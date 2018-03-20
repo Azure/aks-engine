@@ -135,30 +135,30 @@ func (ku *Upgrader) upgradeMasterNodes(ctx context.Context) error {
 
 	for _, vm := range *ku.ClusterTopology.UpgradedMasterVMs {
 		ku.logger.Infof("Master VM: %s is upgraded to expected orchestrator version", *vm.Name)
-		masterIndex, _ := utils.GetVMNameIndex(vm.StorageProfile.OsDisk.OsType, *vm.Name)
+		masterIndex, _ := utils.GetVMNameIndex(ku.DataModel.Properties, vm.StorageProfile.OsDisk.OsType, *vm.Name)
 		upgradedMastersIndex[masterIndex] = true
 	}
 
 	for _, vm := range *ku.ClusterTopology.MasterVMs {
 		ku.logger.Infof("Upgrading Master VM: %s", *vm.Name)
 
-		masterIndex, _ := utils.GetVMNameIndex(vm.StorageProfile.OsDisk.OsType, *vm.Name)
+		masterIndex, _ := utils.GetVMNameIndex(ku.DataModel.Properties, vm.StorageProfile.OsDisk.OsType, *vm.Name)
 
 		err := upgradeMasterNode.DeleteNode(vm.Name, false)
 		if err != nil {
-			ku.logger.Infof("Error deleting master VM: %s, err: %v", *vm.Name, err)
+			ku.logger.Errorf("Error deleting master VM: %s, err: %v", *vm.Name, err)
 			return err
 		}
 
 		err = upgradeMasterNode.CreateNode(ctx, "master", masterIndex)
 		if err != nil {
-			ku.logger.Infof("Error creating upgraded master VM: %s", *vm.Name)
+			ku.logger.Errorf("Error creating upgraded master VM: %s, err: %s", *vm.Name, err)
 			return err
 		}
 
 		err = upgradeMasterNode.Validate(vm.Name)
 		if err != nil {
-			ku.logger.Infof("Error validating upgraded master VM: %s", *vm.Name)
+			ku.logger.Errorf("Error validating upgraded master VM: %s, err: %s", *vm.Name, err)
 			return err
 		}
 
@@ -187,14 +187,14 @@ func (ku *Upgrader) upgradeMasterNodes(ctx context.Context) error {
 
 		err = upgradeMasterNode.CreateNode(ctx, "master", masterIndexToCreate)
 		if err != nil {
-			ku.logger.Infof("Error creating upgraded master VM with index: %d", masterIndexToCreate)
+			ku.logger.Errorf("Error creating upgraded master VM with index: %d, err: %s", masterIndexToCreate, err)
 			return err
 		}
 
 		tempVMName := ""
 		err = upgradeMasterNode.Validate(&tempVMName)
 		if err != nil {
-			ku.logger.Infof("Error validating upgraded master VM with index: %d", masterIndexToCreate)
+			ku.logger.Errorf("Error validating upgraded master VM with index: %d, err: %s", masterIndexToCreate, err)
 			return err
 		}
 
@@ -276,7 +276,7 @@ func (ku *Upgrader) upgradeAgentPools(ctx context.Context) error {
 			if vm.VirtualMachineProperties != nil && vm.VirtualMachineProperties.ProvisioningState != nil {
 				vmProvisioningState = *vm.VirtualMachineProperties.ProvisioningState
 			}
-			agentIndex, _ := utils.GetVMNameIndex(vm.StorageProfile.OsDisk.OsType, *vm.Name)
+			agentIndex, _ := utils.GetVMNameIndex(ku.DataModel.Properties, vm.StorageProfile.OsDisk.OsType, *vm.Name)
 
 			switch vmProvisioningState {
 			case "Creating", "Updating", "Succeeded":
@@ -300,7 +300,7 @@ func (ku *Upgrader) upgradeAgentPools(ctx context.Context) error {
 		}
 
 		for _, vm := range *agentPool.AgentVMs {
-			agentIndex, _ := utils.GetVMNameIndex(vm.StorageProfile.OsDisk.OsType, *vm.Name)
+			agentIndex, _ := utils.GetVMNameIndex(ku.DataModel.Properties, vm.StorageProfile.OsDisk.OsType, *vm.Name)
 			agentVMs[agentIndex] = &vmInfo{*vm.Name, vmStatusNotUpgraded}
 		}
 		toBeUpgradedCount := len(*agentPool.AgentVMs)

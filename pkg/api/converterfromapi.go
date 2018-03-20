@@ -435,6 +435,8 @@ func convertPropertiesToV20170701(api *Properties, p *v20170701.Properties) {
 }
 
 func convertPropertiesToVLabs(api *Properties, vlabsProps *vlabs.Properties) {
+	vlabsProps.ClusterName = api.ClusterName
+	vlabsProps.ClusterResourceNameTemplate = api.ClusterResourceNameTemplate
 	vlabsProps.ProvisioningState = vlabs.ProvisioningState(api.ProvisioningState)
 	if api.OrchestratorProfile != nil {
 		vlabsProps.OrchestratorProfile = &vlabs.OrchestratorProfile{}

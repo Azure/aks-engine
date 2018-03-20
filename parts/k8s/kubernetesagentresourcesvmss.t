@@ -111,7 +111,7 @@
         },
         "osProfile": {
           "adminUsername": "[parameters('linuxAdminUsername')]",
-          "computerNamePrefix": "[variables('{{.Name}}VMNamePrefix')]",
+          "computerNamePrefix": "[concat(variables('{{.Name}}VMNamePrefix'), '-')]",
           {{GetKubernetesAgentCustomData .}}
           "linuxConfiguration": {
               "disablePasswordAuthentication": true,

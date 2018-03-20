@@ -1,3 +1,17 @@
+    "clusterName": {
+      "defaultValue": "",
+      "metadata": {
+        "description": "The name of the cluster which will prefix all resources name."
+      },
+      "type": "string"
+    },
+    "clusterResourceNameTemplate": {
+      "defaultValue": "",
+      "metadata": {
+        "description": "A go template string used to generate resource names."
+      },
+      "type": "string"
+    },
     "linuxAdminUsername": {
       "metadata": {
         "description": "User name for the Linux Virtual Machines (SSH or Password)."

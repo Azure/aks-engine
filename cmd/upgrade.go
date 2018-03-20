@@ -249,6 +249,7 @@ func (uc *upgradeCmd) run(cmd *cobra.Command, args []string) error {
 	upgradeCluster.SubscriptionID = uc.authArgs.SubscriptionID.String()
 	upgradeCluster.ResourceGroup = uc.resourceGroupName
 	upgradeCluster.DataModel = uc.containerService
+	upgradeCluster.DataModel.Properties.ClusterID = uc.nameSuffix
 	upgradeCluster.NameSuffix = uc.nameSuffix
 	upgradeCluster.AgentPoolsToUpgrade = uc.agentPoolsToUpgrade
 

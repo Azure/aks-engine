@@ -2007,7 +2007,7 @@ func TestGetPrimaryAvailabilitySetName(t *testing.T) {
 		},
 	}
 
-	expected := "agentpool-availabilitySet-28513887"
+	expected := "k8s-agentpool-28513887-availabilityset"
 	got := p.GetPrimaryAvailabilitySetName()
 	if got != expected {
 		t.Errorf("expected primary availability set name %s, but got %s", expected, got)
@@ -2062,10 +2062,18 @@ func TestGetRouteTableName(t *testing.T) {
 	}
 
 	actualRTName := p.GetRouteTableName()
-	expectedRTName := "aks-agentpool-28513887-routetable"
-
 	actualNSGName := p.GetNSGName()
-	expectedNSGName := "aks-agentpool-28513887-nsg"
+
+	var prefix string
+
+	if p.IsHostedMasterProfile() {
+		prefix = DefaultHostedProfileMasterName
+	} else {
+		prefix = DefaultOrchestratorName
+	}
+
+	expectedRTName := prefix + "-agentpool-28513887-routetable"
+	expectedNSGName := prefix + "-agentpool-28513887-nsg"
 
 	if actualRTName != expectedRTName {
 		t.Errorf("expected route table name %s, but got %s", expectedRTName, actualRTName)
@@ -2095,10 +2103,16 @@ func TestGetRouteTableName(t *testing.T) {
 	}
 
 	actualRTName = p.GetRouteTableName()
-	expectedRTName = "k8s-master-28513887-routetable"
-
 	actualNSGName = p.GetNSGName()
-	expectedNSGName = "k8s-master-28513887-nsg"
+
+	if p.IsHostedMasterProfile() {
+		prefix = DefaultHostedProfileMasterName
+	} else {
+		prefix = DefaultOrchestratorName
+	}
+
+	expectedRTName = prefix + "-master-28513887-routetable"
+	expectedNSGName = prefix + "-master-28513887-nsg"
 
 	if actualRTName != expectedRTName {
 		t.Errorf("expected route table name %s, but got %s", actualRTName, expectedRTName)
@@ -2135,7 +2149,7 @@ func TestGetSubnetName(t *testing.T) {
 					},
 				},
 			},
-			expectedSubnetName: "aks-subnet",
+			expectedSubnetName: DefaultHostedProfileMasterName + "-28513887-subnet",
 		},
 		{
 			name: "Cluster with HosterMasterProfile and custom VNET",
@@ -2180,7 +2194,7 @@ func TestGetSubnetName(t *testing.T) {
 					},
 				},
 			},
-			expectedSubnetName: "k8s-subnet",
+			expectedSubnetName: DefaultOrchestratorName + "-28513887-subnet",
 		},
 		{
 			name: "Cluster with MasterProfile and custom VNET",
@@ -2266,7 +2280,7 @@ func TestProperties_GetVirtualNetworkName(t *testing.T) {
 					},
 				},
 			},
-			expectedVirtualNetworkName: "aks-vnet-28513887",
+			expectedVirtualNetworkName: DefaultHostedProfileMasterName + "-28513887-vnet",
 		},
 	}
 
@@ -2361,7 +2375,7 @@ func TestProperties_GetClusterMetadata(t *testing.T) {
 		t.Errorf("expected SecurityGroupName name %s, but got %s", expectedSecurityGroupName, metadata.SecurityGroupName)
 	}
 
-	expectedPrimaryAvailabilitySetName := "agentpool-availabilitySet-28513887"
+	expectedPrimaryAvailabilitySetName := "k8s-agentpool-28513887-availabilityset"
 	if metadata.PrimaryAvailabilitySetName != expectedPrimaryAvailabilitySetName {
 		t.Errorf("expected PrimaryAvailabilitySetName name %s, but got %s", expectedPrimaryAvailabilitySetName, metadata.PrimaryAvailabilitySetName)
 	}

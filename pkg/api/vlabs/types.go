@@ -38,18 +38,20 @@ type ContainerService struct {
 
 // Properties represents the AKS cluster definition
 type Properties struct {
-	ProvisioningState       ProvisioningState        `json:"provisioningState,omitempty"`
-	OrchestratorProfile     *OrchestratorProfile     `json:"orchestratorProfile,omitempty" validate:"required"`
-	MasterProfile           *MasterProfile           `json:"masterProfile,omitempty" validate:"required"`
-	AgentPoolProfiles       []*AgentPoolProfile      `json:"agentPoolProfiles,omitempty" validate:"dive,required"`
-	LinuxProfile            *LinuxProfile            `json:"linuxProfile,omitempty" validate:"required"`
-	ExtensionProfiles       []*ExtensionProfile      `json:"extensionProfiles,omitempty"`
-	WindowsProfile          *WindowsProfile          `json:"windowsProfile,omitempty"`
-	ServicePrincipalProfile *ServicePrincipalProfile `json:"servicePrincipalProfile,omitempty"`
-	CertificateProfile      *CertificateProfile      `json:"certificateProfile,omitempty"`
-	AADProfile              *AADProfile              `json:"aadProfile,omitempty"`
-	FeatureFlags            *FeatureFlags            `json:"featureFlags,omitempty"`
-	CustomCloudProfile      *CustomCloudProfile      `json:"customCloudProfile,omitempty"`
+	ClusterName                 string                   `json:"clusterName,omitempty"`
+	ClusterResourceNameTemplate string                   `json:"clusterResourceNameTemplate,omitempty"`
+	ProvisioningState           ProvisioningState        `json:"provisioningState,omitempty"`
+	OrchestratorProfile         *OrchestratorProfile     `json:"orchestratorProfile,omitempty" validate:"required"`
+	MasterProfile               *MasterProfile           `json:"masterProfile,omitempty" validate:"required"`
+	AgentPoolProfiles           []*AgentPoolProfile      `json:"agentPoolProfiles,omitempty" validate:"dive,required"`
+	LinuxProfile                *LinuxProfile            `json:"linuxProfile,omitempty" validate:"required"`
+	ExtensionProfiles           []*ExtensionProfile      `json:"extensionProfiles,omitempty"`
+	WindowsProfile              *WindowsProfile          `json:"windowsProfile,omitempty"`
+	ServicePrincipalProfile     *ServicePrincipalProfile `json:"servicePrincipalProfile,omitempty"`
+	CertificateProfile          *CertificateProfile      `json:"certificateProfile,omitempty"`
+	AADProfile                  *AADProfile              `json:"aadProfile,omitempty"`
+	FeatureFlags                *FeatureFlags            `json:"featureFlags,omitempty"`
+	CustomCloudProfile          *CustomCloudProfile      `json:"customCloudProfile,omitempty"`
 }
 
 // FeatureFlags defines feature-flag restricted functionality

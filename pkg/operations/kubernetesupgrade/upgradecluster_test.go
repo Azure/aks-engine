@@ -46,6 +46,7 @@ var _ = Describe("Upgrade Kubernetes cluster tests", func() {
 		uc.ResourceGroup = "TestRg"
 		uc.DataModel = cs
 		uc.NameSuffix = "12345678"
+		uc.DataModel.Properties.ClusterID = "12345678"
 		uc.AgentPoolsToUpgrade = map[string]bool{"agentpool1": true}
 
 		err := uc.UpgradeCluster(&mockClient, "kubeConfig", TestAKSEngineVersion)
@@ -72,6 +73,7 @@ var _ = Describe("Upgrade Kubernetes cluster tests", func() {
 		uc.ResourceGroup = "TestRg"
 		uc.DataModel = cs
 		uc.NameSuffix = "12345678"
+		uc.DataModel.Properties.ClusterID = "12345678"
 		uc.AgentPoolsToUpgrade = map[string]bool{"agentpool1": true}
 
 		err := uc.UpgradeCluster(&mockClient, "kubeConfig", TestAKSEngineVersion)
@@ -98,6 +100,7 @@ var _ = Describe("Upgrade Kubernetes cluster tests", func() {
 		uc.ResourceGroup = "TestRg"
 		uc.DataModel = cs
 		uc.NameSuffix = "12345678"
+		uc.DataModel.Properties.ClusterID = "12345678"
 		uc.AgentPoolsToUpgrade = map[string]bool{"agentpool1": true}
 
 		err := uc.UpgradeCluster(&mockClient, "kubeConfig", TestAKSEngineVersion)
@@ -121,6 +124,7 @@ var _ = Describe("Upgrade Kubernetes cluster tests", func() {
 		uc.ResourceGroup = "TestRg"
 		uc.DataModel = cs
 		uc.NameSuffix = "12345678"
+		uc.DataModel.Properties.ClusterID = "12345678"
 		uc.AgentPoolsToUpgrade = map[string]bool{"agentpool1": true}
 
 		err := uc.UpgradeCluster(&mockClient, "kubeConfig", TestAKSEngineVersion)
@@ -144,6 +148,7 @@ var _ = Describe("Upgrade Kubernetes cluster tests", func() {
 		uc.ResourceGroup = "TestRg"
 		uc.DataModel = cs
 		uc.NameSuffix = "12345678"
+		uc.DataModel.Properties.ClusterID = "12345678"
 		uc.AgentPoolsToUpgrade = map[string]bool{"agentpool1": true}
 
 		err := uc.UpgradeCluster(&mockClient, "kubeConfig", TestAKSEngineVersion)
@@ -167,6 +172,7 @@ var _ = Describe("Upgrade Kubernetes cluster tests", func() {
 		uc.ResourceGroup = "TestRg"
 		uc.DataModel = cs
 		uc.NameSuffix = "12345678"
+		uc.DataModel.Properties.ClusterID = "12345678"
 		uc.AgentPoolsToUpgrade = map[string]bool{"agentpool1": true}
 
 		err := uc.UpgradeCluster(&mockClient, "kubeConfig", TestAKSEngineVersion)
@@ -190,6 +196,7 @@ var _ = Describe("Upgrade Kubernetes cluster tests", func() {
 		uc.ResourceGroup = "TestRg"
 		uc.DataModel = cs
 		uc.NameSuffix = "12345678"
+		uc.DataModel.Properties.ClusterID = "12345678"
 		uc.AgentPoolsToUpgrade = map[string]bool{"agentpool1": true}
 
 		err := uc.UpgradeCluster(&mockClient, "kubeConfig", TestAKSEngineVersion)
@@ -212,6 +219,7 @@ var _ = Describe("Upgrade Kubernetes cluster tests", func() {
 		uc.ResourceGroup = "TestRg"
 		uc.DataModel = cs
 		uc.NameSuffix = "12345678"
+		uc.DataModel.Properties.ClusterID = "12345678"
 		uc.AgentPoolsToUpgrade = map[string]bool{"agentpool1": true}
 
 		err := uc.UpgradeCluster(&mockClient, "kubeConfig", TestAKSEngineVersion)
@@ -239,6 +247,7 @@ var _ = Describe("Upgrade Kubernetes cluster tests", func() {
 		uc.ResourceGroup = "TestRg"
 		uc.DataModel = cs
 		uc.NameSuffix = "12345678"
+		uc.DataModel.Properties.ClusterID = "12345678"
 		uc.AgentPoolsToUpgrade = map[string]bool{"agentpool1": true}
 
 		err := uc.UpgradeCluster(&mockClient, "kubeConfig", TestAKSEngineVersion)
@@ -263,6 +272,7 @@ var _ = Describe("Upgrade Kubernetes cluster tests", func() {
 		uc.ResourceGroup = "TestRg"
 		uc.DataModel = cs
 		uc.NameSuffix = "12345678"
+		uc.DataModel.Properties.ClusterID = "12345678"
 		uc.AgentPoolsToUpgrade = map[string]bool{"agentpool1": true}
 
 		err := uc.UpgradeCluster(&mockClient, "kubeConfig", TestAKSEngineVersion)

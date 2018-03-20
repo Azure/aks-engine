@@ -353,6 +353,8 @@ func convertV20170701Properties(v20170701 *v20170701.Properties, api *Properties
 }
 
 func convertVLabsProperties(vlabs *vlabs.Properties, api *Properties, isUpdate bool) error {
+	api.ClusterName = vlabs.ClusterName
+	api.ClusterResourceNameTemplate = vlabs.ClusterResourceNameTemplate
 	api.ProvisioningState = ProvisioningState(vlabs.ProvisioningState)
 	if vlabs.OrchestratorProfile != nil {
 		api.OrchestratorProfile = &OrchestratorProfile{}

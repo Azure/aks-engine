@@ -325,7 +325,7 @@
 {{ end }}
       ],
       "location": "[variables('location')]",
-      "name": "[concat(variables('masterVMNamePrefix'), 'nic-', copyIndex(variables('masterOffset')))]",
+      "name": "[concat(variables('masterVMNamePrefix'), copyIndex(variables('masterOffset')), '-nic')]",
       "properties": {
         "ipConfigurations": [
           {
@@ -408,7 +408,7 @@
   {{end}}
         ],
         "location": "[variables('location')]",
-        "name": "[concat(variables('masterVMNamePrefix'), 'nic-', copyIndex(variables('masterOffset')))]",
+        "name": "[concat(variables('masterVMNamePrefix'), copyIndex(variables('masterOffset')), '-nic')]",
         "properties": {
           "ipConfigurations": [
             {
@@ -699,7 +699,7 @@
        "apiVersion": "[variables('apiVersionKeyVault')]",
        "location": "[variables('location')]",
        {{ if UseManagedIdentity}}
-       "dependsOn": 
+       "dependsOn":
        [
        {{if UserAssignedIDEnabled}}
        "[variables('userAssignedIDReference')]"
@@ -802,7 +802,7 @@
         "name": "vmLoopNode"
       },
       "dependsOn": [
-        "[concat('Microsoft.Network/networkInterfaces/', variables('masterVMNamePrefix'), 'nic-', copyIndex(variables('masterOffset')))]"
+        "[concat('Microsoft.Network/networkInterfaces/', variables('masterVMNamePrefix'), copyIndex(variables('masterOffset')), '-nic')]"
         {{if not .MasterProfile.HasAvailabilityZones}}
         ,"[concat('Microsoft.Compute/availabilitySets/',variables('masterAvailabilitySet'))]"
         {{end}}
@@ -813,6 +813,7 @@
       "tags":
       {
         "creationSource" : "[concat(parameters('generatorCode'), '-', variables('masterVMNamePrefix'), copyIndex(variables('masterOffset')))]",
+        "clusterName" : "['{{GetClusterName}}']",
         "resourceNameSuffix" : "[parameters('nameSuffix')]",
         "orchestrator" : "[variables('orchestratorNameVersionTag')]",
         "aksEngineVersion" : "[parameters('aksEngineVersion')]",
@@ -849,7 +850,7 @@
         "networkProfile": {
           "networkInterfaces": [
             {
-              "id": "[resourceId('Microsoft.Network/networkInterfaces',concat(variables('masterVMNamePrefix'),'nic-', copyIndex(variables('masterOffset'))))]"
+              "id": "[resourceId('Microsoft.Network/networkInterfaces',concat(variables('masterVMNamePrefix'), copyIndex(variables('masterOffset')), '-nic'))]"
             }
           ]
         },
@@ -902,8 +903,8 @@
           "osDisk": {
             "caching": "ReadWrite"
             ,"createOption": "FromImage"
-{{if .MasterProfile.IsStorageAccount}}
             ,"name": "[concat(variables('masterVMNamePrefix'), copyIndex(variables('masterOffset')),'-osdisk')]"
+{{if .MasterProfile.IsStorageAccount}}
             ,"vhd": {
               "uri": "[concat(reference(concat('Microsoft.Storage/storageAccounts/',variables('masterStorageAccountName')),variables('apiVersionStorage')).primaryEndpoints.blob,'vhds/',variables('masterVMNamePrefix'),copyIndex(variables('masterOffset')),'-osdisk.vhd')]"
             }

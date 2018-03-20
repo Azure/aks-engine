@@ -6,6 +6,7 @@ package kubernetesupgrade
 import (
 	"context"
 	"fmt"
+	"regexp"
 	"strings"
 	"time"
 
@@ -67,9 +68,6 @@ type UpgradeCluster struct {
 	Client      armhelpers.AKSEngineClient
 	StepTimeout *time.Duration
 }
-
-// MasterVMNamePrefix is the prefix for all master VM names for Kubernetes clusters
-const MasterVMNamePrefix = "k8s-master-"
 
 // MasterPoolName pool name
 const MasterPoolName = "master"
@@ -184,16 +182,20 @@ func (uc *UpgradeCluster) getClusterNodeStatus(az armhelpers.AKSEngineClient, re
 				}
 			}
 
+			MasterVMPattern := "^" + uc.ClusterTopology.DataModel.Properties.FormatResourceName("master", "", "") + ".*"
+			uc.Logger.Debugf("Using regexp: '%s' to validate master VM names\n", MasterVMPattern)
+			MasterVMRE := regexp.MustCompile(MasterVMPattern)
+
 			// If the current version is different than the desired version then we add the VM to the list of VMs to upgrade.
 			if currentVersion != goalVersion {
-				if strings.Contains(*(vm.Name), MasterVMNamePrefix) {
+				if MasterVMRE.MatchString(*(vm.Name)) {
 					uc.Logger.Infof("Master VM name: %s, orchestrator: %s (MasterVMs)\n", *vm.Name, currentVersion)
 					*uc.MasterVMs = append(*uc.MasterVMs, vm)
 				} else {
 					uc.addVMToAgentPool(vm, true)
 				}
 			} else if currentVersion == goalVersion {
-				if strings.Contains(*(vm.Name), MasterVMNamePrefix) {
+				if MasterVMRE.MatchString(*(vm.Name)) {
 					uc.Logger.Infof("Master VM name: %s, orchestrator: %s (UpgradedMasterVMs)\n", *vm.Name, currentVersion)
 					*uc.UpgradedMasterVMs = append(*uc.UpgradedMasterVMs, vm)
 				} else {
@@ -295,7 +297,7 @@ func (uc *UpgradeCluster) addVMToAgentPool(vm compute.VirtualMachine, isUpgradab
 	}
 
 	if vm.StorageProfile.OsDisk.OsType == compute.Windows {
-		poolPrefix, _, _, _, err = utils.WindowsVMNameParts(*vm.Name)
+		poolPrefix, _, _, _, err = utils.WindowsVMNameParts(uc.DataModel.Properties, *vm.Name)
 		if !strings.Contains(uc.NameSuffix, poolPrefix) {
 			uc.Logger.Infof("Skipping VM: %s for upgrade as it does not belong to cluster with expected name suffix: %s\n",
 				*vm.Name, uc.NameSuffix)
@@ -311,15 +313,18 @@ func (uc *UpgradeCluster) addVMToAgentPool(vm compute.VirtualMachine, isUpgradab
 			poolIdentifier = (*vm.Name)[:9]
 		}
 	} else { // vm.StorageProfile.OsDisk.OsType == compute.Linux
-		poolIdentifier, poolPrefix, _, err = utils.K8sLinuxVMNameParts(*vm.Name)
+		AgentVMPattern := "^" + uc.ClusterTopology.DataModel.Properties.FormatResourceName(vmPoolName, "", "") + ".*"
+		uc.Logger.Debugf("Using regexp: '%s' to validate agent VM names\n", AgentVMPattern)
+		AgentVMRE := regexp.MustCompile(AgentVMPattern)
+
+		poolIdentifier, poolPrefix, _, err = utils.K8sLinuxVMNameParts(uc.DataModel.Properties, *vm.Name)
 		if err != nil {
 			uc.Logger.Errorf(err.Error())
 			return err
 		}
 
-		if !strings.EqualFold(uc.NameSuffix, poolPrefix) {
-			uc.Logger.Infof("Skipping VM: %s for upgrade as it does not belong to cluster with expected name suffix: %s\n",
-				*vm.Name, uc.NameSuffix)
+		if !AgentVMRE.MatchString(*vm.Name) {
+			uc.Logger.Infof("Skipping VM: %s for upgrade as it does not match name pattern '%s'\n", *vm.Name, AgentVMPattern)
 			return nil
 		}
 	}

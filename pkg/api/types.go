@@ -4,6 +4,7 @@
 package api
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"hash/fnv"
@@ -14,6 +15,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"text/template"
 
 	v20170831 "github.com/Azure/aks-engine/pkg/api/agentPoolOnlyApi/v20170831"
 	v20180331 "github.com/Azure/aks-engine/pkg/api/agentPoolOnlyApi/v20180331"
@@ -72,24 +74,26 @@ type AgentPoolResource struct {
 
 // Properties represents the AKS cluster definition
 type Properties struct {
-	ClusterID               string
-	ProvisioningState       ProvisioningState        `json:"provisioningState,omitempty"`
-	OrchestratorProfile     *OrchestratorProfile     `json:"orchestratorProfile,omitempty"`
-	MasterProfile           *MasterProfile           `json:"masterProfile,omitempty"`
-	AgentPoolProfiles       []*AgentPoolProfile      `json:"agentPoolProfiles,omitempty"`
-	LinuxProfile            *LinuxProfile            `json:"linuxProfile,omitempty"`
-	WindowsProfile          *WindowsProfile          `json:"windowsProfile,omitempty"`
-	ExtensionProfiles       []*ExtensionProfile      `json:"extensionProfiles"`
-	DiagnosticsProfile      *DiagnosticsProfile      `json:"diagnosticsProfile,omitempty"`
-	JumpboxProfile          *JumpboxProfile          `json:"jumpboxProfile,omitempty"`
-	ServicePrincipalProfile *ServicePrincipalProfile `json:"servicePrincipalProfile,omitempty"`
-	CertificateProfile      *CertificateProfile      `json:"certificateProfile,omitempty"`
-	AADProfile              *AADProfile              `json:"aadProfile,omitempty"`
-	CustomProfile           *CustomProfile           `json:"customProfile,omitempty"`
-	HostedMasterProfile     *HostedMasterProfile     `json:"hostedMasterProfile,omitempty"`
-	AddonProfiles           map[string]AddonProfile  `json:"addonProfiles,omitempty"`
-	FeatureFlags            *FeatureFlags            `json:"featureFlags,omitempty"`
-	CustomCloudProfile      *CustomCloudProfile      `json:"customCloudProfile,omitempty"`
+	ClusterID                   string
+	ClusterName                 string                   `json:"clusterName,omitempty"`
+	ClusterResourceNameTemplate string                   `json:"clusterResourceNameTemplate,omitempty"`
+	ProvisioningState           ProvisioningState        `json:"provisioningState,omitempty"`
+	OrchestratorProfile         *OrchestratorProfile     `json:"orchestratorProfile,omitempty"`
+	MasterProfile               *MasterProfile           `json:"masterProfile,omitempty"`
+	AgentPoolProfiles           []*AgentPoolProfile      `json:"agentPoolProfiles,omitempty"`
+	LinuxProfile                *LinuxProfile            `json:"linuxProfile,omitempty"`
+	WindowsProfile              *WindowsProfile          `json:"windowsProfile,omitempty"`
+	ExtensionProfiles           []*ExtensionProfile      `json:"extensionProfiles"`
+	DiagnosticsProfile          *DiagnosticsProfile      `json:"diagnosticsProfile,omitempty"`
+	JumpboxProfile              *JumpboxProfile          `json:"jumpboxProfile,omitempty"`
+	ServicePrincipalProfile     *ServicePrincipalProfile `json:"servicePrincipalProfile,omitempty"`
+	CertificateProfile          *CertificateProfile      `json:"certificateProfile,omitempty"`
+	AADProfile                  *AADProfile              `json:"aadProfile,omitempty"`
+	CustomProfile               *CustomProfile           `json:"customProfile,omitempty"`
+	HostedMasterProfile         *HostedMasterProfile     `json:"hostedMasterProfile,omitempty"`
+	AddonProfiles               map[string]AddonProfile  `json:"addonProfiles,omitempty"`
+	FeatureFlags                *FeatureFlags            `json:"featureFlags,omitempty"`
+	CustomCloudProfile          *CustomCloudProfile      `json:"customCloudProfile,omitempty"`
 }
 
 // ClusterMetadata represents the metadata of the AKS cluster.
@@ -799,6 +803,58 @@ func (p *Properties) getAgentPoolIndexByName(name string) int {
 	return index
 }
 
+// GetClusterName returns resource prefix based on Properties
+func (p *Properties) GetClusterName() (ret string) {
+	if len(p.ClusterName) > 0 {
+		ret = p.ClusterName
+	} else {
+		ret = p.K8sOrchestratorName() + "-" + p.GetClusterID()
+	}
+	return
+}
+
+func (p *Properties) FormatResourceName(rpool string, rtype string, rsuffix string) (ret string) {
+	if len(p.ClusterResourceNameTemplate) == 0 {
+		p.ClusterResourceNameTemplate = `
+			{{- .Properties.K8sOrchestratorName -}}
+			{{- if .Pool }}-{{- .Pool -}}{{ end -}}
+			-{{- .Properties.GetClusterID -}}
+			{{- if .Type }}-{{- .Type -}}{{ end -}}
+			{{- if .Suffix }}-{{- .Suffix -}}{{ end -}}
+		`
+		p.ClusterResourceNameTemplate = strings.TrimSpace(p.ClusterResourceNameTemplate)
+		p.ClusterResourceNameTemplate = strings.Replace(p.ClusterResourceNameTemplate, "\t", "", -1)
+		p.ClusterResourceNameTemplate = strings.Replace(p.ClusterResourceNameTemplate, "\n", "", -1)
+	}
+
+	data := struct {
+		Properties *Properties
+		Pool       string
+		Type       string
+		Suffix     string
+	}{
+		Properties: p,
+		Pool:       rpool,
+		Type:       rtype,
+		Suffix:     rsuffix,
+	}
+
+	var result bytes.Buffer
+	tmpl, err := template.New("FormatResourceName").Parse(p.ClusterResourceNameTemplate)
+
+	if err != nil {
+		panic(err)
+	}
+
+	err = tmpl.Execute(&result, data)
+
+	if err != nil {
+		panic(err)
+	}
+
+	return result.String()
+}
+
 // GetAgentVMPrefix returns the VM prefix for an agentpool
 func (p *Properties) GetAgentVMPrefix(a *AgentPoolProfile) string {
 	index := p.getAgentPoolIndexByName(a.Name)
@@ -808,9 +864,10 @@ func (p *Properties) GetAgentVMPrefix(a *AgentPoolProfile) string {
 		if a.IsWindows() {
 			vmPrefix = nameSuffix[:4] + p.K8sOrchestratorName() + fmt.Sprintf("%02d", index)
 		} else {
-			vmPrefix = p.K8sOrchestratorName() + "-" + a.Name + "-" + nameSuffix + "-"
 			if a.IsVirtualMachineScaleSets() {
-				vmPrefix += "vmss"
+				vmPrefix = p.FormatResourceName(a.Name, "vmss", "")
+			} else {
+				vmPrefix = p.FormatResourceName(a.Name, "", "") + "-"
 			}
 		}
 	}
@@ -819,36 +876,41 @@ func (p *Properties) GetAgentVMPrefix(a *AgentPoolProfile) string {
 
 // GetMasterVMPrefix returns the prefix of master VMs
 func (p *Properties) GetMasterVMPrefix() string {
-	return p.K8sOrchestratorName() + "-master-" + p.GetClusterID() + "-"
+	return p.FormatResourceName("master", "", "") + "-"
 }
 
 // GetResourcePrefix returns the prefix to use for naming cluster resources
 func (p *Properties) GetResourcePrefix() string {
 	if p.IsHostedMasterProfile() {
-		return p.K8sOrchestratorName() + "-agentpool-" + p.GetClusterID() + "-"
+		return p.FormatResourceName("agentpool", "", "")
 	}
-	return p.K8sOrchestratorName() + "-master-" + p.GetClusterID() + "-"
-
+	return p.FormatResourceName("master", "", "")
 }
 
 // GetRouteTableName returns the route table name of the cluster.
 func (p *Properties) GetRouteTableName() string {
-	return p.GetResourcePrefix() + "routetable"
+	if p.IsHostedMasterProfile() {
+		return p.FormatResourceName("agentpool", "routetable", "")
+	}
+	return p.FormatResourceName("master", "routetable", "")
 }
 
 // GetNSGName returns the name of the network security group of the cluster.
 func (p *Properties) GetNSGName() string {
-	return p.GetResourcePrefix() + "nsg"
+	if p.IsHostedMasterProfile() {
+		return p.FormatResourceName("agentpool", "nsg", "")
+	}
+	return p.FormatResourceName("master", "nsg", "")
 }
 
 // GetPrimaryAvailabilitySetName returns the name of the primary availability set of the cluster
 func (p *Properties) GetPrimaryAvailabilitySetName() string {
-	return p.AgentPoolProfiles[0].Name + "-availabilitySet-" + p.GetClusterID()
+	return p.FormatResourceName(p.AgentPoolProfiles[0].Name, "availabilityset", "")
 }
 
 // GetPrimaryScaleSetName returns the name of the primary scale set node of the cluster
 func (p *Properties) GetPrimaryScaleSetName() string {
-	return p.K8sOrchestratorName() + "-" + p.AgentPoolProfiles[0].Name + "-" + p.GetClusterID() + "-vmss"
+	return p.FormatResourceName(p.AgentPoolProfiles[0].Name, "vmss", "")
 }
 
 // IsHostedMasterProfile returns true if the cluster has a hosted master
@@ -883,7 +945,7 @@ func (p *Properties) GetVirtualNetworkName() string {
 	} else if !p.IsHostedMasterProfile() && p.MasterProfile.IsCustomVNET() {
 		vnetName = strings.Split(p.MasterProfile.VnetSubnetID, "/")[DefaultVnetNameResourceSegmentIndex]
 	} else {
-		vnetName = p.K8sOrchestratorName() + "-vnet-" + p.GetClusterID()
+		vnetName = p.FormatResourceName("", "vnet", "")
 	}
 	return vnetName
 }
@@ -895,13 +957,13 @@ func (p *Properties) GetSubnetName() string {
 		if p.AreAgentProfilesCustomVNET() {
 			subnetName = strings.Split(p.AgentPoolProfiles[0].VnetSubnetID, "/")[DefaultSubnetNameResourceSegmentIndex]
 		} else {
-			subnetName = p.K8sOrchestratorName() + "-subnet"
+			subnetName = p.FormatResourceName("", "subnet", "")
 		}
 	} else {
 		if p.MasterProfile.IsCustomVNET() {
 			subnetName = strings.Split(p.MasterProfile.VnetSubnetID, "/")[DefaultSubnetNameResourceSegmentIndex]
 		} else {
-			subnetName = p.K8sOrchestratorName() + "-subnet"
+			subnetName = p.FormatResourceName("", "subnet", "")
 		}
 	}
 	return subnetName
@@ -953,7 +1015,7 @@ func (p *Properties) GetClusterMetadata() *ClusterMetadata {
 		RouteTableName:             p.GetRouteTableName(),
 		PrimaryAvailabilitySetName: p.GetPrimaryAvailabilitySetName(),
 		PrimaryScaleSetName:        p.GetPrimaryScaleSetName(),
-		ResourcePrefix:             p.GetResourcePrefix(),
+		ResourcePrefix:             p.FormatResourceName("", "", ""),
 	}
 }
 

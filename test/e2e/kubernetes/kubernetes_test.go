@@ -69,7 +69,7 @@ var _ = BeforeSuite(func() {
 		ClusterDefinition:  csInput,
 		ExpandedDefinition: csGenerated,
 	}
-	masterNodes, err := node.GetByPrefix("k8s-master")
+	masterNodes, err := node.GetByPrefix("k8s-master-\\d+")
 	Expect(err).NotTo(HaveOccurred())
 	masterName := masterNodes[0].Metadata.Name
 	if strings.Contains(masterName, "vmss") {
