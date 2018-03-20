@@ -139,6 +139,7 @@
       {
         "creationSource" : "[concat(parameters('generatorCode'), '-', variables('{{.Name}}VMNamePrefix'), copyIndex(variables('{{.Name}}Offset')))]",
         "resourceNameSuffix" : "[parameters('nameSuffix')]",
+        "clusterName" : "['{{GetClusterName}}']",
         "orchestrator" : "[variables('orchestratorNameVersionTag')]",
         "acsengineVersion" : "[parameters('acsengineVersion')]",
         "poolName" : "{{.Name}}"
@@ -322,4 +323,3 @@
       }
     }
     {{end}}
-  

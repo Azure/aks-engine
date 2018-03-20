@@ -1,3 +1,10 @@
+    "clusterName": {
+      "defaultValue": "",
+      "metadata": {
+        "description": "The name of the cluster which will prefix all resources name."
+      },
+      "type": "string"
+    },
     "linuxAdminUsername": {
       "metadata": {
         "description": "User name for the Linux Virtual Machines (SSH or Password)."

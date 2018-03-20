@@ -12,8 +12,6 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/Azure/go-autorest/autorest/to"
-
 	"github.com/Azure/azure-sdk-for-go/services/authorization/mgmt/2015-07-01/authorization"
 	"github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2018-04-01/compute"
 	"github.com/Azure/azure-sdk-for-go/services/graphrbac/1.6/graphrbac"
@@ -21,6 +19,7 @@ import (
 	"github.com/Azure/azure-sdk-for-go/services/resources/mgmt/2018-05-01/resources"
 	azStorage "github.com/Azure/azure-sdk-for-go/storage"
 	"github.com/Azure/go-autorest/autorest"
+	"github.com/Azure/go-autorest/autorest/to"
 	log "github.com/sirupsen/logrus"
 	"k8s.io/api/core/v1"
 )
@@ -371,14 +370,14 @@ func (mc *MockAKSEngineClient) ListVirtualMachines(ctx context.Context, resource
 		}, errors.New("ListVirtualMachines failed")
 	}
 
-	vm1Name := "k8s-agentpool1-12345678-0"
+	vm1Name := "k8s-12345678-agentpool1-0"
 
 	creationSourceString := "creationSource"
 	orchestratorString := "orchestrator"
 	resourceNameSuffixString := "resourceNameSuffix"
 	poolnameString := "poolName"
 
-	creationSource := "acsengine-k8s-agentpool1-12345678-0"
+	creationSource := "acsengine-k8s-12345678-agentpool1-0"
 	orchestrator := "Kubernetes:1.7.9"
 	resourceNameSuffix := "12345678"
 	poolname := "agentpool1"
@@ -439,14 +438,14 @@ func (mc *MockAKSEngineClient) GetVirtualMachine(ctx context.Context, resourceGr
 		return compute.VirtualMachine{}, errors.New("GetVirtualMachine failed")
 	}
 
-	vm1Name := "k8s-agentpool1-12345678-0"
+	vm1Name := "k8s-12345678-agentpool1-0"
 
 	creationSourceString := "creationSource"
 	orchestratorString := "orchestrator"
 	resourceNameSuffixString := "resourceNameSuffix"
 	poolnameString := "poolName"
 
-	creationSource := "acsengine-k8s-agentpool1-12345678-0"
+	creationSource := "acsengine-k8s-12345678-agentpool1-0"
 	orchestrator := "Kubernetes:1.7.9"
 	resourceNameSuffix := "12345678"
 	poolname := "agentpool1"
@@ -542,7 +541,7 @@ func (mc *MockAKSEngineClient) DeleteNetworkInterface(ctx context.Context, resou
 }
 
 var validOSDiskResourceName = "https://00k71r4u927seqiagnt0.blob.core.windows.net/osdisk/k8s-agentpool1-12345678-0-osdisk.vhd"
-var validNicResourceName = "/subscriptions/DEC923E3-1EF1-4745-9516-37906D56DEC4/resourceGroups/acsK8sTest/providers/Microsoft.Network/networkInterfaces/k8s-agent-12345678-nic-0"
+var validNicResourceName = "/subscriptions/DEC923E3-1EF1-4745-9516-37906D56DEC4/resourceGroups/acsK8sTest/providers/Microsoft.Network/networkInterfaces/k8s-12345678-agent-nic-0"
 
 // Active Directory
 // Mocks

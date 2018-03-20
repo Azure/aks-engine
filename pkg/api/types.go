@@ -56,6 +56,7 @@ type ContainerService struct {
 // Properties represents the AKS cluster definition
 type Properties struct {
 	ClusterID               string
+	ClusterName             string                   `json:"clusterName,omitempty"`
 	ProvisioningState       ProvisioningState        `json:"provisioningState,omitempty"`
 	OrchestratorProfile     *OrchestratorProfile     `json:"orchestratorProfile,omitempty"`
 	MasterProfile           *MasterProfile           `json:"masterProfile,omitempty"`
@@ -753,6 +754,16 @@ func (p *Properties) getAgentPoolIndexByName(name string) int {
 	return index
 }
 
+// GetClusterName returns resource prefix based on Properties
+func (p *Properties) GetClusterName() (ret string) {
+	if len(p.ClusterName) > 0 {
+		ret = p.ClusterName
+	} else {
+		ret = p.K8sOrchestratorName() + "-" + p.GetClusterID()
+	}
+	return
+}
+
 // GetAgentVMPrefix returns the VM prefix for an agentpool
 func (p *Properties) GetAgentVMPrefix(a *AgentPoolProfile) string {
 	index := p.getAgentPoolIndexByName(a.Name)
@@ -762,7 +773,7 @@ func (p *Properties) GetAgentVMPrefix(a *AgentPoolProfile) string {
 		if a.IsWindows() {
 			vmPrefix = nameSuffix[:4] + p.K8sOrchestratorName() + fmt.Sprintf("%02d", index)
 		} else {
-			vmPrefix = p.K8sOrchestratorName() + "-" + a.Name + "-" + nameSuffix + "-"
+			vmPrefix = p.GetClusterName() + "-" + a.Name + "-"
 			if a.IsVirtualMachineScaleSets() {
 				vmPrefix += "vmss"
 			}
@@ -773,16 +784,15 @@ func (p *Properties) GetAgentVMPrefix(a *AgentPoolProfile) string {
 
 // GetMasterVMPrefix returns the prefix of master VMs
 func (p *Properties) GetMasterVMPrefix() string {
-	return p.K8sOrchestratorName() + "-master-" + p.GetClusterID() + "-"
+	return p.GetClusterName() + "-master-"
 }
 
 // GetResourcePrefix returns the prefix to use for naming cluster resources
 func (p *Properties) GetResourcePrefix() string {
 	if p.IsHostedMasterProfile() {
-		return p.K8sOrchestratorName() + "-agentpool-" + p.GetClusterID() + "-"
+		return p.GetClusterName() + "-agentpool-"
 	}
-	return p.K8sOrchestratorName() + "-master-" + p.GetClusterID() + "-"
-
+	return p.GetClusterName() + "-master-"
 }
 
 // GetRouteTableName returns the route table name of the cluster.
@@ -797,12 +807,12 @@ func (p *Properties) GetNSGName() string {
 
 // GetPrimaryAvailabilitySetName returns the name of the primary availability set of the cluster
 func (p *Properties) GetPrimaryAvailabilitySetName() string {
-	return p.AgentPoolProfiles[0].Name + "-availabilitySet-" + p.GetClusterID()
+	return p.GetClusterName() + "-" + p.AgentPoolProfiles[0].Name + "-availabilityset"
 }
 
 // GetPrimaryScaleSetName returns the name of the primary scale set node of the cluster
 func (p *Properties) GetPrimaryScaleSetName() string {
-	return p.K8sOrchestratorName() + "-" + p.AgentPoolProfiles[0].Name + "-" + p.GetClusterID() + "-vmss"
+	return p.GetClusterName() + "-" + p.AgentPoolProfiles[0].Name + "-vmss"
 }
 
 // IsHostedMasterProfile returns true if the cluster has a hosted master
@@ -837,7 +847,7 @@ func (p *Properties) GetVirtualNetworkName() string {
 	} else if !p.IsHostedMasterProfile() && p.MasterProfile.IsCustomVNET() {
 		vnetName = strings.Split(p.MasterProfile.VnetSubnetID, "/")[DefaultVnetNameResourceSegmentIndex]
 	} else {
-		vnetName = p.K8sOrchestratorName() + "-vnet-" + p.GetClusterID()
+		vnetName = p.GetClusterName() + "-vnet"
 	}
 	return vnetName
 }
@@ -849,13 +859,13 @@ func (p *Properties) GetSubnetName() string {
 		if p.AreAgentProfilesCustomVNET() {
 			subnetName = strings.Split(p.AgentPoolProfiles[0].VnetSubnetID, "/")[DefaultSubnetNameResourceSegmentIndex]
 		} else {
-			subnetName = p.K8sOrchestratorName() + "-subnet"
+			subnetName = p.GetClusterName() + "-subnet"
 		}
 	} else {
 		if p.MasterProfile.IsCustomVNET() {
 			subnetName = strings.Split(p.MasterProfile.VnetSubnetID, "/")[DefaultSubnetNameResourceSegmentIndex]
 		} else {
-			subnetName = p.K8sOrchestratorName() + "-subnet"
+			subnetName = p.GetClusterName() + "-subnet"
 		}
 	}
 	return subnetName
@@ -907,7 +917,7 @@ func (p *Properties) GetClusterMetadata() *ClusterMetadata {
 		RouteTableName:             p.GetRouteTableName(),
 		PrimaryAvailabilitySetName: p.GetPrimaryAvailabilitySetName(),
 		PrimaryScaleSetName:        p.GetPrimaryScaleSetName(),
-		ResourcePrefix:             p.GetResourcePrefix(),
+		ResourcePrefix:             p.GetClusterName(),
 	}
 }
 

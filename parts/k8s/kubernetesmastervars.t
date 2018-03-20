@@ -96,7 +96,7 @@
          "[parameters('location')]"
     ],
     "location": "[variables('locations')[mod(add(2,length(parameters('location'))),add(1,length(parameters('location'))))]]",
-    "masterAvailabilitySet": "[concat('master-availabilityset-', parameters('nameSuffix'))]",
+    "masterAvailabilitySet": "[concat('{{GetClusterName}}', '-master-availabilityset')]",
     "resourceGroup": "[resourceGroup().name]",
     "truncatedResourceGroup": "[take(replace(replace(resourceGroup().name, '(', '-'), ')', '-'), 63)]",
     "labelResourceGroup": "[if(or(or(endsWith(variables('truncatedResourceGroup'), '-'), endsWith(variables('truncatedResourceGroup'), '_')), endsWith(variables('truncatedResourceGroup'), '.')), concat(take(variables('truncatedResourceGroup'), 62), 'z'), variables('truncatedResourceGroup'))]",
@@ -162,10 +162,10 @@
     "virtualNetworkName": "[split(variables('vnetSubnetID'), '/')[variables('vnetNameResourceSegmentIndex')]]",
     "virtualNetworkResourceGroupName": "[split(variables('vnetSubnetID'), '/')[variables('vnetResourceGroupNameResourceSegmentIndex')]]",
   {{else}}
-    "subnetName": "[concat(parameters('orchestratorName'), '-subnet')]",
+    "subnetName": "[concat('{{GetClusterName}}', '-subnet')]",
     "vnetID": "[resourceId('Microsoft.Network/virtualNetworks',variables('virtualNetworkName'))]",
     "vnetSubnetID": "[concat(variables('vnetID'),'/subnets/',variables('subnetName'))]",
-    "virtualNetworkName": "[concat(parameters('orchestratorName'), '-vnet-', parameters('nameSuffix'))]",
+    "virtualNetworkName": "[concat('{{GetClusterName}}', '-vnet')]",
     "virtualNetworkResourceGroupName": "",
   {{end}}
 {{else}}
@@ -185,10 +185,10 @@
     "vnetSubnetID": "[concat(variables('vnetID'),'/subnets/subnetagent')]",
     "vnetSubnetIDMaster": "[concat(variables('vnetID'),'/subnets/subnetmaster')]",
     {{else}}
-    "subnetName": "[concat(parameters('orchestratorName'), '-subnet')]",
+    "subnetName": "[concat('{{GetClusterName}}', '-subnet')]",
     "vnetSubnetID": "[concat(variables('vnetID'),'/subnets/',variables('subnetName'))]",
     {{end}}
-    "virtualNetworkName": "[concat(parameters('orchestratorName'), '-vnet-', parameters('nameSuffix'))]",
+    "virtualNetworkName": "[concat('{{GetClusterName}}', '-vnet')]",
     "vnetID": "[resourceId('Microsoft.Network/virtualNetworks',variables('virtualNetworkName'))]",
     "virtualNetworkResourceGroupName": "''",
   {{end}}
@@ -200,17 +200,17 @@
 {{end}}
     "nsgID": "[resourceId('Microsoft.Network/networkSecurityGroups',variables('nsgName'))]",
 {{if AnyAgentUsesVirtualMachineScaleSets}}
-    "primaryScaleSetName": "[concat(parameters('orchestratorName'), '-{{ (index .AgentPoolProfiles 0).Name }}-',parameters('nameSuffix'), '-vmss')]",
+    "primaryScaleSetName": "[concat('{{GetClusterName}}', '-{{ (index .AgentPoolProfiles 0).Name }}-vmss')]",
     "primaryAvailabilitySetName": "",
     "vmType": "vmss",
 {{else}}
-    "primaryAvailabilitySetName": "[concat('{{ (index .AgentPoolProfiles 0).Name }}-availabilitySet-',parameters('nameSuffix'))]",
+    "primaryAvailabilitySetName": "[concat('{{GetClusterName}}', '-{{ (index .AgentPoolProfiles 0).Name }}-availabilityset')]",
     "primaryScaleSetName": "",
     "vmType": "standard",
 {{end}}
 {{if IsHostedMaster }}
     "kubernetesAPIServerIP": "[parameters('kubernetesEndpoint')]",
-    "agentNamePrefix": "[concat(parameters('orchestratorName'), '-agentpool-', parameters('nameSuffix'), '-')]",
+    "agentNamePrefix": "[concat('{{GetClusterName}}', '-agentpool-', parameters('nameSuffix'), '-')]",
 {{else}}
     {{if IsPrivateCluster}}
       "kubeconfigServer": "[concat('https://', variables('kubernetesAPIServerIP'), ':443')]",
@@ -228,17 +228,17 @@
           {{end}}
         {{end}}
     {{else}}
-        "masterPublicIPAddressName": "[concat(parameters('orchestratorName'), '-master-ip-', variables('masterFqdnPrefix'), '-', parameters('nameSuffix'))]",
+        "masterPublicIPAddressName": "[concat('{{GetClusterName}}', '-master-ip-', variables('masterFqdnPrefix'))]",
         "masterLbID": "[resourceId('Microsoft.Network/loadBalancers',variables('masterLbName'))]",
         "masterLbIPConfigID": "[concat(variables('masterLbID'),'/frontendIPConfigurations/', variables('masterLbIPConfigName'))]",
-        "masterLbIPConfigName": "[concat(parameters('orchestratorName'), '-master-lbFrontEnd-', parameters('nameSuffix'))]",
-        "masterLbName": "[concat(parameters('orchestratorName'), '-master-lb-', parameters('nameSuffix'))]",
+        "masterLbIPConfigName": "[concat('{{GetClusterName}}', '-master-lbFrontEnd-', parameters('nameSuffix'))]",
+        "masterLbName": "[concat('{{GetClusterName}}', '-master-lb')]",
         "kubeconfigServer": "[concat('https://', variables('masterFqdnPrefix'), '.', variables('location'), '.', parameters('fqdnEndpointSuffix'))]",
     {{end}}
       {{if gt .MasterProfile.Count 1}}
-        "masterInternalLbName": "[concat(parameters('orchestratorName'), '-master-internal-lb-', parameters('nameSuffix'))]",
+        "masterInternalLbName": "[concat('{{GetClusterName}}', '-master-internal-lb')]",
         "masterInternalLbID": "[resourceId('Microsoft.Network/loadBalancers',variables('masterInternalLbName'))]",
-        "masterInternalLbIPConfigName": "[concat(parameters('orchestratorName'), '-master-internal-lbFrontEnd-', parameters('nameSuffix'))]",
+        "masterInternalLbIPConfigName": "[concat('{{GetClusterName}}', '-master-internal-lb-frontend')]",
         "masterInternalLbIPConfigID": "[concat(variables('masterInternalLbID'),'/frontendIPConfigurations/', variables('masterInternalLbIPConfigName'))]",
         "masterInternalLbIPOffset": {{GetDefaultInternalLbStaticIPOffset}},
         {{if IsMasterVirtualMachineScaleSets}}
@@ -249,7 +249,7 @@
     {{else}}
       "kubernetesAPIServerIP": "[parameters('firstConsecutiveStaticIP')]",
     {{end}}
-    "masterLbBackendPoolName": "[concat(parameters('orchestratorName'), '-master-pool-', parameters('nameSuffix'))]",
+    "masterLbBackendPoolName": "[concat('{{GetClusterName}}', '-master-pool-', parameters('nameSuffix'))]",
     "masterFirstAddrComment": "these MasterFirstAddrComment are used to place multiple masters consecutively in the address space",
     "masterFirstAddrOctets": "[split(parameters('firstConsecutiveStaticIP'),'.')]",
     "masterFirstAddrOctet4": "[variables('masterFirstAddrOctets')[3]]",
