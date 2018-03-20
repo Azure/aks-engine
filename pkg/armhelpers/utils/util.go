@@ -17,17 +17,17 @@ import (
 
 const (
 	// TODO: merge with the RP code
-	k8sLinuxVMNamingFormat         = "^[0-9a-zA-Z]{3}-(.+)-([0-9a-fA-F]{8})-{0,2}([0-9]+)$"
-	k8sLinuxVMAgentPoolNameIndex   = 1
-	k8sLinuxVMAgentClusterIDIndex  = 2
+	k8sLinuxVMNamingFormat         = "^[0-9a-zA-Z]{3}-([0-9a-fA-F]{8})-(.+)-([0-9]+)$"
+	k8sLinuxVMAgentPoolNameIndex   = 2
+	k8sLinuxVMAgentClusterIDIndex  = 1
 	k8sLinuxVMAgentIndexArrayIndex = 3
 
 	// here there are 2 capture groups
 	//  the first is the agent pool name, which can contain -s
 	//  the second group is the Cluster ID for the cluster
-	vmssNamingFormat       = "^[0-9a-zA-Z]+-(.+)-([0-9a-fA-F]{8})-vmss$"
-	vmssAgentPoolNameIndex = 1
-	vmssClusterIDIndex     = 2
+	vmssNamingFormat       = "^[0-9a-zA-Z]+-([0-9a-fA-F]{8})-(.+)-vmss$"
+	vmssAgentPoolNameIndex = 2
+	vmssClusterIDIndex     = 1
 
 	k8sWindowsOldVMNamingFormat = "^([a-fA-F0-9]{5})([0-9a-zA-Z]{3})([9])([a-zA-Z0-9]{3,5})$"
 	k8sWindowsVMNamingFormat    = "^([a-fA-F0-9]{4})([0-9a-zA-Z]{3})([0-9]{3,8})$"
@@ -73,7 +73,7 @@ func SplitBlobURI(URI string) (string, string, string, error) {
 	return accountName, containerName, blobPath, nil
 }
 
-// K8sLinuxVMNameParts returns parts of Linux VM name e.g: k8s-agentpool1-11290731-0
+// K8sLinuxVMNameParts returns parts of Linux VM name e.g: k8s-11290731-agentpool1-0
 func K8sLinuxVMNameParts(vmName string) (poolIdentifier, nameSuffix string, agentIndex int, err error) {
 	vmNameParts := vmnameLinuxRegexp.FindStringSubmatch(vmName)
 	if len(vmNameParts) != 4 {
@@ -89,7 +89,7 @@ func K8sLinuxVMNameParts(vmName string) (poolIdentifier, nameSuffix string, agen
 	return vmNameParts[k8sLinuxVMAgentPoolNameIndex], vmNameParts[k8sLinuxVMAgentClusterIDIndex], vmNum, nil
 }
 
-// VmssNameParts returns parts of Linux VM name e.g: k8s-agentpool1-11290731-0
+// VmssNameParts returns parts of Linux VM name e.g: k8s-11129073-agentpool1-0
 func VmssNameParts(vmssName string) (poolIdentifier, nameSuffix string, err error) {
 	vmssNameParts := vmssnameRegexp.FindStringSubmatch(vmssName)
 	if len(vmssNameParts) != 3 {

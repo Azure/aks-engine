@@ -1312,7 +1312,7 @@
     "useInstanceMetadata": "false",
     "useManagedIdentityExtension": "false",
     "username": "[parameters('linuxAdminUsername')]",
-    "virtualNetworkName": "[concat(parameters('orchestratorName'), '-vnet-', parameters('nameSuffix'))]",
+    "virtualNetworkName": "[concat(parameters('orchestratorName'), '-vnet')]",
     "vmSizesMap": {
       "Standard_A0": {
         "storageAccountType": "Standard_LRS"

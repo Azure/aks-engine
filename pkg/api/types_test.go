@@ -8,10 +8,9 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/Azure/go-autorest/autorest/to"
-
 	"github.com/Azure/aks-engine/pkg/api/common"
 	"github.com/Azure/aks-engine/pkg/helpers"
+	"github.com/Azure/go-autorest/autorest/to"
 )
 
 const exampleCustomHyperkubeImage = `example.azurecr.io/example/hyperkube-amd64:custom`
@@ -1926,7 +1925,7 @@ func TestGetPrimaryAvailabilitySetName(t *testing.T) {
 		},
 	}
 
-	expected := "agentpool-availabilitySet-28513887"
+	expected := "k8s-28513887-agentpool-availabilityset"
 	got := p.GetPrimaryAvailabilitySetName()
 	if got != expected {
 		t.Errorf("expected primary availability set name %s, but got %s", expected, got)
@@ -1953,7 +1952,7 @@ func TestGetPrimaryScaleSetName(t *testing.T) {
 		},
 	}
 
-	expected := "k8s-agentpool-28513887-vmss"
+	expected := "k8s-28513887-agentpool-vmss"
 	got := p.GetPrimaryScaleSetName()
 	if got != expected {
 		t.Errorf("expected primary availability set name %s, but got %s", expected, got)
@@ -1981,10 +1980,18 @@ func TestGetRouteTableName(t *testing.T) {
 	}
 
 	actualRTName := p.GetRouteTableName()
-	expectedRTName := "aks-agentpool-28513887-routetable"
-
 	actualNSGName := p.GetNSGName()
-	expectedNSGName := "aks-agentpool-28513887-nsg"
+
+	var prefix string
+
+	if p.IsHostedMasterProfile() {
+		prefix = DefaultHostedProfileMasterName
+	} else {
+		prefix = DefaultOrchestratorName
+	}
+
+	expectedRTName := prefix + "-28513887-agentpool-routetable"
+	expectedNSGName := prefix + "-28513887-agentpool-nsg"
 
 	if actualRTName != expectedRTName {
 		t.Errorf("expected route table name %s, but got %s", expectedRTName, actualRTName)
@@ -2014,10 +2021,16 @@ func TestGetRouteTableName(t *testing.T) {
 	}
 
 	actualRTName = p.GetRouteTableName()
-	expectedRTName = "k8s-master-28513887-routetable"
-
 	actualNSGName = p.GetNSGName()
-	expectedNSGName = "k8s-master-28513887-nsg"
+
+	if p.IsHostedMasterProfile() {
+		prefix = DefaultHostedProfileMasterName
+	} else {
+		prefix = DefaultOrchestratorName
+	}
+
+	expectedRTName = prefix + "-28513887-master-routetable"
+	expectedNSGName = prefix + "-28513887-master-nsg"
 
 	if actualRTName != expectedRTName {
 		t.Errorf("expected route table name %s, but got %s", actualRTName, expectedRTName)
@@ -2054,7 +2067,7 @@ func TestGetSubnetName(t *testing.T) {
 					},
 				},
 			},
-			expectedSubnetName: "aks-subnet",
+			expectedSubnetName: DefaultHostedProfileMasterName + "-28513887-subnet",
 		},
 		{
 			name: "Cluster with HosterMasterProfile and custom VNET",
@@ -2099,7 +2112,7 @@ func TestGetSubnetName(t *testing.T) {
 					},
 				},
 			},
-			expectedSubnetName: "k8s-subnet",
+			expectedSubnetName: DefaultOrchestratorName + "-28513887-subnet",
 		},
 		{
 			name: "Cluster with MasterProfile and custom VNET",
@@ -2185,7 +2198,7 @@ func TestProperties_GetVirtualNetworkName(t *testing.T) {
 					},
 				},
 			},
-			expectedVirtualNetworkName: "aks-vnet-28513887",
+			expectedVirtualNetworkName: DefaultHostedProfileMasterName + "-28513887-vnet",
 		},
 	}
 
@@ -2270,22 +2283,22 @@ func TestProperties_GetClusterMetadata(t *testing.T) {
 		t.Errorf("expected VirtualNetworkName name %s, but got %s", expectedVirtualNetworkName, metadata.VirtualNetworkName)
 	}
 
-	expectedRouteTableName := "k8s-master-28513887-routetable"
+	expectedRouteTableName := "k8s-28513887-master-routetable"
 	if metadata.RouteTableName != expectedRouteTableName {
 		t.Errorf("expected RouteTableName name %s, but got %s", expectedVirtualNetworkName, metadata.RouteTableName)
 	}
 
-	expectedSecurityGroupName := "k8s-master-28513887-nsg"
+	expectedSecurityGroupName := "k8s-28513887-master-nsg"
 	if metadata.SecurityGroupName != expectedSecurityGroupName {
 		t.Errorf("expected SecurityGroupName name %s, but got %s", expectedSecurityGroupName, metadata.SecurityGroupName)
 	}
 
-	expectedPrimaryAvailabilitySetName := "agentpool-availabilitySet-28513887"
+	expectedPrimaryAvailabilitySetName := "k8s-28513887-agentpool-availabilityset"
 	if metadata.PrimaryAvailabilitySetName != expectedPrimaryAvailabilitySetName {
 		t.Errorf("expected PrimaryAvailabilitySetName name %s, but got %s", expectedPrimaryAvailabilitySetName, metadata.PrimaryAvailabilitySetName)
 	}
 
-	expectedPrimaryScaleSetName := "k8s-agentpool-28513887-vmss"
+	expectedPrimaryScaleSetName := "k8s-28513887-agentpool-vmss"
 	if metadata.PrimaryScaleSetName != expectedPrimaryScaleSetName {
 		t.Errorf("expected PrimaryScaleSetName name %s, but got %s", expectedPrimaryScaleSetName, metadata.PrimaryScaleSetName)
 	}
@@ -2437,7 +2450,7 @@ func TestGetAgentVMPrefix(t *testing.T) {
 					},
 				},
 			},
-			expectedVMPrefix: "k8s-agentpool-42378941-",
+			expectedVMPrefix: "k8s-42378941-agentpool-",
 		},
 		{
 			name: "Linux VMSS agent pool profile",
@@ -2467,7 +2480,7 @@ func TestGetAgentVMPrefix(t *testing.T) {
 					},
 				},
 			},
-			expectedVMPrefix: "k8s-agentpool-30819786-vmss",
+			expectedVMPrefix: "k8s-30819786-agentpool-vmss",
 		},
 		{
 			name: "Windows agent pool profile",
@@ -2671,7 +2684,7 @@ func TestProperties_GetMasterVMPrefix(t *testing.T) {
 	}
 
 	actual := p.GetMasterVMPrefix()
-	expected := "k8s-master-30819786-"
+	expected := "k8s-30819786-master-"
 
 	if actual != expected {
 		t.Errorf("expected master VM prefix %s, but got %s", expected, actual)

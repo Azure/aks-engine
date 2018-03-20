@@ -14,12 +14,11 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/Azure/go-autorest/autorest/to"
-
 	"github.com/Azure/aks-engine/pkg/api"
 	"github.com/Azure/aks-engine/pkg/api/common"
 	"github.com/Azure/aks-engine/pkg/helpers"
 	"github.com/Azure/aks-engine/pkg/i18n"
+	"github.com/Azure/go-autorest/autorest/to"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 )
@@ -880,6 +879,12 @@ func (t *TemplateGenerator) getTemplateFuncMap(cs *api.ContainerService) templat
 		},
 		"GetMasterVMPrefix": func() string {
 			return cs.Properties.GetMasterVMPrefix()
+		},
+		"GetClusterName": func() string {
+			return cs.Properties.GetClusterName()
+		},
+		"FormatResourceName": func(p string, t string, s string) string {
+			return cs.Properties.FormatResourceName(p, t, s)
 		},
 		"GetRouteTableName": func() string {
 			return cs.Properties.GetRouteTableName()

@@ -41,7 +41,7 @@ func Test_LinuxVMNameParts(t *testing.T) {
 	}
 
 	for _, el := range data {
-		vmName := fmt.Sprintf("k8s-%s-%s-%d", el.poolIdentifier, el.nameSuffix, el.agentIndex)
+		vmName := fmt.Sprintf("k8s-%s-%s-%d", el.nameSuffix, el.poolIdentifier, el.agentIndex)
 		poolIdentifier, nameSuffix, agentIndex, err := K8sLinuxVMNameParts(vmName)
 		if poolIdentifier != el.poolIdentifier {
 			t.Fatalf("incorrect poolIdentifier. expected=%s actual=%s", el.poolIdentifier, poolIdentifier)
@@ -68,7 +68,7 @@ func Test_VmssNameParts(t *testing.T) {
 	}
 
 	for _, el := range data {
-		vmssName := fmt.Sprintf("swarmm-%s-%s-vmss", el.poolIdentifier, el.nameSuffix)
+		vmssName := fmt.Sprintf("swarmm-%s-%s-vmss", el.nameSuffix, el.poolIdentifier)
 		poolIdentifier, nameSuffix, err := VmssNameParts(vmssName)
 		if err != nil {
 			t.Fatalf("unexpected error: %s", err)
@@ -116,7 +116,7 @@ func Test_WindowsVMNameParts(t *testing.T) {
 func Test_GetVMNameIndexLinux(t *testing.T) {
 	expectedAgentIndex := 65
 
-	agentIndex, err := GetVMNameIndex(compute.Linux, "k8s-agentpool1-38988164-65")
+	agentIndex, err := GetVMNameIndex(compute.Linux, "k8s-38988164-agentpool1-65")
 
 	if agentIndex != expectedAgentIndex {
 		t.Fatalf("incorrect agentIndex. expected=%d actual=%d", expectedAgentIndex, agentIndex)
@@ -175,7 +175,7 @@ func Test_GetK8sVMName(t *testing.T) {
 		expected                   string
 		expectedErr                bool
 	}{
-		{properties: p, agentPoolIndex: 0, agentIndex: 2, expected: "aks-linux1-28513887-2", expectedErr: false},
+		{properties: p, agentPoolIndex: 0, agentIndex: 2, expected: "aks-28513887-linux1-2", expectedErr: false},
 		{properties: p, agentPoolIndex: 1, agentIndex: 1, expected: "2851aks011", expectedErr: false},
 		{properties: p, agentPoolIndex: 3, agentIndex: 0, expected: "", expectedErr: true},
 	} {

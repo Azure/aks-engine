@@ -23,6 +23,8 @@ func getParameters(cs *api.ContainerService, generatorCode string, aksEngineVers
 	addValue(parametersMap, "aksEngineVersion", aksEngineVersion)
 
 	// Master Parameters
+	addValue(parametersMap, "clusterName", cs.Properties.ClusterName)
+	addValue(parametersMap, "clusterResourceNameTemplate", cs.Properties.ClusterResourceNameTemplate)
 	addValue(parametersMap, "location", location)
 
 	// Identify Master distro
