@@ -5,21 +5,6 @@ import (
 	"testing"
 )
 
-func TestIsDCOS(t *testing.T) {
-	dCOSProfile := &OrchestratorProfile{
-		OrchestratorType: "DCOS",
-	}
-	if !dCOSProfile.IsDCOS() {
-		t.Fatalf("unable to detect DCOS orchestrator profile from OrchestratorType=%s", dCOSProfile.OrchestratorType)
-	}
-	kubernetesProfile := &OrchestratorProfile{
-		OrchestratorType: "Kubernetes",
-	}
-	if kubernetesProfile.IsDCOS() {
-		t.Fatalf("unexpectedly detected DCOS orchestrator profile from OrchestratorType=%s", kubernetesProfile.OrchestratorType)
-	}
-}
-
 func TestMasterProfile(t *testing.T) {
 	MasterProfileText := "{\"count\" : 0}"
 	mp := &MasterProfile{}
@@ -49,7 +34,7 @@ func TestAgentPoolProfile(t *testing.T) {
 	}
 
 	// With osType specified
-	AgentPoolProfileText = `{ "name": "linuxpool1", "osType" : "Windows", "count": 1, "vmSize": "Standard_D2_v2", 
+	AgentPoolProfileText = `{ "name": "linuxpool1", "osType" : "Windows", "count": 1, "vmSize": "Standard_D2_v2",
 "availabilityProfile": "AvailabilitySet", "storageProfile" : "ManagedDisks", "vnetSubnetID" : "12345" }`
 	ap = &AgentPoolProfile{}
 	if e := json.Unmarshal([]byte(AgentPoolProfileText), ap); e != nil {
@@ -66,28 +51,9 @@ func TestAgentPoolProfile(t *testing.T) {
 }
 
 func TestOrchestratorProfile(t *testing.T) {
-	OrchestratorProfileText := `{ "orchestratorType": "Mesos" }`
+	OrchestratorProfileText := `{ "orchestratorType": "Kubernetes" }`
 	op := &OrchestratorProfile{}
 	if e := json.Unmarshal([]byte(OrchestratorProfileText), op); e != nil {
 		t.Fatalf("unexpectedly detected unmarshal failure for OrchestratorProfile, %+v", e)
-	}
-
-	OrchestratorProfileText = `{ "orchestratorType": "Swarm" }`
-	op = &OrchestratorProfile{}
-	if e := json.Unmarshal([]byte(OrchestratorProfileText), op); e != nil {
-		t.Fatalf("unexpectedly detected unmarshal failure for OrchestratorProfile, %+v", e)
-	}
-
-	OrchestratorProfileText = `{ "orchestratorType": "DCOS" }`
-	op = &OrchestratorProfile{}
-	if e := json.Unmarshal([]byte(OrchestratorProfileText), op); e != nil {
-		t.Fatalf("unexpectedly detected unmarshal failure for OrchestratorProfile, %+v", e)
-	}
-
-	OrchestratorProfileText = `{ "orchestratorType": "Kubernetes" }`
-	op = &OrchestratorProfile{}
-	if e := json.Unmarshal([]byte(OrchestratorProfileText), op); e != nil {
-		t.Fatalf("unexpectedly detected unmarshal failure for OrchestratorProfile, %+v", e)
-
 	}
 }

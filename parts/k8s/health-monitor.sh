@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # This script originated at https://github.com/kubernetes/kubernetes/blob/master/cluster/gce/gci/health-monitor.sh
-# and has been modified for acs-engine.
+# and has been modified for aks-engine.
 
 set -o nounset
 set -o pipefail

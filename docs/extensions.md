@@ -1,13 +1,13 @@
-# Microsoft Azure Container Service Engine - Extensions
+# Microsoft Azure Kubernetes Service Engine - Extensions
 
-Extensions in acs-engine provide an easy way for acs-engine users to add pre-packaged functionality into their cluster.  For example, an extension could configure a monitoring solution on an ACS cluster.  The user would not need to know the details of how to install the monitoring solution.  Rather, the user would simply add the extension into the extensionProfiles section of the template.
+Extensions in aks-engine provide an easy way for aks-engine users to add pre-packaged functionality into their cluster.  For example, an extension could configure a monitoring solution on an AKS cluster.  The user would not need to know the details of how to install the monitoring solution.  Rather, the user would simply add the extension into the extensionProfiles section of the template.
 
 # extensionProfiles
 
 The extensionProfiles contains the extensions that the cluster will install. The following illustrates a template with a hello-world-dcos extension.
 
 ``` javascript
-{ 
+{
   ...
   "extensionProfiles": [
     {
@@ -35,7 +35,7 @@ You normally would not provide a rootURL.  The extensions are normally loaded fr
 - Create a blob container called 'extensions'
 - Under 'extensions', create a folder called 'extension-one'
 - Under 'extension-one', create a folder called 'v1'
-- Under 'v1', upload your files (see Required Extension Files) 
+- Under 'v1', upload your files (see Required Extension Files)
 - Set the rootURL to: 'https://mystorageaccount.blob.core.windows.net/'
 
 # masterProfile
@@ -50,7 +50,7 @@ Extensions, in the current implementation run a script on a master node. The ext
       "osType": "Linux",
       "firstConsecutiveStaticIP": "10.240.255.5",
       "extensions": [
-        { 
+        {
           "name": "hello-world-k8s",
           "singleOrAll": "single"
         }
@@ -78,7 +78,7 @@ Or they can be referenced as a preprovision extension, this will run during clou
           "name": "hello-world",
           "singleOrAll": "All"
       }
-     
+
   },
   "extensionProfiles": [
     {
@@ -92,7 +92,7 @@ Or they can be referenced as a preprovision extension, this will run during clou
 ```
 |Name|Required|Description|
 |---|---|---|
-|name|yes|The name of the extension. This must match the name in the extensionProfiles| 
+|name|yes|The name of the extension. This must match the name in the extensionProfiles|
 
 # Required Extension Files
 
@@ -103,7 +103,7 @@ In order to install a preprovision extension, there are two required files - sup
 
 |File Name|Description|
 |-----------------------------|---|
-|supported-orchestrators.json |Defines what orchestrators are supported by the extension (Swarm, Dcos, OpenShift or Kubernetes)|
+|supported-orchestrators.json |Defines what orchestrators are supported by the extension (Kubernetes)|
 |template.json               |The ARM template used to deploy the extension|
 |template-link.json          |The ARM template snippet which will be injected into azuredeploy.json to call template.json|
 |EXTENSION-NAME.sh           |The script file that will execute on the VM itself via Custom Script Extension to perform installation of the extension|
@@ -120,7 +120,7 @@ The supported-orchestrators.json file is a simple one line file that contains th
 
 The template.json file is a linked template that will be called by the main cluster deployment template and must adhere to all the rules of a normal ARM template. All the necessary parameters needed from the azuredeploy.json file must be passed into this template and defined appropriately.
 
-Additional variables can be defined for use in creating additional resources. Additional resources can also be created.  The key resource for installing the extension is the custom script extension. 
+Additional variables can be defined for use in creating additional resources. Additional resources can also be created.  The key resource for installing the extension is the custom script extension.
 
 Modify the commandToExecute entry with the necessary command and paramters to install the desired extension. Replace EXTENSION-NAME with the name of the extension. The resource name of the custom script extension has to have the same name as the other custom script on the box as we aren't allowed to have two, this is also why we use a linked deployment so we can have the same resource twice and just make this one depend on the other so that it always runs after the provision extension is done.
 
@@ -130,7 +130,7 @@ The following is an example of the template.json file.
 {
    "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
    "contentVersion": "1.0.0.0",
-   "parameters": {  
+   "parameters": {
 		"apiVersionStorage": {
 			"type": "string",
 			"minLength": 1,
@@ -167,21 +167,21 @@ The following is an example of the template.json file.
 			}
 		}
    },
-   "variables": {  
+   "variables": {
 		"singleQuote": "'",
 		"sampleStorageAccountName": "[concat(uniqueString(concat(parameters('storageAccountBaseName'), 'sample')), 'aa')]"
-		"initScriptUrl": "https://raw.githubusercontent.com/Azure/acs-engine/master/extensions/EXTENSION-NAME/v1/EXTENSION-NAME.sh"
+		"initScriptUrl": "https://raw.githubusercontent.com/Azure/aks-engine/master/extensions/EXTENSION-NAME/v1/EXTENSION-NAME.sh"
    },
-   "resources": [  
+   "resources": [
 	{
-      "apiVersion": "[parameters('apiVersionStorage')]", 
-      "dependsOn": [], 
-      "location": "[resourceGroup().location]", 
-      "name": "[variables('sampleStorageAccountName')]", 
+      "apiVersion": "[parameters('apiVersionStorage')]",
+      "dependsOn": [],
+      "location": "[resourceGroup().location]",
+      "name": "[variables('sampleStorageAccountName')]",
       "properties": {
         "accountType": "Standard_LRS"
-      }, 
-      "type": "Microsoft.Storage/storageAccounts"	
+      },
+      "type": "Microsoft.Storage/storageAccounts"
 	}, {
       "apiVersion": "[parameters('apiVersionCompute')]",
       "dependsOn": [],
@@ -194,8 +194,8 @@ The following is an example of the template.json file.
         "typeHandlerVersion": "1.5",
         "autoUpgradeMinorVersion": true,
         "settings": {
-			"fileUris": [ 
-			   "[variables('initScriptUrl')]" 
+			"fileUris": [
+			   "[variables('initScriptUrl')]"
 			 ]
 		},
         "protectedSettings": {
@@ -207,10 +207,10 @@ The following is an example of the template.json file.
    "outputs": {  }
 }
 ```
- 
+
 # Creating extension template-link.json
 
-When acs-engine generates the azuredeploy.json file, this JSON snippet will be injected. This code calls the linked template (template.json) defined above.
+When aks-engine generates the azuredeploy.json file, this JSON snippet will be injected. This code calls the linked template (template.json) defined above.
 
 Any parameters from the main azuredeploy.json file that is needed by template.json must be passed in via the parameters section. The parameter, "extensionParameters" is an optional parameter that is passed in directly by the user in the **extensionProfiles** section as defined in an earlier section. This special parameter can be used to pass in information such as an activation key or access code (as an example). If the extension does not need this capability, this optional parameter can be deleted.
 
@@ -229,7 +229,7 @@ Replace "**EXTENSION-NAME**" with the name of the extension.
     "properties": {
         "mode": "Incremental",
         "templateLink": {
-            "uri": "https://raw.githubusercontent.com/Azure/acs-engine/master/extensions/EXTENSION-NAME/v1/template.json",
+            "uri": "https://raw.githubusercontent.com/Azure/aks-engine/master/extensions/EXTENSION-NAME/v1/template.json",
             "contentVersion": "1.0.0.0"
         },
         "parameters": {
@@ -292,7 +292,6 @@ echo $(date) " - Script complete"
 ```
 
 # Current list of extensions
-- [hello-world-dcos](../extensions/hello-world-dcos/README.md)
 - [hello-world-k8s](../extensions/hello-world-k8s/README.md)
 
 # Known issues

@@ -11,9 +11,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/Azure/acs-engine/pkg/api/common"
-	"github.com/Azure/acs-engine/pkg/helpers"
-	"github.com/blang/semver"
+	"github.com/Azure/aks-engine/pkg/api/common"
+	"github.com/Azure/aks-engine/pkg/helpers"
 	"github.com/pkg/errors"
 )
 
@@ -237,32 +236,6 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpdate bool) {
 		cs.setAPIServerConfig()
 		// Configure scheduler
 		cs.setSchedulerConfig()
-
-	case DCOS:
-		if o.DcosConfig == nil {
-			o.DcosConfig = &DcosConfig{}
-		}
-		dcosSemVer, _ := semver.Make(o.OrchestratorVersion)
-		dcosBootstrapSemVer, _ := semver.Make(common.DCOSVersion1Dot11Dot0)
-		if !dcosSemVer.LT(dcosBootstrapSemVer) {
-			if o.DcosConfig.BootstrapProfile == nil {
-				o.DcosConfig.BootstrapProfile = &BootstrapProfile{}
-			}
-			if len(o.DcosConfig.BootstrapProfile.VMSize) == 0 {
-				o.DcosConfig.BootstrapProfile.VMSize = "Standard_D2s_v3"
-			}
-		}
-	case OpenShift:
-		kc := a.OrchestratorProfile.OpenShiftConfig.KubernetesConfig
-		if kc == nil {
-			kc = &KubernetesConfig{}
-		}
-		if kc.ContainerRuntime == "" {
-			kc.ContainerRuntime = DefaultContainerRuntime
-		}
-		if kc.NetworkPlugin == "" {
-			kc.NetworkPlugin = DefaultNetworkPlugin
-		}
 	}
 }
 
@@ -281,8 +254,6 @@ func (p *Properties) setMasterProfileDefaults(isUpgrade bool) {
 	if p.MasterProfile.Distro == "" {
 		if p.OrchestratorProfile.IsKubernetes() {
 			p.MasterProfile.Distro = AKS
-		} else if !p.OrchestratorProfile.IsOpenShift() {
-			p.MasterProfile.Distro = Ubuntu
 		}
 	}
 	// set default to VMAS for now
@@ -316,34 +287,6 @@ func (p *Properties) setMasterProfileDefaults(isUpgrade bool) {
 						p.MasterProfile.FirstConsecutiveStaticIP = DefaultFirstConsecutiveKubernetesStaticIP
 					}
 				}
-			}
-		} else if p.OrchestratorProfile.OrchestratorType == OpenShift {
-			p.MasterProfile.Subnet = DefaultOpenShiftMasterSubnet
-			if !isUpgrade || len(p.MasterProfile.FirstConsecutiveStaticIP) == 0 {
-				p.MasterProfile.FirstConsecutiveStaticIP = DefaultOpenShiftFirstConsecutiveStaticIP
-			}
-		} else if p.OrchestratorProfile.OrchestratorType == DCOS {
-			p.MasterProfile.Subnet = DefaultDCOSMasterSubnet
-			// FirstConsecutiveStaticIP is not reset if it is upgrade and some value already exists
-			if !isUpgrade || len(p.MasterProfile.FirstConsecutiveStaticIP) == 0 {
-				p.MasterProfile.FirstConsecutiveStaticIP = DefaultDCOSFirstConsecutiveStaticIP
-			}
-			if p.OrchestratorProfile.DcosConfig != nil && p.OrchestratorProfile.DcosConfig.BootstrapProfile != nil {
-				if !isUpgrade || len(p.OrchestratorProfile.DcosConfig.BootstrapProfile.StaticIP) == 0 {
-					p.OrchestratorProfile.DcosConfig.BootstrapProfile.StaticIP = DefaultDCOSBootstrapStaticIP
-				}
-			}
-		} else if p.HasWindows() {
-			p.MasterProfile.Subnet = DefaultSwarmWindowsMasterSubnet
-			// FirstConsecutiveStaticIP is not reset if it is upgrade and some value already exists
-			if !isUpgrade || len(p.MasterProfile.FirstConsecutiveStaticIP) == 0 {
-				p.MasterProfile.FirstConsecutiveStaticIP = DefaultSwarmWindowsFirstConsecutiveStaticIP
-			}
-		} else {
-			p.MasterProfile.Subnet = DefaultMasterSubnet
-			// FirstConsecutiveStaticIP is not reset if it is upgrade and some value already exists
-			if !isUpgrade || len(p.MasterProfile.FirstConsecutiveStaticIP) == 0 {
-				p.MasterProfile.FirstConsecutiveStaticIP = DefaultFirstConsecutiveStaticIP
 			}
 		}
 	}
@@ -407,8 +350,7 @@ func (p *Properties) setAgentProfileDefaults(isUpgrade, isScale bool) {
 	if p.MasterProfile != nil && !p.MasterProfile.IsCustomVNET() {
 		subnetCounter := 0
 		for _, profile := range p.AgentPoolProfiles {
-			if p.OrchestratorProfile.OrchestratorType == Kubernetes ||
-				p.OrchestratorProfile.OrchestratorType == OpenShift {
+			if p.OrchestratorProfile.OrchestratorType == Kubernetes {
 				if !p.MasterProfile.IsVirtualMachineScaleSets() {
 					profile.Subnet = p.MasterProfile.Subnet
 				}
@@ -450,7 +392,7 @@ func (p *Properties) setAgentProfileDefaults(isUpgrade, isScale bool) {
 							profile.Distro = AKS
 						}
 					}
-				} else if !p.OrchestratorProfile.IsOpenShift() {
+				} else {
 					profile.Distro = Ubuntu
 				}
 				// Ensure distro is set properly for N Series SKUs, because
@@ -513,10 +455,6 @@ func (p *Properties) setHostedMasterProfileDefaults() {
 }
 
 func (p *Properties) setDefaultCerts() (bool, []net.IP, error) {
-	if p.MasterProfile != nil && p.OrchestratorProfile.OrchestratorType == OpenShift {
-		return setOpenShiftSetDefaultCerts(p, DefaultOpenshiftOrchestratorName, p.GetClusterID())
-	}
-
 	if p.MasterProfile == nil || p.OrchestratorProfile.OrchestratorType != Kubernetes {
 		return false, nil, nil
 	}

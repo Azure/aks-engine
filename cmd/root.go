@@ -6,10 +6,10 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/Azure/acs-engine/pkg/api"
-	"github.com/Azure/acs-engine/pkg/api/vlabs"
-	"github.com/Azure/acs-engine/pkg/armhelpers"
-	"github.com/Azure/acs-engine/pkg/helpers"
+	"github.com/Azure/aks-engine/pkg/api"
+	"github.com/Azure/aks-engine/pkg/api/vlabs"
+	"github.com/Azure/aks-engine/pkg/armhelpers"
+	"github.com/Azure/aks-engine/pkg/helpers"
 	"github.com/Azure/go-autorest/autorest/azure"
 	"github.com/pkg/errors"
 	uuid "github.com/satori/go.uuid"
@@ -20,9 +20,9 @@ import (
 )
 
 const (
-	rootName             = "acs-engine"
-	rootShortDescription = "ACS-Engine deploys and manages container orchestrators in Azure"
-	rootLongDescription  = "ACS-Engine deploys and manages Kubernetes, OpenShift, Swarm Mode, and DC/OS clusters in Azure"
+	rootName             = "aks-engine"
+	rootShortDescription = "AKS-Engine deploys and manages Kubernetes clusters in Azure"
+	rootLongDescription  = "AKS-Engine deploys and manages Kubernetes clusters in Azure"
 )
 
 var (
@@ -30,7 +30,7 @@ var (
 	dumpDefaultModel bool
 )
 
-// NewRootCmd returns the root command for ACS-Engine.
+// NewRootCmd returns the root command for AKS-Engine.
 func NewRootCmd() *cobra.Command {
 	rootCmd := &cobra.Command{
 		Use:   rootName,
@@ -61,7 +61,6 @@ func NewRootCmd() *cobra.Command {
 	rootCmd.AddCommand(newOrchestratorsCmd())
 	rootCmd.AddCommand(newUpgradeCmd())
 	rootCmd.AddCommand(newScaleCmd())
-	rootCmd.AddCommand(newDcosUpgradeCmd())
 	rootCmd.AddCommand(getCompletionCmd(rootCmd))
 
 	return rootCmd
@@ -87,7 +86,7 @@ func writeDefaultModel(out io.Writer) error {
 
 type authProvider interface {
 	getAuthArgs() *authArgs
-	getClient() (armhelpers.ACSEngineClient, error)
+	getClient() (armhelpers.AKSEngineClient, error)
 }
 
 type authArgs struct {
@@ -190,7 +189,7 @@ func getCloudSubFromAzConfig(cloud string, f *ini.File) (uuid.UUID, error) {
 	return uuid.FromString(sub.String())
 }
 
-func (authArgs *authArgs) getClient() (armhelpers.ACSEngineClient, error) {
+func (authArgs *authArgs) getClient() (armhelpers.AKSEngineClient, error) {
 	var client *armhelpers.AzureClient
 	env, err := azure.EnvironmentFromName(authArgs.RawAzureEnvironment)
 	if err != nil {
@@ -223,12 +222,12 @@ func getCompletionCmd(root *cobra.Command) *cobra.Command {
 		Short: "Generates bash completion scripts",
 		Long: `To load completion run
 
-	source <(acs-engine completion)
+	source <(aks-engine completion)
 
 	To configure your bash shell to load completions for each session, add this to your bashrc
 
 	# ~/.bashrc or ~/.profile
-	source <(acs-engine completion)
+	source <(aks-engine completion)
 	`,
 		Run: func(cmd *cobra.Command, args []string) {
 			root.GenBashCompletion(os.Stdout)

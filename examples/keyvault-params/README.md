@@ -1,8 +1,8 @@
-# Microsoft Azure Container Service Engine - Key vault referencing for k8s parameters
+# Microsoft Azure Kubernetes Service Engine - Key vault referencing for k8s parameters
 
 ## Overview
 
-ACS-Engine enables you to retrieve the following k8s deployment parameters from Microsoft Azure KeyVault:
+AKS Engine enables you to retrieve the following k8s deployment parameters from Microsoft Azure KeyVault:
 
 * certificateProfile
   * apiServerCertificate

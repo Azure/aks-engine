@@ -1,0 +1,196 @@
+<?xml version="1.0"?>
+<LCX SchemaVersion="6.0" Name="aksengine" PsrId="1" SrcCul="en-US" TgtCul="en-US" xmlns="http://schemas.microsoft.com/locstudio/2006/6/lcx">
+  <Item ItemType="0" ItemId="1" PsrId="1" Leaf="true">
+    <Str Cat="Text">
+      <Val><![CDATA[Error generating upgrade template: %s]]></Val>
+      <Tgt Cat="Text" Stat="Loc" Appr="PreApproved">
+        <Val><![CDATA[Error generating upgrade template: %s]]></Val>
+      </Tgt>
+    </Str>
+    <Disp Icon="Str" />
+  </Item>
+  <Item ItemType="0" ItemId="2" PsrId="1" Leaf="true">
+    <Str Cat="Text">
+      <Val><![CDATA[Error reading file %s, Error: %s]]></Val>
+      <Tgt Cat="Text" Stat="Loc" Appr="PreApproved">
+        <Val><![CDATA[Error reading file %s, Error: %s]]></Val>
+      </Tgt>
+    </Str>
+    <Disp Icon="Str" />
+  </Item>
+  <Item ItemType="0" ItemId="3" PsrId="1" Leaf="true">
+    <Str Cat="Text">
+      <Val><![CDATA[Error while querying ARM for resources: %+v]]></Val>
+      <Tgt Cat="Text" Stat="Loc" Appr="PreApproved">
+        <Val><![CDATA[Error while querying ARM for resources: %+v]]></Val>
+      </Tgt>
+    </Str>
+    <Disp Icon="Str" />
+  </Item>
+  <Item ItemType="0" ItemId="4" PsrId="1" Leaf="true">
+    <Str Cat="Text">
+      <Val><![CDATA[Found 2 resources with type %s in the template. There should only be 1]]></Val>
+      <Tgt Cat="Text" Stat="Loc" Appr="PreApproved">
+        <Val><![CDATA[Found 2 resources with type %s in the template. There should only be 1]]></Val>
+      </Tgt>
+    </Str>
+    <Disp Icon="Str" />
+  </Item>
+  <Item ItemType="0" ItemId="5" PsrId="1" Leaf="true">
+    <Str Cat="Text">
+      <Val><![CDATA[Found no resources with type %s in the template. There should have been 1]]></Val>
+      <Tgt Cat="Text" Stat="Loc" Appr="PreApproved">
+        <Val><![CDATA[Found no resources with type %s in the template. There should have been 1]]></Val>
+      </Tgt>
+    </Str>
+    <Disp Icon="Str" />
+  </Item>
+  <Item ItemType="0" ItemId="6" PsrId="1" Leaf="true">
+    <Str Cat="Text">
+      <Val><![CDATA[Node was not ready within %v]]></Val>
+      <Tgt Cat="Text" Stat="Loc" Appr="PreApproved">
+        <Val><![CDATA[Node was not ready within %v]]></Val>
+      </Tgt>
+    </Str>
+    <Disp Icon="Str" />
+  </Item>
+  <Item ItemType="0" ItemId="7" PsrId="1" Leaf="true">
+    <Str Cat="Text">
+      <Val><![CDATA[The selected orchestrator version '%s' is not supported]]></Val>
+      <Tgt Cat="Text" Stat="Loc" Appr="PreApproved">
+        <Val><![CDATA[The selected orchestrator version '%s' is not supported]]></Val>
+      </Tgt>
+    </Str>
+    <Disp Icon="Str" />
+  </Item>
+  <Item ItemType="0" ItemId="8" PsrId="1" Leaf="true">
+    <Str Cat="Text">
+      <Val><![CDATA[Total count of master VMs: %d exceeded expected count: %d]]></Val>
+      <Tgt Cat="Text" Stat="Loc" Appr="PreApproved">
+        <Val><![CDATA[Total count of master VMs: %d exceeded expected count: %d]]></Val>
+      </Tgt>
+    </Str>
+    <Disp Icon="Str" />
+  </Item>
+  <Item ItemType="0" ItemId="9" PsrId="1" Leaf="true">
+    <Str Cat="Text">
+      <Val><![CDATA[Upgrade to Kubernetes version %s is not supported]]></Val>
+      <Tgt Cat="Text" Stat="Loc" Appr="PreApproved">
+        <Val><![CDATA[Upgrade to Kubernetes version %s is not supported]]></Val>
+      </Tgt>
+    </Str>
+    <Disp Icon="Str" />
+  </Item>
+  <Item ItemType="0" ItemId="10" PsrId="1" Leaf="true">
+    <Str Cat="Text">
+      <Val><![CDATA[error creating directory '%s': %s]]></Val>
+      <Tgt Cat="Text" Stat="Loc" Appr="PreApproved">
+        <Val><![CDATA[error creating directory '%s': %s]]></Val>
+      </Tgt>
+    </Str>
+    <Disp Icon="Str" />
+  </Item>
+  <Item ItemType="0" ItemId="11" PsrId="1" Leaf="true">
+    <Str Cat="Text">
+      <Val><![CDATA[error executing template for file %s: %v]]></Val>
+      <Tgt Cat="Text" Stat="Loc" Appr="PreApproved">
+        <Val><![CDATA[error executing template for file %s: %v]]></Val>
+      </Tgt>
+    </Str>
+    <Disp Icon="Str" />
+  </Item>
+  <Item ItemType="0" ItemId="12" PsrId="1" Leaf="true">
+    <Str Cat="Text">
+      <Val><![CDATA[error generating upgrade template: %s]]></Val>
+      <Tgt Cat="Text" Stat="Loc" Appr="PreApproved">
+        <Val><![CDATA[error generating upgrade template: %s]]></Val>
+      </Tgt>
+    </Str>
+    <Disp Icon="Str" />
+  </Item>
+  <Item ItemType="0" ItemId="13" PsrId="1" Leaf="true">
+    <Str Cat="Text">
+      <Val><![CDATA[error parsing file %s: %v]]></Val>
+      <Tgt Cat="Text" Stat="Loc" Appr="PreApproved">
+        <Val><![CDATA[error parsing file %s: %v]]></Val>
+      </Tgt>
+    </Str>
+    <Disp Icon="Str" />
+  </Item>
+  <Item ItemType="0" ItemId="14" PsrId="1" Leaf="true">
+    <Str Cat="Text">
+      <Val><![CDATA[error reading file %s: %s]]></Val>
+      <Tgt Cat="Text" Stat="Loc" Appr="PreApproved">
+        <Val><![CDATA[error reading file %s: %s]]></Val>
+      </Tgt>
+    </Str>
+    <Disp Icon="Str" />
+  </Item>
+  <Item ItemType="0" ItemId="15" PsrId="1" Leaf="true">
+    <Str Cat="Text">
+      <Val><![CDATA[failed to initialize template generator: %s]]></Val>
+      <Tgt Cat="Text" Stat="Loc" Appr="PreApproved">
+        <Val><![CDATA[failed to initialize template generator: %s]]></Val>
+      </Tgt>
+    </Str>
+    <Disp Icon="Str" />
+  </Item>
+  <Item ItemType="0" ItemId="16" PsrId="1" Leaf="true">
+    <Str Cat="Text">
+      <Val><![CDATA[invalid version %s for conversion back from unversioned object]]></Val>
+      <Tgt Cat="Text" Stat="Loc" Appr="PreApproved">
+        <Val><![CDATA[invalid version %s for conversion back from unversioned object]]></Val>
+      </Tgt>
+    </Str>
+    <Disp Icon="Str" />
+  </Item>
+  <Item ItemType="0" ItemId="17" PsrId="1" Leaf="true">
+    <Str Cat="Text">
+      <Val><![CDATA[orchestrator '%s' is unsupported]]></Val>
+      <Tgt Cat="Text" Stat="Loc" Appr="PreApproved">
+        <Val><![CDATA[orchestrator '%s' is unsupported]]></Val>
+      </Tgt>
+    </Str>
+    <Disp Icon="Str" />
+  </Item>
+  <Item ItemType="0" ItemId="18" PsrId="1" Leaf="true">
+    <Str Cat="Text">
+      <Val><![CDATA[template file %s does not exist]]></Val>
+      <Tgt Cat="Text" Stat="Loc" Appr="PreApproved">
+        <Val><![CDATA[template file %s does not exist]]></Val>
+      </Tgt>
+    </Str>
+    <Disp Icon="Str" />
+  </Item>
+  <Item ItemType="0" ItemId="19" PsrId="1" Leaf="true">
+    <Str Cat="Text">
+      <Val><![CDATA[unrecognized APIVersion '%s']]></Val>
+      <Tgt Cat="Text" Stat="Loc" Appr="PreApproved">
+        <Val><![CDATA[unrecognized APIVersion '%s']]></Val>
+      </Tgt>
+    </Str>
+    <Disp Icon="Str" />
+  </Item>
+  <Item ItemType="0" ItemId="20" PsrId="1" Leaf="true">
+    <Str Cat="Text">
+      <Val><![CDATA[unrecognized APIVersion in LoadContainerServiceForAgentPoolOnlyCluster '%s']]></Val>
+      <Tgt Cat="Text" Stat="Loc" Appr="PreApproved">
+        <Val><![CDATA[unrecognized APIVersion in LoadContainerServiceForAgentPoolOnlyCluster '%s']]></Val>
+      </Tgt>
+    </Str>
+    <Disp Icon="Str" />
+  </Item>
+  <Item ItemType="0" ItemId="21" PsrId="1" Leaf="true">
+    <Str Cat="Text">
+      <Val><![CDATA[yaml file %s does not exist]]></Val>
+      <Tgt Cat="Text" Stat="Loc" Appr="PreApproved">
+        <Val><![CDATA[yaml file %s does not exist]]></Val>
+      </Tgt>
+    </Str>
+    <Disp Icon="Str" />
+  </Item>
+  <OwnedComments>
+    <Cmt Name="LcxAdmin" />
+  </OwnedComments>
+  <Settings Name="@vsLocTools@\current\default.lss" Type="Lss" />
+</LCX>

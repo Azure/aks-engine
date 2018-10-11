@@ -1,7 +1,7 @@
 package fake
 
 import (
-	"github.com/Azure/acs-engine/pkg/i18n"
+	"github.com/Azure/aks-engine/pkg/i18n"
 	"github.com/leonelquinteros/gotext"
 )
 
@@ -12,7 +12,7 @@ import (
 // 4. msginit -l en_US -o i18ntestinput.po -i i18ntestinput.pot
 // 5. Modify i18ntestinput.po using poedit as necessary
 // Or msgfmt -c -v -o i18ntestinput.mo i18ntestinput.po
-// 6. for d in "en_US"; do cp i18ntestinput.mo translations/test/$d/LC_MESSAGES/acsengine.mo; cp i18ntestinput.po translations/test/$d/LC_MESSAGES/acsengine.po; done
+// 6. for d in "en_US"; do cp i18ntestinput.mo translations/test/$d/LC_MESSAGES/aksengine.mo; cp i18ntestinput.po translations/test/$d/LC_MESSAGES/aksengine.po; done
 // 7. rm i18ntestinput.*
 
 var (

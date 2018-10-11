@@ -4,7 +4,7 @@ Prow is a CI system that offers various features such as rich Github automation,
 and running tests in Jenkins or on a Kubernetes cluster. You can read more about
 Prow in [upstream docs][0].
 
-## acs-engine setup
+## aks-engine setup
 
 Prow is optimized to run as a Kubernetes application. There are some pre-installation
 steps that need to happen in a new Kubernetes cluster before deploying Prow. These

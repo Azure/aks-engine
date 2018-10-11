@@ -4,7 +4,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/Azure/acs-engine/pkg/api/common"
+	"github.com/Azure/aks-engine/pkg/api/common"
 	"github.com/pkg/errors"
 	"gopkg.in/go-playground/validator.v9"
 )

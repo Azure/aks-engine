@@ -5,7 +5,7 @@ import (
 	"os"
 	"path"
 
-	"github.com/Azure/acs-engine/pkg/i18n"
+	"github.com/Azure/aks-engine/pkg/i18n"
 	log "github.com/sirupsen/logrus"
 )
 

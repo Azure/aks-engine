@@ -1,9 +1,0 @@
-{
-  "deployments": [
-    {
-      "cluster_definition": "dcos.json",
-      "category": "canary",
-      "location": "eastus2euap"
-    }
-  ]
-}

@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/Azure/acs-engine/pkg/armhelpers"
-	"github.com/Azure/acs-engine/pkg/armhelpers/utils"
+	"github.com/Azure/aks-engine/pkg/armhelpers"
+	"github.com/Azure/aks-engine/pkg/armhelpers/utils"
 	azStorage "github.com/Azure/azure-sdk-for-go/storage"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
@@ -17,7 +17,7 @@ const (
 )
 
 // CleanDeleteVirtualMachine deletes a VM and any associated OS disk
-func CleanDeleteVirtualMachine(az armhelpers.ACSEngineClient, logger *log.Entry, subscriptionID, resourceGroup, name string) error {
+func CleanDeleteVirtualMachine(az armhelpers.AKSEngineClient, logger *log.Entry, subscriptionID, resourceGroup, name string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), armhelpers.DefaultARMOperationTimeout)
 	defer cancel()
 	logger.Infof("fetching VM: %s/%s", resourceGroup, name)

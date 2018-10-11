@@ -1,16 +1,16 @@
 # Using a custom virtual network with Azure Container Service
-In this tutorial you are going to learn how to use [ACS Engine](https://github.com/Azure/acs-engine) to deploy a brand new cluster into an existing or pre-created virtual network.
+In this tutorial you are going to learn how to use [AKS Engine](https://github.com/Azure/aks-engine) to deploy a brand new cluster into an existing or pre-created virtual network.
 By doing this, you will be able to control the properties of the virtual network or integrate a new cluster into your existing infrastructure.
 
-*Note: This article describes the procedure with Docker Swarm but it will work in the exact same way with the all the orchestrators available with ACS Engine: Docker Swarm, Kubernetes and DC/OS.*
+*Note: This article describes the procedure with Docker Swarm but it will work in the exact same way with the all the orchestrators available with AKS Engine: Kubernetes.*
 
-*For Kubernetes, the cluster should be deployed in the same resource group as the virtual network and the service principal you use for the cluster needs permissions on the VNET resource's group too. Custom VNET for Kubernetes Windows cluster has a [known issue](https://github.com/Azure/acs-engine/issues/1767).*
+*For Kubernetes, the cluster should be deployed in the same resource group as the virtual network and the service principal you use for the cluster needs permissions on the VNET resource's group too. Custom VNET for Kubernetes Windows cluster has a [known issue](https://github.com/Azure/aks-engine/issues/1767).*
 
 ## Prerequisites
 You can run this walkthrough on OS X, Windows, or Linux.
 - You need an Azure subscription. If you don't have one, you can [sign up for an account](https://azure.microsoft.com/).
 - Install the [Azure CLI 2.0](/cli/azure/install-az-cli2).
-- Install the [ACS Engine](https://github.com/Azure/acs-engine/blob/master/docs/acsengine.md)
+- Install the [AKS Engine](https://github.com/Azure/aks-engine/blob/master/docs/aksengine.md)
 
 ## Create the virtual network
 *You need a virtual network before creating the new cluster. If you already have one, you can skip this step.*
@@ -78,12 +78,12 @@ az group deployment create -g acs-custom-vnet --name "CustomVNet" --template-fil
 Once the deployment is completed you should see the virtual network in the resource group.
 
 
-## Create the template for ACS Engine
-ACS Engine uses a JSON template in input and generates the ARM template and ARM parameters files in output.
+## Create the template for AKS Engine
+AKS Engine uses a JSON template in input and generates the ARM template and ARM parameters files in output.
 
 Depending on the orchestrator you want to deploy, the number of agent pools, the machine size you want (etc.) this input template could differ from the one we are going to detail here.
 
-There are a lot of examples available on the [ACS Engine GitHub](https://github.com/Azure/acs-engine/tree/master/examples) and you can find [one dedicated for virtual network](https://github.com/Azure/acs-engine/blob/master/examples/vnet/README.md).
+There are a lot of examples available on the [AKS Engine GitHub](https://github.com/Azure/aks-engine/tree/master/examples) and you can find [one dedicated for virtual network](https://github.com/Azure/aks-engine/blob/master/examples/vnet/README.md).
 
 In this case, we are going to use the following template:
 
@@ -140,10 +140,10 @@ As you can see, for all node pools definition (master or agents) you can use the
 *Note: Make sure the the vnetSubnetId matches with your subnet, by giving your **SUBSCRIPTION_ID**, **RESOURCE_GROUP_NAME**, virtual network and subnet names. You also need to fill DNS prefix for all the public pools you want to create, give an SSH keys...*
 
 ## Generate the cluster Azure Resource Manager template
-Once your are ready with the cluster definition file, you can use ACS Engine to generate the ARM template that will be used to deploy the cluster on Azure:
+Once your are ready with the cluster definition file, you can use AKS Engine to generate the ARM template that will be used to deploy the cluster on Azure:
 
 ```bash
-acs-engine azuredeploy.swarm.clusterdefinition.json
+aks-engine azuredeploy.swarm.clusterdefinition.json
 ```
 
 This command will output three files:
@@ -152,15 +152,15 @@ This command will output three files:
 wrote _output/Swarm-12652785/apimodel.json
 wrote _output/Swarm-12652785/azuredeploy.json
 wrote _output/Swarm-12652785/azuredeploy.parameters.json
-acsengine took 37.1384ms
+aksengine took 37.1384ms
 ```
 
-- apimodel.json: this is the cluster definition file you gave to ACS Engine
+- apimodel.json: this is the cluster definition file you gave to AKS Engine
 - azuredeploy.json: this is the Azure Resource Manager JSON template that you are going to use to deploy the cluster
 - azuredeploy.parameters.json: this is the parameters file that you are going to use to deploy the cluster
 
 ## Deploy the Azure Container Service cluster
-Now that you have generated the ARM templates and its parameters file using ACS Engine, you can use Azure CLI 2.0 to start the deployment of the cluster:
+Now that you have generated the ARM templates and its parameters file using AKS Engine, you can use Azure CLI 2.0 to start the deployment of the cluster:
 
 ```bash
 az group deployment create -g acs-custom-vnet --name "ClusterDeployment" --template-file azuredeploy.json --parameters "@azuredeploy.parameters.json"

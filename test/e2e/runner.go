@@ -8,12 +8,11 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/Azure/acs-engine/test/e2e/azure"
-	"github.com/Azure/acs-engine/test/e2e/config"
-	"github.com/Azure/acs-engine/test/e2e/engine"
-	"github.com/Azure/acs-engine/test/e2e/metrics"
-	outil "github.com/Azure/acs-engine/test/e2e/openshift/util"
-	"github.com/Azure/acs-engine/test/e2e/runner"
+	"github.com/Azure/aks-engine/test/e2e/azure"
+	"github.com/Azure/aks-engine/test/e2e/config"
+	"github.com/Azure/aks-engine/test/e2e/engine"
+	"github.com/Azure/aks-engine/test/e2e/metrics"
+	"github.com/Azure/aks-engine/test/e2e/runner"
 )
 
 var (
@@ -63,8 +62,8 @@ func main() {
 
 	// Soak test specific setup
 	if cfg.SoakClusterName != "" {
-		sa.Name = "acsesoaktests" + cfg.Location
-		sa.ResourceGroup.Name = "acse-test-infrastructure-storage"
+		sa.Name = "aksesoaktests" + cfg.Location
+		sa.ResourceGroup.Name = "akse-test-infrastructure-storage"
 		sa.ResourceGroup.Location = cfg.Location
 		err = sa.CreateStorageAccount()
 		if err != nil {
@@ -195,24 +194,6 @@ func teardown() {
 		err = cliProvisioner.FetchProvisioningMetrics(logsPath, cfg, acct)
 		if err != nil {
 			log.Printf("cliProvisioner.FetchProvisioningMetrics error: %s\n", err)
-		}
-	}
-	if cliProvisioner.Config.IsOpenShift() {
-		sshKeyPath := cfg.GetSSHKeyPath()
-		adminName := eng.ClusterDefinition.Properties.LinuxProfile.AdminUsername
-		version := eng.Config.OrchestratorVersion
-		distro := eng.Config.Distro
-		if err := outil.FetchWaagentLogs(sshKeyPath, adminName, cfg.Name, cfg.Location, logsPath); err != nil {
-			log.Printf("cannot fetch waagent logs: %v", err)
-		}
-		if err := outil.FetchOpenShiftLogs(distro, version, sshKeyPath, adminName, cfg.Name, cfg.Location, logsPath); err != nil {
-			log.Printf("cannot get openshift logs: %v", err)
-		}
-		if err := outil.FetchClusterInfo(logsPath); err != nil {
-			log.Printf("cannot get pod and node info: %v", err)
-		}
-		if err := outil.FetchOpenShiftMetrics(logsPath); err != nil {
-			log.Printf("cannot fetch openshift metrics: %v", err)
 		}
 	}
 	if !cfg.SkipLogsCollection {

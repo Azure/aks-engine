@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"math/rand"
@@ -12,35 +13,24 @@ import (
 	"strings"
 	"time"
 
-	"github.com/leonelquinteros/gotext"
-	log "github.com/sirupsen/logrus"
-	"github.com/spf13/cobra"
-
-	"encoding/json"
-
-	"github.com/Azure/acs-engine/pkg/acsengine"
-	"github.com/Azure/acs-engine/pkg/acsengine/transform"
-	"github.com/Azure/acs-engine/pkg/api"
-	"github.com/Azure/acs-engine/pkg/armhelpers"
-	"github.com/Azure/acs-engine/pkg/helpers"
-	"github.com/Azure/acs-engine/pkg/i18n"
+	"github.com/Azure/aks-engine/pkg/api"
+	"github.com/Azure/aks-engine/pkg/armhelpers"
+	"github.com/Azure/aks-engine/pkg/engine"
+	"github.com/Azure/aks-engine/pkg/engine/transform"
+	"github.com/Azure/aks-engine/pkg/helpers"
+	"github.com/Azure/aks-engine/pkg/i18n"
 	"github.com/Azure/azure-sdk-for-go/services/graphrbac/1.6/graphrbac"
 	"github.com/Azure/go-autorest/autorest/to"
+	"github.com/leonelquinteros/gotext"
 	"github.com/pkg/errors"
+	log "github.com/sirupsen/logrus"
+	"github.com/spf13/cobra"
 )
 
 const (
 	deployName             = "deploy"
 	deployShortDescription = "Deploy an Azure Resource Manager template"
 	deployLongDescription  = "Deploy an Azure Resource Manager template, parameters file and other assets for a cluster"
-
-	// aadServicePrincipal is a hard-coded service principal which represents
-	// Azure Active Dirctory (see az ad sp list)
-	aadServicePrincipal = "00000002-0000-0000-c000-000000000000"
-
-	// aadPermissionUserRead is the User.Read hard-coded permission on
-	// aadServicePrincipal (see az ad sp list)
-	aadPermissionUserRead = "311a71cc-e848-46a1-bdf8-97ff7156d8e6"
 )
 
 type deployCmd struct {
@@ -60,7 +50,7 @@ type deployCmd struct {
 	apiVersion       string
 	locale           *gotext.Locale
 
-	client        armhelpers.ACSEngineClient
+	client        armhelpers.AKSEngineClient
 	resourceGroup string
 	random        *rand.Rand
 	location      string
@@ -323,22 +313,6 @@ func autofillApimodel(dc *deployCmd) error {
 			appURL := fmt.Sprintf("https://%s/", appName)
 			var replyURLs *[]string
 			var requiredResourceAccess *[]graphrbac.RequiredResourceAccess
-			if dc.containerService.Properties.OrchestratorProfile.OrchestratorType == api.OpenShift {
-				appName = fmt.Sprintf("%s.%s.cloudapp.azure.com", appName, dc.containerService.Properties.AzProfile.Location)
-				appURL = fmt.Sprintf("https://%s:8443/", appName)
-				replyURLs = to.StringSlicePtr([]string{fmt.Sprintf("https://%s:8443/oauth2callback/Azure%%20AD", appName)})
-				requiredResourceAccess = &[]graphrbac.RequiredResourceAccess{
-					{
-						ResourceAppID: to.StringPtr(aadServicePrincipal),
-						ResourceAccess: &[]graphrbac.ResourceAccess{
-							{
-								ID:   to.StringPtr(aadPermissionUserRead),
-								Type: to.StringPtr("Scope"),
-							},
-						},
-					},
-				}
-			}
 			applicationResp, servicePrincipalObjectID, secret, err := dc.client.CreateApp(ctx, appName, appURL, replyURLs, requiredResourceAccess)
 			if err != nil {
 				return errors.Wrap(err, "apimodel invalid: ServicePrincipalProfile was empty, and we failed to create valid credentials")
@@ -394,13 +368,13 @@ func (dc *deployCmd) validateApimodel() (*api.ContainerService, string, error) {
 }
 
 func (dc *deployCmd) run() error {
-	ctx := acsengine.Context{
+	ctx := engine.Context{
 		Translator: &i18n.Translator{
 			Locale: dc.locale,
 		},
 	}
 
-	templateGenerator, err := acsengine.InitializeTemplateGenerator(ctx)
+	templateGenerator, err := engine.InitializeTemplateGenerator(ctx)
 	if err != nil {
 		log.Fatalf("failed to initialize template generator: %s", err.Error())
 	}
@@ -411,7 +385,7 @@ func (dc *deployCmd) run() error {
 		os.Exit(1)
 	}
 
-	template, parameters, err := templateGenerator.GenerateTemplate(dc.containerService, acsengine.DefaultGeneratorCode, BuildTag)
+	template, parameters, err := templateGenerator.GenerateTemplate(dc.containerService, engine.DefaultGeneratorCode, BuildTag)
 	if err != nil {
 		log.Fatalf("error generating template %s: %s", dc.apimodelPath, err.Error())
 		os.Exit(1)
@@ -425,7 +399,7 @@ func (dc *deployCmd) run() error {
 		log.Fatalf("error pretty printing template parameters: %s \n", err.Error())
 	}
 
-	writer := &acsengine.ArtifactWriter{
+	writer := &engine.ArtifactWriter{
 		Translator: &i18n.Translator{
 			Locale: dc.locale,
 		},
@@ -464,11 +438,6 @@ func (dc *deployCmd) run() error {
 			log.Errorf(string(body))
 		}
 		log.Fatalln(err)
-	}
-
-	if dc.containerService.Properties.OrchestratorProfile.OrchestratorType == api.OpenShift {
-		// TODO: when the Azure client library is updated, read this from the template `masterFQDN` output
-		fmt.Printf("OpenShift web UI available at https://%s.%s.cloudapp.azure.com:8443/\n", dc.containerService.Properties.MasterProfile.DNSPrefix, dc.location)
 	}
 
 	return nil

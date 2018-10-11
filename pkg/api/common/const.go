@@ -2,18 +2,8 @@ package common
 
 // the orchestrators supported
 const (
-	// Mesos is the string constant for MESOS orchestrator type
-	Mesos string = "Mesos"
-	// DCOS is the string constant for DCOS orchestrator type and defaults to DCOS188
-	DCOS string = "DCOS"
-	// Swarm is the string constant for the Swarm orchestrator type
-	Swarm string = "Swarm"
 	// Kubernetes is the string constant for the Kubernetes orchestrator type
 	Kubernetes string = "Kubernetes"
-	// SwarmMode is the string constant for the Swarm Mode orchestrator type
-	SwarmMode string = "SwarmMode"
-	// OpenShift is the string constant for the OpenShift orchestrator type
-	OpenShift string = "OpenShift"
 )
 
 // validation values
@@ -60,66 +50,3 @@ const (
 	// KubernetesDefaultReleaseWindows is the default Kubernetes release
 	KubernetesDefaultReleaseWindows string = "1.9"
 )
-
-const (
-	// DCOSVersion1Dot11Dot2 is the major.minor.patch string for 1.11.0 versions of DCOS
-	DCOSVersion1Dot11Dot2 string = "1.11.2"
-	// DCOSVersion1Dot11Dot0 is the major.minor.patch string for 1.11.0 versions of DCOS
-	DCOSVersion1Dot11Dot0 string = "1.11.0"
-	// DCOSVersion1Dot10Dot0 is the major.minor.patch string for 1.10.0 versions of DCOS
-	DCOSVersion1Dot10Dot0 string = "1.10.0"
-	// DCOSVersion1Dot9Dot0 is the major.minor.patch string for 1.9.0 versions of DCOS
-	DCOSVersion1Dot9Dot0 string = "1.9.0"
-	// DCOSVersion1Dot9Dot8 is the major.minor.patch string for 1.9.8 versions of DCOS
-	DCOSVersion1Dot9Dot8 string = "1.9.8"
-	// DCOSVersion1Dot8Dot8 is the major.minor.patch string for 1.8.8 versions of DCOS
-	DCOSVersion1Dot8Dot8 string = "1.8.8"
-	// DCOSDefaultVersion is the default major.minor.patch version for DCOS
-	DCOSDefaultVersion string = DCOSVersion1Dot11Dot0
-)
-
-// AllDCOSSupportedVersions maintain a list of available dcos versions in acs-engine
-var AllDCOSSupportedVersions = []string{
-	DCOSVersion1Dot11Dot2,
-	DCOSVersion1Dot11Dot0,
-	DCOSVersion1Dot10Dot0,
-	DCOSVersion1Dot9Dot8,
-	DCOSVersion1Dot9Dot0,
-	DCOSVersion1Dot8Dot8,
-}
-
-const (
-	// OpenShiftVersion3Dot9Dot0 is the major.minor.patch string for the 3.9.0 version of OpenShift
-	OpenShiftVersion3Dot9Dot0 string = "3.9.0"
-	// OpenShiftVersionUnstable is used for development in acs-engine and should not be used by end-users.
-	OpenShiftVersionUnstable string = "unstable"
-	// OpenShiftDefaultVersion is the default major.minor.patch version for OpenShift
-	OpenShiftDefaultVersion string = OpenShiftVersion3Dot9Dot0
-)
-
-const (
-	// SwarmVersion is the Swarm orchestrator version
-	SwarmVersion = "swarm:1.1.0"
-	// DockerCEVersion is the DockerCE orchestrator version
-	DockerCEVersion = "17.03.*"
-)
-
-// GetAllSupportedDCOSVersions returns a slice of all supported DCOS versions.
-func GetAllSupportedDCOSVersions() []string {
-	return AllDCOSSupportedVersions
-}
-
-// GetAllSupportedOpenShiftVersions returns a slice of all supported OpenShift versions.
-func GetAllSupportedOpenShiftVersions() []string {
-	return []string{OpenShiftVersion3Dot9Dot0, OpenShiftVersionUnstable}
-}
-
-// GetAllSupportedSwarmVersions returns a slice of all supported Swarm versions.
-func GetAllSupportedSwarmVersions() []string {
-	return []string{SwarmVersion}
-}
-
-// GetAllSupportedDockerCEVersions returns a slice of all supported Docker CE versions.
-func GetAllSupportedDockerCEVersions() []string {
-	return []string{DockerCEVersion}
-}

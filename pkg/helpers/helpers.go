@@ -12,7 +12,7 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/Azure/acs-engine/pkg/i18n"
+	"github.com/Azure/aks-engine/pkg/i18n"
 	"golang.org/x/crypto/ssh"
 )
 

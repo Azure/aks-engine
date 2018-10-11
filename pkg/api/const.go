@@ -2,18 +2,8 @@ package api
 
 // the orchestrators supported by vlabs
 const (
-	// Mesos is the string constant for MESOS orchestrator type
-	Mesos string = "Mesos"
-	// DCOS is the string constant for DCOS orchestrator type and defaults to DCOS188
-	DCOS string = "DCOS"
-	// Swarm is the string constant for the Swarm orchestrator type
-	Swarm string = "Swarm"
 	// Kubernetes is the string constant for the Kubernetes orchestrator type
 	Kubernetes string = "Kubernetes"
-	// SwarmMode is the string constant for the Swarm Mode orchestrator type
-	SwarmMode string = "SwarmMode"
-	// OpenShift is the string constant for the OpenShift orchestrator type
-	OpenShift string = "OpenShift"
 )
 
 // the OSTypes supported by vlabs
@@ -29,20 +19,9 @@ const (
 	CoreOS          Distro = "coreos"
 	AKS             Distro = "aks"
 	AKSDockerEngine Distro = "aks-docker-engine"
-	// Supported distros by OpenShift
-	OpenShift39RHEL Distro = "openshift39_rhel"
-	OpenShiftCentOS Distro = "openshift39_centos"
 )
 
 const (
-	// SwarmVersion is the Swarm orchestrator version
-	SwarmVersion = "swarm:1.1.0"
-	// SwarmDockerComposeVersion is the Docker Compose version
-	SwarmDockerComposeVersion = "1.6.2"
-	// DockerCEVersion is the DockerCE orchestrator version
-	DockerCEVersion = "17.03.*"
-	// DockerCEDockerComposeVersion is the Docker Compose version
-	DockerCEDockerComposeVersion = "1.14.0"
 	// KubernetesWindowsDockerVersion is the default version for docker on Windows nodes in kubernetes
 	KubernetesWindowsDockerVersion = "18.09.0"
 )
@@ -67,8 +46,6 @@ const (
 	AvailabilitySet = "AvailabilitySet"
 	// DefaultOrchestratorName specifies the 3 character orchestrator code of the cluster template and affects resource naming.
 	DefaultOrchestratorName = "k8s"
-	// DefaultOpenshiftOrchestratorName specifies the 3 character orchestrator code of the cluster template and affects resource naming.
-	DefaultOpenshiftOrchestratorName = "ocp"
 	// DefaultHostedProfileMasterName specifies the 3 character orchestrator code of the clusters with hosted master profiles.
 	DefaultHostedProfileMasterName = "aks"
 	// DefaultFirstConsecutiveKubernetesStaticIP specifies the static IP address on Kubernetes master 0
@@ -107,43 +84,40 @@ const (
 	ManagedDisks = "ManagedDisks"
 )
 
-// To identify programmatically generated public agent pools
-const publicAgentPoolSuffix = "-public"
-
 const (
-	// DefaultTillerAddonEnabled determines the acs-engine provided default for enabling tiller addon
+	// DefaultTillerAddonEnabled determines the aks-engine provided default for enabling tiller addon
 	DefaultTillerAddonEnabled = true
-	// DefaultAADPodIdentityAddonEnabled determines the acs-engine provided default for enabling aad-pod-identity addon
+	// DefaultAADPodIdentityAddonEnabled determines the aks-engine provided default for enabling aad-pod-identity addon
 	DefaultAADPodIdentityAddonEnabled = false
-	// DefaultACIConnectorAddonEnabled determines the acs-engine provided default for enabling aci connector addon
+	// DefaultACIConnectorAddonEnabled determines the aks-engine provided default for enabling aci connector addon
 	DefaultACIConnectorAddonEnabled = false
-	// DefaultClusterAutoscalerAddonEnabled determines the acs-engine provided default for enabling cluster autoscaler addon
+	// DefaultClusterAutoscalerAddonEnabled determines the aks-engine provided default for enabling cluster autoscaler addon
 	DefaultClusterAutoscalerAddonEnabled = false
-	// DefaultBlobfuseFlexVolumeAddonEnabled determines the acs-engine provided default for enabling blobfuse flexvolume addon
+	// DefaultBlobfuseFlexVolumeAddonEnabled determines the aks-engine provided default for enabling blobfuse flexvolume addon
 	DefaultBlobfuseFlexVolumeAddonEnabled = true
-	// DefaultSMBFlexVolumeAddonEnabled determines the acs-engine provided default for enabling smb flexvolume addon
+	// DefaultSMBFlexVolumeAddonEnabled determines the aks-engine provided default for enabling smb flexvolume addon
 	DefaultSMBFlexVolumeAddonEnabled = true
-	// DefaultKeyVaultFlexVolumeAddonEnabled determines the acs-engine provided default for enabling key vault flexvolume addon
+	// DefaultKeyVaultFlexVolumeAddonEnabled determines the aks-engine provided default for enabling key vault flexvolume addon
 	DefaultKeyVaultFlexVolumeAddonEnabled = true
-	// DefaultDashboardAddonEnabled determines the acs-engine provided default for enabling kubernetes-dashboard addon
+	// DefaultDashboardAddonEnabled determines the aks-engine provided default for enabling kubernetes-dashboard addon
 	DefaultDashboardAddonEnabled = true
-	// DefaultReschedulerAddonEnabled determines the acs-engine provided default for enabling kubernetes-rescheduler addon
+	// DefaultReschedulerAddonEnabled determines the aks-engine provided default for enabling kubernetes-rescheduler addon
 	DefaultReschedulerAddonEnabled = false
-	// DefaultRBACEnabled determines the acs-engine provided default for enabling kubernetes RBAC
+	// DefaultRBACEnabled determines the aks-engine provided default for enabling kubernetes RBAC
 	DefaultRBACEnabled = true
-	// DefaultUseInstanceMetadata determines the acs-engine provided default for enabling Azure cloudprovider instance metadata service
+	// DefaultUseInstanceMetadata determines the aks-engine provided default for enabling Azure cloudprovider instance metadata service
 	DefaultUseInstanceMetadata = true
-	// DefaultLoadBalancerSku determines the acs-engine provided default for enabling Azure cloudprovider load balancer SKU
+	// DefaultLoadBalancerSku determines the aks-engine provided default for enabling Azure cloudprovider load balancer SKU
 	DefaultLoadBalancerSku = "Basic"
-	// DefaultExcludeMasterFromStandardLB determines the acs-engine provided default for excluding master nodes from standard load balancer.
+	// DefaultExcludeMasterFromStandardLB determines the aks-engine provided default for excluding master nodes from standard load balancer.
 	DefaultExcludeMasterFromStandardLB = true
-	// DefaultSecureKubeletEnabled determines the acs-engine provided default for securing kubelet communications
+	// DefaultSecureKubeletEnabled determines the aks-engine provided default for securing kubelet communications
 	DefaultSecureKubeletEnabled = true
-	// DefaultMetricsServerAddonEnabled determines the acs-engine provided default for enabling kubernetes metrics-server addon
+	// DefaultMetricsServerAddonEnabled determines the aks-engine provided default for enabling kubernetes metrics-server addon
 	DefaultMetricsServerAddonEnabled = false
-	// DefaultNVIDIADevicePluginAddonEnabled determines the acs-engine provided default for enabling NVIDIA Device Plugin
+	// DefaultNVIDIADevicePluginAddonEnabled determines the aks-engine provided default for enabling NVIDIA Device Plugin
 	DefaultNVIDIADevicePluginAddonEnabled = false
-	// DefaultContainerMonitoringAddonEnabled determines the acs-engine provided default for enabling kubernetes container monitoring addon
+	// DefaultContainerMonitoringAddonEnabled determines the aks-engine provided default for enabling kubernetes container monitoring addon
 	DefaultContainerMonitoringAddonEnabled = false
 	// DefaultDNSAutoscalerAddonEnabled determines the acs-engine provided default for dns-autoscaler addon
 	DefaultDNSAutoscalerAddonEnabled = false
@@ -175,7 +149,7 @@ const (
 	ContainerMonitoringAddonName = "container-monitoring"
 	// IPMASQAgentAddonName is the name of the ip masq agent addon
 	IPMASQAgentAddonName = "ip-masq-agent"
-	// DefaultPrivateClusterEnabled determines the acs-engine provided default for enabling kubernetes Private Cluster
+	// DefaultPrivateClusterEnabled determines the aks-engine provided default for enabling kubernetes Private Cluster
 	DefaultPrivateClusterEnabled = false
 	// NetworkPolicyAzure is the string expression for Azure CNI network policy manager
 	NetworkPolicyAzure = "azure"
@@ -185,14 +159,14 @@ const (
 	NetworkPluginKubenet = "kubenet"
 	// NetworkPluginAzure is the string expression for Azure CNI plugin.
 	NetworkPluginAzure = "azure"
-	// DefaultSinglePlacementGroup determines the acs-engine provided default for supporting large VMSS
+	// DefaultSinglePlacementGroup determines the aks-engine provided default for supporting large VMSS
 	// (true = single placement group 0-100 VMs, false = multiple placement group 0-1000 VMs)
 	DefaultSinglePlacementGroup = true
 	// ARMNetworkNamespace is the ARM-specific namespace for ARM's network providers.
 	ARMNetworkNamespace = "Microsoft.Networks"
 	// ARMVirtualNetworksResourceType is the ARM resource type for virtual network resources of ARM.
 	ARMVirtualNetworksResourceType = "virtualNetworks"
-	// DefaultAcceleratedNetworkingWindowsEnabled determines the acs-engine provided default for enabling accelerated networking on Windows nodes
+	// DefaultAcceleratedNetworkingWindowsEnabled determines the aks-engine provided default for enabling accelerated networking on Windows nodes
 	DefaultAcceleratedNetworkingWindowsEnabled = false
 	// DefaultDNSAutoscalerAddonName is the name of the dns-autoscaler addon
 	DefaultDNSAutoscalerAddonName = "dns-autoscaler"
@@ -200,7 +174,7 @@ const (
 
 const (
 	// AgentPoolProfileRoleEmpty is the empty role.  Deprecated; only used in
-	// acs-engine.
+	// aks-engine.
 	AgentPoolProfileRoleEmpty AgentPoolProfileRole = ""
 	// AgentPoolProfileRoleCompute is the compute role
 	AgentPoolProfileRoleCompute AgentPoolProfileRole = "compute"
@@ -231,14 +205,6 @@ const (
 )
 
 const (
-	//AzureEdgeDCOSBootstrapDownloadURL is the azure edge CDN download url
-	AzureEdgeDCOSBootstrapDownloadURL = "https://dcosio.azureedge.net/dcos/%s/bootstrap/%s.bootstrap.tar.xz"
-	//AzureChinaCloudDCOSBootstrapDownloadURL is the China specific DCOS package download url.
-	AzureChinaCloudDCOSBootstrapDownloadURL = "https://acsengine.blob.core.chinacloudapi.cn/dcos/%s.bootstrap.tar.xz"
-	//AzureEdgeDCOSWindowsBootstrapDownloadURL
-)
-
-const (
 	// AzureCniPluginVerLinux specifies version of Azure CNI plugin, which has been mirrored from
 	// https://github.com/Azure/azure-container-networking/releases/download/${AZURE_PLUGIN_VER}/azure-vnet-cni-linux-amd64-${AZURE_PLUGIN_VER}.tgz
 	// to https://acs-mirror.azureedge.net/cni
@@ -253,24 +219,6 @@ const (
 )
 
 const (
-	// DefaultOpenShiftMasterSubnet is the default value for master subnet for Openshift.
-	DefaultOpenShiftMasterSubnet = "10.0.0.0/24"
-	// DefaultOpenShiftFirstConsecutiveStaticIP is the default static ip address for master 0 for Openshift.
-	DefaultOpenShiftFirstConsecutiveStaticIP = "10.0.0.11"
-	// DefaultMasterSubnet specifies the default master subnet for DCOS or Swarm
-	DefaultMasterSubnet = "172.16.0.0/24"
-	// DefaultFirstConsecutiveStaticIP specifies the static IP address on master 0 for DCOS or Swarm
-	DefaultFirstConsecutiveStaticIP = "172.16.0.5"
-	// DefaultSwarmWindowsMasterSubnet specifies the default master subnet for a Swarm Windows cluster
-	DefaultSwarmWindowsMasterSubnet = "192.168.255.0/24"
-	// DefaultSwarmWindowsFirstConsecutiveStaticIP specifies the static IP address on master 0 for a Swarm WIndows cluster
-	DefaultSwarmWindowsFirstConsecutiveStaticIP = "192.168.255.5"
-	// DefaultDCOSMasterSubnet specifies the default master subnet for a DCOS cluster
-	DefaultDCOSMasterSubnet = "192.168.255.0/24"
-	// DefaultDCOSFirstConsecutiveStaticIP  specifies the static IP address on master 0 for a DCOS cluster
-	DefaultDCOSFirstConsecutiveStaticIP = "192.168.255.5"
-	// DefaultDCOSBootstrapStaticIP specifies the static IP address on bootstrap for a DCOS cluster
-	DefaultDCOSBootstrapStaticIP = "192.168.255.240"
 	// DefaultKubernetesMasterSubnet specifies the default subnet for masters and agents.
 	// Except when master VMSS is used, this specifies the default subnet for masters.
 	DefaultKubernetesMasterSubnet = "10.240.0.0/16"
@@ -380,7 +328,7 @@ const (
 
 const (
 	//DefaultExtensionsRootURL  Root URL for extensions
-	DefaultExtensionsRootURL = "https://raw.githubusercontent.com/Azure/acs-engine/master/"
+	DefaultExtensionsRootURL = "https://raw.githubusercontent.com/Azure/aks-engine/master/"
 )
 
 const (

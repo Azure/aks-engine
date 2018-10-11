@@ -11,7 +11,7 @@ import (
 	"regexp"
 	"time"
 
-	"github.com/Azure/acs-engine/test/e2e/kubernetes/util"
+	"github.com/Azure/aks-engine/test/e2e/kubernetes/util"
 	"github.com/pkg/errors"
 )
 

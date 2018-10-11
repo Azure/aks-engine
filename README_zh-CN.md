@@ -2,10 +2,10 @@
 
 ## 概览
 
-微软容器服务引擎（`acs-engine`）用于将一个容器集群描述文件转化成一组ARM（Azure Resource Manager）模板，通过在Azure上部署这些模板，用户可以很方便地在Azure上建立一套基于Docker的容器服务集群。用户可以自由地选择集群编排引擎DC/OS, Kubernetes或者是Swarm/Swarm Mode。集群描述文件使用和ARM模板相同的语法，它们都可以用来部署Azure容器服务。
+微软容器服务引擎（`aks-engine`）用于将一个容器集群描述文件转化成一组ARM（Azure Resource Manager）模板，通过在Azure上部署这些模板，用户可以很方便地在Azure上建立一套基于Docker的容器服务集群。用户可以自由地选择集群编排引擎Kubernetes。集群描述文件使用和ARM模板相同的语法，它们都可以用来部署Azure容器服务。
 
 集群描述文件提供了一下几个功能：
-* 可以自由选择DC/OS, Kubernetes, Swarm Mode和Swarm等多种编排引擎
+* 可以自由选择Kubernetes等多种编排引擎
 * 可以自由定制集群节点的规格，包括：
     * 虚机的规格
     * 节点的数量
@@ -16,12 +16,9 @@
 
 ## 演示链接
 
-* [ACS Engine](docs/acsengine.md) - 演示如何使用ACS引擎来生成基于Docker的容器集群
+* [AKS Engine](docs/aksengine.md) - 演示如何使用ACS引擎来生成基于Docker的容器集群
 * [Cluster Definition](docs/clusterdefinition.md) - 详细介绍集群描述文件的格式
-* [DC/OS Walkthrough](docs/dcos.md) - 演示如何使用ACS引擎在Azure上创建DC/OS集群
 * [Kubernetes Walkthrough](docs/kubernetes.md) - 演示如何使用ACS引擎在Azure上创建Kubernetes集群
-* [Swarm Walkthrough](docs/swarm.md) - 演示如何使用ACS引擎在Azure上创建Swarm集群
-* [Swarm Mode Walkthrough](docs/swarmmode.md) - 演示如何使用ACS引擎在Azure上创建Swarm Mode集群
 * [Custom VNET](examples/vnet) - 演示如何在用户自定义VNET上创建容器集群
 * [Attached Disks](examples/disks-storageaccount) - 演示如何在一个集群节点上创建4个磁盘
 * [Managed Disks](examples/disks-managed) - 演示如何管理托管磁盘

@@ -1,0 +1,80 @@
+{
+  "apiVersion": "vlabs",
+  "properties": {
+    "orchestratorProfile": {
+      "orchestratorType": "Kubernetes"
+    },
+    "masterProfile": {
+      "count": 1,
+      "dnsPrefix": "masterdns1",
+      "vmSize": "Standard_D2_v2",
+      "extensions": [
+        {
+          "name": "hello-world-k8s",
+          "singleOrAll": "single"
+        }
+     ]
+    },
+    "agentPoolProfiles": [
+      {
+        "name": "agentpool1",
+        "count": 3,
+        "vmSize": "Standard_D2_v2",
+        "availabilityProfile": "AvailabilitySet",
+      "extensions": [
+          {
+            "name": "hello-world-k8s",
+            "singleOrAll": "all"
+          }
+        ]
+      },
+      {
+        "name": "agentpool2",
+        "count": 3,
+        "vmSize": "Standard_D2_v2",
+        "availabilityProfile": "AvailabilitySet"
+      }
+    ],
+    "linuxProfile": {
+      "adminUsername": "azureuser",
+      "ssh": {
+        "publicKeys": [
+          {
+            "keyData": "ssh-rsa PUBLICKEY azureuser@linuxvm"
+          }
+        ]
+      }
+    },
+    "extensionProfiles": [
+      {
+        "name": "hello-world-k8s",
+        "version": "v1",
+        "rootURL": "https://raw.githubusercontent.com/Azure/aks-engine/master/"
+      }
+    ],
+    "servicePrincipalProfile": {
+      "clientID": "ServicePrincipalClientID",
+      "secret": "myServicePrincipalClientSecret"
+    },
+    "certificateProfile": {
+      "caCertificate": "caCertificate",
+      "caPrivateKey": "caPrivateKey",
+      "apiServerCertificate": "apiServerCertificate",
+      "apiServerPrivateKey": "apiServerPrivateKey",
+      "clientCertificate": "clientCertificate",
+      "clientPrivateKey": "clientPrivateKey",
+      "kubeConfigCertificate": "kubeConfigCertificate",
+      "kubeConfigPrivateKey": "kubeConfigPrivateKey",
+      "etcdClientCertificate": "etcdClientCertificate",
+      "etcdClientPrivateKey": "etcdClientPrivateKey",
+      "etcdServerCertificate": "etcdServerCertificate",
+      "etcdServerPrivateKey": "etcdServerPrivateKey",
+      "etcdPeerCertificates": [
+        "etcdPeerCertificate0"
+      ],
+      "etcdPeerPrivateKeys": [
+        "etcdPeerPrivateKey0"
+      ]
+    }
+  }
+}

@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -13,15 +12,14 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Azure/acs-engine/pkg/acsengine"
-	"github.com/Azure/acs-engine/pkg/acsengine/transform"
-	"github.com/Azure/acs-engine/pkg/api"
-	"github.com/Azure/acs-engine/pkg/armhelpers"
-	"github.com/Azure/acs-engine/pkg/armhelpers/utils"
-	"github.com/Azure/acs-engine/pkg/helpers"
-	"github.com/Azure/acs-engine/pkg/i18n"
-	"github.com/Azure/acs-engine/pkg/openshift/filesystem"
-	"github.com/Azure/acs-engine/pkg/operations"
+	"github.com/Azure/aks-engine/pkg/api"
+	"github.com/Azure/aks-engine/pkg/armhelpers"
+	"github.com/Azure/aks-engine/pkg/armhelpers/utils"
+	"github.com/Azure/aks-engine/pkg/engine"
+	"github.com/Azure/aks-engine/pkg/engine/transform"
+	"github.com/Azure/aks-engine/pkg/helpers"
+	"github.com/Azure/aks-engine/pkg/i18n"
+	"github.com/Azure/aks-engine/pkg/operations"
 	"github.com/leonelquinteros/gotext"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
@@ -44,7 +42,7 @@ type scaleCmd struct {
 	apiVersion       string
 	apiModelPath     string
 	agentPool        *api.AgentPoolProfile
-	client           armhelpers.ACSEngineClient
+	client           armhelpers.AKSEngineClient
 	locale           *gotext.Locale
 	nameSuffix       string
 	agentPoolIndex   int
@@ -53,8 +51,8 @@ type scaleCmd struct {
 
 const (
 	scaleName             = "scale"
-	scaleShortDescription = "Scale an existing Kubernetes or OpenShift cluster"
-	scaleLongDescription  = "Scale an existing Kubernetes or OpenShift cluster by specifying increasing or decreasing the node count of an agentpool"
+	scaleShortDescription = "Scale an existing Kubernetes cluster"
+	scaleLongDescription  = "Scale an existing Kubernetes cluster by specifying increasing or decreasing the node count of an agentpool"
 )
 
 // NewScaleCmd run a command to upgrade a Kubernetes cluster
@@ -209,7 +207,6 @@ func (sc *scaleCmd) run(cmd *cobra.Command, args []string) error {
 
 	ctx, cancel := context.WithTimeout(context.Background(), armhelpers.DefaultARMOperationTimeout)
 	defer cancel()
-	orchestratorInfo := sc.containerService.Properties.OrchestratorProfile
 	var currentNodeCount, highestUsedIndex, index, winPoolIndex int
 	winPoolIndex = -1
 	indexes := make([]int, 0)
@@ -265,30 +262,13 @@ func (sc *scaleCmd) run(cmd *cobra.Command, args []string) error {
 				vmsToDelete = append(vmsToDelete, indexToVM[index])
 			}
 
-			switch orchestratorInfo.OrchestratorType {
-			case api.Kubernetes:
-				kubeConfig, err := acsengine.GenerateKubeConfig(sc.containerService.Properties, sc.location)
-				if err != nil {
-					return errors.Wrap(err, "failed to generate kube config")
-				}
-				err = sc.drainNodes(kubeConfig, vmsToDelete)
-				if err != nil {
-					return errors.Wrap(err, "Got error while draining the nodes to be deleted")
-				}
-			case api.OpenShift:
-				bundle := bytes.NewReader(sc.containerService.Properties.OrchestratorProfile.OpenShiftConfig.ConfigBundles["master"])
-				fs, err := filesystem.NewTGZReader(bundle)
-				if err != nil {
-					return errors.Wrap(err, "failed to read master bundle")
-				}
-				kubeConfig, err := fs.ReadFile("etc/origin/master/admin.kubeconfig")
-				if err != nil {
-					return errors.Wrap(err, "failed to read kube config")
-				}
-				err = sc.drainNodes(string(kubeConfig), vmsToDelete)
-				if err != nil {
-					return errors.Wrap(err, "Got error while draining the nodes to be deleted")
-				}
+			kubeConfig, err := engine.GenerateKubeConfig(sc.containerService.Properties, sc.location)
+			if err != nil {
+				return errors.Wrap(err, "failed to generate kube config")
+			}
+			err = sc.drainNodes(kubeConfig, vmsToDelete)
+			if err != nil {
+				return errors.Wrap(err, "Got error while draining the nodes to be deleted")
 			}
 
 			errList := operations.ScaleDownVMs(sc.client, sc.logger, sc.SubscriptionID.String(), sc.resourceGroupName, vmsToDelete...)
@@ -333,12 +313,12 @@ func (sc *scaleCmd) run(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	translator := acsengine.Context{
+	translator := engine.Context{
 		Translator: &i18n.Translator{
 			Locale: sc.locale,
 		},
 	}
-	templateGenerator, err := acsengine.InitializeTemplateGenerator(translator)
+	templateGenerator, err := engine.InitializeTemplateGenerator(translator)
 	if err != nil {
 		return errors.Wrap(err, "failed to initialize template generator")
 	}
@@ -350,7 +330,7 @@ func (sc *scaleCmd) run(cmd *cobra.Command, args []string) error {
 		log.Fatalf("error in SetPropertiesDefaults template %s: %s", sc.apiModelPath, err.Error())
 		os.Exit(1)
 	}
-	template, parameters, err := templateGenerator.GenerateTemplate(sc.containerService, acsengine.DefaultGeneratorCode, BuildTag)
+	template, parameters, err := templateGenerator.GenerateTemplate(sc.containerService, engine.DefaultGeneratorCode, BuildTag)
 	if err != nil {
 		return errors.Wrapf(err, "error generating template %s", sc.apiModelPath)
 	}
@@ -384,30 +364,12 @@ func (sc *scaleCmd) run(cmd *cobra.Command, args []string) error {
 	if winPoolIndex != -1 {
 		templateJSON["variables"].(map[string]interface{})[sc.agentPool.Name+"Index"] = winPoolIndex
 	}
-	switch orchestratorInfo.OrchestratorType {
-	case api.OpenShift:
-		err = transformer.NormalizeForOpenShiftVMASScalingUp(sc.logger, sc.agentPool.Name, templateJSON)
-		if err != nil {
-			return errors.Wrapf(err, "error tranforming the template for scaling template %s", sc.apiModelPath)
-		}
-		if sc.agentPool.IsAvailabilitySets() {
-			addValue(parametersJSON, fmt.Sprintf("%sOffset", sc.agentPool.Name), highestUsedIndex+1)
-		}
-	case api.Kubernetes:
-		err = transformer.NormalizeForK8sVMASScalingUp(sc.logger, templateJSON)
-		if err != nil {
-			return errors.Wrapf(err, "error tranforming the template for scaling template %s", sc.apiModelPath)
-		}
-		if sc.agentPool.IsAvailabilitySets() {
-			addValue(parametersJSON, fmt.Sprintf("%sOffset", sc.agentPool.Name), highestUsedIndex+1)
-		}
-	case api.Swarm:
-	case api.SwarmMode:
-	case api.DCOS:
-		if sc.agentPool.IsAvailabilitySets() {
-			return errors.Errorf("scaling isn't supported for orchestrator %q, with availability sets", orchestratorInfo.OrchestratorType)
-		}
-		transformer.NormalizeForVMSSScaling(sc.logger, templateJSON)
+	err = transformer.NormalizeForK8sVMASScalingUp(sc.logger, templateJSON)
+	if err != nil {
+		return errors.Wrapf(err, "error tranforming the template for scaling template %s", sc.apiModelPath)
+	}
+	if sc.agentPool.IsAvailabilitySets() {
+		addValue(parametersJSON, fmt.Sprintf("%sOffset", sc.agentPool.Name), highestUsedIndex+1)
 	}
 
 	random := rand.New(rand.NewSource(time.Now().UnixNano()))

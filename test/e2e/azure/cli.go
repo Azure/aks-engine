@@ -9,9 +9,8 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/Azure/acs-engine/test/e2e/engine"
-	"github.com/Azure/acs-engine/test/e2e/kubernetes/util"
-
+	"github.com/Azure/aks-engine/test/e2e/engine"
+	"github.com/Azure/aks-engine/test/e2e/kubernetes/util"
 	"github.com/kelseyhightower/envconfig"
 )
 
@@ -48,7 +47,7 @@ type VM struct {
 	Name string `json:"name"`
 }
 
-// Deployment represents a deployment of an acs cluster
+// Deployment represents a deployment of an AKS cluster
 type Deployment struct {
 	Name              string // Name of the deployment
 	TemplateDirectory string // engine.GeneratedDefinitionPath

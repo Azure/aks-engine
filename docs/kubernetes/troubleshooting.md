@@ -2,7 +2,7 @@
 
 ## VMExtensionProvisioningError or VMExtensionProvisioningTimeout
 
-The two above VMExtensionProvisioning— errors tell us that a vm in the cluster failed installing required application prerequisites after CRP provisioned the VM into the resource group. When acs-engine creates a new Kubernetes cluster, a series of shell scripts runs to install prereq's like docker, etcd, Kubernetes runtime, and various other host OS packages that support the Kubernetes application layer. *Usually* this indicates one of the following:
+The two above VMExtensionProvisioning— errors tell us that a vm in the cluster failed installing required application prerequisites after CRP provisioned the VM into the resource group. When aks-engine creates a new Kubernetes cluster, a series of shell scripts runs to install prereq's like docker, etcd, Kubernetes runtime, and various other host OS packages that support the Kubernetes application layer. *Usually* this indicates one of the following:
 
 1. Something about the cluster configuration is pathological. For example, perhaps the cluster config includes a custom version of a particular software dependency that doesn't exist. Or, another example, for a cluster created inside a custom VNET (i.e., a user-provided, pre-existing VNET), perhaps that custom VNET does not have general outbound internet access, and so apt, docker pull, etc is not able to execute successfully.
 2. A transient Azure environmental error caused the shell script operation to timeout, or exceed its retry count. For example, the shell script may attempt to download a required package (e.g., etcd), and if the Azure networking environment for the newly provisioned vm is flaky for a period of time, then the shell script may retry several times, but eventually timeout and fail.
@@ -15,7 +15,7 @@ For classification #2 above, the appropriate strategic response is to retry a fe
 
 CSE stands for CustomScriptExtension, and is just a way of expressing: "a script that executes as part of the VM provisioning process, and that must exit 0 (i.e., successfully) in order for that VM provisioning process to succeed". Basically it's another way of expressing the VMExtensionProvisioning— concept above.
 
-To summarize, the way that acs-engine implements Kubernetes on Azure is a collection of (1) Azure VM configuration + (2) shell script execution. Both are implemented as a single operational unit, and when #2 fails, we consider the entire VM provisioning operation to be a failure; more importantly, if only one VM in the cluster deployment fails, we consider the entire cluster operation to be a failure.
+To summarize, the way that aks-engine implements Kubernetes on Azure is a collection of (1) Azure VM configuration + (2) shell script execution. Both are implemented as a single operational unit, and when #2 fails, we consider the entire VM provisioning operation to be a failure; more importantly, if only one VM in the cluster deployment fails, we consider the entire cluster operation to be a failure.
 
 ### How To Debug CSE errors (Linux)
 
@@ -152,4 +152,4 @@ read and **write** permissions to the target Subscription.
 
 `Nov 10 16:35:22 k8s-master-43D6F832-0 docker[3177]: E1110 16:35:22.840688    3201 kubelet_node_status.go:69] Unable to construct api.Node object for kubelet: failed to get external ID from cloud provider: autorest#WithErrorUnlessStatusCode: POST https://login.microsoftonline.com/72f988bf-86f1-41af-91ab-2d7cd011db47/oauth2/token?api-version=1.0 failed with 400 Bad Request: StatusCode=400`
 
-[This documentation](../serviceprincipal.md) explains how to create/configure a service principal for an ACS-Engine Kubernetes cluster.
+[This documentation](../serviceprincipal.md) explains how to create/configure a service principal for an AKS Engine Kubernetes cluster.

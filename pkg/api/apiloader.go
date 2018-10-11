@@ -6,17 +6,16 @@ import (
 	"io/ioutil"
 	"reflect"
 
-	"github.com/Azure/acs-engine/pkg/api/agentPoolOnlyApi/v20170831"
-	"github.com/Azure/acs-engine/pkg/api/agentPoolOnlyApi/v20180331"
-	apvlabs "github.com/Azure/acs-engine/pkg/api/agentPoolOnlyApi/vlabs"
-	"github.com/Azure/acs-engine/pkg/api/common"
-	"github.com/Azure/acs-engine/pkg/api/v20160330"
-	"github.com/Azure/acs-engine/pkg/api/v20160930"
-	"github.com/Azure/acs-engine/pkg/api/v20170131"
-	"github.com/Azure/acs-engine/pkg/api/v20170701"
-	"github.com/Azure/acs-engine/pkg/api/vlabs"
-	"github.com/Azure/acs-engine/pkg/helpers"
-	"github.com/Azure/acs-engine/pkg/i18n"
+	"github.com/Azure/aks-engine/pkg/api/agentPoolOnlyApi/v20170831"
+	"github.com/Azure/aks-engine/pkg/api/agentPoolOnlyApi/v20180331"
+	apvlabs "github.com/Azure/aks-engine/pkg/api/agentPoolOnlyApi/vlabs"
+	"github.com/Azure/aks-engine/pkg/api/common"
+	"github.com/Azure/aks-engine/pkg/api/v20160930"
+	"github.com/Azure/aks-engine/pkg/api/v20170131"
+	"github.com/Azure/aks-engine/pkg/api/v20170701"
+	"github.com/Azure/aks-engine/pkg/api/vlabs"
+	"github.com/Azure/aks-engine/pkg/helpers"
+	"github.com/Azure/aks-engine/pkg/i18n"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 )
@@ -26,7 +25,7 @@ type Apiloader struct {
 	Translator *i18n.Translator
 }
 
-// LoadContainerServiceFromFile loads an ACS Cluster API Model from a JSON file
+// LoadContainerServiceFromFile loads an AKS cluster API Model from a JSON file
 func (a *Apiloader) LoadContainerServiceFromFile(jsonFile string, validate, isUpdate bool, existingContainerService *ContainerService) (*ContainerService, string, error) {
 	contents, e := ioutil.ReadFile(jsonFile)
 	if e != nil {
@@ -58,7 +57,7 @@ func LoadDefaultContainerServiceProperties() (TypeMeta, *vlabs.Properties) {
 	}
 }
 
-// DeserializeContainerService loads an ACS Cluster API Model, validates it, and returns the unversioned representation
+// DeserializeContainerService loads an AKS cluster API Model, validates it, and returns the unversioned representation
 func (a *Apiloader) DeserializeContainerService(contents []byte, validate, isUpdate bool, existingContainerService *ContainerService) (*ContainerService, string, error) {
 	m := &TypeMeta{}
 	if err := json.Unmarshal(contents, &m); err != nil {
@@ -77,7 +76,7 @@ func (a *Apiloader) DeserializeContainerService(contents []byte, validate, isUpd
 	return service, version, err
 }
 
-// LoadContainerService loads an ACS Cluster API Model, validates it, and returns the unversioned representation
+// LoadContainerService loads an AKS cluster API Model, validates it, and returns the unversioned representation
 func (a *Apiloader) LoadContainerService(
 	contents []byte,
 	version string,
@@ -112,30 +111,6 @@ func (a *Apiloader) LoadContainerService(
 			unversioned.Properties.OrchestratorProfile.OrchestratorVersion = curOrchVersion
 		}
 		return unversioned, nil
-	case v20160330.APIVersion:
-		containerService := &v20160330.ContainerService{}
-		if e := json.Unmarshal(contents, &containerService); e != nil {
-			return nil, e
-		}
-		if hasExistingCS {
-			vecs := ConvertContainerServiceToV20160330(existingContainerService)
-			if e := containerService.Merge(vecs); e != nil {
-				return nil, e
-			}
-		}
-		setContainerServiceDefaultsv20160330(containerService)
-		if containerService.Properties == nil {
-			return nil, errors.New("missing ContainerService Properties")
-		}
-		if e := containerService.Properties.Validate(); validate && e != nil {
-			return nil, e
-		}
-		unversioned := ConvertV20160330ContainerService(containerService)
-		if curOrchVersion != "" {
-			unversioned.Properties.OrchestratorProfile.OrchestratorVersion = curOrchVersion
-		}
-		return unversioned, nil
-
 	case v20170131.APIVersion:
 		containerService := &v20170131.ContainerService{}
 		if e := json.Unmarshal(contents, &containerService); e != nil {
@@ -219,7 +194,7 @@ func (a *Apiloader) LoadContainerService(
 	}
 }
 
-// LoadContainerServiceForAgentPoolOnlyCluster loads an ACS Cluster API Model, validates it, and returns the unversioned representation
+// LoadContainerServiceForAgentPoolOnlyCluster loads an AKS cluster API Model, validates it, and returns the unversioned representation
 func (a *Apiloader) LoadContainerServiceForAgentPoolOnlyCluster(
 	contents []byte,
 	version string,
@@ -357,17 +332,6 @@ func (a *Apiloader) SerializeContainerService(containerService *ContainerService
 		}
 		return b, nil
 
-	case v20160330.APIVersion:
-		v20160330ContainerService := ConvertContainerServiceToV20160330(containerService)
-		armContainerService := &V20160330ARMContainerService{}
-		armContainerService.ContainerService = v20160330ContainerService
-		armContainerService.APIVersion = version
-		b, err := helpers.JSONMarshalIndent(armContainerService, "", "  ", false)
-		if err != nil {
-			return nil, err
-		}
-		return b, nil
-
 	case v20170131.APIVersion:
 		v20170131ContainerService := ConvertContainerServiceToV20170131(containerService)
 		armContainerService := &V20170131ARMContainerService{}
@@ -436,26 +400,13 @@ func (a *Apiloader) serializeHostedContainerService(containerService *ContainerS
 // Sets default container service property values for any appropriate zero values
 func setContainerServiceDefaultsv20160930(c *v20160930.ContainerService) {
 	if c.Properties.OrchestratorProfile == nil {
-		c.Properties.OrchestratorProfile = &v20160930.OrchestratorProfile{
-			OrchestratorType: v20160930.DCOS,
-		}
-	}
-}
-
-// Sets default container service property values for any appropriate zero values
-func setContainerServiceDefaultsv20160330(c *v20160330.ContainerService) {
-	if c.Properties.OrchestratorProfile == nil {
-		c.Properties.OrchestratorProfile = &v20160330.OrchestratorProfile{
-			OrchestratorType: v20160330.DCOS,
-		}
+		c.Properties.OrchestratorProfile = &v20160930.OrchestratorProfile{}
 	}
 }
 
 // Sets default container service property values for any appropriate zero values
 func setContainerServiceDefaultsv20170131(c *v20170131.ContainerService) {
 	if c.Properties.OrchestratorProfile == nil {
-		c.Properties.OrchestratorProfile = &v20170131.OrchestratorProfile{
-			OrchestratorType: v20170131.DCOS,
-		}
+		c.Properties.OrchestratorProfile = &v20170131.OrchestratorProfile{}
 	}
 }

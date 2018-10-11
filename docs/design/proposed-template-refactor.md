@@ -1,18 +1,18 @@
-# Acs-engine
+# AKS Engine
 
-The Azure Container Service Engine (acs-engine) is a command line tool that generates ARM (Azure Resource Manager) templates in order for one to deploy container-based clusters (like Kubernetes , DCOS, Openshift, Docker swarm) on the Azure platform.
+The Azure Kubernetes Service Engine (aks-engine) is a command line tool that generates ARM (Azure Resource Manager) templates in order for one to deploy Kubernetes clusters on the Azure platform.
 
-This design document provides a brief and high-level overview of what acs-engine does internally to achieve deployment of containerized clusters. The scope of this document will be limited to the execution of acs-engine when creating Kubernetes clusters.
+This design document provides a brief and high-level overview of what aks-engine does internally to achieve deployment of containerized clusters. The scope of this document will be limited to the execution of aks-engine when creating Kubernetes clusters.
 
 ## Architecture Diagram
 
-![Alt text](../images/proposed-template-refactor.jpg "acs-engine architecture diagram")
+![Alt text](../images/proposed-template-refactor.jpg "aks-engine architecture diagram")
 
 ## Components
 
 ### Cluster api model
 
-Acs-engine accepts JSONs of cluster api models as inputs. These api models allow the user to specify cluster configuration items such as
+AKS Engine accepts JSONs of cluster api models as inputs. These api models allow the user to specify cluster configuration items such as
 
 - Master and worker nodes configuration
 - Kubernetes version
@@ -227,11 +227,11 @@ The template generator then creates the following artifacts
 
 ### ARM Interface
 
-Acs-engine interfaces with Azure Resource Manager (ARM) through the Azure Go SDK. The Go SDK provides interfaces to perform functions like template deployment, validation.
+AKS Engine interfaces with Azure Resource Manager (ARM) through the Azure Go SDK. The Go SDK provides interfaces to perform functions like template deployment, validation.
 
 ### Kubernetes Client API
 
-Acs-engine also performs kubernetes cluster management operations (kubectl) through the imported Kubernetes API libraries. The Client API calls are made during the scale and upgrade commands of acs-engine.
+AKS Engine also performs kubernetes cluster management operations (kubectl) through the imported Kubernetes API libraries. The Client API calls are made during the scale and upgrade commands of aks-engine.
 
 
 Design challenges and proposals
@@ -244,7 +244,7 @@ We find that the current implementation of templating leads to challenges in ter
 
 - There is no direct and intuitive mapping between the input apimodels and the ARM templates. The placeholder substitutions are performed at very specific areas in the template skeletons. It's hard to draw any generality from it and this makes it difficult to create the template JSONs purely through code as opposed to performing the placeholder substitutions.
 
-- This also limits the capabilities of acs-engine as far as extensibility is concerned. If we were to introduce more changes and customizations, it would potentially entail modifying the template skeleton layouts. This would just add more complexity.
+- This also limits the capabilities of aks-engine as far as extensibility is concerned. If we were to introduce more changes and customizations, it would potentially entail modifying the template skeleton layouts. This would just add more complexity.
 
 #### Possible Solutions
 
@@ -258,7 +258,7 @@ _**Pros**_
 
 - This will allow us to accommodate future ARM template customization more effectively, because we can express and maintain the variety of inter-dependent outputs natively, as first class data representations.
 
-- Template validation can be done within the acs-engine layer itself. Currently, template validation can only be performed via the Azure GO SDK and this entails a network call.
+- Template validation can be done within the aks-engine layer itself. Currently, template validation can only be performed via the Azure GO SDK and this entails a network call.
 
 _**Cons/Challenges**_
 
@@ -268,7 +268,7 @@ _**Cons/Challenges**_
 
 **YAML-based templates**
 
-We could also do away with our current JSON-based template skeletons and use YAML templating instead. 
+We could also do away with our current JSON-based template skeletons and use YAML templating instead.
 
 _**Pros**_
 

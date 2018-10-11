@@ -3,9 +3,9 @@ package api
 import (
 	"strconv"
 
-	"github.com/Azure/acs-engine/pkg/api/agentPoolOnlyApi/v20170831"
-	"github.com/Azure/acs-engine/pkg/api/agentPoolOnlyApi/v20180331"
-	"github.com/Azure/acs-engine/pkg/helpers"
+	"github.com/Azure/aks-engine/pkg/api/agentPoolOnlyApi/v20170831"
+	"github.com/Azure/aks-engine/pkg/api/agentPoolOnlyApi/v20180331"
+	"github.com/Azure/aks-engine/pkg/helpers"
 )
 
 ///////////////////////////////////////////////////////////

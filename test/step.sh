@@ -29,16 +29,16 @@ create_resource_group)
 ;;
 
 predeploy)
-  ACSE_PREDEPLOY=${ACSE_PREDEPLOY:-}
-  if [ ! -z "${ACSE_PREDEPLOY}" ] && [ -x "${ACSE_PREDEPLOY}" ]; then
-      "${ACSE_PREDEPLOY}"
+  AKSE_PREDEPLOY=${AKSE_PREDEPLOY:-}
+  if [ ! -z "${AKSE_PREDEPLOY}" ] && [ -x "${AKSE_PREDEPLOY}" ]; then
+      "${AKSE_PREDEPLOY}"
   fi
 ;;
 
 postdeploy)
-  ACSE_POSTDEPLOY=${ACSE_POSTDEPLOY:-}
-  if [ ! -z "${ACSE_POSTDEPLOY}" ] && [ -x "${ACSE_POSTDEPLOY}" ]; then
-      "${ACSE_POSTDEPLOY}"
+  AKSE_POSTDEPLOY=${AKSE_POSTDEPLOY:-}
+  if [ ! -z "${AKSE_POSTDEPLOY}" ] && [ -x "${AKSE_POSTDEPLOY}" ]; then
+      "${AKSE_POSTDEPLOY}"
   fi
 ;;
 

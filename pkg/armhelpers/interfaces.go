@@ -39,10 +39,10 @@ type RoleAssignmentListResultPage interface {
 	Values() []authorization.RoleAssignment
 }
 
-// ACSEngineClient is the interface used to talk to an Azure environment.
+// AKSEngineClient is the interface used to talk to an Azure environment.
 // This interface exposes just the subset of Azure APIs and clients needed for
-// ACS-Engine.
-type ACSEngineClient interface {
+// AKS Engine.
+type AKSEngineClient interface {
 
 	//AddAcceptLanguages sets the list of languages to accept on this request
 	AddAcceptLanguages(languages []string)
@@ -87,7 +87,7 @@ type ACSEngineClient interface {
 
 	// GetStorageClient uses SRP to retrieve keys, and then an authenticated client for talking to the specified storage
 	// account.
-	GetStorageClient(ctx context.Context, resourceGroup, accountName string) (ACSStorageClient, error)
+	GetStorageClient(ctx context.Context, resourceGroup, accountName string) (AKSStorageClient, error)
 
 	//
 	// NETWORK
@@ -130,8 +130,8 @@ type ACSEngineClient interface {
 	ListDeploymentOperations(ctx context.Context, resourceGroupName string, deploymentName string, top *int32) (result DeploymentOperationsListResultPage, err error)
 }
 
-// ACSStorageClient interface models the azure storage client
-type ACSStorageClient interface {
+// AKSStorageClient interface models the azure storage client
+type AKSStorageClient interface {
 	// DeleteBlob deletes the specified blob in the specified container.
 	DeleteBlob(containerName, blobName string, options *azStorage.DeleteBlobOptions) error
 	// CreateContainer creates the CloudBlobContainer if it does not exist

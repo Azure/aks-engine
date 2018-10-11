@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
 
+# TODO: does this script need refactoring post-OpenShift, or can it be deleted?
+echo "No generated files to check!"
+exit 0
+
 ####################################################
 SOURCE="${BASH_SOURCE[0]}"
 while [ -h "$SOURCE" ]; do # resolve $SOURCE until the file is no longer a symlink
@@ -18,7 +22,6 @@ trap "rm -rf ${T}" EXIT
 cp -a "${DIR}/.." "${T}/"
 
 (cd "${T}/" && go generate ./...)
-
 
 GENERATED_FILES=(
 	"pkg/openshift/certgen/unstable/templates/bindata.go"

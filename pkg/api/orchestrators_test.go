@@ -3,7 +3,7 @@ package api
 import (
 	"testing"
 
-	"github.com/Azure/acs-engine/pkg/api/common"
+	"github.com/Azure/aks-engine/pkg/api/common"
 	"github.com/blang/semver"
 	. "github.com/onsi/gomega"
 )
@@ -78,14 +78,8 @@ func TestGetOrchestratorVersionProfileListV20170930(t *testing.T) {
 	// v20170930 - all orchestrators
 	list, e := GetOrchestratorVersionProfileListV20170930("", "")
 	Expect(e).To(BeNil())
-	numSwarmVersions := 1
-	numDockerCEVersions := 1
 
-	totalNumVersions := numSwarmVersions +
-		numDockerCEVersions +
-		len(common.GetAllSupportedKubernetesVersions(false, false)) +
-		len(common.AllDCOSSupportedVersions) +
-		len(common.GetAllSupportedOpenShiftVersions()) - 1
+	totalNumVersions := len(common.GetAllSupportedKubernetesVersions(false, false))
 
 	Expect(len(list.Properties.Orchestrators)).To(Equal(totalNumVersions))
 
@@ -119,125 +113,6 @@ func TestKubernetesInfo(t *testing.T) {
 		Expect(e).NotTo(BeNil())
 	}
 
-}
-
-func TestOpenshiftInfo(t *testing.T) {
-	RegisterTestingT(t)
-
-	invalid := []string{
-		"invalid number",
-		"invalid.number",
-		"a4.b7.c3",
-		"31.29.",
-		".17.02",
-		"43.156.89.",
-		"1.2.a",
-		"3.8.9",
-		"3.9.2"}
-
-	for _, v := range invalid {
-		csOrch := &OrchestratorProfile{
-			OrchestratorType:    OpenShift,
-			OrchestratorVersion: v,
-		}
-
-		_, e := openShiftInfo(csOrch, false)
-		Expect(e).NotTo(BeNil())
-	}
-
-	// test good value
-	csOrch := &OrchestratorProfile{
-		OrchestratorType:    OpenShift,
-		OrchestratorVersion: common.OpenShiftDefaultVersion,
-	}
-
-	_, e := openShiftInfo(csOrch, false)
-	Expect(e).To(BeNil())
-}
-
-func TestDcosInfo(t *testing.T) {
-	RegisterTestingT(t)
-	invalid := []string{
-		"invalid number",
-		"invalid.number",
-		"a4.b7.c3",
-		"31.29.",
-		".17.02",
-		"43.156.89.",
-		"1.2.a"}
-
-	for _, v := range invalid {
-		csOrch := &OrchestratorProfile{
-			OrchestratorType:    DCOS,
-			OrchestratorVersion: v,
-		}
-
-		_, e := dcosInfo(csOrch, false)
-		Expect(e).NotTo(BeNil())
-	}
-
-	// test good value
-	csOrch := &OrchestratorProfile{
-		OrchestratorType:    DCOS,
-		OrchestratorVersion: common.DCOSDefaultVersion,
-	}
-
-	_, e := dcosInfo(csOrch, false)
-	Expect(e).To(BeNil())
-}
-
-func TestSwarmInfo(t *testing.T) {
-	RegisterTestingT(t)
-	invalid := []string{
-		"swarm:1.1.1",
-		"swarm:1.1.2",
-	}
-
-	for _, v := range invalid {
-		csOrch := &OrchestratorProfile{
-			OrchestratorType:    Swarm,
-			OrchestratorVersion: v,
-		}
-
-		_, e := swarmInfo(csOrch, false)
-		Expect(e).NotTo(BeNil())
-	}
-
-	// test good value
-	csOrch := &OrchestratorProfile{
-		OrchestratorType:    Swarm,
-		OrchestratorVersion: common.SwarmVersion,
-	}
-
-	_, e := swarmInfo(csOrch, false)
-	Expect(e).To(BeNil())
-}
-
-func TestDockerceInfoInfo(t *testing.T) {
-	RegisterTestingT(t)
-	invalid := []string{
-		"17.02.1",
-		"43.156.89",
-	}
-
-	for _, v := range invalid {
-		csOrch := &OrchestratorProfile{
-			OrchestratorType:    SwarmMode,
-			OrchestratorVersion: v,
-		}
-
-		_, e := dockerceInfo(csOrch, false)
-		Expect(e).NotTo(BeNil())
-	}
-
-	// test good value
-	csOrch := &OrchestratorProfile{
-		OrchestratorType:    SwarmMode,
-		OrchestratorVersion: common.DockerCEVersion,
-	}
-
-	_, e := dockerceInfo(csOrch, false)
-	Expect(e).To(BeNil())
 }
 
 func TestGetKubernetesAvailableUpgradeVersions(t *testing.T) {

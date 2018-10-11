@@ -175,7 +175,7 @@ then
 fi
 
 log ''
-log 'ACS-Engine - installing Microsoft OMS Agent (k8s)'
+log 'AKS Engine - installing Microsoft OMS Agent (k8s)'
 log '--------------------------------------------------'
 
 install_script_dependencies

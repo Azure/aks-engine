@@ -3,7 +3,7 @@ package cmd
 import (
 	"fmt"
 
-	"github.com/Azure/acs-engine/pkg/helpers"
+	"github.com/Azure/aks-engine/pkg/helpers"
 	log "github.com/sirupsen/logrus"
 
 	"github.com/spf13/cobra"
@@ -26,8 +26,8 @@ var (
 
 const (
 	versionName             = "version"
-	versionShortDescription = "Print the version of ACS-Engine"
-	versionLongDescription  = "Print the version of ACS-Engine"
+	versionShortDescription = "Print the version of AKS Engine"
+	versionLongDescription  = "Print the version of AKS Engine"
 )
 
 type versionInfo struct {

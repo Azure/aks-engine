@@ -1,4 +1,4 @@
-$REPO_PATH = "github.com/Azure/acs-engine"
+$REPO_PATH = "github.com/Azure/aks-engine"
 $DEV_ENV_IMAGE = "quay.io/deis/go-dev:v1.17.2"
 $DEV_ENV_WORK_DIR = "/go/src/$REPO_PATH"
 

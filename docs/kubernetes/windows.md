@@ -1,4 +1,4 @@
-# Microsoft ACS-Engine - Kubernetes Windows Walkthrough
+# Microsoft AKS Engine - Kubernetes Windows Walkthrough
 
 <!-- TOC -->
 
@@ -10,7 +10,7 @@
     - [Create a Resource Group and Service Principal](#create-a-resource-group-and-service-principal)
         - [Create a Resource Group and Service Principal (Windows)](#create-a-resource-group-and-service-principal-windows)
         - [Create a Resource Group and Service Principal (Mac+Linux)](#create-a-resource-group-and-service-principal-maclinux)
-    - [Create an acs-engine apimodel](#create-an-acs-engine-apimodel)
+    - [Create an aks-engine apimodel](#create-an-aks-engine-apimodel)
         - [Filling out apimodel (Windows)](#filling-out-apimodel-windows)
         - [Filling out apimodel (Mac & Linux)](#filling-out-apimodel-mac--linux)
     - [Generate Azure Resource Manager template](#generate-azure-resource-manager-template)
@@ -27,21 +27,21 @@
 This guide will step through everything needed to build your first Kubernetes cluster and deploy a Windows web server on it. The steps include:
 
 - Getting the right tools
-- Completing an ACS-Engine apimodel which describes what you want to deploy
-- Running ACS-Engine to generate Azure Resource Model templates
+- Completing an AKS Engine apimodel which describes what you want to deploy
+- Running AKS Engine to generate Azure Resource Model templates
 - Deploying your first Kubernetes cluster with Windows Server nodes
 - Managing the cluster from your Windows machine
 - Deploying your first app on the cluster
 
 All of these steps can be done from any OS platform, so some sections are split out by Windows, Mac or Linux to provide the most relevant samples and scripts. If you have a Windows machine but want to use the Linux tools - no problem! Set up the [Windows Subsystem for Linux](https://docs.microsoft.com/en-us/windows/wsl/about) and you can follow the Linux instructions on this page.
 
-> Note: Windows support for Kubernetes is still in beta and under **active development**. If you run into problems, please be sure to check the [Troubleshooting](windows-details.md#troubleshooting) page and [active Windows issues](https://github.com/azure/acs-engine/issues?&q=is:issue+is:open+label:windows) in this repo, then help us by filing new issues for things that aren't already covered.
+> Note: Windows support for Kubernetes is still in beta and under **active development**. If you run into problems, please be sure to check the [Troubleshooting](windows-details.md#troubleshooting) page and [active Windows issues](https://github.com/Azure/aks-engine/issues?&q=is:issue+is:open+label:windows) in this repo, then help us by filing new issues for things that aren't already covered.
 
 ### Install Needed Tools
 
 This guide needs a few important tools, which are available on Windows, Mac, and Linux:
 
-- ACS-Engine - used to generate the Azure Resource Manager (ARM) template to automatically deploy a Kubernetes cluster
+- AKS Engine - used to generate the Azure Resource Manager (ARM) template to automatically deploy a Kubernetes cluster
 - Azure CLI - used to log into Azure, create resource groups, and deploy a Kubernetes cluster from a template
 - Kubectl - "Kube control" tool used to manage Kubernetes clusters
 - SSH - A SSH public key is needed when you deploy a cluster. It's used to connect to the Linux VMs running the cluster if you need to do more  management or troubleshooting later.
@@ -56,20 +56,20 @@ Once it's installed, make sure you can connect to Azure with it. Open a new Powe
 
 > If you want other versions, check out the [official instructions](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli?view=azure-cli-latest). For more help, check out the Azure CLI [getting started](https://docs.microsoft.com/en-us/cli/azure/get-started-with-azure-cli?view=azure-cli-latest) page.
 
-##### ACS-Engine (Windows)
+##### AKS Engine (Windows)
 
-Windows support is evolving rapidly, so be sure to use the latest ACS-Engine  version (v0.20 or later).
+Windows support is evolving rapidly, so be sure to use the latest AKS Engine  version (v0.20 or later).
 
-1. Browse to the ACS-Engine [releases page](https://github.com/Azure/acs-engine/releases) on GitHub.
+1. Browse to the AKS Engine [releases page](https://github.com/Azure/aks-engine/releases) on GitHub.
 
 2. Find the latest version, and download the file ending in `-windows-amd64.zip`.
 
-3. Extract the `acs-engine...-windows-amd64.zip` file to a working folder such as `c:\tools`
+3. Extract the `aks-engine...-windows-amd64.zip` file to a working folder such as `c:\tools`
 
-4. Check that it runs with `.\acs-engine.exe version`
+4. Check that it runs with `.\aks-engine.exe version`
 
 ```none
-PS C:\Users\patrick\acs-engine> .\acs-engine.exe version
+PS C:\Users\patrick\aks-engine> .\aks-engine.exe version
 Version: v0.20.6
 GitCommit: 293adfda
 GitTreeState: clean
@@ -88,7 +88,7 @@ $oldPath = [Environment]::GetEnvironmentVariable('Path', [EnvironmentVariableTar
 
 The latest release of Kubernetes Control (kubectl) is available on the [Kubernetes release page](https://kubernetes.io/docs/imported/release/notes/). Look for `kubernetes-client-windows-amd64.tar.gz` and download it.
 
-Windows 10 version 1803 already includes `tar`, so extract the archive and move `kubectl.exe` to the same folder (such as `c:\tools`) that you put `acs-engine.exe`. If you don't already have `tar`, then [busybox-w32](https://frippery.org/busybox/) is a good alternative. Download [busybox.exe](https://frippery.org/files/busybox/busybox.exe), then copy it to `c:\tools\tar.exe`. It must be named to `tar.exe` for the next step to work.
+Windows 10 version 1803 already includes `tar`, so extract the archive and move `kubectl.exe` to the same folder (such as `c:\tools`) that you put `aks-engine.exe`. If you don't already have `tar`, then [busybox-w32](https://frippery.org/busybox/) is a good alternative. Download [busybox.exe](https://frippery.org/files/busybox/busybox.exe), then copy it to `c:\tools\tar.exe`. It must be named to `tar.exe` for the next step to work.
 
 ```powershell
 tar xvzf C:\Users\patrick\Downloads\kubernetes-client-windows-amd64.tar.gz
@@ -116,7 +116,7 @@ If the file already exists, then you can skip forward to [Create a Resource Grou
 If it does not exist, then run `ssh-keygen.exe`. Use the default file, and enter a passphrase if you wish to protect it. Be sure not to use a SSH key with blank passphrase in production.
 
 ```powershell
-PS C:\Users\patrick\acs-engine> ssh-keygen.exe
+PS C:\Users\patrick\aks-engine> ssh-keygen.exe
 Generating public/private rsa key pair.
 Enter file in which to save the key (C:\Users\patrick/.ssh/id_rsa):
 Created directory 'C:\Users\patrick/.ssh'.
@@ -142,20 +142,20 @@ Most of the needed tools are available with [Homebrew](https://brew.sh/). Use it
 
 Once you have those installed, make sure you can log into Azure. Open a new Terminal window, then run `az login`. It will have you log in to Azure in your web browser, then return back to the command line and show "You have logged in. Now let us find all the subscriptions to which you have access..." along with the list of subscriptions.
 
-##### ACS-Engine (Mac)
+##### AKS Engine (Mac)
 
-Windows support is evolving rapidly, so be sure to use the latest ACS-Engine version (v0.20 or later).
+Windows support is evolving rapidly, so be sure to use the latest AKS Engine version (v0.20 or later).
 
-1. Browse to the ACS-Engine [releases page](https://github.com/Azure/acs-engine/releases) on GitHub.
+1. Browse to the AKS Engine [releases page](https://github.com/Azure/aks-engine/releases) on GitHub.
 
 2. Find the latest version, and download the file ending in `-darwin-amd64.zip`.
 
-3. Extract the `acs-engine...-darwin-amd64.zip` file to a folder in your path such as `/usr/local/bin`
+3. Extract the `aks-engine...-darwin-amd64.zip` file to a folder in your path such as `/usr/local/bin`
 
-4. Check that it runs with `acs-engine version`
+4. Check that it runs with `aks-engine version`
 
 ```bash
-$ acs-engine.exe version
+$ aks-engine.exe version
 Version: v0.20.6
 GitCommit: 293adfda
 GitTreeState: clean
@@ -194,20 +194,20 @@ Packages for the `az` cli are available for most distributions. Please follow th
 
 Now, make sure you can log into Azure. Open a new Terminal window, then run `az login`. It will have you log in to Azure in your web browser, then return back to the command line and show "You have logged in. Now let us find all the subscriptions to which you have access..." along with the list of subscriptions.
 
-##### ACS-Engine (Linux)
+##### AKS Engine (Linux)
 
-Windows support is evolving rapidly, so be sure to use the latest ACS-Engine version (v0.20 or later).
+Windows support is evolving rapidly, so be sure to use the latest AKS Engine version (v0.20 or later).
 
-1. Browse to the ACS-Engine [releases page](https://github.com/Azure/acs-engine/releases) on GitHub.
+1. Browse to the AKS Engine [releases page](https://github.com/Azure/aks-engine/releases) on GitHub.
 
 2. Find the latest version, and download the file ending in `-linux-amd64.zip`.
 
-3. Extract the `acs-engine...-linux-amd64.zip` file to a folder in your path such as `/usr/local/bin`
+3. Extract the `aks-engine...-linux-amd64.zip` file to a folder in your path such as `/usr/local/bin`
 
-4. Check that it runs with `acs-engine version`
+4. Check that it runs with `aks-engine version`
 
 ```bash
-$ acs-engine.exe version
+$ aks-engine.exe version
 Version: v0.20.6
 GitCommit: 293adfda
 GitTreeState: clean
@@ -251,14 +251,14 @@ If the file doesn't exist, run `ssh-keygen` to create one.
 
 Now that we have the Azure CLI configured and a SSH key generated, it's time to create a resource group to hold the deployment.
 
-ACS-Engine and Kubernetes also need access to deploy resources inside that resource group to build the cluster, as well as configure more resources such as Azure Load Balancers once the cluster is running. This is done using an Azure Service Principal. It's safest to create one with access just to the resource group so that once your deployment is deleted, the service principal can't be used to make other changes in your subscription.
+AKS Engine and Kubernetes also need access to deploy resources inside that resource group to build the cluster, as well as configure more resources such as Azure Load Balancers once the cluster is running. This is done using an Azure Service Principal. It's safest to create one with access just to the resource group so that once your deployment is deleted, the service principal can't be used to make other changes in your subscription.
 
 #### Create a Resource Group and Service Principal (Windows)
 
 `az group create --location <location> --name <name>` will create a group for you. Be sure to use a unique name for each cluster. If you need a list of available locations, run `az account list-locations -o table`.
 
 ```powershell
-PS C:\Users\patrick\acs-engine> az group create --location westus2 --name k8s-win1
+PS C:\Users\patrick\aks-engine> az group create --location westus2 --name k8s-win1
 {
   "id": "/subscriptions/df392461-0000-1111-2222-cd3aa2d911a6/resourceGroups/k8s-win1",
   "location": "westus2",
@@ -302,7 +302,7 @@ export SERVICEPRINCIPAL=$(az ad sp create-for-rbac --role="Contributor" --scopes
 ```
 
 
-### Create an acs-engine apimodel
+### Create an aks-engine apimodel
 
 Multiple samples are available in this repo under [examples/windows](../../examples/windows/). This guide will use the [windows/kubernetes.json](../../examples/windows/kubernetes.json) sample to deploy 1 Linux VM to run Kubernetes services, and 2 Windows nodes to run your Windows containers.
 
@@ -324,7 +324,7 @@ $windowsUser = "winuser"
 $windowsPassword = "Cr4shOverride!"
 
 # Download template
-Invoke-WebRequest -UseBasicParsing https://raw.githubusercontent.com/Azure/acs-engine/master/examples/windows/kubernetes.json -OutFile kubernetes-windows.json
+Invoke-WebRequest -UseBasicParsing https://raw.githubusercontent.com/Azure/aks-engine/master/examples/windows/kubernetes.json -OutFile kubernetes-windows.json
 
 # Load template
 $inJson = Get-Content .\kubernetes-windows.json | ConvertFrom-Json
@@ -356,7 +356,7 @@ export DNSPREFIX="wink8s1"
 export WINDOWSUSER="winuser"
 export WINDOWSPASSWORD="Cr4shOverride!"
 
-curl -L https://raw.githubusercontent.com/Azure/acs-engine/master/examples/windows/kubernetes.json -o kubernetes.json
+curl -L https://raw.githubusercontent.com/Azure/aks-engine/master/examples/windows/kubernetes.json -o kubernetes.json
 
 cat kubernetes.json | \
 jq ".properties.masterProfile.dnsPrefix = \"$DNSPREFIX\"" | \
@@ -369,10 +369,10 @@ jq ".properties.windowsProfile.adminUsername = \"$WINDOWSUSER\"" > kubernetes-wi
 
 ### Generate Azure Resource Manager template
 
-Now that the ACS-Engine cluster definition is complete, generate the Azure templates with `acs-engine generate kubernetes-windows-complete.json`
+Now that the AKS Engine cluster definition is complete, generate the Azure templates with `aks-engine generate kubernetes-windows-complete.json`
 
 ```none
-acs-engine.exe generate kubernetes-windows-complete.json
+aks-engine.exe generate kubernetes-windows-complete.json
 INFO[0000] Generating assets into _output/plangk8swin1...
 ```
 
@@ -399,7 +399,7 @@ After several minutes, it will return the list of resources created in JSON. Loo
 
 #### Check that the cluster is up
 
-As mentioned earlier, `acs-engine generate` also creates Kubernetes configuration files under `_output/<dnsprefix>/kubeconfig`. There will be one per possible region, so find the one matching the region you deployed in.
+As mentioned earlier, `aks-engine generate` also creates Kubernetes configuration files under `_output/<dnsprefix>/kubeconfig`. There will be one per possible region, so find the one matching the region you deployed in.
 
 In the example above with `dnsprefix`=`plangk8swin1` and the `westus2` region, the filename would be `_output/plangk8swin1/kubeconfig/kubeconfig.westus2.json`.
 
@@ -530,7 +530,7 @@ Once your Kubernetes cluster has been created you will have a resource group con
 
 ![Image of Kubernetes cluster on azure with Windows](../images/kubernetes-windows.png)
 
-These parts were all automatically created using the Azure Resource Manager template created by ACS-Engine:
+These parts were all automatically created using the Azure Resource Manager template created by AKS Engine:
 
 1. **Master Components** - The master runs the Kubernetes scheduler, api server, and controller manager.  Port 443 is exposed for remote management with the kubectl cli.
 2. **Linux Nodes** - the Kubernetes nodes run in an availability set.  Azure load balancers are dynamically added to the cluster depending on exposed services.
@@ -540,7 +540,7 @@ These parts were all automatically created using the Azure Resource Manager temp
 
 ## Next Steps
 
-For more resources on Windows and ACS-Engine, continue reading:
+For more resources on Windows and AKS Engine, continue reading:
 
 - [Customizing Windows Deployments](windows-details.md#customizing-windows-deployments)
 - [More Examples](windows-details.md#more-examples)

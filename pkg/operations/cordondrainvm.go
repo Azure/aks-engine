@@ -4,7 +4,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Azure/acs-engine/pkg/armhelpers"
+	"github.com/Azure/aks-engine/pkg/armhelpers"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	"k8s.io/api/core/v1"
@@ -31,7 +31,7 @@ type drainOperation struct {
 type podFilter func(v1.Pod) bool
 
 // SafelyDrainNode safely drains a node so that it can be deleted from the cluster
-func SafelyDrainNode(az armhelpers.ACSEngineClient, logger *log.Entry, masterURL, kubeConfig, nodeName string, timeout time.Duration) error {
+func SafelyDrainNode(az armhelpers.AKSEngineClient, logger *log.Entry, masterURL, kubeConfig, nodeName string, timeout time.Duration) error {
 	//get client using kubeconfig
 	client, err := az.GetKubernetesClient(masterURL, kubeConfig, interval, timeout)
 	if err != nil {

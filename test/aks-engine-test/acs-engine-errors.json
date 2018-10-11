@@ -1,0 +1,159 @@
+{
+    "Errors": [
+        {
+            "name": "AzCliRunError",
+            "class": "AzCLI",
+            "regex": "_init__.py"
+        },
+        {
+            "name": "AzCliLoadError",
+            "class": "AzCLI",
+            "regex": "Error loading command module"
+        },
+        {
+            "name": "VMStartTimedOut",
+            "class": "Deployment",
+            "regex": "VMStartTimedOut"
+        },
+		{
+            "name": "OSProvisioningTimedOut",
+            "class": "Deployment",
+            "regex": "OSProvisioningTimedOut"
+        },
+		{
+            "name": "VMExtensionProvisioningError",
+            "class": "Deployment",
+            "regex": "VMExtensionProvisioningError"
+        },
+		{
+            "name": "VMExtensionProvisioningTimeout",
+            "class": "Deployment",
+            "regex": "VMExtensionProvisioningTimeout"
+        },
+		{
+            "name": "InternalExecutionError",
+            "class": "Deployment",
+            "regex": "InternalExecutionError"
+        },
+		{
+            "name": "SkuNotAvailable",
+            "class": "Deployment",
+            "regex": "SkuNotAvailable"
+        },
+		{
+            "name": "MaxStorageAccountsCountPerSubscriptionExceeded",
+            "class": "Deployment",
+            "regex": "MaxStorageAccountsCountPerSubscriptionExceeded"
+        },
+		{
+            "name": "ImageManagementOperationError",
+            "class": "Deployment",
+            "regex": "ImageManagementOperationError"
+        },
+		{
+            "name": "DiskProcessingError",
+            "class": "Deployment",
+            "regex": "DiskProcessingError"
+        },
+		{
+            "name": "DiskServiceInternalError",
+            "class": "Deployment",
+            "regex": "DiskServiceInternalError"
+        },
+		{
+            "name": "AllocationFailed",
+            "class": "Deployment",
+            "regex": "AllocationFailed"
+        },
+		{
+            "name": "NetworkingInternalOperationError",
+            "class": "Deployment",
+            "regex": "NetworkingInternalOperationError"
+        },
+		{
+            "name": "PlatformFaultDomainCount",
+            "class": "Deployment",
+            "regex": "platformFaultDomainCount"
+        },
+		{
+            "name": "K8sNodeNotReady",
+            "class": "Validation",
+            "regex": "K8S: gave up waiting for apiserver"
+        },
+		{
+            "name": "K8sUnexpectedVersion",
+            "class": "Validation",
+            "regex": "K8S: unexpected kubernetes version"
+        },
+		{
+            "name": "K8sContainerNotCreated",
+            "class": "Validation",
+            "regex": "K8S: gave up waiting for containers"
+        },
+		{
+            "name": "K8sPodNotRunning",
+            "class": "Validation",
+            "regex": "K8S: gave up waiting for running pods"
+        },
+		{
+            "name": "K8sKubeDnsNotRunning",
+            "class": "Validation",
+            "regex": "K8S: gave up waiting for kube-dns"
+        },
+		{
+            "name": "K8sDashboardNotRunning",
+            "class": "Validation",
+            "regex": "K8S: gave up waiting for kubernetes-dashboard"
+        },
+		{
+            "name": "K8sKubeProxyNotRunning",
+            "class": "Validation",
+            "regex": "K8S: gave up waiting for kube-proxy"
+        },
+		{
+            "name": "K8sProxyNotWorking",
+            "class": "Validation",
+            "regex": "K8S: gave up verifying proxy"
+        },
+		{
+            "name": "K8sLinuxDeploymentNotReady",
+            "class": "Validation",
+            "regex": "K8S-Linux: gave up waiting for deployment"
+        },
+		{
+            "name": "K8sWindowsDeploymentNotReady",
+            "class": "Validation",
+            "regex": "K8S-Windows: gave up waiting for deployment"
+        },
+		{
+            "name": "K8sLinuxNoExternalIP",
+            "class": "Validation",
+            "regex": "K8S-Linux: gave up waiting for loadbalancer to get an ingress ip"
+        },
+		{
+            "name": "K8sWindowsNoExternalIP",
+            "class": "Validation",
+            "regex": "K8S-Windows: gave up waiting for loadbalancer to get an ingress ip"
+        },
+		{
+            "name": "K8sLinuxNginxUnreachable",
+            "class": "Validation",
+            "regex": "K8S-Linux: failed to get expected response from nginx through the loadbalancer"
+        },
+		{
+            "name": "K8sWindowsSimpleWebUnreachable",
+            "class": "Validation",
+            "regex": "K8S-Windows: failed to get expected response from simpleweb through the loadbalancer"
+        },
+		{
+            "name": "K8sWindowsNoSimpleWebPodname",
+            "class": "Validation",
+            "regex": "K8S-Windows: failed to get expected pod name for simpleweb"
+        },
+		{
+            "name": "K8sWindowsNoSimpleWebOutboundInternet",
+            "class": "Validation",
+            "regex": "K8S-Windows: failed to get outbound internet connection inside simpleweb container"
+        }
+    ]
+}

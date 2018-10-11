@@ -5,11 +5,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/Azure/acs-engine/pkg/api/v20160330"
-	"github.com/Azure/acs-engine/pkg/api/v20160930"
-	"github.com/Azure/acs-engine/pkg/api/v20170131"
-	"github.com/Azure/acs-engine/pkg/api/v20170701"
-	"github.com/Azure/acs-engine/pkg/api/vlabs"
+	"github.com/Azure/aks-engine/pkg/api/v20160930"
+	"github.com/Azure/aks-engine/pkg/api/v20170131"
+	"github.com/Azure/aks-engine/pkg/api/v20170701"
+	"github.com/Azure/aks-engine/pkg/api/vlabs"
 )
 
 type SubTestProfile struct {
@@ -200,7 +199,7 @@ const jsonWithTypo = `
 	"apiVersion": "ignored",
 	"properties": {
 	  "orchestratorProfile": {
-		"orchestratorType": "DCOS"
+		"orchestratorType": "Kubernetes"
 	  },
 	  "masterProfile": {
 		"count": 1,
@@ -231,7 +230,7 @@ func TestStrictJSONValidationIsNotAppliedToApiVersions20170701AndEarlier(t *test
 	// These API versions existed before we added strict JSON validation:
 	// we cannot apply it retrospectively because it could break existing
 	// customer apimodels.
-	preStrictVersions := []string{v20160330.APIVersion, v20160930.APIVersion, v20170131.APIVersion, v20170701.APIVersion /*, v20170930.APIVersion */}
+	preStrictVersions := []string{v20160930.APIVersion, v20170131.APIVersion, v20170701.APIVersion /*, v20170930.APIVersion */}
 	a := &Apiloader{
 		Translator: nil,
 	}

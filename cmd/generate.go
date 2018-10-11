@@ -6,10 +6,10 @@ import (
 	"os"
 	"path"
 
-	"github.com/Azure/acs-engine/pkg/acsengine"
-	"github.com/Azure/acs-engine/pkg/acsengine/transform"
-	"github.com/Azure/acs-engine/pkg/api"
-	"github.com/Azure/acs-engine/pkg/i18n"
+	"github.com/Azure/aks-engine/pkg/api"
+	"github.com/Azure/aks-engine/pkg/engine"
+	"github.com/Azure/aks-engine/pkg/engine/transform"
+	"github.com/Azure/aks-engine/pkg/i18n"
 	"github.com/leonelquinteros/gotext"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
@@ -169,12 +169,12 @@ func (gc *generateCmd) loadAPIModel(cmd *cobra.Command, args []string) error {
 func (gc *generateCmd) run() error {
 	log.Infoln(fmt.Sprintf("Generating assets into %s...", gc.outputDirectory))
 
-	ctx := acsengine.Context{
+	ctx := engine.Context{
 		Translator: &i18n.Translator{
 			Locale: gc.locale,
 		},
 	}
-	templateGenerator, err := acsengine.InitializeTemplateGenerator(ctx)
+	templateGenerator, err := engine.InitializeTemplateGenerator(ctx)
 	if err != nil {
 		log.Fatalf("failed to initialize template generator: %s", err.Error())
 	}
@@ -184,7 +184,7 @@ func (gc *generateCmd) run() error {
 		log.Fatalf("error in SetPropertiesDefaults template %s: %s", gc.apimodelPath, err.Error())
 		os.Exit(1)
 	}
-	template, parameters, err := templateGenerator.GenerateTemplate(gc.containerService, acsengine.DefaultGeneratorCode, BuildTag)
+	template, parameters, err := templateGenerator.GenerateTemplate(gc.containerService, engine.DefaultGeneratorCode, BuildTag)
 	if err != nil {
 		log.Fatalf("error generating template %s: %s", gc.apimodelPath, err.Error())
 		os.Exit(1)
@@ -199,7 +199,7 @@ func (gc *generateCmd) run() error {
 		}
 	}
 
-	writer := &acsengine.ArtifactWriter{
+	writer := &engine.ArtifactWriter{
 		Translator: &i18n.Translator{
 			Locale: gc.locale,
 		},

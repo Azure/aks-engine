@@ -3,7 +3,7 @@ package cmd_test
 import (
 	"testing"
 
-	. "github.com/Azure/acs-engine/pkg/test"
+	. "github.com/Azure/aks-engine/pkg/test"
 )
 
 func TestCmd(t *testing.T) {

@@ -2,7 +2,7 @@
 
 There are numerous implementations of a service mesh which integrate with kubernetes such as Istio, [Linkerd](http://linkerd.io), and [Conduit](https://conduit.io/).  [This is one blog post](https://medium.com/microservices-in-practice/service-mesh-for-microservices-2953109a3c9a) which explains some fundamentals behind what it is and why to use it.
 
-Some service mesh implementations **may** benefit from or require additional [customizations to the kubernetes cluster itself](https://github.com/Azure/acs-engine/blob/master/docs/clusterdefinition.md).
+Some service mesh implementations **may** benefit from or require additional [customizations to the kubernetes cluster itself](https://github.com/Azure/aks-engine/blob/master/docs/clusterdefinition.md).
 
 ## Istio
 

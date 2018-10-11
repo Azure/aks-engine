@@ -6,10 +6,10 @@ import (
 	"math/rand"
 	"time"
 
-	"github.com/Azure/acs-engine/pkg/api"
-	"github.com/Azure/acs-engine/pkg/armhelpers"
-	"github.com/Azure/acs-engine/pkg/i18n"
-	"github.com/Azure/acs-engine/pkg/operations"
+	"github.com/Azure/aks-engine/pkg/api"
+	"github.com/Azure/aks-engine/pkg/armhelpers"
+	"github.com/Azure/aks-engine/pkg/i18n"
+	"github.com/Azure/aks-engine/pkg/operations"
 	"github.com/sirupsen/logrus"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -32,7 +32,7 @@ type UpgradeAgentNode struct {
 	UpgradeContainerService *api.ContainerService
 	SubscriptionID          string
 	ResourceGroup           string
-	Client                  armhelpers.ACSEngineClient
+	Client                  armhelpers.AKSEngineClient
 	kubeConfig              string
 	timeout                 time.Duration
 }

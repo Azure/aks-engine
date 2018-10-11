@@ -1,8 +1,8 @@
-# Microsoft Azure Container Service Engine - Provisioning of master node custom files
+# Microsoft Azure Kubernetes Service Engine - Provisioning of master node custom files
 
 ## Overview
 
-ACS-Engine enables you to provision custom files to your master nodes. This can be used to put whichever files you want on your master nodes to whichever path you want (and have permission to). For example, the use case is when you want additional configurations to native kubernetes features, such as in
+AKS Engine enables you to provision custom files to your master nodes. This can be used to put whichever files you want on your master nodes to whichever path you want (and have permission to). For example, the use case is when you want additional configurations to native kubernetes features, such as in
 the [given example](../examples/customfiles/kubernetes-customfiles-podnodeselector.yaml)
 
 ## Examples

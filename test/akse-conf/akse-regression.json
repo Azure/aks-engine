@@ -1,0 +1,12 @@
+{
+  "deployments": [
+    {
+      "cluster_definition": "networkpolicy/kubernetes-calico.json",
+      "category": "network"
+    },
+    {
+      "cluster_definition": "vnet/kubernetesvnet.json",
+      "category": "network"
+    }
+  ]
+}

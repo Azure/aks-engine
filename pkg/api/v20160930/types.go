@@ -30,7 +30,7 @@ type ContainerService struct {
 	Properties *Properties `json:"properties"`
 }
 
-// Properties represents the ACS cluster definition
+// Properties represents the AKS cluster definition
 type Properties struct {
 	ProvisioningState       ProvisioningState        `json:"provisioningState,omitempty"`
 	OrchestratorProfile     *OrchestratorProfile     `json:"orchestratorProfile,omitempty"`
@@ -223,14 +223,8 @@ func (o *OrchestratorProfile) UnmarshalJSON(b []byte) error {
 	// Unmarshal OrchestratorType, format it as well
 	orchestratorType := o.OrchestratorType
 	switch {
-	case strings.EqualFold(orchestratorType, DCOS):
-		o.OrchestratorType = DCOS
-	case strings.EqualFold(orchestratorType, Swarm):
-		o.OrchestratorType = Swarm
 	case strings.EqualFold(orchestratorType, Kubernetes):
 		o.OrchestratorType = Kubernetes
-	case strings.EqualFold(orchestratorType, Mesos):
-		o.OrchestratorType = Mesos
 	default:
 		return errors.Errorf("OrchestratorType has unknown orchestrator: %s", orchestratorType)
 	}
@@ -268,11 +262,6 @@ func (a *AgentPoolProfile) IsWindows() bool {
 // IsLinux returns true if the agent pool is linux
 func (a *AgentPoolProfile) IsLinux() bool {
 	return a.OSType == Linux
-}
-
-// IsDCOS returns true if this template is for DCOS orchestrator
-func (o *OrchestratorProfile) IsDCOS() bool {
-	return o.OrchestratorType == DCOS
 }
 
 // GetSubnet returns the read-only subnet for the agent pool

@@ -1,6 +1,6 @@
 # Contributing Guidelines
 
-The Microsoft acs-engine project accepts contributions via GitHub pull requests. This document outlines the process to help get your contribution accepted.
+The Microsoft aks-engine project accepts contributions via GitHub pull requests. This document outlines the process to help get your contribution accepted.
 
 ## Contributor License Agreements
 
@@ -18,8 +18,8 @@ signed the CLA can be accepted into the repository.
 This is an open source project and as such no formal support is available. However, like all good open source projects we do offer "best effort" support through github issues.
 
 GitHub issues:
-- ACS-Engine: https://github.com/Azure/acs-engine/issues - file issues and PRs related to ACS-Engine
-- ACS: https://github.com/Azure/acs/issues - file issues and PRs related to Azure Container Service
+- AKS Engine: https://github.com/Azure/aks-engine/issues - file issues and PRs related to AKS Engine
+- AKS: https://github.com/Azure/AKS/issues - file issues and PRs related to Azure Kubernetes Service
 
 Before opening a new issue or submitting a new pull request, it's helpful to search the project - it's likely that another user has already reported the issue you're facing, or it's a known issue that we're already aware of.
 
@@ -33,11 +33,11 @@ specific upcoming bug or minor release, it would go into `2.2.1` or `2.3.0`.
 A milestone (and hence release) is considered done when all outstanding issues/PRs have been closed or moved to another milestone.
 
 ## Issues
-Issues are used as the primary method for tracking anything to do with the acs-engine project.
+Issues are used as the primary method for tracking anything to do with the aks-engine project.
 
 ### Issue Lifecycle
 The issue lifecycle is mainly driven by the core maintainers, but is good information for those
-contributing to acs-engine. All issue types follow the same general lifecycle. Differences are noted below.
+contributing to aks-engine. All issue types follow the same general lifecycle. Differences are noted below.
 1. Issue creation
 2. Triage
     - The maintainer in charge of triaging will apply the proper labels for the issue. This

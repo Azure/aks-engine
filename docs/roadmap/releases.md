@@ -1,6 +1,6 @@
 # Releases
 
-acs-engine uses a [continuous delivery][] approach for creating releases. Every merged commit that passes
+aks-engine uses a [continuous delivery][] approach for creating releases. Every merged commit that passes
 testing results in a deliverable that can be given a [semantic version][] tag and shipped.
 
 ## Release as Needed
@@ -8,33 +8,33 @@ testing results in a deliverable that can be given a [semantic version][] tag an
 The master `git` branch of a project should always work. Only changes considered ready to be
 released publicly are merged.
 
-acs-engine depends on components that release new versions as often as needed. Fixing
+aks-engine depends on components that release new versions as often as needed. Fixing
 a high priority bug requires the project maintainer to create a new patch release.
 Merging a backward-compatible feature implies a minor release.
 
 By releasing often, each component release becomes a safe and routine event. This makes it faster
 and easier for users to obtain specific fixes. Continuous delivery also reduces the work
-necessary to release a product such as acs-engine, which depends on several external projects.
+necessary to release a product such as aks-engine, which depends on several external projects.
 
 "Components" applies not just to ACS projects, but also to development and release
-tools, orchestrator versions (Kubernetes, DC/OS, Swarm),to Docker base images, and to other Azure
+tools, Kubernetes orchestrator versions, to Docker base images, and to other Azure
 projects that do [semantic version][] releases.
 
-## acs-engine Releases Each Month
+## aks-engine Releases Each Month
 
-acs-engine has a regular, public release cadence. From v0.1.0 onward, new acs-engine feature
+aks-engine has a regular, public release cadence. From v0.1.0 onward, new aks-engine feature
 releases arrive on the first Thursday of each month. Patch releases are created at any time,
 as needed. GitHub milestones are used to communicate the content and timing of major and minor
 releases, and longer-term planning is visible at [the Roadmap](roadmap.md).
 
-acs-engine release timing is not linked to specific features. If a feature is merged before the
+aks-engine release timing is not linked to specific features. If a feature is merged before the
 release date, it is included in the next release.
 
-See "[How to Release acs-engine](#how-to-release-acs-engine)" for more detail.
+See "[How to Release aks-engine](#how-to-release-aks-engine)" for more detail.
 
 ## Semantic Versioning
 
-acs-engine releases comply with [semantic versioning][semantic version], with the "public API" broadly
+aks-engine releases comply with [semantic versioning][semantic version], with the "public API" broadly
 defined as:
 
 - REST, gRPC, or other API that is network-accessible
@@ -44,16 +44,16 @@ defined as:
 - Integration with Azure public APIs such as ARM
 
 In general, changes to anything a user might reasonably link to, customize, or integrate with should
-be backward-compatible, or else require a major release. acs-engine users can be confident that upgrading
+be backward-compatible, or else require a major release. aks-engine users can be confident that upgrading
 to a patch or to a minor release will not break anything.
 
-## How to Release acs-engine
+## How to Release aks-engine
 
-This section leads a maintainer through creating an acs-engine release.
+This section leads a maintainer through creating an aks-engine release.
 
 ### Step 1: Assemble Master Changelog
 A change log is a file which contains a curated, chronologically ordered list of changes
-for each version of acs-engine, which helps users and contributors see what notable changes
+for each version of aks-engine, which helps users and contributors see what notable changes
 have been made between each version of the project.
 
 The CHANGELOG should be driven by release milestones defined on Github, which track specific deliverables and
@@ -88,13 +88,13 @@ TBD
 
 ### Step 5: Let Everyone Know
 
-Let the rest of the team know they can start blogging and tweeting about the new acs-engine release.
+Let the rest of the team know they can start blogging and tweeting about the new aks-engine release.
 Post a message to the #company channel on Slack. Include a link to the released chart and to the
 master CHANGELOG:
 
 ```
-@here acs-engine 0.1.0 is here!
-Master CHANGELOG: https://github.com/Azure/acs-engine/CHANGELOG.md
+@here aks-engine 0.1.0 is here!
+Master CHANGELOG: https://github.com/Azure/aks-engine/CHANGELOG.md
 ```
 
 You're done with the release. Nice job!

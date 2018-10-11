@@ -1,8 +1,6 @@
 package engine
 
 import (
-	"crypto/rand"
-	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -10,11 +8,11 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/Azure/acs-engine/pkg/api"
-	"github.com/Azure/acs-engine/pkg/api/vlabs"
-	"github.com/Azure/acs-engine/pkg/helpers"
-	"github.com/Azure/acs-engine/pkg/i18n"
-	"github.com/Azure/acs-engine/test/e2e/config"
+	"github.com/Azure/aks-engine/pkg/api"
+	"github.com/Azure/aks-engine/pkg/api/vlabs"
+	"github.com/Azure/aks-engine/pkg/helpers"
+	"github.com/Azure/aks-engine/pkg/i18n"
+	"github.com/Azure/aks-engine/test/e2e/config"
 	"github.com/kelseyhightower/envconfig"
 	"github.com/pkg/errors"
 )
@@ -41,14 +39,14 @@ type Config struct {
 
 	ClusterDefinitionPath     string // The original template we want to use to build the cluster from.
 	ClusterDefinitionTemplate string // This is the template after we splice in the environment variables
-	GeneratedDefinitionPath   string // Holds the contents of running acs-engine generate
+	GeneratedDefinitionPath   string // Holds the contents of running aks-engine generate
 	OutputPath                string // This is the root output path
 	DefinitionName            string // Unique cluster name
 	GeneratedTemplatePath     string // azuredeploy.json path
 	GeneratedParametersPath   string // azuredeploy.parameters.json path
 }
 
-// Engine holds necessary information to interact with acs-engine cli
+// Engine holds necessary information to interact with aks-engine cli
 type Engine struct {
 	Config             *Config
 	ClusterDefinition  *api.VlabsARMContainerService // Holds the parsed ClusterDefinition
@@ -93,49 +91,12 @@ func Build(cfg *config.Config, masterSubnetID string, agentSubnetID string, isVM
 			Secret:   config.ClientSecret,
 		}
 	}
-	if cfg.IsOpenShift() {
-		// azProfile
-		cs.ContainerService.Properties.AzProfile = &vlabs.AzProfile{
-			TenantID:       config.TenantID,
-			SubscriptionID: config.SubscriptionID,
-			ResourceGroup:  cfg.Name,
-			Location:       cfg.Location,
-		}
-		// openshiftConfig
-		pass, err := generateRandomString(32)
-		if err != nil {
-			return nil, err
-		}
-		cs.ContainerService.Properties.OrchestratorProfile.OpenShiftConfig = &vlabs.OpenShiftConfig{
-			ClusterUsername: "test-user",
-			ClusterPassword: pass,
-		}
-		// master and agent config
-		cs.ContainerService.Properties.MasterProfile.Distro = vlabs.Distro(config.Distro)
-		cs.ContainerService.Properties.MasterProfile.ImageRef = nil
-		if config.ImageName != "" && config.ImageResourceGroup != "" {
-			cs.ContainerService.Properties.MasterProfile.ImageRef = &vlabs.ImageReference{
-				Name:          config.ImageName,
-				ResourceGroup: config.ImageResourceGroup,
-			}
-		}
-		for i := range cs.ContainerService.Properties.AgentPoolProfiles {
-			cs.ContainerService.Properties.AgentPoolProfiles[i].Distro = vlabs.Distro(config.Distro)
-			cs.ContainerService.Properties.AgentPoolProfiles[i].ImageRef = nil
-			if config.ImageName != "" && config.ImageResourceGroup != "" {
-				cs.ContainerService.Properties.AgentPoolProfiles[i].ImageRef = &vlabs.ImageReference{
-					Name:          config.ImageName,
-					ResourceGroup: config.ImageResourceGroup,
-				}
-			}
-		}
-	}
 
 	if config.MasterDNSPrefix != "" {
 		cs.ContainerService.Properties.MasterProfile.DNSPrefix = config.MasterDNSPrefix
 	}
 
-	if !cfg.IsKubernetes() && !cfg.IsOpenShift() && config.AgentDNSPrefix != "" {
+	if !cfg.IsKubernetes() && config.AgentDNSPrefix != "" {
 		for idx, pool := range cs.ContainerService.Properties.AgentPoolProfiles {
 			pool.DNSPrefix = fmt.Sprintf("%v-%v", config.AgentDNSPrefix, idx)
 		}
@@ -161,7 +122,7 @@ func Build(cfg *config.Config, masterSubnetID string, agentSubnetID string, isVM
 			// Or, choose the version string if ENV declares it
 		} else if config.OrchestratorVersion != "" {
 			cs.ContainerService.Properties.OrchestratorProfile.OrchestratorVersion = config.OrchestratorVersion
-			// If ENV similarly has no version opinion, we will rely upon the acs-engine default
+			// If ENV similarly has no version opinion, we will rely upon the aks-engine default
 		} else {
 			log.Println("No orchestrator version specified, will use the default.")
 		}
@@ -283,18 +244,4 @@ func ParseOutput(path string) (*api.ContainerService, error) {
 		return nil, err
 	}
 	return containerService, nil
-}
-
-func generateRandomBytes(n int) ([]byte, error) {
-	b := make([]byte, n)
-	_, err := rand.Read(b)
-	if err != nil {
-		return nil, err
-	}
-	return b, nil
-}
-
-func generateRandomString(s int) (string, error) {
-	b, err := generateRandomBytes(s)
-	return base64.URLEncoding.EncodeToString(b), err
 }

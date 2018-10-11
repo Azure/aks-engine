@@ -10,15 +10,14 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/Azure/acs-engine/pkg/api/agentPoolOnlyApi/v20170831"
-	"github.com/Azure/acs-engine/pkg/api/agentPoolOnlyApi/v20180331"
-	"github.com/Azure/acs-engine/pkg/api/common"
-	"github.com/Azure/acs-engine/pkg/api/v20160330"
-	"github.com/Azure/acs-engine/pkg/api/v20160930"
-	"github.com/Azure/acs-engine/pkg/api/v20170131"
-	"github.com/Azure/acs-engine/pkg/api/v20170701"
-	"github.com/Azure/acs-engine/pkg/api/vlabs"
-	"github.com/Azure/acs-engine/pkg/helpers"
+	"github.com/Azure/aks-engine/pkg/api/agentPoolOnlyApi/v20170831"
+	"github.com/Azure/aks-engine/pkg/api/agentPoolOnlyApi/v20180331"
+	"github.com/Azure/aks-engine/pkg/api/common"
+	"github.com/Azure/aks-engine/pkg/api/v20160930"
+	"github.com/Azure/aks-engine/pkg/api/v20170131"
+	"github.com/Azure/aks-engine/pkg/api/v20170701"
+	"github.com/Azure/aks-engine/pkg/api/vlabs"
+	"github.com/Azure/aks-engine/pkg/helpers"
 	"github.com/blang/semver"
 )
 
@@ -50,7 +49,7 @@ type ContainerService struct {
 	Properties *Properties `json:"properties,omitempty"`
 }
 
-// Properties represents the ACS cluster definition
+// Properties represents the AKS cluster definition
 type Properties struct {
 	ClusterID               string
 	ProvisioningState       ProvisioningState        `json:"provisioningState,omitempty"`
@@ -72,7 +71,7 @@ type Properties struct {
 	FeatureFlags            *FeatureFlags            `json:"featureFlags,omitempty"`
 }
 
-// ClusterMetadata represents the metadata of the ACS cluster.
+// ClusterMetadata represents the metadata of the AKS cluster.
 type ClusterMetadata struct {
 	SubnetName                 string `json:"subnetName,omitempty"`
 	VNetResourceGroupName      string `json:"vnetResourceGroupName,omitempty"`
@@ -222,8 +221,6 @@ type OrchestratorProfile struct {
 	OrchestratorType    string            `json:"orchestratorType"`
 	OrchestratorVersion string            `json:"orchestratorVersion"`
 	KubernetesConfig    *KubernetesConfig `json:"kubernetesConfig,omitempty"`
-	OpenShiftConfig     *OpenShiftConfig  `json:"openshiftConfig,omitempty"`
-	DcosConfig          *DcosConfig       `json:"dcosConfig,omitempty"`
 }
 
 // OrchestratorVersionProfile contains information of a supported orchestrator version:
@@ -379,52 +376,6 @@ type KubernetesConfig struct {
 type CustomFile struct {
 	Source string `json:"source,omitempty"`
 	Dest   string `json:"dest,omitempty"`
-}
-
-// BootstrapProfile represents the definition of the DCOS bootstrap node used to deploy the cluster
-type BootstrapProfile struct {
-	VMSize       string `json:"vmSize,omitempty"`
-	OSDiskSizeGB int    `json:"osDiskSizeGB,omitempty"`
-	OAuthEnabled bool   `json:"oauthEnabled,omitempty"`
-	StaticIP     string `json:"staticIP,omitempty"`
-	Subnet       string `json:"subnet,omitempty"`
-}
-
-// DcosConfig Configuration for DC/OS
-type DcosConfig struct {
-	DcosBootstrapURL         string            `json:"dcosBootstrapURL,omitempty"`
-	DcosWindowsBootstrapURL  string            `json:"dcosWindowsBootstrapURL,omitempty"`
-	Registry                 string            `json:"registry,omitempty"`
-	RegistryUser             string            `json:"registryUser,omitempty"`
-	RegistryPass             string            `json:"registryPassword,omitempty"`
-	DcosRepositoryURL        string            `json:"dcosRepositoryURL,omitempty"`        // For CI use, you need to specify
-	DcosClusterPackageListID string            `json:"dcosClusterPackageListID,omitempty"` // all three of these items
-	DcosProviderPackageID    string            `json:"dcosProviderPackageID,omitempty"`    // repo url is the location of the build,
-	BootstrapProfile         *BootstrapProfile `json:"bootstrapProfile,omitempty"`
-}
-
-// OpenShiftConfig holds configuration for OpenShift
-type OpenShiftConfig struct {
-	KubernetesConfig *KubernetesConfig `json:"kubernetesConfig,omitempty"`
-
-	// ClusterUsername and ClusterPassword are temporary, do not rely on them.
-	ClusterUsername string `json:"clusterUsername,omitempty"`
-	ClusterPassword string `json:"clusterPassword,omitempty"`
-
-	// EnableAADAuthentication is temporary, do not rely on it.
-	EnableAADAuthentication bool `json:"enableAADAuthentication,omitempty"`
-
-	ConfigBundles map[string][]byte `json:"configBundles,omitempty"`
-
-	PublicHostname string
-	RouterProfiles []OpenShiftRouterProfile
-}
-
-// OpenShiftRouterProfile represents an OpenShift router.
-type OpenShiftRouterProfile struct {
-	Name            string
-	PublicSubdomain string
-	FQDN            string
 }
 
 // MasterProfile represents the definition of the master cluster
@@ -636,23 +587,15 @@ type CustomProfile struct {
 }
 
 // VlabsARMContainerService is the type we read and write from file
-// needed because the json that is sent to ARM and acs-engine
+// needed because the json that is sent to ARM and aks-engine
 // is different from the json that the ACS RP Api gets from ARM
 type VlabsARMContainerService struct {
 	TypeMeta
 	*vlabs.ContainerService
 }
 
-// V20160330ARMContainerService is the type we read and write from file
-// needed because the json that is sent to ARM and acs-engine
-// is different from the json that the ACS RP Api gets from ARM
-type V20160330ARMContainerService struct {
-	TypeMeta
-	*v20160330.ContainerService
-}
-
 // V20160930ARMContainerService is the type we read and write from file
-// needed because the json that is sent to ARM and acs-engine
+// needed because the json that is sent to ARM and aks-engine
 // is different from the json that the ACS RP Api gets from ARM
 type V20160930ARMContainerService struct {
 	TypeMeta
@@ -660,7 +603,7 @@ type V20160930ARMContainerService struct {
 }
 
 // V20170131ARMContainerService is the type we read and write from file
-// needed because the json that is sent to ARM and acs-engine
+// needed because the json that is sent to ARM and aks-engine
 // is different from the json that the ACS RP Api gets from ARM
 type V20170131ARMContainerService struct {
 	TypeMeta
@@ -668,7 +611,7 @@ type V20170131ARMContainerService struct {
 }
 
 // V20170701ARMContainerService is the type we read and write from file
-// needed because the json that is sent to ARM and acs-engine
+// needed because the json that is sent to ARM and aks-engine
 // is different from the json that the ACS RP Api gets from ARM
 type V20170701ARMContainerService struct {
 	TypeMeta
@@ -676,7 +619,7 @@ type V20170701ARMContainerService struct {
 }
 
 // V20170831ARMManagedContainerService is the type we read and write from file
-// needed because the json that is sent to ARM and acs-engine
+// needed because the json that is sent to ARM and aks-engine
 // is different from the json that the ACS RP Api gets from ARM
 type V20170831ARMManagedContainerService struct {
 	TypeMeta
@@ -684,7 +627,7 @@ type V20170831ARMManagedContainerService struct {
 }
 
 // V20180331ARMManagedContainerService is the type we read and write from file
-// needed because the json that is sent to ARM and acs-engine
+// needed because the json that is sent to ARM and aks-engine
 // is different from the json that the ACS RP Api gets from ARM
 type V20180331ARMManagedContainerService struct {
 	TypeMeta
@@ -719,9 +662,6 @@ func (p *Properties) HasManagedDisks() bool {
 
 // HasStorageAccountDisks returns true if the cluster contains Storage Account Disks
 func (p *Properties) HasStorageAccountDisks() bool {
-	if p.OrchestratorProfile != nil && p.OrchestratorProfile.OrchestratorType == OpenShift {
-		return true
-	}
 	if p.MasterProfile != nil && p.MasterProfile.StorageProfile == StorageAccount {
 		return true
 	}
@@ -760,15 +700,11 @@ func (p *Properties) HasVMSSAgentPool() bool {
 
 // K8sOrchestratorName returns the 3 character orchestrator code for kubernetes-based clusters.
 func (p *Properties) K8sOrchestratorName() string {
-	if p.OrchestratorProfile.IsKubernetes() ||
-		p.OrchestratorProfile.IsOpenShift() {
+	if p.OrchestratorProfile.IsKubernetes() {
 		if p.HostedMasterProfile != nil {
 			return DefaultHostedProfileMasterName
-		} else if p.OrchestratorProfile.IsOpenShift() {
-			return DefaultOpenshiftOrchestratorName
-		} else {
-			return DefaultOrchestratorName
 		}
+		return DefaultOrchestratorName
 	}
 	return ""
 }
@@ -1125,24 +1061,9 @@ func (l *LinuxProfile) HasCustomNodesDNS() bool {
 	return false
 }
 
-// IsSwarmMode returns true if this template is for Swarm Mode orchestrator
-func (o *OrchestratorProfile) IsSwarmMode() bool {
-	return o.OrchestratorType == SwarmMode
-}
-
 // IsKubernetes returns true if this template is for Kubernetes orchestrator
 func (o *OrchestratorProfile) IsKubernetes() bool {
 	return o.OrchestratorType == Kubernetes
-}
-
-// IsOpenShift returns true if this template is for OpenShift orchestrator
-func (o *OrchestratorProfile) IsOpenShift() bool {
-	return o.OrchestratorType == OpenShift
-}
-
-// IsDCOS returns true if this template is for DCOS orchestrator
-func (o *OrchestratorProfile) IsDCOS() bool {
-	return o.OrchestratorType == DCOS
 }
 
 // IsAzureCNI returns true if Azure CNI network plugin is enabled

@@ -4,7 +4,7 @@ import (
 	"net"
 	"regexp"
 
-	"github.com/Azure/acs-engine/pkg/api/common"
+	"github.com/Azure/aks-engine/pkg/api/common"
 	"github.com/pkg/errors"
 	"gopkg.in/go-playground/validator.v9"
 )
@@ -26,19 +26,6 @@ func (o *OrchestratorProfile) Validate(isUpdate, hasWindows bool) error {
 	// On updates we only need to make sure there is a supported patch version for the minor version
 	if !isUpdate {
 		switch o.OrchestratorType {
-		case Swarm:
-		case DCOS:
-			switch o.OrchestratorVersion {
-			case common.DCOSVersion1Dot11Dot0:
-			case common.DCOSVersion1Dot10Dot0:
-			case common.DCOSVersion1Dot9Dot0:
-			case common.DCOSVersion1Dot9Dot8:
-			case common.DCOSVersion1Dot8Dot8:
-			case "":
-			default:
-				return errors.Errorf("OrchestratorProfile has unknown orchestrator version: %s", o.OrchestratorVersion)
-			}
-		case DockerCE:
 		case Kubernetes:
 			if k8sVersion := o.OrchestratorVersion; !common.IsSupportedKubernetesVersion(k8sVersion, isUpdate, hasWindows) && o.OrchestratorVersion != "" {
 				return errors.Errorf("OrchestratorProfile has unknown orchestrator version: %s", o.OrchestratorVersion)
@@ -49,7 +36,7 @@ func (o *OrchestratorProfile) Validate(isUpdate, hasWindows bool) error {
 		}
 	} else {
 		switch o.OrchestratorType {
-		case DCOS, Kubernetes:
+		case Kubernetes:
 			patchVersion := common.GetValidPatchVersion(o.OrchestratorType, o.OrchestratorVersion, isUpdate, hasWindows)
 			// if there isn't a supported patch version for this version fail
 			if patchVersion == "" {

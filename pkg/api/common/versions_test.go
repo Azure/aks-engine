@@ -342,11 +342,6 @@ func Test_GetValidPatchVersion(t *testing.T) {
 		t.Errorf("It is not the default Kubernetes version")
 	}
 
-	v = GetValidPatchVersion(Mesos, "1.6.0", false, false)
-	if v != "" {
-		t.Errorf("Expected empty version for unsupported orchType")
-	}
-
 	for version, enabled := range AllKubernetesWindowsSupportedVersions {
 		if enabled {
 			v = GetValidPatchVersion(Kubernetes, version, false, true)

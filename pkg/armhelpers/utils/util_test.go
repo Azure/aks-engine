@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/Azure/acs-engine/pkg/api"
+	"github.com/Azure/aks-engine/pkg/api"
 	"github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2018-04-01/compute"
 )
 
@@ -65,7 +65,7 @@ func Test_VmssNameParts(t *testing.T) {
 	}
 
 	for _, el := range data {
-		vmssName := fmt.Sprintf("swarmm-%s-%s-vmss", el.poolIdentifier, el.nameSuffix)
+		vmssName := fmt.Sprintf("kuberm-%s-%s-vmss", el.poolIdentifier, el.nameSuffix)
 		poolIdentifier, nameSuffix, err := VmssNameParts(vmssName)
 		if err != nil {
 			t.Fatalf("unexpected error: %s", err)

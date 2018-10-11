@@ -5,13 +5,12 @@ import (
 	"fmt"
 	"net"
 	"net/url"
-	"reflect"
 	"regexp"
 	"strings"
 	"time"
 
-	"github.com/Azure/acs-engine/pkg/api/common"
-	"github.com/Azure/acs-engine/pkg/helpers"
+	"github.com/Azure/aks-engine/pkg/api/common"
+	"github.com/Azure/aks-engine/pkg/helpers"
 	"github.com/blang/semver"
 	"github.com/pkg/errors"
 	"github.com/satori/go.uuid"
@@ -145,9 +144,6 @@ func (a *Properties) Validate(isUpdate bool) error {
 		return e
 	}
 
-	if e := a.validateAzProfile(); e != nil {
-		return e
-	}
 	return nil
 }
 
@@ -162,26 +158,6 @@ func (a *Properties) validateOrchestratorProfile(isUpdate bool) error {
 	// On updates we only need to make sure there is a supported patch version for the minor version
 	if !isUpdate {
 		switch o.OrchestratorType {
-		case DCOS:
-			version := common.RationalizeReleaseAndVersion(
-				o.OrchestratorType,
-				o.OrchestratorRelease,
-				o.OrchestratorVersion,
-				isUpdate,
-				false)
-			if version == "" {
-				return errors.Errorf("the following OrchestratorProfile configuration is not supported: OrchestratorType: %s, OrchestratorRelease: %s, OrchestratorVersion: %s. Please check supported Release or Version for this build of acs-engine", o.OrchestratorType, o.OrchestratorRelease, o.OrchestratorVersion)
-			}
-			if o.DcosConfig != nil && o.DcosConfig.BootstrapProfile != nil {
-				if len(o.DcosConfig.BootstrapProfile.StaticIP) > 0 {
-					if net.ParseIP(o.DcosConfig.BootstrapProfile.StaticIP) == nil {
-						return errors.Errorf("DcosConfig.BootstrapProfile.StaticIP '%s' is an invalid IP address",
-							o.DcosConfig.BootstrapProfile.StaticIP)
-					}
-				}
-			}
-		case Swarm:
-		case SwarmMode:
 		case Kubernetes:
 			version := common.RationalizeReleaseAndVersion(
 				o.OrchestratorType,
@@ -267,7 +243,7 @@ func (a *Properties) validateOrchestratorProfile(isUpdate bool) error {
 						return errors.Errorf("could not validate version")
 					}
 					if sv.LT(minVersion) {
-						return errors.Errorf("enablePodSecurityPolicy is only supported in acs-engine for Kubernetes version %s or greater; unable to validate for Kubernetes version %s",
+						return errors.Errorf("enablePodSecurityPolicy is only supported in aks-engine for Kubernetes version %s or greater; unable to validate for Kubernetes version %s",
 							minVersion.String(), version)
 					}
 				}
@@ -290,29 +266,12 @@ func (a *Properties) validateOrchestratorProfile(isUpdate bool) error {
 					log.Warnf("docker-engine is deprecated in favor of moby, but you passed in a dockerEngineVersion configuration. This will be ignored.")
 				}
 			}
-		case OpenShift:
-			// TODO: add appropriate additional validation logic
-			if o.OrchestratorVersion != common.OpenShiftVersionUnstable {
-				version := common.RationalizeReleaseAndVersion(
-					o.OrchestratorType,
-					o.OrchestratorRelease,
-					o.OrchestratorVersion,
-					isUpdate,
-					false)
-				if version == "" {
-					return errors.Errorf("OrchestratorProfile is not able to be rationalized, check supported Release or Version")
-				}
-			}
-			if o.OpenShiftConfig == nil {
-				return errors.Errorf("OpenShiftConfig must be specified for OpenShift orchestrator")
-			}
-			return o.OpenShiftConfig.Validate()
 		default:
 			return errors.Errorf("OrchestratorProfile has unknown orchestrator: %s", o.OrchestratorType)
 		}
 	} else {
 		switch o.OrchestratorType {
-		case DCOS, Kubernetes:
+		case Kubernetes:
 
 			version := common.RationalizeReleaseAndVersion(
 				o.OrchestratorType,
@@ -325,25 +284,17 @@ func (a *Properties) validateOrchestratorProfile(isUpdate bool) error {
 				// if there isn't a supported patch version for this version fail
 				if patchVersion == "" {
 					if a.HasWindows() {
-						return errors.Errorf("the following OrchestratorProfile configuration is not supported with Windows agentpools: OrchestratorType: \"%s\", OrchestratorRelease: \"%s\", OrchestratorVersion: \"%s\". Please check supported Release or Version for this build of acs-engine", o.OrchestratorType, o.OrchestratorRelease, o.OrchestratorVersion)
+						return errors.Errorf("the following OrchestratorProfile configuration is not supported with Windows agentpools: OrchestratorType: \"%s\", OrchestratorRelease: \"%s\", OrchestratorVersion: \"%s\". Please check supported Release or Version for this build of aks-engine", o.OrchestratorType, o.OrchestratorRelease, o.OrchestratorVersion)
 					}
-					return errors.Errorf("the following OrchestratorProfile configuration is not supported: OrchestratorType: \"%s\", OrchestratorRelease: \"%s\", OrchestratorVersion: \"%s\". Please check supported Release or Version for this build of acs-engine", o.OrchestratorType, o.OrchestratorRelease, o.OrchestratorVersion)
+					return errors.Errorf("the following OrchestratorProfile configuration is not supported: OrchestratorType: \"%s\", OrchestratorRelease: \"%s\", OrchestratorVersion: \"%s\". Please check supported Release or Version for this build of aks-engine", o.OrchestratorType, o.OrchestratorRelease, o.OrchestratorVersion)
 				}
 			}
 
 		}
 	}
 
-	if (o.OrchestratorType != Kubernetes && o.OrchestratorType != OpenShift) && o.KubernetesConfig != nil {
-		return errors.Errorf("KubernetesConfig can be specified only when OrchestratorType is Kubernetes or OpenShift")
-	}
-
-	if o.OrchestratorType != OpenShift && o.OpenShiftConfig != nil {
-		return errors.Errorf("OpenShiftConfig can be specified only when OrchestratorType is OpenShift")
-	}
-
-	if o.OrchestratorType != DCOS && o.DcosConfig != nil && (*o.DcosConfig != DcosConfig{}) {
-		return errors.Errorf("DcosConfig can be specified only when OrchestratorType is DCOS")
+	if (o.OrchestratorType != Kubernetes) && o.KubernetesConfig != nil {
+		return errors.Errorf("KubernetesConfig can be specified only when OrchestratorType is Kubernetes")
 	}
 
 	if e := a.validateContainerRuntime(); e != nil {
@@ -355,18 +306,6 @@ func (a *Properties) validateOrchestratorProfile(isUpdate bool) error {
 
 func (a *Properties) validateMasterProfile() error {
 	m := a.MasterProfile
-	if a.OrchestratorProfile.OrchestratorType == OpenShift {
-		if m.Count != 1 {
-			return errors.New("openshift can only deployed with one master")
-		}
-		if m.VnetSubnetID != "" && m.FirstConsecutiveStaticIP == "" {
-			return errors.New("when specifying a vnetsubnetid the firstconsecutivestaticip is required")
-		}
-		if m.StorageProfile != ManagedDisks {
-			return errors.New("OpenShift orchestrator supports only ManagedDisks")
-		}
-	}
-
 	if a.OrchestratorProfile.OrchestratorType == Kubernetes {
 		if m.IsVirtualMachineScaleSets() && m.VnetSubnetID != "" && m.FirstConsecutiveStaticIP != "" {
 			return errors.New("when masterProfile's availabilityProfile is VirtualMachineScaleSets and a vnetSubnetID is specified, the firstConsecutiveStaticIP should be empty and will be determined by an offset from the first IP in the vnetCidr")
@@ -380,7 +319,7 @@ func (a *Properties) validateMasterProfile() error {
 	}
 
 	if m.IsVirtualMachineScaleSets() && a.OrchestratorProfile.OrchestratorType == Kubernetes {
-		log.Warnf("Clusters with VMSS masters are not yet upgradable! You will not be able to upgrade your cluster until a future version of acs-engine!")
+		log.Warnf("Clusters with VMSS masters are not yet upgradable! You will not be able to upgrade your cluster until a future version of aks-engine!")
 		e := validateVMSS(a.OrchestratorProfile, false, m.StorageProfile)
 		if e != nil {
 			return e
@@ -465,20 +404,8 @@ func (a *Properties) validateAgentPoolProfiles(isUpdate bool) error {
 			}
 		}
 
-		if a.OrchestratorProfile.OrchestratorType == OpenShift {
-			if (agentPoolProfile.Name == "infra") != (agentPoolProfile.Role == "infra") {
-				return errors.New("OpenShift requires that the 'infra' agent pool profile, and no other, should have role 'infra'")
-			}
-		}
-
 		if e := agentPoolProfile.validateWindows(a.OrchestratorProfile, a.WindowsProfile, isUpdate); agentPoolProfile.OSType == Windows && e != nil {
 			return e
-		}
-	}
-
-	if a.OrchestratorProfile.OrchestratorType == OpenShift {
-		if !reflect.DeepEqual(profileNames, map[string]bool{"compute": true, "infra": true}) {
-			return errors.New("OpenShift requires exactly two agent pool profiles: compute and infra")
 		}
 	}
 
@@ -563,7 +490,7 @@ func (a *Properties) validateAddons() error {
 						false,
 						false)
 					if version == "" {
-						return errors.Errorf("the following user supplied OrchestratorProfile configuration is not supported: OrchestratorType: %s, OrchestratorRelease: %s, OrchestratorVersion: %s. Please check supported Release or Version for this build of acs-engine", a.OrchestratorProfile.OrchestratorType, a.OrchestratorProfile.OrchestratorRelease, a.OrchestratorProfile.OrchestratorVersion)
+						return errors.Errorf("the following user supplied OrchestratorProfile configuration is not supported: OrchestratorType: %s, OrchestratorRelease: %s, OrchestratorVersion: %s. Please check supported Release or Version for this build of aks-engine", a.OrchestratorProfile.OrchestratorType, a.OrchestratorProfile.OrchestratorRelease, a.OrchestratorProfile.OrchestratorVersion)
 					}
 					sv, err := semver.Make(version)
 					if err != nil {
@@ -700,7 +627,7 @@ func (a *Properties) validateManagedIdentity() error {
 				false,
 				false)
 			if version == "" {
-				return errors.Errorf("the following user supplied OrchestratorProfile configuration is not supported: OrchestratorType: %s, OrchestratorRelease: %s, OrchestratorVersion: %s. Please check supported Release or Version for this build of acs-engine", a.OrchestratorProfile.OrchestratorType, a.OrchestratorProfile.OrchestratorRelease, a.OrchestratorProfile.OrchestratorVersion)
+				return errors.Errorf("the following user supplied OrchestratorProfile configuration is not supported: OrchestratorType: %s, OrchestratorRelease: %s, OrchestratorVersion: %s. Please check supported Release or Version for this build of aks-engine", a.OrchestratorProfile.OrchestratorType, a.OrchestratorProfile.OrchestratorRelease, a.OrchestratorProfile.OrchestratorVersion)
 			}
 			sv, err := semver.Make(version)
 			if err != nil {
@@ -749,30 +676,6 @@ func (a *Properties) validateAADProfile() error {
 	return nil
 }
 
-func (a *Properties) validateAzProfile() error {
-	switch a.OrchestratorProfile.OrchestratorType {
-	case OpenShift:
-		if a.AzProfile == nil || a.AzProfile.Location == "" ||
-			a.AzProfile.ResourceGroup == "" || a.AzProfile.SubscriptionID == "" ||
-			a.AzProfile.TenantID == "" {
-			return errors.Errorf("'azProfile' must be supplied in full for orchestrator '%v'", OpenShift)
-		}
-	default:
-		if a.AzProfile != nil {
-			return errors.Errorf("'azProfile' is only supported by orchestrator '%v'", OpenShift)
-		}
-	}
-	return nil
-}
-
-// Validate OpenShiftConfig ensures that the OpenShiftConfig is valid.
-func (o *OpenShiftConfig) Validate() error {
-	if o.ClusterUsername == "" || o.ClusterPassword == "" {
-		return errors.Errorf("ClusterUsername and ClusterPassword must both be specified")
-	}
-	return nil
-}
-
 func (a *AgentPoolProfile) validateAvailabilityProfile(orchestratorType string) error {
 	switch a.AvailabilityProfile {
 	case AvailabilitySet:
@@ -783,18 +686,11 @@ func (a *AgentPoolProfile) validateAvailabilityProfile(orchestratorType string) 
 			return errors.Errorf("unknown availability profile type '%s' for agent pool '%s'.  Specify either %s, or %s", a.AvailabilityProfile, a.Name, AvailabilitySet, VirtualMachineScaleSets)
 		}
 	}
-
-	if orchestratorType == OpenShift && a.AvailabilityProfile != AvailabilitySet {
-		return errors.Errorf("Only AvailabilityProfile: AvailabilitySet is supported for Orchestrator 'OpenShift'")
-	}
 	return nil
 }
 
 func (a *AgentPoolProfile) validateRoles(orchestratorType string) error {
 	validRoles := []AgentPoolProfileRole{AgentPoolProfileRoleEmpty}
-	if orchestratorType == OpenShift {
-		validRoles = append(validRoles, AgentPoolProfileRoleInfra)
-	}
 	var found bool
 	for _, validRole := range validRoles {
 		if a.Role == validRole {
@@ -812,18 +708,10 @@ func (a *AgentPoolProfile) validateStorageProfile(orchestratorType string) error
 	/* this switch statement is left to protect newly added orchestrators until they support Managed Disks*/
 	if a.StorageProfile == ManagedDisks {
 		switch orchestratorType {
-		case DCOS:
-		case Swarm:
 		case Kubernetes:
-		case OpenShift:
-		case SwarmMode:
 		default:
 			return errors.Errorf("HA volumes are currently unsupported for Orchestrator %s", orchestratorType)
 		}
-	}
-
-	if orchestratorType == OpenShift && a.StorageProfile != ManagedDisks {
-		return errors.New("OpenShift orchestrator supports only ManagedDisks")
 	}
 
 	return nil
@@ -832,7 +720,6 @@ func (a *AgentPoolProfile) validateStorageProfile(orchestratorType string) error
 func (a *AgentPoolProfile) validateCustomNodeLabels(orchestratorType string) error {
 	if len(a.CustomNodeLabels) > 0 {
 		switch orchestratorType {
-		case DCOS:
 		case Kubernetes:
 			for k, v := range a.CustomNodeLabels {
 				if e := validateKubernetesLabelKey(k); e != nil {
@@ -843,7 +730,7 @@ func (a *AgentPoolProfile) validateCustomNodeLabels(orchestratorType string) err
 				}
 			}
 		default:
-			return errors.New("Agent CustomNodeLabels are only supported for DCOS and Kubernetes")
+			return errors.New("Agent CustomNodeLabels are only supported for Kubernetes")
 		}
 	}
 	return nil
@@ -868,7 +755,7 @@ func validateVMSS(o *OrchestratorProfile, isUpdate bool, storageProfile string) 
 			isUpdate,
 			false)
 		if version == "" {
-			return errors.Errorf("the following OrchestratorProfile configuration is not supported: OrchestratorType: %s, OrchestratorRelease: %s, OrchestratorVersion: %s. Please check supported Release or Version for this build of acs-engine", o.OrchestratorType, o.OrchestratorRelease, o.OrchestratorVersion)
+			return errors.Errorf("the following OrchestratorProfile configuration is not supported: OrchestratorType: %s, OrchestratorRelease: %s, OrchestratorVersion: %s. Please check supported Release or Version for this build of aks-engine", o.OrchestratorType, o.OrchestratorRelease, o.OrchestratorVersion)
 		}
 
 		sv, err := semver.Make(version)
@@ -901,9 +788,6 @@ func validateVMSS(o *OrchestratorProfile, isUpdate bool, storageProfile string) 
 
 func (a *AgentPoolProfile) validateWindows(o *OrchestratorProfile, w *WindowsProfile, isUpdate bool) error {
 	switch o.OrchestratorType {
-	case DCOS:
-	case Swarm:
-	case SwarmMode:
 	case Kubernetes:
 		version := common.RationalizeReleaseAndVersion(
 			o.OrchestratorType,
@@ -999,8 +883,8 @@ func validateKeyVaultSecrets(secrets []KeyVaultSecrets, requireCertificateStore 
 // Validate ensures that the WindowsProfile is valid
 func (w *WindowsProfile) Validate(orchestratorType string) error {
 	if w.WindowsImageSourceURL != "" {
-		if orchestratorType != DCOS && orchestratorType != Kubernetes {
-			return errors.New("Windows Custom Images are only supported if the Orchestrator Type is DCOS or Kubernetes")
+		if orchestratorType != Kubernetes {
+			return errors.New("Windows Custom Images are only supported if the Orchestrator Type is Kubernetes")
 		}
 	}
 	if e := validate.Var(w.AdminUsername, "required"); e != nil {
@@ -1097,7 +981,7 @@ func (k *KubernetesConfig) Validate(k8sVersion string, hasWindows bool) error {
 				ctrlMgrNodeMonitorGracePeriod, _ := time.ParseDuration(k.ControllerManagerConfig["--node-monitor-grace-period"])
 				kubeletRetries := ctrlMgrNodeMonitorGracePeriod.Seconds() / nodeStatusUpdateFrequency.Seconds()
 				if kubeletRetries < minKubeletRetries {
-					return errors.Errorf("acs-engine requires that --node-monitor-grace-period(%f)s be larger than nodeStatusUpdateFrequency(%f)s by at least a factor of %d; ", ctrlMgrNodeMonitorGracePeriod.Seconds(), nodeStatusUpdateFrequency.Seconds(), minKubeletRetries)
+					return errors.Errorf("aks-engine requires that --node-monitor-grace-period(%f)s be larger than nodeStatusUpdateFrequency(%f)s by at least a factor of %d; ", ctrlMgrNodeMonitorGracePeriod.Seconds(), nodeStatusUpdateFrequency.Seconds(), minKubeletRetries)
 				}
 			}
 		}

@@ -3,7 +3,7 @@ package operations
 import (
 	"container/list"
 
-	"github.com/Azure/acs-engine/pkg/armhelpers"
+	"github.com/Azure/aks-engine/pkg/armhelpers"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -15,7 +15,7 @@ type VMScalingErrorDetails struct {
 
 // ScaleDownVMs removes the vms in the provided list. Returns a list with details on each failure.
 // all items in the list will always be of type *VMScalingErrorDetails
-func ScaleDownVMs(az armhelpers.ACSEngineClient, logger *log.Entry, subscriptionID string, resourceGroup string, vmNames ...string) *list.List {
+func ScaleDownVMs(az armhelpers.AKSEngineClient, logger *log.Entry, subscriptionID string, resourceGroup string, vmNames ...string) *list.List {
 	numVmsToDelete := len(vmNames)
 	errChan := make(chan *VMScalingErrorDetails, numVmsToDelete)
 	defer close(errChan)

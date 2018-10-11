@@ -1,0 +1,241 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<LCX SchemaVersion="6.0" Name="aksengine" PsrId="1" SrcCul="en-US" TgtCul="zh-CN" xmlns="http://schemas.microsoft.com/locstudio/2006/6/lcx">
+  <OwnedComments>
+    <Cmt Name="LcxAdmin" />
+  </OwnedComments>
+  <Settings Name="@SettingsPath@\default.lss" Type="Lss" />
+  <Item ItemId="1" ItemType="0" PsrId="1" Leaf="true">
+    <Str Cat="Text">
+      <Val><![CDATA[Error generating upgrade template: %s]]></Val>
+      <Tgt Cat="Text" Stat="Loc" Orig="New">
+        <Val><![CDATA[生成升级模板时出错: %s]]></Val>
+      </Tgt>
+      <Prev Cat="Text">
+        <Val><![CDATA[Error reading file %s, Error: %s]]></Val>
+      </Prev>
+    </Str>
+    <Disp Icon="Str" />
+  </Item>
+  <Item ItemId="2" ItemType="0" PsrId="1" Leaf="true">
+    <Str Cat="Text">
+      <Val><![CDATA[Error reading file %s, Error: %s]]></Val>
+      <Tgt Cat="Text" Stat="Loc" Orig="New">
+        <Val><![CDATA[读取文件 %s 时出错，错误: %s]]></Val>
+      </Tgt>
+      <Prev Cat="Text">
+        <Val><![CDATA[Error while querying ARM for resources: %+v]]></Val>
+      </Prev>
+    </Str>
+    <Disp Icon="Str" />
+  </Item>
+  <Item ItemId="3" ItemType="0" PsrId="1" Leaf="true">
+    <Str Cat="Text">
+      <Val><![CDATA[Error while querying ARM for resources: %+v]]></Val>
+      <Tgt Cat="Text" Stat="Loc" Orig="New">
+        <Val><![CDATA[查询资源的 ARM 时出错: %+v]]></Val>
+      </Tgt>
+      <Prev Cat="Text">
+        <Val><![CDATA[Found 2 resources with type %s in the template. There should only be 1]]></Val>
+      </Prev>
+    </Str>
+    <Disp Icon="Str" />
+  </Item>
+  <Item ItemId="4" ItemType="0" PsrId="1" Leaf="true">
+    <Str Cat="Text">
+      <Val><![CDATA[Found 2 resources with type %s in the template. There should only be 1]]></Val>
+      <Tgt Cat="Text" Stat="Loc" Orig="New">
+        <Val><![CDATA[在模板中发现 2 个 %s 类型的资源。应仅有 1 个资源]]></Val>
+      </Tgt>
+      <Prev Cat="Text">
+        <Val><![CDATA[Found no resources with type %s in the template. There should have been 1]]></Val>
+      </Prev>
+    </Str>
+    <Disp Icon="Str" />
+  </Item>
+  <Item ItemId="5" ItemType="0" PsrId="1" Leaf="true">
+    <Str Cat="Text">
+      <Val><![CDATA[Found no resources with type %s in the template. There should have been 1]]></Val>
+      <Tgt Cat="Text" Stat="Loc" Orig="New">
+        <Val><![CDATA[未在模板中发现 %s 类型的资源。应有 1 个资源]]></Val>
+      </Tgt>
+      <Prev Cat="Text">
+        <Val><![CDATA[Total count of master VMs: %d exceeded expected count: %d]]></Val>
+      </Prev>
+    </Str>
+    <Disp Icon="Str" />
+  </Item>
+  <Item ItemId="6" ItemType="0" PsrId="1" Leaf="true">
+    <Str Cat="Text">
+      <Val><![CDATA[Node was not ready within %v]]></Val>
+      <Tgt Cat="Text" Stat="Loc" Orig="New">
+        <Val><![CDATA[节点未在 %v 中准备就绪]]></Val>
+      </Tgt>
+      <Prev Cat="Text">
+        <Val><![CDATA[Upgrade to Kubernetes 1.6.2 is not supported from version: %s]]></Val>
+      </Prev>
+    </Str>
+    <Disp Icon="Str" />
+  </Item>
+  <Item ItemId="7" ItemType="0" PsrId="1" Leaf="true">
+    <Str Cat="Text">
+      <Val><![CDATA[The selected orchestrator version '%s' is not supported]]></Val>
+      <Tgt Cat="Text" Stat="Loc" Orig="New">
+        <Val><![CDATA[所选的编写程序版本“%s”不受支持]]></Val>
+      </Tgt>
+      <Prev Cat="Text">
+        <Val><![CDATA[Upgrade to Kubernetes version: %s is not supported from version: %s]]></Val>
+      </Prev>
+    </Str>
+    <Disp Icon="Str" />
+  </Item>
+  <Item ItemId="8" ItemType="0" PsrId="1" Leaf="true">
+    <Str Cat="Text">
+      <Val><![CDATA[Total count of master VMs: %d exceeded expected count: %d]]></Val>
+      <Tgt Cat="Text" Stat="Loc" Orig="New">
+        <Val><![CDATA[主 VM 的总数: %d 超过了预计数量: %d]]></Val>
+      </Tgt>
+      <Prev Cat="Text">
+        <Val><![CDATA[error creating directory '%s': %s]]></Val>
+      </Prev>
+    </Str>
+    <Disp Icon="Str" />
+  </Item>
+  <Item ItemId="9" ItemType="0" PsrId="1" Leaf="true">
+    <Str Cat="Text">
+      <Val><![CDATA[Upgrade to Kubernetes version %s is not supported]]></Val>
+      <Tgt Cat="Text" Stat="Loc" Orig="New">
+        <Val><![CDATA[不可升级到 Kubernetes 版本 %s]]></Val>
+      </Tgt>
+      <Prev Cat="Text">
+        <Val><![CDATA[error executing template for file %s: %v]]></Val>
+      </Prev>
+    </Str>
+    <Disp Icon="Str" />
+  </Item>
+  <Item ItemId="10" ItemType="0" PsrId="1" Leaf="true">
+    <Str Cat="Text">
+      <Val><![CDATA[error creating directory '%s': %s]]></Val>
+      <Tgt Cat="Text" Stat="Loc" Orig="New">
+        <Val><![CDATA[创建目录“%s”时出错: %s]]></Val>
+      </Tgt>
+      <Prev Cat="Text">
+        <Val><![CDATA[error generating upgrade template: %s]]></Val>
+      </Prev>
+    </Str>
+    <Disp Icon="Str" />
+  </Item>
+  <Item ItemId="11" ItemType="0" PsrId="1" Leaf="true">
+    <Str Cat="Text">
+      <Val><![CDATA[error executing template for file %s: %v]]></Val>
+      <Tgt Cat="Text" Stat="Loc" Orig="New">
+        <Val><![CDATA[执行 %s 文件的模板时出错: %v]]></Val>
+      </Tgt>
+      <Prev Cat="Text">
+        <Val><![CDATA[error parsing file %s: %v]]></Val>
+      </Prev>
+    </Str>
+    <Disp Icon="Str" />
+  </Item>
+  <Item ItemId="12" ItemType="0" PsrId="1" Leaf="true">
+    <Str Cat="Text">
+      <Val><![CDATA[error generating upgrade template: %s]]></Val>
+      <Tgt Cat="Text" Stat="Loc" Orig="New">
+        <Val><![CDATA[生成升级模板时出错: %s]]></Val>
+      </Tgt>
+      <Prev Cat="Text">
+        <Val><![CDATA[error reading file %s: %s]]></Val>
+      </Prev>
+    </Str>
+    <Disp Icon="Str" />
+  </Item>
+  <Item ItemId="13" ItemType="0" PsrId="1" Leaf="true">
+    <Str Cat="Text">
+      <Val><![CDATA[error parsing file %s: %v]]></Val>
+      <Tgt Cat="Text" Stat="Loc" Orig="New">
+        <Val><![CDATA[分析文件 %s 时出错: %v]]></Val>
+      </Tgt>
+      <Prev Cat="Text">
+        <Val><![CDATA[failed to create openssh public key string: %q]]></Val>
+      </Prev>
+    </Str>
+    <Disp Icon="Str" />
+  </Item>
+  <Item ItemId="14" ItemType="0" PsrId="1" Leaf="true">
+    <Str Cat="Text">
+      <Val><![CDATA[error reading file %s: %s]]></Val>
+      <Tgt Cat="Text" Stat="Loc" Orig="New">
+        <Val><![CDATA[读取文件 %s 时出错: %s]]></Val>
+      </Tgt>
+      <Prev Cat="Text">
+        <Val><![CDATA[failed to generate private key for ssh: %q]]></Val>
+      </Prev>
+    </Str>
+    <Disp Icon="Str" />
+  </Item>
+  <Item ItemId="15" ItemType="0" PsrId="1" Leaf="true">
+    <Str Cat="Text">
+      <Val><![CDATA[failed to initialize template generator: %s]]></Val>
+      <Tgt Cat="Text" Stat="Loc" Orig="New">
+        <Val><![CDATA[未能初始化模板生成器: %s]]></Val>
+      </Tgt>
+    </Str>
+    <Disp Icon="Str" />
+  </Item>
+  <Item ItemId="16" ItemType="0" PsrId="1" Leaf="true">
+    <Str Cat="Text">
+      <Val><![CDATA[invalid version %s for conversion back from unversioned object]]></Val>
+      <Tgt Cat="Text" Stat="Loc" Orig="New">
+        <Val><![CDATA[从未进行版本管理的对象转换回的无效版本 %s]]></Val>
+      </Tgt>
+    </Str>
+    <Disp Icon="Str" />
+  </Item>
+  <Item ItemId="17" ItemType="0" PsrId="1" Leaf="true">
+    <Str Cat="Text">
+      <Val><![CDATA[orchestrator '%s' is unsupported]]></Val>
+      <Tgt Cat="Text" Stat="Loc" Orig="New">
+        <Val><![CDATA[不支持业务流程协调程序“%s”]]></Val>
+      </Tgt>
+    </Str>
+    <Disp Icon="Str" />
+  </Item>
+  <Item ItemId="18" ItemType="0" PsrId="1" Leaf="true">
+    <Str Cat="Text">
+      <Val><![CDATA[template file %s does not exist]]></Val>
+      <Tgt Cat="Text" Stat="Loc" Orig="New">
+        <Val><![CDATA[模板文件 %s 不存在]]></Val>
+      </Tgt>
+    </Str>
+    <Disp Icon="Str" />
+  </Item>
+  <Item ItemId="19" ItemType="0" PsrId="1" Leaf="true">
+    <Str Cat="Text">
+      <Val><![CDATA[unrecognized APIVersion '%s']]></Val>
+      <Tgt Cat="Text" Stat="Loc" Orig="New">
+        <Val><![CDATA[无法识别的 APIVersion“%s”]]></Val>
+      </Tgt>
+    </Str>
+    <Disp Icon="Str" />
+  </Item>
+  <Item ItemId="20" ItemType="0" PsrId="1" Leaf="true">
+    <Str Cat="Text">
+      <Val><![CDATA[unrecognized APIVersion in LoadContainerServiceForAgentPoolOnlyCluster '%s']]></Val>
+      <Tgt Cat="Text" Stat="Loc" Orig="New">
+        <Val><![CDATA[ LoadContainerServiceForAgentPoolOnlyCluster“%s”中的 APIVersion 不受支持]]></Val>
+      </Tgt>
+      <Prev Cat="Text">
+        <Val><![CDATA[yaml file %s does not exist]]></Val>
+      </Prev>
+    </Str>
+    <Disp Icon="Str" />
+  </Item>
+  <Item ItemId="21" ItemType="0" PsrId="1" Leaf="true">
+    <Str Cat="Text">
+      <Val><![CDATA[yaml file %s does not exist]]></Val>
+      <Tgt Cat="Text" Stat="Loc" Orig="New">
+        <Val><![CDATA[yaml 文件 %s 不存在]]></Val>
+      </Tgt>
+    </Str>
+    <Disp Icon="Str" />
+  </Item>
+</LCX>

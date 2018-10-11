@@ -14,7 +14,7 @@ There are five main options to monitor your cluster:
 
 ## Intro to Heapster
 
-Monitoring your cluster in Kubernetes is powered by a component called [Heapster](https://github.com/kubernetes/Heapster/). Heapster is a pod that is responsible for aggregating monitoring data from across all the nodes and pods in your cluster. Heapster is necessary for viewing monitoring data in the Kubernetes dashboard as well as in Grafana. Heapster comes preinstalled on `acs-engine` deployments. To ensure that Heapster is set up in your cluster and is running:
+Monitoring your cluster in Kubernetes is powered by a component called [Heapster](https://github.com/kubernetes/Heapster/). Heapster is a pod that is responsible for aggregating monitoring data from across all the nodes and pods in your cluster. Heapster is necessary for viewing monitoring data in the Kubernetes dashboard as well as in Grafana. Heapster comes preinstalled on `aks-engine` deployments. To ensure that Heapster is set up in your cluster and is running:
 1. Ensure you have set up a [working kubernetes cluster](../kubernetes.md) and are able to use kubectl
 2. Run `kubectl get pods --namespace=kube-system`
 
@@ -68,7 +68,7 @@ Once you have opened the UI, you can explore node stats (CPU, Memory, etc...) un
 
 ## Monitoring extension
 
-A quick way to scaffold out cloud-native and open source monitoring components is to use the [acs-engine monitoring extension](https://github.com/Azure/acs-engine/tree/master/extensions/prometheus-grafana-k8s). For details on how to use the monitoring extension, please refer to the [extension documentation](https://github.com/Azure/acs-engine/tree/master/extensions/prometheus-grafana-k8s). By embedding the extension in your apimodel, the extension will do much of the work to create a monitoring solution in your cluster, which includes the following:
+A quick way to scaffold out cloud-native and open source monitoring components is to use the [aks-engine monitoring extension](https://github.com/Azure/aks-engine/tree/master/extensions/prometheus-grafana-k8s). For details on how to use the monitoring extension, please refer to the [extension documentation](https://github.com/Azure/aks-engine/tree/master/extensions/prometheus-grafana-k8s). By embedding the extension in your apimodel, the extension will do much of the work to create a monitoring solution in your cluster, which includes the following:
 
 - [cAdvisor](https://github.com/google/cadvisor) daemon set to publish container metrics
 - [Prometheus](https://prometheus.io/) for metrics collection and storage

@@ -1,7 +1,7 @@
 version: 2
 
 defaults: &defaults
-  working_directory: /go/src/github.com/Azure/acs-engine
+  working_directory: /go/src/github.com/Azure/aks-engine
   docker:
     - image: quay.io/deis/go-dev:v1.17.2
   environment:
@@ -62,7 +62,7 @@ jobs:
           command: make test-kubernetes
           no_output_timeout: "30m"
       - store_artifacts:
-          path: /go/src/github.com/Azure/acs-engine/_logs
+          path: /go/src/github.com/Azure/aks-engine/_logs
   k8s-1.10-release-e2e:
     <<: *defaults
     steps:
@@ -88,7 +88,7 @@ jobs:
           command: make test-kubernetes
           no_output_timeout: "30m"
       - store_artifacts:
-          path: /go/src/github.com/Azure/acs-engine/_logs
+          path: /go/src/github.com/Azure/aks-engine/_logs
   k8s-1.11-release-e2e:
     <<: *defaults
     steps:
@@ -114,7 +114,7 @@ jobs:
           command: make test-kubernetes
           no_output_timeout: "30m"
       - store_artifacts:
-          path: /go/src/github.com/Azure/acs-engine/_logs
+          path: /go/src/github.com/Azure/aks-engine/_logs
   k8s-1.12-release-e2e:
     <<: *defaults
     steps:
@@ -140,7 +140,7 @@ jobs:
           command: make test-kubernetes
           no_output_timeout: "30m"
       - store_artifacts:
-          path: /go/src/github.com/Azure/acs-engine/_logs
+          path: /go/src/github.com/Azure/aks-engine/_logs
   k8s-1.13-release-e2e:
     <<: *defaults
     steps:
@@ -166,7 +166,7 @@ jobs:
           command: make test-kubernetes
           no_output_timeout: "30m"
       - store_artifacts:
-          path: /go/src/github.com/Azure/acs-engine/_logs
+          path: /go/src/github.com/Azure/aks-engine/_logs
   k8s-windows-1.10-release-e2e:
     <<: *defaults
     steps:
@@ -189,7 +189,7 @@ jobs:
           command: make test-kubernetes
           no_output_timeout: "30m"
       - store_artifacts:
-          path: /go/src/github.com/Azure/acs-engine/_logs
+          path: /go/src/github.com/Azure/aks-engine/_logs
   k8s-windows-1.11-release-e2e:
     <<: *defaults
     steps:
@@ -212,7 +212,7 @@ jobs:
           command: make test-kubernetes
           no_output_timeout: "30m"
       - store_artifacts:
-          path: /go/src/github.com/Azure/acs-engine/_logs
+          path: /go/src/github.com/Azure/aks-engine/_logs
   k8s-windows-1.12-release-e2e:
     <<: *defaults
     steps:
@@ -235,7 +235,7 @@ jobs:
           command: make test-kubernetes
           no_output_timeout: "30m"
       - store_artifacts:
-          path: /go/src/github.com/Azure/acs-engine/_logs
+          path: /go/src/github.com/Azure/aks-engine/_logs
   k8s-windows-1.13-release-e2e:
     <<: *defaults
     steps:
@@ -258,7 +258,7 @@ jobs:
           command: make test-kubernetes
           no_output_timeout: "30m"
       - store_artifacts:
-          path: /go/src/github.com/Azure/acs-engine/_logs
+          path: /go/src/github.com/Azure/aks-engine/_logs
 workflows:
   version: 2
   build_and_test_pr:

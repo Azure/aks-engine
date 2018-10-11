@@ -6,10 +6,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Azure/acs-engine/pkg/api"
-	"github.com/Azure/acs-engine/pkg/armhelpers"
-	"github.com/Azure/acs-engine/pkg/armhelpers/utils"
-	"github.com/Azure/acs-engine/pkg/i18n"
+	"github.com/Azure/aks-engine/pkg/api"
+	"github.com/Azure/aks-engine/pkg/armhelpers"
+	"github.com/Azure/aks-engine/pkg/armhelpers/utils"
+	"github.com/Azure/aks-engine/pkg/i18n"
 	"github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2018-04-01/compute"
 	"github.com/blang/semver"
 	"github.com/pkg/errors"
@@ -63,7 +63,7 @@ type UpgradeCluster struct {
 	Translator *i18n.Translator
 	Logger     *logrus.Entry
 	ClusterTopology
-	Client      armhelpers.ACSEngineClient
+	Client      armhelpers.AKSEngineClient
 	StepTimeout *time.Duration
 }
 
@@ -74,8 +74,8 @@ const MasterVMNamePrefix = "k8s-master-"
 const MasterPoolName = "master"
 
 // UpgradeCluster runs the workflow to upgrade a Kubernetes cluster.
-func (uc *UpgradeCluster) UpgradeCluster(subscriptionID uuid.UUID, az armhelpers.ACSEngineClient, kubeConfig, resourceGroup string,
-	cs *api.ContainerService, nameSuffix string, agentPoolsToUpgrade []string, acsengineVersion string) error {
+func (uc *UpgradeCluster) UpgradeCluster(subscriptionID uuid.UUID, az armhelpers.AKSEngineClient, kubeConfig, resourceGroup string,
+	cs *api.ContainerService, nameSuffix string, agentPoolsToUpgrade []string, aksengineVersion string) error {
 	uc.ClusterTopology = ClusterTopology{}
 	uc.SubscriptionID = subscriptionID.String()
 	uc.ResourceGroup = resourceGroup
@@ -101,17 +101,17 @@ func (uc *UpgradeCluster) UpgradeCluster(subscriptionID uuid.UUID, az armhelpers
 	switch {
 	case strings.HasPrefix(upgradeVersion, "1.6."):
 		upgrader16 := &Kubernetes16upgrader{}
-		upgrader16.Init(uc.Translator, uc.Logger, uc.ClusterTopology, uc.Client, kubeConfig, uc.StepTimeout, acsengineVersion)
+		upgrader16.Init(uc.Translator, uc.Logger, uc.ClusterTopology, uc.Client, kubeConfig, uc.StepTimeout, aksengineVersion)
 		upgrader = upgrader16
 
 	case strings.HasPrefix(upgradeVersion, "1.7."):
 		upgrader17 := &Kubernetes17upgrader{}
-		upgrader17.Init(uc.Translator, uc.Logger, uc.ClusterTopology, uc.Client, kubeConfig, uc.StepTimeout, acsengineVersion)
+		upgrader17.Init(uc.Translator, uc.Logger, uc.ClusterTopology, uc.Client, kubeConfig, uc.StepTimeout, aksengineVersion)
 		upgrader = upgrader17
 
 	case strings.HasPrefix(upgradeVersion, "1.8."):
 		upgrader18 := &Kubernetes18upgrader{}
-		upgrader18.Init(uc.Translator, uc.Logger, uc.ClusterTopology, uc.Client, kubeConfig, uc.StepTimeout, acsengineVersion)
+		upgrader18.Init(uc.Translator, uc.Logger, uc.ClusterTopology, uc.Client, kubeConfig, uc.StepTimeout, aksengineVersion)
 		upgrader = upgrader18
 
 	case strings.HasPrefix(upgradeVersion, "1.9."),
@@ -120,7 +120,7 @@ func (uc *UpgradeCluster) UpgradeCluster(subscriptionID uuid.UUID, az armhelpers
 		strings.HasPrefix(upgradeVersion, "1.12."),
 		strings.HasPrefix(upgradeVersion, "1.13."):
 		u := &Upgrader{}
-		u.Init(uc.Translator, uc.Logger, uc.ClusterTopology, uc.Client, kubeConfig, uc.StepTimeout, acsengineVersion)
+		u.Init(uc.Translator, uc.Logger, uc.ClusterTopology, uc.Client, kubeConfig, uc.StepTimeout, aksengineVersion)
 		upgrader = u
 
 	default:
@@ -135,7 +135,7 @@ func (uc *UpgradeCluster) UpgradeCluster(subscriptionID uuid.UUID, az armhelpers
 	return nil
 }
 
-func (uc *UpgradeCluster) getClusterNodeStatus(subscriptionID uuid.UUID, az armhelpers.ACSEngineClient, resourceGroup, kubeConfig string) error {
+func (uc *UpgradeCluster) getClusterNodeStatus(subscriptionID uuid.UUID, az armhelpers.AKSEngineClient, resourceGroup, kubeConfig string) error {
 	targetOrchestratorTypeVersion := fmt.Sprintf("%s:%s", uc.DataModel.Properties.OrchestratorProfile.OrchestratorType, uc.DataModel.Properties.OrchestratorProfile.OrchestratorVersion)
 
 	ctx, cancel := context.WithTimeout(context.Background(), armhelpers.DefaultARMOperationTimeout)
@@ -397,16 +397,16 @@ func WriteTemplate(
 	updatedTemplateJSON, _ := json.Marshal(templateMap)
 	parametersJSON, _ := json.Marshal(parametersMap)
 
-	templateapp, err := acsengine.PrettyPrintArmTemplate(string(updatedTemplateJSON))
+	templateapp, err := engine.PrettyPrintArmTemplate(string(updatedTemplateJSON))
 	if err != nil {
 		logrus.Fatalf("error pretty printing template: %s \n", err.Error())
 	}
-	parametersapp, e := acsengine.PrettyPrintJSON(string(parametersJSON))
+	parametersapp, e := engine.PrettyPrintJSON(string(parametersJSON))
 	if e != nil {
 		logrus.Fatalf("error pretty printing template parameters: %s \n", e.Error())
 	}
 	outputDirectory := path.Join("_output", upgradeContainerService.Properties.MasterProfile.DNSPrefix, "Upgrade")
-	writer := &acsengine.ArtifactWriter{
+	writer := &engine.ArtifactWriter{
 		Translator: translator,
 	}
 	if err := writer.WriteTLSArtifacts(upgradeContainerService, "vlabs", templateapp, parametersapp, outputDirectory, false, false); err != nil {

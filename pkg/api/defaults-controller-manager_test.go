@@ -3,7 +3,7 @@ package api
 import (
 	"testing"
 
-	"github.com/Azure/acs-engine/pkg/helpers"
+	"github.com/Azure/aks-engine/pkg/helpers"
 )
 
 func TestControllerManagerConfigEnableRbac(t *testing.T) {

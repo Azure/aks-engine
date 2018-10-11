@@ -11,7 +11,7 @@ This extension will install Windows Server patches, including prerelease hotfixe
 |-------------------|--------|----------------------|
 |name               |yes     | windows-patches      |
 |version            |yes     | v1                   |
-|rootURL            |optional| `https://raw.githubusercontent.com/Azure/acs-engine/master/` or any repo with the same extensions/... directory structure |
+|rootURL            |optional| `https://raw.githubusercontent.com/Azure/aks-engine/master/` or any repo with the same extensions/... directory structure |
 |extensionParameters|yes     | comma-delimited list of URIs enclosed with ' such as `'https://privateupdates.domain.ext/Windows10.0-KB999999-x64-InstallForTestingPurposesOnly.exe', 'https://privateupdates.domain.ext/Windows10.0-KB123456-x64-InstallForTestingPurposesOnly.exe'` |
 
 ## Example
@@ -33,7 +33,7 @@ This extension will install Windows Server patches, including prerelease hotfixe
       {
         "name": "windows-patches",
         "version": "v1",
-        "rootURL": "https://raw.githubusercontent.com/Azure/acs-engine/master/",
+        "rootURL": "https://raw.githubusercontent.com/Azure/aks-engine/master/",
         "extensionParameters": "'https://mypatches.blob.core.windows.net/hotfix3692/Windows10.0-KB999999-x64-InstallForTestingPurposesOnly.exe?sp=r&st=2018-08-17T00:25:01Z&se=2018-09-17T08:25:01Z&spr=https&sv=2017-11-09&sig=0000000000%3D&sr=b', 'http://download.windowsupdate.com/c/msdownload/update/software/secu/2018/08/windows10.0-kb4343909-x64_f931af6d56797388715fe3b0d97569af7aebdae6.msu'"
       }
     ]

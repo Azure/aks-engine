@@ -16,7 +16,7 @@ GO              ?= go
 TAGS            :=
 LDFLAGS         :=
 BINDIR          := $(CURDIR)/bin
-BINARIES        := acs-engine
+BINARIES        := aks-engine
 VERSION         ?= $(shell git rev-parse HEAD)
 VERSION_SHORT   ?= $(shell git rev-parse --short HEAD)
 GITTAG          := $(shell git describe --exact-match --tags $(shell git log -n1 --pretty='%h') 2> /dev/null)
@@ -24,7 +24,7 @@ ifeq ($(GITTAG),)
 GITTAG := $(VERSION_SHORT)
 endif
 
-REPO_PATH := github.com/Azure/acs-engine
+REPO_PATH := github.com/Azure/aks-engine
 DEV_ENV_IMAGE := quay.io/deis/go-dev:v1.17.2
 DEV_ENV_WORK_DIR := /go/src/${REPO_PATH}
 DEV_ENV_OPTS := --rm -v ${CURDIR}:${DEV_ENV_WORK_DIR} -w ${DEV_ENV_WORK_DIR} ${DEV_ENV_VARS}
@@ -58,22 +58,22 @@ generate: bootstrap
 
 .PHONY: generate-azure-constants
 generate-azure-constants:
-	python pkg/acsengine/Get-AzureConstants.py
+	python pkg/engine/Get-AzureConstants.py
 
 .PHONY: build
 build: generate
 	GOBIN=$(BINDIR) $(GO) install $(GOFLAGS) -ldflags '$(LDFLAGS)'
-	cd test/acs-engine-test; go build $(GOFLAGS)
+	cd test/aks-engine-test; go build $(GOFLAGS)
 
 build-binary: generate
-	go build $(GOFLAGS) -v -ldflags "${LDFLAGS}" -o ${BINARY_DEST_DIR}/acs-engine .
+	go build $(GOFLAGS) -v -ldflags "${LDFLAGS}" -o ${BINARY_DEST_DIR}/aks-engine .
 
 # usage: make clean build-cross dist VERSION=v0.4.0
 .PHONY: build-cross
 build-cross: build
 build-cross: LDFLAGS += -extldflags "-static"
 build-cross:
-	CGO_ENABLED=0 gox -output="_dist/acs-engine-${GITTAG}-{{.OS}}-{{.Arch}}/{{.Dir}}" -osarch='$(TARGETS)' $(GOFLAGS) -tags '$(TAGS)' -ldflags '$(LDFLAGS)'
+	CGO_ENABLED=0 gox -output="_dist/aks-engine-${GITTAG}-{{.OS}}-{{.Arch}}/{{.Dir}}" -osarch='$(TARGETS)' $(GOFLAGS) -tags '$(TAGS)' -ldflags '$(LDFLAGS)'
 
 .PHONY: build-windows-k8s
 build-windows-k8s:
@@ -101,11 +101,11 @@ clean:
 
 GIT_BASEDIR    = $(shell git rev-parse --show-toplevel 2>/dev/null)
 ifneq ($(GIT_BASEDIR),)
-	LDFLAGS += -X github.com/Azure/acs-engine/pkg/test.JUnitOutDir=${GIT_BASEDIR}/test/junit
+	LDFLAGS += -X github.com/Azure/aks-engine/pkg/test.JUnitOutDir=${GIT_BASEDIR}/test/junit
 endif
 
 test: generate
-	ginkgo -skipPackage test/e2e/dcos,test/e2e/kubernetes,test/e2e/openshift -failFast -r .
+	ginkgo -skipPackage test/e2e/kubernetes -failFast -r .
 
 .PHONY: test-style
 test-style:

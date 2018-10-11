@@ -20,10 +20,7 @@
 
 可选的编排引擎如下所示：
 
-1. `DCOS` - 指定编排引擎为 [DC/OS编排引擎](dcos.md)。
-2. `Kubernetes` - 指定编排引擎为 [Kubernetes编排引擎](kubernetes.md)。
-3. `Swarm` - 指定编排引擎为 [Swarm编排引擎](swarm.md)。
-4. `Swarm Mode` - 指定编排引擎为 [Swarm Mode编排引擎](swarmmode.md)。
+1. `Kubernetes` - 指定编排引擎为 [Kubernetes编排引擎](kubernetes.md)。
 
 ### masterProfile
 `masterProfile` 指定了集群中master节点的各种配置。
@@ -90,7 +87,7 @@
 
 ## "2016-03-30"版本apiVersion的集群定义文件
 
-以下是"2016-03-30"版本apiVersion的集群定义文件，这个版本的api和Azure Container Service Engine的一致。
+以下是"2016-03-30"版本apiVersion的集群定义文件，这个版本的api和Azure Kubernetes Service Engine的一致。
 
 ### apiVersion
 
@@ -107,10 +104,7 @@
 
 可选的编排引擎如下所示：
 
-1. `DCOS` - 指定编排引擎为 [DC/OS编排引擎](dcos.md)。
-2. `Swarm` - 指定编排引擎为 [Swarm编排引擎](swarm.md)。
-3. `Kubernetes` - 指定编排引擎为 [Kubernetes编排引擎](kubernetes.md)。
-4. `Swarm Mode` - 指定编排引擎为 [Swarm Mode编排引擎](swarmmode.md)。
+1. `Kubernetes` - 指定编排引擎为 [Kubernetes编排引擎](kubernetes.md)。
 
 ### masterProfile
 `masterProfile` 指定了集群中master节点的各种配置。

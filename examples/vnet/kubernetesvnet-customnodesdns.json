@@ -61,7 +61,7 @@
           "name": "register-dns",
           "version": "v1",
           "extensionParameters": "mydomain.com",
-          "rootURL": "https://raw.githubusercontent.com/Azure/acs-engine/master/extensions/dnsupdate/",
+          "rootURL": "https://raw.githubusercontent.com/Azure/aks-engine/master/extensions/dnsupdate/",
           "script": "register-dns.sh"
         }
       ],

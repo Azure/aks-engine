@@ -1,0 +1,126 @@
+# English translations for aks-engine package.
+# Copyright (C) 2017
+# This file is distributed under the same license as the aks-engine package.
+# Jiangtian Li <jiangtianli@hotmail.com>, 2017.
+msgid ""
+msgstr ""
+"Project-Id-Version: aksengine\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2017-07-25 00:04+0000\n"
+"PO-Revision-Date: 2017-07-24 17:23-0700\n"
+"Last-Translator: Jiangtian Li <jiangtianli@hotmail.com>\n"
+"Language-Team: English\n"
+"Language: en_US\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Generator: Poedit 2.0.3\n"
+
+#: pkg/engine/engine.go:239
+#, c-format
+msgid "Error reading file %s, Error: %s"
+msgstr "Erro ao ler ficheiro %s, Erro: %s"
+
+#: pkg/operations/kubernetesupgrade/upgradecluster.go:71
+#, c-format
+msgid "Error while querying ARM for resources: %+v"
+msgstr "Erro ao consultar o ARM para os recursos: %+v"
+
+#: pkg/engine/transform.go:99
+#, c-format
+msgid "Found 2 resources with type %s in the template. There should only be 1"
+msgstr ""
+"Foram encontrados 2 recursos de tipo %s no modelo. Deve existir apenas 1."
+
+#: pkg/engine/transform.go:122
+#, c-format
+msgid ""
+"Found no resources with type %s in the template. There should have been 1"
+msgstr ""
+"Não foram encontrados recursos de tipo %s no modelo. Deve existir apenas 1"
+
+#: pkg/operations/kubernetesupgrade/v162upgrader.go:102
+#, c-format
+msgid "Total count of master VMs: %d exceeded expected count: %d"
+msgstr "Contagem total das VMs principais: %d excedeu a contagem esperada: %d"
+
+#: pkg/operations/kubernetesupgrade/v162upgrader.go:30
+#, c-format
+msgid "Upgrade to Kubernetes 1.6.2 is not supported from version: %s"
+msgstr "A atualização para o Kubernetes 1.6.2 não é suportada da versão: %s"
+
+#: pkg/operations/kubernetesupgrade/upgradecluster.go:86
+#, c-format
+msgid "Upgrade to Kubernetes version: %s is not supported from version: %s"
+msgstr ""
+"Atualizar para a versão Kubernetes: %s não é suportado a partir da versão: "
+"%s"
+
+#: pkg/engine/filesaver.go:24
+#, c-format
+msgid "error creating directory '%s': %s"
+msgstr "erro ao criar diretório \"%s\": %s"
+
+#: pkg/engine/engine.go:1194
+#, c-format
+msgid "error executing template for file %s: %v"
+msgstr "erro ao executar o modelo para o ficheiro %s: %v"
+
+#: pkg/operations/kubernetesupgrade/v162upgrader.go:67
+#: pkg/operations/kubernetesupgrade/v162upgrader.go:182
+#: pkg/operations/kubernetesupgrade/v162upgrader.go:295
+#, c-format
+msgid "error generating upgrade template: %s"
+msgstr "erro ao gerar modelo de atualização: %s"
+
+#: pkg/engine/engine.go:1189
+#, c-format
+msgid "error parsing file %s: %v"
+msgstr "erro ao analisar o ficheiro %s: %v"
+
+#: pkg/api/apiloader.go:24 pkg/api/upgradeapiloader.go:20
+#, c-format
+msgid "error reading file %s: %s"
+msgstr "erro ao ler o ficheiro %s: %s"
+
+#: pkg/engine/ssh.go:55
+#, c-format
+msgid "failed to create openssh public key string: %q"
+msgstr "falha ao criar cadeia de chave pública de openssh: %q"
+
+#: pkg/engine/ssh.go:49
+#, c-format
+msgid "failed to generate private key for ssh: %q"
+msgstr "falha ao gerar chave privada para ssh: %q"
+
+#: pkg/operations/kubernetesupgrade/v162upgrader.go:289
+#, c-format
+msgid "failed to initialize template generator: %s"
+msgstr "falha ao iniciar o gerador de modelo: %s"
+
+#: pkg/api/apiloader.go:161 pkg/api/upgradeapiloader.go:70
+#, c-format
+msgid "invalid version %s for conversion back from unversioned object"
+msgstr "versão %s inválida para a reconversão de um objeto sem versão definida"
+
+#: pkg/engine/engine.go:322
+#, c-format
+msgid "orchestrator '%s' is unsupported"
+msgstr "o orquestrador \"%s\" não é suportado"
+
+#: pkg/engine/engine.go:187
+#, c-format
+msgid "template file %s does not exist"
+msgstr "o ficheiro do modelo %s não existe"
+
+#: pkg/api/apiloader.go:98 pkg/api/upgradeapiloader.go:51
+#, c-format
+msgid "unrecognized APIVersion '%s'"
+msgstr "APIVersion \"%s\" não reconhecida"
+
+#: pkg/engine/engine.go:1183
+#, c-format
+msgid "yaml file %s does not exist"
+msgstr "o ficheiro yaml %s não existe"
+

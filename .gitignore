@@ -1,5 +1,5 @@
-acs-engine.exe
-acs-engine
+aks-engine.exe
+aks-engine
 debug
 _output/
 _input/
@@ -7,7 +7,7 @@ _input/
 .DS_Store
 test/user.env
 user.env
-test/acs-engine-test/acs-engine-test
+test/aks-engine-test/aks-engine-test
 .editorconfig
 _dist/
 bin/
@@ -15,20 +15,18 @@ bin/
 .coverprofile
 
 test/junit/
-test/acs-engine-test/acs-engine-test.exe
+test/aks-engine-test/aks-engine-test.exe
 pkg/operations/junit.xml
 pkg/operations/kubernetesupgrade/junit.xml
-pkg/acsengine/templates.go
+pkg/engine/templates.go
 pkg/i18n/translations.go
 
 _logs/
-test/acs-engine-test/report/TestReport.json
+test/aks-engine-test/report/TestReport.json
 *.swp
 
 # I have no idea why these get generated when I run the e2e test
 test/e2e/kubernetes/translations/
-test/e2e/openshift/translations/
-pkg/openshift/translations/
 
 # test outputs
 cmd/_test_output

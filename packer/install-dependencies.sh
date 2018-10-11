@@ -153,7 +153,7 @@ done
 
 pullContainerImage "docker" "busybox"
 
-# TODO: fetch supported k8s versions from an acs-engine command instead of hardcoding them here
+# TODO: fetch supported k8s versions from an aks-engine command instead of hardcoding them here
 K8S_VERSIONS="1.7.15 1.7.16 1.8.14 1.8.15 1.9.10 1.9.11 1.10.8 1.10.9 1.11.3 1.11.4 1.12.1 1.12.2"
 
 for KUBERNETES_VERSION in ${K8S_VERSIONS}; do

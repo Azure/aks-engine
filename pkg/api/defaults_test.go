@@ -7,7 +7,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/Azure/acs-engine/pkg/helpers"
+	"github.com/Azure/aks-engine/pkg/helpers"
 )
 
 func TestCertsAlreadyPresent(t *testing.T) {
@@ -761,34 +761,6 @@ func TestSetComponentsNetworkDefaults(t *testing.T) {
 			},
 			AKS,
 		},
-		{
-			"default_openshift",
-			OrchestratorProfile{
-				OrchestratorType: OpenShift,
-			},
-			"",
-		},
-		{
-			"default_swarm",
-			OrchestratorProfile{
-				OrchestratorType: Swarm,
-			},
-			Ubuntu,
-		},
-		{
-			"default_swarmmode",
-			OrchestratorProfile{
-				OrchestratorType: SwarmMode,
-			},
-			Ubuntu,
-		},
-		{
-			"default_dcos",
-			OrchestratorProfile{
-				OrchestratorType: DCOS,
-			},
-			Ubuntu,
-		},
 	}
 
 	for _, test := range tests {
@@ -968,7 +940,7 @@ func TestAKSDockerEngineDistro(t *testing.T) {
 		t.Fatalf("Expected %s distro for D-series pool, got %s instead", AKS, properties.AgentPoolProfiles[1].Distro)
 	}
 	if properties.AgentPoolProfiles[2].Distro != Ubuntu {
-		t.Fatalf("Expected %s distro for D-series pool, got %s instead", Ubuntu, properties.AgentPoolProfiles[2].Distro)
+		t.Fatalf("Expected %s distro for N-series pool, got %s instead", Ubuntu, properties.AgentPoolProfiles[2].Distro)
 	}
 	if properties.AgentPoolProfiles[3].Distro != Ubuntu {
 		t.Fatalf("Expected %s distro for D-series pool, got %s instead", Ubuntu, properties.AgentPoolProfiles[3].Distro)
@@ -1227,81 +1199,6 @@ func TestSetCertDefaults(t *testing.T) {
 		}
 	}
 
-}
-
-func TestSetOpenShiftCertDefaults(t *testing.T) {
-	cs := &ContainerService{
-		Properties: &Properties{
-			AzProfile: &AzProfile{
-				TenantID:       "sampleTenantID",
-				SubscriptionID: "foobarsubscription",
-				ResourceGroup:  "sampleRG",
-				Location:       "westus2",
-			},
-			ServicePrincipalProfile: &ServicePrincipalProfile{
-				ClientID: "barClientID",
-				Secret:   "bazSecret",
-			},
-			MasterProfile: &MasterProfile{
-				Count:     1,
-				DNSPrefix: "myprefix1",
-				VMSize:    "Standard_DS2_v2",
-			},
-			OrchestratorProfile: &OrchestratorProfile{
-				OrchestratorType:    OpenShift,
-				OrchestratorVersion: "3.9.0",
-				OpenShiftConfig:     &OpenShiftConfig{},
-			},
-		},
-	}
-
-	cs.Properties.setMasterProfileDefaults(false)
-
-	result, _, err := cs.Properties.setDefaultCerts()
-	if !result {
-		t.Error("expected setOpenShiftDefaultCerts to return true")
-	}
-
-	if err != nil {
-		t.Errorf("unexpected error thrown while executing setOpenShiftDefaultCerts %s", err.Error())
-	}
-
-	cs = &ContainerService{
-		Properties: &Properties{
-			AzProfile: &AzProfile{
-				TenantID:       "sampleTenantID",
-				SubscriptionID: "foobarsubscription",
-				ResourceGroup:  "sampleRG",
-				Location:       "westus2",
-			},
-			ServicePrincipalProfile: &ServicePrincipalProfile{
-				ClientID: "barClientID",
-				Secret:   "bazSecret",
-			},
-			MasterProfile: &MasterProfile{
-				Count:               1,
-				DNSPrefix:           "myprefix1",
-				VMSize:              "Standard_DS2_v2",
-				AvailabilityProfile: VirtualMachineScaleSets,
-			},
-			OrchestratorProfile: &OrchestratorProfile{
-				OrchestratorType:    OpenShift,
-				OrchestratorVersion: "3.7.0",
-				OpenShiftConfig:     &OpenShiftConfig{},
-			},
-		},
-	}
-
-	cs.Properties.setMasterProfileDefaults(false)
-	result, _, err = cs.Properties.setDefaultCerts()
-
-	if !result {
-		t.Error("expected setOpenShiftDefaultCerts to return true")
-	}
-
-	if err != nil {
-		t.Errorf("unexpected error thrown while executing setOpenShiftDefaultCerts %s", err.Error())
-	}
 }
 
 func getMockBaseContainerService(orchestratorVersion string) ContainerService {

@@ -11,13 +11,13 @@ convert_lcl_to_po() {
   do
     loc_lang=`basename "$dir"`
     translation_lang=`echo $loc_lang | tr - _`
-    publish/PythonLocalizerTool lcltopo $dir translations/$translation_lang/LC_MESSAGES/ translations/en_US/LC_MESSAGES/en-US/metadata acsengine ""
-    msgfmt -c -v -o translations/$translation_lang/LC_MESSAGES/acsengine.mo translations/$translation_lang/LC_MESSAGES/acsengine.po
+    publish/PythonLocalizerTool lcltopo $dir translations/$translation_lang/LC_MESSAGES/ translations/en_US/LC_MESSAGES/en-US/metadata aksengine ""
+    msgfmt -c -v -o translations/$translation_lang/LC_MESSAGES/aksengine.mo translations/$translation_lang/LC_MESSAGES/aksengine.po
   done
 }
 
 convert_po_to_lcg() {
-  publish/PythonLocalizerTool potolcg translations/en_US/LC_MESSAGES acsengine
+  publish/PythonLocalizerTool potolcg translations/en_US/LC_MESSAGES aksengine
 }
 
 case "${1-}" in

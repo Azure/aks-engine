@@ -6,9 +6,9 @@ import (
 	"os"
 	"os/exec"
 
-	"github.com/Azure/acs-engine/test/e2e/config"
-	"github.com/Azure/acs-engine/test/e2e/kubernetes/util"
-	"github.com/Azure/acs-engine/test/e2e/metrics"
+	"github.com/Azure/aks-engine/test/e2e/config"
+	"github.com/Azure/aks-engine/test/e2e/kubernetes/util"
+	"github.com/Azure/aks-engine/test/e2e/metrics"
 	"github.com/kelseyhightower/envconfig"
 )
 
@@ -48,7 +48,7 @@ func (g *Ginkgo) Run() error {
 	err = cmd.Wait()
 	if err != nil {
 		g.Point.RecordTestError()
-		if g.Config.IsKubernetes() || g.Config.IsOpenShift() {
+		if g.Config.IsKubernetes() {
 			kubectl := exec.Command("kubectl", "get", "all", "--all-namespaces", "-o", "wide")
 			util.PrintCommand(kubectl)
 			kubectl.CombinedOutput()

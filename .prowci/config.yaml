@@ -3,10 +3,10 @@ log_level: debug
 tide:
   # target_url: http://ci-bot-aks-ingress.eastus.cloudapp.azure.com/tide.html
   merge_method:
-    Azure/acs-engine: squash
+    Azure/aks-engine: squash
   queries:
   - repos:
-    - Azure/acs-engine
+    - Azure/aks-engine
     labels:
     - lgtm
     - approved

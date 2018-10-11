@@ -287,8 +287,8 @@ ensure_k8s_namespace_exists() {
 }
 
 NAMESPACE=default
-RAW_PROMETHEUS_CHART_VALS="https://raw.githubusercontent.com/Azure/acs-engine/master/extensions/prometheus-grafana-k8s/v1/prometheus_values.yaml"
-CADVISOR_CONFIG_URL="https://raw.githubusercontent.com/Azure/acs-engine/master/extensions/prometheus-grafana-k8s/v1/cadvisor_daemonset.yml"
+RAW_PROMETHEUS_CHART_VALS="https://raw.githubusercontent.com/Azure/aks-engine/master/extensions/prometheus-grafana-k8s/v1/prometheus_values.yaml"
+CADVISOR_CONFIG_URL="https://raw.githubusercontent.com/Azure/aks-engine/master/extensions/prometheus-grafana-k8s/v1/cadvisor_daemonset.yml"
 
 # retrieve and parse extension parameters
 if [[ -n "$1" ]]; then

@@ -10,9 +10,9 @@
       },
       "type": "string"
     },
-    "acsengineVersion": {
+    "aksengineVersion": {
       "metadata": {
-        "description": "Contains details of the acs-engine version which was used to provision the cluster"
+        "description": "Contains details of the aks-engine version which was used to provision the cluster"
       },
       "type": "string"
     },

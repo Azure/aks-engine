@@ -27,7 +27,7 @@ type ManagedCluster struct {
 	Properties *Properties `json:"properties"`
 }
 
-// Properties represents the ACS cluster definition
+// Properties represents the AKS cluster definition
 type Properties struct {
 	ProvisioningState       ProvisioningState        `json:"provisioningState,omitempty"`
 	KubernetesVersion       string                   `json:"kubernetesVersion"`

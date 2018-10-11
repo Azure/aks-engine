@@ -4,8 +4,8 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/Azure/acs-engine/pkg/api/agentPoolOnlyApi/v20180331"
-	"github.com/Azure/acs-engine/pkg/helpers"
+	"github.com/Azure/aks-engine/pkg/api/agentPoolOnlyApi/v20180331"
+	"github.com/Azure/aks-engine/pkg/helpers"
 )
 
 func TestConvertOrchestratorProfileToV20180331AgentPoolOnly(t *testing.T) {

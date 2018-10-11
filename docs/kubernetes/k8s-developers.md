@@ -1,8 +1,8 @@
 # For Kubernetes Developers
 
-If you're working on Kubernetes upstream, you can use ACS Engine to test your build of Kubernetes in the Azure environment.  The option that allows you to do this is `orchestratorProfile/kubernetesConfig/customHyperkubeImage`, which you should set to point to a Docker image containing your build of hyperkube.
+If you're working on Kubernetes upstream, you can use AKS Engine to test your build of Kubernetes in the Azure environment.  The option that allows you to do this is `orchestratorProfile/kubernetesConfig/customHyperkubeImage`, which you should set to point to a Docker image containing your build of hyperkube.
 
-The following instructions describe in more detail how to create the required Docker image and deploy it using ACS Engine (replace `dockerhubid` and `sometag` with your Docker Hub ID and a unique tag for your build):
+The following instructions describe in more detail how to create the required Docker image and deploy it using AKS Engine (replace `dockerhubid` and `sometag` with your Docker Hub ID and a unique tag for your build):
 
 ## In the Kubernetes repo
 
@@ -31,7 +31,7 @@ docker push dockerhubid/hyperkube-amd64:sometag
 
 ## In the ACS repo
 
-* Open the ACS Engine input JSON (e.g. a file from the examples directory) and add the following to the `orchestratorProfile` section:
+* Open the AKS Engine input JSON (e.g. a file from the examples directory) and add the following to the `orchestratorProfile` section:
 
 ```
 "kubernetesConfig": {
@@ -39,4 +39,4 @@ docker push dockerhubid/hyperkube-amd64:sometag
 }
 ```
 
-* Run `./bin/acs-engine deploy --api-model the_json_file_you_just_edited.json ...` [as normal](deploy.md).
+* Run `./bin/aks-engine deploy --api-model the_json_file_you_just_edited.json ...` [as normal](deploy.md).

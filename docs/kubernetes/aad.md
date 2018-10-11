@@ -1,6 +1,6 @@
-# Microsoft Azure Container Service Engine - Kubernetes AAD integration Walkthrough
+# Microsoft Azure Kubernetes Service Engine - Kubernetes AAD integration Walkthrough
 
-This is walkthrough is to help you get start with Azure Active Directory(AAD) integeration with an ACS-Engine Kubernetes cluster.
+This is walkthrough is to help you get start with Azure Active Directory(AAD) integeration with an AKS Engine Kubernetes cluster.
 
 [OpenID Connect](http://openid.net/connect/) is a simple identity layer built on top of the OAuth 2.0 protocol, and it is supported by both AAD and Kubernetes. Here we're going to use OpenID Connect as the communication protocol.
 
@@ -45,7 +45,7 @@ To sign in, use a web browser to open the page https://aka.ms/devicelogin and en
 You can now authenticate to the Kubernetes cluster, but you need to set up authorization as well.
 
 #### Authentication
-With ACS-Engine, the cluster is locked down by default.
+With AKS Engine, the cluster is locked down by default.
 
 This means that when you try to use your AAD account you will see something
 like:

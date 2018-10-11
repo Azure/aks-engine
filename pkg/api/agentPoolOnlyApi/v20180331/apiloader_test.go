@@ -1,11 +1,11 @@
 package v20180331_test
 
 import (
-	"github.com/Azure/acs-engine/pkg/api"
-	"github.com/Azure/acs-engine/pkg/api/agentPoolOnlyApi/v20180331"
-	"github.com/Azure/acs-engine/pkg/api/common"
-	"github.com/Azure/acs-engine/pkg/i18n"
-	. "github.com/Azure/acs-engine/pkg/test"
+	"github.com/Azure/aks-engine/pkg/api"
+	"github.com/Azure/aks-engine/pkg/api/agentPoolOnlyApi/v20180331"
+	"github.com/Azure/aks-engine/pkg/api/common"
+	"github.com/Azure/aks-engine/pkg/i18n"
+	. "github.com/Azure/aks-engine/pkg/test"
 	"github.com/leonelquinteros/gotext"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"

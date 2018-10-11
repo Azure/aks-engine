@@ -32,7 +32,7 @@ type ContainerService struct {
 	Properties *Properties `json:"properties"`
 }
 
-// Properties represents the ACS cluster definition
+// Properties represents the AKS cluster definition
 type Properties struct {
 	ProvisioningState       ProvisioningState        `json:"provisioningState,omitempty"`
 	OrchestratorProfile     *OrchestratorProfile     `json:"orchestratorProfile,omitempty" validate:"required"`
@@ -254,14 +254,8 @@ func (o *OrchestratorProfile) UnmarshalJSON(b []byte) error {
 	// Unmarshal OrchestratorType, format it as well
 	orchestratorType := o.OrchestratorType
 	switch {
-	case strings.EqualFold(orchestratorType, DCOS):
-		o.OrchestratorType = DCOS
 	case strings.EqualFold(orchestratorType, Kubernetes):
 		o.OrchestratorType = Kubernetes
-	case strings.EqualFold(orchestratorType, Swarm):
-		o.OrchestratorType = Swarm
-	case strings.EqualFold(orchestratorType, DockerCE):
-		o.OrchestratorType = DockerCE
 	default:
 		return errors.Errorf("OrchestratorType has unknown orchestrator: %s", orchestratorType)
 	}
@@ -339,9 +333,4 @@ func (a *AgentPoolProfile) GetSubnet() string {
 // SetSubnet sets the read-only subnet for the agent pool
 func (a *AgentPoolProfile) SetSubnet(subnet string) {
 	a.subnet = subnet
-}
-
-// IsSwarmMode returns true if this template is for Docker CE orchestrator
-func (o *OrchestratorProfile) IsSwarmMode() bool {
-	return o.OrchestratorType == DockerCE
 }

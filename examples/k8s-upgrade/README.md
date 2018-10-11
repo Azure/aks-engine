@@ -1,23 +1,23 @@
-# Microsoft Azure Container Service Engine - Kubernetes Upgrade
+# Microsoft Azure Kubernetes Service Engine - Kubernetes Upgrade
 
 ## Overview
 
 This document describes how to upgrade kubernetes version for an existing cluster.
 
-*acs-engine* supports Kubernetes version upgrades starting from ``1.5`` release.
-During the upgrade, *acs-engine* successively visits virtual machines that constitute the cluster (first the master nodes, then the agent nodes) and performs the following operations:
+*aks-engine* supports Kubernetes version upgrades starting from ``1.5`` release.
+During the upgrade, *aks-engine* successively visits virtual machines that constitute the cluster (first the master nodes, then the agent nodes) and performs the following operations:
  - cordon the node and drain existing workload
  - delete the VM
  - create new VM and install desired orchestrator version
  - add the new VM to the cluster
 
-*acs-engine* allows one subsequent minor version upgrade at a time, for example, from ``1.6.x`` to ``1.7.y``.
+*aks-engine* allows one subsequent minor version upgrade at a time, for example, from ``1.6.x`` to ``1.7.y``.
 
 For upgrade that spans over more than a single minor version, this operation should be called several times, each time advancing the minor version by one. For example, to upgrade from ``1.6.x`` to ``1.8.z`` one should first upgrade the cluster to ``1.7.y``, followed by upgrading it to ``1.8.z``
 
 To get the list of all available Kubernetes versions and upgrades, run the *orchestrators* command and specify Kubernetes orchestrator type. The output is a JSON object:
 ```bash
-./bin/acs-engine orchestrators --orchestrator Kubernetes
+./bin/aks-engine orchestrators --orchestrator Kubernetes
 ```
 
 ```json
@@ -75,7 +75,7 @@ To get the list of all available Kubernetes versions and upgrades, run the *orch
 
 To get the information specific to the cluster, provide its current orchestrator version:
 ```bash
-./bin/acs-engine orchestrators --orchestrator Kubernetes --version 1.7.8
+./bin/aks-engine orchestrators --orchestrator Kubernetes --version 1.7.8
 ```
 
 ```json
@@ -132,9 +132,9 @@ To get the information specific to the cluster, provide its current orchestrator
 
 Once the desired Kubernetes version is finalized, call the *upgrade* command:
 ```bash
-./bin/acs-engine upgrade \
+./bin/aks-engine upgrade \
   --subscription-id <subscription id> \
-  --deployment-dir <acs-engine output directory > \
+  --deployment-dir <aks-engine output directory > \
   --location <resource group location> \
   --resource-group <resource group name> \
   --upgrade-version <desired Kubernetes version> \
@@ -144,7 +144,7 @@ Once the desired Kubernetes version is finalized, call the *upgrade* command:
 ```
 For example,
 ```bash
-./bin/acs-engine upgrade \
+./bin/aks-engine upgrade \
   --subscription-id xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx \
   --deployment-dir ./_output/test \
   --location westus \
@@ -157,7 +157,7 @@ For example,
 
 By its nature, the upgrade operation is long running and potentially could fail for various reasons, such as temporary lack of resources, etc. In this case, rerun the command. The *upgrade* command is idempotent, and will pick up execution from the point it failed on. 
 
-[This directory](https://github.com/Azure/acs-engine/tree/master/examples/k8s-upgrade) contains the following files:
+[This directory](https://github.com/Azure/aks-engine/tree/master/examples/k8s-upgrade) contains the following files:
 - **README.md** - this file
 - **k8s-upgrade.sh** - script invoking upgrade operation
 - **\*.json** - cluster definition examples for various orchestrator versions and configurations: Linux clusters, Windows clusters, hybrid clusters.

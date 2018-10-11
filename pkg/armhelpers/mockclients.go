@@ -9,8 +9,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/Azure/acs-engine/pkg/helpers"
-
+	"github.com/Azure/aks-engine/pkg/helpers"
 	"github.com/Azure/azure-sdk-for-go/services/authorization/mgmt/2015-07-01/authorization"
 	"github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2018-04-01/compute"
 	"github.com/Azure/azure-sdk-for-go/services/graphrbac/1.6/graphrbac"
@@ -22,8 +21,8 @@ import (
 	"k8s.io/api/core/v1"
 )
 
-//MockACSEngineClient is an implementation of ACSEngineClient where all requests error out
-type MockACSEngineClient struct {
+//MockAKSEngineClient is an implementation of AKSEngineClient where all requests error out
+type MockAKSEngineClient struct {
 	FailDeployTemplate                    bool
 	FailDeployTemplateQuota               bool
 	FailDeployTemplateConflict            bool
@@ -270,13 +269,13 @@ func (msc *MockStorageClient) SaveBlockBlob(container, blob string, b []byte, op
 }
 
 //AddAcceptLanguages mock
-func (mc *MockACSEngineClient) AddAcceptLanguages(languages []string) {}
+func (mc *MockAKSEngineClient) AddAcceptLanguages(languages []string) {}
 
 // AddAuxiliaryTokens mock
-func (mc *MockACSEngineClient) AddAuxiliaryTokens(tokens []string) {}
+func (mc *MockAKSEngineClient) AddAuxiliaryTokens(tokens []string) {}
 
 //DeployTemplate mock
-func (mc *MockACSEngineClient) DeployTemplate(ctx context.Context, resourceGroup, name string, template, parameters map[string]interface{}) (de resources.DeploymentExtended, err error) {
+func (mc *MockAKSEngineClient) DeployTemplate(ctx context.Context, resourceGroup, name string, template, parameters map[string]interface{}) (de resources.DeploymentExtended, err error) {
 	switch {
 	case mc.FailDeployTemplate:
 		return de, errors.New("DeployTemplate failed")
@@ -350,7 +349,7 @@ func (mc *MockACSEngineClient) DeployTemplate(ctx context.Context, resourceGroup
 }
 
 //EnsureResourceGroup mock
-func (mc *MockACSEngineClient) EnsureResourceGroup(ctx context.Context, resourceGroup, location string, managedBy *string) (*resources.Group, error) {
+func (mc *MockAKSEngineClient) EnsureResourceGroup(ctx context.Context, resourceGroup, location string, managedBy *string) (*resources.Group, error) {
 	if mc.FailEnsureResourceGroup {
 		return nil, errors.New("EnsureResourceGroup failed")
 	}
@@ -359,7 +358,7 @@ func (mc *MockACSEngineClient) EnsureResourceGroup(ctx context.Context, resource
 }
 
 //ListVirtualMachines mock
-func (mc *MockACSEngineClient) ListVirtualMachines(ctx context.Context, resourceGroup string) (VirtualMachineListResultPage, error) {
+func (mc *MockAKSEngineClient) ListVirtualMachines(ctx context.Context, resourceGroup string) (VirtualMachineListResultPage, error) {
 	if mc.FailListVirtualMachines {
 		return &MockVirtualMachineListResultPage{
 			Vmlr: compute.VirtualMachineListResult{
@@ -422,7 +421,7 @@ func (mc *MockACSEngineClient) ListVirtualMachines(ctx context.Context, resource
 }
 
 //ListVirtualMachineScaleSets mock
-func (mc *MockACSEngineClient) ListVirtualMachineScaleSets(ctx context.Context, resourceGroup string) (compute.VirtualMachineScaleSetListResultPage, error) {
+func (mc *MockAKSEngineClient) ListVirtualMachineScaleSets(ctx context.Context, resourceGroup string) (compute.VirtualMachineScaleSetListResultPage, error) {
 	if mc.FailListVirtualMachineScaleSets {
 		return compute.VirtualMachineScaleSetListResultPage{}, errors.New("ListVirtualMachines failed")
 	}
@@ -431,7 +430,7 @@ func (mc *MockACSEngineClient) ListVirtualMachineScaleSets(ctx context.Context, 
 }
 
 //GetVirtualMachine mock
-func (mc *MockACSEngineClient) GetVirtualMachine(ctx context.Context, resourceGroup, name string) (compute.VirtualMachine, error) {
+func (mc *MockAKSEngineClient) GetVirtualMachine(ctx context.Context, resourceGroup, name string) (compute.VirtualMachine, error) {
 	if mc.FailGetVirtualMachine {
 		return compute.VirtualMachine{}, errors.New("GetVirtualMachine failed")
 	}
@@ -485,7 +484,7 @@ func (mc *MockACSEngineClient) GetVirtualMachine(ctx context.Context, resourceGr
 }
 
 //DeleteVirtualMachine mock
-func (mc *MockACSEngineClient) DeleteVirtualMachine(ctx context.Context, resourceGroup, name string) error {
+func (mc *MockAKSEngineClient) DeleteVirtualMachine(ctx context.Context, resourceGroup, name string) error {
 	if mc.FailDeleteVirtualMachine {
 		return errors.New("DeleteVirtualMachine failed")
 	}
@@ -494,7 +493,7 @@ func (mc *MockACSEngineClient) DeleteVirtualMachine(ctx context.Context, resourc
 }
 
 //DeleteVirtualMachineScaleSetVM mock
-func (mc *MockACSEngineClient) DeleteVirtualMachineScaleSetVM(ctx context.Context, resourceGroup, virtualMachineScaleSet, instanceID string) error {
+func (mc *MockAKSEngineClient) DeleteVirtualMachineScaleSetVM(ctx context.Context, resourceGroup, virtualMachineScaleSet, instanceID string) error {
 	if mc.FailDeleteVirtualMachineScaleSetVM {
 		return errors.New("DeleteVirtualMachineScaleSetVM failed")
 	}
@@ -503,7 +502,7 @@ func (mc *MockACSEngineClient) DeleteVirtualMachineScaleSetVM(ctx context.Contex
 }
 
 //SetVirtualMachineScaleSetCapacity mock
-func (mc *MockACSEngineClient) SetVirtualMachineScaleSetCapacity(ctx context.Context, resourceGroup, virtualMachineScaleSet string, sku compute.Sku, location string) error {
+func (mc *MockAKSEngineClient) SetVirtualMachineScaleSetCapacity(ctx context.Context, resourceGroup, virtualMachineScaleSet string, sku compute.Sku, location string) error {
 	if mc.FailSetVirtualMachineScaleSetCapacity {
 		return errors.New("SetVirtualMachineScaleSetCapacity failed")
 	}
@@ -512,7 +511,7 @@ func (mc *MockACSEngineClient) SetVirtualMachineScaleSetCapacity(ctx context.Con
 }
 
 //ListVirtualMachineScaleSetVMs mock
-func (mc *MockACSEngineClient) ListVirtualMachineScaleSetVMs(ctx context.Context, resourceGroup, virtualMachineScaleSet string) (compute.VirtualMachineScaleSetVMListResultPage, error) {
+func (mc *MockAKSEngineClient) ListVirtualMachineScaleSetVMs(ctx context.Context, resourceGroup, virtualMachineScaleSet string) (compute.VirtualMachineScaleSetVMListResultPage, error) {
 	if mc.FailDeleteVirtualMachineScaleSetVM {
 		return compute.VirtualMachineScaleSetVMListResultPage{}, errors.New("DeleteVirtualMachineScaleSetVM failed")
 	}
@@ -521,7 +520,7 @@ func (mc *MockACSEngineClient) ListVirtualMachineScaleSetVMs(ctx context.Context
 }
 
 //GetStorageClient mock
-func (mc *MockACSEngineClient) GetStorageClient(ctx context.Context, resourceGroup, accountName string) (ACSStorageClient, error) {
+func (mc *MockAKSEngineClient) GetStorageClient(ctx context.Context, resourceGroup, accountName string) (AKSStorageClient, error) {
 	if mc.FailGetStorageClient {
 		return nil, errors.New("GetStorageClient failed")
 	}
@@ -530,7 +529,7 @@ func (mc *MockACSEngineClient) GetStorageClient(ctx context.Context, resourceGro
 }
 
 //DeleteNetworkInterface mock
-func (mc *MockACSEngineClient) DeleteNetworkInterface(ctx context.Context, resourceGroup, nicName string) error {
+func (mc *MockAKSEngineClient) DeleteNetworkInterface(ctx context.Context, resourceGroup, nicName string) error {
 	if mc.FailDeleteNetworkInterface {
 		return errors.New("DeleteNetworkInterface failed")
 	}
@@ -547,58 +546,58 @@ var validNicResourceName = "/subscriptions/DEC923E3-1EF1-4745-9516-37906D56DEC4/
 // Graph Mocks
 
 // CreateGraphApplication creates an application via the graphrbac client
-func (mc *MockACSEngineClient) CreateGraphApplication(ctx context.Context, applicationCreateParameters graphrbac.ApplicationCreateParameters) (graphrbac.Application, error) {
+func (mc *MockAKSEngineClient) CreateGraphApplication(ctx context.Context, applicationCreateParameters graphrbac.ApplicationCreateParameters) (graphrbac.Application, error) {
 	return graphrbac.Application{}, nil
 }
 
 // CreateGraphPrincipal creates a service principal via the graphrbac client
-func (mc *MockACSEngineClient) CreateGraphPrincipal(ctx context.Context, servicePrincipalCreateParameters graphrbac.ServicePrincipalCreateParameters) (graphrbac.ServicePrincipal, error) {
+func (mc *MockAKSEngineClient) CreateGraphPrincipal(ctx context.Context, servicePrincipalCreateParameters graphrbac.ServicePrincipalCreateParameters) (graphrbac.ServicePrincipal, error) {
 	return graphrbac.ServicePrincipal{}, nil
 }
 
 // CreateApp is a simpler method for creating an application
-func (mc *MockACSEngineClient) CreateApp(ctx context.Context, applicationName, applicationURL string, replyURLs *[]string, requiredResourceAccess *[]graphrbac.RequiredResourceAccess) (result graphrbac.Application, servicePrincipalObjectID, secret string, err error) {
+func (mc *MockAKSEngineClient) CreateApp(ctx context.Context, applicationName, applicationURL string, replyURLs *[]string, requiredResourceAccess *[]graphrbac.RequiredResourceAccess) (result graphrbac.Application, servicePrincipalObjectID, secret string, err error) {
 	return graphrbac.Application{
 		AppID: helpers.PointerToString("app-id"),
 	}, "client-id", "client-secret", nil
 }
 
 // DeleteApp is a simpler method for deleting an application
-func (mc *MockACSEngineClient) DeleteApp(ctx context.Context, appName, applicationObjectID string) (response autorest.Response, err error) {
+func (mc *MockAKSEngineClient) DeleteApp(ctx context.Context, appName, applicationObjectID string) (response autorest.Response, err error) {
 	return response, nil
 }
 
 // User Assigned MSI
 
 //CreateUserAssignedID - Creates a user assigned msi.
-func (mc *MockACSEngineClient) CreateUserAssignedID(location string, resourceGroup string, userAssignedID string) (*msi.Identity, error) {
+func (mc *MockAKSEngineClient) CreateUserAssignedID(location string, resourceGroup string, userAssignedID string) (*msi.Identity, error) {
 	return &msi.Identity{}, nil
 }
 
 // RBAC Mocks
 
 // CreateRoleAssignment creates a role assignment via the authorization client
-func (mc *MockACSEngineClient) CreateRoleAssignment(ctx context.Context, scope string, roleAssignmentName string, parameters authorization.RoleAssignmentCreateParameters) (authorization.RoleAssignment, error) {
+func (mc *MockAKSEngineClient) CreateRoleAssignment(ctx context.Context, scope string, roleAssignmentName string, parameters authorization.RoleAssignmentCreateParameters) (authorization.RoleAssignment, error) {
 	return authorization.RoleAssignment{}, nil
 }
 
 // CreateRoleAssignmentSimple is a wrapper around RoleAssignmentsClient.Create
-func (mc *MockACSEngineClient) CreateRoleAssignmentSimple(ctx context.Context, applicationID, roleID string) error {
+func (mc *MockAKSEngineClient) CreateRoleAssignmentSimple(ctx context.Context, applicationID, roleID string) error {
 	return nil
 }
 
 // DeleteManagedDisk is a wrapper around disksClient.Delete
-func (mc *MockACSEngineClient) DeleteManagedDisk(ctx context.Context, resourceGroupName string, diskName string) error {
+func (mc *MockAKSEngineClient) DeleteManagedDisk(ctx context.Context, resourceGroupName string, diskName string) error {
 	return nil
 }
 
 // ListManagedDisksByResourceGroup is a wrapper around disksClient.ListManagedDisksByResourceGroup
-func (mc *MockACSEngineClient) ListManagedDisksByResourceGroup(ctx context.Context, resourceGroupName string) (result compute.DiskListPage, err error) {
+func (mc *MockAKSEngineClient) ListManagedDisksByResourceGroup(ctx context.Context, resourceGroupName string) (result compute.DiskListPage, err error) {
 	return compute.DiskListPage{}, nil
 }
 
 //GetKubernetesClient mock
-func (mc *MockACSEngineClient) GetKubernetesClient(masterURL, kubeConfig string, interval, timeout time.Duration) (KubernetesClient, error) {
+func (mc *MockAKSEngineClient) GetKubernetesClient(masterURL, kubeConfig string, interval, timeout time.Duration) (KubernetesClient, error) {
 	if mc.FailGetKubernetesClient {
 		return nil, errors.New("GetKubernetesClient failed")
 	}
@@ -610,7 +609,7 @@ func (mc *MockACSEngineClient) GetKubernetesClient(masterURL, kubeConfig string,
 }
 
 // ListProviders mock
-func (mc *MockACSEngineClient) ListProviders(ctx context.Context) (resources.ProviderListResultPage, error) {
+func (mc *MockAKSEngineClient) ListProviders(ctx context.Context) (resources.ProviderListResultPage, error) {
 	if mc.FailListProviders {
 		return resources.ProviderListResultPage{}, errors.New("ListProviders failed")
 	}
@@ -619,7 +618,7 @@ func (mc *MockACSEngineClient) ListProviders(ctx context.Context) (resources.Pro
 }
 
 // ListDeploymentOperations gets all deployments operations for a deployment.
-func (mc *MockACSEngineClient) ListDeploymentOperations(ctx context.Context, resourceGroupName string, deploymentName string, top *int32) (result DeploymentOperationsListResultPage, err error) {
+func (mc *MockAKSEngineClient) ListDeploymentOperations(ctx context.Context, resourceGroupName string, deploymentName string, top *int32) (result DeploymentOperationsListResultPage, err error) {
 	resp := `{
 	"properties": {
 	"provisioningState":"Failed",
@@ -682,12 +681,12 @@ func (mc *MockACSEngineClient) ListDeploymentOperations(ctx context.Context, res
 }
 
 // ListDeploymentOperationsNextResults retrieves the next set of results, if any.
-func (mc *MockACSEngineClient) ListDeploymentOperationsNextResults(lastResults resources.DeploymentOperationsListResult) (result resources.DeploymentOperationsListResult, err error) {
+func (mc *MockAKSEngineClient) ListDeploymentOperationsNextResults(lastResults resources.DeploymentOperationsListResult) (result resources.DeploymentOperationsListResult, err error) {
 	return resources.DeploymentOperationsListResult{}, nil
 }
 
 // DeleteRoleAssignmentByID deletes a roleAssignment via its unique identifier
-func (mc *MockACSEngineClient) DeleteRoleAssignmentByID(ctx context.Context, roleAssignmentID string) (authorization.RoleAssignment, error) {
+func (mc *MockAKSEngineClient) DeleteRoleAssignmentByID(ctx context.Context, roleAssignmentID string) (authorization.RoleAssignment, error) {
 	if mc.FailDeleteRoleAssignment {
 		return authorization.RoleAssignment{}, errors.New("DeleteRoleAssignmentByID failed")
 	}
@@ -696,7 +695,7 @@ func (mc *MockACSEngineClient) DeleteRoleAssignmentByID(ctx context.Context, rol
 }
 
 // ListRoleAssignmentsForPrincipal (e.g. a VM) via the scope and the unique identifier of the principal
-func (mc *MockACSEngineClient) ListRoleAssignmentsForPrincipal(ctx context.Context, scope string, principalID string) (RoleAssignmentListResultPage, error) {
+func (mc *MockAKSEngineClient) ListRoleAssignmentsForPrincipal(ctx context.Context, scope string, principalID string) (RoleAssignmentListResultPage, error) {
 	roleAssignments := []authorization.RoleAssignment{}
 
 	if mc.ShouldSupportVMIdentity {

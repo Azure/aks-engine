@@ -15,7 +15,7 @@ type AzureStorageClient struct {
 }
 
 // GetStorageClient returns an authenticated client for the specified account.
-func (az *AzureClient) GetStorageClient(ctx context.Context, resourceGroup, accountName string) (ACSStorageClient, error) {
+func (az *AzureClient) GetStorageClient(ctx context.Context, resourceGroup, accountName string) (AKSStorageClient, error) {
 	keys, err := az.getStorageKeys(ctx, resourceGroup, accountName)
 	if err != nil {
 		return nil, err

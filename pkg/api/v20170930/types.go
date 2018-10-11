@@ -4,7 +4,7 @@ package v20170930
 type OSType string
 
 // OrchestratorProfile contains orchestrator properties:
-//  - type: kubernetes, DCOS, etc.
+//  - type: kubernetes, etc.
 //  - release: major and minor version numbers
 //  - version: major, minor, and patch version numbers
 type OrchestratorProfile struct {

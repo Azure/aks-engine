@@ -4,7 +4,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/Azure/acs-engine/pkg/api/common"
+	"github.com/Azure/aks-engine/pkg/api/common"
 )
 
 // k8sComponentVersions defines "best known-working" component versions for each minor version of k8s

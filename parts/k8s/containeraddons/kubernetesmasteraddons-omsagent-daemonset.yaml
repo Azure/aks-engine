@@ -136,7 +136,7 @@ spec:
                 fieldRef:
                   fieldPath: status.hostIP
             - name: ACS_RESOURCE_NAME
-              value: "my_acs_cluster_name"
+              value: "my_aks_cluster_name"
             - name: DISABLE_KUBE_SYSTEM_LOG_COLLECTION
               value: "true"
             - name: ISTEST

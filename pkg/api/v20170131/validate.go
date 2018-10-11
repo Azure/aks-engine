@@ -3,17 +3,13 @@ package v20170131
 import (
 	"regexp"
 
-	"github.com/Azure/acs-engine/pkg/api/common"
+	"github.com/Azure/aks-engine/pkg/api/common"
 	"github.com/pkg/errors"
 )
 
 // Validate implements APIObject
 func (o *OrchestratorProfile) Validate() error {
 	switch o.OrchestratorType {
-	case DCOS:
-	case Mesos:
-	case Swarm:
-	case SwarmMode:
 	case Kubernetes:
 	default:
 		return errors.Errorf("OrchestratorProfile has unknown orchestrator: %s", o.OrchestratorType)
@@ -111,7 +107,6 @@ func (a *Properties) Validate() error {
 				return errors.New("missing WindowsProfile")
 			}
 			switch a.OrchestratorProfile.OrchestratorType {
-			case Swarm:
 			case Kubernetes:
 			default:
 				return errors.Errorf("Orchestrator %s does not support Windows", a.OrchestratorProfile.OrchestratorType)

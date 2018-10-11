@@ -1,4 +1,4 @@
-# Microsoft Azure Container Service Engine - Using GPUs with Kubernetes
+# Microsoft Azure Kubernetes Service Engine - Using GPUs with Kubernetes
 
 If you created a Kubernetes cluster with one or multiple agent pool(s) whose VM size is `Standard_NC*` or `Standard_NV*` you can schedule GPU workload on your cluster.
 The NVIDIA drivers are automatically installed on every GPU agent in your cluster, so you don't need to do that manually, unless you require a specific version of the drivers. Currently, the installed driver is version 396.26.
