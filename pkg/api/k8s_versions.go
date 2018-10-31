@@ -22,7 +22,7 @@ var k8sComponentVersions = map[string]map[string]string{
 		"metrics-server":                   "metrics-server-amd64:v0.2.1",
 		"coredns":                          "coredns:1.2.2",
 		"kube-dns":                         "k8s-dns-kube-dns-amd64:1.14.13",
-		"addon-manager":                    "kube-addon-manager-amd64:v8.8",
+		"addon-manager":                    "kube-addon-manager-amd64:v8.9",
 		"dnsmasq":                          "k8s-dns-dnsmasq-nanny-amd64:1.14.10",
 		"pause":                            "pause-amd64:3.1",
 		"tiller":                           "tiller:v2.11.0",
