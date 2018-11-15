@@ -377,7 +377,7 @@ func (p *Properties) setAgentProfileDefaults(isUpgrade, isScale bool) {
 		}
 
 		if profile.AcceleratedNetworkingEnabledWindows == nil {
-			profile.AcceleratedNetworkingEnabledWindows = helpers.PointerToBool(DefaultAcceleratedNetworkingWindowsEnabled)
+			profile.AcceleratedNetworkingEnabledWindows = helpers.PointerToBool(DefaultAcceleratedNetworkingWindowsEnabled && !isUpgrade && !isScale && helpers.AcceleratedNetworkingSupported(profile.VMSize))
 		}
 
 		if profile.OSType != Windows {
