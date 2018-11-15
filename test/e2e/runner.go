@@ -130,7 +130,7 @@ func main() {
 			}
 		}
 	} else {
-		cliProvisioner.ResourceGroups = append(rgs, cliProvisioner.Config.Name)
+		rgs = append(rgs, cliProvisioner.Config.Name)
 		engCfg, err := engine.ParseConfig(cfg.CurrentWorkingDir, cfg.ClusterDefinition, cfg.Name)
 		cfg.SetKubeConfig()
 		if err != nil {
