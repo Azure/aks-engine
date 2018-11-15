@@ -1,6 +1,6 @@
 #!/bin/bash
 
-for i in $(find ${FOLDER} -name '*.go') # or whatever other pattern...
+for i in $(find ${FOLDER} -name '*.go') # do not run on the vendor dir
 do
   if ! grep -q Copyright $i
   then
