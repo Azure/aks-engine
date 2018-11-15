@@ -39,7 +39,7 @@ items:
       spec:
         containers:
         - name: hook
-          image: quay.io/kargakis/hook:workaround
+          image: registry.svc.ci.openshift.org/ci/hook:latest
           imagePullPolicy: IfNotPresent
           args:
           - --dry-run=false

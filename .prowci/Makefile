@@ -2,13 +2,13 @@ prow: prow-config prow-secrets prow-services
 .PHONY: prow
 
 prow-config:
-	kubectl create cm config --from-file=config=config.yaml
-	kubectl create cm plugins --from-file=plugins=plugins.yaml
+	kubectl create cm config --from-file=config.yaml=config.yaml
+	kubectl create cm plugins --from-file=plugins.yaml=plugins.yaml
 .PHONY: prow-config
 
 prow-config-update:
-	kubectl create cm config --from-file=config=config.yaml -o yaml --dry-run | kubectl replace -f -
-	kubectl create cm plugins --from-file=plugins=plugins.yaml -o yaml --dry-run | kubectl replace -f -
+	kubectl create cm config --from-file=config.yaml=config.yaml -o yaml --dry-run | kubectl replace -f -
+	kubectl create cm plugins --from-file=plugins.yaml=plugins.yaml -o yaml --dry-run | kubectl replace -f -
 .PHONY: prow-config-update
 
 prow-secrets:

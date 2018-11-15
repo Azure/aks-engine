@@ -6,10 +6,10 @@ Prow in [upstream docs][0].
 
 ## aks-engine setup
 
-Prow is optimized to run as a Kubernetes application. There are some pre-installation
-steps that need to happen in a new Kubernetes cluster before deploying Prow. These
-involve setting up an Ingress controller and a mechanism to do TLS. The [Azure docs][1]
-explain how to setup Ingress with TLS on top of a Kubernetes cluster in Azure.
+Deploy a new Kubernetes cluster (eg. `az aks create -g acse-test-prow-ci -n prow)
+
+Set up an Ingress controller and a mechanism to do TLS. The [Azure docs][1]
+explain how to setup Ingress with TLS on top of a Kubernetes cluster in Azure. (make sure you specify `--set rbac.create=true` when creating the ingress controller)
 
 A Github webhook also needs to be setup in the repo that points to `dns-name/hook`.
 `dns-name` is the DNS name setup during the DNS configuration of the Ingress controller.
@@ -34,7 +34,6 @@ make prow
 appropriately on Github. `deck` is installed as the Prow frontend. Last, `tide`
 is also installed that takes care of merging pull requests that pass all tests
 and satisfy a set of label requirements.
-
 
 [0]: https://github.com/kubernetes/test-infra/tree/master/prow#prow
 [1]: https://docs.microsoft.com/en-us/azure/aks/ingress
