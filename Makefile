@@ -3,7 +3,7 @@ DIST_DIRS         = find * -type d -exec
 
 .NOTPARALLEL:
 
-.PHONY: bootstrap build test test_fmt validate-generated fmt lint ci devenv
+.PHONY: bootstrap build test test_fmt validate-generated validate-headers fmt lint ci devenv
 
 ifdef DEBUG
 GOFLAGS   := -gcflags="-N -l"
@@ -51,6 +51,10 @@ validate-generated: bootstrap
 .PHONY: validate-dependencies
 validate-dependencies: bootstrap
 	./scripts/validate-dependencies.sh
+
+.PHONY: validate-headers
+common-check_license: bootstrap
+	./scripts/validate-copyright-header.sh
 
 .PHONY: generate
 generate: bootstrap
