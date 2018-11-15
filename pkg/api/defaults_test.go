@@ -372,6 +372,74 @@ func TestAssignDefaultAddonVals(t *testing.T) {
 
 }
 
+func TestAcceleratedNetworking(t *testing.T) {
+	mockCS := getMockBaseContainerService("1.10.8")
+	mockCS.Properties.OrchestratorProfile.OrchestratorType = "Kubernetes"
+	mockCS.Properties.AgentPoolProfiles[0].AcceleratedNetworkingEnabled = nil
+	mockCS.Properties.AgentPoolProfiles[0].AcceleratedNetworkingEnabledWindows = nil
+	isUpgrade := true
+	mockCS.SetPropertiesDefaults(isUpgrade, false)
+
+	// In upgrade scenario, nil AcceleratedNetworkingEnabled should always render as false (i.e., we never turn on this feature on an existing vm that didn't have it before)
+	if helpers.IsTrueBoolPointer(mockCS.Properties.AgentPoolProfiles[0].AcceleratedNetworkingEnabled) {
+		t.Errorf("expected nil acceleratedNetworkingEnabled to be false after upgrade, instead got %t", helpers.IsTrueBoolPointer(mockCS.Properties.AgentPoolProfiles[0].AcceleratedNetworkingEnabled))
+	}
+	// In upgrade scenario, nil AcceleratedNetworkingEnabledWindows should always render as false (i.e., we never turn on this feature on an existing vm that didn't have it before)
+	if helpers.IsTrueBoolPointer(mockCS.Properties.AgentPoolProfiles[0].AcceleratedNetworkingEnabledWindows) {
+		t.Errorf("expected nil acceleratedNetworkingEnabledWindows to be false after upgrade, instead got %t", helpers.IsTrueBoolPointer(mockCS.Properties.AgentPoolProfiles[0].AcceleratedNetworkingEnabledWindows))
+	}
+
+	mockCS = getMockBaseContainerService("1.10.8")
+	mockCS.Properties.OrchestratorProfile.OrchestratorType = "Kubernetes"
+	mockCS.Properties.AgentPoolProfiles[0].AcceleratedNetworkingEnabled = nil
+	mockCS.Properties.AgentPoolProfiles[0].AcceleratedNetworkingEnabledWindows = nil
+	isScale := true
+	mockCS.SetPropertiesDefaults(false, isScale)
+
+	// In scale scenario, nil AcceleratedNetworkingEnabled should always render as false (i.e., we never turn on this feature on an existing agent pool / vmss that didn't have it before)
+	if helpers.IsTrueBoolPointer(mockCS.Properties.AgentPoolProfiles[0].AcceleratedNetworkingEnabled) {
+		t.Errorf("expected nil acceleratedNetworkingEnabled to be false after upgrade, instead got %t", helpers.IsTrueBoolPointer(mockCS.Properties.AgentPoolProfiles[0].AcceleratedNetworkingEnabled))
+	}
+	// In scale scenario, nil AcceleratedNetworkingEnabledWindows should always render as false (i.e., we never turn on this feature on an existing vm that didn't have it before)
+	if helpers.IsTrueBoolPointer(mockCS.Properties.AgentPoolProfiles[0].AcceleratedNetworkingEnabledWindows) {
+		t.Errorf("expected nil acceleratedNetworkingEnabledWindows to be false after upgrade, instead got %t", helpers.IsTrueBoolPointer(mockCS.Properties.AgentPoolProfiles[0].AcceleratedNetworkingEnabledWindows))
+	}
+
+	mockCS = getMockBaseContainerService("1.10.8")
+	mockCS.Properties.OrchestratorProfile.OrchestratorType = "Kubernetes"
+	mockCS.Properties.AgentPoolProfiles[0].AcceleratedNetworkingEnabled = nil
+	mockCS.Properties.AgentPoolProfiles[0].VMSize = "Standard_D2_v2"
+	mockCS.Properties.AgentPoolProfiles[0].AcceleratedNetworkingEnabledWindows = nil
+	mockCS.Properties.AgentPoolProfiles[0].VMSize = "Standard_D2_v2"
+	mockCS.SetPropertiesDefaults(false, false)
+
+	// In create scenario, nil AcceleratedNetworkingEnabled should be the defaults
+	if helpers.IsTrueBoolPointer(mockCS.Properties.AgentPoolProfiles[0].AcceleratedNetworkingEnabled) != DefaultAcceleratedNetworking {
+		t.Errorf("expected default acceleratedNetworkingEnabled to be %t, instead got %t", DefaultAcceleratedNetworking, helpers.IsTrueBoolPointer(mockCS.Properties.AgentPoolProfiles[0].AcceleratedNetworkingEnabled))
+	}
+	// In create scenario, nil AcceleratedNetworkingEnabledWindows should be the defaults
+	if helpers.IsTrueBoolPointer(mockCS.Properties.AgentPoolProfiles[0].AcceleratedNetworkingEnabledWindows) != DefaultAcceleratedNetworkingWindowsEnabled {
+		t.Errorf("expected default acceleratedNetworkingEnabledWindows to be %t, instead got %t", DefaultAcceleratedNetworkingWindowsEnabled, helpers.IsTrueBoolPointer(mockCS.Properties.AgentPoolProfiles[0].AcceleratedNetworkingEnabledWindows))
+	}
+
+	mockCS = getMockBaseContainerService("1.10.8")
+	mockCS.Properties.OrchestratorProfile.OrchestratorType = "Kubernetes"
+	mockCS.Properties.AgentPoolProfiles[0].AcceleratedNetworkingEnabled = nil
+	mockCS.Properties.AgentPoolProfiles[0].VMSize = "Standard_D666_v2"
+	mockCS.Properties.AgentPoolProfiles[0].AcceleratedNetworkingEnabledWindows = nil
+	mockCS.Properties.AgentPoolProfiles[0].VMSize = "Standard_D666_v2"
+	mockCS.SetPropertiesDefaults(false, false)
+
+	// In non-supported VM SKU scenario, acceleratedNetworkingEnabled should always be false
+	if helpers.IsTrueBoolPointer(mockCS.Properties.AgentPoolProfiles[0].AcceleratedNetworkingEnabled) {
+		t.Errorf("expected acceleratedNetworkingEnabled to be %t for an unsupported VM SKU, instead got %t", false, helpers.IsTrueBoolPointer(mockCS.Properties.AgentPoolProfiles[0].AcceleratedNetworkingEnabled))
+	}
+	// In non-supported VM SKU scenario, acceleratedNetworkingEnabledWindows should always be false
+	if helpers.IsTrueBoolPointer(mockCS.Properties.AgentPoolProfiles[0].AcceleratedNetworkingEnabledWindows) {
+		t.Errorf("expected acceleratedNetworkingEnabledWindows to be %t for an unsupported VM SKU, instead got %t", false, helpers.IsTrueBoolPointer(mockCS.Properties.AgentPoolProfiles[0].AcceleratedNetworkingEnabledWindows))
+	}
+}
+
 func TestKubeletFeatureGatesEnsureFeatureGatesOnAgentsFor1_6_0(t *testing.T) {
 	mockCS := getMockBaseContainerService("1.6.0")
 	properties := mockCS.Properties
