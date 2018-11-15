@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Copyright (c) Microsoft Corporation. All rights reserved.
+# Licensed under the MIT license.
+
 GO_SOURCE="pkg/engine/*.go pkg/engine/transform/*.go pkg/api/*.go pkg/operations/*.go pkg/operations/kubernetesupgrade/*.go"
 LANGUAGE="en_US"
 DOMAIN="aksengine"

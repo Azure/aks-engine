@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 
+# Copyright (c) Microsoft Corporation. All rights reserved.
+# Licensed under the MIT license.
+
 # TODO: does this script need refactoring post-OpenShift, or can it be deleted?
 echo "No generated files to check!"
 exit 0

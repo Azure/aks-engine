@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Copyright (c) Microsoft Corporation. All rights reserved.
+# Licensed under the MIT license.
+
 source /home/packer/provision_installs.sh
 source /home/packer/provision_source.sh
 source /home/packer/feature-flagged.sh

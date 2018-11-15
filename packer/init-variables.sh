@@ -1,5 +1,8 @@
 #!/bin/bash -e
 
+# Copyright (c) Microsoft Corporation. All rights reserved.
+# Licensed under the MIT license.
+
 CDIR=$(dirname "${BASH_SOURCE}")
 
 SETTINGS_JSON="${SETTINGS_JSON:-./packer/settings.json}"

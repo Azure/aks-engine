@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 
+# Copyright (c) Microsoft Corporation. All rights reserved.
+# Licensed under the MIT license.
+
 # DON'T RUN. This script requires PythonLocalizerTool which is not published yet.
 # TODO: make PythonLocalizerTool public
 set -eo pipefail
