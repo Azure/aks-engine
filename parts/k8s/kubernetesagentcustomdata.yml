@@ -212,6 +212,7 @@ write_files:
     KUBELET_CONFIG={{GetKubeletConfigKeyVals .KubernetesConfig }}
     KUBELET_IMAGE={{WrapAsParameter "kubernetesHyperkubeSpec"}}
     KUBELET_REGISTER_SCHEDULABLE=true
+    {{if IsNSeriesSKU .}}{{if IsNVIDIADevicePluginEnabled}}{{if HasNonNSeriesAgentPool}}KUBELET_REGISTER_WITH_TAINTS=--register-with-taints=nvidia.com/gpu=true:NoSchedule{{end}}{{end}}{{end}}
     KUBELET_NODE_LABELS={{GetAgentKubernetesLabels . "',variables('labelResourceGroup'),'"}}
 
 AGENT_ARTIFACTS_CONFIG_PLACEHOLDER

@@ -24,6 +24,10 @@ spec:
         operator: Equal
         value: "true"
         effect: NoSchedule
+      - key: nvidia.com/gpu
+        effect: NoSchedule
+        operator: Equal
+        value: "true"
       nodeSelector:
         beta.kubernetes.io/os: linux
       containers:

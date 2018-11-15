@@ -587,6 +587,14 @@ func (t *TemplateGenerator) getTemplateFuncMap(cs *api.ContainerService) templat
 		"IsNSeriesSKU": func(profile *api.AgentPoolProfile) bool {
 			return common.IsNvidiaEnabledSKU(profile.VMSize)
 		},
+		"HasNonNSeriesAgentPool": func() bool {
+			for _, agentProfile := range cs.Properties.AgentPoolProfiles {
+				if !agentProfile.IsNSeriesSKU() {
+					return true
+				}
+			}
+			return false
+		},
 		"UseSinglePlacementGroup": func(profile *api.AgentPoolProfile) bool {
 			return *profile.SinglePlacementGroup
 		},

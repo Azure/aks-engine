@@ -25,6 +25,10 @@ spec:
         operator: Equal
         value: "true"
         effect: NoSchedule
+      - key: nvidia.com/gpu
+        effect: NoSchedule
+        operator: Equal
+        value: "true"
       containers:
       - name: azure-ip-masq-agent
         image: {{ContainerImage "ip-masq-agent"}}
