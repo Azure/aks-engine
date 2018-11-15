@@ -6,7 +6,7 @@
 
 ## Overview
 
-AKS-Engine leverages ARM (Azure Resource Manager) to build Kubernetes IaaS in Azure. Originally acs-engine[https://github.com/Azure/acs-engine], the project has moved here (1) to evolve without harming its legacy non-k8s bits that other non-k8s Azure upstream projects depend upon, and (2) to better reflect its affinity with AKS, Azure's managed Kubernetes service offering.
+AKS-Engine leverages ARM (Azure Resource Manager) to build Kubernetes IaaS in Azure. Originally [acs-engine](https://github.com/Azure/acs-engine), the project has moved here (1) to evolve without harming its legacy non-k8s bits that other non-k8s Azure upstream projects depend upon, and (2) to better reflect its affinity with AKS, Azure's managed Kubernetes service offering.
 
 ## Under Construction
 
