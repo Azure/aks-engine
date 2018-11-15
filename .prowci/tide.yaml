@@ -38,7 +38,7 @@ items:
         serviceAccountName: tide
         containers:
         - name: tide
-          image: quay.io/kargakis/tide:workaround
+          image: registry.svc.ci.openshift.org/ci/tide:workaround
           imagePullPolicy: IfNotPresent
           args:
           - --dry-run=false
