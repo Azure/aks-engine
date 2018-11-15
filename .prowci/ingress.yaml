@@ -9,9 +9,9 @@ spec:
   tls:
   - secretName: prow-tls
     hosts:
-    - ci-bot-aks-ingress.eastus.cloudapp.azure.com
+    - prow-ci-bot-ingress.eastus.cloudapp.azure.com
   rules:
-  - host: ci-bot-aks-ingress.eastus.cloudapp.azure.com
+  - host: prow-ci-bot-ingress.eastus.cloudapp.azure.com
     http:
       paths:
       - path: /*
