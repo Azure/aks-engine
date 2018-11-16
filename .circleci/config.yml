@@ -25,9 +25,6 @@ jobs:
           name: Install dependencies
           command: make bootstrap
       - run:
-          name: Run validation rules
-          command: make validate-generated
-      - run:
           name: Run linting rules
           command: make test-style
       - run:
