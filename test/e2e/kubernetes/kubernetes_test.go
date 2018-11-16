@@ -141,9 +141,10 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 
 		It("should have have the appropriate node count", func() {
 			var nodeList *node.List
+			var err error
 			// Allow ten mins for node count to converge, in the case where we're running this test immediately after a scale operation
 			for i := 0; i < 60; i++ {
-				nodeList, err := node.Get()
+				nodeList, err = node.Get()
 				if err != nil {
 					log.Printf("Error while getting nodes: %s\n", err)
 				}
