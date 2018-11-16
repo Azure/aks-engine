@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT license.
+
 package engine
 
 //go:generate go-bindata -nometadata -pkg $GOPACKAGE -prefix ../../parts/ -o templates.go ../../parts/...
