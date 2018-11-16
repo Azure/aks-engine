@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 
+# Copyright (c) Microsoft Corporation. All rights reserved.
+# Licensed under the MIT license.
+
 function shunittest_validate_deployment {
   set -eux -o pipefail
 
