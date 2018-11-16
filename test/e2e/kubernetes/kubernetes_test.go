@@ -161,6 +161,9 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			}
 			Expect(nodeList).NotTo(BeNil())
 			Expect(len(nodeList.Nodes)).To(Equal(eng.NodeCount()))
+			cmd := exec.Command("kubectl", "get", "nodes", "-o", "wide")
+			out, err := cmd.CombinedOutput()
+			log.Printf("%s\n", out)
 		})
 
 		It("should have DNS pod running", func() {
