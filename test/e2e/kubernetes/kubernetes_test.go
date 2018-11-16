@@ -140,8 +140,22 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 		})
 
 		It("should have have the appropriate node count", func() {
-			nodeList, err := node.Get()
-			Expect(err).NotTo(HaveOccurred())
+			var nodeList *node.List
+			// Allow ten mins for node count to converge, in the case where we're running this test immediately after a scale operation
+			for i := 0; i < 60; i++ {
+				nodeList, err := node.Get()
+				if err != nil {
+					log.Printf("Error while getting nodes: %s\n", err)
+				}
+				if nodeList != nil && len(nodeList.Nodes) == eng.NodeCount() {
+					break
+				} else {
+					log.Printf("Got %d nodes, expected %d\n", len(nodeList.Nodes), eng.NodeCount())
+				}
+				// Wait a minute before proceeding to create a new job w/ the same name
+				time.Sleep(10 * time.Second)
+			}
+			Expect(nodeList).NotTo(BeNil())
 			Expect(len(nodeList.Nodes)).To(Equal(eng.NodeCount()))
 		})
 
