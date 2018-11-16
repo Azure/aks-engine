@@ -104,6 +104,7 @@ func (cli *CLIProvisioner) provision() error {
 		cli.Config.Name = cli.Config.SoakClusterName
 	}
 	os.Setenv("NAME", cli.Config.Name)
+	cli.Config.NewCluster = true
 
 	outputPath := filepath.Join(cli.Config.CurrentWorkingDir, "_output")
 	if !cli.Config.UseDeployCommand {
@@ -255,6 +256,9 @@ func (cli *CLIProvisioner) waitForNodes() error {
 		if !cli.IsPrivate() {
 			log.Println("Waiting on nodes to go into ready state...")
 			ready := node.WaitOnReady(cli.Engine.NodeCount(), 10*time.Second, cli.Config.Timeout)
+			cmd := exec.Command("kubectl", "get", "nodes", "-o", "wide")
+			out, _ := cmd.CombinedOutput()
+			log.Printf("%s\n", out)
 			if !ready {
 				return errors.New("Error: Not all nodes in a healthy state")
 			}
