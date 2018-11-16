@@ -98,17 +98,6 @@ func assignKubernetesParameters(properties *api.Properties, parametersMap params
 				CloudProviderRateLimitBucket: kubernetesConfig.CloudProviderRateLimitBucket,
 			})
 			addValue(parametersMap, "kubeClusterCidr", kubernetesConfig.ClusterSubnet)
-			if !properties.IsHostedMasterProfile() {
-				if properties.OrchestratorProfile.IsAzureCNI() {
-					if properties.MasterProfile != nil && properties.MasterProfile.IsCustomVNET() {
-						addValue(parametersMap, "kubernetesNonMasqueradeCidr", properties.MasterProfile.VnetCidr)
-					} else {
-						addValue(parametersMap, "kubernetesNonMasqueradeCidr", DefaultVNETCIDR)
-					}
-				} else {
-					addValue(parametersMap, "kubernetesNonMasqueradeCidr", properties.OrchestratorProfile.KubernetesConfig.ClusterSubnet)
-				}
-			}
 			addValue(parametersMap, "kubernetesKubeletClusterDomain", kubernetesConfig.KubeletConfig["--cluster-domain"])
 			addValue(parametersMap, "dockerBridgeCidr", kubernetesConfig.DockerBridgeSubnet)
 			addValue(parametersMap, "networkPolicy", kubernetesConfig.NetworkPolicy)

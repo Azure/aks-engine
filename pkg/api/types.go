@@ -897,6 +897,32 @@ func (p *Properties) HasAvailabilityZones() bool {
 	return hasZones
 }
 
+// GetNonMasqueradeCIDR returns the non-masquerade CIDR for the ip-masq-agent.
+func (p *Properties) GetNonMasqueradeCIDR() string {
+	var nonMasqCidr string
+	if !p.IsHostedMasterProfile() {
+		if p.OrchestratorProfile.IsAzureCNI() {
+			if p.MasterProfile != nil && p.MasterProfile.IsCustomVNET() {
+				nonMasqCidr = p.MasterProfile.VnetCidr
+			} else {
+				nonMasqCidr = DefaultVNETCIDR
+			}
+		} else {
+			nonMasqCidr = p.OrchestratorProfile.KubernetesConfig.ClusterSubnet
+		}
+	}
+	return nonMasqCidr
+}
+
+// GetAzureCNICidr returns the default CNI Cidr if Azure CNI is enabled.
+func (p *Properties) GetAzureCNICidr() string {
+	var masqCNIIP string
+	if p.OrchestratorProfile != nil && p.OrchestratorProfile.IsAzureCNI() {
+		masqCNIIP = DefaultCNICIDR
+	}
+	return masqCNIIP
+}
+
 // IsCustomVNET returns true if the customer brought their own VNET
 func (m *MasterProfile) IsCustomVNET() bool {
 	return len(m.VnetSubnetID) > 0
