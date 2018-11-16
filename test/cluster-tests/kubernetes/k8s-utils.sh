@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation. All rights reserved.
+# Licensed under the MIT license.
+
 function test_linux_deployment() {
   ###### Testing an nginx deployment
   log "Testing deployments"

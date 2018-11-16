@@ -1,4 +1,8 @@
 #!/bin/bash
+
+# Copyright (c) Microsoft Corporation. All rights reserved.
+# Licensed under the MIT license.
+
 if [ -z "$CLIENT_ID" ]; then
     echo "must provide a CLIENT_ID env var"
     exit 1;

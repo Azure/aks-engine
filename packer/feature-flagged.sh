@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Copyright (c) Microsoft Corporation. All rights reserved.
+# Licensed under the MIT license.
+
 function installDockerEngine() {
     DOCKER_REPO="https://apt.dockerproject.org/repo"
     DOCKER_ENGINE_VERSION="1.13.*"
