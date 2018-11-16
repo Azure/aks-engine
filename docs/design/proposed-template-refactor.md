@@ -31,7 +31,7 @@ Once the input is validated, the template generator is invoked which will conver
   "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
   "contentVersion": "1.0.0.0",
   "parameters": {
-    {{range .AgentPoolProfiles}}{{template "agentparams.t" .}},{{end}}
+    {{range .AgentPoolProfiles}}{{template "agentparams.tmpl" .}},{{end}}
     {{if .HasWindows}}
       "kubeBinariesSASURL": {
         "metadata": {
@@ -57,15 +57,15 @@ Once the input is validated, the template generator is invoked which will conver
         },
         "type": "string"
       },
-      {{template "windowsparams.t"}},
+      {{template "windowsparams.tmpl"}},
     {{end}}
-    {{template "masterparams.t" .}},
-    {{template "k8s/kubernetesparams.t" .}}
+    {{template "masterparams.tmpl" .}},
+    {{template "k8s/kubernetesparams.tmpl" .}}
   },
   "variables": {
     {{range $index, $agent := .AgentPoolProfiles}}
         "{{.Name}}Index": {{$index}},
-        {{template "k8s/kubernetesagentvars.t" .}}
+        {{template "k8s/kubernetesagentvars.tmpl" .}}
         {{if IsNSeriesSKU .}}
           {{if IsNVIDIADevicePluginEnabled}}
           "registerWithGpuTaints": "nvidia.com/gpu=true:NoSchedule",
@@ -78,30 +78,30 @@ Once the input is validated, the template generator is invoked which will conver
           "{{.Name}}AccountName": "[concat(variables('storageAccountBaseName'), 'agnt{{$index}}')]",
         {{end}}
     {{end}}
-    {{template "k8s/kubernetesmastervars.t" .}}
+    {{template "k8s/kubernetesmastervars.tmpl" .}}
   },
   "resources": [
     {{if IsOpenShift}}
-      {{template "openshift/infraresources.t" .}}
+      {{template "openshift/infraresources.tmpl" .}}
     {{end}}
     {{ range $index, $element := .AgentPoolProfiles}}
       {{if $index}}, {{end}}
       {{if .IsWindows}}
         {{if .IsVirtualMachineScaleSets}}
-          {{template "k8s/kuberneteswinagentresourcesvmss.t" .}}
+          {{template "k8s/kuberneteswinagentresourcesvmss.tmpl" .}}
         {{else}}
-          {{template "k8s/kuberneteswinagentresourcesvmas.t" .}}
+          {{template "k8s/kuberneteswinagentresourcesvmas.tmpl" .}}
         {{end}}
       {{else}}
         {{if .IsVirtualMachineScaleSets}}
-          {{template "k8s/kubernetesagentresourcesvmss.t" .}}
+          {{template "k8s/kubernetesagentresourcesvmss.tmpl" .}}
         {{else}}
-          {{template "k8s/kubernetesagentresourcesvmas.t" .}}
+          {{template "k8s/kubernetesagentresourcesvmas.tmpl" .}}
         {{end}}
       {{end}}
     {{end}}
     {{if not IsHostedMaster}}
-      ,{{template "k8s/kubernetesmasterresources.t" .}}
+      ,{{template "k8s/kubernetesmasterresources.tmpl" .}}
     {{else}}
       {{if not IsCustomVNET}}
       ,{
@@ -207,12 +207,12 @@ Once the input is validated, the template generator is invoked which will conver
     {{end}}
   ],
   "outputs": {
-    {{range .AgentPoolProfiles}}{{template "agentoutputs.t" .}}
+    {{range .AgentPoolProfiles}}{{template "agentoutputs.tmpl" .}}
     {{end}}
     {{if not IsHostedMaster}}
-      {{template "masteroutputs.t" .}} ,
+      {{template "masteroutputs.tmpl" .}} ,
     {{end}}
-    {{template "iaasoutputs.t" .}}
+    {{template "iaasoutputs.tmpl" .}}
 
   }
 }

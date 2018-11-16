@@ -1,1 +1,2 @@
+parts/*.tmpl linguist-language=Go
 * -crlf
