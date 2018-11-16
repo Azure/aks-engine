@@ -87,44 +87,47 @@ func Build(cfg *config.Config, masterSubnetID string, agentSubnetID string, isVM
 	if err != nil {
 		return nil, err
 	}
+	prop := cs.ContainerService.Properties
 
 	if config.ClientID != "" && config.ClientSecret != "" {
-		cs.ContainerService.Properties.ServicePrincipalProfile = &vlabs.ServicePrincipalProfile{
+		prop.ServicePrincipalProfile = &vlabs.ServicePrincipalProfile{
 			ClientID: config.ClientID,
 			Secret:   config.ClientSecret,
 		}
 	}
 
 	if config.MasterDNSPrefix != "" {
-		cs.ContainerService.Properties.MasterProfile.DNSPrefix = config.MasterDNSPrefix
+		prop.MasterProfile.DNSPrefix = config.MasterDNSPrefix
 	}
 
 	if !cfg.IsKubernetes() && config.AgentDNSPrefix != "" {
-		for idx, pool := range cs.ContainerService.Properties.AgentPoolProfiles {
+		for idx, pool := range prop.AgentPoolProfiles {
 			pool.DNSPrefix = fmt.Sprintf("%v-%v", config.AgentDNSPrefix, idx)
 		}
 	}
 
-	if config.PublicSSHKey != "" {
-		cs.ContainerService.Properties.LinuxProfile.SSH.PublicKeys[0].KeyData = config.PublicSSHKey
-		if cs.ContainerService.Properties.OrchestratorProfile.KubernetesConfig != nil && cs.ContainerService.Properties.OrchestratorProfile.KubernetesConfig.PrivateCluster != nil && cs.ContainerService.Properties.OrchestratorProfile.KubernetesConfig.PrivateCluster.JumpboxProfile != nil {
-			cs.ContainerService.Properties.OrchestratorProfile.KubernetesConfig.PrivateCluster.JumpboxProfile.PublicKey = config.PublicSSHKey
+	if prop.LinuxProfile != nil {
+		if config.PublicSSHKey != "" {
+			prop.LinuxProfile.SSH.PublicKeys[0].KeyData = config.PublicSSHKey
+			if prop.OrchestratorProfile.KubernetesConfig != nil && prop.OrchestratorProfile.KubernetesConfig.PrivateCluster != nil && prop.OrchestratorProfile.KubernetesConfig.PrivateCluster.JumpboxProfile != nil {
+				prop.OrchestratorProfile.KubernetesConfig.PrivateCluster.JumpboxProfile.PublicKey = config.PublicSSHKey
+			}
 		}
 	}
 
 	if config.WindowsAdminPasssword != "" {
-		cs.ContainerService.Properties.WindowsProfile.AdminPassword = config.WindowsAdminPasssword
+		prop.WindowsProfile.AdminPassword = config.WindowsAdminPasssword
 	}
 
 	// If the parsed api model input has no expressed version opinion, we check if ENV does have an opinion
-	if cs.ContainerService.Properties.OrchestratorProfile.OrchestratorRelease == "" &&
-		cs.ContainerService.Properties.OrchestratorProfile.OrchestratorVersion == "" {
+	if prop.OrchestratorProfile.OrchestratorRelease == "" &&
+		prop.OrchestratorProfile.OrchestratorVersion == "" {
 		// First, prefer the release string if ENV declares it
 		if config.OrchestratorRelease != "" {
-			cs.ContainerService.Properties.OrchestratorProfile.OrchestratorRelease = config.OrchestratorRelease
+			prop.OrchestratorProfile.OrchestratorRelease = config.OrchestratorRelease
 			// Or, choose the version string if ENV declares it
 		} else if config.OrchestratorVersion != "" {
-			cs.ContainerService.Properties.OrchestratorProfile.OrchestratorVersion = config.OrchestratorVersion
+			prop.OrchestratorProfile.OrchestratorVersion = config.OrchestratorVersion
 			// If ENV similarly has no version opinion, we will rely upon the aks-engine default
 		} else {
 			log.Println("No orchestrator version specified, will use the default.")
@@ -133,22 +136,22 @@ func Build(cfg *config.Config, masterSubnetID string, agentSubnetID string, isVM
 
 	if config.CreateVNET {
 		if isVMSS {
-			cs.ContainerService.Properties.MasterProfile.VnetSubnetID = masterSubnetID
-			cs.ContainerService.Properties.MasterProfile.AgentVnetSubnetID = agentSubnetID
-			for _, p := range cs.ContainerService.Properties.AgentPoolProfiles {
+			prop.MasterProfile.VnetSubnetID = masterSubnetID
+			prop.MasterProfile.AgentVnetSubnetID = agentSubnetID
+			for _, p := range prop.AgentPoolProfiles {
 				p.VnetSubnetID = agentSubnetID
 			}
 		} else {
-			cs.ContainerService.Properties.MasterProfile.VnetSubnetID = masterSubnetID
-			for _, p := range cs.ContainerService.Properties.AgentPoolProfiles {
+			prop.MasterProfile.VnetSubnetID = masterSubnetID
+			for _, p := range prop.AgentPoolProfiles {
 				p.VnetSubnetID = masterSubnetID
 			}
 		}
 	}
 
 	if config.EnableKMSEncryption && config.ClientObjectID != "" {
-		cs.ContainerService.Properties.OrchestratorProfile.KubernetesConfig.EnableEncryptionWithExternalKms = &config.EnableKMSEncryption
-		cs.ContainerService.Properties.ServicePrincipalProfile.ObjectID = config.ClientObjectID
+		prop.OrchestratorProfile.KubernetesConfig.EnableEncryptionWithExternalKms = &config.EnableKMSEncryption
+		prop.ServicePrincipalProfile.ObjectID = config.ClientObjectID
 	}
 
 	return &Engine{
