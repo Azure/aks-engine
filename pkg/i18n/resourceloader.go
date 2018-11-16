@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT license.
+
 package i18n
 
 //go:generate go-bindata -nometadata -pkg $GOPACKAGE -prefix ../../ -o translations.go ../../translations/...

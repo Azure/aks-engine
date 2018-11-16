@@ -3,7 +3,7 @@ DIST_DIRS         = find * -type d -exec
 
 .NOTPARALLEL:
 
-.PHONY: bootstrap build test test_fmt fmt lint ci devenv
+.PHONY: bootstrap build test test_fmt validate-headers fmt lint ci devenv
 
 ifdef DEBUG
 GOFLAGS   := -gcflags="-N -l"
@@ -47,6 +47,17 @@ dev:
 .PHONY: validate-dependencies
 validate-dependencies: bootstrap
 	./scripts/validate-dependencies.sh
+
+.PHONY: validate-headers
+validate-headers:
+	@echo ">> checking license header"
+	@licRes=$$(for file in $$(find . -type f -iname '*.go' ! -path './vendor/*') ; do \
+               awk 'NR<=3' $$file | grep -Eq "(Copyright|generated|GENERATED)" || echo $$file; \
+       done); \
+       if [ -n "$${licRes}" ]; then \
+               echo "license header checking failed:"; echo "$${licRes}"; \
+               exit 1; \
+       fi
 
 .PHONY: generate
 generate: bootstrap
