@@ -90,7 +90,7 @@ func CleanDeleteVirtualMachine(az armhelpers.AKSEngineClient, logger *log.Entry,
 		}
 	}
 
-	if vm.Identity != nil {
+	if vm.Identity != nil && vm.Identity.PrincipalID != nil {
 		// Role assignments are not deleted if the VM is destroyed, so we must cleanup ourselves!
 		// The role assignments should only be relevant if managed identities are used,
 		// but always cleaning them up is easier than adding rule based logic here and there.
