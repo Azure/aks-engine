@@ -153,6 +153,8 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 					log.Printf("Error: Not all nodes in a healthy state\n")
 				}
 				Expect(ready).To(Equal(true))
+			} else {
+				Skip("We already ran this test when provisioning the cluster")
 			}
 		})
 

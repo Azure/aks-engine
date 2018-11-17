@@ -104,7 +104,7 @@ func (cli *CLIProvisioner) provision() error {
 		cli.Config.Name = cli.Config.SoakClusterName
 	}
 	os.Setenv("NAME", cli.Config.Name)
-	cli.Config.NewCluster = true
+	os.Setenv("NEW_CLUSTER", "true")
 
 	outputPath := filepath.Join(cli.Config.CurrentWorkingDir, "_output")
 	if !cli.Config.UseDeployCommand {
