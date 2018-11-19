@@ -154,7 +154,7 @@ done
 pullContainerImage "docker" "busybox"
 
 # TODO: fetch supported k8s versions from an aks-engine command instead of hardcoding them here
-K8S_VERSIONS="1.7.15 1.7.16 1.8.14 1.8.15 1.9.10 1.9.11 1.10.8 1.10.9 1.11.4 1.11.5 1.12.1 1.12.2"
+K8S_VERSIONS="1.7.15 1.7.16 1.8.14 1.8.15 1.9.10 1.9.11 1.10.8 1.10.9 1.11.4 1.11.5 1.12.1 1.12.2 1.13.0"
 
 for KUBERNETES_VERSION in ${K8S_VERSIONS}; do
     HYPERKUBE_URL="k8s.gcr.io/hyperkube-amd64:v${KUBERNETES_VERSION}"
