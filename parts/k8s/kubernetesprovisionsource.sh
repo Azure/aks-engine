@@ -26,6 +26,7 @@ ERR_K8S_DOWNLOAD_TIMEOUT=31 # Timeout waiting for Kubernetes download(s)
 ERR_KUBECTL_NOT_FOUND=32 # kubectl client binary not found on local disk
 ERR_KUBELET_START_FAIL=34 # kubelet could not be started by systemctl
 ERR_IMG_DOWNLOAD_TIMEOUT=33 # Timeout waiting for img download
+ERR_CLOUDPROVIDER_CONFIG_ERROR=39 # Error configuring cloudprovider on node
 ERR_CNI_DOWNLOAD_TIMEOUT=41 # Timeout waiting for CNI download(s)
 ERR_MS_PROD_DEB_DOWNLOAD_TIMEOUT=42 # Timeout waiting for https://packages.microsoft.com/config/ubuntu/16.04/packages-microsoft-prod.deb
 ERR_MS_PROD_DEB_PKG_ADD_FAIL=43 # Failed to add repo pkg file
