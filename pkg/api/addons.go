@@ -207,6 +207,10 @@ func (cs *ContainerService) setAddonsConfig(isUpdate bool) {
 				Image:          specConfig.KubernetesImageBase + "ip-masq-agent-amd64:v2.0.0",
 			},
 		},
+		Config: map[string]string{
+			"non-masquerade-cidr": cs.Properties.GetNonMasqueradeCIDR(),
+			"non-masq-cni-cidr":   cs.Properties.GetAzureCNICidr(),
+		},
 	}
 
 	defaultAzureCNINetworkMonitorAddonsConfig := KubernetesAddon{
