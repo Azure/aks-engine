@@ -544,13 +544,13 @@ func TestGenerateKubeConfig(t *testing.T) {
 	}
 	containerService.Properties.MasterProfile.Count = 1
 	containerService.Properties.MasterProfile.FirstConsecutiveStaticIP = "invalid_ip"
-	kubeConfig, err := GenerateKubeConfig(containerService.Properties, "westus2")
+	_, err = GenerateKubeConfig(containerService.Properties, "westus2")
 	if err == nil {
 		t.Fatalf("Expected an error result from invalid FirstConsecutiveStaticIP")
 	}
 
 	containerService.Properties.MasterProfile.FirstConsecutiveStaticIP = "10.240.255.5"
-	kubeConfig, err := GenerateKubeConfig(containerService.Properties, "westus2")
+	kubeConfig, err = GenerateKubeConfig(containerService.Properties, "westus2")
 	if len(kubeConfig) < 1 {
 		t.Fatalf("Got unexpected kubeconfig payload: %v", kubeConfig)
 	}
@@ -559,7 +559,7 @@ func TestGenerateKubeConfig(t *testing.T) {
 	}
 
 	containerService.Properties.MasterProfile.Count = 3
-	kubeConfig, err := GenerateKubeConfig(containerService.Properties, "westus2")
+	kubeConfig, err = GenerateKubeConfig(containerService.Properties, "westus2")
 	if len(kubeConfig) < 1 {
 		t.Fatalf("Got unexpected kubeconfig payload: %v", kubeConfig)
 	}
