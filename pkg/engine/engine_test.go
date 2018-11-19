@@ -534,6 +534,38 @@ func TestGenerateKubeConfig(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to call GenerateKubeConfig with simple Kubernetes config from file: %v", testData)
 	}
+	
+	containerService.Properties.OrchestratorProfile = &api.OrchestratorProfile{
+		KubernetesConfig: &api.KubernetesConfig{
+			PrivateCluster: &api.PrivateCluster{
+				Enabled: true,
+			}
+		}
+	}
+	containerService.Properties.MasterProfile.Count = 1
+	containerService.Properties.MasterProfile.FirstConsecutiveStaticIP = "invalid_ip"
+	kubeConfig, err := GenerateKubeConfig(containerService.Properties, "westus2")
+	if err == nil {
+		t.Fatalf("Expected an error result from invalid FirstConsecutiveStaticIP")
+	}
+
+	containerService.Properties.MasterProfile.FirstConsecutiveStaticIP = "10.240.255.5"
+	kubeConfig, err := GenerateKubeConfig(containerService.Properties, "westus2")
+	if len(kubeConfig) < 1 {
+		t.Fatalf("Got unexpected kubeconfig payload: %v", kubeConfig)
+	}
+	if err != nil {
+		t.Fatalf("Failed to call GenerateKubeConfig with private cluster enabled with 1 master")
+	}
+
+	containerService.Properties.MasterProfile.Count = 3
+	kubeConfig, err := GenerateKubeConfig(containerService.Properties, "westus2")
+	if len(kubeConfig) < 1 {
+		t.Fatalf("Got unexpected kubeconfig payload: %v", kubeConfig)
+	}
+	if err != nil {
+		t.Fatalf("Failed to call GenerateKubeConfig with private cluster enabled with 3 masters")
+	}
 
 	p := api.Properties{}
 	_, err = GenerateKubeConfig(&p, "westus2")
