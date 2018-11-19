@@ -534,13 +534,13 @@ func TestGenerateKubeConfig(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to call GenerateKubeConfig with simple Kubernetes config from file: %v", testData)
 	}
-	
+
 	containerService.Properties.OrchestratorProfile = &api.OrchestratorProfile{
 		KubernetesConfig: &api.KubernetesConfig{
 			PrivateCluster: &api.PrivateCluster{
 				Enabled: true,
-			}
-		}
+			},
+		},
 	}
 	containerService.Properties.MasterProfile.Count = 1
 	containerService.Properties.MasterProfile.FirstConsecutiveStaticIP = "invalid_ip"
