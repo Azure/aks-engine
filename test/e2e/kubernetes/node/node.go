@@ -80,6 +80,8 @@ func AreAllReady(nodeCount int) bool {
 			for _, condition := range node.Status.Conditions {
 				if condition.Type == "Ready" && condition.Status == "True" {
 					ready++
+				} else {
+					return false
 				}
 			}
 		}

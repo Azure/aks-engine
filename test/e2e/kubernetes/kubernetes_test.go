@@ -142,20 +142,15 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			}
 		})
 
-		It("should have have the appropriate node count", func() {
-			// If this is newly built cluster, we have already run this test
-			if !cfg.NewCluster {
-				ready := node.WaitOnReady(eng.NodeCount(), 10*time.Second, cfg.Timeout)
-				cmd := exec.Command("kubectl", "get", "nodes", "-o", "wide")
-				out, _ := cmd.CombinedOutput()
-				log.Printf("%s\n", out)
-				if !ready {
-					log.Printf("Error: Not all nodes in a healthy state\n")
-				}
-				Expect(ready).To(Equal(true))
-			} else {
-				Skip("We already ran this test when provisioning the cluster")
+		It("should all nodeas in a Ready state", func() {
+			ready := node.WaitOnReady(eng.NodeCount(), 10*time.Second, cfg.Timeout)
+			cmd := exec.Command("kubectl", "get", "nodes", "-o", "wide")
+			out, _ := cmd.CombinedOutput()
+			log.Printf("%s\n", out)
+			if !ready {
+				log.Printf("Error: Not all nodes in a healthy state\n")
 			}
+			Expect(ready).To(Equal(true))
 		})
 
 		It("should have DNS pod running", func() {
