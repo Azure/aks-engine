@@ -175,7 +175,7 @@ configureK8s() {
 EOF
     set -x
     ls -la ${AZURE_JSON_PATH}
-    if [[ ! -s /etc/kubernetes/azure.json ]]; then
+    if [[ ! -s ${AZURE_JSON_PATH} ]]; then
         exit $ERR_CLOUDPROVIDER_CONFIG_ERROR
     fi
     if [[ ! -z "${MASTER_NODE}" ]]; then
