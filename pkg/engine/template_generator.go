@@ -398,16 +398,13 @@ func (t *TemplateGenerator) getTemplateFuncMap(cs *api.ContainerService) templat
 			return false
 		},
 		"GetMasterAllowedSizes": func() string {
-			return helpers.GetMasterAgentAllowedSizes()
+			return helpers.GetKubernetesAllowedSizes()
 		},
 		"GetDefaultVNETCIDR": func() string {
 			return DefaultVNETCIDR
 		},
 		"GetAgentAllowedSizes": func() string {
-			if cs.Properties.OrchestratorProfile.IsKubernetes() {
-				return helpers.GetKubernetesAgentAllowedSizes()
-			}
-			return helpers.GetMasterAgentAllowedSizes()
+			return helpers.GetKubernetesAllowedSizes()
 		},
 		"GetSizeMap": func() string {
 			return helpers.GetSizeMap()
