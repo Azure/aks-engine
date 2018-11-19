@@ -77,12 +77,15 @@ func AreAllReady(nodeCount int) bool {
 	var ready int
 	if list != nil && len(list.Nodes) == nodeCount {
 		for _, node := range list.Nodes {
+			nodeReady := false
 			for _, condition := range node.Status.Conditions {
 				if condition.Type == "Ready" && condition.Status == "True" {
 					ready++
-				} else {
-					return false
+					nodeReady = true
 				}
+			}
+			if !nodeReady {
+				return false
 			}
 		}
 	}
