@@ -350,14 +350,6 @@ MASTER_ARTIFACTS_CONFIG_PLACEHOLDER
 {{if HasCustomSearchDomain}}
     sed -i "s|<searchDomainName>|{{WrapAsParameter "searchDomainName"}}|g; s|<searchDomainRealmUser>|{{WrapAsParameter "searchDomainRealmUser"}}|g; s|<searchDomainRealmPassword>|{{WrapAsParameter "searchDomainRealmPassword"}}|g" /opt/azure/containers/setup-custom-search-domains.sh
 {{end}}
-    a=/etc/kubernetes/addons/ip-masq-agent.yaml
-    sed -i "s|<nonmasqCIDR>|{{WrapAsParameter "kubernetesNonMasqueradeCidr"}}|g" $a
-{{if IsAzureCNI}}
-    sed -i "s|<nonmasqCNIIP>|168.63.129.16/32|g; s|<masqLink>|true|g" $a
-{{else}}
-    sed -i "\|<nonmasqCNIIP>|d" $a
-    sed -i "s|<masqLink>|false|g" $a
-{{end}}
 
 - path: /opt/azure/containers/mountetcd.sh
   permissions: "0744"

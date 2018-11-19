@@ -58,7 +58,11 @@ metadata:
 data:
   ip-masq-agent: |-
     nonMasqueradeCIDRs:
-      - <nonmasqCIDR>
-      - <nonmasqCNIIP>
-    masqLinkLocal: <masqLink>
+      - {{ContainerConfig "non-masquerade-cidr"}}
+    {{- if ContainerConfig "non-masq-cni-cidr"}}
+      - {{ContainerConfig "non-masq-cni-cidr"}}
+    masqLinkLocal: true
+    {{else -}}
+    masqLinkLocal: false
+    {{end -}}
     resyncInterval: 60s
