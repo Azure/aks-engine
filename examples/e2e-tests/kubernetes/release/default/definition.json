@@ -91,7 +91,7 @@
           },
           {
             "name": "blobfuse-flexvolume",
-            "enabled": true,
+            "enabled": false,
             "containers": [
               {
                 "name": "blobfuse-flexvolume",
@@ -119,7 +119,7 @@
           },
           {
             "name": "keyvault-flexvolume",
-            "enabled": true,
+            "enabled": false,
             "containers": [
               {
                 "name": "keyvault-flexvolume",
