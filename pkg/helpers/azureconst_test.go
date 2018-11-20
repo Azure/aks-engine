@@ -230,6 +230,9 @@ func TestKubernetesAllowedSizes(t *testing.T) {
 		"Standard_NV24s_v2",
 		"Standard_NV6",
 		"Standard_NV6s_v2",
+		"Standard_PB12s",
+		"Standard_PB24s",
+		"Standard_PB6s",
 	}
 
 	for _, expectedSize := range expectedSizes {
