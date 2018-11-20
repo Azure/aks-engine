@@ -104,6 +104,7 @@ type AzProfile struct {
 type FeatureFlags struct {
 	EnableCSERunInBackground bool `json:"enableCSERunInBackground,omitempty"`
 	BlockOutboundInternet    bool `json:"blockOutboundInternet,omitempty"`
+	DockerEngine             bool `json:"dockerEngine,omitempty"`
 }
 
 // ServicePrincipalProfile contains the client and secret used by the cluster for Azure Resource CRUD
@@ -1311,6 +1312,23 @@ func (k *KubernetesConfig) GetAzureCNIURLWindows(cloudSpecConfig AzureEnvironmen
 		return k.AzureCNIURLWindows
 	}
 	return cloudSpecConfig.KubernetesSpecConfig.VnetCNIWindowsPluginsDownloadURL
+}
+
+// IsFeatureEnabled returns true if a feature flag is on for the provided feature
+func (f *FeatureFlags) IsFeatureEnabled(feature string) bool {
+	if f != nil {
+		switch feature {
+		case "CSERunInBackground":
+			return f.EnableCSERunInBackground
+		case "BlockOutboundInternet":
+			return f.BlockOutboundInternet
+		case "DockerEngine":
+			return f.DockerEngine
+		default:
+			return false
+		}
+	}
+	return false
 }
 
 //GetCloudSpecConfig returns the Kubernetes container images URL configurations based on the deploy target environment.

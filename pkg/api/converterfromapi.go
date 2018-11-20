@@ -9,8 +9,8 @@ import (
 	"github.com/Azure/aks-engine/pkg/api/v20160930"
 	"github.com/Azure/aks-engine/pkg/api/v20170131"
 	"github.com/Azure/aks-engine/pkg/api/v20170701"
-	"github.com/Azure/aks-engine/pkg/api/v20170930"
 	"github.com/Azure/aks-engine/pkg/api/vlabs"
+	"github.com/CecileRobertMichon/aks-engine/pkg/api/v20170930"
 	"github.com/blang/semver"
 )
 
@@ -923,4 +923,5 @@ func convertAzProfileToVLabs(api *AzProfile, vlabs *vlabs.AzProfile) {
 func convertFeatureFlagsToVLabs(api *FeatureFlags, vlabs *vlabs.FeatureFlags) {
 	vlabs.EnableCSERunInBackground = api.EnableCSERunInBackground
 	vlabs.BlockOutboundInternet = api.BlockOutboundInternet
+	vlabs.DockerEngine = api.DockerEngine
 }
