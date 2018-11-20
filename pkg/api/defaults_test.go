@@ -417,12 +417,14 @@ func TestAcceleratedNetworking(t *testing.T) {
 	mockCS.SetPropertiesDefaults(false, false)
 
 	// In create scenario, nil AcceleratedNetworkingEnabled should be the defaults
-	if helpers.IsTrueBoolPointer(mockCS.Properties.AgentPoolProfiles[0].AcceleratedNetworkingEnabled) != DefaultAcceleratedNetworking {
-		t.Errorf("expected default acceleratedNetworkingEnabled to be %t, instead got %t", DefaultAcceleratedNetworking, helpers.IsTrueBoolPointer(mockCS.Properties.AgentPoolProfiles[0].AcceleratedNetworkingEnabled))
+	acceleratedNetworking := DefaultAcceleratedNetworking
+	if helpers.IsTrueBoolPointer(mockCS.Properties.AgentPoolProfiles[0].AcceleratedNetworkingEnabled) != acceleratedNetworking {
+		t.Errorf("expected default acceleratedNetworkingEnabled to be %t, instead got %t", acceleratedNetworking, helpers.IsTrueBoolPointer(mockCS.Properties.AgentPoolProfiles[0].AcceleratedNetworkingEnabled))
 	}
 	// In create scenario, nil AcceleratedNetworkingEnabledWindows should be the defaults
-	if helpers.IsTrueBoolPointer(mockCS.Properties.AgentPoolProfiles[0].AcceleratedNetworkingEnabledWindows) != DefaultAcceleratedNetworkingWindowsEnabled {
-		t.Errorf("expected default acceleratedNetworkingEnabledWindows to be %t, instead got %t", DefaultAcceleratedNetworkingWindowsEnabled, helpers.IsTrueBoolPointer(mockCS.Properties.AgentPoolProfiles[0].AcceleratedNetworkingEnabledWindows))
+	acceleratedNetworking = DefaultAcceleratedNetworkingWindowsEnabled
+	if helpers.IsTrueBoolPointer(mockCS.Properties.AgentPoolProfiles[0].AcceleratedNetworkingEnabledWindows) != acceleratedNetworking {
+		t.Errorf("expected default acceleratedNetworkingEnabledWindows to be %t, instead got %t", acceleratedNetworking, helpers.IsTrueBoolPointer(mockCS.Properties.AgentPoolProfiles[0].AcceleratedNetworkingEnabledWindows))
 	}
 
 	mockCS = getMockBaseContainerService("1.10.8")
