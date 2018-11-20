@@ -9,18 +9,19 @@
           {
             "name": "tiller",
             "enabled": true,
-            "config": {
-              "max-history": "10"
-            },
             "containers": [
               {
                 "name": "tiller",
+                "image": "gcr.io/kubernetes-helm/tiller:v2.8.1",
                 "cpuRequests": "1",
                 "memoryRequests": "1Gi",
                 "cpuLimits": "1",
                 "memoryLimits": "1Gi"
               }
-            ]
+            ],
+            "config": {
+              "max-history": "10"
+            }
           },
           {
             "name": "kubernetes-dashboard",
@@ -28,10 +29,192 @@
             "containers": [
               {
                 "name": "kubernetes-dashboard",
+                "image": "k8s.gcr.io/kubernetes-dashboard-amd64:v1.10.0",
                 "cpuRequests": "50m",
                 "memoryRequests": "512Mi",
                 "cpuLimits": "50m",
                 "memoryLimits": "512Mi"
+              }
+            ]
+          },
+          {
+            "name": "rescheduler",
+            "enabled": true,
+            "containers": [
+              {
+                "name": "rescheduler",
+                "image": "k8s.gcr.io/rescheduler:v0.4.0",
+                "cpuRequests": "20m",
+                "memoryRequests": "200Mi",
+                "cpuLimits": "20m",
+                "memoryLimits": "200Mi"
+              }
+            ]
+          },
+          {
+            "name": "aci-connector",
+            "enabled": false,
+            "containers": [
+              {
+                "name": "aci-connector",
+                "image": "microsoft/virtual-kubelet:latest",
+                "cpuRequests": "50m",
+                "memoryRequests": "150Mi",
+                "cpuLimits": "50m",
+                "memoryLimits": "150Mi"
+              }
+            ],
+            "config": {
+              "nodeName": "aci-connector",
+              "os": "Linux",
+              "region": "westus",
+              "taint": "azure.com/aci"
+            }
+          },
+          {
+            "name": "cluster-autoscaler",
+            "enabled": false,
+            "containers": [
+              {
+                "name": "cluster-autoscaler",
+                "image": "k8s.gcr.io/cluster-autoscaler:v1.3.3",
+                "cpuRequests": "100m",
+                "memoryRequests": "300Mi",
+                "cpuLimits": "100m",
+                "memoryLimits": "300Mi"
+              }
+            ],
+            "config": {
+              "maxNodes": "5",
+              "minNodes": "1"
+            }
+          },
+          {
+            "name": "blobfuse-flexvolume",
+            "enabled": true,
+            "containers": [
+              {
+                "name": "blobfuse-flexvolume",
+                "image": "andyzhangx/blobfuse-flexvol-installer",
+                "cpuRequests": "50m",
+                "memoryRequests": "10Mi",
+                "cpuLimits": "50m",
+                "memoryLimits": "10Mi"
+              }
+            ]
+          },
+          {
+            "name": "smb-flexvolume",
+            "enabled": false,
+            "containers": [
+              {
+                "name": "smb-flexvolume",
+                "image": "andyzhangx/smb-flexvol-installer",
+                "cpuRequests": "50m",
+                "memoryRequests": "10Mi",
+                "cpuLimits": "50m",
+                "memoryLimits": "10Mi"
+              }
+            ]
+          },
+          {
+            "name": "keyvault-flexvolume",
+            "enabled": true,
+            "containers": [
+              {
+                "name": "keyvault-flexvolume",
+                "image": "mcr.microsoft.com/k8s/flexvolume/keyvault-flexvolume:v0.0.5",
+                "cpuRequests": "50m",
+                "memoryRequests": "10Mi",
+                "cpuLimits": "50m",
+                "memoryLimits": "10Mi"
+              }
+            ]
+          },
+          {
+            "name": "metrics-server",
+            "enabled": true,
+            "containers": [
+              {
+                "name": "metrics-server",
+                "image": "k8s.gcr.io/metrics-server-amd64:v0.2.1"
+              }
+            ]
+          },
+          {
+            "name": "nvidia-device-plugin",
+            "enabled": false,
+            "containers": [
+              {
+                "name": "nvidia-device-plugin",
+                "image": "nvidia/k8s-device-plugin:1.11",
+                "cpuRequests": "50m",
+                "memoryRequests": "10Mi",
+                "cpuLimits": "50m",
+                "memoryLimits": "10Mi"
+              }
+            ]
+          },
+          {
+            "name": "container-monitoring",
+            "enabled": false,
+            "containers": [
+              {
+                "name": "omsagent",
+                "image": "microsoft/oms:ciprod10162018-2",
+                "cpuRequests": "50m",
+                "memoryRequests": "200Mi",
+                "cpuLimits": "150m",
+                "memoryLimits": "750Mi"
+              }
+            ],
+            "config": {
+              "dockerProviderVersion": "2.0.0-3",
+              "omsAgentVersion": "1.6.0-42"
+            }
+          },
+          {
+            "name": "azure-cni-networkmonitor",
+            "enabled": true,
+            "containers": [
+              {
+                "name": "azure-cni-networkmonitor",
+                "image": "containernetworking/networkmonitor:v0.0.4"
+              }
+            ]
+          },
+          {
+            "name": "azure-npm-daemonset",
+            "enabled": false,
+            "containers": [
+              {
+                "name": "azure-npm-daemonset"
+              }
+            ]
+          },
+          {
+            "name": "ip-masq-agent",
+            "enabled": true,
+            "containers": [
+              {
+                "name": "ip-masq-agent",
+                "image": "k8s.gcr.io/ip-masq-agent-amd64:v2.0.0",
+                "cpuRequests": "50m",
+                "memoryRequests": "50Mi",
+                "cpuLimits": "50m",
+                "memoryLimits": "250Mi"
+              }
+            ]
+          },
+          {
+            "name": "dns-autoscaler",
+            "enabled": false,
+            "containers": [
+              {
+                "name": "dns-autoscaler",
+                "image": "k8s.gcr.io/cluster-proportional-autoscaler-amd64:1.1.1",
+                "cpuRequests": "20m",
+                "memoryRequests": "10Mi"
               }
             ]
           }
