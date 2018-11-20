@@ -94,3 +94,21 @@ spec:
 ```
 
 We specify `nvidia.com/gpu: 1` or `alpha.kubernetes.io/nvidia-gpu: 1` in the resources limits. For v1.6 to v1.9 clusters, we need to mount the drivers from the host into the container.
+
+## Known incompatibilty with Moby
+
+GPU nodes are currently incompatible with the default Moby container runtime provided in the default `aks` image. Clusters containing GPU nodes will be set to use the `aks-docker-engine` distro by default which is functionally equivalent to `aks` with the exception of the docker distribution.
+
+For users unable to use the `aks` OS image (eg. Sovereign Clouds), a workaround is provided to install docker-engine instead of moby. To use it, simply enable docker-engine in your apimodel as follows:
+
+```json
+{
+  "apiVersion": "vlabs",
+  "properties": {
+    "featureFlags": {
+      "dockerEngine": true
+    }
+  }
+}
+
+```
