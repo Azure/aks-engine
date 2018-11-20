@@ -174,6 +174,7 @@ configureK8s() {
 }
 EOF
     set -x
+    chmod 400 ${AZURE_JSON_PATH}
     ls -la ${AZURE_JSON_PATH}
     if [[ ! -s ${AZURE_JSON_PATH} ]]; then
         exit $ERR_CLOUDPROVIDER_CONFIG_ERROR
