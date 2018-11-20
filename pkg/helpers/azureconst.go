@@ -277,7 +277,10 @@ func GetKubernetesAllowedSizes() string {
         "Standard_NV24",
         "Standard_NV24s_v2",
         "Standard_NV6",
-        "Standard_NV6s_v2"
+        "Standard_NV6s_v2",
+        "Standard_PB12s",
+        "Standard_PB24s",
+        "Standard_PB6s"
     ],
 `
 }
@@ -928,6 +931,15 @@ func GetSizeMap() string {
       "storageAccountType": "Standard_LRS"
     },
     "Standard_NV6s_v2": {
+      "storageAccountType": "Premium_LRS"
+    },
+    "Standard_PB12s": {
+      "storageAccountType": "Premium_LRS"
+    },
+    "Standard_PB24s": {
+      "storageAccountType": "Premium_LRS"
+    },
+    "Standard_PB6s": {
       "storageAccountType": "Premium_LRS"
     }
    }
