@@ -39,7 +39,6 @@ type Config struct {
 	UseDeployCommand    bool   `envconfig:"USE_DEPLOY_COMMAND"`
 	GinkgoFocus         string `envconfig:"GINKGO_FOCUS"`
 	GinkgoSkip          string `envconfig:"GINKGO_SKIP"`
-	NewCluster          bool   `envconfig:"NEW_CLUSTER" default:"false"` // track when we create a new cluster via E2E
 }
 
 const (
