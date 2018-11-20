@@ -9,8 +9,8 @@ import (
 	"github.com/Azure/aks-engine/pkg/api/v20160930"
 	"github.com/Azure/aks-engine/pkg/api/v20170131"
 	"github.com/Azure/aks-engine/pkg/api/v20170701"
-	"github.com/Azure/aks-engine/pkg/api/vlabs"
 	"github.com/Azure/aks-engine/pkg/api/v20170930"
+	"github.com/Azure/aks-engine/pkg/api/vlabs"
 	"github.com/blang/semver"
 )
 
