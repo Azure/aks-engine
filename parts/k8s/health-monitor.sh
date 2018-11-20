@@ -6,7 +6,7 @@
 set -o nounset
 set -o pipefail
 
-container_runtime_monitoring {
+container_runtime_monitoring() {
   local -r max_attempts=5
   local attempt=1
   local -r crictl="${KUBE_HOME}/bin/crictl"
@@ -38,7 +38,7 @@ container_runtime_monitoring {
   done
 }
 
-kubelet_monitoring {
+kubelet_monitoring() {
   echo "Wait for 2 minutes for kubelet to be functional"
   sleep 120
   local -r max_seconds=10
