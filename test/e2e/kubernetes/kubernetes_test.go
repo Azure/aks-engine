@@ -142,25 +142,15 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			}
 		})
 
-		It("should have have the appropriate node count", func() {
-			var nodeList *node.List
-			var err error
-			// Allow ten mins for node count to converge, in the case where we're running this test immediately after a scale operation
-			for i := 0; i < 60; i++ {
-				nodeList, err = node.Get()
-				if err != nil {
-					log.Printf("Error while getting nodes: %s\n", err)
-				}
-				if nodeList != nil && len(nodeList.Nodes) == eng.NodeCount() {
-					break
-				} else {
-					log.Printf("Got %d nodes, expected %d\n", len(nodeList.Nodes), eng.NodeCount())
-				}
-				// Wait a minute before proceeding to create a new job w/ the same name
-				time.Sleep(10 * time.Second)
+		It("should report all nodes in a Ready state", func() {
+			ready := node.WaitOnReady(eng.NodeCount(), 10*time.Second, cfg.Timeout)
+			cmd := exec.Command("kubectl", "get", "nodes", "-o", "wide")
+			out, _ := cmd.CombinedOutput()
+			log.Printf("%s\n", out)
+			if !ready {
+				log.Printf("Error: Not all nodes in a healthy state\n")
 			}
-			Expect(nodeList).NotTo(BeNil())
-			Expect(len(nodeList.Nodes)).To(Equal(eng.NodeCount()))
+			Expect(ready).To(Equal(true))
 		})
 
 		It("should have DNS pod running", func() {

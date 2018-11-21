@@ -255,6 +255,9 @@ func (cli *CLIProvisioner) waitForNodes() error {
 		if !cli.IsPrivate() {
 			log.Println("Waiting on nodes to go into ready state...")
 			ready := node.WaitOnReady(cli.Engine.NodeCount(), 10*time.Second, cli.Config.Timeout)
+			cmd := exec.Command("kubectl", "get", "nodes", "-o", "wide")
+			out, _ := cmd.CombinedOutput()
+			log.Printf("%s\n", out)
 			if !ready {
 				return errors.New("Error: Not all nodes in a healthy state")
 			}
