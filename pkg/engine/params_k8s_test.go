@@ -37,7 +37,7 @@ func TestAssignKubernetesParameters(t *testing.T) {
 		}
 
 		parametersMap := paramsMap{}
-		containerService.Location = "eatsus"
+		containerService.Location = "eastus"
 		cloudSpecConfig := containerService.GetCloudSpecConfig()
 		containerService.SetPropertiesDefaults(false, false)
 		assignKubernetesParameters(containerService.Properties, parametersMap, cloudSpecConfig, DefaultGeneratorCode)
