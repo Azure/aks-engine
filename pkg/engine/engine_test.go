@@ -4,7 +4,6 @@
 package engine
 
 import (
-	"Azure/aks-engine/pkg/helpers"
 	"bytes"
 	"encoding/json"
 	"fmt"
