@@ -2626,3 +2626,62 @@ func TestProperties_GetMasterVMPrefix(t *testing.T) {
 		t.Errorf("expected master VM prefix %s, but got %s", expected, actual)
 	}
 }
+
+func TestIsFeatureEnabled(t *testing.T) {
+	tests := []struct {
+		name     string
+		feature  string
+		flags    *FeatureFlags
+		expected bool
+	}{
+		{
+			name:     "nil flags",
+			feature:  "DockerEngine",
+			flags:    nil,
+			expected: false,
+		},
+		{
+			name:     "empty flags",
+			feature:  "DockerEngine",
+			flags:    &FeatureFlags{},
+			expected: false,
+		},
+		{
+			name:    "Enabled feature",
+			feature: "CSERunInBackground",
+			flags: &FeatureFlags{
+				EnableCSERunInBackground: true,
+				DockerEngine:             false,
+			},
+			expected: true,
+		},
+		{
+			name:    "Disabled feature",
+			feature: "DockerEngine",
+			flags: &FeatureFlags{
+				EnableCSERunInBackground: true,
+				DockerEngine:             false,
+			},
+			expected: false,
+		},
+		{
+			name:    "Non-existent feature",
+			feature: "Foo",
+			flags: &FeatureFlags{
+				EnableCSERunInBackground: true,
+				DockerEngine:             true,
+			},
+			expected: false,
+		},
+	}
+	for _, test := range tests {
+		test := test
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+			actual := test.flags.IsFeatureEnabled(test.feature)
+			if actual != test.expected {
+				t.Errorf("expected feature %s to be enabled:%v, but got %v", test.feature, test.expected, actual)
+			}
+		})
+	}
+}

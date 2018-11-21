@@ -64,11 +64,6 @@
             "destination": "/home/packer/install-dependencies.sh"
         },
         {
-            "type": "file",
-            "source": "packer/feature-flagged.sh",
-            "destination": "/home/packer/feature-flagged.sh"
-        },
-        {
             "type": "shell",
             "inline": [
                 "sudo FEATURE_FLAGS={{user `feature_flags`}} BUILD_NUMBER={{user `build_number`}} BUILD_ID={{user `build_id`}} COMMIT={{user `commit`}} /bin/bash -ux /home/packer/install-dependencies.sh",

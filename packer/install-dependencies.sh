@@ -5,7 +5,6 @@
 
 source /home/packer/provision_installs.sh
 source /home/packer/provision_source.sh
-source /home/packer/feature-flagged.sh
 
 echo "Starting build on " `date` > /var/log/azure/golden-image-install.complete
 echo "Using kernel:" >> /var/log/azure/golden-image-install.complete
