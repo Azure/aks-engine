@@ -971,6 +971,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 		})
 	})
 
+	Describe("with a windows agent pool", func() {
 		It("should be able to deploy and scale an iis webserver", func() {
 			if eng.HasWindowsAgents() {
 				iisImage := "microsoft/iis:windowsservercore-1803" // BUG: This should be set based on the host OS version
