@@ -2636,13 +2636,11 @@ func TestIsFeatureEnabled(t *testing.T) {
 	}{
 		{
 			name:     "nil flags",
-			feature:  "DockerEngine",
 			flags:    nil,
 			expected: false,
 		},
 		{
 			name:     "empty flags",
-			feature:  "DockerEngine",
 			flags:    &FeatureFlags{},
 			expected: false,
 		},
@@ -2651,16 +2649,14 @@ func TestIsFeatureEnabled(t *testing.T) {
 			feature: "CSERunInBackground",
 			flags: &FeatureFlags{
 				EnableCSERunInBackground: true,
-				DockerEngine:             false,
 			},
 			expected: true,
 		},
 		{
 			name:    "Disabled feature",
-			feature: "DockerEngine",
+			feature: "CSERunInBackground",
 			flags: &FeatureFlags{
-				EnableCSERunInBackground: true,
-				DockerEngine:             false,
+				EnableCSERunInBackground: false,
 			},
 			expected: false,
 		},
@@ -2669,7 +2665,6 @@ func TestIsFeatureEnabled(t *testing.T) {
 			feature: "Foo",
 			flags: &FeatureFlags{
 				EnableCSERunInBackground: true,
-				DockerEngine:             true,
 			},
 			expected: false,
 		},

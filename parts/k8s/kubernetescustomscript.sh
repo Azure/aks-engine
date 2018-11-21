@@ -73,6 +73,12 @@ fi
 installContainerRuntime
 installNetworkPlugin
 installContainerd
+if [[ "${GPU_NODE}" = true ]]; then
+    if $FULL_INSTALL_REQUIRED; then
+        installGPUDrivers
+    fi
+    ensureGPUDrivers
+fi
 installKubeletAndKubectl
 ensureRPC
 createKubeManifestDir
@@ -120,13 +126,6 @@ if [[ ! -z "${MASTER_NODE}" ]]; then
     ensureEtcd
     ensureK8sControlPlane
     ensurePodSecurityPolicy
-fi
-
-if [[ "${GPU_NODE}" = true ]]; then
-    if $FULL_INSTALL_REQUIRED; then
-        installGPUDrivers
-    fi
-    ensureGPUDrivers
 fi
 
 if $FULL_INSTALL_REQUIRED; then

@@ -51,7 +51,7 @@ installGPUDrivers() {
 
 installContainerRuntime() {
     if [[ "$CONTAINER_RUNTIME" == "docker" ]]; then
-        if [[ "$DOCKER_ENGINE" == "true" ]]; then
+        if [[ "$DOCKER_ENGINE_REPO" != "" ]]; then
             installDockerEngine
         else
             installMoby
@@ -79,7 +79,6 @@ installMoby() {
 }
 
 installDockerEngine() {
-    DOCKER_REPO="https://apt.dockerproject.org/repo"
     DOCKER_ENGINE_VERSION="1.13.*"
     dockerd --version
     if [ $? -eq 0 ]; then
@@ -87,7 +86,7 @@ installDockerEngine() {
     else
         retrycmd_if_failure_no_stats 20 1 5 curl -fsSL https://aptdocker.azureedge.net/gpg > /tmp/aptdocker.gpg || exit $ERR_DOCKER_KEY_DOWNLOAD_TIMEOUT
         retrycmd_if_failure 10 5 10 apt-key add /tmp/aptdocker.gpg || exit $ERR_DOCKER_APT_KEY_TIMEOUT
-        echo "deb ${DOCKER_REPO} ubuntu-xenial main" | sudo tee /etc/apt/sources.list.d/docker.list
+        echo "deb ${DOCKER_ENGINE_REPO} ubuntu-xenial main" | sudo tee /etc/apt/sources.list.d/docker.list
         printf "Package: docker-engine\nPin: version ${DOCKER_ENGINE_VERSION}\nPin-Priority: 550\n" > /etc/apt/preferences.d/docker.pref
         apt_get_update || exit $ERR_APT_UPDATE_TIMEOUT
         apt_get_install 20 30 120 docker-engine || exit $ERR_DOCKER_INSTALL_TIMEOUT
