@@ -527,76 +527,117 @@ func TestGenerateKubeConfig(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to load container service from file: %v", err)
 	}
-	kubeConfig, err := GenerateKubeConfig(containerService.Properties, "westus2")
-	if len(kubeConfig) < 1 {
-		t.Fatalf("Got unexpected kubeconfig payload: %v", kubeConfig)
-	}
-	if err != nil {
-		t.Fatalf("Failed to call GenerateKubeConfig with simple Kubernetes config from file: %v", testData)
-	}
+	certs := containerService.Properties.CertificateProfile
 
-	containerService.Properties.OrchestratorProfile = &api.OrchestratorProfile{
-		KubernetesConfig: &api.KubernetesConfig{
-			PrivateCluster: &api.PrivateCluster{
-				Enabled: helpers.PointerToBool(true),
+	cases := []struct {
+		p           *api.Properties
+		expectedErr error
+	}{
+		{
+			p:           containerService.Properties,
+			expectedErr: nil,
+		},
+		{
+			p: &api.Properties{
+				OrchestratorProfile: &api.OrchestratorProfile{
+					KubernetesConfig: &api.KubernetesConfig{
+						PrivateCluster: &api.PrivateCluster{
+							Enabled: helpers.PointerToBool(true),
+						},
+					},
+				},
+				MasterProfile: &api.MasterProfile{
+					Count:                    3,
+					FirstConsecutiveStaticIP: "invalid_ip",
+				},
 			},
+			expectedErr: errors.New("MasterProfile.FirstConsecutiveStaticIP 'invalid_ip' is an invalid IP address"),
+		},
+		{
+			p: &api.Properties{
+				OrchestratorProfile: &api.OrchestratorProfile{
+					KubernetesConfig: &api.KubernetesConfig{
+						PrivateCluster: &api.PrivateCluster{
+							Enabled: helpers.PointerToBool(true),
+						},
+					},
+				},
+				MasterProfile: &api.MasterProfile{
+					Count:                    3,
+					FirstConsecutiveStaticIP: "10.240.255.5",
+				},
+				CertificateProfile: certs,
+			},
+			expectedErr: nil,
+		},
+		{
+			p: &api.Properties{
+				OrchestratorProfile: &api.OrchestratorProfile{
+					KubernetesConfig: &api.KubernetesConfig{
+						PrivateCluster: &api.PrivateCluster{
+							Enabled: helpers.PointerToBool(true),
+						},
+					},
+				},
+				MasterProfile: &api.MasterProfile{
+					Count: 1,
+				},
+				CertificateProfile: certs,
+			},
+			expectedErr: nil,
+		},
+		{
+			p: &api.Properties{
+				AADProfile: &api.AADProfile{
+					ServerAppID: "00000000-0000-0000-0000-000000000000",
+					ClientAppID: "00000000-0000-0000-0000-000000000000",
+				},
+				MasterProfile: &api.MasterProfile{
+					Count: 1,
+				},
+				CertificateProfile: certs,
+			},
+			expectedErr: nil,
+		},
+		{
+			p: &api.Properties{
+				AADProfile: &api.AADProfile{
+					ServerAppID: "00000000-0000-0000-0000-000000000000",
+					ClientAppID: "00000000-0000-0000-0000-000000000000",
+					TenantID:    "00000000-0000-0000-0000-000000000000",
+				},
+				MasterProfile: &api.MasterProfile{
+					Count: 1,
+				},
+				CertificateProfile: certs,
+			},
+			expectedErr: nil,
+		},
+		{
+			p:           &api.Properties{},
+			expectedErr: errors.New("CertificateProfile property may not be nil in GenerateKubeConfig"),
+		},
+		{
+			p:           nil,
+			expectedErr: errors.New("Properties nil in GenerateKubeConfig"),
 		},
 	}
-	containerService.Properties.MasterProfile.Count = 3
-	containerService.Properties.MasterProfile.FirstConsecutiveStaticIP = "invalid_ip"
-	_, err = GenerateKubeConfig(containerService.Properties, "westus2")
-	if err == nil {
-		t.Fatalf("Expected an error result from invalid FirstConsecutiveStaticIP")
-	}
 
-	containerService.Properties.MasterProfile.FirstConsecutiveStaticIP = "10.240.255.5"
-	kubeConfig, err = GenerateKubeConfig(containerService.Properties, "westus2")
-	if len(kubeConfig) < 1 {
-		t.Fatalf("Got unexpected kubeconfig payload: %v", kubeConfig)
-	}
-	if err != nil {
-		t.Fatalf("Failed to call GenerateKubeConfig with private cluster enabled with 3 masters")
-	}
+	for _, c := range cases {
+		containerService.Properties = c.p
+		kubeConfig, err := GenerateKubeConfig(containerService.Properties, "westus2")
+		if c.expectedErr == nil {
+			if len(kubeConfig) < 1 {
+				t.Fatalf("Got unexpected kubeconfig payload: %v", kubeConfig)
+			}
+			if err != nil {
+				t.Fatalf("Failed to call GenerateKubeConfig with properties: %v", c.p)
+			}
+		} else {
+			if err == nil || err.Error() != c.expectedErr.Error() {
+				t.Fatalf("Expected error: %v but got %v from GenerateKubeConfig", c.expectedErr, err)
+			}
+		}
 
-	containerService.Properties.MasterProfile.Count = 1
-	kubeConfig, err = GenerateKubeConfig(containerService.Properties, "westus2")
-	if len(kubeConfig) < 1 {
-		t.Fatalf("Got unexpected kubeconfig payload: %v", kubeConfig)
-	}
-	if err != nil {
-		t.Fatalf("Failed to call GenerateKubeConfig with private cluster enabled with 1 master")
-	}
-
-	containerService.Properties.AADProfile = &api.AADProfile{
-		ServerAppID: "00000000-0000-0000-0000-000000000000",
-		ClientAppID: "00000000-0000-0000-0000-000000000000",
-	}
-
-	kubeConfig, err = GenerateKubeConfig(containerService.Properties, "westus2")
-	if len(kubeConfig) < 1 {
-		t.Fatalf("Got unexpected kubeconfig payload: %v", kubeConfig)
-	}
-	if err != nil {
-		t.Fatalf("Failed to call GenerateKubeConfig with AAD profile")
-	}
-
-	containerService.Properties.AADProfile.TenantID = "00000000-0000-0000-0000-000000000000"
-	kubeConfig, err = GenerateKubeConfig(containerService.Properties, "westus2")
-	if len(kubeConfig) < 1 {
-		t.Fatalf("Got unexpected kubeconfig payload: %v", kubeConfig)
-	}
-	if err != nil {
-		t.Fatalf("Failed to call GenerateKubeConfig with AAD profile w/ tenant ID")
-	}
-
-	p := api.Properties{}
-	_, err = GenerateKubeConfig(&p, "westus2")
-	if err == nil {
-		t.Fatalf("Expected an error result from nil Properties child properties")
-	}
-
-	_, err = GenerateKubeConfig(nil, "westus2")
-	if err == nil {
-		t.Fatalf("Expected an error result from nil Properties child properties")
 	}
 }
