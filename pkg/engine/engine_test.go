@@ -17,6 +17,7 @@ import (
 	"github.com/Azure/aks-engine/pkg/api/common"
 	"github.com/Azure/aks-engine/pkg/api/vlabs"
 	"github.com/Azure/aks-engine/pkg/engine/transform"
+	"github.com/Azure/aks-engine/pkg/helpers"
 	"github.com/Azure/aks-engine/pkg/i18n"
 	"github.com/leonelquinteros/gotext"
 	"github.com/pkg/errors"
@@ -538,7 +539,7 @@ func TestGenerateKubeConfig(t *testing.T) {
 	containerService.Properties.OrchestratorProfile = &api.OrchestratorProfile{
 		KubernetesConfig: &api.KubernetesConfig{
 			PrivateCluster: &api.PrivateCluster{
-				Enabled: true,
+				Enabled: helpers.PointerToBool(true),
 			},
 		},
 	}
