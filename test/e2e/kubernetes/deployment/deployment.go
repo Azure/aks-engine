@@ -190,6 +190,17 @@ func (d *Deployment) Expose(svcType string, targetPort, exposedPort int) error {
 	return nil
 }
 
+// ScaleDeployment scales a deployment to n instancees
+func (d *Deployment) ScaleDeployment(n int) error {
+	cmd := exec.Command("kubectl", "scale", fmt.Sprintf("--replicas=%d", n), "deployment", d.Metadata.Name)
+	out, err := util.RunAndLogCommand(cmd)
+	if err != nil {
+		log.Printf("Error while scaling deployment %s to %d pods:%s\n", d.Metadata.Name, n, string(out))
+		return err
+	}
+	return nil
+}
+
 // CreateDeploymentHPA applies autoscale characteristics to deployment
 func (d *Deployment) CreateDeploymentHPA(cpuPercent, min, max int) error {
 	cmd := exec.Command("kubectl", "autoscale", "deployment", d.Metadata.Name, fmt.Sprintf("--cpu-percent=%d", cpuPercent),

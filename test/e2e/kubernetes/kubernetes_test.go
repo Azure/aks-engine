@@ -971,8 +971,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 		})
 	})
 
-	Describe("with a windows agent pool", func() {
-		It("should be able to deploy an iis webserver", func() {
+		It("should be able to deploy and scale an iis webserver", func() {
 			if eng.HasWindowsAgents() {
 				iisImage := "microsoft/iis:windowsservercore-1803" // BUG: This should be set based on the host OS version
 
@@ -990,11 +989,11 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				By("Exposing a LoadBalancer for the pod")
 				err = iisDeploy.Expose("LoadBalancer", 80, 80)
 				Expect(err).NotTo(HaveOccurred())
-				s, err := service.Get(deploymentName, "default")
+				iisService, err := service.Get(deploymentName, "default")
 				Expect(err).NotTo(HaveOccurred())
 
 				By("Verifying that the service is reachable and returns the default IIS start page")
-				valid := s.Validate("(IIS Windows Server)", 10, 10*time.Second, cfg.Timeout)
+				valid := iisService.Validate("(IIS Windows Server)", 10, 10*time.Second, cfg.Timeout)
 				Expect(valid).To(BeTrue())
 
 				By("Checking that each pod can reach http://www.bing.com")
@@ -1007,10 +1006,68 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 					Expect(pass).To(BeTrue())
 				}
 
+				By("Scaling deployment to 5 pods")
+				err = iisDeploy.ScaleDeployment(5)
+				Expect(err).NotTo(HaveOccurred())
+				_, err = iisDeploy.WaitForReplicas(5, 5, 2*time.Second, cfg.Timeout)
+				Expect(err).NotTo(HaveOccurred())
+
+				By("Waiting on 5 pods to be Ready")
+				running, err = pod.WaitOnReady(deploymentName, "default", 3, 30*time.Second, cfg.Timeout)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(running).To(Equal(true))
+				iisPods, err = iisDeploy.Pods()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(len(iisPods)).To(Equal(5))
+
+				By("Verifying that the service is reachable and returns the default IIS start page")
+				valid = iisService.Validate("(IIS Windows Server)", 10, 10*time.Second, cfg.Timeout)
+				Expect(valid).To(BeTrue())
+
+				By("Checking that each pod can reach http://www.bing.com")
+				iisPods, err = iisDeploy.Pods()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(len(iisPods)).ToNot(BeZero())
+				for _, iisPod := range iisPods {
+					pass, err := iisPod.CheckWindowsOutboundConnection("www.bing.com", 10*time.Second, cfg.Timeout)
+					Expect(err).NotTo(HaveOccurred())
+					Expect(pass).To(BeTrue())
+				}
+
+				By("Checking that no pods restart")
+				for _, iisPod := range iisPods {
+					log.Printf("Checking %s", iisPod.Metadata.Name)
+					Expect(iisPod.Status.ContainerStatuses[0].Ready).To(BeTrue())
+					Expect(iisPod.Status.ContainerStatuses[0].RestartCount).To(Equal(0))
+				}
+
+				By("Scaling deployment to 2 pods")
+				err = iisDeploy.ScaleDeployment(2)
+				Expect(err).NotTo(HaveOccurred())
+				_, err = iisDeploy.WaitForReplicas(2, 2, 2*time.Second, cfg.Timeout)
+				Expect(err).NotTo(HaveOccurred())
+				iisPods, err = iisDeploy.Pods()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(len(iisPods)).To(Equal(2))
+
+				By("Verifying that the service is reachable and returns the default IIS start page")
+				valid = iisService.Validate("(IIS Windows Server)", 10, 10*time.Second, cfg.Timeout)
+				Expect(valid).To(BeTrue())
+
+				By("Checking that each pod can reach http://www.bing.com")
+				iisPods, err = iisDeploy.Pods()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(len(iisPods)).ToNot(BeZero())
+				for _, iisPod := range iisPods {
+					pass, err := iisPod.CheckWindowsOutboundConnection("www.bing.com", 10*time.Second, cfg.Timeout)
+					Expect(err).NotTo(HaveOccurred())
+					Expect(pass).To(BeTrue())
+				}
+
 				By("Verifying pods & services can be deleted")
 				err = iisDeploy.Delete(deleteResourceRetries)
 				Expect(err).NotTo(HaveOccurred())
-				err = s.Delete(deleteResourceRetries)
+				err = iisService.Delete(deleteResourceRetries)
 				Expect(err).NotTo(HaveOccurred())
 			} else {
 				Skip("No windows agent was provisioned for this Cluster Definition")
