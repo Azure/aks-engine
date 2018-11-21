@@ -720,7 +720,7 @@ func orchestratorSupportsExtension(rootURL, orchestrator, extensionName, version
 		return false, errors.Errorf("Unable to parse supported-orchestrators.json for Extension %s Version %s", extensionName, version)
 	}
 
-	if !stringInSlice(orchestrator, supportedOrchestrators) {
+	if !helpers.StringInSlice(orchestrator, supportedOrchestrators) {
 		return false, errors.Errorf("Orchestrator: %s not in list of supported orchestrators for Extension: %s Version %s", orchestrator, extensionName, version)
 	}
 
@@ -756,13 +756,4 @@ func getExtensionURL(rootURL, extensionName, version, fileName, query string) st
 		url += "?" + query
 	}
 	return url
-}
-
-func stringInSlice(a string, list []string) bool {
-	for _, b := range list {
-		if b == a {
-			return true
-		}
-	}
-	return false
 }

@@ -4,6 +4,7 @@
 package engine
 
 import (
+	"Azure/aks-engine/pkg/helpers"
 	"bytes"
 	"encoding/json"
 	"fmt"
@@ -550,6 +551,7 @@ func TestGenerateKubeConfig(t *testing.T) {
 					Count:                    3,
 					FirstConsecutiveStaticIP: "invalid_ip",
 				},
+				CertificateProfile: certs,
 			},
 			expectedErr: errors.New("MasterProfile.FirstConsecutiveStaticIP 'invalid_ip' is an invalid IP address"),
 		},
@@ -634,7 +636,7 @@ func TestGenerateKubeConfig(t *testing.T) {
 				t.Fatalf("Failed to call GenerateKubeConfig with properties: %v", c.p)
 			}
 		} else {
-			if err == nil || err.Error() != c.expectedErr.Error() {
+			if helpers.EqualError(err, c.expectedErr) {
 				t.Fatalf("Expected error: %v but got %v from GenerateKubeConfig", c.expectedErr, err)
 			}
 		}
