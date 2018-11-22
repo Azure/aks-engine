@@ -34,10 +34,6 @@
 
 ## 使用步骤
 
-This produces a new directory inside `_output/` that contains an ARM template
-for deploying Kubernetes into Azure. (In the case of Kubernetes, some additional
-needed assets are generated and placed in the output directory.)
-
 运行完毕后，项目的根目录下就会产生一个`_output/`的文件夹，这个文件夹中包含了所有的ARM模板，通过部署这些模板就可以在Azure上创建对应的容器集群了。（对于kubernetes来说，_output文件夹中也会生成一些证书之类的文件来供ARM部署时的需要）
 
 ## 部署方法
