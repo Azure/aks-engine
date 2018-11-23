@@ -95,6 +95,14 @@ required = [
   version = "v9.0.0"
 
 [[constraint]]
+  name = "k8s.io/api"
+  version = "kubernetes-1.12.0"
+
+[[constraint]]
+  name = "k8s.io/apimachinery"
+  version = "kubernetes-1.12.0"
+
+[[constraint]]
   name = "github.com/onsi/ginkgo"
   version = "v1.6.0"
 

@@ -573,8 +573,7 @@
   version = "v2.0.0"
 
 [[projects]]
-  branch = "master"
-  digest = "1:4c538f78d79d05e4dc19308b3da298a0d5b2ade51156b5a16366fd523bab5f54"
+  digest = "1:c6b0cfc418f5e8bb9169d78f1024cb1c9f3e61c9a76235134d26d3f28ecdf27b"
   name = "k8s.io/api"
   packages = [
     "admissionregistration/v1alpha1",
@@ -610,11 +609,11 @@
     "storage/v1beta1",
   ]
   pruneopts = "NUT"
-  revision = "74c9151590fc25da763fda38bb2e3eb9a1590c63"
+  revision = "fd83cbc87e7632ccd8bbab63d2b673d4e0c631cc"
+  version = "kubernetes-1.12.0"
 
 [[projects]]
-  branch = "master"
-  digest = "1:2de7192b1fc3884f49b413d351c24947fdd781e111f46b8291dcecc506391d14"
+  digest = "1:e2de35943ac512e65bd427bf0543a1c2946bf624deb5e932d46b6cdf079c545a"
   name = "k8s.io/apimachinery"
   packages = [
     "pkg/api/equality",
@@ -656,7 +655,8 @@
     "third_party/forked/golang/reflect",
   ]
   pruneopts = "NUT"
-  revision = "1c355ce7f987f9610178d7c598031fbfa62b3af9"
+  revision = "6dd46049f39503a1fc8d65de4bd566829e95faff"
+  version = "kubernetes-1.12.0"
 
 [[projects]]
   digest = "1:3b5b7622d385891eeac9eaf3151ea57d38cff4f05c57d6ad94134f346f7f8099"
