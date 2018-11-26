@@ -8,8 +8,8 @@ trigger: none
 
 phases:
 - phase: build_vhd
-  queue: 
-    name: Hosted Linux Preview
+  pool:
+    vmImage: 'ubuntu-16.04'
     timeoutInMinutes: 120
   steps:
   - script: |
