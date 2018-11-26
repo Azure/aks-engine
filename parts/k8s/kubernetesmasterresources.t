@@ -287,6 +287,9 @@
 {{if gt .MasterProfile.Count 1}}
         ,"[variables('masterInternalLbName')]"
 {{end}}
+{{ if IsUsingCosmos }}
+	,"[resourceId('Microsoft.DocumentDB/databaseAccounts/', variables('cosmosEtcdName'))]"
+{{ end }}
       ],
       "location": "[variables('location')]",
       "name": "[concat(variables('masterVMNamePrefix'), 'nic-', copyIndex(variables('masterOffset')))]",

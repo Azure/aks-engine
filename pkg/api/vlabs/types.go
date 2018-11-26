@@ -379,6 +379,9 @@ type MasterProfile struct {
 	// The format will be FQDN:2376
 	// Not used during PUT, returned as part of GET
 	FQDN string `json:"fqdn,omitempty"`
+
+	// True: uses cosmos etcd endpoint instead of installing etcd on masters
+	UseCosmos *bool `json:"useCosmos,omitempty"`
 }
 
 // ImageReference represents a reference to an Image resource in Azure.
