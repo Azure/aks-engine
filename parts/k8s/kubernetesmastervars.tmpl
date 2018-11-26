@@ -1,4 +1,7 @@
     "maxVMsPerPool": 100,
+{{ if .MasterProfile.IsUsingCosmos}}
+	"cosmosEtcdName" : "[concat(tolower(resourceGroup().location),tolower(parameters('masterEndpointDNSNamePrefix')), 'etcd')]"
+{{end}}
 {{ if not IsHostedMaster }}
     {{if eq .MasterProfile.Count 1}}
     "etcdPeerPrivateKeys": [

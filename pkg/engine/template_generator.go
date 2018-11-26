@@ -282,6 +282,10 @@ func (t *TemplateGenerator) getTemplateFuncMap(cs *api.ContainerService) templat
 		"IsAzureCNI": func() bool {
 			return cs.Properties.OrchestratorProfile.IsAzureCNI()
 		},
+		"IsUsingCosmos": func() bool {
+			return helpers.IsTrueBoolPointer(cs.Properties.MasterProfile.UseCosmos)
+		},
+
 		"RequireRouteTable": func() bool {
 			return cs.Properties.OrchestratorProfile.RequireRouteTable()
 		},

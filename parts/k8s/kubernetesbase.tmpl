@@ -28,6 +28,44 @@
     {{template "k8s/kubernetesmastervars.tmpl" .}}
   },
   "resources": [
+		{{if IsUsingCosmos }}
+				{
+					"apiVersion": "2015-04-08",
+					"type": "Microsoft.DocumentDB/databaseAccounts"
+					"kind": "GlobalDocumentDB",
+					"location": "[resourceGroup().location]",
+					"name": "[variables('cosmosEtcdName')]",
+					"properties": {
+						 "capabilities": [
+								 {
+									"name": "EnableEtcd"
+								 }
+							],
+					"consistencyPolicy": {
+						"defaultConsistencyLevel": "BoundedStaleness",
+						"maxIntervalInSeconds": 5,
+						"maxStalenessPrefix": 100
+					},
+					"databaseAccountOfferType": "Standard",
+					"locations": [
+						{
+							"failoverPriority": 0,
+							"locationName": "[resourceGroup().location]"
+						},
+						{
+							"failoverPriority": 1,
+							"locationName": "[resourceGroup().location]"
+						}
+					],
+					"name": "[variables('cosmosEtcdName')]",
+					"primaryClientCertificatePemBytes": "//TODO",
+					"secondaryClientCertificatePemBytes": "//TODO"
+					},
+					"tags": {
+						"defaultExperience": "Etcd"
+					},
+				},
+		{{end}}
     {{if UserAssignedIDEnabled}}
       {
         "type": "Microsoft.ManagedIdentity/userAssignedIdentities",
