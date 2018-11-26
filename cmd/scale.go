@@ -211,6 +211,7 @@ func (sc *scaleCmd) run(cmd *cobra.Command, args []string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), armhelpers.DefaultARMOperationTimeout)
 	defer cancel()
 	var currentNodeCount, highestUsedIndex, index, winPoolIndex int
+	var needsDeployment = true
 	winPoolIndex = -1
 	indexes := make([]int, 0)
 	indexToVM := make(map[int]string)
@@ -254,6 +255,7 @@ func (sc *scaleCmd) run(cmd *cobra.Command, args []string) error {
 
 		// Scale down Scenario
 		if currentNodeCount > sc.newDesiredAgentCount {
+			needsDeployment = false
 			if sc.masterFQDN == "" {
 				cmd.Usage()
 				return errors.New("master-FQDN is required to scale down a kubernetes cluster's agent pool")
@@ -290,8 +292,6 @@ func (sc *scaleCmd) run(cmd *cobra.Command, args []string) error {
 				}
 				return err
 			}
-
-			return nil
 		}
 	} else {
 		for vmssListPage, err := sc.client.ListVirtualMachineScaleSets(ctx, sc.resourceGroupName); vmssListPage.NotDone(); vmssListPage.Next() {
@@ -375,17 +375,19 @@ func (sc *scaleCmd) run(cmd *cobra.Command, args []string) error {
 		addValue(parametersJSON, fmt.Sprintf("%sOffset", sc.agentPool.Name), highestUsedIndex+1)
 	}
 
-	random := rand.New(rand.NewSource(time.Now().UnixNano()))
-	deploymentSuffix := random.Int31()
+	if needsDeployment {
+		random := rand.New(rand.NewSource(time.Now().UnixNano()))
+		deploymentSuffix := random.Int31()
 
-	_, err = sc.client.DeployTemplate(
-		ctx,
-		sc.resourceGroupName,
-		fmt.Sprintf("%s-%d", sc.resourceGroupName, deploymentSuffix),
-		templateJSON,
-		parametersJSON)
-	if err != nil {
-		return err
+		_, err = sc.client.DeployTemplate(
+			ctx,
+			sc.resourceGroupName,
+			fmt.Sprintf("%s-%d", sc.resourceGroupName, deploymentSuffix),
+			templateJSON,
+			parametersJSON)
+		if err != nil {
+			return err
+		}
 	}
 
 	apiloader := &api.Apiloader{
