@@ -34,7 +34,7 @@
 					"type": "Microsoft.DocumentDB/databaseAccounts"
 					"kind": "GlobalDocumentDB",
 					"location": "[resourceGroup().location]",
-					"name": "[variables('cosmosEtcdName')]",
+					"name": "[variables('cosmosAccountName')]",
 					"properties": {
 						 "capabilities": [
 								 {
@@ -58,8 +58,7 @@
 						}
 					],
 					"name": "[variables('cosmosEtcdName')]",
-					"primaryClientCertificatePemBytes": "//TODO",
-					"secondaryClientCertificatePemBytes": "//TODO"
+					"primaryClientCertificatePemBytes": "[variables('cosmosDBCertb64')]"
 					},
 					"tags": {
 						"defaultExperience": "Etcd"

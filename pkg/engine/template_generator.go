@@ -285,11 +285,20 @@ func (t *TemplateGenerator) getTemplateFuncMap(cs *api.ContainerService) templat
 		"IsUsingCosmos": func() bool {
 			return helpers.IsTrueBoolPointer(cs.Properties.MasterProfile.UseCosmos)
 		},
-
+		"GetCosmosAccountName": func() string {
+			etcdAccountName := "%sk8s"
+			return fmt.Sprintf(etcdAccountName, cs.Properties.MasterProfile.DNSPrefix)
+		},
+		"GetCosmosEndPointUri": func() string {
+			etcdEndpointUriFmt := "%s.etcd.cosmosdb.windows-ppe.net"
+			return fmt.Sprintf(etcdEndpointUriFmt, etcdEndpointUriFmt)
+		},
+		"GetCosmosDBCert": func() string {
+			return cs.Properties.CertificateProfile.EtcdClientCertificate
+		},
 		"RequireRouteTable": func() bool {
 			return cs.Properties.OrchestratorProfile.RequireRouteTable()
 		},
-
 		"IsPrivateCluster": func() bool {
 			if !cs.Properties.OrchestratorProfile.IsKubernetes() {
 				return false

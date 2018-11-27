@@ -1,8 +1,9 @@
     "maxVMsPerPool": 100,
-{{ if .MasterProfile.IsUsingCosmos}}
-	"cosmosEtcdName" : "[concat(tolower(resourceGroup().location),tolower(parameters('masterEndpointDNSNamePrefix')), 'etcd')]"
+{{ if IsUsingCosmos}}
+	"cosmosAccountName" : "{{ GetCosmosAccountName }}",
 {{end}}
 {{ if not IsHostedMaster }}
+{{if not IsUsingCosmos }}
     {{if eq .MasterProfile.Count 1}}
     "etcdPeerPrivateKeys": [
         "[parameters('etcdPeerPrivateKey0')]"
@@ -53,11 +54,15 @@
         "/etc/kubernetes/certs/etcdpeer3.key",
         "/etc/kubernetes/certs/etcdpeer4.key"
     ],
+{{end}}
     "etcdCaFilepath": "/etc/kubernetes/certs/ca.crt",
     "etcdClientCertFilepath": "/etc/kubernetes/certs/etcdclient.crt",
     "etcdClientKeyFilepath": "/etc/kubernetes/certs/etcdclient.key",
     "etcdServerCertFilepath": "/etc/kubernetes/certs/etcdserver.crt",
     "etcdServerKeyFilepath": "/etc/kubernetes/certs/etcdserver.key",
+{{if IsUsingCosmos }}
+	"cosmosDBCertb64" : "[ base64('{{ GetCosmosDBCert }}')]"
+{{end}}
 {{end}}
     "useManagedIdentityExtension": "{{ UseManagedIdentity }}",
     "userAssignedID": "{{UserAssignedID}}",
