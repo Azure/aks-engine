@@ -60,7 +60,9 @@ holdWALinuxAgent() {
 }
 
 if [[ ! -z "${MASTER_NODE}" ]]; then
-    installEtcd
+		if [[ "TRUE" != "${USE_COSMOS}" ]]; then
+    	installEtcd
+		fi
 fi
 
 if $FULL_INSTALL_REQUIRED; then
@@ -84,7 +86,9 @@ ensureRPC
 createKubeManifestDir
 
 if [[ ! -z "${MASTER_NODE}" ]]; then
+	if [[ "TRUE" != "${USE_COSMOS}" ]]; then
     configureEtcd
+	fi
 else
     removeEtcd
 fi
@@ -123,7 +127,9 @@ ensureJournal
 
 if [[ ! -z "${MASTER_NODE}" ]]; then
     writeKubeConfig
-    ensureEtcd
+		if [[ "TRUE" != "${USE_COSMOS}" ]]; then
+    	ensureEtcd
+		fi
     ensureK8sControlPlane
     ensurePodSecurityPolicy
 fi
