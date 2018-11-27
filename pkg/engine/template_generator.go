@@ -320,21 +320,27 @@ func (t *TemplateGenerator) getTemplateFuncMap(cs *api.ContainerService) templat
 			return cs.Properties.OrchestratorProfile.IsAzureCNI()
 		},
 		"IsUsingCosmos": func() bool {
-			return helpers.IsTrueBoolPointer(cs.Properties.MasterProfile.UseCosmos)
+			return nil != cs.Properties.MasterProfile && helpers.IsTrueBoolPointer(cs.Properties.MasterProfile.UseCosmos)
 		},
 		"strIsUsingCosmos": func() string {
-			if helpers.IsTrueBoolPointer(cs.Properties.MasterProfile.UseCosmos) {
+			if nil != cs.Properties.MasterProfile && helpers.IsTrueBoolPointer(cs.Properties.MasterProfile.UseCosmos) {
 				return "TRUE"
 			}
 			return "FALSE"
 		},
 		"GetCosmosAccountName": func() string {
-			etcdAccountNameFmt := "%sk8s"
-			return fmt.Sprintf(etcdAccountNameFmt, cs.Properties.MasterProfile.DNSPrefix)
+			if nil != cs.Properties.MasterProfile {
+				etcdAccountNameFmt := "%sk8s"
+				return fmt.Sprintf(etcdAccountNameFmt, cs.Properties.MasterProfile.DNSPrefix)
+			}
+			return "TEST"
 		},
 		"GetCosmosEndPointUri": func() string {
-			etcdEndpointURIFmt := "%sk8s.etcd.cosmosdb.windows-ppe.net"
-			return fmt.Sprintf(etcdEndpointURIFmt, cs.Properties.MasterProfile.DNSPrefix)
+			if nil != cs.Properties.MasterProfile {
+				etcdEndpointURIFmt := "%sk8s.etcd.cosmosdb.windows-ppe.net"
+				return fmt.Sprintf(etcdEndpointURIFmt, cs.Properties.MasterProfile.DNSPrefix)
+			}
+			return "TEST"
 		},
 		"GetCosmosDBCert": func() string {
 			return cs.Properties.CertificateProfile.EtcdClientCertificate
