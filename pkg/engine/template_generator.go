@@ -286,12 +286,12 @@ func (t *TemplateGenerator) getTemplateFuncMap(cs *api.ContainerService) templat
 			return helpers.IsTrueBoolPointer(cs.Properties.MasterProfile.UseCosmos)
 		},
 		"GetCosmosAccountName": func() string {
-			etcdAccountName := "%sk8s"
-			return fmt.Sprintf(etcdAccountName, cs.Properties.MasterProfile.DNSPrefix)
+			etcdAccountNameFmt := "%sk8s"
+			return fmt.Sprintf(etcdAccountNameFmt, cs.Properties.MasterProfile.DNSPrefix)
 		},
 		"GetCosmosEndPointUri": func() string {
-			etcdEndpointUriFmt := "%s.etcd.cosmosdb.windows-ppe.net"
-			return fmt.Sprintf(etcdEndpointUriFmt, etcdEndpointUriFmt)
+			etcdEndpointURIFmt := "%sk8s.etcd.cosmosdb.windows-ppe.net"
+			return fmt.Sprintf(etcdEndpointURIFmt, cs.Properties.MasterProfile.DNSPrefix)
 		},
 		"GetCosmosDBCert": func() string {
 			return cs.Properties.CertificateProfile.EtcdClientCertificate
