@@ -9,7 +9,7 @@ trigger: none
 phases:
 - phase: build_vhd
   queue: 
-    name: Hosted Linux Preview
+    name: Hosted Ubuntu 1604
     timeoutInMinutes: 120
   steps:
   - script: |
