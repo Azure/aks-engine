@@ -17,6 +17,7 @@ installEtcd
 installDeps
 
 if [[ ${FEATURE_FLAGS} == *"docker-engine"* ]]; then
+    DOCKER_ENGINE_REPO="https://apt.dockerproject.org/repo"
     installDockerEngine
     installGPUDrivers
 else
