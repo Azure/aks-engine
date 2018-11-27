@@ -143,7 +143,9 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 		})
 
 		It("should report all nodes in a Ready state", func() {
-			ready := node.WaitOnReady(eng.NodeCount(), 10*time.Second, cfg.Timeout)
+			nodeCount := eng.NodeCount()
+			log.Printf("Checking for %d Ready nodes\n", nodeCount)
+			ready := node.WaitOnReady(nodeCount, 10*time.Second, cfg.Timeout)
 			cmd := exec.Command("kubectl", "get", "nodes", "-o", "wide")
 			out, _ := cmd.CombinedOutput()
 			log.Printf("%s\n", out)
