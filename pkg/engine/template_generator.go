@@ -285,6 +285,12 @@ func (t *TemplateGenerator) getTemplateFuncMap(cs *api.ContainerService) templat
 		"IsUsingCosmos": func() bool {
 			return helpers.IsTrueBoolPointer(cs.Properties.MasterProfile.UseCosmos)
 		},
+		"strIsUsingCosmos": func() string {
+			if helpers.IsTrueBoolPointer(cs.Properties.MasterProfile.UseCosmos) {
+				return "TRUE"
+			}
+			return "FALSE"
+		},
 		"GetCosmosAccountName": func() string {
 			etcdAccountNameFmt := "%sk8s"
 			return fmt.Sprintf(etcdAccountNameFmt, cs.Properties.MasterProfile.DNSPrefix)
