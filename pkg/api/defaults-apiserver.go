@@ -21,10 +21,9 @@ func (cs *ContainerService) setAPIServerConfig() {
 		"--insecure-port":               "8080",
 		"--secure-port":                 "443",
 		"--service-account-lookup":      "true",
-		"--etcd-cafile":                 "/etc/kubernetes/certs/ca.crt",
 		"--etcd-certfile":               "/etc/kubernetes/certs/etcdclient.crt",
 		"--etcd-keyfile":                "/etc/kubernetes/certs/etcdclient.key",
-		"--etcd-servers":                "https://127.0.0.1:" + strconv.Itoa(DefaultMasterEtcdClientPort),
+		"--etcd-servers":                "https://<etcdEndPointUri>:" + strconv.Itoa(DefaultMasterEtcdClientPort),
 		"--tls-cert-file":               "/etc/kubernetes/certs/apiserver.crt",
 		"--tls-private-key-file":        "/etc/kubernetes/certs/apiserver.key",
 		"--client-ca-file":              "/etc/kubernetes/certs/ca.crt",
@@ -36,6 +35,10 @@ func (cs *ContainerService) setAPIServerConfig() {
 		"--storage-backend":             o.GetAPIServerEtcdAPIVersion(),
 		"--enable-bootstrap-token-auth": "true",
 		"--v":                           "4",
+	}
+	// if using local etcd server then we need the ca file
+	if !helpers.IsTrueBoolPointer(cs.Properties.MasterProfile.UseCosmos) {
+		staticAPIServerConfig["--etcd-cafile"] = "/etc/kubernetes/certs/ca.crt"
 	}
 
 	// Default apiserver config

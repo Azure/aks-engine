@@ -1,0 +1,35 @@
+{
+    "apiVersion": "vlabs",
+    "properties": {
+        "orchestratorProfile": {
+        	"orchestratorType": "Kubernetes",
+	    		"kubernetesConfig": {
+						"useManagedIdentity": true
+      		}
+        },
+        "masterProfile": {
+            "count": 3,
+            "dnsPrefix": "",
+            "vmSize": "Standard_D2_v2",
+	    			"useCosmos" : true
+        },
+        "agentPoolProfiles": [
+            {
+                "name": "agent",
+                "count": 3,
+                "vmSize": "Standard_D2_v2",
+                "availabilityProfile": "AvailabilitySet"
+            }
+        ],
+        "linuxProfile": {
+            "adminUsername": "azureuser",
+            "ssh": {
+                "publicKeys": [
+                    {
+                        "keyData": ""
+                    }
+                ]
+            }
+        }
+		}
+}

@@ -287,6 +287,11 @@ MASTER_ARTIFACTS_CONFIG_PLACEHOLDER
     done
     a=/etc/kubernetes/manifests/kube-apiserver.yaml
     sed -i "s|<args>|{{GetK8sRuntimeConfigKeyVals .OrchestratorProfile.KubernetesConfig.APIServerConfig}}|g" $a
+{{ if IsUsingCosmos  }}
+  sed -i "s|<etcdEndPointUri>|{{ GetCosmosEndPointUri }}|g" $a
+{{ else }}
+  sed -i "s|<etcdEndPointUri>|127.0.0.1|g" $a
+{{ end }}
     sed -i "s|<advertiseAddr>|{{WrapAsVariable "kubernetesAPIServerIP"}}|g" $a
     sed -i "s|<args>|{{GetK8sRuntimeConfigKeyVals .OrchestratorProfile.KubernetesConfig.ControllerManagerConfig}}|g" /etc/kubernetes/manifests/kube-controller-manager.yaml
     sed -i "s|<args>|{{GetK8sRuntimeConfigKeyVals .OrchestratorProfile.KubernetesConfig.SchedulerConfig}}|g" /etc/kubernetes/manifests/kube-scheduler.yaml
