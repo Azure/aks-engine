@@ -297,9 +297,9 @@
     {{else}}
       "[variables('vnetID')]"
     {{end}}
-		{{ if IsUsingCosmos }}
-			,"[resourceId('Microsoft.DocumentDB/databaseAccounts/', variables('cosmosEtcdName'))]"
-		{{ end }}
+    {{ if IsUsingCosmos }}
+      ,"[resourceId('Microsoft.DocumentDB/databaseAccounts/', variables('cosmosEtcdName'))]"
+    {{ end }}
       ,"[variables('masterLbID')]"
     ],
     "tags":

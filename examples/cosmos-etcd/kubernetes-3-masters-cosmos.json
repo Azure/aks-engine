@@ -2,16 +2,16 @@
     "apiVersion": "vlabs",
     "properties": {
         "orchestratorProfile": {
-        	"orchestratorType": "Kubernetes",
-	    		"kubernetesConfig": {
-						"useManagedIdentity": true
-      		}
+        "orchestratorType": "Kubernetes",
+            "kubernetesConfig": {
+            "useManagedIdentity": true
+          }
         },
         "masterProfile": {
             "count": 3,
             "dnsPrefix": "",
             "vmSize": "Standard_D2_v2",
-	    			"useCosmos" : true
+            "useCosmos" : true
         },
         "agentPoolProfiles": [
             {
@@ -31,5 +31,5 @@
                 ]
             }
         }
-		}
+  }
 }

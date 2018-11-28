@@ -322,25 +322,19 @@ func (t *TemplateGenerator) getTemplateFuncMap(cs *api.ContainerService) templat
 		"IsUsingCosmos": func() bool {
 			return nil != cs.Properties.MasterProfile && helpers.IsTrueBoolPointer(cs.Properties.MasterProfile.UseCosmos)
 		},
-		"strIsUsingCosmos": func() string {
-			if nil != cs.Properties.MasterProfile && helpers.IsTrueBoolPointer(cs.Properties.MasterProfile.UseCosmos) {
-				return "TRUE"
-			}
-			return "FALSE"
-		},
 		"GetCosmosAccountName": func() string {
 			if nil != cs.Properties.MasterProfile {
 				etcdAccountNameFmt := "%sk8s"
 				return fmt.Sprintf(etcdAccountNameFmt, cs.Properties.MasterProfile.DNSPrefix)
 			}
-			return "TEST"
+			return "" // This will apply on both during unit tests as !IsUsingCosmos
 		},
 		"GetCosmosEndPointUri": func() string {
 			if nil != cs.Properties.MasterProfile {
 				etcdEndpointURIFmt := "%sk8s.etcd.cosmosdb.windows-ppe.net"
 				return fmt.Sprintf(etcdEndpointURIFmt, cs.Properties.MasterProfile.DNSPrefix)
 			}
-			return "TEST"
+			return "" // This will apply on both during unit tests as !IsUsingCosmos
 		},
 		"GetCosmosDBCert": func() string {
 			return cs.Properties.CertificateProfile.EtcdClientCertificate

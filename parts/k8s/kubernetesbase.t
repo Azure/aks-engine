@@ -30,7 +30,7 @@
   "resources": [
 		{{if IsUsingCosmos }}
 				{
-					"apiVersion": "2015-04-08",
+					"apiVersion": "[variables('apiVersionCosmos')]",
 					"type": "Microsoft.DocumentDB/databaseAccounts"
 					"kind": "GlobalDocumentDB",
 					"location": "[resourceGroup().location]",
