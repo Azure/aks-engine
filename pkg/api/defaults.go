@@ -318,8 +318,7 @@ func (p *Properties) setMasterProfileDefaults(isUpgrade bool) {
 	}
 
 	if nil == p.MasterProfile.UseCosmos {
-		useCosmos := false
-		p.MasterProfile.UseCosmos = &useCosmos
+		p.MasterProfile.UseCosmos = helpers.PointerToBool(DefaultUseCosmos)
 	}
 }
 

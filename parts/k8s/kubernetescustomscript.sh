@@ -60,7 +60,7 @@ holdWALinuxAgent() {
 }
 
 if [[ ! -z "${MASTER_NODE}" ]]; then
-		if [[ "TRUE" != "${USE_COSMOS}" ]]; then
+		if [[ "true" != "${USE_COSMOS}" ]]; then
     	installEtcd
 		fi
 fi
@@ -85,10 +85,8 @@ installKubeletAndKubectl
 ensureRPC
 createKubeManifestDir
 
-if [[ ! -z "${MASTER_NODE}" ]]; then
-	if [[ "TRUE" != "${USE_COSMOS}" ]]; then
+if [[ ! -z "${MASTER_NODE}" ]] && [[ "true" != "${USE_COSMOS}" ]]; then
     configureEtcd
-	fi
 else
     removeEtcd
 fi
