@@ -189,7 +189,7 @@ func (cs *ContainerService) setAddonsConfig(isUpdate bool) {
 				MemoryRequests: "200Mi",
 				CPULimits:      "150m",
 				MemoryLimits:   "750Mi",
-				Image:          "microsoft/oms:ciprod10162018-2",
+				Image:          "microsoft/oms:internaltest1127-3",
 			},
 		},
 	}
