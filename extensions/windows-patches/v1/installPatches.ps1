@@ -13,6 +13,7 @@ function DownloadFile([string] $URI, [string] $fullName)
 {
     try {
         Write-Host "Downloading $URI"
+        $ProgressPreference = 'SilentlyContinue'
         Invoke-WebRequest -UseBasicParsing $URI -OutFile $fullName
     } catch {
         Write-Error $_
