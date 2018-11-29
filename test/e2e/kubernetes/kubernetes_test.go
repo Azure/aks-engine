@@ -29,6 +29,7 @@ import (
 	"github.com/Azure/aks-engine/test/e2e/kubernetes/service"
 	"github.com/Azure/aks-engine/test/e2e/kubernetes/storageclass"
 	"github.com/Azure/aks-engine/test/e2e/kubernetes/util"
+	"github.com/blang/semver"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
@@ -585,7 +586,8 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 		})
 
 		It("should be able to autoscale", func() {
-			if eng.HasLinuxAgents() && eng.ExpandedDefinition.Properties.OrchestratorProfile.KubernetesConfig.EnableAggregatedAPIs {
+			if eng.HasLinuxAgents() && eng.ExpandedDefinition.Properties.OrchestratorProfile.KubernetesConfig.EnableAggregatedAPIs &&
+				supportsHPA(eng.ExpandedDefinition.Properties.OrchestratorProfile.OrchestratorVersion) {
 				// "Pre"-delete the hpa in case a prior delete attempt failed, for long-running cluster scenarios
 				h, err := hpa.Get(longRunningApacheDeploymentName, "default")
 				if err == nil {
@@ -1229,3 +1231,23 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 		})
 	})
 })
+
+func supportsHPA(version string) bool {
+	v, _ := semver.Make(version)
+	switch v.Minor {
+	case 10:
+		hasPatch, _ := semver.Make("1.10.11")
+		if v.GE(hasPatch) {
+			return false
+		}
+		return true
+	case 12:
+		hasPatch, _ := semver.Make("1.12.3")
+		if v.GE(hasPatch) {
+			return false
+		}
+		return true
+	default:
+		return true
+	}
+}
