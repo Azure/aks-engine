@@ -27,8 +27,6 @@ test/aks-engine-test/report/TestReport.json
 
 # I have no idea why these get generated when I run the e2e test
 test/e2e/kubernetes/translations/
-test/e2e/openshift/translations/
-pkg/openshift/translations/
 
 # test outputs
 cmd/_test_output

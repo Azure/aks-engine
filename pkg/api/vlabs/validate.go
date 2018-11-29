@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"net"
 	"net/url"
-	"reflect"
 	"regexp"
 	"strings"
 	"time"
@@ -148,9 +147,6 @@ func (a *Properties) Validate(isUpdate bool) error {
 		return e
 	}
 
-	if e := a.validateAzProfile(); e != nil {
-		return e
-	}
 	return nil
 }
 
@@ -293,23 +289,6 @@ func (a *Properties) validateOrchestratorProfile(isUpdate bool) error {
 					log.Warnf("docker-engine is deprecated in favor of moby, but you passed in a dockerEngineVersion configuration. This will be ignored.")
 				}
 			}
-		case OpenShift:
-			// TODO: add appropriate additional validation logic
-			if o.OrchestratorVersion != common.OpenShiftVersionUnstable {
-				version := common.RationalizeReleaseAndVersion(
-					o.OrchestratorType,
-					o.OrchestratorRelease,
-					o.OrchestratorVersion,
-					isUpdate,
-					false)
-				if version == "" {
-					return errors.Errorf("OrchestratorProfile is not able to be rationalized, check supported Release or Version")
-				}
-			}
-			if o.OpenShiftConfig == nil {
-				return errors.Errorf("OpenShiftConfig must be specified for OpenShift orchestrator")
-			}
-			return o.OpenShiftConfig.Validate()
 		default:
 			return errors.Errorf("OrchestratorProfile has unknown orchestrator: %s", o.OrchestratorType)
 		}
@@ -337,12 +316,8 @@ func (a *Properties) validateOrchestratorProfile(isUpdate bool) error {
 		}
 	}
 
-	if (o.OrchestratorType != Kubernetes && o.OrchestratorType != OpenShift) && o.KubernetesConfig != nil {
-		return errors.Errorf("KubernetesConfig can be specified only when OrchestratorType is Kubernetes or OpenShift")
-	}
-
-	if o.OrchestratorType != OpenShift && o.OpenShiftConfig != nil {
-		return errors.Errorf("OpenShiftConfig can be specified only when OrchestratorType is OpenShift")
+	if o.OrchestratorType != Kubernetes && o.KubernetesConfig != nil {
+		return errors.Errorf("KubernetesConfig can be specified only when OrchestratorType is Kubernetes")
 	}
 
 	if o.OrchestratorType != DCOS && o.DcosConfig != nil && (*o.DcosConfig != DcosConfig{}) {
@@ -358,17 +333,6 @@ func (a *Properties) validateOrchestratorProfile(isUpdate bool) error {
 
 func (a *Properties) validateMasterProfile() error {
 	m := a.MasterProfile
-	if a.OrchestratorProfile.OrchestratorType == OpenShift {
-		if m.Count != 1 {
-			return errors.New("openshift can only deployed with one master")
-		}
-		if m.VnetSubnetID != "" && m.FirstConsecutiveStaticIP == "" {
-			return errors.New("when specifying a vnetsubnetid the firstconsecutivestaticip is required")
-		}
-		if m.StorageProfile != ManagedDisks {
-			return errors.New("OpenShift orchestrator supports only ManagedDisks")
-		}
-	}
 
 	if a.OrchestratorProfile.OrchestratorType == Kubernetes {
 		if m.IsVirtualMachineScaleSets() && m.VnetSubnetID != "" && m.FirstConsecutiveStaticIP != "" {
@@ -468,20 +432,8 @@ func (a *Properties) validateAgentPoolProfiles(isUpdate bool) error {
 			}
 		}
 
-		if a.OrchestratorProfile.OrchestratorType == OpenShift {
-			if (agentPoolProfile.Name == "infra") != (agentPoolProfile.Role == "infra") {
-				return errors.New("OpenShift requires that the 'infra' agent pool profile, and no other, should have role 'infra'")
-			}
-		}
-
 		if e := agentPoolProfile.validateWindows(a.OrchestratorProfile, a.WindowsProfile, isUpdate); agentPoolProfile.OSType == Windows && e != nil {
 			return e
-		}
-	}
-
-	if a.OrchestratorProfile.OrchestratorType == OpenShift {
-		if !reflect.DeepEqual(profileNames, map[string]bool{"compute": true, "infra": true}) {
-			return errors.New("OpenShift requires exactly two agent pool profiles: compute and infra")
 		}
 	}
 
@@ -749,30 +701,6 @@ func (a *Properties) validateAADProfile() error {
 	return nil
 }
 
-func (a *Properties) validateAzProfile() error {
-	switch a.OrchestratorProfile.OrchestratorType {
-	case OpenShift:
-		if a.AzProfile == nil || a.AzProfile.Location == "" ||
-			a.AzProfile.ResourceGroup == "" || a.AzProfile.SubscriptionID == "" ||
-			a.AzProfile.TenantID == "" {
-			return errors.Errorf("'azProfile' must be supplied in full for orchestrator '%v'", OpenShift)
-		}
-	default:
-		if a.AzProfile != nil {
-			return errors.Errorf("'azProfile' is only supported by orchestrator '%v'", OpenShift)
-		}
-	}
-	return nil
-}
-
-// Validate OpenShiftConfig ensures that the OpenShiftConfig is valid.
-func (o *OpenShiftConfig) Validate() error {
-	if o.ClusterUsername == "" || o.ClusterPassword == "" {
-		return errors.Errorf("ClusterUsername and ClusterPassword must both be specified")
-	}
-	return nil
-}
-
 func (a *AgentPoolProfile) validateAvailabilityProfile(orchestratorType string) error {
 	switch a.AvailabilityProfile {
 	case AvailabilitySet:
@@ -784,17 +712,11 @@ func (a *AgentPoolProfile) validateAvailabilityProfile(orchestratorType string) 
 		}
 	}
 
-	if orchestratorType == OpenShift && a.AvailabilityProfile != AvailabilitySet {
-		return errors.Errorf("Only AvailabilityProfile: AvailabilitySet is supported for Orchestrator 'OpenShift'")
-	}
 	return nil
 }
 
 func (a *AgentPoolProfile) validateRoles(orchestratorType string) error {
 	validRoles := []AgentPoolProfileRole{AgentPoolProfileRoleEmpty}
-	if orchestratorType == OpenShift {
-		validRoles = append(validRoles, AgentPoolProfileRoleInfra)
-	}
 	var found bool
 	for _, validRole := range validRoles {
 		if a.Role == validRole {
@@ -815,15 +737,10 @@ func (a *AgentPoolProfile) validateStorageProfile(orchestratorType string) error
 		case DCOS:
 		case Swarm:
 		case Kubernetes:
-		case OpenShift:
 		case SwarmMode:
 		default:
 			return errors.Errorf("HA volumes are currently unsupported for Orchestrator %s", orchestratorType)
 		}
-	}
-
-	if orchestratorType == OpenShift && a.StorageProfile != ManagedDisks {
-		return errors.New("OpenShift orchestrator supports only ManagedDisks")
 	}
 
 	return nil

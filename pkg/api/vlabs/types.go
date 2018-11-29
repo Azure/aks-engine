@@ -45,16 +45,7 @@ type Properties struct {
 	ServicePrincipalProfile *ServicePrincipalProfile `json:"servicePrincipalProfile,omitempty"`
 	CertificateProfile      *CertificateProfile      `json:"certificateProfile,omitempty"`
 	AADProfile              *AADProfile              `json:"aadProfile,omitempty"`
-	AzProfile               *AzProfile               `json:"azProfile,omitempty"`
 	FeatureFlags            *FeatureFlags            `json:"featureFlags,omitempty"`
-}
-
-// AzProfile holds the azure context for where the cluster resides
-type AzProfile struct {
-	TenantID       string `json:"tenantId,omitempty"`
-	SubscriptionID string `json:"subscriptionId,omitempty"`
-	ResourceGroup  string `json:"resourceGroup,omitempty"`
-	Location       string `json:"location,omitempty"`
 }
 
 // FeatureFlags defines feature-flag restricted functionality
@@ -197,7 +188,6 @@ type OrchestratorProfile struct {
 	OrchestratorRelease string            `json:"orchestratorRelease,omitempty"`
 	OrchestratorVersion string            `json:"orchestratorVersion,omitempty"`
 	KubernetesConfig    *KubernetesConfig `json:"kubernetesConfig,omitempty"`
-	OpenShiftConfig     *OpenShiftConfig  `json:"openshiftConfig,omitempty"`
 	DcosConfig          *DcosConfig       `json:"dcosConfig,omitempty"`
 }
 
@@ -222,8 +212,6 @@ func (o *OrchestratorProfile) UnmarshalJSON(b []byte) error {
 		o.OrchestratorType = Kubernetes
 	case strings.EqualFold(orchestratorType, SwarmMode):
 		o.OrchestratorType = SwarmMode
-	case strings.EqualFold(orchestratorType, OpenShift):
-		o.OrchestratorType = OpenShift
 	default:
 		return errors.Errorf("OrchestratorType has unknown orchestrator: %s", orchestratorType)
 	}
@@ -356,20 +344,6 @@ type DcosConfig struct {
 	DcosClusterPackageListID string            `json:"dcosClusterPackageListID,omitempty"` // all three of these items
 	DcosProviderPackageID    string            `json:"dcosProviderPackageID,omitempty"`    // repo url is the location of the build,
 	BootstrapProfile         *BootstrapProfile `json:"bootstrapProfile,omitempty"`
-}
-
-// OpenShiftConfig holds configuration for OpenShift
-type OpenShiftConfig struct {
-	KubernetesConfig *KubernetesConfig `json:"kubernetesConfig,omitempty"`
-
-	// ClusterUsername and ClusterPassword are temporary, do not rely on them.
-	ClusterUsername string `json:"clusterUsername,omitempty"`
-	ClusterPassword string `json:"clusterPassword,omitempty"`
-
-	// EnableAADAuthentication is temporary, do not rely on it.
-	EnableAADAuthentication bool `json:"enableAADAuthentication,omitempty"`
-
-	ConfigBundles map[string][]byte `json:"configBundles,omitempty"`
 }
 
 // MasterProfile represents the definition of the master cluster

@@ -25,14 +25,12 @@ func init() {
 		DCOS:       dcosInfo,
 		Swarm:      swarmInfo,
 		SwarmMode:  dockerceInfo,
-		OpenShift:  openShiftInfo,
 	}
 	versionsMap = map[string][]string{
 		Kubernetes: common.GetAllSupportedKubernetesVersions(true, false),
 		DCOS:       common.GetAllSupportedDCOSVersions(),
 		Swarm:      common.GetAllSupportedSwarmVersions(),
 		SwarmMode:  common.GetAllSupportedDockerCEVersions(),
-		OpenShift:  common.GetAllSupportedOpenShiftVersions(),
 	}
 }
 
@@ -46,8 +44,6 @@ func validate(orchestrator, version string) (string, error) {
 		return Swarm, nil
 	case strings.EqualFold(orchestrator, SwarmMode):
 		return SwarmMode, nil
-	case strings.EqualFold(orchestrator, OpenShift):
-		return OpenShift, nil
 	case orchestrator == "":
 		if version != "" {
 			return "", errors.Errorf("Must specify orchestrator for version '%s'", version)
@@ -327,40 +323,4 @@ func dockerceInfo(csOrch *OrchestratorProfile, hasWindows bool) ([]*Orchestrator
 			},
 		},
 	}, nil
-}
-
-func openShiftInfo(csOrch *OrchestratorProfile, hasWindows bool) ([]*OrchestratorVersionProfile, error) {
-	orchs := []*OrchestratorVersionProfile{}
-	if csOrch.OrchestratorVersion == "" {
-		// get info for all supported versions
-		for _, ver := range common.GetAllSupportedOpenShiftVersions() {
-			if ver == common.OpenShiftVersionUnstable {
-				continue
-			}
-			// TODO: populate OrchestratorVersionProfile.Upgrades
-			orchs = append(orchs,
-				&OrchestratorVersionProfile{
-					OrchestratorProfile: OrchestratorProfile{
-						OrchestratorType:    OpenShift,
-						OrchestratorVersion: ver,
-					},
-					Default: ver == common.OpenShiftDefaultVersion,
-				})
-		}
-	} else {
-		if !isVersionSupported(csOrch) {
-			return nil, errors.Errorf("OpenShift version %s is not supported", csOrch.OrchestratorVersion)
-		}
-
-		// TODO: populate OrchestratorVersionProfile.Upgrades
-		orchs = append(orchs,
-			&OrchestratorVersionProfile{
-				OrchestratorProfile: OrchestratorProfile{
-					OrchestratorType:    OpenShift,
-					OrchestratorVersion: csOrch.OrchestratorVersion,
-				},
-				Default: csOrch.OrchestratorVersion == common.OpenShiftDefaultVersion,
-			})
-	}
-	return orchs, nil
 }

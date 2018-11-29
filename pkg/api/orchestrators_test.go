@@ -87,8 +87,7 @@ func TestGetOrchestratorVersionProfileListV20170930(t *testing.T) {
 	totalNumVersions := numSwarmVersions +
 		numDockerCEVersions +
 		len(common.GetAllSupportedKubernetesVersions(false, false)) +
-		len(common.AllDCOSSupportedVersions) +
-		len(common.GetAllSupportedOpenShiftVersions()) - 1
+		len(common.AllDCOSSupportedVersions)
 
 	Expect(len(list.Properties.Orchestrators)).To(Equal(totalNumVersions))
 
@@ -122,40 +121,6 @@ func TestKubernetesInfo(t *testing.T) {
 		Expect(e).NotTo(BeNil())
 	}
 
-}
-
-func TestOpenshiftInfo(t *testing.T) {
-	RegisterTestingT(t)
-
-	invalid := []string{
-		"invalid number",
-		"invalid.number",
-		"a4.b7.c3",
-		"31.29.",
-		".17.02",
-		"43.156.89.",
-		"1.2.a",
-		"3.8.9",
-		"3.9.2"}
-
-	for _, v := range invalid {
-		csOrch := &OrchestratorProfile{
-			OrchestratorType:    OpenShift,
-			OrchestratorVersion: v,
-		}
-
-		_, e := openShiftInfo(csOrch, false)
-		Expect(e).NotTo(BeNil())
-	}
-
-	// test good value
-	csOrch := &OrchestratorProfile{
-		OrchestratorType:    OpenShift,
-		OrchestratorVersion: common.OpenShiftDefaultVersion,
-	}
-
-	_, e := openShiftInfo(csOrch, false)
-	Expect(e).To(BeNil())
 }
 
 func TestDcosInfo(t *testing.T) {

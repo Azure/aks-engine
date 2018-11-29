@@ -107,7 +107,7 @@ The build process leaves the compiled `aks-engine` binary in the `bin` directory
 
 ```sh
 $ ./bin/aks-engine
-AKS Engine deploys and manages Kubernetes, OpenShift, Swarm Mode, and DC/OS clusters in Azure
+AKS Engine deploys and manages Kubernetes, Swarm Mode, and DC/OS clusters in Azure
 
 Usage:
   aks-engine [command]

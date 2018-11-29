@@ -11,7 +11,6 @@ import (
 
 	"github.com/Azure/aks-engine/pkg/helpers"
 	"github.com/Azure/aks-engine/pkg/i18n"
-	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/sirupsen/logrus"
 )
@@ -65,69 +64,6 @@ func TestNormalizeForK8sVMASScalingUpWithVnet(t *testing.T) {
 	e = transformer.NormalizeForK8sVMASScalingUp(logger, templateMap)
 	Expect(e).To(BeNil())
 	ValidateTemplate(templateMap, expectedFileContents, "TestNormalizeForK8sVMASScalingUpWithVnet")
-}
-
-func TestNormalizeForOpenShiftVMASScalingUp(t *testing.T) {
-	RegisterTestingT(t)
-
-	tests := []struct {
-		agentPoolName       string
-		templateMap         map[string]interface{}
-		expectedTemplateMap map[string]interface{}
-		expectedErr         bool
-	}{
-		{
-			// a badly constructed input should result in an error, not a panic
-			expectedErr: true,
-		},
-		{
-			agentPoolName: "compute",
-			templateMap: map[string]interface{}{
-				"resources": []interface{}{
-					map[string]interface{}{
-						"name": "foo",
-					},
-					map[string]interface{}{
-						"name": "barVMNamePrefix",
-						"dependsOn": []interface{}{
-							"foo",
-						},
-					},
-					map[string]interface{}{
-						"name": "computeVMNamePrefix",
-						"dependsOn": []interface{}{
-							"foo",
-							"barVMNamePrefix",
-							"computeVMNamePrefix",
-						},
-					},
-				},
-				"outputs": map[string]interface{}{
-					"junk": "junk",
-				},
-			},
-			expectedTemplateMap: map[string]interface{}{
-				"resources": []interface{}{
-					map[string]interface{}{
-						"name": "computeVMNamePrefix",
-						"dependsOn": []interface{}{
-							"computeVMNamePrefix",
-						},
-					},
-				},
-				"outputs": map[string]interface{}{},
-			},
-		},
-	}
-
-	transformer := &Transformer{}
-
-	for i, test := range tests {
-		fmt.Fprintf(GinkgoWriter, "test %d\n", i)
-		err := transformer.NormalizeForOpenShiftVMASScalingUp(nil, test.agentPoolName, test.templateMap)
-		Expect(err != nil).To(Equal(test.expectedErr))
-		Expect(test.templateMap).To(BeEquivalentTo(test.expectedTemplateMap))
-	}
 }
 
 func TestNormalizeResourcesForK8sMasterUpgrade(t *testing.T) {

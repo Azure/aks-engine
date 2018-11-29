@@ -154,22 +154,6 @@ var (
 		ImageVersion:   "2018.11.28",
 	}
 
-	//DefaultOpenShift39RHELImageConfig is the OpenShift on RHEL distribution.
-	DefaultOpenShift39RHELImageConfig = AzureOSImageConfig{
-		ImageOffer:     "acsengine-preview",
-		ImageSku:       "rhel74",
-		ImagePublisher: "redhat",
-		ImageVersion:   "latest",
-	}
-
-	//DefaultOpenShift39CentOSImageConfig is the OpenShift on CentOS distribution.
-	DefaultOpenShift39CentOSImageConfig = AzureOSImageConfig{
-		ImageOffer:     "origin-acsengine-preview",
-		ImageSku:       "centos7",
-		ImagePublisher: "redhat",
-		ImageVersion:   "latest",
-	}
-
 	//AzureCloudSpec is the default configurations for global azure.
 	AzureCloudSpec = AzureEnvironmentSpecConfig{
 		CloudName: AzurePublicCloud,
@@ -189,9 +173,6 @@ var (
 			CoreOS:          DefaultCoreOSImageConfig,
 			AKS:             DefaultAKSOSImageConfig,
 			AKSDockerEngine: DefaultAKSDockerEngineOSImageConfig,
-			// Image config supported for OpenShift
-			OpenShift39RHEL: DefaultOpenShift39RHELImageConfig,
-			OpenShiftCentOS: DefaultOpenShift39CentOSImageConfig,
 		},
 	}
 

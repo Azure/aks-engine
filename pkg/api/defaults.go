@@ -255,17 +255,6 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpdate bool) {
 				o.DcosConfig.BootstrapProfile.VMSize = "Standard_D2s_v3"
 			}
 		}
-	case OpenShift:
-		kc := a.OrchestratorProfile.OpenShiftConfig.KubernetesConfig
-		if kc == nil {
-			kc = &KubernetesConfig{}
-		}
-		if kc.ContainerRuntime == "" {
-			kc.ContainerRuntime = DefaultContainerRuntime
-		}
-		if kc.NetworkPlugin == "" {
-			kc.NetworkPlugin = DefaultNetworkPlugin
-		}
 	}
 }
 
@@ -284,7 +273,7 @@ func (p *Properties) setMasterProfileDefaults(isUpgrade bool) {
 	if p.MasterProfile.Distro == "" {
 		if p.OrchestratorProfile.IsKubernetes() {
 			p.MasterProfile.Distro = AKS
-		} else if !p.OrchestratorProfile.IsOpenShift() {
+		} else {
 			p.MasterProfile.Distro = Ubuntu
 		}
 	}
@@ -319,11 +308,6 @@ func (p *Properties) setMasterProfileDefaults(isUpgrade bool) {
 						p.MasterProfile.FirstConsecutiveStaticIP = DefaultFirstConsecutiveKubernetesStaticIP
 					}
 				}
-			}
-		} else if p.OrchestratorProfile.OrchestratorType == OpenShift {
-			p.MasterProfile.Subnet = DefaultOpenShiftMasterSubnet
-			if !isUpgrade || len(p.MasterProfile.FirstConsecutiveStaticIP) == 0 {
-				p.MasterProfile.FirstConsecutiveStaticIP = DefaultOpenShiftFirstConsecutiveStaticIP
 			}
 		} else if p.OrchestratorProfile.OrchestratorType == DCOS {
 			p.MasterProfile.Subnet = DefaultDCOSMasterSubnet
@@ -410,8 +394,7 @@ func (p *Properties) setAgentProfileDefaults(isUpgrade, isScale bool) {
 	if p.MasterProfile != nil && !p.MasterProfile.IsCustomVNET() {
 		subnetCounter := 0
 		for _, profile := range p.AgentPoolProfiles {
-			if p.OrchestratorProfile.OrchestratorType == Kubernetes ||
-				p.OrchestratorProfile.OrchestratorType == OpenShift {
+			if p.OrchestratorProfile.OrchestratorType == Kubernetes {
 				if !p.MasterProfile.IsVirtualMachineScaleSets() {
 					profile.Subnet = p.MasterProfile.Subnet
 				}
@@ -453,7 +436,7 @@ func (p *Properties) setAgentProfileDefaults(isUpgrade, isScale bool) {
 							profile.Distro = AKS
 						}
 					}
-				} else if !p.OrchestratorProfile.IsOpenShift() {
+				} else {
 					profile.Distro = Ubuntu
 				}
 				// Ensure distro is set properly for N Series SKUs, because
@@ -516,10 +499,6 @@ func (p *Properties) setHostedMasterProfileDefaults() {
 }
 
 func (p *Properties) setDefaultCerts() (bool, []net.IP, error) {
-	if p.MasterProfile != nil && p.OrchestratorProfile.OrchestratorType == OpenShift {
-		return setOpenShiftSetDefaultCerts(p, DefaultOpenshiftOrchestratorName, p.GetClusterID())
-	}
-
 	if p.MasterProfile == nil || p.OrchestratorProfile.OrchestratorType != Kubernetes {
 		return false, nil, nil
 	}

@@ -127,13 +127,8 @@ const (
 	kubernetesWindowsKubeletFunctionsPS1  = "k8s/windowskubeletfunc.ps1"
 	kubernetesWindowsCniFunctionsPS1      = "k8s/windowscnifunc.ps1"
 	kubernetesWindowsAzureCniFunctionsPS1 = "k8s/windowsazurecnifunc.ps1"
-	// OpenShift custom scripts
-	openshiftNodeScript     = "openshift/unstable/openshiftnodescript.sh"
-	openshiftMasterScript   = "openshift/unstable/openshiftmasterscript.sh"
-	openshift39NodeScript   = "openshift/release-3.9/openshiftnodescript.sh"
-	openshift39MasterScript = "openshift/release-3.9/openshiftmasterscript.sh"
-	sshdConfig              = "k8s/sshd_config"
-	systemConf              = "k8s/system.conf"
+	sshdConfig                            = "k8s/sshd_config"
+	systemConf                            = "k8s/system.conf"
 )
 
 const (
@@ -189,7 +184,6 @@ const (
 	kubernetesWinAgentVarsVMSS    = "k8s/kuberneteswinagentresourcesvmss.t"
 	masterOutputs                 = "masteroutputs.t"
 	masterParams                  = "masterparams.t"
-	openshiftInfraResources       = "openshift/infraresources.t"
 	swarmBaseFile                 = "swarm/swarmbase.t"
 	swarmParams                   = "swarm/swarmparams.t"
 	swarmAgentResourcesVMAS       = "swarm/swarmagentresourcesvmas.t"

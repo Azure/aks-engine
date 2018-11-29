@@ -165,61 +165,6 @@ func TestKubernetesVlabsDefaults(t *testing.T) {
 	}
 }
 
-func TestConvertVLabsOrchestratorProfile(t *testing.T) {
-	tests := map[string]struct {
-		props  *vlabs.Properties
-		expect *OrchestratorProfile
-	}{
-		"nilOpenShiftConfig": {
-			props: &vlabs.Properties{
-				OrchestratorProfile: &vlabs.OrchestratorProfile{
-					OrchestratorType: OpenShift,
-				},
-			},
-			expect: &OrchestratorProfile{
-				OrchestratorType:    OpenShift,
-				OrchestratorVersion: common.OpenShiftDefaultVersion,
-			},
-		},
-		"setOpenShiftConfig": {
-			props: &vlabs.Properties{
-				OrchestratorProfile: &vlabs.OrchestratorProfile{
-					OrchestratorType: OpenShift,
-					OpenShiftConfig: &vlabs.OpenShiftConfig{
-						KubernetesConfig: &vlabs.KubernetesConfig{
-							NetworkPlugin:    "azure",
-							ContainerRuntime: "docker",
-						},
-					},
-				},
-			},
-			expect: &OrchestratorProfile{
-				OrchestratorType:    OpenShift,
-				OrchestratorVersion: common.OpenShiftDefaultVersion,
-				KubernetesConfig: &KubernetesConfig{
-					NetworkPlugin:    "azure",
-					ContainerRuntime: "docker",
-				},
-				OpenShiftConfig: &OpenShiftConfig{
-					KubernetesConfig: &KubernetesConfig{
-						NetworkPlugin:    "azure",
-						ContainerRuntime: "docker",
-					},
-				},
-			},
-		},
-	}
-
-	for name, test := range tests {
-		t.Logf("running scenario %q", name)
-		actual := &OrchestratorProfile{}
-		convertVLabsOrchestratorProfile(test.props, actual, false)
-		if !equality.Semantic.DeepEqual(test.expect, actual) {
-			t.Errorf(spew.Sprintf("Expected:\n%+v\nGot:\n%+v", test.expect, actual))
-		}
-	}
-}
-
 func TestConvertVLabsKubernetesConfigProfile(t *testing.T) {
 	tests := map[string]struct {
 		props  *vlabs.KubernetesConfig

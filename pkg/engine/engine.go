@@ -33,14 +33,6 @@ var dcos2TemplateFiles = []string{dcos2BaseFile, dcosAgentResourcesVMAS, dcosAge
 var kubernetesTemplateFiles = []string{kubernetesBaseFile, kubernetesAgentResourcesVMAS, kubernetesAgentResourcesVMSS, kubernetesAgentVars, kubernetesMasterResourcesVMAS, kubernetesMasterResourcesVMSS, kubernetesMasterVars, kubernetesParams, kubernetesWinAgentVars, kubernetesWinAgentVarsVMSS}
 var swarmTemplateFiles = []string{swarmBaseFile, swarmParams, swarmAgentResourcesVMAS, swarmAgentVars, swarmAgentResourcesVMSS, swarmBaseFile, swarmMasterResources, swarmMasterVars, swarmWinAgentResourcesVMAS, swarmWinAgentResourcesVMSS}
 var swarmModeTemplateFiles = []string{swarmBaseFile, swarmParams, swarmAgentResourcesVMAS, swarmAgentVars, swarmAgentResourcesVMSS, swarmBaseFile, swarmMasterResources, swarmMasterVars, swarmWinAgentResourcesVMAS, swarmWinAgentResourcesVMSS}
-var openshiftTemplateFiles = append(
-	kubernetesTemplateFiles,
-	openshiftInfraResources,
-	openshiftNodeScript,
-	openshiftMasterScript,
-	openshift39NodeScript,
-	openshift39MasterScript,
-)
 
 var keyvaultSecretPathRe *regexp.Regexp
 
@@ -110,41 +102,19 @@ func GenerateKubeConfig(properties *api.Properties, location string) (string, er
 func validateDistro(cs *api.ContainerService) bool {
 	// Check Master distro
 	if cs.Properties.MasterProfile != nil && cs.Properties.MasterProfile.Distro == api.RHEL &&
-		(cs.Properties.OrchestratorProfile.OrchestratorType != api.SwarmMode && cs.Properties.OrchestratorProfile.OrchestratorType != api.OpenShift) {
+		(cs.Properties.OrchestratorProfile.OrchestratorType != api.SwarmMode) {
 		log.Fatalf("Orchestrator type %s not suported on RHEL Master", cs.Properties.OrchestratorProfile.OrchestratorType)
 		return false
 	}
 	// Check Agent distros
 	for _, agentProfile := range cs.Properties.AgentPoolProfiles {
 		if agentProfile.Distro == api.RHEL &&
-			(cs.Properties.OrchestratorProfile.OrchestratorType != api.SwarmMode && cs.Properties.OrchestratorProfile.OrchestratorType != api.OpenShift) {
+			(cs.Properties.OrchestratorProfile.OrchestratorType != api.SwarmMode) {
 			log.Fatalf("Orchestrator type %s not suported on RHEL Agent", cs.Properties.OrchestratorProfile.OrchestratorType)
 			return false
 		}
 	}
 	return true
-}
-
-func getOpenshiftMasterShAsset(version string) string {
-	switch version {
-	case common.OpenShiftVersion3Dot9Dot0:
-		return openshift39MasterScript
-	case common.OpenShiftVersionUnstable:
-		return openshiftMasterScript
-	default:
-		panic(fmt.Sprintf("BUG: invalid OpenShift version %s", version))
-	}
-}
-
-func getOpenshiftNodeShAsset(version string) string {
-	switch version {
-	case common.OpenShiftVersion3Dot9Dot0:
-		return openshift39NodeScript
-	case common.OpenShiftVersionUnstable:
-		return openshiftNodeScript
-	default:
-		panic(fmt.Sprintf("BUG: invalid OpenShift version %s", version))
-	}
 }
 
 func generateIPList(count int, firstAddr string) []string {
@@ -210,7 +180,7 @@ func getStorageAccountType(sizeName string) (string, error) {
 
 func makeMasterExtensionScriptCommands(cs *api.ContainerService) string {
 	copyIndex := "',copyIndex(),'"
-	if cs.Properties.OrchestratorProfile.IsKubernetes() || cs.Properties.OrchestratorProfile.IsOpenShift() {
+	if cs.Properties.OrchestratorProfile.IsKubernetes() {
 		copyIndex = "',copyIndex(variables('masterOffset')),'"
 	}
 	return makeExtensionScriptCommands(cs.Properties.MasterProfile.PreprovisionExtension,
@@ -1013,7 +983,7 @@ func getMasterLinkedTemplateText(masterProfile *api.MasterProfile, orchestratorT
 
 	loopCount := "[variables('masterCount')]"
 	loopOffset := ""
-	if orchestratorType == api.Kubernetes || orchestratorType == api.OpenShift {
+	if orchestratorType == api.Kubernetes {
 		// Due to upgrade k8s sometimes needs to install just some of the nodes.
 		loopCount = "[sub(variables('masterCount'), variables('masterOffset'))]"
 		loopOffset = "variables('masterOffset')"

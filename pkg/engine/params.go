@@ -36,8 +36,6 @@ func getParameters(cs *api.ContainerService, generatorCode string, acsengineVers
 			addValue(parametersMap, "osImageResourceGroup", properties.MasterProfile.ImageRef.ResourceGroup)
 		}
 	}
-	// TODO: Choose the correct image config based on the version
-	// for the openshift orchestrator
 
 	addValue(parametersMap, "fqdnEndpointSuffix", cloudSpecConfig.EndpointConfig.ResourceManagerVMDNSSuffix)
 	addValue(parametersMap, "targetEnvironment", helpers.GetCloudTargetEnv(cs.Location))
@@ -64,7 +62,7 @@ func getParameters(cs *api.ContainerService, generatorCode string, acsengineVers
 			if properties.MasterProfile.IsVirtualMachineScaleSets() {
 				addValue(parametersMap, "agentVnetSubnetID", properties.MasterProfile.AgentVnetSubnetID)
 			}
-			if properties.OrchestratorProfile.IsKubernetes() || properties.OrchestratorProfile.IsOpenShift() {
+			if properties.OrchestratorProfile.IsKubernetes() {
 				addValue(parametersMap, "vnetCidr", properties.MasterProfile.VnetCidr)
 			}
 		} else {
@@ -106,8 +104,7 @@ func getParameters(cs *api.ContainerService, generatorCode string, acsengineVers
 	}
 
 	// Kubernetes Parameters
-	if properties.OrchestratorProfile.IsKubernetes() ||
-		properties.OrchestratorProfile.IsOpenShift() {
+	if properties.OrchestratorProfile.IsKubernetes() {
 		assignKubernetesParameters(properties, parametersMap, cloudSpecConfig, generatorCode)
 	}
 
