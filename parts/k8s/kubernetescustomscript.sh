@@ -59,10 +59,8 @@ holdWALinuxAgent() {
     fi
 }
 
-if [[ ! -z "${MASTER_NODE}" ]]; then
-		if [[ "true" != "${USE_COSMOS}" ]]; then
+if [[ ! -z "${MASTER_NODE}" ]] && [[ -z "${COSMOS_URI}" ]]; then
     	installEtcd
-		fi
 fi
 
 if $FULL_INSTALL_REQUIRED; then
@@ -85,7 +83,9 @@ installKubeletAndKubectl
 ensureRPC
 createKubeManifestDir
 
-if [[ ! -z "${MASTER_NODE}" ]] && [[ "true" != "${USE_COSMOS}" ]]; then
+configureSecrets # this step configures all certs
+
+if [[ ! -z "${MASTER_NODE}" ]] && [[ -z "${COSMOS_URI}" ]]; then
     configureEtcd
 else
     removeEtcd
@@ -125,9 +125,9 @@ ensureJournal
 
 if [[ ! -z "${MASTER_NODE}" ]]; then
     writeKubeConfig
-		if [[ "TRUE" != "${USE_COSMOS}" ]]; then
-    	ensureEtcd
-		fi
+    if [[ -z "${COSMOS_URI}" ]]; then
+      ensureEtcd
+    fi
     ensureK8sControlPlane
     ensurePodSecurityPolicy
 fi

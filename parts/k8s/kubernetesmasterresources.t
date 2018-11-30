@@ -288,7 +288,7 @@
         ,"[variables('masterInternalLbName')]"
 {{end}}
 {{ if IsUsingCosmos }}
-	,"[resourceId('Microsoft.DocumentDB/databaseAccounts/', variables('cosmosEtcdName'))]"
+        ,"[resourceId('Microsoft.DocumentDB/databaseAccounts/', variables('cosmosAccountName'))]"
 {{ end }}
       ],
       "location": "[variables('location')]",

@@ -323,21 +323,20 @@ func (t *TemplateGenerator) getTemplateFuncMap(cs *api.ContainerService) templat
 			return nil != cs.Properties.MasterProfile && helpers.IsTrueBoolPointer(cs.Properties.MasterProfile.UseCosmos)
 		},
 		"GetCosmosAccountName": func() string {
-			if nil != cs.Properties.MasterProfile {
-				etcdAccountNameFmt := "%sk8s"
+			if nil != cs.Properties.MasterProfile && helpers.IsTrueBoolPointer(cs.Properties.MasterProfile.UseCosmos) {
 				return fmt.Sprintf(etcdAccountNameFmt, cs.Properties.MasterProfile.DNSPrefix)
 			}
 			return "" // This will apply on both during unit tests as !IsUsingCosmos
 		},
 		"GetCosmosEndPointUri": func() string {
-			if nil != cs.Properties.MasterProfile {
-				etcdEndpointURIFmt := "%sk8s.etcd.cosmosdb.windows-ppe.net"
+			if nil != cs.Properties.MasterProfile && helpers.IsTrueBoolPointer(cs.Properties.MasterProfile.UseCosmos) {
 				return fmt.Sprintf(etcdEndpointURIFmt, cs.Properties.MasterProfile.DNSPrefix)
 			}
 			return "" // This will apply on both during unit tests as !IsUsingCosmos
 		},
 		"GetCosmosDBCert": func() string {
-			return cs.Properties.CertificateProfile.EtcdClientCertificate
+			encoded := base64.StdEncoding.EncodeToString([]byte(cs.Properties.CertificateProfile.EtcdClientCertificate))
+			return encoded
 		},
 		"RequireRouteTable": func() bool {
 			return cs.Properties.OrchestratorProfile.RequireRouteTable()
