@@ -261,7 +261,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				pass, err = pods[0].ValidateOmsAgentLogs("cAdvisorPerfEmitStreamSuccess", 1*time.Second, cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(pass).To(BeTrue())
-				By("Ensuring that the containerinventory plugin is writing data successfully")
+				By("Ensuring that the containerinventory plugin is writing data successfully.")
 				pass, err = pods[0].ValidateOmsAgentLogs("containerInventoryEmitStreamSuccess", 1*time.Second, cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(pass).To(BeTrue())
