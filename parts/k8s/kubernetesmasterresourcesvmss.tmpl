@@ -298,7 +298,7 @@
       "[variables('vnetID')]"
     {{end}}
     {{ if IsUsingCosmos }}
-      ,"[resourceId('Microsoft.DocumentDB/databaseAccounts/', variables('cosmosEtcdName'))]"
+      ,"[resourceId('Microsoft.DocumentDB/databaseAccounts/', variables('cosmosAccountName'))]"
     {{ end }}
       ,"[variables('masterLbID')]"
     ],

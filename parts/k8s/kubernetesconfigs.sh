@@ -20,12 +20,7 @@ systemctlEnableAndStart() {
     fi
 }
 
-configureEtcd() {
-    useradd -U "etcd"
-    usermod -p "$(head -c 32 /dev/urandom | base64)" "etcd"
-    passwd -u "etcd"
-    id "etcd"
-
+configureSecrets(){
     APISERVER_PRIVATE_KEY_PATH="/etc/kubernetes/certs/apiserver.key"
     touch "${APISERVER_PRIVATE_KEY_PATH}"
     chmod 0600 "${APISERVER_PRIVATE_KEY_PATH}"
@@ -39,7 +34,9 @@ configureEtcd() {
     ETCD_SERVER_PRIVATE_KEY_PATH="/etc/kubernetes/certs/etcdserver.key"
     touch "${ETCD_SERVER_PRIVATE_KEY_PATH}"
     chmod 0600 "${ETCD_SERVER_PRIVATE_KEY_PATH}"
-    chown etcd:etcd "${ETCD_SERVER_PRIVATE_KEY_PATH}"
+    if [[ "" == "${COSMOS_URI}" ]]; then
+      chown etcd:etcd "${ETCD_SERVER_PRIVATE_KEY_PATH}"
+    fi
 
     ETCD_CLIENT_PRIVATE_KEY_PATH="/etc/kubernetes/certs/etcdclient.key"
     touch "${ETCD_CLIENT_PRIVATE_KEY_PATH}"
@@ -49,7 +46,9 @@ configureEtcd() {
     ETCD_PEER_PRIVATE_KEY_PATH="/etc/kubernetes/certs/etcdpeer${NODE_INDEX}.key"
     touch "${ETCD_PEER_PRIVATE_KEY_PATH}"
     chmod 0600 "${ETCD_PEER_PRIVATE_KEY_PATH}"
-    chown etcd:etcd "${ETCD_PEER_PRIVATE_KEY_PATH}"
+    if [[ "" == "${COSMOS_URI}" ]]; then
+      chown etcd:etcd "${ETCD_PEER_PRIVATE_KEY_PATH}"
+    fi 
 
     ETCD_SERVER_CERTIFICATE_PATH="/etc/kubernetes/certs/etcdserver.crt"
     touch "${ETCD_SERVER_CERTIFICATE_PATH}"
@@ -75,6 +74,14 @@ configureEtcd() {
     echo "${ETCD_SERVER_CERTIFICATE}" | base64 --decode > "${ETCD_SERVER_CERTIFICATE_PATH}"
     echo "${ETCD_CLIENT_CERTIFICATE}" | base64 --decode > "${ETCD_CLIENT_CERTIFICATE_PATH}"
     echo "${ETCD_PEER_CERT}" | base64 --decode > "${ETCD_PEER_CERTIFICATE_PATH}"
+}
+
+configureEtcd() {
+    useradd -U "etcd"
+    usermod -p "$(head -c 32 /dev/urandom | base64)" "etcd"
+    passwd -u "etcd"
+    id "etcd"
+
     set -x
 
     ETCD_SETUP_FILE=/opt/azure/containers/setup-etcd.sh
