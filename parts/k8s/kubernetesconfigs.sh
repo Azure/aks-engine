@@ -34,7 +34,7 @@ configureSecrets(){
     ETCD_SERVER_PRIVATE_KEY_PATH="/etc/kubernetes/certs/etcdserver.key"
     touch "${ETCD_SERVER_PRIVATE_KEY_PATH}"
     chmod 0600 "${ETCD_SERVER_PRIVATE_KEY_PATH}"
-    if [[ "" == "${COSMOS_URI}" ]]; then
+    if [[ -z "${COSMOS_URI}" ]]; then
       chown etcd:etcd "${ETCD_SERVER_PRIVATE_KEY_PATH}"
     fi
 
@@ -46,7 +46,7 @@ configureSecrets(){
     ETCD_PEER_PRIVATE_KEY_PATH="/etc/kubernetes/certs/etcdpeer${NODE_INDEX}.key"
     touch "${ETCD_PEER_PRIVATE_KEY_PATH}"
     chmod 0600 "${ETCD_PEER_PRIVATE_KEY_PATH}"
-    if [[ "" == "${COSMOS_URI}" ]]; then
+    if [[ -z "${COSMOS_URI}" ]]; then
       chown etcd:etcd "${ETCD_PEER_PRIVATE_KEY_PATH}"
     fi 
 
