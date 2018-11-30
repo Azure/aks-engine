@@ -20,6 +20,13 @@ systemctlEnableAndStart() {
     fi
 }
 
+configureEtcdUser(){
+    useradd -U "etcd"
+    usermod -p "$(head -c 32 /dev/urandom | base64)" "etcd"
+    passwd -u "etcd"
+    id "etcd"
+}
+
 configureSecrets(){
     APISERVER_PRIVATE_KEY_PATH="/etc/kubernetes/certs/apiserver.key"
     touch "${APISERVER_PRIVATE_KEY_PATH}"
@@ -77,11 +84,6 @@ configureSecrets(){
 }
 
 configureEtcd() {
-    useradd -U "etcd"
-    usermod -p "$(head -c 32 /dev/urandom | base64)" "etcd"
-    passwd -u "etcd"
-    id "etcd"
-
     set -x
 
     ETCD_SETUP_FILE=/opt/azure/containers/setup-etcd.sh
