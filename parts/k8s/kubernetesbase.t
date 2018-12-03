@@ -41,25 +41,25 @@
            "name": "EnableEtcd"
          }
         ],
-     "consistencyPolicy": {
-       "defaultConsistencyLevel": "BoundedStaleness",
-       "maxIntervalInSeconds": 5,
-       "maxStalenessPrefix": 100
-     },
-     "databaseAccountOfferType": "Standard",
-     "locations": [
-       {
-         "failoverPriority": 0,
-         "locationName": "[resourceGroup().location]"
+        "consistencyPolicy": {
+          "defaultConsistencyLevel": "BoundedStaleness",
+          "maxIntervalInSeconds": 5,
+          "maxStalenessPrefix": 100
+        },
+        "databaseAccountOfferType": "Standard",
+        "locations": [
+          {
+           "failoverPriority": 0,
+           "locationName": "[resourceGroup().location]"
+          },
+          {
+           "failoverPriority": 1,
+           "locationName": "[resourceGroup().location]"
+          }
+        ],
+        "name": "[variables('cosmosAccountName')]",
+        "primaryClientCertificatePemBytes": "[variables('cosmosDBCertb64')]"
        },
-       {
-         "failoverPriority": 1,
-         "locationName": "[resourceGroup().location]"
-       }
-     ],
-     "name": "[variables('cosmosAccountName')]",
-     "primaryClientCertificatePemBytes": "[variables('cosmosDBCertb64')]"
-     },
      "tags": {
        "defaultExperience": "Etcd"
       }
