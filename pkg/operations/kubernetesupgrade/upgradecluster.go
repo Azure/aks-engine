@@ -9,10 +9,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Azure/acs-engine/pkg/api"
-	"github.com/Azure/acs-engine/pkg/armhelpers"
-	"github.com/Azure/acs-engine/pkg/armhelpers/utils"
-	"github.com/Azure/acs-engine/pkg/i18n"
+	"github.com/Azure/aks-engine/pkg/api"
+	"github.com/Azure/aks-engine/pkg/armhelpers"
+	"github.com/Azure/aks-engine/pkg/armhelpers/utils"
+	"github.com/Azure/aks-engine/pkg/i18n"
 	"github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2018-04-01/compute"
 	"github.com/blang/semver"
 	"github.com/pkg/errors"
@@ -66,7 +66,7 @@ type UpgradeCluster struct {
 	Translator *i18n.Translator
 	Logger     *logrus.Entry
 	ClusterTopology
-	Client      armhelpers.ACSEngineClient
+	Client      armhelpers.AKSEngineClient
 	StepTimeout *time.Duration
 }
 
@@ -77,7 +77,7 @@ const MasterVMNamePrefix = "k8s-master-"
 const MasterPoolName = "master"
 
 // UpgradeCluster runs the workflow to upgrade a Kubernetes cluster.
-func (uc *UpgradeCluster) UpgradeCluster(subscriptionID uuid.UUID, az armhelpers.ACSEngineClient, kubeConfig, resourceGroup string,
+func (uc *UpgradeCluster) UpgradeCluster(subscriptionID uuid.UUID, az armhelpers.AKSEngineClient, kubeConfig, resourceGroup string,
 	cs *api.ContainerService, nameSuffix string, agentPoolsToUpgrade []string, acsengineVersion string) error {
 	uc.ClusterTopology = ClusterTopology{}
 	uc.SubscriptionID = subscriptionID.String()
@@ -138,7 +138,7 @@ func (uc *UpgradeCluster) UpgradeCluster(subscriptionID uuid.UUID, az armhelpers
 	return nil
 }
 
-func (uc *UpgradeCluster) getClusterNodeStatus(subscriptionID uuid.UUID, az armhelpers.ACSEngineClient, resourceGroup, kubeConfig string) error {
+func (uc *UpgradeCluster) getClusterNodeStatus(subscriptionID uuid.UUID, az armhelpers.AKSEngineClient, resourceGroup, kubeConfig string) error {
 	targetOrchestratorTypeVersion := fmt.Sprintf("%s:%s", uc.DataModel.Properties.OrchestratorProfile.OrchestratorType, uc.DataModel.Properties.OrchestratorProfile.OrchestratorVersion)
 
 	ctx, cancel := context.WithTimeout(context.Background(), armhelpers.DefaultARMOperationTimeout)

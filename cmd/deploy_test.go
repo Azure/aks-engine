@@ -10,8 +10,8 @@ import (
 
 	"os"
 
-	"github.com/Azure/acs-engine/pkg/api"
-	"github.com/Azure/acs-engine/pkg/armhelpers"
+	"github.com/Azure/aks-engine/pkg/api"
+	"github.com/Azure/aks-engine/pkg/armhelpers"
 	"github.com/pkg/errors"
 	"github.com/satori/go.uuid"
 	"github.com/spf13/cobra"
@@ -60,13 +60,13 @@ const ExampleAPIModelWithoutServicePrincipalProfile = `{
 
 //mockAuthProvider implements AuthProvider and allows in particular to stub out getClient()
 type mockAuthProvider struct {
-	getClientMock armhelpers.ACSEngineClient
+	getClientMock armhelpers.AKSEngineClient
 	*authArgs
 }
 
-func (provider *mockAuthProvider) getClient() (armhelpers.ACSEngineClient, error) {
+func (provider *mockAuthProvider) getClient() (armhelpers.AKSEngineClient, error) {
 	if provider.getClientMock == nil {
-		return &armhelpers.MockACSEngineClient{}, nil
+		return &armhelpers.MockAKSEngineClient{}, nil
 	}
 	return provider.getClientMock, nil
 
@@ -241,7 +241,7 @@ func TestAutoSufixWithDnsPrefixInApiModel(t *testing.T) {
 		containerService: cs,
 		apiVersion:       ver,
 
-		client: &armhelpers.MockACSEngineClient{},
+		client: &armhelpers.MockAKSEngineClient{},
 		authProvider: &mockAuthProvider{
 			authArgs: &authArgs{},
 		},
@@ -285,7 +285,7 @@ func TestAPIModelWithoutServicePrincipalProfileAndClientIdAndSecretInCmd(t *test
 		containerService: cs,
 		apiVersion:       ver,
 
-		client: &armhelpers.MockACSEngineClient{},
+		client: &armhelpers.MockAKSEngineClient{},
 		authProvider: &mockAuthProvider{
 			authArgs: &authArgs{},
 		},
@@ -338,7 +338,7 @@ func TestAPIModelWithEmptyServicePrincipalProfileAndClientIdAndSecretInCmd(t *te
 		containerService: cs,
 		apiVersion:       ver,
 
-		client: &armhelpers.MockACSEngineClient{},
+		client: &armhelpers.MockAKSEngineClient{},
 		authProvider: &mockAuthProvider{
 			authArgs: &authArgs{},
 		},
@@ -384,7 +384,7 @@ func TestAPIModelWithoutServicePrincipalProfileAndWithoutClientIdAndSecretInCmd(
 		containerService: cs,
 		apiVersion:       ver,
 
-		client: &armhelpers.MockACSEngineClient{},
+		client: &armhelpers.MockAKSEngineClient{},
 		authProvider: &mockAuthProvider{
 			authArgs: &authArgs{},
 		},
@@ -421,7 +421,7 @@ func TestAPIModelWithEmptyServicePrincipalProfileAndWithoutClientIdAndSecretInCm
 		containerService: cs,
 		apiVersion:       ver,
 
-		client: &armhelpers.MockACSEngineClient{},
+		client: &armhelpers.MockAKSEngineClient{},
 		authProvider: &mockAuthProvider{
 			authArgs: &authArgs{},
 		},
@@ -473,7 +473,7 @@ func testAutodeployCredentialHandling(t *testing.T, useManagedIdentity bool, cli
 		containerService: cs,
 		apiVersion:       ver,
 
-		client: &armhelpers.MockACSEngineClient{},
+		client: &armhelpers.MockAKSEngineClient{},
 		authProvider: &mockAuthProvider{
 			authArgs: &authArgs{},
 		},
@@ -507,14 +507,14 @@ func testAutodeployCredentialHandling(t *testing.T, useManagedIdentity bool, cli
 
 func TestDeployCmdMergeAPIModel(t *testing.T) {
 	d := &deployCmd{}
-	d.apimodelPath = "../pkg/acsengine/testdata/simple/kubernetes.json"
+	d.apimodelPath = "../pkg/engine/testdata/simple/kubernetes.json"
 	err := d.mergeAPIModel()
 	if err != nil {
 		t.Fatalf("unexpected error calling mergeAPIModel with no --set flag defined: %s", err.Error())
 	}
 
 	d = &deployCmd{}
-	d.apimodelPath = "../pkg/acsengine/testdata/simple/kubernetes.json"
+	d.apimodelPath = "../pkg/engine/testdata/simple/kubernetes.json"
 	d.set = []string{"masterProfile.count=3,linuxProfile.adminUsername=testuser"}
 	err = d.mergeAPIModel()
 	if err != nil {
@@ -522,7 +522,7 @@ func TestDeployCmdMergeAPIModel(t *testing.T) {
 	}
 
 	d = &deployCmd{}
-	d.apimodelPath = "../pkg/acsengine/testdata/simple/kubernetes.json"
+	d.apimodelPath = "../pkg/engine/testdata/simple/kubernetes.json"
 	d.set = []string{"masterProfile.count=3", "linuxProfile.adminUsername=testuser"}
 	err = d.mergeAPIModel()
 	if err != nil {
@@ -530,7 +530,7 @@ func TestDeployCmdMergeAPIModel(t *testing.T) {
 	}
 
 	d = &deployCmd{}
-	d.apimodelPath = "../pkg/acsengine/testdata/simple/kubernetes.json"
+	d.apimodelPath = "../pkg/engine/testdata/simple/kubernetes.json"
 	d.set = []string{"agentPoolProfiles[0].count=1"}
 	err = d.mergeAPIModel()
 	if err != nil {
@@ -540,10 +540,10 @@ func TestDeployCmdMergeAPIModel(t *testing.T) {
 
 func TestDeployCmdRun(t *testing.T) {
 	d := &deployCmd{
-		client: &armhelpers.MockACSEngineClient{},
+		client: &armhelpers.MockAKSEngineClient{},
 		authProvider: &mockAuthProvider{
 			authArgs:      &authArgs{},
-			getClientMock: &armhelpers.MockACSEngineClient{},
+			getClientMock: &armhelpers.MockAKSEngineClient{},
 		},
 		apimodelPath:    "./this/is/unused.json",
 		outputDirectory: "_test_output",
@@ -562,7 +562,7 @@ func TestDeployCmdRun(t *testing.T) {
 		t.Fatalf("Invalid SubscriptionId in Test: %s", err)
 	}
 
-	d.apimodelPath = "../pkg/acsengine/testdata/simple/kubernetes.json"
+	d.apimodelPath = "../pkg/engine/testdata/simple/kubernetes.json"
 	d.getAuthArgs().SubscriptionID = fakeSubscriptionID
 	d.getAuthArgs().rawSubscriptionID = fakeRawSubscriptionID
 

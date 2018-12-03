@@ -1,6 +1,6 @@
-# English translations for acs-engine package.
+# English translations for aks-engine package.
 # Copyright (C) 2017
-# This file is distributed under the same license as the acs-engine package.
+# This file is distributed under the same license as the aks-engine package.
 # Jiangtian Li <jiangtianli@hotmail.com>, 2017.
 msgid ""
 msgstr ""
@@ -119,4 +119,3 @@ msgstr "인식할 수 없는 APIVersion '%s'"
 #, c-format
 msgid "yaml file %s does not exist"
 msgstr "YAML 파일 %s이(가) 없습니다."
-

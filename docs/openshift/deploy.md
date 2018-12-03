@@ -2,22 +2,22 @@
 
 ## Install Pre-requisites
 
-All the commands in this guide require both the Azure CLI and `acs-engine`. Follow the [installation instructions to download acs-engine before continuing](../acsengine.md#install-acs-engine) or [compile it from source](../acsengine.md#build-from-source).
+All the commands in this guide require both the Azure CLI and `aks-engine`. Follow the [installation instructions to download aks-engine before continuing](../acsengine.md#install-aks-engine) or [compile it from source](../acsengine.md#build-from-source).
 
 To install the Azure CLI, follow [the official documentation](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli) for your operating system.
 
 ## Overview
 
-[acs-engine](https://github.com/Azure/acs-engine/blob/master/docs/acsengine.md) reads a cluster definition (or api model) which describes the size, shape, and configuration of your cluster. This guide follows the default configuration of one master and two Linux nodes, where one node is used by the OpenShift internal infrastructure, and the other one is for end-user workloads (compute node). At least one of each node type is required for a working OpenShift cluster. In the openshift.json file, one agent pool specifies the number of infrastructure node(s); another is used to specify the number of compute node(s). If you would like to change these numbers, edit [examples/openshift.json](/examples/openshift.json) before continuing.
+[aks-engine](https://github.com/Azure/aks-engine/blob/master/docs/acsengine.md) reads a cluster definition (or api model) which describes the size, shape, and configuration of your cluster. This guide follows the default configuration of one master and two Linux nodes, where one node is used by the OpenShift internal infrastructure, and the other one is for end-user workloads (compute node). At least one of each node type is required for a working OpenShift cluster. In the openshift.json file, one agent pool specifies the number of infrastructure node(s); another is used to specify the number of compute node(s). If you would like to change these numbers, edit [examples/openshift.json](/examples/openshift.json) before continuing.
 
-The `acs-engine deploy` command automates creation of a Service Principal, Resource Group and SSH key for your cluster. If operators need more control or are interested in the individual steps see the ["Long Way" section below](#acs-engine-the-long-way).
+The `aks-engine deploy` command automates creation of a Service Principal, Resource Group and SSH key for your cluster. If operators need more control or are interested in the individual steps see the ["Long Way" section below](#aks-engine-the-long-way).
 
 ## Preparing for the Deployment
 
 In order to deploy OpenShift, you will need the following:
 
 * The subscription and tenant ID in which you would like to provision the cluster. Both uuids can be found with `az account list -o json`, under the `id` and `tenantId` fields.
-* Proper access rights within the subscription. Especially the right to create and assign service principals to applications (see ACS Engine the Long Way, Step #2).
+* Proper access rights within the subscription. Especially the right to create and assign service principals to applications (see AKS Engine the Long Way, Step #2).
 * A `dnsPrefix` which forms part of the the hostname for your cluster (e.g. staging, prodwest, blueberry). The DNS prefix must be unique in the given geographical location, so pick a random name.
 * A location to provision the cluster e.g. `eastus`.
 
@@ -43,12 +43,12 @@ $ az account list -o json
 
 For this example, the subscription id is `5eca53b6-18b4-4d9b-a4d4-a45a1ff367c8`, the tenant id is `5a27b61b-1b6e-4be5-aa9d-0d5696076bb9`, the DNS prefix and a resource group is `openshift-red`, and location is `eastus`.
 
-Before running the `acs-engine deploy` command, you must fill in all missing fields in the `examples/openshift.json` file. See the ["Long Way" section below](#acs-engine-the-long-way) for the description of required values.
+Before running the `aks-engine deploy` command, you must fill in all missing fields in the `examples/openshift.json` file. See the ["Long Way" section below](#aks-engine-the-long-way) for the description of required values.
 
-Now you can run `acs-engine deploy` with the appropriate arguments:
+Now you can run `aks-engine deploy` with the appropriate arguments:
 
 ```
-$ acs-engine deploy --subscription-id 5eca53b6-18b4-4d9b-a4d4-a45a1ff367c8 \
+$ aks-engine deploy --subscription-id 5eca53b6-18b4-4d9b-a4d4-a45a1ff367c8 \
     --resource-group openshift-red --location eastus \
     --api-model examples/openshift.json
 
@@ -56,7 +56,7 @@ INFO[0034] Starting ARM Deployment (openshift-red-1843927849). This will take so
 INFO[0393] Finished ARM Deployment (openshift-red-1843927849).
 ```
 
-As well as deploying the cluster, `acs-engine` will output Azure Resource Manager (ARM) templates, SSH keys (only if generated by `acs-engine`) and a node configuration in `_output/openshift-red` directory:
+As well as deploying the cluster, `aks-engine` will output Azure Resource Manager (ARM) templates, SSH keys (only if generated by `aks-engine`) and a node configuration in `_output/openshift-red` directory:
 
    * `_output/openshift-red/apimodel.json`
    * `_output/openshift-red/azuredeploy.json`
@@ -64,7 +64,7 @@ As well as deploying the cluster, `acs-engine` will output Azure Resource Manage
    * `_output/openshift-red/master.tar.gz`
    * `_output/openshift-red/node.tar.gz`
 
-Administrative note: By default, the directory where acs-engine stores cluster configuration (`_output/openshift-red` above) won't be overwritten as a result of subsequent attempts to deploy a cluster using the same `--dns-prefix`) To re-use the same resource group name repeatedly, include the `--force-overwrite` command line option with your `acs-engine deploy` command.
+Administrative note: By default, the directory where aks-engine stores cluster configuration (`_output/openshift-red` above) won't be overwritten as a result of subsequent attempts to deploy a cluster using the same `--dns-prefix`) To re-use the same resource group name repeatedly, include the `--force-overwrite` command line option with your `aks-engine deploy` command.
 
 Bonus tip: include an `--auto-suffix` option to append a randomly generated suffix to the dns-prefix to form the resource group name, for example if your workflow requires a common prefix across multiple cluster deployments. Using the `--auto-suffix` pattern appends a compressed timestamp to ensure a unique cluster name (and thus ensure that each deployment's configuration artifacts will be stored locally under a discrete `_output/<resource-group-name>/` directory).
 
@@ -72,7 +72,7 @@ After couple of minutes, your OpenShift web console should be accessible at `htt
 
 For next steps, see [getting started documentation](https://docs.openshift.org/latest/getting_started/index.html) on OpenShift website.
 
-## ACS Engine the Long Way
+## AKS Engine the Long Way
 
 ### Step 1: Generate an SSH Key
 
@@ -86,7 +86,7 @@ The OpenShift cluster needs a Service Principal to interact with Azure Resource 
 
 ### Step 3: Edit your Cluster Definition
 
-ACS Engine consumes a cluster definition which outlines the desired shape, size, and configuration of OpenShift. There are a number of features that can be enabled through the cluster definition: check the `examples` directory for a number of examples.
+AKS Engine consumes a cluster definition which outlines the desired shape, size, and configuration of OpenShift. There are a number of features that can be enabled through the cluster definition: check the `examples` directory for a number of examples.
 
 Edit the [simple OpenShift cluster definition](/examples/openshift.json) and fill out the required values (every value with empty default `""` must be filled in):
 
@@ -106,7 +106,7 @@ Edit the [simple OpenShift cluster definition](/examples/openshift.json) and fil
 
 The generate command takes a cluster definition and outputs a template and parameters file which describes your OpenShift cluster. By default, `generate` will create a new directory named after your cluster nested in the `_output` directory. If my dnsPrefix was `openshift-red` my cluster templates would be found in `_output/openshift-red-`.
 
-Run `acs-engine generate examples/openshift.json`
+Run `aks-engine generate examples/openshift.json`
 
 ### Step 5: Submit your Templates to Azure Resource Manager (ARM)
 
@@ -120,7 +120,7 @@ For next steps, see [getting started documentation](https://docs.openshift.org/l
 
 ## Custom VNET
 
-ACS Engine supports deploying into an existing VNET. Operators must specify the ARM path/id of Subnets for the `masterProfile` and  any `agentPoolProfiles`, as well as the master IP address in `firstConsecutiveStaticIP`. Note: Currently OpenShift clusters cannot be set up in the 172.30.0.0/16 range. 
+AKS Engine supports deploying into an existing VNET. Operators must specify the ARM path/id of Subnets for the `masterProfile` and  any `agentPoolProfiles`, as well as the master IP address in `firstConsecutiveStaticIP`. Note: Currently OpenShift clusters cannot be set up in the 172.30.0.0/16 range.
 
 To create a vnet and a subnet, for example:
 

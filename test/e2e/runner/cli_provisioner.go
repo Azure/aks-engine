@@ -14,14 +14,14 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Azure/acs-engine/pkg/helpers"
-	"github.com/Azure/acs-engine/test/e2e/azure"
-	"github.com/Azure/acs-engine/test/e2e/config"
-	"github.com/Azure/acs-engine/test/e2e/engine"
-	"github.com/Azure/acs-engine/test/e2e/kubernetes/node"
-	"github.com/Azure/acs-engine/test/e2e/kubernetes/util"
-	"github.com/Azure/acs-engine/test/e2e/metrics"
-	"github.com/Azure/acs-engine/test/e2e/remote"
+	"github.com/Azure/aks-engine/pkg/helpers"
+	"github.com/Azure/aks-engine/test/e2e/azure"
+	"github.com/Azure/aks-engine/test/e2e/config"
+	"github.com/Azure/aks-engine/test/e2e/engine"
+	"github.com/Azure/aks-engine/test/e2e/kubernetes/node"
+	"github.com/Azure/aks-engine/test/e2e/kubernetes/util"
+	"github.com/Azure/aks-engine/test/e2e/metrics"
+	"github.com/Azure/aks-engine/test/e2e/remote"
 	"github.com/kelseyhightower/envconfig"
 	"github.com/pkg/errors"
 )
@@ -153,7 +153,7 @@ func (cli *CLIProvisioner) provision() error {
 		}
 	}
 
-	// Lets modify our template and call acs-engine generate on it
+	// Lets modify our template and call aks-engine generate on it
 	var eng *engine.Engine
 
 	if cli.CreateVNET && cli.MasterVMSS {
@@ -203,12 +203,12 @@ func (cli *CLIProvisioner) generateAndDeploy() error {
 		fmt.Printf("Provisionning with the Deploy Command\n")
 		err := cli.Engine.Deploy(cli.Config.Location)
 		if err != nil {
-			return errors.Wrap(err, "Error while trying to deploy acs-engine template")
+			return errors.Wrap(err, "Error while trying to deploy aks-engine template")
 		}
 	} else {
 		err := cli.Engine.Generate()
 		if err != nil {
-			return errors.Wrap(err, "Error while trying to generate acs-engine template")
+			return errors.Wrap(err, "Error while trying to generate aks-engine template")
 		}
 	}
 

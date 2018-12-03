@@ -2,7 +2,7 @@
 
 ## Overview
 
-ACS-Engine enables you to retrieve the following k8s deployment parameters from Microsoft Azure KeyVault:
+AKS Engine enables you to retrieve the following k8s deployment parameters from Microsoft Azure KeyVault:
 
 * certificateProfile
   * apiServerCertificate

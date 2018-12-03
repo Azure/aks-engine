@@ -4,7 +4,7 @@
 
 Here are the steps to deploy a simple Swarm Mode cluster:
 
-1. [Install acs-engine](acsengine.md#downloading-and-building-acs-engine)
+1. [Install aks-engine](acsengine.md#downloading-and-building-aks-engine)
 2. [Generate your ssh key](ssh.md#ssh-key-generation)
 3. [Edit the Swarm Mode example](../examples/swarmmode.json) and fill in the blank strings
 4. [Generate the template](acsengine.md#generate-templates)
@@ -40,7 +40,7 @@ After completing this walkthrough you will know how to:
         3. then click on "Succeeded" under *last deployment*
         4. then click on the "Microsoft.Template"
         5. now you can copy the output FQDNs and sample SSH commands
-        
+
         ![Image of docker scaling](images/findingoutputs.png)
 
  2. SSH to port 2200 of the master FQDN (or first master's SSH can also be accessed via public dns address on port 22.). See [agent forwarding](ssh.md#key-management-and-agent-forwarding-with-windows-pageant) for an example of how to do this.
@@ -60,7 +60,7 @@ After completing this walkthrough you will know how to:
 
  ![Image of the web page](images/swarmbrowser.png)
 
- 8. You can now scale the service.  You can type `docker service scale fe=5`, and this will scale up the service to the desired number of replicas.  
+ 8. You can now scale the service.  You can type `docker service scale fe=5`, and this will scale up the service to the desired number of replicas.
 
  ![Image of service scaling](images/dockerservicescale.png)
 

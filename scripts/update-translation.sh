@@ -1,6 +1,6 @@
 #!/bin/bash
 
-GO_SOURCE="pkg/acsengine/*.go pkg/acsengine/transform/*.go pkg/api/*.go pkg/operations/*.go pkg/operations/kubernetesupgrade/*.go"
+GO_SOURCE="pkg/engine/*.go pkg/engine/transform/*.go pkg/api/*.go pkg/operations/*.go pkg/operations/kubernetesupgrade/*.go"
 LANGUAGE="en_US"
 DOMAIN="acsengine"
 generate_po="false"

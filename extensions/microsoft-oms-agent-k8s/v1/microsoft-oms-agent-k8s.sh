@@ -59,7 +59,7 @@ metadata:
 type: Opaque
 data:
   wsid: `echo $wsid | base64 -w0`
-  key: `echo $key | base64 -w0` 
+  key: `echo $key | base64 -w0`
 EOFSECRET
 
   log 'done'
@@ -85,7 +85,7 @@ spec:
     dockerProviderVersion: 10.0.0-22
   spec:
    containers:
-     - name: omsagent 
+     - name: omsagent
        image: "microsoft/oms"
        imagePullPolicy: Always
        env:
@@ -103,7 +103,7 @@ spec:
          privileged: true
        ports:
        - containerPort: 25225
-         protocol: TCP 
+         protocol: TCP
        - containerPort: 25224
          protocol: UDP
        volumeMounts:
@@ -111,10 +111,10 @@ spec:
           name: docker-sock
         - mountPath: /var/opt/microsoft/omsagent/state/containerhostname
           name: container-hostname
-        - mountPath: /var/log 
+        - mountPath: /var/log
           name: host-log
    volumes:
-    - name: docker-sock 
+    - name: docker-sock
       hostPath:
        path: /var/run/docker.sock
     - name: container-hostname
@@ -122,7 +122,7 @@ spec:
        path: /etc/hostname
     - name: host-log
       hostPath:
-       path: /var/log 
+       path: /var/log
 EOFDAEMONSET
 
   log 'done'
@@ -137,7 +137,7 @@ deploy_yaml() {
   log 'Deploying oms agent secret - oms-agentsecret.yaml'
   kubectl create -f 'oms-agentsecret.yaml'
 
-  log 'Deploying oms agent daemonset - oms-daemonset.yaml' 
+  log 'Deploying oms agent daemonset - oms-daemonset.yaml'
   kubectl create -f 'oms-daemonset.yaml'
 
   log 'done'
@@ -175,7 +175,7 @@ then
 fi
 
 log ''
-log 'ACS-Engine - installing Microsoft OMS Agent (k8s)'
+log 'AKS Engine - installing Microsoft OMS Agent (k8s)'
 log '--------------------------------------------------'
 
 install_script_dependencies

@@ -6,9 +6,9 @@ package api
 import (
 	"strconv"
 
-	"github.com/Azure/acs-engine/pkg/api/agentPoolOnlyApi/v20170831"
-	"github.com/Azure/acs-engine/pkg/api/agentPoolOnlyApi/v20180331"
-	"github.com/Azure/acs-engine/pkg/helpers"
+	"github.com/Azure/aks-engine/pkg/api/agentPoolOnlyApi/v20170831"
+	"github.com/Azure/aks-engine/pkg/api/agentPoolOnlyApi/v20180331"
+	"github.com/Azure/aks-engine/pkg/helpers"
 )
 
 ///////////////////////////////////////////////////////////
@@ -208,7 +208,7 @@ func convertOrchestratorProfileToV20180331AgentPoolOnly(orchestratorProfile *Orc
 			networkProfile.DockerBridgeCidr = k.DockerBridgeSubnet
 		} else if k.NetworkPolicy != "" {
 			networkProfile = &v20180331.NetworkProfile{}
-			// ACS-E uses "none" in the old un-versioned model to represent kubenet.
+			// AKS Engine uses "none" in the old un-versioned model to represent kubenet.
 			if k.NetworkPolicy == "none" {
 				networkProfile.NetworkPlugin = v20180331.Kubenet
 				networkProfile.PodCidr = k.ClusterSubnet

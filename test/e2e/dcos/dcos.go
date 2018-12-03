@@ -13,9 +13,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Azure/acs-engine/test/e2e/config"
-	"github.com/Azure/acs-engine/test/e2e/engine"
-	"github.com/Azure/acs-engine/test/e2e/remote"
+	"github.com/Azure/aks-engine/test/e2e/config"
+	"github.com/Azure/aks-engine/test/e2e/engine"
+	"github.com/Azure/aks-engine/test/e2e/remote"
 	"github.com/pkg/errors"
 )
 

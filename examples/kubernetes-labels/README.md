@@ -22,7 +22,7 @@ The definition below adds 2 labels `"bar"` and `"baz"` to all nodes in the `firs
     ],
 ```
 
-In addition to any custom node labels you may add, ACS Engine will add another label, `"agentpool"`, which identifies which Agent Pool the node belongs to.
+In addition to any custom node labels you may add, AKS Engine will add another label, `"agentpool"`, which identifies which Agent Pool the node belongs to.
 
 You can confirm the labels have been applied on the node by running `kubectl describe node <nodename>`:
 

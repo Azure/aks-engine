@@ -2,7 +2,7 @@
 
 There are numerous implementations of a service mesh which integrate with kubernetes such as Istio, [Linkerd](http://linkerd.io), and [Conduit](https://conduit.io/).  [This is one blog post](https://medium.com/microservices-in-practice/service-mesh-for-microservices-2953109a3c9a) which explains some fundamentals behind what it is and why to use it.
 
-Some service mesh implementations **may** benefit from or require additional [customizations to the kubernetes cluster itself](https://github.com/Azure/acs-engine/blob/master/docs/clusterdefinition.md).
+Some service mesh implementations **may** benefit from or require additional [customizations to the kubernetes cluster itself](https://github.com/Azure/aks-engine/blob/master/docs/clusterdefinition.md).
 
 ## Istio
 
@@ -28,7 +28,7 @@ The main changes this configuration makes is adding these flags to the apiserver
 
 #### Update istio.json
 
-3. Ensure `orchestratorRelease` is 1.9+. 
+3. Ensure `orchestratorRelease` is 1.9+.
 4. Update `--admission-control` to include `MutatingAdmissionWebhook,ValidatingAdmissionWebhook`
 
     **Note**: admission-controls need to be entered in the order defined on the kubernetes [docs](https://kubernetes.io/docs/admin/admission-controllers/#is-there-a-recommended-set-of-admission-controllers-to-use).

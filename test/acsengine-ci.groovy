@@ -1,13 +1,13 @@
 #!/usr/bin/env groovy
 
 node("slave") {
-  withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: 'AZURE_CLI_SPN_ACS_TEST',
+  withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: 'AZURE_CLI_SPN_AKS_TEST',
                   passwordVariable: 'SPN_PASSWORD', usernameVariable: 'SPN_USER']]) {
     timestamps {
       wrap([$class: 'AnsiColorBuildWrapper', 'colorMapName': 'XTerm']) {
         env.GOPATH="${WORKSPACE}"
         env.PATH="${env.PATH}:${env.GOPATH}/bin"
-        def clone_dir = "${env.GOPATH}/src/github.com/Azure/acs-engine"
+        def clone_dir = "${env.GOPATH}/src/github.com/Azure/aks-engine"
         env.HOME=clone_dir
         def success = true
         Integer timeoutInMinutes = TEST_TIMEOUT.toInteger()
@@ -18,7 +18,7 @@ node("slave") {
             stage('Init') {
               deleteDir()
               checkout scm
-              img = docker.build('acs-engine-test', '--pull .')
+              img = docker.build('aks-engine-test', '--pull .')
             }
           }
           catch(exc) {
@@ -93,7 +93,7 @@ node("slave") {
                 gitCommit = sh(returnStdout: true, script: 'git rev-parse HEAD').trim()
                 emailext(
                   to: to,
-                  subject: "[ACS Engine is BROKEN] ${env.JOB_NAME} #${env.BUILD_NUM}",
+                  subject: "[AKS Engine is BROKEN] ${env.JOB_NAME} #${env.BUILD_NUM}",
                   body: "Commit: ${gitCommit}\n\n${url}${errorMsg}"
                 )
               }

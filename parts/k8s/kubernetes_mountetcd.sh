@@ -1,6 +1,6 @@
 #!/bin/bash
 # Mounting is done here instead of etcd because of bug https://bugs.launchpad.net/cloud-init/+bug/1692093
-# Once the bug is fixed, replace the below with the cloud init changes replaced in https://github.com/Azure/acs-engine/pull/661.
+# Once the bug is fixed, replace the below with the cloud init changes replaced in https://github.com/Azure/aks-engine/pull/661.
 set -x
 DISK=/dev/sdc
 PARTITION=${DISK}1

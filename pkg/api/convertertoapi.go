@@ -4,13 +4,13 @@
 package api
 
 import (
-	"github.com/Azure/acs-engine/pkg/api/common"
-	"github.com/Azure/acs-engine/pkg/api/v20160330"
-	"github.com/Azure/acs-engine/pkg/api/v20160930"
-	"github.com/Azure/acs-engine/pkg/api/v20170131"
-	"github.com/Azure/acs-engine/pkg/api/v20170701"
-	"github.com/Azure/acs-engine/pkg/api/vlabs"
-	"github.com/Azure/acs-engine/pkg/helpers"
+	"github.com/Azure/aks-engine/pkg/api/common"
+	"github.com/Azure/aks-engine/pkg/api/v20160330"
+	"github.com/Azure/aks-engine/pkg/api/v20160930"
+	"github.com/Azure/aks-engine/pkg/api/v20170131"
+	"github.com/Azure/aks-engine/pkg/api/v20170701"
+	"github.com/Azure/aks-engine/pkg/api/vlabs"
+	"github.com/Azure/aks-engine/pkg/helpers"
 )
 
 ///////////////////////////////////////////////////////////
@@ -599,7 +599,7 @@ func convertVLabsOrchestratorProfile(vp *vlabs.Properties, api *OrchestratorProf
 			convertVLabsOpenShiftConfig(vlabscs.OpenShiftConfig, api.OpenShiftConfig)
 		}
 		// Set api.KubernetesConfig to api.OpenShiftConfig.KubernetesConfig so
-		// acs-engine can reuse the same code used for generating parameters from
+		// aks-engine can reuse the same code used for generating parameters from
 		// KubernetesConfig for OpenShiftConfig.
 		if api.OpenShiftConfig != nil && api.OpenShiftConfig.KubernetesConfig != nil {
 			api.KubernetesConfig = api.OpenShiftConfig.KubernetesConfig
@@ -671,7 +671,7 @@ func convertVLabsDcosConfig(vlabs *vlabs.DcosConfig, api *DcosConfig) {
 }
 
 func convertVLabsOpenShiftConfig(vlabs *vlabs.OpenShiftConfig, api *OpenShiftConfig) {
-	// NOTE: This is a hack to avoid breaking the rest of the acs-engine
+	// NOTE: This is a hack to avoid breaking the rest of the aks-engine
 	// code when KubernetesConfig is accessed for various things. We don't
 	// use anything from it today. Maybe do something cleaner here.
 	api.KubernetesConfig = &KubernetesConfig{}

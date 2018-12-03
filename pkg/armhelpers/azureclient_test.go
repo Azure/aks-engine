@@ -10,7 +10,7 @@ import (
 
 	"github.com/Azure/go-autorest/autorest"
 
-	. "github.com/Azure/acs-engine/pkg/test"
+	. "github.com/Azure/aks-engine/pkg/test"
 	. "github.com/onsi/gomega"
 
 	"github.com/Azure/go-autorest/autorest/azure"

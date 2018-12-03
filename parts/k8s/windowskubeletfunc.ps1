@@ -1,50 +1,48 @@
 function
-Write-AzureConfig
-{
+Write-AzureConfig {
     Param(
-        
-        [Parameter(Mandatory=$true)][string]
+
+        [Parameter(Mandatory = $true)][string]
         $AADClientId,
-        [Parameter(Mandatory=$true)][string]
+        [Parameter(Mandatory = $true)][string]
         $AADClientSecret,
-        [Parameter(Mandatory=$true)][string]
+        [Parameter(Mandatory = $true)][string]
         $TenantId,
-        [Parameter(Mandatory=$true)][string]
+        [Parameter(Mandatory = $true)][string]
         $SubscriptionId,
-        [Parameter(Mandatory=$true)][string]
+        [Parameter(Mandatory = $true)][string]
         $ResourceGroup,
-        [Parameter(Mandatory=$true)][string]
+        [Parameter(Mandatory = $true)][string]
         $Location,
-        [Parameter(Mandatory=$true)][string]
+        [Parameter(Mandatory = $true)][string]
         $VmType,
-        [Parameter(Mandatory=$true)][string]
+        [Parameter(Mandatory = $true)][string]
         $SubnetName,
-        [Parameter(Mandatory=$true)][string]
+        [Parameter(Mandatory = $true)][string]
         $SecurityGroupName,
-        [Parameter(Mandatory=$true)][string]
+        [Parameter(Mandatory = $true)][string]
         $VNetName,
-        [Parameter(Mandatory=$true)][string]
+        [Parameter(Mandatory = $true)][string]
         $RouteTableName,
-        [Parameter(Mandatory=$false)][string] # Need one of these configured
+        [Parameter(Mandatory = $false)][string] # Need one of these configured
         $PrimaryAvailabilitySetName,
-        [Parameter(Mandatory=$false)][string] # Need one of these configured
+        [Parameter(Mandatory = $false)][string] # Need one of these configured
         $PrimaryScaleSetName,
-        [Parameter(Mandatory=$true)][string]
+        [Parameter(Mandatory = $true)][string]
         $UseManagedIdentityExtension,
         [string]
         $UserAssignedClientID,
-        [Parameter(Mandatory=$true)][string]
+        [Parameter(Mandatory = $true)][string]
         $UseInstanceMetadata,
-        [Parameter(Mandatory=$true)][string]
+        [Parameter(Mandatory = $true)][string]
         $LoadBalancerSku,
-        [Parameter(Mandatory=$true)][string]
+        [Parameter(Mandatory = $true)][string]
         $ExcludeMasterFromStandardLB,
-        [Parameter(Mandatory=$true)][string]
+        [Parameter(Mandatory = $true)][string]
         $KubeDir
     )
 
-    if ( -Not $PrimaryAvailabilitySetName -And -Not $PrimaryScaleSetName )
-    {
+    if ( -Not $PrimaryAvailabilitySetName -And -Not $PrimaryScaleSetName ) {
         throw "Either PrimaryAvailabilitySetName or PrimaryScaleSetName must be set"
     }
 
@@ -78,12 +76,11 @@ Write-AzureConfig
 
 
 function
-Write-CACert
-{
+Write-CACert {
     Param(
-        [Parameter(Mandatory=$true)][string]
+        [Parameter(Mandatory = $true)][string]
         $CACertificate,
-        [Parameter(Mandatory=$true)][string]
+        [Parameter(Mandatory = $true)][string]
         $KubeDir
     )
     $caFile = [io.path]::Combine($KubeDir, "ca.crt")
@@ -91,20 +88,19 @@ Write-CACert
 }
 
 function
-Write-KubeConfig
-{
+Write-KubeConfig {
     Param(
-        [Parameter(Mandatory=$true)][string]
+        [Parameter(Mandatory = $true)][string]
         $CACertificate,
-        [Parameter(Mandatory=$true)][string]
+        [Parameter(Mandatory = $true)][string]
         $MasterFQDNPrefix,
-        [Parameter(Mandatory=$true)][string]
+        [Parameter(Mandatory = $true)][string]
         $MasterIP,
-        [Parameter(Mandatory=$true)][string]
+        [Parameter(Mandatory = $true)][string]
         $AgentKey,
-        [Parameter(Mandatory=$true)][string]
+        [Parameter(Mandatory = $true)][string]
         $AgentCertificate,
-        [Parameter(Mandatory=$true)][string]
+        [Parameter(Mandatory = $true)][string]
         $KubeDir
     )
     $kubeConfigFile = [io.path]::Combine($KubeDir, "config")
@@ -135,21 +131,23 @@ users:
 }
 
 function
-New-InfraContainer
-{
+New-InfraContainer {
     Param(
-        [Parameter(Mandatory=$true)][string]
+        [Parameter(Mandatory = $true)][string]
         $KubeDir
     )
     cd $KubeDir
     $computerInfo = Get-ComputerInfo
     $windowsBase = if ($computerInfo.WindowsVersion -eq "1709") {
         "microsoft/nanoserver:1709"
-    } elseif ($computerInfo.WindowsVersion -eq "1803") {
+    }
+    elseif ($computerInfo.WindowsVersion -eq "1803") {
         "microsoft/nanoserver:1803"
-    } elseif ($computerInfo.WindowsVersion -eq "1809") {
+    }
+    elseif ($computerInfo.WindowsVersion -eq "1809") {
         "mcr.microsoft.com/windows/nanoserver:1809"
-    } else {
+    }
+    else {
         "mcr.microsoft.com/nanoserver-insider"
     }
 
@@ -162,20 +160,19 @@ New-InfraContainer
 # TODO: Deprecate this and replace with methods that get individual components instead of zip containing everything
 # This expects the ZIP file to be created by scripts/build-windows-k8s.sh
 function
-Get-KubePackage
-{
+Get-KubePackage {
     Param(
-        [Parameter(Mandatory=$true)][string]
+        [Parameter(Mandatory = $true)][string]
         $KubeBinariesSASURL
     )
-    
+
     $zipfile = "c:\k.zip"
-    for ($i=0; $i -le 10; $i++)
-    {
+    for ($i = 0; $i -le 10; $i++) {
         DownloadFileOverHttp -Url $KubeBinariesSASURL -DestinationPath $zipfile
         if ($?) {
             break
-        } else {
+        }
+        else {
             Write-Log $Error[0].Exception.Message
         }
     }
@@ -183,59 +180,56 @@ Get-KubePackage
 }
 
 function
-Get-KubeBinaries
-{
+Get-KubeBinaries {
     Param(
-        [Parameter(Mandatory=$true)][string]
+        [Parameter(Mandatory = $true)][string]
         $KubeBinariesURL
     )
 
-    if ($computerInfo.WindowsVersion -eq "1709") 
-    {        
-        Write-Log "Server version 1709 does not support using kubernetes binaries in tar file."    
+    if ($computerInfo.WindowsVersion -eq "1709") {
+        Write-Log "Server version 1709 does not support using kubernetes binaries in tar file."
         return
     }
-    
+
     $tempdir = New-TemporaryDirectory
     $binaryPackage = "$tempdir\k.tar.gz"
-    for ($i=0; $i -le 10; $i++)
-    {
+    for ($i = 0; $i -le 10; $i++) {
         DownloadFileOverHttp -Url $KubeBinariesURL -DestinationPath $binaryPackage
         if ($?) {
             break
-        } else {
+        }
+        else {
             Write-Log $Error[0].Exception.Message
         }
     }
 
-    # using tar to minimize dependencies    
+    # using tar to minimize dependencies
     # tar should be avalible on 1803+
     tar -xzf $binaryPackage -C $tempdir
-     
-    # copy binaries over to kube folder      
+
+    # copy binaries over to kube folder
     $windowsbinariespath = "c:\k\"
-    if(!(Test-path $windowsbinariespath)) {
+    if (!(Test-path $windowsbinariespath)) {
         mkdir $windowsbinariespath
-    }   
+    }
     cp $tempdir\kubernetes\node\bin\* $windowsbinariespath -Recurse
-    
-    #remove temp folder created when unzipping            
+
+    #remove temp folder created when unzipping
     del $tempdir -Recurse
 }
 
 # TODO: replace KubeletStartFile with a Kubelet config, remove NSSM, and use built-in service integration
 function
-New-NSSMService
-{
+New-NSSMService {
     Param(
         [string]
-        [Parameter(Mandatory=$true)]
+        [Parameter(Mandatory = $true)]
         $KubeDir,
         [string]
-        [Parameter(Mandatory=$true)]
+        [Parameter(Mandatory = $true)]
         $KubeletStartFile,
         [string]
-        [Parameter(Mandatory=$true)]
+        [Parameter(Mandatory = $true)]
         $KubeProxyStartFile
     )
 
@@ -279,42 +273,41 @@ New-NSSMService
 
 # Renamed from Write-KubernetesStartFiles
 function
-Install-KubernetesServices
-{
+Install-KubernetesServices {
     param(
-        [Parameter(Mandatory=$true)][string[]]
+        [Parameter(Mandatory = $true)][string[]]
         $KubeletConfigArgs,
-        [Parameter(Mandatory=$true)][string]
+        [Parameter(Mandatory = $true)][string]
         $KubeBinariesVersion,
-        [Parameter(Mandatory=$true)][string]
+        [Parameter(Mandatory = $true)][string]
         $NetworkPlugin,
-        [Parameter(Mandatory=$true)][string]
+        [Parameter(Mandatory = $true)][string]
         $NetworkMode,
-        [Parameter(Mandatory=$true)][string]
+        [Parameter(Mandatory = $true)][string]
         $KubeDir,
-        [Parameter(Mandatory=$true)][string]
+        [Parameter(Mandatory = $true)][string]
         $AzureCNIBinDir,
-        [Parameter(Mandatory=$true)][string]
+        [Parameter(Mandatory = $true)][string]
         $AzureCNIConfDir,
-        [Parameter(Mandatory=$true)][string]
+        [Parameter(Mandatory = $true)][string]
         $CNIPath,
-        [Parameter(Mandatory=$true)][string]
+        [Parameter(Mandatory = $true)][string]
         $CNIConfig,
-        [Parameter(Mandatory=$true)][string]
+        [Parameter(Mandatory = $true)][string]
         $CNIConfigPath,
-        [Parameter(Mandatory=$true)][string]
+        [Parameter(Mandatory = $true)][string]
         $MasterIP,
-        [Parameter(Mandatory=$true)][string]
+        [Parameter(Mandatory = $true)][string]
         $KubeDnsServiceIp,
-        [Parameter(Mandatory=$true)][string]
+        [Parameter(Mandatory = $true)][string]
         $MasterSubnet,
-        [Parameter(Mandatory=$true)][string]
+        [Parameter(Mandatory = $true)][string]
         $KubeClusterCIDR,
-        [Parameter(Mandatory=$true)][string]
+        [Parameter(Mandatory = $true)][string]
         $KubeServiceCIDR,
-        [Parameter(Mandatory=$true)][string]
+        [Parameter(Mandatory = $true)][string]
         $HNSModule,
-        [Parameter(Mandatory=$true)][string]
+        [Parameter(Mandatory = $true)][string]
         $KubeletNodeLabels
     )
 
@@ -324,19 +317,18 @@ Install-KubernetesServices
     $KubeProxyStartFile = [io.path]::Combine($KubeDir, "kubeproxystart.ps1")
 
     mkdir $VolumePluginDir
-    $KubeletArgList = $KubeletConfigArgs # This is the initial list passed in from acs-engine
+    $KubeletArgList = $KubeletConfigArgs # This is the initial list passed in from aks-engine
     $KubeletArgList += "--node-labels=`$global:KubeletNodeLabels"
     # $KubeletArgList += "--hostname-override=`$global:AzureHostname" TODO: remove - dead code?
     $KubeletArgList += "--volume-plugin-dir=`$global:VolumePluginDir"
-    # If you are thinking about adding another arg here, you should be considering pkg/acsengine/defaults-kubelet.go first
+    # If you are thinking about adding another arg here, you should be considering pkg/engine/defaults-kubelet.go first
     # Only args that need to be calculated or combined with other ones on the Windows agent should be added here.
-    
+
 
     # Regex to strip version to Major.Minor.Build format such that the following check does not crash for version like x.y.z-alpha
     [regex]$regex = "^[0-9.]+"
     $KubeBinariesVersionStripped = $regex.Matches($KubeBinariesVersion).Value
-    if ([System.Version]$KubeBinariesVersionStripped -lt [System.Version]"1.8.0")
-    {
+    if ([System.Version]$KubeBinariesVersionStripped -lt [System.Version]"1.8.0") {
         # --api-server deprecates from 1.8.0
         $KubeletArgList += "--api-servers=https://`${global:MasterIP}:443"
     }
@@ -344,11 +336,13 @@ Install-KubernetesServices
     # Configure kubelet to use CNI plugins if enabled.
     if ($NetworkPlugin -eq "azure") {
         $KubeletArgList += @("--cni-bin-dir=$AzureCNIBinDir", "--cni-conf-dir=$AzureCNIConfDir")
-    } elseif ($NetworkPlugin -eq "kubenet") {
+    }
+    elseif ($NetworkPlugin -eq "kubenet") {
         $KubeletArgList += @("--cni-bin-dir=$CNIPath", "--cni-conf-dir=$CNIConfigPath")
         # handle difference in naming between Linux & Windows reference plugin
         $KubeletArgList = $KubeletArgList -replace "kubenet", "cni"
-    } else {
+    }
+    else {
         throw "Unknown network type $NetworkPlugin, can't configure kubelet"
     }
 
@@ -356,11 +350,10 @@ Install-KubernetesServices
     $KubeletArgListStr = ""
     $KubeletArgList | Foreach-Object {
         # Since generating new code to be written to a file, need to escape quotes again
-        if ($KubeletArgListStr.length -gt 0)
-        {
+        if ($KubeletArgListStr.length -gt 0) {
             $KubeletArgListStr = $KubeletArgListStr + ", "
         }
-        $KubeletArgListStr = $KubeletArgListStr + "`"" + $_.Replace("`"`"","`"`"`"`"") + "`""
+        $KubeletArgListStr = $KubeletArgListStr + "`"" + $_.Replace("`"`"", "`"`"`"`"") + "`""
     }
     $KubeletArgListStr = "@`($KubeletArgListStr`)"
 
@@ -451,9 +444,9 @@ Restart-Service Kubeproxy
 $KubeletCommandLine
 
 "@
-    } 
-    else  # using WinCNI. TODO: If WinCNI support is removed, then delete this as dead code later
-    {
+    }
+    else {
+        # using WinCNI. TODO: If WinCNI support is removed, then delete this as dead code later
         $KubeNetwork = "l2bridge"
         $kubeStartStr += @"
 
@@ -621,6 +614,6 @@ $KubeDir\kube-proxy.exe --v=3 --proxy-mode=kernelspace --hostname-override=$env:
     $kubeProxyStartStr | Out-File -encoding ASCII -filepath $KubeProxyStartFile
 
     New-NSSMService -KubeDir $KubeDir `
-                    -KubeletStartFile $KubeletStartFile `
-                    -KubeProxyStartFile $KubeProxyStartFile
+        -KubeletStartFile $KubeletStartFile `
+        -KubeProxyStartFile $KubeProxyStartFile
 }

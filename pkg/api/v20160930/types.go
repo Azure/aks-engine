@@ -33,7 +33,7 @@ type ContainerService struct {
 	Properties *Properties `json:"properties"`
 }
 
-// Properties represents the ACS cluster definition
+// Properties represents the AKS cluster definition
 type Properties struct {
 	ProvisioningState       ProvisioningState        `json:"provisioningState,omitempty"`
 	OrchestratorProfile     *OrchestratorProfile     `json:"orchestratorProfile,omitempty"`
@@ -181,7 +181,7 @@ func (a *AgentPoolProfile) UnmarshalJSON(b []byte) error {
 }
 
 // JumpboxProfile describes properties of the jumpbox setup
-// in the ACS container cluster.
+// in the AKS container cluster.
 type JumpboxProfile struct {
 	OSType    OSType `json:"osType,omitempty"`
 	DNSPrefix string `json:"dnsPrefix"`

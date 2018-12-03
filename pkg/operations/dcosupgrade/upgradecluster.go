@@ -4,9 +4,9 @@
 package dcosupgrade
 
 import (
-	"github.com/Azure/acs-engine/pkg/api"
-	"github.com/Azure/acs-engine/pkg/armhelpers"
-	"github.com/Azure/acs-engine/pkg/i18n"
+	"github.com/Azure/aks-engine/pkg/api"
+	"github.com/Azure/aks-engine/pkg/armhelpers"
+	"github.com/Azure/aks-engine/pkg/i18n"
 	uuid "github.com/satori/go.uuid"
 	"github.com/sirupsen/logrus"
 )
@@ -28,7 +28,7 @@ type UpgradeCluster struct {
 	Translator *i18n.Translator
 	Logger     *logrus.Entry
 	ClusterTopology
-	Client armhelpers.ACSEngineClient
+	Client armhelpers.AKSEngineClient
 }
 
 // UpgradeCluster runs the workflow to upgrade a DCOS cluster.

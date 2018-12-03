@@ -228,7 +228,7 @@ func getSortedSemverVersions(versions []string, preRelease bool) []semver.Versio
 	return semverVersions
 }
 
-// AllKubernetesWindowsSupportedVersions maintain a set of available k8s Windows versions in acs-engine
+// AllKubernetesWindowsSupportedVersions maintain a set of available k8s Windows versions in aks-engine
 var AllKubernetesWindowsSupportedVersions = getAllKubernetesWindowsSupportedVersionsMap()
 
 func getAllKubernetesWindowsSupportedVersionsMap() map[string]bool {

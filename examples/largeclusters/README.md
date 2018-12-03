@@ -2,7 +2,7 @@
 
 ## Overview
 
-ACS-Engine enables you to create customized Docker enabled cluster on Microsoft Azure with 1200 nodes.
+AKS Engine enables you to create customized Docker enabled cluster on Microsoft Azure with 1200 nodes.
 
 The examples show you how to configure up to 12 agent pools with 100 nodes each:
 

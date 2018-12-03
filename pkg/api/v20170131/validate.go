@@ -6,7 +6,7 @@ package v20170131
 import (
 	"regexp"
 
-	"github.com/Azure/acs-engine/pkg/api/common"
+	"github.com/Azure/aks-engine/pkg/api/common"
 	"github.com/pkg/errors"
 )
 

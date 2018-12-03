@@ -10,7 +10,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/Azure/acs-engine/pkg/openshift/filesystem"
+	"github.com/Azure/aks-engine/pkg/openshift/filesystem"
 )
 
 type fakefilesystem map[string]filesystem.Fileinfo

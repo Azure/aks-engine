@@ -9,7 +9,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/Azure/acs-engine/pkg/openshift/filesystem"
+	"github.com/Azure/aks-engine/pkg/openshift/filesystem"
 	yaml "gopkg.in/yaml.v2"
 )
 

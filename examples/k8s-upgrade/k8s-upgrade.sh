@@ -12,7 +12,7 @@ fi
 
 OUTPUT="_output/${INSTANCE_NAME}"
 
-./bin/acs-engine upgrade \
+./bin/aks-engine upgrade \
   --subscription-id ${SUBSCRIPTION_ID} \
   --deployment-dir ${OUTPUT} \
   --location ${LOCATION} \

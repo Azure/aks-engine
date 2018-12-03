@@ -9,12 +9,12 @@ fetch_k8s() {
 }
 
 set_git_config() {
-	git config user.name "ACS CI"
+	git config user.name "AKS CI"
 	git config user.email "containers@microsoft.com"
 }
 
 create_version_branch() {
-	git checkout -b ${ACS_BRANCH_NAME} ${KUBERNETES_TAG_BRANCH} || true
+	git checkout -b ${AKS_BRANCH_NAME} ${KUBERNETES_TAG_BRANCH} || true
 }
 
 version_lt() {
@@ -316,37 +316,37 @@ download_wincni() {
 }
 
 copy_dockerfile() {
-  cp ${ACS_ENGINE_HOME}/windows/Dockerfile ${DIST_DIR}
+  cp ${AKS_ENGINE_HOME}/windows/Dockerfile ${DIST_DIR}
 }
 
 create_zip() {
-	ZIP_NAME="${k8s_e2e_upstream_version:-"v${ACS_VERSION}int.zip"}"
+	ZIP_NAME="${k8s_e2e_upstream_version:-"v${AKS_VERSION}int.zip"}"
 	cd ${DIST_DIR}/..
 	zip -r ../${ZIP_NAME} k/*
 	cd -
 }
 
 upload_zip_to_blob_storage() {
-	az storage blob upload -f ${TOP_DIR}/../v${ACS_VERSION}int.zip -c ${AZURE_STORAGE_CONTAINER_NAME} -n v${ACS_VERSION}int.zip
+	az storage blob upload -f ${TOP_DIR}/../v${AKS_VERSION}int.zip -c ${AZURE_STORAGE_CONTAINER_NAME} -n v${AKS_VERSION}int.zip
 }
 
 push_acs_branch() {
 	if version_lt "${KUBERNETES_RELEASE}" "1.9"; then
 		echo "push to azure repo..."
 		cd ${GOPATH}/src/k8s.io/kubernetes
-		git push origin ${ACS_BRANCH_NAME}
+		git push origin ${AKS_BRANCH_NAME}
 	else
 		echo "no need to push to azure repo"
 	fi
 }
 
 cleanup_output() {
-	rm ${TOP_DIR}/../v${ACS_VERSION}int.zip
+	rm ${TOP_DIR}/../v${AKS_VERSION}int.zip
 	rm -r ${TOP_DIR}
 }
 
 
-ACS_ENGINE_HOME=${GOPATH}/src/github.com/Azure/acs-engine
+AKS_ENGINE_HOME=${GOPATH}/src/github.com/Azure/aks-engine
 
 usage() {
 	echo "$0 [-v version] [-p acs_patch_version]"
@@ -369,7 +369,7 @@ while getopts ":v:p:u:z:" opt; do
 	  ;;
 	z)
 	  zip_path=${OPTARG}
-	  ;;  
+	  ;;
     *)
 			usage
 			exit
@@ -393,9 +393,9 @@ if [ -z "${k8s_e2e_upstream_version}" ]; then
 
 	KUBERNETES_RELEASE=$(echo $version | cut -d'.' -f1,2)
 	KUBERNETES_TAG_BRANCH=v${version}
-	ACS_VERSION=${version}-${acs_patch_version}
-	ACS_BRANCH_NAME=acs-v${ACS_VERSION}
-	TOP_DIR=${ACS_ENGINE_HOME}/_dist/k8s-windows-v${ACS_VERSION}
+	AKS_VERSION=${version}-${acs_patch_version}
+	AKS_BRANCH_NAME=acs-v${AKS_VERSION}
+	TOP_DIR=${AKS_ENGINE_HOME}/_dist/k8s-windows-v${AKS_VERSION}
 	DIST_DIR=${TOP_DIR}/k
 
 	create_dist_dir
@@ -415,5 +415,4 @@ else
 	download_nssm
 	download_wincni
 	create_zip
-fi	
-
+fi

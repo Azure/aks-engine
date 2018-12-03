@@ -27,4 +27,4 @@ ROOT="${DIR}/.."
 
 make bootstrap build
 
-${ROOT}/test/acs-engine-test/acs-engine-test -c ${TEST_CONFIG} -d ${ROOT} -e ${LOGERROR_CONFIG:-${ROOT}/test/acs-engine-test/acs-engine-errors.json} -j ${SA_NAME} -k ${SA_KEY}
+${ROOT}/test/aks-engine-test/aks-engine-test -c ${TEST_CONFIG} -d ${ROOT} -e ${LOGERROR_CONFIG:-${ROOT}/test/aks-engine-test/aks-engine-errors.json} -j ${SA_NAME} -k ${SA_KEY}

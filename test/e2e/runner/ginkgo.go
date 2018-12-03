@@ -9,9 +9,9 @@ import (
 	"os"
 	"os/exec"
 
-	"github.com/Azure/acs-engine/test/e2e/config"
-	"github.com/Azure/acs-engine/test/e2e/kubernetes/util"
-	"github.com/Azure/acs-engine/test/e2e/metrics"
+	"github.com/Azure/aks-engine/test/e2e/config"
+	"github.com/Azure/aks-engine/test/e2e/kubernetes/util"
+	"github.com/Azure/aks-engine/test/e2e/metrics"
 	"github.com/kelseyhightower/envconfig"
 )
 

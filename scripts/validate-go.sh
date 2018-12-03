@@ -42,7 +42,7 @@ gometalinter \
   --skip pkg/test \
   --exclude pkg/i18n/i18n.go \
   --exclude pkg/i18n/translations.go \
-  --exclude pkg/acsengine/templates.go \
+  --exclude pkg/engine/templates.go \
   --exclude pkg/openshift/certgen/release39/templates/bindata.go \
   --exclude pkg/openshift/certgen/unstable/templates/bindata.go \
   ./... || exit_code=1
@@ -58,7 +58,7 @@ gometalinter \
   --skip pkg/test \
   --deadline 60s \
   --exclude pkg/i18n/translations.go \
-  --exclude pkg/acsengine/templates.go \
+  --exclude pkg/engine/templates.go \
   --exclude pkg/openshift/certgen/release39/templates/bindata.go \
   --exclude pkg/openshift/certgen/unstable/templates/bindata.go \
   ./... || exit_code=1

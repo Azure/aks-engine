@@ -13,15 +13,15 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/Azure/acs-engine/pkg/api/agentPoolOnlyApi/v20170831"
-	"github.com/Azure/acs-engine/pkg/api/agentPoolOnlyApi/v20180331"
-	"github.com/Azure/acs-engine/pkg/api/common"
-	"github.com/Azure/acs-engine/pkg/api/v20160330"
-	"github.com/Azure/acs-engine/pkg/api/v20160930"
-	"github.com/Azure/acs-engine/pkg/api/v20170131"
-	"github.com/Azure/acs-engine/pkg/api/v20170701"
-	"github.com/Azure/acs-engine/pkg/api/vlabs"
-	"github.com/Azure/acs-engine/pkg/helpers"
+	"github.com/Azure/aks-engine/pkg/api/agentPoolOnlyApi/v20170831"
+	"github.com/Azure/aks-engine/pkg/api/agentPoolOnlyApi/v20180331"
+	"github.com/Azure/aks-engine/pkg/api/common"
+	"github.com/Azure/aks-engine/pkg/api/v20160330"
+	"github.com/Azure/aks-engine/pkg/api/v20160930"
+	"github.com/Azure/aks-engine/pkg/api/v20170131"
+	"github.com/Azure/aks-engine/pkg/api/v20170701"
+	"github.com/Azure/aks-engine/pkg/api/vlabs"
+	"github.com/Azure/aks-engine/pkg/helpers"
 	"github.com/blang/semver"
 )
 
@@ -53,7 +53,7 @@ type ContainerService struct {
 	Properties *Properties `json:"properties,omitempty"`
 }
 
-// Properties represents the ACS cluster definition
+// Properties represents the AKS cluster definition
 type Properties struct {
 	ClusterID               string
 	ProvisioningState       ProvisioningState        `json:"provisioningState,omitempty"`
@@ -75,7 +75,7 @@ type Properties struct {
 	FeatureFlags            *FeatureFlags            `json:"featureFlags,omitempty"`
 }
 
-// ClusterMetadata represents the metadata of the ACS cluster.
+// ClusterMetadata represents the metadata of the AKS cluster.
 type ClusterMetadata struct {
 	SubnetName                 string `json:"subnetName,omitempty"`
 	VNetResourceGroupName      string `json:"vnetResourceGroupName,omitempty"`
@@ -546,7 +546,7 @@ type VMDiagnostics struct {
 }
 
 // JumpboxProfile describes properties of the jumpbox setup
-// in the ACS container cluster.
+// in the AKS container cluster.
 type JumpboxProfile struct {
 	OSType    OSType `json:"osType"`
 	DNSPrefix string `json:"dnsPrefix"`
@@ -639,7 +639,7 @@ type CustomProfile struct {
 }
 
 // VlabsARMContainerService is the type we read and write from file
-// needed because the json that is sent to ARM and acs-engine
+// needed because the json that is sent to ARM and aks-engine
 // is different from the json that the ACS RP Api gets from ARM
 type VlabsARMContainerService struct {
 	TypeMeta
@@ -647,7 +647,7 @@ type VlabsARMContainerService struct {
 }
 
 // V20160330ARMContainerService is the type we read and write from file
-// needed because the json that is sent to ARM and acs-engine
+// needed because the json that is sent to ARM and aks-engine
 // is different from the json that the ACS RP Api gets from ARM
 type V20160330ARMContainerService struct {
 	TypeMeta
@@ -655,7 +655,7 @@ type V20160330ARMContainerService struct {
 }
 
 // V20160930ARMContainerService is the type we read and write from file
-// needed because the json that is sent to ARM and acs-engine
+// needed because the json that is sent to ARM and aks-engine
 // is different from the json that the ACS RP Api gets from ARM
 type V20160930ARMContainerService struct {
 	TypeMeta
@@ -663,7 +663,7 @@ type V20160930ARMContainerService struct {
 }
 
 // V20170131ARMContainerService is the type we read and write from file
-// needed because the json that is sent to ARM and acs-engine
+// needed because the json that is sent to ARM and aks-engine
 // is different from the json that the ACS RP Api gets from ARM
 type V20170131ARMContainerService struct {
 	TypeMeta
@@ -671,7 +671,7 @@ type V20170131ARMContainerService struct {
 }
 
 // V20170701ARMContainerService is the type we read and write from file
-// needed because the json that is sent to ARM and acs-engine
+// needed because the json that is sent to ARM and aks-engine
 // is different from the json that the ACS RP Api gets from ARM
 type V20170701ARMContainerService struct {
 	TypeMeta
@@ -679,7 +679,7 @@ type V20170701ARMContainerService struct {
 }
 
 // V20170831ARMManagedContainerService is the type we read and write from file
-// needed because the json that is sent to ARM and acs-engine
+// needed because the json that is sent to ARM and aks-engine
 // is different from the json that the ACS RP Api gets from ARM
 type V20170831ARMManagedContainerService struct {
 	TypeMeta
@@ -687,7 +687,7 @@ type V20170831ARMManagedContainerService struct {
 }
 
 // V20180331ARMManagedContainerService is the type we read and write from file
-// needed because the json that is sent to ARM and acs-engine
+// needed because the json that is sent to ARM and aks-engine
 // is different from the json that the ACS RP Api gets from ARM
 type V20180331ARMManagedContainerService struct {
 	TypeMeta

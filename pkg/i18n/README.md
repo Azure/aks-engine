@@ -1,13 +1,13 @@
-# Translation and Internationalization in acs-engine
-The translation process in acs-engine borrows some approach from [Kubernetes translation](https://github.com/kubernetes/kubernetes/tree/master/translations).
+# Translation and Internationalization in aks-engine
+The translation process in aks-engine borrows some approach from [Kubernetes translation](https://github.com/kubernetes/kubernetes/tree/master/translations).
 The strings to be localized are mainly the error message strings under `pkg` directory. Those error message strings are also consumed by other components such as ACS RP.
 
-The localization in acs-engine depends on github.com/leonelquinteros/gotext, a GNU gettext utility for Go. The package supports concurrency in translating strings in multiple goroutines, e.g., the same acs-engine API called from multiple requests at the same time.
+The localization in aks-engine depends on github.com/leonelquinteros/gotext, a GNU gettext utility for Go. The package supports concurrency in translating strings in multiple goroutines, e.g., the same aks-engine API called from multiple requests at the same time.
 
-The translation files containing resource strings are packaged into acs-engine binary using go-bindata. At runtime, the translation files are recreated on disk in the same directory as acs-engine binary, for gotext to load.
+The translation files containing resource strings are packaged into aks-engine binary using go-bindata. At runtime, the translation files are recreated on disk in the same directory as aks-engine binary, for gotext to load.
 
 ## How to add new string to be localized
-When a new error string needs to be localized, it needs to use translation function Errorf in `pkg/i18n/i18n.go`. The locale is passed to acs-engine API from acs-engine command or any other component calls it. If the locale is nil, then it falls back to en-us as in the Go source file.
+When a new error string needs to be localized, it needs to use translation function Errorf in `pkg/i18n/i18n.go`. The locale is passed to aks-engine API from aks-engine command or any other component calls it. If the locale is nil, then it falls back to en-us as in the Go source file.
 
 Once the Go source file is modified, `scripts/update-translation.sh` needs to be run to extract the resource strings. The script generates PO file according to the locale specified. An example of running the script is:
 ```

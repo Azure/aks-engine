@@ -81,7 +81,7 @@ const (
 	DCOSDefaultVersion string = DCOSVersion1Dot11Dot0
 )
 
-// AllDCOSSupportedVersions maintain a list of available dcos versions in acs-engine
+// AllDCOSSupportedVersions maintain a list of available dcos versions in aks-engine
 var AllDCOSSupportedVersions = []string{
 	DCOSVersion1Dot11Dot2,
 	DCOSVersion1Dot11Dot0,
@@ -94,7 +94,7 @@ var AllDCOSSupportedVersions = []string{
 const (
 	// OpenShiftVersion3Dot9Dot0 is the major.minor.patch string for the 3.9.0 version of OpenShift
 	OpenShiftVersion3Dot9Dot0 string = "3.9.0"
-	// OpenShiftVersionUnstable is used for development in acs-engine and should not be used by end-users.
+	// OpenShiftVersionUnstable is used for development in aks-engine and should not be used by end-users.
 	OpenShiftVersionUnstable string = "unstable"
 	// OpenShiftDefaultVersion is the default major.minor.patch version for OpenShift
 	OpenShiftDefaultVersion string = OpenShiftVersion3Dot9Dot0

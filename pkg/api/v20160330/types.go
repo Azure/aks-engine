@@ -167,7 +167,7 @@ func (a *AgentPoolProfile) UnmarshalJSON(b []byte) error {
 }
 
 // JumpboxProfile dscribes properties of the jumpbox setup
-// in the ACS container cluster.
+// in the AKS container cluster.
 type JumpboxProfile struct {
 	OSType    OSType `json:"osType"`
 	DNSPrefix string `json:"dnsPrefix"`

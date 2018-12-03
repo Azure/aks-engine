@@ -6,7 +6,7 @@ package armhelpers
 import (
 	"testing"
 
-	. "github.com/Azure/acs-engine/pkg/test"
+	. "github.com/Azure/aks-engine/pkg/test"
 	. "github.com/onsi/gomega"
 
 	"github.com/Azure/azure-sdk-for-go/services/resources/mgmt/2018-05-01/resources"
@@ -22,7 +22,7 @@ func TestUpgradeCluster(t *testing.T) {
 var _ = Describe("Template deployment tests", func() {
 
 	It("Should return InternalOperationError error code", func() {
-		mockClient := &MockACSEngineClient{}
+		mockClient := &MockAKSEngineClient{}
 		mockClient.FailDeployTemplate = true
 		logger := log.NewEntry(log.New())
 
@@ -38,7 +38,7 @@ var _ = Describe("Template deployment tests", func() {
 	})
 
 	It("Should return QuotaExceeded error code, specified in details", func() {
-		mockClient := &MockACSEngineClient{}
+		mockClient := &MockAKSEngineClient{}
 		mockClient.FailDeployTemplateQuota = true
 		logger := log.NewEntry(log.New())
 
@@ -54,7 +54,7 @@ var _ = Describe("Template deployment tests", func() {
 	})
 
 	It("Should return Conflict error code, specified in details", func() {
-		mockClient := &MockACSEngineClient{}
+		mockClient := &MockAKSEngineClient{}
 		mockClient.FailDeployTemplateConflict = true
 		logger := log.NewEntry(log.New())
 
@@ -70,7 +70,7 @@ var _ = Describe("Template deployment tests", func() {
 	})
 
 	It("Should return deployment error with Operations Lists", func() {
-		mockClient := &MockACSEngineClient{}
+		mockClient := &MockAKSEngineClient{}
 		mockClient.FailDeployTemplateWithProperties = true
 		logger := log.NewEntry(log.New())
 
@@ -86,7 +86,7 @@ var _ = Describe("Template deployment tests", func() {
 	})
 
 	It("Should return nil on success", func() {
-		mockClient := &MockACSEngineClient{}
+		mockClient := &MockAKSEngineClient{}
 		logger := log.NewEntry(log.New())
 		err := DeployTemplateSync(mockClient, logger, "rg1", "agentvm", map[string]interface{}{}, map[string]interface{}{})
 		Expect(err).To(BeNil())

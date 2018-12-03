@@ -14,8 +14,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/Azure/acs-engine/pkg/api/common"
-	"github.com/Azure/acs-engine/pkg/helpers"
+	"github.com/Azure/aks-engine/pkg/api/common"
+	"github.com/Azure/aks-engine/pkg/helpers"
 	"github.com/blang/semver"
 	"github.com/pkg/errors"
 )
@@ -458,7 +458,7 @@ func (p *Properties) setAgentProfileDefaults(isUpgrade, isScale bool) {
 				}
 				// Ensure distro is set properly for N Series SKUs, because
 				// (1) At present, "aks-docker-engine" and "ubuntu" are the only working distro base for running GPU workloads on N Series SKUs
-				// (2) Previous versions of acs-engine had working implementations using the "aks" distro value,
+				// (2) Previous versions of aks-engine had working implementations using the "aks" distro value,
 				//     so we need to hard override it in order to produce a working cluster in upgrade/scale contexts
 			} else if p.OrchestratorProfile.IsKubernetes() && (isUpgrade || isScale) && profile.IsNSeriesSKU() {
 				if profile.Distro == AKS {

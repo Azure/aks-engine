@@ -16,8 +16,8 @@ import (
 
 	kerrors "k8s.io/apimachinery/pkg/util/errors"
 
-	"github.com/Azure/acs-engine/pkg/api"
-	"github.com/Azure/acs-engine/pkg/api/common"
+	"github.com/Azure/aks-engine/pkg/api"
+	"github.com/Azure/aks-engine/pkg/api/common"
 	"github.com/pkg/errors"
 )
 

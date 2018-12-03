@@ -6,7 +6,7 @@ package unstable
 import (
 	"bytes"
 
-	"github.com/Azure/acs-engine/pkg/openshift/filesystem"
+	"github.com/Azure/aks-engine/pkg/openshift/filesystem"
 )
 
 // OpenShiftSetDefaultCerts sets default certificate and configuration properties in the

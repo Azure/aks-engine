@@ -11,11 +11,11 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/Azure/acs-engine/test/e2e/azure"
-	"github.com/Azure/acs-engine/test/e2e/config"
-	"github.com/Azure/acs-engine/test/e2e/engine"
-	"github.com/Azure/acs-engine/test/e2e/metrics"
-	"github.com/Azure/acs-engine/test/e2e/runner"
+	"github.com/Azure/aks-engine/test/e2e/azure"
+	"github.com/Azure/aks-engine/test/e2e/config"
+	"github.com/Azure/aks-engine/test/e2e/engine"
+	"github.com/Azure/aks-engine/test/e2e/metrics"
+	"github.com/Azure/aks-engine/test/e2e/runner"
 )
 
 var (

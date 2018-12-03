@@ -16,6 +16,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Azure/aks-engine/pkg/engine"
 	"github.com/Azure/azure-sdk-for-go/services/apimanagement/mgmt/2017-03-01/apimanagement"
 	"github.com/Azure/azure-sdk-for-go/services/authorization/mgmt/2015-07-01/authorization"
 	"github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2018-04-01/compute"
@@ -31,8 +32,6 @@ import (
 	"github.com/mitchellh/go-homedir"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
-
-	"github.com/Azure/acs-engine/pkg/acsengine"
 )
 
 const (
@@ -41,11 +40,11 @@ const (
 )
 
 var (
-	// RequiredResourceProviders is the list of Azure Resource Providers needed for ACS-Engine to function
+	// RequiredResourceProviders is the list of Azure Resource Providers needed for AKS Engine to function
 	RequiredResourceProviders = []string{"Microsoft.Compute", "Microsoft.Storage", "Microsoft.Network"}
 )
 
-// AzureClient implements the `ACSEngineClient` interface.
+// AzureClient implements the `AKSEngineClient` interface.
 // This client is backed by real Azure clients talking to an ARM endpoint.
 type AzureClient struct {
 	acceptLanguages []string
@@ -282,7 +281,7 @@ func tryLoadCachedToken(cachePath string) (*adal.Token, error) {
 }
 
 func getOAuthConfig(env azure.Environment, subscriptionID string) (*adal.OAuthConfig, string, error) {
-	tenantID, err := acsengine.GetTenantID(env.ResourceManagerEndpoint, subscriptionID)
+	tenantID, err := engine.GetTenantID(env.ResourceManagerEndpoint, subscriptionID)
 	if err != nil {
 		return nil, "", err
 	}

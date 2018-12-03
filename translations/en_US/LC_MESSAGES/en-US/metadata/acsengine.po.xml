@@ -131,9 +131,9 @@
     </Props>
   </Item>
   <Props>
-    <Str Name="CopyrightHeader0" Val="# English translations for acs-engine package." />
+    <Str Name="CopyrightHeader0" Val="# English translations for aks-engine package." />
     <Str Name="CopyrightHeader1" Val="# Copyright (C) 2017" />
-    <Str Name="CopyrightHeader2" Val="# This file is distributed under the same license as the acs-engine package." />
+    <Str Name="CopyrightHeader2" Val="# This file is distributed under the same license as the aks-engine package." />
     <Str Name="CopyrightHeader3" Val="# Jiangtian Li &lt;jiangtianli@hotmail.com&gt;, 2017." />
     <Str Name="FromFile" Val="translations/en_US/LC_MESSAGES/acsengine.po" />
     <Str Name="FromRepository" Val="acsengine" />

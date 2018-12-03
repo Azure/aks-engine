@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # This script originated at https://github.com/kubernetes/kubernetes/blob/master/cluster/gce/gci/health-monitor.sh
-# and has been modified for acs-engine.
+# and has been modified for aks-engine.
 
 set -o nounset
 set -o pipefail
@@ -15,7 +15,7 @@ container_runtime_monitoring() {
   if [[ "${CONTAINER_RUNTIME:-docker}" != "docker" ]]; then
     healthcheck_command="${crictl} pods"
   fi
-  
+
   until timeout 60 ${healthcheck_command} > /dev/null; do
     if (( attempt == max_attempts )); then
       echo "Max attempt ${max_attempts} reached! Proceeding to monitor container runtime healthiness."

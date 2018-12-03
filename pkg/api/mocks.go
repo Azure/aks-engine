@@ -4,7 +4,7 @@
 package api
 
 import (
-	"github.com/Azure/acs-engine/pkg/helpers"
+	"github.com/Azure/aks-engine/pkg/helpers"
 	"github.com/satori/go.uuid"
 )
 

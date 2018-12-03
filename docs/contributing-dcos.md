@@ -1,4 +1,4 @@
-# Porting a new DC/OS version to ACS-Engine
+# Porting a new DC/OS version to AKS Engine
 
 ## 1. Locate the official ARM Template
 
@@ -31,7 +31,7 @@ You should now have a clean yaml.
 under the `parts` directory, create a new file called `dcoscustomdataXXX.t` replacing `XXX` by the correct version number.
 Paste the yaml from the previous step inside.
 
-In the new file, under the `runcmd` section you should find 4 sucessive `curl` calls downloading some `.deb` packages followed by a bash script installing each one of them. This is handled by `parts\dcos\dcosprovision.sh` in ACS-Engine, so make sure the dependencies didn't change and replace the `curl` and `bash` calls by a link to the script.
+In the new file, under the `runcmd` section you should find 4 sucessive `curl` calls downloading some `.deb` packages followed by a bash script installing each one of them. This is handled by `parts\dcos\dcosprovision.sh` in AKS Engine, so make sure the dependencies didn't change and replace the `curl` and `bash` calls by a link to the script.
 
 For example, in DC/OS 1.9:
 ```yaml
@@ -53,7 +53,7 @@ becomes
 
 Additional modifications under `runcmd`:
 * Replace every occurence of the Package GUID (that we found in step 2) by `DCOSGUID`.
-* the `content` of the cmd with path `/etc/mesosphere/setup-flags/late-config.yaml` should be modified to accept ACS-Engine bindings instead of variable where needed (look at a previous custom data file for reference).
+* the `content` of the cmd with path `/etc/mesosphere/setup-flags/late-config.yaml` should be modified to accept AKS Engine bindings instead of variable where needed (look at a previous custom data file for reference).
 * At the very end of the file, replace
 ```yaml
 - content: ''
@@ -77,7 +77,7 @@ by
 
 ## 5. Adding the support of the new version inside to .go files
 
-### pkg/acsengine/defaults.go
+### pkg/engine/defaults.go
 
 - Around line 30, add your `DCOSXXXBootstrapDownloadURL` variable (replace XXX with the version number), inside the `fmt.Sprintf()` function replace the second and third parameters with the version `EA, Stable, Beta, ...` and the commit hash.
 
@@ -90,7 +90,7 @@ Example for version 1.10
 DCOS110BootstrapDownloadURL: fmt.Sprintf(AzureEdgeDCOSBootstrapDownloadURL, "stable", "e38ab2aa282077c8eb7bf103c6fff7b0f08db1a4"),
 ```
 
-### pkg/acsengine/engine.go
+### pkg/engine/engine.go
 
 - Around line 39, add `dcosCustomDataXXX    = "dcos/dcoscustomdataXXX.t"` variable
 
@@ -132,7 +132,7 @@ Example for version 1.10:
  			yamlFilename = dcosCustomData110
 ```
 
-### pkg/acsengine/types.go
+### pkg/engine/types.go
 
 - Around line 40, add your the type for your new version.
 
@@ -203,8 +203,8 @@ case common.DCOSRelease1Dot10:
 
 We encourage you to look at previous PR as example, listed bellow :
 
-- [Adding DC/OS 1.10 stable version support #1439](https://github.com/Azure/acs-engine/pull/1439/files)
-- [setting dcos test to 1.9 (current default)](https://github.com/Azure/acs-engine/pull/1443)
-- [[DC/OS] Set 1.9 as default DCOS version and upgrade Packages](https://github.com/Azure/acs-engine/pull/457)
-- [[DC/OS] Add support for DCOS 1.9 EA](https://github.com/Azure/acs-engine/pull/360)
-- [DCOS 1.8.8 Support](https://github.com/Azure/acs-engine/pull/278)
+- [Adding DC/OS 1.10 stable version support #1439](https://github.com/Azure/aks-engine/pull/1439/files)
+- [setting dcos test to 1.9 (current default)](https://github.com/Azure/aks-engine/pull/1443)
+- [[DC/OS] Set 1.9 as default DCOS version and upgrade Packages](https://github.com/Azure/aks-engine/pull/457)
+- [[DC/OS] Add support for DCOS 1.9 EA](https://github.com/Azure/aks-engine/pull/360)
+- [DCOS 1.8.8 Support](https://github.com/Azure/aks-engine/pull/278)

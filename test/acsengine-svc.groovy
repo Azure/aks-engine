@@ -1,13 +1,13 @@
 #!/usr/bin/env groovy
 
 node("slave") {
-  withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: 'AZURE_CLI_SPN_ACS_TEST',
+  withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: 'AZURE_CLI_SPN_AKS_TEST',
                   passwordVariable: 'SPN_PASSWORD', usernameVariable: 'SPN_USER']]) {
     timestamps {
       wrap([$class: 'AnsiColorBuildWrapper', 'colorMapName': 'XTerm']) {
         env.GOPATH="${WORKSPACE}"
         env.PATH="${env.PATH}:${env.GOPATH}/bin"
-        def clone_dir = "${env.GOPATH}/src/github.com/Azure/acs-engine"
+        def clone_dir = "${env.GOPATH}/src/github.com/Azure/aks-engine"
         env.HOME=clone_dir
         String locations_str = "${LOCATIONS}"
         String sendTo = "${SEND_TO}".trim()
@@ -34,7 +34,7 @@ uksouth ukwest"
           stage('Init') {
             deleteDir()
             checkout scm
-            img = docker.build('acs-engine-test', '--pull .')
+            img = docker.build('aks-engine-test', '--pull .')
           }
 
           img.inside("-u root:root") {
@@ -47,7 +47,7 @@ uksouth ukwest"
                 sh("az account set --subscription ${SUBSCRIPTION_ID}")
                 // Create report directory
                 sh("mkdir ${junit_dir}")
-                // Build and test acs-engine
+                // Build and test aks-engine
                 sh('make ci')
                 // Create template
                 env.CLUSTER_DEFINITION = "examples/${CLUSTER_DEFINITION}"
@@ -123,7 +123,7 @@ uksouth ukwest"
                   if(sendTo != "") {
                     emailext(
                       to: "${sendTo}",
-                      subject: "[ACS Engine Jenkins Failure] ${env.JOB_NAME} #${env.BUILD_NUM}",
+                      subject: "[AKS Engine Jenkins Failure] ${env.JOB_NAME} #${env.BUILD_NUM}",
                       body: "${env.BUILD_URL}testReport")
                   }
                 }

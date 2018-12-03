@@ -4,7 +4,7 @@
 package api
 
 import (
-	"github.com/Azure/acs-engine/pkg/api/osa/vlabs"
+	"github.com/Azure/aks-engine/pkg/api/osa/vlabs"
 )
 
 // ConvertVLabsOpenShiftClusterToContainerService converts from a

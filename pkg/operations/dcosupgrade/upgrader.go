@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/Azure/acs-engine/pkg/operations"
+	"github.com/Azure/aks-engine/pkg/operations"
 	"github.com/pkg/errors"
 )
 

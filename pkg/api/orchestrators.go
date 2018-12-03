@@ -7,9 +7,9 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/Azure/acs-engine/pkg/api/common"
-	"github.com/Azure/acs-engine/pkg/api/v20170930"
-	"github.com/Azure/acs-engine/pkg/api/vlabs"
+	"github.com/Azure/aks-engine/pkg/api/common"
+	"github.com/Azure/aks-engine/pkg/api/v20170930"
+	"github.com/Azure/aks-engine/pkg/api/vlabs"
 	"github.com/blang/semver"
 	"github.com/pkg/errors"
 )

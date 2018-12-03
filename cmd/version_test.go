@@ -6,7 +6,7 @@ package cmd
 import (
 	"fmt"
 
-	"github.com/Azure/acs-engine/pkg/helpers"
+	"github.com/Azure/aks-engine/pkg/helpers"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
@@ -20,14 +20,14 @@ var _ = Describe("the version command", func() {
 		Expect(output.Flags().Lookup("output")).NotTo(BeNil())
 	})
 
-	It("should print a json version of ACS-Engine", func() {
+	It("should print a json version of AKS Engine", func() {
 		output := getVersion("json")
 
 		expectedOutput, _ := helpers.JSONMarshalIndent(version, "", "  ", false)
 
 		Expect(output).Should(Equal(string(expectedOutput)))
 	})
-	It("should print a humanized version of ACS-Engine", func() {
+	It("should print a humanized version of AKS Engine", func() {
 		output := getVersion("human")
 
 		expectedOutput := fmt.Sprintf("Version: %s\nGitCommit: %s\nGitTreeState: %s",
@@ -38,7 +38,7 @@ var _ = Describe("the version command", func() {
 		Expect(output).Should(Equal(expectedOutput))
 	})
 
-	It("should print a json version of ACS-Engine", func() {
+	It("should print a json version of AKS Engine", func() {
 		output := getVersion("json")
 
 		expectedOutput, _ := helpers.JSONMarshalIndent(version, "", "  ", false)

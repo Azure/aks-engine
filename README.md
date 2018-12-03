@@ -1,12 +1,12 @@
 # Microsoft Azure Container Service Engine - Builds Docker Enabled Clusters
 
-[![Coverage Status](https://codecov.io/gh/Azure/acs-engine/branch/master/graph/badge.svg)](https://codecov.io/gh/Azure/acs-engine)
-[![CircleCI](https://circleci.com/gh/Azure/acs-engine/tree/master.svg?style=svg)](https://circleci.com/gh/Azure/acs-engine/tree/master)
-[![GoDoc](https://godoc.org/github.com/Azure/acs-engine?status.svg)](https://godoc.org/github.com/Azure/acs-engine)
+[![Coverage Status](https://codecov.io/gh/Azure/aks-engine/branch/master/graph/badge.svg)](https://codecov.io/gh/Azure/aks-engine)
+[![CircleCI](https://circleci.com/gh/Azure/aks-engine/tree/master.svg?style=svg)](https://circleci.com/gh/Azure/aks-engine/tree/master)
+[![GoDoc](https://godoc.org/github.com/Azure/aks-engine?status.svg)](https://godoc.org/github.com/Azure/aks-engine)
 
 ## Overview
 
-The Azure Container Service Engine (`acs-engine`) generates ARM (Azure Resource Manager) templates for Docker enabled clusters on Microsoft Azure with your choice of DC/OS, Kubernetes, OpenShift, Swarm Mode, or Swarm orchestrators. The input to the tool is a cluster definition. The cluster definition (or apimodel) is very similar to (in many cases the same as) the ARM template syntax used to deploy a Microsoft Azure Container Service cluster.
+The Azure Container Service Engine (`aks-engine`) generates ARM (Azure Resource Manager) templates for Docker enabled clusters on Microsoft Azure with your choice of DC/OS, Kubernetes, OpenShift, Swarm Mode, or Swarm orchestrators. The input to the tool is a cluster definition. The cluster definition (or apimodel) is very similar to (in many cases the same as) the ARM template syntax used to deploy a Microsoft Azure Container Service cluster.
 
 The cluster definition file enables you to customize your Docker enabled cluster in many ways including:
 
@@ -44,7 +44,7 @@ These guides cover more advanced features to try out after you have built your f
 
 Follow the [developers guide](docs/developers.md) to set up your environment.
 
-To build acs-engine, run `make build`. If you are developing with a working [Docker environment](https://docs.docker.com/engine), you can also run `make dev` (or `makedev.ps1` on Windows) first to start a Docker container and run `make build` inside the container.
+To build aks-engine, run `make build`. If you are developing with a working [Docker environment](https://docs.docker.com/engine), you can also run `make dev` (or `makedev.ps1` on Windows) first to start a Docker container and run `make build` inside the container.
 
 Please follow these instructions before submitting a PR:
 
@@ -65,7 +65,7 @@ $ vim examples/kubernetes.json
 # insert your preferred, unique DNS prefix
 # insert your SSH public key
 
-$ ./acs-engine generate examples/kubernetes.json
+$ ./aks-engine generate examples/kubernetes.json
 ```
 
 This produces a new directory inside `_output/` that contains an ARM template for deploying Kubernetes into Azure. (In the case of Kubernetes, some additional needed assets are generated and placed in the output directory.)
