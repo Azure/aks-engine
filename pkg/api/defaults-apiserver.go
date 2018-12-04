@@ -38,7 +38,7 @@ func (cs *ContainerService) setAPIServerConfig() {
 	}
 	// if using local etcd server then we need the ca file
 	/*this ugly if statement is made this way, because this function is used in a test that does not pass correct data structure */
-	if !(nil != cs.Properties && nil != cs.Properties.MasterProfile && helpers.IsTrueBoolPointer(cs.Properties.MasterProfile.UseCosmos)) {
+	if !(nil != cs.Properties && nil != cs.Properties.MasterProfile && helpers.IsTrueBoolPointer(cs.Properties.MasterProfile.CosmosEtcd)) {
 		staticAPIServerConfig["--etcd-cafile"] = "/etc/kubernetes/certs/ca.crt"
 	}
 

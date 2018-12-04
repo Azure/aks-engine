@@ -11,7 +11,7 @@
             "count": 3,
             "dnsPrefix": "",
             "vmSize": "Standard_D2_v2",
-            "useCosmos" : true
+            "cosmosEtcd" : true
         },
         "agentPoolProfiles": [
             {

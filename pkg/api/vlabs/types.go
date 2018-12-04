@@ -381,7 +381,7 @@ type MasterProfile struct {
 	FQDN string `json:"fqdn,omitempty"`
 
 	// True: uses cosmos etcd endpoint instead of installing etcd on masters
-	UseCosmos *bool `json:"useCosmos,omitempty"`
+	CosmosEtcd *bool `json:"cosmosEtcd,omitempty"`
 }
 
 // ImageReference represents a reference to an Image resource in Azure.

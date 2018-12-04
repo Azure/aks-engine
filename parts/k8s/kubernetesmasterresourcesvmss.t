@@ -1,4 +1,4 @@
-{{if IsUsingCosmos }}
+{{if HasCosmosEtcd }}
    {
      "apiVersion": "[variables('apiVersionCosmos')]",
      "type": "Microsoft.DocumentDB/databaseAccounts",
@@ -334,7 +334,7 @@
     {{else}}
       "[variables('vnetID')]"
     {{end}}
-    {{ if IsUsingCosmos }}
+    {{ if HasCosmosEtcd }}
       ,"[resourceId('Microsoft.DocumentDB/databaseAccounts/', variables('cosmosAccountName'))]"
     {{ end }}
       ,"[variables('masterLbID')]"

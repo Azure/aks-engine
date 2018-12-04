@@ -47,19 +47,19 @@ write_certs_to_disk() {
 }
 
 write_certs_to_disk_with_retry() {
-    for i in 1 2 3 4 5 6 7 8 9 10 11 12; do
+    for i in $(seq 1 12); do
         write_certs_to_disk
         [ $? -eq 0  ] && break || sleep 5
     done
 }
-is_cluster_healthy(){
-    for i in 1 2 3 4 5 6 7 8 9 10 11 12; do
+is_etcd_healthy(){
+    for i in $(seq 1 100); do
         ETCDCTL_API=3 etcdctl ${ETCDCTL_PARAMS} endpoint health
         [ $? -eq 0  ] && break || sleep 5
     done
 }
 # block until all etcd is ready
-is_cluster_healthy 
+is_etcd_healthy 
 # Make etcd keys, adding a leading whitespace because etcd won't accept a val that begins with a '-' (hyphen)!
 # etcdctl will output the data it's given, stdout is redirected to dev null to avoid capturing sensitive data in logs
 if ETCDCTL_API=3 etcdctl ${ETCDCTL_PARAMS} put $ETCD_REQUESTHEADER_CLIENT_CA " $(cat ${PROXY_CRT})" > /dev/null 2>&1; then

@@ -917,7 +917,7 @@ func convertMasterProfileToVLabs(api *MasterProfile, vlabsProfile *vlabs.MasterP
 	vlabsProfile.AgentSubnet = api.AgentSubnet
 	vlabsProfile.AvailabilityZones = api.AvailabilityZones
 	vlabsProfile.SinglePlacementGroup = api.SinglePlacementGroup
-	vlabsProfile.UseCosmos = api.UseCosmos
+	vlabsProfile.CosmosEtcd = api.CosmosEtcd
 	convertCustomFilesToVlabs(api, vlabsProfile)
 }
 

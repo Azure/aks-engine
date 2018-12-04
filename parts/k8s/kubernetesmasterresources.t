@@ -1,4 +1,4 @@
-{{if IsUsingCosmos }}
+{{if HasCosmosEtcd }}
    {
      "apiVersion": "[variables('apiVersionCosmos')]",
      "type": "Microsoft.DocumentDB/databaseAccounts",
@@ -324,7 +324,7 @@
 {{if gt .MasterProfile.Count 1}}
         ,"[variables('masterInternalLbName')]"
 {{end}}
-{{ if IsUsingCosmos }}
+{{ if HasCosmosEtcd }}
         ,"[resourceId('Microsoft.DocumentDB/databaseAccounts/', variables('cosmosAccountName'))]"
 {{ end }}
       ],

@@ -287,7 +287,7 @@ MASTER_ARTIFACTS_CONFIG_PLACEHOLDER
     done
     a=/etc/kubernetes/manifests/kube-apiserver.yaml
     sed -i "s|<args>|{{GetK8sRuntimeConfigKeyVals .OrchestratorProfile.KubernetesConfig.APIServerConfig}}|g" $a
-{{ if IsUsingCosmos  }}
+{{ if HasCosmosEtcd  }}
     sed -i "s|<etcdEndPointUri>|{{ GetCosmosEndPointUri }}|g" $a
 {{ else }}
     sed -i "s|<etcdEndPointUri>|127.0.0.1|g" $a
@@ -362,7 +362,7 @@ MASTER_ARTIFACTS_CONFIG_PLACEHOLDER
   owner: root
   content: !!binary |
     {{WrapAsVariable "mountetcdScript"}}
-{{ if not IsUsingCosmos  }}
+{{ if not HasCosmosEtcd  }}
 - path: /etc/systemd/system/etcd.service
   permissions: "0644"
   owner: root

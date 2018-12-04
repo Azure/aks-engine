@@ -358,8 +358,8 @@ func (p *Properties) setMasterProfileDefaults(isUpgrade bool) {
 		p.MasterProfile.HTTPSourceAddressPrefix = "*"
 	}
 
-	if nil == p.MasterProfile.UseCosmos {
-		p.MasterProfile.UseCosmos = helpers.PointerToBool(DefaultUseCosmos)
+	if nil == p.MasterProfile.CosmosEtcd {
+		p.MasterProfile.CosmosEtcd = helpers.PointerToBool(DefaultUseCosmos)
 	}
 }
 
