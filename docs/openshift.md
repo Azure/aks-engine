@@ -1,4 +1,4 @@
-# Microsoft Azure Container Service Engine - OpenShift
+# AKS-Engine - OpenShift
 
 [OpenShift](https://www.openshift.com/) is a distribution of [Kubernetes](https://kubernetes.io/) optimized for continuous application development and multi-tenant deployment. OpenShift adds developer and operations-centric tools on top of Kubernetes to enable rapid application development, easy deployment and scaling, and long-term lifecycle maintenance for small and large teams.
 

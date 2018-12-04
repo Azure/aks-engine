@@ -25,7 +25,7 @@ Let's provision a DC/OS cluster with credentials to an [Azure Container Registry
 - Enable Admin Access and note the registry credentials
 <img src="../../docs/images/acrblade.png" alt="ACR Blade with Admin Access enabled" style="width: 50%; height: 50%;"/>
 
-- Clone [aks-engine](http://github.com/azure/aks-engine) and [start the container with the dev environment](https://github.com/Azure/aks-engine/blob/master/docs/acsengine.md).
+- Clone [aks-engine](http://github.com/azure/aks-engine) and [start the container with the dev environment](https://github.com/Azure/aks-engine/blob/master/docs/aksengine.md).
 
 - Edit the API model to include the credentials
 ```

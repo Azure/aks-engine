@@ -1,4 +1,4 @@
-# Microsoft Azure Container Service Engine - Key vault referencing for k8s parameters
+# AKS-Engine - Key vault referencing for k8s parameters
 
 ## Overview
 

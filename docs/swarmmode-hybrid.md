@@ -1,13 +1,13 @@
-# Microsoft Azure Container Service Engine - Hybrid Swarm Mode Walkthrough
+# AKS-Engine - Hybrid Swarm Mode Walkthrough
 
 ## Deployment
 
 Here are the steps to deploy a Hybrid Swarm Mode cluster:
 
-1. [Install aks-engine](acsengine.md#downloading-and-building-aks-engine)
+1. [Install aks-engine](aksengine.md#downloading-and-building-aks-engine)
 2. [Generate your ssh key](ssh.md#ssh-key-generation)
 3. [Edit the Hybrid Swarm Mode example](../examples/windows/swarmmode-hybrid.json) and fill in the blank strings
-4. [Generate the template](acsengine.md#generate-templates)
+4. [Generate the template](aksengine.md#generate-templates)
 5. [Deploy the output azuredeploy.json and azuredeploy.parameters.json](../README.md#deploy-templates)
 
 ## Walkthrough

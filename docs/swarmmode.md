@@ -1,14 +1,14 @@
-# Microsoft Azure Container Service Engine - Swarm Mode Walkthrough
+# AKS-Engine - Swarm Mode Walkthrough
 
 ## Deployment
 
 Here are the steps to deploy a simple Swarm Mode cluster:
 
-1. [Install aks-engine](acsengine.md#downloading-and-building-aks-engine)
+1. [Install aks-engine](aksengine.md#downloading-and-building-aks-engine)
 2. [Generate your ssh key](ssh.md#ssh-key-generation)
 3. [Edit the Swarm Mode example](../examples/swarmmode.json) and fill in the blank strings
-4. [Generate the template](acsengine.md#generate-templates)
-5. [Deploy the output azuredeploy.json and azuredeploy.parameters.json](../docs/acsengine.md#deploy-templates)
+4. [Generate the template](aksengine.md#generate-templates)
+5. [Deploy the output azuredeploy.json and azuredeploy.parameters.json](../docs/aksengine.md#deploy-templates)
 
 ## Walkthrough
 

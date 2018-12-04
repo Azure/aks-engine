@@ -1,4 +1,4 @@
-# Microsoft Azure Container Service Engine - DC/OS Walkthrough
+# AKS-Engine - DC/OS Walkthrough
 
 ### `Note:`
 Support for DC/OS `1.11` and later continues in the forked project [dcos-engine](https://github.com/Azure/dcos-engine).
@@ -7,11 +7,11 @@ Support for DC/OS `1.11` and later continues in the forked project [dcos-engine]
 
 Here are the steps to deploy a simple DC/OS cluster:
 
-1. [install aks-engine](acsengine.md#downloading-and-building-aks-engine)
+1. [install aks-engine](aksengine.md#downloading-and-building-aks-engine)
 2. [generate your ssh key](ssh.md#ssh-key-generation)
 3. edit the [DC/OS example](../examples/dcos.json) and fill in the blank strings
-4. [generate the template](acsengine.md#generate-templates)
-5. [deploy the output azuredeploy.json and azuredeploy.parameters.json](acsengine.md#deploy-templates)
+4. [generate the template](aksengine.md#generate-templates)
+5. [deploy the output azuredeploy.json and azuredeploy.parameters.json](aksengine.md#deploy-templates)
 
 ## Walkthrough
 

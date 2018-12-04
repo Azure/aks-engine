@@ -2,13 +2,13 @@
 
 ## Install Pre-requisites
 
-All the commands in this guide require both the Azure CLI and `aks-engine`. Follow the [installation instructions to download aks-engine before continuing](../acsengine.md#install-aks-engine) or [compile it from source](../acsengine.md#build-from-source).
+All the commands in this guide require both the Azure CLI and `aks-engine`. Follow the [installation instructions to download aks-engine before continuing](../aksengine.md#install-aks-engine) or [compile it from source](../aksengine.md#build-from-source).
 
 To install the Azure CLI, follow [the official documentation](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli) for your operating system.
 
 ## Overview
 
-[aks-engine](https://github.com/Azure/aks-engine/blob/master/docs/acsengine.md) reads a cluster definition (or api model) which describes the size, shape, and configuration of your cluster. This guide follows the default configuration of one master and two Linux nodes, where one node is used by the OpenShift internal infrastructure, and the other one is for end-user workloads (compute node). At least one of each node type is required for a working OpenShift cluster. In the openshift.json file, one agent pool specifies the number of infrastructure node(s); another is used to specify the number of compute node(s). If you would like to change these numbers, edit [examples/openshift.json](/examples/openshift.json) before continuing.
+[aks-engine](https://github.com/Azure/aks-engine/blob/master/docs/aksengine.md) reads a cluster definition (or api model) which describes the size, shape, and configuration of your cluster. This guide follows the default configuration of one master and two Linux nodes, where one node is used by the OpenShift internal infrastructure, and the other one is for end-user workloads (compute node). At least one of each node type is required for a working OpenShift cluster. In the openshift.json file, one agent pool specifies the number of infrastructure node(s); another is used to specify the number of compute node(s). If you would like to change these numbers, edit [examples/openshift.json](/examples/openshift.json) before continuing.
 
 The `aks-engine deploy` command automates creation of a Service Principal, Resource Group and SSH key for your cluster. If operators need more control or are interested in the individual steps see the ["Long Way" section below](#aks-engine-the-long-way).
 
@@ -110,7 +110,7 @@ Run `aks-engine generate examples/openshift.json`
 
 ### Step 5: Submit your Templates to Azure Resource Manager (ARM)
 
-[Deploy the output azuredeploy.json and azuredeploy.parameters.json](../acsengine.md#deployment-usage)
+[Deploy the output azuredeploy.json and azuredeploy.parameters.json](../aksengine.md#deployment-usage)
 
 ### Step 6: Check the OpenShift cluster
 
