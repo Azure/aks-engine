@@ -91,7 +91,7 @@ for TILLER_VERSION in ${TILLER_VERSIONS}; do
     pullContainerImage "docker" "gcr.io/kubernetes-helm/tiller:v${TILLER_VERSION}"
 done
 
-CLUSTER_AUTOSCALER_VERSIONS="1.13.1 1.3.4 1.3.3 1.2.2 1.1.2"
+CLUSTER_AUTOSCALER_VERSIONS="1.13.1 1.12.1 1.3.4 1.3.3 1.2.2 1.1.2"
 for CLUSTER_AUTOSCALER_VERSION in ${CLUSTER_AUTOSCALER_VERSIONS}; do
     pullContainerImage "docker" "k8s.gcr.io/cluster-autoscaler:v${CLUSTER_AUTOSCALER_VERSION}"
 done
