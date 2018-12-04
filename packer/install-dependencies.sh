@@ -101,7 +101,7 @@ for K8S_DNS_SIDECAR_VERSION in ${K8S_DNS_SIDECAR_VERSIONS}; do
     pullContainerImage "docker" "k8s.gcr.io/k8s-dns-sidecar-amd64:${K8S_DNS_SIDECAR_VERSION}"
 done
 
-CORE_DNS_VERSIONS="1.2.2"
+CORE_DNS_VERSIONS="1.2.6 1.2.2"
 for CORE_DNS_VERSION in ${CORE_DNS_VERSIONS}; do
     pullContainerImage "docker" "k8s.gcr.io/coredns:${CORE_DNS_VERSION}"
 done
