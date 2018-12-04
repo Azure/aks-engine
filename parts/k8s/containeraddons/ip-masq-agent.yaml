@@ -62,7 +62,7 @@ data:
     {{- if ContainerConfig "non-masq-cni-cidr"}}
       - {{ContainerConfig "non-masq-cni-cidr"}}
     masqLinkLocal: true
-    {{else -}}
+    {{else}}
     masqLinkLocal: false
     {{end -}}
     resyncInterval: 60s
