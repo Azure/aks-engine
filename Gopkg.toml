@@ -100,15 +100,15 @@ required = [
 
 [[constraint]]
   name = "k8s.io/api"
-  version = "kubernetes-1.12.3"
+  version = "kubernetes-1.10.0"
 
 [[constraint]]
   name = "k8s.io/apimachinery"
-  version = "kubernetes-1.12.3"
+  version = "kubernetes-1.10.0"
 
 [[constraint]]
   name = "k8s.io/client-go"
-  version = "v9.0.0"
+  version = "~7.0.0"
 
 [[constraint]]
   name = "github.com/onsi/ginkgo"
