@@ -71,7 +71,7 @@ for KUBE_DNS_VERSION in ${KUBE_DNS_VERSIONS}; do
     pullContainerImage "docker" "k8s.gcr.io/k8s-dns-kube-dns-amd64:${KUBE_DNS_VERSION}"
 done
 
-KUBE_ADDON_MANAGER_VERSIONS="8.8 8.7 8.6"
+KUBE_ADDON_MANAGER_VERSIONS="8.9 8.8 8.7 8.6"
 for KUBE_ADDON_MANAGER_VERSION in ${KUBE_ADDON_MANAGER_VERSIONS}; do
     pullContainerImage "docker" "k8s.gcr.io/kube-addon-manager-amd64:v${KUBE_ADDON_MANAGER_VERSION}"
 done
