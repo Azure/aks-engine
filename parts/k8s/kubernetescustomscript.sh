@@ -88,10 +88,11 @@ if [[ ! -z "${MASTER_NODE}" ]] && [[ -z "${COSMOS_URI}" ]]; then
   configureEtcdUser
 fi
 
-# this step configures all certs
-# both configs etcd/cosmos
-configureSecrets 
-
+if [[ ! -z "${MASTER_NODE}" ]]; then 
+  # this step configures all certs
+  # both configs etcd/cosmos
+  configureSecrets 
+fi
 # configure etcd if we are configured for etcd
 if [[ ! -z "${MASTER_NODE}" ]] && [[ -z "${COSMOS_URI}" ]]; then
     configureEtcd
