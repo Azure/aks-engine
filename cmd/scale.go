@@ -381,13 +381,6 @@ func (sc *scaleCmd) run(cmd *cobra.Command, args []string) error {
 		if sc.agentPool.IsAvailabilitySets() {
 			addValue(parametersJSON, fmt.Sprintf("%sOffset", sc.agentPool.Name), highestUsedIndex+1)
 		}
-	case api.Swarm:
-	case api.SwarmMode:
-	case api.DCOS:
-		if sc.agentPool.IsAvailabilitySets() {
-			return errors.Errorf("scaling isn't supported for orchestrator %q, with availability sets", orchestratorInfo.OrchestratorType)
-		}
-		transformer.NormalizeForVMSSScaling(sc.logger, templateJSON)
 	}
 
 	random := rand.New(rand.NewSource(time.Now().UnixNano()))

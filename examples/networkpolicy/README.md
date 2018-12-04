@@ -1,4 +1,4 @@
-# Microsoft Azure Container Service Engine - Network Policy
+# Microsoft Azure Kubernetes Engine - Network Policy
 
 There are 2 different Network Policy options :
 

@@ -24,8 +24,8 @@ import (
 
 const (
 	rootName             = "aks-engine"
-	rootShortDescription = "AKS-Engine deploys and manages container orchestrators in Azure"
-	rootLongDescription  = "AKS-Engine deploys and manages Kubernetes, Swarm Mode, and DC/OS clusters in Azure"
+	rootShortDescription = "AKS-Engine deploys and manages Kubernetes clusters in Azure"
+	rootLongDescription  = "AKS-Engine deploys and manages Kubernetes clusters in Azure"
 )
 
 var (
@@ -64,7 +64,6 @@ func NewRootCmd() *cobra.Command {
 	rootCmd.AddCommand(newOrchestratorsCmd())
 	rootCmd.AddCommand(newUpgradeCmd())
 	rootCmd.AddCommand(newScaleCmd())
-	rootCmd.AddCommand(newDcosUpgradeCmd())
 	rootCmd.AddCommand(getCompletionCmd(rootCmd))
 
 	return rootCmd

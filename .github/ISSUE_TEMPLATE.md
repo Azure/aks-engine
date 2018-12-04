@@ -27,7 +27,7 @@ might close your issue.  If we're wrong, PLEASE feel free to reopen it and
 explain why.
 -->
 
-**Orchestrator and version (e.g. Kubernetes, DC/OS, Swarm)**
+**Kubernetes version**:
 
 
 **What happened**:

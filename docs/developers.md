@@ -81,8 +81,8 @@ Unit tests may be run locally via `make test`.
 
 ### End-to-end Tests
 
-End-to-end tests for the DCOS and Kubernetes orchestrators may be run
-via `make test-{dcos,kubernetes}`.  The test process can optionally
+End-to-end tests for Kubernetes may be run
+via `make test-kubernetes`.  The test process can optionally
 deploy and tear down a cluster as part of the test (this is enabled by default).
 You'll need access to an Azure subscription, as well as at least the following
 environment variables to be set:

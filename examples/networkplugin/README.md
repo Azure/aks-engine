@@ -1,10 +1,10 @@
-# Microsoft Azure Container Service Engine - Network Plugin
+# Microsoft Azure Kubernetes Engine - Network Plugin
 
 There are 2 different Network Plugin options :
 
 - Azure Container Networking (default)
 - Kubenet
-- Flannel (docs are //TODO) 
+- Flannel (docs are //TODO)
 - Cilium (docs are //TODO)
 
 ## Azure Container Networking (default)
