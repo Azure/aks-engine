@@ -139,9 +139,7 @@ func NewDefaultClientConfigLoadingRules() *ClientConfigLoadingRules {
 
 	envVarFiles := os.Getenv(RecommendedConfigPathEnvVar)
 	if len(envVarFiles) != 0 {
-		fileList := filepath.SplitList(envVarFiles)
-		// prevent the same path load multiple times
-		chain = append(chain, deduplicate(fileList)...)
+		chain = append(chain, filepath.SplitList(envVarFiles)...)
 
 	} else {
 		chain = append(chain, RecommendedHomeFile)
@@ -211,7 +209,7 @@ func (rules *ClientConfigLoadingRules) Load() (*clientcmdapi.Config, error) {
 	mapConfig := clientcmdapi.NewConfig()
 
 	for _, kubeconfig := range kubeconfigs {
-		mergo.MergeWithOverwrite(mapConfig, kubeconfig)
+		mergo.Merge(mapConfig, kubeconfig)
 	}
 
 	// merge all of the struct values in the reverse order so that priority is given correctly
@@ -219,14 +217,14 @@ func (rules *ClientConfigLoadingRules) Load() (*clientcmdapi.Config, error) {
 	nonMapConfig := clientcmdapi.NewConfig()
 	for i := len(kubeconfigs) - 1; i >= 0; i-- {
 		kubeconfig := kubeconfigs[i]
-		mergo.MergeWithOverwrite(nonMapConfig, kubeconfig)
+		mergo.Merge(nonMapConfig, kubeconfig)
 	}
 
 	// since values are overwritten, but maps values are not, we can merge the non-map config on top of the map config and
 	// get the values we expect.
 	config := clientcmdapi.NewConfig()
-	mergo.MergeWithOverwrite(config, mapConfig)
-	mergo.MergeWithOverwrite(config, nonMapConfig)
+	mergo.Merge(config, mapConfig)
+	mergo.Merge(config, nonMapConfig)
 
 	if rules.ResolvePaths() {
 		if err := ResolveLocalPaths(config); err != nil {
@@ -616,18 +614,4 @@ func MakeRelative(path, base string) (string, error) {
 		return rel, nil
 	}
 	return path, nil
-}
-
-// deduplicate removes any duplicated values and returns a new slice, keeping the order unchanged
-func deduplicate(s []string) []string {
-	encountered := map[string]bool{}
-	ret := make([]string, 0)
-	for i := range s {
-		if encountered[s[i]] {
-			continue
-		}
-		encountered[s[i]] = true
-		ret = append(ret, s[i])
-	}
-	return ret
 }
