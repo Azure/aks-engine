@@ -130,9 +130,23 @@ If everything looks ok and Grafana and Influx DB were able to start up, you can 
 
 ![Image of Grafana](../images/k8s-monitoring-grafana2.png)
 
-## OMS
+## Azure Monitor for containers
 
-OMS is a hosted monitoring solution by Microsoft. It can be used to aggregate node metrics, logs, and other information. OMS container support can be configured to monitor a kubernetes cluster. For more information checkout the tutorial at Azure Docs [here.](https://github.com/MicrosoftDocs/azure-docs/blob/master/articles/container-service/kubernetes/container-service-tutorial-kubernetes-monitor.md)
+Azure Monitor for containers is a feature designed to monitor the performance of container workloads deployed to AKS-engine (formerly known as ACS-engine) cluster(s)hosted on Azure. Monitoring your containers is critical, especially when you're running a production cluster, at scale, with multiple applications.
+
+Azure Monitor for containers gives you performance visibility by collecting memory and processor metrics from controllers, nodes, and containers that are available in Kubernetes through the Metrics API. Container logs are also collected. After you enable monitoring from Kubernetes clusters, these metrics and logs are automatically collected for you through a containerized version of the Log Analytics agent for Linux and stored in your Log Analytics workspace.
+
+To setup Azure Monitor for containers for aks-engine cluster, please follow the instructions in [azuremonitor-containers](https://github.com/helm/charts/tree/master/incubator/azuremonitor-containers)
+
+Navigate to [azmon-containers](https://aka.ms/azmon-containers) to view the health, metrics and logs of AKS-engine cluster(s).
+
+For more details, see  following documentation 
+
+[azuremonitor-containers-aks-engine](https://github.com/Microsoft/OMS-docker/blob/aks-engine/README.md)
+
+[azuremonitor-containers-docs](https://docs.microsoft.com/en-us/azure/azure-monitor/insights/container-insights-overview)
+
+![Image of Azure Monitor for containers](../images/azure_monitor_aks_engine.png)
 
 ## Heapster REST API
 
