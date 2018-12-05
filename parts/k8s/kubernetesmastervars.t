@@ -55,6 +55,11 @@
     "etcdClientKeyFilepath": "/etc/kubernetes/certs/etcdclient.key",
     "etcdServerCertFilepath": "/etc/kubernetes/certs/etcdserver.crt",
     "etcdServerKeyFilepath": "/etc/kubernetes/certs/etcdserver.key",
+    {{if HasCosmosEtcd }}
+    "cosmosAccountName" : "{{ GetCosmosAccountName }}",
+    "cosmosDBCertb64" : "{{ GetCosmosDBCert }}",
+    "apiVersionCosmos" : "2015-04-08",
+    {{end}}
 {{end}}
     "useManagedIdentityExtension": "{{ UseManagedIdentity }}",
     "userAssignedID": "{{UserAssignedID}}",
