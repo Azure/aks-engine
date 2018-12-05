@@ -90,7 +90,7 @@
 
 ## "2016-03-30"版本apiVersion的集群定义文件
 
-以下是"2016-03-30"版本apiVersion的集群定义文件，这个版本的api和Azure Container Service Engine的一致。
+以下是"2016-03-30"版本apiVersion的集群定义文件，这个版本的api和Azure Kubernetes Engine的一致。
 
 ### apiVersion
 

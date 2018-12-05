@@ -1,8 +1,8 @@
-# Microsoft Azure Container Service Engine - Key vault certificate deployment
+# Microsoft Azure Kubernetes Engine - Key vault certificate deployment
 
 ## Overview
 
-AKS Engine enables you to create customized Docker enabled cluster on Microsoft Azure with certs installed from key vault during deployment.
+AKS Engine enables you to create customized Kubernetes cluster on Microsoft Azure with certs installed from key vault during deployment.
 
 The examples show you how to configure installing a cert from keyvault. These certs are assumed to be in the secrets portion of your keyvault:
 

@@ -1,4 +1,4 @@
-# Microsoft Azure Container Service Engine - Kubernetes AAD integration Walkthrough
+# Microsoft Azure Kubernetes Engine - Kubernetes AAD integration Walkthrough
 
 This is walkthrough is to help you get start with Azure Active Directory(AAD) integeration with an AKS Engine Kubernetes cluster.
 
