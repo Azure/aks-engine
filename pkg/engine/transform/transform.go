@@ -6,7 +6,6 @@ package transform
 import (
 	"fmt"
 	"log"
-	"runtime"
 	"sort"
 	"strings"
 
@@ -32,7 +31,6 @@ const (
 	createOptionFieldName          = "createOption"
 	tagsFieldName                  = "tags"
 	managedDiskFieldName           = "managedDisk"
-	outputsFieldName               = "outputs"
 
 	// ARM resource Types
 	nsgResourceType  = "Microsoft.Network/networkSecurityGroups"
@@ -102,55 +100,6 @@ func (t *Transformer) NormalizeForVMSSScaling(logger *logrus.Entry, templateMap 
 		}
 	}
 	return nil
-}
-
-// NormalizeForOpenShiftVMASScalingUp takes a template and removes elements that
-// are unwanted in a OpenShift VMAS scale up/down case
-func (t *Transformer) NormalizeForOpenShiftVMASScalingUp(logger *logrus.Entry, agentPoolName string, templateMap map[string]interface{}) (err error) {
-	defer func() {
-		// catch a failed type assertion and return it as an error.  This saves
-		// needing to write `if foo, ok := bar.(*Baz); ok` everywhere below.
-		if r := recover(); r != nil {
-			e, ok := r.(*runtime.TypeAssertionError)
-			if ok {
-				err = e
-			} else {
-				panic(r)
-			}
-		}
-	}()
-
-	isNeeded := func(name interface{}) bool {
-		return strings.Contains(name.(string), agentPoolName+"VMNamePrefix")
-	}
-
-	// only include resources including <agentPoolName>VMNamePrefix in their
-	// name (VM, VM extension, NIC).
-	resources := []interface{}{}
-	for _, res := range templateMap[resourcesFieldName].([]interface{}) {
-		res := res.(map[string]interface{})
-
-		if !isNeeded(res[nameFieldName]) {
-			continue
-		}
-
-		// remove dependencies to removed resources
-		depends := []interface{}{}
-		for _, depend := range res[dependsOnFieldName].([]interface{}) {
-			if isNeeded(depend) {
-				depends = append(depends, depend)
-			}
-		}
-		res[dependsOnFieldName] = depends
-
-		resources = append(resources, res)
-	}
-	templateMap[resourcesFieldName] = resources
-
-	// remove all outputs: they may depend on deleted resources
-	templateMap[outputsFieldName] = map[string]interface{}{}
-
-	return
 }
 
 // NormalizeForK8sVMASScalingUp takes a template and removes elements that are unwanted in a K8s VMAS scale up/down case

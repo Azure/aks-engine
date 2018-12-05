@@ -5,9 +5,7 @@ package engine
 
 import (
 	"fmt"
-	"io/ioutil"
 	"path"
-	"path/filepath"
 	"strconv"
 
 	"github.com/Azure/aks-engine/pkg/api"
@@ -131,15 +129,6 @@ func (w *ArtifactWriter) WriteTLSArtifacts(containerService *api.ContainerServic
 				return e
 			}
 		}
-	} else if properties.OrchestratorProfile.IsOpenShift() {
-		masterTarballPath := filepath.Join(artifactsDir, "master.tar.gz")
-		masterBundle := properties.OrchestratorProfile.OpenShiftConfig.ConfigBundles["master"]
-		if err := ioutil.WriteFile(masterTarballPath, masterBundle, 0644); err != nil {
-			return err
-		}
-		nodeTarballPath := filepath.Join(artifactsDir, "node.tar.gz")
-		nodeBundle := properties.OrchestratorProfile.OpenShiftConfig.ConfigBundles["bootstrap"]
-		return ioutil.WriteFile(nodeTarballPath, nodeBundle, 0644)
 	}
 
 	return nil

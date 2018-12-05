@@ -21,8 +21,7 @@ func assignKubernetesParameters(properties *api.Properties, parametersMap params
 
 	orchestratorProfile := properties.OrchestratorProfile
 
-	if orchestratorProfile.IsKubernetes() ||
-		orchestratorProfile.IsOpenShift() {
+	if orchestratorProfile.IsKubernetes() {
 
 		k8sVersion := orchestratorProfile.OrchestratorVersion
 		k8sComponents := api.K8sComponentsByVersionMap[k8sVersion]
@@ -229,13 +228,11 @@ func assignKubernetesParameters(properties *api.Properties, parametersMap params
 			addValue(parametersMap, "kubernetesEndpoint", properties.HostedMasterProfile.FQDN)
 		}
 
-		if !orchestratorProfile.IsOpenShift() {
-			// GPU nodes need docker-engine as the container runtime
-			if properties.HasNSeriesSKU() {
-				addValue(parametersMap, "dockerEngineDownloadRepo", cloudSpecConfig.DockerSpecConfig.DockerEngineRepo)
-			} else {
-				addValue(parametersMap, "dockerEngineDownloadRepo", "")
-			}
+		// GPU nodes need docker-engine as the container runtime
+		if properties.HasNSeriesSKU() {
+			addValue(parametersMap, "dockerEngineDownloadRepo", cloudSpecConfig.DockerSpecConfig.DockerEngineRepo)
+		} else {
+			addValue(parametersMap, "dockerEngineDownloadRepo", "")
 		}
 
 		if properties.AADProfile != nil {

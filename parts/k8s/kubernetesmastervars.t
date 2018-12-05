@@ -1,22 +1,14 @@
     "maxVMsPerPool": 100,
-{{ if IsOpenShift }}
-    "routerNSGName": "[concat(parameters('orchestratorName'), '-router-', parameters('nameSuffix'), '-nsg')]",
-    "routerNSGID": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('routerNSGName'))]",
-    "routerIPName": "[concat(parameters('orchestratorName'), '-router-ip-', variables('masterFqdnPrefix'), '-', parameters('nameSuffix'))]",
-    "routerLBName": "[concat(parameters('orchestratorName'), '-router-lb-', parameters('nameSuffix'))]",
-    "routerLBID": "[resourceId('Microsoft.Network/loadBalancers', variables('routerLBName'))]",
-{{ end }}
 {{ if not IsHostedMaster }}
-    {{ if not IsOpenShift }}
-        {{if eq .MasterProfile.Count 1}}
+    {{if eq .MasterProfile.Count 1}}
     "etcdPeerPrivateKeys": [
         "[parameters('etcdPeerPrivateKey0')]"
     ],
     "etcdPeerCertificates": [
         "[parameters('etcdPeerCertificate0')]"
     ],
-        {{end}}
-        {{if eq .MasterProfile.Count 3}}
+    {{end}}
+    {{if eq .MasterProfile.Count 3}}
     "etcdPeerPrivateKeys": [
         "[parameters('etcdPeerPrivateKey0')]",
         "[parameters('etcdPeerPrivateKey1')]",
@@ -27,8 +19,8 @@
         "[parameters('etcdPeerCertificate1')]",
         "[parameters('etcdPeerCertificate2')]"
     ],
-        {{end}}
-        {{if eq .MasterProfile.Count 5}}
+    {{end}}
+    {{if eq .MasterProfile.Count 5}}
     "etcdPeerPrivateKeys": [
         "[parameters('etcdPeerPrivateKey0')]",
         "[parameters('etcdPeerPrivateKey1')]",
@@ -43,7 +35,7 @@
         "[parameters('etcdPeerCertificate3')]",
         "[parameters('etcdPeerCertificate4')]"
     ],
-        {{end}}
+    {{end}}
     "etcdPeerCertFilepath":[
         "/etc/kubernetes/certs/etcdpeer0.crt",
         "/etc/kubernetes/certs/etcdpeer1.crt",
@@ -63,7 +55,6 @@
     "etcdClientKeyFilepath": "/etc/kubernetes/certs/etcdclient.key",
     "etcdServerCertFilepath": "/etc/kubernetes/certs/etcdserver.crt",
     "etcdServerKeyFilepath": "/etc/kubernetes/certs/etcdserver.key",
-    {{end}}
 {{end}}
     "useManagedIdentityExtension": "{{ UseManagedIdentity }}",
     "userAssignedID": "{{UserAssignedID}}",
@@ -140,7 +131,6 @@
     "customSearchDomainsScript": "{{GetKubernetesB64CustomSearchDomainsScript}}",
     "sshdConfig": "{{GetB64sshdConfig}}",
     "systemConf": "{{GetB64systemConf}}",
-{{if not IsOpenShift}}
     "provisionScriptParametersCommon": "[concat('ADMINUSER=',parameters('linuxAdminUsername'),' ETCD_DOWNLOAD_URL=',parameters('etcdDownloadURLBase'),' ETCD_VERSION=',parameters('etcdVersion'),' DOCKER_ENGINE_REPO=',parameters('dockerEngineDownloadRepo'),' TENANT_ID=',variables('tenantID'),' KUBERNETES_VERSION={{.OrchestratorProfile.OrchestratorVersion}} HYPERKUBE_URL=',parameters('kubernetesHyperkubeSpec'),' APISERVER_PUBLIC_KEY=',parameters('apiserverCertificate'),' SUBSCRIPTION_ID=',variables('subscriptionId'),' RESOURCE_GROUP=',variables('resourceGroup'),' LOCATION=',variables('location'),' VM_TYPE=',variables('vmType'),' SUBNET=',variables('subnetName'),' NETWORK_SECURITY_GROUP=',variables('nsgName'),' VIRTUAL_NETWORK=',variables('virtualNetworkName'),' VIRTUAL_NETWORK_RESOURCE_GROUP=',variables('virtualNetworkResourceGroupName'),' ROUTE_TABLE=',variables('routeTableName'),' PRIMARY_AVAILABILITY_SET=',variables('primaryAvailabilitySetName'),' PRIMARY_SCALE_SET=',variables('primaryScaleSetName'),' SERVICE_PRINCIPAL_CLIENT_ID=',variables('servicePrincipalClientId'),' SERVICE_PRINCIPAL_CLIENT_SECRET=',variables('singleQuote'),variables('servicePrincipalClientSecret'),variables('singleQuote'),' KUBELET_PRIVATE_KEY=',parameters('clientPrivateKey'),' TARGET_ENVIRONMENT=',parameters('targetEnvironment'),' NETWORK_PLUGIN=',parameters('networkPlugin'),' NETWORK_POLICY=',parameters('networkPolicy'),' VNET_CNI_PLUGINS_URL=',parameters('vnetCniLinuxPluginsURL'),' CNI_PLUGINS_URL=',parameters('cniPluginsURL'),' CLOUDPROVIDER_BACKOFF=',toLower(string(parameters('cloudproviderConfig').cloudProviderBackoff)),' CLOUDPROVIDER_BACKOFF_RETRIES=',parameters('cloudproviderConfig').cloudProviderBackoffRetries,' CLOUDPROVIDER_BACKOFF_EXPONENT=',parameters('cloudproviderConfig').cloudProviderBackoffExponent,' CLOUDPROVIDER_BACKOFF_DURATION=',parameters('cloudproviderConfig').cloudProviderBackoffDuration,' CLOUDPROVIDER_BACKOFF_JITTER=',parameters('cloudproviderConfig').cloudProviderBackoffJitter,' CLOUDPROVIDER_RATELIMIT=',toLower(string(parameters('cloudproviderConfig').cloudProviderRatelimit)),' CLOUDPROVIDER_RATELIMIT_QPS=',parameters('cloudproviderConfig').cloudProviderRatelimitQPS,' CLOUDPROVIDER_RATELIMIT_BUCKET=',parameters('cloudproviderConfig').cloudProviderRatelimitBucket,' USE_MANAGED_IDENTITY_EXTENSION=',variables('useManagedIdentityExtension'),' USER_ASSIGNED_IDENTITY_ID=',variables('userAssignedClientID'),' USE_INSTANCE_METADATA=',variables('useInstanceMetadata'),' LOAD_BALANCER_SKU=',variables('loadBalancerSku'),' EXCLUDE_MASTER_FROM_STANDARD_LB=',variables('excludeMasterFromStandardLB'),' CONTAINER_RUNTIME=',parameters('containerRuntime'),' CONTAINERD_DOWNLOAD_URL_BASE=',parameters('containerdDownloadURLBase'),' POD_INFRA_CONTAINER_SPEC=',parameters('kubernetesPodInfraContainerSpec'),' KMS_PROVIDER_VAULT_NAME=',variables('clusterKeyVaultName'),' IS_HOSTED_MASTER={{IsHostedMaster}}')]",
     {{if not IsHostedMaster}}
     {{if IsMasterVirtualMachineScaleSets}}
@@ -149,7 +139,6 @@
     "provisionScriptParametersMaster": "[concat('MASTER_VM_NAME=',variables('masterVMNames')[variables('masterOffset')],' ETCD_PEER_URL=',variables('masterEtcdPeerURLs')[variables('masterOffset')],' ETCD_CLIENT_URL=',variables('masterEtcdClientURLs')[variables('masterOffset')],' MASTER_NODE=true NO_OUTBOUND={{IsFeatureEnabled "BlockOutboundInternet"}} CLUSTER_AUTOSCALER_ADDON=',parameters('kubernetesClusterAutoscalerEnabled'),' ACI_CONNECTOR_ADDON=',parameters('kubernetesACIConnectorEnabled'),' APISERVER_PRIVATE_KEY=',parameters('apiServerPrivateKey'),' CA_CERTIFICATE=',parameters('caCertificate'),' CA_PRIVATE_KEY=',parameters('caPrivateKey'),' MASTER_FQDN=',variables('masterFqdnPrefix'),' KUBECONFIG_CERTIFICATE=',parameters('kubeConfigCertificate'),' KUBECONFIG_KEY=',parameters('kubeConfigPrivateKey'),' ETCD_SERVER_CERTIFICATE=',parameters('etcdServerCertificate'),' ETCD_CLIENT_CERTIFICATE=',parameters('etcdClientCertificate'),' ETCD_SERVER_PRIVATE_KEY=',parameters('etcdServerPrivateKey'),' ETCD_CLIENT_PRIVATE_KEY=',parameters('etcdClientPrivateKey'),' ETCD_PEER_CERTIFICATES=',string(variables('etcdPeerCertificates')),' ETCD_PEER_PRIVATE_KEYS=',string(variables('etcdPeerPrivateKeys')),' ENABLE_AGGREGATED_APIS=',string(parameters('enableAggregatedAPIs')),' KUBECONFIG_SERVER=',variables('kubeconfigServer'))]",
     {{end}}
     {{end}}
-{{end}}
     "generateProxyCertsScript": "{{GetKubernetesB64GenerateProxyCerts}}",
     "orchestratorNameVersionTag": "{{.OrchestratorProfile.OrchestratorType}}:{{.OrchestratorProfile.OrchestratorVersion}}",
 

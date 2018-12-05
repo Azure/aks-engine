@@ -36,14 +36,6 @@ const (
 	deployName             = "deploy"
 	deployShortDescription = "Deploy an Azure Resource Manager template"
 	deployLongDescription  = "Deploy an Azure Resource Manager template, parameters file and other assets for a cluster"
-
-	// aadServicePrincipal is a hard-coded service principal which represents
-	// Azure Active Dirctory (see az ad sp list)
-	aadServicePrincipal = "00000002-0000-0000-c000-000000000000"
-
-	// aadPermissionUserRead is the User.Read hard-coded permission on
-	// aadServicePrincipal (see az ad sp list)
-	aadPermissionUserRead = "311a71cc-e848-46a1-bdf8-97ff7156d8e6"
 )
 
 type deployCmd struct {
@@ -326,22 +318,6 @@ func autofillApimodel(dc *deployCmd) error {
 			appURL := fmt.Sprintf("https://%s/", appName)
 			var replyURLs *[]string
 			var requiredResourceAccess *[]graphrbac.RequiredResourceAccess
-			if dc.containerService.Properties.OrchestratorProfile.OrchestratorType == api.OpenShift {
-				appName = fmt.Sprintf("%s.%s.cloudapp.azure.com", appName, dc.containerService.Properties.AzProfile.Location)
-				appURL = fmt.Sprintf("https://%s:8443/", appName)
-				replyURLs = to.StringSlicePtr([]string{fmt.Sprintf("https://%s:8443/oauth2callback/Azure%%20AD", appName)})
-				requiredResourceAccess = &[]graphrbac.RequiredResourceAccess{
-					{
-						ResourceAppID: to.StringPtr(aadServicePrincipal),
-						ResourceAccess: &[]graphrbac.ResourceAccess{
-							{
-								ID:   to.StringPtr(aadPermissionUserRead),
-								Type: to.StringPtr("Scope"),
-							},
-						},
-					},
-				}
-			}
 			applicationResp, servicePrincipalObjectID, secret, err := dc.client.CreateApp(ctx, appName, appURL, replyURLs, requiredResourceAccess)
 			if err != nil {
 				return errors.Wrap(err, "apimodel invalid: ServicePrincipalProfile was empty, and we failed to create valid credentials")
@@ -467,11 +443,6 @@ func (dc *deployCmd) run() error {
 			log.Errorf(string(body))
 		}
 		log.Fatalln(err)
-	}
-
-	if dc.containerService.Properties.OrchestratorProfile.OrchestratorType == api.OpenShift {
-		// TODO: when the Azure client library is updated, read this from the template `masterFQDN` output
-		fmt.Printf("OpenShift web UI available at https://%s.%s.cloudapp.azure.com:8443/\n", dc.containerService.Properties.MasterProfile.DNSPrefix, dc.location)
 	}
 
 	return nil

@@ -15,8 +15,6 @@ const (
 	Kubernetes string = "Kubernetes"
 	// SwarmMode is the string constant for the Swarm Mode orchestrator type
 	SwarmMode string = "SwarmMode"
-	// OpenShift is the string constant for the OpenShift orchestrator type
-	OpenShift string = "OpenShift"
 )
 
 // validation values
@@ -92,15 +90,6 @@ var AllDCOSSupportedVersions = []string{
 }
 
 const (
-	// OpenShiftVersion3Dot9Dot0 is the major.minor.patch string for the 3.9.0 version of OpenShift
-	OpenShiftVersion3Dot9Dot0 string = "3.9.0"
-	// OpenShiftVersionUnstable is used for development in aks-engine and should not be used by end-users.
-	OpenShiftVersionUnstable string = "unstable"
-	// OpenShiftDefaultVersion is the default major.minor.patch version for OpenShift
-	OpenShiftDefaultVersion string = OpenShiftVersion3Dot9Dot0
-)
-
-const (
 	// SwarmVersion is the Swarm orchestrator version
 	SwarmVersion = "swarm:1.1.0"
 	// DockerCEVersion is the DockerCE orchestrator version
@@ -110,11 +99,6 @@ const (
 // GetAllSupportedDCOSVersions returns a slice of all supported DCOS versions.
 func GetAllSupportedDCOSVersions() []string {
 	return AllDCOSSupportedVersions
-}
-
-// GetAllSupportedOpenShiftVersions returns a slice of all supported OpenShift versions.
-func GetAllSupportedOpenShiftVersions() []string {
-	return []string{OpenShiftVersion3Dot9Dot0, OpenShiftVersionUnstable}
 }
 
 // GetAllSupportedSwarmVersions returns a slice of all supported Swarm versions.

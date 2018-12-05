@@ -10,7 +10,6 @@ import (
 
 	"github.com/blang/semver"
 
-	"github.com/Azure/aks-engine/pkg/api/common"
 	"github.com/Azure/aks-engine/pkg/api/v20160330"
 	"github.com/Azure/aks-engine/pkg/api/v20160930"
 	"github.com/Azure/aks-engine/pkg/api/v20170131"
@@ -165,8 +164,6 @@ func ConvertOrchestratorVersionProfileToVLabs(api *OrchestratorVersionProfile) *
 		vlabsProfile.OrchestratorType = vlabs.Swarm
 	case SwarmMode:
 		vlabsProfile.OrchestratorType = vlabs.SwarmMode
-	case OpenShift:
-		vlabsProfile.OrchestratorType = vlabs.OpenShift
 	}
 	vlabsProfile.OrchestratorVersion = api.OrchestratorVersion
 	vlabsProfile.Default = api.Default
@@ -478,10 +475,6 @@ func convertPropertiesToVLabs(api *Properties, vlabsProps *vlabs.Properties) {
 		vlabsProps.AADProfile = &vlabs.AADProfile{}
 		convertAADProfileToVLabs(api.AADProfile, vlabsProps.AADProfile)
 	}
-	if api.AzProfile != nil {
-		vlabsProps.AzProfile = &vlabs.AzProfile{}
-		convertAzProfileToVLabs(api.AzProfile, vlabsProps.AzProfile)
-	}
 
 	if api.FeatureFlags != nil {
 		vlabsProps.FeatureFlags = &vlabs.FeatureFlags{}
@@ -654,12 +647,8 @@ func convertOrchestratorProfileToVLabs(api *OrchestratorProfile, o *vlabs.Orches
 
 	if api.OrchestratorVersion != "" {
 		o.OrchestratorVersion = api.OrchestratorVersion
-		// Enable using "unstable" as a valid version in the openshift orchestrator.
-		// Required for progressing on an unreleased version.
-		if !api.IsOpenShift() || api.OrchestratorVersion != common.OpenShiftVersionUnstable {
-			sv, _ := semver.Make(o.OrchestratorVersion)
-			o.OrchestratorRelease = fmt.Sprintf("%d.%d", sv.Major, sv.Minor)
-		}
+		sv, _ := semver.Make(o.OrchestratorVersion)
+		o.OrchestratorRelease = fmt.Sprintf("%d.%d", sv.Major, sv.Minor)
 	}
 
 	if api.KubernetesConfig != nil {
@@ -667,26 +656,10 @@ func convertOrchestratorProfileToVLabs(api *OrchestratorProfile, o *vlabs.Orches
 		convertKubernetesConfigToVLabs(api.KubernetesConfig, o.KubernetesConfig)
 	}
 
-	if api.OpenShiftConfig != nil {
-		o.OpenShiftConfig = &vlabs.OpenShiftConfig{}
-		convertOpenShiftConfigToVLabs(api.OpenShiftConfig, o.OpenShiftConfig)
-	}
-
 	if api.DcosConfig != nil {
 		o.DcosConfig = &vlabs.DcosConfig{}
 		convertDcosConfigToVLabs(api.DcosConfig, o.DcosConfig)
 	}
-}
-
-func convertOpenShiftConfigToVLabs(api *OpenShiftConfig, vl *vlabs.OpenShiftConfig) {
-	vl.KubernetesConfig = &vlabs.KubernetesConfig{}
-	if api.KubernetesConfig != nil {
-		convertKubernetesConfigToVLabs(api.KubernetesConfig, vl.KubernetesConfig)
-	}
-	vl.ClusterUsername = api.ClusterUsername
-	vl.ClusterPassword = api.ClusterPassword
-	vl.EnableAADAuthentication = api.EnableAADAuthentication
-	vl.ConfigBundles = api.ConfigBundles
 }
 
 func convertDcosConfigToVLabs(api *DcosConfig, vl *vlabs.DcosConfig) {
@@ -1180,13 +1153,6 @@ func convertAADProfileToVLabs(api *AADProfile, vlabs *vlabs.AADProfile) {
 	vlabs.ServerAppID = api.ServerAppID
 	vlabs.TenantID = api.TenantID
 	vlabs.AdminGroupID = api.AdminGroupID
-}
-
-func convertAzProfileToVLabs(api *AzProfile, vlabs *vlabs.AzProfile) {
-	vlabs.Location = api.Location
-	vlabs.ResourceGroup = api.ResourceGroup
-	vlabs.SubscriptionID = api.SubscriptionID
-	vlabs.TenantID = api.TenantID
 }
 
 func convertFeatureFlagsToVLabs(api *FeatureFlags, vlabs *vlabs.FeatureFlags) {

@@ -47,7 +47,7 @@ func Test_OrchestratorProfile_Validate(t *testing.T) {
 					},
 				},
 			},
-			expectedError: "KubernetesConfig can be specified only when OrchestratorType is Kubernetes or OpenShift",
+			expectedError: "KubernetesConfig can be specified only when OrchestratorType is Kubernetes",
 		},
 		"should error when KubernetesConfig has invalid etcd version": {
 			properties: &Properties{
@@ -238,51 +238,6 @@ func Test_OrchestratorProfile_Validate(t *testing.T) {
 				},
 			},
 		},
-		"openshift should have failed on old version": {
-			properties: &Properties{
-				OrchestratorProfile: &OrchestratorProfile{
-					OrchestratorType:    OpenShift,
-					OrchestratorVersion: "v1.0",
-				},
-			},
-			expectedError: "OrchestratorProfile is not able to be rationalized, check supported Release or Version",
-		},
-		"openshift should not have failed on old version if update": {
-			properties: &Properties{
-				OrchestratorProfile: &OrchestratorProfile{
-					OrchestratorType:    OpenShift,
-					OrchestratorVersion: "v1.0",
-				},
-			},
-			isUpdate: true,
-		},
-		"openshift should not have failed on good version": {
-			properties: &Properties{
-				OrchestratorProfile: &OrchestratorProfile{
-					OrchestratorType:    OpenShift,
-					OrchestratorVersion: "3.9.0",
-					OpenShiftConfig:     validOpenShiftConifg(),
-				},
-			},
-		},
-		"openshift should not have failed on good version with v prefix": {
-			properties: &Properties{
-				OrchestratorProfile: &OrchestratorProfile{
-					OrchestratorType:    OpenShift,
-					OrchestratorVersion: "v3.9.0",
-					OpenShiftConfig:     validOpenShiftConifg(),
-				},
-			},
-		},
-		"openshift fails with unset config": {
-			properties: &Properties{
-				OrchestratorProfile: &OrchestratorProfile{
-					OrchestratorType:    OpenShift,
-					OrchestratorVersion: "v3.9.0",
-				},
-			},
-			expectedError: "OpenShiftConfig must be specified for OpenShift orchestrator",
-		},
 	}
 
 	for testName, test := range tests {
@@ -304,58 +259,6 @@ func Test_OrchestratorProfile_Validate(t *testing.T) {
 			}
 			if !strings.Contains(err.Error(), test.expectedError) {
 				t.Errorf("%s expected error: %s but received: %s", testName, test.expectedError, err.Error())
-			}
-		})
-	}
-}
-
-func Test_OpenShiftConfig_Validate(t *testing.T) {
-	tests := map[string]struct {
-		properties    *Properties
-		expectedError string
-		isUpdate      bool
-	}{
-		"openshift config requires username": {
-			properties: &Properties{
-				OrchestratorProfile: &OrchestratorProfile{
-					OrchestratorType:    OpenShift,
-					OrchestratorVersion: "v3.9.0",
-					OpenShiftConfig:     &OpenShiftConfig{ClusterPassword: "foo"},
-				},
-			},
-			expectedError: "ClusterUsername and ClusterPassword must both be specified",
-		},
-		"openshift config requires password": {
-			properties: &Properties{
-				OrchestratorProfile: &OrchestratorProfile{
-					OrchestratorType:    OpenShift,
-					OrchestratorVersion: "v3.9.0",
-					OpenShiftConfig:     &OpenShiftConfig{ClusterUsername: "foo"},
-				},
-			},
-			expectedError: "ClusterUsername and ClusterPassword must both be specified",
-		},
-	}
-
-	for testName, test := range tests {
-		test := test
-		t.Run(testName, func(t *testing.T) {
-			t.Parallel()
-			err := test.properties.validateOrchestratorProfile(test.isUpdate)
-
-			if test.expectedError == "" && err == nil {
-				return
-			}
-			if test.expectedError == "" && err != nil {
-				t.Errorf("%s expected no error but received: %s", testName, err.Error())
-				return
-			}
-			if test.expectedError != "" && err == nil {
-				t.Errorf("%s expected error: %s, but received no error", testName, test.expectedError)
-				return
-			}
-			if !strings.Contains(err.Error(), test.expectedError) {
-				t.Errorf("%s expected error to container %s but received: %s", testName, test.expectedError, err.Error())
 			}
 		})
 	}
@@ -974,7 +877,7 @@ func Test_AadProfile_Validate(t *testing.T) {
 		t.Parallel()
 		properties := getK8sDefaultProperties(false)
 		properties.OrchestratorProfile = &OrchestratorProfile{
-			OrchestratorType: OpenShift,
+			OrchestratorType: DCOS,
 		}
 		properties.AADProfile = &AADProfile{
 			ClientAppID: "92444486-5bc3-4291-818b-d53ae480991b",
@@ -985,44 +888,6 @@ func Test_AadProfile_Validate(t *testing.T) {
 			t.Errorf("error should have occurred with msg : %s, but got : %s", expectedMsg, err.Error())
 		}
 	})
-}
-
-func TestValidateProperties_AzProfile(t *testing.T) {
-	t.Run("It returns error for unsupported orchestratorTypes", func(t *testing.T) {
-		t.Parallel()
-		p := getK8sDefaultProperties(false)
-		p.OrchestratorProfile = &OrchestratorProfile{
-			OrchestratorType: Kubernetes,
-		}
-		p.AzProfile = &AzProfile{
-			TenantID:       "tenant_id",
-			SubscriptionID: "sub_id",
-			ResourceGroup:  "rg1",
-		}
-		expectedMsg := "'azProfile' is only supported by orchestrator 'OpenShift'"
-		if err := p.Validate(false); err == nil || err.Error() != expectedMsg {
-			t.Errorf("expected error to be thrown with message : %s", expectedMsg)
-		}
-	})
-
-	t.Run("It should return an error for incomplete azProfile details", func(t *testing.T) {
-		t.Parallel()
-		p := getK8sDefaultProperties(false)
-		p.OrchestratorProfile = &OrchestratorProfile{
-			OrchestratorType: OpenShift,
-			OpenShiftConfig:  validOpenShiftConifg(),
-		}
-		p.AzProfile = &AzProfile{
-			TenantID:       "tenant_id",
-			SubscriptionID: "sub_id",
-			ResourceGroup:  "",
-		}
-		expectedMsg := "'azProfile' must be supplied in full for orchestrator 'OpenShift'"
-		if err := p.validateAzProfile(); err == nil || err.Error() != expectedMsg {
-			t.Errorf("expected error to be thrown with message : %s", err.Error())
-		}
-	})
-
 }
 
 func TestProperties_ValidateInvalidStruct(t *testing.T) {
@@ -1571,45 +1436,6 @@ func TestMasterProfileValidate(t *testing.T) {
 			masterProfile: MasterProfile{
 				DNSPrefix: "dummy",
 				Count:     3,
-			},
-		},
-		{
-			name:             "Master Profile with valid DNS Prefix 3",
-			orchestratorType: OpenShift,
-			masterProfile: MasterProfile{
-				DNSPrefix:      "dummy",
-				Count:          1,
-				StorageProfile: ManagedDisks,
-			},
-		},
-		{
-			name:             "Openshift Master Profile with invalid DNS prefix config",
-			orchestratorType: OpenShift,
-			masterProfile: MasterProfile{
-				DNSPrefix: "dummy",
-				Count:     3,
-			},
-			expectedErr: "openshift can only deployed with one master",
-		},
-		{ // test existing vnet: run with only specifying vnetsubnetid
-			name:             "Master Profile with empty firstconsecutivestaticip and non-empty vnetsubnetid",
-			orchestratorType: OpenShift,
-			masterProfile: MasterProfile{
-				VnetSubnetID:   "testvnetstring",
-				Count:          1,
-				StorageProfile: ManagedDisks,
-			},
-			expectedErr: "when specifying a vnetsubnetid the firstconsecutivestaticip is required",
-		},
-		{ // test existing vnet: run with specifying both vnetsubnetid and firstconsecutivestaticip
-			name:             "Master Profile with non-empty firstconsecutivestaticip and non-empty vnetsubnetid",
-			orchestratorType: OpenShift,
-			masterProfile: MasterProfile{
-				DNSPrefix:                "dummy",
-				VnetSubnetID:             "testvnetstring",
-				FirstConsecutiveStaticIP: "10.0.0.1",
-				Count:                    1,
-				StorageProfile:           ManagedDisks,
 			},
 		},
 		{
@@ -2188,169 +2014,6 @@ func TestProperties_ValidateVNET(t *testing.T) {
 	}
 }
 
-func TestOpenshiftValidate(t *testing.T) {
-	tests := []struct {
-		name       string
-		properties *Properties
-		isUpgrade  bool
-
-		expectedErr error
-	}{
-		{
-			name: "valid",
-
-			properties: &Properties{
-				AzProfile: &AzProfile{
-					Location:       "eastus",
-					ResourceGroup:  "group",
-					SubscriptionID: "sub_id",
-					TenantID:       "tenant_id",
-				},
-				OrchestratorProfile: &OrchestratorProfile{
-					OrchestratorType: OpenShift,
-					OpenShiftConfig: &OpenShiftConfig{
-						ClusterUsername: "user",
-						ClusterPassword: "pass",
-					},
-				},
-				MasterProfile: &MasterProfile{
-					Count:          1,
-					DNSPrefix:      "mydns",
-					VMSize:         "Standard_D4s_v3",
-					StorageProfile: ManagedDisks,
-				},
-				AgentPoolProfiles: []*AgentPoolProfile{
-					{
-						Name:                "compute",
-						Count:               1,
-						VMSize:              "Standard_D4s_v3",
-						StorageProfile:      ManagedDisks,
-						AvailabilityProfile: AvailabilitySet,
-					},
-					{
-						Name:                "infra",
-						Role:                "infra",
-						Count:               1,
-						VMSize:              "Standard_D4s_v3",
-						StorageProfile:      ManagedDisks,
-						AvailabilityProfile: AvailabilitySet,
-					},
-				},
-				LinuxProfile: &LinuxProfile{
-					AdminUsername: "admin",
-					SSH: struct {
-						PublicKeys []PublicKey `json:"publicKeys" validate:"required,len=1"`
-					}{
-						PublicKeys: []PublicKey{
-							{KeyData: "ssh-key"},
-						},
-					},
-				},
-			},
-			isUpgrade: false,
-
-			expectedErr: nil,
-		},
-		{
-			name: "invalid - masterProfile.storageProfile needs to be ManagedDisks",
-
-			properties: &Properties{
-				AzProfile: &AzProfile{
-					Location:       "eastus",
-					ResourceGroup:  "group",
-					SubscriptionID: "sub_id",
-					TenantID:       "tenant_id",
-				},
-				OrchestratorProfile: &OrchestratorProfile{
-					OrchestratorType: OpenShift,
-					OpenShiftConfig: &OpenShiftConfig{
-						ClusterUsername: "user",
-						ClusterPassword: "pass",
-					},
-				},
-				MasterProfile: &MasterProfile{
-					Count:          1,
-					DNSPrefix:      "mydns",
-					VMSize:         "Standard_D4s_v3",
-					StorageProfile: StorageAccount,
-				},
-				LinuxProfile: &LinuxProfile{
-					AdminUsername: "admin",
-					SSH: struct {
-						PublicKeys []PublicKey `json:"publicKeys" validate:"required,len=1"`
-					}{
-						PublicKeys: []PublicKey{
-							{KeyData: "ssh-key"},
-						},
-					},
-				},
-			},
-			isUpgrade: false,
-
-			expectedErr: errors.New("OpenShift orchestrator supports only ManagedDisks"),
-		},
-		{
-			name: "invalid - agentPoolProfile[0].storageProfile needs to be ManagedDisks",
-
-			properties: &Properties{
-				AzProfile: &AzProfile{
-					Location:       "eastus",
-					ResourceGroup:  "group",
-					SubscriptionID: "sub_id",
-					TenantID:       "tenant_id",
-				},
-				OrchestratorProfile: &OrchestratorProfile{
-					OrchestratorType: OpenShift,
-					OpenShiftConfig: &OpenShiftConfig{
-						ClusterUsername: "user",
-						ClusterPassword: "pass",
-					},
-				},
-				MasterProfile: &MasterProfile{
-					Count:          1,
-					DNSPrefix:      "mydns",
-					VMSize:         "Standard_D4s_v3",
-					StorageProfile: ManagedDisks,
-				},
-				AgentPoolProfiles: []*AgentPoolProfile{
-					{
-						Name:                "compute",
-						Count:               1,
-						VMSize:              "Standard_D4s_v3",
-						StorageProfile:      StorageAccount,
-						AvailabilityProfile: AvailabilitySet,
-					},
-				},
-				LinuxProfile: &LinuxProfile{
-					AdminUsername: "admin",
-					SSH: struct {
-						PublicKeys []PublicKey `json:"publicKeys" validate:"required,len=1"`
-					}{
-						PublicKeys: []PublicKey{
-							{KeyData: "ssh-key"},
-						},
-					},
-				},
-			},
-			isUpgrade: false,
-
-			expectedErr: errors.New("OpenShift orchestrator supports only ManagedDisks"),
-		},
-	}
-
-	for _, test := range tests {
-		test := test
-		t.Run(test.name, func(t *testing.T) {
-			t.Parallel()
-			gotErr := test.properties.Validate(test.isUpgrade)
-			if !helpers.EqualError(gotErr, test.expectedErr) {
-				t.Logf("running scenario %q", test.name)
-				t.Errorf("expected error: %v\ngot error: %v", test.expectedErr, gotErr)
-			}
-		})
-	}
-}
-
 func TestWindowsProfile_Validate(t *testing.T) {
 	tests := []struct {
 		name             string
@@ -2395,100 +2058,6 @@ func TestWindowsProfile_Validate(t *testing.T) {
 			err := test.w.Validate(test.orchestratorType)
 			if err.Error() != test.expectedMsg {
 				t.Errorf("should error on unsupported orchType with msg : %s, but got : %s", test.expectedMsg, err.Error())
-			}
-		})
-	}
-}
-
-// validOpenShiftConifg returns a valid OpenShift config that can be use for validation tests.
-func validOpenShiftConifg() *OpenShiftConfig {
-	return &OpenShiftConfig{
-		ClusterUsername: "foo",
-		ClusterPassword: "bar",
-	}
-}
-
-func TestValidateAgentPoolProfiles(t *testing.T) {
-	tests := []struct {
-		name        string
-		properties  *Properties
-		expectedErr error
-	}{
-		{
-			name: "valid",
-			properties: &Properties{
-				OrchestratorProfile: &OrchestratorProfile{
-					OrchestratorType: OpenShift,
-				},
-				AgentPoolProfiles: []*AgentPoolProfile{
-					{
-						Name:                "compute",
-						StorageProfile:      ManagedDisks,
-						AvailabilityProfile: AvailabilitySet,
-					},
-					{
-						Name:                "infra",
-						Role:                "infra",
-						StorageProfile:      ManagedDisks,
-						AvailabilityProfile: AvailabilitySet,
-					},
-				},
-			},
-			expectedErr: nil,
-		},
-		{
-			name: "invalid - role wrong",
-			properties: &Properties{
-				OrchestratorProfile: &OrchestratorProfile{
-					OrchestratorType: OpenShift,
-				},
-				AgentPoolProfiles: []*AgentPoolProfile{
-					{
-						Name:                "compute",
-						StorageProfile:      ManagedDisks,
-						AvailabilityProfile: AvailabilitySet,
-					},
-					{
-						Name:                "infra",
-						StorageProfile:      ManagedDisks,
-						AvailabilityProfile: AvailabilitySet,
-					},
-				},
-			},
-			expectedErr: errors.New("OpenShift requires that the 'infra' agent pool profile, and no other, should have role 'infra'"),
-		},
-		{
-			name: "invalid - profiles misnamed",
-			properties: &Properties{
-				OrchestratorProfile: &OrchestratorProfile{
-					OrchestratorType: OpenShift,
-				},
-				AgentPoolProfiles: []*AgentPoolProfile{
-					{
-						Name:                "bad",
-						StorageProfile:      ManagedDisks,
-						AvailabilityProfile: AvailabilitySet,
-					},
-					{
-						Name:                "infra",
-						Role:                "infra",
-						StorageProfile:      ManagedDisks,
-						AvailabilityProfile: AvailabilitySet,
-					},
-				},
-			},
-			expectedErr: errors.New("OpenShift requires exactly two agent pool profiles: compute and infra"),
-		},
-	}
-
-	for _, test := range tests {
-		test := test
-		t.Run(test.name, func(t *testing.T) {
-			t.Parallel()
-			gotErr := test.properties.validateAgentPoolProfiles(true)
-			if !helpers.EqualError(gotErr, test.expectedErr) {
-				t.Logf("running scenario %q", test.name)
-				t.Errorf("expected error: %v\ngot error: %v", test.expectedErr, gotErr)
 			}
 		})
 	}
@@ -2608,84 +2177,6 @@ func TestValidateProperties_OrchestratorSpecificProperties(t *testing.T) {
 			t.Errorf("expected error with message : %s, but got %s", expectedMsg, err.Error())
 		}
 	})
-
-	t.Run("Should contain a valid DNS prefix", func(t *testing.T) {
-		t.Parallel()
-		p := getK8sDefaultProperties(false)
-		p.OrchestratorProfile.OrchestratorType = OpenShift
-		agentPoolProfiles := p.AgentPoolProfiles
-		agentPoolProfiles[0].DNSPrefix = "invalid_prefix"
-		expectedMsg := "DNSPrefix 'invalid_prefix' is invalid. The DNSPrefix must contain between 3 and 45 characters and can contain only letters, numbers, and hyphens.  It must start with a letter and must end with a letter or a number. (length was 14)"
-		if err := p.validateAgentPoolProfiles(true); err.Error() != expectedMsg {
-			t.Errorf("expected error with message : %s, but got %s", expectedMsg, err.Error())
-		}
-	})
-
-	t.Run("Should not contain ports when DNS prefix is empty", func(t *testing.T) {
-		t.Parallel()
-		p := getK8sDefaultProperties(false)
-		p.OrchestratorProfile.OrchestratorType = OpenShift
-		agentPoolProfiles := p.AgentPoolProfiles
-		agentPoolProfiles[0].Ports = []int{80, 443}
-		expectedMsg := "AgentPoolProfile.Ports must be empty when AgentPoolProfile.DNSPrefix is empty for Orchestrator: OpenShift"
-		if err := p.validateAgentPoolProfiles(true); err.Error() != expectedMsg {
-			t.Errorf("expected error with message : %s, but got %s", expectedMsg, err.Error())
-		}
-	})
-
-	t.Run("Should contain unique ports", func(t *testing.T) {
-		t.Parallel()
-		p := getK8sDefaultProperties(false)
-		p.OrchestratorProfile.OrchestratorType = OpenShift
-		agentPoolProfiles := p.AgentPoolProfiles
-		agentPoolProfiles[0].Ports = []int{80, 443, 80}
-		agentPoolProfiles[0].DNSPrefix = "sampleprefix"
-		expectedMsg := "agent profile 'agentpool' has duplicate port '80', ports must be unique"
-		if err := p.validateAgentPoolProfiles(true); err.Error() != expectedMsg {
-			t.Errorf("expected error with message : %s, but got %s", expectedMsg, err.Error())
-		}
-	})
-
-	t.Run("Should contain valid Storage Profile", func(t *testing.T) {
-		t.Parallel()
-		p := getK8sDefaultProperties(false)
-		p.OrchestratorProfile.OrchestratorType = OpenShift
-		agentPoolProfiles := p.AgentPoolProfiles
-		agentPoolProfiles[0].DiskSizesGB = []int{512, 256, 768}
-		agentPoolProfiles[0].DNSPrefix = "sampleprefix"
-		expectedMsg := "property 'StorageProfile' must be set to either 'StorageAccount' or 'ManagedDisks' when attaching disks"
-		if err := p.validateAgentPoolProfiles(true); err.Error() != expectedMsg {
-			t.Errorf("expected error with message : %s, but got %s", expectedMsg, err.Error())
-		}
-	})
-
-	t.Run("Should contain valid Availability Profile", func(t *testing.T) {
-		t.Parallel()
-		p := getK8sDefaultProperties(false)
-		p.OrchestratorProfile.OrchestratorType = OpenShift
-		agentPoolProfiles := p.AgentPoolProfiles
-		agentPoolProfiles[0].DiskSizesGB = []int{512, 256, 768}
-		agentPoolProfiles[0].StorageProfile = "ManagedDisks"
-		agentPoolProfiles[0].AvailabilityProfile = "InvalidAvailabilityProfile"
-		expectedMsg := "property 'AvailabilityProfile' must be set to either 'VirtualMachineScaleSets' or 'AvailabilitySet' when attaching disks"
-		if err := p.validateAgentPoolProfiles(true); err.Error() != expectedMsg {
-			t.Errorf("expected error with message : %s, but got %s", expectedMsg, err.Error())
-		}
-	})
-
-	t.Run("Should not support both VirtualMachineScaleSets and StorageAccount", func(t *testing.T) {
-		t.Parallel()
-		p := getK8sDefaultProperties(false)
-		p.OrchestratorProfile.OrchestratorType = OpenShift
-		agentPoolProfiles := p.AgentPoolProfiles
-		agentPoolProfiles[0].DiskSizesGB = []int{512, 256, 768}
-		agentPoolProfiles[0].StorageProfile = "StorageAccount"
-		agentPoolProfiles[0].AvailabilityProfile = "VirtualMachineScaleSets"
-		expectedMsg := "VirtualMachineScaleSets does not support storage account attached disks.  Instead specify 'StorageAccount': 'ManagedDisks' or specify AvailabilityProfile 'AvailabilitySet'"
-		if err := p.validateAgentPoolProfiles(true); err.Error() != expectedMsg {
-			t.Errorf("expected error with message : %s, but got %s", expectedMsg, err.Error())
-		}
-	})
 }
 
 func TestValidateProperties_CustomNodeLabels(t *testing.T) {
@@ -2738,18 +2229,6 @@ func TestAgentPoolProfile_ValidateAvailabilityProfile(t *testing.T) {
 		agentPoolProfiles := p.AgentPoolProfiles
 		agentPoolProfiles[0].AvailabilityProfile = "InvalidAvailabilityProfile"
 		expectedMsg := "unknown availability profile type 'InvalidAvailabilityProfile' for agent pool 'agentpool'.  Specify either AvailabilitySet, or VirtualMachineScaleSets"
-		if err := p.validateAgentPoolProfiles(true); err.Error() != expectedMsg {
-			t.Errorf("expected error with message : %s, but got %s", expectedMsg, err.Error())
-		}
-	})
-
-	t.Run("Should fail when using VirtualMachineScalesets with Openshift", func(t *testing.T) {
-		t.Parallel()
-		p := getK8sDefaultProperties(false)
-		p.OrchestratorProfile.OrchestratorType = OpenShift
-		agentPoolProfiles := p.AgentPoolProfiles
-		agentPoolProfiles[0].AvailabilityProfile = VirtualMachineScaleSets
-		expectedMsg := "Only AvailabilityProfile: AvailabilitySet is supported for Orchestrator 'OpenShift'"
 		if err := p.validateAgentPoolProfiles(true); err.Error() != expectedMsg {
 			t.Errorf("expected error with message : %s, but got %s", expectedMsg, err.Error())
 		}

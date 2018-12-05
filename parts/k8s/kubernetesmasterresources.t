@@ -45,11 +45,9 @@
       "apiVersion": "[variables('apiVersionNetwork')]",
       "dependsOn": [
 {{if RequireRouteTable}}
-        "[concat('Microsoft.Network/routeTables/', variables('routeTableName'))]"{{if not IsOpenShift}},{{end}}
+        "[concat('Microsoft.Network/routeTables/', variables('routeTableName'))]",
 {{end}}
-{{if not IsOpenShift}}
         "[concat('Microsoft.Network/networkSecurityGroups/', variables('nsgName'))]"
-{{end}}
       ],
       "location": "[variables('location')]",
       "name": "[variables('virtualNetworkName')]",
@@ -64,12 +62,10 @@
             "name": "[variables('subnetName')]",
             "properties": {
               "addressPrefix": "[parameters('masterSubnet')]"
-{{if not IsOpenShift}}
               ,
               "networkSecurityGroup": {
                 "id": "[variables('nsgID')]"
               }
-{{end}}
 {{if RequireRouteTable}}
               ,
               "routeTable": {
@@ -125,7 +121,7 @@
               "access": "Allow",
               "description": "Allow kube-apiserver (tls) traffic to master",
               "destinationAddressPrefix": "*",
-              "destinationPortRange": {{if IsOpenShift}}"8443-8443"{{else}}"443-443"{{end}},
+              "destinationPortRange": "443-443",
               "direction": "Inbound",
               "priority": 100,
               "protocol": "Tcp",
@@ -225,8 +221,8 @@
                 "id": "[concat(variables('masterLbID'), '/backendAddressPools/', variables('masterLbBackendPoolName'))]"
               },
               "protocol": "Tcp",
-              "frontendPort": {{if IsOpenShift}}8443{{else}}443{{end}},
-              "backendPort": {{if IsOpenShift}}8443{{else}}443{{end}},
+              "frontendPort": 443,
+              "backendPort": 443,
               "enableFloatingIP": false,
               "idleTimeoutInMinutes": 5,
               "loadDistribution": "Default",
@@ -241,7 +237,7 @@
             "name": "tcpHTTPSProbe",
             "properties": {
               "protocol": "Tcp",
-              "port": {{if IsOpenShift}}8443{{else}}443{{end}},
+              "port": 443,
               "intervalInSeconds": 5,
               "numberOfProbes": "2"
             }
@@ -282,17 +278,10 @@
         "name": "nicLoopNode"
       },
       "dependsOn": [
-{{if not IsOpenShift}}
 {{if .MasterProfile.IsCustomVNET}}
         "[variables('nsgID')]",
 {{else}}
         "[variables('vnetID')]",
-{{end}}
-{{else}}
-        "[variables('nsgID')]",
-{{if not .MasterProfile.IsCustomVNET}}
-        "[variables('vnetID')]",
-{{end}}
 {{end}}
         "[concat(variables('masterLbID'),'/inboundNatRules/SSH-',variables('masterVMNamePrefix'),copyIndex(variables('masterOffset')))]"
 {{if gt .MasterProfile.Count 1}}
@@ -357,7 +346,7 @@
           ]
       }
 {{end}}
-{{if or .MasterProfile.IsCustomVNET IsOpenShift}}
+{{if .MasterProfile.IsCustomVNET}}
         ,"networkSecurityGroup": {
           "id": "[variables('nsgID')]"
         }
@@ -373,17 +362,10 @@
           "name": "nicLoopNode"
         },
         "dependsOn": [
-  {{if not IsOpenShift}}
   {{if .MasterProfile.IsCustomVNET}}
           "[variables('nsgID')]"
   {{else}}
           "[variables('vnetID')]"
-  {{end}}
-  {{else}}
-          "[variables('nsgID')]"
-  {{if not .MasterProfile.IsCustomVNET}}
-          ,"[variables('vnetID')]"
-  {{end}}
   {{end}}
   {{if gt .MasterProfile.Count 1}}
           ,"[variables('masterInternalLbName')]"
@@ -440,7 +422,7 @@
           ]
       }
   {{end}}
-  {{if or .MasterProfile.IsCustomVNET IsOpenShift}}
+  {{if .MasterProfile.IsCustomVNET}}
           ,"networkSecurityGroup": {
             "id": "[variables('nsgID')]"
           }
@@ -633,12 +615,12 @@
               "backendAddressPool": {
                 "id": "[concat(variables('masterInternalLbID'), '/backendAddressPools/', variables('masterLbBackendPoolName'))]"
               },
-              "backendPort": {{if IsOpenShift}}8443{{else}}4443{{end}},
+              "backendPort": 4443,
               "enableFloatingIP": false,
               "frontendIPConfiguration": {
                 "id": "[variables('masterInternalLbIPConfigID')]"
               },
-              "frontendPort": {{if IsOpenShift}}8443{{else}}443{{end}},
+              "frontendPort": 443,
               "idleTimeoutInMinutes": 5,
               "protocol": "Tcp",
               "probe": {
@@ -653,7 +635,7 @@
             "properties": {
               "intervalInSeconds": 5,
               "numberOfProbes": 2,
-              "port": {{if IsOpenShift}}8443{{else}}4443{{end}},
+              "port": 4443,
               "protocol": "Tcp"
             }
           }
@@ -819,13 +801,6 @@
       },
       {{end}}
       {{end}}
-      {{if and IsOpenShift (not UseMasterCustomImage)}}
-      "plan": {
-        "name": "[parameters('osImageSku')]",
-        "publisher": "[parameters('osImagePublisher')]",
-        "product": "[parameters('osImageOffer')]"
-      },
-      {{end}}
       "properties": {
         {{if not .MasterProfile.HasAvailabilityZones}}
         "availabilitySet": {
@@ -845,9 +820,7 @@
         "osProfile": {
           "adminUsername": "[parameters('linuxAdminUsername')]",
           "computername": "[concat(variables('masterVMNamePrefix'), copyIndex(variables('masterOffset')))]",
-          {{if not IsOpenShift}}
           {{GetKubernetesMasterCustomData .}}
-          {{end}}
           "linuxConfiguration": {
             "disablePasswordAuthentication": true,
             "ssh": {
@@ -865,7 +838,7 @@
           {{end}}
         },
         "storageProfile": {
-          {{if and (not UseMasterCustomImage) (not IsOpenShift)}}
+          {{if not UseMasterCustomImage}}
           "dataDisks": [
             {
               "createOption": "Empty"
@@ -976,11 +949,7 @@
         "autoUpgradeMinorVersion": true,
         "settings": {},
         "protectedSettings": {
-        {{if IsOpenShift}}
-          "script": "{{ Base64 OpenShiftGetMasterSh }}"
-        {{else}}
           "commandToExecute": "[concat('retrycmd_if_failure() { r=$1; w=$2; t=$3; shift && shift && shift; for i in $(seq 1 $r); do timeout $t ${@}; [ $? -eq 0  ] && break || if [ $i -eq $r ]; then return 1; else sleep $w; fi; done };{{if not (IsFeatureEnabled "BlockOutboundInternet")}} ERR_OUTBOUND_CONN_FAIL=50; retrycmd_if_failure 50 1 3 nc -vz {{if IsMooncake}}gcr.azk8s.cn 80{{else}}k8s.gcr.io 443 && retrycmd_if_failure 50 1 3 nc -vz gcr.io 443 && retrycmd_if_failure 50 1 3 nc -vz docker.io 443{{end}} || exit $ERR_OUTBOUND_CONN_FAIL;{{end}} for i in $(seq 1 1200); do if [ -f /opt/azure/containers/provision.sh ]; then break; fi; if [ $i -eq 1200 ]; then exit 100; else sleep 1; fi; done; ', variables('provisionScriptParametersCommon'),' ',variables('provisionScriptParametersMaster'), ' /usr/bin/nohup /bin/bash -c \"/bin/bash /opt/azure/containers/provision.sh >> /var/log/azure/cluster-provision.log 2>&1\"')]"
-        {{end}}
         }
       }
     }

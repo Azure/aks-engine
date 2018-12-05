@@ -103,7 +103,7 @@ In order to install a preprovision extension, there are two required files - sup
 
 |File Name|Description|
 |-----------------------------|---|
-|supported-orchestrators.json |Defines what orchestrators are supported by the extension (Swarm, Dcos, OpenShift or Kubernetes)|
+|supported-orchestrators.json |Defines what orchestrators are supported by the extension (Swarm, Dcos, or Kubernetes)|
 |template.json               |The ARM template used to deploy the extension|
 |template-link.json          |The ARM template snippet which will be injected into azuredeploy.json to call template.json|
 |EXTENSION-NAME.sh           |The script file that will execute on the VM itself via Custom Script Extension to perform installation of the extension|

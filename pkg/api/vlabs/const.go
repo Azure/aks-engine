@@ -18,8 +18,6 @@ const (
 	Kubernetes string = "Kubernetes"
 	// SwarmMode is the string constant for the Swarm Mode orchestrator type
 	SwarmMode string = "SwarmMode"
-	// OpenShift is the string constant for the OpenShift orchestrator type
-	OpenShift string = "OpenShift"
 )
 
 // the OSTypes supported by vlabs

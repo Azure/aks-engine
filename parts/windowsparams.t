@@ -1,4 +1,4 @@
- {{if or IsKubernetes IsOpenShift}}
+ {{if IsKubernetes}}
     "kubeBinariesSASURL": {
       "metadata": {
         "description": "The download url for kubernetes windows binaries package that is created by scripts/build-windows-k8s.sh"
