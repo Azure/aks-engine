@@ -588,6 +588,14 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			}
 		})
 
+		It("should be able to get nodes metrics", func() {
+			cmd := exec.Command("kubectl", "top", "nodes")
+			util.PrintCommand(cmd)
+			out, err := cmd.CombinedOutput()
+			log.Printf("%s\n", out)
+			Expect(err).NotTo(HaveOccurred())
+		})
+
 		It("should be able to autoscale", func() {
 			if eng.HasLinuxAgents() && eng.ExpandedDefinition.Properties.OrchestratorProfile.KubernetesConfig.EnableAggregatedAPIs {
 				// "Pre"-delete the hpa in case a prior delete attempt failed, for long-running cluster scenarios
