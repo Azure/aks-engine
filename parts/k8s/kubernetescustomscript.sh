@@ -59,8 +59,8 @@ holdWALinuxAgent() {
     fi
 }
 
-if [[ ! -z "${MASTER_NODE}" ]]; then
-    installEtcd
+if [[ ! -z "${MASTER_NODE}" ]] && [[ -z "${COSMOS_URI}" ]]; then
+    	installEtcd
 fi
 
 if $FULL_INSTALL_REQUIRED; then
@@ -83,11 +83,23 @@ installKubeletAndKubectl
 ensureRPC
 createKubeManifestDir
 
-if [[ ! -z "${MASTER_NODE}" ]]; then
+# create etcd user if we are configured for etcd
+if [[ ! -z "${MASTER_NODE}" ]] && [[ -z "${COSMOS_URI}" ]]; then
+  configureEtcdUser
+fi
+
+if [[ ! -z "${MASTER_NODE}" ]]; then 
+  # this step configures all certs
+  # both configs etcd/cosmos
+  configureSecrets 
+fi
+# configure etcd if we are configured for etcd
+if [[ ! -z "${MASTER_NODE}" ]] && [[ -z "${COSMOS_URI}" ]]; then
     configureEtcd
 else
     removeEtcd
 fi
+
 
 if [ -f $CUSTOM_SEARCH_DOMAIN_SCRIPT ]; then
     $CUSTOM_SEARCH_DOMAIN_SCRIPT > /opt/azure/containers/setup-custom-search-domain.log 2>&1 || exit $ERR_CUSTOM_SEARCH_DOMAINS_FAIL
@@ -123,7 +135,9 @@ ensureJournal
 
 if [[ ! -z "${MASTER_NODE}" ]]; then
     writeKubeConfig
-    ensureEtcd
+    if [[ -z "${COSMOS_URI}" ]]; then
+      ensureEtcd
+    fi
     ensureK8sControlPlane
     ensurePodSecurityPolicy
 fi

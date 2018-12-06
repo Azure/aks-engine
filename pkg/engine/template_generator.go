@@ -319,10 +319,28 @@ func (t *TemplateGenerator) getTemplateFuncMap(cs *api.ContainerService) templat
 		"IsAzureCNI": func() bool {
 			return cs.Properties.OrchestratorProfile.IsAzureCNI()
 		},
+		"HasCosmosEtcd": func() bool {
+			return nil != cs.Properties.MasterProfile && helpers.IsTrueBoolPointer(cs.Properties.MasterProfile.CosmosEtcd)
+		},
+		"GetCosmosAccountName": func() string {
+			if nil != cs.Properties.MasterProfile && helpers.IsTrueBoolPointer(cs.Properties.MasterProfile.CosmosEtcd) {
+				return fmt.Sprintf(etcdAccountNameFmt, cs.Properties.MasterProfile.DNSPrefix)
+			}
+			return "" // This will apply on both during unit tests as !HasCosmosEtcd
+		},
+		"GetCosmosEndPointUri": func() string {
+			if nil != cs.Properties.MasterProfile && helpers.IsTrueBoolPointer(cs.Properties.MasterProfile.CosmosEtcd) {
+				return fmt.Sprintf(etcdEndpointURIFmt, cs.Properties.MasterProfile.DNSPrefix)
+			}
+			return "" // This will apply on both during unit tests as !HasCosmosEtcd
+		},
+		"GetCosmosDBCert": func() string {
+			encoded := base64.StdEncoding.EncodeToString([]byte(cs.Properties.CertificateProfile.EtcdClientCertificate))
+			return encoded
+		},
 		"RequireRouteTable": func() bool {
 			return cs.Properties.OrchestratorProfile.RequireRouteTable()
 		},
-
 		"IsPrivateCluster": func() bool {
 			if !cs.Properties.OrchestratorProfile.IsKubernetes() {
 				return false

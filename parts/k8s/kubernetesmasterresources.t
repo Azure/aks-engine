@@ -1,3 +1,40 @@
+{{if HasCosmosEtcd }}
+   {
+     "apiVersion": "[variables('apiVersionCosmos')]",
+     "type": "Microsoft.DocumentDB/databaseAccounts",
+     "kind": "GlobalDocumentDB",
+     "location": "[resourceGroup().location]",
+     "name": "[variables('cosmosAccountName')]",
+     "properties": {
+       "capabilities": [
+         {
+           "name": "EnableEtcd"
+         }
+        ],
+        "consistencyPolicy": {
+          "defaultConsistencyLevel": "BoundedStaleness",
+          "maxIntervalInSeconds": 5,
+          "maxStalenessPrefix": 100
+        },
+        "databaseAccountOfferType": "Standard",
+        "locations": [
+          {
+           "failoverPriority": 0,
+           "locationName": "[resourceGroup().location]"
+          },
+          {
+           "failoverPriority": 1,
+           "locationName": "[resourceGroup().location]"
+          }
+        ],
+        "name": "[variables('cosmosAccountName')]",
+        "primaryClientCertificatePemBytes": "[variables('cosmosDBCertb64')]"
+       },
+     "tags": {
+       "defaultExperience": "Etcd"
+      }
+     },
+{{end}}
 {{if .MasterProfile.IsManagedDisks}}
     {{if not .MasterProfile.HasAvailabilityZones}}
     {
@@ -287,6 +324,9 @@
 {{if gt .MasterProfile.Count 1}}
         ,"[variables('masterInternalLbName')]"
 {{end}}
+{{ if HasCosmosEtcd }}
+        ,"[resourceId('Microsoft.DocumentDB/databaseAccounts/', variables('cosmosAccountName'))]"
+{{ end }}
       ],
       "location": "[variables('location')]",
       "name": "[concat(variables('masterVMNamePrefix'), 'nic-', copyIndex(variables('masterOffset')))]",

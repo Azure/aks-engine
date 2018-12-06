@@ -357,6 +357,10 @@ func (p *Properties) setMasterProfileDefaults(isUpgrade bool) {
 	if p.MasterProfile.HTTPSourceAddressPrefix == "" {
 		p.MasterProfile.HTTPSourceAddressPrefix = "*"
 	}
+
+	if nil == p.MasterProfile.CosmosEtcd {
+		p.MasterProfile.CosmosEtcd = helpers.PointerToBool(DefaultUseCosmos)
+	}
 }
 
 // setVMSSDefaultsForMasters

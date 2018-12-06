@@ -198,6 +198,8 @@ const (
 	DefaultAcceleratedNetworking = true
 	// DefaultDNSAutoscalerAddonName is the name of the dns-autoscaler addon
 	DefaultDNSAutoscalerAddonName = "dns-autoscaler"
+	// DefaultUseCosmos determines if the cluster will use cosmos as etcd storage
+	DefaultUseCosmos = false
 )
 
 const (

@@ -91,6 +91,10 @@ const (
 	DefaultMasterEtcdServerPort = 2380
 	// DefaultMasterEtcdClientPort is the default etcd client port for Kubernetes master nodes
 	DefaultMasterEtcdClientPort = 2379
+	// etcdAccountNameFmt is the name format for a typical etcd account on Cosmos
+	etcdAccountNameFmt = "%sk8s"
+	// etcdEndpointURIFmt is the name format for a typical etcd account uri
+	etcdEndpointURIFmt = "%sk8s.etcd.cosmosdb.azure.com"
 )
 
 const (
