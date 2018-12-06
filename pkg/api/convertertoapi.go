@@ -82,7 +82,7 @@ func ConvertV20170131ContainerService(v20170131 *v20170131.ContainerService) *Co
 }
 
 // ConvertV20170701ContainerService converts a v20170701 ContainerService to an unversioned ContainerService
-func ConvertV20170701ContainerService(v20170701 *v20170701.ContainerService) *ContainerService {
+func ConvertV20170701ContainerService(v20170701 *v20170701.ContainerService, isUpdate bool) *ContainerService {
 	c := &ContainerService{}
 	c.ID = v20170701.ID
 	c.Location = helpers.NormalizeAzureRegion(v20170701.Location)
@@ -97,7 +97,7 @@ func ConvertV20170701ContainerService(v20170701 *v20170701.ContainerService) *Co
 	}
 	c.Type = v20170701.Type
 	c.Properties = &Properties{}
-	convertV20170701Properties(v20170701.Properties, c.Properties)
+	convertV20170701Properties(v20170701.Properties, c.Properties, isUpdate)
 	return c
 }
 
@@ -303,12 +303,12 @@ func convertV20170131Properties(v20170131 *v20170131.Properties, api *Properties
 	}
 }
 
-func convertV20170701Properties(v20170701 *v20170701.Properties, api *Properties) {
+func convertV20170701Properties(v20170701 *v20170701.Properties, api *Properties, isUpdate bool) {
 	api.ProvisioningState = ProvisioningState(v20170701.ProvisioningState)
 
 	if v20170701.OrchestratorProfile != nil {
 		api.OrchestratorProfile = &OrchestratorProfile{}
-		convertV20170701OrchestratorProfile(v20170701.OrchestratorProfile, api.OrchestratorProfile, v20170701.HasWindows())
+		convertV20170701OrchestratorProfile(v20170701.OrchestratorProfile, api.OrchestratorProfile, isUpdate, v20170701.HasWindows())
 	}
 	if v20170701.MasterProfile != nil {
 		api.MasterProfile = &MasterProfile{}
@@ -556,7 +556,7 @@ func convertV20170131OrchestratorProfile(v20170131 *v20170131.OrchestratorProfil
 	}
 }
 
-func convertV20170701OrchestratorProfile(v20170701cs *v20170701.OrchestratorProfile, api *OrchestratorProfile, hasWindows bool) {
+func convertV20170701OrchestratorProfile(v20170701cs *v20170701.OrchestratorProfile, api *OrchestratorProfile, isUpdate, hasWindows bool) {
 	if v20170701cs.OrchestratorType == v20170701.DockerCE {
 		api.OrchestratorType = SwarmMode
 	} else {
@@ -565,7 +565,10 @@ func convertV20170701OrchestratorProfile(v20170701cs *v20170701.OrchestratorProf
 
 	switch api.OrchestratorType {
 	case Kubernetes:
-		api.OrchestratorVersion = common.GetSupportedKubernetesVersion(v20170701cs.OrchestratorVersion, hasWindows)
+		api.OrchestratorVersion = common.RationalizeReleaseAndVersion(Kubernetes, "", v20170701cs.OrchestratorVersion, isUpdate, hasWindows)
+		if api.OrchestratorVersion == "" {
+			api.OrchestratorVersion = common.GetDefaultKubernetesVersion(hasWindows)
+		}
 	case DCOS:
 		switch v20170701cs.OrchestratorVersion {
 		case common.DCOSVersion1Dot10Dot0, common.DCOSVersion1Dot9Dot0, common.DCOSVersion1Dot8Dot8:
