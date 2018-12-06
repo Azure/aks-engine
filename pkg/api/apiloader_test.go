@@ -96,6 +96,15 @@ func TestLoadContainerServiceFromFile(t *testing.T) {
 		t.Errorf("Failed to set orcherstator version to windows default when it is not set in the json API v20170131, got %s but expected %s", containerService.Properties.OrchestratorProfile.OrchestratorVersion, common.GetDefaultKubernetesVersion(true))
 	}
 
+	// Test ACS scale scenario
+	existingContainerService.Properties.OrchestratorProfile.OrchestratorVersion = "1.8.12"
+	containerService, _, err = apiloader.LoadContainerServiceFromFile("../acsengine/testdata/v20170701/kubernetes.json", true, true, existingContainerService)
+	if err != nil {
+		t.Error(err.Error())
+	}
+	if containerService.Properties.OrchestratorProfile.OrchestratorVersion != "1.8.12" {
+		t.Errorf("Failed to set orcherstator version when it is set in the json, expected 1.8.12 but got %s", containerService.Properties.OrchestratorProfile.OrchestratorVersion)
+	}
 }
 
 func TestLoadContainerServiceForAgentPoolOnlyCluster(t *testing.T) {
