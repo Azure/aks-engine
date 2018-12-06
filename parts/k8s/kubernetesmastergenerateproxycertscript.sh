@@ -24,7 +24,6 @@ if [[ -z "${COSMOS_URI}" ]]; then
 else
   ETCDCTL_ENDPOINTS="${ETCDCTL_ENDPOINTS:=https://${COSMOS_URI}:2379}"
   ETCD_CA_PARAM=""
-  #we don't provide etcd ca cert for cosmos
 fi
 ETCDCTL_KEY_FILE="${ETCDCTL_KEY_FILE:=/etc/kubernetes/certs/etcdclient.key}"
 ETCDCTL_CERT_FILE="${ETCDCTL_CERT_FILE:=/etc/kubernetes/certs/etcdclient.crt}"
@@ -32,10 +31,8 @@ ETCDCTL_CERT_FILE="${ETCDCTL_CERT_FILE:=/etc/kubernetes/certs/etcdclient.crt}"
 ETCDCTL_PARAMS="--command-timeout=30s --cert=${ETCDCTL_CERT_FILE} --key=${ETCDCTL_KEY_FILE} ${ETCD_CA_PARAM} --endpoints=${ETCDCTL_ENDPOINTS}"
 export RANDFILE=$(mktemp)
 
-# generate root CA
 openssl genrsa -out $PROXY_CA_KEY 2048
 openssl req -new -x509 -days 1826 -key $PROXY_CA_KEY -out $PROXY_CRT -subj '/CN=proxyClientCA'
-# generate new cert
 openssl genrsa -out $PROXY_CLIENT_KEY 2048
 openssl req -new -key $PROXY_CLIENT_KEY -out $PROXY_CLIENT_CSR -subj '/CN=aggregator/O=system:masters'
 openssl x509 -req -days 730 -in $PROXY_CLIENT_CSR -CA $PROXY_CRT -CAkey $PROXY_CA_KEY -set_serial 02 -out $PROXY_CLIENT_CRT
@@ -61,9 +58,8 @@ is_etcd_healthy(){
         [ $? -eq 0  ] && break || sleep 5
     done
 }
-# block until all etcd is ready
 is_etcd_healthy 
-#pluming for making sure that one master gets to create proxy certs
+# lock file to enable "only 1 master generates certs"
 rm -f "${PROXY_CERT_LOCK_FILE}"
 mkfifo "${PROXY_CERT_LOCK_FILE}"
 
@@ -96,9 +92,3 @@ rm -f "${PROXY_CERT_LOCK_FILE}"
 echo "$(date) cert gen and save/check etcd completed"
 
 write_certs_to_disk_with_retry
-
-# If the etcdtl mk command failed, that means the key already exists
-#else
-#    sleep 5
-#    write_certs_to_disk_with_retry
-#fi
