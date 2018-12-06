@@ -132,7 +132,7 @@ If everything looks ok and Grafana and Influx DB were able to start up, you can 
 
 ## Azure Monitor for containers
 
-Azure Monitor for containers is a feature designed to monitor the performance of container workloads deployed to AKS-engine (formerly known as ACS-engine) cluster(s)hosted on Azure. Monitoring your containers is critical, especially when you're running a production cluster, at scale, with multiple applications.
+Azure Monitor for containers is a feature designed to monitor the performance of container workloads deployed to AKS-engine (formerly known as ACS-engine) cluster(s) hosted on Azure. Monitoring your containers is critical, especially when you're running a production cluster, at scale, with multiple applications.
 
 Azure Monitor for containers gives you performance visibility by collecting memory and processor metrics from controllers, nodes, and containers that are available in Kubernetes through the Metrics API. Container logs are also collected. After you enable monitoring from Kubernetes clusters, these metrics and logs are automatically collected for you through a containerized version of the Log Analytics agent for Linux and stored in your Log Analytics workspace.
 
@@ -142,7 +142,7 @@ Navigate to [azmon-containers](https://aka.ms/azmon-containers) to view the heal
 
 For more details on how to use the product, see [Azure Monitor for containers](https://docs.microsoft.com/en-us/azure/azure-monitor/insights/container-insights-overview)
 
-Refer for the supported matrix and troubleshooting [azuremonitor-containers-aks-engine](https://github.com/Microsoft/OMS-docker/blob/aks-engine/README.md) 
+Refer [azuremonitor-containers-aks-engine](https://github.com/Microsoft/OMS-docker/blob/aks-engine/README.md) for the supported matrix, troubleshooting and supportability etc.
 
 ![Image of Azure Monitor for containers](../images/azure_monitor_aks_engine.png)
 
