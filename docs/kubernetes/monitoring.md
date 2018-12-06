@@ -142,7 +142,7 @@ Navigate to [azmon-containers](https://aka.ms/azmon-containers) to view the heal
 
 For more details on how to use the product, see [Azure Monitor for containers](https://docs.microsoft.com/en-us/azure/azure-monitor/insights/container-insights-overview)
 
-Refer [azuremonitor-containers-aks-engine](https://github.com/Microsoft/OMS-docker/blob/aks-engine/README.md) for the supported matrix, troubleshooting and supportability etc.
+Refer to [azuremonitor-containers-aks-engine](https://github.com/Microsoft/OMS-docker/blob/aks-engine/README.md) for the supported matrix, troubleshooting and supportability etc.
 
 ![Image of Azure Monitor for containers](../images/azure_monitor_aks_engine.png)
 
