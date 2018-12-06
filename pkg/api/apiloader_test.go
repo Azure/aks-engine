@@ -98,7 +98,7 @@ func TestLoadContainerServiceFromFile(t *testing.T) {
 
 	// Test ACS scale scenario
 	existingContainerService.Properties.OrchestratorProfile.OrchestratorVersion = "1.8.12"
-	containerService, _, err = apiloader.LoadContainerServiceFromFile("../acsengine/testdata/v20170701/kubernetes.json", true, true, existingContainerService)
+	containerService, _, err = apiloader.LoadContainerServiceFromFile("../engine/testdata/v20170701/kubernetes.json", true, true, existingContainerService)
 	if err != nil {
 		t.Error(err.Error())
 	}
