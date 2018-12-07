@@ -12,9 +12,13 @@ AKS clusters can be created in the Azure portal or with `az aks create` in the [
 
 AKS-Engine is the next version of the ACS-Engine project. AKS-Engine supports current and future versions of [Kubernetes][], while ACS-Engine also supported the Docker Swarm and Mesos DC/OS container orchestrators.
 
+### Can I Scale or Upgrade an `acs-engine` Cluster with `aks-engine`?
+
+Yes.
+
 ### Is ACS-Engine Still Active?
 
-Security fixes and other critical changes will still go into ACS-Engine and patch releases will be made as needed. But in general, improvements and releases with new features will only be made in AKS-Engine.
+No further development or releases in ACS-Engine are planned. AKS-Engine is a backward-compatible continuation of ACS-Engine, so all fixes and new features will target AKS-Engine.
 
 ### Can I Build an AKS Cluster with `aks-engine`?
 
