@@ -1,5 +1,5 @@
-// Package v20170831 stores the API model for version "2017-08-31."
+// Package kubernetesupgrade allows upgrading of Kubernetes clusters.
 //
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
-package v20170831
+package kubernetesupgrade
