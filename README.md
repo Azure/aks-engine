@@ -12,6 +12,8 @@ AKS-Engine leverages ARM (Azure Resource Manager) to build Kubernetes IaaS in Az
 
 We are currently in transition from acs-engine to aks-engine! Bear with us as we stabilize this space as the future home for building customizable, self-managed Kubernetes on Azure!
 
+Please see the [FAQ](/docs/faq.md) for answers about AKS-Engine and this project transition.
+
 ## Code of conduct
 
 This project has adopted the [Microsoft Open Source Code of Conduct](https://opensource.microsoft.com/codeofconduct/). For more information see the [Code of Conduct FAQ](https://opensource.microsoft.com/codeofconduct/faq) or contact [opencode@microsoft.com](mailto:opencode@microsoft.com) with any additional questions or comments.
