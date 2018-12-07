@@ -186,10 +186,11 @@ var (
 			ResourceManagerVMDNSSuffix: "cloudapp.microsoftazure.de",
 		},
 		OSImageConfig: map[Distro]AzureOSImageConfig{
-			Ubuntu: GermanCloudUbuntuImageConfig,
-			RHEL:   DefaultRHELOSImageConfig,
-			CoreOS: DefaultCoreOSImageConfig,
-			AKS:    GermanCloudUbuntuImageConfig,
+			Ubuntu:          GermanCloudUbuntuImageConfig,
+			RHEL:            DefaultRHELOSImageConfig,
+			CoreOS:          DefaultCoreOSImageConfig,
+			AKS:             GermanCloudUbuntuImageConfig,
+			AKSDockerEngine: GermanCloudUbuntuImageConfig,
 		},
 	}
 
@@ -203,10 +204,11 @@ var (
 			ResourceManagerVMDNSSuffix: "cloudapp.usgovcloudapi.net",
 		},
 		OSImageConfig: map[Distro]AzureOSImageConfig{
-			Ubuntu: SovereignCloudsUbuntuImageConfig,
-			RHEL:   DefaultRHELOSImageConfig,
-			CoreOS: DefaultCoreOSImageConfig,
-			AKS:    SovereignCloudsUbuntuImageConfig,
+			Ubuntu:          SovereignCloudsUbuntuImageConfig,
+			RHEL:            DefaultRHELOSImageConfig,
+			CoreOS:          DefaultCoreOSImageConfig,
+			AKS:             SovereignCloudsUbuntuImageConfig,
+			AKSDockerEngine: SovereignCloudsUbuntuImageConfig,
 		},
 	}
 
@@ -244,14 +246,15 @@ var (
 			ResourceManagerVMDNSSuffix: "cloudapp.chinacloudapi.cn",
 		},
 		OSImageConfig: map[Distro]AzureOSImageConfig{
-			Ubuntu: SovereignCloudsUbuntuImageConfig,
-			RHEL:   DefaultRHELOSImageConfig,
-			CoreOS: DefaultCoreOSImageConfig,
-			AKS:    SovereignCloudsUbuntuImageConfig,
+			Ubuntu:          SovereignCloudsUbuntuImageConfig,
+			RHEL:            DefaultRHELOSImageConfig,
+			CoreOS:          DefaultCoreOSImageConfig,
+			AKS:             SovereignCloudsUbuntuImageConfig,
+			AKSDockerEngine: SovereignCloudsUbuntuImageConfig,
 		},
 	}
 
-	// AzureCloudSpecEnvMap is the environment configuration map for all the Azure cloid environments.
+	// AzureCloudSpecEnvMap is the environment configuration map for all the Azure cloud environments.
 	AzureCloudSpecEnvMap = map[string]AzureEnvironmentSpecConfig{
 		AzureChinaCloud:        AzureChinaCloudSpec,
 		azureGermanCloud:       AzureGermanCloudSpec,
