@@ -254,7 +254,7 @@ var (
 		},
 	}
 
-	// AzureCloudSpecEnvMap is the environment configuration map for all the Azure cloud environments
+	// AzureCloudSpecEnvMap is the environment configuration map for all the Azure cloud environments.
 	AzureCloudSpecEnvMap = map[string]AzureEnvironmentSpecConfig{
 		AzureChinaCloud:        AzureChinaCloudSpec,
 		azureGermanCloud:       AzureGermanCloudSpec,
