@@ -589,11 +589,21 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 		})
 
 		It("should be able to get nodes metrics", func() {
-			cmd := exec.Command("kubectl", "top", "nodes")
-			util.PrintCommand(cmd)
-			out, err := cmd.CombinedOutput()
-			log.Printf("%s\n", out)
-			Expect(err).NotTo(HaveOccurred())
+			success := false
+			for i := 0; i < 30; i++ {
+				cmd := exec.Command("kubectl", "top", "nodes")
+				util.PrintCommand(cmd)
+				out, err := cmd.CombinedOutput()
+				if err == nil {
+					success = true
+					break
+				}
+				if i > 28 {
+					log.Printf("Error while running kubectl top nodes:%s\n", err)
+					log.Println(string(out))
+				}
+			}
+			Expect(success).To(BeTrue())
 		})
 
 		It("should be able to autoscale", func() {
