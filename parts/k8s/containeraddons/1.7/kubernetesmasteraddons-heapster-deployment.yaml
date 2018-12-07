@@ -95,7 +95,7 @@ spec:
         operator: Exists
       serviceAccountName: heapster
       containers:
-      - image: <img>
+      - image: {{ContainerImage "heapster"}}
         imagePullPolicy: IfNotPresent
         command:
         - "/heapster"
@@ -108,7 +108,7 @@ spec:
           limits:
             cpu: 80m
             memory: 140Mi
-      - image: <imgNanny>
+      - image: {{ContainerImage "heapster-nanny"}}
         imagePullPolicy: IfNotPresent
         command:
         - "/pod_nanny"

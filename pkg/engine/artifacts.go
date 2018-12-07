@@ -21,6 +21,12 @@ type kubernetesFeatureSetting struct {
 
 func kubernetesContainerAddonSettingsInit(profile *api.Properties) map[string]kubernetesFeatureSetting {
 	return map[string]kubernetesFeatureSetting{
+		DefaultHeapsterAddonName: {
+			"kubernetesmasteraddons-heapster-deployment.yaml",
+			"kube-heapster-deployment.yaml",
+			!common.IsKubernetesVersionGe(profile.OrchestratorProfile.OrchestratorVersion, "1.12.0"),
+			profile.OrchestratorProfile.KubernetesConfig.GetAddonScript(DefaultKubeHeapsterDeploymentAddonName),
+		},
 		DefaultMetricsServerAddonName: {
 			"kubernetesmasteraddons-metrics-server-deployment.yaml",
 			"kube-metrics-server-deployment.yaml",
@@ -119,13 +125,6 @@ func kubernetesContainerAddonSettingsInit(profile *api.Properties) map[string]ku
 
 func kubernetesAddonSettingsInit(profile *api.Properties) []kubernetesFeatureSetting {
 	return []kubernetesFeatureSetting{
-		{
-
-			"kubernetesmasteraddons-heapster-deployment.yaml",
-			"kube-heapster-deployment.yaml",
-			true,
-			profile.OrchestratorProfile.KubernetesConfig.GetAddonScript(DefaultKubeHeapsterDeploymentAddonName),
-		},
 		{
 			"kubernetesmasteraddons-kube-dns-deployment.yaml",
 			"kube-dns-deployment.yaml",
@@ -329,6 +328,11 @@ func buildConfigString(configString, destinationFile, destinationPath string) st
 }
 
 func getCustomScriptFromFile(sourceFile, sourcePath, version string) string {
+	customDataFilePath := getCustomDataFilePath(sourceFile, sourcePath, version)
+	return getBase64CustomScript(customDataFilePath)
+}
+
+func getCustomDataFilePath(sourceFile, sourcePath, version string) string {
 	sourceFileFullPath := sourcePath + "/" + sourceFile
 	sourceFileFullPathVersioned := sourcePath + "/" + version + "/" + sourceFile
 
@@ -337,5 +341,5 @@ func getCustomScriptFromFile(sourceFile, sourcePath, version string) string {
 	if err == nil {
 		sourceFileFullPath = sourceFileFullPathVersioned
 	}
-	return getBase64CustomScript(sourceFileFullPath)
+	return sourceFileFullPath
 }

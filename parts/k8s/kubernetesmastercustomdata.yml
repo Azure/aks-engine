@@ -304,7 +304,6 @@ MASTER_ARTIFACTS_CONFIG_PLACEHOLDER
 {{else}}
     sed -i "s|<img>|{{WrapAsParameter "kubernetesKubeDNSSpec"}}|g; s|<imgMasq>|{{WrapAsParameter "kubernetesDNSMasqSpec"}}|g; s|<imgSidecar>|{{WrapAsParameter "kubernetesDNSSidecarSpec"}}|g; s|<domain>|{{WrapAsParameter "kubernetesKubeletClusterDomain"}}|g; s|<clustIP>|{{WrapAsParameter "kubeDNSServiceIP"}}|g" $KUBEDNS
 {{end}}
-    sed -i "s|<img>|{{WrapAsParameter "kubernetesHeapsterSpec"}}|g; s|<imgNanny>|{{WrapAsParameter "kubernetesAddonResizerSpec"}}|g" /etc/kubernetes/addons/kube-heapster-deployment.yaml
 
 {{if AdminGroupID }}
     sed -i "s|<gID>|{{WrapAsParameter "aadAdminGroupId"}}|g" "/etc/kubernetes/addons/aad-default-admin-group-rbac.yaml"

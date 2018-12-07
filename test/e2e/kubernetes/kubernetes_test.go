@@ -171,7 +171,11 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 		})
 
 		It("should have core kube-system componentry running", func() {
-			for _, componentName := range []string{"kube-proxy", "heapster", "kube-addon-manager", "kube-apiserver", "kube-controller-manager", "kube-scheduler"} {
+			coreComponents := []string{"kube-proxy", "kube-addon-manager", "kube-apiserver", "kube-controller-manager", "kube-scheduler"}
+			if !common.IsKubernetesVersionGe(eng.ExpandedDefinition.Properties.OrchestratorProfile.OrchestratorVersion, "1.12.0") {
+				coreComponents = append(coreComponents, "heapster")
+			}
+			for _, componentName := range coreComponents {
 				By(fmt.Sprintf("Ensuring that %s is Running", componentName))
 				running, err := pod.WaitOnReady(componentName, "kube-system", 3, 1*time.Second, cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())

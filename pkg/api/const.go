@@ -111,6 +111,8 @@ const (
 const publicAgentPoolSuffix = "-public"
 
 const (
+	// DefaultHeapsterAddonEnabled determines the acs-engine provided default for enabling heapster addon
+	DefaultHeapsterAddonEnabled = true
 	// DefaultTillerAddonEnabled determines the aks-engine provided default for enabling tiller addon
 	DefaultTillerAddonEnabled = true
 	// DefaultAADPodIdentityAddonEnabled determines the aks-engine provided default for enabling aad-pod-identity addon
@@ -149,6 +151,8 @@ const (
 	DefaultDNSAutoscalerAddonEnabled = false
 	// IPMasqAgentAddonEnabled enables the ip-masq-agent addon
 	IPMasqAgentAddonEnabled = true
+	// DefaultHeapsterAddonName is the name of the heapster addon
+	DefaultHeapsterAddonName = "heapster"
 	// DefaultTillerAddonName is the name of the tiller addon deployment
 	DefaultTillerAddonName = "tiller"
 	// DefaultAADPodIdentityAddonName is the name of the aad-pod-identity addon deployment
