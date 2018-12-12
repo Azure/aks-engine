@@ -59,25 +59,25 @@ jobs:
 
 - template: e2e-linux-job-template.yaml
   parameters:
-    name: 'k8s-1.10-release-e2e'
+    name: 'k8s_1.10_release_e2e'
     k8sRelease: '1.10'
     apimodel: 'examples/e2e-tests/kubernetes/release/default/definition.json'
 
 - template: e2e-linux-job-template.yaml
   parameters:
-    name: 'k8s-1.11-release-e2e'
+    name: 'k8s_1.11_release_e2e'
     k8sRelease: '1.11'
     apimodel: 'examples/e2e-tests/kubernetes/release/default/definition.json'
 
 - template: e2e-linux-job-template.yaml
   parameters:
-    name: 'k8s-1.12-release-e2e'
+    name: 'k8s_1.12_release_e2e'
     k8sRelease: '1.12'
     apimodel: 'examples/e2e-tests/kubernetes/release/default/definition.json'
 
 - template: e2e-linux-job-template.yaml
   parameters:
-    name: 'k8s-1.13-release-e2e'
+    name: 'k8s_1.13_release_e2e'
     k8sRelease: '1.13'
     apimodel: 'examples/e2e-tests/kubernetes/release/default/definition.json'
 
