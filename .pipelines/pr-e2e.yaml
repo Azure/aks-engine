@@ -89,7 +89,7 @@ jobs:
   - script: make build-binary
     displayName: Compile
     workingDirectory: $(modulePath)
-  - script: make test-kubernetes
+  - script: printenv && make test-kubernetes
     displayName: ginkgo k8s e2e tests
     workingDirectory: $(modulePath)
     # todo : store artifacts
