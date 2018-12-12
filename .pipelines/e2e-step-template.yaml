@@ -1,0 +1,21 @@
+steps:
+  - script: |
+      mkdir -p '$(GOBIN)'
+      mkdir -p '$(GOPATH)/pkg'
+      mkdir -p '$(modulePath)'
+      shopt -s extglob
+      mv !(gopath) '$(modulePath)'
+      echo '##vso[task.prependpath]$(GOBIN)'
+      echo '##vso[task.prependpath]$(GOROOT)/bin'
+    displayName: 'Set up the Go workspace'
+  - script: make build-binary
+    displayName: Compile
+    workingDirectory: $(modulePath)
+  - script: |
+      export CLIENT_ID=$(SERVICE_PRINCIPAL_CLIENT_ID_E2E_KUBERNETES)
+      export CLIENT_SECRET=$(SERVICE_PRINCIPAL_CLIENT_SECRET_E2E_KUBERNETES)
+      export CLIENT_OBJECTID=$(SERVICE_PRINCIPAL_OBJECT_ID_E2E_KUBERNETES)
+      make test-kubernetes
+    displayName: ginkgo k8s e2e tests
+    workingDirectory: $(modulePath)
+    # todo : store artifacts
