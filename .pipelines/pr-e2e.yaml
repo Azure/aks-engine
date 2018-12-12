@@ -67,6 +67,14 @@ jobs:
     GOROOT: '/usr/local/go' # Go installation path
     GOPATH: '$(system.defaultWorkingDirectory)/gopath' # Go workspace path
     modulePath: '$(GOPATH)/src/github.com/$(build.repository.name)' # Path to the module's code
+    TIMEOUT: 10m
+    CLUSTER_DEFINITION: examples/kubernetes.json
+    CREATE_VNET: false
+    CLEANUP_ON_EXIT: $(CLEANUP_ON_EXIT)
+    RETAIN_SSH: false
+    SUBSCRIPTION_ID: $(SUBSCRIPTION_ID_E2E_KUBERNETES)
+    CLIENT_ID: $(SERVICE_PRINCIPAL_CLIENT_ID_E2E_KUBERNETES)
+    CLIENT_SECRET: $(SERVICE_PRINCIPAL_CLIENT_SECRET_E2E_KUBERNETES)
 
   steps:
   - script: |
@@ -81,3 +89,7 @@ jobs:
   - script: make build-binary
     displayName: Compile
     workingDirectory: $(modulePath)
+  - script: make test-kubernetes
+    displayName: ginkgo k8s e2e tests
+    workingDirectory: $(modulePath)
+    # todo : store artifacts
