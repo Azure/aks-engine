@@ -70,11 +70,9 @@ jobs:
     TIMEOUT: 10m
     CLUSTER_DEFINITION: examples/kubernetes.json
     CREATE_VNET: false
-    CLEANUP_ON_EXIT: false
+    CLEANUP_ON_EXIT: true
     RETAIN_SSH: false
     SUBSCRIPTION_ID: '$(SUBSCRIPTION_ID_E2E_KUBERNETES)'
-    CLIENT_ID: '$(SERVICE_PRINCIPAL_CLIENT_ID_E2E_KUBERNETES)'
-    CLIENT_SECRET: '$(SERVICE_PRINCIPAL_CLIENT_SECRET_E2E_KUBERNETES)'
 
   steps:
   - script: |
@@ -89,7 +87,10 @@ jobs:
   - script: make build-binary
     displayName: Compile
     workingDirectory: $(modulePath)
-  - script: printenv && make test-kubernetes
+  - script: |
+      export CLIENT_SECRET=$(SERVICE_PRINCIPAL_CLIENT_SECRET_E2E_KUBERNETES)
+      export CLIENT_SECRET=$(SERVICE_PRINCIPAL_CLIENT_SECRET_E2E_KUBERNETES)
+      make test-kubernetes
     displayName: ginkgo k8s e2e tests
     workingDirectory: $(modulePath)
     # todo : store artifacts
