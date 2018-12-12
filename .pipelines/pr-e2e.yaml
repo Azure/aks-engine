@@ -88,7 +88,7 @@ jobs:
     displayName: Compile
     workingDirectory: $(modulePath)
   - script: |
-      export CLIENT_SECRET=$(SERVICE_PRINCIPAL_CLIENT_SECRET_E2E_KUBERNETES)
+      export CLIENT_ID=$(SERVICE_PRINCIPAL_CLIENT_ID_E2E_KUBERNETES)
       export CLIENT_SECRET=$(SERVICE_PRINCIPAL_CLIENT_SECRET_E2E_KUBERNETES)
       make test-kubernetes
     displayName: ginkgo k8s e2e tests
