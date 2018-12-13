@@ -198,6 +198,8 @@ const (
 	Creating ProvisioningState = "Creating"
 	// Updating means an existing ContainerService resource is being updated
 	Updating ProvisioningState = "Updating"
+	// Scaling means an existing ContainerService resource is being scaled only
+	Scaling ProvisioningState = "Scaling"
 	// Failed means resource is in failed state
 	Failed ProvisioningState = "Failed"
 	// Succeeded means resource created succeeded during last create/update
