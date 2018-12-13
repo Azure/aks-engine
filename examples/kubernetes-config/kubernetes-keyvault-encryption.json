@@ -5,8 +5,7 @@
       "orchestratorType": "Kubernetes",
       "orchestratorRelease": "1.10",
       "kubernetesConfig": {
-        "enableEncryptionWithExternalKms": true,
-        "keyVaultSku": "Premium"
+        "enableEncryptionWithExternalKms": true
       }
     },
     "masterProfile": {

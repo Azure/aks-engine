@@ -734,7 +734,6 @@ func convertKubernetesConfigToVLabs(api *KubernetesConfig, vlabs *vlabs.Kubernet
 	vlabs.AzureCNIVersion = api.AzureCNIVersion
 	vlabs.AzureCNIURLLinux = api.AzureCNIURLLinux
 	vlabs.AzureCNIURLWindows = api.AzureCNIURLWindows
-	vlabs.KeyVaultSku = api.KeyVaultSku
 	convertAddonsToVlabs(api, vlabs)
 	convertKubeletConfigToVlabs(api, vlabs)
 	convertControllerManagerConfigToVlabs(api, vlabs)
