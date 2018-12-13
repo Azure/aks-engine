@@ -48,54 +48,58 @@ jobs:
     displayName: Run unit tests and calculate coverage
     workingDirectory: $(modulePath)
 
-- template: e2e-linux-job-template.yaml
+- template: e2e-job-template.yaml
   parameters:
     name: 'default_linux_e2e'
     apimodel: 'examples/kubernetes.json'
 
-- template: e2e-linux-job-template.yaml
+- template: e2e-job-template.yaml
   parameters:
     name: 'k8s_1dot10_release_e2e'
     k8sRelease: '1.10'
     apimodel: 'examples/e2e-tests/kubernetes/release/default/definition.json'
+    createVNET: true
 
-- template: e2e-linux-job-template.yaml
+- template: e2e-job-template.yaml
   parameters:
     name: 'k8s_1dot11_release_e2e'
     k8sRelease: '1.11'
     apimodel: 'examples/e2e-tests/kubernetes/release/default/definition.json'
+    createVNET: true
 
-- template: e2e-linux-job-template.yaml
+- template: e2e-job-template.yaml
   parameters:
     name: 'k8s_1dot12_release_e2e'
     k8sRelease: '1.12'
     apimodel: 'examples/e2e-tests/kubernetes/release/default/definition.json'
+    createVNET: true
 
-- template: e2e-linux-job-template.yaml
+- template: e2e-job-template.yaml
   parameters:
     name: 'k8s_1dot13_release_e2e'
     k8sRelease: '1.13'
     apimodel: 'examples/e2e-tests/kubernetes/release/default/definition.json'
+    createVNET: true
 
-- template: e2e-linux-job-template.yaml
+- template: e2e-job-template.yaml
   parameters:
     name: 'k8s_windows_1dot10_release_e2e'
     k8sRelease: '1.10'
     apimodel: 'examples/e2e-tests/kubernetes/windows/hybrid/definition.json'
 
-- template: e2e-linux-job-template.yaml
+- template: e2e-job-template.yaml
   parameters:
     name: 'k8s_windows_1dot11_release_e2e'
     k8sRelease: '1.11'
     apimodel: 'examples/e2e-tests/kubernetes/windows/hybrid/definition.json'
 
-- template: e2e-linux-job-template.yaml
+- template: e2e-job-template.yaml
   parameters:
     name: 'k8s_windows_1dot12_release_e2e'
     k8sRelease: '1.12'
     apimodel: 'examples/e2e-tests/kubernetes/windows/hybrid/definition.json'
 
-- template: e2e-linux-job-template.yaml
+- template: e2e-job-template.yaml
   parameters:
     name: 'k8s_windows_1dot13_release_e2e'
     k8sRelease: '1.13'
