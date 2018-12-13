@@ -193,7 +193,7 @@ func (mkc *MockKubernetesClient) GetNode(name string) (*v1.Node, error) {
 	}
 	node := &v1.Node{}
 	node.Status.Conditions = append(node.Status.Conditions, v1.NodeCondition{Type: v1.NodeReady, Status: v1.ConditionTrue})
-	node.Status.NodeInfo.KubeletVersion = "1.7.9"
+	node.Status.NodeInfo.KubeletVersion = "1.9.10"
 	return node, nil
 }
 
@@ -379,7 +379,7 @@ func (mc *MockAKSEngineClient) ListVirtualMachines(ctx context.Context, resource
 	poolnameString := "poolName"
 
 	creationSource := "acsengine-k8s-agentpool1-12345678-0"
-	orchestrator := "Kubernetes:1.7.9"
+	orchestrator := "Kubernetes:1.9.10"
 	resourceNameSuffix := "12345678"
 	poolname := "agentpool1"
 
@@ -447,7 +447,7 @@ func (mc *MockAKSEngineClient) GetVirtualMachine(ctx context.Context, resourceGr
 	poolnameString := "poolName"
 
 	creationSource := "acsengine-k8s-agentpool1-12345678-0"
-	orchestrator := "Kubernetes:1.7.9"
+	orchestrator := "Kubernetes:1.9.10"
 	resourceNameSuffix := "12345678"
 	poolname := "agentpool1"
 

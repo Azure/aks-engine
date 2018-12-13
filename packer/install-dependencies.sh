@@ -41,7 +41,7 @@ installContainerd
 
 installImg
 
-DASHBOARD_VERSIONS="1.10.0 1.6.3"
+DASHBOARD_VERSIONS="1.10.0"
 for DASHBOARD_VERSION in ${DASHBOARD_VERSIONS}; do
     pullContainerImage "docker" "k8s.gcr.io/kubernetes-dashboard-amd64:v${DASHBOARD_VERSION}"
 done
@@ -66,7 +66,7 @@ for METRICS_SERVER_VERSION in ${METRICS_SERVER_VERSIONS}; do
     pullContainerImage "docker" "k8s.gcr.io/metrics-server-amd64:v${METRICS_SERVER_VERSION}"
 done
 
-KUBE_DNS_VERSIONS="1.14.13 1.14.5"
+KUBE_DNS_VERSIONS="1.14.13"
 for KUBE_DNS_VERSION in ${KUBE_DNS_VERSIONS}; do
     pullContainerImage "docker" "k8s.gcr.io/k8s-dns-kube-dns-amd64:${KUBE_DNS_VERSION}"
 done
@@ -76,7 +76,7 @@ for KUBE_ADDON_MANAGER_VERSION in ${KUBE_ADDON_MANAGER_VERSIONS}; do
     pullContainerImage "docker" "k8s.gcr.io/kube-addon-manager-amd64:v${KUBE_ADDON_MANAGER_VERSION}"
 done
 
-KUBE_DNS_MASQ_VERSIONS="1.14.10 1.14.8 1.14.5"
+KUBE_DNS_MASQ_VERSIONS="1.14.10 1.14.8"
 for KUBE_DNS_MASQ_VERSION in ${KUBE_DNS_MASQ_VERSIONS}; do
     pullContainerImage "docker" "k8s.gcr.io/k8s-dns-dnsmasq-nanny-amd64:${KUBE_DNS_MASQ_VERSION}"
 done
@@ -154,7 +154,7 @@ done
 pullContainerImage "docker" "busybox"
 
 # TODO: fetch supported k8s versions from an aks-engine command instead of hardcoding them here
-K8S_VERSIONS="1.7.15 1.7.16 1.8.14 1.8.15 1.9.10 1.9.11 1.10.8 1.10.9 1.11.4 1.11.5 1.12.1 1.12.2"
+K8S_VERSIONS="1.9.10 1.9.11 1.10.8 1.10.9 1.11.4 1.11.5 1.12.1 1.12.2"
 
 for KUBERNETES_VERSION in ${K8S_VERSIONS}; do
     HYPERKUBE_URL="k8s.gcr.io/hyperkube-amd64:v${KUBERNETES_VERSION}"
