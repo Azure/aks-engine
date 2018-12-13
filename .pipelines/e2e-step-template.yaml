@@ -18,4 +18,7 @@ steps:
       make test-kubernetes
     displayName: ginkgo k8s e2e tests
     workingDirectory: $(modulePath)
-    # todo : store artifacts
+  - task: PublishPipelineArtifact@0
+    inputs:
+      artifactName: 'E2E_logs'
+      targetPath: '$(modulePath)/_logs'
