@@ -33,5 +33,3 @@ jobs:
 
   steps:
     - template: e2e-step-template.yaml
-      parameters:
-        job: '$(Agent.JobName)'

@@ -1,6 +1,3 @@
-parameters:
-  job: ''
-
 steps:
   - script: |
       mkdir -p '$(GOBIN)'
@@ -23,5 +20,5 @@ steps:
     workingDirectory: $(modulePath)
   - task: PublishPipelineArtifact@0
     inputs:
-      artifactName: '${{ parameters.job }}-logs'
+      artifactName: '${{ parameters.name }}_logs'
       targetPath: '$(modulePath)/_logs'
