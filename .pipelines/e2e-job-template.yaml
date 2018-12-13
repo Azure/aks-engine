@@ -2,9 +2,11 @@ parameters:
   name: ''  # defaults for any parameters that aren't specified
   k8sRelease: ''
   apimodel: 'examples/e2e-tests/kubernetes/release/default/definition.json'
+  createVNET: false
 
 jobs:
 - job: ${{ parameters.name }}
+  dependsOn: unit_tests
   timeoutInMinutes: 60
   cancelTimeoutInMinutes: 5
   strategy:
@@ -22,7 +24,7 @@ jobs:
     TIMEOUT: 20m
     CLUSTER_DEFINITION: ${{ parameters.apimodel }}
     ORCHESTRATOR_RELEASE: ${{ parameters.k8sRelease }}
-    CREATE_VNET: true
+    CREATE_VNET: ${{ parameters.createVNET }}
     CLEANUP_ON_EXIT: true
     CLEANUP_IF_FAIL: true
     RETAIN_SSH: false
