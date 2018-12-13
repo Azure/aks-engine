@@ -1,4 +1,18 @@
-trigger: none
+trigger:
+  branches:
+    include:
+    - master
+  paths:
+    exclude:
+    - docs/*
+
+pr:
+  branches:
+    include:
+    - master
+  paths:
+    exclude:
+    - docs/*
 
 resources:
   containers:
