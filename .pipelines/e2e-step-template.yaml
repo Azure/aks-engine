@@ -20,5 +20,5 @@ steps:
     workingDirectory: $(modulePath)
   - task: PublishPipelineArtifact@0
     inputs:
-      artifactName: 'E2E_logs'
+      artifactName: '$(agent.jobName)-logs'
       targetPath: '$(modulePath)/_logs'
