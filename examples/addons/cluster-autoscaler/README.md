@@ -27,8 +27,9 @@ The following is an example:
             "name": "cluster-autoscaler",
             "enabled": true,
             "config": {
-              "minNodes": "1",
-              "maxNodes": "5"
+              "min-nodes": "1",
+              "max-nodes": "5",
+              "scan-interval": "10s",
             }
           }
         ]
@@ -72,16 +73,17 @@ Follow the README at https://github.com/kubernetes/autoscaler/tree/master/cluste
 
 ## Configuration
 
-| Name           | Required | Description                       | Default Value                                              |
-| -------------- | -------- | --------------------------------- | ---------------------------------------------------------- |
-| minNodes       | no       | minimum node count                | 1                                                          |
-| maxNodes       | no       | maximum node count                | 5                                                          |
-| name           | no       | container name                    | "cluster-autoscaler"                                       |
-| image          | no       | image                             | "gcr.io/google-containers/cluster-autoscaler" |
-| cpuRequests    | no       | cpu requests for the container    | "100m"                                                     |
-| memoryRequests | no       | memory requests for the container | "300Mi"                                                    |
-| cpuLimits      | no       | cpu limits for the container      | "100m"                                                     |
-| memoryLimits   | no       | memory limits for the container   | "300Mi"                                                    |
+| Name           | Required | Description                                    | Default Value                                              |
+| -------------- | -------- | ---------------------------------------------- | ---------------------------------------------------------- |
+| min-nodes      | no       | minimum node count                             | 1                                                          |
+| max-nodes      | no       | maximum node count                             | 5                                                          |
+| scan-interval  | no       | interval to evaluate scale up/down decision    | "10s"                                                      |
+| name           | no       | container name                                 | "cluster-autoscaler"                                       |
+| image          | no       | image                                          | "gcr.io/google-containers/cluster-autoscaler"              |
+| cpuRequests    | no       | cpu requests for the container                 | "100m"                                                     |
+| memoryRequests | no       | memory requests for the container              | "300Mi"                                                    |
+| cpuLimits      | no       | cpu limits for the container                   | "100m"                                                     |
+| memoryLimits   | no       | memory limits for the container                | "300Mi"                                                    |
 
 ## Supported Orchestrators
 
