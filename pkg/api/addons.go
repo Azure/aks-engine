@@ -58,8 +58,9 @@ func (cs *ContainerService) setAddonsConfig(isUpdate bool) {
 		Name:    DefaultClusterAutoscalerAddonName,
 		Enabled: helpers.PointerToBool(DefaultClusterAutoscalerAddonEnabled),
 		Config: map[string]string{
-			"min-nodes": "1",
-			"max-nodes": "5",
+			"min-nodes":     "1",
+			"max-nodes":     "5",
+			"scan-interval": "10s",
 		},
 		Containers: []KubernetesContainerSpec{
 			{

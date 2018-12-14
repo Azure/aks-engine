@@ -170,6 +170,7 @@ spec:
         - --cloud-provider=azure
         - --skip-nodes-with-local-storage=false
         - --nodes={{ContainerConfig "min-nodes"}}:{{ContainerConfig "max-nodes"}}:<vmssName>
+        - --scan-interval={{ContainerConfig "scan-interval"}}
         env:
         - name: ARM_CLOUD
           value: "<cloud>"
