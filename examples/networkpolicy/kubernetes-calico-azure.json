@@ -4,7 +4,8 @@
     "orchestratorProfile": {
       "orchestratorType": "Kubernetes",
       "kubernetesConfig": {
-        "networkPolicy": "calico"
+        "networkPolicy": "calico",
+        "networkPlugin": "azure"
       }
     },
     "masterProfile": {
