@@ -26,7 +26,7 @@ No, Azure Kubernetes Service itself is the way to create a supported, managed AK
 
 ### Should I use the latest `aks-engine` release if I was previously using `acs-engine`?
 
-Yes. `aks-engine` 0.27.0 is a continuation of acs-engine 0.26.2 with all the Kubernetes fixes and features included in 0.26.2 and more.
+Yes. `aks-engine` [v0.27.0][] is a continuation of acs-engine [v0.26.2][] with all the Kubernetes fixes and features included in [v0.26.2][] and more.
 
 
 [AKS]: https://azure.microsoft.com/en-us/services/kubernetes-service/
@@ -34,3 +34,5 @@ Yes. `aks-engine` 0.27.0 is a continuation of acs-engine 0.26.2 with all the Kub
 [Azure command-line tool]: https://docs.microsoft.com/en-us/cli/azure/install-azure-cli?view=azure-cli-latest
 [acs-engine release]: https://github.com/Azure/acs-engine/releases
 [Kubernetes]: https://kubernetes.io/
+[v0.27.0]: https://github.com/Azure/aks-engine/releases/tag/v0.27.0
+[v0.26.2]: https://github.com/Azure/aks-engine/releases/tag/v0.26.2
