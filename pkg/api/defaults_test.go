@@ -185,7 +185,7 @@ func TestAddonsIndexByName(t *testing.T) {
 }
 
 func TestAssignDefaultAddonImages(t *testing.T) {
-	addonNameMap := map[string]string{
+	addonContainerMap := map[string]string{
 		DefaultTillerAddonName:             "gcr.io/kubernetes-helm/tiller:v2.11.0",
 		DefaultACIConnectorAddonName:       "microsoft/virtual-kubelet:latest",
 		DefaultClusterAutoscalerAddonName:  "k8s.gcr.io/cluster-autoscaler:v1.2.2",
@@ -200,10 +200,11 @@ func TestAssignDefaultAddonImages(t *testing.T) {
 		IPMASQAgentAddonName:               "k8s.gcr.io/ip-masq-agent-amd64:v2.0.0",
 		AzureCNINetworkMonitoringAddonName: "containernetworking/networkmonitor:v0.0.4",
 		DefaultDNSAutoscalerAddonName:      "k8s.gcr.io/cluster-proportional-autoscaler-amd64:1.1.1",
+		DefaultHeapsterAddonName:           "k8s.gcr.io/heapster-amd64:v1.5.1",
 	}
 
 	var addons []KubernetesAddon
-	for addonName := range addonNameMap {
+	for addonName := range addonContainerMap {
 		containerName := addonName
 		if addonName == ContainerMonitoringAddonName {
 			containerName = "omsagent"
@@ -231,7 +232,7 @@ func TestAssignDefaultAddonImages(t *testing.T) {
 	modifiedAddons := mockCS.Properties.OrchestratorProfile.KubernetesConfig.Addons
 
 	for _, addon := range modifiedAddons {
-		expected := addonNameMap[addon.Name]
+		expected := addonContainerMap[addon.Name]
 		actual := addon.Containers[0].Image
 		if actual != expected {
 			t.Errorf("expected setDefaults to set Image %s in addon %s, but got %s", expected, addon.Name, actual)

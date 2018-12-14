@@ -46,12 +46,10 @@ func assignKubernetesParameters(properties *api.Properties, parametersMap params
 			addValue(parametersMap, "kubeDNSServiceIP", kubernetesConfig.DNSServiceIP)
 			addValue(parametersMap, "kubernetesHyperkubeSpec", kubernetesHyperkubeSpec)
 			addValue(parametersMap, "kubernetesAddonManagerSpec", kubernetesImageBase+k8sComponents["addonmanager"])
-			addValue(parametersMap, "kubernetesAddonResizerSpec", kubernetesImageBase+k8sComponents["addonresizer"])
 			if orchestratorProfile.NeedsExecHealthz() {
 				addValue(parametersMap, "kubernetesExecHealthzSpec", kubernetesImageBase+k8sComponents["exechealthz"])
 			}
 			addValue(parametersMap, "kubernetesDNSSidecarSpec", kubernetesImageBase+k8sComponents["k8s-dns-sidecar"])
-			addValue(parametersMap, "kubernetesHeapsterSpec", kubernetesImageBase+k8sComponents["heapster"])
 			if kubernetesConfig.IsAADPodIdentityEnabled() {
 				aadPodIdentityAddon := kubernetesConfig.GetAddonByName(DefaultAADPodIdentityAddonName)
 				aadIndex := aadPodIdentityAddon.GetAddonContainersIndexByName(DefaultAADPodIdentityAddonName)
