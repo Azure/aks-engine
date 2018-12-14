@@ -1,4 +1,4 @@
-# Microsoft Azure Kubernetes Engine - Cluster Definition
+# AKS-Engine - Cluster Definition
 
 ## Cluster Defintions for apiVersion "vlabs"
 

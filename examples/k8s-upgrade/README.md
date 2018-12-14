@@ -1,4 +1,4 @@
-# Microsoft Azure Kubernetes Engine - Kubernetes Upgrade
+# AKS-Engine - Kubernetes Upgrade
 
 ## Overview
 
