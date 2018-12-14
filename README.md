@@ -10,7 +10,7 @@ AKS-Engine leverages ARM (Azure Resource Manager) to build Kubernetes IaaS in Az
 
 More info, including a thorough walkthrough is [here](docs/aksengine.md).
 
-Please see the [FAQ](/docs/faq.md) for answers about AKS-Engine and this project transition.
+Please see the [FAQ](/docs/faq.md) for answers about AKS-Engine and its progenitor ACS-Engine.
 
 ## User guides
 
