@@ -1,4 +1,4 @@
-# Microsoft Azure Kubernetes Engine - Network Policy
+# AKS-Engine - Network Policy
 
 There are 2 different Network Policy options :
 

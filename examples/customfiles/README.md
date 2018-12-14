@@ -1,4 +1,4 @@
-# Microsoft Azure Kubernetes Engine - Provisioning of master node custom files
+# AKS-Engine - Provisioning of master node custom files
 
 ## Overview
 
