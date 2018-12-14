@@ -106,7 +106,7 @@ spec:
     spec:
       priorityClassName: system-cluster-critical
       containers:
-        - image: <img>
+        - image: {{ContainerImage "heapster"}}
           imagePullPolicy: IfNotPresent
           name: heapster
           resources:
@@ -126,7 +126,7 @@ spec:
           command:
             - /heapster
             - --source=kubernetes.summary_api:''
-        - image: <imgNanny>
+        - image: {{ContainerImage "heapster-nanny"}}
           imagePullPolicy: IfNotPresent
           name: heapster-nanny
           resources:

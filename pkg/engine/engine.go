@@ -717,9 +717,11 @@ func getContainerAddonsString(properties *api.Properties, sourcePath string) str
 			if setting.rawScript != "" {
 				input = setting.rawScript
 			} else {
-				addon := properties.OrchestratorProfile.KubernetesConfig.GetAddonByName(addonName)
+				orchProfile := properties.OrchestratorProfile
+				versions := strings.Split(orchProfile.OrchestratorVersion, ".")
+				addon := orchProfile.KubernetesConfig.GetAddonByName(addonName)
 				templ := template.New("addon resolver template").Funcs(getAddonFuncMap(addon))
-				addonFile := sourcePath + "/" + setting.sourceFile
+				addonFile := getCustomDataFilePath(setting.sourceFile, sourcePath, versions[0]+"."+versions[1])
 				addonFileBytes, err := Asset(addonFile)
 				if err != nil {
 					return ""
