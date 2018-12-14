@@ -2,7 +2,7 @@
 
 ## Install Pre-requisites
 
-All the commands in this guide require both the Azure CLI and `aks-engine`. Follow the [installation instructions to download aks-engine before continuing](../acsengine.md#install-aks-engine) or [compile from source](../acsengine.md#build-from-source).
+All the commands in this guide require both the Azure CLI and `aks-engine`. Follow the [installation instructions to download aks-engine before continuing](../aksengine.md#install-aks-engine) or [compile from source](../aksengine.md#build-from-source).
 
 For installation instructions see [the Azure CLI GitHub repository](https://github.com/Azure/azure-cli#installation) for the latest release.
 

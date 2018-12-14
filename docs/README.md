@@ -1,4 +1,4 @@
-# Microsoft Azure Kubernetes Engine - Builds Kubernetes Clusters
+# AKS-Engine - Builds Kubernetes Clusters
 
 ## Overview
 
@@ -6,7 +6,7 @@ This cluster definition examples demonstrate how to create a customized Docker E
 
 ## User Guides
 
-* [AKS Engine](acsengine.md) - shows you how to build and use the AKS engine to generate custom Docker enabled container clusters
+* [AKS Engine](aksengine.md) - shows you how to build and use the AKS engine to generate custom Docker enabled container clusters
 * [Cluster Definition](clusterdefinition.md) - describes the components of the cluster definition file
 * [Kubernetes Walkthrough](kubernetes.md) - shows how to create a Kubernetes enabled Docker cluster on Azure
 * [Kubernetes Windows Walkthrough](kubernetes/windows.md) - shows how to create a hybrid Kubernetes Windows enabled Docker cluster on Azure.
