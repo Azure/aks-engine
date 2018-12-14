@@ -11,8 +11,11 @@ steps:
       echo '##vso[task.prependpath]$(GOBIN)'
       echo '##vso[task.prependpath]$(GOROOT)/bin'
     displayName: 'Set up the Go workspace'
+  - script: bash ./scripts/get-kubectl.sh
+    displayName: get kubectl
+    workingDirectory: $(modulePath)
   - script: make build-binary
-    displayName: Compile
+    displayName: compile
     workingDirectory: $(modulePath)
   - script: |
       export CLIENT_ID=$(SERVICE_PRINCIPAL_CLIENT_ID_E2E_KUBERNETES)
