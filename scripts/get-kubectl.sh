@@ -4,6 +4,7 @@
 
 echo "==> Downloading kubectl version ${KUBECTL_VERSION} <=="
 
+apt-get install sudo -y
 apt-get update
 apt-get install sudo -y
 sudo curl -L https://storage.googleapis.com/kubernetes-release/release/v${KUBECTL_VERSION}/bin/linux/amd64/kubectl -o /usr/local/bin/kubectl
