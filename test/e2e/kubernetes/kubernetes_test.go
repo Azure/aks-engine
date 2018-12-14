@@ -172,7 +172,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 
 		It("should have core kube-system componentry running", func() {
 			coreComponents := []string{"kube-proxy", "kube-addon-manager", "kube-apiserver", "kube-controller-manager", "kube-scheduler"}
-			if !common.IsKubernetesVersionGe(eng.ExpandedDefinition.Properties.OrchestratorProfile.OrchestratorVersion, "1.12.0") {
+			if !common.IsKubernetesVersionGe(eng.ExpandedDefinition.Properties.OrchestratorProfile.OrchestratorVersion, "1.13.0") {
 				coreComponents = append(coreComponents, "heapster")
 			}
 			for _, componentName := range coreComponents {

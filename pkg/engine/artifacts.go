@@ -24,7 +24,7 @@ func kubernetesContainerAddonSettingsInit(profile *api.Properties) map[string]ku
 		DefaultHeapsterAddonName: {
 			"kubernetesmasteraddons-heapster-deployment.yaml",
 			"kube-heapster-deployment.yaml",
-			!common.IsKubernetesVersionGe(profile.OrchestratorProfile.OrchestratorVersion, "1.12.0"),
+			!common.IsKubernetesVersionGe(profile.OrchestratorProfile.OrchestratorVersion, "1.13.0"),
 			profile.OrchestratorProfile.KubernetesConfig.GetAddonScript(DefaultKubeHeapsterDeploymentAddonName),
 		},
 		DefaultMetricsServerAddonName: {
