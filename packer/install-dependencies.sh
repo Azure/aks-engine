@@ -71,7 +71,7 @@ for KUBE_DNS_VERSION in ${KUBE_DNS_VERSIONS}; do
     pullContainerImage "docker" "k8s.gcr.io/k8s-dns-kube-dns-amd64:${KUBE_DNS_VERSION}"
 done
 
-KUBE_ADDON_MANAGER_VERSIONS="8.8 8.7 8.6"
+KUBE_ADDON_MANAGER_VERSIONS="8.9 8.8 8.7 8.6"
 for KUBE_ADDON_MANAGER_VERSION in ${KUBE_ADDON_MANAGER_VERSIONS}; do
     pullContainerImage "docker" "k8s.gcr.io/kube-addon-manager-amd64:v${KUBE_ADDON_MANAGER_VERSION}"
 done
@@ -101,7 +101,7 @@ for K8S_DNS_SIDECAR_VERSION in ${K8S_DNS_SIDECAR_VERSIONS}; do
     pullContainerImage "docker" "k8s.gcr.io/k8s-dns-sidecar-amd64:${K8S_DNS_SIDECAR_VERSION}"
 done
 
-CORE_DNS_VERSIONS="1.2.2"
+CORE_DNS_VERSIONS="1.2.6 1.2.2"
 for CORE_DNS_VERSION in ${CORE_DNS_VERSIONS}; do
     pullContainerImage "docker" "k8s.gcr.io/coredns:${CORE_DNS_VERSION}"
 done
@@ -154,7 +154,7 @@ done
 pullContainerImage "docker" "busybox"
 
 # TODO: fetch supported k8s versions from an aks-engine command instead of hardcoding them here
-K8S_VERSIONS="1.9.10 1.9.11 1.10.8 1.10.9 1.11.4 1.11.5 1.12.1 1.12.2"
+K8S_VERSIONS="1.9.10 1.9.11 1.10.8 1.10.9 1.11.4 1.11.5 1.12.1 1.12.2 1.13.0"
 
 for KUBERNETES_VERSION in ${K8S_VERSIONS}; do
     HYPERKUBE_URL="k8s.gcr.io/hyperkube-amd64:v${KUBERNETES_VERSION}"
