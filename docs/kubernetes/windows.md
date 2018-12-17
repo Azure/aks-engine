@@ -221,7 +221,7 @@ The latest release of Kubernetes Control (kubectl) is available on the [Kubernet
 
 Download and extract it with curl & tar:
 ```bash
-curl -L https://dl.k8s.io/v1.11.0/kubernetes-client-linux-amd64.tar.gz | tar xvzf -
+curl -L https://dl.k8s.io/v1.13.1/kubernetes-client-linux-amd64.tar.gz | tar xvzf -
 
   % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
                                  Dload  Upload   Total   Spent    Left  Speed
