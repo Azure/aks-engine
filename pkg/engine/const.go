@@ -114,7 +114,7 @@ const (
 )
 
 const (
-	kubernetesMasterCustomDataYaml           = "k8s/kubernetesmastercustomdata.yml"
+	KubernetesMasterCustomDataYaml           = "k8s/kubernetesmastercustomdata.yml"
 	kubernetesCustomScript                   = "k8s/kubernetescustomscript.sh"
 	kubernetesProvisionSourceScript          = "k8s/kubernetesprovisionsource.sh"
 	kubernetesHealthMonitorScript            = "k8s/health-monitor.sh"

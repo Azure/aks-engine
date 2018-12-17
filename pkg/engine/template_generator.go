@@ -153,7 +153,7 @@ func (t *TemplateGenerator) prepareTemplateFiles(properties *api.Properties) ([]
 	return files, baseFile, nil
 }
 
-func (t *TemplateGenerator) getMasterCustomData(cs *api.ContainerService, textFilename string, profile *api.Properties) string {
+func (t *TemplateGenerator) GetMasterCustomDataString(cs *api.ContainerService, textFilename string, profile *api.Properties) string {
 	str, e := t.getSingleLineForTemplate(textFilename, cs, profile)
 	if e != nil {
 		panic(e)
@@ -195,7 +195,11 @@ func (t *TemplateGenerator) getMasterCustomData(cs *api.ContainerService, textFi
 	addonStr := getContainerAddonsString(cs.Properties, "k8s/containeraddons")
 
 	str = strings.Replace(str, "MASTER_CONTAINER_ADDONS_PLACEHOLDER", addonStr, -1)
+	return str
+}
 
+func (t *TemplateGenerator) getMasterCustomData(cs *api.ContainerService, textFilename string, profile *api.Properties) string {
+	str := t.GetMasterCustomDataString(cs, textFilename, profile)
 	// return the custom data
 	return fmt.Sprintf("\"customData\": \"[base64(concat('%s'))]\",", str)
 }
@@ -572,7 +576,7 @@ func (t *TemplateGenerator) getTemplateFuncMap(cs *api.ContainerService) templat
 			return DefaultInternalLbStaticIPOffset
 		},
 		"GetKubernetesMasterCustomData": func(profile *api.Properties) string {
-			str := t.getMasterCustomData(cs, kubernetesMasterCustomDataYaml, profile)
+			str := t.getMasterCustomData(cs, KubernetesMasterCustomDataYaml, profile)
 			return str
 		},
 		"GetKubernetesAgentCustomData": func(profile *api.AgentPoolProfile) string {
@@ -945,4 +949,8 @@ func (t *TemplateGenerator) getTemplateFuncMap(cs *api.ContainerService) templat
 		"quote":      strconv.Quote,
 		"shellQuote": helpers.ShellQuote,
 	}
+}
+
+func GenerateTemplateV2(containerService *api.ContainerService, generatorCode string, acsengineVersion string) (templateRaw string, parametersRaw string, err error) {
+	return "", "", nil
 }
