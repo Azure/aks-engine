@@ -13,10 +13,8 @@ steps:
     displayName: 'Set up the Go workspace'
   - script: |
       echo "==> Downloading kubectl version ${KUBECTL_VERSION} <=="
-      which kubectl
-      apt-get update && apt-get install -y sudo && rm -rf /var/lib/apt/lists/*
-      sudo curl -L https://storage.googleapis.com/kubernetes-release/release/v${KUBECTL_VERSION}/bin/linux/amd64/kubectl -o /usr/local/bin/kubectl
-      sudo chmod +x /usr/local/bin/kubectl
+      curl -sSL https://storage.googleapis.com/kubernetes-release/release/v${KUBECTL_VERSION}/bin/linux/amd64/kubectl -o $GOROOT/bin/kubectl
+      sudo chmod +x $GOROOT/bin/kubectl
     displayName: get kubectl
     workingDirectory: $(modulePath)
   - script: make build-binary
