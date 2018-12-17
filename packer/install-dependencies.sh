@@ -151,6 +151,11 @@ for NGINX_VERSION in ${NGINX_VERSIONS}; do
     pullContainerImage "docker" "nginx:${NGINX_VERSION}"
 done
 
+KMS_PLUGIN_VERSIONS="0.0.7"
+for KMS_PLUGIN_VERSION in ${KMS_PLUGIN_VERSIONS}; do
+    pullContainerImage "docker" "microsoft/k8s-azure-kms:v${KMS_PLUGIN_VERSION}"
+done
+
 pullContainerImage "docker" "busybox"
 
 # TODO: fetch supported k8s versions from an aks-engine command instead of hardcoding them here
