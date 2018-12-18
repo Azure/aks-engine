@@ -4,6 +4,7 @@
 package api
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/Azure/go-autorest/autorest/to"
@@ -336,6 +337,7 @@ func TestAPIServerConfigDefaultAdmissionControls(t *testing.T) {
 	cs := CreateMockContainerService("testcluster", version, 3, 2, false)
 	cs.Properties.OrchestratorProfile.KubernetesConfig.APIServerConfig = map[string]string{}
 	cs.Properties.OrchestratorProfile.KubernetesConfig.APIServerConfig[admissonControlKey] = "NamespaceLifecycle,LimitRanger,ServiceAccount,DefaultStorageClass,DefaultTolerationSeconds,MutatingAdmissionWebhook,ValidatingAdmissionWebhook,ResourceQuota,AlwaysPullImages,ExtendedResourceToleration"
+	cs.Properties.OrchestratorProfile.KubernetesConfig.EnablePodSecurityPolicy = to.BoolPtr(true)
 	cs.setAPIServerConfig()
 	a := cs.Properties.OrchestratorProfile.KubernetesConfig.APIServerConfig
 
@@ -347,6 +349,12 @@ func TestAPIServerConfigDefaultAdmissionControls(t *testing.T) {
 	// --admission-control was deprecated in v1.10
 	if _, found := a[admissonControlKey]; found {
 		t.Fatalf("Deprecated admission control key '%s' set in API server config for version %s", admissonControlKey, version)
+	}
+
+	// PodSecurityPolicy should be enabled in admission control
+	admissionControlVal := a[enableAdmissionPluginsKey]
+	if !strings.Contains(admissionControlVal, ",PodSecurityPolicy") {
+		t.Fatalf("Admission control value '%s' expected to contain PodSecurityPolicy", admissionControlVal)
 	}
 
 	// Test --admission-control for v1.9 and below

@@ -85,3 +85,16 @@ func TestControllerManagerConfigDefaultFeatureGates(t *testing.T) {
 			cm["--feature-gates"])
 	}
 }
+
+func TestControllerManagerConfigHostedMasterProfile(t *testing.T) {
+	cs := CreateMockContainerService("testcluster", defaultTestClusterVer, 3, 2, false)
+	cs.Properties.MasterProfile = nil
+	cs.Properties.HostedMasterProfile = &HostedMasterProfile{
+		DNSPrefix: "foodns",
+	}
+	cs.setControllerManagerConfig()
+	cm := cs.Properties.OrchestratorProfile.KubernetesConfig.ControllerManagerConfig
+	if cm["--cluster-name"] != "foodns" {
+		t.Fatalf("expected controller-manager to have cluster-name foodns when using HostedMasterProfile")
+	}
+}
