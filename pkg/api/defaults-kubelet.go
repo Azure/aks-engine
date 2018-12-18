@@ -68,8 +68,8 @@ func (cs *ContainerService) setKubeletConfig() {
 		"--image-pull-progress-deadline":    "30m",
 	}
 
-	// AKS overrides
-	if cs.Properties.IsHostedMasterProfile() {
+	// Set --non-masquerade-cidr if ip-masq-agent is disabled on AKS
+	if cs.Properties.IsHostedMasterIPMasqAgentDisabled() {
 		defaultKubeletConfig["--non-masquerade-cidr"] = cs.Properties.OrchestratorProfile.KubernetesConfig.ClusterSubnet
 	}
 
