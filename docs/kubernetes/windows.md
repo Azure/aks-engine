@@ -29,11 +29,13 @@ This guide will step through everything needed to build your first Kubernetes cl
 - Getting the right tools
 - Completing an AKS Engine apimodel which describes what you want to deploy
 - Running AKS Engine to generate Azure Resource Model templates
-- Deploying your first Kubernetes cluster with Windows Server nodes
+- Deploying your first Kubernetes cluster with Windows Server 2019 nodes
 - Managing the cluster from your Windows machine
 - Deploying your first app on the cluster
 
 All of these steps can be done from any OS platform, so some sections are split out by Windows, Mac or Linux to provide the most relevant samples and scripts. If you have a Windows machine but want to use the Linux tools - no problem! Set up the [Windows Subsystem for Linux](https://docs.microsoft.com/en-us/windows/wsl/about) and you can follow the Linux instructions on this page.
+
+When you're done, you will have a working cluster running Windows Server 2019 and the latest Kubernetes v1.13 release. Older releases are available but not recommended.
 
 > Note: Windows support for Kubernetes is still in beta and under **active development**. If you run into problems, please be sure to check the [Troubleshooting](windows-details.md#troubleshooting) page and [active Windows issues](https://github.com/azure/aks-engine/issues?&q=is:issue+is:open+label:windows) in this repo, then help us by filing new issues for things that aren't already covered.
 
@@ -70,8 +72,8 @@ Windows support is evolving rapidly, so be sure to use the latest AKS Engine  ve
 
 ```none
 PS C:\Users\patrick\aks-engine> .\aks-engine.exe version
-Version: v0.20.6
-GitCommit: 293adfda
+Version: v0.27.0
+GitCommit: f895db7f
 GitTreeState: clean
 ```
 
@@ -88,7 +90,7 @@ $oldPath = [Environment]::GetEnvironmentVariable('Path', [EnvironmentVariableTar
 
 The latest release of Kubernetes Control (kubectl) is available on the [Kubernetes release page](https://kubernetes.io/docs/imported/release/notes/). Look for `kubernetes-client-windows-amd64.tar.gz` and download it.
 
-Windows 10 version 1803 already includes `tar`, so extract the archive and move `kubectl.exe` to the same folder (such as `c:\tools`) that you put `aks-engine.exe`. If you don't already have `tar`, then [busybox-w32](https://frippery.org/busybox/) is a good alternative. Download [busybox.exe](https://frippery.org/files/busybox/busybox.exe), then copy it to `c:\tools\tar.exe`. It must be named to `tar.exe` for the next step to work.
+Windows 10 version 1803 and later already include `tar`, so extract the archive and move `kubectl.exe` to the same folder (such as `c:\tools`) that you put `aks-engine.exe`. If you don't already have `tar`, then [busybox-w32](https://frippery.org/busybox/) is a good alternative. Download [busybox.exe](https://frippery.org/files/busybox/busybox.exe), then copy it to `c:\tools\tar.exe`. It must be named to `tar.exe` for the next step to work.
 
 ```powershell
 tar xvzf C:\Users\patrick\Downloads\kubernetes-client-windows-amd64.tar.gz
@@ -97,7 +99,7 @@ Move-Item .\kubernetes\client\bin\kubectl.exe c:\tools
 
 ##### SSH (Windows)
 
-Windows 10 version 1803 comes with the Secure Shell (SSH) client as an optional feature installed at `C:\Windows\system32\openssh`. If you have `ssh.exe` and `ssh-keygen.exe` there, skip forward to [Generate SSH key (Windows)](#generate-ssh-key-windows)
+Windows 10 version 1803 and later come with the Secure Shell (SSH) client as an optional feature installed at `C:\Windows\system32\openssh`. If you have `ssh.exe` and `ssh-keygen.exe` there, skip forward to [Generate SSH key (Windows)](#generate-ssh-key-windows)
 
 1. Download the latest OpenSSH-Win64.zip file from [Win32-OpenSSH releases](https://github.com/PowerShell/Win32-OpenSSH/releases)
 2. Extract it to the same `c:\tools` folder or another folder in your path
@@ -156,8 +158,8 @@ Windows support is evolving rapidly, so be sure to use the latest AKS Engine ver
 
 ```bash
 $ aks-engine.exe version
-Version: v0.20.6
-GitCommit: 293adfda
+Version: v0.27.0
+GitCommit: f895db7f
 GitTreeState: clean
 ```
 
@@ -208,18 +210,18 @@ Windows support is evolving rapidly, so be sure to use the latest AKS Engine ver
 
 ```bash
 $ aks-engine.exe version
-Version: v0.20.6
-GitCommit: 293adfda
+Version: v0.27.0
+GitCommit: f895db7f
 GitTreeState: clean
 ```
 
 ##### Kubectl (Linux)
 
-The latest release of Kubernetes Control (kubectl) is available on the [Kubernetes release page](https://kubernetes.io/docs/imported/release/notes/). Look for `kubernetes-client-linux-....tar.gz` and copy the link to it.
+The latest release of Kubernetes Control (kubectl) is available on the [Kubernetes release page](https://kubernetes.io/docs/setup/release/notes/). Look for `kubernetes-client-linux-....tar.gz` and copy the link to it.
 
 Download and extract it with curl & tar:
 ```bash
-curl -L https://dl.k8s.io/v1.11.0/kubernetes-client-linux-amd64.tar.gz | tar xvzf -
+curl -L https://dl.k8s.io/v1.13.1/kubernetes-client-linux-amd64.tar.gz | tar xvzf -
 
   % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
                                  Dload  Upload   Total   Spent    Left  Speed
@@ -447,27 +449,34 @@ Kubernetes deployments are typically written in YAML files. This one will create
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: iis-1803
+  name: iis-2019
   labels:
-    app: iis-1803
+    app: iis-2019
 spec:
   replicas: 1
   template:
     metadata:
-      name: iis-1803
+      name: iis-2019
       labels:
-        app: iis-1803
+        app: iis-2019
     spec:
       containers:
       - name: iis
-        image: microsoft/iis:windowsservercore-1803
+        image: mcr.microsoft.com/windows/servercore/iis:windowsservercore-ltsc2019
+        resources:
+          limits:
+            cpu: 1
+            memory: 800m
+          requests:
+            cpu: .1
+            memory: 300m
         ports:
           - containerPort: 80
       nodeSelector:
         "beta.kubernetes.io/os": windows
   selector:
     matchLabels:
-      app: iis-1803
+      app: iis-2019
 ---
 apiVersion: v1
 kind: Service
@@ -479,7 +488,7 @@ spec:
   - protocol: TCP
     port: 80
   selector:
-    app: iis-1803
+    app: iis-2019
 ```
 
 Copy and paste that into a file called `iis.yaml`, then run `kubectl apply -f iis.yaml`. kubectl will show the deployment and service were created:
@@ -487,7 +496,7 @@ Copy and paste that into a file called `iis.yaml`, then run `kubectl apply -f ii
 ```powershell
 kubectl apply -f .\iis.yaml
 
-deployment.apps/iis-1803 created
+deployment.apps/iis-1809 created
 service/iis created
 ```
 
@@ -499,7 +508,7 @@ Initially, the pod will be in the `ContainerCreating` state, and eventually go t
 kubectl get pod
 
 NAME                        READY     STATUS              RESTARTS   AGE
-iis-1803-6c49777598-h45cs   0/1       ContainerCreating   0          1m
+iis-1809-6c49777598-h45cs   0/1       ContainerCreating   0          1m
 
 kubectl get service
 NAME         TYPE           CLUSTER-IP   EXTERNAL-IP   PORT(S)        AGE
