@@ -10,7 +10,7 @@ import (
 	"github.com/Azure/go-autorest/autorest"
 )
 
-// EnsureResourceGroup ensures the named resouce group exists in the given location.
+// EnsureResourceGroup ensures the named resource group exists in the given location.
 func (az *AzureClient) EnsureResourceGroup(ctx context.Context, name, location string, managedBy *string) (resourceGroup *resources.Group, err error) {
 	var tags map[string]*string
 	group, err := az.groupsClient.Get(ctx, name)
