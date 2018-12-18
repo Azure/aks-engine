@@ -91,7 +91,7 @@ for TILLER_VERSION in ${TILLER_VERSIONS}; do
     pullContainerImage "docker" "gcr.io/kubernetes-helm/tiller:v${TILLER_VERSION}"
 done
 
-CLUSTER_AUTOSCALER_VERSIONS="1.13.1 1.3.4 1.3.3 1.2.2 1.1.2"
+CLUSTER_AUTOSCALER_VERSIONS="1.13.1 1.12.1 1.3.4 1.3.3 1.2.2 1.1.2"
 for CLUSTER_AUTOSCALER_VERSION in ${CLUSTER_AUTOSCALER_VERSIONS}; do
     pullContainerImage "docker" "k8s.gcr.io/cluster-autoscaler:v${CLUSTER_AUTOSCALER_VERSION}"
 done
@@ -159,7 +159,7 @@ done
 pullContainerImage "docker" "busybox"
 
 # TODO: fetch supported k8s versions from an aks-engine command instead of hardcoding them here
-K8S_VERSIONS="1.7.15 1.7.16 1.8.14 1.8.15 1.9.10 1.9.11 1.10.8 1.10.9 1.11.5 1.11.6 1.12.1 1.12.2 1.13.1"
+K8S_VERSIONS="1.7.15 1.7.16 1.8.14 1.8.15 1.9.10 1.9.11 1.10.8 1.10.9 1.11.5 1.11.6 1.12.2 1.12.4 1.13.1"
 
 for KUBERNETES_VERSION in ${K8S_VERSIONS}; do
     HYPERKUBE_URL="k8s.gcr.io/hyperkube-amd64:v${KUBERNETES_VERSION}"
