@@ -249,8 +249,8 @@ var (
 			Ubuntu:          SovereignCloudsUbuntuImageConfig,
 			RHEL:            DefaultRHELOSImageConfig,
 			CoreOS:          DefaultCoreOSImageConfig,
-			AKS:             SovereignCloudsUbuntuImageConfig,
-			AKSDockerEngine: SovereignCloudsUbuntuImageConfig,
+			AKS:             DefaultAKSOSImageConfig,
+			AKSDockerEngine: DefaultAKSDockerEngineOSImageConfig,
 		},
 	}
 
