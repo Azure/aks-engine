@@ -131,6 +131,8 @@ const (
 	DefaultDashboardAddonEnabled = true
 	// DefaultReschedulerAddonEnabled determines the aks-engine provided default for enabling kubernetes-rescheduler addon
 	DefaultReschedulerAddonEnabled = false
+	// DefaultAzureCNIMonitoringAddonEnabled determines the aks-engine provided default for enabling azurecni-network monitoring addon
+	DefaultAzureCNIMonitoringAddonEnabled = true
 	// DefaultRBACEnabled determines the aks-engine provided default for enabling kubernetes RBAC
 	DefaultRBACEnabled = true
 	// DefaultUseInstanceMetadata determines the aks-engine provided default for enabling Azure cloudprovider instance metadata service
