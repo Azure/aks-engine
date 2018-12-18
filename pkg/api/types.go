@@ -491,6 +491,7 @@ type AgentPoolProfile struct {
 	EnableAutoScaling                   *bool                `json:"enableAutoScaling,omitempty"`
 	AvailabilityZones                   []string             `json:"availabilityZones,omitempty"`
 	SinglePlacementGroup                *bool                `json:"singlePlacementGroup,omitempty"`
+	VnetCidrs                           []string             `json:"vnetCidrs,omitempty"`
 }
 
 // AgentPoolProfileRole represents an agent role
@@ -570,6 +571,7 @@ type HostedMasterProfile struct {
 	Subnet string `json:"subnet"`
 	// ApiServerWhiteListRange is a comma delimited CIDR which is whitelisted to AKS
 	APIServerWhiteListRange *string `json:"apiServerWhiteListRange"`
+	IPMasqAgent             bool    `json:"ipMasqAgent"`
 }
 
 // AuthenticatorType represents the authenticator type the cluster was
@@ -806,6 +808,11 @@ func (p *Properties) GetPrimaryScaleSetName() string {
 // IsHostedMasterProfile returns true if the cluster has a hosted master
 func (p *Properties) IsHostedMasterProfile() bool {
 	return p.HostedMasterProfile != nil
+}
+
+// IsHostedMasterIPMasqAgentDisabled returns true if the cluster has a hosted master and IpMasqAgent is disabled
+func (p *Properties) IsHostedMasterIPMasqAgentDisabled() bool {
+	return p.HostedMasterProfile != nil && !p.HostedMasterProfile.IPMasqAgent
 }
 
 // GetVNetResourceGroupName returns the virtual network resource group name of the cluster
