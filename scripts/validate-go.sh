@@ -17,46 +17,9 @@ set -euo pipefail
 
 exit_code=0
 
-if ! hash gometalinter 2>/dev/null ; then
-  go get -u github.com/alecthomas/gometalinter
-  gometalinter --install
-fi
-
 echo
-echo "==> Running static validations <=="
+echo "==> Running static validations and linters <=="
 # Run linters that should return errors
-gometalinter \
-  --disable-all \
-  --enable deadcode \
-  --enable gofmt \
-  --enable goimports \
-  --enable gosimple \
-  --enable ineffassign \
-  --enable misspell \
-  --enable unused \
-  --enable vet \
-  --tests \
-  --vendor \
-  --deadline 120s \
-  --skip test/i18n \
-  --skip pkg/test \
-  --exclude pkg/i18n/i18n.go \
-  --exclude pkg/i18n/translations.go \
-  --exclude pkg/engine/templates.go \
-  ./... || exit_code=1
-
-echo
-echo "==> Running linters <=="
-# Run linters that should return warnings
-gometalinter \
-  --disable-all \
-  --enable golint \
-  --vendor \
-  --skip proto \
-  --skip pkg/test \
-  --deadline 60s \
-  --exclude pkg/i18n/translations.go \
-  --exclude pkg/engine/templates.go \
-  ./... || exit_code=1
+golangci-lint run || exit_code=1
 
 exit $exit_code
