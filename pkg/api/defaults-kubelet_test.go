@@ -214,7 +214,7 @@ func TestKubeletCalico(t *testing.T) {
 
 func TestKubeletHostedMasterIPMasqAgentDisabled(t *testing.T) {
 	subnet := "172.16.0.0/16"
-	defaultSubnet := "0.0.0.0"
+	defaultSubnet := "0.0.0.0/0"
 	// MasterIPMasqAgent disabled, --non-masquerade-cidr should be subnet
 	cs := CreateMockContainerService("testcluster", defaultTestClusterVer, 3, 2, false)
 	cs.Properties.HostedMasterProfile = &HostedMasterProfile{
@@ -228,7 +228,7 @@ func TestKubeletHostedMasterIPMasqAgentDisabled(t *testing.T) {
 			k["--non-masquerade-cidr"], subnet)
 	}
 
-	// MasterIPMasqAgent enabled, --non-masquerade-cidr should be 0.0.0.0
+	// MasterIPMasqAgent enabled, --non-masquerade-cidr should be 0.0.0.0/0
 	cs = CreateMockContainerService("testcluster", defaultTestClusterVer, 3, 2, false)
 	cs.Properties.HostedMasterProfile = &HostedMasterProfile{
 		IPMasqAgent: true,
@@ -241,7 +241,7 @@ func TestKubeletHostedMasterIPMasqAgentDisabled(t *testing.T) {
 			k["--non-masquerade-cidr"], defaultSubnet)
 	}
 
-	// no HostedMasterProfile, --non-masquerade-cidr should be 0.0.0.0
+	// no HostedMasterProfile, --non-masquerade-cidr should be 0.0.0.0/0
 	cs = CreateMockContainerService("testcluster", defaultTestClusterVer, 3, 2, false)
 	cs.Properties.OrchestratorProfile.KubernetesConfig.ClusterSubnet = subnet
 	cs.setKubeletConfig()
