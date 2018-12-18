@@ -209,8 +209,8 @@ func (t *TemplateGenerator) getTemplateFuncMap(cs *api.ContainerService) templat
 		"IsHostedMaster": func() bool {
 			return cs.Properties.IsHostedMasterProfile()
 		},
-		"IsHostedMasterIPMasqAgentDisabled": func() bool {
-			return cs.Properties.IsHostedMasterIPMasqAgentDisabled()
+		"IsIPMasqAgentEnabled": func() bool {
+			return cs.Properties.IsIPMasqAgentEnabled()
 		},
 		"IsDCOS19": func() bool {
 			return cs.Properties.OrchestratorProfile.OrchestratorType == api.DCOS &&
