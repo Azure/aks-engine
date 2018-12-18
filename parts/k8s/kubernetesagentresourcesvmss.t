@@ -172,21 +172,6 @@
               }
             }
             {{end}}
-            {{if UseManagedIdentity}}
-            ,{
-              "name": "managedIdentityExtension",
-              "properties": {
-                "publisher": "Microsoft.ManagedIdentity",
-                "type": "ManagedIdentityExtensionForLinux",
-                "typeHandlerVersion": "1.0",
-                "autoUpgradeMinorVersion": true,
-                "settings": {
-                  "port": 50343
-                },
-                "protectedSettings": {}
-              }
-            }
-            {{end}}
           ]
         }
       }

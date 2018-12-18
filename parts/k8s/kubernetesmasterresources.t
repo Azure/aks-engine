@@ -937,34 +937,6 @@
       }
     },
     {{end}}
-     {
-       "type": "Microsoft.Compute/virtualMachines/extensions",
-       "name": "[concat(variables('masterVMNamePrefix'), copyIndex(), '/ManagedIdentityExtension')]",
-       "copy": {
-         "count": "[variables('masterCount')]",
-         "name": "vmLoopNode"
-       },
-       "apiVersion": "[variables('apiVersionCompute')]",
-       "location": "[resourceGroup().location]",
-       "dependsOn": [
-         "[concat('Microsoft.Compute/virtualMachines/', variables('masterVMNamePrefix'), copyIndex())]",
-         {{if UserAssignedIDEnabled}}
-         "[concat('Microsoft.Authorization/roleAssignments/',guid(concat(variables('userAssignedID'), 'roleAssignment', resourceGroup().id)))]"
-         {{else}}
-         "[concat('Microsoft.Authorization/roleAssignments/', guid(concat('Microsoft.Compute/virtualMachines/', variables('masterVMNamePrefix'), copyIndex(), 'vmidentity')))]"
-         {{end}}
-       ],
-       "properties": {
-         "publisher": "Microsoft.ManagedIdentity",
-         "type": "ManagedIdentityExtensionForLinux",
-         "typeHandlerVersion": "1.0",
-         "autoUpgradeMinorVersion": true,
-         "settings": {
-           "port": 50343
-         },
-         "protectedSettings": {}
-       }
-     },
      {{end}}
     {
       "apiVersion": "[variables('apiVersionCompute')]",
@@ -973,11 +945,7 @@
         "name": "vmLoopNode"
       },
       "dependsOn": [
-        {{if UseManagedIdentity}}
-        "[concat('Microsoft.Compute/virtualMachines/', variables('masterVMNamePrefix'), copyIndex(variables('masterOffset')), '/extensions/ManagedIdentityExtension')]"
-        {{else}}
         "[concat('Microsoft.Compute/virtualMachines/', variables('masterVMNamePrefix'), copyIndex(variables('masterOffset')))]"
-        {{end}}
       ],
       "location": "[variables('location')]",
       "type": "Microsoft.Compute/virtualMachines/extensions",
