@@ -109,7 +109,7 @@ func kubernetesContainerAddonSettingsInit(profile *api.Properties) map[string]ku
 		DefaultAzureCNINetworkMonitorAddonName: {
 			"azure-cni-networkmonitor.yaml",
 			"azure-cni-networkmonitor.yaml",
-			profile.OrchestratorProfile.IsAzureCNI(),
+			profile.OrchestratorProfile.IsAzureCNI() && profile.OrchestratorProfile.KubernetesConfig.IsAzureCNIMonitoringEnabled(),
 			profile.OrchestratorProfile.KubernetesConfig.GetAddonScript(DefaultAzureCNINetworkMonitorAddonName),
 		},
 		DefaultDNSAutoscalerAddonName: {

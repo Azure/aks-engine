@@ -1222,6 +1222,11 @@ func (o *OrchestratorProfile) IsMetricsServerEnabled() bool {
 		common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.9.0"))
 }
 
+// IsAzureCNIMonitoringEnabled checks if the azure cni monitoring addon is enabled
+func (k *KubernetesConfig) IsAzureCNIMonitoringEnabled() bool {
+	return k.isAddonEnabled(AzureCNINetworkMonitoringAddonName, DefaultAzureCNIMonitoringAddonEnabled)
+}
+
 // IsContainerMonitoringEnabled checks if the container monitoring addon is enabled
 func (k *KubernetesConfig) IsContainerMonitoringEnabled() bool {
 	return k.isAddonEnabled(ContainerMonitoringAddonName, DefaultContainerMonitoringAddonEnabled)
