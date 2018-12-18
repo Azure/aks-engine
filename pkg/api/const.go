@@ -131,6 +131,8 @@ const (
 	DefaultDashboardAddonEnabled = true
 	// DefaultReschedulerAddonEnabled determines the aks-engine provided default for enabling kubernetes-rescheduler addon
 	DefaultReschedulerAddonEnabled = false
+	// DefaultAzureCNIMonitoringAddonEnabled determines the aks-engine provided default for enabling azurecni-network monitoring addon
+	DefaultAzureCNIMonitoringAddonEnabled = true
 	// DefaultRBACEnabled determines the aks-engine provided default for enabling kubernetes RBAC
 	DefaultRBACEnabled = true
 	// DefaultUseInstanceMetadata determines the aks-engine provided default for enabling Azure cloudprovider instance metadata service
@@ -380,6 +382,8 @@ const (
 	DefaultKubernetesCtrMgrEnableProfiling = "false"
 	// DefaultKubernetesSchedulerEnableProfiling is the config that enables profiling via web interface host:port/debug/pprof/
 	DefaultKubernetesSchedulerEnableProfiling = "false"
+	// DefaultNonMasqueradeCIDR is the default --non-masquerade-cidr value for kubelet
+	DefaultNonMasqueradeCIDR = "0.0.0.0/0"
 )
 
 const (

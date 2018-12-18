@@ -104,13 +104,13 @@ func kubernetesContainerAddonSettingsInit(profile *api.Properties) map[string]ku
 		IPMASQAgentAddonName: {
 			"ip-masq-agent.yaml",
 			"ip-masq-agent.yaml",
-			true,
+			profile.OrchestratorProfile.KubernetesConfig.IsIPMasqAgentEnabled(),
 			profile.OrchestratorProfile.KubernetesConfig.GetAddonScript(IPMASQAgentAddonName),
 		},
 		DefaultAzureCNINetworkMonitorAddonName: {
 			"azure-cni-networkmonitor.yaml",
 			"azure-cni-networkmonitor.yaml",
-			profile.OrchestratorProfile.IsAzureCNI(),
+			profile.OrchestratorProfile.IsAzureCNI() && profile.OrchestratorProfile.KubernetesConfig.IsAzureCNIMonitoringEnabled(),
 			profile.OrchestratorProfile.KubernetesConfig.GetAddonScript(DefaultAzureCNINetworkMonitorAddonName),
 		},
 		DefaultDNSAutoscalerAddonName: {

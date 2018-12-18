@@ -810,9 +810,12 @@ func (p *Properties) IsHostedMasterProfile() bool {
 	return p.HostedMasterProfile != nil
 }
 
-// IsHostedMasterIPMasqAgentDisabled returns true if the cluster has a hosted master and IpMasqAgent is disabled
-func (p *Properties) IsHostedMasterIPMasqAgentDisabled() bool {
-	return p.HostedMasterProfile != nil && !p.HostedMasterProfile.IPMasqAgent
+// IsIPMasqAgentEnabled returns true if the cluster has a hosted master and IpMasqAgent is disabled
+func (p *Properties) IsIPMasqAgentEnabled() bool {
+	if p.HostedMasterProfile != nil {
+		return p.HostedMasterProfile.IPMasqAgent
+	}
+	return p.OrchestratorProfile.KubernetesConfig.IsIPMasqAgentEnabled()
 }
 
 // GetVNetResourceGroupName returns the virtual network resource group name of the cluster
@@ -1220,6 +1223,11 @@ func (k *KubernetesConfig) isAddonEnabled(addonName string, defaultValue bool) b
 func (o *OrchestratorProfile) IsMetricsServerEnabled() bool {
 	return o.KubernetesConfig.isAddonEnabled(DefaultMetricsServerAddonName,
 		common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.9.0"))
+}
+
+// IsAzureCNIMonitoringEnabled checks if the azure cni monitoring addon is enabled
+func (k *KubernetesConfig) IsAzureCNIMonitoringEnabled() bool {
+	return k.isAddonEnabled(AzureCNINetworkMonitoringAddonName, DefaultAzureCNIMonitoringAddonEnabled)
 }
 
 // IsContainerMonitoringEnabled checks if the container monitoring addon is enabled
