@@ -23,7 +23,7 @@ jobs:
           echo 'export CLIENT_SECRET=${CLUSTER_SERVICE_PRINCIPAL_CLIENT_SECRET}' >> $BASH_ENV
       - run:
           name: Install dependencies
-          command: make bootstrap
+          command: make generate
       - run:
           name: Run linting rules
           command: make validate-copyright-headers test-style

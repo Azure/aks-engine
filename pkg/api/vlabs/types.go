@@ -315,6 +315,7 @@ type KubernetesConfig struct {
 	AzureCNIVersion                 string            `json:"azureCNIVersion,omitempty"`
 	AzureCNIURLLinux                string            `json:"azureCNIURLLinux,omitempty"`
 	AzureCNIURLWindows              string            `json:"azureCNIURLWindows,omitempty"`
+	KeyVaultSku                     string            `json:"keyVaultSku,omitempty"`
 }
 
 // CustomFile has source as the full absolute source path to a file and dest

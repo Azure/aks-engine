@@ -367,6 +367,7 @@ type KubernetesConfig struct {
 	AzureCNIVersion                  string            `json:"azureCNIVersion,omitempty"`
 	AzureCNIURLLinux                 string            `json:"azureCNIURLLinux,omitempty"`
 	AzureCNIURLWindows               string            `json:"azureCNIURLWindows,omitempty"`
+	KeyVaultSku                      string            `json:"keyVaultSku,omitempty"`
 }
 
 // CustomFile has source as the full absolute source path to a file and dest
@@ -490,6 +491,7 @@ type AgentPoolProfile struct {
 	EnableAutoScaling                   *bool                `json:"enableAutoScaling,omitempty"`
 	AvailabilityZones                   []string             `json:"availabilityZones,omitempty"`
 	SinglePlacementGroup                *bool                `json:"singlePlacementGroup,omitempty"`
+	VnetCidrs                           []string             `json:"vnetCidrs,omitempty"`
 }
 
 // AgentPoolProfileRole represents an agent role
@@ -569,6 +571,7 @@ type HostedMasterProfile struct {
 	Subnet string `json:"subnet"`
 	// ApiServerWhiteListRange is a comma delimited CIDR which is whitelisted to AKS
 	APIServerWhiteListRange *string `json:"apiServerWhiteListRange"`
+	IPMasqAgent             bool    `json:"ipMasqAgent"`
 }
 
 // AuthenticatorType represents the authenticator type the cluster was
@@ -805,6 +808,14 @@ func (p *Properties) GetPrimaryScaleSetName() string {
 // IsHostedMasterProfile returns true if the cluster has a hosted master
 func (p *Properties) IsHostedMasterProfile() bool {
 	return p.HostedMasterProfile != nil
+}
+
+// IsIPMasqAgentEnabled returns true if the cluster has a hosted master and IpMasqAgent is disabled
+func (p *Properties) IsIPMasqAgentEnabled() bool {
+	if p.HostedMasterProfile != nil {
+		return p.HostedMasterProfile.IPMasqAgent
+	}
+	return p.OrchestratorProfile.KubernetesConfig.IsIPMasqAgentEnabled()
 }
 
 // GetVNetResourceGroupName returns the virtual network resource group name of the cluster
