@@ -19,6 +19,8 @@ import (
 	"strings"
 	"text/template"
 
+	"github.com/Azure/go-autorest/autorest/to"
+
 	//log "github.com/sirupsen/logrus"
 	"github.com/Azure/aks-engine/pkg/api"
 	"github.com/Azure/aks-engine/pkg/api/common"
@@ -58,7 +60,7 @@ func GenerateKubeConfig(properties *api.Properties, location string) (string, er
 	if properties.OrchestratorProfile != nil &&
 		properties.OrchestratorProfile.KubernetesConfig != nil &&
 		properties.OrchestratorProfile.KubernetesConfig.PrivateCluster != nil &&
-		helpers.IsTrueBoolPointer(properties.OrchestratorProfile.KubernetesConfig.PrivateCluster.Enabled) {
+		to.Bool(properties.OrchestratorProfile.KubernetesConfig.PrivateCluster.Enabled) {
 		if properties.MasterProfile.Count > 1 {
 			// more than 1 master, use the internal lb IP
 			firstMasterIP := net.ParseIP(properties.MasterProfile.FirstConsecutiveStaticIP).To4()

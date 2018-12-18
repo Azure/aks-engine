@@ -6,9 +6,10 @@ package api
 import (
 	"strconv"
 
+	"github.com/Azure/go-autorest/autorest/to"
+
 	"github.com/Azure/aks-engine/pkg/api/agentPoolOnlyApi/v20170831"
 	"github.com/Azure/aks-engine/pkg/api/agentPoolOnlyApi/v20180331"
-	"github.com/Azure/aks-engine/pkg/helpers"
 )
 
 ///////////////////////////////////////////////////////////
@@ -140,14 +141,14 @@ func convertResourcePurchasePlanToV20180331AgentPoolOnly(api *ResourcePurchasePl
 
 func convertKubernetesConfigToEnableRBACV20180331AgentPoolOnly(kc *KubernetesConfig) *bool {
 	if kc == nil {
-		return helpers.PointerToBool(false)
+		return to.BoolPtr(false)
 	}
 	// We use KubernetesConfig.EnableRbac to convert to versioned api model
 	// The assumption here is KubernetesConfig.EnableSecureKubelet is set to be same
 	if kc != nil && kc.EnableRbac != nil && *kc.EnableRbac {
-		return helpers.PointerToBool(true)
+		return to.BoolPtr(true)
 	}
-	return helpers.PointerToBool(false)
+	return to.BoolPtr(false)
 }
 
 func convertPropertiesToV20180331AgentPoolOnly(api *Properties, p *v20180331.Properties) {

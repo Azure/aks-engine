@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/Azure/aks-engine/pkg/helpers"
+	"github.com/Azure/go-autorest/autorest/to"
 )
 
 func TestKubeletConfigDefaults(t *testing.T) {
@@ -44,7 +44,7 @@ func TestKubeletConfigDefaults(t *testing.T) {
 func TestKubeletConfigUseCloudControllerManager(t *testing.T) {
 	// Test UseCloudControllerManager = true
 	cs := CreateMockContainerService("testcluster", defaultTestClusterVer, 3, 2, false)
-	cs.Properties.OrchestratorProfile.KubernetesConfig.UseCloudControllerManager = helpers.PointerToBool(true)
+	cs.Properties.OrchestratorProfile.KubernetesConfig.UseCloudControllerManager = to.BoolPtr(true)
 	cs.setKubeletConfig()
 	k := cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig
 	if k["--cloud-provider"] != "external" {
@@ -54,7 +54,7 @@ func TestKubeletConfigUseCloudControllerManager(t *testing.T) {
 
 	// Test UseCloudControllerManager = false
 	cs = CreateMockContainerService("testcluster", defaultTestClusterVer, 3, 2, false)
-	cs.Properties.OrchestratorProfile.KubernetesConfig.UseCloudControllerManager = helpers.PointerToBool(false)
+	cs.Properties.OrchestratorProfile.KubernetesConfig.UseCloudControllerManager = to.BoolPtr(false)
 	cs.setKubeletConfig()
 	k = cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig
 	if k["--cloud-provider"] != "azure" {
@@ -130,7 +130,7 @@ func TestKubeletConfigNetworkPlugin(t *testing.T) {
 func TestKubeletConfigEnableSecureKubelet(t *testing.T) {
 	// Test EnableSecureKubelet = true
 	cs := CreateMockContainerService("testcluster", defaultTestClusterVer, 3, 2, false)
-	cs.Properties.OrchestratorProfile.KubernetesConfig.EnableSecureKubelet = helpers.PointerToBool(true)
+	cs.Properties.OrchestratorProfile.KubernetesConfig.EnableSecureKubelet = to.BoolPtr(true)
 	cs.setKubeletConfig()
 	k := cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig
 	if k["--anonymous-auth"] != "false" {
@@ -148,7 +148,7 @@ func TestKubeletConfigEnableSecureKubelet(t *testing.T) {
 
 	// Test EnableSecureKubelet = false
 	cs = CreateMockContainerService("testcluster", defaultTestClusterVer, 3, 2, false)
-	cs.Properties.OrchestratorProfile.KubernetesConfig.EnableSecureKubelet = helpers.PointerToBool(false)
+	cs.Properties.OrchestratorProfile.KubernetesConfig.EnableSecureKubelet = to.BoolPtr(false)
 	cs.setKubeletConfig()
 	k = cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig
 	for _, key := range []string{"--anonymous-auth", "--client-ca-file"} {

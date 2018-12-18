@@ -7,6 +7,8 @@ import (
 	"encoding/json"
 	"strconv"
 
+	"github.com/Azure/go-autorest/autorest/to"
+
 	"github.com/Azure/aks-engine/pkg/api/agentPoolOnlyApi/v20170831"
 	"github.com/Azure/aks-engine/pkg/api/agentPoolOnlyApi/v20180331"
 	"github.com/Azure/aks-engine/pkg/api/agentPoolOnlyApi/vlabs"
@@ -215,8 +217,8 @@ func convertV20170831AgentPoolOnlyOrchestratorProfile(kubernetesVersion string) 
 		OrchestratorType:    Kubernetes,
 		OrchestratorVersion: common.GetSupportedKubernetesVersion(kubernetesVersion, false),
 		KubernetesConfig: &KubernetesConfig{
-			EnableRbac:          helpers.PointerToBool(false),
-			EnableSecureKubelet: helpers.PointerToBool(false),
+			EnableRbac:          to.BoolPtr(false),
+			EnableSecureKubelet: to.BoolPtr(false),
 			// set network default for un-versioned model
 			NetworkPlugin:      string(v20180331.Kubenet),
 			ClusterSubnet:      DefaultKubernetesClusterSubnet,
@@ -372,16 +374,16 @@ func convertV20180331AgentPoolOnlyWindowsProfile(obj *v20180331.WindowsProfile) 
 }
 
 func convertV20180331AgentPoolOnlyKubernetesConfig(enableRBAC *bool) *KubernetesConfig {
-	if helpers.IsTrueBoolPointer(enableRBAC) {
+	if to.Bool(enableRBAC) {
 		// We set default behavior to be false
 		return &KubernetesConfig{
-			EnableRbac:          helpers.PointerToBool(true),
-			EnableSecureKubelet: helpers.PointerToBool(true),
+			EnableRbac:          to.BoolPtr(true),
+			EnableSecureKubelet: to.BoolPtr(true),
 		}
 	}
 	return &KubernetesConfig{
-		EnableRbac:          helpers.PointerToBool(false),
-		EnableSecureKubelet: helpers.PointerToBool(false),
+		EnableRbac:          to.BoolPtr(false),
+		EnableSecureKubelet: to.BoolPtr(false),
 	}
 }
 

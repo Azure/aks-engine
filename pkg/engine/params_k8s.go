@@ -10,9 +10,10 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Azure/go-autorest/autorest/to"
+
 	"github.com/Azure/aks-engine/pkg/api"
 	"github.com/Azure/aks-engine/pkg/api/common"
-	"github.com/Azure/aks-engine/pkg/helpers"
 )
 
 func assignKubernetesParameters(properties *api.Properties, parametersMap paramsMap,
@@ -29,7 +30,7 @@ func assignKubernetesParameters(properties *api.Properties, parametersMap params
 		kubernetesImageBase := kubernetesConfig.KubernetesImageBase
 
 		if kubernetesConfig != nil {
-			if helpers.IsTrueBoolPointer(kubernetesConfig.UseCloudControllerManager) {
+			if to.Bool(kubernetesConfig.UseCloudControllerManager) {
 				kubernetesCcmSpec := kubernetesImageBase + k8sComponents["ccm"]
 				if kubernetesConfig.CustomCcmImage != "" {
 					kubernetesCcmSpec = kubernetesConfig.CustomCcmImage
@@ -54,7 +55,7 @@ func assignKubernetesParameters(properties *api.Properties, parametersMap params
 				aadPodIdentityAddon := kubernetesConfig.GetAddonByName(DefaultAADPodIdentityAddonName)
 				aadIndex := aadPodIdentityAddon.GetAddonContainersIndexByName(DefaultAADPodIdentityAddonName)
 				if aadIndex > -1 {
-					addValue(parametersMap, "kubernetesAADPodIdentityEnabled", helpers.IsTrueBoolPointer(aadPodIdentityAddon.Enabled))
+					addValue(parametersMap, "kubernetesAADPodIdentityEnabled", to.Bool(aadPodIdentityAddon.Enabled))
 				}
 			}
 			if kubernetesConfig.IsACIConnectorEnabled() {
@@ -153,7 +154,7 @@ func assignKubernetesParameters(properties *api.Properties, parametersMap params
 				addValue(parametersMap, "servicePrincipalClientSecret", properties.ServicePrincipalProfile.Secret)
 			}
 
-			if kubernetesConfig != nil && helpers.IsTrueBoolPointer(kubernetesConfig.EnableEncryptionWithExternalKms) && !kubernetesConfig.UseManagedIdentity && properties.ServicePrincipalProfile.ObjectID != "" {
+			if kubernetesConfig != nil && to.Bool(kubernetesConfig.EnableEncryptionWithExternalKms) && !kubernetesConfig.UseManagedIdentity && properties.ServicePrincipalProfile.ObjectID != "" {
 				addValue(parametersMap, "servicePrincipalObjectId", properties.ServicePrincipalProfile.ObjectID)
 			}
 		}

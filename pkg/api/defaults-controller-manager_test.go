@@ -6,13 +6,13 @@ package api
 import (
 	"testing"
 
-	"github.com/Azure/aks-engine/pkg/helpers"
+	"github.com/Azure/go-autorest/autorest/to"
 )
 
 func TestControllerManagerConfigEnableRbac(t *testing.T) {
 	// Test EnableRbac = true
 	cs := CreateMockContainerService("testcluster", defaultTestClusterVer, 3, 2, false)
-	cs.Properties.OrchestratorProfile.KubernetesConfig.EnableRbac = helpers.PointerToBool(true)
+	cs.Properties.OrchestratorProfile.KubernetesConfig.EnableRbac = to.BoolPtr(true)
 	cs.setControllerManagerConfig()
 	cm := cs.Properties.OrchestratorProfile.KubernetesConfig.ControllerManagerConfig
 	if cm["--use-service-account-credentials"] != "true" {
@@ -22,7 +22,7 @@ func TestControllerManagerConfigEnableRbac(t *testing.T) {
 
 	// Test default
 	cs = CreateMockContainerService("testcluster", defaultTestClusterVer, 3, 2, false)
-	cs.Properties.OrchestratorProfile.KubernetesConfig.EnableRbac = helpers.PointerToBool(false)
+	cs.Properties.OrchestratorProfile.KubernetesConfig.EnableRbac = to.BoolPtr(false)
 	cs.setControllerManagerConfig()
 	cm = cs.Properties.OrchestratorProfile.KubernetesConfig.ControllerManagerConfig
 	if cm["--use-service-account-credentials"] != DefaultKubernetesCtrlMgrUseSvcAccountCreds {

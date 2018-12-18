@@ -7,9 +7,10 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/Azure/go-autorest/autorest/to"
+
 	"github.com/Azure/aks-engine/pkg/api"
 	"github.com/Azure/aks-engine/pkg/api/common"
-	"github.com/Azure/aks-engine/pkg/helpers"
 )
 
 type kubernetesFeatureSetting struct {
@@ -230,7 +231,7 @@ func kubernetesManifestSettingsInit(profile *api.Properties) []kubernetesFeature
 		{
 			"kubernetesmaster-pod-security-policy.yaml",
 			"pod-security-policy.yaml",
-			helpers.IsTrueBoolPointer(profile.OrchestratorProfile.KubernetesConfig.EnablePodSecurityPolicy),
+			to.Bool(profile.OrchestratorProfile.KubernetesConfig.EnablePodSecurityPolicy),
 			profile.OrchestratorProfile.KubernetesConfig.PodSecurityPolicyConfig["data"],
 		},
 		{
