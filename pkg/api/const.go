@@ -382,6 +382,8 @@ const (
 	DefaultKubernetesCtrMgrEnableProfiling = "false"
 	// DefaultKubernetesSchedulerEnableProfiling is the config that enables profiling via web interface host:port/debug/pprof/
 	DefaultKubernetesSchedulerEnableProfiling = "false"
+	// DefaultNonMasqueradeCIDR is the default --non-masquerade-cidr value for kubelet
+	DefaultNonMasqueradeCIDR = "0.0.0.0/0"
 )
 
 const (
