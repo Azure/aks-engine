@@ -73,6 +73,8 @@ const (
 	DefaultGeneratorCode = "acsengine"
 	// DefaultReschedulerAddonName is the name of the rescheduler addon deployment
 	DefaultReschedulerAddonName = "rescheduler"
+	// DefaultHeapsterAddonName is the name of the heapster addon deployment
+	DefaultHeapsterAddonName = "heapster"
 	// DefaultMetricsServerAddonName is the name of the kubernetes Metrics server addon deployment
 	DefaultMetricsServerAddonName = "metrics-server"
 	// NVIDIADevicePluginAddonName is the name of the kubernetes NVIDIA Device Plugin daemon set

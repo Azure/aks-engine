@@ -111,6 +111,8 @@ const (
 const publicAgentPoolSuffix = "-public"
 
 const (
+	// DefaultHeapsterAddonEnabled determines the acs-engine provided default for enabling heapster addon
+	DefaultHeapsterAddonEnabled = true
 	// DefaultTillerAddonEnabled determines the aks-engine provided default for enabling tiller addon
 	DefaultTillerAddonEnabled = true
 	// DefaultAADPodIdentityAddonEnabled determines the aks-engine provided default for enabling aad-pod-identity addon
@@ -129,6 +131,8 @@ const (
 	DefaultDashboardAddonEnabled = true
 	// DefaultReschedulerAddonEnabled determines the aks-engine provided default for enabling kubernetes-rescheduler addon
 	DefaultReschedulerAddonEnabled = false
+	// DefaultAzureCNIMonitoringAddonEnabled determines the aks-engine provided default for enabling azurecni-network monitoring addon
+	DefaultAzureCNIMonitoringAddonEnabled = true
 	// DefaultRBACEnabled determines the aks-engine provided default for enabling kubernetes RBAC
 	DefaultRBACEnabled = true
 	// DefaultUseInstanceMetadata determines the aks-engine provided default for enabling Azure cloudprovider instance metadata service
@@ -149,6 +153,8 @@ const (
 	DefaultDNSAutoscalerAddonEnabled = false
 	// IPMasqAgentAddonEnabled enables the ip-masq-agent addon
 	IPMasqAgentAddonEnabled = true
+	// DefaultHeapsterAddonName is the name of the heapster addon
+	DefaultHeapsterAddonName = "heapster"
 	// DefaultTillerAddonName is the name of the tiller addon deployment
 	DefaultTillerAddonName = "tiller"
 	// DefaultAADPodIdentityAddonName is the name of the aad-pod-identity addon deployment
@@ -376,6 +382,8 @@ const (
 	DefaultKubernetesCtrMgrEnableProfiling = "false"
 	// DefaultKubernetesSchedulerEnableProfiling is the config that enables profiling via web interface host:port/debug/pprof/
 	DefaultKubernetesSchedulerEnableProfiling = "false"
+	// DefaultNonMasqueradeCIDR is the default --non-masquerade-cidr value for kubelet
+	DefaultNonMasqueradeCIDR = "0.0.0.0/0"
 )
 
 const (

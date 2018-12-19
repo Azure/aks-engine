@@ -211,3 +211,83 @@ func TestKubeletCalico(t *testing.T) {
 			NetworkPolicyCalico, k["--network-plugin"])
 	}
 }
+
+func TestKubeletHostedMasterIPMasqAgentDisabled(t *testing.T) {
+	subnet := "172.16.0.0/16"
+	// MasterIPMasqAgent disabled, --non-masquerade-cidr should be subnet
+	cs := CreateMockContainerService("testcluster", defaultTestClusterVer, 3, 2, false)
+	cs.Properties.HostedMasterProfile = &HostedMasterProfile{
+		IPMasqAgent: false,
+	}
+	cs.Properties.OrchestratorProfile.KubernetesConfig.ClusterSubnet = subnet
+	cs.setKubeletConfig()
+	k := cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig
+	if k["--non-masquerade-cidr"] != subnet {
+		t.Fatalf("got unexpected '--non-masquerade-cidr' kubelet config value %s, the expected value is %s",
+			k["--non-masquerade-cidr"], subnet)
+	}
+
+	// MasterIPMasqAgent enabled, --non-masquerade-cidr should be 0.0.0.0/0
+	cs = CreateMockContainerService("testcluster", defaultTestClusterVer, 3, 2, false)
+	cs.Properties.HostedMasterProfile = &HostedMasterProfile{
+		IPMasqAgent: true,
+	}
+	cs.Properties.OrchestratorProfile.KubernetesConfig.ClusterSubnet = subnet
+	cs.setKubeletConfig()
+	k = cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig
+	if k["--non-masquerade-cidr"] != DefaultNonMasqueradeCIDR {
+		t.Fatalf("got unexpected '--non-masquerade-cidr' kubelet config value %s, the expected value is %s",
+			k["--non-masquerade-cidr"], DefaultNonMasqueradeCIDR)
+	}
+
+	// no HostedMasterProfile, --non-masquerade-cidr should be 0.0.0.0/0
+	cs = CreateMockContainerService("testcluster", defaultTestClusterVer, 3, 2, false)
+	cs.Properties.OrchestratorProfile.KubernetesConfig.ClusterSubnet = subnet
+	cs.setKubeletConfig()
+	k = cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig
+	if k["--non-masquerade-cidr"] != DefaultNonMasqueradeCIDR {
+		t.Fatalf("got unexpected '--non-masquerade-cidr' kubelet config value %s, the expected value is %s",
+			k["--non-masquerade-cidr"], DefaultNonMasqueradeCIDR)
+	}
+}
+
+func TestKubeletIPMasqAgentEnabledOrDisabled(t *testing.T) {
+	subnet := "172.16.0.0/16"
+	// MasterIPMasqAgent disabled, --non-masquerade-cidr should be subnet
+	cs := CreateMockContainerService("testcluster", defaultTestClusterVer, 3, 2, false)
+	b := false
+	cs.Properties.OrchestratorProfile.KubernetesConfig = &KubernetesConfig{
+		Addons: []KubernetesAddon{
+			{
+				Name:    IPMASQAgentAddonName,
+				Enabled: &b,
+			},
+		},
+	}
+	cs.Properties.OrchestratorProfile.KubernetesConfig.ClusterSubnet = subnet
+	cs.setKubeletConfig()
+	k := cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig
+	if k["--non-masquerade-cidr"] != subnet {
+		t.Fatalf("got unexpected '--non-masquerade-cidr' kubelet config value %s, the expected value is %s",
+			k["--non-masquerade-cidr"], subnet)
+	}
+
+	// MasterIPMasqAgent enabled, --non-masquerade-cidr should be 0.0.0.0/0
+	cs = CreateMockContainerService("testcluster", defaultTestClusterVer, 3, 2, false)
+	b = true
+	cs.Properties.OrchestratorProfile.KubernetesConfig = &KubernetesConfig{
+		Addons: []KubernetesAddon{
+			{
+				Name:    IPMASQAgentAddonName,
+				Enabled: &b,
+			},
+		},
+	}
+	cs.Properties.OrchestratorProfile.KubernetesConfig.ClusterSubnet = subnet
+	cs.setKubeletConfig()
+	k = cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig
+	if k["--non-masquerade-cidr"] != DefaultNonMasqueradeCIDR {
+		t.Fatalf("got unexpected '--non-masquerade-cidr' kubelet config value %s, the expected value is %s",
+			k["--non-masquerade-cidr"], DefaultNonMasqueradeCIDR)
+	}
+}

@@ -1,4 +1,4 @@
-# Microsoft Azure Kubernetes Engine - Kubernetes Features
+# AKS-Engine - Kubernetes Features
 
 ## Overview
 

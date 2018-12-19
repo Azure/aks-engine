@@ -171,7 +171,11 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 		})
 
 		It("should have core kube-system componentry running", func() {
-			for _, componentName := range []string{"kube-proxy", "heapster", "kube-addon-manager", "kube-apiserver", "kube-controller-manager", "kube-scheduler"} {
+			coreComponents := []string{"kube-proxy", "kube-addon-manager", "kube-apiserver", "kube-controller-manager", "kube-scheduler"}
+			if !common.IsKubernetesVersionGe(eng.ExpandedDefinition.Properties.OrchestratorProfile.OrchestratorVersion, "1.13.0") {
+				coreComponents = append(coreComponents, "heapster")
+			}
+			for _, componentName := range coreComponents {
 				By(fmt.Sprintf("Ensuring that %s is Running", componentName))
 				running, err := pod.WaitOnReady(componentName, "kube-system", 3, 1*time.Second, cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())
@@ -666,7 +670,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				Expect(err).NotTo(HaveOccurred())
 
 				By("Ensuring we only have 1 apache-php pod after stopping load")
-				_, err = phpApacheDeploy.WaitForReplicas(-1, 1, 5*time.Second, cfg.Timeout)
+				_, err = phpApacheDeploy.WaitForReplicas(-1, 1, 5*time.Second, 20*time.Minute)
 				Expect(err).NotTo(HaveOccurred())
 				h, err = hpa.Get(longRunningApacheDeploymentName, "default")
 				Expect(err).NotTo(HaveOccurred())

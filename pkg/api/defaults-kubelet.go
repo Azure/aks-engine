@@ -57,7 +57,7 @@ func (cs *ContainerService) setKubeletConfig() {
 		"--node-status-update-frequency":    K8sComponentsByVersionMap[o.OrchestratorVersion]["nodestatusfreq"],
 		"--image-gc-high-threshold":         strconv.Itoa(DefaultKubernetesGCHighThreshold),
 		"--image-gc-low-threshold":          strconv.Itoa(DefaultKubernetesGCLowThreshold),
-		"--non-masquerade-cidr":             "0.0.0.0",
+		"--non-masquerade-cidr":             DefaultNonMasqueradeCIDR,
 		"--cloud-provider":                  "azure",
 		"--cloud-config":                    "/etc/kubernetes/azure.json",
 		"--azure-container-registry-config": "/etc/kubernetes/azure.json",
@@ -67,8 +67,8 @@ func (cs *ContainerService) setKubeletConfig() {
 		"--image-pull-progress-deadline":    "30m",
 	}
 
-	// AKS overrides
-	if cs.Properties.IsHostedMasterProfile() {
+	// Set --non-masquerade-cidr if ip-masq-agent is disabled on AKS
+	if !cs.Properties.IsIPMasqAgentEnabled() {
 		defaultKubeletConfig["--non-masquerade-cidr"] = cs.Properties.OrchestratorProfile.KubernetesConfig.ClusterSubnet
 	}
 

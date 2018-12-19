@@ -10,7 +10,7 @@ By doing this, you will be able to control the properties of the virtual network
 You can run this walkthrough on OS X, Windows, or Linux.
 - You need an Azure subscription. If you don't have one, you can [sign up for an account](https://azure.microsoft.com/).
 - Install the [Azure CLI 2.0](/cli/azure/install-az-cli2).
-- Install the [AKS Engine](https://github.com/Azure/aks-engine/blob/master/docs/acsengine.md)
+- Install the [AKS Engine](https://github.com/Azure/aks-engine/blob/master/docs/aksengine.md)
 
 ## Create the virtual network
 *You need a virtual network before creating the new cluster. If you already have one, you can skip this step.*

@@ -24,12 +24,15 @@ No further development or releases in ACS-Engine are planned. AKS-Engine is a ba
 
 No, Azure Kubernetes Service itself is the way to create a supported, managed AKS cluster. AKS-Engine shares some code with AKS, but does not create managed clusters.
 
-### Where is the `aks-engine` Release?
+### Should I use the latest `aks-engine` release if I was previously using `acs-engine`?
 
-We don't have an official aks-engine release yet. Please use the most recent [acs-engine release][] for now.
+Yes. `aks-engine` [v0.27.0][] is a continuation of acs-engine [v0.26.2][] with all the Kubernetes fixes and features included in [v0.26.2][] and more.
+
 
 [AKS]: https://azure.microsoft.com/en-us/services/kubernetes-service/
 [AKS-Engine]: https://github.com/Azure/aks-engine
 [Azure command-line tool]: https://docs.microsoft.com/en-us/cli/azure/install-azure-cli?view=azure-cli-latest
 [acs-engine release]: https://github.com/Azure/acs-engine/releases
 [Kubernetes]: https://kubernetes.io/
+[v0.27.0]: https://github.com/Azure/aks-engine/releases/tag/v0.27.0
+[v0.26.2]: https://github.com/Azure/acs-engine/releases/tag/v0.26.2

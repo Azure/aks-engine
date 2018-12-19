@@ -15,6 +15,21 @@ func (cs *ContainerService) setAddonsConfig(isUpdate bool) {
 	cloudSpecConfig := cs.GetCloudSpecConfig()
 	k8sComponents := K8sComponentsByVersionMap[o.OrchestratorVersion]
 	specConfig := cloudSpecConfig.KubernetesSpecConfig
+	defaultsHeapsterAddonsConfig := KubernetesAddon{
+		Name:    DefaultHeapsterAddonName,
+		Enabled: helpers.PointerToBool(DefaultHeapsterAddonEnabled),
+		Containers: []KubernetesContainerSpec{
+			{
+				Name:  DefaultHeapsterAddonName,
+				Image: specConfig.KubernetesImageBase + k8sComponents["heapster"],
+			},
+			{
+				Name:  "heapster-nanny",
+				Image: specConfig.KubernetesImageBase + k8sComponents["addonresizer"],
+			},
+		},
+	}
+
 	defaultTillerAddonsConfig := KubernetesAddon{
 		Name:    DefaultTillerAddonName,
 		Enabled: helpers.PointerToBool(DefaultTillerAddonEnabled),
@@ -58,8 +73,9 @@ func (cs *ContainerService) setAddonsConfig(isUpdate bool) {
 		Name:    DefaultClusterAutoscalerAddonName,
 		Enabled: helpers.PointerToBool(DefaultClusterAutoscalerAddonEnabled),
 		Config: map[string]string{
-			"min-nodes": "1",
-			"max-nodes": "5",
+			"min-nodes":     "1",
+			"max-nodes":     "5",
+			"scan-interval": "10s",
 		},
 		Containers: []KubernetesContainerSpec{
 			{
@@ -83,7 +99,7 @@ func (cs *ContainerService) setAddonsConfig(isUpdate bool) {
 				MemoryRequests: "10Mi",
 				CPULimits:      "50m",
 				MemoryLimits:   "10Mi",
-				Image:          "mcr.microsoft.com/k8s/flexvolume/blobfuse-flexvolume",
+				Image:          "mcr.microsoft.com/k8s/flexvolume/blobfuse-flexvolume:1.0.7",
 			},
 		},
 	}
@@ -98,7 +114,7 @@ func (cs *ContainerService) setAddonsConfig(isUpdate bool) {
 				MemoryRequests: "10Mi",
 				CPULimits:      "50m",
 				MemoryLimits:   "10Mi",
-				Image:          "mcr.microsoft.com/k8s/flexvolume/smb-flexvolume",
+				Image:          "mcr.microsoft.com/k8s/flexvolume/smb-flexvolume:1.0.2",
 			},
 		},
 	}
@@ -248,6 +264,7 @@ func (cs *ContainerService) setAddonsConfig(isUpdate bool) {
 	}
 
 	defaultAddons := []KubernetesAddon{
+		defaultsHeapsterAddonsConfig,
 		defaultTillerAddonsConfig,
 		defaultACIConnectorAddonsConfig,
 		defaultClusterAutoscalerAddonsConfig,

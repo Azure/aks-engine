@@ -118,7 +118,7 @@ test-e2e:
 HAS_DEP := $(shell command -v dep;)
 HAS_GOX := $(shell command -v gox;)
 HAS_GIT := $(shell command -v git;)
-HAS_GOMETALINTER := $(shell command -v gometalinter;)
+HAS_GOLANGCI := $(shell command -v golangci-lint;)
 HAS_GINKGO := $(shell command -v ginkgo;)
 
 .PHONY: bootstrap
@@ -133,9 +133,8 @@ endif
 ifndef HAS_GIT
 	$(error You must install Git)
 endif
-ifndef HAS_GOMETALINTER
-	go get -u github.com/alecthomas/gometalinter
-	gometalinter --install
+ifndef HAS_GOLANGCI
+	curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sh -s -- -b $(GOPATH)/bin
 endif
 ifndef HAS_GINKGO
 	go get -u github.com/onsi/ginkgo/ginkgo
