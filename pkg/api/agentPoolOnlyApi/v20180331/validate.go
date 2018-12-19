@@ -8,8 +8,9 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/Azure/go-autorest/autorest/to"
+
 	"github.com/Azure/aks-engine/pkg/api/common"
-	"github.com/Azure/aks-engine/pkg/helpers"
 	"github.com/pkg/errors"
 	validator "gopkg.in/go-playground/validator.v9"
 )
@@ -44,7 +45,7 @@ func (l *LinuxProfile) Validate() error {
 
 // Validate implements APIObject
 func (a *AADProfile) Validate(rbacEnabled *bool) error {
-	if !helpers.IsTrueBoolPointer(rbacEnabled) {
+	if !to.Bool(rbacEnabled) {
 		return ErrorRBACNotEnabledForAAD
 	}
 

@@ -7,8 +7,9 @@ import (
 	"strconv"
 	"testing"
 
+	"github.com/Azure/go-autorest/autorest/to"
+
 	"github.com/Azure/aks-engine/pkg/api/agentPoolOnlyApi/v20180331"
-	"github.com/Azure/aks-engine/pkg/helpers"
 )
 
 func TestConvertV20180331AgentPoolOnlyOrchestratorProfile(t *testing.T) {
@@ -229,18 +230,18 @@ func TestConvertV20170831AgentPoolOnlyOrchestratorProfile_KubernetesConfig(t *te
 		t.Error("OrchestratorProfile.KubernetesConfig expected not to be nil")
 	}
 
-	if helpers.IsTrueBoolPointer(op.KubernetesConfig.EnableRbac) {
+	if to.Bool(op.KubernetesConfig.EnableRbac) {
 		t.Error("OrchestratorProfile.KubernetesConfig.EnableRbac expected to be *false")
 	}
 
-	if helpers.IsTrueBoolPointer(op.KubernetesConfig.EnableSecureKubelet) {
+	if to.Bool(op.KubernetesConfig.EnableSecureKubelet) {
 		t.Error("OrchestratorProfile.KubernetesConfig.EnableSecureKubelet expected to be *false")
 	}
 
 }
 
 func TestConvertV20180331AgentPoolOnlyKubernetesConfig(t *testing.T) {
-	var kc = convertV20180331AgentPoolOnlyKubernetesConfig(helpers.PointerToBool(true))
+	var kc = convertV20180331AgentPoolOnlyKubernetesConfig(to.BoolPtr(true))
 	if kc == nil {
 		t.Error("kubernetesConfig expected not to be nil")
 	}
@@ -265,7 +266,7 @@ func TestConvertV20180331AgentPoolOnlyKubernetesConfig(t *testing.T) {
 		t.Error("EnableSecureKubelet and EnableRbac expected to be same")
 	}
 
-	kc = convertV20180331AgentPoolOnlyKubernetesConfig(helpers.PointerToBool(false))
+	kc = convertV20180331AgentPoolOnlyKubernetesConfig(to.BoolPtr(false))
 	if kc == nil {
 		t.Error("kubernetesConfig expected not to be nil")
 	}
@@ -274,7 +275,7 @@ func TestConvertV20180331AgentPoolOnlyKubernetesConfig(t *testing.T) {
 		t.Error("EnableRbac expected not to be nil")
 	}
 
-	if helpers.IsTrueBoolPointer(kc.EnableRbac) {
+	if to.Bool(kc.EnableRbac) {
 		t.Error("EnableRbac expected to be false")
 	}
 
@@ -282,7 +283,7 @@ func TestConvertV20180331AgentPoolOnlyKubernetesConfig(t *testing.T) {
 		t.Error("EnableSecureKubelet expected not to be nil")
 	}
 
-	if helpers.IsTrueBoolPointer(kc.EnableSecureKubelet) {
+	if to.Bool(kc.EnableSecureKubelet) {
 		t.Error("EnableSecureKubelet expected to be false")
 	}
 
@@ -299,7 +300,7 @@ func TestConvertV20180331AgentPoolOnlyKubernetesConfig(t *testing.T) {
 		t.Error("EnableRbac expected not to be nil")
 	}
 
-	if helpers.IsTrueBoolPointer(kc.EnableRbac) {
+	if to.Bool(kc.EnableRbac) {
 		t.Error("EnableRbac expected to be false")
 	}
 
@@ -307,7 +308,7 @@ func TestConvertV20180331AgentPoolOnlyKubernetesConfig(t *testing.T) {
 		t.Error("EnableSecureKubelet expected not to be nil")
 	}
 
-	if helpers.IsTrueBoolPointer(kc.EnableSecureKubelet) {
+	if to.Bool(kc.EnableSecureKubelet) {
 		t.Error("EnableSecureKubelet expected to be false")
 	}
 

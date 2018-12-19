@@ -4,9 +4,10 @@
 package api
 
 import (
+	"strings"
 	"testing"
 
-	"github.com/Azure/aks-engine/pkg/helpers"
+	"github.com/Azure/go-autorest/autorest/to"
 )
 
 const defaultTestClusterVer = "1.7.12"
@@ -14,7 +15,7 @@ const defaultTestClusterVer = "1.7.12"
 func TestAPIServerConfigEnableDataEncryptionAtRest(t *testing.T) {
 	// Test EnableDataEncryptionAtRest = true
 	cs := CreateMockContainerService("testcluster", defaultTestClusterVer, 3, 2, false)
-	cs.Properties.OrchestratorProfile.KubernetesConfig.EnableDataEncryptionAtRest = helpers.PointerToBool(true)
+	cs.Properties.OrchestratorProfile.KubernetesConfig.EnableDataEncryptionAtRest = to.BoolPtr(true)
 	cs.setAPIServerConfig()
 	a := cs.Properties.OrchestratorProfile.KubernetesConfig.APIServerConfig
 	if a["--experimental-encryption-provider-config"] != "/etc/kubernetes/encryption-config.yaml" {
@@ -24,7 +25,7 @@ func TestAPIServerConfigEnableDataEncryptionAtRest(t *testing.T) {
 
 	// Test EnableDataEncryptionAtRest = false
 	cs = CreateMockContainerService("testcluster", defaultTestClusterVer, 3, 2, false)
-	cs.Properties.OrchestratorProfile.KubernetesConfig.EnableDataEncryptionAtRest = helpers.PointerToBool(false)
+	cs.Properties.OrchestratorProfile.KubernetesConfig.EnableDataEncryptionAtRest = to.BoolPtr(false)
 	cs.setAPIServerConfig()
 	a = cs.Properties.OrchestratorProfile.KubernetesConfig.APIServerConfig
 	if _, ok := a["--experimental-encryption-provider-config"]; ok {
@@ -36,7 +37,7 @@ func TestAPIServerConfigEnableDataEncryptionAtRest(t *testing.T) {
 func TestAPIServerConfigEnableEncryptionWithExternalKms(t *testing.T) {
 	// Test EnableEncryptionWithExternalKms = true
 	cs := CreateMockContainerService("testcluster", defaultTestClusterVer, 3, 2, false)
-	cs.Properties.OrchestratorProfile.KubernetesConfig.EnableEncryptionWithExternalKms = helpers.PointerToBool(true)
+	cs.Properties.OrchestratorProfile.KubernetesConfig.EnableEncryptionWithExternalKms = to.BoolPtr(true)
 	cs.setAPIServerConfig()
 	a := cs.Properties.OrchestratorProfile.KubernetesConfig.APIServerConfig
 	if a["--experimental-encryption-provider-config"] != "/etc/kubernetes/encryption-config.yaml" {
@@ -46,7 +47,7 @@ func TestAPIServerConfigEnableEncryptionWithExternalKms(t *testing.T) {
 
 	// Test EnableEncryptionWithExternalKms = false
 	cs = CreateMockContainerService("testcluster", defaultTestClusterVer, 3, 2, false)
-	cs.Properties.OrchestratorProfile.KubernetesConfig.EnableEncryptionWithExternalKms = helpers.PointerToBool(false)
+	cs.Properties.OrchestratorProfile.KubernetesConfig.EnableEncryptionWithExternalKms = to.BoolPtr(false)
 	cs.setAPIServerConfig()
 	a = cs.Properties.OrchestratorProfile.KubernetesConfig.APIServerConfig
 	if _, ok := a["--experimental-encryption-provider-config"]; ok {
@@ -108,7 +109,7 @@ func TestAPIServerConfigEnableAggregatedAPIs(t *testing.T) {
 func TestAPIServerConfigUseCloudControllerManager(t *testing.T) {
 	// Test UseCloudControllerManager = true
 	cs := CreateMockContainerService("testcluster", defaultTestClusterVer, 3, 2, false)
-	cs.Properties.OrchestratorProfile.KubernetesConfig.UseCloudControllerManager = helpers.PointerToBool(true)
+	cs.Properties.OrchestratorProfile.KubernetesConfig.UseCloudControllerManager = to.BoolPtr(true)
 	cs.setAPIServerConfig()
 	a := cs.Properties.OrchestratorProfile.KubernetesConfig.APIServerConfig
 	if _, ok := a["--cloud-provider"]; ok {
@@ -122,7 +123,7 @@ func TestAPIServerConfigUseCloudControllerManager(t *testing.T) {
 
 	// Test UseCloudControllerManager = false
 	cs = CreateMockContainerService("testcluster", defaultTestClusterVer, 3, 2, false)
-	cs.Properties.OrchestratorProfile.KubernetesConfig.UseCloudControllerManager = helpers.PointerToBool(false)
+	cs.Properties.OrchestratorProfile.KubernetesConfig.UseCloudControllerManager = to.BoolPtr(false)
 	cs.setAPIServerConfig()
 	a = cs.Properties.OrchestratorProfile.KubernetesConfig.APIServerConfig
 	if a["--cloud-provider"] != "azure" {
@@ -249,7 +250,7 @@ func TestAPIServerConfigHasAadProfile(t *testing.T) {
 func TestAPIServerConfigEnableRbac(t *testing.T) {
 	// Test EnableRbac = true
 	cs := CreateMockContainerService("testcluster", defaultTestClusterVer, 3, 2, false)
-	cs.Properties.OrchestratorProfile.KubernetesConfig.EnableRbac = helpers.PointerToBool(true)
+	cs.Properties.OrchestratorProfile.KubernetesConfig.EnableRbac = to.BoolPtr(true)
 	cs.setAPIServerConfig()
 	a := cs.Properties.OrchestratorProfile.KubernetesConfig.APIServerConfig
 	if a["--authorization-mode"] != "Node,RBAC" {
@@ -259,7 +260,7 @@ func TestAPIServerConfigEnableRbac(t *testing.T) {
 
 	// Test EnableRbac = true with 1.6 cluster
 	cs = CreateMockContainerService("testcluster", "1.6.11", 3, 2, false)
-	cs.Properties.OrchestratorProfile.KubernetesConfig.EnableRbac = helpers.PointerToBool(true)
+	cs.Properties.OrchestratorProfile.KubernetesConfig.EnableRbac = to.BoolPtr(true)
 	cs.setAPIServerConfig()
 	a = cs.Properties.OrchestratorProfile.KubernetesConfig.APIServerConfig
 	if a["--authorization-mode"] != "RBAC" {
@@ -269,7 +270,7 @@ func TestAPIServerConfigEnableRbac(t *testing.T) {
 
 	// Test EnableRbac = false
 	cs = CreateMockContainerService("testcluster", defaultTestClusterVer, 3, 2, false)
-	cs.Properties.OrchestratorProfile.KubernetesConfig.EnableRbac = helpers.PointerToBool(false)
+	cs.Properties.OrchestratorProfile.KubernetesConfig.EnableRbac = to.BoolPtr(false)
 	cs.setAPIServerConfig()
 	a = cs.Properties.OrchestratorProfile.KubernetesConfig.APIServerConfig
 	if _, ok := a["--authorization-mode"]; ok {
@@ -279,7 +280,7 @@ func TestAPIServerConfigEnableRbac(t *testing.T) {
 
 	// Test EnableRbac = false with 1.6 cluster
 	cs = CreateMockContainerService("testcluster", "1.6.11", 3, 2, false)
-	cs.Properties.OrchestratorProfile.KubernetesConfig.EnableRbac = helpers.PointerToBool(false)
+	cs.Properties.OrchestratorProfile.KubernetesConfig.EnableRbac = to.BoolPtr(false)
 	cs.setAPIServerConfig()
 	a = cs.Properties.OrchestratorProfile.KubernetesConfig.APIServerConfig
 	if _, ok := a["--authorization-mode"]; ok {
@@ -291,7 +292,7 @@ func TestAPIServerConfigEnableRbac(t *testing.T) {
 func TestAPIServerConfigDisableRbac(t *testing.T) {
 	// Test EnableRbac = false
 	cs := CreateMockContainerService("testcluster", defaultTestClusterVer, 3, 2, false)
-	cs.Properties.OrchestratorProfile.KubernetesConfig.EnableRbac = helpers.PointerToBool(false)
+	cs.Properties.OrchestratorProfile.KubernetesConfig.EnableRbac = to.BoolPtr(false)
 	cs.setAPIServerConfig()
 	a := cs.Properties.OrchestratorProfile.KubernetesConfig.APIServerConfig
 	if a["--authorization-mode"] != "" {
@@ -303,7 +304,7 @@ func TestAPIServerConfigDisableRbac(t *testing.T) {
 func TestAPIServerConfigEnableSecureKubelet(t *testing.T) {
 	// Test EnableSecureKubelet = true
 	cs := CreateMockContainerService("testcluster", defaultTestClusterVer, 3, 2, false)
-	cs.Properties.OrchestratorProfile.KubernetesConfig.EnableSecureKubelet = helpers.PointerToBool(true)
+	cs.Properties.OrchestratorProfile.KubernetesConfig.EnableSecureKubelet = to.BoolPtr(true)
 	cs.setAPIServerConfig()
 	a := cs.Properties.OrchestratorProfile.KubernetesConfig.APIServerConfig
 	if a["--kubelet-client-certificate"] != "/etc/kubernetes/certs/client.crt" {
@@ -317,7 +318,7 @@ func TestAPIServerConfigEnableSecureKubelet(t *testing.T) {
 
 	// Test EnableSecureKubelet = false
 	cs = CreateMockContainerService("testcluster", defaultTestClusterVer, 3, 2, false)
-	cs.Properties.OrchestratorProfile.KubernetesConfig.EnableSecureKubelet = helpers.PointerToBool(false)
+	cs.Properties.OrchestratorProfile.KubernetesConfig.EnableSecureKubelet = to.BoolPtr(false)
 	cs.setAPIServerConfig()
 	a = cs.Properties.OrchestratorProfile.KubernetesConfig.APIServerConfig
 	for _, key := range []string{"--kubelet-client-certificate", "--kubelet-client-key"} {
@@ -336,6 +337,7 @@ func TestAPIServerConfigDefaultAdmissionControls(t *testing.T) {
 	cs := CreateMockContainerService("testcluster", version, 3, 2, false)
 	cs.Properties.OrchestratorProfile.KubernetesConfig.APIServerConfig = map[string]string{}
 	cs.Properties.OrchestratorProfile.KubernetesConfig.APIServerConfig[admissonControlKey] = "NamespaceLifecycle,LimitRanger,ServiceAccount,DefaultStorageClass,DefaultTolerationSeconds,MutatingAdmissionWebhook,ValidatingAdmissionWebhook,ResourceQuota,AlwaysPullImages,ExtendedResourceToleration"
+	cs.Properties.OrchestratorProfile.KubernetesConfig.EnablePodSecurityPolicy = to.BoolPtr(true)
 	cs.setAPIServerConfig()
 	a := cs.Properties.OrchestratorProfile.KubernetesConfig.APIServerConfig
 
@@ -347,6 +349,12 @@ func TestAPIServerConfigDefaultAdmissionControls(t *testing.T) {
 	// --admission-control was deprecated in v1.10
 	if _, found := a[admissonControlKey]; found {
 		t.Fatalf("Deprecated admission control key '%s' set in API server config for version %s", admissonControlKey, version)
+	}
+
+	// PodSecurityPolicy should be enabled in admission control
+	admissionControlVal := a[enableAdmissionPluginsKey]
+	if !strings.Contains(admissionControlVal, ",PodSecurityPolicy") {
+		t.Fatalf("Admission control value '%s' expected to contain PodSecurityPolicy", admissionControlVal)
 	}
 
 	// Test --admission-control for v1.9 and below

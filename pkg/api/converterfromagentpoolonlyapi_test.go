@@ -7,8 +7,9 @@ import (
 	"strconv"
 	"testing"
 
+	"github.com/Azure/go-autorest/autorest/to"
+
 	"github.com/Azure/aks-engine/pkg/api/agentPoolOnlyApi/v20180331"
-	"github.com/Azure/aks-engine/pkg/helpers"
 )
 
 func TestConvertOrchestratorProfileToV20180331AgentPoolOnly(t *testing.T) {
@@ -257,7 +258,7 @@ func TestConvertKubernetesConfigToEnableRBACV20180331AgentPoolOnly(t *testing.T)
 
 	kc = &KubernetesConfig{
 		EnableRbac:          nil,
-		EnableSecureKubelet: helpers.PointerToBool(true),
+		EnableSecureKubelet: to.BoolPtr(true),
 	}
 	enableRBAC = convertKubernetesConfigToEnableRBACV20180331AgentPoolOnly(kc)
 	if enableRBAC == nil {
@@ -268,8 +269,8 @@ func TestConvertKubernetesConfigToEnableRBACV20180331AgentPoolOnly(t *testing.T)
 	}
 
 	kc = &KubernetesConfig{
-		EnableRbac:          helpers.PointerToBool(false),
-		EnableSecureKubelet: helpers.PointerToBool(true),
+		EnableRbac:          to.BoolPtr(false),
+		EnableSecureKubelet: to.BoolPtr(true),
 	}
 	enableRBAC = convertKubernetesConfigToEnableRBACV20180331AgentPoolOnly(kc)
 	if enableRBAC == nil {
@@ -280,8 +281,8 @@ func TestConvertKubernetesConfigToEnableRBACV20180331AgentPoolOnly(t *testing.T)
 	}
 
 	kc = &KubernetesConfig{
-		EnableRbac:          helpers.PointerToBool(false),
-		EnableSecureKubelet: helpers.PointerToBool(false),
+		EnableRbac:          to.BoolPtr(false),
+		EnableSecureKubelet: to.BoolPtr(false),
 	}
 	enableRBAC = convertKubernetesConfigToEnableRBACV20180331AgentPoolOnly(kc)
 	if enableRBAC == nil {
@@ -292,8 +293,8 @@ func TestConvertKubernetesConfigToEnableRBACV20180331AgentPoolOnly(t *testing.T)
 	}
 
 	kc = &KubernetesConfig{
-		EnableRbac:          helpers.PointerToBool(true),
-		EnableSecureKubelet: helpers.PointerToBool(true),
+		EnableRbac:          to.BoolPtr(true),
+		EnableSecureKubelet: to.BoolPtr(true),
 	}
 	enableRBAC = convertKubernetesConfigToEnableRBACV20180331AgentPoolOnly(kc)
 	if enableRBAC == nil {
@@ -304,8 +305,8 @@ func TestConvertKubernetesConfigToEnableRBACV20180331AgentPoolOnly(t *testing.T)
 	}
 
 	kc = &KubernetesConfig{
-		EnableRbac:          helpers.PointerToBool(true),
-		EnableSecureKubelet: helpers.PointerToBool(false),
+		EnableRbac:          to.BoolPtr(true),
+		EnableSecureKubelet: to.BoolPtr(false),
 	}
 	enableRBAC = convertKubernetesConfigToEnableRBACV20180331AgentPoolOnly(kc)
 	if enableRBAC == nil {
@@ -316,7 +317,7 @@ func TestConvertKubernetesConfigToEnableRBACV20180331AgentPoolOnly(t *testing.T)
 	}
 
 	kc = &KubernetesConfig{
-		EnableRbac:          helpers.PointerToBool(true),
+		EnableRbac:          to.BoolPtr(true),
 		EnableSecureKubelet: nil,
 	}
 	enableRBAC = convertKubernetesConfigToEnableRBACV20180331AgentPoolOnly(kc)

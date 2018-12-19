@@ -14,6 +14,8 @@ import (
 	"strings"
 	"text/template"
 
+	"github.com/Azure/go-autorest/autorest/to"
+
 	"github.com/Azure/aks-engine/pkg/api"
 	"github.com/Azure/aks-engine/pkg/api/common"
 	"github.com/Azure/aks-engine/pkg/helpers"
@@ -327,16 +329,16 @@ func (t *TemplateGenerator) getTemplateFuncMap(cs *api.ContainerService) templat
 			return cs.Properties.OrchestratorProfile.IsAzureCNI()
 		},
 		"HasCosmosEtcd": func() bool {
-			return nil != cs.Properties.MasterProfile && helpers.IsTrueBoolPointer(cs.Properties.MasterProfile.CosmosEtcd)
+			return nil != cs.Properties.MasterProfile && to.Bool(cs.Properties.MasterProfile.CosmosEtcd)
 		},
 		"GetCosmosAccountName": func() string {
-			if nil != cs.Properties.MasterProfile && helpers.IsTrueBoolPointer(cs.Properties.MasterProfile.CosmosEtcd) {
+			if nil != cs.Properties.MasterProfile && to.Bool(cs.Properties.MasterProfile.CosmosEtcd) {
 				return fmt.Sprintf(etcdAccountNameFmt, cs.Properties.MasterProfile.DNSPrefix)
 			}
 			return "" // This will apply on both during unit tests as !HasCosmosEtcd
 		},
 		"GetCosmosEndPointUri": func() string {
-			if nil != cs.Properties.MasterProfile && helpers.IsTrueBoolPointer(cs.Properties.MasterProfile.CosmosEtcd) {
+			if nil != cs.Properties.MasterProfile && to.Bool(cs.Properties.MasterProfile.CosmosEtcd) {
 				return fmt.Sprintf(etcdEndpointURIFmt, cs.Properties.MasterProfile.DNSPrefix)
 			}
 			return "" // This will apply on both during unit tests as !HasCosmosEtcd
@@ -352,7 +354,7 @@ func (t *TemplateGenerator) getTemplateFuncMap(cs *api.ContainerService) templat
 			if !cs.Properties.OrchestratorProfile.IsKubernetes() {
 				return false
 			}
-			return helpers.IsTrueBoolPointer(cs.Properties.OrchestratorProfile.KubernetesConfig.PrivateCluster.Enabled)
+			return to.Bool(cs.Properties.OrchestratorProfile.KubernetesConfig.PrivateCluster.Enabled)
 		},
 		"ProvisionJumpbox": func() bool {
 			return cs.Properties.OrchestratorProfile.KubernetesConfig.PrivateJumpboxProvision()
@@ -403,7 +405,7 @@ func (t *TemplateGenerator) getTemplateFuncMap(cs *api.ContainerService) templat
 			return cloudSpecConfig.CloudName == api.AzureChinaCloud
 		},
 		"UseInstanceMetadata": func() bool {
-			return helpers.IsTrueBoolPointer(cs.Properties.OrchestratorProfile.KubernetesConfig.UseInstanceMetadata)
+			return to.Bool(cs.Properties.OrchestratorProfile.KubernetesConfig.UseInstanceMetadata)
 		},
 		"NeedsKubeDNSWithExecHealthz": func() bool {
 			return cs.Properties.OrchestratorProfile.NeedsExecHealthz()
@@ -412,7 +414,7 @@ func (t *TemplateGenerator) getTemplateFuncMap(cs *api.ContainerService) templat
 			return cs.Properties.OrchestratorProfile.KubernetesConfig.LoadBalancerSku
 		},
 		"ExcludeMasterFromStandardLB": func() bool {
-			return helpers.IsTrueBoolPointer(cs.Properties.OrchestratorProfile.KubernetesConfig.ExcludeMasterFromStandardLB)
+			return to.Bool(cs.Properties.OrchestratorProfile.KubernetesConfig.ExcludeMasterFromStandardLB)
 		},
 		"GetVNETSubnetDependencies": func() string {
 			return getVNETSubnetDependencies(cs.Properties)
@@ -905,10 +907,10 @@ func (t *TemplateGenerator) getTemplateFuncMap(cs *api.ContainerService) templat
 			return cs.Properties.AADProfile != nil && cs.Properties.AADProfile.AdminGroupID != ""
 		},
 		"EnableDataEncryptionAtRest": func() bool {
-			return helpers.IsTrueBoolPointer(cs.Properties.OrchestratorProfile.KubernetesConfig.EnableDataEncryptionAtRest)
+			return to.Bool(cs.Properties.OrchestratorProfile.KubernetesConfig.EnableDataEncryptionAtRest)
 		},
 		"EnableEncryptionWithExternalKms": func() bool {
-			return helpers.IsTrueBoolPointer(cs.Properties.OrchestratorProfile.KubernetesConfig.EnableEncryptionWithExternalKms)
+			return to.Bool(cs.Properties.OrchestratorProfile.KubernetesConfig.EnableEncryptionWithExternalKms)
 		},
 		"EnableAggregatedAPIs": func() bool {
 			if cs.Properties.OrchestratorProfile.KubernetesConfig.EnableAggregatedAPIs {
@@ -919,7 +921,7 @@ func (t *TemplateGenerator) getTemplateFuncMap(cs *api.ContainerService) templat
 			return false
 		},
 		"EnablePodSecurityPolicy": func() bool {
-			return helpers.IsTrueBoolPointer(cs.Properties.OrchestratorProfile.KubernetesConfig.EnablePodSecurityPolicy)
+			return to.Bool(cs.Properties.OrchestratorProfile.KubernetesConfig.EnablePodSecurityPolicy)
 		},
 		// inspired by http://stackoverflow.com/questions/18276173/calling-a-template-with-several-pipeline-parameters/18276968#18276968
 		"dict": func(values ...interface{}) (map[string]interface{}, error) {

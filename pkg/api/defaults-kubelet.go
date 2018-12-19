@@ -7,8 +7,9 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/Azure/go-autorest/autorest/to"
+
 	"github.com/Azure/aks-engine/pkg/api/common"
-	"github.com/Azure/aks-engine/pkg/helpers"
 )
 
 func (cs *ContainerService) setKubeletConfig() {
@@ -83,7 +84,7 @@ func (cs *ContainerService) setKubeletConfig() {
 	addDefaultFeatureGates(o.KubernetesConfig.KubeletConfig, o.OrchestratorVersion, "1.8.0", "PodPriority=true")
 
 	// Override default cloud-provider?
-	if helpers.IsTrueBoolPointer(o.KubernetesConfig.UseCloudControllerManager) {
+	if to.Bool(o.KubernetesConfig.UseCloudControllerManager) {
 		staticLinuxKubeletConfig["--cloud-provider"] = "external"
 	}
 
@@ -101,7 +102,7 @@ func (cs *ContainerService) setKubeletConfig() {
 	}
 
 	// Remove secure kubelet flags, if configured
-	if !helpers.IsTrueBoolPointer(o.KubernetesConfig.EnableSecureKubelet) {
+	if !to.Bool(o.KubernetesConfig.EnableSecureKubelet) {
 		for _, key := range []string{"--anonymous-auth", "--client-ca-file"} {
 			delete(o.KubernetesConfig.KubeletConfig, key)
 		}

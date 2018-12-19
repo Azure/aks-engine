@@ -6,6 +6,8 @@ package v20180331
 import (
 	"testing"
 
+	"github.com/Azure/go-autorest/autorest/to"
+
 	"github.com/Azure/aks-engine/pkg/helpers"
 )
 
@@ -647,7 +649,7 @@ func TestValidateAADProfile(t *testing.T) {
 			name: "Empty ServerAppID",
 			mc: ManagedCluster{
 				Properties: &Properties{
-					EnableRBAC: helpers.PointerToBool(true),
+					EnableRBAC: to.BoolPtr(true),
 					AADProfile: &AADProfile{
 						ServerAppSecret: "ccbfaea3-7312-497e-81d9-9ad9b8a99853",
 					},
@@ -659,7 +661,7 @@ func TestValidateAADProfile(t *testing.T) {
 			name: "Empty ServerApp Secret",
 			mc: ManagedCluster{
 				Properties: &Properties{
-					EnableRBAC: helpers.PointerToBool(true),
+					EnableRBAC: to.BoolPtr(true),
 					AADProfile: &AADProfile{
 						ServerAppID: "ccbfaea3-7312-497e-81d9-9ad9b8a99853",
 					},
@@ -671,7 +673,7 @@ func TestValidateAADProfile(t *testing.T) {
 			name: "Empty ClientAppID",
 			mc: ManagedCluster{
 				Properties: &Properties{
-					EnableRBAC: helpers.PointerToBool(true),
+					EnableRBAC: to.BoolPtr(true),
 					AADProfile: &AADProfile{
 						ServerAppID:     "ccbfaea3-7312-497e-81d9-9ad9b8a99853",
 						ServerAppSecret: "bcbfaea3-7312-497e-81d9-9ad9b8a99853",
@@ -684,7 +686,7 @@ func TestValidateAADProfile(t *testing.T) {
 			name: "Empty TenantID",
 			mc: ManagedCluster{
 				Properties: &Properties{
-					EnableRBAC: helpers.PointerToBool(true),
+					EnableRBAC: to.BoolPtr(true),
 					AADProfile: &AADProfile{
 						ServerAppID:     "ccbfaea3-7312-497e-81d9-9ad9b8a99853",
 						ServerAppSecret: "bcbfaea3-7312-497e-81d9-9ad9b8a99853",

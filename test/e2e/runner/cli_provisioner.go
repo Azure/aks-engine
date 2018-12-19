@@ -14,7 +14,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Azure/aks-engine/pkg/helpers"
+	"github.com/Azure/go-autorest/autorest/to"
+
 	"github.com/Azure/aks-engine/test/e2e/azure"
 	"github.com/Azure/aks-engine/test/e2e/config"
 	"github.com/Azure/aks-engine/test/e2e/engine"
@@ -339,7 +340,7 @@ func (cli *CLIProvisioner) FetchProvisioningMetrics(path string, cfg *config.Con
 func (cli *CLIProvisioner) IsPrivate() bool {
 	return cli.Config.IsKubernetes() &&
 		cli.Engine.ExpandedDefinition.Properties.OrchestratorProfile.KubernetesConfig.PrivateCluster != nil &&
-		helpers.IsTrueBoolPointer(cli.Engine.ExpandedDefinition.Properties.OrchestratorProfile.KubernetesConfig.PrivateCluster.Enabled)
+		to.Bool(cli.Engine.ExpandedDefinition.Properties.OrchestratorProfile.KubernetesConfig.PrivateCluster.Enabled)
 }
 
 // FetchActivityLog gets the activity log for the all resource groups used in the provisioner.

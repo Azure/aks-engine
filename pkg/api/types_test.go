@@ -8,6 +8,8 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/Azure/go-autorest/autorest/to"
+
 	"github.com/Azure/aks-engine/pkg/api/common"
 	"github.com/Azure/aks-engine/pkg/helpers"
 )
@@ -264,7 +266,7 @@ func TestHasStorageProfile(t *testing.T) {
 					OrchestratorType: Kubernetes,
 					KubernetesConfig: &KubernetesConfig{
 						PrivateCluster: &PrivateCluster{
-							Enabled: helpers.PointerToBool(true),
+							Enabled: to.BoolPtr(true),
 							JumpboxProfile: &PrivateJumpboxProfile{
 								StorageProfile: ManagedDisks,
 							},
@@ -293,7 +295,7 @@ func TestHasStorageProfile(t *testing.T) {
 					OrchestratorType: Kubernetes,
 					KubernetesConfig: &KubernetesConfig{
 						PrivateCluster: &PrivateCluster{
-							Enabled: helpers.PointerToBool(true),
+							Enabled: to.BoolPtr(true),
 							JumpboxProfile: &PrivateJumpboxProfile{
 								StorageProfile: StorageAccount,
 							},
@@ -1343,7 +1345,7 @@ func TestIsNVIDIADevicePluginEnabled(t *testing.T) {
 	p.OrchestratorProfile.KubernetesConfig.Addons = []KubernetesAddon{
 		{
 			Name:    NVIDIADevicePluginAddonName,
-			Enabled: helpers.PointerToBool(false),
+			Enabled: to.BoolPtr(false),
 		},
 	}
 
