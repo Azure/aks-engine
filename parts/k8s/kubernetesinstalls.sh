@@ -200,9 +200,9 @@ installImg() {
 extractHyperkube() {
     CLI_TOOL=$1
     path="/home/hyperkube-downloads/${KUBERNETES_VERSION}"
-    mkdir -p "$path"
     pullContainerImage $CLI_TOOL ${HYPERKUBE_URL}
     if [[ "$CLI_TOOL" == "docker" ]]; then
+        mkdir -p "$path"
         docker run --rm -v $path:$path ${HYPERKUBE_URL} /bin/bash -c "cp /hyperkube $path"
     else
         img unpack -o "$path" ${HYPERKUBE_URL}
