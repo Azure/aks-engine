@@ -54,3 +54,23 @@ type RouteTableARM struct {
 	ARMResource
 	network.RouteTable
 }
+
+type PublicIPAddressARM struct {
+	ARMResource
+	network.PublicIPAddress
+}
+
+type LoadBalancerARM struct {
+	ARMResource
+	network.LoadBalancer
+}
+
+type InboundNATRuleARM struct {
+	ARMResource
+	InboundNatRule
+}
+
+type NetworkInterfaceARM struct {
+	ARMResource
+	network.Interface
+}
