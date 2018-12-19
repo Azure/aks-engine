@@ -18,7 +18,7 @@ type InboundNatRule struct {
 	// Location - Resource Location
 	Location *string `json:"location,omitempty"`
 	// Type - Resource type
-	Type *string `json:"type",omitempty`
+	Type *string `json:"type,omitempty"`
 }
 
 func createInboundNATRules() InboundNATRuleARM {
@@ -47,7 +47,7 @@ func createInboundNATRules() InboundNATRuleARM {
 			},
 
 			Location: to.StringPtr("[variables('location')]"),
-			Type: to.StringPtr("Microsoft.Network/loadBalancers/inboundNatRules"),
+			Type:     to.StringPtr("Microsoft.Network/loadBalancers/inboundNatRules"),
 		},
 	}
 }
