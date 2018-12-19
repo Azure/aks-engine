@@ -6,8 +6,9 @@ package api
 import (
 	"strconv"
 
+	"github.com/Azure/go-autorest/autorest/to"
+
 	"github.com/Azure/aks-engine/pkg/api/common"
-	"github.com/Azure/aks-engine/pkg/helpers"
 )
 
 func (cs *ContainerService) setAddonsConfig(isUpdate bool) {
@@ -17,7 +18,7 @@ func (cs *ContainerService) setAddonsConfig(isUpdate bool) {
 	specConfig := cloudSpecConfig.KubernetesSpecConfig
 	defaultsHeapsterAddonsConfig := KubernetesAddon{
 		Name:    DefaultHeapsterAddonName,
-		Enabled: helpers.PointerToBool(DefaultHeapsterAddonEnabled),
+		Enabled: to.BoolPtr(DefaultHeapsterAddonEnabled),
 		Containers: []KubernetesContainerSpec{
 			{
 				Name:  DefaultHeapsterAddonName,
@@ -32,7 +33,7 @@ func (cs *ContainerService) setAddonsConfig(isUpdate bool) {
 
 	defaultTillerAddonsConfig := KubernetesAddon{
 		Name:    DefaultTillerAddonName,
-		Enabled: helpers.PointerToBool(DefaultTillerAddonEnabled),
+		Enabled: to.BoolPtr(DefaultTillerAddonEnabled),
 		Containers: []KubernetesContainerSpec{
 			{
 				Name:           DefaultTillerAddonName,
@@ -50,7 +51,7 @@ func (cs *ContainerService) setAddonsConfig(isUpdate bool) {
 
 	defaultACIConnectorAddonsConfig := KubernetesAddon{
 		Name:    DefaultACIConnectorAddonName,
-		Enabled: helpers.PointerToBool(DefaultACIConnectorAddonEnabled),
+		Enabled: to.BoolPtr(DefaultACIConnectorAddonEnabled),
 		Config: map[string]string{
 			"region":   "westus",
 			"nodeName": "aci-connector",
@@ -71,7 +72,7 @@ func (cs *ContainerService) setAddonsConfig(isUpdate bool) {
 
 	defaultClusterAutoscalerAddonsConfig := KubernetesAddon{
 		Name:    DefaultClusterAutoscalerAddonName,
-		Enabled: helpers.PointerToBool(DefaultClusterAutoscalerAddonEnabled),
+		Enabled: to.BoolPtr(DefaultClusterAutoscalerAddonEnabled),
 		Config: map[string]string{
 			"min-nodes":     "1",
 			"max-nodes":     "5",
@@ -91,7 +92,7 @@ func (cs *ContainerService) setAddonsConfig(isUpdate bool) {
 
 	defaultBlobfuseFlexVolumeAddonsConfig := KubernetesAddon{
 		Name:    DefaultBlobfuseFlexVolumeAddonName,
-		Enabled: helpers.PointerToBool(common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.8.0") && DefaultBlobfuseFlexVolumeAddonEnabled),
+		Enabled: to.BoolPtr(common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.8.0") && DefaultBlobfuseFlexVolumeAddonEnabled),
 		Containers: []KubernetesContainerSpec{
 			{
 				Name:           DefaultBlobfuseFlexVolumeAddonName,
@@ -106,7 +107,7 @@ func (cs *ContainerService) setAddonsConfig(isUpdate bool) {
 
 	defaultSMBFlexVolumeAddonsConfig := KubernetesAddon{
 		Name:    DefaultSMBFlexVolumeAddonName,
-		Enabled: helpers.PointerToBool(common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.8.0") && DefaultSMBFlexVolumeAddonEnabled),
+		Enabled: to.BoolPtr(common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.8.0") && DefaultSMBFlexVolumeAddonEnabled),
 		Containers: []KubernetesContainerSpec{
 			{
 				Name:           DefaultSMBFlexVolumeAddonName,
@@ -121,7 +122,7 @@ func (cs *ContainerService) setAddonsConfig(isUpdate bool) {
 
 	defaultKeyVaultFlexVolumeAddonsConfig := KubernetesAddon{
 		Name:    DefaultKeyVaultFlexVolumeAddonName,
-		Enabled: helpers.PointerToBool(DefaultKeyVaultFlexVolumeAddonEnabled),
+		Enabled: to.BoolPtr(DefaultKeyVaultFlexVolumeAddonEnabled),
 		Containers: []KubernetesContainerSpec{
 			{
 				Name:           DefaultKeyVaultFlexVolumeAddonName,
@@ -136,7 +137,7 @@ func (cs *ContainerService) setAddonsConfig(isUpdate bool) {
 
 	defaultDashboardAddonsConfig := KubernetesAddon{
 		Name:    DefaultDashboardAddonName,
-		Enabled: helpers.PointerToBool(DefaultDashboardAddonEnabled),
+		Enabled: to.BoolPtr(DefaultDashboardAddonEnabled),
 		Containers: []KubernetesContainerSpec{
 			{
 				Name:           DefaultDashboardAddonName,
@@ -151,7 +152,7 @@ func (cs *ContainerService) setAddonsConfig(isUpdate bool) {
 
 	defaultReschedulerAddonsConfig := KubernetesAddon{
 		Name:    DefaultReschedulerAddonName,
-		Enabled: helpers.PointerToBool(DefaultReschedulerAddonEnabled),
+		Enabled: to.BoolPtr(DefaultReschedulerAddonEnabled),
 		Containers: []KubernetesContainerSpec{
 			{
 				Name:           DefaultReschedulerAddonName,
@@ -177,7 +178,7 @@ func (cs *ContainerService) setAddonsConfig(isUpdate bool) {
 
 	defaultNVIDIADevicePluginAddonsConfig := KubernetesAddon{
 		Name:    NVIDIADevicePluginAddonName,
-		Enabled: helpers.PointerToBool(cs.Properties.HasNSeriesSKU() && common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.10.0")),
+		Enabled: to.BoolPtr(cs.Properties.HasNSeriesSKU() && common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.10.0")),
 		Containers: []KubernetesContainerSpec{
 			{
 				Name: NVIDIADevicePluginAddonName,
@@ -193,7 +194,7 @@ func (cs *ContainerService) setAddonsConfig(isUpdate bool) {
 
 	defaultContainerMonitoringAddonsConfig := KubernetesAddon{
 		Name:    ContainerMonitoringAddonName,
-		Enabled: helpers.PointerToBool(DefaultContainerMonitoringAddonEnabled),
+		Enabled: to.BoolPtr(DefaultContainerMonitoringAddonEnabled),
 		Config: map[string]string{
 			"omsAgentVersion":       "1.6.0-42",
 			"dockerProviderVersion": "2.0.0-3",
@@ -212,7 +213,7 @@ func (cs *ContainerService) setAddonsConfig(isUpdate bool) {
 
 	defaultIPMasqAgentAddonsConfig := KubernetesAddon{
 		Name:    IPMASQAgentAddonName,
-		Enabled: helpers.PointerToBool(IPMasqAgentAddonEnabled),
+		Enabled: to.BoolPtr(IPMasqAgentAddonEnabled),
 		Containers: []KubernetesContainerSpec{
 			{
 				Name:           IPMASQAgentAddonName,
@@ -252,7 +253,7 @@ func (cs *ContainerService) setAddonsConfig(isUpdate bool) {
 
 	defaultDNSAutoScalerAddonsConfig := KubernetesAddon{
 		Name:    DefaultDNSAutoscalerAddonName,
-		Enabled: helpers.PointerToBool(DefaultDNSAutoscalerAddonEnabled),
+		Enabled: to.BoolPtr(DefaultDNSAutoscalerAddonEnabled),
 		Containers: []KubernetesContainerSpec{
 			{
 				Name:           DefaultDNSAutoscalerAddonName,
@@ -355,13 +356,13 @@ func synthesizeAddonsConfig(addons []KubernetesAddon, addon KubernetesAddon, ena
 }
 
 func k8sVersionMetricsServerAddonEnabled(o *OrchestratorProfile) *bool {
-	return helpers.PointerToBool(common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.9.0"))
+	return to.BoolPtr(common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.9.0"))
 }
 
 func azureNetworkPolicyAddonEnabled(o *OrchestratorProfile) *bool {
-	return helpers.PointerToBool(o.KubernetesConfig.NetworkPlugin == NetworkPluginAzure && o.KubernetesConfig.NetworkPolicy == NetworkPolicyAzure)
+	return to.BoolPtr(o.KubernetesConfig.NetworkPlugin == NetworkPluginAzure && o.KubernetesConfig.NetworkPolicy == NetworkPolicyAzure)
 }
 
 func azureCNINetworkMonitorAddonEnabled(o *OrchestratorProfile) *bool {
-	return helpers.PointerToBool(o.IsAzureCNI())
+	return to.BoolPtr(o.IsAzureCNI())
 }

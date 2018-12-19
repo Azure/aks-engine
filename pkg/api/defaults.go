@@ -14,6 +14,8 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/Azure/go-autorest/autorest/to"
+
 	"github.com/Azure/aks-engine/pkg/api/common"
 	"github.com/Azure/aks-engine/pkg/helpers"
 	"github.com/blang/semver"
@@ -140,18 +142,18 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpdate bool) {
 		}
 
 		if o.KubernetesConfig.CloudProviderBackoff == nil {
-			o.KubernetesConfig.CloudProviderBackoff = helpers.PointerToBool(DefaultKubernetesCloudProviderBackoff)
+			o.KubernetesConfig.CloudProviderBackoff = to.BoolPtr(DefaultKubernetesCloudProviderBackoff)
 		}
 		// Enforce sane cloudprovider backoff defaults, if CloudProviderBackoff is true in KubernetesConfig
-		if helpers.IsTrueBoolPointer(o.KubernetesConfig.CloudProviderBackoff) {
+		if to.Bool(o.KubernetesConfig.CloudProviderBackoff) {
 			o.KubernetesConfig.SetCloudProviderBackoffDefaults()
 		}
 
 		if o.KubernetesConfig.CloudProviderRateLimit == nil {
-			o.KubernetesConfig.CloudProviderRateLimit = helpers.PointerToBool(DefaultKubernetesCloudProviderRateLimit)
+			o.KubernetesConfig.CloudProviderRateLimit = to.BoolPtr(DefaultKubernetesCloudProviderRateLimit)
 		}
 		// Enforce sane cloudprovider rate limit defaults, if CloudProviderRateLimit is true in KubernetesConfig
-		if helpers.IsTrueBoolPointer(o.KubernetesConfig.CloudProviderRateLimit) {
+		if to.Bool(o.KubernetesConfig.CloudProviderRateLimit) {
 			o.KubernetesConfig.SetCloudProviderRateLimitDefaults()
 		}
 
@@ -160,7 +162,7 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpdate bool) {
 		}
 
 		if o.KubernetesConfig.PrivateCluster.Enabled == nil {
-			o.KubernetesConfig.PrivateCluster.Enabled = helpers.PointerToBool(DefaultPrivateClusterEnabled)
+			o.KubernetesConfig.PrivateCluster.Enabled = to.BoolPtr(DefaultPrivateClusterEnabled)
 		}
 
 		if "" == a.OrchestratorProfile.KubernetesConfig.EtcdDiskSizeGB {
@@ -176,7 +178,7 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpdate bool) {
 			}
 		}
 
-		if helpers.IsTrueBoolPointer(o.KubernetesConfig.EnableDataEncryptionAtRest) {
+		if to.Bool(o.KubernetesConfig.EnableDataEncryptionAtRest) {
 			if "" == a.OrchestratorProfile.KubernetesConfig.EtcdEncryptionKey {
 				a.OrchestratorProfile.KubernetesConfig.EtcdEncryptionKey = generateEtcdEncryptionKey()
 			}
@@ -194,22 +196,23 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpdate bool) {
 			a.OrchestratorProfile.KubernetesConfig.PrivateCluster.JumpboxProfile.StorageProfile = ManagedDisks
 		}
 
-		if !helpers.IsFalseBoolPointer(a.OrchestratorProfile.KubernetesConfig.EnableRbac) {
+		if a.OrchestratorProfile.KubernetesConfig.EnableRbac == nil {
+			a.OrchestratorProfile.KubernetesConfig.EnableRbac = to.BoolPtr(DefaultRBACEnabled)
+		}
+
+		if to.Bool(a.OrchestratorProfile.KubernetesConfig.EnableRbac) {
 			if common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.9.0") {
 				// TODO make EnableAggregatedAPIs a pointer to bool so that a user can opt out of it
 				a.OrchestratorProfile.KubernetesConfig.EnableAggregatedAPIs = true
 			}
-			if a.OrchestratorProfile.KubernetesConfig.EnableRbac == nil {
-				a.OrchestratorProfile.KubernetesConfig.EnableRbac = helpers.PointerToBool(DefaultRBACEnabled)
-			}
 		}
 
 		if a.OrchestratorProfile.KubernetesConfig.EnableSecureKubelet == nil {
-			a.OrchestratorProfile.KubernetesConfig.EnableSecureKubelet = helpers.PointerToBool(DefaultSecureKubeletEnabled)
+			a.OrchestratorProfile.KubernetesConfig.EnableSecureKubelet = to.BoolPtr(DefaultSecureKubeletEnabled)
 		}
 
 		if a.OrchestratorProfile.KubernetesConfig.UseInstanceMetadata == nil {
-			a.OrchestratorProfile.KubernetesConfig.UseInstanceMetadata = helpers.PointerToBool(DefaultUseInstanceMetadata)
+			a.OrchestratorProfile.KubernetesConfig.UseInstanceMetadata = to.BoolPtr(DefaultUseInstanceMetadata)
 		}
 
 		if !a.HasAvailabilityZones() && a.OrchestratorProfile.KubernetesConfig.LoadBalancerSku == "" {
@@ -217,7 +220,7 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpdate bool) {
 		}
 
 		if common.IsKubernetesVersionGe(a.OrchestratorProfile.OrchestratorVersion, "1.11.0") && a.OrchestratorProfile.KubernetesConfig.LoadBalancerSku == "Standard" && a.OrchestratorProfile.KubernetesConfig.ExcludeMasterFromStandardLB == nil {
-			a.OrchestratorProfile.KubernetesConfig.ExcludeMasterFromStandardLB = helpers.PointerToBool(DefaultExcludeMasterFromStandardLB)
+			a.OrchestratorProfile.KubernetesConfig.ExcludeMasterFromStandardLB = to.BoolPtr(DefaultExcludeMasterFromStandardLB)
 		}
 
 		if a.OrchestratorProfile.IsAzureCNI() {
@@ -359,18 +362,18 @@ func (p *Properties) setMasterProfileDefaults(isUpgrade bool) {
 	}
 
 	if nil == p.MasterProfile.CosmosEtcd {
-		p.MasterProfile.CosmosEtcd = helpers.PointerToBool(DefaultUseCosmos)
+		p.MasterProfile.CosmosEtcd = to.BoolPtr(DefaultUseCosmos)
 	}
 }
 
 // setVMSSDefaultsForMasters
 func (p *Properties) setVMSSDefaultsForMasters() {
 	if p.MasterProfile.SinglePlacementGroup == nil {
-		p.MasterProfile.SinglePlacementGroup = helpers.PointerToBool(DefaultSinglePlacementGroup)
+		p.MasterProfile.SinglePlacementGroup = to.BoolPtr(DefaultSinglePlacementGroup)
 	}
 	if p.MasterProfile.HasAvailabilityZones() && (p.OrchestratorProfile.KubernetesConfig != nil && p.OrchestratorProfile.KubernetesConfig.LoadBalancerSku == "") {
 		p.OrchestratorProfile.KubernetesConfig.LoadBalancerSku = "Standard"
-		p.OrchestratorProfile.KubernetesConfig.ExcludeMasterFromStandardLB = helpers.PointerToBool(DefaultExcludeMasterFromStandardLB)
+		p.OrchestratorProfile.KubernetesConfig.ExcludeMasterFromStandardLB = to.BoolPtr(DefaultExcludeMasterFromStandardLB)
 	}
 }
 
@@ -379,14 +382,14 @@ func (p *Properties) setVMSSDefaultsForAgents() {
 	for _, profile := range p.AgentPoolProfiles {
 		if profile.AvailabilityProfile == VirtualMachineScaleSets {
 			if profile.Count > 100 {
-				profile.SinglePlacementGroup = helpers.PointerToBool(false)
+				profile.SinglePlacementGroup = to.BoolPtr(false)
 			}
 			if profile.SinglePlacementGroup == nil {
-				profile.SinglePlacementGroup = helpers.PointerToBool(DefaultSinglePlacementGroup)
+				profile.SinglePlacementGroup = to.BoolPtr(DefaultSinglePlacementGroup)
 			}
 			if profile.HasAvailabilityZones() && (p.OrchestratorProfile.KubernetesConfig != nil && p.OrchestratorProfile.KubernetesConfig.LoadBalancerSku == "") {
 				p.OrchestratorProfile.KubernetesConfig.LoadBalancerSku = "Standard"
-				p.OrchestratorProfile.KubernetesConfig.ExcludeMasterFromStandardLB = helpers.PointerToBool(DefaultExcludeMasterFromStandardLB)
+				p.OrchestratorProfile.KubernetesConfig.ExcludeMasterFromStandardLB = to.BoolPtr(DefaultExcludeMasterFromStandardLB)
 			}
 		}
 
@@ -421,11 +424,11 @@ func (p *Properties) setAgentProfileDefaults(isUpgrade, isScale bool) {
 		// On instances that support hyperthreading, Accelerated Networking is supported on VM instances with 4 or more vCPUs.
 		// Supported series are: D/DSv3, E/ESv3, Fsv2, and Ms/Mms.
 		if profile.AcceleratedNetworkingEnabled == nil {
-			profile.AcceleratedNetworkingEnabled = helpers.PointerToBool(DefaultAcceleratedNetworking && !isUpgrade && !isScale && helpers.AcceleratedNetworkingSupported(profile.VMSize))
+			profile.AcceleratedNetworkingEnabled = to.BoolPtr(DefaultAcceleratedNetworking && !isUpgrade && !isScale && helpers.AcceleratedNetworkingSupported(profile.VMSize))
 		}
 
 		if profile.AcceleratedNetworkingEnabledWindows == nil {
-			profile.AcceleratedNetworkingEnabledWindows = helpers.PointerToBool(DefaultAcceleratedNetworkingWindowsEnabled && !isUpgrade && !isScale && helpers.AcceleratedNetworkingSupported(profile.VMSize))
+			profile.AcceleratedNetworkingEnabledWindows = to.BoolPtr(DefaultAcceleratedNetworkingWindowsEnabled && !isUpgrade && !isScale && helpers.AcceleratedNetworkingSupported(profile.VMSize))
 		}
 
 		if profile.OSType != Windows {

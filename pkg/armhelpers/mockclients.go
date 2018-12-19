@@ -12,7 +12,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/Azure/aks-engine/pkg/helpers"
+	"github.com/Azure/go-autorest/autorest/to"
 
 	"github.com/Azure/azure-sdk-for-go/services/authorization/mgmt/2015-07-01/authorization"
 	"github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2018-04-01/compute"
@@ -562,7 +562,7 @@ func (mc *MockAKSEngineClient) CreateGraphPrincipal(ctx context.Context, service
 // CreateApp is a simpler method for creating an application
 func (mc *MockAKSEngineClient) CreateApp(ctx context.Context, applicationName, applicationURL string, replyURLs *[]string, requiredResourceAccess *[]graphrbac.RequiredResourceAccess) (result graphrbac.Application, servicePrincipalObjectID, secret string, err error) {
 	return graphrbac.Application{
-		AppID: helpers.PointerToString("app-id"),
+		AppID: to.StringPtr("app-id"),
 	}, "client-id", "client-secret", nil
 }
 
