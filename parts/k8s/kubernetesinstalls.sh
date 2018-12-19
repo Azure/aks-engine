@@ -187,7 +187,7 @@ installContainerd() {
         downloadContainerd
     fi
     tar -xzf "$CONTAINERD_DOWNLOADS_DIR/$CONTAINERD_TGZ_TMP" -C /
-    rm -f "$CONTAINERD_TGZ_TMP"
+    rm -Rf $CONTAINERD_DOWNLOADS_DIR &
     sed -i '/\[Service\]/a ExecStartPost=\/sbin\/iptables -P FORWARD ACCEPT' /etc/systemd/system/containerd.service
     echo "Successfully installed cri-containerd..."
 }
