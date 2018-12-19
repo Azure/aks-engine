@@ -22,7 +22,7 @@ $ aks-engine scale --subscription-id 51ac25de-afdg-9201-d923-8d8e8e8e8e8e \
     --node-pool agentpool1 --master-FQDN mycluster.westus2.cloudapp.azure.com
 ```
 
-This command will look the the deployment directory to find info about the cluster currently deployed. Then it will generate and deploy a template deployment to update the cluster and add the new nodes. When it is done it will update the cluster definition in the deployment directory's apimodel.json to reflect the new node count.
+This command will look the deployment directory to find info about the cluster currently deployed. Then it will generate and deploy a template deployment to update the cluster and add the new nodes. When it is done it will update the cluster definition in the deployment directory's apimodel.json to reflect the new node count.
 
 ### Parameters
 |Parameter|Required|Description|
@@ -34,3 +34,5 @@ This command will look the the deployment directory to find info about the clust
 |node-pool|depends|Required if there is more than one node pool. Which node pool should be scaled.|
 |new-node-count|yes|Desired number of nodes in the node pool.|
 |master-FQDN|depends|When scaling down a kuberentes cluster this is required. The master FDQN so that the nodes can be cordoned and drained before removal. This should be output as part of the create template or it can be found by looking at the public ip addresses in the resource group.|
+|auth-method|depends|Authentication method. Required if you don't use 'Device' authentication. Other values are: 'client-secret' and 'client-certificate'.|
+|language|no|Language to return error message in. Default value is "en-us").|
