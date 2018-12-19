@@ -226,7 +226,7 @@
     },
     {{if and UseManagedIdentity (not UserAssignedIDEnabled)}}
     {
-      "apiVersion": "[variables('apiVersionAuthorization')]",
+      "apiVersion": "[variables('apiVersionAuthorizationSystem')]",
       "copy": {
          "count": "[sub(variables('{{.Name}}Count'), variables('{{.Name}}Offset'))]",
          "name": "vmLoopNode"

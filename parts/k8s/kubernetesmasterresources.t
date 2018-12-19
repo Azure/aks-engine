@@ -921,10 +921,9 @@
       },
       "type": "Microsoft.Compute/virtualMachines"
     },
-    {{if UseManagedIdentity}}
-    {{if (not UserAssignedIDEnabled)}}
+    {{if and UseManagedIdentity (not UserAssignedIDEnabled)}}
     {
-      "apiVersion": "[variables('apiVersionAuthorization')]",
+      "apiVersion": "[variables('apiVersionAuthorizationSystem')]",
       "copy": {
          "count": "[variables('masterCount')]",
          "name": "vmLoopNode"
@@ -937,7 +936,6 @@
       }
     },
     {{end}}
-     {{end}}
     {
       "apiVersion": "[variables('apiVersionCompute')]",
       "copy": {
@@ -946,6 +944,9 @@
       },
       "dependsOn": [
         "[concat('Microsoft.Compute/virtualMachines/', variables('masterVMNamePrefix'), copyIndex(variables('masterOffset')))]"
+        {{if EnableEncryptionWithExternalKms}}
+        ,"[concat('Microsoft.KeyVault/vaults/', variables('clusterKeyVaultName'))]"
+        {{end}}
       ],
       "location": "[variables('location')]",
       "type": "Microsoft.Compute/virtualMachines/extensions",
