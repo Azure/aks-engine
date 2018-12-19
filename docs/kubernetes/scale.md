@@ -22,7 +22,7 @@ $ aks-engine scale --subscription-id 51ac25de-afdg-9201-d923-8d8e8e8e8e8e \
     --node-pool agentpool1 --master-FQDN mycluster.westus2.cloudapp.azure.com
 ```
 
-This command will look the the deployment directory to find info about the cluster currently deployed. Then it will generate and deploy a template deployment to update the cluster and add the new nodes. When it is done it will update the cluster definition in the deployment directory's apimodel.json to reflect the new node count.
+This command will look the deployment directory to find info about the cluster currently deployed. Then it will generate and deploy a template deployment to update the cluster and add the new nodes. When it is done it will update the cluster definition in the deployment directory's apimodel.json to reflect the new node count.
 
 ### Parameters
 |Parameter|Required|Description|
