@@ -67,7 +67,7 @@ type LoadBalancerARM struct {
 
 type InboundNATRuleARM struct {
 	ARMResource
-	InboundNatRule
+	network.InboundNatRule
 }
 
 type NetworkInterfaceARM struct {
