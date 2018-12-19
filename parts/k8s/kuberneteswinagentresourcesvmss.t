@@ -6,7 +6,10 @@
     "properties": {
       "roleDefinitionId": "[variables('readerRoleDefinitionId')]",
       "principalId": "[reference(concat('Microsoft.Compute/virtualMachineScaleSets/', variables('{{.Name}}VMNamePrefix')), '2017-03-30', 'Full').identity.principalId]"
-    }
+    },
+    "dependsOn": [
+      "[concat('Microsoft.Compute/virtualMachineScaleSets/', variables('{{.Name}}VMNamePrefix'))]"
+    ]
   },
 {{end}}
   {
