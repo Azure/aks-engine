@@ -2,6 +2,7 @@ package armhelpers
 
 import (
 	"encoding/json"
+	"github.com/Azure/azure-sdk-for-go/services/cosmos-db/mgmt/2015-04-08/documentdb"
 
 	"github.com/Azure/azure-sdk-for-go/services/network/mgmt/2018-08-01/network"
 	"github.com/Azure/azure-sdk-for-go/services/storage/mgmt/2018-02-01/storage"
@@ -73,4 +74,9 @@ type InboundNATRuleARM struct {
 type NetworkInterfaceARM struct {
 	ARMResource
 	network.Interface
+}
+
+type DocumentDBAccountARM struct {
+	ARMResource
+	documentdb.DatabaseAccountCreateUpdateParameters
 }

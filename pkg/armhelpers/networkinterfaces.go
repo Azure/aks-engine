@@ -122,3 +122,29 @@ func createNetworkInterfaces(cs *api.ContainerService) NetworkInterfaceARM {
 		Interface:   networkInterface,
 	}
 }
+
+func createPrivateClusterNetworkInterface(cs *api.ContainerService) NetworkInterfaceARM {
+	var dependencies []string
+	if cs.Properties.MasterProfile.IsCustomVNET() {
+		dependencies = append(dependencies, "[variables('nsgID')]")
+	} else {
+		dependencies = append(dependencies, "[variables('vnetID')]")
+	}
+
+	if cs.Properties.MasterProfile.Count > 1 {
+		dependencies = append(dependencies, "[variables('masterInternalLbName')]")
+	}
+
+	armResource := ARMResource{
+		ApiVersion: "[variables('apiVersionNetwork')]",
+		Copy: map[string]string{
+			"count": "[sub(variables('masterCount'), variables('masterOffset'))]",
+			"name":  "nicLoopNode",
+		},
+		DependsOn: dependencies,
+	}
+
+	return NetworkInterfaceARM{
+		ARMResource: armResource,
+	}
+}
