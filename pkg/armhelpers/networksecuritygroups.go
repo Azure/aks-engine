@@ -114,3 +114,37 @@ func createNetworkSecurityGroup(cs *api.ContainerService) NetworkSecurityGroupAR
 		SecurityGroup: nsg,
 	}
 }
+
+func createJumpboxNSG() NetworkSecurityGroupARM {
+	armResource := ARMResource{
+		ApiVersion: "[variables('apiVersionNetwork')]",
+	}
+
+	securityRules := []network.SecurityRule{
+		{
+			Name: to.StringPtr("default-allow-ssh"),
+			SecurityRulePropertiesFormat: &network.SecurityRulePropertiesFormat{
+				Priority:                 to.Int32Ptr(1000),
+				Protocol:                 network.SecurityRuleProtocolTCP,
+				Access:                   network.SecurityRuleAccessAllow,
+				Direction:                network.SecurityRuleDirectionInbound,
+				SourceAddressPrefix:      to.StringPtr("*"),
+				SourcePortRange:          to.StringPtr("*"),
+				DestinationAddressPrefix: to.StringPtr("*"),
+				DestinationPortRange:     to.StringPtr("22"),
+			},
+		},
+	}
+	nsg := network.SecurityGroup{
+		Location: to.StringPtr("[variables('location')]"),
+		Name:     to.StringPtr("[variables('nsgName')]"),
+		Type:     to.StringPtr("Microsoft.Network/networkSecurityGroups"),
+		SecurityGroupPropertiesFormat: &network.SecurityGroupPropertiesFormat{
+			SecurityRules: &securityRules,
+		},
+	}
+	return NetworkSecurityGroupARM{
+		ARMResource:   armResource,
+		SecurityGroup: nsg,
+	}
+}

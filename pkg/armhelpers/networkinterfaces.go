@@ -144,7 +144,133 @@ func createPrivateClusterNetworkInterface(cs *api.ContainerService) NetworkInter
 		DependsOn: dependencies,
 	}
 
+	var lbBackendAddressPools []network.BackendAddressPool
+
+	if cs.Properties.MasterProfile.Count > 1 {
+		internalLbPool := network.BackendAddressPool{
+			ID: to.StringPtr("[concat(variables('masterInternalLbID'), '/backendAddressPools/', variables('masterLbBackendPoolName'))]"),
+		}
+		lbBackendAddressPools = append(lbBackendAddressPools, internalLbPool)
+	}
+
+	loadBalancerIpConfig := network.InterfaceIPConfiguration{
+		Name: to.StringPtr("ipconfig1"),
+		InterfaceIPConfigurationPropertiesFormat: &network.InterfaceIPConfigurationPropertiesFormat{
+			LoadBalancerBackendAddressPools: &lbBackendAddressPools,
+			LoadBalancerInboundNatRules:     &[]network.InboundNatRule{},
+			PrivateIPAddress:                to.StringPtr("[variables('masterPrivateIpAddrs')[copyIndex(variables('masterOffset'))]]"),
+			Primary:                         to.BoolPtr(true),
+			PrivateIPAllocationMethod:       network.Static,
+			Subnet: &network.Subnet{
+				ID: to.StringPtr("[variables('vnetSubnetID')]"),
+			},
+		},
+	}
+
+	ipConfigurations := []network.InterfaceIPConfiguration{loadBalancerIpConfig}
+
+	isAzureCNI := cs.Properties.OrchestratorProfile.IsAzureCNI()
+
+	if isAzureCNI {
+		for i := 2; i <= cs.Properties.MasterProfile.IPAddressCount; i++ {
+			ipConfig := network.InterfaceIPConfiguration{
+				Name: to.StringPtr(fmt.Sprintf("ipconfig%d", i)),
+				InterfaceIPConfigurationPropertiesFormat: &network.InterfaceIPConfigurationPropertiesFormat{
+					Primary:                   to.BoolPtr(false),
+					PrivateIPAllocationMethod: network.Dynamic,
+					Subnet: &network.Subnet{
+						ID: to.StringPtr("[variables('vnetSubnetID')]"),
+					},
+				},
+			}
+			ipConfigurations = append(ipConfigurations, ipConfig)
+		}
+	}
+
+	nicProperties := network.InterfacePropertiesFormat{
+		IPConfigurations: &ipConfigurations,
+	}
+
+	if !isAzureCNI {
+		nicProperties.EnableIPForwarding = to.BoolPtr(true)
+	}
+
+	if cs.Properties.LinuxProfile.HasCustomNodesDNS() {
+		nicProperties.DNSSettings = &network.InterfaceDNSSettings{
+			DNSServers: &[]string{
+				"[parameters('dnsServer')]",
+			},
+		}
+	}
+
+	if cs.Properties.MasterProfile.IsCustomVNET() {
+		nicProperties.NetworkSecurityGroup = &network.SecurityGroup{
+			ID: to.StringPtr("[variables('nsgID')]"),
+		}
+	}
+
+	networkInterface := network.Interface{
+		Location:                  to.StringPtr("[variables('location')]"),
+		Name:                      to.StringPtr("[concat(variables('masterVMNamePrefix'), 'nic-', copyIndex(variables('masterOffset')))]"),
+		InterfacePropertiesFormat: &nicProperties,
+		Type:                      to.StringPtr("Microsoft.Network/networkInterfaces"),
+	}
+
 	return NetworkInterfaceARM{
 		ARMResource: armResource,
+		Interface:   networkInterface,
+	}
+}
+
+func createJumpboxNIC(cs *api.ContainerService) NetworkInterfaceARM {
+	dependencies := []string{
+		"[concat('Microsoft.Network/publicIpAddresses/', variables('jumpboxPublicIpAddressName'))]",
+		"[concat('Microsoft.Network/networkSecurityGroups/', variables('jumpboxNetworkSecurityGroupName'))]",
+	}
+
+	if !cs.Properties.MasterProfile.IsCustomVNET() {
+		dependencies = append(dependencies, "[variables('vnetID')]")
+	}
+
+	armResource := ARMResource{
+		ApiVersion: "[variables('apiVersionNetwork')]",
+		Copy: map[string]string{
+			"count": "[sub(variables('masterCount'), variables('masterOffset'))]",
+			"name":  "nicLoopNode",
+		},
+		DependsOn: dependencies,
+	}
+
+	nicProperties := network.InterfacePropertiesFormat{
+		IPConfigurations: &[]network.InterfaceIPConfiguration{
+			{
+				Name: to.StringPtr("ipconfig1"),
+				InterfaceIPConfigurationPropertiesFormat: &network.InterfaceIPConfigurationPropertiesFormat{
+					Subnet: &network.Subnet{
+						ID: to.StringPtr("[variables('vnetSubnetID')]"),
+					},
+					Primary:                   to.BoolPtr(true),
+					PrivateIPAllocationMethod: network.Dynamic,
+					PublicIPAddress: &network.PublicIPAddress{
+						ID: to.StringPtr("[resourceId('Microsoft.Network/publicIpAddresses', variables('jumpboxPublicIpAddressName'))]"),
+					},
+				},
+			},
+		},
+		NetworkSecurityGroup: &network.SecurityGroup{
+			ID: to.StringPtr("[resourceId('Microsoft.Network/networkSecurityGroups', variables('jumpboxNetworkSecurityGroupName'))]"),
+		},
+	}
+
+	networkInterface := network.Interface{
+		Location:                  to.StringPtr("[variables('location')]"),
+		Name:                      to.StringPtr("[concat(variables('masterVMNamePrefix'), 'nic-', copyIndex(variables('masterOffset')))]"),
+		InterfacePropertiesFormat: &nicProperties,
+		Type:                      to.StringPtr("Microsoft.Network/networkInterfaces"),
+	}
+
+	return NetworkInterfaceARM{
+		ARMResource: armResource,
+		Interface:   networkInterface,
 	}
 }

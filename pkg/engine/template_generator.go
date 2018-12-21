@@ -155,6 +155,16 @@ func (t *TemplateGenerator) prepareTemplateFiles(properties *api.Properties) ([]
 	return files, baseFile, nil
 }
 
+func (t *TemplateGenerator) GetKubernetestJumpboxCustomDataString(cs *api.ContainerService, p *api.Properties) string{
+	str, err := t.getSingleLineForTemplate(kubernetesJumpboxCustomDataYaml, cs, p)
+
+	if err != nil {
+		panic(err)
+	}
+
+	return str
+}
+
 func (t *TemplateGenerator) GetMasterCustomDataString(cs *api.ContainerService, textFilename string, profile *api.Properties) string {
 	str, e := t.getSingleLineForTemplate(textFilename, cs, profile)
 	if e != nil {
@@ -602,11 +612,7 @@ func (t *TemplateGenerator) getTemplateFuncMap(cs *api.ContainerService) templat
 			return fmt.Sprintf("\"customData\": \"[base64(concat('%s'))]\",", str)
 		},
 		"GetKubernetesJumpboxCustomData": func(p *api.Properties) string {
-			str, err := t.getSingleLineForTemplate(kubernetesJumpboxCustomDataYaml, cs, p)
-
-			if err != nil {
-				panic(err)
-			}
+			str := t.GetKubernetestJumpboxCustomDataString(cs, p)
 
 			return fmt.Sprintf("\"customData\": \"[base64(concat('%s'))]\",", str)
 		},

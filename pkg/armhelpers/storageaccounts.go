@@ -8,7 +8,7 @@ import (
 
 func createStorageAccount(cs *api.ContainerService) StorageAccountARM {
 	armResource := ARMResource{
-		ApiVersion: "[variables('masterStorageAccountName')]",
+		ApiVersion: "[variables('apiVersionStorage')]",
 	}
 
 	if !to.Bool(cs.Properties.OrchestratorProfile.KubernetesConfig.PrivateCluster.Enabled) {
@@ -23,6 +23,26 @@ func createStorageAccount(cs *api.ContainerService) StorageAccountARM {
 		Type:     to.StringPtr("Microsoft.Storage/storageAccounts"),
 		Sku: &storage.Sku{
 			Name: storage.SkuName("[variables('vmSizesMap')[parameters('masterVMSize')].storageAccountType]"),
+		},
+	}
+
+	return StorageAccountARM{
+		ARMResource: armResource,
+		Account:     storageAccount,
+	}
+}
+
+func createJumpboxStorageAccount(cs *api.ContainerService) StorageAccountARM {
+	armResource := ARMResource{
+		ApiVersion: "[variables('apiVersionStorage')]",
+	}
+
+	storageAccount := storage.Account{
+		Type:     to.StringPtr("Microsoft.Storage/storageAccounts"),
+		Name:     to.StringPtr("[variables('jumpboxStorageAccountName')]"),
+		Location: to.StringPtr("[variables('location')]"),
+		Sku: &storage.Sku{
+			Name: storage.SkuName("[variables('vmSizesMap')[parameters('jumpboxVMSize')].storageAccountType]"),
 		},
 	}
 

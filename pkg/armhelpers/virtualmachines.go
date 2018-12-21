@@ -50,6 +50,7 @@ func createVirtualMachine(cs *api.ContainerService) VirtualMachineARM {
 			"acsengineVersion":   to.StringPtr("[parameters('acsengineVersion')]"),
 			"poolName":           to.StringPtr("master"),
 		},
+		Type: to.StringPtr("Microsoft.Compute/virtualMachines"),
 	}
 
 	if hasAvailabilityZones {
@@ -180,5 +181,96 @@ func createVirtualMachine(cs *api.ContainerService) VirtualMachineARM {
 	return VirtualMachineARM{
 		ARMResource:    armResource,
 		VirtualMachine: virtualMachine,
+	}
+}
+
+func createJumpboxVirtualMachine(cs *api.ContainerService) VirtualMachineARM {
+	armResource := ARMResource{
+		ApiVersion: "[variables('apiVersionCompute')]",
+		DependsOn: []string{
+			"[concat('Microsoft.Network/networkInterfaces/', variables('jumpboxNetworkInterfaceName'))]",
+		},
+	}
+
+	vm := compute.VirtualMachine{
+		Location: to.StringPtr("[variables('location')]"),
+		Name:     to.StringPtr("[parameters('jumpboxVMName')]"),
+		Type:     to.StringPtr("Microsoft.Compute/virtualMachines"),
+	}
+
+	storageProfile := compute.StorageProfile{
+		ImageReference: &compute.ImageReference{
+			Publisher: to.StringPtr("Canonical"),
+			Offer:     to.StringPtr("UbuntuServer"),
+			Sku:       to.StringPtr("16.04-LTS"),
+			Version:   to.StringPtr("latest"),
+		},
+		DataDisks: &[]compute.DataDisk{},
+	}
+
+	jumpBoxIsManagedDisks := cs.Properties.OrchestratorProfile.KubernetesConfig.PrivateJumpboxProvision() && cs.Properties.OrchestratorProfile.KubernetesConfig.PrivateCluster.JumpboxProfile.StorageProfile == api.ManagedDisks
+
+	if jumpBoxIsManagedDisks {
+		storageProfile.OsDisk = &compute.OSDisk{
+			CreateOption: compute.DiskCreateOptionTypesFromImage,
+			// TODO: had to override int32 value here
+			DiskSizeGB: to.Int32Ptr(30),
+			ManagedDisk: &compute.ManagedDiskParameters{
+				StorageAccountType: "[variables('vmSizesMap')[parameters('jumpboxVMSize')].storageAccountType]",
+			},
+		}
+	} else {
+		storageProfile.OsDisk = &compute.OSDisk{
+			CreateOption: compute.DiskCreateOptionTypesFromImage,
+			Vhd: &compute.VirtualHardDisk{
+				URI: to.StringPtr("[concat(reference(concat('Microsoft.Storage/storageAccounts/',variables('jumpboxStorageAccountName')),variables('apiVersionStorage')).primaryEndpoints.blob,'vhds/',parameters('jumpboxVMName'),'jumpboxdisk.vhd')]"),
+			},
+			Name: to.StringPtr("[variables('jumpboxOSDiskName')]"),
+		}
+	}
+
+	t, err := engine.InitializeTemplateGenerator(engine.Context{})
+
+	if err != nil {
+		panic(err)
+	}
+
+	customDataStr := t.GetKubernetestJumpboxCustomDataString(cs, cs.Properties)
+
+	vmProperties := compute.VirtualMachineProperties{
+		HardwareProfile: &compute.HardwareProfile{
+			VMSize: "[parameters('jumpboxVMSize')]",
+		},
+		OsProfile: &compute.OSProfile{
+			ComputerName:  to.StringPtr("[parameters('jumpboxVMName')]"),
+			AdminUsername: to.StringPtr("[parameters('jumpboxUsername')]"),
+			LinuxConfiguration: &compute.LinuxConfiguration{
+				DisablePasswordAuthentication: to.BoolPtr(true),
+				SSH: &compute.SSHConfiguration{
+					PublicKeys: &[]compute.SSHPublicKey{
+						{
+							Path:    to.StringPtr("[concat('/home/', parameters('jumpboxUsername'), '/.ssh/authorized_keys')]"),
+							KeyData: to.StringPtr("[parameters('jumpboxPublicKey')]"),
+						},
+					},
+				},
+			},
+			CustomData: to.StringPtr(fmt.Sprintf("[base64(concat('%s'))]", customDataStr)),
+		},
+		NetworkProfile: &compute.NetworkProfile{
+			NetworkInterfaces: &[]compute.NetworkInterfaceReference{
+				{
+					ID: to.StringPtr("[resourceId('Microsoft.Network/networkInterfaces', variables('jumpboxNetworkInterfaceName'))]"),
+				},
+			},
+		},
+		StorageProfile: &storageProfile,
+	}
+
+	vm.VirtualMachineProperties = &vmProperties
+
+	return VirtualMachineARM{
+		ARMResource:    armResource,
+		VirtualMachine: vm,
 	}
 }

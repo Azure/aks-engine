@@ -1,6 +1,7 @@
 package armhelpers
 
 import (
+	"github.com/Azure/aks-engine/pkg/api"
 	"github.com/Azure/azure-sdk-for-go/services/network/mgmt/2018-08-01/network"
 	"github.com/Azure/go-autorest/autorest/to"
 )
@@ -68,6 +69,82 @@ func createLoadBalancer() LoadBalancerARM {
 			},
 			Sku: &network.LoadBalancerSku{
 				Name: "[variables('loadBalancerSku')]",
+			},
+			Type: to.StringPtr("Microsoft.Network/loadBalancers"),
+		},
+	}
+}
+
+func createMasterInternalLoadBalancer(cs *api.ContainerService) LoadBalancerARM {
+
+	var dependencies []string
+	if cs.Properties.MasterProfile.IsCustomVNET() {
+		dependencies = append(dependencies, "[variables('nsgID')]")
+	} else {
+		dependencies = append(dependencies, "[variables('vnetID')]")
+	}
+
+	return LoadBalancerARM{
+		ARMResource: ARMResource{
+			ApiVersion: "[variables('apiVersionNetwork')]",
+			DependsOn:  dependencies,
+		},
+		LoadBalancer: network.LoadBalancer{
+			Location: to.StringPtr("[variables('location')]"),
+			Name:     to.StringPtr("[variables('masterInternalLbName')]"),
+			LoadBalancerPropertiesFormat: &network.LoadBalancerPropertiesFormat{
+				BackendAddressPools: &[]network.BackendAddressPool{
+					{
+						Name: to.StringPtr("[variables('masterLbBackendPoolName')]"),
+					},
+				},
+				FrontendIPConfigurations: &[]network.FrontendIPConfiguration{
+					{
+						Name: to.StringPtr("[variables('masterInternalLbIPConfigName')]"),
+						FrontendIPConfigurationPropertiesFormat: &network.FrontendIPConfigurationPropertiesFormat{
+							PrivateIPAddress:          to.StringPtr("[variables('kubernetesAPIServerIP')]"),
+							PrivateIPAllocationMethod: network.Static,
+							Subnet: &network.Subnet{
+								ID: to.StringPtr("[variables('vnetSubnetID')]"),
+							},
+						},
+					},
+				},
+				LoadBalancingRules: &[]network.LoadBalancingRule{
+					{
+						Name: to.StringPtr("InternalLBRuleHTTPS"),
+						LoadBalancingRulePropertiesFormat: &network.LoadBalancingRulePropertiesFormat{
+							BackendAddressPool: &network.SubResource{
+								ID: to.StringPtr("[concat(variables('masterInternalLbID'), '/backendAddressPools/', variables('masterLbBackendPoolName'))]"),
+							},
+							BackendPort:      to.Int32Ptr(4443),
+							EnableFloatingIP: to.BoolPtr(false),
+							FrontendIPConfiguration: &network.SubResource{
+								ID: to.StringPtr("[variables('masterInternalLbIPConfigID')]"),
+							},
+							FrontendPort:         to.Int32Ptr(443),
+							IdleTimeoutInMinutes: to.Int32Ptr(5),
+							Protocol:             network.TransportProtocolTCP,
+							Probe: &network.SubResource{
+								ID: to.StringPtr("[concat(variables('masterInternalLbID'),'/probes/tcpHTTPSProbe')]"),
+							},
+						},
+					},
+				},
+				Probes: &[]network.Probe{
+					{
+						Name: to.StringPtr("tcpHTTPSProbe"),
+						ProbePropertiesFormat: &network.ProbePropertiesFormat{
+							IntervalInSeconds: to.Int32Ptr(5),
+							NumberOfProbes:    to.Int32Ptr(2),
+							Port:              to.Int32Ptr(4443),
+							Protocol:          network.ProbeProtocolTCP,
+						},
+					},
+				},
+			},
+			Sku: &network.LoadBalancerSku{
+				Name: network.LoadBalancerSkuName("[variables('loadBalancerSku')]"),
 			},
 			Type: to.StringPtr("Microsoft.Network/loadBalancers"),
 		},
