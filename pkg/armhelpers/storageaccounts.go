@@ -51,3 +51,19 @@ func createJumpboxStorageAccount(cs *api.ContainerService) StorageAccountARM {
 		Account:     storageAccount,
 	}
 }
+
+func createKeyVaultStorageAccount(cs *api.ContainerService) StorageAccountARM {
+	return StorageAccountARM{
+		ARMResource: ARMResource{
+			ApiVersion: "[variables('apiVersionStorage')]",
+		},
+		Account: storage.Account{
+			Type: to.StringPtr("Microsoft.Storage/storageAccounts"),
+			Name: to.StringPtr("[variables('clusterKeyVaultName')]"),
+			Location: to.StringPtr("[variables('location')]"),
+			Sku: &storage.Sku{
+				Name: storage.StandardLRS,
+			},
+		},
+	}
+}
