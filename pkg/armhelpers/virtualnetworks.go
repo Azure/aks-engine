@@ -130,3 +130,56 @@ func createVirtualNetworkVMSS(cs *api.ContainerService) VirtualNetworkARM {
 		VirtualNetwork: virtualNetwork,
 	}
 }
+
+func createHostedMasterVirtualNetwork(cs *api.ContainerService) VirtualNetworkARM {
+	armResource := ARMResource{
+		ApiVersion: "[variables('apiVersionNetwork')]",
+	}
+	dependencies := []string{
+		"[concat('Microsoft.Network/networkSecurityGroups/', variables('nsgName'))]",
+	}
+
+	isAzureCNI := cs.Properties.OrchestratorProfile.IsAzureCNI()
+	if !isAzureCNI {
+		dependencies = append(dependencies, "[concat('Microsoft.Network/routeTables/', variables('routeTableName'))]")
+	}
+
+	subnet := network.Subnet{
+		Name: to.StringPtr("[variables('subnetName')]"),
+		SubnetPropertiesFormat: &network.SubnetPropertiesFormat{
+			AddressPrefixes: &[]string{"[parameters('masterSubnet')]"},
+			NetworkSecurityGroup: &network.SecurityGroup{
+				ID: to.StringPtr("[variables('nsgID')]"),
+			},
+		},
+	}
+
+	if !isAzureCNI {
+		subnet.RouteTable = &network.RouteTable{
+			ID: to.StringPtr("[variables('routeTableID')]"),
+		}
+	}
+
+	vnetProps := network.VirtualNetworkPropertiesFormat{
+		AddressSpace: &network.AddressSpace{
+			AddressPrefixes: &[]string{
+				"[parameters('vnetCidr')]",
+			},
+		},
+		Subnets: &[]network.Subnet{
+			subnet,
+		},
+	}
+
+	virtualNetwork := network.VirtualNetwork{
+		Location:                       to.StringPtr("[variables('location')]"),
+		Name:                           to.StringPtr("[variables('virtualNetworkName')]"),
+		VirtualNetworkPropertiesFormat: &vnetProps,
+		Type:                           to.StringPtr("Microsoft.Network/virtualNetworks"),
+	}
+
+	return VirtualNetworkARM{
+		ARMResource:    armResource,
+		VirtualNetwork: virtualNetwork,
+	}
+}
