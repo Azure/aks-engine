@@ -84,7 +84,7 @@ func createMasterInternalLoadBalancer(cs *api.ContainerService) LoadBalancerARM 
 		dependencies = append(dependencies, "[variables('vnetID')]")
 	}
 
-	return LoadBalancerARM{
+	loadBalancerARM := LoadBalancerARM{
 		ARMResource: ARMResource{
 			ApiVersion: "[variables('apiVersionNetwork')]",
 			DependsOn:  dependencies,
@@ -149,4 +149,40 @@ func createMasterInternalLoadBalancer(cs *api.ContainerService) LoadBalancerARM 
 			Type: to.StringPtr("Microsoft.Network/loadBalancers"),
 		},
 	}
+
+	if cs.Properties.MasterProfile.IsVirtualMachineScaleSets() {
+		inboundNATPools := []network.InboundNatPool{
+			{
+				Name: to.StringPtr("[concat('SSH-', variables('masterVMNamePrefix'), 'natpools')]"),
+				InboundNatPoolPropertiesFormat: &network.InboundNatPoolPropertiesFormat{
+					FrontendIPConfiguration: &network.SubResource{
+						ID: to.StringPtr("[variables('masterLbIPConfigID')]"),
+					},
+					Protocol:               network.TransportProtocolTCP,
+					BackendPort:            to.Int32Ptr(22),
+					FrontendPortRangeStart: to.Int32Ptr(50001),
+					FrontendPortRangeEnd:   to.Int32Ptr(50119),
+					EnableFloatingIP:       to.BoolPtr(false),
+				},
+			},
+		}
+		loadBalancerARM.InboundNatPools = &inboundNATPools
+	} else {
+		inboundNATRules := []network.InboundNatRule{
+			{
+				InboundNatRulePropertiesFormat: &network.InboundNatRulePropertiesFormat{
+					BackendPort:      to.Int32Ptr(22),
+					EnableFloatingIP: to.BoolPtr(false),
+					FrontendIPConfiguration: &network.SubResource{
+						ID: to.StringPtr("[variables('masterLbIPConfigID')]"),
+					},
+					FrontendPort: to.Int32Ptr(22), //"[variables('sshNatPorts')[copyIndex(variables('masterOffset'))]]",
+					Protocol:     network.TransportProtocolTCP,
+				},
+			},
+		}
+		loadBalancerARM.InboundNatRules = &inboundNATRules
+	}
+
+	return loadBalancerARM
 }

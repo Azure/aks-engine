@@ -22,6 +22,16 @@ func (arm ARMResource) MarshalJSON() ([]byte, error) {
 	return json.Marshal(arm)
 }
 
+type VirtualMachineARM struct {
+	ARMResource
+	compute.VirtualMachine
+}
+
+type VirtualMachineScaleSetARM struct {
+	ARMResource
+	compute.VirtualMachineScaleSet
+}
+
 type VirtualMachineExtensionARM struct {
 	ARMResource
 	compute.VirtualMachineExtension

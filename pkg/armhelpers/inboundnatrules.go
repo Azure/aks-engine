@@ -26,7 +26,7 @@ func createInboundNATRules() InboundNATRuleARM {
 					ID: to.StringPtr("[variables('masterLbIPConfigID')]"),
 				},
 				// TODO: directly resolve sshNatPorts here
-				FrontendPort: to.Int32Ptr(123123123), //"[variables('sshNatPorts')[copyIndex(variables('masterOffset'))]]",
+				FrontendPort: to.Int32Ptr(22), //"[variables('sshNatPorts')[copyIndex(variables('masterOffset'))]]",
 				Protocol:     network.TransportProtocolTCP,
 			},
 

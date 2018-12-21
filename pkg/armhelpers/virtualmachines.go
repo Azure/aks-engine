@@ -9,11 +9,6 @@ import (
 	"strconv"
 )
 
-type VirtualMachineARM struct {
-	ARMResource
-	compute.VirtualMachine
-}
-
 func createVirtualMachine(cs *api.ContainerService) VirtualMachineARM {
 	hasAvailabilityZones := cs.Properties.MasterProfile.HasAvailabilityZones()
 	isStorageAccount := cs.Properties.MasterProfile.IsStorageAccount()
@@ -272,5 +267,281 @@ func createJumpboxVirtualMachine(cs *api.ContainerService) VirtualMachineARM {
 	return VirtualMachineARM{
 		ARMResource:    armResource,
 		VirtualMachine: vm,
+	}
+}
+
+func createVirtualMachineVMSS(cs *api.ContainerService) VirtualMachineScaleSetARM {
+	isCustomVnet := cs.Properties.MasterProfile.IsCustomVNET()
+	hasAvailabilityZones := cs.Properties.MasterProfile.HasAvailabilityZones()
+	useManagedIdentity := cs.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity
+	userAssignedIDEnabled := cs.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity &&
+		cs.Properties.OrchestratorProfile.KubernetesConfig.UserAssignedID != ""
+	isAzureCNI := cs.Properties.OrchestratorProfile.IsAzureCNI()
+
+	var dependencies []string
+
+	if isCustomVnet {
+		dependencies = append(dependencies, "[variables('nsgID')]")
+	} else {
+		dependencies = append(dependencies, "[variables('vnetID')]")
+	}
+
+	if to.Bool(cs.Properties.MasterProfile.CosmosEtcd) {
+		dependencies = append(dependencies, "[resourceId('Microsoft.DocumentDB/databaseAccounts/', variables('cosmosAccountName'))]")
+	}
+
+	dependencies = append(dependencies, "[variables('masterLbID')]")
+
+	armResource := ARMResource{
+		ApiVersion: "[variables('apiVersionCompute')]",
+		DependsOn:  dependencies,
+	}
+
+	virtualMachine := compute.VirtualMachineScaleSet{
+		Location: to.StringPtr("[variables('location')]"),
+		Name:     to.StringPtr("[concat(variables('masterVMNamePrefix'), 'vmss')]"),
+		Tags: map[string]*string{
+			"creationSource":     to.StringPtr("[concat(parameters('generatorCode'), '-', variables('masterVMNamePrefix'), 'vmss']"),
+			"resourceNameSuffix": to.StringPtr("[parameters('nameSuffix')]"),
+			"orchestrator":       to.StringPtr("[variables('orchestratorNameVersionTag')]"),
+			"acsengineVersion":   to.StringPtr("[parameters('acsengineVersion')]"),
+			"poolName":           to.StringPtr("master"),
+		},
+		Type: to.StringPtr("Microsoft.Compute/virtualMachineScaleSets"),
+	}
+
+	if hasAvailabilityZones {
+		virtualMachine.Zones = &[]string{
+			"[parameters('availabilityZones')]",
+		}
+	}
+
+	if useManagedIdentity && userAssignedIDEnabled {
+		identity := &compute.VirtualMachineScaleSetIdentity{}
+		identity.Type = compute.ResourceIdentityTypeUserAssigned
+		identity.UserAssignedIdentities = map[string]*compute.VirtualMachineScaleSetIdentityUserAssignedIdentitiesValue{
+			"[variables('userAssignedIDReference')]": {},
+		}
+		virtualMachine.Identity = identity
+	}
+
+	virtualMachine.Sku = &compute.Sku{
+		Tier:     to.StringPtr("Standard"),
+		Capacity: to.Int64Ptr(int64(cs.Properties.MasterProfile.Count)),
+		Name:     to.StringPtr("[parameters('masterVMSize')]"),
+	}
+
+	vmProperties := &compute.VirtualMachineScaleSetProperties{}
+
+	vmProperties.SinglePlacementGroup = cs.Properties.MasterProfile.SinglePlacementGroup
+	vmProperties.Overprovision = to.BoolPtr(false)
+	vmProperties.UpgradePolicy = &compute.UpgradePolicy{
+		Mode: compute.Manual,
+	}
+
+	netintconfig := compute.VirtualMachineScaleSetNetworkConfiguration{
+		Name: to.StringPtr("[concat(variables('masterVMNamePrefix'), 'netintconfig')]"),
+		VirtualMachineScaleSetNetworkConfigurationProperties: &compute.VirtualMachineScaleSetNetworkConfigurationProperties{
+			Primary: to.BoolPtr(true),
+		},
+	}
+
+	if isCustomVnet {
+		netintconfig.NetworkSecurityGroup = &compute.SubResource{
+			ID: to.StringPtr("[variables('nsgID')]"),
+		}
+	}
+
+	var ipConfigurations []compute.VirtualMachineScaleSetIPConfiguration
+
+	for i := 1; i <= cs.Properties.MasterProfile.Count; i++ {
+		ipConfig := compute.VirtualMachineScaleSetIPConfiguration{
+			Name: to.StringPtr(fmt.Sprintf("ipconfig%d", i)),
+		}
+
+		ipConfigProps := compute.VirtualMachineScaleSetIPConfigurationProperties{
+			Subnet: &compute.APIEntityReference{
+				ID: to.StringPtr("[variables('vnetSubnetIDMaster')]"),
+			},
+		}
+		if i == 1 {
+			ipConfigProps.Primary = to.BoolPtr(true)
+			ipConfigProps.LoadBalancerBackendAddressPools = &[]compute.SubResource{
+				{
+					ID: to.StringPtr("[concat(variables('masterLbID'), '/backendAddressPools/', variables('masterLbBackendPoolName'))]"),
+				},
+			}
+			ipConfigProps.LoadBalancerInboundNatPools = &[]compute.SubResource{
+				{
+					ID: to.StringPtr("[concat(variables('masterLbID'),'/inboundNatPools/SSH-', variables('masterVMNamePrefix'), 'natpools')]"),
+				},
+			}
+		} else {
+			ipConfigProps.Primary = to.BoolPtr(false)
+		}
+		ipConfigurations = append(ipConfigurations, ipConfig)
+	}
+	netintconfig.IPConfigurations = &ipConfigurations
+
+	if cs.Properties.LinuxProfile.HasCustomNodesDNS() {
+		netintconfig.DNSSettings = &compute.VirtualMachineScaleSetNetworkConfigurationDNSSettings{
+			DNSServers: &[]string{
+				"[parameters('dnsServer')]",
+			},
+		}
+	}
+
+	if isAzureCNI {
+		netintconfig.EnableIPForwarding = to.BoolPtr(true)
+	}
+
+	networkProfile := compute.VirtualMachineScaleSetNetworkProfile{
+		NetworkInterfaceConfigurations: &[]compute.VirtualMachineScaleSetNetworkConfiguration{
+			netintconfig,
+		},
+	}
+
+	osProfile := compute.VirtualMachineScaleSetOSProfile{
+		AdminUsername:      to.StringPtr("[parameters('linuxAdminUsername')]"),
+		ComputerNamePrefix: to.StringPtr("[concat(variables('masterVMNamePrefix'), 'vmss')]"),
+		LinuxConfiguration: &compute.LinuxConfiguration{
+			DisablePasswordAuthentication: to.BoolPtr(true),
+			SSH: &compute.SSHConfiguration{
+				PublicKeys: &[]compute.SSHPublicKey{
+					{
+						KeyData: to.StringPtr("[parameters('sshRSAPublicKey')]"),
+						Path:    to.StringPtr("[variables('sshKeyPath')]"),
+					},
+				},
+			},
+		},
+	}
+
+	t, err := engine.InitializeTemplateGenerator(engine.Context{})
+
+	customDataStr := t.GetMasterCustomDataString(cs, engine.KubernetesMasterCustomDataYaml, cs.Properties)
+	customDataStr = fmt.Sprintf("[base64(concat('%s'))]", customDataStr)
+	osProfile.CustomData = to.StringPtr(customDataStr)
+
+	if err != nil {
+		panic(err)
+	}
+
+	if cs.Properties.LinuxProfile.HasSecrets() {
+		osProfile.Secrets = &[]compute.VaultSecretGroup{
+			//TODO: Need to address secrets case
+		}
+	}
+
+	storageProfile := compute.VirtualMachineScaleSetStorageProfile{}
+	imageRef := cs.Properties.MasterProfile.ImageRef
+	useMasterCustomImage := imageRef != nil && len(imageRef.Name) > 0 && len(imageRef.ResourceGroup) > 0
+	if !useMasterCustomImage {
+		etcdSizeGB, _ := strconv.Atoi(cs.Properties.OrchestratorProfile.KubernetesConfig.EtcdDiskSizeGB)
+		dataDisk := compute.VirtualMachineScaleSetDataDisk{
+			CreateOption: compute.DiskCreateOptionTypesEmpty,
+			DiskSizeGB:   to.Int32Ptr(int32(etcdSizeGB)),
+			Lun:          to.Int32Ptr(0),
+		}
+		storageProfile.DataDisks = &[]compute.VirtualMachineScaleSetDataDisk{
+			dataDisk,
+		}
+	}
+	imgReference := &compute.ImageReference{}
+	if useMasterCustomImage {
+		imgReference.ID = to.StringPtr("[resourceId(parameters('osImageResourceGroup'), 'Microsoft.Compute/images', parameters('osImageName'))]")
+	} else {
+		imgReference.Offer = to.StringPtr("[parameters('osImageOffer')]")
+		imgReference.Publisher = to.StringPtr("[parameters('osImagePublisher')]")
+		imgReference.Sku = to.StringPtr("[parameters('osImageSku')]")
+		imgReference.Version = to.StringPtr("[parameters('osImageVersion')]")
+	}
+
+	osDisk := &compute.VirtualMachineScaleSetOSDisk{
+		Caching:      compute.CachingTypesReadWrite,
+		CreateOption: compute.DiskCreateOptionTypesFromImage,
+	}
+
+	if cs.Properties.MasterProfile.OSDiskSizeGB > 0 {
+		osDisk.DiskSizeGB = to.Int32Ptr(int32(cs.Properties.MasterProfile.OSDiskSizeGB))
+	}
+
+	storageProfile.OsDisk = osDisk
+	storageProfile.ImageReference = imgReference
+
+	var extensions []compute.VirtualMachineScaleSetExtension
+
+	if useManagedIdentity {
+		managedIdentityExtension := compute.VirtualMachineScaleSetExtension{
+			Name: to.StringPtr("[concat(variables('masterVMNamePrefix'), 'vmss-ManagedIdentityExtension')]"),
+			VirtualMachineScaleSetExtensionProperties: &compute.VirtualMachineScaleSetExtensionProperties{
+				Publisher:               to.StringPtr("Microsoft.ManagedIdentity"),
+				Type:                    to.StringPtr("ManagedIdentityExtensionForLinux"),
+				TypeHandlerVersion:      to.StringPtr("1.0"),
+				AutoUpgradeMinorVersion: to.BoolPtr(true),
+				Settings: map[string]interface{}{
+					"port": 50343,
+				},
+				ProtectedSettings: map[string]interface{}{},
+			},
+		}
+		extensions = append(extensions, managedIdentityExtension)
+	}
+
+	outBoundCmd := ""
+	registry := ""
+	if !cs.Properties.FeatureFlags.BlockOutboundInternet {
+		if cs.GetCloudSpecConfig().CloudName == api.AzureChinaCloud {
+			registry = `gcr.azk8s.cn 80`
+		} else {
+			registry = `k8s.gcr.io 443 && retrycmd_if_failure 50 1 3 nc -vz gcr.io 443 && retrycmd_if_failure 50 1 3 nc -vz docker.io 443`
+		}
+		outBoundCmd = `ERR_OUTBOUND_CONN_FAIL=50; retrycmd_if_failure 50 1 3 nc -vz ` + registry + `|| exit $ERR_OUTBOUND_CONN_FAIL;`
+	}
+
+	vmssCSE := compute.VirtualMachineScaleSetExtension{
+		Name: to.StringPtr("[concat(variables('masterVMNamePrefix'), 'vmssCSE')]"),
+		VirtualMachineScaleSetExtensionProperties: &compute.VirtualMachineScaleSetExtensionProperties{
+			Publisher:               to.StringPtr("Microsoft.Azure.Extensions"),
+			Type:                    to.StringPtr("CustomScript"),
+			TypeHandlerVersion:      to.StringPtr("2.0"),
+			AutoUpgradeMinorVersion: to.BoolPtr(true),
+			Settings:                map[string]interface{}{},
+			ProtectedSettings: map[string]interface{}{
+				"commandToExecute": "[concat('retrycmd_if_failure() { r=$1; w=$2; t=$3; shift && shift && shift; for i in $(seq 1 $r); do timeout $t ${@}; [ $? -eq 0  ] && break || if [ $i -eq $r ]; then return 1; else sleep $w; fi; done }; " + outBoundCmd + " for i in $(seq 1 1200); do if [ -f /opt/azure/containers/provision.sh ]; then break; fi; if [ $i -eq 1200 ]; then exit 100; else sleep 1; fi; done; ', variables('provisionScriptParametersCommon'),' ',variables('provisionScriptParametersMaster'), ' /usr/bin/nohup /bin/bash -c \"/bin/bash /opt/azure/containers/provision.sh >> /var/log/azure/cluster-provision.log 2>&1\"')]",
+			},
+		},
+	}
+
+	extensions = append(extensions, vmssCSE)
+
+	if cs.GetCloudSpecConfig().CloudName == api.AzurePublicCloud {
+		aksBillingExtension := compute.VirtualMachineScaleSetExtension{
+			Name: to.StringPtr("[concat(variables('masterVMNamePrefix'), 'vmss-computeAksLinuxBilling')]"),
+			VirtualMachineScaleSetExtensionProperties: &compute.VirtualMachineScaleSetExtensionProperties{
+				Publisher:               to.StringPtr("Microsoft.AKS"),
+				Type:                    to.StringPtr("Compute.AKS-Engine.Linux.Billing"),
+				TypeHandlerVersion:      to.StringPtr("1.0"),
+				AutoUpgradeMinorVersion: to.BoolPtr(true),
+				Settings:                map[string]interface{}{},
+			},
+		}
+		extensions = append(extensions, aksBillingExtension)
+	}
+
+	extensionProfile := compute.VirtualMachineScaleSetExtensionProfile{
+		Extensions: &extensions,
+	}
+
+	vmProperties.VirtualMachineProfile = &compute.VirtualMachineScaleSetVMProfile{
+		NetworkProfile:   &networkProfile,
+		OsProfile:        &osProfile,
+		StorageProfile:   &storageProfile,
+		ExtensionProfile: &extensionProfile,
+	}
+
+	return VirtualMachineScaleSetARM{
+		ARMResource:            armResource,
+		VirtualMachineScaleSet: virtualMachine,
 	}
 }

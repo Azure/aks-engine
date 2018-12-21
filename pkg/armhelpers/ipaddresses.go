@@ -1,11 +1,21 @@
 package armhelpers
 
 import (
+	"github.com/Azure/aks-engine/pkg/api"
 	"github.com/Azure/azure-sdk-for-go/services/network/mgmt/2018-08-01/network"
 	"github.com/Azure/go-autorest/autorest/to"
 )
 
-func createPublicIpAddress() PublicIPAddressARM {
+func createPublicIpAddress(cs *api.ContainerService) PublicIPAddressARM {
+
+	allocMethod := network.Static
+
+	if cs.Properties.MasterProfile.IsVirtualMachineScaleSets() {
+		if cs.Properties.OrchestratorProfile.KubernetesConfig.LoadBalancerSku != "Standard" {
+			allocMethod = network.Dynamic
+		}
+	}
+
 	return PublicIPAddressARM{
 		ARMResource: ARMResource{
 			ApiVersion: "[variables('apiVersionNetwork')]",
@@ -17,7 +27,7 @@ func createPublicIpAddress() PublicIPAddressARM {
 				DNSSettings:&network.PublicIPAddressDNSSettings{
 					DomainNameLabel: to.StringPtr("[variables('masterFqdnPrefix')]"),
 				},
-				PublicIPAllocationMethod: network.Static,
+				PublicIPAllocationMethod: allocMethod,
 			},
 			Sku: &network.PublicIPAddressSku{
 				Name: "[variables('loadBalancerSku')]",

@@ -43,8 +43,84 @@ func createVirtualNetwork(cs *api.ContainerService) VirtualNetworkARM {
 		Name:     to.StringPtr("[variables('virtualNetworkName')]"),
 		Type:     to.StringPtr("Microsoft.Network/virtualNetworks"),
 		VirtualNetworkPropertiesFormat: &network.VirtualNetworkPropertiesFormat{
+			AddressSpace: &network.AddressSpace{
+				AddressPrefixes: &[]string{
+					"[parameters('vnetCidr')]",
+				},
+			},
 			Subnets: &[]network.Subnet{
 				subnet,
+			},
+		},
+	}
+
+	return VirtualNetworkARM{
+		ARMResource:    armResource,
+		VirtualNetwork: virtualNetwork,
+	}
+}
+
+func createVirtualNetworkVMSS(cs *api.ContainerService) VirtualNetworkARM {
+
+	dependencies := []string{
+		"[concat('Microsoft.Network/networkSecurityGroups/', variables('nsgName'))]",
+	}
+
+	requireRouteTable := cs.Properties.OrchestratorProfile.RequireRouteTable()
+	if requireRouteTable {
+		dependencies = append(dependencies, "[concat('Microsoft.Network/routeTables/', variables('routeTableName'))]")
+	}
+
+	armResource := ARMResource{
+		ApiVersion: "[variables('apiVersionNetwork')]",
+		DependsOn:  dependencies,
+	}
+
+	subnetMaster := network.Subnet{
+		Name: to.StringPtr("subnetmaster"),
+		SubnetPropertiesFormat: &network.SubnetPropertiesFormat{
+			AddressPrefix: to.StringPtr("[parameters('masterSubnet')]"),
+			NetworkSecurityGroup: &network.SecurityGroup{
+				ID: to.StringPtr("[variables('nsgID')]"),
+			},
+		},
+	}
+
+	if requireRouteTable {
+		subnetMaster.RouteTable = &network.RouteTable{
+			ID: to.StringPtr("[variables('routeTableID')]"),
+		}
+	}
+
+	subnetAgent := network.Subnet{
+		Name: to.StringPtr("subnetagent"),
+		SubnetPropertiesFormat: &network.SubnetPropertiesFormat{
+			AddressPrefix: to.StringPtr("[parameters('agentSubnet')]"),
+			NetworkSecurityGroup: &network.SecurityGroup{
+				ID: to.StringPtr("[variables('nsgID')]"),
+			},
+		},
+	}
+
+	if requireRouteTable {
+		subnetAgent.RouteTable = &network.RouteTable{
+			ID: to.StringPtr("[variables('routeTableID')]"),
+		}
+	}
+
+	virtualNetwork := network.VirtualNetwork{
+		Location: to.StringPtr("[variables('location')]"),
+		Name:     to.StringPtr("[variables('virtualNetworkName')]"),
+		Type:     to.StringPtr("Microsoft.Network/virtualNetworks"),
+		VirtualNetworkPropertiesFormat: &network.VirtualNetworkPropertiesFormat{
+			AddressSpace: &network.AddressSpace{
+				AddressPrefixes: &[]string{
+					"[parameters('vnetCidr')]",
+				},
+			},
+			Subnets: &[]network.Subnet{
+				subnetMaster,
+				subnetAgent,
 			},
 		},
 	}
