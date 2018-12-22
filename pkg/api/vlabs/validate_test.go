@@ -8,6 +8,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/Azure/go-autorest/autorest/to"
+
 	"github.com/Azure/aks-engine/pkg/api/common"
 	"github.com/Azure/aks-engine/pkg/helpers"
 	"github.com/blang/semver"
@@ -263,12 +265,12 @@ func Test_KubernetesConfig_Validate(t *testing.T) {
 			ClusterSubnet:                "10.120.0.0/16",
 			DockerBridgeSubnet:           "10.120.1.0/16",
 			MaxPods:                      42,
-			CloudProviderBackoff:         helpers.PointerToBool(ValidKubernetesCloudProviderBackoff),
+			CloudProviderBackoff:         to.BoolPtr(ValidKubernetesCloudProviderBackoff),
 			CloudProviderBackoffRetries:  ValidKubernetesCloudProviderBackoffRetries,
 			CloudProviderBackoffJitter:   ValidKubernetesCloudProviderBackoffJitter,
 			CloudProviderBackoffDuration: ValidKubernetesCloudProviderBackoffDuration,
 			CloudProviderBackoffExponent: ValidKubernetesCloudProviderBackoffExponent,
-			CloudProviderRateLimit:       helpers.PointerToBool(ValidKubernetesCloudProviderRateLimit),
+			CloudProviderRateLimit:       to.BoolPtr(ValidKubernetesCloudProviderRateLimit),
 			CloudProviderRateLimitQPS:    ValidKubernetesCloudProviderRateLimitQPS,
 			CloudProviderRateLimitBucket: ValidKubernetesCloudProviderRateLimitBucket,
 			KubeletConfig: map[string]string{
@@ -447,8 +449,8 @@ func Test_KubernetesConfig_Validate(t *testing.T) {
 	// Tests that apply to 1.6 and later releases
 	for _, k8sVersion := range common.GetAllSupportedKubernetesVersions(false, false) {
 		c := KubernetesConfig{
-			CloudProviderBackoff:   helpers.PointerToBool(true),
-			CloudProviderRateLimit: helpers.PointerToBool(true),
+			CloudProviderBackoff:   to.BoolPtr(true),
+			CloudProviderRateLimit: to.BoolPtr(true),
 		}
 		if err := c.Validate(k8sVersion, false); err != nil {
 			t.Error("should not error when basic backoff and rate limiting are set to true with no options")
@@ -1030,7 +1032,7 @@ func Test_Properties_ValidateAddons(t *testing.T) {
 		Addons: []KubernetesAddon{
 			{
 				Name:    "cluster-autoscaler",
-				Enabled: helpers.PointerToBool(true),
+				Enabled: to.BoolPtr(true),
 			},
 		},
 	}
@@ -1054,7 +1056,7 @@ func Test_Properties_ValidateAddons(t *testing.T) {
 		Addons: []KubernetesAddon{
 			{
 				Name:    "nvidia-device-plugin",
-				Enabled: helpers.PointerToBool(true),
+				Enabled: to.BoolPtr(true),
 			},
 		},
 	}
@@ -1494,7 +1496,7 @@ func TestMasterProfileValidate(t *testing.T) {
 				OrchestratorVersion: test.orchestratorVersion,
 				OrchestratorRelease: test.orchestratorRelease,
 				KubernetesConfig: &KubernetesConfig{
-					UseInstanceMetadata: helpers.PointerToBool(test.useInstanceMetadata),
+					UseInstanceMetadata: to.BoolPtr(test.useInstanceMetadata),
 				},
 			}
 			properties.AgentPoolProfiles = test.agentPoolProfiles
@@ -1736,7 +1738,7 @@ func TestProperties_ValidateZones(t *testing.T) {
 			p.OrchestratorProfile.OrchestratorRelease = test.orchestratorRelease
 			p.OrchestratorProfile.KubernetesConfig = &KubernetesConfig{
 				LoadBalancerSku:             test.loadBalancerSku,
-				ExcludeMasterFromStandardLB: helpers.PointerToBool(test.excludeMasterFromStandardLB),
+				ExcludeMasterFromStandardLB: to.BoolPtr(test.excludeMasterFromStandardLB),
 			}
 
 			if err := p.Validate(false); err != nil {
@@ -1766,7 +1768,7 @@ func TestProperties_ValidateSinglePlacementGroup(t *testing.T) {
 				DNSPrefix:            "foo",
 				VMSize:               "Standard_DS2_v2",
 				AvailabilityProfile:  AvailabilitySet,
-				SinglePlacementGroup: helpers.PointerToBool(false),
+				SinglePlacementGroup: to.BoolPtr(false),
 			},
 			expectedMsg: "singlePlacementGroup is only supported with VirtualMachineScaleSets",
 		},
@@ -1784,7 +1786,7 @@ func TestProperties_ValidateSinglePlacementGroup(t *testing.T) {
 					VMSize:               "Standard_DS2_v2",
 					Count:                4,
 					AvailabilityProfile:  AvailabilitySet,
-					SinglePlacementGroup: helpers.PointerToBool(false),
+					SinglePlacementGroup: to.BoolPtr(false),
 				},
 			},
 			expectedMsg: `VirtualMachineScaleSets for master profile must be used together with virtualMachineScaleSets for agent profiles. Set "availabilityProfile" to "VirtualMachineScaleSets" for agent profiles`,
@@ -1796,7 +1798,7 @@ func TestProperties_ValidateSinglePlacementGroup(t *testing.T) {
 				DNSPrefix:            "foo",
 				VMSize:               "Standard_DS2_v2",
 				AvailabilityProfile:  VirtualMachineScaleSets,
-				SinglePlacementGroup: helpers.PointerToBool(false),
+				SinglePlacementGroup: to.BoolPtr(false),
 				StorageProfile:       StorageAccount,
 			},
 			agentPoolProfiles: []*AgentPoolProfile{

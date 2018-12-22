@@ -4,7 +4,7 @@
 package api
 
 import (
-	"github.com/Azure/aks-engine/pkg/helpers"
+	"github.com/Azure/go-autorest/autorest/to"
 	"github.com/satori/go.uuid"
 )
 
@@ -52,8 +52,8 @@ func CreateMockContainerService(containerServiceName, orchestratorVersion string
 	cs.Properties.OrchestratorProfile.OrchestratorType = Kubernetes
 	cs.Properties.OrchestratorProfile.OrchestratorVersion = orchestratorVersion
 	cs.Properties.OrchestratorProfile.KubernetesConfig = &KubernetesConfig{
-		EnableSecureKubelet: helpers.PointerToBool(DefaultSecureKubeletEnabled),
-		EnableRbac:          helpers.PointerToBool(DefaultRBACEnabled),
+		EnableSecureKubelet: to.BoolPtr(DefaultSecureKubeletEnabled),
+		EnableRbac:          to.BoolPtr(DefaultRBACEnabled),
 		EtcdDiskSizeGB:      DefaultEtcdDiskSize,
 		ServiceCIDR:         DefaultKubernetesServiceCIDR,
 		DockerBridgeSubnet:  DefaultDockerBridgeSubnet,

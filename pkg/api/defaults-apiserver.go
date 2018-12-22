@@ -6,6 +6,8 @@ package api
 import (
 	"strconv"
 
+	"github.com/Azure/go-autorest/autorest/to"
+
 	"github.com/Azure/aks-engine/pkg/api/common"
 	"github.com/Azure/aks-engine/pkg/helpers"
 )
@@ -38,7 +40,7 @@ func (cs *ContainerService) setAPIServerConfig() {
 	}
 	// if using local etcd server then we need the ca file
 	/*this ugly if statement is made this way, because this function is used in a test that does not pass correct data structure */
-	if !(nil != cs.Properties && nil != cs.Properties.MasterProfile && helpers.IsTrueBoolPointer(cs.Properties.MasterProfile.CosmosEtcd)) {
+	if !(nil != cs.Properties && nil != cs.Properties.MasterProfile && to.Bool(cs.Properties.MasterProfile.CosmosEtcd)) {
 		staticAPIServerConfig["--etcd-cafile"] = "/etc/kubernetes/certs/ca.crt"
 	}
 
@@ -51,7 +53,7 @@ func (cs *ContainerService) setAPIServerConfig() {
 	}
 
 	// Data Encryption at REST configuration conditions
-	if helpers.IsTrueBoolPointer(o.KubernetesConfig.EnableDataEncryptionAtRest) || helpers.IsTrueBoolPointer(o.KubernetesConfig.EnableEncryptionWithExternalKms) {
+	if to.Bool(o.KubernetesConfig.EnableDataEncryptionAtRest) || to.Bool(o.KubernetesConfig.EnableEncryptionWithExternalKms) {
 		staticAPIServerConfig["--experimental-encryption-provider-config"] = "/etc/kubernetes/encryption-config.yaml"
 	}
 
@@ -67,7 +69,7 @@ func (cs *ContainerService) setAPIServerConfig() {
 	}
 
 	// Enable cloudprovider if we're not using cloud controller manager
-	if !helpers.IsTrueBoolPointer(o.KubernetesConfig.UseCloudControllerManager) {
+	if !to.Bool(o.KubernetesConfig.UseCloudControllerManager) {
 		staticAPIServerConfig["--cloud-provider"] = "azure"
 		staticAPIServerConfig["--cloud-config"] = "/etc/kubernetes/azure.json"
 	}
@@ -90,7 +92,7 @@ func (cs *ContainerService) setAPIServerConfig() {
 	}
 
 	// RBAC configuration
-	if helpers.IsTrueBoolPointer(o.KubernetesConfig.EnableRbac) {
+	if to.Bool(o.KubernetesConfig.EnableRbac) {
 		if common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.7.0") {
 			defaultAPIServerConfig["--authorization-mode"] = "Node,RBAC"
 		} else {
@@ -122,7 +124,7 @@ func (cs *ContainerService) setAPIServerConfig() {
 	}
 
 	// Remove flags for secure communication to kubelet, if configured
-	if !helpers.IsTrueBoolPointer(o.KubernetesConfig.EnableSecureKubelet) {
+	if !to.Bool(o.KubernetesConfig.EnableSecureKubelet) {
 		for _, key := range []string{"--kubelet-client-certificate", "--kubelet-client-key"} {
 			delete(o.KubernetesConfig.APIServerConfig, key)
 		}
@@ -156,7 +158,7 @@ func getDefaultAdmissionControls(cs *ContainerService) (string, string) {
 	}
 
 	// Pod Security Policy configuration
-	if helpers.IsTrueBoolPointer(o.KubernetesConfig.EnablePodSecurityPolicy) {
+	if to.Bool(o.KubernetesConfig.EnablePodSecurityPolicy) {
 		admissionControlValues += ",PodSecurityPolicy"
 	}
 

@@ -12,6 +12,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Azure/go-autorest/autorest/to"
+
 	"github.com/Azure/aks-engine/pkg/api/common"
 	"github.com/Azure/aks-engine/pkg/helpers"
 	"github.com/blang/semver"
@@ -233,7 +235,7 @@ func (a *Properties) validateOrchestratorProfile(isUpdate bool) error {
 					}
 				}
 
-				if helpers.IsTrueBoolPointer(o.KubernetesConfig.EnableDataEncryptionAtRest) {
+				if to.Bool(o.KubernetesConfig.EnableDataEncryptionAtRest) {
 					if sv.LT(minVersion) {
 						return errors.Errorf("enableDataEncryptionAtRest is only available in Kubernetes version %s or greater; unable to validate for Kubernetes version %s",
 							minVersion.String(), o.OrchestratorVersion)
@@ -246,7 +248,7 @@ func (a *Properties) validateOrchestratorProfile(isUpdate bool) error {
 					}
 				}
 
-				if helpers.IsTrueBoolPointer(o.KubernetesConfig.EnableEncryptionWithExternalKms) {
+				if to.Bool(o.KubernetesConfig.EnableEncryptionWithExternalKms) {
 					minVersion, err := semver.Make("1.10.0")
 					if err != nil {
 						return errors.Errorf("could not validate version")
@@ -257,8 +259,8 @@ func (a *Properties) validateOrchestratorProfile(isUpdate bool) error {
 					}
 				}
 
-				if helpers.IsTrueBoolPointer(o.KubernetesConfig.EnablePodSecurityPolicy) {
-					if !helpers.IsTrueBoolPointer(o.KubernetesConfig.EnableRbac) {
+				if to.Bool(o.KubernetesConfig.EnablePodSecurityPolicy) {
+					if !to.Bool(o.KubernetesConfig.EnableRbac) {
 						return errors.Errorf("enablePodSecurityPolicy requires the enableRbac feature as a prerequisite")
 					}
 					minVersion, err := semver.Make("1.8.0")
@@ -280,7 +282,7 @@ func (a *Properties) validateOrchestratorProfile(isUpdate bool) error {
 						return errors.Errorf("loadBalancerSku is only available in Kubernetes version %s or greater; unable to validate for Kubernetes version %s",
 							minVersion.String(), o.OrchestratorVersion)
 					}
-					if helpers.IsFalseBoolPointer(a.OrchestratorProfile.KubernetesConfig.ExcludeMasterFromStandardLB) {
+					if !to.Bool(a.OrchestratorProfile.KubernetesConfig.ExcludeMasterFromStandardLB) {
 						return errors.Errorf("standard loadBalancerSku should exclude master nodes. Please set KubernetesConfig \"ExcludeMasterFromStandardLB\" to \"true\"")
 					}
 				}
@@ -385,7 +387,7 @@ func (a *Properties) validateAgentPoolProfiles(isUpdate bool) error {
 			return e
 		}
 
-		if helpers.IsTrueBoolPointer(agentPoolProfile.AcceleratedNetworkingEnabled) || helpers.IsTrueBoolPointer(agentPoolProfile.AcceleratedNetworkingEnabledWindows) {
+		if to.Bool(agentPoolProfile.AcceleratedNetworkingEnabled) || to.Bool(agentPoolProfile.AcceleratedNetworkingEnabledWindows) {
 			if e := validatePoolAcceleratedNetworking(agentPoolProfile.VMSize); e != nil {
 				return e
 			}
@@ -503,11 +505,11 @@ func (a *Properties) validateAddons() error {
 
 			switch addon.Name {
 			case "cluster-autoscaler":
-				if helpers.IsTrueBoolPointer(addon.Enabled) && isAvailabilitySets {
+				if to.Bool(addon.Enabled) && isAvailabilitySets {
 					return errors.Errorf("Cluster Autoscaler add-on can only be used with VirtualMachineScaleSets. Please specify \"availabilityProfile\": \"%s\"", VirtualMachineScaleSets)
 				}
 			case "nvidia-device-plugin":
-				if helpers.IsTrueBoolPointer(addon.Enabled) {
+				if to.Bool(addon.Enabled) {
 					version := common.RationalizeReleaseAndVersion(
 						a.OrchestratorProfile.OrchestratorType,
 						a.OrchestratorProfile.OrchestratorRelease,
@@ -619,7 +621,7 @@ func (a *Properties) validateServicePrincipalProfile() error {
 				return errors.Errorf("either the service principal client secret or keyvault secret reference must be specified with Orchestrator %s", a.OrchestratorProfile.OrchestratorType)
 			}
 
-			if a.OrchestratorProfile.KubernetesConfig != nil && helpers.IsTrueBoolPointer(a.OrchestratorProfile.KubernetesConfig.EnableEncryptionWithExternalKms) && len(a.ServicePrincipalProfile.ObjectID) == 0 {
+			if a.OrchestratorProfile.KubernetesConfig != nil && to.Bool(a.OrchestratorProfile.KubernetesConfig.EnableEncryptionWithExternalKms) && len(a.ServicePrincipalProfile.ObjectID) == 0 {
 				return errors.Errorf("the service principal object ID must be specified with Orchestrator %s when enableEncryptionWithExternalKms is true", a.OrchestratorProfile.OrchestratorType)
 			}
 

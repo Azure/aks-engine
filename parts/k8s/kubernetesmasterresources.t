@@ -396,7 +396,7 @@
     },
 {{else}}
       {
-        "apiVersion": "[variables('apiVersionCompute')]",
+        "apiVersion": "[variables('apiVersionNetwork')]",
         "copy": {
           "count": "[sub(variables('masterCount'), variables('masterOffset'))]",
           "name": "nicLoopNode"

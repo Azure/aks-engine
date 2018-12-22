@@ -6,7 +6,7 @@ package v20180331
 import (
 	"testing"
 
-	"github.com/Azure/aks-engine/pkg/helpers"
+	"github.com/Azure/go-autorest/autorest/to"
 )
 
 func TestMerge_DNSPrefix(t *testing.T) {
@@ -19,7 +19,7 @@ func TestMerge_DNSPrefix(t *testing.T) {
 	existingMC := &ManagedCluster{
 		Properties: &Properties{
 			DNSPrefix:  "oldprefix",
-			EnableRBAC: helpers.PointerToBool(false),
+			EnableRBAC: to.BoolPtr(false),
 		},
 	}
 
@@ -35,7 +35,7 @@ func TestMerge_DNSPrefix(t *testing.T) {
 	existingMC = &ManagedCluster{
 		Properties: &Properties{
 			DNSPrefix:  "oldprefix",
-			EnableRBAC: helpers.PointerToBool(false),
+			EnableRBAC: to.BoolPtr(false),
 		},
 	}
 
@@ -55,7 +55,7 @@ func TestMerge_DNSPrefix(t *testing.T) {
 	existingMC = &ManagedCluster{
 		Properties: &Properties{
 			DNSPrefix:  "",
-			EnableRBAC: helpers.PointerToBool(false),
+			EnableRBAC: to.BoolPtr(false),
 		},
 	}
 
@@ -69,7 +69,7 @@ func TestMerge_AAD(t *testing.T) {
 	// Partial AAD profile was passed during update
 	newMC := &ManagedCluster{
 		Properties: &Properties{
-			EnableRBAC: helpers.PointerToBool(true),
+			EnableRBAC: to.BoolPtr(true),
 			AADProfile: &AADProfile{
 				ClientAppID: "1234-5",
 				ServerAppID: "1a34-5",
@@ -81,7 +81,7 @@ func TestMerge_AAD(t *testing.T) {
 	existingMC := &ManagedCluster{
 		Properties: &Properties{
 			DNSPrefix:  "something",
-			EnableRBAC: helpers.PointerToBool(true),
+			EnableRBAC: to.BoolPtr(true),
 			AADProfile: &AADProfile{
 				ClientAppID:     "1234-5",
 				ServerAppID:     "1a34-5",
@@ -123,7 +123,7 @@ func TestMerge_AAD(t *testing.T) {
 	// Nil AAD profile was passed during update but DM had AAD Profile
 	newMC = &ManagedCluster{
 		Properties: &Properties{
-			EnableRBAC: helpers.PointerToBool(true),
+			EnableRBAC: to.BoolPtr(true),
 			AADProfile: nil,
 		},
 	}
@@ -131,7 +131,7 @@ func TestMerge_AAD(t *testing.T) {
 	existingMC = &ManagedCluster{
 		Properties: &Properties{
 			DNSPrefix:  "something",
-			EnableRBAC: helpers.PointerToBool(true),
+			EnableRBAC: to.BoolPtr(true),
 			AADProfile: &AADProfile{
 				ClientAppID:     "1234-5",
 				ServerAppID:     "1a34-5",
@@ -173,7 +173,7 @@ func TestMerge_AAD(t *testing.T) {
 	// No AAD profile set
 	newMC = &ManagedCluster{
 		Properties: &Properties{
-			EnableRBAC: helpers.PointerToBool(true),
+			EnableRBAC: to.BoolPtr(true),
 			AADProfile: nil,
 		},
 	}
@@ -181,7 +181,7 @@ func TestMerge_AAD(t *testing.T) {
 	existingMC = &ManagedCluster{
 		Properties: &Properties{
 			DNSPrefix:  "something",
-			EnableRBAC: helpers.PointerToBool(true),
+			EnableRBAC: to.BoolPtr(true),
 			AADProfile: nil,
 		},
 	}
@@ -198,7 +198,7 @@ func TestMerge_AAD(t *testing.T) {
 	// Empty field in AAD profile was passed during update but DM had AAD Profile
 	newMC = &ManagedCluster{
 		Properties: &Properties{
-			EnableRBAC: helpers.PointerToBool(true),
+			EnableRBAC: to.BoolPtr(true),
 			AADProfile: &AADProfile{
 				ClientAppID:     "1234-5",
 				ServerAppID:     "1a34-5",
@@ -211,7 +211,7 @@ func TestMerge_AAD(t *testing.T) {
 	existingMC = &ManagedCluster{
 		Properties: &Properties{
 			DNSPrefix:  "something",
-			EnableRBAC: helpers.PointerToBool(true),
+			EnableRBAC: to.BoolPtr(true),
 			AADProfile: &AADProfile{
 				ClientAppID:     "1234-5",
 				ServerAppID:     "1a34-5",
@@ -249,7 +249,7 @@ func TestMerge_AAD(t *testing.T) {
 	// Full AAD profile was passed during update
 	newMC = &ManagedCluster{
 		Properties: &Properties{
-			EnableRBAC: helpers.PointerToBool(true),
+			EnableRBAC: to.BoolPtr(true),
 			AADProfile: &AADProfile{
 				ClientAppID:     "1234-5",
 				ServerAppID:     "1a34-5",
@@ -262,7 +262,7 @@ func TestMerge_AAD(t *testing.T) {
 	existingMC = &ManagedCluster{
 		Properties: &Properties{
 			DNSPrefix:  "something",
-			EnableRBAC: helpers.PointerToBool(true),
+			EnableRBAC: to.BoolPtr(true),
 			AADProfile: &AADProfile{
 				ClientAppID:     "1234-5",
 				ServerAppID:     "1a34-5",

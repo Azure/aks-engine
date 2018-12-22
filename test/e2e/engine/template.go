@@ -11,6 +11,8 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/Azure/go-autorest/autorest/to"
+
 	"github.com/Azure/aks-engine/pkg/api"
 	"github.com/Azure/aks-engine/pkg/api/vlabs"
 	"github.com/Azure/aks-engine/pkg/helpers"
@@ -221,7 +223,7 @@ func (e *Engine) GetWindowsTestImages() (*WindowsTestImages, error) {
 func (e *Engine) HasAddon(name string) (bool, api.KubernetesAddon) {
 	for _, addon := range e.ExpandedDefinition.Properties.OrchestratorProfile.KubernetesConfig.Addons {
 		if addon.Name == name {
-			return helpers.IsTrueBoolPointer(addon.Enabled), addon
+			return to.Bool(addon.Enabled), addon
 		}
 	}
 	return false, api.KubernetesAddon{}

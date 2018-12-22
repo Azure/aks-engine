@@ -14,6 +14,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/Azure/go-autorest/autorest/to"
+
 	"github.com/Azure/aks-engine/pkg/i18n"
 	"github.com/pkg/errors"
 )
@@ -79,6 +81,14 @@ func TestPointerToBool(t *testing.T) {
 	if !IsTrueBoolPointer(ret) {
 		t.Fatal("expected IsTrueBoolPointer(*true) to return true")
 	}
+	ret = to.BoolPtr(boolVar)
+	if !*ret {
+		t.Fatal("expected to.BoolPtr(true) to return true")
+	}
+
+	if !to.Bool(ret) {
+		t.Fatal("expected to.Bool(*true) to return true")
+	}
 
 	boolVar = false
 	ret = PointerToBool(boolVar)
@@ -90,10 +100,23 @@ func TestPointerToBool(t *testing.T) {
 		t.Fatal("expected IsFalseBoolPointer(*false) to return true")
 	}
 
+	ret = to.BoolPtr(boolVar)
+	if *ret {
+		t.Fatal("expected to.BoolPtr(false) to return false")
+	}
+
+	if to.Bool(ret) {
+		t.Fatal("expected to.Bool(*true) to return false")
+	}
+
 	boolVar = true
 	ret = PointerToBool(boolVar)
 	if IsFalseBoolPointer(ret) {
 		t.Fatal("expected IsFalseBoolPointer(*true) to return false")
+	}
+
+	if !to.Bool(ret) {
+		t.Fatal("expected !to.Bool(*true) to return false")
 	}
 }
 

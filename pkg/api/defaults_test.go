@@ -10,7 +10,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/Azure/aks-engine/pkg/helpers"
+	"github.com/Azure/go-autorest/autorest/to"
 )
 
 func TestCertsAlreadyPresent(t *testing.T) {
@@ -211,7 +211,7 @@ func TestAssignDefaultAddonImages(t *testing.T) {
 		}
 		customAddon := KubernetesAddon{
 			Name:    addonName,
-			Enabled: helpers.PointerToBool(true),
+			Enabled: to.BoolPtr(true),
 			Containers: []KubernetesContainerSpec{
 				{
 					Name:           containerName,
@@ -250,7 +250,7 @@ func TestAssignDefaultAddonVals(t *testing.T) {
 	// Verify that an addon with all custom values provided remains unmodified during default value assignment
 	customAddon := KubernetesAddon{
 		Name:    addonName,
-		Enabled: helpers.PointerToBool(true),
+		Enabled: to.BoolPtr(true),
 		Containers: []KubernetesContainerSpec{
 			{
 				Name:           addonName,
@@ -287,7 +287,7 @@ func TestAssignDefaultAddonVals(t *testing.T) {
 	// Verify that an addon with no custom values provided gets all the appropriate defaults
 	customAddon = KubernetesAddon{
 		Name:    addonName,
-		Enabled: helpers.PointerToBool(true),
+		Enabled: to.BoolPtr(true),
 		Containers: []KubernetesContainerSpec{
 			{
 				Name: addonName,
@@ -315,7 +315,7 @@ func TestAssignDefaultAddonVals(t *testing.T) {
 	// More checking to verify default interpolation
 	customAddon = KubernetesAddon{
 		Name:    addonName,
-		Enabled: helpers.PointerToBool(true),
+		Enabled: to.BoolPtr(true),
 		Containers: []KubernetesContainerSpec{
 			{
 				Name:         addonName,
@@ -345,7 +345,7 @@ func TestAssignDefaultAddonVals(t *testing.T) {
 	// Verify that an addon with a custom image value will be overridden during upgrade/scale
 	customAddon = KubernetesAddon{
 		Name:    addonName,
-		Enabled: helpers.PointerToBool(true),
+		Enabled: to.BoolPtr(true),
 		Containers: []KubernetesContainerSpec{
 			{
 				Name:  addonName,
@@ -385,12 +385,12 @@ func TestAcceleratedNetworking(t *testing.T) {
 	mockCS.SetPropertiesDefaults(isUpgrade, false)
 
 	// In upgrade scenario, nil AcceleratedNetworkingEnabled should always render as false (i.e., we never turn on this feature on an existing vm that didn't have it before)
-	if helpers.IsTrueBoolPointer(mockCS.Properties.AgentPoolProfiles[0].AcceleratedNetworkingEnabled) {
-		t.Errorf("expected nil acceleratedNetworkingEnabled to be false after upgrade, instead got %t", helpers.IsTrueBoolPointer(mockCS.Properties.AgentPoolProfiles[0].AcceleratedNetworkingEnabled))
+	if to.Bool(mockCS.Properties.AgentPoolProfiles[0].AcceleratedNetworkingEnabled) {
+		t.Errorf("expected nil acceleratedNetworkingEnabled to be false after upgrade, instead got %t", to.Bool(mockCS.Properties.AgentPoolProfiles[0].AcceleratedNetworkingEnabled))
 	}
 	// In upgrade scenario, nil AcceleratedNetworkingEnabledWindows should always render as false (i.e., we never turn on this feature on an existing vm that didn't have it before)
-	if helpers.IsTrueBoolPointer(mockCS.Properties.AgentPoolProfiles[0].AcceleratedNetworkingEnabledWindows) {
-		t.Errorf("expected nil acceleratedNetworkingEnabledWindows to be false after upgrade, instead got %t", helpers.IsTrueBoolPointer(mockCS.Properties.AgentPoolProfiles[0].AcceleratedNetworkingEnabledWindows))
+	if to.Bool(mockCS.Properties.AgentPoolProfiles[0].AcceleratedNetworkingEnabledWindows) {
+		t.Errorf("expected nil acceleratedNetworkingEnabledWindows to be false after upgrade, instead got %t", to.Bool(mockCS.Properties.AgentPoolProfiles[0].AcceleratedNetworkingEnabledWindows))
 	}
 
 	mockCS = getMockBaseContainerService("1.10.8")
@@ -401,12 +401,12 @@ func TestAcceleratedNetworking(t *testing.T) {
 	mockCS.SetPropertiesDefaults(false, isScale)
 
 	// In scale scenario, nil AcceleratedNetworkingEnabled should always render as false (i.e., we never turn on this feature on an existing agent pool / vmss that didn't have it before)
-	if helpers.IsTrueBoolPointer(mockCS.Properties.AgentPoolProfiles[0].AcceleratedNetworkingEnabled) {
-		t.Errorf("expected nil acceleratedNetworkingEnabled to be false after upgrade, instead got %t", helpers.IsTrueBoolPointer(mockCS.Properties.AgentPoolProfiles[0].AcceleratedNetworkingEnabled))
+	if to.Bool(mockCS.Properties.AgentPoolProfiles[0].AcceleratedNetworkingEnabled) {
+		t.Errorf("expected nil acceleratedNetworkingEnabled to be false after upgrade, instead got %t", to.Bool(mockCS.Properties.AgentPoolProfiles[0].AcceleratedNetworkingEnabled))
 	}
 	// In scale scenario, nil AcceleratedNetworkingEnabledWindows should always render as false (i.e., we never turn on this feature on an existing vm that didn't have it before)
-	if helpers.IsTrueBoolPointer(mockCS.Properties.AgentPoolProfiles[0].AcceleratedNetworkingEnabledWindows) {
-		t.Errorf("expected nil acceleratedNetworkingEnabledWindows to be false after upgrade, instead got %t", helpers.IsTrueBoolPointer(mockCS.Properties.AgentPoolProfiles[0].AcceleratedNetworkingEnabledWindows))
+	if to.Bool(mockCS.Properties.AgentPoolProfiles[0].AcceleratedNetworkingEnabledWindows) {
+		t.Errorf("expected nil acceleratedNetworkingEnabledWindows to be false after upgrade, instead got %t", to.Bool(mockCS.Properties.AgentPoolProfiles[0].AcceleratedNetworkingEnabledWindows))
 	}
 
 	mockCS = getMockBaseContainerService("1.10.8")
@@ -419,13 +419,13 @@ func TestAcceleratedNetworking(t *testing.T) {
 
 	// In create scenario, nil AcceleratedNetworkingEnabled should be the defaults
 	acceleratedNetworkingEnabled := DefaultAcceleratedNetworking
-	if helpers.IsTrueBoolPointer(mockCS.Properties.AgentPoolProfiles[0].AcceleratedNetworkingEnabled) != acceleratedNetworkingEnabled {
-		t.Errorf("expected default acceleratedNetworkingEnabled to be %t, instead got %t", acceleratedNetworkingEnabled, helpers.IsTrueBoolPointer(mockCS.Properties.AgentPoolProfiles[0].AcceleratedNetworkingEnabled))
+	if to.Bool(mockCS.Properties.AgentPoolProfiles[0].AcceleratedNetworkingEnabled) != acceleratedNetworkingEnabled {
+		t.Errorf("expected default acceleratedNetworkingEnabled to be %t, instead got %t", acceleratedNetworkingEnabled, to.Bool(mockCS.Properties.AgentPoolProfiles[0].AcceleratedNetworkingEnabled))
 	}
 	// In create scenario, nil AcceleratedNetworkingEnabledWindows should be the defaults
 	acceleratedNetworkingEnabled = DefaultAcceleratedNetworkingWindowsEnabled
-	if helpers.IsTrueBoolPointer(mockCS.Properties.AgentPoolProfiles[0].AcceleratedNetworkingEnabledWindows) != acceleratedNetworkingEnabled {
-		t.Errorf("expected default acceleratedNetworkingEnabledWindows to be %t, instead got %t", acceleratedNetworkingEnabled, helpers.IsTrueBoolPointer(mockCS.Properties.AgentPoolProfiles[0].AcceleratedNetworkingEnabledWindows))
+	if to.Bool(mockCS.Properties.AgentPoolProfiles[0].AcceleratedNetworkingEnabledWindows) != acceleratedNetworkingEnabled {
+		t.Errorf("expected default acceleratedNetworkingEnabledWindows to be %t, instead got %t", acceleratedNetworkingEnabled, to.Bool(mockCS.Properties.AgentPoolProfiles[0].AcceleratedNetworkingEnabledWindows))
 	}
 
 	mockCS = getMockBaseContainerService("1.10.8")
@@ -437,12 +437,12 @@ func TestAcceleratedNetworking(t *testing.T) {
 	mockCS.SetPropertiesDefaults(false, false)
 
 	// In non-supported VM SKU scenario, acceleratedNetworkingEnabled should always be false
-	if helpers.IsTrueBoolPointer(mockCS.Properties.AgentPoolProfiles[0].AcceleratedNetworkingEnabled) {
-		t.Errorf("expected acceleratedNetworkingEnabled to be %t for an unsupported VM SKU, instead got %t", false, helpers.IsTrueBoolPointer(mockCS.Properties.AgentPoolProfiles[0].AcceleratedNetworkingEnabled))
+	if to.Bool(mockCS.Properties.AgentPoolProfiles[0].AcceleratedNetworkingEnabled) {
+		t.Errorf("expected acceleratedNetworkingEnabled to be %t for an unsupported VM SKU, instead got %t", false, to.Bool(mockCS.Properties.AgentPoolProfiles[0].AcceleratedNetworkingEnabled))
 	}
 	// In non-supported VM SKU scenario, acceleratedNetworkingEnabledWindows should always be false
-	if helpers.IsTrueBoolPointer(mockCS.Properties.AgentPoolProfiles[0].AcceleratedNetworkingEnabledWindows) {
-		t.Errorf("expected acceleratedNetworkingEnabledWindows to be %t for an unsupported VM SKU, instead got %t", false, helpers.IsTrueBoolPointer(mockCS.Properties.AgentPoolProfiles[0].AcceleratedNetworkingEnabledWindows))
+	if to.Bool(mockCS.Properties.AgentPoolProfiles[0].AcceleratedNetworkingEnabledWindows) {
+		t.Errorf("expected acceleratedNetworkingEnabledWindows to be %t for an unsupported VM SKU, instead got %t", false, to.Bool(mockCS.Properties.AgentPoolProfiles[0].AcceleratedNetworkingEnabledWindows))
 	}
 }
 
@@ -620,7 +620,7 @@ func TestStorageProfile(t *testing.T) {
 	properties.OrchestratorProfile.OrchestratorType = "Kubernetes"
 	properties.MasterProfile.Count = 1
 	properties.OrchestratorProfile.KubernetesConfig.PrivateCluster = &PrivateCluster{
-		Enabled:        helpers.PointerToBool(true),
+		Enabled:        to.BoolPtr(true),
 		JumpboxProfile: &PrivateJumpboxProfile{},
 	}
 	mockCS.SetPropertiesDefaults(false, false)
@@ -891,13 +891,13 @@ func TestIsAzureCNINetworkmonitorAddon(t *testing.T) {
 					MemoryLimits:   "150Mi",
 				},
 			},
-			Enabled: helpers.PointerToBool(true),
+			Enabled: to.BoolPtr(true),
 		},
 	}
 	mockCS.setOrchestratorDefaults(true)
 
 	i := getAddonsIndexByName(properties.OrchestratorProfile.KubernetesConfig.Addons, AzureCNINetworkMonitoringAddonName)
-	if !helpers.IsTrueBoolPointer(properties.OrchestratorProfile.KubernetesConfig.Addons[i].Enabled) {
+	if !to.Bool(properties.OrchestratorProfile.KubernetesConfig.Addons[i].Enabled) {
 		t.Fatalf("Azure CNI networkmonitor addon should be present")
 	}
 
@@ -909,7 +909,7 @@ func TestIsAzureCNINetworkmonitorAddon(t *testing.T) {
 	mockCS.setOrchestratorDefaults(true)
 
 	i = getAddonsIndexByName(properties.OrchestratorProfile.KubernetesConfig.Addons, AzureCNINetworkMonitoringAddonName)
-	if !helpers.IsTrueBoolPointer(properties.OrchestratorProfile.KubernetesConfig.Addons[i].Enabled) {
+	if !to.Bool(properties.OrchestratorProfile.KubernetesConfig.Addons[i].Enabled) {
 		t.Fatalf("Azure CNI networkmonitor addon should be present by default if Azure CNI is set")
 	}
 }
@@ -1001,7 +1001,7 @@ func TestSetVMSSDefaultsAndZones(t *testing.T) {
 
 	properties.AgentPoolProfiles[0].Count = 110
 	mockCS.SetPropertiesDefaults(false, false)
-	if helpers.IsTrueBoolPointer(properties.AgentPoolProfiles[0].SinglePlacementGroup) {
+	if to.Bool(properties.AgentPoolProfiles[0].SinglePlacementGroup) {
 		t.Fatalf("AgentPoolProfile[0].SinglePlacementGroup did not have the expected configuration, got %t, expected %t",
 			*properties.AgentPoolProfiles[0].SinglePlacementGroup, false)
 	}
@@ -1186,7 +1186,7 @@ func TestDefaultDisableRbac(t *testing.T) {
 	mockCS := getMockBaseContainerService("1.10.3")
 	properties := mockCS.Properties
 	properties.OrchestratorProfile.OrchestratorType = "Kubernetes"
-	properties.OrchestratorProfile.KubernetesConfig.EnableRbac = helpers.PointerToBool(false)
+	properties.OrchestratorProfile.KubernetesConfig.EnableRbac = to.BoolPtr(false)
 	mockCS.setOrchestratorDefaults(true)
 
 	if properties.OrchestratorProfile.KubernetesConfig.EnableAggregatedAPIs {
@@ -1201,31 +1201,31 @@ func TestDefaultCloudProvider(t *testing.T) {
 	properties.OrchestratorProfile.OrchestratorType = "Kubernetes"
 	mockCS.setOrchestratorDefaults(true)
 
-	if !helpers.IsTrueBoolPointer(properties.OrchestratorProfile.KubernetesConfig.CloudProviderBackoff) {
+	if !to.Bool(properties.OrchestratorProfile.KubernetesConfig.CloudProviderBackoff) {
 		t.Fatalf("got unexpected CloudProviderBackoff expected true, got %t",
-			helpers.IsTrueBoolPointer(properties.OrchestratorProfile.KubernetesConfig.CloudProviderBackoff))
+			to.Bool(properties.OrchestratorProfile.KubernetesConfig.CloudProviderBackoff))
 	}
 
-	if !helpers.IsTrueBoolPointer(properties.OrchestratorProfile.KubernetesConfig.CloudProviderRateLimit) {
+	if !to.Bool(properties.OrchestratorProfile.KubernetesConfig.CloudProviderRateLimit) {
 		t.Fatalf("got unexpected CloudProviderBackoff expected true, got %t",
-			helpers.IsTrueBoolPointer(properties.OrchestratorProfile.KubernetesConfig.CloudProviderBackoff))
+			to.Bool(properties.OrchestratorProfile.KubernetesConfig.CloudProviderBackoff))
 	}
 
 	mockCS = getMockBaseContainerService("1.10.3")
 	properties = mockCS.Properties
 	properties.OrchestratorProfile.OrchestratorType = "Kubernetes"
-	properties.OrchestratorProfile.KubernetesConfig.CloudProviderBackoff = helpers.PointerToBool(false)
-	properties.OrchestratorProfile.KubernetesConfig.CloudProviderRateLimit = helpers.PointerToBool(false)
+	properties.OrchestratorProfile.KubernetesConfig.CloudProviderBackoff = to.BoolPtr(false)
+	properties.OrchestratorProfile.KubernetesConfig.CloudProviderRateLimit = to.BoolPtr(false)
 	mockCS.setOrchestratorDefaults(true)
 
-	if !helpers.IsFalseBoolPointer(properties.OrchestratorProfile.KubernetesConfig.CloudProviderBackoff) {
+	if to.Bool(properties.OrchestratorProfile.KubernetesConfig.CloudProviderBackoff) {
 		t.Fatalf("got unexpected CloudProviderBackoff expected true, got %t",
-			helpers.IsTrueBoolPointer(properties.OrchestratorProfile.KubernetesConfig.CloudProviderBackoff))
+			to.Bool(properties.OrchestratorProfile.KubernetesConfig.CloudProviderBackoff))
 	}
 
-	if !helpers.IsFalseBoolPointer(properties.OrchestratorProfile.KubernetesConfig.CloudProviderRateLimit) {
+	if to.Bool(properties.OrchestratorProfile.KubernetesConfig.CloudProviderRateLimit) {
 		t.Fatalf("got unexpected CloudProviderBackoff expected true, got %t",
-			helpers.IsTrueBoolPointer(properties.OrchestratorProfile.KubernetesConfig.CloudProviderBackoff))
+			to.Bool(properties.OrchestratorProfile.KubernetesConfig.CloudProviderBackoff))
 	}
 }
 func TestSetCertDefaults(t *testing.T) {
