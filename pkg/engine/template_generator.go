@@ -155,7 +155,23 @@ func (t *TemplateGenerator) prepareTemplateFiles(properties *api.Properties) ([]
 	return files, baseFile, nil
 }
 
-func (t *TemplateGenerator) GetKubernetestJumpboxCustomDataString(cs *api.ContainerService, p *api.Properties) string{
+func (t *TemplateGenerator) GetKubernetesWindowsAgentCustomDataString(cs *api.ContainerService, p *api.AgentPoolProfile) string {
+	str, e := t.getSingleLineForTemplate(kubernetesWindowsAgentCustomDataPS1, cs, p)
+
+	if e != nil {
+		panic(e)
+	}
+
+	preprovisionCmd := ""
+
+	if p.PreprovisionExtension != nil {
+		preprovisionCmd = makeAgentExtensionScriptCommands(cs, p)
+	}
+
+	return strings.Replace(str, "PREPROVISION_EXTENSION", escapeSingleLine(strings.TrimSpace(preprovisionCmd)), -1)
+}
+
+func (t *TemplateGenerator) GetKubernetesJumpboxCustomDataString(cs *api.ContainerService, p *api.Properties) string {
 	str, err := t.getSingleLineForTemplate(kubernetesJumpboxCustomDataYaml, cs, p)
 
 	if err != nil {
@@ -207,6 +223,23 @@ func (t *TemplateGenerator) GetMasterCustomDataString(cs *api.ContainerService, 
 	addonStr := getContainerAddonsString(cs.Properties, "k8s/containeraddons")
 
 	str = strings.Replace(str, "MASTER_CONTAINER_ADDONS_PLACEHOLDER", addonStr, -1)
+	return str
+}
+
+func (t *TemplateGenerator) GetKubernetesAgentCustomDataString(cs *api.ContainerService, profile *api.AgentPoolProfile) string {
+	str, e := t.getSingleLineForTemplate(kubernetesAgentCustomDataYaml, cs, profile)
+
+	if e != nil {
+		panic(e)
+	}
+
+	// add artifacts
+	str = substituteConfigString(str,
+		kubernetesArtifactSettingsInitAgent(cs.Properties),
+		"k8s/artifacts",
+		"/etc/systemd/system",
+		"AGENT_ARTIFACTS_CONFIG_PLACEHOLDER",
+		cs.Properties.OrchestratorProfile.OrchestratorVersion)
 	return str
 }
 
@@ -595,24 +628,11 @@ func (t *TemplateGenerator) getTemplateFuncMap(cs *api.ContainerService) templat
 			return str
 		},
 		"GetKubernetesAgentCustomData": func(profile *api.AgentPoolProfile) string {
-			str, e := t.getSingleLineForTemplate(kubernetesAgentCustomDataYaml, cs, profile)
-
-			if e != nil {
-				panic(e)
-			}
-
-			// add artifacts
-			str = substituteConfigString(str,
-				kubernetesArtifactSettingsInitAgent(cs.Properties),
-				"k8s/artifacts",
-				"/etc/systemd/system",
-				"AGENT_ARTIFACTS_CONFIG_PLACEHOLDER",
-				cs.Properties.OrchestratorProfile.OrchestratorVersion)
-
+			str := t.GetKubernetesAgentCustomDataString(cs, profile)
 			return fmt.Sprintf("\"customData\": \"[base64(concat('%s'))]\",", str)
 		},
 		"GetKubernetesJumpboxCustomData": func(p *api.Properties) string {
-			str := t.GetKubernetestJumpboxCustomDataString(cs, p)
+			str := t.GetKubernetesJumpboxCustomDataString(cs, p)
 
 			return fmt.Sprintf("\"customData\": \"[base64(concat('%s'))]\",", str)
 		},
@@ -735,20 +755,7 @@ func (t *TemplateGenerator) getTemplateFuncMap(cs *api.ContainerService) templat
 			return base64.StdEncoding.EncodeToString(buf.Bytes())
 		},
 		"GetKubernetesWindowsAgentCustomData": func(profile *api.AgentPoolProfile) string {
-			str, e := t.getSingleLineForTemplate(kubernetesWindowsAgentCustomDataPS1, cs, profile)
-
-			if e != nil {
-				panic(e)
-			}
-
-			preprovisionCmd := ""
-
-			if profile.PreprovisionExtension != nil {
-				preprovisionCmd = makeAgentExtensionScriptCommands(cs, profile)
-			}
-
-			str = strings.Replace(str, "PREPROVISION_EXTENSION", escapeSingleLine(strings.TrimSpace(preprovisionCmd)), -1)
-
+            str := t.GetKubernetesWindowsAgentCustomDataString(cs, profile)
 			return fmt.Sprintf("\"customData\": \"[base64(concat('%s'))]\",", str)
 		},
 		"GetMasterSwarmModeCustomData": func() string {

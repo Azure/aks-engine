@@ -274,3 +274,79 @@ func createJumpboxNIC(cs *api.ContainerService) NetworkInterfaceARM {
 		Interface:   networkInterface,
 	}
 }
+
+func createAgentVMASNIC(cs *api.ContainerService, profile api.AgentPoolProfile) NetworkInterfaceARM {
+	isWindows := profile.IsWindows()
+	isCustomVNet := cs.Properties.MasterProfile.IsCustomVNET()
+	isAzureCNI := cs.Properties.OrchestratorProfile.IsAzureCNI()
+
+	armResource := ARMResource{
+		ApiVersion: "[variables('apiVersionNetwork')]",
+		Copy: map[string]string{
+			"count": "[sub(variables('{{.Name}}Count'), variables('{{.Name}}Offset'))]",
+			"name":  "loop",
+		},
+	}
+
+	var dependencies []string
+
+	if isCustomVNet {
+		dependencies = append(dependencies, "[variables('nsgID')]")
+	} else {
+		dependencies = append(dependencies, "[variables('vnetID')]")
+	}
+
+	armResource.DependsOn = dependencies
+
+	networkInterface := network.Interface{
+		Type: to.StringPtr("Microsoft.Network/networkInterfaces"),
+		Name: to.StringPtr("[concat(variables('" + profile.Name + "VMNamePrefix'), 'nic-', copyIndex(variables('" + profile.Name + "Offset')))]"),
+	}
+
+	if isCustomVNet {
+		networkInterface.NetworkSecurityGroup = &network.SecurityGroup{
+			ID: to.StringPtr("[variables('nsgID')]"),
+		}
+	}
+
+	if isWindows {
+		networkInterface.EnableAcceleratedNetworking = profile.AcceleratedNetworkingEnabledWindows
+	} else {
+		networkInterface.EnableAcceleratedNetworking = profile.AcceleratedNetworkingEnabled
+	}
+
+	var ipConfigurations []network.InterfaceIPConfiguration
+	for i := 1; i <= profile.IPAddressCount; i++ {
+		ipConfig := network.InterfaceIPConfiguration{
+			Name: to.StringPtr(fmt.Sprintf("ipconfig%d", i)),
+		}
+		if i == 1 {
+			ipConfig.Primary = to.BoolPtr(true)
+		}
+		ipConfig.PrivateIPAllocationMethod = network.Dynamic
+		ipConfig.Subnet = &network.Subnet{
+			ID: to.StringPtr(fmt.Sprintf("[variables('%sVnetSubnetID')]", profile.Name)),
+		}
+		if !isWindows {
+			if profile.Role == "Infra" {
+				ipConfig.LoadBalancerBackendAddressPools = &[]network.BackendAddressPool{
+					{
+						ID: to.StringPtr("[concat(resourceId('Microsoft.Network/loadBalancers', variables('routerLBName')), '/backendAddressPools/backend')]"),
+					},
+				}
+			}
+		}
+		ipConfigurations = append(ipConfigurations, ipConfig)
+	}
+
+	networkInterface.IPConfigurations = &ipConfigurations
+
+	if !isAzureCNI {
+		networkInterface.EnableIPForwarding = to.BoolPtr(true)
+	}
+
+	return NetworkInterfaceARM{
+		ARMResource: armResource,
+		Interface:   networkInterface,
+	}
+}

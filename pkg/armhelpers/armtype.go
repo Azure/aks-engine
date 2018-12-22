@@ -102,3 +102,8 @@ type UserAssignedIdentitiesARM struct {
 	ARMResource
 	msi.Identity
 }
+
+type ImageARM struct {
+	ARMResource
+	compute.Image
+}

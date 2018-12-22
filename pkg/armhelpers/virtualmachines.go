@@ -230,7 +230,7 @@ func createJumpboxVirtualMachine(cs *api.ContainerService) VirtualMachineARM {
 		panic(err)
 	}
 
-	customDataStr := t.GetKubernetestJumpboxCustomDataString(cs, cs.Properties)
+	customDataStr := t.GetKubernetesJumpboxCustomDataString(cs, cs.Properties)
 
 	vmProperties := compute.VirtualMachineProperties{
 		HardwareProfile: &compute.HardwareProfile{
@@ -544,4 +544,203 @@ func createVirtualMachineVMSS(cs *api.ContainerService) VirtualMachineScaleSetAR
 		ARMResource:            armResource,
 		VirtualMachineScaleSet: virtualMachine,
 	}
+}
+
+func createAgentAvailabilitySetVM(cs *api.ContainerService, profile *api.AgentPoolProfile) VirtualMachineARM {
+	var dependencies []string
+
+	isStorageAccount := profile.IsStorageAccount()
+	hasDisks := profile.HasDisks()
+	useManagedIdentity := cs.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity
+	userAssignedIDEnabled := cs.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity &&
+		cs.Properties.OrchestratorProfile.KubernetesConfig.UserAssignedID != ""
+
+	if isStorageAccount {
+		storageDep := fmt.Sprintf("[concat('Microsoft.Storage/storageAccounts/',variables('storageAccountPrefixes')[mod(add(div(copyIndex(variables('%[1]sOffset')),variables('maxVMsPerStorageAccount')),variables('%[1]sStorageAccountOffset')),variables('storageAccountPrefixesCount'))],variables('storageAccountPrefixes')[div(add(div(copyIndex(variables('%[1]sOffset')),variables('maxVMsPerStorageAccount')),variables('%[1]sStorageAccountOffset')),variables('storageAccountPrefixesCount'))],variables('%[1]sAccountName'))]", profile.Name)
+		dependencies = append(dependencies, storageDep)
+	}
+
+	if hasDisks {
+		dataDiskDep := fmt.Sprintf("[concat('Microsoft.Storage/storageAccounts/',variables('storageAccountPrefixes')[mod(add(add(div(copyIndex(variables('%[1]sOffset')),variables('maxVMsPerStorageAccount')),variables('%[1]sStorageAccountOffset')),variables('dataStorageAccountPrefixSeed')),variables('storageAccountPrefixesCount'))],variables('storageAccountPrefixes')[div(add(add(div(copyIndex(variables('%[1]sOffset')),variables('maxVMsPerStorageAccount')),variables('%[1]sStorageAccountOffset')),variables('dataStorageAccountPrefixSeed')),variables('storageAccountPrefixesCount'))],variables('%[1]sDataAccountName'))]", profile.Name)
+		dependencies = append(dependencies, dataDiskDep)
+	}
+
+	dependencies = append(dependencies, fmt.Sprintf("[concat('Microsoft.Network/networkInterfaces/', variables('%[1]sVMNamePrefix'), 'nic-', copyIndex(variables('%[1]sOffset')))]", profile.Name))
+
+	dependencies = append(dependencies, fmt.Sprintf("[concat('Microsoft.Compute/availabilitySets/', variables('%[1]sAvailabilitySet'))]", profile.Name))
+
+	tags := map[string]string{
+		"creationSource":   fmt.Sprintf("[concat(parameters('generatorCode'), '-', variables('%[1]sVMNamePrefix'), copyIndex(variables('%[1]sOffset')))]", profile.Name),
+		"orchestrator":     "[variables('orchestratorNameVersionTag')]",
+		"acsengineVersion": "[parameters('acsengineVersion')]",
+		"poolName":         profile.Name,
+	}
+
+	if profile.IsWindows() {
+		tags["resourceNameSuffix"] = "[variables('winResourceNamePrefix')]"
+	} else {
+		tags["resourceNameSuffix"] = "[variables('nameSuffix')]"
+	}
+
+	armResource := ARMResource{
+		ApiVersion: "[variables('apiVersionCompute')]",
+		DependsOn:  dependencies,
+		Copy: map[string]string{
+			"count": fmt.Sprintf("[sub(variables('%[1]sCount'), variables('%[1]sOffset'))]", profile.Name),
+		},
+	}
+
+	virtualMachine := compute.VirtualMachine{
+		Location: to.StringPtr("[variables('location')]"),
+		Name:     to.StringPtr(fmt.Sprintf("[concat(variables('%[1]sVMNamePrefix'), copyIndex(variables('%[1]sOffset')))]", profile.Name)),
+		Type:     to.StringPtr("Microsoft.Compute/virtualMachines"),
+	}
+
+	if useManagedIdentity {
+		if userAssignedIDEnabled && !profile.IsWindows() {
+			virtualMachine.Identity = &compute.VirtualMachineIdentity{
+				Type: compute.ResourceIdentityTypeUserAssigned,
+				UserAssignedIdentities: map[string]*compute.VirtualMachineIdentityUserAssignedIdentitiesValue{
+					"[variables('userAssignedIDReference')]": {},
+				},
+			}
+		} else {
+			virtualMachine.Identity = &compute.VirtualMachineIdentity{
+				Type: compute.ResourceIdentityTypeSystemAssigned,
+			}
+		}
+	}
+
+	virtualMachine.AvailabilitySet = &compute.SubResource{
+		ID: to.StringPtr(fmt.Sprintf("[resourceId('Microsoft.Compute/availabilitySets',variables('%sAvailabilitySet'))]", profile.Name)),
+	}
+
+	vmSize := fmt.Sprintf("[variables('%sVMSize')]", profile.Name)
+
+	virtualMachine.HardwareProfile = &compute.HardwareProfile{
+		VMSize: compute.VirtualMachineSizeTypes(vmSize),
+	}
+
+	osProfile := compute.OSProfile{
+		ComputerName: to.StringPtr(fmt.Sprintf("[concat(variables('%[1]sVMNamePrefix'), copyIndex(variables('%[1]sOffset')))]", profile.Name)),
+	}
+
+	t, err := engine.InitializeTemplateGenerator(engine.Context{})
+
+	if !profile.IsWindows() {
+		osProfile.AdminUsername = to.StringPtr("[parameters('linuxAdminUsername')]")
+		osProfile.LinuxConfiguration = &compute.LinuxConfiguration{
+			DisablePasswordAuthentication: to.BoolPtr(true),
+			SSH: &compute.SSHConfiguration{
+				PublicKeys: &[]compute.SSHPublicKey{
+					{
+						KeyData: to.StringPtr("[parameters('sshRSAPublicKey')]"),
+						Path:    to.StringPtr("[variables('sshKeyPath')]"),
+					},
+				},
+			},
+		}
+		if err != nil {
+			panic(err)
+		}
+
+		agentCustomData := fmt.Sprintf("[base64(concat('%s'))]", t.GetKubernetesAgentCustomDataString(cs, profile))
+		osProfile.CustomData = to.StringPtr(agentCustomData)
+
+		if cs.Properties.LinuxProfile.HasSecrets() {
+			//osProfile.Secrets = &[]compute.VaultSecretGroup {
+			//	"[variables('linuxProfileSecrets')]"
+			//}
+		}
+	} else {
+		osProfile.AdminUsername = to.StringPtr("[parameters('windowsAdminUsername')]")
+		osProfile.AdminPassword = to.StringPtr("[parameters('windowsAdminPassword')]")
+		agentCustomData := fmt.Sprintf("[base64(concat('%s'))]", t.GetKubernetesWindowsAgentCustomDataString(cs, profile))
+		osProfile.CustomData = to.StringPtr(agentCustomData)
+	}
+
+	virtualMachine.OsProfile = &osProfile
+
+	storageProfile := compute.StorageProfile{}
+
+	if profile.IsWindows() {
+		if cs.Properties.WindowsProfile.HasCustomImage() {
+			storageProfile.ImageReference = &compute.ImageReference{
+				ID: to.StringPtr(fmt.Sprintf("[resourceId('Microsoft.Compute/images','%sCustomWindowsImage')]", profile.Name)),
+			}
+		} else {
+			storageProfile.ImageReference = &compute.ImageReference{
+				Offer:     to.StringPtr("[parameters('agentWindowsOffer')]"),
+				Publisher: to.StringPtr("[parameters('agentWindowsPublisher')]"),
+				Sku:       to.StringPtr("[parameters('agentWindowsSku')]"),
+				Version:   to.StringPtr("[parameters('agentWindowsVersion')]"),
+			}
+		}
+
+		if profile.HasDisks() {
+			storageProfile.DataDisks = getDataDisks(profile)
+		}
+
+	} else {
+		imageRef := profile.ImageRef
+		useAgentCustomImage := imageRef != nil && len(imageRef.Name) > 0 && len(imageRef.ResourceGroup) > 0
+		if useAgentCustomImage {
+			storageProfile.ImageReference = &compute.ImageReference{
+				ID: to.StringPtr(fmt.Sprintf("[resourceId(variables('%[1]sosImageResourceGroup'), 'Microsoft.Compute/images', variables('%[1]sosImageName'))]", profile.Name)),
+			}
+		} else {
+			storageProfile.ImageReference = &compute.ImageReference{
+				Offer:     to.StringPtr(fmt.Sprintf("[variables('%sosImageOffer')]", profile.Name)),
+				Publisher: to.StringPtr(fmt.Sprintf("[variables('%sosImagePublisher')]", profile.Name)),
+				Sku:       to.StringPtr(fmt.Sprintf("[variables('%sosImageSKU')]", profile.Name)),
+				Version:   to.StringPtr(fmt.Sprintf("[variables('%sosImageVersion')]", profile.Name)),
+			}
+			storageProfile.DataDisks = getDataDisks(profile)
+		}
+	}
+
+	osDisk := compute.OSDisk{
+		CreateOption: compute.DiskCreateOptionTypesFromImage,
+		Caching:      compute.CachingTypesReadWrite,
+	}
+
+	if profile.IsStorageAccount() {
+		osDisk.Name = to.StringPtr(fmt.Sprintf("[concat(variables('%[1]sVMNamePrefix'), copyIndex(variables('%[1]sOffset')),'-osdisk')]", profile.Name))
+		osDisk.Vhd = &compute.VirtualHardDisk{
+			URI: to.StringPtr(fmt.Sprintf("[concat(reference(concat('Microsoft.Storage/storageAccounts/',variables('storageAccountPrefixes')[mod(add(div(copyIndex(variables('%[1]sOffset')),variables('maxVMsPerStorageAccount')),variables('%[1]sStorageAccountOffset')),variables('storageAccountPrefixesCount'))],variables('storageAccountPrefixes')[div(add(div(copyIndex(variables('%[1]sOffset')),variables('maxVMsPerStorageAccount')),variables('%[1]sStorageAccountOffset')),variables('storageAccountPrefixesCount'))],variables('%[1]sAccountName')),variables('apiVersionStorage')).primaryEndpoints.blob,'osdisk/', variables('%[1]sVMNamePrefix'), copyIndex(variables('%[1]sOffset')), '-osdisk.vhd')]", profile.Name)),
+		}
+	}
+
+	if profile.OSDiskSizeGB > 0 {
+		osDisk.DiskSizeGB = to.Int32Ptr(int32(profile.OSDiskSizeGB))
+	}
+
+	storageProfile.OsDisk = &osDisk
+
+	virtualMachine.StorageProfile = &storageProfile
+
+	return VirtualMachineARM{
+		ARMResource:    armResource,
+		VirtualMachine: virtualMachine,
+	}
+}
+
+func getDataDisks(profile *api.AgentPoolProfile) *[]compute.DataDisk {
+	var dataDisks []compute.DataDisk
+	for i, diskSize := range profile.DiskSizesGB {
+		dataDisk := compute.DataDisk{
+			DiskSizeGB:   to.Int32Ptr(int32(diskSize)),
+			Lun:          to.Int32Ptr(int32(i)),
+			CreateOption: compute.DiskCreateOptionTypesEmpty,
+		}
+		if profile.StorageProfile == api.StorageAccount {
+			dataDisk.Name = to.StringPtr(fmt.Sprintf("[concat(variables('%sVMNamePrefix'), copyIndex(),'-datadisk%d')]", profile.Name))
+			dataDisk.Vhd = &compute.VirtualHardDisk{
+				URI: to.StringPtr(fmt.Sprintf("[concat('http://',variables('storageAccountPrefixes')[mod(add(add(div(copyIndex(),variables('maxVMsPerStorageAccount')),variables('%sStorageAccountOffset')),variables('dataStorageAccountPrefixSeed')),variables('storageAccountPrefixesCount'))],variables('storageAccountPrefixes')[div(add(add(div(copyIndex(),variables('maxVMsPerStorageAccount')),variables('%sStorageAccountOffset')),variables('dataStorageAccountPrefixSeed')),variables('storageAccountPrefixesCount'))],variables('%sDataAccountName'),'.blob.core.windows.net/vhds/',variables('%sVMNamePrefix'),copyIndex(), '--datadisk%d.vhd')]",
+					profile.Name, profile.Name, profile.Name, profile.Name, i)),
+			}
+		}
+		dataDisks = append(dataDisks, dataDisk)
+	}
+	return &dataDisks
 }
