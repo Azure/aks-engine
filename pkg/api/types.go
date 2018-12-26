@@ -432,6 +432,8 @@ type MasterProfile struct {
 	FQDN string `json:"fqdn,omitempty"`
 	// True: uses cosmos etcd endpoint instead of installing etcd on masters
 	CosmosEtcd *bool `json:"cosmosEtcd,omitempty"`
+	// ApiServerWhiteListRanges is a list of CIDRs which are whitelisted to API server.
+	APIServerWhiteListRanges []string `json:"apiServerWhiteListRanges,omitempty"`
 }
 
 // ImageReference represents a reference to an Image resource in Azure.
@@ -569,9 +571,9 @@ type HostedMasterProfile struct {
 	// Agents will be provisioned. This is stored on the HostedMasterProfile
 	// and will become `masterSubnet` in the compiled template.
 	Subnet string `json:"subnet"`
-	// ApiServerWhiteListRange is a comma delimited CIDR which is whitelisted to AKS
-	APIServerWhiteListRange *string `json:"apiServerWhiteListRange"`
-	IPMasqAgent             bool    `json:"ipMasqAgent"`
+	// ApiServerWhiteListRanges is a list of CIDRs which are whitelisted to API server.
+	APIServerWhiteListRanges []string `json:"apiServerWhiteListRanges,omitempty"`
+	IPMasqAgent              bool     `json:"ipMasqAgent"`
 }
 
 // AuthenticatorType represents the authenticator type the cluster was
@@ -1023,6 +1025,11 @@ func (m *MasterProfile) GetFirstConsecutiveStaticIPAddress(subnetStr string) str
 // HasAvailabilityZones returns true if the master profile has availability zones
 func (m *MasterProfile) HasAvailabilityZones() bool {
 	return m.AvailabilityZones != nil && len(m.AvailabilityZones) > 0
+}
+
+// HasAPIServerWhiteListRanges returns true if the master profile has apiServerWhiteListRanges
+func (m *MasterProfile) HasAPIServerWhiteListRanges() bool {
+	return m.APIServerWhiteListRanges != nil && len(m.APIServerWhiteListRanges) > 0
 }
 
 // IsCustomVNET returns true if the customer brought their own VNET

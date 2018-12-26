@@ -64,7 +64,7 @@
       "enabledForDiskEncryption": "false",
       "enabledForTemplateDeployment": "false",
       "tenantId": "[variables('tenantID')]",
-    "accessPolicies": 
+    "accessPolicies":
       [
         {
           "tenantId": "[variables('tenantID')]",
@@ -133,7 +133,7 @@
           "direction": "Inbound",
           "priority": 100,
           "protocol": "Tcp",
-          "sourceAddressPrefix": "*",
+          "sourceAddressPrefixes": "[variables('apiServerWhiteListRanges')]",
           "sourcePortRange": "*"
         }
       }
@@ -211,9 +211,9 @@
           {{end}}
         }
       },
-      {  
+      {
         "name":"subnetagent",
-        "properties":{  
+        "properties":{
             "addressPrefix": "[parameters('agentSubnet')]",
             "networkSecurityGroup": {
             "id": "[variables('nsgID')]"

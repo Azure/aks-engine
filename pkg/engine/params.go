@@ -74,6 +74,9 @@ func getParameters(cs *api.ContainerService, generatorCode string, acsengineVers
 		if properties.MasterProfile.HasAvailabilityZones() {
 			addValue(parametersMap, "availabilityZones", properties.MasterProfile.AvailabilityZones)
 		}
+		if properties.MasterProfile.HasAPIServerWhiteListRanges() {
+			addValue(parametersMap, "apiServerWhiteListRanges", properties.MasterProfile.APIServerWhiteListRanges)
+		}
 	}
 	if properties.HostedMasterProfile != nil {
 		addValue(parametersMap, "masterSubnet", properties.HostedMasterProfile.Subnet)

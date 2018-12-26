@@ -330,3 +330,4 @@
 {{else}}
     ,"clusterKeyVaultName": ""
 {{end}}
+    ,"apiServerWhiteListRanges": "[parameters('apiServerWhiteListRanges')]"

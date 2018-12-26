@@ -225,3 +225,10 @@
     {{end}}
   {{end}}
 {{end}} {{end}}
+    ,"apiServerWhiteListRanges": {
+      "defaultValue": ["*"],
+      "metadata": {
+        "description": "CIDRs delimited by comma which are whitelisted to API server"
+      },
+      "type": "array"
+    }

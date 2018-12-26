@@ -147,6 +147,21 @@ func TestMasterProfile(t *testing.T) {
 	if !mp.HasAvailabilityZones() {
 		t.Fatalf("unexpectedly detected MasterProfile.AvailabilityZones, HasAvailabilityZones returned false after unmarshal")
 	}
+
+	// With APIServerWhiteListRanges
+	MasterProfileText = `{"count" : 0, "apiServerWhiteListRanges": ["1.2.3.4/32"]}`
+	mp = &MasterProfile{}
+	if e := json.Unmarshal([]byte(MasterProfileText), mp); e != nil {
+		t.Fatalf("unexpectedly detected unmarshal failure for MasterProfile, %+v", e)
+	}
+
+	if len(mp.APIServerWhiteListRanges) != 1 {
+		t.Fatalf("unexpectedly detected MasterProfile.APIServerWhiteListRanges, length of APIServerWhiteListRanges not equal to 1 after unmarshal")
+	}
+
+	if mp.APIServerWhiteListRanges[0] != "1.2.3.4/32" {
+		t.Fatalf("unexpectedly detected MasterProfile.APIServerWhiteListRanges, APIServerWhiteListRanges not equal to 1.2.3.4/32 after unmarshal")
+	}
 }
 func TestAgentPoolProfile(t *testing.T) {
 	// With osType not specified

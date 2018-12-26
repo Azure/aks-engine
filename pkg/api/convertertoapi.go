@@ -917,6 +917,7 @@ func convertVLabsMasterProfile(vlabs *vlabs.MasterProfile, api *MasterProfile) {
 	api.AvailabilityZones = vlabs.AvailabilityZones
 	api.SinglePlacementGroup = vlabs.SinglePlacementGroup
 	api.CosmosEtcd = vlabs.CosmosEtcd
+	api.APIServerWhiteListRanges = vlabs.APIServerWhiteListRanges
 	convertCustomFilesToAPI(vlabs, api)
 }
 

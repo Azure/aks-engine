@@ -1103,6 +1103,13 @@
         "description": "The azure deploy environment. Currently support: AzurePublicCloud, AzureChinaCloud"
       },
       "type": "string"
+    },
+    "apiServerWhiteListRanges": {
+      "defaultValue": ["*"],
+      "metadata": {
+        "description": "CIDRs delimited by comma which are whitelisted to API server"
+      },
+      "type": "array"
     }
   },
   "variables": {
@@ -1644,7 +1651,8 @@
     },
     "vmsPerStorageAccount": 20,
     "vnetNameResourceSegmentIndex": 8,
-    "vnetSubnetID": "[variables('vnetSubnetID')]"
+    "vnetSubnetID": "[variables('vnetSubnetID')]",
+    "apiServerWhiteListRanges": "[parameters('apiServerWhiteListRanges')]"
   },
   "resources": [
     {
@@ -1978,7 +1986,7 @@
               "direction": "Inbound",
               "priority": 100,
               "protocol": "Tcp",
-              "sourceAddressPrefix": "*",
+              "sourceAddressPrefixes": "[variables('apiServerWhiteListRanges')]",
               "sourcePortRange": "*"
             }
           }

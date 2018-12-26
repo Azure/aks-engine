@@ -5,6 +5,7 @@ package vlabs
 
 import (
 	"encoding/json"
+	"net"
 	"strings"
 
 	"github.com/Azure/aks-engine/pkg/api/common"
@@ -383,6 +384,9 @@ type MasterProfile struct {
 
 	// True: uses cosmos etcd endpoint instead of installing etcd on masters
 	CosmosEtcd *bool `json:"cosmosEtcd,omitempty"`
+
+	// ApiServerWhiteListRanges is a list of CIDRs which are whitelisted to API server.
+	APIServerWhiteListRanges []string `json:"apiServerWhiteListRanges,omitempty"`
 }
 
 // ImageReference represents a reference to an Image resource in Azure.
@@ -559,6 +563,21 @@ func (m *MasterProfile) IsVirtualMachineScaleSets() bool {
 // HasAvailabilityZones returns true if the master profile has availability zones
 func (m *MasterProfile) HasAvailabilityZones() bool {
 	return m.AvailabilityZones != nil && len(m.AvailabilityZones) > 0
+}
+
+func (m *MasterProfile) validateAPIServerWhiteListRanges() error {
+	if len(m.APIServerWhiteListRanges) == 0 {
+		return nil
+	}
+
+	for _, cidr := range m.APIServerWhiteListRanges {
+		_, _, err := net.ParseCIDR(cidr)
+		if err != nil {
+			return errors.Errorf("apiServerWhiteListRanges is invalid: %v", err)
+		}
+	}
+
+	return nil
 }
 
 // HasZonesForAllAgentPools returns true if all of the agent pools have zones

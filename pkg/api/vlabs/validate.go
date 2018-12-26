@@ -12,10 +12,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Azure/go-autorest/autorest/to"
-
 	"github.com/Azure/aks-engine/pkg/api/common"
 	"github.com/Azure/aks-engine/pkg/helpers"
+	"github.com/Azure/go-autorest/autorest/to"
 	"github.com/blang/semver"
 	"github.com/pkg/errors"
 	"github.com/satori/go.uuid"
@@ -365,6 +364,13 @@ func (a *Properties) validateMasterProfile() error {
 	if m.SinglePlacementGroup != nil && m.AvailabilityProfile == AvailabilitySet {
 		return errors.New("singlePlacementGroup is only supported with VirtualMachineScaleSets")
 	}
+
+	if len(m.APIServerWhiteListRanges) > 0 {
+		if err := m.validateAPIServerWhiteListRanges(); err != nil {
+			return err
+		}
+	}
+
 	return common.ValidateDNSPrefix(m.DNSPrefix)
 }
 

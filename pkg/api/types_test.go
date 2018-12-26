@@ -2737,3 +2737,47 @@ func TestIsFeatureEnabled(t *testing.T) {
 		})
 	}
 }
+
+func TestHasAPIServerWhiteListRanges(t *testing.T) {
+	cases := []struct {
+		p        Properties
+		expected bool
+	}{
+		{
+			p: Properties{
+				MasterProfile: &MasterProfile{},
+			},
+			expected: false,
+		},
+		{
+			p: Properties{
+				MasterProfile: &MasterProfile{
+					APIServerWhiteListRanges: []string{},
+				},
+			},
+			expected: false,
+		},
+		{
+			p: Properties{
+				MasterProfile: &MasterProfile{
+					APIServerWhiteListRanges: []string{"1.2.3.4/32"},
+				},
+			},
+			expected: true,
+		},
+		{
+			p: Properties{
+				MasterProfile: &MasterProfile{
+					APIServerWhiteListRanges: []string{"1.2.3.4/32", "10.240.0.0/16"},
+				},
+			},
+			expected: true,
+		},
+	}
+
+	for _, c := range cases {
+		if actual := c.p.MasterProfile.HasAPIServerWhiteListRanges(); actual != c.expected {
+			t.Fatalf("expected HasAPIServerWhiteListRanges() to return %t but instead returned %t", c.expected, actual)
+		}
+	}
+}

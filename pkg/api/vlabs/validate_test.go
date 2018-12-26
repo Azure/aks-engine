@@ -1495,6 +1495,31 @@ func TestMasterProfileValidate(t *testing.T) {
 			},
 			expectedErr: "VirtualMachineScaleSets for master profile must be used together with virtualMachineScaleSets for agent profiles. Set \"availabilityProfile\" to \"VirtualMachineScaleSets\" for agent profiles",
 		},
+		{
+			name: "Master Profile with empty APIServerWhiteListRanges",
+			masterProfile: MasterProfile{
+				APIServerWhiteListRanges: []string{},
+				DNSPrefix:                "dummy",
+				Count:                    1,
+			},
+		},
+		{
+			name: "Master Profile with valid APIServerWhiteListRanges",
+			masterProfile: MasterProfile{
+				APIServerWhiteListRanges: []string{"1.2.3.4/32", "10.240.0.0/16"},
+				DNSPrefix:                "dummy",
+				Count:                    1,
+			},
+		},
+		{
+			name: "Master Profile with invalid APIServerWhiteListRanges",
+			masterProfile: MasterProfile{
+				APIServerWhiteListRanges: []string{"10.240.0.0/16", "1.2"},
+				DNSPrefix:                "dummy",
+				Count:                    1,
+			},
+			expectedErr: "apiServerWhiteListRanges is invalid: invalid CIDR address: 1.2",
+		},
 	}
 
 	for _, test := range tests {

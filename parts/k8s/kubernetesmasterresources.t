@@ -162,7 +162,7 @@
               "direction": "Inbound",
               "priority": 100,
               "protocol": "Tcp",
-              "sourceAddressPrefix": "*",
+              "sourceAddressPrefixes": "[variables('apiServerWhiteListRanges')]",
               "sourcePortRange": "*"
             }
           }
@@ -703,7 +703,7 @@
        "apiVersion": "[variables('apiVersionKeyVault')]",
        "location": "[variables('location')]",
        {{ if UseManagedIdentity}}
-       "dependsOn": 
+       "dependsOn":
        [
        {{if UserAssignedIDEnabled}}
        "[variables('userAssignedIDReference')]"
