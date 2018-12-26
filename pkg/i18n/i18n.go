@@ -11,8 +11,8 @@ import (
 
 	"path"
 
-	"github.com/pkg/errors"
 	"github.com/leonelquinteros/gotext"
+	"github.com/pkg/errors"
 )
 
 func loadSystemLanguage() string {
