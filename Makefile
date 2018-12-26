@@ -109,7 +109,7 @@ test: generate
 
 .PHONY: test-style
 test-style:
-	${DEV_ENV_CMD} scripts/validate-go.sh
+	@scripts/validate-go.sh
 
 .PHONY: test-e2e
 test-e2e:
