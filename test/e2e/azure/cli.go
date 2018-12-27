@@ -14,7 +14,6 @@ import (
 
 	"github.com/Azure/aks-engine/test/e2e/engine"
 	"github.com/Azure/aks-engine/test/e2e/kubernetes/util"
-
 	"github.com/kelseyhightower/envconfig"
 )
 
@@ -212,7 +211,8 @@ func (a *Account) CreateDeployment(name string, e *engine.Engine) error {
 		"--name", d.Name,
 		"--resource-group", a.ResourceGroup.Name,
 		"--template-file", e.Config.GeneratedTemplatePath,
-		"--parameters", e.Config.GeneratedParametersPath)
+		"--parameters", e.Config.GeneratedParametersPath,
+		"--verbose", "--debug")
 	util.PrintCommand(cmd)
 	out, err := cmd.CombinedOutput()
 	if err != nil {
