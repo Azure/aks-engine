@@ -1,6 +1,7 @@
 package validator
 
 import (
+	"context"
 	"fmt"
 	"reflect"
 	"strconv"
@@ -13,28 +14,23 @@ type validate struct {
 	ns             []byte
 	actualNs       []byte
 	errs           ValidationErrors
+	includeExclude map[string]struct{} // reset only if StructPartial or StructExcept are called, no need otherwise
+	ffn            FilterFunc
+	slflParent     reflect.Value // StructLevel & FieldLevel
+	slCurrent      reflect.Value // StructLevel & FieldLevel
+	flField        reflect.Value // StructLevel & FieldLevel
+	cf             *cField       // StructLevel & FieldLevel
+	ct             *cTag         // StructLevel & FieldLevel
+	misc           []byte        // misc reusable
+	str1           string        // misc reusable
+	str2           string        // misc reusable
+	fldIsPointer   bool          // StructLevel & FieldLevel
 	isPartial      bool
 	hasExcludes    bool
-	includeExclude map[string]struct{} // reset only if StructPartial or StructExcept are called, no need otherwise
-
-	ffn FilterFunc
-
-	// StructLevel & FieldLevel fields
-	slflParent   reflect.Value
-	slCurrent    reflect.Value
-	flField      reflect.Value
-	fldIsPointer bool
-	cf           *cField
-	ct           *cTag
-
-	// misc reusable values
-	misc []byte
-	str1 string
-	str2 string
 }
 
 // parent and current will be the same the first run of validateStruct
-func (v *validate) validateStruct(parent reflect.Value, current reflect.Value, typ reflect.Type, ns []byte, structNs []byte, ct *cTag) {
+func (v *validate) validateStruct(ctx context.Context, parent reflect.Value, current reflect.Value, typ reflect.Type, ns []byte, structNs []byte, ct *cTag) {
 
 	cs, ok := v.v.structCache.Get(typ)
 	if !ok {
@@ -78,7 +74,7 @@ func (v *validate) validateStruct(parent reflect.Value, current reflect.Value, t
 				}
 			}
 
-			v.traverseField(parent, current.Field(f.idx), ns, structNs, f, f.cTags)
+			v.traverseField(ctx, parent, current.Field(f.idx), ns, structNs, f, f.cTags)
 		}
 	}
 
@@ -92,12 +88,12 @@ func (v *validate) validateStruct(parent reflect.Value, current reflect.Value, t
 		v.ns = ns
 		v.actualNs = structNs
 
-		cs.fn(v)
+		cs.fn(ctx, v)
 	}
 }
 
 // traverseField validates any field, be it a struct or single field, ensures it's validity and passes it along to be validated via it's tag options
-func (v *validate) traverseField(parent reflect.Value, current reflect.Value, ns []byte, structNs []byte, cf *cField, ct *cTag) {
+func (v *validate) traverseField(ctx context.Context, parent reflect.Value, current reflect.Value, ns []byte, structNs []byte, cf *cField, ct *cTag) {
 
 	var typ reflect.Type
 	var kind reflect.Kind
@@ -111,7 +107,7 @@ func (v *validate) traverseField(parent reflect.Value, current reflect.Value, ns
 			return
 		}
 
-		if ct.typeof == typeOmitEmpty {
+		if ct.typeof == typeOmitEmpty || ct.typeof == typeIsDefault {
 			return
 		}
 
@@ -126,7 +122,6 @@ func (v *validate) traverseField(parent reflect.Value, current reflect.Value, ns
 			}
 
 			if kind == reflect.Invalid {
-
 				v.errs = append(v.errs,
 					&fieldError{
 						v:              v.v,
@@ -173,6 +168,39 @@ func (v *validate) traverseField(parent reflect.Value, current reflect.Value, ns
 
 				if ct.typeof == typeStructOnly {
 					goto CONTINUE
+				} else if ct.typeof == typeIsDefault {
+					// set Field Level fields
+					v.slflParent = parent
+					v.flField = current
+					v.cf = cf
+					v.ct = ct
+
+					if !ct.fn(ctx, v) {
+						v.str1 = string(append(ns, cf.altName...))
+
+						if v.v.hasTagNameFunc {
+							v.str2 = string(append(structNs, cf.name...))
+						} else {
+							v.str2 = v.str1
+						}
+
+						v.errs = append(v.errs,
+							&fieldError{
+								v:              v.v,
+								tag:            ct.aliasTag,
+								actualTag:      ct.tag,
+								ns:             v.str1,
+								structNs:       v.str2,
+								fieldLen:       uint8(len(cf.altName)),
+								structfieldLen: uint8(len(cf.name)),
+								value:          current.Interface(),
+								param:          ct.param,
+								kind:           kind,
+								typ:            typ,
+							},
+						)
+						return
+					}
 				}
 
 				ct = ct.next
@@ -185,14 +213,14 @@ func (v *validate) traverseField(parent reflect.Value, current reflect.Value, ns
 		CONTINUE:
 			// if len == 0 then validating using 'Var' or 'VarWithValue'
 			// Var - doesn't make much sense to do it that way, should call 'Struct', but no harm...
-			// VarWithField - this allows for validating against each field withing the struct against a specific value
-			//                pretty handly in certain situations
+			// VarWithField - this allows for validating against each field within the struct against a specific value
+			//                pretty handy in certain situations
 			if len(cf.name) > 0 {
 				ns = append(append(ns, cf.altName...), '.')
 				structNs = append(append(structNs, cf.name...), '.')
 			}
 
-			v.validateStruct(current, current, typ, ns, structNs, ct)
+			v.validateStruct(ctx, current, current, typ, ns, structNs, ct)
 			return
 		}
 	}
@@ -225,6 +253,9 @@ OUTER:
 
 			ct = ct.next
 			continue
+
+		case typeEndKeys:
+			return
 
 		case typeDive:
 
@@ -260,8 +291,7 @@ OUTER:
 
 						reusableCF.altName = string(v.misc)
 					}
-
-					v.traverseField(parent, current.Index(i), ns, structNs, reusableCF, ct)
+					v.traverseField(ctx, parent, current.Index(i), ns, structNs, reusableCF, ct)
 				}
 
 			case reflect.Map:
@@ -291,7 +321,15 @@ OUTER:
 						reusableCF.altName = string(v.misc)
 					}
 
-					v.traverseField(parent, current.MapIndex(key), ns, structNs, reusableCF, ct)
+					if ct != nil && ct.typeof == typeKeys && ct.keys != nil {
+						v.traverseField(ctx, parent, key, ns, structNs, reusableCF, ct.keys)
+						// can be nil when just keys being validated
+						if ct.next != nil {
+							v.traverseField(ctx, parent, current.MapIndex(key), ns, structNs, reusableCF, ct.next)
+						}
+					} else {
+						v.traverseField(ctx, parent, current.MapIndex(key), ns, structNs, reusableCF, ct)
+					}
 				}
 
 			default:
@@ -314,7 +352,7 @@ OUTER:
 				v.cf = cf
 				v.ct = ct
 
-				if ct.fn(v) {
+				if ct.fn(ctx, v) {
 
 					// drain rest of the 'or' values, then continue or leave
 					for {
@@ -334,14 +372,13 @@ OUTER:
 				v.misc = append(v.misc, '|')
 				v.misc = append(v.misc, ct.tag...)
 
-				if len(ct.param) > 0 {
+				if ct.hasParam {
 					v.misc = append(v.misc, '=')
 					v.misc = append(v.misc, ct.param...)
 				}
 
-				if ct.next == nil || ct.next.typeof != typeOr { // ct.typeof != typeOr
+				if ct.isBlockEnd || ct.next == nil {
 					// if we get here, no valid 'or' value and no more tags
-
 					v.str1 = string(append(ns, cf.altName...))
 
 					if v.v.hasTagNameFunc {
@@ -403,11 +440,7 @@ OUTER:
 			v.cf = cf
 			v.ct = ct
 
-			// // report error interface functions need these
-			// v.ns = ns
-			// v.actualNs = structNs
-
-			if !ct.fn(v) {
+			if !ct.fn(ctx, v) {
 
 				v.str1 = string(append(ns, cf.altName...))
 
@@ -434,9 +467,7 @@ OUTER:
 				)
 
 				return
-
 			}
-
 			ct = ct.next
 		}
 	}
