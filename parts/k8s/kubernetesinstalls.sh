@@ -5,6 +5,10 @@ CC_SOCKET_IN_TMP=/opt/azure/containers/cc-proxy.socket.in
 CNI_CONFIG_DIR="/etc/cni/net.d"
 CNI_BIN_DIR="/opt/cni/bin"
 CNI_DOWNLOADS_DIR="/opt/cni/downloads"
+CONTAINERD_DOWNLOADS_DIR="/opt/containerd/downloads"
+CRI_CONTAINERD_VERSION="1.1.5"
+CONTAINERD_DOWNLOAD_URL="${CONTAINERD_DOWNLOAD_URL_BASE}cri-containerd-${CRI_CONTAINERD_VERSION}.linux-amd64.tar.gz"
+CONTAINERD_TGZ_TMP=$(echo ${CONTAINERD_DOWNLOAD_URL} | cut -d "/" -f 5)
 
 removeEtcd() {
     rm -rf /usr/bin/etcd &
@@ -150,6 +154,11 @@ downloadAzureCNI() {
     retrycmd_get_tarball 120 5 "$CNI_DOWNLOADS_DIR/${CNI_TGZ_TMP}" ${VNET_CNI_PLUGINS_URL} || exit $ERR_CNI_DOWNLOAD_TIMEOUT
 }
 
+downloadContainerd() {
+    mkdir -p $CONTAINERD_DOWNLOADS_DIR
+    retrycmd_get_tarball 120 5 "$CONTAINERD_DOWNLOADS_DIR/${CONTAINERD_TGZ_TMP}" ${CONTAINERD_DOWNLOAD_URL} || exit $ERR_CONTAINERD_DOWNLOAD_TIMEOUT
+}
+
 installCNI() {
     CNI_TGZ_TMP=$(echo ${CNI_PLUGINS_URL} | cut -d "/" -f 5)
     if [[ ! -f "$CNI_DOWNLOADS_DIR/${CNI_TGZ_TMP}" ]]; then
@@ -174,19 +183,13 @@ installAzureCNI() {
 }
 
 installContainerd() {
-    containerd --version
-    if [ $? -eq 0 ]; then
-        echo "containerd is already installed, skipping download"
-    else
-        CRI_CONTAINERD_VERSION="1.1.0"
-        CONTAINERD_DOWNLOAD_URL="${CONTAINERD_DOWNLOAD_URL_BASE}cri-containerd-${CRI_CONTAINERD_VERSION}.linux-amd64.tar.gz"
-        CONTAINERD_TGZ_TMP=/tmp/containerd.tar.gz
-        retrycmd_get_tarball 120 5 "$CONTAINERD_TGZ_TMP" "$CONTAINERD_DOWNLOAD_URL" || exit $ERR_CONTAINERD_DOWNLOAD_TIMEOUT
-        tar -xzf "$CONTAINERD_TGZ_TMP" -C /
-        rm -f "$CONTAINERD_TGZ_TMP"
-        sed -i '/\[Service\]/a ExecStartPost=\/sbin\/iptables -P FORWARD ACCEPT' /etc/systemd/system/containerd.service
-        echo "Successfully installed cri-containerd..."
+    if [[ ! -f "$CONTAINERD_DOWNLOADS_DIR/${CONTAINERD_TGZ_TMP}" ]]; then
+        downloadContainerd
     fi
+    tar -xzf "$CONTAINERD_DOWNLOADS_DIR/$CONTAINERD_TGZ_TMP" -C /
+    rm -Rf $CONTAINERD_DOWNLOADS_DIR &
+    sed -i '/\[Service\]/a ExecStartPost=\/sbin\/iptables -P FORWARD ACCEPT' /etc/systemd/system/containerd.service
+    echo "Successfully installed cri-containerd..."
 }
 
 installImg() {
@@ -197,9 +200,9 @@ installImg() {
 extractHyperkube() {
     CLI_TOOL=$1
     path="/home/hyperkube-downloads/${KUBERNETES_VERSION}"
-    mkdir -p "$path"
     pullContainerImage $CLI_TOOL ${HYPERKUBE_URL}
     if [[ "$CLI_TOOL" == "docker" ]]; then
+        mkdir -p "$path"
         docker run --rm -v $path:$path ${HYPERKUBE_URL} /bin/bash -c "cp /hyperkube $path"
     else
         img unpack -o "$path" ${HYPERKUBE_URL}

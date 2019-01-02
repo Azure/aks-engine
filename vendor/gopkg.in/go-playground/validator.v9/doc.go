@@ -31,7 +31,7 @@ Custom Validation Functions
 Custom Validation functions can be added. Example:
 
 	// Structure
-	func customFunc(fl FielddLevel) bool {
+	func customFunc(fl validator.FieldLevel) bool {
 
 		if fl.Field().String() == "invalid" {
 			return false
@@ -56,7 +56,7 @@ Cross-Field Validation can be done via the following tags:
 	- eqcsfield
 	- necsfield
 	- gtcsfield
-	- ftecsfield
+	- gtecsfield
 	- ltcsfield
 	- ltecsfield
 
@@ -94,7 +94,7 @@ used "eqcsfield" it could be multiple levels down. Example:
 
 	// NOTE: when calling validate.Struct(val) topStruct will be the top level struct passed
 	//       into the function
-	//       when calling validate.FieldWithValue(val, field, tag) val will be
+	//       when calling validate.VarWithValue(val, field, tag) val will be
 	//       whatever you pass, struct, field...
 	//       when calling validate.Field(field, tag) val will be nil
 
@@ -132,7 +132,7 @@ so the above will become excludesall=0x2C.
 		Field `validate:"excludesall=0x2C"` // GOOD! Use the UTF-8 hex representation.
 	}
 
-Pipe ("|") is the default separator of validation tags. If you wish to
+Pipe ("|") is the 'or' validation tags deparator. If you wish to
 have a pipe included within the parameter i.e. excludesall=| you will need to
 use the UTF-8 hex representation 0x7C, which is replaced in the code as a pipe,
 so the above will become excludesall=0x7C
@@ -168,7 +168,7 @@ StructOnly
 
 When a field that is a nested struct is encountered, and contains this flag
 any validation on the nested struct will be run, but none of the nested
-struct fields will be validated. This is usefull if inside of you program
+struct fields will be validated. This is useful if inside of you program
 you know the struct will be valid, but need to verify it has been assigned.
 NOTE: only "required" and "omitempty" can be used on a struct itself.
 
@@ -193,7 +193,8 @@ Dive
 This tells the validator to dive into a slice, array or map and validate that
 level of the slice, array or map with the validation tags that follow.
 Multidimensional nesting is also supported, each level you wish to dive will
-require another dive tag.
+require another dive tag. dive has some sub-tags, 'keys' & 'endkeys', please see
+the Keys & EndKeys section just below.
 
 	Usage: dive
 
@@ -211,6 +212,30 @@ Example #2
 	// []string will be spared validation
 	// required will be applied to string
 
+Keys & EndKeys
+
+These are to be used together directly after the dive tag and tells the validator
+that anything between 'keys' and 'endkeys' applies to the keys of a map and not the
+values; think of it like the 'dive' tag, but for map keys instead of values.
+Multidimensional nesting is also supported, each level you wish to validate will
+require another 'keys' and 'endkeys' tag. These tags are only valid for maps.
+
+	Usage: dive,keys,othertagvalidation(s),endkeys,valuevalidationtags
+
+Example #1
+
+	map[string]string with validation tag "gt=0,dive,keys,eg=1|eq=2,endkeys,required"
+	// gt=0 will be applied to the map itself
+	// eg=1|eq=2 will be applied to the map keys
+	// required will be applied to map values
+
+Example #2
+
+	map[[2]string]string with validation tag "gt=0,dive,keys,dive,eq=1|eq=2,endkeys,required"
+	// gt=0 will be applied to the map itself
+	// eg=1|eq=2 will be applied to each array element in the the map keys
+	// required will be applied to map values
+
 Required
 
 This validates that the value is not the data types default zero value.
@@ -219,6 +244,13 @@ not "". For slices, maps, pointers, interfaces, channels and functions
 ensures the value is not nil.
 
 	Usage: required
+
+Is Default
+
+This validates that the value is the default value and is almost the
+opposite of required.
+
+	Usage: isdefault
 
 Length
 
@@ -262,6 +294,16 @@ equal to the parameter given. For slices, arrays, and maps,
 validates the number of items.
 
 	Usage: ne=10
+
+One Of
+
+For strings, ints, and uints, oneof will ensure that the value
+is one of the values in the parameter.  The parameter should be
+a list of values separated by whitespace.  Values may be
+strings or numbers.
+
+    Usage: oneof=red green
+           oneof=5 7 9
 
 Greater Than
 
@@ -337,7 +379,7 @@ Example #1:
 Example #2:
 
 	// Validating by field:
-	validate.FieldWithValue(password, confirmpassword, "eqfield")
+	validate.VarWithValue(password, confirmpassword, "eqfield")
 
 Field Equals Another Field (relative)
 
@@ -359,7 +401,7 @@ Examples:
 	Usage: nefield=Color2
 
 	// Validating by field:
-	validate.FieldWithValue(color1, color2, "nefield")
+	validate.VarWithValue(color1, color2, "nefield")
 
 Field Does Not Equal Another Field (relative)
 
@@ -382,7 +424,7 @@ Example #1:
 Example #2:
 
 	// Validating by field:
-	validate.FieldWithValue(start, end, "gtfield")
+	validate.VarWithValue(start, end, "gtfield")
 
 
 Field Greater Than Another Relative Field
@@ -406,7 +448,7 @@ Example #1:
 Example #2:
 
 	// Validating by field:
-	validate.FieldWithValue(start, end, "gtefield")
+	validate.VarWithValue(start, end, "gtefield")
 
 Field Greater Than or Equal To Another Relative Field
 
@@ -429,7 +471,7 @@ Example #1:
 Example #2:
 
 	// Validating by field:
-	validate.FieldWithValue(start, end, "ltfield")
+	validate.VarWithValue(start, end, "ltfield")
 
 Less Than Another Relative Field
 
@@ -452,7 +494,7 @@ Example #1:
 Example #2:
 
 	// Validating by field:
-	validate.FieldWithValue(start, end, "ltefield")
+	validate.VarWithValue(start, end, "ltefield")
 
 Less Than or Equal To Another Relative Field
 
@@ -460,6 +502,13 @@ This does the same as ltefield except that it validates the field provided relat
 to the top level struct.
 
 	Usage: ltecsfield=InnerStructField.Field
+
+Unique
+
+For arrays & slices, unique will ensure that there are no duplicates.
+For maps, unique will ensure that there are no duplicate values.
+
+	Usage: unique
 
 Alpha Only
 
@@ -489,6 +538,7 @@ Numeric
 
 This validates that a string value contains a basic numeric value.
 basic excludes exponents etc...
+for integers or float it returns true.
 
 	Usage: numeric
 
@@ -533,9 +583,17 @@ E-mail String
 
 This validates that a string value contains a valid email
 This may not conform to all possibilities of any rfc standard, but neither
-does any email provider accept all posibilities.
+does any email provider accept all possibilities.
 
 	Usage: email
+
+File path
+
+This validates that a string value contains a valid file path and that
+the file exists on the machine.
+This is done using os.Stat, which is a platform independent function.
+
+	Usage: file
 
 URL String
 
@@ -552,6 +610,13 @@ This will accept any uri the golang request uri accepts
 
 	Usage: uri
 
+Urn RFC 2141 String
+
+This validataes that a string value contains a valid URN
+according to the RFC 2141 spec.
+
+	Usage: urn_rfc2141
+
 Base64 String
 
 This validates that a string value contains a valid base64 value.
@@ -560,6 +625,40 @@ as an error, if you wish to accept an empty string as valid you can use
 this with the omitempty tag.
 
 	Usage: base64
+
+Base64URL String
+
+This validates that a string value contains a valid base64 URL safe value
+according the the RFC4648 spec.
+Although an empty string is a valid base64 URL safe value, this will report
+an empty string as an error, if you wish to accept an empty string as valid
+you can use this with the omitempty tag.
+
+	Usage: base64url
+
+Bitcoin Address
+
+This validates that a string value contains a valid bitcoin address.
+The format of the string is checked to ensure it matches one of the three formats
+P2PKH, P2SH and performs checksum validation.
+
+	Usage: btc_addr
+
+Bitcoin Bech32 Address (segwit)
+
+This validates that a string value contains a valid bitcoin Bech32 address as defined
+by bip-0173 (https://github.com/bitcoin/bips/blob/master/bip-0173.mediawiki)
+Special thanks to Pieter Wuille for providng reference implementations.
+
+	Usage: btc_addr_bech32
+
+Ethereum Address
+
+This validates that a string value contains a valid ethereum address.
+The format of the string is checked to ensure it matches the standard Ethereum address format
+Full validation is blocked by https://github.com/golang/crypto/pull/28
+
+	Usage: eth_addr
 
 Contains
 
@@ -616,7 +715,6 @@ International Standard Book Number 13
 This validates that a string value contains a valid isbn13 value.
 
 	Usage: isbn13
-
 
 Universally Unique Identifier UUID
 
@@ -690,109 +788,148 @@ This validates that a string value contains a valid U.S. Social Security Number.
 
 Internet Protocol Address IP
 
-This validates that a string value contains a valid IP Adress.
+This validates that a string value contains a valid IP Address.
 
 	Usage: ip
 
 Internet Protocol Address IPv4
 
-This validates that a string value contains a valid v4 IP Adress.
+This validates that a string value contains a valid v4 IP Address.
 
 	Usage: ipv4
 
 Internet Protocol Address IPv6
 
-This validates that a string value contains a valid v6 IP Adress.
+This validates that a string value contains a valid v6 IP Address.
 
 	Usage: ipv6
 
 Classless Inter-Domain Routing CIDR
 
-This validates that a string value contains a valid CIDR Adress.
+This validates that a string value contains a valid CIDR Address.
 
 	Usage: cidr
 
 Classless Inter-Domain Routing CIDRv4
 
-This validates that a string value contains a valid v4 CIDR Adress.
+This validates that a string value contains a valid v4 CIDR Address.
 
 	Usage: cidrv4
 
 Classless Inter-Domain Routing CIDRv6
 
-This validates that a string value contains a valid v6 CIDR Adress.
+This validates that a string value contains a valid v6 CIDR Address.
 
 	Usage: cidrv6
 
 Transmission Control Protocol Address TCP
 
-This validates that a string value contains a valid resolvable TCP Adress.
+This validates that a string value contains a valid resolvable TCP Address.
 
 	Usage: tcp_addr
 
 Transmission Control Protocol Address TCPv4
 
-This validates that a string value contains a valid resolvable v4 TCP Adress.
+This validates that a string value contains a valid resolvable v4 TCP Address.
 
 	Usage: tcp4_addr
 
 Transmission Control Protocol Address TCPv6
 
-This validates that a string value contains a valid resolvable v6 TCP Adress.
+This validates that a string value contains a valid resolvable v6 TCP Address.
 
 	Usage: tcp6_addr
 
 User Datagram Protocol Address UDP
 
-This validates that a string value contains a valid resolvable UDP Adress.
+This validates that a string value contains a valid resolvable UDP Address.
 
 	Usage: udp_addr
 
 User Datagram Protocol Address UDPv4
 
-This validates that a string value contains a valid resolvable v4 UDP Adress.
+This validates that a string value contains a valid resolvable v4 UDP Address.
 
 	Usage: udp4_addr
 
 User Datagram Protocol Address UDPv6
 
-This validates that a string value contains a valid resolvable v6 UDP Adress.
+This validates that a string value contains a valid resolvable v6 UDP Address.
 
 	Usage: udp6_addr
 
 Internet Protocol Address IP
 
-This validates that a string value contains a valid resolvable IP Adress.
+This validates that a string value contains a valid resolvable IP Address.
 
 	Usage: ip_addr
 
 Internet Protocol Address IPv4
 
-This validates that a string value contains a valid resolvable v4 IP Adress.
+This validates that a string value contains a valid resolvable v4 IP Address.
 
 	Usage: ip4_addr
 
 Internet Protocol Address IPv6
 
-This validates that a string value contains a valid resolvable v6 IP Adress.
+This validates that a string value contains a valid resolvable v6 IP Address.
 
 	Usage: ip6_addr
 
 Unix domain socket end point Address
 
-This validates that a string value contains a valid Unix Adress.
+This validates that a string value contains a valid Unix Address.
 
 	Usage: unix_addr
 
 Media Access Control Address MAC
 
-This validates that a string value contains a valid MAC Adress.
+This validates that a string value contains a valid MAC Address.
 
 	Usage: mac
 
 Note: See Go's ParseMAC for accepted formats and types:
 
 	http://golang.org/src/net/mac.go?s=866:918#L29
+
+Hostname RFC 952
+
+This validates that a string value is a valid Hostname according to RFC 952 https://tools.ietf.org/html/rfc952
+
+	Usage: hostname
+
+Hostname RFC 1123
+
+This validates that a string value is a valid Hostname according to RFC 1123 https://tools.ietf.org/html/rfc1123
+
+	Usage: hostname_rfc1123 or if you want to continue to use 'hostname' in your tags, create an alias.
+
+Full Qualified Domain Name (FQDN)
+
+This validates that a string value contains a valid FQDN.
+
+	Usage: fqdn
+
+HTML Tags
+
+This validates that a string value appears to be an HTML element tag
+including those described at https://developer.mozilla.org/en-US/docs/Web/HTML/Element
+
+	Usage: html
+
+HTML Encoded
+
+This validates that a string value is a proper character reference in decimal
+or hexadecimal format
+
+	Usage: html_encoded
+
+URL Encoded
+
+This validates that a string value is percent-encoded (URL encoded) according
+to https://tools.ietf.org/html/rfc3986#section-2.1
+
+	Usage: url_encoded
 
 Alias Validators and Tags
 
@@ -813,7 +950,7 @@ Validator notes:
 		of a regex which conflict with the validation definitions. Although
 		workarounds can be made, they take away from using pure regex's.
 		Furthermore it's quick and dirty but the regex's become harder to
-		maintain and are not reusable, so it's as much a programming philosiphy
+		maintain and are not reusable, so it's as much a programming philosophy
 		as anything.
 
 		In place of this new validator functions should be created; a regex can

@@ -144,18 +144,14 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpdate bool) {
 		if o.KubernetesConfig.CloudProviderBackoff == nil {
 			o.KubernetesConfig.CloudProviderBackoff = to.BoolPtr(DefaultKubernetesCloudProviderBackoff)
 		}
-		// Enforce sane cloudprovider backoff defaults, if CloudProviderBackoff is true in KubernetesConfig
-		if to.Bool(o.KubernetesConfig.CloudProviderBackoff) {
-			o.KubernetesConfig.SetCloudProviderBackoffDefaults()
-		}
+		// Enforce sane cloudprovider backoff defaults.
+		o.KubernetesConfig.SetCloudProviderBackoffDefaults()
 
 		if o.KubernetesConfig.CloudProviderRateLimit == nil {
 			o.KubernetesConfig.CloudProviderRateLimit = to.BoolPtr(DefaultKubernetesCloudProviderRateLimit)
 		}
-		// Enforce sane cloudprovider rate limit defaults, if CloudProviderRateLimit is true in KubernetesConfig
-		if to.Bool(o.KubernetesConfig.CloudProviderRateLimit) {
-			o.KubernetesConfig.SetCloudProviderRateLimitDefaults()
-		}
+		// Enforce sane cloudprovider rate limit defaults.
+		o.KubernetesConfig.SetCloudProviderRateLimitDefaults()
 
 		if o.KubernetesConfig.PrivateCluster == nil {
 			o.KubernetesConfig.PrivateCluster = &PrivateCluster{}
