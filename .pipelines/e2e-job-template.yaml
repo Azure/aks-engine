@@ -6,6 +6,7 @@ parameters:
 
 jobs:
 - job: ${{ parameters.name }}
+  dependsOn: unit_tests
   timeoutInMinutes: 90
   cancelTimeoutInMinutes: 5
   strategy:
