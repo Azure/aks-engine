@@ -1,12 +1,15 @@
-{{if UseManagedIdentity}}
+{{if and UseManagedIdentity (not UserAssignedIDEnabled)}}
   {
-    "apiVersion": "[variables('apiVersionAuthorization')]",
+    "apiVersion": "[variables('apiVersionAuthorizationSystem')]",
     "name": "[guid(concat('Microsoft.Compute/virtualMachineScaleSets/', variables('{{.Name}}VMNamePrefix'), 'vmidentity'))]",
     "type": "Microsoft.Authorization/roleAssignments",
     "properties": {
       "roleDefinitionId": "[variables('readerRoleDefinitionId')]",
       "principalId": "[reference(concat('Microsoft.Compute/virtualMachineScaleSets/', variables('{{.Name}}VMNamePrefix')), '2017-03-30', 'Full').identity.principalId]"
-    }
+    },
+    "dependsOn": [
+      "[concat('Microsoft.Compute/virtualMachineScaleSets/', variables('{{.Name}}VMNamePrefix'))]"
+    ]
   },
 {{end}}
   {
@@ -31,9 +34,18 @@
     {{ end }}
     "name": "[variables('{{.Name}}VMNamePrefix')]",
     {{if UseManagedIdentity}}
+      {{if UserAssignedIDEnabled}}
+    "identity": {
+      "type": "userAssigned",
+      "userAssignedIdentities": {
+        "[variables('userAssignedIDReference')]":{}
+      }
+    },
+      {{else}}
     "identity": {
       "type": "systemAssigned"
     },
+      {{end}}
     {{end}}
     "sku": {
       "tier": "Standard",
@@ -129,21 +141,6 @@
                 "typeHandlerVersion": "1.0",
                 "autoUpgradeMinorVersion": true,
                 "settings": {}
-              }
-            }
-            {{end}}
-            {{if UseManagedIdentity}}
-            ,{
-              "name": "managedIdentityExtension",
-              "properties": {
-                "publisher": "Microsoft.ManagedIdentity",
-                "type": "ManagedIdentityExtensionForWindows",
-                "typeHandlerVersion": "1.0",
-                "autoUpgradeMinorVersion": true,
-                "settings": {
-                  "port": 50343
-                },
-                "protectedSettings": {}
               }
             }
             {{end}}

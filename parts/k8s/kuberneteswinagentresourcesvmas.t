@@ -154,9 +154,18 @@
       "location": "[variables('location')]",
       "name": "[concat(variables('{{.Name}}VMNamePrefix'), copyIndex(variables('{{.Name}}Offset')))]",
       {{if UseManagedIdentity}}
+        {{if UserAssignedIDEnabled}}
+      "identity": {
+        "type": "userAssigned",
+        "userAssignedIdentities": {
+          "[variables('userAssignedIDReference')]":{}
+        }
+      },
+        {{else}}
       "identity": {
         "type": "systemAssigned"
       },
+        {{end}}
       {{end}}
       "properties": {
         "availabilitySet": {
@@ -207,9 +216,9 @@
       },
       "type": "Microsoft.Compute/virtualMachines"
     },
-    {{if UseManagedIdentity}}
+    {{if and UseManagedIdentity (not UserAssignedIDEnabled)}}
     {
-      "apiVersion": "[variables('apiVersionAuthorization')]",
+      "apiVersion": "[variables('apiVersionAuthorizationSystem')]",
       "copy": {
          "count": "[sub(variables('{{.Name}}Count'), variables('{{.Name}}Offset'))]",
          "name": "vmLoopNode"
@@ -219,32 +228,11 @@
       "properties": {
         "roleDefinitionId": "[variables('readerRoleDefinitionId')]",
         "principalId": "[reference(concat('Microsoft.Compute/virtualMachines/', variables('{{.Name}}VMNamePrefix'), copyIndex(variables('{{.Name}}Offset'))), '2017-03-30', 'Full').identity.principalId]"
-      }
-    },
-      {
-        "type": "Microsoft.Compute/virtualMachines/extensions",
-        "name": "[concat(variables('{{.Name}}VMNamePrefix'), copyIndex(variables('{{.Name}}Offset')), '/ManagedIdentityExtension')]",
-        "copy": {
-          "count": "[sub(variables('{{.Name}}Count'), variables('{{.Name}}Offset'))]",
-          "name": "vmLoopNode"
-        },
-        "apiVersion": "[variables('apiVersionCompute')]",
-        "location": "[resourceGroup().location]",
-        "dependsOn": [
-          "[concat('Microsoft.Compute/virtualMachines/', variables('{{.Name}}VMNamePrefix'), copyIndex(variables('{{.Name}}Offset')))]",
-          "[concat('Microsoft.Authorization/roleAssignments/', guid(concat('Microsoft.Compute/virtualMachines/', variables('{{.Name}}VMNamePrefix'), copyIndex(variables('{{.Name}}Offset')), 'vmidentity')))]"
-        ],
-        "properties": {
-          "publisher": "Microsoft.ManagedIdentity",
-          "type": "ManagedIdentityExtensionForWindows",
-          "typeHandlerVersion": "1.0",
-          "autoUpgradeMinorVersion": true,
-          "settings": {
-            "port": 50343
-          },
-          "protectedSettings": {}
-        }
       },
+      "dependsOn": [
+        "[concat('Microsoft.Compute/virtualMachines/', variables('{{.Name}}VMNamePrefix'), copyIndex(variables('{{.Name}}Offset')))]"
+      ]
+    },
      {{end}}
     {
       "apiVersion": "[variables('apiVersionCompute')]",
@@ -253,11 +241,7 @@
         "name": "vmLoopNode"
       },
       "dependsOn": [
-        {{if UseManagedIdentity}}
-        "[concat('Microsoft.Compute/virtualMachines/', variables('{{.Name}}VMNamePrefix'), copyIndex(variables('{{.Name}}Offset')), '/extensions/ManagedIdentityExtension')]"
-        {{else}}
         "[concat('Microsoft.Compute/virtualMachines/', variables('{{.Name}}VMNamePrefix'), copyIndex(variables('{{.Name}}Offset')))]"
-        {{end}}
       ],
       "location": "[variables('location')]",
       "type": "Microsoft.Compute/virtualMachines/extensions",
