@@ -11,12 +11,6 @@ steps:
       echo '##vso[task.prependpath]$(GOBIN)'
       echo '##vso[task.prependpath]$(GOROOT)/bin'
     displayName: 'Set up the Go workspace'
-  - script: |
-      echo "==> Downloading kubectl version ${KUBECTL_VERSION} <=="
-      curl -sSL https://storage.googleapis.com/kubernetes-release/release/v${KUBECTL_VERSION}/bin/linux/amd64/kubectl -o $GOROOT/bin/kubectl
-      chmod +x $GOROOT/bin/kubectl
-    displayName: get kubectl
-    workingDirectory: $(modulePath)
   - script: make build-binary
     displayName: compile
     workingDirectory: $(modulePath)
