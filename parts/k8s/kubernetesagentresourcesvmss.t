@@ -34,18 +34,18 @@
     {{ end }}
     "name": "[variables('{{.Name}}VMNamePrefix')]",
     {{if UseManagedIdentity}}
-    {{if UserAssignedIDEnabled}}
+      {{if UserAssignedIDEnabled}}
     "identity": {
       "type": "userAssigned",
       "userAssignedIdentities": {
         "[variables('userAssignedIDReference')]":{}
       }
     },
-    {{else}}
+      {{else}}
     "identity": {
       "type": "systemAssigned"
     },
-    {{end}}
+      {{end}}
     {{end}}
     "sku": {
       "tier": "Standard",

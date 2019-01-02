@@ -154,18 +154,18 @@
       "location": "[variables('location')]",
       "name": "[concat(variables('{{.Name}}VMNamePrefix'), copyIndex(variables('{{.Name}}Offset')))]",
       {{if UseManagedIdentity}}
-      {{if UserAssignedIDEnabled}}
+        {{if UserAssignedIDEnabled}}
       "identity": {
         "type": "userAssigned",
         "userAssignedIdentities": {
           "[variables('userAssignedIDReference')]":{}
         }
       },
-      {{else}}
+        {{else}}
       "identity": {
         "type": "systemAssigned"
       },
-      {{end}}
+        {{end}}
       {{end}}
       "properties": {
         "availabilitySet": {

@@ -828,18 +828,18 @@
       "zones": "[split(string(parameters('availabilityZones')[mod(copyIndex(variables('masterOffset')), length(parameters('availabilityZones')))]), ',')]",
       {{end}}
       {{if UseManagedIdentity}}
-      {{if UserAssignedIDEnabled}}
+        {{if UserAssignedIDEnabled}}
       "identity": {
         "type": "userAssigned",
         "userAssignedIdentities": {
           "[variables('userAssignedIDReference')]":{}
         }
       },
-      {{else}}
+        {{else}}
       "identity": {
         "type": "systemAssigned"
       },
-      {{end}}
+        {{end}}
       {{end}}
       "properties": {
         {{if not .MasterProfile.HasAvailabilityZones}}
