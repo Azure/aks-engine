@@ -14,6 +14,7 @@ import (
 	"fmt"
 	"math/big"
 	"net"
+	"sync"
 	"time"
 
 	"golang.org/x/sync/errgroup"
@@ -76,6 +77,7 @@ func CreatePki(extraFQDNs []string, extraIPs []net.IP, clusterDomain string, caP
 	var group errgroup.Group
 
 	var err error
+	var mu sync.Mutex
 	caCertificate, err = pemToCertificate(caPair.CertificatePem)
 	if err != nil {
 		return nil, nil, nil, nil, nil, nil, err
@@ -106,14 +108,18 @@ func CreatePki(extraFQDNs []string, extraIPs []net.IP, clusterDomain string, caP
 
 	group.Go(func() (err error) {
 		ip := net.ParseIP("127.0.0.1").To4()
+		mu.Lock()
 		peerIPs := append(extraIPs, ip)
+		mu.Unlock()
 		etcdServerCertificate, etcdServerPrivateKey, err = createCertificate("etcdserver", caCertificate, caPrivateKey, true, true, nil, peerIPs, nil)
 		return err
 	})
 
 	group.Go(func() (err error) {
 		ip := net.ParseIP("127.0.0.1").To4()
+		mu.Lock()
 		peerIPs := append(extraIPs, ip)
+		mu.Unlock()
 		etcdClientCertificate, etcdClientPrivateKey, err = createCertificate("etcdclient", caCertificate, caPrivateKey, true, false, nil, peerIPs, nil)
 		return err
 	})
@@ -123,7 +129,9 @@ func CreatePki(extraFQDNs []string, extraIPs []net.IP, clusterDomain string, caP
 		i := i
 		group.Go(func() (err error) {
 			ip := net.ParseIP("127.0.0.1").To4()
+			mu.Lock()
 			peerIPs := append(extraIPs, ip)
+			mu.Unlock()
 			etcdPeerCertificate, etcdPeerPrivateKey, err := createCertificate("etcdpeer", caCertificate, caPrivateKey, true, false, nil, peerIPs, nil)
 			etcdPeerCertPairs[i] = &PkiKeyCertPair{CertificatePem: string(certificateToPem(etcdPeerCertificate.Raw)), PrivateKeyPem: string(privateKeyToPem(etcdPeerPrivateKey))}
 			return err
