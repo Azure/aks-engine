@@ -8,21 +8,84 @@
 
 AKS-Engine leverages ARM (Azure Resource Manager) to build Kubernetes IaaS in Azure. AKS-Engine provides convenient tooling to quickly bootstrap clusters, and implements cluster provisioning and lifecycle operations for [AKS](https://docs.microsoft.com/en-us/azure/aks), Azure's managed Kubernetes service offering.
 
-More info, including a thorough walkthrough is [here](docs/aksengine.md).
+## Install AKS-Engine
+
+To install via homebrew, run `brew tap azure/aks-engine && brew install azure/aks-engine/aks-engine` or download the binary via the [github releases page](https://github.com/Azure/aks-engine/releases)
+
+## Getting Started
+
+Building a Kubernetes cluster on Azure using AKS-Engine is as simple as:
+
+1. `aks-engine init` to set up aks-engine (after the binary has been installed in your `$PATH`)
+  - This will walk you through setting default configurations
+    - Azure subscription context, including the service principal configuration that aks-engine will use to scaffold new IaaS on behalf of your Azure subscription
+    - Preferred region(s)
+    - Preferred default cluster configuration
+2. `aks-engine create` to create a new cluster using the default Kubernetes configuration.
+
+Cluster creation time will take between 3-5 minutes, after which your console session's `KUBECONFIG` context will be automatically set to your new cluster.
+
+```
+$ kubectl get nodes
+NAME                                           STATUS    ROLES     AGE       VERSION
+k8s-Standard_D2_v2-10678025-vmss000000         Ready     agent     18s       v1.10.12
+k8s-Standard_D2_v2-10678025-vmss000001         Ready     agent     17s       v1.10.12
+k8s-Standard_D2_v2-10678025-vmss000002         Ready     agent     17s       v1.10.12
+k8s-master-10678025-0                          Ready     master    11s       v1.10.12
+```
+
+Scale out your cluster:
+
+```
+$ aks-engine scale -n 5
+```
+
+Scale out will similarly take between 3-5 minutes.
+
+```
+$ kubectl get nodes
+NAME                                           STATUS    ROLES     AGE       VERSION
+k8s-Standard_D2_v2-10678025-vmss000000         Ready     agent     18s       v1.10.12
+k8s-Standard_D2_v2-10678025-vmss000001         Ready     agent     17s       v1.10.12
+k8s-Standard_D2_v2-10678025-vmss000002         Ready     agent     17s       v1.10.12
+k8s-Standard_D2_v2-10678025-vmss000003         Ready     agent     17s       v1.10.12
+k8s-Standard_D2_v2-10678025-vmss000004         Ready     agent     17s       v1.10.12
+k8s-master-10678025-0                          Ready     master    11s       v1.10.12
+```
+
+Scale in:
+
+```
+$ aks-engine scale -n 1
+...
+$ kubectl get nodes
+NAME                                           STATUS    ROLES     AGE       VERSION
+k8s-Standard_D2_v2-10678025-vmss000000         Ready     agent     18s       v1.10.12
+k8s-master-10678025-0                          Ready     master    11s       v1.10.12
+```
+
+Upgrade your cluster:
+
+```
+$ aks-engine update -v 1.11
+```
+
+Cluster upgrade time will take between 5-20 minutes *per node* (including master node(s) running the control plane), due to cordon/drain, the addition of new vms with the desired changes, and the deletion of vms with the previous configuration. And it does this according to a rolling, one-at-a-time strategy to minimize operational side-effects. Depending on the size of your cluster, brew some coffee in the French press style, walk your dog(s), or go do that open source contribution you've been putting off for a few months.
+
+...
+$ kubectl get nodes
+NAME                                           STATUS    ROLES     AGE       VERSION
+k8s-Standard_D2_v2-10678025-vmss000005         Ready     agent     18s       v1.11.6
+k8s-master-10678025-0                          Ready     master    11s       v1.11.6
+```
+
+More info, including a thorough tour through the CLI is [here](docs/aksengine.md).
 
 Please see the [FAQ](/docs/faq.md) for answers about AKS-Engine and its progenitor ACS-Engine.
 
 ## User guides
 
-[This guide](docs/kubernetes.md) walks you through your first cluster deployment.
-
-These guides cover more advanced features to try out after you have built your first cluster:
-
-* [Cluster Definition](docs/clusterdefinition.md) - describes the components of the cluster definition file
-* [Custom VNET](examples/vnet) - shows how to use a custom VNET
-* [Attached Disks](examples/disks-storageaccount) - shows how to attach up to 4 disks per node
-* [Managed Disks](examples/disks-managed) - shows how to use managed disks
-* [Large Clusters](examples/largeclusters) - shows how to create cluster sizes of up to 1200 nodes
+[These guides](docs/kubernetes.md) will walk you through some of the common cluster configurations supported by AKS-Engine.
 
 ## Contributing
 
