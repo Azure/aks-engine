@@ -73,7 +73,7 @@ func (cs *ContainerService) setControllerManagerConfig() {
 		o.KubernetesConfig.ControllerManagerConfig[key] = val
 	}
 
-	if *o.KubernetesConfig.EnableRbac {
+	if o.KubernetesConfig.IsRBACEnabled() {
 		o.KubernetesConfig.ControllerManagerConfig["--use-service-account-credentials"] = "true"
 	}
 }
