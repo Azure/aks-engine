@@ -170,6 +170,8 @@ Depending on the number of agent you have asked for the deployment can take a wh
 
 ## Post-Deployment: Attach Cluster Route Table to VNET
 
+*NOTE: This section is applicable only to Kubernetes clusters that use Kubenet. If AzureCNI is enabled in your cluster, you may disregard.*
+
 For Kubernetes clusters, we need to update the VNET to attach to the route table created by the above `az group deployment create` command. An example in bash form if the VNET is in the same ResourceGroup as the Kubernetes Cluster:
 
 ```

@@ -161,8 +161,9 @@ More usefully, let's add some custom configuration to the above addons:
               }
             ],
             "config": {
-              "maxNodes": "5",
-              "minNodes": "1"
+              "max-nodes": "5",
+              "min-nodes": "1",
+              "scan-interval": "10s"
             }
         }
     ]
