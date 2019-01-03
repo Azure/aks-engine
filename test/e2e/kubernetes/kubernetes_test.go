@@ -556,10 +556,18 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				r := rand.New(rand.NewSource(time.Now().UnixNano()))
 				serviceName := "ingress-nginx"
 				deploymentName := fmt.Sprintf("ingress-nginx-%s-%v", cfg.Name, r.Intn(99999))
+				d, _ := deployment.Get(deploymentName, "default")
+				if d != nil {
+					_ = d.Delete(deleteResourceRetries)
+				}
 				deploy, err := deployment.CreateLinuxDeploy("library/nginx:latest", deploymentName, "default", "--labels=app="+serviceName)
 				Expect(err).NotTo(HaveOccurred())
 
-				s, err := service.CreateServiceFromFile(filepath.Join(WorkloadDir, "ingress-nginx-ilb.yaml"), serviceName, "default")
+				s, _ := service.Get(serviceName, "default")
+				if s != nil {
+					_ = s.Delete(deleteResourceRetries)
+				}
+				s, err = service.CreateServiceFromFile(filepath.Join(WorkloadDir, "ingress-nginx-ilb.yaml"), serviceName, "default")
 				Expect(err).NotTo(HaveOccurred())
 				svc, err := s.WaitForExternalIP(cfg.Timeout, 5*time.Second)
 				Expect(err).NotTo(HaveOccurred())
