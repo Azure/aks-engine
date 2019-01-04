@@ -191,14 +191,10 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				switch addonName {
 				case "blobfuse-flexvolume":
 					addonPods = []string{"blobfuse-flexvol-installer"}
-					addonNamespace = "flex"
 				case "smb-flexvolume":
 					addonPods = []string{"smb-flexvol-installer"}
-					addonNamespace = "flex"
 				case "container-monitoring":
 					addonPods = []string{"omsagent"}
-				case "keyvault-flexvolume":
-					addonNamespace = "kv"
 				case "azure-npm-daemonset":
 					addonPods = []string{"azure-npm"}
 				}
