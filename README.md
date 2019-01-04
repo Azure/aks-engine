@@ -72,7 +72,7 @@ $ aks-engine update -v 1.11
 
 Cluster upgrade time will take between 5-20 minutes *per node* (including master node(s) running the control plane), due to cordon/drain, the addition of new vms with the desired changes, and the deletion of vms with the previous configuration. And it does this according to a rolling, one-at-a-time strategy to minimize operational side-effects. Depending on the size of your cluster, brew some coffee in the French press style, walk your dog(s), or go do that open source contribution you've been putting off for a few months.
 
-...
+```
 $ kubectl get nodes
 NAME                                           STATUS    ROLES     AGE       VERSION
 k8s-Standard_D2_v2-10678025-vmss000005         Ready     agent     18s       v1.11.6
