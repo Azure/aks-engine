@@ -315,10 +315,6 @@ download_wincni() {
 	curl -L ${WINSDN_URL}${HNS_PSM1} -o ${DIST_DIR}/${HNS_PSM1}
 }
 
-copy_dockerfile() {
-  cp ${AKS_ENGINE_HOME}/windows/Dockerfile ${DIST_DIR}
-}
-
 create_zip() {
 	ZIP_NAME="${k8s_e2e_upstream_version:-"v${AKS_VERSION}int.zip"}"
 	cd ${DIST_DIR}/..
@@ -402,7 +398,6 @@ if [ -z "${k8s_e2e_upstream_version}" ]; then
 	get_kube_binaries
 	download_nssm
 	download_wincni
-	copy_dockerfile
 	create_zip
 	upload_zip_to_blob_storage
 	push_acs_branch
