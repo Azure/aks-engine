@@ -138,7 +138,7 @@ Once the desired Kubernetes version is finalized, call the *upgrade* command:
   --location <resource group location> \
   --resource-group <resource group name> \
   --upgrade-version <desired Kubernetes version> \
-  --auth-method client_secret \
+  --auth-method service_principal \
   --client-id <service principal id> \
   --client-secret <service principal secret>
 ```
@@ -150,7 +150,6 @@ For example,
   --location westus \
   --resource-group test-upgrade \
   --upgrade-version 1.8.7 \
-  --auth-method client_secret \
   --client-id xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx \
   --client-secret xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
 ```

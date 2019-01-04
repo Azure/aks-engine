@@ -20,6 +20,7 @@ After the cluster is deployed the upgrade and [scale](scale.md) commands can be 
 
 * The subscription in which you would like to provision the cluster. This is a uuid which can be found with `az account list -o table`.
 * Proper access rights within the subscription. Especially the right to create and assign service principals to applications ( see  AKS Engine the Long Way, Step #2)
+* A valid service principal with all the required create/manage permissions. Instructions to create a new service principal can be found [here](../serviceprincipal.md).
 * A `dnsPrefix` which forms part of the the hostname for your cluster (e.g. staging, prodwest, blueberry). The DNS prefix must be unique so pick a random name.
 * A location to provision the cluster e.g. `westus2`.
 
@@ -38,14 +39,13 @@ Run `aks-engine deploy` with the appropriate arguments:
 
 ```sh
 $ aks-engine deploy --subscription-id 51ac25de-afdg-9201-d923-8d8e8e8e8e8e \
+    --client-id '<service principal client ID>' \
+    --client-secret '<service principal client secret>' \
     --dns-prefix contoso-apple --location westus2 \
     --api-model examples/kubernetes.json
 
 WARN[0005] apimodel: missing masterProfile.dnsPrefix will use "contoso-apple"
 WARN[0005] --resource-group was not specified. Using the DNS prefix from the apimodel as the resource group name: contoso-apple
-WARN[0008] apimodel: ServicePrincipalProfile was empty, creating application...
-WARN[0017] created application with applicationID (7e2d433f-d039-48b8-87dc-83fa4dfa38d4) and servicePrincipalObjectID (db6167e1-aeed-407a-b218-086589759442).
-WARN[0017] apimodel: ServicePrincipalProfile was empty, assigning role to application...
 INFO[0034] Starting ARM Deployment (contoso-apple-1423145182). This will take some time...
 INFO[0393] Finished ARM Deployment (contoso-apple-1423145182).
 ```
@@ -77,6 +77,8 @@ The deploy command lets you override any values under the properties tag (even i
 aks-engine deploy --resource-group "your-resource-group" \
   --location "westeurope" \
   --subscription-id "your-subscription-id" \
+  --client_id '<your service principal client ID>' \
+  --client_secret '<your service principal client secret>' \
   --api-model "./apimodel.json" \
   --set masterProfile.dnsPrefix="your-dns-prefix-override" \
   --set agentPoolProfiles[0].name="your-agentpool-0-name-override" \

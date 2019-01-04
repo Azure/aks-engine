@@ -18,6 +18,6 @@ OUTPUT="_output/${INSTANCE_NAME}"
   --location ${LOCATION} \
   --resource-group ${RESOURCE_GROUP} \
   --upgrade-version ${EXPECTED_ORCHESTRATOR_VERSION} \
-  --auth-method client_secret \
+  --auth-method service_principal \
   --client-id ${SERVICE_PRINCIPAL_CLIENT_ID} \
   --client-secret ${SERVICE_PRINCIPAL_CLIENT_SECRET}
