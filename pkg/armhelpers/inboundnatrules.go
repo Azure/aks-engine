@@ -7,15 +7,19 @@ import (
 
 func createInboundNATRules() InboundNATRuleARM {
 	return InboundNATRuleARM{
-		ARMResource: ARMResource{
-			ApiVersion: "[variables('apiVersionNetwork')]",
-			Copy: map[string]string{
-				"count": "[sub(variables('masterCount'), variables('masterOffset'))]",
-				"name":  "masterLbLoopNode",
+		ARMResourceLocType: ARMResourceLocType{
+			ARMResource: ARMResource{
+				ApiVersion: "[variables('apiVersionNetwork')]",
+				Copy: map[string]string{
+					"count": "[sub(variables('masterCount'), variables('masterOffset'))]",
+					"name":  "masterLbLoopNode",
+				},
+				DependsOn: []string{
+					"[variables('masterLbID')]",
+				},
 			},
-			DependsOn: []string{
-				"[variables('masterLbID')]",
-			},
+			Location: "[variables('location')]",
+			Type:     "Microsoft.Network/loadBalancers/inboundNatRules",
 		},
 		InboundNatRule: network.InboundNatRule{
 			Name: to.StringPtr("[concat(variables('masterLbName'), '/', 'SSH-', variables('masterVMNamePrefix'), copyIndex(variables('masterOffset')))]", ),
@@ -29,9 +33,6 @@ func createInboundNATRules() InboundNATRuleARM {
 				FrontendPort: to.Int32Ptr(22), //"[variables('sshNatPorts')[copyIndex(variables('masterOffset'))]]",
 				Protocol:     network.TransportProtocolTCP,
 			},
-
-			//Location: to.StringPtr("[variables('location')]"),
-			//Type:     to.StringPtr("Microsoft.Network/loadBalancers/inboundNatRules"),
 		},
 	}
 }
