@@ -109,9 +109,9 @@ type authArgs struct {
 func addAuthFlags(authArgs *authArgs, f *flag.FlagSet) {
 	f.StringVar(&authArgs.RawAzureEnvironment, "azure-env", "AzurePublicCloud", "the target Azure cloud")
 	f.StringVarP(&authArgs.rawSubscriptionID, "subscription-id", "s", "", "azure subscription id (required)")
-	f.StringVar(&authArgs.AuthMethod, "auth-method", "service_principal", "auth method (default:`service_principal`, `device`, `client_certificate`)")
-	f.StringVar(&authArgs.rawClientID, "client-id", "", "client id (used with --auth-method=[service_principal|client_certificate])")
-	f.StringVar(&authArgs.ClientSecret, "client-secret", "", "client secret (used with --auth-mode=service_principal)")
+	f.StringVar(&authArgs.AuthMethod, "auth-method", "client_secret", "auth method (default:`client_secret`, `device`, `client_certificate`)")
+	f.StringVar(&authArgs.rawClientID, "client-id", "", "client id (used with --auth-method=[client_secret|client_certificate])")
+	f.StringVar(&authArgs.ClientSecret, "client-secret", "", "client secret (used with --auth-mode=client_secret)")
 	f.StringVar(&authArgs.CertificatePath, "certificate-path", "", "path to client certificate (used with --auth-method=client_certificate)")
 	f.StringVar(&authArgs.PrivateKeyPath, "private-key-path", "", "path to private key (used with --auth-method=client_certificate)")
 	f.StringVar(&authArgs.language, "language", "en-us", "language to return error messages in")
@@ -126,9 +126,9 @@ func (authArgs *authArgs) validateAuthArgs() error {
 	authArgs.ClientID, _ = uuid.FromString(authArgs.rawClientID)
 	authArgs.SubscriptionID, _ = uuid.FromString(authArgs.rawSubscriptionID)
 
-	if authArgs.AuthMethod == "service_principal" {
+	if authArgs.AuthMethod == "client_secret" {
 		if authArgs.ClientID.String() == "00000000-0000-0000-0000-000000000000" || authArgs.ClientSecret == "" {
-			return errors.New(`--client-id and --client-secret must be specified when --auth-method="service_principal"`)
+			return errors.New(`--client-id and --client-secret must be specified when --auth-method="client_secret"`)
 		}
 		// try parse the UUID
 	} else if authArgs.AuthMethod == "client_certificate" {

@@ -138,7 +138,7 @@ Once the desired Kubernetes version is finalized, call the *upgrade* command:
   --location <resource group location> \
   --resource-group <resource group name> \
   --upgrade-version <desired Kubernetes version> \
-  --auth-method service_principal \
+  --auth-method client_secret \
   --client-id <service principal id> \
   --client-secret <service principal secret>
 ```

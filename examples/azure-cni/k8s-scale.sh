@@ -23,6 +23,6 @@ sleep 180
   --master-FQDN "${INSTANCE_NAME}.${LOCATION}.cloudapp.azure.com" \
   --node-pool "agentpool1" \
   --new-node-count ${NEW_AGENT_NODE_COUNT} \
-  --auth-method service_principal \
+  --auth-method client_secret \
   --client-id ${SERVICE_PRINCIPAL_CLIENT_ID} \
   --client-secret ${SERVICE_PRINCIPAL_CLIENT_SECRET}
