@@ -58,7 +58,9 @@ jobs:
   - script: make build-cross
     displayName: Build cross-architectural binaries
     workingDirectory: $(modulePath)
-  - script: make coverage
+  - script: |
+        export CODECOV_TOKEN=$(CODECOV_TOKEN)
+        make coverage
     displayName: Run unit tests and calculate coverage
     workingDirectory: $(modulePath)
 
