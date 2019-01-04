@@ -16,7 +16,7 @@ GO              ?= go
 TAGS            :=
 LDFLAGS         :=
 BINDIR          := $(CURDIR)/bin
-BINARIES        := aks-engine
+PROJECT         := aks-engine
 VERSION         ?= $(shell git rev-parse HEAD)
 VERSION_SHORT   ?= $(shell git rev-parse --short HEAD)
 GITTAG          := $(shell git describe --exact-match --tags $(shell git log -n1 --pretty='%h') 2> /dev/null)
@@ -24,8 +24,8 @@ ifeq ($(GITTAG),)
 GITTAG := $(VERSION_SHORT)
 endif
 
-REPO_PATH := github.com/Azure/aks-engine
-DEV_ENV_IMAGE := quay.io/deis/go-dev:v1.18.1
+REPO_PATH := github.com/Azure/$(PROJECT)
+DEV_ENV_IMAGE := quay.io/deis/go-dev:v1.18.2
 DEV_ENV_WORK_DIR := /go/src/${REPO_PATH}
 DEV_ENV_OPTS := --rm -v ${CURDIR}:${DEV_ENV_WORK_DIR} -w ${DEV_ENV_WORK_DIR} ${DEV_ENV_VARS}
 DEV_ENV_CMD := docker run ${DEV_ENV_OPTS} ${DEV_ENV_IMAGE}
@@ -37,6 +37,16 @@ else
 LDFLAGS := -s -X main.version=${VERSION}
 endif
 BINARY_DEST_DIR ?= bin
+
+ifeq ($(OS),Windows_NT)
+	EXTENSION = .exe
+	SHELL     = cmd.exe
+	CHECK     = where.exe
+else
+	EXTENSION =
+	SHELL     = bash
+	CHECK     = which
+endif
 
 all: build
 
@@ -54,7 +64,7 @@ validate-copyright-headers:
 
 .PHONY: generate
 generate: bootstrap
-	go generate $(GOFLAGS) -v `go list ./...`
+	go generate $(GOFLAGS) -v ./...
 
 .PHONY: generate-azure-constants
 generate-azure-constants:
@@ -62,8 +72,8 @@ generate-azure-constants:
 
 .PHONY: build
 build: generate
-	GOBIN=$(BINDIR) $(GO) install $(GOFLAGS) -ldflags '$(LDFLAGS)'
-	cd test/aks-engine-test; go build $(GOFLAGS)
+	$(GO) build $(GOFLAGS) -ldflags '$(LDFLAGS)' -o $(BINDIR)/$(PROJECT)$(EXTENSION) $(REPO_PATH)
+	$(GO) build $(GOFLAGS) -o $(BINDIR)/aks-engine-test$(EXTENSION) $(REPO_PATH)/test/aks-engine-test
 
 build-binary: generate
 	go build $(GOFLAGS) -v -ldflags "${LDFLAGS}" -o ${BINARY_DEST_DIR}/aks-engine .
@@ -115,11 +125,11 @@ test-style:
 test-e2e:
 	@test/e2e.sh
 
-HAS_DEP := $(shell command -v dep;)
-HAS_GOX := $(shell command -v gox;)
-HAS_GIT := $(shell command -v git;)
-HAS_GOLANGCI := $(shell command -v golangci-lint;)
-HAS_GINKGO := $(shell command -v ginkgo;)
+HAS_DEP := $(shell $(CHECK) dep)
+HAS_GOX := $(shell $(CHECK) gox)
+HAS_GIT := $(shell $(CHECK) git)
+HAS_GOLANGCI := $(shell $(CHECK) golangci-lint)
+HAS_GINKGO := $(shell $(CHECK) ginkgo)
 
 .PHONY: bootstrap
 bootstrap:

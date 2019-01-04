@@ -48,8 +48,9 @@
               }
             ],
             "config": {
-              "maxNodes": "5",
-              "minNodes": "1"
+              "max-nodes": "5",
+              "min-nodes": "1",
+              "scan-interval": "10s"
             }
           },
           {
@@ -129,8 +130,12 @@
       "etcdClientPrivateKey": "etcdClientPrivateKey",
       "etcdServerCertificate": "etcdServerCertificate",
       "etcdServerPrivateKey": "etcdServerPrivateKey",
-      "etcdPeerCertificates": ["etcdPeerCertificate0"],
-      "etcdPeerPrivateKeys": ["etcdPeerPrivateKey0"]
+      "etcdPeerCertificates": [
+        "etcdPeerCertificate0"
+      ],
+      "etcdPeerPrivateKeys": [
+        "etcdPeerPrivateKey0"
+      ]
     }
   }
 }

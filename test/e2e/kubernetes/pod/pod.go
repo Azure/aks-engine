@@ -538,7 +538,7 @@ func WaitOnSucceeded(podPrefix, namespace string, sleep, duration time.Duration)
 
 // WaitOnReady will call the static method WaitOnReady passing in p.Metadata.Name and p.Metadata.Namespace
 func (p *Pod) WaitOnReady(sleep, duration time.Duration) (bool, error) {
-	return WaitOnReady(p.Metadata.Name, p.Metadata.Namespace, 2, sleep, duration)
+	return WaitOnReady(p.Metadata.Name, p.Metadata.Namespace, 6, sleep, duration)
 }
 
 // WaitOnSucceeded will call the static method WaitOnSucceeded passing in p.Metadata.Name and p.Metadata.Namespace

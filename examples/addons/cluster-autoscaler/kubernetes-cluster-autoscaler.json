@@ -11,8 +11,9 @@
             "name": "cluster-autoscaler",
             "enabled": true,
             "config": {
-              "minNodes": "1",
-              "maxNodes": "5"
+              "min-nodes": "1",
+              "max-nodes": "5",
+              "scan-interval": "10s"
             }
           }
         ]

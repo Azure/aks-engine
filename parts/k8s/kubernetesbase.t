@@ -36,7 +36,7 @@
         "location": "[variables('location')]"
       },
       {
-        "apiVersion": "[variables('apiVersionAuthorization')]",
+        "apiVersion": "[variables('apiVersionAuthorizationUser')]",
         "type": "Microsoft.Authorization/roleAssignments",
         "name": "[guid(concat(variables('userAssignedID'), 'roleAssignment', resourceGroup().id))]",
         "properties": {
