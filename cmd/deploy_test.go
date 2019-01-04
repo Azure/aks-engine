@@ -558,6 +558,8 @@ func TestDeployCmdRun(t *testing.T) {
 
 	fakeRawSubscriptionID := "6dc93fae-9a76-421f-bbe5-cc6460ea81cb"
 	fakeSubscriptionID, err := uuid.FromString(fakeRawSubscriptionID)
+	fakeClientId := "b829b379-ca1f-4f1d-91a2-0d26b244680d"
+	fakeClientSecret := "0se43bie-3zs5-303e-aav5-dcf231vb82ds"
 	if err != nil {
 		t.Fatalf("Invalid SubscriptionId in Test: %s", err)
 	}
@@ -565,6 +567,11 @@ func TestDeployCmdRun(t *testing.T) {
 	d.apimodelPath = "../pkg/engine/testdata/simple/kubernetes.json"
 	d.getAuthArgs().SubscriptionID = fakeSubscriptionID
 	d.getAuthArgs().rawSubscriptionID = fakeRawSubscriptionID
+	d.getAuthArgs().rawClientID = fakeClientId
+	d.getAuthArgs().ClientSecret = fakeClientSecret
+	if err != nil {
+		t.Fatalf("Invalid SubscriptionId in Test: %s", err)
+	}
 
 	err = d.loadAPIModel(r, []string{})
 	if err != nil {
@@ -575,5 +582,4 @@ func TestDeployCmdRun(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to call LoadAPIModel: %s", err)
 	}
-
 }
