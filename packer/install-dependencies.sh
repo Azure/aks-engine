@@ -1,5 +1,7 @@
 #!/bin/bash
 
+CONTAINERD_DOWNLOAD_URL_BASE="https://storage.googleapis.com/cri-containerd-release/"
+
 source /home/packer/provision_installs.sh
 source /home/packer/provision_source.sh
 
@@ -36,7 +38,6 @@ for CNI_PLUGIN_VERSION in $CNI_PLUGIN_VERSIONS; do
     downloadCNI
 done
 
-CONTAINERD_DOWNLOAD_URL_BASE="https://storage.googleapis.com/cri-containerd-release/"
 installContainerd
 
 installImg
@@ -56,7 +57,7 @@ for ADDON_RESIZER_VERSION in ${ADDON_RESIZER_VERSIONS}; do
     pullContainerImage "docker" "k8s.gcr.io/addon-resizer:${ADDON_RESIZER_VERSION}"
 done
 
-HEAPSTER_VERSIONS="1.5.3 1.5.1 1.3.0"
+HEAPSTER_VERSIONS="1.5.3 1.5.1"
 for HEAPSTER_VERSION in ${HEAPSTER_VERSIONS}; do
     pullContainerImage "docker" "k8s.gcr.io/heapster-amd64:v${HEAPSTER_VERSION}"
 done
@@ -151,7 +152,7 @@ for NGINX_VERSION in ${NGINX_VERSIONS}; do
     pullContainerImage "docker" "nginx:${NGINX_VERSION}"
 done
 
-KMS_PLUGIN_VERSIONS="0.0.7"
+KMS_PLUGIN_VERSIONS="0.0.8"
 for KMS_PLUGIN_VERSION in ${KMS_PLUGIN_VERSIONS}; do
     pullContainerImage "docker" "microsoft/k8s-azure-kms:v${KMS_PLUGIN_VERSION}"
 done

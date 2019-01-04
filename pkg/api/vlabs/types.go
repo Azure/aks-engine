@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/Azure/aks-engine/pkg/api/common"
+	"github.com/Azure/go-autorest/autorest/to"
 	"github.com/pkg/errors"
 )
 
@@ -689,4 +690,12 @@ func (o *OrchestratorProfile) IsSwarmMode() bool {
 func (k *KubernetesConfig) RequiresDocker() bool {
 	runtime := strings.ToLower(k.ContainerRuntime)
 	return runtime == "docker" || runtime == ""
+}
+
+// IsRBACEnabled checks if RBAC is enabled
+func (k *KubernetesConfig) IsRBACEnabled() bool {
+	if k.EnableRbac != nil {
+		return to.Bool(k.EnableRbac)
+	}
+	return false
 }

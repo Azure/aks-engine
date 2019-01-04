@@ -22,6 +22,7 @@ import (
 	"github.com/Azure/aks-engine/pkg/api/v20170701"
 	"github.com/Azure/aks-engine/pkg/api/vlabs"
 	"github.com/Azure/aks-engine/pkg/helpers"
+	"github.com/Azure/go-autorest/autorest/to"
 	"github.com/blang/semver"
 )
 
@@ -1278,6 +1279,14 @@ func (k *KubernetesConfig) IsDashboardEnabled() bool {
 // IsIPMasqAgentEnabled checks if the ip-masq-agent addon is enabled
 func (k *KubernetesConfig) IsIPMasqAgentEnabled() bool {
 	return k.isAddonEnabled(IPMASQAgentAddonName, IPMasqAgentAddonEnabled)
+}
+
+// IsRBACEnabled checks if RBAC is enabled
+func (k *KubernetesConfig) IsRBACEnabled() bool {
+	if k.EnableRbac != nil {
+		return to.Bool(k.EnableRbac)
+	}
+	return false
 }
 
 // IsNSeriesSKU returns true if the agent pool contains an N-series (NVIDIA GPU) VM
