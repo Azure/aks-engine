@@ -2,22 +2,22 @@ apiVersion: extensions/v1beta1
 kind: DaemonSet
 metadata:
   labels:
-    app: keyvault-flexvolume-installer
+    app: keyvault-flexvolume
     kubernetes.io/cluster-service: "true"
     addonmanager.kubernetes.io/mode: EnsureExists
-  name: keyvault-flexvolume-installer
+  name: keyvault-flexvolume
   namespace: kube-system
 spec:
   template:
     metadata:
       labels:
-        app: keyvault-flexvolume-installer
+        app: keyvault-flexvolume
         kubernetes.io/cluster-service: "true"
         addonmanager.kubernetes.io/mode: EnsureExists
     spec:
       tolerations:
       containers:
-      - name: keyvault-flexvolume-installer
+      - name: keyvault-flexvolume
         image: {{ContainerImage "keyvault-flexvolume"}}
         imagePullPolicy: IfNotPresent
         resources:
