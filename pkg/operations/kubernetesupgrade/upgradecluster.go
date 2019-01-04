@@ -223,7 +223,7 @@ func (uc *UpgradeCluster) getClusterNodeStatus(subscriptionID uuid.UUID, az armh
 					uc.Logger.Infof("Master VM name: %s, orchestrator: %s (MasterVMs)\n", *vm.Name, vmOrchestratorTypeAndVersion)
 					*uc.MasterVMs = append(*uc.MasterVMs, vm)
 				} else {
-					if err := uc.upgradable(vmOrchestratorTypeAndVersion); err != nil {
+					if err := uc.upgradable(vmOrchestratorTypeAndVersion); err != nil && !uc.DataModel.Properties.IsHostedMasterProfile() {
 						return err
 					}
 					uc.addVMToAgentPool(vm, true)
