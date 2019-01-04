@@ -1,15 +1,8 @@
-apiVersion: v1
-kind: Namespace
-metadata:
-  name: flex
-  labels:
-    kubernetes.io/cluster-service: "true"
----
 apiVersion: extensions/v1beta1
 kind: DaemonSet
 metadata:
   name: blobfuse-flexvol-installer
-  namespace: flex
+  namespace: kube-system
   labels:
     k8s-app: blobfuse
     kubernetes.io/cluster-service: "true"

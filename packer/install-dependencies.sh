@@ -42,7 +42,7 @@ installContainerd
 
 installImg
 
-DASHBOARD_VERSIONS="1.10.0"
+DASHBOARD_VERSIONS="1.10.1"
 for DASHBOARD_VERSION in ${DASHBOARD_VERSIONS}; do
     pullContainerImage "docker" "k8s.gcr.io/kubernetes-dashboard-amd64:v${DASHBOARD_VERSION}"
 done
@@ -57,7 +57,7 @@ for ADDON_RESIZER_VERSION in ${ADDON_RESIZER_VERSIONS}; do
     pullContainerImage "docker" "k8s.gcr.io/addon-resizer:${ADDON_RESIZER_VERSION}"
 done
 
-HEAPSTER_VERSIONS="1.5.3 1.5.1 1.3.0"
+HEAPSTER_VERSIONS="1.5.3 1.5.1"
 for HEAPSTER_VERSION in ${HEAPSTER_VERSIONS}; do
     pullContainerImage "docker" "k8s.gcr.io/heapster-amd64:v${HEAPSTER_VERSION}"
 done
