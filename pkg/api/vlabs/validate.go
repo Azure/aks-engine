@@ -228,10 +228,8 @@ func (a *Properties) validateOrchestratorProfile(isUpdate bool) error {
 							minVersion.String(), version)
 					}
 
-					if o.KubernetesConfig.EnableRbac != nil {
-						if !*o.KubernetesConfig.EnableRbac {
-							return errors.New("enableAggregatedAPIs requires the enableRbac feature as a prerequisite")
-						}
+					if !o.KubernetesConfig.IsRBACEnabled() {
+						return errors.New("enableAggregatedAPIs requires the enableRbac feature as a prerequisite")
 					}
 				}
 
@@ -260,7 +258,7 @@ func (a *Properties) validateOrchestratorProfile(isUpdate bool) error {
 				}
 
 				if to.Bool(o.KubernetesConfig.EnablePodSecurityPolicy) {
-					if !to.Bool(o.KubernetesConfig.EnableRbac) {
+					if !o.KubernetesConfig.IsRBACEnabled() {
 						return errors.Errorf("enablePodSecurityPolicy requires the enableRbac feature as a prerequisite")
 					}
 					minVersion, err := semver.Make("1.8.0")

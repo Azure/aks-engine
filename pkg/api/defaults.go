@@ -196,7 +196,7 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpdate bool) {
 			a.OrchestratorProfile.KubernetesConfig.EnableRbac = to.BoolPtr(DefaultRBACEnabled)
 		}
 
-		if to.Bool(a.OrchestratorProfile.KubernetesConfig.EnableRbac) {
+		if a.OrchestratorProfile.KubernetesConfig.IsRBACEnabled() {
 			if common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.9.0") {
 				// TODO make EnableAggregatedAPIs a pointer to bool so that a user can opt out of it
 				a.OrchestratorProfile.KubernetesConfig.EnableAggregatedAPIs = true
