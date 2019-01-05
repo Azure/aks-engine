@@ -150,7 +150,6 @@ For example,
   --location westus \
   --resource-group test-upgrade \
   --upgrade-version 1.8.7 \
-  --auth-method client_secret \
   --client-id xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx \
   --client-secret xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
 ```
