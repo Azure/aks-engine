@@ -4,7 +4,7 @@ set -euo pipefail
 
 echo "==> Checking commit message <=="
 
-msg=$(git log -1 --pretty=%B)
+msg=$(git log --no-merges -1 --pretty=%B)
 echo "$msg" | grep -E '^(build|chore|ci|docs|feat|fix|perf|refactor|revert|style|test)(\(.+\))?: .+' \
   || (echo -e "Commit message \"$msg\" failed validation.\n" \
       "Commits must follow https://www.conventionalcommits.org/en/v1.0.0-beta.2/#specification with one of these types:\n" \
