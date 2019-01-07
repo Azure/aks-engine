@@ -223,8 +223,11 @@ func (uc *UpgradeCluster) getClusterNodeStatus(subscriptionID uuid.UUID, az armh
 					uc.Logger.Infof("Master VM name: %s, orchestrator: %s (MasterVMs)\n", *vm.Name, vmOrchestratorTypeAndVersion)
 					*uc.MasterVMs = append(*uc.MasterVMs, vm)
 				} else {
-					if err := uc.upgradable(vmOrchestratorTypeAndVersion); err != nil {
-						return err
+					// skip the agent VM upgrade validation for managed clusters as it only applies to aks-engine version support
+					if !uc.DataModel.Properties.IsHostedMasterProfile() {
+						if err := uc.upgradable(vmOrchestratorTypeAndVersion); err != nil {
+							return err
+						}
 					}
 					uc.addVMToAgentPool(vm, true)
 				}
