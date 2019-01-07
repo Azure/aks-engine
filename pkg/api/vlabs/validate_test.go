@@ -240,6 +240,17 @@ func Test_OrchestratorProfile_Validate(t *testing.T) {
 				},
 			},
 		},
+		"should error when maximumLoadBalancerRuleCount populated with a negative integer": {
+			properties: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					OrchestratorType: "Kubernetes",
+					KubernetesConfig: &KubernetesConfig{
+						MaximumLoadBalancerRuleCount: -1,
+					},
+				},
+			},
+			expectedError: "maximumLoadBalancerRuleCount shouldn't be less than 0",
+		},
 	}
 
 	for testName, test := range tests {

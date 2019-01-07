@@ -206,6 +206,9 @@ const (
 	DefaultDNSAutoscalerAddonName = "dns-autoscaler"
 	// DefaultUseCosmos determines if the cluster will use cosmos as etcd storage
 	DefaultUseCosmos = false
+	// DefaultMaximumLoadBalancerRuleCount determines the default value of maximum allowed loadBalancer rule count according to
+	// https://docs.microsoft.com/en-us/azure/azure-subscription-service-limits#load-balancer.
+	DefaultMaximumLoadBalancerRuleCount = 250
 )
 
 const (

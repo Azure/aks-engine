@@ -288,6 +288,10 @@ func (a *Properties) validateOrchestratorProfile(isUpdate bool) error {
 				if o.KubernetesConfig.DockerEngineVersion != "" {
 					log.Warnf("docker-engine is deprecated in favor of moby, but you passed in a dockerEngineVersion configuration. This will be ignored.")
 				}
+
+				if o.KubernetesConfig.MaximumLoadBalancerRuleCount < 0 {
+					return errors.New("maximumLoadBalancerRuleCount shouldn't be less than 0")
+				}
 			}
 		default:
 			return errors.Errorf("OrchestratorProfile has unknown orchestrator: %s", o.OrchestratorType)

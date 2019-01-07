@@ -227,6 +227,10 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpdate bool) {
 			}
 		}
 
+		if a.OrchestratorProfile.KubernetesConfig.MaximumLoadBalancerRuleCount == 0 {
+			a.OrchestratorProfile.KubernetesConfig.MaximumLoadBalancerRuleCount = DefaultMaximumLoadBalancerRuleCount
+		}
+
 		// Configure addons
 		cs.setAddonsConfig(isUpdate)
 		// Configure kubelet
