@@ -896,11 +896,11 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			if eng.HasNetworkPolicy("calico") || eng.HasNetworkPolicy("azure") || eng.HasNetworkPolicy("cilium") {
 				nsClientOne, nsClientTwo, nsServer := "client-one", "client-two", "server"
 				By("Creating namespaces")
-				_, err := namespace.Create(nsClientOne)
+				namespaceClientOne, err := namespace.CreateIfNotExist(nsClientOne)
 				Expect(err).NotTo(HaveOccurred())
-				_, err = namespace.Create(nsClientTwo)
+				namespaceClientTwo, err := namespace.CreateIfNotExist(nsClientTwo)
 				Expect(err).NotTo(HaveOccurred())
-				_, err = namespace.Create(nsServer)
+				namespaceServer, err := namespace.CreateIfNotExist(nsServer)
 				Expect(err).NotTo(HaveOccurred())
 				By("Creating client and server nginx deployments")
 				r := rand.New(rand.NewSource(time.Now().UnixNano()))
@@ -1001,6 +1001,12 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				err = clientTwoDeploy.Delete(deleteResourceRetries)
 				Expect(err).NotTo(HaveOccurred())
 				err = serverDeploy.Delete(deleteResourceRetries)
+				Expect(err).NotTo(HaveOccurred())
+				err = namespaceClientOne.Delete()
+				Expect(err).NotTo(HaveOccurred())
+				err = namespaceClientTwo.Delete()
+				Expect(err).NotTo(HaveOccurred())
+				err = namespaceServer.Delete()
 				Expect(err).NotTo(HaveOccurred())
 			} else {
 				Skip("Calico or Azure network policy was not provisioned for this Cluster Definition")

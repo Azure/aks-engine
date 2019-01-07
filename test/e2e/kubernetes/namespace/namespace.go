@@ -35,6 +35,15 @@ func Create(name string) (*Namespace, error) {
 	return Get(name)
 }
 
+// CreateIfNotExist a namespace with the given name if it doesn't exist already
+func CreateIfNotExist(name string) (*Namespace, error) {
+	n, err := Get(name)
+	if err != nil {
+		return Create(name)
+	}
+	return n, nil
+}
+
 // Get returns a namespace for with a given name
 func Get(name string) (*Namespace, error) {
 	cmd := exec.Command("kubectl", "get", "namespace", name, "-o", "json")
