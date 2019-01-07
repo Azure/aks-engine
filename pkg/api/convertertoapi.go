@@ -684,6 +684,7 @@ func convertVLabsKubernetesConfig(vlabs *vlabs.KubernetesConfig, api *Kubernetes
 	api.AzureCNIURLLinux = vlabs.AzureCNIURLLinux
 	api.AzureCNIURLWindows = vlabs.AzureCNIURLWindows
 	api.KeyVaultSku = vlabs.KeyVaultSku
+	api.MaximumLoadBalancerRuleCount = vlabs.MaximumLoadBalancerRuleCount
 	convertAddonsToAPI(vlabs, api)
 	convertKubeletConfigToAPI(vlabs, api)
 	convertControllerManagerConfigToAPI(vlabs, api)
