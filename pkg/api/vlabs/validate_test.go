@@ -1571,27 +1571,6 @@ func TestProperties_ValidateZones(t *testing.T) {
 			expectedErr: "availabilityZone is only available in Kubernetes version 1.12 or greater",
 		},
 		{
-			name:                "Master profile with zones node count",
-			orchestratorRelease: "1.12",
-			masterProfile: &MasterProfile{
-				Count:               1,
-				DNSPrefix:           "foo",
-				VMSize:              "Standard_DS2_v2",
-				AvailabilityProfile: VirtualMachineScaleSets,
-				AvailabilityZones:   []string{"1", "2"},
-			},
-			agentProfiles: []*AgentPoolProfile{
-				{
-					Name:                "agentpool",
-					VMSize:              "Standard_DS2_v2",
-					Count:               4,
-					AvailabilityProfile: VirtualMachineScaleSets,
-					AvailabilityZones:   []string{"1", "2"},
-				},
-			},
-			expectedErr: "the node count and the number of availability zones provided can result in zone imbalance. To achieve zone balance, each zone should have at least 2 nodes or more",
-		},
-		{
 			name:                "Agent profile with zones version",
 			orchestratorRelease: "1.11",
 			masterProfile: &MasterProfile{
@@ -1611,27 +1590,6 @@ func TestProperties_ValidateZones(t *testing.T) {
 				},
 			},
 			expectedErr: "availabilityZone is only available in Kubernetes version 1.12 or greater",
-		},
-		{
-			name:                "Agent profile with zones node count",
-			orchestratorRelease: "1.12",
-			masterProfile: &MasterProfile{
-				Count:               5,
-				DNSPrefix:           "foo",
-				VMSize:              "Standard_DS2_v2",
-				AvailabilityProfile: VirtualMachineScaleSets,
-				AvailabilityZones:   []string{"1", "2"},
-			},
-			agentProfiles: []*AgentPoolProfile{
-				{
-					Name:                "agentpool",
-					VMSize:              "Standard_DS2_v2",
-					Count:               2,
-					AvailabilityProfile: VirtualMachineScaleSets,
-					AvailabilityZones:   []string{"1", "2"},
-				},
-			},
-			expectedErr: "the node count and the number of availability zones provided can result in zone imbalance. To achieve zone balance, each zone should have at least 2 nodes or more",
 		},
 		{
 			name:                "Agent profile with zones vmas",
