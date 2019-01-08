@@ -288,6 +288,10 @@ func (a *Properties) validateOrchestratorProfile(isUpdate bool) error {
 				if o.KubernetesConfig.DockerEngineVersion != "" {
 					log.Warnf("docker-engine is deprecated in favor of moby, but you passed in a dockerEngineVersion configuration. This will be ignored.")
 				}
+
+				if o.KubernetesConfig.MaximumLoadBalancerRuleCount < 0 {
+					return errors.New("maximumLoadBalancerRuleCount shouldn't be less than 0")
+				}
 			}
 		default:
 			return errors.Errorf("OrchestratorProfile has unknown orchestrator: %s", o.OrchestratorType)
@@ -445,17 +449,10 @@ func (a *Properties) validateZones() error {
 		// all zones or no zones should be defined for the cluster
 		if a.HasAvailabilityZones() {
 			if a.MastersAndAgentsUseAvailabilityZones() {
-				// master profile
-				if a.MasterProfile.Count < len(a.MasterProfile.AvailabilityZones)*2 {
-					return errors.New("the node count and the number of availability zones provided can result in zone imbalance. To achieve zone balance, each zone should have at least 2 nodes or more")
-				}
 				// agent pool profiles
 				for _, agentPoolProfile := range a.AgentPoolProfiles {
 					if agentPoolProfile.AvailabilityProfile == AvailabilitySet {
 						return errors.New("Availability Zones are not supported with an AvailabilitySet. Please either remove availabilityProfile or set availabilityProfile to VirtualMachineScaleSets")
-					}
-					if agentPoolProfile.Count < len(agentPoolProfile.AvailabilityZones)*2 {
-						return errors.New("the node count and the number of availability zones provided can result in zone imbalance. To achieve zone balance, each zone should have at least 2 nodes or more")
 					}
 				}
 				if a.OrchestratorProfile.KubernetesConfig != nil && a.OrchestratorProfile.KubernetesConfig.LoadBalancerSku != "" && a.OrchestratorProfile.KubernetesConfig.LoadBalancerSku != "Standard" {

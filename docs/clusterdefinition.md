@@ -66,6 +66,7 @@ To learn more about supported orchestrators and versions, run the orchestrators 
 | useManagedIdentity              | no       | Includes and uses MSI identities for all interactions with the Azure Resource Manager (ARM) API. Instead of using a static service principal written to /etc/kubernetes/azure.json, Kubernetes will use a dynamic, time-limited token fetched from the MSI extension running on master and agent nodes. This support is currently alpha and requires Kubernetes v1.9.1 or newer. (boolean - default == false). When MasterProfile is using `VirtualMachineScaleSets`, this feature requires Kubernetes v1.12 or newer as we default to using user assigned identity. |
 | azureCNIURLLinux                | no       | Deploy a private build of Azure CNI on Linux nodes. This should be a full path to the .tar.gz |
 | azureCNIURLWindows              | no       | Deploy a private build of Azure CNI on Windows nodes. This should be a full path to the .tar.gz |
+| maximumLoadBalancerRuleCount    | no       | Maximum allowed LoadBalancer Rule Count is the limit enforced by Azure Load balancer. Default is 250 |
 
 #### addons
 

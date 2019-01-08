@@ -62,6 +62,10 @@ validate-dependencies: bootstrap
 validate-copyright-headers:
 	./scripts/validate-copyright-header.sh
 
+.PHONY: validate-commit-msg
+validate-commit-msg:
+	./scripts/validate-commit-msg.sh
+
 .PHONY: generate
 generate: bootstrap
 	go generate $(GOFLAGS) -v ./...

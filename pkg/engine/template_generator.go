@@ -459,6 +459,9 @@ func (t *TemplateGenerator) getTemplateFuncMap(cs *api.ContainerService) templat
 		"ExcludeMasterFromStandardLB": func() bool {
 			return to.Bool(cs.Properties.OrchestratorProfile.KubernetesConfig.ExcludeMasterFromStandardLB)
 		},
+		"MaximumLoadBalancerRuleCount": func() int {
+			return cs.Properties.OrchestratorProfile.KubernetesConfig.MaximumLoadBalancerRuleCount
+		},
 		"GetVNETSubnetDependencies": func() string {
 			return getVNETSubnetDependencies(cs.Properties)
 		},
