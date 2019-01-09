@@ -52,7 +52,7 @@ for EXECHEALTHZ_VERSION in ${EXECHEALTHZ_VERSIONS}; do
     pullContainerImage "docker" "k8s.gcr.io/exechealthz-amd64:${EXECHEALTHZ_VERSION}"
 done
 
-ADDON_RESIZER_VERSIONS="1.8.1 1.7"
+ADDON_RESIZER_VERSIONS="1.8.4 1.8.1 1.7"
 for ADDON_RESIZER_VERSION in ${ADDON_RESIZER_VERSIONS}; do
     pullContainerImage "docker" "k8s.gcr.io/addon-resizer:${ADDON_RESIZER_VERSION}"
 done
