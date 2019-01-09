@@ -29,10 +29,12 @@ const (
 // the LinuxDistros supported by vlabs
 const (
 	Ubuntu          Distro = "ubuntu"
+	Ubuntu1804      Distro = "ubuntu-18.04"
 	RHEL            Distro = "rhel"
 	CoreOS          Distro = "coreos"
 	AKS             Distro = "aks"
 	AKSDockerEngine Distro = "aks-docker-engine"
+	AKS1804         Distro = "aks-18.04"
 )
 
 // validation values

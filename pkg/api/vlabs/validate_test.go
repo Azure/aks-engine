@@ -1162,12 +1162,33 @@ func TestAgentPoolProfileDistro(t *testing.T) {
 			Distro: AKSDockerEngine,
 			VMSize: "Standard_NC6",
 		},
+		{
+			Distro: Ubuntu,
+			VMSize: "Standard_NC6",
+		},
+		{
+			Distro: AKS1804,
+			VMSize: "Standard_NC6",
+		},
+		{
+			Distro: Ubuntu1804,
+			VMSize: "Standard_NC6",
+		},
 	}
 	if err := p.AgentPoolProfiles[0].validateKubernetesDistro(); err == nil {
 		t.Errorf("should error on %s Distro with N Series VM SKU", AKS)
 	}
 	if err := p.AgentPoolProfiles[1].validateKubernetesDistro(); err != nil {
 		t.Errorf("should not error on %s Distro with N Series VM SKU", AKSDockerEngine)
+	}
+	if err := p.AgentPoolProfiles[2].validateKubernetesDistro(); err != nil {
+		t.Errorf("should not error on %s Distro with N Series VM SKU", Ubuntu)
+	}
+	if err := p.AgentPoolProfiles[3].validateKubernetesDistro(); err == nil {
+		t.Errorf("should error on %s Distro with N Series VM SKU", AKS1804)
+	}
+	if err := p.AgentPoolProfiles[4].validateKubernetesDistro(); err == nil {
+		t.Errorf("should error on %s Distro with N Series VM SKU", Ubuntu1804)
 	}
 }
 
