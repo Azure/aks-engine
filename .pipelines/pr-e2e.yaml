@@ -49,7 +49,7 @@ jobs:
   - script: make bootstrap
     displayName: Install dependencies
     workingDirectory: $(modulePath)
-  - script: make validate-commit-msg validate-copyright-headers test-style
+  - script: make validate-copyright-headers test-style
     displayName: Run linting rules
     workingDirectory: $(modulePath)
   - script: make validate-dependencies
