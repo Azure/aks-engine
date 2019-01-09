@@ -372,7 +372,7 @@
                     ]
                 }
           {{end}}
-          {{if or $MasterProfile.IsCustomVNET IsOpenShift}}
+          {{if $MasterProfile.IsCustomVNET}}
                   ,"networkSecurityGroup": {
                     "id": "[variables('nsgID')]"
                   }
