@@ -294,6 +294,72 @@ func getK8sMasterVars(cs *api.ContainerService) map[string]interface{} {
 	return masterVars
 }
 
+func getK8sAgentVars(cs *api.ContainerService, profile *api.AgentPoolProfile) map[string]interface{} {
+	agentVars := map[string]interface{}{}
+	agentName := profile.Name
+
+	storageAccountOffset := fmt.Sprintf("%sStorageAccountOffset", agentName)
+	storageAccountsCount := fmt.Sprintf("%sStorageAccountsCount", agentName)
+	agentsCount := fmt.Sprintf("%sCount", agentName)
+	agentsVMNamePrefix := fmt.Sprintf("%sVMNamePrefix", agentName)
+	agentOffset := fmt.Sprintf("%sOffset", agentName)
+	agentAvailabilitySet := fmt.Sprintf("%sAvailabilitySet", agentName)
+	agentScaleSetPriority := fmt.Sprintf("%sScaleSetPriority", agentName)
+	agentScaleSetEvictionPolicy := fmt.Sprintf("%sEvictionPolicy", agentName)
+	agentVMSize := fmt.Sprintf("%sVMSize", agentName)
+	agentVnetSubnetID := fmt.Sprintf("%sVnetSubnetID", agentName)
+	agentSubnetName := fmt.Sprintf("%sSubnetName", agentName)
+	agentVnetParts := fmt.Sprintf("%sVnetParts", agentName)
+
+	agentOsImageOffer := fmt.Sprintf("%sosImageOffer", agentName)
+	agentOsImageSku := fmt.Sprintf("%sosImageSKU", agentName)
+	agentOsImagePublisher := fmt.Sprintf("%sosImagePublisher", agentName)
+	agentOsImageVersion := fmt.Sprintf("%sosImageVersion", agentName)
+	agentOsImageName := fmt.Sprintf("%sosImageName", agentName)
+	agentOsImageResourceGroup := fmt.Sprintf("%sosImageResourceGroup", agentName)
+
+	if profile.IsStorageAccount() {
+		agentVars[storageAccountOffset] = fmt.Sprintf("[mul(variables('maxStorageAccountsPerAgent'),variables('%sIndex'))]", agentName)
+		agentVars[storageAccountsCount] = fmt.Sprintf("[add(div(variables('%[1]sCount'), variables('maxVMsPerStorageAccount')), mod(add(mod(variables('%[1]sCount'), variables('maxVMsPerStorageAccount')),2), add(mod(variables('%[1]sCount'), variables('maxVMsPerStorageAccount')),1)))]", agentName)
+	}
+
+	agentVars[agentsCount] = fmt.Sprintf("[parameters('%s')]", agentsCount)
+	agentVars[agentsVMNamePrefix] = cs.Properties.GetAgentVMPrefix(profile)
+
+	if profile.IsWindows() {
+		agentVars["winResourceNamePrefix"] = "[substring(parameters('nameSuffix'), 0, 5)]"
+	}
+
+	if profile.IsAvailabilitySets() {
+		agentVars[agentOffset] = fmt.Sprintf("[parameters('%s')]", agentOffset)
+		agentVars[agentAvailabilitySet] = fmt.Sprintf("[concat('%s-availabilitySet-', parameters('nameSuffix'))]", agentName)
+	} else {
+		if profile.IsLowPriorityScaleSet() {
+			agentVars[agentScaleSetPriority] = fmt.Sprintf("[parameters('%s')]", agentScaleSetPriority)
+			agentVars[agentScaleSetEvictionPolicy] = fmt.Sprintf("[parameters('%s')]", agentScaleSetEvictionPolicy)
+		}
+	}
+	agentVars[agentVMSize] = fmt.Sprintf("[parameters('%s')]", agentVMSize)
+
+	if profile.IsCustomVNET() {
+		agentVars[agentVnetSubnetID] = fmt.Sprintf("[parameters('%s')]", agentVnetSubnetID)
+		agentVars[agentSubnetName] = fmt.Sprintf("[parameters('%s')]", agentVnetSubnetID)
+		agentVars[agentVnetParts] = fmt.Sprintf("[split(parameters('%sVnetSubnetID'),'/subnets/')]", agentName)
+	} else {
+		agentVars[agentVnetSubnetID] = fmt.Sprintf("[variables('vnetSubnetID')]")
+		agentVars[agentSubnetName] = fmt.Sprintf("[variables('subnetName')]")
+	}
+
+	agentVars[agentOsImageOffer] = fmt.Sprintf("[parameters('%sosImageOffer')]", agentName)
+	agentVars[agentOsImageSku] = fmt.Sprintf("[parameters('%sosImageSKU')]", agentName)
+	agentVars[agentOsImagePublisher] = fmt.Sprintf("[parameters('%sosImagePublisher')]", agentName)
+	agentVars[agentOsImageVersion] = fmt.Sprintf("[parameters('%sosImageVersion')]", agentName)
+	agentVars[agentOsImageName] = fmt.Sprintf("[parameters('%sosImageName')]", agentName)
+	agentVars[agentOsImageResourceGroup] = fmt.Sprintf("[parameters('%sosImageResourceGroup')]", agentName)
+
+	return agentVars
+}
+
 func getSizeMap() map[string]interface{} {
 	var sizeMap map[string]interface{}
 	sizeMapStr := fmt.Sprintf("{%s}", helpers.GetSizeMap())
