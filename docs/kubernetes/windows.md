@@ -88,7 +88,7 @@ $oldPath = [Environment]::GetEnvironmentVariable('Path', [EnvironmentVariableTar
 
 ##### Kubectl (Windows)
 
-The latest release of Kubernetes Control (kubectl) is available on the [Kubernetes release page](https://kubernetes.io/docs/imported/release/notes/). Look for `kubernetes-client-windows-amd64.tar.gz` and download it.
+The latest release of Kubernetes Control (kubectl) is available on the [Kubernetes release page](https://kubernetes.io/docs/setup/release/notes/). Look for `kubernetes-client-windows-amd64.tar.gz` and download it.
 
 Windows 10 version 1803 and later already include `tar`, so extract the archive and move `kubectl.exe` to the same folder (such as `c:\tools`) that you put `aks-engine.exe`. If you don't already have `tar`, then [busybox-w32](https://frippery.org/busybox/) is a good alternative. Download [busybox.exe](https://frippery.org/files/busybox/busybox.exe), then copy it to `c:\tools\tar.exe`. It must be named to `tar.exe` for the next step to work.
 
