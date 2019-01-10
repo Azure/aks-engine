@@ -403,8 +403,7 @@
 {{if not $MasterProfile.IsCustomVNET}}
         "[variables('vnetID')]",
 {{end}}
-{{end}}
-        {{ range $seq2 := loop 0 (subtract $MasterProfile.Count 1) }}
+        {{ range $seq2 := loop 0 (subtract $Context.MasterProfile.Count 1) }}
         {{/* key bit to make sure that ALL the static ips are allocated BEFORE dynamic address assignment */}}
         {{ if gt $seq2 0}} , {{ end }}
         "[concat(variables('masterVMNamePrefix'), 'nic-{{$seq2}}')]"
