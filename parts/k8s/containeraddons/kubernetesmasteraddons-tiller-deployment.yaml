@@ -100,6 +100,8 @@ kind: PodDisruptionBudget
 metadata:
   name: tiller
   namespace: kube-system
+  labels:
+    addonmanager.kubernetes.io/mode: EnsureExists
 spec:
   minAvailable: 0%
   selector:
