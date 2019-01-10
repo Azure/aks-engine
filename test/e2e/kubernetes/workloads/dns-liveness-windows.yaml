@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    test: liveness
+  name: dns-liveness-windows
+spec:
+  containers:
+  - name: dns-liveness
+    image: microsoft/windowsservercore:1803
+    args:
+    - powershell
+    - "-command"
+    - "while ($true){ Start-Sleep -s 5; echo 'sleeping'}"
+    livenessProbe:
+      exec:
+        command:
+        - nslookup
+        - bbc.co.uk
+      initialDelaySeconds: 5
+      periodSeconds: 5
+  nodeSelector:
+        beta.kubernetes.io/os: windows
