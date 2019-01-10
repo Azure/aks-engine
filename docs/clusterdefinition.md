@@ -716,7 +716,7 @@ For apiVersion "2016-03-30", a cluster may have only 1 agent pool profiles.
 
 ### aadProfile
 
-`aadProfile` provides [Azure Active Directory integration](kubernetes.aad.md) configuration for the cluster, currently only available for Kubernetes orchestrator.
+`aadProfile` provides [Azure Active Directory integration](kubernetes/aad.md) configuration for the cluster, currently only available for Kubernetes orchestrator.
 
 | Name         | Required | Description                                                                                                                 |
 | ------------ | -------- | --------------------------------------------------------------------------------------------------------------------------- |
