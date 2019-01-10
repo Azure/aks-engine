@@ -200,7 +200,7 @@ func TestAssignDefaultAddonImages(t *testing.T) {
 		IPMASQAgentAddonName:               "k8s.gcr.io/ip-masq-agent-amd64:v2.0.0",
 		AzureCNINetworkMonitoringAddonName: "containernetworking/networkmonitor:v0.0.4",
 		DefaultDNSAutoscalerAddonName:      "k8s.gcr.io/cluster-proportional-autoscaler-amd64:1.1.1",
-		DefaultHeapsterAddonName:           "k8s.gcr.io/heapster-amd64:v1.5.1",
+		DefaultHeapsterAddonName:           "k8s.gcr.io/heapster-amd64:v1.5.4",
 	}
 
 	var addons []KubernetesAddon
