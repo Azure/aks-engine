@@ -1277,8 +1277,8 @@ func TestSetCertDefaults(t *testing.T) {
 		t.Error("expected setDefaultCerts to create a list of IPs")
 	} else {
 
-		if len(ips) != cs.Properties.MasterProfile.Count+2 {
-			t.Errorf("expected length of IPs from setDefaultCerts %d, actual length %d", cs.Properties.MasterProfile.Count+2, len(ips))
+		if len(ips) != cs.Properties.MasterProfile.Count+3 {
+			t.Errorf("expected length of IPs from setDefaultCerts %d, actual length %d", cs.Properties.MasterProfile.Count+3, len(ips))
 		}
 
 		firstMasterIP := net.ParseIP(cs.Properties.MasterProfile.FirstConsecutiveStaticIP).To4()

@@ -522,13 +522,15 @@ func (p *Properties) setDefaultCerts() (bool, []net.IP, error) {
 	}
 
 	masterExtraFQDNs := append(azureProdFQDNs, p.MasterProfile.SubjectAltNames...)
+	masterExtraFQDNs = append(masterExtraFQDNs, "localhost")
 	firstMasterIP := net.ParseIP(p.MasterProfile.FirstConsecutiveStaticIP).To4()
+	localhostIP := net.ParseIP("127.0.0.1").To4()
 
 	if firstMasterIP == nil {
 		return false, nil, errors.Errorf("MasterProfile.FirstConsecutiveStaticIP '%s' is an invalid IP address", p.MasterProfile.FirstConsecutiveStaticIP)
 	}
 
-	ips := []net.IP{firstMasterIP}
+	ips := []net.IP{firstMasterIP, localhostIP}
 	// Add the Internal Loadbalancer IP which is always at at p known offset from the firstMasterIP
 	ips = append(ips, net.IP{firstMasterIP[0], firstMasterIP[1], firstMasterIP[2], firstMasterIP[3] + byte(DefaultInternalLbStaticIPOffset)})
 	// Include the Internal load balancer as well
