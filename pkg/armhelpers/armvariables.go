@@ -231,16 +231,15 @@ func getK8sMasterVars(cs *api.ContainerService) map[string]interface{} {
 				masterVars["subnetName"] = "[concat(parameters('orchestratorName'), '-subnet')]"
 				masterVars["vnetSubnetID"] = "[concat(variables('vnetID'),'/subnets/',variables('subnetName'))]"
 				masterVars["virtualNetworkName"] = "[concat(parameters('orchestratorName'), '-vnet-', parameters('nameSuffix'))]"
-				masterVars[    "vnetID"] = "[resourceId('Microsoft.Network/virtualNetworks',variables('virtualNetworkName'))]"
-				masterVars[    "virtualNetworkResourceGroupName"] = "''"
+				masterVars["vnetID"] = "[resourceId('Microsoft.Network/virtualNetworks',variables('virtualNetworkName'))]"
+				masterVars["virtualNetworkResourceGroupName"] = "''"
 			}
 		}
 		masterVars["routeTableName"] = "[concat(variables('masterVMNamePrefix'),'routetable')]"
 		if cs.Properties.MasterProfile.IsStorageAccount() {
 			masterVars["masterStorageAccountName"] = "[concat(variables('storageAccountBaseName'), 'mstr0')]"
 		}
-
-		masterVars["nsgName"] = "[concat(variables('agentNamePrefix'), 'nsg')]"
+		masterVars["nsgName"] = "[concat(variables('masterVMNamePrefix'), 'nsg')]"
 
 	} else {
 		if isCustomVnet {
@@ -255,7 +254,8 @@ func getK8sMasterVars(cs *api.ContainerService) map[string]interface{} {
 			masterVars["virtualNetworkName"] = "[concat(parameters('orchestratorName'), '-vnet-', parameters('nameSuffix'))]"
 			masterVars["virtualNetworkResourceGroupName"] = ""
 		}
-		masterVars["nsgName"] = "[concat(variables('masterVMNamePrefix'), 'nsg')]"
+		masterVars["nsgName"] = "[concat(variables('agentNamePrefix'), 'nsg')]"
+
 		masterVars["routeTableName"] = "[concat(variables('agentNamePrefix'), 'routetable')]"
 	}
 
@@ -275,6 +275,7 @@ func getK8sMasterVars(cs *api.ContainerService) map[string]interface{} {
 		masterVars["storageAccountBaseName"] = ""
 	}
 
+	//TODO: This could be a bug
 	if isAzureCNI {
 		masterVars["allocateNodeCidrs"] = false
 	} else {
