@@ -9,7 +9,7 @@ echo "Starting build on " `date` > /var/log/azure/golden-image-install.complete
 echo "Using kernel:" >> /var/log/azure/golden-image-install.complete
 cat /proc/version | tee -a /var/log/azure/golden-image-install.complete
 
-ETCD_VERSION="3.2.24"
+ETCD_VERSION="3.2.25"
 ETCD_DOWNLOAD_URL="https://acs-mirror.azureedge.net/github-coreos"
 installEtcd
 
@@ -52,7 +52,7 @@ for EXECHEALTHZ_VERSION in ${EXECHEALTHZ_VERSIONS}; do
     pullContainerImage "docker" "k8s.gcr.io/exechealthz-amd64:${EXECHEALTHZ_VERSION}"
 done
 
-ADDON_RESIZER_VERSIONS="1.8.1 1.7"
+ADDON_RESIZER_VERSIONS="1.8.4 1.8.1 1.7"
 for ADDON_RESIZER_VERSION in ${ADDON_RESIZER_VERSIONS}; do
     pullContainerImage "docker" "k8s.gcr.io/addon-resizer:${ADDON_RESIZER_VERSION}"
 done
@@ -67,7 +67,7 @@ for METRICS_SERVER_VERSION in ${METRICS_SERVER_VERSIONS}; do
     pullContainerImage "docker" "k8s.gcr.io/metrics-server-amd64:v${METRICS_SERVER_VERSION}"
 done
 
-KUBE_DNS_VERSIONS="1.14.13 1.14.5"
+KUBE_DNS_VERSIONS="1.15.0 1.14.13 1.14.5"
 for KUBE_DNS_VERSION in ${KUBE_DNS_VERSIONS}; do
     pullContainerImage "docker" "k8s.gcr.io/k8s-dns-kube-dns-amd64:${KUBE_DNS_VERSION}"
 done
@@ -77,7 +77,7 @@ for KUBE_ADDON_MANAGER_VERSION in ${KUBE_ADDON_MANAGER_VERSIONS}; do
     pullContainerImage "docker" "k8s.gcr.io/kube-addon-manager-amd64:v${KUBE_ADDON_MANAGER_VERSION}"
 done
 
-KUBE_DNS_MASQ_VERSIONS="1.14.10 1.14.8 1.14.5"
+KUBE_DNS_MASQ_VERSIONS="1.15.0 1.14.10 1.14.8 1.14.5"
 for KUBE_DNS_MASQ_VERSION in ${KUBE_DNS_MASQ_VERSIONS}; do
     pullContainerImage "docker" "k8s.gcr.io/k8s-dns-dnsmasq-nanny-amd64:${KUBE_DNS_MASQ_VERSION}"
 done
