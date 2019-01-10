@@ -67,7 +67,7 @@ for METRICS_SERVER_VERSION in ${METRICS_SERVER_VERSIONS}; do
     pullContainerImage "docker" "k8s.gcr.io/metrics-server-amd64:v${METRICS_SERVER_VERSION}"
 done
 
-KUBE_DNS_VERSIONS="1.14.13 1.14.5"
+KUBE_DNS_VERSIONS="1.15.0 1.14.13 1.14.5"
 for KUBE_DNS_VERSION in ${KUBE_DNS_VERSIONS}; do
     pullContainerImage "docker" "k8s.gcr.io/k8s-dns-kube-dns-amd64:${KUBE_DNS_VERSION}"
 done
@@ -77,7 +77,7 @@ for KUBE_ADDON_MANAGER_VERSION in ${KUBE_ADDON_MANAGER_VERSIONS}; do
     pullContainerImage "docker" "k8s.gcr.io/kube-addon-manager-amd64:v${KUBE_ADDON_MANAGER_VERSION}"
 done
 
-KUBE_DNS_MASQ_VERSIONS="1.14.10 1.14.8 1.14.5"
+KUBE_DNS_MASQ_VERSIONS="1.15.0 1.14.10 1.14.8 1.14.5"
 for KUBE_DNS_MASQ_VERSION in ${KUBE_DNS_MASQ_VERSIONS}; do
     pullContainerImage "docker" "k8s.gcr.io/k8s-dns-dnsmasq-nanny-amd64:${KUBE_DNS_MASQ_VERSION}"
 done
