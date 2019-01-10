@@ -13,14 +13,14 @@ import (
 	"github.com/Azure/aks-engine/pkg/helpers"
 )
 
-func getParameters(cs *api.ContainerService, generatorCode string, acsengineVersion string) (paramsMap, error) {
+func getParameters(cs *api.ContainerService, generatorCode string, aksEngineVersion string) (paramsMap, error) {
 	properties := cs.Properties
 	location := cs.Location
 	parametersMap := paramsMap{}
 	cloudSpecConfig := cs.GetCloudSpecConfig()
 
 	// acsengine Parameters
-	addValue(parametersMap, "acsengineVersion", acsengineVersion)
+	addValue(parametersMap, "aksEngineVersion", aksEngineVersion)
 
 	// Master Parameters
 	addValue(parametersMap, "location", location)
