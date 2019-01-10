@@ -21,14 +21,14 @@
       "ssh": {
         "publicKeys": [
           {
-            "keyData": "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQDdoP+QQRd1hvsNa6/qEW+L7RDY0rnbioD4vPpYMLPCh1svqQtXOF7CkxMogZFolVMVBPMwxT4SamNMJ491ojBWC5pZZdce6hb9PE4s2YHJiVnqNpUJwqn8pp8eSs/MTl8iUqOvGaa0PXth1bdltj7WQYEjMuGYfMOFCIQBy4ZwHHx0tuLf0N0WKGn+dZ6XZJvK+SBV8FOWVekTOVn1oR51/a4RR0E6elwIThghREixQ0QRPM6oR2gNEp9GPbzqEEdaObRSQJ78P9P4rUsm08+mB01KCNS8iy23Ee4y3aoZBjxErYHks88AbnGNS0Myr9e3Jm4Xto811avfeO6EHWJAqLCa5bY0s6zktq0XFg3WHE3XFmURkIU7kvOmBF7MW/vltxub4MfQezOptLx0+FGF6Gc7TScIciHXqaSQ5qKumeAUp/1Bk7i6nZRPij37GjoMR34oPxcrM9BJHbw37w6Nj0RCbMUOLPHJ3mSvzcuzO2bdDWpV/prtkBcDvhTvX5ABJIZ4e1Q0cuJAnwau2TyO/iUCatvXBGkBKMTNnxAZJkB+GIDW+aqwq/grYN6Oqi8+u+6sSpWbKlET2tq7rv0sPwMeMfwNwuLVpcKHXL8Ho+YsEB2ocVXKbTY0X5sYny3RlWDVmy4z9+2e03xnavfSQOsyRzrooM6kIAGjiA1WVQ== tariq.ibrahim@microsoft.com"
+            "keyData": ""
           }
         ]
       }
     },
     "servicePrincipalProfile": {
-      "clientId": "f877da1d-2247-4dd8-9932-7c4a9fc45e7f",
-      "secret": "PwEV@QG7/PYt\"re9"
+      "clientId": "",
+      "secret": ""
     }
   }
 }

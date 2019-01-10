@@ -4,11 +4,48 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/Azure/aks-engine/pkg/api"
+	"github.com/Azure/aks-engine/pkg/api/common"
 	"github.com/Azure/aks-engine/pkg/engine"
 	"github.com/Azure/aks-engine/pkg/helpers"
 	"github.com/Azure/go-autorest/autorest/to"
 	"strconv"
 )
+
+func getK8sVars(cs *api.ContainerService) map[string]interface{} {
+	k8sVars := map[string]interface{}{}
+	profiles := cs.Properties.AgentPoolProfiles
+	for i := 0; i < len(profiles); i++ {
+		profile := profiles[i]
+		k8sVars[fmt.Sprintf("%sIndex", profile.Name)] = i
+		agentVars := getK8sAgentVars(cs, profile)
+
+		for k, v := range agentVars {
+			k8sVars[k] = v
+		}
+
+		if common.IsNvidiaEnabledSKU(profile.VMSize) {
+			if cs.Properties.IsNVIDIADevicePluginEnabled() {
+				k8sVars["registerWithGpuTaints"] = "nvidia.com/gpu=true:NoSchedule"
+			}
+		}
+
+		if profile.IsStorageAccount() {
+			if profile.HasDisks() {
+				k8sVars[fmt.Sprintf("%sDataAccountName", profile.Name)] = fmt.Sprintf("[concat(variables('storageAccountBaseName'), 'data%d')]", i)
+			} else {
+				k8sVars[fmt.Sprintf("%sAccountName", profile.Name)] = fmt.Sprintf("[concat(variables('storageAccountBaseName'), 'agnt%d')]", i)
+			}
+		}
+	}
+
+	masterVars := getK8sMasterVars(cs)
+
+	for k, v := range masterVars {
+		k8sVars[k] = v
+	}
+
+	return k8sVars
+}
 
 func getK8sMasterVars(cs *api.ContainerService) map[string]interface{} {
 	useManagedIdentity := cs.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity
@@ -27,10 +64,9 @@ func getK8sMasterVars(cs *api.ContainerService) map[string]interface{} {
 	enableEncryptionWithExternalKms := to.Bool(cs.Properties.OrchestratorProfile.KubernetesConfig.EnableEncryptionWithExternalKms)
 
 	masterVars := map[string]interface{}{
-		"maxVMsPerPool":                 100,
-		"useManagedIdentityExtension":   strconv.FormatBool(useManagedIdentity),
-		"userAssignedID":                strconv.FormatBool(userAssignedID),
-		"userAssignedClientID":          strconv.FormatBool(userAssignedClientID),
+		"maxVMsPerPool":               100,
+		"useManagedIdentityExtension": strconv.FormatBool(useManagedIdentity),
+
 		"userAssignedIDReference":       "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities/', variables('userAssignedID'))]",
 		"useInstanceMetadata":           strconv.FormatBool(to.Bool(useInstanceMetadata)),
 		"loadBalancerSku":               cs.Properties.OrchestratorProfile.KubernetesConfig.LoadBalancerSku,
@@ -74,12 +110,97 @@ func getK8sMasterVars(cs *api.ContainerService) map[string]interface{} {
 		"vnetResourceGroupNameResourceSegmentIndex": 4,
 	}
 
+	blockOutboundInternet := cs.Properties.FeatureFlags.IsFeatureEnabled("BlockOutboundInternet")
+	var cosmosEndPointUri string
+	if nil != cs.Properties.MasterProfile && to.Bool(cs.Properties.MasterProfile.CosmosEtcd) {
+		cosmosEndPointUri = fmt.Sprintf("%sk8s.etcd.cosmosdb.azure.com", cs.Properties.MasterProfile.DNSPrefix)
+	} else {
+		cosmosEndPointUri = ""
+	}
+
+	if !isHostedMaster {
+		if isMasterVMSS {
+			masterVars["provisionScriptParametersMaster"] = fmt.Sprintf("[concat('COSMOS_URI=%s MASTER_NODE=true NO_OUTBOUND=%t CLUSTER_AUTOSCALER_ADDON=',parameters('kubernetesClusterAutoscalerEnabled'),' ACI_CONNECTOR_ADDON=',parameters('kubernetesACIConnectorEnabled'),' APISERVER_PRIVATE_KEY=',parameters('apiServerPrivateKey'),' CA_CERTIFICATE=',parameters('caCertificate'),' CA_PRIVATE_KEY=',parameters('caPrivateKey'),' MASTER_FQDN=',variables('masterFqdnPrefix'),' KUBECONFIG_CERTIFICATE=',parameters('kubeConfigCertificate'),' KUBECONFIG_KEY=',parameters('kubeConfigPrivateKey'),' ETCD_SERVER_CERTIFICATE=',parameters('etcdServerCertificate'),' ETCD_CLIENT_CERTIFICATE=',parameters('etcdClientCertificate'),' ETCD_SERVER_PRIVATE_KEY=',parameters('etcdServerPrivateKey'),' ETCD_CLIENT_PRIVATE_KEY=',parameters('etcdClientPrivateKey'),' ETCD_PEER_CERTIFICATES=',string(variables('etcdPeerCertificates')),' ETCD_PEER_PRIVATE_KEYS=',string(variables('etcdPeerPrivateKeys')),' ENABLE_AGGREGATED_APIS=',string(parameters('enableAggregatedAPIs')),' KUBECONFIG_SERVER=',variables('kubeconfigServer'))]", cosmosEndPointUri, blockOutboundInternet)
+		} else {
+			masterVars["provisionScriptParametersMaster"] = fmt.Sprintf("[concat('COSMOS_URI=%s MASTER_VM_NAME=',variables('masterVMNames')[variables('masterOffset')],' ETCD_PEER_URL=',variables('masterEtcdPeerURLs')[variables('masterOffset')],' ETCD_CLIENT_URL=',variables('masterEtcdClientURLs')[variables('masterOffset')],' MASTER_NODE=true NO_OUTBOUND=%t CLUSTER_AUTOSCALER_ADDON=',parameters('kubernetesClusterAutoscalerEnabled'),' ACI_CONNECTOR_ADDON=',parameters('kubernetesACIConnectorEnabled'),' APISERVER_PRIVATE_KEY=',parameters('apiServerPrivateKey'),' CA_CERTIFICATE=',parameters('caCertificate'),' CA_PRIVATE_KEY=',parameters('caPrivateKey'),' MASTER_FQDN=',variables('masterFqdnPrefix'),' KUBECONFIG_CERTIFICATE=',parameters('kubeConfigCertificate'),' KUBECONFIG_KEY=',parameters('kubeConfigPrivateKey'),' ETCD_SERVER_CERTIFICATE=',parameters('etcdServerCertificate'),' ETCD_CLIENT_CERTIFICATE=',parameters('etcdClientCertificate'),' ETCD_SERVER_PRIVATE_KEY=',parameters('etcdServerPrivateKey'),' ETCD_CLIENT_PRIVATE_KEY=',parameters('etcdClientPrivateKey'),' ETCD_PEER_CERTIFICATES=',string(variables('etcdPeerCertificates')),' ETCD_PEER_PRIVATE_KEYS=',string(variables('etcdPeerPrivateKeys')),' ENABLE_AGGREGATED_APIS=',string(parameters('enableAggregatedAPIs')),' KUBECONFIG_SERVER=',variables('kubeconfigServer'))]", cosmosEndPointUri, blockOutboundInternet)
+		}
+	}
+
+	//TODO: Implement CosmosDB variables
+
+	if userAssignedID {
+		masterVars["userAssignedID"] = cs.Properties.OrchestratorProfile.KubernetesConfig.UserAssignedID
+	} else {
+		masterVars["userAssignedID"] = ""
+	}
+
+	if userAssignedClientID {
+		masterVars["userAssignedClientID"] = cs.Properties.OrchestratorProfile.KubernetesConfig.UserAssignedClientID
+	} else {
+		masterVars["userAssignedClientID"] = ""
+	}
+
+	if !isHostedMaster {
+		masterCount := cs.Properties.MasterProfile.Count
+
+		if masterCount == 1 {
+			masterVars["etcdPeerPrivateKeys"] = []string{"[parameters('etcdPeerPrivateKey0')]"}
+			masterVars["etcdPeerCertificates"] = []string{"[parameters('etcdPeerCertificate0')]"}
+		} else if masterCount == 3 {
+			masterVars["etcdPeerPrivateKeys"] = []string{
+				"[parameters('etcdPeerPrivateKey0')]",
+				"[parameters('etcdPeerPrivateKey1')]",
+				"[parameters('etcdPeerPrivateKey2')]",
+			}
+			masterVars["etcdPeerCertificates"] = []string{
+				"[parameters('etcdPeerCertificate0')]",
+				"[parameters('etcdPeerCertificate1')]",
+				"[parameters('etcdPeerCertificate2')]",
+			}
+		} else if masterCount == 5 {
+			masterVars["etcdPeerPrivateKeys"] = []string{
+				"[parameters('etcdPeerPrivateKey0')]",
+				"[parameters('etcdPeerPrivateKey1')]",
+				"[parameters('etcdPeerPrivateKey2')]",
+				"[parameters('etcdPeerPrivateKey3')]",
+				"[parameters('etcdPeerPrivateKey4')]",
+			}
+			masterVars["etcdPeerCertificates"] = []string{
+				"[parameters('etcdPeerCertificate0')]",
+				"[parameters('etcdPeerCertificate1')]",
+				"[parameters('etcdPeerCertificate2')]",
+				"[parameters('etcdPeerCertificate3')]",
+				"[parameters('etcdPeerCertificate4')]",
+			}
+		}
+		masterVars["etcdPeerCertFilepath"] = []string{
+			"/etc/kubernetes/certs/etcdpeer0.crt",
+			"/etc/kubernetes/certs/etcdpeer1.crt",
+			"/etc/kubernetes/certs/etcdpeer2.crt",
+			"/etc/kubernetes/certs/etcdpeer3.crt",
+			"/etc/kubernetes/certs/etcdpeer4.crt",
+		}
+
+		masterVars["etcdPeerKeyFilepath"] = []string{
+			"/etc/kubernetes/certs/etcdpeer0.key",
+			"/etc/kubernetes/certs/etcdpeer1.key",
+			"/etc/kubernetes/certs/etcdpeer2.key",
+			"/etc/kubernetes/certs/etcdpeer3.key",
+			"/etc/kubernetes/certs/etcdpeer4.key",
+		}
+
+		masterVars["etcdCaFilepath"] = "/etc/kubernetes/certs/ca.crt"
+		masterVars["etcdClientCertFilepath"] = "/etc/kubernetes/certs/etcdclient.crt"
+		masterVars["etcdClientKeyFilepath"] = "/etc/kubernetes/certs/etcdclient.key"
+		masterVars["etcdServerCertFilepath"] = "/etc/kubernetes/certs/etcdserver.crt"
+		masterVars["etcdServerKeyFilepath"] = "/etc/kubernetes/certs/etcdserver.key"
+	}
 	if useManagedIdentity {
 		masterVars["servicePrincipalClientId"] = "msi"
 		masterVars["servicePrincipalClientSecret"] = "msi"
 	} else {
 		masterVars["servicePrincipalClientId"] = "[parameters('servicePrincipalClientId')]"
-		masterVars["servicePrincipalClientId"] = "[parameters('servicePrincipalClientSecret')]"
+		masterVars["servicePrincipalClientSecret"] = "[parameters('servicePrincipalClientSecret')]"
 	}
 
 	if !isHostedMaster {
@@ -226,7 +347,7 @@ func getK8sMasterVars(cs *api.ContainerService) map[string]interface{} {
 		}
 
 		masterVars["masterLbBackendPoolName"] = "[concat(parameters('orchestratorName'), '-master-pool-', parameters('nameSuffix'))]"
-		//masterVars["masterFirstAddrComment"] = "these MasterFirstAddrComment are used to place multiple masters consecutively in the address space"
+		masterVars["masterFirstAddrComment"] = "these MasterFirstAddrComment are used to place multiple masters consecutively in the address space"
 		masterVars["masterFirstAddrOctets"] = "[split(parameters('firstConsecutiveStaticIP'),'.')]"
 		masterVars["masterFirstAddrOctet4"] = "[variables('masterFirstAddrOctets')[3]]"
 		masterVars["masterFirstAddrPrefix"] = "[concat(variables('masterFirstAddrOctets')[0],'.',variables('masterFirstAddrOctets')[1],'.',variables('masterFirstAddrOctets')[2],'.')]"
@@ -288,7 +409,8 @@ func getK8sMasterVars(cs *api.ContainerService) map[string]interface{} {
 
 	if enableEncryptionWithExternalKms {
 		masterVars["clusterKeyVaultName"] = "[take(concat('kv', tolower(uniqueString(concat(variables('masterFqdnPrefix'),variables('location'),parameters('nameSuffix'))))), 22)]"
-
+	} else {
+		masterVars["clusterKeyVaultName"] = ""
 	}
 
 	return masterVars
