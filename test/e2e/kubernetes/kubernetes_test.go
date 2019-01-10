@@ -612,10 +612,12 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 					}
 					if i > 28 {
 						log.Printf("Error while running kubectl top nodes:%s\n", err)
-						p, err := pod.Get("metrics-server", "kube-system")
+						pods, err := pod.GetAllByPrefix("metrics-server", "kube-system")
 						Expect(err).NotTo(HaveOccurred())
-						err = p.Logs()
-						Expect(err).NotTo(HaveOccurred())
+						for _, p := range pods {
+							err = p.Logs()
+							Expect(err).NotTo(HaveOccurred())
+						}
 						log.Println(string(out))
 					}
 				}
