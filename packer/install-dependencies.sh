@@ -87,7 +87,7 @@ for PAUSE_VERSION in ${PAUSE_VERSIONS}; do
     pullContainerImage "docker" "k8s.gcr.io/pause-amd64:${PAUSE_VERSION}"
 done
 
-TILLER_VERSIONS="2.8.1"
+TILLER_VERSIONS="2.8.1 2.11.0"
 for TILLER_VERSION in ${TILLER_VERSIONS}; do
     pullContainerImage "docker" "gcr.io/kubernetes-helm/tiller:v${TILLER_VERSION}"
 done
@@ -140,6 +140,11 @@ done
 KV_FLEXVOLUME_VERSIONS="0.0.5"
 for KV_FLEXVOLUME_VERSION in ${KV_FLEXVOLUME_VERSIONS}; do
     pullContainerImage "docker" "mcr.microsoft.com/k8s/flexvolume/keyvault-flexvolume:v${KV_FLEXVOLUME_VERSION}"
+done
+
+BLOBFUSE-FLEXVOLUME_VERSIONS="1.0.7"
+for FLEXVOLUME_VERSIONS in ${FLEXVOLUME_VERSIONS}; do
+    pullContainerImage "docker" "mcr.microsoft.com/k8s/flexvolume/blobfuse-flexvolume:v${FLEXVOLUME_VERSIONS}"
 done
 
 IP_MASQ_AGENT_VERSIONS="2.0.0"
