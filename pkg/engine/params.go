@@ -19,7 +19,7 @@ func getParameters(cs *api.ContainerService, generatorCode string, aksEngineVers
 	parametersMap := paramsMap{}
 	cloudSpecConfig := cs.GetCloudSpecConfig()
 
-	// acsengine Parameters
+	// aksengine Parameters
 	addValue(parametersMap, "aksEngineVersion", aksEngineVersion)
 
 	// Master Parameters

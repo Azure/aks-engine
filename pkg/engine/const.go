@@ -70,7 +70,7 @@ const (
 	// DefaultELBSVCAddonName is the name of the elb service addon deployment
 	DefaultELBSVCAddonName = "elb-svc"
 	// DefaultGeneratorCode specifies the source generator of the cluster template.
-	DefaultGeneratorCode = "acsengine"
+	DefaultGeneratorCode = "aksengine"
 	// DefaultReschedulerAddonName is the name of the rescheduler addon deployment
 	DefaultReschedulerAddonName = "rescheduler"
 	// DefaultHeapsterAddonName is the name of the heapster addon deployment

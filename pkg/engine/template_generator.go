@@ -43,7 +43,7 @@ func InitializeTemplateGenerator(ctx Context) (*TemplateGenerator, error) {
 }
 
 // GenerateTemplate generates the template from the API Model
-func (t *TemplateGenerator) GenerateTemplate(containerService *api.ContainerService, generatorCode string, aksEngineVersion string) (templateRaw string, parametersRaw string, err error) {
+func (t *TemplateGenerator) GenerateTemplate(containerService *api.ContainerService, generatorCode string, aksengineVersion string) (templateRaw string, parametersRaw string, err error) {
 	// named return values are used in order to set err in case of a panic
 	templateRaw = ""
 	parametersRaw = ""
@@ -100,7 +100,7 @@ func (t *TemplateGenerator) GenerateTemplate(containerService *api.ContainerServ
 	templateRaw = b.String()
 
 	var parametersMap paramsMap
-	if parametersMap, err = getParameters(containerService, generatorCode, aksEngineVersion); err != nil {
+	if parametersMap, err = getParameters(containerService, generatorCode, aksengineVersion); err != nil {
 		return templateRaw, parametersRaw, err
 	}
 
