@@ -9,7 +9,7 @@ echo "Starting build on " `date` > /var/log/azure/golden-image-install.complete
 echo "Using kernel:" >> /var/log/azure/golden-image-install.complete
 cat /proc/version | tee -a /var/log/azure/golden-image-install.complete
 
-ETCD_VERSION="3.2.24"
+ETCD_VERSION="3.2.25"
 ETCD_DOWNLOAD_URL="https://acs-mirror.azureedge.net/github-coreos"
 installEtcd
 
