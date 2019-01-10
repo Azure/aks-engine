@@ -344,7 +344,7 @@
       "creationSource": "[concat(parameters('generatorCode'), '-', variables('masterVMNamePrefix'), 'vmss')]",
       "resourceNameSuffix": "[parameters('nameSuffix')]",
       "orchestrator": "[variables('orchestratorNameVersionTag')]",
-      "acsengineVersion" : "[parameters('acsengineVersion')]",
+      "aksEngineVersion" : "[parameters('aksEngineVersion')]",
       "poolName": "master"
     },
     "location": "[variables('location')]",
