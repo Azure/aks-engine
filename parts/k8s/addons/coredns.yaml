@@ -185,6 +185,8 @@ kind: PodDisruptionBudget
 metadata:
   name: coredns
   namespace: kube-system
+  labels:
+    addonmanager.kubernetes.io/mode: EnsureExists
 spec:
   minAvailable: 50%
   selector:
