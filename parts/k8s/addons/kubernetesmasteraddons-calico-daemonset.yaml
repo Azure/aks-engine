@@ -257,6 +257,8 @@ kind: PodDisruptionBudget
 metadata:
   name: calico-typha
   namespace: kube-system
+  labels:
+    addonmanager.kubernetes.io/mode: EnsureExists
 spec:
   minAvailable: 0%
   selector:
@@ -374,6 +376,8 @@ kind: PodDisruptionBudget
 metadata:
   name: calico-typha-horizontal-autoscaler
   namespace: kube-system
+  labels:
+    addonmanager.kubernetes.io/mode: "EnsureExists"
 spec:
   minAvailable: 0%
   selector:
