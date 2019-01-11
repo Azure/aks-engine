@@ -124,33 +124,54 @@ func (cli *CLIProvisioner) provision() error {
 
 	subnetID := ""
 	vnetName := fmt.Sprintf("%sCustomVnet", cli.Config.Name)
-	subnetName := fmt.Sprintf("%sCustomSubnet", cli.Config.Name)
-	masterSubnetID := ""
+	masterSubnetName := fmt.Sprintf("%sCustomSubnetMaster", cli.Config.Name)
+	masterSubnetID := fmt.Sprintf("/subscriptions/%s/resourceGroups/%s/providers/Microsoft.Network/virtualNetworks/%s/subnets/%s", cli.Account.SubscriptionID, cli.Account.ResourceGroup.Name, vnetName, masterSubnetName)
 	agentSubnetID := ""
+	agentSubnetIDs := []string{}
 
 	if cli.CreateVNET {
 		if cli.MasterVMSS {
-			masterSubnetName := fmt.Sprintf("%sCustomSubnetMaster", cli.Config.Name)
 			agentSubnetName := fmt.Sprintf("%sCustomSubnetAgent", cli.Config.Name)
-			err = cli.Account.CreateVnet(vnetName, "10.239.0.0/16", masterSubnetName, "10.239.0.0/17")
+			err = cli.Account.CreateVnet(vnetName, "10.239.0.0/16")
 			if err != nil {
 				return errors.Errorf("Error trying to create vnet:%s", err.Error())
 			}
-
-			masterSubnetID = fmt.Sprintf("/subscriptions/%s/resourceGroups/%s/providers/Microsoft.Network/virtualNetworks/%s/subnets/%s", cli.Account.SubscriptionID, cli.Account.ResourceGroup.Name, vnetName, masterSubnetName)
-
+			err = cli.Account.CreateSubnet(vnetName, masterSubnetName, "10.239.0.0/17")
+			if err != nil {
+				return errors.Errorf("Error trying to create subnet:%s", err.Error())
+			}
 			err = cli.Account.CreateSubnet(vnetName, agentSubnetName, "10.239.128.0/17")
 			if err != nil {
-				return errors.Errorf("Error trying to create subnet in vnet:%s", err.Error())
+				return errors.Errorf("Error trying to create subnet in subnet:%s", err.Error())
 			}
 
 			agentSubnetID = fmt.Sprintf("/subscriptions/%s/resourceGroups/%s/providers/Microsoft.Network/virtualNetworks/%s/subnets/%s", cli.Account.SubscriptionID, cli.Account.ResourceGroup.Name, vnetName, agentSubnetName)
 		} else {
-			err = cli.Account.CreateVnet(vnetName, "10.239.0.0/16", subnetName, "10.239.0.0/16")
+			config, err := engine.ParseConfig(cli.Config.CurrentWorkingDir, cli.Config.ClusterDefinition, cli.Config.Name)
+			if err != nil {
+				log.Printf("Error while trying to build Engine Configuration:%s\n", err)
+			}
+			cs, err := engine.ParseInput(config.ClusterDefinitionPath)
+			if err != nil {
+				return err
+			}
+			err = cli.Account.CreateVnet(vnetName, "10.239.0.0/16")
 			if err != nil {
 				return errors.Errorf("Error trying to create vnet:%s", err.Error())
 			}
-			subnetID = fmt.Sprintf("/subscriptions/%s/resourceGroups/%s/providers/Microsoft.Network/virtualNetworks/%s/subnets/%s", cli.Account.SubscriptionID, cli.Account.ResourceGroup.Name, vnetName, subnetName)
+			err = cli.Account.CreateSubnet(vnetName, masterSubnetName, "10.239.255.0/24")
+			if err != nil {
+				return errors.Errorf("Error trying to create subnet:%s", err.Error())
+			}
+			for i, pool := range cs.ContainerService.Properties.AgentPoolProfiles {
+				subnetName := fmt.Sprintf("%sCustomSubnet", pool.Name)
+				err = cli.Account.CreateSubnet(vnetName, subnetName, fmt.Sprintf("10.239.%d.0/24", i+1))
+				if err != nil {
+					return errors.Errorf("Error trying to create subnet:%s", err.Error())
+				}
+				subnetID = fmt.Sprintf("/subscriptions/%s/resourceGroups/%s/providers/Microsoft.Network/virtualNetworks/%s/subnets/%s", cli.Account.SubscriptionID, cli.Account.ResourceGroup.Name, vnetName, subnetName)
+				agentSubnetIDs = append(agentSubnetIDs, subnetID)
+			}
 		}
 	}
 
@@ -158,9 +179,9 @@ func (cli *CLIProvisioner) provision() error {
 	var eng *engine.Engine
 
 	if cli.CreateVNET && cli.MasterVMSS {
-		eng, err = engine.Build(cli.Config, masterSubnetID, agentSubnetID, true)
+		eng, err = engine.Build(cli.Config, masterSubnetID, []string{agentSubnetID}, true)
 	} else {
-		eng, err = engine.Build(cli.Config, subnetID, subnetID, false)
+		eng, err = engine.Build(cli.Config, masterSubnetID, agentSubnetIDs, false)
 	}
 
 	if err != nil {

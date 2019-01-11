@@ -226,21 +226,19 @@ func (a *Account) CreateDeployment(name string, e *engine.Engine) error {
 }
 
 // CreateVnet will create a vnet in a resource group
-func (a *Account) CreateVnet(vnet, addressPrefixes, subnetName, subnetPrefix string) error {
+func (a *Account) CreateVnet(vnet, addressPrefixes string) error {
 	var cmd *exec.Cmd
 	if a.TimeoutCommands {
 		cmd = exec.Command("timeout", "60", "az", "network", "vnet", "create", "-g",
-			a.ResourceGroup.Name, "-n", vnet, "--address-prefixes", addressPrefixes,
-			"--subnet-name", subnetName, "--subnet-prefix", subnetPrefix)
+			a.ResourceGroup.Name, "-n", vnet, "--address-prefixes", addressPrefixes)
 	} else {
 		cmd = exec.Command("az", "network", "vnet", "create", "-g",
-			a.ResourceGroup.Name, "-n", vnet, "--address-prefixes", addressPrefixes,
-			"--subnet-name", subnetName, "--subnet-prefix", subnetPrefix)
+			a.ResourceGroup.Name, "-n", vnet, "--address-prefixes", addressPrefixes)
 	}
 	util.PrintCommand(cmd)
 	out, err := cmd.CombinedOutput()
 	if err != nil {
-		log.Printf("Error while trying to create vnet with the following command:\n az network vnet create -g %s -n %s --address-prefixes %s --subnet-name %s --subnet-prefix %s \n Output:%s\n", a.ResourceGroup.Name, vnet, addressPrefixes, subnetName, subnetPrefix, out)
+		log.Printf("Error while trying to create vnet with the following command:\n az network vnet create -g %s -n %s --address-prefixes %s\n Output:%s\n", a.ResourceGroup.Name, vnet, addressPrefixes, out)
 		return err
 	}
 	return nil
