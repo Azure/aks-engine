@@ -86,13 +86,23 @@
     "masterOffset": "[parameters('masterOffset')]",
     {{ end }}
 {{end}}
+{{if not IsAzureStackCloud}}
     "apiVersionCompute": "2018-06-01",
     "apiVersionStorage": "2018-07-01",
     "apiVersionKeyVault": "2018-02-14",
     "apiVersionNetwork": "2018-08-01",
-    "apiVersionManagedIdentity": "2015-08-31-preview",
     "apiVersionAuthorizationUser": "2018-09-01-preview",
     "apiVersionAuthorizationSystem": "2018-01-01-preview",
+{{ else }}
+    "apiVersionCompute": "2017-03-30",
+    "apiVersionStorage": "2017-10-01",
+    "apiVersionKeyVault": "2016-10-01",
+    "apiVersionNetwork": "2017-10-01",
+    "apiVersionAuthorizationUser": "2015-07-01",
+    "apiVersionAuthorizationSystem": "2015-07-01",
+    "environmentJSON": "{{GetCustomEnvironmentJSON}}",
+{{ end }}
+    "apiVersionManagedIdentity": "2015-08-31-preview",
     "locations": [
          "[resourceGroup().location]",
          "[parameters('location')]"

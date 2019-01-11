@@ -401,4 +401,6 @@ const (
 	AzureChinaCloud        = "AzureChinaCloud"
 	azureGermanCloud       = "AzureGermanCloud"
 	azureUSGovernmentCloud = "AzureUSGovernmentCloud"
+	// AzureStackCloud is a const string reference identifier for Azure Stack cloud
+	AzureStackCloud = "AzureStackCloud"
 )
