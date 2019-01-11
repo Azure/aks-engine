@@ -57,7 +57,7 @@ for ADDON_RESIZER_VERSION in ${ADDON_RESIZER_VERSIONS}; do
     pullContainerImage "docker" "k8s.gcr.io/addon-resizer:${ADDON_RESIZER_VERSION}"
 done
 
-HEAPSTER_VERSIONS="1.5.3 1.5.1"
+HEAPSTER_VERSIONS="1.5.4 1.5.3 1.5.1"
 for HEAPSTER_VERSION in ${HEAPSTER_VERSIONS}; do
     pullContainerImage "docker" "k8s.gcr.io/heapster-amd64:v${HEAPSTER_VERSION}"
 done
