@@ -5,7 +5,7 @@ package main
 
 import (
 	"github.com/Azure/aks-engine/cmd"
-	"github.com/mattn/go-colorable"
+	colorable "github.com/mattn/go-colorable"
 	log "github.com/sirupsen/logrus"
 )
 
