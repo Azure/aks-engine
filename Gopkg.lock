@@ -30,12 +30,13 @@
   version = "v24.0.0"
 
 [[projects]]
-  digest = "1:44a1ddb10a1ee66aa8b7625b507829d30a423e555690b8db840f8caf35cb0e79"
+  digest = "1:b087403a2a2aa3fb245807bdcd3a62fa2792680df0b45259db12ddadf2ea1539"
   name = "github.com/Azure/go-autorest"
   packages = [
     "autorest",
     "autorest/adal",
     "autorest/azure",
+    "autorest/azure/cli",
     "autorest/date",
     "autorest/to",
     "autorest/validation",
@@ -43,8 +44,8 @@
     "tracing",
   ]
   pruneopts = "NUT"
-  revision = "f401b1ccc8eb505927fae7a0c7f6406d37ca1c7e"
-  version = "v11.2.8"
+  revision = "be17756531f50014397912b7aa557ec335e39b98"
+  version = "v11.3.0"
 
 [[projects]]
   digest = "1:6eefbb45475750bda6fc0331c36acd2015640ec5ed2ff7f8e2b0646aee451175"
@@ -98,6 +99,14 @@
   pruneopts = "NUT"
   revision = "06ea1031745cb8b3dab3f6a236daf2b0aa468b7e"
   version = "v3.2.0"
+
+[[projects]]
+  digest = "1:f9adc21a937e5da643ea14a3488cb7506788876737a5e205394e508627a6eec8"
+  name = "github.com/dimchansky/utfbom"
+  packages = ["."]
+  pruneopts = "NUT"
+  revision = "d2133a1ce379ef6fa992b0514a77146c60db9d1c"
+  version = "v1.1.0"
 
 [[projects]]
   digest = "1:81466b4218bf6adddac2572a30ac733a9255919bc2f470b4827a317bd4ee1756"
@@ -249,7 +258,7 @@
     "pkg/escape",
   ]
   pruneopts = "NUT"
-  revision = "efdb37386875ec70c5df4ff303c07cc0323624e5"
+  revision = "fef6d4618e96a760b6677113385dc6125823047e"
 
 [[projects]]
   digest = "1:8e36686e8b139f8fe240c1d5cf3a145bc675c22ff8e707857cdd3ae17b00d728"
@@ -391,12 +400,12 @@
   version = "v1.4.3"
 
 [[projects]]
-  digest = "1:5cf3f025cbee5951a4ee961de067c8a89fc95a5adabead774f82822efabab121"
+  digest = "1:14715f705ff5dfe0ffd6571d7d201dd8e921030f8070321a79380d8ca4ec1a24"
   name = "github.com/pkg/errors"
   packages = ["."]
   pruneopts = "NUT"
-  revision = "645ef00459ed84a119197bfb8d8205042c6df63d"
-  version = "v0.8.0"
+  revision = "ba968bfe8b2f7e042a574c888954fccecfa385b4"
+  version = "v0.8.1"
 
 [[projects]]
   digest = "1:6bc0652ea6e39e22ccd522458b8bdd8665bf23bdc5a20eec90056e4dc7e273ca"
@@ -407,12 +416,12 @@
   version = "v1.2.0"
 
 [[projects]]
-  digest = "1:d848e2bdc690ea54c4b49894b67a05db318a97ee6561879b814c2c1f82f61406"
+  digest = "1:e256b859ab89f005f2f639f5ed9807d0873d9135e27c6382f419b840ff9abe71"
   name = "github.com/sirupsen/logrus"
   packages = ["."]
   pruneopts = "NUT"
-  revision = "bcd833dfe83d3cebad139e4a29ed79cb2318bf95"
-  version = "v1.2.0"
+  revision = "e1e72e9de974bd926e5c56f83753fba2df402ce5"
+  version = "v1.3.0"
 
 [[projects]]
   digest = "1:343d44e06621142ab09ae0c76c1799104cdfddd3ffb445d78b1adf8dc3ffaf3d"
@@ -470,7 +479,7 @@
     "ssh/terminal",
   ]
   pruneopts = "NUT"
-  revision = "505ab145d0a99da450461ae2c1a9f6cd10d1f447"
+  revision = "ff983b9c42bc9fbf91556e191cc8efb585c16908"
 
 [[projects]]
   branch = "master"
@@ -489,7 +498,7 @@
     "trace",
   ]
   pruneopts = "NUT"
-  revision = "927f97764cc334a6575f4b7a1584a147864d5723"
+  revision = "395948e2f546cb82afa9e1f6d1a6e87849b9af1d"
 
 [[projects]]
   branch = "master"
@@ -504,14 +513,14 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:b5da9f75e020ec1f263b98525d57b99107cedfc86904ae4103100077663b9242"
+  digest = "1:29edb5eca830bfe65f504139807795dbc79844ebf1a44345aac6ecf644f73885"
   name = "golang.org/x/sys"
   packages = [
     "unix",
     "windows",
   ]
   pruneopts = "NUT"
-  revision = "b4a75ba826a64a70990f11a225237acd6ef35c9f"
+  revision = "7fbe1cd0fcc20051e1fcb87fbabec4a1bacaaeba"
 
 [[projects]]
   digest = "1:8a12cbc891b7130d3f660f8a309e5c0b083f831e6ac38cdaa1f12e63c12d6bea"
@@ -557,12 +566,12 @@
   revision = "85acf8d2951cb2a3bde7632f9ff273ef0379bcbd"
 
 [[projects]]
-  branch = "master"
   digest = "1:5f003878aabe31d7f6b842d4de32b41c46c214bb629bb485387dbcce1edf5643"
   name = "google.golang.org/api"
   packages = ["support/bundler"]
   pruneopts = "NUT"
-  revision = "65a46cafb132eff435c7d1e0f439cc73c8eebb85"
+  revision = "19e022d8cf43ce81f046bae8cc18c5397cc7732f"
+  version = "v0.1.0"
 
 [[projects]]
   branch = "master"
@@ -570,7 +579,7 @@
   name = "google.golang.org/genproto"
   packages = ["googleapis/rpc/status"]
   pruneopts = "NUT"
-  revision = "bd9b4fb69e2ffd37621a6caa54dcbead29b546f2"
+  revision = "ae2f86662275e140f395167f1dab7081a5bd5fa8"
 
 [[projects]]
   digest = "1:638e6e596d67d0a0c8aeb76ebdcf73561b701ea43f21963b1db231d96ed7db68"
@@ -638,12 +647,12 @@
   version = "v0.9.1"
 
 [[projects]]
-  digest = "1:331fe4e4cee05255c0079e18a9e043c446742c47a64ea00ce859048e2ee768c9"
+  digest = "1:5e92676b56ce4c69edf9ee1f6343c56f637e30af11b9d8b5edd1b6530f3fbc3d"
   name = "gopkg.in/ini.v1"
   packages = ["."]
   pruneopts = "NUT"
-  revision = "a9da9309fb4822643ceebb765f80025c35ac19a1"
-  version = "v1.40.0"
+  revision = "6ed8d5f64cd79a498d1f3fab5880cc376ce41bbe"
+  version = "v1.41.0"
 
 [[projects]]
   branch = "v1"
@@ -818,6 +827,7 @@
     "github.com/Azure/go-autorest/autorest",
     "github.com/Azure/go-autorest/autorest/adal",
     "github.com/Azure/go-autorest/autorest/azure",
+    "github.com/Azure/go-autorest/autorest/azure/cli",
     "github.com/Azure/go-autorest/autorest/date",
     "github.com/Azure/go-autorest/autorest/to",
     "github.com/Jeffail/gabs",

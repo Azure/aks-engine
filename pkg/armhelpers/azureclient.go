@@ -28,6 +28,7 @@ import (
 	"github.com/Azure/go-autorest/autorest"
 	"github.com/Azure/go-autorest/autorest/adal"
 	"github.com/Azure/go-autorest/autorest/azure"
+	"github.com/Azure/go-autorest/autorest/azure/cli"
 	"github.com/Azure/go-autorest/autorest/to"
 	homedir "github.com/mitchellh/go-homedir"
 	"github.com/pkg/errors"
@@ -70,6 +71,26 @@ type AzureClient struct {
 	servicePrincipalsClient graphrbac.ServicePrincipalsClient
 }
 
+// NewAzureClientWithCLI creates an AzureClient configured from Azure CLI 2.0 for local development scenarios.
+func NewAzureClientWithCLI(env azure.Environment, subscriptionID string) (*AzureClient, error) {
+	_, tenantID, err := getOAuthConfig(env, subscriptionID)
+	if err != nil {
+		return nil, err
+	}
+
+	token, err := cli.GetTokenFromCLI(env.ResourceManagerEndpoint)
+	if err != nil {
+		return nil, err
+	}
+
+	adalToken, err := token.ToADALToken()
+	if err != nil {
+		return nil, err
+	}
+
+	return getClient(env, subscriptionID, tenantID, autorest.NewBearerAuthorizer(&adalToken), autorest.NewBearerAuthorizer(&adalToken)), nil
+}
+
 // NewAzureClientWithDeviceAuth returns an AzureClient by having a user complete a device authentication flow
 func NewAzureClientWithDeviceAuth(env azure.Environment, subscriptionID string) (*AzureClient, error) {
 	oauthConfig, tenantID, err := getOAuthConfig(env, subscriptionID)
@@ -107,7 +128,7 @@ func NewAzureClientWithDeviceAuth(env azure.Environment, subscriptionID string) 
 			}
 			graphSpt.Refresh()
 
-			return getClient(env, subscriptionID, tenantID, armSpt, graphSpt), nil
+			return getClient(env, subscriptionID, tenantID, autorest.NewBearerAuthorizer(armSpt), autorest.NewBearerAuthorizer(graphSpt)), nil
 		}
 	}
 
@@ -139,7 +160,7 @@ func NewAzureClientWithDeviceAuth(env azure.Environment, subscriptionID string) 
 	}
 	graphSpt.Refresh()
 
-	return getClient(env, subscriptionID, tenantID, armSpt, graphSpt), nil
+	return getClient(env, subscriptionID, tenantID, autorest.NewBearerAuthorizer(armSpt), autorest.NewBearerAuthorizer(graphSpt)), nil
 }
 
 // NewAzureClientWithClientSecret returns an AzureClient via client_id and client_secret
@@ -159,7 +180,7 @@ func NewAzureClientWithClientSecret(env azure.Environment, subscriptionID, clien
 	}
 	graphSpt.Refresh()
 
-	return getClient(env, subscriptionID, tenantID, armSpt, graphSpt), nil
+	return getClient(env, subscriptionID, tenantID, autorest.NewBearerAuthorizer(armSpt), autorest.NewBearerAuthorizer(graphSpt)), nil
 }
 
 // NewAzureClientWithClientSecretExternalTenant returns an AzureClient via client_id and client_secret from a tenant
@@ -179,7 +200,7 @@ func NewAzureClientWithClientSecretExternalTenant(env azure.Environment, subscri
 	}
 	graphSpt.Refresh()
 
-	return getClient(env, subscriptionID, tenantID, armSpt, graphSpt), nil
+	return getClient(env, subscriptionID, tenantID, autorest.NewBearerAuthorizer(armSpt), autorest.NewBearerAuthorizer(graphSpt)), nil
 }
 
 // NewAzureClientWithClientCertificateFile returns an AzureClient via client_id and jwt certificate assertion
@@ -246,7 +267,7 @@ func newAzureClientWithCertificate(env azure.Environment, oauthConfig *adal.OAut
 	}
 	graphSpt.Refresh()
 
-	return getClient(env, subscriptionID, tenantID, armSpt, graphSpt), nil
+	return getClient(env, subscriptionID, tenantID, autorest.NewBearerAuthorizer(armSpt), autorest.NewBearerAuthorizer(graphSpt)), nil
 }
 
 func tokenCallback(path string) func(t adal.Token) error {
@@ -303,7 +324,7 @@ func getAcsEngineClientID(envName string) string {
 	}
 }
 
-func getClient(env azure.Environment, subscriptionID, tenantID string, armSpt *adal.ServicePrincipalToken, graphSpt *adal.ServicePrincipalToken) *AzureClient {
+func getClient(env azure.Environment, subscriptionID, tenantID string, armAuthorizer autorest.Authorizer, graphAuthorizer autorest.Authorizer) *AzureClient {
 	c := &AzureClient{
 		environment:    env,
 		subscriptionID: subscriptionID,
@@ -326,20 +347,19 @@ func getClient(env azure.Environment, subscriptionID, tenantID string, armSpt *a
 		servicePrincipalsClient: graphrbac.NewServicePrincipalsClientWithBaseURI(env.GraphEndpoint, tenantID),
 	}
 
-	authorizer := autorest.NewBearerAuthorizer(armSpt)
-	c.authorizationClient.Authorizer = authorizer
-	c.deploymentsClient.Authorizer = authorizer
-	c.deploymentOperationsClient.Authorizer = authorizer
-	c.msiClient.Authorizer = authorizer
-	c.resourcesClient.Authorizer = authorizer
-	c.storageAccountsClient.Authorizer = authorizer
-	c.interfacesClient.Authorizer = authorizer
-	c.groupsClient.Authorizer = authorizer
-	c.providersClient.Authorizer = authorizer
-	c.virtualMachinesClient.Authorizer = authorizer
-	c.virtualMachineScaleSetsClient.Authorizer = authorizer
-	c.virtualMachineScaleSetVMsClient.Authorizer = authorizer
-	c.disksClient.Authorizer = authorizer
+	c.authorizationClient.Authorizer = armAuthorizer
+	c.deploymentsClient.Authorizer = armAuthorizer
+	c.deploymentOperationsClient.Authorizer = armAuthorizer
+	c.msiClient.Authorizer = armAuthorizer
+	c.resourcesClient.Authorizer = armAuthorizer
+	c.storageAccountsClient.Authorizer = armAuthorizer
+	c.interfacesClient.Authorizer = armAuthorizer
+	c.groupsClient.Authorizer = armAuthorizer
+	c.providersClient.Authorizer = armAuthorizer
+	c.virtualMachinesClient.Authorizer = armAuthorizer
+	c.virtualMachineScaleSetsClient.Authorizer = armAuthorizer
+	c.virtualMachineScaleSetVMsClient.Authorizer = armAuthorizer
+	c.disksClient.Authorizer = armAuthorizer
 
 	c.deploymentsClient.PollingDelay = time.Second * 5
 	c.resourcesClient.PollingDelay = time.Second * 5
@@ -359,7 +379,6 @@ func getClient(env azure.Environment, subscriptionID, tenantID string, armSpt *a
 	c.virtualMachineScaleSetVMsClient.PollingDuration = DefaultARMOperationTimeout
 	c.virtualMachinesClient.PollingDuration = DefaultARMOperationTimeout
 
-	graphAuthorizer := autorest.NewBearerAuthorizer(graphSpt)
 	c.applicationsClient.Authorizer = graphAuthorizer
 	c.servicePrincipalsClient.Authorizer = graphAuthorizer
 
