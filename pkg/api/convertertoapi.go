@@ -11,6 +11,7 @@ import (
 	v20170701 "github.com/Azure/aks-engine/pkg/api/v20170701"
 	"github.com/Azure/aks-engine/pkg/api/vlabs"
 	"github.com/Azure/aks-engine/pkg/helpers"
+	"github.com/Azure/go-autorest/autorest/azure"
 )
 
 ///////////////////////////////////////////////////////////
@@ -402,6 +403,11 @@ func convertVLabsProperties(vlabs *vlabs.Properties, api *Properties, isUpdate b
 	if vlabs.FeatureFlags != nil {
 		api.FeatureFlags = &FeatureFlags{}
 		convertVLabsFeatureFlags(vlabs.FeatureFlags, api.FeatureFlags)
+	}
+
+	if vlabs.CustomCloudProfile != nil {
+		api.CustomCloudProfile = &CustomCloudProfile{}
+		convertVLabsCustomCloudProfile(vlabs.CustomCloudProfile, api.CustomCloudProfile)
 	}
 }
 
@@ -1197,4 +1203,30 @@ func addDCOSPublicAgentPool(api *Properties) {
 		publicPool.Count = 3
 	}
 	api.AgentPoolProfiles = append(api.AgentPoolProfiles, publicPool)
+}
+
+func convertVLabsCustomCloudProfile(vlabs *vlabs.CustomCloudProfile, api *CustomCloudProfile) {
+	if vlabs.Enviornment != nil {
+		api.Enviornment = &azure.Environment{}
+		api.Enviornment.Name = vlabs.Enviornment.Name
+		api.Enviornment.ManagementPortalURL = vlabs.Enviornment.ManagementPortalURL
+		api.Enviornment.PublishSettingsURL = vlabs.Enviornment.PublishSettingsURL
+		api.Enviornment.ServiceManagementEndpoint = vlabs.Enviornment.ServiceManagementEndpoint
+		api.Enviornment.ResourceManagerEndpoint = vlabs.Enviornment.ResourceManagerEndpoint
+		api.Enviornment.ActiveDirectoryEndpoint = vlabs.Enviornment.ActiveDirectoryEndpoint
+		api.Enviornment.GalleryEndpoint = vlabs.Enviornment.GalleryEndpoint
+		api.Enviornment.KeyVaultEndpoint = vlabs.Enviornment.KeyVaultEndpoint
+		api.Enviornment.GraphEndpoint = vlabs.Enviornment.GraphEndpoint
+		api.Enviornment.ServiceBusEndpoint = vlabs.Enviornment.ServiceBusEndpoint
+		api.Enviornment.BatchManagementEndpoint = vlabs.Enviornment.BatchManagementEndpoint
+		api.Enviornment.StorageEndpointSuffix = vlabs.Enviornment.StorageEndpointSuffix
+		api.Enviornment.SQLDatabaseDNSSuffix = vlabs.Enviornment.SQLDatabaseDNSSuffix
+		api.Enviornment.TrafficManagerDNSSuffix = vlabs.Enviornment.TrafficManagerDNSSuffix
+		api.Enviornment.KeyVaultDNSSuffix = vlabs.Enviornment.KeyVaultDNSSuffix
+		api.Enviornment.ServiceBusEndpointSuffix = vlabs.Enviornment.ServiceBusEndpointSuffix
+		api.Enviornment.ServiceManagementVMDNSSuffix = vlabs.Enviornment.ServiceManagementVMDNSSuffix
+		api.Enviornment.ResourceManagerVMDNSSuffix = vlabs.Enviornment.ResourceManagerVMDNSSuffix
+		api.Enviornment.ContainerRegistryDNSSuffix = vlabs.Enviornment.ContainerRegistryDNSSuffix
+		api.Enviornment.TokenAudience = vlabs.Enviornment.TokenAudience
+	}
 }

@@ -22,6 +22,7 @@ import (
 	v20170701 "github.com/Azure/aks-engine/pkg/api/v20170701"
 	"github.com/Azure/aks-engine/pkg/api/vlabs"
 	"github.com/Azure/aks-engine/pkg/helpers"
+	"github.com/Azure/go-autorest/autorest/azure"
 	"github.com/Azure/go-autorest/autorest/to"
 	"github.com/blang/semver"
 )
@@ -73,6 +74,7 @@ type Properties struct {
 	HostedMasterProfile     *HostedMasterProfile     `json:"hostedMasterProfile,omitempty"`
 	AddonProfiles           map[string]AddonProfile  `json:"addonProfiles,omitempty"`
 	FeatureFlags            *FeatureFlags            `json:"featureFlags,omitempty"`
+	CustomCloudProfile      *CustomCloudProfile      `json:"customCloudProfile,omitempty"`
 }
 
 // ClusterMetadata represents the metadata of the AKS cluster.
@@ -667,6 +669,11 @@ type V20170831ARMManagedContainerService struct {
 type V20180331ARMManagedContainerService struct {
 	TypeMeta
 	*v20180331.ManagedCluster
+}
+
+// CustomCloudProfile Represents Azure Enviornment
+type CustomCloudProfile struct {
+	Enviornment *azure.Environment `json:"environment,omitempty"`
 }
 
 // HasWindows returns true if the cluster contains windows
