@@ -311,7 +311,7 @@
     },
     {{/* allocate all static ips separately and BEFORE dynamic ips */}}
       {{range $seq := loop 0 (subtract .MasterProfile.Count 1) }}
-         {{ $MasterProfile := $Context.MasterProfile }}
+        {{ $MasterProfile := $Context.MasterProfile }}
         {
           "apiVersion": "[variables('apiVersionNetwork')]",
           "dependsOn": [
@@ -398,11 +398,6 @@
 {{ if HasCosmosEtcd }}
         "[resourceId('Microsoft.DocumentDB/databaseAccounts/', variables('cosmosAccountName'))]",
 {{ end }}
-{{else}}
-        "[variables('nsgID')]",
-{{if not $MasterProfile.IsCustomVNET}}
-        "[variables('vnetID')]",
-{{end}}
         {{ range $seq2 := loop 0 (subtract $Context.MasterProfile.Count 1) }}
         {{/* key bit to make sure that ALL the static ips are allocated BEFORE dynamic address assignment */}}
         {{ if gt $seq2 0}} , {{ end }}
