@@ -153,7 +153,7 @@ This command will output three files:
 wrote _output/Swarm-12652785/apimodel.json
 wrote _output/Swarm-12652785/azuredeploy.json
 wrote _output/Swarm-12652785/azuredeploy.parameters.json
-acsengine took 37.1384ms
+aksengine took 37.1384ms
 ```
 
 - apimodel.json: this is the cluster definition file you gave to AKS Engine

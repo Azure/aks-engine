@@ -1324,7 +1324,7 @@ func TestProperties_ValidateManagedIdentity(t *testing.T) {
 			name:                "use managed identity with master vmss",
 			orchestratorRelease: "1.11",
 			useManagedIdentity:  true,
-			userAssignedID:      "utacsenginetestid",
+			userAssignedID:      "utaksenginetestid",
 			masterProfile: MasterProfile{
 				DNSPrefix:           "dummy",
 				Count:               3,
@@ -1360,7 +1360,7 @@ func TestProperties_ValidateManagedIdentity(t *testing.T) {
 			name:                "use user assigned identity with master vmas",
 			orchestratorRelease: "1.11",
 			useManagedIdentity:  true,
-			userAssignedID:      "acsenginetestid",
+			userAssignedID:      "aksenginetestid",
 			masterProfile: MasterProfile{
 				DNSPrefix: "dummy",
 				Count:     3,
