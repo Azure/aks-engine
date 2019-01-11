@@ -19,8 +19,9 @@ import (
 )
 
 const (
-	interval = time.Second * 1
-	retry    = time.Second * 5
+	interval           = time.Second * 1
+	retry              = time.Second * 5
+	cordonDrainTimeout = time.Minute * 10
 )
 
 // Compiler to verify QueueMessageProcessor implements OperationsProcessor
@@ -59,7 +60,7 @@ func (kan *UpgradeAgentNode) DeleteNode(vmName *string, drain bool) error {
 	}
 	// Cordon and drain the node
 	if drain {
-		err = operations.SafelyDrainNodeWithClient(client, kan.logger, *vmName, time.Minute)
+		err = operations.SafelyDrainNodeWithClient(client, kan.logger, *vmName, cordonDrainTimeout)
 		if err != nil {
 			kan.logger.Warningf("Error draining agent VM %s. Proceeding with deletion. Error: %v", *vmName, err)
 			// Proceed with deletion anyways
