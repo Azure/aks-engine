@@ -142,9 +142,9 @@ for KV_FLEXVOLUME_VERSION in ${KV_FLEXVOLUME_VERSIONS}; do
     pullContainerImage "docker" "mcr.microsoft.com/k8s/flexvolume/keyvault-flexvolume:v${KV_FLEXVOLUME_VERSION}"
 done
 
-BLOBFUSE-FLEXVOLUME_VERSIONS="1.0.7"
-for FLEXVOLUME_VERSIONS in ${FLEXVOLUME_VERSIONS}; do
-    pullContainerImage "docker" "mcr.microsoft.com/k8s/flexvolume/blobfuse-flexvolume:v${FLEXVOLUME_VERSIONS}"
+BLOBFUSE_FLEXVOLUME_VERSIONS="1.0.7"
+for BLOBFUSE_FLEXVOLUME_VERSION in ${BLOBFUSE_FLEXVOLUME_VERSIONS}; do
+    pullContainerImage "docker" "mcr.microsoft.com/k8s/flexvolume/blobfuse-flexvolume:v${BLOBFUSE_FLEXVOLUME_VERSION}"
 done
 
 IP_MASQ_AGENT_VERSIONS="2.0.0"
