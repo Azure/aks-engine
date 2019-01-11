@@ -144,7 +144,7 @@ done
 
 BLOBFUSE_FLEXVOLUME_VERSIONS="1.0.7"
 for BLOBFUSE_FLEXVOLUME_VERSION in ${BLOBFUSE_FLEXVOLUME_VERSIONS}; do
-    pullContainerImage "docker" "mcr.microsoft.com/k8s/flexvolume/blobfuse-flexvolume:v${BLOBFUSE_FLEXVOLUME_VERSION}"
+    pullContainerImage "docker" "mcr.microsoft.com/k8s/flexvolume/blobfuse-flexvolume:${BLOBFUSE_FLEXVOLUME_VERSION}"
 done
 
 IP_MASQ_AGENT_VERSIONS="2.0.0"
