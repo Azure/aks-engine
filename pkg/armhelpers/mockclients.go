@@ -378,7 +378,7 @@ func (mc *MockAKSEngineClient) ListVirtualMachines(ctx context.Context, resource
 	resourceNameSuffixString := "resourceNameSuffix"
 	poolnameString := "poolName"
 
-	creationSource := "acsengine-k8s-agentpool1-12345678-0"
+	creationSource := "aksengine-k8s-agentpool1-12345678-0"
 	orchestrator := "Kubernetes:1.7.9"
 	resourceNameSuffix := "12345678"
 	poolname := "agentpool1"
@@ -446,7 +446,7 @@ func (mc *MockAKSEngineClient) GetVirtualMachine(ctx context.Context, resourceGr
 	resourceNameSuffixString := "resourceNameSuffix"
 	poolnameString := "poolName"
 
-	creationSource := "acsengine-k8s-agentpool1-12345678-0"
+	creationSource := "aksengine-k8s-agentpool1-12345678-0"
 	orchestrator := "Kubernetes:1.7.9"
 	resourceNameSuffix := "12345678"
 	poolname := "agentpool1"

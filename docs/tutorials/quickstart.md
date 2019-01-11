@@ -159,7 +159,7 @@ Setup steps:
   5. Type `go get -d github.com/Azure/aks-engine` to download aks-engine from GitHub
   6. Type `go get all` to get the supporting components
   7. Type `go get -u github.com/go-bindata/go-bindata/...`
-  8. Type `cd %GOPATH%\src\github.com\Azure\aks-engine\pkg\acsengine`
+  8. Type `cd %GOPATH%\src\github.com\Azure\aks-engine\pkg\engine`
   9. Type `go generate`
   10. Type `cd %GOPATH%\src\github.com\Azure\aks-engine\pkg\i18n`
   11. Type `go generate`
