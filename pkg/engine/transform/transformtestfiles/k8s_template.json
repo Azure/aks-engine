@@ -2148,7 +2148,7 @@
         "dnsSettings": {
           "domainNameLabel": "[variables('masterFqdnPrefix')]"
         },
-        "publicIPAllocationMethod": "Dynamic"
+        "publicIPAllocationMethod": "Static"
       },
       "type": "Microsoft.Network/publicIPAddresses"
     },
