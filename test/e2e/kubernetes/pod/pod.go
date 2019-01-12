@@ -59,6 +59,7 @@ type Container struct {
 	Ports     []Port    `json:"ports"`
 	Env       []EnvVar  `json:"env"`
 	Resources Resources `json:"resources"`
+	Name      string    `json:"name"`
 }
 
 // TerminatedContainerState shows terminated state of a container
@@ -492,6 +493,15 @@ func WaitOnReady(podPrefix, namespace string, successesNeeded int, sleep, durati
 	for {
 		select {
 		case err := <-errCh:
+			pods, _ := GetAllByPrefix(podPrefix, namespace)
+			if pods != nil {
+				for _, p := range pods {
+					e := p.Logs()
+					if e != nil {
+						log.Printf("Unable to print pod logs for pod %s", p.Metadata.Name)
+					}
+				}
+			}
 			return false, err
 		case ready := <-readyCh:
 			return ready, nil
@@ -770,6 +780,19 @@ func (p *Pod) ValidateHostPort(check string, attempts int, sleep time.Duration, 
 		time.Sleep(sleep)
 	}
 	return false
+}
+
+// Logs will get logs from all containers in a pod
+func (p *Pod) Logs() error {
+	for _, container := range p.Spec.Containers {
+		cmd := exec.Command("kubectl", "logs", p.Metadata.Name, "-c", container.Name, "-n", p.Metadata.Namespace)
+		out, err := util.RunAndLogCommand(cmd)
+		log.Printf("\n%s\n", string(out))
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 // ValidateAzureFile will keep retrying the check if azure file is mounted in Pod
