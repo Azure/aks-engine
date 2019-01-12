@@ -8,7 +8,7 @@ import (
 	"strings"
 
 	"github.com/Azure/aks-engine/pkg/api/common"
-	"github.com/Azure/aks-engine/pkg/api/v20170930"
+	v20170930 "github.com/Azure/aks-engine/pkg/api/v20170930"
 	"github.com/Azure/aks-engine/pkg/api/vlabs"
 	"github.com/blang/semver"
 	"github.com/pkg/errors"

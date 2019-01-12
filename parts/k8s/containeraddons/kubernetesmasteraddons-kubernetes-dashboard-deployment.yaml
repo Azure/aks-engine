@@ -127,14 +127,3 @@ spec:
       serviceAccountName: kubernetes-dashboard
       nodeSelector:
         beta.kubernetes.io/os: linux
----
-apiVersion: policy/v1beta1
-kind: PodDisruptionBudget
-metadata:
-  name: kubernetes-dashboard
-  namespace: kube-system
-spec:
-  minAvailable: 0%
-  selector:
-    matchLabels:
-      k8s-app: kubernetes-dashboard

@@ -200,7 +200,7 @@ func TestAssignDefaultAddonImages(t *testing.T) {
 		IPMASQAgentAddonName:               "k8s.gcr.io/ip-masq-agent-amd64:v2.0.0",
 		AzureCNINetworkMonitoringAddonName: "containernetworking/networkmonitor:v0.0.4",
 		DefaultDNSAutoscalerAddonName:      "k8s.gcr.io/cluster-proportional-autoscaler-amd64:1.1.1",
-		DefaultHeapsterAddonName:           "k8s.gcr.io/heapster-amd64:v1.5.1",
+		DefaultHeapsterAddonName:           "k8s.gcr.io/heapster-amd64:v1.5.4",
 	}
 
 	var addons []KubernetesAddon
@@ -1277,8 +1277,8 @@ func TestSetCertDefaults(t *testing.T) {
 		t.Error("expected setDefaultCerts to create a list of IPs")
 	} else {
 
-		if len(ips) != cs.Properties.MasterProfile.Count+2 {
-			t.Errorf("expected length of IPs from setDefaultCerts %d, actual length %d", cs.Properties.MasterProfile.Count+2, len(ips))
+		if len(ips) != cs.Properties.MasterProfile.Count+3 {
+			t.Errorf("expected length of IPs from setDefaultCerts %d, actual length %d", cs.Properties.MasterProfile.Count+3, len(ips))
 		}
 
 		firstMasterIP := net.ParseIP(cs.Properties.MasterProfile.FirstConsecutiveStaticIP).To4()

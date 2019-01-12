@@ -57,7 +57,7 @@ for ADDON_RESIZER_VERSION in ${ADDON_RESIZER_VERSIONS}; do
     pullContainerImage "docker" "k8s.gcr.io/addon-resizer:${ADDON_RESIZER_VERSION}"
 done
 
-HEAPSTER_VERSIONS="1.5.3 1.5.1"
+HEAPSTER_VERSIONS="1.5.4 1.5.3 1.5.1"
 for HEAPSTER_VERSION in ${HEAPSTER_VERSIONS}; do
     pullContainerImage "docker" "k8s.gcr.io/heapster-amd64:v${HEAPSTER_VERSION}"
 done
@@ -87,7 +87,7 @@ for PAUSE_VERSION in ${PAUSE_VERSIONS}; do
     pullContainerImage "docker" "k8s.gcr.io/pause-amd64:${PAUSE_VERSION}"
 done
 
-TILLER_VERSIONS="2.8.1"
+TILLER_VERSIONS="2.8.1 2.11.0"
 for TILLER_VERSION in ${TILLER_VERSIONS}; do
     pullContainerImage "docker" "gcr.io/kubernetes-helm/tiller:v${TILLER_VERSION}"
 done
@@ -142,6 +142,11 @@ for KV_FLEXVOLUME_VERSION in ${KV_FLEXVOLUME_VERSIONS}; do
     pullContainerImage "docker" "mcr.microsoft.com/k8s/flexvolume/keyvault-flexvolume:v${KV_FLEXVOLUME_VERSION}"
 done
 
+BLOBFUSE_FLEXVOLUME_VERSIONS="1.0.7"
+for BLOBFUSE_FLEXVOLUME_VERSION in ${BLOBFUSE_FLEXVOLUME_VERSIONS}; do
+    pullContainerImage "docker" "mcr.microsoft.com/k8s/flexvolume/blobfuse-flexvolume:${BLOBFUSE_FLEXVOLUME_VERSION}"
+done
+
 IP_MASQ_AGENT_VERSIONS="2.0.0"
 for IP_MASQ_AGENT_VERSION in ${IP_MASQ_AGENT_VERSIONS}; do
     pullContainerImage "docker" "gcr.io/google-containers/ip-masq-agent-amd64:v${IP_MASQ_AGENT_VERSION}"
@@ -160,7 +165,7 @@ done
 pullContainerImage "docker" "busybox"
 
 # TODO: fetch supported k8s versions from an aks-engine command instead of hardcoding them here
-K8S_VERSIONS="1.7.15 1.7.16 1.8.14 1.8.15 1.9.10 1.9.11 1.10.9 1.10.12 1.11.5 1.11.6 1.12.2 1.12.4 1.13.1"
+K8S_VERSIONS="1.7.15 1.7.16 1.8.14 1.8.15 1.9.10 1.9.11 1.10.9 1.10.12 1.11.5 1.11.6 1.12.2 1.12.4 1.13.1 1.13.2"
 
 for KUBERNETES_VERSION in ${K8S_VERSIONS}; do
     HYPERKUBE_URL="k8s.gcr.io/hyperkube-amd64:v${KUBERNETES_VERSION}"

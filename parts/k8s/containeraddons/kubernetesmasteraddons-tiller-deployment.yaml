@@ -94,15 +94,3 @@ spec:
             memory: {{ContainerMemLimits "tiller"}}
       nodeSelector:
         beta.kubernetes.io/os: linux
----
-apiVersion: policy/v1beta1
-kind: PodDisruptionBudget
-metadata:
-  name: tiller
-  namespace: kube-system
-spec:
-  minAvailable: 0%
-  selector:
-    matchLabels:
-      app: helm
-      name: tiller

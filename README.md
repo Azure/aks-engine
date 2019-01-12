@@ -3,39 +3,32 @@
 [![Coverage Status](https://codecov.io/gh/Azure/aks-engine/branch/master/graph/badge.svg)](https://codecov.io/gh/Azure/aks-engine)
 [![GoDoc](https://godoc.org/github.com/Azure/aks-engine?status.svg)](https://godoc.org/github.com/Azure/aks-engine)
 
+AKS-Engine is the easiest way to provision a self-managed Kubernetes cluster on Azure.
+
 ## Overview
 
-AKS-Engine leverages ARM (Azure Resource Manager) to build Kubernetes IaaS in Azure. AKS-Engine provides convenient tooling to quickly bootstrap clusters, and implements cluster provisioning and lifecycle operations for [AKS](https://docs.microsoft.com/en-us/azure/aks), Azure's managed Kubernetes service offering.
+AKS-Engine provides convenient tooling to quickly bootstrap Kubernetes clusters on Azure. By leveraging [ARM (Azure Resource Manager)][ARM], AKS-Engine helps you create, destroy and maintain clusters provisioned with basic IaaS resources in Azure. AKS-Engine is also the library used by AKS for performing these operations to provide managed service implementations.
 
-More info, including a thorough walkthrough is [here](docs/aksengine.md).
+## Getting started
 
-Please see the [FAQ](/docs/faq.md) for answers about AKS-Engine and its progenitor ACS-Engine.
+Depending on how new you are to AKS-Engine, you can try [a tutorial][tutorials], or just dive straight into the [documentation][docs].
 
-## User guides
+Please see the [FAQ][] for answers about AKS-Engine and its progenitor ACS-Engine.
 
-[This guide](docs/kubernetes.md) walks you through your first cluster deployment.
+## Sharpen your skills
 
-These guides cover more advanced features to try out after you have built your first cluster:
+The official [AKS-Engine documentation][docs] covers everything you need to know about AKS-Engine (and then some).
 
-* [Cluster Definition](docs/clusterdefinition.md) - describes the components of the cluster definition file
-* [Custom VNET](examples/vnet) - shows how to use a custom VNET
-* [Attached Disks](examples/disks-storageaccount) - shows how to attach up to 4 disks per node
-* [Managed Disks](examples/disks-managed) - shows how to use managed disks
-* [Large Clusters](examples/largeclusters) - shows how to create cluster sizes of up to 1200 nodes
+## Join the community
 
-## Contributing
-
-Follow the [developers guide](docs/developers.md) to set up your environment.
-
-To build aks-engine, run `make build`. If you are developing with a working [Docker environment](https://docs.docker.com/engine), you can also run `make dev` (or `makedev.ps1` on Windows) first to start a Docker container and run `make build` inside the container.
-
-Please follow these instructions before submitting a PR:
-
-1. Execute `make test` to run unit tests.
-2. Manually test deployments if you are making modifications to the templates.
-* For example, if you have to change the expected resulting templates then you should deploy the relevant example cluster definitions to ensure that you are not introducing any regressions.
-3. Make sure that your changes are properly documented and include relevant unit tests.
+Want to get involved? The [community guide][community] covers everything you need to know about the AKS-Engine community and how you can contribute.
 
 ## Code of conduct
 
-This project has adopted the [Microsoft Open Source Code of Conduct](https://opensource.microsoft.com/codeofconduct/). For more information see the [Code of Conduct FAQ](https://opensource.microsoft.com/codeofconduct/faq) or contact [opencode@microsoft.com](mailto:opencode@microsoft.com) with any additional questions or comments.
+This project has adopted the [Microsoft Open Source Code of Conduct](https://opensource.microsoft.com/codeofconduct/). For more information, see the [Code of Conduct FAQ](https://opensource.microsoft.com/codeofconduct/faq) or contact [opencode@microsoft.com](mailto:opencode@microsoft.com) with any additional questions or comments.
+
+[ARM]: https://docs.microsoft.com/en-us/azure/azure-resource-manager/resource-group-overview
+[community]: docs/community/README.md
+[docs]: docs/README.md
+[FAQ]: docs/faq.md
+[tutorials]: docs/tutorials/README.md

@@ -26,4 +26,4 @@ In addition to any custom node labels you may add, AKS Engine will add another l
 
 You can confirm the labels have been applied on the node by running `kubectl describe node <nodename>`:
 
-![Node Labels](images/kubernetesnodelabels.png)
+![Node Labels](static/img/kubernetesnodelabels.png)
