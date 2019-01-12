@@ -180,19 +180,6 @@ spec:
             - key: Corefile
               path: Corefile
 ---
-apiVersion: policy/v1beta1
-kind: PodDisruptionBudget
-metadata:
-  name: coredns
-  namespace: kube-system
-  labels:
-    addonmanager.kubernetes.io/mode: EnsureExists
-spec:
-  minAvailable: 50%
-  selector:
-    matchLabels:
-      k8s-app: kube-dns
----
 apiVersion: v1
 kind: Service
 metadata:

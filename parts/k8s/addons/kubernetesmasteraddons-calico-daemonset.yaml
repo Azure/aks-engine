@@ -252,21 +252,6 @@ spec:
 
 ---
 
-apiVersion: policy/v1beta1
-kind: PodDisruptionBudget
-metadata:
-  name: calico-typha
-  namespace: kube-system
-  labels:
-    addonmanager.kubernetes.io/mode: EnsureExists
-spec:
-  minAvailable: 0%
-  selector:
-    matchLabels:
-      k8s-app: calico-typha
-
----
-
 # Typha Horizontal Autoscaler Cluster Role
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
@@ -368,21 +353,6 @@ spec:
           limits:
             cpu: 10m
       serviceAccountName: typha-cpha
-
----
-
-apiVersion: policy/v1beta1
-kind: PodDisruptionBudget
-metadata:
-  name: calico-typha-horizontal-autoscaler
-  namespace: kube-system
-  labels:
-    addonmanager.kubernetes.io/mode: "EnsureExists"
-spec:
-  minAvailable: 0%
-  selector:
-    matchLabels:
-      k8s-app: calico-typha-autoscaler
 
 ---
 
