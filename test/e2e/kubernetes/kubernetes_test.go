@@ -615,8 +615,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 						pods, err := pod.GetAllByPrefix("metrics-server", "kube-system")
 						Expect(err).NotTo(HaveOccurred())
 						for _, p := range pods {
-							err = p.Logs()
-							Expect(err).NotTo(HaveOccurred())
+							p.Logs()
 						}
 						log.Println(string(out))
 					}
