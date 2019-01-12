@@ -7,7 +7,7 @@ import (
 	"github.com/Azure/go-autorest/autorest/to"
 )
 
-func createWindowsImage(cs *api.ContainerService, profile api.AgentPoolProfile) ImageARM {
+func createWindowsImage(cs *api.ContainerService, profile *api.AgentPoolProfile) ImageARM {
 	return ImageARM{
 		ARMResource: ARMResource{
 			ApiVersion: "[variables('apiVersionCompute')]",

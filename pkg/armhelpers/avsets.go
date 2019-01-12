@@ -7,7 +7,7 @@ import (
 	"github.com/Azure/go-autorest/autorest/to"
 )
 
-func createAvailabilitySet(cs *api.ContainerService) AvailabilitySetARM {
+func CreateAvailabilitySet(cs *api.ContainerService, isManagedDisks bool) AvailabilitySetARM {
 
 	armResource := ARMResource{
 		ApiVersion: "[variables('apiVersionCompute')]",
@@ -20,7 +20,7 @@ func createAvailabilitySet(cs *api.ContainerService) AvailabilitySetARM {
 	}
 
 	if !cs.Properties.MasterProfile.HasAvailabilityZones() {
-		if cs.Properties.MasterProfile.IsManagedDisks() {
+		if isManagedDisks {
 			avSet.AvailabilitySetProperties = &compute.AvailabilitySetProperties{
 				PlatformFaultDomainCount:  to.Int32Ptr(2),
 				PlatformUpdateDomainCount: to.Int32Ptr(3),

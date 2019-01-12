@@ -32,7 +32,7 @@ func TestMarshalJSON(t *testing.T) {
 			},
 		},
 	}
-	armObject := createCustomScriptExtension(cs)
+	armObject := CreateCustomScriptExtension(cs)
 
 	jsonObj, _ := json.MarshalIndent(armObject, "", "   ")
 	fmt.Println(string(jsonObj))

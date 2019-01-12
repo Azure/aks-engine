@@ -33,7 +33,7 @@ func createStorageAccount(cs *api.ContainerService) StorageAccountARM {
 	}
 }
 
-func createJumpboxStorageAccount(cs *api.ContainerService) StorageAccountARM {
+func createJumpboxStorageAccount() StorageAccountARM {
 	armResource := ARMResource{
 		ApiVersion: "[variables('apiVersionStorage')]",
 	}
@@ -69,12 +69,19 @@ func createKeyVaultStorageAccount(cs *api.ContainerService) StorageAccountARM {
 	}
 }
 
-func createAgentVMASStorageAccount(cs *api.ContainerService, profile *api.AgentPoolProfile) StorageAccountARM {
+func createAgentVMASStorageAccount(cs *api.ContainerService, profile *api.AgentPoolProfile, isDataDisk bool) StorageAccountARM {
+	var copyName string
+	if isDataDisk {
+		copyName = "datadiskLoop"
+	} else {
+		copyName = "loop"
+	}
+
 	armResource := ARMResource{
 		ApiVersion: "[variables('apiVersionStorage')]",
 		Copy: map[string]string{
 			"count": fmt.Sprintf("[variables('%sStorageAccountsCount')]", profile.Name),
-			"name":  "loop",
+			"name":  copyName,
 		},
 	}
 
@@ -94,7 +101,7 @@ func createAgentVMASStorageAccount(cs *api.ContainerService, profile *api.AgentP
 		},
 	}
 
-	if profile.HasDisks() {
+	if isDataDisk {
 		storageAccount.Name = to.StringPtr(fmt.Sprintf("[concat(variables('storageAccountPrefixes')[mod(add(copyIndex(variables('dataStorageAccountPrefixSeed')),variables('%[1]sStorageAccountOffset')),variables('storageAccountPrefixesCount'))],variables('storageAccountPrefixes')[div(add(copyIndex(variables('dataStorageAccountPrefixSeed')),variables('%[1]sStorageAccountOffset')),variables('storageAccountPrefixesCount'))],variables('%[1]sDataAccountName'))]", profile.Name))
 	} else {
 		storageAccount.Name = to.StringPtr(fmt.Sprintf(      "[concat(variables('storageAccountPrefixes')[mod(add(copyIndex(),variables('%[1]sStorageAccountOffset')),variables('storageAccountPrefixesCount'))],variables('storageAccountPrefixes')[div(add(copyIndex(),variables('%[1]sStorageAccountOffset')),variables('storageAccountPrefixesCount'))],variables('%[1]sAccountName'))]", profile.Name))

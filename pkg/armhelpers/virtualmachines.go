@@ -9,7 +9,7 @@ import (
 	"strconv"
 )
 
-func createVirtualMachine(cs *api.ContainerService) VirtualMachineARM {
+func CreateVirtualMachine(cs *api.ContainerService) VirtualMachineARM {
 	hasAvailabilityZones := cs.Properties.MasterProfile.HasAvailabilityZones()
 	isStorageAccount := cs.Properties.MasterProfile.IsStorageAccount()
 	useManagedIdentity := cs.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity

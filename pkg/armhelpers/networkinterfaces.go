@@ -7,7 +7,7 @@ import (
 	"github.com/Azure/go-autorest/autorest/to"
 )
 
-func createNetworkInterfaces(cs *api.ContainerService) NetworkInterfaceARM {
+func CreateNetworkInterfaces(cs *api.ContainerService) NetworkInterfaceARM {
 
 	var dependencies []string
 	if cs.Properties.MasterProfile.IsCustomVNET() {
@@ -275,7 +275,7 @@ func createJumpboxNIC(cs *api.ContainerService) NetworkInterfaceARM {
 	}
 }
 
-func createAgentVMASNIC(cs *api.ContainerService, profile api.AgentPoolProfile) NetworkInterfaceARM {
+func createAgentVMASNIC(cs *api.ContainerService, profile *api.AgentPoolProfile) NetworkInterfaceARM {
 	isWindows := profile.IsWindows()
 	isCustomVNet := cs.Properties.MasterProfile.IsCustomVNET()
 	isAzureCNI := cs.Properties.OrchestratorProfile.IsAzureCNI()

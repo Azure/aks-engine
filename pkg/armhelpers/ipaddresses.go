@@ -6,7 +6,7 @@ import (
 	"github.com/Azure/go-autorest/autorest/to"
 )
 
-func createPublicIpAddress(cs *api.ContainerService) PublicIPAddressARM {
+func CreatePublicIpAddress(cs *api.ContainerService) PublicIPAddressARM {
 
 	allocMethod := network.Static
 

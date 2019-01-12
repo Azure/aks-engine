@@ -6,7 +6,7 @@ import (
 	"github.com/Azure/go-autorest/autorest/to"
 )
 
-func createNetworkSecurityGroup(cs *api.ContainerService) NetworkSecurityGroupARM {
+func CreateNetworkSecurityGroup(cs *api.ContainerService) NetworkSecurityGroupARM {
 	armResource := ARMResource{
 		ApiVersion: "[variables('apiVersionNetwork')]",
 	}
@@ -65,7 +65,7 @@ func createNetworkSecurityGroup(cs *api.ContainerService) NetworkSecurityGroupAR
 		securityRules = append(securityRules, rdpRule)
 	}
 
-	if cs.Properties.FeatureFlags.BlockOutboundInternet {
+	if cs.Properties.FeatureFlags.IsFeatureEnabled("BlockOutboundInternet") {
 		vnetRule := network.SecurityRule{
 			Name: to.StringPtr("allow_vnet"),
 			SecurityRulePropertiesFormat: &network.SecurityRulePropertiesFormat{

@@ -28,7 +28,7 @@ func createRoleAssignment() RoleAssignmentARM {
 func createMSIRoleAssignment() RoleAssignmentARM {
 	return RoleAssignmentARM{
 		ARMResource: ARMResource{
-			ApiVersion: "[variables('apiVersionAuthorization')]",
+			ApiVersion: "[variables('apiVersionAuthorizationUser')]",
 			DependsOn: []string{
 				"[concat('Microsoft.ManagedIdentity/userAssignedIdentities/', variables('userAssignedID'))]",
 			},

@@ -3,13 +3,14 @@ package armhelpers
 import (
 	"fmt"
 	"github.com/Azure/aks-engine/pkg/api"
+	"github.com/Azure/aks-engine/pkg/api/common"
 	"github.com/Azure/aks-engine/pkg/engine"
 	"github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2018-06-01/compute"
 	"github.com/Azure/go-autorest/autorest/to"
 	"strconv"
 )
 
-func createMasterVMSS(cs *api.ContainerService) VirtualMachineScaleSetARM {
+func CreateMasterVMSS(cs *api.ContainerService) VirtualMachineScaleSetARM {
 	isCustomVnet := cs.Properties.MasterProfile.IsCustomVNET()
 	hasAvailabilityZones := cs.Properties.MasterProfile.HasAvailabilityZones()
 	useManagedIdentity := cs.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity
@@ -229,7 +230,7 @@ func createMasterVMSS(cs *api.ContainerService) VirtualMachineScaleSetARM {
 
 	outBoundCmd := ""
 	registry := ""
-	if !cs.Properties.FeatureFlags.BlockOutboundInternet {
+	if !cs.Properties.FeatureFlags.IsFeatureEnabled("BlockOutboundInternet") {
 		if cs.GetCloudSpecConfig().CloudName == api.AzureChinaCloud {
 			registry = `gcr.azk8s.cn 80`
 		} else {
@@ -285,7 +286,7 @@ func createMasterVMSS(cs *api.ContainerService) VirtualMachineScaleSetARM {
 	}
 }
 
-func createAgentVMSS(cs *api.ContainerService, profile *api.AgentPoolProfile) VirtualMachineScaleSetARM {
+func CreateAgentVMSS(cs *api.ContainerService, profile *api.AgentPoolProfile) VirtualMachineScaleSetARM {
 	armResource := ARMResource{
 		ApiVersion: "[variables('apiVersionCompute')]",
 	}
@@ -359,7 +360,7 @@ func createAgentVMSS(cs *api.ContainerService, profile *api.AgentPoolProfile) Vi
 
 	vmssVMProfile := compute.VirtualMachineScaleSetVMProfile{}
 
-	if profile.IsLowPriorityScaleSet() && !profile.IsWindows() {
+	if profile.IsLowPriorityScaleSet() {
 		vmssVMProfile.Priority = compute.VirtualMachinePriorityTypes(fmt.Sprintf("[variables('%sScaleSetPriority')]", profile.Name))
 		vmssVMProfile.EvictionPolicy = compute.VirtualMachineEvictionPolicyTypes(fmt.Sprintf("[variables('%sScaleSetEvictionPolicy')]", profile.Name))
 	}
@@ -507,7 +508,7 @@ func createAgentVMSS(cs *api.ContainerService, profile *api.AgentPoolProfile) Vi
 
 	outBoundCmd := ""
 	registry := ""
-	if !cs.Properties.FeatureFlags.BlockOutboundInternet {
+	if !cs.Properties.FeatureFlags.IsFeatureEnabled("BlockOutboundInternet") {
 		if cs.GetCloudSpecConfig().CloudName == api.AzureChinaCloud {
 			registry = `gcr.azk8s.cn 80`
 		} else {
@@ -533,6 +534,13 @@ func createAgentVMSS(cs *api.ContainerService, profile *api.AgentPoolProfile) Vi
 			},
 		}
 	} else {
+
+		runInBackground := ""
+		if cs.Properties.FeatureFlags.IsFeatureEnabled("CSERunInBackground") {
+			runInBackground = "&"
+		}
+		nVidiaEnabled := strconv.FormatBool(common.IsNvidiaEnabledSKU(profile.VMSize))
+		commandExec := fmt.Sprintf("[concat('retrycmd_if_failure() { r=$1; w=$2; t=$3; shift && shift && shift; for i in $(seq 1 $r); do timeout $t ${@}; [ $? -eq 0  ] && break || if [ $i -eq $r ]; then return 1; else sleep $w; fi; done }; %s for i in $(seq 1 1200); do if [ -f /opt/azure/containers/provision.sh ]; then break; fi; if [ $i -eq 1200 ]; then exit 100; else sleep 1; fi; done; ', variables('provisionScriptParametersCommon'),' GPU_NODE=%s /usr/bin/nohup /bin/bash -c \"/bin/bash /opt/azure/containers/provision.sh >> /var/log/azure/cluster-provision.log 2>&1 %s\"')]", outBoundCmd, nVidiaEnabled, runInBackground)
 		vmssCSE = compute.VirtualMachineScaleSetExtension{
 			Name: to.StringPtr("[concat(variables('masterVMNamePrefix'), 'vmssCSE')]"),
 			VirtualMachineScaleSetExtensionProperties: &compute.VirtualMachineScaleSetExtensionProperties{
@@ -542,7 +550,7 @@ func createAgentVMSS(cs *api.ContainerService, profile *api.AgentPoolProfile) Vi
 				AutoUpgradeMinorVersion: to.BoolPtr(true),
 				Settings:                map[string]interface{}{},
 				ProtectedSettings: map[string]interface{}{
-					"commandToExecute": "[concat('retrycmd_if_failure() { r=$1; w=$2; t=$3; shift && shift && shift; for i in $(seq 1 $r); do timeout $t ${@}; [ $? -eq 0  ] && break || if [ $i -eq $r ]; then return 1; else sleep $w; fi; done }; " + outBoundCmd + " for i in $(seq 1 1200); do if [ -f /opt/azure/containers/provision.sh ]; then break; fi; if [ $i -eq 1200 ]; then exit 100; else sleep 1; fi; done; ', variables('provisionScriptParametersCommon'),' ',variables('provisionScriptParametersMaster'), ' /usr/bin/nohup /bin/bash -c \"/bin/bash /opt/azure/containers/provision.sh >> /var/log/azure/cluster-provision.log 2>&1\"')]",
+					"commandToExecute": commandExec,
 				},
 			},
 		}

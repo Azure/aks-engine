@@ -41,7 +41,7 @@ func TestCreateNIC(t *testing.T) {
 
 	cs.SetPropertiesDefaults(false, false)
 
-	nic := createNetworkInterfaces(cs)
+	nic := CreateNetworkInterfaces(cs)
 	jsonObj, _ := json.MarshalIndent(nic, "", "   ")
 	fmt.Println(string(jsonObj))
 }

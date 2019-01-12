@@ -6,7 +6,7 @@ import (
 	"github.com/Azure/go-autorest/autorest/to"
 )
 
-func createVirtualNetwork(cs *api.ContainerService) VirtualNetworkARM {
+func CreateVirtualNetwork(cs *api.ContainerService) VirtualNetworkARM {
 
 	dependencies := []string{
 		"[concat('Microsoft.Network/networkSecurityGroups/', variables('nsgName'))]",

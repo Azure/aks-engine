@@ -6,7 +6,7 @@ import (
 	"github.com/Azure/go-autorest/autorest/to"
 )
 
-func createLoadBalancer() LoadBalancerARM {
+func CreateLoadBalancer() LoadBalancerARM {
 	return LoadBalancerARM{
 		ARMResource: ARMResource{
 			ApiVersion: "[variables('apiVersionNetwork')]",
@@ -75,7 +75,7 @@ func createLoadBalancer() LoadBalancerARM {
 	}
 }
 
-func createMasterInternalLoadBalancer(cs *api.ContainerService) LoadBalancerARM {
+func CreateMasterInternalLoadBalancer(cs *api.ContainerService) LoadBalancerARM {
 
 	var dependencies []string
 	if cs.Properties.MasterProfile.IsCustomVNET() {
@@ -167,21 +167,6 @@ func createMasterInternalLoadBalancer(cs *api.ContainerService) LoadBalancerARM 
 			},
 		}
 		loadBalancerARM.InboundNatPools = &inboundNATPools
-	} else {
-		inboundNATRules := []network.InboundNatRule{
-			{
-				InboundNatRulePropertiesFormat: &network.InboundNatRulePropertiesFormat{
-					BackendPort:      to.Int32Ptr(22),
-					EnableFloatingIP: to.BoolPtr(false),
-					FrontendIPConfiguration: &network.SubResource{
-						ID: to.StringPtr("[variables('masterLbIPConfigID')]"),
-					},
-					FrontendPort: to.Int32Ptr(22), //"[variables('sshNatPorts')[copyIndex(variables('masterOffset'))]]",
-					Protocol:     network.TransportProtocolTCP,
-				},
-			},
-		}
-		loadBalancerARM.InboundNatRules = &inboundNATRules
 	}
 
 	return loadBalancerARM

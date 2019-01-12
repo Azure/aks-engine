@@ -42,7 +42,7 @@ func TestCreateVirtualMachines(t *testing.T) {
 
 	cs.SetPropertiesDefaults(false, false)
 
-	vm := createVirtualMachine(cs)
+	vm := CreateVirtualMachine(cs)
 	jsonObj, _ := json.MarshalIndent(vm, "", "   ")
 	fmt.Println(string(jsonObj))
 }

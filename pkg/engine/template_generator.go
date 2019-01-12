@@ -7,6 +7,7 @@ import (
 	"archive/zip"
 	"bytes"
 	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"runtime/debug"
 	"sort"
@@ -758,7 +759,7 @@ func (t *TemplateGenerator) getTemplateFuncMap(cs *api.ContainerService) templat
 			return base64.StdEncoding.EncodeToString(buf.Bytes())
 		},
 		"GetKubernetesWindowsAgentCustomData": func(profile *api.AgentPoolProfile) string {
-            str := t.GetKubernetesWindowsAgentCustomDataString(cs, profile)
+			str := t.GetKubernetesWindowsAgentCustomDataString(cs, profile)
 			return fmt.Sprintf("\"customData\": \"[base64(concat('%s'))]\",", str)
 		},
 		"GetMasterSwarmModeCustomData": func() string {
@@ -972,6 +973,49 @@ func (t *TemplateGenerator) getTemplateFuncMap(cs *api.ContainerService) templat
 	}
 }
 
-func GenerateTemplateV2(containerService *api.ContainerService, generatorCode string, acsengineVersion string) (templateRaw string, parametersRaw string, err error) {
-	return "", "", nil
+func (t *TemplateGenerator) GenerateTemplateV2(containerService *api.ContainerService, generatorCode string, acsengineVersion string) (templateRaw string, parametersRaw string, err error) {
+
+	t.getParameterDescMap(containerService)
+
+	return templateRaw, "", nil
+}
+
+func (t *TemplateGenerator) getParameterDescMap(containerService *api.ContainerService) (map[string]interface{}, error) {
+	var templ *template.Template
+	var paramsDescMap map[string]interface{}
+	properties := containerService.Properties
+	// save the current orchestrator version and restore it after deploying.
+	// this allows us to deploy agents on the most recent patch without updating the orchestator version in the object
+	orchVersion := properties.OrchestratorProfile.OrchestratorVersion
+	defer func() {
+		properties.OrchestratorProfile.OrchestratorVersion = orchVersion
+	}()
+
+	templ = template.New("acs template").Funcs(t.getTemplateFuncMap(containerService))
+
+	files, baseFile := kubernetesParamFiles, kubernetesParameters
+
+	for _, file := range files {
+		bytes, e := Asset(file)
+		if e != nil {
+			err := t.Translator.Errorf("Error reading file %s, Error: %s", file, e.Error())
+			return nil, err
+		}
+		if _, err := templ.New(file).Parse(string(bytes)); err != nil {
+			return nil, err
+		}
+	}
+
+	var b bytes.Buffer
+	if err := templ.ExecuteTemplate(&b, baseFile, properties); err != nil {
+		return nil, err
+	}
+
+	err := json.Unmarshal(b.Bytes(), &paramsDescMap)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return paramsDescMap, nil
 }
