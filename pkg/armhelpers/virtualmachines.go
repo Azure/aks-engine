@@ -1,12 +1,14 @@
 package armhelpers
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/Azure/aks-engine/pkg/api"
 	"github.com/Azure/aks-engine/pkg/engine"
 	"github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2018-06-01/compute"
 	"github.com/Azure/go-autorest/autorest/to"
 	"strconv"
+	"strings"
 )
 
 func CreateVirtualMachine(cs *api.ContainerService) VirtualMachineARM {
@@ -105,8 +107,7 @@ func CreateVirtualMachine(cs *api.ContainerService) VirtualMachineARM {
 
 	t, err := engine.InitializeTemplateGenerator(engine.Context{})
 
-	customDataStr := t.GetMasterCustomDataString(cs, engine.KubernetesMasterCustomDataYaml, cs.Properties)
-	customDataStr = fmt.Sprintf("[base64(concat('%s'))]", customDataStr)
+	customDataStr := getCustomDataFromJSON(t.GetMasterCustomDataJSON(cs))
 	osProfile.CustomData = to.StringPtr(customDataStr)
 
 	if err != nil {
@@ -224,13 +225,13 @@ func createJumpboxVirtualMachine(cs *api.ContainerService) VirtualMachineARM {
 		}
 	}
 
-	t, err := engine.InitializeTemplateGenerator(engine.Context{})
+	//t, err := engine.InitializeTemplateGenerator(engine.Context{})
 
-	if err != nil {
-		panic(err)
-	}
+	//if err != nil {
+	//	panic(err)
+	//}
 
-	customDataStr := t.GetKubernetesJumpboxCustomDataString(cs, cs.Properties)
+	customDataStr := ""//t.GetKubernetesJumpboxCustomDataString(cs, cs.Properties)
 
 	vmProperties := compute.VirtualMachineProperties{
 		HardwareProfile: &compute.HardwareProfile{
@@ -349,7 +350,7 @@ func createAgentAvailabilitySetVM(cs *api.ContainerService, profile *api.AgentPo
 		ComputerName: to.StringPtr(fmt.Sprintf("[concat(variables('%[1]sVMNamePrefix'), copyIndex(variables('%[1]sOffset')))]", profile.Name)),
 	}
 
-	t, err := engine.InitializeTemplateGenerator(engine.Context{})
+	//t, err := engine.InitializeTemplateGenerator(engine.Context{})
 
 	if !profile.IsWindows() {
 		osProfile.AdminUsername = to.StringPtr("[parameters('linuxAdminUsername')]")
@@ -364,11 +365,13 @@ func createAgentAvailabilitySetVM(cs *api.ContainerService, profile *api.AgentPo
 				},
 			},
 		}
-		if err != nil {
-			panic(err)
-		}
+		//if err != nil {
+		//	panic(err)
+		//}
 
-		agentCustomData := fmt.Sprintf("[base64(concat('%s'))]", t.GetKubernetesAgentCustomDataString(cs, profile))
+		agentCustomData := fmt.Sprintf("[base64(concat('%s'))]", "")//t.GetKubernetesAgentCustomDataString(cs, profile))
+		agentCustomData = strings.Replace(agentCustomData, "\\n", "\n", -1)
+		agentCustomData = strings.Replace(agentCustomData, `\"`, `"`, -1)
 		osProfile.CustomData = to.StringPtr(agentCustomData)
 
 		if cs.Properties.LinuxProfile.HasSecrets() {
@@ -379,7 +382,9 @@ func createAgentAvailabilitySetVM(cs *api.ContainerService, profile *api.AgentPo
 	} else {
 		osProfile.AdminUsername = to.StringPtr("[parameters('windowsAdminUsername')]")
 		osProfile.AdminPassword = to.StringPtr("[parameters('windowsAdminPassword')]")
-		agentCustomData := fmt.Sprintf("[base64(concat('%s'))]", t.GetKubernetesWindowsAgentCustomDataString(cs, profile))
+		agentCustomData := fmt.Sprintf("[base64(concat('%s'))]", "")//t.GetKubernetesWindowsAgentCustomDataString(cs, profile))
+		agentCustomData = strings.Replace(agentCustomData, "\\n", "\n", -1)
+		agentCustomData = strings.Replace(agentCustomData, `\"`, `"`, -1)
 		osProfile.CustomData = to.StringPtr(agentCustomData)
 	}
 
@@ -467,4 +472,10 @@ func getDataDisks(profile *api.AgentPoolProfile) *[]compute.DataDisk {
 		dataDisks = append(dataDisks, dataDisk)
 	}
 	return &dataDisks
+}
+
+func getCustomDataFromJSON(jsonStr string) string {
+	var customDataObj map[string]string
+	json.Unmarshal([]byte(jsonStr), &customDataObj)
+	return customDataObj["customData"]
 }

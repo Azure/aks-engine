@@ -100,13 +100,13 @@ func CreateCustomScriptExtension(cs *api.ContainerService) VirtualMachineExtensi
 		} else {
 			registry = `k8s.gcr.io 443 && retrycmd_if_failure 50 1 3 nc -vz gcr.io 443 && retrycmd_if_failure 50 1 3 nc -vz docker.io 443`
 		}
-		outBoundCmd = `ERR_OUTBOUND_CONN_FAIL=50; retrycmd_if_failure 50 1 3 nc -vz ` + registry + `|| exit $ERR_OUTBOUND_CONN_FAIL;`
+		outBoundCmd = `ERR_OUTBOUND_CONN_FAIL=50; retrycmd_if_failure 50 1 3 nc -vz ` + registry + ` || exit $ERR_OUTBOUND_CONN_FAIL;`
 	}
 	vmExtension := compute.VirtualMachineExtension{
 		Location: to.StringPtr(location),
 		Name:     to.StringPtr(name),
 		VirtualMachineExtensionProperties: &compute.VirtualMachineExtensionProperties{
-			Publisher:               to.StringPtr("Microsoft.Azure.Extenions"),
+			Publisher:               to.StringPtr("Microsoft.Azure.Extensions"),
 			Type:                    to.StringPtr("CustomScript"),
 			TypeHandlerVersion:      to.StringPtr("2.0"),
 			AutoUpgradeMinorVersion: to.BoolPtr(true),
@@ -142,7 +142,7 @@ func createAgentVMASCustomScriptExtension(cs *api.ContainerService, profile *api
 		} else {
 			registry = `k8s.gcr.io 443 && retrycmd_if_failure 50 1 3 nc -vz gcr.io 443 && retrycmd_if_failure 50 1 3 nc -vz docker.io 443`
 		}
-		outBoundCmd = `ERR_OUTBOUND_CONN_FAIL=50; retrycmd_if_failure 50 1 3 nc -vz ` + registry + `|| exit $ERR_OUTBOUND_CONN_FAIL;`
+		outBoundCmd = `ERR_OUTBOUND_CONN_FAIL=50; retrycmd_if_failure 50 1 3 nc -vz ` + registry + ` || exit $ERR_OUTBOUND_CONN_FAIL;`
 	}
 
 	runInBackground := ""

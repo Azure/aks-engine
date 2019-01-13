@@ -57,7 +57,7 @@ func CreateLoadBalancer() LoadBalancerARM {
 				},
 				Probes: &[]network.Probe{
 					{
-						Name: to.StringPtr("LBRuleHTTPS"),
+						Name: to.StringPtr("tcpHTTPSProbe"),
 						ProbePropertiesFormat: &network.ProbePropertiesFormat{
 							Protocol:          network.ProbeProtocolTCP,
 							Port:              to.Int32Ptr(443),

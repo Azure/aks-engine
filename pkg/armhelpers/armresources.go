@@ -25,8 +25,10 @@ func GenerateARMResources(cs *api.ContainerService) []interface{} {
 
 	for _, profile := range profiles {
 		if profile.IsVirtualMachineScaleSets() {
+			if useManagedIdentity && !userAssignedIDEnabled {
+				armResources = append(armResources, createAgentVmssSysRoleAssignment(profile))
+			}
 			armResources = append(armResources, CreateAgentVMSS(cs, profile))
-			armResources = append(armResources, createAgentVmssSysRoleAssignment(profile))
 		} else {
 			agentVmasResources := createKubernetesAgentVMASResources(cs, profile)
 			for _, agentVmasResource := range agentVmasResources {

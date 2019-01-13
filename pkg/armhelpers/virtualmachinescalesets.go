@@ -159,8 +159,7 @@ func CreateMasterVMSS(cs *api.ContainerService) VirtualMachineScaleSetARM {
 
 	t, err := engine.InitializeTemplateGenerator(engine.Context{})
 
-	customDataStr := t.GetMasterCustomDataString(cs, engine.KubernetesMasterCustomDataYaml, cs.Properties)
-	customDataStr = fmt.Sprintf("[base64(concat('%s'))]", customDataStr)
+	customDataStr := getCustomDataFromJSON(t.GetMasterCustomDataJSON(cs))
 	osProfile.CustomData = to.StringPtr(customDataStr)
 
 	if err != nil {
@@ -236,7 +235,7 @@ func CreateMasterVMSS(cs *api.ContainerService) VirtualMachineScaleSetARM {
 		} else {
 			registry = `k8s.gcr.io 443 && retrycmd_if_failure 50 1 3 nc -vz gcr.io 443 && retrycmd_if_failure 50 1 3 nc -vz docker.io 443`
 		}
-		outBoundCmd = `ERR_OUTBOUND_CONN_FAIL=50; retrycmd_if_failure 50 1 3 nc -vz ` + registry + `|| exit $ERR_OUTBOUND_CONN_FAIL;`
+		outBoundCmd = `ERR_OUTBOUND_CONN_FAIL=50; retrycmd_if_failure 50 1 3 nc -vz ` + registry + ` || exit $ERR_OUTBOUND_CONN_FAIL;`
 	}
 
 	vmssCSE := compute.VirtualMachineScaleSetExtension{
@@ -385,16 +384,16 @@ func CreateAgentVMSS(cs *api.ContainerService, profile *api.AgentPoolProfile) Vi
 
 	var ipConfigurations []compute.VirtualMachineScaleSetIPConfiguration
 
-	for i := 0; i < profile.IPAddressCount; i++ {
+	for i := 1; i <= profile.IPAddressCount; i++ {
 		ipconfig := compute.VirtualMachineScaleSetIPConfiguration{
-			Name: to.StringPtr("ipconfig" + string(i)),
+			Name: to.StringPtr(fmt.Sprintf("ipconfig%d", i)),
 			VirtualMachineScaleSetIPConfigurationProperties: &compute.VirtualMachineScaleSetIPConfigurationProperties{
 				Subnet: &compute.APIEntityReference{
 					ID: to.StringPtr(fmt.Sprintf("[variables('%sVnetSubnetID')]", profile.Name)),
 				},
 			},
 		}
-		if i == 0 {
+		if i == 1 {
 			ipconfig.Primary = to.BoolPtr(true)
 		}
 		ipConfigurations = append(ipConfigurations, ipconfig)
@@ -429,17 +428,20 @@ func CreateAgentVMSS(cs *api.ContainerService, profile *api.AgentPoolProfile) Vi
 	}
 
 	if profile.IsWindows() {
+
+		customDataStr := getCustomDataFromJSON(t.GetKubernetesWindowsAgentCustomDataJSON(cs, profile))
 		windowsOsProfile := compute.VirtualMachineScaleSetOSProfile{
 			AdminUsername: to.StringPtr("[parameters('windowsAdminUsername')]"),
 			AdminPassword: to.StringPtr("[parameters('windowsAdminPassword')]"),
-			CustomData:    to.StringPtr(fmt.Sprintf("[base64(concat('%s'))]", t.GetKubernetesWindowsAgentCustomDataString(cs, profile))),
+			CustomData:    to.StringPtr(customDataStr),
 		}
 		vmssVMProfile.OsProfile = &windowsOsProfile
 	} else {
+		customDataStr := getCustomDataFromJSON(t.GetKubernetesAgentCustomDataJSON(cs, profile))
 		linuxOsProfile := compute.VirtualMachineScaleSetOSProfile{
 			AdminUsername:      to.StringPtr("[parameters('linuxAdminUsername')]"),
 			ComputerNamePrefix: to.StringPtr(fmt.Sprintf("[variables('%sVMNamePrefix')]", profile.Name)),
-			CustomData:         to.StringPtr(t.GetKubernetesAgentCustomDataString(cs, profile)),
+			CustomData:         to.StringPtr(customDataStr),
 			LinuxConfiguration: &compute.LinuxConfiguration{
 				DisablePasswordAuthentication: to.BoolPtr(true),
 				SSH: &compute.SSHConfiguration{
@@ -514,14 +516,14 @@ func CreateAgentVMSS(cs *api.ContainerService, profile *api.AgentPoolProfile) Vi
 		} else {
 			registry = `k8s.gcr.io 443 && retrycmd_if_failure 50 1 3 nc -vz gcr.io 443 && retrycmd_if_failure 50 1 3 nc -vz docker.io 443`
 		}
-		outBoundCmd = `ERR_OUTBOUND_CONN_FAIL=50; retrycmd_if_failure 50 1 3 nc -vz ` + registry + `|| exit $ERR_OUTBOUND_CONN_FAIL;`
+		outBoundCmd = `ERR_OUTBOUND_CONN_FAIL=50; retrycmd_if_failure 50 1 3 nc -vz ` + registry + ` || exit $ERR_OUTBOUND_CONN_FAIL;`
 	}
 
 	var vmssCSE compute.VirtualMachineScaleSetExtension
 
 	if profile.IsWindows() {
 		vmssCSE = compute.VirtualMachineScaleSetExtension{
-			Name: to.StringPtr("[concat(variables('masterVMNamePrefix'), 'vmssCSE')]"),
+			Name: to.StringPtr("vmssCSE"),
 			VirtualMachineScaleSetExtensionProperties: &compute.VirtualMachineScaleSetExtensionProperties{
 				Publisher:               to.StringPtr("Microsoft.Compute"),
 				Type:                    to.StringPtr("CustomScriptExtension"),
@@ -534,15 +536,14 @@ func CreateAgentVMSS(cs *api.ContainerService, profile *api.AgentPoolProfile) Vi
 			},
 		}
 	} else {
-
 		runInBackground := ""
 		if cs.Properties.FeatureFlags.IsFeatureEnabled("CSERunInBackground") {
-			runInBackground = "&"
+			runInBackground = " &"
 		}
 		nVidiaEnabled := strconv.FormatBool(common.IsNvidiaEnabledSKU(profile.VMSize))
-		commandExec := fmt.Sprintf("[concat('retrycmd_if_failure() { r=$1; w=$2; t=$3; shift && shift && shift; for i in $(seq 1 $r); do timeout $t ${@}; [ $? -eq 0  ] && break || if [ $i -eq $r ]; then return 1; else sleep $w; fi; done }; %s for i in $(seq 1 1200); do if [ -f /opt/azure/containers/provision.sh ]; then break; fi; if [ $i -eq 1200 ]; then exit 100; else sleep 1; fi; done; ', variables('provisionScriptParametersCommon'),' GPU_NODE=%s /usr/bin/nohup /bin/bash -c \"/bin/bash /opt/azure/containers/provision.sh >> /var/log/azure/cluster-provision.log 2>&1 %s\"')]", outBoundCmd, nVidiaEnabled, runInBackground)
+		commandExec := fmt.Sprintf("[concat('retrycmd_if_failure() { r=$1; w=$2; t=$3; shift && shift && shift; for i in $(seq 1 $r); do timeout $t ${@}; [ $? -eq 0  ] && break || if [ $i -eq $r ]; then return 1; else sleep $w; fi; done }; %s for i in $(seq 1 1200); do if [ -f /opt/azure/containers/provision.sh ]; then break; fi; if [ $i -eq 1200 ]; then exit 100; else sleep 1; fi; done; ', variables('provisionScriptParametersCommon'),' GPU_NODE=%s /usr/bin/nohup /bin/bash -c \"/bin/bash /opt/azure/containers/provision.sh >> /var/log/azure/cluster-provision.log 2>&1%s\"')]", outBoundCmd, nVidiaEnabled, runInBackground)
 		vmssCSE = compute.VirtualMachineScaleSetExtension{
-			Name: to.StringPtr("[concat(variables('masterVMNamePrefix'), 'vmssCSE')]"),
+			Name: to.StringPtr("vmssCSE"),
 			VirtualMachineScaleSetExtensionProperties: &compute.VirtualMachineScaleSetExtensionProperties{
 				Publisher:               to.StringPtr("Microsoft.Azure.Extensions"),
 				Type:                    to.StringPtr("CustomScript"),
@@ -560,7 +561,7 @@ func CreateAgentVMSS(cs *api.ContainerService, profile *api.AgentPoolProfile) Vi
 
 	if cs.GetCloudSpecConfig().CloudName == api.AzurePublicCloud {
 		aksBillingExtension := compute.VirtualMachineScaleSetExtension{
-			Name: to.StringPtr("[concat(variables('masterVMNamePrefix'), 'vmss-computeAksLinuxBilling')]"),
+			Name: to.StringPtr(fmt.Sprintf("[concat(variables('%sVMNamePrefix'), '-computeAksLinuxBilling')]", profile.Name)),
 			VirtualMachineScaleSetExtensionProperties: &compute.VirtualMachineScaleSetExtensionProperties{
 				Publisher:               to.StringPtr("Microsoft.AKS"),
 				Type:                    to.StringPtr("Compute.AKS-Engine.Linux.Billing"),
