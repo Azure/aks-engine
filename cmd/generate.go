@@ -192,7 +192,7 @@ func (gc *generateCmd) run() error {
 
 	log.Info(string(bts))
 
-	template, parameters, err := templateGenerator.GenerateTemplate(gc.containerService, engine.DefaultGeneratorCode, BuildTag)
+	template, parameters, err := templateGenerator.GenerateTemplateV2(gc.containerService, engine.DefaultGeneratorCode, BuildTag)
 	if err != nil {
 		log.Fatalf("error generating template %s: %s", gc.apimodelPath, err.Error())
 		os.Exit(1)

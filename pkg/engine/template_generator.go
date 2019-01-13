@@ -25,6 +25,15 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+type ARMTemplate struct {
+	Schema         string      `json:"$schema,omitempty"`
+	ContentVersion string      `json:"contentVersion,omitempty"`
+	Parameters     interface{} `json:"parameters,omitempty"`
+	Variables      interface{} `json:"variables,omitempty"`
+	Resources      interface{} `json:"resources,omitempty"`
+	Outputs        interface{} `json:"outputs,omitempty"`
+}
+
 // TemplateGenerator represents the object that performs the template generation.
 type TemplateGenerator struct {
 	Translator *i18n.Translator
@@ -1042,9 +1051,35 @@ func (t *TemplateGenerator) getTemplateFuncMap(cs *api.ContainerService) templat
 
 func (t *TemplateGenerator) GenerateTemplateV2(containerService *api.ContainerService, generatorCode string, acsengineVersion string) (templateRaw string, parametersRaw string, err error) {
 
-	t.getParameterDescMap(containerService)
+	armParams, _ := t.getParameterDescMap(containerService)
+	armResources := GenerateARMResources(containerService)
+	armVariables := GetKubernetesVariables(containerService)
+	armOutputs := GetKubernetesOutputs(containerService)
 
-	return templateRaw, "", nil
+	armTemplate := ARMTemplate{
+		Schema:         "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+		ContentVersion: "1.0.0.0",
+		Parameters:     armParams["parameters"],
+		Variables:      armVariables,
+		Resources:      armResources,
+		Outputs:        armOutputs,
+	}
+
+	templBytes, _ := json.Marshal(armTemplate)
+	templateRaw = string(templBytes)
+
+	var parametersMap paramsMap
+	if parametersMap, err = getParameters(containerService, generatorCode, acsengineVersion); err != nil {
+		return "", "", err
+	}
+
+	var parameterBytes []byte
+	if parameterBytes, err = helpers.JSONMarshal(parametersMap, false); err != nil {
+		return "", "", err
+	}
+	parametersRaw = string(parameterBytes)
+
+	return templateRaw, parametersRaw, err
 }
 
 func (t *TemplateGenerator) getParameterDescMap(containerService *api.ContainerService) (map[string]interface{}, error) {
