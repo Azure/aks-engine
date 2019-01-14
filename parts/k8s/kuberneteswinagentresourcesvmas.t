@@ -148,7 +148,7 @@
         "creationSource" : "[concat(parameters('generatorCode'), '-', variables('{{.Name}}VMNamePrefix'), copyIndex(variables('{{.Name}}Offset')))]",
         "resourceNameSuffix" : "[variables('winResourceNamePrefix')]",
         "orchestrator" : "[variables('orchestratorNameVersionTag')]",
-        "acsengineVersion" : "[parameters('acsengineVersion')]",
+        "aksEngineVersion" : "[parameters('aksEngineVersion')]",
         "poolName" : "{{.Name}}"
       },
       "location": "[variables('location')]",

@@ -5,7 +5,7 @@
       "orchestratorType": "Kubernetes",
       "kubernetesConfig": {
         "useManagedIdentity": true,
-        "userAssignedID": "acsenginetestid"
+        "userAssignedID": "aksenginetestid"
       }
     },
     "masterProfile": {

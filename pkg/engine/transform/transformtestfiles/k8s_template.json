@@ -786,7 +786,7 @@
       "type": "string"
     },
     "generatorCode": {
-      "defaultValue": "acsengine",
+      "defaultValue": "aksengine",
       "metadata": {
         "description": "The generator code used to identify the generator"
       },
@@ -1766,7 +1766,7 @@
         }
       },
       "tags": {
-        "creationSource": "[concat('acsengine-', variables('agentppol1VMNamePrefix'), copyIndex(variables('agentppol1Offset')))]",
+        "creationSource": "[concat('aksengine-', variables('agentppol1VMNamePrefix'), copyIndex(variables('agentppol1Offset')))]",
         "orchestrator": "[variables('orchestratorNameVersionTag')]",
         "poolName": "agentppol1",
         "resourceNameSuffix": "[parameters('nameSuffix')]"
@@ -1908,7 +1908,7 @@
         }
       },
       "tags": {
-        "creationSource": "[concat('acsengine-', variables('agentpool2VMNamePrefix'), copyIndex(variables('agentpool2Offset')))]",
+        "creationSource": "[concat('aksengine-', variables('agentpool2VMNamePrefix'), copyIndex(variables('agentpool2Offset')))]",
         "orchestrator": "[variables('orchestratorNameVersionTag')]",
         "poolName": "agentpool2",
         "resourceNameSuffix": "[parameters('nameSuffix')]"
@@ -2282,7 +2282,7 @@
         }
       },
       "tags": {
-        "creationSource": "[concat('acsengine-', variables('masterVMNamePrefix'), copyIndex(variables('masterOffset')))]",
+        "creationSource": "[concat('aksengine-', variables('masterVMNamePrefix'), copyIndex(variables('masterOffset')))]",
         "orchestrator": "[variables('orchestratorNameVersionTag')]",
         "resourceNameSuffix": "[parameters('nameSuffix')]"
       },

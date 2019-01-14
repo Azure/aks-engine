@@ -9,7 +9,7 @@ import (
 
 	"github.com/Azure/aks-engine/pkg/api/common"
 	"github.com/pkg/errors"
-	"gopkg.in/go-playground/validator.v9"
+	validator "gopkg.in/go-playground/validator.v9"
 )
 
 var (

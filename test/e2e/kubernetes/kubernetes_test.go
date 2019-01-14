@@ -156,6 +156,15 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			Expect(ready).To(Equal(true))
 		})
 
+		It("should print all pods", func() {
+			cmd := exec.Command("kubectl", "get", "pods", "--all-namespaces", "-o", "wide")
+			out, err := cmd.CombinedOutput()
+			log.Printf("%s\n", out)
+			if err != nil {
+				log.Printf("Error: Unable to print all pods\n")
+			}
+		})
+
 		It("should have DNS pod running", func() {
 			var err error
 			var running bool
@@ -627,6 +636,12 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 					}
 					if i > 28 {
 						log.Printf("Error while running kubectl top nodes:%s\n", err)
+						pods, _ := pod.GetAllByPrefix("metrics-server", "kube-system")
+						if pods != nil {
+							for _, p := range pods {
+								p.Logs()
+							}
+						}
 						log.Println(string(out))
 					}
 				}

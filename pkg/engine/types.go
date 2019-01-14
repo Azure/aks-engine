@@ -5,7 +5,7 @@ package engine
 
 import (
 	"github.com/Azure/aks-engine/pkg/api"
-	"github.com/Azure/aks-engine/pkg/api/v20160330"
+	v20160330 "github.com/Azure/aks-engine/pkg/api/v20160330"
 	"github.com/Azure/aks-engine/pkg/api/vlabs"
 	"github.com/Azure/aks-engine/pkg/i18n"
 )

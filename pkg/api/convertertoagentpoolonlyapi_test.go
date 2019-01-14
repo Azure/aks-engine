@@ -9,7 +9,7 @@ import (
 
 	"github.com/Azure/go-autorest/autorest/to"
 
-	"github.com/Azure/aks-engine/pkg/api/agentPoolOnlyApi/v20180331"
+	v20180331 "github.com/Azure/aks-engine/pkg/api/agentPoolOnlyApi/v20180331"
 )
 
 func TestConvertV20180331AgentPoolOnlyOrchestratorProfile(t *testing.T) {

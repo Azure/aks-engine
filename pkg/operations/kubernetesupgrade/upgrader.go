@@ -18,7 +18,7 @@ import (
 	"github.com/Azure/aks-engine/pkg/i18n"
 	"github.com/Azure/aks-engine/pkg/operations"
 	"github.com/sirupsen/logrus"
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 )
 
 // Upgrader holds information on upgrading an AKS cluster
@@ -47,14 +47,14 @@ type vmInfo struct {
 }
 
 // Init initializes an upgrader struct
-func (ku *Upgrader) Init(translator *i18n.Translator, logger *logrus.Entry, clusterTopology ClusterTopology, client armhelpers.AKSEngineClient, kubeConfig string, stepTimeout *time.Duration, acsEngineVersion string) {
+func (ku *Upgrader) Init(translator *i18n.Translator, logger *logrus.Entry, clusterTopology ClusterTopology, client armhelpers.AKSEngineClient, kubeConfig string, stepTimeout *time.Duration, aksEngineVersion string) {
 	ku.Translator = translator
 	ku.logger = logger
 	ku.ClusterTopology = clusterTopology
 	ku.Client = client
 	ku.kubeConfig = kubeConfig
 	ku.stepTimeout = stepTimeout
-	ku.AKSEngineVersion = acsEngineVersion
+	ku.AKSEngineVersion = aksEngineVersion
 }
 
 // RunUpgrade runs the upgrade pipeline
@@ -524,7 +524,7 @@ func (ku *Upgrader) upgradeAgentScaleSets(ctx context.Context) error {
 	return nil
 }
 
-func (ku *Upgrader) generateUpgradeTemplate(upgradeContainerService *api.ContainerService, acsengineVersion string) (map[string]interface{}, map[string]interface{}, error) {
+func (ku *Upgrader) generateUpgradeTemplate(upgradeContainerService *api.ContainerService, aksEngineVersion string) (map[string]interface{}, map[string]interface{}, error) {
 	var err error
 	ctx := engine.Context{
 		Translator: ku.Translator,
@@ -542,7 +542,7 @@ func (ku *Upgrader) generateUpgradeTemplate(upgradeContainerService *api.Contain
 
 	var templateJSON string
 	var parametersJSON string
-	if templateJSON, parametersJSON, err = templateGenerator.GenerateTemplate(upgradeContainerService, engine.DefaultGeneratorCode, acsengineVersion); err != nil {
+	if templateJSON, parametersJSON, err = templateGenerator.GenerateTemplate(upgradeContainerService, engine.DefaultGeneratorCode, aksEngineVersion); err != nil {
 		return nil, nil, ku.Translator.Errorf("error generating upgrade template: %s", err.Error())
 	}
 

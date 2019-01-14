@@ -79,7 +79,7 @@ func ParseConfig(cwd, clusterDefinition, name string) (*Config, error) {
 
 // Build takes a template path and will inject values based on provided environment variables
 // it will then serialize the structs back into json and save it to outputPath
-func Build(cfg *config.Config, masterSubnetID string, agentSubnetID string, isVMSS bool) (*Engine, error) {
+func Build(cfg *config.Config, masterSubnetID string, agentSubnetIDs []string, isVMSS bool) (*Engine, error) {
 	config, err := ParseConfig(cfg.CurrentWorkingDir, cfg.ClusterDefinition, cfg.Name)
 	if err != nil {
 		log.Printf("Error while trying to build Engine Configuration:%s\n", err)
@@ -139,14 +139,14 @@ func Build(cfg *config.Config, masterSubnetID string, agentSubnetID string, isVM
 	if config.CreateVNET {
 		if isVMSS {
 			prop.MasterProfile.VnetSubnetID = masterSubnetID
-			prop.MasterProfile.AgentVnetSubnetID = agentSubnetID
+			prop.MasterProfile.AgentVnetSubnetID = agentSubnetIDs[0]
 			for _, p := range prop.AgentPoolProfiles {
-				p.VnetSubnetID = agentSubnetID
+				p.VnetSubnetID = agentSubnetIDs[0]
 			}
 		} else {
 			prop.MasterProfile.VnetSubnetID = masterSubnetID
-			for _, p := range prop.AgentPoolProfiles {
-				p.VnetSubnetID = masterSubnetID
+			for i, p := range prop.AgentPoolProfiles {
+				p.VnetSubnetID = agentSubnetIDs[i]
 			}
 		}
 	}

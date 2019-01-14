@@ -60,7 +60,7 @@ func Test_OrchestratorProfile_Validate(t *testing.T) {
 					},
 				},
 			},
-			expectedError: "Invalid etcd version \"1.0.0\", please use one of the following versions: [2.2.5 2.3.0 2.3.1 2.3.2 2.3.3 2.3.4 2.3.5 2.3.6 2.3.7 2.3.8 3.0.0 3.0.1 3.0.2 3.0.3 3.0.4 3.0.5 3.0.6 3.0.7 3.0.8 3.0.9 3.0.10 3.0.11 3.0.12 3.0.13 3.0.14 3.0.15 3.0.16 3.0.17 3.1.0 3.1.1 3.1.2 3.1.2 3.1.3 3.1.4 3.1.5 3.1.6 3.1.7 3.1.8 3.1.9 3.1.10 3.2.0 3.2.1 3.2.2 3.2.3 3.2.4 3.2.5 3.2.6 3.2.7 3.2.8 3.2.9 3.2.11 3.2.12 3.2.13 3.2.14 3.2.15 3.2.16 3.2.23 3.2.24 3.3.0 3.3.1 3.3.8 3.3.9]",
+			expectedError: "Invalid etcd version \"1.0.0\", please use one of the following versions: [2.2.5 2.3.0 2.3.1 2.3.2 2.3.3 2.3.4 2.3.5 2.3.6 2.3.7 2.3.8 3.0.0 3.0.1 3.0.2 3.0.3 3.0.4 3.0.5 3.0.6 3.0.7 3.0.8 3.0.9 3.0.10 3.0.11 3.0.12 3.0.13 3.0.14 3.0.15 3.0.16 3.0.17 3.1.0 3.1.1 3.1.2 3.1.2 3.1.3 3.1.4 3.1.5 3.1.6 3.1.7 3.1.8 3.1.9 3.1.10 3.2.0 3.2.1 3.2.2 3.2.3 3.2.4 3.2.5 3.2.6 3.2.7 3.2.8 3.2.9 3.2.11 3.2.12 3.2.13 3.2.14 3.2.15 3.2.16 3.2.23 3.2.24 3.2.25 3.3.0 3.3.1 3.3.8 3.3.9 3.3.10]",
 		},
 		"should error when KubernetesConfig has enableAggregatedAPIs enabled with an invalid version": {
 			properties: &Properties{
@@ -1324,7 +1324,7 @@ func TestProperties_ValidateManagedIdentity(t *testing.T) {
 			name:                "use managed identity with master vmss",
 			orchestratorRelease: "1.11",
 			useManagedIdentity:  true,
-			userAssignedID:      "utacsenginetestid",
+			userAssignedID:      "utaksenginetestid",
 			masterProfile: MasterProfile{
 				DNSPrefix:           "dummy",
 				Count:               3,
@@ -1360,7 +1360,7 @@ func TestProperties_ValidateManagedIdentity(t *testing.T) {
 			name:                "use user assigned identity with master vmas",
 			orchestratorRelease: "1.11",
 			useManagedIdentity:  true,
-			userAssignedID:      "acsenginetestid",
+			userAssignedID:      "aksenginetestid",
 			masterProfile: MasterProfile{
 				DNSPrefix: "dummy",
 				Count:     3,

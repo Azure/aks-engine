@@ -5,7 +5,7 @@ package api
 
 import (
 	"github.com/Azure/go-autorest/autorest/to"
-	"github.com/satori/go.uuid"
+	uuid "github.com/satori/go.uuid"
 )
 
 // CreateMockContainerService returns a mock container service for testing purposes
