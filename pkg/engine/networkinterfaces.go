@@ -283,7 +283,7 @@ func createAgentVMASNIC(cs *api.ContainerService, profile *api.AgentPoolProfile)
 	armResource := ARMResource{
 		ApiVersion: "[variables('apiVersionNetwork')]",
 		Copy: map[string]string{
-			"count": "[sub(variables('{{.Name}}Count'), variables('{{.Name}}Offset'))]",
+			"count": fmt.Sprintf("[sub(variables('%[1]sCount'), variables('%[1]sOffset'))]", profile.Name),
 			"name":  "loop",
 		},
 	}
@@ -301,7 +301,10 @@ func createAgentVMASNIC(cs *api.ContainerService, profile *api.AgentPoolProfile)
 	networkInterface := network.Interface{
 		Type: to.StringPtr("Microsoft.Network/networkInterfaces"),
 		Name: to.StringPtr("[concat(variables('" + profile.Name + "VMNamePrefix'), 'nic-', copyIndex(variables('" + profile.Name + "Offset')))]"),
+		Location: to.StringPtr("[variables('location')]"),
 	}
+
+	networkInterface.InterfacePropertiesFormat = &network.InterfacePropertiesFormat{}
 
 	if isCustomVNet {
 		networkInterface.NetworkSecurityGroup = &network.SecurityGroup{
@@ -318,7 +321,8 @@ func createAgentVMASNIC(cs *api.ContainerService, profile *api.AgentPoolProfile)
 	var ipConfigurations []network.InterfaceIPConfiguration
 	for i := 1; i <= profile.IPAddressCount; i++ {
 		ipConfig := network.InterfaceIPConfiguration{
-			Name: to.StringPtr(fmt.Sprintf("ipconfig%d", i)),
+			Name:                                     to.StringPtr(fmt.Sprintf("ipconfig%d", i)),
+			InterfaceIPConfigurationPropertiesFormat: &network.InterfaceIPConfigurationPropertiesFormat{},
 		}
 		if i == 1 {
 			ipConfig.Primary = to.BoolPtr(true)

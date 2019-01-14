@@ -147,27 +147,29 @@ func createAgentVMASCustomScriptExtension(cs *api.ContainerService, profile *api
 
 	runInBackground := ""
 
-	if cs.Properties.FeatureFlags.EnableCSERunInBackground {
+	if cs.Properties.FeatureFlags.IsFeatureEnabled("CSERunInBackground") {
 		runInBackground = "&"
 	}
 
 	nVidiaEnabled := strconv.FormatBool(common.IsNvidiaEnabledSKU(profile.VMSize))
 
 	vmExtension := compute.VirtualMachineExtension{
-		Location: to.StringPtr(location),
-		Name:     to.StringPtr(name),
+		Location:                          to.StringPtr(location),
+		Name:                              to.StringPtr(name),
+		VirtualMachineExtensionProperties: &compute.VirtualMachineExtensionProperties{},
+		Type:                              to.StringPtr("Microsoft.Compute/virtualMachines/extensions"),
 	}
 
 	if profile.IsWindows() {
 		vmExtension.Publisher = to.StringPtr("Microsoft.Compute")
-		vmExtension.Type = to.StringPtr("CustomScriptExtension")
+		vmExtension.VirtualMachineExtensionProperties.Type = to.StringPtr("CustomScriptExtension")
 		vmExtension.TypeHandlerVersion = to.StringPtr("1.8")
 		vmExtension.ProtectedSettings = &map[string]interface{}{
 			"commandToExecute": "[concat('powershell.exe -ExecutionPolicy Unrestricted -command \"', '$arguments = ', variables('singleQuote'),'-MasterIP ',variables('kubernetesAPIServerIP'),' -KubeDnsServiceIp ',parameters('kubeDnsServiceIp'),' -MasterFQDNPrefix ',variables('masterFqdnPrefix'),' -Location ',variables('location'),' -AgentKey ',parameters('clientPrivateKey'),' -AADClientId ',variables('servicePrincipalClientId'),' -AADClientSecret ',variables('servicePrincipalClientSecret'),variables('singleQuote'), ' ; ', variables('windowsCustomScriptSuffix'), '\" > %SYSTEMDRIVE%\\AzureData\\CustomDataSetupScript.log 2>&1')]",
 		}
 	} else {
 		vmExtension.Publisher = to.StringPtr("Microsoft.Azure.Extensions")
-		vmExtension.Type = to.StringPtr("CustomScript")
+		vmExtension.VirtualMachineExtensionProperties.Type = to.StringPtr("CustomScript")
 		vmExtension.TypeHandlerVersion = to.StringPtr("2.0")
 		commandExec := fmt.Sprintf("[concat('retrycmd_if_failure() { r=$1; w=$2; t=$3; shift && shift && shift; for i in $(seq 1 $r); do timeout $t ${@}; [ $? -eq 0  ] && break || if [ $i -eq $r ]; then return 1; else sleep $w; fi; done }; %s for i in $(seq 1 1200); do if [ -f /opt/azure/containers/provision.sh ]; then break; fi; if [ $i -eq 1200 ]; then exit 100; else sleep 1; fi; done; ', variables('provisionScriptParametersCommon'),' GPU_NODE=%s /usr/bin/nohup /bin/bash -c \"/bin/bash /opt/azure/containers/provision.sh >> /var/log/azure/cluster-provision.log 2>&1 %s\"')]", outBoundCmd, nVidiaEnabled, runInBackground)
 		vmExtension.ProtectedSettings = &map[string]interface{}{
@@ -209,12 +211,12 @@ func CreateAgentVMASAKSBillingExtension(cs *api.ContainerService, profile *api.A
 	}
 
 	if profile.IsWindows() {
-		vmExtension.Type = to.StringPtr("Compute.AKS-Engine.Windows.Billing")
+		vmExtension.VirtualMachineExtensionProperties.Type = to.StringPtr("Compute.AKS-Engine.Windows.Billing")
 	} else {
 		if cs.Properties.IsHostedMasterProfile() {
-			vmExtension.Type = to.StringPtr("Compute.AKS.Linux.Billing")
+			vmExtension.VirtualMachineExtensionProperties.Type = to.StringPtr("Compute.AKS.Linux.Billing")
 		} else {
-			vmExtension.Type = to.StringPtr("Compute.AKS-Engine.Linux.Billing")
+			vmExtension.VirtualMachineExtensionProperties.Type = to.StringPtr("Compute.AKS-Engine.Linux.Billing")
 		}
 	}
 

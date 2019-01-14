@@ -31,9 +31,8 @@ func GetKubernetesVariables(cs *api.ContainerService) map[string]interface{} {
 		if profile.IsStorageAccount() {
 			if profile.HasDisks() {
 				k8sVars[fmt.Sprintf("%sDataAccountName", profile.Name)] = fmt.Sprintf("[concat(variables('storageAccountBaseName'), 'data%d')]", i)
-			} else {
-				k8sVars[fmt.Sprintf("%sAccountName", profile.Name)] = fmt.Sprintf("[concat(variables('storageAccountBaseName'), 'agnt%d')]", i)
 			}
+			k8sVars[fmt.Sprintf("%sAccountName", profile.Name)] = fmt.Sprintf("[concat(variables('storageAccountBaseName'), 'agnt%d')]", i)
 		}
 	}
 

@@ -231,7 +231,7 @@ func createJumpboxVirtualMachine(cs *api.ContainerService) VirtualMachineARM {
 	//	panic(err)
 	//}
 
-	customDataStr := ""//t.GetKubernetesJumpboxCustomDataString(cs, cs.Properties)
+	customDataStr := "" //t.GetKubernetesJumpboxCustomDataString(cs, cs.Properties)
 
 	vmProperties := compute.VirtualMachineProperties{
 		HardwareProfile: &compute.HardwareProfile{
@@ -283,11 +283,10 @@ func createAgentAvailabilitySetVM(cs *api.ContainerService, profile *api.AgentPo
 	if isStorageAccount {
 		storageDep := fmt.Sprintf("[concat('Microsoft.Storage/storageAccounts/',variables('storageAccountPrefixes')[mod(add(div(copyIndex(variables('%[1]sOffset')),variables('maxVMsPerStorageAccount')),variables('%[1]sStorageAccountOffset')),variables('storageAccountPrefixesCount'))],variables('storageAccountPrefixes')[div(add(div(copyIndex(variables('%[1]sOffset')),variables('maxVMsPerStorageAccount')),variables('%[1]sStorageAccountOffset')),variables('storageAccountPrefixesCount'))],variables('%[1]sAccountName'))]", profile.Name)
 		dependencies = append(dependencies, storageDep)
-	}
-
-	if hasDisks {
-		dataDiskDep := fmt.Sprintf("[concat('Microsoft.Storage/storageAccounts/',variables('storageAccountPrefixes')[mod(add(add(div(copyIndex(variables('%[1]sOffset')),variables('maxVMsPerStorageAccount')),variables('%[1]sStorageAccountOffset')),variables('dataStorageAccountPrefixSeed')),variables('storageAccountPrefixesCount'))],variables('storageAccountPrefixes')[div(add(add(div(copyIndex(variables('%[1]sOffset')),variables('maxVMsPerStorageAccount')),variables('%[1]sStorageAccountOffset')),variables('dataStorageAccountPrefixSeed')),variables('storageAccountPrefixesCount'))],variables('%[1]sDataAccountName'))]", profile.Name)
-		dependencies = append(dependencies, dataDiskDep)
+		if hasDisks {
+			dataDiskDep := fmt.Sprintf("[concat('Microsoft.Storage/storageAccounts/',variables('storageAccountPrefixes')[mod(add(add(div(copyIndex(variables('%[1]sOffset')),variables('maxVMsPerStorageAccount')),variables('%[1]sStorageAccountOffset')),variables('dataStorageAccountPrefixSeed')),variables('storageAccountPrefixesCount'))],variables('storageAccountPrefixes')[div(add(add(div(copyIndex(variables('%[1]sOffset')),variables('maxVMsPerStorageAccount')),variables('%[1]sStorageAccountOffset')),variables('dataStorageAccountPrefixSeed')),variables('storageAccountPrefixesCount'))],variables('%[1]sDataAccountName'))]", profile.Name)
+			dependencies = append(dependencies, dataDiskDep)
+		}
 	}
 
 	dependencies = append(dependencies, fmt.Sprintf("[concat('Microsoft.Network/networkInterfaces/', variables('%[1]sVMNamePrefix'), 'nic-', copyIndex(variables('%[1]sOffset')))]", profile.Name))
@@ -312,13 +311,23 @@ func createAgentAvailabilitySetVM(cs *api.ContainerService, profile *api.AgentPo
 		DependsOn:  dependencies,
 		Copy: map[string]string{
 			"count": fmt.Sprintf("[sub(variables('%[1]sCount'), variables('%[1]sOffset'))]", profile.Name),
+			"name": "vmLoopNode",
 		},
 	}
 
 	virtualMachine := compute.VirtualMachine{
-		Location: to.StringPtr("[variables('location')]"),
-		Name:     to.StringPtr(fmt.Sprintf("[concat(variables('%[1]sVMNamePrefix'), copyIndex(variables('%[1]sOffset')))]", profile.Name)),
-		Type:     to.StringPtr("Microsoft.Compute/virtualMachines"),
+		Location:                 to.StringPtr("[variables('location')]"),
+		Name:                     to.StringPtr(fmt.Sprintf("[concat(variables('%[1]sVMNamePrefix'), copyIndex(variables('%[1]sOffset')))]", profile.Name)),
+		Type:                     to.StringPtr("Microsoft.Compute/virtualMachines"),
+		VirtualMachineProperties: &compute.VirtualMachineProperties{
+			NetworkProfile: &compute.NetworkProfile{
+				NetworkInterfaces: &[]compute.NetworkInterfaceReference{
+					{
+						ID: to.StringPtr(fmt.Sprintf("[resourceId('Microsoft.Network/networkInterfaces',concat(variables('%[1]sVMNamePrefix'), 'nic-', copyIndex(variables('%[1]sOffset'))))]", profile.Name)),
+					},
+				},
+			},
+		},
 	}
 
 	if useManagedIdentity {

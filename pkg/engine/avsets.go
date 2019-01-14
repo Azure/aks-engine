@@ -49,6 +49,7 @@ func createAgentAvailabilitySets(cs *api.ContainerService, profile *api.AgentPoo
 		Name:     to.StringPtr(fmt.Sprintf("[variables('%sAvailabilitySet')]", profile.Name)),
 		Location: to.StringPtr("[variables('location')]"),
 		Type:     to.StringPtr("Microsoft.Compute/availabilitySets"),
+		AvailabilitySetProperties: &compute.AvailabilitySetProperties{},
 	}
 
 	if profile.IsManagedDisks() {
