@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT license.
+
 package engine
 
 import (
@@ -302,10 +305,9 @@ func CreateAgentVMSS(cs *api.ContainerService, profile *api.AgentPoolProfile) Vi
 
 	if profile.IsWindows() {
 		resourceNameSuffix = to.StringPtr("[variables('winResourceNamePrefix')]")
+	} else {
+		resourceNameSuffix = to.StringPtr("[parameters('nameSuffix')]")
 	}
-
-	resourceNameSuffix = to.StringPtr("[parameters('nameSuffix')]")
-
 	tags := map[string]*string{
 		"creationSource":     to.StringPtr(fmt.Sprintf("[concat(parameters('generatorCode'), '-', variables('%sVMNamePrefix'))]", profile.Name)),
 		"orchestrator":       to.StringPtr("[variables('orchestratorNameVersionTag')]"),
