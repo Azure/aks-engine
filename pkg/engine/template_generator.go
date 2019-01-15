@@ -211,8 +211,6 @@ func (t *TemplateGenerator) getTemplateFuncMap(cs *api.ContainerService) templat
 			if cs.Properties.CustomCloudProfile != nil {
 				if cs.Properties.CustomCloudProfile.Enviornment != nil {
 					cloudProfileName = cs.Properties.CustomCloudProfile.Enviornment.Name
-				} else {
-					log.Fatalf("The environment filed need to be present inside customCloudProfile filed in api model")
 				}
 			}
 			return strings.EqualFold(cloudProfileName, api.AzureStackCloud)
@@ -227,8 +225,6 @@ func (t *TemplateGenerator) getTemplateFuncMap(cs *api.ContainerService) templat
 					}
 					environmentJSON = string(bytes)
 					environmentJSON = strings.Replace(environmentJSON, "\"", "\\\"", -1)
-				} else {
-					log.Fatalln("The environment filed need to be present inside customCloudProfile filed in api model")
 				}
 			}
 			return environmentJSON
