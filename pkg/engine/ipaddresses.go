@@ -22,9 +22,9 @@ func CreatePublicIpAddress(cs *api.ContainerService) PublicIPAddressARM {
 		},
 		PublicIPAddress: network.PublicIPAddress{
 			Location: to.StringPtr("[variables('location')]"),
-			Name: to.StringPtr("[variables('masterPublicIPAddressName')]"),
+			Name:     to.StringPtr("[variables('masterPublicIPAddressName')]"),
 			PublicIPAddressPropertiesFormat: &network.PublicIPAddressPropertiesFormat{
-				DNSSettings:&network.PublicIPAddressDNSSettings{
+				DNSSettings: &network.PublicIPAddressDNSSettings{
 					DomainNameLabel: to.StringPtr("[variables('masterFqdnPrefix')]"),
 				},
 				PublicIPAllocationMethod: allocMethod,
@@ -44,9 +44,9 @@ func createJumpboxPublicIpAddress() PublicIPAddressARM {
 		},
 		PublicIPAddress: network.PublicIPAddress{
 			Location: to.StringPtr("[variables('location')]"),
-			Name: to.StringPtr("[variables('jumpboxPublicIpAddressName')]"),
+			Name:     to.StringPtr("[variables('jumpboxPublicIpAddressName')]"),
 			PublicIPAddressPropertiesFormat: &network.PublicIPAddressPropertiesFormat{
-				DNSSettings:&network.PublicIPAddressDNSSettings{
+				DNSSettings: &network.PublicIPAddressDNSSettings{
 					DomainNameLabel: to.StringPtr("[variables('masterFqdnPrefix')]"),
 				},
 				PublicIPAllocationMethod: network.Dynamic,

@@ -104,7 +104,7 @@ func createAgentVMASStorageAccount(cs *api.ContainerService, profile *api.AgentP
 	if isDataDisk {
 		storageAccount.Name = to.StringPtr(fmt.Sprintf("[concat(variables('storageAccountPrefixes')[mod(add(copyIndex(variables('dataStorageAccountPrefixSeed')),variables('%[1]sStorageAccountOffset')),variables('storageAccountPrefixesCount'))],variables('storageAccountPrefixes')[div(add(copyIndex(variables('dataStorageAccountPrefixSeed')),variables('%[1]sStorageAccountOffset')),variables('storageAccountPrefixesCount'))],variables('%[1]sDataAccountName'))]", profile.Name))
 	} else {
-		storageAccount.Name = to.StringPtr(fmt.Sprintf(      "[concat(variables('storageAccountPrefixes')[mod(add(copyIndex(),variables('%[1]sStorageAccountOffset')),variables('storageAccountPrefixesCount'))],variables('storageAccountPrefixes')[div(add(copyIndex(),variables('%[1]sStorageAccountOffset')),variables('storageAccountPrefixesCount'))],variables('%[1]sAccountName'))]", profile.Name))
+		storageAccount.Name = to.StringPtr(fmt.Sprintf("[concat(variables('storageAccountPrefixes')[mod(add(copyIndex(),variables('%[1]sStorageAccountOffset')),variables('storageAccountPrefixesCount'))],variables('storageAccountPrefixes')[div(add(copyIndex(),variables('%[1]sStorageAccountOffset')),variables('storageAccountPrefixesCount'))],variables('%[1]sAccountName'))]", profile.Name))
 	}
 
 	return StorageAccountARM{

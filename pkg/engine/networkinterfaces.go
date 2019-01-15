@@ -299,8 +299,8 @@ func createAgentVMASNIC(cs *api.ContainerService, profile *api.AgentPoolProfile)
 	armResource.DependsOn = dependencies
 
 	networkInterface := network.Interface{
-		Type: to.StringPtr("Microsoft.Network/networkInterfaces"),
-		Name: to.StringPtr("[concat(variables('" + profile.Name + "VMNamePrefix'), 'nic-', copyIndex(variables('" + profile.Name + "Offset')))]"),
+		Type:     to.StringPtr("Microsoft.Network/networkInterfaces"),
+		Name:     to.StringPtr("[concat(variables('" + profile.Name + "VMNamePrefix'), 'nic-', copyIndex(variables('" + profile.Name + "Offset')))]"),
 		Location: to.StringPtr("[variables('location')]"),
 	}
 

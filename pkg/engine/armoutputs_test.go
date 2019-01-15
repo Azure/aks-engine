@@ -42,7 +42,7 @@ func TestGetK8sOutputs(t *testing.T) {
 	}
 
 	outputMap := GetKubernetesOutputs(cs)
-	jsonStr := map[string]interface{} {
+	jsonStr := map[string]interface{}{
 		"outputs": outputMap,
 	}
 	jsonObj, _ := json.MarshalIndent(jsonStr, "", "   ")

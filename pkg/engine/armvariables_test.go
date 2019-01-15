@@ -43,7 +43,7 @@ func TestK8sVars(t *testing.T) {
 	cs.SetPropertiesDefaults(false, false)
 
 	varMap := GetKubernetesVariables(cs)
-	jsonStr := map[string]interface{} {
+	jsonStr := map[string]interface{}{
 		"variables": varMap,
 	}
 	jsonObj, _ := json.MarshalIndent(jsonStr, "", "   ")

@@ -16,7 +16,7 @@ func TestGenerateARMResources(t *testing.T) {
 
 	armResources := GenerateARMResources(cs)
 
-	jsonStr := map[string]interface{} {
+	jsonStr := map[string]interface{}{
 		"resources": armResources,
 	}
 	jsonObj, _ := json.MarshalIndent(jsonStr, "", "   ")

@@ -20,7 +20,7 @@ func TestToArmParams(t *testing.T) {
 
 	paramsMap["aadTenantId"] = toARMParameterObj(aadTenantId)
 
-	jsonStr := map[string]interface{} {
+	jsonStr := map[string]interface{}{
 		"parameters": paramsMap,
 	}
 	jsonObj, _ := json.MarshalIndent(jsonStr, "", "   ")

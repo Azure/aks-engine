@@ -78,7 +78,7 @@ func createAgentVmssSysRoleAssignment(profile *api.AgentPoolProfile) RoleAssignm
 			},
 		},
 	}
-    systemRoleAssignment.RoleAssignmentPropertiesWithScope = &authorization.RoleAssignmentPropertiesWithScope{}
+	systemRoleAssignment.RoleAssignmentPropertiesWithScope = &authorization.RoleAssignmentPropertiesWithScope{}
 	systemRoleAssignment.Name = to.StringPtr(fmt.Sprintf("[guid(concat('Microsoft.Compute/virtualMachineScaleSets/', variables('%[1]sVMNamePrefix'), 'vmidentity'))]", profile.Name))
 	systemRoleAssignment.Type = to.StringPtr("Microsoft.Authorization/roleAssignments")
 	systemRoleAssignment.RoleDefinitionID = to.StringPtr("[variables('readerRoleDefinitionId')]")

@@ -46,9 +46,9 @@ func createAgentAvailabilitySets(cs *api.ContainerService, profile *api.AgentPoo
 	}
 
 	avSet := compute.AvailabilitySet{
-		Name:     to.StringPtr(fmt.Sprintf("[variables('%sAvailabilitySet')]", profile.Name)),
-		Location: to.StringPtr("[variables('location')]"),
-		Type:     to.StringPtr("Microsoft.Compute/availabilitySets"),
+		Name:                      to.StringPtr(fmt.Sprintf("[variables('%sAvailabilitySet')]", profile.Name)),
+		Location:                  to.StringPtr("[variables('location')]"),
+		Type:                      to.StringPtr("Microsoft.Compute/availabilitySets"),
 		AvailabilitySetProperties: &compute.AvailabilitySetProperties{},
 	}
 

@@ -130,7 +130,6 @@ func createKubernetesMasterResourcesVmss(cs *api.ContainerService) []interface{}
 	loadBalancer := CreateLoadBalancer()
 	masterResources = append(masterResources, loadBalancer)
 
-
 	masterVmss := CreateMasterVMSS(cs)
 	masterResources = append(masterResources, masterVmss)
 

@@ -311,14 +311,14 @@ func createAgentAvailabilitySetVM(cs *api.ContainerService, profile *api.AgentPo
 		DependsOn:  dependencies,
 		Copy: map[string]string{
 			"count": fmt.Sprintf("[sub(variables('%[1]sCount'), variables('%[1]sOffset'))]", profile.Name),
-			"name": "vmLoopNode",
+			"name":  "vmLoopNode",
 		},
 	}
 
 	virtualMachine := compute.VirtualMachine{
-		Location:                 to.StringPtr("[variables('location')]"),
-		Name:                     to.StringPtr(fmt.Sprintf("[concat(variables('%[1]sVMNamePrefix'), copyIndex(variables('%[1]sOffset')))]", profile.Name)),
-		Type:                     to.StringPtr("Microsoft.Compute/virtualMachines"),
+		Location: to.StringPtr("[variables('location')]"),
+		Name:     to.StringPtr(fmt.Sprintf("[concat(variables('%[1]sVMNamePrefix'), copyIndex(variables('%[1]sOffset')))]", profile.Name)),
+		Type:     to.StringPtr("Microsoft.Compute/virtualMachines"),
 		VirtualMachineProperties: &compute.VirtualMachineProperties{
 			NetworkProfile: &compute.NetworkProfile{
 				NetworkInterfaces: &[]compute.NetworkInterfaceReference{
@@ -328,7 +328,7 @@ func createAgentAvailabilitySetVM(cs *api.ContainerService, profile *api.AgentPo
 				},
 			},
 		},
-		Tags:tags,
+		Tags: tags,
 	}
 
 	if useManagedIdentity {

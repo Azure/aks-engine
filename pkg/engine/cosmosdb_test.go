@@ -12,4 +12,3 @@ func TestCreateCosmosDB(t *testing.T) {
 	jsonObj, _ := json.MarshalIndent(db, "", "   ")
 	fmt.Println(string(jsonObj))
 }
-

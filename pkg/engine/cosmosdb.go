@@ -45,7 +45,7 @@ func createCosmosDBAccount() DocumentDBAccountARM {
 	}
 
 	return DocumentDBAccountARM{
-		ARMResource:     armResource,
+		ARMResource:                           armResource,
 		DatabaseAccountCreateUpdateParameters: documentDB,
 	}
 }
