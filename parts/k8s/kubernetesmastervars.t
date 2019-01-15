@@ -202,7 +202,7 @@
 {{end}}
     "nsgID": "[resourceId('Microsoft.Network/networkSecurityGroups',variables('nsgName'))]",
 {{if AnyAgentUsesVirtualMachineScaleSets}}
-    "primaryScaleSetName": "[concat(parameters('orchestratorName'), '-{{ (index .AgentPoolProfiles 0).Name }}-',parameters('nameSuffix'), '-vmss')]",
+    "primaryScaleSetName": "[variables('{{ (index .AgentPoolProfiles 0).Name }}VMNamePrefix')]",
     "primaryAvailabilitySetName": "",
     "vmType": "vmss",
 {{else}}
