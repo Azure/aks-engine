@@ -10,7 +10,7 @@ import (
 )
 
 func TestCreateInboundNatRules(t *testing.T) {
-	ibnr := createInboundNATRules(1)
+	ibnr := createInboundNATRules()
 	jsonObj, _ := json.MarshalIndent(ibnr, "", "   ")
 	fmt.Println(string(jsonObj))
 }
