@@ -196,8 +196,8 @@ func (cs *ContainerService) setAddonsConfig(isUpdate bool) {
 		Name:    ContainerMonitoringAddonName,
 		Enabled: to.BoolPtr(DefaultContainerMonitoringAddonEnabled),
 		Config: map[string]string{
-			"omsAgentVersion":       "1.6.0-42",
-			"dockerProviderVersion": "2.0.0-3",
+			"omsAgentVersion":       "1.8.1.256",
+			"dockerProviderVersion": "3.0.0-3",
 		},
 		Containers: []KubernetesContainerSpec{
 			{
