@@ -6,8 +6,9 @@ package engine
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/Azure/aks-engine/pkg/api"
 	"testing"
+
+	"github.com/Azure/aks-engine/pkg/api"
 )
 
 func TestGenerateTemplateV2(t *testing.T) {
@@ -18,7 +19,7 @@ func TestGenerateTemplateV2(t *testing.T) {
 
 	json.Unmarshal([]byte(apiModelStr), &cs)
 
-	templ , _, err := tg.GenerateTemplateV2(cs, DefaultGeneratorCode, TestAKSEngineVersion)
+	templ, _, err := tg.GenerateTemplateV2(cs, DefaultGeneratorCode, TestAKSEngineVersion)
 
 	if err != nil {
 		t.Errorf("unexpected error while running getParameterDescMap: %s", err.Error())

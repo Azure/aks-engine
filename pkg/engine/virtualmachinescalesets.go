@@ -5,11 +5,12 @@ package engine
 
 import (
 	"fmt"
+	"strconv"
+
 	"github.com/Azure/aks-engine/pkg/api"
 	"github.com/Azure/aks-engine/pkg/api/common"
 	"github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2018-06-01/compute"
 	"github.com/Azure/go-autorest/autorest/to"
-	"strconv"
 )
 
 func CreateMasterVMSS(cs *api.ContainerService) VirtualMachineScaleSetARM {
@@ -35,7 +36,7 @@ func CreateMasterVMSS(cs *api.ContainerService) VirtualMachineScaleSetARM {
 	dependencies = append(dependencies, "[variables('masterLbID')]")
 
 	armResource := ARMResource{
-		ApiVersion: "[variables('apiVersionCompute')]",
+		APIVersion: "[variables('apiVersionCompute')]",
 		DependsOn:  dependencies,
 	}
 
@@ -289,7 +290,7 @@ func CreateMasterVMSS(cs *api.ContainerService) VirtualMachineScaleSetARM {
 
 func CreateAgentVMSS(cs *api.ContainerService, profile *api.AgentPoolProfile) VirtualMachineScaleSetARM {
 	armResource := ARMResource{
-		ApiVersion: "[variables('apiVersionCompute')]",
+		APIVersion: "[variables('apiVersionCompute')]",
 	}
 	var dependencies []string
 

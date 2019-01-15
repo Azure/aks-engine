@@ -6,8 +6,9 @@ package engine
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/Azure/aks-engine/pkg/api"
 	"testing"
+
+	"github.com/Azure/aks-engine/pkg/api"
 )
 
 func TestSizeMap(t *testing.T) {
@@ -31,8 +32,7 @@ func TestK8sVars(t *testing.T) {
 			OrchestratorProfile: &api.OrchestratorProfile{
 				OrchestratorType: api.Kubernetes,
 			},
-			LinuxProfile: &api.LinuxProfile{
-			},
+			LinuxProfile: &api.LinuxProfile{},
 			AgentPoolProfiles: []*api.AgentPoolProfile{
 				{
 					Name:   "agentpool1",

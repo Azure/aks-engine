@@ -5,6 +5,7 @@ package engine
 
 import (
 	"fmt"
+
 	"github.com/Azure/aks-engine/pkg/api"
 	"github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2018-06-01/compute"
 	"github.com/Azure/go-autorest/autorest/to"
@@ -13,7 +14,7 @@ import (
 func CreateAvailabilitySet(cs *api.ContainerService, isManagedDisks bool) AvailabilitySetARM {
 
 	armResource := ARMResource{
-		ApiVersion: "[variables('apiVersionCompute')]",
+		APIVersion: "[variables('apiVersionCompute')]",
 	}
 
 	avSet := compute.AvailabilitySet{
@@ -45,7 +46,7 @@ func CreateAvailabilitySet(cs *api.ContainerService, isManagedDisks bool) Availa
 func createAgentAvailabilitySets(cs *api.ContainerService, profile *api.AgentPoolProfile) AvailabilitySetARM {
 
 	armResource := ARMResource{
-		ApiVersion: "[variables('apiVersionCompute')]",
+		APIVersion: "[variables('apiVersionCompute')]",
 	}
 
 	avSet := compute.AvailabilitySet{

@@ -5,6 +5,7 @@ package engine
 
 import (
 	"fmt"
+
 	"github.com/Azure/aks-engine/pkg/api"
 	"github.com/Azure/azure-sdk-for-go/services/storage/mgmt/2018-02-01/storage"
 	"github.com/Azure/go-autorest/autorest/to"
@@ -12,7 +13,7 @@ import (
 
 func createStorageAccount(cs *api.ContainerService) StorageAccountARM {
 	armResource := ARMResource{
-		ApiVersion: "[variables('apiVersionStorage')]",
+		APIVersion: "[variables('apiVersionStorage')]",
 	}
 
 	if !to.Bool(cs.Properties.OrchestratorProfile.KubernetesConfig.PrivateCluster.Enabled) {
@@ -38,7 +39,7 @@ func createStorageAccount(cs *api.ContainerService) StorageAccountARM {
 
 func createJumpboxStorageAccount() StorageAccountARM {
 	armResource := ARMResource{
-		ApiVersion: "[variables('apiVersionStorage')]",
+		APIVersion: "[variables('apiVersionStorage')]",
 	}
 
 	storageAccount := storage.Account{
@@ -56,21 +57,21 @@ func createJumpboxStorageAccount() StorageAccountARM {
 	}
 }
 
-func createKeyVaultStorageAccount(cs *api.ContainerService) StorageAccountARM {
-	return StorageAccountARM{
-		ARMResource: ARMResource{
-			ApiVersion: "[variables('apiVersionStorage')]",
-		},
-		Account: storage.Account{
-			Type:     to.StringPtr("Microsoft.Storage/storageAccounts"),
-			Name:     to.StringPtr("[variables('clusterKeyVaultName')]"),
-			Location: to.StringPtr("[variables('location')]"),
-			Sku: &storage.Sku{
-				Name: storage.StandardLRS,
-			},
-		},
-	}
-}
+//func createKeyVaultStorageAccount(cs *api.ContainerService) StorageAccountARM {
+//	return StorageAccountARM{
+//		ARMResource: ARMResource{
+//			APIVersion: "[variables('apiVersionStorage')]",
+//		},
+//		Account: storage.Account{
+//			Type:     to.StringPtr("Microsoft.Storage/storageAccounts"),
+//			Name:     to.StringPtr("[variables('clusterKeyVaultName')]"),
+//			Location: to.StringPtr("[variables('location')]"),
+//			Sku: &storage.Sku{
+//				Name: storage.StandardLRS,
+//			},
+//		},
+//	}
+//}
 
 func createAgentVMASStorageAccount(cs *api.ContainerService, profile *api.AgentPoolProfile, isDataDisk bool) StorageAccountARM {
 	var copyName string
@@ -81,7 +82,7 @@ func createAgentVMASStorageAccount(cs *api.ContainerService, profile *api.AgentP
 	}
 
 	armResource := ARMResource{
-		ApiVersion: "[variables('apiVersionStorage')]",
+		APIVersion: "[variables('apiVersionStorage')]",
 		Copy: map[string]string{
 			"count": fmt.Sprintf("[variables('%sStorageAccountsCount')]", profile.Name),
 			"name":  copyName,

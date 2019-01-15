@@ -5,6 +5,7 @@ package engine
 
 import (
 	"fmt"
+
 	"github.com/Azure/aks-engine/pkg/api"
 	"github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2018-06-01/compute"
 	"github.com/Azure/go-autorest/autorest/to"
@@ -13,7 +14,7 @@ import (
 func createWindowsImage(cs *api.ContainerService, profile *api.AgentPoolProfile) ImageARM {
 	return ImageARM{
 		ARMResource: ARMResource{
-			ApiVersion: "[variables('apiVersionCompute')]",
+			APIVersion: "[variables('apiVersionCompute')]",
 		},
 		Image: compute.Image{
 			Type: to.StringPtr("Microsoft.Compute/images"),

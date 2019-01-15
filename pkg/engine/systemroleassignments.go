@@ -5,6 +5,7 @@ package engine
 
 import (
 	"fmt"
+
 	"github.com/Azure/aks-engine/pkg/api"
 	"github.com/Azure/azure-sdk-for-go/services/preview/authorization/mgmt/2018-09-01-preview/authorization"
 	"github.com/Azure/go-autorest/autorest/to"
@@ -18,7 +19,7 @@ type SystemRoleAssignmentARM struct {
 func createVmasRoleAssignment() SystemRoleAssignmentARM {
 	systemRoleAssignment := SystemRoleAssignmentARM{
 		ARMResource: ARMResource{
-			ApiVersion: "[variables('apiVersionAuthorizationSystem')]",
+			APIVersion: "[variables('apiVersionAuthorizationSystem')]",
 			Copy: map[string]string{
 				"count": "[variables('masterCount')]",
 				"name":  "vmLoopNode",
@@ -33,27 +34,27 @@ func createVmasRoleAssignment() SystemRoleAssignmentARM {
 	return systemRoleAssignment
 }
 
-func createVMScaleSetRoleAssignment(cs *api.ContainerService, profile *api.AgentPoolProfile) SystemRoleAssignmentARM {
-	systemRoleAssignment := SystemRoleAssignmentARM{
-		ARMResource: ARMResource{
-			ApiVersion: "[variables('apiVersionAuthorizationSystem')]",
-			DependsOn: []string{
-				fmt.Sprintf("[concat('Microsoft.Compute/virtualMachineScaleSets/', variables('%sVMNamePrefix'))]", profile.Name),
-			},
-		},
-	}
-
-	systemRoleAssignment.Name = to.StringPtr(fmt.Sprintf("[guid(concat('Microsoft.Compute/virtualMachineScaleSets/', variables('%sVMNamePrefix'), 'vmidentity'))]", profile.Name))
-	systemRoleAssignment.Type = to.StringPtr("Microsoft.Authorization/roleAssignments")
-	systemRoleAssignment.RoleDefinitionID = to.StringPtr("[variables('readerRoleDefinitionId')]")
-	systemRoleAssignment.PrincipalID = to.StringPtr(fmt.Sprintf("[reference(concat('Microsoft.Compute/virtualMachineScaleSets/', variables('%sVMNamePrefix')), '2017-03-30', 'Full').identity.principalId]", profile.Name))
-	return systemRoleAssignment
-}
+//func createVMScaleSetRoleAssignment(cs *api.ContainerService, profile *api.AgentPoolProfile) SystemRoleAssignmentARM {
+//	systemRoleAssignment := SystemRoleAssignmentARM{
+//		ARMResource: ARMResource{
+//			APIVersion: "[variables('apiVersionAuthorizationSystem')]",
+//			DependsOn: []string{
+//				fmt.Sprintf("[concat('Microsoft.Compute/virtualMachineScaleSets/', variables('%sVMNamePrefix'))]", profile.Name),
+//			},
+//		},
+//	}
+//
+//	systemRoleAssignment.Name = to.StringPtr(fmt.Sprintf("[guid(concat('Microsoft.Compute/virtualMachineScaleSets/', variables('%sVMNamePrefix'), 'vmidentity'))]", profile.Name))
+//	systemRoleAssignment.Type = to.StringPtr("Microsoft.Authorization/roleAssignments")
+//	systemRoleAssignment.RoleDefinitionID = to.StringPtr("[variables('readerRoleDefinitionId')]")
+//	systemRoleAssignment.PrincipalID = to.StringPtr(fmt.Sprintf("[reference(concat('Microsoft.Compute/virtualMachineScaleSets/', variables('%sVMNamePrefix')), '2017-03-30', 'Full').identity.principalId]", profile.Name))
+//	return systemRoleAssignment
+//}
 
 func createAgentVmasSysRoleAssignment(profile *api.AgentPoolProfile) SystemRoleAssignmentARM {
 	systemRoleAssignment := SystemRoleAssignmentARM{
 		ARMResource: ARMResource{
-			ApiVersion: "[variables('apiVersionAuthorizationSystem')]",
+			APIVersion: "[variables('apiVersionAuthorizationSystem')]",
 			DependsOn: []string{
 				fmt.Sprintf("[concat('Microsoft.Compute/virtualMachines/', variables('%[1]sVMNamePrefix'), copyIndex(variables('%[1]sOffset')))]", profile.Name),
 			},
@@ -75,7 +76,7 @@ func createAgentVmasSysRoleAssignment(profile *api.AgentPoolProfile) SystemRoleA
 func createAgentVmssSysRoleAssignment(profile *api.AgentPoolProfile) RoleAssignmentARM {
 	systemRoleAssignment := RoleAssignmentARM{
 		ARMResource: ARMResource{
-			ApiVersion: "[variables('apiVersionAuthorizationSystem')]",
+			APIVersion: "[variables('apiVersionAuthorizationSystem')]",
 			DependsOn: []string{
 				fmt.Sprintf("[concat('Microsoft.Compute/virtualMachineScaleSets/', variables('%[1]sVMNamePrefix')", profile.Name),
 			},

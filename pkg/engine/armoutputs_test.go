@@ -6,9 +6,10 @@ package engine
 import (
 	"encoding/json"
 	"fmt"
+	"testing"
+
 	"github.com/Azure/aks-engine/pkg/api"
 	"github.com/Azure/go-autorest/autorest/to"
-	"testing"
 )
 
 func TestGetK8sOutputs(t *testing.T) {
@@ -32,8 +33,7 @@ func TestGetK8sOutputs(t *testing.T) {
 					},
 				},
 			},
-			LinuxProfile: &api.LinuxProfile{
-			},
+			LinuxProfile: &api.LinuxProfile{},
 			AgentPoolProfiles: []*api.AgentPoolProfile{
 				{
 					Name:   "agentpool1",

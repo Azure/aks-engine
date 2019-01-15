@@ -21,7 +21,7 @@ func CreateVirtualNetwork(cs *api.ContainerService) VirtualNetworkARM {
 	}
 
 	armResource := ARMResource{
-		ApiVersion: "[variables('apiVersionNetwork')]",
+		APIVersion: "[variables('apiVersionNetwork')]",
 		DependsOn:  dependencies,
 	}
 
@@ -75,7 +75,7 @@ func createVirtualNetworkVMSS(cs *api.ContainerService) VirtualNetworkARM {
 	}
 
 	armResource := ARMResource{
-		ApiVersion: "[variables('apiVersionNetwork')]",
+		APIVersion: "[variables('apiVersionNetwork')]",
 		DependsOn:  dependencies,
 	}
 
@@ -136,7 +136,7 @@ func createVirtualNetworkVMSS(cs *api.ContainerService) VirtualNetworkARM {
 
 func createHostedMasterVirtualNetwork(cs *api.ContainerService) VirtualNetworkARM {
 	armResource := ARMResource{
-		ApiVersion: "[variables('apiVersionNetwork')]",
+		APIVersion: "[variables('apiVersionNetwork')]",
 	}
 	dependencies := []string{
 		"[concat('Microsoft.Network/networkSecurityGroups/', variables('nsgName'))]",
@@ -146,6 +146,8 @@ func createHostedMasterVirtualNetwork(cs *api.ContainerService) VirtualNetworkAR
 	if !isAzureCNI {
 		dependencies = append(dependencies, "[concat('Microsoft.Network/routeTables/', variables('routeTableName'))]")
 	}
+
+	armResource.DependsOn = dependencies
 
 	subnet := network.Subnet{
 		Name: to.StringPtr("[variables('subnetName')]"),

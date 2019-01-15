@@ -11,7 +11,7 @@ import (
 
 func CreateNetworkSecurityGroup(cs *api.ContainerService) NetworkSecurityGroupARM {
 	armResource := ARMResource{
-		ApiVersion: "[variables('apiVersionNetwork')]",
+		APIVersion: "[variables('apiVersionNetwork')]",
 	}
 
 	sshRule := network.SecurityRule{
@@ -120,7 +120,7 @@ func CreateNetworkSecurityGroup(cs *api.ContainerService) NetworkSecurityGroupAR
 
 func createJumpboxNSG() NetworkSecurityGroupARM {
 	armResource := ARMResource{
-		ApiVersion: "[variables('apiVersionNetwork')]",
+		APIVersion: "[variables('apiVersionNetwork')]",
 	}
 
 	securityRules := []network.SecurityRule{
@@ -154,7 +154,7 @@ func createJumpboxNSG() NetworkSecurityGroupARM {
 
 func createHostedMasterNSG() NetworkSecurityGroupARM {
 	armResource := ARMResource{
-		ApiVersion: "[variables('apiVersionNetwork')]",
+		APIVersion: "[variables('apiVersionNetwork')]",
 	}
 	nsg := network.SecurityGroup{
 		Location: to.StringPtr("[variables('location')]"),

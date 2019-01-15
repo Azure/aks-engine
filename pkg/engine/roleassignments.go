@@ -8,30 +8,30 @@ import (
 	"github.com/Azure/go-autorest/autorest/to"
 )
 
-func createRoleAssignment() RoleAssignmentARM {
-	return RoleAssignmentARM{
-		ARMResource: ARMResource{
-			ApiVersion: "[variables('apiVersionAuthorization')]",
-			Copy: map[string]string{
-				"count": "[variables('masterCount')]",
-				"name":  "vmLoopNode",
-			},
-		},
-		RoleAssignment: authorization.RoleAssignment{
-			Name: to.StringPtr("[guid(concat('Microsoft.Compute/virtualMachines/', variables('masterVMNamePrefix'), copyIndex(),'vmidentity'))]"),
-			Type: to.StringPtr("Microsoft.Authorization/roleAssignments"),
-			RoleAssignmentPropertiesWithScope: &authorization.RoleAssignmentPropertiesWithScope{
-				RoleDefinitionID: to.StringPtr("[variables('contributorRoleDefinitionId')]"),
-				PrincipalID:      to.StringPtr("[reference(concat('Microsoft.Compute/virtualMachines/', variables('masterVMNamePrefix'), copyIndex()), '2017-03-30', 'Full').identity.principalId]"),
-			},
-		},
-	}
-}
+//func createRoleAssignment() RoleAssignmentARM {
+//	return RoleAssignmentARM{
+//		ARMResource: ARMResource{
+//			APIVersion: "[variables('apiVersionAuthorization')]",
+//			Copy: map[string]string{
+//				"count": "[variables('masterCount')]",
+//				"name":  "vmLoopNode",
+//			},
+//		},
+//		RoleAssignment: authorization.RoleAssignment{
+//			Name: to.StringPtr("[guid(concat('Microsoft.Compute/virtualMachines/', variables('masterVMNamePrefix'), copyIndex(),'vmidentity'))]"),
+//			Type: to.StringPtr("Microsoft.Authorization/roleAssignments"),
+//			RoleAssignmentPropertiesWithScope: &authorization.RoleAssignmentPropertiesWithScope{
+//				RoleDefinitionID: to.StringPtr("[variables('contributorRoleDefinitionId')]"),
+//				PrincipalID:      to.StringPtr("[reference(concat('Microsoft.Compute/virtualMachines/', variables('masterVMNamePrefix'), copyIndex()), '2017-03-30', 'Full').identity.principalId]"),
+//			},
+//		},
+//	}
+//}
 
 func createMSIRoleAssignment() RoleAssignmentARM {
 	return RoleAssignmentARM{
 		ARMResource: ARMResource{
-			ApiVersion: "[variables('apiVersionAuthorizationUser')]",
+			APIVersion: "[variables('apiVersionAuthorizationUser')]",
 			DependsOn: []string{
 				"[concat('Microsoft.ManagedIdentity/userAssignedIdentities/', variables('userAssignedID'))]",
 			},

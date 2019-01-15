@@ -6,8 +6,9 @@ package engine
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/Azure/aks-engine/pkg/api"
 	"testing"
+
+	"github.com/Azure/aks-engine/pkg/api"
 )
 
 func TestCreateNIC(t *testing.T) {

@@ -11,7 +11,7 @@ import (
 func createRouteTable() RouteTableARM {
 	return RouteTableARM{
 		ARMResource: ARMResource{
-			ApiVersion: "[variables('apiVersionNetwork')]",
+			APIVersion: "[variables('apiVersionNetwork')]",
 		},
 		RouteTable: network.RouteTable{
 			Location: to.StringPtr("[variables('location')]"),

@@ -18,7 +18,7 @@ import (
 )
 
 type ARMResource struct {
-	ApiVersion string            `json:"apiVersion,omitempty"`
+	APIVersion string            `json:"apiVersion,omitempty"`
 	Copy       map[string]string `json:"copy,omitempty"`
 	DependsOn  []string          `json:"dependsOn,omitempty"`
 }

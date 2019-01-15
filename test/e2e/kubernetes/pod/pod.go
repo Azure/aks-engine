@@ -494,12 +494,10 @@ func WaitOnReady(podPrefix, namespace string, successesNeeded int, sleep, durati
 		select {
 		case err := <-errCh:
 			pods, _ := GetAllByPrefix(podPrefix, namespace)
-			if pods != nil {
-				for _, p := range pods {
-					e := p.Logs()
-					if e != nil {
-						log.Printf("Unable to print pod logs for pod %s", p.Metadata.Name)
-					}
+			for _, p := range pods {
+				e := p.Logs()
+				if e != nil {
+					log.Printf("Unable to print pod logs for pod %s", p.Metadata.Name)
 				}
 			}
 			return false, err

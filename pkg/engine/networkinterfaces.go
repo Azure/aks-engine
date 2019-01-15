@@ -5,6 +5,7 @@ package engine
 
 import (
 	"fmt"
+
 	"github.com/Azure/aks-engine/pkg/api"
 	"github.com/Azure/azure-sdk-for-go/services/network/mgmt/2018-08-01/network"
 	"github.com/Azure/go-autorest/autorest/to"
@@ -32,7 +33,7 @@ func CreateNetworkInterfaces(cs *api.ContainerService) NetworkInterfaceARM {
 	}
 
 	armResource := ARMResource{
-		ApiVersion: "[variables('apiVersionNetwork')]",
+		APIVersion: "[variables('apiVersionNetwork')]",
 		Copy: map[string]string{
 			"count": "[sub(variables('masterCount'), variables('masterOffset'))]",
 			"name":  "nicLoopNode",
@@ -53,7 +54,7 @@ func CreateNetworkInterfaces(cs *api.ContainerService) NetworkInterfaceARM {
 		lbBackendAddressPools = append(lbBackendAddressPools, internalLbPool)
 	}
 
-	loadBalancerIpConfig := network.InterfaceIPConfiguration{
+	loadBalancerIPConfig := network.InterfaceIPConfiguration{
 		Name: to.StringPtr("ipconfig1"),
 		InterfaceIPConfigurationPropertiesFormat: &network.InterfaceIPConfigurationPropertiesFormat{
 			LoadBalancerBackendAddressPools: &lbBackendAddressPools,
@@ -73,7 +74,7 @@ func CreateNetworkInterfaces(cs *api.ContainerService) NetworkInterfaceARM {
 
 	isAzureCNI := cs.Properties.OrchestratorProfile.IsAzureCNI()
 
-	ipConfigurations := []network.InterfaceIPConfiguration{loadBalancerIpConfig}
+	ipConfigurations := []network.InterfaceIPConfiguration{loadBalancerIPConfig}
 
 	if isAzureCNI {
 		for i := 2; i <= cs.Properties.MasterProfile.IPAddressCount; i++ {
@@ -139,7 +140,7 @@ func createPrivateClusterNetworkInterface(cs *api.ContainerService) NetworkInter
 	}
 
 	armResource := ARMResource{
-		ApiVersion: "[variables('apiVersionNetwork')]",
+		APIVersion: "[variables('apiVersionNetwork')]",
 		Copy: map[string]string{
 			"count": "[sub(variables('masterCount'), variables('masterOffset'))]",
 			"name":  "nicLoopNode",
@@ -156,7 +157,7 @@ func createPrivateClusterNetworkInterface(cs *api.ContainerService) NetworkInter
 		lbBackendAddressPools = append(lbBackendAddressPools, internalLbPool)
 	}
 
-	loadBalancerIpConfig := network.InterfaceIPConfiguration{
+	loadBalancerIPConfig := network.InterfaceIPConfiguration{
 		Name: to.StringPtr("ipconfig1"),
 		InterfaceIPConfigurationPropertiesFormat: &network.InterfaceIPConfigurationPropertiesFormat{
 			LoadBalancerBackendAddressPools: &lbBackendAddressPools,
@@ -170,7 +171,7 @@ func createPrivateClusterNetworkInterface(cs *api.ContainerService) NetworkInter
 		},
 	}
 
-	ipConfigurations := []network.InterfaceIPConfiguration{loadBalancerIpConfig}
+	ipConfigurations := []network.InterfaceIPConfiguration{loadBalancerIPConfig}
 
 	isAzureCNI := cs.Properties.OrchestratorProfile.IsAzureCNI()
 
@@ -236,7 +237,7 @@ func createJumpboxNIC(cs *api.ContainerService) NetworkInterfaceARM {
 	}
 
 	armResource := ARMResource{
-		ApiVersion: "[variables('apiVersionNetwork')]",
+		APIVersion: "[variables('apiVersionNetwork')]",
 		Copy: map[string]string{
 			"count": "[sub(variables('masterCount'), variables('masterOffset'))]",
 			"name":  "nicLoopNode",
@@ -284,7 +285,7 @@ func createAgentVMASNIC(cs *api.ContainerService, profile *api.AgentPoolProfile)
 	isAzureCNI := cs.Properties.OrchestratorProfile.IsAzureCNI()
 
 	armResource := ARMResource{
-		ApiVersion: "[variables('apiVersionNetwork')]",
+		APIVersion: "[variables('apiVersionNetwork')]",
 		Copy: map[string]string{
 			"count": fmt.Sprintf("[sub(variables('%[1]sCount'), variables('%[1]sOffset'))]", profile.Name),
 			"name":  "loop",

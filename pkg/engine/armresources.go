@@ -34,9 +34,7 @@ func GenerateARMResources(cs *api.ContainerService) []interface{} {
 			armResources = append(armResources, CreateAgentVMSS(cs, profile))
 		} else {
 			agentVmasResources := createKubernetesAgentVMASResources(cs, profile)
-			for _, agentVmasResource := range agentVmasResources {
-				armResources = append(armResources, agentVmasResource)
-			}
+			armResources = append(armResources, agentVmasResources...)
 		}
 	}
 
@@ -64,9 +62,8 @@ func GenerateARMResources(cs *api.ContainerService) []interface{} {
 		} else {
 			masterResources = createKubernetesMasterResources(cs)
 		}
-		for _, masterResource := range masterResources {
-			armResources = append(armResources, masterResource)
-		}
+
+		armResources = append(armResources, masterResources...)
 
 	}
 
@@ -93,7 +90,7 @@ func GenerateARMResources(cs *api.ContainerService) []interface{} {
 	//	armResources = append(armResources, masterVmss)
 	//}
 	//
-	//publicIp := CreatePublicIpAddress(cs)
+	//publicIp := CreatePublicIPAddress(cs)
 	//armResources = append(armResources, publicIp)
 	//loadBalancers := CreateLoadBalancer()
 	//masterNIC := CreateNetworkInterfaces(cs)
@@ -133,7 +130,7 @@ func createKubernetesAgentVMASResources(cs *api.ContainerService, profile *api.A
 
 		avSet := AvailabilitySetARM{
 			ARMResource: ARMResource{
-				ApiVersion: "[variables('apiVersionCompute')]",
+				APIVersion: "[variables('apiVersionCompute')]",
 			},
 			AvailabilitySet: compute.AvailabilitySet{
 				Location: to.StringPtr("[variables('location')]"),

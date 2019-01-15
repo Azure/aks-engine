@@ -10,7 +10,7 @@ import (
 
 func createCosmosDBAccount() DocumentDBAccountARM {
 	armResource := ARMResource{
-		ApiVersion: "[variables('apiVersionCosmos')]",
+		APIVersion: "[variables('apiVersionCosmos')]",
 	}
 
 	documentDB := documentdb.DatabaseAccountCreateUpdateParameters{

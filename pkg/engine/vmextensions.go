@@ -5,54 +5,55 @@ package engine
 
 import (
 	"fmt"
+	"strconv"
+
 	"github.com/Azure/aks-engine/pkg/api"
 	"github.com/Azure/aks-engine/pkg/api/common"
 	"github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2018-06-01/compute"
 	"github.com/Azure/go-autorest/autorest/to"
-	"strconv"
 )
 
-func createManagedIdentityExtension(cs api.ContainerService) VirtualMachineExtensionARM {
-	dependentVM := "[concat('Microsoft.Compute/virtualMachines/', variables('masterVMNamePrefix'), copyIndex())]"
-	dependentRoleAssignment := ""
-	userAssignedIDEnabled := cs.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity &&
-		cs.Properties.OrchestratorProfile.KubernetesConfig.UserAssignedID != ""
-
-	if userAssignedIDEnabled {
-		dependentRoleAssignment = "[concat('Microsoft.Authorization/roleAssignments/',guid(concat(variables('userAssignedID'), 'roleAssignment', resourceGroup().id)))]"
-	} else {
-		dependentRoleAssignment = "[concat('Microsoft.Authorization/roleAssignments/', guid(concat('Microsoft.Compute/virtualMachines/', variables('masterVMNamePrefix'), copyIndex(), 'vmidentity')))]"
-	}
-
-	return VirtualMachineExtensionARM{
-		ARMResource: ARMResource{
-			ApiVersion: "[variables('apiVersionCompute')]",
-			Copy: map[string]string{
-				"count": "[variables('masterCount')]",
-				"name":  "vmLoopNode",
-			},
-			DependsOn: []string{
-				dependentVM,
-				dependentRoleAssignment,
-			},
-		},
-		VirtualMachineExtension: compute.VirtualMachineExtension{
-			Location: to.StringPtr("[resourceGroup().location]"),
-			Name:     to.StringPtr("[concat(variables('masterVMNamePrefix'), copyIndex(), '/ManagedIdentityExtension')]"),
-			VirtualMachineExtensionProperties: &compute.VirtualMachineExtensionProperties{
-				Publisher:               to.StringPtr("Microsoft.ManagedIdentity"),
-				Type:                    to.StringPtr("ManagedIdentityExtensionForLinux"),
-				TypeHandlerVersion:      to.StringPtr("1.0"),
-				AutoUpgradeMinorVersion: to.BoolPtr(true),
-				Settings: &map[string]interface{}{
-					"port": "50343",
-				},
-				ProtectedSettings: &map[string]interface{}{},
-			},
-			Type: to.StringPtr("Microsoft.Compute/virtualMachines/extensions"),
-		},
-	}
-}
+//func createManagedIdentityExtension(cs api.ContainerService) VirtualMachineExtensionARM {
+//	dependentVM := "[concat('Microsoft.Compute/virtualMachines/', variables('masterVMNamePrefix'), copyIndex())]"
+//	dependentRoleAssignment := ""
+//	userAssignedIDEnabled := cs.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity &&
+//		cs.Properties.OrchestratorProfile.KubernetesConfig.UserAssignedID != ""
+//
+//	if userAssignedIDEnabled {
+//		dependentRoleAssignment = "[concat('Microsoft.Authorization/roleAssignments/',guid(concat(variables('userAssignedID'), 'roleAssignment', resourceGroup().id)))]"
+//	} else {
+//		dependentRoleAssignment = "[concat('Microsoft.Authorization/roleAssignments/', guid(concat('Microsoft.Compute/virtualMachines/', variables('masterVMNamePrefix'), copyIndex(), 'vmidentity')))]"
+//	}
+//
+//	return VirtualMachineExtensionARM{
+//		ARMResource: ARMResource{
+//			APIVersion: "[variables('apiVersionCompute')]",
+//			Copy: map[string]string{
+//				"count": "[variables('masterCount')]",
+//				"name":  "vmLoopNode",
+//			},
+//			DependsOn: []string{
+//				dependentVM,
+//				dependentRoleAssignment,
+//			},
+//		},
+//		VirtualMachineExtension: compute.VirtualMachineExtension{
+//			Location: to.StringPtr("[resourceGroup().location]"),
+//			Name:     to.StringPtr("[concat(variables('masterVMNamePrefix'), copyIndex(), '/ManagedIdentityExtension')]"),
+//			VirtualMachineExtensionProperties: &compute.VirtualMachineExtensionProperties{
+//				Publisher:               to.StringPtr("Microsoft.ManagedIdentity"),
+//				Type:                    to.StringPtr("ManagedIdentityExtensionForLinux"),
+//				TypeHandlerVersion:      to.StringPtr("1.0"),
+//				AutoUpgradeMinorVersion: to.BoolPtr(true),
+//				Settings: &map[string]interface{}{
+//					"port": "50343",
+//				},
+//				ProtectedSettings: &map[string]interface{}{},
+//			},
+//			Type: to.StringPtr("Microsoft.Compute/virtualMachines/extensions"),
+//		},
+//	}
+//}
 
 func CreateAKSBillingExtension(cs *api.ContainerService) VirtualMachineExtensionARM {
 	location := "[variables('location')]"
@@ -67,7 +68,7 @@ func CreateAKSBillingExtension(cs *api.ContainerService) VirtualMachineExtension
 
 	return VirtualMachineExtensionARM{
 		ARMResource: ARMResource{
-			ApiVersion: "[variables('apiVersionCompute')]",
+			APIVersion: "[variables('apiVersionCompute')]",
 			Copy: map[string]string{
 				"count": "[sub(variables('masterCount'), variables('masterOffset'))]",
 				"name":  "vmLoopNode",
@@ -123,7 +124,7 @@ func CreateCustomScriptExtension(cs *api.ContainerService) VirtualMachineExtensi
 	}
 	return VirtualMachineExtensionARM{
 		ARMResource: ARMResource{
-			ApiVersion: "[variables('apiVersionCompute')]",
+			APIVersion: "[variables('apiVersionCompute')]",
 			Copy: map[string]string{
 				"count": "[sub(variables('masterCount'), variables('masterOffset'))]",
 				"name":  "vmLoopNode",
@@ -187,7 +188,7 @@ func createAgentVMASCustomScriptExtension(cs *api.ContainerService, profile *api
 
 	return VirtualMachineExtensionARM{
 		ARMResource: ARMResource{
-			ApiVersion: "[variables('apiVersionCompute')]",
+			APIVersion: "[variables('apiVersionCompute')]",
 			Copy: map[string]string{
 				"count": fmt.Sprintf("[sub(variables('%[1]sCount'), variables('%[1]sOffset'))]", profile.Name),
 				"name":  "vmLoopNode",
@@ -227,7 +228,7 @@ func CreateAgentVMASAKSBillingExtension(cs *api.ContainerService, profile *api.A
 
 	return VirtualMachineExtensionARM{
 		ARMResource: ARMResource{
-			ApiVersion: "[variables('apiVersionCompute')]",
+			APIVersion: "[variables('apiVersionCompute')]",
 			Copy: map[string]string{
 				"count": fmt.Sprintf("[sub(variables('%[1]sCount'), variables('%[1]sOffset'))]", profile.Name),
 				"name":  "vmLoopNode",

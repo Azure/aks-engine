@@ -12,7 +12,7 @@ import (
 func CreateLoadBalancer() LoadBalancerARM {
 	return LoadBalancerARM{
 		ARMResource: ARMResource{
-			ApiVersion: "[variables('apiVersionNetwork')]",
+			APIVersion: "[variables('apiVersionNetwork')]",
 			DependsOn: []string{
 				"[concat('Microsoft.Network/publicIPAddresses/', variables('masterPublicIPAddressName'))]",
 			},
@@ -89,7 +89,7 @@ func CreateMasterInternalLoadBalancer(cs *api.ContainerService) LoadBalancerARM 
 
 	loadBalancerARM := LoadBalancerARM{
 		ARMResource: ARMResource{
-			ApiVersion: "[variables('apiVersionNetwork')]",
+			APIVersion: "[variables('apiVersionNetwork')]",
 			DependsOn:  dependencies,
 		},
 		LoadBalancer: network.LoadBalancer{

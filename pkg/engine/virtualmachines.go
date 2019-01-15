@@ -6,10 +6,11 @@ package engine
 import (
 	"encoding/json"
 	"fmt"
+	"strconv"
+
 	"github.com/Azure/aks-engine/pkg/api"
 	"github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2018-06-01/compute"
 	"github.com/Azure/go-autorest/autorest/to"
-	"strconv"
 )
 
 func CreateVirtualMachine(cs *api.ContainerService) VirtualMachineARM {
@@ -30,7 +31,7 @@ func CreateVirtualMachine(cs *api.ContainerService) VirtualMachineARM {
 	}
 
 	armResource := ARMResource{
-		ApiVersion: "[variables('apiVersionCompute')]",
+		APIVersion: "[variables('apiVersionCompute')]",
 		Copy: map[string]string{
 			"count": "[sub(variables('masterCount'), variables('masterOffset'))]",
 			"name":  "vmLoopNode",
@@ -183,7 +184,7 @@ func CreateVirtualMachine(cs *api.ContainerService) VirtualMachineARM {
 
 func createJumpboxVirtualMachine(cs *api.ContainerService) VirtualMachineARM {
 	armResource := ARMResource{
-		ApiVersion: "[variables('apiVersionCompute')]",
+		APIVersion: "[variables('apiVersionCompute')]",
 		DependsOn: []string{
 			"[concat('Microsoft.Network/networkInterfaces/', variables('jumpboxNetworkInterfaceName'))]",
 		},
@@ -310,7 +311,7 @@ func createAgentAvailabilitySetVM(cs *api.ContainerService, profile *api.AgentPo
 	}
 
 	armResource := ARMResource{
-		ApiVersion: "[variables('apiVersionCompute')]",
+		APIVersion: "[variables('apiVersionCompute')]",
 		DependsOn:  dependencies,
 		Copy: map[string]string{
 			"count": fmt.Sprintf("[sub(variables('%[1]sCount'), variables('%[1]sOffset'))]", profile.Name),

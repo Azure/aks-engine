@@ -568,7 +568,7 @@ func TestGenerateKubeConfig(t *testing.T) {
 func TestGetDataDisks(t *testing.T) {
 	a := &api.AgentPoolProfile{
 		Name: "sampleAgent",
-		DiskSizesGB: []int {
+		DiskSizesGB: []int{
 			128, 128, 128, 128, 128,
 		},
 		StorageProfile: api.ManagedDisks,
@@ -578,7 +578,7 @@ func TestGetDataDisks(t *testing.T) {
 
 	a = &api.AgentPoolProfile{
 		Name: "sampleAgentStorage",
-		DiskSizesGB: []int {
+		DiskSizesGB: []int{
 			128, 128, 128, 128, 128,
 		},
 		StorageProfile: api.StorageAccount,

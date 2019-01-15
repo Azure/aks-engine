@@ -11,7 +11,7 @@ import (
 func createUserAssignedIdentities() UserAssignedIdentitiesARM {
 	return UserAssignedIdentitiesARM{
 		ARMResource: ARMResource{
-			ApiVersion: "[variables('apiVersionManagedIdentity')]",
+			APIVersion: "[variables('apiVersionManagedIdentity')]",
 		},
 		Identity: msi.Identity{
 			Type:     "Microsoft.ManagedIdentity/userAssignedIdentities",
