@@ -394,7 +394,7 @@ MASTER_ARTIFACTS_CONFIG_PLACEHOLDER
   {{if IsMasterVirtualMachineScaleSets}}
     MASTER_VM_NAME=$(hostname)
     MASTER_VM_NAME_BASE=$(hostname | sed "s/.$//")
-    MASTER_FIRSTADDR={{WrapAsVariable "kubernetesAPIServerIP"}}
+    MASTER_FIRSTADDR={{WrapAsVariable "masterFirstAddr"}}
     MASTER_INDEX=$(hostname | tail -c 2)
     PRIVATE_IP=$(hostname -I | cut -d" " -f1)
     MASTER_COUNT={{WrapAsVariable "masterCount"}}

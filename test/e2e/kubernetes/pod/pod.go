@@ -494,7 +494,7 @@ func WaitOnReady(podPrefix, namespace string, successesNeeded int, sleep, durati
 		select {
 		case err := <-errCh:
 			pods, _ := GetAllByPrefix(podPrefix, namespace)
-			if pods != nil {
+			if len(pods) != 0 {
 				for _, p := range pods {
 					e := p.Logs()
 					if e != nil {
