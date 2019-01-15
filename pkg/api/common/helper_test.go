@@ -70,3 +70,14 @@ func TestIsNvidiaEnabledSKU(t *testing.T) {
 		}
 	}
 }
+
+func TestIsSGXEnabledSKU(t *testing.T) {
+	cases := GetCSeriesVMCasesForTesting()
+
+	for _, c := range cases {
+		ret := IsSgxEnabledSKU(c.VMSKU)
+		if ret != c.Expected {
+			t.Fatalf("expected IsSgxEnabledSKU(%s) to return %t, but instead got %t", c.VMSKU, c.Expected, ret)
+		}
+	}
+}

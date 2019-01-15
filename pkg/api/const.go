@@ -30,6 +30,7 @@ const (
 	CoreOS          Distro = "coreos"
 	AKS             Distro = "aks"
 	AKSDockerEngine Distro = "aks-docker-engine"
+	ACC1604         Distro = "acc-16.04"
 )
 
 const (

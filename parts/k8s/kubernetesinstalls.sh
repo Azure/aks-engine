@@ -53,6 +53,35 @@ installGPUDrivers() {
     retrycmd_if_failure 120 5 25 mount -t overlay -o lowerdir=/usr/lib/x86_64-linux-gnu,upperdir=${GPU_DEST}/lib64,workdir=${GPU_DEST}/overlay-workdir none /usr/lib/x86_64-linux-gnu || exit $ERR_GPU_DRIVERS_INSTALL_TIMEOUT
 }
 
+installSGXDrivers() {
+    echo "Installing SGX driver"
+    local VERSION=`grep DISTRIB_RELEASE /etc/*-release| cut -f 2 -d "="`
+    case $VERSION in
+    "18.04")
+        SGX_DRIVER_URL="https://download.01.org/intel-sgx/dcap-1.0.1/dcap_installer/ubuntuServer1804/sgx_linux_x64_driver_dcap_4f32b98.bin"
+        ;;
+    "16.04")
+        SGX_DRIVER_URL="https://download.01.org/intel-sgx/dcap-1.0.1/dcap_installer/ubuntuServer1604/sgx_linux_x64_driver_dcap_4f32b98.bin"
+        ;;
+    "*")
+        echo "Version $VERSION is not supported"
+        exit 1
+        ;;
+    esac
+
+    PACKAGES="make gcc dkms"
+    wait_for_apt_locks
+    retrycmd_if_failure 30 5 3600 apt-get -y install $PACKAGES
+
+    local SGX_DRIVER=$(basename $SGX_DRIVER_URL)
+    local OE_DIR=/opt/azure/containers/oe
+    mkdir -p ${OE_DIR}
+
+    retrycmd_if_failure 120 5 25 curl -fsSL ${SGX_DRIVER_URL} -o ${OE_DIR}/${SGX_DRIVER}
+    chmod a+x ${OE_DIR}/${SGX_DRIVER}
+    ${OE_DIR}/${SGX_DRIVER}
+}
+
 installContainerRuntime() {
     if [[ "$CONTAINER_RUNTIME" == "docker" ]]; then
         if [[ "$DOCKER_ENGINE_REPO" != "" ]]; then
