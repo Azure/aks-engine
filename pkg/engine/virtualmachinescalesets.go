@@ -43,7 +43,7 @@ func CreateMasterVMSS(cs *api.ContainerService) VirtualMachineScaleSetARM {
 			"creationSource":     to.StringPtr("[concat(parameters('generatorCode'), '-', variables('masterVMNamePrefix'), 'vmss']"),
 			"resourceNameSuffix": to.StringPtr("[parameters('nameSuffix')]"),
 			"orchestrator":       to.StringPtr("[variables('orchestratorNameVersionTag')]"),
-			"aksengineVersion":   to.StringPtr("[parameters('aksengineVersion')]"),
+			"aksEngineVersion":   to.StringPtr("[parameters('aksEngineVersion')]"),
 			"poolName":           to.StringPtr("master"),
 		},
 		Type: to.StringPtr("Microsoft.Compute/virtualMachineScaleSets"),

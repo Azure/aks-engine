@@ -148,16 +148,19 @@ func createAgentVMASCustomScriptExtension(cs *api.ContainerService, profile *api
 	runInBackground := ""
 
 	if cs.Properties.FeatureFlags.IsFeatureEnabled("CSERunInBackground") {
-		runInBackground = "&"
+		runInBackground = " &"
 	}
 
 	nVidiaEnabled := strconv.FormatBool(common.IsNvidiaEnabledSKU(profile.VMSize))
 
 	vmExtension := compute.VirtualMachineExtension{
-		Location:                          to.StringPtr(location),
-		Name:                              to.StringPtr(name),
-		VirtualMachineExtensionProperties: &compute.VirtualMachineExtensionProperties{},
-		Type:                              to.StringPtr("Microsoft.Compute/virtualMachines/extensions"),
+		Location: to.StringPtr(location),
+		Name:     to.StringPtr(name),
+		VirtualMachineExtensionProperties: &compute.VirtualMachineExtensionProperties{
+			AutoUpgradeMinorVersion: to.BoolPtr(true),
+			Settings:                &map[string]interface{}{},
+		},
+		Type: to.StringPtr("Microsoft.Compute/virtualMachines/extensions"),
 	}
 
 	if profile.IsWindows() {
@@ -183,7 +186,7 @@ func createAgentVMASCustomScriptExtension(cs *api.ContainerService, profile *api
 		ARMResource: ARMResource{
 			ApiVersion: "[variables('apiVersionCompute')]",
 			Copy: map[string]string{
-				"count": "[sub(variables('masterCount'), variables('masterOffset'))]",
+				"count": fmt.Sprintf("[sub(variables('%[1]sCount'), variables('%[1]sOffset'))]", profile.Name),
 				"name":  "vmLoopNode",
 			},
 			DependsOn: []string{dependency},
@@ -207,7 +210,6 @@ func CreateAgentVMASAKSBillingExtension(cs *api.ContainerService, profile *api.A
 			Settings:                &map[string]interface{}{},
 		},
 		Type: to.StringPtr("Microsoft.Compute/virtualMachines/extensions"),
-		Tags: map[string]*string{},
 	}
 
 	if profile.IsWindows() {

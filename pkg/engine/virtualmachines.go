@@ -42,7 +42,7 @@ func CreateVirtualMachine(cs *api.ContainerService) VirtualMachineARM {
 			"creationSource":     to.StringPtr("[concat(parameters('generatorCode'), '-', variables('masterVMNamePrefix'), copyIndex(variables('masterOffset')))]"),
 			"resourceNameSuffix": to.StringPtr("[parameters('nameSuffix')]"),
 			"orchestrator":       to.StringPtr("[variables('orchestratorNameVersionTag')]"),
-			"aksengineVersion":   to.StringPtr("[parameters('aksengineVersion')]"),
+			"aksEngineVersion":   to.StringPtr("[parameters('aksEngineVersion')]"),
 			"poolName":           to.StringPtr("master"),
 		},
 		Type: to.StringPtr("Microsoft.Compute/virtualMachines"),
@@ -293,17 +293,17 @@ func createAgentAvailabilitySetVM(cs *api.ContainerService, profile *api.AgentPo
 
 	dependencies = append(dependencies, fmt.Sprintf("[concat('Microsoft.Compute/availabilitySets/', variables('%[1]sAvailabilitySet'))]", profile.Name))
 
-	tags := map[string]string{
-		"creationSource":   fmt.Sprintf("[concat(parameters('generatorCode'), '-', variables('%[1]sVMNamePrefix'), copyIndex(variables('%[1]sOffset')))]", profile.Name),
-		"orchestrator":     "[variables('orchestratorNameVersionTag')]",
-		"aksengineVersion": "[parameters('aksengineVersion')]",
-		"poolName":         profile.Name,
+	tags := map[string]*string{
+		"creationSource":   to.StringPtr(fmt.Sprintf("[concat(parameters('generatorCode'), '-', variables('%[1]sVMNamePrefix'), copyIndex(variables('%[1]sOffset')))]", profile.Name)),
+		"orchestrator":     to.StringPtr("[variables('orchestratorNameVersionTag')]"),
+		"aksEngineVersion": to.StringPtr("[parameters('aksEngineVersion')]"),
+		"poolName":         to.StringPtr(profile.Name),
 	}
 
 	if profile.IsWindows() {
-		tags["resourceNameSuffix"] = "[variables('winResourceNamePrefix')]"
+		tags["resourceNameSuffix"] = to.StringPtr("[variables('winResourceNamePrefix')]")
 	} else {
-		tags["resourceNameSuffix"] = "[variables('nameSuffix')]"
+		tags["resourceNameSuffix"] = to.StringPtr("[parameters('nameSuffix')]")
 	}
 
 	armResource := ARMResource{
@@ -328,6 +328,7 @@ func createAgentAvailabilitySetVM(cs *api.ContainerService, profile *api.AgentPo
 				},
 			},
 		},
+		Tags:tags,
 	}
 
 	if useManagedIdentity {

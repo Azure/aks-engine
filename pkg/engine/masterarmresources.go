@@ -10,6 +10,7 @@ func createKubernetesMasterResources(cs *api.ContainerService) []interface{} {
 
 	p := cs.Properties
 	//TODO: Implement CosmosEtcd
+	masterCount := p.MasterProfile.Count
 
 	if p.HasManagedDisks() {
 		if !p.HasAvailabilityZones() {
@@ -43,8 +44,10 @@ func createKubernetesMasterResources(cs *api.ContainerService) []interface{} {
 		loadBalancer := CreateLoadBalancer()
 		masterResources = append(masterResources, loadBalancer)
 
-		inboundNatRules := createInboundNATRules()
-		masterResources = append(masterResources, inboundNatRules)
+		inboundNatRules := createInboundNATRules(masterCount)
+		for _, inboundNatRule := range inboundNatRules {
+			masterResources = append(masterResources, inboundNatRule)
+		}
 
 		masterNic := CreateNetworkInterfaces(cs)
 		masterResources = append(masterResources, masterNic)
