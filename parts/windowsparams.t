@@ -45,7 +45,7 @@
     "agentWindowsVersion": {
       "defaultValue": "latest",
       "metadata": {
-        "description": "Version of the Windows Server 2016 OS image to use for the agent virtual machines."
+        "description": "Version of the Windows Server OS image to use for the agent virtual machines."
       },
       "type": "string"
     },

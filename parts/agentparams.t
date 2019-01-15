@@ -59,21 +59,21 @@
     "{{.Name}}osImageName": {
       "defaultValue": "",
       "metadata": {
-        "description": "Name of a Linux OS image. Needs to be used in conjuction with osImageResourceGroup."
+        "description": "Name of a {{.OSType}} OS image. Needs to be used in conjuction with osImageResourceGroup."
       },
       "type": "string"
     },
     "{{.Name}}osImageResourceGroup": {
       "defaultValue": "",
       "metadata": {
-        "description": "Resource group of a Linux OS image. Needs to be used in conjuction with osImageName."
+        "description": "Resource group of a {{.OSType}} OS image. Needs to be used in conjuction with osImageName."
       },
       "type": "string"
     },
     "{{.Name}}osImageOffer": {
       "defaultValue": "UbuntuServer",
       "metadata": {
-        "description": "Linux OS image type."
+        "description": "{{.OSType}} OS image type."
       },
       "type": "string"
     },
