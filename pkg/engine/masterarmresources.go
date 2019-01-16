@@ -48,12 +48,9 @@ func createKubernetesMasterResources(cs *api.ContainerService) []interface{} {
 		loadBalancer := CreateLoadBalancer()
 		masterResources = append(masterResources, loadBalancer)
 
-		inboundNatRules := createInboundNATRules(p.MasterProfile.Count)
-		for _, inboundNatRule := range inboundNatRules {
-			masterResources = append(masterResources, inboundNatRule)
-		}
+		inboundNatRules := createInboundNATRules()
 
-		//masterResources = append(masterResources, inboundNatRules)
+		masterResources = append(masterResources, inboundNatRules)
 
 		masterNic := CreateNetworkInterfaces(cs)
 		masterResources = append(masterResources, masterNic)

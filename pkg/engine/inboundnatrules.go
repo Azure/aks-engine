@@ -3,80 +3,69 @@
 
 package engine
 
-import (
-	"fmt"
+func createInboundNATRules() map[string]interface{} {
 
-	"github.com/Azure/azure-sdk-for-go/services/network/mgmt/2018-08-01/network"
-	"github.com/Azure/go-autorest/autorest/to"
-)
-
-//func createInboundNATRules() InboundNATRuleARM {
-//	return InboundNATRuleARM{
-//		ARMResourceLocType: ARMResourceLocType{
-//			ARMResource: ARMResource{
-//				APIVersion: "[variables('apiVersionNetwork')]",
-//				Copy: map[string]string{
-//					"count": "[sub(variables('masterCount'), variables('masterOffset'))]",
-//					"name":  "masterLbLoopNode",
-//				},
-//				DependsOn: []string{
-//					"[variables('masterLbID')]",
-//				},
-//			},
-//			Location: "[variables('location')]",
-//			Type:     "Microsoft.Network/loadBalancers/inboundNatRules",
-//		},
-//		InboundNatRule: network.InboundNatRule{
-//			Name: to.StringPtr("[concat(variables('masterLbName'), '/', 'SSH-', variables('masterVMNamePrefix'), copyIndex(variables('masterOffset')))]"),
-//			InboundNatRulePropertiesFormat: &network.InboundNatRulePropertiesFormat{
-//				BackendPort:      to.Int32Ptr(22),
-//				EnableFloatingIP: to.BoolPtr(false),
-//				FrontendIPConfiguration: &network.SubResource{
-//					ID: to.StringPtr("[variables('masterLbIPConfigID')]"),
-//				},
-//				// TODO: directly resolve sshNatPorts here
-//				FrontendPort: to.Int32Ptr(22), //"[variables('sshNatPorts')[copyIndex(variables('masterOffset'))]]",
-//				Protocol:     network.TransportProtocolTCP,
-//			},
-//		},
-//	}
-//}
-
-func createInboundNATRules(masterCount int) []InboundNATRuleARM {
-
-	var natRules []InboundNATRuleARM
-	sshNatPorts := []int32{
-		22, 2201, 2202, 2203, 2204,
-	}
-	for i := 0; i < masterCount; i++ {
-		natRule := InboundNATRuleARM{
-			ARMResourceLocType: ARMResourceLocType{
-				ARMResource: ARMResource{
-					APIVersion: "[variables('apiVersionNetwork')]",
-					DependsOn: []string{
-						"[variables('masterLbID')]",
-					},
-				},
-				Location: "[variables('location')]",
-				Type:     "Microsoft.Network/loadBalancers/inboundNatRules",
+	inboundNatRules := map[string]interface{}{
+		"apiVersion": "[variables('apiVersionNetwork')]",
+		"copy": map[string]interface{}{
+			"count": "[sub(variables('masterCount'), variables('masterOffset'))]",
+			"name":  "masterLbLoopNode",
+		},
+		"dependsOn": []string{
+			"[variables('masterLbID')]",
+		},
+		"location": "[variables('location')]",
+		"name":     "[concat(variables('masterLbName'), '/', 'SSH-', variables('masterVMNamePrefix'), copyIndex(variables('masterOffset')))]",
+		"properties": map[string]interface{}{
+			"backendPort":      22,
+			"enableFloatingIP": false,
+			"frontendIPConfiguration": map[string]string{
+				"id": "[variables('masterLbIPConfigID')]",
 			},
-			InboundNatRule: network.InboundNatRule{
-				Name: to.StringPtr(fmt.Sprintf("[concat(variables('masterLbName'), '/', 'SSH-', variables('masterVMNamePrefix'), '%d')]", i)),
-				InboundNatRulePropertiesFormat: &network.InboundNatRulePropertiesFormat{
-					BackendPort:      to.Int32Ptr(22),
-					EnableFloatingIP: to.BoolPtr(false),
-					FrontendIPConfiguration: &network.SubResource{
-						ID: to.StringPtr("[variables('masterLbIPConfigID')]"),
-					},
-					// TODO: directly resolve sshNatPorts here
-					FrontendPort: to.Int32Ptr(sshNatPorts[i]), //"[variables('sshNatPorts')[copyIndex(variables('masterOffset'))]]",
-					Protocol:     network.TransportProtocolTCP,
-				},
-			},
-		}
-
-		natRules = append(natRules, natRule)
+			"frontendPort": "[variables('sshNatPorts')[copyIndex(variables('masterOffset'))]]",
+			"protocol":     "Tcp",
+		},
+		"type": "Microsoft.Network/loadBalancers/inboundNatRules",
 	}
 
-	return natRules
+	return inboundNatRules
 }
+
+//func createInboundNATRules(masterCount int) []InboundNATRuleARM {
+//
+//	var natRules []InboundNATRuleARM
+//	sshNatPorts := []int32{
+//		22, 2201, 2202, 2203, 2204,
+//	}
+//	for i := 0; i < masterCount; i++ {
+//		natRule := InboundNATRuleARM{
+//			ARMResourceLocType: ARMResourceLocType{
+//				ARMResource: ARMResource{
+//					APIVersion: "[variables('apiVersionNetwork')]",
+//					DependsOn: []string{
+//						"[variables('masterLbID')]",
+//					},
+//				},
+//				Location: "[variables('location')]",
+//				Type:     "Microsoft.Network/loadBalancers/inboundNatRules",
+//			},
+//			InboundNatRule: network.InboundNatRule{
+//				Name: to.StringPtr(fmt.Sprintf("[concat(variables('masterLbName'), '/', 'SSH-', variables('masterVMNamePrefix'), '%d')]", i)),
+//				InboundNatRulePropertiesFormat: &network.InboundNatRulePropertiesFormat{
+//					BackendPort:      to.Int32Ptr(22),
+//					EnableFloatingIP: to.BoolPtr(false),
+//					FrontendIPConfiguration: &network.SubResource{
+//						ID: to.StringPtr("[variables('masterLbIPConfigID')]"),
+//					},
+//					// TODO: directly resolve sshNatPorts here
+//					FrontendPort: to.Int32Ptr(sshNatPorts[i]), //"[variables('sshNatPorts')[copyIndex(variables('masterOffset'))]]",
+//					Protocol:     network.TransportProtocolTCP,
+//				},
+//			},
+//		}
+//
+//		natRules = append(natRules, natRule)
+//	}
+//
+//	return natRules
+//}
