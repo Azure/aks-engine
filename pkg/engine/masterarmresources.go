@@ -14,8 +14,6 @@ func createKubernetesMasterResources(cs *api.ContainerService) []interface{} {
 	p := cs.Properties
 	//TODO: Implement CosmosEtcd
 
-	//masterCount := p.MasterProfile.Count
-
 	if p.HasManagedDisks() {
 		if !p.HasAvailabilityZones() {
 			masterResources = append(masterResources, CreateAvailabilitySet(cs, true))
