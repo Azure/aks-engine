@@ -289,8 +289,8 @@ func getK8sMasterVars(cs *api.ContainerService) map[string]interface{} {
 		masterVars["primaryAvailabilitySetName"] = ""
 		masterVars["vmType"] = "vmss"
 	} else {
-		masterVars["primaryScaleSetName"] = fmt.Sprintf("[concat('%s-availabilitySet-',parameters('nameSuffix'))]", cs.Properties.AgentPoolProfiles[0].Name)
-		masterVars["primaryAvailabilitySetName"] = ""
+		masterVars["primaryAvailabilitySetName"] = fmt.Sprintf("[concat('%s-availabilitySet-',parameters('nameSuffix'))]", cs.Properties.AgentPoolProfiles[0].Name)
+		masterVars["primaryScaleSetName"] = ""
 		masterVars["vmType"] = "standard"
 	}
 
