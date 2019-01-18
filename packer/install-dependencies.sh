@@ -162,6 +162,11 @@ for KMS_PLUGIN_VERSION in ${KMS_PLUGIN_VERSIONS}; do
     pullContainerImage "docker" "microsoft/k8s-azure-kms:v${KMS_PLUGIN_VERSION}"
 done
 
+FLANNEL_VERSIONS="0.8.0 0.10.0"
+for FLANNEL_VERSION in ${FLANNEL_VERSIONS}; do
+    pullContainerImage "docker" "quay.io/coreos/flannel:v${FLANNEL_VERSION}"
+done
+
 pullContainerImage "docker" "busybox"
 
 # TODO: fetch supported k8s versions from an aks-engine command instead of hardcoding them here
