@@ -244,7 +244,7 @@
         "masterInternalLbIPConfigID": "[concat(variables('masterInternalLbID'),'/frontendIPConfigurations/', variables('masterInternalLbIPConfigName'))]",
         "masterInternalLbIPOffset": {{GetDefaultInternalLbStaticIPOffset}},
         {{if IsMasterVirtualMachineScaleSets}}
-        "kubernetesAPIServerIP": "[parameters('firstConsecutiveStaticIP')]",
+        "kubernetesAPIServerIP": "[concat(variables('masterFirstAddrOctets')[0],'.',variables('masterFirstAddrOctets')[1],'.255.', variables('masterInternalLbIPOffset'))]",
         {{else}}
         "kubernetesAPIServerIP": "[concat(variables('masterFirstAddrPrefix'), add(variables('masterInternalLbIPOffset'), int(variables('masterFirstAddrOctet4'))))]",
         {{end}}
