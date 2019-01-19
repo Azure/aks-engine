@@ -71,8 +71,40 @@ func TestIsNvidiaEnabledSKU(t *testing.T) {
 	}
 }
 
+func getCSeriesVMCasesForTesting() []struct {
+	VMSKU    string
+	Expected bool
+} {
+	cases := []struct {
+		VMSKU    string
+		Expected bool
+	}{
+		{
+			"Standard_DC2s",
+			true,
+		},
+		{
+			"Standard_DC4s",
+			true,
+		},
+		{
+			"Standard_D2_v2",
+			false,
+		},
+		{
+			"gobledygook",
+			false,
+		},
+		{
+			"",
+			false,
+		},
+	}
+	return cases
+}
+
 func TestIsSGXEnabledSKU(t *testing.T) {
-	cases := GetCSeriesVMCasesForTesting()
+	cases := getCSeriesVMCasesForTesting()
 
 	for _, c := range cases {
 		ret := IsSgxEnabledSKU(c.VMSKU)
