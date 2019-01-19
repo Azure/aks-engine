@@ -43,7 +43,7 @@ See [cluster definition](https://github.com/Azure/aks-engine/blob/master/docs/cl
 
 ## Managed Disks
 
-[Managed disks](../examples/disks-managed/README.md) are supported for both node OS disks and Kubernetes persistent volumes.
+[Managed disks](../../examples/disks-managed/README.md) are supported for both node OS disks and Kubernetes persistent volumes.
 
 Related [upstream PR](https://github.com/kubernetes/kubernetes/pull/46360) for details.
 
@@ -76,8 +76,8 @@ They are managed-premium and managed-standard and map to Standard_LRS and Premiu
 
 In order to use these storage classes the following conditions must be met.
 
-* The cluster must be running Kubernetes release 1.7 or greater. Refer to this [example](../examples/kubernetes-releases/kubernetes1.7.json) for how to provision a Kubernetes cluster of a specific version.
-* The node must support managed disks. See this [example](../examples/disks-managed/kubernetes-vmas.json) to provision nodes with managed disks. You can also confirm if a node has managed disks using kubectl.
+* The cluster must be running Kubernetes release 1.7 or greater. Refer to this [example](../../examples/kubernetes-releases/kubernetes1.7.json) for how to provision a Kubernetes cluster of a specific version.
+* The node must support managed disks. See this [example](../../examples/disks-managed/kubernetes-vmas.json) to provision nodes with managed disks. You can also confirm if a node has managed disks using kubectl.
 
 ```console
 kubectl get nodes -l storageprofile=managed

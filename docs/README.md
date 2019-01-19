@@ -17,7 +17,7 @@ AKS-Engine has a lot of documentation. A high-level overview of how it’s organ
 [quickstart]: tutorials/quickstart.md
 [getting started]: tutorials/hello-world.md
 [tutorials]: tutorials/README.md
-[How-to guides]: how-to/README.md
+[How-to guides]: howto/README.md
 [Topic guides]: topics/README.md
 [the reference guides]: reference/README.md
 [community guides]: community/README.md
