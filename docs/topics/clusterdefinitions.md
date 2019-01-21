@@ -495,7 +495,7 @@ We consider `kubeletConfig`, `controllerManagerConfig`, `apiServerConfig`, and `
 
 | Name           | Required | Description                                                                                                                                          |
 | -------------- | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
-| enabled        | no       | Enable [Private Cluster](./kubernetes/features.md/#feat-private-cluster) (boolean - default == false)                                                |
+| enabled        | no       | Enable [Private Cluster](./features.md#feat-private-cluster) (boolean - default == false)                                                |
 | jumpboxProfile | no       | Configure and auto-provision a jumpbox to access your private cluster. `jumpboxProfile` is ignored if enabled is `false`. See `jumpboxProfile` below |
 
 #### jumpboxProfile
