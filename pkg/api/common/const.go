@@ -37,6 +37,8 @@ const (
 	MinIPAddressCount = 1
 	// MaxIPAddressCount specifies the maximum number of IP addresses per network interface
 	MaxIPAddressCount = 256
+	// address relative to the first consecutive Kubernetes static IP
+	DefaultInternalLbStaticIPOffset = 10
 )
 
 // Availability profiles
