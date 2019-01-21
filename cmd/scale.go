@@ -30,16 +30,6 @@ import (
 )
 
 type scaleCmd struct {
-	authArgs
-
-	// user input
-	resourceGroupName    string
-	deploymentDirectory  string
-	newDesiredAgentCount int
-	location             string
-	agentPoolToScale     string
-	masterFQDN           string
-
 	// derived
 	containerService *api.ContainerService
 	apiVersion       string
@@ -72,15 +62,17 @@ func newScaleCmd() *cobra.Command {
 		},
 	}
 
+	cfg := &currentConfig.CLIConfig.Scale
+	defaultCfg := &defaultConfigValues.CLIConfig.Scale
 	f := scaleCmd.Flags()
-	f.StringVarP(&sc.location, "location", "l", "", "location the cluster is deployed in")
-	f.StringVarP(&sc.resourceGroupName, "resource-group", "g", "", "the resource group where the cluster is deployed")
-	f.StringVar(&sc.deploymentDirectory, "deployment-dir", "", "the location of the output from `generate`")
-	f.IntVarP(&sc.newDesiredAgentCount, "new-node-count", "c", 0, "desired number of nodes")
-	f.StringVar(&sc.agentPoolToScale, "node-pool", "", "node pool to scale")
-	f.StringVar(&sc.masterFQDN, "master-FQDN", "", "FQDN for the master load balancer, Needed to scale down Kubernetes agent pools")
+	f.StringVarP(&cfg.Location, "location", "l", defaultCfg.Location, "location the cluster is deployed in")
+	f.StringVarP(&cfg.ResourceGroup, "resource-group", "g", defaultCfg.ResourceGroup, "the resource group where the cluster is deployed")
+	f.StringVar(&cfg.DeploymentDir, "deployment-dir", defaultCfg.DeploymentDir, "the location of the output from `generate`")
+	f.IntVarP(&cfg.NewNodeCount, "new-node-count", "c", defaultCfg.NewNodeCount, "desired number of nodes")
+	f.StringVar(&cfg.NodePool, "node-pool", defaultCfg.NodePool, "node pool to scale")
+	f.StringVar(&cfg.MasterFQDN, "master-fqdn", defaultCfg.MasterFQDN, "FQDN for the master load balancer, Needed to scale down Kubernetes agent pools")
 
-	addAuthFlags(&sc.authArgs, f)
+	addAuthFlags(&currentConfig.Auth, f)
 
 	return scaleCmd
 }
@@ -94,24 +86,24 @@ func (sc *scaleCmd) validate(cmd *cobra.Command) error {
 		return errors.Wrap(err, "error loading translation files")
 	}
 
-	if sc.resourceGroupName == "" {
+	if currentConfig.CLIConfig.Scale.ResourceGroup == "" {
 		cmd.Usage()
 		return errors.New("--resource-group must be specified")
 	}
 
-	if sc.location == "" {
+	if currentConfig.CLIConfig.Scale.Location == "" {
 		cmd.Usage()
 		return errors.New("--location must be specified")
 	}
 
-	sc.location = helpers.NormalizeAzureRegion(sc.location)
+	currentConfig.CLIConfig.Scale.Location = helpers.NormalizeAzureRegion(currentConfig.CLIConfig.Scale.Location)
 
-	if sc.newDesiredAgentCount == 0 {
+	if currentConfig.CLIConfig.Scale.NewNodeCount == 0 {
 		cmd.Usage()
 		return errors.New("--new-node-count must be specified")
 	}
 
-	if sc.deploymentDirectory == "" {
+	if currentConfig.CLIConfig.Scale.DeploymentDir == "" {
 		cmd.Usage()
 		return errors.New("--deployment-dir must be specified")
 	}
@@ -123,23 +115,23 @@ func (sc *scaleCmd) load(cmd *cobra.Command) error {
 	sc.logger = log.New().WithField("source", "scaling command line")
 	var err error
 
-	if err = sc.authArgs.validateAuthArgs(); err != nil {
+	if err = currentConfig.Auth.Validate(); err != nil {
 		return err
 	}
 
-	if sc.client, err = sc.authArgs.getClient(); err != nil {
+	if sc.client, err = currentConfig.Auth.NewClient(); err != nil {
 		return errors.Wrap(err, "failed to get client")
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), armhelpers.DefaultARMOperationTimeout)
 	defer cancel()
-	_, err = sc.client.EnsureResourceGroup(ctx, sc.resourceGroupName, sc.location, nil)
+	_, err = sc.client.EnsureResourceGroup(ctx, currentConfig.CLIConfig.Scale.ResourceGroup, currentConfig.CLIConfig.Scale.Location, nil)
 	if err != nil {
 		return err
 	}
 
 	// load apimodel from the deployment directory
-	sc.apiModelPath = path.Join(sc.deploymentDirectory, apiModelFilename)
+	sc.apiModelPath = path.Join(currentConfig.CLIConfig.Scale.DeploymentDir, apiModelFilename)
 
 	if _, err = os.Stat(sc.apiModelPath); os.IsNotExist(err) {
 		return errors.Errorf("specified api model does not exist (%s)", sc.apiModelPath)
@@ -156,37 +148,37 @@ func (sc *scaleCmd) load(cmd *cobra.Command) error {
 	}
 
 	if sc.containerService.Location == "" {
-		sc.containerService.Location = sc.location
-	} else if sc.containerService.Location != sc.location {
+		sc.containerService.Location = currentConfig.CLIConfig.Scale.Location
+	} else if sc.containerService.Location != currentConfig.CLIConfig.Scale.Location {
 		return errors.New("--location does not match api model location")
 	}
 
-	if sc.agentPoolToScale == "" {
+	if currentConfig.CLIConfig.Scale.NodePool == "" {
 		agentPoolCount := len(sc.containerService.Properties.AgentPoolProfiles)
 		if agentPoolCount > 1 {
 			return errors.New("--node-pool is required if more than one agent pool is defined in the container service")
 		} else if agentPoolCount == 1 {
 			sc.agentPool = sc.containerService.Properties.AgentPoolProfiles[0]
 			sc.agentPoolIndex = 0
-			sc.agentPoolToScale = sc.containerService.Properties.AgentPoolProfiles[0].Name
+			currentConfig.CLIConfig.Scale.NodePool = sc.containerService.Properties.AgentPoolProfiles[0].Name
 		} else {
 			return errors.New("No node pools found to scale")
 		}
 	} else {
 		agentPoolIndex := -1
 		for i, pool := range sc.containerService.Properties.AgentPoolProfiles {
-			if pool.Name == sc.agentPoolToScale {
+			if pool.Name == currentConfig.CLIConfig.Scale.NodePool {
 				agentPoolIndex = i
 				sc.agentPool = pool
 				sc.agentPoolIndex = i
 			}
 		}
 		if agentPoolIndex == -1 {
-			return errors.Errorf("node pool %s was not found in the deployed api model", sc.agentPoolToScale)
+			return errors.Errorf("node pool %s was not found in the deployed api model", currentConfig.CLIConfig.Scale.NodePool)
 		}
 	}
 
-	templatePath := path.Join(sc.deploymentDirectory, "azuredeploy.json")
+	templatePath := path.Join(currentConfig.CLIConfig.Scale.DeploymentDir, "azuredeploy.json")
 	contents, _ := ioutil.ReadFile(templatePath)
 
 	var template interface{}
@@ -217,7 +209,7 @@ func (sc *scaleCmd) run(cmd *cobra.Command, args []string) error {
 	indexes := make([]int, 0)
 	indexToVM := make(map[int]string)
 	if sc.agentPool.IsAvailabilitySets() {
-		for vmsListPage, err := sc.client.ListVirtualMachines(ctx, sc.resourceGroupName); vmsListPage.NotDone(); err = vmsListPage.Next() {
+		for vmsListPage, err := sc.client.ListVirtualMachines(ctx, currentConfig.CLIConfig.Scale.ResourceGroup); vmsListPage.NotDone(); err = vmsListPage.Next() {
 			if err != nil {
 				return errors.Wrap(err, "failed to get vms in the resource group")
 			} else if len(vmsListPage.Values()) < 1 {
@@ -248,28 +240,28 @@ func (sc *scaleCmd) run(cmd *cobra.Command, args []string) error {
 		indexes = []int(sortedIndexes)
 		currentNodeCount = len(indexes)
 
-		if currentNodeCount == sc.newDesiredAgentCount {
+		if currentNodeCount == currentConfig.CLIConfig.Scale.NewNodeCount {
 			log.Info("Cluster is currently at the desired agent count.")
 			return nil
 		}
 		highestUsedIndex = indexes[len(indexes)-1]
 
 		// Scale down Scenario
-		if currentNodeCount > sc.newDesiredAgentCount {
-			if sc.masterFQDN == "" {
+		if currentNodeCount > currentConfig.CLIConfig.Scale.NewNodeCount {
+			if currentConfig.CLIConfig.Scale.MasterFQDN == "" {
 				cmd.Usage()
-				return errors.New("master-FQDN is required to scale down a kubernetes cluster's agent pool")
+				return errors.New("master-fqdn is required to scale down a kubernetes cluster's agent pool")
 			}
 
 			vmsToDelete := make([]string, 0)
-			for i := currentNodeCount - 1; i >= sc.newDesiredAgentCount; i-- {
+			for i := currentNodeCount - 1; i >= currentConfig.CLIConfig.Scale.NewNodeCount; i-- {
 				index = indexes[i]
 				vmsToDelete = append(vmsToDelete, indexToVM[index])
 			}
 
 			switch orchestratorInfo.OrchestratorType {
 			case api.Kubernetes:
-				kubeConfig, err := engine.GenerateKubeConfig(sc.containerService.Properties, sc.location)
+				kubeConfig, err := engine.GenerateKubeConfig(sc.containerService.Properties, currentConfig.CLIConfig.Scale.Location)
 				if err != nil {
 					return errors.Wrap(err, "failed to generate kube config")
 				}
@@ -279,7 +271,7 @@ func (sc *scaleCmd) run(cmd *cobra.Command, args []string) error {
 				}
 			}
 
-			errList := operations.ScaleDownVMs(sc.client, sc.logger, sc.SubscriptionID.String(), sc.resourceGroupName, vmsToDelete...)
+			errList := operations.ScaleDownVMs(sc.client, sc.logger, currentConfig.Auth.SubscriptionID, currentConfig.CLIConfig.Scale.ResourceGroup, vmsToDelete...)
 			if errList != nil {
 				var err error
 				format := "Node '%s' failed to delete with error: '%s'"
@@ -299,7 +291,7 @@ func (sc *scaleCmd) run(cmd *cobra.Command, args []string) error {
 			return sc.saveAPIModel()
 		}
 	} else {
-		for vmssListPage, err := sc.client.ListVirtualMachineScaleSets(ctx, sc.resourceGroupName); vmssListPage.NotDone(); vmssListPage.Next() {
+		for vmssListPage, err := sc.client.ListVirtualMachineScaleSets(ctx, currentConfig.CLIConfig.Scale.ResourceGroup); vmssListPage.NotDone(); vmssListPage.Next() {
 			if err != nil {
 				return errors.Wrap(err, "failed to get vmss list in the resource group")
 			}
@@ -363,7 +355,7 @@ func (sc *scaleCmd) run(cmd *cobra.Command, args []string) error {
 	transformer := transform.Transformer{Translator: translator.Translator}
 	// Our templates generate a range of nodes based on a count and offset, it is possible for there to be holes in the template
 	// So we need to set the count in the template to get enough nodes for the range, if there are holes that number will be larger than the desired count
-	countForTemplate := sc.newDesiredAgentCount
+	countForTemplate := currentConfig.CLIConfig.Scale.NewNodeCount
 	if highestUsedIndex != 0 {
 		countForTemplate += highestUsedIndex + 1 - currentNodeCount
 	}
@@ -388,8 +380,8 @@ func (sc *scaleCmd) run(cmd *cobra.Command, args []string) error {
 
 	_, err = sc.client.DeployTemplate(
 		ctx,
-		sc.resourceGroupName,
-		fmt.Sprintf("%s-%d", sc.resourceGroupName, deploymentSuffix),
+		currentConfig.CLIConfig.Scale.ResourceGroup,
+		fmt.Sprintf("%s-%d", currentConfig.CLIConfig.Scale.ResourceGroup, deploymentSuffix),
 		templateJSON,
 		parametersJSON)
 	if err != nil {
@@ -411,7 +403,7 @@ func (sc *scaleCmd) saveAPIModel() error {
 	if err != nil {
 		return err
 	}
-	sc.containerService.Properties.AgentPoolProfiles[sc.agentPoolIndex].Count = sc.newDesiredAgentCount
+	sc.containerService.Properties.AgentPoolProfiles[sc.agentPoolIndex].Count = currentConfig.CLIConfig.Scale.NewNodeCount
 
 	b, err := apiloader.SerializeContainerService(sc.containerService, apiVersion)
 
@@ -425,7 +417,7 @@ func (sc *scaleCmd) saveAPIModel() error {
 		},
 	}
 
-	return f.SaveFile(sc.deploymentDirectory, apiModelFilename, b)
+	return f.SaveFile(currentConfig.CLIConfig.Scale.DeploymentDir, apiModelFilename, b)
 }
 
 func (sc *scaleCmd) vmInAgentPool(vmName string, tags map[string]*string) bool {
@@ -435,7 +427,7 @@ func (sc *scaleCmd) vmInAgentPool(vmName string, tags map[string]*string) bool {
 			if nameSuffix, ok := tags["resourceNameSuffix"]; ok {
 				// Use strings.Contains for the nameSuffix as the Windows Agent Pools use only
 				// a substring of the first 5 characters of the entire nameSuffix.
-				if strings.EqualFold(*poolName, sc.agentPoolToScale) && strings.Contains(sc.nameSuffix, *nameSuffix) {
+				if strings.EqualFold(*poolName, currentConfig.CLIConfig.Scale.NodePool) && strings.Contains(sc.nameSuffix, *nameSuffix) {
 					return true
 				}
 			}
@@ -443,7 +435,7 @@ func (sc *scaleCmd) vmInAgentPool(vmName string, tags map[string]*string) bool {
 	}
 
 	// Fall back to checking the VM name to see if it fits the naming pattern.
-	return strings.Contains(vmName, sc.nameSuffix[:5]) && strings.Contains(vmName, sc.agentPoolToScale)
+	return strings.Contains(vmName, sc.nameSuffix[:5]) && strings.Contains(vmName, currentConfig.CLIConfig.Scale.NodePool)
 }
 
 type paramsMap map[string]interface{}
@@ -455,7 +447,7 @@ func addValue(m paramsMap, k string, v interface{}) {
 }
 
 func (sc *scaleCmd) drainNodes(kubeConfig string, vmsToDelete []string) error {
-	masterURL := sc.masterFQDN
+	masterURL := currentConfig.CLIConfig.Scale.MasterFQDN
 	if !strings.HasPrefix(masterURL, "https://") {
 		masterURL = fmt.Sprintf("https://%s", masterURL)
 	}

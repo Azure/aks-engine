@@ -116,8 +116,20 @@ required = [
   unused-packages = true
 
 [[constraint]]
+  name = "github.com/casimir/xdg-go"
+  revision = "372ccc2180dab73316615641d5617c5ed3e35529"
+
+[[constraint]]
   name = "gopkg.in/ini.v1"
   version = "1.38.1"
+
+[[constraint]]
+  name = "gopkg.in/AlecAivazis/survey.v1"
+  version = "v1.8.0"
+
+[[constraint]]
+  name = "github.com/bacongobbler/symdiff"
+  version = "v0.1.0"
 
 # Apply workaround from https://github.com/golang/dep/issues/1799
 [[constraint]]

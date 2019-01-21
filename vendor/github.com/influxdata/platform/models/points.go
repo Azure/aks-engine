@@ -335,7 +335,7 @@ func ParseName(buf []byte) []byte {
 // ValidPrecision checks if the precision is known.
 func ValidPrecision(precision string) bool {
 	switch precision {
-	case "ns", "us", "ms", "s":
+	case "n", "ns", "u", "us", "ms", "s":
 		return true
 	default:
 		return false
@@ -479,12 +479,16 @@ func parsePoint(buf []byte, defaultTime time.Time, precision string) (Point, err
 func GetPrecisionMultiplier(precision string) int64 {
 	d := time.Nanosecond
 	switch precision {
-	case "us":
+	case "u":
 		d = time.Microsecond
 	case "ms":
 		d = time.Millisecond
 	case "s":
 		d = time.Second
+	case "m":
+		d = time.Minute
+	case "h":
+		d = time.Hour
 	}
 	return int64(d)
 }
@@ -1672,12 +1676,17 @@ func (p *point) Fields() (Fields, error) {
 // SetPrecision will round a time to the specified precision.
 func (p *point) SetPrecision(precision string) {
 	switch precision {
-	case "us":
+	case "n":
+	case "u":
 		p.SetTime(p.Time().Truncate(time.Microsecond))
 	case "ms":
 		p.SetTime(p.Time().Truncate(time.Millisecond))
 	case "s":
 		p.SetTime(p.Time().Truncate(time.Second))
+	case "m":
+		p.SetTime(p.Time().Truncate(time.Minute))
+	case "h":
+		p.SetTime(p.Time().Truncate(time.Hour))
 	}
 }
 

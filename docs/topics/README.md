@@ -5,6 +5,7 @@ Introductions to all the key parts of AKS Engine you’ll need to know.
 - [AAD integration Walkthrough](aad.md)
 - [Architecture](architecture.md)
 - [Cluster Definitions](clusterdefinitions.md) ([Chinese](clusterdefinitions.zh-CN.md))
+- [Configuring the CLI](configuration.md)
 - [Extensions](extensions.md)
 - [Features](features.md)
 - [Using GPUs with Kubernetes](gpu.md)

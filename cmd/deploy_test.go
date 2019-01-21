@@ -8,10 +8,13 @@ import (
 	"strconv"
 	"testing"
 
+	"github.com/imdario/mergo"
+
 	"os"
 
 	"github.com/Azure/aks-engine/pkg/api"
 	"github.com/Azure/aks-engine/pkg/armhelpers"
+	"github.com/Azure/aks-engine/pkg/cli/config"
 	"github.com/pkg/errors"
 	uuid "github.com/satori/go.uuid"
 	"github.com/spf13/cobra"
@@ -61,7 +64,7 @@ const ExampleAPIModelWithoutServicePrincipalProfile = `{
 //mockAuthProvider implements AuthProvider and allows in particular to stub out getClient()
 type mockAuthProvider struct {
 	getClientMock armhelpers.AKSEngineClient
-	*authArgs
+	authArgs      *config.AuthConfig
 }
 
 func (provider *mockAuthProvider) getClient() (armhelpers.AKSEngineClient, error) {
@@ -71,7 +74,7 @@ func (provider *mockAuthProvider) getClient() (armhelpers.AKSEngineClient, error
 	return provider.getClientMock, nil
 
 }
-func (provider *mockAuthProvider) getAuthArgs() *authArgs {
+func (provider *mockAuthProvider) getAuthArgs() *config.AuthConfig {
 	return provider.authArgs
 }
 
@@ -118,83 +121,88 @@ func TestValidate(t *testing.T) {
 	defer os.Remove(apimodelPath)
 
 	cases := []struct {
+		config      config.DeployConfig
 		dc          *deployCmd
 		expectedErr error
 		args        []string
 	}{
 		{
-			dc: &deployCmd{
-				apimodelPath:      "",
-				dnsPrefix:         "test",
-				outputDirectory:   "output/test",
-				forceOverwrite:    false,
-				caCertificatePath: "test",
-				caPrivateKeyPath:  "test",
-				location:          "west europe",
+			config: config.DeployConfig{
+				DNSPrefix:         "test",
+				OutputDirectory:   "output/test",
+				CACertificatePath: "test",
+				CAPrivateKeyPath:  "test",
+				Location:          "west europe",
 			},
+			dc:          &deployCmd{},
 			args:        []string{},
 			expectedErr: nil,
 		},
 		{
-			dc: &deployCmd{
-				apimodelPath:      "",
-				dnsPrefix:         "test",
-				outputDirectory:   "output/test",
-				caCertificatePath: "test",
-				caPrivateKeyPath:  "test",
+			config: config.DeployConfig{
+				DNSPrefix:         "test",
+				OutputDirectory:   "output/test",
+				CACertificatePath: "test",
+				CAPrivateKeyPath:  "test",
 			},
+			dc:          &deployCmd{},
 			args:        []string{"wrong/path"},
 			expectedErr: errors.New("specified api model does not exist (wrong/path)"),
 		},
 		{
-			dc: &deployCmd{
-				apimodelPath:      "",
-				dnsPrefix:         "test",
-				outputDirectory:   "output/test",
-				caCertificatePath: "test",
-				caPrivateKeyPath:  "test",
+			config: config.DeployConfig{
+				DNSPrefix:         "test",
+				OutputDirectory:   "output/test",
+				CACertificatePath: "test",
+				CAPrivateKeyPath:  "test",
 			},
+			dc:          &deployCmd{},
 			args:        []string{"test/apimodel.json", "some_random_stuff"},
 			expectedErr: errors.New("too many arguments were provided to 'deploy'"),
 		},
 		{
-			dc: &deployCmd{
-				apimodelPath:      "",
-				dnsPrefix:         "test",
-				outputDirectory:   "output/test",
-				caCertificatePath: "test",
-				caPrivateKeyPath:  "test",
+			config: config.DeployConfig{
+				DNSPrefix:         "test",
+				OutputDirectory:   "output/test",
+				CACertificatePath: "test",
+				CAPrivateKeyPath:  "test",
 			},
+			dc:          &deployCmd{},
 			args:        []string{apimodelPath},
 			expectedErr: errors.New("--location must be specified"),
 		},
 		{
-			dc: &deployCmd{
-				apimodelPath:      "",
-				dnsPrefix:         "test",
-				outputDirectory:   "output/test",
-				caCertificatePath: "test",
-				caPrivateKeyPath:  "test",
-				location:          "west europe",
+			config: config.DeployConfig{
+				DNSPrefix:         "test",
+				OutputDirectory:   "output/test",
+				CACertificatePath: "test",
+				CAPrivateKeyPath:  "test",
+				Location:          "west europe",
 			},
+			dc:          &deployCmd{},
 			args:        []string{apimodelPath},
 			expectedErr: nil,
 		},
 		{
-			dc: &deployCmd{
-				apimodelPath:      apimodelPath,
-				dnsPrefix:         "test",
-				outputDirectory:   "output/test",
-				caCertificatePath: "test",
-				caPrivateKeyPath:  "test",
-				location:          "canadaeast",
+			config: config.DeployConfig{
+				APIModel:          apimodelPath,
+				DNSPrefix:         "test",
+				OutputDirectory:   "output/test",
+				CACertificatePath: "test",
+				CAPrivateKeyPath:  "test",
+				Location:          "canadaeast",
 			},
+			dc:          &deployCmd{},
 			args:        []string{},
 			expectedErr: nil,
 		},
 	}
 
 	for _, c := range cases {
+		currentConfig.CLIConfig.Deploy = c.config
+		if err := mergo.Merge(&currentConfig.CLIConfig.Deploy, defaultConfigValues.CLIConfig.Deploy); err != nil {
+			t.Fatal(err)
+		}
 		err = c.dc.validateArgs(r, c.args)
 		if err != nil && c.expectedErr != nil {
 			if err.Error() != c.expectedErr.Error() {
@@ -232,27 +240,33 @@ func TestAutoSufixWithDnsPrefixInApiModel(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected error deserializing the example apimodel: %s", err)
 	}
+	conf := config.DeployConfig{
+		APIModel:        "./this/is/unused.json",
+		OutputDirectory: "_test_output",
+		ForceOverwrite:  true,
+		Location:        "westus",
+		AutoSuffix:      true,
+	}
 	deployCmd := &deployCmd{
-		apimodelPath:     "./this/is/unused.json",
-		outputDirectory:  "_test_output",
-		forceOverwrite:   true,
-		location:         "westus",
-		autoSuffix:       true,
 		containerService: cs,
 		apiVersion:       ver,
 
 		client: &armhelpers.MockAKSEngineClient{},
 		authProvider: &mockAuthProvider{
-			authArgs: &authArgs{},
+			authArgs: &config.AuthConfig{},
 		},
 	}
 
+	currentConfig.CLIConfig.Deploy = conf
+	defer func() {
+		currentConfig = config.Config{}
+	}()
 	err = autofillApimodel(deployCmd)
 	if err != nil {
 		t.Fatalf("unexpected error autofilling the example apimodel: %s", err)
 	}
 
-	defer os.RemoveAll(deployCmd.outputDirectory)
+	defer os.RemoveAll(conf.OutputDirectory)
 
 	if deployCmd.containerService.Properties.MasterProfile.DNSPrefix == "mytestcluster" {
 		t.Fatalf("expected %s-{timestampsuffix} but got %s", "mytestcluster", deployCmd.containerService.Properties.MasterProfile.DNSPrefix)
@@ -277,28 +291,34 @@ func TestAPIModelWithoutServicePrincipalProfileAndClientIdAndSecretInCmd(t *test
 	if err != nil {
 		t.Fatalf("unexpected error deserializing the example apimodel: %s", err)
 	}
+	conf := config.DeployConfig{
+		APIModel:        "./this/is/unused.json",
+		OutputDirectory: "_test_output",
+		ForceOverwrite:  true,
+		Location:        "westus",
+	}
 	deployCmd := &deployCmd{
-		apimodelPath:     "./this/is/unused.json",
-		outputDirectory:  "_test_output",
-		forceOverwrite:   true,
-		location:         "westus",
 		containerService: cs,
 		apiVersion:       ver,
 
 		client: &armhelpers.MockAKSEngineClient{},
 		authProvider: &mockAuthProvider{
-			authArgs: &authArgs{},
+			authArgs: &config.AuthConfig{},
 		},
 	}
-	deployCmd.getAuthArgs().ClientID = TestClientIDInCmd
+	deployCmd.getAuthArgs().ClientID = TestClientIDInCmd.String()
 	deployCmd.getAuthArgs().ClientSecret = TestClientSecretInCmd
 
+	currentConfig.CLIConfig.Deploy = conf
+	defer func() {
+		currentConfig = config.Config{}
+	}()
 	err = autofillApimodel(deployCmd)
 	if err != nil {
 		t.Fatalf("unexpected error autofilling the example apimodel: %s", err)
 	}
 
-	defer os.RemoveAll(deployCmd.outputDirectory)
+	defer os.RemoveAll(conf.OutputDirectory)
 
 	if deployCmd.containerService.Properties.ServicePrincipalProfile == nil || deployCmd.containerService.Properties.ServicePrincipalProfile.ClientID == "" || deployCmd.containerService.Properties.ServicePrincipalProfile.Secret == "" {
 		t.Fatalf("expected service principal profile to be populated from deployment command arguments")
@@ -330,27 +350,33 @@ func TestAPIModelWithEmptyServicePrincipalProfileAndClientIdAndSecretInCmd(t *te
 	if err != nil {
 		t.Fatalf("unexpected error deserializing the example apimodel: %s", err)
 	}
+	conf := config.DeployConfig{
+		APIModel:        "./this/is/unused.json",
+		OutputDirectory: "_test_output",
+		ForceOverwrite:  true,
+		Location:        "westus",
+	}
 	deployCmd := &deployCmd{
-		apimodelPath:     "./this/is/unused.json",
-		outputDirectory:  "_test_output",
-		forceOverwrite:   true,
-		location:         "westus",
 		containerService: cs,
 		apiVersion:       ver,
 
 		client: &armhelpers.MockAKSEngineClient{},
 		authProvider: &mockAuthProvider{
-			authArgs: &authArgs{},
+			authArgs: &config.AuthConfig{},
 		},
 	}
-	deployCmd.getAuthArgs().ClientID = TestClientIDInCmd
+	deployCmd.getAuthArgs().ClientID = TestClientIDInCmd.String()
 	deployCmd.getAuthArgs().ClientSecret = TestClientSecretInCmd
+	currentConfig.CLIConfig.Deploy = conf
+	defer func() {
+		currentConfig = config.Config{}
+	}()
 	err = autofillApimodel(deployCmd)
 	if err != nil {
 		t.Fatalf("unexpected error autofilling the example apimodel: %s", err)
 	}
 
-	defer os.RemoveAll(deployCmd.outputDirectory)
+	defer os.RemoveAll(conf.OutputDirectory)
 
 	if deployCmd.containerService.Properties.ServicePrincipalProfile == nil || deployCmd.containerService.Properties.ServicePrincipalProfile.ClientID == "" || deployCmd.containerService.Properties.ServicePrincipalProfile.Secret == "" {
 		t.Fatalf("expected service principal profile to be populated from deployment command arguments")
@@ -376,25 +402,31 @@ func TestAPIModelWithoutServicePrincipalProfileAndWithoutClientIdAndSecretInCmd(
 	if err != nil {
 		t.Fatalf("unexpected error deserializing the example apimodel: %s", err)
 	}
+	conf := config.DeployConfig{
+		APIModel:        "./this/is/unused.json",
+		OutputDirectory: "_test_output",
+		ForceOverwrite:  true,
+		Location:        "westus",
+	}
 	deployCmd := &deployCmd{
-		apimodelPath:     "./this/is/unused.json",
-		outputDirectory:  "_test_output",
-		forceOverwrite:   true,
-		location:         "westus",
 		containerService: cs,
 		apiVersion:       ver,
 
 		client: &armhelpers.MockAKSEngineClient{},
 		authProvider: &mockAuthProvider{
-			authArgs: &authArgs{},
+			authArgs: &config.AuthConfig{},
 		},
 	}
+	currentConfig.CLIConfig.Deploy = conf
+	defer func() {
+		currentConfig = config.Config{}
+	}()
 	err = autofillApimodel(deployCmd)
 	if err != nil {
 		t.Fatalf("unexpected error autofilling the example apimodel: %s", err)
 	}
 
-	defer os.RemoveAll(deployCmd.outputDirectory)
+	defer os.RemoveAll(conf.OutputDirectory)
 
 	if deployCmd.containerService.Properties.ServicePrincipalProfile != nil {
 		t.Fatalf("expected service principal profile to be nil for unmanaged identity, where client id and secret are not supplied in api model and deployment command")
@@ -413,25 +445,31 @@ func TestAPIModelWithEmptyServicePrincipalProfileAndWithoutClientIdAndSecretInCm
 	if err != nil {
 		t.Fatalf("unexpected error deserializing the example apimodel: %s", err)
 	}
+	conf := config.DeployConfig{
+		APIModel:        "./this/is/unused.json",
+		OutputDirectory: "_test_output",
+		ForceOverwrite:  true,
+		Location:        "westus",
+	}
 	deployCmd := &deployCmd{
-		apimodelPath:     "./this/is/unused.json",
-		outputDirectory:  "_test_output",
-		forceOverwrite:   true,
-		location:         "westus",
 		containerService: cs,
 		apiVersion:       ver,
 
 		client: &armhelpers.MockAKSEngineClient{},
 		authProvider: &mockAuthProvider{
-			authArgs: &authArgs{},
+			authArgs: &config.AuthConfig{},
 		},
 	}
+	currentConfig.CLIConfig.Deploy = conf
+	defer func() {
+		currentConfig = config.Config{}
+	}()
 	err = autofillApimodel(deployCmd)
 	if err != nil {
 		t.Fatalf("unexpected error autofilling the example apimodel: %s", err)
 	}
 
-	defer os.RemoveAll(deployCmd.outputDirectory)
+	defer os.RemoveAll(conf.OutputDirectory)
 
 	if deployCmd.containerService.Properties.ServicePrincipalProfile == nil {
 		t.Fatalf("expected service principal profile to be Empty and not nil for unmanaged identity, where client id and secret are not supplied in api model and deployment command")
@@ -463,21 +501,26 @@ func testAutodeployCredentialHandling(t *testing.T, useManagedIdentity bool, cli
 	// deserialization happens in validate(), but we are testing just the default
 	// setting that occurs in autofillApimodel (which is called from validate)
 	// Thus, it assumes that containerService/apiVersion are already populated
+	conf := config.DeployConfig{
+		APIModel:        "./this/is/unused.json",
+		DNSPrefix:       "dnsPrefix1",
+		OutputDirectory: "_test_output",
+		ForceOverwrite:  true,
+		Location:        "westus",
+	}
 	deployCmd := &deployCmd{
-		apimodelPath:    "./this/is/unused.json",
-		dnsPrefix:       "dnsPrefix1",
-		outputDirectory: "_test_output",
-		forceOverwrite:  true,
-		location:        "westus",
-
 		containerService: cs,
 		apiVersion:       ver,
 
 		client: &armhelpers.MockAKSEngineClient{},
 		authProvider: &mockAuthProvider{
-			authArgs: &authArgs{},
+			authArgs: &config.AuthConfig{},
 		},
 	}
+	currentConfig.CLIConfig.Deploy = conf
+	defer func() {
+		currentConfig = config.Config{}
+	}()
 
 	err = autofillApimodel(deployCmd)
 	if err != nil {
@@ -485,7 +528,7 @@ func testAutodeployCredentialHandling(t *testing.T, useManagedIdentity bool, cli
 	}
 
 	// cleanup, since auto-populations creates dirs and saves the SSH private key that it might create
-	defer os.RemoveAll(deployCmd.outputDirectory)
+	defer os.RemoveAll(conf.OutputDirectory)
 
 	cs, _, err = deployCmd.validateApimodel()
 	if err != nil {
@@ -507,31 +550,31 @@ func testAutodeployCredentialHandling(t *testing.T, useManagedIdentity bool, cli
 
 func TestDeployCmdMergeAPIModel(t *testing.T) {
 	d := &deployCmd{}
-	d.apimodelPath = "../pkg/engine/testdata/simple/kubernetes.json"
+	currentConfig.CLIConfig.Deploy.APIModel = "../pkg/engine/testdata/simple/kubernetes.json"
 	err := d.mergeAPIModel()
 	if err != nil {
 		t.Fatalf("unexpected error calling mergeAPIModel with no --set flag defined: %s", err.Error())
 	}
 
 	d = &deployCmd{}
-	d.apimodelPath = "../pkg/engine/testdata/simple/kubernetes.json"
-	d.set = []string{"masterProfile.count=3,linuxProfile.adminUsername=testuser"}
+	currentConfig.CLIConfig.Deploy.APIModel = "../pkg/engine/testdata/simple/kubernetes.json"
+	currentConfig.CLIConfig.Deploy.Set = []string{"masterProfile.count=3,linuxProfile.adminUsername=testuser"}
 	err = d.mergeAPIModel()
 	if err != nil {
 		t.Fatalf("unexpected error calling mergeAPIModel with one --set flag: %s", err.Error())
 	}
 
 	d = &deployCmd{}
-	d.apimodelPath = "../pkg/engine/testdata/simple/kubernetes.json"
-	d.set = []string{"masterProfile.count=3", "linuxProfile.adminUsername=testuser"}
+	currentConfig.CLIConfig.Deploy.APIModel = "../pkg/engine/testdata/simple/kubernetes.json"
+	currentConfig.CLIConfig.Deploy.Set = []string{"masterProfile.count=3", "linuxProfile.adminUsername=testuser"}
 	err = d.mergeAPIModel()
 	if err != nil {
 		t.Fatalf("unexpected error calling mergeAPIModel with multiple --set flags: %s", err.Error())
 	}
 
 	d = &deployCmd{}
-	d.apimodelPath = "../pkg/engine/testdata/simple/kubernetes.json"
-	d.set = []string{"agentPoolProfiles[0].count=1"}
+	currentConfig.CLIConfig.Deploy.APIModel = "../pkg/engine/testdata/simple/kubernetes.json"
+	currentConfig.CLIConfig.Deploy.Set = []string{"agentPoolProfiles[0].count=1"}
 	err = d.mergeAPIModel()
 	if err != nil {
 		t.Fatalf("unexpected error calling mergeAPIModel with one --set flag to override an array property: %s", err.Error())
@@ -539,16 +582,21 @@ func TestDeployCmdMergeAPIModel(t *testing.T) {
 }
 
 func TestDeployCmdRun(t *testing.T) {
+	conf := config.DeployConfig{
+		APIModel:        "./this/is/unused.json",
+		OutputDirectory: "_test_output",
+		ForceOverwrite:  true,
+		Location:        "westus",
+	}
 	d := &deployCmd{
 		client: &armhelpers.MockAKSEngineClient{},
 		authProvider: &mockAuthProvider{
-			authArgs:      &authArgs{},
+			authArgs:      &config.AuthConfig{},
 			getClientMock: &armhelpers.MockAKSEngineClient{},
 		},
-		apimodelPath:    "./this/is/unused.json",
-		outputDirectory: "_test_output",
-		forceOverwrite:  true,
-		location:        "westus",
+	}
+	if err := mergo.Merge(&currentConfig.CLIConfig.Deploy, conf); err != nil {
+		t.Fatal(err)
 	}
 
 	r := &cobra.Command{}
@@ -556,30 +604,20 @@ func TestDeployCmdRun(t *testing.T) {
 
 	addAuthFlags(d.getAuthArgs(), f)
 
-	fakeRawSubscriptionID := "6dc93fae-9a76-421f-bbe5-cc6460ea81cb"
-	fakeSubscriptionID, err := uuid.FromString(fakeRawSubscriptionID)
+	fakeSubscriptionID := "6dc93fae-9a76-421f-bbe5-cc6460ea81cb"
 	fakeClientID := "b829b379-ca1f-4f1d-91a2-0d26b244680d"
 	fakeClientSecret := "0se43bie-3zs5-303e-aav5-dcf231vb82ds"
-	if err != nil {
-		t.Fatalf("Invalid SubscriptionId in Test: %s", err)
-	}
 
-	d.apimodelPath = "../pkg/engine/testdata/simple/kubernetes.json"
+	currentConfig.CLIConfig.Deploy.APIModel = "../pkg/engine/testdata/simple/kubernetes.json"
 	d.getAuthArgs().SubscriptionID = fakeSubscriptionID
-	d.getAuthArgs().rawSubscriptionID = fakeRawSubscriptionID
-	d.getAuthArgs().rawClientID = fakeClientID
+	d.getAuthArgs().ClientID = fakeClientID
 	d.getAuthArgs().ClientSecret = fakeClientSecret
-	if err != nil {
-		t.Fatalf("Invalid SubscriptionId in Test: %s", err)
-	}
 
-	err = d.loadAPIModel(r, []string{})
-	if err != nil {
+	if err := d.loadAPIModel(r, []string{}); err != nil {
 		t.Fatalf("Failed to call LoadAPIModel: %s", err)
 	}
 
-	err = d.run()
-	if err != nil {
+	if err := d.run(); err != nil {
 		t.Fatalf("Failed to call LoadAPIModel: %s", err)
 	}
 }

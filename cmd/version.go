@@ -23,7 +23,6 @@ var (
 	GitTreeState = "unset"
 
 	outputFormatOptions = []string{"human", "json"}
-	outputFormat        string
 	version             versionInfo
 )
 
@@ -69,7 +68,7 @@ func getVersion(outputType string) string {
 	} else if outputType == "json" {
 		output = getJSONVersion()
 	} else {
-		log.Fatalf("unsupported output format: %s\n", outputFormat)
+		log.Fatalf("unsupported output format: %s\n", currentConfig.CLIConfig.Version.OutputFormat)
 	}
 
 	return output
@@ -82,13 +81,12 @@ func newVersionCmd() *cobra.Command {
 		Long:  versionLongDescription,
 
 		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Println(getVersion(outputFormat))
+			fmt.Println(getVersion(currentConfig.CLIConfig.Version.OutputFormat))
 		},
 	}
 
 	versionCmdDescription := fmt.Sprintf("Output format to use: %s", outputFormatOptions)
-
-	versionCmd.Flags().StringVarP(&outputFormat, "output", "o", "human", versionCmdDescription)
+	versionCmd.Flags().StringVarP(&currentConfig.CLIConfig.Version.OutputFormat, "output", "o", defaultConfigValues.CLIConfig.Version.OutputFormat, versionCmdDescription)
 
 	return versionCmd
 }

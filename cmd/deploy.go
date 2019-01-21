@@ -5,6 +5,7 @@ package cmd
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"math/rand"
@@ -15,21 +16,19 @@ import (
 	"strings"
 	"time"
 
-	"github.com/leonelquinteros/gotext"
-	log "github.com/sirupsen/logrus"
-	"github.com/spf13/cobra"
-
-	"encoding/json"
-
 	"github.com/Azure/aks-engine/pkg/api"
 	"github.com/Azure/aks-engine/pkg/armhelpers"
+	"github.com/Azure/aks-engine/pkg/cli/config"
 	"github.com/Azure/aks-engine/pkg/engine"
 	"github.com/Azure/aks-engine/pkg/engine/transform"
 	"github.com/Azure/aks-engine/pkg/helpers"
 	"github.com/Azure/aks-engine/pkg/i18n"
 	"github.com/Azure/azure-sdk-for-go/services/graphrbac/1.6/graphrbac"
 	"github.com/Azure/go-autorest/autorest/to"
+	"github.com/leonelquinteros/gotext"
 	"github.com/pkg/errors"
+	log "github.com/sirupsen/logrus"
+	"github.com/spf13/cobra"
 )
 
 const (
@@ -40,15 +39,6 @@ const (
 
 type deployCmd struct {
 	authProvider
-	apimodelPath      string
-	dnsPrefix         string
-	autoSuffix        bool
-	outputDirectory   string // can be auto-determined from clusterDefinition
-	forceOverwrite    bool
-	caCertificatePath string
-	caPrivateKeyPath  string
-	parametersOnly    bool
-	set               []string
 
 	// derived
 	containerService *api.ContainerService
@@ -62,9 +52,7 @@ type deployCmd struct {
 }
 
 func newDeployCmd() *cobra.Command {
-	dc := deployCmd{
-		authProvider: &authArgs{},
-	}
+	dc := deployCmd{}
 
 	deployCmd := &cobra.Command{
 		Use:   deployName,
@@ -87,21 +75,32 @@ func newDeployCmd() *cobra.Command {
 		},
 	}
 
+	cfg := &currentConfig.CLIConfig.Deploy
+	defaultCfg := &defaultConfigValues.CLIConfig.Deploy
 	f := deployCmd.Flags()
-	f.StringVarP(&dc.apimodelPath, "api-model", "m", "", "path to the apimodel file")
-	f.StringVarP(&dc.dnsPrefix, "dns-prefix", "p", "", "dns prefix (unique name for the cluster)")
-	f.BoolVar(&dc.autoSuffix, "auto-suffix", false, "automatically append a compressed timestamp to the dnsPrefix to ensure unique cluster name automatically")
-	f.StringVarP(&dc.outputDirectory, "output-directory", "o", "", "output directory (derived from FQDN if absent)")
-	f.StringVar(&dc.caCertificatePath, "ca-certificate-path", "", "path to the CA certificate to use for Kubernetes PKI assets")
-	f.StringVar(&dc.caPrivateKeyPath, "ca-private-key-path", "", "path to the CA private key to use for Kubernetes PKI assets")
-	f.StringVarP(&dc.resourceGroup, "resource-group", "g", "", "resource group to deploy to (will use the DNS prefix from the apimodel if not specified)")
-	f.StringVarP(&dc.location, "location", "l", "", "location to deploy to (required)")
-	f.BoolVarP(&dc.forceOverwrite, "force-overwrite", "f", false, "automatically overwrite existing files in the output directory")
-	f.StringArrayVar(&dc.set, "set", []string{}, "set values on the command line (can specify multiple or separate values with commas: key1=val1,key2=val2)")
+	f.StringVarP(&cfg.APIModel, "api-model", "m", defaultCfg.APIModel, "path to the apimodel file")
+	f.StringVarP(&cfg.DNSPrefix, "dns-prefix", "p", defaultCfg.DNSPrefix, "dns prefix (unique name for the cluster)")
+	f.BoolVar(&cfg.AutoSuffix, "auto-suffix", defaultCfg.AutoSuffix, "automatically append a compressed timestamp to the dnsPrefix to ensure unique cluster name automatically")
+	f.StringVarP(&cfg.OutputDirectory, "output-directory", "o", defaultCfg.OutputDirectory, "output directory (derived from FQDN if absent)")
+	f.StringVar(&cfg.CACertificatePath, "ca-certificate-path", defaultCfg.CACertificatePath, "path to the CA certificate to use for Kubernetes PKI assets")
+	f.StringVar(&cfg.CAPrivateKeyPath, "ca-private-key-path", defaultCfg.CAPrivateKeyPath, "path to the CA private key to use for Kubernetes PKI assets")
+	f.StringVarP(&cfg.ResourceGroup, "resource-group", "g", defaultCfg.ResourceGroup, "resource group to deploy to (will use the DNS prefix from the apimodel if not specified)")
+	f.StringVarP(&cfg.Location, "location", "l", defaultCfg.Location, "location to deploy to (required)")
+	f.BoolVarP(&cfg.ForceOverwrite, "force-overwrite", "f", defaultCfg.ForceOverwrite, "automatically overwrite existing files in the output directory")
+	f.BoolVar(&cfg.ParametersOnly, "parameters-only", defaultCfg.ParametersOnly, "only output parameters files")
+	f.StringArrayVar(&cfg.Set, "set", defaultCfg.Set, "set values on the command line (can specify multiple or separate values with commas: key1=val1,key2=val2)")
 
 	addAuthFlags(dc.getAuthArgs(), f)
 
 	return deployCmd
+}
+
+func (dc *deployCmd) getAuthArgs() *config.AuthConfig {
+	return &currentConfig.Auth
+}
+
+func (dc *deployCmd) getClient() (armhelpers.AKSEngineClient, error) {
+	return currentConfig.Auth.NewClient()
 }
 
 func (dc *deployCmd) validateArgs(cmd *cobra.Command, args []string) error {
@@ -112,25 +111,25 @@ func (dc *deployCmd) validateArgs(cmd *cobra.Command, args []string) error {
 		return errors.Wrap(err, "error loading translation files")
 	}
 
-	if dc.apimodelPath == "" {
+	if currentConfig.CLIConfig.Deploy.APIModel == "" {
 		if len(args) == 1 {
-			dc.apimodelPath = args[0]
+			currentConfig.CLIConfig.Deploy.APIModel = args[0]
 		} else if len(args) > 1 {
 			cmd.Usage()
 			return errors.New("too many arguments were provided to 'deploy'")
 		}
 	}
 
-	if dc.apimodelPath != "" {
-		if _, err := os.Stat(dc.apimodelPath); os.IsNotExist(err) {
-			return errors.Errorf("specified api model does not exist (%s)", dc.apimodelPath)
+	if currentConfig.CLIConfig.Deploy.APIModel != "" {
+		if _, err := os.Stat(currentConfig.CLIConfig.Deploy.APIModel); os.IsNotExist(err) {
+			return errors.Errorf("specified api model does not exist (%s)", currentConfig.CLIConfig.Deploy.APIModel)
 		}
 	}
 
-	if dc.location == "" {
+	if currentConfig.CLIConfig.Deploy.Location == "" {
 		return errors.New("--location must be specified")
 	}
-	dc.location = helpers.NormalizeAzureRegion(dc.location)
+	currentConfig.CLIConfig.Deploy.Location = helpers.NormalizeAzureRegion(currentConfig.CLIConfig.Deploy.Location)
 
 	return nil
 }
@@ -138,7 +137,7 @@ func (dc *deployCmd) validateArgs(cmd *cobra.Command, args []string) error {
 func (dc *deployCmd) mergeAPIModel() error {
 	var err error
 
-	if dc.apimodelPath == "" {
+	if currentConfig.CLIConfig.Deploy.APIModel == "" {
 		log.Infoln("no --api-model was specified, using default model")
 		f, err := ioutil.TempFile("", fmt.Sprintf("%s-default-api-model_%s-%s_", filepath.Base(os.Args[0]), BuildSHA, GitTreeState))
 		if err != nil {
@@ -150,21 +149,21 @@ func (dc *deployCmd) mergeAPIModel() error {
 		if err := writeDefaultModel(f); err != nil {
 			return err
 		}
-		dc.apimodelPath = f.Name()
+		currentConfig.CLIConfig.Deploy.APIModel = f.Name()
 	}
 
 	// if --set flag has been used
-	if len(dc.set) > 0 {
+	if len(currentConfig.CLIConfig.Deploy.Set) > 0 {
 		m := make(map[string]transform.APIModelValue)
-		transform.MapValues(m, dc.set)
+		transform.MapValues(m, currentConfig.CLIConfig.Deploy.Set)
 
 		// overrides the api model and generates a new file
-		dc.apimodelPath, err = transform.MergeValuesWithAPIModel(dc.apimodelPath, m)
+		currentConfig.CLIConfig.Deploy.APIModel, err = transform.MergeValuesWithAPIModel(currentConfig.CLIConfig.Deploy.APIModel, m)
 		if err != nil {
-			return errors.Wrapf(err, "error merging --set values with the api model: %s", dc.apimodelPath)
+			return errors.Wrapf(err, "error merging --set values with the api model: %s", currentConfig.CLIConfig.Deploy.APIModel)
 		}
 
-		log.Infoln(fmt.Sprintf("new api model file has been generated during merge: %s", dc.apimodelPath))
+		log.Infoln(fmt.Sprintf("new api model file has been generated during merge: %s", currentConfig.CLIConfig.Deploy.APIModel))
 	}
 
 	return nil
@@ -182,29 +181,29 @@ func (dc *deployCmd) loadAPIModel(cmd *cobra.Command, args []string) error {
 	}
 
 	// do not validate when initially loading the apimodel, validation is done later after autofilling values
-	dc.containerService, dc.apiVersion, err = apiloader.LoadContainerServiceFromFile(dc.apimodelPath, false, false, nil)
+	dc.containerService, dc.apiVersion, err = apiloader.LoadContainerServiceFromFile(currentConfig.CLIConfig.Deploy.APIModel, false, false, nil)
 	if err != nil {
 		return errors.Wrap(err, "error parsing the api model")
 	}
 
-	if dc.outputDirectory == "" {
+	if currentConfig.CLIConfig.Deploy.OutputDirectory == "" {
 		if dc.containerService.Properties.MasterProfile != nil {
-			dc.outputDirectory = path.Join("_output", dc.containerService.Properties.MasterProfile.DNSPrefix)
+			currentConfig.CLIConfig.Deploy.OutputDirectory = path.Join("_output", dc.containerService.Properties.MasterProfile.DNSPrefix)
 		} else {
-			dc.outputDirectory = path.Join("_output", dc.containerService.Properties.HostedMasterProfile.DNSPrefix)
+			currentConfig.CLIConfig.Deploy.OutputDirectory = path.Join("_output", dc.containerService.Properties.HostedMasterProfile.DNSPrefix)
 		}
 	}
 
-	// consume dc.caCertificatePath and dc.caPrivateKeyPath
-	if (dc.caCertificatePath != "" && dc.caPrivateKeyPath == "") || (dc.caCertificatePath == "" && dc.caPrivateKeyPath != "") {
+	// consume currentConfig.CLIConfig.Deploy.CACertificatePath and currentConfig.CLIConfig.Deploy.CAPrivateKeyPath
+	if (currentConfig.CLIConfig.Deploy.CACertificatePath != "" && currentConfig.CLIConfig.Deploy.CAPrivateKeyPath == "") || (currentConfig.CLIConfig.Deploy.CACertificatePath == "" && currentConfig.CLIConfig.Deploy.CAPrivateKeyPath != "") {
 		return errors.New("--ca-certificate-path and --ca-private-key-path must be specified together")
 	}
 
-	if dc.caCertificatePath != "" {
-		if caCertificateBytes, err = ioutil.ReadFile(dc.caCertificatePath); err != nil {
+	if currentConfig.CLIConfig.Deploy.CACertificatePath != "" {
+		if caCertificateBytes, err = ioutil.ReadFile(currentConfig.CLIConfig.Deploy.CACertificatePath); err != nil {
 			return errors.Wrap(err, "failed to read CA certificate file")
 		}
-		if caKeyBytes, err = ioutil.ReadFile(dc.caPrivateKeyPath); err != nil {
+		if caKeyBytes, err = ioutil.ReadFile(currentConfig.CLIConfig.Deploy.CAPrivateKeyPath); err != nil {
 			return errors.Wrap(err, "failed to read CA private key file")
 		}
 
@@ -217,12 +216,12 @@ func (dc *deployCmd) loadAPIModel(cmd *cobra.Command, args []string) error {
 	}
 
 	if dc.containerService.Location == "" {
-		dc.containerService.Location = dc.location
-	} else if dc.containerService.Location != dc.location {
+		dc.containerService.Location = currentConfig.CLIConfig.Deploy.Location
+	} else if dc.containerService.Location != currentConfig.CLIConfig.Deploy.Location {
 		return errors.New("--location does not match api model location")
 	}
 
-	if err = dc.getAuthArgs().validateAuthArgs(); err != nil {
+	if err = dc.getAuthArgs().Validate(); err != nil {
 		return err
 	}
 
@@ -250,35 +249,35 @@ func autofillApimodel(dc *deployCmd) error {
 		}
 	}
 
-	if dc.dnsPrefix != "" && dc.containerService.Properties.MasterProfile.DNSPrefix != "" {
+	if currentConfig.CLIConfig.Deploy.DNSPrefix != "" && dc.containerService.Properties.MasterProfile.DNSPrefix != "" {
 		return errors.New("invalid configuration: the apimodel masterProfile.dnsPrefix and --dns-prefix were both specified")
 	}
 	if dc.containerService.Properties.MasterProfile.DNSPrefix == "" {
-		if dc.dnsPrefix == "" {
+		if currentConfig.CLIConfig.Deploy.DNSPrefix == "" {
 			return errors.New("apimodel: missing masterProfile.dnsPrefix and --dns-prefix was not specified")
 		}
-		log.Warnf("apimodel: missing masterProfile.dnsPrefix will use %q", dc.dnsPrefix)
-		dc.containerService.Properties.MasterProfile.DNSPrefix = dc.dnsPrefix
+		log.Warnf("apimodel: missing masterProfile.dnsPrefix will use %q", currentConfig.CLIConfig.Deploy.DNSPrefix)
+		dc.containerService.Properties.MasterProfile.DNSPrefix = currentConfig.CLIConfig.Deploy.DNSPrefix
 	}
 
-	if dc.autoSuffix {
+	if currentConfig.CLIConfig.Deploy.AutoSuffix {
 		suffix := strconv.FormatInt(time.Now().Unix(), 16)
 		dc.containerService.Properties.MasterProfile.DNSPrefix += "-" + suffix
 	}
 
-	if dc.outputDirectory == "" {
-		dc.outputDirectory = path.Join("_output", dc.containerService.Properties.MasterProfile.DNSPrefix)
+	if currentConfig.CLIConfig.Deploy.OutputDirectory == "" {
+		currentConfig.CLIConfig.Deploy.OutputDirectory = path.Join("_output", dc.containerService.Properties.MasterProfile.DNSPrefix)
 	}
 
-	if _, err := os.Stat(dc.outputDirectory); !dc.forceOverwrite && err == nil {
-		return errors.Errorf("Output directory already exists and forceOverwrite flag is not set: %s", dc.outputDirectory)
+	if _, err := os.Stat(currentConfig.CLIConfig.Deploy.OutputDirectory); !currentConfig.CLIConfig.Deploy.ForceOverwrite && err == nil {
+		return errors.Errorf("Output directory already exists and forceOverwrite flag is not set: %s", currentConfig.CLIConfig.Deploy.OutputDirectory)
 	}
 
-	if dc.resourceGroup == "" {
+	if currentConfig.CLIConfig.Deploy.ResourceGroup == "" {
 		dnsPrefix := dc.containerService.Properties.MasterProfile.DNSPrefix
 		log.Warnf("--resource-group was not specified. Using the DNS prefix from the apimodel as the resource group name: %s", dnsPrefix)
-		dc.resourceGroup = dnsPrefix
-		if dc.location == "" {
+		currentConfig.CLIConfig.Deploy.ResourceGroup = dnsPrefix
+		if currentConfig.CLIConfig.Deploy.Location == "" {
 			return errors.New("--resource-group was not specified. --location must be specified in case the resource group needs creation")
 		}
 	}
@@ -289,7 +288,7 @@ func autofillApimodel(dc *deployCmd) error {
 		translator := &i18n.Translator{
 			Locale: dc.locale,
 		}
-		_, publicKey, err := helpers.CreateSaveSSH(dc.containerService.Properties.LinuxProfile.AdminUsername, dc.outputDirectory, translator)
+		_, publicKey, err := helpers.CreateSaveSSH(dc.containerService.Properties.LinuxProfile.AdminUsername, currentConfig.CLIConfig.Deploy.OutputDirectory, translator)
 		if err != nil {
 			return errors.Wrap(err, "Failed to generate SSH Key")
 		}
@@ -299,7 +298,7 @@ func autofillApimodel(dc *deployCmd) error {
 
 	ctx, cancel := context.WithTimeout(context.Background(), armhelpers.DefaultARMOperationTimeout)
 	defer cancel()
-	_, err = dc.client.EnsureResourceGroup(ctx, dc.resourceGroup, dc.location, nil)
+	_, err = dc.client.EnsureResourceGroup(ctx, currentConfig.CLIConfig.Deploy.ResourceGroup, currentConfig.CLIConfig.Deploy.Location, nil)
 	if err != nil {
 		return err
 	}
@@ -310,7 +309,7 @@ func autofillApimodel(dc *deployCmd) error {
 
 	if !useManagedIdentity {
 		spp := dc.containerService.Properties.ServicePrincipalProfile
-		if spp != nil && spp.ClientID == "" && spp.Secret == "" && spp.KeyvaultSecretRef == nil && (dc.getAuthArgs().ClientID.String() == "" || dc.getAuthArgs().ClientID.String() == "00000000-0000-0000-0000-000000000000") && dc.getAuthArgs().ClientSecret == "" {
+		if spp != nil && spp.ClientID == "" && spp.Secret == "" && spp.KeyvaultSecretRef == nil && (dc.getAuthArgs().ClientID == "" || dc.getAuthArgs().ClientID == "00000000-0000-0000-0000-000000000000") && dc.getAuthArgs().ClientSecret == "" {
 			log.Warnln("apimodel: ServicePrincipalProfile was missing or empty, creating application...")
 
 			// TODO: consider caching the creds here so they persist between subsequent runs of 'deploy'
@@ -327,7 +326,7 @@ func autofillApimodel(dc *deployCmd) error {
 
 			log.Warnln("apimodel: ServicePrincipalProfile was empty, assigning role to application...")
 
-			err = dc.client.CreateRoleAssignmentSimple(ctx, dc.resourceGroup, servicePrincipalObjectID)
+			err = dc.client.CreateRoleAssignmentSimple(ctx, currentConfig.CLIConfig.Deploy.ResourceGroup, servicePrincipalObjectID)
 			if err != nil {
 				return errors.Wrap(err, "apimodel: could not create or assign ServicePrincipal")
 
@@ -338,9 +337,9 @@ func autofillApimodel(dc *deployCmd) error {
 				Secret:   secret,
 				ObjectID: servicePrincipalObjectID,
 			}
-		} else if (dc.containerService.Properties.ServicePrincipalProfile == nil || ((dc.containerService.Properties.ServicePrincipalProfile.ClientID == "" || dc.containerService.Properties.ServicePrincipalProfile.ClientID == "00000000-0000-0000-0000-000000000000") && dc.containerService.Properties.ServicePrincipalProfile.Secret == "")) && dc.getAuthArgs().ClientID.String() != "" && dc.getAuthArgs().ClientSecret != "" {
+		} else if (dc.containerService.Properties.ServicePrincipalProfile == nil || ((dc.containerService.Properties.ServicePrincipalProfile.ClientID == "" || dc.containerService.Properties.ServicePrincipalProfile.ClientID == "00000000-0000-0000-0000-000000000000") && dc.containerService.Properties.ServicePrincipalProfile.Secret == "")) && dc.getAuthArgs().ClientID != "" && dc.getAuthArgs().ClientSecret != "" {
 			dc.containerService.Properties.ServicePrincipalProfile = &api.ServicePrincipalProfile{
-				ClientID: dc.getAuthArgs().ClientID.String(),
+				ClientID: dc.getAuthArgs().ClientID,
 				Secret:   dc.getAuthArgs().ClientSecret,
 			}
 		}
@@ -386,13 +385,13 @@ func (dc *deployCmd) run() error {
 
 	certsgenerated, err := dc.containerService.SetPropertiesDefaults(false, false)
 	if err != nil {
-		log.Fatalf("error in SetPropertiesDefaults template %s: %s", dc.apimodelPath, err.Error())
+		log.Fatalf("error in SetPropertiesDefaults template %s: %s", currentConfig.CLIConfig.Deploy.APIModel, err.Error())
 		os.Exit(1)
 	}
 
 	template, parameters, err := templateGenerator.GenerateTemplate(dc.containerService, engine.DefaultGeneratorCode, BuildTag)
 	if err != nil {
-		log.Fatalf("error generating template %s: %s", dc.apimodelPath, err.Error())
+		log.Fatalf("error generating template %s: %s", currentConfig.CLIConfig.Deploy.APIModel, err.Error())
 		os.Exit(1)
 	}
 
@@ -409,7 +408,7 @@ func (dc *deployCmd) run() error {
 			Locale: dc.locale,
 		},
 	}
-	if err = writer.WriteTLSArtifacts(dc.containerService, dc.apiVersion, template, parametersFile, dc.outputDirectory, certsgenerated, dc.parametersOnly); err != nil {
+	if err = writer.WriteTLSArtifacts(dc.containerService, dc.apiVersion, template, parametersFile, currentConfig.CLIConfig.Deploy.OutputDirectory, certsgenerated, currentConfig.CLIConfig.Deploy.ParametersOnly); err != nil {
 		log.Fatalf("error writing artifacts: %s \n", err.Error())
 	}
 
@@ -432,8 +431,8 @@ func (dc *deployCmd) run() error {
 
 	if res, err := dc.client.DeployTemplate(
 		cx,
-		dc.resourceGroup,
-		fmt.Sprintf("%s-%d", dc.resourceGroup, deploymentSuffix),
+		currentConfig.CLIConfig.Deploy.ResourceGroup,
+		fmt.Sprintf("%s-%d", currentConfig.CLIConfig.Deploy.ResourceGroup, deploymentSuffix),
 		templateJSON,
 		parametersJSON,
 	); err != nil {

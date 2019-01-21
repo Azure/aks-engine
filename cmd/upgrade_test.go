@@ -4,6 +4,8 @@
 package cmd
 
 import (
+	"github.com/Azure/aks-engine/pkg/cli/config"
+	"github.com/imdario/mergo"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/pkg/errors"
@@ -28,71 +30,79 @@ var _ = Describe("the upgrade command", func() {
 		r := &cobra.Command{}
 
 		cases := []struct {
+			conf        config.UpgradeConfig
 			uc          *upgradeCmd
 			expectedErr error
 		}{
 			{
-				uc: &upgradeCmd{
-					resourceGroupName:   "",
-					deploymentDirectory: "_output/test",
-					upgradeVersion:      "1.8.9",
-					location:            "centralus",
-					timeoutInMinutes:    60,
+				conf: config.UpgradeConfig{
+					ResourceGroup:  "",
+					DeploymentDir:  "_output/test",
+					UpgradeVersion: "1.8.9",
+					Location:       "centralus",
+					VMTimeout:      60,
 				},
+				uc:          &upgradeCmd{},
 				expectedErr: errors.New("--resource-group must be specified"),
 			},
 			{
-				uc: &upgradeCmd{
-					resourceGroupName:   "test",
-					deploymentDirectory: "_output/test",
-					upgradeVersion:      "1.8.9",
-					location:            "",
-					timeoutInMinutes:    60,
+				conf: config.UpgradeConfig{
+					ResourceGroup:  "test",
+					DeploymentDir:  "_output/test",
+					UpgradeVersion: "1.8.9",
+					Location:       "",
+					VMTimeout:      60,
 				},
+				uc:          &upgradeCmd{},
 				expectedErr: errors.New("--location must be specified"),
 			},
 			{
-				uc: &upgradeCmd{
-					resourceGroupName:   "test",
-					deploymentDirectory: "_output/test",
-					upgradeVersion:      "",
-					location:            "southcentralus",
-					timeoutInMinutes:    60,
+				conf: config.UpgradeConfig{
+					ResourceGroup:  "test",
+					DeploymentDir:  "_output/test",
+					UpgradeVersion: "",
+					Location:       "centralus",
+					VMTimeout:      60,
 				},
+				uc:          &upgradeCmd{},
 				expectedErr: errors.New("--upgrade-version must be specified"),
 			},
 			{
-				uc: &upgradeCmd{
-					resourceGroupName:   "test",
-					deploymentDirectory: "",
-					upgradeVersion:      "1.9.0",
-					location:            "southcentralus",
-					timeoutInMinutes:    60,
+				conf: config.UpgradeConfig{
+					ResourceGroup:  "test",
+					DeploymentDir:  "",
+					UpgradeVersion: "1.8.9",
+					Location:       "centralus",
+					VMTimeout:      60,
 				},
+				uc:          &upgradeCmd{},
 				expectedErr: errors.New("--deployment-dir must be specified"),
 			},
 			{
-				uc: &upgradeCmd{
-					resourceGroupName:   "test",
-					deploymentDirectory: "",
-					upgradeVersion:      "1.9.0",
-					location:            "southcentralus",
-					timeoutInMinutes:    60,
+				conf: config.UpgradeConfig{
+					ResourceGroup:  "test",
+					DeploymentDir:  "",
+					UpgradeVersion: "1.9.0",
+					Location:       "centralus",
+					VMTimeout:      60,
 				},
+				uc:          &upgradeCmd{},
 				expectedErr: errors.New("--deployment-dir must be specified"),
 			},
 			{
-				uc: &upgradeCmd{
-					resourceGroupName:   "test",
-					deploymentDirectory: "_output/mydir",
-					upgradeVersion:      "1.9.0",
-					location:            "southcentralus",
+				conf: config.UpgradeConfig{
+					ResourceGroup:  "test",
+					DeploymentDir:  "_output/mydir",
+					UpgradeVersion: "1.9.0",
+					Location:       "southcentralus",
 				},
+				uc:          &upgradeCmd{},
 				expectedErr: nil,
 			},
 		}
 
 		for _, c := range cases {
+			Expect(mergo.Merge(&currentConfig.CLIConfig.Upgrade, c.conf)).To(BeNil())
 			err := c.uc.validate(r)
 			if c.expectedErr != nil && err != nil {
 				Expect(err.Error()).To(Equal(c.expectedErr.Error()))
@@ -100,6 +110,8 @@ var _ = Describe("the upgrade command", func() {
 				Expect(err).To(BeNil())
 				Expect(c.expectedErr).To(BeNil())
 			}
+			// reset config
+			currentConfig = config.Config{}
 		}
 
 	})
