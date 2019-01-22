@@ -125,6 +125,11 @@ func createKubernetesMasterResourcesVmss(cs *api.ContainerService) []interface{}
 		masterResources = append(masterResources, masterVnet)
 	}
 
+	if cs.Properties.MasterProfile.Count > 1 {
+		internalLb := CreateMasterInternalLoadBalancerVMSS(cs)
+		masterResources = append(masterResources, internalLb)
+	}
+
 	publicIPAddress := CreatePublicIPAddress(cs)
 	masterResources = append(masterResources, publicIPAddress)
 

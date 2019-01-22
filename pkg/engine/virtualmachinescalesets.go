@@ -20,6 +20,7 @@ func CreateMasterVMSS(cs *api.ContainerService) VirtualMachineScaleSetARM {
 	userAssignedIDEnabled := cs.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity &&
 		cs.Properties.OrchestratorProfile.KubernetesConfig.UserAssignedID != ""
 	isAzureCNI := cs.Properties.OrchestratorProfile.IsAzureCNI()
+	masterCount := cs.Properties.MasterProfile.Count
 
 	var dependencies []string
 
@@ -27,6 +28,10 @@ func CreateMasterVMSS(cs *api.ContainerService) VirtualMachineScaleSetARM {
 		dependencies = append(dependencies, "[variables('nsgID')]")
 	} else {
 		dependencies = append(dependencies, "[variables('vnetID')]")
+	}
+
+	if masterCount > 1 {
+		dependencies = append(dependencies, "[variables('masterInternalLbName')]")
 	}
 
 	if to.Bool(cs.Properties.MasterProfile.CosmosEtcd) {
@@ -109,11 +114,19 @@ func CreateMasterVMSS(cs *api.ContainerService) VirtualMachineScaleSetARM {
 		}
 		if i == 1 {
 			ipConfigProps.Primary = to.BoolPtr(true)
-			ipConfigProps.LoadBalancerBackendAddressPools = &[]compute.SubResource{
+			backendAddressPools := []compute.SubResource{
 				{
 					ID: to.StringPtr("[concat(variables('masterLbID'), '/backendAddressPools/', variables('masterLbBackendPoolName'))]"),
 				},
 			}
+			if masterCount > 1 {
+				internalLbBackendAddressPool := compute.SubResource{
+					ID: to.StringPtr("[concat(variables('masterInternalLbID'), '/backendAddressPools/', variables('masterLbBackendPoolName'))]"),
+				}
+				backendAddressPools = append(backendAddressPools, internalLbBackendAddressPool)
+			}
+			ipConfigProps.LoadBalancerBackendAddressPools = &backendAddressPools
+
 			ipConfigProps.LoadBalancerInboundNatPools = &[]compute.SubResource{
 				{
 					ID: to.StringPtr("[concat(variables('masterLbID'),'/inboundNatPools/SSH-', variables('masterVMNamePrefix'), 'natpools')]"),
@@ -122,6 +135,7 @@ func CreateMasterVMSS(cs *api.ContainerService) VirtualMachineScaleSetARM {
 		} else {
 			ipConfigProps.Primary = to.BoolPtr(false)
 		}
+		ipConfig.VirtualMachineScaleSetIPConfigurationProperties = &ipConfigProps
 		ipConfigurations = append(ipConfigurations, ipConfig)
 	}
 	netintconfig.IPConfigurations = &ipConfigurations
