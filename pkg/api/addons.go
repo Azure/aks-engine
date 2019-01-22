@@ -364,5 +364,5 @@ func azureNetworkPolicyAddonEnabled(o *OrchestratorProfile) *bool {
 }
 
 func azureCNINetworkMonitorAddonEnabled(o *OrchestratorProfile) *bool {
-	return to.BoolPtr(o.IsAzureCNI())
+	return to.BoolPtr(o.IsAzureCNI() && o.KubernetesConfig.NetworkPolicy != NetworkPolicyCalico)
 }
