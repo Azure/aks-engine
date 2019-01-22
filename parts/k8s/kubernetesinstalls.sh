@@ -69,17 +69,17 @@ installSGXDrivers() {
         ;;
     esac
 
-    PACKAGES="make gcc dkms"
+    local PACKAGES="make gcc dkms"
     wait_for_apt_locks
-    retrycmd_if_failure 30 5 3600 apt-get -y install $PACKAGES
+    retrycmd_if_failure 30 5 3600 apt-get -y install $PACKAGES  || exit $ERR_SGX_DRIVERS_INSTALL_TIMEOUT
 
     local SGX_DRIVER=$(basename $SGX_DRIVER_URL)
     local OE_DIR=/opt/azure/containers/oe
     mkdir -p ${OE_DIR}
 
-    retrycmd_if_failure 120 5 25 curl -fsSL ${SGX_DRIVER_URL} -o ${OE_DIR}/${SGX_DRIVER}
+    retrycmd_if_failure 120 5 25 curl -fsSL ${SGX_DRIVER_URL} -o ${OE_DIR}/${SGX_DRIVER} || exit $ERR_SGX_DRIVERS_INSTALL_TIMEOUT
     chmod a+x ${OE_DIR}/${SGX_DRIVER}
-    ${OE_DIR}/${SGX_DRIVER}
+    ${OE_DIR}/${SGX_DRIVER} || exit $ERR_SGX_DRIVERS_START_FAIL
 }
 
 installContainerRuntime() {
