@@ -60,6 +60,7 @@ type Container struct {
 	Env       []EnvVar  `json:"env"`
 	Resources Resources `json:"resources"`
 	Name      string    `json:"name"`
+	Args      []string  `json:"args"`
 }
 
 // TerminatedContainerState shows terminated state of a container
@@ -494,10 +495,12 @@ func WaitOnReady(podPrefix, namespace string, successesNeeded int, sleep, durati
 		select {
 		case err := <-errCh:
 			pods, _ := GetAllByPrefix(podPrefix, namespace)
-			for _, p := range pods {
-				e := p.Logs()
-				if e != nil {
-					log.Printf("Unable to print pod logs for pod %s", p.Metadata.Name)
+			if len(pods) != 0 {
+				for _, p := range pods {
+					e := p.Logs()
+					if e != nil {
+						log.Printf("Unable to print pod logs for pod %s", p.Metadata.Name)
+					}
 				}
 			}
 			return false, err
@@ -902,6 +905,17 @@ func (c *Container) GetEnvironmentVariable(varName string) (string, error) {
 		}
 	}
 	return "", errors.New("environment variable not found")
+}
+
+// GetArg returns an arg's value from a container within a pod
+func (c *Container) GetArg(argKey string) (string, error) {
+	for _, argvar := range c.Args {
+		if strings.Contains(argvar, argKey) {
+			value := strings.SplitAfter(argvar, "=")[1]
+			return value, nil
+		}
+	}
+	return "", errors.New("container argument not found")
 }
 
 // getCPURequests returns an the CPU Requests value from a container within a pod

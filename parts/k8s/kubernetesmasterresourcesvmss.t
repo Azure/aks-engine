@@ -326,6 +326,75 @@
         "name": "[variables('loadBalancerSku')]"
     }
 },
+{{if gt .MasterProfile.Count 1}}
+    {
+      "apiVersion": "[variables('apiVersionNetwork')]",
+      "dependsOn": [
+{{if .MasterProfile.IsCustomVNET}}
+        "[variables('nsgID')]"
+{{else}}
+        "[variables('vnetID')]"
+{{end}}
+      ],
+      "location": "[variables('location')]",
+      "name": "[variables('masterInternalLbName')]",
+      "properties": {
+        "backendAddressPools": [
+          {
+            "name": "[variables('masterLbBackendPoolName')]"
+          }
+        ],
+        "frontendIPConfigurations": [
+          {
+            "name": "[variables('masterInternalLbIPConfigName')]",
+            "properties": {
+              "privateIPAddress": "[variables('kubernetesAPIServerIP')]",
+              "privateIPAllocationMethod": "Static",
+              "subnet": {
+                "id": "[variables('vnetSubnetIDMaster')]"
+              }
+            }
+          }
+        ],
+        "loadBalancingRules": [
+          {
+            "name": "InternalLBRuleHTTPS",
+            "properties": {
+              "backendAddressPool": {
+                "id": "[concat(variables('masterInternalLbID'), '/backendAddressPools/', variables('masterLbBackendPoolName'))]"
+              },
+              "backendPort": 4443,
+              "enableFloatingIP": false,
+              "frontendIPConfiguration": {
+                "id": "[variables('masterInternalLbIPConfigID')]"
+              },
+              "frontendPort": 443,
+              "idleTimeoutInMinutes": 5,
+              "protocol": "Tcp",
+              "probe": {
+                "id": "[concat(variables('masterInternalLbID'),'/probes/tcpHTTPSProbe')]"
+              }
+            }
+          }
+        ],
+        "probes": [
+          {
+            "name": "tcpHTTPSProbe",
+            "properties": {
+              "intervalInSeconds": 5,
+              "numberOfProbes": 2,
+              "port": 4443,
+              "protocol": "Tcp"
+            }
+          }
+        ]
+      },
+      "sku": {
+        "name": "[variables('loadBalancerSku')]"
+      },
+      "type": "Microsoft.Network/loadBalancers"
+    },
+{{end}}
 {
     "apiVersion": "[variables('apiVersionCompute')]",
     "dependsOn": [
@@ -333,6 +402,9 @@
       "[variables('nsgID')]"
     {{else}}
       "[variables('vnetID')]"
+    {{end}}
+    {{if gt .MasterProfile.Count 1}}
+        ,"[variables('masterInternalLbName')]"
     {{end}}
     {{ if HasCosmosEtcd }}
       ,"[resourceId('Microsoft.DocumentDB/databaseAccounts/', variables('cosmosAccountName'))]"
@@ -395,6 +467,11 @@
                         {
                           "id": "[concat(variables('masterLbID'), '/backendAddressPools/', variables('masterLbBackendPoolName'))]"
                         }
+                        {{if gt $.MasterProfile.Count 1}}
+                          ,{
+                            "id": "[concat(variables('masterInternalLbID'), '/backendAddressPools/', variables('masterLbBackendPoolName'))]"
+                          }
+                        {{end}}
                       ],
                       "loadBalancerInboundNatPools": [
                         {
