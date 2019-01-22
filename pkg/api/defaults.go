@@ -230,6 +230,9 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpdate bool) {
 		if a.OrchestratorProfile.KubernetesConfig.MaximumLoadBalancerRuleCount == 0 {
 			a.OrchestratorProfile.KubernetesConfig.MaximumLoadBalancerRuleCount = DefaultMaximumLoadBalancerRuleCount
 		}
+		if "" == a.OrchestratorProfile.KubernetesConfig.ProxyMode {
+			a.OrchestratorProfile.KubernetesConfig.ProxyMode = KubeProxyModeIpTables
+		}
 
 		// Configure addons
 		cs.setAddonsConfig(isUpdate)

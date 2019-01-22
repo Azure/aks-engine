@@ -292,6 +292,9 @@ func (a *Properties) validateOrchestratorProfile(isUpdate bool) error {
 				if o.KubernetesConfig.MaximumLoadBalancerRuleCount < 0 {
 					return errors.New("maximumLoadBalancerRuleCount shouldn't be less than 0")
 				}
+				if "" != o.KubernetesConfig.ProxyMode && KubeProxyModeIpTables != o.KubernetesConfig.ProxyMode && KubeProxyModeIPVS != o.KubernetesConfig.ProxyMode {
+					return errors.Errorf("Invalid KubeProxyMode %v. Allowed modes are %v and %v", o.KubernetesConfig.ProxyMode, KubeProxyModeIpTables, KubeProxyModeIPVS)
+				}
 			}
 		default:
 			return errors.Errorf("OrchestratorProfile has unknown orchestrator: %s", o.OrchestratorType)
