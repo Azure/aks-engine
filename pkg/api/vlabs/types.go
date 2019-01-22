@@ -267,7 +267,7 @@ type KubeProxyMode string
 
 // We currently support ipvs and iptables
 const (
-	KubeProxyModeIpTables KubeProxyMode = "iptables"
+	KubeProxyModeIPTables KubeProxyMode = "iptables"
 	KubeProxyModeIPVS     KubeProxyMode = "ipvs"
 )
 
