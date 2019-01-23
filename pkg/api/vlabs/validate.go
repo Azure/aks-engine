@@ -1039,10 +1039,10 @@ func (k *KubernetesConfig) Validate(k8sVersion string, hasWindows bool) error {
 
 	if k.DNSServiceIP != "" || k.ServiceCidr != "" {
 		if k.DNSServiceIP == "" {
-			return errors.New("OrchestratorProfile.KubernetesConfig.ServiceCidr must be specified when DNSServiceIP is")
+			return errors.New("OrchestratorProfile.KubernetesConfig.DNSServiceIP must be specified when ServiceCidr is")
 		}
 		if k.ServiceCidr == "" {
-			return errors.New("OrchestratorProfile.KubernetesConfig.DNSServiceIP must be specified when ServiceCidr is")
+			return errors.New("OrchestratorProfile.KubernetesConfig.ServiceCidr must be specified when DNSServiceIP is")
 		}
 
 		dnsIP := net.ParseIP(k.DNSServiceIP)
