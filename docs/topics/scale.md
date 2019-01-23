@@ -1,12 +1,10 @@
 # Scaling Kubernetes Clusters
 
-## Install Pre-requisites
+## Prerequisites
 
-All the commands in this guide require both the Azure CLI and `aks-engine`. Follow the [installation instructions to download aks-engine before continuing](../aksengine.md#install-aks-engine) or [compile from source](../aksengine.md#build-from-source).
+All the commands in this guide require both the Azure CLI and `aks-engine`. Follow the [quickstart guide](../tutorials/quickstart.md) before continuing.
 
-For installation instructions see [the Azure CLI GitHub repository](https://github.com/Azure/azure-cli#installation) for the latest release.
-
-This guide assumes you already have deployed a cluster using acs engine. For more details on how to do that see [deploy](./deploy.md).
+This guide assumes you already have deployed a cluster using aks-engine. For more details on how to do that see [deploy](../tutorials/deploy.md).
 
 ## Scale
 
