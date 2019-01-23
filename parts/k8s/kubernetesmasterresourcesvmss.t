@@ -570,7 +570,6 @@
             {{if UseAksExtension}}
             ,{
               "name": "[concat(variables('masterVMNamePrefix'), 'vmss-computeAksLinuxBilling')]",
-              "location": "[variables('location')]",
               "properties": {
                 "publisher": "Microsoft.AKS",
                 "type": "Compute.AKS-Engine.Linux.Billing",
