@@ -1369,6 +1369,31 @@ func TestSetCertDefaultsVMSS(t *testing.T) {
 	}
 }
 
+func TestProxyModeDefaults(t *testing.T) {
+	// Test that default is what we expect
+	mockCS := getMockBaseContainerService("1.10.12")
+	properties := mockCS.Properties
+	properties.OrchestratorProfile.OrchestratorType = "Kubernetes"
+	properties.MasterProfile.Count = 1
+	mockCS.setOrchestratorDefaults(true)
+
+	if properties.OrchestratorProfile.KubernetesConfig.ProxyMode != DefaultKubeProxyMode {
+		t.Fatalf("ProxyMode string not the expected default value, got %s, expected %s", properties.OrchestratorProfile.KubernetesConfig.ProxyMode, DefaultKubeProxyMode)
+	}
+
+	// Test that default assignment flow doesn't overwrite a user-provided config
+	mockCS = getMockBaseContainerService("1.10.12")
+	properties = mockCS.Properties
+	properties.OrchestratorProfile.OrchestratorType = "Kubernetes"
+	properties.OrchestratorProfile.KubernetesConfig.ProxyMode = KubeProxyModeIPVS
+	properties.MasterProfile.Count = 1
+	mockCS.setOrchestratorDefaults(true)
+
+	if properties.OrchestratorProfile.KubernetesConfig.ProxyMode != KubeProxyModeIPVS {
+		t.Fatalf("ProxyMode string not the expected default value, got %s, expected %s", properties.OrchestratorProfile.KubernetesConfig.ProxyMode, KubeProxyModeIPVS)
+	}
+}
+
 func getMockBaseContainerService(orchestratorVersion string) ContainerService {
 	mockAPIProperties := getMockAPIProperties(orchestratorVersion)
 	return ContainerService{

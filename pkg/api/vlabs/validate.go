@@ -1073,6 +1073,10 @@ func (k *KubernetesConfig) Validate(k8sVersion string, hasWindows bool) error {
 		}
 	}
 
+	if k.ProxyMode != "" && k.ProxyMode != KubeProxyModeIPTables && k.ProxyMode != KubeProxyModeIPVS {
+		return errors.Errorf("Invalid KubeProxyMode %v. Allowed modes are %v and %v", k.ProxyMode, KubeProxyModeIPTables, KubeProxyModeIPVS)
+	}
+
 	// Validate that we have a valid etcd version
 	if e := validateEtcdVersion(k.EtcdVersion); e != nil {
 		return e

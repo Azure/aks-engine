@@ -308,6 +308,17 @@ type KubernetesConfigDeprecated struct {
 	CtrlMgrRouteReconciliationPeriod string `json:"ctrlMgrRouteReconciliationPeriod,omitempty"`
 }
 
+// KubeProxyMode is for iptables and ipvs (and future others)
+type KubeProxyMode string
+
+// We currently support ipvs and iptables
+const (
+	// KubeProxyModeIPTables is used to set the kube-proxy to iptables mode
+	KubeProxyModeIPTables KubeProxyMode = "iptables"
+	// KubeProxyModeIPVS is used to set the kube-proxy to ipvs mode
+	KubeProxyModeIPVS KubeProxyMode = "ipvs"
+)
+
 // KubernetesConfig contains the Kubernetes config structure, containing
 // Kubernetes specific configuration
 type KubernetesConfig struct {
@@ -370,6 +381,7 @@ type KubernetesConfig struct {
 	AzureCNIURLWindows               string            `json:"azureCNIURLWindows,omitempty"`
 	KeyVaultSku                      string            `json:"keyVaultSku,omitempty"`
 	MaximumLoadBalancerRuleCount     int               `json:"maximumLoadBalancerRuleCount,omitempty"`
+	ProxyMode                        KubeProxyMode     `json:"kubeProxyMode,omitempty"`
 }
 
 // CustomFile has source as the full absolute source path to a file and dest
