@@ -26,7 +26,7 @@ spec:
         - --kubeconfig=/var/lib/kubelet/kubeconfig
         - --cluster-cidr=<CIDR>
         - --feature-gates=ExperimentalCriticalPodAnnotation=true
-        - --proxy-mode=<KUBE-PROXY-MODE>
+        - --proxy-mode=<kubeProxyMode>
         image: <img>
         imagePullPolicy: IfNotPresent
         name: kube-proxy

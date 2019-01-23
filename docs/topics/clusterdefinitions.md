@@ -67,6 +67,8 @@ To learn more about supported orchestrators and versions, run the orchestrators 
 | azureCNIURLLinux                | no       | Deploy a private build of Azure CNI on Linux nodes. This should be a full path to the .tar.gz |
 | azureCNIURLWindows              | no       | Deploy a private build of Azure CNI on Windows nodes. This should be a full path to the .tar.gz |
 | maximumLoadBalancerRuleCount    | no       | Maximum allowed LoadBalancer Rule Count is the limit enforced by Azure Load balancer. Default is 250 |
+| kubeProxyMode    | no       | kube-proxy --proxy-mode value, either "iptables" or "ipvs". Default is "iptables". See https://kubernetes.io/blog/2018/07/09/ipvs-based-in-cluster-load-balancing-deep-dive/ for further reference. |
+
 
 #### addons
 

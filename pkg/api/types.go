@@ -313,12 +313,11 @@ type KubeProxyMode string
 
 // We currently support ipvs and iptables
 const (
+	// KubeProxyModeIPTables is used to set the kube-proxy to iptables mode
 	KubeProxyModeIPTables KubeProxyMode = "iptables"
-	KubeProxyModeIPVS     KubeProxyMode = "ipvs"
+	// KubeProxyModeIPVS is used to set the kube-proxy to ipvs mode
+	KubeProxyModeIPVS KubeProxyMode = "ipvs"
 )
-
-// DefaultKubeProxyMode is the default KubeProxyMode value
-const DefaultKubeProxyMode KubeProxyMode = KubeProxyModeIPTables
 
 // KubernetesConfig contains the Kubernetes config structure, containing
 // Kubernetes specific configuration
