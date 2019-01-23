@@ -276,7 +276,7 @@
               "protocol": "Tcp",
               "port": 443,
               "intervalInSeconds": 5,
-              "numberOfProbes": "2"
+              "numberOfProbes": 2
             }
           }
         ]
