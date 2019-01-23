@@ -1290,6 +1290,32 @@ func (k *KubernetesConfig) IsRBACEnabled() bool {
 	return false
 }
 
+// UserAssignedIDEnabled checks if the user assigned ID is enabled or not.
+func (k *KubernetesConfig) UserAssignedIDEnabled() bool {
+	return k.UseManagedIdentity && k.UserAssignedID != ""
+}
+
+// UserAssignedClientIDEnabled checks if the user assigned client ID is enabled or not.
+func (k *KubernetesConfig) UserAssignedClientIDEnabled() bool {
+	return k.UseManagedIdentity && k.UserAssignedClientID != ""
+}
+
+// GetUserAssignedID returns the user assigned ID if it is enabled.
+func (k *KubernetesConfig) GetUserAssignedID() string {
+	if k.UserAssignedIDEnabled() {
+		return k.UserAssignedID
+	}
+	return ""
+}
+
+// GetUserAssignedClientID returns the user assigned client ID if it is enabled.
+func (k *KubernetesConfig) GetUserAssignedClientID() string {
+	if k.UserAssignedClientIDEnabled() {
+		return k.UserAssignedClientID
+	}
+	return ""
+}
+
 // IsNSeriesSKU returns true if the agent pool contains an N-series (NVIDIA GPU) VM
 func (a *AgentPoolProfile) IsNSeriesSKU() bool {
 	return common.IsNvidiaEnabledSKU(a.VMSize)

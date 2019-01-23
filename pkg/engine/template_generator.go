@@ -372,25 +372,13 @@ func (t *TemplateGenerator) getTemplateFuncMap(cs *api.ContainerService) templat
 			return cs.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity
 		},
 		"UserAssignedIDEnabled": func() bool {
-			if cs.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity &&
-				cs.Properties.OrchestratorProfile.KubernetesConfig.UserAssignedID != "" {
-				return true
-			}
-			return false
+			return cs.Properties.OrchestratorProfile.KubernetesConfig.UserAssignedIDEnabled()
 		},
 		"UserAssignedID": func() string {
-			if cs.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity &&
-				cs.Properties.OrchestratorProfile.KubernetesConfig.UserAssignedID != "" {
-				return cs.Properties.OrchestratorProfile.KubernetesConfig.UserAssignedID
-			}
-			return ""
+			return cs.Properties.OrchestratorProfile.KubernetesConfig.GetUserAssignedID()
 		},
 		"UserAssignedClientID": func() string {
-			if cs.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity &&
-				cs.Properties.OrchestratorProfile.KubernetesConfig.UserAssignedClientID != "" {
-				return cs.Properties.OrchestratorProfile.KubernetesConfig.UserAssignedClientID
-			}
-			return ""
+			return cs.Properties.OrchestratorProfile.KubernetesConfig.GetUserAssignedClientID()
 		},
 		"UseAksExtension": func() bool {
 			cloudSpecConfig := cs.GetCloudSpecConfig()
