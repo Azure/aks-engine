@@ -258,7 +258,7 @@ func Test_OrchestratorProfile_Validate(t *testing.T) {
 		test := test
 		t.Run(testName, func(t *testing.T) {
 			t.Parallel()
-			err := test.properties.validateOrchestratorProfile(test.isUpdate)
+			err := test.properties.ValidateOrchestratorProfile(test.isUpdate)
 
 			if test.expectedError == "" && err == nil {
 				return
