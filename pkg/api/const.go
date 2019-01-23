@@ -388,6 +388,8 @@ const (
 	DefaultKubernetesSchedulerEnableProfiling = "false"
 	// DefaultNonMasqueradeCIDR is the default --non-masquerade-cidr value for kubelet
 	DefaultNonMasqueradeCIDR = "0.0.0.0/0"
+	// DefaultKubeProxyMode is the default KubeProxyMode value
+	DefaultKubeProxyMode KubeProxyMode = KubeProxyModeIPTables
 )
 
 const (

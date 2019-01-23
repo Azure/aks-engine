@@ -48,9 +48,9 @@ Use "aks-engine [command] --help" for more information about a command.
 
 [详细的开发，编译，测试过程和步骤可以参考这个视频](https://www.youtube.com/watch?v=lc6UZmqxQMs)
 
-# 本地下载并编译ACS引擎
+# 本地下载并编译AKS引擎
 
-ACS引擎具有跨平台特性，可以在windows，OS X和Linux上运行。以下是对应不同平台的安装步骤：
+AKS引擎具有跨平台特性，可以在windows，OS X和Linux上运行。以下是对应不同平台的安装步骤：
 
 ## Windows
 
@@ -66,13 +66,13 @@ ACS引擎具有跨平台特性，可以在windows，OS X和Linux上运行。以�
   2. 执行命令：`rundll32 sysdm.cpl,EditEnvironmentVariables`打开系统环境变量设置对话框
   3. 添加`c:\go\bin`到PATH环境变量
   4. 点击“新建”按钮并新建GOPATH环境变量，设置缺省值为`c:\gopath`
-2. 编译ACS引擎:
+2. 编译AKS引擎:
   1. 使用Windows + R组合键打开运行窗口
   2. 运行`cmd`命令打开命令行窗口
   3. 运行命令mkdir %GOPATH%
   4. cd %GOPATH%
-  5. 运行`go get github.com/Azure/aks-engine`命令获取ACS引擎在github上的最新代码
-  6. 运行`go get all`命令安装ACS引擎需要的依赖组件
+  5. 运行`go get github.com/Azure/aks-engine`命令获取AKS引擎在github上的最新代码
+  6. 运行`go get all`命令安装AKS引擎需要的依赖组件
   7. `cd %GOPATH%\src\github.com\Azure\aks-engine`
   8. 运行`go build`编译项目
 3. 运行`aks-engine`命令，如果能看到命令参数提示就说明已经正确编译成功了。
@@ -92,9 +92,9 @@ ACS引擎具有跨平台特性，可以在windows，OS X和Linux上运行。以�
   export GOPATH=$HOME/gopath
   ```
   3. `source $HOME/.sh_profile`使配置生效。
-2. 编译ACS引擎:
-  1. 运行`go get github.com/Azure/aks-engine`命令获取ACS引擎在github上的最新代码。
-  2. 运行`go get all`命令安装ACS引擎需要的依赖组件
+2. 编译AKS引擎:
+  1. 运行`go get github.com/Azure/aks-engine`命令获取AKS引擎在github上的最新代码。
+  2. 运行`go get all`命令安装AKS引擎需要的依赖组件
   3. `cd $GOPATH/src/github.com/Azure/aks-engine`
   4. `go build`编译项目
 3. 运行`aks-engine`命令，如果能看到命令参数提示就说明已经正确编译成功了。
@@ -117,9 +117,9 @@ ACS引擎具有跨平台特性，可以在windows，OS X和Linux上运行。以�
   export GOPATH=$HOME/gopath
   ```
   3. 运行命令`source $HOME/.profile`使配置生效。
-2. 编译ACS引擎:
-  1. 运行命令`go get github.com/Azure/aks-engine`获取ACS引擎在github上的最新代码。
-  2. 运行`go get all`命令安装ACS引擎需要的依赖组件
+2. 编译AKS引擎:
+  1. 运行命令`go get github.com/Azure/aks-engine`获取AKS引擎在github上的最新代码。
+  2. 运行`go get all`命令安装AKS引擎需要的依赖组件
   3. `cd $GOPATH/src/github.com/Azure/aks-engine`
   4. 运行`go build`命令编译项目
 3. 运行`aks-engine`命令，如果能看到命令参数提示就说明已经正确编译成功了。
@@ -127,7 +127,7 @@ ACS引擎具有跨平台特性，可以在windows，OS X和Linux上运行。以�
 
 # 生成模板
 
-ACS引擎使用json格式的[集群定义文件](clusterdefinition.md)作为输入参数，生成3个或者多个类似如下的模板：
+AKS引擎使用json格式的[集群定义文件](../topics/clusterdefinitions.zh-CN.md)作为输入参数，生成3个或者多个类似如下的模板：
 
 1. **apimodel.json** - 集群配置文件
 2. **azuredeploy.json** - 核心的ARM (Azure Resource Model)模板，用来部署Docker集群
