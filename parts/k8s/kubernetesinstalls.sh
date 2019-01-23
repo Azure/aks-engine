@@ -73,12 +73,15 @@ installMoby() {
     if [ $? -eq 0 ]; then
         echo "dockerd is already installed, skipping download"
     else
-        retrycmd_if_failure_no_stats 120 5 25 curl https://packages.microsoft.com/config/ubuntu/16.04/prod.list > /tmp/microsoft-prod.list || exit $ERR_MOBY_APT_LIST_TIMEOUT
-        retrycmd_if_failure 10 5 10 cp /tmp/microsoft-prod.list /etc/apt/sources.list.d/ || exit $ERR_MOBY_APT_LIST_TIMEOUT
-        retrycmd_if_failure_no_stats 120 5 25 curl https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > /tmp/microsoft.gpg || exit $ERR_MS_GPG_KEY_DOWNLOAD_TIMEOUT
-        retrycmd_if_failure 10 5 10 cp /tmp/microsoft.gpg /etc/apt/trusted.gpg.d/ || exit $ERR_MS_GPG_KEY_DOWNLOAD_TIMEOUT
-        apt_get_update || exit $ERR_APT_UPDATE_TIMEOUT
-        apt_get_install 20 30 120 moby-engine=3.0.1 moby-cli=3.0.1 || exit $ERR_MOBY_INSTALL_TIMEOUT
+        mkdir -p /tmp/moby
+        mkdir -p /tmp/moby-cli
+        retrycmd_if_failure_no_stats 120 5 25 curl "https://upstreamci.blob.core.windows.net/moby-amd64/75/artifacts.tgz?sp=r&st=2019-01-22T16:34:45Z&se=2019-02-02T00:34:45Z&spr=https&sv=2018-03-28&sig=30JKpVjqTDyRGC%2BWSvSodAI19KBs%2Fthf9WUNl8e4q0Q%3D&sr=b" > /tmp/moby/artifacts.tgz || exit $ERR_MOBY_APT_LIST_TIMEOUT
+        retrycmd_if_failure_no_stats 120 5 25 curl "https://upstreamci.blob.core.windows.net/moby-cli-amd64/9/artifacts.tgz?sp=r&st=2019-01-22T16:36:31Z&se=2019-02-02T00:36:31Z&spr=https&sv=2018-03-28&sig=szQEGN6HfgbVd1p7h388p5MnnCSdyhm%2BpyQ9wjfGItU%3D&sr=b" > /tmp/moby-cli/artifacts.tgz || exit $ERR_MOBY_APT_LIST_TIMEOUT
+        retrycmd_if_failure_no_stats 120 5 25 tar -xvzf /tmp/moby/artifacts.tgz -C /tmp/moby/
+        retrycmd_if_failure_no_stats 120 5 25 tar -xvzf /tmp/moby-cli/artifacts.tgz -C /tmp/moby-cli/
+        retrycmd_if_failure_no_stats 120 5 25 dpkg -i /tmp/moby/bundles/debbuild/ubuntu-xenial/moby-engine_3.0.03_amd64.deb
+        retrycmd_if_failure_no_stats 120 5 25 dpkg -i /tmp/moby-cli/bundles/debbuild/ubuntu-xenial/moby-cli_3.0.3_amd64.deb
+        retrycmd_if_failure_no_stats 120 5 25 apt-get install -f 
     fi
 }
 
