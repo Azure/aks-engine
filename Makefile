@@ -19,7 +19,7 @@ BINDIR          := $(CURDIR)/bin
 PROJECT         := aks-engine
 VERSION         ?= $(shell git rev-parse HEAD)
 VERSION_SHORT   ?= $(shell git rev-parse --short HEAD)
-GITTAG          := $(shell git describe --exact-match --tags $(shell git log -n1 --pretty='%h') 2> /dev/null)
+GITTAG          := $(shell git describe --tags --abbrev $(shell git log -n1 --pretty='%h') 2> /dev/null)
 ifeq ($(GITTAG),)
 GITTAG := $(VERSION_SHORT)
 endif

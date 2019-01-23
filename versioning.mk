@@ -1,6 +1,6 @@
 GIT_COMMIT = $(shell git rev-parse HEAD)
 GIT_SHA    = $(shell git rev-parse --short HEAD)
-GIT_TAG    = $(shell git describe --tags --abbrev=0 --exact-match 2>/dev/null || echo "canary")
+GIT_TAG    = $(shell git describe --tags --dirty --broken 2>/dev/null || echo "canary")
 GIT_DIRTY  = $(shell test -n "`git status --porcelain`" && echo "dirty" || echo "clean")
 
 LDFLAGS += -X github.com/Azure/aks-engine/cmd.BuildSHA=${GIT_SHA}
