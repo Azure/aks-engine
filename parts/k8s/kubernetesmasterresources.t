@@ -859,7 +859,7 @@
         },
         "osProfile": {
           "adminUsername": "[parameters('linuxAdminUsername')]",
-          "computername": "[concat(variables('masterVMNamePrefix'), copyIndex(variables('masterOffset')))]",
+          "computerName": "[concat(variables('masterVMNamePrefix'), copyIndex(variables('masterOffset')))]",
           {{GetKubernetesMasterCustomData .}}
           "linuxConfiguration": {
             "disablePasswordAuthentication": true,
