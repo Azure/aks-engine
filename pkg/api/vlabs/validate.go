@@ -292,9 +292,6 @@ func (a *Properties) validateOrchestratorProfile(isUpdate bool) error {
 				if o.KubernetesConfig.MaximumLoadBalancerRuleCount < 0 {
 					return errors.New("maximumLoadBalancerRuleCount shouldn't be less than 0")
 				}
-				if "" != o.KubernetesConfig.ProxyMode && KubeProxyModeIPTables != o.KubernetesConfig.ProxyMode && KubeProxyModeIPVS != o.KubernetesConfig.ProxyMode {
-					return errors.Errorf("Invalid KubeProxyMode %v. Allowed modes are %v and %v", o.KubernetesConfig.ProxyMode, KubeProxyModeIPTables, KubeProxyModeIPVS)
-				}
 			}
 		default:
 			return errors.Errorf("OrchestratorProfile has unknown orchestrator: %s", o.OrchestratorType)
@@ -1074,6 +1071,10 @@ func (k *KubernetesConfig) Validate(k8sVersion string, hasWindows bool) error {
 		if firstServiceIP.Equal(dnsIP) {
 			return errors.Errorf("OrchestratorProfile.KubernetesConfig.DNSServiceIP '%s' cannot be the first IP of ServiceCidr '%s'", k.DNSServiceIP, k.ServiceCidr)
 		}
+	}
+
+	if k.ProxyMode != "" && k.ProxyMode != KubeProxyModeIPTables && k.ProxyMode != KubeProxyModeIPVS {
+		return errors.Errorf("Invalid KubeProxyMode %v. Allowed modes are %v and %v", k.ProxyMode, KubeProxyModeIPTables, KubeProxyModeIPVS)
 	}
 
 	// Validate that we have a valid etcd version

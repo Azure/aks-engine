@@ -6,7 +6,7 @@
       "orchestratorRelease": "1.7",
       "kubernetesConfig": {
         "useManagedIdentity": true,
-				"kubeProxyMode" : "ipvs"
+        "kubeProxyMode" : "ipvs"
       }
     },
     "masterProfile": {

@@ -317,6 +317,9 @@ const (
 	KubeProxyModeIPVS     KubeProxyMode = "ipvs"
 )
 
+// DefaultKubeProxyMode is the default KubeProxyMode value
+const DefaultKubeProxyMode KubeProxyMode = KubeProxyModeIPTables
+
 // KubernetesConfig contains the Kubernetes config structure, containing
 // Kubernetes specific configuration
 type KubernetesConfig struct {
