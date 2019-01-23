@@ -154,6 +154,14 @@ var (
 		ImageVersion:   "2019.01.11",
 	}
 
+	// DefaultACC1604OSImageConfig is the ACC image based on Ubuntu 16.04.
+	DefaultACC1604OSImageConfig = AzureOSImageConfig{
+		ImageOffer:     "confidential-compute-preview",
+		ImageSku:       "16.04-LTS",
+		ImagePublisher: "Canonical",
+		ImageVersion:   "latest",
+	}
+
 	//AzureCloudSpec is the default configurations for global azure.
 	AzureCloudSpec = AzureEnvironmentSpecConfig{
 		CloudName: AzurePublicCloud,
@@ -173,6 +181,7 @@ var (
 			CoreOS:          DefaultCoreOSImageConfig,
 			AKS:             DefaultAKSOSImageConfig,
 			AKSDockerEngine: DefaultAKSDockerEngineOSImageConfig,
+			ACC1604:         DefaultACC1604OSImageConfig,
 		},
 	}
 

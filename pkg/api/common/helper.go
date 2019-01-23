@@ -217,3 +217,12 @@ func GetNSeriesVMCasesForTesting() []struct {
 
 	return cases
 }
+
+// IsSgxEnabledSKU determines if an VM SKU has SGX driver support
+func IsSgxEnabledSKU(vmSize string) bool {
+	switch vmSize {
+	case "Standard_DC2s", "Standard_DC4s":
+		return true
+	}
+	return false
+}
