@@ -902,6 +902,9 @@ func (t *TemplateGenerator) getTemplateFuncMap(cs *api.ContainerService) templat
 		"IsNSeriesSKU": func(profile *api.AgentPoolProfile) bool {
 			return common.IsNvidiaEnabledSKU(profile.VMSize)
 		},
+		"IsCSeriesSKU": func(profile *api.AgentPoolProfile) bool {
+			return common.IsSgxEnabledSKU(profile.VMSize)
+		},
 		"UseSinglePlacementGroup": func(profile *api.AgentPoolProfile) bool {
 			return *profile.SinglePlacementGroup
 		},
