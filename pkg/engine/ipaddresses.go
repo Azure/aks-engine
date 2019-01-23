@@ -10,15 +10,6 @@ import (
 )
 
 func CreatePublicIPAddress(cs *api.ContainerService) PublicIPAddressARM {
-
-	allocMethod := network.Static
-
-	if cs.Properties.MasterProfile.IsVirtualMachineScaleSets() {
-		if cs.Properties.OrchestratorProfile.KubernetesConfig.LoadBalancerSku != "Standard" {
-			allocMethod = network.Dynamic
-		}
-	}
-
 	return PublicIPAddressARM{
 		ARMResource: ARMResource{
 			APIVersion: "[variables('apiVersionNetwork')]",
@@ -30,7 +21,7 @@ func CreatePublicIPAddress(cs *api.ContainerService) PublicIPAddressARM {
 				DNSSettings: &network.PublicIPAddressDNSSettings{
 					DomainNameLabel: to.StringPtr("[variables('masterFqdnPrefix')]"),
 				},
-				PublicIPAllocationMethod: allocMethod,
+				PublicIPAllocationMethod: network.Static,
 			},
 			Sku: &network.PublicIPAddressSku{
 				Name: "[variables('loadBalancerSku')]",
