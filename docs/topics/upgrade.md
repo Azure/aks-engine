@@ -10,6 +10,8 @@ This guide assumes you already have deployed a cluster using `aks-engine`. For m
 
 This document provides guidance on how to upgrade the Kubernetes version for an existing `aks-engine` cluster and recommendations for adopting `aks-engine upgrade` as a production quality tool.
 
+<a name="pre-requirements"></a>
+
 ### Know before you go
 
 In order to ensure that your `aks-engine upgrade` operation runs smoothly, there are a few things you should be aware of before getting started.
@@ -43,10 +45,10 @@ During the upgrade, *aks-engine* successively visits virtual machines that const
  - create new VM and install desired orchestrator version
  - add the new VM to the cluster
 
-
 ### Simple steps to run upgrade
 
-Once the desired Kubernetes version is finalized, call the *upgrade* command:
+Once you have read all the [prerequirements](#pre-requirements), run `aks-engine upgrade` with the appropriate arguments:
+
 ```bash
 ./bin/aks-engine upgrade \
   --subscription-id <subscription id> \
@@ -70,13 +72,6 @@ For example,
   --client-secret xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
 ```
 
-
-
 ### What can go wrong
-
-Definitive guidance to aid customers who want to use the above tooling to their advantage
-what can/can't they do to their Azure IaaS resources
-what can go wrong
-
 
 By its nature, the upgrade operation is long running and potentially could fail for various reasons, such as temporary lack of resources, etc. In this case, rerun the command. The *upgrade* command is idempotent, and will pick up execution from the point it failed on.
