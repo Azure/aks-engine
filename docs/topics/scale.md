@@ -8,7 +8,7 @@ This guide assumes you already have deployed a cluster using aks-engine. For mor
 
 ## Scale
 
-After a cluster has been deployed using acs engine the cluster can be interacted further by using the scale command. The scale command can add more nodes to an existing node pool or remove them. Nodes will always be added or removed from the end of the agent pool. Nodes will be cordoned and drained before deletion.
+The `aks-engine scale` command can increase or decrease the number of nodes in an existing agent pool in an `aks-engine` Kubernetes cluster. Nodes will always be added or removed from the end of the agent pool. Nodes will be cordoned and drained before deletion.
 
 This guide will assume you have a cluster deployed and the output for the deployed cluster is stored at _output/mycluster. It will also assume there is a node pool named "agentpool1" in your cluster. AKS Engine will default to storing the output at ./_output/dns-prefix from where the aks-engine command was ran.
 

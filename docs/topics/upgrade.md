@@ -74,4 +74,4 @@ For example,
 
 ### What can go wrong
 
-By its nature, the upgrade operation is long running and potentially could fail for various reasons, such as temporary lack of resources, etc. In this case, rerun the command. The *upgrade* command is idempotent, and will pick up execution from the point it failed on.
+By its nature, the upgrade operation is long running and potentially could fail for various reasons, such as temporary lack of resources, etc. In this case, rerun the command. The `upgrade` command is idempotent, and will pick up execution from the point it failed on.
