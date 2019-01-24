@@ -24,15 +24,15 @@ In order to ensure that your `aks-engine upgrade` operation runs smoothly, there
 
     To get the list of all available Kubernetes versions and upgrades, run the `orchestrators` command and specify Kubernetes orchestrator type:
 
-        ```bash
-        ./bin/aks-engine orchestrators --orchestrator Kubernetes
-        ```
+    ```bash
+    ./bin/aks-engine orchestrators --orchestrator Kubernetes
+    ```
 
     To get the versions of Kubernetes that your particular cluster version is upgradable to, provide its current Kubernetes version in the `version` arg:
 
-        ```bash
-        ./bin/aks-engine orchestrators --orchestrator Kubernetes --version 1.11.5
-        ```
+    ```bash
+    ./bin/aks-engine orchestrators --orchestrator Kubernetes --version 1.11.5
+    ```
 
 4) If using `aks-engine upgrade` in production, it is recommended to stage an upgrade test on an cluster that was built to the same specifications (built with the same cluster configuration + `aks-engine` version) as your production cluster before performing the upgrade, especially if the cluster configuration is "interesting", or in other words differs significantly from defaults. The reason for this is that `aks-engine` supports many different cluster configurations and the extent of E2E testing that the AKS-Engine team runs cannot practically cover every single configuration out there. Therefore, it is recommended that you make sure that your specific cluster configuration works with the existing upgrade implementation before starting this long-running operation.
 
