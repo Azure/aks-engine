@@ -134,7 +134,6 @@
             {{if UseAksExtension}}
             ,{
               "name": "[concat(variables('{{.Name}}VMNamePrefix'), '-computeAksWindowsBilling')]",
-              "location": "[variables('location')]",
               "properties": {
                 "publisher": "Microsoft.AKS",
                 "type": "Compute.AKS-Engine.Windows.Billing",
