@@ -230,6 +230,9 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpdate bool) {
 		if a.OrchestratorProfile.KubernetesConfig.MaximumLoadBalancerRuleCount == 0 {
 			a.OrchestratorProfile.KubernetesConfig.MaximumLoadBalancerRuleCount = DefaultMaximumLoadBalancerRuleCount
 		}
+		if a.OrchestratorProfile.KubernetesConfig.ProxyMode == "" {
+			a.OrchestratorProfile.KubernetesConfig.ProxyMode = DefaultKubeProxyMode
+		}
 
 		// Configure addons
 		cs.setAddonsConfig(isUpdate)
@@ -531,9 +534,14 @@ func (p *Properties) setDefaultCerts() (bool, []net.IP, error) {
 	}
 
 	ips := []net.IP{firstMasterIP, localhostIP}
-	// Add the Internal Loadbalancer IP which is always at at p known offset from the firstMasterIP
-	ips = append(ips, net.IP{firstMasterIP[0], firstMasterIP[1], firstMasterIP[2], firstMasterIP[3] + byte(DefaultInternalLbStaticIPOffset)})
+
 	// Include the Internal load balancer as well
+	if p.MasterProfile.IsVirtualMachineScaleSets() {
+		ips = append(ips, net.IP{firstMasterIP[0], firstMasterIP[1], byte(255), byte(DefaultInternalLbStaticIPOffset)})
+	} else {
+		// Add the Internal Loadbalancer IP which is always at p known offset from the firstMasterIP
+		ips = append(ips, net.IP{firstMasterIP[0], firstMasterIP[1], firstMasterIP[2], firstMasterIP[3] + byte(DefaultInternalLbStaticIPOffset)})
+	}
 
 	var offsetMultiplier int
 	if p.MasterProfile.IsVirtualMachineScaleSets() {

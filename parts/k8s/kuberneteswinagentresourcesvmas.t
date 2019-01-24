@@ -182,7 +182,7 @@
           ]
         },
         "osProfile": {
-          "computername": "[concat(variables('{{.Name}}VMNamePrefix'), copyIndex(variables('{{.Name}}Offset')))]",
+          "computerName": "[concat(variables('{{.Name}}VMNamePrefix'), copyIndex(variables('{{.Name}}Offset')))]",
           {{GetKubernetesWindowsAgentCustomData .}}
           "adminUsername": "[parameters('windowsAdminUsername')]",
           "adminPassword": "[parameters('windowsAdminPassword')]"
@@ -260,7 +260,7 @@
     {{if UseAksExtension}}
     ,{
       "type": "Microsoft.Compute/virtualMachines/extensions",
-      "name": "[concat(variables('{{.Name}}VMNamePrefix'), copyIndex(variables('{{.Name}}Offset')), '/computeAksLinuxBilling')]",
+      "name": "[concat(variables('{{.Name}}VMNamePrefix'), copyIndex(variables('{{.Name}}Offset')), '/computeAksWindowsBilling')]",
       "apiVersion": "[variables('apiVersionCompute')]",
       "copy": {
         "count": "[sub(variables('{{.Name}}Count'), variables('{{.Name}}Offset'))]",

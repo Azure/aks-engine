@@ -692,58 +692,59 @@ func convertDcosConfigToVLabs(api *DcosConfig, vl *vlabs.DcosConfig) {
 	}
 }
 
-func convertKubernetesConfigToVLabs(api *KubernetesConfig, vlabs *vlabs.KubernetesConfig) {
-	vlabs.KubernetesImageBase = api.KubernetesImageBase
-	vlabs.ClusterSubnet = api.ClusterSubnet
-	vlabs.DNSServiceIP = api.DNSServiceIP
-	vlabs.ServiceCidr = api.ServiceCIDR
-	vlabs.NetworkPolicy = api.NetworkPolicy
-	vlabs.NetworkPlugin = api.NetworkPlugin
-	vlabs.MaxPods = api.MaxPods
-	vlabs.DockerBridgeSubnet = api.DockerBridgeSubnet
-	vlabs.CloudProviderBackoff = api.CloudProviderBackoff
-	vlabs.CloudProviderBackoffDuration = api.CloudProviderBackoffDuration
-	vlabs.CloudProviderBackoffExponent = api.CloudProviderBackoffExponent
-	vlabs.CloudProviderBackoffJitter = api.CloudProviderBackoffJitter
-	vlabs.CloudProviderBackoffRetries = api.CloudProviderBackoffRetries
-	vlabs.CloudProviderRateLimit = api.CloudProviderRateLimit
-	vlabs.CloudProviderRateLimitBucket = api.CloudProviderRateLimitBucket
-	vlabs.CloudProviderRateLimitQPS = api.CloudProviderRateLimitQPS
-	vlabs.UseManagedIdentity = api.UseManagedIdentity
-	vlabs.UserAssignedID = api.UserAssignedID
-	vlabs.UserAssignedClientID = api.UserAssignedClientID
-	vlabs.CustomHyperkubeImage = api.CustomHyperkubeImage
-	vlabs.CustomCcmImage = api.CustomCcmImage
-	vlabs.UseCloudControllerManager = api.UseCloudControllerManager
-	vlabs.CustomWindowsPackageURL = api.CustomWindowsPackageURL
-	vlabs.WindowsNodeBinariesURL = api.WindowsNodeBinariesURL
-	vlabs.UseInstanceMetadata = api.UseInstanceMetadata
-	vlabs.LoadBalancerSku = api.LoadBalancerSku
-	vlabs.ExcludeMasterFromStandardLB = api.ExcludeMasterFromStandardLB
-	vlabs.EnableRbac = api.EnableRbac
-	vlabs.EnableSecureKubelet = api.EnableSecureKubelet
-	vlabs.EnableAggregatedAPIs = api.EnableAggregatedAPIs
-	vlabs.EnableDataEncryptionAtRest = api.EnableDataEncryptionAtRest
-	vlabs.EnableEncryptionWithExternalKms = api.EnableEncryptionWithExternalKms
-	vlabs.EnablePodSecurityPolicy = api.EnablePodSecurityPolicy
-	vlabs.GCHighThreshold = api.GCHighThreshold
-	vlabs.GCLowThreshold = api.GCLowThreshold
-	vlabs.EtcdVersion = api.EtcdVersion
-	vlabs.EtcdDiskSizeGB = api.EtcdDiskSizeGB
-	vlabs.EtcdEncryptionKey = api.EtcdEncryptionKey
-	vlabs.AzureCNIVersion = api.AzureCNIVersion
-	vlabs.AzureCNIURLLinux = api.AzureCNIURLLinux
-	vlabs.AzureCNIURLWindows = api.AzureCNIURLWindows
-	vlabs.KeyVaultSku = api.KeyVaultSku
-	vlabs.MaximumLoadBalancerRuleCount = api.MaximumLoadBalancerRuleCount
-	convertAddonsToVlabs(api, vlabs)
-	convertKubeletConfigToVlabs(api, vlabs)
-	convertControllerManagerConfigToVlabs(api, vlabs)
-	convertCloudControllerManagerConfigToVlabs(api, vlabs)
-	convertAPIServerConfigToVlabs(api, vlabs)
-	convertSchedulerConfigToVlabs(api, vlabs)
-	convertPrivateClusterToVlabs(api, vlabs)
-	convertPodSecurityPolicyConfigToVlabs(api, vlabs)
+func convertKubernetesConfigToVLabs(apiCfg *KubernetesConfig, vlabsCfg *vlabs.KubernetesConfig) {
+	vlabsCfg.KubernetesImageBase = apiCfg.KubernetesImageBase
+	vlabsCfg.ClusterSubnet = apiCfg.ClusterSubnet
+	vlabsCfg.DNSServiceIP = apiCfg.DNSServiceIP
+	vlabsCfg.ServiceCidr = apiCfg.ServiceCIDR
+	vlabsCfg.NetworkPolicy = apiCfg.NetworkPolicy
+	vlabsCfg.NetworkPlugin = apiCfg.NetworkPlugin
+	vlabsCfg.MaxPods = apiCfg.MaxPods
+	vlabsCfg.DockerBridgeSubnet = apiCfg.DockerBridgeSubnet
+	vlabsCfg.CloudProviderBackoff = apiCfg.CloudProviderBackoff
+	vlabsCfg.CloudProviderBackoffDuration = apiCfg.CloudProviderBackoffDuration
+	vlabsCfg.CloudProviderBackoffExponent = apiCfg.CloudProviderBackoffExponent
+	vlabsCfg.CloudProviderBackoffJitter = apiCfg.CloudProviderBackoffJitter
+	vlabsCfg.CloudProviderBackoffRetries = apiCfg.CloudProviderBackoffRetries
+	vlabsCfg.CloudProviderRateLimit = apiCfg.CloudProviderRateLimit
+	vlabsCfg.CloudProviderRateLimitBucket = apiCfg.CloudProviderRateLimitBucket
+	vlabsCfg.CloudProviderRateLimitQPS = apiCfg.CloudProviderRateLimitQPS
+	vlabsCfg.UseManagedIdentity = apiCfg.UseManagedIdentity
+	vlabsCfg.UserAssignedID = apiCfg.UserAssignedID
+	vlabsCfg.UserAssignedClientID = apiCfg.UserAssignedClientID
+	vlabsCfg.CustomHyperkubeImage = apiCfg.CustomHyperkubeImage
+	vlabsCfg.CustomCcmImage = apiCfg.CustomCcmImage
+	vlabsCfg.UseCloudControllerManager = apiCfg.UseCloudControllerManager
+	vlabsCfg.CustomWindowsPackageURL = apiCfg.CustomWindowsPackageURL
+	vlabsCfg.WindowsNodeBinariesURL = apiCfg.WindowsNodeBinariesURL
+	vlabsCfg.UseInstanceMetadata = apiCfg.UseInstanceMetadata
+	vlabsCfg.LoadBalancerSku = apiCfg.LoadBalancerSku
+	vlabsCfg.ExcludeMasterFromStandardLB = apiCfg.ExcludeMasterFromStandardLB
+	vlabsCfg.EnableRbac = apiCfg.EnableRbac
+	vlabsCfg.EnableSecureKubelet = apiCfg.EnableSecureKubelet
+	vlabsCfg.EnableAggregatedAPIs = apiCfg.EnableAggregatedAPIs
+	vlabsCfg.EnableDataEncryptionAtRest = apiCfg.EnableDataEncryptionAtRest
+	vlabsCfg.EnableEncryptionWithExternalKms = apiCfg.EnableEncryptionWithExternalKms
+	vlabsCfg.EnablePodSecurityPolicy = apiCfg.EnablePodSecurityPolicy
+	vlabsCfg.GCHighThreshold = apiCfg.GCHighThreshold
+	vlabsCfg.GCLowThreshold = apiCfg.GCLowThreshold
+	vlabsCfg.EtcdVersion = apiCfg.EtcdVersion
+	vlabsCfg.EtcdDiskSizeGB = apiCfg.EtcdDiskSizeGB
+	vlabsCfg.EtcdEncryptionKey = apiCfg.EtcdEncryptionKey
+	vlabsCfg.AzureCNIVersion = apiCfg.AzureCNIVersion
+	vlabsCfg.AzureCNIURLLinux = apiCfg.AzureCNIURLLinux
+	vlabsCfg.AzureCNIURLWindows = apiCfg.AzureCNIURLWindows
+	vlabsCfg.KeyVaultSku = apiCfg.KeyVaultSku
+	vlabsCfg.MaximumLoadBalancerRuleCount = apiCfg.MaximumLoadBalancerRuleCount
+	vlabsCfg.ProxyMode = vlabs.KubeProxyMode(apiCfg.ProxyMode)
+	convertAddonsToVlabs(apiCfg, vlabsCfg)
+	convertKubeletConfigToVlabs(apiCfg, vlabsCfg)
+	convertControllerManagerConfigToVlabs(apiCfg, vlabsCfg)
+	convertCloudControllerManagerConfigToVlabs(apiCfg, vlabsCfg)
+	convertAPIServerConfigToVlabs(apiCfg, vlabsCfg)
+	convertSchedulerConfigToVlabs(apiCfg, vlabsCfg)
+	convertPrivateClusterToVlabs(apiCfg, vlabsCfg)
+	convertPodSecurityPolicyConfigToVlabs(apiCfg, vlabsCfg)
 }
 
 func convertKubeletConfigToVlabs(a *KubernetesConfig, v *vlabs.KubernetesConfig) {

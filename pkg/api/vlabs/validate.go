@@ -1039,10 +1039,10 @@ func (k *KubernetesConfig) Validate(k8sVersion string, hasWindows bool) error {
 
 	if k.DNSServiceIP != "" || k.ServiceCidr != "" {
 		if k.DNSServiceIP == "" {
-			return errors.New("OrchestratorProfile.KubernetesConfig.ServiceCidr must be specified when DNSServiceIP is")
+			return errors.New("OrchestratorProfile.KubernetesConfig.DNSServiceIP must be specified when ServiceCidr is")
 		}
 		if k.ServiceCidr == "" {
-			return errors.New("OrchestratorProfile.KubernetesConfig.DNSServiceIP must be specified when ServiceCidr is")
+			return errors.New("OrchestratorProfile.KubernetesConfig.ServiceCidr must be specified when DNSServiceIP is")
 		}
 
 		dnsIP := net.ParseIP(k.DNSServiceIP)
@@ -1071,6 +1071,10 @@ func (k *KubernetesConfig) Validate(k8sVersion string, hasWindows bool) error {
 		if firstServiceIP.Equal(dnsIP) {
 			return errors.Errorf("OrchestratorProfile.KubernetesConfig.DNSServiceIP '%s' cannot be the first IP of ServiceCidr '%s'", k.DNSServiceIP, k.ServiceCidr)
 		}
+	}
+
+	if k.ProxyMode != "" && k.ProxyMode != KubeProxyModeIPTables && k.ProxyMode != KubeProxyModeIPVS {
+		return errors.Errorf("Invalid KubeProxyMode %v. Allowed modes are %v and %v", k.ProxyMode, KubeProxyModeIPTables, KubeProxyModeIPVS)
 	}
 
 	// Validate that we have a valid etcd version

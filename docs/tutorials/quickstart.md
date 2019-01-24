@@ -22,7 +22,7 @@ source <(aks-engine completion)
 
 ## Usage
 
-`aks-engine` reads a JSON [cluster definition](./clusterdefinition.md) and generates a number of files that may be submitted to Azure Resource Manager (ARM). The generated files include:
+`aks-engine` reads a JSON [cluster definition](../topics/clusterdefinitions.md) and generates a number of files that may be submitted to Azure Resource Manager (ARM). The generated files include:
 
 1. **apimodel.json**: is an expanded version of the cluster definition provided to the generate command. All default or computed values will be expanded during the generate phase.
 2. **azuredeploy.json**: represents a complete description of all Azure resources required to fulfill the cluster definition from `apimodel.json`.

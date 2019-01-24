@@ -1246,6 +1246,71 @@ func TestSetCertDefaults(t *testing.T) {
 				Secret:   "bazSecret",
 			},
 			MasterProfile: &MasterProfile{
+				Count:     3,
+				DNSPrefix: "myprefix1",
+				VMSize:    "Standard_DS2_v2",
+			},
+			OrchestratorProfile: &OrchestratorProfile{
+				OrchestratorType:    Kubernetes,
+				OrchestratorVersion: "1.10.2",
+				KubernetesConfig: &KubernetesConfig{
+					NetworkPlugin: "azure",
+				},
+			},
+		},
+	}
+
+	cs.setOrchestratorDefaults(false)
+	cs.Properties.setMasterProfileDefaults(false)
+	result, ips, err := cs.Properties.setDefaultCerts()
+
+	if !result {
+		t.Error("expected setDefaultCerts to return true")
+	}
+
+	if err != nil {
+		t.Errorf("unexpected error thrown while executing setDefaultCerts %s", err.Error())
+	}
+
+	if ips == nil {
+		t.Error("expected setDefaultCerts to create a list of IPs")
+	} else {
+
+		if len(ips) != cs.Properties.MasterProfile.Count+3 {
+			t.Errorf("expected length of IPs from setDefaultCerts %d, actual length %d", cs.Properties.MasterProfile.Count+3, len(ips))
+		}
+
+		firstMasterIP := net.ParseIP(cs.Properties.MasterProfile.FirstConsecutiveStaticIP).To4()
+		offsetMultiplier := 1
+		addr := binary.BigEndian.Uint32(firstMasterIP)
+		expectedNewAddr := getNewAddr(addr, cs.Properties.MasterProfile.Count-1, offsetMultiplier)
+		actualLastIPAddr := binary.BigEndian.Uint32(ips[len(ips)-2])
+		if actualLastIPAddr != expectedNewAddr {
+			expectedLastIP := make(net.IP, 4)
+			binary.BigEndian.PutUint32(expectedLastIP, expectedNewAddr)
+			t.Errorf("expected last IP of master vm from setDefaultCerts %d, actual %d", expectedLastIP, ips[len(ips)-2])
+		}
+
+		if cs.Properties.MasterProfile.Count > 1 {
+			expectedILBIP := net.IP{firstMasterIP[0], firstMasterIP[1], firstMasterIP[2], firstMasterIP[3] + byte(DefaultInternalLbStaticIPOffset)}
+			actualILBIPAddr := binary.BigEndian.Uint32(ips[2])
+			expectedILBIPAddr := binary.BigEndian.Uint32(expectedILBIP)
+
+			if actualILBIPAddr != expectedILBIPAddr {
+				t.Errorf("expected IP of master ILB from setDefaultCerts %d, actual %d", expectedILBIP, ips[2])
+			}
+		}
+	}
+}
+
+func TestSetCertDefaultsVMSS(t *testing.T) {
+	cs := &ContainerService{
+		Properties: &Properties{
+			ServicePrincipalProfile: &ServicePrincipalProfile{
+				ClientID: "barClientID",
+				Secret:   "bazSecret",
+			},
+			MasterProfile: &MasterProfile{
 				Count:               3,
 				DNSPrefix:           "myprefix1",
 				VMSize:              "Standard_DS2_v2",
@@ -1282,12 +1347,7 @@ func TestSetCertDefaults(t *testing.T) {
 		}
 
 		firstMasterIP := net.ParseIP(cs.Properties.MasterProfile.FirstConsecutiveStaticIP).To4()
-		var offsetMultiplier int
-		if cs.Properties.MasterProfile.IsVirtualMachineScaleSets() {
-			offsetMultiplier = cs.Properties.MasterProfile.IPAddressCount
-		} else {
-			offsetMultiplier = 1
-		}
+		offsetMultiplier := cs.Properties.MasterProfile.IPAddressCount
 		addr := binary.BigEndian.Uint32(firstMasterIP)
 		expectedNewAddr := getNewAddr(addr, cs.Properties.MasterProfile.Count-1, offsetMultiplier)
 		actualLastIPAddr := binary.BigEndian.Uint32(ips[len(ips)-2])
@@ -1296,8 +1356,42 @@ func TestSetCertDefaults(t *testing.T) {
 			binary.BigEndian.PutUint32(expectedLastIP, expectedNewAddr)
 			t.Errorf("expected last IP of master vm from setDefaultCerts %d, actual %d", expectedLastIP, ips[len(ips)-2])
 		}
+
+		if cs.Properties.MasterProfile.Count > 1 {
+			expectedILBIP := net.IP{firstMasterIP[0], firstMasterIP[1], byte(255), byte(DefaultInternalLbStaticIPOffset)}
+			actualILBIPAddr := binary.BigEndian.Uint32(ips[2])
+			expectedILBIPAddr := binary.BigEndian.Uint32(expectedILBIP)
+
+			if actualILBIPAddr != expectedILBIPAddr {
+				t.Errorf("expected IP of master ILB from setDefaultCerts %d, actual %d", expectedILBIP, ips[2])
+			}
+		}
+	}
+}
+
+func TestProxyModeDefaults(t *testing.T) {
+	// Test that default is what we expect
+	mockCS := getMockBaseContainerService("1.10.12")
+	properties := mockCS.Properties
+	properties.OrchestratorProfile.OrchestratorType = "Kubernetes"
+	properties.MasterProfile.Count = 1
+	mockCS.setOrchestratorDefaults(true)
+
+	if properties.OrchestratorProfile.KubernetesConfig.ProxyMode != DefaultKubeProxyMode {
+		t.Fatalf("ProxyMode string not the expected default value, got %s, expected %s", properties.OrchestratorProfile.KubernetesConfig.ProxyMode, DefaultKubeProxyMode)
 	}
 
+	// Test that default assignment flow doesn't overwrite a user-provided config
+	mockCS = getMockBaseContainerService("1.10.12")
+	properties = mockCS.Properties
+	properties.OrchestratorProfile.OrchestratorType = "Kubernetes"
+	properties.OrchestratorProfile.KubernetesConfig.ProxyMode = KubeProxyModeIPVS
+	properties.MasterProfile.Count = 1
+	mockCS.setOrchestratorDefaults(true)
+
+	if properties.OrchestratorProfile.KubernetesConfig.ProxyMode != KubeProxyModeIPVS {
+		t.Fatalf("ProxyMode string not the expected default value, got %s, expected %s", properties.OrchestratorProfile.KubernetesConfig.ProxyMode, KubeProxyModeIPVS)
+	}
 }
 
 func getMockBaseContainerService(orchestratorVersion string) ContainerService {

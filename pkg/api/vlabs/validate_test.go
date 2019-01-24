@@ -468,6 +468,32 @@ func Test_KubernetesConfig_Validate(t *testing.T) {
 		if err := c.Validate(k8sVersion, false); err == nil {
 			t.Error("should error when ClusterSubnet has a mask of 24 bits or higher")
 		}
+
+		c = KubernetesConfig{
+			ProxyMode: KubeProxyMode("invalid"),
+		}
+
+		if err := c.Validate(k8sVersion, false); err == nil {
+			t.Error("should error when ProxyMode has an invalid string value")
+		}
+
+		for _, validProxyModeValue := range []KubeProxyMode{KubeProxyModeIPTables, KubeProxyModeIPVS} {
+			c = KubernetesConfig{
+				ProxyMode: KubeProxyMode(validProxyModeValue),
+			}
+
+			if err := c.Validate(k8sVersion, false); err != nil {
+				t.Error("should error when ProxyMode has a valid string value")
+			}
+
+			c = KubernetesConfig{
+				ProxyMode: KubeProxyMode(validProxyModeValue),
+			}
+
+			if err := c.Validate(k8sVersion, false); err != nil {
+				t.Error("should error when ProxyMode has a valid string value")
+			}
+		}
 	}
 
 	// Tests that apply to 1.6 and later releases
