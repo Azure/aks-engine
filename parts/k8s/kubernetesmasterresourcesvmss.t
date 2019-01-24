@@ -238,11 +238,7 @@
     "dnsSettings": {
       "domainNameLabel": "[variables('masterFqdnPrefix')]"
     },
-    {{ if eq LoadBalancerSku "Standard"}}
     "publicIPAllocationMethod": "Static"
-    {{else}}
-    "publicIPAllocationMethod": "Dynamic"
-    {{end}}
   },
   "sku": {
       "name": "[variables('loadBalancerSku')]"
