@@ -9,7 +9,8 @@ Container health gives you performance monitoring ability by collecting memory a
 
 # Prerequisites!
 
-  - A Log Analytics workspace. You can create it when you enable monitoring of your new AKS cluster or let the onboarding experience create a default workspace in the default resource group of the AKS cluster subscription. If you chose to create it yourself, you can create it through [Azure Resource Manager], through [PowerShell], or in the [Azure portal].
+  - A Log Analytics workspace. You can create it when you enable monitoring of your new AKS cluster. You can create it through [Azure Resource Manager], through [PowerShell], or in the [Azure portal].
+  - You will need to add the "Container Insights" solution to your workspace if you do not have any. Please follow the steps here. - [Add Container Insights]
   - The Log Analytics contributor role, to enable container monitoring. For more information about how to control access to a Log Analytics workspace, see [Manage workspaces].
 
 # Components
@@ -27,6 +28,7 @@ Container health gives you performance monitoring ability by collecting memory a
     - Select Advanced settings.
     - Select Connected Sources, and then select Linux Servers.
     - Copy and paste into your favorite editor, the Workspace ID and Primary Key.
+- Please run this [script] which helps you set the tags to the AKS-engine cluster. This will help [visualize] the data in the Azure portal. 
 
 ##### After the deployment is complete, you should be able to see all the cluster data here: [Link to Container Health]
 ##### Pick your workspace from the dropdown to get all the useful data about your cluster.
@@ -38,3 +40,6 @@ Container health gives you performance monitoring ability by collecting memory a
    [Azure portal]: <https://docs.microsoft.com/en-us/azure/log-analytics/log-analytics-quick-create-workspace>
    [Manage workspaces]: <https://docs.microsoft.com/en-us/azure/log-analytics/log-analytics-manage-access>
    [Link to Container Health]: <https://aka.ms/ci-dogfood>
+   [Add Container Insights]: <https://github.com/Microsoft/OMS-docker/blob/ci_feature_prod/docs/solution-onboarding.md>
+   [script]: <https://github.com/Microsoft/OMS-docker/blob/ci_feature/docs/attach-monitoring-tags.md>
+   [visualize]: <https://aka.ms/azmon-containers>
