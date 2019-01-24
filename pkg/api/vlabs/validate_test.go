@@ -2207,7 +2207,7 @@ func TestAgentPoolProfile_ValidateAvailabilityProfile(t *testing.T) {
 	})
 }
 
-func TestValidateCustomCloudProvider(t *testing.T) {
+func TestValidateCustomCloudProfile(t *testing.T) {
 
 	const (
 		name                         = "AzureStackCloud"
@@ -2275,7 +2275,7 @@ func TestValidateCustomCloudProvider(t *testing.T) {
 			customProfile: &CustomCloudProfile{
 				Environment: nil,
 			},
-			expectedErr: errors.New("Environment needs to be specified when CustomCloudProfile is provided"),
+			expectedErr: errors.New("environment needs to be specified when CustomCloudProfile is provided"),
 		},
 		{
 			name: "name is empty",
