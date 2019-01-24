@@ -28,10 +28,9 @@ Container health gives you performance monitoring ability by collecting memory a
     - Select Advanced settings.
     - Select Connected Sources, and then select Linux Servers.
     - Copy and paste into your favorite editor, the Workspace ID and Primary Key.
-- Please run this [script] which helps you set the tags to the AKS-engine cluster. This will help [visualize] the data in the Azure portal. 
+- Please run this [script] which helps you set the tags to the AKS-engine cluster.
 
 ##### After the deployment is complete, you should be able to see all the cluster data here: [Link to Container Health]
-##### Pick your workspace from the dropdown to get all the useful data about your cluster.
 ##### Any feedback: askcoin@microsoft.com
 
    [Log Analytics]: <https://docs.microsoft.com/en-us/azure/log-analytics/log-analytics-overview>
@@ -39,7 +38,6 @@ Container health gives you performance monitoring ability by collecting memory a
    [PowerShell]: <https://docs.microsoft.com/azure/log-analytics/scripts/log-analytics-powershell-sample-create-workspace?toc=%2fpowershell%2fmodule%2ftoc.json>
    [Azure portal]: <https://docs.microsoft.com/en-us/azure/log-analytics/log-analytics-quick-create-workspace>
    [Manage workspaces]: <https://docs.microsoft.com/en-us/azure/log-analytics/log-analytics-manage-access>
-   [Link to Container Health]: <https://aka.ms/ci-dogfood>
+   [Link to Container Health]: <https://aka.ms/azmon-containers>
    [Add Container Insights]: <https://github.com/Microsoft/OMS-docker/blob/ci_feature_prod/docs/solution-onboarding.md>
    [script]: <https://github.com/Microsoft/OMS-docker/blob/ci_feature/docs/attach-monitoring-tags.md>
-   [visualize]: <https://aka.ms/azmon-containers>
