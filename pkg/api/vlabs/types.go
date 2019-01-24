@@ -497,9 +497,9 @@ type OSType string
 // Distro represents Linux distro to use for Linux VMs
 type Distro string
 
-// CustomCloudProfile Represents Azure Enviornment
+// CustomCloudProfile Represents Azure Environment
 type CustomCloudProfile struct {
-	Enviornment *azure.Environment `json:"environment,omitempty"`
+	Environment *azure.Environment `json:"environment,omitempty"`
 }
 
 // HasWindows returns true if the cluster contains windows

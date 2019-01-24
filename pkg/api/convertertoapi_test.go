@@ -254,7 +254,7 @@ func TestCustomCloudProfile(t *testing.T) {
 	vlabscs := &vlabs.ContainerService{
 		Properties: &vlabs.Properties{
 			CustomCloudProfile: &vlabs.CustomCloudProfile{
-				Enviornment: &azure.Environment{
+				Environment: &azure.Environment{
 					Name:                         name,
 					ManagementPortalURL:          managementPortalURL,
 					PublishSettingsURL:           publishSettingsURL,
@@ -281,64 +281,64 @@ func TestCustomCloudProfile(t *testing.T) {
 	}
 
 	cs := ConvertVLabsContainerService(vlabscs, false)
-	if cs.Properties.CustomCloudProfile.Enviornment.Name != name {
-		t.Fatalf("incorrect Name, expect: '%s', actual: '%s'", name, cs.Properties.CustomCloudProfile.Enviornment.Name)
+	if cs.Properties.CustomCloudProfile.Environment.Name != name {
+		t.Fatalf("incorrect Name, expect: '%s', actual: '%s'", name, cs.Properties.CustomCloudProfile.Environment.Name)
 	}
-	if cs.Properties.CustomCloudProfile.Enviornment.ManagementPortalURL != managementPortalURL {
-		t.Fatalf("incorrect ManagementPortalURL, expect: '%s', actual: '%s'", managementPortalURL, cs.Properties.CustomCloudProfile.Enviornment.ManagementPortalURL)
+	if cs.Properties.CustomCloudProfile.Environment.ManagementPortalURL != managementPortalURL {
+		t.Fatalf("incorrect ManagementPortalURL, expect: '%s', actual: '%s'", managementPortalURL, cs.Properties.CustomCloudProfile.Environment.ManagementPortalURL)
 	}
-	if cs.Properties.CustomCloudProfile.Enviornment.PublishSettingsURL != publishSettingsURL {
-		t.Fatalf("incorrect PublishSettingsURL, expect: '%s', actual: '%s'", publishSettingsURL, cs.Properties.CustomCloudProfile.Enviornment.PublishSettingsURL)
+	if cs.Properties.CustomCloudProfile.Environment.PublishSettingsURL != publishSettingsURL {
+		t.Fatalf("incorrect PublishSettingsURL, expect: '%s', actual: '%s'", publishSettingsURL, cs.Properties.CustomCloudProfile.Environment.PublishSettingsURL)
 	}
-	if cs.Properties.CustomCloudProfile.Enviornment.ServiceManagementEndpoint != serviceManagementEndpoint {
-		t.Fatalf("incorrect ServiceManagementEndpoint, expect: '%s', actual: '%s'", serviceManagementEndpoint, cs.Properties.CustomCloudProfile.Enviornment.ServiceManagementEndpoint)
+	if cs.Properties.CustomCloudProfile.Environment.ServiceManagementEndpoint != serviceManagementEndpoint {
+		t.Fatalf("incorrect ServiceManagementEndpoint, expect: '%s', actual: '%s'", serviceManagementEndpoint, cs.Properties.CustomCloudProfile.Environment.ServiceManagementEndpoint)
 	}
-	if cs.Properties.CustomCloudProfile.Enviornment.ResourceManagerEndpoint != resourceManagerEndpoint {
-		t.Fatalf("incorrect ResourceManagerEndpoint, expect: '%s', actual: '%s'", resourceManagerEndpoint, cs.Properties.CustomCloudProfile.Enviornment.ResourceManagerEndpoint)
+	if cs.Properties.CustomCloudProfile.Environment.ResourceManagerEndpoint != resourceManagerEndpoint {
+		t.Fatalf("incorrect ResourceManagerEndpoint, expect: '%s', actual: '%s'", resourceManagerEndpoint, cs.Properties.CustomCloudProfile.Environment.ResourceManagerEndpoint)
 	}
-	if cs.Properties.CustomCloudProfile.Enviornment.ActiveDirectoryEndpoint != activeDirectoryEndpoint {
-		t.Fatalf("incorrect ActiveDirectoryEndpoint, expect: '%s', actual: '%s'", activeDirectoryEndpoint, cs.Properties.CustomCloudProfile.Enviornment.ActiveDirectoryEndpoint)
+	if cs.Properties.CustomCloudProfile.Environment.ActiveDirectoryEndpoint != activeDirectoryEndpoint {
+		t.Fatalf("incorrect ActiveDirectoryEndpoint, expect: '%s', actual: '%s'", activeDirectoryEndpoint, cs.Properties.CustomCloudProfile.Environment.ActiveDirectoryEndpoint)
 	}
-	if cs.Properties.CustomCloudProfile.Enviornment.GalleryEndpoint != galleryEndpoint {
-		t.Fatalf("incorrect GalleryEndpoint, expect: '%s', actual: '%s'", galleryEndpoint, cs.Properties.CustomCloudProfile.Enviornment.GalleryEndpoint)
+	if cs.Properties.CustomCloudProfile.Environment.GalleryEndpoint != galleryEndpoint {
+		t.Fatalf("incorrect GalleryEndpoint, expect: '%s', actual: '%s'", galleryEndpoint, cs.Properties.CustomCloudProfile.Environment.GalleryEndpoint)
 	}
-	if cs.Properties.CustomCloudProfile.Enviornment.KeyVaultEndpoint != keyVaultEndpoint {
-		t.Fatalf("incorrect KeyVaultEndpoint, expect: '%s', actual: '%s'", keyVaultEndpoint, cs.Properties.CustomCloudProfile.Enviornment.KeyVaultEndpoint)
+	if cs.Properties.CustomCloudProfile.Environment.KeyVaultEndpoint != keyVaultEndpoint {
+		t.Fatalf("incorrect KeyVaultEndpoint, expect: '%s', actual: '%s'", keyVaultEndpoint, cs.Properties.CustomCloudProfile.Environment.KeyVaultEndpoint)
 	}
-	if cs.Properties.CustomCloudProfile.Enviornment.GraphEndpoint != graphEndpoint {
-		t.Fatalf("incorrect GraphEndpoint, expect: '%s', actual: '%s'", graphEndpoint, cs.Properties.CustomCloudProfile.Enviornment.GraphEndpoint)
+	if cs.Properties.CustomCloudProfile.Environment.GraphEndpoint != graphEndpoint {
+		t.Fatalf("incorrect GraphEndpoint, expect: '%s', actual: '%s'", graphEndpoint, cs.Properties.CustomCloudProfile.Environment.GraphEndpoint)
 	}
-	if cs.Properties.CustomCloudProfile.Enviornment.ServiceBusEndpoint != serviceBusEndpoint {
-		t.Fatalf("incorrect ServiceBusEndpoint, expect: '%s', actual: '%s'", serviceBusEndpoint, cs.Properties.CustomCloudProfile.Enviornment.ServiceBusEndpoint)
+	if cs.Properties.CustomCloudProfile.Environment.ServiceBusEndpoint != serviceBusEndpoint {
+		t.Fatalf("incorrect ServiceBusEndpoint, expect: '%s', actual: '%s'", serviceBusEndpoint, cs.Properties.CustomCloudProfile.Environment.ServiceBusEndpoint)
 	}
-	if cs.Properties.CustomCloudProfile.Enviornment.BatchManagementEndpoint != batchManagementEndpoint {
-		t.Fatalf("incorrect BatchManagementEndpoint, expect: '%s', actual: '%s'", batchManagementEndpoint, cs.Properties.CustomCloudProfile.Enviornment.BatchManagementEndpoint)
+	if cs.Properties.CustomCloudProfile.Environment.BatchManagementEndpoint != batchManagementEndpoint {
+		t.Fatalf("incorrect BatchManagementEndpoint, expect: '%s', actual: '%s'", batchManagementEndpoint, cs.Properties.CustomCloudProfile.Environment.BatchManagementEndpoint)
 	}
-	if cs.Properties.CustomCloudProfile.Enviornment.StorageEndpointSuffix != storageEndpointSuffix {
-		t.Fatalf("incorrect StorageEndpointSuffix, expect: '%s', actual: '%s'", storageEndpointSuffix, cs.Properties.CustomCloudProfile.Enviornment.StorageEndpointSuffix)
+	if cs.Properties.CustomCloudProfile.Environment.StorageEndpointSuffix != storageEndpointSuffix {
+		t.Fatalf("incorrect StorageEndpointSuffix, expect: '%s', actual: '%s'", storageEndpointSuffix, cs.Properties.CustomCloudProfile.Environment.StorageEndpointSuffix)
 	}
-	if cs.Properties.CustomCloudProfile.Enviornment.SQLDatabaseDNSSuffix != sqlDatabaseDNSSuffix {
-		t.Fatalf("incorrect SQLDatabaseDNSSuffix, expect: '%s', actual: '%s'", sqlDatabaseDNSSuffix, cs.Properties.CustomCloudProfile.Enviornment.SQLDatabaseDNSSuffix)
+	if cs.Properties.CustomCloudProfile.Environment.SQLDatabaseDNSSuffix != sqlDatabaseDNSSuffix {
+		t.Fatalf("incorrect SQLDatabaseDNSSuffix, expect: '%s', actual: '%s'", sqlDatabaseDNSSuffix, cs.Properties.CustomCloudProfile.Environment.SQLDatabaseDNSSuffix)
 	}
-	if cs.Properties.CustomCloudProfile.Enviornment.TrafficManagerDNSSuffix != trafficManagerDNSSuffix {
-		t.Fatalf("incorrect TrafficManagerDNSSuffix, expect: '%s', actual: '%s'", trafficManagerDNSSuffix, cs.Properties.CustomCloudProfile.Enviornment.TrafficManagerDNSSuffix)
+	if cs.Properties.CustomCloudProfile.Environment.TrafficManagerDNSSuffix != trafficManagerDNSSuffix {
+		t.Fatalf("incorrect TrafficManagerDNSSuffix, expect: '%s', actual: '%s'", trafficManagerDNSSuffix, cs.Properties.CustomCloudProfile.Environment.TrafficManagerDNSSuffix)
 	}
-	if cs.Properties.CustomCloudProfile.Enviornment.KeyVaultDNSSuffix != keyVaultDNSSuffix {
-		t.Fatalf("incorrect KeyVaultDNSSuffix, expect: '%s', actual: '%s'", keyVaultDNSSuffix, cs.Properties.CustomCloudProfile.Enviornment.KeyVaultDNSSuffix)
+	if cs.Properties.CustomCloudProfile.Environment.KeyVaultDNSSuffix != keyVaultDNSSuffix {
+		t.Fatalf("incorrect KeyVaultDNSSuffix, expect: '%s', actual: '%s'", keyVaultDNSSuffix, cs.Properties.CustomCloudProfile.Environment.KeyVaultDNSSuffix)
 	}
-	if cs.Properties.CustomCloudProfile.Enviornment.ServiceBusEndpointSuffix != serviceBusEndpointSuffix {
-		t.Fatalf("incorrect ServiceBusEndpointSuffix, expect: '%s', actual: '%s'", serviceBusEndpointSuffix, cs.Properties.CustomCloudProfile.Enviornment.ServiceBusEndpointSuffix)
+	if cs.Properties.CustomCloudProfile.Environment.ServiceBusEndpointSuffix != serviceBusEndpointSuffix {
+		t.Fatalf("incorrect ServiceBusEndpointSuffix, expect: '%s', actual: '%s'", serviceBusEndpointSuffix, cs.Properties.CustomCloudProfile.Environment.ServiceBusEndpointSuffix)
 	}
-	if cs.Properties.CustomCloudProfile.Enviornment.ServiceManagementVMDNSSuffix != serviceManagementVMDNSSuffix {
-		t.Fatalf("incorrect ServiceManagementVMDNSSuffix, expect: '%s', actual: '%s'", serviceManagementVMDNSSuffix, cs.Properties.CustomCloudProfile.Enviornment.ServiceManagementVMDNSSuffix)
+	if cs.Properties.CustomCloudProfile.Environment.ServiceManagementVMDNSSuffix != serviceManagementVMDNSSuffix {
+		t.Fatalf("incorrect ServiceManagementVMDNSSuffix, expect: '%s', actual: '%s'", serviceManagementVMDNSSuffix, cs.Properties.CustomCloudProfile.Environment.ServiceManagementVMDNSSuffix)
 	}
-	if cs.Properties.CustomCloudProfile.Enviornment.ResourceManagerVMDNSSuffix != resourceManagerVMDNSSuffix {
-		t.Fatalf("incorrect ResourceManagerVMDNSSuffix, expect: '%s', actual: '%s'", resourceManagerVMDNSSuffix, cs.Properties.CustomCloudProfile.Enviornment.ResourceManagerVMDNSSuffix)
+	if cs.Properties.CustomCloudProfile.Environment.ResourceManagerVMDNSSuffix != resourceManagerVMDNSSuffix {
+		t.Fatalf("incorrect ResourceManagerVMDNSSuffix, expect: '%s', actual: '%s'", resourceManagerVMDNSSuffix, cs.Properties.CustomCloudProfile.Environment.ResourceManagerVMDNSSuffix)
 	}
-	if cs.Properties.CustomCloudProfile.Enviornment.ContainerRegistryDNSSuffix != containerRegistryDNSSuffix {
-		t.Fatalf("incorrect ContainerRegistryDNSSuffix, expect: '%s', actual: '%s'", containerRegistryDNSSuffix, cs.Properties.CustomCloudProfile.Enviornment.ContainerRegistryDNSSuffix)
+	if cs.Properties.CustomCloudProfile.Environment.ContainerRegistryDNSSuffix != containerRegistryDNSSuffix {
+		t.Fatalf("incorrect ContainerRegistryDNSSuffix, expect: '%s', actual: '%s'", containerRegistryDNSSuffix, cs.Properties.CustomCloudProfile.Environment.ContainerRegistryDNSSuffix)
 	}
-	if cs.Properties.CustomCloudProfile.Enviornment.TokenAudience != tokenAudience {
-		t.Fatalf("incorrect TokenAudience, expect: '%s', actual: '%s'", tokenAudience, cs.Properties.CustomCloudProfile.Enviornment.TokenAudience)
+	if cs.Properties.CustomCloudProfile.Environment.TokenAudience != tokenAudience {
+		t.Fatalf("incorrect TokenAudience, expect: '%s', actual: '%s'", tokenAudience, cs.Properties.CustomCloudProfile.Environment.TokenAudience)
 	}
 }

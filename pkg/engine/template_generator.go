@@ -7,7 +7,6 @@ import (
 	"archive/zip"
 	"bytes"
 	"encoding/base64"
-	"encoding/json"
 	"fmt"
 	"runtime/debug"
 	"sort"
@@ -207,27 +206,10 @@ func (t *TemplateGenerator) getMasterCustomData(cs *api.ContainerService, textFi
 func (t *TemplateGenerator) getTemplateFuncMap(cs *api.ContainerService) template.FuncMap {
 	return template.FuncMap{
 		"IsAzureStackCloud": func() bool {
-			var cloudProfileName string
-			if cs.Properties.CustomCloudProfile != nil {
-				if cs.Properties.CustomCloudProfile.Enviornment != nil {
-					cloudProfileName = cs.Properties.CustomCloudProfile.Enviornment.Name
-				}
-			}
-			return strings.EqualFold(cloudProfileName, api.AzureStackCloud)
+			return cs.Properties.IsAzureStackCloud()
 		},
 		"GetCustomEnvironmentJSON": func() string {
-			var environmentJSON string
-			if cs.Properties.CustomCloudProfile != nil {
-				if cs.Properties.CustomCloudProfile.Enviornment != nil {
-					bytes, err := json.Marshal(cs.Properties.CustomCloudProfile.Enviornment)
-					if err != nil {
-						log.Fatalf("Could not serialize Enviornment object - %s", err.Error())
-					}
-					environmentJSON = string(bytes)
-					environmentJSON = strings.Replace(environmentJSON, "\"", "\\\"", -1)
-				}
-			}
-			return environmentJSON
+			return cs.Properties.GetCustomEnvironmentJSON()
 		},
 		"IsMasterVirtualMachineScaleSets": func() bool {
 			return cs.Properties.MasterProfile != nil && cs.Properties.MasterProfile.IsVirtualMachineScaleSets()

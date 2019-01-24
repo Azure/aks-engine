@@ -1889,10 +1889,10 @@ func TestProperties_ValidateVNET(t *testing.T) {
 		{
 			name: "Invalid MasterProfile FirstConsecutiveStaticIP when master is VMAS",
 			masterProfile: &MasterProfile{
-				VnetSubnetID: validVNetSubnetID,
-				Count:        1,
-				DNSPrefix:    "foo",
-				VMSize:       "Standard_DS2_v2",
+				VnetSubnetID:             validVNetSubnetID,
+				Count:                    1,
+				DNSPrefix:                "foo",
+				VMSize:                   "Standard_DS2_v2",
 				FirstConsecutiveStaticIP: "10.0.0.invalid",
 			},
 			agentPoolProfiles: []*AgentPoolProfile{
@@ -1950,10 +1950,10 @@ func TestProperties_ValidateVNET(t *testing.T) {
 		{
 			name: "Invalid vnetcidr",
 			masterProfile: &MasterProfile{
-				VnetSubnetID: validVNetSubnetID,
-				Count:        1,
-				DNSPrefix:    "foo",
-				VMSize:       "Standard_DS2_v2",
+				VnetSubnetID:             validVNetSubnetID,
+				Count:                    1,
+				DNSPrefix:                "foo",
+				VMSize:                   "Standard_DS2_v2",
 				FirstConsecutiveStaticIP: "10.0.0.1",
 				VnetCidr:                 "10.1.0.0/invalid",
 			},
@@ -2240,7 +2240,7 @@ func TestValidateCustomCloudProvider(t *testing.T) {
 		{
 			name: "valid run",
 			customProfile: &CustomCloudProfile{
-				Enviornment: &azure.Environment{
+				Environment: &azure.Environment{
 					Name:                         name,
 					ManagementPortalURL:          managementPortalURL,
 					PublishSettingsURL:           publishSettingsURL,
@@ -2273,14 +2273,14 @@ func TestValidateCustomCloudProvider(t *testing.T) {
 		{
 			name: "environment is nil",
 			customProfile: &CustomCloudProfile{
-				Enviornment: nil,
+				Environment: nil,
 			},
-			expectedErr: errors.New("enviornment needs to be specified when CustomCloudProfile is provided"),
+			expectedErr: errors.New("Environment needs to be specified when CustomCloudProfile is provided"),
 		},
 		{
 			name: "name is empty",
 			customProfile: &CustomCloudProfile{
-				Enviornment: &azure.Environment{
+				Environment: &azure.Environment{
 					Name:                         "",
 					ManagementPortalURL:          managementPortalURL,
 					PublishSettingsURL:           publishSettingsURL,
@@ -2303,12 +2303,12 @@ func TestValidateCustomCloudProvider(t *testing.T) {
 					TokenAudience:                tokenAudience,
 				},
 			},
-			expectedErr: errors.New("name needs to be specified when Enviornment is provided"),
+			expectedErr: errors.New("name needs to be specified when Environment is provided"),
 		},
 		{
 			name: "ServiceManagementEndpoint is empty",
 			customProfile: &CustomCloudProfile{
-				Enviornment: &azure.Environment{
+				Environment: &azure.Environment{
 					Name:                         name,
 					ManagementPortalURL:          managementPortalURL,
 					PublishSettingsURL:           publishSettingsURL,
@@ -2331,12 +2331,12 @@ func TestValidateCustomCloudProvider(t *testing.T) {
 					TokenAudience:                tokenAudience,
 				},
 			},
-			expectedErr: errors.New("serviceManagementEndpoint needs to be specified when Enviornment is provided"),
+			expectedErr: errors.New("serviceManagementEndpoint needs to be specified when Environment is provided"),
 		},
 		{
 			name: "ResourceManagerEndpoint is empty",
 			customProfile: &CustomCloudProfile{
-				Enviornment: &azure.Environment{
+				Environment: &azure.Environment{
 					Name:                         name,
 					ManagementPortalURL:          managementPortalURL,
 					PublishSettingsURL:           publishSettingsURL,
@@ -2359,12 +2359,12 @@ func TestValidateCustomCloudProvider(t *testing.T) {
 					TokenAudience:                tokenAudience,
 				},
 			},
-			expectedErr: errors.New("resourceManagerEndpoint needs to be specified when Enviornment is provided"),
+			expectedErr: errors.New("resourceManagerEndpoint needs to be specified when Environment is provided"),
 		},
 		{
 			name: "activeDirectoryEndpoint is empty",
 			customProfile: &CustomCloudProfile{
-				Enviornment: &azure.Environment{
+				Environment: &azure.Environment{
 					Name:                         name,
 					ManagementPortalURL:          managementPortalURL,
 					PublishSettingsURL:           publishSettingsURL,
@@ -2387,12 +2387,12 @@ func TestValidateCustomCloudProvider(t *testing.T) {
 					TokenAudience:                tokenAudience,
 				},
 			},
-			expectedErr: errors.New("activeDirectoryEndpoint needs to be specified when Enviornment is provided"),
+			expectedErr: errors.New("activeDirectoryEndpoint needs to be specified when Environment is provided"),
 		},
 		{
 			name: "graphEndpoint is empty",
 			customProfile: &CustomCloudProfile{
-				Enviornment: &azure.Environment{
+				Environment: &azure.Environment{
 					Name:                         name,
 					ManagementPortalURL:          managementPortalURL,
 					PublishSettingsURL:           publishSettingsURL,
@@ -2415,7 +2415,7 @@ func TestValidateCustomCloudProvider(t *testing.T) {
 					TokenAudience:                tokenAudience,
 				},
 			},
-			expectedErr: errors.New("graphEndpoint needs to be specified when Enviornment is provided"),
+			expectedErr: errors.New("graphEndpoint needs to be specified when Environment is provided"),
 		},
 	}
 

@@ -1206,27 +1206,27 @@ func addDCOSPublicAgentPool(api *Properties) {
 }
 
 func convertVLabsCustomCloudProfile(vlabs *vlabs.CustomCloudProfile, api *CustomCloudProfile) {
-	if vlabs.Enviornment != nil {
-		api.Enviornment = &azure.Environment{}
-		api.Enviornment.Name = vlabs.Enviornment.Name
-		api.Enviornment.ManagementPortalURL = vlabs.Enviornment.ManagementPortalURL
-		api.Enviornment.PublishSettingsURL = vlabs.Enviornment.PublishSettingsURL
-		api.Enviornment.ServiceManagementEndpoint = vlabs.Enviornment.ServiceManagementEndpoint
-		api.Enviornment.ResourceManagerEndpoint = vlabs.Enviornment.ResourceManagerEndpoint
-		api.Enviornment.ActiveDirectoryEndpoint = vlabs.Enviornment.ActiveDirectoryEndpoint
-		api.Enviornment.GalleryEndpoint = vlabs.Enviornment.GalleryEndpoint
-		api.Enviornment.KeyVaultEndpoint = vlabs.Enviornment.KeyVaultEndpoint
-		api.Enviornment.GraphEndpoint = vlabs.Enviornment.GraphEndpoint
-		api.Enviornment.ServiceBusEndpoint = vlabs.Enviornment.ServiceBusEndpoint
-		api.Enviornment.BatchManagementEndpoint = vlabs.Enviornment.BatchManagementEndpoint
-		api.Enviornment.StorageEndpointSuffix = vlabs.Enviornment.StorageEndpointSuffix
-		api.Enviornment.SQLDatabaseDNSSuffix = vlabs.Enviornment.SQLDatabaseDNSSuffix
-		api.Enviornment.TrafficManagerDNSSuffix = vlabs.Enviornment.TrafficManagerDNSSuffix
-		api.Enviornment.KeyVaultDNSSuffix = vlabs.Enviornment.KeyVaultDNSSuffix
-		api.Enviornment.ServiceBusEndpointSuffix = vlabs.Enviornment.ServiceBusEndpointSuffix
-		api.Enviornment.ServiceManagementVMDNSSuffix = vlabs.Enviornment.ServiceManagementVMDNSSuffix
-		api.Enviornment.ResourceManagerVMDNSSuffix = vlabs.Enviornment.ResourceManagerVMDNSSuffix
-		api.Enviornment.ContainerRegistryDNSSuffix = vlabs.Enviornment.ContainerRegistryDNSSuffix
-		api.Enviornment.TokenAudience = vlabs.Enviornment.TokenAudience
+	if vlabs.Environment != nil {
+		api.Environment = &azure.Environment{}
+		api.Environment.Name = vlabs.Environment.Name
+		api.Environment.ManagementPortalURL = vlabs.Environment.ManagementPortalURL
+		api.Environment.PublishSettingsURL = vlabs.Environment.PublishSettingsURL
+		api.Environment.ServiceManagementEndpoint = vlabs.Environment.ServiceManagementEndpoint
+		api.Environment.ResourceManagerEndpoint = vlabs.Environment.ResourceManagerEndpoint
+		api.Environment.ActiveDirectoryEndpoint = vlabs.Environment.ActiveDirectoryEndpoint
+		api.Environment.GalleryEndpoint = vlabs.Environment.GalleryEndpoint
+		api.Environment.KeyVaultEndpoint = vlabs.Environment.KeyVaultEndpoint
+		api.Environment.GraphEndpoint = vlabs.Environment.GraphEndpoint
+		api.Environment.ServiceBusEndpoint = vlabs.Environment.ServiceBusEndpoint
+		api.Environment.BatchManagementEndpoint = vlabs.Environment.BatchManagementEndpoint
+		api.Environment.StorageEndpointSuffix = vlabs.Environment.StorageEndpointSuffix
+		api.Environment.SQLDatabaseDNSSuffix = vlabs.Environment.SQLDatabaseDNSSuffix
+		api.Environment.TrafficManagerDNSSuffix = vlabs.Environment.TrafficManagerDNSSuffix
+		api.Environment.KeyVaultDNSSuffix = vlabs.Environment.KeyVaultDNSSuffix
+		api.Environment.ServiceBusEndpointSuffix = vlabs.Environment.ServiceBusEndpointSuffix
+		api.Environment.ServiceManagementVMDNSSuffix = vlabs.Environment.ServiceManagementVMDNSSuffix
+		api.Environment.ResourceManagerVMDNSSuffix = vlabs.Environment.ResourceManagerVMDNSSuffix
+		api.Environment.ContainerRegistryDNSSuffix = vlabs.Environment.ContainerRegistryDNSSuffix
+		api.Environment.TokenAudience = vlabs.Environment.TokenAudience
 	}
 }
