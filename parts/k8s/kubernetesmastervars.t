@@ -99,8 +99,8 @@
     "environmentJSON": "{{GetCustomEnvironmentJSON}}",
 {{ end }}
     "apiVersionManagedIdentity": "2015-08-31-preview",
-    "apiVersionAuthorizationUser": "2015-07-01",
-    "apiVersionAuthorizationSystem": "2015-07-01",
+    "apiVersionAuthorizationUser": "2018-09-01-preview",
+    "apiVersionAuthorizationSystem": "2018-01-01-preview",
     "locations": [
          "[resourceGroup().location]",
          "[parameters('location')]"
