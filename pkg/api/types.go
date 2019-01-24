@@ -4,8 +4,10 @@
 package api
 
 import (
+	"encoding/json"
 	"fmt"
 	"hash/fnv"
+	"log"
 	"math/rand"
 	"net"
 	neturl "net/url"
@@ -671,9 +673,9 @@ type V20180331ARMManagedContainerService struct {
 	*v20180331.ManagedCluster
 }
 
-// CustomCloudProfile Represents custom cloud profile
+// CustomCloudProfile Represents Azure Environment
 type CustomCloudProfile struct {
-	Enviornment *azure.Environment `json:"environment,omitempty"`
+	Environment *azure.Environment `json:"environment,omitempty"`
 }
 
 // HasWindows returns true if the cluster contains windows
@@ -1317,6 +1319,31 @@ func (p *Properties) HasNSeriesSKU() bool {
 func (p *Properties) IsNVIDIADevicePluginEnabled() bool {
 	k := p.OrchestratorProfile.KubernetesConfig
 	return k.isAddonEnabled(NVIDIADevicePluginAddonName, getDefaultNVIDIADevicePluginEnabled(p))
+}
+
+// IsAzureStackCloud return true if the cloud is AzureStack
+func (p *Properties) IsAzureStackCloud() bool {
+	var cloudProfileName string
+	if p.CustomCloudProfile != nil {
+		if p.CustomCloudProfile.Environment != nil {
+			cloudProfileName = p.CustomCloudProfile.Environment.Name
+		}
+	}
+	return strings.EqualFold(cloudProfileName, AzureStackCloud)
+}
+
+// GetCustomEnvironmentJSON return the JSON format string for custom environment
+func (p *Properties) GetCustomEnvironmentJSON() string {
+	var environmentJSON string
+	if p.IsAzureStackCloud() {
+		bytes, err := json.Marshal(p.CustomCloudProfile.Environment)
+		if err != nil {
+			log.Fatalf("Could not serialize Environment object - %s", err.Error())
+		}
+		environmentJSON = string(bytes)
+		environmentJSON = strings.Replace(environmentJSON, "\"", "\\\"", -1)
+	}
+	return environmentJSON
 }
 
 func getDefaultNVIDIADevicePluginEnabled(p *Properties) bool {
