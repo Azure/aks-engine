@@ -149,6 +149,10 @@ func (a *Properties) Validate(isUpdate bool) error {
 		return e
 	}
 
+	if e := a.validateCustomCloudProfile(); e != nil {
+		return e
+	}
+
 	return nil
 }
 
@@ -1286,6 +1290,30 @@ func (i *ImageReference) validateImageNameAndGroup() error {
 	}
 	if i.Name != "" && i.ResourceGroup == "" {
 		return errors.New("imageResourceGroup needs to be specified when imageName is provided")
+	}
+	return nil
+}
+
+func (a *Properties) validateCustomCloudProfile() error {
+	if a.CustomCloudProfile != nil {
+		if a.CustomCloudProfile.Environment == nil {
+			return errors.New("environment needs to be specified when CustomCloudProfile is provided")
+		}
+		if len(a.CustomCloudProfile.Environment.Name) == 0 {
+			return errors.New("name needs to be specified when Environment is provided")
+		}
+		if len(a.CustomCloudProfile.Environment.ServiceManagementEndpoint) == 0 {
+			return errors.New("serviceManagementEndpoint needs to be specified when Environment is provided")
+		}
+		if len(a.CustomCloudProfile.Environment.ResourceManagerEndpoint) == 0 {
+			return errors.New("resourceManagerEndpoint needs to be specified when Environment is provided")
+		}
+		if len(a.CustomCloudProfile.Environment.ActiveDirectoryEndpoint) == 0 {
+			return errors.New("activeDirectoryEndpoint needs to be specified when Environment is provided")
+		}
+		if len(a.CustomCloudProfile.Environment.GraphEndpoint) == 0 {
+			return errors.New("graphEndpoint needs to be specified when Environment is provided")
+		}
 	}
 	return nil
 }
