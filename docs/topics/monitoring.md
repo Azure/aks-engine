@@ -5,10 +5,10 @@ Monitoring your Kubernetes cluster is important to be able to see your cluster's
 There are five main options to monitor your cluster:
 
 1. [Kubectl](#kubectl)
+1. [Azure Monitor for containers](#azure-monitor-for-containers)
 1. [Kubernetes dashboard](#kubernetes-dashboard)
 1. [Monitoring extension](#monitoring-extension)
 1. [Grafana and Influx DB](#grafana-and-influx-db)
-1. [Azure Operations Management Suite (OMS)](#oms)
 1. [Heapster REST API](#heapster-rest-api)
 
 ## Intro to Heapster
@@ -53,6 +53,26 @@ azureuser@k8s-master-95363663-0:~$ kubectl top pod
 NAME            CPU(cores)   MEMORY(bytes)
 somePod         0m           11Mi
 ```
+## Azure Monitor for containers
+
+Azure Monitor for containers is a feature designed to monitor the performance of container workloads deployed to AKS-engine (formerly known as ACS-engine) cluster(s) hosted on Azure. Monitoring your containers is critical, especially when you're running a production cluster, at scale, with multiple applications.
+
+Azure Monitor for containers gives you performance visibility by collecting memory and processor metrics from controllers, nodes, and containers that are available in Kubernetes through the Metrics API. Container logs are also collected. After you enable monitoring from Kubernetes clusters, these metrics and logs are automatically collected for you through a containerized version of the Log Analytics agent for Linux and stored in your Log Analytics workspace.
+
+Azure Monitor for containers for aks-engine cluster(s) can be configured through following options
+
+1. [Container-monitoring add-on](../../examples/addons/container-monitoring/README.md)
+2. Helm chart [azuremonitor-containers](https://github.com/helm/charts/tree/master/incubator/azuremonitor-containers)
+
+Navigate to [azmon-containers](https://aka.ms/azmon-containers) to view the health, metrics and logs of AKS-engine cluster(s).
+
+For more details on how to use the product, see [Azure Monitor for containers](https://docs.microsoft.com/en-us/azure/azure-monitor/insights/container-insights-overview)
+
+Refer to [azuremonitor-containers-aks-engine](https://github.com/Microsoft/OMS-docker/blob/aks-engine/README.md) for the supported matrix, troubleshooting and supportability etc.
+
+![Image of Azure Monitor for containers](../static/img/azure_monitor_aks_engine.png)
+
+If you have any questions or feedback regarding the monitoring of your AKS engine cluster(s), please reach us out thru [this](mailto:askcoin@microsoft.com) email.
 
 ## Kubernetes dashboard
 
@@ -128,22 +148,6 @@ If everything looks ok and Grafana and Influx DB were able to start up, you can 
 1. To see pod stats: http://localhost:8001/api/v1/namespaces/kube-system/services/monitoring-grafana/proxy/dashboard/db/pods
 
 ![Image of Grafana](../static/img/k8s-monitoring-grafana2.png)
-
-## Azure Monitor for containers
-
-Azure Monitor for containers is a feature designed to monitor the performance of container workloads deployed to AKS-engine (formerly known as ACS-engine) cluster(s) hosted on Azure. Monitoring your containers is critical, especially when you're running a production cluster, at scale, with multiple applications.
-
-Azure Monitor for containers gives you performance visibility by collecting memory and processor metrics from controllers, nodes, and containers that are available in Kubernetes through the Metrics API. Container logs are also collected. After you enable monitoring from Kubernetes clusters, these metrics and logs are automatically collected for you through a containerized version of the Log Analytics agent for Linux and stored in your Log Analytics workspace.
-
-To setup Azure Monitor for containers for aks-engine cluster, follow the instructions in [azuremonitor-containers](https://github.com/helm/charts/tree/master/incubator/azuremonitor-containers)
-
-Navigate to [azmon-containers](https://aka.ms/azmon-containers) to view the health, metrics and logs of AKS-engine cluster(s).
-
-For more details on how to use the product, see [Azure Monitor for containers](https://docs.microsoft.com/en-us/azure/azure-monitor/insights/container-insights-overview)
-
-Refer to [azuremonitor-containers-aks-engine](https://github.com/Microsoft/OMS-docker/blob/aks-engine/README.md) for the supported matrix, troubleshooting and supportability etc.
-
-![Image of Azure Monitor for containers](../static/img/azure_monitor_aks_engine.png)
 
 ## Heapster REST API
 

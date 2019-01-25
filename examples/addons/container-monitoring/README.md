@@ -19,14 +19,9 @@ Following additional steps required to view the health, metrics and logs of your
 
 2. [For AKS-engine K8S cluster, add clusterName and Log Analytics workspace tag to cluster resources, to be able to use Azure Container monitoring User experience (aka.ms/azmon-containers)](http://aka.ms/coin-acs-tag-doc)
 
-> Note: At the moment, if the AKS engine version is v0.29.1, then default clusterName is my_acs_cluster_name in the container monitoring add-on. 
-In post AKS-engine versions v0.29.1, default cluster name is aks-engine-cluster. This name needs to be tagged as clusterName value in step #2 above.
+> Note: At the moment, if the AKS engine version is v0.29.1 or ACS engine Kubernetes cluster, default clusterName is my_acs_cluster_name in the container monitoring add-on. In  AKS-engine version greater than v0.29.1, the default cluster name is aks-engine-cluster. This name needs to be tagged as clusterName value in step #2 above.
 
 Navigate to [azmon-containers](https://aka.ms/azmon-containers) to view the health, metrics and logs of your Kubernetes cluster(s).
-
-For more details on how to use the product, see [Azure Monitor for containers](https://docs.microsoft.com/en-us/azure/azure-monitor/insights/container-insights-overview)
-
-![Image of Azure Monitor for containers](../../static/img/azure_monitor_aks_engine.png)
 
 If you have any questions regarding the Container Monitoring add-on, please reach us out thru [this](mailto:askcoin@microsoft.com) email.
 
@@ -89,8 +84,27 @@ All these pods should be in 'Running' state after executing:
 ```bash
 kubectl get pods -n kube-system
 ```
+## UX
+
+For more details on how to use the product, see [Azure Monitor for containers](https://docs.microsoft.com/en-us/azure/azure-monitor/insights/container-insights-overview)
+
+![Image of Azure Monitor for containers](../../../docs/static/img/azure_monitor_aks_engine.png)
+
 
 ## Supported Matrix
 
  Refer to [azuremonitor-containers-aks-engine](https://github.com/Microsoft/OMS-docker/blob/aks-engine/README.md) for the supported matrix, troubleshooting and supportability etc.
 
+## Contact
+
+If you have any questions or feedback regarding the container monitoring add-on, please reach us out thru [this](mailto:askcoin@microsoft.com) email.
+
+## References
+
+ - [Log Analytics](https://docs.microsoft.com/en-us/azure/log-analytics/log-analytics-overview)
+ - [Azure Resource Manager](https://docs.microsoft.com/en-us/azure/log-analytics/log-analytics-template-workspace-configuration)
+ - [Azure portal](https://docs.microsoft.com/en-us/azure/log-analytics/log-analytics-quick-create-workspace)
+ - [Manage workspaces](https://docs.microsoft.com/en-us/azure/log-analytics/log-analytics-manage-access)
+ - [Link to Container Health](https://aka.ms/azmon-containers)
+ - [Add Container Insights](https://github.com/Microsoft/OMS-docker/blob/ci_feature_prod/docs/solution-onboarding.md)
+ - [script for attaching the monitoring tags](https://github.com/Microsoft/OMS-docker/blob/ci_feature/docs/attach-monitoring-tags.md)
