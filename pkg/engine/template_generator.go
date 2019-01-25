@@ -299,6 +299,12 @@ func (t *TemplateGenerator) getMasterCustomData(cs *api.ContainerService, textFi
 // getTemplateFuncMap returns all functions used in template generation
 func (t *TemplateGenerator) getTemplateFuncMap(cs *api.ContainerService) template.FuncMap {
 	return template.FuncMap{
+		"IsAzureStackCloud": func() bool {
+			return cs.Properties.IsAzureStackCloud()
+		},
+		"GetCustomEnvironmentJSON": func() string {
+			return cs.Properties.GetCustomEnvironmentJSON()
+		},
 		"IsMasterVirtualMachineScaleSets": func() bool {
 			return cs.Properties.MasterProfile != nil && cs.Properties.MasterProfile.IsVirtualMachineScaleSets()
 		},
@@ -466,25 +472,13 @@ func (t *TemplateGenerator) getTemplateFuncMap(cs *api.ContainerService) templat
 			return cs.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity
 		},
 		"UserAssignedIDEnabled": func() bool {
-			if cs.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity &&
-				cs.Properties.OrchestratorProfile.KubernetesConfig.UserAssignedID != "" {
-				return true
-			}
-			return false
+			return cs.Properties.OrchestratorProfile.KubernetesConfig.UserAssignedIDEnabled()
 		},
 		"UserAssignedID": func() string {
-			if cs.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity &&
-				cs.Properties.OrchestratorProfile.KubernetesConfig.UserAssignedID != "" {
-				return cs.Properties.OrchestratorProfile.KubernetesConfig.UserAssignedID
-			}
-			return ""
+			return cs.Properties.OrchestratorProfile.KubernetesConfig.GetUserAssignedID()
 		},
 		"UserAssignedClientID": func() string {
-			if cs.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity &&
-				cs.Properties.OrchestratorProfile.KubernetesConfig.UserAssignedClientID != "" {
-				return cs.Properties.OrchestratorProfile.KubernetesConfig.UserAssignedClientID
-			}
-			return ""
+			return cs.Properties.OrchestratorProfile.KubernetesConfig.GetUserAssignedClientID()
 		},
 		"UseAksExtension": func() bool {
 			cloudSpecConfig := cs.GetCloudSpecConfig()

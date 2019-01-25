@@ -4,8 +4,10 @@
 package api
 
 import (
+	"encoding/json"
 	"fmt"
 	"hash/fnv"
+	"log"
 	"math/rand"
 	"net"
 	neturl "net/url"
@@ -22,6 +24,7 @@ import (
 	v20170701 "github.com/Azure/aks-engine/pkg/api/v20170701"
 	"github.com/Azure/aks-engine/pkg/api/vlabs"
 	"github.com/Azure/aks-engine/pkg/helpers"
+	"github.com/Azure/go-autorest/autorest/azure"
 	"github.com/Azure/go-autorest/autorest/to"
 	"github.com/blang/semver"
 )
@@ -73,6 +76,7 @@ type Properties struct {
 	HostedMasterProfile     *HostedMasterProfile     `json:"hostedMasterProfile,omitempty"`
 	AddonProfiles           map[string]AddonProfile  `json:"addonProfiles,omitempty"`
 	FeatureFlags            *FeatureFlags            `json:"featureFlags,omitempty"`
+	CustomCloudProfile      *CustomCloudProfile      `json:"customCloudProfile,omitempty"`
 }
 
 // ClusterMetadata represents the metadata of the AKS cluster.
@@ -679,6 +683,11 @@ type V20170831ARMManagedContainerService struct {
 type V20180331ARMManagedContainerService struct {
 	TypeMeta
 	*v20180331.ManagedCluster
+}
+
+// CustomCloudProfile Represents Azure Environment
+type CustomCloudProfile struct {
+	Environment *azure.Environment `json:"environment,omitempty"`
 }
 
 // HasWindows returns true if the cluster contains windows
@@ -1322,6 +1331,32 @@ func (k *KubernetesConfig) IsRBACEnabled() bool {
 	return false
 }
 
+// UserAssignedIDEnabled checks if the user assigned ID is enabled or not.
+func (k *KubernetesConfig) UserAssignedIDEnabled() bool {
+	return k.UseManagedIdentity && k.UserAssignedID != ""
+}
+
+// UserAssignedClientIDEnabled checks if the user assigned client ID is enabled or not.
+func (k *KubernetesConfig) UserAssignedClientIDEnabled() bool {
+	return k.UseManagedIdentity && k.UserAssignedClientID != ""
+}
+
+// GetUserAssignedID returns the user assigned ID if it is enabled.
+func (k *KubernetesConfig) GetUserAssignedID() string {
+	if k.UserAssignedIDEnabled() {
+		return k.UserAssignedID
+	}
+	return ""
+}
+
+// GetUserAssignedClientID returns the user assigned client ID if it is enabled.
+func (k *KubernetesConfig) GetUserAssignedClientID() string {
+	if k.UserAssignedClientIDEnabled() {
+		return k.UserAssignedClientID
+	}
+	return ""
+}
+
 // IsNSeriesSKU returns true if the agent pool contains an N-series (NVIDIA GPU) VM
 func (a *AgentPoolProfile) IsNSeriesSKU() bool {
 	return common.IsNvidiaEnabledSKU(a.VMSize)
@@ -1342,6 +1377,31 @@ func (p *Properties) HasNSeriesSKU() bool {
 func (p *Properties) IsNVIDIADevicePluginEnabled() bool {
 	k := p.OrchestratorProfile.KubernetesConfig
 	return k.isAddonEnabled(NVIDIADevicePluginAddonName, getDefaultNVIDIADevicePluginEnabled(p))
+}
+
+// IsAzureStackCloud return true if the cloud is AzureStack
+func (p *Properties) IsAzureStackCloud() bool {
+	var cloudProfileName string
+	if p.CustomCloudProfile != nil {
+		if p.CustomCloudProfile.Environment != nil {
+			cloudProfileName = p.CustomCloudProfile.Environment.Name
+		}
+	}
+	return strings.EqualFold(cloudProfileName, AzureStackCloud)
+}
+
+// GetCustomEnvironmentJSON return the JSON format string for custom environment
+func (p *Properties) GetCustomEnvironmentJSON() string {
+	var environmentJSON string
+	if p.IsAzureStackCloud() {
+		bytes, err := json.Marshal(p.CustomCloudProfile.Environment)
+		if err != nil {
+			log.Fatalf("Could not serialize Environment object - %s", err.Error())
+		}
+		environmentJSON = string(bytes)
+		environmentJSON = strings.Replace(environmentJSON, "\"", "\\\"", -1)
+	}
+	return environmentJSON
 }
 
 func getDefaultNVIDIADevicePluginEnabled(p *Properties) bool {

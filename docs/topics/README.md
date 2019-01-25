@@ -12,8 +12,9 @@ Introductions to all the key parts of AKS-Engine you’ll need to know.
 - [For Kubernetes Developers](kubernetes-developers.md)
 - [Kubernetes Walkthrough](kubernetes-walkthrough.md)
 - [Monitoring Kubernetes Clusters](monitoring.md)
-- [Scaling Kubernetes Clusters](scaling.md)
+- [Scaling Kubernetes Clusters](scale.md)
 - [Service Principals](service-principals.md)
+- [Upgrading Kubernetes Clusters](upgrade.md)
 - [More on Windows and Kubernetes](windows-and-kubernetes.md)
 - [Kubernetes Windows Walkthrough](windows.md)
 

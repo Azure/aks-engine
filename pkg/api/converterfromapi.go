@@ -16,6 +16,7 @@ import (
 	v20170701 "github.com/Azure/aks-engine/pkg/api/v20170701"
 	v20170930 "github.com/Azure/aks-engine/pkg/api/v20170930"
 	"github.com/Azure/aks-engine/pkg/api/vlabs"
+	"github.com/Azure/go-autorest/autorest/azure"
 )
 
 ///////////////////////////////////////////////////////////
@@ -479,6 +480,11 @@ func convertPropertiesToVLabs(api *Properties, vlabsProps *vlabs.Properties) {
 	if api.FeatureFlags != nil {
 		vlabsProps.FeatureFlags = &vlabs.FeatureFlags{}
 		convertFeatureFlagsToVLabs(api.FeatureFlags, vlabsProps.FeatureFlags)
+	}
+
+	if api.CustomCloudProfile != nil {
+		vlabsProps.CustomCloudProfile = &vlabs.CustomCloudProfile{}
+		convertCloudProfileToVLabs(api.CustomCloudProfile, vlabsProps.CustomCloudProfile)
 	}
 }
 
@@ -1162,4 +1168,30 @@ func convertAADProfileToVLabs(api *AADProfile, vlabs *vlabs.AADProfile) {
 func convertFeatureFlagsToVLabs(api *FeatureFlags, vlabs *vlabs.FeatureFlags) {
 	vlabs.EnableCSERunInBackground = api.EnableCSERunInBackground
 	vlabs.BlockOutboundInternet = api.BlockOutboundInternet
+}
+
+func convertCloudProfileToVLabs(api *CustomCloudProfile, vlabs *vlabs.CustomCloudProfile) {
+	if api.Environment != nil {
+		vlabs.Environment = &azure.Environment{}
+		vlabs.Environment.Name = api.Environment.Name
+		vlabs.Environment.ManagementPortalURL = api.Environment.ManagementPortalURL
+		vlabs.Environment.PublishSettingsURL = api.Environment.PublishSettingsURL
+		vlabs.Environment.ServiceManagementEndpoint = api.Environment.ServiceManagementEndpoint
+		vlabs.Environment.ResourceManagerEndpoint = api.Environment.ResourceManagerEndpoint
+		vlabs.Environment.ActiveDirectoryEndpoint = api.Environment.ActiveDirectoryEndpoint
+		vlabs.Environment.GalleryEndpoint = api.Environment.GalleryEndpoint
+		vlabs.Environment.KeyVaultEndpoint = api.Environment.KeyVaultEndpoint
+		vlabs.Environment.GraphEndpoint = api.Environment.GraphEndpoint
+		vlabs.Environment.ServiceBusEndpoint = api.Environment.ServiceBusEndpoint
+		vlabs.Environment.BatchManagementEndpoint = api.Environment.BatchManagementEndpoint
+		vlabs.Environment.StorageEndpointSuffix = api.Environment.StorageEndpointSuffix
+		vlabs.Environment.SQLDatabaseDNSSuffix = api.Environment.SQLDatabaseDNSSuffix
+		vlabs.Environment.TrafficManagerDNSSuffix = api.Environment.TrafficManagerDNSSuffix
+		vlabs.Environment.KeyVaultDNSSuffix = api.Environment.KeyVaultDNSSuffix
+		vlabs.Environment.ServiceBusEndpointSuffix = api.Environment.ServiceBusEndpointSuffix
+		vlabs.Environment.ServiceManagementVMDNSSuffix = api.Environment.ServiceManagementVMDNSSuffix
+		vlabs.Environment.ResourceManagerVMDNSSuffix = api.Environment.ResourceManagerVMDNSSuffix
+		vlabs.Environment.ContainerRegistryDNSSuffix = api.Environment.ContainerRegistryDNSSuffix
+		vlabs.Environment.TokenAudience = api.Environment.TokenAudience
+	}
 }

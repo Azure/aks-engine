@@ -7,6 +7,8 @@ import (
 	"encoding/json"
 	"strings"
 
+	"github.com/Azure/go-autorest/autorest/azure"
+
 	"github.com/Azure/aks-engine/pkg/api/common"
 	"github.com/Azure/go-autorest/autorest/to"
 	"github.com/pkg/errors"
@@ -47,6 +49,7 @@ type Properties struct {
 	CertificateProfile      *CertificateProfile      `json:"certificateProfile,omitempty"`
 	AADProfile              *AADProfile              `json:"aadProfile,omitempty"`
 	FeatureFlags            *FeatureFlags            `json:"featureFlags,omitempty"`
+	CustomCloudProfile      *CustomCloudProfile      `json:"customCloudProfile,omitempty"`
 }
 
 // FeatureFlags defines feature-flag restricted functionality
@@ -503,6 +506,11 @@ type OSType string
 
 // Distro represents Linux distro to use for Linux VMs
 type Distro string
+
+// CustomCloudProfile Represents Azure Environment
+type CustomCloudProfile struct {
+	Environment *azure.Environment `json:"environment,omitempty"`
+}
 
 // HasWindows returns true if the cluster contains windows
 func (p *Properties) HasWindows() bool {
