@@ -1230,4 +1230,54 @@ func convertVLabsCustomCloudProfile(vlabs *vlabs.CustomCloudProfile, api *Custom
 		api.Environment.ContainerRegistryDNSSuffix = vlabs.Environment.ContainerRegistryDNSSuffix
 		api.Environment.TokenAudience = vlabs.Environment.TokenAudience
 	}
+	if vlabs.AzureEnvironmentSpecConfig != nil {
+		api.AzureEnvironmentSpecConfig = &AzureEnvironmentSpecConfig{}
+		convertAzureEnvironmentSpecConfig(vlabs.AzureEnvironmentSpecConfig, api.AzureEnvironmentSpecConfig)
+	}
+}
+
+func convertAzureEnvironmentSpecConfig(vlabses *vlabs.AzureEnvironmentSpecConfig, api *AzureEnvironmentSpecConfig) {
+	api.CloudName = vlabses.CloudName
+	api.DCOSSpecConfig = DCOSSpecConfig{
+		DCOS188BootstrapDownloadURL:     vlabses.DCOSSpecConfig.DCOS188BootstrapDownloadURL,
+		DCOS190BootstrapDownloadURL:     vlabses.DCOSSpecConfig.DCOS190BootstrapDownloadURL,
+		DCOS198BootstrapDownloadURL:     vlabses.DCOSSpecConfig.DCOS198BootstrapDownloadURL,
+		DCOS110BootstrapDownloadURL:     vlabses.DCOSSpecConfig.DCOS110BootstrapDownloadURL,
+		DCOS111BootstrapDownloadURL:     vlabses.DCOSSpecConfig.DCOS111BootstrapDownloadURL,
+		DCOSWindowsBootstrapDownloadURL: vlabses.DCOSSpecConfig.DCOSWindowsBootstrapDownloadURL,
+		DcosRepositoryURL:               vlabses.DCOSSpecConfig.DcosRepositoryURL,
+		DcosClusterPackageListID:        vlabses.DCOSSpecConfig.DcosClusterPackageListID,
+		DcosProviderPackageID:           vlabses.DCOSSpecConfig.DcosProviderPackageID,
+	}
+
+	api.DockerSpecConfig = DockerSpecConfig{
+		DockerEngineRepo:         vlabses.DockerSpecConfig.DockerEngineRepo,
+		DockerComposeDownloadURL: vlabses.DockerSpecConfig.DockerComposeDownloadURL,
+	}
+	api.EndpointConfig = AzureEndpointConfig{
+		ResourceManagerVMDNSSuffix: vlabses.EndpointConfig.ResourceManagerVMDNSSuffix,
+	}
+	api.KubernetesSpecConfig = KubernetesSpecConfig{
+		KubernetesImageBase:              vlabses.KubernetesSpecConfig.KubernetesImageBase,
+		TillerImageBase:                  vlabses.KubernetesSpecConfig.TillerImageBase,
+		ACIConnectorImageBase:            vlabses.KubernetesSpecConfig.ACIConnectorImageBase,
+		NVIDIAImageBase:                  vlabses.KubernetesSpecConfig.NVIDIAImageBase,
+		AzureCNIImageBase:                vlabses.KubernetesSpecConfig.AzureCNIImageBase,
+		EtcdDownloadURLBase:              vlabses.KubernetesSpecConfig.EtcdDownloadURLBase,
+		KubeBinariesSASURLBase:           vlabses.KubernetesSpecConfig.KubeBinariesSASURLBase,
+		WindowsTelemetryGUID:             vlabses.KubernetesSpecConfig.WindowsTelemetryGUID,
+		CNIPluginsDownloadURL:            vlabses.KubernetesSpecConfig.CNIPluginsDownloadURL,
+		VnetCNILinuxPluginsDownloadURL:   vlabses.KubernetesSpecConfig.VnetCNILinuxPluginsDownloadURL,
+		VnetCNIWindowsPluginsDownloadURL: vlabses.KubernetesSpecConfig.VnetCNIWindowsPluginsDownloadURL,
+		ContainerdDownloadURLBase:        vlabses.KubernetesSpecConfig.ContainerdDownloadURLBase,
+	}
+	api.OSImageConfig = map[Distro]AzureOSImageConfig{}
+	for k, v := range vlabses.OSImageConfig {
+		api.OSImageConfig[Distro(string(k))] = AzureOSImageConfig{
+			ImageOffer:     v.ImageOffer,
+			ImageSku:       v.ImageSku,
+			ImagePublisher: v.ImagePublisher,
+			ImageVersion:   v.ImageVersion,
+		}
+	}
 }

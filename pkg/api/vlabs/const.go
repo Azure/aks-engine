@@ -107,3 +107,36 @@ const (
 	// AgentPoolProfileRoleInfra is the infra role
 	AgentPoolProfileRoleInfra AgentPoolProfileRole = "infra"
 )
+
+const (
+	//AzureEdgeDCOSBootstrapDownloadURL is the azure edge CDN download url
+	AzureEdgeDCOSBootstrapDownloadURL = "https://dcosio.azureedge.net/dcos/%s/bootstrap/%s.bootstrap.tar.xz"
+	//AzureChinaCloudDCOSBootstrapDownloadURL is the China specific DCOS package download url.
+	AzureChinaCloudDCOSBootstrapDownloadURL = "https://acsengine.blob.core.chinacloudapi.cn/dcos/%s.bootstrap.tar.xz"
+	//AzureEdgeDCOSWindowsBootstrapDownloadURL
+)
+
+const (
+	// AzureCniPluginVerLinux specifies version of Azure CNI plugin, which has been mirrored from
+	// https://github.com/Azure/azure-container-networking/releases/download/${AZURE_PLUGIN_VER}/azure-vnet-cni-linux-amd64-${AZURE_PLUGIN_VER}.tgz
+	// to https://acs-mirror.azureedge.net/cni
+	AzureCniPluginVerLinux = "v1.0.15"
+	// AzureCniPluginVerWindows specifies version of Azure CNI plugin, which has been mirrored from
+	// https://github.com/Azure/azure-container-networking/releases/download/${AZURE_PLUGIN_VER}/azure-vnet-cni-windows-amd64-${AZURE_PLUGIN_VER}.tgz
+	// to https://acs-mirror.azureedge.net/cni
+	AzureCniPluginVerWindows = "v1.0.15"
+	// CNIPluginVer specifies the version of CNI implementation
+	// https://github.com/containernetworking/plugins
+	CNIPluginVer = "v0.7.1"
+)
+
+const (
+	// AzurePublicCloud is a const string reference identifier for public cloud
+	AzurePublicCloud = "AzurePublicCloud"
+	// AzureChinaCloud is a const string reference identifier for china cloud
+	AzureChinaCloud        = "AzureChinaCloud"
+	azureGermanCloud       = "AzureGermanCloud"
+	azureUSGovernmentCloud = "AzureUSGovernmentCloud"
+	// AzureStackCloud is a const string reference identifier for Azure Stack cloud
+	AzureStackCloud = "AzureStackCloud"
+)

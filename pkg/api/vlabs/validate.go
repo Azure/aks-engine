@@ -1314,6 +1314,9 @@ func (a *Properties) validateCustomCloudProfile() error {
 		if len(a.CustomCloudProfile.Environment.GraphEndpoint) == 0 {
 			return errors.New("graphEndpoint needs to be specified when Environment is provided")
 		}
+		if len(a.CustomCloudProfile.Environment.ResourceManagerVMDNSSuffix) == 0 {
+			return errors.New("resourceManagerVMDNSSuffix needs to be specified when Environment is provided")
+		}
 	}
 	return nil
 }

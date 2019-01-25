@@ -30,7 +30,73 @@
             "serviceManagementVMDNSSuffix": "cloudapp.net",
             "resourceManagerVMDNSSuffix": "cloudapp.azurestack.external",
             "containerRegistryDNSSuffix": ""
-            }
+            },
+            "azureEnvironmentSpecConfig": {
+                "cloudName": "AzureStackCloud",
+                "dockerSpecConfig": {
+                  "dockerEngineRepo": "https://aptdocker.azureedge.net/repo1",
+                  "dockerComposeDownloadURL": "https://github.com/docker/compose/releases/download"
+                },
+                "kubernetesSpecConfig": {
+                  "kubernetesImageBase": "k8s.gcr.io/",
+                  "tillerImageBase": "gcr.io/kubernetes-helm/",
+                  "aciConnectorImageBase": "microsoft/",
+                  "nvidiaImageBase": "nvidia/",
+                  "azureCNIImageBase": "containernetworking/",
+                  "etcdDownloadURLBase": "https://acs-mirror.azureedge.net/github-coreos",
+                  "kubeBinariesSASURLBase": "https://acs-mirror.azureedge.net/wink8s/",
+                  "windowsTelemetryGUID": "fb801154-36b9-41bc-89c2-f4d4f05472b0",
+                  "cniPluginsDownloadURL": "https://acs-mirror.azureedge.net/cni/cni-plugins-amd64-v0.7.1.tgz",
+                  "vnetCNILinuxPluginsDownloadURL": "https://acs-mirror.azureedge.net/cni/azure-vnet-cni-linux-amd64-v1.0.15.tgz",
+                  "vnetCNIWindowsPluginsDownloadURL": "https://acs-mirror.azureedge.net/cni/azure-vnet-cni-windows-amd64-v1.0.15.zip",
+                  "containerdDownloadURLBase": "https://storage.googleapis.com/cri-containerd-release/"
+                },
+                "dcosSpecConfig": {
+                  "dcos188BootstrapDownloadURL": "https://dcosio.azureedge.net/dcos/stable/bootstrap/5df43052907c021eeb5de145419a3da1898c58a5.bootstrap.tar.xz",
+                  "dcos190BootstrapDownloadURL": "https://dcosio.azureedge.net/dcos/stable/bootstrap/58fd0833ce81b6244fc73bf65b5deb43217b0bd7.bootstrap.tar.xz",
+                  "dcos198BootstrapDownloadURL": "https://dcosio.azureedge.net/dcos/stable/1.9.8/bootstrap/f4ae0d20665fc68ee25282d6f78681b2773c6e10.bootstrap.tar.xz",
+                  "dcos110BootstrapDownloadURL": "https://dcosio.azureedge.net/dcos/stable/1.10.0/bootstrap/4d92536e7381176206e71ee15b5ffe454439920c.bootstrap.tar.xz",
+                  "dcos111BootstrapDownloadURL": "https://dcosio.azureedge.net/dcos/stable/1.11.0/bootstrap/a0654657903fb68dff60f6e522a7f241c1bfbf0f.bootstrap.tar.xz",
+                  "dcosWindowsBootstrapDownloadURL": "http://dcos-win.westus.cloudapp.azure.com/dcos-windows/stable/",
+                  "dcosRepositoryURL": "https://dcosio.azureedge.net/dcos/stable/1.11.0",
+                  "dcosClusterPackageListID": "248a66388bba1adbcb14a52fd3b7b424ab06fa76"
+                },
+                "endpointConfig": {
+                  "resourceManagerVMDNSSuffix": "cloudapp.azurestack.external"
+                },
+                "osImageConfig": {
+                  "aks": {
+                    "imageOffer": "aks",
+                    "imageSku": "aks-ubuntu-1604-201812",
+                    "imagePublisher": "microsoft-aks",
+                    "imageVersion": "2018.12.19"
+                  },
+                  "aks-docker-engine": {
+                    "imageOffer": "aks",
+                    "imageSku": "aks-ubuntu-1604-docker-engine",
+                    "imagePublisher": "microsoft-aks",
+                    "imageVersion": "2018.12.19"
+                  },
+                  "test": {
+                    "imageOffer": "imageOffertest",
+                    "imageSku": "imageSkutest",
+                    "imagePublisher": "imagePublishertest",
+                    "imageVersion": "imageVersiontest"
+                  },
+                  "rhel": {
+                    "imageOffer": "RHEL",
+                    "imageSku": "7.3",
+                    "imagePublisher": "RedHat",
+                    "imageVersion": "latest"
+                  },
+                  "ubuntu": {
+                    "imageOffer": "UbuntuServer",
+                    "imageSku": "16.04-LTS",
+                    "imagePublisher": "Canonical",
+                    "imageVersion": "latest"
+                  }
+                }
+              }
         },
         "masterProfile": {
             "dnsPrefix": "k111007",

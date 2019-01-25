@@ -1393,6 +1393,97 @@ func TestProxyModeDefaults(t *testing.T) {
 		t.Fatalf("ProxyMode string not the expected default value, got %s, expected %s", properties.OrchestratorProfile.KubernetesConfig.ProxyMode, KubeProxyModeIPVS)
 	}
 }
+func TestSetCustomCloudProfileDefaults(t *testing.T) {
+
+	// Test that the ResourceManagerVMDNSSuffix is set in EndpointConfig
+	mockCS := getMockBaseContainerService("1.11.6")
+	mockCSP := getMockPropertiesWithCustomCloudProfile("azurestackcloud", true, true, true)
+	vmDNSSuffix := "contoso.net"
+	mockCSP.CustomCloudProfile.Environment.ResourceManagerVMDNSSuffix = vmDNSSuffix
+	mockCS.Properties.CustomCloudProfile = mockCSP.CustomCloudProfile
+	mockCS.SetPropertiesDefaults(false, false)
+
+	if AzureStackCloudSpec.EndpointConfig.ResourceManagerVMDNSSuffix != vmDNSSuffix {
+		t.Errorf("setCustomCloudProfileDefaults(): ResourceManagerVMDNSSuffix string not the expected default value, got %s, expected %s", AzureStackCloudSpec.EndpointConfig.ResourceManagerVMDNSSuffix, vmDNSSuffix)
+	}
+
+	if AzureCloudSpecEnvMap[AzureStackCloud].EndpointConfig.ResourceManagerVMDNSSuffix != vmDNSSuffix {
+		t.Errorf("setCustomCloudProfileDefaults(): ResourceManagerVMDNSSuffix string in AzureCloudSpecEnvMap[AzureStackCloud] not the expected default value, got %s, expected %s", AzureStackCloudSpec.EndpointConfig.ResourceManagerVMDNSSuffix, vmDNSSuffix)
+	}
+
+	// Test that the AzureStackCloudSpec is default when azureEnvironmentSpecConfig is empty in api model JSON file
+	mockCSDefaultSpec := getMockBaseContainerService("1.11.6")
+	mockCSPDefaultSpec := getMockPropertiesWithCustomCloudProfile("azurestackcloud", true, true, false)
+	mockCSDefaultSpec.Properties.CustomCloudProfile = mockCSPDefaultSpec.CustomCloudProfile
+	mockCSDefaultSpec.SetPropertiesDefaults(false, false)
+
+	if !reflect.DeepEqual(mockCSDefaultSpec.Properties.CustomCloudProfile.AzureEnvironmentSpecConfig, &AzureStackCloudSpec) {
+		t.Errorf("setCustomCloudProfileDefaults(): did not set AzureStackCloudSpec as default when azureEnvironmentSpecConfig is empty in api model JSON file")
+	}
+
+	// Test that default assignment flow doesn't overwrite a user-provided config
+	mockCSCustom := getMockBaseContainerService("1.11.6")
+	mockCSPCustom := getMockPropertiesWithCustomCloudProfile("azurestackcloud", true, true, false)
+
+	//Mock AzureEnvironmentSpecConfig
+	customCloudSpec := AzureEnvironmentSpecConfig{
+		CloudName: "AzureStackCloud",
+		//DockerSpecConfig specify the docker engine download repo
+		DockerSpecConfig: DockerSpecConfig{
+			DockerEngineRepo:         "DockerEngineRepo",
+			DockerComposeDownloadURL: "DockerComposeDownloadURL",
+		},
+		//KubernetesSpecConfig - Due to Chinese firewall issue, the default containers from google is blocked, use the Chinese local mirror instead
+		KubernetesSpecConfig: KubernetesSpecConfig{
+			KubernetesImageBase:              "KubernetesImageBase",
+			TillerImageBase:                  "TillerImageBase",
+			ACIConnectorImageBase:            "ACIConnectorImageBase",
+			NVIDIAImageBase:                  "NVIDIAImageBase",
+			AzureCNIImageBase:                "AzureCNIImageBase",
+			EtcdDownloadURLBase:              "EtcdDownloadURLBase",
+			KubeBinariesSASURLBase:           "KubeBinariesSASURLBase",
+			WindowsTelemetryGUID:             "WindowsTelemetryGUID",
+			CNIPluginsDownloadURL:            "CNIPluginsDownloadURL",
+			VnetCNILinuxPluginsDownloadURL:   "VnetCNILinuxPluginsDownloadURL",
+			VnetCNIWindowsPluginsDownloadURL: "VnetCNIWindowsPluginsDownloadURL",
+			ContainerdDownloadURLBase:        "ContainerdDownloadURLBase",
+		},
+		DCOSSpecConfig: DCOSSpecConfig{
+			DCOS188BootstrapDownloadURL:     "DCOS188BootstrapDownloadURL",
+			DCOS190BootstrapDownloadURL:     "DCOS190BootstrapDownloadURL",
+			DCOS198BootstrapDownloadURL:     "DCOS198BootstrapDownloadURL",
+			DCOS110BootstrapDownloadURL:     "DCOS110BootstrapDownloadURL",
+			DCOS111BootstrapDownloadURL:     "DCOS111BootstrapDownloadURL",
+			DCOSWindowsBootstrapDownloadURL: "DCOSWindowsBootstrapDownloadURL",
+			DcosRepositoryURL:               "DcosRepositoryURL",
+			DcosClusterPackageListID:        "DcosClusterPackageListID",
+			DcosProviderPackageID:           "DcosProviderPackageID",
+		},
+		EndpointConfig: AzureEndpointConfig{
+			ResourceManagerVMDNSSuffix: "ResourceManagerVMDNSSuffix",
+		},
+		OSImageConfig: map[Distro]AzureOSImageConfig{
+			Distro("Test"): {
+				ImageOffer:     "ImageOffer",
+				ImageSku:       "ImageSku",
+				ImagePublisher: "ImagePublisher",
+				ImageVersion:   "ImageVersion",
+			},
+			AKS:             DefaultAKSOSImageConfig,
+			AKSDockerEngine: DefaultAKSDockerEngineOSImageConfig,
+		},
+	}
+	mockCSPCustom.CustomCloudProfile.AzureEnvironmentSpecConfig = &customCloudSpec
+	mockCSCustom.Properties.CustomCloudProfile = mockCSPCustom.CustomCloudProfile
+	mockCSCustom.SetPropertiesDefaults(false, false)
+
+	if !reflect.DeepEqual(AzureStackCloudSpec, customCloudSpec) {
+		t.Errorf("setCustomCloudProfileDefaults(): did not set AzureStackCloudSpec with customer input")
+	}
+	if !reflect.DeepEqual(AzureCloudSpecEnvMap[AzureStackCloud], customCloudSpec) {
+		t.Errorf("setCustomCloudProfileDefaults(): did not set AzureCloudSpecEnvMap[AzureStackCloud] with customer input")
+	}
+}
 
 func getMockBaseContainerService(orchestratorVersion string) ContainerService {
 	mockAPIProperties := getMockAPIProperties(orchestratorVersion)

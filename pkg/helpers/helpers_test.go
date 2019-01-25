@@ -378,53 +378,79 @@ func TestCreateSaveSSH(t *testing.T) {
 
 func TestGetCloudTargetEnv(t *testing.T) {
 	testcases := []struct {
-		input    string
-		expected string
+		location   string
+		clouldName string
+		expected   string
 	}{
 		{
 			"chinaeast",
+			"",
 			"AzureChinaCloud",
 		},
 		{
 			"chinanorth",
+			"",
 			"AzureChinaCloud",
 		},
 		{
 			"chinaeast",
+			"",
 			"AzureChinaCloud",
 		},
 		{
 			"chinaeast2",
+			"",
 			"AzureChinaCloud",
 		},
 		{
 			"chinanorth2",
+			"",
 			"AzureChinaCloud",
 		},
 		{
 			"germanycentral",
+			"",
 			"AzureGermanCloud",
 		},
 		{
 			"germanynortheast",
+			"",
 			"AzureGermanCloud",
 		},
 		{
 			"usgov123",
+			"",
 			"AzureUSGovernmentCloud",
 		},
 		{
 			"usdod-123",
+			"",
 			"AzureUSGovernmentCloud",
 		},
 		{
 			"sampleinput",
+			"",
+			"AzurePublicCloud",
+		},
+		{
+			"azurestacklocation",
+			"azurestackcloud",
+			"AzureStackCloud",
+		},
+		{
+			"azurestacklocation",
+			"AzureStackcloud",
+			"AzureStackCloud",
+		},
+		{
+			"azurestacklocation",
+			"azurestacklocation",
 			"AzurePublicCloud",
 		},
 	}
 
 	for _, testcase := range testcases {
-		actual := GetCloudTargetEnv(testcase.input)
+		actual := GetCloudTargetEnv(testcase.location, testcase.clouldName)
 		if testcase.expected != actual {
 			t.Errorf("expected GetCloudTargetEnv to return %s, but got %s", testcase.expected, actual)
 		}

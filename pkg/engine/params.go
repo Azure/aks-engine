@@ -38,7 +38,7 @@ func getParameters(cs *api.ContainerService, generatorCode string, aksEngineVers
 	}
 
 	addValue(parametersMap, "fqdnEndpointSuffix", cloudSpecConfig.EndpointConfig.ResourceManagerVMDNSSuffix)
-	addValue(parametersMap, "targetEnvironment", helpers.GetCloudTargetEnv(cs.Location))
+	addValue(parametersMap, "targetEnvironment", helpers.GetCloudTargetEnv(cs.Location, cs.Properties.GetCustomCloudName()))
 	addValue(parametersMap, "linuxAdminUsername", properties.LinuxProfile.AdminUsername)
 	if properties.LinuxProfile.CustomSearchDomain != nil {
 		addValue(parametersMap, "searchDomainName", properties.LinuxProfile.CustomSearchDomain.Name)

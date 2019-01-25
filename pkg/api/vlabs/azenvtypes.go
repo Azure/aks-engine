@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
-package api
+package vlabs
 
 import "fmt"
 
@@ -141,9 +141,9 @@ var (
 	// DefaultAKSOSImageConfig is the AKS image based on Ubuntu 16.04.
 	DefaultAKSOSImageConfig = AzureOSImageConfig{
 		ImageOffer:     "aks",
-		ImageSku:       "aks-ubuntu-1604-201901",
+		ImageSku:       "aks-ubuntu-1604-201812",
 		ImagePublisher: "microsoft-aks",
-		ImageVersion:   "2019.01.11",
+		ImageVersion:   "2018.12.19",
 	}
 
 	// DefaultAKSDockerEngineOSImageConfig is the AKS image based on Ubuntu 16.04.
@@ -151,15 +151,7 @@ var (
 		ImageOffer:     "aks",
 		ImageSku:       "aks-ubuntu-1604-docker-engine",
 		ImagePublisher: "microsoft-aks",
-		ImageVersion:   "2019.01.11",
-	}
-
-	// DefaultACC1604OSImageConfig is the ACC image based on Ubuntu 16.04.
-	DefaultACC1604OSImageConfig = AzureOSImageConfig{
-		ImageOffer:     "confidential-compute-preview",
-		ImageSku:       "16.04-LTS",
-		ImagePublisher: "Canonical",
-		ImageVersion:   "latest",
+		ImageVersion:   "2018.12.19",
 	}
 
 	//AzureCloudSpec is the default configurations for global azure.
@@ -181,7 +173,6 @@ var (
 			CoreOS:          DefaultCoreOSImageConfig,
 			AKS:             DefaultAKSOSImageConfig,
 			AKSDockerEngine: DefaultAKSDockerEngineOSImageConfig,
-			ACC1604:         DefaultACC1604OSImageConfig,
 		},
 	}
 
