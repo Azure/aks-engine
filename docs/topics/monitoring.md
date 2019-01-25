@@ -53,6 +53,7 @@ azureuser@k8s-master-95363663-0:~$ kubectl top pod
 NAME            CPU(cores)   MEMORY(bytes)
 somePod         0m           11Mi
 ```
+
 ## Azure Monitor for containers
 
 Azure Monitor for containers is a feature designed to monitor the performance of container workloads deployed to AKS-engine (formerly known as ACS-engine) cluster(s) hosted on Azure. Monitoring your containers is critical, especially when you're running a production cluster, at scale, with multiple applications.
@@ -63,6 +64,8 @@ Azure Monitor for containers for aks-engine cluster(s) can be configured through
 
 1. [Container-monitoring add-on](../../examples/addons/container-monitoring/README.md)
 2. Helm chart [azuremonitor-containers](https://github.com/helm/charts/tree/master/incubator/azuremonitor-containers)
+
+> Note: If more than one AKS engine cluster planned to configure to the same Azure Log Workspace then recommend option is to use Helm chart (i.e. option #2 above)
 
 Navigate to [azmon-containers](https://aka.ms/azmon-containers) to view the health, metrics and logs of AKS-engine cluster(s).
 

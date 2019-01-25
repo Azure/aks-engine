@@ -1,5 +1,7 @@
 # Container-monitoring add-on
 
+> Note: If more than one AKS engine cluster planned to configure to the same Azure Log Workspace then preferred option to use Helm chart to onboard the container monitoring add-on. Refer [azuremonitor-containers](https://github.com/helm/charts/tree/master/incubator/azuremonitor-containers) to onboard monitoring addon to the AKS Engine clusters using HELM chart.
+
 This is the Container-monitoring add-on. This add-on requires Azure Log Analytics Workspace GUID and key in Base64 encoded form. If you don't have Azure Log Analytics workspace, please create one by following the instructions in https://docs.microsoft.com/en-us/azure/log-analytics/log-analytics-quick-create-workspace.
 > Note: Workspace GUID and Key MUST be in Base-64 encoded.
 
@@ -94,6 +96,21 @@ For more details on how to use the product, see [Azure Monitor for containers](h
 ## Supported Matrix
 
  Refer to [azuremonitor-containers-aks-engine](https://github.com/Microsoft/OMS-docker/blob/aks-engine/README.md) for the supported matrix, troubleshooting and supportability etc.
+
+
+## Disable Monitoring 
+
+After you enable monitoring of your AKS Engine cluster, you can stop monitoring the cluster if you decide you no longer want to monitor it. 
+
+- If you have onboarded the monitoring using the HELM chart, then you can disable monitoring by uninstalling the chart. Refer Uninstalling the Chart section in [azuremonitor-containers](https://github.com/helm/charts/tree/master/incubator/azuremonitor-containers)
+
+- If you have onboarded using the Container Monitoring addon, then you can stop monitoring either 
+
+      - kubectl delete -f <kubernetesmasteraddons-omsagent-daemonset.yaml>
+
+        or
+
+      - deleting omsagent daemonset and replicaset using Kubectl tool
 
 ## Contact
 
