@@ -437,7 +437,7 @@
     },
     "properties": {
       "singlePlacementGroup": {{ .MasterProfile.SinglePlacementGroup}},
-      "overprovision": true,
+      "overprovision": false,
       "upgradePolicy": {
         "mode": "Manual"
       },
@@ -549,7 +549,6 @@
           }
         },
         "extensionProfile": {
-          "doNotRunOnOverprovisionedVMs": true,
           "extensions": [
             {
               "name": "[concat(variables('masterVMNamePrefix'), 'vmssCSE')]",
