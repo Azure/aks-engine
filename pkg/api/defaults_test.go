@@ -1448,17 +1448,7 @@ func TestSetCustomCloudProfileDefaults(t *testing.T) {
 			VnetCNIWindowsPluginsDownloadURL: "VnetCNIWindowsPluginsDownloadURL",
 			ContainerdDownloadURLBase:        "ContainerdDownloadURLBase",
 		},
-		DCOSSpecConfig: DCOSSpecConfig{
-			DCOS188BootstrapDownloadURL:     "DCOS188BootstrapDownloadURL",
-			DCOS190BootstrapDownloadURL:     "DCOS190BootstrapDownloadURL",
-			DCOS198BootstrapDownloadURL:     "DCOS198BootstrapDownloadURL",
-			DCOS110BootstrapDownloadURL:     "DCOS110BootstrapDownloadURL",
-			DCOS111BootstrapDownloadURL:     "DCOS111BootstrapDownloadURL",
-			DCOSWindowsBootstrapDownloadURL: "DCOSWindowsBootstrapDownloadURL",
-			DcosRepositoryURL:               "DcosRepositoryURL",
-			DcosClusterPackageListID:        "DcosClusterPackageListID",
-			DcosProviderPackageID:           "DcosProviderPackageID",
-		},
+		DCOSSpecConfig: DefaultDCOSSpecConfig,
 		EndpointConfig: AzureEndpointConfig{
 			ResourceManagerVMDNSSuffix: "ResourceManagerVMDNSSuffix",
 		},

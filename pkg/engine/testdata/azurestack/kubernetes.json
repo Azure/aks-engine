@@ -51,16 +51,6 @@
                   "vnetCNIWindowsPluginsDownloadURL": "https://acs-mirror.azureedge.net/cni/azure-vnet-cni-windows-amd64-v1.0.15.zip",
                   "containerdDownloadURLBase": "https://storage.googleapis.com/cri-containerd-release/"
                 },
-                "dcosSpecConfig": {
-                  "dcos188BootstrapDownloadURL": "https://dcosio.azureedge.net/dcos/stable/bootstrap/5df43052907c021eeb5de145419a3da1898c58a5.bootstrap.tar.xz",
-                  "dcos190BootstrapDownloadURL": "https://dcosio.azureedge.net/dcos/stable/bootstrap/58fd0833ce81b6244fc73bf65b5deb43217b0bd7.bootstrap.tar.xz",
-                  "dcos198BootstrapDownloadURL": "https://dcosio.azureedge.net/dcos/stable/1.9.8/bootstrap/f4ae0d20665fc68ee25282d6f78681b2773c6e10.bootstrap.tar.xz",
-                  "dcos110BootstrapDownloadURL": "https://dcosio.azureedge.net/dcos/stable/1.10.0/bootstrap/4d92536e7381176206e71ee15b5ffe454439920c.bootstrap.tar.xz",
-                  "dcos111BootstrapDownloadURL": "https://dcosio.azureedge.net/dcos/stable/1.11.0/bootstrap/a0654657903fb68dff60f6e522a7f241c1bfbf0f.bootstrap.tar.xz",
-                  "dcosWindowsBootstrapDownloadURL": "http://dcos-win.westus.cloudapp.azure.com/dcos-windows/stable/",
-                  "dcosRepositoryURL": "https://dcosio.azureedge.net/dcos/stable/1.11.0",
-                  "dcosClusterPackageListID": "248a66388bba1adbcb14a52fd3b7b424ab06fa76"
-                },
                 "endpointConfig": {
                   "resourceManagerVMDNSSuffix": "cloudapp.azurestack.external"
                 },

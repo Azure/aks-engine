@@ -10,7 +10,7 @@ type AzureEnvironmentSpecConfig struct {
 	CloudName            string                        `json:"cloudName,omitempty"`
 	DockerSpecConfig     DockerSpecConfig              `json:"dockerSpecConfig,omitempty"`
 	KubernetesSpecConfig KubernetesSpecConfig          `json:"kubernetesSpecConfig,omitempty"`
-	DCOSSpecConfig       DCOSSpecConfig                `json:"dcosSpecConfig,omitempty"`
+	DCOSSpecConfig       DCOSSpecConfig                `json:"-"`
 	EndpointConfig       AzureEndpointConfig           `json:"endpointConfig,omitempty"`
 	OSImageConfig        map[Distro]AzureOSImageConfig `json:"osImageConfig,omitempty"`
 }
@@ -23,15 +23,15 @@ type DockerSpecConfig struct {
 
 //DCOSSpecConfig is the configurations of DCOS
 type DCOSSpecConfig struct {
-	DCOS188BootstrapDownloadURL     string `json:"dcos188BootstrapDownloadURL,omitempty"`
-	DCOS190BootstrapDownloadURL     string `json:"dcos190BootstrapDownloadURL,omitempty"`
-	DCOS198BootstrapDownloadURL     string `json:"dcos198BootstrapDownloadURL,omitempty"`
-	DCOS110BootstrapDownloadURL     string `json:"dcos110BootstrapDownloadURL,omitempty"`
-	DCOS111BootstrapDownloadURL     string `json:"dcos111BootstrapDownloadURL,omitempty"`
-	DCOSWindowsBootstrapDownloadURL string `json:"dcosWindowsBootstrapDownloadURL,omitempty"`
-	DcosRepositoryURL               string `json:"dcosRepositoryURL,omitempty"`        // For custom install, for example CI, need these three addributes
-	DcosClusterPackageListID        string `json:"dcosClusterPackageListID,omitempty"` // the id of the package list file
-	DcosProviderPackageID           string `json:"dcosProviderPackageID,omitempty"`    // the id of the dcos-provider-xxx package
+	DCOS188BootstrapDownloadURL     string
+	DCOS190BootstrapDownloadURL     string
+	DCOS198BootstrapDownloadURL     string
+	DCOS110BootstrapDownloadURL     string
+	DCOS111BootstrapDownloadURL     string
+	DCOSWindowsBootstrapDownloadURL string
+	DcosRepositoryURL               string // For custom install, for example CI, need these three addributes
+	DcosClusterPackageListID        string // the id of the package list file
+	DcosProviderPackageID           string // the id of the dcos-provider-xxx package
 }
 
 //KubernetesSpecConfig is the kubernetes container images used.
@@ -271,11 +271,9 @@ var (
 		//KubernetesSpecConfig is the default kubernetes container image url.
 		KubernetesSpecConfig: DefaultKubernetesSpecConfig,
 		DCOSSpecConfig:       DefaultDCOSSpecConfig,
-
 		EndpointConfig: AzureEndpointConfig{
 			ResourceManagerVMDNSSuffix: "",
 		},
-
 		OSImageConfig: map[Distro]AzureOSImageConfig{
 			Ubuntu:          DefaultUbuntuImageConfig,
 			RHEL:            DefaultRHELOSImageConfig,
