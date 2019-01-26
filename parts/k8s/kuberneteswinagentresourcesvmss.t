@@ -59,6 +59,10 @@
         "mode": "Manual"
       },
       "virtualMachineProfile": {
+        {{if .IsLowPriorityScaleSet}}
+          "priority": "[variables('{{.Name}}ScaleSetPriority')]",
+          "evictionPolicy": "[variables('{{.Name}}ScaleSetEvictionPolicy')]",
+        {{end}}
         "networkProfile": {
           "networkInterfaceConfigurations": [
             {
