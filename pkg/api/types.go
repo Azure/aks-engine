@@ -1491,12 +1491,18 @@ func (f *FeatureFlags) IsFeatureEnabled(feature string) bool {
 	return false
 }
 
-//GetCloudSpecConfig returns the Kubernetes container images URL configurations based on the deploy target environment.
+// GetCloudSpecConfig returns the Kubernetes container images URL configurations based on the deploy target environment.
 //for example: if the target is the public azure, then the default container image url should be k8s.gcr.io/...
 //if the target is azure china, then the default container image should be mirror.azure.cn:5000/google_container/...
 func (cs *ContainerService) GetCloudSpecConfig() AzureEnvironmentSpecConfig {
 	targetEnv := helpers.GetCloudTargetEnv(cs.Location)
 	return AzureCloudSpecEnvMap[targetEnv]
+}
+
+// IsAksBillingEnabled checks if the AKS Billing Extension should be enabled for a cloud environment.
+func (cs *ContainerService) IsAksBillingEnabled() bool {
+	cloudSpecConfig := cs.GetCloudSpecConfig()
+	return cloudSpecConfig.CloudName == AzurePublicCloud || cloudSpecConfig.CloudName == AzureChinaCloud
 }
 
 // GetAzureProdFQDN returns the formatted FQDN string for a given apimodel.

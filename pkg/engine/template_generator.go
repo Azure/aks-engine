@@ -481,8 +481,7 @@ func (t *TemplateGenerator) getTemplateFuncMap(cs *api.ContainerService) templat
 			return cs.Properties.OrchestratorProfile.KubernetesConfig.GetUserAssignedClientID()
 		},
 		"UseAksExtension": func() bool {
-			cloudSpecConfig := cs.GetCloudSpecConfig()
-			return cloudSpecConfig.CloudName == api.AzurePublicCloud || cloudSpecConfig.CloudName == api.AzureChinaCloud
+			return cs.IsAksBillingEnabled()
 		},
 		"IsMooncake": func() bool {
 			cloudSpecConfig := cs.GetCloudSpecConfig()

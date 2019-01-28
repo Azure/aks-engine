@@ -271,7 +271,7 @@ func CreateMasterVMSS(cs *api.ContainerService) VirtualMachineScaleSetARM {
 
 	extensions = append(extensions, vmssCSE)
 
-	if cs.GetCloudSpecConfig().CloudName == api.AzurePublicCloud {
+	if cs.IsAksBillingEnabled() {
 		aksBillingExtension := compute.VirtualMachineScaleSetExtension{
 			Name: to.StringPtr("[concat(variables('masterVMNamePrefix'), 'vmss-computeAksLinuxBilling')]"),
 			VirtualMachineScaleSetExtensionProperties: &compute.VirtualMachineScaleSetExtensionProperties{
@@ -577,7 +577,7 @@ func CreateAgentVMSS(cs *api.ContainerService, profile *api.AgentPoolProfile) Vi
 
 	vmssExtensions = append(vmssExtensions, vmssCSE)
 
-	if cs.GetCloudSpecConfig().CloudName == api.AzurePublicCloud {
+	if cs.IsAksBillingEnabled() {
 		aksBillingExtension := compute.VirtualMachineScaleSetExtension{
 			Name: to.StringPtr(fmt.Sprintf("[concat(variables('%sVMNamePrefix'), '-computeAksLinuxBilling')]", profile.Name)),
 			VirtualMachineScaleSetExtensionProperties: &compute.VirtualMachineScaleSetExtensionProperties{

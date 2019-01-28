@@ -98,7 +98,7 @@ func createKubernetesMasterResources(cs *api.ContainerService) []interface{} {
 	masterCSE := CreateCustomScriptExtension(cs)
 	masterResources = append(masterResources, masterCSE)
 
-	if cs.GetCloudSpecConfig().CloudName == api.AzurePublicCloud {
+	if cs.IsAksBillingEnabled() {
 		aksBillingExtension := CreateAKSBillingExtension(cs)
 		masterResources = append(masterResources, aksBillingExtension)
 	}
