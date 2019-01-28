@@ -482,7 +482,7 @@ func (t *TemplateGenerator) getTemplateFuncMap(cs *api.ContainerService) templat
 		},
 		"UseAksExtension": func() bool {
 			cloudSpecConfig := cs.GetCloudSpecConfig()
-			return cloudSpecConfig.CloudName == api.AzurePublicCloud
+			return cloudSpecConfig.CloudName == api.AzurePublicCloud || cloudSpecConfig.CloudName == api.AzureChinaCloud
 		},
 		"IsMooncake": func() bool {
 			cloudSpecConfig := cs.GetCloudSpecConfig()
