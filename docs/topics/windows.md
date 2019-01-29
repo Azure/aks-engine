@@ -3,21 +3,21 @@
 <!-- TOC -->
 
 - [Quick Start](#quick-start)
-    - [Install Needed Tools](#install-needed-tools)
-        - [Windows](#windows)
-        - [Mac](#mac)
-        - [Linux](#linux)
-    - [Create a Resource Group and Service Principal](#create-a-resource-group-and-service-principal)
-        - [Create a Resource Group and Service Principal (Windows)](#create-a-resource-group-and-service-principal-windows)
-        - [Create a Resource Group and Service Principal (Mac+Linux)](#create-a-resource-group-and-service-principal-maclinux)
-    - [Create an aks-engine apimodel](#create-an-aks-engine-apimodel)
-        - [Filling out apimodel (Windows)](#filling-out-apimodel-windows)
-        - [Filling out apimodel (Mac & Linux)](#filling-out-apimodel-mac--linux)
-    - [Generate Azure Resource Manager template](#generate-azure-resource-manager-template)
-    - [Deploy the cluster](#deploy-the-cluster)
-        - [Check that the cluster is up](#check-that-the-cluster-is-up)
-    - [Deploy your first application](#deploy-your-first-application)
-    - [What was deployed](#what-was-deployed)
+  - [Install Needed Tools](#install-needed-tools)
+    - [Windows](#windows)
+    - [Mac](#mac)
+    - [Linux](#linux)
+  - [Create a Resource Group and Service Principal](#create-a-resource-group-and-service-principal)
+    - [Create a Resource Group and Service Principal (Windows)](#create-a-resource-group-and-service-principal-windows)
+    - [Create a Resource Group and Service Principal (Mac+Linux)](#create-a-resource-group-and-service-principal-maclinux)
+  - [Create an aks-engine apimodel](#create-an-aks-engine-apimodel)
+    - [Filling out apimodel (Windows)](#filling-out-apimodel-windows)
+    - [Filling out apimodel (Mac & Linux)](#filling-out-apimodel-mac--linux)
+  - [Generate Azure Resource Manager template](#generate-azure-resource-manager-template)
+  - [Deploy the cluster](#deploy-the-cluster)
+    - [Check that the cluster is up](#check-that-the-cluster-is-up)
+  - [Deploy your first application](#deploy-your-first-application)
+  - [What was deployed](#what-was-deployed)
 - [Next Steps](#next-steps)
 
 <!-- /TOC -->
@@ -37,7 +37,7 @@ All of these steps can be done from any OS platform, so some sections are split 
 
 When you're done, you will have a working cluster running Windows Server 2019 and the latest Kubernetes v1.13 release. Older releases are available but not recommended.
 
-> Note: Windows support for Kubernetes is still in beta and under **active development**. If you run into problems, please be sure to check the [Troubleshooting](windows-details.md#troubleshooting) page and [active Windows issues](https://github.com/azure/aks-engine/issues?&q=is:issue+is:open+label:windows) in this repo, then help us by filing new issues for things that aren't already covered.
+> Note: Windows support for Kubernetes is still in beta and under **active development**. If you run into problems, please be sure to check the [Troubleshooting](../howto/troubleshooting.md) page and [active Windows issues](https://github.com/azure/aks-engine/issues?&q=is:issue+is:open+label:windows) in this repo, then help us by filing new issues for things that aren't already covered.
 
 ### Install Needed Tools
 
@@ -220,6 +220,7 @@ GitTreeState: clean
 The latest release of Kubernetes Control (kubectl) is available on the [Kubernetes release page](https://kubernetes.io/docs/setup/release/notes/). Look for `kubernetes-client-linux-....tar.gz` and copy the link to it.
 
 Download and extract it with curl & tar:
+
 ```console
 $ curl -L https://dl.k8s.io/v1.13.1/kubernetes-client-linux-amd64.tar.gz | tar xvzf -
   % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
@@ -383,7 +384,7 @@ It will also create a working Kubernetes client config file in `_output/<dnspref
 
 Get the paths to `azuredeploy.json` and `azuredeploy.parameters.json` from the last step, and pass them into `az group deployment create --name <name for deployment> --resource-group <resource group name> --template-file <...azuredeploy.json> --parameters <...azuredeploy.parameters.json>`
 
-```powershell
+```console
 $ az group deployment create --name plangk8swin1-deploy --resource-group k8s-win1 --template-file "./_output/plangk8swin1/azuredeploy.json" --parameters "./_output/plangk8swin1/azuredeploy.parameters.json"
 ```
 
@@ -529,7 +530,7 @@ Once your Kubernetes cluster has been created you will have a resource group con
 
 1. 1 master accessible by SSH on port 22 or kubectl on port 443
 
-2. A set of Windows and/or Linux nodes.  The windows nodes can be accessed through an RDP SSH tunnel via the master node, following these steps [Connecting to Windows Nodes](troubleshooting.md#connecting-to-windows-nodes).
+2. A set of Windows and/or Linux nodes.  The windows nodes can be accessed through an RDP SSH tunnel via the master node, following these steps [Connecting to Windows Nodes](../howto/troubleshooting.md#connecting-to-windows-nodes).
 
 ![Image of Kubernetes cluster on azure with Windows](../static/img/kubernetes-windows.png)
 
@@ -545,13 +546,12 @@ These parts were all automatically created using the Azure Resource Manager temp
 
 For more resources on Windows and AKS Engine, continue reading:
 
-- [Customizing Windows Deployments](windows-details.md#customizing-windows-deployments)
-- [More Examples](windows-details.md#more-examples)
-- [Troubleshooting](windows-details.md#troubleshooting)
-- [Using Kubernetes ingress](mixed-cluster-ingress.md) for more flexibility in http and https routing
+- [Customizing Windows Deployments](windows-and-kubernetes.md#customizing-windows-deployments)
+- [More Examples](windows-and-kubernetes.md#more-examples)
+- [Troubleshooting](../howto/troubleshooting.md)
+- [Using Kubernetes ingress](../howto/mixed-cluster-ingress.md) for more flexibility in http and https routing
 
 If you'd like to learn more about Kubernetes in general, check out these guides:
 
 1. [Kubernetes Bootcamp](https://kubernetesbootcamp.github.io/kubernetes-bootcamp/index.html) - shows you how to deploy, scale, update, and debug containerized applications.
 2. [Kubernetes Userguide](http://kubernetes.io/docs/user-guide/) - provides information on running programs in an existing Kubernetes cluster.
-3. [Kubernetes Examples](https://github.com/kubernetes/kubernetes/tree/master/examples) - provides a number of examples on how to run real applications with Kubernetes.

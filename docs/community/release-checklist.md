@@ -25,7 +25,7 @@ projects that do [semantic version][] releases.
 aks-engine has a regular, public release cadence. From v0.1.0 onward, new aks-engine feature
 releases arrive on the first Thursday of each month. Patch releases are created at any time,
 as needed. GitHub milestones are used to communicate the content and timing of major and minor
-releases, and longer-term planning is visible at [the Roadmap](roadmap.md).
+releases, and longer-term planning is visible at [the Roadmap](planning-process.md#open-roadmap).
 
 aks-engine release timing is not linked to specific features. If a feature is merged before the
 release date, it is included in the next release.
@@ -52,6 +52,7 @@ to a patch or to a minor release will not break anything.
 This section leads a maintainer through creating an aks-engine release.
 
 ### Step 1: Assemble Master Changelog
+
 A change log is a file which contains a curated, chronologically ordered list of changes
 for each version of aks-engine, which helps users and contributors see what notable changes
 have been made between each version of the project.
@@ -71,16 +72,12 @@ infrastructure providers.
 When showstopper-level bugs are found, the process is as follows:
 
 1. Create an issue that describes the bug.
-1. Create an PR that fixes the bug.
-  - PRs should always include tests (unit or e2e as appropriate) to add
- automated coverage for the bug.
+1. Create an PR that fixes the bug. PRs should always include tests (unit or e2e as appropriate) to add automated coverage for the bug.
 1. Once the PR passes and is reviewed, merge it and update the CHANGELOG
-
 
 ### Step 3: Tag and Create a Release
 
 TBD
-
 
 ### Step 4: Close GitHub Milestones
 
@@ -92,7 +89,7 @@ Let the rest of the team know they can start blogging and tweeting about the new
 Post a message to the #company channel on Slack. Include a link to the released chart and to the
 master CHANGELOG:
 
-```
+```text
 @here aks-engine 0.1.0 is here!
 Master CHANGELOG: https://github.com/Azure/aks-engine/CHANGELOG.md
 ```
