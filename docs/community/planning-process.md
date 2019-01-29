@@ -8,7 +8,7 @@ aks-engine features a lightweight process that emphasizes openness and ensures e
 
 ## Open Roadmap
 
-The [aks-engine Roadmap](roadmap.md) is a community document. While Maintainers propose the Roadmap, it gets discussed and refined in Release Planning Meetings.
+The [AKS Engine Backlog](https://github.com/Azure/aks-engine/projects/2) is a community document. While Maintainers propose the Roadmap, it gets discussed and refined in Release Planning Meetings.
 
 ## Contributing to the Roadmap
 
@@ -16,7 +16,7 @@ Proposals and issues can be opened by anyone. Every member of the community is w
 
 ## Release Milestones
 
-The Roadmap gets delivered progressively via the [Release Schedule][].  Releases are defined during Release Planning Meetings and managed using GitHub Milestones which track specific deliverables and work-in-progress.
+The Roadmap gets delivered progressively via the Release Schedule. Releases are defined during Release Planning Meetings and managed using GitHub Milestones which track specific deliverables and work-in-progress.
 
 ## Release Planning Meetings
 
@@ -25,4 +25,3 @@ Major decisions affecting the Roadmap are discussed during Release Planning Meet
 Release Planning Meetings are not currently open to non-Microsoft contributors, but we may change this in the future.
 
 [Maintainers]: https://github.com/Azure/aks-engine/blob/master/OWNERS
-[Release Schedule]: releases.md
