@@ -84,29 +84,10 @@ The upgrade operation is long running, and for large clusters, more susceptible 
 
 ### Cluster-autoscaler + VMSS
 
-At present, the Azure cloudprovider cluster-autoscaler implementation for VMSS relies upon the original ARM template deployment specification to inform the Azure IaaS (VM, NIC, CustomScriptExtension, etc) configuration to scale out new nodes.
-
-Because `aks-engine upgrade` also employs ARM template deployments to evolve the cluster state going forward, as soon as you upgrade your cluster, the cluster-autoscaler will no longer scale out your cluster according to the latest version. You will see cluster-autoscaler scale out scenarios that look like this one:
-
-```
-$ kubectl get nodes
-NAME                                STATUS    ROLES     AGE       VERSION
-k8s-agentpool-27988949-vmss00000a   Ready     agent     1h        v1.11.5
-k8s-agentpool-27988949-vmss00000m   Ready     agent     1m        v1.10.12
-k8s-agentpool-27988949-vmss00000n   Ready     agent     1m        v1.10.12
-k8s-agentpool-27988949-vmss00000o   Ready     agent     1m        v1.10.12
-k8s-agentpool-27988949-vmss00000p   Ready     agent     1m        v1.10.12
-k8s-agentpool-27988949-vmss00000q   Ready     agent     1m        v1.10.12
-k8s-agentpool-27988949-vmss00000r   Ready     agent     1m        v1.10.12
-k8s-master-27988949-0               Ready     master    2h        v1.11.5
-```
-
-For this reason, we do not recommend incorporating `aks-engine upgrade` into your operational workflow if you also rely upon cluster-autoscaler + VMSS
+// TODO
 
 ### Cluster-autoscaler + VMAS
 
-A similar scenario exists for VMAS as well, but because the cluster-autoscaler spec includes a configurable ARM template deployment reference, you may manually maintain that reference over time to be current with the ARM template deployment that `aks-engine upgrade` creates during an upgrade operation.
-
-// TODO describe the above
+// TODO
 
 
