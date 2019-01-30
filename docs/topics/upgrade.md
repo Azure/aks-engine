@@ -84,10 +84,14 @@ The upgrade operation is long running, and for large clusters, more susceptible 
 
 ### Cluster-autoscaler + VMSS
 
-// TODO
+There are known limitations with VMSS cluster-autoscaler scenarios and upgrade. Our current guidance is not to use `aks-engine upgrade` on clusters with `cluster-autoscaler` functionality. See [here](https://github.com/Azure/aks-engine/issues/400) to get more information and to track progress of the issues related to these limitations.
 
-### Cluster-autoscaler + VMAS
+### Cluster-autoscaler + Availability Set
 
-// TODO
+We don't recommend using `aks-engine upgrade` on clusters that have Availability Set (non-VMSS) agent pools `cluster-autoscaler` at this time.
+
+### Cluster-autoscaler + Dynamic Agent Pools
+
+If you manually add/remove agent pools on your `aks-engine`-created cluster over time, we don't recommend using `aks-engine upgrade` at this time.
 
 
