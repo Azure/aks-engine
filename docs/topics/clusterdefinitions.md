@@ -22,12 +22,13 @@ Here are the cluster definitions for apiVersion "vlabs":
 
 Here are the valid values for the orchestrator types:
 
-1.  `Kubernetes` - this represents the [Kubernetes orchestrator](kubernetes.md).
+1. `Kubernetes` - this represents the Kubernetes orchestrator.
 
 To learn more about supported orchestrators and versions, run the orchestrators command:
 
-```/bin/aks-engine orchestrators```
-
+```console
+$ aks-engine orchestrators
+```
 
 ### kubernetesConfig
 
@@ -504,14 +505,14 @@ We consider `kubeletConfig`, `controllerManagerConfig`, `apiServerConfig`, and `
 
 `jumpboxProfile` describes the settings for a jumpbox deployed via aks-engine to access a private cluster. It is a child property of `privateCluster`.
 
-| Name           | Required | Description                                                                                                                                                                        |
-| -------------- | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| name           | yes      | This is the unique name for the jumpbox VM. Some resources deployed with the jumpbox are derived from this name                                                                    |
-| vmSize         | yes      | Describes a valid [Azure VM Sizes](https://azure.microsoft.com/en-us/documentation/articles/virtual-machines-windows-sizes/)                                                       |
-| publicKey      | yes      | The public SSH key used for authenticating access to the jumpbox. Here are instructions for [generating a public/private key pair](ssh.md#ssh-key-generation)                      |
-| osDiskSizeGB   | no       | Describes the OS Disk Size in GB. Defaults to `30`                                                                                                                                 |
-| storageProfile | no       | Specifies the storage profile to use. Valid values are [ManagedDisks](../../examples/disks-managed) or [StorageAccount](../../examples/disks-storageaccount). Defaults to `ManagedDisks` |
-| username       | no       | Describes the admin username to be used on the jumpbox. Defaults to `azureuser`                                                                                                    |
+| Name           | Required | Description                                                                                                                                                                                                                   |
+| -------------- | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| name           | yes      | This is the unique name for the jumpbox VM. Some resources deployed with the jumpbox are derived from this name                                                                                                               |
+| vmSize         | yes      | Describes a valid [Azure VM Sizes](https://azure.microsoft.com/en-us/documentation/articles/virtual-machines-windows-sizes/)                                                                                                  |
+| publicKey      | yes      | The public SSH key used for authenticating access to the jumpbox. Here are instructions for [generating a public/private key pair][ssh] |
+| osDiskSizeGB   | no       | Describes the OS Disk Size in GB. Defaults to `30`                                                                                                                                                                            |
+| storageProfile | no       | Specifies the storage profile to use. Valid values are [ManagedDisks](../../examples/disks-managed) or [StorageAccount](../../examples/disks-storageaccount). Defaults to `ManagedDisks`                                      |
+| username       | no       | Describes the admin username to be used on the jumpbox. Defaults to `azureuser`                                                                                                                                               |
 
 ### masterProfile
 
@@ -560,7 +561,7 @@ A cluster can have 0 to 12 agent pool profiles. Agent Pool Profiles are used for
 | imageReference.name          | no                                                                   | The name of a a Linux OS image. Needs to be used in conjunction with resourceGroup, below                                                                                                                                                                                                                                                                                                                                                                                                                                        |
 | imageReference.resourceGroup | no                                                                   | Resource group that contains the Linux OS image. Needs to be used in conjunction with name, above                                                                                                                                                                                                                                                                                                                                                                                                                                |
 | osType                       | no                                                                   | Specifies the agent pool's Operating System. Supported values are `Windows` and `Linux`. Defaults to `Linux`                                                                                                                                                                                                                                                                                                                                                                                                                     |
-| distro                       | no                                                                   | Specifies the agent pool's Linux distribution. Currently supported values are: `ubuntu`, `aks`, `aks-docker-engine` and `coreos` (CoreOS support is currently experimental - [Example of CoreOS Master with CoreOS Agents](../../examples/coreos/kubernetes-coreos.json)). For Azure Public Cloud, defaults to `aks` if undefined, unless GPU nodes are present, in which case it will default to `aks-docker-engine`. For Sovereign Clouds, the default is `ubuntu`. `aks` is a custom image based on `ubuntu` that comes with pre-installed software necessary for Kubernetes deployments (Azure Public Cloud only for now). **NOTE**: GPU nodes are currently incompatible with the default Moby container runtime provided in the `aks` image. Clusters containing GPU nodes will be set to use the `aks-docker-engine` distro which is functionally equivalent to `aks` with the exception of the docker distribution (see [GPU support Walkthrough](kubernetes/gpu.md) for details). Currently supported OS and orchestrator configurations -- `ubuntu`: Kubernetes; `coreos`: Kubernetes. [Example of CoreOS Master with Windows and Linux (CoreOS and Ubuntu) Agents](../../examples/coreos/kubernetes-coreos-hybrid.json) |
+| distro                       | no                                                                   | Specifies the agent pool's Linux distribution. Currently supported values are: `ubuntu`, `aks`, `aks-docker-engine` and `coreos` (CoreOS support is currently experimental - [Example of CoreOS Master with CoreOS Agents](../../examples/coreos/kubernetes-coreos.json)). For Azure Public Cloud, defaults to `aks` if undefined, unless GPU nodes are present, in which case it will default to `aks-docker-engine`. For Sovereign Clouds, the default is `ubuntu`. `aks` is a custom image based on `ubuntu` that comes with pre-installed software necessary for Kubernetes deployments (Azure Public Cloud only for now). **NOTE**: GPU nodes are currently incompatible with the default Moby container runtime provided in the `aks` image. Clusters containing GPU nodes will be set to use the `aks-docker-engine` distro which is functionally equivalent to `aks` with the exception of the docker distribution (see [GPU support Walkthrough](gpu.md) for details). Currently supported OS and orchestrator configurations -- `ubuntu`: Kubernetes; `coreos`: Kubernetes. [Example of CoreOS Master with Windows and Linux (CoreOS and Ubuntu) Agents](../../examples/coreos/kubernetes-coreos-hybrid.json) |
 | acceleratedNetworkingEnabled | no                                                                   | Use [Azure Accelerated Networking](https://azure.microsoft.com/en-us/blog/maximize-your-vm-s-performance-with-accelerated-networking-now-generally-available-for-both-windows-and-linux/) feature for Linux agents (You must select a VM SKU that supports Accelerated Networking). Defaults to `true` if the VM SKU selected supports Accelerated Networking                                                                                                                                                                                                                                                      |
 | acceleratedNetworkingEnabledWindows | no                                                                   | Use [Azure Accelerated Networking](https://azure.microsoft.com/en-us/blog/maximize-your-vm-s-performance-with-accelerated-networking-now-generally-available-for-both-windows-and-linux/) feature for Windows agents (You must select a VM SKU that supports Accelerated Networking). Defaults to `false`                                                                                                                                                                                                                                                      |
 
@@ -571,12 +572,14 @@ A cluster can have 0 to 12 agent pool profiles. Agent Pool Profiles are used for
 | Name                             | Required | Description                                                                                                                                                                      |
 | -------------------------------- | -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | adminUsername                    | yes      | Describes the username to be used on all linux clusters                                                                                                                          |
-| ssh.publicKeys.keyData           | yes      | The public SSH key used for authenticating access to all Linux nodes in the cluster. Here are instructions for [generating a public/private key pair](ssh.md#ssh-key-generation) |
+| ssh.publicKeys.keyData           | yes      | The public SSH key used for authenticating access to all Linux nodes in the cluster                                                                                              |
 | secrets                          | no       | Specifies an array of key vaults to pull secrets from and what secrets to pull from each                                                                                         |
 | customSearchDomain.name          | no       | describes the search domain to be used on all linux clusters                                                                                                                     |
 | customSearchDomain.realmUser     | no       | describes the realm user with permissions to update dns registries on Windows Server DNS                                                                                         |
 | customSearchDomain.realmPassword | no       | describes the realm user password to update dns registries on Windows Server DNS                                                                                                 |
 | customNodesDNS.dnsServer         | no       | describes the IP address of the DNS Server                                                                                                                                       |
+
+Here are instructions for [generating a public/private key pair][ssh] for `ssh.publicKeys.keyData`.
 
 #### secrets
 
@@ -648,7 +651,7 @@ If you wanted to use the last one in the list above, then set:
 
 ### servicePrincipalProfile
 
-`servicePrincipalProfile` describes an Azure Service credentials to be used by the cluster for self-configuration. See [service principal](serviceprincipal.md) for more details on creation.
+`servicePrincipalProfile` describes an Azure Service credentials to be used by the cluster for self-configuration. See [service principal](service-principals.md) for more details on creation.
 
 | Name                         | Required                          | Description                                                                                                 |
 | ---------------------------- | --------------------------------- | ----------------------------------------------------------------------------------------------------------- |
@@ -682,10 +685,10 @@ Here are the cluster definitions for apiVersion "2016-03-30". This matches the a
 
 Here are the valid values for the orchestrator types:
 
-1.  `DCOS` - this represents the [DC/OS orchestrator](dcos.md).
-2.  `Swarm` - this represents the [Swarm orchestrator](swarm.md).
-3.  `Kubernetes` - this represents the [Kubernetes orchestrator](kubernetes.md).
-4.  `Swarm Mode` - this represents the [Swarm Mode orchestrator](swarmmode.md).
+1. `DCOS` - this represents the DC/OS orchestrator.
+1. `Swarm` - this represents the Swarm orchestrator.
+1. `Kubernetes` - this represents the Kubernetes orchestrator.
+1. `Swarm Mode` - this represents the Swarm Mode orchestrator.
 
 ### masterProfile
 
@@ -714,11 +717,13 @@ For apiVersion "2016-03-30", a cluster may have only 1 agent pool profiles.
 | Name                      | Required | Description                                                                                                                                                                      |
 | ------------------------- | -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | adminUsername             | yes      | Describes the username to be used on all linux clusters                                                                                                                          |
-| ssh.publicKeys[0].keyData | yes      | The public SSH key used for authenticating access to all Linux nodes in the cluster. Here are instructions for [generating a public/private key pair](ssh.md#ssh-key-generation) |
+| ssh.publicKeys[0].keyData | yes      | The public SSH key used for authenticating access to all Linux nodes in the cluster                                                                                              |
+
+Here are instructions for [generating a public/private key pair][ssh] for `ssh.publicKeys[0].keyData`.
 
 ### aadProfile
 
-`aadProfile` provides [Azure Active Directory integration](kubernetes/aad.md) configuration for the cluster, currently only available for Kubernetes orchestrator.
+`aadProfile` provides [Azure Active Directory integration](aad.md) configuration for the cluster, currently only available for Kubernetes orchestrator.
 
 | Name         | Required | Description                                                                                                                 |
 | ------------ | -------- | --------------------------------------------------------------------------------------------------------------------------- |
@@ -739,3 +744,5 @@ A cluster can have 0 - N extensions in extension profiles. Extension profiles al
 | rootURL             | optional | URL to the root location of extensions. The rootURL must have an extensions child folder that follows the extensions convention. The rootURL is mainly used for testing purposes |
 
 You can find more information, as well as a list of extensions on the [extensions documentation](extensions.md).
+
+[ssh]: https://help.github.com/articles/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent/
