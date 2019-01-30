@@ -57,4 +57,4 @@ For VERSION, we recommend that you provide a value which would help you identify
 ]
 ```
 
-* Run `./bin/aks-engine deploy --api-model the_json_file_you_just_edited.json ...` [as normal](deploy.md).
+* Run `aks-engine deploy` [as normal](../tutorials/deploy.md).

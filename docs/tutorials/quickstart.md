@@ -33,7 +33,7 @@ source <(aks-engine completion)
 
 AKS Engine consumes a cluster definition which outlines the desired shape, size, and configuration of Kubernetes. There are a number of features that can be enabled through the cluster definition.
 
-See [AKS Engine The Long Way](kubernetes/deploy.md#aks-engine-the-long-way) for an example on generating templates by hand.
+See [AKS Engine The Long Way](deploy.md#aks-engine-the-long-way) for an example on generating templates by hand.
 
 <a href="#deployment-usage"></a>
 
@@ -127,10 +127,6 @@ Flags:
 
 Use "aks-engine [command] --help" for more information about a command.
 ```
-
-[Here is a reference to the information on Kubernetes cluster upgrade.](https://github.com/Azure/aks-engine/blob/master/examples/k8s-upgrade/README.md)
-
-[Here's a quick demo video showing the dev/build/test cycle with this setup.](https://www.youtube.com/watch?v=lc6UZmqxQMs)
 
 ## Building on Windows, OSX, and Linux
 

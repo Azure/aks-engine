@@ -27,11 +27,9 @@ The network topology must be well defined beforehand to enable peering between t
 ### DNS
 
 In a hybrid environment, you usually want to integrate with your on-premises DNS. There is two aspects to this. The first one is to register the VMs forming the cluster, and using your local search domain when resolving other services. The second is getting the services running on Kubernetes to use the external DNS.
-To benefit the scaling capabilities of the cluster and to ensure resiliency to machine failure, every node configuration needs to be scripted and part of the initial template that aks-engine will deploy. To register the nodes in your DNS at startup, you need to define [an aks-engine extension](../extensions.md) that will run your [DNS registration script](https://github.com/tesharp/aks-engine/blob/register-dns-extension/extensions/register-dns/v1/register-dns.sh).
+To benefit the scaling capabilities of the cluster and to ensure resiliency to machine failure, every node configuration needs to be scripted and part of the initial template that aks-engine will deploy. To register the nodes in your DNS at startup, you need to define [an aks-engine extension](extensions.md) that will run your [DNS registration script](https://github.com/Azure/aks-engine/blob/master/extensions/dnsupdate/v1/register-dns.sh).
 
 In addition, you might want cluster services to address URLs outside the cluster using your on-premise DNS. To achieve this you need to configure KubeDNS to use your existing nameservice as upstream. [This setup is well documented on kubernetes blog](https://kubernetes.io/blog/2017/04/configuring-private-dns-zones-upstream-nameservers-kubernetes)
-
-Note : There is some ongoing work to make this easier. See [aks-engine#2590](https://github.com/Azure/aks-engine/pull/2590)
 
 ### Private Cluster
 
@@ -39,7 +37,7 @@ By default, Kubernetes deployment with aks-engine expose the the admin api publi
 
 ## Kubernetes Network
 
-For your kubernetes cluster to communicate with your on-premise network, you will have to deploy it to the existing vnet setup to communicate through your VPN/ExpressRoute (see Peering). Deploying to an existing VNET is documented under [Custom VNET](../custom-vnet.md).
+For your kubernetes cluster to communicate with your on-premise network, you will have to deploy it to the existing vnet setup to communicate through your VPN/ExpressRoute (see Peering). Deploying to an existing VNET is documented under [Custom VNET](../tutorials/custom-vnet.md).
 
 ### Network
 
@@ -155,7 +153,7 @@ Note: when using service without selector, you can't have any Kubernetes readine
 
 ## Cluster upgrades
 
-As you may know, AKS Engine proposes an [upgrade command](../../examples/k8s-upgrade/README.md). It is really important to understand that this uprade process is *not* fail-safe. Therefore in most cases, and especially with production clusters, a good practice consists of creating another Kubernetes cluster running the targeted version in another VNET and move the workloads into this new cluster. Once everything is tested and works as desired, set up the network redirection to this new environment.
+As you may know, AKS Engine proposes an [upgrade command](upgrade.md). It is really important to understand that this uprade process is *not* fail-safe. Therefore in most cases, and especially with production clusters, a good practice consists of creating another Kubernetes cluster running the targeted version in another VNET and move the workloads into this new cluster. Once everything is tested and works as desired, set up the network redirection to this new environment.
 
 If you plan everything correctly following the documentation above and use Kubernetes Services properly to address both in-cluster and outside services, everything should work fine.
 

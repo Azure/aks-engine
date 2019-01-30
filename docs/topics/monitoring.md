@@ -14,7 +14,7 @@ There are five main options to monitor your cluster:
 ## Intro to Heapster
 
 Monitoring your cluster in Kubernetes is powered by a component called [Heapster](https://github.com/kubernetes/Heapster/). Heapster is a pod that is responsible for aggregating monitoring data from across all the nodes and pods in your cluster. Heapster is necessary for viewing monitoring data in the Kubernetes dashboard as well as in Grafana. Heapster comes preinstalled on `aks-engine` deployments. To ensure that Heapster is set up in your cluster and is running:
-1. Ensure you have set up a [working kubernetes cluster](../kubernetes.md) and are able to use kubectl
+1. Ensure you have set up a [working kubernetes cluster](../tutorials/quickstart.md) and are able to use kubectl
 2. Run `kubectl get pods --namespace=kube-system`
 
 ```shell
@@ -81,7 +81,7 @@ If you have any questions or feedback regarding the monitoring of your AKS-Engin
 
 The Kubernetes dashboard is an easy way to visualize your cluster metrics. The Kubernetes dashboard displays all the metrics that are collected by the Heapster. The dashboard comes preinstalled on your cluster. To access the dashboard:
 
-1. On Linux, run `kubectl proxy`. This will allow you to access the dashboard at http://localhost:8001/ui
+1. On Linux, run `kubectl proxy`. This will allow you to access the dashboard at `http://localhost:8001/ui`
     * If you are using Windows and sshing into the master to use kubectl, you will need to set up remote port forwarding from port 8001 on the master to your host in order to use `kubectl proxy`. To do this, under PUTTY > Connection > SSH > Tunnels, create a new forwarded port (source local port 8001 to destination 127.0.0.1:8001).
 
 Once you have opened the UI, you can explore node stats (CPU, Memory, etc...) under the nodes section on the left menu. You can also see pod level metrics under the pods section, and even drill into a specific container in a given pod.
@@ -147,8 +147,8 @@ If everything looks ok and Grafana and Influx DB were able to start up, you can 
 1. Run `kubectl proxy`.
     * If you are using Windows and sshing into the master to use kubectl, you will need to set up remote port forwarding from port 8001 on the master to your host in order to use `kubectl proxy`. To do this, under Putty > Connection > SSH > Tunnels, create a new forwarded port (source local port 8001 to destination 127.0.0.1:8001).
 
-1. To see cluster stats: http://localhost:8001/api/v1/namespaces/kube-system/services/monitoring-grafana/proxy/dashboard/db/cluster
-1. To see pod stats: http://localhost:8001/api/v1/namespaces/kube-system/services/monitoring-grafana/proxy/dashboard/db/pods
+1. To see cluster stats: `http://localhost:8001/api/v1/namespaces/kube-system/services/monitoring-grafana/proxy/dashboard/db/cluster`
+1. To see pod stats: `http://localhost:8001/api/v1/namespaces/kube-system/services/monitoring-grafana/proxy/dashboard/db/pods`
 
 ![Image of Grafana](../static/img/k8s-monitoring-grafana2.png)
 
@@ -161,46 +161,46 @@ Here are a few examples on how to use the REST API.
 1. Run `kubectl proxy`
 1. `curl http://localhost:8001/api/v1/namespaces/kube-system/services/heapster/proxy/api/v1/model/nodes`
 
-    ```
-    [
+```json
+[
     "k8s-agentpool1-95363663-0",
     "k8s-master-95363663-0"
-    ]
-    ```
+]
+```
 
 1. `curl http://localhost:8001/api/v1/namespaces/kube-system/services/heapster/proxy/api/v1/model/nodes/k8s-master-95363663-0/metrics`
 
-    ```
-    [
+```json
+[
     "cpu/usage",
     "network/rx_errors",
     "memory/major_page_faults",
     "memory/page_faults_rate",
     "cpu/node_allocatable",
     ...
-    ]
-    ```
+]
+```
 
 1. `curl http://localhost:8001/api/v1/namespaces/kube-system/services/heapster/proxy/api/v1/model/nodes/k8s-master-95363663-0/metrics/cpu/usage`
 
-    ```
-    {
-        metrics: [
-            {
-                timestamp: "2017-08-31T00:08:00Z",
-                value: 1040133457832
-            },
-            {
-                timestamp: "2017-08-31T00:09:00Z",
-                value: 1046556719483
-            },
-            {
-                timestamp: "2017-08-31T00:10:00Z",
-                value: 1052835238099
-            }
-        ],
-            latestTimestamp: "2017-08-31T00:10:00Z"
-    }
-    ```
+```json
+{
+    metrics: [
+        {
+            timestamp: "2017-08-31T00:08:00Z",
+            value: 1040133457832
+        },
+        {
+            timestamp: "2017-08-31T00:09:00Z",
+            value: 1046556719483
+        },
+        {
+            timestamp: "2017-08-31T00:10:00Z",
+            value: 1052835238099
+        }
+    ],
+        latestTimestamp: "2017-08-31T00:10:00Z"
+}
+```
 
 For more details take a look at the [Heapster model documentation.](https://github.com/kubernetes/heapster/blob/master/docs/model.md)
