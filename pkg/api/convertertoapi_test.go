@@ -391,8 +391,6 @@ func TestConvertAzureEnvironmentSpecConfig(t *testing.T) {
 							ImagePublisher: "ImagePublisher",
 							ImageVersion:   "ImageVersion",
 						},
-						vlabs.AKS:             vlabs.DefaultAKSOSImageConfig,
-						vlabs.AKSDockerEngine: vlabs.DefaultAKSDockerEngineOSImageConfig,
 					},
 				},
 			},
