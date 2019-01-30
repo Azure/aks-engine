@@ -272,7 +272,7 @@
       ],
       "properties": {
         "publisher": "Microsoft.AKS",
-        "type": "Compute.AKS-Engine.Windows.Billing",
+        "type": {{if IsHostedMaster}}"Compute.AKS.Windows.Billing"{{else}}"Compute.AKS-Engine.Windows.Billing"{{end}},
         "typeHandlerVersion": "1.0",
         "autoUpgradeMinorVersion": true,
         "settings": {
