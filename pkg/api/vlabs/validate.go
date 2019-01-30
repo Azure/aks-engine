@@ -1299,22 +1299,22 @@ func (a *Properties) validateCustomCloudProfile() error {
 		if a.CustomCloudProfile.Environment == nil {
 			return errors.New("environment needs to be specified when CustomCloudProfile is provided")
 		}
-		if len(a.CustomCloudProfile.Environment.Name) == 0 {
+		if a.CustomCloudProfile.Environment.Name == "" {
 			return errors.New("name needs to be specified when Environment is provided")
 		}
-		if len(a.CustomCloudProfile.Environment.ServiceManagementEndpoint) == 0 {
+		if a.CustomCloudProfile.Environment.ServiceManagementEndpoint == "" {
 			return errors.New("serviceManagementEndpoint needs to be specified when Environment is provided")
 		}
-		if len(a.CustomCloudProfile.Environment.ResourceManagerEndpoint) == 0 {
+		if a.CustomCloudProfile.Environment.ResourceManagerEndpoint == "" {
 			return errors.New("resourceManagerEndpoint needs to be specified when Environment is provided")
 		}
-		if len(a.CustomCloudProfile.Environment.ActiveDirectoryEndpoint) == 0 {
+		if a.CustomCloudProfile.Environment.ActiveDirectoryEndpoint == "" {
 			return errors.New("activeDirectoryEndpoint needs to be specified when Environment is provided")
 		}
-		if len(a.CustomCloudProfile.Environment.GraphEndpoint) == 0 {
+		if a.CustomCloudProfile.Environment.GraphEndpoint == "" {
 			return errors.New("graphEndpoint needs to be specified when Environment is provided")
 		}
-		if len(a.CustomCloudProfile.Environment.ResourceManagerVMDNSSuffix) == 0 {
+		if a.CustomCloudProfile.Environment.ResourceManagerVMDNSSuffix == "" {
 			return errors.New("resourceManagerVMDNSSuffix needs to be specified when Environment is provided")
 		}
 	}

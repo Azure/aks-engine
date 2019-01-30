@@ -196,7 +196,7 @@ func GetCloudTargetEnv(location, customCloudName string) string {
 	switch {
 	// Because customCloudProfile is empty for deployment is AzurePublicCloud, AzureChinaCloud,AzureGermanCloud,AzureUSGovernmentCloud,
 	// the return value will be empty string for those clouds
-	case len(customCloudName) > 0 && strings.EqualFold(customCloudName, "AzureStackCloud"):
+	case customCloudName != "" && strings.EqualFold(customCloudName, "AzureStackCloud"):
 		return "AzureStackCloud"
 	case loc == "chinaeast" || loc == "chinanorth" || loc == "chinaeast2" || loc == "chinanorth2":
 		return "AzureChinaCloud"
