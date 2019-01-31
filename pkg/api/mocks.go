@@ -66,6 +66,7 @@ func CreateMockContainerService(containerServiceName, orchestratorVersion string
 		NetworkPlugin:       DefaultNetworkPlugin,
 		NetworkPolicy:       DefaultNetworkPolicy,
 		EtcdVersion:         DefaultEtcdVersion,
+		MobyVersion:         DefaultMobyVersion,
 		KubeletConfig:       make(map[string]string),
 	}
 

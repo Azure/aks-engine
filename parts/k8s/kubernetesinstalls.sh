@@ -98,16 +98,16 @@ installContainerRuntime() {
 }
 
 installMoby() {
-    dockerd --version
-    if [ $? -eq 0 ]; then
-        echo "dockerd is already installed, skipping download"
+    CURRENT_VERSION=$(dockerd --version)
+    if [[ "$CURRENT_VERSION" == "${MOBY_VERSION}" ]]; then
+        echo "dockerd $MOBY_VERSION is already installed, skipping moby download"
     else
         retrycmd_if_failure_no_stats 120 5 25 curl https://packages.microsoft.com/config/ubuntu/16.04/prod.list > /tmp/microsoft-prod.list || exit $ERR_MOBY_APT_LIST_TIMEOUT
         retrycmd_if_failure 10 5 10 cp /tmp/microsoft-prod.list /etc/apt/sources.list.d/ || exit $ERR_MOBY_APT_LIST_TIMEOUT
         retrycmd_if_failure_no_stats 120 5 25 curl https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > /tmp/microsoft.gpg || exit $ERR_MS_GPG_KEY_DOWNLOAD_TIMEOUT
         retrycmd_if_failure 10 5 10 cp /tmp/microsoft.gpg /etc/apt/trusted.gpg.d/ || exit $ERR_MS_GPG_KEY_DOWNLOAD_TIMEOUT
         apt_get_update || exit $ERR_APT_UPDATE_TIMEOUT
-        apt_get_install 20 30 120 moby-engine=3.0.1 moby-cli=3.0.1 || exit $ERR_MOBY_INSTALL_TIMEOUT
+        apt_get_install 20 30 120 moby-engine=${MOBY_VERSION} moby-cli=${MOBY_VERSION} || exit $ERR_MOBY_INSTALL_TIMEOUT
     fi
 }
 

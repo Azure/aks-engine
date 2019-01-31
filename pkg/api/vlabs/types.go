@@ -291,6 +291,7 @@ type KubernetesConfig struct {
 	UserAssignedClientID            string            `json:"userAssignedClientID,omitempty"` //Note: cannot be provided in config. Used *only* for transferring this to azure.json.
 	CustomHyperkubeImage            string            `json:"customHyperkubeImage,omitempty"`
 	DockerEngineVersion             string            `json:"dockerEngineVersion,omitempty"` // Deprecated
+	MobyVersion                     string            `json:"mobyVersion,omitempty"`
 	CustomCcmImage                  string            `json:"customCcmImage,omitempty"`
 	UseCloudControllerManager       *bool             `json:"useCloudControllerManager,omitempty"`
 	CustomWindowsPackageURL         string            `json:"customWindowsPackageURL,omitempty"`

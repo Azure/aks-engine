@@ -237,6 +237,7 @@ func assignKubernetesParameters(properties *api.Properties, parametersMap params
 			addValue(parametersMap, "dockerEngineDownloadRepo", cloudSpecConfig.DockerSpecConfig.DockerEngineRepo)
 		} else {
 			addValue(parametersMap, "dockerEngineDownloadRepo", "")
+			addValue(parametersMap, "mobyVersion", properties.OrchestratorProfile.KubernetesConfig.MobyVersion)
 		}
 
 		if properties.AADProfile != nil {
