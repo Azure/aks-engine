@@ -326,6 +326,7 @@ func CreateAgentVMSS(cs *api.ContainerService, profile *api.AgentPoolProfile) Vi
 	tags := map[string]*string{
 		"creationSource":     to.StringPtr(fmt.Sprintf("[concat(parameters('generatorCode'), '-', variables('%sVMNamePrefix'))]", profile.Name)),
 		"orchestrator":       to.StringPtr("[variables('orchestratorNameVersionTag')]"),
+		"aksEngineVersion":   to.StringPtr("[parameters('aksEngineVersion')]"),
 		"poolName":           to.StringPtr(profile.Name),
 		"resourceNameSuffix": resourceNameSuffix,
 	}
