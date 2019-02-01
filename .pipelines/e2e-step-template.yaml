@@ -25,3 +25,4 @@ steps:
     inputs:
       artifactName: '${{ parameters.job }}_logs'
       targetPath: '$(modulePath)/_logs'
+    condition: always()
