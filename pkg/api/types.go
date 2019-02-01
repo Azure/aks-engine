@@ -486,6 +486,7 @@ type AgentPoolProfile struct {
 	DNSPrefix                           string               `json:"dnsPrefix,omitempty"`
 	OSType                              OSType               `json:"osType,omitempty"`
 	Ports                               []int                `json:"ports,omitempty"`
+	ProvisioningState                   ProvisioningState    `json:"provisioningState,omitempty"`
 	AvailabilityProfile                 string               `json:"availabilityProfile"`
 	ScaleSetPriority                    string               `json:"scaleSetPriority,omitempty"`
 	ScaleSetEvictionPolicy              string               `json:"scaleSetEvictionPolicy,omitempty"`
@@ -503,6 +504,7 @@ type AgentPoolProfile struct {
 	PreprovisionExtension               *Extension           `json:"preProvisionExtension"`
 	Extensions                          []Extension          `json:"extensions"`
 	KubernetesConfig                    *KubernetesConfig    `json:"kubernetesConfig,omitempty"`
+	KubernetesVersion                   string               `json:"kubernetesVersion"`
 	ImageRef                            *ImageReference      `json:"imageReference,omitempty"`
 	MaxCount                            *int                 `json:"maxCount,omitempty"`
 	MinCount                            *int                 `json:"minCount,omitempty"`
