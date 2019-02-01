@@ -263,7 +263,7 @@ var (
 		},
 	}
 
-	//AzureStackCloudSpec is the default configurations for azure stack with public Azure.
+	//AzureStackCloudSpec is the default configuration for Azure Stack with public Azure.
 	AzureStackCloudSpec = AzureEnvironmentSpecConfig{
 		CloudName: AzureStackCloud,
 		//DockerSpecConfig specify the docker engine download repo
