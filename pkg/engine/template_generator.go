@@ -695,8 +695,9 @@ func (t *TemplateGenerator) getTemplateFuncMap(cs *api.ContainerService) templat
 				kubernetesWindowsConfigFunctionsPS1,
 				kubernetesWindowsKubeletFunctionsPS1,
 				kubernetesWindowsCniFunctionsPS1,
-				kubernetesWindowsAzureCniFunctionsPS1}
-
+				kubernetesWindowsAzureCniFunctionsPS1,
+				kubernetesWindowsOpenSSHFunctionPS1}
+			
 			// Create a buffer, new zip
 			buf := new(bytes.Buffer)
 			zw := zip.NewWriter(buf)
@@ -825,6 +826,9 @@ func (t *TemplateGenerator) getTemplateFuncMap(cs *api.ContainerService) templat
 		},
 		"HasWindowsCustomImage": func() bool {
 			return cs.Properties.WindowsProfile.HasCustomImage()
+		},
+		"WindowsSSHEnabled" : func() bool {
+			return cs.Properties.WindowsProfile.SSHEnabled
 		},
 		"GetConfigurationScriptRootURL": func() string {
 			if cs.Properties.LinuxProfile.ScriptRootURL == "" {
