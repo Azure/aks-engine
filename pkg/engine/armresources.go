@@ -110,7 +110,7 @@ func createKubernetesAgentVMASResources(cs *api.ContainerService, profile *api.A
 
 	if profile.IsWindows() {
 		if cs.Properties.WindowsProfile.HasCustomImage() {
-			agentVMASResources = append(agentVMASResources, createWindowsImage(cs, profile))
+			agentVMASResources = append(agentVMASResources, createWindowsImage(profile))
 		}
 	}
 
@@ -118,7 +118,7 @@ func createKubernetesAgentVMASResources(cs *api.ContainerService, profile *api.A
 	agentVMASResources = append(agentVMASResources, agentVmasNic)
 
 	if profile.IsManagedDisks() {
-		agentAvSet := createAgentAvailabilitySets(cs, profile)
+		agentAvSet := createAgentAvailabilitySets(profile)
 		agentVMASResources = append(agentVMASResources, agentAvSet)
 	} else if profile.IsStorageAccount() {
 		agentStorageAccount := createAgentVMASStorageAccount(cs, profile, false)

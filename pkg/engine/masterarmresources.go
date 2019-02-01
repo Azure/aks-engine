@@ -40,7 +40,7 @@ func createKubernetesMasterResources(cs *api.ContainerService) []interface{} {
 	isPrivateCluster := to.Bool(cs.Properties.OrchestratorProfile.KubernetesConfig.PrivateCluster.Enabled)
 
 	if !isPrivateCluster {
-		publicIPAddress := CreatePublicIPAddress(cs)
+		publicIPAddress := CreatePublicIPAddress()
 		masterResources = append(masterResources, publicIPAddress)
 
 		loadBalancer := CreateLoadBalancer()
@@ -130,7 +130,7 @@ func createKubernetesMasterResourcesVmss(cs *api.ContainerService) []interface{}
 		masterResources = append(masterResources, internalLb)
 	}
 
-	publicIPAddress := CreatePublicIPAddress(cs)
+	publicIPAddress := CreatePublicIPAddress()
 	masterResources = append(masterResources, publicIPAddress)
 
 	loadBalancer := CreateLoadBalancer()

@@ -4,21 +4,28 @@
 package engine
 
 import (
-	"fmt"
+	"testing"
 
 	"github.com/Azure/aks-engine/pkg/api"
 	"github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2018-06-01/compute"
 	"github.com/Azure/go-autorest/autorest/to"
+	"github.com/google/go-cmp/cmp"
 )
 
-func createWindowsImage(profile *api.AgentPoolProfile) ImageARM {
-	return ImageARM{
+func TestCreateWindowsImage(t *testing.T) {
+	profile := &api.AgentPoolProfile{
+		Name: "foobar",
+	}
+
+	actual := createWindowsImage(profile)
+
+	expected := ImageARM{
 		ARMResource: ARMResource{
 			APIVersion: "[variables('apiVersionCompute')]",
 		},
 		Image: compute.Image{
 			Type: to.StringPtr("Microsoft.Compute/images"),
-			Name: to.StringPtr(fmt.Sprintf("%sCustomWindowsImage", profile.Name)),
+			Name: to.StringPtr("foobarCustomWindowsImage"),
 			ImageProperties: &compute.ImageProperties{
 				StorageProfile: &compute.ImageStorageProfile{
 					OsDisk: &compute.ImageOSDisk{
@@ -30,5 +37,11 @@ func createWindowsImage(profile *api.AgentPoolProfile) ImageARM {
 				},
 			},
 		},
+	}
+
+	diff := cmp.Diff(actual, expected)
+
+	if diff != "" {
+		t.Errorf("unexpected diff while comparing windows images: %s", diff)
 	}
 }

@@ -43,7 +43,7 @@ func CreateAvailabilitySet(cs *api.ContainerService, isManagedDisks bool) Availa
 	}
 }
 
-func createAgentAvailabilitySets(cs *api.ContainerService, profile *api.AgentPoolProfile) AvailabilitySetARM {
+func createAgentAvailabilitySets(profile *api.AgentPoolProfile) AvailabilitySetARM {
 
 	armResource := ARMResource{
 		APIVersion: "[variables('apiVersionCompute')]",
