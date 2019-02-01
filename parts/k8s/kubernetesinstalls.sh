@@ -11,7 +11,11 @@ CONTAINERD_DOWNLOAD_URL="${CONTAINERD_DOWNLOAD_URL_BASE}cri-containerd-${CRI_CON
 CONTAINERD_TGZ_TMP=$(echo ${CONTAINERD_DOWNLOAD_URL} | cut -d "/" -f 5)
 
 removeEtcd() {
-    rm -rf /usr/bin/etcd &
+    rm -rf /usr/bin/etcd
+}
+
+removeMoby() {
+    sudo apt-get purge moby-engine moby-cli
 }
 
 installEtcd() {
@@ -98,10 +102,11 @@ installContainerRuntime() {
 }
 
 installMoby() {
-    CURRENT_VERSION=$(dockerd --version)
+    CURRENT_VERSION=$(dockerd --version | grep "Docker version" | cut -d "," -f 1 | cut -d " " -f 3)
     if [[ "$CURRENT_VERSION" == "${MOBY_VERSION}" ]]; then
-        echo "dockerd $MOBY_VERSION is already installed, skipping moby download"
+        echo "dockerd $MOBY_VERSION is already installed, skipping Moby download"
     else
+        removeMoby
         retrycmd_if_failure_no_stats 120 5 25 curl https://packages.microsoft.com/config/ubuntu/16.04/prod.list > /tmp/microsoft-prod.list || exit $ERR_MOBY_APT_LIST_TIMEOUT
         retrycmd_if_failure 10 5 10 cp /tmp/microsoft-prod.list /etc/apt/sources.list.d/ || exit $ERR_MOBY_APT_LIST_TIMEOUT
         retrycmd_if_failure_no_stats 120 5 25 curl https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > /tmp/microsoft.gpg || exit $ERR_MS_GPG_KEY_DOWNLOAD_TIMEOUT
