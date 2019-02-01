@@ -504,7 +504,7 @@ type AgentPoolProfile struct {
 	PreprovisionExtension               *Extension           `json:"preProvisionExtension"`
 	Extensions                          []Extension          `json:"extensions"`
 	KubernetesConfig                    *KubernetesConfig    `json:"kubernetesConfig,omitempty"`
-	KubernetesVersion                   string               `json:"kubernetesVersion"`
+	OrchestratorVersion                 string               `json:"orchestratorVersion"`
 	ImageRef                            *ImageReference      `json:"imageReference,omitempty"`
 	MaxCount                            *int                 `json:"maxCount,omitempty"`
 	MinCount                            *int                 `json:"minCount,omitempty"`
