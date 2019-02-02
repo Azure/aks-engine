@@ -263,32 +263,11 @@ var (
 		},
 	}
 
-	//AzureStackCloudSpec is the default configurations for azure stack with public Azure.
-	AzureStackCloudSpec = AzureEnvironmentSpecConfig{
-		CloudName: AzureStackCloud,
-		//DockerSpecConfig specify the docker engine download repo
-		DockerSpecConfig: DefaultDockerSpecConfig,
-		//KubernetesSpecConfig is the default kubernetes container image url.
-		KubernetesSpecConfig: DefaultKubernetesSpecConfig,
-		DCOSSpecConfig:       DefaultDCOSSpecConfig,
-		EndpointConfig: AzureEndpointConfig{
-			ResourceManagerVMDNSSuffix: "",
-		},
-		OSImageConfig: map[Distro]AzureOSImageConfig{
-			Ubuntu:          DefaultUbuntuImageConfig,
-			RHEL:            DefaultRHELOSImageConfig,
-			CoreOS:          DefaultCoreOSImageConfig,
-			AKS:             DefaultAKSOSImageConfig,
-			AKSDockerEngine: DefaultAKSDockerEngineOSImageConfig,
-		},
-	}
-
 	// AzureCloudSpecEnvMap is the environment configuration map for all the Azure cloud environments.
 	AzureCloudSpecEnvMap = map[string]AzureEnvironmentSpecConfig{
 		AzureChinaCloud:        AzureChinaCloudSpec,
 		azureGermanCloud:       AzureGermanCloudSpec,
 		azureUSGovernmentCloud: AzureUSGovernmentCloud,
 		AzurePublicCloud:       AzureCloudSpec,
-		AzureStackCloud:        AzureStackCloudSpec,
 	}
 )

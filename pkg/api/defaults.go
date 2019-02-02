@@ -515,77 +515,95 @@ func (p *Properties) setHostedMasterProfileDefaults() {
 func (p *Properties) setCustomCloudProfileDefaults() {
 
 	if p.IsAzureStackCloud() {
+
+		//azureStackCloudSpec is the default configurations for azure stack with public Azure.
+		azureStackCloudSpec := AzureEnvironmentSpecConfig{
+			CloudName: AzureStackCloud,
+			//DockerSpecConfig specify the docker engine download repo
+			DockerSpecConfig: DefaultDockerSpecConfig,
+			//KubernetesSpecConfig is the default kubernetes container image url.
+			KubernetesSpecConfig: DefaultKubernetesSpecConfig,
+			DCOSSpecConfig:       DefaultDCOSSpecConfig,
+			EndpointConfig: AzureEndpointConfig{
+				ResourceManagerVMDNSSuffix: "",
+			},
+			OSImageConfig: map[Distro]AzureOSImageConfig{
+				Ubuntu:          DefaultUbuntuImageConfig,
+				RHEL:            DefaultRHELOSImageConfig,
+				CoreOS:          DefaultCoreOSImageConfig,
+				AKS:             DefaultAKSOSImageConfig,
+				AKSDockerEngine: DefaultAKSDockerEngineOSImageConfig,
+			},
+		}
+
 		//Set default value for ResourceManagerVMDNSSuffix
-		AzureStackCloudSpec.EndpointConfig.ResourceManagerVMDNSSuffix = p.CustomCloudProfile.Environment.ResourceManagerVMDNSSuffix
-		AzureCloudSpecEnvMap[AzureStackCloud] = AzureStackCloudSpec
+		azureStackCloudSpec.EndpointConfig.ResourceManagerVMDNSSuffix = p.CustomCloudProfile.Environment.ResourceManagerVMDNSSuffix
 
 		// Use the custom input to overwrite the default values in AzureStackCloudSpec
 		if p.CustomCloudProfile.AzureEnvironmentSpecConfig != nil {
 			if p.CustomCloudProfile.AzureEnvironmentSpecConfig.CloudName != "" {
-				AzureStackCloudSpec.CloudName = p.CustomCloudProfile.AzureEnvironmentSpecConfig.CloudName
+				azureStackCloudSpec.CloudName = p.CustomCloudProfile.AzureEnvironmentSpecConfig.CloudName
 			}
 
 			// DockerSpecConfig
 			if p.CustomCloudProfile.AzureEnvironmentSpecConfig.DockerSpecConfig.DockerComposeDownloadURL != "" {
-				AzureStackCloudSpec.DockerSpecConfig.DockerComposeDownloadURL = p.CustomCloudProfile.AzureEnvironmentSpecConfig.DockerSpecConfig.DockerComposeDownloadURL
+				azureStackCloudSpec.DockerSpecConfig.DockerComposeDownloadURL = p.CustomCloudProfile.AzureEnvironmentSpecConfig.DockerSpecConfig.DockerComposeDownloadURL
 			}
 			if p.CustomCloudProfile.AzureEnvironmentSpecConfig.DockerSpecConfig.DockerEngineRepo != "" {
-				AzureStackCloudSpec.DockerSpecConfig.DockerEngineRepo = p.CustomCloudProfile.AzureEnvironmentSpecConfig.DockerSpecConfig.DockerEngineRepo
+				azureStackCloudSpec.DockerSpecConfig.DockerEngineRepo = p.CustomCloudProfile.AzureEnvironmentSpecConfig.DockerSpecConfig.DockerEngineRepo
 			}
 
 			//KubernetesSpecConfig
 			if p.CustomCloudProfile.AzureEnvironmentSpecConfig.KubernetesSpecConfig.ACIConnectorImageBase != "" {
-				AzureStackCloudSpec.KubernetesSpecConfig.ACIConnectorImageBase = p.CustomCloudProfile.AzureEnvironmentSpecConfig.KubernetesSpecConfig.ACIConnectorImageBase
+				azureStackCloudSpec.KubernetesSpecConfig.ACIConnectorImageBase = p.CustomCloudProfile.AzureEnvironmentSpecConfig.KubernetesSpecConfig.ACIConnectorImageBase
 			}
 			if p.CustomCloudProfile.AzureEnvironmentSpecConfig.KubernetesSpecConfig.AzureCNIImageBase != "" {
-				AzureStackCloudSpec.KubernetesSpecConfig.AzureCNIImageBase = p.CustomCloudProfile.AzureEnvironmentSpecConfig.KubernetesSpecConfig.AzureCNIImageBase
+				azureStackCloudSpec.KubernetesSpecConfig.AzureCNIImageBase = p.CustomCloudProfile.AzureEnvironmentSpecConfig.KubernetesSpecConfig.AzureCNIImageBase
 			}
 			if p.CustomCloudProfile.AzureEnvironmentSpecConfig.KubernetesSpecConfig.CNIPluginsDownloadURL != "" {
-				AzureStackCloudSpec.KubernetesSpecConfig.CNIPluginsDownloadURL = p.CustomCloudProfile.AzureEnvironmentSpecConfig.KubernetesSpecConfig.CNIPluginsDownloadURL
+				azureStackCloudSpec.KubernetesSpecConfig.CNIPluginsDownloadURL = p.CustomCloudProfile.AzureEnvironmentSpecConfig.KubernetesSpecConfig.CNIPluginsDownloadURL
 			}
 			if p.CustomCloudProfile.AzureEnvironmentSpecConfig.KubernetesSpecConfig.ContainerdDownloadURLBase != "" {
-				AzureStackCloudSpec.KubernetesSpecConfig.ContainerdDownloadURLBase = p.CustomCloudProfile.AzureEnvironmentSpecConfig.KubernetesSpecConfig.ContainerdDownloadURLBase
+				azureStackCloudSpec.KubernetesSpecConfig.ContainerdDownloadURLBase = p.CustomCloudProfile.AzureEnvironmentSpecConfig.KubernetesSpecConfig.ContainerdDownloadURLBase
 			}
 			if p.CustomCloudProfile.AzureEnvironmentSpecConfig.KubernetesSpecConfig.EtcdDownloadURLBase != "" {
-				AzureStackCloudSpec.KubernetesSpecConfig.EtcdDownloadURLBase = p.CustomCloudProfile.AzureEnvironmentSpecConfig.KubernetesSpecConfig.EtcdDownloadURLBase
+				azureStackCloudSpec.KubernetesSpecConfig.EtcdDownloadURLBase = p.CustomCloudProfile.AzureEnvironmentSpecConfig.KubernetesSpecConfig.EtcdDownloadURLBase
 			}
 			if p.CustomCloudProfile.AzureEnvironmentSpecConfig.KubernetesSpecConfig.KubeBinariesSASURLBase != "" {
-				AzureStackCloudSpec.KubernetesSpecConfig.KubeBinariesSASURLBase = p.CustomCloudProfile.AzureEnvironmentSpecConfig.KubernetesSpecConfig.KubeBinariesSASURLBase
+				azureStackCloudSpec.KubernetesSpecConfig.KubeBinariesSASURLBase = p.CustomCloudProfile.AzureEnvironmentSpecConfig.KubernetesSpecConfig.KubeBinariesSASURLBase
 			}
 			if p.CustomCloudProfile.AzureEnvironmentSpecConfig.KubernetesSpecConfig.KubernetesImageBase != "" {
-				AzureStackCloudSpec.KubernetesSpecConfig.KubernetesImageBase = p.CustomCloudProfile.AzureEnvironmentSpecConfig.KubernetesSpecConfig.KubernetesImageBase
+				azureStackCloudSpec.KubernetesSpecConfig.KubernetesImageBase = p.CustomCloudProfile.AzureEnvironmentSpecConfig.KubernetesSpecConfig.KubernetesImageBase
 			}
 			if p.CustomCloudProfile.AzureEnvironmentSpecConfig.KubernetesSpecConfig.NVIDIAImageBase != "" {
-				AzureStackCloudSpec.KubernetesSpecConfig.NVIDIAImageBase = p.CustomCloudProfile.AzureEnvironmentSpecConfig.KubernetesSpecConfig.NVIDIAImageBase
+				azureStackCloudSpec.KubernetesSpecConfig.NVIDIAImageBase = p.CustomCloudProfile.AzureEnvironmentSpecConfig.KubernetesSpecConfig.NVIDIAImageBase
 			}
 			if p.CustomCloudProfile.AzureEnvironmentSpecConfig.KubernetesSpecConfig.TillerImageBase != "" {
-				AzureStackCloudSpec.KubernetesSpecConfig.TillerImageBase = p.CustomCloudProfile.AzureEnvironmentSpecConfig.KubernetesSpecConfig.TillerImageBase
+				azureStackCloudSpec.KubernetesSpecConfig.TillerImageBase = p.CustomCloudProfile.AzureEnvironmentSpecConfig.KubernetesSpecConfig.TillerImageBase
 			}
 			if p.CustomCloudProfile.AzureEnvironmentSpecConfig.KubernetesSpecConfig.VnetCNILinuxPluginsDownloadURL != "" {
-				AzureStackCloudSpec.KubernetesSpecConfig.VnetCNILinuxPluginsDownloadURL = p.CustomCloudProfile.AzureEnvironmentSpecConfig.KubernetesSpecConfig.VnetCNILinuxPluginsDownloadURL
+				azureStackCloudSpec.KubernetesSpecConfig.VnetCNILinuxPluginsDownloadURL = p.CustomCloudProfile.AzureEnvironmentSpecConfig.KubernetesSpecConfig.VnetCNILinuxPluginsDownloadURL
 			}
 			if p.CustomCloudProfile.AzureEnvironmentSpecConfig.KubernetesSpecConfig.VnetCNIWindowsPluginsDownloadURL != "" {
-				AzureStackCloudSpec.KubernetesSpecConfig.VnetCNIWindowsPluginsDownloadURL = p.CustomCloudProfile.AzureEnvironmentSpecConfig.KubernetesSpecConfig.VnetCNIWindowsPluginsDownloadURL
+				azureStackCloudSpec.KubernetesSpecConfig.VnetCNIWindowsPluginsDownloadURL = p.CustomCloudProfile.AzureEnvironmentSpecConfig.KubernetesSpecConfig.VnetCNIWindowsPluginsDownloadURL
 			}
 			if p.CustomCloudProfile.AzureEnvironmentSpecConfig.KubernetesSpecConfig.WindowsTelemetryGUID != "" {
-				AzureStackCloudSpec.KubernetesSpecConfig.WindowsTelemetryGUID = p.CustomCloudProfile.AzureEnvironmentSpecConfig.KubernetesSpecConfig.WindowsTelemetryGUID
+				azureStackCloudSpec.KubernetesSpecConfig.WindowsTelemetryGUID = p.CustomCloudProfile.AzureEnvironmentSpecConfig.KubernetesSpecConfig.WindowsTelemetryGUID
 			}
 
 			//EndpointConfig
 			if p.CustomCloudProfile.AzureEnvironmentSpecConfig.EndpointConfig.ResourceManagerVMDNSSuffix != "" {
-				AzureStackCloudSpec.EndpointConfig.ResourceManagerVMDNSSuffix = p.CustomCloudProfile.AzureEnvironmentSpecConfig.EndpointConfig.ResourceManagerVMDNSSuffix
+				azureStackCloudSpec.EndpointConfig.ResourceManagerVMDNSSuffix = p.CustomCloudProfile.AzureEnvironmentSpecConfig.EndpointConfig.ResourceManagerVMDNSSuffix
 			}
 			//OSImageConfig
-			AzureStackCloudSpec.OSImageConfig = make(map[Distro]AzureOSImageConfig)
+			azureStackCloudSpec.OSImageConfig = make(map[Distro]AzureOSImageConfig)
 			for k, v := range p.CustomCloudProfile.AzureEnvironmentSpecConfig.OSImageConfig {
-				AzureStackCloudSpec.OSImageConfig[k] = v
+				azureStackCloudSpec.OSImageConfig[k] = v
 			}
-
-			AzureCloudSpecEnvMap[AzureStackCloud] = AzureStackCloudSpec
 		} else {
-			customCloudDefault := AzureCloudSpecEnvMap[AzureStackCloud]
-			p.CustomCloudProfile.AzureEnvironmentSpecConfig = &customCloudDefault
+			p.CustomCloudProfile.AzureEnvironmentSpecConfig = &azureStackCloudSpec
 		}
+		AzureCloudSpecEnvMap[AzureStackCloud] = azureStackCloudSpec
 	}
 }
 

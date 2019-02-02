@@ -1395,20 +1395,40 @@ func TestProxyModeDefaults(t *testing.T) {
 }
 func TestSetCustomCloudProfileDefaults(t *testing.T) {
 
+	//azureStackCloudSpec is the default configurations for azure stack with public Azure.
+	azureStackCloudSpec := AzureEnvironmentSpecConfig{
+		CloudName: AzureStackCloud,
+		//DockerSpecConfig specify the docker engine download repo
+		DockerSpecConfig: DefaultDockerSpecConfig,
+		//KubernetesSpecConfig is the default kubernetes container image url.
+		KubernetesSpecConfig: DefaultKubernetesSpecConfig,
+		DCOSSpecConfig:       DefaultDCOSSpecConfig,
+		EndpointConfig: AzureEndpointConfig{
+			ResourceManagerVMDNSSuffix: "",
+		},
+		OSImageConfig: map[Distro]AzureOSImageConfig{
+			Ubuntu:          DefaultUbuntuImageConfig,
+			RHEL:            DefaultRHELOSImageConfig,
+			CoreOS:          DefaultCoreOSImageConfig,
+			AKS:             DefaultAKSOSImageConfig,
+			AKSDockerEngine: DefaultAKSDockerEngineOSImageConfig,
+		},
+	}
+
 	// Test that the ResourceManagerVMDNSSuffix is set in EndpointConfig
 	mockCS := getMockBaseContainerService("1.11.6")
-	mockCSP := getMockPropertiesWithCustomCloudProfile("azurestackcloud", true, true, true)
+	mockCSP := getMockPropertiesWithCustomCloudProfile("azurestackcloud", true, true, false)
 	vmDNSSuffix := "contoso.net"
 	mockCSP.CustomCloudProfile.Environment.ResourceManagerVMDNSSuffix = vmDNSSuffix
 	mockCS.Properties.CustomCloudProfile = mockCSP.CustomCloudProfile
 	mockCS.SetPropertiesDefaults(false, false)
 
-	if AzureStackCloudSpec.EndpointConfig.ResourceManagerVMDNSSuffix != vmDNSSuffix {
-		t.Errorf("setCustomCloudProfileDefaults(): ResourceManagerVMDNSSuffix string not the expected default value, got %s, expected %s", AzureStackCloudSpec.EndpointConfig.ResourceManagerVMDNSSuffix, vmDNSSuffix)
+	if mockCS.Properties.CustomCloudProfile.AzureEnvironmentSpecConfig.EndpointConfig.ResourceManagerVMDNSSuffix != vmDNSSuffix {
+		t.Errorf("setCustomCloudProfileDefaults(): ResourceManagerVMDNSSuffix string not the expected default value, got %s, expected %s", mockCS.Properties.CustomCloudProfile.AzureEnvironmentSpecConfig.EndpointConfig.ResourceManagerVMDNSSuffix, vmDNSSuffix)
 	}
 
 	if AzureCloudSpecEnvMap[AzureStackCloud].EndpointConfig.ResourceManagerVMDNSSuffix != vmDNSSuffix {
-		t.Errorf("setCustomCloudProfileDefaults(): ResourceManagerVMDNSSuffix string in AzureCloudSpecEnvMap[AzureStackCloud] not the expected default value, got %s, expected %s", AzureStackCloudSpec.EndpointConfig.ResourceManagerVMDNSSuffix, vmDNSSuffix)
+		t.Errorf("setCustomCloudProfileDefaults(): ResourceManagerVMDNSSuffix string in AzureCloudSpecEnvMap[AzureStackCloud] not the expected default value, got %s, expected %s", azureStackCloudSpec.EndpointConfig.ResourceManagerVMDNSSuffix, vmDNSSuffix)
 	}
 
 	// Test that the AzureStackCloudSpec is default when azureEnvironmentSpecConfig is empty in api model JSON file
@@ -1417,7 +1437,8 @@ func TestSetCustomCloudProfileDefaults(t *testing.T) {
 	mockCSDefaultSpec.Properties.CustomCloudProfile = mockCSPDefaultSpec.CustomCloudProfile
 	mockCSDefaultSpec.SetPropertiesDefaults(false, false)
 
-	if !reflect.DeepEqual(mockCSDefaultSpec.Properties.CustomCloudProfile.AzureEnvironmentSpecConfig, &AzureStackCloudSpec) {
+	azsEnv := AzureCloudSpecEnvMap[AzureStackCloud]
+	if !reflect.DeepEqual(mockCSDefaultSpec.Properties.CustomCloudProfile.AzureEnvironmentSpecConfig, &azsEnv) {
 		t.Errorf("setCustomCloudProfileDefaults(): did not set AzureStackCloudSpec as default when azureEnvironmentSpecConfig is empty in api model JSON file")
 	}
 
@@ -1467,9 +1488,6 @@ func TestSetCustomCloudProfileDefaults(t *testing.T) {
 	mockCSCustom.Properties.CustomCloudProfile = mockCSPCustom.CustomCloudProfile
 	mockCSCustom.SetPropertiesDefaults(false, false)
 
-	if !reflect.DeepEqual(AzureStackCloudSpec, customCloudSpec) {
-		t.Errorf("setCustomCloudProfileDefaults(): did not set AzureStackCloudSpec with customer input")
-	}
 	if !reflect.DeepEqual(AzureCloudSpecEnvMap[AzureStackCloud], customCloudSpec) {
 		t.Errorf("setCustomCloudProfileDefaults(): did not set AzureCloudSpecEnvMap[AzureStackCloud] with customer input")
 	}

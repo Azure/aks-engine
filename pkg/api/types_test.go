@@ -2965,7 +2965,26 @@ func getMockPropertiesWithCustomCloudProfile(name string, hasCustomCloudProfile,
 			}
 		}
 		if hasAzureEnvironmentSpecConfig {
-			p.CustomCloudProfile.AzureEnvironmentSpecConfig = &AzureStackCloudSpec
+			//azureStackCloudSpec is the default configurations for azure stack with public Azure.
+			azureStackCloudSpec := AzureEnvironmentSpecConfig{
+				CloudName: AzureStackCloud,
+				//DockerSpecConfig specify the docker engine download repo
+				DockerSpecConfig: DefaultDockerSpecConfig,
+				//KubernetesSpecConfig is the default kubernetes container image url.
+				KubernetesSpecConfig: DefaultKubernetesSpecConfig,
+				DCOSSpecConfig:       DefaultDCOSSpecConfig,
+				EndpointConfig: AzureEndpointConfig{
+					ResourceManagerVMDNSSuffix: "",
+				},
+				OSImageConfig: map[Distro]AzureOSImageConfig{
+					Ubuntu:          DefaultUbuntuImageConfig,
+					RHEL:            DefaultRHELOSImageConfig,
+					CoreOS:          DefaultCoreOSImageConfig,
+					AKS:             DefaultAKSOSImageConfig,
+					AKSDockerEngine: DefaultAKSDockerEngineOSImageConfig,
+				},
+			}
+			p.CustomCloudProfile.AzureEnvironmentSpecConfig = &azureStackCloudSpec
 		}
 	}
 	return p
