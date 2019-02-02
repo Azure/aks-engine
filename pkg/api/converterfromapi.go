@@ -707,6 +707,7 @@ func convertKubernetesConfigToVLabs(apiCfg *KubernetesConfig, vlabsCfg *vlabs.Ku
 	vlabsCfg.NetworkPlugin = apiCfg.NetworkPlugin
 	vlabsCfg.MaxPods = apiCfg.MaxPods
 	vlabsCfg.DockerBridgeSubnet = apiCfg.DockerBridgeSubnet
+	vlabsCfg.MobyVersion = apiCfg.MobyVersion
 	vlabsCfg.CloudProviderBackoff = apiCfg.CloudProviderBackoff
 	vlabsCfg.CloudProviderBackoffDuration = apiCfg.CloudProviderBackoffDuration
 	vlabsCfg.CloudProviderBackoffExponent = apiCfg.CloudProviderBackoffExponent
