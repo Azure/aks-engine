@@ -1,6 +1,6 @@
 # Architecture
 
-AKS-Engine is a command line tool that generates ARM (Azure Resource Manager) templates in order for one to deploy container-based clusters (like Kubernetes , DCOS, Openshift, Docker swarm) on the Azure platform.
+AKS Engine is a command line tool that generates ARM (Azure Resource Manager) templates in order for one to deploy container-based clusters (like Kubernetes , DCOS, Openshift, Docker swarm) on the Azure platform.
 
 This design document provides a brief and high-level overview of what aks-engine does internally to achieve deployment of containerized clusters. The scope of this document will be limited to the execution of aks-engine when creating Kubernetes clusters.
 
@@ -12,7 +12,7 @@ This design document provides a brief and high-level overview of what aks-engine
 
 ### Cluster api model
 
-AKS-Engine accepts JSONs of cluster api models as inputs. These api models allow the user to specify cluster configuration items such as
+AKS Engine accepts JSONs of cluster api models as inputs. These api models allow the user to specify cluster configuration items such as
 
 - Master and worker nodes configuration
 - Kubernetes version
@@ -227,11 +227,11 @@ The template generator then creates the following artifacts
 
 ### ARM Interface
 
-AKS-Engine interfaces with Azure Resource Manager (ARM) through the Azure Go SDK. The Go SDK provides interfaces to perform functions like template deployment, validation.
+AKS Engine interfaces with Azure Resource Manager (ARM) through the Azure Go SDK. The Go SDK provides interfaces to perform functions like template deployment, validation.
 
 ### Kubernetes Client API
 
-AKS-Engine also performs kubernetes cluster management operations (kubectl) through the imported Kubernetes API libraries. The Client API calls are made during the scale and upgrade commands of aks-engine.
+AKS Engine also performs kubernetes cluster management operations (kubectl) through the imported Kubernetes API libraries. The Client API calls are made during the scale and upgrade commands of aks-engine.
 
 
 Design challenges and proposals

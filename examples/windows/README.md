@@ -1,4 +1,4 @@
-# AKS-Engine
+# AKS Engine
 
 ## Overview
 

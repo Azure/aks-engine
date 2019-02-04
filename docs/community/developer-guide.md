@@ -137,16 +137,16 @@ Example launch.json file:
 
 ## Test pipeline
 
-AKS-Engine employs a Continuous Integration (CI) system that incorporates Azure DevOps, configured to interact with the AKS-Engine GitHub project.
+AKS Engine employs a Continuous Integration (CI) system that incorporates Azure DevOps, configured to interact with the AKS Engine GitHub project.
 
-The following steps constitute the AKS-Engine CI pipeline:
+The following steps constitute the AKS Engine CI pipeline:
 
-1. Contributor opens a Pull Request (PR) against the AKS-Engine project
+1. Contributor opens a Pull Request (PR) against the AKS Engine project
 1. The PR triggers an Azure DevOps job that
    + applies the changes to the HEAD of the master branch
    + runs unit tests and code coverage reports
    + generates multiple ARM templates for different deployment scenarios
    + simultaneously provisions the clusters based on generated templates in Azure
-1. The PR is code reviewed by the members of AKS-Engine team
+1. The PR is code reviewed by the members of AKS Engine team
 1. Once the PR is approved and the end-to-end job has passed, the PR can now be merged into the master branch
 1. Once merged, another job is triggered to verify integrity of the master branch. This job is similar to the PR job.

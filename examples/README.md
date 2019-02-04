@@ -1,4 +1,4 @@
-# AKS-Engine - Builds Kubernetes Clusters
+# AKS Engine - Builds Kubernetes Clusters
 
 ## Overview
 

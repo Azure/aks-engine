@@ -1,6 +1,6 @@
 # Extensions
 
-Extensions in AKS-Engine provide an easy way for AKS-Engine users to add pre-packaged functionality into their cluster.  For example, an extension could configure a monitoring solution on an AKS cluster.  The user would not need to know the details of how to install the monitoring solution.  Rather, the user would simply add the extension into the extensionProfiles section of the template.
+Extensions in AKS Engine provide an easy way for AKS Engine users to add pre-packaged functionality into their cluster.  For example, an extension could configure a monitoring solution on an AKS cluster.  The user would not need to know the details of how to install the monitoring solution.  Rather, the user would simply add the extension into the extensionProfiles section of the template.
 
 ## extensionProfiles
 
@@ -215,7 +215,7 @@ The following is an example of the template.json file.
 
 ## Creating extension template-link.json
 
-When AKS-Engine generates the azuredeploy.json file, this JSON snippet will be injected. This code calls the linked template (template.json) defined above.
+When AKS Engine generates the azuredeploy.json file, this JSON snippet will be injected. This code calls the linked template (template.json) defined above.
 
 Any parameters from the main azuredeploy.json file that is needed by template.json must be passed in via the parameters section. The parameter, "extensionParameters" is an optional parameter that is passed in directly by the user in the **extensionProfiles** section as defined in an earlier section. This special parameter can be used to pass in information such as an activation key or access code (as an example). If the extension does not need this capability, this optional parameter can be deleted.
 

@@ -13,8 +13,8 @@ newPRWelcomeComment: >
   Examples of commit messages with semantic prefixes:
   - `fix: change azure disk cachingMode to ReadOnly`
   - `feat: make maximumLoadBalancerRuleCount configurable`
-  - `docs: add note on AKS-Engine and AKS relationship`
-  
+  - `docs: add note on AKS Engine and AKS relationship`
+
   Make sure to check out the [developer guide](https://github.com/Azure/aks-engine/blob/master/docs/community/developer-guide.md) for guidance on testing your change.
 
 # Configuration for first-pr-merge - https://github.com/behaviorbot/first-pr-merge
