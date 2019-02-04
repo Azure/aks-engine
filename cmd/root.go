@@ -24,8 +24,8 @@ import (
 
 const (
 	rootName             = "aks-engine"
-	rootShortDescription = "AKS-Engine deploys and manages Kubernetes clusters in Azure"
-	rootLongDescription  = "AKS-Engine deploys and manages Kubernetes clusters in Azure"
+	rootShortDescription = "AKS Engine deploys and manages Kubernetes clusters in Azure"
+	rootLongDescription  = "AKS Engine deploys and manages Kubernetes clusters in Azure"
 )
 
 var (
@@ -33,7 +33,7 @@ var (
 	dumpDefaultModel bool
 )
 
-// NewRootCmd returns the root command for AKS-Engine.
+// NewRootCmd returns the root command for AKS Engine.
 func NewRootCmd() *cobra.Command {
 	rootCmd := &cobra.Command{
 		Use:   rootName,

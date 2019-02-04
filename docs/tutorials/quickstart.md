@@ -1,4 +1,4 @@
-# AKS-Engine
+# AKS Engine
 
 The Azure Kubernetes Engine (`aks-engine`) generates ARM (Azure Resource Manager) templates for Kubernetes clusters on Microsoft Azure. The input to aks-engine is a cluster definition file which describes the desired cluster, including orchestrator, features, and agents. The structure of the input files is very similar to the public API for Azure Kubernetes Service.
 

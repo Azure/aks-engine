@@ -1,4 +1,4 @@
-# Using a custom virtual network with AKS-Engine
+# Using a custom virtual network with AKS Engine
 
 In this tutorial you are going to learn how to use [AKS Engine](https://github.com/Azure/aks-engine) to deploy a brand new cluster into an existing or pre-created virtual network.
 By doing this, you will be able to control the properties of the virtual network or integrate a new cluster into your existing infrastructure.

@@ -1,4 +1,4 @@
-# AKS-Engine - Large Clusters
+# AKS Engine - Large Clusters
 
 ## Overview
 
