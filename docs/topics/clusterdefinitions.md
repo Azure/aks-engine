@@ -616,6 +616,7 @@ https://{keyvaultname}.vault.azure.net:443/secrets/{secretName}/{version}
 | windowsSku                       | no       | SKU usedto find Windows VM to deploy from marketplace. Default: `Datacenter-Core-1809-with-Containers-smalldisk` |
 | imageVersion                     | no       | Specific image version to deploy from marketplace.  Default: `latest` |
 | windowsImageSourceURL            | no       | Path to an existing Azure storage blob with a sysprepped VHD. This is used to test pre-release or customized VHD files that you have uploaded to Azure. If provided, the above 4 parameters are ignored. |
+| sshEnabled                       | no       | If set to `true`, OpenSSH will be installed on windows nodes to allow for ssh remoting. |
 
 #### Choosing a Windows version
 
