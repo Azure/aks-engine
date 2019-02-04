@@ -20,6 +20,7 @@ if [[ ${FEATURE_FLAGS} == *"docker-engine"* ]]; then
     installDockerEngine
     installGPUDrivers
 else
+    MOBY_VERSION="3.0.1"
     installMoby
 fi
 

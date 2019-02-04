@@ -104,6 +104,9 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpdate bool) {
 		if o.KubernetesConfig.EtcdVersion == "" {
 			o.KubernetesConfig.EtcdVersion = DefaultEtcdVersion
 		}
+		if o.KubernetesConfig.MobyVersion == "" {
+			o.KubernetesConfig.MobyVersion = DefaultMobyVersion
+		}
 		if a.HasWindows() {
 			if o.KubernetesConfig.NetworkPlugin == "" {
 				o.KubernetesConfig.NetworkPlugin = DefaultNetworkPluginWindows
