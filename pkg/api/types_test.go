@@ -811,7 +811,7 @@ func TestWindowsProfile(t *testing.T) {
 	w = WindowsProfile{
 		WindowsDockerVersion: "18.03.1-ee-3",
 		WindowsSku:           "Datacenter-Core-1809-with-Containers-smalldisk",
-		SSHEnabled:     true,
+		SSHEnabled:           true,
 	}
 
 	dv = w.GetWindowsDockerVersion()
