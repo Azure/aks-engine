@@ -67,41 +67,6 @@ func GenerateARMResources(cs *api.ContainerService) []interface{} {
 
 	}
 
-	//nsg := CreateNetworkSecurityGroup(cs)
-	//virtualNetwork := CreateVirtualNetwork(cs)
-	//
-	//armResources = append(armResources, nsg)
-	//armResources = append(armResources, virtualNetwork)
-
-	//for _, profile := range cs.Properties.AgentPoolProfiles {
-	//	vmss := CreateAgentVMSS(cs, profile)
-	//	armResources = append(armResources, vmss)
-	//}
-	//
-	//masterAVProfile := cs.Properties.MasterProfile.AvailabilityProfile
-	//
-	//if masterAVProfile == api.AvailabilitySet {
-	//	masterAvSet := CreateAvailabilitySet(cs)
-	//	armResources = append(armResources, masterAvSet)
-	//	masterVM := CreateVirtualMachine(cs)
-	//	armResources = append(armResources, masterVM)
-	//} else {
-	//	masterVmss := CreateMasterVMSS(cs)
-	//	armResources = append(armResources, masterVmss)
-	//}
-	//
-	//publicIp := CreatePublicIPAddress(cs)
-	//armResources = append(armResources, publicIp)
-	//loadBalancers := CreateLoadBalancer()
-	//masterNIC := CreateNetworkInterfaces(cs)
-	//armResources = append(armResources, loadBalancers)
-	//armResources = append(armResources, masterNIC)
-	//
-	//if cs.GetCloudSpecConfig().CloudName == api.AzurePublicCloud {
-	//	aksBillingExtension := CreateAKSBillingExtension(cs)
-	//	armResources = append(armResources, aksBillingExtension)
-	//}
-
 	return armResources
 }
 
