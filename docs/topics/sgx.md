@@ -16,11 +16,11 @@ Azure supports provisioning of SGX-enabled VMs under the umbrella of Azure Confi
   ],
 ```
 
-The SGX driver is automatically installed on every ACC agent in your cluster, so you don't need to do that manually.
+The SGX driver is automatically installed on every ACC node in your cluster, so you don't need to do that manually.
 
 ## Running a SGX-enabled container
 
-When running an SGX container, you will need to mount the drivers from the host (the kubernetes agent) into the container.
+When running an SGX container, you will need to mount the drivers from the host (the kubernetes node) into the container.
 
 On the host, the drivers are installed under `/dev/sgx`.
 
