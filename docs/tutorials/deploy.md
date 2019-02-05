@@ -77,8 +77,8 @@ The deploy command lets you override any values under the properties tag (even i
 aks-engine deploy --resource-group "your-resource-group" \
   --location "westeurope" \
   --subscription-id "your-subscription-id" \
-  --client_id '<your service principal client ID>' \
-  --client_secret '<your service principal client secret>' \
+  --client-id '<your service principal client ID>' \
+  --client-secret '<your service principal client secret>' \
   --api-model "./apimodel.json" \
   --set masterProfile.dnsPrefix="your-dns-prefix-override" \
   --set agentPoolProfiles[0].name="your-agentpool-0-name-override" \
