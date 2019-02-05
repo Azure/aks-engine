@@ -2665,6 +2665,24 @@ func TestContainerService_GetAzureProdFQDN(t *testing.T) {
 	}
 }
 
+func TestAgentPoolResource(t *testing.T) {
+	expectedName := "TestAgentPool"
+	expectedVersion := "1.13.0"
+	expectedCount := 100
+
+	agentPoolResource := CreateMockAgentPoolProfile(expectedName, expectedVersion, Succeeded, expectedCount)
+
+	gotName := agentPoolResource.Properties.Name
+	gotVervsion := agentPoolResource.Properties.OrchestratorVersion
+	gotCount := agentPoolResource.Properties.Count
+
+	if gotName != expectedName || gotVervsion != expectedVersion || gotCount != expectedCount {
+		t.Fatalf("Expected values - name: %s, version: %s, count: %d. Got - name: %s, version: %s, count: %d", expectedName, expectedVersion, expectedCount,
+			gotName, gotVervsion, gotCount)
+	}
+
+}
+
 func TestKubernetesConfig_RequiresDocker(t *testing.T) {
 	// k8sConfig with empty runtime string
 	k := &KubernetesConfig{
