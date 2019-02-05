@@ -8,6 +8,22 @@ import (
 	uuid "github.com/satori/go.uuid"
 )
 
+// CreateMockAgentPoolProfile creates a mock AgentPoolResource for testing
+func CreateMockAgentPoolProfile(agentPoolName, orchestratorVersion string, provisioningState ProvisioningState, agentCount int) *AgentPoolResource {
+	agentPoolResource := AgentPoolResource{}
+	agentPoolResource.ID = uuid.NewV4().String()
+	agentPoolResource.Location = "westus2"
+	agentPoolResource.Name = agentPoolName
+
+	agentPoolResource.Properties = &AgentPoolProfile{}
+	// AgentPoolProfile needs to be remain same, so the name is repeated inside.
+	agentPoolResource.Properties.Name = agentPoolName
+	agentPoolResource.Properties.Count = agentCount
+	agentPoolResource.Properties.OrchestratorVersion = orchestratorVersion
+	agentPoolResource.Properties.ProvisioningState = provisioningState
+	return &agentPoolResource
+}
+
 // CreateMockContainerService returns a mock container service for testing purposes
 func CreateMockContainerService(containerServiceName, orchestratorVersion string, masterCount, agentCount int, certs bool) *ContainerService {
 	cs := ContainerService{}
