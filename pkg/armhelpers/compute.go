@@ -60,6 +60,19 @@ func (az *AzureClient) DeleteVirtualMachineScaleSetVM(ctx context.Context, resou
 	return err
 }
 
+// DeleteVirtualMachineScaleSet deletes an entire VM Scale Set.
+func (az *AzureClient) DeleteVirtualMachineScaleSet(ctx context.Context, resourceGroup, vmssName string) error {
+	future, err := az.virtualMachineScaleSetsClient.Delete(ctx, resourceGroup, vmssName)
+	if err != nil {
+		return err
+	}
+	if err = future.WaitForCompletionRef(ctx, az.virtualMachineScaleSetsClient.Client); err != nil {
+		return err
+	}
+	_, err = future.Result(az.virtualMachineScaleSetsClient)
+	return err
+}
+
 // SetVirtualMachineScaleSetCapacity sets the VMSS capacity
 func (az *AzureClient) SetVirtualMachineScaleSetCapacity(ctx context.Context, resourceGroup, virtualMachineScaleSet string, sku compute.Sku, location string) error {
 	future, err := az.virtualMachineScaleSetsClient.CreateOrUpdate(

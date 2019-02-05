@@ -504,6 +504,42 @@ func TestAvailabilityProfile(t *testing.T) {
 	}
 }
 
+func TestPerAgentPoolVersionAndState(t *testing.T) {
+	cases := []struct {
+		ap              AgentPoolProfile
+		expectedVersion string
+		expectedState   ProvisioningState
+	}{
+		{
+			ap: AgentPoolProfile{
+				Name:                "agentpool1",
+				OrchestratorVersion: "1.12.0",
+				ProvisioningState:   Creating,
+			},
+			expectedVersion: "1.12.0",
+			expectedState:   Creating,
+		},
+		{
+			ap: AgentPoolProfile{
+				Name:                "agentpool2",
+				OrchestratorVersion: "",
+				ProvisioningState:   "",
+			},
+			expectedVersion: "",
+			expectedState:   "",
+		},
+	}
+
+	for _, c := range cases {
+		if c.ap.OrchestratorVersion != c.expectedVersion {
+			t.Fatalf("Orchestrator profile mismatch. Expected: %s. Got: %s.", c.expectedVersion, c.ap.OrchestratorVersion)
+		}
+		if c.ap.ProvisioningState != c.expectedState {
+			t.Fatalf("Provisioning state mismatch. Expected: %s. Got: %s.", c.expectedState, c.ap.ProvisioningState)
+		}
+	}
+}
+
 func TestIsCustomVNET(t *testing.T) {
 	cases := []struct {
 		p              Properties

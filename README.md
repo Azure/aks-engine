@@ -1,27 +1,27 @@
-# AKS-Engine - Units of Kubernetes on Azure!
+# AKS Engine - Units of Kubernetes on Azure!
 
 [![Coverage Status](https://codecov.io/gh/Azure/aks-engine/branch/master/graph/badge.svg)](https://codecov.io/gh/Azure/aks-engine)
 [![GoDoc](https://godoc.org/github.com/Azure/aks-engine?status.svg)](https://godoc.org/github.com/Azure/aks-engine)
 
-AKS-Engine is the easiest way to provision a self-managed Kubernetes cluster on Azure.
+AKS Engine is the easiest way to provision a self-managed Kubernetes cluster on Azure.
 
 ## Overview
 
-AKS-Engine provides convenient tooling to quickly bootstrap Kubernetes clusters on Azure. By leveraging [ARM (Azure Resource Manager)][ARM], AKS-Engine helps you create, destroy and maintain clusters provisioned with basic IaaS resources in Azure. AKS-Engine is also the library used by AKS for performing these operations to provide managed service implementations.
+AKS Engine provides convenient tooling to quickly bootstrap Kubernetes clusters on Azure. By leveraging [ARM (Azure Resource Manager)][ARM], AKS Engine helps you create, destroy and maintain clusters provisioned with basic IaaS resources in Azure. AKS Engine is also the library used by AKS for performing these operations to provide managed service implementations.
 
 ## Getting started
 
-Depending on how new you are to AKS-Engine, you can try [a tutorial][tutorials], or just dive straight into the [documentation][docs].
+Depending on how new you are to AKS Engine, you can try [a tutorial][tutorials], or just dive straight into the [documentation][docs].
 
-Please see the [FAQ][] for answers about AKS-Engine and its progenitor ACS-Engine.
+Please see the [FAQ][] for answers about AKS Engine and its progenitor ACS-Engine.
 
 ## Sharpen your skills
 
-The official [AKS-Engine documentation][docs] covers everything you need to know about AKS-Engine (and then some).
+The official [AKS Engine documentation][docs] covers everything you need to know about AKS Engine (and then some).
 
 ## Join the community
 
-Want to get involved? The [community guide][community] covers everything you need to know about the AKS-Engine community and how you can contribute.
+Want to get involved? The [community guide][community] covers everything you need to know about the AKS Engine community and how you can contribute.
 
 ## Code of conduct
 

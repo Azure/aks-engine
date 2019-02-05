@@ -1,4 +1,4 @@
-# AKS-Engine - Kubernetes Features
+# AKS Engine - Kubernetes Features
 
 ## Overview
 

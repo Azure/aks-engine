@@ -1,6 +1,6 @@
 ## Troubleshooting
 
-Common issues or questions that users have run into when using AKS-Engine are detailed below.
+Common issues or questions that users have run into when using AKS Engine are detailed below.
 
 ## VMExtensionProvisioningError or VMExtensionProvisioningTimeout
 
