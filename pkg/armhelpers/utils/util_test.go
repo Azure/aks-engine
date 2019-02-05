@@ -177,9 +177,8 @@ func Test_GetK8sVMName(t *testing.T) {
 	}{
 		{properties: p, agentPoolIndex: 0, agentIndex: 2, expected: "aks-linux1-28513887-2", expectedErr: false},
 		{properties: p, agentPoolIndex: 1, agentIndex: 1, expected: "2851aks011", expectedErr: false},
-		{properties: p, agentPoolIndex: 3, agentIndex: 0, expected: "", expectedErr: true},
 	} {
-		vmName, err := GetK8sVMName(s.properties, s.agentPoolIndex, s.agentIndex)
+		vmName, err := GetK8sVMName(s.properties, p.AgentPoolProfiles[s.agentPoolIndex], s.agentIndex)
 
 		if !s.expectedErr {
 			if err != nil {

@@ -56,16 +56,16 @@ somePod         0m           11Mi
 
 ## Azure Monitor for containers
 
-Azure Monitor for containers is a feature designed to monitor the performance of container workloads deployed to AKS-Engine (formerly known as ACS-Engine) cluster(s) hosted on Azure. Monitoring your containers is critical, especially when you're running a production cluster, at scale, with multiple applications.
+Azure Monitor for containers is a feature designed to monitor the performance of container workloads deployed to AKS Engine (formerly known as ACS-Engine) cluster(s) hosted on Azure. Monitoring your containers is critical, especially when you're running a production cluster, at scale, with multiple applications.
 
 Azure Monitor for containers gives you performance visibility by collecting memory and processor metrics from controllers, nodes, and containers that are available in Kubernetes through the Metrics API. Container logs are also collected. After you enable monitoring from Kubernetes clusters, these metrics and logs are automatically collected for you through a containerized version of the Log Analytics agent for Linux and stored in your Log Analytics workspace.
 
-Azure Monitor for containers for AKS-Engine cluster(s) can be configured through following options
+Azure Monitor for containers for AKS Engine cluster(s) can be configured through following options
 
 1. Helm chart [azuremonitor-containers](https://github.com/helm/charts/tree/master/incubator/azuremonitor-containers)
 2. [Container-monitoring add-on](../../examples/addons/container-monitoring/README.md)
 
-> Note: If more than one AKS-Engine cluster planned to configure to the same Azure Log Analytics Workspace then recommend option is to use Helm chart (i.e. option #1 above)
+> Note: If more than one AKS Engine cluster planned to configure to the same Azure Log Analytics Workspace then recommend option is to use Helm chart (i.e. option #1 above)
 
 Navigate to [azmon-containers](https://aka.ms/azmon-containers) to view the health, metrics and logs of AKS-engine cluster(s).
 
@@ -75,7 +75,7 @@ Refer to [azuremonitor-containers-aks-engine](https://github.com/Microsoft/OMS-d
 
 ![Image of Azure Monitor for containers](../static/img/azure_monitor_aks_engine.png)
 
-If you have any questions or feedback regarding the monitoring of your AKS-Engine (or ACS-Engine) cluster(s), please reach us out through [this](mailto:askcoin@microsoft.com) email.
+If you have any questions or feedback regarding the monitoring of your AKS Engine (or ACS-Engine) cluster(s), please reach us out through [this](mailto:askcoin@microsoft.com) email.
 
 ## Kubernetes dashboard
 

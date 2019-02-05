@@ -1,4 +1,4 @@
-# AKS-Engine - Network Plugin
+# AKS Engine - Network Plugin
 
 There are 2 different Network Plugin options :
 

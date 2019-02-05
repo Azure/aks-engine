@@ -1,4 +1,4 @@
-# AKS-Engine - Multiple Node Pools
+# AKS Engine - Multiple Node Pools
 
 aks-engine supports creating a Kubernetes cluster with more than one node pool. These pools can have different configurations, such as VM size or storage profile.
 

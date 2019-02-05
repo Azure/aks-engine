@@ -727,9 +727,6 @@ func (t *TemplateGenerator) getTemplateFuncMap(cs *api.ContainerService) templat
 		"GetB64sshdConfig": func() string {
 			return getBase64CustomScript(sshdConfig)
 		},
-		"GetB64systemConf": func() string {
-			return getBase64CustomScript(systemConf)
-		},
 		"GetKubernetesMasterPreprovisionYaml": func() string {
 			str := ""
 			if cs.Properties.MasterProfile.PreprovisionExtension != nil {

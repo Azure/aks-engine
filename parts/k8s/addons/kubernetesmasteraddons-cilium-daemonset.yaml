@@ -108,6 +108,9 @@ spec:
           effect: NoSchedule
         - key: CriticalAddonsOnly
           operator: Exists
+        - effect: NoSchedule
+          key: node.kubernetes.io/not-ready
+          operator: Exists
       containers:
       - image: cilium/cilium:stable
         imagePullPolicy: Always

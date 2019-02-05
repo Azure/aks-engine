@@ -1,4 +1,4 @@
-# AKS-Engine - Custom VNET
+# AKS Engine - Custom VNET
 
 ## Overview
 

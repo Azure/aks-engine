@@ -26,6 +26,7 @@
       "creationSource" : "[concat(parameters('generatorCode'), '-', variables('{{.Name}}VMNamePrefix'))]",
       "resourceNameSuffix" : "[variables('winResourceNamePrefix')]",
       "orchestrator" : "[variables('orchestratorNameVersionTag')]",
+      "aksEngineVersion" : "[parameters('aksEngineVersion')]",
       "poolName" : "{{.Name}}"
     },
     "location": "[variables('location')]",

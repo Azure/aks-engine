@@ -228,11 +228,12 @@ func (ku *Upgrader) upgradeAgentPools(ctx context.Context) error {
 			return ku.Translator.Errorf("Error generating upgrade template: %s", err.Error())
 		}
 
-		var agentCount, agentPoolIndex int
-		for indx, app := range ku.ClusterTopology.DataModel.Properties.AgentPoolProfiles {
+		var agentCount int
+		var agentPoolProfile *api.AgentPoolProfile
+		for _, app := range ku.ClusterTopology.DataModel.Properties.AgentPoolProfiles {
 			if app.Name == *agentPool.Name {
 				agentCount = app.Count
-				agentPoolIndex = indx
+				agentPoolProfile = app
 				break
 			}
 		}
@@ -315,7 +316,7 @@ func (ku *Upgrader) upgradeAgentPools(ctx context.Context) error {
 		for upgradedCount+toBeUpgradedCount < agentCount {
 			agentIndex := getAvailableIndex(agentVMs)
 
-			vmName, err := utils.GetK8sVMName(ku.DataModel.Properties, agentPoolIndex, agentIndex)
+			vmName, err := utils.GetK8sVMName(ku.DataModel.Properties, agentPoolProfile, agentIndex)
 			if err != nil {
 				ku.logger.Errorf("Error reconstructing agent VM name with index %d: %v", agentIndex, err)
 				return err
@@ -357,7 +358,7 @@ func (ku *Upgrader) upgradeAgentPools(ctx context.Context) error {
 				return err
 			}
 
-			vmName, err := utils.GetK8sVMName(ku.DataModel.Properties, agentPoolIndex, agentIndex)
+			vmName, err := utils.GetK8sVMName(ku.DataModel.Properties, agentPoolProfile, agentIndex)
 			if err != nil {
 				ku.logger.Errorf("Error fetching new VM name: %v", err)
 				return err

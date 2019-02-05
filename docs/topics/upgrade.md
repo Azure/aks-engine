@@ -34,7 +34,7 @@ In order to ensure that your `aks-engine upgrade` operation runs smoothly, there
     ./bin/aks-engine orchestrators --orchestrator Kubernetes --version 1.11.5
     ```
 
-4) If using `aks-engine upgrade` in production, it is recommended to stage an upgrade test on an cluster that was built to the same specifications (built with the same cluster configuration + `aks-engine` version) as your production cluster before performing the upgrade, especially if the cluster configuration is "interesting", or in other words differs significantly from defaults. The reason for this is that `aks-engine` supports many different cluster configurations and the extent of E2E testing that the AKS-Engine team runs cannot practically cover every single configuration out there. Therefore, it is recommended that you make sure that your specific cluster configuration works with the existing upgrade implementation before starting this long-running operation.
+4) If using `aks-engine upgrade` in production, it is recommended to stage an upgrade test on an cluster that was built to the same specifications (built with the same cluster configuration + `aks-engine` version) as your production cluster before performing the upgrade, especially if the cluster configuration is "interesting", or in other words differs significantly from defaults. The reason for this is that `aks-engine` supports many different cluster configurations and the extent of E2E testing that the AKS Engine team runs cannot practically cover every single configuration out there. Therefore, it is recommended that you make sure that your specific cluster configuration works with the existing upgrade implementation before starting this long-running operation.
 
 5) `aks-engine upgrade` is backwards compatible. If you deployed with `aks-engine` version `0.27.x`, you can run upgrade with version `0.29.y`. In fact, it is recommended that you use the latest available `aks-engine` version when running an upgrade operation. This will ensure that you get the latest available software and bug fixes in your upgraded cluster.
 
@@ -76,6 +76,16 @@ For example,
   --client-secret xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
 ```
 
-### What can go wrong
+## Known Limitations
 
-By its nature, the upgrade operation is long running and potentially could fail for various reasons, such as temporary lack of resources, etc. In this case, rerun the command. The `upgrade` command is idempotent, and will pick up execution from the point it failed on.
+### Manual reconciliation
+
+The upgrade operation is long running, and for large clusters, more susceptible to single operational failures. This is based on the design principle of upgrade enumerating, one-at-a-time, through each node in the cluster. A transient Azure resource allocation error could thus interrupt the successful progression of the overall transaction. At present, the upgrade operation is implemented to "fail fast"; and so, if a well formed upgrade operation fails before completing, it can be manually retried by invoking the exact same command line arguments as were sent originally. The upgrade operation will enumerate through the cluster nodes, skipping any nodes that have already been upgraded to the desired Kubernetes version. Those nodes that match the *original* Kubernetes version will then, one-at-a-time, be cordon and drained, and upgraded to the desired version. Put another way, an upgrade command is designed to be idempotent across retry scenarios.
+
+### Cluster-autoscaler + VMSS
+
+There are known limitations with VMSS cluster-autoscaler scenarios and upgrade. Our current guidance is not to use `aks-engine upgrade` on clusters with `cluster-autoscaler` functionality. See [here](https://github.com/Azure/aks-engine/issues/400) to get more information and to track progress of the issues related to these limitations.
+
+### Cluster-autoscaler + Availability Set
+
+We don't recommend using `aks-engine upgrade` on clusters that have Availability Set (non-VMSS) agent pools `cluster-autoscaler` at this time.
