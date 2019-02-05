@@ -814,6 +814,9 @@ func (t *TemplateGenerator) getTemplateFuncMap(cs *api.ContainerService) templat
 		"HasCustomSearchDomain": func() bool {
 			return cs.Properties.LinuxProfile.HasSearchDomain()
 		},
+		"HasCiliumNetworkPlugin": func() bool {
+			return cs.Properties.OrchestratorProfile.KubernetesConfig.NetworkPlugin == "cilium"
+		},
 		"HasCustomNodesDNS": func() bool {
 			return cs.Properties.LinuxProfile.HasCustomNodesDNS()
 		},

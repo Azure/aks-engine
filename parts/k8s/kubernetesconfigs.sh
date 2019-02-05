@@ -202,6 +202,11 @@ configureCNI() {
         fi
         /sbin/ebtables -t nat --list
     fi
+    if [[ "${NETWORK_PLUGIN}" = "cilium" ]]; then
+        systemctl enable sys-fs-bpf.mount
+        systemctl restart sys-fs-bpf.mount
+        REBOOTREQUIRED=true
+    fi
 }
 
 setKubeletOpts () {
