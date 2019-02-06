@@ -5,7 +5,7 @@ Install-OpenSSH {
         $SSHKey
     )
 
-    $adminpath = "c:\ProgramData\ssh\"
+    $adminpath = "c:\ProgramData\ssh"
     $adminfile = "administrators_authorized_keys"
 
     Write-Host "Installing OpenSSH"
@@ -20,6 +20,7 @@ Install-OpenSSH {
 
     if (!(Test-Path "$adminpath")) {
         Write-Host "Created new file and text content added"
+        New-Item -path "C:\ProgramData" -name "ssh" -type "directory" -value ""
         New-Item -path $adminpath -name $adminfile -type "file" -value ""
     }
 
