@@ -34,6 +34,7 @@ func newOrchestratorsCmd() *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return oc.run(cmd, args)
 		},
+		Hidden: true,
 	}
 
 	f := command.Flags()
