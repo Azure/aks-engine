@@ -18,21 +18,23 @@ Install-OpenSSH {
 
     Add-WindowsCapability -Online -Name OpenSSH.Server~~~~0.0.1.0
 
+    Start-Service sshd
+
     if (!(Test-Path "$adminpath")) {
         Write-Host "Created new file and text content added"
-        New-Item -path "C:\ProgramData" -name "ssh" -type "directory" -value ""
         New-Item -path $adminpath -name $adminfile -type "file" -value ""
     }
 
-    Write-Host "Adding key"
+    Write-Host "$adminpath found."
+    Write-Host "Adding key to: $adminpath\$adminfile ..."
     Add-Content $adminpath\$adminfile $SSHKey
 
-    Write-Host "Setting required permissions"
+    Write-Host "Setting required permissions..."
     icacls $adminpath\$adminfile /remove "NT AUTHORITY\Authenticated Users"
     icacls $adminpath\$adminfile /inheritance:r
 
-    Start-Service sshd
-
+    Write-Host "Restarting sshd service..."
+    Restart-Service sshd
     # OPTIONAL but recommended:
     Set-Service -Name sshd -StartupType 'Automatic'
 
@@ -43,4 +45,5 @@ Install-OpenSSH {
         Write-Error "OpenSSH is firewall is not configured properly"
         exit 1
     }
+    Write-Host "OpenSSH installed and configured successfully"
 }
