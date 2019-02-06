@@ -15,7 +15,7 @@ removeEtcd() {
 }
 
 removeMoby() {
-    sudo apt-get purge moby-engine moby-cli
+    sudo apt-get purge -y moby-engine moby-cli
 }
 
 installEtcd() {
