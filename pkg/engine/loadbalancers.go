@@ -79,103 +79,6 @@ func CreateLoadBalancer() LoadBalancerARM {
 }
 
 func CreateMasterInternalLoadBalancer(cs *api.ContainerService) LoadBalancerARM {
-
-	var dependencies []string
-	if cs.Properties.MasterProfile.IsCustomVNET() {
-		dependencies = append(dependencies, "[variables('nsgID')]")
-	} else {
-		dependencies = append(dependencies, "[variables('vnetID')]")
-	}
-
-	loadBalancerARM := LoadBalancerARM{
-		ARMResource: ARMResource{
-			APIVersion: "[variables('apiVersionNetwork')]",
-			DependsOn:  dependencies,
-		},
-		LoadBalancer: network.LoadBalancer{
-			Location: to.StringPtr("[variables('location')]"),
-			Name:     to.StringPtr("[variables('masterInternalLbName')]"),
-			LoadBalancerPropertiesFormat: &network.LoadBalancerPropertiesFormat{
-				BackendAddressPools: &[]network.BackendAddressPool{
-					{
-						Name: to.StringPtr("[variables('masterLbBackendPoolName')]"),
-					},
-				},
-				FrontendIPConfigurations: &[]network.FrontendIPConfiguration{
-					{
-						Name: to.StringPtr("[variables('masterInternalLbIPConfigName')]"),
-						FrontendIPConfigurationPropertiesFormat: &network.FrontendIPConfigurationPropertiesFormat{
-							PrivateIPAddress:          to.StringPtr("[variables('kubernetesAPIServerIP')]"),
-							PrivateIPAllocationMethod: network.Static,
-							Subnet: &network.Subnet{
-								ID: to.StringPtr("[variables('vnetSubnetID')]"),
-							},
-						},
-					},
-				},
-				LoadBalancingRules: &[]network.LoadBalancingRule{
-					{
-						Name: to.StringPtr("InternalLBRuleHTTPS"),
-						LoadBalancingRulePropertiesFormat: &network.LoadBalancingRulePropertiesFormat{
-							BackendAddressPool: &network.SubResource{
-								ID: to.StringPtr("[concat(variables('masterInternalLbID'), '/backendAddressPools/', variables('masterLbBackendPoolName'))]"),
-							},
-							BackendPort:      to.Int32Ptr(4443),
-							EnableFloatingIP: to.BoolPtr(false),
-							FrontendIPConfiguration: &network.SubResource{
-								ID: to.StringPtr("[variables('masterInternalLbIPConfigID')]"),
-							},
-							FrontendPort:         to.Int32Ptr(443),
-							IdleTimeoutInMinutes: to.Int32Ptr(5),
-							Protocol:             network.TransportProtocolTCP,
-							Probe: &network.SubResource{
-								ID: to.StringPtr("[concat(variables('masterInternalLbID'),'/probes/tcpHTTPSProbe')]"),
-							},
-						},
-					},
-				},
-				Probes: &[]network.Probe{
-					{
-						Name: to.StringPtr("tcpHTTPSProbe"),
-						ProbePropertiesFormat: &network.ProbePropertiesFormat{
-							IntervalInSeconds: to.Int32Ptr(5),
-							NumberOfProbes:    to.Int32Ptr(2),
-							Port:              to.Int32Ptr(4443),
-							Protocol:          network.ProbeProtocolTCP,
-						},
-					},
-				},
-			},
-			Sku: &network.LoadBalancerSku{
-				Name: network.LoadBalancerSkuName("[variables('loadBalancerSku')]"),
-			},
-			Type: to.StringPtr("Microsoft.Network/loadBalancers"),
-		},
-	}
-
-	if cs.Properties.MasterProfile.IsVirtualMachineScaleSets() {
-		inboundNATPools := []network.InboundNatPool{
-			{
-				Name: to.StringPtr("[concat('SSH-', variables('masterVMNamePrefix'), 'natpools')]"),
-				InboundNatPoolPropertiesFormat: &network.InboundNatPoolPropertiesFormat{
-					FrontendIPConfiguration: &network.SubResource{
-						ID: to.StringPtr("[variables('masterLbIPConfigID')]"),
-					},
-					Protocol:               network.TransportProtocolTCP,
-					BackendPort:            to.Int32Ptr(22),
-					FrontendPortRangeStart: to.Int32Ptr(50001),
-					FrontendPortRangeEnd:   to.Int32Ptr(50119),
-					EnableFloatingIP:       to.BoolPtr(false),
-				},
-			},
-		}
-		loadBalancerARM.InboundNatPools = &inboundNATPools
-	}
-
-	return loadBalancerARM
-}
-
-func CreateMasterInternalLoadBalancerVMSS(cs *api.ContainerService) LoadBalancerARM {
 	var dependencies []string
 	if cs.Properties.MasterProfile.IsCustomVNET() {
 		dependencies = append(dependencies, "[variables('nsgID')]")
@@ -186,6 +89,10 @@ func CreateMasterInternalLoadBalancerVMSS(cs *api.ContainerService) LoadBalancer
 	armResource := ARMResource{
 		APIVersion: "[variables('apiVersionNetwork')]",
 		DependsOn:  dependencies,
+	}
+	subnet := "[variables('vnetSubnetID')]"
+	if cs.Properties.MasterProfile.IsVirtualMachineScaleSets() {
+		subnet = "[variables('vnetSubnetIDMaster')]"
 	}
 
 	loadBalancer := network.LoadBalancer{
@@ -204,7 +111,7 @@ func CreateMasterInternalLoadBalancerVMSS(cs *api.ContainerService) LoadBalancer
 						PrivateIPAddress:          to.StringPtr("[variables('kubernetesAPIServerIP')]"),
 						PrivateIPAllocationMethod: network.Static,
 						Subnet: &network.Subnet{
-							ID: to.StringPtr("[variables('vnetSubnetIDMaster')]"),
+							ID: to.StringPtr(subnet),
 						},
 					},
 				},
