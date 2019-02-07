@@ -39,7 +39,7 @@ for CNI_PLUGIN_VERSION in $CNI_PLUGIN_VERSIONS; do
     downloadCNI
 done
 
-installContainerd
+downloadContainerd
 
 installImg
 
