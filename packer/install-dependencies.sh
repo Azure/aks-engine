@@ -1,5 +1,7 @@
 #!/bin/bash
 
+CONTAINERD_DOWNLOAD_URL_BASE="https://storage.googleapis.com/cri-containerd-release/"
+
 source /home/packer/provision_installs.sh
 source /home/packer/provision_source.sh
 
@@ -39,7 +41,7 @@ done
 
 CRI_CONTAINERD_VERSIONS="1.1.5"
 for CRI_CONTAINERD_VERSION in $CRI_CONTAINERD_VERSIONS; do
-    CONTAINERD_DOWNLOAD_URL="https://storage.googleapis.com/cri-containerd-release/cri-containerd-${CRI_CONTAINERD_VERSION}.linux-amd64.tar.gz"
+    CONTAINERD_DOWNLOAD_URL="${CONTAINERD_DOWNLOAD_URL_BASE}cri-containerd-${CRI_CONTAINERD_VERSION}.linux-amd64.tar.gz"
     downloadContainerd
 done
 
