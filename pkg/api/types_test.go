@@ -847,6 +847,7 @@ func TestWindowsProfile(t *testing.T) {
 	w = WindowsProfile{
 		WindowsDockerVersion: "18.03.1-ee-3",
 		WindowsSku:           "Datacenter-Core-1809-with-Containers-smalldisk",
+		SSHEnabled:           true,
 	}
 
 	dv = w.GetWindowsDockerVersion()
@@ -857,6 +858,11 @@ func TestWindowsProfile(t *testing.T) {
 	windowsSku = w.GetWindowsSku()
 	if windowsSku != "Datacenter-Core-1809-with-Containers-smalldisk" {
 		t.Fatalf("Expected GetWindowsSku() to equal Datacenter-Core-1809-with-Containers-smalldisk, got %s", windowsSku)
+	}
+
+	se := w.SSHEnabled
+	if !se {
+		t.Fatalf("Expected SSHEnabled to return true, got %v", se)
 	}
 }
 

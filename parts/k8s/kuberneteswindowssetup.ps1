@@ -121,6 +121,7 @@ Expand-Archive scripts.zip -DestinationPath "C:\\AzureData\\"
 . c:\AzureData\k8s\windowskubeletfunc.ps1
 . c:\AzureData\k8s\windowscnifunc.ps1
 . c:\AzureData\k8s\windowsazurecnifunc.ps1
+. c:\AzureData\k8s\windowsinstallopensshfunc.ps1
 
 function
 Update-ServiceFailureActions()
@@ -238,6 +239,14 @@ try
             -KubeServiceCIDR $global:KubeServiceCIDR `
             -HNSModule $global:HNSModule `
             -KubeletNodeLabels $global:KubeletNodeLabels
+
+        # Install OpenSSH if SSH enabled
+        $sshEnabled = [System.Convert]::ToBoolean("{{ WindowsSSHEnabled }}")
+
+        if ( $sshEnabled ) {
+            $SSHKey = "{{ WrapAsParameter "sshRSAPublicKey" }}"
+            Install-OpenSSH -SSHKey $SSHKey
+        }
 
         Write-Log "Disable Internet Explorer compat mode and set homepage"
         Set-Explorer
