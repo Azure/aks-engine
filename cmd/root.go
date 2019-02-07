@@ -9,7 +9,6 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"path/filepath"
 
 	"github.com/Azure/aks-engine/pkg/api"
 	"github.com/Azure/aks-engine/pkg/api/vlabs"
@@ -29,11 +28,11 @@ const (
 	rootName             = "aks-engine"
 	rootShortDescription = "AKS Engine deploys and manages Kubernetes clusters in Azure"
 	rootLongDescription  = "AKS Engine deploys and manages Kubernetes clusters in Azure"
+	settingsFileName     = "settings.json"
 )
 
 var (
-	configHome       = filepath.Join(xdg.ConfigHome(), "aks-engine")
-	settingsFileName = "settings.json"
+	settingsFilepath = xdg.App{Name: rootName}.ConfigPath(settingsFileName)
 	// holds the configuration provided by the user.
 	//
 	// Priority: feature flags > environment variables > settings.json > defaultConfigValues
@@ -80,7 +79,6 @@ func NewRootCmd() *cobra.Command {
 		Short: rootShortDescription,
 		Long:  rootLongDescription,
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
-			settingsFilepath := filepath.Join(configHome, settingsFileName)
 			_, err := os.Stat(settingsFilepath)
 			var r io.Reader
 			if err != nil {
@@ -102,7 +100,7 @@ func NewRootCmd() *cobra.Command {
 			s, err := config.FromReader(r)
 			// skip if the settings could not be read due to it being an empty file
 			if err != nil && err != io.EOF {
-				return fmt.Errorf("could not read from JSON stream: %v", err)
+				return fmt.Errorf("could not read from settings file: %v", err)
 			}
 			if err := loadSettings(s); err != nil {
 				return fmt.Errorf("could not load settings: %v", err)

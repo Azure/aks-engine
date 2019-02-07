@@ -68,7 +68,6 @@ func newConfigureCmd() *cobra.Command {
 }
 
 func (cc *configureCmd) run() error {
-	settingsFilepath := filepath.Join(configHome, settingsFileName)
 	f, err := os.Open(settingsFilepath)
 	if err != nil {
 		if !os.IsNotExist(err) {
@@ -87,7 +86,7 @@ func (cc *configureCmd) run() error {
 	if err != nil && err != io.EOF {
 		// log a warning message if the settings could not be read; possibly due to it being an empty or malformed file
 		// config.FromReader will return a non-nil settings object so it's safe to carry on as if we read from the file
-		log.Warningf("could not read from settings file %s: %v", settingsFilepath, err)
+		log.Warningf("could not read settings from %s: %v", settingsFilepath, err)
 	}
 	f.Close()
 	// load current settings; we display these to the user
@@ -228,7 +227,7 @@ func promptAuth(conf *config.AuthConfig) error {
 			},
 		},
 	}
-	if err := survey.Ask(qs, &conf); err != nil {
+	if err := survey.Ask(qs, conf); err != nil {
 		return err
 	}
 
@@ -281,9 +280,12 @@ func promptAuth(conf *config.AuthConfig) error {
 				},
 			},
 		}
+	default:
+		// no more questions to ask
+		qs = []*survey.Question{}
 	}
 
-	return survey.Ask(qs, &conf)
+	return survey.Ask(qs, conf)
 }
 
 func promptDeploy(conf *config.DeployConfig) error {
@@ -360,7 +362,7 @@ func promptDeploy(conf *config.DeployConfig) error {
 			},
 		},
 	}
-	return survey.Ask(qs, &conf)
+	return survey.Ask(qs, conf)
 }
 
 func promptGenerate(conf *config.GenerateConfig) error {
@@ -409,7 +411,7 @@ func promptGenerate(conf *config.GenerateConfig) error {
 			},
 		},
 	}
-	return survey.Ask(qs, &conf)
+	return survey.Ask(qs, conf)
 }
 
 func promptScale(conf *config.ScaleConfig) error {
@@ -452,7 +454,7 @@ func promptScale(conf *config.ScaleConfig) error {
 			},
 		},
 	}
-	return survey.Ask(qs, &conf)
+	return survey.Ask(qs, conf)
 }
 
 func promptUpgrade(conf *config.UpgradeConfig) error {
@@ -480,7 +482,7 @@ func promptUpgrade(conf *config.UpgradeConfig) error {
 			},
 		},
 	}
-	return survey.Ask(qs, &conf)
+	return survey.Ask(qs, conf)
 }
 
 func promptVersion(conf *config.VersionConfig) error {
@@ -494,5 +496,5 @@ func promptVersion(conf *config.VersionConfig) error {
 			},
 		},
 	}
-	return survey.Ask(qs, &conf)
+	return survey.Ask(qs, conf)
 }

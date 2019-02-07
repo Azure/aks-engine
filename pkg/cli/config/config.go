@@ -5,7 +5,6 @@ package config
 
 import (
 	"encoding/json"
-	"fmt"
 	"io"
 	"path/filepath"
 
@@ -121,7 +120,7 @@ func FromReader(r io.Reader) (*Settings, error) {
 	s := New()
 	decoder := json.NewDecoder(r)
 	if err := decoder.Decode(s); err != nil {
-		return s, fmt.Errorf("could not read from JSON stream: %v", err)
+		return s, err
 	}
 	return s, nil
 }

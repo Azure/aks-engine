@@ -219,7 +219,7 @@ func TestLoadSettings(t *testing.T) {
 			Name:                  "bad settings.json",
 			SettingsFileContent:   "{]",
 			FromReaderShouldError: true,
-			ExpectedErrorMessage:  "could not read from JSON stream: invalid character ']' looking for beginning of object key string",
+			ExpectedErrorMessage:  "invalid character ']' looking for beginning of object key string",
 		},
 		{
 			Name:                "bad profile name, defaulting to settings in the 'default' profile in settings.json",
