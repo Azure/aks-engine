@@ -208,3 +208,13 @@ func GetCloudTargetEnv(location, customCloudName string) string {
 		return "AzurePublicCloud"
 	}
 }
+
+//AssignStringIfNotEmpty set the *dst to src if src is not empty string
+func AssignStringIfNotEmpty(dst *string, src string) {
+	if dst == nil {
+		return
+	}
+	if src != "" {
+		*dst = src
+	}
+}

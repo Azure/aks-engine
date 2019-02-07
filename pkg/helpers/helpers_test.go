@@ -457,3 +457,34 @@ func TestGetCloudTargetEnv(t *testing.T) {
 	}
 
 }
+
+func TestAssignStringIfNotEmpty(t *testing.T) {
+	testcases := []struct {
+		dst      *string
+		src      string
+		expected string
+	}{
+		{
+			to.StringPtr("randomstring"),
+			"",
+			"randomstring",
+		},
+		{
+			to.StringPtr("randomstring2"),
+			"srcisnotempty",
+			"srcisnotempty",
+		},
+	}
+
+	for _, testcase := range testcases {
+		AssignStringIfNotEmpty(testcase.dst, testcase.src)
+		if testcase.dst != nil && testcase.expected != *testcase.dst {
+			t.Errorf("expected AssignStringIfNotEmpty to return %s, but got %s", testcase.expected, *testcase.dst)
+		}
+	}
+	var nilString *string
+	AssignStringIfNotEmpty(nilString, "randomstring3")
+	if nilString != nil {
+		t.Errorf("expected AssignStringIfNotEmpty to return nil")
+	}
+}

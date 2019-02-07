@@ -1491,6 +1491,61 @@ func TestSetCustomCloudProfileDefaults(t *testing.T) {
 	if !reflect.DeepEqual(AzureCloudSpecEnvMap[AzureStackCloud], customCloudSpec) {
 		t.Errorf("setCustomCloudProfileDefaults(): did not set AzureCloudSpecEnvMap[AzureStackCloud] with customer input")
 	}
+
+	// Test that default assignment flow set the value if the field is partially  missing in user-provided config
+	mockCSCustomP := getMockBaseContainerService("1.11.6")
+	mockCSPCustomP := getMockPropertiesWithCustomCloudProfile("azurestackcloud", true, true, false)
+
+	//Mock AzureEnvironmentSpecConfig
+	customCloudSpecP := AzureEnvironmentSpecConfig{
+		CloudName: "AzureStackCloud",
+		//DockerSpecConfig specify the docker engine download repo
+		DockerSpecConfig: DockerSpecConfig{
+			DockerEngineRepo: "DockerEngineRepo",
+		},
+		//KubernetesSpecConfig - Due to Chinese firewall issue, the default containers from google is blocked, use the Chinese local mirror instead
+		KubernetesSpecConfig: KubernetesSpecConfig{
+			KubernetesImageBase:            "KubernetesImageBase",
+			TillerImageBase:                "TillerImageBase",
+			NVIDIAImageBase:                "NVIDIAImageBase",
+			AzureCNIImageBase:              "AzureCNIImageBase",
+			EtcdDownloadURLBase:            "EtcdDownloadURLBase",
+			WindowsTelemetryGUID:           "WindowsTelemetryGUID",
+			CNIPluginsDownloadURL:          "CNIPluginsDownloadURL",
+			VnetCNILinuxPluginsDownloadURL: "VnetCNILinuxPluginsDownloadURL",
+			ContainerdDownloadURLBase:      "ContainerdDownloadURLBase",
+		},
+		DCOSSpecConfig: DefaultDCOSSpecConfig,
+		EndpointConfig: AzureEndpointConfig{
+			ResourceManagerVMDNSSuffix: "ResourceManagerVMDNSSuffix",
+		},
+		OSImageConfig: map[Distro]AzureOSImageConfig{
+			Distro("Test"): {
+				ImageOffer:     "ImageOffer",
+				ImageSku:       "ImageSku",
+				ImagePublisher: "ImagePublisher",
+				ImageVersion:   "ImageVersion",
+			},
+			AKS:             DefaultAKSOSImageConfig,
+			AKSDockerEngine: DefaultAKSDockerEngineOSImageConfig,
+		},
+	}
+	mockCSPCustomP.CustomCloudProfile.AzureEnvironmentSpecConfig = &customCloudSpecP
+	mockCSCustomP.Properties.CustomCloudProfile = mockCSPCustomP.CustomCloudProfile
+	mockCSCustomP.SetPropertiesDefaults(false, false)
+
+	if mockCSCustomP.Properties.CustomCloudProfile.AzureEnvironmentSpecConfig.DockerSpecConfig.DockerComposeDownloadURL != DefaultDockerSpecConfig.DockerComposeDownloadURL {
+		t.Errorf("setCustomCloudProfileDefaults(): did not set DockerComposeDownloadURL with default Value, got '%s', expected %s", mockCSCustomP.Properties.CustomCloudProfile.AzureEnvironmentSpecConfig.DockerSpecConfig.DockerComposeDownloadURL, DefaultDockerSpecConfig.DockerComposeDownloadURL)
+	}
+	if mockCSCustomP.Properties.CustomCloudProfile.AzureEnvironmentSpecConfig.KubernetesSpecConfig.ACIConnectorImageBase != DefaultKubernetesSpecConfig.ACIConnectorImageBase {
+		t.Errorf("setCustomCloudProfileDefaults(): did not set ACIConnectorImageBase with default Value, got '%s', expected %s", mockCSCustomP.Properties.CustomCloudProfile.AzureEnvironmentSpecConfig.KubernetesSpecConfig.ACIConnectorImageBase, DefaultKubernetesSpecConfig.ACIConnectorImageBase)
+	}
+	if mockCSCustomP.Properties.CustomCloudProfile.AzureEnvironmentSpecConfig.KubernetesSpecConfig.KubeBinariesSASURLBase != DefaultKubernetesSpecConfig.KubeBinariesSASURLBase {
+		t.Errorf("setCustomCloudProfileDefaults(): did not set KubeBinariesSASURLBase with default Value, got '%s', expected %s", mockCSCustomP.Properties.CustomCloudProfile.AzureEnvironmentSpecConfig.KubernetesSpecConfig.KubeBinariesSASURLBase, DefaultKubernetesSpecConfig.KubeBinariesSASURLBase)
+	}
+	if mockCSCustomP.Properties.CustomCloudProfile.AzureEnvironmentSpecConfig.KubernetesSpecConfig.VnetCNIWindowsPluginsDownloadURL != DefaultKubernetesSpecConfig.VnetCNIWindowsPluginsDownloadURL {
+		t.Errorf("setCustomCloudProfileDefaults(): did not set VnetCNIWindowsPluginsDownloadURL with default Value, got '%s', expected %s", mockCSCustomP.Properties.CustomCloudProfile.AzureEnvironmentSpecConfig.KubernetesSpecConfig.VnetCNIWindowsPluginsDownloadURL, DefaultKubernetesSpecConfig.VnetCNIWindowsPluginsDownloadURL)
+	}
 }
 
 func getMockBaseContainerService(orchestratorVersion string) ContainerService {
