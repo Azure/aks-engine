@@ -125,6 +125,10 @@ test: generate
 test-style:
 	@scripts/validate-go.sh
 
+.PHONY: validate-generated
+validate-generated:
+	@scripts/validate-generated.sh
+
 .PHONY: test-e2e
 test-e2e:
 	@test/e2e.sh
