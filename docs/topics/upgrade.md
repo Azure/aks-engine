@@ -22,16 +22,16 @@ In order to ensure that your `aks-engine upgrade` operation runs smoothly, there
 
 3) `aks-engine upgrade` allows upgrading the Kubernetes version to any AKS Engine-supported patch release in the current minor release channel that is greater than the current version on the cluster (e.g., from `1.11.4` to `1.11.5`), or to the next aks-engine-supported minor version (e.g., from `1.11.4` to `1.12.5`). In practice, the next AKS Engine-supported minor version will commonly be a single minor version ahead of the current cluster version. However, if the cluster has not been upgraded in a significant amount of time, the "next" minor version may have actually been deprecated by aks-engine. In such a case, your long-lived cluster will be upgradable to the nearest, supported minor version that `aks-engine` supports at the time of upgrade (e.g., from `1.7.16` to `1.9.11`).
 
-    To get the list of all available Kubernetes versions and upgrades, run the `orchestrators` command and specify Kubernetes orchestrator type:
+    To get the list of all available Kubernetes versions and upgrades, run the `get-versions` command:
 
     ```bash
-    ./bin/aks-engine orchestrators --orchestrator Kubernetes
+    ./bin/aks-engine get-versions
     ```
 
     To get the versions of Kubernetes that your particular cluster version is upgradable to, provide its current Kubernetes version in the `version` arg:
 
     ```bash
-    ./bin/aks-engine orchestrators --orchestrator Kubernetes --version 1.11.5
+    ./bin/aks-engine get-versions --version 1.11.7
     ```
 
 4) If using `aks-engine upgrade` in production, it is recommended to stage an upgrade test on an cluster that was built to the same specifications (built with the same cluster configuration + the same version of the `aks-engine` binary) as your production cluster before performing the upgrade, especially if the cluster configuration is "interesting", or in other words differs significantly from defaults. The reason for this is that AKS Engine supports many different cluster configurations and the extent of E2E testing that the AKS Engine team runs cannot practically cover every possible configuration. Therefore, it is recommended that you ensure in a staging environment that your specific cluster configuration is upgradable using `aks-engine upgrade` before attempting this potentially destructive operation on your production cluster.

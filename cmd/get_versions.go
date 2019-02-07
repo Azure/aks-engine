@@ -28,7 +28,7 @@ func newGetVersionsCmd() *cobra.Command {
 	f := command.Flags()
 	oc.orchestrator = "Kubernetes" // orchestrator is always Kubernetes
 	f.StringVar(&oc.version, "version", "", "Kubernetes version (optional)")
-	f.BoolVar(&oc.windows, "windows", false, "Kubernetes platform (optional)")
+	f.BoolVar(&oc.windows, "windows", false, "Kubernetes cluster with Windows nodes (optional)")
 
 	return command
 }
