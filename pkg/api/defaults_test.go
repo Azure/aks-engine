@@ -1448,7 +1448,7 @@ func TestSetCustomCloudProfileDefaults(t *testing.T) {
 
 	//Mock AzureEnvironmentSpecConfig
 	customCloudSpec := AzureEnvironmentSpecConfig{
-		CloudName: "AzureStackCloud",
+		CloudName: "AzuReStackCloud",
 		//DockerSpecConfig specify the docker engine download repo
 		DockerSpecConfig: DockerSpecConfig{
 			DockerEngineRepo:         "DockerEngineRepo",
@@ -1490,6 +1490,9 @@ func TestSetCustomCloudProfileDefaults(t *testing.T) {
 
 	if !reflect.DeepEqual(AzureCloudSpecEnvMap[AzureStackCloud], customCloudSpec) {
 		t.Errorf("setCustomCloudProfileDefaults(): did not set AzureCloudSpecEnvMap[AzureStackCloud] with customer input")
+	}
+	if !reflect.DeepEqual(mockCSCustom.Properties.CustomCloudProfile.AzureEnvironmentSpecConfig, &customCloudSpec) {
+		t.Errorf("setCustomCloudProfileDefaults(): did not set CustomCloudProfile.AzureEnvironmentSpecConfig with customer input")
 	}
 
 	// Test that default assignment flow set the value if the field is partially  missing in user-provided config
