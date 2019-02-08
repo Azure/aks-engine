@@ -219,7 +219,9 @@ func GetTargetEnv(location, customCloudName string) string {
 	}
 }
 
-//GetDefaultStringWithOverwrite set the *dst to src if src is not empty string
+// GetDefaultStringWithOverwrite returns an string for the default value.
+// If overwrite is not empty, return overwrite
+// If overwrite is empty, return defaultString
 func GetDefaultStringWithOverwrite(defaultString, overwrite string) string {
 	if overwrite != "" {
 		return overwrite
