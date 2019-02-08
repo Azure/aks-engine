@@ -146,6 +146,9 @@ try
         Write-Log "Resize os drive if possible"
         Resize-OSDrive
 
+        Write-Log "Initialize data disks"
+        Initialize-DataDisks
+
         Write-Log "Create required data directories as needed"
         Initialize-DataDirectories
 
