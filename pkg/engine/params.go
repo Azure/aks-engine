@@ -64,7 +64,6 @@ func getParameters(cs *api.ContainerService, generatorCode string, aksEngineVers
 			}
 			if properties.OrchestratorProfile.IsKubernetes() {
 				addValue(parametersMap, "vnetCidr", properties.MasterProfile.VnetCidr)
-				addValue(parametersMap, "masterSubnet", properties.MasterProfile.VnetCidr)
 			}
 		} else {
 			addValue(parametersMap, "masterSubnet", properties.MasterProfile.Subnet)
