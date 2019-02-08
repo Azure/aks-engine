@@ -2545,7 +2545,7 @@ func TestFormatAzureProdFQDN(t *testing.T) {
 	dnsPrefix := "santest"
 	var actual []string
 	for _, location := range helpers.GetAzureLocations() {
-		actual = append(actual, FormatAzureProdFQDNByLocation(dnsPrefix, location, ""))
+		actual = append(actual, FormatAzureProdFQDNByLocation(dnsPrefix, location))
 	}
 
 	expected := []string{
@@ -2602,6 +2602,68 @@ func TestFormatAzureProdFQDN(t *testing.T) {
 		t.Errorf("expected formatted fqdns %s, but got %s", expected, actual)
 	}
 
+}
+
+func TestFormatProdFQDNByLocation(t *testing.T) {
+	dnsPrefix := "santest"
+	var actual []string
+	for _, location := range helpers.GetAzureLocations() {
+		actual = append(actual, FormatProdFQDNByLocation(dnsPrefix, location, ""))
+	}
+
+	expected := []string{
+		"santest.australiacentral.cloudapp.azure.com",
+		"santest.australiacentral2.cloudapp.azure.com",
+		"santest.australiaeast.cloudapp.azure.com",
+		"santest.australiasoutheast.cloudapp.azure.com",
+		"santest.brazilsouth.cloudapp.azure.com",
+		"santest.canadacentral.cloudapp.azure.com",
+		"santest.canadaeast.cloudapp.azure.com",
+		"santest.centralindia.cloudapp.azure.com",
+		"santest.centralus.cloudapp.azure.com",
+		"santest.centraluseuap.cloudapp.azure.com",
+		"santest.chinaeast.cloudapp.chinacloudapi.cn",
+		"santest.chinaeast2.cloudapp.chinacloudapi.cn",
+		"santest.chinanorth.cloudapp.chinacloudapi.cn",
+		"santest.chinanorth2.cloudapp.chinacloudapi.cn",
+		"santest.eastasia.cloudapp.azure.com",
+		"santest.eastus.cloudapp.azure.com",
+		"santest.eastus2.cloudapp.azure.com",
+		"santest.eastus2euap.cloudapp.azure.com",
+		"santest.francecentral.cloudapp.azure.com",
+		"santest.francesouth.cloudapp.azure.com",
+		"santest.japaneast.cloudapp.azure.com",
+		"santest.japanwest.cloudapp.azure.com",
+		"santest.koreacentral.cloudapp.azure.com",
+		"santest.koreasouth.cloudapp.azure.com",
+		"santest.northcentralus.cloudapp.azure.com",
+		"santest.northeurope.cloudapp.azure.com",
+		"santest.southcentralus.cloudapp.azure.com",
+		"santest.southeastasia.cloudapp.azure.com",
+		"santest.southindia.cloudapp.azure.com",
+		"santest.uksouth.cloudapp.azure.com",
+		"santest.ukwest.cloudapp.azure.com",
+		"santest.westcentralus.cloudapp.azure.com",
+		"santest.westeurope.cloudapp.azure.com",
+		"santest.westindia.cloudapp.azure.com",
+		"santest.westus.cloudapp.azure.com",
+		"santest.westus2.cloudapp.azure.com",
+		"santest.chinaeast.cloudapp.chinacloudapi.cn",
+		"santest.chinanorth.cloudapp.chinacloudapi.cn",
+		"santest.chinanorth2.cloudapp.chinacloudapi.cn",
+		"santest.chinaeast2.cloudapp.chinacloudapi.cn",
+		"santest.germanycentral.cloudapp.microsoftazure.de",
+		"santest.germanynortheast.cloudapp.microsoftazure.de",
+		"santest.usgovvirginia.cloudapp.usgovcloudapi.net",
+		"santest.usgoviowa.cloudapp.usgovcloudapi.net",
+		"santest.usgovarizona.cloudapp.usgovcloudapi.net",
+		"santest.usgovtexas.cloudapp.usgovcloudapi.net",
+		"santest.francecentral.cloudapp.azure.com",
+	}
+
+	if !reflect.DeepEqual(actual, expected) {
+		t.Errorf("expected formatted fqdns %s, but got %s", expected, actual)
+	}
 }
 
 func TestKubernetesConfig_GetAddonScript(t *testing.T) {

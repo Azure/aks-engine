@@ -1487,18 +1487,28 @@ func (f *FeatureFlags) IsFeatureEnabled(feature string) bool {
 //for example: if the target is the public azure, then the default container image url should be k8s.gcr.io/...
 //if the target is azure china, then the default container image should be mirror.azure.cn:5000/google_container/...
 func (cs *ContainerService) GetCloudSpecConfig() AzureEnvironmentSpecConfig {
-	targetEnv := helpers.GetCloudTargetEnv(cs.Location, cs.Properties.GetCustomCloudName())
+	targetEnv := helpers.GetTargetEnv(cs.Location, cs.Properties.GetCustomCloudName())
 	return AzureCloudSpecEnvMap[targetEnv]
 }
 
 // GetAzureProdFQDN returns the formatted FQDN string for a given apimodel.
 func (cs *ContainerService) GetAzureProdFQDN() string {
-	return FormatAzureProdFQDNByLocation(cs.Properties.MasterProfile.DNSPrefix, cs.Location, cs.Properties.GetCustomCloudName())
+	return FormatProdFQDNByLocation(cs.Properties.MasterProfile.DNSPrefix, cs.Location, cs.Properties.GetCustomCloudName())
 }
 
 // FormatAzureProdFQDNByLocation constructs an Azure prod fqdn
-func FormatAzureProdFQDNByLocation(fqdnPrefix string, location string, cloudName string) string {
-	targetEnv := helpers.GetCloudTargetEnv(location, cloudName)
+func FormatAzureProdFQDNByLocation(fqdnPrefix string, location string) string {
+	targetEnv := helpers.GetCloudTargetEnv(location)
+	FQDNFormat := AzureCloudSpecEnvMap[targetEnv].EndpointConfig.ResourceManagerVMDNSSuffix
+	return fmt.Sprintf("%s.%s."+FQDNFormat, fqdnPrefix, location)
+}
+
+// FormatProdFQDNByLocation constructs an Azure prod fqdn with custom cloud profile
+// CustomCloudName is name of environment if customCloudProfile is provided, it will be empty string if customCloudProfile is empty.
+// Because customCloudProfile is empty for deployment for AzurePublicCloud, AzureChinaCloud,AzureGermanCloud,AzureUSGovernmentCloud,
+// The customCloudName value will be empty string for those clouds
+func FormatProdFQDNByLocation(fqdnPrefix string, location string, cloudName string) string {
+	targetEnv := helpers.GetTargetEnv(location, cloudName)
 	FQDNFormat := AzureCloudSpecEnvMap[targetEnv].EndpointConfig.ResourceManagerVMDNSSuffix
 	return fmt.Sprintf("%s.%s."+FQDNFormat, fqdnPrefix, location)
 }

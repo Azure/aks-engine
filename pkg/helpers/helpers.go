@@ -190,14 +190,9 @@ func CreateSaveSSH(username, outputDirectory string, s *i18n.Translator) (privat
 // GetCloudTargetEnv determines and returns whether the region is a sovereign cloud which
 // have their own data compliance regulations (China/Germany/USGov) or standard
 // Azure public cloud
-// CustomCloudName is name of environment if customCloudProfile is provided, it will be empty string if customCloudProfile is empty.
-// Because customCloudProfile is empty for deployment for AzurePublicCloud, AzureChinaCloud,AzureGermanCloud,AzureUSGovernmentCloud,
-// The customCloudName value will be empty string for those clouds
-func GetCloudTargetEnv(location, customCloudName string) string {
+func GetCloudTargetEnv(location string) string {
 	loc := strings.ToLower(strings.Join(strings.Fields(location), ""))
 	switch {
-	case customCloudName != "" && strings.EqualFold(customCloudName, "AzureStackCloud"):
-		return "AzureStackCloud"
 	case loc == "chinaeast" || loc == "chinanorth" || loc == "chinaeast2" || loc == "chinanorth2":
 		return "AzureChinaCloud"
 	case loc == "germanynortheast" || loc == "germanycentral":
@@ -209,12 +204,25 @@ func GetCloudTargetEnv(location, customCloudName string) string {
 	}
 }
 
-//AssignStringIfNotEmpty set the *dst to src if src is not empty string
-func AssignStringIfNotEmpty(dst *string, src string) {
-	if dst == nil {
-		return
+// GetTargetEnv determines and returns whether the region is a sovereign cloud which
+// have their own data compliance regulations (China/Germany/USGov) or standard
+// Azure public cloud
+// CustomCloudName is name of environment if customCloudProfile is provided, it will be empty string if customCloudProfile is empty.
+// Because customCloudProfile is empty for deployment for AzurePublicCloud, AzureChinaCloud,AzureGermanCloud,AzureUSGovernmentCloud,
+// The customCloudName value will be empty string for those clouds
+func GetTargetEnv(location, customCloudName string) string {
+	switch {
+	case customCloudName != "" && strings.EqualFold(customCloudName, "AzureStackCloud"):
+		return "AzureStackCloud"
+	default:
+		return GetCloudTargetEnv(location)
 	}
-	if src != "" {
-		*dst = src
+}
+
+//GetDefaultStringWithOverwrite set the *dst to src if src is not empty string
+func GetDefaultStringWithOverwrite(defaultString, overwrite string) string {
+	if overwrite != "" {
+		return overwrite
 	}
+	return defaultString
 }

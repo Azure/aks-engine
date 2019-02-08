@@ -375,8 +375,61 @@ func TestCreateSaveSSH(t *testing.T) {
 		t.Fatalf("ssh file was not created")
 	}
 }
-
 func TestGetCloudTargetEnv(t *testing.T) {
+	testcases := []struct {
+		location string
+		expected string
+	}{
+		{
+			"chinaeast",
+			"AzureChinaCloud",
+		},
+		{
+			"chinanorth",
+			"AzureChinaCloud",
+		},
+		{
+			"chinaeast",
+			"AzureChinaCloud",
+		},
+		{
+			"chinaeast2",
+			"AzureChinaCloud",
+		},
+		{
+			"chinanorth2",
+			"AzureChinaCloud",
+		},
+		{
+			"germanycentral",
+			"AzureGermanCloud",
+		},
+		{
+			"germanynortheast",
+			"AzureGermanCloud",
+		},
+		{
+			"usgov123",
+			"AzureUSGovernmentCloud",
+		},
+		{
+			"usdod-123",
+			"AzureUSGovernmentCloud",
+		},
+		{
+			"sampleinput",
+			"AzurePublicCloud",
+		},
+	}
+
+	for _, testcase := range testcases {
+		actual := GetCloudTargetEnv(testcase.location)
+		if testcase.expected != actual {
+			t.Errorf("expected GetCloudTargetEnv to return %s, but got %s", testcase.expected, actual)
+		}
+	}
+}
+func TestGetTargetEnv(t *testing.T) {
 	testcases := []struct {
 		location   string
 		clouldName string
@@ -450,41 +503,36 @@ func TestGetCloudTargetEnv(t *testing.T) {
 	}
 
 	for _, testcase := range testcases {
-		actual := GetCloudTargetEnv(testcase.location, testcase.clouldName)
+		actual := GetTargetEnv(testcase.location, testcase.clouldName)
 		if testcase.expected != actual {
 			t.Errorf("expected GetCloudTargetEnv to return %s, but got %s", testcase.expected, actual)
 		}
 	}
-
 }
 
-func TestAssignStringIfNotEmpty(t *testing.T) {
+func TestGetDefaultStringWithOverwrite(t *testing.T) {
 	testcases := []struct {
-		dst      *string
-		src      string
-		expected string
+		defaultstring string
+		overwrite     string
+		expected      string
 	}{
 		{
-			to.StringPtr("randomstring"),
+			"randomstring",
 			"",
 			"randomstring",
 		},
 		{
-			to.StringPtr("randomstring2"),
+			"randomstring2",
 			"srcisnotempty",
 			"srcisnotempty",
 		},
 	}
 
 	for _, testcase := range testcases {
-		AssignStringIfNotEmpty(testcase.dst, testcase.src)
-		if testcase.dst != nil && testcase.expected != *testcase.dst {
-			t.Errorf("expected AssignStringIfNotEmpty to return %s, but got %s", testcase.expected, *testcase.dst)
+		result := GetDefaultStringWithOverwrite(testcase.defaultstring, testcase.overwrite)
+		if testcase.expected != result {
+			t.Errorf("expected GetDefaultStringWithOverwrite to return %s, but got %s", testcase.expected, result)
 		}
 	}
-	var nilString *string
-	AssignStringIfNotEmpty(nilString, "randomstring3")
-	if nilString != nil {
-		t.Errorf("expected AssignStringIfNotEmpty to return nil")
-	}
+
 }

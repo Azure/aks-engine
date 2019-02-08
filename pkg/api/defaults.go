@@ -542,31 +542,34 @@ func (p *Properties) setCustomCloudProfileDefaults() {
 		// Use the custom input to overwrite the default values in AzureStackCloudSpec
 		if p.CustomCloudProfile.AzureEnvironmentSpecConfig != nil {
 			ascc := p.CustomCloudProfile.AzureEnvironmentSpecConfig
-			helpers.AssignStringIfNotEmpty(&azureStackCloudSpec.CloudName, ascc.CloudName)
+			azureStackCloudSpec.CloudName = helpers.GetDefaultStringWithOverwrite(azureStackCloudSpec.CloudName, ascc.CloudName)
 
 			// DockerSpecConfig
 			asccDockerSpecConfig := ascc.DockerSpecConfig
-			helpers.AssignStringIfNotEmpty(&azureStackCloudSpec.DockerSpecConfig.DockerComposeDownloadURL, asccDockerSpecConfig.DockerComposeDownloadURL)
-			helpers.AssignStringIfNotEmpty(&azureStackCloudSpec.DockerSpecConfig.DockerEngineRepo, asccDockerSpecConfig.DockerEngineRepo)
+			azsDockerSpecConfig := azureStackCloudSpec.DockerSpecConfig
+			azureStackCloudSpec.DockerSpecConfig.DockerComposeDownloadURL = helpers.GetDefaultStringWithOverwrite(azsDockerSpecConfig.DockerComposeDownloadURL, asccDockerSpecConfig.DockerComposeDownloadURL)
+			azureStackCloudSpec.DockerSpecConfig.DockerEngineRepo = helpers.GetDefaultStringWithOverwrite(azsDockerSpecConfig.DockerComposeDownloadURL, asccDockerSpecConfig.DockerEngineRepo)
 
 			//KubernetesSpecConfig
 			asccKubernetesSpecConfig := ascc.KubernetesSpecConfig
-			helpers.AssignStringIfNotEmpty(&azureStackCloudSpec.KubernetesSpecConfig.ACIConnectorImageBase, asccKubernetesSpecConfig.ACIConnectorImageBase)
-			helpers.AssignStringIfNotEmpty(&azureStackCloudSpec.KubernetesSpecConfig.AzureCNIImageBase, asccKubernetesSpecConfig.AzureCNIImageBase)
-			helpers.AssignStringIfNotEmpty(&azureStackCloudSpec.KubernetesSpecConfig.CNIPluginsDownloadURL, asccKubernetesSpecConfig.CNIPluginsDownloadURL)
-			helpers.AssignStringIfNotEmpty(&azureStackCloudSpec.KubernetesSpecConfig.ContainerdDownloadURLBase, asccKubernetesSpecConfig.ContainerdDownloadURLBase)
-			helpers.AssignStringIfNotEmpty(&azureStackCloudSpec.KubernetesSpecConfig.EtcdDownloadURLBase, asccKubernetesSpecConfig.EtcdDownloadURLBase)
-			helpers.AssignStringIfNotEmpty(&azureStackCloudSpec.KubernetesSpecConfig.KubeBinariesSASURLBase, asccKubernetesSpecConfig.KubeBinariesSASURLBase)
-			helpers.AssignStringIfNotEmpty(&azureStackCloudSpec.KubernetesSpecConfig.KubernetesImageBase, asccKubernetesSpecConfig.KubernetesImageBase)
-			helpers.AssignStringIfNotEmpty(&azureStackCloudSpec.KubernetesSpecConfig.NVIDIAImageBase, asccKubernetesSpecConfig.NVIDIAImageBase)
-			helpers.AssignStringIfNotEmpty(&azureStackCloudSpec.KubernetesSpecConfig.TillerImageBase, asccKubernetesSpecConfig.TillerImageBase)
-			helpers.AssignStringIfNotEmpty(&azureStackCloudSpec.KubernetesSpecConfig.VnetCNILinuxPluginsDownloadURL, asccKubernetesSpecConfig.VnetCNILinuxPluginsDownloadURL)
-			helpers.AssignStringIfNotEmpty(&azureStackCloudSpec.KubernetesSpecConfig.VnetCNIWindowsPluginsDownloadURL, asccKubernetesSpecConfig.VnetCNIWindowsPluginsDownloadURL)
-			helpers.AssignStringIfNotEmpty(&azureStackCloudSpec.KubernetesSpecConfig.WindowsTelemetryGUID, asccKubernetesSpecConfig.WindowsTelemetryGUID)
+			azsKubernetesSpecConfig := azureStackCloudSpec.KubernetesSpecConfig
+			azureStackCloudSpec.KubernetesSpecConfig.ACIConnectorImageBase = helpers.GetDefaultStringWithOverwrite(azsKubernetesSpecConfig.ACIConnectorImageBase, asccKubernetesSpecConfig.ACIConnectorImageBase)
+			azureStackCloudSpec.KubernetesSpecConfig.AzureCNIImageBase = helpers.GetDefaultStringWithOverwrite(azsKubernetesSpecConfig.AzureCNIImageBase, asccKubernetesSpecConfig.AzureCNIImageBase)
+			azureStackCloudSpec.KubernetesSpecConfig.CNIPluginsDownloadURL = helpers.GetDefaultStringWithOverwrite(azsKubernetesSpecConfig.CNIPluginsDownloadURL, asccKubernetesSpecConfig.CNIPluginsDownloadURL)
+			azureStackCloudSpec.KubernetesSpecConfig.ContainerdDownloadURLBase = helpers.GetDefaultStringWithOverwrite(azsKubernetesSpecConfig.ContainerdDownloadURLBase, asccKubernetesSpecConfig.ContainerdDownloadURLBase)
+			azureStackCloudSpec.KubernetesSpecConfig.EtcdDownloadURLBase = helpers.GetDefaultStringWithOverwrite(azsKubernetesSpecConfig.EtcdDownloadURLBase, asccKubernetesSpecConfig.EtcdDownloadURLBase)
+			azureStackCloudSpec.KubernetesSpecConfig.KubeBinariesSASURLBase = helpers.GetDefaultStringWithOverwrite(azsKubernetesSpecConfig.KubeBinariesSASURLBase, asccKubernetesSpecConfig.KubeBinariesSASURLBase)
+			azureStackCloudSpec.KubernetesSpecConfig.KubernetesImageBase = helpers.GetDefaultStringWithOverwrite(azsKubernetesSpecConfig.KubernetesImageBase, asccKubernetesSpecConfig.KubernetesImageBase)
+			azureStackCloudSpec.KubernetesSpecConfig.NVIDIAImageBase = helpers.GetDefaultStringWithOverwrite(azsKubernetesSpecConfig.NVIDIAImageBase, asccKubernetesSpecConfig.NVIDIAImageBase)
+			azureStackCloudSpec.KubernetesSpecConfig.TillerImageBase = helpers.GetDefaultStringWithOverwrite(azsKubernetesSpecConfig.TillerImageBase, asccKubernetesSpecConfig.TillerImageBase)
+			azureStackCloudSpec.KubernetesSpecConfig.VnetCNILinuxPluginsDownloadURL = helpers.GetDefaultStringWithOverwrite(azsKubernetesSpecConfig.VnetCNILinuxPluginsDownloadURL, asccKubernetesSpecConfig.VnetCNILinuxPluginsDownloadURL)
+			azureStackCloudSpec.KubernetesSpecConfig.VnetCNIWindowsPluginsDownloadURL = helpers.GetDefaultStringWithOverwrite(azsKubernetesSpecConfig.VnetCNIWindowsPluginsDownloadURL, asccKubernetesSpecConfig.VnetCNIWindowsPluginsDownloadURL)
+			azureStackCloudSpec.KubernetesSpecConfig.WindowsTelemetryGUID = helpers.GetDefaultStringWithOverwrite(azsKubernetesSpecConfig.WindowsTelemetryGUID, asccKubernetesSpecConfig.WindowsTelemetryGUID)
 
 			//EndpointConfig
 			asccEndpointConfig := ascc.EndpointConfig
-			helpers.AssignStringIfNotEmpty(&azureStackCloudSpec.EndpointConfig.ResourceManagerVMDNSSuffix, asccEndpointConfig.ResourceManagerVMDNSSuffix)
+			azsEndpointConfig := azureStackCloudSpec.EndpointConfig
+			azureStackCloudSpec.EndpointConfig.ResourceManagerVMDNSSuffix = helpers.GetDefaultStringWithOverwrite(azsEndpointConfig.ResourceManagerVMDNSSuffix, asccEndpointConfig.ResourceManagerVMDNSSuffix)
 
 			//OSImageConfig
 			azureStackCloudSpec.OSImageConfig = make(map[Distro]AzureOSImageConfig)
@@ -592,7 +595,7 @@ func (p *Properties) setDefaultCerts() (bool, []net.IP, error) {
 
 	var azureProdFQDNs []string
 	for _, location := range helpers.GetAzureLocations() {
-		azureProdFQDNs = append(azureProdFQDNs, FormatAzureProdFQDNByLocation(p.MasterProfile.DNSPrefix, location, p.GetCustomCloudName()))
+		azureProdFQDNs = append(azureProdFQDNs, FormatProdFQDNByLocation(p.MasterProfile.DNSPrefix, location, p.GetCustomCloudName()))
 	}
 
 	masterExtraFQDNs := append(azureProdFQDNs, p.MasterProfile.SubjectAltNames...)
