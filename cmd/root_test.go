@@ -6,7 +6,7 @@ package cmd
 import (
 	"testing"
 
-	uuid "github.com/satori/go.uuid"
+	"github.com/gofrs/uuid"
 	"github.com/spf13/cobra"
 	ini "gopkg.in/ini.v1"
 )

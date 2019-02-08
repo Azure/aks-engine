@@ -17,8 +17,8 @@ import (
 	"github.com/Azure/aks-engine/pkg/api/common"
 	"github.com/Azure/aks-engine/pkg/helpers"
 	"github.com/blang/semver"
+	"github.com/gofrs/uuid"
 	"github.com/pkg/errors"
-	uuid "github.com/satori/go.uuid"
 	log "github.com/sirupsen/logrus"
 	validator "gopkg.in/go-playground/validator.v9"
 )
