@@ -118,7 +118,7 @@ for VIRTUAL_KUBELET_VERSION in ${VIRTUAL_KUBELET_VERSIONS}; do
     pullContainerImage "docker" "microsoft/virtual-kubelet:${VIRTUAL_KUBELET_VERSION}"
 done
 
-AZURE_CNI_NETWORKMONITOR_VERSIONS="0.0.4"
+AZURE_CNI_NETWORKMONITOR_VERSIONS="0.0.5"
 for AZURE_CNI_NETWORKMONITOR_VERSION in ${AZURE_CNI_NETWORKMONITOR_VERSIONS}; do
     pullContainerImage "docker" "containernetworking/networkmonitor:v${AZURE_CNI_NETWORKMONITOR_VERSION}"
 done
