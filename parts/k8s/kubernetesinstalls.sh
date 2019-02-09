@@ -15,7 +15,7 @@ removeEtcd() {
 }
 
 removeMoby() {
-    sudo apt-get purge moby-engine moby-cli
+    sudo apt-get purge -y moby-engine moby-cli
 }
 
 installEtcd() {
@@ -217,13 +217,16 @@ installAzureCNI() {
 }
 
 installContainerd() {
-    if [[ ! -f "$CONTAINERD_DOWNLOADS_DIR/${CONTAINERD_TGZ_TMP}" ]]; then
+    containerd --version
+    if [ $? -eq 0 ]; then
+	    echo "containerd is already installed, skipping download"
+	else
         downloadContainerd
+        tar -xzf "$CONTAINERD_DOWNLOADS_DIR/$CONTAINERD_TGZ_TMP" -C /
+        rm -Rf $CONTAINERD_DOWNLOADS_DIR &
+        sed -i '/\[Service\]/a ExecStartPost=\/sbin\/iptables -P FORWARD ACCEPT' /etc/systemd/system/containerd.service
+        echo "Successfully installed cri-containerd..."
     fi
-    tar -xzf "$CONTAINERD_DOWNLOADS_DIR/$CONTAINERD_TGZ_TMP" -C /
-    rm -Rf $CONTAINERD_DOWNLOADS_DIR &
-    sed -i '/\[Service\]/a ExecStartPost=\/sbin\/iptables -P FORWARD ACCEPT' /etc/systemd/system/containerd.service
-    echo "Successfully installed cri-containerd..."
 }
 
 installImg() {

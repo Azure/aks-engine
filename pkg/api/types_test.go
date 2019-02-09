@@ -847,6 +847,7 @@ func TestWindowsProfile(t *testing.T) {
 	w = WindowsProfile{
 		WindowsDockerVersion: "18.03.1-ee-3",
 		WindowsSku:           "Datacenter-Core-1809-with-Containers-smalldisk",
+		SSHEnabled:           true,
 	}
 
 	dv = w.GetWindowsDockerVersion()
@@ -857,6 +858,11 @@ func TestWindowsProfile(t *testing.T) {
 	windowsSku = w.GetWindowsSku()
 	if windowsSku != "Datacenter-Core-1809-with-Containers-smalldisk" {
 		t.Fatalf("Expected GetWindowsSku() to equal Datacenter-Core-1809-with-Containers-smalldisk, got %s", windowsSku)
+	}
+
+	se := w.SSHEnabled
+	if !se {
+		t.Fatalf("Expected SSHEnabled to return true, got %v", se)
 	}
 }
 
@@ -2663,6 +2669,24 @@ func TestContainerService_GetAzureProdFQDN(t *testing.T) {
 	if expected != actual {
 		t.Errorf("expected GetAzureProdFQDN to return %s, but got %s", expected, actual)
 	}
+}
+
+func TestAgentPoolResource(t *testing.T) {
+	expectedName := "TestAgentPool"
+	expectedVersion := "1.13.0"
+	expectedCount := 100
+
+	agentPoolResource := CreateMockAgentPoolProfile(expectedName, expectedVersion, Succeeded, expectedCount)
+
+	gotName := agentPoolResource.Properties.Name
+	gotVervsion := agentPoolResource.Properties.OrchestratorVersion
+	gotCount := agentPoolResource.Properties.Count
+
+	if gotName != expectedName || gotVervsion != expectedVersion || gotCount != expectedCount {
+		t.Fatalf("Expected values - name: %s, version: %s, count: %d. Got - name: %s, version: %s, count: %d", expectedName, expectedVersion, expectedCount,
+			gotName, gotVervsion, gotCount)
+	}
+
 }
 
 func TestKubernetesConfig_RequiresDocker(t *testing.T) {

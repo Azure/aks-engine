@@ -26,7 +26,7 @@ fi
 
 installClearContainersRuntime
 
-VNET_CNI_VERSIONS="1.0.14 1.0.15 1.0.16"
+VNET_CNI_VERSIONS="1.0.16 1.0.17"
 CNI_PLUGIN_VERSIONS="0.7.1"
 
 for VNET_CNI_VERSION in $VNET_CNI_VERSIONS; do
@@ -118,7 +118,7 @@ for VIRTUAL_KUBELET_VERSION in ${VIRTUAL_KUBELET_VERSIONS}; do
     pullContainerImage "docker" "microsoft/virtual-kubelet:${VIRTUAL_KUBELET_VERSION}"
 done
 
-AZURE_CNI_NETWORKMONITOR_VERSIONS="0.0.4"
+AZURE_CNI_NETWORKMONITOR_VERSIONS="0.0.5"
 for AZURE_CNI_NETWORKMONITOR_VERSION in ${AZURE_CNI_NETWORKMONITOR_VERSIONS}; do
     pullContainerImage "docker" "containernetworking/networkmonitor:v${AZURE_CNI_NETWORKMONITOR_VERSION}"
 done
@@ -158,9 +158,9 @@ for NGINX_VERSION in ${NGINX_VERSIONS}; do
     pullContainerImage "docker" "nginx:${NGINX_VERSION}"
 done
 
-KMS_PLUGIN_VERSIONS="0.0.8"
+KMS_PLUGIN_VERSIONS="0.0.9"
 for KMS_PLUGIN_VERSION in ${KMS_PLUGIN_VERSIONS}; do
-    pullContainerImage "docker" "microsoft/k8s-azure-kms:v${KMS_PLUGIN_VERSION}"
+    pullContainerImage "docker" "mcr.microsoft.com/k8s/kms/keyvault:v${KMS_PLUGIN_VERSION}"
 done
 
 FLANNEL_VERSIONS="0.8.0 0.10.0"

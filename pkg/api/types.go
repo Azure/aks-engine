@@ -57,6 +57,19 @@ type ContainerService struct {
 	Properties *Properties `json:"properties,omitempty"`
 }
 
+// AgentPoolResource complies with the ARM model of
+// agentpool resource definition in a JSON template.
+type AgentPoolResource struct {
+	ID       string                `json:"id"`
+	Location string                `json:"location"`
+	Name     string                `json:"name"`
+	Plan     *ResourcePurchasePlan `json:"plan,omitempty"`
+	Tags     map[string]string     `json:"tags"`
+	Type     string                `json:"type"`
+
+	Properties *AgentPoolProfile `json:"properties,omitempty"`
+}
+
 // Properties represents the AKS cluster definition
 type Properties struct {
 	ClusterID               string
@@ -193,6 +206,7 @@ type WindowsProfile struct {
 	WindowsSku            string            `json:"windowsSku"`
 	WindowsDockerVersion  string            `json:"windowsDockerVersion"`
 	Secrets               []KeyVaultSecrets `json:"secrets,omitempty"`
+	SSHEnabled            bool              `json:"sshEnabled,omitempty"`
 }
 
 // ProvisioningState represents the current state of container service resource.
