@@ -296,6 +296,8 @@ func CreateMasterVMSS(cs *api.ContainerService) VirtualMachineScaleSetARM {
 		ExtensionProfile: &extensionProfile,
 	}
 
+	virtualMachine.VirtualMachineScaleSetProperties = vmProperties
+
 	return VirtualMachineScaleSetARM{
 		ARMResource:            armResource,
 		VirtualMachineScaleSet: virtualMachine,
