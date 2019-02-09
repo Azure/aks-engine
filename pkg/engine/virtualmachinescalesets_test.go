@@ -426,6 +426,9 @@ func TestCreateAgentVMSS(t *testing.T) {
 	// Now Test AgentVMSS with windows
 	cs.Properties.AgentPoolProfiles[0].OSType = "Windows"
 	cs.Properties.AgentPoolProfiles[0].AcceleratedNetworkingEnabledWindows = to.BoolPtr(true)
+	cs.Properties.WindowsProfile = &api.WindowsProfile{
+		SSHEnabled: true,
+	}
 
 	actual = CreateAgentVMSS(cs, cs.Properties.AgentPoolProfiles[0])
 
