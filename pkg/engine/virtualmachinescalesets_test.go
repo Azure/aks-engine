@@ -384,7 +384,7 @@ func TestCreateAgentVMSS(t *testing.T) {
 								VirtualMachineScaleSetNetworkConfigurationProperties: &compute.VirtualMachineScaleSetNetworkConfigurationProperties{
 									Primary:                     to.BoolPtr(true),
 									EnableAcceleratedNetworking: to.BoolPtr(true),
-									IPConfigurations:            getIpConfigs(),
+									IPConfigurations:            getIPConfigs(),
 								},
 							},
 						},
@@ -479,7 +479,7 @@ func TestCreateAgentVMSS(t *testing.T) {
 	}
 }
 
-func getIpConfigs() *[]compute.VirtualMachineScaleSetIPConfiguration {
+func getIPConfigs() *[]compute.VirtualMachineScaleSetIPConfiguration {
 	var ipConfigs []compute.VirtualMachineScaleSetIPConfiguration
 	for i := 1; i <= 31; i++ {
 		ipconfig := compute.VirtualMachineScaleSetIPConfiguration{
