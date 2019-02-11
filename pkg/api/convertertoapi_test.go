@@ -318,7 +318,10 @@ func TestCustomCloudProfile(t *testing.T) {
 		},
 	}
 
-	cs := ConvertVLabsContainerService(vlabscs, false)
+	cs, err := ConvertVLabsContainerService(vlabscs, false)
+	if err != nil {
+		t.Fatalf("failed to convert: '%s'", err)
+	}
 	if cs.Properties.CustomCloudProfile.Environment.Name != name {
 		t.Fatalf("incorrect Name, expect: '%s', actual: '%s'", name, cs.Properties.CustomCloudProfile.Environment.Name)
 	}
