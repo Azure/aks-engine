@@ -1,0 +1,5 @@
+// Package armhelpers stores helpers and wrapper for the go azure sdk.
+//
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT license.
+package armhelpers
