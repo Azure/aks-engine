@@ -6,7 +6,8 @@
             "orchestratorType": "Kubernetes",
             "orchestratorRelease": "1.11",
             "kubernetesConfig": {
-                "kubernetesImageBase": "msazurestackqa/",
+                "kubernetesImageBase": "k8s.gcr.io/",
+                "customHyperkubeImage": "msazurestackqa/hyperkube-amd64/v1.11.6",
                 "useInstanceMetadata": false,
                 "networkPolicy": "none"
             }

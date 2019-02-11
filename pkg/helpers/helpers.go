@@ -219,12 +219,12 @@ func GetTargetEnv(location, customCloudName string) string {
 	}
 }
 
-// GetDefaultStringWithOverwrite returns an string for the default value.
-// If overwrite is not empty, return overwrite
-// If overwrite is empty, return defaultString
-func GetDefaultStringWithOverwrite(defaultString, overwrite string) string {
-	if overwrite != "" {
-		return overwrite
+// EnsureString returns an string for the default value.
+// If val is not empty, return val
+// If val is empty, return defaultVal
+func EnsureString(val, defaultVal string) string {
+	if val != "" {
+		return val
 	}
-	return defaultString
+	return defaultVal
 }

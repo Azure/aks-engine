@@ -685,7 +685,7 @@ type V20180331ARMManagedContainerService struct {
 	*v20180331.ManagedCluster
 }
 
-// CustomCloudProfile Represents custom cloud profile
+// CustomCloudProfile represents the custom cloud profile
 type CustomCloudProfile struct {
 	Environment                *azure.Environment          `json:"environment,omitempty"`
 	AzureEnvironmentSpecConfig *AzureEnvironmentSpecConfig `json:"azureEnvironmentSpecConfig,omitempty"`

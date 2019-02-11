@@ -510,28 +510,28 @@ func TestGetTargetEnv(t *testing.T) {
 	}
 }
 
-func TestGetDefaultStringWithOverwrite(t *testing.T) {
+func TestEnsureString(t *testing.T) {
 	testcases := []struct {
 		defaultstring string
 		overwrite     string
 		expected      string
 	}{
 		{
-			"randomstring",
 			"",
+			"randomstring",
 			"randomstring",
 		},
 		{
-			"randomstring2",
 			"srcisnotempty",
+			"randomstring2",
 			"srcisnotempty",
 		},
 	}
 
 	for _, testcase := range testcases {
-		result := GetDefaultStringWithOverwrite(testcase.defaultstring, testcase.overwrite)
+		result := EnsureString(testcase.defaultstring, testcase.overwrite)
 		if testcase.expected != result {
-			t.Errorf("expected GetDefaultStringWithOverwrite to return %s, but got %s", testcase.expected, result)
+			t.Errorf("expected EnsureString to return %s, but got %s", testcase.expected, result)
 		}
 	}
 

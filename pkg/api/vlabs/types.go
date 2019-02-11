@@ -507,7 +507,7 @@ type OSType string
 // Distro represents Linux distro to use for Linux VMs
 type Distro string
 
-// CustomCloudProfile Represents custom cloud profile
+// CustomCloudProfile represents the custom cloud profile
 type CustomCloudProfile struct {
 	Environment                *azure.Environment          `json:"environment,omitempty"`
 	AzureEnvironmentSpecConfig *AzureEnvironmentSpecConfig `json:"azureEnvironmentSpecConfig,omitempty"`
