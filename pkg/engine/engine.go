@@ -553,6 +553,7 @@ func getDataDisks(a *api.AgentPoolProfile) string {
               "createOption": "Empty",
               "diskSizeGB": "%d",
               "lun": %d,
+              "caching": "ReadOnly",
               "name": "[concat(variables('%sVMNamePrefix'), copyIndex(),'-datadisk%d')]",
               "vhd": {
                 "uri": "[concat('http://',variables('storageAccountPrefixes')[mod(add(add(div(copyIndex(),variables('maxVMsPerStorageAccount')),variables('%sStorageAccountOffset')),variables('dataStorageAccountPrefixSeed')),variables('storageAccountPrefixesCount'))],variables('storageAccountPrefixes')[div(add(add(div(copyIndex(),variables('maxVMsPerStorageAccount')),variables('%sStorageAccountOffset')),variables('dataStorageAccountPrefixSeed')),variables('storageAccountPrefixesCount'))],variables('%sDataAccountName'),'.blob.core.windows.net/vhds/',variables('%sVMNamePrefix'),copyIndex(), '--datadisk%d.vhd')]"
@@ -561,6 +562,7 @@ func getDataDisks(a *api.AgentPoolProfile) string {
 	managedDataDisks := `            {
               "diskSizeGB": "%d",
               "lun": %d,
+              "caching": "ReadOnly",
               "createOption": "Empty"
             }`
 	for i, diskSize := range a.DiskSizesGB {
