@@ -605,7 +605,7 @@ func convertVLabsOrchestratorProfile(vp *vlabs.Properties, api *OrchestratorProf
 		}
 		setVlabsKubernetesDefaults(vp, api)
 
-		//HACK : this validation should be done as part of the main validation, but deploy does it only after loading the container.
+		// TODO (hack): this validation should be done as part of the main validation, but deploy does it only after loading the container.
 		if err := vp.ValidateOrchestratorProfile(isUpdate); err != nil {
 			return err
 		}
