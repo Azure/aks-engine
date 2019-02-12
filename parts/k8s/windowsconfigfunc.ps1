@@ -22,6 +22,12 @@ function Resize-OSDrive
     }
 }
 
+# https://docs.microsoft.com/en-us/powershell/module/storage/new-partition
+function Initialize-DataDisks
+{
+    Get-Disk | Where-Object PartitionStyle -eq 'raw' | Initialize-Disk -PartitionStyle MBR -PassThru | New-Partition -UseMaximumSize -AssignDriveLetter | Format-Volume -FileSystem NTFS -Force
+}
+
 # Set the Internet Explorer to use the latest rendering mode on all sites
 # https://docs.microsoft.com/en-us/windows-hardware/customize/desktop/unattend/microsoft-windows-ie-internetexplorer-intranetcompatibilitymode
 # (This only affects installations with UI)

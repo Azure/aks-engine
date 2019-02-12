@@ -43,7 +43,7 @@ func InitializeTemplateGenerator(ctx Context) (*TemplateGenerator, error) {
 }
 
 // GenerateTemplate generates the template from the API Model
-func (t *TemplateGenerator) GenerateTemplate(containerService *api.ContainerService, generatorCode string, acsengineVersion string) (templateRaw string, parametersRaw string, err error) {
+func (t *TemplateGenerator) GenerateTemplate(containerService *api.ContainerService, generatorCode string, aksengineVersion string) (templateRaw string, parametersRaw string, err error) {
 	// named return values are used in order to set err in case of a panic
 	templateRaw = ""
 	parametersRaw = ""
@@ -100,7 +100,7 @@ func (t *TemplateGenerator) GenerateTemplate(containerService *api.ContainerServ
 	templateRaw = b.String()
 
 	var parametersMap paramsMap
-	if parametersMap, err = getParameters(containerService, generatorCode, acsengineVersion); err != nil {
+	if parametersMap, err = getParameters(containerService, generatorCode, aksengineVersion); err != nil {
 		return templateRaw, parametersRaw, err
 	}
 
@@ -205,6 +205,12 @@ func (t *TemplateGenerator) getMasterCustomData(cs *api.ContainerService, textFi
 // getTemplateFuncMap returns all functions used in template generation
 func (t *TemplateGenerator) getTemplateFuncMap(cs *api.ContainerService) template.FuncMap {
 	return template.FuncMap{
+		"IsAzureStackCloud": func() bool {
+			return cs.Properties.IsAzureStackCloud()
+		},
+		"GetCustomEnvironmentJSON": func() string {
+			return cs.Properties.GetCustomEnvironmentJSON()
+		},
 		"IsMasterVirtualMachineScaleSets": func() bool {
 			return cs.Properties.MasterProfile != nil && cs.Properties.MasterProfile.IsVirtualMachineScaleSets()
 		},
@@ -372,29 +378,17 @@ func (t *TemplateGenerator) getTemplateFuncMap(cs *api.ContainerService) templat
 			return cs.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity
 		},
 		"UserAssignedIDEnabled": func() bool {
-			if cs.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity &&
-				cs.Properties.OrchestratorProfile.KubernetesConfig.UserAssignedID != "" {
-				return true
-			}
-			return false
+			return cs.Properties.OrchestratorProfile.KubernetesConfig.UserAssignedIDEnabled()
 		},
 		"UserAssignedID": func() string {
-			if cs.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity &&
-				cs.Properties.OrchestratorProfile.KubernetesConfig.UserAssignedID != "" {
-				return cs.Properties.OrchestratorProfile.KubernetesConfig.UserAssignedID
-			}
-			return ""
+			return cs.Properties.OrchestratorProfile.KubernetesConfig.GetUserAssignedID()
 		},
 		"UserAssignedClientID": func() string {
-			if cs.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity &&
-				cs.Properties.OrchestratorProfile.KubernetesConfig.UserAssignedClientID != "" {
-				return cs.Properties.OrchestratorProfile.KubernetesConfig.UserAssignedClientID
-			}
-			return ""
+			return cs.Properties.OrchestratorProfile.KubernetesConfig.GetUserAssignedClientID()
 		},
 		"UseAksExtension": func() bool {
 			cloudSpecConfig := cs.GetCloudSpecConfig()
-			return cloudSpecConfig.CloudName == api.AzurePublicCloud
+			return cloudSpecConfig.CloudName == api.AzurePublicCloud || cloudSpecConfig.CloudName == api.AzureChinaCloud
 		},
 		"IsMooncake": func() bool {
 			cloudSpecConfig := cs.GetCloudSpecConfig()
@@ -411,6 +405,9 @@ func (t *TemplateGenerator) getTemplateFuncMap(cs *api.ContainerService) templat
 		},
 		"ExcludeMasterFromStandardLB": func() bool {
 			return to.Bool(cs.Properties.OrchestratorProfile.KubernetesConfig.ExcludeMasterFromStandardLB)
+		},
+		"MaximumLoadBalancerRuleCount": func() int {
+			return cs.Properties.OrchestratorProfile.KubernetesConfig.MaximumLoadBalancerRuleCount
 		},
 		"GetVNETSubnetDependencies": func() string {
 			return getVNETSubnetDependencies(cs.Properties)
@@ -637,9 +634,6 @@ func (t *TemplateGenerator) getTemplateFuncMap(cs *api.ContainerService) templat
 		"GetB64sshdConfig": func() string {
 			return getBase64CustomScript(sshdConfig)
 		},
-		"GetB64systemConf": func() string {
-			return getBase64CustomScript(systemConf)
-		},
 		"GetKubernetesMasterPreprovisionYaml": func() string {
 			str := ""
 			if cs.Properties.MasterProfile.PreprovisionExtension != nil {
@@ -698,7 +692,8 @@ func (t *TemplateGenerator) getTemplateFuncMap(cs *api.ContainerService) templat
 				kubernetesWindowsConfigFunctionsPS1,
 				kubernetesWindowsKubeletFunctionsPS1,
 				kubernetesWindowsCniFunctionsPS1,
-				kubernetesWindowsAzureCniFunctionsPS1}
+				kubernetesWindowsAzureCniFunctionsPS1,
+				kubernetesWindowsOpenSSHFunctionPS1}
 
 			// Create a buffer, new zip
 			buf := new(bytes.Buffer)
@@ -805,6 +800,9 @@ func (t *TemplateGenerator) getTemplateFuncMap(cs *api.ContainerService) templat
 		"IsNSeriesSKU": func(profile *api.AgentPoolProfile) bool {
 			return common.IsNvidiaEnabledSKU(profile.VMSize)
 		},
+		"IsCSeriesSKU": func(profile *api.AgentPoolProfile) bool {
+			return common.IsSgxEnabledSKU(profile.VMSize)
+		},
 		"UseSinglePlacementGroup": func(profile *api.AgentPoolProfile) bool {
 			return *profile.SinglePlacementGroup
 		},
@@ -825,6 +823,9 @@ func (t *TemplateGenerator) getTemplateFuncMap(cs *api.ContainerService) templat
 		},
 		"HasWindowsCustomImage": func() bool {
 			return cs.Properties.WindowsProfile.HasCustomImage()
+		},
+		"WindowsSSHEnabled": func() bool {
+			return cs.Properties.WindowsProfile.SSHEnabled
 		},
 		"GetConfigurationScriptRootURL": func() string {
 			if cs.Properties.LinuxProfile.ScriptRootURL == "" {

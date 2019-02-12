@@ -14,7 +14,6 @@ import (
 	"fmt"
 	"math/big"
 	"net"
-	"sync"
 	"time"
 
 	"golang.org/x/sync/errgroup"
@@ -24,7 +23,7 @@ import (
 
 const (
 	// ValidityDuration specifies the duration an TLS certificate is valid
-	ValidityDuration = time.Hour * 24 * 365 * 2
+	ValidityDuration = time.Hour * 24 * 365 * 30
 	// PkiKeySize is the size in bytes of the PKI key
 	PkiKeySize = 4096
 )
@@ -77,7 +76,6 @@ func CreatePki(extraFQDNs []string, extraIPs []net.IP, clusterDomain string, caP
 	var group errgroup.Group
 
 	var err error
-	var mu sync.Mutex
 	caCertificate, err = pemToCertificate(caPair.CertificatePem)
 	if err != nil {
 		return nil, nil, nil, nil, nil, nil, err
@@ -107,20 +105,12 @@ func CreatePki(extraFQDNs []string, extraIPs []net.IP, clusterDomain string, caP
 	})
 
 	group.Go(func() (err error) {
-		ip := net.ParseIP("127.0.0.1").To4()
-		mu.Lock()
-		peerIPs := append(extraIPs, ip)
-		mu.Unlock()
-		etcdServerCertificate, etcdServerPrivateKey, err = createCertificate("etcdserver", caCertificate, caPrivateKey, true, true, nil, peerIPs, nil)
+		etcdServerCertificate, etcdServerPrivateKey, err = createCertificate("etcdserver", caCertificate, caPrivateKey, true, true, nil, extraIPs, nil)
 		return err
 	})
 
 	group.Go(func() (err error) {
-		ip := net.ParseIP("127.0.0.1").To4()
-		mu.Lock()
-		peerIPs := append(extraIPs, ip)
-		mu.Unlock()
-		etcdClientCertificate, etcdClientPrivateKey, err = createCertificate("etcdclient", caCertificate, caPrivateKey, true, false, nil, peerIPs, nil)
+		etcdClientCertificate, etcdClientPrivateKey, err = createCertificate("etcdclient", caCertificate, caPrivateKey, true, false, nil, extraIPs, nil)
 		return err
 	})
 
@@ -128,11 +118,7 @@ func CreatePki(extraFQDNs []string, extraIPs []net.IP, clusterDomain string, caP
 	for i := 0; i < masterCount; i++ {
 		i := i
 		group.Go(func() (err error) {
-			ip := net.ParseIP("127.0.0.1").To4()
-			mu.Lock()
-			peerIPs := append(extraIPs, ip)
-			mu.Unlock()
-			etcdPeerCertificate, etcdPeerPrivateKey, err := createCertificate("etcdpeer", caCertificate, caPrivateKey, true, false, nil, peerIPs, nil)
+			etcdPeerCertificate, etcdPeerPrivateKey, err := createCertificate("etcdpeer", caCertificate, caPrivateKey, true, false, nil, extraIPs, nil)
 			etcdPeerCertPairs[i] = &PkiKeyCertPair{CertificatePem: string(certificateToPem(etcdPeerCertificate.Raw)), PrivateKeyPem: string(privateKeyToPem(etcdPeerPrivateKey))}
 			return err
 		})

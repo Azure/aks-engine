@@ -15,7 +15,6 @@ import (
 	. "github.com/Azure/aks-engine/pkg/test"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"github.com/satori/go.uuid"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -42,9 +41,14 @@ var _ = Describe("Upgrade Kubernetes cluster tests", func() {
 		mockClient.FailListVirtualMachinesTags = true
 		uc.Client = &mockClient
 
-		subID, _ := uuid.FromString("DEC923E3-1EF1-4745-9516-37906D56DEC4")
+		uc.ClusterTopology = ClusterTopology{}
+		uc.SubscriptionID = "DEC923E3-1EF1-4745-9516-37906D56DEC4"
+		uc.ResourceGroup = "TestRg"
+		uc.DataModel = cs
+		uc.NameSuffix = "12345678"
+		uc.AgentPoolsToUpgrade = map[string]bool{"agentpool1": true}
 
-		err := uc.UpgradeCluster(subID, &mockClient, "kubeConfig", "TestRg", cs, "12345678", []string{"agentpool1"}, TestAKSEngineVersion)
+		err := uc.UpgradeCluster(&mockClient, "kubeConfig", TestAKSEngineVersion)
 		Expect(err).To(BeNil())
 		Expect(uc.ClusterTopology.AgentPools).NotTo(BeEmpty())
 
@@ -63,9 +67,14 @@ var _ = Describe("Upgrade Kubernetes cluster tests", func() {
 		mockClient.FailListVirtualMachines = true
 		uc.Client = &mockClient
 
-		subID, _ := uuid.FromString("DEC923E3-1EF1-4745-9516-37906D56DEC4")
+		uc.ClusterTopology = ClusterTopology{}
+		uc.SubscriptionID = "DEC923E3-1EF1-4745-9516-37906D56DEC4"
+		uc.ResourceGroup = "TestRg"
+		uc.DataModel = cs
+		uc.NameSuffix = "12345678"
+		uc.AgentPoolsToUpgrade = map[string]bool{"agentpool1": true}
 
-		err := uc.UpgradeCluster(subID, nil, "kubeConfig", "TestRg", cs, "12345678", []string{"agentpool1"}, TestAKSEngineVersion)
+		err := uc.UpgradeCluster(&mockClient, "kubeConfig", TestAKSEngineVersion)
 		Expect(err).NotTo(BeNil())
 		Expect(err.Error()).To(Equal("Error while querying ARM for resources: ListVirtualMachines failed"))
 
@@ -84,9 +93,14 @@ var _ = Describe("Upgrade Kubernetes cluster tests", func() {
 		mockClient.FailDeleteVirtualMachine = true
 		uc.Client = &mockClient
 
-		subID, _ := uuid.FromString("DEC923E3-1EF1-4745-9516-37906D56DEC4")
+		uc.ClusterTopology = ClusterTopology{}
+		uc.SubscriptionID = "DEC923E3-1EF1-4745-9516-37906D56DEC4"
+		uc.ResourceGroup = "TestRg"
+		uc.DataModel = cs
+		uc.NameSuffix = "12345678"
+		uc.AgentPoolsToUpgrade = map[string]bool{"agentpool1": true}
 
-		err := uc.UpgradeCluster(subID, nil, "kubeConfig", "TestRg", cs, "12345678", []string{"agentpool1"}, TestAKSEngineVersion)
+		err := uc.UpgradeCluster(&mockClient, "kubeConfig", TestAKSEngineVersion)
 		Expect(err).NotTo(BeNil())
 		Expect(err.Error()).To(Equal("DeleteVirtualMachine failed"))
 	})
@@ -102,9 +116,14 @@ var _ = Describe("Upgrade Kubernetes cluster tests", func() {
 		mockClient.FailDeployTemplate = true
 		uc.Client = &mockClient
 
-		subID, _ := uuid.FromString("DEC923E3-1EF1-4745-9516-37906D56DEC4")
+		uc.ClusterTopology = ClusterTopology{}
+		uc.SubscriptionID = "DEC923E3-1EF1-4745-9516-37906D56DEC4"
+		uc.ResourceGroup = "TestRg"
+		uc.DataModel = cs
+		uc.NameSuffix = "12345678"
+		uc.AgentPoolsToUpgrade = map[string]bool{"agentpool1": true}
 
-		err := uc.UpgradeCluster(subID, nil, "kubeConfig", "TestRg", cs, "12345678", []string{"agentpool1"}, TestAKSEngineVersion)
+		err := uc.UpgradeCluster(&mockClient, "kubeConfig", TestAKSEngineVersion)
 		Expect(err).NotTo(BeNil())
 		Expect(err.Error()).To(Equal("DeployTemplate failed"))
 	})
@@ -120,9 +139,14 @@ var _ = Describe("Upgrade Kubernetes cluster tests", func() {
 		mockClient.FailGetVirtualMachine = true
 		uc.Client = &mockClient
 
-		subID, _ := uuid.FromString("DEC923E3-1EF1-4745-9516-37906D56DEC4")
+		uc.ClusterTopology = ClusterTopology{}
+		uc.SubscriptionID = "DEC923E3-1EF1-4745-9516-37906D56DEC4"
+		uc.ResourceGroup = "TestRg"
+		uc.DataModel = cs
+		uc.NameSuffix = "12345678"
+		uc.AgentPoolsToUpgrade = map[string]bool{"agentpool1": true}
 
-		err := uc.UpgradeCluster(subID, nil, "kubeConfig", "TestRg", cs, "12345678", []string{"agentpool1"}, TestAKSEngineVersion)
+		err := uc.UpgradeCluster(&mockClient, "kubeConfig", TestAKSEngineVersion)
 		Expect(err).NotTo(BeNil())
 		Expect(err.Error()).To(Equal("GetVirtualMachine failed"))
 	})
@@ -138,9 +162,14 @@ var _ = Describe("Upgrade Kubernetes cluster tests", func() {
 		mockClient.FailGetStorageClient = true
 		uc.Client = &mockClient
 
-		subID, _ := uuid.FromString("DEC923E3-1EF1-4745-9516-37906D56DEC4")
+		uc.ClusterTopology = ClusterTopology{}
+		uc.SubscriptionID = "DEC923E3-1EF1-4745-9516-37906D56DEC4"
+		uc.ResourceGroup = "TestRg"
+		uc.DataModel = cs
+		uc.NameSuffix = "12345678"
+		uc.AgentPoolsToUpgrade = map[string]bool{"agentpool1": true}
 
-		err := uc.UpgradeCluster(subID, nil, "kubeConfig", "TestRg", cs, "12345678", []string{"agentpool1"}, TestAKSEngineVersion)
+		err := uc.UpgradeCluster(&mockClient, "kubeConfig", TestAKSEngineVersion)
 		Expect(err).NotTo(BeNil())
 		Expect(err.Error()).To(Equal("GetStorageClient failed"))
 	})
@@ -154,11 +183,16 @@ var _ = Describe("Upgrade Kubernetes cluster tests", func() {
 
 		mockClient := armhelpers.MockAKSEngineClient{}
 		mockClient.FailDeleteNetworkInterface = true
+
 		uc.Client = &mockClient
+		uc.ClusterTopology = ClusterTopology{}
+		uc.SubscriptionID = "DEC923E3-1EF1-4745-9516-37906D56DEC4"
+		uc.ResourceGroup = "TestRg"
+		uc.DataModel = cs
+		uc.NameSuffix = "12345678"
+		uc.AgentPoolsToUpgrade = map[string]bool{"agentpool1": true}
 
-		subID, _ := uuid.FromString("DEC923E3-1EF1-4745-9516-37906D56DEC4")
-
-		err := uc.UpgradeCluster(subID, nil, "kubeConfig", "TestRg", cs, "12345678", []string{"agentpool1"}, TestAKSEngineVersion)
+		err := uc.UpgradeCluster(&mockClient, "kubeConfig", TestAKSEngineVersion)
 		Expect(err).NotTo(BeNil())
 		Expect(err.Error()).To(Equal("DeleteNetworkInterface failed"))
 	})
@@ -173,9 +207,14 @@ var _ = Describe("Upgrade Kubernetes cluster tests", func() {
 		mockClient := armhelpers.MockAKSEngineClient{}
 		uc.Client = &mockClient
 
-		subID, _ := uuid.FromString("DEC923E3-1EF1-4745-9516-37906D56DEC4")
+		uc.ClusterTopology = ClusterTopology{}
+		uc.SubscriptionID = "DEC923E3-1EF1-4745-9516-37906D56DEC4"
+		uc.ResourceGroup = "TestRg"
+		uc.DataModel = cs
+		uc.NameSuffix = "12345678"
+		uc.AgentPoolsToUpgrade = map[string]bool{"agentpool1": true}
 
-		err := uc.UpgradeCluster(subID, nil, "kubeConfig", "TestRg", cs, "12345678", []string{"agentpool1"}, TestAKSEngineVersion)
+		err := uc.UpgradeCluster(&mockClient, "kubeConfig", TestAKSEngineVersion)
 		Expect(err).NotTo(BeNil())
 		fmt.Print("GOT :   ", err.Error())
 		Expect(err.Error()).To(ContainSubstring("Error while querying ARM for resources: Kubernetes:1.9.10 cannot be upgraded to 1.9.0"))
@@ -195,9 +234,14 @@ var _ = Describe("Upgrade Kubernetes cluster tests", func() {
 		mockClient.ShouldSupportVMIdentity = true
 		uc.Client = &mockClient
 
-		subID, _ := uuid.FromString("DEC923E3-1EF1-4745-9516-37906D56DEC4")
+		uc.ClusterTopology = ClusterTopology{}
+		uc.SubscriptionID = "DEC923E3-1EF1-4745-9516-37906D56DEC4"
+		uc.ResourceGroup = "TestRg"
+		uc.DataModel = cs
+		uc.NameSuffix = "12345678"
+		uc.AgentPoolsToUpgrade = map[string]bool{"agentpool1": true}
 
-		err := uc.UpgradeCluster(subID, nil, "kubeConfig", "TestRg", cs, "12345678", []string{"agentpool1"}, TestAKSEngineVersion)
+		err := uc.UpgradeCluster(&mockClient, "kubeConfig", TestAKSEngineVersion)
 		Expect(err).NotTo(BeNil())
 		Expect(err.Error()).To(Equal("DeleteRoleAssignmentByID failed"))
 	})
@@ -214,9 +258,14 @@ var _ = Describe("Upgrade Kubernetes cluster tests", func() {
 		mockClient := armhelpers.MockAKSEngineClient{}
 		uc.Client = &mockClient
 
-		subID, _ := uuid.FromString("DEC923E3-1EF1-4745-9516-37906D56DEC4")
+		uc.ClusterTopology = ClusterTopology{}
+		uc.SubscriptionID = "DEC923E3-1EF1-4745-9516-37906D56DEC4"
+		uc.ResourceGroup = "TestRg"
+		uc.DataModel = cs
+		uc.NameSuffix = "12345678"
+		uc.AgentPoolsToUpgrade = map[string]bool{"agentpool1": true}
 
-		err := uc.UpgradeCluster(subID, nil, "kubeConfig", "TestRg", cs, "12345678", []string{"agentpool1"}, TestAKSEngineVersion)
+		err := uc.UpgradeCluster(&mockClient, "kubeConfig", TestAKSEngineVersion)
 		Expect(err).To(BeNil())
 	})
 })

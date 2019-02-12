@@ -130,7 +130,7 @@ func (cs *ContainerService) setAddonsConfig(isUpdate bool) {
 				MemoryRequests: "10Mi",
 				CPULimits:      "50m",
 				MemoryLimits:   "10Mi",
-				Image:          "mcr.microsoft.com/k8s/flexvolume/keyvault-flexvolume:v0.0.5",
+				Image:          "mcr.microsoft.com/k8s/flexvolume/keyvault-flexvolume:v0.0.7",
 			},
 		},
 	}
@@ -196,8 +196,8 @@ func (cs *ContainerService) setAddonsConfig(isUpdate bool) {
 		Name:    ContainerMonitoringAddonName,
 		Enabled: to.BoolPtr(DefaultContainerMonitoringAddonEnabled),
 		Config: map[string]string{
-			"omsAgentVersion":       "1.6.0-42",
-			"dockerProviderVersion": "2.0.0-3",
+			"omsAgentVersion":       "1.8.1.256",
+			"dockerProviderVersion": "3.0.0-3",
 		},
 		Containers: []KubernetesContainerSpec{
 			{
@@ -206,7 +206,7 @@ func (cs *ContainerService) setAddonsConfig(isUpdate bool) {
 				MemoryRequests: "200Mi",
 				CPULimits:      "150m",
 				MemoryLimits:   "750Mi",
-				Image:          "microsoft/oms:ciprod11292018",
+				Image:          "microsoft/oms:ciprod01092019",
 			},
 		},
 	}

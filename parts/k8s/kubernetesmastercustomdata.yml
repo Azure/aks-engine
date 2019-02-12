@@ -42,13 +42,6 @@ write_files:
   content: !!binary |
     {{WrapAsVariable "sshdConfig"}}
 
-- path: /etc/systemd/system.conf
-  permissions: "0644"
-  encoding: gzip
-  owner: root
-  content: !!binary |
-    {{WrapAsVariable "systemConf"}}
-
 - path: /usr/local/bin/health-monitor.sh
   permissions: "0544"
   encoding: gzip
@@ -295,7 +288,7 @@ MASTER_ARTIFACTS_CONFIG_PLACEHOLDER
     sed -i "s|<advertiseAddr>|{{WrapAsVariable "kubernetesAPIServerIP"}}|g" $a
     sed -i "s|<args>|{{GetK8sRuntimeConfigKeyVals .OrchestratorProfile.KubernetesConfig.ControllerManagerConfig}}|g" /etc/kubernetes/manifests/kube-controller-manager.yaml
     sed -i "s|<args>|{{GetK8sRuntimeConfigKeyVals .OrchestratorProfile.KubernetesConfig.SchedulerConfig}}|g" /etc/kubernetes/manifests/kube-scheduler.yaml
-    sed -i "s|<img>|{{WrapAsParameter "kubernetesHyperkubeSpec"}}|g; s|<CIDR>|{{WrapAsParameter "kubeClusterCidr"}}|g" /etc/kubernetes/addons/kube-proxy-daemonset.yaml
+    sed -i "s|<img>|{{WrapAsParameter "kubernetesHyperkubeSpec"}}|g; s|<CIDR>|{{WrapAsParameter "kubeClusterCidr"}}|g; s|<kubeProxyMode>|{{ .OrchestratorProfile.KubernetesConfig.ProxyMode}}|g" /etc/kubernetes/addons/kube-proxy-daemonset.yaml
     KUBEDNS=/etc/kubernetes/addons/kube-dns-deployment.yaml
 {{if NeedsKubeDNSWithExecHealthz}}
     sed -i "s|<img>|{{WrapAsParameter "kubernetesKubeDNSSpec"}}|g; s|<imgMasq>|{{WrapAsParameter "kubernetesDNSMasqSpec"}}|g; s|<imgHealthz>|{{WrapAsParameter "kubernetesExecHealthzSpec"}}|g; s|<imgSidecar>|{{WrapAsParameter "kubernetesDNSSidecarSpec"}}|g; s|<domain>|{{WrapAsParameter "kubernetesKubeletClusterDomain"}}|g; s|<clustIP>|{{WrapAsParameter "kubeDNSServiceIP"}}|g" $KUBEDNS
@@ -394,7 +387,7 @@ MASTER_ARTIFACTS_CONFIG_PLACEHOLDER
   {{if IsMasterVirtualMachineScaleSets}}
     MASTER_VM_NAME=$(hostname)
     MASTER_VM_NAME_BASE=$(hostname | sed "s/.$//")
-    MASTER_FIRSTADDR={{WrapAsVariable "kubernetesAPIServerIP"}}
+    MASTER_FIRSTADDR={{WrapAsParameter "firstConsecutiveStaticIP"}}
     MASTER_INDEX=$(hostname | tail -c 2)
     PRIVATE_IP=$(hostname -I | cut -d" " -f1)
     MASTER_COUNT={{WrapAsVariable "masterCount"}}
@@ -434,6 +427,15 @@ MASTER_ARTIFACTS_CONFIG_PLACEHOLDER
     /bin/echo DAEMON_ARGS=--name "{{WrapAsVerbatim "variables('masterVMNames')[copyIndex(variables('masterOffset'))]"}}" --peer-client-cert-auth --peer-trusted-ca-file={{WrapAsVariable "etcdCaFilepath"}} --peer-cert-file={{WrapAsVerbatim "variables('etcdPeerCertFilepath')[copyIndex(variables('masterOffset'))]"}} --peer-key-file={{WrapAsVerbatim "variables('etcdPeerKeyFilepath')[copyIndex(variables('masterOffset'))]"}} --initial-advertise-peer-urls "{{WrapAsVerbatim "variables('masterEtcdPeerURLs')[copyIndex(variables('masterOffset'))]"}}" --listen-peer-urls "{{WrapAsVerbatim "variables('masterEtcdPeerURLs')[copyIndex(variables('masterOffset'))]"}}" --client-cert-auth --trusted-ca-file={{WrapAsVariable "etcdCaFilepath"}} --cert-file={{WrapAsVariable "etcdServerCertFilepath"}} --key-file={{WrapAsVariable "etcdServerKeyFilepath"}} --advertise-client-urls "{{WrapAsVerbatim "variables('masterEtcdClientURLs')[copyIndex(variables('masterOffset'))]"}}" --listen-client-urls "{{WrapAsVerbatim "concat(variables('masterEtcdClientURLs')[copyIndex(variables('masterOffset'))], ',https://127.0.0.1:', variables('masterEtcdClientPort'))"}}" --initial-cluster-token "k8s-etcd-cluster" --initial-cluster {{WrapAsVerbatim "variables('masterEtcdClusterStates')[div(variables('masterCount'), 2)]"}} --data-dir "/var/lib/etcddisk" --initial-cluster-state "new" | tee -a /etc/default/etcd
   {{end}}
 {{end}}
+
+{{if IsAzureStackCloud}}
+- path: "/etc/kubernetes/azurestackcloud.json"
+  permissions: "0600"
+  owner: "root"
+  content: |
+    {{WrapAsVariable "environmentJSON"}}
+{{end}}
+
 {{if .MasterProfile.IsCoreOS}}
 - path: /opt/azure/containers/provision-setup.sh
   permissions: "0755"

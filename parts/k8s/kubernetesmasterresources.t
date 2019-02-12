@@ -276,7 +276,7 @@
               "protocol": "Tcp",
               "port": 443,
               "intervalInSeconds": 5,
-              "numberOfProbes": "2"
+              "numberOfProbes": 2
             }
           }
         ]
@@ -819,7 +819,7 @@
         "creationSource" : "[concat(parameters('generatorCode'), '-', variables('masterVMNamePrefix'), copyIndex(variables('masterOffset')))]",
         "resourceNameSuffix" : "[parameters('nameSuffix')]",
         "orchestrator" : "[variables('orchestratorNameVersionTag')]",
-        "acsengineVersion" : "[parameters('acsengineVersion')]",
+        "aksEngineVersion" : "[parameters('aksEngineVersion')]",
         "poolName" : "master"
       },
       "location": "[variables('location')]",
@@ -859,7 +859,7 @@
         },
         "osProfile": {
           "adminUsername": "[parameters('linuxAdminUsername')]",
-          "computername": "[concat(variables('masterVMNamePrefix'), copyIndex(variables('masterOffset')))]",
+          "computerName": "[concat(variables('masterVMNamePrefix'), copyIndex(variables('masterOffset')))]",
           {{GetKubernetesMasterCustomData .}}
           "linuxConfiguration": {
             "disablePasswordAuthentication": true,

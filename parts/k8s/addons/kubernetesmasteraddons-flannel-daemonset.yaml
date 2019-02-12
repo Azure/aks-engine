@@ -58,6 +58,9 @@ spec:
         beta.kubernetes.io/arch: amd64
         beta.kubernetes.io/os: linux
       tolerations:
+        - key: node.kubernetes.io/not-ready
+          operator: Exists
+          effect: NoSchedule
         - key: node-role.kubernetes.io/master
           operator: Equal
           value: "true"

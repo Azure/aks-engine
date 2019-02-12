@@ -46,7 +46,6 @@ if [ -f /var/log/azure/golden-image-install.complete ]; then
     echo "detected golden image pre-install"
     FULL_INSTALL_REQUIRED=false
     rm -rf /home/packer
-    cleanUpContainerImages
 else
     FULL_INSTALL_REQUIRED=true
 fi
@@ -82,6 +81,11 @@ fi
 installKubeletAndKubectl
 ensureRPC
 createKubeManifestDir
+if [[ "${SGX_NODE}" = true ]]; then
+    if $FULL_INSTALL_REQUIRED; then
+        installSGXDrivers
+    fi
+fi
 
 # create etcd user if we are configured for etcd
 if [[ ! -z "${MASTER_NODE}" ]] && [[ -z "${COSMOS_URI}" ]]; then
@@ -159,6 +163,10 @@ echo "Custom script finished successfully"
 echo `date`,`hostname`, endcustomscript>>/opt/m
 mkdir -p /opt/azure/containers && touch /opt/azure/containers/provision.complete
 ps auxfww > /opt/azure/provision-ps.log &
+
+if ! $FULL_INSTALL_REQUIRED; then
+    cleanUpContainerImages
+fi
 
 if $REBOOTREQUIRED; then
   echo 'reboot required, rebooting node in 1 minute'

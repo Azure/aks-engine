@@ -9,14 +9,14 @@ import (
 	"io/ioutil"
 	"reflect"
 
-	"github.com/Azure/aks-engine/pkg/api/agentPoolOnlyApi/v20170831"
-	"github.com/Azure/aks-engine/pkg/api/agentPoolOnlyApi/v20180331"
+	v20170831 "github.com/Azure/aks-engine/pkg/api/agentPoolOnlyApi/v20170831"
+	v20180331 "github.com/Azure/aks-engine/pkg/api/agentPoolOnlyApi/v20180331"
 	apvlabs "github.com/Azure/aks-engine/pkg/api/agentPoolOnlyApi/vlabs"
 	"github.com/Azure/aks-engine/pkg/api/common"
-	"github.com/Azure/aks-engine/pkg/api/v20160330"
-	"github.com/Azure/aks-engine/pkg/api/v20160930"
-	"github.com/Azure/aks-engine/pkg/api/v20170131"
-	"github.com/Azure/aks-engine/pkg/api/v20170701"
+	v20160330 "github.com/Azure/aks-engine/pkg/api/v20160330"
+	v20160930 "github.com/Azure/aks-engine/pkg/api/v20160930"
+	v20170131 "github.com/Azure/aks-engine/pkg/api/v20170131"
+	v20170701 "github.com/Azure/aks-engine/pkg/api/v20170701"
 	"github.com/Azure/aks-engine/pkg/api/vlabs"
 	"github.com/Azure/aks-engine/pkg/helpers"
 	"github.com/Azure/aks-engine/pkg/i18n"
@@ -208,7 +208,12 @@ func (a *Apiloader) LoadContainerService(
 		if e := containerService.Properties.Validate(isUpdate); validate && e != nil {
 			return nil, e
 		}
-		unversioned := ConvertVLabsContainerService(containerService, isUpdate)
+
+		var unversioned *ContainerService
+		var err error
+		if unversioned, err = ConvertVLabsContainerService(containerService, isUpdate); err != nil {
+			return nil, err
+		}
 		if curOrchVersion != "" &&
 			(containerService.Properties.OrchestratorProfile == nil ||
 				(containerService.Properties.OrchestratorProfile.OrchestratorVersion == "" &&

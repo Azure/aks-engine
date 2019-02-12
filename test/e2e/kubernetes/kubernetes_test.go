@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log"
 	"math/rand"
+	"net"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -156,6 +157,15 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			Expect(ready).To(Equal(true))
 		})
 
+		It("should print all pods", func() {
+			cmd := exec.Command("kubectl", "get", "pods", "--all-namespaces", "-o", "wide")
+			out, err := cmd.CombinedOutput()
+			log.Printf("%s\n", out)
+			if err != nil {
+				log.Printf("Error: Unable to print all pods\n")
+			}
+		})
+
 		It("should have DNS pod running", func() {
 			var err error
 			var running bool
@@ -182,6 +192,25 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				Expect(err).NotTo(HaveOccurred())
 				Expect(running).To(Equal(true))
 			}
+		})
+
+		It("should have the correct IP address for the apiserver", func() {
+			pods, err := pod.GetAllByPrefix("kube-apiserver", "kube-system")
+			Expect(err).NotTo(HaveOccurred())
+			By("Ensuring that the correct IP address has been applied to the apiserver")
+			expectedIPAddress := eng.ExpandedDefinition.Properties.MasterProfile.FirstConsecutiveStaticIP
+			if eng.ExpandedDefinition.Properties.MasterProfile.Count > 1 {
+				firstMasterIP := net.ParseIP(eng.ExpandedDefinition.Properties.MasterProfile.FirstConsecutiveStaticIP).To4()
+				expectedIP := net.IP{firstMasterIP[0], firstMasterIP[1], firstMasterIP[2], firstMasterIP[3] + byte(common.DefaultInternalLbStaticIPOffset)}
+				if eng.ExpandedDefinition.Properties.MasterProfile.IsVirtualMachineScaleSets() {
+					expectedIP = net.IP{firstMasterIP[0], firstMasterIP[1], byte(255), byte(common.DefaultInternalLbStaticIPOffset)}
+				}
+				expectedIPAddress = expectedIP.String()
+			}
+
+			actualIPAddress, err := pods[0].Spec.Containers[0].GetArg("--advertise-address")
+			Expect(err).NotTo(HaveOccurred())
+			Expect(actualIPAddress).To(Equal(expectedIPAddress))
 		})
 
 		It("should have addons running", func() {
@@ -612,6 +641,12 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 					}
 					if i > 28 {
 						log.Printf("Error while running kubectl top nodes:%s\n", err)
+						pods, _ := pod.GetAllByPrefix("metrics-server", "kube-system")
+						if len(pods) != 0 {
+							for _, p := range pods {
+								p.Logs()
+							}
+						}
 						log.Println(string(out))
 					}
 				}
@@ -896,11 +931,11 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			if eng.HasNetworkPolicy("calico") || eng.HasNetworkPolicy("azure") || eng.HasNetworkPolicy("cilium") {
 				nsClientOne, nsClientTwo, nsServer := "client-one", "client-two", "server"
 				By("Creating namespaces")
-				_, err := namespace.Create(nsClientOne)
+				namespaceClientOne, err := namespace.CreateIfNotExist(nsClientOne)
 				Expect(err).NotTo(HaveOccurred())
-				_, err = namespace.Create(nsClientTwo)
+				namespaceClientTwo, err := namespace.CreateIfNotExist(nsClientTwo)
 				Expect(err).NotTo(HaveOccurred())
-				_, err = namespace.Create(nsServer)
+				namespaceServer, err := namespace.CreateIfNotExist(nsServer)
 				Expect(err).NotTo(HaveOccurred())
 				By("Creating client and server nginx deployments")
 				r := rand.New(rand.NewSource(time.Now().UnixNano()))
@@ -1001,6 +1036,12 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				err = clientTwoDeploy.Delete(deleteResourceRetries)
 				Expect(err).NotTo(HaveOccurred())
 				err = serverDeploy.Delete(deleteResourceRetries)
+				Expect(err).NotTo(HaveOccurred())
+				err = namespaceClientOne.Delete()
+				Expect(err).NotTo(HaveOccurred())
+				err = namespaceClientTwo.Delete()
+				Expect(err).NotTo(HaveOccurred())
+				err = namespaceServer.Delete()
 				Expect(err).NotTo(HaveOccurred())
 			} else {
 				Skip("Calico or Azure network policy was not provisioned for this Cluster Definition")

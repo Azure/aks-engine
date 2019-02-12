@@ -807,7 +807,7 @@
       "type": "string"
     },
     "generatorCode": {
-      "defaultValue": "acsengine",
+      "defaultValue": "aksengine",
       "metadata": {
         "description": "The generator code used to identify the generator"
       },
@@ -1882,7 +1882,7 @@
         "dnsSettings": {
           "domainNameLabel": "[variables('masterFqdnPrefix')]"
         },
-        "publicIPAllocationMethod": "Dynamic"
+        "publicIPAllocationMethod": "Static"
       },
       "type": "Microsoft.Network/publicIPAddresses"
     },
@@ -1998,7 +1998,7 @@
         }
       },
       "tags": {
-        "creationSource": "[concat('acsengine-', variables('masterVMNamePrefix'), copyIndex(variables('masterOffset')))]",
+        "creationSource": "[concat('aksengine-', variables('masterVMNamePrefix'), copyIndex(variables('masterOffset')))]",
         "orchestrator": "[variables('orchestratorNameVersionTag')]",
         "resourceNameSuffix": "[parameters('nameSuffix')]"
       },

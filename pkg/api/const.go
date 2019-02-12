@@ -30,6 +30,7 @@ const (
 	CoreOS          Distro = "coreos"
 	AKS             Distro = "aks"
 	AKSDockerEngine Distro = "aks-docker-engine"
+	ACC1604         Distro = "acc-16.04"
 )
 
 const (
@@ -206,6 +207,9 @@ const (
 	DefaultDNSAutoscalerAddonName = "dns-autoscaler"
 	// DefaultUseCosmos determines if the cluster will use cosmos as etcd storage
 	DefaultUseCosmos = false
+	// DefaultMaximumLoadBalancerRuleCount determines the default value of maximum allowed loadBalancer rule count according to
+	// https://docs.microsoft.com/en-us/azure/azure-subscription-service-limits#load-balancer.
+	DefaultMaximumLoadBalancerRuleCount = 250
 )
 
 const (
@@ -252,11 +256,11 @@ const (
 	// AzureCniPluginVerLinux specifies version of Azure CNI plugin, which has been mirrored from
 	// https://github.com/Azure/azure-container-networking/releases/download/${AZURE_PLUGIN_VER}/azure-vnet-cni-linux-amd64-${AZURE_PLUGIN_VER}.tgz
 	// to https://acs-mirror.azureedge.net/cni
-	AzureCniPluginVerLinux = "v1.0.15"
+	AzureCniPluginVerLinux = "v1.0.17"
 	// AzureCniPluginVerWindows specifies version of Azure CNI plugin, which has been mirrored from
-	// https://github.com/Azure/azure-container-networking/releases/download/${AZURE_PLUGIN_VER}/azure-vnet-cni-windows-amd64-${AZURE_PLUGIN_VER}.tgz
+	// https://github.com/Azure/azure-container-networking/releases/download/${AZURE_PLUGIN_VER}/azure-vnet-cni-windows-amd64-${AZURE_PLUGIN_VER}.zip
 	// to https://acs-mirror.azureedge.net/cni
-	AzureCniPluginVerWindows = "v1.0.15"
+	AzureCniPluginVerWindows = "v1.0.17"
 	// CNIPluginVer specifies the version of CNI implementation
 	// https://github.com/containernetworking/plugins
 	CNIPluginVer = "v0.7.1"
@@ -337,7 +341,7 @@ const (
 	//DefaultKubernetesGCLowThreshold specifies the value for the image-gc-low-threshold kubelet flag
 	DefaultKubernetesGCLowThreshold = 80
 	// DefaultEtcdVersion specifies the default etcd version to install
-	DefaultEtcdVersion = "3.2.24"
+	DefaultEtcdVersion = "3.2.25"
 	// DefaultEtcdDiskSize specifies the default size for Kubernetes master etcd disk volumes in GB
 	DefaultEtcdDiskSize = "256"
 	// DefaultEtcdDiskSizeGT3Nodes = size for Kubernetes master etcd disk volumes in GB if > 3 nodes
@@ -370,6 +374,8 @@ const (
 	DefaultKubernetesServiceCIDR = "10.0.0.0/16"
 	// DefaultKubernetesDNSServiceIP specifies the IP address that kube-dns listens on by default. must by in the default Service CIDR range.
 	DefaultKubernetesDNSServiceIP = "10.0.0.10"
+	// DefaultMobyVersion specifies the default Azure build version of Moby to install.
+	DefaultMobyVersion = "3.0.4"
 	// DefaultDockerBridgeSubnet specifies the default subnet for the docker bridge network for masters and agents.
 	DefaultDockerBridgeSubnet = "172.17.0.1/16"
 	// DefaultKubernetesMaxPodsKubenet is the maximum number of pods to run on a node for Kubenet.
@@ -384,6 +390,8 @@ const (
 	DefaultKubernetesSchedulerEnableProfiling = "false"
 	// DefaultNonMasqueradeCIDR is the default --non-masquerade-cidr value for kubelet
 	DefaultNonMasqueradeCIDR = "0.0.0.0/0"
+	// DefaultKubeProxyMode is the default KubeProxyMode value
+	DefaultKubeProxyMode KubeProxyMode = KubeProxyModeIPTables
 )
 
 const (
@@ -398,4 +406,6 @@ const (
 	AzureChinaCloud        = "AzureChinaCloud"
 	azureGermanCloud       = "AzureGermanCloud"
 	azureUSGovernmentCloud = "AzureUSGovernmentCloud"
+	// AzureStackCloud is a const string reference identifier for Azure Stack cloud
+	AzureStackCloud = "AzureStackCloud"
 )

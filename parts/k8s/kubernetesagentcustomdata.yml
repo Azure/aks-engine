@@ -36,13 +36,6 @@ write_files:
   content: !!binary |
     {{WrapAsVariable "sshdConfig"}}
 
-- path: /etc/systemd/system.conf
-  permissions: "0644"
-  encoding: gzip
-  owner: root
-  content: !!binary |
-    {{WrapAsVariable "systemConf"}}
-
 - path: /usr/local/bin/health-monitor.sh
   permissions: "0544"
   encoding: gzip
@@ -233,6 +226,14 @@ AGENT_ARTIFACTS_CONFIG_PLACEHOLDER
     sed -i "s|<searchDomainName>|{{WrapAsParameter "searchDomainName"}}|g" "/opt/azure/containers/setup-custom-search-domains.sh"
     sed -i "s|<searchDomainRealmUser>|{{WrapAsParameter "searchDomainRealmUser"}}|g" "/opt/azure/containers/setup-custom-search-domains.sh"
     sed -i "s|<searchDomainRealmPassword>|{{WrapAsParameter "searchDomainRealmPassword"}}|g" "/opt/azure/containers/setup-custom-search-domains.sh"
+{{end}}
+
+{{if IsAzureStackCloud}}
+- path: "/etc/kubernetes/azurestackcloud.json"
+  permissions: "0600"
+  owner: "root"
+  content: |
+    {{WrapAsVariable "environmentJSON"}}
 {{end}}
 
 {{if .IsCoreOS}}

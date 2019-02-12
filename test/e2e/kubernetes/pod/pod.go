@@ -59,6 +59,8 @@ type Container struct {
 	Ports     []Port    `json:"ports"`
 	Env       []EnvVar  `json:"env"`
 	Resources Resources `json:"resources"`
+	Name      string    `json:"name"`
+	Args      []string  `json:"args"`
 }
 
 // TerminatedContainerState shows terminated state of a container
@@ -492,6 +494,15 @@ func WaitOnReady(podPrefix, namespace string, successesNeeded int, sleep, durati
 	for {
 		select {
 		case err := <-errCh:
+			pods, _ := GetAllByPrefix(podPrefix, namespace)
+			if len(pods) != 0 {
+				for _, p := range pods {
+					e := p.Logs()
+					if e != nil {
+						log.Printf("Unable to print pod logs for pod %s", p.Metadata.Name)
+					}
+				}
+			}
 			return false, err
 		case ready := <-readyCh:
 			return ready, nil
@@ -772,6 +783,19 @@ func (p *Pod) ValidateHostPort(check string, attempts int, sleep time.Duration, 
 	return false
 }
 
+// Logs will get logs from all containers in a pod
+func (p *Pod) Logs() error {
+	for _, container := range p.Spec.Containers {
+		cmd := exec.Command("kubectl", "logs", p.Metadata.Name, "-c", container.Name, "-n", p.Metadata.Namespace)
+		out, err := util.RunAndLogCommand(cmd)
+		log.Printf("\n%s\n", string(out))
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 // ValidateAzureFile will keep retrying the check if azure file is mounted in Pod
 func (p *Pod) ValidateAzureFile(mountPath string, sleep, duration time.Duration) (bool, error) {
 	readyCh := make(chan bool, 1)
@@ -881,6 +905,17 @@ func (c *Container) GetEnvironmentVariable(varName string) (string, error) {
 		}
 	}
 	return "", errors.New("environment variable not found")
+}
+
+// GetArg returns an arg's value from a container within a pod
+func (c *Container) GetArg(argKey string) (string, error) {
+	for _, argvar := range c.Args {
+		if strings.Contains(argvar, argKey) {
+			value := strings.SplitAfter(argvar, "=")[1]
+			return value, nil
+		}
+	}
+	return "", errors.New("container argument not found")
 }
 
 // getCPURequests returns an the CPU Requests value from a container within a pod

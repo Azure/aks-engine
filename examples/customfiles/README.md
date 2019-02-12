@@ -1,12 +1,12 @@
-# AKS-Engine - Provisioning of master node custom files
+# AKS Engine - Provisioning of master node custom files
 
 ## Overview
 
 AKS Engine enables you to provision custom files to your master nodes. This can be used to put whichever files you want on your master nodes to whichever path you want (and have permission to). For example, the use case is when you want additional configurations to native kubernetes features, such as in
-the [given example](../examples/customfiles/kubernetes-customfiles-podnodeselector.yaml)
+the [given example](kubernetes-customfiles-podnodeselector.json)
 
 ## Examples
-[Admission control with pod node selector](../examples/customfiles/kubernetes-customfiles-podnodeselector.yaml) provisions two local files to defined paths on our master nodes. These files define admission control for the apiserver. They could look like:
+[Admission control with pod node selector](kubernetes-customfiles-podnodeselector.json) provisions two local files to defined paths on our master nodes. These files define admission control for the apiserver. They could look like:
 
 `admission-control.yaml`
 ```

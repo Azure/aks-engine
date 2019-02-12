@@ -18,9 +18,9 @@ import (
 	"github.com/Azure/aks-engine/pkg/helpers"
 	"github.com/blang/semver"
 	"github.com/pkg/errors"
-	"github.com/satori/go.uuid"
+	uuid "github.com/satori/go.uuid"
 	log "github.com/sirupsen/logrus"
-	"gopkg.in/go-playground/validator.v9"
+	validator "gopkg.in/go-playground/validator.v9"
 )
 
 var (
@@ -33,7 +33,7 @@ var (
 		"3.0.0", "3.0.1", "3.0.2", "3.0.3", "3.0.4", "3.0.5", "3.0.6", "3.0.7", "3.0.8", "3.0.9", "3.0.10", "3.0.11", "3.0.12", "3.0.13", "3.0.14", "3.0.15", "3.0.16", "3.0.17",
 		"3.1.0", "3.1.1", "3.1.2", "3.1.2", "3.1.3", "3.1.4", "3.1.5", "3.1.6", "3.1.7", "3.1.8", "3.1.9", "3.1.10",
 		"3.2.0", "3.2.1", "3.2.2", "3.2.3", "3.2.4", "3.2.5", "3.2.6", "3.2.7", "3.2.8", "3.2.9", "3.2.11", "3.2.12",
-		"3.2.13", "3.2.14", "3.2.15", "3.2.16", "3.2.23", "3.2.24", "3.3.0", "3.3.1", "3.3.8", "3.3.9"}
+		"3.2.13", "3.2.14", "3.2.15", "3.2.16", "3.2.23", "3.2.24", "3.2.25", "3.3.0", "3.3.1", "3.3.8", "3.3.9", "3.3.10"}
 	networkPluginPlusPolicyAllowed = []k8sNetworkConfig{
 		{
 			networkPlugin: "",
@@ -113,7 +113,7 @@ func (a *Properties) Validate(isUpdate bool) error {
 	if e := validate.Struct(a); e != nil {
 		return handleValidationErrors(e.(validator.ValidationErrors))
 	}
-	if e := a.validateOrchestratorProfile(isUpdate); e != nil {
+	if e := a.ValidateOrchestratorProfile(isUpdate); e != nil {
 		return e
 	}
 	if e := a.validateMasterProfile(); e != nil {
@@ -149,6 +149,10 @@ func (a *Properties) Validate(isUpdate bool) error {
 		return e
 	}
 
+	if e := a.validateCustomCloudProfile(); e != nil {
+		return e
+	}
+
 	return nil
 }
 
@@ -158,7 +162,8 @@ func handleValidationErrors(e validator.ValidationErrors) error {
 	return common.HandleValidationErrors(e)
 }
 
-func (a *Properties) validateOrchestratorProfile(isUpdate bool) error {
+//ValidateOrchestratorProfile validates the orchestrator profile and the addons dependent on the version of the orchestrator
+func (a *Properties) ValidateOrchestratorProfile(isUpdate bool) error {
 	o := a.OrchestratorProfile
 	// On updates we only need to make sure there is a supported patch version for the minor version
 	if !isUpdate {
@@ -287,6 +292,10 @@ func (a *Properties) validateOrchestratorProfile(isUpdate bool) error {
 
 				if o.KubernetesConfig.DockerEngineVersion != "" {
 					log.Warnf("docker-engine is deprecated in favor of moby, but you passed in a dockerEngineVersion configuration. This will be ignored.")
+				}
+
+				if o.KubernetesConfig.MaximumLoadBalancerRuleCount < 0 {
+					return errors.New("maximumLoadBalancerRuleCount shouldn't be less than 0")
 				}
 			}
 		default:
@@ -445,17 +454,10 @@ func (a *Properties) validateZones() error {
 		// all zones or no zones should be defined for the cluster
 		if a.HasAvailabilityZones() {
 			if a.MastersAndAgentsUseAvailabilityZones() {
-				// master profile
-				if a.MasterProfile.Count < len(a.MasterProfile.AvailabilityZones)*2 {
-					return errors.New("the node count and the number of availability zones provided can result in zone imbalance. To achieve zone balance, each zone should have at least 2 nodes or more")
-				}
 				// agent pool profiles
 				for _, agentPoolProfile := range a.AgentPoolProfiles {
 					if agentPoolProfile.AvailabilityProfile == AvailabilitySet {
 						return errors.New("Availability Zones are not supported with an AvailabilitySet. Please either remove availabilityProfile or set availabilityProfile to VirtualMachineScaleSets")
-					}
-					if agentPoolProfile.Count < len(agentPoolProfile.AvailabilityZones)*2 {
-						return errors.New("the node count and the number of availability zones provided can result in zone imbalance. To achieve zone balance, each zone should have at least 2 nodes or more")
 					}
 				}
 				if a.OrchestratorProfile.KubernetesConfig != nil && a.OrchestratorProfile.KubernetesConfig.LoadBalancerSku != "" && a.OrchestratorProfile.KubernetesConfig.LoadBalancerSku != "Standard" {
@@ -1042,10 +1044,10 @@ func (k *KubernetesConfig) Validate(k8sVersion string, hasWindows bool) error {
 
 	if k.DNSServiceIP != "" || k.ServiceCidr != "" {
 		if k.DNSServiceIP == "" {
-			return errors.New("OrchestratorProfile.KubernetesConfig.ServiceCidr must be specified when DNSServiceIP is")
+			return errors.New("OrchestratorProfile.KubernetesConfig.DNSServiceIP must be specified when ServiceCidr is")
 		}
 		if k.ServiceCidr == "" {
-			return errors.New("OrchestratorProfile.KubernetesConfig.DNSServiceIP must be specified when ServiceCidr is")
+			return errors.New("OrchestratorProfile.KubernetesConfig.ServiceCidr must be specified when DNSServiceIP is")
 		}
 
 		dnsIP := net.ParseIP(k.DNSServiceIP)
@@ -1074,6 +1076,10 @@ func (k *KubernetesConfig) Validate(k8sVersion string, hasWindows bool) error {
 		if firstServiceIP.Equal(dnsIP) {
 			return errors.Errorf("OrchestratorProfile.KubernetesConfig.DNSServiceIP '%s' cannot be the first IP of ServiceCidr '%s'", k.DNSServiceIP, k.ServiceCidr)
 		}
+	}
+
+	if k.ProxyMode != "" && k.ProxyMode != KubeProxyModeIPTables && k.ProxyMode != KubeProxyModeIPVS {
+		return errors.Errorf("Invalid KubeProxyMode %v. Allowed modes are %v and %v", k.ProxyMode, KubeProxyModeIPTables, KubeProxyModeIPVS)
 	}
 
 	// Validate that we have a valid etcd version
@@ -1285,6 +1291,33 @@ func (i *ImageReference) validateImageNameAndGroup() error {
 	}
 	if i.Name != "" && i.ResourceGroup == "" {
 		return errors.New("imageResourceGroup needs to be specified when imageName is provided")
+	}
+	return nil
+}
+
+func (a *Properties) validateCustomCloudProfile() error {
+	if a.CustomCloudProfile != nil {
+		if a.CustomCloudProfile.Environment == nil {
+			return errors.New("environment needs to be specified when CustomCloudProfile is provided")
+		}
+		if a.CustomCloudProfile.Environment.Name == "" {
+			return errors.New("name needs to be specified when Environment is provided")
+		}
+		if a.CustomCloudProfile.Environment.ServiceManagementEndpoint == "" {
+			return errors.New("serviceManagementEndpoint needs to be specified when Environment is provided")
+		}
+		if a.CustomCloudProfile.Environment.ResourceManagerEndpoint == "" {
+			return errors.New("resourceManagerEndpoint needs to be specified when Environment is provided")
+		}
+		if a.CustomCloudProfile.Environment.ActiveDirectoryEndpoint == "" {
+			return errors.New("activeDirectoryEndpoint needs to be specified when Environment is provided")
+		}
+		if a.CustomCloudProfile.Environment.GraphEndpoint == "" {
+			return errors.New("graphEndpoint needs to be specified when Environment is provided")
+		}
+		if a.CustomCloudProfile.Environment.ResourceManagerVMDNSSuffix == "" {
+			return errors.New("resourceManagerVMDNSSuffix needs to be specified when Environment is provided")
+		}
 	}
 	return nil
 }

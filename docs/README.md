@@ -1,20 +1,23 @@
-# AKS-Engine - Builds Kubernetes Clusters
+# AKS Engine documentation
 
-## Overview
+Everything you need to know about AKS Engine.
 
-This cluster definition examples demonstrate how to create a customized Docker Enabled Cluster on Microsoft Azure.
+## How the documentation is organized
 
-## User Guides
+AKS Engine has a lot of documentation. A high-level overview of how it’s organized will help you know where to look for certain things.
 
-* [AKS Engine](aksengine.md) - shows you how to build and use the AKS engine to generate custom Docker enabled container clusters
-* [Cluster Definition](clusterdefinition.md) - describes the components of the cluster definition file
-* [Kubernetes Walkthrough](kubernetes.md) - shows how to create a Kubernetes enabled Docker cluster on Azure
-* [Kubernetes Windows Walkthrough](kubernetes/windows.md) - shows how to create a hybrid Kubernetes Windows enabled Docker cluster on Azure.
-* [Kubernetes with GPU support Walkthrough](kubernetes/gpu.md) - shows how to create a Kubernetes cluster with GPU support.
-* [Kubernetes AAD integration Walkthrough](kubernetes/aad.md) - shows how to create a Kubernetes cluster with AAD as authentication provider.
-* [Kubernetes Monitoring Walkthrough](kubernetes/monitoring.md) - shows how to set up monitoring of your Kubernetes cluster
-* [Custom VNET](../examples/vnet) - shows how to use a custom VNET
-* [Attached Disks](../examples/disks-storageaccount) - shows how to attach up to 4 disks per node
-* [Managed Disks](../examples/disks-managed) (under private preview) - shows how to use managed disks
-* [Large Clusters](../examples/largeclusters) - shows how to create cluster sizes of up to 1200 nodes
-* [Running Kubernetes in a hybrid environment](kubernetes/hybrid-environment.md) - considerations around how you will configure your cluster, and plan your deployment when running Kubernetes in a Cloud/On-Premise environment
+[Tutorials][] take you by the hand through a series of steps on a given subject. Start here if you’re new to AKS Engine.
+
+[Topic guides][] discuss key topics and concepts at a fairly high level and provide useful background information and explanation.
+
+[How-to guides][] are recipes. They guide you through the steps involved in addressing key problems and use-cases. They are more advanced than tutorials and assume some knowledge of how AKS Engine works.
+
+[Community guides][] teach you about the AKS Engine community. It incudes information on the project's Code of Conduct, the planning process for the AKS Engine project itself, its release cycle, and how you can contribute to the project.
+
+[quickstart]: tutorials/quickstart.md
+[getting started]: tutorials/hello-world.md
+[tutorials]: tutorials/README.md
+[How-to guides]: howto/README.md
+[Topic guides]: topics/README.md
+[the reference guides]: reference/README.md
+[community guides]: community/README.md

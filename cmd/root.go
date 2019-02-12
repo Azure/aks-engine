@@ -24,8 +24,8 @@ import (
 
 const (
 	rootName             = "aks-engine"
-	rootShortDescription = "AKS-Engine deploys and manages Kubernetes clusters in Azure"
-	rootLongDescription  = "AKS-Engine deploys and manages Kubernetes clusters in Azure"
+	rootShortDescription = "AKS Engine deploys and manages Kubernetes clusters in Azure"
+	rootLongDescription  = "AKS Engine deploys and manages Kubernetes clusters in Azure"
 )
 
 var (
@@ -33,7 +33,7 @@ var (
 	dumpDefaultModel bool
 )
 
-// NewRootCmd returns the root command for AKS-Engine.
+// NewRootCmd returns the root command for AKS Engine.
 func NewRootCmd() *cobra.Command {
 	rootCmd := &cobra.Command{
 		Use:   rootName,
@@ -109,7 +109,7 @@ type authArgs struct {
 func addAuthFlags(authArgs *authArgs, f *flag.FlagSet) {
 	f.StringVar(&authArgs.RawAzureEnvironment, "azure-env", "AzurePublicCloud", "the target Azure cloud")
 	f.StringVarP(&authArgs.rawSubscriptionID, "subscription-id", "s", "", "azure subscription id (required)")
-	f.StringVar(&authArgs.AuthMethod, "auth-method", "device", "auth method (default:`device`, `client_secret`, `client_certificate`)")
+	f.StringVar(&authArgs.AuthMethod, "auth-method", "client_secret", "auth method (default:`client_secret`, `cli`, `client_certificate`, `device`)")
 	f.StringVar(&authArgs.rawClientID, "client-id", "", "client id (used with --auth-method=[client_secret|client_certificate])")
 	f.StringVar(&authArgs.ClientSecret, "client-secret", "", "client secret (used with --auth-mode=client_secret)")
 	f.StringVar(&authArgs.CertificatePath, "certificate-path", "", "path to client certificate (used with --auth-method=client_certificate)")
@@ -199,6 +199,8 @@ func (authArgs *authArgs) getClient() (armhelpers.AKSEngineClient, error) {
 		return nil, err
 	}
 	switch authArgs.AuthMethod {
+	case "cli":
+		client, err = armhelpers.NewAzureClientWithCLI(env, authArgs.SubscriptionID.String())
 	case "device":
 		client, err = armhelpers.NewAzureClientWithDeviceAuth(env, authArgs.SubscriptionID.String())
 	case "client_secret":

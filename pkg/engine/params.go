@@ -13,14 +13,14 @@ import (
 	"github.com/Azure/aks-engine/pkg/helpers"
 )
 
-func getParameters(cs *api.ContainerService, generatorCode string, acsengineVersion string) (paramsMap, error) {
+func getParameters(cs *api.ContainerService, generatorCode string, aksEngineVersion string) (paramsMap, error) {
 	properties := cs.Properties
 	location := cs.Location
 	parametersMap := paramsMap{}
 	cloudSpecConfig := cs.GetCloudSpecConfig()
 
-	// acsengine Parameters
-	addValue(parametersMap, "acsengineVersion", acsengineVersion)
+	// aksengine Parameters
+	addValue(parametersMap, "aksEngineVersion", aksEngineVersion)
 
 	// Master Parameters
 	addValue(parametersMap, "location", location)
@@ -38,7 +38,7 @@ func getParameters(cs *api.ContainerService, generatorCode string, acsengineVers
 	}
 
 	addValue(parametersMap, "fqdnEndpointSuffix", cloudSpecConfig.EndpointConfig.ResourceManagerVMDNSSuffix)
-	addValue(parametersMap, "targetEnvironment", helpers.GetCloudTargetEnv(cs.Location))
+	addValue(parametersMap, "targetEnvironment", helpers.GetTargetEnv(cs.Location, cs.Properties.GetCustomCloudName()))
 	addValue(parametersMap, "linuxAdminUsername", properties.LinuxProfile.AdminUsername)
 	if properties.LinuxProfile.CustomSearchDomain != nil {
 		addValue(parametersMap, "searchDomainName", properties.LinuxProfile.CustomSearchDomain.Name)

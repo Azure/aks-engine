@@ -55,7 +55,7 @@ configureSecrets(){
     chmod 0600 "${ETCD_PEER_PRIVATE_KEY_PATH}"
     if [[ -z "${COSMOS_URI}" ]]; then
       chown etcd:etcd "${ETCD_PEER_PRIVATE_KEY_PATH}"
-    fi 
+    fi
 
     ETCD_SERVER_CERTIFICATE_PATH="/etc/kubernetes/certs/etcdserver.crt"
     touch "${ETCD_SERVER_CERTIFICATE_PATH}"
@@ -178,6 +178,7 @@ configureK8s() {
     "loadBalancerSku": "${LOAD_BALANCER_SKU}",
     "excludeMasterFromStandardLB": ${EXCLUDE_MASTER_FROM_STANDARD_LB},
     "providerVaultName": "${KMS_PROVIDER_VAULT_NAME}",
+    "maximumLoadBalancerRuleCount": ${MAXIMUM_LOADBALANCER_RULE_COUNT},
     "providerKeyName": "k8s",
     "providerKeyVersion": ""
 }

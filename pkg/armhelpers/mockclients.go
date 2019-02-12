@@ -22,7 +22,7 @@ import (
 	azStorage "github.com/Azure/azure-sdk-for-go/storage"
 	"github.com/Azure/go-autorest/autorest"
 	log "github.com/sirupsen/logrus"
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 )
 
 //MockAKSEngineClient is an implementation of AKSEngineClient where all requests error out
@@ -378,7 +378,7 @@ func (mc *MockAKSEngineClient) ListVirtualMachines(ctx context.Context, resource
 	resourceNameSuffixString := "resourceNameSuffix"
 	poolnameString := "poolName"
 
-	creationSource := "acsengine-k8s-agentpool1-12345678-0"
+	creationSource := "aksengine-k8s-agentpool1-12345678-0"
 	orchestrator := "Kubernetes:1.9.10"
 	resourceNameSuffix := "12345678"
 	poolname := "agentpool1"
@@ -446,7 +446,7 @@ func (mc *MockAKSEngineClient) GetVirtualMachine(ctx context.Context, resourceGr
 	resourceNameSuffixString := "resourceNameSuffix"
 	poolnameString := "poolName"
 
-	creationSource := "acsengine-k8s-agentpool1-12345678-0"
+	creationSource := "aksengine-k8s-agentpool1-12345678-0"
 	orchestrator := "Kubernetes:1.9.10"
 	resourceNameSuffix := "12345678"
 	poolname := "agentpool1"

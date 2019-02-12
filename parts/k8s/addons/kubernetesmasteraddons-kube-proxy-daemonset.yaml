@@ -26,6 +26,7 @@ spec:
         - --kubeconfig=/var/lib/kubelet/kubeconfig
         - --cluster-cidr=<CIDR>
         - --feature-gates=ExperimentalCriticalPodAnnotation=true
+        - --proxy-mode=<kubeProxyMode>
         image: <img>
         imagePullPolicy: IfNotPresent
         name: kube-proxy
@@ -46,6 +47,9 @@ spec:
           readOnly: true
         - mountPath: /run/xtables.lock
           name: iptableslock
+        - mountPath: /lib/modules/
+          name: kernelmodules
+          readOnly: true
       hostNetwork: true
       volumes:
       - hostPath:
@@ -60,5 +64,8 @@ spec:
       - hostPath:
           path: /run/xtables.lock
         name: iptableslock
+      - hostPath:
+          path: /lib/modules/
+        name: kernelmodules
       nodeSelector:
         beta.kubernetes.io/os: linux

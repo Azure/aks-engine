@@ -11,7 +11,11 @@ CONTAINERD_DOWNLOAD_URL="${CONTAINERD_DOWNLOAD_URL_BASE}cri-containerd-${CRI_CON
 CONTAINERD_TGZ_TMP=$(echo ${CONTAINERD_DOWNLOAD_URL} | cut -d "/" -f 5)
 
 removeEtcd() {
-    rm -rf /usr/bin/etcd &
+    rm -rf /usr/bin/etcd
+}
+
+removeMoby() {
+    sudo apt-get purge -y moby-engine moby-cli
 }
 
 installEtcd() {
@@ -19,7 +23,7 @@ installEtcd() {
     if [[ "$CURRENT_VERSION" == "${ETCD_VERSION}" ]]; then
         echo "etcd version ${ETCD_VERSION} is already installed, skipping download"
     else
-        retrycmd_get_tarball 360 10 /tmp/etcd-v${ETCD_VERSION}-linux-amd64.tar.gz ${ETCD_DOWNLOAD_URL}/etcd-v${ETCD_VERSION}-linux-amd64.tar.gz || exit $ERR_ETCD_DOWNLOAD_TIMEOUT
+        retrycmd_get_tarball 120 5 /tmp/etcd-v${ETCD_VERSION}-linux-amd64.tar.gz ${ETCD_DOWNLOAD_URL}/etcd-v${ETCD_VERSION}-linux-amd64.tar.gz || exit $ERR_ETCD_DOWNLOAD_TIMEOUT
         removeEtcd
         tar -xzvf /tmp/etcd-v${ETCD_VERSION}-linux-amd64.tar.gz -C /usr/bin/ --strip-components=1 || exit $ERR_ETCD_DOWNLOAD_TIMEOUT
     fi
@@ -53,6 +57,35 @@ installGPUDrivers() {
     retrycmd_if_failure 120 5 25 mount -t overlay -o lowerdir=/usr/lib/x86_64-linux-gnu,upperdir=${GPU_DEST}/lib64,workdir=${GPU_DEST}/overlay-workdir none /usr/lib/x86_64-linux-gnu || exit $ERR_GPU_DRIVERS_INSTALL_TIMEOUT
 }
 
+installSGXDrivers() {
+    echo "Installing SGX driver"
+    local VERSION=`grep DISTRIB_RELEASE /etc/*-release| cut -f 2 -d "="`
+    case $VERSION in
+    "18.04")
+        SGX_DRIVER_URL="https://download.01.org/intel-sgx/dcap-1.0.1/dcap_installer/ubuntuServer1804/sgx_linux_x64_driver_dcap_4f32b98.bin"
+        ;;
+    "16.04")
+        SGX_DRIVER_URL="https://download.01.org/intel-sgx/dcap-1.0.1/dcap_installer/ubuntuServer1604/sgx_linux_x64_driver_dcap_4f32b98.bin"
+        ;;
+    "*")
+        echo "Version $VERSION is not supported"
+        exit 1
+        ;;
+    esac
+
+    local PACKAGES="make gcc dkms"
+    wait_for_apt_locks
+    retrycmd_if_failure 30 5 3600 apt-get -y install $PACKAGES  || exit $ERR_SGX_DRIVERS_INSTALL_TIMEOUT
+
+    local SGX_DRIVER=$(basename $SGX_DRIVER_URL)
+    local OE_DIR=/opt/azure/containers/oe
+    mkdir -p ${OE_DIR}
+
+    retrycmd_if_failure 120 5 25 curl -fsSL ${SGX_DRIVER_URL} -o ${OE_DIR}/${SGX_DRIVER} || exit $ERR_SGX_DRIVERS_INSTALL_TIMEOUT
+    chmod a+x ${OE_DIR}/${SGX_DRIVER}
+    ${OE_DIR}/${SGX_DRIVER} || exit $ERR_SGX_DRIVERS_START_FAIL
+}
+
 installContainerRuntime() {
     if [[ "$CONTAINER_RUNTIME" == "docker" ]]; then
         if [[ "$DOCKER_ENGINE_REPO" != "" ]]; then
@@ -69,16 +102,17 @@ installContainerRuntime() {
 }
 
 installMoby() {
-    dockerd --version
-    if [ $? -eq 0 ]; then
-        echo "dockerd is already installed, skipping download"
+    CURRENT_VERSION=$(dockerd --version | grep "Docker version" | cut -d "," -f 1 | cut -d " " -f 3)
+    if [[ "$CURRENT_VERSION" == "${MOBY_VERSION}" ]]; then
+        echo "dockerd $MOBY_VERSION is already installed, skipping Moby download"
     else
+        removeMoby
         retrycmd_if_failure_no_stats 120 5 25 curl https://packages.microsoft.com/config/ubuntu/16.04/prod.list > /tmp/microsoft-prod.list || exit $ERR_MOBY_APT_LIST_TIMEOUT
         retrycmd_if_failure 10 5 10 cp /tmp/microsoft-prod.list /etc/apt/sources.list.d/ || exit $ERR_MOBY_APT_LIST_TIMEOUT
         retrycmd_if_failure_no_stats 120 5 25 curl https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > /tmp/microsoft.gpg || exit $ERR_MS_GPG_KEY_DOWNLOAD_TIMEOUT
         retrycmd_if_failure 10 5 10 cp /tmp/microsoft.gpg /etc/apt/trusted.gpg.d/ || exit $ERR_MS_GPG_KEY_DOWNLOAD_TIMEOUT
         apt_get_update || exit $ERR_APT_UPDATE_TIMEOUT
-        apt_get_install 20 30 120 moby-engine=3.0.1 moby-cli=3.0.1 || exit $ERR_MOBY_INSTALL_TIMEOUT
+        apt_get_install 20 30 120 moby-engine=${MOBY_VERSION} moby-cli=3.0.3 || exit $ERR_MOBY_INSTALL_TIMEOUT  # HACK: revert moby-cli to ${MOBY_VERSION} for next release
     fi
 }
 
@@ -183,18 +217,21 @@ installAzureCNI() {
 }
 
 installContainerd() {
-    if [[ ! -f "$CONTAINERD_DOWNLOADS_DIR/${CONTAINERD_TGZ_TMP}" ]]; then
+    containerd --version
+    if [ $? -eq 0 ]; then
+	    echo "containerd is already installed, skipping download"
+	else
         downloadContainerd
+        tar -xzf "$CONTAINERD_DOWNLOADS_DIR/$CONTAINERD_TGZ_TMP" -C /
+        rm -Rf $CONTAINERD_DOWNLOADS_DIR &
+        sed -i '/\[Service\]/a ExecStartPost=\/sbin\/iptables -P FORWARD ACCEPT' /etc/systemd/system/containerd.service
+        echo "Successfully installed cri-containerd..."
     fi
-    tar -xzf "$CONTAINERD_DOWNLOADS_DIR/$CONTAINERD_TGZ_TMP" -C /
-    rm -Rf $CONTAINERD_DOWNLOADS_DIR &
-    sed -i '/\[Service\]/a ExecStartPost=\/sbin\/iptables -P FORWARD ACCEPT' /etc/systemd/system/containerd.service
-    echo "Successfully installed cri-containerd..."
 }
 
 installImg() {
     img_filepath=/usr/local/bin/img
-    retrycmd_get_executable 120 5 $img_filepath "https://acs-mirror.azureedge.net/img/img-linux-amd64-v0.4.6" ls || exit $ERR_IMG_DOWNLOAD_TIMEOUT
+    retrycmd_get_executable 120 5 $img_filepath "https://acs-mirror.azureedge.net/img/img-linux-amd64-v0.5.6" ls || exit $ERR_IMG_DOWNLOAD_TIMEOUT
 }
 
 extractHyperkube() {

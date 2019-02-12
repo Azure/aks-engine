@@ -70,7 +70,7 @@ const (
 	// DefaultELBSVCAddonName is the name of the elb service addon deployment
 	DefaultELBSVCAddonName = "elb-svc"
 	// DefaultGeneratorCode specifies the source generator of the cluster template.
-	DefaultGeneratorCode = "acsengine"
+	DefaultGeneratorCode = "aksengine"
 	// DefaultReschedulerAddonName is the name of the rescheduler addon deployment
 	DefaultReschedulerAddonName = "rescheduler"
 	// DefaultHeapsterAddonName is the name of the heapster addon deployment
@@ -133,8 +133,8 @@ const (
 	kubernetesWindowsKubeletFunctionsPS1  = "k8s/windowskubeletfunc.ps1"
 	kubernetesWindowsCniFunctionsPS1      = "k8s/windowscnifunc.ps1"
 	kubernetesWindowsAzureCniFunctionsPS1 = "k8s/windowsazurecnifunc.ps1"
+	kubernetesWindowsOpenSSHFunctionPS1   = "k8s/windowsinstallopensshfunc.ps1"
 	sshdConfig                            = "k8s/sshd_config"
-	systemConf                            = "k8s/system.conf"
 )
 
 const (

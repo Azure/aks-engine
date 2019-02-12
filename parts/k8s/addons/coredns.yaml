@@ -100,6 +100,27 @@ spec:
       annotations:
         seccomp.security.alpha.kubernetes.io/pod: docker/default
     spec:
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: k8s-app
+                  operator: In
+                  values:
+                  - kube-dns
+              topologyKey: failure-domain.beta.kubernetes.io/zone
+            weight: 10
+          - podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: k8s-app
+                  operator: In
+                  values:
+                  - kube-dns
+              topologyKey: kubernetes.io/hostname
+            weight: 5
       serviceAccountName: coredns
       tolerations:
         - key: node-role.kubernetes.io/master
@@ -158,17 +179,6 @@ spec:
             items:
             - key: Corefile
               path: Corefile
----
-apiVersion: policy/v1beta1
-kind: PodDisruptionBudget
-metadata:
-  name: coredns
-  namespace: kube-system
-spec:
-  minAvailable: 50%
-  selector:
-    matchLabels:
-      k8s-app: kube-dns
 ---
 apiVersion: v1
 kind: Service

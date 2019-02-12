@@ -74,7 +74,7 @@ func GenerateKubeConfig(properties *api.Properties, location string) (string, er
 			kubeconfig = strings.Replace(kubeconfig, "{{WrapAsVerbatim \"reference(concat('Microsoft.Network/publicIPAddresses/', variables('masterPublicIPAddressName'))).dnsSettings.fqdn\"}}", properties.MasterProfile.FirstConsecutiveStaticIP, -1)
 		}
 	} else {
-		kubeconfig = strings.Replace(kubeconfig, "{{WrapAsVerbatim \"reference(concat('Microsoft.Network/publicIPAddresses/', variables('masterPublicIPAddressName'))).dnsSettings.fqdn\"}}", api.FormatAzureProdFQDNByLocation(properties.MasterProfile.DNSPrefix, location), -1)
+		kubeconfig = strings.Replace(kubeconfig, "{{WrapAsVerbatim \"reference(concat('Microsoft.Network/publicIPAddresses/', variables('masterPublicIPAddressName'))).dnsSettings.fqdn\"}}", api.FormatProdFQDNByLocation(properties.MasterProfile.DNSPrefix, location, properties.GetCustomCloudName()), -1)
 	}
 	kubeconfig = strings.Replace(kubeconfig, "{{WrapAsVariable \"resourceGroup\"}}", properties.MasterProfile.DNSPrefix, -1)
 
@@ -90,7 +90,7 @@ func GenerateKubeConfig(properties *api.Properties, location string) (string, er
 		}
 
 		authInfo = fmt.Sprintf("{\"auth-provider\":{\"name\":\"azure\",\"config\":{\"environment\":\"%v\",\"tenant-id\":\"%v\",\"apiserver-id\":\"%v\",\"client-id\":\"%v\"}}}",
-			helpers.GetCloudTargetEnv(location),
+			helpers.GetTargetEnv(location, properties.GetCustomCloudName()),
 			tenantID,
 			properties.AADProfile.ServerAppID,
 			properties.AADProfile.ClientAppID)
@@ -553,6 +553,7 @@ func getDataDisks(a *api.AgentPoolProfile) string {
               "createOption": "Empty",
               "diskSizeGB": "%d",
               "lun": %d,
+              "caching": "ReadOnly",
               "name": "[concat(variables('%sVMNamePrefix'), copyIndex(),'-datadisk%d')]",
               "vhd": {
                 "uri": "[concat('http://',variables('storageAccountPrefixes')[mod(add(add(div(copyIndex(),variables('maxVMsPerStorageAccount')),variables('%sStorageAccountOffset')),variables('dataStorageAccountPrefixSeed')),variables('storageAccountPrefixesCount'))],variables('storageAccountPrefixes')[div(add(add(div(copyIndex(),variables('maxVMsPerStorageAccount')),variables('%sStorageAccountOffset')),variables('dataStorageAccountPrefixSeed')),variables('storageAccountPrefixesCount'))],variables('%sDataAccountName'),'.blob.core.windows.net/vhds/',variables('%sVMNamePrefix'),copyIndex(), '--datadisk%d.vhd')]"
@@ -561,6 +562,7 @@ func getDataDisks(a *api.AgentPoolProfile) string {
 	managedDataDisks := `            {
               "diskSizeGB": "%d",
               "lun": %d,
+              "caching": "ReadOnly",
               "createOption": "Empty"
             }`
 	for i, diskSize := range a.DiskSizesGB {

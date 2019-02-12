@@ -7,6 +7,8 @@ import (
 	"encoding/json"
 	"strings"
 
+	"github.com/Azure/go-autorest/autorest/azure"
+
 	"github.com/Azure/aks-engine/pkg/api/common"
 	"github.com/Azure/go-autorest/autorest/to"
 	"github.com/pkg/errors"
@@ -47,6 +49,7 @@ type Properties struct {
 	CertificateProfile      *CertificateProfile      `json:"certificateProfile,omitempty"`
 	AADProfile              *AADProfile              `json:"aadProfile,omitempty"`
 	FeatureFlags            *FeatureFlags            `json:"featureFlags,omitempty"`
+	CustomCloudProfile      *CustomCloudProfile      `json:"customCloudProfile,omitempty"`
 }
 
 // FeatureFlags defines feature-flag restricted functionality
@@ -162,6 +165,7 @@ type WindowsProfile struct {
 	WindowsSku            string            `json:"WindowsSku"`
 	WindowsDockerVersion  string            `json:"windowsDockerVersion"`
 	Secrets               []KeyVaultSecrets `json:"secrets,omitempty"`
+	SSHEnabled            bool              `json:"sshEnabled,omitempty"`
 }
 
 // ProvisioningState represents the current state of container service resource.
@@ -262,6 +266,15 @@ type PrivateJumpboxProfile struct {
 	StorageProfile string `json:"storageProfile,omitempty"`
 }
 
+// KubeProxyMode is for iptables and ipvs (and future others)
+type KubeProxyMode string
+
+// We currently support ipvs and iptables
+const (
+	KubeProxyModeIPTables KubeProxyMode = "iptables"
+	KubeProxyModeIPVS     KubeProxyMode = "ipvs"
+)
+
 // KubernetesConfig contains the Kubernetes config structure, containing
 // Kubernetes specific configuration
 type KubernetesConfig struct {
@@ -279,6 +292,7 @@ type KubernetesConfig struct {
 	UserAssignedClientID            string            `json:"userAssignedClientID,omitempty"` //Note: cannot be provided in config. Used *only* for transferring this to azure.json.
 	CustomHyperkubeImage            string            `json:"customHyperkubeImage,omitempty"`
 	DockerEngineVersion             string            `json:"dockerEngineVersion,omitempty"` // Deprecated
+	MobyVersion                     string            `json:"mobyVersion,omitempty"`
 	CustomCcmImage                  string            `json:"customCcmImage,omitempty"`
 	UseCloudControllerManager       *bool             `json:"useCloudControllerManager,omitempty"`
 	CustomWindowsPackageURL         string            `json:"customWindowsPackageURL,omitempty"`
@@ -317,6 +331,8 @@ type KubernetesConfig struct {
 	AzureCNIURLLinux                string            `json:"azureCNIURLLinux,omitempty"`
 	AzureCNIURLWindows              string            `json:"azureCNIURLWindows,omitempty"`
 	KeyVaultSku                     string            `json:"keyVaultSku,omitempty"`
+	MaximumLoadBalancerRuleCount    int               `json:"maximumLoadBalancerRuleCount,omitempty"`
+	ProxyMode                       KubeProxyMode     `json:"kubeProxyMode,omitempty"`
 }
 
 // CustomFile has source as the full absolute source path to a file and dest
@@ -492,6 +508,12 @@ type OSType string
 
 // Distro represents Linux distro to use for Linux VMs
 type Distro string
+
+// CustomCloudProfile represents the custom cloud profile
+type CustomCloudProfile struct {
+	Environment                *azure.Environment          `json:"environment,omitempty"`
+	AzureEnvironmentSpecConfig *AzureEnvironmentSpecConfig `json:"azureEnvironmentSpecConfig,omitempty"`
+}
 
 // HasWindows returns true if the cluster contains windows
 func (p *Properties) HasWindows() bool {

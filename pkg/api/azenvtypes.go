@@ -7,18 +7,18 @@ import "fmt"
 
 //AzureEnvironmentSpecConfig is the overall configuration differences in different cloud environments.
 type AzureEnvironmentSpecConfig struct {
-	CloudName            string
-	DockerSpecConfig     DockerSpecConfig
-	KubernetesSpecConfig KubernetesSpecConfig
-	DCOSSpecConfig       DCOSSpecConfig
-	EndpointConfig       AzureEndpointConfig
-	OSImageConfig        map[Distro]AzureOSImageConfig
+	CloudName            string                        `json:"cloudName,omitempty"`
+	DockerSpecConfig     DockerSpecConfig              `json:"dockerSpecConfig,omitempty"`
+	KubernetesSpecConfig KubernetesSpecConfig          `json:"kubernetesSpecConfig,omitempty"`
+	DCOSSpecConfig       DCOSSpecConfig                `json:"-"`
+	EndpointConfig       AzureEndpointConfig           `json:"endpointConfig,omitempty"`
+	OSImageConfig        map[Distro]AzureOSImageConfig `json:"osImageConfig,omitempty"`
 }
 
 //DockerSpecConfig is the configurations of docker
 type DockerSpecConfig struct {
-	DockerEngineRepo         string
-	DockerComposeDownloadURL string
+	DockerEngineRepo         string `json:"dockerEngineRepo,omitempty"`
+	DockerComposeDownloadURL string `json:"dockerComposeDownloadURL,omitempty"`
 }
 
 //DCOSSpecConfig is the configurations of DCOS
@@ -36,31 +36,31 @@ type DCOSSpecConfig struct {
 
 //KubernetesSpecConfig is the kubernetes container images used.
 type KubernetesSpecConfig struct {
-	KubernetesImageBase              string
-	TillerImageBase                  string
-	ACIConnectorImageBase            string
-	NVIDIAImageBase                  string
-	AzureCNIImageBase                string
-	EtcdDownloadURLBase              string
-	KubeBinariesSASURLBase           string
-	WindowsTelemetryGUID             string
-	CNIPluginsDownloadURL            string
-	VnetCNILinuxPluginsDownloadURL   string
-	VnetCNIWindowsPluginsDownloadURL string
-	ContainerdDownloadURLBase        string
+	KubernetesImageBase              string `json:"kubernetesImageBase,omitempty"`
+	TillerImageBase                  string `json:"tillerImageBase,omitempty"`
+	ACIConnectorImageBase            string `json:"aciConnectorImageBase,omitempty"`
+	NVIDIAImageBase                  string `json:"nvidiaImageBase,omitempty"`
+	AzureCNIImageBase                string `json:"azureCNIImageBase,omitempty"`
+	EtcdDownloadURLBase              string `json:"etcdDownloadURLBase,omitempty"`
+	KubeBinariesSASURLBase           string `json:"kubeBinariesSASURLBase,omitempty"`
+	WindowsTelemetryGUID             string `json:"windowsTelemetryGUID,omitempty"`
+	CNIPluginsDownloadURL            string `json:"cniPluginsDownloadURL,omitempty"`
+	VnetCNILinuxPluginsDownloadURL   string `json:"vnetCNILinuxPluginsDownloadURL,omitempty"`
+	VnetCNIWindowsPluginsDownloadURL string `json:"vnetCNIWindowsPluginsDownloadURL,omitempty"`
+	ContainerdDownloadURLBase        string `json:"containerdDownloadURLBase,omitempty"`
 }
 
 //AzureEndpointConfig describes an Azure endpoint
 type AzureEndpointConfig struct {
-	ResourceManagerVMDNSSuffix string
+	ResourceManagerVMDNSSuffix string `json:"resourceManagerVMDNSSuffix,omitempty"`
 }
 
 //AzureOSImageConfig describes an Azure OS image
 type AzureOSImageConfig struct {
-	ImageOffer     string
-	ImageSku       string
-	ImagePublisher string
-	ImageVersion   string
+	ImageOffer     string `json:"imageOffer,omitempty"`
+	ImageSku       string `json:"imageSku,omitempty"`
+	ImagePublisher string `json:"imagePublisher,omitempty"`
+	ImageVersion   string `json:"imageVersion,omitempty"`
 }
 
 var (
@@ -141,9 +141,9 @@ var (
 	// DefaultAKSOSImageConfig is the AKS image based on Ubuntu 16.04.
 	DefaultAKSOSImageConfig = AzureOSImageConfig{
 		ImageOffer:     "aks",
-		ImageSku:       "aks-ubuntu-1604-201812",
+		ImageSku:       "aks-ubuntu-1604-201902",
 		ImagePublisher: "microsoft-aks",
-		ImageVersion:   "2018.12.19",
+		ImageVersion:   "2019.02.12",
 	}
 
 	// DefaultAKSDockerEngineOSImageConfig is the AKS image based on Ubuntu 16.04.
@@ -151,7 +151,15 @@ var (
 		ImageOffer:     "aks",
 		ImageSku:       "aks-ubuntu-1604-docker-engine",
 		ImagePublisher: "microsoft-aks",
-		ImageVersion:   "2018.12.19",
+		ImageVersion:   "2019.02.12",
+	}
+
+	// DefaultACC1604OSImageConfig is the ACC image based on Ubuntu 16.04.
+	DefaultACC1604OSImageConfig = AzureOSImageConfig{
+		ImageOffer:     "confidential-compute-preview",
+		ImageSku:       "16.04-LTS",
+		ImagePublisher: "Canonical",
+		ImageVersion:   "latest",
 	}
 
 	//AzureCloudSpec is the default configurations for global azure.
@@ -173,6 +181,7 @@ var (
 			CoreOS:          DefaultCoreOSImageConfig,
 			AKS:             DefaultAKSOSImageConfig,
 			AKSDockerEngine: DefaultAKSDockerEngineOSImageConfig,
+			ACC1604:         DefaultACC1604OSImageConfig,
 		},
 	}
 

@@ -19,6 +19,7 @@ metadata:
     kubernetes.io/cluster-service: "true"
 provisioner: kubernetes.io/azure-disk
 parameters:
+  kind: shared
   storageaccounttype: Premium_LRS
   cachingmode: ReadOnly
 ---
@@ -31,6 +32,7 @@ metadata:
     kubernetes.io/cluster-service: "true"
 provisioner: kubernetes.io/azure-disk
 parameters:
+  kind: shared
   storageaccounttype: Standard_LRS
   cachingmode: ReadOnly
 ---

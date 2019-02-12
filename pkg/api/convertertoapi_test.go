@@ -10,8 +10,9 @@ import (
 	"k8s.io/apimachinery/pkg/api/equality"
 
 	"github.com/Azure/aks-engine/pkg/api/common"
-	"github.com/Azure/aks-engine/pkg/api/v20170701"
+	v20170701 "github.com/Azure/aks-engine/pkg/api/v20170701"
 	"github.com/Azure/aks-engine/pkg/api/vlabs"
+	"github.com/Azure/go-autorest/autorest/azure"
 )
 
 func TestAddDCOSPublicAgentPool(t *testing.T) {
@@ -116,7 +117,10 @@ func TestOrchestratorVersion(t *testing.T) {
 			},
 		},
 	}
-	cs = ConvertVLabsContainerService(vlabscs, false)
+	cs, err := ConvertVLabsContainerService(vlabscs, false)
+	if err != nil {
+		t.Fatalf("Failed to convert ContainerService, error: %s", err)
+	}
 	if cs.Properties.OrchestratorProfile.OrchestratorVersion != common.GetDefaultKubernetesVersion(false) {
 		t.Fatalf("incorrect OrchestratorVersion '%s'", cs.Properties.OrchestratorProfile.OrchestratorVersion)
 	}
@@ -129,10 +133,45 @@ func TestOrchestratorVersion(t *testing.T) {
 			},
 		},
 	}
-	cs = ConvertVLabsContainerService(vlabscs, false)
+	cs, err = ConvertVLabsContainerService(vlabscs, false)
+	if err != nil {
+		t.Fatalf("Failed to convert ContainerService, error: %s", err)
+	}
 	if cs.Properties.OrchestratorProfile.OrchestratorVersion != "1.9.11" {
 		t.Fatalf("incorrect OrchestratorVersion '%s'", cs.Properties.OrchestratorProfile.OrchestratorVersion)
 	}
+}
+
+func TestKubernetesOrchestratorVersionFailWhenInvalid(t *testing.T) {
+	vlabscs := &vlabs.ContainerService{
+		Properties: &vlabs.Properties{
+			OrchestratorProfile: &vlabs.OrchestratorProfile{
+				OrchestratorType:    vlabs.Kubernetes,
+				OrchestratorVersion: "1.10.8",
+			},
+		},
+	}
+
+	_, err := ConvertVLabsContainerService(vlabscs, false)
+	if err == nil {
+		t.Error("1.10.8 is not a valid version and should fail, but didn't")
+	}
+
+	vlabscs.Properties.OrchestratorProfile.OrchestratorRelease = "1.9"
+	vlabscs.Properties.OrchestratorProfile.OrchestratorVersion = "1.10.7"
+	_, err = ConvertVLabsContainerService(vlabscs, false)
+	if err == nil {
+		t.Fatalf("release 1.9 is incoherent with 1.10.7 and should fail, but didn't")
+	}
+
+	vlabscs.Properties.OrchestratorProfile.OrchestratorVersion = "whatever"
+	vlabscs.Properties.OrchestratorProfile.OrchestratorRelease = "1.10.8"
+
+	_, err = ConvertVLabsContainerService(vlabscs, false)
+	if err == nil {
+		t.Fatalf("garbage version string should fail, but didn't")
+	}
+
 }
 
 func TestKubernetesVlabsDefaults(t *testing.T) {
@@ -223,5 +262,289 @@ func TestConvertCustomFilesToAPI(t *testing.T) {
 	convertCustomFilesToAPI(vp, &masterProfile)
 	if !equality.Semantic.DeepEqual(&expectedAPICustomFiles, masterProfile.CustomFiles) {
 		t.Fatalf("convertCustomFilesToApi conversion of vlabs.MasterProfile did not convert correctly")
+	}
+}
+
+func TestCustomCloudProfile(t *testing.T) {
+	const (
+		name                         = "AzureStackCloud"
+		managementPortalURL          = "https=//management.local.azurestack.external/"
+		publishSettingsURL           = "https=//management.local.azurestack.external/publishsettings/index"
+		serviceManagementEndpoint    = "https=//management.azurestackci15.onmicrosoft.com/36f71706-54df-4305-9847-5b038a4cf189"
+		resourceManagerEndpoint      = "https=//management.local.azurestack.external/"
+		activeDirectoryEndpoint      = "https=//login.windows.net/"
+		galleryEndpoint              = "https=//portal.local.azurestack.external=30015/"
+		keyVaultEndpoint             = "https=//vault.azurestack.external/"
+		graphEndpoint                = "https=//graph.windows.net/"
+		serviceBusEndpoint           = "https=//servicebus.azurestack.external/"
+		batchManagementEndpoint      = "https=//batch.azurestack.external/"
+		storageEndpointSuffix        = "core.azurestack.external"
+		sqlDatabaseDNSSuffix         = "database.azurestack.external"
+		trafficManagerDNSSuffix      = "trafficmanager.cn"
+		keyVaultDNSSuffix            = "vault.azurestack.external"
+		serviceBusEndpointSuffix     = "servicebus.azurestack.external"
+		serviceManagementVMDNSSuffix = "chinacloudapp.cn"
+		resourceManagerVMDNSSuffix   = "cloudapp.azurestack.external"
+		containerRegistryDNSSuffix   = "azurecr.io"
+		tokenAudience                = "https=//management.azurestack.external/"
+	)
+
+	vlabscs := &vlabs.ContainerService{
+		Properties: &vlabs.Properties{
+			CustomCloudProfile: &vlabs.CustomCloudProfile{
+				Environment: &azure.Environment{
+					Name:                         name,
+					ManagementPortalURL:          managementPortalURL,
+					PublishSettingsURL:           publishSettingsURL,
+					ServiceManagementEndpoint:    serviceManagementEndpoint,
+					ResourceManagerEndpoint:      resourceManagerEndpoint,
+					ActiveDirectoryEndpoint:      activeDirectoryEndpoint,
+					GalleryEndpoint:              galleryEndpoint,
+					KeyVaultEndpoint:             keyVaultEndpoint,
+					GraphEndpoint:                graphEndpoint,
+					ServiceBusEndpoint:           serviceBusEndpoint,
+					BatchManagementEndpoint:      batchManagementEndpoint,
+					StorageEndpointSuffix:        storageEndpointSuffix,
+					SQLDatabaseDNSSuffix:         sqlDatabaseDNSSuffix,
+					TrafficManagerDNSSuffix:      trafficManagerDNSSuffix,
+					KeyVaultDNSSuffix:            keyVaultDNSSuffix,
+					ServiceBusEndpointSuffix:     serviceBusEndpointSuffix,
+					ServiceManagementVMDNSSuffix: serviceManagementVMDNSSuffix,
+					ResourceManagerVMDNSSuffix:   resourceManagerVMDNSSuffix,
+					ContainerRegistryDNSSuffix:   containerRegistryDNSSuffix,
+					TokenAudience:                tokenAudience,
+				},
+			},
+		},
+	}
+
+	cs, err := ConvertVLabsContainerService(vlabscs, false)
+	if err != nil {
+		t.Fatalf("failed to convert: '%s'", err)
+	}
+	if cs.Properties.CustomCloudProfile.Environment.Name != name {
+		t.Errorf("incorrect Name, expect: '%s', actual: '%s'", name, cs.Properties.CustomCloudProfile.Environment.Name)
+	}
+	if cs.Properties.CustomCloudProfile.Environment.ManagementPortalURL != managementPortalURL {
+		t.Errorf("incorrect ManagementPortalURL, expect: '%s', actual: '%s'", managementPortalURL, cs.Properties.CustomCloudProfile.Environment.ManagementPortalURL)
+	}
+	if cs.Properties.CustomCloudProfile.Environment.PublishSettingsURL != publishSettingsURL {
+		t.Errorf("incorrect PublishSettingsURL, expect: '%s', actual: '%s'", publishSettingsURL, cs.Properties.CustomCloudProfile.Environment.PublishSettingsURL)
+	}
+	if cs.Properties.CustomCloudProfile.Environment.ServiceManagementEndpoint != serviceManagementEndpoint {
+		t.Errorf("incorrect ServiceManagementEndpoint, expect: '%s', actual: '%s'", serviceManagementEndpoint, cs.Properties.CustomCloudProfile.Environment.ServiceManagementEndpoint)
+	}
+	if cs.Properties.CustomCloudProfile.Environment.ResourceManagerEndpoint != resourceManagerEndpoint {
+		t.Errorf("incorrect ResourceManagerEndpoint, expect: '%s', actual: '%s'", resourceManagerEndpoint, cs.Properties.CustomCloudProfile.Environment.ResourceManagerEndpoint)
+	}
+	if cs.Properties.CustomCloudProfile.Environment.ActiveDirectoryEndpoint != activeDirectoryEndpoint {
+		t.Errorf("incorrect ActiveDirectoryEndpoint, expect: '%s', actual: '%s'", activeDirectoryEndpoint, cs.Properties.CustomCloudProfile.Environment.ActiveDirectoryEndpoint)
+	}
+	if cs.Properties.CustomCloudProfile.Environment.GalleryEndpoint != galleryEndpoint {
+		t.Errorf("incorrect GalleryEndpoint, expect: '%s', actual: '%s'", galleryEndpoint, cs.Properties.CustomCloudProfile.Environment.GalleryEndpoint)
+	}
+	if cs.Properties.CustomCloudProfile.Environment.KeyVaultEndpoint != keyVaultEndpoint {
+		t.Errorf("incorrect KeyVaultEndpoint, expect: '%s', actual: '%s'", keyVaultEndpoint, cs.Properties.CustomCloudProfile.Environment.KeyVaultEndpoint)
+	}
+	if cs.Properties.CustomCloudProfile.Environment.GraphEndpoint != graphEndpoint {
+		t.Errorf("incorrect GraphEndpoint, expect: '%s', actual: '%s'", graphEndpoint, cs.Properties.CustomCloudProfile.Environment.GraphEndpoint)
+	}
+	if cs.Properties.CustomCloudProfile.Environment.ServiceBusEndpoint != serviceBusEndpoint {
+		t.Errorf("incorrect ServiceBusEndpoint, expect: '%s', actual: '%s'", serviceBusEndpoint, cs.Properties.CustomCloudProfile.Environment.ServiceBusEndpoint)
+	}
+	if cs.Properties.CustomCloudProfile.Environment.BatchManagementEndpoint != batchManagementEndpoint {
+		t.Errorf("incorrect BatchManagementEndpoint, expect: '%s', actual: '%s'", batchManagementEndpoint, cs.Properties.CustomCloudProfile.Environment.BatchManagementEndpoint)
+	}
+	if cs.Properties.CustomCloudProfile.Environment.StorageEndpointSuffix != storageEndpointSuffix {
+		t.Errorf("incorrect StorageEndpointSuffix, expect: '%s', actual: '%s'", storageEndpointSuffix, cs.Properties.CustomCloudProfile.Environment.StorageEndpointSuffix)
+	}
+	if cs.Properties.CustomCloudProfile.Environment.SQLDatabaseDNSSuffix != sqlDatabaseDNSSuffix {
+		t.Errorf("incorrect SQLDatabaseDNSSuffix, expect: '%s', actual: '%s'", sqlDatabaseDNSSuffix, cs.Properties.CustomCloudProfile.Environment.SQLDatabaseDNSSuffix)
+	}
+	if cs.Properties.CustomCloudProfile.Environment.TrafficManagerDNSSuffix != trafficManagerDNSSuffix {
+		t.Errorf("incorrect TrafficManagerDNSSuffix, expect: '%s', actual: '%s'", trafficManagerDNSSuffix, cs.Properties.CustomCloudProfile.Environment.TrafficManagerDNSSuffix)
+	}
+	if cs.Properties.CustomCloudProfile.Environment.KeyVaultDNSSuffix != keyVaultDNSSuffix {
+		t.Errorf("incorrect KeyVaultDNSSuffix, expect: '%s', actual: '%s'", keyVaultDNSSuffix, cs.Properties.CustomCloudProfile.Environment.KeyVaultDNSSuffix)
+	}
+	if cs.Properties.CustomCloudProfile.Environment.ServiceBusEndpointSuffix != serviceBusEndpointSuffix {
+		t.Errorf("incorrect ServiceBusEndpointSuffix, expect: '%s', actual: '%s'", serviceBusEndpointSuffix, cs.Properties.CustomCloudProfile.Environment.ServiceBusEndpointSuffix)
+	}
+	if cs.Properties.CustomCloudProfile.Environment.ServiceManagementVMDNSSuffix != serviceManagementVMDNSSuffix {
+		t.Errorf("incorrect ServiceManagementVMDNSSuffix, expect: '%s', actual: '%s'", serviceManagementVMDNSSuffix, cs.Properties.CustomCloudProfile.Environment.ServiceManagementVMDNSSuffix)
+	}
+	if cs.Properties.CustomCloudProfile.Environment.ResourceManagerVMDNSSuffix != resourceManagerVMDNSSuffix {
+		t.Errorf("incorrect ResourceManagerVMDNSSuffix, expect: '%s', actual: '%s'", resourceManagerVMDNSSuffix, cs.Properties.CustomCloudProfile.Environment.ResourceManagerVMDNSSuffix)
+	}
+	if cs.Properties.CustomCloudProfile.Environment.ContainerRegistryDNSSuffix != containerRegistryDNSSuffix {
+		t.Errorf("incorrect ContainerRegistryDNSSuffix, expect: '%s', actual: '%s'", containerRegistryDNSSuffix, cs.Properties.CustomCloudProfile.Environment.ContainerRegistryDNSSuffix)
+	}
+	if cs.Properties.CustomCloudProfile.Environment.TokenAudience != tokenAudience {
+		t.Errorf("incorrect TokenAudience, expect: '%s', actual: '%s'", tokenAudience, cs.Properties.CustomCloudProfile.Environment.TokenAudience)
+	}
+}
+
+func TestConvertAzureEnvironmentSpecConfig(t *testing.T) {
+	//Mock AzureEnvironmentSpecConfig
+	vlabscs := &vlabs.ContainerService{
+		Properties: &vlabs.Properties{
+			CustomCloudProfile: &vlabs.CustomCloudProfile{
+				AzureEnvironmentSpecConfig: &vlabs.AzureEnvironmentSpecConfig{
+					CloudName: "AzureStackCloud",
+					//DockerSpecConfig specify the docker engine download repo
+					DockerSpecConfig: vlabs.DockerSpecConfig{
+						DockerEngineRepo:         "DockerEngineRepo",
+						DockerComposeDownloadURL: "DockerComposeDownloadURL",
+					},
+					//KubernetesSpecConfig - Due to Chinese firewall issue, the default containers from google is blocked, use the Chinese local mirror instead
+					KubernetesSpecConfig: vlabs.KubernetesSpecConfig{
+						KubernetesImageBase:              "KubernetesImageBase",
+						TillerImageBase:                  "TillerImageBase",
+						ACIConnectorImageBase:            "ACIConnectorImageBase",
+						NVIDIAImageBase:                  "NVIDIAImageBase",
+						AzureCNIImageBase:                "AzureCNIImageBase",
+						EtcdDownloadURLBase:              "EtcdDownloadURLBase",
+						KubeBinariesSASURLBase:           "KubeBinariesSASURLBase",
+						WindowsTelemetryGUID:             "WindowsTelemetryGUID",
+						CNIPluginsDownloadURL:            "CNIPluginsDownloadURL",
+						VnetCNILinuxPluginsDownloadURL:   "VnetCNILinuxPluginsDownloadURL",
+						VnetCNIWindowsPluginsDownloadURL: "VnetCNIWindowsPluginsDownloadURL",
+						ContainerdDownloadURLBase:        "ContainerdDownloadURLBase",
+					},
+					DCOSSpecConfig: vlabs.DCOSSpecConfig{
+						DCOS188BootstrapDownloadURL:     "DCOS188BootstrapDownloadURL",
+						DCOS190BootstrapDownloadURL:     "DCOS190BootstrapDownloadURL",
+						DCOS198BootstrapDownloadURL:     "DCOS198BootstrapDownloadURL",
+						DCOS110BootstrapDownloadURL:     "DCOS110BootstrapDownloadURL",
+						DCOS111BootstrapDownloadURL:     "DCOS111BootstrapDownloadURL",
+						DCOSWindowsBootstrapDownloadURL: "DCOSWindowsBootstrapDownloadURL",
+						DcosRepositoryURL:               "DcosRepositoryURL",
+						DcosClusterPackageListID:        "DcosClusterPackageListID",
+						DcosProviderPackageID:           "DcosProviderPackageID",
+					},
+					EndpointConfig: vlabs.AzureEndpointConfig{
+						ResourceManagerVMDNSSuffix: "ResourceManagerVMDNSSuffix",
+					},
+					OSImageConfig: map[vlabs.Distro]vlabs.AzureOSImageConfig{
+						vlabs.Distro("Test"): {
+							ImageOffer:     "ImageOffer",
+							ImageSku:       "ImageSku",
+							ImagePublisher: "ImagePublisher",
+							ImageVersion:   "ImageVersion",
+						},
+					},
+				},
+			},
+		},
+	}
+	cs, err := ConvertVLabsContainerService(vlabscs, false)
+	if err != nil {
+		t.Fatalf("Failed to convert ContainerService, error: %s", err)
+	}
+
+	csSpec := cs.Properties.CustomCloudProfile.AzureEnvironmentSpecConfig
+	vlabscsSpec := vlabscs.Properties.CustomCloudProfile.AzureEnvironmentSpecConfig
+	if csSpec.CloudName != vlabscsSpec.CloudName {
+		t.Errorf("incorrect CloudName, expect: '%s', actual: '%s'", vlabscsSpec.CloudName, csSpec.CloudName)
+	}
+
+	//KubernetesSpecConfig
+	if csSpec.KubernetesSpecConfig.KubernetesImageBase != vlabscsSpec.KubernetesSpecConfig.KubernetesImageBase {
+		t.Errorf("incorrect KubernetesImageBase, expect: '%s', actual: '%s'", vlabscsSpec.KubernetesSpecConfig.KubernetesImageBase, csSpec.KubernetesSpecConfig.KubernetesImageBase)
+	}
+	if csSpec.KubernetesSpecConfig.TillerImageBase != vlabscsSpec.KubernetesSpecConfig.TillerImageBase {
+		t.Errorf("incorrect TillerImageBase, expect: '%s', actual: '%s'", vlabscsSpec.KubernetesSpecConfig.TillerImageBase, csSpec.KubernetesSpecConfig.TillerImageBase)
+	}
+	if csSpec.KubernetesSpecConfig.ACIConnectorImageBase != vlabscsSpec.KubernetesSpecConfig.ACIConnectorImageBase {
+		t.Errorf("incorrect ACIConnectorImageBase, expect: '%s', actual: '%s'", vlabscsSpec.KubernetesSpecConfig.ACIConnectorImageBase, csSpec.KubernetesSpecConfig.ACIConnectorImageBase)
+	}
+	if csSpec.KubernetesSpecConfig.NVIDIAImageBase != vlabscsSpec.KubernetesSpecConfig.NVIDIAImageBase {
+		t.Errorf("incorrect NVIDIAImageBase, expect: '%s', actual: '%s'", vlabscsSpec.KubernetesSpecConfig.NVIDIAImageBase, csSpec.KubernetesSpecConfig.NVIDIAImageBase)
+	}
+	if csSpec.KubernetesSpecConfig.AzureCNIImageBase != vlabscsSpec.KubernetesSpecConfig.AzureCNIImageBase {
+		t.Errorf("incorrect AzureCNIImageBase, expect: '%s', actual: '%s'", vlabscsSpec.KubernetesSpecConfig.AzureCNIImageBase, csSpec.KubernetesSpecConfig.AzureCNIImageBase)
+	}
+	if csSpec.KubernetesSpecConfig.EtcdDownloadURLBase != vlabscsSpec.KubernetesSpecConfig.EtcdDownloadURLBase {
+		t.Errorf("incorrect EtcdDownloadURLBase, expect: '%s', actual: '%s'", vlabscsSpec.KubernetesSpecConfig.EtcdDownloadURLBase, csSpec.KubernetesSpecConfig.EtcdDownloadURLBase)
+	}
+	if csSpec.KubernetesSpecConfig.KubeBinariesSASURLBase != vlabscsSpec.KubernetesSpecConfig.KubeBinariesSASURLBase {
+		t.Errorf("incorrect KubeBinariesSASURLBase, expect: '%s', actual: '%s'", vlabscsSpec.KubernetesSpecConfig.KubeBinariesSASURLBase, csSpec.KubernetesSpecConfig.KubeBinariesSASURLBase)
+	}
+	if csSpec.KubernetesSpecConfig.WindowsTelemetryGUID != vlabscsSpec.KubernetesSpecConfig.WindowsTelemetryGUID {
+		t.Errorf("incorrect WindowsTelemetryGUID, expect: '%s', actual: '%s'", vlabscsSpec.KubernetesSpecConfig.WindowsTelemetryGUID, csSpec.KubernetesSpecConfig.WindowsTelemetryGUID)
+	}
+	if csSpec.KubernetesSpecConfig.CNIPluginsDownloadURL != vlabscsSpec.KubernetesSpecConfig.CNIPluginsDownloadURL {
+		t.Errorf("incorrect CNIPluginsDownloadURL, expect: '%s', actual: '%s'", vlabscsSpec.KubernetesSpecConfig.CNIPluginsDownloadURL, csSpec.KubernetesSpecConfig.CNIPluginsDownloadURL)
+	}
+	if csSpec.KubernetesSpecConfig.VnetCNILinuxPluginsDownloadURL != vlabscsSpec.KubernetesSpecConfig.VnetCNILinuxPluginsDownloadURL {
+		t.Errorf("incorrect VnetCNILinuxPluginsDownloadURL, expect: '%s', actual: '%s'", vlabscsSpec.KubernetesSpecConfig.VnetCNILinuxPluginsDownloadURL, csSpec.KubernetesSpecConfig.VnetCNILinuxPluginsDownloadURL)
+	}
+	if csSpec.KubernetesSpecConfig.VnetCNIWindowsPluginsDownloadURL != vlabscsSpec.KubernetesSpecConfig.VnetCNIWindowsPluginsDownloadURL {
+		t.Errorf("incorrect VnetCNIWindowsPluginsDownloadURL, expect: '%s', actual: '%s'", vlabscsSpec.KubernetesSpecConfig.VnetCNIWindowsPluginsDownloadURL, csSpec.KubernetesSpecConfig.VnetCNIWindowsPluginsDownloadURL)
+	}
+	if csSpec.KubernetesSpecConfig.ContainerdDownloadURLBase != vlabscsSpec.KubernetesSpecConfig.ContainerdDownloadURLBase {
+		t.Errorf("incorrect ContainerdDownloadURLBase, expect: '%s', actual: '%s'", vlabscsSpec.KubernetesSpecConfig.ContainerdDownloadURLBase, csSpec.KubernetesSpecConfig.ContainerdDownloadURLBase)
+	}
+
+	//DockerSpecConfig
+	if csSpec.DockerSpecConfig.DockerComposeDownloadURL != vlabscsSpec.DockerSpecConfig.DockerComposeDownloadURL {
+		t.Errorf("incorrect DockerComposeDownloadURL, expect: '%s', actual: '%s'", vlabscsSpec.DockerSpecConfig.DockerComposeDownloadURL, csSpec.DockerSpecConfig.DockerComposeDownloadURL)
+	}
+	if csSpec.DockerSpecConfig.DockerEngineRepo != vlabscsSpec.DockerSpecConfig.DockerEngineRepo {
+		t.Errorf("incorrect DockerEngineRepo, expect: '%s', actual: '%s'", vlabscsSpec.DockerSpecConfig.DockerEngineRepo, csSpec.DockerSpecConfig.DockerEngineRepo)
+	}
+
+	//DCOSSpecConfig
+	if csSpec.DCOSSpecConfig.DCOS188BootstrapDownloadURL != vlabscsSpec.DCOSSpecConfig.DCOS188BootstrapDownloadURL {
+		t.Errorf("incorrect DCOS188BootstrapDownloadURL, expect: '%s', actual: '%s'", vlabscsSpec.DCOSSpecConfig.DCOS188BootstrapDownloadURL, csSpec.DCOSSpecConfig.DCOS188BootstrapDownloadURL)
+	}
+	if csSpec.DCOSSpecConfig.DCOS190BootstrapDownloadURL != vlabscsSpec.DCOSSpecConfig.DCOS190BootstrapDownloadURL {
+		t.Errorf("incorrect DCOS190BootstrapDownloadURL, expect: '%s', actual: '%s'", vlabscsSpec.DCOSSpecConfig.DCOS190BootstrapDownloadURL, csSpec.DCOSSpecConfig.DCOS190BootstrapDownloadURL)
+	}
+	if csSpec.DCOSSpecConfig.DCOS198BootstrapDownloadURL != vlabscsSpec.DCOSSpecConfig.DCOS198BootstrapDownloadURL {
+		t.Errorf("incorrect DCOS198BootstrapDownloadURL, expect: '%s', actual: '%s'", vlabscsSpec.DCOSSpecConfig.DCOS198BootstrapDownloadURL, csSpec.DCOSSpecConfig.DCOS198BootstrapDownloadURL)
+	}
+	if csSpec.DCOSSpecConfig.DCOS110BootstrapDownloadURL != vlabscsSpec.DCOSSpecConfig.DCOS110BootstrapDownloadURL {
+		t.Errorf("incorrect DCOS110BootstrapDownloadURL, expect: '%s', actual: '%s'", vlabscsSpec.DCOSSpecConfig.DCOS110BootstrapDownloadURL, csSpec.DCOSSpecConfig.DCOS110BootstrapDownloadURL)
+	}
+	if csSpec.DCOSSpecConfig.DCOS111BootstrapDownloadURL != vlabscsSpec.DCOSSpecConfig.DCOS111BootstrapDownloadURL {
+		t.Errorf("incorrect DCOS111BootstrapDownloadURL, expect: '%s', actual: '%s'", vlabscsSpec.DCOSSpecConfig.DCOS111BootstrapDownloadURL, csSpec.DCOSSpecConfig.DCOS111BootstrapDownloadURL)
+	}
+	if csSpec.DCOSSpecConfig.DCOSWindowsBootstrapDownloadURL != vlabscsSpec.DCOSSpecConfig.DCOSWindowsBootstrapDownloadURL {
+		t.Errorf("incorrect DCOSWindowsBootstrapDownloadURL, expect: '%s', actual: '%s'", vlabscsSpec.DCOSSpecConfig.DCOSWindowsBootstrapDownloadURL, csSpec.DCOSSpecConfig.DCOSWindowsBootstrapDownloadURL)
+	}
+	if csSpec.DCOSSpecConfig.DcosRepositoryURL != vlabscsSpec.DCOSSpecConfig.DcosRepositoryURL {
+		t.Errorf("incorrect DcosRepositoryURL, expect: '%s', actual: '%s'", vlabscsSpec.DCOSSpecConfig.DcosRepositoryURL, csSpec.DCOSSpecConfig.DcosRepositoryURL)
+	}
+	if csSpec.DCOSSpecConfig.DcosClusterPackageListID != vlabscsSpec.DCOSSpecConfig.DcosClusterPackageListID {
+		t.Errorf("incorrect DcosClusterPackageListID, expect: '%s', actual: '%s'", vlabscsSpec.DCOSSpecConfig.DcosClusterPackageListID, csSpec.DCOSSpecConfig.DcosClusterPackageListID)
+	}
+	if csSpec.DCOSSpecConfig.DcosProviderPackageID != vlabscsSpec.DCOSSpecConfig.DcosProviderPackageID {
+		t.Errorf("incorrect DcosProviderPackageID, expect: '%s', actual: '%s'", vlabscsSpec.DCOSSpecConfig.DcosProviderPackageID, csSpec.DCOSSpecConfig.DcosProviderPackageID)
+	}
+
+	//EndpointConfig
+	if csSpec.EndpointConfig.ResourceManagerVMDNSSuffix != vlabscsSpec.EndpointConfig.ResourceManagerVMDNSSuffix {
+		t.Errorf("incorrect ResourceManagerVMDNSSuffix, expect: '%s', actual: '%s'", vlabscsSpec.EndpointConfig.ResourceManagerVMDNSSuffix, csSpec.EndpointConfig.ResourceManagerVMDNSSuffix)
+	}
+
+	//OSImageConfig
+	for k, v := range vlabscsSpec.OSImageConfig {
+		if actualValue, ok := csSpec.OSImageConfig[Distro(string(k))]; ok {
+			if v.ImageOffer != actualValue.ImageOffer {
+				t.Errorf("incorrect ImageOffer for '%s', expect: '%s', actual: '%s'", string(k), v.ImageOffer, actualValue.ImageOffer)
+			}
+			if v.ImagePublisher != actualValue.ImagePublisher {
+				t.Errorf("incorrect ImagePublisher for '%s', expect: '%s', actual: '%s'", string(k), v.ImagePublisher, actualValue.ImagePublisher)
+			}
+			if v.ImageSku != actualValue.ImageSku {
+				t.Errorf("incorrect ImageSku for '%s', expect: '%s', actual: '%s'", string(k), v.ImageSku, actualValue.ImageSku)
+			}
+			if v.ImageVersion != actualValue.ImageVersion {
+				t.Errorf("incorrect ImageVersion for '%s', expect: '%s', actual: '%s'", string(k), v.ImageVersion, actualValue.ImageVersion)
+			}
+		} else {
+			t.Errorf("incorrect OSImageConfig: '%s' is missing", string(k))
+		}
 	}
 }

@@ -1,4 +1,4 @@
-# AKS-Engine - Managed Disks
+# AKS Engine - Managed Disks
 
 ## Overview
 

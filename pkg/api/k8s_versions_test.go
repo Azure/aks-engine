@@ -8,12 +8,103 @@ import (
 )
 
 func TestGetK8sVersionComponents(t *testing.T) {
+	oneDotFourteenDotZero := getK8sVersionComponents("1.14.0", nil)
+	if oneDotFourteenDotZero == nil {
+		t.Fatalf("getK8sVersionComponents() should not return nil for valid version")
+	}
+	expected := map[string]string{
+		"hyperkube":                        "hyperkube-amd64:v1.14.0",
+		"ccm":                              "cloud-controller-manager-amd64:v1.14.0",
+		"windowszip":                       "v1.14.0-1int.zip",
+		DefaultDashboardAddonName:          k8sComponentVersions["1.14"]["dashboard"],
+		"exechealthz":                      k8sComponentVersions["1.14"]["exechealthz"],
+		"addonresizer":                     k8sComponentVersions["1.14"]["addon-resizer"],
+		"heapster":                         k8sComponentVersions["1.14"]["heapster"],
+		DefaultMetricsServerAddonName:      k8sComponentVersions["1.14"]["metrics-server"],
+		"coredns":                          k8sComponentVersions["1.14"]["coredns"],
+		"kube-dns":                         k8sComponentVersions["1.14"]["kube-dns"],
+		"addonmanager":                     k8sComponentVersions["1.14"]["addon-manager"],
+		"dnsmasq":                          k8sComponentVersions["1.14"]["dnsmasq"],
+		"pause":                            k8sComponentVersions["1.14"]["pause"],
+		DefaultTillerAddonName:             k8sComponentVersions["1.14"]["tiller"],
+		DefaultReschedulerAddonName:        k8sComponentVersions["1.14"]["rescheduler"],
+		DefaultACIConnectorAddonName:       k8sComponentVersions["1.14"]["aci-connector"],
+		ContainerMonitoringAddonName:       k8sComponentVersions["1.14"][ContainerMonitoringAddonName],
+		AzureCNINetworkMonitoringAddonName: k8sComponentVersions["1.14"][AzureCNINetworkMonitoringAddonName],
+		DefaultClusterAutoscalerAddonName:  k8sComponentVersions["1.14"]["cluster-autoscaler"],
+		NVIDIADevicePluginAddonName:        k8sComponentVersions["1.14"][NVIDIADevicePluginAddonName],
+		"k8s-dns-sidecar":                  k8sComponentVersions["1.14"]["k8s-dns-sidecar"],
+		"nodestatusfreq":                   k8sComponentVersions["1.14"]["nodestatusfreq"],
+		"nodegraceperiod":                  k8sComponentVersions["1.14"]["nodegraceperiod"],
+		"podeviction":                      k8sComponentVersions["1.14"]["podeviction"],
+		"routeperiod":                      k8sComponentVersions["1.14"]["routeperiod"],
+		"backoffretries":                   k8sComponentVersions["1.14"]["backoffretries"],
+		"backoffjitter":                    k8sComponentVersions["1.14"]["backoffjitter"],
+		"backoffduration":                  k8sComponentVersions["1.14"]["backoffduration"],
+		"backoffexponent":                  k8sComponentVersions["1.14"]["backoffexponent"],
+		"ratelimitqps":                     k8sComponentVersions["1.14"]["ratelimitqps"],
+		"ratelimitbucket":                  k8sComponentVersions["1.14"]["ratelimitbucket"],
+		"gchighthreshold":                  k8sComponentVersions["1.14"]["gchighthreshold"],
+		"gclowthreshold":                   k8sComponentVersions["1.14"]["gclowthreshold"],
+	}
+
+	for k, v := range oneDotFourteenDotZero {
+		if expected[k] != v {
+			t.Fatalf("getK8sVersionComponents() returned an unexpected map[string]string value for k8s 1.14.0: %s = %s", k, oneDotFourteenDotZero[k])
+		}
+	}
+
+	oneDotThirteenDotZero := getK8sVersionComponents("1.13.0", nil)
+	if oneDotThirteenDotZero == nil {
+		t.Fatalf("getK8sVersionComponents() should not return nil for valid version")
+	}
+	expected = map[string]string{
+		"hyperkube":                        "hyperkube-amd64:v1.13.0",
+		"ccm":                              "cloud-controller-manager-amd64:v1.13.0",
+		"windowszip":                       "v1.13.0-1int.zip",
+		DefaultDashboardAddonName:          k8sComponentVersions["1.13"]["dashboard"],
+		"exechealthz":                      k8sComponentVersions["1.13"]["exechealthz"],
+		"addonresizer":                     k8sComponentVersions["1.13"]["addon-resizer"],
+		"heapster":                         k8sComponentVersions["1.13"]["heapster"],
+		DefaultMetricsServerAddonName:      k8sComponentVersions["1.13"]["metrics-server"],
+		"coredns":                          k8sComponentVersions["1.13"]["coredns"],
+		"kube-dns":                         k8sComponentVersions["1.13"]["kube-dns"],
+		"addonmanager":                     k8sComponentVersions["1.13"]["addon-manager"],
+		"dnsmasq":                          k8sComponentVersions["1.13"]["dnsmasq"],
+		"pause":                            k8sComponentVersions["1.13"]["pause"],
+		DefaultTillerAddonName:             k8sComponentVersions["1.13"]["tiller"],
+		DefaultReschedulerAddonName:        k8sComponentVersions["1.13"]["rescheduler"],
+		DefaultACIConnectorAddonName:       k8sComponentVersions["1.13"]["aci-connector"],
+		ContainerMonitoringAddonName:       k8sComponentVersions["1.13"][ContainerMonitoringAddonName],
+		AzureCNINetworkMonitoringAddonName: k8sComponentVersions["1.13"][AzureCNINetworkMonitoringAddonName],
+		DefaultClusterAutoscalerAddonName:  k8sComponentVersions["1.13"]["cluster-autoscaler"],
+		NVIDIADevicePluginAddonName:        k8sComponentVersions["1.13"][NVIDIADevicePluginAddonName],
+		"k8s-dns-sidecar":                  k8sComponentVersions["1.13"]["k8s-dns-sidecar"],
+		"nodestatusfreq":                   k8sComponentVersions["1.13"]["nodestatusfreq"],
+		"nodegraceperiod":                  k8sComponentVersions["1.13"]["nodegraceperiod"],
+		"podeviction":                      k8sComponentVersions["1.13"]["podeviction"],
+		"routeperiod":                      k8sComponentVersions["1.13"]["routeperiod"],
+		"backoffretries":                   k8sComponentVersions["1.13"]["backoffretries"],
+		"backoffjitter":                    k8sComponentVersions["1.13"]["backoffjitter"],
+		"backoffduration":                  k8sComponentVersions["1.13"]["backoffduration"],
+		"backoffexponent":                  k8sComponentVersions["1.13"]["backoffexponent"],
+		"ratelimitqps":                     k8sComponentVersions["1.13"]["ratelimitqps"],
+		"ratelimitbucket":                  k8sComponentVersions["1.13"]["ratelimitbucket"],
+		"gchighthreshold":                  k8sComponentVersions["1.13"]["gchighthreshold"],
+		"gclowthreshold":                   k8sComponentVersions["1.13"]["gclowthreshold"],
+	}
+
+	for k, v := range oneDotThirteenDotZero {
+		if expected[k] != v {
+			t.Fatalf("getK8sVersionComponents() returned an unexpected map[string]string value for k8s 1.13.0: %s = %s", k, oneDotThirteenDotZero[k])
+		}
+	}
 
 	oneDotTwelveDotZero := getK8sVersionComponents("1.12.0", nil)
 	if oneDotTwelveDotZero == nil {
 		t.Fatalf("getK8sVersionComponents() should not return nil for valid version")
 	}
-	expected := map[string]string{
+	expected = map[string]string{
 		"hyperkube":                        "hyperkube-amd64:v1.12.0",
 		"ccm":                              "cloud-controller-manager-amd64:v1.12.0",
 		"windowszip":                       "v1.12.0-1int.zip",

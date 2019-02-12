@@ -14,9 +14,7 @@ import (
 	"github.com/Azure/aks-engine/pkg/armhelpers/utils"
 	"github.com/Azure/aks-engine/pkg/i18n"
 	"github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2018-04-01/compute"
-	"github.com/blang/semver"
 	"github.com/pkg/errors"
-	"github.com/satori/go.uuid"
 	"github.com/sirupsen/logrus"
 )
 
@@ -77,58 +75,21 @@ const MasterVMNamePrefix = "k8s-master-"
 const MasterPoolName = "master"
 
 // UpgradeCluster runs the workflow to upgrade a Kubernetes cluster.
-func (uc *UpgradeCluster) UpgradeCluster(subscriptionID uuid.UUID, az armhelpers.AKSEngineClient, kubeConfig, resourceGroup string,
-	cs *api.ContainerService, nameSuffix string, agentPoolsToUpgrade []string, acsengineVersion string) error {
-	uc.ClusterTopology = ClusterTopology{}
-	uc.SubscriptionID = subscriptionID.String()
-	uc.ResourceGroup = resourceGroup
-	uc.DataModel = cs
-	uc.NameSuffix = nameSuffix
+func (uc *UpgradeCluster) UpgradeCluster(az armhelpers.AKSEngineClient, kubeConfig string, aksEngineVersion string) error {
 	uc.MasterVMs = &[]compute.VirtualMachine{}
 	uc.UpgradedMasterVMs = &[]compute.VirtualMachine{}
 	uc.AgentPools = make(map[string]*AgentPoolTopology)
-	uc.AgentPoolsToUpgrade = make(map[string]bool)
 
-	for _, poolName := range agentPoolsToUpgrade {
-		uc.AgentPoolsToUpgrade[poolName] = true
-	}
-	uc.AgentPoolsToUpgrade[MasterPoolName] = true
-
-	if err := uc.getClusterNodeStatus(subscriptionID, az, resourceGroup, kubeConfig); err != nil {
+	if err := uc.getClusterNodeStatus(az, uc.ResourceGroup, kubeConfig); err != nil {
 		return uc.Translator.Errorf("Error while querying ARM for resources: %+v", err)
 	}
 
 	var upgrader UpgradeWorkFlow
 	upgradeVersion := uc.DataModel.Properties.OrchestratorProfile.OrchestratorVersion
 	uc.Logger.Infof("Upgrading to Kubernetes version %s\n", upgradeVersion)
-	switch {
-	case strings.HasPrefix(upgradeVersion, "1.6."):
-		upgrader16 := &Kubernetes16upgrader{}
-		upgrader16.Init(uc.Translator, uc.Logger, uc.ClusterTopology, uc.Client, kubeConfig, uc.StepTimeout, acsengineVersion)
-		upgrader = upgrader16
-
-	case strings.HasPrefix(upgradeVersion, "1.7."):
-		upgrader17 := &Kubernetes17upgrader{}
-		upgrader17.Init(uc.Translator, uc.Logger, uc.ClusterTopology, uc.Client, kubeConfig, uc.StepTimeout, acsengineVersion)
-		upgrader = upgrader17
-
-	case strings.HasPrefix(upgradeVersion, "1.8."):
-		upgrader18 := &Kubernetes18upgrader{}
-		upgrader18.Init(uc.Translator, uc.Logger, uc.ClusterTopology, uc.Client, kubeConfig, uc.StepTimeout, acsengineVersion)
-		upgrader = upgrader18
-
-	case strings.HasPrefix(upgradeVersion, "1.9."),
-		strings.HasPrefix(upgradeVersion, "1.10."),
-		strings.HasPrefix(upgradeVersion, "1.11."),
-		strings.HasPrefix(upgradeVersion, "1.12."),
-		strings.HasPrefix(upgradeVersion, "1.13."):
-		u := &Upgrader{}
-		u.Init(uc.Translator, uc.Logger, uc.ClusterTopology, uc.Client, kubeConfig, uc.StepTimeout, acsengineVersion)
-		upgrader = u
-
-	default:
-		return uc.Translator.Errorf("Upgrade to Kubernetes version %s is not supported", upgradeVersion)
-	}
+	u := &Upgrader{}
+	u.Init(uc.Translator, uc.Logger, uc.ClusterTopology, uc.Client, kubeConfig, uc.StepTimeout, aksEngineVersion)
+	upgrader = u
 
 	if err := upgrader.RunUpgrade(); err != nil {
 		return err
@@ -138,8 +99,8 @@ func (uc *UpgradeCluster) UpgradeCluster(subscriptionID uuid.UUID, az armhelpers
 	return nil
 }
 
-func (uc *UpgradeCluster) getClusterNodeStatus(subscriptionID uuid.UUID, az armhelpers.AKSEngineClient, resourceGroup, kubeConfig string) error {
-	targetOrchestratorTypeVersion := fmt.Sprintf("%s:%s", uc.DataModel.Properties.OrchestratorProfile.OrchestratorType, uc.DataModel.Properties.OrchestratorProfile.OrchestratorVersion)
+func (uc *UpgradeCluster) getClusterNodeStatus(az armhelpers.AKSEngineClient, resourceGroup, kubeConfig string) error {
+	goalVersion := uc.DataModel.Properties.OrchestratorProfile.OrchestratorVersion
 
 	ctx, cancel := context.WithTimeout(context.Background(), armhelpers.DefaultARMOperationTimeout)
 	defer cancel()
@@ -169,20 +130,19 @@ func (uc *UpgradeCluster) getClusterNodeStatus(subscriptionID uuid.UUID, az armh
 					Location: *vmScaleSet.Location,
 				}
 				for _, vm := range vmScaleSetVMsPage.Values() {
-					scaleSetVMOrchestratorTypeAndVersion := uc.getClusterNodeVersion(kubeClient, *vm.Name, vm.Tags)
-					if scaleSetVMOrchestratorTypeAndVersion == "" {
+					currentVersion := uc.getNodeVersion(kubeClient, *vm.Name, vm.Tags)
+					if currentVersion == "" {
 						uc.Logger.Infof("Skipping VM: %s for upgrade as the orchestrator version could not be determined.", *vm.Name)
 						continue
 					}
 
-					if scaleSetVMOrchestratorTypeAndVersion != targetOrchestratorTypeVersion {
-						// This condition is a scale set VM that is an older version and should be handled
+					if currentVersion != goalVersion {
 						uc.Logger.Infof(
 							"VM %s in VMSS %s has a current version of %s and a desired version of %s. Upgrading this node.",
 							*vm.Name,
 							*vmScaleSet.Name,
-							scaleSetVMOrchestratorTypeAndVersion,
-							targetOrchestratorTypeVersion,
+							currentVersion,
+							goalVersion,
 						)
 						scaleSetToUpgrade.VMsToUpgrade = append(
 							scaleSetToUpgrade.VMsToUpgrade,
@@ -204,38 +164,37 @@ func (uc *UpgradeCluster) getClusterNodeStatus(subscriptionID uuid.UUID, az armh
 		}
 
 		for _, vm := range vmListPage.Values() {
-			vmOrchestratorTypeAndVersion := uc.getClusterNodeVersion(kubeClient, *vm.Name, vm.Tags)
-			if vmOrchestratorTypeAndVersion == "" {
+			// Windows VMs contain a substring of the name suffix
+			if !strings.Contains(*(vm.Name), uc.NameSuffix) && !strings.Contains(*(vm.Name), uc.NameSuffix[:4]+"k8s") {
+				uc.Logger.Infof("Skipping VM: %s for upgrade as it does not belong to cluster with expected name suffix: %s\n",
+					*vm.Name, uc.NameSuffix)
+				continue
+			}
+
+			currentVersion := uc.getNodeVersion(kubeClient, *vm.Name, vm.Tags)
+			if currentVersion == "" {
 				uc.Logger.Infof("Skipping VM: %s for upgrade as the orchestrator version could not be determined.", *vm.Name)
 				continue
 			}
 
-			if vmOrchestratorTypeAndVersion != targetOrchestratorTypeVersion {
+			// Skip the VM upgrade validation for managed clusters as it only applies to aks-engine version support.
+			if !uc.DataModel.Properties.IsHostedMasterProfile() {
+				if err := uc.upgradable(currentVersion); err != nil {
+					return err
+				}
+			}
+
+			// If the current version is different than the desired version then we add the VM to the list of VMs to upgrade.
+			if currentVersion != goalVersion {
 				if strings.Contains(*(vm.Name), MasterVMNamePrefix) {
-					if !strings.Contains(*(vm.Name), uc.NameSuffix) {
-						uc.Logger.Infof("Skipping VM: %s for upgrade as it does not belong to cluster with expected name suffix: %s\n",
-							*vm.Name, uc.NameSuffix)
-						continue
-					}
-					if err := uc.upgradable(vmOrchestratorTypeAndVersion); err != nil {
-						return err
-					}
-					uc.Logger.Infof("Master VM name: %s, orchestrator: %s (MasterVMs)\n", *vm.Name, vmOrchestratorTypeAndVersion)
+					uc.Logger.Infof("Master VM name: %s, orchestrator: %s (MasterVMs)\n", *vm.Name, currentVersion)
 					*uc.MasterVMs = append(*uc.MasterVMs, vm)
 				} else {
-					if err := uc.upgradable(vmOrchestratorTypeAndVersion); err != nil {
-						return err
-					}
 					uc.addVMToAgentPool(vm, true)
 				}
-			} else if vmOrchestratorTypeAndVersion == targetOrchestratorTypeVersion {
+			} else if currentVersion == goalVersion {
 				if strings.Contains(*(vm.Name), MasterVMNamePrefix) {
-					if !strings.Contains(*(vm.Name), uc.NameSuffix) {
-						uc.Logger.Infof("Not adding VM: %s to upgraded list as it does not belong to cluster with expected name suffix: %s\n",
-							*vm.Name, uc.NameSuffix)
-						continue
-					}
-					uc.Logger.Infof("Master VM name: %s, orchestrator: %s (UpgradedMasterVMs)\n", *vm.Name, vmOrchestratorTypeAndVersion)
+					uc.Logger.Infof("Master VM name: %s, orchestrator: %s (UpgradedMasterVMs)\n", *vm.Name, currentVersion)
 					*uc.UpgradedMasterVMs = append(*uc.UpgradedMasterVMs, vm)
 				} else {
 					uc.addVMToAgentPool(vm, false)
@@ -247,16 +206,19 @@ func (uc *UpgradeCluster) getClusterNodeStatus(subscriptionID uuid.UUID, az armh
 	return nil
 }
 
-// getClusterNodeVersion returns a node's "orchestrator:version" via Kubernetes API or VM tag.
-func (uc *UpgradeCluster) getClusterNodeVersion(client armhelpers.KubernetesClient, name string, tags map[string]*string) string {
+// getNodeVersion returns a node's current Kubernetes version via Kubernetes API or VM tag.
+func (uc *UpgradeCluster) getNodeVersion(client armhelpers.KubernetesClient, name string, tags map[string]*string) string {
 	if tags != nil && tags["orchestrator"] != nil {
-		return *tags["orchestrator"]
+		parts := strings.Split(*tags["orchestrator"], ":")
+		if len(parts) == 2 {
+			return parts[1]
+		}
 	}
-	uc.Logger.Warnf("Expected tag \"orchestrator\" not found for VM: %s", name)
+	uc.Logger.Warnf("Expected tag \"orchestrator\" not found for VM: %s. Using Kubernetes API to retrieve Kubernetes version.", name)
 	if client != nil {
 		node, err := client.GetNode(name)
 		if err == nil {
-			return api.Kubernetes + ":" + strings.TrimPrefix(node.Status.NodeInfo.KubeletVersion, "v")
+			return strings.TrimPrefix(node.Status.NodeInfo.KubeletVersion, "v")
 		}
 		uc.Logger.Warnf("Failed to get node %s: %v", name, err)
 		// If it's a VMSS cluster, generate the likely Kubernetes node name and try again.
@@ -271,7 +233,7 @@ func (uc *UpgradeCluster) getClusterNodeVersion(client armhelpers.KubernetesClie
 				node, err := client.GetNode(vmssName)
 				if err == nil {
 					uc.Logger.Infof("Found VMSS node %s under the name %s", name, vmssName)
-					return api.Kubernetes + ":" + strings.TrimPrefix(node.Status.NodeInfo.KubeletVersion, "v")
+					return strings.TrimPrefix(node.Status.NodeInfo.KubeletVersion, "v")
 				}
 				uc.Logger.Warnf("Failed to get node %s: %v", vmssName, err)
 			}
@@ -280,18 +242,10 @@ func (uc *UpgradeCluster) getClusterNodeVersion(client armhelpers.KubernetesClie
 	return ""
 }
 
-func (uc *UpgradeCluster) upgradable(vmOrchestratorTypeAndVersion string) error {
-	arr := strings.Split(vmOrchestratorTypeAndVersion, ":")
-	if len(arr) != 2 {
-		return errors.Errorf("Unsupported orchestrator tag format %s", vmOrchestratorTypeAndVersion)
-	}
-	currentVer, err := semver.Make(arr[1])
-	if err != nil {
-		return errors.Errorf("Unsupported orchestrator version format %s", currentVer.String())
-	}
+func (uc *UpgradeCluster) upgradable(currentVersion string) error {
 	csOrch := &api.OrchestratorProfile{
 		OrchestratorType:    api.Kubernetes,
-		OrchestratorVersion: currentVer.String(),
+		OrchestratorVersion: currentVersion,
 	}
 	orch, err := api.GetOrchestratorVersionProfile(csOrch, uc.DataModel.Properties.HasWindows())
 	if err != nil {
@@ -302,7 +256,7 @@ func (uc *UpgradeCluster) upgradable(vmOrchestratorTypeAndVersion string) error 
 			return nil
 		}
 	}
-	return errors.Errorf("%s cannot be upgraded to %s", vmOrchestratorTypeAndVersion, uc.DataModel.Properties.OrchestratorProfile.OrchestratorVersion)
+	return errors.Errorf("%s cannot be upgraded to %s", currentVersion, uc.DataModel.Properties.OrchestratorProfile.OrchestratorVersion)
 }
 
 func (uc *UpgradeCluster) addVMToAgentPool(vm compute.VirtualMachine, isUpgradableVM bool) error {
@@ -391,28 +345,3 @@ func (uc *UpgradeCluster) addVMToAgentPool(vm compute.VirtualMachine, isUpgradab
 
 	return nil
 }
-
-/* WriteTemplate writes upgrade template to a folder
-func WriteTemplate(
-	translator *i18n.Translator,
-	upgradeContainerService *api.ContainerService,
-	templateMap map[string]interface{}, parametersMap map[string]interface{}) {
-	updatedTemplateJSON, _ := json.Marshal(templateMap)
-	parametersJSON, _ := json.Marshal(parametersMap)
-
-	templateapp, err := acsengine.PrettyPrintArmTemplate(string(updatedTemplateJSON))
-	if err != nil {
-		logrus.Fatalf("error pretty printing template: %s \n", err.Error())
-	}
-	parametersapp, e := acsengine.PrettyPrintJSON(string(parametersJSON))
-	if e != nil {
-		logrus.Fatalf("error pretty printing template parameters: %s \n", e.Error())
-	}
-	outputDirectory := path.Join("_output", upgradeContainerService.Properties.MasterProfile.DNSPrefix, "Upgrade")
-	writer := &acsengine.ArtifactWriter{
-		Translator: translator,
-	}
-	if err := writer.WriteTLSArtifacts(upgradeContainerService, "vlabs", templateapp, parametersapp, outputDirectory, false, false); err != nil {
-		logrus.Fatalf("error writing artifacts: %s\n", err.Error())
-	}
-}*/

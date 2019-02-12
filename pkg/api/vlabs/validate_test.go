@@ -8,6 +8,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/Azure/go-autorest/autorest/azure"
 	"github.com/Azure/go-autorest/autorest/to"
 
 	"github.com/Azure/aks-engine/pkg/api/common"
@@ -60,7 +61,7 @@ func Test_OrchestratorProfile_Validate(t *testing.T) {
 					},
 				},
 			},
-			expectedError: "Invalid etcd version \"1.0.0\", please use one of the following versions: [2.2.5 2.3.0 2.3.1 2.3.2 2.3.3 2.3.4 2.3.5 2.3.6 2.3.7 2.3.8 3.0.0 3.0.1 3.0.2 3.0.3 3.0.4 3.0.5 3.0.6 3.0.7 3.0.8 3.0.9 3.0.10 3.0.11 3.0.12 3.0.13 3.0.14 3.0.15 3.0.16 3.0.17 3.1.0 3.1.1 3.1.2 3.1.2 3.1.3 3.1.4 3.1.5 3.1.6 3.1.7 3.1.8 3.1.9 3.1.10 3.2.0 3.2.1 3.2.2 3.2.3 3.2.4 3.2.5 3.2.6 3.2.7 3.2.8 3.2.9 3.2.11 3.2.12 3.2.13 3.2.14 3.2.15 3.2.16 3.2.23 3.2.24 3.3.0 3.3.1 3.3.8 3.3.9]",
+			expectedError: "Invalid etcd version \"1.0.0\", please use one of the following versions: [2.2.5 2.3.0 2.3.1 2.3.2 2.3.3 2.3.4 2.3.5 2.3.6 2.3.7 2.3.8 3.0.0 3.0.1 3.0.2 3.0.3 3.0.4 3.0.5 3.0.6 3.0.7 3.0.8 3.0.9 3.0.10 3.0.11 3.0.12 3.0.13 3.0.14 3.0.15 3.0.16 3.0.17 3.1.0 3.1.1 3.1.2 3.1.2 3.1.3 3.1.4 3.1.5 3.1.6 3.1.7 3.1.8 3.1.9 3.1.10 3.2.0 3.2.1 3.2.2 3.2.3 3.2.4 3.2.5 3.2.6 3.2.7 3.2.8 3.2.9 3.2.11 3.2.12 3.2.13 3.2.14 3.2.15 3.2.16 3.2.23 3.2.24 3.2.25 3.3.0 3.3.1 3.3.8 3.3.9 3.3.10]",
 		},
 		"should error when KubernetesConfig has enableAggregatedAPIs enabled with an invalid version": {
 			properties: &Properties{
@@ -227,13 +228,24 @@ func Test_OrchestratorProfile_Validate(t *testing.T) {
 				},
 			},
 		},
+		"should error when maximumLoadBalancerRuleCount populated with a negative integer": {
+			properties: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					OrchestratorType: "Kubernetes",
+					KubernetesConfig: &KubernetesConfig{
+						MaximumLoadBalancerRuleCount: -1,
+					},
+				},
+			},
+			expectedError: "maximumLoadBalancerRuleCount shouldn't be less than 0",
+		},
 	}
 
 	for testName, test := range tests {
 		test := test
 		t.Run(testName, func(t *testing.T) {
 			t.Parallel()
-			err := test.properties.validateOrchestratorProfile(test.isUpdate)
+			err := test.properties.ValidateOrchestratorProfile(test.isUpdate)
 
 			if test.expectedError == "" && err == nil {
 				return
@@ -443,6 +455,32 @@ func Test_KubernetesConfig_Validate(t *testing.T) {
 
 		if err := c.Validate(k8sVersion, false); err == nil {
 			t.Error("should error when ClusterSubnet has a mask of 24 bits or higher")
+		}
+
+		c = KubernetesConfig{
+			ProxyMode: KubeProxyMode("invalid"),
+		}
+
+		if err := c.Validate(k8sVersion, false); err == nil {
+			t.Error("should error when ProxyMode has an invalid string value")
+		}
+
+		for _, validProxyModeValue := range []KubeProxyMode{KubeProxyModeIPTables, KubeProxyModeIPVS} {
+			c = KubernetesConfig{
+				ProxyMode: KubeProxyMode(validProxyModeValue),
+			}
+
+			if err := c.Validate(k8sVersion, false); err != nil {
+				t.Error("should error when ProxyMode has a valid string value")
+			}
+
+			c = KubernetesConfig{
+				ProxyMode: KubeProxyMode(validProxyModeValue),
+			}
+
+			if err := c.Validate(k8sVersion, false); err != nil {
+				t.Error("should error when ProxyMode has a valid string value")
+			}
 		}
 	}
 
@@ -1300,7 +1338,7 @@ func TestProperties_ValidateManagedIdentity(t *testing.T) {
 			name:                "use managed identity with master vmss",
 			orchestratorRelease: "1.11",
 			useManagedIdentity:  true,
-			userAssignedID:      "utacsenginetestid",
+			userAssignedID:      "utaksenginetestid",
 			masterProfile: MasterProfile{
 				DNSPrefix:           "dummy",
 				Count:               3,
@@ -1336,7 +1374,7 @@ func TestProperties_ValidateManagedIdentity(t *testing.T) {
 			name:                "use user assigned identity with master vmas",
 			orchestratorRelease: "1.11",
 			useManagedIdentity:  true,
-			userAssignedID:      "acsenginetestid",
+			userAssignedID:      "aksenginetestid",
 			masterProfile: MasterProfile{
 				DNSPrefix: "dummy",
 				Count:     3,
@@ -1558,27 +1596,6 @@ func TestProperties_ValidateZones(t *testing.T) {
 			expectedErr: "availabilityZone is only available in Kubernetes version 1.12 or greater",
 		},
 		{
-			name:                "Master profile with zones node count",
-			orchestratorRelease: "1.12",
-			masterProfile: &MasterProfile{
-				Count:               1,
-				DNSPrefix:           "foo",
-				VMSize:              "Standard_DS2_v2",
-				AvailabilityProfile: VirtualMachineScaleSets,
-				AvailabilityZones:   []string{"1", "2"},
-			},
-			agentProfiles: []*AgentPoolProfile{
-				{
-					Name:                "agentpool",
-					VMSize:              "Standard_DS2_v2",
-					Count:               4,
-					AvailabilityProfile: VirtualMachineScaleSets,
-					AvailabilityZones:   []string{"1", "2"},
-				},
-			},
-			expectedErr: "the node count and the number of availability zones provided can result in zone imbalance. To achieve zone balance, each zone should have at least 2 nodes or more",
-		},
-		{
 			name:                "Agent profile with zones version",
 			orchestratorRelease: "1.11",
 			masterProfile: &MasterProfile{
@@ -1598,27 +1615,6 @@ func TestProperties_ValidateZones(t *testing.T) {
 				},
 			},
 			expectedErr: "availabilityZone is only available in Kubernetes version 1.12 or greater",
-		},
-		{
-			name:                "Agent profile with zones node count",
-			orchestratorRelease: "1.12",
-			masterProfile: &MasterProfile{
-				Count:               5,
-				DNSPrefix:           "foo",
-				VMSize:              "Standard_DS2_v2",
-				AvailabilityProfile: VirtualMachineScaleSets,
-				AvailabilityZones:   []string{"1", "2"},
-			},
-			agentProfiles: []*AgentPoolProfile{
-				{
-					Name:                "agentpool",
-					VMSize:              "Standard_DS2_v2",
-					Count:               2,
-					AvailabilityProfile: VirtualMachineScaleSets,
-					AvailabilityZones:   []string{"1", "2"},
-				},
-			},
-			expectedErr: "the node count and the number of availability zones provided can result in zone imbalance. To achieve zone balance, each zone should have at least 2 nodes or more",
 		},
 		{
 			name:                "Agent profile with zones vmas",
@@ -2222,4 +2218,259 @@ func TestAgentPoolProfile_ValidateAvailabilityProfile(t *testing.T) {
 			t.Errorf("expected error with message : %s, but got %s", expectedMsg, err.Error())
 		}
 	})
+}
+
+func TestValidateCustomCloudProfile(t *testing.T) {
+
+	const (
+		name                         = "AzureStackCloud"
+		managementPortalURL          = "https=//management.local.azurestack.external/"
+		publishSettingsURL           = "https=//management.local.azurestack.external/publishsettings/index"
+		serviceManagementEndpoint    = "https=//management.azurestackci15.onmicrosoft.com/36f71706-54df-4305-9847-5b038a4cf189"
+		resourceManagerEndpoint      = "https=//management.local.azurestack.external/"
+		activeDirectoryEndpoint      = "https=//login.windows.net/"
+		galleryEndpoint              = "https=//portal.local.azurestack.external=30015/"
+		keyVaultEndpoint             = "https=//vault.azurestack.external/"
+		graphEndpoint                = "https=//graph.windows.net/"
+		serviceBusEndpoint           = "https=//servicebus.azurestack.external/"
+		batchManagementEndpoint      = "https=//batch.azurestack.external/"
+		storageEndpointSuffix        = "core.azurestack.external"
+		sqlDatabaseDNSSuffix         = "database.azurestack.external"
+		trafficManagerDNSSuffix      = "trafficmanager.cn"
+		keyVaultDNSSuffix            = "vault.azurestack.external"
+		serviceBusEndpointSuffix     = "servicebus.azurestack.external"
+		serviceManagementVMDNSSuffix = "chinacloudapp.cn"
+		resourceManagerVMDNSSuffix   = "cloudapp.azurestack.external"
+		containerRegistryDNSSuffix   = "azurecr.io"
+		tokenAudience                = "https=//management.azurestack.external/"
+	)
+
+	tests := []struct {
+		name          string
+		customProfile *CustomCloudProfile
+		expectedErr   error
+	}{
+		{
+			name: "valid run",
+			customProfile: &CustomCloudProfile{
+				Environment: &azure.Environment{
+					Name:                         name,
+					ManagementPortalURL:          managementPortalURL,
+					PublishSettingsURL:           publishSettingsURL,
+					ServiceManagementEndpoint:    serviceManagementEndpoint,
+					ResourceManagerEndpoint:      resourceManagerEndpoint,
+					ActiveDirectoryEndpoint:      activeDirectoryEndpoint,
+					GalleryEndpoint:              galleryEndpoint,
+					KeyVaultEndpoint:             keyVaultEndpoint,
+					GraphEndpoint:                graphEndpoint,
+					ServiceBusEndpoint:           serviceBusEndpoint,
+					BatchManagementEndpoint:      batchManagementEndpoint,
+					StorageEndpointSuffix:        storageEndpointSuffix,
+					SQLDatabaseDNSSuffix:         sqlDatabaseDNSSuffix,
+					TrafficManagerDNSSuffix:      trafficManagerDNSSuffix,
+					KeyVaultDNSSuffix:            keyVaultDNSSuffix,
+					ServiceBusEndpointSuffix:     serviceBusEndpointSuffix,
+					ServiceManagementVMDNSSuffix: serviceManagementVMDNSSuffix,
+					ResourceManagerVMDNSSuffix:   resourceManagerVMDNSSuffix,
+					ContainerRegistryDNSSuffix:   containerRegistryDNSSuffix,
+					TokenAudience:                tokenAudience,
+				},
+			},
+			expectedErr: nil,
+		},
+		{
+			name:          "custom profile is nil",
+			customProfile: nil,
+			expectedErr:   nil,
+		},
+		{
+			name: "environment is nil",
+			customProfile: &CustomCloudProfile{
+				Environment: nil,
+			},
+			expectedErr: errors.New("environment needs to be specified when CustomCloudProfile is provided"),
+		},
+		{
+			name: "name is empty",
+			customProfile: &CustomCloudProfile{
+				Environment: &azure.Environment{
+					Name:                         "",
+					ManagementPortalURL:          managementPortalURL,
+					PublishSettingsURL:           publishSettingsURL,
+					ServiceManagementEndpoint:    serviceManagementEndpoint,
+					ResourceManagerEndpoint:      resourceManagerEndpoint,
+					ActiveDirectoryEndpoint:      activeDirectoryEndpoint,
+					GalleryEndpoint:              galleryEndpoint,
+					KeyVaultEndpoint:             keyVaultEndpoint,
+					GraphEndpoint:                graphEndpoint,
+					ServiceBusEndpoint:           serviceBusEndpoint,
+					BatchManagementEndpoint:      batchManagementEndpoint,
+					StorageEndpointSuffix:        storageEndpointSuffix,
+					SQLDatabaseDNSSuffix:         sqlDatabaseDNSSuffix,
+					TrafficManagerDNSSuffix:      trafficManagerDNSSuffix,
+					KeyVaultDNSSuffix:            keyVaultDNSSuffix,
+					ServiceBusEndpointSuffix:     serviceBusEndpointSuffix,
+					ServiceManagementVMDNSSuffix: serviceManagementVMDNSSuffix,
+					ResourceManagerVMDNSSuffix:   resourceManagerVMDNSSuffix,
+					ContainerRegistryDNSSuffix:   containerRegistryDNSSuffix,
+					TokenAudience:                tokenAudience,
+				},
+			},
+			expectedErr: errors.New("name needs to be specified when Environment is provided"),
+		},
+		{
+			name: "ServiceManagementEndpoint is empty",
+			customProfile: &CustomCloudProfile{
+				Environment: &azure.Environment{
+					Name:                         name,
+					ManagementPortalURL:          managementPortalURL,
+					PublishSettingsURL:           publishSettingsURL,
+					ServiceManagementEndpoint:    "",
+					ResourceManagerEndpoint:      resourceManagerEndpoint,
+					ActiveDirectoryEndpoint:      activeDirectoryEndpoint,
+					GalleryEndpoint:              galleryEndpoint,
+					KeyVaultEndpoint:             keyVaultEndpoint,
+					GraphEndpoint:                graphEndpoint,
+					ServiceBusEndpoint:           serviceBusEndpoint,
+					BatchManagementEndpoint:      batchManagementEndpoint,
+					StorageEndpointSuffix:        storageEndpointSuffix,
+					SQLDatabaseDNSSuffix:         sqlDatabaseDNSSuffix,
+					TrafficManagerDNSSuffix:      trafficManagerDNSSuffix,
+					KeyVaultDNSSuffix:            keyVaultDNSSuffix,
+					ServiceBusEndpointSuffix:     serviceBusEndpointSuffix,
+					ServiceManagementVMDNSSuffix: serviceManagementVMDNSSuffix,
+					ResourceManagerVMDNSSuffix:   resourceManagerVMDNSSuffix,
+					ContainerRegistryDNSSuffix:   containerRegistryDNSSuffix,
+					TokenAudience:                tokenAudience,
+				},
+			},
+			expectedErr: errors.New("serviceManagementEndpoint needs to be specified when Environment is provided"),
+		},
+		{
+			name: "ResourceManagerEndpoint is empty",
+			customProfile: &CustomCloudProfile{
+				Environment: &azure.Environment{
+					Name:                         name,
+					ManagementPortalURL:          managementPortalURL,
+					PublishSettingsURL:           publishSettingsURL,
+					ServiceManagementEndpoint:    serviceManagementEndpoint,
+					ResourceManagerEndpoint:      "",
+					ActiveDirectoryEndpoint:      activeDirectoryEndpoint,
+					GalleryEndpoint:              galleryEndpoint,
+					KeyVaultEndpoint:             keyVaultEndpoint,
+					GraphEndpoint:                graphEndpoint,
+					ServiceBusEndpoint:           serviceBusEndpoint,
+					BatchManagementEndpoint:      batchManagementEndpoint,
+					StorageEndpointSuffix:        storageEndpointSuffix,
+					SQLDatabaseDNSSuffix:         sqlDatabaseDNSSuffix,
+					TrafficManagerDNSSuffix:      trafficManagerDNSSuffix,
+					KeyVaultDNSSuffix:            keyVaultDNSSuffix,
+					ServiceBusEndpointSuffix:     serviceBusEndpointSuffix,
+					ServiceManagementVMDNSSuffix: serviceManagementVMDNSSuffix,
+					ResourceManagerVMDNSSuffix:   resourceManagerVMDNSSuffix,
+					ContainerRegistryDNSSuffix:   containerRegistryDNSSuffix,
+					TokenAudience:                tokenAudience,
+				},
+			},
+			expectedErr: errors.New("resourceManagerEndpoint needs to be specified when Environment is provided"),
+		},
+		{
+			name: "activeDirectoryEndpoint is empty",
+			customProfile: &CustomCloudProfile{
+				Environment: &azure.Environment{
+					Name:                         name,
+					ManagementPortalURL:          managementPortalURL,
+					PublishSettingsURL:           publishSettingsURL,
+					ServiceManagementEndpoint:    serviceManagementEndpoint,
+					ResourceManagerEndpoint:      resourceManagerEndpoint,
+					ActiveDirectoryEndpoint:      "",
+					GalleryEndpoint:              galleryEndpoint,
+					KeyVaultEndpoint:             keyVaultEndpoint,
+					GraphEndpoint:                graphEndpoint,
+					ServiceBusEndpoint:           serviceBusEndpoint,
+					BatchManagementEndpoint:      batchManagementEndpoint,
+					StorageEndpointSuffix:        storageEndpointSuffix,
+					SQLDatabaseDNSSuffix:         sqlDatabaseDNSSuffix,
+					TrafficManagerDNSSuffix:      trafficManagerDNSSuffix,
+					KeyVaultDNSSuffix:            keyVaultDNSSuffix,
+					ServiceBusEndpointSuffix:     serviceBusEndpointSuffix,
+					ServiceManagementVMDNSSuffix: serviceManagementVMDNSSuffix,
+					ResourceManagerVMDNSSuffix:   resourceManagerVMDNSSuffix,
+					ContainerRegistryDNSSuffix:   containerRegistryDNSSuffix,
+					TokenAudience:                tokenAudience,
+				},
+			},
+			expectedErr: errors.New("activeDirectoryEndpoint needs to be specified when Environment is provided"),
+		},
+		{
+			name: "graphEndpoint is empty",
+			customProfile: &CustomCloudProfile{
+				Environment: &azure.Environment{
+					Name:                         name,
+					ManagementPortalURL:          managementPortalURL,
+					PublishSettingsURL:           publishSettingsURL,
+					ServiceManagementEndpoint:    serviceManagementEndpoint,
+					ResourceManagerEndpoint:      resourceManagerEndpoint,
+					ActiveDirectoryEndpoint:      activeDirectoryEndpoint,
+					GalleryEndpoint:              galleryEndpoint,
+					KeyVaultEndpoint:             keyVaultEndpoint,
+					GraphEndpoint:                "",
+					ServiceBusEndpoint:           serviceBusEndpoint,
+					BatchManagementEndpoint:      batchManagementEndpoint,
+					StorageEndpointSuffix:        storageEndpointSuffix,
+					SQLDatabaseDNSSuffix:         sqlDatabaseDNSSuffix,
+					TrafficManagerDNSSuffix:      trafficManagerDNSSuffix,
+					KeyVaultDNSSuffix:            keyVaultDNSSuffix,
+					ServiceBusEndpointSuffix:     serviceBusEndpointSuffix,
+					ServiceManagementVMDNSSuffix: serviceManagementVMDNSSuffix,
+					ResourceManagerVMDNSSuffix:   resourceManagerVMDNSSuffix,
+					ContainerRegistryDNSSuffix:   containerRegistryDNSSuffix,
+					TokenAudience:                tokenAudience,
+				},
+			},
+			expectedErr: errors.New("graphEndpoint needs to be specified when Environment is provided"),
+		},
+		{
+			name: "resourceManagerVMDNSSuffix is empty",
+			customProfile: &CustomCloudProfile{
+				Environment: &azure.Environment{
+					Name:                         name,
+					ManagementPortalURL:          managementPortalURL,
+					PublishSettingsURL:           publishSettingsURL,
+					ServiceManagementEndpoint:    serviceManagementEndpoint,
+					ResourceManagerEndpoint:      resourceManagerEndpoint,
+					ActiveDirectoryEndpoint:      activeDirectoryEndpoint,
+					GalleryEndpoint:              galleryEndpoint,
+					KeyVaultEndpoint:             keyVaultEndpoint,
+					GraphEndpoint:                graphEndpoint,
+					ServiceBusEndpoint:           serviceBusEndpoint,
+					BatchManagementEndpoint:      batchManagementEndpoint,
+					StorageEndpointSuffix:        storageEndpointSuffix,
+					SQLDatabaseDNSSuffix:         sqlDatabaseDNSSuffix,
+					TrafficManagerDNSSuffix:      trafficManagerDNSSuffix,
+					KeyVaultDNSSuffix:            keyVaultDNSSuffix,
+					ServiceBusEndpointSuffix:     serviceBusEndpointSuffix,
+					ServiceManagementVMDNSSuffix: serviceManagementVMDNSSuffix,
+					ResourceManagerVMDNSSuffix:   "",
+					ContainerRegistryDNSSuffix:   containerRegistryDNSSuffix,
+					TokenAudience:                tokenAudience,
+				},
+			},
+			expectedErr: errors.New("resourceManagerVMDNSSuffix needs to be specified when Environment is provided"),
+		},
+	}
+
+	for _, test := range tests {
+		test := test
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+			p := getK8sDefaultProperties(true)
+			p.CustomCloudProfile = test.customProfile
+			gotErr := p.validateCustomCloudProfile()
+			if !helpers.EqualError(gotErr, test.expectedErr) {
+				t.Logf("scenario %q", test.name)
+				t.Errorf("expected error: %v, got: %v", test.expectedErr, gotErr)
+			}
+		})
+	}
 }

@@ -51,6 +51,10 @@ func (cs *ContainerService) SetPropertiesDefaults(isUpgrade, isScale bool) (bool
 		properties.setHostedMasterProfileDefaults()
 	}
 
+	// Set custom cloud profile defaults if this cluster configuration has custom cloud profile
+	if cs.Properties.CustomCloudProfile != nil {
+		properties.setCustomCloudProfileDefaults()
+	}
 	certsGenerated, _, e := properties.setDefaultCerts()
 	if e != nil {
 		return false, e
@@ -103,6 +107,9 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpdate bool) {
 		}
 		if o.KubernetesConfig.EtcdVersion == "" {
 			o.KubernetesConfig.EtcdVersion = DefaultEtcdVersion
+		}
+		if o.KubernetesConfig.MobyVersion == "" {
+			o.KubernetesConfig.MobyVersion = DefaultMobyVersion
 		}
 		if a.HasWindows() {
 			if o.KubernetesConfig.NetworkPlugin == "" {
@@ -225,6 +232,13 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpdate bool) {
 			} else {
 				a.OrchestratorProfile.KubernetesConfig.AzureCNIVersion = AzureCniPluginVerLinux
 			}
+		}
+
+		if a.OrchestratorProfile.KubernetesConfig.MaximumLoadBalancerRuleCount == 0 {
+			a.OrchestratorProfile.KubernetesConfig.MaximumLoadBalancerRuleCount = DefaultMaximumLoadBalancerRuleCount
+		}
+		if a.OrchestratorProfile.KubernetesConfig.ProxyMode == "" {
+			a.OrchestratorProfile.KubernetesConfig.ProxyMode = DefaultKubeProxyMode
 		}
 
 		// Configure addons
@@ -514,20 +528,27 @@ func (p *Properties) setDefaultCerts() (bool, []net.IP, error) {
 
 	var azureProdFQDNs []string
 	for _, location := range helpers.GetAzureLocations() {
-		azureProdFQDNs = append(azureProdFQDNs, FormatAzureProdFQDNByLocation(p.MasterProfile.DNSPrefix, location))
+		azureProdFQDNs = append(azureProdFQDNs, FormatProdFQDNByLocation(p.MasterProfile.DNSPrefix, location, p.GetCustomCloudName()))
 	}
 
 	masterExtraFQDNs := append(azureProdFQDNs, p.MasterProfile.SubjectAltNames...)
+	masterExtraFQDNs = append(masterExtraFQDNs, "localhost")
 	firstMasterIP := net.ParseIP(p.MasterProfile.FirstConsecutiveStaticIP).To4()
+	localhostIP := net.ParseIP("127.0.0.1").To4()
 
 	if firstMasterIP == nil {
 		return false, nil, errors.Errorf("MasterProfile.FirstConsecutiveStaticIP '%s' is an invalid IP address", p.MasterProfile.FirstConsecutiveStaticIP)
 	}
 
-	ips := []net.IP{firstMasterIP}
-	// Add the Internal Loadbalancer IP which is always at at p known offset from the firstMasterIP
-	ips = append(ips, net.IP{firstMasterIP[0], firstMasterIP[1], firstMasterIP[2], firstMasterIP[3] + byte(DefaultInternalLbStaticIPOffset)})
+	ips := []net.IP{firstMasterIP, localhostIP}
+
 	// Include the Internal load balancer as well
+	if p.MasterProfile.IsVirtualMachineScaleSets() {
+		ips = append(ips, net.IP{firstMasterIP[0], firstMasterIP[1], byte(255), byte(DefaultInternalLbStaticIPOffset)})
+	} else {
+		// Add the Internal Loadbalancer IP which is always at p known offset from the firstMasterIP
+		ips = append(ips, net.IP{firstMasterIP[0], firstMasterIP[1], firstMasterIP[2], firstMasterIP[3] + byte(DefaultInternalLbStaticIPOffset)})
+	}
 
 	var offsetMultiplier int
 	if p.MasterProfile.IsVirtualMachineScaleSets() {

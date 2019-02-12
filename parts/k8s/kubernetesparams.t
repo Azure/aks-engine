@@ -319,6 +319,19 @@
       },
       "type": "string"
     },
+    "mobyVersion": {
+      "defaultValue": "3.0.4",
+      "metadata": {
+        "description": "The Azure Moby build version"
+      },
+      "allowedValues": [
+         "3.0.1",
+         "3.0.2",
+         "3.0.3",
+         "3.0.4"
+       ],
+      "type": "string"
+    },
     "networkPolicy": {
       "defaultValue": "{{.OrchestratorProfile.KubernetesConfig.NetworkPolicy}}",
       "metadata": {
