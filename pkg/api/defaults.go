@@ -51,6 +51,10 @@ func (cs *ContainerService) SetPropertiesDefaults(isUpgrade, isScale bool) (bool
 		properties.setHostedMasterProfileDefaults()
 	}
 
+	// Set custom cloud profile defaults if this cluster configuration has custom cloud profile
+	if cs.Properties.CustomCloudProfile != nil {
+		properties.setCustomCloudProfileDefaults()
+	}
 	certsGenerated, _, e := properties.setDefaultCerts()
 	if e != nil {
 		return false, e
@@ -524,7 +528,7 @@ func (p *Properties) setDefaultCerts() (bool, []net.IP, error) {
 
 	var azureProdFQDNs []string
 	for _, location := range helpers.GetAzureLocations() {
-		azureProdFQDNs = append(azureProdFQDNs, FormatAzureProdFQDNByLocation(p.MasterProfile.DNSPrefix, location))
+		azureProdFQDNs = append(azureProdFQDNs, FormatProdFQDNByLocation(p.MasterProfile.DNSPrefix, location, p.GetCustomCloudName()))
 	}
 
 	masterExtraFQDNs := append(azureProdFQDNs, p.MasterProfile.SubjectAltNames...)
