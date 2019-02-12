@@ -117,7 +117,10 @@ func TestOrchestratorVersion(t *testing.T) {
 			},
 		},
 	}
-	cs = ConvertVLabsContainerService(vlabscs, false)
+	cs, err := ConvertVLabsContainerService(vlabscs, false)
+	if err != nil {
+		t.Fatalf("Failed to convert ContainerService, error: %s", err)
+	}
 	if cs.Properties.OrchestratorProfile.OrchestratorVersion != common.GetDefaultKubernetesVersion(false) {
 		t.Fatalf("incorrect OrchestratorVersion '%s'", cs.Properties.OrchestratorProfile.OrchestratorVersion)
 	}
@@ -130,10 +133,45 @@ func TestOrchestratorVersion(t *testing.T) {
 			},
 		},
 	}
-	cs = ConvertVLabsContainerService(vlabscs, false)
+	cs, err = ConvertVLabsContainerService(vlabscs, false)
+	if err != nil {
+		t.Fatalf("Failed to convert ContainerService, error: %s", err)
+	}
 	if cs.Properties.OrchestratorProfile.OrchestratorVersion != "1.7.15" {
 		t.Fatalf("incorrect OrchestratorVersion '%s'", cs.Properties.OrchestratorProfile.OrchestratorVersion)
 	}
+}
+
+func TestKubernetesOrchestratorVersionFailWhenInvalid(t *testing.T) {
+	vlabscs := &vlabs.ContainerService{
+		Properties: &vlabs.Properties{
+			OrchestratorProfile: &vlabs.OrchestratorProfile{
+				OrchestratorType:    vlabs.Kubernetes,
+				OrchestratorVersion: "1.10.8",
+			},
+		},
+	}
+
+	_, err := ConvertVLabsContainerService(vlabscs, false)
+	if err == nil {
+		t.Error("1.10.8 is not a valid version and should fail, but didn't")
+	}
+
+	vlabscs.Properties.OrchestratorProfile.OrchestratorRelease = "1.9"
+	vlabscs.Properties.OrchestratorProfile.OrchestratorVersion = "1.10.7"
+	_, err = ConvertVLabsContainerService(vlabscs, false)
+	if err == nil {
+		t.Fatalf("release 1.9 is incoherent with 1.10.7 and should fail, but didn't")
+	}
+
+	vlabscs.Properties.OrchestratorProfile.OrchestratorVersion = "whatever"
+	vlabscs.Properties.OrchestratorProfile.OrchestratorRelease = "1.10.8"
+
+	_, err = ConvertVLabsContainerService(vlabscs, false)
+	if err == nil {
+		t.Fatalf("garbage version string should fail, but didn't")
+	}
+
 }
 
 func TestKubernetesVlabsDefaults(t *testing.T) {
@@ -280,7 +318,10 @@ func TestCustomCloudProfile(t *testing.T) {
 		},
 	}
 
-	cs := ConvertVLabsContainerService(vlabscs, false)
+	cs, err := ConvertVLabsContainerService(vlabscs, false)
+	if err != nil {
+		t.Fatalf("failed to convert: '%s'", err)
+	}
 	if cs.Properties.CustomCloudProfile.Environment.Name != name {
 		t.Fatalf("incorrect Name, expect: '%s', actual: '%s'", name, cs.Properties.CustomCloudProfile.Environment.Name)
 	}

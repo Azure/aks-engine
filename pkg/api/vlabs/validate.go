@@ -113,7 +113,7 @@ func (a *Properties) Validate(isUpdate bool) error {
 	if e := validate.Struct(a); e != nil {
 		return handleValidationErrors(e.(validator.ValidationErrors))
 	}
-	if e := a.validateOrchestratorProfile(isUpdate); e != nil {
+	if e := a.ValidateOrchestratorProfile(isUpdate); e != nil {
 		return e
 	}
 	if e := a.validateMasterProfile(); e != nil {
@@ -162,7 +162,8 @@ func handleValidationErrors(e validator.ValidationErrors) error {
 	return common.HandleValidationErrors(e)
 }
 
-func (a *Properties) validateOrchestratorProfile(isUpdate bool) error {
+//ValidateOrchestratorProfile validates the orchestrator profile and the addons dependent on the version of the orchestrator
+func (a *Properties) ValidateOrchestratorProfile(isUpdate bool) error {
 	o := a.OrchestratorProfile
 	// On updates we only need to make sure there is a supported patch version for the minor version
 	if !isUpdate {

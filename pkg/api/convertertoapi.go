@@ -103,7 +103,7 @@ func ConvertV20170701ContainerService(v20170701 *v20170701.ContainerService, isU
 }
 
 // ConvertVLabsContainerService converts a vlabs ContainerService to an unversioned ContainerService
-func ConvertVLabsContainerService(vlabs *vlabs.ContainerService, isUpdate bool) *ContainerService {
+func ConvertVLabsContainerService(vlabs *vlabs.ContainerService, isUpdate bool) (*ContainerService, error) {
 	c := &ContainerService{}
 	c.ID = vlabs.ID
 	c.Location = helpers.NormalizeAzureRegion(vlabs.Location)
@@ -118,8 +118,10 @@ func ConvertVLabsContainerService(vlabs *vlabs.ContainerService, isUpdate bool) 
 	}
 	c.Type = vlabs.Type
 	c.Properties = &Properties{}
-	convertVLabsProperties(vlabs.Properties, c.Properties, isUpdate)
-	return c
+	if err := convertVLabsProperties(vlabs.Properties, c.Properties, isUpdate); err != nil {
+		return nil, err
+	}
+	return c, nil
 }
 
 // convertV20160930ResourcePurchasePlan converts a v20160930 ResourcePurchasePlan to an unversioned ResourcePurchasePlan
@@ -350,11 +352,13 @@ func convertV20170701Properties(v20170701 *v20170701.Properties, api *Properties
 	}
 }
 
-func convertVLabsProperties(vlabs *vlabs.Properties, api *Properties, isUpdate bool) {
+func convertVLabsProperties(vlabs *vlabs.Properties, api *Properties, isUpdate bool) error {
 	api.ProvisioningState = ProvisioningState(vlabs.ProvisioningState)
 	if vlabs.OrchestratorProfile != nil {
 		api.OrchestratorProfile = &OrchestratorProfile{}
-		convertVLabsOrchestratorProfile(vlabs, api.OrchestratorProfile, isUpdate)
+		if err := convertVLabsOrchestratorProfile(vlabs, api.OrchestratorProfile, isUpdate); err != nil {
+			return err
+		}
 	}
 	if vlabs.MasterProfile != nil {
 		api.MasterProfile = &MasterProfile{}
@@ -409,6 +413,8 @@ func convertVLabsProperties(vlabs *vlabs.Properties, api *Properties, isUpdate b
 		api.CustomCloudProfile = &CustomCloudProfile{}
 		convertVLabsCustomCloudProfile(vlabs.CustomCloudProfile, api.CustomCloudProfile)
 	}
+
+	return nil
 }
 
 func convertVLabsFeatureFlags(vlabs *vlabs.FeatureFlags, api *FeatureFlags) {
@@ -588,7 +594,7 @@ func convertV20170701OrchestratorProfile(v20170701cs *v20170701.OrchestratorProf
 	}
 }
 
-func convertVLabsOrchestratorProfile(vp *vlabs.Properties, api *OrchestratorProfile, isUpdate bool) {
+func convertVLabsOrchestratorProfile(vp *vlabs.Properties, api *OrchestratorProfile, isUpdate bool) error {
 	vlabscs := vp.OrchestratorProfile
 	api.OrchestratorType = vlabscs.OrchestratorType
 	switch api.OrchestratorType {
@@ -598,12 +604,19 @@ func convertVLabsOrchestratorProfile(vp *vlabs.Properties, api *OrchestratorProf
 			convertVLabsKubernetesConfig(vlabscs.KubernetesConfig, api.KubernetesConfig)
 		}
 		setVlabsKubernetesDefaults(vp, api)
+
+		// TODO (hack): this validation should be done as part of the main validation, but deploy does it only after loading the container.
+		if err := vp.ValidateOrchestratorProfile(isUpdate); err != nil {
+			return err
+		}
+
 		api.OrchestratorVersion = common.RationalizeReleaseAndVersion(
 			vlabscs.OrchestratorType,
 			vlabscs.OrchestratorRelease,
 			vlabscs.OrchestratorVersion,
 			isUpdate,
 			vp.HasWindows())
+
 	case DCOS:
 		if vlabscs.DcosConfig != nil {
 			api.DcosConfig = &DcosConfig{}
@@ -616,6 +629,8 @@ func convertVLabsOrchestratorProfile(vp *vlabs.Properties, api *OrchestratorProf
 			isUpdate,
 			false)
 	}
+
+	return nil
 }
 
 func convertVLabsDcosConfig(vlabs *vlabs.DcosConfig, api *DcosConfig) {
