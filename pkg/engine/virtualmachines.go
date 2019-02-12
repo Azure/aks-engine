@@ -474,6 +474,7 @@ func getArmDataDisks(profile *api.AgentPoolProfile) *[]compute.DataDisk {
 			DiskSizeGB:   to.Int32Ptr(int32(diskSize)),
 			Lun:          to.Int32Ptr(int32(i)),
 			CreateOption: compute.DiskCreateOptionTypesEmpty,
+			Caching:      compute.CachingTypesReadOnly,
 		}
 		if profile.StorageProfile == api.StorageAccount {
 			dataDisk.Name = to.StringPtr(fmt.Sprintf("[concat(variables('%sVMNamePrefix'), copyIndex(),'-datadisk%d')]", profile.Name, i))
