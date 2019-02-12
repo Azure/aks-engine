@@ -439,7 +439,7 @@ func TestConvertAzureEnvironmentSpecConfig(t *testing.T) {
 	}
 	cs, err := ConvertVLabsContainerService(vlabscs, false)
 	if err != nil {
-		t.Errorf("unexpected error: '%s' ", err)
+		t.Fatalf("Failed to convert ContainerService, error: %s", err)
 	}
 
 	csSpec := cs.Properties.CustomCloudProfile.AzureEnvironmentSpecConfig
