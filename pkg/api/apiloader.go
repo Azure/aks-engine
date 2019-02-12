@@ -208,7 +208,12 @@ func (a *Apiloader) LoadContainerService(
 		if e := containerService.Properties.Validate(isUpdate); validate && e != nil {
 			return nil, e
 		}
-		unversioned := ConvertVLabsContainerService(containerService, isUpdate)
+
+		var unversioned *ContainerService
+		var err error
+		if unversioned, err = ConvertVLabsContainerService(containerService, isUpdate); err != nil {
+			return nil, err
+		}
 		if curOrchVersion != "" &&
 			(containerService.Properties.OrchestratorProfile == nil ||
 				(containerService.Properties.OrchestratorProfile.OrchestratorVersion == "" &&

@@ -258,7 +258,7 @@ func Test_OrchestratorProfile_Validate(t *testing.T) {
 		test := test
 		t.Run(testName, func(t *testing.T) {
 			t.Parallel()
-			err := test.properties.validateOrchestratorProfile(test.isUpdate)
+			err := test.properties.ValidateOrchestratorProfile(test.isUpdate)
 
 			if test.expectedError == "" && err == nil {
 				return
@@ -2442,6 +2442,34 @@ func TestValidateCustomCloudProfile(t *testing.T) {
 				},
 			},
 			expectedErr: errors.New("graphEndpoint needs to be specified when Environment is provided"),
+		},
+		{
+			name: "resourceManagerVMDNSSuffix is empty",
+			customProfile: &CustomCloudProfile{
+				Environment: &azure.Environment{
+					Name:                         name,
+					ManagementPortalURL:          managementPortalURL,
+					PublishSettingsURL:           publishSettingsURL,
+					ServiceManagementEndpoint:    serviceManagementEndpoint,
+					ResourceManagerEndpoint:      resourceManagerEndpoint,
+					ActiveDirectoryEndpoint:      activeDirectoryEndpoint,
+					GalleryEndpoint:              galleryEndpoint,
+					KeyVaultEndpoint:             keyVaultEndpoint,
+					GraphEndpoint:                graphEndpoint,
+					ServiceBusEndpoint:           serviceBusEndpoint,
+					BatchManagementEndpoint:      batchManagementEndpoint,
+					StorageEndpointSuffix:        storageEndpointSuffix,
+					SQLDatabaseDNSSuffix:         sqlDatabaseDNSSuffix,
+					TrafficManagerDNSSuffix:      trafficManagerDNSSuffix,
+					KeyVaultDNSSuffix:            keyVaultDNSSuffix,
+					ServiceBusEndpointSuffix:     serviceBusEndpointSuffix,
+					ServiceManagementVMDNSSuffix: serviceManagementVMDNSSuffix,
+					ResourceManagerVMDNSSuffix:   "",
+					ContainerRegistryDNSSuffix:   containerRegistryDNSSuffix,
+					TokenAudience:                tokenAudience,
+				},
+			},
+			expectedErr: errors.New("resourceManagerVMDNSSuffix needs to be specified when Environment is provided"),
 		},
 	}
 

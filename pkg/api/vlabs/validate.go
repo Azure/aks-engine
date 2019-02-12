@@ -113,7 +113,7 @@ func (a *Properties) Validate(isUpdate bool) error {
 	if e := validate.Struct(a); e != nil {
 		return handleValidationErrors(e.(validator.ValidationErrors))
 	}
-	if e := a.validateOrchestratorProfile(isUpdate); e != nil {
+	if e := a.ValidateOrchestratorProfile(isUpdate); e != nil {
 		return e
 	}
 	if e := a.validateMasterProfile(); e != nil {
@@ -162,7 +162,8 @@ func handleValidationErrors(e validator.ValidationErrors) error {
 	return common.HandleValidationErrors(e)
 }
 
-func (a *Properties) validateOrchestratorProfile(isUpdate bool) error {
+//ValidateOrchestratorProfile validates the orchestrator profile and the addons dependent on the version of the orchestrator
+func (a *Properties) ValidateOrchestratorProfile(isUpdate bool) error {
 	o := a.OrchestratorProfile
 	// On updates we only need to make sure there is a supported patch version for the minor version
 	if !isUpdate {
@@ -1299,20 +1300,23 @@ func (a *Properties) validateCustomCloudProfile() error {
 		if a.CustomCloudProfile.Environment == nil {
 			return errors.New("environment needs to be specified when CustomCloudProfile is provided")
 		}
-		if len(a.CustomCloudProfile.Environment.Name) == 0 {
+		if a.CustomCloudProfile.Environment.Name == "" {
 			return errors.New("name needs to be specified when Environment is provided")
 		}
-		if len(a.CustomCloudProfile.Environment.ServiceManagementEndpoint) == 0 {
+		if a.CustomCloudProfile.Environment.ServiceManagementEndpoint == "" {
 			return errors.New("serviceManagementEndpoint needs to be specified when Environment is provided")
 		}
-		if len(a.CustomCloudProfile.Environment.ResourceManagerEndpoint) == 0 {
+		if a.CustomCloudProfile.Environment.ResourceManagerEndpoint == "" {
 			return errors.New("resourceManagerEndpoint needs to be specified when Environment is provided")
 		}
-		if len(a.CustomCloudProfile.Environment.ActiveDirectoryEndpoint) == 0 {
+		if a.CustomCloudProfile.Environment.ActiveDirectoryEndpoint == "" {
 			return errors.New("activeDirectoryEndpoint needs to be specified when Environment is provided")
 		}
-		if len(a.CustomCloudProfile.Environment.GraphEndpoint) == 0 {
+		if a.CustomCloudProfile.Environment.GraphEndpoint == "" {
 			return errors.New("graphEndpoint needs to be specified when Environment is provided")
+		}
+		if a.CustomCloudProfile.Environment.ResourceManagerVMDNSSuffix == "" {
+			return errors.New("resourceManagerVMDNSSuffix needs to be specified when Environment is provided")
 		}
 	}
 	return nil
