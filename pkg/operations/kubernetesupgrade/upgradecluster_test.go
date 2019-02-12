@@ -217,7 +217,7 @@ var _ = Describe("Upgrade Kubernetes cluster tests", func() {
 		err := uc.UpgradeCluster(&mockClient, "kubeConfig", TestAKSEngineVersion)
 		Expect(err).NotTo(BeNil())
 		fmt.Print("GOT :   ", err.Error())
-		Expect(err.Error()).To(ContainSubstring("Error while querying ARM for resources: Kubernetes:1.9.10 cannot be upgraded to 1.9.0"))
+		Expect(err.Error()).To(ContainSubstring("Error while querying ARM for resources: 1.9.10 cannot be upgraded to 1.9.0"))
 	})
 
 	It("Should return error message when failing to delete role assignment during upgrade operation", func() {
