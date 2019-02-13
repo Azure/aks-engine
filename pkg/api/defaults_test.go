@@ -189,7 +189,7 @@ func TestAssignDefaultAddonImages(t *testing.T) {
 		DefaultTillerAddonName:             "gcr.io/kubernetes-helm/tiller:v2.11.0",
 		DefaultACIConnectorAddonName:       "microsoft/virtual-kubelet:latest",
 		DefaultClusterAutoscalerAddonName:  "k8s.gcr.io/cluster-autoscaler:v1.2.2",
-		DefaultBlobfuseFlexVolumeAddonName: "mcr.microsoft.com/k8s/flexvolume/blobfuse-flexvolume:1.0.7",
+		DefaultBlobfuseFlexVolumeAddonName: "mcr.microsoft.com/k8s/flexvolume/blobfuse-flexvolume:1.0.8",
 		DefaultSMBFlexVolumeAddonName:      "mcr.microsoft.com/k8s/flexvolume/smb-flexvolume:1.0.2",
 		DefaultKeyVaultFlexVolumeAddonName: "mcr.microsoft.com/k8s/flexvolume/keyvault-flexvolume:v0.0.7",
 		DefaultDashboardAddonName:          "k8s.gcr.io/kubernetes-dashboard-amd64:v1.10.1",
