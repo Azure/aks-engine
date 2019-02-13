@@ -6,6 +6,7 @@ package api
 import (
 	"encoding/base64"
 	"encoding/binary"
+	"fmt"
 	"net"
 	"reflect"
 	"testing"
@@ -1262,7 +1263,7 @@ func TestSetCertDefaults(t *testing.T) {
 
 	cs.setOrchestratorDefaults(false)
 	cs.Properties.setMasterProfileDefaults(false)
-	result, ips, err := cs.Properties.setDefaultCerts()
+	result, ips, err := cs.setDefaultCerts()
 
 	if !result {
 		t.Error("expected setDefaultCerts to return true")
@@ -1328,7 +1329,7 @@ func TestSetCertDefaultsVMSS(t *testing.T) {
 
 	cs.setOrchestratorDefaults(false)
 	cs.Properties.setMasterProfileDefaults(false)
-	result, ips, err := cs.Properties.setDefaultCerts()
+	result, ips, err := cs.setDefaultCerts()
 
 	if !result {
 		t.Error("expected setDefaultCerts to return true")
@@ -1548,6 +1549,23 @@ func TestSetCustomCloudProfileDefaults(t *testing.T) {
 	}
 	if mockCSCustomP.Properties.CustomCloudProfile.AzureEnvironmentSpecConfig.KubernetesSpecConfig.VnetCNIWindowsPluginsDownloadURL != DefaultKubernetesSpecConfig.VnetCNIWindowsPluginsDownloadURL {
 		t.Errorf("setCustomCloudProfileDefaults(): did not set VnetCNIWindowsPluginsDownloadURL with default Value, got '%s', expected %s", mockCSCustomP.Properties.CustomCloudProfile.AzureEnvironmentSpecConfig.KubernetesSpecConfig.VnetCNIWindowsPluginsDownloadURL, DefaultKubernetesSpecConfig.VnetCNIWindowsPluginsDownloadURL)
+	}
+}
+
+func TestCustomCloudLocation(t *testing.T) {
+
+	// Test that the ResourceManagerVMDNSSuffix is set in EndpointConfig
+	mockCS := getMockBaseContainerService("1.11.6")
+	mockCSP := getMockPropertiesWithCustomCloudProfile("AzureStackCloud", true, true, true)
+	mockCS.Properties = &mockCSP
+	mockCS.SetPropertiesDefaults(false, false)
+	dnsPrefix := "santest"
+	actual := []string{FormatProdFQDNByLocation(dnsPrefix, mockCS.Location, "AzureStackCloud")}
+
+	expected := []string{fmt.Sprintf("%s.%s.%s", dnsPrefix, mockCS.Location, AzureCloudSpecEnvMap[AzureStackCloud].EndpointConfig.ResourceManagerVMDNSSuffix)}
+
+	if !reflect.DeepEqual(actual, expected) {
+		t.Errorf("expected formatted fqdns %s, but got %s", expected, actual)
 	}
 }
 

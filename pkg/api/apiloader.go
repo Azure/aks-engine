@@ -205,6 +205,9 @@ func (a *Apiloader) LoadContainerService(
 		if containerService.Properties == nil {
 			return nil, errors.New("missing ContainerService Properties")
 		}
+		if containerService.Properties.IsAzureStackCloud() && containerService.Location == "" {
+			return nil, errors.New("missing ContainerService Location")
+		}
 		if e := containerService.Properties.Validate(isUpdate); validate && e != nil {
 			return nil, e
 		}
