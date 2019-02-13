@@ -5,13 +5,13 @@ package api
 
 import (
 	"github.com/Azure/go-autorest/autorest/to"
-	uuid "github.com/satori/go.uuid"
+	"github.com/gofrs/uuid"
 )
 
 // CreateMockAgentPoolProfile creates a mock AgentPoolResource for testing
 func CreateMockAgentPoolProfile(agentPoolName, orchestratorVersion string, provisioningState ProvisioningState, agentCount int) *AgentPoolResource {
 	agentPoolResource := AgentPoolResource{}
-	agentPoolResource.ID = uuid.NewV4().String()
+	agentPoolResource.ID = uuid.Must(uuid.NewV4()).String()
 	agentPoolResource.Location = "westus2"
 	agentPoolResource.Name = agentPoolName
 
@@ -27,7 +27,7 @@ func CreateMockAgentPoolProfile(agentPoolName, orchestratorVersion string, provi
 // CreateMockContainerService returns a mock container service for testing purposes
 func CreateMockContainerService(containerServiceName, orchestratorVersion string, masterCount, agentCount int, certs bool) *ContainerService {
 	cs := ContainerService{}
-	cs.ID = uuid.NewV4().String()
+	cs.ID = uuid.Must(uuid.NewV4()).String()
 	cs.Location = "eastus"
 	cs.Name = containerServiceName
 

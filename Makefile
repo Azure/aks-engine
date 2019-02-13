@@ -126,9 +126,9 @@ test-style:
 	@scripts/validate-go.sh
 
 .PHONY: validate-generated
-validate-generated: generate
+validate-generated:
 	@echo "==> Checking generated files <=="
-	! git diff --name-only pkg/ | grep _generated.go
+	@scripts/validate-generated.sh
 
 .PHONY: test-e2e
 test-e2e:
