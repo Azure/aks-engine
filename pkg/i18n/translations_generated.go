@@ -39,8 +39,6 @@
 // ../../translations/zh_CN/LC_MESSAGES/acsengine.po
 // ../../translations/zh_TW/LC_MESSAGES/acsengine.mo
 // ../../translations/zh_TW/LC_MESSAGES/acsengine.po
-// DO NOT EDIT!
-
 package i18n
 
 import (
