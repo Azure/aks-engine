@@ -137,6 +137,13 @@ func (cs *ContainerService) setAPIServerConfig() {
 			delete(o.KubernetesConfig.APIServerConfig, key)
 		}
 	}
+	// Enforce flags removal that don't work with specific versions, to accommodate upgrade
+	// Remove flags that are not compatible with 1.14
+	if common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.14.0-alpha.1") {
+		for _, key := range []string{"--repair-malformed-updates"} {
+			delete(o.KubernetesConfig.APIServerConfig, key)
+		}
+	}
 }
 
 func getDefaultAdmissionControls(cs *ContainerService) (string, string) {
