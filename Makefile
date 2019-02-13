@@ -126,7 +126,7 @@ test-style:
 	@scripts/validate-go.sh
 
 .PHONY: validate-generated
-validate-generated: generate
+validate-generated:
 	@echo "==> Checking generated files <=="
 	@scripts/validate-generated.sh
 
