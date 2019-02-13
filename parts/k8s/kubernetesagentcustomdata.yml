@@ -137,12 +137,6 @@ write_files:
     # These settings, and other Node settings are put in place by AKS. Do not attempt to change these values as any alterations will be removed by the service
     # This setting disabled the linux OOM killer and sets panic on OOM to prevent partial node failures in out of memory conditions
     vm.panic_on_oom = 1
-
-- path: /etc/sysctl.d/10-reboot-on-panic.conf
-  permissions: "0644"
-  owner: root
-  content: |
-    # These settings, and other Node settings are put in place by AKS. Do not attempt to change these values as any alterations will be removed by the service
     # This setting instructs the kernel to reboot 30 seconds after a panic event to allow the node to automatically recover
     kernel.panic = 30
 
