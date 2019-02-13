@@ -1,0 +1,72 @@
+groups:
+  - etcd
+users:
+  - default
+  - name: etcd
+    gecos: etcd user
+    groups: etcd
+    inactive: true
+    system: true
+     no_create_home: true
+write_files:
+-   path: /etc/systemd/system/etcd.service
+    content: |
+        [Unit]
+        Description=etcd - highly-available key value store
+        Documentation=https://github.com/coreos/etcd
+        Documentation=man:etcd
+        After=network.target
+        Wants=network-online.target
+        [Service]
+        Environment=DAEMON_ARGS=
+        Environment=ETCD_NAME=%H
+        Environment=ETCD_DATA_DIR=
+        EnvironmentFile=-/etc/default/%p
+        Type=notify
+        User=etcd
+        PermissionsStartOnly=true
+        ExecStart=/usr/bin/etcd $DAEMON_ARGS
+        Restart=always
+        [Install]
+        WantedBy=multi-user.target 
+-   path: /etc/default/etcd
+    encoding: b64
+    content: <ETCD_ENV>
+-   path: /etc/kubernetes/certs/peer.ca.crt
+    encoding: b64
+    owner: etcd:etcd
+    content: <PEER_CA>
+-   path: /etc/kubernetes/certs/peer.crt
+    encoding: b64
+    owner: etcd:etcd
+    content: <PEER_CRT>
+-   path: /etc/kubernetes/certs/peer.key
+    encoding: b64
+    owner: etcd:etcd
+    content: <PEER_KEY>
+-   path: /etc/kubernetes/certs/server.crt
+    encoding: b64
+    owner: etcd:etcd
+    content: <SERVER_CRT>
+-   path: /etc/kubernetes/certs/server.key
+    encoding: b64
+    owner: etcd:etcd
+    content: <SERVER_KEY>
+-   path: /etc/kubernetes/certs/client.ca.crt
+    encoding: b64
+    owner: etcd:etcd
+    content: <CLIENT_CA>
+
+# Run all install commands
+runcmd:
+#replace hostname in etcd env file
+ - [ sed, -i, "s/SERVER_NAME/$(hostname)/g", "/etc/default/etcd" ]
+# etcd install
+ - [ mkdir, -p, /usr/bin/etcd ]
+ - [ bash, -c, "cd /usr/bin/etcd && wget https://github.com/etcd-io/etcd/releases/download/v${RELEASE}/etcd-v<ETCD_VERSION>-linux-amd64.tar.gz" ]
+ - [bash, -c, "cd /usr/bin/etcd && tar xvf etcd-v<ETCD_VERSION>-linux-amd64.tar.gz" ]
+ - [ mkdir, -p, /var/lib/etcddisk ]
+# run etcd
+ - [ systemctl, daemon-reload ]
+ - [ systemctl, enable, etcd.service ]
+ - [ systemctl, start, --no-block, etcd.service ]
