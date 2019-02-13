@@ -252,3 +252,148 @@ func TestLoadContainerServiceWithNilProperties(t *testing.T) {
 		t.Errorf("Expected error with message %s but got %s", expectedMsg, err.Error())
 	}
 }
+
+func TestLoadContainerServiceWithEmptyLocationCustomCloud(t *testing.T) {
+	jsonWithoutlocationcustomcloud := `{
+		"apiVersion": "vlabs",
+		"properties": {
+			"orchestratorProfile": {
+				"orchestratorType": "Kubernetes",
+				"orchestratorRelease": "1.11",
+				"kubernetesConfig": {
+					"kubernetesImageBase": "msazurestackqa/",
+					"useInstanceMetadata": false,
+					"networkPolicy": "none"
+				}
+			},
+			"customCloudProfile": {
+				"environment": {
+					"name": "AzureStackCloud",
+					"managementPortalURL": "",
+					"publishSettingsURL": "",
+					"serviceManagementEndpoint": "https://management.azurestackci15.onmicrosoft.com/36f71706-54df-4305-9847-5b038a4cf189",
+					"resourceManagerEndpoint": "https://management.local.azurestack.external/",
+					"activeDirectoryEndpoint": "https://login.windows.net/",
+					"galleryEndpoint": "https://portal.local.azurestack.external:30015/",
+					"keyVaultEndpoint": "",
+					"graphEndpoint": "https://graph.windows.net/",
+					"storageEndpointSuffix": "local.azurestack.external",
+					"sqlDatabaseDNSSuffix": "",
+					"trafficManagerDNSSuffix": "",
+					"keyVaultDNSSuffix": "vault.local.azurestack.external",
+					"serviceBusEndpointSuffix": "",
+					"serviceManagementVMDNSSuffix": "cloudapp.net",
+					"resourceManagerVMDNSSuffix": "cloudapp.azurestack.external",
+					"containerRegistryDNSSuffix": ""
+				}
+			},
+			"masterProfile": {
+				"dnsPrefix": "k111006",
+				"distro": "ubuntu",
+				"osDiskSizeGB": 200,
+				"count": 3,
+				"vmSize": "Standard_D2_v2"
+			},
+			"agentPoolProfiles": [
+				{
+					"name": "linuxpool",
+					"osDiskSizeGB": 200,
+					"count": 3,
+					"vmSize": "Standard_D2_v2",
+					"distro": "ubuntu",
+					"availabilityProfile": "AvailabilitySet",
+					"AcceleratedNetworkingEnabled": false
+				}
+			],
+			"linuxProfile": {
+				"adminUsername": "azureuser",
+				"ssh": {
+					"publicKeys": [
+						{
+							"keyData": "ssh-rsa PblicKey"
+						}
+					]
+				}
+			},
+			"servicePrincipalProfile": {
+				"clientId": "clientId",
+				"secret": "secret"
+			}
+		}
+	}`
+
+	tmpFile, err := ioutil.TempFile("", "containerService-nolocation")
+	fileName := tmpFile.Name()
+	defer os.Remove(fileName)
+
+	err = ioutil.WriteFile(fileName, []byte(jsonWithoutlocationcustomcloud), os.ModeAppend)
+
+	apiloader := &Apiloader{}
+	_, _, err = apiloader.LoadContainerServiceFromFile(fileName, true, false, nil)
+	if err == nil {
+		t.Errorf("Expected error for missing loation to be thrown")
+	}
+	expectedMsg := "missing ContainerService Location"
+	if err.Error() != expectedMsg {
+		t.Errorf("Expected error with message %s but got %s", expectedMsg, err.Error())
+	}
+
+	jsonWithoutlocationpubliccloud := `{
+		"apiVersion": "vlabs",
+		"properties": {
+			"orchestratorProfile": {
+				"orchestratorType": "Kubernetes",
+				"orchestratorRelease": "1.11",
+				"kubernetesConfig": {
+					"kubernetesImageBase": "msazurestackqa/",
+					"useInstanceMetadata": false,
+					"networkPolicy": "none"
+				}
+			},
+			"masterProfile": {
+				"dnsPrefix": "k111006",
+				"distro": "ubuntu",
+				"osDiskSizeGB": 200,
+				"count": 3,
+				"vmSize": "Standard_D2_v2"
+			},
+			"agentPoolProfiles": [
+				{
+					"name": "linuxpool",
+					"osDiskSizeGB": 200,
+					"count": 3,
+					"vmSize": "Standard_D2_v2",
+					"distro": "ubuntu",
+					"availabilityProfile": "AvailabilitySet",
+					"AcceleratedNetworkingEnabled": false
+				}
+			],
+			"linuxProfile": {
+				"adminUsername": "azureuser",
+				"ssh": {
+					"publicKeys": [
+						{
+							"keyData": "ssh-rsa PblicKey"
+						}
+					]
+				}
+			},
+			"servicePrincipalProfile": {
+				"clientId": "clientId",
+				"secret": "secret"
+			}
+		}
+	}`
+
+	tmpFilewithoutlocationpubliccloud, err := ioutil.TempFile("", "containerService-nolocationpubliccloud")
+	fileNamewithoutlocationpubliccloud := tmpFilewithoutlocationpubliccloud.Name()
+	defer os.Remove(fileNamewithoutlocationpubliccloud)
+
+	err = ioutil.WriteFile(fileNamewithoutlocationpubliccloud, []byte(jsonWithoutlocationpubliccloud), os.ModeAppend)
+
+	apiloaderwithoutlocationpubliccloud := &Apiloader{}
+	_, _, err = apiloaderwithoutlocationpubliccloud.LoadContainerServiceFromFile(fileNamewithoutlocationpubliccloud, true, false, nil)
+	if err != nil {
+		t.Errorf("Expected no error for missing loation for public cloud to be thrown")
+	}
+}

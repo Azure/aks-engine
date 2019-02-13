@@ -1413,6 +1413,19 @@ func (p *Properties) GetCustomCloudName() string {
 	return cloudProfileName
 }
 
+// GetLocations returns all supported regions.
+// If AzureStackCloud, GetLocations provides the location of container service
+// If AzurePublicCloud, AzureChinaCloud,AzureGermanCloud or AzureUSGovernmentCloud, GetLocations provides all azure regions in prod.
+func (cs *ContainerService) GetLocations() []string {
+	var allLocations []string
+	if cs.Properties.IsAzureStackCloud() {
+		allLocations = []string{cs.Location}
+	} else {
+		allLocations = helpers.GetAzureLocations()
+	}
+	return allLocations
+}
+
 func getDefaultNVIDIADevicePluginEnabled(p *Properties) bool {
 	o := p.OrchestratorProfile
 	var addonEnabled bool

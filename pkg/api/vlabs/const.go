@@ -107,3 +107,8 @@ const (
 	// AgentPoolProfileRoleInfra is the infra role
 	AgentPoolProfileRoleInfra AgentPoolProfileRole = "infra"
 )
+
+const (
+	// AzureStackCloud is a const string reference identifier for Azure Stack cloud
+	AzureStackCloud = "AzureStackCloud"
+)
