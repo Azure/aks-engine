@@ -27,6 +27,8 @@ import (
 	"github.com/Azure/aks-engine/pkg/helpers"
 	"github.com/ghodss/yaml"
 	"github.com/pkg/errors"
+
+	_ "k8s.io/client-go/plugin/pkg/client/auth/azure" // register azure (AD) authentication plugin
 )
 
 var commonTemplateFiles = []string{agentOutputs, agentParams, masterOutputs, iaasOutputs, masterParams, windowsParams}
