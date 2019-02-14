@@ -24,10 +24,10 @@ Here are the valid values for the orchestrator types:
 
 1. `Kubernetes` - this represents the Kubernetes orchestrator.
 
-To learn more about supported orchestrators and versions, run the orchestrators command:
+To learn more about supported versions, run the get-versions command:
 
 ```console
-$ aks-engine orchestrators
+$ aks-engine get-versions
 ```
 
 ### kubernetesConfig

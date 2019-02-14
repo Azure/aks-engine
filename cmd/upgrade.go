@@ -174,7 +174,7 @@ func (uc *upgradeCmd) loadCluster(cmd *cobra.Command) error {
 		}
 	}
 	if !found {
-		return errors.Errorf("upgrading from Kubernetes version %s to version %s is not supported. To see a list of available upgrades, use 'aks-engine orchestrators --orchestrator kubernetes --version %s'", uc.containerService.Properties.OrchestratorProfile.OrchestratorVersion, uc.upgradeVersion, uc.containerService.Properties.OrchestratorProfile.OrchestratorVersion)
+		return errors.Errorf("upgrading from Kubernetes version %s to version %s is not supported. To see a list of available upgrades, use 'aks-engine get-versions --version %s'", uc.containerService.Properties.OrchestratorProfile.OrchestratorVersion, uc.upgradeVersion, uc.containerService.Properties.OrchestratorProfile.OrchestratorVersion)
 	}
 
 	// Read the name suffix from the parameters to identify VMs in the resource group that belong to this cluster.
