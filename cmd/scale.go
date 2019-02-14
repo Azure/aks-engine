@@ -299,7 +299,7 @@ func (sc *scaleCmd) run(cmd *cobra.Command, args []string) error {
 			return sc.saveAPIModel()
 		}
 	} else {
-		for vmssListPage, err := sc.client.ListVirtualMachineScaleSets(ctx, sc.resourceGroupName); vmssListPage.NotDone(); vmssListPage.Next() {
+		for vmssListPage, err := sc.client.ListVirtualMachineScaleSets(ctx, sc.resourceGroupName); vmssListPage.NotDone(); err = vmssListPage.NextWithContext(ctx) {
 			if err != nil {
 				return errors.Wrap(err, "failed to get vmss list in the resource group")
 			}
