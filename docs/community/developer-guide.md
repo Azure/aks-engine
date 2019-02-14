@@ -263,4 +263,4 @@ generated Go code is committed to the repository. Your pull request may need to 
 files before it will pass the required `make ensure-generated` step:
 
 - Changes under the `parts/` folder require the `pkg/engine/templates_generated.go` file to be updated.
-- Changes under the `pkg/i8n/translations` require the `pkg/engine/translations_generated.go` file to be updated.
+- Changes under `pkg/i8n/translations` require the `pkg/engine/translations_generated.go` file to be updated.
