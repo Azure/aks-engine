@@ -24,10 +24,10 @@ Here are the valid values for the orchestrator types:
 
 1. `Kubernetes` - this represents the Kubernetes orchestrator.
 
-To learn more about supported orchestrators and versions, run the orchestrators command:
+To learn more about supported versions, run the get-versions command:
 
 ```console
-$ aks-engine orchestrators
+$ aks-engine get-versions
 ```
 
 ### kubernetesConfig
@@ -436,7 +436,7 @@ Below is a list of apiserver options that are _not_ currently user-configurable,
 | "--etcd-keyfile"                            | "/etc/kubernetes/certs/etcdclient.key"                                                  |
 | "--etcd-servers"                            | _calculated value that represents etcd servers_                                         |
 | "--profiling"                               | "false"                                                                                 |
-| "--repair-malformed-updates"                | "false"                                                                                 |
+| "--repair-malformed-updates"                | "false"  (_deprecated in v1.14_)                                                           |
 | "--tls-cert-file"                           | "/etc/kubernetes/certs/apiserver.crt"                                                   |
 | "--tls-private-key-file"                    | "/etc/kubernetes/certs/apiserver.key"                                                   |
 | "--client-ca-file"                          | "/etc/kubernetes/certs/ca.crt"                                                          |

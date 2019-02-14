@@ -143,7 +143,7 @@ for KV_FLEXVOLUME_VERSION in ${KV_FLEXVOLUME_VERSIONS}; do
     pullContainerImage "docker" "mcr.microsoft.com/k8s/flexvolume/keyvault-flexvolume:v${KV_FLEXVOLUME_VERSION}"
 done
 
-BLOBFUSE_FLEXVOLUME_VERSIONS="1.0.7"
+BLOBFUSE_FLEXVOLUME_VERSIONS="1.0.8"
 for BLOBFUSE_FLEXVOLUME_VERSION in ${BLOBFUSE_FLEXVOLUME_VERSIONS}; do
     pullContainerImage "docker" "mcr.microsoft.com/k8s/flexvolume/blobfuse-flexvolume:${BLOBFUSE_FLEXVOLUME_VERSION}"
 done
@@ -171,7 +171,7 @@ done
 pullContainerImage "docker" "busybox"
 
 # TODO: fetch supported k8s versions from an aks-engine command instead of hardcoding them here
-K8S_VERSIONS="1.9.10 1.9.11 1.10.9 1.10.12 1.11.6 1.11.7 1.12.4 1.12.5 1.13.2 1.13.3"
+K8S_VERSIONS="1.9.10 1.9.11 1.10.12 1.10.13 1.11.6 1.11.7 1.12.4 1.12.5 1.13.2 1.13.3"
 
 for KUBERNETES_VERSION in ${K8S_VERSIONS}; do
     HYPERKUBE_URL="k8s.gcr.io/hyperkube-amd64:v${KUBERNETES_VERSION}"
