@@ -56,6 +56,7 @@
     "properties": {
       "singlePlacementGroup": {{UseSinglePlacementGroup .}},
       "overprovision": true,
+      "doNotRunExtensionsOnOverprovisionedVMs": true,
       "upgradePolicy": {
         "mode": "Manual"
       },
@@ -149,7 +150,6 @@
           }
         },
         "extensionProfile": {
-          "doNotRunOnOverprovisionedVMs": true,
           "extensions": [
             {
               "name": "vmssCSE",
