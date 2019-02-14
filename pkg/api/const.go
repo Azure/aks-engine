@@ -211,6 +211,8 @@ const (
 	DefaultAcceleratedNetworkingWindowsEnabled = false
 	// DefaultAcceleratedNetworking determines the aks-engine provided default for enabling accelerated networking on Linux nodes
 	DefaultAcceleratedNetworking = true
+	// DefaultVMSSOverProvisioningEnabled determines the aks-engine provided default for enabling VMSS Overprovisioning
+	DefaultVMSSOverProvisioningEnabled = false
 	// DefaultDNSAutoscalerAddonName is the name of the dns-autoscaler addon
 	DefaultDNSAutoscalerAddonName = "dns-autoscaler"
 	// DefaultUseCosmos determines if the cluster will use cosmos as etcd storage

@@ -55,8 +55,10 @@
     },
     "properties": {
       "singlePlacementGroup": {{UseSinglePlacementGroup .}},
-      "overprovision": true,
+      "overprovision": {{.VMSSOverProvisioningEnabled}},
+      {{if .VMSSOverProvisioningEnabled}}
       "doNotRunExtensionsOnOverprovisionedVMs": true,
+      {{end}}
       "upgradePolicy": {
         "mode": "Manual"
       },

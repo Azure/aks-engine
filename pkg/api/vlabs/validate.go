@@ -401,6 +401,12 @@ func (a *Properties) validateAgentPoolProfiles(isUpdate bool) error {
 			}
 		}
 
+		if to.Bool(agentPoolProfile.VMSSOverProvisioningEnabled) {
+			if agentPoolProfile.AvailabilityProfile != VirtualMachineScaleSets {
+				return errors.Errorf("You have specified VMSS Overprovisioning in agent pool %s, but you did not specify VMSS", agentPoolProfile.Name)
+			}
+		}
+
 		if e := agentPoolProfile.validateOrchestratorSpecificProperties(a.OrchestratorProfile.OrchestratorType); e != nil {
 			return e
 		}
@@ -801,16 +807,6 @@ func validateVMSS(o *OrchestratorProfile, isUpdate bool, storageProfile string) 
 		}
 		if sv.LT(minVersion) {
 			return errors.Errorf("VirtualMachineScaleSets are only available in Kubernetes version %s or greater. Please set \"orchestratorVersion\" to %s or above", minVersion.String(), minVersion.String())
-		}
-		// validation for instanceMetadata using VMSS with Kubernetes
-		minVersion, err = semver.Make("1.10.2")
-		if err != nil {
-			return errors.New("could not validate version")
-		}
-		if o.KubernetesConfig != nil && o.KubernetesConfig.UseInstanceMetadata != nil {
-			if *o.KubernetesConfig.UseInstanceMetadata && sv.LT(minVersion) {
-				return errors.Errorf("VirtualMachineScaleSets with instance metadata is supported for Kubernetes version %s or greater. Please set \"useInstanceMetadata\": false in \"kubernetesConfig\" or set \"orchestratorVersion\" to %s or above", minVersion.String(), minVersion.String())
-			}
 		}
 		if storageProfile == StorageAccount {
 			return errors.Errorf("VirtualMachineScaleSets does not support %s disks.  Please specify \"storageProfile\": \"%s\" (recommended) or \"availabilityProfile\": \"%s\"", StorageAccount, ManagedDisks, AvailabilitySet)
