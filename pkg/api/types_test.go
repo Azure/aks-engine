@@ -2648,10 +2648,13 @@ func TestFormatAzureProdFQDN(t *testing.T) {
 }
 
 func TestFormatProdFQDNByLocation(t *testing.T) {
+	// Test locations for Azure
+	mockCSDefault := getMockBaseContainerService("1.11.6")
+	mockCSDefault.Location = "eastus"
 	dnsPrefix := "santest"
 	var actual []string
-	for _, location := range helpers.GetAzureLocations() {
-		actual = append(actual, FormatProdFQDNByLocation(dnsPrefix, location, ""))
+	for _, location := range mockCSDefault.GetLocations() {
+		actual = append(actual, FormatProdFQDNByLocation(dnsPrefix, location, mockCSDefault.Properties.GetCustomCloudName()))
 	}
 
 	expected := []string{
@@ -2706,6 +2709,22 @@ func TestFormatProdFQDNByLocation(t *testing.T) {
 
 	if !reflect.DeepEqual(actual, expected) {
 		t.Errorf("expected formatted fqdns %s, but got %s", expected, actual)
+	}
+
+	// Test location for Azure Stack Cloud
+	mockCSDefaultSpec := getMockBaseContainerService("1.11.6")
+	mockCSPDefaultSpec := getMockPropertiesWithCustomCloudProfile("azurestackcloud", true, true, false)
+	mockCSDefaultSpec.Properties.CustomCloudProfile = mockCSPDefaultSpec.CustomCloudProfile
+	mockCSDefaultSpec.Location = "randomlocation"
+	mockCSDefaultSpec.Properties.MasterProfile.DNSPrefix = "azurestackprefix"
+	mockCSDefaultSpec.SetPropertiesDefaults(false, false)
+	var actualResult []string
+	for _, location := range mockCSDefaultSpec.GetLocations() {
+		actualResult = append(actualResult, FormatProdFQDNByLocation("azurestackprefix", location, mockCSDefaultSpec.Properties.GetCustomCloudName()))
+	}
+	expectedResult := []string{"azurestackprefix.randomlocation.cloudapp.azurestack.external"}
+	if !reflect.DeepEqual(expectedResult, actualResult) {
+		t.Errorf("Test TestGetLocations() : expected to return %s, but got %s . ", expectedResult, actualResult)
 	}
 }
 
@@ -3036,6 +3055,77 @@ func TestGetCustomEnvironmentJSON(t *testing.T) {
 		if testcase.expected != actual {
 			t.Errorf("Test \"%s\": expected GetCustomEnvironmentJSON() to return %s, but got %s . ", testcase.name, testcase.expected, actual)
 		}
+	}
+}
+
+func TestGetLocations(t *testing.T) {
+
+	// Test location for Azure Stack Cloud
+	mockCSDefaultSpec := getMockBaseContainerService("1.11.6")
+	mockCSPDefaultSpec := getMockPropertiesWithCustomCloudProfile("azurestackcloud", true, true, false)
+	mockCSDefaultSpec.Properties.CustomCloudProfile = mockCSPDefaultSpec.CustomCloudProfile
+	mockCSDefaultSpec.Location = "randomlocation"
+
+	expectedResult := []string{"randomlocation"}
+	actualResult := mockCSDefaultSpec.GetLocations()
+	if !reflect.DeepEqual(expectedResult, actualResult) {
+		t.Errorf("Test TestGetLocations() : expected to return %s, but got %s . ", expectedResult, actualResult)
+	}
+
+	// Test locations for Azure
+	mockCSDefault := getMockBaseContainerService("1.11.6")
+	mockCSDefault.Location = "eastus"
+
+	expected := []string{"australiacentral",
+		"australiacentral2",
+		"australiaeast",
+		"australiasoutheast",
+		"brazilsouth",
+		"canadacentral",
+		"canadaeast",
+		"centralindia",
+		"centralus",
+		"centraluseuap",
+		"chinaeast",
+		"chinaeast2",
+		"chinanorth",
+		"chinanorth2",
+		"eastasia",
+		"eastus",
+		"eastus2",
+		"eastus2euap",
+		"francecentral",
+		"francesouth",
+		"japaneast",
+		"japanwest",
+		"koreacentral",
+		"koreasouth",
+		"northcentralus",
+		"northeurope",
+		"southcentralus",
+		"southeastasia",
+		"southindia",
+		"uksouth",
+		"ukwest",
+		"westcentralus",
+		"westeurope",
+		"westindia",
+		"westus",
+		"westus2",
+		"chinaeast",
+		"chinanorth",
+		"chinanorth2",
+		"chinaeast2",
+		"germanycentral",
+		"germanynortheast",
+		"usgovvirginia",
+		"usgoviowa",
+		"usgovarizona",
+		"usgovtexas",
+		"francecentral"}
+	actual := mockCSDefault.GetLocations()
+	if !reflect.DeepEqual(expected, actual) {
+		t.Errorf("Test TestGetLocations() : expected to return %s, but got %s . ", expected, actual)
 	}
 }
 

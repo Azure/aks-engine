@@ -109,7 +109,7 @@ func init() {
 }
 
 // Validate implements APIObject
-func (a *Properties) Validate(isUpdate bool) error {
+func (a *Properties) validate(isUpdate bool) error {
 	if e := validate.Struct(a); e != nil {
 		return handleValidationErrors(e.(validator.ValidationErrors))
 	}
@@ -1318,6 +1318,34 @@ func (a *Properties) validateCustomCloudProfile() error {
 		if a.CustomCloudProfile.Environment.ResourceManagerVMDNSSuffix == "" {
 			return errors.New("resourceManagerVMDNSSuffix needs to be specified when Environment is provided")
 		}
+	}
+	return nil
+}
+
+// Validate implements validation for ContainerService
+func (cs *ContainerService) Validate(isUpdate bool) error {
+	if e := cs.validateProperties(); e != nil {
+		return e
+	}
+	if e := cs.validateLocation(); e != nil {
+		return e
+	}
+	if e := cs.Properties.validate(isUpdate); e != nil {
+		return e
+	}
+	return nil
+}
+
+func (cs *ContainerService) validateLocation() error {
+	if cs.Properties != nil && cs.Properties.IsAzureStackCloud() && cs.Location == "" {
+		return errors.New("missing ContainerService Location")
+	}
+	return nil
+}
+
+func (cs *ContainerService) validateProperties() error {
+	if cs.Properties == nil {
+		return errors.New("missing ContainerService Properties")
 	}
 	return nil
 }
