@@ -325,7 +325,6 @@
         "description": "The Azure Moby build version"
       },
       "allowedValues": [
-         "",
          "3.0.1",
          "3.0.2",
          "3.0.3",
@@ -339,7 +338,6 @@
         "description": "The Azure Moby build version"
       },
       "allowedValues": [
-         "",
          "1.1.5",
          "1.1.6"
        ],

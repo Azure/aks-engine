@@ -237,7 +237,16 @@ func assignKubernetesParameters(properties *api.Properties, parametersMap params
 			addValue(parametersMap, "dockerEngineDownloadRepo", cloudSpecConfig.DockerSpecConfig.DockerEngineRepo)
 		} else {
 			addValue(parametersMap, "dockerEngineDownloadRepo", "")
+
+			addValue(parametersMap, "containerdVersion", properties.OrchestratorProfile.KubernetesConfig.ContainerdVersion)
+		}
+
+		if properties.OrchestratorProfile.KubernetesConfig.MobyVersion != "" {
 			addValue(parametersMap, "mobyVersion", properties.OrchestratorProfile.KubernetesConfig.MobyVersion)
+		}
+
+		if properties.OrchestratorProfile.KubernetesConfig.ContainerdVersion != "" {
+			addValue(parametersMap, "containerdVersion", properties.OrchestratorProfile.KubernetesConfig.ContainerdVersion)
 		}
 
 		if properties.AADProfile != nil {
