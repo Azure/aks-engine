@@ -1089,14 +1089,13 @@ func (k *KubernetesConfig) Validate(k8sVersion string, hasWindows bool) error {
 	}
 
 	// Validate containerd scenarios
-	switch k.ContainerRuntime {
-	case Containerd, ClearContainers, KataContainers:
-		if e := validateContainerdVersion(k.ContainerdVersion); e != nil {
-			return e
-		}
-	default:
+	if k.ContainerRuntime == Docker || k.ContainerRuntime == "" {
 		if k.ContainerdVersion != "" {
 			return errors.Errorf("containerdVersion is only valid in a non-docker context, use %s, %s, or %s containerRuntime values instead if you wish to provide a containerdVersion", Containerd, ClearContainers, KataContainers)
+		}
+	} else {
+		if e := validateContainerdVersion(k.ContainerdVersion); e != nil {
+			return e
 		}
 	}
 
