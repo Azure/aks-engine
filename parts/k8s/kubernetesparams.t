@@ -339,6 +339,7 @@
         "description": "The Azure Moby build version"
       },
       "allowedValues": [
+         "",
          "1.1.5",
          "1.1.6"
        ],
