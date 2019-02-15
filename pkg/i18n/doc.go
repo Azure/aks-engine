@@ -1,5 +1,5 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
-// Package kubernetesupgrade allows upgrading of Kubernetes clusters.
-package kubernetesupgrade
+// Package i18n contains localized strings for user facing messages.
+package i18n

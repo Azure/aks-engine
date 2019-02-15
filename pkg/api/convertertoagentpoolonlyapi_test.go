@@ -13,7 +13,7 @@ import (
 )
 
 func TestConvertV20180331AgentPoolOnlyOrchestratorProfile(t *testing.T) {
-	kubernetesVersion := "1.7.15"
+	kubernetesVersion := "1.9.11"
 	networkPlugin := v20180331.Azure
 	networkPolicy := v20180331.NetworkPolicyCalico
 	networkPluginKubenet := v20180331.Kubenet
