@@ -19,6 +19,7 @@ if [[ ${FEATURE_FLAGS} == *"docker-engine"* ]]; then
     DOCKER_ENGINE_REPO="https://apt.dockerproject.org/repo"
     installDockerEngine
     installGPUDrivers
+    installContainerd
 else
     MOBY_VERSION="3.0.4"
     installMoby
@@ -28,6 +29,7 @@ installClearContainersRuntime
 
 VNET_CNI_VERSIONS="1.0.16 1.0.17"
 CNI_PLUGIN_VERSIONS="0.7.1"
+CONTAINERD_VERSIONS="1.1.5"
 
 for VNET_CNI_VERSION in $VNET_CNI_VERSIONS; do
     VNET_CNI_PLUGINS_URL="https://acs-mirror.azureedge.net/cni/azure-vnet-cni-linux-amd64-v${VNET_CNI_VERSION}.tgz"
@@ -39,7 +41,10 @@ for CNI_PLUGIN_VERSION in $CNI_PLUGIN_VERSIONS; do
     downloadCNI
 done
 
-installContainerd
+for CONTAINERD_VERSION in $CONTAINERD_VERSIONS; do
+    CONTAINERD_DOWNLOAD_URL="${CONTAINERD_DOWNLOAD_URL_BASE}cri-containerd-${CONTAINERD_VERSION}.linux-amd64.tar.gz"
+    downloadContainerd
+done
 
 installImg
 
