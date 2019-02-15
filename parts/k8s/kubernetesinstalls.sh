@@ -217,11 +217,11 @@ installAzureCNI() {
 }
 
 installContainerd() {
-    CONTAINERD_TGZ_TMP=$(echo ${CONTAINERD_DOWNLOAD_URL} | cut -d "/" -f 5)
     CURRENT_VERSION=$(containerd -version | cut -d " " -f 3 | sed 's|v||')
     if [[ "$CURRENT_VERSION" == "${CRI_CONTAINERD_VERSION}" ]]; then
         echo "containerd is already installed, skipping install"
     else
+        CONTAINERD_TGZ_TMP=$(echo ${CONTAINERD_DOWNLOAD_URL} | cut -d "/" -f 5)
         rm -Rf /usr/bin/containerd
         rm -Rf /var/lib/docker/containerd
         rm -Rf /run/docker/containerd
@@ -229,10 +229,10 @@ installContainerd() {
             downloadContainerd
         fi
         tar -xzf "$CONTAINERD_DOWNLOADS_DIR/$CONTAINERD_TGZ_TMP" -C /
-        rm -Rf $CONTAINERD_DOWNLOADS_DIR &
         sed -i '/\[Service\]/a ExecStartPost=\/sbin\/iptables -P FORWARD ACCEPT' /etc/systemd/system/containerd.service
         echo "Successfully installed cri-containerd..."
     fi
+    rm -Rf $CONTAINERD_DOWNLOADS_DIR &
 }
 
 installImg() {
