@@ -4,7 +4,10 @@
 package cmd
 
 import (
+	"errors"
 	"fmt"
+	"os"
+	"text/tabwriter"
 
 	"github.com/Azure/aks-engine/pkg/api"
 	"github.com/Azure/aks-engine/pkg/helpers"
@@ -22,6 +25,7 @@ type getVersionsCmd struct {
 	orchestrator string
 	version      string
 	windows      bool
+	output       string
 }
 
 func newGetVersionsCmd() *cobra.Command {
@@ -40,6 +44,7 @@ func newGetVersionsCmd() *cobra.Command {
 	gvc.orchestrator = "Kubernetes" // orchestrator is always Kubernetes
 	f.StringVar(&gvc.version, "version", "", "Kubernetes version (optional)")
 	f.BoolVar(&gvc.windows, "windows", false, "Kubernetes cluster with Windows nodes (optional)")
+	f.StringVarP(&gvc.output, "output", "o", "json", "Output format. Allowed values: json, table.")
 
 	return command
 }
@@ -50,11 +55,35 @@ func (gvc *getVersionsCmd) run(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	data, err := helpers.JSONMarshalIndent(orchs, "", "  ", false)
-	if err != nil {
-		return err
+	switch gvc.output {
+	case "json":
+		data, err := helpers.JSONMarshalIndent(orchs, "", "  ", false)
+		if err != nil {
+			return err
+		}
+		fmt.Println(string(data))
+	case "table":
+		w := tabwriter.NewWriter(os.Stdout, 0, 4, 1, ' ', tabwriter.FilterHTML)
+		fmt.Fprintln(w, "Version\tUpgrades")
+		// iterate in reverse so the newest Kubernetes release is listed first
+		for i := len(orchs.Orchestrators) - 1; i >= 0; i-- {
+			o := orchs.Orchestrators[i]
+			fmt.Fprintf(w, "%s\t", o.OrchestratorVersion)
+			// collapse the upgrade fields into a comma-separated list
+			lenUpgrades := len(o.Upgrades) - 1
+			for j := 0; j < len(o.Upgrades); j++ {
+				u := o.Upgrades[j]
+				fmt.Fprintf(w, "%s", u.OrchestratorVersion)
+				if j < lenUpgrades {
+					fmt.Fprintf(w, ", ")
+				}
+			}
+			fmt.Fprintln(w)
+		}
+		w.Flush()
+	default:
+		return errors.New(fmt.Sprintf("Output format \"%s\" is not supported.", gvc.output))
 	}
 
-	fmt.Println(string(data))
 	return nil
 }
