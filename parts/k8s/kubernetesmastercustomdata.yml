@@ -306,7 +306,7 @@ MASTER_ARTIFACTS_CONFIG_PLACEHOLDER
     sed -i "s|<cloud>|{{WrapAsParameter "kubernetesClusterAutoscalerAzureCloud"}}|g; s|<useManagedIdentity>|{{WrapAsParameter "kubernetesClusterAutoscalerUseManagedIdentity"}}|g" /etc/kubernetes/addons/cluster-autoscaler-deployment.yaml
 {{end}}
 
-{{if eq .OrchestratorProfile.KubernetesConfig.LoadBalancerSku "Standard"}}
+{{if and (not IsPrivateCluster) (eq .OrchestratorProfile.KubernetesConfig.LoadBalancerSku "Standard")}}
     sed -i "s|<svcName>|{{WrapAsParameter "kuberneteselbsvcname"}}|g" "/etc/kubernetes/addons/elb-svc.yaml"
 {{end}}
 
