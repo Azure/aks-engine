@@ -54,6 +54,7 @@ var _ = Describe("The orchestrators command", func() {
 		command := &getVersionsCmd{
 			orchestrator: "kubernetes",
 			version:      "1.7.14",
+			output:       "json",
 		}
 
 		err := command.run(nil, nil)

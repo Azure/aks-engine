@@ -30,6 +30,7 @@ func newOrchestratorsCmd() *cobra.Command {
 	f.StringVar(&gvc.orchestrator, "orchestrator", "", "orchestrator name (optional) ")
 	f.StringVar(&gvc.version, "version", "", "orchestrator version (optional)")
 	f.BoolVar(&gvc.windows, "windows", false, "orchestrator platform (optional, applies to Kubernetes only)")
+	gvc.output = "json" // output is always JSON
 
 	return command
 }
