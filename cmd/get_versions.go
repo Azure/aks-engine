@@ -4,6 +4,10 @@
 package cmd
 
 import (
+	"fmt"
+
+	"github.com/Azure/aks-engine/pkg/api"
+	"github.com/Azure/aks-engine/pkg/helpers"
 	"github.com/spf13/cobra"
 )
 
@@ -13,22 +17,44 @@ const (
 	getVersionsLongDescription  = "Display supported Kubernetes versions and upgrade versions"
 )
 
+type getVersionsCmd struct {
+	// user input
+	orchestrator string
+	version      string
+	windows      bool
+}
+
 func newGetVersionsCmd() *cobra.Command {
-	oc := orchestratorsCmd{}
+	gvc := getVersionsCmd{}
 
 	command := &cobra.Command{
 		Use:   getVersionsName,
 		Short: getVersionsShortDescription,
 		Long:  getVersionsLongDescription,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return oc.run(cmd, args)
+			return gvc.run(cmd, args)
 		},
 	}
 
 	f := command.Flags()
-	oc.orchestrator = "Kubernetes" // orchestrator is always Kubernetes
-	f.StringVar(&oc.version, "version", "", "Kubernetes version (optional)")
-	f.BoolVar(&oc.windows, "windows", false, "Kubernetes cluster with Windows nodes (optional)")
+	gvc.orchestrator = "Kubernetes" // orchestrator is always Kubernetes
+	f.StringVar(&gvc.version, "version", "", "Kubernetes version (optional)")
+	f.BoolVar(&gvc.windows, "windows", false, "Kubernetes cluster with Windows nodes (optional)")
 
 	return command
+}
+
+func (gvc *getVersionsCmd) run(cmd *cobra.Command, args []string) error {
+	orchs, err := api.GetOrchestratorVersionProfileListVLabs(gvc.orchestrator, gvc.version, gvc.windows)
+	if err != nil {
+		return err
+	}
+
+	data, err := helpers.JSONMarshalIndent(orchs, "", "  ", false)
+	if err != nil {
+		return err
+	}
+
+	fmt.Println(string(data))
+	return nil
 }
