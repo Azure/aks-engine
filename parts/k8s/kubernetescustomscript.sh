@@ -130,7 +130,9 @@ if [[ ! -z "${MASTER_NODE}" ]]; then
     configAddons
 fi
 
-ensureContainerd
+if [[ "$CONTAINER_RUNTIME" == "clear-containers" ]] || [[ "$CONTAINER_RUNTIME" == "kata-containers" ]] || [[ "$CONTAINER_RUNTIME" == "containerd" ]]; then
+    ensureContainerd
+fi
 
 if [[ ! -z "${MASTER_NODE}" && "${KMS_PROVIDER_VAULT_NAME}" != "" ]]; then
     ensureKMS
