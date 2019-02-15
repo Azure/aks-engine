@@ -579,6 +579,25 @@ func Test_KubernetesConfig_Validate(t *testing.T) {
 	}
 }
 
+func Test_Properties_ValidatePrivateAzureRegistryServer(t *testing.T) {
+	p := &Properties{}
+	p.OrchestratorProfile = &OrchestratorProfile{}
+	p.OrchestratorProfile.OrchestratorType = Kubernetes
+	p.OrchestratorProfile.KubernetesConfig = &KubernetesConfig{}
+
+	p.OrchestratorProfile.KubernetesConfig.PrivateAzureRegistryServer = "example.azurecr.io"
+	err := p.OrchestratorProfile.KubernetesConfig.validatePrivateAzureRegistryServer()
+	expectedMsg := "customHyperkubeImage must be provided when privateAzureRegistryServer is provided"
+	if err.Error() != expectedMsg {
+		t.Errorf("expected error message : %s to be thrown, but got : %s", expectedMsg, err.Error())
+	}
+	p.OrchestratorProfile.KubernetesConfig.CustomHyperkubeImage = "example.azurecr.io/hyperkube-amd64:tag"
+	err = p.OrchestratorProfile.KubernetesConfig.validatePrivateAzureRegistryServer()
+	if err != nil {
+		t.Errorf("should not error because CustomHyperkubeImage is provided, got error : %s", err.Error())
+	}
+}
+
 func Test_Properties_ValidateNetworkPolicy(t *testing.T) {
 	p := &Properties{}
 	p.OrchestratorProfile = &OrchestratorProfile{}

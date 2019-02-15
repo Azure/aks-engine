@@ -402,6 +402,7 @@ type KubernetesConfig struct {
 	KeyVaultSku                      string            `json:"keyVaultSku,omitempty"`
 	MaximumLoadBalancerRuleCount     int               `json:"maximumLoadBalancerRuleCount,omitempty"`
 	ProxyMode                        KubeProxyMode     `json:"kubeProxyMode,omitempty"`
+	PrivateAzureRegistryServer       string            `json:"privateAzureRegistryServer,omitempty"`
 }
 
 // CustomFile has source as the full absolute source path to a file and dest

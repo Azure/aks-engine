@@ -1122,6 +1122,28 @@ func (k *KubernetesConfig) Validate(k8sVersion string, hasWindows bool) error {
 	if e := k.validateNetworkPluginPlusPolicy(); e != nil {
 		return e
 	}
+	if e := k.validatePrivateAzureRegistryServer(); e != nil {
+		return e
+	}
+
+	return nil
+}
+
+func (k *KubernetesConfig) validatePrivateAzureRegistryServer() error {
+
+	// Check PrivateAzureRegistryServer has a valid value.
+	valid := false
+	if k.PrivateAzureRegistryServer != "" {
+		if k.CustomHyperkubeImage != "" {
+			valid = true
+		}
+	} else {
+		valid = true
+	}
+
+	if !valid {
+		return errors.Errorf("customHyperkubeImage must be provided when privateAzureRegistryServer is provided")
+	}
 
 	return nil
 }
