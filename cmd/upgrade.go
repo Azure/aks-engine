@@ -40,6 +40,7 @@ type upgradeCmd struct {
 	upgradeVersion      string
 	location            string
 	timeoutInMinutes    int
+	force               bool
 
 	// derived
 	containerService    *api.ContainerService
@@ -69,6 +70,7 @@ func newUpgradeCmd() *cobra.Command {
 	f.StringVar(&uc.deploymentDirectory, "deployment-dir", "", "the location of the output from `generate` (required)")
 	f.StringVarP(&uc.upgradeVersion, "upgrade-version", "k", "", "desired kubernetes version (required)")
 	f.IntVar(&uc.timeoutInMinutes, "vm-timeout", -1, "how long to wait for each vm to be upgraded in minutes")
+	f.BoolVarP(&uc.force, "force", "f", false, "force upgrading the cluster to desired version. Allows same version upgrades and downgrades.")
 	addAuthFlags(&uc.authArgs, f)
 
 	return upgradeCmd
