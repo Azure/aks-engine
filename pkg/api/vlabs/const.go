@@ -73,6 +73,14 @@ const (
 	ManagedDisks = "ManagedDisks"
 )
 
+// Supported container runtimes
+const (
+	Docker          = "docker"
+	ClearContainers = "clear-containers"
+	KataContainers  = "kata-containers"
+	Containerd      = "containerd"
+)
+
 var (
 	// NetworkPluginValues holds the valid values for network plugin implementation
 	NetworkPluginValues = [...]string{"", "kubenet", "azure", "cilium", "flannel"}
@@ -82,7 +90,7 @@ var (
 	NetworkPolicyValues = [...]string{"", "calico", "cilium", "azure", "none"}
 
 	// ContainerRuntimeValues holds the valid values for container runtimes
-	ContainerRuntimeValues = [...]string{"", "docker", "clear-containers", "kata-containers", "containerd"}
+	ContainerRuntimeValues = [...]string{"", Docker, ClearContainers, KataContainers, Containerd}
 )
 
 // Kubernetes configuration

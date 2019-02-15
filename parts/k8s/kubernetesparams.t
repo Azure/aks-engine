@@ -332,6 +332,17 @@
        ],
       "type": "string"
     },
+    "containerdVersion": {
+      "defaultValue": "1.1.5",
+      "metadata": {
+        "description": "The Azure Moby build version"
+      },
+      "allowedValues": [
+         "1.1.5",
+         "1.1.6"
+       ],
+      "type": "string"
+    },
     "networkPolicy": {
       "defaultValue": "{{.OrchestratorProfile.KubernetesConfig.NetworkPolicy}}",
       "metadata": {
