@@ -125,10 +125,10 @@ test: generate
 test-style:
 	@scripts/validate-go.sh
 
-.PHONY: validate-generated
-validate-generated:
+.PHONY: ensure-generated
+ensure-generated:
 	@echo "==> Checking generated files <=="
-	@scripts/validate-generated.sh
+	@scripts/ensure-generated.sh
 
 .PHONY: test-e2e
 test-e2e:

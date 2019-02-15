@@ -268,16 +268,16 @@ func TestConvertCustomFilesToAPI(t *testing.T) {
 func TestCustomCloudProfile(t *testing.T) {
 	const (
 		name                         = "AzureStackCloud"
-		managementPortalURL          = "https=//management.local.azurestack.external/"
-		publishSettingsURL           = "https=//management.local.azurestack.external/publishsettings/index"
-		serviceManagementEndpoint    = "https=//management.azurestackci15.onmicrosoft.com/36f71706-54df-4305-9847-5b038a4cf189"
-		resourceManagerEndpoint      = "https=//management.local.azurestack.external/"
-		activeDirectoryEndpoint      = "https=//login.windows.net/"
-		galleryEndpoint              = "https=//portal.local.azurestack.external=30015/"
-		keyVaultEndpoint             = "https=//vault.azurestack.external/"
-		graphEndpoint                = "https=//graph.windows.net/"
-		serviceBusEndpoint           = "https=//servicebus.azurestack.external/"
-		batchManagementEndpoint      = "https=//batch.azurestack.external/"
+		managementPortalURL          = "https://management.local.azurestack.external/"
+		publishSettingsURL           = "https://management.local.azurestack.external/publishsettings/index"
+		serviceManagementEndpoint    = "https://management.azurestackci15.onmicrosoft.com/36f71706-54df-4305-9847-5b038a4cf189"
+		resourceManagerEndpoint      = "https://management.local.azurestack.external/"
+		activeDirectoryEndpoint      = "https://login.windows.net/"
+		galleryEndpoint              = "https://portal.local.azurestack.external=30015/"
+		keyVaultEndpoint             = "https://vault.azurestack.external/"
+		graphEndpoint                = "https://graph.windows.net/"
+		serviceBusEndpoint           = "https://servicebus.azurestack.external/"
+		batchManagementEndpoint      = "https://batch.azurestack.external/"
 		storageEndpointSuffix        = "core.azurestack.external"
 		sqlDatabaseDNSSuffix         = "database.azurestack.external"
 		trafficManagerDNSSuffix      = "trafficmanager.cn"
@@ -286,7 +286,7 @@ func TestCustomCloudProfile(t *testing.T) {
 		serviceManagementVMDNSSuffix = "chinacloudapp.cn"
 		resourceManagerVMDNSSuffix   = "cloudapp.azurestack.external"
 		containerRegistryDNSSuffix   = "azurecr.io"
-		tokenAudience                = "https=//management.azurestack.external/"
+		tokenAudience                = "https://management.azurestack.external/"
 	)
 
 	vlabscs := &vlabs.ContainerService{

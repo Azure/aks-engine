@@ -202,10 +202,7 @@ func (a *Apiloader) LoadContainerService(
 				return nil, e
 			}
 		}
-		if containerService.Properties == nil {
-			return nil, errors.New("missing ContainerService Properties")
-		}
-		if e := containerService.Properties.Validate(isUpdate); validate && e != nil {
+		if e := containerService.Validate(isUpdate); validate && e != nil {
 			return nil, e
 		}
 
