@@ -217,10 +217,13 @@ installAzureCNI() {
 }
 
 installContainerd() {
-    containerd --version
-    if [ $? -eq 0 ]; then
-	    echo "containerd is already installed, skipping download"
-	else
+    CURRENT_VERSION=$(containerd -version | cut -d " " -f 3 | sed 's|v||')
+    if [[ "$CURRENT_VERSION" == "${CRI_CONTAINERD_VERSION}" ]]; then
+        echo "containerd is already installed, skipping download"
+    else
+        rm -Rf /usr/bin/containerd
+        rm -Rf /var/lib/docker/containerd
+        rm -Rf /run/docker/containerd
         downloadContainerd
         tar -xzf "$CONTAINERD_DOWNLOADS_DIR/$CONTAINERD_TGZ_TMP" -C /
         rm -Rf $CONTAINERD_DOWNLOADS_DIR &
