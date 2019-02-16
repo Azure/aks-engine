@@ -204,6 +204,7 @@
       "type": "string"
     },
     "privateAzureRegistryServer": {
+      "defaultValue": "",
       "metadata": {
         "description": "The private Azure registry server for hyperkube."
       },
