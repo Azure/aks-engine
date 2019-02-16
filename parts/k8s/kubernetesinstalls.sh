@@ -6,9 +6,7 @@ CNI_CONFIG_DIR="/etc/cni/net.d"
 CNI_BIN_DIR="/opt/cni/bin"
 CNI_DOWNLOADS_DIR="/opt/cni/downloads"
 CONTAINERD_DOWNLOADS_DIR="/opt/containerd/downloads"
-CRI_CONTAINERD_VERSION="1.1.5"
-CONTAINERD_DOWNLOAD_URL="${CONTAINERD_DOWNLOAD_URL_BASE}cri-containerd-${CRI_CONTAINERD_VERSION}.linux-amd64.tar.gz"
-CONTAINERD_TGZ_TMP=$(echo ${CONTAINERD_DOWNLOAD_URL} | cut -d "/" -f 5)
+CONTAINERD_DOWNLOAD_URL="${CONTAINERD_DOWNLOAD_URL_BASE}cri-containerd-${CONTAINERD_VERSION}.linux-amd64.tar.gz"
 
 removeEtcd() {
     rm -rf /usr/bin/etcd
@@ -190,6 +188,7 @@ downloadAzureCNI() {
 
 downloadContainerd() {
     mkdir -p $CONTAINERD_DOWNLOADS_DIR
+    CONTAINERD_TGZ_TMP=$(echo ${CONTAINERD_DOWNLOAD_URL} | cut -d "/" -f 5)
     retrycmd_get_tarball 120 5 "$CONTAINERD_DOWNLOADS_DIR/${CONTAINERD_TGZ_TMP}" ${CONTAINERD_DOWNLOAD_URL} || exit $ERR_CONTAINERD_DOWNLOAD_TIMEOUT
 }
 
@@ -217,16 +216,22 @@ installAzureCNI() {
 }
 
 installContainerd() {
-    containerd --version
-    if [ $? -eq 0 ]; then
-	    echo "containerd is already installed, skipping download"
-	else
-        downloadContainerd
+    CURRENT_VERSION=$(containerd -version | cut -d " " -f 3 | sed 's|v||')
+    if [[ "$CURRENT_VERSION" == "${CONTAINERD_VERSION}" ]]; then
+        echo "containerd is already installed, skipping install"
+    else
+        CONTAINERD_TGZ_TMP=$(echo ${CONTAINERD_DOWNLOAD_URL} | cut -d "/" -f 5)
+        rm -Rf /usr/bin/containerd
+        rm -Rf /var/lib/docker/containerd
+        rm -Rf /run/docker/containerd
+        if [[ ! -f "$CONTAINERD_DOWNLOADS_DIR/${CONTAINERD_TGZ_TMP}" ]]; then
+            downloadContainerd
+        fi
         tar -xzf "$CONTAINERD_DOWNLOADS_DIR/$CONTAINERD_TGZ_TMP" -C /
-        rm -Rf $CONTAINERD_DOWNLOADS_DIR &
-        sed -i '/\[Service\]/a ExecStartPost=\/sbin\/iptables -P FORWARD ACCEPT' /etc/systemd/system/containerd.service
+        sed -i '/\[Service\]/a ExecStartPost=\/sbin\/iptables -P FORWARD ACCEPT -w' /etc/systemd/system/containerd.service
         echo "Successfully installed cri-containerd..."
     fi
+    rm -Rf $CONTAINERD_DOWNLOADS_DIR &
 }
 
 installImg() {

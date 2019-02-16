@@ -108,9 +108,7 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpdate bool) {
 		if o.KubernetesConfig.EtcdVersion == "" {
 			o.KubernetesConfig.EtcdVersion = DefaultEtcdVersion
 		}
-		if o.KubernetesConfig.MobyVersion == "" {
-			o.KubernetesConfig.MobyVersion = DefaultMobyVersion
-		}
+
 		if a.HasWindows() {
 			if o.KubernetesConfig.NetworkPlugin == "" {
 				o.KubernetesConfig.NetworkPlugin = DefaultNetworkPluginWindows
@@ -122,6 +120,16 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpdate bool) {
 		}
 		if o.KubernetesConfig.ContainerRuntime == "" {
 			o.KubernetesConfig.ContainerRuntime = DefaultContainerRuntime
+		}
+		switch o.KubernetesConfig.ContainerRuntime {
+		case Docker:
+			if o.KubernetesConfig.MobyVersion == "" {
+				o.KubernetesConfig.MobyVersion = DefaultMobyVersion
+			}
+		case Containerd, ClearContainers, KataContainers:
+			if o.KubernetesConfig.ContainerdVersion == "" {
+				o.KubernetesConfig.ContainerdVersion = DefaultContainerdVersion
+			}
 		}
 		if o.KubernetesConfig.ClusterSubnet == "" {
 			if o.IsAzureCNI() {

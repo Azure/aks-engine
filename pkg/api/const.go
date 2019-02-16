@@ -100,6 +100,14 @@ const (
 	ScaleSetEvictionPolicyDeallocate = "Deallocate"
 )
 
+// Supported container runtimes
+const (
+	Docker          = "docker"
+	ClearContainers = "clear-containers"
+	KataContainers  = "kata-containers"
+	Containerd      = "containerd"
+)
+
 // storage profiles
 const (
 	// StorageAccount means that the nodes use raw storage accounts for their os and attached volumes
@@ -315,7 +323,7 @@ const (
 	// DefaultNetworkPolicyWindows defines the network policy implementation to use by default for clusters with Windows agent pools
 	DefaultNetworkPolicyWindows = ""
 	// DefaultContainerRuntime is docker
-	DefaultContainerRuntime = "docker"
+	DefaultContainerRuntime = Docker
 	// DefaultKubernetesNodeStatusUpdateFrequency is 10s, see --node-status-update-frequency at https://kubernetes.io/docs/admin/kubelet/
 	DefaultKubernetesNodeStatusUpdateFrequency = "10s"
 	// DefaultKubernetesHardEvictionThreshold is memory.available<100Mi,nodefs.available<10%,nodefs.inodesFree<5%, see --eviction-hard at https://kubernetes.io/docs/admin/kubelet/
@@ -376,6 +384,8 @@ const (
 	DefaultKubernetesDNSServiceIP = "10.0.0.10"
 	// DefaultMobyVersion specifies the default Azure build version of Moby to install.
 	DefaultMobyVersion = "3.0.4"
+	// DefaultContainerdVersion specifies the default containerd version to install.
+	DefaultContainerdVersion = "1.1.5"
 	// DefaultDockerBridgeSubnet specifies the default subnet for the docker bridge network for masters and agents.
 	DefaultDockerBridgeSubnet = "172.17.0.1/16"
 	// DefaultKubernetesMaxPodsKubenet is the maximum number of pods to run on a node for Kubenet.

@@ -241,11 +241,9 @@ setupContainerd() {
 }
 
 ensureContainerd() {
-    if [[ "$CONTAINER_RUNTIME" == "clear-containers" ]] || [[ "$CONTAINER_RUNTIME" == "kata-containers" ]] || [[ "$CONTAINER_RUNTIME" == "containerd" ]]; then
-        setupContainerd
-        echo "Enabling and starting cri-containerd service..."
-        systemctlEnableAndStart containerd || exit $ERR_SYSTEMCTL_START_FAIL
-    fi
+    setupContainerd
+    echo "Enabling and starting cri-containerd service..."
+    systemctlEnableAndStart containerd || exit $ERR_SYSTEMCTL_START_FAIL
 }
 
 ensureDocker() {
