@@ -17,6 +17,7 @@ import (
 )
 
 const exampleCustomHyperkubeImage = `example.azurecr.io/example/hyperkube-amd64:custom`
+const examplePrivateAzureRegistryServer = `example.azurecr.io`
 
 const exampleAPIModel = `{
 		"apiVersion": "vlabs",
@@ -34,6 +35,26 @@ const exampleAPIModel = `{
 		},
 		"servicePrincipalProfile": { "clientId": "", "secret": "" }
 	}
+}
+`
+
+const exampleAPIModelWithPrivateAzureRegistry = `{
+	"apiVersion": "vlabs",
+"properties": {
+	"orchestratorProfile": {
+		"orchestratorType": "Kubernetes",
+		"kubernetesConfig": {
+			"customHyperkubeImage": "` + exampleCustomHyperkubeImage + `",
+			"privateAzureRegistryServer": "` + examplePrivateAzureRegistryServer + `"
+		}
+	},
+	"masterProfile": { "count": 1, "dnsPrefix": "", "vmSize": "Standard_D2_v2" },
+	"agentPoolProfiles": [ { "name": "linuxpool1", "count": 2, "vmSize": "Standard_D2_v2", "availabilityProfile": "AvailabilitySet" } ],
+	"windowsProfile": { "adminUsername": "azureuser", "adminPassword": "replacepassword1234$" },
+	"linuxProfile": { "adminUsername": "azureuser", "ssh": { "publicKeys": [ { "keyData": "" } ] }
+	},
+	"servicePrincipalProfile": { "clientId": "", "secret": "" }
+}
 }
 `
 
@@ -955,6 +976,22 @@ func TestCustomHyperkubeImageField(t *testing.T) {
 	actualCustomHyperkubeImage := apimodel.Properties.OrchestratorProfile.KubernetesConfig.CustomHyperkubeImage
 	if actualCustomHyperkubeImage != exampleCustomHyperkubeImage {
 		t.Fatalf("kubernetesConfig->customHyperkubeImage field value was unexpected: got(%s), expected(%s)", actualCustomHyperkubeImage, exampleCustomHyperkubeImage)
+	}
+}
+
+func TestPrivateAzureRegistryServerField(t *testing.T) {
+	log.Println(exampleAPIModelWithPrivateAzureRegistry)
+	apiloader := &Apiloader{
+		Translator: nil,
+	}
+	apimodel, _, err := apiloader.DeserializeContainerService([]byte(exampleAPIModelWithPrivateAzureRegistry), false, false, nil)
+	if err != nil {
+		t.Fatalf("unexpectedly error deserializing the example apimodel: %s", err)
+	}
+
+	actualPrivateAzureRegistryServer := apimodel.Properties.OrchestratorProfile.KubernetesConfig.PrivateAzureRegistryServer
+	if actualPrivateAzureRegistryServer != examplePrivateAzureRegistryServer {
+		t.Fatalf("kubernetesConfig->privateAzureRegistryServer field value was unexpected: got(%s), expected(%s)", actualPrivateAzureRegistryServer, examplePrivateAzureRegistryServer)
 	}
 }
 

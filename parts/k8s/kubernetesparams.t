@@ -203,6 +203,12 @@
       },
       "type": "string"
     },
+    "privateAzureRegistryServer": {
+      "metadata": {
+        "description": "The private Azure registry server for hyperkube."
+      },
+      "type": "string"
+    },
     "kubernetesCcmImageSpec": {
       "defaultValue": "",
       "metadata": {
