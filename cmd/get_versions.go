@@ -4,7 +4,6 @@
 package cmd
 
 import (
-	"errors"
 	"fmt"
 	"os"
 	"text/tabwriter"
@@ -82,7 +81,7 @@ func (gvc *getVersionsCmd) run(cmd *cobra.Command, args []string) error {
 		}
 		w.Flush()
 	default:
-		return errors.New(fmt.Sprintf("Output format \"%s\" is not supported.", gvc.output))
+		return fmt.Errorf("output format \"%s\" is not supported", gvc.output)
 	}
 
 	return nil
