@@ -2784,7 +2784,7 @@ func TestKubernetesConfig_RequiresDocker(t *testing.T) {
 
 	// k8sConfig with empty runtime string
 	k = &KubernetesConfig{
-		ContainerRuntime: "docker",
+		ContainerRuntime: Docker,
 	}
 
 	if !k.RequiresDocker() {

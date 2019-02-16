@@ -34,6 +34,7 @@ var (
 		"3.1.0", "3.1.1", "3.1.2", "3.1.2", "3.1.3", "3.1.4", "3.1.5", "3.1.6", "3.1.7", "3.1.8", "3.1.9", "3.1.10",
 		"3.2.0", "3.2.1", "3.2.2", "3.2.3", "3.2.4", "3.2.5", "3.2.6", "3.2.7", "3.2.8", "3.2.9", "3.2.11", "3.2.12",
 		"3.2.13", "3.2.14", "3.2.15", "3.2.16", "3.2.23", "3.2.24", "3.2.25", "3.3.0", "3.3.1", "3.3.8", "3.3.9", "3.3.10"}
+	containerdValidVersions        = [...]string{"1.1.5", "1.1.6", "1.2.4"}
 	networkPluginPlusPolicyAllowed = []k8sNetworkConfig{
 		{
 			networkPlugin: "",
@@ -1087,6 +1088,17 @@ func (k *KubernetesConfig) Validate(k8sVersion string, hasWindows bool) error {
 		return e
 	}
 
+	// Validate containerd scenarios
+	if k.ContainerRuntime == Docker || k.ContainerRuntime == "" {
+		if k.ContainerdVersion != "" {
+			return errors.Errorf("containerdVersion is only valid in a non-docker context, use %s, %s, or %s containerRuntime values instead if you wish to provide a containerdVersion", Containerd, ClearContainers, KataContainers)
+		}
+	} else {
+		if e := validateContainerdVersion(k.ContainerdVersion); e != nil {
+			return e
+		}
+	}
+
 	if k.UseCloudControllerManager != nil && *k.UseCloudControllerManager || k.CustomCcmImage != "" {
 		sv, err := semver.Make(k8sVersion)
 		if err != nil {
@@ -1201,7 +1213,7 @@ func (a *Properties) validateContainerRuntime() error {
 	}
 
 	// Make sure we don't use unsupported container runtimes on windows.
-	if (containerRuntime == "clear-containers" || containerRuntime == "kata-containers" || containerRuntime == "containerd") && a.HasWindows() {
+	if (containerRuntime == ClearContainers || containerRuntime == KataContainers || containerRuntime == Containerd) && a.HasWindows() {
 		return errors.Errorf("containerRuntime %q is not supporting windows agents", containerRuntime)
 	}
 
@@ -1283,6 +1295,19 @@ func validateEtcdVersion(etcdVersion string) error {
 		}
 	}
 	return errors.Errorf("Invalid etcd version \"%s\", please use one of the following versions: %s", etcdVersion, etcdValidVersions)
+}
+
+func validateContainerdVersion(containerdVersion string) error {
+	// "" is a valid containerd that maps to DefaultContainerdVersion
+	if containerdVersion == "" {
+		return nil
+	}
+	for _, ver := range containerdValidVersions {
+		if ver == containerdVersion {
+			return nil
+		}
+	}
+	return errors.Errorf("Invalid containerd version \"%s\", please use one of the following versions: %s", containerdVersion, containerdValidVersions)
 }
 
 func (i *ImageReference) validateImageNameAndGroup() error {
