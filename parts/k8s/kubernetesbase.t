@@ -2,7 +2,9 @@
   "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
   "contentVersion": "1.0.0.0",
   "parameters": {
-    {{range .AgentPoolProfiles}}{{template "agentparams.t" .}},{{end}}
+    {{if .AgentPoolProfiles }}
+      {{range .AgentPoolProfiles}}{{template "agentparams.t" .}},{{end}}
+    {{end}}
     {{if .HasWindows}}
       {{template "windowsparams.t"}},
     {{end}}
@@ -10,20 +12,22 @@
     {{template "k8s/kubernetesparams.t" .}}
   },
   "variables": {
-    {{range $index, $agent := .AgentPoolProfiles}}
-        "{{.Name}}Index": {{$index}},
-        {{template "k8s/kubernetesagentvars.t" .}}
-        {{if IsNSeriesSKU .}}
-          {{if IsNVIDIADevicePluginEnabled}}
-          "registerWithGpuTaints": "nvidia.com/gpu=true:NoSchedule",
+    {{if .AgentPoolProfiles }}
+      {{range $index, $agent := .AgentPoolProfiles}}
+          "{{.Name}}Index": {{$index}},
+          {{template "k8s/kubernetesagentvars.t" .}}
+          {{if IsNSeriesSKU .}}
+            {{if IsNVIDIADevicePluginEnabled}}
+            "registerWithGpuTaints": "nvidia.com/gpu=true:NoSchedule",
+            {{end}}
           {{end}}
-        {{end}}
-        {{if .IsStorageAccount}}
-          {{if .HasDisks}}
-            "{{.Name}}DataAccountName": "[concat(variables('storageAccountBaseName'), 'data{{$index}}')]",
+          {{if .IsStorageAccount}}
+            {{if .HasDisks}}
+              "{{.Name}}DataAccountName": "[concat(variables('storageAccountBaseName'), 'data{{$index}}')]",
+            {{end}}
+            "{{.Name}}AccountName": "[concat(variables('storageAccountBaseName'), 'agnt{{$index}}')]",
           {{end}}
-          "{{.Name}}AccountName": "[concat(variables('storageAccountBaseName'), 'agnt{{$index}}')]",
-        {{end}}
+      {{end}}
     {{end}}
     {{template "k8s/kubernetesmastervars.t" .}}
   },
@@ -50,25 +54,29 @@
         ]
       },
     {{end}}
-    {{ range $index, $element := .AgentPoolProfiles}}
-      {{if $index}}, {{end}}
-      {{if .IsWindows}}
-        {{if .IsVirtualMachineScaleSets}}
-          {{template "k8s/kuberneteswinagentresourcesvmss.t" .}}
+    
+    {{if .AgentPoolProfiles }}
+      {{ range $index, $element := .AgentPoolProfiles}}
+        {{if $index}}, {{end}}
+        {{if .IsWindows}}
+          {{if .IsVirtualMachineScaleSets}}
+            {{template "k8s/kuberneteswinagentresourcesvmss.t" .}}
+          {{else}}
+            {{template "k8s/kuberneteswinagentresourcesvmas.t" .}}
+          {{end}}
         {{else}}
-          {{template "k8s/kuberneteswinagentresourcesvmas.t" .}}
-        {{end}}
-      {{else}}
-        {{if .IsVirtualMachineScaleSets}}
-          {{template "k8s/kubernetesagentresourcesvmss.t" .}}
-        {{else}}
-          {{template "k8s/kubernetesagentresourcesvmas.t" .}}
+          {{if .IsVirtualMachineScaleSets}}
+            {{template "k8s/kubernetesagentresourcesvmss.t" .}}
+          {{else}}
+            {{template "k8s/kubernetesagentresourcesvmas.t" .}}
+          {{end}}
         {{end}}
       {{end}}
+      ,
     {{end}}
     {{if IsHostedMaster}}
       {{if not IsCustomVNET}}
-        ,{
+        {
           "apiVersion": "[variables('apiVersionNetwork')]",
           "dependsOn": [
             "[concat('Microsoft.Network/networkSecurityGroups/', variables('nsgName'))]"
@@ -104,17 +112,17 @@
             ]
           },
           "type": "Microsoft.Network/virtualNetworks"
-        }
+        },
       {{end}}
       {{if not IsAzureCNI}}
-        ,{
+        {
           "apiVersion": "[variables('apiVersionNetwork')]",
           "location": "[variables('location')]",
           "name": "[variables('routeTableName')]",
           "type": "Microsoft.Network/routeTables"
-        }
+        },
       {{end}}
-      ,{
+      {
         "apiVersion": "[variables('apiVersionNetwork')]",
         "location": "[variables('location')]",
         "name": "[variables('nsgName')]",
@@ -125,14 +133,16 @@
       }
     {{else}}
       {{if IsMasterVirtualMachineScaleSets}}
-          ,{{template "k8s/kubernetesmasterresourcesvmss.t" .}}
+          {{template "k8s/kubernetesmasterresourcesvmss.t" .}}
         {{else}}
-          ,{{template "k8s/kubernetesmasterresources.t" .}}
+          {{template "k8s/kubernetesmasterresources.t" .}}
         {{end}}
     {{end}}
   ],
   "outputs": {
-    {{range .AgentPoolProfiles}}{{template "agentoutputs.t" .}}
+    {{if .AgentPoolProfiles }}
+      {{range .AgentPoolProfiles}}{{template "agentoutputs.t" .}}
+      {{end}}
     {{end}}
     {{if not IsHostedMaster}}
       {{template "masteroutputs.t" .}} ,
