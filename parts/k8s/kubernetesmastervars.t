@@ -166,9 +166,9 @@
     "vnetResourceGroupNameResourceSegmentIndex": 4,
 {{if IsHostedMaster}}
   {{if IsCustomVNET}}
-{{if .AgentPoolProfiles}}
+    {{if .AgentPoolProfiles}}
     "vnetSubnetID": "[parameters('{{ (index .AgentPoolProfiles 0).Name }}VnetSubnetID')]",
-{{end}}
+    {{end}}
     "subnetName": "[split(variables('vnetSubnetID'), '/')[variables('subnetNameResourceSegmentIndex')]]",
     "virtualNetworkName": "[split(variables('vnetSubnetID'), '/')[variables('vnetNameResourceSegmentIndex')]]",
     "virtualNetworkResourceGroupName": "[split(variables('vnetSubnetID'), '/')[variables('vnetResourceGroupNameResourceSegmentIndex')]]",
