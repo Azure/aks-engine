@@ -46,6 +46,9 @@ func assignKubernetesParameters(properties *api.Properties, parametersMap params
 
 			addValue(parametersMap, "kubeDNSServiceIP", kubernetesConfig.DNSServiceIP)
 			addValue(parametersMap, "kubernetesHyperkubeSpec", kubernetesHyperkubeSpec)
+			if kubernetesConfig.PrivateAzureRegistryServer != "" {
+				addValue(parametersMap, "privateAzureRegistryServer", kubernetesConfig.PrivateAzureRegistryServer)
+			}
 			addValue(parametersMap, "kubernetesAddonManagerSpec", kubernetesImageBase+k8sComponents["addonmanager"])
 			if orchestratorProfile.NeedsExecHealthz() {
 				addValue(parametersMap, "kubernetesExecHealthzSpec", kubernetesImageBase+k8sComponents["exechealthz"])
@@ -237,7 +240,14 @@ func assignKubernetesParameters(properties *api.Properties, parametersMap params
 			addValue(parametersMap, "dockerEngineDownloadRepo", cloudSpecConfig.DockerSpecConfig.DockerEngineRepo)
 		} else {
 			addValue(parametersMap, "dockerEngineDownloadRepo", "")
+		}
+
+		if properties.OrchestratorProfile.KubernetesConfig.MobyVersion != "" {
 			addValue(parametersMap, "mobyVersion", properties.OrchestratorProfile.KubernetesConfig.MobyVersion)
+		}
+
+		if properties.OrchestratorProfile.KubernetesConfig.ContainerdVersion != "" {
+			addValue(parametersMap, "containerdVersion", properties.OrchestratorProfile.KubernetesConfig.ContainerdVersion)
 		}
 
 		if properties.AADProfile != nil {

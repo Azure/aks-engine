@@ -293,6 +293,7 @@ type KubernetesConfig struct {
 	CustomHyperkubeImage            string            `json:"customHyperkubeImage,omitempty"`
 	DockerEngineVersion             string            `json:"dockerEngineVersion,omitempty"` // Deprecated
 	MobyVersion                     string            `json:"mobyVersion,omitempty"`
+	ContainerdVersion               string            `json:"containerdVersion,omitempty"`
 	CustomCcmImage                  string            `json:"customCcmImage,omitempty"`
 	UseCloudControllerManager       *bool             `json:"useCloudControllerManager,omitempty"`
 	CustomWindowsPackageURL         string            `json:"customWindowsPackageURL,omitempty"`
@@ -333,6 +334,7 @@ type KubernetesConfig struct {
 	KeyVaultSku                     string            `json:"keyVaultSku,omitempty"`
 	MaximumLoadBalancerRuleCount    int               `json:"maximumLoadBalancerRuleCount,omitempty"`
 	ProxyMode                       KubeProxyMode     `json:"kubeProxyMode,omitempty"`
+	PrivateAzureRegistryServer      string            `json:"privateAzureRegistryServer,omitempty"`
 }
 
 // CustomFile has source as the full absolute source path to a file and dest
@@ -722,7 +724,7 @@ func (o *OrchestratorProfile) IsSwarmMode() bool {
 // RequiresDocker returns if the kubernetes settings require docker binary to be installed.
 func (k *KubernetesConfig) RequiresDocker() bool {
 	runtime := strings.ToLower(k.ContainerRuntime)
-	return runtime == "docker" || runtime == ""
+	return runtime == Docker || runtime == ""
 }
 
 // IsRBACEnabled checks if RBAC is enabled

@@ -202,6 +202,11 @@ configureCNI() {
         fi
         /sbin/ebtables -t nat --list
     fi
+    if [[ "${NETWORK_PLUGIN}" = "cilium" ]]; then
+        systemctl enable sys-fs-bpf.mount
+        systemctl restart sys-fs-bpf.mount
+        REBOOTREQUIRED=true
+    fi
 }
 
 setKubeletOpts () {
@@ -241,11 +246,9 @@ setupContainerd() {
 }
 
 ensureContainerd() {
-    if [[ "$CONTAINER_RUNTIME" == "clear-containers" ]] || [[ "$CONTAINER_RUNTIME" == "kata-containers" ]] || [[ "$CONTAINER_RUNTIME" == "containerd" ]]; then
-        setupContainerd
-        echo "Enabling and starting cri-containerd service..."
-        systemctlEnableAndStart containerd || exit $ERR_SYSTEMCTL_START_FAIL
-    fi
+    setupContainerd
+    echo "Enabling and starting cri-containerd service..."
+    systemctlEnableAndStart containerd || exit $ERR_SYSTEMCTL_START_FAIL
 }
 
 ensureDocker() {

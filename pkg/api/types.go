@@ -355,6 +355,7 @@ type KubernetesConfig struct {
 	CustomHyperkubeImage             string            `json:"customHyperkubeImage,omitempty"`
 	DockerEngineVersion              string            `json:"dockerEngineVersion,omitempty"` // Deprecated
 	MobyVersion                      string            `json:"mobyVersion,omitempty"`
+	ContainerdVersion                string            `json:"containerdVersion,omitempty"`
 	CustomCcmImage                   string            `json:"customCcmImage,omitempty"` // Image for cloud-controller-manager
 	UseCloudControllerManager        *bool             `json:"useCloudControllerManager,omitempty"`
 	CustomWindowsPackageURL          string            `json:"customWindowsPackageURL,omitempty"`
@@ -401,6 +402,7 @@ type KubernetesConfig struct {
 	KeyVaultSku                      string            `json:"keyVaultSku,omitempty"`
 	MaximumLoadBalancerRuleCount     int               `json:"maximumLoadBalancerRuleCount,omitempty"`
 	ProxyMode                        KubeProxyMode     `json:"kubeProxyMode,omitempty"`
+	PrivateAzureRegistryServer       string            `json:"privateAzureRegistryServer,omitempty"`
 }
 
 // CustomFile has source as the full absolute source path to a file and dest
@@ -1224,7 +1226,7 @@ func (o *OrchestratorProfile) IsAzureCNI() bool {
 func (o *OrchestratorProfile) RequireRouteTable() bool {
 	switch o.OrchestratorType {
 	case Kubernetes:
-		if o.IsAzureCNI() || "cilium" == o.KubernetesConfig.NetworkPolicy {
+		if o.IsAzureCNI() || "cilium" == o.KubernetesConfig.NetworkPolicy || "flannel" == o.KubernetesConfig.NetworkPlugin {
 			return false
 		}
 		return true
@@ -1473,7 +1475,7 @@ func (k *KubernetesConfig) PrivateJumpboxProvision() bool {
 // RequiresDocker returns if the kubernetes settings require docker binary to be installed.
 func (k *KubernetesConfig) RequiresDocker() bool {
 	runtime := strings.ToLower(k.ContainerRuntime)
-	return runtime == "docker" || runtime == ""
+	return runtime == Docker || runtime == ""
 }
 
 // SetCloudProviderBackoffDefaults sets default cloudprovider backoff config

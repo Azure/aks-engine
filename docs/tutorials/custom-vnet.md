@@ -70,13 +70,13 @@ The Azure Resource Manager template used to deploy this virtual network is:
 And you can deploy it using the Azure CLI 2.0. First, you need to create a new resource group:
 
 ```bash
-az group create -n acs-custom-vnet -l "westeurope"
+az group create -n aks-custom-vnet -l "westeurope"
 ```
 
 Then you can deploy the virtual network using the JSON description above and the following command:
 
 ```bash
-az group deployment create -g acs-custom-vnet --name "CustomVNet" --template-file azuredeploy.swarm.vnet.json
+az group deployment create -g aks-custom-vnet --name "CustomVNet" --template-file azuredeploy.swarm.vnet.json
 ```
 
 Once the deployment is completed you should see the virtual network in the resource group.
@@ -169,7 +169,7 @@ aksengine took 37.1384ms
 Now that you have generated the ARM templates and its parameters file using AKS Engine, you can use Azure CLI 2.0 to start the deployment of the cluster:
 
 ```bash
-az group deployment create -g acs-custom-vnet --name "ClusterDeployment" --template-file azuredeploy.json --parameters "@azuredeploy.parameters.json"
+az group deployment create -g aks-custom-vnet --name "ClusterDeployment" --template-file azuredeploy.json --parameters "@azuredeploy.parameters.json"
 ```
 
 Depending on the number of agent you have asked for the deployment can take a while.
@@ -182,9 +182,9 @@ For Kubernetes clusters, we need to update the VNET to attach to the route table
 
 ```
 #!/bin/bash
-rt=$(az network route-table list -g acs-custom-vnet -o json | jq -r '.[].id')
+rt=$(az network route-table list -g aks-custom-vnet -o json | jq -r '.[].id')
 az network vnet subnet update -n KubernetesSubnet \
--g acs-custom-vnet \
+-g aks-custom-vnet \
 --vnet-name KubernetesCustomVNET \
 --route-table $rt
 ```

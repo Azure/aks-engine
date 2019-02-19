@@ -140,6 +140,27 @@ write_files:
     # This setting instructs the kernel to reboot 30 seconds after a panic event to allow the node to automatically recover
     kernel.panic = 30
 
+{{if HasCiliumNetworkPlugin }}
+- path: /etc/systemd/system/sys-fs-bpf.mount
+  permissions: "0644"
+  owner: root
+  content: |
+    [Unit]
+    Description=Cilium BPF mounts
+    Documentation=http://docs.cilium.io/
+    DefaultDependencies=no
+    Before=local-fs.target umount.target
+    After=swap.target
+
+    [Mount]
+    What=bpffs
+    Where=/sys/fs/bpf
+    Type=bpf
+
+    [Install]
+    WantedBy=multi-user.target
+{{end}}
+
 {{if IsNSeriesSKU .}}
 - path: /etc/systemd/system/nvidia-modprobe.service
   permissions: "0644"
