@@ -18,4 +18,35 @@ var _ = Describe("The get-versions command", func() {
 		Expect(output.Flags().Lookup("orchestrator")).To(BeNil())
 		Expect(output.Flags().Lookup("version")).NotTo(BeNil())
 	})
+
+	It("should support JSON output", func() {
+		command := &getVersionsCmd{
+			orchestrator: "kubernetes",
+			version:      "1.13.3",
+			output:       "json",
+		}
+		err := command.run(nil, nil)
+		Expect(err).To(BeNil())
+	})
+
+	It("should support table output", func() {
+		command := &getVersionsCmd{
+			orchestrator: "kubernetes",
+			version:      "1.13.3",
+			output:       "table",
+		}
+		err := command.run(nil, nil)
+		Expect(err).To(BeNil())
+	})
+
+	It("should error on an invalid output option", func() {
+		command := &getVersionsCmd{
+			orchestrator: "kubernetes",
+			version:      "1.13.3",
+			output:       "yaml",
+		}
+		err := command.run(nil, nil)
+		Expect(err).NotTo(BeNil())
+		Expect(err.Error()).To(Equal("output format \"yaml\" is not supported"))
+	})
 })
