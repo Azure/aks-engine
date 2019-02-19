@@ -211,6 +211,12 @@ func (t *TemplateGenerator) getTemplateFuncMap(cs *api.ContainerService) templat
 		"GetCustomEnvironmentJSON": func() string {
 			return cs.Properties.GetCustomEnvironmentJSON()
 		},
+		"GetAuthenticationMethod": func() string {
+			return cs.Properties.GetAuthenticationMethod()
+		},
+		"GetIdentitySystem": func() string {
+			return cs.Properties.GetIdentitySystem()
+		},
 		"IsMasterVirtualMachineScaleSets": func() bool {
 			return cs.Properties.MasterProfile != nil && cs.Properties.MasterProfile.IsVirtualMachineScaleSets()
 		},

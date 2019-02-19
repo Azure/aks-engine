@@ -37,6 +37,8 @@ func TestConvertCloudProfileToVLabs(t *testing.T) {
 	cs := &ContainerService{
 		Properties: &Properties{
 			CustomCloudProfile: &CustomCloudProfile{
+				IdentitySystem:       AzureAD,
+				AuthenticationMethod: ClientSecret,
 				Environment: &azure.Environment{
 					Name:                         name,
 					ManagementPortalURL:          managementPortalURL,
@@ -64,6 +66,13 @@ func TestConvertCloudProfileToVLabs(t *testing.T) {
 	}
 
 	vlabscs := ConvertContainerServiceToVLabs(cs)
+
+	if vlabscs.Properties.CustomCloudProfile.AuthenticationMethod != ClientSecret {
+		t.Errorf("incorrect AuthenticationMethod, expect: '%s', actual: '%s'", ClientSecret, vlabscs.Properties.CustomCloudProfile.AuthenticationMethod)
+	}
+	if vlabscs.Properties.CustomCloudProfile.IdentitySystem != AzureAD {
+		t.Errorf("incorrect IdentitySystem, expect: '%s', actual: '%s'", AzureAD, vlabscs.Properties.CustomCloudProfile.IdentitySystem)
+	}
 	if vlabscs.Properties.CustomCloudProfile.Environment.Name != name {
 		t.Errorf("incorrect Name, expect: '%s', actual: '%s'", name, vlabscs.Properties.CustomCloudProfile.Environment.Name)
 	}
@@ -131,6 +140,8 @@ func TestConvertAzureEnvironmentSpecConfigToVLabs(t *testing.T) {
 	cs := &ContainerService{
 		Properties: &Properties{
 			CustomCloudProfile: &CustomCloudProfile{
+				IdentitySystem:       ADFS,
+				AuthenticationMethod: ClientCertificate,
 				AzureEnvironmentSpecConfig: &AzureEnvironmentSpecConfig{
 					CloudName: "AzureStackCloud",
 					//DockerSpecConfig specify the docker engine download repo
@@ -182,7 +193,12 @@ func TestConvertAzureEnvironmentSpecConfigToVLabs(t *testing.T) {
 		},
 	}
 	vlabscs := ConvertContainerServiceToVLabs(cs)
-
+	if vlabscs.Properties.CustomCloudProfile.AuthenticationMethod != ClientCertificate {
+		t.Errorf("incorrect AuthenticationMethod, expect: '%s', actual: '%s'", ClientCertificate, vlabscs.Properties.CustomCloudProfile.AuthenticationMethod)
+	}
+	if vlabscs.Properties.CustomCloudProfile.IdentitySystem != ADFS {
+		t.Errorf("incorrect IdentitySystem, expect: '%s', actual: '%s'", ADFS, vlabscs.Properties.CustomCloudProfile.IdentitySystem)
+	}
 	csSpec := cs.Properties.CustomCloudProfile.AzureEnvironmentSpecConfig
 	vlabscsSpec := vlabscs.Properties.CustomCloudProfile.AzureEnvironmentSpecConfig
 

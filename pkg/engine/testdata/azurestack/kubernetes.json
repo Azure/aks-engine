@@ -13,6 +13,8 @@
             }
         },
         "customCloudProfile": {
+            "identitySystem": "AzureAD",
+            "authenticationMethod": "client_secret",
             "environment":{
             "name": "AzureStackCloud",
             "managementPortalURL": "",
