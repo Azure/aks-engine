@@ -292,8 +292,8 @@ func TestCustomCloudProfile(t *testing.T) {
 	vlabscs := &vlabs.ContainerService{
 		Properties: &vlabs.Properties{
 			CustomCloudProfile: &vlabs.CustomCloudProfile{
-				IdentitySystem:       ADFS,
-				AuthenticationMethod: ClientCertificate,
+				IdentitySystem:       ADFSIdentitySystem,
+				AuthenticationMethod: ClientCertificateAuthMethod,
 				Environment: &azure.Environment{
 					Name:                         name,
 					ManagementPortalURL:          managementPortalURL,
@@ -324,11 +324,11 @@ func TestCustomCloudProfile(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to convert ContainerService, error: %s", err)
 	}
-	if cs.Properties.CustomCloudProfile.AuthenticationMethod != ClientCertificate {
-		t.Errorf("incorrect AuthenticationMethod, expect: '%s', actual: '%s'", ClientCertificate, cs.Properties.CustomCloudProfile.AuthenticationMethod)
+	if cs.Properties.CustomCloudProfile.AuthenticationMethod != ClientCertificateAuthMethod {
+		t.Errorf("incorrect AuthenticationMethod, expect: '%s', actual: '%s'", ClientCertificateAuthMethod, cs.Properties.CustomCloudProfile.AuthenticationMethod)
 	}
-	if cs.Properties.CustomCloudProfile.IdentitySystem != ADFS {
-		t.Errorf("incorrect IdentitySystem, expect: '%s', actual: '%s'", ADFS, cs.Properties.CustomCloudProfile.IdentitySystem)
+	if cs.Properties.CustomCloudProfile.IdentitySystem != ADFSIdentitySystem {
+		t.Errorf("incorrect IdentitySystem, expect: '%s', actual: '%s'", ADFSIdentitySystem, cs.Properties.CustomCloudProfile.IdentitySystem)
 	}
 	if cs.Properties.CustomCloudProfile.Environment.Name != name {
 		t.Errorf("incorrect Name, expect: '%s', actual: '%s'", name, cs.Properties.CustomCloudProfile.Environment.Name)
@@ -397,8 +397,8 @@ func TestConvertAzureEnvironmentSpecConfig(t *testing.T) {
 	vlabscs := &vlabs.ContainerService{
 		Properties: &vlabs.Properties{
 			CustomCloudProfile: &vlabs.CustomCloudProfile{
-				IdentitySystem:       AzureAD,
-				AuthenticationMethod: ClientSecret,
+				IdentitySystem:       AzureADIdentitySystem,
+				AuthenticationMethod: ClientSecretAuthMethod,
 				AzureEnvironmentSpecConfig: &vlabs.AzureEnvironmentSpecConfig{
 					CloudName: "AzureStackCloud",
 					//DockerSpecConfig specify the docker engine download repo
@@ -453,11 +453,11 @@ func TestConvertAzureEnvironmentSpecConfig(t *testing.T) {
 		t.Fatalf("Failed to convert ContainerService, error: %s", err)
 	}
 
-	if cs.Properties.CustomCloudProfile.AuthenticationMethod != ClientSecret {
-		t.Errorf("incorrect AuthenticationMethod, expect: '%s', actual: '%s'", ClientSecret, cs.Properties.CustomCloudProfile.AuthenticationMethod)
+	if cs.Properties.CustomCloudProfile.AuthenticationMethod != ClientSecretAuthMethod {
+		t.Errorf("incorrect AuthenticationMethod, expect: '%s', actual: '%s'", ClientSecretAuthMethod, cs.Properties.CustomCloudProfile.AuthenticationMethod)
 	}
-	if cs.Properties.CustomCloudProfile.IdentitySystem != AzureAD {
-		t.Errorf("incorrect IdentitySystem, expect: '%s', actual: '%s'", AzureAD, cs.Properties.CustomCloudProfile.IdentitySystem)
+	if cs.Properties.CustomCloudProfile.IdentitySystem != AzureADIdentitySystem {
+		t.Errorf("incorrect IdentitySystem, expect: '%s', actual: '%s'", AzureADIdentitySystem, cs.Properties.CustomCloudProfile.IdentitySystem)
 	}
 
 	csSpec := cs.Properties.CustomCloudProfile.AzureEnvironmentSpecConfig

@@ -1430,24 +1430,24 @@ func (cs *ContainerService) GetLocations() []string {
 	return allLocations
 }
 
-// GetAuthenticationMethod returns authentication method which k8s azure cloud provider will use
+// GetCustomCloudAuthenticationMethod returns authentication method which k8s azure cloud provider will use
 // For AzurePublicCloud,AzureChinaCloud,azureGermanCloud,azureUSGovernmentCloud, it will be always be client_secret
 // For AzureStackCloud, if it is specifiled in configuration, the value will be used, if not ,the default value is client_secret.
-func (p *Properties) GetAuthenticationMethod() string {
+func (p *Properties) GetCustomCloudAuthenticationMethod() string {
 	if p.IsAzureStackCloud() {
 		return p.CustomCloudProfile.AuthenticationMethod
 	}
-	return ClientSecret
+	return ClientSecretAuthMethod
 }
 
-// GetIdentitySystem returns identity system method for azure stack.
+// GetCustomCloudIdentitySystem returns identity system method for azure stack.
 // For AzurePublicCloud,AzureChinaCloud,azureGermanCloud,azureUSGovernmentCloud, it will be always be AzureAD
 // For AzureStackCloud, if it is specifiled in configuration, the value will be used, if not ,the default value is AzureAD.
-func (p *Properties) GetIdentitySystem() string {
+func (p *Properties) GetCustomCloudIdentitySystem() string {
 	if p.IsAzureStackCloud() {
 		return p.CustomCloudProfile.IdentitySystem
 	}
-	return AzureAD
+	return AzureADIdentitySystem
 }
 
 func getDefaultNVIDIADevicePluginEnabled(p *Properties) bool {

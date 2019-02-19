@@ -2579,7 +2579,7 @@ func TestValidateCustomCloudProfile(t *testing.T) {
 					TokenAudience:                tokenAudience,
 				},
 			},
-			expectedErr: errors.New(fmt.Sprintf("authenticationMethod allowed values are '%s' and '%s'", ClientCertificate, ClientSecret)),
+			expectedErr: errors.New(fmt.Sprintf("authenticationMethod allowed values are '%s' and '%s'", ClientCertificateAuthMethod, ClientSecretAuthMethod)),
 		},
 		{
 			name: "identitySystem has invalid value",
@@ -2608,13 +2608,13 @@ func TestValidateCustomCloudProfile(t *testing.T) {
 					TokenAudience:                tokenAudience,
 				},
 			},
-			expectedErr: errors.New(fmt.Sprintf("identitySystem allowed values are '%s' and '%s'", AzureAD, ADFS)),
+			expectedErr: errors.New(fmt.Sprintf("identitySystem allowed values are '%s' and '%s'", AzureADIdentitySystem, ADFSIdentitySystem)),
 		},
 		{
 			name: " valid AzureAD and ClientSecret",
 			customProfile: &CustomCloudProfile{
-				IdentitySystem:       AzureAD,
-				AuthenticationMethod: ClientSecret,
+				IdentitySystem:       AzureADIdentitySystem,
+				AuthenticationMethod: ClientSecretAuthMethod,
 				Environment: &azure.Environment{
 					Name:                         name,
 					ManagementPortalURL:          managementPortalURL,
@@ -2643,8 +2643,8 @@ func TestValidateCustomCloudProfile(t *testing.T) {
 		{
 			name: " valid ADFS and ClientCertificate",
 			customProfile: &CustomCloudProfile{
-				IdentitySystem:       ADFS,
-				AuthenticationMethod: ClientCertificate,
+				IdentitySystem:       ADFSIdentitySystem,
+				AuthenticationMethod: ClientCertificateAuthMethod,
 				Environment: &azure.Environment{
 					Name:                         name,
 					ManagementPortalURL:          managementPortalURL,

@@ -122,15 +122,15 @@ const (
 )
 
 const (
-	//AzureAD Identity System
-	AzureAD = "azure_ad"
+	//AzureADIdentitySystem Identity System
+	AzureADIdentitySystem = "azure_ad"
 	//ADFS Identity System
-	ADFS = "adfs"
+	ADFSIdentitySystem = "adfs"
 )
 
 const (
-	//ClientSecret Authentication method
-	ClientSecret = "client_secret"
-	//ClientCertificate Authentication method
-	ClientCertificate = "client_certificate"
+	//ClientSecretAuthMethod Authentication method
+	ClientSecretAuthMethod = "client_secret"
+	//ClientCertificateAuthMethod Authentication method
+	ClientCertificateAuthMethod = "client_certificate"
 )

@@ -211,11 +211,11 @@ func (t *TemplateGenerator) getTemplateFuncMap(cs *api.ContainerService) templat
 		"GetCustomEnvironmentJSON": func() string {
 			return cs.Properties.GetCustomEnvironmentJSON()
 		},
-		"GetAuthenticationMethod": func() string {
-			return cs.Properties.GetAuthenticationMethod()
+		"GetCustomCloudAuthenticationMethod": func() string {
+			return cs.Properties.GetCustomCloudAuthenticationMethod()
 		},
-		"GetIdentitySystem": func() string {
-			return cs.Properties.GetIdentitySystem()
+		"GetCustomCloudIdentitySystem": func() string {
+			return cs.Properties.GetCustomCloudIdentitySystem()
 		},
 		"IsMasterVirtualMachineScaleSets": func() bool {
 			return cs.Properties.MasterProfile != nil && cs.Properties.MasterProfile.IsVirtualMachineScaleSets()
