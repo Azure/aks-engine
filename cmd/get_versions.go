@@ -43,7 +43,7 @@ func newGetVersionsCmd() *cobra.Command {
 	gvc.orchestrator = "Kubernetes" // orchestrator is always Kubernetes
 	f.StringVar(&gvc.version, "version", "", "Kubernetes version (optional)")
 	f.BoolVar(&gvc.windows, "windows", false, "Kubernetes cluster with Windows nodes (optional)")
-	f.StringVarP(&gvc.output, "output", "o", "json", "Output format. Allowed values: json, table.")
+	f.StringVarP(&gvc.output, "output", "o", "table", "Output format. Allowed values: json, table.")
 
 	return command
 }
