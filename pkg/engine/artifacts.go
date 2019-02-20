@@ -125,7 +125,7 @@ func kubernetesContainerAddonSettingsInit(profile *api.Properties) map[string]ku
 }
 
 func kubernetesAddonSettingsInit(profile *api.Properties) []kubernetesFeatureSetting {
-	return []kubernetesFeatureSetting{
+	kubernetesFeatureSettings := []kubernetesFeatureSetting{
 		{
 			"kubernetesmasteraddons-kube-dns-deployment.yaml",
 			"kube-dns-deployment.yaml",
@@ -143,18 +143,6 @@ func kubernetesAddonSettingsInit(profile *api.Properties) []kubernetesFeatureSet
 			"kube-proxy-daemonset.yaml",
 			true,
 			profile.OrchestratorProfile.KubernetesConfig.GetAddonScript(DefaultKubeProxyAddonName),
-		},
-		{
-			"kubernetesmasteraddons-unmanaged-azure-storage-classes.yaml",
-			"azure-storage-classes.yaml",
-			profile.AgentPoolProfiles[0].StorageProfile != api.ManagedDisks,
-			profile.OrchestratorProfile.KubernetesConfig.GetAddonScript(DefaultAzureStorageClassesAddonName),
-		},
-		{
-			"kubernetesmasteraddons-managed-azure-storage-classes.yaml",
-			"azure-storage-classes.yaml",
-			profile.AgentPoolProfiles[0].StorageProfile == api.ManagedDisks,
-			profile.OrchestratorProfile.KubernetesConfig.GetAddonScript(DefaultAzureStorageClassesAddonName),
 		},
 		{
 			"kubernetesmasteraddons-azure-npm-daemonset.yaml",
@@ -206,6 +194,25 @@ func kubernetesAddonSettingsInit(profile *api.Properties) []kubernetesFeatureSet
 			profile.OrchestratorProfile.KubernetesConfig.GetAddonScript(DefaultELBSVCAddonName),
 		},
 	}
+
+	if len(profile.AgentPoolProfiles) > 0 {
+		kubernetesFeatureSettings = append(kubernetesFeatureSettings,
+			kubernetesFeatureSetting{
+				"kubernetesmasteraddons-unmanaged-azure-storage-classes.yaml",
+				"azure-storage-classes.yaml",
+				profile.AgentPoolProfiles[0].StorageProfile != api.ManagedDisks,
+				profile.OrchestratorProfile.KubernetesConfig.GetAddonScript(DefaultAzureStorageClassesAddonName),
+			})
+		kubernetesFeatureSettings = append(kubernetesFeatureSettings,
+			kubernetesFeatureSetting{
+				"kubernetesmasteraddons-managed-azure-storage-classes.yaml",
+				"azure-storage-classes.yaml",
+				profile.AgentPoolProfiles[0].StorageProfile == api.ManagedDisks,
+				profile.OrchestratorProfile.KubernetesConfig.GetAddonScript(DefaultAzureStorageClassesAddonName),
+			})
+	}
+
+	return kubernetesFeatureSettings
 }
 
 func kubernetesManifestSettingsInit(profile *api.Properties) []kubernetesFeatureSetting {

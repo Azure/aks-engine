@@ -166,7 +166,9 @@
     "vnetResourceGroupNameResourceSegmentIndex": 4,
 {{if IsHostedMaster}}
   {{if IsCustomVNET}}
+    {{if .AgentPoolProfiles}}
     "vnetSubnetID": "[parameters('{{ (index .AgentPoolProfiles 0).Name }}VnetSubnetID')]",
+    {{end}}
     "subnetName": "[split(variables('vnetSubnetID'), '/')[variables('subnetNameResourceSegmentIndex')]]",
     "virtualNetworkName": "[split(variables('vnetSubnetID'), '/')[variables('vnetNameResourceSegmentIndex')]]",
     "virtualNetworkResourceGroupName": "[split(variables('vnetSubnetID'), '/')[variables('vnetResourceGroupNameResourceSegmentIndex')]]",
@@ -209,11 +211,19 @@
 {{end}}
     "nsgID": "[resourceId('Microsoft.Network/networkSecurityGroups',variables('nsgName'))]",
 {{if AnyAgentUsesVirtualMachineScaleSets}}
+{{if .AgentPoolProfiles}}
     "primaryScaleSetName": "[concat(parameters('orchestratorName'), '-{{ (index .AgentPoolProfiles 0).Name }}-',parameters('nameSuffix'), '-vmss')]",
+{{else}}
+    "primaryScaleSetName": "",
+{{end}}
     "primaryAvailabilitySetName": "",
     "vmType": "vmss",
 {{else}}
+{{if .AgentPoolProfiles}}
     "primaryAvailabilitySetName": "[concat('{{ (index .AgentPoolProfiles 0).Name }}-availabilitySet-',parameters('nameSuffix'))]",
+{{else}}
+    "primaryAvailabilitySetName": "",
+{{end}}
     "primaryScaleSetName": "",
     "vmType": "standard",
 {{end}}
