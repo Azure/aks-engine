@@ -291,3 +291,28 @@ func TestKubeletIPMasqAgentEnabledOrDisabled(t *testing.T) {
 			k["--non-masquerade-cidr"], DefaultNonMasqueradeCIDR)
 	}
 }
+
+func TestEnforceNodeAllocatable(t *testing.T) {
+	// Validate default
+	cs := CreateMockContainerService("testcluster", "1.10.13", 3, 2, false)
+	cs.setKubeletConfig()
+	k := cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig
+	if k["--enforce-node-allocatable"] != "pods" {
+		t.Fatalf("got unexpected '--enforce-node-allocatable' kubelet config value %s, the expected value is %s",
+			k["--enforce-node-allocatable"], "pods")
+	}
+
+	// Validate that --enforce-node-allocatable is overridable
+	cs = CreateMockContainerService("testcluster", "1.10.13", 3, 2, false)
+	cs.Properties.OrchestratorProfile.KubernetesConfig = &KubernetesConfig{
+		KubeletConfig: map[string]string{
+			"--enforce-node-allocatable": "kube-reserved/system-reserved",
+		},
+	}
+	cs.setKubeletConfig()
+	k = cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig
+	if k["--enforce-node-allocatable"] != "kube-reserved/system-reserved" {
+		t.Fatalf("got unexpected '--enforce-node-allocatable' kubelet config value %s, the expected value is %s",
+			k["--enforce-node-allocatable"], "kube-reserved/system-reserved")
+	}
+}
