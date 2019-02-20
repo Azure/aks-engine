@@ -963,9 +963,8 @@ func (p *Properties) HasZonesForAllAgentPools() bool {
 			}
 		}
 		return true
-	} else {
-		return false
 	}
+	return false
 }
 
 // HasAvailabilityZones returns true if the cluster contains a profile with zones
