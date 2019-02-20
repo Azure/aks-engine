@@ -93,7 +93,11 @@
     "apiVersionNetwork": "2017-10-01",
     "environmentJSON": "{{GetCustomEnvironmentJSON}}",
 {{ else }}
+    {{if IsVMSSOverProvisioningEnabled}}
     "apiVersionCompute": "2018-10-01",
+    {{else}}
+    "apiVersionCompute": "2018-06-01",
+    {{end}}
     "apiVersionStorage": "2018-07-01",
     "apiVersionKeyVault": "2018-02-14",
     "apiVersionNetwork": "2018-08-01",
