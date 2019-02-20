@@ -57,12 +57,12 @@ var (
 			networkPolicy: "",
 		},
 		{
-			networkPlugin: "cilium",
+			networkPlugin: NetworkPolicyCilium,
 			networkPolicy: "",
 		},
 		{
-			networkPlugin: "cilium",
-			networkPolicy: "cilium",
+			networkPlugin: NetworkPluginCilium,
+			networkPolicy: NetworkPolicyCilium,
 		},
 		{
 			networkPlugin: "kubenet",
@@ -78,7 +78,7 @@ var (
 		},
 		{
 			networkPlugin: "",
-			networkPolicy: "cilium",
+			networkPolicy: NetworkPolicyCilium,
 		},
 		{
 			networkPlugin: "",
@@ -1189,7 +1189,7 @@ func (k *KubernetesConfig) validateNetworkPolicy(k8sVersion string, hasWindows b
 	}
 
 	// Temporary safety check, to be removed when Windows support is added.
-	if (networkPolicy == "calico" || networkPolicy == "cilium" || networkPolicy == "flannel") && hasWindows {
+	if (networkPolicy == "calico" || networkPolicy == NetworkPolicyCilium || networkPolicy == "flannel") && hasWindows {
 		return errors.Errorf("networkPolicy '%s' is not supporting windows agents", networkPolicy)
 	}
 

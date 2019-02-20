@@ -639,7 +639,7 @@ func Test_Properties_ValidateNetworkPolicy(t *testing.T) {
 		)
 	}
 
-	p.OrchestratorProfile.KubernetesConfig.NetworkPolicy = "cilium"
+	p.OrchestratorProfile.KubernetesConfig.NetworkPolicy = NetworkPolicyCilium
 	if err := p.OrchestratorProfile.KubernetesConfig.validateNetworkPolicy(k8sVersion, true); err == nil {
 		t.Errorf(
 			"should error on cilium for windows clusters",
@@ -698,7 +698,7 @@ func Test_Properties_ValidateNetworkPluginPlusPolicy(t *testing.T) {
 	for _, config := range []k8sNetworkConfig{
 		{
 			networkPlugin: "azure",
-			networkPolicy: "cilium",
+			networkPolicy: NetworkPolicyCilium,
 		},
 		{
 			networkPlugin: "azure",
