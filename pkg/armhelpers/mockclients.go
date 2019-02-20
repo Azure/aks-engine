@@ -370,7 +370,7 @@ func (mc *MockAKSEngineClient) ListVirtualMachines(ctx context.Context, resource
 		}, errors.New("ListVirtualMachines failed")
 	}
 
-	vm1Name := "k8s-12345678-agentpool1-0"
+	vm1Name := "k8s-agentpool1-12345678-0"
 
 	creationSourceString := "creationSource"
 	orchestratorString := "orchestrator"
@@ -438,7 +438,7 @@ func (mc *MockAKSEngineClient) GetVirtualMachine(ctx context.Context, resourceGr
 		return compute.VirtualMachine{}, errors.New("GetVirtualMachine failed")
 	}
 
-	vm1Name := "k8s-12345678-agentpool1-0"
+	vm1Name := "k8s-agentpool1-12345678-0"
 
 	creationSourceString := "creationSource"
 	orchestratorString := "orchestrator"

@@ -101,8 +101,10 @@ func main() {
 			err = sa.DownloadFiles(cfg.SoakClusterName, "_output")
 			if err != nil {
 				log.Printf("Error while trying to download _output dir: %s, will provision a new cluster.\n", err)
-				log.Printf("Deleting Resource Group:%s\n", rg)
-				acct.DeleteGroup(rg, true)
+				if cfg.CleanUpIfFail {
+					log.Printf("Deleting Resource Group:%s\n", rg)
+					acct.DeleteGroup(rg, true)
+				}
 				log.Printf("Deleting Storage files:%s\n", rg)
 				sa.DeleteFiles(cfg.SoakClusterName)
 				cfg.Name = ""

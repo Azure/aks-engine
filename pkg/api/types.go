@@ -832,7 +832,7 @@ func (p *Properties) GetAgentVMPrefix(a *AgentPoolProfile) string {
 
 // GetMasterVMPrefix returns the prefix of master VMs
 func (p *Properties) GetMasterVMPrefix() string {
-	return p.FormatResourceName("master", "", "")
+	return p.FormatResourceName("master", "", "") + "-"
 }
 
 // GetResourcePrefix returns the prefix to use for naming cluster resources
@@ -845,12 +845,18 @@ func (p *Properties) GetResourcePrefix() string {
 
 // GetRouteTableName returns the route table name of the cluster.
 func (p *Properties) GetRouteTableName() string {
-	return p.FormatResourceName("", "routetable", "")
+	if p.IsHostedMasterProfile() {
+		return p.FormatResourceName("agentpool", "routetable", "")
+	}
+	return p.FormatResourceName("master", "routetable", "")
 }
 
 // GetNSGName returns the name of the network security group of the cluster.
 func (p *Properties) GetNSGName() string {
-	return p.FormatResourceName("", "nsg", "")
+	if p.IsHostedMasterProfile() {
+		return p.FormatResourceName("agentpool", "nsg", "")
+	}
+	return p.FormatResourceName("master", "nsg", "")
 }
 
 // GetPrimaryAvailabilitySetName returns the name of the primary availability set of the cluster

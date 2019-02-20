@@ -87,6 +87,8 @@ func (uc *UpgradeCluster) UpgradeCluster(subscriptionID uuid.UUID, az armhelpers
 	uc.AgentPools = make(map[string]*AgentPoolTopology)
 	uc.AgentPoolsToUpgrade = make(map[string]bool)
 
+	uc.DataModel.Properties.ClusterID = nameSuffix
+
 	for _, poolName := range agentPoolsToUpgrade {
 		uc.AgentPoolsToUpgrade[poolName] = true
 	}
@@ -352,15 +354,18 @@ func (uc *UpgradeCluster) addVMToAgentPool(vm compute.VirtualMachine, isUpgradab
 			poolIdentifier = (*vm.Name)[:9]
 		}
 	} else { // vm.StorageProfile.OsDisk.OsType == compute.Linux
+		AgentVMPattern := "^" + uc.ClusterTopology.DataModel.Properties.FormatResourceName(vmPoolName, "", "") + ".*"
+		uc.Logger.Debugf("Using regexp: '%s' to validate agent VM names\n", AgentVMPattern)
+		AgentVMRE := regexp.MustCompile(AgentVMPattern)
+
 		poolIdentifier, poolPrefix, _, err = utils.K8sLinuxVMNameParts(uc.DataModel.Properties, *vm.Name)
 		if err != nil {
 			uc.Logger.Errorf(err.Error())
 			return err
 		}
 
-		if !strings.EqualFold(uc.NameSuffix, poolPrefix) {
-			uc.Logger.Infof("Skipping VM: %s for upgrade as it does not belong to cluster with expected name suffix: %s\n",
-				*vm.Name, uc.NameSuffix)
+		if !AgentVMRE.MatchString(*vm.Name) {
+			uc.Logger.Infof("Skipping VM: %s for upgrade as it does not match name pattern '%s'\n", *vm.Name, AgentVMPattern)
 			return nil
 		}
 	}
