@@ -2315,22 +2315,22 @@ func TestAgentPoolProfile_ValidateAvailabilityProfile(t *testing.T) {
 
 	t.Run("Should fail for AvailabilitySet + SinglePlacementGroup true", func(t *testing.T) {
 		t.Parallel()
-		p := getK8sDefaultProperties(false)
-		agentPoolProfiles := p.AgentPoolProfiles
+		cs := getK8sDefaultContainerService(false)
+		agentPoolProfiles := cs.Properties.AgentPoolProfiles
 		agentPoolProfiles[0].SinglePlacementGroup = to.BoolPtr(true)
 		expectedMsg := fmt.Sprintf("singlePlacementGroup is only supported with VirtualMachineScaleSets")
-		if err := p.validateAgentPoolProfiles(true); err.Error() != expectedMsg {
+		if err := cs.Properties.validateAgentPoolProfiles(true); err.Error() != expectedMsg {
 			t.Errorf("expected error with message : %s, but got %s", expectedMsg, err.Error())
 		}
 	})
 
 	t.Run("Should fail for AvailabilitySet + SinglePlacementGroup false", func(t *testing.T) {
 		t.Parallel()
-		p := getK8sDefaultProperties(false)
-		agentPoolProfiles := p.AgentPoolProfiles
+		cs := getK8sDefaultContainerService(false)
+		agentPoolProfiles := cs.Properties.AgentPoolProfiles
 		agentPoolProfiles[0].SinglePlacementGroup = to.BoolPtr(false)
 		expectedMsg := fmt.Sprintf("singlePlacementGroup is only supported with VirtualMachineScaleSets")
-		if err := p.validateAgentPoolProfiles(true); err.Error() != expectedMsg {
+		if err := cs.Properties.validateAgentPoolProfiles(true); err.Error() != expectedMsg {
 			t.Errorf("expected error with message : %s, but got %s", expectedMsg, err.Error())
 		}
 	})
@@ -2339,79 +2339,79 @@ func TestAgentPoolProfile_ValidateAvailabilityProfile(t *testing.T) {
 func TestAgentPoolProfile_ValidateVirtualMachineScaleSet(t *testing.T) {
 	t.Run("Should fail for invalid VMSS + Overprovisioning config", func(t *testing.T) {
 		t.Parallel()
-		p := getK8sDefaultProperties(false)
-		agentPoolProfiles := p.AgentPoolProfiles
+		cs := getK8sDefaultContainerService(false)
+		agentPoolProfiles := cs.Properties.AgentPoolProfiles
 		agentPoolProfiles[0].AvailabilityProfile = AvailabilitySet
 		agentPoolProfiles[0].VMSSOverProvisioningEnabled = to.BoolPtr(true)
 		expectedMsg := fmt.Sprintf("You have specified VMSS Overprovisioning in agent pool %s, but you did not specify VMSS", agentPoolProfiles[0].Name)
-		if err := p.validateAgentPoolProfiles(false); err.Error() != expectedMsg {
+		if err := cs.Properties.validateAgentPoolProfiles(false); err.Error() != expectedMsg {
 			t.Errorf("expected error with message : %s, but got %s", expectedMsg, err.Error())
 		}
 	})
 
 	t.Run("Should fail for invalid VMSS + VnetSubnetID + FirstConsecutiveStaticIP config", func(t *testing.T) {
 		t.Parallel()
-		p := getK8sDefaultProperties(false)
-		p.MasterProfile.AvailabilityProfile = VirtualMachineScaleSets
-		p.MasterProfile.VnetSubnetID = "vnet"
-		p.MasterProfile.FirstConsecutiveStaticIP = "10.10.10.240"
+		cs := getK8sDefaultContainerService(false)
+		cs.Properties.MasterProfile.AvailabilityProfile = VirtualMachineScaleSets
+		cs.Properties.MasterProfile.VnetSubnetID = "vnet"
+		cs.Properties.MasterProfile.FirstConsecutiveStaticIP = "10.10.10.240"
 		expectedMsg := fmt.Sprintf("when masterProfile's availabilityProfile is VirtualMachineScaleSets and a vnetSubnetID is specified, the firstConsecutiveStaticIP should be empty and will be determined by an offset from the first IP in the vnetCidr")
-		if err := p.validateMasterProfile(); err.Error() != expectedMsg {
+		if err := cs.Properties.validateMasterProfile(); err.Error() != expectedMsg {
 			t.Errorf("expected error with message : %s, but got %s", expectedMsg, err.Error())
 		}
 	})
 
 	t.Run("Should fail for VMSS master + AvailabilitySet agent pool", func(t *testing.T) {
 		t.Parallel()
-		p := getK8sDefaultProperties(false)
-		p.MasterProfile.AvailabilityProfile = VirtualMachineScaleSets
-		agentPoolProfiles := p.AgentPoolProfiles
+		cs := getK8sDefaultContainerService(false)
+		cs.Properties.MasterProfile.AvailabilityProfile = VirtualMachineScaleSets
+		agentPoolProfiles := cs.Properties.AgentPoolProfiles
 		agentPoolProfiles[0].AvailabilityProfile = AvailabilitySet
 		expectedMsg := fmt.Sprintf("VirtualMachineScaleSets for master profile must be used together with virtualMachineScaleSets for agent profiles. Set \"availabilityProfile\" to \"VirtualMachineScaleSets\" for agent profiles")
-		if err := p.validateMasterProfile(); err.Error() != expectedMsg {
+		if err := cs.Properties.validateMasterProfile(); err.Error() != expectedMsg {
 			t.Errorf("expected error with message : %s, but got %s", expectedMsg, err.Error())
 		}
 	})
 
 	t.Run("Should fail for VMSS + < 1.10 version", func(t *testing.T) {
 		t.Parallel()
-		p := getK8sDefaultProperties(false)
-		p.OrchestratorProfile.OrchestratorRelease = "1.9"
-		agentPoolProfiles := p.AgentPoolProfiles
+		cs := getK8sDefaultContainerService(false)
+		cs.Properties.OrchestratorProfile.OrchestratorRelease = "1.9"
+		agentPoolProfiles := cs.Properties.AgentPoolProfiles
 		agentPoolProfiles[0].AvailabilityProfile = VirtualMachineScaleSets
 		minVersion, _ := semver.Make("1.10.0")
 		expectedMsg := fmt.Sprintf("VirtualMachineScaleSets are only available in Kubernetes version %s or greater. Please set \"orchestratorVersion\" to %s or above", minVersion.String(), minVersion.String())
-		if err := p.validateAgentPoolProfiles(false); err.Error() != expectedMsg {
+		if err := cs.Properties.validateAgentPoolProfiles(false); err.Error() != expectedMsg {
 			t.Errorf("expected error with message : %s, but got %s", expectedMsg, err.Error())
 		}
 	})
 
 	t.Run("Should fail for VMSS + StorageAccount", func(t *testing.T) {
 		t.Parallel()
-		p := getK8sDefaultProperties(false)
-		agentPoolProfiles := p.AgentPoolProfiles
+		cs := getK8sDefaultContainerService(false)
+		agentPoolProfiles := cs.Properties.AgentPoolProfiles
 		agentPoolProfiles[0].AvailabilityProfile = VirtualMachineScaleSets
 		agentPoolProfiles[0].StorageProfile = StorageAccount
 		expectedMsg := fmt.Sprintf("VirtualMachineScaleSets does not support %s disks.  Please specify \"storageProfile\": \"%s\" (recommended) or \"availabilityProfile\": \"%s\"", StorageAccount, ManagedDisks, AvailabilitySet)
-		if err := p.validateAgentPoolProfiles(false); err.Error() != expectedMsg {
+		if err := cs.Properties.validateAgentPoolProfiles(false); err.Error() != expectedMsg {
 			t.Errorf("expected error with message : %s, but got %s", expectedMsg, err.Error())
 		}
 	})
 
 	t.Run("Should fail for VMSS + VMAS", func(t *testing.T) {
 		t.Parallel()
-		p := getK8sDefaultProperties(false)
-		p.AgentPoolProfiles = append(p.AgentPoolProfiles, &AgentPoolProfile{
+		cs := getK8sDefaultContainerService(false)
+		cs.Properties.AgentPoolProfiles = append(cs.Properties.AgentPoolProfiles, &AgentPoolProfile{
 			Name:                "agentpool2",
 			VMSize:              "Standard_D2_v2",
 			Count:               1,
 			AvailabilityProfile: AvailabilitySet,
 		})
-		agentPoolProfiles := p.AgentPoolProfiles
+		agentPoolProfiles := cs.Properties.AgentPoolProfiles
 		agentPoolProfiles[0].AvailabilityProfile = VirtualMachineScaleSets
 		agentPoolProfiles[1].AvailabilityProfile = AvailabilitySet
 		expectedMsg := fmt.Sprintf("mixed mode availability profiles are not allowed. Please set either VirtualMachineScaleSets or AvailabilitySet in availabilityProfile for all agent pools")
-		if err := p.validateAgentPoolProfiles(false); err.Error() != expectedMsg {
+		if err := cs.Properties.validateAgentPoolProfiles(false); err.Error() != expectedMsg {
 			t.Errorf("expected error with message : %s, but got %s", expectedMsg, err.Error())
 		}
 	})
