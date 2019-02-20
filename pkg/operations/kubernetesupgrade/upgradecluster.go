@@ -6,6 +6,7 @@ package kubernetesupgrade
 import (
 	"context"
 	"fmt"
+	"regexp"
 	"strings"
 	"time"
 
@@ -69,9 +70,6 @@ type UpgradeCluster struct {
 	Client      armhelpers.AKSEngineClient
 	StepTimeout *time.Duration
 }
-
-// MasterVMNamePrefix is the prefix for all master VM names for Kubernetes clusters
-const MasterVMNamePrefix = "k8s-master-"
 
 // MasterPoolName pool name
 const MasterPoolName = "master"
@@ -210,13 +208,12 @@ func (uc *UpgradeCluster) getClusterNodeStatus(subscriptionID uuid.UUID, az armh
 				continue
 			}
 
+			MasterVMPattern := "^" + uc.ClusterTopology.DataModel.Properties.FormatResourceName("master", "", "") + ".*"
+			uc.Logger.Debugf("Using regexp: '%s' to validate master VM name n", MasterVMPattern)
+			MasterVMRE := regexp.MustCompile(MasterVMPattern)
+
 			if vmOrchestratorTypeAndVersion != targetOrchestratorTypeVersion {
-				if strings.Contains(*(vm.Name), MasterVMNamePrefix) {
-					if !strings.Contains(*(vm.Name), uc.NameSuffix) {
-						uc.Logger.Infof("Skipping VM: %s for upgrade as it does not belong to cluster with expected name suffix: %s\n",
-							*vm.Name, uc.NameSuffix)
-						continue
-					}
+				if MasterVMRE.MatchString(*(vm.Name)) {
 					if err := uc.upgradable(vmOrchestratorTypeAndVersion); err != nil {
 						return err
 					}
@@ -232,12 +229,7 @@ func (uc *UpgradeCluster) getClusterNodeStatus(subscriptionID uuid.UUID, az armh
 					uc.addVMToAgentPool(vm, true)
 				}
 			} else if vmOrchestratorTypeAndVersion == targetOrchestratorTypeVersion {
-				if strings.Contains(*(vm.Name), MasterVMNamePrefix) {
-					if !strings.Contains(*(vm.Name), uc.NameSuffix) {
-						uc.Logger.Infof("Not adding VM: %s to upgraded list as it does not belong to cluster with expected name suffix: %s\n",
-							*vm.Name, uc.NameSuffix)
-						continue
-					}
+				if MasterVMRE.MatchString(*(vm.Name)) {
 					uc.Logger.Infof("Master VM name: %s, orchestrator: %s (UpgradedMasterVMs)\n", *vm.Name, vmOrchestratorTypeAndVersion)
 					*uc.UpgradedMasterVMs = append(*uc.UpgradedMasterVMs, vm)
 				} else {
