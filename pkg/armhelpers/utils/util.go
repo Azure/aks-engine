@@ -74,33 +74,47 @@ func SplitBlobURI(URI string) (string, string, string, error) {
 }
 
 // K8sLinuxVMNameParts returns parts of Linux VM name e.g: k8s-11290731-agentpool1-0
-func K8sLinuxVMNameParts(vmName string) (poolIdentifier, nameSuffix string, agentIndex int, err error) {
-	vmNameParts := vmnameLinuxRegexp.FindStringSubmatch(vmName)
-	if len(vmNameParts) != 4 {
-		return "", "", -1, errors.Errorf("resource name was missing from identifier")
+func K8sLinuxVMNameParts(props *api.Properties, vmName string) (poolIdentifier, nameSuffix string, agentIndex int, err error) {
+	pattern := "^" + props.FormatResourceName("(?<pool>.*)", "", "") + ".*-(?<index>\\d+)$"
+	re := regexp.MustCompile(pattern)
+	vmNameParts := re.FindStringSubmatch(vmName)
+
+	result := make(map[string]string)
+
+	for i, name := range re.SubexpNames() {
+		if i != 0 && name != "" {
+			result[name] = vmNameParts[i]
+		}
 	}
 
-	vmNum, err := strconv.Atoi(vmNameParts[k8sLinuxVMAgentIndexArrayIndex])
+	vmIndex, err := strconv.Atoi(result["index"])
 
 	if err != nil {
 		return "", "", -1, errors.Wrap(err, "Error parsing VM Name")
 	}
 
-	return vmNameParts[k8sLinuxVMAgentPoolNameIndex], vmNameParts[k8sLinuxVMAgentClusterIDIndex], vmNum, nil
+	return result["pool"], props.ClusterID, vmIndex, nil
 }
 
 // VmssNameParts returns parts of Linux VM name e.g: k8s-11129073-agentpool1-0
-func VmssNameParts(vmssName string) (poolIdentifier, nameSuffix string, err error) {
-	vmssNameParts := vmssnameRegexp.FindStringSubmatch(vmssName)
-	if len(vmssNameParts) != 3 {
-		return "", "", errors.New("resource name was missing from identifier")
+func VmssNameParts(props *api.Properties, vmssName string) (poolIdentifier, nameSuffix string, err error) {
+	pattern := "^" + props.FormatResourceName("(?<pool>.*)", "vmss", "") + ".*-(?<index>\\d+)$"
+	re := regexp.MustCompile(pattern)
+	vmssNameParts := re.FindStringSubmatch(vmssName)
+
+	result := make(map[string]string)
+
+	for i, name := range re.SubexpNames() {
+		if i != 0 && name != "" {
+			result[name] = vmssNameParts[i]
+		}
 	}
 
-	return vmssNameParts[vmssAgentPoolNameIndex], vmssNameParts[vmssClusterIDIndex], nil
+	return result["pool"], props.ClusterID, nil
 }
 
 // WindowsVMNameParts returns parts of Windows VM name
-func WindowsVMNameParts(vmName string) (poolPrefix string, orch string, poolIndex int, agentIndex int, err error) {
+func WindowsVMNameParts(props *api.Properties, vmName string) (poolPrefix string, orch string, poolIndex int, agentIndex int, err error) {
 	var poolInfo string
 	vmNameParts := oldvmnameWindowsRegexp.FindStringSubmatch(vmName)
 	if len(vmNameParts) != 5 {
@@ -129,17 +143,17 @@ func WindowsVMNameParts(vmName string) (poolPrefix string, orch string, poolInde
 }
 
 // GetVMNameIndex return VM index of a node in the Kubernetes cluster
-func GetVMNameIndex(osType compute.OperatingSystemTypes, vmName string) (int, error) {
+func GetVMNameIndex(props *api.Properties, osType compute.OperatingSystemTypes, vmName string) (int, error) {
 	var agentIndex int
 	var err error
 	if osType == compute.Linux {
-		_, _, agentIndex, err = K8sLinuxVMNameParts(vmName)
+		_, _, agentIndex, err = K8sLinuxVMNameParts(props, vmName)
 		if err != nil {
 			log.Errorln(err)
 			return 0, err
 		}
 	} else if osType == compute.Windows {
-		_, _, _, agentIndex, err = WindowsVMNameParts(vmName)
+		_, _, _, agentIndex, err = WindowsVMNameParts(props, vmName)
 		if err != nil {
 			log.Errorln(err)
 			return 0, err

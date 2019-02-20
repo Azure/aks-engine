@@ -5,7 +5,6 @@ package armhelpers
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/Azure/azure-sdk-for-go/services/resources/mgmt/2018-05-01/resources"
 	"github.com/Azure/go-autorest/autorest"
@@ -28,20 +27,19 @@ func (az *AzureClient) DeployTemplate(ctx context.Context, resourceGroupName, de
 		return de, err
 	}
 
-	outcomeText := "Succeeded"
 	err = future.WaitForCompletionRef(ctx, az.deploymentsClient.Client)
 	if err != nil {
-		outcomeText = fmt.Sprintf("Error: %v", err)
-		log.Infof("Finished ARM Deployment (%s). %s", deploymentName, outcomeText)
+		log.Errorf("Finished ARM Deployment (%s). Error: %v", deploymentName, err)
 		return de, err
 	}
 
 	de, err = future.Result(az.deploymentsClient)
 	if err != nil {
-		outcomeText = fmt.Sprintf("Error: %v", err)
+		log.Errorf("Finished ARM Deployment (%s). Result Error: %v", deploymentName, err)
+		return de, err
 	}
 
-	log.Infof("Finished ARM Deployment (%s). %s", deploymentName, outcomeText)
+	log.Infof("Finished ARM Deployment (%s). Succeeded", deploymentName)
 	return de, err
 }
 
