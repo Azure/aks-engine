@@ -824,7 +824,7 @@ func (p *Properties) GetAgentVMPrefix(a *AgentPoolProfile) string {
 			if a.IsVirtualMachineScaleSets() {
 				t = "vmss"
 			}
-			vmPrefix = p.FormatResourceName(a.Name, t, "")
+			vmPrefix = p.FormatResourceName(a.Name, t, "") + "-"
 		}
 	}
 	return vmPrefix

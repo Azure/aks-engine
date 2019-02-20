@@ -42,16 +42,14 @@ func Test_LinuxVMNameParts(t *testing.T) {
 
 	p := &api.Properties{
 		ClusterID: "38988164",
+
 		OrchestratorProfile: &api.OrchestratorProfile{
 			OrchestratorType: api.Kubernetes,
-		},
-		HostedMasterProfile: &api.HostedMasterProfile{
-			DNSPrefix: "foo",
 		},
 	}
 
 	for _, el := range data {
-		vmName := fmt.Sprintf("k8s-%s-%s-%d", el.nameSuffix, el.poolIdentifier, el.agentIndex)
+		vmName := fmt.Sprintf("%s-%s-%s-%d", p.K8sOrchestratorName(), el.poolIdentifier, el.nameSuffix, el.agentIndex)
 		poolIdentifier, nameSuffix, agentIndex, err := K8sLinuxVMNameParts(p, vmName)
 		if poolIdentifier != el.poolIdentifier {
 			t.Fatalf("incorrect poolIdentifier. expected=%s actual=%s", el.poolIdentifier, poolIdentifier)
@@ -82,13 +80,10 @@ func Test_VmssNameParts(t *testing.T) {
 		OrchestratorProfile: &api.OrchestratorProfile{
 			OrchestratorType: api.Kubernetes,
 		},
-		HostedMasterProfile: &api.HostedMasterProfile{
-			DNSPrefix: "foo",
-		},
 	}
 
 	for _, el := range data {
-		vmssName := fmt.Sprintf("swarmm-%s-%s-vmss", el.nameSuffix, el.poolIdentifier)
+		vmssName := fmt.Sprintf("%s-%s-%s-vmss", p.K8sOrchestratorName(), el.poolIdentifier, el.nameSuffix)
 		poolIdentifier, nameSuffix, err := VmssNameParts(p, vmssName)
 		if err != nil {
 			t.Fatalf("unexpected error: %s", err)
@@ -117,9 +112,6 @@ func Test_WindowsVMNameParts(t *testing.T) {
 		ClusterID: "38988164",
 		OrchestratorProfile: &api.OrchestratorProfile{
 			OrchestratorType: api.Kubernetes,
-		},
-		HostedMasterProfile: &api.HostedMasterProfile{
-			DNSPrefix: "foo",
 		},
 	}
 
@@ -151,12 +143,9 @@ func Test_GetVMNameIndexLinux(t *testing.T) {
 		OrchestratorProfile: &api.OrchestratorProfile{
 			OrchestratorType: api.Kubernetes,
 		},
-		HostedMasterProfile: &api.HostedMasterProfile{
-			DNSPrefix: "foo",
-		},
 	}
 
-	agentIndex, err := GetVMNameIndex(p, compute.Linux, "k8s-38988164-agentpool1-65")
+	agentIndex, err := GetVMNameIndex(p, compute.Linux, "k8s-agentpool1-38988164-65")
 
 	if agentIndex != expectedAgentIndex {
 		t.Fatalf("incorrect agentIndex. expected=%d actual=%d", expectedAgentIndex, agentIndex)
@@ -225,7 +214,7 @@ func Test_GetK8sVMName(t *testing.T) {
 		expected                   string
 		expectedErr                bool
 	}{
-		{properties: p, agentPoolIndex: 0, agentIndex: 2, expected: "aks-28513887-linux1-2", expectedErr: false},
+		{properties: p, agentPoolIndex: 0, agentIndex: 2, expected: "aks-linux1-28513887-2", expectedErr: false},
 		{properties: p, agentPoolIndex: 1, agentIndex: 1, expected: "2851aks011", expectedErr: false},
 		{properties: p, agentPoolIndex: 3, agentIndex: 0, expected: "", expectedErr: true},
 	} {

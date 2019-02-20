@@ -79,6 +79,10 @@ func K8sLinuxVMNameParts(props *api.Properties, vmName string) (poolIdentifier, 
 	re := regexp.MustCompile(pattern)
 	vmNameParts := re.FindStringSubmatch(vmName)
 
+	if len(vmNameParts) != 3 {
+		return "", "", -1, errors.Wrap(err, "Error parsing VM Name")
+	}
+
 	result := make(map[string]string)
 
 	for i, name := range re.SubexpNames() {
@@ -101,6 +105,10 @@ func VmssNameParts(props *api.Properties, vmssName string) (poolIdentifier, name
 	pattern := "^" + props.FormatResourceName("(?P<pool>.*)", "vmss", "") + "$"
 	re := regexp.MustCompile(pattern)
 	vmssNameParts := re.FindStringSubmatch(vmssName)
+
+	if len(vmssNameParts) != 2 {
+		return "", "", errors.Wrap(err, "Error parsing VMSS Name")
+	}
 
 	result := make(map[string]string)
 
