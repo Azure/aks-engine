@@ -9,7 +9,7 @@
 {{end}}
 {{if .IsAvailabilitySets}}
     "{{.Name}}Offset": "[parameters('{{.Name}}Offset')]",
-    "{{.Name}}AvailabilitySet": "{{FormatResourceName "" "availabilityset" .Name}}",
+    "{{.Name}}AvailabilitySet": "{{FormatResourceName .Name "availabilityset" ""}}",
 {{else}}
     {{if .IsLowPriorityScaleSet}}
     "{{.Name}}ScaleSetPriority": "[parameters('{{.Name}}ScaleSetPriority')]",
