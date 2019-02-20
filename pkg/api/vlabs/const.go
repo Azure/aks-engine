@@ -120,3 +120,17 @@ const (
 	// AzureStackCloud is a const string reference identifier for Azure Stack cloud
 	AzureStackCloud = "AzureStackCloud"
 )
+
+const (
+	//AzureADIdentitySystem Identity System
+	AzureADIdentitySystem = "azure_ad"
+	//ADFS Identity System
+	ADFSIdentitySystem = "adfs"
+)
+
+const (
+	//ClientSecretAuthMethod Authentication method
+	ClientSecretAuthMethod = "client_secret"
+	//ClientCertificateAuthMethod Authentication method
+	ClientCertificateAuthMethod = "client_certificate"
+)
