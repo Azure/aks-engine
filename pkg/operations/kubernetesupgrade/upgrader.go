@@ -146,19 +146,19 @@ func (ku *Upgrader) upgradeMasterNodes(ctx context.Context) error {
 
 		err := upgradeMasterNode.DeleteNode(vm.Name, false)
 		if err != nil {
-			ku.logger.Infof("Error deleting master VM: %s, err: %v", *vm.Name, err)
+			ku.logger.Errorf("Error deleting master VM: %s, err: %v", *vm.Name, err)
 			return err
 		}
 
 		err = upgradeMasterNode.CreateNode(ctx, "master", masterIndex)
 		if err != nil {
-			ku.logger.Infof("Error creating upgraded master VM: %s", *vm.Name)
+			ku.logger.Errorf("Error creating upgraded master VM: %s, err: %s", *vm.Name, err)
 			return err
 		}
 
 		err = upgradeMasterNode.Validate(vm.Name)
 		if err != nil {
-			ku.logger.Infof("Error validating upgraded master VM: %s", *vm.Name)
+			ku.logger.Errorf("Error validating upgraded master VM: %s, err: %s", *vm.Name, err)
 			return err
 		}
 
@@ -187,14 +187,14 @@ func (ku *Upgrader) upgradeMasterNodes(ctx context.Context) error {
 
 		err = upgradeMasterNode.CreateNode(ctx, "master", masterIndexToCreate)
 		if err != nil {
-			ku.logger.Infof("Error creating upgraded master VM with index: %d", masterIndexToCreate)
+			ku.logger.Errorf("Error creating upgraded master VM with index: %d, err: %s", masterIndexToCreate, err)
 			return err
 		}
 
 		tempVMName := ""
 		err = upgradeMasterNode.Validate(&tempVMName)
 		if err != nil {
-			ku.logger.Infof("Error validating upgraded master VM with index: %d", masterIndexToCreate)
+			ku.logger.Errorf("Error validating upgraded master VM with index: %d, err: %s", masterIndexToCreate, err)
 			return err
 		}
 

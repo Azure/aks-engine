@@ -209,7 +209,7 @@ func (uc *UpgradeCluster) getClusterNodeStatus(subscriptionID uuid.UUID, az armh
 			}
 
 			MasterVMPattern := "^" + uc.ClusterTopology.DataModel.Properties.FormatResourceName("master", "", "") + ".*"
-			uc.Logger.Debugf("Using regexp: '%s' to validate master VM name n", MasterVMPattern)
+			uc.Logger.Debugf("Using regexp: '%s' to validate master VM names\n", MasterVMPattern)
 			MasterVMRE := regexp.MustCompile(MasterVMPattern)
 
 			if vmOrchestratorTypeAndVersion != targetOrchestratorTypeVersion {
