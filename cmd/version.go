@@ -5,6 +5,7 @@ package cmd
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/Azure/aks-engine/pkg/helpers"
 	log "github.com/sirupsen/logrus"
@@ -86,7 +87,8 @@ func newVersionCmd() *cobra.Command {
 		},
 	}
 
-	versionCmdDescription := fmt.Sprintf("Output format to use: %s", outputFormatOptions)
+	versionCmdDescription := fmt.Sprintf("Output format. Allowed values: %s",
+		strings.Join(outputFormatOptions, ", "))
 
 	versionCmd.Flags().StringVarP(&outputFormat, "output", "o", "human", versionCmdDescription)
 

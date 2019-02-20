@@ -6,6 +6,7 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"strings"
 	"text/tabwriter"
 
 	"github.com/Azure/aks-engine/pkg/api"
@@ -17,6 +18,10 @@ const (
 	getVersionsName             = "get-versions"
 	getVersionsShortDescription = "Display info about supported Kubernetes versions"
 	getVersionsLongDescription  = "Display supported Kubernetes versions and upgrade versions"
+)
+
+var (
+	getVersionsOutputFormatOptions = []string{"human", "json"}
 )
 
 type getVersionsCmd struct {
@@ -43,7 +48,9 @@ func newGetVersionsCmd() *cobra.Command {
 	gvc.orchestrator = "Kubernetes" // orchestrator is always Kubernetes
 	f.StringVar(&gvc.version, "version", "", "Kubernetes version (optional)")
 	f.BoolVar(&gvc.windows, "windows", false, "Kubernetes cluster with Windows nodes (optional)")
-	f.StringVarP(&gvc.output, "output", "o", "table", "Output format. Allowed values: json, table.")
+	getVersionsCmdDescription := fmt.Sprintf("Output format. Allowed values: %s",
+		strings.Join(getVersionsOutputFormatOptions, ", "))
+	f.StringVarP(&gvc.output, "output", "o", "human", getVersionsCmdDescription)
 
 	return command
 }
@@ -61,7 +68,7 @@ func (gvc *getVersionsCmd) run(cmd *cobra.Command, args []string) error {
 			return err
 		}
 		fmt.Println(string(data))
-	case "table":
+	case "human":
 		w := tabwriter.NewWriter(os.Stdout, 0, 4, 1, ' ', tabwriter.FilterHTML)
 		fmt.Fprintln(w, "Version\tUpgrades")
 		// iterate in reverse so the newest Kubernetes release is listed first

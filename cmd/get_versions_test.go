@@ -29,11 +29,11 @@ var _ = Describe("The get-versions command", func() {
 		Expect(err).To(BeNil())
 	})
 
-	It("should support table output", func() {
+	It("should support human-readable output", func() {
 		command := &getVersionsCmd{
 			orchestrator: "kubernetes",
 			version:      "1.13.3",
-			output:       "table",
+			output:       "human",
 		}
 		err := command.run(nil, nil)
 		Expect(err).To(BeNil())
