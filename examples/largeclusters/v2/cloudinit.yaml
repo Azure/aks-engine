@@ -1,72 +1,84 @@
-groups:
-  - etcd
+#cloud-config
 users:
   - default
   - name: etcd
     gecos: etcd user
-    groups: etcd
     inactive: true
     system: true
-     no_create_home: true
+    no_create_home: true
 write_files:
--   path: /etc/systemd/system/etcd.service
-    content: |
-        [Unit]
-        Description=etcd - highly-available key value store
-        Documentation=https://github.com/coreos/etcd
-        Documentation=man:etcd
-        After=network.target
-        Wants=network-online.target
-        [Service]
-        Environment=DAEMON_ARGS=
-        Environment=ETCD_NAME=%H
-        Environment=ETCD_DATA_DIR=
-        EnvironmentFile=-/etc/default/%p
-        Type=notify
-        User=etcd
-        PermissionsStartOnly=true
-        ExecStart=/usr/bin/etcd $DAEMON_ARGS
-        Restart=always
-        [Install]
-        WantedBy=multi-user.target 
--   path: /etc/default/etcd
-    encoding: b64
-    content: <ETCD_ENV>
--   path: /etc/kubernetes/certs/peer.ca.crt
-    encoding: b64
-    owner: etcd:etcd
-    content: <PEER_CA>
--   path: /etc/kubernetes/certs/peer.crt
-    encoding: b64
-    owner: etcd:etcd
-    content: <PEER_CRT>
--   path: /etc/kubernetes/certs/peer.key
-    encoding: b64
-    owner: etcd:etcd
-    content: <PEER_KEY>
--   path: /etc/kubernetes/certs/server.crt
-    encoding: b64
-    owner: etcd:etcd
-    content: <SERVER_CRT>
--   path: /etc/kubernetes/certs/server.key
-    encoding: b64
-    owner: etcd:etcd
-    content: <SERVER_KEY>
--   path: /etc/kubernetes/certs/client.ca.crt
-    encoding: b64
-    owner: etcd:etcd
-    content: <CLIENT_CA>
+- path: /etc/systemd/system/etcd.service
+  content: |
+    [Unit]
+    Description=etcd - highly-available key value store
+    Documentation=https://github.com/coreos/etcd
+    Documentation=man:etcd
+    After=network.target
+    Wants=network-online.target
+    [Service]
+    Environment=DAEMON_ARGS=
+    Environment=ETCD_NAME=%H
+    Environment=ETCD_DATA_DIR=
+    EnvironmentFile=-/etc/default/%p
+    Type=notify
+    User=etcd
+    PermissionsStartOnly=true
+    ExecStart=/usr/bin/etcd $DAEMON_ARGS
+    Restart=always
+    [Install]
+    WantedBy=multi-user.target 
+
+- path: /etc/default/etcd
+  encoding: b64
+  content: |
+    <ETCD_ENV>
+
+- path: /etc/kubernetes/certs/server.crt
+  encoding: b64
+  content: |
+    <SERVER_CRT>
+
+- path: /etc/kubernetes/certs/server.key
+  encoding: b64
+  content: |
+    <SERVER_KEY>
+
+- path: /etc/kubernetes/certs/client.ca.crt
+  encoding: b64
+  content: |
+    <CLIENT_CA>
+
+- path: /etc/kubernetes/etcd.bootstrap.sh
+  permissions: 755
+  content: |
+    #!/bin/bash
+    set -x
+    set -e
+    set -o pipefail
+    # replace server name in etcd env
+    sed -i s/SERVER_NAME/$(hostname)/g  '/etc/default/etcd'
+    #replace server ip
+    server_ip=$(ip addr show eth0 | grep "inet\b" | awk '{print $2}' | cut -d/ -f1)
+    sed -i s/SERVER_IP/${server_ip}/g '/etc/default/etcd'
+    #etcd download
+    mkdir -p /tmp/etcd.download
+    cd /tmp/etcd.download/
+    wget https://github.com/etcd-io/etcd/releases/download/v<ETCD_VERSION>/etcd-v<ETCD_VERSION>-linux-amd64.tar.gz
+    tar xvf etcd-v<ETCD_VERSION>-linux-amd64.tar.gz
+    cp /tmp/etcd.download/etcd-v<ETCD_VERSION>-linux-amd64/etcd /usr/bin/
+    cp /tmp/etcd.download/etcd-v<ETCD_VERSION>-linux-amd64/etcdctl /usr/bin/
+    #etcd data location
+    mkdir -p /var/lib/etcddisk
+    #change file ownership
+    chown etcd:etcd /var/lib/etcddisk
+    chown etcd:etcd /etc/kubernetes/certs/client.ca.crt
+    chown etcd:etcd /etc/kubernetes/certs/server.key
+    chown etcd:etcd /etc/kubernetes/certs/server.crt
+    #start
+    systemctl daemon-reload
+    systemctl enable etcd.service
+    systemctl start --no-block etcd.service
 
 # Run all install commands
 runcmd:
-#replace hostname in etcd env file
- - [ sed, -i, "s/SERVER_NAME/$(hostname)/g", "/etc/default/etcd" ]
-# etcd install
- - [ mkdir, -p, /usr/bin/etcd ]
- - [ bash, -c, "cd /usr/bin/etcd && wget https://github.com/etcd-io/etcd/releases/download/v${RELEASE}/etcd-v<ETCD_VERSION>-linux-amd64.tar.gz" ]
- - [bash, -c, "cd /usr/bin/etcd && tar xvf etcd-v<ETCD_VERSION>-linux-amd64.tar.gz" ]
- - [ mkdir, -p, /var/lib/etcddisk ]
-# run etcd
- - [ systemctl, daemon-reload ]
- - [ systemctl, enable, etcd.service ]
- - [ systemctl, start, --no-block, etcd.service ]
+- [ /bin/bash, -c, "/etc/kubernetes/etcd.bootstrap.sh" ]

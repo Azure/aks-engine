@@ -22,14 +22,12 @@ SSH_KEY_VALUE=${SSH_KEY_VALUE:-$(cat ~/.ssh/id_rsa.pub)}
 
 CLOUD_INIT_FILE="cloudinit.yaml"
 
-ETCD_DISCOVERY_FILE="etcd.discovery"
 ETCD_SERVER_CERT_DIR="etcd.server"
 ETCD_PEER_CERT_DIR="etcd.peer"
 ETCD_CLIENT_CERT_DIR="etcd.client"
 
-ETCD_ENV="DAEMON_ARGS=--name <<SERVER_NAME>> --peer-client-cert-auth --peer-trusted-ca-file=/etc/kubernetes/certs/peer.ca.crt --peer-cert-file=/etc/kubernetes/certs/peer.crt --peer-key-file=/etc/kubernetes/certs/peer.key --initial-advertise-peer-urls https://0.0.0.0:2380 --client-cert-auth --trusted-ca-file=/etc/kubernetes/certs/client.ca.crt --cert-file=/etc/kubernetes/certs/server.crt --key-file=/etc/kubernetes/certs/server.key --advertise-client-urls https://0.0.0.0:2379 --listen-client-urls https://0.0.0.0:2379 --discovery <<DISCOVERY>> --data-dir /var/lib/etcddisk --initial-cluster-state new"
 
-
+ETCD_ENV="DAEMON_ARGS=--name SERVER_NAME --peer-auto-tls --peer-client-cert-auth --client-cert-auth --trusted-ca-file=/etc/kubernetes/certs/client.ca.crt --cert-file=/etc/kubernetes/certs/server.crt --key-file=/etc/kubernetes/certs/server.key --advertise-client-urls https://SERVER_IP:2379 --listen-client-urls https://SERVER_IP:2379 --listen-peer-urls https://SERVER_IP:2380 --initial-cluster <INIT_CLUSTER> --data-dir /var/lib/etcddisk --initial-cluster-state new --initial-advertise-peer-urls=https://SERVER_NAME:2380"
 
 # Colors
 Color_Off='\033[0m'
@@ -134,7 +132,7 @@ create_vms(){
 
 	inf "Creating cluster with size: ${CLUSTER_SIZE}"
 	while [  $current -lt ${CLUSTER_SIZE} ]; do
-		vmName="${BASE_CLUSTER_NAME}${current}"
+		vmName="$(vmName_ByIdx $current)"
 		inf "Creating VM:${vmName} RG ${RG} AVSET:${AV_SET_NAME}"
 		# We create a VM with large premium disks
 		# to get the highest possible I/O throughput 
@@ -151,8 +149,8 @@ create_vms(){
 								 --storage-sku Premium_LRS \
 								 --admin-username "${ADMIN_USER}" \
 								 --ssh-key-value "${SSH_KEY_VALUE}" \
-								 --image ubuntults \
-                 --custom-data "${OUTPUT_DIR}/${CLOUD_INIT_FILE}"
+								 --image "Canonical:UbuntuServer:16.04-LTS:latest" \
+                 --custom-data @"${OUTPUT_DIR}/${CLOUD_INIT_FILE}"
 		let current=current+1 
 	done
 }
@@ -198,37 +196,7 @@ generate_certs(){
 
 	inf "etcd server certs are in ${server_cert_dir}"
 	
-	inf "Generating etcd certs for peer"
-	#CA
-	openssl genrsa -out "${peer_cert_dir}/peer.ca.key"  2048 2>/dev/null
-  #CA crt
-	openssl req -x509 \
-							-new \
-							-nodes \
-							-key "${peer_cert_dir}/peer.ca.key" \
-							-days $((5 * 365)) \
-							-out "${peer_cert_dir}/peer.ca.crt" \
-							-subj "/C=US" 2>/dev/null
-	# key
-	openssl genrsa \
-					-out "${peer_cert_dir}/peer.key" 4096 2>/dev/null
-
-  # csr
-	openssl req -new \
-							-key "${peer_cert_dir}/peer.key" \
-							-out "${peer_cert_dir}/peer.csr" \
-							-subj "/C=US" 2>/dev/null
-
-	# sign
-	openssl x509 -req \
-							-in "${peer_cert_dir}/peer.csr" \
-							-CA "${peer_cert_dir}/peer.ca.crt" \
-							-CAkey "${peer_cert_dir}/peer.ca.key" \
-							-CAcreateserial -out "${peer_cert_dir}/peer.crt" \
-							-days $((5 * 365))  2>/dev/null
-
- 	inf "etcd peer certs are in ${peer_cert_dir}"	
- 	inf "Generating etcd certs for client"
+	inf "Generating etcd certs for client"
 	#CA
 	openssl genrsa -out "${client_cert_dir}/client.ca.key"  2048 2>/dev/null
   #CA crt
@@ -261,15 +229,21 @@ generate_certs(){
 
 }
 
-# all offline work
-# 1- Get cluster discovery token
-# 2- Generates the certs
-# 3- Put vars in cloud init 
-pre_work(){
-	inf "Generating etcd discovery token"
-	curl -s "https://discovery.etcd.io/new?size=${CLUSTER_SIZE}" --output "${OUTPUT_DIR}/${ETCD_DISCOVERY_FILE}"
-	inf "etcd token generated in ${OUTPUT_DIR}/${ETCD_DISCOVERY_FILE}"
+vmName_ByIdx(){
+	local idx="$1"
+	local vmName="${BASE_CLUSTER_NAME}${idx}"
+	echo -n "$vmName"
+}
+join_by(){
+	local IFS="$1"
+ 	shift
+ 	echo "$*" 
+}
 
+# all offline work
+# 1- Generates the certs
+# 2- Put vars in cloud init 
+pre_work(){
 	generate_certs
 
 	# Modify cloud init
@@ -281,22 +255,32 @@ pre_work(){
 	local server_cert_dir="${OUTPUT_DIR}/${ETCD_SERVER_CERT_DIR}"
 	local peer_cert_dir="${OUTPUT_DIR}/${ETCD_PEER_CERT_DIR}"
 	local client_cert_dir="${OUTPUT_DIR}/${ETCD_CLIENT_CERT_DIR}"
-	
-	# certs, keys et al
-	sed -i "s/<PEER_CA>/$(cat ${peer_cert_dir}/peer.ca.crt | base64 -w 0)/g" ${cloudinit_dst}
-	sed -i "s/<PEER_CRT>/$(cat ${peer_cert_dir}/peer.crt | base64 -w 0)/g" ${cloudinit_dst}
-	sed -i "s/<PEER_KEY>/$(cat ${peer_cert_dir}/peer.key | base64 -w 0)/g" ${cloudinit_dst}
-
-	sed -i "s/<SERVER_CRT>/$(cat ${server_cert_dir}/server.crt | base64 -w 0)/g" ${cloudinit_dst}
-	sed -i "s/<SERVER_KEY>/$(cat ${server_cert_dir}/server.key | base64 -w 0)/g" ${cloudinit_dst}
-
-	sed -i "s/<CLIENT_CA>/$(cat ${client_cert_dir}/client.ca.crt | base64 -w 0)/g" ${cloudinit_dst}
-
-	# etcd env file 
-	sed -i "s/<ETCD_ENV>/$(echo -n ${ENV} | base64 -w 0)/g" ${cloudinit_dst}
 
 	# etcd version
 	sed -i "s/<ETCD_VERSION>/${ETCD_VERSION}/g" ${cloudinit_dst}
+	# etcd env file 
+	# generate cluster members
+	# for -initial-cluster argument
+	local current=0
+	local cluter_members=()
+	while [  $current -lt ${CLUSTER_SIZE} ]; do
+		local vmName="$(vmName_ByIdx $current)"
+		cluter_members+=("${vmName}=https://${vmName}:2380")
+		let current=current+1
+	done
+	cluter_members=$(join_by "," ${cluter_members[@]})
+	ETCD_ENV=$(echo -n "${ETCD_ENV}" | sed  "s|<INIT_CLUSTER>|${cluter_members}|g")
+	sed -i "s|<ETCD_ENV>|$(echo -n ${ETCD_ENV} | base64 -w 0)|g" ${cloudinit_dst}
+
+	# certs, keys et al
+	sed -i "s|<PEER_CA>|$(cat ${peer_cert_dir}/peer.ca.crt | base64 -w 0)|g" ${cloudinit_dst}
+	sed -i "s|<PEER_CRT>|$(cat ${peer_cert_dir}/peer.crt | base64 -w 0)|g" ${cloudinit_dst}
+	sed -i "s|<PEER_KEY>|$(cat ${peer_cert_dir}/peer.key | base64 -w 0)|g" ${cloudinit_dst}
+
+	sed -i "s|<SERVER_CRT>|$(cat ${server_cert_dir}/server.crt | base64 -w 0)|g" ${cloudinit_dst}
+	sed -i "s|<SERVER_KEY>|$(cat ${server_cert_dir}/server.key | base64 -w 0)|g" ${cloudinit_dst}
+
+	sed -i "s|<CLIENT_CA>|$(cat ${client_cert_dir}/client.ca.crt | base64 -w 0)|g" ${cloudinit_dst}
 
 	inf "cloudinit file is in ${cloudinit_dst}"
 }
