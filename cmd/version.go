@@ -70,7 +70,7 @@ func getVersion(outputType string) string {
 	} else if outputType == "json" {
 		output = getJSONVersion()
 	} else {
-		log.Fatalf("unsupported output format: %s\n", outputFormat)
+		log.Fatalf("output format \"%s\" is not supported", outputFormat)
 	}
 
 	return output

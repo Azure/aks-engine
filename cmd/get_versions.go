@@ -20,10 +20,6 @@ const (
 	getVersionsLongDescription  = "Display supported Kubernetes versions and upgrade versions"
 )
 
-var (
-	getVersionsOutputFormatOptions = []string{"human", "json"}
-)
-
 type getVersionsCmd struct {
 	// user input
 	orchestrator string
@@ -49,7 +45,7 @@ func newGetVersionsCmd() *cobra.Command {
 	f.StringVar(&gvc.version, "version", "", "Kubernetes version (optional)")
 	f.BoolVar(&gvc.windows, "windows", false, "Kubernetes cluster with Windows nodes (optional)")
 	getVersionsCmdDescription := fmt.Sprintf("Output format. Allowed values: %s",
-		strings.Join(getVersionsOutputFormatOptions, ", "))
+		strings.Join(outputFormatOptions, ", "))
 	f.StringVarP(&gvc.output, "output", "o", "human", getVersionsCmdDescription)
 
 	return command
