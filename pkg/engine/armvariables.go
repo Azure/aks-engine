@@ -64,6 +64,7 @@ func getK8sMasterVars(cs *api.ContainerService) map[string]interface{} {
 	isPrivateCluster := to.Bool(cs.Properties.OrchestratorProfile.KubernetesConfig.PrivateCluster.Enabled)
 	provisionJumpbox := cs.Properties.OrchestratorProfile.KubernetesConfig.PrivateJumpboxProvision()
 	enableEncryptionWithExternalKms := to.Bool(cs.Properties.OrchestratorProfile.KubernetesConfig.EnableEncryptionWithExternalKms)
+	hasAgentPool := len(cs.Properties.AgentPoolProfiles) > 0
 
 	masterVars := map[string]interface{}{
 		"maxVMsPerPool":               100,
@@ -244,7 +245,9 @@ func getK8sMasterVars(cs *api.ContainerService) map[string]interface{} {
 
 	} else {
 		if isCustomVnet {
-			masterVars["vnetSubnetID"] = fmt.Sprintf("[parameters('%sVnetSubnetID')]", cs.Properties.AgentPoolProfiles[0].Name)
+			if hasAgentPool {
+				masterVars["vnetSubnetID"] = fmt.Sprintf("[parameters('%sVnetSubnetID')]", cs.Properties.AgentPoolProfiles[0].Name)
+			}
 			masterVars["subnetName"] = "[split(variables('vnetSubnetID'), '/')[variables('subnetNameResourceSegmentIndex')]]"
 			masterVars["virtualNetworkName"] = "[split(variables('vnetSubnetID'), '/')[variables('vnetNameResourceSegmentIndex')]]"
 			masterVars["virtualNetworkResourceGroupName"] = "[split(variables('vnetSubnetID'), '/')[variables('vnetResourceGroupNameResourceSegmentIndex')]]"
@@ -284,11 +287,15 @@ func getK8sMasterVars(cs *api.ContainerService) map[string]interface{} {
 	}
 
 	if cs.Properties.AnyAgentUsesVirtualMachineScaleSets() {
-		masterVars["primaryScaleSetName"] = fmt.Sprintf("[concat(parameters('orchestratorName'), '-%s-',parameters('nameSuffix'), '-vmss')]", cs.Properties.AgentPoolProfiles[0].Name)
+		if hasAgentPool {
+			masterVars["primaryScaleSetName"] = fmt.Sprintf("[concat(parameters('orchestratorName'), '-%s-',parameters('nameSuffix'), '-vmss')]", cs.Properties.AgentPoolProfiles[0].Name)
+		}
 		masterVars["primaryAvailabilitySetName"] = ""
 		masterVars["vmType"] = "vmss"
 	} else {
-		masterVars["primaryAvailabilitySetName"] = fmt.Sprintf("[concat('%s-availabilitySet-',parameters('nameSuffix'))]", cs.Properties.AgentPoolProfiles[0].Name)
+		if hasAgentPool {
+			masterVars["primaryAvailabilitySetName"] = fmt.Sprintf("[concat('%s-availabilitySet-',parameters('nameSuffix'))]", cs.Properties.AgentPoolProfiles[0].Name)
+		}
 		masterVars["primaryScaleSetName"] = ""
 		masterVars["vmType"] = "standard"
 	}
