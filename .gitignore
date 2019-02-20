@@ -19,6 +19,8 @@ test/junit/
 test/aks-engine-test/aks-engine-test.exe
 pkg/operations/junit.xml
 pkg/operations/kubernetesupgrade/junit.xml
+pkg/engine/templates_generated.go
+pkg/i18n/translations_generated.go
 
 _logs/
 test/aks-engine-test/report/TestReport.json

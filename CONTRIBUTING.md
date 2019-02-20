@@ -65,15 +65,3 @@ contributing to aks-engine. All issue types follow the same general lifecycle. D
 1. If you haven't already done so, sign a Contributor License Agreement (see details above).
 2. Fork the desired repo, develop and test your code changes.
 3. Submit a pull request.
-
-## Pull Requests and Generated Code
-
-**Summary:** Always run `make ensure-generated` before you submit a pull request. If that command
-returns an error, it will also have generated files that need to be included with the PR.
-
-To make it easier use AKS Engine as a library and to `go get github.com/Azure/aks-engine`, some
-generated Go code is committed to the repository. Your pull request may need to regenerate those
-files before it will pass the required `make ensure-generated` step:
-
-- Changes under the `parts/` folder require the `pkg/engine/templates_generated.go` file to be updated.
-- Changes under `pkg/i8n/translations` require the `pkg/engine/translations_generated.go` file to be updated.
