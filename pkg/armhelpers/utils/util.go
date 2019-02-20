@@ -75,7 +75,7 @@ func SplitBlobURI(URI string) (string, string, string, error) {
 
 // K8sLinuxVMNameParts returns parts of Linux VM name e.g: k8s-11290731-agentpool1-0
 func K8sLinuxVMNameParts(props *api.Properties, vmName string) (poolIdentifier, nameSuffix string, agentIndex int, err error) {
-	pattern := "^" + props.FormatResourceName("(?<pool>.*)", "", "") + ".*-(?<index>\\d+)$"
+	pattern := "^" + props.FormatResourceName("(?P<pool>.*)", "", "") + ".*-(?P<index>\\d+)$"
 	re := regexp.MustCompile(pattern)
 	vmNameParts := re.FindStringSubmatch(vmName)
 
@@ -98,7 +98,7 @@ func K8sLinuxVMNameParts(props *api.Properties, vmName string) (poolIdentifier, 
 
 // VmssNameParts returns parts of Linux VM name e.g: k8s-11129073-agentpool1-0
 func VmssNameParts(props *api.Properties, vmssName string) (poolIdentifier, nameSuffix string, err error) {
-	pattern := "^" + props.FormatResourceName("(?<pool>.*)", "vmss", "") + ".*-(?<index>\\d+)$"
+	pattern := "^" + props.FormatResourceName("(?P<pool>.*)", "vmss", "") + "$"
 	re := regexp.MustCompile(pattern)
 	vmssNameParts := re.FindStringSubmatch(vmssName)
 
