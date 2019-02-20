@@ -40,9 +40,19 @@ func Test_LinuxVMNameParts(t *testing.T) {
 		{"agent-pool-1", "38988164", 0},
 	}
 
+	p := &api.Properties{
+		ClusterID: "38988164",
+		OrchestratorProfile: &api.OrchestratorProfile{
+			OrchestratorType: api.Kubernetes,
+		},
+		HostedMasterProfile: &api.HostedMasterProfile{
+			DNSPrefix: "foo",
+		},
+	}
+
 	for _, el := range data {
 		vmName := fmt.Sprintf("k8s-%s-%s-%d", el.nameSuffix, el.poolIdentifier, el.agentIndex)
-		poolIdentifier, nameSuffix, agentIndex, err := K8sLinuxVMNameParts(vmName)
+		poolIdentifier, nameSuffix, agentIndex, err := K8sLinuxVMNameParts(p, vmName)
 		if poolIdentifier != el.poolIdentifier {
 			t.Fatalf("incorrect poolIdentifier. expected=%s actual=%s", el.poolIdentifier, poolIdentifier)
 		}
@@ -67,9 +77,19 @@ func Test_VmssNameParts(t *testing.T) {
 		{"agent-pool-1", "38988164"},
 	}
 
+	p := &api.Properties{
+		ClusterID: "38988164",
+		OrchestratorProfile: &api.OrchestratorProfile{
+			OrchestratorType: api.Kubernetes,
+		},
+		HostedMasterProfile: &api.HostedMasterProfile{
+			DNSPrefix: "foo",
+		},
+	}
+
 	for _, el := range data {
 		vmssName := fmt.Sprintf("swarmm-%s-%s-vmss", el.nameSuffix, el.poolIdentifier)
-		poolIdentifier, nameSuffix, err := VmssNameParts(vmssName)
+		poolIdentifier, nameSuffix, err := VmssNameParts(p, vmssName)
 		if err != nil {
 			t.Fatalf("unexpected error: %s", err)
 		}
@@ -93,8 +113,18 @@ func Test_WindowsVMNameParts(t *testing.T) {
 		{"2314k8s0310", "2314", "k8s", 3, 10},
 	}
 
+	p := &api.Properties{
+		ClusterID: "38988164",
+		OrchestratorProfile: &api.OrchestratorProfile{
+			OrchestratorType: api.Kubernetes,
+		},
+		HostedMasterProfile: &api.HostedMasterProfile{
+			DNSPrefix: "foo",
+		},
+	}
+
 	for _, d := range data {
-		poolPrefix, orch, poolIndex, agentIndex, err := WindowsVMNameParts(d.VMName)
+		poolPrefix, orch, poolIndex, agentIndex, err := WindowsVMNameParts(p, d.VMName)
 		if poolPrefix != d.expectedPoolPrefix {
 			t.Fatalf("incorrect poolPrefix. expected=%s actual=%s", d.expectedPoolPrefix, poolPrefix)
 		}
@@ -116,7 +146,17 @@ func Test_WindowsVMNameParts(t *testing.T) {
 func Test_GetVMNameIndexLinux(t *testing.T) {
 	expectedAgentIndex := 65
 
-	agentIndex, err := GetVMNameIndex(compute.Linux, "k8s-38988164-agentpool1-65")
+	p := &api.Properties{
+		ClusterID: "38988164",
+		OrchestratorProfile: &api.OrchestratorProfile{
+			OrchestratorType: api.Kubernetes,
+		},
+		HostedMasterProfile: &api.HostedMasterProfile{
+			DNSPrefix: "foo",
+		},
+	}
+
+	agentIndex, err := GetVMNameIndex(p, compute.Linux, "k8s-38988164-agentpool1-65")
 
 	if agentIndex != expectedAgentIndex {
 		t.Fatalf("incorrect agentIndex. expected=%d actual=%d", expectedAgentIndex, agentIndex)
@@ -129,7 +169,17 @@ func Test_GetVMNameIndexLinux(t *testing.T) {
 func Test_GetVMNameIndexWindows(t *testing.T) {
 	expectedAgentIndex := 20
 
-	agentIndex, err := GetVMNameIndex(compute.Windows, "38988k8s90320")
+	p := &api.Properties{
+		ClusterID: "38988164",
+		OrchestratorProfile: &api.OrchestratorProfile{
+			OrchestratorType: api.Kubernetes,
+		},
+		HostedMasterProfile: &api.HostedMasterProfile{
+			DNSPrefix: "foo",
+		},
+	}
+
+	agentIndex, err := GetVMNameIndex(p, compute.Windows, "38988k8s90320")
 
 	if agentIndex != expectedAgentIndex {
 		t.Fatalf("incorrect agentIndex. expected=%d actual=%d", expectedAgentIndex, agentIndex)
