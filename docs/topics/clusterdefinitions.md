@@ -272,6 +272,7 @@ Below is a list of kubelet options that aks-engine will configure by default:
 | "--pod-max-pids"                    | "100" (need to activate the feature in --feature-gates=SupportPodPidsLimit=true)                                                                              |
 | "--image-pull-progress-deadline"    | "30m"                                                                                                                                                         |
 | "--feature-gates"                   | No default (can be a comma-separated list). On agent nodes `Accelerators=true` will be applied in the `--feature-gates` option for k8s versions before 1.11.0 |
+| "--enforce-node-allocatable"        | "pods" |
 
 Below is a list of kubelet options that are _not_ currently user-configurable, either because a higher order configuration vector is available that enforces kubelet configuration, or because a static configuration is required to build a functional cluster:
 
@@ -283,7 +284,6 @@ Below is a list of kubelet options that are _not_ currently user-configurable, e
 | "--network-plugin"                           | "cni"                                            |
 | "--node-labels"                              | (based on Azure node metadata)                   |
 | "--cgroups-per-qos"                          | "true"                                           |
-| "--enforce-node-allocatable"                 | "pods"                                           |
 | "--kubeconfig"                               | "/var/lib/kubelet/kubeconfig"                    |
 | "--register-node" (master nodes only)        | "true"                                           |
 | "--register-with-taints" (master nodes only) | "node-role.kubernetes.io/master=true:NoSchedule" |
