@@ -3238,6 +3238,8 @@ func getMockPropertiesWithCustomCloudProfile(name string, hasCustomCloudProfile,
 			}
 			p.CustomCloudProfile.AzureEnvironmentSpecConfig = &azureStackCloudSpec
 		}
+		p.CustomCloudProfile.IdentitySystem = AzureADIdentitySystem
+		p.CustomCloudProfile.AuthenticationMethod = ClientSecretAuthMethod
 	}
 	return p
 }

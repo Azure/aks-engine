@@ -72,5 +72,8 @@ func (p *Properties) setCustomCloudProfileDefaults() {
 		}
 		p.CustomCloudProfile.AzureEnvironmentSpecConfig = &azureStackCloudSpec
 		AzureCloudSpecEnvMap[AzureStackCloud] = azureStackCloudSpec
+
+		p.CustomCloudProfile.AuthenticationMethod = helpers.EnsureString(p.CustomCloudProfile.AuthenticationMethod, ClientSecretAuthMethod)
+		p.CustomCloudProfile.IdentitySystem = helpers.EnsureString(p.CustomCloudProfile.IdentitySystem, AzureADIdentitySystem)
 	}
 }

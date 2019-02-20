@@ -20,7 +20,7 @@ var _ = Describe("The orchestrators command", func() {
 	})
 
 	It("should fail on unsupported orchestrator", func() {
-		command := &orchestratorsCmd{
+		command := &getVersionsCmd{
 			orchestrator: "unsupported",
 		}
 
@@ -30,7 +30,7 @@ var _ = Describe("The orchestrators command", func() {
 	})
 
 	It("should fail on unprovided orchestrator", func() {
-		command := &orchestratorsCmd{
+		command := &getVersionsCmd{
 			version: "1.1.1",
 		}
 
@@ -40,7 +40,7 @@ var _ = Describe("The orchestrators command", func() {
 	})
 
 	It("should fail on unsupported version", func() {
-		command := &orchestratorsCmd{
+		command := &getVersionsCmd{
 			orchestrator: "kubernetes",
 			version:      "1.1.1",
 		}
@@ -51,9 +51,10 @@ var _ = Describe("The orchestrators command", func() {
 	})
 
 	It("should succeed", func() {
-		command := &orchestratorsCmd{
+		command := &getVersionsCmd{
 			orchestrator: "kubernetes",
 			version:      "1.7.14",
+			output:       "json",
 		}
 
 		err := command.run(nil, nil)

@@ -5,6 +5,7 @@ package cmd
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/Azure/aks-engine/pkg/helpers"
 	log "github.com/sirupsen/logrus"
@@ -69,7 +70,7 @@ func getVersion(outputType string) string {
 	} else if outputType == "json" {
 		output = getJSONVersion()
 	} else {
-		log.Fatalf("unsupported output format: %s\n", outputFormat)
+		log.Fatalf("output format \"%s\" is not supported", outputFormat)
 	}
 
 	return output
@@ -86,7 +87,8 @@ func newVersionCmd() *cobra.Command {
 		},
 	}
 
-	versionCmdDescription := fmt.Sprintf("Output format to use: %s", outputFormatOptions)
+	versionCmdDescription := fmt.Sprintf("Output format. Allowed values: %s",
+		strings.Join(outputFormatOptions, ", "))
 
 	versionCmd.Flags().StringVarP(&outputFormat, "output", "o", "human", versionCmdDescription)
 
