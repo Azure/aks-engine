@@ -631,7 +631,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 		It("should be able to get nodes metrics", func() {
 			if eng.ExpandedDefinition.Properties.OrchestratorProfile.KubernetesConfig.IsRBACEnabled() {
 				success := false
-				for i := 0; i < 30; i++ {
+				for i := 0; i < 10; i++ {
 					cmd := exec.Command("kubectl", "top", "nodes")
 					util.PrintCommand(cmd)
 					out, err := cmd.CombinedOutput()
