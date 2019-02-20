@@ -184,8 +184,6 @@ configureK8s() {
 }
 EOF
     if [[ "${TARGET_ENVIRONMENT,,}" == "azurestackcloud"  ]]; then 
-        echo "AUTHENTICATION_METHOD: ${AUTHENTICATION_METHOD}"
-        echo "IDENTITY_SYSTEM: ${IDENTITY_SYSTEM}"
         # When AUTHENTICATION_METHOD is client_certificate, the certificate is stored into key valut, 
         # And SERVICE_PRINCIPAL_CLIENT_SECRET will be the following json payload with based64 encode
         #{
