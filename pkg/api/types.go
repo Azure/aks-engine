@@ -956,7 +956,7 @@ func (p *Properties) GetClusterMetadata() *ClusterMetadata {
 
 // HasZonesForAllAgentPools returns true if all of the agent pools have zones
 func (p *Properties) HasZonesForAllAgentPools() bool {
-	if p.AgentPoolProfiles != nil {
+	if len(p.AgentPoolProfiles) > 0 {
 		for _, ap := range p.AgentPoolProfiles {
 			if !ap.HasAvailabilityZones() {
 				return false
