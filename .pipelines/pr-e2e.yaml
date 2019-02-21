@@ -52,9 +52,6 @@ jobs:
   - script: make validate-copyright-headers test-style
     displayName: Run linting rules
     workingDirectory: $(modulePath)
-  - script: make ensure-generated
-    displayName: Check if generated code is up to date
-    workingDirectory: $(modulePath)
   - script: make validate-dependencies
     displayName: Check if imports, Gopkg.toml, and Gopkg.lock are in sync
     workingDirectory: $(modulePath)
