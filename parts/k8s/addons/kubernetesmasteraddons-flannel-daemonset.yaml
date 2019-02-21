@@ -57,7 +57,7 @@ spec:
       nodeSelector:
         beta.kubernetes.io/arch: amd64
         beta.kubernetes.io/os: linux
-      priorityClassName: system-cluster-critical
+      priorityClassName: system-node-critical
       tolerations:
         - key: node.kubernetes.io/not-ready
           operator: Exists

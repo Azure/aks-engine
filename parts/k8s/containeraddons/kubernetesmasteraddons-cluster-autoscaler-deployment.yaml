@@ -142,7 +142,7 @@ spec:
       labels:
         app: cluster-autoscaler
     spec:
-      priorityClassName: system-cluster-critical
+      priorityClassName: system-node-critical
       <hostNet>
       serviceAccountName: cluster-autoscaler
       tolerations:
