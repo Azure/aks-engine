@@ -7,8 +7,6 @@ import (
 	"os"
 	"testing"
 
-	"fmt"
-
 	"github.com/Azure/aks-engine/pkg/api"
 	"github.com/Azure/aks-engine/pkg/armhelpers"
 	"github.com/Azure/aks-engine/pkg/i18n"
@@ -215,29 +213,6 @@ var _ = Describe("Upgrade Kubernetes cluster tests", func() {
 		err := uc.UpgradeCluster(&mockClient, "kubeConfig", TestAKSEngineVersion)
 		Expect(err).NotTo(BeNil())
 		Expect(err.Error()).To(Equal("DeleteNetworkInterface failed"))
-	})
-
-	It("Should return error message when failing on ClusterPreflightCheck operation", func() {
-		cs := api.CreateMockContainerService("testcluster", "1.9.0", 3, 3, false)
-		uc := UpgradeCluster{
-			Translator: &i18n.Translator{},
-			Logger:     log.NewEntry(log.New()),
-		}
-
-		mockClient := armhelpers.MockAKSEngineClient{}
-		uc.Client = &mockClient
-
-		uc.ClusterTopology = ClusterTopology{}
-		uc.SubscriptionID = "DEC923E3-1EF1-4745-9516-37906D56DEC4"
-		uc.ResourceGroup = "TestRg"
-		uc.DataModel = cs
-		uc.NameSuffix = "12345678"
-		uc.AgentPoolsToUpgrade = map[string]bool{"agentpool1": true}
-
-		err := uc.UpgradeCluster(&mockClient, "kubeConfig", TestAKSEngineVersion)
-		Expect(err).NotTo(BeNil())
-		fmt.Print("GOT :   ", err.Error())
-		Expect(err.Error()).To(ContainSubstring("Error while querying ARM for resources: 1.9.10 cannot be upgraded to 1.9.0"))
 	})
 
 	It("Should return error message when failing to delete role assignment during upgrade operation", func() {
