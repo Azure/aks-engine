@@ -30,3 +30,5 @@ comment:
 
 ignore:
   - "**/*_generated.go"
+  - "test/**/*.go"
+  - "pkg/armhelpers/mockclients.go"
