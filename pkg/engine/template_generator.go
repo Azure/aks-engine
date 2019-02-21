@@ -628,6 +628,9 @@ func (t *TemplateGenerator) getTemplateFuncMap(cs *api.ContainerService) templat
 		"GetKubernetesB64Configs": func() string {
 			return getBase64CustomScript(kubernetesConfigurations)
 		},
+		"GetKubernetesB64ConfigsCustomCloud": func() string {
+			return getBase64CustomScript(kubernetesConfigurationsCustomCloud)
+		},
 		"GetKubernetesB64Mountetcd": func() string {
 			return getBase64CustomScript(kubernetesMountetcd)
 		},
