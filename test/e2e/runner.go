@@ -123,6 +123,7 @@ func main() {
 				teardown()
 			}
 			log.Fatalf("Error while trying to provision cluster:%s", err)
+			os.Exit(1)
 		}
 		if cfg.SoakClusterName != "" {
 			err = sa.CreateFileShare(cfg.SoakClusterName)
@@ -139,13 +140,19 @@ func main() {
 		engCfg, err := engine.ParseConfig(cfg.CurrentWorkingDir, cfg.ClusterDefinition, cfg.Name)
 		cfg.SetKubeConfig()
 		if err != nil {
-			teardown()
+			if cfg.CleanUpIfFail {
+				teardown()
+			}
 			log.Fatalf("Error trying to parse Engine config:%s\n", err)
+			os.Exit(1)
 		}
 		cs, err := engine.ParseInput(engCfg.ClusterDefinitionTemplate)
 		if err != nil {
-			teardown()
+			if cfg.CleanUpIfFail {
+				teardown()
+			}
 			log.Fatalf("Error trying to parse engine template into memory:%s\n", err)
+			os.Exit(1)
 		}
 		eng = &engine.Engine{
 			Config:            engCfg,
@@ -157,12 +164,17 @@ func main() {
 	if !cfg.SkipTest {
 		g, err := runner.BuildGinkgoRunner(cfg, pt)
 		if err != nil {
-			teardown()
+			if cfg.CleanUpIfFail {
+				teardown()
+			}
 			log.Fatalf("Error: Unable to parse ginkgo configuration!")
+			os.Exit(1)
 		}
 		err = g.Run()
 		if err != nil {
-			teardown()
+			if cfg.CleanUpIfFail {
+				teardown()
+			}
 			os.Exit(1)
 		}
 	}
