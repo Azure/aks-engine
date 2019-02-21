@@ -4,6 +4,7 @@
 package cmd
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/Azure/aks-engine/pkg/api"
@@ -110,6 +111,7 @@ func TestCreateUpgradeCommandSuccesfully(t *testing.T) {
 
 //TODO: Should it fail or should it pass without --force? hmm
 func TestUpgradeShouldFailForSameVersion(t *testing.T) {
+	fakeArmTemplateHandle := strings.NewReader("{\"parameters\" : { \"nameSuffix\" : {\"defaultValue\" : \"test\"}}}")
 	g := NewGomegaWithT(t)
 	upgradeCmd := &upgradeCmd{
 		resourceGroupName:   "rg",
@@ -124,9 +126,30 @@ func TestUpgradeShouldFailForSameVersion(t *testing.T) {
 	containerServiceMock := api.CreateMockContainerService("testcluster", "1.10.13", 3, 2, false)
 	containerServiceMock.Location = "centralus"
 	upgradeCmd.containerService = containerServiceMock
-	err := upgradeCmd.validateCurrentState()
+	err := upgradeCmd.validateCurrentLocalState(fakeArmTemplateHandle)
 	g.Expect(err).To(HaveOccurred())
-	g.Expect(err.Error()).To(HavePrefix("upgrading from Kubernetes version 1.10.13 to version 1.10.13 is not supported"))
+	g.Expect(err.Error()).To(ContainSubstring("upgrading from Kubernetes version 1.10.13 to version 1.10.13 is not supported"))
+}
+
+func TestUpgradeForceSameVersionShouldSucceed(t *testing.T) {
+	fakeArmTemplateHandle := strings.NewReader("{\"parameters\" : { \"nameSuffix\" : {\"defaultValue\" : \"test\"}}}")
+	g := NewGomegaWithT(t)
+	upgradeCmd := &upgradeCmd{
+		resourceGroupName:   "rg",
+		deploymentDirectory: "_output/test",
+		upgradeVersion:      "1.10.13",
+		location:            "centralus",
+		timeoutInMinutes:    60,
+
+		client: &armhelpers.MockAKSEngineClient{},
+	}
+
+	containerServiceMock := api.CreateMockContainerService("testcluster", "1.10.13", 3, 2, false)
+	containerServiceMock.Location = "centralus"
+	upgradeCmd.containerService = containerServiceMock
+	upgradeCmd.force = true
+	err := upgradeCmd.validateCurrentLocalState(fakeArmTemplateHandle)
+	g.Expect(err).NotTo(HaveOccurred())
 }
 
 func setupAuthParams(uc *upgradeCmd) {
