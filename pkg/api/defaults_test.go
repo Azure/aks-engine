@@ -447,6 +447,66 @@ func TestAcceleratedNetworking(t *testing.T) {
 	}
 }
 
+func TestVMSSOverProvisioning(t *testing.T) {
+	mockCS := getMockBaseContainerService("1.10.8")
+	mockCS.Properties.OrchestratorProfile.OrchestratorType = "Kubernetes"
+	mockCS.Properties.AgentPoolProfiles[0].AvailabilityProfile = VirtualMachineScaleSets
+	mockCS.Properties.AgentPoolProfiles[0].VMSSOverProvisioningEnabled = nil
+	isUpgrade := true
+	mockCS.SetPropertiesDefaults(isUpgrade, false)
+
+	// In upgrade scenario, nil AcceleratedNetworkingEnabled should always render as false (i.e., we never turn on this feature on an existing vm that didn't have it before)
+	if to.Bool(mockCS.Properties.AgentPoolProfiles[0].VMSSOverProvisioningEnabled) {
+		t.Errorf("expected nil VMSSOverProvisioningEnabled to be false after upgrade, instead got %t", to.Bool(mockCS.Properties.AgentPoolProfiles[0].VMSSOverProvisioningEnabled))
+	}
+
+	mockCS = getMockBaseContainerService("1.10.8")
+	mockCS.Properties.OrchestratorProfile.OrchestratorType = "Kubernetes"
+	mockCS.Properties.AgentPoolProfiles[0].AvailabilityProfile = VirtualMachineScaleSets
+	mockCS.Properties.AgentPoolProfiles[0].VMSSOverProvisioningEnabled = nil
+	isScale := true
+	mockCS.SetPropertiesDefaults(false, isScale)
+
+	// In scale scenario, nil VMSSOverProvisioningEnabled should always render as false (i.e., we never turn on this feature on an existing agent pool / vmss that didn't have it before)
+	if to.Bool(mockCS.Properties.AgentPoolProfiles[0].VMSSOverProvisioningEnabled) {
+		t.Errorf("expected nil VMSSOverProvisioningEnabled to be false after upgrade, instead got %t", to.Bool(mockCS.Properties.AgentPoolProfiles[0].VMSSOverProvisioningEnabled))
+	}
+
+	mockCS = getMockBaseContainerService("1.10.8")
+	mockCS.Properties.OrchestratorProfile.OrchestratorType = "Kubernetes"
+	mockCS.Properties.AgentPoolProfiles[0].AvailabilityProfile = VirtualMachineScaleSets
+	mockCS.Properties.AgentPoolProfiles[0].VMSSOverProvisioningEnabled = nil
+	mockCS.SetPropertiesDefaults(false, false)
+
+	// In create scenario, nil VMSSOverProvisioningEnabled should be the defaults
+	vmssOverProvisioningEnabled := DefaultVMSSOverProvisioningEnabled
+	if to.Bool(mockCS.Properties.AgentPoolProfiles[0].VMSSOverProvisioningEnabled) != vmssOverProvisioningEnabled {
+		t.Errorf("expected default VMSSOverProvisioningEnabled to be %t, instead got %t", vmssOverProvisioningEnabled, to.Bool(mockCS.Properties.AgentPoolProfiles[0].VMSSOverProvisioningEnabled))
+	}
+
+	mockCS = getMockBaseContainerService("1.10.8")
+	mockCS.Properties.OrchestratorProfile.OrchestratorType = "Kubernetes"
+	mockCS.Properties.AgentPoolProfiles[0].AvailabilityProfile = VirtualMachineScaleSets
+	mockCS.Properties.AgentPoolProfiles[0].VMSSOverProvisioningEnabled = to.BoolPtr(true)
+	mockCS.SetPropertiesDefaults(false, false)
+
+	// In create scenario with explicit true, VMSSOverProvisioningEnabled should be true
+	if !to.Bool(mockCS.Properties.AgentPoolProfiles[0].VMSSOverProvisioningEnabled) {
+		t.Errorf("expected VMSSOverProvisioningEnabled to be true, instead got %t", to.Bool(mockCS.Properties.AgentPoolProfiles[0].VMSSOverProvisioningEnabled))
+	}
+
+	mockCS = getMockBaseContainerService("1.10.8")
+	mockCS.Properties.OrchestratorProfile.OrchestratorType = "Kubernetes"
+	mockCS.Properties.AgentPoolProfiles[0].AvailabilityProfile = VirtualMachineScaleSets
+	mockCS.Properties.AgentPoolProfiles[0].VMSSOverProvisioningEnabled = to.BoolPtr(false)
+	mockCS.SetPropertiesDefaults(false, false)
+
+	// In create scenario with explicit false, VMSSOverProvisioningEnabled should be false
+	if to.Bool(mockCS.Properties.AgentPoolProfiles[0].VMSSOverProvisioningEnabled) {
+		t.Errorf("expected VMSSOverProvisioningEnabled to be false, instead got %t", to.Bool(mockCS.Properties.AgentPoolProfiles[0].VMSSOverProvisioningEnabled))
+	}
+}
+
 func TestKubeletFeatureGatesEnsureFeatureGatesOnAgentsFor1_6_0(t *testing.T) {
 	mockCS := getMockBaseContainerService("1.6.0")
 	properties := mockCS.Properties
