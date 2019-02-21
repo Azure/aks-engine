@@ -21,6 +21,8 @@ pkg/operations/junit.xml
 pkg/operations/kubernetesupgrade/junit.xml
 pkg/engine/templates_generated.go
 pkg/i18n/translations_generated.go
+pkg/engine/templates.go
+pkg/i18n/translations.go
 
 _logs/
 test/aks-engine-test/report/TestReport.json
