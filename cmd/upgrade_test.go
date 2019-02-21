@@ -6,6 +6,10 @@ package cmd
 import (
 	"testing"
 
+	"github.com/Azure/aks-engine/pkg/api"
+	"github.com/Azure/aks-engine/pkg/armhelpers"
+	"github.com/gofrs/uuid"
+
 	. "github.com/onsi/gomega"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -102,4 +106,37 @@ func TestCreateUpgradeCommandSuccesfully(t *testing.T) {
 	g.Expect(output.Flags().Lookup("resource-group")).NotTo(BeNil())
 	g.Expect(output.Flags().Lookup("deployment-dir")).NotTo(BeNil())
 	g.Expect(output.Flags().Lookup("upgrade-version")).NotTo(BeNil())
+}
+
+//TODO: Should it fail or should it pass without --force? hmm
+func TestUpgradeShouldFailForSameVersion(t *testing.T) {
+	g := NewGomegaWithT(t)
+	upgradeCmd := &upgradeCmd{
+		resourceGroupName:   "rg",
+		deploymentDirectory: "_output/test",
+		upgradeVersion:      "1.10.13",
+		location:            "centralus",
+		timeoutInMinutes:    60,
+
+		client: &armhelpers.MockAKSEngineClient{},
+	}
+
+	containerServiceMock := api.CreateMockContainerService("testcluster", "1.10.13", 3, 2, false)
+	containerServiceMock.Location = "centralus"
+	upgradeCmd.containerService = containerServiceMock
+	err := upgradeCmd.validateCurrentState()
+	g.Expect(err).To(HaveOccurred())
+	g.Expect(err.Error()).To(HavePrefix("upgrading from Kubernetes version 1.10.13 to version 1.10.13 is not supported"))
+}
+
+func setupAuthParams(uc *upgradeCmd) {
+	fakeRawSubscriptionID := "6dc93fae-9a76-421f-bbe5-cc6460ea81cb"
+	fakeSubscriptionID, _ := uuid.FromString(fakeRawSubscriptionID)
+	fakeClientID := "b829b379-ca1f-4f1d-91a2-0d26b244680d"
+	fakeClientSecret := "0se43bie-3zs5-303e-aav5-dcf231vb82ds"
+
+	uc.getAuthArgs().SubscriptionID = fakeSubscriptionID
+	uc.getAuthArgs().rawSubscriptionID = fakeRawSubscriptionID
+	uc.getAuthArgs().rawClientID = fakeClientID
+	uc.getAuthArgs().ClientSecret = fakeClientSecret
 }

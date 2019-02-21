@@ -32,7 +32,7 @@ const (
 )
 
 type upgradeCmd struct {
-	authArgs
+	authProvider
 
 	// user input
 	resourceGroupName   string
@@ -53,7 +53,9 @@ type upgradeCmd struct {
 }
 
 func newUpgradeCmd() *cobra.Command {
-	uc := upgradeCmd{}
+	uc := upgradeCmd{
+		authProvider: &authArgs{},
+	}
 
 	upgradeCmd := &cobra.Command{
 		Use:   upgradeName,
@@ -71,7 +73,7 @@ func newUpgradeCmd() *cobra.Command {
 	f.StringVarP(&uc.upgradeVersion, "upgrade-version", "k", "", "desired kubernetes version (required)")
 	f.IntVar(&uc.timeoutInMinutes, "vm-timeout", -1, "how long to wait for each vm to be upgraded in minutes")
 	f.BoolVarP(&uc.force, "force", "f", false, "force upgrading the cluster to desired version. Allows same version upgrades and downgrades.")
-	addAuthFlags(&uc.authArgs, f)
+	addAuthFlags(uc.getAuthArgs(), f)
 
 	return upgradeCmd
 }
@@ -115,11 +117,11 @@ func (uc *upgradeCmd) validate(cmd *cobra.Command) error {
 func (uc *upgradeCmd) loadCluster(cmd *cobra.Command) error {
 	var err error
 
-	if err = uc.authArgs.validateAuthArgs(); err != nil {
+	if err = uc.getAuthArgs().validateAuthArgs(); err != nil {
 		return err
 	}
 
-	if uc.client, err = uc.authArgs.getClient(); err != nil {
+	if uc.client, err = uc.getAuthArgs().getClient(); err != nil {
 		return errors.Wrap(err, "failed to get client")
 	}
 
@@ -149,6 +151,14 @@ func (uc *upgradeCmd) loadCluster(cmd *cobra.Command) error {
 		return errors.Wrap(err, "error parsing the api model")
 	}
 
+	err = uc.validateCurrentState()
+	if err != nil {
+		return errors.Wrap(err, "error validating the api model")
+	}
+	return nil
+}
+
+func (uc *upgradeCmd) validateCurrentState() error {
 	if uc.containerService.Location == "" {
 		uc.containerService.Location = uc.location
 	} else if uc.containerService.Location != uc.location {
@@ -160,11 +170,6 @@ func (uc *upgradeCmd) loadCluster(cmd *cobra.Command) error {
 	if err != nil {
 		return errors.Wrap(err, "error getting list of available upgrades")
 	}
-
-	// Add the current version to account for failed upgrades.
-	orchestratorInfo.Upgrades = append(orchestratorInfo.Upgrades, &api.OrchestratorProfile{
-		OrchestratorType:    uc.containerService.Properties.OrchestratorProfile.OrchestratorType,
-		OrchestratorVersion: uc.containerService.Properties.OrchestratorProfile.OrchestratorVersion})
 
 	// Validate desired upgrade version and set goal state.
 	found := false
@@ -248,7 +253,7 @@ func (uc *upgradeCmd) run(cmd *cobra.Command, args []string) error {
 	}
 
 	upgradeCluster.ClusterTopology = kubernetesupgrade.ClusterTopology{}
-	upgradeCluster.SubscriptionID = uc.authArgs.SubscriptionID.String()
+	upgradeCluster.SubscriptionID = uc.getAuthArgs().SubscriptionID.String()
 	upgradeCluster.ResourceGroup = uc.resourceGroupName
 	upgradeCluster.DataModel = uc.containerService
 	upgradeCluster.NameSuffix = uc.nameSuffix

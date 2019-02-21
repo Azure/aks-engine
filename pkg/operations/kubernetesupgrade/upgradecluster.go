@@ -14,7 +14,6 @@ import (
 	"github.com/Azure/aks-engine/pkg/armhelpers/utils"
 	"github.com/Azure/aks-engine/pkg/i18n"
 	"github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2018-10-01/compute"
-	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 )
 
@@ -183,13 +182,6 @@ func (uc *UpgradeCluster) getClusterNodeStatus(az armhelpers.AKSEngineClient, re
 				continue
 			}
 
-			// Skip the VM upgrade validation for managed clusters as it only applies to aks-engine version support.
-			if !uc.DataModel.Properties.IsHostedMasterProfile() {
-				if err := uc.upgradable(currentVersion); err != nil {
-					return err
-				}
-			}
-
 			// If the current version is different than the desired version then we add the VM to the list of VMs to upgrade.
 			if currentVersion != goalVersion {
 				if strings.Contains(*(vm.Name), MasterVMNamePrefix) {
@@ -246,23 +238,6 @@ func (uc *UpgradeCluster) getNodeVersion(client armhelpers.KubernetesClient, nam
 		}
 	}
 	return ""
-}
-
-func (uc *UpgradeCluster) upgradable(currentVersion string) error {
-	csOrch := &api.OrchestratorProfile{
-		OrchestratorType:    api.Kubernetes,
-		OrchestratorVersion: currentVersion,
-	}
-	orch, err := api.GetOrchestratorVersionProfile(csOrch, uc.DataModel.Properties.HasWindows())
-	if err != nil {
-		return err
-	}
-	for _, up := range orch.Upgrades {
-		if up.OrchestratorVersion == uc.DataModel.Properties.OrchestratorProfile.OrchestratorVersion {
-			return nil
-		}
-	}
-	return errors.Errorf("%s cannot be upgraded to %s", currentVersion, uc.DataModel.Properties.OrchestratorProfile.OrchestratorVersion)
 }
 
 func (uc *UpgradeCluster) addVMToAgentPool(vm compute.VirtualMachine, isUpgradableVM bool) error {
