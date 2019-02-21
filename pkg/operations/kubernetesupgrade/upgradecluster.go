@@ -162,13 +162,6 @@ func (uc *UpgradeCluster) getClusterNodeStatus(az armhelpers.AKSEngineClient, re
 		}
 
 		for _, vm := range vmListPage.Values() {
-			// Windows VMs contain a substring of the name suffix
-			if !strings.Contains(*(vm.Name), uc.NameSuffix) && !strings.Contains(*(vm.Name), uc.NameSuffix[:4]+"k8s") {
-				uc.Logger.Infof("Skipping VM: %s for upgrade as it does not belong to cluster with expected name suffix: %s\n",
-					*vm.Name, uc.NameSuffix)
-				continue
-			}
-
 			currentVersion := uc.getNodeVersion(kubeClient, *vm.Name, vm.Tags)
 			if currentVersion == "" {
 				uc.Logger.Infof("Skipping VM: %s for upgrade as the orchestrator version could not be determined.", *vm.Name)
@@ -178,7 +171,7 @@ func (uc *UpgradeCluster) getClusterNodeStatus(az armhelpers.AKSEngineClient, re
 			// Skip the VM upgrade validation for managed clusters as it only applies to aks-engine version support.
 			if !uc.DataModel.Properties.IsHostedMasterProfile() {
 				if err := uc.upgradable(currentVersion); err != nil {
-					return err
+					continue
 				}
 			}
 
