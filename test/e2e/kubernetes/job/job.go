@@ -42,7 +42,7 @@ type Status struct {
 
 // CreateJobFromFile will create a Job from file with a name
 func CreateJobFromFile(filename, name, namespace string) (*Job, error) {
-	cmd := exec.Command("kubectl", "create", "-f", filename)
+	cmd := exec.Command("k", "create", "-f", filename)
 	util.PrintCommand(cmd)
 	out, err := cmd.CombinedOutput()
 	if err != nil {
@@ -59,7 +59,7 @@ func CreateJobFromFile(filename, name, namespace string) (*Job, error) {
 
 // GetAll will return all jobs in a given namespace
 func GetAll(namespace string) (*List, error) {
-	cmd := exec.Command("kubectl", "get", "jobs", "-n", namespace, "-o", "json")
+	cmd := exec.Command("k", "get", "jobs", "-n", namespace, "-o", "json")
 	util.PrintCommand(cmd)
 	out, err := cmd.CombinedOutput()
 	if err != nil {
@@ -76,7 +76,7 @@ func GetAll(namespace string) (*List, error) {
 
 // Get will return a job with a given name and namespace
 func Get(jobName, namespace string) (*Job, error) {
-	cmd := exec.Command("kubectl", "get", "jobs", jobName, "-n", namespace, "-o", "json")
+	cmd := exec.Command("k", "get", "jobs", jobName, "-n", namespace, "-o", "json")
 	util.PrintCommand(cmd)
 	out, err := cmd.CombinedOutput()
 	if err != nil {
@@ -168,7 +168,7 @@ func (j *Job) Delete(retries int) error {
 	var kubectlOutput []byte
 	var kubectlError error
 	for i := 0; i < retries; i++ {
-		cmd := exec.Command("kubectl", "delete", "job", "-n", j.Metadata.Namespace, j.Metadata.Name)
+		cmd := exec.Command("k", "delete", "job", "-n", j.Metadata.Namespace, j.Metadata.Name)
 		util.PrintCommand(cmd)
 		kubectlOutput, kubectlError = cmd.CombinedOutput()
 		if kubectlError != nil {

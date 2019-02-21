@@ -126,7 +126,7 @@ func WaitOnReady(nodeCount int, sleep, duration time.Duration) bool {
 
 // Get returns the current nodes for a given kubeconfig
 func Get() (*List, error) {
-	cmd := exec.Command("kubectl", "get", "nodes", "-o", "json")
+	cmd := exec.Command("k", "get", "nodes", "-o", "json")
 	util.PrintCommand(cmd)
 	out, err := cmd.CombinedOutput()
 	if err != nil {
@@ -143,7 +143,7 @@ func Get() (*List, error) {
 
 // Version get the version of the server
 func Version() (string, error) {
-	cmd := exec.Command("kubectl", "version", "--short")
+	cmd := exec.Command("k", "version", "--short")
 	util.PrintCommand(cmd)
 	out, err := cmd.CombinedOutput()
 	if err != nil {

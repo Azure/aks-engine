@@ -148,7 +148,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			nodeCount := eng.NodeCount()
 			log.Printf("Checking for %d Ready nodes\n", nodeCount)
 			ready := node.WaitOnReady(nodeCount, 10*time.Second, cfg.Timeout)
-			cmd := exec.Command("kubectl", "get", "nodes", "-o", "wide")
+			cmd := exec.Command("k", "get", "nodes", "-o", "wide")
 			out, _ := cmd.CombinedOutput()
 			log.Printf("%s\n", out)
 			if !ready {
@@ -158,7 +158,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 		})
 
 		It("should print all pods", func() {
-			cmd := exec.Command("kubectl", "get", "pods", "--all-namespaces", "-o", "wide")
+			cmd := exec.Command("k", "get", "pods", "--all-namespaces", "-o", "wide")
 			out, err := cmd.CombinedOutput()
 			log.Printf("%s\n", out)
 			if err != nil {
@@ -632,7 +632,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			if eng.ExpandedDefinition.Properties.OrchestratorProfile.KubernetesConfig.IsRBACEnabled() {
 				success := false
 				for i := 0; i < 10; i++ {
-					cmd := exec.Command("kubectl", "top", "nodes")
+					cmd := exec.Command("k", "top", "nodes")
 					util.PrintCommand(cmd)
 					out, err := cmd.CombinedOutput()
 					if err == nil {

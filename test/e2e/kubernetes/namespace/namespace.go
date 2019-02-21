@@ -25,7 +25,7 @@ type Metadata struct {
 
 // Create a namespace with the given name
 func Create(name string) (*Namespace, error) {
-	cmd := exec.Command("kubectl", "create", "namespace", name)
+	cmd := exec.Command("k", "create", "namespace", name)
 	util.PrintCommand(cmd)
 	out, err := cmd.CombinedOutput()
 	if err != nil {
@@ -46,7 +46,7 @@ func CreateIfNotExist(name string) (*Namespace, error) {
 
 // Get returns a namespace for with a given name
 func Get(name string) (*Namespace, error) {
-	cmd := exec.Command("kubectl", "get", "namespace", name, "-o", "json")
+	cmd := exec.Command("k", "get", "namespace", name, "-o", "json")
 	util.PrintCommand(cmd)
 	out, err := cmd.CombinedOutput()
 	if err != nil {
@@ -63,7 +63,7 @@ func Get(name string) (*Namespace, error) {
 
 // Delete a namespace
 func (n *Namespace) Delete() error {
-	cmd := exec.Command("kubectl", "delete", "namespace", n.Metadata.Name)
+	cmd := exec.Command("k", "delete", "namespace", n.Metadata.Name)
 	util.PrintCommand(cmd)
 	out, err := cmd.CombinedOutput()
 	if err != nil {

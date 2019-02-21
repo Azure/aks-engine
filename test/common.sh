@@ -87,7 +87,7 @@ function set_azure_account() {
 	[[ ! -z "${TENANT_ID:-}" ]] || (echo "Must specify TENANT_ID" && exit -1)
 	[[ ! -z "${SERVICE_PRINCIPAL_CLIENT_ID:-}" ]] || (echo "Must specify SERVICE_PRINCIPAL_CLIENT_ID" && exit -1)
 	[[ ! -z "${SERVICE_PRINCIPAL_CLIENT_SECRET:-}" ]] || (echo "Must specify SERVICE_PRINCIPAL_CLIENT_SECRET" && exit -1)
-	which kubectl || (echo "kubectl must be on PATH" && exit -1)
+	which k || (echo "k must be on PATH" && exit -1)
 	which az || (echo "az must be on PATH" && exit -1)
 
 	# Login to Azure-Cli
@@ -116,7 +116,7 @@ function deploy_template() {
 	[[ ! -z "${RESOURCE_GROUP:-}" ]] || (echo "Must specify RESOURCE_GROUP" && exit -1)
 	[[ ! -z "${OUTPUT:-}" ]] || (echo "Must specify OUTPUT" && exit -1)
 
-	which kubectl || (echo "kubectl must be on PATH" && exit -1)
+	which k || (echo "k must be on PATH" && exit -1)
 	which az || (echo "az must be on PATH" && exit -1)
 
 	create_resource_group
