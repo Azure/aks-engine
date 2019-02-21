@@ -125,6 +125,37 @@ generateAggregatedAPICerts() {
     $AGGREGATED_API_CERTS_SETUP_FILE
 }
 
+function ensureCertificates()
+{
+    if [[ "${TARGET_ENVIRONMENT,,}" == "azurestackcloud"  ]]; then 
+        AZURESTACK_ENVIRONMENT_JSON_PATH="/etc/kubernetes/azurestackcloud.json"
+        AZURESTACK_RESOURCE_MANAGER_ENDPOINT=`cat $AZURESTACK_ENVIRONMENT_JSON_PATH | jq .resourceManagerEndpoint | tr -d "\""`
+        AZURESTACK_RESOURCE_METADATA_ENDPOINT="$AZURESTACK_RESOURCE_MANAGER_ENDPOINT/metadata/endpoints?api-version=2015-01-01"
+        curl $AZURESTACK_RESOURCE_METADATA_ENDPOINT
+        CURL_RETURNCODE=$?
+        if [ $CURL_RETURNCODE != 0 ]; then
+            # Replace placeholder for ssl binding
+            KUBE_CONTROLLER_MANAGER_FILE=/etc/kubernetes/manifests/kube-controller-manager.yaml
+            sed -i "s|<volumessl>|- name: ssl\n      hostPath:\n        path: \\/etc\\/ssl\\/certs|g" $KUBE_CONTROLLER_MANAGER_FILE 
+            sed -i "s|<volumeMountssl>|- name: "ssl"\n          mountPath: \\/etc\\/ssl\\/certs\n          readOnly: true|g" $KUBE_CONTROLLER_MANAGER_FILE
+
+            # Copying the AzureStack root certificate to the appropriate store to be updated.
+            AZURESTACK_ROOT_CERTIFICATE_SOURCE_PATH="/var/lib/waagent/Certificates.pem"
+            AZURESTACK_ROOT_CERTIFICATE__DEST_PATH="/usr/local/share/ca-certificates/azsCertificate.crt"
+            cp $AZURESTACK_ROOT_CERTIFICATE_SOURCE_PATH $AZURESTACK_ROOT_CERTIFICATE__DEST_PATH
+            update-ca-certificates
+        else
+            # the ARM resource manager endpoint binding certificate is trusted, remove the placeholder for ssl binding
+            sed -i "/<volumessl>/d" $KUBE_CONTROLLER_MANAGER_FILE
+            sed -i "/<volumeMountssl>/d" $KUBE_CONTROLLER_MANAGER_FILE
+        fi
+
+        # ensureCertificates will be retried if the exit code is not 0
+        curl $AZURESTACK_RESOURCE_METADATA_ENDPOINT
+        exit $?
+    fi
+}
+
 configureK8s() {
     KUBELET_PRIVATE_KEY_PATH="/etc/kubernetes/certs/client.key"
     touch "${KUBELET_PRIVATE_KEY_PATH}"
@@ -184,6 +215,8 @@ configureK8s() {
 }
 EOF
     if [[ "${TARGET_ENVIRONMENT,,}" == "azurestackcloud"  ]]; then 
+        export -f ensureCertificates
+        retrycmd_if_failure 60 10 30 bash -c ensureCertificates
         # When AUTHENTICATION_METHOD is client_certificate, the certificate is stored into key valut, 
         # And SERVICE_PRINCIPAL_CLIENT_SECRET will be the following json payload with based64 encode
         #{

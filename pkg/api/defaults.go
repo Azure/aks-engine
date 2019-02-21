@@ -26,6 +26,11 @@ import (
 func (cs *ContainerService) SetPropertiesDefaults(isUpgrade, isScale bool) (bool, error) {
 	properties := cs.Properties
 
+	// Set custom cloud profile defaults if this cluster configuration has custom cloud profile
+	if cs.Properties.CustomCloudProfile != nil {
+		properties.setCustomCloudProfileDefaults()
+	}
+
 	cs.setOrchestratorDefaults(isUpgrade || isScale)
 
 	// Set master profile defaults if this cluster configuration includes master node(s)
@@ -51,10 +56,6 @@ func (cs *ContainerService) SetPropertiesDefaults(isUpgrade, isScale bool) (bool
 		properties.setHostedMasterProfileDefaults()
 	}
 
-	// Set custom cloud profile defaults if this cluster configuration has custom cloud profile
-	if cs.Properties.CustomCloudProfile != nil {
-		properties.setCustomCloudProfileDefaults()
-	}
 	certsGenerated, _, e := cs.setDefaultCerts()
 	if e != nil {
 		return false, e
