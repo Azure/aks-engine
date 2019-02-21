@@ -69,6 +69,7 @@ spec:
         scheduler.alpha.kubernetes.io/critical-pod: ''
     spec:
       tolerations:
+      priorityClassName: system-cluster-critical
       - key: CriticalAddonsOnly
         operator: Exists
       nodeSelector:

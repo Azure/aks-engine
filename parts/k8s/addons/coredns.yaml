@@ -122,6 +122,7 @@ spec:
               topologyKey: kubernetes.io/hostname
             weight: 5
       serviceAccountName: coredns
+      priorityClassName: system-cluster-critical
       tolerations:
         - key: node-role.kubernetes.io/master
           effect: NoSchedule

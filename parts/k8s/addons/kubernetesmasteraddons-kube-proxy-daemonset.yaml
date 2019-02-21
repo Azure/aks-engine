@@ -14,6 +14,7 @@ spec:
         component: kube-proxy
         tier: node
     spec:
+      priorityClassName: system-cluster-critical
       tolerations:
       - key: node-role.kubernetes.io/master
         operator: Equal
