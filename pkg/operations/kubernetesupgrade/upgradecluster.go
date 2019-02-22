@@ -6,13 +6,11 @@ package kubernetesupgrade
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"strings"
 	"time"
 
 	"github.com/Azure/aks-engine/pkg/api"
 	"github.com/Azure/aks-engine/pkg/armhelpers"
-	"github.com/Azure/aks-engine/pkg/armhelpers/utils"
 	"github.com/Azure/aks-engine/pkg/i18n"
 	"github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2018-04-01/compute"
 	"github.com/pkg/errors"
@@ -84,7 +82,7 @@ func (uc *UpgradeCluster) UpgradeCluster(az armhelpers.AKSEngineClient, kubeConf
 
 	var upgrader UpgradeWorkFlow
 	upgradeVersion := uc.DataModel.Properties.OrchestratorProfile.OrchestratorVersion
-	uc.Logger.Infof("Upgrading to Kubernetes version %s\n", upgradeVersion)
+	uc.Logger.Infof("Upgrading to Kubernetes version %s.", upgradeVersion)
 	u := &Upgrader{}
 	u.Init(uc.Translator, uc.Logger, uc.ClusterTopology, uc.Client, kubeConfig, uc.StepTimeout, aksEngineVersion)
 	upgrader = u
@@ -93,7 +91,7 @@ func (uc *UpgradeCluster) UpgradeCluster(az armhelpers.AKSEngineClient, kubeConf
 		return err
 	}
 
-	uc.Logger.Infof("Cluster upgraded successfully to Kubernetes version %s\n", upgradeVersion)
+	uc.Logger.Infof("Cluster upgraded successfully to Kubernetes version %s.", upgradeVersion)
 	return nil
 }
 
@@ -168,6 +166,7 @@ func (uc *UpgradeCluster) getClusterNodeStatus(az armhelpers.AKSEngineClient, re
 				continue
 			}
 
+			// Validate VM Tag `resourceNameSuffix`
 			if resourceNameSuffix, ok := vm.Tags["resourceNameSuffix"]; !ok {
 				uc.Logger.Infof("Skipping VM: %s for upgrade as the VM Tag resourceNameSuffix has not been found.", *vm.Name)
 				continue
@@ -185,11 +184,12 @@ func (uc *UpgradeCluster) getClusterNodeStatus(az armhelpers.AKSEngineClient, re
 
 			// If the current version is different than the desired version then we add the VM to the list of VMs to upgrade.
 			if currentVersion != goalVersion {
+				// Validate VM Tag `poolName`
 				if poolName, ok := vm.Tags["poolName"]; ok && *poolName == "master" {
 					uc.Logger.Infof("Master VM name: %s, orchestrator: %s (MasterVMs)\n", *vm.Name, currentVersion)
 					*uc.MasterVMs = append(*uc.MasterVMs, vm)
-				} else if ok {
-					uc.addVMToAgentPool(vm, true)
+				} else if ok && len(*poolName) > 0 {
+					uc.addVMToAgentPool(*poolName, vm, true)
 				} else {
 					uc.Logger.Infof("Skipping VM: %s for upgrade as the VM Tag poolName has not been found.", *vm.Name)
 				}
@@ -197,8 +197,8 @@ func (uc *UpgradeCluster) getClusterNodeStatus(az armhelpers.AKSEngineClient, re
 				if poolName, ok := vm.Tags["poolName"]; ok && *poolName == "master" {
 					uc.Logger.Infof("Master VM name: %s, orchestrator: %s (UpgradedMasterVMs)\n", *vm.Name, currentVersion)
 					*uc.UpgradedMasterVMs = append(*uc.UpgradedMasterVMs, vm)
-				} else if ok {
-					uc.addVMToAgentPool(vm, false)
+				} else if ok && len(*poolName) > 0 {
+					uc.addVMToAgentPool(*poolName, vm, false)
 				} else {
 					uc.Logger.Infof("Skipping VM: %s for upgrade as the VM Tag poolName has not been found.", *vm.Name)
 				}
@@ -262,91 +262,31 @@ func (uc *UpgradeCluster) upgradable(currentVersion string) error {
 	return errors.Errorf("%s cannot be upgraded to %s", currentVersion, uc.DataModel.Properties.OrchestratorProfile.OrchestratorVersion)
 }
 
-func (uc *UpgradeCluster) addVMToAgentPool(vm compute.VirtualMachine, isUpgradableVM bool) error {
-	var poolIdentifier string
-	var poolPrefix string
-	var err error
-	var vmPoolName string
-
-	if vm.Tags != nil && vm.Tags["poolName"] != nil {
-		vmPoolName = *vm.Tags["poolName"]
-	} else {
-		uc.Logger.Infof("poolName tag not found for VM: %s.", *vm.Name)
-		// If there's only one agent pool, assume this VM is a member.
-		agentPools := []string{}
-		for k := range uc.AgentPoolsToUpgrade {
-			if !strings.HasPrefix(k, "master") {
-				agentPools = append(agentPools, k)
-			}
-		}
-		if len(agentPools) == 1 {
-			vmPoolName = agentPools[0]
-		}
-	}
-	if vmPoolName == "" {
-		uc.Logger.Warnf("Couldn't determine agent pool membership for VM: %s.", *vm.Name)
-		return nil
+func (uc *UpgradeCluster) addVMToAgentPool(vmPoolName string, vm compute.VirtualMachine, isUpgradableVM bool) error {
+	if len(vmPoolName) > 0 {
+		return errors.Errorf("vmPoolName should not be empty.")
 	}
 
-	uc.Logger.Infof("Evaluating VM: %s in pool: %s...", *vm.Name, vmPoolName)
-	if vmPoolName == "" {
-		uc.Logger.Infof("VM: %s does not contain `poolName` tag, skipping.", *vm.Name)
-		return nil
-	} else if !uc.AgentPoolsToUpgrade[vmPoolName] {
-		uc.Logger.Infof("Skipping upgrade of VM: %s in pool: %s.", *vm.Name, vmPoolName)
-		return nil
-	}
-
-	if vm.StorageProfile.OsDisk.OsType == compute.Windows {
-		poolPrefix, _, _, _, err = utils.WindowsVMNameParts(uc.DataModel.Properties, *vm.Name)
-		if !strings.Contains(uc.NameSuffix, poolPrefix) {
-			uc.Logger.Infof("Skipping VM: %s for upgrade as it does not belong to cluster with expected name suffix: %s\n",
-				*vm.Name, uc.NameSuffix)
-			return nil
+	if uc.AgentPools[vmPoolName] == nil {
+		uc.AgentPools[vmPoolName] = &AgentPoolTopology{
+			&vmPoolName,
+			&vmPoolName,
+			&[]compute.VirtualMachine{},
+			&[]compute.VirtualMachine{},
 		}
-
-		// The k8s Windows VM Naming Format was previously "^([a-fA-F0-9]{5})([0-9a-zA-Z]{3})([a-zA-Z0-9]{4,6})$" (i.e.: 50621k8s9000)
-		// The k8s Windows VM Naming Format is now "^([a-fA-F0-9]{4})([0-9a-zA-Z]{3})([0-9]{3,8})$" (i.e.: 1708k8s020)
-		// The pool identifier is made of the first 11 or 9 characters
-		if string((*vm.Name)[8]) == "9" {
-			poolIdentifier = (*vm.Name)[:11]
-		} else {
-			poolIdentifier = (*vm.Name)[:9]
-		}
-	} else { // vm.StorageProfile.OsDisk.OsType == compute.Linux
-		AgentVMPattern := "^" + uc.ClusterTopology.DataModel.Properties.FormatResourceName(vmPoolName, "", "") + ".*"
-		uc.Logger.Debugf("Using regexp: '%s' to validate agent VM names\n", AgentVMPattern)
-		AgentVMRE := regexp.MustCompile(AgentVMPattern)
-
-		poolIdentifier, poolPrefix, _, err = utils.K8sLinuxVMNameParts(uc.DataModel.Properties, *vm.Name)
-		if err != nil {
-			uc.Logger.Errorf(err.Error())
-			return err
-		}
-
-		if !AgentVMRE.MatchString(*vm.Name) {
-			uc.Logger.Infof("Skipping VM: %s for upgrade as it does not match name pattern '%s'\n", *vm.Name, AgentVMPattern)
-			return nil
-		}
-	}
-
-	if uc.AgentPools[poolIdentifier] == nil {
-		uc.AgentPools[poolIdentifier] =
-			&AgentPoolTopology{&poolIdentifier, &vmPoolName, &[]compute.VirtualMachine{}, &[]compute.VirtualMachine{}}
 	}
 
 	orchestrator := "unknown"
 	if vm.Tags != nil && vm.Tags["orchestrator"] != nil {
 		orchestrator = *vm.Tags["orchestrator"]
 	}
+
 	if isUpgradableVM {
-		uc.Logger.Infof("Adding Agent VM: %s, orchestrator: %s to pool: %s (AgentVMs)\n",
-			*vm.Name, orchestrator, poolIdentifier)
-		*uc.AgentPools[poolIdentifier].AgentVMs = append(*uc.AgentPools[poolIdentifier].AgentVMs, vm)
+		uc.Logger.Infof("Adding Agent VM: %s, orchestrator: %s to pool: %s (AgentVMs).", *vm.Name, orchestrator, vmPoolName)
+		*uc.AgentPools[vmPoolName].AgentVMs = append(*uc.AgentPools[vmPoolName].AgentVMs, vm)
 	} else {
-		uc.Logger.Infof("Adding Agent VM: %s, orchestrator: %s to pool: %s (UpgradedAgentVMs)\n",
-			*vm.Name, orchestrator, poolIdentifier)
-		*uc.AgentPools[poolIdentifier].UpgradedAgentVMs = append(*uc.AgentPools[poolIdentifier].UpgradedAgentVMs, vm)
+		uc.Logger.Infof("Adding Agent VM: %s, orchestrator: %s to pool: %s (UpgradedAgentVMs).", *vm.Name, orchestrator, vmPoolName)
+		*uc.AgentPools[vmPoolName].UpgradedAgentVMs = append(*uc.AgentPools[vmPoolName].UpgradedAgentVMs, vm)
 	}
 
 	return nil
