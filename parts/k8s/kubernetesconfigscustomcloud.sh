@@ -1,8 +1,7 @@
 #!/bin/bash
-
-function ensureCertificates()
-{
-    if [[ "${TARGET_ENVIRONMENT,,}" == "azurestackcloud"  ]]; then 
+AZURE_STACK_ENV="azurestackcloud"
+function ensureCertificates() {
+    if [[ "${TARGET_ENVIRONMENT,,}" == "${AZURE_STACK_ENV}" ]]; then 
         AZURESTACK_ENVIRONMENT_JSON_PATH="/etc/kubernetes/azurestackcloud.json"
         AZURESTACK_RESOURCE_MANAGER_ENDPOINT=`cat $AZURESTACK_ENVIRONMENT_JSON_PATH | jq .resourceManagerEndpoint | tr -d "\""`
         AZURESTACK_RESOURCE_METADATA_ENDPOINT="$AZURESTACK_RESOURCE_MANAGER_ENDPOINT/metadata/endpoints?api-version=2015-01-01"
@@ -32,7 +31,7 @@ function ensureCertificates()
 }
 
 configureK8sCustomCloud() {
-    if [[ "${TARGET_ENVIRONMENT,,}" == "azurestackcloud"  ]]; then 
+    if [[ "${TARGET_ENVIRONMENT,,}" == "${AZURE_STACK_ENV}"  ]]; then 
         export -f ensureCertificates
         retrycmd_if_failure 60 10 30 bash -c ensureCertificates
         set +x

@@ -25,9 +25,9 @@ wait_for_file 3600 1 $config_script || exit $ERR_FILE_WATCH_TIMEOUT
 source $config_script
 
 if [[ "${TARGET_ENVIRONMENT,,}" == "azurestackcloud"  ]]; then 
-config_script_custom_cloud=/opt/azure/containers/provision_configs_custom_cloud.sh
-wait_for_file 3600 1 $config_script_custom_cloud || exit $ERR_FILE_WATCH_TIMEOUT
-source $config_script_custom_cloud
+    config_script_custom_cloud=/opt/azure/containers/provision_configs_custom_cloud.sh
+    wait_for_file 3600 1 $config_script_custom_cloud || exit $ERR_FILE_WATCH_TIMEOUT
+    source $config_script_custom_cloud
 fi
 
 CUSTOM_SEARCH_DOMAIN_SCRIPT=/opt/azure/containers/setup-custom-search-domains.sh
@@ -132,7 +132,7 @@ fi
 configureK8s
 
 if [[ "${TARGET_ENVIRONMENT,,}" == "azurestackcloud"  ]]; then 
-configureK8sCustomCloud
+    configureK8sCustomCloud
 fi
 
 configureCNI
