@@ -168,6 +168,14 @@ func (uc *UpgradeCluster) getClusterNodeStatus(az armhelpers.AKSEngineClient, re
 				continue
 			}
 
+			if resourceNameSuffix, ok := vm.Tags["resourceNameSuffix"]; !ok {
+				uc.Logger.Infof("Skipping VM: %s for upgrade as the VM Tag resourceNameSuffix has not been found.", *vm.Name)
+				continue
+			} else if *resourceNameSuffix == uc.NameSuffix {
+				uc.Logger.Infof("Skipping VM: %s for upgrade as the VM Tag resourceNameSuffix '%s' is not '%s'.", *vm.Name, *resourceNameSuffix, uc.NameSuffix)
+				continue
+			}
+
 			// Skip the VM upgrade validation for managed clusters as it only applies to aks-engine version support.
 			if !uc.DataModel.Properties.IsHostedMasterProfile() {
 				if err := uc.upgradable(currentVersion); err != nil {
@@ -175,24 +183,24 @@ func (uc *UpgradeCluster) getClusterNodeStatus(az armhelpers.AKSEngineClient, re
 				}
 			}
 
-			MasterVMPattern := "^" + uc.ClusterTopology.DataModel.Properties.FormatResourceName("master", "", "") + ".*"
-			uc.Logger.Debugf("Using regexp: '%s' to validate master VM names\n", MasterVMPattern)
-			MasterVMRE := regexp.MustCompile(MasterVMPattern)
-
 			// If the current version is different than the desired version then we add the VM to the list of VMs to upgrade.
 			if currentVersion != goalVersion {
-				if MasterVMRE.MatchString(*(vm.Name)) {
+				if poolName, ok := vm.Tags["poolName"]; ok && *poolName == "master" {
 					uc.Logger.Infof("Master VM name: %s, orchestrator: %s (MasterVMs)\n", *vm.Name, currentVersion)
 					*uc.MasterVMs = append(*uc.MasterVMs, vm)
-				} else {
+				} else if ok {
 					uc.addVMToAgentPool(vm, true)
+				} else {
+					uc.Logger.Infof("Skipping VM: %s for upgrade as the VM Tag poolName has not been found.", *vm.Name)
 				}
 			} else if currentVersion == goalVersion {
-				if MasterVMRE.MatchString(*(vm.Name)) {
+				if poolName, ok := vm.Tags["poolName"]; ok && *poolName == "master" {
 					uc.Logger.Infof("Master VM name: %s, orchestrator: %s (UpgradedMasterVMs)\n", *vm.Name, currentVersion)
 					*uc.UpgradedMasterVMs = append(*uc.UpgradedMasterVMs, vm)
-				} else {
+				} else if ok {
 					uc.addVMToAgentPool(vm, false)
+				} else {
+					uc.Logger.Infof("Skipping VM: %s for upgrade as the VM Tag poolName has not been found.", *vm.Name)
 				}
 			}
 		}
