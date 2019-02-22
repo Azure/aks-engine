@@ -12,7 +12,7 @@ import (
 
 // CreateNetworkPolicyFromFile will create a NetworkPolicy from file with a name
 func CreateNetworkPolicyFromFile(filename, name, namespace string) error {
-	cmd := exec.Command("kubectl", "create", "-f", filename)
+	cmd := exec.Command("k", "create", "-f", filename)
 	util.PrintCommand(cmd)
 	out, err := cmd.CombinedOutput()
 	if err != nil {
@@ -24,7 +24,7 @@ func CreateNetworkPolicyFromFile(filename, name, namespace string) error {
 
 // DeleteNetworkPolicy will create a NetworkPolicy from file with a name
 func DeleteNetworkPolicy(name, namespace string) error {
-	cmd := exec.Command("kubectl", "delete", "networkpolicy", "-n", namespace, name)
+	cmd := exec.Command("k", "delete", "networkpolicy", "-n", namespace, name)
 	util.PrintCommand(cmd)
 	out, err := cmd.CombinedOutput()
 	if err != nil {

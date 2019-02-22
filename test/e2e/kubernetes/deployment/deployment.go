@@ -67,9 +67,9 @@ func CreateLinuxDeploy(image, name, namespace, miscOpts string) (*Deployment, er
 	var cmd *exec.Cmd
 	overrides := `{ "spec":{"template":{"spec": {"nodeSelector":{"beta.kubernetes.io/os":"linux"}}}}}`
 	if miscOpts != "" {
-		cmd = exec.Command("kubectl", "run", name, "-n", namespace, "--image", image, "--image-pull-policy=IfNotPresent", "--overrides", overrides, miscOpts)
+		cmd = exec.Command("k", "run", name, "-n", namespace, "--image", image, "--image-pull-policy=IfNotPresent", "--overrides", overrides, miscOpts)
 	} else {
-		cmd = exec.Command("kubectl", "run", name, "-n", namespace, "--image", image, "--image-pull-policy=IfNotPresent", "--overrides", overrides)
+		cmd = exec.Command("k", "run", name, "-n", namespace, "--image", image, "--image-pull-policy=IfNotPresent", "--overrides", overrides)
 	}
 	out, err := util.RunAndLogCommand(cmd)
 	if err != nil {
@@ -98,7 +98,7 @@ func CreateLinuxDeployIfNotExist(image, name, namespace, miscOpts string) (*Depl
 // --overrides=' "spec":{"template":{"spec": {"nodeSelector":{"beta.kubernetes.io/os":"linux"}}}}}'
 func RunLinuxDeploy(image, name, namespace, command string, replicas int) (*Deployment, error) {
 	overrides := `{ "spec":{"template":{"spec": {"nodeSelector":{"beta.kubernetes.io/os":"linux"}}}}}`
-	cmd := exec.Command("kubectl", "run", name, "-n", namespace, "--image", image, "--image-pull-policy=IfNotPresent", "--replicas", strconv.Itoa(replicas), "--overrides", overrides, "--command", "--", "/bin/sh", "-c", command)
+	cmd := exec.Command("k", "run", name, "-n", namespace, "--image", image, "--image-pull-policy=IfNotPresent", "--replicas", strconv.Itoa(replicas), "--overrides", overrides, "--command", "--", "/bin/sh", "-c", command)
 	out, err := util.RunAndLogCommand(cmd)
 	if err != nil {
 		log.Printf("Error trying to deploy %s [%s] in namespace %s:%s\n", name, image, namespace, string(out))
@@ -115,7 +115,7 @@ func RunLinuxDeploy(image, name, namespace, command string, replicas int) (*Depl
 // CreateWindowsDeploy will crete a deployment for a given image with a name in a namespace
 func CreateWindowsDeploy(image, name, namespace string, port int, hostport int) (*Deployment, error) {
 	overrides := `{ "spec":{"template":{"spec": {"nodeSelector":{"beta.kubernetes.io/os":"windows"}}}}}`
-	cmd := exec.Command("kubectl", "run", name, "-n", namespace, "--image", image, "--port", strconv.Itoa(port), "--hostport", strconv.Itoa(hostport), "--overrides", overrides)
+	cmd := exec.Command("k", "run", name, "-n", namespace, "--image", image, "--port", strconv.Itoa(port), "--hostport", strconv.Itoa(hostport), "--overrides", overrides)
 	out, err := util.RunAndLogCommand(cmd)
 	if err != nil {
 		log.Printf("Error trying to deploy %s [%s] in namespace %s:%s\n", name, image, namespace, string(out))
@@ -131,7 +131,7 @@ func CreateWindowsDeploy(image, name, namespace string, port int, hostport int) 
 
 // Get returns a deployment from a name and namespace
 func Get(name, namespace string) (*Deployment, error) {
-	cmd := exec.Command("kubectl", "get", "deploy", "-o", "json", "-n", namespace, name)
+	cmd := exec.Command("k", "get", "deploy", "-o", "json", "-n", namespace, name)
 	out, err := util.RunAndLogCommand(cmd)
 	if err != nil {
 		log.Printf("Error while trying to fetch deployment %s in namespace %s:%s\n", name, namespace, string(out))
@@ -151,7 +151,7 @@ func (d *Deployment) Delete(retries int) error {
 	var kubectlOutput []byte
 	var kubectlError error
 	for i := 0; i < retries; i++ {
-		cmd := exec.Command("kubectl", "delete", "deploy", "-n", d.Metadata.Namespace, d.Metadata.Name)
+		cmd := exec.Command("k", "delete", "deploy", "-n", d.Metadata.Namespace, d.Metadata.Name)
 		kubectlOutput, kubectlError = util.RunAndLogCommand(cmd)
 		if kubectlError != nil {
 			log.Printf("Error while trying to delete deployment %s in namespace %s:%s\n", d.Metadata.Namespace, d.Metadata.Name, string(kubectlOutput))
@@ -166,7 +166,7 @@ func (d *Deployment) Delete(retries int) error {
 
 	if d.Metadata.HasHPA {
 		for i := 0; i < retries; i++ {
-			cmd := exec.Command("kubectl", "delete", "hpa", "-n", d.Metadata.Namespace, d.Metadata.Name)
+			cmd := exec.Command("k", "delete", "hpa", "-n", d.Metadata.Namespace, d.Metadata.Name)
 			kubectlOutput, kubectlError = util.RunAndLogCommand(cmd)
 			if kubectlError != nil {
 				log.Printf("Deployment %s has associated HPA but unable to delete in namespace %s:%s\n", d.Metadata.Namespace, d.Metadata.Name, string(kubectlOutput))
@@ -181,7 +181,7 @@ func (d *Deployment) Delete(retries int) error {
 
 // Expose will create a load balancer and expose the deployment on a given port
 func (d *Deployment) Expose(svcType string, targetPort, exposedPort int) error {
-	cmd := exec.Command("kubectl", "expose", "deployment", d.Metadata.Name, "--type", svcType, "-n", d.Metadata.Namespace, "--target-port", strconv.Itoa(targetPort), "--port", strconv.Itoa(exposedPort))
+	cmd := exec.Command("k", "expose", "deployment", d.Metadata.Name, "--type", svcType, "-n", d.Metadata.Namespace, "--target-port", strconv.Itoa(targetPort), "--port", strconv.Itoa(exposedPort))
 	out, err := util.RunAndLogCommand(cmd)
 	if err != nil {
 		log.Printf("Error while trying to expose (%s) target port (%v) for deployment %s in namespace %s on port %v:%s\n", svcType, targetPort, d.Metadata.Name, d.Metadata.Namespace, exposedPort, string(out))
@@ -192,7 +192,7 @@ func (d *Deployment) Expose(svcType string, targetPort, exposedPort int) error {
 
 // ScaleDeployment scales a deployment to n instancees
 func (d *Deployment) ScaleDeployment(n int) error {
-	cmd := exec.Command("kubectl", "scale", fmt.Sprintf("--replicas=%d", n), "deployment", d.Metadata.Name)
+	cmd := exec.Command("k", "scale", fmt.Sprintf("--replicas=%d", n), "deployment", d.Metadata.Name)
 	out, err := util.RunAndLogCommand(cmd)
 	if err != nil {
 		log.Printf("Error while scaling deployment %s to %d pods:%s\n", d.Metadata.Name, n, string(out))
@@ -203,7 +203,7 @@ func (d *Deployment) ScaleDeployment(n int) error {
 
 // CreateDeploymentHPA applies autoscale characteristics to deployment
 func (d *Deployment) CreateDeploymentHPA(cpuPercent, min, max int) error {
-	cmd := exec.Command("kubectl", "autoscale", "deployment", d.Metadata.Name, fmt.Sprintf("--cpu-percent=%d", cpuPercent),
+	cmd := exec.Command("k", "autoscale", "deployment", d.Metadata.Name, fmt.Sprintf("--cpu-percent=%d", cpuPercent),
 		fmt.Sprintf("--min=%d", min), fmt.Sprintf("--max=%d", max))
 	out, err := util.RunAndLogCommand(cmd)
 	if err != nil {

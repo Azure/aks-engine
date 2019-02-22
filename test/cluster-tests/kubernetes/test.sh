@@ -43,10 +43,10 @@ log "Running test in namespace: ${namespace}"
 trap teardown EXIT
 
 function teardown {
-  kubectl get all --all-namespaces || echo "teardown error"
-  kubectl get nodes || echo "teardown error"
-  kubectl get namespaces || echo "teardown error"
-  kubectl delete namespaces ${namespace} || echo "teardown error"
+  k get all --all-namespaces || echo "teardown error"
+  k get nodes || echo "teardown error"
+  k get namespaces || echo "teardown error"
+  k delete namespaces ${namespace} || echo "teardown error"
 }
 
 # TODO: cleanup the loops more
@@ -67,7 +67,7 @@ function check_node_count() {
   count=120
   while (( $count > 0 )); do
     log "  ... counting down $count"
-    node_count=$(kubectl get nodes --no-headers | grep -v NotReady | grep Ready | wc | awk '{print $1}')
+    node_count=$(k get nodes --no-headers | grep -v NotReady | grep Ready | wc | awk '{print $1}')
     if (( ${node_count} == ${EXPECTED_NODE_COUNT} )); then break; fi
     sleep 5; count=$((count-1))
   done
@@ -79,7 +79,7 @@ function check_node_count() {
 check_node_count
 
 ###### Validate Kubernetes version
-kubernetes_version=$(kubectl version --short)
+kubernetes_version=$(k version --short)
 DASHBOARD_PORT=80
 if [[ ${kubernetes_version} == *"Server Version: v1.9."* ]]; then
   DASHBOARD_PORT=443
@@ -98,7 +98,7 @@ log "Checking containers being created"
 count=60
 while (( $count > 0 )); do
   log "  ... counting down $count"
-  creating_count=$(kubectl get nodes --no-headers | grep 'CreatingContainer' | wc | awk '{print $1}')
+  creating_count=$(k get nodes --no-headers | grep 'CreatingContainer' | wc | awk '{print $1}')
   if (( ${creating_count} == 0 )); then break; fi
   sleep 5; count=$((count-1))
 done
@@ -118,7 +118,7 @@ log "Checking $pods"
 count=60
 while (( $count > 0 )); do
   for pod in $pods; do
-    running=$(kubectl get pods --all-namespaces | grep $pod | grep Running | wc -l)
+    running=$(k get pods --all-namespaces | grep $pod | grep Running | wc -l)
     if (( $running > 0 )); then
       log "... $pod is Running"
       pods=$(echo $pods | sed -e "s/ *$pod */ /")
@@ -139,7 +139,7 @@ log "Checking Kube-DNS"
 count=60
 while (( $count > 0 )); do
   log "  ... counting down $count"
-  running=$(kubectl get pods --namespace=kube-system | grep kube-dns | grep Running | wc | awk '{print $1}')
+  running=$(k get pods --namespace=kube-system | grep kube-dns | grep Running | wc | awk '{print $1}')
   if (( ${running} == ${EXPECTED_DNS} )); then break; fi
   sleep 5; count=$((count-1))
 done
@@ -153,7 +153,7 @@ if (( ${EXPECTED_DASHBOARD} != 0 )); then
   count=60
   while (( $count > 0 )); do
     log "  ... counting down $count"
-    running=$(kubectl get pods --namespace=kube-system | grep kubernetes-dashboard | grep Running | wc | awk '{print $1}')
+    running=$(k get pods --namespace=kube-system | grep kubernetes-dashboard | grep Running | wc | awk '{print $1}')
     if (( ${running} == ${EXPECTED_DASHBOARD} )); then break; fi
     sleep 5; count=$((count-1))
   done
@@ -169,7 +169,7 @@ log "Checking Kube-Proxys"
 count=60
 while (( $count > 0 )); do
   log "  ... counting down $count"
-  running=$(kubectl get pods --namespace=kube-system | grep kube-proxy | grep Running | wc | awk '{print $1}')
+  running=$(k get pods --namespace=kube-system | grep kube-proxy | grep Running | wc | awk '{print $1}')
   if (( ${running} == ${KUBE_PROXY_COUNT} )); then break; fi
   sleep 5; count=$((count-1))
 done
@@ -180,11 +180,11 @@ fi
 if ! [ $EXPECTED_WINDOWS_AGENTS -gt 0 ] ; then
   if (( ${EXPECTED_DASHBOARD} != 0 )); then
     # get master public hostname
-    master=$(kubectl config view | grep server | cut -f 3- -d "/" | tr -d " ")
+    master=$(k config view | grep server | cut -f 3- -d "/" | tr -d " ")
     # get dashboard port
-    port=$(kubectl get svc --namespace=kube-system | grep dashboard | awk '{print $4}' | sed -n 's/^'${DASHBOARD_PORT}':\(.*\)\/TCP$/\1/p')
+    port=$(k get svc --namespace=kube-system | grep dashboard | awk '{print $4}' | sed -n 's/^'${DASHBOARD_PORT}':\(.*\)\/TCP$/\1/p')
     # get internal IPs of the nodes
-    ips=$(kubectl get nodes --all-namespaces -o yaml | grep -B 1 InternalIP | grep address | awk '{print $3}')
+    ips=$(k get nodes --all-namespaces -o yaml | grep -B 1 InternalIP | grep address | awk '{print $3}')
 
     for ip in $ips; do
       log "Probing IP address ${ip}"
