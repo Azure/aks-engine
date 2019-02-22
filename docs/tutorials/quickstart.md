@@ -17,6 +17,8 @@ Binary downloads for the latest version of aks-engine for are available [on Gith
 
 You can also choose to install aks-engine using [gofish][gofish-about]. To do so, execute the command `gofish install aks-engine`. You can install gofish following the [instructions][gofish-install] for your OS.
 
+On macOS, you can install aks-engine with [Homebrew][homebrew]. Run the command `brew install Azure/aks-engine/aks-engine` to do so. You can install Homebrew following the [instructions][homebrew-install].
+
 If you would prefer to build AKS Engine from source, or you are interested in contributing to AKS Engine, see [the developer guide][developer-guide] for more information.
 
 ## Completion
@@ -236,5 +238,7 @@ $ az group deployment create \
 [developer-guide]: ../community/developer-guide.md
 [gofish-about]: https://gofi.sh/#about
 [gofish-install]: https://gofi.sh/#install
+[homebrew]: https://brew.sh/
+[homebrew-install]: https://brew.sh/#install
 [scale]: ../topics/scale.md
 [sp]: ../topics/service-principals.md
