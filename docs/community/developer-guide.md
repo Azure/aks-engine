@@ -194,6 +194,10 @@ environment variables to be set:
 * `SUBSCRIPTION_ID`: Azure subscription UUID
 * `TENANT_ID`: Azure tenant UUID
 
+The end-to-end tests also require the [`k`](https://github.com/jakepearson/k)
+script to be your the search $PATH. This ensures that testing uses a `kubectl`
+client that matches the version of the Kubernetes server.
+
 ### Debugging
 
 For aks-engine code debugging you can use [Delve](https://github.com/derekparker/delve) debugger.
