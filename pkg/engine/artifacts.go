@@ -286,15 +286,7 @@ func kubernetesArtifactSettingsInitAgent(profile *api.Properties) []kubernetesFe
 
 func getAddonString(input, destinationPath, destinationFile string) string {
 	addonString := getBase64CustomScriptFromStr(input)
-	contents := []string{
-		fmt.Sprintf("- path: %s/%s", destinationPath, destinationFile),
-		"  permissions: \\\"0644\\\"",
-		"  encoding: gzip",
-		"  owner: \\\"root\\\"",
-		"  content: !!binary |",
-		fmt.Sprintf("    %s\\n\\n", addonString),
-	}
-	return strings.Join(contents, "\\n")
+	return buildConfigString(addonString, destinationFile, destinationPath)
 }
 
 func substituteConfigString(input string, kubernetesFeatureSettings []kubernetesFeatureSetting, sourcePath string, destinationPath string, placeholder string, orchestratorVersion string) string {
@@ -305,16 +297,21 @@ func substituteConfigString(input string, kubernetesFeatureSettings []kubernetes
 		if setting.isEnabled {
 			var cscript string
 			if setting.rawScript != "" {
-				cscript = setting.rawScript
+				var err error
+				cscript, err = getStringFromBase64(setting.rawScript)
+				if err != nil {
+					return ""
+				}
+				config += getAddonString(cscript, setting.destinationFile, destinationPath)
 			} else {
 				cscript = getCustomScriptFromFile(setting.sourceFile,
 					sourcePath,
 					versions[0]+"."+versions[1])
+				config += buildConfigString(
+					cscript,
+					setting.destinationFile,
+					destinationPath)
 			}
-			config += buildConfigString(
-				cscript,
-				setting.destinationFile,
-				destinationPath)
 		}
 	}
 
@@ -322,7 +319,6 @@ func substituteConfigString(input string, kubernetesFeatureSettings []kubernetes
 }
 
 func buildConfigString(configString, destinationFile, destinationPath string) string {
-
 	contents := []string{
 		fmt.Sprintf("- path: %s/%s", destinationPath, destinationFile),
 		"  permissions: \\\"0644\\\"",
