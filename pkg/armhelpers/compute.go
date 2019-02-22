@@ -36,13 +36,15 @@ func (az *AzureClient) DeleteVirtualMachine(ctx context.Context, resourceGroup, 
 }
 
 // ListVirtualMachineScaleSets returns (the first page of) the vmss resources in the specified resource group.
-func (az *AzureClient) ListVirtualMachineScaleSets(ctx context.Context, resourceGroup string) (compute.VirtualMachineScaleSetListResultPage, error) {
-	return az.virtualMachineScaleSetsClient.List(ctx, resourceGroup)
+func (az *AzureClient) ListVirtualMachineScaleSets(ctx context.Context, resourceGroup string) (VirtualMachineScaleSetListResultPage, error) {
+	page, err := az.virtualMachineScaleSetsClient.List(ctx, resourceGroup)
+	return &page, err
 }
 
 // ListVirtualMachineScaleSetVMs returns the list of VMs per VMSS
-func (az *AzureClient) ListVirtualMachineScaleSetVMs(ctx context.Context, resourceGroup, virtualMachineScaleSet string) (compute.VirtualMachineScaleSetVMListResultPage, error) {
-	return az.virtualMachineScaleSetVMsClient.List(ctx, resourceGroup, virtualMachineScaleSet, "", "", "")
+func (az *AzureClient) ListVirtualMachineScaleSetVMs(ctx context.Context, resourceGroup, virtualMachineScaleSet string) (VirtualMachineScaleSetVMListResultPage, error) {
+	page, err := az.virtualMachineScaleSetVMsClient.List(ctx, resourceGroup, virtualMachineScaleSet, "", "", "")
+	return &page, err
 }
 
 // DeleteVirtualMachineScaleSetVM deletes a VM in a VMSS
