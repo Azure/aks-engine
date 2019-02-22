@@ -35,7 +35,7 @@ configureK8sCustomCloud() {
     if [[ "${TARGET_ENVIRONMENT,,}" == "azurestackcloud"  ]]; then 
         export -f ensureCertificates
         retrycmd_if_failure 60 10 30 bash -c ensureCertificates
-        sex +x
+        set +x
         # When AUTHENTICATION_METHOD is client_certificate, the certificate is stored into key valut, 
         # And SERVICE_PRINCIPAL_CLIENT_SECRET will be the following json payload with based64 encode
         #{
@@ -68,6 +68,6 @@ configureK8sCustomCloud() {
             # update the tenent id for ADFS environment.
             echo `cat "${AZURE_JSON_PATH}" | jq '.tenantId = "adfs"' ` > ${AZURE_JSON_PATH}
         fi
-         set -x
+        set -x
     fi  
 }
