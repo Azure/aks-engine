@@ -238,12 +238,7 @@ func RunCommandMultipleTimes(podRunnerCmd podRunnerCmd, image, name, command str
 		podName := fmt.Sprintf("%s-%d", name, r.Intn(99999))
 		var p *Pod
 		var err error
-		if i < 1 {
-			// Print the first attempt
-			p, err = podRunnerCmd(image, podName, "default", command, true, sleep, duration, timeout)
-		} else {
-			p, err = podRunnerCmd(image, podName, "default", command, false, sleep, duration, timeout)
-		}
+		p, err = podRunnerCmd(image, podName, "default", command, true, sleep, duration, timeout)
 
 		if err != nil {
 			return successfulAttempts, err
