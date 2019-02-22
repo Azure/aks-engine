@@ -1,6 +1,6 @@
 #!/bin/bash
 
-function ensureCertificates() {
+ensureCertificates() {
     AZURESTACK_ENVIRONMENT_JSON_PATH="/etc/kubernetes/azurestackcloud.json"
     AZURESTACK_RESOURCE_MANAGER_ENDPOINT=`cat $AZURESTACK_ENVIRONMENT_JSON_PATH | jq .resourceManagerEndpoint | tr -d "\""`
     AZURESTACK_RESOURCE_METADATA_ENDPOINT="$AZURESTACK_RESOURCE_MANAGER_ENDPOINT/metadata/endpoints?api-version=2015-01-01"
