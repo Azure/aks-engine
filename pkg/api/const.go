@@ -312,7 +312,7 @@ const (
 	NetworkPolicyCalico = "calico"
 	// NetworkPolicyCilium is the string expression for cilium network policy config option
 	NetworkPolicyCilium = "cilium"
-	// NetworkPluginCilium is the string expression for cilium network policy config option
+	// NetworkPluginCilium is the string expression for cilium network plugin config option
 	NetworkPluginCilium = NetworkPolicyCilium
 	// NetworkPluginFlannel is the string expression for flannel network policy config option
 	NetworkPluginFlannel = "flannel"
