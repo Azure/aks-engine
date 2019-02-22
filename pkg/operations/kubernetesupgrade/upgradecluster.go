@@ -86,7 +86,7 @@ func (uc *UpgradeCluster) UpgradeCluster(az armhelpers.AKSEngineClient, kubeConf
 	}
 
 	upgradeVersion := uc.DataModel.Properties.OrchestratorProfile.OrchestratorVersion
-	uc.Logger.Infof("Upgrading to Kubernetes version %s\n", upgradeVersion)
+	uc.Logger.Infof("Upgrading to Kubernetes version %s", upgradeVersion)
 
 	if err := uc.getUpgradeWorkflow(kubeConfig, aksEngineVersion).RunUpgrade(); err != nil {
 		return err

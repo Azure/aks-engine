@@ -9,7 +9,6 @@ import (
 
 	"github.com/Azure/aks-engine/pkg/api"
 	"github.com/Azure/aks-engine/pkg/armhelpers"
-	"github.com/gofrs/uuid"
 
 	. "github.com/onsi/gomega"
 	"github.com/pkg/errors"
@@ -150,16 +149,4 @@ func TestUpgradeForceSameVersionShouldSucceed(t *testing.T) {
 	upgradeCmd.force = true
 	err := upgradeCmd.validateCurrentLocalState(fakeArmTemplateHandle)
 	g.Expect(err).NotTo(HaveOccurred())
-}
-
-func setupAuthParams(uc *upgradeCmd) {
-	fakeRawSubscriptionID := "6dc93fae-9a76-421f-bbe5-cc6460ea81cb"
-	fakeSubscriptionID, _ := uuid.FromString(fakeRawSubscriptionID)
-	fakeClientID := "b829b379-ca1f-4f1d-91a2-0d26b244680d"
-	fakeClientSecret := "0se43bie-3zs5-303e-aav5-dcf231vb82ds"
-
-	uc.getAuthArgs().SubscriptionID = fakeSubscriptionID
-	uc.getAuthArgs().rawSubscriptionID = fakeRawSubscriptionID
-	uc.getAuthArgs().rawClientID = fakeClientID
-	uc.getAuthArgs().ClientSecret = fakeClientSecret
 }

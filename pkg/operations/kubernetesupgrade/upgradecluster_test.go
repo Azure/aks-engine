@@ -241,7 +241,7 @@ var _ = Describe("Upgrade Kubernetes cluster tests", func() {
 		Expect(err.Error()).To(Equal("DeleteRoleAssignmentByID failed"))
 	})
 
-	PIt("Should skip VMSS VMs that are already on desired version", func() {
+	It("Should skip VMSS VMs that are already on desired version", func() {
 		cs := api.CreateMockContainerService("testcluster", "1.9.10", 3, 3, false)
 		uc := UpgradeCluster{
 			Translator: &i18n.Translator{},
