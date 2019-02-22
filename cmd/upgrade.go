@@ -277,6 +277,7 @@ func (uc *upgradeCmd) run(cmd *cobra.Command, args []string) error {
 	upgradeCluster.DataModel = uc.containerService
 	upgradeCluster.NameSuffix = uc.nameSuffix
 	upgradeCluster.AgentPoolsToUpgrade = uc.agentPoolsToUpgrade
+	upgradeCluster.Force = uc.force
 
 	kubeConfig, err := engine.GenerateKubeConfig(uc.containerService.Properties, uc.location)
 	if err != nil {
