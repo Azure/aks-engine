@@ -159,7 +159,7 @@ func getDefaultAdmissionControls(cs *ContainerService) (string, string) {
 	// Add new version case when applying admission controllers only available in that version or later
 	switch {
 	case common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.9.0"):
-		admissionControlValues = "NamespaceLifecycle,LimitRanger,ServiceAccount,DefaultStorageClass,DefaultTolerationSeconds,MutatingAdmissionWebhook,ValidatingAdmissionWebhook,ResourceQuota,ExtendedResourceToleration"
+		admissionControlValues = "NamespaceLifecycle,LimitRanger,ServiceAccount,DefaultStorageClass,DefaultTolerationSeconds,ValidatingAdmissionWebhook,ResourceQuota,ExtendedResourceToleration"
 	default:
 		admissionControlValues = "NamespaceLifecycle,LimitRanger,ServiceAccount,DefaultStorageClass,ResourceQuota"
 	}
