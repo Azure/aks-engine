@@ -194,9 +194,9 @@ environment variables to be set:
 * `SUBSCRIPTION_ID`: Azure subscription UUID
 * `TENANT_ID`: Azure tenant UUID
 
-The end-to-end tests also require the [`k`](https://github.com/jakepearson/k)
-script to be in your search $PATH. This ensures that testing uses a `kubectl`
-client that matches the version of the Kubernetes server.
+The end-to-end tests also require the `k` script from the `scripts/` folder in to
+be in your search $PATH. This ensures that testing uses a `kubectl` client that
+matches the version of the Kubernetes server.
 
 ### Debugging
 

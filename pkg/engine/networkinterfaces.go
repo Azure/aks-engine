@@ -20,7 +20,7 @@ func CreateNetworkInterfaces(cs *api.ContainerService) NetworkInterfaceARM {
 		dependencies = append(dependencies, "[variables('vnetID')]")
 	}
 
-	dependencies = append(dependencies, "[concat(variables('masterLbID'),'/inboundNatRules/SSH-',variables('masterVMNamePrefix'),copyIndex(variables('masterOffset')))]")
+	dependencies = append(dependencies, "[variables('masterLbName')]")
 
 	if cs.Properties.MasterProfile.Count > 1 {
 		dependencies = append(dependencies, "[variables('masterInternalLbName')]")

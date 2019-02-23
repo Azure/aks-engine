@@ -60,7 +60,7 @@ func TestCreateNIC(t *testing.T) {
 			},
 			DependsOn: []string{
 				"[variables('vnetID')]",
-				"[concat(variables('masterLbID'),'/inboundNatRules/SSH-',variables('masterVMNamePrefix'),copyIndex(variables('masterOffset')))]",
+				"[variables('masterLbName')]",
 			},
 		},
 		Interface: network.Interface{
@@ -146,7 +146,7 @@ func TestCreateNIC(t *testing.T) {
 
 	expected.DependsOn = []string{
 		"[variables('nsgID')]",
-		"[concat(variables('masterLbID'),'/inboundNatRules/SSH-',variables('masterVMNamePrefix'),copyIndex(variables('masterOffset')))]",
+		"[variables('masterLbName')]",
 	}
 
 	expected.NetworkSecurityGroup = &network.SecurityGroup{
@@ -169,7 +169,7 @@ func TestCreateNIC(t *testing.T) {
 
 	expected.DependsOn = []string{
 		"[variables('nsgID')]",
-		"[concat(variables('masterLbID'),'/inboundNatRules/SSH-',variables('masterVMNamePrefix'),copyIndex(variables('masterOffset')))]",
+		"[variables('masterLbName')]",
 		"[variables('masterInternalLbName')]",
 	}
 
@@ -254,7 +254,7 @@ func TestCreateNIC(t *testing.T) {
 	nic = CreateNetworkInterfaces(cs)
 	expected.DependsOn = []string{
 		"[variables('nsgID')]",
-		"[concat(variables('masterLbID'),'/inboundNatRules/SSH-',variables('masterVMNamePrefix'),copyIndex(variables('masterOffset')))]",
+		"[variables('masterLbName')]",
 		"[variables('masterInternalLbName')]",
 		"[resourceId('Microsoft.DocumentDB/databaseAccounts/', variables('cosmosAccountName'))]",
 	}

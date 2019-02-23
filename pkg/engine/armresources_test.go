@@ -334,7 +334,7 @@ func TestGenerateARMResources(t *testing.T) {
 			},
 			DependsOn: []string{
 				"[variables('vnetID')]",
-				"[concat(variables('masterLbID'),'/inboundNatRules/SSH-',variables('masterVMNamePrefix'),copyIndex(variables('masterOffset')))]",
+				"[variables('masterLbName')]",
 			},
 		},
 		Interface: network.Interface{
