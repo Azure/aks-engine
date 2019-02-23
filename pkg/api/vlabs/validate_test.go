@@ -1056,7 +1056,7 @@ func getK8sDefaultContainerService(hasWindows bool) *ContainerService {
 		LinuxProfile: &LinuxProfile{
 			AdminUsername: "azureuser",
 			SSH: struct {
-				PublicKeys []PublicKey `json:"publicKeys" validate:"required,len=1"`
+				PublicKeys []PublicKey `json:"publicKeys" validate:"required,min=1"`
 			}{
 				PublicKeys: []PublicKey{{
 					KeyData: "publickeydata",
