@@ -6,11 +6,13 @@ ensureCertificates() {
     AZURESTACK_RESOURCE_METADATA_ENDPOINT="$AZURESTACK_RESOURCE_MANAGER_ENDPOINT/metadata/endpoints?api-version=2015-01-01"
     curl $AZURESTACK_RESOURCE_METADATA_ENDPOINT
     CURL_RETURNCODE=$?
+    KUBE_CONTROLLER_MANAGER_FILE=/etc/kubernetes/manifests/kube-controller-manager.yaml
     if [ $CURL_RETURNCODE != 0 ]; then
         # Replace placeholder for ssl binding
-        KUBE_CONTROLLER_MANAGER_FILE=/etc/kubernetes/manifests/kube-controller-manager.yaml
-        sed -i "s|<volumessl>|- name: ssl\n      hostPath:\n        path: \\/etc\\/ssl\\/certs|g" $KUBE_CONTROLLER_MANAGER_FILE 
-        sed -i "s|<volumeMountssl>|- name: "ssl"\n          mountPath: \\/etc\\/ssl\\/certs\n          readOnly: true|g" $KUBE_CONTROLLER_MANAGER_FILE
+        if [ -f $KUBE_CONTROLLER_MANAGER_FILE ]; then
+            sed -i "s|<volumessl>|- name: ssl\n      hostPath:\n        path: \\/etc\\/ssl\\/certs|g" $KUBE_CONTROLLER_MANAGER_FILE 
+            sed -i "s|<volumeMountssl>|- name: "ssl"\n          mountPath: \\/etc\\/ssl\\/certs\n          readOnly: true|g" $KUBE_CONTROLLER_MANAGER_FILE
+        fi
 
         # Copying the AzureStack root certificate to the appropriate store to be updated.
         AZURESTACK_ROOT_CERTIFICATE_SOURCE_PATH="/var/lib/waagent/Certificates.pem"
@@ -18,11 +20,13 @@ ensureCertificates() {
         cp $AZURESTACK_ROOT_CERTIFICATE_SOURCE_PATH $AZURESTACK_ROOT_CERTIFICATE__DEST_PATH
         update-ca-certificates
     else
-        # the ARM resource manager endpoint binding certificate is trusted, remove the placeholder for ssl binding
-        sed -i "/<volumessl>/d" $KUBE_CONTROLLER_MANAGER_FILE
-        sed -i "/<volumeMountssl>/d" $KUBE_CONTROLLER_MANAGER_FILE
+        if [ -f $KUBE_CONTROLLER_MANAGER_FILE ]; then
+            # the ARM resource manager endpoint binding certificate is trusted, remove the placeholder for ssl binding
+            sed -i "/<volumessl>/d" $KUBE_CONTROLLER_MANAGER_FILE
+            sed -i "/<volumeMountssl>/d" $KUBE_CONTROLLER_MANAGER_FILE
+        fi
     fi
-
+    
     # ensureCertificates will be retried if the exit code is not 0
     curl $AZURESTACK_RESOURCE_METADATA_ENDPOINT
     exit $?
