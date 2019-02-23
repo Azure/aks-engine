@@ -116,7 +116,7 @@
           "linuxConfiguration": {
               "disablePasswordAuthentication": true,
               "ssh": {
-                {{ GetSshPublicKeys . }}
+                {{ GetSshPublicKeys }}
               }
             }
             {{if HasLinuxSecrets}}

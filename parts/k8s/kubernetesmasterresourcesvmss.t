@@ -507,7 +507,7 @@
           "linuxConfiguration": {
               "disablePasswordAuthentication": true,
               "ssh": {
-                {{ GetSshPublicKeys . }}
+                {{ GetSshPublicKeys }}
               }
             }
             {{if .LinuxProfile.HasSecrets}}
