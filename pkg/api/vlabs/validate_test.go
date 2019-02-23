@@ -748,7 +748,7 @@ func TestProperties_ValidateLinuxProfile(t *testing.T) {
 	}{
 		PublicKeys: []PublicKey{
 			{
-			    KeyData: "not empty"
+				KeyData: "not empty",
 			},
 			{},
 		},
