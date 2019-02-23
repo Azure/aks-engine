@@ -530,6 +530,7 @@ type AgentPoolProfile struct {
 	AvailabilityZones                   []string             `json:"availabilityZones,omitempty"`
 	SinglePlacementGroup                *bool                `json:"singlePlacementGroup,omitempty"`
 	VnetCidrs                           []string             `json:"vnetCidrs,omitempty"`
+	PreserveNodesPropertiesInUpgrading  *bool                `json:"preserveNodesPropertiesInUpgrading,omitempty"`
 }
 
 // AgentPoolProfileRole represents an agent role
