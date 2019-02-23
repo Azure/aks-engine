@@ -43,12 +43,8 @@ func createKubernetesMasterResources(cs *api.ContainerService) []interface{} {
 		publicIPAddress := CreatePublicIPAddress()
 		masterResources = append(masterResources, publicIPAddress)
 
-		loadBalancer := CreateLoadBalancer()
+		loadBalancer := CreateLoadBalancer(cs.Properties.MasterProfile.Count)
 		masterResources = append(masterResources, loadBalancer)
-
-		inboundNatRules := createInboundNATRules()
-
-		masterResources = append(masterResources, inboundNatRules)
 
 		masterNic := CreateNetworkInterfaces(cs)
 		masterResources = append(masterResources, masterNic)
@@ -133,7 +129,7 @@ func createKubernetesMasterResourcesVmss(cs *api.ContainerService) []interface{}
 	publicIPAddress := CreatePublicIPAddress()
 	masterResources = append(masterResources, publicIPAddress)
 
-	loadBalancer := CreateLoadBalancer()
+	loadBalancer := CreateLoadBalancer(cs.Properties.MasterProfile.Count)
 	masterResources = append(masterResources, loadBalancer)
 
 	masterVmss := CreateMasterVMSS(cs)

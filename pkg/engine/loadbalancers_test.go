@@ -15,7 +15,7 @@ import (
 )
 
 func TestCreateLoadBalancer(t *testing.T) {
-	actual := CreateLoadBalancer()
+	actual := CreateLoadBalancer(1)
 
 	expected := LoadBalancerARM{
 		ARMResource: ARMResource{
@@ -62,6 +62,20 @@ func TestCreateLoadBalancer(t *testing.T) {
 							Probe: &network.SubResource{
 								ID: to.StringPtr("[concat(variables('masterLbID'),'/probes/tcpHTTPSProbe')]"),
 							},
+						},
+					},
+				},
+				InboundNatRules: &[]network.InboundNatRule{
+					{
+						Name: to.StringPtr("[concat('SSH-', variables('masterVMNamePrefix'), 0)]"),
+						InboundNatRulePropertiesFormat: &network.InboundNatRulePropertiesFormat{
+							FrontendIPConfiguration: &network.SubResource{
+								ID: to.StringPtr("[variables('masterLbIPConfigID')]"),
+							},
+							Protocol:         network.TransportProtocol("Tcp"),
+							FrontendPort:     to.Int32Ptr(22),
+							BackendPort:      to.Int32Ptr(22),
+							EnableFloatingIP: to.BoolPtr(false),
 						},
 					},
 				},

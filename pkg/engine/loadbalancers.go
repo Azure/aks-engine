@@ -4,12 +4,39 @@
 package engine
 
 import (
+	"fmt"
+
 	"github.com/Azure/aks-engine/pkg/api"
 	"github.com/Azure/azure-sdk-for-go/services/network/mgmt/2018-08-01/network"
 	"github.com/Azure/go-autorest/autorest/to"
 )
 
-func CreateLoadBalancer() LoadBalancerARM {
+func CreateLoadBalancer(masterCount int) LoadBalancerARM {
+
+	var inboundNatRules []network.InboundNatRule
+	sshNatPorts := []int32{
+		22,
+		2201,
+		2202,
+		2203,
+		2204,
+	}
+	for i := 0; i < masterCount; i++ {
+		inboundNatRule := network.InboundNatRule{
+			Name: to.StringPtr(fmt.Sprintf("[concat('SSH-', variables('masterVMNamePrefix'), %d)]", i)),
+			InboundNatRulePropertiesFormat: &network.InboundNatRulePropertiesFormat{
+				BackendPort:      to.Int32Ptr(22),
+				EnableFloatingIP: to.BoolPtr(false),
+				FrontendIPConfiguration: &network.SubResource{
+					ID: to.StringPtr("[variables('masterLbIPConfigID')]"),
+				},
+				FrontendPort: to.Int32Ptr(sshNatPorts[i]),
+				Protocol:     network.TransportProtocolTCP,
+			},
+		}
+		inboundNatRules = append(inboundNatRules, inboundNatRule)
+	}
+
 	return LoadBalancerARM{
 		ARMResource: ARMResource{
 			APIVersion: "[variables('apiVersionNetwork')]",
@@ -69,6 +96,7 @@ func CreateLoadBalancer() LoadBalancerARM {
 						},
 					},
 				},
+				InboundNatRules: &inboundNatRules,
 			},
 			Sku: &network.LoadBalancerSku{
 				Name: "[variables('loadBalancerSku')]",
