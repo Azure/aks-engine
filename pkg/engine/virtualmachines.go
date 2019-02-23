@@ -211,8 +211,7 @@ func createJumpboxVirtualMachine(cs *api.ContainerService) VirtualMachineARM {
 	if jumpBoxIsManagedDisks {
 		storageProfile.OsDisk = &compute.OSDisk{
 			CreateOption: compute.DiskCreateOptionTypesFromImage,
-			// TODO: had to override int32 value here
-			DiskSizeGB: to.Int32Ptr(30),
+			DiskSizeGB:   to.Int32Ptr(int32(cs.Properties.OrchestratorProfile.KubernetesConfig.PrivateCluster.JumpboxProfile.OSDiskSizeGB)),
 			ManagedDisk: &compute.ManagedDiskParameters{
 				StorageAccountType: "[variables('vmSizesMap')[parameters('jumpboxVMSize')].storageAccountType]",
 			},
@@ -227,15 +226,13 @@ func createJumpboxVirtualMachine(cs *api.ContainerService) VirtualMachineARM {
 		}
 	}
 
-	//TODO: Implement Jumpbox VM Custom Data
+	t, err := InitializeTemplateGenerator(Context{})
 
-	//t, err := InitializeTemplateGenerator(Context{})
+	if err != nil {
+		panic(err)
+	}
 
-	//if err != nil {
-	//	panic(err)
-	//}
-
-	customDataStr := "" //t.GetKubernetesJumpboxCustomDataString(cs, cs.Properties)
+	customDataStr := getCustomDataFromJSON(t.GetJumpboxCustomDataJSON(cs))
 
 	vmProperties := compute.VirtualMachineProperties{
 		HardwareProfile: &compute.HardwareProfile{

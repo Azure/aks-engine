@@ -165,6 +165,16 @@ func (t *TemplateGenerator) prepareTemplateFiles(properties *api.Properties) ([]
 	return files, baseFile, nil
 }
 
+func (t *TemplateGenerator) GetJumpboxCustomDataJSON(cs *api.ContainerService) string {
+	str, err := t.getSingleLineForTemplate(kubernetesJumpboxCustomDataYaml, cs, cs.Properties)
+
+	if err != nil {
+		panic(err)
+	}
+
+	return fmt.Sprintf("\"customData\": \"[base64(concat('%s'))]\",", str)
+}
+
 func (t *TemplateGenerator) GetMasterCustomDataJSON(cs *api.ContainerService) string {
 	profile := cs.Properties
 
