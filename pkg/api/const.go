@@ -43,7 +43,7 @@ const (
 	// DockerCEDockerComposeVersion is the Docker Compose version
 	DockerCEDockerComposeVersion = "1.14.0"
 	// KubernetesWindowsDockerVersion is the default version for docker on Windows nodes in kubernetes
-	KubernetesWindowsDockerVersion = "18.09.0"
+	KubernetesWindowsDockerVersion = "18.09.2"
 	// KubernetesDefaultWindowsSku is the default SKU for Windows VMs in kubernetes
 	KubernetesDefaultWindowsSku = "Datacenter-Core-1809-with-Containers-smalldisk"
 )
@@ -211,6 +211,8 @@ const (
 	DefaultAcceleratedNetworkingWindowsEnabled = false
 	// DefaultAcceleratedNetworking determines the aks-engine provided default for enabling accelerated networking on Linux nodes
 	DefaultAcceleratedNetworking = true
+	// DefaultVMSSOverProvisioningEnabled determines the aks-engine provided default for enabling VMSS Overprovisioning
+	DefaultVMSSOverProvisioningEnabled = false
 	// DefaultDNSAutoscalerAddonName is the name of the dns-autoscaler addon
 	DefaultDNSAutoscalerAddonName = "dns-autoscaler"
 	// DefaultUseCosmos determines if the cluster will use cosmos as etcd storage

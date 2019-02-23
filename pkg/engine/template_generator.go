@@ -1022,6 +1022,14 @@ func (t *TemplateGenerator) getTemplateFuncMap(cs *api.ContainerService) templat
 		"EnablePodSecurityPolicy": func() bool {
 			return to.Bool(cs.Properties.OrchestratorProfile.KubernetesConfig.EnablePodSecurityPolicy)
 		},
+		"IsVMSSOverProvisioningEnabled": func() bool {
+			for _, agentProfile := range cs.Properties.AgentPoolProfiles {
+				if to.Bool(agentProfile.VMSSOverProvisioningEnabled) {
+					return true
+				}
+			}
+			return false
+		},
 		// inspired by http://stackoverflow.com/questions/18276173/calling-a-template-with-several-pipeline-parameters/18276968#18276968
 		"dict": func(values ...interface{}) (map[string]interface{}, error) {
 			if len(values)%2 != 0 {

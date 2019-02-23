@@ -516,6 +516,7 @@ type AgentPoolProfile struct {
 	Role                                AgentPoolProfileRole `json:"role,omitempty"`
 	AcceleratedNetworkingEnabled        *bool                `json:"acceleratedNetworkingEnabled,omitempty"`
 	AcceleratedNetworkingEnabledWindows *bool                `json:"acceleratedNetworkingEnabledWindows,omitempty"`
+	VMSSOverProvisioningEnabled         *bool                `json:"vmssOverProvisioningEnabled,omitempty"`
 	FQDN                                string               `json:"fqdn,omitempty"`
 	CustomNodeLabels                    map[string]string    `json:"customNodeLabels,omitempty"`
 	PreprovisionExtension               *Extension           `json:"preProvisionExtension"`

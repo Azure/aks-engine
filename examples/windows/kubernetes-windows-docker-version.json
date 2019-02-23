@@ -21,7 +21,7 @@
     "windowsProfile": {
       "adminUsername": "azureuser",
       "adminPassword": "replacepassword1234$",
-      "windowsDockerVersion": "18.09.0"
+      "windowsDockerVersion": "18.09.2"
     },
     "linuxProfile": {
       "adminUsername": "azureuser",

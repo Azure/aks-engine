@@ -60,7 +60,7 @@ type LoadBalancer struct {
 
 // Get returns the service definition specified in a given namespace
 func Get(name, namespace string) (*Service, error) {
-	cmd := exec.Command("kubectl", "get", "svc", "-o", "json", "-n", namespace, name)
+	cmd := exec.Command("k", "get", "svc", "-o", "json", "-n", namespace, name)
 	out, err := cmd.CombinedOutput()
 	if err != nil {
 		log.Printf("Error getting svc:\n")
@@ -81,7 +81,7 @@ func (s *Service) Delete(retries int) error {
 	var kubectlOutput []byte
 	var kubectlError error
 	for i := 0; i < retries; i++ {
-		cmd := exec.Command("kubectl", "delete", "svc", "-n", s.Metadata.Namespace, s.Metadata.Name)
+		cmd := exec.Command("k", "delete", "svc", "-n", s.Metadata.Namespace, s.Metadata.Name)
 		kubectlOutput, kubectlError = util.RunAndLogCommand(cmd)
 		if kubectlError != nil {
 			log.Printf("Error while trying to delete service %s in namespace %s:%s\n", s.Metadata.Namespace, s.Metadata.Name, string(kubectlOutput))
@@ -176,7 +176,7 @@ func CreateServiceFromFile(filename, name, namespace string) (*Service, error) {
 		log.Printf("Service %s already exists\n", name)
 		return svc, nil
 	}
-	cmd := exec.Command("kubectl", "create", "-f", filename)
+	cmd := exec.Command("k", "create", "-f", filename)
 	util.PrintCommand(cmd)
 	out, err := cmd.CombinedOutput()
 	if err != nil {

@@ -269,6 +269,24 @@
             }
           }
         ],
+        "inboundNatRules": [
+        {{$max := .MasterProfile.Count}}
+        {{$c := subtract $max 1}}
+        {{range $i := loop 0 $c}}
+          {
+             "name": "[concat('SSH-', variables('masterVMNamePrefix'), {{$i}})]",
+             "properties": {
+                     "backendPort": 22,
+                     "enableFloatingIP": false,
+                     "frontendIPConfiguration": {
+                       "id": "[variables('masterLbIPConfigID')]"
+                     },
+                     "frontendPort": "[variables('sshNatPorts')[{{$i}}]]",
+                     "protocol": "Tcp"
+             }
+           }{{if ne $i $c}},{{end}}
+        {{end}}
+        ],
         "probes": [
           {
             "name": "tcpHTTPSProbe",
@@ -290,28 +308,6 @@
       "apiVersion": "[variables('apiVersionNetwork')]",
       "copy": {
         "count": "[sub(variables('masterCount'), variables('masterOffset'))]",
-        "name": "masterLbLoopNode"
-      },
-      "dependsOn": [
-        "[variables('masterLbID')]"
-      ],
-      "location": "[variables('location')]",
-      "name": "[concat(variables('masterLbName'), '/', 'SSH-', variables('masterVMNamePrefix'), copyIndex(variables('masterOffset')))]",
-      "properties": {
-        "backendPort": 22,
-        "enableFloatingIP": false,
-        "frontendIPConfiguration": {
-          "id": "[variables('masterLbIPConfigID')]"
-        },
-        "frontendPort": "[variables('sshNatPorts')[copyIndex(variables('masterOffset'))]]",
-        "protocol": "Tcp"
-      },
-      "type": "Microsoft.Network/loadBalancers/inboundNatRules"
-    },
-    {
-      "apiVersion": "[variables('apiVersionNetwork')]",
-      "copy": {
-        "count": "[sub(variables('masterCount'), variables('masterOffset'))]",
         "name": "nicLoopNode"
       },
       "dependsOn": [
@@ -320,7 +316,7 @@
 {{else}}
         "[variables('vnetID')]",
 {{end}}
-        "[concat(variables('masterLbID'),'/inboundNatRules/SSH-',variables('masterVMNamePrefix'),copyIndex(variables('masterOffset')))]"
+        "[variables('masterLbName')]"
 {{if gt .MasterProfile.Count 1}}
         ,"[variables('masterInternalLbName')]"
 {{end}}

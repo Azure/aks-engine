@@ -449,6 +449,10 @@ func (p *Properties) setAgentProfileDefaults(isUpgrade, isScale bool) {
 			profile.AcceleratedNetworkingEnabledWindows = to.BoolPtr(DefaultAcceleratedNetworkingWindowsEnabled && !isUpgrade && !isScale && helpers.AcceleratedNetworkingSupported(profile.VMSize))
 		}
 
+		if profile.VMSSOverProvisioningEnabled == nil {
+			profile.VMSSOverProvisioningEnabled = to.BoolPtr(DefaultVMSSOverProvisioningEnabled && !isUpgrade && !isScale)
+		}
+
 		if profile.OSType != Windows {
 			if profile.Distro == "" {
 				if p.OrchestratorProfile.IsKubernetes() {

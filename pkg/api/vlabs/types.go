@@ -451,6 +451,7 @@ type AgentPoolProfile struct {
 	Role                                AgentPoolProfileRole `json:"role,omitempty"`
 	AcceleratedNetworkingEnabled        *bool                `json:"acceleratedNetworkingEnabled,omitempty"`
 	AcceleratedNetworkingEnabledWindows *bool                `json:"acceleratedNetworkingEnabledWindows,omitempty"`
+	VMSSOverProvisioningEnabled         *bool                `json:"vmssOverProvisioningEnabled,omitempty"`
 
 	// subnet is internal
 	subnet string
