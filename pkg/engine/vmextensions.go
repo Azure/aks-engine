@@ -58,13 +58,8 @@ import (
 func CreateAKSBillingExtension(cs *api.ContainerService) VirtualMachineExtensionARM {
 	location := "[variables('location')]"
 	name := "[concat(variables('masterVMNamePrefix'), copyIndex(variables('masterOffset')), '/computeAksLinuxBilling')]"
-	useManagedIdentity := cs.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity
 	dependentVM := ""
-	if useManagedIdentity {
-		dependentVM = "[concat('Microsoft.Compute/virtualMachines/', variables('masterVMNamePrefix'), copyIndex(variables('masterOffset')), '/extensions/ManagedIdentityExtension')]"
-	} else {
-		dependentVM = "[concat('Microsoft.Compute/virtualMachines/', variables('masterVMNamePrefix'), copyIndex(variables('masterOffset')))]"
-	}
+	dependentVM = "[concat('Microsoft.Compute/virtualMachines/', variables('masterVMNamePrefix'), copyIndex(variables('masterOffset')))]"
 
 	return VirtualMachineExtensionARM{
 		ARMResource: ARMResource{

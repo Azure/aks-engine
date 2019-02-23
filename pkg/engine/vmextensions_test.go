@@ -35,7 +35,7 @@ func TestCreateAKSBillingExtension(t *testing.T) {
 				"name":  "vmLoopNode",
 			},
 			DependsOn: []string{
-				"[concat('Microsoft.Compute/virtualMachines/', variables('masterVMNamePrefix'), copyIndex(variables('masterOffset')), '/extensions/ManagedIdentityExtension')]",
+				"[concat('Microsoft.Compute/virtualMachines/', variables('masterVMNamePrefix'), copyIndex(variables('masterOffset')))]",
 			},
 		},
 

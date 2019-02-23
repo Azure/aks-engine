@@ -182,7 +182,6 @@ func CreateMasterInternalLoadBalancer(cs *api.ContainerService) LoadBalancerARM 
 		},
 		Type: to.StringPtr("Microsoft.Network/loadBalancers"),
 	}
-
 	loadBalancerARM := LoadBalancerARM{
 		ARMResource:  armResource,
 		LoadBalancer: loadBalancer,

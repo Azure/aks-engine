@@ -77,19 +77,7 @@ func CreateNetworkInterfaces(cs *api.ContainerService) NetworkInterfaceARM {
 	ipConfigurations := []network.InterfaceIPConfiguration{loadBalancerIPConfig}
 
 	if isAzureCNI {
-		for i := 2; i <= cs.Properties.MasterProfile.IPAddressCount; i++ {
-			ipConfig := network.InterfaceIPConfiguration{
-				Name: to.StringPtr(fmt.Sprintf("ipconfig%d", i)),
-				InterfaceIPConfigurationPropertiesFormat: &network.InterfaceIPConfigurationPropertiesFormat{
-					Primary:                   to.BoolPtr(false),
-					PrivateIPAllocationMethod: network.Dynamic,
-					Subnet: &network.Subnet{
-						ID: to.StringPtr("[variables('vnetSubnetID')]"),
-					},
-				},
-			}
-			ipConfigurations = append(ipConfigurations, ipConfig)
-		}
+		ipConfigurations = append(ipConfigurations, getSecondaryNICIPConfigs(cs.Properties.MasterProfile.IPAddressCount)...)
 	}
 
 	nicProperties := network.InterfacePropertiesFormat{
@@ -357,4 +345,22 @@ func createAgentVMASNIC(cs *api.ContainerService, profile *api.AgentPoolProfile)
 		ARMResource: armResource,
 		Interface:   networkInterface,
 	}
+}
+
+func getSecondaryNICIPConfigs(n int) []network.InterfaceIPConfiguration {
+	var ipConfigurations []network.InterfaceIPConfiguration
+	for i := 2; i <= n; i++ {
+		ipConfig := network.InterfaceIPConfiguration{
+			Name: to.StringPtr(fmt.Sprintf("ipconfig%d", i)),
+			InterfaceIPConfigurationPropertiesFormat: &network.InterfaceIPConfigurationPropertiesFormat{
+				Primary:                   to.BoolPtr(false),
+				PrivateIPAllocationMethod: network.Dynamic,
+				Subnet: &network.Subnet{
+					ID: to.StringPtr("[variables('vnetSubnetID')]"),
+				},
+			},
+		}
+		ipConfigurations = append(ipConfigurations, ipConfig)
+	}
+	return ipConfigurations
 }
