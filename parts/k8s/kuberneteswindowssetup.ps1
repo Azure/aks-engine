@@ -247,7 +247,7 @@ try
         $sshEnabled = [System.Convert]::ToBoolean("{{ WindowsSSHEnabled }}")
 
         if ( $sshEnabled ) {
-            # TODO: This doesn't support multiple SSH keys yet. It will only get the first one from the list.
+            # TODO: This does not support multiple SSH keys yet. It will only get the first one from the list.
             $SSHKey = "{{ WrapAsParameter "sshRSAPublicKey" }}"
             Install-OpenSSH -SSHKey $SSHKey
         }
