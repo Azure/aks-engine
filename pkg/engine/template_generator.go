@@ -640,6 +640,32 @@ func (t *TemplateGenerator) getTemplateFuncMap(cs *api.ContainerService) templat
 		"GetB64sshdConfig": func() string {
 			return getBase64CustomScript(sshdConfig)
 		},
+		"GetSshPublicKeys": func() string {
+			// https://docs.microsoft.com/en-us/rest/api/compute/virtualmachines/createorupdate#sshconfiguration
+			// "ssh": {
+			//     "publicKeys": [
+			//       {
+			//         "keyData": "[parameters('sshRSAPublicKey')]",
+			//         "path": "[variables('sshKeyPath')]"
+			//       }
+			//     ]
+			//   }
+			str := ""
+			str += "\"publicKeys\": [\n"
+			lastItem := len(cs.Properties.LinuxProfile.SSH.PublicKeys) - 1
+			for i, publicKey := range cs.Properties.LinuxProfile.SSH.PublicKeys {
+				str += "{\n"
+				str += "    \"keyData\": \"" + publicKey.KeyData + "\",\n"
+				str += "    \"path\": \"[variables('sshKeyPath')]\"\n"
+				if i < lastItem {
+					str += "},\n"
+				} else {
+					str += "}\n"
+				}
+			}
+			str += "]\n"
+			return str
+		},
 		"GetKubernetesMasterPreprovisionYaml": func() string {
 			str := ""
 			if cs.Properties.MasterProfile.PreprovisionExtension != nil {
