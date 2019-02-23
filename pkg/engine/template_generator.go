@@ -641,7 +641,7 @@ func (t *TemplateGenerator) getTemplateFuncMap(cs *api.ContainerService) templat
 			return getBase64CustomScript(sshdConfig)
 		},
 		"GetSshPublicKeys": func() string {
-			// https://docs.microsoft.com/en-us/rest/api/compute/virtualmachines/createorupdate#sshconfiguration
+			// This generates the publicKeys array described at https://docs.microsoft.com/en-us/rest/api/compute/virtualmachines/createorupdate#sshconfiguration
 			// "ssh": {
 			//     "publicKeys": [
 			//       {

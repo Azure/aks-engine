@@ -5,6 +5,8 @@ Install-OpenSSH {
         $SSHKey
     )
 
+    # TODO: This doesn't support multiple SSH keys yet. It will only get the first one from the list.
+
     $adminpath = "c:\ProgramData\ssh"
     $adminfile = "administrators_authorized_keys"
 

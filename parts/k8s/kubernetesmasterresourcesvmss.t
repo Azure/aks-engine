@@ -507,12 +507,7 @@
           "linuxConfiguration": {
               "disablePasswordAuthentication": true,
               "ssh": {
-                "publicKeys": [
-                  {
-                    "keyData": "[parameters('sshRSAPublicKey')]",
-                    "path": "[variables('sshKeyPath')]"
-                  }
-                ]
+                {{ GetSshPublicKeys . }}
               }
             }
             {{if .LinuxProfile.HasSecrets}}
