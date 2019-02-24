@@ -651,19 +651,19 @@ func (t *TemplateGenerator) getTemplateFuncMap(cs *api.ContainerService) templat
 			//     ]
 			//   }
 			str := ""
-			str += "\"publicKeys\": [\n"
+			str += "\"publicKeys\": [ "
 			lastItem := len(cs.Properties.LinuxProfile.SSH.PublicKeys) - 1
 			for i, publicKey := range cs.Properties.LinuxProfile.SSH.PublicKeys {
-				str += "{\n"
-				str += "    \"keyData\": \"" + publicKey.KeyData + "\",\n"
-				str += "    \"path\": \"[variables('sshKeyPath')]\"\n"
+				str += "{ "
+				str += "\"keyData\": \"" + publicKey.KeyData + "\", "
+				str += "\"path\": \"[variables('sshKeyPath')]\" "
 				if i < lastItem {
-					str += "},\n"
+					str += "}, "
 				} else {
-					str += "}\n"
+					str += "} "
 				}
 			}
-			str += "]\n"
+			str += "]"
 			return str
 		},
 		"GetKubernetesMasterPreprovisionYaml": func() string {
