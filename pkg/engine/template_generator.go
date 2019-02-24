@@ -655,7 +655,7 @@ func (t *TemplateGenerator) getTemplateFuncMap(cs *api.ContainerService) templat
 			lastItem := len(cs.Properties.LinuxProfile.SSH.PublicKeys) - 1
 			for i, publicKey := range cs.Properties.LinuxProfile.SSH.PublicKeys {
 				str += "{ "
-				str += "\"keyData\": \"" + publicKey.KeyData + "\", "
+				str += "\"keyData\": \"" + strings.TrimSpace(publicKey.KeyData) + "\", "
 				str += "\"path\": \"[variables('sshKeyPath')]\" "
 				if i < lastItem {
 					str += "}, "
