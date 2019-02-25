@@ -28,6 +28,15 @@ write_files:
   owner: root
   content: !!binary |
     {{WrapAsVariable "provisionConfigs"}}
+    
+{{if IsAzureStackCloud}}
+- path: /opt/azure/containers/provision_configs_custom_cloud.sh
+  permissions: "0744"
+  encoding: gzip
+  owner: root
+  content: !!binary |
+    {{WrapAsVariable "provisionConfigsCustomCloud"}}
+{{end}}
 
 - path: /etc/ssh/sshd_config
   permissions: "0644"

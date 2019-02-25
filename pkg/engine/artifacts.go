@@ -226,7 +226,13 @@ func kubernetesManifestSettingsInit(profile *api.Properties) []kubernetesFeature
 		{
 			"kubernetesmaster-kube-controller-manager.yaml",
 			"kube-controller-manager.yaml",
-			true,
+			!profile.IsAzureStackCloud(),
+			profile.OrchestratorProfile.KubernetesConfig.ControllerManagerConfig["data"],
+		},
+		{
+			"kubernetesmaster-kube-controller-manager-custom.yaml",
+			"kube-controller-manager.yaml",
+			profile.IsAzureStackCloud(),
 			profile.OrchestratorProfile.KubernetesConfig.ControllerManagerConfig["data"],
 		},
 		{

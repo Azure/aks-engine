@@ -146,6 +146,9 @@
     "healthMonitorScript": "{{GetKubernetesB64HealthMonitorScript}}",
     "provisionInstalls": "{{GetKubernetesB64Installs}}",
     "provisionConfigs": "{{GetKubernetesB64Configs}}",
+    {{if IsAzureStackCloud}}
+    "provisionConfigsCustomCloud": "{{GetKubernetesB64ConfigsCustomCloud}}",
+    {{end}}
     "mountetcdScript": "{{GetKubernetesB64Mountetcd}}",
     "customSearchDomainsScript": "{{GetKubernetesB64CustomSearchDomainsScript}}",
     "sshdConfig": "{{GetB64sshdConfig}}",
