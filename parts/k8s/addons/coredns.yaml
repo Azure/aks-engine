@@ -128,6 +128,10 @@ spec:
           effect: NoSchedule
         - key: CriticalAddonsOnly
           operator: "Exists"
+        - operator: "Exists"
+	        effect: NoExecute
+	      - operator: "Exists"
+	        effect: NoSchedule
       nodeSelector:
         beta.kubernetes.io/os: linux
       containers:
