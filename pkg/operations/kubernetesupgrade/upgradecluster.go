@@ -147,7 +147,7 @@ func (uc *UpgradeCluster) getClusterNodeStatus(az armhelpers.AKSEngineClient, re
 						uc.Logger.Infof("Skipping VM: %s for upgrade as the orchestrator version could not be determined.", *vm.Name)
 						continue
 					}
-					if currentVersion != goalVersion {
+					if uc.Force || currentVersion != goalVersion {
 						uc.Logger.Infof(
 							"VM %s in VMSS %s has a current version of %s and a desired version of %s. Upgrading this node.",
 							*vm.Name,
