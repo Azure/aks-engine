@@ -24,7 +24,8 @@ import (
 )
 
 const (
-	testDir string = "testdirectory"
+	testDir        string = "testdirectory"
+	commandTimeout        = 1 * time.Minute
 )
 
 // List is a container that holds all pods returned from doing a kubectl get pods
@@ -573,7 +574,7 @@ func (p *Pod) Delete(retries int) error {
 	var kubectlError error
 	for i := 0; i < retries; i++ {
 		cmd := exec.Command("k", "delete", "po", "-n", p.Metadata.Namespace, p.Metadata.Name)
-		kubectlOutput, kubectlError = util.RunAndLogCommand(cmd, 1*time.Minute)
+		kubectlOutput, kubectlError = util.RunAndLogCommand(cmd, commandTimeout)
 		if kubectlError != nil {
 			log.Printf("Error while trying to delete Pod %s in namespace %s:%s\n", p.Metadata.Namespace, p.Metadata.Name, string(kubectlOutput))
 			continue
@@ -766,7 +767,7 @@ func (p *Pod) ValidateHostPort(check string, attempts int, sleep time.Duration, 
 
 	for i := 0; i < attempts; i++ {
 		cmd := exec.Command("ssh", "-i", sshKeyPath, "-o", "ConnectTimeout=10", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", master, curlCMD)
-		out, err := util.RunAndLogCommand(cmd, 1*time.Minute)
+		out, err := util.RunAndLogCommand(cmd, commandTimeout)
 		if err == nil {
 			matched, _ := regexp.MatchString(check, string(out))
 			if matched {
@@ -782,7 +783,7 @@ func (p *Pod) ValidateHostPort(check string, attempts int, sleep time.Duration, 
 func (p *Pod) Logs() error {
 	for _, container := range p.Spec.Containers {
 		cmd := exec.Command("k", "logs", p.Metadata.Name, "-c", container.Name, "-n", p.Metadata.Namespace)
-		out, err := util.RunAndLogCommand(cmd, 1*time.Minute)
+		out, err := util.RunAndLogCommand(cmd, commandTimeout)
 		log.Printf("\n%s\n", string(out))
 		if err != nil {
 			return err
