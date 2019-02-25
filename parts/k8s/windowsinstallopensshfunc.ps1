@@ -1,11 +1,9 @@
 function
 Install-OpenSSH {
     Param(
-        [Parameter(Mandatory = $true)][string] 
-        $SSHKey
+        [Parameter(Mandatory = $true)][string[]] 
+        $SSHKeys
     )
-
-    # TODO: This doesn't support multiple SSH keys yet. It will only get the first one from the list.
 
     $adminpath = "c:\ProgramData\ssh"
     $adminfile = "administrators_authorized_keys"
@@ -28,8 +26,10 @@ Install-OpenSSH {
     }
 
     Write-Host "$adminpath found."
-    Write-Host "Adding key to: $adminpath\$adminfile ..."
-    Add-Content $adminpath\$adminfile $SSHKey
+    Write-Host "Adding keys to: $adminpath\$adminfile ..."
+    $SSHKeys | foreach-object {
+        Add-Content $adminpath\$adminfile $_
+    }
 
     Write-Host "Setting required permissions..."
     icacls $adminpath\$adminfile /remove "NT AUTHORITY\Authenticated Users"
