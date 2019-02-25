@@ -747,7 +747,7 @@ func TestProperties_ValidateLinuxProfile(t *testing.T) {
 		PublicKeys []PublicKey `json:"publicKeys" validate:"required,min=1"`
 	}{
 		PublicKeys: []PublicKey{
-			PublicKey{
+			{
 				KeyData: "not empty",
 			},
 			{},
