@@ -657,19 +657,18 @@ func (t *TemplateGenerator) getTemplateFuncMap(cs *api.ContainerService) templat
 			for _, publicKey := range cs.Properties.LinuxProfile.SSH.PublicKeys {
 				publicKeyTrimmed := strings.TrimSpace(publicKey.KeyData)
 				publicKeys = append(publicKeys, compute.SSHPublicKey{
-					Path: &publicKeyPath,
+					Path:    &publicKeyPath,
 					KeyData: &publicKeyTrimmed,
 				})
 			}
-			ssh := compute.SSHConfiguration {
+			ssh := compute.SSHConfiguration{
 				PublicKeys: &publicKeys,
 			}
-			sshJson, err := json.Marshal(ssh)
+			sshJSON, err := json.Marshal(ssh)
 			if err != nil {
 				panic(err)
 			}
-			fmt.Println(string(sshJson))
-			return string(sshJson)
+			return string(sshJSON)
 		},
 		"GetSshPublicKeysPowerShell": func() string {
 			str := ""
