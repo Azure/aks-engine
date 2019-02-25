@@ -115,9 +115,7 @@
           {{GetKubernetesAgentCustomData .}}
           "linuxConfiguration": {
               "disablePasswordAuthentication": true,
-              "ssh": {
-                {{ GetSshPublicKeys }}
-              }
+              "ssh": {{ GetSshPublicKeys }}
             }
             {{if HasLinuxSecrets}}
               ,
