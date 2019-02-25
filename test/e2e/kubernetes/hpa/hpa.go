@@ -71,7 +71,7 @@ func (h *HPA) Delete(retries int) error {
 	var kubectlError error
 	for i := 0; i < retries; i++ {
 		cmd := exec.Command("k", "delete", "hpa", "-n", h.Metadata.Namespace, h.Metadata.Name)
-		kubectlOutput, kubectlError = util.RunAndLogCommand(cmd, jcommandTimeout)
+		kubectlOutput, kubectlError = util.RunAndLogCommand(cmd, commandTimeout)
 		if kubectlError != nil {
 			log.Printf("Error while trying to delete service %s in namespace %s:%s\n", h.Metadata.Namespace, h.Metadata.Name, string(kubectlOutput))
 			continue
