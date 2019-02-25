@@ -1212,7 +1212,7 @@ func (o *OrchestratorProfile) IsAzureCNI() bool {
 func (o *OrchestratorProfile) RequireRouteTable() bool {
 	switch o.OrchestratorType {
 	case Kubernetes:
-		if o.IsAzureCNI() || "cilium" == o.KubernetesConfig.NetworkPolicy || "flannel" == o.KubernetesConfig.NetworkPlugin {
+		if o.IsAzureCNI() || NetworkPolicyCilium == o.KubernetesConfig.NetworkPolicy || "flannel" == o.KubernetesConfig.NetworkPlugin {
 			return false
 		}
 		return true
@@ -1326,7 +1326,7 @@ func (k *KubernetesConfig) IsDashboardEnabled() bool {
 
 // IsIPMasqAgentEnabled checks if the ip-masq-agent addon is enabled
 func (k *KubernetesConfig) IsIPMasqAgentEnabled() bool {
-	return k.isAddonEnabled(IPMASQAgentAddonName, IPMasqAgentAddonEnabled)
+	return k.isAddonEnabled(IPMASQAgentAddonName, (k.NetworkPlugin != NetworkPluginCilium && IPMasqAgentAddonEnabled))
 }
 
 // IsRBACEnabled checks if RBAC is enabled

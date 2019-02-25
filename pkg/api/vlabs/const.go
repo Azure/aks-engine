@@ -83,11 +83,11 @@ const (
 
 var (
 	// NetworkPluginValues holds the valid values for network plugin implementation
-	NetworkPluginValues = [...]string{"", "kubenet", "azure", "cilium", "flannel"}
+	NetworkPluginValues = [...]string{"", "kubenet", "azure", NetworkPluginCilium, "flannel"}
 
 	// NetworkPolicyValues holds the valid values for a network policy
 	// "azure" and "none" are there for backwards-compatibility
-	NetworkPolicyValues = [...]string{"", "calico", "cilium", "azure", "none"}
+	NetworkPolicyValues = [...]string{"", "calico", NetworkPolicyCilium, "azure", "none"}
 
 	// ContainerRuntimeValues holds the valid values for container runtimes
 	ContainerRuntimeValues = [...]string{"", Docker, ClearContainers, KataContainers, Containerd}
@@ -107,6 +107,10 @@ const (
 	DefaultNetworkPluginWindows = "azure"
 	// DefaultNetworkPolicy defines the network policy to use by default
 	DefaultNetworkPolicy = ""
+	// NetworkPolicyCilium is the string expression for cilium network policy config option
+	NetworkPolicyCilium = "cilium"
+	// NetworkPluginCilium is the string expression for cilium network policy config option
+	NetworkPluginCilium = NetworkPolicyCilium
 )
 
 const (
