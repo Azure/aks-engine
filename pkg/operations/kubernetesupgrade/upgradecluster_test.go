@@ -272,7 +272,6 @@ var _ = Describe("Upgrade Kubernetes cluster tests", func() {
 			uc.NameSuffix = "12345678"
 			uc.UpgradeWorkFlow = fakeUpgradeWorkflow{}
 		})
-
 		It("Should skip VMs that are already on desired version", func() {
 			mockClient.FakeListVirtualMachineScaleSetVMsResult = func() []compute.VirtualMachineScaleSetVM {
 				return []compute.VirtualMachineScaleSetVM{
@@ -288,7 +287,6 @@ var _ = Describe("Upgrade Kubernetes cluster tests", func() {
 			Expect(err).NotTo(HaveOccurred())
 			Expect(uc.AgentPoolScaleSetsToUpgrade[0].VMsToUpgrade).To(HaveLen(2))
 		})
-
 		It("Should skip VMs that cannot determine version", func() {
 			mockClient.FakeListVirtualMachineScaleSetVMsResult = func() []compute.VirtualMachineScaleSetVM {
 				return []compute.VirtualMachineScaleSetVM{
@@ -302,8 +300,7 @@ var _ = Describe("Upgrade Kubernetes cluster tests", func() {
 			Expect(err).NotTo(HaveOccurred())
 			Expect(uc.AgentPoolScaleSetsToUpgrade[0].VMsToUpgrade).To(HaveLen(1))
 		})
-
-		It("Should not VMs that cannot determine version when using Force", func() {
+		It("Should not skip VMs that cannot determine version when using Force", func() {
 			mockClient.FakeListVirtualMachineScaleSetVMsResult = func() []compute.VirtualMachineScaleSetVM {
 				return []compute.VirtualMachineScaleSetVM{
 					mockClient.MakeFakeVirtualMachineScaleSetVM("Kubernetes:1.9.7"),
@@ -316,7 +313,6 @@ var _ = Describe("Upgrade Kubernetes cluster tests", func() {
 			Expect(err).NotTo(HaveOccurred())
 			Expect(uc.AgentPoolScaleSetsToUpgrade[0].VMsToUpgrade).To(HaveLen(2))
 		})
-
 		It("Should not skip any VMs when using Force", func() {
 			mockClient.FakeListVirtualMachineScaleSetVMsResult = func() []compute.VirtualMachineScaleSetVM {
 				return []compute.VirtualMachineScaleSetVM{
@@ -331,6 +327,81 @@ var _ = Describe("Upgrade Kubernetes cluster tests", func() {
 			err := uc.UpgradeCluster(&mockClient, "kubeConfig", TestAKSEngineVersion)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(uc.AgentPoolScaleSetsToUpgrade[0].VMsToUpgrade).To(HaveLen(4))
+		})
+	})
+
+	Context("When upgrading a cluster with AvailibilitySets VMs", func() {
+		var cs *api.ContainerService
+		var uc UpgradeCluster
+		var mockClient armhelpers.MockAKSEngineClient
+		BeforeEach(func() {
+			mockClient = armhelpers.MockAKSEngineClient{}
+			cs = api.CreateMockContainerService("testcluster", "1.9.10", 3, 3, false)
+			uc = UpgradeCluster{
+				Translator: &i18n.Translator{},
+				Logger:     log.NewEntry(log.New()),
+			}
+
+			uc.Client = &mockClient
+			uc.ClusterTopology = ClusterTopology{}
+			uc.SubscriptionID = "DEC923E3-1EF1-4745-9516-37906D56DEC4"
+			uc.ResourceGroup = "TestRg"
+			uc.DataModel = cs
+			uc.NameSuffix = "12345678"
+			uc.UpgradeWorkFlow = fakeUpgradeWorkflow{}
+		})
+		It("Should skip VMs that are already on desired version", func() {
+			mockClient.FakeListVirtualMachineResult = func() []compute.VirtualMachine {
+				return []compute.VirtualMachine{
+					mockClient.MakeFakeVirtualMachine("k8s-agentpool1-12345678-0", "Kubernetes:1.9.10"),
+				}
+			}
+			uc.AgentPoolsToUpgrade = map[string]bool{"agentpool1": true}
+			uc.Force = false
+
+			err := uc.UpgradeCluster(&mockClient, "kubeConfig", TestAKSEngineVersion)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(*uc.AgentPools["agentpool1"].AgentVMs).To(HaveLen(0))
+		})
+		It("Should not skip VMs that are already on desired version when Force true", func() {
+			mockClient.FakeListVirtualMachineResult = func() []compute.VirtualMachine {
+				return []compute.VirtualMachine{
+					mockClient.MakeFakeVirtualMachine("k8s-agentpool1-12345678-0", "Kubernetes:1.9.10"),
+				}
+			}
+			uc.AgentPoolsToUpgrade = map[string]bool{"agentpool1": true}
+			uc.Force = true
+
+			err := uc.UpgradeCluster(&mockClient, "kubeConfig", TestAKSEngineVersion)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(*uc.AgentPools["agentpool1"].AgentVMs).To(HaveLen(1))
+		})
+		It("Should skip master VMS that are already on desired version", func() {
+			mockClient.FakeListVirtualMachineResult = func() []compute.VirtualMachine {
+				return []compute.VirtualMachine{
+					mockClient.MakeFakeVirtualMachine("k8s-master-12345678-0", "Kubernetes:1.9.10"),
+				}
+			}
+			uc.Force = false
+
+			err := uc.UpgradeCluster(&mockClient, "kubeConfig", TestAKSEngineVersion)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(*uc.MasterVMs).To(HaveLen(0))
+			Expect(*uc.UpgradedMasterVMs).To(HaveLen(1))
+
+		})
+		It("Should not skip master VMS that are already on desired version when Force is true", func() {
+			mockClient.FakeListVirtualMachineResult = func() []compute.VirtualMachine {
+				return []compute.VirtualMachine{
+					mockClient.MakeFakeVirtualMachine("k8s-master-12345678-0", "Kubernetes:1.9.10"),
+				}
+			}
+			uc.Force = true
+
+			err := uc.UpgradeCluster(&mockClient, "kubeConfig", TestAKSEngineVersion)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(*uc.MasterVMs).To(HaveLen(1))
+			Expect(*uc.UpgradedMasterVMs).To(HaveLen(0))
 		})
 	})
 
