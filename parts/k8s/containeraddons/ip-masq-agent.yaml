@@ -27,9 +27,9 @@ spec:
         value: "true"
         effect: NoSchedule
       - operator: "Exists"
-	      effect: NoExecute
-	    - operator: "Exists"
-	      effect: NoSchedule
+        effect: NoExecute
+      - operator: "Exists"
+        effect: NoSchedule
       containers:
       - name: azure-ip-masq-agent
         image: {{ContainerImage "ip-masq-agent"}}
