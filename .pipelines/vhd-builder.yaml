@@ -44,7 +44,7 @@ phases:
       -e VHD_NAME=${VHD_NAME} \
       ${DEIS_GO_DEV_IMAGE} make az-copy
     displayName: Copying resource to Classic Storage Account
-    condition: ! ${DRY_RUN}
+    condition: not(${DRY_RUN})
   - script: |
       SA_NAME="$(cat packer-output | grep "creating new storage account" | cut -d " " -f 5)" && \
       docker run --rm \
