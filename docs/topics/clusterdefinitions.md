@@ -576,7 +576,7 @@ A cluster can have 0 to 12 agent pool profiles. Agent Pool Profiles are used for
 | Name                             | Required | Description                                                                                                                                                                      |
 | -------------------------------- | -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | adminUsername                    | yes      | Describes the username to be used on all linux clusters                                                                                                                          |
-| ssh.publicKeys[].keyData           | yes      | The public SSH key used for authenticating access to all Linux nodes in the cluster                                                                                              |
+| ssh.publicKeys.keyData           | yes      | The public SSH key used for authenticating access to all Linux nodes in the cluster                                                                                              |
 | secrets                          | no       | Specifies an array of key vaults to pull secrets from and what secrets to pull from each                                                                                         |
 | customSearchDomain.name          | no       | describes the search domain to be used on all linux clusters                                                                                                                     |
 | customSearchDomain.realmUser     | no       | describes the realm user with permissions to update dns registries on Windows Server DNS                                                                                         |
@@ -584,47 +584,6 @@ A cluster can have 0 to 12 agent pool profiles. Agent Pool Profiles are used for
 | customNodesDNS.dnsServer         | no       | describes the IP address of the DNS Server                                                                                                                                       |
 
 Here are instructions for [generating a public/private key pair][ssh] for `ssh.publicKeys.keyData`.
-
-
-#### Notes on SSH public keys
-
-At least one SSH key is required, but multiple are supported when deploying Kubernetes.
-
-Here's a minimal example using just one key:
-
-```
-    "linuxProfile": {
-      "adminUsername": "azureuser",
-      "ssh": {
-        "publicKeys": [
-          {
-            "keyData": "ssh-rsa AAAA...w=="
-          }
-        ]
-      }
-    },
-```
-
-
-And an example using two keys.
-
-
-```json
-    "linuxProfile": {
-      "adminUsername": "azureuser",
-      "ssh": {
-        "publicKeys": [
-          {
-            "keyData": "ssh-rsa AAAA...w=="
-          },
-          {
-            "keyData": "ssh-rsa AAAA...w=="
-          }
-        ]
-      }
-    },
-```
-
 
 #### secrets
 
@@ -661,8 +620,7 @@ https://{keyvaultname}.vault.azure.net:443/secrets/{secretName}/{version}
 | windowsSku                       | no       | SKU usedto find Windows VM to deploy from marketplace. Default: `Datacenter-Core-1809-with-Containers-smalldisk` |
 | imageVersion                     | no       | Specific image version to deploy from marketplace.  Default: `latest` |
 | windowsImageSourceURL            | no       | Path to an existing Azure storage blob with a sysprepped VHD. This is used to test pre-release or customized VHD files that you have uploaded to Azure. If provided, the above 4 parameters are ignored. |
-| sshEnabled                       | no       | If set to `true`, OpenSSH will be installed on windows nodes to allow for ssh remoting. **Only for Windows version 1809 or 2019** . The same SSH authorized public key(s) will be added from [linuxProfile.ssh.publicKeys](#linuxProfile) |
-
+| sshEnabled                       | no       | If set to `true`, OpenSSH will be installed on windows nodes to allow for ssh remoting. **Only for Windows version 1809 or 2019** |
 
 #### Choosing a Windows version
 
