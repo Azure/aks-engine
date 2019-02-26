@@ -1,8 +1,8 @@
 function
 Install-OpenSSH {
     Param(
-        [Parameter(Mandatory = $true)][string[]] 
-        $SSHKeys
+        [Parameter(Mandatory = $true)][string] 
+        $SSHKey
     )
 
     $adminpath = "c:\ProgramData\ssh"
@@ -26,10 +26,8 @@ Install-OpenSSH {
     }
 
     Write-Host "$adminpath found."
-    Write-Host "Adding keys to: $adminpath\$adminfile ..."
-    $SSHKeys | foreach-object {
-        Add-Content $adminpath\$adminfile $_
-    }
+    Write-Host "Adding key to: $adminpath\$adminfile ..."
+    Add-Content $adminpath\$adminfile $SSHKey
 
     Write-Host "Setting required permissions..."
     icacls $adminpath\$adminfile /remove "NT AUTHORITY\Authenticated Users"
