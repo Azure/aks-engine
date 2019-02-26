@@ -21,6 +21,7 @@ import (
 	"github.com/Azure/aks-engine/pkg/api/common"
 	"github.com/Azure/aks-engine/pkg/helpers"
 	"github.com/Azure/aks-engine/pkg/i18n"
+	"github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2018-10-01/compute"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 )
@@ -745,6 +746,45 @@ func (t *TemplateGenerator) getTemplateFuncMap(cs *api.ContainerService) templat
 		},
 		"GetB64sshdConfig": func() string {
 			return getBase64CustomScript(sshdConfig)
+		},
+		"GetSshPublicKeys": func() string {
+			// This generates the publicKeys array described at https://docs.microsoft.com/en-us/rest/api/compute/virtualmachines/createorupdate#sshconfiguration
+			// "ssh": {
+			//     "publicKeys": [
+			//       {
+			//         "keyData": "[parameters('sshRSAPublicKey')]",
+			//         "path": "[variables('sshKeyPath')]"
+			//       }
+			//     ]
+			//   }
+			publicKeyPath := "[variables('sshKeyPath')]"
+			publicKeys := []compute.SSHPublicKey{}
+			for _, publicKey := range cs.Properties.LinuxProfile.SSH.PublicKeys {
+				publicKeyTrimmed := strings.TrimSpace(publicKey.KeyData)
+				publicKeys = append(publicKeys, compute.SSHPublicKey{
+					Path:    &publicKeyPath,
+					KeyData: &publicKeyTrimmed,
+				})
+			}
+			ssh := compute.SSHConfiguration{
+				PublicKeys: &publicKeys,
+			}
+			sshJSON, err := json.Marshal(ssh)
+			if err != nil {
+				panic(err)
+			}
+			return string(sshJSON)
+		},
+		"GetSshPublicKeysPowerShell": func() string {
+			str := ""
+			lastItem := len(cs.Properties.LinuxProfile.SSH.PublicKeys) - 1
+			for i, publicKey := range cs.Properties.LinuxProfile.SSH.PublicKeys {
+				str += `"` + strings.TrimSpace(publicKey.KeyData) + `"`
+				if i < lastItem {
+					str += ", "
+				}
+			}
+			return str
 		},
 		"GetKubernetesMasterPreprovisionYaml": func() string {
 			str := ""

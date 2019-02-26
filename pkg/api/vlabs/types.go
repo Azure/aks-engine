@@ -129,7 +129,7 @@ type CertificateProfile struct {
 type LinuxProfile struct {
 	AdminUsername string `json:"adminUsername" validate:"required"`
 	SSH           struct {
-		PublicKeys []PublicKey `json:"publicKeys" validate:"required,len=1"`
+		PublicKeys []PublicKey `json:"publicKeys" validate:"required,min=1"`
 	} `json:"ssh" validate:"required"`
 	Secrets            []KeyVaultSecrets   `json:"secrets,omitempty"`
 	ScriptRootURL      string              `json:"scriptroot,omitempty"`
