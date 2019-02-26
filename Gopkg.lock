@@ -10,13 +10,12 @@
   version = "v0.2.0"
 
 [[projects]]
-  digest = "1:27739a80d1f0b257fa1e6b360e4515dd01e2811869838f5595252a8b2fcec868"
+  digest = "1:a25a623447ce55b3acd9840e9de41a392d4c07a3d6298af51881ca6e6ca4973f"
   name = "github.com/Azure/azure-sdk-for-go"
   packages = [
     "services/apimanagement/mgmt/2017-03-01/apimanagement",
     "services/authorization/mgmt/2015-07-01/authorization",
-    "services/compute/mgmt/2018-04-01/compute",
-    "services/compute/mgmt/2018-06-01/compute",
+    "services/compute/mgmt/2018-10-01/compute",
     "services/cosmos-db/mgmt/2015-04-08/documentdb",
     "services/graphrbac/1.6/graphrbac",
     "services/keyvault/mgmt/2018-02-14/keyvault",
@@ -849,8 +848,7 @@
   input-imports = [
     "github.com/Azure/azure-sdk-for-go/services/apimanagement/mgmt/2017-03-01/apimanagement",
     "github.com/Azure/azure-sdk-for-go/services/authorization/mgmt/2015-07-01/authorization",
-    "github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2018-04-01/compute",
-    "github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2018-06-01/compute",
+    "github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2018-10-01/compute",
     "github.com/Azure/azure-sdk-for-go/services/cosmos-db/mgmt/2015-04-08/documentdb",
     "github.com/Azure/azure-sdk-for-go/services/graphrbac/1.6/graphrbac",
     "github.com/Azure/azure-sdk-for-go/services/keyvault/mgmt/2018-02-14/keyvault",

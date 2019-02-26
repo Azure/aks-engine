@@ -735,7 +735,7 @@ func TestRequireRouteTable(t *testing.T) {
 				OrchestratorProfile: &OrchestratorProfile{
 					OrchestratorType: Kubernetes,
 					KubernetesConfig: &KubernetesConfig{
-						NetworkPolicy: "cilium",
+						NetworkPolicy: NetworkPolicyCilium,
 					},
 				},
 			},

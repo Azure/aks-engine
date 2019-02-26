@@ -15,6 +15,8 @@ const (
 	NetworkPolicyCalico = "calico"
 	// NetworkPolicyCilium is the string expression for cilium network policy config option
 	NetworkPolicyCilium = "cilium"
+	// NetworkPluginCilium is the string expression for cilium network plugin config option
+	NetworkPluginCilium = NetworkPolicyCilium
 	// NetworkPolicyAzure is the string expression for Azure CNI network policy manager
 	NetworkPolicyAzure = "azure"
 	// NetworkPluginAzure is the string expression for Azure CNI plugin
@@ -120,6 +122,7 @@ const (
 	kubernetesHealthMonitorScript            = "k8s/health-monitor.sh"
 	kubernetesInstalls                       = "k8s/kubernetesinstalls.sh"
 	kubernetesConfigurations                 = "k8s/kubernetesconfigs.sh"
+	kubernetesConfigurationsCustomCloud      = "k8s/kubernetesconfigscustomcloud.sh"
 	kubernetesMountetcd                      = "k8s/kubernetes_mountetcd.sh"
 	kubernetesCustomSearchDomainsScript      = "k8s/setup-custom-search-domains.sh"
 	kubernetesMasterGenerateProxyCertsScript = "k8s/kubernetesmastergenerateproxycertscript.sh"
