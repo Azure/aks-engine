@@ -110,7 +110,7 @@ func TestCreateUpgradeCommandSuccesfully(t *testing.T) {
 
 //TODO: Should it fail or should it pass without --force? hmm
 func TestUpgradeShouldFailForSameVersion(t *testing.T) {
-	fakeArmTemplateHandle := strings.NewReader("{\"parameters\" : { \"nameSuffix\" : {\"defaultValue\" : \"test\"}}}")
+	fakeArmTemplateHandle := strings.NewReader(`{"parameters" : { "nameSuffix" : {"defaultValue" : "test"}}}`)
 	g := NewGomegaWithT(t)
 	upgradeCmd := &upgradeCmd{
 		resourceGroupName:   "rg",
@@ -131,7 +131,7 @@ func TestUpgradeShouldFailForSameVersion(t *testing.T) {
 }
 
 func TestUpgradeForceSameVersionShouldSucceed(t *testing.T) {
-	fakeArmTemplateHandle := strings.NewReader("{\"parameters\" : { \"nameSuffix\" : {\"defaultValue\" : \"test\"}}}")
+	fakeArmTemplateHandle := strings.NewReader(`{"parameters" : { "nameSuffix" : {"defaultValue" : "test"}}}`)
 	g := NewGomegaWithT(t)
 	upgradeCmd := &upgradeCmd{
 		resourceGroupName:   "rg",

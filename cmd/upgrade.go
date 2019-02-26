@@ -220,7 +220,7 @@ func (uc *upgradeCmd) validateCurrentLocalState(armTemplateHandle io.Reader) err
 func readNameSuffixFromArmTemplate(armTemplateHandle io.Reader) (string, error) {
 	var template *map[string]interface{}
 	decoder := json.NewDecoder(armTemplateHandle)
-	if err := decoder.Decode(&template); err != nil || template == nil {
+	if err := decoder.Decode(&template); err != nil {
 		return "", err
 	}
 
