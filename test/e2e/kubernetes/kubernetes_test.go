@@ -41,7 +41,7 @@ const (
 	retryCommandsTimeout            = 5 * time.Minute
 	kubeSystemPodsReadinessChecks   = 6
 	retryTimeWhenWaitingForPodReady = 1 * time.Minute
-	stabilityCommandTimeout         = 3 * time.Second
+	stabilityCommandTimeout         = 5 * time.Second
 	windowsCommandTimeout           = 1 * time.Minute
 )
 
