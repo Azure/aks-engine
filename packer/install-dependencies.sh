@@ -15,6 +15,7 @@ installDeps
 if [[ ${FEATURE_FLAGS} == *"docker-engine"* ]]; then
     DOCKER_ENGINE_REPO="https://apt.dockerproject.org/repo"
     installDockerEngine
+    overrideDockerEngineStorageDriver
     installGPUDrivers
 else
     MOBY_VERSION="3.0.4"

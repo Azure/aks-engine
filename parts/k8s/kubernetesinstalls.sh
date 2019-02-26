@@ -128,6 +128,27 @@ installDockerEngine() {
     fi
 }
 
+overrideDockerEngineStorageDriver() {
+    echo "stopping docker engine"
+    sudo systemctl stop docker
+    cat << EOF > /tmp/daemon.json 
+{
+    "storage-driver": "overlay2",
+    "live-restore": true,
+    "log-driver": "json-file",
+    "log-opts":  {
+        "max-size": "50m",
+        "max-file": "5"
+    }
+}
+EOF
+    sudo mv /tmp/daemon.json /etc/docker/daemon.json
+    echo "cleaning up aufs storage"
+    sudo rm -rf /var/lib/docker/aufs
+    echo "starting docker engine with overlay2 driver"
+    sudo systemctl start docker
+}
+
 installKataContainersRuntime() {
     # TODO incorporate this into packer CI so that it is pre-baked into the VHD image
     echo "Adding Kata Containers repository key..."
