@@ -1,7 +1,4 @@
 #!/bin/bash
-
-CONTAINERD_DOWNLOAD_URL_BASE="https://storage.googleapis.com/cri-containerd-release/"
-
 source /home/packer/provision_installs.sh
 source /home/packer/provision_source.sh
 
@@ -40,8 +37,8 @@ for CNI_PLUGIN_VERSION in $CNI_PLUGIN_VERSIONS; do
     downloadCNI
 done
 
-for CONTAINERD_VERSION in $CONTAINERD_VERSIONS; do
-    CONTAINERD_DOWNLOAD_URL="${CONTAINERD_DOWNLOAD_URL_BASE}cri-containerd-${CONTAINERD_VERSION}.linux-amd64.tar.gz"
+CONTAINERD_DOWNLOAD_URL_BASE="https://storage.googleapis.com/cri-containerd-release/"
+for CONTAINERD_VERSION in ${CONTAINERD_VERSIONS}; do
     downloadContainerd
 done
 
