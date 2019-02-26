@@ -14,13 +14,19 @@ import (
 )
 
 func CreateMasterVMSS(cs *api.ContainerService) VirtualMachineScaleSetARM {
-	isCustomVnet := cs.Properties.MasterProfile.IsCustomVNET()
-	hasAvailabilityZones := cs.Properties.MasterProfile.HasAvailabilityZones()
-	useManagedIdentity := cs.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity
-	userAssignedIDEnabled := cs.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity &&
-		cs.Properties.OrchestratorProfile.KubernetesConfig.UserAssignedID != ""
-	isAzureCNI := cs.Properties.OrchestratorProfile.IsAzureCNI()
-	masterCount := cs.Properties.MasterProfile.Count
+
+	masterProfile := cs.Properties.MasterProfile
+	orchProfile := cs.Properties.OrchestratorProfile
+	k8sConfig := orchProfile.KubernetesConfig
+	linuxProfile := cs.Properties.LinuxProfile
+
+	isCustomVnet := masterProfile.IsCustomVNET()
+	hasAvailabilityZones := masterProfile.HasAvailabilityZones()
+	useManagedIdentity := k8sConfig.UseManagedIdentity
+	userAssignedIDEnabled := k8sConfig.UseManagedIdentity &&
+		k8sConfig.UserAssignedID != ""
+	isAzureCNI := orchProfile.IsAzureCNI()
+	masterCount := masterProfile.Count
 
 	var dependencies []string
 
@@ -34,7 +40,7 @@ func CreateMasterVMSS(cs *api.ContainerService) VirtualMachineScaleSetARM {
 		dependencies = append(dependencies, "[variables('masterInternalLbName')]")
 	}
 
-	if to.Bool(cs.Properties.MasterProfile.CosmosEtcd) {
+	if to.Bool(masterProfile.CosmosEtcd) {
 		dependencies = append(dependencies, "[resourceId('Microsoft.DocumentDB/databaseAccounts/', variables('cosmosAccountName'))]")
 	}
 
@@ -75,13 +81,13 @@ func CreateMasterVMSS(cs *api.ContainerService) VirtualMachineScaleSetARM {
 
 	virtualMachine.Sku = &compute.Sku{
 		Tier:     to.StringPtr("Standard"),
-		Capacity: to.Int64Ptr(int64(cs.Properties.MasterProfile.Count)),
+		Capacity: to.Int64Ptr(int64(masterProfile.Count)),
 		Name:     to.StringPtr("[parameters('masterVMSize')]"),
 	}
 
 	vmProperties := &compute.VirtualMachineScaleSetProperties{}
 
-	vmProperties.SinglePlacementGroup = cs.Properties.MasterProfile.SinglePlacementGroup
+	vmProperties.SinglePlacementGroup = masterProfile.SinglePlacementGroup
 	vmProperties.Overprovision = to.BoolPtr(false)
 	vmProperties.UpgradePolicy = &compute.UpgradePolicy{
 		Mode: compute.Manual,
@@ -102,7 +108,7 @@ func CreateMasterVMSS(cs *api.ContainerService) VirtualMachineScaleSetARM {
 
 	var ipConfigurations []compute.VirtualMachineScaleSetIPConfiguration
 
-	for i := 1; i <= cs.Properties.MasterProfile.Count; i++ {
+	for i := 1; i <= masterProfile.Count; i++ {
 		ipConfig := compute.VirtualMachineScaleSetIPConfiguration{
 			Name: to.StringPtr(fmt.Sprintf("ipconfig%d", i)),
 		}
@@ -140,7 +146,7 @@ func CreateMasterVMSS(cs *api.ContainerService) VirtualMachineScaleSetARM {
 	}
 	netintconfig.IPConfigurations = &ipConfigurations
 
-	if cs.Properties.LinuxProfile.HasCustomNodesDNS() {
+	if linuxProfile.HasCustomNodesDNS() {
 		netintconfig.DNSSettings = &compute.VirtualMachineScaleSetNetworkConfigurationDNSSettings{
 			DNSServers: &[]string{
 				"[parameters('dnsServer')]",
@@ -183,17 +189,17 @@ func CreateMasterVMSS(cs *api.ContainerService) VirtualMachineScaleSetARM {
 		panic(err)
 	}
 
-	if cs.Properties.LinuxProfile.HasSecrets() {
+	if linuxProfile.HasSecrets() {
 		osProfile.Secrets = &[]compute.VaultSecretGroup{
 			//TODO: Need to address secrets case
 		}
 	}
 
 	storageProfile := compute.VirtualMachineScaleSetStorageProfile{}
-	imageRef := cs.Properties.MasterProfile.ImageRef
+	imageRef := masterProfile.ImageRef
 	useMasterCustomImage := imageRef != nil && len(imageRef.Name) > 0 && len(imageRef.ResourceGroup) > 0
 	if !useMasterCustomImage {
-		etcdSizeGB, _ := strconv.Atoi(cs.Properties.OrchestratorProfile.KubernetesConfig.EtcdDiskSizeGB)
+		etcdSizeGB, _ := strconv.Atoi(k8sConfig.EtcdDiskSizeGB)
 		dataDisk := compute.VirtualMachineScaleSetDataDisk{
 			CreateOption: compute.DiskCreateOptionTypesEmpty,
 			DiskSizeGB:   to.Int32Ptr(int32(etcdSizeGB)),
@@ -218,8 +224,8 @@ func CreateMasterVMSS(cs *api.ContainerService) VirtualMachineScaleSetARM {
 		CreateOption: compute.DiskCreateOptionTypesFromImage,
 	}
 
-	if cs.Properties.MasterProfile.OSDiskSizeGB > 0 {
-		osDisk.DiskSizeGB = to.Int32Ptr(int32(cs.Properties.MasterProfile.OSDiskSizeGB))
+	if masterProfile.OSDiskSizeGB > 0 {
+		osDisk.DiskSizeGB = to.Int32Ptr(int32(masterProfile.OSDiskSizeGB))
 	}
 
 	storageProfile.OsDisk = osDisk
@@ -316,6 +322,10 @@ func CreateAgentVMSS(cs *api.ContainerService, profile *api.AgentPoolProfile) Vi
 		dependencies = append(dependencies, "[variables('vnetID')]")
 	}
 
+	orchProfile := cs.Properties.OrchestratorProfile
+	k8sConfig := orchProfile.KubernetesConfig
+	linuxProfile := cs.Properties.LinuxProfile
+
 	armResource.DependsOn = dependencies
 
 	var resourceNameSuffix *string
@@ -351,9 +361,9 @@ func CreateAgentVMSS(cs *api.ContainerService, profile *api.AgentPoolProfile) Vi
 		}
 	}
 
-	useManagedIdentity := cs.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity
+	useManagedIdentity := k8sConfig.UseManagedIdentity
 	if useManagedIdentity {
-		userAssignedIdentityEnabled := cs.Properties.OrchestratorProfile.KubernetesConfig.UserAssignedID != ""
+		userAssignedIdentityEnabled := k8sConfig.UserAssignedID != ""
 		if userAssignedIdentityEnabled {
 			virtualMachineScaleSet.Identity = &compute.VirtualMachineScaleSetIdentity{
 				Type: compute.ResourceIdentityTypeUserAssigned,
@@ -420,7 +430,7 @@ func CreateAgentVMSS(cs *api.ContainerService, profile *api.AgentPoolProfile) Vi
 
 	vmssNICConfig.IPConfigurations = &ipConfigurations
 
-	if cs.Properties.LinuxProfile.HasCustomNodesDNS() && !profile.IsWindows() {
+	if linuxProfile.HasCustomNodesDNS() && !profile.IsWindows() {
 		vmssNICConfig.DNSSettings = &compute.VirtualMachineScaleSetNetworkConfigurationDNSSettings{
 			DNSServers: &[]string{
 				"[parameters('dnsServer')]",
@@ -428,7 +438,7 @@ func CreateAgentVMSS(cs *api.ContainerService, profile *api.AgentPoolProfile) Vi
 		}
 	}
 
-	if !cs.Properties.OrchestratorProfile.IsAzureCNI() {
+	if !orchProfile.IsAzureCNI() {
 		vmssNICConfig.EnableIPForwarding = to.BoolPtr(true)
 	}
 
@@ -475,7 +485,7 @@ func CreateAgentVMSS(cs *api.ContainerService, profile *api.AgentPoolProfile) Vi
 		}
 
 		//TODO : Need to address secrets
-		if cs.Properties.LinuxProfile.HasSecrets() {
+		if linuxProfile.HasSecrets() {
 			linuxOsProfile.Secrets = &[]compute.VaultSecretGroup{
 				//"[variables('linuxProfileSecrets')]",
 			}
@@ -529,7 +539,10 @@ func CreateAgentVMSS(cs *api.ContainerService, profile *api.AgentPoolProfile) Vi
 
 	outBoundCmd := ""
 	registry := ""
-	if !cs.Properties.FeatureFlags.IsFeatureEnabled("BlockOutboundInternet") {
+
+	featureFlags := cs.Properties.FeatureFlags
+
+	if !featureFlags.IsFeatureEnabled("BlockOutboundInternet") {
 		if cs.GetCloudSpecConfig().CloudName == api.AzureChinaCloud {
 			registry = `gcr.azk8s.cn 80`
 		} else {
@@ -556,7 +569,7 @@ func CreateAgentVMSS(cs *api.ContainerService, profile *api.AgentPoolProfile) Vi
 		}
 	} else {
 		runInBackground := ""
-		if cs.Properties.FeatureFlags.IsFeatureEnabled("CSERunInBackground") {
+		if featureFlags.IsFeatureEnabled("CSERunInBackground") {
 			runInBackground = " &"
 		}
 		nVidiaEnabled := strconv.FormatBool(common.IsNvidiaEnabledSKU(profile.VMSize))
