@@ -48,11 +48,11 @@ func (kmn *UpgradeMasterNode) CreateNode(ctx context.Context, poolName string, m
 
 	templateVariables["masterOffset"] = masterNo
 	masterOffsetVar := templateVariables["masterOffset"]
-	kmn.logger.Infof("Master offset: %v\n", masterOffsetVar)
+	kmn.logger.Infof("Master offset: %v", masterOffsetVar)
 
 	templateVariables["masterCount"] = masterNo + 1
 	masterOffset := templateVariables["masterCount"]
-	kmn.logger.Infof("Master pool set count to: %v temporarily during upgrade...\n", masterOffset)
+	kmn.logger.Infof("Master pool set count to: %v temporarily during upgrade...", masterOffset)
 
 	// Debug function - keep commented out
 	// WriteTemplate(kmn.Translator, kmn.UpgradeContainerService, kmn.TemplateMap, kmn.ParametersMap)
@@ -94,7 +94,7 @@ func (kmn *UpgradeMasterNode) Validate(vmName *string) error {
 		for {
 			masterNode, err := client.GetNode(*vmName)
 			if err != nil {
-				kmn.logger.Infof("Master VM: %s status error: %v\n", *vmName, err)
+				kmn.logger.Infof("Master VM: %s status error: %v", *vmName, err)
 				time.Sleep(time.Second * 5)
 			} else if isNodeReady(masterNode) {
 				kmn.logger.Infof("Master VM: %s is ready", *vmName)
