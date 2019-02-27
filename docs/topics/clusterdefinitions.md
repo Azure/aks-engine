@@ -185,7 +185,7 @@ Above you see custom configuration for both tiller and kubernetes-dashboard. Bot
 
 See https://kubernetes.io/docs/concepts/configuration/manage-compute-resources-container/ for more on Kubernetes resource limits.
 
-Additionally above, we specified a custom docker image for tiller, let's say we want to build a cluster and test an alpha version of tiller in it. **Important note!** customizing the image is not sticky across upgrade/scale, to ensure that aks-engine always delivers a version-curated, known-working addon when moving a cluster to a new version. Considering all that, providing a custom image reference for an addon configuration should be considered for testing/development, but not for a production cluster. If you'd like to entirely customize one of the addons available, including across scale/upgrade operations, you may include in an addon's spec a gzip+base64-encoded (in that order) string of a Kubernetes yaml manifest. E.g.,
+Additionally above, we specified a custom docker image for tiller, let's say we want to build a cluster and test an alpha version of tiller in it. **Important note!** customizing the image is not sticky across upgrade/scale, to ensure that aks-engine always delivers a version-curated, known-working addon when moving a cluster to a new version. Considering all that, providing a custom image reference for an addon configuration should be considered for testing/development, but not for a production cluster. If you'd like to entirely customize one of the addons available, including across scale/upgrade operations, you may include in an addon's spec a base64-encoded string of a Kubernetes yaml manifest. E.g.,
 
 ```
 "kubernetesConfig": {
@@ -199,7 +199,7 @@ Additionally above, we specified a custom docker image for tiller, let's say we 
 }
 ```
 
-The reason for the unsightly gzip+base64 encoded input type is to optimize delivery payload, and to squash a human-maintainable yaml file representation into something that can be tightly pasted into a JSON string value without the arguably more unsightly carriage returns / whitespace that would be delivered with a literal copy/paste of a Kubernetes manifest.
+The reason for the unsightly base64 encoded input type is to optimize delivery payload, and to squash a human-maintainable yaml file representation into something that can be tightly pasted into a JSON string value without the arguably more unsightly carriage returns / whitespace that would be delivered with a literal copy/paste of a Kubernetes manifest.
 
 Finally, the `addons.enabled` boolean property was omitted above; that's by design. If you specify a `containers` configuration, aks-engine assumes you're enabling the addon. The very first example above demonstrates a simple "enable this addon with default configuration" declaration.
 
@@ -576,7 +576,7 @@ A cluster can have 0 to 12 agent pool profiles. Agent Pool Profiles are used for
 | Name                             | Required | Description                                                                                                                                                                      |
 | -------------------------------- | -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | adminUsername                    | yes      | Describes the username to be used on all linux clusters                                                                                                                          |
-| ssh.publicKeys.keyData           | yes      | The public SSH key used for authenticating access to all Linux nodes in the cluster                                                                                              |
+| ssh.publicKeys[].keyData           | yes      | The public SSH key used for authenticating access to all Linux nodes in the cluster                                                                                              |
 | secrets                          | no       | Specifies an array of key vaults to pull secrets from and what secrets to pull from each                                                                                         |
 | customSearchDomain.name          | no       | describes the search domain to be used on all linux clusters                                                                                                                     |
 | customSearchDomain.realmUser     | no       | describes the realm user with permissions to update dns registries on Windows Server DNS                                                                                         |
@@ -584,6 +584,47 @@ A cluster can have 0 to 12 agent pool profiles. Agent Pool Profiles are used for
 | customNodesDNS.dnsServer         | no       | describes the IP address of the DNS Server                                                                                                                                       |
 
 Here are instructions for [generating a public/private key pair][ssh] for `ssh.publicKeys.keyData`.
+
+
+#### Notes on SSH public keys
+
+At least one SSH key is required, but multiple are supported when deploying Kubernetes.
+
+Here's a minimal example using just one key:
+
+```
+    "linuxProfile": {
+      "adminUsername": "azureuser",
+      "ssh": {
+        "publicKeys": [
+          {
+            "keyData": "ssh-rsa AAAA...w=="
+          }
+        ]
+      }
+    },
+```
+
+
+And an example using two keys.
+
+
+```json
+    "linuxProfile": {
+      "adminUsername": "azureuser",
+      "ssh": {
+        "publicKeys": [
+          {
+            "keyData": "ssh-rsa AAAA...w=="
+          },
+          {
+            "keyData": "ssh-rsa AAAA...w=="
+          }
+        ]
+      }
+    },
+```
+
 
 #### secrets
 
@@ -620,7 +661,8 @@ https://{keyvaultname}.vault.azure.net:443/secrets/{secretName}/{version}
 | windowsSku                       | no       | SKU usedto find Windows VM to deploy from marketplace. Default: `Datacenter-Core-1809-with-Containers-smalldisk` |
 | imageVersion                     | no       | Specific image version to deploy from marketplace.  Default: `latest` |
 | windowsImageSourceURL            | no       | Path to an existing Azure storage blob with a sysprepped VHD. This is used to test pre-release or customized VHD files that you have uploaded to Azure. If provided, the above 4 parameters are ignored. |
-| sshEnabled                       | no       | If set to `true`, OpenSSH will be installed on windows nodes to allow for ssh remoting. **Only for Windows version 1809 or 2019** |
+| sshEnabled                       | no       | If set to `true`, OpenSSH will be installed on windows nodes to allow for ssh remoting. **Only for Windows version 1809 or 2019** . The same SSH authorized public key(s) will be added from [linuxProfile.ssh.publicKeys](#linuxProfile) |
+
 
 #### Choosing a Windows version
 

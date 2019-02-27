@@ -89,7 +89,7 @@ func (client VirtualMachinesClient) CapturePreparer(ctx context.Context, resourc
 		"vmName":            autorest.Encode("path", VMName),
 	}
 
-	const APIVersion = "2018-04-01"
+	const APIVersion = "2018-10-01"
 	queryParameters := map[string]interface{}{
 		"api-version": APIVersion,
 	}
@@ -169,7 +169,7 @@ func (client VirtualMachinesClient) ConvertToManagedDisksPreparer(ctx context.Co
 		"vmName":            autorest.Encode("path", VMName),
 	}
 
-	const APIVersion = "2018-04-01"
+	const APIVersion = "2018-10-01"
 	queryParameters := map[string]interface{}{
 		"api-version": APIVersion,
 	}
@@ -267,7 +267,7 @@ func (client VirtualMachinesClient) CreateOrUpdatePreparer(ctx context.Context, 
 		"vmName":            autorest.Encode("path", VMName),
 	}
 
-	const APIVersion = "2018-04-01"
+	const APIVersion = "2018-10-01"
 	queryParameters := map[string]interface{}{
 		"api-version": APIVersion,
 	}
@@ -347,7 +347,7 @@ func (client VirtualMachinesClient) DeallocatePreparer(ctx context.Context, reso
 		"vmName":            autorest.Encode("path", VMName),
 	}
 
-	const APIVersion = "2018-04-01"
+	const APIVersion = "2018-10-01"
 	queryParameters := map[string]interface{}{
 		"api-version": APIVersion,
 	}
@@ -423,7 +423,7 @@ func (client VirtualMachinesClient) DeletePreparer(ctx context.Context, resource
 		"vmName":            autorest.Encode("path", VMName),
 	}
 
-	const APIVersion = "2018-04-01"
+	const APIVersion = "2018-10-01"
 	queryParameters := map[string]interface{}{
 		"api-version": APIVersion,
 	}
@@ -505,7 +505,7 @@ func (client VirtualMachinesClient) GeneralizePreparer(ctx context.Context, reso
 		"vmName":            autorest.Encode("path", VMName),
 	}
 
-	const APIVersion = "2018-04-01"
+	const APIVersion = "2018-10-01"
 	queryParameters := map[string]interface{}{
 		"api-version": APIVersion,
 	}
@@ -582,7 +582,7 @@ func (client VirtualMachinesClient) GetPreparer(ctx context.Context, resourceGro
 		"vmName":            autorest.Encode("path", VMName),
 	}
 
-	const APIVersion = "2018-04-01"
+	const APIVersion = "2018-10-01"
 	queryParameters := map[string]interface{}{
 		"api-version": APIVersion,
 	}
@@ -662,7 +662,7 @@ func (client VirtualMachinesClient) InstanceViewPreparer(ctx context.Context, re
 		"vmName":            autorest.Encode("path", VMName),
 	}
 
-	const APIVersion = "2018-04-01"
+	const APIVersion = "2018-10-01"
 	queryParameters := map[string]interface{}{
 		"api-version": APIVersion,
 	}
@@ -739,7 +739,7 @@ func (client VirtualMachinesClient) ListPreparer(ctx context.Context, resourceGr
 		"subscriptionId":    autorest.Encode("path", client.SubscriptionID),
 	}
 
-	const APIVersion = "2018-04-01"
+	const APIVersion = "2018-10-01"
 	queryParameters := map[string]interface{}{
 		"api-version": APIVersion,
 	}
@@ -850,7 +850,7 @@ func (client VirtualMachinesClient) ListAllPreparer(ctx context.Context) (*http.
 		"subscriptionId": autorest.Encode("path", client.SubscriptionID),
 	}
 
-	const APIVersion = "2018-04-01"
+	const APIVersion = "2018-10-01"
 	queryParameters := map[string]interface{}{
 		"api-version": APIVersion,
 	}
@@ -964,7 +964,7 @@ func (client VirtualMachinesClient) ListAvailableSizesPreparer(ctx context.Conte
 		"vmName":            autorest.Encode("path", VMName),
 	}
 
-	const APIVersion = "2018-04-01"
+	const APIVersion = "2018-10-01"
 	queryParameters := map[string]interface{}{
 		"api-version": APIVersion,
 	}
@@ -1046,7 +1046,7 @@ func (client VirtualMachinesClient) ListByLocationPreparer(ctx context.Context, 
 		"subscriptionId": autorest.Encode("path", client.SubscriptionID),
 	}
 
-	const APIVersion = "2018-04-01"
+	const APIVersion = "2018-10-01"
 	queryParameters := map[string]interface{}{
 		"api-version": APIVersion,
 	}
@@ -1154,7 +1154,7 @@ func (client VirtualMachinesClient) PerformMaintenancePreparer(ctx context.Conte
 		"vmName":            autorest.Encode("path", VMName),
 	}
 
-	const APIVersion = "2018-04-01"
+	const APIVersion = "2018-10-01"
 	queryParameters := map[string]interface{}{
 		"api-version": APIVersion,
 	}
@@ -1231,7 +1231,7 @@ func (client VirtualMachinesClient) PowerOffPreparer(ctx context.Context, resour
 		"vmName":            autorest.Encode("path", VMName),
 	}
 
-	const APIVersion = "2018-04-01"
+	const APIVersion = "2018-10-01"
 	queryParameters := map[string]interface{}{
 		"api-version": APIVersion,
 	}
@@ -1307,7 +1307,7 @@ func (client VirtualMachinesClient) RedeployPreparer(ctx context.Context, resour
 		"vmName":            autorest.Encode("path", VMName),
 	}
 
-	const APIVersion = "2018-04-01"
+	const APIVersion = "2018-10-01"
 	queryParameters := map[string]interface{}{
 		"api-version": APIVersion,
 	}
@@ -1336,6 +1336,88 @@ func (client VirtualMachinesClient) RedeploySender(req *http.Request) (future Vi
 // RedeployResponder handles the response to the Redeploy request. The method always
 // closes the http.Response Body.
 func (client VirtualMachinesClient) RedeployResponder(resp *http.Response) (result autorest.Response, err error) {
+	err = autorest.Respond(
+		resp,
+		client.ByInspecting(),
+		azure.WithErrorUnlessStatusCode(http.StatusOK, http.StatusAccepted),
+		autorest.ByClosing())
+	result.Response = resp
+	return
+}
+
+// Reimage reimages the virtual machine which has an ephemeral OS disk back to its initial state.
+// Parameters:
+// resourceGroupName - the name of the resource group.
+// VMName - the name of the virtual machine.
+// parameters - parameters supplied to the Reimage Virtual Machine operation.
+func (client VirtualMachinesClient) Reimage(ctx context.Context, resourceGroupName string, VMName string, parameters *VirtualMachineReimageParameters) (result VirtualMachinesReimageFuture, err error) {
+	if tracing.IsEnabled() {
+		ctx = tracing.StartSpan(ctx, fqdn+"/VirtualMachinesClient.Reimage")
+		defer func() {
+			sc := -1
+			if result.Response() != nil {
+				sc = result.Response().StatusCode
+			}
+			tracing.EndSpan(ctx, sc, err)
+		}()
+	}
+	req, err := client.ReimagePreparer(ctx, resourceGroupName, VMName, parameters)
+	if err != nil {
+		err = autorest.NewErrorWithError(err, "compute.VirtualMachinesClient", "Reimage", nil, "Failure preparing request")
+		return
+	}
+
+	result, err = client.ReimageSender(req)
+	if err != nil {
+		err = autorest.NewErrorWithError(err, "compute.VirtualMachinesClient", "Reimage", result.Response(), "Failure sending request")
+		return
+	}
+
+	return
+}
+
+// ReimagePreparer prepares the Reimage request.
+func (client VirtualMachinesClient) ReimagePreparer(ctx context.Context, resourceGroupName string, VMName string, parameters *VirtualMachineReimageParameters) (*http.Request, error) {
+	pathParameters := map[string]interface{}{
+		"resourceGroupName": autorest.Encode("path", resourceGroupName),
+		"subscriptionId":    autorest.Encode("path", client.SubscriptionID),
+		"vmName":            autorest.Encode("path", VMName),
+	}
+
+	const APIVersion = "2018-10-01"
+	queryParameters := map[string]interface{}{
+		"api-version": APIVersion,
+	}
+
+	preparer := autorest.CreatePreparer(
+		autorest.AsContentType("application/json; charset=utf-8"),
+		autorest.AsPost(),
+		autorest.WithBaseURL(client.BaseURI),
+		autorest.WithPathParameters("/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Compute/virtualMachines/{vmName}/reimage", pathParameters),
+		autorest.WithQueryParameters(queryParameters))
+	if parameters != nil {
+		preparer = autorest.DecoratePreparer(preparer,
+			autorest.WithJSON(parameters))
+	}
+	return preparer.Prepare((&http.Request{}).WithContext(ctx))
+}
+
+// ReimageSender sends the Reimage request. The method will close the
+// http.Response Body if it receives an error.
+func (client VirtualMachinesClient) ReimageSender(req *http.Request) (future VirtualMachinesReimageFuture, err error) {
+	var resp *http.Response
+	resp, err = autorest.SendWithSender(client, req,
+		azure.DoRetryWithRegistration(client.Client))
+	if err != nil {
+		return
+	}
+	future.Future, err = azure.NewFutureFromResponse(resp)
+	return
+}
+
+// ReimageResponder handles the response to the Reimage request. The method always
+// closes the http.Response Body.
+func (client VirtualMachinesClient) ReimageResponder(resp *http.Response) (result autorest.Response, err error) {
 	err = autorest.Respond(
 		resp,
 		client.ByInspecting(),
@@ -1383,7 +1465,7 @@ func (client VirtualMachinesClient) RestartPreparer(ctx context.Context, resourc
 		"vmName":            autorest.Encode("path", VMName),
 	}
 
-	const APIVersion = "2018-04-01"
+	const APIVersion = "2018-10-01"
 	queryParameters := map[string]interface{}{
 		"api-version": APIVersion,
 	}
@@ -1466,7 +1548,7 @@ func (client VirtualMachinesClient) RunCommandPreparer(ctx context.Context, reso
 		"vmName":            autorest.Encode("path", VMName),
 	}
 
-	const APIVersion = "2018-04-01"
+	const APIVersion = "2018-10-01"
 	queryParameters := map[string]interface{}{
 		"api-version": APIVersion,
 	}
@@ -1545,7 +1627,7 @@ func (client VirtualMachinesClient) StartPreparer(ctx context.Context, resourceG
 		"vmName":            autorest.Encode("path", VMName),
 	}
 
-	const APIVersion = "2018-04-01"
+	const APIVersion = "2018-10-01"
 	queryParameters := map[string]interface{}{
 		"api-version": APIVersion,
 	}
@@ -1622,7 +1704,7 @@ func (client VirtualMachinesClient) UpdatePreparer(ctx context.Context, resource
 		"vmName":            autorest.Encode("path", VMName),
 	}
 
-	const APIVersion = "2018-04-01"
+	const APIVersion = "2018-10-01"
 	queryParameters := map[string]interface{}{
 		"api-version": APIVersion,
 	}

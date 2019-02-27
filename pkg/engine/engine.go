@@ -646,6 +646,11 @@ func getBase64CustomScript(csFilename string) string {
 	return getBase64CustomScriptFromStr(csStr)
 }
 
+func getStringFromBase64(str string) (string, error) {
+	decodedBytes, err := base64.StdEncoding.DecodeString(str)
+	return string(decodedBytes), err
+}
+
 // getBase64CustomScript will return a base64 of the CSE
 func getBase64CustomScriptFromStr(str string) string {
 	var gzipB bytes.Buffer
@@ -719,7 +724,11 @@ func getContainerAddonsString(properties *api.Properties, sourcePath string) str
 		if setting.isEnabled {
 			var input string
 			if setting.rawScript != "" {
-				input = setting.rawScript
+				var err error
+				input, err = getStringFromBase64(setting.rawScript)
+				if err != nil {
+					return ""
+				}
 			} else {
 				orchProfile := properties.OrchestratorProfile
 				versions := strings.Split(orchProfile.OrchestratorVersion, ".")

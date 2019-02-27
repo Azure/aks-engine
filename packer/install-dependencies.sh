@@ -1,7 +1,4 @@
 #!/bin/bash
-
-CONTAINERD_DOWNLOAD_URL_BASE="https://storage.googleapis.com/cri-containerd-release/"
-
 source /home/packer/provision_installs.sh
 source /home/packer/provision_source.sh
 
@@ -18,6 +15,7 @@ installDeps
 if [[ ${FEATURE_FLAGS} == *"docker-engine"* ]]; then
     DOCKER_ENGINE_REPO="https://apt.dockerproject.org/repo"
     installDockerEngine
+    overrideDockerEngineStorageDriver
     installGPUDrivers
 else
     MOBY_VERSION="3.0.4"
@@ -40,8 +38,8 @@ for CNI_PLUGIN_VERSION in $CNI_PLUGIN_VERSIONS; do
     downloadCNI
 done
 
-for CONTAINERD_VERSION in $CONTAINERD_VERSIONS; do
-    CONTAINERD_DOWNLOAD_URL="${CONTAINERD_DOWNLOAD_URL_BASE}cri-containerd-${CONTAINERD_VERSION}.linux-amd64.tar.gz"
+CONTAINERD_DOWNLOAD_URL_BASE="https://storage.googleapis.com/cri-containerd-release/"
+for CONTAINERD_VERSION in ${CONTAINERD_VERSIONS}; do
     downloadContainerd
 done
 
@@ -175,7 +173,7 @@ done
 pullContainerImage "docker" "busybox"
 
 # TODO: fetch supported k8s versions from an aks-engine command instead of hardcoding them here
-K8S_VERSIONS="1.9.10 1.9.11 1.10.12 1.10.13 1.11.6 1.11.7 1.12.4 1.12.5 1.13.2 1.13.3"
+K8S_VERSIONS="1.9.10 1.9.11 1.10.12 1.10.13 1.11.6 1.11.7 1.12.5 1.12.6 1.13.2 1.13.3"
 
 for KUBERNETES_VERSION in ${K8S_VERSIONS}; do
     HYPERKUBE_URL="k8s.gcr.io/hyperkube-amd64:v${KUBERNETES_VERSION}"

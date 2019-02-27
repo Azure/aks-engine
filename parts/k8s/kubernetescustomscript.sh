@@ -2,6 +2,7 @@
 ERR_FILE_WATCH_TIMEOUT=6 # Timeout waiting for a file
 set -x
 echo `date`,`hostname`, startcustomscript>>/opt/m
+AZURE_STACK_ENV="azurestackcloud"
 
 script_lib=/opt/azure/containers/provision_source.sh
 for i in $(seq 1 3600); do
@@ -23,6 +24,12 @@ source $install_script
 config_script=/opt/azure/containers/provision_configs.sh
 wait_for_file 3600 1 $config_script || exit $ERR_FILE_WATCH_TIMEOUT
 source $config_script
+
+if [[ "${TARGET_ENVIRONMENT,,}" == "${AZURE_STACK_ENV}"  ]]; then 
+    config_script_custom_cloud=/opt/azure/containers/provision_configs_custom_cloud.sh
+    wait_for_file 3600 1 $config_script_custom_cloud || exit $ERR_FILE_WATCH_TIMEOUT
+    source $config_script_custom_cloud
+fi
 
 CUSTOM_SEARCH_DOMAIN_SCRIPT=/opt/azure/containers/setup-custom-search-domains.sh
 
@@ -124,6 +131,11 @@ elif [[ "$CONTAINER_RUNTIME" == "kata-containers" ]]; then
 fi
 
 configureK8s
+
+if [[ "${TARGET_ENVIRONMENT,,}" == "${AZURE_STACK_ENV}"  ]]; then 
+    configureK8sCustomCloud
+fi
+
 configureCNI
 
 if [[ ! -z "${MASTER_NODE}" ]]; then

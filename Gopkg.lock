@@ -10,12 +10,12 @@
   version = "v0.2.0"
 
 [[projects]]
-  digest = "1:5c21f6fe78fcf62e7ec4b0213d271341dded178e7e2067ce2e0ef67177bd4f4a"
+  digest = "1:c22d3f330689215420ec360a2247b2417de23989c8ca26b7b87a5d9cbe828dde"
   name = "github.com/Azure/azure-sdk-for-go"
   packages = [
     "services/apimanagement/mgmt/2017-03-01/apimanagement",
     "services/authorization/mgmt/2015-07-01/authorization",
-    "services/compute/mgmt/2018-04-01/compute",
+    "services/compute/mgmt/2018-10-01/compute",
     "services/graphrbac/1.6/graphrbac",
     "services/network/mgmt/2018-08-01/network",
     "services/preview/msi/mgmt/2015-08-31-preview/msi",
@@ -824,7 +824,7 @@
   input-imports = [
     "github.com/Azure/azure-sdk-for-go/services/apimanagement/mgmt/2017-03-01/apimanagement",
     "github.com/Azure/azure-sdk-for-go/services/authorization/mgmt/2015-07-01/authorization",
-    "github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2018-04-01/compute",
+    "github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2018-10-01/compute",
     "github.com/Azure/azure-sdk-for-go/services/graphrbac/1.6/graphrbac",
     "github.com/Azure/azure-sdk-for-go/services/network/mgmt/2018-08-01/network",
     "github.com/Azure/azure-sdk-for-go/services/preview/msi/mgmt/2015-08-31-preview/msi",

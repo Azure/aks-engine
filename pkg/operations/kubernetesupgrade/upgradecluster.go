@@ -13,7 +13,7 @@ import (
 	"github.com/Azure/aks-engine/pkg/armhelpers"
 	"github.com/Azure/aks-engine/pkg/armhelpers/utils"
 	"github.com/Azure/aks-engine/pkg/i18n"
-	"github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2018-04-01/compute"
+	"github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2018-10-01/compute"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 )
@@ -86,7 +86,7 @@ func (uc *UpgradeCluster) UpgradeCluster(az armhelpers.AKSEngineClient, kubeConf
 
 	var upgrader UpgradeWorkFlow
 	upgradeVersion := uc.DataModel.Properties.OrchestratorProfile.OrchestratorVersion
-	uc.Logger.Infof("Upgrading to Kubernetes version %s\n", upgradeVersion)
+	uc.Logger.Infof("Upgrading to Kubernetes version %s", upgradeVersion)
 	u := &Upgrader{}
 	u.Init(uc.Translator, uc.Logger, uc.ClusterTopology, uc.Client, kubeConfig, uc.StepTimeout, aksEngineVersion)
 	upgrader = u
@@ -95,7 +95,7 @@ func (uc *UpgradeCluster) UpgradeCluster(az armhelpers.AKSEngineClient, kubeConf
 		return err
 	}
 
-	uc.Logger.Infof("Cluster upgraded successfully to Kubernetes version %s\n", upgradeVersion)
+	uc.Logger.Infof("Cluster upgraded successfully to Kubernetes version %s", upgradeVersion)
 	return nil
 }
 
@@ -166,7 +166,7 @@ func (uc *UpgradeCluster) getClusterNodeStatus(az armhelpers.AKSEngineClient, re
 		for _, vm := range vmListPage.Values() {
 			// Windows VMs contain a substring of the name suffix
 			if !strings.Contains(*(vm.Name), uc.NameSuffix) && !strings.Contains(*(vm.Name), uc.NameSuffix[:4]+"k8s") {
-				uc.Logger.Infof("Skipping VM: %s for upgrade as it does not belong to cluster with expected name suffix: %s\n",
+				uc.Logger.Infof("Skipping VM: %s for upgrade as it does not belong to cluster with expected name suffix: %s",
 					*vm.Name, uc.NameSuffix)
 				continue
 			}
@@ -187,14 +187,14 @@ func (uc *UpgradeCluster) getClusterNodeStatus(az armhelpers.AKSEngineClient, re
 			// If the current version is different than the desired version then we add the VM to the list of VMs to upgrade.
 			if currentVersion != goalVersion {
 				if strings.Contains(*(vm.Name), MasterVMNamePrefix) {
-					uc.Logger.Infof("Master VM name: %s, orchestrator: %s (MasterVMs)\n", *vm.Name, currentVersion)
+					uc.Logger.Infof("Master VM name: %s, orchestrator: %s (MasterVMs)", *vm.Name, currentVersion)
 					*uc.MasterVMs = append(*uc.MasterVMs, vm)
 				} else {
 					uc.addVMToAgentPool(vm, true)
 				}
 			} else if currentVersion == goalVersion {
 				if strings.Contains(*(vm.Name), MasterVMNamePrefix) {
-					uc.Logger.Infof("Master VM name: %s, orchestrator: %s (UpgradedMasterVMs)\n", *vm.Name, currentVersion)
+					uc.Logger.Infof("Master VM name: %s, orchestrator: %s (UpgradedMasterVMs)", *vm.Name, currentVersion)
 					*uc.UpgradedMasterVMs = append(*uc.UpgradedMasterVMs, vm)
 				} else {
 					uc.addVMToAgentPool(vm, false)
@@ -297,7 +297,7 @@ func (uc *UpgradeCluster) addVMToAgentPool(vm compute.VirtualMachine, isUpgradab
 	if vm.StorageProfile.OsDisk.OsType == compute.Windows {
 		poolPrefix, _, _, _, err = utils.WindowsVMNameParts(*vm.Name)
 		if !strings.Contains(uc.NameSuffix, poolPrefix) {
-			uc.Logger.Infof("Skipping VM: %s for upgrade as it does not belong to cluster with expected name suffix: %s\n",
+			uc.Logger.Infof("Skipping VM: %s for upgrade as it does not belong to cluster with expected name suffix: %s",
 				*vm.Name, uc.NameSuffix)
 			return nil
 		}
@@ -318,7 +318,7 @@ func (uc *UpgradeCluster) addVMToAgentPool(vm compute.VirtualMachine, isUpgradab
 		}
 
 		if !strings.EqualFold(uc.NameSuffix, poolPrefix) {
-			uc.Logger.Infof("Skipping VM: %s for upgrade as it does not belong to cluster with expected name suffix: %s\n",
+			uc.Logger.Infof("Skipping VM: %s for upgrade as it does not belong to cluster with expected name suffix: %s",
 				*vm.Name, uc.NameSuffix)
 			return nil
 		}
@@ -334,11 +334,11 @@ func (uc *UpgradeCluster) addVMToAgentPool(vm compute.VirtualMachine, isUpgradab
 		orchestrator = *vm.Tags["orchestrator"]
 	}
 	if isUpgradableVM {
-		uc.Logger.Infof("Adding Agent VM: %s, orchestrator: %s to pool: %s (AgentVMs)\n",
+		uc.Logger.Infof("Adding Agent VM: %s, orchestrator: %s to pool: %s (AgentVMs)",
 			*vm.Name, orchestrator, poolIdentifier)
 		*uc.AgentPools[poolIdentifier].AgentVMs = append(*uc.AgentPools[poolIdentifier].AgentVMs, vm)
 	} else {
-		uc.Logger.Infof("Adding Agent VM: %s, orchestrator: %s to pool: %s (UpgradedAgentVMs)\n",
+		uc.Logger.Infof("Adding Agent VM: %s, orchestrator: %s to pool: %s (UpgradedAgentVMs)",
 			*vm.Name, orchestrator, poolIdentifier)
 		*uc.AgentPools[poolIdentifier].UpgradedAgentVMs = append(*uc.AgentPools[poolIdentifier].UpgradedAgentVMs, vm)
 	}

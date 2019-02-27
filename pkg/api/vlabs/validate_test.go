@@ -639,7 +639,7 @@ func Test_Properties_ValidateNetworkPolicy(t *testing.T) {
 		)
 	}
 
-	p.OrchestratorProfile.KubernetesConfig.NetworkPolicy = "cilium"
+	p.OrchestratorProfile.KubernetesConfig.NetworkPolicy = NetworkPolicyCilium
 	if err := p.OrchestratorProfile.KubernetesConfig.validateNetworkPolicy(k8sVersion, true); err == nil {
 		t.Errorf(
 			"should error on cilium for windows clusters",
@@ -698,7 +698,7 @@ func Test_Properties_ValidateNetworkPluginPlusPolicy(t *testing.T) {
 	for _, config := range []k8sNetworkConfig{
 		{
 			networkPlugin: "azure",
-			networkPolicy: "cilium",
+			networkPolicy: NetworkPolicyCilium,
 		},
 		{
 			networkPlugin: "azure",
@@ -732,12 +732,29 @@ func Test_Properties_ValidateNetworkPluginPlusPolicy(t *testing.T) {
 func TestProperties_ValidateLinuxProfile(t *testing.T) {
 	cs := getK8sDefaultContainerService(true)
 	cs.Properties.LinuxProfile.SSH = struct {
-		PublicKeys []PublicKey `json:"publicKeys" validate:"required,len=1"`
+		PublicKeys []PublicKey `json:"publicKeys" validate:"required,min=1"`
 	}{
 		PublicKeys: []PublicKey{{}},
 	}
 	expectedMsg := "KeyData in LinuxProfile.SSH.PublicKeys cannot be empty string"
 	err := cs.Validate(true)
+
+	if err.Error() != expectedMsg {
+		t.Errorf("expected error message : %s to be thrown, but got : %s", expectedMsg, err.Error())
+	}
+
+	cs.Properties.LinuxProfile.SSH = struct {
+		PublicKeys []PublicKey `json:"publicKeys" validate:"required,min=1"`
+	}{
+		PublicKeys: []PublicKey{
+			{
+				KeyData: "not empty",
+			},
+			{},
+		},
+	}
+	expectedMsg = "KeyData in LinuxProfile.SSH.PublicKeys cannot be empty string"
+	err = cs.Validate(true)
 
 	if err.Error() != expectedMsg {
 		t.Errorf("expected error message : %s to be thrown, but got : %s", expectedMsg, err.Error())
@@ -1038,7 +1055,7 @@ func getK8sDefaultContainerService(hasWindows bool) *ContainerService {
 		LinuxProfile: &LinuxProfile{
 			AdminUsername: "azureuser",
 			SSH: struct {
-				PublicKeys []PublicKey `json:"publicKeys" validate:"required,len=1"`
+				PublicKeys []PublicKey `json:"publicKeys" validate:"required,min=1"`
 			}{
 				PublicKeys: []PublicKey{{
 					KeyData: "publickeydata",

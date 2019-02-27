@@ -57,12 +57,12 @@ var (
 			networkPolicy: "",
 		},
 		{
-			networkPlugin: "cilium",
+			networkPlugin: NetworkPolicyCilium,
 			networkPolicy: "",
 		},
 		{
-			networkPlugin: "cilium",
-			networkPolicy: "cilium",
+			networkPlugin: NetworkPluginCilium,
+			networkPolicy: NetworkPolicyCilium,
 		},
 		{
 			networkPlugin: "kubenet",
@@ -78,7 +78,7 @@ var (
 		},
 		{
 			networkPlugin: "",
-			networkPolicy: "cilium",
+			networkPolicy: NetworkPolicyCilium,
 		},
 		{
 			networkPlugin: "",
@@ -479,8 +479,10 @@ func (a *Properties) validateZones() error {
 }
 
 func (a *Properties) validateLinuxProfile() error {
-	if e := validate.Var(a.LinuxProfile.SSH.PublicKeys[0].KeyData, "required"); e != nil {
-		return errors.New("KeyData in LinuxProfile.SSH.PublicKeys cannot be empty string")
+	for _, publicKey := range a.LinuxProfile.SSH.PublicKeys {
+		if e := validate.Var(publicKey.KeyData, "required"); e != nil {
+			return errors.New("KeyData in LinuxProfile.SSH.PublicKeys cannot be empty string")
+		}
 	}
 	return validateKeyVaultSecrets(a.LinuxProfile.Secrets, false)
 }
@@ -1195,7 +1197,7 @@ func (k *KubernetesConfig) validateNetworkPolicy(k8sVersion string, hasWindows b
 	}
 
 	// Temporary safety check, to be removed when Windows support is added.
-	if (networkPolicy == "calico" || networkPolicy == "cilium" || networkPolicy == "flannel") && hasWindows {
+	if (networkPolicy == "calico" || networkPolicy == NetworkPolicyCilium || networkPolicy == "flannel") && hasWindows {
 		return errors.Errorf("networkPolicy '%s' is not supporting windows agents", networkPolicy)
 	}
 

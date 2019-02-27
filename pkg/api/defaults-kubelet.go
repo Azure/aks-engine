@@ -46,6 +46,7 @@ func (cs *ContainerService) setKubeletConfig() {
 	staticWindowsKubeletConfig["--hairpin-mode"] = "promiscuous-bridge"
 	staticWindowsKubeletConfig["--image-pull-progress-deadline"] = "20m"
 	staticWindowsKubeletConfig["--resolv-conf"] = "\"\"\"\""
+	staticWindowsKubeletConfig["--eviction-hard"] = "\"\"\"\""
 
 	// Default Kubelet config
 	defaultKubeletConfig := map[string]string{
