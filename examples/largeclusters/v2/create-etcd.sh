@@ -1,6 +1,7 @@
 #!/bin/bash
 
-set -eo pipefail
+set -e
+set -o pipefail
 
 CURRENT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
@@ -14,7 +15,7 @@ CURRENT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 #VM_SIZE						etcd vm size										optional(default: Standard_DS2_v2)
 #OUTPUT_DIR					location of generated certs			optional(default /tmp/${BASE_CLUSTER_NAME}
 #ETCD_VERSION       etcd version										optional, defaults to 3.3.10
-
+#REUSE_CERTS_DIR		reuse existing certs						optional, reuse existing certs path is expected to be base/etcd.server|etcd.client
 # Global Vars
 AV_SET_NAME=""
 ADMIN_USER=${ADMIN_USER:-azureuser}
@@ -122,6 +123,33 @@ validate_and_default(){
 
 	AV_SET_NAME="${BASE_CLUSTER_NAME}_avset"
 	inf "Availability set name: ${AV_SET_NAME}"
+
+	if [[ ! -z "${REUSE_CERTS_DIR}" ]]; then
+		wrn "will not generate certs, reusing certs in ${REUSE_CERTS_DIR}"
+		reuse_server_cert_dir="${REUSE_CERTS_DIR}/${ETCD_SERVER_CERT_DIR}"
+		reuse_client_cert_dir="${REUSE_CERTS_DIR}/${ETCD_CLIENT_CERT_DIR}"
+
+		reuse_server_ca_crt="${reuse_server_cert_dir}/server.ca.crt"
+		reuse_server_ca_key="${reuse_server_cert_dir}/server.ca.key"
+		reuse_server_crt="${reuse_server_cert_dir}/server.crt"
+		reuse_server_key="${reuse_server_cert_dir}/server.key"
+
+		reuse_client_ca_crt="${reuse_client_cert_dir}/client.ca.crt"
+		reuse_client_ca_key="${reuse_client_cert_dir}/client.ca.key"
+		reuse_client_crt="${reuse_client_cert_dir}/client.crt"
+		reuse_client_key="${reuse_client_cert_dir}/client.key"
+
+		# check if files do exist
+		if [[ ! -f "${reuse_server_ca_crt}" ]] || [[ ! -f "${reuse_server_ca_key}" ]] || [[ ! -f "${reuse_server_crt}" ]] || [[ ! -f "${reuse_server_key}" ]]; then
+			err "server crt bundles is incomplete"
+			exit 1
+		fi
+		
+		if [[ ! -f "${reuse_client_ca_crt}" ]] || [[ ! -f "${reuse_client_ca_key}" ]] || [[ ! -f "${reuse_client_crt}" ]] || [[ ! -f "${reuse_client_key}" ]]; then
+			err "client crt bundles is incomplete"
+			exit 1	
+		fi
+	fi
 }
 
 create_vms(){
@@ -158,75 +186,85 @@ create_vms(){
 
 generate_certs(){
 	local server_cert_dir="${OUTPUT_DIR}/${ETCD_SERVER_CERT_DIR}"
-	local peer_cert_dir="${OUTPUT_DIR}/${ETCD_PEER_CERT_DIR}"
 	local client_cert_dir="${OUTPUT_DIR}/${ETCD_CLIENT_CERT_DIR}"
 
 	mkdir -p "${server_cert_dir}"
-	mkdir -p "${peer_cert_dir}"
 	mkdir -p "${client_cert_dir}"
 
-	inf "Generating etcd certs for server"
-	#CA
-	openssl genrsa -out "${server_cert_dir}/server.ca.key"  2048 2>/dev/null
-  #CA crt
-	openssl req -x509 \
+	if [[ -z "${REUSE_CERTS_DIR}" ]]; then
+		inf "Generating etcd certs for server"
+		#CA
+		openssl genrsa -out "${server_cert_dir}/server.ca.key"  2048 2>/dev/null
+  	#CA crt
+		openssl req -x509 \
 							-new \
 							-nodes \
 							-key "${server_cert_dir}/server.ca.key" \
 							-days $((5 * 365)) \
 							-out "${server_cert_dir}/server.ca.crt" \
 							-subj "/C=US" 2>/dev/null
-	# key
-	openssl genrsa \
+		# key
+		openssl genrsa \
 					-out "${server_cert_dir}/server.key" 4096 2>/dev/null
 
-  # csr
-	openssl req -new \
+  	# csr
+		openssl req -new \
 							-key "${server_cert_dir}/server.key" \
 							-out "${server_cert_dir}/server.csr" \
 							-subj "/C=US" 2>/dev/null
 
-	# sign
-	openssl x509 -req \
+		#sign
+		openssl x509 -req \
 							-in "${server_cert_dir}/server.csr" \
 							-CA "${server_cert_dir}/server.ca.crt" \
 							-CAkey "${server_cert_dir}/server.ca.key" \
 							-CAcreateserial -out "${server_cert_dir}/server.crt" \
 							-days $((5 * 365))  2>/dev/null
 
-	inf "etcd server certs are in ${server_cert_dir}"
+		inf "etcd server certs are in ${server_cert_dir}"
 	
-	inf "Generating etcd certs for client"
-	#CA
-	openssl genrsa -out "${client_cert_dir}/client.ca.key"  2048 2>/dev/null
-  #CA crt
-	openssl req -x509 \
+		inf "Generating etcd certs for client"
+		#CA
+		openssl genrsa -out "${client_cert_dir}/client.ca.key"  2048 2>/dev/null
+  	#CA crt
+		openssl req -x509 \
 							-new \
 							-nodes \
 							-key "${client_cert_dir}/client.ca.key" \
 							-days $((5 * 365)) \
 							-out "${client_cert_dir}/client.ca.crt" \
 							-subj "/C=US" 2>/dev/null
-	# key
-	openssl genrsa \
+		# key
+		openssl genrsa \
 					-out "${client_cert_dir}/client.key" 4096 2>/dev/null
 
-  # csr
-	openssl req -new \
+  	# csr
+		openssl req -new \
 							-key "${client_cert_dir}/client.key" \
 							-out "${client_cert_dir}/client.csr" \
 							-subj "/C=US" 2>/dev/null
 
-	# sign
-	openssl x509 -req \
+		# sign
+		openssl x509 -req \
 							-in "${client_cert_dir}/client.csr" \
 							-CA "${client_cert_dir}/client.ca.crt" \
 							-CAkey "${client_cert_dir}/client.ca.key" \
 							-CAcreateserial -out "${client_cert_dir}/client.crt" \
 							-days $((5 * 365))  2>/dev/null
 
- inf "etcd client certs are in ${client_cert_dir}"	
+ 		inf "etcd client certs are in ${client_cert_dir}"	
+	else
+		wrn "copying cert bundles from ${REUSE_CERTS_DIR}"
+		cp "${reuse_server_ca_crt}" "${server_cert_dir}/server.ca.crt"
+		cp "${reuse_server_ca_key}"  "${server_cert_dir}/server.ca.key"
+		cp "${reuse_server_crt}" "${server_cert_dir}/server.crt"	
+		cp "${reuse_server_key}" "${server_cert_dir}/server.key"
 
+		cp "${reuse_client_ca_crt}" "${client_cert_dir}/client.ca.crt"
+		cp "${reuse_client_ca_key}" "${client_cert_dir}/client.ca.key"
+		cp "${reuse_client_crt}" "${client_cert_dir}/client.crt"
+		cp "${reuse_client_key}" "${client_cert_dir}/client.key"
+	fi
 }
 
 vmName_ByIdx(){
@@ -273,10 +311,6 @@ pre_work(){
 	sed -i "s|<ETCD_ENV>|$(echo -n ${ETCD_ENV} | base64 -w 0)|g" ${cloudinit_dst}
 
 	# certs, keys et al
-	sed -i "s|<PEER_CA>|$(cat ${peer_cert_dir}/peer.ca.crt | base64 -w 0)|g" ${cloudinit_dst}
-	sed -i "s|<PEER_CRT>|$(cat ${peer_cert_dir}/peer.crt | base64 -w 0)|g" ${cloudinit_dst}
-	sed -i "s|<PEER_KEY>|$(cat ${peer_cert_dir}/peer.key | base64 -w 0)|g" ${cloudinit_dst}
-
 	sed -i "s|<SERVER_CRT>|$(cat ${server_cert_dir}/server.crt | base64 -w 0)|g" ${cloudinit_dst}
 	sed -i "s|<SERVER_KEY>|$(cat ${server_cert_dir}/server.key | base64 -w 0)|g" ${cloudinit_dst}
 
