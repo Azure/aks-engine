@@ -536,14 +536,7 @@
           {{GetKubernetesMasterCustomData .}}
           "linuxConfiguration": {
               "disablePasswordAuthentication": true,
-              "ssh": {
-                "publicKeys": [
-                  {
-                    "keyData": "[parameters('sshRSAPublicKey')]",
-                    "path": "[variables('sshKeyPath')]"
-                  }
-                ]
-              }
+              "ssh": {{ GetSshPublicKeys }}
             }
             {{if .LinuxProfile.HasSecrets}}
               ,
