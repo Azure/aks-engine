@@ -14,6 +14,7 @@ import (
 	"github.com/Azure/aks-engine/pkg/armhelpers/utils"
 	"github.com/Azure/aks-engine/pkg/i18n"
 	"github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2018-10-01/compute"
+	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 )
 
@@ -182,6 +183,7 @@ func (uc *UpgradeCluster) getClusterNodeStatus(az armhelpers.AKSEngineClient, re
 				continue
 			}
 			currentVersion := uc.getNodeVersion(kubeClient, *vm.Name, vm.Tags)
+
 			if uc.Force {
 				if currentVersion == "" {
 					currentVersion = "Unknown"
@@ -194,6 +196,11 @@ func (uc *UpgradeCluster) getClusterNodeStatus(az armhelpers.AKSEngineClient, re
 				}
 				// If the current version is different than the desired version then we add the VM to the list of VMs to upgrade.
 				if currentVersion != goalVersion {
+					if !uc.DataModel.Properties.IsHostedMasterProfile() {
+						if err := uc.upgradable(currentVersion); err != nil {
+							return err
+						}
+					}
 					uc.addVMToUpgradeSets(vm, currentVersion)
 				} else if currentVersion == goalVersion {
 					uc.addVMToFinishedSets(vm, currentVersion)
@@ -203,6 +210,26 @@ func (uc *UpgradeCluster) getClusterNodeStatus(az armhelpers.AKSEngineClient, re
 	}
 
 	return nil
+}
+
+func (uc *UpgradeCluster) upgradable(currentVersion string) error {
+	nodeVersion := &api.OrchestratorProfile{
+		OrchestratorType:    api.Kubernetes,
+		OrchestratorVersion: currentVersion,
+	}
+	targetVersion := uc.DataModel.Properties.OrchestratorProfile.OrchestratorVersion
+
+	orch, err := api.GetOrchestratorVersionProfile(nodeVersion, uc.DataModel.Properties.HasWindows())
+	if err != nil {
+		return err
+	}
+
+	for _, up := range orch.Upgrades {
+		if up.OrchestratorVersion == targetVersion {
+			return nil
+		}
+	}
+	return errors.Errorf("%s cannot be upgraded to %s", currentVersion, targetVersion)
 }
 
 // getNodeVersion returns a node's current Kubernetes version via Kubernetes API or VM tag.
