@@ -179,7 +179,18 @@
           {{GetKubernetesAgentCustomData .}}
           "linuxConfiguration": {
               "disablePasswordAuthentication": true,
+              {{if HasMultipleSshKeys }}
               "ssh": {{ GetSshPublicKeys }}
+              {{ else }}
+              "ssh": {
+                "publicKeys": [
+                  {
+                    "keyData": "[parameters('sshRSAPublicKey')]",
+                    "path": "[variables('sshKeyPath')]"
+                  }
+                ]
+              }
+              {{ end }}
             }
             {{if HasLinuxSecrets}}
               ,

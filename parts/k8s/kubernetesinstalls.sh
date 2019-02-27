@@ -6,7 +6,6 @@ CNI_CONFIG_DIR="/etc/cni/net.d"
 CNI_BIN_DIR="/opt/cni/bin"
 CNI_DOWNLOADS_DIR="/opt/cni/downloads"
 CONTAINERD_DOWNLOADS_DIR="/opt/containerd/downloads"
-CONTAINERD_DOWNLOAD_URL="${CONTAINERD_DOWNLOAD_URL_BASE}cri-containerd-${CONTAINERD_VERSION}.linux-amd64.tar.gz"
 
 removeEtcd() {
     rm -rf /usr/bin/etcd
@@ -129,6 +128,27 @@ installDockerEngine() {
     fi
 }
 
+overrideDockerEngineStorageDriver() {
+    echo "stopping docker engine"
+    sudo systemctl stop docker
+    cat << EOF > /tmp/daemon.json 
+{
+    "storage-driver": "overlay2",
+    "live-restore": true,
+    "log-driver": "json-file",
+    "log-opts":  {
+        "max-size": "50m",
+        "max-file": "5"
+    }
+}
+EOF
+    sudo mv /tmp/daemon.json /etc/docker/daemon.json
+    echo "cleaning up aufs storage"
+    sudo rm -rf /var/lib/docker/aufs
+    echo "starting docker engine with overlay2 driver"
+    sudo systemctl start docker
+}
+
 installKataContainersRuntime() {
     # TODO incorporate this into packer CI so that it is pre-baked into the VHD image
     echo "Adding Kata Containers repository key..."
@@ -187,6 +207,7 @@ downloadAzureCNI() {
 }
 
 downloadContainerd() {
+    CONTAINERD_DOWNLOAD_URL="${CONTAINERD_DOWNLOAD_URL_BASE}cri-containerd-${CONTAINERD_VERSION}.linux-amd64.tar.gz"
     mkdir -p $CONTAINERD_DOWNLOADS_DIR
     CONTAINERD_TGZ_TMP=$(echo ${CONTAINERD_DOWNLOAD_URL} | cut -d "/" -f 5)
     retrycmd_get_tarball 120 5 "$CONTAINERD_DOWNLOADS_DIR/${CONTAINERD_TGZ_TMP}" ${CONTAINERD_DOWNLOAD_URL} || exit $ERR_CONTAINERD_DOWNLOAD_TIMEOUT
@@ -220,7 +241,7 @@ installContainerd() {
     if [[ "$CURRENT_VERSION" == "${CONTAINERD_VERSION}" ]]; then
         echo "containerd is already installed, skipping install"
     else
-        CONTAINERD_TGZ_TMP=$(echo ${CONTAINERD_DOWNLOAD_URL} | cut -d "/" -f 5)
+        CONTAINERD_TGZ_TMP="cri-containerd-${CONTAINERD_VERSION}.linux-amd64.tar.gz"
         rm -Rf /usr/bin/containerd
         rm -Rf /var/lib/docker/containerd
         rm -Rf /run/docker/containerd
@@ -278,7 +299,7 @@ installKubeletAndKubectl() {
 pullContainerImage() {
     CLI_TOOL=$1
     DOCKER_IMAGE_URL=$2
-    if [ ! -z "${PRIVATE_AZURE_REGISTRY_SERVER}" ]; then
+    if [[ ! -z "${PRIVATE_AZURE_REGISTRY_SERVER:-}" ]]; then
         $CLI_TOOL login -u $SERVICE_PRINCIPAL_CLIENT_ID -p $SERVICE_PRINCIPAL_CLIENT_SECRET $PRIVATE_AZURE_REGISTRY_SERVER
     fi
     retrycmd_if_failure 60 1 1200 $CLI_TOOL pull $DOCKER_IMAGE_URL || exit $ERR_CONTAINER_IMG_PULL_TIMEOUT
