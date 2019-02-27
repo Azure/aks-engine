@@ -57,21 +57,21 @@ func createJumpboxStorageAccount() StorageAccountARM {
 	}
 }
 
-//func createKeyVaultStorageAccount(cs *api.ContainerService) StorageAccountARM {
-//	return StorageAccountARM{
-//		ARMResource: ARMResource{
-//			APIVersion: "[variables('apiVersionStorage')]",
-//		},
-//		Account: storage.Account{
-//			Type:     to.StringPtr("Microsoft.Storage/storageAccounts"),
-//			Name:     to.StringPtr("[variables('clusterKeyVaultName')]"),
-//			Location: to.StringPtr("[variables('location')]"),
-//			Sku: &storage.Sku{
-//				Name: storage.StandardLRS,
-//			},
-//		},
-//	}
-//}
+func createKeyVaultStorageAccount(cs *api.ContainerService) StorageAccountARM {
+	return StorageAccountARM{
+		ARMResource: ARMResource{
+			APIVersion: "[variables('apiVersionStorage')]",
+		},
+		Account: storage.Account{
+			Type:     to.StringPtr("Microsoft.Storage/storageAccounts"),
+			Name:     to.StringPtr("[variables('clusterKeyVaultName')]"),
+			Location: to.StringPtr("[variables('location')]"),
+			Sku: &storage.Sku{
+				Name: storage.StandardLRS,
+			},
+		},
+	}
+}
 
 func createAgentVMASStorageAccount(cs *api.ContainerService, profile *api.AgentPoolProfile, isDataDisk bool) StorageAccountARM {
 	var copyName string

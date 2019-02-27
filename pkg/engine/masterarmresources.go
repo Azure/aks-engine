@@ -78,7 +78,14 @@ func createKubernetesMasterResources(cs *api.ContainerService) []interface{} {
 		masterResources = append(masterResources, internalLb)
 	}
 
-	//TODO: Implement KMS
+	isKMSEnabled := to.Bool(cs.Properties.OrchestratorProfile.KubernetesConfig.EnableEncryptionWithExternalKms)
+
+	if isKMSEnabled {
+		keyVaultStorageAccount := createKeyVaultStorageAccount(cs)
+		masterResources = append(masterResources, keyVaultStorageAccount)
+		keyVault := CreateKeyVault(cs)
+		masterResources = append(masterResources, keyVault)
+	}
 
 	masterVM := CreateVirtualMachine(cs)
 	masterResources = append(masterResources, masterVM)
@@ -104,11 +111,10 @@ func createKubernetesMasterResources(cs *api.ContainerService) []interface{} {
 	return masterResources
 }
 
-func createKubernetesMasterResourcesVmss(cs *api.ContainerService) []interface{} {
+func createKubernetesMasterResourcesVMSS(cs *api.ContainerService) []interface{} {
 	var masterResources []interface{}
 
 	//TODO: Implement CosmosEtcd
-	//TODO: Implement KMS
 
 	masterNsg := CreateNetworkSecurityGroup(cs)
 	masterResources = append(masterResources, masterNsg)
@@ -131,6 +137,15 @@ func createKubernetesMasterResourcesVmss(cs *api.ContainerService) []interface{}
 
 	loadBalancer := CreateLoadBalancer(cs.Properties.MasterProfile.Count)
 	masterResources = append(masterResources, loadBalancer)
+
+	isKMSEnabled := to.Bool(cs.Properties.OrchestratorProfile.KubernetesConfig.EnableEncryptionWithExternalKms)
+
+	if isKMSEnabled {
+		keyVaultStorageAccount := createKeyVaultStorageAccount(cs)
+		masterResources = append(masterResources, keyVaultStorageAccount)
+		keyVault := CreateKeyVaultVMSS(cs)
+		masterResources = append(masterResources, keyVault)
+	}
 
 	masterVmss := CreateMasterVMSS(cs)
 	masterResources = append(masterResources, masterVmss)
