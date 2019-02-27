@@ -6,7 +6,7 @@ package common
 // the orchestrators supported
 const (
 	// Mesos is the string constant for MESOS orchestrator type
-	Mesos string = "Mesos"
+	Mesos string = "Test"
 	// DCOS is the string constant for DCOS orchestrator type and defaults to DCOS188
 	DCOS string = "DCOS"
 	// Swarm is the string constant for the Swarm orchestrator type
