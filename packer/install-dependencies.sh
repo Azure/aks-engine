@@ -248,7 +248,7 @@ echo "  - k8s.gcr.io/hyperkube-amd64 and k8s.gcr.io/cloud-controller-manager-amd
 
 df -h
 
-echo "\nInstall completed successfully on " `date` >> /var/log/azure/golden-image-install.complete
+echo "Install completed successfully on " `date` >> /var/log/azure/golden-image-install.complete
 echo "VSTS Build NUMBER: ${BUILD_NUMBER}" >> /var/log/azure/golden-image-install.complete
 echo "VSTS Build ID: ${BUILD_ID}" >> /var/log/azure/golden-image-install.complete
 echo "Commit: ${COMMIT}" >> /var/log/azure/golden-image-install.complete
