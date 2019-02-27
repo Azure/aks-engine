@@ -301,7 +301,7 @@ func (sc *scaleCmd) run(cmd *cobra.Command, args []string) error {
 	} else {
 		for vmssListPage, err := sc.client.ListVirtualMachineScaleSets(ctx, sc.resourceGroupName); vmssListPage.NotDone(); err = vmssListPage.NextWithContext(ctx) {
 			if err != nil {
-				return errors.Wrap(err, "failed to get vmss list in the resource group")
+				return errors.Wrap(err, "failed to get VMSS list in the resource group")
 			}
 			for _, vmss := range vmssListPage.Values() {
 				vmName := *vmss.Name

@@ -401,11 +401,11 @@ func TestAcceleratedNetworking(t *testing.T) {
 	isScale := true
 	mockCS.SetPropertiesDefaults(false, isScale)
 
-	// In scale scenario, nil AcceleratedNetworkingEnabled should always render as false (i.e., we never turn on this feature on an existing agent pool / vmss that didn't have it before)
+	// In scale scenario, nil AcceleratedNetworkingEnabled should always render as false (i.e., we never turn on this feature on an existing agent pool / VMSS that didn't have it before)
 	if to.Bool(mockCS.Properties.AgentPoolProfiles[0].AcceleratedNetworkingEnabled) {
 		t.Errorf("expected nil acceleratedNetworkingEnabled to be false after upgrade, instead got %t", to.Bool(mockCS.Properties.AgentPoolProfiles[0].AcceleratedNetworkingEnabled))
 	}
-	// In scale scenario, nil AcceleratedNetworkingEnabledWindows should always render as false (i.e., we never turn on this feature on an existing vm that didn't have it before)
+	// In scale scenario, nil AcceleratedNetworkingEnabledWindows should always render as false (i.e., we never turn on this feature on an existing VM that didn't have it before)
 	if to.Bool(mockCS.Properties.AgentPoolProfiles[0].AcceleratedNetworkingEnabledWindows) {
 		t.Errorf("expected nil acceleratedNetworkingEnabledWindows to be false after upgrade, instead got %t", to.Bool(mockCS.Properties.AgentPoolProfiles[0].AcceleratedNetworkingEnabledWindows))
 	}
@@ -467,7 +467,7 @@ func TestVMSSOverProvisioning(t *testing.T) {
 	isScale := true
 	mockCS.SetPropertiesDefaults(false, isScale)
 
-	// In scale scenario, nil VMSSOverProvisioningEnabled should always render as false (i.e., we never turn on this feature on an existing agent pool / vmss that didn't have it before)
+	// In scale scenario, nil VMSSOverProvisioningEnabled should always render as false (i.e., we never turn on this feature on an existing agent pool / VMSS that didn't have it before)
 	if to.Bool(mockCS.Properties.AgentPoolProfiles[0].VMSSOverProvisioningEnabled) {
 		t.Errorf("expected nil VMSSOverProvisioningEnabled to be false after upgrade, instead got %t", to.Bool(mockCS.Properties.AgentPoolProfiles[0].VMSSOverProvisioningEnabled))
 	}
@@ -846,7 +846,7 @@ func TestMasterProfileDefaults(t *testing.T) {
 			properties.MasterProfile.FirstConsecutiveStaticIP, "10.255.255.5")
 	}
 
-	// this validates default vmss masterProfile configuration
+	// this validates default VMSS masterProfile configuration
 	mockCS = getMockBaseContainerService("1.10.3")
 	properties = mockCS.Properties
 	properties.OrchestratorProfile.OrchestratorType = "Kubernetes"
@@ -922,7 +922,7 @@ func TestMasterProfileDefaults(t *testing.T) {
 			properties.MasterProfile.FirstConsecutiveStaticIP, "10.239.255.239")
 	}
 
-	// this validates default vmss masterProfile configuration, AzureCNI, and custom vnet
+	// this validates default VMSS masterProfile configuration, AzureCNI, and custom VNET
 	mockCS = getMockBaseContainerService("1.10.3")
 	properties = mockCS.Properties
 	properties.OrchestratorProfile.OrchestratorType = "Kubernetes"
@@ -1079,7 +1079,7 @@ func TestIsAzureCNINetworkmonitorAddon(t *testing.T) {
 
 // TestSetVMSSDefaultsAndZones covers tests for setVMSSDefaultsForAgents and masters
 func TestSetVMSSDefaultsAndZones(t *testing.T) {
-	// masters with vmss and no zones
+	// masters with VMSS and no zones
 	mockCS := getMockBaseContainerService("1.12.0")
 	properties := mockCS.Properties
 	properties.OrchestratorProfile.OrchestratorType = "Kubernetes"
@@ -1093,7 +1093,7 @@ func TestSetVMSSDefaultsAndZones(t *testing.T) {
 		t.Fatalf("OrchestratorProfile.KubernetesConfig.LoadBalancerSku did not have the expected configuration, got %s, expected %s",
 			properties.OrchestratorProfile.KubernetesConfig.LoadBalancerSku, DefaultLoadBalancerSku)
 	}
-	// masters with vmss and zones
+	// masters with VMSS and zones
 	mockCS = getMockBaseContainerService("1.12.0")
 	properties = mockCS.Properties
 	properties.OrchestratorProfile.OrchestratorType = "Kubernetes"
@@ -1118,7 +1118,7 @@ func TestSetVMSSDefaultsAndZones(t *testing.T) {
 		t.Fatalf("OrchestratorProfile.KubernetesConfig.ExcludeMasterFromStandardLB did not have the expected configuration, got %t, expected %t",
 			*properties.OrchestratorProfile.KubernetesConfig.ExcludeMasterFromStandardLB, excludeMaster)
 	}
-	// agents with vmss and no zones
+	// agents with VMSS and no zones
 	mockCS = getMockBaseContainerService("1.12.0")
 	properties = mockCS.Properties
 	properties.OrchestratorProfile.OrchestratorType = "Kubernetes"
@@ -1132,7 +1132,7 @@ func TestSetVMSSDefaultsAndZones(t *testing.T) {
 		t.Fatalf("OrchestratorProfile.KubernetesConfig.LoadBalancerSku did not have the expected configuration, got %s, expected %s",
 			properties.OrchestratorProfile.KubernetesConfig.LoadBalancerSku, DefaultLoadBalancerSku)
 	}
-	// agents with vmss and zones
+	// agents with VMSS and zones
 	mockCS = getMockBaseContainerService("1.12.0")
 	properties = mockCS.Properties
 	properties.OrchestratorProfile.OrchestratorType = "Kubernetes"

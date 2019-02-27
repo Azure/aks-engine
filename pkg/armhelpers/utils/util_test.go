@@ -58,7 +58,7 @@ func Test_LinuxVMNameParts(t *testing.T) {
 	}
 }
 
-func Test_VmssNameParts(t *testing.T) {
+func Test_VMSSNameParts(t *testing.T) {
 	data := []struct {
 		poolIdentifier, nameSuffix string
 	}{

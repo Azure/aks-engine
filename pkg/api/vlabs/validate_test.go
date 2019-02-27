@@ -1446,7 +1446,7 @@ func TestProperties_ValidateManagedIdentity(t *testing.T) {
 		agentPoolProfiles   []*AgentPoolProfile
 	}{
 		{
-			name:                "use managed identity with master vmss",
+			name:                "use managed identity with master VMSS",
 			orchestratorRelease: "1.11",
 			useManagedIdentity:  true,
 			userAssignedID:      "utaksenginetestid",
@@ -1500,7 +1500,7 @@ func TestProperties_ValidateManagedIdentity(t *testing.T) {
 			expectedErr: "user assigned identity can only be used with Kubernetes 1.12.0 or above. Please specify \"orchestratorRelease\": \"1.12\"",
 		},
 		{
-			name:                "user master vmss with empty user assigned ID",
+			name:                "user master VMSS with empty user assigned ID",
 			orchestratorRelease: "1.12",
 			useManagedIdentity:  true,
 			masterProfile: MasterProfile{
