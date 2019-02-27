@@ -848,6 +848,11 @@ func TestWindowsProfile(t *testing.T) {
 		t.Fatalf("Expected GetWindowsSku() to equal default KubernetesDefaultWindowsSku, got %s", windowsSku)
 	}
 
+	update := w.GetEnableWindowsUpdate()
+	if update != "true" {
+		t.Fatalf("Expected GetEnableWindowsUpdate() to equal default 'true', got %s", update)
+	}
+
 	w = WindowsProfile{
 		Secrets: []KeyVaultSecrets{
 			{
@@ -868,9 +873,9 @@ func TestWindowsProfile(t *testing.T) {
 	}
 
 	w = WindowsProfile{
-		WindowsDockerVersion: "18.03.1-ee-3",
-		WindowsSku:           "Datacenter-Core-1809-with-Containers-smalldisk",
-		SSHEnabled:           true,
+		WindowsDockerVersion:   "18.03.1-ee-3",
+		WindowsSku:             "Datacenter-Core-1809-with-Containers-smalldisk",
+		SSHEnabled:             true
 	}
 
 	dv = w.GetWindowsDockerVersion()

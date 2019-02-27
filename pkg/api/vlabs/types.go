@@ -156,16 +156,17 @@ type CustomNodesDNS struct {
 
 // WindowsProfile represents the windows parameters passed to the cluster
 type WindowsProfile struct {
-	AdminUsername         string            `json:"adminUsername,omitempty"`
-	AdminPassword         string            `json:"adminPassword,omitempty"`
-	ImageVersion          string            `json:"imageVersion,omitempty"`
-	WindowsImageSourceURL string            `json:"WindowsImageSourceUrl"`
-	WindowsPublisher      string            `json:"WindowsPublisher"`
-	WindowsOffer          string            `json:"WindowsOffer"`
-	WindowsSku            string            `json:"WindowsSku"`
-	WindowsDockerVersion  string            `json:"windowsDockerVersion"`
-	Secrets               []KeyVaultSecrets `json:"secrets,omitempty"`
-	SSHEnabled            bool              `json:"sshEnabled,omitempty"`
+	AdminUsername          string            `json:"adminUsername,omitempty"`
+	AdminPassword          string            `json:"adminPassword,omitempty"`
+	ImageVersion           string            `json:"imageVersion,omitempty"`
+	WindowsImageSourceURL  string            `json:"WindowsImageSourceUrl"`
+	WindowsPublisher       string            `json:"WindowsPublisher"`
+	WindowsOffer           string            `json:"WindowsOffer"`
+	WindowsSku             string            `json:"WindowsSku"`
+	WindowsDockerVersion   string            `json:"windowsDockerVersion"`
+	Secrets                []KeyVaultSecrets `json:"secrets,omitempty"`
+	SSHEnabled             bool              `json:"sshEnabled,omitempty"`
+	EnableAutomaticUpdates string            `json:"enableAutomaticUpdates,omitempty"`
 }
 
 // ProvisioningState represents the current state of container service resource.

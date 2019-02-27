@@ -185,7 +185,10 @@
           "computerName": "[concat(variables('{{.Name}}VMNamePrefix'), copyIndex(variables('{{.Name}}Offset')))]",
           {{GetKubernetesWindowsAgentCustomData .}}
           "adminUsername": "[parameters('windowsAdminUsername')]",
-          "adminPassword": "[parameters('windowsAdminPassword')]"
+          "adminPassword": "[parameters('windowsAdminPassword')]",
+          "windowsConfiguration": {
+            "enableAutomaticUpdates": {{WindowsAutomaticUpdateEnabled}}
+          }
         },
         "storageProfile": {
           {{GetDataDisks .}}

@@ -197,16 +197,17 @@ type CustomNodesDNS struct {
 
 // WindowsProfile represents the windows parameters passed to the cluster
 type WindowsProfile struct {
-	AdminUsername         string            `json:"adminUsername"`
-	AdminPassword         string            `json:"adminPassword" conform:"redact"`
-	ImageVersion          string            `json:"imageVersion"`
-	WindowsImageSourceURL string            `json:"windowsImageSourceURL"`
-	WindowsPublisher      string            `json:"windowsPublisher"`
-	WindowsOffer          string            `json:"windowsOffer"`
-	WindowsSku            string            `json:"windowsSku"`
-	WindowsDockerVersion  string            `json:"windowsDockerVersion"`
-	Secrets               []KeyVaultSecrets `json:"secrets,omitempty"`
-	SSHEnabled            bool              `json:"sshEnabled,omitempty"`
+	AdminUsername          string            `json:"adminUsername"`
+	AdminPassword          string            `json:"adminPassword" conform:"redact"`
+	ImageVersion           string            `json:"imageVersion"`
+	WindowsImageSourceURL  string            `json:"windowsImageSourceURL"`
+	WindowsPublisher       string            `json:"windowsPublisher"`
+	WindowsOffer           string            `json:"windowsOffer"`
+	WindowsSku             string            `json:"windowsSku"`
+	WindowsDockerVersion   string            `json:"windowsDockerVersion"`
+	Secrets                []KeyVaultSecrets `json:"secrets,omitempty"`
+	SSHEnabled             bool              `json:"sshEnabled,omitempty"`
+	EnableAutomaticUpdates string            `json:"enableAutomaticUpdates,omitempty"`
 }
 
 // ProvisioningState represents the current state of container service resource.
@@ -1158,6 +1159,14 @@ func (w *WindowsProfile) GetWindowsSku() string {
 		return w.WindowsSku
 	}
 	return KubernetesDefaultWindowsSku
+}
+
+// GetEnableWindowsUpdate gets the flag for enable windows update or returns the default value
+func (w *WindowsProfile) GetEnableWindowsUpdate() string {
+	if w.EnableAutomaticUpdates != "" {
+		return w.EnableAutomaticUpdates
+	}
+	return "true"
 }
 
 // HasSecrets returns true if the customer specified secrets to install
