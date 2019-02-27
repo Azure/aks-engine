@@ -143,7 +143,7 @@ var (
 		ImageOffer:     "aks",
 		ImageSku:       "aks-ubuntu-1604-201902",
 		ImagePublisher: "microsoft-aks",
-		ImageVersion:   "2019.02.13",
+		ImageVersion:   "2019.02.26",
 	}
 
 	// DefaultAKSDockerEngineOSImageConfig is the AKS image based on Ubuntu 16.04.
@@ -151,7 +151,7 @@ var (
 		ImageOffer:     "aks",
 		ImageSku:       "aks-ubuntu-1604-docker-engine",
 		ImagePublisher: "microsoft-aks",
-		ImageVersion:   "2019.02.13",
+		ImageVersion:   "2019.02.26",
 	}
 
 	// DefaultACC1604OSImageConfig is the ACC image based on Ubuntu 16.04.
