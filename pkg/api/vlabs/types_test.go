@@ -126,7 +126,7 @@ func TestMasterProfile(t *testing.T) {
 		t.Fatalf("unexpectedly detected MasterProfile.AvailabilitySets == VirtualMachineScaleSets after unmarshal")
 	}
 
-	// With vmss and zones
+	// With VMSS and zones
 	MasterProfileText = `{  "count": 3, "vmSize": "Standard_D2_v2", "availabilityProfile": "VirtualMachineScaleSets", "storageProfile" : "ManagedDisks", "diskSizesGB" : [750, 250, 600, 1000],  "AvailabilityZones": ["1","2"] }`
 	mp = &MasterProfile{}
 	if e := json.Unmarshal([]byte(MasterProfileText), mp); e != nil {

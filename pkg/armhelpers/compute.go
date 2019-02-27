@@ -35,7 +35,7 @@ func (az *AzureClient) DeleteVirtualMachine(ctx context.Context, resourceGroup, 
 	return err
 }
 
-// ListVirtualMachineScaleSets returns (the first page of) the vmss resources in the specified resource group.
+// ListVirtualMachineScaleSets returns (the first page of) the VMSS resources in the specified resource group.
 func (az *AzureClient) ListVirtualMachineScaleSets(ctx context.Context, resourceGroup string) (VirtualMachineScaleSetListResultPage, error) {
 	page, err := az.virtualMachineScaleSetsClient.List(ctx, resourceGroup)
 	return &page, err
