@@ -500,7 +500,7 @@ func (mc *MockAKSEngineClient) GetVirtualMachine(ctx context.Context, resourceGr
 	return mc.MakeFakeVirtualMachine(), nil
 }
 
-// MakeFakeVirtualMachineScaleSetVM creates a fake vmss vm
+// MakeFakeVirtualMachineScaleSetVM creates a fake VMSS VM
 func (mc *MockAKSEngineClient) MakeFakeVirtualMachineScaleSetVM(orchestratorTag string) compute.VirtualMachineScaleSetVM {
 	vm1Name := "k8s-agentpool1-12345678-0"
 

@@ -91,10 +91,10 @@ type AKSEngineClient interface {
 	// DeleteVirtualMachine deletes the specified virtual machine.
 	DeleteVirtualMachine(ctx context.Context, resourceGroup, name string) error
 
-	// ListVirtualMachineScaleSets lists the vmss resources in the resource group
+	// ListVirtualMachineScaleSets lists the VMSS resources in the resource group
 	ListVirtualMachineScaleSets(ctx context.Context, resourceGroup string) (VirtualMachineScaleSetListResultPage, error)
 
-	// ListVirtualMachineScaleSetVMs lists the virtual machines contained in a vmss
+	// ListVirtualMachineScaleSetVMs lists the virtual machines contained in a VMSS
 	ListVirtualMachineScaleSetVMs(ctx context.Context, resourceGroup, virtualMachineScaleSet string) (VirtualMachineScaleSetVMListResultPage, error)
 
 	// DeleteVirtualMachineScaleSetVM deletes a VM in a VMSS
