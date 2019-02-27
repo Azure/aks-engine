@@ -44,9 +44,9 @@ phases:
       -e VHD_NAME=${VHD_NAME} \
       ${DEIS_GO_DEV_IMAGE} make az-copy
     displayName: Copying resource to Classic Storage Account
-    condition: not(variables['DRY_RUN'])
+    condition: not(variables.DRY_RUN)
   - script: |
-      SA_NAME="$(cat packer-output | grep "creating new storage account" | cut -d " " -f 5)" && \
+      SA_NAME="$(cat packer-output | grep "storage name:" | cut -d " " -f 3)" && \
       docker run --rm \
       -v ${PWD}:/go/src/github.com/Azure/aks-engine \
       -w /go/src/github.com/Azure/aks-engine \
