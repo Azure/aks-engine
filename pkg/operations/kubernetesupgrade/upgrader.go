@@ -362,8 +362,13 @@ func (ku *Upgrader) upgradeAgentPools(ctx context.Context) error {
 			}
 			ku.logger.Infof("Upgrading Agent VM: %s, pool name: %s", vm.name, *agentPool.Name)
 
-			// copy custom properties from old node to new node if the flag in AgentPoolProfile is set.
-			if agentPoolProfile != nil && agentPoolProfile.PreserveNodesPropertiesInUpgrading != nil && *agentPoolProfile.PreserveNodesPropertiesInUpgrading {
+			// copy custom properties from old node to new node if the NotPreserveNodesProperties in AgentPoolProfile is not set to true explicitly.
+			notPreserveNodesProperties := false
+			if agentPoolProfile != nil && agentPoolProfile.NotPreserveNodesProperties != nil {
+				notPreserveNodesProperties = *agentPoolProfile.NotPreserveNodesProperties
+			}
+
+			if !notPreserveNodesProperties {
 				if len(newCreatedVMs) > 0 {
 					newNodeName := newCreatedVMs[0]
 					newCreatedVMs = newCreatedVMs[1:]
@@ -513,16 +518,16 @@ func (ku *Upgrader) upgradeAgentScaleSets(ctx context.Context) error {
 				vmssToUpgrade.Name,
 			)
 
-			// copy custom properties from old node to new node if the flag in AgentPoolProfile is set.
-			preserveNodesPropertiesInUpgrading := false
+			// copy custom properties from old node to new node if the NotPreserveNodesProperties in AgentPoolProfile is not set to true explicitly.
+			notPreserveNodesProperties := false
 			poolName, _, _ := utils.VmssNameParts(vmssToUpgrade.Name)
 			if agentPool, ok := agentPoolMap[poolName]; ok {
-				if agentPool != nil && agentPool.PreserveNodesPropertiesInUpgrading != nil && *agentPool.PreserveNodesPropertiesInUpgrading {
-					preserveNodesPropertiesInUpgrading = true
+				if agentPool != nil && agentPool.NotPreserveNodesProperties != nil {
+					notPreserveNodesProperties = *agentPool.NotPreserveNodesProperties
 				}
 			}
 
-			if preserveNodesPropertiesInUpgrading {
+			if !notPreserveNodesProperties {
 				newNodeName, err := ku.getLastVMNameInVMSS(ctx, ku.ClusterTopology.ResourceGroup, vmssToUpgrade.Name)
 				if err != nil {
 					return err
@@ -668,17 +673,10 @@ func (ku *Upgrader) copyCustomPropertiesToNewNode(client armhelpers.KubernetesCl
 }
 
 func (ku *Upgrader) getKubernetesClient() (armhelpers.KubernetesClient, error) {
-	var kubeAPIServerURL string
 	getClientTimeout := 10 * time.Second
 
-	if ku.DataModel.Properties.HostedMasterProfile != nil {
-		kubeAPIServerURL = ku.DataModel.Properties.HostedMasterProfile.FQDN
-	} else {
-		kubeAPIServerURL = ku.DataModel.Properties.MasterProfile.FQDN
-	}
-
 	return ku.Client.GetKubernetesClient(
-		kubeAPIServerURL,
+		ku.DataModel.Properties.GetMasterFQDN(),
 		ku.kubeConfig,
 		interval,
 		getClientTimeout)
