@@ -64,8 +64,9 @@ type UpgradeCluster struct {
 	Translator *i18n.Translator
 	Logger     *logrus.Entry
 	ClusterTopology
-	Client      armhelpers.AKSEngineClient
-	StepTimeout *time.Duration
+	Client          armhelpers.AKSEngineClient
+	StepTimeout     *time.Duration
+	UpgradeWorkFlow UpgradeWorkFlow
 }
 
 // MasterVMNamePrefix is the prefix for all master VM names for Kubernetes clusters
@@ -84,19 +85,24 @@ func (uc *UpgradeCluster) UpgradeCluster(az armhelpers.AKSEngineClient, kubeConf
 		return uc.Translator.Errorf("Error while querying ARM for resources: %+v", err)
 	}
 
-	var upgrader UpgradeWorkFlow
 	upgradeVersion := uc.DataModel.Properties.OrchestratorProfile.OrchestratorVersion
-	uc.Logger.Infof("Upgrading to Kubernetes version %s", upgradeVersion)
-	u := &Upgrader{}
-	u.Init(uc.Translator, uc.Logger, uc.ClusterTopology, uc.Client, kubeConfig, uc.StepTimeout, aksEngineVersion)
-	upgrader = u
+	uc.Logger.Infof("Upgrading to Kubernetes version %s\n", upgradeVersion)
 
-	if err := upgrader.RunUpgrade(); err != nil {
+	if err := uc.getUpgradeWorkflow(kubeConfig, aksEngineVersion).RunUpgrade(); err != nil {
 		return err
 	}
 
 	uc.Logger.Infof("Cluster upgraded successfully to Kubernetes version %s", upgradeVersion)
 	return nil
+}
+
+func (uc *UpgradeCluster) getUpgradeWorkflow(kubeConfig string, aksEngineVersion string) UpgradeWorkFlow {
+	if uc.UpgradeWorkFlow != nil {
+		return uc.UpgradeWorkFlow
+	}
+	u := &Upgrader{}
+	u.Init(uc.Translator, uc.Logger, uc.ClusterTopology, uc.Client, kubeConfig, uc.StepTimeout, aksEngineVersion)
+	return u
 }
 
 func (uc *UpgradeCluster) getClusterNodeStatus(az armhelpers.AKSEngineClient, resourceGroup, kubeConfig string) error {
