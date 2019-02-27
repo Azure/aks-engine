@@ -536,6 +536,9 @@
           {{GetKubernetesMasterCustomData .}}
           "linuxConfiguration": {
               "disablePasswordAuthentication": true,
+              {{if HasMultipleSshKeys }}
+              "ssh": {{ GetSshPublicKeys }}
+              {{ else }}
               "ssh": {
                 "publicKeys": [
                   {
@@ -544,6 +547,7 @@
                   }
                 ]
               }
+              {{ end }}
             }
             {{if .LinuxProfile.HasSecrets}}
               ,
