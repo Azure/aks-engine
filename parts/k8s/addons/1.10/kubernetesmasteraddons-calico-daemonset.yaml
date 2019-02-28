@@ -333,7 +333,7 @@ spec:
       annotations:
         scheduler.alpha.kubernetes.io/critical-pod: ''
     spec:
-      priorityClassName: system-cluster-critical
+      priorityClassName: system-node-critical
       securityContext:
         supplementalGroups: [ 65534 ]
         fsGroup: 65534

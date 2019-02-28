@@ -14,10 +14,15 @@ spec:
         component: kube-proxy
         tier: node
     spec:
+      priorityClassName: system-node-critical
       tolerations:
       - key: node-role.kubernetes.io/master
         operator: Equal
         value: "true"
+        effect: NoSchedule
+      - operator: "Exists"
+        effect: NoExecute
+      - operator: "Exists"
         effect: NoSchedule
       containers:
       - command:
