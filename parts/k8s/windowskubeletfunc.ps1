@@ -413,29 +413,29 @@ if (`$hnsNetwork)
     Remove-HnsNetwork `$hnsNetwork
     # Kill all cni instances & stale data left by cni
     # Cleanup all files related to cni
+    taskkill /IM azure-vnet.exe /f
+    taskkill /IM azure-vnet-ipam.exe /f
     `$cnijson = [io.path]::Combine("$KubeDir", "azure-vnet-ipam.json")
     if ((Test-Path `$cnijson))
     {
         Remove-Item `$cnijson
     }
-    `$cnilock = [io.path]::Combine("$KubeDir", "azure-vnet-ipam.lock")
+    `$cnilock = [io.path]::Combine("$KubeDir", "azure-vnet-ipam.json.lock")
     if ((Test-Path `$cnilock))
     {
         Remove-Item `$cnilock
     }
-    taskkill /IM azure-vnet-ipam.exe /f
 
     `$cnijson = [io.path]::Combine("$KubeDir", "azure-vnet.json")
     if ((Test-Path `$cnijson))
     {
         Remove-Item `$cnijson
     }
-    `$cnilock = [io.path]::Combine("$KubeDir", "azure-vnet.lock")
+    `$cnilock = [io.path]::Combine("$KubeDir", "azure-vnet.json.lock")
     if ((Test-Path `$cnilock))
     {
         Remove-Item `$cnilock
     }
-    taskkill /IM azure-vnet.exe /f
 }
 
 # Restart Kubeproxy, which would wait, until the network is created
