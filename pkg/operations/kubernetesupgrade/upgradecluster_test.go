@@ -13,12 +13,32 @@ import (
 	"github.com/Azure/aks-engine/pkg/armhelpers"
 	"github.com/Azure/aks-engine/pkg/i18n"
 	. "github.com/Azure/aks-engine/pkg/test"
+	"github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2018-10-01/compute"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	log "github.com/sirupsen/logrus"
 )
 
 const TestAKSEngineVersion = "1.0.0"
+
+type fakeUpgradeWorkflow struct {
+	RunUpgradeError error
+	ValidateError   error
+}
+
+func (workflow fakeUpgradeWorkflow) RunUpgrade() error {
+	if workflow.RunUpgradeError != nil {
+		return workflow.RunUpgradeError
+	}
+	return nil
+}
+
+func (workflow fakeUpgradeWorkflow) Validate() error {
+	if workflow.ValidateError != nil {
+		return workflow.ValidateError
+	}
+	return nil
+}
 
 func TestUpgradeCluster(t *testing.T) {
 	RunSpecsWithReporters(t, "kubernetesupgrade", "Server Suite")
@@ -244,6 +264,49 @@ var _ = Describe("Upgrade Kubernetes cluster tests", func() {
 		err := uc.UpgradeCluster(&mockClient, "kubeConfig", TestAKSEngineVersion)
 		Expect(err).NotTo(BeNil())
 		Expect(err.Error()).To(Equal("DeleteRoleAssignmentByID failed"))
+	})
+
+	PIt("Should skip VMSS VMs that are already on desired version", func() {
+		cs := api.CreateMockContainerService("testcluster", "1.9.10", 3, 3, false)
+		uc := UpgradeCluster{
+			Translator: &i18n.Translator{},
+			Logger:     log.NewEntry(log.New()),
+		}
+
+		mockClient := armhelpers.MockAKSEngineClient{}
+		mockClient.FakeListVirtualMachineScaleSetsResult = func() []compute.VirtualMachineScaleSet {
+			scalesetName := "scalesetName"
+			sku := compute.Sku{}
+			location := "eastus"
+			return []compute.VirtualMachineScaleSet{
+				{
+					Name:     &scalesetName,
+					Sku:      &sku,
+					Location: &location,
+				},
+			}
+		}
+		mockClient.FakeListVirtualMachineScaleSetVMsResult = func() []compute.VirtualMachineScaleSetVM {
+			return []compute.VirtualMachineScaleSetVM{
+				mockClient.MakeFakeVirtualMachineScaleSetVM("Kubernetes:1.9.10"),
+				mockClient.MakeFakeVirtualMachineScaleSetVM("Kubernetes:1.9.9"),
+				mockClient.MakeFakeVirtualMachineScaleSetVM("Kubernetes:1.9.7"),
+				mockClient.MakeFakeVirtualMachineScaleSetVM("Kubernetes:1.9.10"),
+			}
+		}
+		uc.Client = &mockClient
+
+		uc.ClusterTopology = ClusterTopology{}
+		uc.SubscriptionID = "DEC923E3-1EF1-4745-9516-37906D56DEC4"
+		uc.ResourceGroup = "TestRg"
+		uc.DataModel = cs
+		uc.NameSuffix = "12345678"
+		uc.AgentPoolsToUpgrade = map[string]bool{"agentpool1": true}
+		uc.UpgradeWorkFlow = fakeUpgradeWorkflow{}
+
+		err := uc.UpgradeCluster(&mockClient, "kubeConfig", TestAKSEngineVersion)
+		Expect(err).NotTo(HaveOccurred())
+		Expect(uc.AgentPoolScaleSetsToUpgrade[0].VMsToUpgrade).To(HaveLen(2))
 	})
 
 	It("Should not fail if no managed identity is returned by azure during upgrade operation", func() {

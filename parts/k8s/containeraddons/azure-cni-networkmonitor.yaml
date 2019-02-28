@@ -17,12 +17,17 @@ spec:
       annotations:
         scheduler.alpha.kubernetes.io/critical-pod: ''
     spec:
+      priorityClassName: system-node-critical
       tolerations:
       - key: CriticalAddonsOnly
         operator: Exists
       - key: node-role.kubernetes.io/master
         operator: Equal
         value: "true"
+        effect: NoSchedule
+      - operator: "Exists"
+        effect: NoExecute
+      - operator: "Exists"
         effect: NoSchedule
       nodeSelector:
         beta.kubernetes.io/os: linux

@@ -15,6 +15,7 @@ spec:
         k8s-app: azure-ip-masq-agent
         tier: node
     spec:
+      priorityClassName: system-node-critical
       hostNetwork: true
       nodeSelector:
         beta.kubernetes.io/os: linux
@@ -24,6 +25,10 @@ spec:
       - key: node-role.kubernetes.io/master
         operator: Equal
         value: "true"
+        effect: NoSchedule
+      - operator: "Exists"
+        effect: NoExecute
+      - operator: "Exists"
         effect: NoSchedule
       containers:
       - name: azure-ip-masq-agent
