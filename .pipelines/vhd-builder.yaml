@@ -34,6 +34,10 @@ phases:
       -w /go/src/github.com/Azure/aks-engine \
       ${DEIS_GO_DEV_IMAGE} make vhd-notes
     displayName: Generate VHD release notes
+  - task: PublishPipelineArtifact@0
+    inputs:
+      artifactName: 'vhd-release-notes'
+      targetPath: '${PWD}:/go/src/github.com/Azure/aks-engine/release-notes'
   - script: |
       OS_DISK_SAS="$(cat packer-output | grep "OSDiskUriReadOnlySas:" | cut -d " " -f 2)" && \
       VHD_NAME="$(echo $OS_DISK_SAS | cut -d "/" -f 8 | cut -d "?" -f 1)" && \
