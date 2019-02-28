@@ -110,7 +110,7 @@ func TestCreateUpgradeCommandSuccesfully(t *testing.T) {
 
 //TODO: Should it fail or should it pass without --force? hmm
 func TestUpgradeShouldFailForSameVersion(t *testing.T) {
-	fakeArmTemplateHandle := strings.NewReader(`{"parameters" : { "nameSuffix" : {"defaultValue" : "test"}}}`)
+	fakeARMTemplateHandle := strings.NewReader(`{"parameters" : { "nameSuffix" : {"defaultValue" : "test"}}}`)
 	g := NewGomegaWithT(t)
 	upgradeCmd := &upgradeCmd{
 		resourceGroupName:   "rg",
@@ -125,13 +125,13 @@ func TestUpgradeShouldFailForSameVersion(t *testing.T) {
 	containerServiceMock := api.CreateMockContainerService("testcluster", "1.10.13", 3, 2, false)
 	containerServiceMock.Location = "centralus"
 	upgradeCmd.containerService = containerServiceMock
-	err := upgradeCmd.validateCurrentLocalState(fakeArmTemplateHandle)
+	err := upgradeCmd.validateCurrentLocalState(fakeARMTemplateHandle)
 	g.Expect(err).To(HaveOccurred())
 	g.Expect(err.Error()).To(ContainSubstring("upgrading from Kubernetes version 1.10.13 to version 1.10.13 is not supported"))
 }
 
 func TestUpgradeForceSameVersionShouldSucceed(t *testing.T) {
-	fakeArmTemplateHandle := strings.NewReader(`{"parameters" : { "nameSuffix" : {"defaultValue" : "test"}}}`)
+	fakeARMTemplateHandle := strings.NewReader(`{"parameters" : { "nameSuffix" : {"defaultValue" : "test"}}}`)
 	g := NewGomegaWithT(t)
 	upgradeCmd := &upgradeCmd{
 		resourceGroupName:   "rg",
@@ -147,6 +147,6 @@ func TestUpgradeForceSameVersionShouldSucceed(t *testing.T) {
 	containerServiceMock.Location = "centralus"
 	upgradeCmd.containerService = containerServiceMock
 	upgradeCmd.force = true
-	err := upgradeCmd.validateCurrentLocalState(fakeArmTemplateHandle)
+	err := upgradeCmd.validateCurrentLocalState(fakeARMTemplateHandle)
 	g.Expect(err).NotTo(HaveOccurred())
 }

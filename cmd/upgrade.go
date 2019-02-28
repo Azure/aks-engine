@@ -201,7 +201,7 @@ func (uc *upgradeCmd) validateCurrentLocalState(armTemplateHandle io.Reader) err
 	}
 
 	//allows to identify VMs in the resource group that belong to this cluster.
-	if nameSuffix, err := readNameSuffixFromArmTemplate(armTemplateHandle); err == nil {
+	if nameSuffix, err := readNameSuffixFromARMTemplate(armTemplateHandle); err == nil {
 		uc.nameSuffix = nameSuffix
 	} else {
 		return errors.Wrap(err, "Failed to read nameSuffix from azuredeploy.json")
@@ -217,7 +217,7 @@ func (uc *upgradeCmd) validateCurrentLocalState(armTemplateHandle io.Reader) err
 	return nil
 }
 
-func readNameSuffixFromArmTemplate(armTemplateHandle io.Reader) (string, error) {
+func readNameSuffixFromARMTemplate(armTemplateHandle io.Reader) (string, error) {
 	var template *map[string]interface{}
 	decoder := json.NewDecoder(armTemplateHandle)
 	if err := decoder.Decode(&template); err != nil {
