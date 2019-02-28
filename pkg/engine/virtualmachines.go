@@ -117,9 +117,8 @@ func CreateVirtualMachine(cs *api.ContainerService) VirtualMachineARM {
 	}
 
 	if cs.Properties.LinuxProfile.HasSecrets() {
-		osProfile.Secrets = &[]compute.VaultSecretGroup{
-			//TODO: Need to address secrets case
-		}
+		vsg := getVaultSecretGroup(cs.Properties.LinuxProfile)
+		osProfile.Secrets = &vsg
 	}
 	vmProperties.OsProfile = osProfile
 
@@ -384,12 +383,8 @@ func createAgentAvailabilitySetVM(cs *api.ContainerService, profile *api.AgentPo
 		osProfile.CustomData = to.StringPtr(agentCustomData)
 
 		if cs.Properties.LinuxProfile.HasSecrets() {
-
-			//TODO: To implement Linux Secrets
-
-			//osProfile.Secrets = &[]compute.VaultSecretGroup {
-			//	"[variables('linuxProfileSecrets')]"
-			//}
+			vsg := getVaultSecretGroup(cs.Properties.LinuxProfile)
+			osProfile.Secrets = &vsg
 		}
 	} else {
 		osProfile.AdminUsername = to.StringPtr("[parameters('windowsAdminUsername')]")
@@ -489,4 +484,27 @@ func getCustomDataFromJSON(jsonStr string) string {
 	var customDataObj map[string]string
 	json.Unmarshal([]byte(jsonStr), &customDataObj)
 	return customDataObj["customData"]
+}
+
+func getVaultSecretGroup(linuxProfile *api.LinuxProfile) []compute.VaultSecretGroup {
+	var vaultSecretGroups []compute.VaultSecretGroup
+	if linuxProfile.HasSecrets() {
+		for idx, lVault := range linuxProfile.Secrets {
+			computeVault := compute.VaultSecretGroup{
+				SourceVault: &compute.SubResource{
+					ID: to.StringPtr(fmt.Sprintf("[parameters('linuxKeyVaultID%d')]", idx)),
+				},
+			}
+			var vaultCerts []compute.VaultCertificate
+			for certIdx := range lVault.VaultCertificates {
+				vaultCert := compute.VaultCertificate{
+					CertificateURL: to.StringPtr(fmt.Sprintf("[parameters('linuxKeyVaultID%dCertificateURL%d')]", idx, certIdx)),
+				}
+				vaultCerts = append(vaultCerts, vaultCert)
+			}
+			computeVault.VaultCertificates = &vaultCerts
+			vaultSecretGroups = append(vaultSecretGroups, computeVault)
+		}
+	}
+	return vaultSecretGroups
 }

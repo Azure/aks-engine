@@ -190,9 +190,8 @@ func CreateMasterVMSS(cs *api.ContainerService) VirtualMachineScaleSetARM {
 	}
 
 	if linuxProfile.HasSecrets() {
-		osProfile.Secrets = &[]compute.VaultSecretGroup{
-			//TODO: Need to address secrets case
-		}
+		vsg := getVaultSecretGroup(cs.Properties.LinuxProfile)
+		osProfile.Secrets = &vsg
 	}
 
 	storageProfile := compute.VirtualMachineScaleSetStorageProfile{}
@@ -484,11 +483,9 @@ func CreateAgentVMSS(cs *api.ContainerService, profile *api.AgentPoolProfile) Vi
 			},
 		}
 
-		//TODO : Need to address secrets
 		if linuxProfile.HasSecrets() {
-			linuxOsProfile.Secrets = &[]compute.VaultSecretGroup{
-				//"[variables('linuxProfileSecrets')]",
-			}
+			vsg := getVaultSecretGroup(cs.Properties.LinuxProfile)
+			linuxOsProfile.Secrets = &vsg
 		}
 
 		vmssVMProfile.OsProfile = &linuxOsProfile
