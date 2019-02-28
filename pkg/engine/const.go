@@ -138,6 +138,7 @@ const (
 	kubernetesWindowsAzureCniFunctionsPS1 = "k8s/windowsazurecnifunc.ps1"
 	kubernetesWindowsOpenSSHFunctionPS1   = "k8s/windowsinstallopensshfunc.ps1"
 	sshdConfig                            = "k8s/sshd_config"
+	systemConf                            = "k8s/system.conf"
 )
 
 const (

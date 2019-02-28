@@ -51,6 +51,13 @@ write_files:
   content: !!binary |
     {{WrapAsVariable "sshdConfig"}}
 
+- path: /etc/systemd/system.conf
+  permissions: "0644"
+  encoding: gzip
+  owner: root
+  content: !!binary |
+    {{WrapAsVariable "systemConf"}}
+
 - path: /usr/local/bin/health-monitor.sh
   permissions: "0544"
   encoding: gzip
