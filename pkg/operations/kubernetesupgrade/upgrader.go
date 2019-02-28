@@ -363,7 +363,7 @@ func (ku *Upgrader) upgradeAgentPools(ctx context.Context) error {
 			ku.logger.Infof("Upgrading Agent VM: %s, pool name: %s", vm.name, *agentPool.Name)
 
 			// copy custom properties from old node to new node if the PreserveNodesProperties in AgentPoolProfile is not set to false explicitly.
-			preserveNodesProperties := false
+			preserveNodesProperties := true
 			if agentPoolProfile != nil && agentPoolProfile.PreserveNodesProperties != nil {
 				preserveNodesProperties = *agentPoolProfile.PreserveNodesProperties
 			}
@@ -519,7 +519,7 @@ func (ku *Upgrader) upgradeAgentScaleSets(ctx context.Context) error {
 			)
 
 			// copy custom properties from old node to new node if the PreserveNodesProperties in AgentPoolProfile is not set to false explicitly.
-			preserveNodesProperties := false
+			preserveNodesProperties := true
 			poolName, _, _ := utils.VmssNameParts(vmssToUpgrade.Name)
 			if agentPool, ok := agentPoolMap[poolName]; ok {
 				if agentPool != nil && agentPool.PreserveNodesProperties != nil {
