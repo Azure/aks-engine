@@ -130,6 +130,26 @@ func TestUpgradeShouldFailForSameVersion(t *testing.T) {
 	g.Expect(err.Error()).To(ContainSubstring("upgrading from Kubernetes version 1.10.13 to version 1.10.13 is not supported"))
 }
 
+func TestUpgradeFailWithPathWhenAzureDeployJsonIsInvalid(t *testing.T) {
+	fakeARMTemplateHandle := strings.NewReader(`{"parameters" : { "nameSuffix"}}`)
+	g := NewGomegaWithT(t)
+	upgradeCmd := &upgradeCmd{
+		resourceGroupName:   "rg",
+		deploymentDirectory: "_output/myspecialtestfolder",
+		upgradeVersion:      "1.13.3",
+		location:            "centralus",
+		timeoutInMinutes:    60,
+		force:               true,
+		client:              &armhelpers.MockAKSEngineClient{},
+	}
+
+	containerServiceMock := api.CreateMockContainerService("testcluster", "1.13.2", 3, 2, false)
+	containerServiceMock.Location = "centralus"
+	upgradeCmd.containerService = containerServiceMock
+	err := upgradeCmd.validateCurrentLocalState(fakeARMTemplateHandle)
+	g.Expect(err).To(HaveOccurred())
+	g.Expect(err.Error()).To(ContainSubstring("_output/myspecialtestfolder/azuredeploy.json"))
+}
 func TestUpgradeForceSameVersionShouldSucceed(t *testing.T) {
 	fakeARMTemplateHandle := strings.NewReader(`{"parameters" : { "nameSuffix" : {"defaultValue" : "test"}}}`)
 	g := NewGomegaWithT(t)

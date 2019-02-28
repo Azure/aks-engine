@@ -204,7 +204,8 @@ func (uc *upgradeCmd) validateCurrentLocalState(armTemplateHandle io.Reader) err
 	if nameSuffix, err := readNameSuffixFromARMTemplate(armTemplateHandle); err == nil {
 		uc.nameSuffix = nameSuffix
 	} else {
-		return errors.Wrap(err, "Failed to read nameSuffix from azuredeploy.json")
+		templatePath := path.Join(uc.deploymentDirectory, "azuredeploy.json")
+		return errors.Wrapf(err, "Failed to read nameSuffix from %s", templatePath)
 	}
 
 	log.Infoln(fmt.Sprintf("Upgrading cluster with name suffix: %s", uc.nameSuffix))
