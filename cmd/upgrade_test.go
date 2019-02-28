@@ -7,6 +7,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/Azure/aks-engine/pkg/api/common"
+
 	"github.com/Azure/aks-engine/pkg/api"
 	"github.com/Azure/aks-engine/pkg/armhelpers"
 
@@ -110,6 +112,9 @@ func TestCreateUpgradeCommandSuccesfully(t *testing.T) {
 
 //TODO: Should it fail or should it pass without --force? hmm
 func TestUpgradeShouldFailForSameVersion(t *testing.T) {
+	common.AllKubernetesSupportedVersions = map[string]bool{
+		"1.10.13": true,
+	}
 	fakeARMTemplateHandle := strings.NewReader(`{"parameters" : { "nameSuffix" : {"defaultValue" : "test"}}}`)
 	g := NewGomegaWithT(t)
 	upgradeCmd := &upgradeCmd{
@@ -128,6 +133,54 @@ func TestUpgradeShouldFailForSameVersion(t *testing.T) {
 	err := upgradeCmd.validateCurrentLocalState(fakeARMTemplateHandle)
 	g.Expect(err).To(HaveOccurred())
 	g.Expect(err.Error()).To(ContainSubstring("upgrading from Kubernetes version 1.10.13 to version 1.10.13 is not supported"))
+}
+
+func TestUpgradeShouldFailForInvalidUpgradePath(t *testing.T) {
+	common.AllKubernetesSupportedVersions = map[string]bool{
+		"1.10.13": false,
+		"1.10.12": true,
+	}
+	fakeARMTemplateHandle := strings.NewReader(`{"parameters" : { "nameSuffix" : {"defaultValue" : "test"}}}`)
+	g := NewGomegaWithT(t)
+	upgradeCmd := &upgradeCmd{
+		resourceGroupName:   "rg",
+		deploymentDirectory: "_output/test",
+		upgradeVersion:      "1.10.13",
+		location:            "centralus",
+		timeoutInMinutes:    60,
+
+		client: &armhelpers.MockAKSEngineClient{},
+	}
+
+	containerServiceMock := api.CreateMockContainerService("testcluster", "1.10.12", 3, 2, false)
+	containerServiceMock.Location = "centralus"
+	upgradeCmd.containerService = containerServiceMock
+	err := upgradeCmd.validateCurrentLocalState(fakeARMTemplateHandle)
+	g.Expect(err).To(HaveOccurred())
+	g.Expect(err.Error()).To(ContainSubstring("upgrading from Kubernetes version 1.10.12 to version 1.10.13 is not supported"))
+}
+func TestUpgradeShouldSuceedForValidUpgradePath(t *testing.T) {
+	common.AllKubernetesSupportedVersions = map[string]bool{
+		"1.10.13": true,
+		"1.10.12": true,
+	}
+	fakeARMTemplateHandle := strings.NewReader(`{"parameters" : { "nameSuffix" : {"defaultValue" : "test"}}}`)
+	g := NewGomegaWithT(t)
+	upgradeCmd := &upgradeCmd{
+		resourceGroupName:   "rg",
+		deploymentDirectory: "_output/test",
+		upgradeVersion:      "1.10.13",
+		location:            "centralus",
+		timeoutInMinutes:    60,
+
+		client: &armhelpers.MockAKSEngineClient{},
+	}
+
+	containerServiceMock := api.CreateMockContainerService("testcluster", "1.10.12", 3, 2, false)
+	containerServiceMock.Location = "centralus"
+	upgradeCmd.containerService = containerServiceMock
+	err := upgradeCmd.validateCurrentLocalState(fakeARMTemplateHandle)
+	g.Expect(err).NotTo(HaveOccurred())
 }
 
 func TestUpgradeFailWithPathWhenAzureDeployJsonIsInvalid(t *testing.T) {
@@ -151,6 +204,9 @@ func TestUpgradeFailWithPathWhenAzureDeployJsonIsInvalid(t *testing.T) {
 	g.Expect(err.Error()).To(ContainSubstring("_output/myspecialtestfolder/azuredeploy.json"))
 }
 func TestUpgradeForceSameVersionShouldSucceed(t *testing.T) {
+	common.AllKubernetesSupportedVersions = map[string]bool{
+		"1.10.13": false,
+	}
 	fakeARMTemplateHandle := strings.NewReader(`{"parameters" : { "nameSuffix" : {"defaultValue" : "test"}}}`)
 	g := NewGomegaWithT(t)
 	upgradeCmd := &upgradeCmd{
