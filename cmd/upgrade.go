@@ -219,9 +219,9 @@ func (uc *upgradeCmd) validateCurrentLocalState(armTemplateHandle io.Reader) err
 }
 
 func readNameSuffixFromARMTemplate(armTemplateHandle io.Reader) (string, error) {
-	var template *map[string]interface{}
+	var azureDeployTemplate *map[string]interface{}
 	decoder := json.NewDecoder(armTemplateHandle)
-	if err := decoder.Decode(&template); err != nil {
+	if err := decoder.Decode(&azureDeployTemplate); err != nil {
 		return "", err
 	}
 
@@ -234,7 +234,7 @@ func readNameSuffixFromARMTemplate(armTemplateHandle io.Reader) (string, error) 
 		defaultValueKey = "defaultValue"
 	)
 
-	if templateParameters, okType = (*template)[parametersKey].(map[string]interface{}); !okType {
+	if templateParameters, okType = (*azureDeployTemplate)[parametersKey].(map[string]interface{}); !okType {
 		return "", errors.Errorf("error asserting data from key \"%s\" in file %q",
 			parametersKey, "azuredeploy.json")
 	}
