@@ -81,7 +81,7 @@ func createKubernetesMasterResources(cs *api.ContainerService) []interface{} {
 	isKMSEnabled := to.Bool(cs.Properties.OrchestratorProfile.KubernetesConfig.EnableEncryptionWithExternalKms)
 
 	if isKMSEnabled {
-		keyVaultStorageAccount := createKeyVaultStorageAccount(cs)
+		keyVaultStorageAccount := createKeyVaultStorageAccount()
 		masterResources = append(masterResources, keyVaultStorageAccount)
 		keyVault := CreateKeyVault(cs)
 		masterResources = append(masterResources, keyVault)
@@ -141,7 +141,7 @@ func createKubernetesMasterResourcesVMSS(cs *api.ContainerService) []interface{}
 	isKMSEnabled := to.Bool(cs.Properties.OrchestratorProfile.KubernetesConfig.EnableEncryptionWithExternalKms)
 
 	if isKMSEnabled {
-		keyVaultStorageAccount := createKeyVaultStorageAccount(cs)
+		keyVaultStorageAccount := createKeyVaultStorageAccount()
 		masterResources = append(masterResources, keyVaultStorageAccount)
 		keyVault := CreateKeyVaultVMSS(cs)
 		masterResources = append(masterResources, keyVault)

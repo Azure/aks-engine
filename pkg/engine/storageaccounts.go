@@ -57,7 +57,7 @@ func createJumpboxStorageAccount() StorageAccountARM {
 	}
 }
 
-func createKeyVaultStorageAccount(cs *api.ContainerService) StorageAccountARM {
+func createKeyVaultStorageAccount() StorageAccountARM {
 	return StorageAccountARM{
 		ARMResource: ARMResource{
 			APIVersion: "[variables('apiVersionStorage')]",
