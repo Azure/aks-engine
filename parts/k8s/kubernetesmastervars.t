@@ -145,6 +145,7 @@
     {{if IsAzureStackCloud}}
     "provisionConfigsCustomCloud": "{{GetKubernetesB64ConfigsCustomCloud}}",
     {{end}}
+    "systemConf": "{{GetB64systemConf}}",
     "mountetcdScript": "{{GetKubernetesB64Mountetcd}}",
     "customSearchDomainsScript": "{{GetKubernetesB64CustomSearchDomainsScript}}",
     "sshdConfig": "{{GetB64sshdConfig}}",
