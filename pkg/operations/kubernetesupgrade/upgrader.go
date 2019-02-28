@@ -362,13 +362,13 @@ func (ku *Upgrader) upgradeAgentPools(ctx context.Context) error {
 			}
 			ku.logger.Infof("Upgrading Agent VM: %s, pool name: %s", vm.name, *agentPool.Name)
 
-			// copy custom properties from old node to new node if the NotPreserveNodesProperties in AgentPoolProfile is not set to true explicitly.
-			notPreserveNodesProperties := false
-			if agentPoolProfile != nil && agentPoolProfile.NotPreserveNodesProperties != nil {
-				notPreserveNodesProperties = *agentPoolProfile.NotPreserveNodesProperties
+			// copy custom properties from old node to new node if the PreserveNodesProperties in AgentPoolProfile is not set to false explicitly.
+			preserveNodesProperties := false
+			if agentPoolProfile != nil && agentPoolProfile.PreserveNodesProperties != nil {
+				preserveNodesProperties = *agentPoolProfile.PreserveNodesProperties
 			}
 
-			if !notPreserveNodesProperties {
+			if preserveNodesProperties {
 				if len(newCreatedVMs) > 0 {
 					newNodeName := newCreatedVMs[0]
 					newCreatedVMs = newCreatedVMs[1:]
@@ -518,16 +518,16 @@ func (ku *Upgrader) upgradeAgentScaleSets(ctx context.Context) error {
 				vmssToUpgrade.Name,
 			)
 
-			// copy custom properties from old node to new node if the NotPreserveNodesProperties in AgentPoolProfile is not set to true explicitly.
-			notPreserveNodesProperties := false
+			// copy custom properties from old node to new node if the PreserveNodesProperties in AgentPoolProfile is not set to false explicitly.
+			preserveNodesProperties := false
 			poolName, _, _ := utils.VmssNameParts(vmssToUpgrade.Name)
 			if agentPool, ok := agentPoolMap[poolName]; ok {
-				if agentPool != nil && agentPool.NotPreserveNodesProperties != nil {
-					notPreserveNodesProperties = *agentPool.NotPreserveNodesProperties
+				if agentPool != nil && agentPool.PreserveNodesProperties != nil {
+					preserveNodesProperties = *agentPool.PreserveNodesProperties
 				}
 			}
 
-			if !notPreserveNodesProperties {
+			if preserveNodesProperties {
 				newNodeName, err := ku.getLastVMNameInVMSS(ctx, ku.ClusterTopology.ResourceGroup, vmssToUpgrade.Name)
 				if err != nil {
 					return err
@@ -609,7 +609,7 @@ func (ku *Upgrader) getLastVMNameInVMSS(ctx context.Context, resourceGroup strin
 		}
 
 		vms := vmScaleSetVMsPage.Values()
-		if vms != nil {
+		if vms != nil && len(vms) > 0 {
 			vm := vms[len(vms)-1]
 			lastVMName = *vm.VirtualMachineScaleSetVMProperties.OsProfile.ComputerName
 		}

@@ -4,10 +4,11 @@
 package kubernetesupgrade
 
 import (
+	"context"
+	"fmt"
 	"os"
 	"testing"
-
-	"fmt"
+	"time"
 
 	"github.com/Azure/aks-engine/pkg/api"
 	"github.com/Azure/aks-engine/pkg/armhelpers"
@@ -330,5 +331,61 @@ var _ = Describe("Upgrade Kubernetes cluster tests", func() {
 
 		err := uc.UpgradeCluster(&mockClient, "kubeConfig", TestAKSEngineVersion)
 		Expect(err).To(BeNil())
+	})
+
+	It("Tests GetLastVMNameInVMSS", func() {
+		ctx, _ := context.WithTimeout(context.Background(), 90*time.Minute)
+
+		mockClient := armhelpers.MockAKSEngineClient{}
+		mockClient.FakeListVirtualMachineScaleSetsResult = func() []compute.VirtualMachineScaleSet {
+			scalesetName := "scalesetName"
+			sku := compute.Sku{}
+			location := "eastus"
+			return []compute.VirtualMachineScaleSet{
+				{
+					Name:     &scalesetName,
+					Sku:      &sku,
+					Location: &location,
+				},
+			}
+		}
+		mockClient.FakeListVirtualMachineScaleSetVMsResult = func() []compute.VirtualMachineScaleSetVM {
+			return []compute.VirtualMachineScaleSetVM{
+				mockClient.MakeFakeVirtualMachineScaleSetVMWithGivenName("Kubernetes:1.9.10", "aks-agentnode1-123456-vmss000002"),
+				mockClient.MakeFakeVirtualMachineScaleSetVMWithGivenName("Kubernetes:1.9.10", "aks-agentnode1-123456-vmss000003"),
+				mockClient.MakeFakeVirtualMachineScaleSetVMWithGivenName("Kubernetes:1.9.10", "aks-agentnode1-123456-vmss000004"),
+				mockClient.MakeFakeVirtualMachineScaleSetVMWithGivenName("Kubernetes:1.9.10", "aks-agentnode1-123456-vmss000005"),
+			}
+		}
+
+		u := &Upgrader{}
+		u.Init(&i18n.Translator{}, log.NewEntry(log.New()), ClusterTopology{}, &mockClient, "", nil, TestAKSEngineVersion)
+
+		vmname, err := u.getLastVMNameInVMSS(ctx, "resourcegroup", "scalesetName")
+		Expect(vmname).To(Equal("aks-agentnode1-123456-vmss000005"))
+		Expect(err).NotTo(HaveOccurred())
+
+		mockClient.FakeListVirtualMachineScaleSetVMsResult = func() []compute.VirtualMachineScaleSetVM {
+			return []compute.VirtualMachineScaleSetVM{
+				mockClient.MakeFakeVirtualMachineScaleSetVMWithGivenName("Kubernetes:1.9.10", "aks-agentnode1-123456-vmss000002"),
+				mockClient.MakeFakeVirtualMachineScaleSetVMWithGivenName("Kubernetes:1.9.10", "aks-agentnode1-123456-vmss000003"),
+				mockClient.MakeFakeVirtualMachineScaleSetVMWithGivenName("Kubernetes:1.9.10", "aks-agentnode1-123456-vmss000004"),
+				mockClient.MakeFakeVirtualMachineScaleSetVMWithGivenName("Kubernetes:1.9.10", ""),
+			}
+		}
+		u.Init(&i18n.Translator{}, log.NewEntry(log.New()), ClusterTopology{}, &mockClient, "", nil, TestAKSEngineVersion)
+
+		vmname, err = u.getLastVMNameInVMSS(ctx, "resourcegroup", "scalesetName")
+		Expect(vmname).To(Equal(""))
+		Expect(err).To(HaveOccurred())
+
+		mockClient.FakeListVirtualMachineScaleSetVMsResult = func() []compute.VirtualMachineScaleSetVM {
+			return []compute.VirtualMachineScaleSetVM{}
+		}
+		u.Init(&i18n.Translator{}, log.NewEntry(log.New()), ClusterTopology{}, &mockClient, "", nil, TestAKSEngineVersion)
+
+		vmname, err = u.getLastVMNameInVMSS(ctx, "resourcegroup", "scalesetName")
+		Expect(vmname).To(Equal(""))
+		Expect(err).To(HaveOccurred())
 	})
 })
