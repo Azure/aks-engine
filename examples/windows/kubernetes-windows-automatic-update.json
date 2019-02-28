@@ -22,7 +22,7 @@
             "windowsPublisher": "MicrosoftWindowsServer",
             "windowsOffer": "WindowsServerSemiAnnual",
             "windowsSku": "Datacenter-Core-1803-with-Containers-smalldisk",
-            "enableAutomaticUpdates": "false"
+            "enableAutomaticUpdates": false
         },
         "linuxProfile": {
             "adminUsername": "azureuser",

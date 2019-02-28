@@ -61,7 +61,7 @@ If you want to disable automatic Windows updates, you can use the `enableAutomat
             "windowsPublisher": "MicrosoftWindowsServer",
             "windowsOffer": "WindowsServerSemiAnnual",
             "windowsSku": "Datacenter-Core-1809-with-Containers-smalldisk",
-            "enableAutomaticUpdates": "false"
+            "enableAutomaticUpdates": false
      },
 ```
 

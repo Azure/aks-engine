@@ -207,7 +207,7 @@ type WindowsProfile struct {
 	WindowsDockerVersion   string            `json:"windowsDockerVersion"`
 	Secrets                []KeyVaultSecrets `json:"secrets,omitempty"`
 	SSHEnabled             bool              `json:"sshEnabled,omitempty"`
-	EnableAutomaticUpdates string            `json:"enableAutomaticUpdates,omitempty"`
+	EnableAutomaticUpdates *bool             `json:"enableAutomaticUpdates,omitempty"`
 }
 
 // ProvisioningState represents the current state of container service resource.
@@ -1162,11 +1162,11 @@ func (w *WindowsProfile) GetWindowsSku() string {
 }
 
 // GetEnableWindowsUpdate gets the flag for enable windows update or returns the default value
-func (w *WindowsProfile) GetEnableWindowsUpdate() string {
-	if w.EnableAutomaticUpdates != "" {
-		return w.EnableAutomaticUpdates
+func (w *WindowsProfile) GetEnableWindowsUpdate() bool {
+	if w.EnableAutomaticUpdates != nil {
+		return *w.EnableAutomaticUpdates
 	}
-	return "true"
+	return true
 }
 
 // HasSecrets returns true if the customer specified secrets to install

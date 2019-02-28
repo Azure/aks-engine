@@ -849,8 +849,8 @@ func TestWindowsProfile(t *testing.T) {
 	}
 
 	update := w.GetEnableWindowsUpdate()
-	if update != "true" {
-		t.Fatalf("Expected GetEnableWindowsUpdate() to equal default 'true', got %s", update)
+	if update != true {
+		t.Fatalf("Expected GetEnableWindowsUpdate() to equal default 'true', got %t", update)
 	}
 
 	w = WindowsProfile{
@@ -873,9 +873,9 @@ func TestWindowsProfile(t *testing.T) {
 	}
 
 	w = WindowsProfile{
-		WindowsDockerVersion:   "18.03.1-ee-3",
-		WindowsSku:             "Datacenter-Core-1809-with-Containers-smalldisk",
-		SSHEnabled:             true
+		WindowsDockerVersion: "18.03.1-ee-3",
+		WindowsSku:           "Datacenter-Core-1809-with-Containers-smalldisk",
+		SSHEnabled:           true,
 	}
 
 	dv = w.GetWindowsDockerVersion()

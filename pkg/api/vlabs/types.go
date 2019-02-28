@@ -166,7 +166,7 @@ type WindowsProfile struct {
 	WindowsDockerVersion   string            `json:"windowsDockerVersion"`
 	Secrets                []KeyVaultSecrets `json:"secrets,omitempty"`
 	SSHEnabled             bool              `json:"sshEnabled,omitempty"`
-	EnableAutomaticUpdates string            `json:"enableAutomaticUpdates,omitempty"`
+	EnableAutomaticUpdates *bool             `json:"enableAutomaticUpdates,omitempty"`
 }
 
 // ProvisioningState represents the current state of container service resource.
