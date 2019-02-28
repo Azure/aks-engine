@@ -20,4 +20,5 @@ generate-sas: az-login
 	az storage container generate-sas --name vhds --permissions lr --connection-string "${CLASSIC_SA_CONNECTION_STRING}" --start ${START_DATE} --expiry ${EXPIRY_DATE} | tr -d '"' | tee -a vhd-sas && cat vhd-sas
 
 make vhd-notes:
-	awk '/cat \/var\/log\/azure\/golden-image-install\.complete/{y=1;next}y' packer-output > release-notes && awk '/rm -f \/root\/\.ssh\/authorized_keys/ {exit} {print}' release-notes > release-notes-trimmed && cat release-notes-trimmed
+	awk '/cat \/var\/log\/azure\/golden-image-install\.complete/{y=1;next}y' packer-output > release-notes && awk '/rm -f \/root\/\.ssh\/authorized_keys/ {exit} {print}' release-notes > release-notes-trimmed && sed -e s/azure-arm://g -i release-notes-trimmed
+ && cat release-notes-trimmed
