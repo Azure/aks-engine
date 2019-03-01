@@ -20,4 +20,4 @@ generate-sas: az-login
 	az storage container generate-sas --name vhds --permissions lr --connection-string "${CLASSIC_SA_CONNECTION_STRING}" --start ${START_DATE} --expiry ${EXPIRY_DATE} | tr -d '"' | tee -a vhd-sas && cat vhd-sas
 
 make vhd-notes:
-	awk '/START_OF_NOTES/{y=1;next}y' packer-output > release-notes && awk '/END_OF_NOTES/ {exit} {print}' release-notes > release-notes-trimmed && sed -e s/azure-arm://g -i release-notes-trimmed && cat release-notes-trimmed
+	awk '/START_OF_NOTES/{y=1;next}y' packer-output > release-notes.txt && awk '/END_OF_NOTES/ {exit} {print}' release-notes.txt > release-notes-trimmed.txt && sed -e s/azure-arm://g -i release-notes-trimmed.txt && cat release-notes-trimmed.txt
