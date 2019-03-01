@@ -254,7 +254,7 @@ echo "VSTS Build ID: ${BUILD_ID}" >> /var/log/azure/golden-image-install.complet
 echo "Commit: ${COMMIT}" >> /var/log/azure/golden-image-install.complete
 echo "Feature flags: ${FEATURE_FLAGS}" >> /var/log/azure/golden-image-install.complete
 
-# The below echo statements are used to extract release notes from the packer output
+# The below statements are used to extract release notes from the packer output
 set +x
 echo "START_OF_NOTES"
 cat /var/log/azure/golden-image-install.complete
