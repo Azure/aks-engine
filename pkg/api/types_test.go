@@ -848,6 +848,11 @@ func TestWindowsProfile(t *testing.T) {
 		t.Fatalf("Expected GetWindowsSku() to equal default KubernetesDefaultWindowsSku, got %s", windowsSku)
 	}
 
+	update := w.GetEnableWindowsUpdate()
+	if update != true {
+		t.Fatalf("Expected GetEnableWindowsUpdate() to equal default 'true', got %t", update)
+	}
+
 	w = WindowsProfile{
 		Secrets: []KeyVaultSecrets{
 			{
