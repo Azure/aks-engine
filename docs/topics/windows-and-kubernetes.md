@@ -50,6 +50,21 @@ You can use the Offer, Publisher and Sku to pick a specific version by adding `w
      },
 ```
 
+### Disabling automatic updates
+
+If you want to disable automatic Windows updates, you can use the `enableAutomaticUpdates` option.
+
+```json
+"windowsProfile": {
+            "adminUsername": "azureuser",
+            "adminPassword": "...",
+            "windowsPublisher": "MicrosoftWindowsServer",
+            "windowsOffer": "WindowsServerSemiAnnual",
+            "windowsSku": "Datacenter-Core-1809-with-Containers-smalldisk",
+            "enableAutomaticUpdates": false
+     },
+```
+
 ## More Examples
 
 ### Using Azure Files

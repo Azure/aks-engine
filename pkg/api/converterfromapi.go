@@ -611,6 +611,7 @@ func convertWindowsProfileToVLabs(api *WindowsProfile, vlabsProfile *vlabs.Windo
 		vlabsProfile.Secrets = append(vlabsProfile.Secrets, *secret)
 	}
 	vlabsProfile.SSHEnabled = api.SSHEnabled
+	vlabsProfile.EnableAutomaticUpdates = api.EnableAutomaticUpdates
 }
 
 func convertOrchestratorProfileToV20160930(api *OrchestratorProfile, o *v20160930.OrchestratorProfile) {

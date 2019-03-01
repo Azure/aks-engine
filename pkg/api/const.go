@@ -220,6 +220,8 @@ const (
 	// DefaultMaximumLoadBalancerRuleCount determines the default value of maximum allowed loadBalancer rule count according to
 	// https://docs.microsoft.com/en-us/azure/azure-subscription-service-limits#load-balancer.
 	DefaultMaximumLoadBalancerRuleCount = 250
+	// DefaultEnableAutomaticUpdates determines the aks-engine provided default for enabling automatic updates
+	DefaultEnableAutomaticUpdates = true
 	// DefaultPreserveNodesProperties determines the aks-engine provided default for preserving nodes properties
 	DefaultPreserveNodesProperties = true
 )

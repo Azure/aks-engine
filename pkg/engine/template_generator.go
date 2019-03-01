@@ -886,6 +886,9 @@ func (t *TemplateGenerator) getTemplateFuncMap(cs *api.ContainerService) templat
 		"WindowsSSHEnabled": func() bool {
 			return cs.Properties.WindowsProfile.SSHEnabled
 		},
+		"WindowsAutomaticUpdateEnabled": func() bool {
+			return cs.Properties.WindowsProfile.GetEnableWindowsUpdate()
+		},
 		"GetConfigurationScriptRootURL": func() string {
 			if cs.Properties.LinuxProfile.ScriptRootURL == "" {
 				return DefaultConfigurationScriptRootURL
