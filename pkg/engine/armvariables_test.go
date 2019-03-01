@@ -142,6 +142,7 @@ func TestK8sVars(t *testing.T) {
 		"subnetName":                                "[concat(parameters('orchestratorName'), '-subnet')]",
 		"subnetNameResourceSegmentIndex":            10,
 		"subscriptionId":                            "[subscription().subscriptionId]",
+		"systemConf":                                "H4sIAAAAAAAA/xzFMQqAMAwF0N2z5ApOboInEJEaPrWQJiVNB28vOr19S5oy/JhWK7qYhpsIvM/cBnEbiTk+O4IUcbL03+bF6B4ZIRdVVPPnDQAA///t4NIJTAAAAA==",
 		"tenantId":                                  "[subscription().tenantId]",
 		"truncatedResourceGroup":                    "[take(replace(replace(resourceGroup().name, '(', '-'), ')', '-'), 63)]",
 		"useInstanceMetadata":                       "true",

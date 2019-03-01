@@ -38,3 +38,7 @@ func GetKubernetesB64GenerateProxyCerts() string {
 func GetB64sshdConfig() string {
 	return getBase64CustomScript(sshdConfig)
 }
+
+func GetB64systemConf() string {
+	return getBase64CustomScript(systemConf)
+}
