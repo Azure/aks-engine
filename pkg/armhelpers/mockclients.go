@@ -25,6 +25,12 @@ import (
 	v1 "k8s.io/api/core/v1"
 )
 
+const (
+	defaultK8sVersionForFakeVMs = "Kubernetes:1.9.10"
+	//DefaultFakeVMName is the default name assigned to VMs part of FakeListVirtualMachineScaleSetVMsResult and FakeListVirtualMachineResult
+	DefaultFakeVMName = "k8s-agentpool1-12345678-0"
+)
+
 //MockAKSEngineClient is an implementation of AKSEngineClient where all requests error out
 type MockAKSEngineClient struct {
 	FailDeployTemplate                      bool
@@ -48,6 +54,7 @@ type MockAKSEngineClient struct {
 	FailDeleteRoleAssignment                bool
 	MockKubernetesClient                    *MockKubernetesClient
 	FakeListVirtualMachineScaleSetsResult   func() []compute.VirtualMachineScaleSet
+	FakeListVirtualMachineResult            func() []compute.VirtualMachine
 	FakeListVirtualMachineScaleSetVMsResult func() []compute.VirtualMachineScaleSetVM
 }
 
@@ -455,10 +462,14 @@ func (mc *MockAKSEngineClient) ListVirtualMachines(ctx context.Context, resource
 		}, errors.New("ListVirtualMachines failed")
 	}
 
-	vm1 := mc.MakeFakeVirtualMachine()
-
+	if mc.FakeListVirtualMachineResult == nil {
+		mc.FakeListVirtualMachineResult = func() []compute.VirtualMachine {
+			return []compute.VirtualMachine{mc.MakeFakeVirtualMachine(DefaultFakeVMName, defaultK8sVersionForFakeVMs)}
+		}
+	}
+	vms := mc.FakeListVirtualMachineResult()
 	vmr := compute.VirtualMachineListResult{}
-	vmr.Value = &[]compute.VirtualMachine{vm1}
+	vmr.Value = &vms
 
 	return &MockVirtualMachineListResultPage{
 		Fn: func(lastResults compute.VirtualMachineListResult) (compute.VirtualMachineListResult, error) {
@@ -497,7 +508,7 @@ func (mc *MockAKSEngineClient) GetVirtualMachine(ctx context.Context, resourceGr
 	if mc.FailGetVirtualMachine {
 		return compute.VirtualMachine{}, errors.New("GetVirtualMachine failed")
 	}
-	return mc.MakeFakeVirtualMachine(), nil
+	return mc.MakeFakeVirtualMachine(DefaultFakeVMName, defaultK8sVersionForFakeVMs), nil
 }
 
 // MakeFakeVirtualMachineScaleSetVM creates a fake VMSS VM
@@ -555,8 +566,8 @@ func (mc *MockAKSEngineClient) MakeFakeVirtualMachineScaleSetVMWithGivenName(orc
 }
 
 //MakeFakeVirtualMachine returns a fake compute.VirtualMachine
-func (mc *MockAKSEngineClient) MakeFakeVirtualMachine() compute.VirtualMachine {
-	vm1Name := "k8s-agentpool1-12345678-0"
+func (mc *MockAKSEngineClient) MakeFakeVirtualMachine(vmName string, orchestratorVersion string) compute.VirtualMachine {
+	vm1Name := vmName
 
 	creationSourceString := "creationSource"
 	orchestratorString := "orchestrator"
@@ -564,7 +575,7 @@ func (mc *MockAKSEngineClient) MakeFakeVirtualMachine() compute.VirtualMachine {
 	poolnameString := "poolName"
 
 	creationSource := "aksengine-k8s-agentpool1-12345678-0"
-	orchestrator := "Kubernetes:1.9.10"
+	orchestrator := orchestratorVersion
 	resourceNameSuffix := "12345678"
 	poolname := "agentpool1"
 

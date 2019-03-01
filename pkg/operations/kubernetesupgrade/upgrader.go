@@ -633,6 +633,10 @@ func (ku *Upgrader) copyCustomPropertiesToNewNode(client armhelpers.KubernetesCl
 		return err
 	}
 
+	return ku.copyCustomNodeProperties(client, oldNodeName, oldNode, newNodeName, newNode)
+}
+
+func (ku *Upgrader) copyCustomNodeProperties(client armhelpers.KubernetesClient, oldNodeName string, oldNode *v1.Node, newNodeName string, newNode *v1.Node) error {
 	// copy additional custom annotations from old node to new node
 	if oldNode.Annotations != nil {
 		if newNode.Annotations == nil {
@@ -667,7 +671,7 @@ func (ku *Upgrader) copyCustomPropertiesToNewNode(client armhelpers.KubernetesCl
 		}
 	}
 
-	_, err = client.UpdateNode(newNode)
+	_, err := client.UpdateNode(newNode)
 
 	return err
 }

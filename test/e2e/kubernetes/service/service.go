@@ -18,6 +18,8 @@ import (
 	"github.com/pkg/errors"
 )
 
+const commandTimeout = 1 * time.Minute
+
 // Service represents a kubernetes service
 type Service struct {
 	Metadata Metadata `json:"metadata"`
@@ -82,7 +84,7 @@ func (s *Service) Delete(retries int) error {
 	var kubectlError error
 	for i := 0; i < retries; i++ {
 		cmd := exec.Command("k", "delete", "svc", "-n", s.Metadata.Namespace, s.Metadata.Name)
-		kubectlOutput, kubectlError = util.RunAndLogCommand(cmd)
+		kubectlOutput, kubectlError = util.RunAndLogCommand(cmd, commandTimeout)
 		if kubectlError != nil {
 			log.Printf("Error while trying to delete service %s in namespace %s:%s\n", s.Metadata.Namespace, s.Metadata.Name, string(kubectlOutput))
 			continue

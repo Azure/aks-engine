@@ -15,6 +15,8 @@ import (
 	"github.com/pkg/errors"
 )
 
+const commandTimeout = 1 * time.Minute
+
 // PersistentVolumeClaims is used to parse data from kubectl get pvc
 type PersistentVolumeClaims struct {
 	Metadata Metadata `json:"metadata"`
@@ -93,7 +95,7 @@ func (pvc *PersistentVolumeClaims) Delete(retries int) error {
 	var kubectlError error
 	for i := 0; i < retries; i++ {
 		cmd := exec.Command("k", "delete", "pvc", "-n", pvc.Metadata.NameSpace, pvc.Metadata.Name)
-		kubectlOutput, kubectlError = util.RunAndLogCommand(cmd)
+		kubectlOutput, kubectlError = util.RunAndLogCommand(cmd, commandTimeout)
 		if kubectlError != nil {
 			log.Printf("Error while trying to delete PVC %s in namespace %s:%s\n", pvc.Metadata.Name, pvc.Metadata.NameSpace, string(kubectlOutput))
 			continue
