@@ -425,6 +425,9 @@ func createAgentAvailabilitySetVM(cs *api.ContainerService, profile *api.AgentPo
 	} else {
 		osProfile.AdminUsername = to.StringPtr("[parameters('windowsAdminUsername')]")
 		osProfile.AdminPassword = to.StringPtr("[parameters('windowsAdminPassword')]")
+		osProfile.WindowsConfiguration = &compute.WindowsConfiguration{
+			EnableAutomaticUpdates: to.BoolPtr(cs.Properties.WindowsProfile.GetEnableWindowsUpdate()),
+		}
 		agentCustomData := getCustomDataFromJSON(t.GetKubernetesWindowsAgentCustomDataJSON(cs, profile))
 		osProfile.CustomData = to.StringPtr(agentCustomData)
 	}

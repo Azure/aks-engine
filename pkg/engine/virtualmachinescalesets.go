@@ -479,7 +479,10 @@ func CreateAgentVMSS(cs *api.ContainerService, profile *api.AgentPoolProfile) Vi
 		windowsOsProfile := compute.VirtualMachineScaleSetOSProfile{
 			AdminUsername: to.StringPtr("[parameters('windowsAdminUsername')]"),
 			AdminPassword: to.StringPtr("[parameters('windowsAdminPassword')]"),
-			CustomData:    to.StringPtr(customDataStr),
+			WindowsConfiguration: &compute.WindowsConfiguration{
+				EnableAutomaticUpdates: to.BoolPtr(cs.Properties.WindowsProfile.GetEnableWindowsUpdate()),
+			},
+			CustomData: to.StringPtr(customDataStr),
 		}
 		vmssVMProfile.OsProfile = &windowsOsProfile
 	} else {
