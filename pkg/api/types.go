@@ -1166,7 +1166,7 @@ func (w *WindowsProfile) GetEnableWindowsUpdate() bool {
 	if w.EnableAutomaticUpdates != nil {
 		return *w.EnableAutomaticUpdates
 	}
-	return true
+	return DefaultEnableAutomaticUpdates
 }
 
 // HasSecrets returns true if the customer specified secrets to install
