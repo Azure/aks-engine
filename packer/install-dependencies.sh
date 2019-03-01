@@ -255,6 +255,8 @@ echo "Commit: ${COMMIT}" >> /var/log/azure/golden-image-install.complete
 echo "Feature flags: ${FEATURE_FLAGS}" >> /var/log/azure/golden-image-install.complete
 
 # The below echo statements are used to extract release notes from the packer output
+set +x
 echo "START_OF_NOTES"
 cat /var/log/azure/golden-image-install.complete
 echo "END_OF_NOTES"
+set -x
