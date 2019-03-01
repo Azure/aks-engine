@@ -2,11 +2,12 @@
 source /home/packer/provision_installs.sh
 source /home/packer/provision_source.sh
 
+exit 1
+
 echo "Starting build on " `date` > /var/log/azure/golden-image-install.complete
 echo "Using kernel:" >> /var/log/azure/golden-image-install.complete
 cat /proc/version | tee -a /var/log/azure/golden-image-install.complete
 echo "Components downloaded in this VHD build (some of the below components might get deleted during cluster provisioning if they are not needed):\n" >> /var/log/azure/golden-image-install.complete
-
 
 
 ETCD_VERSION="3.2.25"
