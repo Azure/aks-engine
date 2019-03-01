@@ -319,6 +319,20 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				running, err := p.WaitOnReady(retryTimeWhenWaitingForPodReady, 2*time.Minute)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(running).To(Equal(true))
+			}
+			if eng.HasWindowsAgents() && !eng.HasNetworkPolicy("calico") {
+				windowsPod, err := pod.CreatePodFromFile(filepath.Join(WorkloadDir, "dns-liveness-windows.yaml"), "dns-liveness-windows", "default", 1*time.Second, cfg.Timeout)
+				if cfg.SoakClusterName == "" {
+					Expect(err).NotTo(HaveOccurred())
+				} else {
+					if err != nil {
+						windowsPod, err = pod.Get("dns-liveness-windows", "default")
+						Expect(err).NotTo(HaveOccurred())
+					}
+				}
+				running, err := windowsPod.WaitOnReady(30*time.Second, cfg.Timeout)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(running).To(Equal(true))
 			} else {
 				Skip("We don't run DNS liveness checks on calico clusters ( //TODO )")
 			}
@@ -1378,6 +1392,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 	Describe("after the cluster has been up for awhile", func() {
 		It("dns-liveness pod should not have any restarts", func() {
 			if !eng.HasNetworkPolicy("calico") {
+				By("by checking restarts on pod")
 				pod, err := pod.Get("dns-liveness", "default")
 				Expect(err).NotTo(HaveOccurred())
 				running, err := pod.WaitOnReady(retryTimeWhenWaitingForPodReady, 3*time.Minute)
@@ -1390,6 +1405,22 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 					Expect(restarts).To(Equal(0))
 				} else {
 					log.Printf("%d DNS livenessProbe restarts since this cluster was created...\n", restarts)
+				}
+			}
+			if eng.HasWindowsAgents() && !eng.HasNetworkPolicy("calico") {
+				By("by checking restarts on windows pod")
+				windowspod, err := pod.Get("dns-liveness-windows", "default")
+				Expect(err).NotTo(HaveOccurred())
+				running, err := windowspod.WaitOnReady(5*time.Second, 3*time.Minute)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(running).To(Equal(true))
+				restarts := windowspod.Status.ContainerStatuses[0].RestartCount
+				if cfg.SoakClusterName == "" {
+					err = windowspod.Delete(deleteResourceRetries)
+					Expect(err).NotTo(HaveOccurred())
+					Expect(restarts).To(Equal(0))
+				} else {
+					log.Printf("%d Windows DNS livenessProbe restarts since this cluster was created...\n", restarts)
 				}
 			} else {
 				Skip("We don't run DNS liveness checks on calico clusters ( //TODO )")
