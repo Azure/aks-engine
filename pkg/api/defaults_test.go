@@ -1751,6 +1751,14 @@ func TestCustomCloudLocation(t *testing.T) {
 	}
 }
 
+func TestPreserveNodesProperties(t *testing.T) {
+	mockCS := getMockBaseContainerService("1.10.8")
+	mockCS.SetPropertiesDefaults(false, false)
+	if !to.Bool(mockCS.Properties.AgentPoolProfiles[0].PreserveNodesProperties) {
+		t.Errorf("expected preserveNodesProperties to be %t instead got %t", true, to.Bool(mockCS.Properties.AgentPoolProfiles[0].PreserveNodesProperties))
+	}
+}
+
 func getMockBaseContainerService(orchestratorVersion string) ContainerService {
 	mockAPIProperties := getMockAPIProperties(orchestratorVersion)
 	return ContainerService{

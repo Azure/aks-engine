@@ -140,12 +140,24 @@ func (ku *Upgrader) upgradeMasterNodes(ctx context.Context) error {
 		upgradedMastersIndex[masterIndex] = true
 	}
 
+	client, err := ku.getKubernetesClient()
+	if err != nil {
+		ku.logger.Errorf("Error getting Kubernetes client: %v", err)
+		return err
+	}
+
 	for _, vm := range *ku.ClusterTopology.MasterVMs {
 		ku.logger.Infof("Upgrading Master VM: %s", *vm.Name)
 
 		masterIndex, _ := utils.GetVMNameIndex(vm.StorageProfile.OsDisk.OsType, *vm.Name)
 
-		err := upgradeMasterNode.DeleteNode(vm.Name, false)
+		// Get the old master node's propertyies before it is deleted
+		oldNode, err := client.GetNode(*vm.Name)
+		if err != nil {
+			return err
+		}
+
+		err = upgradeMasterNode.DeleteNode(vm.Name, false)
 		if err != nil {
 			ku.logger.Infof("Error deleting master VM: %s, err: %v", *vm.Name, err)
 			return err
@@ -161,6 +173,16 @@ func (ku *Upgrader) upgradeMasterNodes(ctx context.Context) error {
 		if err != nil {
 			ku.logger.Infof("Error validating upgraded master VM: %s", *vm.Name)
 			return err
+		}
+
+		newNode, err := client.GetNode(*vm.Name)
+		if err != nil {
+			return err
+		}
+
+		err = ku.copyCustomNodeProperties(client, *vm.Name, oldNode, *vm.Name, newNode)
+		if err != nil {
+			ku.logger.Warningf("Failed to preserve custom annotations, labels, taints for master node %s: %v", *vm.Name, err)
 		}
 
 		upgradedMastersIndex[masterIndex] = true
@@ -363,7 +385,7 @@ func (ku *Upgrader) upgradeAgentPools(ctx context.Context) error {
 			ku.logger.Infof("Upgrading Agent VM: %s, pool name: %s", vm.name, *agentPool.Name)
 
 			// copy custom properties from old node to new node if the PreserveNodesProperties in AgentPoolProfile is not set to false explicitly.
-			preserveNodesProperties := true
+			preserveNodesProperties := api.DefaultPreserveNodesProperties
 			if agentPoolProfile != nil && agentPoolProfile.PreserveNodesProperties != nil {
 				preserveNodesProperties = *agentPoolProfile.PreserveNodesProperties
 			}
@@ -375,7 +397,7 @@ func (ku *Upgrader) upgradeAgentPools(ctx context.Context) error {
 					ku.logger.Infof("Copying custom annotations, labels, taints from old node %s to new node %s...", vm.name, newNodeName)
 					err = ku.copyCustomPropertiesToNewNode(client, vm.name, newNodeName)
 					if err != nil {
-						ku.logger.Errorf("Failed to copy custom annotations, labels, taints from old node %s to new node %s: %v", vm.name, newNodeName, err)
+						ku.logger.Warningf("Failed to copy custom annotations, labels, taints from old node %s to new node %s: %v", vm.name, newNodeName, err)
 					}
 				}
 			}
@@ -519,7 +541,7 @@ func (ku *Upgrader) upgradeAgentScaleSets(ctx context.Context) error {
 			)
 
 			// copy custom properties from old node to new node if the PreserveNodesProperties in AgentPoolProfile is not set to false explicitly.
-			preserveNodesProperties := true
+			preserveNodesProperties := api.DefaultPreserveNodesProperties
 			poolName, _, _ := utils.VmssNameParts(vmssToUpgrade.Name)
 			if agentPool, ok := agentPoolMap[poolName]; ok {
 				if agentPool != nil && agentPool.PreserveNodesProperties != nil {
@@ -537,7 +559,7 @@ func (ku *Upgrader) upgradeAgentScaleSets(ctx context.Context) error {
 
 				err = ku.copyCustomPropertiesToNewNode(client, vmToUpgrade.Name, newNodeName)
 				if err != nil {
-					ku.logger.Errorf("Failed to copy custom annotations, labels, taints from old node %s to new node %s: %v", vmToUpgrade.Name, newNodeName, err)
+					ku.logger.Warningf("Failed to copy custom annotations, labels, taints from old node %s to new node %s: %v", vmToUpgrade.Name, newNodeName, err)
 				}
 			}
 
