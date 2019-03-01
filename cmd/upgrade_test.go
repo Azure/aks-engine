@@ -17,6 +17,17 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var validVersionsBackup map[string]bool
+
+func setupValidVersions(validVersions map[string]bool) {
+	validVersionsBackup = common.AllKubernetesSupportedVersions
+	common.AllKubernetesSupportedVersions = validVersions
+}
+
+func resetValidVersions() {
+	common.AllKubernetesSupportedVersions = validVersionsBackup
+}
+
 func TestUpgradeCommandShouldBeValidated(t *testing.T) {
 	g := NewGomegaWithT(t)
 	r := &cobra.Command{}
@@ -110,11 +121,10 @@ func TestCreateUpgradeCommandSuccesfully(t *testing.T) {
 	g.Expect(output.Flags().Lookup("upgrade-version")).NotTo(BeNil())
 }
 
-//TODO: Should it fail or should it pass without --force? hmm
 func TestUpgradeShouldFailForSameVersion(t *testing.T) {
-	common.AllKubernetesSupportedVersions = map[string]bool{
+	setupValidVersions(map[string]bool{
 		"1.10.13": true,
-	}
+	})
 	fakeARMTemplateHandle := strings.NewReader(`{"parameters" : { "nameSuffix" : {"defaultValue" : "test"}}}`)
 	g := NewGomegaWithT(t)
 	upgradeCmd := &upgradeCmd{
@@ -133,13 +143,14 @@ func TestUpgradeShouldFailForSameVersion(t *testing.T) {
 	err := upgradeCmd.validateCurrentLocalState(fakeARMTemplateHandle)
 	g.Expect(err).To(HaveOccurred())
 	g.Expect(err.Error()).To(ContainSubstring("upgrading from Kubernetes version 1.10.13 to version 1.10.13 is not supported"))
+	resetValidVersions()
 }
 
 func TestUpgradeShouldFailForInvalidUpgradePath(t *testing.T) {
-	common.AllKubernetesSupportedVersions = map[string]bool{
+	setupValidVersions(map[string]bool{
 		"1.10.13": false,
 		"1.10.12": true,
-	}
+	})
 	fakeARMTemplateHandle := strings.NewReader(`{"parameters" : { "nameSuffix" : {"defaultValue" : "test"}}}`)
 	g := NewGomegaWithT(t)
 	upgradeCmd := &upgradeCmd{
@@ -158,12 +169,13 @@ func TestUpgradeShouldFailForInvalidUpgradePath(t *testing.T) {
 	err := upgradeCmd.validateCurrentLocalState(fakeARMTemplateHandle)
 	g.Expect(err).To(HaveOccurred())
 	g.Expect(err.Error()).To(ContainSubstring("upgrading from Kubernetes version 1.10.12 to version 1.10.13 is not supported"))
+	resetValidVersions()
 }
 func TestUpgradeShouldSuceedForValidUpgradePath(t *testing.T) {
-	common.AllKubernetesSupportedVersions = map[string]bool{
+	setupValidVersions(map[string]bool{
 		"1.10.13": true,
 		"1.10.12": true,
-	}
+	})
 	fakeARMTemplateHandle := strings.NewReader(`{"parameters" : { "nameSuffix" : {"defaultValue" : "test"}}}`)
 	g := NewGomegaWithT(t)
 	upgradeCmd := &upgradeCmd{
@@ -181,6 +193,7 @@ func TestUpgradeShouldSuceedForValidUpgradePath(t *testing.T) {
 	upgradeCmd.containerService = containerServiceMock
 	err := upgradeCmd.validateCurrentLocalState(fakeARMTemplateHandle)
 	g.Expect(err).NotTo(HaveOccurred())
+	resetValidVersions()
 }
 
 func TestUpgradeFailWithPathWhenAzureDeployJsonIsInvalid(t *testing.T) {
@@ -204,9 +217,9 @@ func TestUpgradeFailWithPathWhenAzureDeployJsonIsInvalid(t *testing.T) {
 	g.Expect(err.Error()).To(ContainSubstring("_output/myspecialtestfolder/azuredeploy.json"))
 }
 func TestUpgradeForceSameVersionShouldSucceed(t *testing.T) {
-	common.AllKubernetesSupportedVersions = map[string]bool{
+	setupValidVersions(map[string]bool{
 		"1.10.13": false,
-	}
+	})
 	fakeARMTemplateHandle := strings.NewReader(`{"parameters" : { "nameSuffix" : {"defaultValue" : "test"}}}`)
 	g := NewGomegaWithT(t)
 	upgradeCmd := &upgradeCmd{
@@ -225,4 +238,5 @@ func TestUpgradeForceSameVersionShouldSucceed(t *testing.T) {
 	upgradeCmd.force = true
 	err := upgradeCmd.validateCurrentLocalState(fakeARMTemplateHandle)
 	g.Expect(err).NotTo(HaveOccurred())
+	resetValidVersions()
 }
