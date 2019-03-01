@@ -18,6 +18,7 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	log "github.com/sirupsen/logrus"
+	v1 "k8s.io/api/core/v1"
 )
 
 const TestAKSEngineVersion = "1.0.0"
@@ -578,14 +579,6 @@ var _ = Describe("Upgrade Kubernetes cluster tests", func() {
 		newNode.Labels = map[string]string{}
 		newNode.Labels["label1"] = "newval1"
 		newNode.Labels["label2"] = "newval2"
-
-		mockClient.MockKubernetesClient.GetNodeFunc = func(nodeName string) (*v1.Node, error) {
-			if nodeName == "oldnode" {
-				return oldNode, nil
-			}
-
-			return newNode, nil
-		}
 
 		mockClient.MockKubernetesClient.UpdateNodeFunc = func(node *v1.Node) (*v1.Node, error) {
 			return node, nil
