@@ -7,7 +7,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"os"
 	"path"
 	"time"
@@ -32,7 +32,7 @@ const (
 )
 
 type upgradeCmd struct {
-	authArgs
+	authProvider
 
 	// user input
 	resourceGroupName   string
@@ -40,6 +40,7 @@ type upgradeCmd struct {
 	upgradeVersion      string
 	location            string
 	timeoutInMinutes    int
+	force               bool
 
 	// derived
 	containerService    *api.ContainerService
@@ -52,7 +53,9 @@ type upgradeCmd struct {
 }
 
 func newUpgradeCmd() *cobra.Command {
-	uc := upgradeCmd{}
+	uc := upgradeCmd{
+		authProvider: &authArgs{},
+	}
 
 	upgradeCmd := &cobra.Command{
 		Use:   upgradeName,
@@ -69,7 +72,8 @@ func newUpgradeCmd() *cobra.Command {
 	f.StringVar(&uc.deploymentDirectory, "deployment-dir", "", "the location of the output from `generate` (required)")
 	f.StringVarP(&uc.upgradeVersion, "upgrade-version", "k", "", "desired kubernetes version (required)")
 	f.IntVar(&uc.timeoutInMinutes, "vm-timeout", -1, "how long to wait for each vm to be upgraded in minutes")
-	addAuthFlags(&uc.authArgs, f)
+	f.BoolVarP(&uc.force, "force", "f", false, "force upgrading the cluster to desired version. Allows same version upgrades and downgrades.")
+	addAuthFlags(uc.getAuthArgs(), f)
 
 	return upgradeCmd
 }
@@ -113,11 +117,11 @@ func (uc *upgradeCmd) validate(cmd *cobra.Command) error {
 func (uc *upgradeCmd) loadCluster(cmd *cobra.Command) error {
 	var err error
 
-	if err = uc.authArgs.validateAuthArgs(); err != nil {
+	if err = uc.getAuthArgs().validateAuthArgs(); err != nil {
 		return err
 	}
 
-	if uc.client, err = uc.authArgs.getClient(); err != nil {
+	if uc.client, err = uc.getAuthArgs().getClient(); err != nil {
 		return errors.Wrap(err, "failed to get client")
 	}
 
@@ -147,22 +151,25 @@ func (uc *upgradeCmd) loadCluster(cmd *cobra.Command) error {
 		return errors.Wrap(err, "error parsing the api model")
 	}
 
-	if uc.containerService.Location == "" {
-		uc.containerService.Location = uc.location
-	} else if uc.containerService.Location != uc.location {
-		return errors.New("--location does not match api model location")
+	templatePath := path.Join(uc.deploymentDirectory, "azuredeploy.json")
+	armTemplateHandle, err := os.Open(templatePath)
+	if err != nil {
+		return errors.Wrap(err, "error reading ARM file")
 	}
+	defer armTemplateHandle.Close()
+	err = uc.validateCurrentLocalState(armTemplateHandle)
+	if err != nil {
+		return errors.Wrap(err, "error validating the api model")
+	}
+	return nil
+}
 
+func (uc *upgradeCmd) validateTargetVersion() error {
 	// Get available upgrades for container service.
 	orchestratorInfo, err := api.GetOrchestratorVersionProfile(uc.containerService.Properties.OrchestratorProfile, uc.containerService.Properties.HasWindows())
 	if err != nil {
 		return errors.Wrap(err, "error getting list of available upgrades")
 	}
-
-	// Add the current version to account for failed upgrades.
-	orchestratorInfo.Upgrades = append(orchestratorInfo.Upgrades, &api.OrchestratorProfile{
-		OrchestratorType:    uc.containerService.Properties.OrchestratorProfile.OrchestratorType,
-		OrchestratorVersion: uc.containerService.Properties.OrchestratorProfile.OrchestratorVersion})
 
 	// Validate desired upgrade version and set goal state.
 	found := false
@@ -176,43 +183,29 @@ func (uc *upgradeCmd) loadCluster(cmd *cobra.Command) error {
 	if !found {
 		return errors.Errorf("upgrading from Kubernetes version %s to version %s is not supported. To see a list of available upgrades, use 'aks-engine get-versions --version %s'", uc.containerService.Properties.OrchestratorProfile.OrchestratorVersion, uc.upgradeVersion, uc.containerService.Properties.OrchestratorProfile.OrchestratorVersion)
 	}
+	return nil
+}
 
-	// Read the name suffix from the parameters to identify VMs in the resource group that belong to this cluster.
-	templatePath := path.Join(uc.deploymentDirectory, "azuredeploy.json")
-	contents, err := ioutil.ReadFile(templatePath)
-	if err != nil {
-		return errors.Wrap(err, "error reading ARM file")
+func (uc *upgradeCmd) validateCurrentLocalState(armTemplateHandle io.Reader) error {
+	if uc.containerService.Location == "" {
+		uc.containerService.Location = uc.location
+	} else if uc.containerService.Location != uc.location {
+		return errors.New("--location does not match api model location")
 	}
 
-	var template interface{}
-	json.Unmarshal(contents, &template)
-
-	var templateMap, templateParameters, nameSuffixParam map[string]interface{}
-	var okType bool
-
-	if templateMap, okType = template.(map[string]interface{}); !okType {
-		return errors.Errorf("error asserting data from file %q", templatePath)
+	if !uc.force {
+		err := uc.validateTargetVersion()
+		if err != nil {
+			return errors.Wrap(err, "Invalid upgrade target version. Consider using --force if you really want to proceed")
+		}
 	}
 
-	const (
-		parametersKey   = "parameters"
-		nameSuffixKey   = "nameSuffix"
-		defaultValueKey = "defaultValue"
-	)
-
-	if templateParameters, okType = templateMap[parametersKey].(map[string]interface{}); !okType {
-		return errors.Errorf("error asserting data from key \"%s\" in file %q",
-			parametersKey, templatePath)
-	}
-
-	if nameSuffixParam, okType = templateParameters[nameSuffixKey].(map[string]interface{}); !okType {
-		return errors.Errorf("error asserting data from key \"%s.%s\" in file %q",
-			parametersKey, nameSuffixKey, templatePath)
-	}
-
-	if uc.nameSuffix, okType = nameSuffixParam[defaultValueKey].(string); !okType {
-		return errors.Errorf("error asserting data from key \"%s.%s.%s\" in file %q",
-			parametersKey, nameSuffixKey, defaultValueKey, templatePath)
+	//allows to identify VMs in the resource group that belong to this cluster.
+	if nameSuffix, err := readNameSuffixFromARMTemplate(armTemplateHandle); err == nil {
+		uc.nameSuffix = nameSuffix
+	} else {
+		templatePath := path.Join(uc.deploymentDirectory, "azuredeploy.json")
+		return errors.Wrapf(err, "Failed to read nameSuffix from %s", templatePath)
 	}
 
 	log.Infoln(fmt.Sprintf("Upgrading cluster with name suffix: %s", uc.nameSuffix))
@@ -223,6 +216,40 @@ func (uc *upgradeCmd) loadCluster(cmd *cobra.Command) error {
 		uc.agentPoolsToUpgrade[agentPool.Name] = true
 	}
 	return nil
+}
+
+func readNameSuffixFromARMTemplate(armTemplateHandle io.Reader) (string, error) {
+	var azureDeployTemplate *map[string]interface{}
+	decoder := json.NewDecoder(armTemplateHandle)
+	if err := decoder.Decode(&azureDeployTemplate); err != nil {
+		return "", err
+	}
+
+	var templateParameters, nameSuffixParam map[string]interface{}
+	var okType bool
+
+	const (
+		parametersKey   = "parameters"
+		nameSuffixKey   = "nameSuffix"
+		defaultValueKey = "defaultValue"
+	)
+
+	if templateParameters, okType = (*azureDeployTemplate)[parametersKey].(map[string]interface{}); !okType {
+		return "", errors.Errorf("error asserting data from key \"%s\" in file %q",
+			parametersKey, "azuredeploy.json")
+	}
+
+	if nameSuffixParam, okType = templateParameters[nameSuffixKey].(map[string]interface{}); !okType {
+		return "", errors.Errorf("error asserting data from key \"%s.%s\" in file %q",
+			parametersKey, nameSuffixKey, "azuredeploy.json")
+	}
+
+	var nameSuffix string
+	if nameSuffix, okType = nameSuffixParam[defaultValueKey].(string); !okType {
+		return "", errors.Errorf("error asserting data from key \"%s.%s.%s\" in file %q",
+			parametersKey, nameSuffixKey, defaultValueKey, "azuredeploy.json")
+	}
+	return nameSuffix, nil
 }
 
 func (uc *upgradeCmd) run(cmd *cobra.Command, args []string) error {
@@ -246,11 +273,12 @@ func (uc *upgradeCmd) run(cmd *cobra.Command, args []string) error {
 	}
 
 	upgradeCluster.ClusterTopology = kubernetesupgrade.ClusterTopology{}
-	upgradeCluster.SubscriptionID = uc.authArgs.SubscriptionID.String()
+	upgradeCluster.SubscriptionID = uc.getAuthArgs().SubscriptionID.String()
 	upgradeCluster.ResourceGroup = uc.resourceGroupName
 	upgradeCluster.DataModel = uc.containerService
 	upgradeCluster.NameSuffix = uc.nameSuffix
 	upgradeCluster.AgentPoolsToUpgrade = uc.agentPoolsToUpgrade
+	upgradeCluster.Force = uc.force
 
 	kubeConfig, err := engine.GenerateKubeConfig(uc.containerService.Properties, uc.location)
 	if err != nil {
