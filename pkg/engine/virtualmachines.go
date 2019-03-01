@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"strconv"
+	"strings"
 
 	"github.com/Azure/aks-engine/pkg/api"
 	"github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2018-10-01/compute"
@@ -96,15 +97,32 @@ func CreateVirtualMachine(cs *api.ContainerService) VirtualMachineARM {
 		ComputerName:  to.StringPtr("[concat(variables('masterVMNamePrefix'), copyIndex(variables('masterOffset')))]"),
 		LinuxConfiguration: &compute.LinuxConfiguration{
 			DisablePasswordAuthentication: to.BoolPtr(true),
-			SSH: &compute.SSHConfiguration{
-				PublicKeys: &[]compute.SSHPublicKey{
-					{
-						KeyData: to.StringPtr("[parameters('sshRSAPublicKey')]"),
-						Path:    to.StringPtr("[variables('sshKeyPath')]"),
-					},
+		},
+	}
+
+	if len(cs.Properties.LinuxProfile.SSH.PublicKeys) > 1 {
+		publicKeyPath := "[variables('sshKeyPath')]"
+		var publicKeys []compute.SSHPublicKey
+		for _, publicKey := range cs.Properties.LinuxProfile.SSH.PublicKeys {
+			publicKeyTrimmed := strings.TrimSpace(publicKey.KeyData)
+			publicKeys = append(publicKeys, compute.SSHPublicKey{
+				Path:    &publicKeyPath,
+				KeyData: &publicKeyTrimmed,
+			})
+		}
+		osProfile.LinuxConfiguration.SSH = &compute.SSHConfiguration{
+			PublicKeys: &publicKeys,
+		}
+
+	} else {
+		osProfile.LinuxConfiguration.SSH = &compute.SSHConfiguration{
+			PublicKeys: &[]compute.SSHPublicKey{
+				{
+					KeyData: to.StringPtr("[parameters('sshRSAPublicKey')]"),
+					Path:    to.StringPtr("[variables('sshKeyPath')]"),
 				},
 			},
-		},
+		}
 	}
 
 	t, err := InitializeTemplateGenerator(Context{})
@@ -366,15 +384,33 @@ func createAgentAvailabilitySetVM(cs *api.ContainerService, profile *api.AgentPo
 		osProfile.AdminUsername = to.StringPtr("[parameters('linuxAdminUsername')]")
 		osProfile.LinuxConfiguration = &compute.LinuxConfiguration{
 			DisablePasswordAuthentication: to.BoolPtr(true),
-			SSH: &compute.SSHConfiguration{
+		}
+
+		if len(cs.Properties.LinuxProfile.SSH.PublicKeys) > 1 {
+			publicKeyPath := "[variables('sshKeyPath')]"
+			publicKeys := []compute.SSHPublicKey{}
+			for _, publicKey := range cs.Properties.LinuxProfile.SSH.PublicKeys {
+				publicKeyTrimmed := strings.TrimSpace(publicKey.KeyData)
+				publicKeys = append(publicKeys, compute.SSHPublicKey{
+					Path:    &publicKeyPath,
+					KeyData: &publicKeyTrimmed,
+				})
+			}
+			osProfile.LinuxConfiguration.SSH = &compute.SSHConfiguration{
+				PublicKeys: &publicKeys,
+			}
+
+		} else {
+			osProfile.LinuxConfiguration.SSH = &compute.SSHConfiguration{
 				PublicKeys: &[]compute.SSHPublicKey{
 					{
 						KeyData: to.StringPtr("[parameters('sshRSAPublicKey')]"),
 						Path:    to.StringPtr("[variables('sshKeyPath')]"),
 					},
 				},
-			},
+			}
 		}
+
 		if err != nil {
 			panic(err)
 		}
