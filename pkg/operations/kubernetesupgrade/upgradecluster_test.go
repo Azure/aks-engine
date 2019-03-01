@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/Azure/aks-engine/pkg/api"
+	"github.com/Azure/aks-engine/pkg/api/common"
 	"github.com/Azure/aks-engine/pkg/armhelpers"
 	"github.com/Azure/aks-engine/pkg/i18n"
 	. "github.com/Azure/aks-engine/pkg/test"
@@ -242,9 +243,12 @@ var _ = Describe("Upgrade Kubernetes cluster tests", func() {
 	})
 
 	Context("When upgrading a cluster with VMSS VMs", func() {
-		var cs *api.ContainerService
-		var uc UpgradeCluster
-		var mockClient armhelpers.MockAKSEngineClient
+		var (
+			cs         *api.ContainerService
+			uc         UpgradeCluster
+			mockClient armhelpers.MockAKSEngineClient
+		)
+
 		BeforeEach(func() {
 			mockClient = armhelpers.MockAKSEngineClient{}
 			cs = api.CreateMockContainerService("testcluster", "1.9.10", 3, 3, false)
@@ -331,10 +335,19 @@ var _ = Describe("Upgrade Kubernetes cluster tests", func() {
 	})
 
 	Context("When upgrading a cluster with AvailibilitySets VMs", func() {
-		var cs *api.ContainerService
-		var uc UpgradeCluster
-		var mockClient armhelpers.MockAKSEngineClient
+		var (
+			cs               *api.ContainerService
+			uc               UpgradeCluster
+			mockClient       armhelpers.MockAKSEngineClient
+			versionMapBackup map[string]bool
+		)
+
+		AfterEach(func() {
+			common.AllKubernetesSupportedVersions = versionMapBackup
+		})
+
 		BeforeEach(func() {
+			versionMapBackup = common.AllKubernetesSupportedVersions
 			mockClient = armhelpers.MockAKSEngineClient{}
 			cs = api.CreateMockContainerService("testcluster", "1.9.10", 3, 3, false)
 			uc = UpgradeCluster{
@@ -362,6 +375,43 @@ var _ = Describe("Upgrade Kubernetes cluster tests", func() {
 			err := uc.UpgradeCluster(&mockClient, "kubeConfig", TestAKSEngineVersion)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(*uc.AgentPools["agentpool1"].AgentVMs).To(HaveLen(0))
+		})
+		It("Should fail when desired version target is not supported", func() {
+			desiredVersion := "1.9.10"
+			common.AllKubernetesSupportedVersions = map[string]bool{
+				"1.9.7":        true,
+				desiredVersion: false,
+			}
+			mockClient.FakeListVirtualMachineResult = func() []compute.VirtualMachine {
+				return []compute.VirtualMachine{
+					mockClient.MakeFakeVirtualMachine("k8s-agentpool1-12345678-0", "Kubernetes:1.9.7"),
+				}
+			}
+			uc.AgentPoolsToUpgrade = map[string]bool{"agentpool1": true}
+			uc.Force = false
+			uc.DataModel.Properties.OrchestratorProfile.OrchestratorVersion = desiredVersion
+			err := uc.UpgradeCluster(&mockClient, "kubeConfig", TestAKSEngineVersion)
+			Expect(err).To(HaveOccurred())
+			Expect(err.Error()).To(ContainSubstring("1.9.7 cannot be upgraded to 1.9.10"))
+		})
+		It("Should not fail when desired version target is not supported and force true", func() {
+			desiredVersion := "1.9.10"
+			common.AllKubernetesSupportedVersions = map[string]bool{
+				"1.9.7":        true,
+				desiredVersion: false,
+			}
+			mockClient.FakeListVirtualMachineResult = func() []compute.VirtualMachine {
+				return []compute.VirtualMachine{
+					mockClient.MakeFakeVirtualMachine("k8s-agentpool1-12345678-0", "Kubernetes:1.9.7"),
+				}
+			}
+			uc.AgentPoolsToUpgrade = map[string]bool{"agentpool1": true}
+			uc.Force = true
+			uc.DataModel.Properties.OrchestratorProfile.OrchestratorVersion = desiredVersion
+			err := uc.UpgradeCluster(&mockClient, "kubeConfig", TestAKSEngineVersion)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(*uc.AgentPools["agentpool1"].AgentVMs).To(HaveLen(1))
+
 		})
 		It("Should not skip VMs that are already on desired version when Force true", func() {
 			mockClient.FakeListVirtualMachineResult = func() []compute.VirtualMachine {
