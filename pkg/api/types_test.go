@@ -849,7 +849,7 @@ func TestWindowsProfile(t *testing.T) {
 	}
 
 	update := w.GetEnableWindowsUpdate()
-	if update != true {
+	if !update {
 		t.Fatalf("Expected GetEnableWindowsUpdate() to equal default 'true', got %t", update)
 	}
 
