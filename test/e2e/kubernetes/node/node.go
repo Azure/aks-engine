@@ -25,7 +25,7 @@ const (
 type Node struct {
 	Status   Status   `json:"status"`
 	Metadata Metadata `json:"metadata"`
-	Spec     Spec     `json:"metadata"`
+	Spec     Spec     `json:"spec"`
 }
 
 // Metadata contains things like name and created at
