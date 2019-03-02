@@ -48,6 +48,7 @@ Master nodes:
 - delete the VM
 - create new VM and install desired Kubernetes version
 - add the new VM to the cluster
+- copy the custom annotations, labels and taints of old node to new node.
 
 Agent nodes:
 
