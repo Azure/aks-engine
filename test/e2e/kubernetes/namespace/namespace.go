@@ -72,3 +72,15 @@ func (n *Namespace) Delete() error {
 	}
 	return nil
 }
+
+// Label a namespace
+func (n *Namespace) Label(label string) error {
+	cmd := exec.Command("k", "label", "namespace/"+n.Metadata.Name, label)
+	util.PrintCommand(cmd)
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		log.Printf("Error while trying to label namespace (%s) with label %s, error: %s\n", n.Metadata.Name, label, out)
+		return err
+	}
+	return nil
+}
