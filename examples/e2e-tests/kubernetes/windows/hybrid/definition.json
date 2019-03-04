@@ -27,7 +27,8 @@
     "windowsProfile": {
       "adminUsername": "azureuser",
       "adminPassword": "replacepassword1234$",
-      "sshEnabled": true
+      "sshEnabled": true,
+      "enableAutomaticUpdates": false
     },
     "linuxProfile": {
       "adminUsername": "azureuser",
