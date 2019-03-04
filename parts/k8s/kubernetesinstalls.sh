@@ -33,7 +33,7 @@ installDeps() {
     apt_get_update || exit $ERR_APT_UPDATE_TIMEOUT
     apt_get_install 30 1 600 apt-transport-https blobfuse ca-certificates ceph-common cgroup-lite cifs-utils conntrack ebtables ethtool fuse git glusterfs-client init-system-helpers iproute2 ipset iptables jq mount nfs-common pigz socat util-linux xz-utils zip htop iotop iftop sysstat || exit $ERR_APT_INSTALL_TIMEOUT
     wait_for_apt_locks
-    retrycmd_if_failure 60 5 10 apt-get install systemd/xenial-proposed
+    apt_get_install 20 30 120 systemd/xenial-proposed
     wait_for_apt_locks
 }
 
