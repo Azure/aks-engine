@@ -2,7 +2,7 @@ apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
   namespace: client-one
-  name: default-deny-ingress
+  name: client-deny-ingress
 spec:
   podSelector:
     matchLabels: {}
