@@ -32,7 +32,6 @@ Yes. `aks-engine` [v0.27.0][] is a continuation of acs-engine [v0.26.2][] with a
 [AKS]: https://azure.microsoft.com/en-us/services/kubernetes-service/
 [AKS Engine]: https://github.com/Azure/aks-engine
 [Azure command-line tool]: https://docs.microsoft.com/en-us/cli/azure/install-azure-cli?view=azure-cli-latest
-[acs-engine release]: https://github.com/Azure/acs-engine/releases
 [Kubernetes]: https://kubernetes.io/
 [v0.27.0]: https://github.com/Azure/aks-engine/releases/tag/v0.27.0
 [v0.26.2]: https://github.com/Azure/acs-engine/releases/tag/v0.26.2
