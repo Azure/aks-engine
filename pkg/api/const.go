@@ -222,6 +222,8 @@ const (
 	DefaultMaximumLoadBalancerRuleCount = 250
 	// DefaultEnableAutomaticUpdates determines the aks-engine provided default for enabling automatic updates
 	DefaultEnableAutomaticUpdates = true
+	// DefaultPreserveNodesProperties determines the aks-engine provided default for preserving nodes properties
+	DefaultPreserveNodesProperties = true
 )
 
 const (

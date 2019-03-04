@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"math/rand"
+	"strings"
 	"time"
 
 	"github.com/Azure/aks-engine/pkg/api"
@@ -139,12 +140,24 @@ func (ku *Upgrader) upgradeMasterNodes(ctx context.Context) error {
 		upgradedMastersIndex[masterIndex] = true
 	}
 
+	client, err := ku.getKubernetesClient()
+	if err != nil {
+		ku.logger.Errorf("Error getting Kubernetes client: %v", err)
+		return err
+	}
+
 	for _, vm := range *ku.ClusterTopology.MasterVMs {
 		ku.logger.Infof("Upgrading Master VM: %s", *vm.Name)
 
 		masterIndex, _ := utils.GetVMNameIndex(vm.StorageProfile.OsDisk.OsType, *vm.Name)
 
-		err := upgradeMasterNode.DeleteNode(vm.Name, false)
+		// Get the old master node's propertyies before it is deleted
+		oldNode, err := client.GetNode(*vm.Name)
+		if err != nil {
+			return err
+		}
+
+		err = upgradeMasterNode.DeleteNode(vm.Name, false)
 		if err != nil {
 			ku.logger.Infof("Error deleting master VM: %s, err: %v", *vm.Name, err)
 			return err
@@ -160,6 +173,16 @@ func (ku *Upgrader) upgradeMasterNodes(ctx context.Context) error {
 		if err != nil {
 			ku.logger.Infof("Error validating upgraded master VM: %s", *vm.Name)
 			return err
+		}
+
+		newNode, err := client.GetNode(*vm.Name)
+		if err != nil {
+			return err
+		}
+
+		err = ku.copyCustomNodeProperties(client, *vm.Name, oldNode, *vm.Name, newNode)
+		if err != nil {
+			ku.logger.Warningf("Failed to preserve custom annotations, labels, taints for master node %s: %v", *vm.Name, err)
 		}
 
 		upgradedMastersIndex[masterIndex] = true
@@ -313,6 +336,14 @@ func (ku *Upgrader) upgradeAgentPools(ctx context.Context) error {
 		if toBeUpgradedCount > 0 {
 			agentCount++
 		}
+
+		newCreatedVMs := []string{}
+		client, err := ku.getKubernetesClient()
+		if err != nil {
+			ku.logger.Errorf("Error getting Kubernetes client: %v", err)
+			return err
+		}
+
 		for upgradedCount+toBeUpgradedCount < agentCount {
 			agentIndex := getAvailableIndex(agentVMs)
 
@@ -335,6 +366,7 @@ func (ku *Upgrader) upgradeAgentPools(ctx context.Context) error {
 				return err
 			}
 
+			newCreatedVMs = append(newCreatedVMs, vmName)
 			agentVMs[agentIndex] = &vmInfo{vmName, vmStatusUpgraded}
 			upgradedCount++
 		}
@@ -351,6 +383,24 @@ func (ku *Upgrader) upgradeAgentPools(ctx context.Context) error {
 				continue
 			}
 			ku.logger.Infof("Upgrading Agent VM: %s, pool name: %s", vm.name, *agentPool.Name)
+
+			// copy custom properties from old node to new node if the PreserveNodesProperties in AgentPoolProfile is not set to false explicitly.
+			preserveNodesProperties := api.DefaultPreserveNodesProperties
+			if agentPoolProfile != nil && agentPoolProfile.PreserveNodesProperties != nil {
+				preserveNodesProperties = *agentPoolProfile.PreserveNodesProperties
+			}
+
+			if preserveNodesProperties {
+				if len(newCreatedVMs) > 0 {
+					newNodeName := newCreatedVMs[0]
+					newCreatedVMs = newCreatedVMs[1:]
+					ku.logger.Infof("Copying custom annotations, labels, taints from old node %s to new node %s...", vm.name, newNodeName)
+					err = ku.copyCustomPropertiesToNewNode(client, vm.name, newNodeName)
+					if err != nil {
+						ku.logger.Warningf("Failed to copy custom annotations, labels, taints from old node %s to new node %s: %v", vm.name, newNodeName, err)
+					}
+				}
+			}
 
 			err := upgradeAgentNode.DeleteNode(&vm.name, true)
 			if err != nil {
@@ -380,6 +430,7 @@ func (ku *Upgrader) upgradeAgentPools(ctx context.Context) error {
 					ku.logger.Errorf("Error validating upgraded agent VM %s: %v", vmName, err)
 					return err
 				}
+				newCreatedVMs = append(newCreatedVMs, vmName)
 				vm.status = vmStatusUpgraded
 			}
 			upgradedCount++
@@ -390,6 +441,11 @@ func (ku *Upgrader) upgradeAgentPools(ctx context.Context) error {
 }
 
 func (ku *Upgrader) upgradeAgentScaleSets(ctx context.Context) error {
+	agentPoolMap := make(map[string]*api.AgentPoolProfile)
+	for _, app := range ku.ClusterTopology.DataModel.Properties.AgentPoolProfiles {
+		agentPoolMap[app.Name] = app
+	}
+
 	if len(ku.ClusterTopology.AgentPoolScaleSetsToUpgrade) > 0 {
 		// need to apply the ARM template with target Kubernetes version to the VMSS first in order that the new VMSS instances
 		// created can get the expected Kubernetes version. Otherwise the new instances created still have old Kubernetes version
@@ -460,20 +516,7 @@ func (ku *Upgrader) upgradeAgentScaleSets(ctx context.Context) error {
 			ku.logger.Infof("Successfully set capacity for VMSS %s", vmssToUpgrade.Name)
 
 			// Before we can delete the node we should safely and responsibly drain it
-			var kubeAPIServerURL string
-			getClientTimeout := 10 * time.Second
-
-			if ku.DataModel.Properties.HostedMasterProfile != nil {
-				kubeAPIServerURL = ku.DataModel.Properties.HostedMasterProfile.FQDN
-			} else {
-				kubeAPIServerURL = ku.DataModel.Properties.MasterProfile.FQDN
-			}
-			client, err := ku.Client.GetKubernetesClient(
-				kubeAPIServerURL,
-				ku.kubeConfig,
-				interval,
-				getClientTimeout,
-			)
+			client, err := ku.getKubernetesClient()
 			if err != nil {
 				ku.logger.Errorf("Error getting Kubernetes client: %v", err)
 				return err
@@ -496,6 +539,29 @@ func (ku *Upgrader) upgradeAgentScaleSets(ctx context.Context) error {
 				vmToUpgrade.Name,
 				vmssToUpgrade.Name,
 			)
+
+			// copy custom properties from old node to new node if the PreserveNodesProperties in AgentPoolProfile is not set to false explicitly.
+			preserveNodesProperties := api.DefaultPreserveNodesProperties
+			poolName, _, _ := utils.VmssNameParts(vmssToUpgrade.Name)
+			if agentPool, ok := agentPoolMap[poolName]; ok {
+				if agentPool != nil && agentPool.PreserveNodesProperties != nil {
+					preserveNodesProperties = *agentPool.PreserveNodesProperties
+				}
+			}
+
+			if preserveNodesProperties {
+				newNodeName, err := ku.getLastVMNameInVMSS(ctx, ku.ClusterTopology.ResourceGroup, vmssToUpgrade.Name)
+				if err != nil {
+					return err
+				}
+
+				ku.logger.Infof("Copying custom annotations, labels, taints from old node %s to new node %s...", vmToUpgrade.Name, newNodeName)
+
+				err = ku.copyCustomPropertiesToNewNode(client, vmToUpgrade.Name, newNodeName)
+				if err != nil {
+					ku.logger.Warningf("Failed to copy custom annotations, labels, taints from old node %s to new node %s: %v", vmToUpgrade.Name, newNodeName, err)
+				}
+			}
 
 			// At this point we have our buffer node that will replace the node to delete
 			// so we can just remove this current node then
@@ -555,6 +621,91 @@ func (ku *Upgrader) generateUpgradeTemplate(upgradeContainerService *api.Contain
 	parametersMap := parameters.(map[string]interface{})
 
 	return templateMap, parametersMap, nil
+}
+
+func (ku *Upgrader) getLastVMNameInVMSS(ctx context.Context, resourceGroup string, vmScaleSetName string) (string, error) {
+	lastVMName := ""
+	for vmScaleSetVMsPage, err := ku.Client.ListVirtualMachineScaleSetVMs(ctx, resourceGroup, vmScaleSetName); vmScaleSetVMsPage.NotDone(); err = vmScaleSetVMsPage.Next() {
+		if err != nil {
+			return "", err
+		}
+
+		vms := vmScaleSetVMsPage.Values()
+		if vms != nil && len(vms) > 0 {
+			vm := vms[len(vms)-1]
+			lastVMName = *vm.VirtualMachineScaleSetVMProperties.OsProfile.ComputerName
+		}
+	}
+
+	if lastVMName == "" {
+		return "", fmt.Errorf("failed to get the last VM name in Scale Set %s", vmScaleSetName)
+	}
+
+	return lastVMName, nil
+}
+
+func (ku *Upgrader) copyCustomPropertiesToNewNode(client armhelpers.KubernetesClient, oldNodeName string, newNodeName string) error {
+	oldNode, err := client.GetNode(oldNodeName)
+	if err != nil {
+		return err
+	}
+
+	newNode, err := client.GetNode(newNodeName)
+	if err != nil {
+		return err
+	}
+
+	return ku.copyCustomNodeProperties(client, oldNodeName, oldNode, newNodeName, newNode)
+}
+
+func (ku *Upgrader) copyCustomNodeProperties(client armhelpers.KubernetesClient, oldNodeName string, oldNode *v1.Node, newNodeName string, newNode *v1.Node) error {
+	// copy additional custom annotations from old node to new node
+	if oldNode.Annotations != nil {
+		if newNode.Annotations == nil {
+			newNode.Annotations = map[string]string{}
+		}
+
+		for k, v := range oldNode.Annotations {
+			if _, ok := newNode.Annotations[k]; !ok {
+				newNode.Annotations[k] = strings.Replace(v, oldNodeName, newNodeName, -1)
+			}
+		}
+	}
+
+	// copy additional custom labels from old node to new node
+	if oldNode.Labels != nil {
+		if newNode.Labels == nil {
+			newNode.Labels = map[string]string{}
+		}
+
+		for k, v := range oldNode.Labels {
+			if _, ok := newNode.Labels[k]; !ok {
+				newNode.Labels[k] = strings.Replace(v, oldNodeName, newNodeName, -1)
+			}
+		}
+	}
+
+	// copy Taints from old node to new node
+	if oldNode.Spec.Taints != nil {
+		newNode.Spec.Taints = append([]v1.Taint{}, oldNode.Spec.Taints...)
+		for i := range newNode.Spec.Taints {
+			newNode.Spec.Taints[i].Value = strings.Replace(newNode.Spec.Taints[i].Value, oldNodeName, newNodeName, -1)
+		}
+	}
+
+	_, err := client.UpdateNode(newNode)
+
+	return err
+}
+
+func (ku *Upgrader) getKubernetesClient() (armhelpers.KubernetesClient, error) {
+	getClientTimeout := 10 * time.Second
+
+	return ku.Client.GetKubernetesClient(
+		ku.DataModel.Properties.GetMasterFQDN(),
+		ku.kubeConfig,
+		interval,
+		getClientTimeout)
 }
 
 // return unused index within the range of agent indices, or subsequent index

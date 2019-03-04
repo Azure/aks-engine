@@ -42,10 +42,21 @@ In order to ensure that your `aks-engine upgrade` operation runs smoothly, there
 
 During the upgrade, *aks-engine* successively visits virtual machines that constitute the cluster (first the master nodes, then the agent nodes) and performs the following operations:
 
+Master nodes:
+
 - cordon the node and drain existing workloads
 - delete the VM
 - create new VM and install desired Kubernetes version
 - add the new VM to the cluster
+- copy the custom annotations, labels and taints of old node to new node.
+
+Agent nodes:
+
+- create new VM and install desired Kubernetes version
+- add the new VM to the cluster
+- copy the custom annotations, labels and taints of old node to new node.
+- cordon the node and drain existing workloads
+- delete the VM
 
 ### Simple steps to run upgrade
 

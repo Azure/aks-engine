@@ -3171,6 +3171,57 @@ func TestGetLocations(t *testing.T) {
 	}
 }
 
+func TestGetMasterFQDN(t *testing.T) {
+	tests := []struct {
+		name         string
+		properties   *Properties
+		expectedFQDN string
+	}{
+		{
+			name: "From Master Profile",
+			properties: &Properties{
+				MasterProfile: &MasterProfile{
+					DNSPrefix: "foo_master",
+					FQDN:      "FQDNFromMasterProfile",
+				},
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						Name: "foo_agent0",
+					},
+				},
+			},
+			expectedFQDN: "FQDNFromMasterProfile",
+		},
+		{
+			name: "From Hosted Master Profile",
+			properties: &Properties{
+				HostedMasterProfile: &HostedMasterProfile{
+					DNSPrefix: "foo_hosted_master",
+					FQDN:      "FQDNFromHostedMasterProfile",
+				},
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						Name: "foo_agent1",
+					},
+				},
+			},
+			expectedFQDN: "FQDNFromHostedMasterProfile",
+		},
+	}
+
+	for _, test := range tests {
+		test := test
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+			actual := test.properties.GetMasterFQDN()
+
+			if actual != test.expectedFQDN {
+				t.Errorf("expected fqdn %s, but got %s", test.expectedFQDN, actual)
+			}
+		})
+	}
+}
+
 func getMockPropertiesWithCustomCloudProfile(name string, hasCustomCloudProfile, hasEnvironment, hasAzureEnvironmentSpecConfig bool) Properties {
 	var (
 		managementPortalURL          = "https://management.local.azurestack.external/"

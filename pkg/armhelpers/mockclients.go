@@ -513,6 +513,11 @@ func (mc *MockAKSEngineClient) GetVirtualMachine(ctx context.Context, resourceGr
 
 // MakeFakeVirtualMachineScaleSetVM creates a fake VMSS VM
 func (mc *MockAKSEngineClient) MakeFakeVirtualMachineScaleSetVM(orchestratorTag string) compute.VirtualMachineScaleSetVM {
+	return mc.MakeFakeVirtualMachineScaleSetVMWithGivenName(orchestratorTag, "computerName")
+}
+
+// MakeFakeVirtualMachineScaleSetVM creates a fake VMSS VM with name provided
+func (mc *MockAKSEngineClient) MakeFakeVirtualMachineScaleSetVMWithGivenName(orchestratorTag string, computerName string) compute.VirtualMachineScaleSetVM {
 	vm1Name := "k8s-agentpool1-12345678-0"
 
 	creationSourceString := "creationSource"
@@ -524,7 +529,6 @@ func (mc *MockAKSEngineClient) MakeFakeVirtualMachineScaleSetVM(orchestratorTag 
 	orchestrator := orchestratorTag
 	resourceNameSuffix := "12345678"
 	poolname := "agentpool1"
-	computerName := "computerName"
 	instanceID := "someguidthatshouldbeunique"
 
 	tags := map[string]*string{
