@@ -1,5 +1,6 @@
 # AKS Engine - Units of Kubernetes on Azure!
 
+[![Build Status](https://dev.azure.com/aks-engine/AKS-Engine/_apis/build/status/E2E?branchName=master)](https://dev.azure.com/aks-engine/AKS-Engine/_build/latest?definitionId=2&branchName=master)
 [![Coverage Status](https://codecov.io/gh/Azure/aks-engine/branch/master/graph/badge.svg)](https://codecov.io/gh/Azure/aks-engine)
 [![GoDoc](https://godoc.org/github.com/Azure/aks-engine?status.svg)](https://godoc.org/github.com/Azure/aks-engine)
 
