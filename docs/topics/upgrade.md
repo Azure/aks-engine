@@ -47,8 +47,7 @@ Master nodes:
 - cordon the node and drain existing workloads
 - delete the VM
 - create new VM and install desired Kubernetes version
-- add the new VM to the cluster
-- copy the custom annotations, labels and taints of old node to new node.
+- add the new VM to the cluster (custom annotations, labels and taints etc are retained automatically)
 
 Agent nodes:
 
