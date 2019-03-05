@@ -65,19 +65,19 @@ CONTAINERD_VERSIONS="1.1.5 1.1.6 1.2.4"
 for VNET_CNI_VERSION in $VNET_CNI_VERSIONS; do
     VNET_CNI_PLUGINS_URL="https://acs-mirror.azureedge.net/cni/azure-vnet-cni-linux-amd64-v${VNET_CNI_VERSION}.tgz"
     downloadAzureCNI
-    echo "  - Azure CNI versions: ${VNET_CNI_VERSION}" >> ${RELEASE_NOTES_FILEPATH}
+    echo "  - Azure CNI version ${VNET_CNI_VERSION}" >> ${RELEASE_NOTES_FILEPATH}
 done
 
 for CNI_PLUGIN_VERSION in $CNI_PLUGIN_VERSIONS; do
     CNI_PLUGINS_URL="https://acs-mirror.azureedge.net/cni/cni-plugins-amd64-v${CNI_PLUGIN_VERSION}.tgz"
     downloadCNI
-    echo "  - CNI plugin versions: ${CNI_PLUGIN_VERSION}" >> ${RELEASE_NOTES_FILEPATH}
+    echo "  - CNI plugin version ${CNI_PLUGIN_VERSION}" >> ${RELEASE_NOTES_FILEPATH}
 done
 
 CONTAINERD_DOWNLOAD_URL_BASE="https://storage.googleapis.com/cri-containerd-release/"
 for CONTAINERD_VERSION in ${CONTAINERD_VERSIONS}; do
     downloadContainerd
-    echo "  - containerd versions: ${CONTAINERD_VERSION}" >> ${RELEASE_NOTES_FILEPATH}
+    echo "  - containerd version ${CONTAINERD_VERSION}" >> ${RELEASE_NOTES_FILEPATH}
 done
 
 installImg
