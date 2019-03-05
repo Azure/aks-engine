@@ -100,3 +100,25 @@ There are known limitations with VMSS cluster-autoscaler scenarios and upgrade. 
 ### Cluster-autoscaler + Availability Set
 
 We don't recommend using `aks-engine upgrade` on clusters that have Availability Set (non-VMSS) agent pools `cluster-autoscaler` at this time.
+
+## Forcing an upgrade
+
+The upgrade operation takes an optional `--force` argument:
+
+```shellscript
+-f, --force   
+force upgrading the cluster to desired version. Allows same version upgrades and downgrades.
+```
+
+In some situations, you might want to bypass the AKS-Engine validation of your apimodel versions and cluster nodes versions. This is at your own risk and you should assess the potential harm of using this flag.
+
+The `--force` parameter instructs the upgrade process to:
+
+- bypass the usual version validation
+- include __all__ your cluster's nodes (masters and agents) in the upgrade process; nodes that are already on the target version will __not__ be skipped.
+- allow any Kubernetes versions, including the ones that have not been whitelisted, or deprecated
+- accept downgrade operations
+
+> Note: If you pass in a version that AKS-Engine literally cannot install (e.g., a version of Kubernetes that does not exist), you may break your cluster.
+
+For each node, the cluster will follow the same process described in the section above: [Under the hood](#under-the-hood)
