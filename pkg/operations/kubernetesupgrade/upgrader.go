@@ -140,24 +140,12 @@ func (ku *Upgrader) upgradeMasterNodes(ctx context.Context) error {
 		upgradedMastersIndex[masterIndex] = true
 	}
 
-	client, err := ku.getKubernetesClient()
-	if err != nil {
-		ku.logger.Errorf("Error getting Kubernetes client: %v", err)
-		return err
-	}
-
 	for _, vm := range *ku.ClusterTopology.MasterVMs {
 		ku.logger.Infof("Upgrading Master VM: %s", *vm.Name)
 
 		masterIndex, _ := utils.GetVMNameIndex(vm.StorageProfile.OsDisk.OsType, *vm.Name)
 
-		// Get the old master node's propertyies before it is deleted
-		oldNode, err := client.GetNode(*vm.Name)
-		if err != nil {
-			return err
-		}
-
-		err = upgradeMasterNode.DeleteNode(vm.Name, false)
+		err := upgradeMasterNode.DeleteNode(vm.Name, false)
 		if err != nil {
 			ku.logger.Infof("Error deleting master VM: %s, err: %v", *vm.Name, err)
 			return err
@@ -173,16 +161,6 @@ func (ku *Upgrader) upgradeMasterNodes(ctx context.Context) error {
 		if err != nil {
 			ku.logger.Infof("Error validating upgraded master VM: %s", *vm.Name)
 			return err
-		}
-
-		newNode, err := client.GetNode(*vm.Name)
-		if err != nil {
-			return err
-		}
-
-		err = ku.copyCustomNodeProperties(client, *vm.Name, oldNode, *vm.Name, newNode)
-		if err != nil {
-			ku.logger.Warningf("Failed to preserve custom annotations, labels, taints for master node %s: %v", *vm.Name, err)
 		}
 
 		upgradedMastersIndex[masterIndex] = true
