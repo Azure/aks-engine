@@ -171,11 +171,9 @@ func (uc *upgradeCmd) validateTargetVersion() error {
 		return errors.Wrap(err, "error getting list of available upgrades")
 	}
 
-	// Validate desired upgrade version and set goal state.
 	found := false
 	for _, up := range orchestratorInfo.Upgrades {
 		if up.OrchestratorVersion == uc.upgradeVersion {
-			uc.containerService.Properties.OrchestratorProfile.OrchestratorVersion = uc.upgradeVersion
 			found = true
 			break
 		}
@@ -199,6 +197,7 @@ func (uc *upgradeCmd) validateCurrentLocalState(armTemplateHandle io.Reader) err
 			return errors.Wrap(err, "Invalid upgrade target version. Consider using --force if you really want to proceed")
 		}
 	}
+	uc.containerService.Properties.OrchestratorProfile.OrchestratorVersion = uc.upgradeVersion
 
 	//allows to identify VMs in the resource group that belong to this cluster.
 	if nameSuffix, err := readNameSuffixFromARMTemplate(armTemplateHandle); err == nil {

@@ -240,3 +240,30 @@ func TestUpgradeForceSameVersionShouldSucceed(t *testing.T) {
 	g.Expect(err).NotTo(HaveOccurred())
 	resetValidVersions()
 }
+
+func TestUpgradeForceDowngradeShouldSetVersionOnContainerService(t *testing.T) {
+	setupValidVersions(map[string]bool{
+		"1.10.12": true,
+		"1.10.13": true,
+	})
+	fakeARMTemplateHandle := strings.NewReader(`{"parameters" : { "nameSuffix" : {"defaultValue" : "test"}}}`)
+	g := NewGomegaWithT(t)
+	upgradeCmd := &upgradeCmd{
+		resourceGroupName:   "rg",
+		deploymentDirectory: "_output/test",
+		upgradeVersion:      "1.10.12",
+		location:            "centralus",
+		timeoutInMinutes:    60,
+
+		client: &armhelpers.MockAKSEngineClient{},
+	}
+
+	containerServiceMock := api.CreateMockContainerService("testcluster", "1.10.13", 3, 2, false)
+	containerServiceMock.Location = "centralus"
+	upgradeCmd.containerService = containerServiceMock
+	upgradeCmd.force = true
+	err := upgradeCmd.validateCurrentLocalState(fakeARMTemplateHandle)
+	g.Expect(err).NotTo(HaveOccurred())
+	g.Expect(upgradeCmd.containerService.Properties.OrchestratorProfile.OrchestratorVersion).To(Equal("1.10.12"))
+	resetValidVersions()
+}
