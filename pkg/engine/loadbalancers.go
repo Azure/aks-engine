@@ -13,8 +13,8 @@ import (
 
 func CreateLoadBalancer(masterCount int) LoadBalancerARM {
 
-	var inboundNatRules []network.InboundNatRule
-	sshNatPorts := []int32{
+	var inboundNATRules []network.InboundNatRule
+	sshNATPorts := []int32{
 		22,
 		2201,
 		2202,
@@ -22,7 +22,7 @@ func CreateLoadBalancer(masterCount int) LoadBalancerARM {
 		2204,
 	}
 	for i := 0; i < masterCount; i++ {
-		inboundNatRule := network.InboundNatRule{
+		inboundNATRule := network.InboundNatRule{
 			Name: to.StringPtr(fmt.Sprintf("[concat('SSH-', variables('masterVMNamePrefix'), %d)]", i)),
 			InboundNatRulePropertiesFormat: &network.InboundNatRulePropertiesFormat{
 				BackendPort:      to.Int32Ptr(22),
@@ -30,11 +30,11 @@ func CreateLoadBalancer(masterCount int) LoadBalancerARM {
 				FrontendIPConfiguration: &network.SubResource{
 					ID: to.StringPtr("[variables('masterLbIPConfigID')]"),
 				},
-				FrontendPort: to.Int32Ptr(sshNatPorts[i]),
+				FrontendPort: to.Int32Ptr(sshNATPorts[i]),
 				Protocol:     network.TransportProtocolTCP,
 			},
 		}
-		inboundNatRules = append(inboundNatRules, inboundNatRule)
+		inboundNATRules = append(inboundNATRules, inboundNATRule)
 	}
 
 	return LoadBalancerARM{
@@ -96,7 +96,7 @@ func CreateLoadBalancer(masterCount int) LoadBalancerARM {
 						},
 					},
 				},
-				InboundNatRules: &inboundNatRules,
+				InboundNatRules: &inboundNATRules,
 			},
 			Sku: &network.LoadBalancerSku{
 				Name: "[variables('loadBalancerSku')]",

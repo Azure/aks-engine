@@ -16,7 +16,7 @@ type SystemRoleAssignmentARM struct {
 	authorization.RoleAssignment
 }
 
-func createVmasRoleAssignment() SystemRoleAssignmentARM {
+func createVMASRoleAssignment() SystemRoleAssignmentARM {
 	systemRoleAssignment := SystemRoleAssignmentARM{
 		ARMResource: ARMResource{
 			APIVersion: "[variables('apiVersionAuthorizationSystem')]",
@@ -36,7 +36,7 @@ func createVmasRoleAssignment() SystemRoleAssignmentARM {
 	return systemRoleAssignment
 }
 
-func createAgentVmasSysRoleAssignment(profile *api.AgentPoolProfile) SystemRoleAssignmentARM {
+func createAgentVMASSysRoleAssignment(profile *api.AgentPoolProfile) SystemRoleAssignmentARM {
 	systemRoleAssignment := SystemRoleAssignmentARM{
 		ARMResource: ARMResource{
 			APIVersion: "[variables('apiVersionAuthorizationSystem')]",
@@ -61,7 +61,7 @@ func createAgentVmasSysRoleAssignment(profile *api.AgentPoolProfile) SystemRoleA
 	return systemRoleAssignment
 }
 
-func createAgentVmssSysRoleAssignment(profile *api.AgentPoolProfile) SystemRoleAssignmentARM {
+func createAgentVMSSSysRoleAssignment(profile *api.AgentPoolProfile) SystemRoleAssignmentARM {
 	systemRoleAssignment := SystemRoleAssignmentARM{
 		ARMResource: ARMResource{
 			APIVersion: "[variables('apiVersionAuthorizationSystem')]",

@@ -29,7 +29,7 @@ func GenerateARMResources(cs *api.ContainerService) []interface{} {
 	for _, profile := range profiles {
 		if profile.IsVirtualMachineScaleSets() {
 			if useManagedIdentity && !userAssignedIDEnabled {
-				armResources = append(armResources, createAgentVmssSysRoleAssignment(profile))
+				armResources = append(armResources, createAgentVMSSSysRoleAssignment(profile))
 			}
 			armResources = append(armResources, CreateAgentVMSS(cs, profile))
 		} else {
@@ -109,22 +109,24 @@ func createKubernetesAgentVMASResources(cs *api.ContainerService, profile *api.A
 		agentVMASResources = append(agentVMASResources, avSet)
 	}
 
-	agentVmasVM := createAgentAvailabilitySetVM(cs, profile)
-	agentVMASResources = append(agentVMASResources, agentVmasVM)
+	agentVMASVM := createAgentAvailabilitySetVM(cs, profile)
+	agentVMASResources = append(agentVMASResources, agentVMASVM)
 
 	useManagedIdentity := cs.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity
 	userAssignedIDEnabled := useManagedIdentity && cs.Properties.OrchestratorProfile.KubernetesConfig.UserAssignedID != ""
 
 	if useManagedIdentity && !userAssignedIDEnabled {
-		agentVmasSysRoleAssignment := createAgentVmasSysRoleAssignment
-		agentVMASResources = append(agentVMASResources, agentVmasSysRoleAssignment)
+		agentVMASSysRoleAssignment := createAgentVMASSysRoleAssignment
+		agentVMASResources = append(agentVMASResources, agentVMASSysRoleAssignment)
 	}
 
-	agentVmasCSE := createAgentVMASCustomScriptExtension(cs, profile)
-	agentVMASResources = append(agentVMASResources, agentVmasCSE)
+	agentVMASCSE := createAgentVMASCustomScriptExtension(cs, profile)
+	agentVMASResources = append(agentVMASResources, agentVMASCSE)
 
-	agentVmasAksBilling := CreateAgentVMASAKSBillingExtension(cs, profile)
-	agentVMASResources = append(agentVMASResources, agentVmasAksBilling)
+	if cs.IsAKSBillingEnabled() {
+		agentVMASAKSBilling := CreateAgentVMASAKSBillingExtension(cs, profile)
+		agentVMASResources = append(agentVMASResources, agentVMASAKSBilling)
+	}
 
 	return agentVMASResources
 }

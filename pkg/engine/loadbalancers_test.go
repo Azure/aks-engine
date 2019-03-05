@@ -107,7 +107,7 @@ func TestCreateLoadBalancer(t *testing.T) {
 }
 
 func TestCreateMasterInternalLoadBalancer(t *testing.T) {
-	// Test without custom Vnet
+	// Test without custom VNET
 	cs := &api.ContainerService{
 		Properties: &api.Properties{
 			MasterProfile: &api.MasterProfile{},

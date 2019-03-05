@@ -53,11 +53,11 @@ func createKubernetesMasterResources(cs *api.ContainerService) []interface{} {
 		masterNic := createPrivateClusterNetworkInterface(cs)
 		masterResources = append(masterResources, masterNic)
 
-		provisionJumpBox := cs.Properties.OrchestratorProfile.KubernetesConfig.PrivateJumpboxProvision()
+		provisionJumpbox := cs.Properties.OrchestratorProfile.KubernetesConfig.PrivateJumpboxProvision()
 
-		if provisionJumpBox {
-			jumpBoxVM := createJumpboxVirtualMachine(cs)
-			masterResources = append(masterResources, jumpBoxVM)
+		if provisionJumpbox {
+			jumpboxVM := createJumpboxVirtualMachine(cs)
+			masterResources = append(masterResources, jumpboxVM)
 			jumpboxIsManagedDisks :=
 				cs.Properties.OrchestratorProfile.KubernetesConfig.PrivateJumpboxProvision() &&
 					cs.Properties.OrchestratorProfile.KubernetesConfig.PrivateCluster.JumpboxProfile.StorageProfile == api.ManagedDisks
@@ -65,17 +65,19 @@ func createKubernetesMasterResources(cs *api.ContainerService) []interface{} {
 				jumpBoxStorage := createJumpboxStorageAccount()
 				masterResources = append(masterResources, jumpBoxStorage)
 			}
-			jumpBoxNSG := createJumpboxNSG()
-			masterResources = append(masterResources, jumpBoxNSG)
-			jumpBoxNIC := createJumpboxNIC(cs)
-			masterResources = append(masterResources, jumpBoxNIC)
+			jumpboxNSG := createJumpboxNSG()
+			masterResources = append(masterResources, jumpboxNSG)
+			jumpboxNIC := createJumpboxNIC(cs)
+			masterResources = append(masterResources, jumpboxNIC)
+			jumpboxPublicIP := createJumpboxPublicIPAddress()
+			masterResources = append(masterResources, jumpboxPublicIP)
 		}
 
 	}
 
 	if p.MasterProfile.Count > 1 {
-		internalLb := CreateMasterInternalLoadBalancer(cs)
-		masterResources = append(masterResources, internalLb)
+		internalLB := CreateMasterInternalLoadBalancer(cs)
+		masterResources = append(masterResources, internalLB)
 	}
 
 	isKMSEnabled := to.Bool(cs.Properties.OrchestratorProfile.KubernetesConfig.EnableEncryptionWithExternalKms)
@@ -83,7 +85,7 @@ func createKubernetesMasterResources(cs *api.ContainerService) []interface{} {
 	if isKMSEnabled {
 		keyVaultStorageAccount := createKeyVaultStorageAccount()
 		masterResources = append(masterResources, keyVaultStorageAccount)
-		keyVault := CreateKeyVault(cs)
+		keyVault := CreateKeyVaultVMAS(cs)
 		masterResources = append(masterResources, keyVault)
 	}
 
@@ -94,14 +96,14 @@ func createKubernetesMasterResources(cs *api.ContainerService) []interface{} {
 	userAssignedIDEnabled := useManagedIdentity && cs.Properties.OrchestratorProfile.KubernetesConfig.UserAssignedID != ""
 
 	if useManagedIdentity && !userAssignedIDEnabled {
-		vmasRoleAssignment := createVmasRoleAssignment()
+		vmasRoleAssignment := createVMASRoleAssignment()
 		masterResources = append(masterResources, vmasRoleAssignment)
 	}
 
 	masterCSE := CreateCustomScriptExtension(cs)
 	masterResources = append(masterResources, masterCSE)
 
-	if cs.IsAksBillingEnabled() {
+	if cs.IsAKSBillingEnabled() {
 		aksBillingExtension := CreateAKSBillingExtension(cs)
 		masterResources = append(masterResources, aksBillingExtension)
 	}

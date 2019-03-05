@@ -15,7 +15,7 @@ func createRouteTable() RouteTableARM {
 		},
 		RouteTable: network.RouteTable{
 			Location: to.StringPtr("[variables('location')]"),
-			Name:     to.StringPtr("variables('routeTableName')"),
+			Name:     to.StringPtr("[variables('routeTableName')]"),
 			Type:     to.StringPtr("Microsoft.Network/routeTables"),
 		},
 	}

@@ -23,7 +23,7 @@ func TestCreateKeyVault(t *testing.T) {
 		},
 	}
 
-	actual := CreateKeyVault(cs)
+	actual := CreateKeyVaultVMAS(cs)
 
 	expected := map[string]interface{}{
 		"type":       "Microsoft.KeyVault/vaults",
@@ -54,7 +54,7 @@ func TestCreateKeyVault(t *testing.T) {
 	//Test with UseManagedIdentityEnabled
 	cs.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity = true
 
-	actual = CreateKeyVault(cs)
+	actual = CreateKeyVaultVMAS(cs)
 
 	expected = map[string]interface{}{
 		"type":       "Microsoft.KeyVault/vaults",
@@ -90,7 +90,7 @@ func TestCreateKeyVault(t *testing.T) {
 	cs.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity = true
 	cs.Properties.OrchestratorProfile.KubernetesConfig.UserAssignedID = "fooID"
 
-	actual = CreateKeyVault(cs)
+	actual = CreateKeyVaultVMAS(cs)
 
 	expected = map[string]interface{}{
 		"type":       "Microsoft.KeyVault/vaults",

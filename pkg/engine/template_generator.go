@@ -498,7 +498,7 @@ func (t *TemplateGenerator) getTemplateFuncMap(cs *api.ContainerService) templat
 			return cs.Properties.OrchestratorProfile.KubernetesConfig.GetUserAssignedClientID()
 		},
 		"UseAksExtension": func() bool {
-			return cs.IsAksBillingEnabled()
+			return cs.IsAKSBillingEnabled()
 		},
 		"IsMooncake": func() bool {
 			cloudSpecConfig := cs.GetCloudSpecConfig()
@@ -1163,7 +1163,7 @@ func (t *TemplateGenerator) getParameterDescMap(containerService *api.ContainerS
 	var paramsDescMap map[string]interface{}
 	properties := containerService.Properties
 	// save the current orchestrator version and restore it after deploying.
-	// this allows us to deploy agents on the most recent patch without updating the orchestator version in the object
+	// this allows us to deploy agents on the most recent patch without updating the orchestrator version in the object
 	orchVersion := properties.OrchestratorProfile.OrchestratorVersion
 	defer func() {
 		properties.OrchestratorProfile.OrchestratorVersion = orchVersion

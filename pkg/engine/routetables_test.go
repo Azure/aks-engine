@@ -20,7 +20,7 @@ func TestCreateRouteTable(t *testing.T) {
 		},
 		RouteTable: network.RouteTable{
 			Location: to.StringPtr("[variables('location')]"),
-			Name:     to.StringPtr("variables('routeTableName')"),
+			Name:     to.StringPtr("[variables('routeTableName')]"),
 			Type:     to.StringPtr("Microsoft.Network/routeTables"),
 		},
 	}

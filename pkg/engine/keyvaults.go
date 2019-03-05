@@ -9,7 +9,7 @@ import (
 	"github.com/Azure/aks-engine/pkg/api"
 )
 
-func CreateKeyVault(cs *api.ContainerService) map[string]interface{} {
+func CreateKeyVaultVMAS(cs *api.ContainerService) map[string]interface{} {
 	keyVaultMap := map[string]interface{}{
 		"type":       "Microsoft.KeyVault/vaults",
 		"name":       "[variables('clusterKeyVaultName')]",

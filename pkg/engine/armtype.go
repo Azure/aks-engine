@@ -23,16 +23,6 @@ type ARMResource struct {
 	DependsOn  []string          `json:"dependsOn,omitempty"`
 }
 
-type ARMResourceLocType struct {
-	ARMResource
-	Location string `json:"location,omitempty"`
-	Type     string `json:"type,omitempty"`
-}
-
-func (arm ARMResourceLocType) MarshalJSON() ([]byte, error) {
-	return json.Marshal(arm)
-}
-
 func (arm ARMResource) MarshalJSON() ([]byte, error) {
 	return json.Marshal(arm)
 }
@@ -90,11 +80,6 @@ type PublicIPAddressARM struct {
 type LoadBalancerARM struct {
 	ARMResource
 	network.LoadBalancer
-}
-
-type InboundNATRuleARM struct {
-	ARMResourceLocType
-	network.InboundNatRule
 }
 
 type NetworkInterfaceARM struct {

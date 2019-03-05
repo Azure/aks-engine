@@ -15,7 +15,7 @@ import (
 
 func TestCreateVmasRoleAssignment(t *testing.T) {
 
-	actual := createVmasRoleAssignment()
+	actual := createVMASRoleAssignment()
 
 	expected := SystemRoleAssignmentARM{
 		ARMResource: ARMResource{
@@ -47,7 +47,7 @@ func TestCreateAgentVmasSysRoleAssignment(t *testing.T) {
 	profile := &api.AgentPoolProfile{
 		Name: "fooprofile",
 	}
-	actual := createAgentVmasSysRoleAssignment(profile)
+	actual := createAgentVMASSysRoleAssignment(profile)
 
 	expected := SystemRoleAssignmentARM{
 		ARMResource: ARMResource{
@@ -83,7 +83,7 @@ func TestCreateAgentVmssSysRoleAssignment(t *testing.T) {
 	profile := &api.AgentPoolProfile{
 		Name: "fooprofile",
 	}
-	actual := createAgentVmssSysRoleAssignment(profile)
+	actual := createAgentVMSSSysRoleAssignment(profile)
 
 	expected := SystemRoleAssignmentARM{
 		ARMResource: ARMResource{

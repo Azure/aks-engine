@@ -30,24 +30,24 @@ func CreatePublicIPAddress() PublicIPAddressARM {
 	}
 }
 
-//func createJumpboxPublicIPAddress() PublicIPAddressARM {
-//	return PublicIPAddressARM{
-//		ARMResource: ARMResource{
-//			APIVersion: "[variables('apiVersionNetwork')]",
-//		},
-//		PublicIPAddress: network.PublicIPAddress{
-//			Location: to.StringPtr("[variables('location')]"),
-//			Name:     to.StringPtr("[variables('jumpboxPublicIpAddressName')]"),
-//			PublicIPAddressPropertiesFormat: &network.PublicIPAddressPropertiesFormat{
-//				DNSSettings: &network.PublicIPAddressDNSSettings{
-//					DomainNameLabel: to.StringPtr("[variables('masterFqdnPrefix')]"),
-//				},
-//				PublicIPAllocationMethod: network.Dynamic,
-//			},
-//			Sku: &network.PublicIPAddressSku{
-//				Name: network.PublicIPAddressSkuNameBasic,
-//			},
-//			Type: to.StringPtr("Microsoft.Network/publicIPAddresses"),
-//		},
-//	}
-//}
+func createJumpboxPublicIPAddress() PublicIPAddressARM {
+	return PublicIPAddressARM{
+		ARMResource: ARMResource{
+			APIVersion: "[variables('apiVersionNetwork')]",
+		},
+		PublicIPAddress: network.PublicIPAddress{
+			Location: to.StringPtr("[variables('location')]"),
+			Name:     to.StringPtr("[variables('jumpboxPublicIpAddressName')]"),
+			PublicIPAddressPropertiesFormat: &network.PublicIPAddressPropertiesFormat{
+				DNSSettings: &network.PublicIPAddressDNSSettings{
+					DomainNameLabel: to.StringPtr("[variables('masterFqdnPrefix')]"),
+				},
+				PublicIPAllocationMethod: network.Dynamic,
+			},
+			Sku: &network.PublicIPAddressSku{
+				Name: network.PublicIPAddressSkuNameBasic,
+			},
+			Type: to.StringPtr("Microsoft.Network/publicIPAddresses"),
+		},
+	}
+}

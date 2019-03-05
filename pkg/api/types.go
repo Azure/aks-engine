@@ -829,7 +829,7 @@ func (p *Properties) AnyAgentUsesVirtualMachineScaleSets() bool {
 	return false
 }
 
-// AnyAgentUsesAvailabilitySets checks whether any of the agents in the AgentPool use VMSS or not
+// AnyAgentUsesAvailabilitySets checks whether any of the agents in the AgentPool use VMAS or not
 func (p *Properties) AnyAgentUsesAvailabilitySets() bool {
 	for _, agentProfile := range p.AgentPoolProfiles {
 		if agentProfile.IsAvailabilitySets() {
@@ -1588,8 +1588,8 @@ func (cs *ContainerService) GetCloudSpecConfig() AzureEnvironmentSpecConfig {
 	return AzureCloudSpecEnvMap[targetEnv]
 }
 
-// IsAksBillingEnabled checks if the AKS Billing Extension should be enabled for a cloud environment.
-func (cs *ContainerService) IsAksBillingEnabled() bool {
+// IsAKSBillingEnabled checks if the AKS Billing Extension should be enabled for a cloud environment.
+func (cs *ContainerService) IsAKSBillingEnabled() bool {
 	cloudSpecConfig := cs.GetCloudSpecConfig()
 	return cloudSpecConfig.CloudName == AzurePublicCloud || cloudSpecConfig.CloudName == AzureChinaCloud
 }

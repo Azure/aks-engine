@@ -44,7 +44,7 @@ func createCosmosDBAccount() DocumentDBAccountARM {
 		Tags: map[string]*string{
 			"defaultExperience": to.StringPtr("Etcd"),
 		},
-		//TODO: Need to something about the primaryClientCertificatePemBytes
+		//TODO: Need to do something about the primaryClientCertificatePemBytes
 	}
 
 	return DocumentDBAccountARM{
