@@ -140,7 +140,7 @@ func TestUpgradeShouldFailForSameVersion(t *testing.T) {
 	containerServiceMock := api.CreateMockContainerService("testcluster", "1.10.13", 3, 2, false)
 	containerServiceMock.Location = "centralus"
 	upgradeCmd.containerService = containerServiceMock
-	err := upgradeCmd.validateCurrentLocalState(fakeARMTemplateHandle)
+	err := upgradeCmd.initializeFromLocalState(fakeARMTemplateHandle)
 	g.Expect(err).To(HaveOccurred())
 	g.Expect(err.Error()).To(ContainSubstring("upgrading from Kubernetes version 1.10.13 to version 1.10.13 is not supported"))
 	resetValidVersions()
@@ -166,7 +166,7 @@ func TestUpgradeShouldFailForInvalidUpgradePath(t *testing.T) {
 	containerServiceMock := api.CreateMockContainerService("testcluster", "1.10.12", 3, 2, false)
 	containerServiceMock.Location = "centralus"
 	upgradeCmd.containerService = containerServiceMock
-	err := upgradeCmd.validateCurrentLocalState(fakeARMTemplateHandle)
+	err := upgradeCmd.initializeFromLocalState(fakeARMTemplateHandle)
 	g.Expect(err).To(HaveOccurred())
 	g.Expect(err.Error()).To(ContainSubstring("upgrading from Kubernetes version 1.10.12 to version 1.10.13 is not supported"))
 	resetValidVersions()
@@ -191,7 +191,7 @@ func TestUpgradeShouldSuceedForValidUpgradePath(t *testing.T) {
 	containerServiceMock := api.CreateMockContainerService("testcluster", "1.10.12", 3, 2, false)
 	containerServiceMock.Location = "centralus"
 	upgradeCmd.containerService = containerServiceMock
-	err := upgradeCmd.validateCurrentLocalState(fakeARMTemplateHandle)
+	err := upgradeCmd.initializeFromLocalState(fakeARMTemplateHandle)
 	g.Expect(err).NotTo(HaveOccurred())
 	resetValidVersions()
 }
@@ -212,7 +212,7 @@ func TestUpgradeFailWithPathWhenAzureDeployJsonIsInvalid(t *testing.T) {
 	containerServiceMock := api.CreateMockContainerService("testcluster", "1.13.2", 3, 2, false)
 	containerServiceMock.Location = "centralus"
 	upgradeCmd.containerService = containerServiceMock
-	err := upgradeCmd.validateCurrentLocalState(fakeARMTemplateHandle)
+	err := upgradeCmd.initializeFromLocalState(fakeARMTemplateHandle)
 	g.Expect(err).To(HaveOccurred())
 	g.Expect(err.Error()).To(ContainSubstring("_output/myspecialtestfolder/azuredeploy.json"))
 }
@@ -236,7 +236,7 @@ func TestUpgradeForceSameVersionShouldSucceed(t *testing.T) {
 	containerServiceMock.Location = "centralus"
 	upgradeCmd.containerService = containerServiceMock
 	upgradeCmd.force = true
-	err := upgradeCmd.validateCurrentLocalState(fakeARMTemplateHandle)
+	err := upgradeCmd.initializeFromLocalState(fakeARMTemplateHandle)
 	g.Expect(err).NotTo(HaveOccurred())
 	resetValidVersions()
 }
@@ -262,7 +262,7 @@ func TestUpgradeForceDowngradeShouldSetVersionOnContainerService(t *testing.T) {
 	containerServiceMock.Location = "centralus"
 	upgradeCmd.containerService = containerServiceMock
 	upgradeCmd.force = true
-	err := upgradeCmd.validateCurrentLocalState(fakeARMTemplateHandle)
+	err := upgradeCmd.initializeFromLocalState(fakeARMTemplateHandle)
 	g.Expect(err).NotTo(HaveOccurred())
 	g.Expect(upgradeCmd.containerService.Properties.OrchestratorProfile.OrchestratorVersion).To(Equal("1.10.12"))
 	resetValidVersions()

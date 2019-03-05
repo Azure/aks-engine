@@ -157,7 +157,7 @@ func (uc *upgradeCmd) loadCluster(cmd *cobra.Command) error {
 		return errors.Wrap(err, "error reading ARM file")
 	}
 	defer armTemplateHandle.Close()
-	err = uc.validateCurrentLocalState(armTemplateHandle)
+	err = uc.initializeFromLocalState(armTemplateHandle)
 	if err != nil {
 		return errors.Wrap(err, "error validating the api model")
 	}
@@ -184,7 +184,7 @@ func (uc *upgradeCmd) validateTargetVersion() error {
 	return nil
 }
 
-func (uc *upgradeCmd) validateCurrentLocalState(armTemplateHandle io.Reader) error {
+func (uc *upgradeCmd) initializeFromLocalState(armTemplateHandle io.Reader) error {
 	if uc.containerService.Location == "" {
 		uc.containerService.Location = uc.location
 	} else if uc.containerService.Location != uc.location {
