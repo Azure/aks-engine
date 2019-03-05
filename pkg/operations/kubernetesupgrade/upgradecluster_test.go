@@ -7,7 +7,6 @@ import (
 	"context"
 	"os"
 	"testing"
-	"time"
 
 	"github.com/Azure/aks-engine/pkg/api"
 	"github.com/Azure/aks-engine/pkg/api/common"
@@ -482,7 +481,7 @@ var _ = Describe("Upgrade Kubernetes cluster tests", func() {
 	})
 
 	It("Tests GetLastVMNameInVMSS", func() {
-		ctx, _ := context.WithTimeout(context.Background(), 90*time.Minute)
+		ctx := context.Background()
 
 		mockClient := armhelpers.MockAKSEngineClient{}
 		mockClient.FakeListVirtualMachineScaleSetsResult = func() []compute.VirtualMachineScaleSet {
