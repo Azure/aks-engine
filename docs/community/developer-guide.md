@@ -248,7 +248,7 @@ AKS Engine employs a Continuous Integration (CI) system that incorporates Azure 
 The following steps constitute the AKS Engine CI pipeline:
 
 1. Contributor opens a Pull Request (PR) against the AKS Engine project
-1. The PR triggers an Azure DevOps job that
+1. An AKS Engine team member comments on the PR to trigger an Azure DevOps job that
    + applies the changes to the HEAD of the master branch
    + runs unit tests and code coverage reports
    + generates multiple ARM templates for different deployment scenarios
