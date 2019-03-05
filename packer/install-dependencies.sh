@@ -5,9 +5,9 @@ source /home/packer/provision_source.sh
 echo "Starting build on " `date` > /var/log/azure/golden-image-install.complete
 echo "Using kernel:" >> /var/log/azure/golden-image-install.complete
 cat /proc/version | tee -a /var/log/azure/golden-image-install.complete
-echo "Components downloaded in this VHD build (some of the below components might get deleted during cluster provisioning if they are not needed):\n" >> /var/log/azure/golden-image-install.complete
 
-
+echo ""
+echo "Components downloaded in this VHD build (some of the below components might get deleted during cluster provisioning if they are not needed):" >> /var/log/azure/golden-image-install.complete
 
 ETCD_VERSION="3.2.25"
 ETCD_DOWNLOAD_URL="https://acs-mirror.azureedge.net/github-coreos"
@@ -16,29 +16,29 @@ echo "  - etcd v${ETCD_VERSION}" >> /var/log/azure/golden-image-install.complete
 
 installDeps
 cat << EOF >> /var/log/azure/golden-image-install.complete
-    - apt-transport-https
-    - blobfuse
-    - ca-certificates
-    - ceph-common
-    - cgroup-lite
-    - cifs-utils
-    - conntrack
-    - ebtables
-    - ethtool
-    - fuse
-    - git
-    - glusterfs-client
-    - init-system-helpers
-    - iproute2
-    - ipset
-    - iptables
-    - jq
-    - mount
-    - nfs-common
-    - pigz socat
-    - util-linux
-    - xz-utils
-    - zip
+  - apt-transport-https
+  - blobfuse
+  - ca-certificates
+  - ceph-common
+  - cgroup-lite
+  - cifs-utils
+  - conntrack
+  - ebtables
+  - ethtool
+  - fuse
+  - git
+  - glusterfs-client
+  - init-system-helpers
+  - iproute2
+  - ipset
+  - iptables
+  - jq
+  - mount
+  - nfs-common
+  - pigz socat
+  - util-linux
+  - xz-utils
+  - zip
 EOF
 
 if [[ ${FEATURE_FLAGS} == *"docker-engine"* ]]; then
