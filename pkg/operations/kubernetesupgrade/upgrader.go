@@ -631,7 +631,7 @@ func (ku *Upgrader) getLastVMNameInVMSS(ctx context.Context, resourceGroup strin
 		}
 
 		vms := vmScaleSetVMsPage.Values()
-		if vms != nil && len(vms) > 0 {
+		if len(vms) > 0 {
 			vm := vms[len(vms)-1]
 			lastVMName = *vm.VirtualMachineScaleSetVMProperties.OsProfile.ComputerName
 		}
