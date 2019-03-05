@@ -145,7 +145,7 @@ func (ku *Upgrader) upgradeMasterNodes(ctx context.Context) error {
 
 		masterIndex, _ := utils.GetVMNameIndex(vm.StorageProfile.OsDisk.OsType, *vm.Name)
 
-		err = upgradeMasterNode.DeleteNode(vm.Name, false)
+		err := upgradeMasterNode.DeleteNode(vm.Name, false)
 		if err != nil {
 			ku.logger.Infof("Error deleting master VM: %s, err: %v", *vm.Name, err)
 			return err
