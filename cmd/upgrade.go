@@ -157,7 +157,7 @@ func (uc *upgradeCmd) loadCluster(cmd *cobra.Command) error {
 		return errors.Wrap(err, "error reading ARM file")
 	}
 	defer armTemplateHandle.Close()
-	err = uc.validateCurrentLocalState(armTemplateHandle)
+	err = uc.initializeFromLocalState(armTemplateHandle)
 	if err != nil {
 		return errors.Wrap(err, "error validating the api model")
 	}
@@ -171,11 +171,9 @@ func (uc *upgradeCmd) validateTargetVersion() error {
 		return errors.Wrap(err, "error getting list of available upgrades")
 	}
 
-	// Validate desired upgrade version and set goal state.
 	found := false
 	for _, up := range orchestratorInfo.Upgrades {
 		if up.OrchestratorVersion == uc.upgradeVersion {
-			uc.containerService.Properties.OrchestratorProfile.OrchestratorVersion = uc.upgradeVersion
 			found = true
 			break
 		}
@@ -186,7 +184,7 @@ func (uc *upgradeCmd) validateTargetVersion() error {
 	return nil
 }
 
-func (uc *upgradeCmd) validateCurrentLocalState(armTemplateHandle io.Reader) error {
+func (uc *upgradeCmd) initializeFromLocalState(armTemplateHandle io.Reader) error {
 	if uc.containerService.Location == "" {
 		uc.containerService.Location = uc.location
 	} else if uc.containerService.Location != uc.location {
@@ -199,6 +197,7 @@ func (uc *upgradeCmd) validateCurrentLocalState(armTemplateHandle io.Reader) err
 			return errors.Wrap(err, "Invalid upgrade target version. Consider using --force if you really want to proceed")
 		}
 	}
+	uc.containerService.Properties.OrchestratorProfile.OrchestratorVersion = uc.upgradeVersion
 
 	//allows to identify VMs in the resource group that belong to this cluster.
 	if nameSuffix, err := readNameSuffixFromARMTemplate(armTemplateHandle); err == nil {
