@@ -81,7 +81,7 @@ echo "  - containerd versions: ${CONTAINERD_VERSIONS}" >> /var/log/azure/golden-
 installImg
 echo "  - img" >> /var/log/azure/golden-image-install.complete
 
-echo "Docker images pre-pulled:\n" >> /var/log/azure/golden-image-install.complete
+echo "Docker images pre-pulled:" >> /var/log/azure/golden-image-install.complete
 
 DASHBOARD_VERSIONS="1.10.1"
 for DASHBOARD_VERSION in ${DASHBOARD_VERSIONS}; do
