@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
+// Package test provides a method to export Ginkgo test results to custom unit test reporters.
 package test
 
 import (

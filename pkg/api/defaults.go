@@ -491,6 +491,10 @@ func (p *Properties) setAgentProfileDefaults(isUpgrade, isScale bool) {
 				profile.IPAddressCount += agentPoolMaxPods
 			}
 		}
+
+		if profile.PreserveNodesProperties == nil {
+			profile.PreserveNodesProperties = to.BoolPtr(DefaultPreserveNodesProperties)
+		}
 	}
 }
 

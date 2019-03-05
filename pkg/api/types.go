@@ -531,6 +531,7 @@ type AgentPoolProfile struct {
 	AvailabilityZones                   []string             `json:"availabilityZones,omitempty"`
 	SinglePlacementGroup                *bool                `json:"singlePlacementGroup,omitempty"`
 	VnetCidrs                           []string             `json:"vnetCidrs,omitempty"`
+	PreserveNodesProperties             *bool                `json:"preserveNodesProperties,omitempty"`
 }
 
 // AgentPoolProfileRole represents an agent role
@@ -1029,6 +1030,15 @@ func (p *Properties) GetAzureCNICidr() string {
 		masqCNIIP = DefaultCNICIDR
 	}
 	return masqCNIIP
+}
+
+// GetMasterFQDN returns the master FQDN.
+func (p *Properties) GetMasterFQDN() string {
+	if p.IsHostedMasterProfile() {
+		return p.HostedMasterProfile.FQDN
+	}
+
+	return p.MasterProfile.FQDN
 }
 
 // IsCustomVNET returns true if the customer brought their own VNET

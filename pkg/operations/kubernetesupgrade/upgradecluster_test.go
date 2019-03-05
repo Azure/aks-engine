@@ -4,6 +4,7 @@
 package kubernetesupgrade
 
 import (
+	"context"
 	"os"
 	"testing"
 
@@ -16,6 +17,7 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	log "github.com/sirupsen/logrus"
+	v1 "k8s.io/api/core/v1"
 )
 
 const TestAKSEngineVersion = "1.0.0"
@@ -476,5 +478,123 @@ var _ = Describe("Upgrade Kubernetes cluster tests", func() {
 
 		err := uc.UpgradeCluster(&mockClient, "kubeConfig", TestAKSEngineVersion)
 		Expect(err).To(BeNil())
+	})
+
+	It("Tests GetLastVMNameInVMSS", func() {
+		ctx := context.Background()
+
+		mockClient := armhelpers.MockAKSEngineClient{}
+		mockClient.FakeListVirtualMachineScaleSetsResult = func() []compute.VirtualMachineScaleSet {
+			scalesetName := "scalesetName"
+			sku := compute.Sku{}
+			location := "eastus"
+			return []compute.VirtualMachineScaleSet{
+				{
+					Name:     &scalesetName,
+					Sku:      &sku,
+					Location: &location,
+				},
+			}
+		}
+		mockClient.FakeListVirtualMachineScaleSetVMsResult = func() []compute.VirtualMachineScaleSetVM {
+			return []compute.VirtualMachineScaleSetVM{
+				mockClient.MakeFakeVirtualMachineScaleSetVMWithGivenName("Kubernetes:1.9.10", "aks-agentnode1-123456-vmss000002"),
+				mockClient.MakeFakeVirtualMachineScaleSetVMWithGivenName("Kubernetes:1.9.10", "aks-agentnode1-123456-vmss000003"),
+				mockClient.MakeFakeVirtualMachineScaleSetVMWithGivenName("Kubernetes:1.9.10", "aks-agentnode1-123456-vmss000004"),
+				mockClient.MakeFakeVirtualMachineScaleSetVMWithGivenName("Kubernetes:1.9.10", "aks-agentnode1-123456-vmss000005"),
+			}
+		}
+
+		u := &Upgrader{}
+		u.Init(&i18n.Translator{}, log.NewEntry(log.New()), ClusterTopology{}, &mockClient, "", nil, TestAKSEngineVersion)
+
+		vmname, err := u.getLastVMNameInVMSS(ctx, "resourcegroup", "scalesetName")
+		Expect(vmname).To(Equal("aks-agentnode1-123456-vmss000005"))
+		Expect(err).NotTo(HaveOccurred())
+
+		mockClient.FakeListVirtualMachineScaleSetVMsResult = func() []compute.VirtualMachineScaleSetVM {
+			return []compute.VirtualMachineScaleSetVM{
+				mockClient.MakeFakeVirtualMachineScaleSetVMWithGivenName("Kubernetes:1.9.10", "aks-agentnode1-123456-vmss000002"),
+				mockClient.MakeFakeVirtualMachineScaleSetVMWithGivenName("Kubernetes:1.9.10", "aks-agentnode1-123456-vmss000003"),
+				mockClient.MakeFakeVirtualMachineScaleSetVMWithGivenName("Kubernetes:1.9.10", "aks-agentnode1-123456-vmss000004"),
+				mockClient.MakeFakeVirtualMachineScaleSetVMWithGivenName("Kubernetes:1.9.10", ""),
+			}
+		}
+		u.Init(&i18n.Translator{}, log.NewEntry(log.New()), ClusterTopology{}, &mockClient, "", nil, TestAKSEngineVersion)
+
+		vmname, err = u.getLastVMNameInVMSS(ctx, "resourcegroup", "scalesetName")
+		Expect(vmname).To(Equal(""))
+		Expect(err).To(HaveOccurred())
+
+		mockClient.FakeListVirtualMachineScaleSetVMsResult = func() []compute.VirtualMachineScaleSetVM {
+			return []compute.VirtualMachineScaleSetVM{}
+		}
+		u.Init(&i18n.Translator{}, log.NewEntry(log.New()), ClusterTopology{}, &mockClient, "", nil, TestAKSEngineVersion)
+
+		vmname, err = u.getLastVMNameInVMSS(ctx, "resourcegroup", "scalesetName")
+		Expect(vmname).To(Equal(""))
+		Expect(err).To(HaveOccurred())
+	})
+
+	It("Tests CopyCustomPropertiesToNewNode", func() {
+		u := &Upgrader{}
+
+		mockClient := &armhelpers.MockAKSEngineClient{MockKubernetesClient: &armhelpers.MockKubernetesClient{}}
+		mockClient.MockKubernetesClient.FailGetNode = true
+
+		u.Init(&i18n.Translator{}, log.NewEntry(log.New()), ClusterTopology{}, nil, "", nil, TestAKSEngineVersion)
+		err := u.copyCustomPropertiesToNewNode(mockClient.MockKubernetesClient, "oldNodeName", "newNodeName")
+		Expect(err).Should(HaveOccurred())
+
+		oldNode := &v1.Node{}
+		oldNode.Annotations = map[string]string{}
+		oldNode.Annotations["ann1"] = "val1"
+		oldNode.Annotations["ann2"] = "val2"
+		oldNode.Annotations["customAnn"] = "customVal"
+
+		oldNode.Labels = map[string]string{}
+		oldNode.Labels["label1"] = "val1"
+		oldNode.Labels["label2"] = "val2"
+		oldNode.Labels["customLabel"] = "customVal"
+
+		oldNode.Spec.Taints = []v1.Taint{
+			{
+				Key:    "key1",
+				Value:  "val1",
+				Effect: "NoSchedule",
+			},
+			{
+				Key:    "key2",
+				Value:  "val2",
+				Effect: "NoSchedule",
+			},
+		}
+
+		newNode := &v1.Node{}
+		newNode.Annotations = map[string]string{}
+		newNode.Annotations["ann1"] = "newval1"
+		newNode.Annotations["ann2"] = "newval2"
+
+		newNode.Labels = map[string]string{}
+		newNode.Labels["label1"] = "newval1"
+		newNode.Labels["label2"] = "newval2"
+
+		mockClient.MockKubernetesClient.UpdateNodeFunc = func(node *v1.Node) (*v1.Node, error) {
+			return node, nil
+		}
+
+		err = u.copyCustomNodeProperties(mockClient.MockKubernetesClient, "oldnode", oldNode, "newnode", newNode)
+		Expect(err).NotTo(HaveOccurred())
+		Expect(len(newNode.Annotations)).To(Equal(3))
+		Expect(newNode.Annotations["ann1"]).To(Equal("newval1"))
+		Expect(newNode.Annotations["ann2"]).To(Equal("newval2"))
+		Expect(newNode.Annotations["customAnn"]).To(Equal("customVal"))
+
+		Expect(len(newNode.Labels)).To(Equal(3))
+		Expect(newNode.Labels["label1"]).To(Equal("newval1"))
+		Expect(newNode.Labels["label2"]).To(Equal("newval2"))
+		Expect(newNode.Labels["customLabel"]).To(Equal("customVal"))
+
+		Expect(len(newNode.Spec.Taints)).To(Equal(2))
 	})
 })

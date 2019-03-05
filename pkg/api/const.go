@@ -120,7 +120,7 @@ const (
 const publicAgentPoolSuffix = "-public"
 
 const (
-	// DefaultHeapsterAddonEnabled determines the acs-engine provided default for enabling heapster addon
+	// DefaultHeapsterAddonEnabled determines the aks-engine provided default for enabling heapster addon
 	DefaultHeapsterAddonEnabled = true
 	// DefaultTillerAddonEnabled determines the aks-engine provided default for enabling tiller addon
 	DefaultTillerAddonEnabled = true
@@ -222,6 +222,8 @@ const (
 	DefaultMaximumLoadBalancerRuleCount = 250
 	// DefaultEnableAutomaticUpdates determines the aks-engine provided default for enabling automatic updates
 	DefaultEnableAutomaticUpdates = true
+	// DefaultPreserveNodesProperties determines the aks-engine provided default for preserving nodes properties
+	DefaultPreserveNodesProperties = true
 )
 
 const (
