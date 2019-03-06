@@ -13,48 +13,6 @@ import (
 	"github.com/Azure/go-autorest/autorest/to"
 )
 
-//func createManagedIdentityExtension(cs api.ContainerService) VirtualMachineExtensionARM {
-//	dependentVM := "[concat('Microsoft.Compute/virtualMachines/', variables('masterVMNamePrefix'), copyIndex())]"
-//	dependentRoleAssignment := ""
-//	userAssignedIDEnabled := cs.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity &&
-//		cs.Properties.OrchestratorProfile.KubernetesConfig.UserAssignedID != ""
-//
-//	if userAssignedIDEnabled {
-//		dependentRoleAssignment = "[concat('Microsoft.Authorization/roleAssignments/',guid(concat(variables('userAssignedID'), 'roleAssignment', resourceGroup().id)))]"
-//	} else {
-//		dependentRoleAssignment = "[concat('Microsoft.Authorization/roleAssignments/', guid(concat('Microsoft.Compute/virtualMachines/', variables('masterVMNamePrefix'), copyIndex(), 'vmidentity')))]"
-//	}
-//
-//	return VirtualMachineExtensionARM{
-//		ARMResource: ARMResource{
-//			APIVersion: "[variables('apiVersionCompute')]",
-//			Copy: map[string]string{
-//				"count": "[variables('masterCount')]",
-//				"name":  "vmLoopNode",
-//			},
-//			DependsOn: []string{
-//				dependentVM,
-//				dependentRoleAssignment,
-//			},
-//		},
-//		VirtualMachineExtension: compute.VirtualMachineExtension{
-//			Location: to.StringPtr("[resourceGroup().location]"),
-//			Name:     to.StringPtr("[concat(variables('masterVMNamePrefix'), copyIndex(), '/ManagedIdentityExtension')]"),
-//			VirtualMachineExtensionProperties: &compute.VirtualMachineExtensionProperties{
-//				Publisher:               to.StringPtr("Microsoft.ManagedIdentity"),
-//				Type:                    to.StringPtr("ManagedIdentityExtensionForLinux"),
-//				TypeHandlerVersion:      to.StringPtr("1.0"),
-//				AutoUpgradeMinorVersion: to.BoolPtr(true),
-//				Settings: &map[string]interface{}{
-//					"port": "50343",
-//				},
-//				ProtectedSettings: &map[string]interface{}{},
-//			},
-//			Type: to.StringPtr("Microsoft.Compute/virtualMachines/extensions"),
-//		},
-//	}
-//}
-
 func CreateAKSBillingExtension(cs *api.ContainerService) VirtualMachineExtensionARM {
 	location := "[variables('location')]"
 	name := "[concat(variables('masterVMNamePrefix'), copyIndex(variables('masterOffset')), '/computeAksLinuxBilling')]"

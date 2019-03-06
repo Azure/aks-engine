@@ -165,6 +165,7 @@ const (
 const (
 	agentOutputs                  = "agentoutputs.t"
 	agentParams                   = "agentparams.t"
+	armParameters                 = "k8s/armparameters.t"
 	dcosAgentResourcesVMAS        = "dcos/dcosagentresourcesvmas.t"
 	dcosWindowsAgentResourcesVMAS = "dcos/dcosWindowsAgentResourcesVmas.t"
 	dcosAgentResourcesVMSS        = "dcos/dcosagentresourcesvmss.t"
@@ -192,7 +193,6 @@ const (
 	kubernetesParams              = "k8s/kubernetesparams.t"
 	kubernetesWinAgentVars        = "k8s/kuberneteswinagentresourcesvmas.t"
 	kubernetesWinAgentVarsVMSS    = "k8s/kuberneteswinagentresourcesvmss.t"
-	kubernetesParameters          = "k8s/kubernetesparameters.t"
 	masterOutputs                 = "masteroutputs.t"
 	masterParams                  = "masterparams.t"
 	swarmBaseFile                 = "swarm/swarmbase.t"

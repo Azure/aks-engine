@@ -20,8 +20,7 @@ func GenerateARMResources(cs *api.ContainerService) []interface{} {
 	if userAssignedIDEnabled {
 		userAssignedID := createUserAssignedIdentities()
 		msiRoleAssignment := createMSIRoleAssignment()
-		armResources = append(armResources, userAssignedID)
-		armResources = append(armResources, msiRoleAssignment)
+		armResources = append(armResources, userAssignedID, msiRoleAssignment)
 	}
 
 	profiles := cs.Properties.AgentPoolProfiles
@@ -60,7 +59,7 @@ func GenerateARMResources(cs *api.ContainerService) []interface{} {
 		if isMasterVMSS {
 			masterResources = createKubernetesMasterResourcesVMSS(cs)
 		} else {
-			masterResources = createKubernetesMasterResources(cs)
+			masterResources = createKubernetesMasterResourcesVMAS(cs)
 		}
 
 		armResources = append(armResources, masterResources...)
@@ -79,7 +78,7 @@ func createKubernetesAgentVMASResources(cs *api.ContainerService, profile *api.A
 		}
 	}
 
-	agentVmasNic := createAgentVMASNIC(cs, profile)
+	agentVmasNic := createAgentVMASNetworkInterface(cs, profile)
 	agentVMASResources = append(agentVMASResources, agentVmasNic)
 
 	if profile.IsManagedDisks() {

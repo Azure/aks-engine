@@ -1135,7 +1135,7 @@ func (t *TemplateGenerator) GenerateTemplateV2(containerService *api.ContainerSe
 	armTemplate := ARMTemplate{
 		Schema:         "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
 		ContentVersion: "1.0.0.0",
-		Parameters:     armParams["parameters"],
+		Parameters:     armParams,
 		Variables:      armVariables,
 		Resources:      armResources,
 		Outputs:        armOutputs,
@@ -1158,7 +1158,7 @@ func (t *TemplateGenerator) GenerateTemplateV2(containerService *api.ContainerSe
 	return templateRaw, parametersRaw, err
 }
 
-func (t *TemplateGenerator) getParameterDescMap(containerService *api.ContainerService) (map[string]interface{}, error) {
+func (t *TemplateGenerator) getParameterDescMap(containerService *api.ContainerService) (interface{}, error) {
 	var templ *template.Template
 	var paramsDescMap map[string]interface{}
 	properties := containerService.Properties
@@ -1171,7 +1171,7 @@ func (t *TemplateGenerator) getParameterDescMap(containerService *api.ContainerS
 
 	templ = template.New("acs template").Funcs(t.getTemplateFuncMap(containerService))
 
-	files, baseFile := kubernetesParamFiles, kubernetesParameters
+	files, baseFile := kubernetesParamFiles, armParameters
 
 	for _, file := range files {
 		bytes, e := Asset(file)
@@ -1195,5 +1195,5 @@ func (t *TemplateGenerator) getParameterDescMap(containerService *api.ContainerS
 		return nil, err
 	}
 
-	return paramsDescMap, nil
+	return paramsDescMap["parameters"], nil
 }

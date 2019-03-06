@@ -8,7 +8,7 @@ import (
 	"github.com/Azure/go-autorest/autorest/to"
 )
 
-func createKubernetesMasterResources(cs *api.ContainerService) []interface{} {
+func createKubernetesMasterResourcesVMAS(cs *api.ContainerService) []interface{} {
 	var masterResources []interface{}
 
 	p := cs.Properties
@@ -19,10 +19,9 @@ func createKubernetesMasterResources(cs *api.ContainerService) []interface{} {
 			masterResources = append(masterResources, CreateAvailabilitySet(cs, true))
 		}
 	} else if p.MasterProfile.IsStorageAccount() {
-		masterResources = append(masterResources, CreateAvailabilitySet(cs, false))
-
+		availabilitySet := CreateAvailabilitySet(cs, false)
 		storageAccount := createStorageAccount(cs)
-		masterResources = append(masterResources, storageAccount)
+		masterResources = append(masterResources, availabilitySet, storageAccount)
 	}
 
 	if !p.MasterProfile.IsCustomVNET() {
@@ -41,13 +40,10 @@ func createKubernetesMasterResources(cs *api.ContainerService) []interface{} {
 
 	if !isPrivateCluster {
 		publicIPAddress := CreatePublicIPAddress()
-		masterResources = append(masterResources, publicIPAddress)
-
 		loadBalancer := CreateLoadBalancer(cs.Properties.MasterProfile.Count)
-		masterResources = append(masterResources, loadBalancer)
-
 		masterNic := CreateNetworkInterfaces(cs)
-		masterResources = append(masterResources, masterNic)
+
+		masterResources = append(masterResources, publicIPAddress, loadBalancer, masterNic)
 
 	} else {
 		masterNic := createPrivateClusterNetworkInterface(cs)
@@ -66,11 +62,9 @@ func createKubernetesMasterResources(cs *api.ContainerService) []interface{} {
 				masterResources = append(masterResources, jumpBoxStorage)
 			}
 			jumpboxNSG := createJumpboxNSG()
-			masterResources = append(masterResources, jumpboxNSG)
-			jumpboxNIC := createJumpboxNIC(cs)
-			masterResources = append(masterResources, jumpboxNIC)
+			jumpboxNIC := createJumpboxNetworkInterface(cs)
 			jumpboxPublicIP := createJumpboxPublicIPAddress()
-			masterResources = append(masterResources, jumpboxPublicIP)
+			masterResources = append(masterResources, jumpboxNSG, jumpboxNIC, jumpboxPublicIP)
 		}
 
 	}
@@ -84,9 +78,8 @@ func createKubernetesMasterResources(cs *api.ContainerService) []interface{} {
 
 	if isKMSEnabled {
 		keyVaultStorageAccount := createKeyVaultStorageAccount()
-		masterResources = append(masterResources, keyVaultStorageAccount)
 		keyVault := CreateKeyVaultVMAS(cs)
-		masterResources = append(masterResources, keyVault)
+		masterResources = append(masterResources, keyVaultStorageAccount, keyVault)
 	}
 
 	masterVM := CreateVirtualMachine(cs)
@@ -118,15 +111,15 @@ func createKubernetesMasterResourcesVMSS(cs *api.ContainerService) []interface{}
 
 	//TODO: Implement CosmosEtcd
 
-	masterNsg := CreateNetworkSecurityGroup(cs)
-	masterResources = append(masterResources, masterNsg)
+	masterNSG := CreateNetworkSecurityGroup(cs)
+	masterResources = append(masterResources, masterNSG)
 
 	if cs.Properties.OrchestratorProfile.RequireRouteTable() {
 		masterResources = append(masterResources, createRouteTable())
 	}
 	if !cs.Properties.MasterProfile.IsCustomVNET() {
-		masterVnet := createVirtualNetworkVMSS(cs)
-		masterResources = append(masterResources, masterVnet)
+		masterVNET := createVirtualNetworkVMSS(cs)
+		masterResources = append(masterResources, masterVNET)
 	}
 
 	if cs.Properties.MasterProfile.Count > 1 {
@@ -135,18 +128,15 @@ func createKubernetesMasterResourcesVMSS(cs *api.ContainerService) []interface{}
 	}
 
 	publicIPAddress := CreatePublicIPAddress()
-	masterResources = append(masterResources, publicIPAddress)
-
 	loadBalancer := CreateLoadBalancer(cs.Properties.MasterProfile.Count)
-	masterResources = append(masterResources, loadBalancer)
+	masterResources = append(masterResources, publicIPAddress, loadBalancer)
 
 	isKMSEnabled := to.Bool(cs.Properties.OrchestratorProfile.KubernetesConfig.EnableEncryptionWithExternalKms)
 
 	if isKMSEnabled {
 		keyVaultStorageAccount := createKeyVaultStorageAccount()
-		masterResources = append(masterResources, keyVaultStorageAccount)
 		keyVault := CreateKeyVaultVMSS(cs)
-		masterResources = append(masterResources, keyVault)
+		masterResources = append(masterResources, keyVaultStorageAccount, keyVault)
 	}
 
 	masterVmss := CreateMasterVMSS(cs)

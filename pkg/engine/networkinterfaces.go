@@ -214,7 +214,7 @@ func createPrivateClusterNetworkInterface(cs *api.ContainerService) NetworkInter
 	}
 }
 
-func createJumpboxNIC(cs *api.ContainerService) NetworkInterfaceARM {
+func createJumpboxNetworkInterface(cs *api.ContainerService) NetworkInterfaceARM {
 	dependencies := []string{
 		"[concat('Microsoft.Network/publicIpAddresses/', variables('jumpboxPublicIpAddressName'))]",
 		"[concat('Microsoft.Network/networkSecurityGroups/', variables('jumpboxNetworkSecurityGroupName'))]",
@@ -267,7 +267,7 @@ func createJumpboxNIC(cs *api.ContainerService) NetworkInterfaceARM {
 	}
 }
 
-func createAgentVMASNIC(cs *api.ContainerService, profile *api.AgentPoolProfile) NetworkInterfaceARM {
+func createAgentVMASNetworkInterface(cs *api.ContainerService, profile *api.AgentPoolProfile) NetworkInterfaceARM {
 	isWindows := profile.IsWindows()
 	isCustomVNet := cs.Properties.MasterProfile.IsCustomVNET()
 	isAzureCNI := cs.Properties.OrchestratorProfile.IsAzureCNI()

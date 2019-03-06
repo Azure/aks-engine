@@ -560,7 +560,7 @@ func TestCreateJumpboxNIC(t *testing.T) {
 		},
 	}
 
-	actual := createJumpboxNIC(cs)
+	actual := createJumpboxNetworkInterface(cs)
 
 	expected := NetworkInterfaceARM{
 		ARMResource: ARMResource{
@@ -647,7 +647,7 @@ func TestCreateAgentVMASNIC(t *testing.T) {
 		Role:   "Infra",
 	}
 
-	actual := createAgentVMASNIC(cs, profile)
+	actual := createAgentVMASNetworkInterface(cs, profile)
 
 	var ipConfigurations []network.InterfaceIPConfiguration
 
@@ -682,7 +682,7 @@ func TestCreateAgentVMASNIC(t *testing.T) {
 
 	cs.Properties.MasterProfile.VnetSubnetID = "fooSubnet"
 
-	actual = createAgentVMASNIC(cs, profile)
+	actual = createAgentVMASNetworkInterface(cs, profile)
 
 	expected.DependsOn = []string{
 		"[variables('nsgID')]",
@@ -701,7 +701,7 @@ func TestCreateAgentVMASNIC(t *testing.T) {
 	// Test AgentVMAS NIC with Custom Vnet and multipleIPAddresses
 	profile.IPAddressCount = 5
 
-	actual = createAgentVMASNIC(cs, profile)
+	actual = createAgentVMASNetworkInterface(cs, profile)
 
 	expected.IPConfigurations = &[]network.InterfaceIPConfiguration{
 		{
