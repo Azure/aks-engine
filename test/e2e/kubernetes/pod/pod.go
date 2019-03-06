@@ -26,6 +26,7 @@ import (
 const (
 	testDir        string = "testdirectory"
 	commandTimeout        = 1 * time.Minute
+	deleteTimeout         = 5 * time.Minute
 )
 
 // List is a container that holds all pods returned from doing a kubectl get pods
@@ -574,7 +575,7 @@ func (p *Pod) Delete(retries int) error {
 	var kubectlError error
 	for i := 0; i < retries; i++ {
 		cmd := exec.Command("k", "delete", "po", "-n", p.Metadata.Namespace, p.Metadata.Name)
-		kubectlOutput, kubectlError = util.RunAndLogCommand(cmd, commandTimeout)
+		kubectlOutput, kubectlError = util.RunAndLogCommand(cmd, deleteTimeout)
 		if kubectlError != nil {
 			log.Printf("Error while trying to delete Pod %s in namespace %s:%s\n", p.Metadata.Namespace, p.Metadata.Name, string(kubectlOutput))
 			continue
