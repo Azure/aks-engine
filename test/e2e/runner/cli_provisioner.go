@@ -309,15 +309,6 @@ func (cli *CLIProvisioner) waitForNodes() error {
 				if err != nil {
 					return err
 				}
-				if exp.MatchString(n.Metadata.Name) {
-					cmd = exec.Command("k", "taint", "nodes", n.Metadata.Name, "foo=bar:NoSchedule")
-					util.PrintCommand(cmd)
-					out, err = cmd.CombinedOutput()
-					log.Printf("%s\n", out)
-					if err != nil {
-						return errors.New(fmt.Sprintf("Unable to taint node %s: %s", n.Metadata.Name, err))
-					}
-				}
 				cmd = exec.Command("k", "annotate", "node", n.Metadata.Name, "foo=bar")
 				util.PrintCommand(cmd)
 				out, err = cmd.CombinedOutput()
