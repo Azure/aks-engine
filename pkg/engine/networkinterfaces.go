@@ -76,15 +76,13 @@ func CreateNetworkInterfaces(cs *api.ContainerService) NetworkInterfaceARM {
 
 	ipConfigurations := []network.InterfaceIPConfiguration{loadBalancerIPConfig}
 
-	if isAzureCNI {
-		ipConfigurations = append(ipConfigurations, getSecondaryNICIPConfigs(cs.Properties.MasterProfile.IPAddressCount)...)
-	}
-
 	nicProperties := network.InterfacePropertiesFormat{
 		IPConfigurations: &ipConfigurations,
 	}
 
-	if !isAzureCNI {
+	if isAzureCNI {
+		ipConfigurations = append(ipConfigurations, getSecondaryNICIPConfigs(cs.Properties.MasterProfile.IPAddressCount)...)
+	} else {
 		nicProperties.EnableIPForwarding = to.BoolPtr(true)
 	}
 
