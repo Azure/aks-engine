@@ -11,7 +11,6 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"regexp"
 	"strings"
 	"time"
 
@@ -304,10 +303,6 @@ func (cli *CLIProvisioner) waitForNodes() error {
 				log.Printf("%s\n", out)
 				if err != nil {
 					return errors.New(fmt.Sprintf("Unable to assign label to node %s: %s", n.Metadata.Name, err))
-				}
-				exp, err := regexp.Compile("k8s-master")
-				if err != nil {
-					return err
 				}
 				cmd = exec.Command("k", "annotate", "node", n.Metadata.Name, "foo=bar")
 				util.PrintCommand(cmd)
