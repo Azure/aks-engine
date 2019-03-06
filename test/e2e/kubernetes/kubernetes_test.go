@@ -348,7 +348,9 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			pods, err := phpApacheDeploy.Pods()
 			Expect(err).NotTo(HaveOccurred())
 			for _, p := range pods {
-				p.CheckLinuxOutboundConnection(5*time.Second, cfg.Timeout)
+				pass, err := p.CheckLinuxOutboundConnection(5*time.Second, cfg.Timeout)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(pass).To(BeTrue())
 			}
 
 			By("Exposing TCP 80 internally on the php-apache deployment")
