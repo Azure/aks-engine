@@ -165,6 +165,7 @@ const (
 const (
 	agentOutputs                  = "agentoutputs.t"
 	agentParams                   = "agentparams.t"
+	armParameters                 = "k8s/armparameters.t"
 	dcosAgentResourcesVMAS        = "dcos/dcosagentresourcesvmas.t"
 	dcosWindowsAgentResourcesVMAS = "dcos/dcosWindowsAgentResourcesVmas.t"
 	dcosAgentResourcesVMSS        = "dcos/dcosagentresourcesvmss.t"

@@ -564,3 +564,25 @@ func TestGenerateKubeConfig(t *testing.T) {
 		t.Fatalf("Expected an error result from nil Properties child properties")
 	}
 }
+
+func TestGetDataDisks(t *testing.T) {
+	a := &api.AgentPoolProfile{
+		Name: "sampleAgent",
+		DiskSizesGB: []int{
+			128, 128, 128, 128, 128,
+		},
+		StorageProfile: api.ManagedDisks,
+	}
+	str := getDataDisks(a)
+	fmt.Println(str)
+
+	a = &api.AgentPoolProfile{
+		Name: "sampleAgentStorage",
+		DiskSizesGB: []int{
+			128, 128, 128, 128, 128,
+		},
+		StorageProfile: api.StorageAccount,
+	}
+	str = getDataDisks(a)
+	fmt.Println(str)
+}

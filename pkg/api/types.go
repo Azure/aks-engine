@@ -819,6 +819,26 @@ func (p *Properties) GetAgentVMPrefix(a *AgentPoolProfile) string {
 	return vmPrefix
 }
 
+// AnyAgentUsesVirtualMachineScaleSets checks whether any of the agents in the AgentPool use VMSS or not
+func (p *Properties) AnyAgentUsesVirtualMachineScaleSets() bool {
+	for _, agentProfile := range p.AgentPoolProfiles {
+		if agentProfile.IsVirtualMachineScaleSets() {
+			return true
+		}
+	}
+	return false
+}
+
+// AnyAgentUsesAvailabilitySets checks whether any of the agents in the AgentPool use VMAS or not
+func (p *Properties) AnyAgentUsesAvailabilitySets() bool {
+	for _, agentProfile := range p.AgentPoolProfiles {
+		if agentProfile.IsAvailabilitySets() {
+			return true
+		}
+	}
+	return false
+}
+
 // GetMasterVMPrefix returns the prefix of master VMs
 func (p *Properties) GetMasterVMPrefix() string {
 	return p.K8sOrchestratorName() + "-master-" + p.GetClusterID() + "-"
@@ -1560,12 +1580,18 @@ func (f *FeatureFlags) IsFeatureEnabled(feature string) bool {
 	return false
 }
 
-//GetCloudSpecConfig returns the Kubernetes container images URL configurations based on the deploy target environment.
+// GetCloudSpecConfig returns the Kubernetes container images URL configurations based on the deploy target environment.
 //for example: if the target is the public azure, then the default container image url should be k8s.gcr.io/...
 //if the target is azure china, then the default container image should be mirror.azure.cn:5000/google_container/...
 func (cs *ContainerService) GetCloudSpecConfig() AzureEnvironmentSpecConfig {
 	targetEnv := helpers.GetTargetEnv(cs.Location, cs.Properties.GetCustomCloudName())
 	return AzureCloudSpecEnvMap[targetEnv]
+}
+
+// IsAKSBillingEnabled checks if the AKS Billing Extension should be enabled for a cloud environment.
+func (cs *ContainerService) IsAKSBillingEnabled() bool {
+	cloudSpecConfig := cs.GetCloudSpecConfig()
+	return cloudSpecConfig.CloudName == AzurePublicCloud || cloudSpecConfig.CloudName == AzureChinaCloud
 }
 
 // GetAzureProdFQDN returns the formatted FQDN string for a given apimodel.

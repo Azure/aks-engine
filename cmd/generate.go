@@ -187,7 +187,14 @@ func (gc *generateCmd) run() error {
 		log.Fatalf("error in SetPropertiesDefaults template %s: %s", gc.apimodelPath, err.Error())
 		os.Exit(1)
 	}
+
+	//TODO remove these debug statements when we're new template generation implementation is enabled!
+	//bts, _ := json.Marshal(gc.containerService)
+	//log.Info(string(bts))
+
 	template, parameters, err := templateGenerator.GenerateTemplate(gc.containerService, engine.DefaultGeneratorCode, BuildTag)
+	//TODO enable GenerateTemplateV2 when new template generation flow has been validated!
+	//template, parameters, err := templateGenerator.GenerateTemplateV2(gc.containerService, engine.DefaultGeneratorCode, BuildTag)
 	if err != nil {
 		log.Fatalf("error generating template %s: %s", gc.apimodelPath, err.Error())
 		os.Exit(1)

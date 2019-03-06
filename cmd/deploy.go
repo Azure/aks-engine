@@ -391,6 +391,8 @@ func (dc *deployCmd) run() error {
 	}
 
 	template, parameters, err := templateGenerator.GenerateTemplate(dc.containerService, engine.DefaultGeneratorCode, BuildTag)
+	//TODO enable GenerateTemplateV2 when new template generation flow has been validated!
+	//template, parameters, err := templateGenerator.GenerateTemplateV2(dc.containerService, engine.DefaultGeneratorCode, BuildTag)
 	if err != nil {
 		log.Fatalf("error generating template %s: %s", dc.apimodelPath, err.Error())
 		os.Exit(1)

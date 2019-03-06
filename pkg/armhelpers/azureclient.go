@@ -65,6 +65,7 @@ type AzureClient struct {
 	virtualMachinesClient           compute.VirtualMachinesClient
 	virtualMachineScaleSetsClient   compute.VirtualMachineScaleSetsClient
 	virtualMachineScaleSetVMsClient compute.VirtualMachineScaleSetVMsClient
+	virtualMachineExtensionsClient  compute.VirtualMachineExtensionsClient
 	disksClient                     compute.DisksClient
 
 	applicationsClient      graphrbac.ApplicationsClient
@@ -341,6 +342,7 @@ func getClient(env azure.Environment, subscriptionID, tenantID string, armAuthor
 		virtualMachinesClient:           compute.NewVirtualMachinesClientWithBaseURI(env.ResourceManagerEndpoint, subscriptionID),
 		virtualMachineScaleSetsClient:   compute.NewVirtualMachineScaleSetsClientWithBaseURI(env.ResourceManagerEndpoint, subscriptionID),
 		virtualMachineScaleSetVMsClient: compute.NewVirtualMachineScaleSetVMsClientWithBaseURI(env.ResourceManagerEndpoint, subscriptionID),
+		virtualMachineExtensionsClient:  compute.NewVirtualMachineExtensionsClientWithBaseURI(env.ResourceManagerEndpoint, subscriptionID),
 		disksClient:                     compute.NewDisksClientWithBaseURI(env.ResourceManagerEndpoint, subscriptionID),
 
 		applicationsClient:      graphrbac.NewApplicationsClientWithBaseURI(env.GraphEndpoint, tenantID),
