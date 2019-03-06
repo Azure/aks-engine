@@ -23,6 +23,7 @@ Components downloaded in this VHD build (some of the below components might get 
   - mount
   - nfs-common
   - pigz socat
+  - systemd/xenial-proposed
   - util-linux
   - xz-utils
   - zip
