@@ -19,6 +19,8 @@ You can also choose to install aks-engine using [gofish][gofish-about]. To do so
 
 On macOS, you can install aks-engine with [Homebrew][homebrew]. Run the command `brew install Azure/aks-engine/aks-engine` to do so. You can install Homebrew following the [instructions][homebrew-install].
 
+On Windows, you can install aks-engine via [Chocolatey][choco] by executing the command `choco install aks-engine`. You can install Chocolatey following the [instructions][choco-install].
+
 If you would prefer to build AKS Engine from source, or you are interested in contributing to AKS Engine, see [the developer guide][developer-guide] for more information.
 
 ## Completion
@@ -234,6 +236,8 @@ $ az group deployment create \
 **Note**: If the cluster is using an existing VNET, please see the [Custom VNET][custom-vnet] feature documentation for additional steps that must be completed after cluster provisioning.
 
 [azure]: https://azure.microsoft.com/
+[choco]: https://chocolatey.org/
+[choco-install]: https://chocolatey.org/install
 [custom-vnet]: custom-vnet.md
 [developer-guide]: ../community/developer-guide.md
 [gofish-about]: https://gofi.sh/#about
