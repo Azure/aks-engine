@@ -1,6 +1,7 @@
 LOCATION ?= westus2
 CLUSTER_DEFINITION ?= examples/kubernetes.json
 SSH_KEY_NAME ?= id_rsa
+SKIP_TEST ?= false
 
 TEST_CMD = docker run --rm \
 						-v ${CURDIR}:${DEV_ENV_WORK_DIR} \
@@ -12,7 +13,8 @@ TEST_CMD = docker run --rm \
 						-e SUBSCRIPTION_ID=${SUBSCRIPTION_ID} \
 						-e CLUSTER_DEFINITION=${CLUSTER_DEFINITION} \
 						-e DNS_PREFIX=${DNS_PREFIX} \
-						-e SSH_KEY_NAME=${SSH_KEY_NAME}
+						-e SSH_KEY_NAME=${SSH_KEY_NAME} \
+						-e SKIP_TEST=${SKIP_TEST}
 
 test-interactive:
 	${TEST_CMD} -it -e TEST=kubernetes ${DEV_ENV_IMAGE} bash
