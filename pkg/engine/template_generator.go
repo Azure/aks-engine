@@ -314,7 +314,7 @@ func (t *TemplateGenerator) getTemplateFuncMap(cs *api.ContainerService) templat
 			return cs.Properties.IsAzureStackCloud()
 		},
 		"GetCustomEnvironmentJSON": func() string {
-			return cs.Properties.GetCustomEnvironmentJSON()
+			return cs.Properties.GetCustomEnvironmentJSON(true)
 		},
 		"GetCustomCloudAuthenticationMethod": func() string {
 			return cs.Properties.GetCustomCloudAuthenticationMethod()
