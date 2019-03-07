@@ -127,6 +127,9 @@ func (uc *UpgradeCluster) getClusterNodeStatus(az armhelpers.AKSEngineClient, re
 			return err
 		}
 		for _, vmScaleSet := range vmScaleSetPage.Values() {
+			if !utils.IsVMSSUpgradeable(uc.AgentPoolsToUpgrade, *vmScaleSet.Name) {
+				continue
+			}
 			for vmScaleSetVMsPage, err := uc.Client.ListVirtualMachineScaleSetVMs(ctx, resourceGroup, *vmScaleSet.Name); vmScaleSetVMsPage.NotDone(); err = vmScaleSetVMsPage.NextWithContext(ctx) {
 				if err != nil {
 					return err
