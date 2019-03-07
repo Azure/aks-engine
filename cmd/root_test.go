@@ -31,6 +31,36 @@ func TestNewRootCmd(t *testing.T) {
 	}
 }
 
+func TestShowDefaultModelArg(t *testing.T) {
+	command := NewRootCmd()
+	command.SetArgs([]string{"--show-default-model"})
+	err := command.Execute()
+	if err != nil {
+		t.Fatal(err)
+	}
+	// TODO: examine command output
+}
+
+func TestDebugArg(t *testing.T) {
+	command := NewRootCmd()
+	command.SetArgs([]string{"--show-default-model"})
+	err := command.Execute()
+	if err != nil {
+		t.Fatal(err)
+	}
+	// TODO: examine command output
+}
+
+func TestCompletionCommand(t *testing.T) {
+	command := getCompletionCmd(NewRootCmd())
+	command.SetArgs([]string{})
+	err := command.Execute()
+	if err != nil {
+		t.Fatal(err)
+	}
+	// TODO: examine command output
+}
+
 func TestGetSelectedCloudFromAzConfig(t *testing.T) {
 	for _, test := range []struct {
 		desc   string
