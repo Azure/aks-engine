@@ -160,7 +160,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			Expect(ready).To(Equal(true))
 		})
 
-		It("should have node labels, taints, and annotations", func() {
+		It("should have node labels and annotations", func() {
 			nodeCount := eng.NodeCount()
 			nodeList, err := node.GetByLabel("foo")
 			Expect(err).NotTo(HaveOccurred())
