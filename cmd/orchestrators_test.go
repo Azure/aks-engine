@@ -4,19 +4,26 @@
 package cmd
 
 import (
+	"os"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
 
 var _ = Describe("The orchestrators command", func() {
 	It("should create an orchestrators command", func() {
-		output := newOrchestratorsCmd()
+		command := newOrchestratorsCmd()
 
-		Expect(output.Use).Should(Equal(orchestratorsName))
-		Expect(output.Short).Should(Equal(orchestratorsShortDescription))
-		Expect(output.Long).Should(Equal(orchestratorsLongDescription))
-		Expect(output.Flags().Lookup("orchestrator")).NotTo(BeNil())
-		Expect(output.Flags().Lookup("version")).NotTo(BeNil())
+		Expect(command.Use).Should(Equal(orchestratorsName))
+		Expect(command.Short).Should(Equal(orchestratorsShortDescription))
+		Expect(command.Long).Should(Equal(orchestratorsLongDescription))
+		Expect(command.Flags().Lookup("orchestrator")).NotTo(BeNil())
+		Expect(command.Flags().Lookup("version")).NotTo(BeNil())
+
+		// Use a trimmed copy of os.Args to work around ginkgo flags.Parse() issue
+		command.SetArgs(os.Args[:1])
+		err := command.Execute()
+		Expect(err).To(BeNil())
 	})
 
 	It("should fail on unsupported orchestrator", func() {
