@@ -11,6 +11,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"time"
 
@@ -297,19 +298,25 @@ func (cli *CLIProvisioner) waitForNodes() error {
 				return errors.New(fmt.Sprintf("Unable to get list of nodes: %s", err))
 			}
 			for _, n := range nodeList.Nodes {
-				cmd := exec.Command("k", "label", "node", n.Metadata.Name, "foo=bar")
-				util.PrintCommand(cmd)
-				out, err := cmd.CombinedOutput()
-				log.Printf("%s\n", out)
+				exp, err := regexp.Compile("k8s-master")
 				if err != nil {
-					return errors.New(fmt.Sprintf("Unable to assign label to node %s: %s", n.Metadata.Name, err))
+					return err
 				}
-				cmd = exec.Command("k", "annotate", "node", n.Metadata.Name, "foo=bar")
-				util.PrintCommand(cmd)
-				out, err = cmd.CombinedOutput()
-				log.Printf("%s\n", out)
-				if err != nil {
-					return errors.New(fmt.Sprintf("Unable to add node annotation to node %s: %s", n.Metadata.Name, err))
+				if !exp.MatchString(n.Metadata.Name) {
+					cmd := exec.Command("k", "label", "node", n.Metadata.Name, "foo=bar")
+					util.PrintCommand(cmd)
+					out, err := cmd.CombinedOutput()
+					log.Printf("%s\n", out)
+					if err != nil {
+						return errors.New(fmt.Sprintf("Unable to assign label to node %s: %s", n.Metadata.Name, err))
+					}
+					cmd = exec.Command("k", "annotate", "node", n.Metadata.Name, "foo=bar")
+					util.PrintCommand(cmd)
+					out, err = cmd.CombinedOutput()
+					log.Printf("%s\n", out)
+					if err != nil {
+						return errors.New(fmt.Sprintf("Unable to add node annotation to node %s: %s", n.Metadata.Name, err))
+					}
 				}
 			}
 		} else {

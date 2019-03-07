@@ -161,13 +161,16 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 		})
 
 		It("should have node labels and annotations", func() {
-			nodeCount := eng.NodeCount()
+			totalNodeCount := eng.NodeCount()
+			masterNodes, err := node.GetByPrefix("k8s-master")
+			Expect(err).NotTo(HaveOccurred())
+			nodes := totalNodeCount - len(masterNodes)
 			nodeList, err := node.GetByLabel("foo")
 			Expect(err).NotTo(HaveOccurred())
-			Expect(len(nodeList)).To(Equal(nodeCount))
+			Expect(len(nodeList)).To(Equal(nodes))
 			nodeList, err = node.GetByAnnotations("foo", "bar")
 			Expect(err).NotTo(HaveOccurred())
-			Expect(len(nodeList)).To(Equal(nodeCount))
+			Expect(len(nodeList)).To(Equal(nodes))
 		})
 
 		It("should print all pods", func() {
