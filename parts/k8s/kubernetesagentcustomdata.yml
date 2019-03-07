@@ -143,14 +143,14 @@ write_files:
       "log-opts":  {
          "max-size": "50m",
          "max-file": "5"
-      }{{if IsNSeriesSKU .}}{{if IsNVIDIADevicePluginEnabled}}
+      }{{if IsNSeriesSKU .}}
       ,"default-runtime": "nvidia",
       "runtimes": {
          "nvidia": {
              "path": "/usr/bin/nvidia-container-runtime",
              "runtimeArgs": []
         }
-      }{{end}}{{end}}
+      }{{end}}
     }
 {{end}}
 
