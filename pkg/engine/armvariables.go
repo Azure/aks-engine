@@ -239,10 +239,11 @@ func getK8sMasterVars(cs *api.ContainerService) map[string]interface{} {
 			} else {
 				masterVars["subnetName"] = "[concat(parameters('orchestratorName'), '-subnet')]"
 				masterVars["vnetSubnetID"] = "[concat(variables('vnetID'),'/subnets/',variables('subnetName'))]"
-				masterVars["virtualNetworkName"] = "[concat(parameters('orchestratorName'), '-vnet-', parameters('nameSuffix'))]"
-				masterVars["vnetID"] = "[resourceId('Microsoft.Network/virtualNetworks',variables('virtualNetworkName'))]"
-				masterVars["virtualNetworkResourceGroupName"] = "''"
+
 			}
+			masterVars["virtualNetworkName"] = "[concat(parameters('orchestratorName'), '-vnet-', parameters('nameSuffix'))]"
+			masterVars["vnetID"] = "[resourceId('Microsoft.Network/virtualNetworks',variables('virtualNetworkName'))]"
+			masterVars["virtualNetworkResourceGroupName"] = "''"
 		}
 		masterVars["routeTableName"] = "[concat(variables('masterVMNamePrefix'),'routetable')]"
 		if masterProfile.IsStorageAccount() {
