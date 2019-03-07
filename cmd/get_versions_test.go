@@ -4,19 +4,26 @@
 package cmd
 
 import (
+	"os"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
 
 var _ = Describe("The get-versions command", func() {
 	It("should create a get-versions command", func() {
-		output := newGetVersionsCmd()
+		command := newGetVersionsCmd()
 
-		Expect(output.Use).Should(Equal(getVersionsName))
-		Expect(output.Short).Should(Equal(getVersionsShortDescription))
-		Expect(output.Long).Should(Equal(getVersionsLongDescription))
-		Expect(output.Flags().Lookup("orchestrator")).To(BeNil())
-		Expect(output.Flags().Lookup("version")).NotTo(BeNil())
+		Expect(command.Use).Should(Equal(getVersionsName))
+		Expect(command.Short).Should(Equal(getVersionsShortDescription))
+		Expect(command.Long).Should(Equal(getVersionsLongDescription))
+		Expect(command.Flags().Lookup("orchestrator")).To(BeNil())
+		Expect(command.Flags().Lookup("version")).NotTo(BeNil())
+
+		// Use a trimmed copy of os.Args to work around ginkgo flags.Parse() issue
+		command.SetArgs(os.Args[:1])
+		err := command.Execute()
+		Expect(err).To(BeNil())
 	})
 
 	It("should support JSON output", func() {

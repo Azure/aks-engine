@@ -5,6 +5,7 @@ package cmd
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/Azure/aks-engine/pkg/helpers"
 	. "github.com/onsi/ginkgo"
@@ -13,13 +14,15 @@ import (
 
 var _ = Describe("the version command", func() {
 	It("should create a version command", func() {
-		output := newVersionCmd()
-		Expect(output.Use).Should(Equal(versionName))
-		Expect(output.Short).Should(Equal(versionShortDescription))
-		Expect(output.Long).Should(Equal(versionLongDescription))
-		Expect(output.Flags().Lookup("output")).NotTo(BeNil())
+		command := newVersionCmd()
+		Expect(command.Use).Should(Equal(versionName))
+		Expect(command.Short).Should(Equal(versionShortDescription))
+		Expect(command.Long).Should(Equal(versionLongDescription))
+		Expect(command.Flags().Lookup("output")).NotTo(BeNil())
 
-		err := output.Execute()
+		// Use a trimmed copy of os.Args to work around ginkgo flags.Parse() issue
+		command.SetArgs(os.Args[:1])
+		err := command.Execute()
 		Expect(err).To(BeNil())
 	})
 
