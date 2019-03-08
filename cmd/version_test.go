@@ -5,7 +5,6 @@ package cmd
 
 import (
 	"fmt"
-	"os"
 
 	"github.com/Azure/aks-engine/pkg/helpers"
 	. "github.com/onsi/ginkgo"
@@ -20,8 +19,7 @@ var _ = Describe("the version command", func() {
 		Expect(command.Long).Should(Equal(versionLongDescription))
 		Expect(command.Flags().Lookup("output")).NotTo(BeNil())
 
-		// Use a trimmed copy of os.Args to work around ginkgo flags.Parse() issue
-		command.SetArgs(os.Args[:1])
+		command.SetArgs([]string{})
 		err := command.Execute()
 		Expect(err).To(BeNil())
 	})

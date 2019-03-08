@@ -4,8 +4,6 @@
 package cmd
 
 import (
-	"os"
-
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
@@ -21,7 +19,7 @@ var _ = Describe("The get-versions command", func() {
 		Expect(command.Flags().Lookup("version")).NotTo(BeNil())
 
 		// Use a trimmed copy of os.Args to work around ginkgo flags.Parse() issue
-		command.SetArgs(os.Args[:1])
+		command.SetArgs([]string{})
 		err := command.Execute()
 		Expect(err).To(BeNil())
 	})
