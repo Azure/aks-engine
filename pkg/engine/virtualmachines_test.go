@@ -24,7 +24,7 @@ func TestCreateVirtualMachines(t *testing.T) {
 	}
 
 	tg, _ := InitializeTemplateGenerator(Context{})
-	expectedCustomDataStr := getCustomDataFromJSON(tg.GetMasterCustomDataJSON(cs))
+	expectedCustomDataStr := getCustomDataFromJSON(tg.GetKubernetesAgentCustomDataJSON(cs))
 
 	actualVM := CreateVirtualMachine(cs)
 	expectedVM := VirtualMachineARM{
@@ -183,7 +183,7 @@ func TestCreateAgentAvailabilitySetVM(t *testing.T) {
 	}
 
 	tg, _ := InitializeTemplateGenerator(Context{})
-	expectedCustomDataStr := getCustomDataFromJSON(tg.GetMasterCustomDataJSON(cs))
+	expectedCustomDataStr := getCustomDataFromJSON(tg.GetKubernetesAgentCustomDataJSON(cs))
 
 	actualVM := createAgentAvailabilitySetVM(cs, profile)
 	expectedVM := VirtualMachineARM{

@@ -323,7 +323,7 @@ func TestCreateAgentVMSS(t *testing.T) {
 	var dataDisks []compute.VirtualMachineScaleSetDataDisk
 
 	tg, _ := InitializeTemplateGenerator(Context{})
-	expectedCustomDataStr := getCustomDataFromJSON(tg.GetMasterCustomDataJSON(cs))
+	expectedCustomDataStr := getCustomDataFromJSON(tg.GetKubernetesAgentCustomDataJSON(cs))
 
 	expected := VirtualMachineScaleSetARM{
 		ARMResource: ARMResource{
@@ -440,7 +440,7 @@ func TestCreateAgentVMSS(t *testing.T) {
 
 	actual = CreateAgentVMSS(cs, cs.Properties.AgentPoolProfiles[0])
 
-	expectedCustomDataStr = getCustomDataFromJSON(tg.GetMasterCustomDataJSON(cs))
+	expectedCustomDataStr = getCustomDataFromJSON(tg.GetKubernetesAgentCustomDataJSON(cs))
 
 	expected.VirtualMachineProfile.OsProfile = &compute.VirtualMachineScaleSetOSProfile{
 		AdminUsername: to.StringPtr("[parameters('windowsAdminUsername')]"),
