@@ -3,52 +3,44 @@
 
 package engine
 
-import (
-	"github.com/Azure/azure-sdk-for-go/services/cosmos-db/mgmt/2015-04-08/documentdb"
-	"github.com/Azure/go-autorest/autorest/to"
-)
-
-func createCosmosDBAccount() DocumentDBAccountARM {
-	armResource := ARMResource{
-		APIVersion: "[variables('apiVersionCosmos')]",
-	}
-
-	documentDB := documentdb.DatabaseAccountCreateUpdateParameters{
-		Type:     to.StringPtr("Microsoft.DocumentDB/databaseAccounts"),
-		Kind:     documentdb.GlobalDocumentDB,
-		Location: to.StringPtr("[resourceGroup().location]"),
-		Name:     to.StringPtr("[variables('cosmosAccountName')]"),
-		DatabaseAccountCreateUpdateProperties: &documentdb.DatabaseAccountCreateUpdateProperties{
-			Capabilities: &[]documentdb.Capability{
+func createCosmosDBAccount() map[string]interface{} {
+	cosmosEtcdMap := map[string]interface{}{
+		"apiVersion": "[variables('apiVersionCosmos')]",
+		"name":       "Microsoft.DocumentDB/databaseAccounts",
+		"location":   "[resourceGroup().location]",
+		"kind":       "GlobalDocumentDB",
+		"properties": map[string]interface{}{
+			"consistencyPolicy": map[string]interface{}{
+				"defaultConsistencyLevel": "BoundedStaleness",
+				"maxStalenessPrefix":      100,
+				"maxIntervalInSeconds":    5,
+			},
+			"databaseAccountOfferType": "Standard",
+			"capabilities": []map[string]string{
 				{
-					Name: to.StringPtr("EnableEtcd"),
+					"name": "EnableEtcd",
 				},
 			},
-			ConsistencyPolicy: &documentdb.ConsistencyPolicy{
-				DefaultConsistencyLevel: documentdb.BoundedStaleness,
-				MaxIntervalInSeconds:    to.Int32Ptr(5),
-				MaxStalenessPrefix:      to.Int64Ptr(100),
-			},
-			DatabaseAccountOfferType: to.StringPtr(string(documentdb.Standard)),
-			Locations: &[]documentdb.Location{
+			"locations": []map[string]interface{}{
 				{
-					FailoverPriority: to.Int32Ptr(0),
-					LocationName:     to.StringPtr("[resourceGroup().location]"),
+					"locationName":     "[resourceGroup().location]",
+					"failoverPriority": 0,
 				},
 				{
-					FailoverPriority: to.Int32Ptr(1),
-					LocationName:     to.StringPtr("[resourceGroup().location]"),
+					"locationName":     "[resourceGroup().location]",
+					"failoverPriority": 1,
 				},
 			},
 		},
-		Tags: map[string]*string{
-			"defaultExperience": to.StringPtr("Etcd"),
+		"tags": map[string]string{
+			"defaultExperience": "Etcd",
 		},
-		//TODO: Need to do something about the primaryClientCertificatePemBytes
+		"consistencyPolicy": map[string]interface{}{
+			"defaultConsistencyLevel": "BoundedStaleness",
+			"maxIntervalInSeconds":    5,
+			"maxStalenessPrefix":      100,
+		},
+		"primaryClientCertificatePemBytes": "[variables('cosmosDBCertb64')]",
 	}
-
-	return DocumentDBAccountARM{
-		ARMResource:                           armResource,
-		DatabaseAccountCreateUpdateParameters: documentDB,
-	}
+	return cosmosEtcdMap
 }
