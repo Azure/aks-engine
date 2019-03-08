@@ -799,7 +799,7 @@ func (p *Pod) Logs() error {
 
 // Describe will describe a pod resource
 func (p *Pod) Describe() error {
-	cmd := exec.Command("k", "describe", "pod", p.Metadata.Name, p.Metadata.Namespace)
+	cmd := exec.Command("k", "describe", "pod", p.Metadata.Name, "-n", p.Metadata.Namespace)
 	out, err := util.RunAndLogCommand(cmd, commandTimeout)
 	log.Printf("\n%s\n", string(out))
 	if err != nil {
