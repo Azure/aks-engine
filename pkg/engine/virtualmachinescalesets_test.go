@@ -23,7 +23,7 @@ func TestCreateMasterVMSS(t *testing.T) {
 	json.Unmarshal([]byte(apiModelStr), &cs)
 
 	tg, _ := InitializeTemplateGenerator(Context{})
-	expectedCustomDataStr := getCustomDataFromJSON(tG.GetMasterCustomDataJSON(cs))
+	expectedCustomDataStr := getCustomDataFromJSON(tg.GetMasterCustomDataJSON(cs))
 
 	actual := CreateMasterVMSS(cs)
 	expected := VirtualMachineScaleSetARM{
@@ -179,7 +179,7 @@ func TestCreateMasterVMSS(t *testing.T) {
 
 	expected.Sku.Capacity = to.Int64Ptr(3)
 
-	expectedCustomDataStr = getCustomDataFromJSON(tG.GetMasterCustomDataJSON(cs))
+	expectedCustomDataStr = getCustomDataFromJSON(tg.GetMasterCustomDataJSON(cs))
 	expected.VirtualMachineProfile.OsProfile.CustomData = to.StringPtr(expectedCustomDataStr)
 
 	expected.VirtualMachineProfile.NetworkProfile.NetworkInterfaceConfigurations = &[]compute.VirtualMachineScaleSetNetworkConfiguration{
@@ -323,7 +323,7 @@ func TestCreateAgentVMSS(t *testing.T) {
 	var dataDisks []compute.VirtualMachineScaleSetDataDisk
 
 	tg, _ := InitializeTemplateGenerator(Context{})
-	expectedCustomDataStr := getCustomDataFromJSON(tG.GetMasterCustomDataJSON(cs))
+	expectedCustomDataStr := getCustomDataFromJSON(tg.GetMasterCustomDataJSON(cs))
 
 	expected := VirtualMachineScaleSetARM{
 		ARMResource: ARMResource{
@@ -440,7 +440,7 @@ func TestCreateAgentVMSS(t *testing.T) {
 
 	actual = CreateAgentVMSS(cs, cs.Properties.AgentPoolProfiles[0])
 
-	expectedCustomDataStr = getCustomDataFromJSON(tG.GetMasterCustomDataJSON(cs))
+	expectedCustomDataStr = getCustomDataFromJSON(tg.GetMasterCustomDataJSON(cs))
 
 	expected.VirtualMachineProfile.OsProfile = &compute.VirtualMachineScaleSetOSProfile{
 		AdminUsername: to.StringPtr("[parameters('windowsAdminUsername')]"),
