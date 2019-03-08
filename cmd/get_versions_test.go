@@ -18,7 +18,6 @@ var _ = Describe("The get-versions command", func() {
 		Expect(command.Flags().Lookup("orchestrator")).To(BeNil())
 		Expect(command.Flags().Lookup("version")).NotTo(BeNil())
 
-		// Use a trimmed copy of os.Args to work around ginkgo flags.Parse() issue
 		command.SetArgs([]string{})
 		err := command.Execute()
 		Expect(err).To(BeNil())

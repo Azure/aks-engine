@@ -11,16 +11,21 @@ import (
 )
 
 func TestNewScaleCmd(t *testing.T) {
-	output := newScaleCmd()
-	if output.Use != scaleName || output.Short != scaleShortDescription || output.Long != scaleLongDescription {
-		t.Fatalf("scale command should have use %s equal %s, short %s equal %s and long %s equal to %s", output.Use, scaleName, output.Short, scaleShortDescription, output.Long, scaleLongDescription)
+	command := newScaleCmd()
+	if command.Use != scaleName || command.Short != scaleShortDescription || command.Long != scaleLongDescription {
+		t.Fatalf("scale command should have use %s equal %s, short %s equal %s and long %s equal to %s", command.Use, scaleName, command.Short, scaleShortDescription, command.Long, scaleLongDescription)
 	}
 
 	expectedFlags := []string{"location", "resource-group", "deployment-dir", "new-node-count", "node-pool", "master-FQDN"}
 	for _, f := range expectedFlags {
-		if output.Flags().Lookup(f) == nil {
+		if command.Flags().Lookup(f) == nil {
 			t.Fatalf("scale command should have flag %s", f)
 		}
+	}
+
+	command.SetArgs([]string{})
+	if err := command.Execute(); err == nil {
+		t.Fatalf("expected an error when calling scale with no arguments")
 	}
 }
 
