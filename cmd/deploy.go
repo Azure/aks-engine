@@ -72,16 +72,16 @@ func newDeployCmd() *cobra.Command {
 		Long:  deployLongDescription,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if err := dc.validateArgs(cmd, args); err != nil {
-				log.Fatalf("error validating deployCmd: %s", err.Error())
+				return errors.Wrap(err, "validating deployCmd")
 			}
 			if err := dc.mergeAPIModel(); err != nil {
-				log.Fatalf("error merging API model in deployCmd: %s", err.Error())
+				return errors.Wrap(err, "merging API model in deployCmd")
 			}
 			if err := dc.loadAPIModel(cmd, args); err != nil {
-				log.Fatalf("failed to load apimodel: %s", err.Error())
+				return errors.Wrap(err, "loading API model")
 			}
 			if _, _, err := dc.validateApimodel(); err != nil {
-				log.Fatalf("Failed to validate the apimodel after populating values: %s", err.Error())
+				return errors.Wrap(err, "validating API model after populating values")
 			}
 			return dc.run()
 		},
@@ -109,7 +109,7 @@ func (dc *deployCmd) validateArgs(cmd *cobra.Command, args []string) error {
 
 	dc.locale, err = i18n.LoadTranslations()
 	if err != nil {
-		return errors.Wrap(err, "error loading translation files")
+		return errors.Wrap(err, "loading translation files")
 	}
 
 	if dc.apimodelPath == "" {
@@ -381,29 +381,27 @@ func (dc *deployCmd) run() error {
 
 	templateGenerator, err := engine.InitializeTemplateGenerator(ctx)
 	if err != nil {
-		log.Fatalf("failed to initialize template generator: %s", err.Error())
+		return errors.Wrap(err, "initializing template generator")
 	}
 
 	certsgenerated, err := dc.containerService.SetPropertiesDefaults(false, false)
 	if err != nil {
-		log.Fatalf("error in SetPropertiesDefaults template %s: %s", dc.apimodelPath, err.Error())
-		os.Exit(1)
+		return errors.Wrapf(err, "in SetPropertiesDefaults template %s", dc.apimodelPath)
 	}
 
 	template, parameters, err := templateGenerator.GenerateTemplate(dc.containerService, engine.DefaultGeneratorCode, BuildTag)
 	//TODO enable GenerateTemplateV2 when new template generation flow has been validated!
 	//template, parameters, err := templateGenerator.GenerateTemplateV2(dc.containerService, engine.DefaultGeneratorCode, BuildTag)
 	if err != nil {
-		log.Fatalf("error generating template %s: %s", dc.apimodelPath, err.Error())
-		os.Exit(1)
+		return errors.Wrapf(err, "generating template %s", dc.apimodelPath)
 	}
 
 	if template, err = transform.PrettyPrintArmTemplate(template); err != nil {
-		log.Fatalf("error pretty printing template: %s \n", err.Error())
+		return errors.Wrap(err, "pretty-printing template")
 	}
 	var parametersFile string
 	if parametersFile, err = transform.BuildAzureParametersFile(parameters); err != nil {
-		log.Fatalf("error pretty printing template parameters: %s \n", err.Error())
+		return errors.Wrap(err, "pretty-printing template parameters")
 	}
 
 	writer := &engine.ArtifactWriter{
@@ -412,20 +410,18 @@ func (dc *deployCmd) run() error {
 		},
 	}
 	if err = writer.WriteTLSArtifacts(dc.containerService, dc.apiVersion, template, parametersFile, dc.outputDirectory, certsgenerated, dc.parametersOnly); err != nil {
-		log.Fatalf("error writing artifacts: %s \n", err.Error())
+		return errors.Wrap(err, "writing artifacts")
 	}
 
 	templateJSON := make(map[string]interface{})
 	parametersJSON := make(map[string]interface{})
 
-	err = json.Unmarshal([]byte(template), &templateJSON)
-	if err != nil {
-		log.Fatalln(err)
+	if err = json.Unmarshal([]byte(template), &templateJSON); err != nil {
+		return err
 	}
 
-	err = json.Unmarshal([]byte(parameters), &parametersJSON)
-	if err != nil {
-		log.Fatalln(err)
+	if err = json.Unmarshal([]byte(parameters), &parametersJSON); err != nil {
+		return err
 	}
 
 	deploymentSuffix := dc.random.Int31()
@@ -444,7 +440,7 @@ func (dc *deployCmd) run() error {
 			body, _ := ioutil.ReadAll(res.Body)
 			log.Errorf(string(body))
 		}
-		log.Fatalln(err)
+		return err
 	}
 
 	return nil

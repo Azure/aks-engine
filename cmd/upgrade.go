@@ -254,12 +254,12 @@ func readNameSuffixFromARMTemplate(armTemplateHandle io.Reader) (string, error) 
 func (uc *upgradeCmd) run(cmd *cobra.Command, args []string) error {
 	err := uc.validate(cmd)
 	if err != nil {
-		log.Fatalf("Error validating upgrade command: %v", err)
+		return errors.Wrap(err, "validating upgrade command")
 	}
 
 	err = uc.loadCluster(cmd)
 	if err != nil {
-		log.Fatalf("Error loading existing cluster: %v", err)
+		return errors.Wrap(err, "loading existing cluster")
 	}
 
 	upgradeCluster := kubernetesupgrade.UpgradeCluster{
@@ -281,11 +281,11 @@ func (uc *upgradeCmd) run(cmd *cobra.Command, args []string) error {
 
 	kubeConfig, err := engine.GenerateKubeConfig(uc.containerService.Properties, uc.location)
 	if err != nil {
-		log.Fatalf("Failed to generate kubeconfig: %v", err)
+		return errors.Wrap(err, "generating kubeconfig")
 	}
 
 	if err = upgradeCluster.UpgradeCluster(uc.client, kubeConfig, BuildTag); err != nil {
-		log.Fatalf("Error upgrading cluster: %v\n", err)
+		return errors.Wrap(err, "upgrading cluster")
 	}
 
 	// Save the new apimodel to reflect the cluster's state.
