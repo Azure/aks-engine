@@ -950,25 +950,47 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 	Describe("with NetworkPolicy enabled", func() {
 		It("should apply various network policies and enforce access to nginx pod", func() {
 			if eng.HasNetworkPolicy("calico") || eng.HasNetworkPolicy("azure") || eng.HasNetworkPolicy("cilium") {
-				nsDev := "development"
-				By("Creating namespace")
+				nsDev, nsProd := "development", "production"
+				By("Creating development namespace")
 				namespaceDev, err := namespace.CreateIfNotExist(nsDev)
 				Expect(err).NotTo(HaveOccurred())
-				By("Labelling namespace")
+				By("Creating production namespace")
+				namespaceProd, err := namespace.CreateIfNotExist(nsProd)
+				Expect(err).NotTo(HaveOccurred())
+				By("Labelling development namespace")
 				err = namespaceDev.Label("purpose=development")
 				Expect(err).NotTo(HaveOccurred())
-				By("Creating backend and network-policy pod deployments")
+				By("Labelling production namespace")
+				err = namespaceProd.Label("purpose=production")
+				Expect(err).NotTo(HaveOccurred())
+				By("Creating frontendProd, backend and network-policy pod deployments")
 				r := rand.New(rand.NewSource(time.Now().UnixNano()))
 				randInt := r.Intn(99999)
-				backendDeploymentName := fmt.Sprintf("backend-%s-%v", cfg.Name, randInt)
+				frontendProdDeploymentName := fmt.Sprintf("frontend-prod-%s-%v", cfg.Name, randInt)
+				frontendProdDeployment, err := deployment.CreateLinuxDeploy("library/nginx:latest", frontendProdDeploymentName, nsProd, "--labels=app=webapp,role=frontend")
+				Expect(err).NotTo(HaveOccurred())
+				frontendDevDeploymentName := fmt.Sprintf("frontend-dev-%s-%v", cfg.Name, randInt+100000)
+				frontendDevDeployment, err := deployment.CreateLinuxDeploy("library/nginx:latest", frontendDevDeploymentName, nsDev, "--labels=app=webapp,role=frontend")
+				Expect(err).NotTo(HaveOccurred())
+				backendDeploymentName := fmt.Sprintf("backend-%s-%v", cfg.Name, randInt+200000)
 				backendDeployment, err := deployment.CreateLinuxDeploy("library/nginx:latest", backendDeploymentName, nsDev, "--labels=app=webapp,role=backend")
 				Expect(err).NotTo(HaveOccurred())
-				nwpolicyDeploymentName := fmt.Sprintf("network-policy-%s-%v", cfg.Name, randInt+100000)
+				nwpolicyDeploymentName := fmt.Sprintf("network-policy-%s-%v", cfg.Name, randInt+300000)
 				nwpolicyDeployment, err := deployment.CreateLinuxDeploy("library/nginx:latest", nwpolicyDeploymentName, nsDev, "")
 				Expect(err).NotTo(HaveOccurred())
 
+				By("Ensure there is a running frontend-prod pod")
+				running, err := pod.WaitOnReady(frontendProdDeploymentName, nsProd, 3, retryTimeWhenWaitingForPodReady, cfg.Timeout)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(running).To(Equal(true))
+
+				By("Ensure there is a running frontend-dev pod")
+				running, err = pod.WaitOnReady(frontendDevDeploymentName, nsDev, 3, retryTimeWhenWaitingForPodReady, cfg.Timeout)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(running).To(Equal(true))
+
 				By("Ensure there is a running backend pod")
-				running, err := pod.WaitOnReady(backendDeploymentName, nsDev, 3, retryTimeWhenWaitingForPodReady, cfg.Timeout)
+				running, err = pod.WaitOnReady(backendDeploymentName, nsDev, 3, retryTimeWhenWaitingForPodReady, cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(running).To(Equal(true))
 
@@ -976,6 +998,26 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				running, err = pod.WaitOnReady(nwpolicyDeploymentName, nsDev, 3, retryTimeWhenWaitingForPodReady, cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(running).To(Equal(true))
+
+				By("Ensuring we have outbound internet access from the frontend-prod pods")
+				frontendProdPods, err := frontendProdDeployment.Pods()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(len(frontendProdPods)).ToNot(BeZero())
+				for _, frontendProdPod := range frontendProdPods {
+					pass, err := frontendProdPod.CheckLinuxOutboundConnection(5*time.Second, cfg.Timeout)
+					Expect(err).NotTo(HaveOccurred())
+					Expect(pass).To(BeTrue())
+				}
+
+				By("Ensuring we have outbound internet access from the frontend-dev pods")
+				frontendDevPods, err := frontendDevDeployment.Pods()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(len(frontendDevPods)).ToNot(BeZero())
+				for _, frontendDevPod := range frontendDevPods {
+					pass, err := frontendDevPod.CheckLinuxOutboundConnection(5*time.Second, cfg.Timeout)
+					Expect(err).NotTo(HaveOccurred())
+					Expect(pass).To(BeTrue())
+				}
 
 				By("Ensuring we have outbound internet access from the backend pods")
 				backendPods, err := backendDeployment.Pods()
@@ -995,6 +1037,15 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 					pass, err := nwpolicyPod.CheckLinuxOutboundConnection(5*time.Second, cfg.Timeout)
 					Expect(err).NotTo(HaveOccurred())
 					Expect(pass).To(BeTrue())
+				}
+
+				By("Ensuring we have connectivity from network-policy pods to frontend-prod pods")
+				for _, nwpolicyPod := range nwpolicyPods {
+					for _, frontendProdPod := range frontendProdPods {
+						pass, err := nwpolicyPod.ValidateCurlConnection(frontendProdPod.Status.PodIP, 5*time.Second, cfg.Timeout)
+						Expect(err).NotTo(HaveOccurred())
+						Expect(pass).To(BeTrue())
+					}
 				}
 
 				By("Ensuring we have connectivity from network-policy pods to backend pods")
@@ -1023,7 +1074,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				By("Cleaning up after ourselves")
 				networkpolicy.DeleteNetworkPolicy(nwpolicyName, namespace)
 
-				By("Applying a network policy to only allow ingress access to app: webapp, role: backend pods in development namespace from pods in any namespace with the same labels ")
+				By("Applying a network policy to only allow ingress access to app: webapp, role: backend pods in development namespace from pods in any namespace with the same labels")
 				nwpolicyName, namespace = "backend-allow-ingress-pod-label", nsDev
 				err = networkpolicy.CreateNetworkPolicyFromFile(filepath.Join(PolicyDir, "backend-policy-allow-ingress-pod-label.yaml"), nwpolicyName, namespace)
 				Expect(err).NotTo(HaveOccurred())
@@ -1049,12 +1100,44 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				By("Cleaning up after ourselves")
 				networkpolicy.DeleteNetworkPolicy(nwpolicyName, namespace)
 
+				By("Applying a network policy to only allow ingress access to app: webapp role:backends in development namespace from pods with label app:webapp, role: frontendProd within namespace with label purpose: development")
+				nwpolicyName, namespace = "backend-policy-allow-ingress-pod-namespace-label", nsDev
+				err = networkpolicy.CreateNetworkPolicyFromFile(filepath.Join(PolicyDir, "backend-policy-allow-ingress-pod-namespace-label.yaml"), nwpolicyName, namespace)
+				Expect(err).NotTo(HaveOccurred())
+
+				By("Ensuring we don't have ingress access from role:frontend pods in production namespace")
+				for _, frontendProdPod := range frontendProdPods {
+					for _, backendPod := range backendPods {
+						pass, err := frontendProdPod.ValidateCurlConnection(backendPod.Status.PodIP, 5*time.Second, cfg.Timeout)
+						Expect(err).Should(HaveOccurred())
+						Expect(pass).To(BeFalse())
+					}
+				}
+
+				By("Ensuring we have ingress access from role:frontend pods in development namespace")
+				for _, frontendDevPod := range frontendDevPods {
+					for _, backendPod := range backendPods {
+						pass, err := frontendDevPod.ValidateCurlConnection(backendPod.Status.PodIP, 5*time.Second, cfg.Timeout)
+						Expect(err).NotTo(HaveOccurred())
+						Expect(pass).To(BeTrue())
+					}
+				}
+
 				By("Cleaning up after ourselves")
+				networkpolicy.DeleteNetworkPolicy(nwpolicyName, namespace)
+
+				By("Cleaning up after ourselves")
+				err = frontendProdDeployment.Delete(deleteResourceRetries)
+				Expect(err).NotTo(HaveOccurred())
+				err = frontendDevDeployment.Delete(deleteResourceRetries)
+				Expect(err).NotTo(HaveOccurred())
 				err = backendDeployment.Delete(deleteResourceRetries)
 				Expect(err).NotTo(HaveOccurred())
 				err = nwpolicyDeployment.Delete(deleteResourceRetries)
 				Expect(err).NotTo(HaveOccurred())
 				err = namespaceDev.Delete()
+				Expect(err).NotTo(HaveOccurred())
+				err = namespaceProd.Delete()
 				Expect(err).NotTo(HaveOccurred())
 			} else {
 				Skip("Calico or Azure network policy was not provisioned for this Cluster Definition")
