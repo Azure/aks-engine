@@ -267,7 +267,7 @@ func createJumpboxNetworkInterface(cs *api.ContainerService) NetworkInterfaceARM
 
 func createAgentVMASNetworkInterface(cs *api.ContainerService, profile *api.AgentPoolProfile) NetworkInterfaceARM {
 	isWindows := profile.IsWindows()
-	isCustomVNet := cs.Properties.MasterProfile.IsCustomVNET()
+	isCustomVNet := profile.IsCustomVNET()
 	isAzureCNI := cs.Properties.OrchestratorProfile.IsAzureCNI()
 
 	armResource := ARMResource{
