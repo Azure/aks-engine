@@ -4,6 +4,7 @@
 package engine
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"strconv"
@@ -70,6 +71,7 @@ func getK8sMasterVars(cs *api.ContainerService) map[string]interface{} {
 	provisionJumpbox := kubernetesConfig.PrivateJumpboxProvision()
 	enableEncryptionWithExternalKms := to.Bool(kubernetesConfig.EnableEncryptionWithExternalKms)
 	hasAgentPool := len(profiles) > 0
+	hasCosmosEtcd := masterProfile != nil && to.Bool(masterProfile.CosmosEtcd)
 
 	masterVars := map[string]interface{}{
 		"maxVMsPerPool":               100,
@@ -120,8 +122,11 @@ func getK8sMasterVars(cs *api.ContainerService) map[string]interface{} {
 
 	blockOutboundInternet := cs.Properties.FeatureFlags.IsFeatureEnabled("BlockOutboundInternet")
 	var cosmosEndPointURI string
-	if nil != masterProfile && to.Bool(masterProfile.CosmosEtcd) {
+	if hasCosmosEtcd {
 		cosmosEndPointURI = fmt.Sprintf("%sk8s.etcd.cosmosdb.azure.com", masterProfile.DNSPrefix)
+		masterVars["cosmosAccountName"] = fmt.Sprintf(etcdAccountNameFmt, cs.Properties.MasterProfile.DNSPrefix)
+		masterVars["cosmosDBCertb64"] = base64.StdEncoding.EncodeToString([]byte(cs.Properties.CertificateProfile.EtcdClientCertificate))
+		masterVars["apiVersionCosmos"] = "2015-04-08"
 	} else {
 		cosmosEndPointURI = ""
 	}
@@ -145,8 +150,6 @@ func getK8sMasterVars(cs *api.ContainerService) map[string]interface{} {
 			masterVars["provisionScriptParametersMaster"] = fmt.Sprintf("[concat('COSMOS_URI=%s MASTER_VM_NAME=',variables('masterVMNames')[variables('masterOffset')],' ETCD_PEER_URL=',variables('masterEtcdPeerURLs')[variables('masterOffset')],' ETCD_CLIENT_URL=',variables('masterEtcdClientURLs')[variables('masterOffset')],' MASTER_NODE=true NO_OUTBOUND=%t CLUSTER_AUTOSCALER_ADDON=',parameters('kubernetesClusterAutoscalerEnabled'),' ACI_CONNECTOR_ADDON=',parameters('kubernetesACIConnectorEnabled'),' APISERVER_PRIVATE_KEY=',parameters('apiServerPrivateKey'),' CA_CERTIFICATE=',parameters('caCertificate'),' CA_PRIVATE_KEY=',parameters('caPrivateKey'),' MASTER_FQDN=',variables('masterFqdnPrefix'),' KUBECONFIG_CERTIFICATE=',parameters('kubeConfigCertificate'),' KUBECONFIG_KEY=',parameters('kubeConfigPrivateKey'),' ETCD_SERVER_CERTIFICATE=',parameters('etcdServerCertificate'),' ETCD_CLIENT_CERTIFICATE=',parameters('etcdClientCertificate'),' ETCD_SERVER_PRIVATE_KEY=',parameters('etcdServerPrivateKey'),' ETCD_CLIENT_PRIVATE_KEY=',parameters('etcdClientPrivateKey'),' ETCD_PEER_CERTIFICATES=',string(variables('etcdPeerCertificates')),' ETCD_PEER_PRIVATE_KEYS=',string(variables('etcdPeerPrivateKeys')),' ENABLE_AGGREGATED_APIS=',string(parameters('enableAggregatedAPIs')),' KUBECONFIG_SERVER=',variables('kubeconfigServer'))]", cosmosEndPointURI, blockOutboundInternet)
 		}
 	}
-
-	//TODO: Implement CosmosDB variables
 
 	if userAssignedID {
 		masterVars["userAssignedID"] = kubernetesConfig.UserAssignedID

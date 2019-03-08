@@ -12,7 +12,10 @@ func createKubernetesMasterResourcesVMAS(cs *api.ContainerService) []interface{}
 	var masterResources []interface{}
 
 	p := cs.Properties
-	//TODO: Implement CosmosEtcd
+
+	if to.Bool(p.MasterProfile.CosmosEtcd) {
+		masterResources = append(masterResources, createCosmosDBAccount())
+	}
 
 	if p.HasManagedDisks() {
 		if !p.HasAvailabilityZones() {
@@ -109,7 +112,9 @@ func createKubernetesMasterResourcesVMAS(cs *api.ContainerService) []interface{}
 func createKubernetesMasterResourcesVMSS(cs *api.ContainerService) []interface{} {
 	var masterResources []interface{}
 
-	//TODO: Implement CosmosEtcd
+	if to.Bool(cs.Properties.MasterProfile.CosmosEtcd) {
+		masterResources = append(masterResources, createCosmosDBAccount())
+	}
 
 	masterNSG := CreateNetworkSecurityGroup(cs)
 	masterResources = append(masterResources, masterNSG)

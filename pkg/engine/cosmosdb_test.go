@@ -4,14 +4,54 @@
 package engine
 
 import (
-	"encoding/json"
-	"fmt"
 	"testing"
+
+	"github.com/google/go-cmp/cmp"
 )
 
 func TestCreateCosmosDB(t *testing.T) {
 	db := createCosmosDBAccount()
+	expected := map[string]interface{}{
+		"apiVersion": "[variables('apiVersionCosmos')]",
+		"name":       "Microsoft.DocumentDB/databaseAccounts",
+		"location":   "[resourceGroup().location]",
+		"kind":       "GlobalDocumentDB",
+		"properties": map[string]interface{}{
+			"consistencyPolicy": map[string]interface{}{
+				"defaultConsistencyLevel": "BoundedStaleness",
+				"maxStalenessPrefix":      100,
+				"maxIntervalInSeconds":    5,
+			},
+			"databaseAccountOfferType": "Standard",
+			"capabilities": []map[string]string{
+				{
+					"name": "EnableEtcd",
+				},
+			},
+			"locations": []map[string]interface{}{
+				{
+					"locationName":     "[resourceGroup().location]",
+					"failoverPriority": 0,
+				},
+				{
+					"locationName":     "[resourceGroup().location]",
+					"failoverPriority": 1,
+				},
+			},
+		},
+		"tags": map[string]string{
+			"defaultExperience": "Etcd",
+		},
+		"consistencyPolicy": map[string]interface{}{
+			"defaultConsistencyLevel": "BoundedStaleness",
+			"maxIntervalInSeconds":    5,
+			"maxStalenessPrefix":      100,
+		},
+		"primaryClientCertificatePemBytes": "[variables('cosmosDBCertb64')]",
+	}
 
-	jsonObj, _ := json.MarshalIndent(db, "", "   ")
-	fmt.Println(string(jsonObj))
+	if diff := cmp.Diff(expected, db); diff != "" {
+		t.Errorf("unexpected error while comparing CosmosEtcd ARM resources: %s", diff)
+	}
+
 }
