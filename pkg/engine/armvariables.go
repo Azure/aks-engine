@@ -65,7 +65,6 @@ func getK8sMasterVars(cs *api.ContainerService) map[string]interface{} {
 	isHostedMaster := cs.Properties.IsHostedMasterProfile()
 	isMasterVMSS := masterProfile != nil && masterProfile.IsVirtualMachineScaleSets()
 	hasStorageAccountDisks := cs.Properties.HasStorageAccountDisks()
-	isAzureCNI := orchProfile.IsAzureCNI()
 	isCustomVnet := cs.Properties.AreAgentProfilesCustomVNET()
 	isPrivateCluster := to.Bool(kubernetesConfig.PrivateCluster.Enabled)
 	provisionJumpbox := kubernetesConfig.PrivateJumpboxProvision()
@@ -297,13 +296,6 @@ func getK8sMasterVars(cs *api.ContainerService) map[string]interface{} {
 	} else {
 		masterVars["storageAccountPrefixes"] = []interface{}{}
 		masterVars["storageAccountBaseName"] = ""
-	}
-
-	//TODO: This could be a bug
-	if isAzureCNI {
-		masterVars["allocateNodeCidrs"] = false
-	} else {
-		masterVars["allocateNodeCidrs"] = true
 	}
 
 	if cs.Properties.AnyAgentUsesVirtualMachineScaleSets() {

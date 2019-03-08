@@ -159,12 +159,6 @@
     {{end}}
     "generateProxyCertsScript": "{{GetKubernetesB64GenerateProxyCerts}}",
     "orchestratorNameVersionTag": "{{.OrchestratorProfile.OrchestratorType}}:{{.OrchestratorProfile.OrchestratorVersion}}",
-
-{{if IsAzureCNI}}
-    "allocateNodeCidrs": false,
-{{else}}
-    "allocateNodeCidrs": true,
-{{end}}
     "subnetNameResourceSegmentIndex": 10,
     "vnetNameResourceSegmentIndex": 8,
     "vnetResourceGroupNameResourceSegmentIndex": 4,
