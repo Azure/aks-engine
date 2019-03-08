@@ -24,7 +24,7 @@ func TestNewRootCmd(t *testing.T) {
 		}
 	}
 
-	command.SetArgs([]string{})
+	command.SetArgs([]string{"--debug"})
 	err := command.Execute()
 	if err != nil {
 		t.Fatal(err)
