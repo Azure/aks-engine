@@ -315,7 +315,7 @@ func (cli *CLIProvisioner) waitForNodes() error {
 					out, err = cmd.CombinedOutput()
 					log.Printf("%s\n", out)
 					if err != nil {
-						return errors.New(fmt.Sprintf("Unable to add node annotation to node %s: %s", n.Metadata.Name, err))
+						return errors.Wrapf(err, "Unable to add node annotation to node %s", n.Metadata.Name)
 					}
 				}
 			}
