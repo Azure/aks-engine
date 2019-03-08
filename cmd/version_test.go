@@ -21,7 +21,7 @@ var _ = Describe("the version command", func() {
 
 		command.SetArgs([]string{})
 		err := command.Execute()
-		Expect(err).To(BeNil())
+		Expect(err).NotTo(HaveOccurred())
 	})
 
 	It("should print a json version of AKS Engine", func() {
@@ -46,7 +46,7 @@ var _ = Describe("the version command", func() {
 	It("should error when asked for a yaml version of AKS Engine", func() {
 		output, err := getVersion("yaml")
 
-		Expect(err).NotTo(BeNil())
+		Expect(err).To(HaveOccurred())
 		Expect(err.Error()).To(Equal("output format \"yaml\" is not supported"))
 		Expect(output).To(BeEmpty())
 	})

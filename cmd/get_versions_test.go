@@ -20,7 +20,7 @@ var _ = Describe("The get-versions command", func() {
 
 		command.SetArgs([]string{})
 		err := command.Execute()
-		Expect(err).To(BeNil())
+		Expect(err).NotTo(HaveOccurred())
 	})
 
 	It("should support JSON output", func() {
@@ -30,7 +30,7 @@ var _ = Describe("The get-versions command", func() {
 			output:       "json",
 		}
 		err := command.run(nil, nil)
-		Expect(err).To(BeNil())
+		Expect(err).NotTo(HaveOccurred())
 	})
 
 	It("should support human-readable output", func() {
@@ -40,7 +40,7 @@ var _ = Describe("The get-versions command", func() {
 			output:       "human",
 		}
 		err := command.run(nil, nil)
-		Expect(err).To(BeNil())
+		Expect(err).NotTo(HaveOccurred())
 	})
 
 	It("should error on an invalid output option", func() {
@@ -50,7 +50,7 @@ var _ = Describe("The get-versions command", func() {
 			output:       "yaml",
 		}
 		err := command.run(nil, nil)
-		Expect(err).NotTo(BeNil())
+		Expect(err).To(HaveOccurred())
 		Expect(err.Error()).To(Equal("output format \"yaml\" is not supported"))
 	})
 })
