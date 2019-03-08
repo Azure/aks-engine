@@ -1,4 +1,4 @@
-FROM alpine:3.7
+FROM alpine:3.9
 
 ARG AKSENGINE_VERSION=0.32.0
 ARG BUILD_DATE
@@ -21,7 +21,7 @@ RUN apk add --no-cache -u ca-certificates
 
 ADD "https://github.com/Azure/aks-engine/releases/download/v${AKSENGINE_VERSION}/aks-engine-v${AKSENGINE_VERSION}-linux-amd64.tar.gz" /tmp/aks-engine.tgz
 
-RUN mkdir /opt/ && \
+RUN mkdir -p /opt/ && \
     tar xvzf /tmp/aks-engine.tgz -C /opt/ && \
     rm /tmp/aks-engine.tgz && \
     chown -R root:root /opt/aks-engine-v${AKSENGINE_VERSION}-linux-amd64 && \
