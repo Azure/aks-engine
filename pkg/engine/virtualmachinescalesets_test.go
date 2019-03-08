@@ -22,7 +22,7 @@ func TestCreateMasterVMSS(t *testing.T) {
 
 	json.Unmarshal([]byte(apiModelStr), &cs)
 
-	tG, _ := InitializeTemplateGenerator(Context{})
+	tg, _ := InitializeTemplateGenerator(Context{})
 	expectedCustomDataStr := getCustomDataFromJSON(tG.GetMasterCustomDataJSON(cs))
 
 	actual := CreateMasterVMSS(cs)
@@ -322,7 +322,7 @@ func TestCreateAgentVMSS(t *testing.T) {
 
 	var dataDisks []compute.VirtualMachineScaleSetDataDisk
 
-	tG, _ := InitializeTemplateGenerator(Context{})
+	tg, _ := InitializeTemplateGenerator(Context{})
 	expectedCustomDataStr := getCustomDataFromJSON(tG.GetMasterCustomDataJSON(cs))
 
 	expected := VirtualMachineScaleSetARM{

@@ -23,7 +23,7 @@ func TestCreateVirtualMachines(t *testing.T) {
 		t.Errorf("unexpected error while trying to unmarshal the apimodel JSON: %s", err.Error())
 	}
 
-	tG, _ := InitializeTemplateGenerator(Context{})
+	tg, _ := InitializeTemplateGenerator(Context{})
 	expectedCustomDataStr := getCustomDataFromJSON(tG.GetMasterCustomDataJSON(cs))
 
 	actualVM := CreateVirtualMachine(cs)
@@ -182,7 +182,7 @@ func TestCreateAgentAvailabilitySetVM(t *testing.T) {
 		SSHEnabled: true,
 	}
 
-	tG, _ := InitializeTemplateGenerator(Context{})
+	tg, _ := InitializeTemplateGenerator(Context{})
 	expectedCustomDataStr := getCustomDataFromJSON(tG.GetMasterCustomDataJSON(cs))
 
 	actualVM := createAgentAvailabilitySetVM(cs, profile)
