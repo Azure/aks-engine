@@ -680,7 +680,7 @@ func TestCreateAgentVMASNIC(t *testing.T) {
 
 	// Test AgentVMAS NIC with Custom Vnet
 
-	cs.Properties.MasterProfile.VnetSubnetID = "fooSubnet"
+	profile.VnetSubnetID = "fooSubnet"
 
 	actual = createAgentVMASNetworkInterface(cs, profile)
 
