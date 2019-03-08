@@ -295,7 +295,7 @@ func (cli *CLIProvisioner) waitForNodes() error {
 			log.Printf("Testing a %s %s cluster...\n", cli.Config.Orchestrator, version)
 			nodeList, err := node.Get()
 			if err != nil {
-				return errors.New(fmt.Sprintf("Unable to get list of nodes: %s", err))
+				return errors.Wrap(err, "Unable to get the list of nodes")
 			}
 			for _, n := range nodeList.Nodes {
 				exp, err := regexp.Compile("k8s-master")
