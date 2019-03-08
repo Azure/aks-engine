@@ -65,7 +65,7 @@ func TestK8sVars(t *testing.T) {
 		"allocateNodeCidrs":                         true,
 		"apiVersionAuthorizationSystem":             "2018-01-01-preview",
 		"apiVersionAuthorizationUser":               "2018-09-01-preview",
-		"apiVersionCompute":                         "2018-06-01",
+		"apiVersionCompute":                         "2018-10-01",
 		"apiVersionKeyVault":                        "2018-02-14",
 		"apiVersionManagedIdentity":                 "2015-08-31-preview",
 		"apiVersionNetwork":                         "2018-08-01",
