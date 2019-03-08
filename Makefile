@@ -112,7 +112,7 @@ checksum:
 .PHONY: build-container
 build-container:
 	docker build --no-cache --build-arg BUILD_DATE=`date -u +"%Y-%m-%dT%H:%M:%SZ"` \
-		--build-arg AKSENGINE_VERSION="$(VERSION)" -t microsoft/aks-engine:$(VERSION) \
+		--build-arg AKSENGINE_VERSION="$(VERSION)" -t microsoft/aks-engine:${VERSION} \
 		--file ./releases/Dockerfile.linux ./releases || \
 	echo 'This target works only for published releases. For example, "VERSION=0.32.0 make build-container".'
 
