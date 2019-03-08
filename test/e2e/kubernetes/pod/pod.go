@@ -498,6 +498,10 @@ func WaitOnReady(podPrefix, namespace string, successesNeeded int, sleep, durati
 					if e != nil {
 						log.Printf("Unable to print pod logs for pod %s", p.Metadata.Name)
 					}
+					e = p.Describe()
+					if e != nil {
+						log.Printf("Unable to describe pod %s", p.Metadata.Name)
+					}
 				}
 			}
 			return false, err
@@ -789,6 +793,17 @@ func (p *Pod) Logs() error {
 		if err != nil {
 			return err
 		}
+	}
+	return nil
+}
+
+// Describe will describe a pod resource
+func (p *Pod) Describe() error {
+	cmd := exec.Command("k", "describe", "pod", p.Metadata.Name, p.Metadata.Namespace)
+	out, err := util.RunAndLogCommand(cmd, commandTimeout)
+	log.Printf("\n%s\n", string(out))
+	if err != nil {
+		return err
 	}
 	return nil
 }
