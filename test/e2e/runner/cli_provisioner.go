@@ -308,7 +308,7 @@ func (cli *CLIProvisioner) waitForNodes() error {
 					out, err := cmd.CombinedOutput()
 					log.Printf("%s\n", out)
 					if err != nil {
-						return errors.New(fmt.Sprintf("Unable to assign label to node %s: %s", n.Metadata.Name, err))
+						return errors.Wrapf(err, "Unable to assign label to node %s", n.Metadata.Name)
 					}
 					cmd = exec.Command("k", "annotate", "node", n.Metadata.Name, "foo=bar")
 					util.PrintCommand(cmd)
