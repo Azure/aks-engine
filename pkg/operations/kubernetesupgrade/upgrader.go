@@ -593,8 +593,17 @@ func (ku *Upgrader) generateUpgradeTemplate(upgradeContainerService *api.Contain
 
 	var template interface{}
 	var parameters interface{}
-	json.Unmarshal([]byte(templateJSON), &template)
-	json.Unmarshal([]byte(parametersJSON), &parameters)
+
+	err = json.Unmarshal([]byte(templateJSON), &template)
+	if err != nil {
+		return nil, nil, ku.Translator.Errorf("error while unmarshaling the ARM template JSON: %s", err.Error())
+	}
+
+	err = json.Unmarshal([]byte(parametersJSON), &parameters)
+	if err != nil {
+		return nil, nil, ku.Translator.Errorf("error while unmarshaling the ARM parameters JSON: %s", err.Error())
+	}
+
 	templateMap := template.(map[string]interface{})
 	parametersMap := parameters.(map[string]interface{})
 
