@@ -160,26 +160,3 @@ func GetK8sVMName(p *api.Properties, agentPoolProfile *api.AgentPoolProfile, age
 
 	return "", errors.Errorf("Failed to reconstruct VM Name")
 }
-
-// IsVMSSUpgradeable - checks if the current vm(in case of VMA) or vm instance (in case of VMSS)
-// is specified in the upgradeMap.
-func IsVMSSUpgradeable(upgradeMap map[string]bool, vmssName string) bool {
-	if len(upgradeMap) > 0 {
-		// Per agentpool upgrade is supported as of now only for linux agentpool names.
-		// When the windows and linux agentpool names will be unified to same format
-		// this will apply across.
-		regexp := regexp.MustCompile(vmssNamingFormat)
-		if capture := regexp.FindStringSubmatch(vmssName); capture != nil {
-			agentPoolName := capture[vmssAgentPoolNameIndex]
-			// Skip the VMSS pool if not requested by caller.
-			if upgradeMap[agentPoolName] {
-				return true
-			} else {
-				return false
-			}
-		}
-	}
-	// If the map is not given, or could not match up any naming convention,
-	// then just return back true to let the upgrade proceed as before.
-	return true
-}
