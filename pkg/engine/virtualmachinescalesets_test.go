@@ -42,7 +42,7 @@ func TestCreateMasterVMSS(t *testing.T) {
 			Location: to.StringPtr("[variables('location')]"),
 			Name:     to.StringPtr("[concat(variables('masterVMNamePrefix'), 'vmss')]"),
 			Tags: map[string]*string{
-				"creationSource":     to.StringPtr("[concat(parameters('generatorCode'), '-', variables('masterVMNamePrefix'), 'vmss']"),
+				"creationSource":     to.StringPtr("[concat(parameters('generatorCode'), '-', variables('masterVMNamePrefix'), 'vmss')]"),
 				"resourceNameSuffix": to.StringPtr("[parameters('nameSuffix')]"),
 				"orchestrator":       to.StringPtr("[variables('orchestratorNameVersionTag')]"),
 				"aksEngineVersion":   to.StringPtr("[parameters('aksEngineVersion')]"),
