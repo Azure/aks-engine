@@ -1,6 +1,6 @@
 FROM alpine:3.7
 
-ARG AKSENGINE_VERSION=0.16.0
+ARG AKSENGINE_VERSION=0.32.0
 ARG BUILD_DATE
 
 # Metadata as defined at http://label-schema.org
@@ -10,14 +10,14 @@ LABEL maintainer="Microsoft" \
       org.label-schema.name="Azure Kubernetes Engine (aks-engine)" \
       org.label-schema.version=$AKSENGINE_VERSION \
       org.label-schema.license="MIT" \
-      org.label-schema.description="The Azure Kubernetes Engine (aks-engine) generates ARM (Azure Resource Manager) templates for Kubernetes clusters on Microsoft Azure with your choice of DCOS, Kubernetes, or Swarm orchestrators." \
+      org.label-schema.description="The Azure Kubernetes Engine (aks-engine) generates ARM (Azure Resource Manager) templates for Kubernetes clusters on Microsoft Azure." \
       org.label-schema.url="https://github.com/Azure/aks-engine" \
       org.label-schema.usage="https://github.com/Azure/aks-engine/blob/master/docs/aksengine.md" \
       org.label-schema.build-date=$BUILD_DATE \
       org.label-schema.vcs-url="https://github.com/Azure/aks-engine.git" \
       org.label-schema.docker.cmd="docker run -v \${PWD}:/aks-engine/workspace -it --rm microsoft/aks-engine:$AKSENGINE_VERSION"
 
-RUN apk add --no-cache ca-certificates
+RUN apk add --no-cache -u ca-certificates
 
 ADD "https://github.com/Azure/aks-engine/releases/download/v${AKSENGINE_VERSION}/aks-engine-v${AKSENGINE_VERSION}-linux-amd64.tar.gz" /tmp/aks-engine.tgz
 
