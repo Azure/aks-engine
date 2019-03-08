@@ -350,7 +350,7 @@ func (sc *scaleCmd) run(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.Wrapf(err, "error in SetPropertiesDefaults template %s", sc.apiModelPath)
 	}
-	template, parameters, err := templateGenerator.GenerateTemplate(sc.containerService, engine.DefaultGeneratorCode, BuildTag)
+	template, parameters, err := templateGenerator.GenerateTemplateV2(sc.containerService, engine.DefaultGeneratorCode, BuildTag)
 	if err != nil {
 		return errors.Wrapf(err, "error generating template %s", sc.apiModelPath)
 	}
