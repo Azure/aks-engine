@@ -133,10 +133,11 @@ func getK8sMasterVars(cs *api.ContainerService) map[string]interface{} {
 		masterVars["apiVersionNetwork"] = "2017-10-01"
 		masterVars["apiVersionKeyVault"] = "2016-10-01"
 		masterVars["environmentJSON"] = cs.Properties.GetCustomEnvironmentJSON(false)
-		masterVars["customCloudAuthenticationMethod"] = cs.Properties.GetCustomCloudAuthenticationMethod()
-		masterVars["customCloudIdentifySystem"] = cs.Properties.GetCustomCloudIdentitySystem()
 		masterVars["provisionConfigsCustomCloud"] = GetKubernetesB64ConfigsCustomCloud()
 	}
+
+	masterVars["customCloudAuthenticationMethod"] = cs.Properties.GetCustomCloudAuthenticationMethod()
+	masterVars["customCloudIdentifySystem"] = cs.Properties.GetCustomCloudIdentitySystem()
 
 	if !isHostedMaster {
 		if isMasterVMSS {
