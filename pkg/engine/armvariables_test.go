@@ -158,6 +158,8 @@ func TestK8sVars(t *testing.T) {
 		"vnetNameResourceSegmentIndex":              8,
 		"vnetResourceGroupNameResourceSegmentIndex": 4,
 		"vnetSubnetID":                              "[concat(variables('vnetID'),'/subnets/',variables('subnetName'))]",
+		"customCloudAuthenticationMethod":           cs.Properties.GetCustomCloudAuthenticationMethod(),
+		"customCloudIdentifySystem":                 cs.Properties.GetCustomCloudIdentitySystem(),
 	}
 	diff := cmp.Diff(varMap, expectedMap)
 
