@@ -183,7 +183,7 @@ func TestCreateAgentAvailabilitySetVM(t *testing.T) {
 	}
 
 	tg, _ := InitializeTemplateGenerator(Context{})
-	expectedCustomDataStr := getCustomDataFromJSON(tg.GetKubernetesAgentCustomDataJSON(cs, profile))
+	expectedCustomDataStr := getCustomDataFromJSON(tg.GetKubernetesWindowsAgentCustomDataJSON(cs, profile))
 
 	actualVM := createAgentAvailabilitySetVM(cs, profile)
 	expectedVM := VirtualMachineARM{

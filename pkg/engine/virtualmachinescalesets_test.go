@@ -440,7 +440,7 @@ func TestCreateAgentVMSS(t *testing.T) {
 
 	actual = CreateAgentVMSS(cs, cs.Properties.AgentPoolProfiles[0])
 
-	expectedCustomDataStr = getCustomDataFromJSON(tg.GetKubernetesAgentCustomDataJSON(cs, cs.Properties.AgentPoolProfiles[0]))
+	expectedCustomDataStr = getCustomDataFromJSON(tg.GetKubernetesWindowsAgentCustomDataJSON(cs, cs.Properties.AgentPoolProfiles[0]))
 
 	expected.VirtualMachineProfile.OsProfile = &compute.VirtualMachineScaleSetOSProfile{
 		AdminUsername: to.StringPtr("[parameters('windowsAdminUsername')]"),
