@@ -531,7 +531,6 @@ func TestK8sVarsMastersOnly(t *testing.T) {
 
 	varMap := GetKubernetesVariables(cs)
 	expectedMap := map[string]interface{}{
-		"allocateNodeCidrs":                         false,
 		"apiVersionAuthorizationSystem":             "2018-01-01-preview",
 		"apiVersionAuthorizationUser":               "2018-09-01-preview",
 		"apiVersionCompute":                         "2018-10-01",
