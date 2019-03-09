@@ -215,16 +215,14 @@ func CreateMasterVMSS(cs *api.ContainerService) VirtualMachineScaleSetARM {
 	storageProfile := compute.VirtualMachineScaleSetStorageProfile{}
 	imageRef := masterProfile.ImageRef
 	useMasterCustomImage := imageRef != nil && len(imageRef.Name) > 0 && len(imageRef.ResourceGroup) > 0
-	if !useMasterCustomImage {
-		etcdSizeGB, _ := strconv.Atoi(k8sConfig.EtcdDiskSizeGB)
-		dataDisk := compute.VirtualMachineScaleSetDataDisk{
-			CreateOption: compute.DiskCreateOptionTypesEmpty,
-			DiskSizeGB:   to.Int32Ptr(int32(etcdSizeGB)),
-			Lun:          to.Int32Ptr(0),
-		}
-		storageProfile.DataDisks = &[]compute.VirtualMachineScaleSetDataDisk{
-			dataDisk,
-		}
+	etcdSizeGB, _ := strconv.Atoi(k8sConfig.EtcdDiskSizeGB)
+	dataDisk := compute.VirtualMachineScaleSetDataDisk{
+		CreateOption: compute.DiskCreateOptionTypesEmpty,
+		DiskSizeGB:   to.Int32Ptr(int32(etcdSizeGB)),
+		Lun:          to.Int32Ptr(0),
+	}
+	storageProfile.DataDisks = &[]compute.VirtualMachineScaleSetDataDisk{
+		dataDisk,
 	}
 	imgReference := &compute.ImageReference{}
 	if useMasterCustomImage {

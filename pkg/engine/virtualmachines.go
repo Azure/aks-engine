@@ -143,24 +143,21 @@ func CreateVirtualMachine(cs *api.ContainerService) VirtualMachineARM {
 	storageProfile := &compute.StorageProfile{}
 	imageRef := cs.Properties.MasterProfile.ImageRef
 	useMasterCustomImage := imageRef != nil && len(imageRef.Name) > 0 && len(imageRef.ResourceGroup) > 0
-	if !useMasterCustomImage {
-		etcdSizeGB, _ := strconv.Atoi(cs.Properties.OrchestratorProfile.KubernetesConfig.EtcdDiskSizeGB)
-		dataDisk := compute.DataDisk{
-			CreateOption: compute.DiskCreateOptionTypesEmpty,
-			DiskSizeGB:   to.Int32Ptr(int32(etcdSizeGB)),
-			Lun:          to.Int32Ptr(0),
-			Name:         to.StringPtr("[concat(variables('masterVMNamePrefix'), copyIndex(variables('masterOffset')),'-etcddisk')]"),
-		}
-		if cs.Properties.MasterProfile.IsStorageAccount() {
-			dataDisk.Vhd = &compute.VirtualHardDisk{
-				URI: to.StringPtr("[concat(reference(concat('Microsoft.Storage/storageAccounts/',variables('masterStorageAccountName')),variables('apiVersionStorage')).primaryEndpoints.blob,'vhds/', variables('masterVMNamePrefix'),copyIndex(variables('masterOffset')),'-etcddisk.vhd')]"),
-			}
-		}
-		storageProfile.DataDisks = &[]compute.DataDisk{
-			dataDisk,
+	etcdSizeGB, _ := strconv.Atoi(cs.Properties.OrchestratorProfile.KubernetesConfig.EtcdDiskSizeGB)
+	dataDisk := compute.DataDisk{
+		CreateOption: compute.DiskCreateOptionTypesEmpty,
+		DiskSizeGB:   to.Int32Ptr(int32(etcdSizeGB)),
+		Lun:          to.Int32Ptr(0),
+		Name:         to.StringPtr("[concat(variables('masterVMNamePrefix'), copyIndex(variables('masterOffset')),'-etcddisk')]"),
+	}
+	if cs.Properties.MasterProfile.IsStorageAccount() {
+		dataDisk.Vhd = &compute.VirtualHardDisk{
+			URI: to.StringPtr("[concat(reference(concat('Microsoft.Storage/storageAccounts/',variables('masterStorageAccountName')),variables('apiVersionStorage')).primaryEndpoints.blob,'vhds/', variables('masterVMNamePrefix'),copyIndex(variables('masterOffset')),'-etcddisk.vhd')]"),
 		}
 	}
-
+	storageProfile.DataDisks = &[]compute.DataDisk{
+		dataDisk,
+	}
 	imgReference := &compute.ImageReference{}
 	if useMasterCustomImage {
 		imgReference.ID = to.StringPtr("[resourceId(parameters('osImageResourceGroup'), 'Microsoft.Compute/images', parameters('osImageName'))]")
