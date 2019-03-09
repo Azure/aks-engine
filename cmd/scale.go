@@ -190,7 +190,11 @@ func (sc *scaleCmd) load(cmd *cobra.Command) error {
 	contents, _ := ioutil.ReadFile(templatePath)
 
 	var template interface{}
-	json.Unmarshal(contents, &template)
+
+	err = json.Unmarshal(contents, &template)
+	if err != nil {
+		return errors.Wrap(err, "error while trying to unmarshal the ARM template")
+	}
 
 	templateMap := template.(map[string]interface{})
 	templateParameters := templateMap["parameters"].(map[string]interface{})
