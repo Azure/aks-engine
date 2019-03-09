@@ -128,17 +128,25 @@ func (cs *ContainerService) setKubeletConfig() {
 		if profile.KubernetesConfig == nil {
 			profile.KubernetesConfig = &KubernetesConfig{}
 			profile.KubernetesConfig.KubeletConfig = make(map[string]string)
-			if profile.OSType == "Windows" {
-				for key, val := range staticWindowsKubeletConfig {
-					profile.KubernetesConfig.KubeletConfig[key] = val
-				}
+		}
+
+		if profile.OSType == "Windows" {
+			for key, val := range staticWindowsKubeletConfig {
+				profile.KubernetesConfig.KubeletConfig[key] = val
 			}
 		}
+
 		setMissingKubeletValues(profile.KubernetesConfig, o.KubernetesConfig.KubeletConfig)
 
 		if profile.OSType == "Windows" {
 			// Remove Linux-specific values
 			delete(profile.KubernetesConfig.KubeletConfig, "--pod-manifest-path")
+
+			if !to.Bool(o.KubernetesConfig.EnableSecureKubelet) {
+				for _, key := range []string{"--anonymous-auth", "--client-ca-file"} {
+					delete(profile.KubernetesConfig.KubeletConfig, key)
+				}
+			}
 		}
 
 		// For N Series (GPU) VMs
