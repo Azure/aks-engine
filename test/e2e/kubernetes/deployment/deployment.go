@@ -234,7 +234,8 @@ func (d *Deployment) WaitForReplicas(min, max int, sleep, duration time.Duration
 			case <-ctx.Done():
 				errCh <- errors.Errorf("Timeout exceeded (%s) while waiting for minimum %d and maximum %d Pod replicas from Deployment %s", duration.String(), min, max, d.Metadata.Name)
 			default:
-				pods, err := pod.GetAllByPrefix(d.Metadata.Name, d.Metadata.Namespace)
+				var err error
+				pods, err = pod.GetAllByPrefix(d.Metadata.Name, d.Metadata.Namespace)
 				if err != nil {
 					errCh <- err
 					return

@@ -436,7 +436,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			Expect(err).NotTo(HaveOccurred())
 			for _, node := range nodeList.Nodes {
 				By("Ensuring that we get a DNS lookup answer response for each node hostname")
-				digCmd := fmt.Sprintf("dig +short +search +answer %s | grep -v -e '^$'", node.Metadata.Name)
+				digCmd = fmt.Sprintf("dig +short +search +answer %s | grep -v -e '^$'", node.Metadata.Name)
 
 				cmd = exec.Command("ssh", "-i", masterSSHPrivateKeyFilepath, "-p", masterSSHPort, "-o", "ConnectTimeout=10", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", master, digCmd)
 				util.PrintCommand(cmd)
@@ -552,7 +552,8 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 							curlCMD := fmt.Sprintf("curl --max-time 60 %s", dashboardURL)
 							cmd := exec.Command("ssh", "-i", masterSSHPrivateKeyFilepath, "-p", masterSSHPort, "-o", "ConnectTimeout=10", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", master, curlCMD)
 							util.PrintCommand(cmd)
-							out, err := cmd.CombinedOutput()
+							var out []byte
+							out, err = cmd.CombinedOutput()
 							if err == nil {
 								success = true
 								break
@@ -597,7 +598,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 
 				s, _ := service.Get(serviceName, "default")
 				if s != nil {
-					err := s.Delete(deleteResourceRetries)
+					err = s.Delete(deleteResourceRetries)
 					Expect(err).NotTo(HaveOccurred())
 				}
 				s, err = service.CreateServiceFromFile(filepath.Join(WorkloadDir, "ingress-nginx-ilb.yaml"), serviceName, "default")
@@ -616,7 +617,8 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				Expect(err).NotTo(HaveOccurred())
 				for i, curlPod := range curlPods {
 					if i < 1 {
-						pass, err := curlPod.ValidateCurlConnection(svc.Status.LoadBalancer.Ingress[0]["ip"], 5*time.Second, cfg.Timeout)
+						var pass bool
+						pass, err = curlPod.ValidateCurlConnection(svc.Status.LoadBalancer.Ingress[0]["ip"], 5*time.Second, cfg.Timeout)
 						Expect(err).NotTo(HaveOccurred())
 						Expect(pass).To(BeTrue())
 					}
@@ -976,7 +978,8 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				Expect(err).NotTo(HaveOccurred())
 				Expect(len(clientOnePods)).ToNot(BeZero())
 				for _, clientOnePod := range clientOnePods {
-					pass, err := clientOnePod.CheckLinuxOutboundConnection(5*time.Second, cfg.Timeout)
+					var pass bool
+					pass, err = clientOnePod.CheckLinuxOutboundConnection(5*time.Second, cfg.Timeout)
 					Expect(err).NotTo(HaveOccurred())
 					Expect(pass).To(BeTrue())
 				}
@@ -986,7 +989,8 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				Expect(err).NotTo(HaveOccurred())
 				Expect(len(clientTwoPods)).ToNot(BeZero())
 				for _, clientTwoPod := range clientTwoPods {
-					pass, err := clientTwoPod.CheckLinuxOutboundConnection(5*time.Second, cfg.Timeout)
+					var pass bool
+					pass, err = clientTwoPod.CheckLinuxOutboundConnection(5*time.Second, cfg.Timeout)
 					Expect(err).NotTo(HaveOccurred())
 					Expect(pass).To(BeTrue())
 				}
@@ -996,7 +1000,8 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				Expect(err).NotTo(HaveOccurred())
 				Expect(len(serverPods)).ToNot(BeZero())
 				for _, serverPod := range serverPods {
-					pass, err := serverPod.CheckLinuxOutboundConnection(5*time.Second, cfg.Timeout)
+					var pass bool
+					pass, err = serverPod.CheckLinuxOutboundConnection(5*time.Second, cfg.Timeout)
 					Expect(err).NotTo(HaveOccurred())
 					Expect(pass).To(BeTrue())
 				}
@@ -1013,7 +1018,8 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 
 				By("Ensuring we no longer have outbound internet access from the nginx client pods")
 				for _, clientOnePod := range clientOnePods {
-					pass, err := clientOnePod.CheckLinuxOutboundConnection(5*time.Second, 3*time.Minute)
+					var pass bool
+					pass, err = clientOnePod.CheckLinuxOutboundConnection(5*time.Second, 3*time.Minute)
 					Expect(err).Should(HaveOccurred())
 					Expect(pass).To(BeFalse())
 				}
@@ -1029,7 +1035,8 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				By("Ensuring we no longer have inbound internet access from the nginx server pods")
 				for _, clientOnePod := range clientOnePods {
 					for _, serverPod := range serverPods {
-						pass, err := clientOnePod.ValidateCurlConnection(serverPod.Status.PodIP, 5*time.Second, 3*time.Minute)
+						var pass bool
+						pass, err = clientOnePod.ValidateCurlConnection(serverPod.Status.PodIP, 5*time.Second, 3*time.Minute)
 						Expect(err).Should(HaveOccurred())
 						Expect(pass).To(BeFalse())
 					}
@@ -1087,7 +1094,8 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				Expect(err).NotTo(HaveOccurred())
 				Expect(len(iisPods)).ToNot(BeZero())
 				for _, iisPod := range iisPods {
-					pass, err := iisPod.CheckWindowsOutboundConnection("www.bing.com", 10*time.Second, cfg.Timeout)
+					var pass bool
+					pass, err = iisPod.CheckWindowsOutboundConnection("www.bing.com", 10*time.Second, cfg.Timeout)
 					Expect(err).NotTo(HaveOccurred())
 					Expect(pass).To(BeTrue())
 				}
@@ -1129,11 +1137,13 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				Expect(valid).To(BeTrue())
 
 				By("Checking that each pod can reach http://www.bing.com")
-				iisPods, err := iisDeploy.Pods()
+				var iisPods []pod.Pod
+				iisPods, err = iisDeploy.Pods()
 				Expect(err).NotTo(HaveOccurred())
 				Expect(len(iisPods)).ToNot(BeZero())
 				for _, iisPod := range iisPods {
-					pass, err := iisPod.CheckWindowsOutboundConnection("www.bing.com", 10*time.Second, cfg.Timeout)
+					var pass bool
+					pass, err = iisPod.CheckWindowsOutboundConnection("www.bing.com", 10*time.Second, cfg.Timeout)
 					Expect(err).NotTo(HaveOccurred())
 					Expect(pass).To(BeTrue())
 				}
@@ -1161,7 +1171,8 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				Expect(err).NotTo(HaveOccurred())
 				Expect(len(iisPods)).ToNot(BeZero())
 				for _, iisPod := range iisPods {
-					pass, err := iisPod.CheckWindowsOutboundConnection("www.bing.com", 10*time.Second, cfg.Timeout)
+					var pass bool
+					pass, err = iisPod.CheckWindowsOutboundConnection("www.bing.com", 10*time.Second, cfg.Timeout)
 					Expect(err).NotTo(HaveOccurred())
 					Expect(pass).To(BeTrue())
 				}
@@ -1191,7 +1202,8 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				Expect(err).NotTo(HaveOccurred())
 				Expect(len(iisPods)).ToNot(BeZero())
 				for _, iisPod := range iisPods {
-					pass, err := iisPod.CheckWindowsOutboundConnection("www.bing.com", 10*time.Second, cfg.Timeout)
+					var pass bool
+					pass, err = iisPod.CheckWindowsOutboundConnection("www.bing.com", 10*time.Second, cfg.Timeout)
 					Expect(err).NotTo(HaveOccurred())
 					Expect(pass).To(BeTrue())
 				}

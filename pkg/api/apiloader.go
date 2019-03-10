@@ -73,7 +73,7 @@ func (a *Apiloader) DeserializeContainerService(contents []byte, validate, isUpd
 	if service == nil || err != nil {
 		if isAgentPoolOnlyClusterJSON(contents) {
 			log.Info("No masterProfile: interpreting API model as agent pool only")
-			service, _, err := a.LoadContainerServiceForAgentPoolOnlyCluster(contents, version, validate, isUpdate, "", existingContainerService)
+			service, _, err = a.LoadContainerServiceForAgentPoolOnlyCluster(contents, version, validate, isUpdate, "", existingContainerService)
 			return service, version, err
 		}
 	}

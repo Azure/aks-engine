@@ -14,6 +14,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Azure/aks-engine/pkg/api"
+
 	"github.com/Azure/go-autorest/autorest/to"
 
 	"github.com/Azure/aks-engine/test/e2e/azure"
@@ -147,11 +149,13 @@ func (cli *CLIProvisioner) provision() error {
 
 			agentSubnetID = fmt.Sprintf("/subscriptions/%s/resourceGroups/%s/providers/Microsoft.Network/virtualNetworks/%s/subnets/%s", cli.Account.SubscriptionID, cli.Account.ResourceGroup.Name, vnetName, agentSubnetName)
 		} else {
-			config, err := engine.ParseConfig(cli.Config.CurrentWorkingDir, cli.Config.ClusterDefinition, cli.Config.Name)
+			var config *engine.Config
+			config, err = engine.ParseConfig(cli.Config.CurrentWorkingDir, cli.Config.ClusterDefinition, cli.Config.Name)
 			if err != nil {
 				log.Printf("Error while trying to build Engine Configuration:%s\n", err)
 			}
-			cs, err := engine.ParseInput(config.ClusterDefinitionPath)
+			var cs *api.VlabsARMContainerService
+			cs, err = engine.ParseInput(config.ClusterDefinitionPath)
 			if err != nil {
 				return err
 			}
@@ -323,13 +327,14 @@ func (cli *CLIProvisioner) FetchProvisioningMetrics(path string, cfg *config.Con
 	}
 	authSock := strings.Split(strings.Split(string(out), "=")[1], ";")
 	os.Setenv("SSH_AUTH_SOCK", authSock[0])
-	conn, err := remote.NewConnection(hostname, "22", cli.Engine.ClusterDefinition.Properties.LinuxProfile.AdminUsername, cli.Config.GetSSHKeyPath())
+	var conn *remote.Connection
+	conn, err = remote.NewConnection(hostname, "22", cli.Engine.ClusterDefinition.Properties.LinuxProfile.AdminUsername, cli.Config.GetSSHKeyPath())
 	if err != nil {
 		return err
 	}
 	for _, master := range cli.Masters {
 		for _, fp := range masterFiles {
-			err := conn.CopyRemote(master.Name, fp)
+			err = conn.CopyRemote(master.Name, fp)
 			if err != nil {
 				log.Printf("Error reading file from path (%s):%s", path, err)
 			}
@@ -338,7 +343,7 @@ func (cli *CLIProvisioner) FetchProvisioningMetrics(path string, cfg *config.Con
 
 	for _, agent := range cli.Agents {
 		for _, fp := range agentFiles {
-			err := conn.CopyRemote(agent.Name, fp)
+			err = conn.CopyRemote(agent.Name, fp)
 			if err != nil {
 				log.Printf("Error reading file from path (%s):%s", path, err)
 			}

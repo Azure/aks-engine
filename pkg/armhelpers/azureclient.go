@@ -123,11 +123,15 @@ func NewAzureClientWithDeviceAuth(env azure.Environment, subscriptionID string) 
 		if err != nil {
 			log.Warnf("Refresh token failed. Will fallback to device auth. %q", err)
 		} else {
-			graphSpt, err := adal.NewServicePrincipalTokenFromManualToken(*oauthConfig, aksEngineClientID, env.GraphEndpoint, armSpt.Token())
+			var graphSpt *adal.ServicePrincipalToken
+			graphSpt, err = adal.NewServicePrincipalTokenFromManualToken(*oauthConfig, aksEngineClientID, env.GraphEndpoint, armSpt.Token())
 			if err != nil {
 				return nil, err
 			}
-			graphSpt.Refresh()
+			err = graphSpt.Refresh()
+			if err != nil {
+				return nil, err
+			}
 
 			return getClient(env, subscriptionID, tenantID, autorest.NewBearerAuthorizer(armSpt), autorest.NewBearerAuthorizer(graphSpt)), nil
 		}
