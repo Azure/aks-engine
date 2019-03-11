@@ -30,7 +30,18 @@ func (cs *ContainerService) setKubeletConfig() {
 	// Start with copy of Linux config
 	staticWindowsKubeletConfig := make(map[string]string)
 	for key, val := range staticLinuxKubeletConfig {
-		staticWindowsKubeletConfig[key] = val
+		switch key {
+		case "--pod-manifest-path": // Don't add Linux-specific config
+			break
+		case "--anonymous-auth", "--client-ca-file":
+			if !to.Bool(o.KubernetesConfig.EnableSecureKubelet) { // Don't add if EnableSecureKubelet is disabled
+				break
+			} else {
+				staticWindowsKubeletConfig[key] = val
+			}
+		default:
+			staticWindowsKubeletConfig[key] = val
+		}
 	}
 
 	// Add Windows-specific overrides
@@ -139,9 +150,6 @@ func (cs *ContainerService) setKubeletConfig() {
 		setMissingKubeletValues(profile.KubernetesConfig, o.KubernetesConfig.KubeletConfig)
 
 		if profile.OSType == "Windows" {
-			// Remove Linux-specific values
-			delete(profile.KubernetesConfig.KubeletConfig, "--pod-manifest-path")
-
 			if !to.Bool(o.KubernetesConfig.EnableSecureKubelet) {
 				for _, key := range []string{"--anonymous-auth", "--client-ca-file"} {
 					delete(profile.KubernetesConfig.KubeletConfig, key)
