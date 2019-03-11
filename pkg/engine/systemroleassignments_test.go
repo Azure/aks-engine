@@ -9,7 +9,7 @@ import (
 	"github.com/Azure/aks-engine/pkg/api"
 	"github.com/google/go-cmp/cmp"
 
-	"github.com/Azure/azure-sdk-for-go/services/preview/authorization/mgmt/2018-09-01-preview/authorization"
+	"github.com/Azure/azure-sdk-for-go/services/preview/authorization/mgmt/2018-01-01-preview/authorization"
 	"github.com/Azure/go-autorest/autorest/to"
 )
 

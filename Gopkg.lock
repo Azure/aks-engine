@@ -10,7 +10,7 @@
   version = "v0.2.0"
 
 [[projects]]
-  digest = "1:a25a623447ce55b3acd9840e9de41a392d4c07a3d6298af51881ca6e6ca4973f"
+  digest = "1:f6f3cee13cf3e669f72dc47cbd64629123f590a0f1f39bea31108ec54491e0ad"
   name = "github.com/Azure/azure-sdk-for-go"
   packages = [
     "services/apimanagement/mgmt/2017-03-01/apimanagement",
@@ -20,6 +20,7 @@
     "services/graphrbac/1.6/graphrbac",
     "services/keyvault/mgmt/2018-02-14/keyvault",
     "services/network/mgmt/2018-08-01/network",
+    "services/preview/authorization/mgmt/2018-01-01-preview/authorization",
     "services/preview/authorization/mgmt/2018-09-01-preview/authorization",
     "services/preview/msi/mgmt/2015-08-31-preview/msi",
     "services/resources/mgmt/2016-06-01/subscriptions",
@@ -853,6 +854,7 @@
     "github.com/Azure/azure-sdk-for-go/services/graphrbac/1.6/graphrbac",
     "github.com/Azure/azure-sdk-for-go/services/keyvault/mgmt/2018-02-14/keyvault",
     "github.com/Azure/azure-sdk-for-go/services/network/mgmt/2018-08-01/network",
+    "github.com/Azure/azure-sdk-for-go/services/preview/authorization/mgmt/2018-01-01-preview/authorization",
     "github.com/Azure/azure-sdk-for-go/services/preview/authorization/mgmt/2018-09-01-preview/authorization",
     "github.com/Azure/azure-sdk-for-go/services/preview/msi/mgmt/2015-08-31-preview/msi",
     "github.com/Azure/azure-sdk-for-go/services/resources/mgmt/2016-06-01/subscriptions",
