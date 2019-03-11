@@ -94,7 +94,7 @@ build-windows-k8s:
 	./scripts/build-windows-k8s.sh -v ${K8S_VERSION} -p ${PATCH_VERSION}
 
 .PHONY: dist
-dist: build-cross
+dist: build-cross compress-binaries
 	( \
 		cd _dist && \
 		$(DIST_DIRS) cp ../LICENSE {} \; && \
@@ -102,6 +102,11 @@ dist: build-cross
 		$(DIST_DIRS) tar -zcf {}.tar.gz {} \; && \
 		$(DIST_DIRS) zip -r {}.zip {} \; \
 	)
+
+.PHONY: compress-binaries
+compress-binaries:
+	@which upx || (echo "Please install the upx executable packer tool. See https://upx.github.io/" && exit 1)
+	find _dist -type f \( -name "aks-engine" -o -name "aks-engine.exe" \) -exec upx -9 {} +
 
 .PHONY: checksum
 checksum:
