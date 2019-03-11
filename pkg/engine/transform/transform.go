@@ -213,7 +213,8 @@ func (t *Transformer) NormalizeMasterResourcesForScaling(logger *logrus.Entry, t
 
 		resourceType, ok := resourceMap[typeFieldName].(string)
 		if !ok || resourceType != vmResourceType {
-			resourceName, ok := resourceMap[nameFieldName].(string)
+			var resourceName string
+			resourceName, ok = resourceMap[nameFieldName].(string)
 			if !ok {
 				logger.Warnf("Template improperly formatted")
 				continue

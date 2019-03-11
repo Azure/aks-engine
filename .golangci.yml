@@ -19,3 +19,7 @@ linters:
     - ineffassign
     - misspell
     - unused
+
+linters-settings:
+  govet:
+    check-shadowing: true

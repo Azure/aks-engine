@@ -807,7 +807,7 @@ func (p *Pod) ValidateAzureFile(mountPath string, sleep, duration time.Duration)
 			default:
 				out, err := p.Exec("--", "powershell", "mkdir", "-force", mountPath+"\\"+testDir)
 				if err == nil && strings.Contains(string(out), testDir) {
-					out, err := p.Exec("--", "powershell", "ls", mountPath)
+					out, err = p.Exec("--", "powershell", "ls", mountPath)
 					if err == nil && strings.Contains(string(out), testDir) {
 						readyCh <- true
 					} else {
@@ -844,9 +844,11 @@ func (p *Pod) ValidatePVC(mountPath string, sleep, duration time.Duration) (bool
 			case <-ctx.Done():
 				errCh <- errors.Errorf("Timeout exceeded (%s) while waiting for Pod (%s) to check azure disk mounted", duration.String(), p.Metadata.Name)
 			default:
-				out, err := p.Exec("--", "mkdir", mountPath+"/"+testDir)
+				var out []byte
+				var err error
+				out, err = p.Exec("--", "mkdir", mountPath+"/"+testDir)
 				if err == nil {
-					out, err := p.Exec("--", "ls", mountPath)
+					out, err = p.Exec("--", "ls", mountPath)
 					if err == nil && strings.Contains(string(out), testDir) {
 						readyCh <- true
 					} else {

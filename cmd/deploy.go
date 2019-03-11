@@ -140,14 +140,15 @@ func (dc *deployCmd) mergeAPIModel() error {
 
 	if dc.apimodelPath == "" {
 		log.Infoln("no --api-model was specified, using default model")
-		f, err := ioutil.TempFile("", fmt.Sprintf("%s-default-api-model_%s-%s_", filepath.Base(os.Args[0]), BuildSHA, GitTreeState))
+		var f *os.File
+		f, err = ioutil.TempFile("", fmt.Sprintf("%s-default-api-model_%s-%s_", filepath.Base(os.Args[0]), BuildSHA, GitTreeState))
 		if err != nil {
 			return errors.Wrap(err, "error creating temp file for default API model")
 		}
 		log.Infoln("default api model generated at", f.Name())
 
 		defer f.Close()
-		if err := writeDefaultModel(f); err != nil {
+		if err = writeDefaultModel(f); err != nil {
 			return err
 		}
 		dc.apimodelPath = f.Name()
@@ -270,7 +271,7 @@ func autofillApimodel(dc *deployCmd) error {
 		dc.outputDirectory = path.Join("_output", dc.containerService.Properties.MasterProfile.DNSPrefix)
 	}
 
-	if _, err := os.Stat(dc.outputDirectory); !dc.forceOverwrite && err == nil {
+	if _, err = os.Stat(dc.outputDirectory); !dc.forceOverwrite && err == nil {
 		return errors.Errorf("Output directory already exists and forceOverwrite flag is not set: %s", dc.outputDirectory)
 	}
 
@@ -289,7 +290,8 @@ func autofillApimodel(dc *deployCmd) error {
 		translator := &i18n.Translator{
 			Locale: dc.locale,
 		}
-		_, publicKey, err := helpers.CreateSaveSSH(dc.containerService.Properties.LinuxProfile.AdminUsername, dc.outputDirectory, translator)
+		var publicKey string
+		_, publicKey, err = helpers.CreateSaveSSH(dc.containerService.Properties.LinuxProfile.AdminUsername, dc.outputDirectory, translator)
 		if err != nil {
 			return errors.Wrap(err, "Failed to generate SSH Key")
 		}

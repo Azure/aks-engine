@@ -102,7 +102,8 @@ func getOrchestratorVersionProfileList(orchestrator, version string, windows boo
 	if len(orchestrator) == 0 {
 		// return all orchestrators
 		for _, f := range funcmap {
-			arr, err := f(&OrchestratorProfile{}, false)
+			var arr []*OrchestratorVersionProfile
+			arr, err = f(&OrchestratorProfile{}, false)
 			if err != nil {
 				return nil, err
 			}
