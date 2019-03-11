@@ -555,7 +555,6 @@
             {{end}}
         },
         "storageProfile": {
-          {{if not UseMasterCustomImage }}
           "dataDisks": [
             {
               "createOption": "Empty",
@@ -563,7 +562,6 @@
               "lun": 0
             }
           ],
-          {{end}}
           "imageReference": {
             {{if UseMasterCustomImage}}
             "id": "[resourceId(parameters('osImageResourceGroup'), 'Microsoft.Compute/images', parameters('osImageName'))]"
