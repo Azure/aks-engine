@@ -8,7 +8,6 @@ import (
 	"strings"
 
 	"github.com/Azure/aks-engine/pkg/helpers"
-	log "github.com/sirupsen/logrus"
 
 	"github.com/spf13/cobra"
 )
@@ -31,7 +30,7 @@ var (
 const (
 	versionName             = "version"
 	versionShortDescription = "Print the version of AKS Engine"
-	versionLongDescription  = "Print the version of AKS Engine"
+	versionLongDescription  = versionShortDescription
 )
 
 type versionInfo struct {
@@ -49,12 +48,10 @@ func init() {
 }
 
 func getHumanVersion() string {
-	r := fmt.Sprintf("Version: %s\nGitCommit: %s\nGitTreeState: %s",
+	return fmt.Sprintf("Version: %s\nGitCommit: %s\nGitTreeState: %s",
 		version.GitTag,
 		version.GitCommit,
 		version.GitTreeState)
-
-	return r
 }
 
 func getJSONVersion() string {
@@ -62,18 +59,15 @@ func getJSONVersion() string {
 	return string(jsonVersion)
 }
 
-func getVersion(outputType string) string {
-	var output string
-
-	if outputType == "human" {
-		output = getHumanVersion()
-	} else if outputType == "json" {
-		output = getJSONVersion()
-	} else {
-		log.Fatalf("output format \"%s\" is not supported", outputFormat)
+func getVersion(outputType string) (string, error) {
+	switch outputType {
+	case "human":
+		return getHumanVersion(), nil
+	case "json":
+		return getJSONVersion(), nil
+	default:
+		return "", fmt.Errorf("output format \"%s\" is not supported", outputType)
 	}
-
-	return output
 }
 
 func newVersionCmd() *cobra.Command {
@@ -82,8 +76,12 @@ func newVersionCmd() *cobra.Command {
 		Short: versionShortDescription,
 		Long:  versionLongDescription,
 
-		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Println(getVersion(outputFormat))
+		RunE: func(cmd *cobra.Command, args []string) error {
+			output, err := getVersion(outputFormat)
+			if err == nil {
+				fmt.Println(output)
+			}
+			return err
 		},
 	}
 

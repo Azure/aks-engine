@@ -235,8 +235,8 @@ func getCompletionCmd(root *cobra.Command) *cobra.Command {
 	# ~/.bashrc or ~/.profile
 	source <(aks-engine completion)
 	`,
-		Run: func(cmd *cobra.Command, args []string) {
-			root.GenBashCompletion(os.Stdout)
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return root.GenBashCompletion(os.Stdout)
 		},
 	}
 	return completionCmd

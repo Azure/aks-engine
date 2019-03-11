@@ -12,17 +12,53 @@ import (
 )
 
 func TestNewRootCmd(t *testing.T) {
-	output := NewRootCmd()
-	if output.Use != rootName || output.Short != rootShortDescription || output.Long != rootLongDescription {
-		t.Fatalf("root command should have use %s equal %s, short %s equal %s and long %s equal to %s", output.Use, rootName, output.Short, rootShortDescription, output.Long, rootLongDescription)
+	command := NewRootCmd()
+	if command.Use != rootName || command.Short != rootShortDescription || command.Long != rootLongDescription {
+		t.Fatalf("root command should have use %s equal %s, short %s equal %s and long %s equal to %s", command.Use, rootName, command.Short, rootShortDescription, command.Long, rootLongDescription)
 	}
-	expectedCommands := []*cobra.Command{getCompletionCmd(output), newDeployCmd(), newGenerateCmd(), newGetVersionsCmd(), newOrchestratorsCmd(), newScaleCmd(), newUpgradeCmd(), newVersionCmd()}
-	rc := output.Commands()
+	expectedCommands := []*cobra.Command{getCompletionCmd(command), newDeployCmd(), newGenerateCmd(), newGetVersionsCmd(), newOrchestratorsCmd(), newScaleCmd(), newUpgradeCmd(), newVersionCmd()}
+	rc := command.Commands()
 	for i, c := range expectedCommands {
 		if rc[i].Use != c.Use {
 			t.Fatalf("root command should have command %s", c.Use)
 		}
 	}
+
+	command.SetArgs([]string{"--debug"})
+	err := command.Execute()
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestShowDefaultModelArg(t *testing.T) {
+	command := NewRootCmd()
+	command.SetArgs([]string{"--show-default-model"})
+	err := command.Execute()
+	if err != nil {
+		t.Fatal(err)
+	}
+	// TODO: examine command output
+}
+
+func TestDebugArg(t *testing.T) {
+	command := NewRootCmd()
+	command.SetArgs([]string{"--show-default-model"})
+	err := command.Execute()
+	if err != nil {
+		t.Fatal(err)
+	}
+	// TODO: examine command output
+}
+
+func TestCompletionCommand(t *testing.T) {
+	command := getCompletionCmd(NewRootCmd())
+	command.SetArgs([]string{})
+	err := command.Execute()
+	if err != nil {
+		t.Fatal(err)
+	}
+	// TODO: examine command output
 }
 
 func TestGetSelectedCloudFromAzConfig(t *testing.T) {

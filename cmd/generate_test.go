@@ -10,16 +10,21 @@ import (
 )
 
 func TestNewGenerateCmd(t *testing.T) {
-	output := newGenerateCmd()
-	if output.Use != generateName || output.Short != generateShortDescription || output.Long != generateLongDescription {
-		t.Fatalf("generate command should have use %s equal %s, short %s equal %s and long %s equal to %s", output.Use, generateName, output.Short, generateShortDescription, output.Long, generateLongDescription)
+	command := newGenerateCmd()
+	if command.Use != generateName || command.Short != generateShortDescription || command.Long != generateLongDescription {
+		t.Fatalf("generate command should have use %s equal %s, short %s equal %s and long %s equal to %s", command.Use, generateName, command.Short, generateShortDescription, command.Long, generateLongDescription)
 	}
 
 	expectedFlags := []string{"api-model", "output-directory", "ca-certificate-path", "ca-private-key-path", "set", "no-pretty-print", "parameters-only"}
 	for _, f := range expectedFlags {
-		if output.Flags().Lookup(f) == nil {
+		if command.Flags().Lookup(f) == nil {
 			t.Fatalf("generate command should have flag %s", f)
 		}
+	}
+
+	command.SetArgs([]string{})
+	if err := command.Execute(); err == nil {
+		t.Fatalf("expected an error when calling generate with no arguments")
 	}
 }
 

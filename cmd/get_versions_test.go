@@ -10,13 +10,17 @@ import (
 
 var _ = Describe("The get-versions command", func() {
 	It("should create a get-versions command", func() {
-		output := newGetVersionsCmd()
+		command := newGetVersionsCmd()
 
-		Expect(output.Use).Should(Equal(getVersionsName))
-		Expect(output.Short).Should(Equal(getVersionsShortDescription))
-		Expect(output.Long).Should(Equal(getVersionsLongDescription))
-		Expect(output.Flags().Lookup("orchestrator")).To(BeNil())
-		Expect(output.Flags().Lookup("version")).NotTo(BeNil())
+		Expect(command.Use).Should(Equal(getVersionsName))
+		Expect(command.Short).Should(Equal(getVersionsShortDescription))
+		Expect(command.Long).Should(Equal(getVersionsLongDescription))
+		Expect(command.Flags().Lookup("orchestrator")).To(BeNil())
+		Expect(command.Flags().Lookup("version")).NotTo(BeNil())
+
+		command.SetArgs([]string{})
+		err := command.Execute()
+		Expect(err).NotTo(HaveOccurred())
 	})
 
 	It("should support JSON output", func() {
@@ -26,7 +30,7 @@ var _ = Describe("The get-versions command", func() {
 			output:       "json",
 		}
 		err := command.run(nil, nil)
-		Expect(err).To(BeNil())
+		Expect(err).NotTo(HaveOccurred())
 	})
 
 	It("should support human-readable output", func() {
@@ -36,7 +40,7 @@ var _ = Describe("The get-versions command", func() {
 			output:       "human",
 		}
 		err := command.run(nil, nil)
-		Expect(err).To(BeNil())
+		Expect(err).NotTo(HaveOccurred())
 	})
 
 	It("should error on an invalid output option", func() {
@@ -46,7 +50,7 @@ var _ = Describe("The get-versions command", func() {
 			output:       "yaml",
 		}
 		err := command.run(nil, nil)
-		Expect(err).NotTo(BeNil())
+		Expect(err).To(HaveOccurred())
 		Expect(err.Error()).To(Equal("output format \"yaml\" is not supported"))
 	})
 })

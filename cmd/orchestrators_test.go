@@ -10,13 +10,17 @@ import (
 
 var _ = Describe("The orchestrators command", func() {
 	It("should create an orchestrators command", func() {
-		output := newOrchestratorsCmd()
+		command := newOrchestratorsCmd()
 
-		Expect(output.Use).Should(Equal(orchestratorsName))
-		Expect(output.Short).Should(Equal(orchestratorsShortDescription))
-		Expect(output.Long).Should(Equal(orchestratorsLongDescription))
-		Expect(output.Flags().Lookup("orchestrator")).NotTo(BeNil())
-		Expect(output.Flags().Lookup("version")).NotTo(BeNil())
+		Expect(command.Use).Should(Equal(orchestratorsName))
+		Expect(command.Short).Should(Equal(orchestratorsShortDescription))
+		Expect(command.Long).Should(Equal(orchestratorsLongDescription))
+		Expect(command.Flags().Lookup("orchestrator")).NotTo(BeNil())
+		Expect(command.Flags().Lookup("version")).NotTo(BeNil())
+
+		command.SetArgs([]string{})
+		err := command.Execute()
+		Expect(err).NotTo(HaveOccurred())
 	})
 
 	It("should fail on unsupported orchestrator", func() {
@@ -25,7 +29,7 @@ var _ = Describe("The orchestrators command", func() {
 		}
 
 		err := command.run(nil, nil)
-		Expect(err).NotTo(BeNil())
+		Expect(err).To(HaveOccurred())
 		Expect(err.Error()).To(Equal("Unsupported orchestrator 'unsupported'"))
 	})
 
@@ -35,7 +39,7 @@ var _ = Describe("The orchestrators command", func() {
 		}
 
 		err := command.run(nil, nil)
-		Expect(err).NotTo(BeNil())
+		Expect(err).To(HaveOccurred())
 		Expect(err.Error()).To(Equal("Must specify orchestrator for version '1.1.1'"))
 	})
 
@@ -46,7 +50,7 @@ var _ = Describe("The orchestrators command", func() {
 		}
 
 		err := command.run(nil, nil)
-		Expect(err).NotTo(BeNil())
+		Expect(err).To(HaveOccurred())
 		Expect(err.Error()).To(Equal("Kubernetes version 1.1.1 is not supported"))
 	})
 
@@ -58,6 +62,6 @@ var _ = Describe("The orchestrators command", func() {
 		}
 
 		err := command.run(nil, nil)
-		Expect(err).To(BeNil())
+		Expect(err).NotTo(HaveOccurred())
 	})
 })

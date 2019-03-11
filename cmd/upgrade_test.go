@@ -108,17 +108,22 @@ func TestUpgradeCommandShouldBeValidated(t *testing.T) {
 	}
 }
 
-func TestCreateUpgradeCommandSuccesfully(t *testing.T) {
+func TestCreateUpgradeCommand(t *testing.T) {
 	g := NewGomegaWithT(t)
-	output := newUpgradeCmd()
+	command := newUpgradeCmd()
 
-	g.Expect(output.Use).Should(Equal(upgradeName))
-	g.Expect(output.Short).Should(Equal(upgradeShortDescription))
-	g.Expect(output.Long).Should(Equal(upgradeLongDescription))
-	g.Expect(output.Flags().Lookup("location")).NotTo(BeNil())
-	g.Expect(output.Flags().Lookup("resource-group")).NotTo(BeNil())
-	g.Expect(output.Flags().Lookup("deployment-dir")).NotTo(BeNil())
-	g.Expect(output.Flags().Lookup("upgrade-version")).NotTo(BeNil())
+	g.Expect(command.Use).Should(Equal(upgradeName))
+	g.Expect(command.Short).Should(Equal(upgradeShortDescription))
+	g.Expect(command.Long).Should(Equal(upgradeLongDescription))
+	g.Expect(command.Flags().Lookup("location")).NotTo(BeNil())
+	g.Expect(command.Flags().Lookup("resource-group")).NotTo(BeNil())
+	g.Expect(command.Flags().Lookup("deployment-dir")).NotTo(BeNil())
+	g.Expect(command.Flags().Lookup("upgrade-version")).NotTo(BeNil())
+
+	command.SetArgs([]string{})
+	if err := command.Execute(); err == nil {
+		t.Fatalf("expected an error when calling upgrade with no arguments")
+	}
 }
 
 func TestUpgradeShouldFailForSameVersion(t *testing.T) {
