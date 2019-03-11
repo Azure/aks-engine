@@ -10,7 +10,6 @@ import (
 	"strconv"
 
 	"github.com/Azure/aks-engine/pkg/api"
-	"github.com/Azure/aks-engine/pkg/api/common"
 	"github.com/Azure/aks-engine/pkg/helpers"
 	"github.com/Azure/go-autorest/autorest/to"
 )
@@ -25,12 +24,6 @@ func GetKubernetesVariables(cs *api.ContainerService) map[string]interface{} {
 
 		for k, v := range agentVars {
 			k8sVars[k] = v
-		}
-
-		if common.IsNvidiaEnabledSKU(profile.VMSize) {
-			if cs.Properties.IsNVIDIADevicePluginEnabled() {
-				k8sVars["registerWithGpuTaints"] = "nvidia.com/gpu=true:NoSchedule"
-			}
 		}
 
 		if profile.IsStorageAccount() {
