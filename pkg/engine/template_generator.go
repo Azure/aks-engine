@@ -1141,7 +1141,10 @@ func (t *TemplateGenerator) GenerateTemplateV2(containerService *api.ContainerSe
 		Outputs:        armOutputs,
 	}
 
-	templBytes, _ := json.Marshal(armTemplate)
+	var templBytes []byte
+	if templBytes, err = json.Marshal(armTemplate); err != nil {
+		return "", "", err
+	}
 	templateRaw = string(templBytes)
 
 	var parametersMap paramsMap
