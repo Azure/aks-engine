@@ -620,7 +620,7 @@ func (t *TemplateGenerator) getSingleLineForTemplate(textFilename string, cs *ap
 		return "", err
 	}
 
-	textStr := escapeSingleLine(string(expandedTemplate))
+	textStr := escapeSingleLine(expandedTemplate)
 
 	return textStr, nil
 }
