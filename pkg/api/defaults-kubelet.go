@@ -149,14 +149,6 @@ func (cs *ContainerService) setKubeletConfig() {
 
 		setMissingKubeletValues(profile.KubernetesConfig, o.KubernetesConfig.KubeletConfig)
 
-		if profile.OSType == "Windows" {
-			if !to.Bool(o.KubernetesConfig.EnableSecureKubelet) {
-				for _, key := range []string{"--anonymous-auth", "--client-ca-file"} {
-					delete(profile.KubernetesConfig.KubeletConfig, key)
-				}
-			}
-		}
-
 		// For N Series (GPU) VMs
 		if strings.Contains(profile.VMSize, "Standard_N") {
 			if !cs.Properties.IsNVIDIADevicePluginEnabled() && !common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.11.0") {
