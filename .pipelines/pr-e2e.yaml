@@ -49,11 +49,11 @@ jobs:
   - script: make bootstrap
     displayName: Install dependencies
     workingDirectory: $(modulePath)
-  - script: make validate-copyright-headers test-style
-    displayName: Run linting rules
-    workingDirectory: $(modulePath)
   - script: make validate-dependencies
     displayName: Check if imports, Gopkg.toml, and Gopkg.lock are in sync
+    workingDirectory: $(modulePath)
+  - script: make validate-copyright-headers test-style
+    displayName: Run linting rules
     workingDirectory: $(modulePath)
   - script: make build-cross
     displayName: Build cross-architectural binaries
