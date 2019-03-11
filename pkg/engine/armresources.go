@@ -115,7 +115,7 @@ func createKubernetesAgentVMASResources(cs *api.ContainerService, profile *api.A
 	userAssignedIDEnabled := useManagedIdentity && cs.Properties.OrchestratorProfile.KubernetesConfig.UserAssignedID != ""
 
 	if useManagedIdentity && !userAssignedIDEnabled {
-		agentVMASSysRoleAssignment := createAgentVMASSysRoleAssignment
+		agentVMASSysRoleAssignment := createAgentVMASSysRoleAssignment(profile)
 		agentVMASResources = append(agentVMASResources, agentVMASSysRoleAssignment)
 	}
 
