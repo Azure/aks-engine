@@ -18,6 +18,9 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+// IsVMSSToBeUpgradedCb - Call back for checking whether the given vmss is to be upgraded or not.
+type IsVMSSToBeUpgradedCb func(vmss string, cs *api.ContainerService) bool
+
 // ClusterTopology contains resources of the cluster the upgrade operation
 // is targeting
 type ClusterTopology struct {
@@ -34,6 +37,8 @@ type ClusterTopology struct {
 
 	MasterVMs         *[]compute.VirtualMachine
 	UpgradedMasterVMs *[]compute.VirtualMachine
+
+	IsVMSSToBeUpgraded IsVMSSToBeUpgradedCb
 }
 
 // AgentPoolScaleSet contains necessary data required to upgrade a VMSS
@@ -127,6 +132,9 @@ func (uc *UpgradeCluster) getClusterNodeStatus(az armhelpers.AKSEngineClient, re
 			return err
 		}
 		for _, vmScaleSet := range vmScaleSetPage.Values() {
+			if uc.IsVMSSToBeUpgraded != nil && !uc.IsVMSSToBeUpgraded(*vmScaleSet.Name, uc.DataModel) {
+				continue
+			}
 			for vmScaleSetVMsPage, err := uc.Client.ListVirtualMachineScaleSetVMs(ctx, resourceGroup, *vmScaleSet.Name); vmScaleSetVMsPage.NotDone(); err = vmScaleSetVMsPage.NextWithContext(ctx) {
 				if err != nil {
 					return err
