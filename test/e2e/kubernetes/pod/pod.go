@@ -802,10 +802,7 @@ func (p *Pod) Describe() error {
 	cmd := exec.Command("k", "describe", "pod", p.Metadata.Name, "-n", p.Metadata.Namespace)
 	out, err := util.RunAndLogCommand(cmd, commandTimeout)
 	log.Printf("\n%s\n", string(out))
-	if err != nil {
-		return err
-	}
-	return nil
+	return err
 }
 
 // ValidateAzureFile will keep retrying the check if azure file is mounted in Pod
