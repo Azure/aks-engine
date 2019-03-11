@@ -496,7 +496,11 @@ func WaitOnReady(podPrefix, namespace string, successesNeeded int, sleep, durati
 				for _, p := range pods {
 					e := p.Logs()
 					if e != nil {
-						log.Printf("Unable to print pod logs for pod %s", p.Metadata.Name)
+						log.Printf("Unable to print pod logs for pod %s: %s", p.Metadata.Name, e)
+					}
+					e = p.Describe()
+					if e != nil {
+						log.Printf("Unable to describe pod %s: %s", p.Metadata.Name, e)
 					}
 				}
 			}
@@ -791,6 +795,14 @@ func (p *Pod) Logs() error {
 		}
 	}
 	return nil
+}
+
+// Describe will describe a pod resource
+func (p *Pod) Describe() error {
+	cmd := exec.Command("k", "describe", "pod", p.Metadata.Name, "-n", p.Metadata.Namespace)
+	out, err := util.RunAndLogCommand(cmd, commandTimeout)
+	log.Printf("\n%s\n", string(out))
+	return err
 }
 
 // ValidateAzureFile will keep retrying the check if azure file is mounted in Pod
