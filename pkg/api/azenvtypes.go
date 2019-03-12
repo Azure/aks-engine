@@ -66,7 +66,6 @@ type AzureOSImageConfig struct {
 var (
 	//DefaultKubernetesSpecConfig is the default Docker image source of Kubernetes
 	DefaultKubernetesSpecConfig = KubernetesSpecConfig{
-		KubernetesImageBase:              "k8s.gcr.io/",
 		TillerImageBase:                  "gcr.io/kubernetes-helm/",
 		ACIConnectorImageBase:            "microsoft/",
 		NVIDIAImageBase:                  "nvidia/",

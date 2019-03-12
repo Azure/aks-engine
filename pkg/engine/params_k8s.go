@@ -16,6 +16,13 @@ import (
 	"github.com/Azure/aks-engine/pkg/api/common"
 )
 
+const (
+	// TODO: migrate all k8s images over to mcr and move the azure image base to
+	// the generated default spec
+	defaultKubernetesImageBase = "k8s.gcr.io/"
+	azureKubernetesImageBase   = "mcr.microsoft.com/k8s/core/"
+)
+
 func assignKubernetesParameters(properties *api.Properties, parametersMap paramsMap,
 	cloudSpecConfig api.AzureEnvironmentSpecConfig, generatorCode string) {
 	addValue(parametersMap, "generatorCode", generatorCode)
@@ -27,7 +34,15 @@ func assignKubernetesParameters(properties *api.Properties, parametersMap params
 		k8sVersion := orchestratorProfile.OrchestratorVersion
 		k8sComponents := api.K8sComponentsByVersionMap[k8sVersion]
 		kubernetesConfig := orchestratorProfile.KubernetesConfig
+
 		kubernetesImageBase := kubernetesConfig.KubernetesImageBase
+
+		// This is a temporary work-around as we migrate images over to mcr.
+		hyperkubeImageBase := kubernetesImageBase
+		if kubernetesImageBase == "" {
+			kubernetesImageBase = defaultKubernetesImageBase
+			hyperkubeImageBase = azureKubernetesImageBase
+		}
 
 		if kubernetesConfig != nil {
 			if to.Bool(kubernetesConfig.UseCloudControllerManager) {
@@ -39,7 +54,7 @@ func assignKubernetesParameters(properties *api.Properties, parametersMap params
 				addValue(parametersMap, "kubernetesCcmImageSpec", kubernetesCcmSpec)
 			}
 
-			kubernetesHyperkubeSpec := kubernetesImageBase + k8sComponents["hyperkube"]
+			kubernetesHyperkubeSpec := hyperkubeImageBase + k8sComponents["hyperkube"]
 			if kubernetesConfig.CustomHyperkubeImage != "" {
 				kubernetesHyperkubeSpec = kubernetesConfig.CustomHyperkubeImage
 			}

@@ -268,7 +268,7 @@ echo "  - busybox" >> ${RELEASE_NOTES_FILEPATH}
 K8S_VERSIONS="1.9.10 1.9.11 1.10.12 1.10.13 1.11.7 1.11.8 1.12.5 1.12.6 1.13.3 1.13.4"
 
 for KUBERNETES_VERSION in ${K8S_VERSIONS}; do
-    HYPERKUBE_URL="k8s.gcr.io/hyperkube-amd64:v${KUBERNETES_VERSION}"
+    HYPERKUBE_URL="mcr.microsoft.com/k8s/core/hyperkube-amd64:v${KUBERNETES_VERSION}"
     extractHyperkube "docker"
     CONTAINER_IMAGE="k8s.gcr.io/cloud-controller-manager-amd64:v${KUBERNETES_VERSION}"
     pullContainerImage "docker" ${CONTAINER_IMAGE}
