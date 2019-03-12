@@ -883,7 +883,7 @@ func (a *AgentPoolProfile) validateOrchestratorSpecificProperties(orchestratorTy
 		}
 	} else {
 		if e := validate.Var(a.Ports, "len=0"); e != nil {
-			return errors.Errorf("AgentPoolProfile.Ports must be empty when AgentPoolProfile.DNSPrefix is empty for Orchestrator: %s", string(orchestratorType))
+			return errors.Errorf("AgentPoolProfile.Ports must be empty when AgentPoolProfile.DNSPrefix is empty for Orchestrator: %s", orchestratorType)
 		}
 	}
 
