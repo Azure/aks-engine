@@ -43,7 +43,7 @@ func createKubernetesMasterResourcesVMAS(cs *api.ContainerService) []interface{}
 
 	if !isPrivateCluster {
 		publicIPAddress := CreatePublicIPAddress()
-		loadBalancer := CreateLoadBalancer(cs.Properties.MasterProfile.Count)
+		loadBalancer := CreateLoadBalancer(cs.Properties.MasterProfile.Count, false)
 		masterNic := CreateNetworkInterfaces(cs)
 
 		masterResources = append(masterResources, publicIPAddress, loadBalancer, masterNic)
@@ -133,7 +133,7 @@ func createKubernetesMasterResourcesVMSS(cs *api.ContainerService) []interface{}
 	}
 
 	publicIPAddress := CreatePublicIPAddress()
-	loadBalancer := CreateLoadBalancer(cs.Properties.MasterProfile.Count)
+	loadBalancer := CreateLoadBalancer(cs.Properties.MasterProfile.Count, true)
 	masterResources = append(masterResources, publicIPAddress, loadBalancer)
 
 	isKMSEnabled := to.Bool(cs.Properties.OrchestratorProfile.KubernetesConfig.EnableEncryptionWithExternalKms)

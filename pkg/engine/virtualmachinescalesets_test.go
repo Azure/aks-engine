@@ -62,29 +62,8 @@ func TestCreateMasterVMSS(t *testing.T) {
 							{
 								Name: to.StringPtr("[concat(variables('masterVMNamePrefix'), 'netintconfig')]"),
 								VirtualMachineScaleSetNetworkConfigurationProperties: &compute.VirtualMachineScaleSetNetworkConfigurationProperties{
-									Primary: to.BoolPtr(true),
-									IPConfigurations: &[]compute.VirtualMachineScaleSetIPConfiguration{
-										{
-											Name: to.StringPtr("ipconfig1"),
-											VirtualMachineScaleSetIPConfigurationProperties: &compute.VirtualMachineScaleSetIPConfigurationProperties{
-												Subnet: &compute.APIEntityReference{
-													ID: to.StringPtr("[variables('vnetSubnetIDMaster')]"),
-												},
-												Primary: to.BoolPtr(true),
-												LoadBalancerBackendAddressPools: &[]compute.SubResource{
-													{
-														ID: to.StringPtr("[concat(variables('masterLbID'), '/backendAddressPools/', variables('masterLbBackendPoolName'))]"),
-													},
-												},
-												LoadBalancerInboundNatPools: &[]compute.SubResource{
-													{
-														ID: to.StringPtr("[concat(variables('masterLbID'),'/inboundNatPools/SSH-', variables('masterVMNamePrefix'), 'natpools')]"),
-													},
-												},
-											},
-										},
-									},
-									EnableIPForwarding: to.BoolPtr(true),
+									Primary:          to.BoolPtr(true),
+									IPConfigurations: getIPConfigsMaster(),
 								},
 							},
 						},
@@ -182,54 +161,22 @@ func TestCreateMasterVMSS(t *testing.T) {
 	expectedCustomDataStr = getCustomDataFromJSON(tg.GetMasterCustomDataJSON(cs))
 	expected.VirtualMachineProfile.OsProfile.CustomData = to.StringPtr(expectedCustomDataStr)
 
+	ipConfigs := *getIPConfigsMaster()
+
+	ipConfigs[0].LoadBalancerBackendAddressPools = &[]compute.SubResource{
+		{
+			ID: to.StringPtr("[concat(variables('masterLbID'), '/backendAddressPools/', variables('masterLbBackendPoolName'))]"),
+		},
+		{
+			ID: to.StringPtr("[concat(variables('masterInternalLbID'), '/backendAddressPools/', variables('masterLbBackendPoolName'))]"),
+		},
+	}
 	expected.VirtualMachineProfile.NetworkProfile.NetworkInterfaceConfigurations = &[]compute.VirtualMachineScaleSetNetworkConfiguration{
 		{
 			Name: to.StringPtr("[concat(variables('masterVMNamePrefix'), 'netintconfig')]"),
 			VirtualMachineScaleSetNetworkConfigurationProperties: &compute.VirtualMachineScaleSetNetworkConfigurationProperties{
-				Primary: to.BoolPtr(true),
-				IPConfigurations: &[]compute.VirtualMachineScaleSetIPConfiguration{
-					{
-						Name: to.StringPtr("ipconfig1"),
-						VirtualMachineScaleSetIPConfigurationProperties: &compute.VirtualMachineScaleSetIPConfigurationProperties{
-							Subnet: &compute.APIEntityReference{
-								ID: to.StringPtr("[variables('vnetSubnetIDMaster')]"),
-							},
-							Primary: to.BoolPtr(true),
-							LoadBalancerBackendAddressPools: &[]compute.SubResource{
-								{
-									ID: to.StringPtr("[concat(variables('masterLbID'), '/backendAddressPools/', variables('masterLbBackendPoolName'))]"),
-								},
-								{
-									ID: to.StringPtr("[concat(variables('masterInternalLbID'), '/backendAddressPools/', variables('masterLbBackendPoolName'))]"),
-								},
-							},
-							LoadBalancerInboundNatPools: &[]compute.SubResource{
-								{
-									ID: to.StringPtr("[concat(variables('masterLbID'),'/inboundNatPools/SSH-', variables('masterVMNamePrefix'), 'natpools')]"),
-								},
-							},
-						},
-					},
-					{
-						Name: to.StringPtr("ipconfig2"),
-						VirtualMachineScaleSetIPConfigurationProperties: &compute.VirtualMachineScaleSetIPConfigurationProperties{
-							Subnet: &compute.APIEntityReference{
-								ID: to.StringPtr("[variables('vnetSubnetIDMaster')]"),
-							},
-							Primary: to.BoolPtr(false),
-						},
-					},
-					{
-						Name: to.StringPtr("ipconfig3"),
-						VirtualMachineScaleSetIPConfigurationProperties: &compute.VirtualMachineScaleSetIPConfigurationProperties{
-							Subnet: &compute.APIEntityReference{
-								ID: to.StringPtr("[variables('vnetSubnetIDMaster')]"),
-							},
-							Primary: to.BoolPtr(false),
-						},
-					},
-				},
-				EnableIPForwarding: to.BoolPtr(true),
+				Primary:          to.BoolPtr(true),
+				IPConfigurations: &ipConfigs,
 				NetworkSecurityGroup: &compute.SubResource{
 					ID: to.StringPtr("[variables('nsgID')]"),
 				},
@@ -493,6 +440,37 @@ func TestCreateAgentVMSS(t *testing.T) {
 	if diff != "" {
 		t.Errorf("unexpected diff while expecting equal structs: %s", diff)
 	}
+}
+
+func getIPConfigsMaster() *[]compute.VirtualMachineScaleSetIPConfiguration {
+	var ipConfigs []compute.VirtualMachineScaleSetIPConfiguration
+	for i := 1; i <= 31; i++ {
+		ipconfig := compute.VirtualMachineScaleSetIPConfiguration{
+			Name: to.StringPtr(fmt.Sprintf("ipconfig%d", i)),
+			VirtualMachineScaleSetIPConfigurationProperties: &compute.VirtualMachineScaleSetIPConfigurationProperties{
+				Subnet: &compute.APIEntityReference{
+					ID: to.StringPtr("[variables('vnetSubnetIDMaster')]"),
+				},
+			},
+		}
+		if i == 1 {
+			ipconfig.Primary = to.BoolPtr(true)
+			ipconfig.LoadBalancerBackendAddressPools = &[]compute.SubResource{
+				{
+					ID: to.StringPtr("[concat(variables('masterLbID'), '/backendAddressPools/', variables('masterLbBackendPoolName'))]"),
+				},
+			}
+			ipconfig.LoadBalancerInboundNatPools = &[]compute.SubResource{
+				{
+					ID: to.StringPtr("[concat(variables('masterLbID'),'/inboundNatPools/SSH-', variables('masterVMNamePrefix'), 'natpools')]"),
+				},
+			}
+		} else {
+			ipconfig.Primary = to.BoolPtr(false)
+		}
+		ipConfigs = append(ipConfigs, ipconfig)
+	}
+	return &ipConfigs
 }
 
 func getIPConfigs() *[]compute.VirtualMachineScaleSetIPConfiguration {
