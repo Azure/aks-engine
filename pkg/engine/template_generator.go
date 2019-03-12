@@ -866,7 +866,7 @@ func (t *TemplateGenerator) getTemplateFuncMap(cs *api.ContainerService) templat
 				if err != nil {
 					panic(err)
 				}
-				_, err = f.Write([]byte(partContents))
+				_, err = f.Write(partContents)
 				if err != nil {
 					panic(err)
 				}

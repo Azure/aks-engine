@@ -49,7 +49,7 @@ func TestConvertOrchestratorProfileToV20180331AgentPoolOnly(t *testing.T) {
 		t.Error("error in orchestrator profile networkPolicy conversion")
 	}
 
-	if string(p.PodCidr) != "" {
+	if p.PodCidr != "" {
 		t.Error("error in orchestrator profile podCidr conversion")
 	}
 
@@ -93,7 +93,7 @@ func TestConvertOrchestratorProfileToV20180331AgentPoolOnly(t *testing.T) {
 		t.Error("error in orchestrator profile networkPolicy conversion")
 	}
 
-	if string(p.PodCidr) != podCIDR {
+	if p.PodCidr != podCIDR {
 		t.Error("error in orchestrator profile podCidr conversion")
 	}
 
@@ -136,7 +136,7 @@ func TestConvertOrchestratorProfileToV20180331AgentPoolOnly(t *testing.T) {
 		t.Error("error in orchestrator profile networkPolicy conversion")
 	}
 
-	if string(p.PodCidr) != "" {
+	if p.PodCidr != "" {
 		t.Error("error in orchestrator profile podCidr conversion")
 	}
 
@@ -179,7 +179,7 @@ func TestConvertOrchestratorProfileToV20180331AgentPoolOnly(t *testing.T) {
 		t.Error("error in orchestrator profile networkPolicy conversion")
 	}
 
-	if string(p.PodCidr) != podCIDR {
+	if p.PodCidr != podCIDR {
 		t.Error("error in orchestrator profile podCidr conversion")
 	}
 

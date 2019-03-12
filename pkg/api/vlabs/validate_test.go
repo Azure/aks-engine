@@ -539,7 +539,7 @@ func Test_KubernetesConfig_Validate(t *testing.T) {
 
 		for _, validProxyModeValue := range []KubeProxyMode{KubeProxyModeIPTables, KubeProxyModeIPVS} {
 			c = KubernetesConfig{
-				ProxyMode: KubeProxyMode(validProxyModeValue),
+				ProxyMode: validProxyModeValue,
 			}
 
 			if err := c.Validate(k8sVersion, false); err != nil {
@@ -547,7 +547,7 @@ func Test_KubernetesConfig_Validate(t *testing.T) {
 			}
 
 			c = KubernetesConfig{
-				ProxyMode: KubeProxyMode(validProxyModeValue),
+				ProxyMode: validProxyModeValue,
 			}
 
 			if err := c.Validate(k8sVersion, false); err != nil {

@@ -110,7 +110,7 @@ func (m *TestManager) Run() error {
 	if err != nil {
 		return errors.Wrap(err, "Error [Atoi STAGE_TIMEOUT_MIN]")
 	}
-	timeout := time.Duration(time.Minute * time.Duration(timeoutMin))
+	timeout := time.Minute * time.Duration(timeoutMin)
 
 	usePromoteToFailure := os.Getenv("PROMOTE_TO_FAILURE") == "true"
 	promoteToFailureTestSuffix := os.Getenv("PROMOTE_TO_FAILURE_TEST_SUFFIX")
