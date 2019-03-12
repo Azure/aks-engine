@@ -360,7 +360,7 @@ func (sc *scaleCmd) run(cmd *cobra.Command, args []string) error {
 
 	err = json.Unmarshal([]byte(parameters), &parametersJSON)
 	if err != nil {
-		return errors.Wrap(err, "errror unmarshaling parameters")
+		return errors.Wrap(err, "error unmarshaling parameters")
 	}
 
 	transformer := transform.Transformer{Translator: translator.Translator}
