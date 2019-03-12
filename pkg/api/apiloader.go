@@ -21,7 +21,6 @@ import (
 	"github.com/Azure/aks-engine/pkg/helpers"
 	"github.com/Azure/aks-engine/pkg/i18n"
 	"github.com/pkg/errors"
-	log "github.com/sirupsen/logrus"
 )
 
 const (
@@ -81,13 +80,6 @@ func (a *Apiloader) DeserializeContainerService(contents []byte, validate, isUpd
 
 	version := m.APIVersion
 	service, err := a.LoadContainerService(contents, version, validate, isUpdate, existingContainerService)
-	if service == nil || err != nil {
-		if isAgentPoolOnlyClusterJSON(contents) {
-			log.Info("No masterProfile: interpreting API model as agent pool only")
-			service, _, err = a.LoadContainerServiceForAgentPoolOnlyCluster(contents, version, validate, isUpdate, "", existingContainerService)
-			return service, version, err
-		}
-	}
 	return service, version, err
 }
 

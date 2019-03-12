@@ -9,6 +9,7 @@ import (
 	v20170831 "github.com/Azure/aks-engine/pkg/api/agentPoolOnlyApi/v20170831"
 	v20180331 "github.com/Azure/aks-engine/pkg/api/agentPoolOnlyApi/v20180331"
 	"github.com/Azure/aks-engine/pkg/api/common"
+	"github.com/Azure/aks-engine/pkg/api/vlabs"
 	"github.com/Azure/aks-engine/pkg/i18n"
 	"github.com/leonelquinteros/gotext"
 	. "github.com/onsi/ginkgo"
@@ -104,6 +105,12 @@ func TestLoadContainerServiceFromFile(t *testing.T) {
 	}
 	if containerService.Properties.OrchestratorProfile.OrchestratorVersion != "1.8.12" {
 		t.Errorf("Failed to set orcherstator version when it is set in the json, expected 1.8.12 but got %s", containerService.Properties.OrchestratorProfile.OrchestratorVersion)
+	}
+
+	// Test error scenario
+	containerService, _, err = apiloader.LoadContainerServiceFromFile("../this-file-doesnt-exist.json", true, false, nil)
+	if err == nil {
+		t.Error(err.Error())
 	}
 }
 
@@ -395,6 +402,29 @@ func TestLoadContainerServiceWithEmptyLocationCustomCloud(t *testing.T) {
 	_, _, err = apiloaderwithoutlocationpubliccloud.LoadContainerServiceFromFile(fileNamewithoutlocationpubliccloud, true, false, nil)
 	if err != nil {
 		t.Errorf("Expected no error for missing loation for public cloud to be thrown")
+	}
+}
+
+func TestDeserializeContainerService(t *testing.T) {
+	apiloader := &Apiloader{
+		Translator: nil,
+	}
+	cs, version, err := apiloader.DeserializeContainerService([]byte(exampleAPIModel), false, false, nil)
+	if err != nil {
+		t.Fatalf("unexpected error deserializing the example apimodel: %s", err)
+	}
+	if version != vlabs.APIVersion {
+		t.Fatalf("expected apiVersion %s, instead got: %s", vlabs.APIVersion, version)
+	}
+
+	if cs.Properties.OrchestratorProfile.OrchestratorType != Kubernetes {
+		t.Fatalf("expected cs.Properties.OrchestratorProfile.OrchestratorType %s, instead got: %s", Kubernetes, cs.Properties.OrchestratorProfile.OrchestratorType)
+	}
+
+	// Test error case
+	_, _, err = apiloader.DeserializeContainerService([]byte(`{thisisnotson}`), false, false, nil)
+	if err == nil {
+		t.Fatalf("expected error from malformed api model input")
 	}
 }
 
