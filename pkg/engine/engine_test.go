@@ -95,7 +95,12 @@ func TestExpected(t *testing.T) {
 			}
 
 			for i := 0; i < 3; i++ {
-				certsGenerated, err = containerService.SetPropertiesDefaults(false, false)
+				if i > 0 {
+					certsGenerated, err = containerService.SetPropertiesDefaults(false, false)
+					if certsGenerated {
+						t.Errorf("cert generation unexpected for %s", containerService.Properties.OrchestratorProfile.OrchestratorType)
+					}
+				}
 				armTemplate, params, err := templateGenerator.GenerateTemplate(containerService, DefaultGeneratorCode, TestAKSEngineVersion)
 				if err != nil {
 					t.Error(errors.Errorf("error in file %s: %s", tuple.APIModelFilename, err.Error()))
@@ -111,10 +116,6 @@ func TestExpected(t *testing.T) {
 				if e2 != nil {
 					t.Error(errors.Errorf("error in file %s: %s", tuple.APIModelFilename, e2.Error()))
 					continue
-				}
-
-				if certsGenerated {
-					t.Errorf("cert generation unexpected for %s", containerService.Properties.OrchestratorProfile.OrchestratorType)
 				}
 
 				if !bytes.Equal([]byte(expectedPpArmTemplate), []byte(generatedPpArmTemplate)) {
@@ -200,7 +201,13 @@ func TestExpected(t *testing.T) {
 			}
 
 			for i := 0; i < 3; i++ {
-				certsGenerated, err = containerService.SetPropertiesDefaults(false, false)
+				if i > 0 {
+					certsGenerated, err = containerService.SetPropertiesDefaults(false, false)
+					if certsGenerated {
+						t.Errorf("cert generation unexpected for %s", containerService.Properties.OrchestratorProfile.OrchestratorType)
+					}
+				}
+
 				armTemplate, params, err := templateGenerator.GenerateTemplateV2(containerService, DefaultGeneratorCode, TestAKSEngineVersion)
 				if err != nil {
 					t.Error(errors.Errorf("error in file %s: %s", tuple.APIModelFilename, err.Error()))
@@ -216,10 +223,6 @@ func TestExpected(t *testing.T) {
 				if e2 != nil {
 					t.Error(errors.Errorf("error in file %s: %s", tuple.APIModelFilename, e2.Error()))
 					continue
-				}
-
-				if certsGenerated {
-					t.Errorf("cert generation unexpected for %s", containerService.Properties.OrchestratorProfile.OrchestratorType)
 				}
 
 				if !bytes.Equal([]byte(expectedPpArmTemplate), []byte(generatedPpArmTemplate)) {
