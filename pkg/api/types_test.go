@@ -563,6 +563,33 @@ func TestPerAgentPoolVersionAndState(t *testing.T) {
 	}
 }
 
+func TestPerAgentPoolWindowsNameVersion(t *testing.T) {
+	cases := []struct {
+		ap                         AgentPoolProfile
+		expectedWindowsNameVersion string
+	}{
+		{
+			ap: AgentPoolProfile{
+				Name:               "agentpool1",
+				WindowsNameVersion: "v2",
+			},
+			expectedWindowsNameVersion: "v2",
+		},
+		{
+			ap: AgentPoolProfile{
+				Name: "agentpool2",
+			},
+			expectedWindowsNameVersion: "",
+		},
+	}
+
+	for _, c := range cases {
+		if c.expectedWindowsNameVersion != c.ap.WindowsNameVersion {
+			t.Fatalf("WindowsNameVersion flag mismatch. Expected: %v. Got: %v.", &c.expectedWindowsNameVersion, &c.ap.WindowsNameVersion)
+		}
+	}
+}
+
 func TestIsCustomVNET(t *testing.T) {
 	cases := []struct {
 		p              Properties

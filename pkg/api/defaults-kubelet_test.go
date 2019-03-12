@@ -158,6 +158,49 @@ func TestKubeletConfigEnableSecureKubelet(t *testing.T) {
 		}
 	}
 
+	// Test default (EnableSecureKubelet = false) for Windows
+	cs = CreateMockContainerService("testcluster", "1.10.13", 3, 1, false)
+	p := GetK8sDefaultProperties(true)
+	cs.Properties = p
+	cs.setKubeletConfig()
+	k = cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig
+	for _, key := range []string{"--anonymous-auth", "--client-ca-file"} {
+		if _, ok := k[key]; ok {
+			t.Fatalf("got unexpected '%s' kubelet config value for EnableSecureKubelet=false: %s",
+				key, k[key])
+		}
+	}
+
+	// Test explicit EnableSecureKubelet = false for Windows
+	cs = CreateMockContainerService("testcluster", "1.10.13", 3, 1, false)
+	p = GetK8sDefaultProperties(true)
+	cs.Properties = p
+	cs.Properties.OrchestratorProfile.KubernetesConfig.EnableSecureKubelet = to.BoolPtr(false)
+	cs.setKubeletConfig()
+	k = cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig
+	for _, key := range []string{"--anonymous-auth", "--client-ca-file"} {
+		if _, ok := k[key]; ok {
+			t.Fatalf("got unexpected '%s' kubelet config value for EnableSecureKubelet=false: %s",
+				key, k[key])
+		}
+	}
+
+	// Test EnableSecureKubelet = true for Windows
+	cs = CreateMockContainerService("testcluster", "1.10.13", 3, 1, false)
+	p = GetK8sDefaultProperties(true)
+	cs.Properties = p
+	cs.Properties.OrchestratorProfile.KubernetesConfig.EnableSecureKubelet = to.BoolPtr(true)
+	cs.setKubeletConfig()
+	k = cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig
+	if k["--anonymous-auth"] != "false" {
+		t.Fatalf("got unexpected '--anonymous-auth' kubelet config value for EnableSecureKubelet=true: %s",
+			k["--anonymous-auth"])
+	}
+	if k["--client-ca-file"] != "/etc/kubernetes/certs/ca.crt" {
+		t.Fatalf("got unexpected '--client-ca-file' kubelet config value for EnableSecureKubelet=true: %s",
+			k["--client-ca-file"])
+	}
+
 }
 
 func TestKubeletMaxPods(t *testing.T) {
@@ -314,5 +357,59 @@ func TestEnforceNodeAllocatable(t *testing.T) {
 	if k["--enforce-node-allocatable"] != "kube-reserved/system-reserved" {
 		t.Fatalf("got unexpected '--enforce-node-allocatable' kubelet config value %s, the expected value is %s",
 			k["--enforce-node-allocatable"], "kube-reserved/system-reserved")
+	}
+}
+
+func TestStaticWindowsConfig(t *testing.T) {
+	cs := CreateMockContainerService("testcluster", defaultTestClusterVer, 3, 1, false)
+	p := GetK8sDefaultProperties(true)
+	cs.Properties = p
+	cs.Properties.OrchestratorProfile.KubernetesConfig.EnableSecureKubelet = to.BoolPtr(true)
+
+	// Start with copy of Linux config
+	staticLinuxKubeletConfig := map[string]string{
+		"--address":                     "0.0.0.0",
+		"--allow-privileged":            "true",
+		"--anonymous-auth":              "false",
+		"--authorization-mode":          "Webhook",
+		"--client-ca-file":              "/etc/kubernetes/certs/ca.crt",
+		"--pod-manifest-path":           "/etc/kubernetes/manifests",
+		"--cluster-dns":                 cs.Properties.OrchestratorProfile.KubernetesConfig.DNSServiceIP,
+		"--cgroups-per-qos":             "true",
+		"--kubeconfig":                  "/var/lib/kubelet/kubeconfig",
+		"--keep-terminated-pod-volumes": "false",
+	}
+	staticWindowsKubeletConfig := make(map[string]string)
+	for key, val := range staticLinuxKubeletConfig {
+		if key != "--pod-manifest-path" {
+			staticWindowsKubeletConfig[key] = val
+		}
+	}
+
+	// Add Windows-specific overrides
+	// Eventually paths should not be hardcoded here. They should be relative to $global:KubeDir in the PowerShell script
+	staticWindowsKubeletConfig["--azure-container-registry-config"] = "c:\\k\\azure.json"
+	staticWindowsKubeletConfig["--pod-infra-container-image"] = "kubletwin/pause"
+	staticWindowsKubeletConfig["--kubeconfig"] = "c:\\k\\config"
+	staticWindowsKubeletConfig["--cloud-config"] = "c:\\k\\azure.json"
+	staticWindowsKubeletConfig["--cgroups-per-qos"] = "false"
+	staticWindowsKubeletConfig["--enforce-node-allocatable"] = "\"\"\"\""
+	staticWindowsKubeletConfig["--system-reserved"] = "memory=2Gi"
+	staticWindowsKubeletConfig["--client-ca-file"] = "c:\\k\\ca.crt"
+	staticWindowsKubeletConfig["--hairpin-mode"] = "promiscuous-bridge"
+	staticWindowsKubeletConfig["--image-pull-progress-deadline"] = "20m"
+	staticWindowsKubeletConfig["--resolv-conf"] = "\"\"\"\""
+	staticWindowsKubeletConfig["--eviction-hard"] = "\"\"\"\""
+
+	cs.setKubeletConfig()
+	for _, profile := range cs.Properties.AgentPoolProfiles {
+		if profile.OSType == "Windows" {
+			for key, val := range staticWindowsKubeletConfig {
+				if val != profile.KubernetesConfig.KubeletConfig[key] {
+					t.Fatalf("got unexpected '%s' kubelet config value, expected %s, got %s",
+						key, val, profile.KubernetesConfig.KubeletConfig[key])
+				}
+			}
+		}
 	}
 }
