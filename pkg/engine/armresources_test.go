@@ -268,7 +268,7 @@ func TestGenerateARMResources(t *testing.T) {
 						Name: to.StringPtr("[variables('masterLbIPConfigName')]"),
 						FrontendIPConfigurationPropertiesFormat: &network.FrontendIPConfigurationPropertiesFormat{
 							PublicIPAddress: &network.PublicIPAddress{
-								ID: to.StringPtr("[resourceId('Microsoft.Network/publicIPAddresses',variables('masterPublicIPAddressName'))]"),
+								ID: to.StringPtr("[resourceId('Microsoft.Network/publicIpAddresses',variables('masterPublicIPAddressName'))]"),
 							},
 						},
 					},

@@ -109,7 +109,7 @@ func CreateMasterVMSS(cs *api.ContainerService) VirtualMachineScaleSetARM {
 
 	var ipConfigurations []compute.VirtualMachineScaleSetIPConfiguration
 
-	for i := 1; i <= masterProfile.Count; i++ {
+	for i := 1; i <= masterProfile.IPAddressCount; i++ {
 		ipConfig := compute.VirtualMachineScaleSetIPConfiguration{
 			Name: to.StringPtr(fmt.Sprintf("ipconfig%d", i)),
 		}
@@ -155,7 +155,7 @@ func CreateMasterVMSS(cs *api.ContainerService) VirtualMachineScaleSetARM {
 		}
 	}
 
-	if isAzureCNI {
+	if !isAzureCNI {
 		netintconfig.EnableIPForwarding = to.BoolPtr(true)
 	}
 
