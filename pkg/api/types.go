@@ -765,7 +765,7 @@ func (p *Properties) TotalNodes() int {
 		totalNodes = p.MasterProfile.Count
 	}
 	for _, pool := range p.AgentPoolProfiles {
-		totalNodes = totalNodes + pool.Count
+		totalNodes += pool.Count
 	}
 	return totalNodes
 }

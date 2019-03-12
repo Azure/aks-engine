@@ -35,9 +35,7 @@ func newGetVersionsCmd() *cobra.Command {
 		Use:   getVersionsName,
 		Short: getVersionsShortDescription,
 		Long:  getVersionsLongDescription,
-		RunE: func(cmd *cobra.Command, args []string) error {
-			return gvc.run(cmd, args)
-		},
+		RunE:  gvc.run,
 	}
 
 	f := command.Flags()

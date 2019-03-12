@@ -61,9 +61,7 @@ func newUpgradeCmd() *cobra.Command {
 		Use:   upgradeName,
 		Short: upgradeShortDescription,
 		Long:  upgradeLongDescription,
-		RunE: func(cmd *cobra.Command, args []string) error {
-			return uc.run(cmd, args)
-		},
+		RunE:  uc.run,
 	}
 
 	f := upgradeCmd.Flags()

@@ -184,7 +184,7 @@ func (a *APIModelTestFile) WriteArmTemplateParamsErrFilename(contents []byte) (s
 }
 
 // IterateTestFilesDirectory iterates the test data directory adding api model files to the test file slice.
-func IterateTestFilesDirectory(directory string, APIModelTestFiles *[]APIModelTestFile) error {
+func IterateTestFilesDirectory(directory string, apiModelTestFiles *[]APIModelTestFile) error {
 	files, err := ioutil.ReadDir(directory)
 	if err != nil {
 		return err
@@ -192,14 +192,14 @@ func IterateTestFilesDirectory(directory string, APIModelTestFiles *[]APIModelTe
 
 	for _, file := range files {
 		if file.IsDir() {
-			if e := IterateTestFilesDirectory(filepath.Join(directory, file.Name()), APIModelTestFiles); e != nil {
+			if e := IterateTestFilesDirectory(filepath.Join(directory, file.Name()), apiModelTestFiles); e != nil {
 				return e
 			}
 		} else {
 			if !strings.Contains(file.Name(), "_expected") && strings.HasSuffix(file.Name(), ".json") {
 				tuple := &APIModelTestFile{}
 				tuple.APIModelFilename = filepath.Join(directory, file.Name())
-				*APIModelTestFiles = append(*APIModelTestFiles, *tuple)
+				*apiModelTestFiles = append(*apiModelTestFiles, *tuple)
 			}
 		}
 	}

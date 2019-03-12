@@ -262,26 +262,20 @@ func validateAgentPoolVNET(a []*AgentPoolProfile) error {
 
 			if subscription == "" {
 				subscription = subnetSubscription
-			} else {
-				if subscription != subnetSubscription {
-					return ErrorSubscriptionNotMatch
-				}
+			} else if subscription != subnetSubscription {
+				return ErrorSubscriptionNotMatch
 			}
 
 			if resourceGroup == "" {
 				resourceGroup = subnetResourceGroup
-			} else {
-				if resourceGroup != subnetResourceGroup {
-					return ErrorResourceGroupNotMatch
-				}
+			} else if resourceGroup != subnetResourceGroup {
+				return ErrorResourceGroupNotMatch
 			}
 
 			if vnet == "" {
 				vnet = subnetVnet
-			} else {
-				if vnet != subnetVnet {
-					return ErrorVnetNotMatch
-				}
+			} else if vnet != subnetVnet {
+				return ErrorVnetNotMatch
 			}
 		}
 	}

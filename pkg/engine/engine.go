@@ -906,7 +906,7 @@ write_files:
 	for _, file := range files {
 		b64GzipString := getBase64CustomScript(file)
 		fileNoPath := strings.TrimPrefix(file, "swarm/")
-		filelines = filelines + fmt.Sprintf(writeFileBlock, b64GzipString, fileNoPath)
+		filelines += fmt.Sprintf(writeFileBlock, b64GzipString, fileNoPath)
 	}
 	return fmt.Sprintf(clusterYamlFile, filelines)
 }

@@ -780,6 +780,7 @@ func (a *AgentPoolProfile) validateKubernetesDistro() error {
 			return errors.Errorf("The %s VM SKU must use the %s or %s Distro as they require the docker-engine container runtime with Ubuntu 16.04-LTS", a.VMSize, AKSDockerEngine, Ubuntu)
 		}
 	}
+
 	return nil
 }
 
@@ -877,10 +878,8 @@ func (a *AgentPoolProfile) validateOrchestratorSpecificProperties(orchestratorTy
 		} else {
 			a.Ports = []int{80, 443, 8080}
 		}
-	} else {
-		if e := validate.Var(a.Ports, "len=0"); e != nil {
-			return errors.Errorf("AgentPoolProfile.Ports must be empty when AgentPoolProfile.DNSPrefix is empty for Orchestrator: %s", orchestratorType)
-		}
+	} else if e := validate.Var(a.Ports, "len=0"); e != nil {
+		return errors.Errorf("AgentPoolProfile.Ports must be empty when AgentPoolProfile.DNSPrefix is empty for Orchestrator: %s", orchestratorType)
 	}
 
 	if len(a.DiskSizesGB) > 0 {
@@ -1270,9 +1269,9 @@ func validatePoolOSType(os OSType) error {
 	return nil
 }
 
-func validatePoolAcceleratedNetworking(VMSize string) error {
-	if !helpers.AcceleratedNetworkingSupported(VMSize) {
-		return fmt.Errorf("AgentPoolProfile.vmsize %s does not support AgentPoolProfile.acceleratedNetworking", VMSize)
+func validatePoolAcceleratedNetworking(vmSize string) error {
+	if !helpers.AcceleratedNetworkingSupported(vmSize) {
+		return fmt.Errorf("AgentPoolProfile.vmsize %s does not support AgentPoolProfile.acceleratedNetworking", vmSize)
 	}
 	return nil
 }

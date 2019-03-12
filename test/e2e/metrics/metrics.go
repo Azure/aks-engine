@@ -114,7 +114,7 @@ func (p *Point) SetProvisionStart() {
 // RecordProvisionError sets appropriate values for when a test error occurs
 func (p *Point) RecordProvisionError() {
 	p.ProvisionDuration = time.Since(p.ProvisionStart)
-	p.ProvisionErrorCount = p.ProvisionErrorCount + 1
+	p.ProvisionErrorCount++
 }
 
 // RecordProvisionSuccess sets TestErrorCount to 0 to mark tests succeeded
@@ -130,7 +130,7 @@ func (p *Point) SetNodeWaitStart() {
 // RecordNodeWait will set NodeWaitDuration to time.Since(p.NodeWaitStart)
 func (p *Point) RecordNodeWait(err error) {
 	if err != nil {
-		p.NodeWaitErrorCount = p.NodeWaitErrorCount + 1
+		p.NodeWaitErrorCount++
 	}
 	p.NodeWaitDuration = time.Since(p.NodeWaitStart)
 }
@@ -138,7 +138,7 @@ func (p *Point) RecordNodeWait(err error) {
 // RecordTestError sets appropriate values for when a test error occurs
 func (p *Point) RecordTestError() {
 	p.TestDuration = time.Since(p.TestStart)
-	p.TestErrorCount = p.TestErrorCount + 1
+	p.TestErrorCount++
 }
 
 // RecordTestSuccess sets TestErrorCount to 0 to mark tests succeeded
