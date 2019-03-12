@@ -197,9 +197,11 @@ for AZURE_CNI_NETWORKMONITOR_VERSION in ${AZURE_CNI_NETWORKMONITOR_VERSIONS}; do
     echo "  - ${CONTAINER_IMAGE}" >> ${RELEASE_NOTES_FILEPATH}
 done
 
-AZURE_NPM_VERSIONS="1.0.18-rc2"
+AZURE_NPM_VERSIONS="1.0.18-rc3"
 for AZURE_NPM_VERSION in ${AZURE_NPM_VERSIONS}; do
-    pullContainerImage "docker" "containernetworking/azure-npm:v${AZURE_NPM_VERSION}"
+    CONTAINER_IMAGE="containernetworking/azure-npm:v${AZURE_NPM_VERSION}"
+    pullContainerImage "docker" ${CONTAINER_IMAGE}
+    echo "  - ${CONTAINER_IMAGE}" >> ${RELEASE_NOTES_FILEPATH}
 done
 
 NVIDIA_DEVICE_PLUGIN_VERSIONS="1.11 1.10"
