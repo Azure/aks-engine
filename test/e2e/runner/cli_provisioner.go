@@ -11,6 +11,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"time"
 
@@ -296,6 +297,32 @@ func (cli *CLIProvisioner) waitForNodes() error {
 				log.Printf("Ready nodes did not return a version: %s", err)
 			}
 			log.Printf("Testing a %s %s cluster...\n", cli.Config.Orchestrator, version)
+			nodeList, err := node.Get()
+			if err != nil {
+				return errors.Wrap(err, "Unable to get the list of nodes")
+			}
+			for _, n := range nodeList.Nodes {
+				exp, err := regexp.Compile("k8s-master")
+				if err != nil {
+					return err
+				}
+				if !exp.MatchString(n.Metadata.Name) {
+					cmd := exec.Command("k", "label", "node", n.Metadata.Name, "foo=bar")
+					util.PrintCommand(cmd)
+					out, err := cmd.CombinedOutput()
+					log.Printf("%s\n", out)
+					if err != nil {
+						return errors.Wrapf(err, "Unable to assign label to node %s", n.Metadata.Name)
+					}
+					cmd = exec.Command("k", "annotate", "node", n.Metadata.Name, "foo=bar")
+					util.PrintCommand(cmd)
+					out, err = cmd.CombinedOutput()
+					log.Printf("%s\n", out)
+					if err != nil {
+						return errors.Wrapf(err, "Unable to add node annotation to node %s", n.Metadata.Name)
+					}
+				}
+			}
 		} else {
 			log.Println("This cluster is private")
 			if cli.Engine.ClusterDefinition.Properties.OrchestratorProfile.KubernetesConfig.PrivateCluster.JumpboxProfile == nil {

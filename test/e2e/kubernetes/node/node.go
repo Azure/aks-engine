@@ -25,6 +25,7 @@ const (
 type Node struct {
 	Status   Status   `json:"status"`
 	Metadata Metadata `json:"metadata"`
+	Spec     Spec     `json:"spec"`
 }
 
 // Metadata contains things like name and created at
@@ -33,6 +34,18 @@ type Metadata struct {
 	CreatedAt   time.Time         `json:"creationTimestamp"`
 	Labels      map[string]string `json:"labels"`
 	Annotations map[string]string `json:"annotations"`
+}
+
+// Spec contains things like taints
+type Spec struct {
+	Taints []Taint `json:"taints"`
+}
+
+// Taint defines a Node Taint
+type Taint struct {
+	Effect string `json:"effect"`
+	Key    string `json:"key"`
+	Value  string `json:"value"`
 }
 
 // Status parses information from the status key
@@ -184,6 +197,56 @@ func GetByPrefix(prefix string) ([]Node, error) {
 		}
 		if exp.MatchString(n.Metadata.Name) {
 			nodes = append(nodes, n)
+		}
+	}
+	return nodes, nil
+}
+
+// GetByLabel will return a []Node of all nodes that have a matching label
+func GetByLabel(label string) ([]Node, error) {
+	list, err := Get()
+	if err != nil {
+		return nil, err
+	}
+
+	nodes := make([]Node, 0)
+	for _, n := range list.Nodes {
+		if _, ok := n.Metadata.Labels[label]; ok {
+			nodes = append(nodes, n)
+		}
+	}
+	return nodes, nil
+}
+
+// GetByAnnotations will return a []Node of all nodes that have a matching annotation
+func GetByAnnotations(key, value string) ([]Node, error) {
+	list, err := Get()
+	if err != nil {
+		return nil, err
+	}
+
+	nodes := make([]Node, 0)
+	for _, n := range list.Nodes {
+		if n.Metadata.Annotations[key] == value {
+			nodes = append(nodes, n)
+		}
+	}
+	return nodes, nil
+}
+
+// GetByTaint will return a []Node of all nodes that have a matching taint
+func GetByTaint(key, value, effect string) ([]Node, error) {
+	list, err := Get()
+	if err != nil {
+		return nil, err
+	}
+
+	nodes := make([]Node, 0)
+	for _, n := range list.Nodes {
+		for _, t := range n.Spec.Taints {
+			if t.Key == key && t.Value == value && t.Effect == effect {
+				nodes = append(nodes, n)
+			}
 		}
 	}
 	return nodes, nil
