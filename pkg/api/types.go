@@ -532,7 +532,7 @@ type AgentPoolProfile struct {
 	SinglePlacementGroup                *bool                `json:"singlePlacementGroup,omitempty"`
 	VnetCidrs                           []string             `json:"vnetCidrs,omitempty"`
 	PreserveNodesProperties             *bool                `json:"preserveNodesProperties,omitempty"`
-	NewWindowsVMNaming                  *bool                `json:"newWindowsVMNaming,omitempty"`
+	WindowsNameVersion                  string               `json:"windowsNameVersion,omitempty"`
 }
 
 // AgentPoolProfileRole represents an agent role
@@ -809,7 +809,7 @@ func (p *Properties) GetAgentVMPrefix(a *AgentPoolProfile) string {
 	vmPrefix := ""
 	if index != -1 {
 		if a.IsWindows() {
-			if a.NewWindowsVMNaming != nil && *a.NewWindowsVMNaming {
+			if a.WindowsNameVersion == "v2" {
 				vmPrefix = p.K8sOrchestratorName() + a.Name
 			} else {
 				vmPrefix = nameSuffix[:4] + p.K8sOrchestratorName() + fmt.Sprintf("%02d", index)

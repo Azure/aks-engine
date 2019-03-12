@@ -563,41 +563,29 @@ func TestPerAgentPoolVersionAndState(t *testing.T) {
 	}
 }
 
-func TestPerAgentPoolNewWindowsVMNaming(t *testing.T) {
-	useNewWindowsVMNaming := true
-	doNotUseNewWindowsVMNaming := false
-
+func TestPerAgentPoolWindowsNameVersion(t *testing.T) {
 	cases := []struct {
 		ap                         AgentPoolProfile
-		expectedNewWindowsVMNaming *bool
+		expectedWindowsNameVersion string
 	}{
 		{
 			ap: AgentPoolProfile{
 				Name:               "agentpool1",
-				NewWindowsVMNaming: &useNewWindowsVMNaming,
+				WindowsNameVersion: "v2",
 			},
-			expectedNewWindowsVMNaming: &useNewWindowsVMNaming,
+			expectedWindowsNameVersion: "v2",
 		},
 		{
 			ap: AgentPoolProfile{
 				Name: "agentpool2",
 			},
-			expectedNewWindowsVMNaming: nil,
-		},
-		{
-			ap: AgentPoolProfile{
-				Name:               "agentpool3",
-				NewWindowsVMNaming: &doNotUseNewWindowsVMNaming,
-			},
-			expectedNewWindowsVMNaming: &doNotUseNewWindowsVMNaming,
+			expectedWindowsNameVersion: "",
 		},
 	}
 
 	for _, c := range cases {
-		if c.expectedNewWindowsVMNaming == nil && c.ap.NewWindowsVMNaming != nil {
-			t.Fatalf("NewWindowsVMNaming flag mismatch. Expected: nil. Got: %v.", c.ap.NewWindowsVMNaming)
-		} else if c.expectedNewWindowsVMNaming != c.ap.NewWindowsVMNaming {
-			t.Fatalf("NewWindowsVMNaming flag mismatch. Expected: %v. Got: %v.", &c.expectedNewWindowsVMNaming, &c.ap.NewWindowsVMNaming)
+		if c.expectedWindowsNameVersion != c.ap.WindowsNameVersion {
+			t.Fatalf("WindowsNameVersion flag mismatch. Expected: %v. Got: %v.", &c.expectedWindowsNameVersion, &c.ap.WindowsNameVersion)
 		}
 	}
 }
