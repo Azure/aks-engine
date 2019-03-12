@@ -62,7 +62,7 @@ func TestCreateMasterVMSS(t *testing.T) {
 							{
 								Name: to.StringPtr("[concat(variables('masterVMNamePrefix'), 'netintconfig')]"),
 								VirtualMachineScaleSetNetworkConfigurationProperties: &compute.VirtualMachineScaleSetNetworkConfigurationProperties{
-									Primary: to.BoolPtr(true),
+									Primary:          to.BoolPtr(true),
 									IPConfigurations: getIPConfigsMaster(),
 								},
 							},
@@ -161,7 +161,7 @@ func TestCreateMasterVMSS(t *testing.T) {
 	expectedCustomDataStr = getCustomDataFromJSON(tg.GetMasterCustomDataJSON(cs))
 	expected.VirtualMachineProfile.OsProfile.CustomData = to.StringPtr(expectedCustomDataStr)
 
-	ipConfigs:= *getIPConfigsMaster()
+	ipConfigs := *getIPConfigsMaster()
 
 	ipConfigs[0].LoadBalancerBackendAddressPools = &[]compute.SubResource{
 		{
@@ -175,7 +175,7 @@ func TestCreateMasterVMSS(t *testing.T) {
 		{
 			Name: to.StringPtr("[concat(variables('masterVMNamePrefix'), 'netintconfig')]"),
 			VirtualMachineScaleSetNetworkConfigurationProperties: &compute.VirtualMachineScaleSetNetworkConfigurationProperties{
-				Primary: to.BoolPtr(true),
+				Primary:          to.BoolPtr(true),
 				IPConfigurations: &ipConfigs,
 				NetworkSecurityGroup: &compute.SubResource{
 					ID: to.StringPtr("[variables('nsgID')]"),
