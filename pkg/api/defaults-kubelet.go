@@ -30,7 +30,18 @@ func (cs *ContainerService) setKubeletConfig() {
 	// Start with copy of Linux config
 	staticWindowsKubeletConfig := make(map[string]string)
 	for key, val := range staticLinuxKubeletConfig {
-		staticWindowsKubeletConfig[key] = val
+		switch key {
+		case "--pod-manifest-path": // Don't add Linux-specific config
+			break
+		case "--anonymous-auth", "--client-ca-file":
+			if !to.Bool(o.KubernetesConfig.EnableSecureKubelet) { // Don't add if EnableSecureKubelet is disabled
+				break
+			} else {
+				staticWindowsKubeletConfig[key] = val
+			}
+		default:
+			staticWindowsKubeletConfig[key] = val
+		}
 	}
 
 	// Add Windows-specific overrides
@@ -128,18 +139,15 @@ func (cs *ContainerService) setKubeletConfig() {
 		if profile.KubernetesConfig == nil {
 			profile.KubernetesConfig = &KubernetesConfig{}
 			profile.KubernetesConfig.KubeletConfig = make(map[string]string)
-			if profile.OSType == "Windows" {
-				for key, val := range staticWindowsKubeletConfig {
-					profile.KubernetesConfig.KubeletConfig[key] = val
-				}
-			}
 		}
-		setMissingKubeletValues(profile.KubernetesConfig, o.KubernetesConfig.KubeletConfig)
 
 		if profile.OSType == "Windows" {
-			// Remove Linux-specific values
-			delete(profile.KubernetesConfig.KubeletConfig, "--pod-manifest-path")
+			for key, val := range staticWindowsKubeletConfig {
+				profile.KubernetesConfig.KubeletConfig[key] = val
+			}
 		}
+
+		setMissingKubeletValues(profile.KubernetesConfig, o.KubernetesConfig.KubeletConfig)
 
 		// For N Series (GPU) VMs
 		if strings.Contains(profile.VMSize, "Standard_N") {
