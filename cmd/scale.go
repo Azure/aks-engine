@@ -187,7 +187,12 @@ func (sc *scaleCmd) load(cmd *cobra.Command) error {
 	}
 
 	templatePath := path.Join(sc.deploymentDirectory, "azuredeploy.json")
-	contents, _ := ioutil.ReadFile(templatePath)
+
+	var contents []byte
+	contents, err = ioutil.ReadFile(templatePath)
+	if err != nil {
+		return errors.Wrap(err, "error while trying to load the ARM template JSON file")
+	}
 
 	var template interface{}
 
