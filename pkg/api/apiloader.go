@@ -24,6 +24,17 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+const (
+	defaultOrchestrator  = Kubernetes
+	defaultAPIVersion    = vlabs.APIVersion
+	defaultMasterCount   = 3
+	defaultVMSize        = "Standard_DS2_v2"
+	defaultOSDiskSizeGB  = 200
+	defaultAgentPoolName = "agent"
+	defaultAgentCount    = 3
+	defaultAdminUser     = "azureuser"
+)
+
 // Apiloader represents the object that loads api model
 type Apiloader struct {
 	Translator *i18n.Translator
@@ -40,24 +51,24 @@ func (a *Apiloader) LoadContainerServiceFromFile(jsonFile string, validate, isUp
 
 // LoadDefaultContainerServiceProperties loads the default API model
 func LoadDefaultContainerServiceProperties() (TypeMeta, *vlabs.Properties) {
-	return TypeMeta{APIVersion: vlabs.APIVersion}, &vlabs.Properties{
+	return TypeMeta{APIVersion: defaultAPIVersion}, &vlabs.Properties{
 		OrchestratorProfile: &vlabs.OrchestratorProfile{
-			OrchestratorType: "kubernetes",
+			OrchestratorType: defaultOrchestrator,
 		},
 		MasterProfile: &vlabs.MasterProfile{
-			Count:        3,
-			VMSize:       "Standard_DS2_v2",
-			OSDiskSizeGB: 200,
+			Count:        defaultMasterCount,
+			VMSize:       defaultVMSize,
+			OSDiskSizeGB: defaultOSDiskSizeGB,
 		},
 		AgentPoolProfiles: []*vlabs.AgentPoolProfile{
 			{
-				Name:         "agent",
-				Count:        3,
-				VMSize:       "Standard_DS2_v2",
-				OSDiskSizeGB: 200,
+				Name:         defaultAgentPoolName,
+				Count:        defaultAgentCount,
+				VMSize:       defaultVMSize,
+				OSDiskSizeGB: defaultOSDiskSizeGB,
 			},
 		},
-		LinuxProfile: &vlabs.LinuxProfile{AdminUsername: "azureuser"},
+		LinuxProfile: &vlabs.LinuxProfile{AdminUsername: defaultAdminUser},
 	}
 }
 

@@ -397,3 +397,51 @@ func TestLoadContainerServiceWithEmptyLocationCustomCloud(t *testing.T) {
 		t.Errorf("Expected no error for missing loation for public cloud to be thrown")
 	}
 }
+
+func TestLoadDefaultContainerServiceProperties(t *testing.T) {
+	m, p := LoadDefaultContainerServiceProperties()
+
+	if m.APIVersion != defaultAPIVersion {
+		t.Errorf("Expected LoadDefaultContainerServiceProperties() to return API version %s, instead got %s", defaultAPIVersion, m.APIVersion)
+	}
+
+	if p.OrchestratorProfile.OrchestratorType != defaultOrchestrator {
+		t.Errorf("Expected LoadDefaultContainerServiceProperties() to return %s OrchestratorProfile.OrchestratorType, instead got %s", Kubernetes, p.OrchestratorProfile.OrchestratorType)
+	}
+
+	if p.MasterProfile.Count != defaultMasterCount {
+		t.Errorf("Expected LoadDefaultContainerServiceProperties() to return %d MasterProfile.Count, instead got %d", defaultMasterCount, p.MasterProfile.Count)
+	}
+
+	if p.MasterProfile.VMSize != defaultVMSize {
+		t.Errorf("Expected LoadDefaultContainerServiceProperties() to return %s MasterProfile.VMSize, instead got %s", defaultVMSize, p.MasterProfile.VMSize)
+	}
+
+	if p.MasterProfile.OSDiskSizeGB != defaultOSDiskSizeGB {
+		t.Errorf("Expected LoadDefaultContainerServiceProperties() to return %d MasterProfile.OSDiskSizeGB, instead got %d", defaultOSDiskSizeGB, p.MasterProfile.OSDiskSizeGB)
+	}
+
+	if len(p.AgentPoolProfiles) != 1 {
+		t.Errorf("Expected 1 agent pool, instead got %d", len(p.AgentPoolProfiles))
+	}
+
+	if p.AgentPoolProfiles[0].Name != defaultAgentPoolName {
+		t.Errorf("Expected LoadDefaultContainerServiceProperties() to return %s AgentPoolProfiles[0].Name, instead got %s", defaultAgentPoolName, p.AgentPoolProfiles[0].Name)
+	}
+
+	if p.AgentPoolProfiles[0].Count != defaultAgentCount {
+		t.Errorf("Expected LoadDefaultContainerServiceProperties() to return %d AgentPoolProfiles[0].Count, instead got %d", defaultAgentCount, p.AgentPoolProfiles[0].Count)
+	}
+
+	if p.AgentPoolProfiles[0].VMSize != defaultVMSize {
+		t.Errorf("Expected LoadDefaultContainerServiceProperties() to return %s AgentPoolProfiles[0].VMSize, instead got %s", defaultVMSize, p.AgentPoolProfiles[0].VMSize)
+	}
+
+	if p.AgentPoolProfiles[0].OSDiskSizeGB != defaultOSDiskSizeGB {
+		t.Errorf("Expected LoadDefaultContainerServiceProperties() to return %d AgentPoolProfiles[0].OSDiskSizeGB, instead got %d", defaultOSDiskSizeGB, p.AgentPoolProfiles[0].OSDiskSizeGB)
+	}
+
+	if p.LinuxProfile.AdminUsername != defaultAdminUser {
+		t.Errorf("Expected LoadDefaultContainerServiceProperties() to return %s LinuxProfile.AdminAdminUsernameUsername, instead got %s", defaultAdminUser, p.LinuxProfile.AdminUsername)
+	}
+}
