@@ -77,7 +77,7 @@ func assignKubernetesParameters(properties *api.Properties, parametersMap params
 			} else {
 				addValue(parametersMap, "kubernetesClusterAutoscalerEnabled", false)
 			}
-			if kubernetesConfig.LoadBalancerSku == "Standard" {
+			if kubernetesConfig.LoadBalancerSku == "Standard" && !to.Bool(kubernetesConfig.PrivateCluster.Enabled) {
 				random := rand.New(rand.NewSource(time.Now().UnixNano()))
 				elbsvcName := random.Int()
 				addValue(parametersMap, "kuberneteselbsvcname", fmt.Sprintf("%d", elbsvcName))
