@@ -150,11 +150,7 @@ func (a *Properties) validate(isUpdate bool) error {
 		return e
 	}
 
-	if e := a.validateCustomCloudProfile(); e != nil {
-		return e
-	}
-
-	return nil
+	return a.validateCustomCloudProfile()
 }
 
 func handleValidationErrors(e validator.ValidationErrors) error {
@@ -1130,11 +1126,7 @@ func (k *KubernetesConfig) Validate(k8sVersion string, hasWindows bool) error {
 	if e := k.validateNetworkPluginPlusPolicy(); e != nil {
 		return e
 	}
-	if e := k.validatePrivateAzureRegistryServer(); e != nil {
-		return e
-	}
-
-	return nil
+	return k.validatePrivateAzureRegistryServer()
 }
 
 func (k *KubernetesConfig) validatePrivateAzureRegistryServer() error {
@@ -1374,10 +1366,10 @@ func (a *Properties) validateCustomCloudProfile() error {
 			return errors.New("resourceManagerVMDNSSuffix needs to be specified when Environment is provided")
 		}
 		if a.CustomCloudProfile.AuthenticationMethod != "" && !(a.CustomCloudProfile.AuthenticationMethod == ClientSecretAuthMethod || a.CustomCloudProfile.AuthenticationMethod == ClientCertificateAuthMethod) {
-			return errors.New(fmt.Sprintf("authenticationMethod allowed values are '%s' and '%s'", ClientCertificateAuthMethod, ClientSecretAuthMethod))
+			return errors.Errorf("authenticationMethod allowed values are '%s' and '%s'", ClientCertificateAuthMethod, ClientSecretAuthMethod)
 		}
 		if a.CustomCloudProfile.IdentitySystem != "" && !(a.CustomCloudProfile.IdentitySystem == AzureADIdentitySystem || a.CustomCloudProfile.IdentitySystem == ADFSIdentitySystem) {
-			return errors.New(fmt.Sprintf("identitySystem allowed values are '%s' and '%s'", AzureADIdentitySystem, ADFSIdentitySystem))
+			return errors.Errorf("identitySystem allowed values are '%s' and '%s'", AzureADIdentitySystem, ADFSIdentitySystem)
 		}
 	}
 	return nil
@@ -1391,10 +1383,7 @@ func (cs *ContainerService) Validate(isUpdate bool) error {
 	if e := cs.validateLocation(); e != nil {
 		return e
 	}
-	if e := cs.Properties.validate(isUpdate); e != nil {
-		return e
-	}
-	return nil
+	return cs.Properties.validate(isUpdate)
 }
 
 func (cs *ContainerService) validateLocation() error {
