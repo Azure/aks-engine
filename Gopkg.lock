@@ -10,21 +10,24 @@
   version = "v0.2.0"
 
 [[projects]]
-  digest = "1:f6f3cee13cf3e669f72dc47cbd64629123f590a0f1f39bea31108ec54491e0ad"
+  digest = "1:60e4d0dfed5ca7863d013f64beac7ea849125e61785221c6b18c3e5ed36dbc64"
   name = "github.com/Azure/azure-sdk-for-go"
   packages = [
     "services/apimanagement/mgmt/2017-03-01/apimanagement",
     "services/authorization/mgmt/2015-07-01/authorization",
+    "services/compute/mgmt/2017-03-30/compute",
     "services/compute/mgmt/2018-10-01/compute",
     "services/cosmos-db/mgmt/2015-04-08/documentdb",
     "services/graphrbac/1.6/graphrbac",
     "services/keyvault/mgmt/2018-02-14/keyvault",
+    "services/network/mgmt/2017-10-01/network",
     "services/network/mgmt/2018-08-01/network",
     "services/preview/authorization/mgmt/2018-01-01-preview/authorization",
     "services/preview/authorization/mgmt/2018-09-01-preview/authorization",
     "services/preview/msi/mgmt/2015-08-31-preview/msi",
     "services/resources/mgmt/2016-06-01/subscriptions",
     "services/resources/mgmt/2018-05-01/resources",
+    "services/storage/mgmt/2017-10-01/storage",
     "services/storage/mgmt/2018-02-01/storage",
     "storage",
     "version",
@@ -849,16 +852,19 @@
   input-imports = [
     "github.com/Azure/azure-sdk-for-go/services/apimanagement/mgmt/2017-03-01/apimanagement",
     "github.com/Azure/azure-sdk-for-go/services/authorization/mgmt/2015-07-01/authorization",
+    "github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2017-03-30/compute",
     "github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2018-10-01/compute",
     "github.com/Azure/azure-sdk-for-go/services/cosmos-db/mgmt/2015-04-08/documentdb",
     "github.com/Azure/azure-sdk-for-go/services/graphrbac/1.6/graphrbac",
     "github.com/Azure/azure-sdk-for-go/services/keyvault/mgmt/2018-02-14/keyvault",
+    "github.com/Azure/azure-sdk-for-go/services/network/mgmt/2017-10-01/network",
     "github.com/Azure/azure-sdk-for-go/services/network/mgmt/2018-08-01/network",
     "github.com/Azure/azure-sdk-for-go/services/preview/authorization/mgmt/2018-01-01-preview/authorization",
     "github.com/Azure/azure-sdk-for-go/services/preview/authorization/mgmt/2018-09-01-preview/authorization",
     "github.com/Azure/azure-sdk-for-go/services/preview/msi/mgmt/2015-08-31-preview/msi",
     "github.com/Azure/azure-sdk-for-go/services/resources/mgmt/2016-06-01/subscriptions",
     "github.com/Azure/azure-sdk-for-go/services/resources/mgmt/2018-05-01/resources",
+    "github.com/Azure/azure-sdk-for-go/services/storage/mgmt/2017-10-01/storage",
     "github.com/Azure/azure-sdk-for-go/services/storage/mgmt/2018-02-01/storage",
     "github.com/Azure/azure-sdk-for-go/storage",
     "github.com/Azure/go-autorest/autorest",
