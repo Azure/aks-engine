@@ -205,12 +205,12 @@ func getCloudSubFromAzConfig(cloud string, f *ini.File) (uuid.UUID, error) {
 
 func (authArgs *authArgs) getClient() (armhelpers.AKSEngineClient, error) {
 	if authArgs.isAzureStackCloud() {
-		return authArgs.getazsClient()
+		return authArgs.getAzureStackClient()
 	}
-	return authArgs.getazClient()
+	return authArgs.getAzureClient()
 }
 
-func (authArgs *authArgs) getazClient() (armhelpers.AKSEngineClient, error) {
+func (authArgs *authArgs) getAzureClient() (armhelpers.AKSEngineClient, error) {
 	var client *armhelpers.AzureClient
 	env, err := azure.EnvironmentFromName(authArgs.RawAzureEnvironment)
 	if err != nil {
@@ -239,7 +239,7 @@ func (authArgs *authArgs) getazClient() (armhelpers.AKSEngineClient, error) {
 	return client, nil
 }
 
-func (authArgs *authArgs) getazsClient() (armhelpers.AKSEngineClient, error) {
+func (authArgs *authArgs) getAzureStackClient() (armhelpers.AKSEngineClient, error) {
 	var client *azurestack.AzureClient
 	env, err := azure.EnvironmentFromName(authArgs.RawAzureEnvironment)
 	if err != nil {
