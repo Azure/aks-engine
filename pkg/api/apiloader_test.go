@@ -110,7 +110,7 @@ func TestLoadContainerServiceFromFile(t *testing.T) {
 	// Test error scenario
 	containerService, _, err = apiloader.LoadContainerServiceFromFile("../this-file-doesnt-exist.json", true, false, nil)
 	if err == nil {
-		t.Error(err.Error())
+		t.Errorf("expected error passing a non-existent filepath string to apiloader.LoadContainerServiceFromFile(), instead got nil")
 	}
 }
 
@@ -413,34 +413,34 @@ func TestDeserializeContainerService(t *testing.T) {
 	// Test AKS Engine api model
 	cs, version, err := apiloader.DeserializeContainerService([]byte(exampleAPIModel), false, false, nil)
 	if err != nil {
-		t.Fatalf("unexpected error deserializing the example apimodel: %s", err)
+		t.Errorf("unexpected error deserializing the example apimodel: %s", err)
 	}
 	if version != vlabs.APIVersion {
-		t.Fatalf("expected apiVersion %s, instead got: %s", vlabs.APIVersion, version)
+		t.Errorf("expected apiVersion %s, instead got: %s", vlabs.APIVersion, version)
 	}
 	if cs.Properties.OrchestratorProfile.OrchestratorType != Kubernetes {
-		t.Fatalf("expected cs.Properties.OrchestratorProfile.OrchestratorType %s, instead got: %s", Kubernetes, cs.Properties.OrchestratorProfile.OrchestratorType)
+		t.Errorf("expected cs.Properties.OrchestratorProfile.OrchestratorType %s, instead got: %s", Kubernetes, cs.Properties.OrchestratorProfile.OrchestratorType)
 	}
 
 	// Test AKS api model
 	cs, version, err = apiloader.DeserializeContainerService([]byte(exampleAKSAPIModel), false, false, nil)
 	if err != nil {
-		t.Fatalf("unexpected error deserializing the example apimodel: %s", err)
+		t.Errorf("unexpected error deserializing the example apimodel: %s", err)
 	}
 	if version != v20180331.APIVersion {
-		t.Fatalf("expected apiVersion %s, instead got: %s", v20180331.APIVersion, version)
+		t.Errorf("expected apiVersion %s, instead got: %s", v20180331.APIVersion, version)
 	}
 	if cs.Properties.OrchestratorProfile.OrchestratorType != Kubernetes {
-		t.Fatalf("expected cs.Properties.OrchestratorProfile.OrchestratorType %s, instead got: %s", Kubernetes, cs.Properties.OrchestratorProfile.OrchestratorType)
+		t.Errorf("expected cs.Properties.OrchestratorProfile.OrchestratorType %s, instead got: %s", Kubernetes, cs.Properties.OrchestratorProfile.OrchestratorType)
 	}
 	if cs.Properties.MasterProfile != nil {
-		t.Fatalf("expected nil MasterProfile for AKS container service object")
+		t.Errorf("expected nil MasterProfile for AKS container service object")
 	}
 
 	// Test error case
 	_, _, err = apiloader.DeserializeContainerService([]byte(`{thisisnotson}`), false, false, nil)
 	if err == nil {
-		t.Fatalf("expected error from malformed api model input")
+		t.Errorf("expected error from malformed api model input")
 	}
 }
 
