@@ -409,6 +409,8 @@ func TestDeserializeContainerService(t *testing.T) {
 	apiloader := &Apiloader{
 		Translator: nil,
 	}
+
+	// Test AKS Engine api model
 	cs, version, err := apiloader.DeserializeContainerService([]byte(exampleAPIModel), false, false, nil)
 	if err != nil {
 		t.Fatalf("unexpected error deserializing the example apimodel: %s", err)
@@ -416,9 +418,23 @@ func TestDeserializeContainerService(t *testing.T) {
 	if version != vlabs.APIVersion {
 		t.Fatalf("expected apiVersion %s, instead got: %s", vlabs.APIVersion, version)
 	}
-
 	if cs.Properties.OrchestratorProfile.OrchestratorType != Kubernetes {
 		t.Fatalf("expected cs.Properties.OrchestratorProfile.OrchestratorType %s, instead got: %s", Kubernetes, cs.Properties.OrchestratorProfile.OrchestratorType)
+	}
+
+	// Test AKS api model
+	cs, version, err = apiloader.DeserializeContainerService([]byte(exampleAKSAPIModel), false, false, nil)
+	if err != nil {
+		t.Fatalf("unexpected error deserializing the example apimodel: %s", err)
+	}
+	if version != v20180331.APIVersion {
+		t.Fatalf("expected apiVersion %s, instead got: %s", v20180331.APIVersion, version)
+	}
+	if cs.Properties.OrchestratorProfile.OrchestratorType != Kubernetes {
+		t.Fatalf("expected cs.Properties.OrchestratorProfile.OrchestratorType %s, instead got: %s", Kubernetes, cs.Properties.OrchestratorProfile.OrchestratorType)
+	}
+	if cs.Properties.MasterProfile != nil {
+		t.Fatalf("expected nil MasterProfile for AKS container service object")
 	}
 
 	// Test error case

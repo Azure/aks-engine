@@ -71,7 +71,7 @@ func LoadDefaultContainerServiceProperties() (TypeMeta, *vlabs.Properties) {
 	}
 }
 
-// DeserializeContainerService loads an AKS Cluster API Model, validates it, and returns the unversioned representation
+// DeserializeContainerService loads an AKS Engine Cluster API Model, validates it, and returns the unversioned representation
 func (a *Apiloader) DeserializeContainerService(contents []byte, validate, isUpdate bool, existingContainerService *ContainerService) (*ContainerService, string, error) {
 	m := &TypeMeta{}
 	if err := json.Unmarshal(contents, &m); err != nil {
@@ -79,8 +79,15 @@ func (a *Apiloader) DeserializeContainerService(contents []byte, validate, isUpd
 	}
 
 	version := m.APIVersion
-	service, err := a.LoadContainerService(contents, version, validate, isUpdate, existingContainerService)
-	return service, version, err
+	var cs *ContainerService
+	var err error
+	switch version {
+	case "2017-08-31", "2018-03-31":
+		cs, _, err = a.LoadContainerServiceForAgentPoolOnlyCluster(contents, version, validate, isUpdate, "", existingContainerService)
+	default:
+		cs, err = a.LoadContainerService(contents, version, validate, isUpdate, existingContainerService)
+	}
+	return cs, version, err
 }
 
 // LoadContainerService loads an AKS Cluster API Model, validates it, and returns the unversioned representation
