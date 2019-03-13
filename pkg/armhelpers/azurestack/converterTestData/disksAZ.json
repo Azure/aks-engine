@@ -1,0 +1,158 @@
+[
+    {
+        "id": "/subscriptions/3fab58ee-83c5-4147-858d-2c2a722e0e66/resourceGroups/k111001/providers/Microsoft.Compute/disks/k8s-linuxpool-64789870-0_OsDisk_1_05b9085ee4e946ac91a3c7459b36bf9e",
+        "location": "eastus",
+        "managedBy": "/subscriptions/3fab58ee-83c5-4147-858d-2c2a722e0e66/resourceGroups/k111001/providers/Microsoft.Compute/virtualMachines/k8s-linuxpool-64789870-0",
+        "name": "k8s-linuxpool-64789870-0_OsDisk_1_05b9085ee4e946ac91a3c7459b36bf9e",
+        "properties": {
+            "timeCreated": "2019-03-11T19:32:41.2457602Z",
+            "osType": "Linux",
+            "creationData": {
+                "createOption": "FromImage",
+                "imageReference": {
+                    "id": "/Subscriptions/3fab58ee-83c5-4147-858d-2c2a722e0e66/Providers/Microsoft.Compute/Locations/eastus/Publishers/Canonical/ArtifactTypes/VMImage/Offers/UbuntuServer/Skus/16.04-LTS/Versions/16.04.201902120"
+                }
+            },
+            "diskSizeGB": 200,
+            "provisioningState": "Succeeded",
+            "diskIOPSReadWrite": 500,
+            "diskMBpsReadWrite": 60
+        },
+        "sku": {
+            "name": "Standard_LRS",
+            "tier": "Standard"
+        },
+        "tags": {
+            "aksEngineVersion": "canary",
+            "creationSource": "aksengine-k8s-linuxpool-64789870-0",
+            "orchestrator": "Kubernetes:1.11.8",
+            "poolName": "linuxpool",
+            "resourceNameSuffix": "64789870"
+        },
+        "type": "Microsoft.Compute/disks"
+    },
+    {
+        "id": "/subscriptions/3fab58ee-83c5-4147-858d-2c2a722e0e66/resourceGroups/k111001/providers/Microsoft.Compute/disks/k8s-linuxpool-64789870-1_OsDisk_1_d14478bf66ef4d9db9ec0a076bf27ed2",
+        "location": "eastus",
+        "managedBy": "/subscriptions/3fab58ee-83c5-4147-858d-2c2a722e0e66/resourceGroups/k111001/providers/Microsoft.Compute/virtualMachines/k8s-linuxpool-64789870-1",
+        "name": "k8s-linuxpool-64789870-1_OsDisk_1_d14478bf66ef4d9db9ec0a076bf27ed2",
+        "properties": {
+            "timeCreated": "2019-03-11T19:32:41.2457602Z",
+            "osType": "Linux",
+            "creationData": {
+                "createOption": "FromImage",
+                "imageReference": {
+                    "id": "/Subscriptions/3fab58ee-83c5-4147-858d-2c2a722e0e66/Providers/Microsoft.Compute/Locations/eastus/Publishers/Canonical/ArtifactTypes/VMImage/Offers/UbuntuServer/Skus/16.04-LTS/Versions/16.04.201902120"
+                }
+            },
+            "diskSizeGB": 200,
+            "provisioningState": "Succeeded",
+            "diskIOPSReadWrite": 500,
+            "diskMBpsReadWrite": 60
+        },
+        "sku": {
+            "name": "Standard_LRS",
+            "tier": "Standard"
+        },
+        "tags": {
+            "aksEngineVersion": "canary",
+            "creationSource": "aksengine-k8s-linuxpool-64789870-1",
+            "orchestrator": "Kubernetes:1.11.8",
+            "poolName": "linuxpool",
+            "resourceNameSuffix": "64789870"
+        },
+        "type": "Microsoft.Compute/disks"
+    },
+    {
+        "id": "/subscriptions/3fab58ee-83c5-4147-858d-2c2a722e0e66/resourceGroups/k111001/providers/Microsoft.Compute/disks/k8s-linuxpool-64789870-2_OsDisk_1_3e3ba21db35841b093df148538af551d",
+        "location": "eastus",
+        "managedBy": "/subscriptions/3fab58ee-83c5-4147-858d-2c2a722e0e66/resourceGroups/k111001/providers/Microsoft.Compute/virtualMachines/k8s-linuxpool-64789870-2",
+        "name": "k8s-linuxpool-64789870-2_OsDisk_1_3e3ba21db35841b093df148538af551d",
+        "properties": {
+            "timeCreated": "2019-03-11T19:32:41.2457602Z",
+            "osType": "Linux",
+            "creationData": {
+                "createOption": "FromImage",
+                "imageReference": {
+                    "id": "/Subscriptions/3fab58ee-83c5-4147-858d-2c2a722e0e66/Providers/Microsoft.Compute/Locations/eastus/Publishers/Canonical/ArtifactTypes/VMImage/Offers/UbuntuServer/Skus/16.04-LTS/Versions/16.04.201902120"
+                }
+            },
+            "diskSizeGB": 200,
+            "provisioningState": "Succeeded",
+            "diskIOPSReadWrite": 500,
+            "diskMBpsReadWrite": 60
+        },
+        "sku": {
+            "name": "Standard_LRS",
+            "tier": "Standard"
+        },
+        "tags": {
+            "aksEngineVersion": "canary",
+            "creationSource": "aksengine-k8s-linuxpool-64789870-2",
+            "orchestrator": "Kubernetes:1.11.8",
+            "poolName": "linuxpool",
+            "resourceNameSuffix": "64789870"
+        },
+        "type": "Microsoft.Compute/disks"
+    },
+    {
+        "id": "/subscriptions/3fab58ee-83c5-4147-858d-2c2a722e0e66/resourceGroups/k111001/providers/Microsoft.Compute/disks/k8s-master-64789870-0-etcddisk",
+        "location": "eastus",
+        "managedBy": "/subscriptions/3fab58ee-83c5-4147-858d-2c2a722e0e66/resourceGroups/k111001/providers/Microsoft.Compute/virtualMachines/k8s-master-64789870-0",
+        "name": "k8s-master-64789870-0-etcddisk",
+        "properties": {
+            "timeCreated": "2019-03-11T19:32:40.6832605Z",
+            "creationData": {
+                "createOption": "Empty"
+            },
+            "diskSizeGB": 512,
+            "provisioningState": "Succeeded",
+            "diskIOPSReadWrite": 500,
+            "diskMBpsReadWrite": 60
+        },
+        "sku": {
+            "name": "Standard_LRS",
+            "tier": "Standard"
+        },
+        "tags": {
+            "aksEngineVersion": "canary",
+            "creationSource": "aksengine-k8s-master-64789870-0",
+            "orchestrator": "Kubernetes:1.11.8",
+            "poolName": "master",
+            "resourceNameSuffix": "64789870"
+        },
+        "type": "Microsoft.Compute/disks"
+    },
+    {
+        "id": "/subscriptions/3fab58ee-83c5-4147-858d-2c2a722e0e66/resourceGroups/k111001/providers/Microsoft.Compute/disks/k8s-master-64789870-0_OsDisk_1_043baaac0b0f431aac9c70405289dc93",
+        "location": "eastus",
+        "managedBy": "/subscriptions/3fab58ee-83c5-4147-858d-2c2a722e0e66/resourceGroups/k111001/providers/Microsoft.Compute/virtualMachines/k8s-master-64789870-0",
+        "name": "k8s-master-64789870-0_OsDisk_1_043baaac0b0f431aac9c70405289dc93",
+        "properties": {
+            "timeCreated": "2019-03-11T19:32:40.6832605Z",
+            "osType": "Linux",
+            "creationData": {
+                "createOption": "FromImage",
+                "imageReference": {
+                    "id": "/Subscriptions/3fab58ee-83c5-4147-858d-2c2a722e0e66/Providers/Microsoft.Compute/Locations/eastus/Publishers/Canonical/ArtifactTypes/VMImage/Offers/UbuntuServer/Skus/16.04-LTS/Versions/16.04.201902120"
+                }
+            },
+            "diskSizeGB": 200,
+            "provisioningState": "Succeeded",
+            "diskIOPSReadWrite": 500,
+            "diskMBpsReadWrite": 60
+        },
+        "sku": {
+            "name": "Standard_LRS",
+            "tier": "Standard"
+        },
+        "tags": {
+            "aksEngineVersion": "canary",
+            "creationSource": "aksengine-k8s-master-64789870-0",
+            "orchestrator": "Kubernetes:1.11.8",
+            "poolName": "master",
+            "resourceNameSuffix": "64789870"
+        },
+        "type": "Microsoft.Compute/disks"
+    }
+]

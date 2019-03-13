@@ -223,6 +223,10 @@ func (dc *deployCmd) loadAPIModel(cmd *cobra.Command, args []string) error {
 		return errors.New("--location does not match api model location")
 	}
 
+	if dc.containerService.Properties.IsAzureStackCloud() {
+		writeCustomCloudProfile(dc.containerService)
+	}
+
 	if err = dc.getAuthArgs().validateAuthArgs(); err != nil {
 		return err
 	}
