@@ -38,6 +38,20 @@ const exampleAPIModel = `{
 }
 `
 
+const exampleAKSAPIModel = `{
+		"apiVersion": "2018-03-31",
+	"properties": {
+		"dnsPrefix": "agents006",
+		"fqdn": "agents006.azmk8s.io",
+		"kubernetesVersion": "1.10.12",
+		"agentPoolProfiles": [ { "name": "agentpool1", "count": 2, "vmSize": "Standard_D2_v2" } ],
+		"linuxProfile": { "adminUsername": "azureuser", "ssh": { "publicKeys": [ { "keyData": "" } ] }
+	},
+	"servicePrincipalProfile": { "clientId": "", "secret": "" }
+	}
+}
+`
+
 const exampleAPIModelWithPrivateAzureRegistry = `{
 	"apiVersion": "vlabs",
 "properties": {
