@@ -384,7 +384,7 @@ func (sc *scaleCmd) run(cmd *cobra.Command, args []string) error {
 	case api.Kubernetes:
 		err = transformer.NormalizeForK8sVMASScalingUp(sc.logger, templateJSON)
 		if err != nil {
-			return errors.Wrapf(err, "error tranforming the template for scaling template %s", sc.apiModelPath)
+			return errors.Wrapf(err, "error transforming the template for scaling template %s", sc.apiModelPath)
 		}
 		if sc.agentPool.IsAvailabilitySets() {
 			addValue(parametersJSON, fmt.Sprintf("%sOffset", sc.agentPool.Name), highestUsedIndex+1)
