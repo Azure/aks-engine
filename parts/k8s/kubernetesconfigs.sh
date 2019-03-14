@@ -7,9 +7,7 @@ ETCD_CLIENT_URL="https://${PRIVATE_IP}:2379"
 
 holdWALinuxAgent() {
     if [[ $OS == $UBUNTU_OS_NAME ]]; then
-        wait_for_apt_locks
         retrycmd_if_failure 120 5 25 apt-mark $1 walinuxagent || exit $ERR_HOLD_WALINUXAGENT
-        wait_for_apt_locks
     fi
 }
 
