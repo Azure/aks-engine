@@ -38,7 +38,6 @@ cat << EOF >> ${RELEASE_NOTES_FILEPATH}
   - mount
   - nfs-common
   - pigz socat
-  - systemd/xenial-proposed
   - util-linux
   - xz-utils
   - zip

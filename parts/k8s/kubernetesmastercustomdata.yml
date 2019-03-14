@@ -113,14 +113,6 @@ write_files:
     RemainAfterExit=yes
     ExecStart=/usr/local/bin/health-monitor.sh container-runtime
 
-- path: /etc/apt/preferences.d/proposed-updates
-  permissions: "0644"
-  owner: root
-  content: |
-    Package: *
-    Pin: release a=xenial-proposed
-    Pin-Priority: 400
-
 {{if .OrchestratorProfile.KubernetesConfig.RequiresDocker}}
     {{if not .MasterProfile.IsCoreOS}}
 - path: /etc/systemd/system/docker.service.d/clear_mount_propagation_flags.conf

@@ -31,10 +31,6 @@ installDeps() {
     retrycmd_if_failure 60 5 10 dpkg -i /tmp/packages-microsoft-prod.deb || exit $ERR_MS_PROD_DEB_PKG_ADD_FAIL
     apt_get_update || exit $ERR_APT_UPDATE_TIMEOUT
     apt_get_install 30 1 600 apt-transport-https blobfuse ca-certificates ceph-common cgroup-lite cifs-utils conntrack ebtables ethtool fuse git glusterfs-client init-system-helpers iproute2 ipset iptables jq mount nfs-common pigz socat util-linux xz-utils zip htop iotop iftop sysstat || exit $ERR_APT_INSTALL_TIMEOUT
-    retrycmd_if_failure_no_stats 120 5 25 echo "deb http://azure.archive.ubuntu.com/ubuntu/ xenial-proposed restricted main multiverse universe" >> /etc/apt/sources.list || exit $ERR_SYSTEMD_INSTALL_FAIL
-    cat /etc/apt/sources.list
-    apt_get_update || exit $ERR_APT_UPDATE_TIMEOUT
-    apt_get_install 20 30 120 systemd/xenial-proposed || exit $ERR_SYSTEMD_INSTALL_FAIL
 }
 
 installGPUDrivers() {
