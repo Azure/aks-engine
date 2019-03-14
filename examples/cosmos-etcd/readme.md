@@ -42,7 +42,7 @@ Your Azure Cosmos account will be provisioned with a database (EtcdDB) and a con
 
 With Azure Cosmos etcd API, benefits include:
 * No need to manually configure and manage etcd
-* High availability guarantees of Cosmos (99.99% in single region, 99.999% in 2+ regions). 
+* High availability of etcd, guaranteed by Cosmos (99.99% in single region, 99.999% in 2+ regions). 
 * Elastic scalability of etcd
 * Secure by default & enterprise ready
 * Industry-leading, comprehensive SLAs
