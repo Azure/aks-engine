@@ -15,8 +15,8 @@ import (
 )
 
 func TestDeepCopyManagedDisk(t *testing.T) {
-	diskJSONAzure := "./converterTestData/disksAZ.JSON"
-	diskJSONAzureStack := "./converterTestData/disksAZS.JSON"
+	diskJSONAzure := "./converterTestData/disksAZ.json"
+	diskJSONAzureStack := "./converterTestData/disksAZS.json"
 	diskAzure := []azcompute.Disk{}
 	err := unmarshalFromFile(diskJSONAzure, &diskAzure)
 	if err != nil {
@@ -58,8 +58,8 @@ func TestDeepCopyManagedDisk(t *testing.T) {
 }
 
 func TestDeepCopyVirtualMachine(t *testing.T) {
-	vmsJSONAzure := "./converterTestData/vmsAZ.JSON"
-	vmsJSONAzureStack := "./converterTestData/vmsAZS.JSON"
+	vmsJSONAzure := "./converterTestData/vmsAZ.json"
+	vmsJSONAzureStack := "./converterTestData/vmsAZS.json"
 	vmsAzure := []azcompute.VirtualMachine{}
 	err := unmarshalFromFile(vmsJSONAzure, &vmsAzure)
 	if err != nil {
@@ -98,8 +98,8 @@ func TestDeepCopyVirtualMachine(t *testing.T) {
 }
 
 func TestDeepCopyVMScaleSet(t *testing.T) {
-	vmssJSONAzure := "./converterTestData/vmssAZ.JSON"
-	vmssJSONAzureStack := "./converterTestData/vmssAZS.JSON"
+	vmssJSONAzure := "./converterTestData/vmssAZ.json"
+	vmssJSONAzureStack := "./converterTestData/vmssAZS.json"
 	vmssAzure := []azcompute.VirtualMachineScaleSet{}
 	err := unmarshalFromFile(vmssJSONAzure, &vmssAzure)
 	if err != nil {
@@ -141,8 +141,8 @@ func TestDeepCopyVMScaleSet(t *testing.T) {
 }
 
 func TestDeepCopyVMScaleSetVM(t *testing.T) {
-	vmssvmJSONAzure := "./converterTestData/vmssvmAZ.JSON"
-	vmssvmJSONAzureStack := "./converterTestData/vmssvmAZS.JSON"
+	vmssvmJSONAzure := "./converterTestData/vmssvmAZ.json"
+	vmssvmJSONAzureStack := "./converterTestData/vmssvmAZS.json"
 	vmssvmAzure := []azcompute.VirtualMachineScaleSetVM{}
 	err := unmarshalFromFile(vmssvmJSONAzure, &vmssvmAzure)
 	if err != nil {
