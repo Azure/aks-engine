@@ -208,9 +208,7 @@ func (e *Engine) GetWindowsTestImages() (*WindowsTestImages, error) {
 
 	windowsSku := e.ExpandedDefinition.Properties.WindowsProfile.GetWindowsSku()
 	switch {
-	case strings.Contains(windowsSku, "1809"):
-		fallthrough
-	case strings.Contains(windowsSku, "2019"):
+	case strings.Contains(windowsSku, "1809"), strings.Contains(windowsSku, "2019"):
 		return &WindowsTestImages{IIS: "mcr.microsoft.com/windows/servercore/iis:windowsservercore-ltsc2019",
 			ServerCore: "mcr.microsoft.com/windows/servercore/iis:windowsservercore-ltsc2019"}, nil
 	case strings.Contains(windowsSku, "1803"):
