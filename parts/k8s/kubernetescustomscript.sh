@@ -57,11 +57,12 @@ else
     FULL_INSTALL_REQUIRED=true
 fi
 
+holdWALinuxAgent "hold"
+
 if [[ ! -z "${MASTER_NODE}" ]] && [[ -z "${COSMOS_URI}" ]]; then
     	installEtcd
 fi
 
-holdWALinuxAgent "hold"
 if $FULL_INSTALL_REQUIRED; then
     installDeps
 else 
