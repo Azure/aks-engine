@@ -340,6 +340,13 @@ func (sc *scaleCmd) run(cmd *cobra.Command, args []string) error {
 		return errors.Wrap(err, "failed to initialize template generator")
 	}
 
+	// Our templates generate a range of nodes based on a count and offset, it is possible for there to be holes in the template
+	// So we need to set the count in the template to get enough nodes for the range, if there are holes that number will be larger than the desired count
+	countForTemplate := sc.newDesiredAgentCount
+	if highestUsedIndex != 0 {
+		countForTemplate += highestUsedIndex + 1 - currentNodeCount
+	}
+	sc.agentPool.Count = countForTemplate
 	sc.containerService.Properties.AgentPoolProfiles = []*api.AgentPoolProfile{sc.agentPool}
 
 	_, err = sc.containerService.SetPropertiesDefaults(false, true)
@@ -369,12 +376,7 @@ func (sc *scaleCmd) run(cmd *cobra.Command, args []string) error {
 	}
 
 	transformer := transform.Transformer{Translator: translator.Translator}
-	// Our templates generate a range of nodes based on a count and offset, it is possible for there to be holes in the template
-	// So we need to set the count in the template to get enough nodes for the range, if there are holes that number will be larger than the desired count
-	countForTemplate := sc.newDesiredAgentCount
-	if highestUsedIndex != 0 {
-		countForTemplate += highestUsedIndex + 1 - currentNodeCount
-	}
+
 	addValue(parametersJSON, sc.agentPool.Name+"Count", countForTemplate)
 
 	if winPoolIndex != -1 {
