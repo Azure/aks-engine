@@ -20,6 +20,9 @@ spec:
         operator: Equal
         value: "true"
         effect: NoSchedule
+      - key: node-role.kubernetes.io/master
+        operator: Equal
+        effect: NoSchedule
       - operator: "Exists"
         effect: NoExecute
       - operator: "Exists"

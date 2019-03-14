@@ -274,6 +274,9 @@ spec:
           key: node-role.kubernetes.io/master
           operator: Equal
           value: "true"
+        - effect: NoSchedule
+          key: node-role.kubernetes.io/master
+          operator: Equal
       volumes:
         - name: docker-sock
           hostPath:

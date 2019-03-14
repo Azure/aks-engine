@@ -150,6 +150,9 @@ spec:
         operator: "Equal"
         value: "true"
         key: node-role.kubernetes.io/master
+      - effect: NoSchedule
+        operator: "Equal"
+        key: node-role.kubernetes.io/master
       nodeSelector:
         kubernetes.io/role: master
         beta.kubernetes.io/os: linux

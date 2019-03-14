@@ -446,6 +446,9 @@ spec:
           operator: Equal
           value: "true"
           effect: NoSchedule
+        - key: node-role.kubernetes.io/master
+          operator: Equal
+          effect: NoSchedule
         # Mark the pod as a critical add-on for rescheduling.
         - key: CriticalAddonsOnly
           operator: Exists

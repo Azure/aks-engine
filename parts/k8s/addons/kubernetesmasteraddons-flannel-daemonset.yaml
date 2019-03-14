@@ -66,6 +66,9 @@ spec:
           operator: Equal
           value: "true"
           effect: NoSchedule
+        - key: node-role.kubernetes.io/master
+          operator: Equal
+          effect: NoSchedule
         - key: CriticalAddonsOnly
           operator: Exists
       serviceAccountName: flannel
