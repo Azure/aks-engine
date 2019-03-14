@@ -1,5 +1,5 @@
 # Kubernetes on Cosmos
-This example deployment allows you to use aks-engine to bootstrap a Kubernetes cluster on Azure that uses [Azure Cosmos](https://azure.microsoft.com/services/cosmos-db/) instead of locally installed and configured etcd.
+This example deployment allows you to use AKS Engine to bootstrap a Kubernetes cluster on Azure that uses [Azure Cosmos](https://azure.microsoft.com/services/cosmos-db/) instead of locally installed and configured etcd.
 
 ## What is the Azure Cosmos etcd API?
 [Azure Cosmos](https://azure.microsoft.com/services/cosmos-db/) is a globally distributed, multi-model database service. It offers turnkey global distribution, guarantees single-digit millisecond latencies at the 99th percentile, elastic scaling of throughput and storage, and comprehensive SLA’s.
@@ -8,13 +8,13 @@ The Azure Cosmos etcd API allows you to use Azure Cosmos as the backing store fo
 
 ## Prerequisites 
 1.	Install the [Azure CLI](https://docs.microsoft.com/cli/azure/install-azure-cli?view=azure-cli-latest)
-2.	Install [AKS-Engine](https://github.com/Azure/aks-engine/blob/master/docs/tutorials/quickstart.md)
+2.	Install [AKS Engine](https://github.com/Azure/aks-engine/blob/master/docs/tutorials/quickstart.md)
 3.	Have a whitelisted subscription for the Azure Cosmos etcd API. Follow instructions at https://aka.ms/cosmosetcdapi-signup to enroll in the private preview. 
 
 ## Steps
 Follow the instructions [here](https://github.com/Azure/aks-engine/blob/master/docs/tutorials/quickstart.md#deploy-your-first-cluster) to deploy your first Kubernetes cluster. 
 
-Here is an example aks-engine command: 
+Here is an example `aks-engine` command: 
 
 ```console
 $ aks-engine deploy --subscription-id <SubscriptionId> \
