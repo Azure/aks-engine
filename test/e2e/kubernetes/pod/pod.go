@@ -590,6 +590,47 @@ func (p *Pod) Delete(retries int) error {
 	return kubectlError
 }
 
+// CheckLinuxOutboundConnection checks outbound connection for a list of Linux pods.
+func (l *List) CheckLinuxOutboundConnection(sleep, duration time.Duration) (bool, error) {
+	readyCh := make(chan bool)
+	errCh := make(chan error)
+	ctx, cancel := context.WithTimeout(context.Background(), 2*duration)
+	defer cancel()
+
+	for _, p := range l.Pods {
+		go func() {
+			ready, err := p.CheckLinuxOutboundConnection(sleep, duration)
+			readyCh <- ready
+			errCh <- err
+		}()
+	}
+
+	readyCount := 0
+	for {
+		select {
+		case <-ctx.Done():
+			return false, errors.Errorf("Timeout exceeded (%s) while waiting for PodList to check outbound internet connection", duration.String())
+		case err := <-errCh:
+			return false, err
+		case <-readyCh:
+			readyCount++
+			if readyCount == len(l.Pods) {
+				return true, nil
+			}
+		}
+	}
+}
+
+/*
+func (l *List) ValidateCurlConnection(uri string, sleep, duration time.Duration) (bool, error) {
+...
+}
+
+func (l *List) CheckWindowsOutboundConnection(url string, sleep, duration time.Duration) (bool, error) {
+...
+}
+*/
+
 // CheckLinuxOutboundConnection will keep retrying the check if an error is received until the timeout occurs or it passes. This helps us when DNS may not be available for some time after a pod starts.
 func (p *Pod) CheckLinuxOutboundConnection(sleep, duration time.Duration) (bool, error) {
 	readyCh := make(chan bool, 1)

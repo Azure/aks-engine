@@ -7,11 +7,8 @@ import (
 	"fmt"
 	"log"
 	"math/rand"
-	"net"
 	"os"
-	"os/exec"
 	"path/filepath"
-	"regexp"
 	"strings"
 	"time"
 
@@ -19,17 +16,13 @@ import (
 	"github.com/Azure/aks-engine/test/e2e/config"
 	"github.com/Azure/aks-engine/test/e2e/engine"
 	"github.com/Azure/aks-engine/test/e2e/kubernetes/deployment"
-	"github.com/Azure/aks-engine/test/e2e/kubernetes/hpa"
-	"github.com/Azure/aks-engine/test/e2e/kubernetes/job"
 	"github.com/Azure/aks-engine/test/e2e/kubernetes/namespace"
 	"github.com/Azure/aks-engine/test/e2e/kubernetes/networkpolicy"
 	"github.com/Azure/aks-engine/test/e2e/kubernetes/node"
-	"github.com/Azure/aks-engine/test/e2e/kubernetes/persistentvolume"
 	"github.com/Azure/aks-engine/test/e2e/kubernetes/persistentvolumeclaims"
 	"github.com/Azure/aks-engine/test/e2e/kubernetes/pod"
 	"github.com/Azure/aks-engine/test/e2e/kubernetes/service"
 	"github.com/Azure/aks-engine/test/e2e/kubernetes/storageclass"
-	"github.com/Azure/aks-engine/test/e2e/kubernetes/util"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
@@ -85,6 +78,7 @@ var _ = BeforeSuite(func() {
 })
 
 var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", func() {
+	/***
 	Describe("regardless of agent pool type", func() {
 		It("should display the installed Ubuntu version on the master node", func() {
 			kubeConfig, err := GetConfig()
@@ -946,7 +940,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			}
 		})
 	})
-
+	***/
 	Describe("with NetworkPolicy enabled", func() {
 		It("should apply various network policies and enforce access to nginx pod", func() {
 			if eng.HasNetworkPolicy("calico") || eng.HasNetworkPolicy("azure") || eng.HasNetworkPolicy("cilium") {
@@ -1003,11 +997,17 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				frontendProdPods, err := frontendProdDeployment.Pods()
 				Expect(err).NotTo(HaveOccurred())
 				Expect(len(frontendProdPods)).ToNot(BeZero())
-				for _, frontendProdPod := range frontendProdPods {
-					pass, err := frontendProdPod.CheckLinuxOutboundConnection(5*time.Second, cfg.Timeout)
-					Expect(err).NotTo(HaveOccurred())
-					Expect(pass).To(BeTrue())
-				}
+				pl := pod.List{Pods: frontendProdPods}
+				pass, err := pl.CheckLinuxOutboundConnection(5*time.Second, cfg.Timeout)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(pass).To(BeTrue())
+				/*
+					for _, frontendProdPod := range frontendProdPods {
+						pass, err := frontendProdPod.CheckLinuxOutboundConnection(5*time.Second, cfg.Timeout)
+						Expect(err).NotTo(HaveOccurred())
+						Expect(pass).To(BeTrue())
+					}
+				*/
 
 				By("Ensuring we have outbound internet access from the frontend-dev pods")
 				frontendDevPods, err := frontendDevDeployment.Pods()
