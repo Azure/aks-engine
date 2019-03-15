@@ -306,5 +306,5 @@ coreos:
 runcmd:
 - set -x
 - . /opt/azure/containers/provision_source.sh
-- {{GetKubernetesAgentPreprovisionYaml .}}
+- aptmarkWALinuxAgent hold{{GetKubernetesAgentPreprovisionYaml .}}
 {{end}}
