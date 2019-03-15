@@ -57,7 +57,9 @@ else
     FULL_INSTALL_REQUIRED=true
 fi
 
-holdWALinuxAgent "hold"
+if [[ $OS == $UBUNTU_OS_NAME ]]; then
+    holdWALinuxAgent "hold"
+fi
 
 if [[ ! -z "${MASTER_NODE}" ]] && [[ -z "${COSMOS_URI}" ]]; then
     	installEtcd
@@ -176,7 +178,11 @@ fi
 if $REBOOTREQUIRED; then
   echo 'reboot required, rebooting node in 1 minute'
   /bin/bash -c "shutdown -r 1 &"
-  holdWALinuxAgent "unhold"
+  if [[ $OS == $UBUNTU_OS_NAME ]]; then
+      holdWALinuxAgent "unhold"
+  fi
 else
-  runAptDaily &
+  if [[ $OS == $UBUNTU_OS_NAME ]]; then
+      runAptDaily &
+  fi
 fi

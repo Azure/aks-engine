@@ -504,6 +504,5 @@ coreos:
 {{else}}
 runcmd:
 - set -x
-- timeout 10 apt-mark hold walinuxagent{{GetKubernetesMasterPreprovisionYaml}}
-- timeout 10 apt-mark unhold walinuxagent
+- {{GetKubernetesMasterPreprovisionYaml}}
 {{end}}
