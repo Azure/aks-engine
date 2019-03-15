@@ -57,10 +57,6 @@ else
     FULL_INSTALL_REQUIRED=true
 fi
 
-if [[ $OS == $UBUNTU_OS_NAME ]]; then
-    apt-mark showhold | grep walinuxagent || aptmarkWALinuxAgent hold
-fi
-
 if [[ ! -z "${MASTER_NODE}" ]] && [[ -z "${COSMOS_URI}" ]]; then
     	installEtcd
 fi
