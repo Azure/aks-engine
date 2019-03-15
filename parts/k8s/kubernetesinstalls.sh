@@ -317,3 +317,13 @@ cleanUpContainerImages() {
         docker rmi $(docker images --format '{{.Repository}}:{{.Tag}}' | grep 'nginx') &
     fi
 }
+
+overrideNetworkConfig() {
+    CONFIG_FILEPATH="/etc/cloud/cloud.cfg.d/80_azure_net_config.cfg"
+    touch ${CONFIG_FILEPATH}
+    cat << EOF >> ${CONFIG_FILEPATH}
+datasource:
+    Azure:
+        apply_network_config: false
+EOF
+}

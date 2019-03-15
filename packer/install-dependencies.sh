@@ -11,6 +11,10 @@ cat /proc/version | tee -a ${RELEASE_NOTES_FILEPATH}
 echo ""
 echo "Components downloaded in this VHD build (some of the below components might get deleted during cluster provisioning if they are not needed):" >> ${RELEASE_NOTES_FILEPATH}
 
+if [[ UBUNTU_RELEASE == "18.04" ]]; then
+  overrideNetworkConfig
+fi
+
 ETCD_VERSION="3.2.25"
 ETCD_DOWNLOAD_URL="https://acs-mirror.azureedge.net/github-coreos"
 installEtcd
