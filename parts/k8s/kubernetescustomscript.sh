@@ -179,6 +179,7 @@ if $REBOOTREQUIRED; then
   fi
 else
   if [[ $OS == $UBUNTU_OS_NAME ]]; then
-      runAptDaily &
+      /usr/lib/apt/apt.systemd.daily &
+      aptmarkWALinuxAgent unhold &
   fi
 fi
