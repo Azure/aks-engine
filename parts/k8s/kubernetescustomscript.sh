@@ -57,6 +57,10 @@ else
     FULL_INSTALL_REQUIRED=true
 fi
 
+if [[ $OS == $UBUNTU_OS_NAME ]]; then
+    apt-mark showhold | grep walinuxagent || aptmarkWALinuxAgent hold
+fi
+
 if [[ ! -z "${MASTER_NODE}" ]] && [[ -z "${COSMOS_URI}" ]]; then
     	installEtcd
 fi
@@ -175,7 +179,7 @@ if $REBOOTREQUIRED; then
   echo 'reboot required, rebooting node in 1 minute'
   /bin/bash -c "shutdown -r 1 &"
   if [[ $OS == $UBUNTU_OS_NAME ]]; then
-      aptmarkWALinuxAgent "unhold"
+      aptmarkWALinuxAgent unhold
   fi
 else
   if [[ $OS == $UBUNTU_OS_NAME ]]; then

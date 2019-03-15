@@ -117,7 +117,7 @@ ensureRPC() {
 runAptDaily() {
     wait_for_apt_locks
     /usr/lib/apt/apt.systemd.daily
-    aptmarkWALinuxAgent "unhold"
+    aptmarkWALinuxAgent unhold
 }
 
 generateAggregatedAPICerts() {
