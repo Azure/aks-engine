@@ -6,10 +6,11 @@ ETCD_PEER_URL="https://${PRIVATE_IP}:2380"
 ETCD_CLIENT_URL="https://${PRIVATE_IP}:2379"
 
 holdWALinuxAgent() {
+    retrycmd_if_failure 120 5 25 apt-mark $1 walinuxagent || \
     if [[ "$1" == "hold" ]]; then
-        retrycmd_if_failure 120 5 25 apt-mark $1 walinuxagent || exit $ERR_HOLD_WALINUXAGENT
+        exit $ERR_HOLD_WALINUXAGENT
     elif [[ "$1" == "unhold" ]]; then
-        retrycmd_if_failure 120 5 25 apt-mark $1 walinuxagent || exit $ERR_RELEASE_HOLD_WALINUXAGENT
+        exit $ERR_RELEASE_HOLD_WALINUXAGENT
     fi
 }
 
