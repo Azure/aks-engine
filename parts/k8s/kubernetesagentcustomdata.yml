@@ -306,6 +306,5 @@ coreos:
 runcmd:
 - set -x
 - . /opt/azure/containers/provision_source.sh
-- timeout 10 apt-mark hold walinuxagent{{GetKubernetesAgentPreprovisionYaml .}}
-- timeout 10 apt-mark unhold walinuxagent
+- {{GetKubernetesAgentPreprovisionYaml .}}
 {{end}}
