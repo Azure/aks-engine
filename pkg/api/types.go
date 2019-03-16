@@ -1481,8 +1481,8 @@ func (cs *ContainerService) GetLocations() []string {
 }
 
 // GetCustomCloudAuthenticationMethod returns authentication method which k8s azure cloud provider will use
-// For AzurePublicCloud,AzureChinaCloud,azureGermanCloud,azureUSGovernmentCloud, it will be always be client_secret
-// For AzureStackCloud, if it is specifiled in configuration, the value will be used, if not ,the default value is client_secret.
+// For AzurePublicCloud,AzureChinaCloud,azureGermanCloud,AzureUSGovernmentCloud, it will be always be client_secret
+// For AzureStackCloud, if it is specified in configuration, the value will be used, if not ,the default value is client_secret.
 func (p *Properties) GetCustomCloudAuthenticationMethod() string {
 	if p.IsAzureStackCloud() {
 		return p.CustomCloudProfile.AuthenticationMethod
@@ -1491,8 +1491,8 @@ func (p *Properties) GetCustomCloudAuthenticationMethod() string {
 }
 
 // GetCustomCloudIdentitySystem returns identity system method for azure stack.
-// For AzurePublicCloud,AzureChinaCloud,azureGermanCloud,azureUSGovernmentCloud, it will be always be AzureAD
-// For AzureStackCloud, if it is specifiled in configuration, the value will be used, if not ,the default value is AzureAD.
+// For AzurePublicCloud,AzureChinaCloud,azureGermanCloud,AzureUSGovernmentCloud, it will be always be AzureAD
+// For AzureStackCloud, if it is specified in configuration, the value will be used, if not ,the default value is AzureAD.
 func (p *Properties) GetCustomCloudIdentitySystem() string {
 	if p.IsAzureStackCloud() {
 		return p.CustomCloudProfile.IdentitySystem
@@ -1598,7 +1598,7 @@ func (cs *ContainerService) GetCloudSpecConfig() AzureEnvironmentSpecConfig {
 // IsAKSBillingEnabled checks if the AKS Billing Extension should be enabled for a cloud environment.
 func (cs *ContainerService) IsAKSBillingEnabled() bool {
 	cloudSpecConfig := cs.GetCloudSpecConfig()
-	return cloudSpecConfig.CloudName == AzurePublicCloud || cloudSpecConfig.CloudName == AzureChinaCloud
+	return cloudSpecConfig.CloudName == AzurePublicCloud || cloudSpecConfig.CloudName == AzureChinaCloud || cloudSpecConfig.CloudName == AzureUSGovernmentCloud
 }
 
 // GetAzureProdFQDN returns the formatted FQDN string for a given apimodel.
