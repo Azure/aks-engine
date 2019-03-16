@@ -5,15 +5,6 @@ PRIVATE_IP=$(hostname -I | cut -d' ' -f1)
 ETCD_PEER_URL="https://${PRIVATE_IP}:2380"
 ETCD_CLIENT_URL="https://${PRIVATE_IP}:2379"
 
-holdWALinuxAgent() {
-    retrycmd_if_failure 120 5 25 apt-mark $1 walinuxagent || \
-    if [[ "$1" == "hold" ]]; then
-        exit $ERR_HOLD_WALINUXAGENT
-    elif [[ "$1" == "unhold" ]]; then
-        exit $ERR_RELEASE_HOLD_WALINUXAGENT
-    fi
-}
-
 systemctlEnableAndStart() {
     systemctl_restart 100 5 30 $1
     RESTART_STATUS=$?
@@ -121,13 +112,6 @@ configureEtcd() {
 ensureRPC() {
     systemctlEnableAndStart rpcbind || exit $ERR_SYSTEMCTL_START_FAIL
     systemctlEnableAndStart rpc-statd || exit $ERR_SYSTEMCTL_START_FAIL
-}
-
-runAptDaily() {
-    wait_for_apt_locks
-    /usr/lib/apt/apt.systemd.daily
-    wait_for_apt_locks
-    holdWALinuxAgent "unhold"
 }
 
 generateAggregatedAPICerts() {
