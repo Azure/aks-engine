@@ -107,6 +107,14 @@ write_files:
     RemainAfterExit=yes
     ExecStart=/usr/local/bin/health-monitor.sh container-runtime
 
+- path: /etc/apt/preferences
+  permissions: "0644"
+  owner: root
+  content: |
+    Package: walinuxagent
+    Pin: version 2.2.32.2
+    Pin-Priority: 550
+
 {{if .KubernetesConfig.RequiresDocker}}
     {{if not .IsCoreOS}}
 - path: /etc/systemd/system/docker.service.d/clear_mount_propagation_flags.conf
@@ -306,5 +314,5 @@ coreos:
 runcmd:
 - set -x
 - . /opt/azure/containers/provision_source.sh
-- {{GetKubernetesAgentPreprovisionYaml .}}
+- aptmarkWALinuxAgent hold{{GetKubernetesAgentPreprovisionYaml .}}
 {{end}}

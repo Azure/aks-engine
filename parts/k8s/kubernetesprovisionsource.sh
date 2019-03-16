@@ -59,6 +59,16 @@ NVIDIA_DOCKER_VERSION=2.0.3
 DOCKER_VERSION=1.13.1-1
 NVIDIA_CONTAINER_RUNTIME_VERSION=2.0.0
 
+aptmarkWALinuxAgent() {
+    wait_for_apt_locks
+    retrycmd_if_failure 120 5 25 apt-mark $1 walinuxagent || \
+    if [[ "$1" == "hold" ]]; then
+        exit $ERR_HOLD_WALINUXAGENT
+    elif [[ "$1" == "unhold" ]]; then
+        exit $ERR_RELEASE_HOLD_WALINUXAGENT
+    fi
+}
+
 retrycmd_if_failure() {
     retries=$1; wait_sleep=$2; timeout=$3; shift && shift && shift
     for i in $(seq 1 $retries); do
