@@ -28,7 +28,7 @@ write_files:
   owner: root
   content: !!binary |
     {{WrapAsVariable "provisionConfigs"}}
-    
+
 {{if IsAzureStackCloud}}
 - path: /opt/azure/containers/provision_configs_custom_cloud.sh
   permissions: "0744"
@@ -106,6 +106,14 @@ write_files:
     RestartSec=10
     RemainAfterExit=yes
     ExecStart=/usr/local/bin/health-monitor.sh container-runtime
+
+- path: /etc/apt/preferences
+  permissions: "0644"
+  owner: root
+  content: |
+    Package: walinuxagent
+    Pin: version 2.2.32.2
+    Pin-Priority: 550
 
 {{if .KubernetesConfig.RequiresDocker}}
     {{if not .IsCoreOS}}
@@ -306,6 +314,5 @@ coreos:
 runcmd:
 - set -x
 - . /opt/azure/containers/provision_source.sh
-- timeout 10 apt-mark hold walinuxagent{{GetKubernetesAgentPreprovisionYaml .}}
-- timeout 10 apt-mark unhold walinuxagent
+- aptmarkWALinuxAgent hold{{GetKubernetesAgentPreprovisionYaml .}}
 {{end}}

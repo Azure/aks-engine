@@ -25,7 +25,7 @@ config_script=/opt/azure/containers/provision_configs.sh
 wait_for_file 3600 1 $config_script || exit $ERR_FILE_WATCH_TIMEOUT
 source $config_script
 
-if [[ "${TARGET_ENVIRONMENT,,}" == "${AZURE_STACK_ENV}"  ]]; then 
+if [[ "${TARGET_ENVIRONMENT,,}" == "${AZURE_STACK_ENV}"  ]]; then
     config_script_custom_cloud=/opt/azure/containers/provision_configs_custom_cloud.sh
     wait_for_file 3600 1 $config_script_custom_cloud || exit $ERR_FILE_WATCH_TIMEOUT
     source $config_script_custom_cloud
@@ -57,14 +57,6 @@ else
     FULL_INSTALL_REQUIRED=true
 fi
 
-holdWALinuxAgent() {
-    if [[ $OS == $UBUNTU_OS_NAME ]]; then
-        wait_for_apt_locks
-        retrycmd_if_failure 120 5 25 apt-mark hold walinuxagent || exit $ERR_HOLD_WALINUXAGENT
-        wait_for_apt_locks
-    fi
-}
-
 if [[ ! -z "${MASTER_NODE}" ]] && [[ -z "${COSMOS_URI}" ]]; then
     	installEtcd
 fi
@@ -72,7 +64,7 @@ fi
 if $FULL_INSTALL_REQUIRED; then
     holdWALinuxAgent
     installDeps
-else 
+else
     echo "Golden image; skipping dependencies installation"
 fi
 
@@ -101,10 +93,10 @@ if [[ ! -z "${MASTER_NODE}" ]] && [[ -z "${COSMOS_URI}" ]]; then
   configureEtcdUser
 fi
 
-if [[ ! -z "${MASTER_NODE}" ]]; then 
+if [[ ! -z "${MASTER_NODE}" ]]; then
   # this step configures all certs
   # both configs etcd/cosmos
-  configureSecrets 
+  configureSecrets
 fi
 # configure etcd if we are configured for etcd
 if [[ ! -z "${MASTER_NODE}" ]] && [[ -z "${COSMOS_URI}" ]]; then
@@ -132,7 +124,7 @@ fi
 
 configureK8s
 
-if [[ "${TARGET_ENVIRONMENT,,}" == "${AZURE_STACK_ENV}"  ]]; then 
+if [[ "${TARGET_ENVIRONMENT,,}" == "${AZURE_STACK_ENV}"  ]]; then
     configureK8sCustomCloud
 fi
 
@@ -187,6 +179,12 @@ fi
 if $REBOOTREQUIRED; then
   echo 'reboot required, rebooting node in 1 minute'
   /bin/bash -c "shutdown -r 1 &"
+  if [[ $OS == $UBUNTU_OS_NAME ]]; then
+      aptmarkWALinuxAgent unhold &
+  fi
 else
-  runAptDaily &
+  if [[ $OS == $UBUNTU_OS_NAME ]]; then
+      /usr/lib/apt/apt.systemd.daily &
+      aptmarkWALinuxAgent unhold &
+  fi
 fi
