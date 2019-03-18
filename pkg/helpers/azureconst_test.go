@@ -38,6 +38,8 @@ func TestGetAzureLocations(t *testing.T) {
 		"northcentralus":     {},
 		"northeurope":        {},
 		"southcentralus":     {},
+		"southafricanorth":   {},
+		"southafricawest":    {},
 		"southeastasia":      {},
 		"southindia":         {},
 		"uksouth":            {},
@@ -220,6 +222,8 @@ func TestGetDCOSMasterAllowedSizes(t *testing.T) {
 		"Standard_H16r",
 		"Standard_H8",
 		"Standard_H8m",
+		"Standard_HB60rs",
+		"Standard_HC44rs",
 		"Standard_L16s",
 		"Standard_L16s_v2",
 		"Standard_L32s",
@@ -275,9 +279,6 @@ func TestGetDCOSMasterAllowedSizes(t *testing.T) {
 		"Standard_NV24s_v2",
 		"Standard_NV6",
 		"Standard_NV6s_v2",
-		"Standard_PB12s",
-		"Standard_PB24s",
-		"Standard_PB6s",
 	}
 
 	for _, expectedSize := range expectedSizes {
@@ -313,6 +314,7 @@ func TestKubernetesAllowedSizes(t *testing.T) {
 		"Standard_A8_v2",
 		"Standard_A8m_v2",
 		"Standard_A9",
+		"Standard_B1ls",
 		"Standard_B1ms",
 		"Standard_B1s",
 		"Standard_B2ms",
@@ -454,6 +456,8 @@ func TestKubernetesAllowedSizes(t *testing.T) {
 		"Standard_H16r",
 		"Standard_H8",
 		"Standard_H8m",
+		"Standard_HB60rs",
+		"Standard_HC44rs",
 		"Standard_L16s",
 		"Standard_L16s_v2",
 		"Standard_L32s",
@@ -509,9 +513,6 @@ func TestKubernetesAllowedSizes(t *testing.T) {
 		"Standard_NV24s_v2",
 		"Standard_NV6",
 		"Standard_NV6s_v2",
-		"Standard_PB12s",
-		"Standard_PB24s",
-		"Standard_PB6s",
 	}
 
 	for _, expectedSize := range expectedSizes {
@@ -579,6 +580,9 @@ func TestGetSizeMap(t *testing.T) {
 		},
 		"Standard_A9": map[string]string{
 			"storageAccountType": "Standard_LRS",
+		},
+		"Standard_B1ls": map[string]string{
+			"storageAccountType": "Premium_LRS",
 		},
 		"Standard_B1ms": map[string]string{
 			"storageAccountType": "Premium_LRS",
@@ -1001,6 +1005,12 @@ func TestGetSizeMap(t *testing.T) {
 			"storageAccountType": "Standard_LRS",
 		},
 		"Standard_H8m": map[string]string{
+			"storageAccountType": "Premium_LRS",
+		},
+		"Standard_HB60rs": map[string]string{
+			"storageAccountType": "Premium_LRS",
+		},
+		"Standard_HC44rs": map[string]string{
 			"storageAccountType": "Standard_LRS",
 		},
 		"Standard_L16s": map[string]string{
@@ -1166,15 +1176,6 @@ func TestGetSizeMap(t *testing.T) {
 			"storageAccountType": "Standard_LRS",
 		},
 		"Standard_NV6s_v2": map[string]string{
-			"storageAccountType": "Premium_LRS",
-		},
-		"Standard_PB12s": map[string]string{
-			"storageAccountType": "Premium_LRS",
-		},
-		"Standard_PB24s": map[string]string{
-			"storageAccountType": "Premium_LRS",
-		},
-		"Standard_PB6s": map[string]string{
 			"storageAccountType": "Premium_LRS",
 		},
 	}
