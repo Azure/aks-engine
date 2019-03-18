@@ -32,8 +32,8 @@ func GenerateARMResources(cs *api.ContainerService) []interface{} {
 			}
 			armResources = append(armResources, CreateAgentVMSS(cs, profile))
 		} else {
-			agentVmasResources := createKubernetesAgentVMASResources(cs, profile)
-			armResources = append(armResources, agentVmasResources...)
+			agentVMASResources := createKubernetesAgentVMASResources(cs, profile)
+			armResources = append(armResources, agentVMASResources...)
 		}
 	}
 
@@ -78,8 +78,8 @@ func createKubernetesAgentVMASResources(cs *api.ContainerService, profile *api.A
 		}
 	}
 
-	agentVmasNic := createAgentVMASNetworkInterface(cs, profile)
-	agentVMASResources = append(agentVMASResources, agentVmasNic)
+	agentVMASNIC := createAgentVMASNetworkInterface(cs, profile)
+	agentVMASResources = append(agentVMASResources, agentVMASNIC)
 
 	if profile.IsManagedDisks() {
 		agentAvSet := createAgentAvailabilitySets(profile)

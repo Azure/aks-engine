@@ -669,10 +669,6 @@ func getVMSSDataDisks(profile *api.AgentPoolProfile) *[]compute.VirtualMachineSc
 		}
 		if profile.StorageProfile == api.StorageAccount {
 			dataDisk.Name = to.StringPtr(fmt.Sprintf("[concat(variables('%sVMNamePrefix'), copyIndex(),'-datadisk%d')]", profile.Name, i))
-			//dataDisk.Vhd = &compute.VirtualHardDisk{
-			//	URI: to.StringPtr(fmt.Sprintf("[concat('http://',variables('storageAccountPrefixes')[mod(add(add(div(copyIndex(),variables('maxVMsPerStorageAccount')),variables('%sStorageAccountOffset')),variables('dataStorageAccountPrefixSeed')),variables('storageAccountPrefixesCount'))],variables('storageAccountPrefixes')[div(add(add(div(copyIndex(),variables('maxVMsPerStorageAccount')),variables('%sStorageAccountOffset')),variables('dataStorageAccountPrefixSeed')),variables('storageAccountPrefixesCount'))],variables('%sDataAccountName'),'.blob.core.windows.net/vhds/',variables('%sVMNamePrefix'),copyIndex(), '--datadisk%d.vhd')]",
-			//		profile.Name, profile.Name, profile.Name, profile.Name, i)),
-			//}
 		}
 		dataDisks = append(dataDisks, dataDisk)
 	}

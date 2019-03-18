@@ -114,11 +114,6 @@ ensureRPC() {
     systemctlEnableAndStart rpc-statd || exit $ERR_SYSTEMCTL_START_FAIL
 }
 
-runAptDaily() {
-    wait_for_apt_locks
-    /usr/lib/apt/apt.systemd.daily
-}
-
 generateAggregatedAPICerts() {
     AGGREGATED_API_CERTS_SETUP_FILE=/etc/kubernetes/generate-proxy-certs.sh
     wait_for_file 1200 1 $AGGREGATED_API_CERTS_SETUP_FILE || exit $ERR_FILE_WATCH_TIMEOUT
