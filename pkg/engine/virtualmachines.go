@@ -266,7 +266,7 @@ func createJumpboxVirtualMachine(cs *api.ContainerService) VirtualMachineARM {
 					},
 				},
 			},
-			CustomData: to.StringPtr(fmt.Sprintf("[base64(concat('%s'))]", customDataStr)),
+			CustomData: to.StringPtr(customDataStr),
 		},
 		NetworkProfile: &compute.NetworkProfile{
 			NetworkInterfaces: &[]compute.NetworkInterfaceReference{
@@ -518,7 +518,10 @@ func getArmDataDisks(profile *api.AgentPoolProfile) *[]compute.DataDisk {
 
 func getCustomDataFromJSON(jsonStr string) string {
 	var customDataObj map[string]string
-	json.Unmarshal([]byte(jsonStr), &customDataObj)
+	err := json.Unmarshal([]byte(jsonStr), &customDataObj)
+	if err != nil {
+		panic(err)
+	}
 	return customDataObj["customData"]
 }
 

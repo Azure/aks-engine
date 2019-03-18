@@ -173,7 +173,7 @@ func (t *TemplateGenerator) GetJumpboxCustomDataJSON(cs *api.ContainerService) s
 		panic(err)
 	}
 
-	return fmt.Sprintf("\"customData\": \"[base64(concat('%s'))]\",", str)
+	return fmt.Sprintf("{\"customData\": \"[base64(concat('%s'))]\"}", str)
 }
 
 func (t *TemplateGenerator) GetMasterCustomDataJSON(cs *api.ContainerService) string {
