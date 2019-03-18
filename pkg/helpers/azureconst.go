@@ -36,6 +36,8 @@ func GetAzureLocations() []string {
 		"koreasouth",
 		"northcentralus",
 		"northeurope",
+		"southafricanorth",
+		"southafricawest",
 		"southcentralus",
 		"southeastasia",
 		"southindia",
@@ -207,6 +209,8 @@ func GetDCOSMasterAllowedSizes() string {
         "Standard_H16r",
         "Standard_H8",
         "Standard_H8m",
+        "Standard_HB60rs",
+        "Standard_HC44rs",
         "Standard_L16s",
         "Standard_L16s_v2",
         "Standard_L32s",
@@ -261,10 +265,7 @@ func GetDCOSMasterAllowedSizes() string {
         "Standard_NV24",
         "Standard_NV24s_v2",
         "Standard_NV6",
-        "Standard_NV6s_v2",
-        "Standard_PB12s",
-        "Standard_PB24s",
-        "Standard_PB6s"
+        "Standard_NV6s_v2"
     ],
 `
 }
@@ -291,6 +292,7 @@ func GetKubernetesAllowedSizes() string {
         "Standard_A8_v2",
         "Standard_A8m_v2",
         "Standard_A9",
+        "Standard_B1ls",
         "Standard_B1ms",
         "Standard_B1s",
         "Standard_B2ms",
@@ -432,6 +434,8 @@ func GetKubernetesAllowedSizes() string {
         "Standard_H16r",
         "Standard_H8",
         "Standard_H8m",
+        "Standard_HB60rs",
+        "Standard_HC44rs",
         "Standard_L16s",
         "Standard_L16s_v2",
         "Standard_L32s",
@@ -486,10 +490,7 @@ func GetKubernetesAllowedSizes() string {
         "Standard_NV24",
         "Standard_NV24s_v2",
         "Standard_NV6",
-        "Standard_NV6s_v2",
-        "Standard_PB12s",
-        "Standard_PB24s",
-        "Standard_PB6s"
+        "Standard_NV6s_v2"
     ],
 `
 }
@@ -553,6 +554,9 @@ func GetSizeMap() string {
     },
     "Standard_A9": {
       "storageAccountType": "Standard_LRS"
+    },
+    "Standard_B1ls": {
+      "storageAccountType": "Premium_LRS"
     },
     "Standard_B1ms": {
       "storageAccountType": "Premium_LRS"
@@ -977,6 +981,12 @@ func GetSizeMap() string {
     "Standard_H8m": {
       "storageAccountType": "Standard_LRS"
     },
+    "Standard_HB60rs": {
+      "storageAccountType": "Premium_LRS"
+    },
+    "Standard_HC44rs": {
+      "storageAccountType": "Premium_LRS"
+    },
     "Standard_L16s": {
       "storageAccountType": "Premium_LRS"
     },
@@ -1140,15 +1150,6 @@ func GetSizeMap() string {
       "storageAccountType": "Standard_LRS"
     },
     "Standard_NV6s_v2": {
-      "storageAccountType": "Premium_LRS"
-    },
-    "Standard_PB12s": {
-      "storageAccountType": "Premium_LRS"
-    },
-    "Standard_PB24s": {
-      "storageAccountType": "Premium_LRS"
-    },
-    "Standard_PB6s": {
       "storageAccountType": "Premium_LRS"
     }
    }
