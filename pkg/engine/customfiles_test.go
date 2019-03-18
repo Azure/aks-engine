@@ -104,3 +104,30 @@ func TestGetBase64CustomFile(t *testing.T) {
 	}
 
 }
+
+func TestCustomFilesIntoReaders(t *testing.T) {
+	p := &api.Properties{
+		MasterProfile: &api.MasterProfile{
+			CustomFiles: &[]api.CustomFile{
+				{
+					Source: "testdata/addons/kubernetes.json",
+					Dest:   "fooDest",
+				},
+				{
+					Source: "testdata/addons/kubernetes-kube-proxy.json",
+					Dest:   "barDest",
+				},
+			},
+		},
+	}
+
+	cfr, err := customfilesIntoReaders(masterCustomFiles(p))
+
+	if err != nil {
+		t.Errorf("unexpected error while trying to get CustomFileReaders: %s", err.Error())
+	}
+
+	if len(cfr) != 2 {
+		t.Errorf("expected length of CustomFileReader slice to be %d, but got %d instead", 2, len(cfr))
+	}
+}
