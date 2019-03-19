@@ -3,7 +3,7 @@ version: 2
 defaults: &defaults
   working_directory: /go/src/github.com/Azure/aks-engine
   docker:
-    - image: quay.io/deis/go-dev:v1.19.1
+    - image: quay.io/deis/go-dev:v1.19.2
   environment:
     GOPATH: /go
 
