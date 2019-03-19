@@ -27,10 +27,11 @@ func (az *AzureClient) GetVirtualMachine(ctx context.Context, resourceGroup, nam
 	vm, err := az.virtualMachinesClient.Get(ctx, resourceGroup, name, "")
 	azVM := azcompute.VirtualMachine{}
 	if err != nil {
-		errConvert := DeepCopy(&azVM, vm)
-		if err != nil {
-			log.Fatalf("fail to get virtual machine, %v", errConvert)
-		}
+		log.Fatalf("fail to get virtual machine, %v", err)
+	}
+	err = DeepCopy(&azVM, vm)
+	if err != nil {
+		log.Fatalf("fail to convert virtual machine, %v", err)
 	}
 	return azVM, err
 }
