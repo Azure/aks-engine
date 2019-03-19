@@ -254,7 +254,7 @@ func RunCommandMultipleTimes(podRunnerCmd podRunnerCmd, image, name, command str
 			log.Printf("%s\n", string(out[:]))
 		}
 
-		err = p.Delete(3)
+		err = p.Delete(3, false)
 		if err != nil {
 			return successfulAttempts, err
 		}
@@ -376,7 +376,7 @@ func GetAllByPrefix(prefix, namespace string) ([]Pod, error) {
 }
 
 // AreAllPodsRunning will return true if all pods in a given namespace are in a Running State
-func AreAllPodsRunning(podPrefix, namespace string) (bool, error) {
+func AreAllPodsRunning(podPrefix, namespace string, tryForceDelete bool) (bool, error) {
 	pl, err := GetAll(namespace)
 	if err != nil {
 		return false, err
@@ -390,7 +390,11 @@ func AreAllPodsRunning(podPrefix, namespace string) (bool, error) {
 			return false, err
 		}
 		if matched {
-			if pod.Status.Phase != "Running" {
+			if pod.Status.Phase == "ContainerCreating" {
+				if tryForceDelete {
+					pod.Delete(1, true)
+				}
+			} else if pod.Status.Phase != "Running" {
 				status = append(status, false)
 			} else {
 				status = append(status, true)
@@ -456,6 +460,7 @@ func AreAllPodsSucceeded(podPrefix, namespace string) (bool, bool, error) {
 func WaitOnReady(podPrefix, namespace string, successesNeeded int, sleep, duration time.Duration) (bool, error) {
 	successCount := 0
 	failureCount := 0
+	attempts := 0
 	readyCh := make(chan bool, 1)
 	errCh := make(chan error)
 	ctx, cancel := context.WithTimeout(context.Background(), duration)
@@ -466,7 +471,13 @@ func WaitOnReady(podPrefix, namespace string, successesNeeded int, sleep, durati
 			case <-ctx.Done():
 				errCh <- errors.Errorf("Timeout exceeded (%s) while waiting for Pods (%s) to become ready in namespace (%s), got %d of %d required successful pods ready results", duration.String(), podPrefix, namespace, successCount, successesNeeded)
 			default:
-				ready, err := AreAllPodsRunning(podPrefix, namespace)
+				var err error
+				var ready bool
+				if attempts > 3 {
+					ready, err = AreAllPodsRunning(podPrefix, namespace, true)
+				} else {
+					ready, err = AreAllPodsRunning(podPrefix, namespace, false)
+				}
 				if err != nil {
 					errCh <- err
 					return
@@ -485,6 +496,7 @@ func WaitOnReady(podPrefix, namespace string, successesNeeded int, sleep, durati
 					}
 					time.Sleep(sleep)
 				}
+				attempts++
 			}
 		}
 	}()
@@ -574,11 +586,16 @@ func (p *Pod) Exec(c ...string) ([]byte, error) {
 }
 
 // Delete will delete a Pod in a given namespace
-func (p *Pod) Delete(retries int) error {
+func (p *Pod) Delete(retries int, force bool) error {
 	var kubectlOutput []byte
 	var kubectlError error
 	for i := 0; i < retries; i++ {
-		cmd := exec.Command("k", "delete", "po", "-n", p.Metadata.Namespace, p.Metadata.Name)
+		var cmd *exec.Cmd
+		if force {
+			cmd = exec.Command("k", "delete", "po", "-n", p.Metadata.Namespace, p.Metadata.Name, "--force", "--grace-period=0")
+		} else {
+			cmd = exec.Command("k", "delete", "po", "-n", p.Metadata.Namespace, p.Metadata.Name)
+		}
 		kubectlOutput, kubectlError = util.RunAndLogCommand(cmd, deleteTimeout)
 		if kubectlError != nil {
 			log.Printf("Error while trying to delete Pod %s in namespace %s:%s\n", p.Metadata.Namespace, p.Metadata.Name, string(kubectlOutput))

@@ -800,7 +800,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			Expect(pass).To(BeTrue())
 
 			By("Cleaning up after ourselves")
-			err = p.Delete(deleteResourceRetries)
+			err = p.Delete(deleteResourceRetries, false)
 			Expect(err).NotTo(HaveOccurred())
 		})
 	})
@@ -937,7 +937,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				Expect(nodeZone == pvZone).To(Equal(true))
 
 				By("Cleaning up after ourselves")
-				err = testPod.Delete(deleteResourceRetries)
+				err = testPod.Delete(deleteResourceRetries, false)
 				Expect(err).NotTo(HaveOccurred())
 				err = pvc.Delete(deleteResourceRetries)
 				Expect(err).NotTo(HaveOccurred())
@@ -1391,7 +1391,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 					Expect(valid).To(BeTrue())
 					Expect(err).NotTo(HaveOccurred())
 
-					err = iisPod.Delete(deleteResourceRetries)
+					err = iisPod.Delete(deleteResourceRetries, false)
 					Expect(err).NotTo(HaveOccurred())
 				} else {
 					Skip("Kubernetes version needs to be 1.8 and up for Azure File test")
@@ -1412,7 +1412,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				Expect(running).To(Equal(true))
 				restarts := pod.Status.ContainerStatuses[0].RestartCount
 				if cfg.SoakClusterName == "" {
-					err = pod.Delete(deleteResourceRetries)
+					err = pod.Delete(deleteResourceRetries, false)
 					Expect(err).NotTo(HaveOccurred())
 					Expect(restarts).To(Equal(0))
 				} else {
