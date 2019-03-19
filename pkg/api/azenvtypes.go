@@ -81,6 +81,22 @@ var (
 		VnetCNILinuxPluginsDownloadURL:   "https://acs-mirror.azureedge.net/cni/azure-vnet-cni-linux-amd64-" + AzureCniPluginVerLinux + ".tgz",
 		VnetCNIWindowsPluginsDownloadURL: "https://acs-mirror.azureedge.net/cni/azure-vnet-cni-windows-amd64-" + AzureCniPluginVerWindows + ".zip",
 		ContainerdDownloadURLBase:        "https://storage.googleapis.com/cri-containerd-release/",
+		ImageRepoOverrides: map[string]ImageRepoOverride{
+			"hyperkube": {
+				Registry: "mcr.microsoft.com",
+				Repo:     "k8s/core/hyperkube-amd64",
+				// TODO: Setup tag overrides so we can map upstream versions to Azure k8s versions
+				// For now just using the upstream version works fine.
+			},
+			"pause": {
+				Registry: "mcr.microsoft.com",
+				Repo:     "k8s/core/pause",
+				Tags: map[string]string{
+					"3.1": "1.1.0",
+					"3.0": "1.1.0",
+				},
+			},
+		},
 	}
 
 	//DefaultDCOSSpecConfig is the default DC/OS binary download URL.
