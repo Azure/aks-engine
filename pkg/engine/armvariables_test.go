@@ -5,7 +5,6 @@ package engine
 
 import (
 	"encoding/json"
-	"fmt"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -17,8 +16,10 @@ import (
 
 func TestSizeMap(t *testing.T) {
 	sizeMap := getSizeMap()
-	b, _ := json.MarshalIndent(sizeMap["vmSizesMap"], "", "   ")
-	fmt.Println(string(b))
+	_, err := json.MarshalIndent(sizeMap["vmSizesMap"], "", "   ")
+	if err != nil {
+		t.Errorf("unxpected error while attempting to marshal the size map: %s", err.Error())
+	}
 }
 
 func TestK8sVars(t *testing.T) {
@@ -297,6 +298,12 @@ func TestK8sVars(t *testing.T) {
 	delete(expectedMap, "masterPublicIPAddressName")
 	delete(expectedMap, "provisionScriptParametersMaster")
 	delete(expectedMap, "kubeconfigServer")
+	delete(expectedMap, "masterVMNamePrefix")
+	delete(expectedMap, "masterVMNames")
+	delete(expectedMap, "masterPrivateIpAddrs")
+	delete(expectedMap, "masterEtcdPeerURLs")
+	delete(expectedMap, "masterEtcdClusterStates")
+	delete(expectedMap, "masterEtcdClientURLs")
 
 	diff = cmp.Diff(varMap, expectedMap)
 
@@ -639,5 +646,4 @@ func TestK8sVarsMastersOnly(t *testing.T) {
 	if diff != "" {
 		t.Errorf("unexpected diff while expecting equal structs: %s", diff)
 	}
-
 }

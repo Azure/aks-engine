@@ -256,7 +256,7 @@ func TestCreateHostedMasterVirtualNetwork(t *testing.T) {
 					{
 						Name: to.StringPtr("[variables('subnetName')]"),
 						SubnetPropertiesFormat: &network.SubnetPropertiesFormat{
-							AddressPrefixes: &[]string{"[parameters('masterSubnet')]"},
+							AddressPrefix: to.StringPtr("[parameters('masterSubnet')]"),
 							NetworkSecurityGroup: &network.SecurityGroup{
 								ID: to.StringPtr("[variables('nsgID')]"),
 							},
