@@ -131,7 +131,6 @@ func (cs *ContainerService) setKubeletConfig() {
 		setMissingKubeletValues(cs.Properties.MasterProfile.KubernetesConfig, o.KubernetesConfig.KubeletConfig)
 		addDefaultFeatureGates(cs.Properties.MasterProfile.KubernetesConfig.KubeletConfig, o.OrchestratorVersion, "", "")
 
-		// For Ubuntu 18.04 VMs
 		if cs.Properties.MasterProfile.IsUbuntu1804() {
 			cs.Properties.MasterProfile.KubernetesConfig.KubeletConfig["--resolv-conf"] = "/run/systemd/resolve/resolv.conf"
 		}
@@ -162,7 +161,6 @@ func (cs *ContainerService) setKubeletConfig() {
 			}
 		}
 
-		// For Ubuntu 18.04 VMs
 		if profile.IsUbuntu1804() {
 			profile.KubernetesConfig.KubeletConfig["--resolv-conf"] = "/run/systemd/resolve/resolv.conf"
 		}
