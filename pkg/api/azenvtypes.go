@@ -106,20 +106,12 @@ var (
 		ImageVersion:   "latest",
 	}
 
-	//SovereignCloudsUbuntuImageConfig is the Linux distribution for Azure Sovereign Clouds.
-	SovereignCloudsUbuntuImageConfig = AzureOSImageConfig{
+	//Ubuntu1804ImageConfig is the Ubunutu 18.04-LTS Linux distribution.
+	Ubuntu1804ImageConfig = AzureOSImageConfig{
 		ImageOffer:     "UbuntuServer",
-		ImageSku:       "16.04-LTS",
+		ImageSku:       "18.04-LTS",
 		ImagePublisher: "Canonical",
 		ImageVersion:   "latest",
-	}
-
-	//GermanCloudUbuntuImageConfig is the Linux distribution for Azure Sovereign Clouds.
-	GermanCloudUbuntuImageConfig = AzureOSImageConfig{
-		ImageOffer:     "UbuntuServer",
-		ImageSku:       "16.04-LTS",
-		ImagePublisher: "Canonical",
-		ImageVersion:   "16.04.201801050",
 	}
 
 	//DefaultRHELOSImageConfig is the RHEL Linux distribution.
@@ -138,7 +130,7 @@ var (
 		ImageVersion:   "latest",
 	}
 
-	// DefaultAKSOSImageConfig is the AKS image based on Ubuntu 16.04.
+	// DefaultAKSOSImageConfig is the AKS image based on Ubuntu 16.04-LTS.
 	DefaultAKSOSImageConfig = AzureOSImageConfig{
 		ImageOffer:     "aks",
 		ImageSku:       "aks-ubuntu-1604-201903",
@@ -146,7 +138,15 @@ var (
 		ImageVersion:   "2019.03.05",
 	}
 
-	// DefaultAKSDockerEngineOSImageConfig is the AKS image based on Ubuntu 16.04.
+	// DefaultAKS1804OSImageConfig is the AKS image based on Ubuntu 18.04-LTS.
+	DefaultAKS1804OSImageConfig = AzureOSImageConfig{
+		ImageOffer:     "aks",
+		ImageSku:       "aks-ubuntu-1804-201901",
+		ImagePublisher: "microsoft-aks",
+		ImageVersion:   "2019.03.08",
+	}
+
+	// DefaultAKSDockerEngineOSImageConfig is the AKS image based on Ubuntu 16.04-LTS.
 	DefaultAKSDockerEngineOSImageConfig = AzureOSImageConfig{
 		ImageOffer:     "aks",
 		ImageSku:       "aks-ubuntu-1604-docker-engine",
@@ -177,10 +177,12 @@ var (
 
 		OSImageConfig: map[Distro]AzureOSImageConfig{
 			Ubuntu:          DefaultUbuntuImageConfig,
+			Ubuntu1804:      Ubuntu1804ImageConfig,
 			RHEL:            DefaultRHELOSImageConfig,
 			CoreOS:          DefaultCoreOSImageConfig,
 			AKS:             DefaultAKSOSImageConfig,
 			AKSDockerEngine: DefaultAKSDockerEngineOSImageConfig,
+			AKS1804:         DefaultAKS1804OSImageConfig,
 			ACC1604:         DefaultACC1604OSImageConfig,
 		},
 	}
@@ -195,11 +197,13 @@ var (
 			ResourceManagerVMDNSSuffix: "cloudapp.microsoftazure.de",
 		},
 		OSImageConfig: map[Distro]AzureOSImageConfig{
-			Ubuntu:          GermanCloudUbuntuImageConfig,
+			Ubuntu:          DefaultUbuntuImageConfig,
+			Ubuntu1804:      Ubuntu1804ImageConfig,
 			RHEL:            DefaultRHELOSImageConfig,
 			CoreOS:          DefaultCoreOSImageConfig,
-			AKS:             GermanCloudUbuntuImageConfig,
-			AKSDockerEngine: GermanCloudUbuntuImageConfig,
+			AKS:             DefaultUbuntuImageConfig,
+			AKSDockerEngine: DefaultUbuntuImageConfig,
+			AKS1804:         Ubuntu1804ImageConfig,
 		},
 	}
 
@@ -213,11 +217,13 @@ var (
 			ResourceManagerVMDNSSuffix: "cloudapp.usgovcloudapi.net",
 		},
 		OSImageConfig: map[Distro]AzureOSImageConfig{
-			Ubuntu:          SovereignCloudsUbuntuImageConfig,
+			Ubuntu:          DefaultUbuntuImageConfig,
+			Ubuntu1804:      Ubuntu1804ImageConfig,
 			RHEL:            DefaultRHELOSImageConfig,
 			CoreOS:          DefaultCoreOSImageConfig,
-			AKS:             SovereignCloudsUbuntuImageConfig,
-			AKSDockerEngine: SovereignCloudsUbuntuImageConfig,
+			AKS:             DefaultUbuntuImageConfig,
+			AKSDockerEngine: DefaultUbuntuImageConfig,
+			AKS1804:         Ubuntu1804ImageConfig,
 		},
 	}
 
@@ -255,11 +261,13 @@ var (
 			ResourceManagerVMDNSSuffix: "cloudapp.chinacloudapi.cn",
 		},
 		OSImageConfig: map[Distro]AzureOSImageConfig{
-			Ubuntu:          SovereignCloudsUbuntuImageConfig,
+			Ubuntu:          DefaultUbuntuImageConfig,
+			Ubuntu1804:      Ubuntu1804ImageConfig,
 			RHEL:            DefaultRHELOSImageConfig,
 			CoreOS:          DefaultCoreOSImageConfig,
 			AKS:             DefaultAKSOSImageConfig,
 			AKSDockerEngine: DefaultAKSDockerEngineOSImageConfig,
+			AKS1804:         DefaultAKS1804OSImageConfig,
 		},
 	}
 

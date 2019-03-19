@@ -26,6 +26,7 @@ phases:
       -e GIT_VERSION=$(Build.SourceVersion) \
       -e BUILD_ID=$(Build.BuildId) \
       -e BUILD_NUMBER=$(Build.BuildNumber) \
+      -e UBUNTU_SKU=${UBUNTU_SKU} \
       ${DEIS_GO_DEV_IMAGE} make run-packer
     displayName: Building VHD
   - script: |

@@ -1092,6 +1092,12 @@ func (t *TemplateGenerator) getTemplateFuncMap(cs *api.ContainerService) templat
 			}
 			return false
 		},
+		"IsAgentUbuntu1604": func(profile *api.AgentPoolProfile) bool {
+			return profile.IsUbuntu1604()
+		},
+		"IsMasterUbuntu1604": func() bool {
+			return cs.Properties.MasterProfile.IsUbuntu1604()
+		},
 		// inspired by http://stackoverflow.com/questions/18276173/calling-a-template-with-several-pipeline-parameters/18276968#18276968
 		"dict": func(values ...interface{}) (map[string]interface{}, error) {
 			if len(values)%2 != 0 {

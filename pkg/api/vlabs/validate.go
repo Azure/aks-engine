@@ -775,9 +775,9 @@ func (a *AgentPoolProfile) validateCustomNodeLabels(orchestratorType string) err
 
 func (a *AgentPoolProfile) validateKubernetesDistro() error {
 	switch a.Distro {
-	case AKS:
+	case AKS, AKS1804, Ubuntu1804:
 		if a.IsNSeriesSKU() {
-			return errors.Errorf("The %s VM SKU must use the %s Distro as they require the docker-engine container runtime", a.VMSize, AKSDockerEngine)
+			return errors.Errorf("The %s VM SKU must use the %s or %s Distro as they require the docker-engine container runtime with Ubuntu 16.04-LTS", a.VMSize, AKSDockerEngine, Ubuntu)
 		}
 	}
 	return nil
