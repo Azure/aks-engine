@@ -597,15 +597,17 @@ func (l *List) CheckOutboundConnection(sleep, duration time.Duration, osType api
 	ctx, cancel := context.WithTimeout(context.Background(), 2*duration)
 	defer cancel()
 
+	ready := false
+	err := errors.Errorf("Unspecified error")
 	for _, p := range l.Pods {
 		go func() {
 			switch osType {
 			case api.Linux:
-				ready, err := p.CheckLinuxOutboundConnection(sleep, duration)
+				ready, err = p.CheckLinuxOutboundConnection(sleep, duration)
 			case api.Windows:
-				ready, err := p.CheckWindowsOutboundConnection(sleep, duration)
+				ready, err = p.CheckWindowsOutboundConnection("www.bing.com", sleep, duration)
 			default:
-				return false, errors.Errorf("Invalid osType for Pod (%s)", p.Metadata.Name)
+				ready, err = false, errors.Errorf("Invalid osType for Pod (%s)", p.Metadata.Name)
 			}
 			readyCh <- ready
 			errCh <- err
@@ -617,49 +619,18 @@ func (l *List) CheckOutboundConnection(sleep, duration time.Duration, osType api
 		select {
 		case <-ctx.Done():
 			return false, errors.Errorf("Timeout exceeded (%s) while waiting for PodList to check outbound internet connection", duration.String())
-		case err := <-errCh:
+		case err = <-errCh:
 			return false, err
-		case <-readyCh:
-			readyCount++
-			if readyCount == len(l.Pods) {
-				return true, nil
+		case ready = <-readyCh:
+			if ready {
+				readyCount++
+				if readyCount == len(l.Pods) {
+					return true, nil
+				}
 			}
 		}
 	}
 }
-
-// CheckLinuxOutboundConnection checks outbound connection for a list of Linux pods.
-/*
-func (l *List) CheckLinuxOutboundConnection(sleep, duration time.Duration) (bool, error) {
-	readyCh := make(chan bool)
-	errCh := make(chan error)
-	ctx, cancel := context.WithTimeout(context.Background(), 2*duration)
-	defer cancel()
-
-	for _, p := range l.Pods {
-		go func() {
-			ready, err := p.CheckLinuxOutboundConnection(sleep, duration)
-			readyCh <- ready
-			errCh <- err
-		}()
-	}
-
-	readyCount := 0
-	for {
-		select {
-		case <-ctx.Done():
-			return false, errors.Errorf("Timeout exceeded (%s) while waiting for PodList to check outbound internet connection", duration.String())
-		case err := <-errCh:
-			return false, err
-		case <-readyCh:
-			readyCount++
-			if readyCount == len(l.Pods) {
-				return true, nil
-			}
-		}
-	}
-}
-*/
 
 //ValidateCurlConnection checks curl connection for a list of Linux pods to a specified uri.
 func (l *List) ValidateCurlConnection(uri string, sleep, duration time.Duration) (bool, error) {
@@ -683,20 +654,16 @@ func (l *List) ValidateCurlConnection(uri string, sleep, duration time.Duration)
 			return false, errors.Errorf("Timeout exceeded (%s) while waiting for PodList to check outbound internet connection", duration.String())
 		case err := <-errCh:
 			return false, err
-		case <-readyCh:
-			readyCount++
-			if readyCount == len(l.Pods) {
-				return true, nil
+		case ready := <-readyCh:
+			if ready {
+				readyCount++
+				if readyCount == len(l.Pods) {
+					return true, nil
+				}
 			}
 		}
 	}
 }
-
-/*
-func (l *List) CheckWindowsOutboundConnection(url string, sleep, duration time.Duration) (bool, error) {
-...
-}
-*/
 
 // CheckLinuxOutboundConnection will keep retrying the check if an error is received until the timeout occurs or it passes. This helps us when DNS may not be available for some time after a pod starts.
 func (p *Pod) CheckLinuxOutboundConnection(sleep, duration time.Duration) (bool, error) {

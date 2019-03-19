@@ -7,8 +7,11 @@ import (
 	"fmt"
 	"log"
 	"math/rand"
+	"net"
 	"os"
+	"os/exec"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"time"
 
@@ -17,13 +20,17 @@ import (
 	"github.com/Azure/aks-engine/test/e2e/config"
 	"github.com/Azure/aks-engine/test/e2e/engine"
 	"github.com/Azure/aks-engine/test/e2e/kubernetes/deployment"
+	"github.com/Azure/aks-engine/test/e2e/kubernetes/hpa"
+	"github.com/Azure/aks-engine/test/e2e/kubernetes/job"
 	"github.com/Azure/aks-engine/test/e2e/kubernetes/namespace"
 	"github.com/Azure/aks-engine/test/e2e/kubernetes/networkpolicy"
 	"github.com/Azure/aks-engine/test/e2e/kubernetes/node"
+	"github.com/Azure/aks-engine/test/e2e/kubernetes/persistentvolume"
 	"github.com/Azure/aks-engine/test/e2e/kubernetes/persistentvolumeclaims"
 	"github.com/Azure/aks-engine/test/e2e/kubernetes/pod"
 	"github.com/Azure/aks-engine/test/e2e/kubernetes/service"
 	"github.com/Azure/aks-engine/test/e2e/kubernetes/storageclass"
+	"github.com/Azure/aks-engine/test/e2e/kubernetes/util"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
@@ -79,7 +86,6 @@ var _ = BeforeSuite(func() {
 })
 
 var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", func() {
-	/***
 	Describe("regardless of agent pool type", func() {
 		It("should display the installed Ubuntu version on the master node", func() {
 			kubeConfig, err := GetConfig()
@@ -941,7 +947,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			}
 		})
 	})
-	***/
+
 	Describe("with NetworkPolicy enabled", func() {
 		It("should apply various network policies and enforce access to nginx pod", func() {
 			if eng.HasNetworkPolicy("calico") || eng.HasNetworkPolicy("azure") || eng.HasNetworkPolicy("cilium") {
@@ -1008,7 +1014,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				Expect(err).NotTo(HaveOccurred())
 				Expect(len(frontendDevPods)).ToNot(BeZero())
 				pl = pod.List{Pods: frontendDevPods}
-				pass, err := pl.CheckOutboundConnection(5*time.Second, cfg.Timeout, api.Linux)
+				pass, err = pl.CheckOutboundConnection(5*time.Second, cfg.Timeout, api.Linux)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(pass).To(BeTrue())
 
@@ -1017,7 +1023,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				Expect(err).NotTo(HaveOccurred())
 				Expect(len(backendPods)).ToNot(BeZero())
 				pl = pod.List{Pods: backendPods}
-				pass, err := pl.CheckOutboundConnection(5*time.Second, cfg.Timeout, api.Linux)
+				pass, err = pl.CheckOutboundConnection(5*time.Second, cfg.Timeout, api.Linux)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(pass).To(BeTrue())
 
@@ -1026,21 +1032,21 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				Expect(err).NotTo(HaveOccurred())
 				Expect(len(nwpolicyPods)).ToNot(BeZero())
 				pl = pod.List{Pods: nwpolicyPods}
-				pass, err := pl.CheckOutboundConnection(5*time.Second, cfg.Timeout, api.Linux)
+				pass, err = pl.CheckOutboundConnection(5*time.Second, cfg.Timeout, api.Linux)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(pass).To(BeTrue())
 
 				By("Ensuring we have connectivity from network-policy pods to frontend-prod pods")
-				pl = pod.List{Pods: nwpolicyPod}
+				pl = pod.List{Pods: nwpolicyPods}
 				for _, frontendProdPod := range frontendProdPods {
-					pass, err := pl.ValidateCurlConnection(frontendProdPod.Status.PodIP, 5*time.Second, cfg.Timeout)
+					pass, err = pl.ValidateCurlConnection(frontendProdPod.Status.PodIP, 5*time.Second, cfg.Timeout)
 					Expect(err).NotTo(HaveOccurred())
 					Expect(pass).To(BeTrue())
 				}
 
 				By("Ensuring we have connectivity from network-policy pods to backend pods")
 				for _, backendPod := range backendPods {
-					pass, err := pl.ValidateCurlConnection(backendPod.Status.PodIP, 5*time.Second, cfg.Timeout)
+					pass, err = pl.ValidateCurlConnection(backendPod.Status.PodIP, 5*time.Second, cfg.Timeout)
 					Expect(err).NotTo(HaveOccurred())
 					Expect(pass).To(BeTrue())
 				}
@@ -1052,7 +1058,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 
 				By("Ensuring we no longer have ingress access from the network-policy pods to backend pods")
 				for _, backendPod := range backendPods {
-					pass, err := pl.ValidateCurlConnection(backendPod.Status.PodIP, 5*time.Second, cfg.Timeout)
+					pass, err = pl.ValidateCurlConnection(backendPod.Status.PodIP, 5*time.Second, cfg.Timeout)
 					Expect(err).Should(HaveOccurred())
 					Expect(pass).To(BeFalse())
 				}
@@ -1068,7 +1074,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				By("Ensuring we have ingress access from pods with matching labels")
 				pl = pod.List{Pods: backendPods}
 				for _, backendDstPod := range backendPods {
-					pass, err := pl.ValidateCurlConnection(backendDstPod.Status.PodIP, 5*time.Second, cfg.Timeout)
+					pass, err = pl.ValidateCurlConnection(backendDstPod.Status.PodIP, 5*time.Second, cfg.Timeout)
 					Expect(err).NotTo(HaveOccurred())
 					Expect(pass).To(BeTrue())
 				}
@@ -1076,7 +1082,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				By("Ensuring we don't have ingress access from pods without matching labels")
 				pl = pod.List{Pods: nwpolicyPods}
 				for _, backendPod := range backendPods {
-					pass, err := pl.ValidateCurlConnection(backendPod.Status.PodIP, 5*time.Second, cfg.Timeout)
+					pass, err = pl.ValidateCurlConnection(backendPod.Status.PodIP, 5*time.Second, cfg.Timeout)
 					Expect(err).Should(HaveOccurred())
 					Expect(pass).To(BeFalse())
 				}
@@ -1092,7 +1098,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				By("Ensuring we don't have ingress access from role:frontend pods in production namespace")
 				pl = pod.List{Pods: frontendProdPods}
 				for _, backendPod := range backendPods {
-					pass, err := pl.ValidateCurlConnection(backendPod.Status.PodIP, 5*time.Second, cfg.Timeout)
+					pass, err = pl.ValidateCurlConnection(backendPod.Status.PodIP, 5*time.Second, cfg.Timeout)
 					Expect(err).Should(HaveOccurred())
 					Expect(pass).To(BeFalse())
 				}
@@ -1100,7 +1106,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				By("Ensuring we have ingress access from role:frontend pods in development namespace")
 				pl = pod.List{Pods: frontendDevPods}
 				for _, backendPod := range backendPods {
-					pass, err := pl.ValidateCurlConnection(backendPod.Status.PodIP, 5*time.Second, cfg.Timeout)
+					pass, err = pl.ValidateCurlConnection(backendPod.Status.PodIP, 5*time.Second, cfg.Timeout)
 					Expect(err).NotTo(HaveOccurred())
 					Expect(pass).To(BeTrue())
 				}
