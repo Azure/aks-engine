@@ -40,12 +40,69 @@ func TestAssignKubernetesParameters(t *testing.T) {
 		containerService.Location = "eastus"
 		cloudSpecConfig := containerService.GetCloudSpecConfig()
 		containerService.SetPropertiesDefaults(false, false)
-		assignKubernetesParameters(containerService.Properties, parametersMap, cloudSpecConfig, DefaultGeneratorCode)
+		if err := assignKubernetesParameters(containerService.Properties, parametersMap, cloudSpecConfig, DefaultGeneratorCode); err != nil {
+			t.Error(err.Error())
+			continue
+		}
 		for k, v := range parametersMap {
 			switch val := v.(paramsMap)["value"].(type) {
 			case *bool:
 				t.Errorf("got a pointer to bool in paramsMap value, this is dangerous!: %s: %v", k, val)
 			}
+		}
+	}
+}
+
+func TestAssignKubernetesComponentImageOverrideParams(t *testing.T) {
+	p := &api.Properties{
+		ServicePrincipalProfile: &api.ServicePrincipalProfile{},
+		OrchestratorProfile: &api.OrchestratorProfile{
+			OrchestratorType:    api.Kubernetes,
+			OrchestratorVersion: "1.13.4",
+			KubernetesConfig: &api.KubernetesConfig{
+				KubernetesImageBase: "foo.com",
+				ImageRepoOverrides: map[string]api.ImageRepoOverride{
+					"hyperkube": {Registry: "bar.com", Repo: "override/hyperkube"},
+				},
+			},
+		},
+	}
+
+	params := paramsMap{}
+	if err := assignKubernetesParameters(p, params, api.AzureCloudSpec, DefaultGeneratorCode); err != nil {
+		t.Fatal(err)
+	}
+
+	cloudSpecConfig := api.AzureEnvironmentSpecConfig{}
+
+	for name := range p.OrchestratorProfile.KubernetesConfig.ImageRepoOverrides {
+		expect, err := api.GetKubernetesComponentImage(name, api.K8sComponentsByVersionMap[p.OrchestratorProfile.OrchestratorVersion], p.OrchestratorProfile.KubernetesConfig, false, cloudSpecConfig)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		actual := params[compToParamImage[name]].(paramsMap)["value"].(string)
+		if actual != expect {
+			t.Fatalf("expected %q, got %q", expect, actual)
+		}
+	}
+
+	for comp, paramName := range compToParamImage {
+		if comp == "hyperkube" {
+			continue
+		}
+
+		pauseImageName := api.K8sComponentsByVersionMap[p.OrchestratorProfile.OrchestratorVersion][comp]
+		param, ok := params[paramName]
+		if !ok {
+			t.Logf("skipping component %s", comp)
+			continue
+		}
+
+		actual := param.(paramsMap)["value"].(string)
+		expect := path.Join(p.OrchestratorProfile.KubernetesConfig.KubernetesImageBase, pauseImageName)
+		if actual != expect {
+			t.Errorf("expected %q, got %q", expect, actual)
 		}
 	}
 }

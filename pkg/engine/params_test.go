@@ -38,7 +38,11 @@ func TestAssignParameters(t *testing.T) {
 
 		containerService.Location = "eastus"
 		containerService.SetPropertiesDefaults(false, false)
-		parametersMap := getParameters(containerService, DefaultGeneratorCode, "testversion")
+		parametersMap, err := getParameters(containerService, DefaultGeneratorCode, "testversion")
+		if err != nil {
+			t.Error(err.Error())
+			continue
+		}
 		for k, v := range parametersMap {
 			switch val := v.(paramsMap)["value"].(type) {
 			case *bool:

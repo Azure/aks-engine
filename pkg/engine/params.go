@@ -13,7 +13,7 @@ import (
 	"github.com/Azure/aks-engine/pkg/helpers"
 )
 
-func getParameters(cs *api.ContainerService, generatorCode string, aksEngineVersion string) paramsMap {
+func getParameters(cs *api.ContainerService, generatorCode string, aksEngineVersion string) (paramsMap, error) {
 	properties := cs.Properties
 	location := cs.Location
 	parametersMap := paramsMap{}
@@ -111,7 +111,9 @@ func getParameters(cs *api.ContainerService, generatorCode string, aksEngineVers
 
 	// Kubernetes Parameters
 	if properties.OrchestratorProfile.IsKubernetes() {
-		assignKubernetesParameters(properties, parametersMap, cloudSpecConfig, generatorCode)
+		if err := assignKubernetesParameters(properties, parametersMap, cloudSpecConfig, generatorCode); err != nil {
+			return nil, err
+		}
 	}
 
 	if strings.HasPrefix(properties.OrchestratorProfile.OrchestratorType, api.DCOS) {
@@ -252,5 +254,5 @@ func getParameters(cs *api.ContainerService, generatorCode string, aksEngineVers
 		}
 	}
 
-	return parametersMap
+	return parametersMap, nil
 }

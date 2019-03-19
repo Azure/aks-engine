@@ -63,7 +63,6 @@ func (cs *ContainerService) setKubeletConfig() {
 	defaultKubeletConfig := map[string]string{
 		"--cluster-domain":                    "cluster.local",
 		"--network-plugin":                    "cni",
-		"--pod-infra-container-image":         o.KubernetesConfig.KubernetesImageBase + K8sComponentsByVersionMap[o.OrchestratorVersion]["pause"],
 		"--max-pods":                          strconv.Itoa(DefaultKubernetesMaxPods),
 		"--eviction-hard":                     DefaultKubernetesHardEvictionThreshold,
 		"--node-status-update-frequency":      K8sComponentsByVersionMap[o.OrchestratorVersion]["nodestatusfreq"],
@@ -79,6 +78,10 @@ func (cs *ContainerService) setKubeletConfig() {
 		"--image-pull-progress-deadline":      "30m",
 		"--enforce-node-allocatable":          "pods",
 		"--streaming-connection-idle-timeout": "5m",
+	}
+
+	if pauseImage, err := GetKubernetesComponentImage("pause", K8sComponentsByVersionMap[o.OrchestratorVersion], o.KubernetesConfig, cs.Properties.IsAzureStackCloud(), cs.GetCloudSpecConfig()); err == nil {
+		defaultKubeletConfig["--pod-infra-container-image"] = pauseImage
 	}
 
 	// Set --non-masquerade-cidr if ip-masq-agent is disabled on AKS

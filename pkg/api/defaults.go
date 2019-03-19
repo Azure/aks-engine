@@ -115,7 +115,20 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpdate bool) {
 
 		if o.KubernetesConfig.KubernetesImageBase == "" {
 			o.KubernetesConfig.KubernetesImageBase = cloudSpecConfig.KubernetesSpecConfig.KubernetesImageBase
+
+			// Only copy overrides when the user did not specify an image base for back-compat
+			//
+			// TODO: inject overrides when the user specified overrides but we have overrides
+			// that the user does not?
+			// TODO: Should we just always do this even if the user specified an image base?
+			if o.KubernetesConfig.ImageRepoOverrides == nil && len(cloudSpecConfig.KubernetesSpecConfig.ImageRepoOverrides) > 0 {
+				o.KubernetesConfig.ImageRepoOverrides = make(map[string]ImageRepoOverride, len(cloudSpecConfig.KubernetesSpecConfig.ImageRepoOverrides))
+				for k, v := range cloudSpecConfig.KubernetesSpecConfig.ImageRepoOverrides {
+					o.KubernetesConfig.ImageRepoOverrides[k] = v
+				}
+			}
 		}
+
 		if o.KubernetesConfig.EtcdVersion == "" {
 			o.KubernetesConfig.EtcdVersion = DefaultEtcdVersion
 		}

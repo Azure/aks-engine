@@ -10,14 +10,26 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Azure/go-autorest/autorest/to"
-
 	"github.com/Azure/aks-engine/pkg/api"
 	"github.com/Azure/aks-engine/pkg/api/common"
+	"github.com/Azure/go-autorest/autorest/to"
+	"github.com/pkg/errors"
 )
 
+var compToParamImage = map[string]string{
+	"ccm":             "kubernetesCcmImageSpec",
+	"hyperkube":       "kubernetesHyperkubeSpec",
+	"addonmanager":    "kubernetesAddonManagerSpec",
+	"exechealthz":     "kubernetesExecHealthzSpec",
+	"k8s-dns-sidecar": "kubernetesDNSSidecarSpec",
+	"coredns":         "kubernetesCoreDNSSpec",
+	"kube-dns":        "kubernetesKubeDNSSpec",
+	"dnsmasq":         "kubernetesDNSMasqSpec",
+	"pause":           "kubernetesPodInfraContainerSpec",
+}
+
 func assignKubernetesParameters(properties *api.Properties, parametersMap paramsMap,
-	cloudSpecConfig api.AzureEnvironmentSpecConfig, generatorCode string) {
+	cloudSpecConfig api.AzureEnvironmentSpecConfig, generatorCode string) error {
 	addValue(parametersMap, "generatorCode", generatorCode)
 
 	orchestratorProfile := properties.OrchestratorProfile
@@ -27,41 +39,38 @@ func assignKubernetesParameters(properties *api.Properties, parametersMap params
 		k8sVersion := orchestratorProfile.OrchestratorVersion
 		k8sComponents := api.K8sComponentsByVersionMap[k8sVersion]
 		kubernetesConfig := orchestratorProfile.KubernetesConfig
-		kubernetesImageBase := kubernetesConfig.KubernetesImageBase
-		hyperkubeImageBase := kubernetesConfig.KubernetesImageBase
-
-		if properties.IsAzureStackCloud() {
-			kubernetesImageBase = cloudSpecConfig.KubernetesSpecConfig.KubernetesImageBase
-		}
 
 		if kubernetesConfig != nil {
 			if to.Bool(kubernetesConfig.UseCloudControllerManager) {
-				kubernetesCcmSpec := kubernetesImageBase + k8sComponents["ccm"]
-				if kubernetesConfig.CustomCcmImage != "" {
-					kubernetesCcmSpec = kubernetesConfig.CustomCcmImage
+				if err := setComponentImage("ccm", kubernetesConfig.CustomCcmImage, parametersMap, k8sComponents, kubernetesConfig, properties.IsAzureStackCloud(), cloudSpecConfig); err != nil {
+					return err
 				}
-
-				addValue(parametersMap, "kubernetesCcmImageSpec", kubernetesCcmSpec)
 			}
 
-			kubernetesHyperkubeSpec := hyperkubeImageBase + k8sComponents["hyperkube"]
-			if properties.IsAzureStackCloud() {
-				kubernetesHyperkubeSpec = kubernetesHyperkubeSpec + AzureStackSuffix
+			if err := setComponentImage("hyperkube", kubernetesConfig.CustomHyperkubeImage, parametersMap, k8sComponents, kubernetesConfig, properties.IsAzureStackCloud(), cloudSpecConfig); err != nil {
+				return err
 			}
-			if kubernetesConfig.CustomHyperkubeImage != "" {
-				kubernetesHyperkubeSpec = kubernetesConfig.CustomHyperkubeImage
-			}
-			addValue(parametersMap, "kubernetesHyperkubeSpec", kubernetesHyperkubeSpec)
 
 			addValue(parametersMap, "kubeDNSServiceIP", kubernetesConfig.DNSServiceIP)
+
 			if kubernetesConfig.PrivateAzureRegistryServer != "" {
 				addValue(parametersMap, "privateAzureRegistryServer", kubernetesConfig.PrivateAzureRegistryServer)
 			}
-			addValue(parametersMap, "kubernetesAddonManagerSpec", kubernetesImageBase+k8sComponents["addonmanager"])
-			if orchestratorProfile.NeedsExecHealthz() {
-				addValue(parametersMap, "kubernetesExecHealthzSpec", kubernetesImageBase+k8sComponents["exechealthz"])
+
+			if err := setComponentImage("addonmanager", "", parametersMap, k8sComponents, kubernetesConfig, properties.IsAzureStackCloud(), cloudSpecConfig); err != nil {
+				return err
 			}
-			addValue(parametersMap, "kubernetesDNSSidecarSpec", kubernetesImageBase+k8sComponents["k8s-dns-sidecar"])
+
+			if orchestratorProfile.NeedsExecHealthz() {
+				if err := setComponentImage("exechealthz", "", parametersMap, k8sComponents, kubernetesConfig, properties.IsAzureStackCloud(), cloudSpecConfig); err != nil {
+					return err
+				}
+			}
+
+			if err := setComponentImage("k8s-dns-sidecar", "", parametersMap, k8sComponents, kubernetesConfig, properties.IsAzureStackCloud(), cloudSpecConfig); err != nil {
+				return err
+			}
+
 			if kubernetesConfig.IsAADPodIdentityEnabled() {
 				aadPodIdentityAddon := kubernetesConfig.GetAddonByName(AADPodIdentityAddonName)
 				aadIndex := aadPodIdentityAddon.GetAddonContainersIndexByName(AADPodIdentityAddonName)
@@ -91,12 +100,22 @@ func assignKubernetesParameters(properties *api.Properties, parametersMap params
 				addValue(parametersMap, "kuberneteselbsvcname", fmt.Sprintf("%d", elbsvcName))
 			}
 			if common.IsKubernetesVersionGe(k8sVersion, "1.12.0") {
-				addValue(parametersMap, "kubernetesCoreDNSSpec", kubernetesImageBase+k8sComponents["coredns"])
+				if err := setComponentImage("coredns", "", parametersMap, k8sComponents, kubernetesConfig, properties.IsAzureStackCloud(), cloudSpecConfig); err != nil {
+					return err
+				}
 			} else {
-				addValue(parametersMap, "kubernetesKubeDNSSpec", kubernetesImageBase+k8sComponents["kube-dns"])
-				addValue(parametersMap, "kubernetesDNSMasqSpec", kubernetesImageBase+k8sComponents["dnsmasq"])
+				if err := setComponentImage("kube-dns", "", parametersMap, k8sComponents, kubernetesConfig, properties.IsAzureStackCloud(), cloudSpecConfig); err != nil {
+					return err
+				}
+				if err := setComponentImage("dnsmasq", "", parametersMap, k8sComponents, kubernetesConfig, properties.IsAzureStackCloud(), cloudSpecConfig); err != nil {
+					return err
+				}
 			}
-			addValue(parametersMap, "kubernetesPodInfraContainerSpec", kubernetesImageBase+k8sComponents["pause"])
+
+			if err := setComponentImage("pause", "", parametersMap, k8sComponents, kubernetesConfig, properties.IsAzureStackCloud(), cloudSpecConfig); err != nil {
+				return err
+			}
+
 			addValue(parametersMap, "cloudproviderConfig", api.CloudProviderConfig{
 				CloudProviderBackoff:         kubernetesConfig.CloudProviderBackoff,
 				CloudProviderBackoffRetries:  kubernetesConfig.CloudProviderBackoffRetries,
@@ -262,4 +281,36 @@ func assignKubernetesParameters(properties *api.Properties, parametersMap params
 			}
 		}
 	}
+
+	return nil
+}
+
+func setComponentImage(name, customImage string, params paramsMap, components map[string]string, config *api.KubernetesConfig, isAzureStack bool, cloudSpecConfig api.AzureEnvironmentSpecConfig) error {
+	paramName, ok := compToParamImage[name]
+	if !ok {
+		panic(fmt.Sprintf("no param image spec name registered for component %s", name))
+	}
+	if customImage != "" {
+		addValue(params, paramName, customImage)
+		return nil
+	}
+
+	if config == nil {
+		return nil
+	}
+
+	img, err := api.GetKubernetesComponentImage(name, components, config, isAzureStack, cloudSpecConfig)
+	if err != nil {
+		if errors.Cause(err) != api.ErrComponentNotFound {
+			return err
+		}
+		return nil
+	}
+
+	if isAzureStack && name == "hyperkube" {
+		img = img + AzureStackSuffix
+	}
+
+	addValue(params, paramName, img)
+	return nil
 }

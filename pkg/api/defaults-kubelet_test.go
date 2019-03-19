@@ -530,6 +530,7 @@ func TestProtectKernelDefaults(t *testing.T) {
 func TestStaticWindowsConfig(t *testing.T) {
 	cs := CreateMockContainerService("testcluster", defaultTestClusterVer, 3, 1, false)
 	p := GetK8sDefaultProperties(true)
+	p.OrchestratorProfile.OrchestratorVersion = defaultTestClusterVer
 	cs.Properties = p
 	cs.Properties.OrchestratorProfile.KubernetesConfig.EnableSecureKubelet = to.BoolPtr(true)
 
@@ -569,6 +570,7 @@ func TestStaticWindowsConfig(t *testing.T) {
 	expected["--eviction-hard"] = "\"\"\"\""
 
 	cs.setKubeletConfig()
+
 	for _, profile := range cs.Properties.AgentPoolProfiles {
 		if profile.OSType == Windows {
 			for key, val := range expected {

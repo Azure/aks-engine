@@ -116,6 +116,17 @@
   version = "v1.1.0"
 
 [[projects]]
+  digest = "1:4ddc17aeaa82cb18c5f0a25d7c253a10682f518f4b2558a82869506eec223d76"
+  name = "github.com/docker/distribution"
+  packages = [
+    "digestset",
+    "reference",
+  ]
+  pruneopts = "NUT"
+  revision = "2461543d988979529609e8cb6fca9ca190dc48da"
+  version = "v2.7.1"
+
+[[projects]]
   digest = "1:aa3ed0a71c4e66e4ae6486bf97a3f4cab28edc78df2e50c5ad01dc7d91604b88"
   name = "github.com/fatih/structs"
   packages = ["."]
@@ -437,6 +448,14 @@
   pruneopts = "NUT"
   revision = "65fb64232476ad9046e57c26cd0bff3d3a8dc6cd"
   version = "v1.4.3"
+
+[[projects]]
+  digest = "1:e0cc8395ea893c898ff5eb0850f4d9851c1f57c78c232304a026379a47a552d0"
+  name = "github.com/opencontainers/go-digest"
+  packages = ["."]
+  pruneopts = "NUT"
+  revision = "279bed98673dd5bef374d3b6e4b09e2af76183bf"
+  version = "v1.0.0-rc1"
 
 [[projects]]
   branch = "master"
@@ -959,6 +978,7 @@
     "github.com/alexcesaro/statsd",
     "github.com/blang/semver",
     "github.com/davecgh/go-spew/spew",
+    "github.com/docker/distribution/reference",
     "github.com/fatih/structs",
     "github.com/ghodss/yaml",
     "github.com/go-bindata/go-bindata/go-bindata",

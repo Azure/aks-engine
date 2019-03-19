@@ -2096,6 +2096,41 @@ func TestUbuntu1804Flags(t *testing.T) {
 	}
 }
 
+func TestKubernetesImageOverrides(t *testing.T) {
+	mockCS := getMockBaseContainerService("1.13.4")
+	mockCS.Properties.OrchestratorProfile.OrchestratorType = Kubernetes
+
+	// Use an image base
+	mockCS.Properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBase = "somregistry.com"
+	mockCS.Properties.OrchestratorProfile.KubernetesConfig.ImageRepoOverrides = nil
+
+	if _, err := mockCS.SetPropertiesDefaults(false, false); err != nil {
+		t.Fatal(err)
+	}
+
+	if mockCS.Properties.OrchestratorProfile.KubernetesConfig.ImageRepoOverrides == nil {
+		t.Fatal("image overrides should be set even with custom base")
+	}
+
+	// Reset with no image base
+	mockCS.Properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBase = ""
+	mockCS.Properties.OrchestratorProfile.KubernetesConfig.ImageRepoOverrides = nil
+
+	if _, err := mockCS.SetPropertiesDefaults(false, false); err != nil {
+		t.Fatal(err)
+	}
+	if mockCS.Properties.OrchestratorProfile.KubernetesConfig.ImageRepoOverrides == nil {
+		t.Fatal("image repo overrides should be set")
+	}
+
+	cloudSpecConfig := mockCS.GetCloudSpecConfig()
+	actual := mockCS.Properties.OrchestratorProfile.KubernetesConfig.ImageRepoOverrides
+	expected := cloudSpecConfig.KubernetesSpecConfig.ImageRepoOverrides
+	if !reflect.DeepEqual(actual, expected) {
+		t.Fatalf("expected image overrides %+v, got: %+v", expected, actual)
+	}
+}
+
 func getMockBaseContainerService(orchestratorVersion string) ContainerService {
 	mockAPIProperties := getMockAPIProperties(orchestratorVersion)
 	return ContainerService{
