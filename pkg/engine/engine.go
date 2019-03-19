@@ -106,14 +106,14 @@ func validateDistro(cs *api.ContainerService) bool {
 	// Check Master distro
 	if cs.Properties.MasterProfile != nil && cs.Properties.MasterProfile.Distro == api.RHEL &&
 		(cs.Properties.OrchestratorProfile.OrchestratorType != api.SwarmMode) {
-		log.Printf("Orchestrator type %s not suported on RHEL Master", cs.Properties.OrchestratorProfile.OrchestratorType)
+		log.Fatalf("Orchestrator type %s not suported on RHEL Master", cs.Properties.OrchestratorProfile.OrchestratorType)
 		return false
 	}
 	// Check Agent distros
 	for _, agentProfile := range cs.Properties.AgentPoolProfiles {
 		if agentProfile.Distro == api.RHEL &&
 			(cs.Properties.OrchestratorProfile.OrchestratorType != api.SwarmMode) {
-			log.Printf("Orchestrator type %s not suported on RHEL Agent", cs.Properties.OrchestratorProfile.OrchestratorType)
+			log.Fatalf("Orchestrator type %s not suported on RHEL Agent", cs.Properties.OrchestratorProfile.OrchestratorType)
 			return false
 		}
 	}
