@@ -279,6 +279,9 @@ func TestGetDCOSMasterAllowedSizes(t *testing.T) {
 		"Standard_NV24s_v2",
 		"Standard_NV6",
 		"Standard_NV6s_v2",
+		"Standard_PB12s",
+		"Standard_PB24s",
+		"Standard_PB6s",
 	}
 
 	for _, expectedSize := range expectedSizes {
@@ -513,6 +516,9 @@ func TestKubernetesAllowedSizes(t *testing.T) {
 		"Standard_NV24s_v2",
 		"Standard_NV6",
 		"Standard_NV6s_v2",
+		"Standard_PB12s",
+		"Standard_PB24s",
+		"Standard_PB6s",
 	}
 
 	for _, expectedSize := range expectedSizes {
@@ -1176,6 +1182,15 @@ func TestGetSizeMap(t *testing.T) {
 			"storageAccountType": "Standard_LRS",
 		},
 		"Standard_NV6s_v2": map[string]string{
+			"storageAccountType": "Premium_LRS",
+		},
+		"Standard_PB12s": map[string]string{
+			"storageAccountType": "Premium_LRS",
+		},
+		"Standard_PB24s": map[string]string{
+			"storageAccountType": "Premium_LRS",
+		},
+		"Standard_PB6s": map[string]string{
 			"storageAccountType": "Premium_LRS",
 		},
 	}
