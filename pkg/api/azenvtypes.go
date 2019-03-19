@@ -203,9 +203,9 @@ var (
 		},
 	}
 
-	//AzureUSGovernmentCloud is the US government config.
-	AzureUSGovernmentCloud = AzureEnvironmentSpecConfig{
-		CloudName:            azureUSGovernmentCloud,
+	//AzureUSGovernmentCloudSpec is the US government config.
+	AzureUSGovernmentCloudSpec = AzureEnvironmentSpecConfig{
+		CloudName:            AzureUSGovernmentCloud,
 		DockerSpecConfig:     DefaultDockerSpecConfig,
 		KubernetesSpecConfig: DefaultKubernetesSpecConfig,
 		DCOSSpecConfig:       DefaultDCOSSpecConfig,
@@ -267,7 +267,7 @@ var (
 	AzureCloudSpecEnvMap = map[string]AzureEnvironmentSpecConfig{
 		AzureChinaCloud:        AzureChinaCloudSpec,
 		azureGermanCloud:       AzureGermanCloudSpec,
-		azureUSGovernmentCloud: AzureUSGovernmentCloud,
+		AzureUSGovernmentCloud: AzureUSGovernmentCloudSpec,
 		AzurePublicCloud:       AzureCloudSpec,
 	}
 )
