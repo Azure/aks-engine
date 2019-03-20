@@ -14,8 +14,13 @@ import (
 func GenerateARMResources(cs *api.ContainerService) []interface{} {
 	var armResources []interface{}
 
-	useManagedIdentity := cs.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity
-	userAssignedIDEnabled := useManagedIdentity && cs.Properties.OrchestratorProfile.KubernetesConfig.UserAssignedID != ""
+	var useManagedIdentity, userAssignedIDEnabled bool
+	kubernetesConfig := cs.Properties.OrchestratorProfile.KubernetesConfig
+
+	if kubernetesConfig != nil {
+		useManagedIdentity = kubernetesConfig.UseManagedIdentity
+		userAssignedIDEnabled = useManagedIdentity && kubernetesConfig.UserAssignedID != ""
+	}
 
 	if userAssignedIDEnabled {
 		userAssignedID := createUserAssignedIdentities()
