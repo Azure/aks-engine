@@ -475,8 +475,9 @@ func CreateAgentVMSS(cs *api.ContainerService, profile *api.AgentPoolProfile) Vi
 
 		customDataStr := getCustomDataFromJSON(t.GetKubernetesWindowsAgentCustomDataJSON(cs, profile))
 		windowsOsProfile := compute.VirtualMachineScaleSetOSProfile{
-			AdminUsername: to.StringPtr("[parameters('windowsAdminUsername')]"),
-			AdminPassword: to.StringPtr("[parameters('windowsAdminPassword')]"),
+			AdminUsername:      to.StringPtr("[parameters('windowsAdminUsername')]"),
+			AdminPassword:      to.StringPtr("[parameters('windowsAdminPassword')]"),
+			ComputerNamePrefix: to.StringPtr(fmt.Sprintf("[variables('%sVMNamePrefix')]", profile.Name)),
 			WindowsConfiguration: &compute.WindowsConfiguration{
 				EnableAutomaticUpdates: to.BoolPtr(cs.Properties.WindowsProfile.GetEnableWindowsUpdate()),
 			},
