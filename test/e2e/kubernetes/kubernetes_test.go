@@ -15,6 +15,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Azure/aks-engine/pkg/api"
 	"github.com/Azure/aks-engine/pkg/api/common"
 	"github.com/Azure/aks-engine/test/e2e/config"
 	"github.com/Azure/aks-engine/test/e2e/engine"
@@ -950,124 +951,181 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 	Describe("with NetworkPolicy enabled", func() {
 		It("should apply various network policies and enforce access to nginx pod", func() {
 			if eng.HasNetworkPolicy("calico") || eng.HasNetworkPolicy("azure") || eng.HasNetworkPolicy("cilium") {
-				nsClientOne, nsClientTwo, nsServer := "client-one", "client-two", "server"
-				By("Creating namespaces")
-				namespaceClientOne, err := namespace.CreateIfNotExist(nsClientOne)
+				nsDev, nsProd := "development", "production"
+				By("Creating development namespace")
+				namespaceDev, err := namespace.CreateIfNotExist(nsDev)
 				Expect(err).NotTo(HaveOccurred())
-				namespaceClientTwo, err := namespace.CreateIfNotExist(nsClientTwo)
+				By("Creating production namespace")
+				namespaceProd, err := namespace.CreateIfNotExist(nsProd)
 				Expect(err).NotTo(HaveOccurred())
-				namespaceServer, err := namespace.CreateIfNotExist(nsServer)
+				By("Labelling development namespace")
+				err = namespaceDev.Label("purpose=development")
 				Expect(err).NotTo(HaveOccurred())
-				By("Creating client and server nginx deployments")
+				By("Labelling production namespace")
+				err = namespaceProd.Label("purpose=production")
+				Expect(err).NotTo(HaveOccurred())
+				By("Creating frontendProd, backend and network-policy pod deployments")
 				r := rand.New(rand.NewSource(time.Now().UnixNano()))
 				randInt := r.Intn(99999)
-				clientOneDeploymentName := fmt.Sprintf("nginx-%s-%v", cfg.Name, randInt)
-				clientTwoDeploymentName := fmt.Sprintf("nginx-%s-%v", cfg.Name, randInt+100000)
-				serverDeploymentName := fmt.Sprintf("nginx-%s-%v", cfg.Name, randInt+200000)
-				clientOneDeploy, err := deployment.CreateLinuxDeploy("library/nginx:latest", clientOneDeploymentName, nsClientOne, "--labels=role=client-one")
+				frontendProdDeploymentName := fmt.Sprintf("frontend-prod-%s-%v", cfg.Name, randInt)
+				frontendProdDeployment, err := deployment.CreateLinuxDeploy("library/nginx:latest", frontendProdDeploymentName, nsProd, "--labels=app=webapp,role=frontend")
 				Expect(err).NotTo(HaveOccurred())
-				clientTwoDeploy, err := deployment.CreateLinuxDeploy("library/nginx:latest", clientTwoDeploymentName, nsClientTwo, "--labels=role=client-two")
+				frontendDevDeploymentName := fmt.Sprintf("frontend-dev-%s-%v", cfg.Name, randInt+100000)
+				frontendDevDeployment, err := deployment.CreateLinuxDeploy("library/nginx:latest", frontendDevDeploymentName, nsDev, "--labels=app=webapp,role=frontend")
 				Expect(err).NotTo(HaveOccurred())
-				serverDeploy, err := deployment.CreateLinuxDeploy("library/nginx:latest", serverDeploymentName, nsServer, "--labels=role=server")
+				backendDeploymentName := fmt.Sprintf("backend-%s-%v", cfg.Name, randInt+200000)
+				backendDeployment, err := deployment.CreateLinuxDeploy("library/nginx:latest", backendDeploymentName, nsDev, "--labels=app=webapp,role=backend")
+				Expect(err).NotTo(HaveOccurred())
+				nwpolicyDeploymentName := fmt.Sprintf("network-policy-%s-%v", cfg.Name, randInt+300000)
+				nwpolicyDeployment, err := deployment.CreateLinuxDeploy("library/nginx:latest", nwpolicyDeploymentName, nsDev, "")
 				Expect(err).NotTo(HaveOccurred())
 
-				By("Ensure there is a Running nginx client one pod")
-				running, err := pod.WaitOnReady(clientOneDeploymentName, nsClientOne, 3, retryTimeWhenWaitingForPodReady, cfg.Timeout)
+				By("Ensure there is a running frontend-prod pod")
+				running, err := pod.WaitOnReady(frontendProdDeploymentName, nsProd, 3, retryTimeWhenWaitingForPodReady, cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(running).To(Equal(true))
 
-				By("Ensure there is a Running nginx client two pod")
-				running, err = pod.WaitOnReady(clientTwoDeploymentName, nsClientTwo, 3, retryTimeWhenWaitingForPodReady, cfg.Timeout)
+				By("Ensure there is a running frontend-dev pod")
+				running, err = pod.WaitOnReady(frontendDevDeploymentName, nsDev, 3, retryTimeWhenWaitingForPodReady, cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(running).To(Equal(true))
 
-				By("Ensure there is a Running nginx server pod")
-				running, err = pod.WaitOnReady(serverDeploymentName, nsServer, 3, retryTimeWhenWaitingForPodReady, cfg.Timeout)
+				By("Ensure there is a running backend pod")
+				running, err = pod.WaitOnReady(backendDeploymentName, nsDev, 3, retryTimeWhenWaitingForPodReady, cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(running).To(Equal(true))
 
-				By("Ensuring we have outbound internet access from the nginx client one pods")
-				clientOnePods, err := clientOneDeploy.Pods()
+				By("Ensure there is a running network-policy pod")
+				running, err = pod.WaitOnReady(nwpolicyDeploymentName, nsDev, 3, retryTimeWhenWaitingForPodReady, cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())
-				Expect(len(clientOnePods)).ToNot(BeZero())
-				for _, clientOnePod := range clientOnePods {
-					var pass bool
-					pass, err = clientOnePod.CheckLinuxOutboundConnection(5*time.Second, cfg.Timeout)
+				Expect(running).To(Equal(true))
+
+				By("Ensuring we have outbound internet access from the frontend-prod pods")
+				frontendProdPods, err := frontendProdDeployment.Pods()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(len(frontendProdPods)).ToNot(BeZero())
+				pl := pod.List{Pods: frontendProdPods}
+				pass, err := pl.CheckOutboundConnection(5*time.Second, cfg.Timeout, api.Linux)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(pass).To(BeTrue())
+
+				By("Ensuring we have outbound internet access from the frontend-dev pods")
+				frontendDevPods, err := frontendDevDeployment.Pods()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(len(frontendDevPods)).ToNot(BeZero())
+				pl = pod.List{Pods: frontendDevPods}
+				pass, err = pl.CheckOutboundConnection(5*time.Second, cfg.Timeout, api.Linux)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(pass).To(BeTrue())
+
+				By("Ensuring we have outbound internet access from the backend pods")
+				backendPods, err := backendDeployment.Pods()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(len(backendPods)).ToNot(BeZero())
+				pl = pod.List{Pods: backendPods}
+				pass, err = pl.CheckOutboundConnection(5*time.Second, cfg.Timeout, api.Linux)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(pass).To(BeTrue())
+
+				By("Ensuring we have outbound internet access from the network-policy pods")
+				nwpolicyPods, err := nwpolicyDeployment.Pods()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(len(nwpolicyPods)).ToNot(BeZero())
+				pl = pod.List{Pods: nwpolicyPods}
+				pass, err = pl.CheckOutboundConnection(5*time.Second, cfg.Timeout, api.Linux)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(pass).To(BeTrue())
+
+				By("Ensuring we have connectivity from network-policy pods to frontend-prod pods")
+				pl = pod.List{Pods: nwpolicyPods}
+				for _, frontendProdPod := range frontendProdPods {
+					pass, err = pl.ValidateCurlConnection(frontendProdPod.Status.PodIP, 5*time.Second, cfg.Timeout)
 					Expect(err).NotTo(HaveOccurred())
 					Expect(pass).To(BeTrue())
 				}
 
-				By("Ensuring we have outbound internet access from the nginx client one pods")
-				clientTwoPods, err := clientTwoDeploy.Pods()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(len(clientTwoPods)).ToNot(BeZero())
-				for _, clientTwoPod := range clientTwoPods {
-					var pass bool
-					pass, err = clientTwoPod.CheckLinuxOutboundConnection(5*time.Second, cfg.Timeout)
+				By("Ensuring we have connectivity from network-policy pods to backend pods")
+				for _, backendPod := range backendPods {
+					pass, err = pl.ValidateCurlConnection(backendPod.Status.PodIP, 5*time.Second, cfg.Timeout)
 					Expect(err).NotTo(HaveOccurred())
 					Expect(pass).To(BeTrue())
 				}
 
-				By("Ensuring we have outbound internet access from the nginx server pods")
-				serverPods, err := serverDeploy.Pods()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(len(serverPods)).ToNot(BeZero())
-				for _, serverPod := range serverPods {
-					var pass bool
-					pass, err = serverPod.CheckLinuxOutboundConnection(5*time.Second, cfg.Timeout)
-					Expect(err).NotTo(HaveOccurred())
-					Expect(pass).To(BeTrue())
-				}
-
-				var (
-					networkPolicyName string
-					namespace         string
-				)
-
-				By("Applying a network policy to deny egress access")
-				networkPolicyName, namespace = "client-one-deny-egress", nsClientOne
-				err = networkpolicy.CreateNetworkPolicyFromFile(filepath.Join(PolicyDir, "client-one-deny-egress-policy.yaml"), networkPolicyName, namespace)
+				By("Applying a network policy to deny ingress access to app: webapp, role: backend pods in development namespace")
+				nwpolicyName, namespace := "backend-deny-ingress", nsDev
+				err = networkpolicy.CreateNetworkPolicyFromFile(filepath.Join(PolicyDir, "backend-policy-deny-ingress.yaml"), nwpolicyName, namespace)
 				Expect(err).NotTo(HaveOccurred())
 
-				By("Ensuring we no longer have outbound internet access from the nginx client pods")
-				for _, clientOnePod := range clientOnePods {
-					var pass bool
-					pass, err = clientOnePod.CheckLinuxOutboundConnection(5*time.Second, 3*time.Minute)
+				By("Ensuring we no longer have ingress access from the network-policy pods to backend pods")
+				for _, backendPod := range backendPods {
+					pass, err = pl.ValidateCurlConnection(backendPod.Status.PodIP, 5*time.Second, cfg.Timeout)
 					Expect(err).Should(HaveOccurred())
 					Expect(pass).To(BeFalse())
 				}
 
 				By("Cleaning up after ourselves")
-				networkpolicy.DeleteNetworkPolicy(networkPolicyName, namespace)
+				networkpolicy.DeleteNetworkPolicy(nwpolicyName, namespace)
 
-				By("Applying a network policy to deny ingress access")
-				networkPolicyName, namespace = "client-one-deny-ingress", nsServer
-				err = networkpolicy.CreateNetworkPolicyFromFile(filepath.Join(PolicyDir, "client-one-deny-ingress-policy.yaml"), networkPolicyName, namespace)
+				By("Applying a network policy to only allow ingress access to app: webapp, role: backend pods in development namespace from pods in any namespace with the same labels")
+				nwpolicyName, namespace = "backend-allow-ingress-pod-label", nsDev
+				err = networkpolicy.CreateNetworkPolicyFromFile(filepath.Join(PolicyDir, "backend-policy-allow-ingress-pod-label.yaml"), nwpolicyName, namespace)
 				Expect(err).NotTo(HaveOccurred())
 
-				By("Ensuring we no longer have inbound internet access from the nginx server pods")
-				for _, clientOnePod := range clientOnePods {
-					for _, serverPod := range serverPods {
-						var pass bool
-						pass, err = clientOnePod.ValidateCurlConnection(serverPod.Status.PodIP, 5*time.Second, 3*time.Minute)
-						Expect(err).Should(HaveOccurred())
-						Expect(pass).To(BeFalse())
-					}
+				By("Ensuring we have ingress access from pods with matching labels")
+				pl = pod.List{Pods: backendPods}
+				for _, backendDstPod := range backendPods {
+					pass, err = pl.ValidateCurlConnection(backendDstPod.Status.PodIP, 5*time.Second, cfg.Timeout)
+					Expect(err).NotTo(HaveOccurred())
+					Expect(pass).To(BeTrue())
+				}
+
+				By("Ensuring we don't have ingress access from pods without matching labels")
+				pl = pod.List{Pods: nwpolicyPods}
+				for _, backendPod := range backendPods {
+					pass, err = pl.ValidateCurlConnection(backendPod.Status.PodIP, 5*time.Second, cfg.Timeout)
+					Expect(err).Should(HaveOccurred())
+					Expect(pass).To(BeFalse())
 				}
 
 				By("Cleaning up after ourselves")
-				networkpolicy.DeleteNetworkPolicy(networkPolicyName, namespace)
-				err = clientOneDeploy.Delete(deleteResourceRetries)
+				networkpolicy.DeleteNetworkPolicy(nwpolicyName, namespace)
+
+				By("Applying a network policy to only allow ingress access to app: webapp role:backends in development namespace from pods with label app:webapp, role: frontendProd within namespace with label purpose: development")
+				nwpolicyName, namespace = "backend-policy-allow-ingress-pod-namespace-label", nsDev
+				err = networkpolicy.CreateNetworkPolicyFromFile(filepath.Join(PolicyDir, "backend-policy-allow-ingress-pod-namespace-label.yaml"), nwpolicyName, namespace)
 				Expect(err).NotTo(HaveOccurred())
-				err = clientTwoDeploy.Delete(deleteResourceRetries)
+
+				By("Ensuring we don't have ingress access from role:frontend pods in production namespace")
+				pl = pod.List{Pods: frontendProdPods}
+				for _, backendPod := range backendPods {
+					pass, err = pl.ValidateCurlConnection(backendPod.Status.PodIP, 5*time.Second, cfg.Timeout)
+					Expect(err).Should(HaveOccurred())
+					Expect(pass).To(BeFalse())
+				}
+
+				By("Ensuring we have ingress access from role:frontend pods in development namespace")
+				pl = pod.List{Pods: frontendDevPods}
+				for _, backendPod := range backendPods {
+					pass, err = pl.ValidateCurlConnection(backendPod.Status.PodIP, 5*time.Second, cfg.Timeout)
+					Expect(err).NotTo(HaveOccurred())
+					Expect(pass).To(BeTrue())
+				}
+
+				By("Cleaning up after ourselves")
+				networkpolicy.DeleteNetworkPolicy(nwpolicyName, namespace)
+
+				By("Cleaning up after ourselves")
+				err = frontendProdDeployment.Delete(deleteResourceRetries)
 				Expect(err).NotTo(HaveOccurred())
-				err = serverDeploy.Delete(deleteResourceRetries)
+				err = frontendDevDeployment.Delete(deleteResourceRetries)
 				Expect(err).NotTo(HaveOccurred())
-				err = namespaceClientOne.Delete()
+				err = backendDeployment.Delete(deleteResourceRetries)
 				Expect(err).NotTo(HaveOccurred())
-				err = namespaceClientTwo.Delete()
+				err = nwpolicyDeployment.Delete(deleteResourceRetries)
 				Expect(err).NotTo(HaveOccurred())
-				err = namespaceServer.Delete()
+				err = namespaceDev.Delete()
+				Expect(err).NotTo(HaveOccurred())
+				err = namespaceProd.Delete()
 				Expect(err).NotTo(HaveOccurred())
 			} else {
 				Skip("Calico or Azure network policy was not provisioned for this Cluster Definition")
