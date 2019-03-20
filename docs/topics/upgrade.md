@@ -8,7 +8,7 @@ This guide assumes you already have deployed a cluster using `aks-engine`. For m
 
 ## Upgrade
 
-This document provides guidance on how to upgrade the Kubernetes version for an existing AKS Engine cluster and recommendations for adopting `aks-engine upgrade` as a production quality tool.
+This document provides guidance on how to upgrade the Kubernetes version for an existing AKS Engine cluster and recommendations for adopting `aks-engine upgrade` as a tool.
 
 <a name="pre-requirements"></a>
 
