@@ -13,6 +13,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/Azure/go-autorest/autorest/to"
+
 	"github.com/Azure/aks-engine/pkg/api"
 	"github.com/Azure/aks-engine/pkg/api/common"
 	v20160330 "github.com/Azure/aks-engine/pkg/api/v20160330"
@@ -542,26 +544,58 @@ func TestGenerateKubeConfig(t *testing.T) {
 
 	containerService, _, err := apiloader.LoadContainerServiceFromFile(testData, true, false, nil)
 	if err != nil {
-		t.Fatalf("Failed to load container service from file: %v", err)
+		t.Errorf("Failed to load container service from file: %v", err)
 	}
 	kubeConfig, err := GenerateKubeConfig(containerService.Properties, "westus2")
 	// TODO add actual kubeconfig validation
 	if len(kubeConfig) < 1 {
-		t.Fatalf("Got unexpected kubeconfig payload: %v", kubeConfig)
+		t.Errorf("Got unexpected kubeconfig payload: %v", kubeConfig)
 	}
 	if err != nil {
-		t.Fatalf("Failed to call GenerateKubeConfig with simple Kubernetes config from file: %v", testData)
+		t.Errorf("Failed to call GenerateKubeConfig with simple Kubernetes config from file: %v", testData)
 	}
 
 	p := api.Properties{}
 	_, err = GenerateKubeConfig(&p, "westus2")
 	if err == nil {
-		t.Fatalf("Expected an error result from nil Properties child properties")
+		t.Errorf("Expected an error result from nil Properties child properties")
 	}
 
 	_, err = GenerateKubeConfig(nil, "westus2")
 	if err == nil {
-		t.Fatalf("Expected an error result from nil Properties child properties")
+		t.Errorf("Expected an error result from nil Properties child properties")
+	}
+
+	containerService.Properties.OrchestratorProfile.KubernetesConfig.PrivateCluster = &api.PrivateCluster{
+		Enabled: to.BoolPtr(true),
+	}
+
+	_, err = GenerateKubeConfig(containerService.Properties, "westus2")
+	if err != nil {
+		t.Errorf("Failed to call GenerateKubeConfig with simple Kubernetes config from file: %v", testData)
+	}
+
+	containerService.Properties.MasterProfile.Count = 3
+	_, err = GenerateKubeConfig(containerService.Properties, "westus2")
+	if err == nil {
+		t.Errorf("expected an error result when Private Cluster is Enabled and no FirstConsecutiveStaticIP was specified")
+	}
+
+	containerService.Properties.MasterProfile.FirstConsecutiveStaticIP = "10.239.255.239"
+	_, err = GenerateKubeConfig(containerService.Properties, "westus2")
+	if err != nil {
+		t.Errorf("Failed to call GenerateKubeConfig with simple Kubernetes config from file: %v", testData)
+	}
+
+	containerService.Properties.AADProfile = &api.AADProfile{
+		ClientAppID: "fooClientAppID",
+		TenantID:    "fooTenantID",
+		ServerAppID: "fooServerAppID",
+	}
+
+	_, err = GenerateKubeConfig(containerService.Properties, "westus2")
+	if err != nil {
+		t.Errorf("Failed to call GenerateKubeConfig with simple Kubernetes config from file: %v", testData)
 	}
 }
 
@@ -585,4 +619,159 @@ func TestGetDataDisks(t *testing.T) {
 	}
 	str = getDataDisks(a)
 	fmt.Println(str)
+}
+
+func TestValidateDistro(t *testing.T) {
+	// Test with Invalid Master Profile
+	cs := &api.ContainerService{
+		Properties: &api.Properties{
+			MasterProfile: &api.MasterProfile{
+				Distro: "rhel",
+			},
+			OrchestratorProfile: &api.OrchestratorProfile{
+				OrchestratorType: "Kubernetes",
+			},
+		},
+	}
+
+	result := validateDistro(cs)
+
+	if result {
+		t.Errorf("expected validateDistro to return false for Kubernetes type")
+	}
+
+	// Test with invalid Agent Pool Profile
+	cs.Properties.MasterProfile.Distro = "coreos"
+	cs.Properties.AgentPoolProfiles = []*api.AgentPoolProfile{
+		{
+			Distro: "rhel",
+		},
+	}
+
+	result = validateDistro(cs)
+
+	if result {
+		t.Errorf("expected validateDistro to return false for Kubernetes type")
+	}
+}
+
+func TestMakeMasterExtensionScriptCommands(t *testing.T) {
+	cs := &api.ContainerService{
+		Properties: &api.Properties{
+			ExtensionProfiles: []*api.ExtensionProfile{
+				{
+					Name:                "fooExtension",
+					RootURL:             "fooRootURL",
+					Version:             "1.0",
+					Script:              "fooBar Script",
+					URLQuery:            "fooURLQuery",
+					ExtensionParameters: "fooExtensionParams",
+				},
+			},
+		},
+	}
+
+	profile := &api.AgentPoolProfile{
+		OSType: "Windows",
+		PreprovisionExtension: &api.Extension{
+			Name: "fooExtension",
+		},
+	}
+
+	actual := makeAgentExtensionScriptCommands(cs, profile)
+
+	expected := `New-Item -ItemType Directory -Force -Path "$env:SystemDrive:/AzureData/extensions/fooExtension" ; Invoke-WebRequest -Uri "fooRootURLextensions/fooExtension/1.0/fooBar Script?fooURLQuery" -OutFile "$env:SystemDrive:/AzureData/extensions/fooExtension/fooBar Script" ; powershell "$env:SystemDrive:/AzureData/extensions/fooExtension/fooBar Script $preprovisionExtensionParams"
+`
+
+	if actual != expected {
+		t.Errorf("expected to get %s, but got %s instead", expected, actual)
+	}
+}
+
+func TestGetDCOSWindowsAgentPreprovisionParameters(t *testing.T) {
+	cs := &api.ContainerService{
+		Properties: &api.Properties{
+			ExtensionProfiles: []*api.ExtensionProfile{
+				{
+					Name:                "fooExtension",
+					ExtensionParameters: "fooExtensionParams",
+				},
+			},
+		},
+	}
+
+	profile := &api.AgentPoolProfile{
+		PreprovisionExtension: &api.Extension{
+			Name: "fooExtension",
+		},
+	}
+
+	actual := getDCOSWindowsAgentPreprovisionParameters(cs, profile)
+
+	expected := "fooExtensionParams"
+
+	if actual != expected {
+		t.Errorf("expected to get %s, but got %s instead", expected, actual)
+	}
+}
+
+func TestGetDCOSWindowsAgentCustomAttributes(t *testing.T) {
+	profile := &api.AgentPoolProfile{
+		OSType: api.Windows,
+		Ports: []int{
+			8000,
+			8080,
+		},
+		CustomNodeLabels: map[string]string{
+			"foo":   "bar",
+			"abc":   "xyz",
+			"lorem": "ipsum",
+		},
+	}
+
+	actual := getDCOSWindowsAgentCustomAttributes(profile)
+
+	if !strings.Contains(actual, "os:Windows;public_ip:yes;") {
+		t.Errorf("expected output string of getDCOSWindowsAgentCustomAttributes %s to contain os:Windows;public_ip:yes;", actual)
+	}
+
+	for k, v := range profile.CustomNodeLabels {
+		if !strings.Contains(actual, fmt.Sprintf("%s:%s", k, v)) {
+			t.Errorf("expected output string of getDCOSWindowsAgentCustomAttributes %s to contain key-value pairs %s:%s", actual, k, v)
+		}
+	}
+}
+
+func TestGetKubernetesSubnets(t *testing.T) {
+	props := &api.Properties{
+		AgentPoolProfiles: []*api.AgentPoolProfile{
+			{
+				OSType: api.Windows,
+				Count:  1,
+			},
+		},
+		MasterProfile: &api.MasterProfile{
+			Count: 1,
+		},
+	}
+
+	actual := getKubernetesSubnets(props)
+
+	expected := `,
+{
+            "name": "podCIDR2",
+            "properties": {
+              "addressPrefix": "10.244.2.0/24",
+              "networkSecurityGroup": {
+                "id": "[variables('nsgID')]"
+              },
+              "routeTable": {
+                "id": "[variables('routeTableID')]"
+              }
+            }
+          }`
+
+	if actual != expected {
+		t.Errorf("expected to get %s, but got %s instead", expected, actual)
+	}
 }
