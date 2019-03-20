@@ -1,4 +1,4 @@
-     Starting build on  Fri Mar 15 19:48:16 UTC 2019
+     Starting build on  Wed Mar 20 18:02:57 UTC 2019
      Using kernel:
      Linux version 4.18.0-1013-azure (buildd@lgw01-amd64-034) (gcc version 7.3.0 (Ubuntu 7.3.0-16ubuntu3)) #13~18.04.1-Ubuntu SMP Thu Feb 28 23:48:47 UTC 2019
      Components downloaded in this VHD build (some of the below components might get deleted during cluster provisioning if they are not needed):
@@ -74,6 +74,7 @@
        - k8s.gcr.io/rescheduler:v0.3.1
        - microsoft/virtual-kubelet:latest
        - containernetworking/networkmonitor:v0.0.5
+       - containernetworking/azure-npm:v1.0.18
        - nvidia/k8s-device-plugin:1.11
        - nvidia/k8s-device-plugin:1.10
        - docker.io/deis/hcp-tunnel-front:v1.9.2-v4.0.4
@@ -106,8 +107,8 @@
        - k8s.gcr.io/cloud-controller-manager-amd64:v1.13.3
        - k8s.gcr.io/hyperkube-amd64:v1.13.4
        - k8s.gcr.io/cloud-controller-manager-amd64:v1.13.4
-     Install completed successfully on  Fri Mar 15 20:02:34 UTC 2019
-     VSTS Build NUMBER: 20190315.12
-     VSTS Build ID: 20812257
-     Commit: 50378c87d20585a9779942a8e8631d33e65cfe67
+     Install completed successfully on  Wed Mar 20 18:17:27 UTC 2019
+     VSTS Build NUMBER: 20190320.4
+     VSTS Build ID: 20909029
+     Commit: 31f17bbe27edee6377a3741ebf287e170bb3862c
      Feature flags:
