@@ -61,8 +61,7 @@ func ParseConfig() (*Config, error) {
 func (c *Config) GetKubeConfig() string {
 	var kubeconfigPath string
 
-	switch {
-	case c.IsKubernetes():
+	if c.IsKubernetes() {
 		file := fmt.Sprintf("kubeconfig.%s.json", c.Location)
 		kubeconfigPath = filepath.Join(c.CurrentWorkingDir, "_output", c.Name, "kubeconfig", file)
 	}

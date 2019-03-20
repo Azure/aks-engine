@@ -101,10 +101,8 @@ func (a *AgentPoolProfile) Validate(orchestratorType string) error {
 		} else {
 			a.Ports = []int{80, 443, 8080}
 		}
-	} else {
-		if e := validate.Var(a.Ports, "len=0"); e != nil {
-			return errors.Errorf("AgentPoolProfile.Ports must be empty when AgentPoolProfile.DNSPrefix is empty for Orchestrator: %s", orchestratorType)
-		}
+	} else if e := validate.Var(a.Ports, "len=0"); e != nil {
+		return errors.Errorf("AgentPoolProfile.Ports must be empty when AgentPoolProfile.DNSPrefix is empty for Orchestrator: %s", orchestratorType)
 	}
 	return nil
 }

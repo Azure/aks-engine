@@ -115,8 +115,7 @@ func getParameters(cs *api.ContainerService, generatorCode string, aksEngineVers
 		dcosClusterPackageListID := cloudSpecConfig.DCOSSpecConfig.DcosClusterPackageListID
 		dcosProviderPackageID := cloudSpecConfig.DCOSSpecConfig.DcosProviderPackageID
 
-		switch properties.OrchestratorProfile.OrchestratorType {
-		case api.DCOS:
+		if properties.OrchestratorProfile.OrchestratorType == api.DCOS {
 			switch properties.OrchestratorProfile.OrchestratorVersion {
 			case common.DCOSVersion1Dot8Dot8:
 				dcosBootstrapURL = cloudSpecConfig.DCOSSpecConfig.DCOS188BootstrapDownloadURL

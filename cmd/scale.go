@@ -67,9 +67,7 @@ func newScaleCmd() *cobra.Command {
 		Use:   scaleName,
 		Short: scaleShortDescription,
 		Long:  scaleLongDescription,
-		RunE: func(cmd *cobra.Command, args []string) error {
-			return sc.run(cmd, args)
-		},
+		RunE:  sc.run,
 	}
 
 	f := scaleCmd.Flags()
@@ -276,8 +274,7 @@ func (sc *scaleCmd) run(cmd *cobra.Command, args []string) error {
 				vmsToDelete = append(vmsToDelete, indexToVM[index])
 			}
 
-			switch orchestratorInfo.OrchestratorType {
-			case api.Kubernetes:
+			if orchestratorInfo.OrchestratorType == api.Kubernetes {
 				kubeConfig, err := engine.GenerateKubeConfig(sc.containerService.Properties, sc.location)
 				if err != nil {
 					return errors.Wrap(err, "failed to generate kube config")
@@ -382,8 +379,7 @@ func (sc *scaleCmd) run(cmd *cobra.Command, args []string) error {
 	if winPoolIndex != -1 {
 		templateJSON["variables"].(map[string]interface{})[sc.agentPool.Name+"Index"] = winPoolIndex
 	}
-	switch orchestratorInfo.OrchestratorType {
-	case api.Kubernetes:
+	if orchestratorInfo.OrchestratorType == api.Kubernetes {
 		err = transformer.NormalizeForK8sVMASScalingUp(sc.logger, templateJSON)
 		if err != nil {
 			return errors.Wrapf(err, "error transforming the template for scaling template %s", sc.apiModelPath)

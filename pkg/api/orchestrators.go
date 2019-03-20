@@ -265,8 +265,7 @@ func dcosInfo(csOrch *OrchestratorProfile, hasWindows bool) ([]*OrchestratorVers
 func dcosUpgrades(csOrch *OrchestratorProfile) ([]*OrchestratorProfile, error) {
 	ret := []*OrchestratorProfile{}
 
-	switch csOrch.OrchestratorVersion {
-	case common.DCOSVersion1Dot11Dot0:
+	if csOrch.OrchestratorVersion == common.DCOSVersion1Dot11Dot0 {
 		ret = append(ret, &OrchestratorProfile{
 			OrchestratorType:    DCOS,
 			OrchestratorVersion: common.DCOSVersion1Dot11Dot2,

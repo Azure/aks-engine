@@ -17,12 +17,10 @@ func newOrchestratorsCmd() *cobra.Command {
 	gvc := getVersionsCmd{}
 
 	command := &cobra.Command{
-		Use:   orchestratorsName,
-		Short: orchestratorsShortDescription,
-		Long:  orchestratorsLongDescription,
-		RunE: func(cmd *cobra.Command, args []string) error {
-			return gvc.run(cmd, args)
-		},
+		Use:    orchestratorsName,
+		Short:  orchestratorsShortDescription,
+		Long:   orchestratorsLongDescription,
+		RunE:   gvc.run,
 		Hidden: true,
 	}
 

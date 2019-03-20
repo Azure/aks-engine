@@ -48,8 +48,8 @@ func init() {
 }
 
 // ResourceName returns the last segment (the resource name) for the specified resource identifier.
-func ResourceName(ID string) (string, error) {
-	parts := strings.Split(ID, "/")
+func ResourceName(id string) (string, error) {
+	parts := strings.Split(id, "/")
 	name := parts[len(parts)-1]
 	if len(name) == 0 {
 		return "", errors.Errorf("resource name was missing from identifier")
@@ -59,14 +59,14 @@ func ResourceName(ID string) (string, error) {
 }
 
 // SplitBlobURI returns a decomposed blob URI parts: accountName, containerName, blobName.
-func SplitBlobURI(URI string) (string, string, string, error) {
-	uri, err := url.Parse(URI)
+func SplitBlobURI(uri string) (string, string, string, error) {
+	parsed, err := url.Parse(uri)
 	if err != nil {
 		return "", "", "", err
 	}
 
-	accountName := strings.Split(uri.Host, ".")[0]
-	urlParts := strings.Split(uri.Path, "/")
+	accountName := strings.Split(parsed.Host, ".")[0]
+	urlParts := strings.Split(parsed.Path, "/")
 
 	containerName := urlParts[1]
 	blobPath := strings.Join(urlParts[2:], "/")

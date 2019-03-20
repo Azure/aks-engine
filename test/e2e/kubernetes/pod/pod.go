@@ -251,7 +251,7 @@ func RunCommandMultipleTimes(podRunnerCmd podRunnerCmd, image, name, command str
 		if err != nil {
 			log.Printf("Unable to get logs from pod %s\n", podName)
 		} else {
-			log.Printf("%s\n", string(out[:]))
+			log.Printf("%s\n", string(out))
 		}
 
 		err = p.Delete(3)
@@ -472,13 +472,13 @@ func WaitOnReady(podPrefix, namespace string, successesNeeded int, sleep, durati
 					return
 				}
 				if ready {
-					successCount = successCount + 1
+					successCount++
 					if successCount >= successesNeeded {
 						readyCh <- true
 					}
 				} else {
 					if successCount > 1 {
-						failureCount = failureCount + 1
+						failureCount++
 						if failureCount >= successesNeeded {
 							errCh <- errors.Errorf("Pods from deployment (%s) in namespace (%s) have been checked out as all Ready %d times, but NotReady %d times. This behavior may mean it is in a crashloop", podPrefix, namespace, successCount, failureCount)
 						}
@@ -970,15 +970,16 @@ func (c *Container) ValidateResources(a api.KubernetesContainerSpec) error {
 	actualCPULimits := c.getCPULimits()
 	actualMemoryRequests := c.getMemoryRequests()
 	actualLimits := c.getMemoryLimits()
-	if expectedCPURequests != "" && expectedCPURequests != actualCPURequests {
+	switch {
+	case expectedCPURequests != "" && expectedCPURequests != actualCPURequests:
 		return errors.Errorf("expected CPU requests %s does not match %s", expectedCPURequests, actualCPURequests)
-	} else if expectedCPULimits != "" && expectedCPULimits != actualCPULimits {
+	case expectedCPULimits != "" && expectedCPULimits != actualCPULimits:
 		return errors.Errorf("expected CPU limits %s does not match %s", expectedCPULimits, actualCPULimits)
-	} else if expectedMemoryRequests != "" && expectedMemoryRequests != actualMemoryRequests {
+	case expectedMemoryRequests != "" && expectedMemoryRequests != actualMemoryRequests:
 		return errors.Errorf("expected Memory requests %s does not match %s", expectedMemoryRequests, actualMemoryRequests)
-	} else if expectedMemoryLimits != "" && expectedMemoryLimits != actualLimits {
+	case expectedMemoryLimits != "" && expectedMemoryLimits != actualLimits:
 		return errors.Errorf("expected Memory limits %s does not match %s", expectedMemoryLimits, actualLimits)
-	} else {
+	default:
 		return nil
 	}
 }
