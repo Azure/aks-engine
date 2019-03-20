@@ -375,6 +375,38 @@ func TestAssignDefaultAddonVals(t *testing.T) {
 		t.Error("assignDefaultAddonVals() should have added the default config property")
 	}
 
+	// Verify that an addon with a nil enabled inherits the default enabled value
+	customAddon = KubernetesAddon{
+		Name: addonName,
+		Containers: []KubernetesContainerSpec{
+			{
+				Name:  addonName,
+				Image: customImage,
+			},
+		},
+	}
+	isUpdate = false
+	addonWithDefaults.Enabled = to.BoolPtr(true)
+	modifiedAddon = assignDefaultAddonVals(customAddon, addonWithDefaults, isUpdate)
+	if to.Bool(modifiedAddon.Enabled) != to.Bool(addonWithDefaults.Enabled) {
+		t.Errorf("assignDefaultAddonVals() should have assigned a default 'Enabled' value of %t, instead assigned %t,", to.Bool(addonWithDefaults.Enabled), to.Bool(modifiedAddon.Enabled))
+	}
+
+	customAddon = KubernetesAddon{
+		Name: addonName,
+		Containers: []KubernetesContainerSpec{
+			{
+				Name:  addonName,
+				Image: customImage,
+			},
+		},
+	}
+	isUpdate = false
+	addonWithDefaults.Enabled = to.BoolPtr(false)
+	modifiedAddon = assignDefaultAddonVals(customAddon, addonWithDefaults, isUpdate)
+	if to.Bool(modifiedAddon.Enabled) != to.Bool(addonWithDefaults.Enabled) {
+		t.Errorf("assignDefaultAddonVals() should have assigned a default 'Enabled' value of %t, instead assigned %t,", to.Bool(addonWithDefaults.Enabled), to.Bool(modifiedAddon.Enabled))
+	}
 }
 
 func TestAcceleratedNetworking(t *testing.T) {
