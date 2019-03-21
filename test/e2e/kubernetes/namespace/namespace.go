@@ -75,7 +75,7 @@ func (n *Namespace) Delete() error {
 
 // Label a namespace
 func (n *Namespace) Label(label string) error {
-	cmd := exec.Command("k", "label", "namespace/"+n.Metadata.Name, label)
+	cmd := exec.Command("k", "label", "--overwrite=true", "namespace/"+n.Metadata.Name, label)
 	util.PrintCommand(cmd)
 	out, err := cmd.CombinedOutput()
 	if err != nil {
