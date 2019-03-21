@@ -104,10 +104,11 @@ func CreateVirtualMachine(cs *api.ContainerService) VirtualMachineARM {
 		},
 	}
 
-	if len(cs.Properties.LinuxProfile.SSH.PublicKeys) > 1 {
+	linuxProfile := cs.Properties.LinuxProfile
+	if linuxProfile != nil && len(linuxProfile.SSH.PublicKeys) > 1 {
 		publicKeyPath := "[variables('sshKeyPath')]"
 		var publicKeys []compute.SSHPublicKey
-		for _, publicKey := range cs.Properties.LinuxProfile.SSH.PublicKeys {
+		for _, publicKey := range linuxProfile.SSH.PublicKeys {
 			publicKeyTrimmed := strings.TrimSpace(publicKey.KeyData)
 			publicKeys = append(publicKeys, compute.SSHPublicKey{
 				Path:    &publicKeyPath,
@@ -138,8 +139,8 @@ func CreateVirtualMachine(cs *api.ContainerService) VirtualMachineARM {
 		panic(err)
 	}
 
-	if cs.Properties.LinuxProfile.HasSecrets() {
-		vsg := getVaultSecretGroup(cs.Properties.LinuxProfile)
+	if linuxProfile != nil && linuxProfile.HasSecrets() {
+		vsg := getVaultSecretGroup(linuxProfile)
 		osProfile.Secrets = &vsg
 	}
 	vmProperties.OsProfile = osProfile
@@ -397,10 +398,11 @@ func createAgentAvailabilitySetVM(cs *api.ContainerService, profile *api.AgentPo
 			DisablePasswordAuthentication: to.BoolPtr(true),
 		}
 
-		if len(cs.Properties.LinuxProfile.SSH.PublicKeys) > 1 {
+		linuxProfile := cs.Properties.LinuxProfile
+		if linuxProfile != nil && len(linuxProfile.SSH.PublicKeys) > 1 {
 			publicKeyPath := "[variables('sshKeyPath')]"
 			publicKeys := []compute.SSHPublicKey{}
-			for _, publicKey := range cs.Properties.LinuxProfile.SSH.PublicKeys {
+			for _, publicKey := range linuxProfile.SSH.PublicKeys {
 				publicKeyTrimmed := strings.TrimSpace(publicKey.KeyData)
 				publicKeys = append(publicKeys, compute.SSHPublicKey{
 					Path:    &publicKeyPath,
@@ -429,8 +431,8 @@ func createAgentAvailabilitySetVM(cs *api.ContainerService, profile *api.AgentPo
 		agentCustomData := getCustomDataFromJSON(t.GetKubernetesAgentCustomDataJSON(cs, profile))
 		osProfile.CustomData = to.StringPtr(agentCustomData)
 
-		if cs.Properties.LinuxProfile.HasSecrets() {
-			vsg := getVaultSecretGroup(cs.Properties.LinuxProfile)
+		if linuxProfile != nil && linuxProfile.HasSecrets() {
+			vsg := getVaultSecretGroup(linuxProfile)
 			osProfile.Secrets = &vsg
 		}
 	} else {

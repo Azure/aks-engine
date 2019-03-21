@@ -902,7 +902,7 @@
             }
             {{ end }}
           }
-          {{if .LinuxProfile.HasSecrets}}
+          {{if and (.LinuxProfile) (.LinuxProfile.HasSecrets)}}
           ,
           "secrets": "[variables('linuxProfileSecrets')]"
           {{end}}

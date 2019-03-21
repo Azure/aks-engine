@@ -179,7 +179,7 @@
       },
       "type": "string"
     }
-{{if .LinuxProfile.HasSecrets}}
+{{if and (.LinuxProfile) (.LinuxProfile.HasSecrets)}}
   {{range  $vIndex, $vault := .LinuxProfile.Secrets}}
     ,
     "linuxKeyVaultID{{$vIndex}}": {
