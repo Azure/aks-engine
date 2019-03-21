@@ -150,7 +150,7 @@ func CreateMasterVMSS(cs *api.ContainerService) VirtualMachineScaleSetARM {
 	}
 	netintconfig.IPConfigurations = &ipConfigurations
 
-	if linuxProfile.HasCustomNodesDNS() {
+	if linuxProfile != nil && linuxProfile.HasCustomNodesDNS() {
 		netintconfig.DNSSettings = &compute.VirtualMachineScaleSetNetworkConfigurationDNSSettings{
 			DNSServers: &[]string{
 				"[parameters('dnsServer')]",

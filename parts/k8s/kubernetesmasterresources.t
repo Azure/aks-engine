@@ -405,13 +405,13 @@
         ,
         "enableIPForwarding": true
 {{end}}
-{{if HasCustomNodesDNS}}
+{{if HasLinuxProfile}}{{if HasCustomNodesDNS}}
  ,"dnsSettings": {
           "dnsServers": [
               "[parameters('dnsServer')]"
           ]
       }
-{{end}}
+{{end}}{{end}}
 {{if .MasterProfile.IsCustomVNET}}
         ,"networkSecurityGroup": {
           "id": "[variables('nsgID')]"
@@ -481,13 +481,13 @@
           ,
           "enableIPForwarding": true
   {{end}}
-  {{if HasCustomNodesDNS}}
+  {{if HasLinuxProfile}}{{if HasCustomNodesDNS}}
    ,"dnsSettings": {
           "dnsServers": [
               "[parameters('dnsServer')]"
           ]
       }
-  {{end}}
+  {{end}}{{end}}
   {{if .MasterProfile.IsCustomVNET}}
           ,"networkSecurityGroup": {
             "id": "[variables('nsgID')]"
@@ -889,7 +889,7 @@
           {{GetKubernetesMasterCustomData .}}
           "linuxConfiguration": {
             "disablePasswordAuthentication": true,
-            {{if HasMultipleSshKeys }}
+            {{if HasLinuxProfile }}{{if HasMultipleSshKeys }}
             "ssh": {{ GetSshPublicKeys }}
             {{ else }}
             "ssh": {
@@ -900,12 +900,12 @@
                 }
               ]
             }
-            {{ end }}
+            {{ end }}{{ end }}
           }
-          {{if and (.LinuxProfile) (.LinuxProfile.HasSecrets)}}
+          {{if .LinuxProfile}}{{if .LinuxProfile.HasSecrets}}
           ,
           "secrets": "[variables('linuxProfileSecrets')]"
-          {{end}}
+          {{end}}{{end}}
         },
         "storageProfile": {
           "dataDisks": [

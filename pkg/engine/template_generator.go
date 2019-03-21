@@ -765,12 +765,15 @@ func (t *TemplateGenerator) getTemplateFuncMap(cs *api.ContainerService) templat
 			//   }
 			publicKeyPath := "[variables('sshKeyPath')]"
 			publicKeys := []compute.SSHPublicKey{}
-			for _, publicKey := range cs.Properties.LinuxProfile.SSH.PublicKeys {
-				publicKeyTrimmed := strings.TrimSpace(publicKey.KeyData)
-				publicKeys = append(publicKeys, compute.SSHPublicKey{
-					Path:    &publicKeyPath,
-					KeyData: &publicKeyTrimmed,
-				})
+			linuxProfile := cs.Properties.LinuxProfile
+			if linuxProfile != nil {
+				for _, publicKey := range linuxProfile.SSH.PublicKeys {
+					publicKeyTrimmed := strings.TrimSpace(publicKey.KeyData)
+					publicKeys = append(publicKeys, compute.SSHPublicKey{
+						Path:    &publicKeyPath,
+						KeyData: &publicKeyTrimmed,
+					})
+				}
 			}
 			ssh := compute.SSHConfiguration{
 				PublicKeys: &publicKeys,
@@ -783,11 +786,14 @@ func (t *TemplateGenerator) getTemplateFuncMap(cs *api.ContainerService) templat
 		},
 		"GetSshPublicKeysPowerShell": func() string {
 			str := ""
-			lastItem := len(cs.Properties.LinuxProfile.SSH.PublicKeys) - 1
-			for i, publicKey := range cs.Properties.LinuxProfile.SSH.PublicKeys {
-				str += `"` + strings.TrimSpace(publicKey.KeyData) + `"`
-				if i < lastItem {
-					str += ", "
+			linuxProfile := cs.Properties.LinuxProfile
+			if linuxProfile != nil {
+				lastItem := len(linuxProfile.SSH.PublicKeys) - 1
+				for i, publicKey := range linuxProfile.SSH.PublicKeys {
+					str += `"` + strings.TrimSpace(publicKey.KeyData) + `"`
+					if i < lastItem {
+						str += ", "
+					}
 				}
 			}
 			return str
@@ -995,10 +1001,11 @@ func (t *TemplateGenerator) getTemplateFuncMap(cs *api.ContainerService) templat
 			return cs.Properties.WindowsProfile.GetEnableWindowsUpdate()
 		},
 		"GetConfigurationScriptRootURL": func() string {
-			if cs.Properties.LinuxProfile.ScriptRootURL == "" {
+			linuxProfile := cs.Properties.LinuxProfile
+			if linuxProfile == nil || linuxProfile.ScriptRootURL == "" {
 				return DefaultConfigurationScriptRootURL
 			}
-			return cs.Properties.LinuxProfile.ScriptRootURL
+			return linuxProfile.ScriptRootURL
 		},
 		"GetMasterOSImageOffer": func() string {
 			cloudSpecConfig := cs.GetCloudSpecConfig()

@@ -95,13 +95,13 @@
                   {{if lt $seq $.IPAddressCount}},{{end}}
                   {{end}}
                 ]
-{{if HasCustomNodesDNS}}
+{{if HasLinuxProfile}}{{if HasCustomNodesDNS}}
                  ,"dnsSettings": {
                     "dnsServers": [
                         "[parameters('dnsServer')]"
                     ]
                 }
-{{end}}
+{{end}}{{end}}
                 {{if not IsAzureCNI}}
                 ,"enableIPForwarding": true
                 {{end}}
@@ -115,7 +115,7 @@
           {{GetKubernetesAgentCustomData .}}
           "linuxConfiguration": {
               "disablePasswordAuthentication": true,
-              {{if HasMultipleSshKeys }}
+              {{if HasLinuxProfile}}{{if HasMultipleSshKeys }}
               "ssh": {{ GetSshPublicKeys }}
               {{ else }}
               "ssh": {
@@ -126,12 +126,12 @@
                   }
                 ]
               }
-              {{ end }}
+              {{ end }}{{ end }}
             }
-            {{if and (HasLinuxProfile) (HasLinuxSecrets)}}
+            {{if HasLinuxProfile}}{{if HasLinuxSecrets}}
               ,
               "secrets": "[variables('linuxProfileSecrets')]"
-            {{end}}
+            {{end}}{{end}}
         },
         "storageProfile": {
           {{if not (UseAgentCustomImage .)}}
