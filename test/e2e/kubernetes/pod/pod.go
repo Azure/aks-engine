@@ -600,14 +600,15 @@ func (l *List) CheckOutboundConnection(sleep, duration time.Duration, osType api
 	ready := false
 	err := errors.Errorf("Unspecified error")
 	for _, p := range l.Pods {
+		localPod := p
 		go func() {
 			switch osType {
 			case api.Linux:
-				ready, err = p.CheckLinuxOutboundConnection(sleep, duration)
+				ready, err = localPod.CheckLinuxOutboundConnection(sleep, duration)
 			case api.Windows:
-				ready, err = p.CheckWindowsOutboundConnection("www.bing.com", sleep, duration)
+				ready, err = localPod.CheckWindowsOutboundConnection("www.bing.com", sleep, duration)
 			default:
-				ready, err = false, errors.Errorf("Invalid osType for Pod (%s)", p.Metadata.Name)
+				ready, err = false, errors.Errorf("Invalid osType for Pod (%s)", localPod.Metadata.Name)
 			}
 			readyCh <- ready
 			errCh <- err
@@ -640,8 +641,9 @@ func (l *List) ValidateCurlConnection(uri string, sleep, duration time.Duration)
 	defer cancel()
 
 	for _, p := range l.Pods {
+		localPod := p
 		go func() {
-			ready, err := p.ValidateCurlConnection(uri, sleep, duration)
+			ready, err := localPod.ValidateCurlConnection(uri, sleep, duration)
 			readyCh <- ready
 			errCh <- err
 		}()
