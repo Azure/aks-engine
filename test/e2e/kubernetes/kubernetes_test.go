@@ -330,7 +330,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 						Expect(err).NotTo(HaveOccurred())
 					}
 				}
-				running, err := p.WaitOnReady(retryTimeWhenWaitingForPodReady, 2*time.Minute)
+				running, err := p.WaitOnReady(retryTimeWhenWaitingForPodReady, cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(running).To(Equal(true))
 			} else {
