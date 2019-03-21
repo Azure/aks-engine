@@ -179,7 +179,7 @@
       },
       "type": "string"
     }
-{{if and (.LinuxProfile) (.LinuxProfile.HasSecrets)}}
+{{if .LinuxProfile}}{{if .LinuxProfile.HasSecrets}}
   {{range  $vIndex, $vault := .LinuxProfile.Secrets}}
     ,
     "linuxKeyVaultID{{$vIndex}}": {
@@ -198,7 +198,7 @@
       }
     {{end}}
   {{end}}
-{{end}}
+{{end}}{{end}}
 {{if .HasWindows}}{{if .WindowsProfile.HasSecrets}}
   {{range  $vIndex, $vault := .WindowsProfile.Secrets}}
     ,

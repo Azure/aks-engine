@@ -318,7 +318,7 @@
     "scope": "[resourceGroup().id]",
     "tenantId": "[subscription().tenantId]",
     "singleQuote": "'"
-{{if .LinuxProfile.HasSecrets}}
+{{if .LinuxProfile}}{{if .LinuxProfile.HasSecrets}}
     , "linuxProfileSecrets" :
       [
           {{range  $vIndex, $vault := .LinuxProfile.Secrets}}
@@ -338,7 +338,7 @@
               }
         {{end}}
       ]
-{{end}}
+{{end}}{{end}}
 {{if .HasWindows}}
     ,"windowsCustomScriptSuffix": " $inputFile = '%SYSTEMDRIVE%\\AzureData\\CustomData.bin' ; $outputFile = '%SYSTEMDRIVE%\\AzureData\\CustomDataSetupScript.ps1' ; Copy-Item $inputFile $outputFile ; Invoke-Expression('{0} {1}' -f $outputFile, $arguments) ; "
 {{end}}

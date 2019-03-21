@@ -516,13 +516,13 @@
                   {{if lt $seq $.MasterProfile.IPAddressCount}},{{end}}
                   {{end}}
                 ]
-                {{if HasCustomNodesDNS}}
+                {{if HasLinuxProfile}}{{if HasCustomNodesDNS}}
                  ,"dnsSettings": {
                     "dnsServers": [
                         "[parameters('dnsServer')]"
                     ]
                 }
-                {{end}}
+                {{end}}{{end}}
                 {{if not IsAzureCNI}}
                 ,"enableIPForwarding": true
                 {{end}}
@@ -536,7 +536,7 @@
           {{GetKubernetesMasterCustomData .}}
           "linuxConfiguration": {
               "disablePasswordAuthentication": true,
-              {{if HasMultipleSshKeys }}
+              {{if HasLinuxProfile }}{{if HasMultipleSshKeys }}
               "ssh": {{ GetSshPublicKeys }}
               {{ else }}
               "ssh": {
@@ -547,12 +547,12 @@
                   }
                 ]
               }
-              {{ end }}
+              {{ end }}{{ end }}
             }
-            {{if .LinuxProfile.HasSecrets}}
+            {{if .LinuxProfile}}{{if .LinuxProfile.HasSecrets}}
               ,
               "secrets": "[variables('linuxProfileSecrets')]"
-            {{end}}
+            {{end}}{{end}}
         },
         "storageProfile": {
           "dataDisks": [
