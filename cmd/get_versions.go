@@ -9,6 +9,8 @@ import (
 	"strings"
 	"text/tabwriter"
 
+	"github.com/pkg/errors"
+
 	"github.com/Azure/aks-engine/pkg/api"
 	"github.com/Azure/aks-engine/pkg/helpers"
 	"github.com/spf13/cobra"
@@ -82,7 +84,7 @@ func (gvc *getVersionsCmd) run(cmd *cobra.Command, args []string) error {
 		}
 		w.Flush()
 	default:
-		return fmt.Errorf("output format \"%s\" is not supported", gvc.output)
+		return errors.Errorf(`output format "%s" is not supported`, gvc.output)
 	}
 
 	return nil

@@ -5,7 +5,6 @@ package vlabs
 
 import (
 	"encoding/base64"
-	"fmt"
 	"net"
 	"net/url"
 	"regexp"
@@ -1271,7 +1270,7 @@ func validatePoolOSType(os OSType) error {
 
 func validatePoolAcceleratedNetworking(vmSize string) error {
 	if !helpers.AcceleratedNetworkingSupported(vmSize) {
-		return fmt.Errorf("AgentPoolProfile.vmsize %s does not support AgentPoolProfile.acceleratedNetworking", vmSize)
+		return errors.Errorf("AgentPoolProfile.vmsize %s does not support AgentPoolProfile.acceleratedNetworking", vmSize)
 	}
 	return nil
 }
