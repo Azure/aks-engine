@@ -128,7 +128,7 @@
               }
               {{ end }}
             }
-            {{if HasLinuxSecrets}}
+            {{if and (HasLinuxProfile) (HasLinuxSecrets)}}
               ,
               "secrets": "[variables('linuxProfileSecrets')]"
             {{end}}
