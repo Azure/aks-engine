@@ -17,9 +17,13 @@ import (
 func CreateVirtualMachine(cs *api.ContainerService) VirtualMachineARM {
 	hasAvailabilityZones := cs.Properties.MasterProfile.HasAvailabilityZones()
 	isStorageAccount := cs.Properties.MasterProfile.IsStorageAccount()
-	useManagedIdentity := cs.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity
-	userAssignedIDEnabled := cs.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity &&
-		cs.Properties.OrchestratorProfile.KubernetesConfig.UserAssignedID != ""
+	kubernetesConfig := cs.Properties.OrchestratorProfile.KubernetesConfig
+
+	var useManagedIdentity, userAssignedIDEnabled bool
+	if kubernetesConfig != nil {
+		useManagedIdentity = kubernetesConfig.UseManagedIdentity
+		userAssignedIDEnabled = useManagedIdentity && kubernetesConfig.UserAssignedID != ""
+	}
 
 	var dependencies []string
 	dependentNIC := "[concat('Microsoft.Network/networkInterfaces/', variables('masterVMNamePrefix'), 'nic-', copyIndex(variables('masterOffset')))]"
@@ -100,10 +104,11 @@ func CreateVirtualMachine(cs *api.ContainerService) VirtualMachineARM {
 		},
 	}
 
-	if len(cs.Properties.LinuxProfile.SSH.PublicKeys) > 1 {
+	linuxProfile := cs.Properties.LinuxProfile
+	if linuxProfile != nil && len(linuxProfile.SSH.PublicKeys) > 1 {
 		publicKeyPath := "[variables('sshKeyPath')]"
 		var publicKeys []compute.SSHPublicKey
-		for _, publicKey := range cs.Properties.LinuxProfile.SSH.PublicKeys {
+		for _, publicKey := range linuxProfile.SSH.PublicKeys {
 			publicKeyTrimmed := strings.TrimSpace(publicKey.KeyData)
 			publicKeys = append(publicKeys, compute.SSHPublicKey{
 				Path:    &publicKeyPath,
@@ -134,8 +139,8 @@ func CreateVirtualMachine(cs *api.ContainerService) VirtualMachineARM {
 		panic(err)
 	}
 
-	if cs.Properties.LinuxProfile.HasSecrets() {
-		vsg := getVaultSecretGroup(cs.Properties.LinuxProfile)
+	if linuxProfile != nil && linuxProfile.HasSecrets() {
+		vsg := getVaultSecretGroup(linuxProfile)
 		osProfile.Secrets = &vsg
 	}
 	vmProperties.OsProfile = osProfile
@@ -143,7 +148,7 @@ func CreateVirtualMachine(cs *api.ContainerService) VirtualMachineARM {
 	storageProfile := &compute.StorageProfile{}
 	imageRef := cs.Properties.MasterProfile.ImageRef
 	useMasterCustomImage := imageRef != nil && len(imageRef.Name) > 0 && len(imageRef.ResourceGroup) > 0
-	etcdSizeGB, _ := strconv.Atoi(cs.Properties.OrchestratorProfile.KubernetesConfig.EtcdDiskSizeGB)
+	etcdSizeGB, _ := strconv.Atoi(kubernetesConfig.EtcdDiskSizeGB)
 	dataDisk := compute.DataDisk{
 		CreateOption: compute.DiskCreateOptionTypesEmpty,
 		DiskSizeGB:   to.Int32Ptr(int32(etcdSizeGB)),
@@ -204,6 +209,8 @@ func createJumpboxVirtualMachine(cs *api.ContainerService) VirtualMachineARM {
 		},
 	}
 
+	kubernetesConfig := cs.Properties.OrchestratorProfile.KubernetesConfig
+
 	vm := compute.VirtualMachine{
 		Location: to.StringPtr("[variables('location')]"),
 		Name:     to.StringPtr("[parameters('jumpboxVMName')]"),
@@ -220,12 +227,15 @@ func createJumpboxVirtualMachine(cs *api.ContainerService) VirtualMachineARM {
 		DataDisks: &[]compute.DataDisk{},
 	}
 
-	jumpBoxIsManagedDisks := cs.Properties.OrchestratorProfile.KubernetesConfig.PrivateJumpboxProvision() && cs.Properties.OrchestratorProfile.KubernetesConfig.PrivateCluster.JumpboxProfile.StorageProfile == api.ManagedDisks
+	var jumpBoxIsManagedDisks bool
+	if kubernetesConfig != nil && kubernetesConfig.PrivateCluster != nil {
+		jumpBoxIsManagedDisks = kubernetesConfig.PrivateJumpboxProvision() && kubernetesConfig.PrivateCluster.JumpboxProfile.StorageProfile == api.ManagedDisks
+	}
 
 	if jumpBoxIsManagedDisks {
 		storageProfile.OsDisk = &compute.OSDisk{
 			CreateOption: compute.DiskCreateOptionTypesFromImage,
-			DiskSizeGB:   to.Int32Ptr(int32(cs.Properties.OrchestratorProfile.KubernetesConfig.PrivateCluster.JumpboxProfile.OSDiskSizeGB)),
+			DiskSizeGB:   to.Int32Ptr(int32(kubernetesConfig.PrivateCluster.JumpboxProfile.OSDiskSizeGB)),
 			ManagedDisk: &compute.ManagedDiskParameters{
 				StorageAccountType: "[variables('vmSizesMap')[parameters('jumpboxVMSize')].storageAccountType]",
 			},
@@ -291,9 +301,14 @@ func createAgentAvailabilitySetVM(cs *api.ContainerService, profile *api.AgentPo
 
 	isStorageAccount := profile.IsStorageAccount()
 	hasDisks := profile.HasDisks()
-	useManagedIdentity := cs.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity
-	userAssignedIDEnabled := cs.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity &&
-		cs.Properties.OrchestratorProfile.KubernetesConfig.UserAssignedID != ""
+	kubernetesConfig := cs.Properties.OrchestratorProfile.KubernetesConfig
+
+	var useManagedIdentity, userAssignedIDEnabled bool
+
+	if kubernetesConfig != nil {
+		useManagedIdentity = kubernetesConfig.UseManagedIdentity
+		userAssignedIDEnabled = useManagedIdentity && kubernetesConfig.UserAssignedID != ""
+	}
 
 	if isStorageAccount {
 		storageDep := fmt.Sprintf("[concat('Microsoft.Storage/storageAccounts/',variables('storageAccountPrefixes')[mod(add(div(copyIndex(variables('%[1]sOffset')),variables('maxVMsPerStorageAccount')),variables('%[1]sStorageAccountOffset')),variables('storageAccountPrefixesCount'))],variables('storageAccountPrefixes')[div(add(div(copyIndex(variables('%[1]sOffset')),variables('maxVMsPerStorageAccount')),variables('%[1]sStorageAccountOffset')),variables('storageAccountPrefixesCount'))],variables('%[1]sAccountName'))]", profile.Name)
@@ -383,10 +398,11 @@ func createAgentAvailabilitySetVM(cs *api.ContainerService, profile *api.AgentPo
 			DisablePasswordAuthentication: to.BoolPtr(true),
 		}
 
-		if len(cs.Properties.LinuxProfile.SSH.PublicKeys) > 1 {
+		linuxProfile := cs.Properties.LinuxProfile
+		if linuxProfile != nil && len(linuxProfile.SSH.PublicKeys) > 1 {
 			publicKeyPath := "[variables('sshKeyPath')]"
 			publicKeys := []compute.SSHPublicKey{}
-			for _, publicKey := range cs.Properties.LinuxProfile.SSH.PublicKeys {
+			for _, publicKey := range linuxProfile.SSH.PublicKeys {
 				publicKeyTrimmed := strings.TrimSpace(publicKey.KeyData)
 				publicKeys = append(publicKeys, compute.SSHPublicKey{
 					Path:    &publicKeyPath,
@@ -415,8 +431,8 @@ func createAgentAvailabilitySetVM(cs *api.ContainerService, profile *api.AgentPo
 		agentCustomData := getCustomDataFromJSON(t.GetKubernetesAgentCustomDataJSON(cs, profile))
 		osProfile.CustomData = to.StringPtr(agentCustomData)
 
-		if cs.Properties.LinuxProfile.HasSecrets() {
-			vsg := getVaultSecretGroup(cs.Properties.LinuxProfile)
+		if linuxProfile != nil && linuxProfile.HasSecrets() {
+			vsg := getVaultSecretGroup(linuxProfile)
 			osProfile.Secrets = &vsg
 		}
 	} else {

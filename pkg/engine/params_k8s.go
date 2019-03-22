@@ -146,23 +146,27 @@ func assignKubernetesParameters(properties *api.Properties, parametersMap params
 
 		if kubernetesConfig == nil ||
 			!kubernetesConfig.UseManagedIdentity {
+			servicePrincipalProfile := properties.ServicePrincipalProfile
 
-			addValue(parametersMap, "servicePrincipalClientId", properties.ServicePrincipalProfile.ClientID)
-			if properties.ServicePrincipalProfile.KeyvaultSecretRef != nil {
-				addKeyvaultReference(parametersMap, "servicePrincipalClientSecret",
-					properties.ServicePrincipalProfile.KeyvaultSecretRef.VaultID,
-					properties.ServicePrincipalProfile.KeyvaultSecretRef.SecretName,
-					properties.ServicePrincipalProfile.KeyvaultSecretRef.SecretVersion)
-			} else {
-				addValue(parametersMap, "servicePrincipalClientSecret", properties.ServicePrincipalProfile.Secret)
-			}
-
-			if kubernetesConfig != nil && to.Bool(kubernetesConfig.EnableEncryptionWithExternalKms) {
-				if kubernetesConfig.KeyVaultSku != "" {
-					addValue(parametersMap, "clusterKeyVaultSku", kubernetesConfig.KeyVaultSku)
+			if servicePrincipalProfile != nil {
+				addValue(parametersMap, "servicePrincipalClientId", servicePrincipalProfile.ClientID)
+				keyVaultSecretRef := servicePrincipalProfile.KeyvaultSecretRef
+				if keyVaultSecretRef != nil {
+					addKeyvaultReference(parametersMap, "servicePrincipalClientSecret",
+						keyVaultSecretRef.VaultID,
+						keyVaultSecretRef.SecretName,
+						keyVaultSecretRef.SecretVersion)
+				} else {
+					addValue(parametersMap, "servicePrincipalClientSecret", servicePrincipalProfile.Secret)
 				}
-				if !kubernetesConfig.UseManagedIdentity && properties.ServicePrincipalProfile.ObjectID != "" {
-					addValue(parametersMap, "servicePrincipalObjectId", properties.ServicePrincipalProfile.ObjectID)
+
+				if kubernetesConfig != nil && to.Bool(kubernetesConfig.EnableEncryptionWithExternalKms) {
+					if kubernetesConfig.KeyVaultSku != "" {
+						addValue(parametersMap, "clusterKeyVaultSku", kubernetesConfig.KeyVaultSku)
+					}
+					if !kubernetesConfig.UseManagedIdentity && servicePrincipalProfile.ObjectID != "" {
+						addValue(parametersMap, "servicePrincipalObjectId", servicePrincipalProfile.ObjectID)
+					}
 				}
 			}
 		}

@@ -44,6 +44,7 @@ const (
 	retryTimeWhenWaitingForPodReady = 1 * time.Minute
 	stabilityCommandTimeout         = 5 * time.Second
 	windowsCommandTimeout           = 1 * time.Minute
+	validateNetworkPolicyTimeout    = 3 * time.Minute
 )
 
 var (
@@ -330,7 +331,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 						Expect(err).NotTo(HaveOccurred())
 					}
 				}
-				running, err := p.WaitOnReady(retryTimeWhenWaitingForPodReady, 2*time.Minute)
+				running, err := p.WaitOnReady(retryTimeWhenWaitingForPodReady, cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(running).To(Equal(true))
 			} else {
@@ -1058,7 +1059,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 
 				By("Ensuring we no longer have ingress access from the network-policy pods to backend pods")
 				for _, backendPod := range backendPods {
-					pass, err = pl.ValidateCurlConnection(backendPod.Status.PodIP, 5*time.Second, cfg.Timeout)
+					pass, err = pl.ValidateCurlConnection(backendPod.Status.PodIP, 5*time.Second, validateNetworkPolicyTimeout)
 					Expect(err).Should(HaveOccurred())
 					Expect(pass).To(BeFalse())
 				}
@@ -1066,53 +1067,55 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				By("Cleaning up after ourselves")
 				networkpolicy.DeleteNetworkPolicy(nwpolicyName, namespace)
 
-				By("Applying a network policy to only allow ingress access to app: webapp, role: backend pods in development namespace from pods in any namespace with the same labels")
-				nwpolicyName, namespace = "backend-allow-ingress-pod-label", nsDev
-				err = networkpolicy.CreateNetworkPolicyFromFile(filepath.Join(PolicyDir, "backend-policy-allow-ingress-pod-label.yaml"), nwpolicyName, namespace)
-				Expect(err).NotTo(HaveOccurred())
-
-				By("Ensuring we have ingress access from pods with matching labels")
-				pl = pod.List{Pods: backendPods}
-				for _, backendDstPod := range backendPods {
-					pass, err = pl.ValidateCurlConnection(backendDstPod.Status.PodIP, 5*time.Second, cfg.Timeout)
+				if common.IsKubernetesVersionGe(eng.ExpandedDefinition.Properties.OrchestratorProfile.OrchestratorVersion, "1.11.0") {
+					By("Applying a network policy to only allow ingress access to app: webapp, role: backend pods in development namespace from pods in any namespace with the same labels")
+					nwpolicyName, namespace = "backend-allow-ingress-pod-label", nsDev
+					err = networkpolicy.CreateNetworkPolicyFromFile(filepath.Join(PolicyDir, "backend-policy-allow-ingress-pod-label.yaml"), nwpolicyName, namespace)
 					Expect(err).NotTo(HaveOccurred())
-					Expect(pass).To(BeTrue())
-				}
 
-				By("Ensuring we don't have ingress access from pods without matching labels")
-				pl = pod.List{Pods: nwpolicyPods}
-				for _, backendPod := range backendPods {
-					pass, err = pl.ValidateCurlConnection(backendPod.Status.PodIP, 5*time.Second, cfg.Timeout)
-					Expect(err).Should(HaveOccurred())
-					Expect(pass).To(BeFalse())
-				}
+					By("Ensuring we have ingress access from pods with matching labels")
+					pl = pod.List{Pods: backendPods}
+					for _, backendDstPod := range backendPods {
+						pass, err = pl.ValidateCurlConnection(backendDstPod.Status.PodIP, 5*time.Second, cfg.Timeout)
+						Expect(err).NotTo(HaveOccurred())
+						Expect(pass).To(BeTrue())
+					}
 
-				By("Cleaning up after ourselves")
-				networkpolicy.DeleteNetworkPolicy(nwpolicyName, namespace)
+					By("Ensuring we don't have ingress access from pods without matching labels")
+					pl = pod.List{Pods: nwpolicyPods}
+					for _, backendPod := range backendPods {
+						pass, err = pl.ValidateCurlConnection(backendPod.Status.PodIP, 5*time.Second, validateNetworkPolicyTimeout)
+						Expect(err).Should(HaveOccurred())
+						Expect(pass).To(BeFalse())
+					}
 
-				By("Applying a network policy to only allow ingress access to app: webapp role:backends in development namespace from pods with label app:webapp, role: frontendProd within namespace with label purpose: development")
-				nwpolicyName, namespace = "backend-policy-allow-ingress-pod-namespace-label", nsDev
-				err = networkpolicy.CreateNetworkPolicyFromFile(filepath.Join(PolicyDir, "backend-policy-allow-ingress-pod-namespace-label.yaml"), nwpolicyName, namespace)
-				Expect(err).NotTo(HaveOccurred())
+					By("Cleaning up after ourselves")
+					networkpolicy.DeleteNetworkPolicy(nwpolicyName, namespace)
 
-				By("Ensuring we don't have ingress access from role:frontend pods in production namespace")
-				pl = pod.List{Pods: frontendProdPods}
-				for _, backendPod := range backendPods {
-					pass, err = pl.ValidateCurlConnection(backendPod.Status.PodIP, 5*time.Second, cfg.Timeout)
-					Expect(err).Should(HaveOccurred())
-					Expect(pass).To(BeFalse())
-				}
-
-				By("Ensuring we have ingress access from role:frontend pods in development namespace")
-				pl = pod.List{Pods: frontendDevPods}
-				for _, backendPod := range backendPods {
-					pass, err = pl.ValidateCurlConnection(backendPod.Status.PodIP, 5*time.Second, cfg.Timeout)
+					By("Applying a network policy to only allow ingress access to app: webapp role:backends in development namespace from pods with label app:webapp, role: frontendProd within namespace with label purpose: development")
+					nwpolicyName, namespace = "backend-policy-allow-ingress-pod-namespace-label", nsDev
+					err = networkpolicy.CreateNetworkPolicyFromFile(filepath.Join(PolicyDir, "backend-policy-allow-ingress-pod-namespace-label.yaml"), nwpolicyName, namespace)
 					Expect(err).NotTo(HaveOccurred())
-					Expect(pass).To(BeTrue())
-				}
 
-				By("Cleaning up after ourselves")
-				networkpolicy.DeleteNetworkPolicy(nwpolicyName, namespace)
+					By("Ensuring we don't have ingress access from role:frontend pods in production namespace")
+					pl = pod.List{Pods: frontendProdPods}
+					for _, backendPod := range backendPods {
+						pass, err = pl.ValidateCurlConnection(backendPod.Status.PodIP, 5*time.Second, validateNetworkPolicyTimeout)
+						Expect(err).Should(HaveOccurred())
+						Expect(pass).To(BeFalse())
+					}
+
+					By("Ensuring we have ingress access from role:frontend pods in development namespace")
+					pl = pod.List{Pods: frontendDevPods}
+					for _, backendPod := range backendPods {
+						pass, err = pl.ValidateCurlConnection(backendPod.Status.PodIP, 5*time.Second, cfg.Timeout)
+						Expect(err).NotTo(HaveOccurred())
+						Expect(pass).To(BeTrue())
+					}
+
+					By("Cleaning up after ourselves")
+					networkpolicy.DeleteNetworkPolicy(nwpolicyName, namespace)
+				}
 
 				By("Cleaning up after ourselves")
 				err = frontendProdDeployment.Delete(deleteResourceRetries)

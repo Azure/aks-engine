@@ -50,19 +50,27 @@ func getK8sMasterVars(cs *api.ContainerService) map[string]interface{} {
 	masterProfile := cs.Properties.MasterProfile
 	profiles := cs.Properties.AgentPoolProfiles
 
-	useManagedIdentity := kubernetesConfig.UseManagedIdentity
-	userAssignedID := useManagedIdentity && kubernetesConfig.UserAssignedID != ""
-	userAssignedClientID := useManagedIdentity && kubernetesConfig.UserAssignedClientID != ""
-	useInstanceMetadata := kubernetesConfig.UseInstanceMetadata
-	excludeMasterFromStandardLB := to.Bool(kubernetesConfig.ExcludeMasterFromStandardLB)
-	maxLoadBalancerCount := kubernetesConfig.MaximumLoadBalancerRuleCount
+	var useManagedIdentity, userAssignedID, userAssignedClientID, enableEncryptionWithExternalKms bool
+	var excludeMasterFromStandardLB, provisionJumpbox, isPrivateCluster bool
+	var maxLoadBalancerCount int
+	var useInstanceMetadata *bool
+	if kubernetesConfig != nil {
+		useManagedIdentity = kubernetesConfig.UseManagedIdentity
+		userAssignedID = useManagedIdentity && kubernetesConfig.UserAssignedID != ""
+		userAssignedClientID = useManagedIdentity && kubernetesConfig.UserAssignedClientID != ""
+		enableEncryptionWithExternalKms = to.Bool(kubernetesConfig.EnableEncryptionWithExternalKms)
+		useInstanceMetadata = kubernetesConfig.UseInstanceMetadata
+		excludeMasterFromStandardLB = to.Bool(kubernetesConfig.ExcludeMasterFromStandardLB)
+		maxLoadBalancerCount = kubernetesConfig.MaximumLoadBalancerRuleCount
+		if kubernetesConfig.PrivateCluster != nil {
+			isPrivateCluster = to.Bool(kubernetesConfig.PrivateCluster.Enabled)
+		}
+		provisionJumpbox = kubernetesConfig.PrivateJumpboxProvision()
+	}
 	isHostedMaster := cs.Properties.IsHostedMasterProfile()
 	isMasterVMSS := masterProfile != nil && masterProfile.IsVirtualMachineScaleSets()
 	hasStorageAccountDisks := cs.Properties.HasStorageAccountDisks()
 	isCustomVnet := cs.Properties.AreAgentProfilesCustomVNET()
-	isPrivateCluster := to.Bool(kubernetesConfig.PrivateCluster.Enabled)
-	provisionJumpbox := kubernetesConfig.PrivateJumpboxProvision()
-	enableEncryptionWithExternalKms := to.Bool(kubernetesConfig.EnableEncryptionWithExternalKms)
 	hasAgentPool := len(profiles) > 0
 	hasCosmosEtcd := masterProfile != nil && to.Bool(masterProfile.CosmosEtcd)
 

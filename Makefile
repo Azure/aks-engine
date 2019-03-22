@@ -72,7 +72,7 @@ generate: bootstrap
 
 .PHONY: generate-azure-constants
 generate-azure-constants:
-	python pkg/helpers/Get-AzureConstants.py
+	python pkg/helpers/generate_azure_constants.py
 
 .PHONY: build
 build: generate

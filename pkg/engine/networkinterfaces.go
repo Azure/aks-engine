@@ -86,7 +86,8 @@ func CreateNetworkInterfaces(cs *api.ContainerService) NetworkInterfaceARM {
 		nicProperties.EnableIPForwarding = to.BoolPtr(true)
 	}
 
-	if cs.Properties.LinuxProfile.HasCustomNodesDNS() {
+	linuxProfile := cs.Properties.LinuxProfile
+	if linuxProfile != nil && linuxProfile.HasCustomNodesDNS() {
 		nicProperties.DNSSettings = &network.InterfaceDNSSettings{
 			DNSServers: &[]string{
 				"[parameters('dnsServer')]",
@@ -185,7 +186,8 @@ func createPrivateClusterNetworkInterface(cs *api.ContainerService) NetworkInter
 		nicProperties.EnableIPForwarding = to.BoolPtr(true)
 	}
 
-	if cs.Properties.LinuxProfile.HasCustomNodesDNS() {
+	linuxProfile := cs.Properties.LinuxProfile
+	if linuxProfile != nil && linuxProfile.HasCustomNodesDNS() {
 		nicProperties.DNSSettings = &network.InterfaceDNSSettings{
 			DNSServers: &[]string{
 				"[parameters('dnsServer')]",

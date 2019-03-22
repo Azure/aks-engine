@@ -27,7 +27,7 @@ az login --service-principal \
 # set to the sub id we want to cleanup
 az account set -s $SUBSCRIPTION_ID
 
-python pkg/helpers/Get-AzureConstants.py
+python pkg/helpers/generate_azure_constants.py
 git status | grep pkg/helpers/azureconst.go
 exit_code=$?
 if [ $exit_code -gt "0" ]; then

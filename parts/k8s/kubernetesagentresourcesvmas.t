@@ -179,7 +179,7 @@
           {{GetKubernetesAgentCustomData .}}
           "linuxConfiguration": {
               "disablePasswordAuthentication": true,
-              {{if HasMultipleSshKeys }}
+              {{if HasLinuxProfile}}{{if HasMultipleSshKeys }}
               "ssh": {{ GetSshPublicKeys }}
               {{ else }}
               "ssh": {
@@ -190,12 +190,12 @@
                   }
                 ]
               }
-              {{ end }}
+              {{ end }}{{ end }}
             }
-            {{if HasLinuxSecrets}}
+            {{if HasLinuxProfile}}{{if HasLinuxSecrets}}
               ,
               "secrets": "[variables('linuxProfileSecrets')]"
-            {{end}}
+            {{ end }}{{ end }}
         },
         "storageProfile": {
           {{if not (UseAgentCustomImage .)}}

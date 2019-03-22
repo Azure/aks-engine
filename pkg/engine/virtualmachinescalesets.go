@@ -23,9 +23,12 @@ func CreateMasterVMSS(cs *api.ContainerService) VirtualMachineScaleSetARM {
 
 	isCustomVnet := masterProfile.IsCustomVNET()
 	hasAvailabilityZones := masterProfile.HasAvailabilityZones()
-	useManagedIdentity := k8sConfig.UseManagedIdentity
-	userAssignedIDEnabled := k8sConfig.UseManagedIdentity &&
-		k8sConfig.UserAssignedID != ""
+
+	var useManagedIdentity, userAssignedIDEnabled bool
+	if k8sConfig != nil {
+		useManagedIdentity = k8sConfig.UseManagedIdentity
+		userAssignedIDEnabled = useManagedIdentity && k8sConfig.UserAssignedID != ""
+	}
 	isAzureCNI := orchProfile.IsAzureCNI()
 	masterCount := masterProfile.Count
 
@@ -147,7 +150,7 @@ func CreateMasterVMSS(cs *api.ContainerService) VirtualMachineScaleSetARM {
 	}
 	netintconfig.IPConfigurations = &ipConfigurations
 
-	if linuxProfile.HasCustomNodesDNS() {
+	if linuxProfile != nil && linuxProfile.HasCustomNodesDNS() {
 		netintconfig.DNSSettings = &compute.VirtualMachineScaleSetNetworkConfigurationDNSSettings{
 			DNSServers: &[]string{
 				"[parameters('dnsServer')]",
@@ -173,10 +176,10 @@ func CreateMasterVMSS(cs *api.ContainerService) VirtualMachineScaleSetARM {
 		},
 	}
 
-	if len(cs.Properties.LinuxProfile.SSH.PublicKeys) > 1 {
+	if linuxProfile != nil && len(linuxProfile.SSH.PublicKeys) > 1 {
 		publicKeyPath := "[variables('sshKeyPath')]"
 		var publicKeys []compute.SSHPublicKey
-		for _, publicKey := range cs.Properties.LinuxProfile.SSH.PublicKeys {
+		for _, publicKey := range linuxProfile.SSH.PublicKeys {
 			publicKeyTrimmed := strings.TrimSpace(publicKey.KeyData)
 			publicKeys = append(publicKeys, compute.SSHPublicKey{
 				Path:    &publicKeyPath,
@@ -207,8 +210,8 @@ func CreateMasterVMSS(cs *api.ContainerService) VirtualMachineScaleSetARM {
 		panic(err)
 	}
 
-	if linuxProfile.HasSecrets() {
-		vsg := getVaultSecretGroup(cs.Properties.LinuxProfile)
+	if linuxProfile != nil && linuxProfile.HasSecrets() {
+		vsg := getVaultSecretGroup(linuxProfile)
 		osProfile.Secrets = &vsg
 	}
 
@@ -376,7 +379,10 @@ func CreateAgentVMSS(cs *api.ContainerService, profile *api.AgentPoolProfile) Vi
 		}
 	}
 
-	useManagedIdentity := k8sConfig.UseManagedIdentity
+	var useManagedIdentity bool
+	if k8sConfig != nil {
+		useManagedIdentity = k8sConfig.UseManagedIdentity
+	}
 	if useManagedIdentity {
 		userAssignedIdentityEnabled := k8sConfig.UserAssignedID != ""
 		if userAssignedIdentityEnabled {
@@ -445,7 +451,7 @@ func CreateAgentVMSS(cs *api.ContainerService, profile *api.AgentPoolProfile) Vi
 
 	vmssNICConfig.IPConfigurations = &ipConfigurations
 
-	if linuxProfile.HasCustomNodesDNS() && !profile.IsWindows() {
+	if linuxProfile != nil && linuxProfile.HasCustomNodesDNS() && !profile.IsWindows() {
 		vmssNICConfig.DNSSettings = &compute.VirtualMachineScaleSetNetworkConfigurationDNSSettings{
 			DNSServers: &[]string{
 				"[parameters('dnsServer')]",
@@ -495,10 +501,10 @@ func CreateAgentVMSS(cs *api.ContainerService, profile *api.AgentPoolProfile) Vi
 			},
 		}
 
-		if len(cs.Properties.LinuxProfile.SSH.PublicKeys) > 1 {
+		if linuxProfile != nil && len(linuxProfile.SSH.PublicKeys) > 1 {
 			publicKeyPath := "[variables('sshKeyPath')]"
 			var publicKeys []compute.SSHPublicKey
-			for _, publicKey := range cs.Properties.LinuxProfile.SSH.PublicKeys {
+			for _, publicKey := range linuxProfile.SSH.PublicKeys {
 				publicKeyTrimmed := strings.TrimSpace(publicKey.KeyData)
 				publicKeys = append(publicKeys, compute.SSHPublicKey{
 					Path:    &publicKeyPath,
@@ -520,8 +526,8 @@ func CreateAgentVMSS(cs *api.ContainerService, profile *api.AgentPoolProfile) Vi
 			}
 		}
 
-		if linuxProfile.HasSecrets() {
-			vsg := getVaultSecretGroup(cs.Properties.LinuxProfile)
+		if linuxProfile != nil && linuxProfile.HasSecrets() {
+			vsg := getVaultSecretGroup(linuxProfile)
 			linuxOsProfile.Secrets = &vsg
 		}
 

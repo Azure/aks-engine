@@ -9,6 +9,8 @@ import (
 	"os/exec"
 	"strings"
 	"time"
+
+	"github.com/pkg/errors"
 )
 
 // PrintCommand prints a command string
@@ -28,7 +30,7 @@ func RunAndLogCommand(cmd *exec.Cmd, timeout time.Duration) ([]byte, error) {
 	total := time.Since(start)
 	log.Printf("#### %s completed in %s", cmdLine, end.Sub(start).String())
 	if total.Seconds() > timeout.Seconds() {
-		err = fmt.Errorf(fmt.Sprintf("%s took too long!", cmdLine))
+		err = errors.Errorf("%s took too long!", cmdLine)
 	}
 	return out, err
 }
