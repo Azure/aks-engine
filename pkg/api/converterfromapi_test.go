@@ -4,11 +4,16 @@
 package api
 
 import (
+	"net/url"
 	"testing"
+
+	"github.com/Azure/go-autorest/autorest/to"
 
 	"github.com/Azure/aks-engine/pkg/api/vlabs"
 	"github.com/Azure/go-autorest/autorest/azure"
 )
+
+const ValidSSHPublicKey = "ssh-rsa AAAAB3NzaC1yc2EAAAABJQAAAQEApD8+lRvLtUcyfO8N2Cwq0zY9DG1Un9d+tcmU3HgnAzBr6UR/dDT5M07NV7DN1lmu/0dt6Ay/ItjF9xK//nwVJL3ezEX32yhLKkCKFMB1LcANNzlhT++SB5tlRBx65CTL8z9FORe4UCWVJNafxu3as/BshQSrSaYt3hjSeYuzTpwd4+4xQutzbTXEUBDUr01zEfjjzfUu0HDrg1IFae62hnLm3ajG6b432IIdUhFUmgjZDljUt5bI3OEz5IWPsNOOlVTuo6fqU8lJHClAtAlZEZkyv0VotidC7ZSCfV153rRsEk9IWscwL2PQIQnCw7YyEYEffDeLjBwkH6MIdJ6OgQ== rsa-key-20170510"
 
 func TestConvertCloudProfileToVLabs(t *testing.T) {
 	const (
@@ -304,5 +309,363 @@ func TestConvertAzureEnvironmentSpecConfigToVLabs(t *testing.T) {
 		} else {
 			t.Errorf("incorrect OSImageConfig: '%s' is missing", string(k))
 		}
+	}
+}
+
+func TestConvertContainerServiceToV20160330(t *testing.T) {
+	cs := getDefaultContainerService()
+	v20160330cs := ConvertContainerServiceToV20160330(cs)
+	if v20160330cs == nil {
+		t.Errorf("expected the converted containerService struct to be non-nil")
+	}
+}
+
+func TestConvertContainerServiceToV20160930(t *testing.T) {
+	cs := getDefaultContainerService()
+	v20160930cs := ConvertContainerServiceToV20160930(cs)
+	if v20160930cs == nil {
+		t.Errorf("expected the converted containerService struct to be non-nil")
+	}
+}
+
+func TestConvertContainerServiceToV20170131(t *testing.T) {
+	cs := getDefaultContainerService()
+	v20170131cs := ConvertContainerServiceToV20170131(cs)
+	if v20170131cs == nil {
+		t.Errorf("expected the converted containerService struct to be non-nil")
+	}
+}
+
+func TestConvertContainerServiceToV20170701(t *testing.T) {
+	cs := getDefaultContainerService()
+	v20170701cs := ConvertContainerServiceToV20170701(cs)
+	if v20170701cs == nil {
+		t.Errorf("expected the converted containerService struct to be non-nil")
+	}
+}
+
+func TestConvertContainerServiceToVLabs(t *testing.T) {
+	cs := getDefaultContainerService()
+	vlabsCS := ConvertContainerServiceToVLabs(cs)
+	if vlabsCS == nil {
+		t.Errorf("expected the converted containerService struct to be non-nil")
+	}
+}
+
+func getDefaultContainerService() *ContainerService {
+	u, _ := url.Parse("http://foobar.com/search")
+	return &ContainerService{
+		ID:       "sampleID",
+		Location: "westus2",
+		Name:     "sampleCS",
+		Plan: &ResourcePurchasePlan{
+			Name:          "sampleRPP",
+			Product:       "sampleProduct",
+			PromotionCode: "sampleCode",
+			Publisher:     "samplePublisher",
+		},
+		Tags: map[string]string{
+			"foo": "bar",
+		},
+		Type: "sampleType",
+		Properties: &Properties{
+			WindowsProfile: &WindowsProfile{
+				AdminUsername: "sampleAdminUsername",
+				AdminPassword: "sampleAdminPassword",
+			},
+			DiagnosticsProfile: &DiagnosticsProfile{
+				VMDiagnostics: &VMDiagnostics{
+					Enabled:    true,
+					StorageURL: u,
+				},
+			},
+			LinuxProfile: &LinuxProfile{
+				AdminUsername: "azureuser",
+				SSH: struct {
+					PublicKeys []PublicKey `json:"publicKeys"`
+				}{
+					PublicKeys: []PublicKey{
+						{
+							KeyData: ValidSSHPublicKey,
+						},
+					},
+				},
+				Secrets: []KeyVaultSecrets{
+					{
+						SourceVault: &KeyVaultID{
+							ID: "sampleKeyVaultID",
+						},
+						VaultCertificates: []KeyVaultCertificate{
+							{
+								CertificateURL:   "FooCertURL",
+								CertificateStore: "BarCertStore",
+							},
+						},
+					},
+				},
+				CustomNodesDNS: &CustomNodesDNS{
+					DNSServer: "SampleDNSServer",
+				},
+				CustomSearchDomain: &CustomSearchDomain{
+					Name:          "FooCustomSearchDomain",
+					RealmUser:     "sampleRealmUser",
+					RealmPassword: "sampleRealmPassword",
+				},
+			},
+			ServicePrincipalProfile: &ServicePrincipalProfile{
+				ClientID: "fooClientID",
+				Secret:   "fooSecret",
+				ObjectID: "fooObjectID",
+				KeyvaultSecretRef: &KeyvaultSecretRef{
+					VaultID:       "fooVaultID",
+					SecretName:    "fooSecretName",
+					SecretVersion: "fooSecretVersion",
+				},
+			},
+			ExtensionProfiles: []*ExtensionProfile{
+				{
+					Name:                "fooExtension",
+					Version:             "fooVersion",
+					ExtensionParameters: "fooExtensionParameters",
+					ExtensionParametersKeyVaultRef: &KeyvaultSecretRef{
+						VaultID:       "fooVaultID",
+						SecretName:    "fooSecretName",
+						SecretVersion: "fooSecretVersion",
+					},
+					RootURL:  "fooRootURL",
+					Script:   "fooSsript",
+					URLQuery: "fooURL",
+				},
+			},
+			JumpboxProfile: &JumpboxProfile{
+				OSType:    "Linux",
+				DNSPrefix: "blueorange",
+				FQDN:      "blueorange.westus2.com",
+			},
+			CertificateProfile: &CertificateProfile{
+				CaCertificate:         "SampleCACert",
+				CaPrivateKey:          "SampleCAPrivateKey",
+				APIServerCertificate:  "SampleAPIServerCert",
+				APIServerPrivateKey:   "SampleAPIServerPrivateKey",
+				ClientCertificate:     "SampleClientCert",
+				ClientPrivateKey:      "SampleClientPrivateKey",
+				KubeConfigCertificate: "SampleKubeConfigCert",
+				KubeConfigPrivateKey:  "SampleKubeConfigPrivateKey",
+				EtcdClientCertificate: "SampleEtcdClientCert",
+				EtcdClientPrivateKey:  "SampleEtcdClientPrivateKey",
+				EtcdServerCertificate: "SampleEtcdServerCert",
+				EtcdServerPrivateKey:  "SampleEtcdServerPrivateKey",
+			},
+			FeatureFlags: &FeatureFlags{
+				EnableCSERunInBackground: true,
+				BlockOutboundInternet:    false,
+			},
+			AADProfile: &AADProfile{
+				ClientAppID:     "SampleClientAppID",
+				ServerAppID:     "ServerAppID",
+				ServerAppSecret: "ServerAppSecret",
+				TenantID:        "SampleTenantID",
+				AdminGroupID:    "SampleAdminGroupID",
+				Authenticator:   Webhook,
+			},
+			CustomProfile: &CustomProfile{
+				Orchestrator: "Kubernetes",
+			},
+			OrchestratorProfile: &OrchestratorProfile{
+				OrchestratorType:    "Kubernetes",
+				OrchestratorVersion: "1.11.6",
+				DcosConfig: &DcosConfig{
+					DcosBootstrapURL:         "SampleDcosBootstrapURL",
+					DcosWindowsBootstrapURL:  "SampleWindowsDcosBootstrapURL",
+					Registry:                 "SampleRegistry",
+					RegistryPass:             "SampleRegistryPass",
+					RegistryUser:             "SampleRegistryUser",
+					DcosClusterPackageListID: "SampleDcosClusterPackageListID",
+					DcosProviderPackageID:    "SampleDcosProviderPackageID",
+					BootstrapProfile: &BootstrapProfile{
+						VMSize:       "Standard_Ds1_v1",
+						OSDiskSizeGB: 256,
+						OAuthEnabled: true,
+						StaticIP:     "172.0.0.1",
+						Subnet:       "255.255.255.0",
+					},
+				},
+				KubernetesConfig: &KubernetesConfig{},
+			},
+			MasterProfile: &MasterProfile{
+				Count:     1,
+				DNSPrefix: "blueorange",
+				SubjectAltNames: []string{
+					"fooSubjectAltName",
+				},
+				CustomFiles: &[]CustomFile{
+					{
+						Source: "sampleCustomFileSource",
+						Dest:   "sampleCustomFileDest",
+					},
+				},
+				VMSize:                   "Standard_DS1_v1",
+				OSDiskSizeGB:             256,
+				VnetSubnetID:             "sampleVnetSubnetID",
+				Subnet:                   "sampleSubnet",
+				VnetCidr:                 "10.240.0.0/8",
+				AgentVnetSubnetID:        "sampleAgentVnetSubnetID",
+				FirstConsecutiveStaticIP: "10.240.0.0",
+				IPAddressCount:           5,
+				StorageProfile:           StorageAccount,
+				HTTPSourceAddressPrefix:  "fooHTTPSourceAddressPrefix",
+				OAuthEnabled:             true,
+				PreprovisionExtension: &Extension{
+					Name:        "sampleExtension",
+					SingleOrAll: "single",
+					Template:    "{{foobar}}",
+				},
+				Extensions: []Extension{
+					{
+						Name:        "sampleExtension",
+						SingleOrAll: "single",
+						Template:    "{{foobar}}",
+					},
+				},
+				Distro: Ubuntu,
+				ImageRef: &ImageReference{
+					Name:          "FooImageRef",
+					ResourceGroup: "FooImageRefResourceGroup",
+				},
+				KubernetesConfig: &KubernetesConfig{
+					KubernetesImageBase:             "quay.io",
+					ClusterSubnet:                   "fooClusterSubnet",
+					NetworkPolicy:                   "calico",
+					NetworkPlugin:                   "azure-cni",
+					ContainerRuntime:                "docker",
+					MaxPods:                         3,
+					DockerBridgeSubnet:              "sampleDockerSubnet",
+					DNSServiceIP:                    "172.0.0.1",
+					ServiceCIDR:                     "172.0.0.1/16",
+					UseManagedIdentity:              true,
+					UserAssignedID:                  "fooUserAssigneID",
+					UserAssignedClientID:            "fooUserAssigneClientID",
+					MobyVersion:                     "3.0.0",
+					CustomHyperkubeImage:            "",
+					ContainerdVersion:               "1.2.4",
+					CustomCcmImage:                  "sampleCCMImage",
+					UseCloudControllerManager:       to.BoolPtr(true),
+					CustomWindowsPackageURL:         "https://deisartifacts.windows.net",
+					WindowsNodeBinariesURL:          "https://deisartifacts.windows.net",
+					UseInstanceMetadata:             to.BoolPtr(true),
+					LoadBalancerSku:                 "Basic",
+					ExcludeMasterFromStandardLB:     to.BoolPtr(false),
+					EnableRbac:                      to.BoolPtr(true),
+					EnableSecureKubelet:             to.BoolPtr(true),
+					EnableAggregatedAPIs:            true,
+					EnableDataEncryptionAtRest:      to.BoolPtr(true),
+					EnablePodSecurityPolicy:         to.BoolPtr(true),
+					EnableEncryptionWithExternalKms: to.BoolPtr(true),
+					GCHighThreshold:                 85,
+					GCLowThreshold:                  80,
+					EtcdVersion:                     "3.0.0",
+					EtcdDiskSizeGB:                  "256",
+					EtcdEncryptionKey:               "sampleEncruptionKey",
+					AzureCNIVersion:                 "1.0.18",
+					AzureCNIURLLinux:                "https://mirror.azk8s.cn/kubernetes/azure-container-networking/linux",
+					AzureCNIURLWindows:              "https://mirror.azk8s.cn/kubernetes/azure-container-networking/windows",
+					KeyVaultSku:                     "Basic",
+					MaximumLoadBalancerRuleCount:    3,
+					ProxyMode:                       KubeProxyModeIPTables,
+					PrivateAzureRegistryServer:      "sampleRegistryServerURL",
+					KubeletConfig: map[string]string{
+						"barKey": "bazValue",
+					},
+					Addons: []KubernetesAddon{
+						{
+							Name:    "sampleAddon",
+							Enabled: to.BoolPtr(true),
+							Containers: []KubernetesContainerSpec{
+								{
+									Name:           "sampleK8sContainer",
+									Image:          "sampleK8sImage",
+									MemoryRequests: "20Mi",
+									CPURequests:    "10m",
+								},
+							},
+							Config: map[string]string{
+								"sampleKey": "sampleVal",
+							},
+						},
+					},
+					APIServerConfig: map[string]string{
+						"sampleAPIServerKey": "sampleAPIServerVal",
+					},
+					ControllerManagerConfig: map[string]string{
+						"sampleCMKey": "sampleCMVal",
+					},
+					CloudControllerManagerConfig: map[string]string{
+						"sampleCCMKey": "sampleCCMVal",
+					},
+					SchedulerConfig: map[string]string{
+						"sampleSchedulerKey": "sampleSchedulerVal",
+					},
+					PrivateCluster: &PrivateCluster{
+						Enabled: to.BoolPtr(true),
+						JumpboxProfile: &PrivateJumpboxProfile{
+							Name:           "sampleJumpboxProfile",
+							VMSize:         "Standard_DS1_v2",
+							OSDiskSizeGB:   512,
+							Username:       "userName",
+							PublicKey:      ValidSSHPublicKey,
+							StorageProfile: StorageAccount,
+						},
+					},
+					PodSecurityPolicyConfig: map[string]string{
+						"samplePSPConfigKey": "samplePSPConfigVal",
+					},
+				},
+			},
+			AgentPoolProfiles: []*AgentPoolProfile{
+				{
+					Name:      "sampleAgent",
+					Count:     2,
+					VMSize:    "sampleVM",
+					DNSPrefix: "blueorange",
+					FQDN:      "blueorange.westus2.com",
+					OSType:    "Linux",
+					Subnet:    "sampleSubnet",
+				},
+				{
+					Name:      "sampleAgent-public",
+					Count:     2,
+					VMSize:    "sampleVM",
+					DNSPrefix: "blueorange",
+					FQDN:      "blueorange.westus2.com",
+					OSType:    "Linux",
+					Subnet:    "sampleSubnet",
+				},
+			},
+		},
+	}
+}
+
+func TestConvertOrchestratorVersionProfileToVLabs(t *testing.T) {
+	ovpK8s := &OrchestratorVersionProfile{
+		OrchestratorProfile: OrchestratorProfile{
+			OrchestratorType:    Kubernetes,
+			OrchestratorVersion: "1.9.11",
+		},
+		Upgrades: []*OrchestratorProfile{
+			{
+				OrchestratorType:    Kubernetes,
+				OrchestratorVersion: "1.10.13",
+			},
+			{
+				OrchestratorType:    Kubernetes,
+				OrchestratorVersion: "1.11.6",
+			},
+		},
+	}
+
+	vlabsOvp := ConvertOrchestratorVersionProfileToVLabs(ovpK8s)
+
+	if vlabsOvp == nil {
+		t.Errorf("expected the converted orchestratorVersionProfileToVLabs struct to be non-nil")
 	}
 }

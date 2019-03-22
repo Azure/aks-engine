@@ -4,12 +4,19 @@
 package api
 
 import (
+	"net/url"
 	"testing"
+
+	"github.com/Azure/go-autorest/autorest/to"
+
+	v20160330 "github.com/Azure/aks-engine/pkg/api/v20160330"
+	v20170131 "github.com/Azure/aks-engine/pkg/api/v20170131"
 
 	"github.com/davecgh/go-spew/spew"
 	"k8s.io/apimachinery/pkg/api/equality"
 
 	"github.com/Azure/aks-engine/pkg/api/common"
+	v20160930 "github.com/Azure/aks-engine/pkg/api/v20160930"
 	v20170701 "github.com/Azure/aks-engine/pkg/api/v20170701"
 	"github.com/Azure/aks-engine/pkg/api/vlabs"
 	"github.com/Azure/go-autorest/autorest/azure"
@@ -565,4 +572,430 @@ func TestConvertAzureEnvironmentSpecConfig(t *testing.T) {
 			t.Errorf("incorrect OSImageConfig: '%s' is missing", string(k))
 		}
 	}
+}
+
+func TestConvertV20160930ContainerService(t *testing.T) {
+	storageURL, _ := url.Parse("https://bing.com")
+	v20160930CS := &v20160930.ContainerService{
+		Location: "westus2",
+		Plan: &v20160930.ResourcePurchasePlan{
+			Name:          "fooPlan",
+			PromotionCode: "fooPromoCode",
+			Product:       "fooProduct",
+			Publisher:     "fooPublisher",
+		},
+
+		Tags: map[string]string{
+			"foo": "bar",
+		},
+		Properties: &v20160930.Properties{
+			ProvisioningState: v20160930.Succeeded,
+			OrchestratorProfile: &v20160930.OrchestratorProfile{
+				OrchestratorType: DCOS,
+			},
+			WindowsProfile: &v20160930.WindowsProfile{
+				AdminUsername: "sampleAdminUsername",
+				AdminPassword: "sampleAdminPassword",
+			},
+			DiagnosticsProfile: &v20160930.DiagnosticsProfile{
+				VMDiagnostics: &v20160930.VMDiagnostics{
+					Enabled:    true,
+					StorageURL: storageURL,
+				},
+			},
+			JumpboxProfile: &v20160930.JumpboxProfile{
+				OSType:    "Linux",
+				DNSPrefix: "blueorange",
+				FQDN:      "blueorange.westus2.azureapp.com",
+			},
+			AgentPoolProfiles: []*v20160930.AgentPoolProfile{
+				{
+					Name:      "sampleagent",
+					Count:     2,
+					VMSize:    "Standard_DS1_v1",
+					DNSPrefix: "blueorange",
+					FQDN:      "blueorange.westus2.azureapp.com",
+					OSType:    "Linux",
+				},
+			},
+			MasterProfile: &v20160930.MasterProfile{
+				Count: 1,
+			},
+			CustomProfile: &v20160930.CustomProfile{
+				Orchestrator: DCOS,
+			},
+		},
+	}
+
+	apiCs := ConvertV20160930ContainerService(v20160930CS)
+
+	if apiCs == nil {
+		t.Error("unexpected nil output while executing ConvertV20160930ContainerService")
+	}
+}
+
+func TestConvertV20170701ContainerService(t *testing.T) {
+	v20170701CS := &v20170701.ContainerService{
+		Location: "westus2",
+		Plan: &v20170701.ResourcePurchasePlan{
+			Name:          "fooPlan",
+			PromotionCode: "fooPromoCode",
+			Product:       "fooProduct",
+			Publisher:     "fooPublisher",
+		},
+
+		Tags: map[string]string{
+			"foo": "bar",
+		},
+		Properties: &v20170701.Properties{
+			ProvisioningState: v20170701.Succeeded,
+			OrchestratorProfile: &v20170701.OrchestratorProfile{
+				OrchestratorType: DCOS,
+			},
+			WindowsProfile: &v20170701.WindowsProfile{
+				AdminUsername: "sampleAdminUsername",
+				AdminPassword: "sampleAdminPassword",
+			},
+			AgentPoolProfiles: []*v20170701.AgentPoolProfile{
+				{
+					Name:      "sampleagent",
+					Count:     2,
+					VMSize:    "Standard_DS1_v1",
+					DNSPrefix: "blueorange",
+					FQDN:      "blueorange.westus2.azureapp.com",
+					OSType:    "Linux",
+				},
+			},
+			MasterProfile: &v20170701.MasterProfile{
+				Count: 1,
+			},
+			CustomProfile: &v20170701.CustomProfile{
+				Orchestrator: DCOS,
+			},
+		},
+	}
+
+	apiCs := ConvertV20170701ContainerService(v20170701CS, false)
+
+	if apiCs == nil {
+		t.Error("unexpected nil output while executing ConvertV20170701ContainerService")
+	}
+}
+
+func TestConvertV20160330ContainerService(t *testing.T) {
+	storageURL, _ := url.Parse("https://bing.com")
+	v20160330CS := &v20160330.ContainerService{
+		Location: "westus2",
+		Plan: &v20160330.ResourcePurchasePlan{
+			Name:          "fooPlan",
+			PromotionCode: "fooPromoCode",
+			Product:       "fooProduct",
+			Publisher:     "fooPublisher",
+		},
+
+		Tags: map[string]string{
+			"foo": "bar",
+		},
+		Properties: &v20160330.Properties{
+			ProvisioningState: v20160330.Succeeded,
+			OrchestratorProfile: &v20160330.OrchestratorProfile{
+				OrchestratorType: DCOS,
+			},
+			WindowsProfile: &v20160330.WindowsProfile{
+				AdminUsername: "sampleAdminUsername",
+				AdminPassword: "sampleAdminPassword",
+			},
+			DiagnosticsProfile: &v20160330.DiagnosticsProfile{
+				VMDiagnostics: &v20160330.VMDiagnostics{
+					Enabled:    true,
+					StorageURL: storageURL,
+				},
+			},
+			JumpboxProfile: &v20160330.JumpboxProfile{
+				OSType:    "Linux",
+				DNSPrefix: "blueorange",
+				FQDN:      "blueorange.westus2.azureapp.com",
+			},
+			AgentPoolProfiles: []*v20160330.AgentPoolProfile{
+				{
+					Name:      "sampleagent",
+					Count:     2,
+					VMSize:    "Standard_DS1_v1",
+					DNSPrefix: "blueorange",
+					FQDN:      "blueorange.westus2.azureapp.com",
+					OSType:    "Linux",
+				},
+			},
+			MasterProfile: &v20160330.MasterProfile{
+				Count: 1,
+			},
+		},
+	}
+
+	apiCs := ConvertV20160330ContainerService(v20160330CS)
+
+	if apiCs == nil {
+		t.Error("unexpected nil output while executing ConvertV20160330ContainerService")
+	}
+}
+
+func TestConvertV20170131ContainerService(t *testing.T) {
+	storageURL, _ := url.Parse("https://bing.com")
+	v20170131CS := &v20170131.ContainerService{
+		Location: "westus2",
+		Plan: &v20170131.ResourcePurchasePlan{
+			Name:          "fooPlan",
+			PromotionCode: "fooPromoCode",
+			Product:       "fooProduct",
+			Publisher:     "fooPublisher",
+		},
+
+		Tags: map[string]string{
+			"foo": "bar",
+		},
+		Properties: &v20170131.Properties{
+			ProvisioningState: v20170131.Succeeded,
+			OrchestratorProfile: &v20170131.OrchestratorProfile{
+				OrchestratorType: DCOS,
+			},
+			WindowsProfile: &v20170131.WindowsProfile{
+				AdminUsername: "sampleAdminUsername",
+				AdminPassword: "sampleAdminPassword",
+			},
+			DiagnosticsProfile: &v20170131.DiagnosticsProfile{
+				VMDiagnostics: &v20170131.VMDiagnostics{
+					Enabled:    true,
+					StorageURL: storageURL,
+				},
+			},
+			JumpboxProfile: &v20170131.JumpboxProfile{
+				OSType:    "Linux",
+				DNSPrefix: "blueorange",
+				FQDN:      "blueorange.westus2.azureapp.com",
+			},
+			AgentPoolProfiles: []*v20170131.AgentPoolProfile{
+				{
+					Name:      "sampleagent",
+					Count:     2,
+					VMSize:    "Standard_DS1_v1",
+					DNSPrefix: "blueorange",
+					FQDN:      "blueorange.westus2.azureapp.com",
+					OSType:    "Linux",
+				},
+			},
+			MasterProfile: &v20170131.MasterProfile{
+				Count: 1,
+			},
+			CustomProfile: &v20170131.CustomProfile{
+				Orchestrator: DCOS,
+			},
+		},
+	}
+
+	apiCs := ConvertV20170131ContainerService(v20170131CS)
+	if apiCs == nil {
+		t.Error("unexpected nil output while executing ConvertV20170131ContainerService")
+	}
+}
+
+func TestConvertVLabsContainerService(t *testing.T) {
+	vlabsCS := &vlabs.ContainerService{
+		Location: "westus2",
+		Plan: &vlabs.ResourcePurchasePlan{
+			Name:          "fooPlan",
+			PromotionCode: "fooPromoCode",
+			Product:       "fooProduct",
+			Publisher:     "fooPublisher",
+		},
+
+		Tags: map[string]string{
+			"foo": "bar",
+		},
+		Properties: &vlabs.Properties{
+			ProvisioningState: vlabs.Succeeded,
+			OrchestratorProfile: &vlabs.OrchestratorProfile{
+				OrchestratorType: DCOS,
+				DcosConfig: &vlabs.DcosConfig{
+					DcosBootstrapURL:         "SampleDcosBootstrapURL",
+					DcosWindowsBootstrapURL:  "SampleWindowsDcosBootstrapURL",
+					Registry:                 "SampleRegistry",
+					RegistryPass:             "SampleRegistryPass",
+					RegistryUser:             "SampleRegistryUser",
+					DcosClusterPackageListID: "SampleDcosClusterPackageListID",
+					DcosProviderPackageID:    "SampleDcosProviderPackageID",
+					BootstrapProfile: &vlabs.BootstrapProfile{
+						VMSize:       "Standard_Ds1_v1",
+						OSDiskSizeGB: 256,
+						OAuthEnabled: true,
+						StaticIP:     "172.0.0.1",
+						Subnet:       "255.255.255.0",
+					},
+				},
+			},
+			WindowsProfile: &vlabs.WindowsProfile{
+				AdminUsername: "sampleAdminUsername",
+				AdminPassword: "sampleAdminPassword",
+			},
+			AgentPoolProfiles: []*vlabs.AgentPoolProfile{
+				{
+					Name:      "sampleagent",
+					Count:     2,
+					VMSize:    "Standard_DS1_v1",
+					DNSPrefix: "blueorange",
+					FQDN:      "blueorange.westus2.azureapp.com",
+					OSType:    "Linux",
+				},
+			},
+			MasterProfile: &vlabs.MasterProfile{
+				Count: 1,
+				PreProvisionExtension: &vlabs.Extension{
+					Name:        "fooExtension",
+					SingleOrAll: "All",
+					Template:    "{{foobar}}",
+				},
+				ImageRef: &vlabs.ImageReference{
+					Name:          "FooImageRef",
+					ResourceGroup: "FooImageRefResourceGroup",
+				},
+				Extensions: []vlabs.Extension{
+					{
+						Name:        "sampleExtension",
+						SingleOrAll: "single",
+						Template:    "{{foobar}}",
+					},
+				},
+			},
+			CertificateProfile: &vlabs.CertificateProfile{
+				CaCertificate:         "SampleCACert",
+				CaPrivateKey:          "SampleCAPrivateKey",
+				APIServerCertificate:  "SampleAPIServerCert",
+				APIServerPrivateKey:   "SampleAPIServerPrivateKey",
+				ClientCertificate:     "SampleClientCert",
+				ClientPrivateKey:      "SampleClientPrivateKey",
+				KubeConfigCertificate: "SampleKubeConfigCert",
+				KubeConfigPrivateKey:  "SampleKubeConfigPrivateKey",
+				EtcdClientCertificate: "SampleEtcdClientCert",
+				EtcdClientPrivateKey:  "SampleEtcdClientPrivateKey",
+				EtcdServerCertificate: "SampleEtcdServerCert",
+				EtcdServerPrivateKey:  "SampleEtcdServerPrivateKey",
+			},
+			FeatureFlags: &vlabs.FeatureFlags{
+				EnableCSERunInBackground: true,
+				BlockOutboundInternet:    false,
+			},
+			AADProfile: &vlabs.AADProfile{
+				ClientAppID:  "SampleClientAppID",
+				ServerAppID:  "ServerAppID",
+				TenantID:     "SampleTenantID",
+				AdminGroupID: "SampleAdminGroupID",
+			},
+			ExtensionProfiles: []*vlabs.ExtensionProfile{
+				{
+					Name:                "fooExtension",
+					Version:             "fooVersion",
+					ExtensionParameters: "fooExtensionParameters",
+					ExtensionParametersKeyVaultRef: &vlabs.KeyvaultSecretRef{
+						VaultID:       "fooVaultID",
+						SecretName:    "fooSecretName",
+						SecretVersion: "fooSecretVersion",
+					},
+					RootURL:  "fooRootURL",
+					Script:   "fooSsript",
+					URLQuery: "fooURL",
+				},
+			},
+			LinuxProfile: &vlabs.LinuxProfile{
+				AdminUsername: "azureuser",
+				Secrets: []vlabs.KeyVaultSecrets{
+					{
+						SourceVault: &vlabs.KeyVaultID{
+							ID: "sampleKeyVaultID",
+						},
+						VaultCertificates: []vlabs.KeyVaultCertificate{
+							{
+								CertificateURL:   "FooCertURL",
+								CertificateStore: "BarCertStore",
+							},
+						},
+					},
+				},
+				CustomNodesDNS: &vlabs.CustomNodesDNS{
+					DNSServer: "SampleDNSServer",
+				},
+				CustomSearchDomain: &vlabs.CustomSearchDomain{
+					Name:          "FooCustomSearchDomain",
+					RealmUser:     "sampleRealmUser",
+					RealmPassword: "sampleRealmPassword",
+				},
+			},
+		},
+	}
+
+	apiCs, err := ConvertVLabsContainerService(vlabsCS, false)
+	if apiCs == nil {
+		t.Error("unexpected nil output while executing ConvertV20170131ContainerService")
+	}
+
+	if err != nil {
+		t.Errorf("unexpected error while executing ConvertV20170131ContainerService: %s", err.Error())
+	}
+
+	//Test Vlabs with Kubernetes Orchestrator
+	vlabsCS.Properties.OrchestratorProfile.OrchestratorType = Kubernetes
+	vlabsCS.Properties.OrchestratorProfile.DcosConfig = nil
+	vlabsCS.Properties.OrchestratorProfile.KubernetesConfig = &vlabs.KubernetesConfig{
+		Addons: []vlabs.KubernetesAddon{
+			{
+				Name:    "sampleAddon",
+				Enabled: to.BoolPtr(true),
+				Containers: []vlabs.KubernetesContainerSpec{
+					{
+						Name:           "sampleK8sContainer",
+						Image:          "sampleK8sImage",
+						MemoryRequests: "20Mi",
+						CPURequests:    "10m",
+					},
+				},
+				Config: map[string]string{
+					"sampleKey": "sampleVal",
+				},
+			},
+		},
+		APIServerConfig: map[string]string{
+			"sampleAPIServerKey": "sampleAPIServerVal",
+		},
+		ControllerManagerConfig: map[string]string{
+			"sampleCMKey": "sampleCMVal",
+		},
+		CloudControllerManagerConfig: map[string]string{
+			"sampleCCMKey": "sampleCCMVal",
+		},
+		SchedulerConfig: map[string]string{
+			"sampleSchedulerKey": "sampleSchedulerVal",
+		},
+		PrivateCluster: &vlabs.PrivateCluster{
+			Enabled: to.BoolPtr(true),
+			JumpboxProfile: &vlabs.PrivateJumpboxProfile{
+				Name:           "sampleJumpboxProfile",
+				VMSize:         "Standard_DS1_v2",
+				OSDiskSizeGB:   512,
+				Username:       "userName",
+				PublicKey:      ValidSSHPublicKey,
+				StorageProfile: StorageAccount,
+			},
+		},
+		PodSecurityPolicyConfig: map[string]string{
+			"samplePSPConfigKey": "samplePSPConfigVal",
+		},
+	}
+
+	apiCs, err = ConvertVLabsContainerService(vlabsCS, false)
+	if apiCs == nil {
+		t.Error("unexpected nil output while executing ConvertV20170131ContainerService")
+	}
+
+	if err != nil {
+		t.Errorf("unexpected error while executing ConvertV20170131ContainerService: %s", err.Error())
+	}
+
 }
