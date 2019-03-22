@@ -11,6 +11,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/pkg/errors"
+
 	"github.com/Azure/aks-engine/pkg/api"
 	"github.com/Azure/aks-engine/pkg/armhelpers"
 	"github.com/Azure/aks-engine/pkg/armhelpers/utils"
@@ -626,7 +628,7 @@ func (ku *Upgrader) getLastVMNameInVMSS(ctx context.Context, resourceGroup strin
 	}
 
 	if lastVMName == "" {
-		return "", fmt.Errorf("failed to get the last VM name in Scale Set %s", vmScaleSetName)
+		return "", errors.Errorf("failed to get the last VM name in Scale Set %s", vmScaleSetName)
 	}
 
 	return lastVMName, nil

@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/pkg/errors"
+
 	"github.com/Azure/aks-engine/pkg/helpers"
 
 	"github.com/spf13/cobra"
@@ -66,7 +68,7 @@ func getVersion(outputType string) (string, error) {
 	case "json":
 		return getJSONVersion(), nil
 	default:
-		return "", fmt.Errorf("output format \"%s\" is not supported", outputType)
+		return "", errors.Errorf(`output format "%s" is not supported`, outputType)
 	}
 }
 
