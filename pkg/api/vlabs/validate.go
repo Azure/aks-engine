@@ -329,11 +329,7 @@ func (a *Properties) ValidateOrchestratorProfile(isUpdate bool) error {
 		return errors.Errorf("DcosConfig can be specified only when OrchestratorType is DCOS")
 	}
 
-	if e := a.validateContainerRuntime(); e != nil {
-		return e
-	}
-
-	return nil
+	return a.validateContainerRuntime()
 }
 
 func (a *Properties) validateMasterProfile() error {

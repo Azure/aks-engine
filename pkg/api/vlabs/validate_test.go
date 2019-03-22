@@ -2719,7 +2719,7 @@ func TestValidateCustomCloudProfile(t *testing.T) {
 					TokenAudience:                tokenAudience,
 				},
 			},
-			expectedErr: errors.New(fmt.Sprintf("authenticationMethod allowed values are '%s' and '%s'", ClientCertificateAuthMethod, ClientSecretAuthMethod)),
+			expectedErr: errors.Errorf("authenticationMethod allowed values are '%s' and '%s'", ClientCertificateAuthMethod, ClientSecretAuthMethod),
 		},
 		{
 			name: "identitySystem has invalid value",
@@ -2748,7 +2748,7 @@ func TestValidateCustomCloudProfile(t *testing.T) {
 					TokenAudience:                tokenAudience,
 				},
 			},
-			expectedErr: errors.New(fmt.Sprintf("identitySystem allowed values are '%s' and '%s'", AzureADIdentitySystem, ADFSIdentitySystem)),
+			expectedErr: errors.Errorf("identitySystem allowed values are '%s' and '%s'", AzureADIdentitySystem, ADFSIdentitySystem),
 		},
 		{
 			name: " valid AzureAD and ClientSecret",
