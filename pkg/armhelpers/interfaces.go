@@ -128,6 +128,9 @@ type AKSEngineClient interface {
 	// SetVirtualMachineScaleSetCapacity sets the VMSS capacity
 	SetVirtualMachineScaleSetCapacity(ctx context.Context, resourceGroup, virtualMachineScaleSet string, sku compute.Sku, location string) error
 
+	// GetAvailabilitySet retrieves the specified VM availability set.
+	GetAvailabilitySet(ctx context.Context, resourceGroup, availabilitySet string) (compute.AvailabilitySet, error)
+
 	//
 	// STORAGE
 

@@ -11,6 +11,13 @@ import (
 	"github.com/Azure/go-autorest/autorest/to"
 )
 
+// PlatformFaultDomainCountUnset indicates an ARM expression should replace this value.
+const PlatformFaultDomainCountNotSet = 0
+
+// PlatformFaultDomainCount is the global value used to populate the fault domain count
+// for a VMAS. It may be changed when upgrade inspects an existing cluster.
+var PlatformFaultDomainCount int32 = PlatformFaultDomainCountNotSet
+
 func CreateAvailabilitySet(cs *api.ContainerService, isManagedDisks bool) AvailabilitySetARM {
 
 	armResource := ARMResource{
@@ -26,7 +33,7 @@ func CreateAvailabilitySet(cs *api.ContainerService, isManagedDisks bool) Availa
 	if !cs.Properties.MasterProfile.HasAvailabilityZones() {
 		if isManagedDisks {
 			avSet.AvailabilitySetProperties = &compute.AvailabilitySetProperties{
-				PlatformFaultDomainCount:  to.Int32Ptr(2),
+				PlatformFaultDomainCount:  to.Int32Ptr(PlatformFaultDomainCount),
 				PlatformUpdateDomainCount: to.Int32Ptr(3),
 			}
 			avSet.Sku = &compute.Sku{
@@ -57,7 +64,7 @@ func createAgentAvailabilitySets(profile *api.AgentPoolProfile) AvailabilitySetA
 	}
 
 	if profile.IsManagedDisks() {
-		avSet.PlatformFaultDomainCount = to.Int32Ptr(2)
+		avSet.PlatformFaultDomainCount = to.Int32Ptr(PlatformFaultDomainCount)
 		avSet.PlatformUpdateDomainCount = to.Int32Ptr(3)
 		avSet.Sku = &compute.Sku{
 			Name: to.StringPtr("Aligned"),

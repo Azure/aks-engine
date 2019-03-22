@@ -223,6 +223,8 @@ func (sc *scaleCmd) run(cmd *cobra.Command, args []string) error {
 	indexes := make([]int, 0)
 	indexToVM := make(map[int]string)
 	if sc.agentPool.IsAvailabilitySets() {
+		availabilitySetIDs := []string{}
+
 		for vmsListPage, err := sc.client.ListVirtualMachines(ctx, sc.resourceGroupName); vmsListPage.NotDone(); err = vmsListPage.Next() {
 			if err != nil {
 				return errors.Wrap(err, "failed to get vms in the resource group")
@@ -233,6 +235,10 @@ func (sc *scaleCmd) run(cmd *cobra.Command, args []string) error {
 				vmName := *vm.Name
 				if !sc.vmInAgentPool(vmName, vm.Tags) {
 					continue
+				}
+
+				if vm.AvailabilitySet != nil {
+					availabilitySetIDs = append(availabilitySetIDs, *vm.AvailabilitySet.ID)
 				}
 
 				osPublisher := vm.StorageProfile.ImageReference.Publisher
@@ -259,6 +265,10 @@ func (sc *scaleCmd) run(cmd *cobra.Command, args []string) error {
 			return nil
 		}
 		highestUsedIndex = indexes[len(indexes)-1]
+
+		if err := sc.setFaultDomainCount(ctx, sc.resourceGroupName, availabilitySetIDs); err != nil {
+			return err
+		}
 
 		// Scale down Scenario
 		if currentNodeCount > sc.newDesiredAgentCount {
@@ -404,6 +414,29 @@ func (sc *scaleCmd) run(cmd *cobra.Command, args []string) error {
 	}
 
 	return sc.saveAPIModel()
+}
+
+func (sc *scaleCmd) setFaultDomainCount(ctx context.Context, resourceGroup string, vmasIds []string) error {
+	count := engine.PlatformFaultDomainCountNotSet
+
+	for _, id := range vmasIds {
+		// extract the last element of the id for VMAS name
+		ss := strings.Split(id, "/")
+		name := ss[len(ss)-1]
+		vmas, err := sc.client.GetAvailabilitySet(ctx, resourceGroup, name)
+		if err != nil {
+			return err
+		}
+		// TODO: return error if all VMASes don't agree on this value?
+		count = int(*vmas.AvailabilitySetProperties.PlatformFaultDomainCount)
+		break
+	}
+
+	// Set the global value used to populate fault domain count.
+	// This assumes all VMASes in a cluster share the same value.
+	engine.PlatformFaultDomainCount = int32(count)
+
+	return nil
 }
 
 func (sc *scaleCmd) saveAPIModel() error {

@@ -65,7 +65,7 @@ func TestCreateAvailabilitySet(t *testing.T) {
 				Name: to.StringPtr("Aligned"),
 			},
 			AvailabilitySetProperties: &compute.AvailabilitySetProperties{
-				PlatformFaultDomainCount:  to.Int32Ptr(2),
+				PlatformFaultDomainCount:  to.Int32Ptr(PlatformFaultDomainCountNotSet),
 				PlatformUpdateDomainCount: to.Int32Ptr(3),
 			},
 		},
@@ -152,7 +152,7 @@ func TestCreateAgentAvailabilitySets(t *testing.T) {
 			Location: to.StringPtr("[variables('location')]"),
 			Type:     to.StringPtr("Microsoft.Compute/availabilitySets"),
 			AvailabilitySetProperties: &compute.AvailabilitySetProperties{
-				PlatformFaultDomainCount:  to.Int32Ptr(2),
+				PlatformFaultDomainCount:  to.Int32Ptr(PlatformFaultDomainCountNotSet),
 				PlatformUpdateDomainCount: to.Int32Ptr(3),
 			},
 			Sku: &compute.Sku{

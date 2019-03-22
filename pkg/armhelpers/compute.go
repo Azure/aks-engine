@@ -126,3 +126,8 @@ func (az *AzureClient) SetVirtualMachineScaleSetCapacity(ctx context.Context, re
 	_, err = future.Result(az.virtualMachineScaleSetsClient)
 	return err
 }
+
+// GetAvailabilitySet retrieves the specified VM availability set.
+func (az *AzureClient) GetAvailabilitySet(ctx context.Context, resourceGroup, availabilitySetName string) (compute.AvailabilitySet, error) {
+	return az.availabilitySetsClient.Get(ctx, resourceGroup, availabilitySetName)
+}

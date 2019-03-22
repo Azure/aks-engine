@@ -10,6 +10,7 @@ import (
 	"github.com/Azure/aks-engine/pkg/armhelpers"
 	"github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2017-03-30/compute"
 	azcompute "github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2018-10-01/compute"
+	log "github.com/sirupsen/logrus"
 )
 
 // ListVirtualMachines returns (the first page of) the machines in the specified resource group.
@@ -159,4 +160,19 @@ func (az *AzureClient) SetVirtualMachineScaleSetCapacity(ctx context.Context, re
 
 	_, err = future.Result(az.virtualMachineScaleSetsClient)
 	return err
+}
+
+// GetAvailabilitySet retrieves the specified VM availability set.
+func (az *AzureClient) GetAvailabilitySet(ctx context.Context, resourceGroup, availabilitySetName string) (azcompute.AvailabilitySet, error) {
+	azVMAS := azcompute.AvailabilitySet{}
+	vmas, err := az.availabilitySetsClient.Get(ctx, resourceGroup, availabilitySetName)
+	if err != nil {
+		log.Printf("fail to get availability set, %v", err)
+		return azVMAS, err
+	}
+	if err = DeepCopy(&azVMAS, vmas); err != nil {
+		log.Printf("fail to convert availability set, %v", err)
+		return azVMAS, err
+	}
+	return azVMAS, nil
 }

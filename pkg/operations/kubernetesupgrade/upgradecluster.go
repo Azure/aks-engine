@@ -12,6 +12,7 @@ import (
 	"github.com/Azure/aks-engine/pkg/api"
 	"github.com/Azure/aks-engine/pkg/armhelpers"
 	"github.com/Azure/aks-engine/pkg/armhelpers/utils"
+	"github.com/Azure/aks-engine/pkg/engine"
 	"github.com/Azure/aks-engine/pkg/i18n"
 	"github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2018-10-01/compute"
 	"github.com/pkg/errors"
@@ -244,6 +245,8 @@ func (uc *UpgradeCluster) getClusterNodeStatus(kubeClient armhelpers.KubernetesC
 		}
 	}
 
+	availabilitySetIDs := []string{}
+
 	for vmListPage, err := uc.Client.ListVirtualMachines(ctx, resourceGroup); vmListPage.NotDone(); err = vmListPage.Next() {
 		if err != nil {
 			return err
@@ -257,6 +260,10 @@ func (uc *UpgradeCluster) getClusterNodeStatus(kubeClient armhelpers.KubernetesC
 				continue
 			}
 			currentVersion := uc.getNodeVersion(kubeClient, strings.ToLower(*vm.Name), vm.Tags, true)
+
+			if vm.AvailabilitySet != nil {
+				availabilitySetIDs = append(availabilitySetIDs, *vm.AvailabilitySet.ID)
+			}
 
 			if uc.Force {
 				if currentVersion == "" {
@@ -282,6 +289,33 @@ func (uc *UpgradeCluster) getClusterNodeStatus(kubeClient armhelpers.KubernetesC
 			}
 		}
 	}
+
+	if err := uc.setFaultDomainCount(ctx, resourceGroup, availabilitySetIDs); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (uc *UpgradeCluster) setFaultDomainCount(ctx context.Context, resourceGroup string, vmasIds []string) error {
+	count := engine.PlatformFaultDomainCountNotSet
+
+	for _, id := range vmasIds {
+		// extract the last element of the id for VMAS name
+		ss := strings.Split(id, "/")
+		name := ss[len(ss)-1]
+		vmas, err := uc.Client.GetAvailabilitySet(ctx, resourceGroup, name)
+		if err != nil {
+			return err
+		}
+		// TODO: return error if all VMASes don't agree on this value?
+		count = int(*vmas.AvailabilitySetProperties.PlatformFaultDomainCount)
+		break
+	}
+
+	// Set the global value used to populate fault domain count.
+	// This assumes all VMASes in a cluster share the same value.
+	engine.PlatformFaultDomainCount = int32(count)
 
 	return nil
 }

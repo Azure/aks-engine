@@ -783,6 +783,11 @@ func (mc *MockAKSEngineClient) ListVirtualMachineScaleSetVMs(ctx context.Context
 	}, nil
 }
 
+// GetAvailabilitySet mock
+func (mc *MockAKSEngineClient) GetAvailabilitySet(ctx context.Context, resourceGroup, availabilitySetName string) (compute.AvailabilitySet, error) {
+	return compute.AvailabilitySet{}, errors.New("not implemented")
+}
+
 //GetStorageClient mock
 func (mc *MockAKSEngineClient) GetStorageClient(ctx context.Context, resourceGroup, accountName string) (AKSStorageClient, error) {
 	if mc.FailGetStorageClient {
