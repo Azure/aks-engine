@@ -54,6 +54,10 @@ Let's go through the process of creating a new release of [aks-engine][].
 
 We will use **v0.32.3** as an example herein. You should replace this with the new version you're releasing.
 
+```
+$ export TAG=v0.32.3
+```
+
 ### Prepare and Tag a Branch
 
 First ensure that all the commits to be included in the release are ready in your local repository.
@@ -63,7 +67,7 @@ For a major or minor release, create a branch from master. For a patch, create a
 Tag the release commit and push it to GitHub:
 
 ```
-$ git tag v0.32.3 && git push upstream v0.32.3
+$ git tag $TAG && git push upstream $TAG
 ```
 
 ### Generate Release Notes
@@ -71,7 +75,7 @@ $ git tag v0.32.3 && git push upstream v0.32.3
 Use the [`git-chglog`][git-chglog] tool to generate release notes:
 
 ```
-$ git-chglog v0.32.3
+$ git-chglog $TAG
 ```
 
 Be sure to proofread the output and verify that the intended commits appear. If a commit made it to master that didn't have a [conventional commit message][conventional-commit], you'll need to add it to the appropriate section by hand.
@@ -114,7 +118,7 @@ Finally, let's make the new aks-engine release easy to install.
 Create a pull request to add the new release to [gofish][] through the [fish-food repository][gofish-food]. You will need to calculate the sha256 checksum for each of the .tar.gz archives:
 
 ```
-$ shasum -a 256 _dist/aks-engine-v0.32.3-darwin-amd64.tar.gz  # macOS example
+$ shasum -a 256 _dist/aks-engine-$TAG-darwin-amd64.tar.gz  # macOS example
 250c0b645ad22514f4af52393ebcda95f1f911032274801f17c295800741f75b  _dist/aks-engine-v0.32.3-darwin-amd64.tar.gz
 ```
 
