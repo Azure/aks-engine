@@ -143,7 +143,7 @@ func TestConvertV20180331AgentPoolOnlyAgentPoolProfile(t *testing.T) {
 	}
 
 	n := &v20180331.NetworkProfile{
-		NetworkPlugin: "azure",
+		NetworkPlugin: NetworkPluginAzure,
 	}
 
 	api := convertV20180331AgentPoolOnlyAgentPoolProfile(p, availabilityProfile, n)
@@ -167,7 +167,7 @@ func TestConvertV20180331AgentPoolOnlyAgentPoolProfile(t *testing.T) {
 	p = &v20180331.AgentPoolProfile{}
 
 	n = &v20180331.NetworkProfile{
-		NetworkPlugin: "kubenet",
+		NetworkPlugin: NetworkPluginKubenet,
 	}
 
 	api = convertV20180331AgentPoolOnlyAgentPoolProfile(p, availabilityProfile, n)
@@ -180,7 +180,7 @@ func TestConvertV20180331AgentPoolOnlyAgentPoolProfile(t *testing.T) {
 	p = &v20180331.AgentPoolProfile{}
 
 	n = &v20180331.NetworkProfile{
-		NetworkPlugin: "azure",
+		NetworkPlugin: NetworkPluginAzure,
 	}
 
 	api = convertV20180331AgentPoolOnlyAgentPoolProfile(p, availabilityProfile, n)
