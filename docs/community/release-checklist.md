@@ -3,7 +3,7 @@
 aks-engine uses a [continuous delivery][] approach for creating releases. Every merged commit that passes
 testing results in a deliverable that can be given a [semantic version][] tag and shipped.
 
-## Release as Needed
+## Master Is Always Releasable
 
 The master `git` branch of a project should always work. Only changes considered ready to be
 released publicly are merged.
@@ -12,23 +12,24 @@ aks-engine depends on components that release new versions as often as needed. F
 a high priority bug requires the project maintainer to create a new patch release.
 Merging a backward-compatible feature implies a minor release.
 
-By releasing often, each component release becomes a safe and routine event. This makes it faster
+By releasing often, each release becomes a safe and routine event. This makes it faster
 and easier for users to obtain specific fixes. Continuous delivery also reduces the work
 necessary to release a product such as aks-engine, which depends on several external projects.
 
 "Components" applies not just to AKS projects, but also to development and release
-tools, orchestrator versions (Kubernetes, DC/OS, Swarm),to Docker base images, and to other Azure
+tools, to orchestrator versions, to Docker base images, and to other Azure
 projects that do [semantic version][] releases.
 
-## aks-engine Releases Each Month
+## AKS Engine Releases As Needed
 
-aks-engine has a regular, public release cadence. From v0.1.0 onward, new aks-engine feature
-releases arrive on the first Thursday of each month. Patch releases are created at any time,
-as needed. GitHub milestones are used to communicate the content and timing of major and minor
-releases, and longer-term planning is visible at [the Roadmap](planning-process.md#open-roadmap).
+AKS Engine releases new versions when the team of maintainers determine it is needed. This usually
+amounts to one or more releases each month.
 
-aks-engine release timing is not linked to specific features. If a feature is merged before the
-release date, it is included in the next release.
+Minor versions—for example, v0.**32**.0—are created from the master branch whenever
+important features or changes have been merged and CI testing shows it to be stable over time.
+
+Patch versions—for example, v0.32.**3**—are based on the previous release and created on demand
+whenever important bug fixes arrive.
 
 See "[Creating a New Release](#creating-a-new-release)" for more detail.
 
