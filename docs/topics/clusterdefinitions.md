@@ -262,7 +262,7 @@ Below is a list of kubelet options that aks-engine will configure by default:
 | "--cloud-provider"                  | "azure"                                                                                                                                                       |
 | "--cluster-domain"                  | "cluster.local"                                                                                                                                               |
 | "--pod-infra-container-image"       | "pause-amd64:_version_"                                                                                                                                       |
-| "--max-pods"                        | "30", or "110" if using kubenet --network-plugin (i.e., `"networkPlugin": "kubenet"`)                                                                         |
+| "--max-pods"                        | "110"                                                                                                                                                         |
 | "--eviction-hard"                   | "memory.available<100Mi,nodefs.available<10%,nodefs.inodesFree<5%"                                                                                            |
 | "--node-status-update-frequency"    | "10s"                                                                                                                                                         |
 | "--image-gc-high-threshold"         | "85"                                                                                                                                                          |
