@@ -391,9 +391,7 @@ func (dc *deployCmd) run() error {
 		return errors.Wrapf(err, "in SetPropertiesDefaults template %s", dc.apimodelPath)
 	}
 
-	template, parameters, err := templateGenerator.GenerateTemplate(dc.containerService, engine.DefaultGeneratorCode, BuildTag)
-	//TODO enable GenerateTemplateV2 when new template generation flow has been validated!
-	//template, parameters, err := templateGenerator.GenerateTemplateV2(dc.containerService, engine.DefaultGeneratorCode, BuildTag)
+	template, parameters, err := templateGenerator.GenerateTemplateV2(dc.containerService, engine.DefaultGeneratorCode, BuildTag)
 	if err != nil {
 		return errors.Wrapf(err, "generating template %s", dc.apimodelPath)
 	}
