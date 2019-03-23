@@ -19,7 +19,7 @@ func TestAddDCOSPublicAgentPool(t *testing.T) {
 	expectedNumPools := 2
 	for _, masterCount := range [2]int{1, 3} {
 		profiles := []*AgentPoolProfile{}
-		profile := makeAgentPoolProfile(1, "agentprivate", "test-dcos-pool", "Standard_D2_v2", "Linux")
+		profile := makeAgentPoolProfile(1, "agentprivate", "test-dcos-pool", "Standard_D2_v2", Linux)
 		profiles = append(profiles, profile)
 		master := makeMasterProfile(masterCount, "test-dcos", "Standard_D2_v2")
 		props := getProperties(profiles, master)

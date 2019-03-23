@@ -210,7 +210,7 @@ func convertOrchestratorProfileToV20180331AgentPoolOnly(orchestratorProfile *Orc
 		} else if k.NetworkPolicy != "" {
 			networkProfile = &v20180331.NetworkProfile{}
 			// AKS Engine uses "none" in the old un-versioned model to represent kubenet.
-			if k.NetworkPolicy == "none" {
+			if k.NetworkPolicy == NetworkPolicyNone {
 				networkProfile.NetworkPlugin = v20180331.Kubenet
 				networkProfile.PodCidr = k.ClusterSubnet
 			} else {

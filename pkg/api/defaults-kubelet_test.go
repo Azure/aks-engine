@@ -403,7 +403,7 @@ func TestStaticWindowsConfig(t *testing.T) {
 
 	cs.setKubeletConfig()
 	for _, profile := range cs.Properties.AgentPoolProfiles {
-		if profile.OSType == "Windows" {
+		if profile.OSType == Windows {
 			for key, val := range staticWindowsKubeletConfig {
 				if val != profile.KubernetesConfig.KubeletConfig[key] {
 					t.Fatalf("got unexpected '%s' kubelet config value, expected %s, got %s",
