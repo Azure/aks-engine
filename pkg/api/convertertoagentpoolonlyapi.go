@@ -395,7 +395,7 @@ func convertV20180331AgentPoolOnlyOrchestratorProfile(kubernetesVersion string, 
 	if networkProfile != nil {
 		switch networkProfile.NetworkPlugin {
 		case v20180331.Azure:
-			kubernetesConfig.NetworkPlugin = "azure"
+			kubernetesConfig.NetworkPlugin = NetworkPluginAzure
 
 			if networkProfile.NetworkPolicy != "" {
 				kubernetesConfig.NetworkPolicy = string(networkProfile.NetworkPolicy)
@@ -419,7 +419,7 @@ func convertV20180331AgentPoolOnlyOrchestratorProfile(kubernetesVersion string, 
 				kubernetesConfig.DockerBridgeSubnet = DefaultDockerBridgeSubnet
 			}
 		case v20180331.Kubenet:
-			kubernetesConfig.NetworkPlugin = "kubenet"
+			kubernetesConfig.NetworkPlugin = NetworkPluginKubenet
 
 			if networkProfile.NetworkPolicy != "" {
 				kubernetesConfig.NetworkPolicy = string(networkProfile.NetworkPolicy)

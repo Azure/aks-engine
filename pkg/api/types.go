@@ -1293,7 +1293,7 @@ func (o *OrchestratorProfile) IsDCOS() bool {
 // IsAzureCNI returns true if Azure CNI network plugin is enabled
 func (o *OrchestratorProfile) IsAzureCNI() bool {
 	if o.KubernetesConfig != nil {
-		return o.KubernetesConfig.NetworkPlugin == "azure"
+		return o.KubernetesConfig.NetworkPlugin == NetworkPluginAzure
 	}
 	return false
 }
