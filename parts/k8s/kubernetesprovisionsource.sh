@@ -151,11 +151,18 @@ apt_get_update() {
         dpkg --configure -a
         apt-get -f -y install
         apt-get update 2>&1 | tee $apt_update_output | grep -E "^([WE]:.*)|([eE]rr.*)$"
-        [ $? -ne 0  ] && cat $apt_update_output && break || \
-        cat $apt_update_output
+
+        if [ $? -ne 0  ]; then
+          cat $apt_update_output
+          break
+        else
+          cat $apt_update_output
+        fi
+
         if [ $i -eq $retries ]; then
             return 1
-        else sleep 30
+        else
+          sleep 30
         fi
     done
     echo Executed apt-get update $i times
