@@ -188,14 +188,6 @@ func (dc *deployCmd) loadAPIModel(cmd *cobra.Command, args []string) error {
 		return errors.Wrap(err, "error parsing the api model")
 	}
 
-	if dc.outputDirectory == "" {
-		if dc.containerService.Properties.MasterProfile != nil {
-			dc.outputDirectory = path.Join("_output", dc.containerService.Properties.MasterProfile.DNSPrefix)
-		} else {
-			dc.outputDirectory = path.Join("_output", dc.containerService.Properties.HostedMasterProfile.DNSPrefix)
-		}
-	}
-
 	// consume dc.caCertificatePath and dc.caPrivateKeyPath
 	if (dc.caCertificatePath != "" && dc.caPrivateKeyPath == "") || (dc.caCertificatePath == "" && dc.caPrivateKeyPath != "") {
 		return errors.New("--ca-certificate-path and --ca-private-key-path must be specified together")
@@ -268,7 +260,11 @@ func autofillApimodel(dc *deployCmd) error {
 	}
 
 	if dc.outputDirectory == "" {
-		dc.outputDirectory = path.Join("_output", dc.containerService.Properties.MasterProfile.DNSPrefix)
+		if dc.containerService.Properties.MasterProfile != nil {
+			dc.outputDirectory = path.Join("_output", dc.containerService.Properties.MasterProfile.DNSPrefix)
+		} else {
+			dc.outputDirectory = path.Join("_output", dc.containerService.Properties.HostedMasterProfile.DNSPrefix)
+		}
 	}
 
 	if _, err = os.Stat(dc.outputDirectory); !dc.forceOverwrite && err == nil {
