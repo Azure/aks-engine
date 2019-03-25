@@ -59,7 +59,7 @@ func (cs *ContainerService) SetPropertiesDefaults(isUpgrade, isScale bool) (bool
 		properties.setHostedMasterProfileDefaults()
 	}
 
-	certsGenerated, _, e := cs.setDefaultCerts()
+	certsGenerated, _, e := cs.SetDefaultCerts()
 	if e != nil {
 		return false, e
 	}
@@ -534,7 +534,8 @@ func (p *Properties) setHostedMasterProfileDefaults() {
 	p.HostedMasterProfile.Subnet = DefaultKubernetesMasterSubnet
 }
 
-func (cs *ContainerService) setDefaultCerts() (bool, []net.IP, error) {
+// SetDefaultCerts generates and sets defaults for the container certificateProfile, returns true if certs are generated
+func (cs *ContainerService) SetDefaultCerts() (bool, []net.IP, error) {
 	p := cs.Properties
 	if p.MasterProfile == nil || p.OrchestratorProfile.OrchestratorType != Kubernetes {
 		return false, nil, nil

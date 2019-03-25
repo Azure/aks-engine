@@ -1344,22 +1344,22 @@ func TestSetCertDefaults(t *testing.T) {
 
 	cs.setOrchestratorDefaults(false)
 	cs.Properties.setMasterProfileDefaults(false)
-	result, ips, err := cs.setDefaultCerts()
+	result, ips, err := cs.SetDefaultCerts()
 
 	if !result {
-		t.Error("expected setDefaultCerts to return true")
+		t.Error("expected SetDefaultCerts to return true")
 	}
 
 	if err != nil {
-		t.Errorf("unexpected error thrown while executing setDefaultCerts %s", err.Error())
+		t.Errorf("unexpected error thrown while executing SetDefaultCerts %s", err.Error())
 	}
 
 	if ips == nil {
-		t.Error("expected setDefaultCerts to create a list of IPs")
+		t.Error("expected SetDefaultCerts to create a list of IPs")
 	} else {
 
 		if len(ips) != cs.Properties.MasterProfile.Count+3 {
-			t.Errorf("expected length of IPs from setDefaultCerts %d, actual length %d", cs.Properties.MasterProfile.Count+3, len(ips))
+			t.Errorf("expected length of IPs from SetDefaultCerts %d, actual length %d", cs.Properties.MasterProfile.Count+3, len(ips))
 		}
 
 		firstMasterIP := net.ParseIP(cs.Properties.MasterProfile.FirstConsecutiveStaticIP).To4()
@@ -1370,7 +1370,7 @@ func TestSetCertDefaults(t *testing.T) {
 		if actualLastIPAddr != expectedNewAddr {
 			expectedLastIP := make(net.IP, 4)
 			binary.BigEndian.PutUint32(expectedLastIP, expectedNewAddr)
-			t.Errorf("expected last IP of master vm from setDefaultCerts %d, actual %d", expectedLastIP, ips[len(ips)-2])
+			t.Errorf("expected last IP of master vm from SetDefaultCerts %d, actual %d", expectedLastIP, ips[len(ips)-2])
 		}
 
 		if cs.Properties.MasterProfile.Count > 1 {
@@ -1379,7 +1379,7 @@ func TestSetCertDefaults(t *testing.T) {
 			expectedILBIPAddr := binary.BigEndian.Uint32(expectedILBIP)
 
 			if actualILBIPAddr != expectedILBIPAddr {
-				t.Errorf("expected IP of master ILB from setDefaultCerts %d, actual %d", expectedILBIP, ips[2])
+				t.Errorf("expected IP of master ILB from SetDefaultCerts %d, actual %d", expectedILBIP, ips[2])
 			}
 		}
 	}
@@ -1410,22 +1410,22 @@ func TestSetCertDefaultsVMSS(t *testing.T) {
 
 	cs.setOrchestratorDefaults(false)
 	cs.Properties.setMasterProfileDefaults(false)
-	result, ips, err := cs.setDefaultCerts()
+	result, ips, err := cs.SetDefaultCerts()
 
 	if !result {
-		t.Error("expected setDefaultCerts to return true")
+		t.Error("expected SetDefaultCerts to return true")
 	}
 
 	if err != nil {
-		t.Errorf("unexpected error thrown while executing setDefaultCerts %s", err.Error())
+		t.Errorf("unexpected error thrown while executing SetDefaultCerts %s", err.Error())
 	}
 
 	if ips == nil {
-		t.Error("expected setDefaultCerts to create a list of IPs")
+		t.Error("expected SetDefaultCerts to create a list of IPs")
 	} else {
 
 		if len(ips) != cs.Properties.MasterProfile.Count+3 {
-			t.Errorf("expected length of IPs from setDefaultCerts %d, actual length %d", cs.Properties.MasterProfile.Count+3, len(ips))
+			t.Errorf("expected length of IPs from SetDefaultCerts %d, actual length %d", cs.Properties.MasterProfile.Count+3, len(ips))
 		}
 
 		firstMasterIP := net.ParseIP(cs.Properties.MasterProfile.FirstConsecutiveStaticIP).To4()
@@ -1436,7 +1436,7 @@ func TestSetCertDefaultsVMSS(t *testing.T) {
 		if actualLastIPAddr != expectedNewAddr {
 			expectedLastIP := make(net.IP, 4)
 			binary.BigEndian.PutUint32(expectedLastIP, expectedNewAddr)
-			t.Errorf("expected last IP of master vm from setDefaultCerts %d, actual %d", expectedLastIP, ips[len(ips)-2])
+			t.Errorf("expected last IP of master vm from SetDefaultCerts %d, actual %d", expectedLastIP, ips[len(ips)-2])
 		}
 
 		if cs.Properties.MasterProfile.Count > 1 {
@@ -1445,7 +1445,7 @@ func TestSetCertDefaultsVMSS(t *testing.T) {
 			expectedILBIPAddr := binary.BigEndian.Uint32(expectedILBIP)
 
 			if actualILBIPAddr != expectedILBIPAddr {
-				t.Errorf("expected IP of master ILB from setDefaultCerts %d, actual %d", expectedILBIP, ips[2])
+				t.Errorf("expected IP of master ILB from SetDefaultCerts %d, actual %d", expectedILBIP, ips[2])
 			}
 		}
 	}
