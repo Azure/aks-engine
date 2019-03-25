@@ -97,7 +97,7 @@ func TestCreateAgentVmssSysRoleAssignment(t *testing.T) {
 			Type: to.StringPtr("Microsoft.Authorization/roleAssignments"),
 			RoleAssignmentPropertiesWithScope: &authorization.RoleAssignmentPropertiesWithScope{
 				RoleDefinitionID: to.StringPtr("[variables('readerRoleDefinitionId')]"),
-				PrincipalID:      to.StringPtr("[reference(concat('Microsoft.Compute/virtualMachineScaleSets/', variables('fooprofileVMNamePrefix'), '2017-03-30', 'Full').identity.principalId]"),
+				PrincipalID:      to.StringPtr("[reference(concat('Microsoft.Compute/virtualMachineScaleSets/', variables('fooprofileVMNamePrefix')), '2017-03-30', 'Full').identity.principalId]"),
 			},
 		},
 	}
