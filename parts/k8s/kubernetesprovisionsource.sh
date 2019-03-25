@@ -140,7 +140,7 @@ wait_for_file() {
 wait_for_apt_locks() {
     while fuser /var/lib/dpkg/lock /var/lib/apt/lists/lock /var/cache/apt/archives/lock >/dev/null 2>&1; do
         echo 'Waiting for release of apt locks'
-        sleep 3
+        sleep 1
     done
 }
 apt_get_update() {
@@ -148,8 +148,8 @@ apt_get_update() {
     apt_update_output=/tmp/apt-get-update.out
     for i in $(seq 1 $retries); do
         wait_for_apt_locks
-        dpkg --configure -a
-        apt-get -f -y install
+        dpkg --configure -a && sleep 1
+        apt-get -f -y install && sleep 1
         apt-get update 2>&1 | tee $apt_update_output | grep -E "^([WE]:.*)|([eE]rr.*)$"
 
         if [ $? -ne 0  ]; then
@@ -162,7 +162,7 @@ apt_get_update() {
         if [ $i -eq $retries ]; then
             return 1
         else
-          sleep 30
+          sleep 3
         fi
     done
     echo Executed apt-get update $i times

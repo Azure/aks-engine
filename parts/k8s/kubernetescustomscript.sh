@@ -161,6 +161,9 @@ if $FULL_INSTALL_REQUIRED; then
     fi
 fi
 
+# Re-enable unattended-upgrades
+rm -f /etc/apt/apt.conf.d/99periodic
+
 echo "Custom script finished successfully"
 
 echo `date`,`hostname`, endcustomscript>>/opt/m
