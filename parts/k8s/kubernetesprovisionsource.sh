@@ -178,6 +178,22 @@ apt_get_install() {
     echo Executed apt-get install --no-install-recommends -y \"$@\" $i times;
     wait_for_apt_locks
 }
+apt_get_remove() {
+    retries=$1; wait_sleep=$2; timeout=$3; shift && shift && shift
+    for i in $(seq 1 $retries); do
+        wait_for_apt_locks
+        apt-get remove -y ${@}
+        [ $? -eq 0  ] && break || \
+        if [ $i -eq $retries ]; then
+            return 1
+        else
+            sleep $wait_sleep
+            apt_get_update
+        fi
+    done
+    echo Executed apt-get remove -y \"$@\" $i times;
+    wait_for_apt_locks
+}
 systemctl_restart() {
     retries=$1; wait_sleep=$2; timeout=$3 svcname=$4
     for i in $(seq 1 $retries); do

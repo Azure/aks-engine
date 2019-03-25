@@ -77,6 +77,8 @@ if [[ "${GPU_NODE}" = true ]]; then
         installGPUDrivers
     fi
     ensureGPUDrivers
+else
+    # remove GPU drivers?
 fi
 installKubeletAndKubectl
 ensureRPC

@@ -415,6 +415,7 @@ configGPUDrivers() {
     retrycmd_if_failure 120 5 25 nvidia-modprobe -u -c0 || exit $ERR_GPU_DRIVERS_START_FAIL
     retrycmd_if_failure 120 5 25 $GPU_DEST/bin/nvidia-smi || exit $ERR_GPU_DRIVERS_START_FAIL
     retrycmd_if_failure 120 5 25 ldconfig || exit $ERR_GPU_DRIVERS_START_FAIL
+    cat /etc/docker/daemon.json | jq '.runtimes["nvidia"] = {"path": "nvidia-container-runtime", "runtimeArgs": {}}' > /etc/docker/daemon.json
 }
 
 ensureGPUDrivers() {
