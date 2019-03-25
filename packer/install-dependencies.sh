@@ -159,7 +159,7 @@ for TILLER_VERSION in ${TILLER_VERSIONS}; do
     echo "  - ${CONTAINER_IMAGE}" >> ${RELEASE_NOTES_FILEPATH}
 done
 
-CLUSTER_AUTOSCALER_VERSIONS="1.13.1 1.12.2 1.3.7 1.3.4 1.3.3 1.2.2 1.1.2"
+CLUSTER_AUTOSCALER_VERSIONS="1.13.1 1.12.3 1.12.2 1.3.7 1.3.4 1.3.3 1.2.2 1.1.2"
 for CLUSTER_AUTOSCALER_VERSION in ${CLUSTER_AUTOSCALER_VERSIONS}; do
     CONTAINER_IMAGE="k8s.gcr.io/cluster-autoscaler:v${CLUSTER_AUTOSCALER_VERSION}"
     pullContainerImage "docker" ${CONTAINER_IMAGE}
@@ -275,7 +275,7 @@ pullContainerImage "docker" "busybox"
 echo "  - busybox" >> ${RELEASE_NOTES_FILEPATH}
 
 # TODO: fetch supported k8s versions from an aks-engine command instead of hardcoding them here
-K8S_VERSIONS="1.9.10 1.9.11 1.10.12 1.10.13 1.11.7 1.11.8 1.12.5 1.12.6 1.13.3 1.13.4"
+K8S_VERSIONS="1.9.10 1.9.11 1.10.12 1.10.13 1.11.7 1.11.8 1.12.6 1.12.7 1.13.3 1.13.4"
 
 for KUBERNETES_VERSION in ${K8S_VERSIONS}; do
     HYPERKUBE_URL="k8s.gcr.io/hyperkube-amd64:v${KUBERNETES_VERSION}"
