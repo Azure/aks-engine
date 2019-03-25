@@ -288,7 +288,7 @@ ensureJournal(){
     echo "Storage=persistent" >> /etc/systemd/journald.conf
     echo "SystemMaxUse=1G" >> /etc/systemd/journald.conf
     echo "RuntimeMaxUse=1G" >> /etc/systemd/journald.conf
-    echo "ForwardToSyslog=no" >> /etc/systemd/journald.conf
+    echo "ForwardToSyslog=yes" >> /etc/systemd/journald.conf
     systemctlEnableAndStart systemd-journald || exit $ERR_SYSTEMCTL_START_FAIL
 }
 
