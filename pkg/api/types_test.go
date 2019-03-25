@@ -847,7 +847,7 @@ func TestRequireRouteTable(t *testing.T) {
 				OrchestratorProfile: &OrchestratorProfile{
 					OrchestratorType: Kubernetes,
 					KubernetesConfig: &KubernetesConfig{
-						NetworkPlugin: "azure",
+						NetworkPlugin: NetworkPluginAzure,
 					},
 				},
 			},
@@ -875,7 +875,7 @@ func TestRequireRouteTable(t *testing.T) {
 
 func TestIsAzureCNI(t *testing.T) {
 	k := &KubernetesConfig{
-		NetworkPlugin: "azure",
+		NetworkPlugin: NetworkPluginAzure,
 	}
 
 	o := &OrchestratorProfile{
@@ -2626,7 +2626,7 @@ func TestGetAgentVMPrefix(t *testing.T) {
 				Name:   "agentpool",
 				VMSize: "Standard_D2_v2",
 				Count:  1,
-				OSType: "Linux",
+				OSType: Linux,
 			},
 			properties: &Properties{
 				OrchestratorProfile: &OrchestratorProfile{
@@ -2642,7 +2642,7 @@ func TestGetAgentVMPrefix(t *testing.T) {
 						Name:   "agentpool",
 						VMSize: "Standard_D2_v2",
 						Count:  1,
-						OSType: "Linux",
+						OSType: Linux,
 					},
 				},
 			},
@@ -2655,7 +2655,7 @@ func TestGetAgentVMPrefix(t *testing.T) {
 				VMSize:              "Standard_D2_v2",
 				Count:               1,
 				AvailabilityProfile: "VirtualMachineScaleSets",
-				OSType:              "Linux",
+				OSType:              Linux,
 			},
 			properties: &Properties{
 				OrchestratorProfile: &OrchestratorProfile{
@@ -2672,7 +2672,7 @@ func TestGetAgentVMPrefix(t *testing.T) {
 						VMSize:              "Standard_D2_v2",
 						Count:               1,
 						AvailabilityProfile: "VirtualMachineScaleSets",
-						OSType:              "Linux",
+						OSType:              Linux,
 					},
 				},
 			},
@@ -2684,7 +2684,7 @@ func TestGetAgentVMPrefix(t *testing.T) {
 				Name:   "agentpool",
 				VMSize: "Standard_D2_v2",
 				Count:  1,
-				OSType: "Windows",
+				OSType: Windows,
 			},
 			properties: &Properties{
 				OrchestratorProfile: &OrchestratorProfile{
@@ -2700,7 +2700,7 @@ func TestGetAgentVMPrefix(t *testing.T) {
 						Name:   "agentpool",
 						VMSize: "Standard_D2_v2",
 						Count:  1,
-						OSType: "Windows",
+						OSType: Windows,
 					},
 				},
 			},
@@ -2712,7 +2712,7 @@ func TestGetAgentVMPrefix(t *testing.T) {
 				Name:   "something",
 				VMSize: "Standard_D2_v2",
 				Count:  1,
-				OSType: "Windows",
+				OSType: Windows,
 			},
 			properties: &Properties{
 				OrchestratorProfile: &OrchestratorProfile{
@@ -2977,7 +2977,7 @@ func TestProperties_GetMasterVMPrefix(t *testing.T) {
 				VMSize:              "Standard_D2_v2",
 				Count:               1,
 				AvailabilityProfile: "VirtualMachineScaleSets",
-				OSType:              "Linux",
+				OSType:              Linux,
 			},
 		},
 	}

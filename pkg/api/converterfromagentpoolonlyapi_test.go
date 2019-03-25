@@ -21,8 +21,8 @@ func TestConvertOrchestratorProfileToV20180331AgentPoolOnly(t *testing.T) {
 
 	// all networkProfile related fields are defined in kubernetesConfig, azure case
 	kubernetesConfig := &KubernetesConfig{
-		NetworkPlugin:      "azure",
-		NetworkPolicy:      "calico",
+		NetworkPlugin:      NetworkPluginAzure,
+		NetworkPolicy:      NetworkPolicyCalico,
 		ClusterSubnet:      podCIDR,
 		ServiceCIDR:        serviceCIDR,
 		DNSServiceIP:       dnsServiceIP,
@@ -41,11 +41,11 @@ func TestConvertOrchestratorProfileToV20180331AgentPoolOnly(t *testing.T) {
 		t.Error("error in orchestrator profile orchestratorVersion conversion")
 	}
 
-	if string(p.NetworkPlugin) != "azure" {
+	if string(p.NetworkPlugin) != NetworkPluginAzure {
 		t.Error("error in orchestrator profile networkPlugin conversion")
 	}
 
-	if string(p.NetworkPolicy) != "calico" {
+	if string(p.NetworkPolicy) != NetworkPolicyCalico {
 		t.Error("error in orchestrator profile networkPolicy conversion")
 	}
 
@@ -67,8 +67,8 @@ func TestConvertOrchestratorProfileToV20180331AgentPoolOnly(t *testing.T) {
 
 	// all networkProfile related fields are defined in kubernetesConfig, kubenet case
 	kubernetesConfig = &KubernetesConfig{
-		NetworkPlugin:      "kubenet",
-		NetworkPolicy:      "calico",
+		NetworkPlugin:      NetworkPluginKubenet,
+		NetworkPolicy:      NetworkPolicyCalico,
 		ClusterSubnet:      podCIDR,
 		ServiceCIDR:        serviceCIDR,
 		DNSServiceIP:       dnsServiceIP,
@@ -85,11 +85,11 @@ func TestConvertOrchestratorProfileToV20180331AgentPoolOnly(t *testing.T) {
 		t.Error("error in orchestrator profile orchestratorVersion conversion")
 	}
 
-	if string(p.NetworkPlugin) != "kubenet" {
+	if string(p.NetworkPlugin) != NetworkPluginKubenet {
 		t.Error("error in orchestrator profile networkPlugin conversion")
 	}
 
-	if string(p.NetworkPolicy) != "calico" {
+	if string(p.NetworkPolicy) != NetworkPolicyCalico {
 		t.Error("error in orchestrator profile networkPolicy conversion")
 	}
 
@@ -111,7 +111,7 @@ func TestConvertOrchestratorProfileToV20180331AgentPoolOnly(t *testing.T) {
 
 	// legacy kubernetesConfig contains NetworkPolicy instead of NetworkPlugin, azure case
 	kubernetesConfig = &KubernetesConfig{
-		NetworkPolicy:      "azure",
+		NetworkPolicy:      NetworkPolicyAzure,
 		ClusterSubnet:      podCIDR,
 		ServiceCIDR:        serviceCIDR,
 		DNSServiceIP:       dnsServiceIP,
@@ -128,7 +128,7 @@ func TestConvertOrchestratorProfileToV20180331AgentPoolOnly(t *testing.T) {
 		t.Error("error in orchestrator profile orchestratorVersion conversion")
 	}
 
-	if string(p.NetworkPlugin) != "azure" {
+	if string(p.NetworkPlugin) != NetworkPluginAzure {
 		t.Error("error in orchestrator profile networkPlugin conversion")
 	}
 
@@ -154,7 +154,7 @@ func TestConvertOrchestratorProfileToV20180331AgentPoolOnly(t *testing.T) {
 
 	// legacy kubernetesConfig contains NetworkPolicy instead of NetworkPlugin, kubenet case
 	kubernetesConfig = &KubernetesConfig{
-		NetworkPolicy:      "none",
+		NetworkPolicy:      NetworkPolicyNone,
 		ClusterSubnet:      podCIDR,
 		ServiceCIDR:        serviceCIDR,
 		DNSServiceIP:       dnsServiceIP,
@@ -171,7 +171,7 @@ func TestConvertOrchestratorProfileToV20180331AgentPoolOnly(t *testing.T) {
 		t.Error("error in orchestrator profile orchestratorVersion conversion")
 	}
 
-	if string(p.NetworkPlugin) != "kubenet" {
+	if string(p.NetworkPlugin) != NetworkPluginKubenet {
 		t.Error("error in orchestrator profile networkPlugin conversion")
 	}
 
