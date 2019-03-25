@@ -157,15 +157,38 @@ apt_get_update() {
           break
         else
           cat $apt_update_output
+          sleep 3
         fi
 
         if [ $i -eq $retries ]; then
             return 1
-        else
-          sleep 3
         fi
     done
     echo Executed apt-get update $i times
+    wait_for_apt_locks
+}
+apt_get_dist_upgrade() {
+    retries=10
+    apt_dist_upgrade_output=/tmp/apt-get-dist-upgrade.out
+    for i in $(seq 1 $retries); do
+        wait_for_apt_locks
+        dpkg --configure -a && sleep 1
+        apt-get -f -y install && sleep 1
+        apt-get dist-upgrade -y 2>&1 | tee $apt_dist_upgrade_output | grep -E "^([WE]:.*)|([eE]rr.*)$"
+
+        if [ $? -ne 0  ]; then
+          cat $apt_dist_upgrade_output
+          break
+        else
+          cat $apt_dist_upgrade_output
+          sleep 3
+        fi
+
+        if [ $i -eq $retries ]; then
+            return 1
+        fi
+    done
+    echo Executed apt-get dist-upgrade $i times
     wait_for_apt_locks
 }
 apt_get_install() {

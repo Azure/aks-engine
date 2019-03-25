@@ -16,6 +16,11 @@ removeMoby() {
     sudo apt-get purge -y moby-engine moby-cli
 }
 
+upgradeOs() {
+    apt_get_update || exit $ERR_APT_UPDATE_TIMEOUT
+    apt_get_dist_upgrade
+}
+
 installEtcd() {
     CURRENT_VERSION=$(etcd --version | grep "etcd Version" | cut -d ":" -f 2 | tr -d '[:space:]')
     if [[ "$CURRENT_VERSION" == "${ETCD_VERSION}" ]]; then
@@ -30,7 +35,6 @@ installEtcd() {
 installDeps() {
     retrycmd_if_failure_no_stats 120 5 25 curl -fsSL https://packages.microsoft.com/config/ubuntu/${UBUNTU_RELEASE}/packages-microsoft-prod.deb > /tmp/packages-microsoft-prod.deb || exit $ERR_MS_PROD_DEB_DOWNLOAD_TIMEOUT
     retrycmd_if_failure 60 5 10 dpkg -i /tmp/packages-microsoft-prod.deb || exit $ERR_MS_PROD_DEB_PKG_ADD_FAIL
-    apt_get_update || exit $ERR_APT_UPDATE_TIMEOUT
     apt_get_install 30 1 600 apt-transport-https blobfuse ca-certificates ceph-common cgroup-lite cifs-utils conntrack ebtables ethtool fuse git glusterfs-client init-system-helpers iproute2 ipset iptables jq mount nfs-common pigz socat util-linux xz-utils zip htop iotop iftop sysstat || exit $ERR_APT_INSTALL_TIMEOUT
 }
 
@@ -309,13 +313,19 @@ pullContainerImage() {
 cleanUpContainerImages() {
     # TODO remove all unused container images at runtime
     docker rmi $(docker images --format '{{.Repository}}:{{.Tag}}' | grep -v ${KUBERNETES_VERSION} | grep 'hyperkube') &
+    pids="$! $pids"
     docker rmi $(docker images --format '{{.Repository}}:{{.Tag}}' | grep -v ${KUBERNETES_VERSION} | grep 'cloud-controller-manager') &
+    pids="$! $pids"
     if [ "$IS_HOSTED_MASTER" = "false" ]; then
         echo "Cleaning up AKS container images, not an AKS cluster"
         docker rmi $(docker images --format '{{.Repository}}:{{.Tag}}' | grep 'hcp-tunnel-front') &
+        pids="$! $pids"
         docker rmi $(docker images --format '{{.Repository}}:{{.Tag}}' | grep 'kube-svc-redirect') &
+        pids="$! $pids"
         docker rmi $(docker images --format '{{.Repository}}:{{.Tag}}' | grep 'nginx') &
+        pids="$! $pids"
     fi
+    wait $pids
 }
 
 overrideNetworkConfig() {
