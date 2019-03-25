@@ -597,4 +597,60 @@ var _ = Describe("Upgrade Kubernetes cluster tests", func() {
 
 		Expect(len(newNode.Spec.Taints)).To(Equal(2))
 	})
+
+	It("Tests to set the Count in agentpool profile to actual node count in VMSS and to restore the count in agentpool profile  ", func() {
+		nodeCount := 2
+		cs := api.CreateMockContainerService("testcluster", "1.12.5", 3, nodeCount, false)
+		cs.Properties.OrchestratorProfile.KubernetesConfig = &api.KubernetesConfig{}
+		cs.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity = true
+		cs.Properties.AgentPoolProfiles[0].AvailabilityProfile = api.VirtualMachineScaleSets
+
+		clusterTopology := ClusterTopology{}
+		clusterTopology.SubscriptionID = "DEC923E3-1EF1-4745-9516-37906D56DEC4"
+		clusterTopology.ResourceGroup = "TestRg"
+		clusterTopology.DataModel = cs
+		clusterTopology.NameSuffix = "12345678"
+		clusterTopology.AgentPoolsToUpgrade = map[string]bool{"agentpool1": true}
+
+		vmssName := "aks-agentpool1-23427335-vmss"
+		actualNodeCount := int64(4)
+		clusterTopology.AgentPoolScaleSetsToUpgrade = []AgentPoolScaleSet{
+			AgentPoolScaleSet{
+				Name: vmssName,
+				Sku: compute.Sku{
+					Name:     &vmssName,
+					Capacity: &actualNodeCount,
+				},
+				Location: "eastus",
+				VMsToUpgrade: []AgentPoolScaleSetVM{
+					AgentPoolScaleSetVM{
+						Name:       "aks-agentpool1-23427335-vmss000000",
+						InstanceID: "0",
+					},
+					AgentPoolScaleSetVM{
+						Name:       "aks-agentpool1-23427335-vmss000001",
+						InstanceID: "1",
+					},
+					AgentPoolScaleSetVM{
+						Name:       "aks-agentpool1-23427335-vmss000002",
+						InstanceID: "2",
+					},
+					AgentPoolScaleSetVM{
+						Name:       "aks-agentpool1-23427335-vmss000003",
+						InstanceID: "3",
+					},
+				},
+			},
+		}
+
+		u := &Upgrader{}
+
+		u.Init(&i18n.Translator{}, log.NewEntry(log.New()), clusterTopology, nil, "", nil, TestAKSEngineVersion)
+		nodeCountInProfile := u.setActualNodeCountForVMSSAgentPool()
+
+		Expect(cs.Properties.AgentPoolProfiles[0].Count).To(Equal(int(actualNodeCount)))
+
+		u.restoreNodeCountForVMSSAgentPool(nodeCountInProfile)
+		Expect(cs.Properties.AgentPoolProfiles[0].Count).To(Equal(nodeCount))
+	})
 })

@@ -65,9 +65,9 @@ func (ku *Upgrader) RunUpgrade() error {
 	ctx, cancel := context.WithTimeout(context.Background(), 90*time.Minute)
 	defer cancel()
 
-	nodeCountInProfile := ku.setActualNodeCountForAutoScalerEnabledVMSSAgentPool()
+	nodeCountInProfile := ku.setActualNodeCountForVMSSAgentPool()
 	defer func() {
-		ku.restoreNodeCountForAutoScalerEnabledVMSSAgentPool(nodeCountInProfile)
+		ku.restoreNodeCountForVMSSAgentPool(nodeCountInProfile)
 	}()
 
 	if err := ku.upgradeMasterNodes(ctx); err != nil {
@@ -86,7 +86,7 @@ func (ku *Upgrader) Validate() error {
 	return nil
 }
 
-func (ku *Upgrader) setActualNodeCountForAutoScalerEnabledVMSSAgentPool() map[string]int {
+func (ku *Upgrader) setActualNodeCountForVMSSAgentPool() map[string]int {
 	nodeCountInProfile := make(map[string]int)
 	agentPoolScaleSetsToUpgradeMap := make(map[string]AgentPoolScaleSet)
 
@@ -95,16 +95,14 @@ func (ku *Upgrader) setActualNodeCountForAutoScalerEnabledVMSSAgentPool() map[st
 		agentPoolScaleSetsToUpgradeMap[poolName] = vmssToUpgrade
 	}
 
-	// if the agent pool is an auto-scaler enabled VMSS agent pool, the actual number of node in VMSS
-	// might be different from the node count in the profile. Set the count in agentpool profile to the
-	// actual VMSS instance count in order that the ARM template deployment won't trigger actual node
-	// count change and eventually fails the upgrade process (https://github.com/Azure/aks-engine/issues/401)
+	// If the agent pool is VMSS agent pool, the actual number of node in VMSS might be different from the node count in the profile.
+	// Set the count in agentpool profile to the actual VMSS instance count in order that the ARM template deployment won't trigger
+	// actual node count change and eventually fails the upgrade process (https://github.com/Azure/aks-engine/issues/401)
 	for _, agentpool := range ku.ClusterTopology.DataModel.Properties.AgentPoolProfiles {
-		if agentpool.AvailabilityProfile == api.VirtualMachineScaleSets &&
-			agentpool.EnableAutoScaling != nil && *agentpool.EnableAutoScaling {
+		if agentpool.AvailabilityProfile == api.VirtualMachineScaleSets {
 			if vmssToUpgrade, ok := agentPoolScaleSetsToUpgradeMap[agentpool.Name]; ok {
 				actualCount := *vmssToUpgrade.Sku.Capacity
-				ku.logger.Infof("Agentpool %s is cluster auto-scaler, node count in profile: %d, actual node count in vmss %d.",
+				ku.logger.Infof("Agentpool %s is VirtualMachineScaleSets, node count in profile: %d, actual node count in vmss %d.",
 					agentpool.Name, agentpool.Count, actualCount)
 
 				nodeCountInProfile[agentpool.Name] = agentpool.Count
@@ -116,10 +114,9 @@ func (ku *Upgrader) setActualNodeCountForAutoScalerEnabledVMSSAgentPool() map[st
 	return nodeCountInProfile
 }
 
-func (ku *Upgrader) restoreNodeCountForAutoScalerEnabledVMSSAgentPool(nodeCountInProfile map[string]int) {
+func (ku *Upgrader) restoreNodeCountForVMSSAgentPool(nodeCountInProfile map[string]int) {
 	for _, agentpool := range ku.ClusterTopology.DataModel.Properties.AgentPoolProfiles {
-		if agentpool.AvailabilityProfile == api.VirtualMachineScaleSets &&
-			agentpool.EnableAutoScaling != nil && *agentpool.EnableAutoScaling {
+		if agentpool.AvailabilityProfile == api.VirtualMachineScaleSets {
 			if count, ok := nodeCountInProfile[agentpool.Name]; ok {
 				agentpool.Count = count
 			}
