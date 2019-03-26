@@ -601,7 +601,6 @@ func TestOutputDirectoryWithDNSPrefix(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to call LoadAPIModel: %s", err)
 	}
-	fmt.Printf("deployCmd vals: %s\n", d.containerService.Properties.MasterProfile.DNSPrefix)
 
 	if d.outputDirectory != path.Join("_output", d.dnsPrefix) {
 		t.Fatalf("Calculated output directory should be %s, actual value %s", path.Join("_output", d.dnsPrefix), d.outputDirectory)
