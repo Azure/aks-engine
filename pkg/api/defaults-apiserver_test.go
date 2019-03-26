@@ -420,6 +420,20 @@ func TestAPIServerConfigRepairMalformedUpdates(t *testing.T) {
 	}
 }
 
+func TestAPIServerAuditPolicyBackCompatOverride(t *testing.T) {
+	// Validate that we statically override "--audit-policy-file" values of "/etc/kubernetes/manifests/audit-policy.yaml" for back-compat
+	auditPolicyKey := "--audit-policy-file"
+	cs := CreateMockContainerService("testcluster", "1.10.8", 3, 2, false)
+	cs.Properties.OrchestratorProfile.KubernetesConfig.APIServerConfig = map[string]string{}
+	cs.Properties.OrchestratorProfile.KubernetesConfig.APIServerConfig[auditPolicyKey] = "/etc/kubernetes/manifests/audit-policy.yaml"
+	cs.setAPIServerConfig()
+	a := cs.Properties.OrchestratorProfile.KubernetesConfig.APIServerConfig
+	if a[auditPolicyKey] != "/etc/kubernetes/addons/audit-policy.yaml" {
+		t.Fatalf("got unexpected default value for '%s' API server config: %s",
+			auditPolicyKey, a[auditPolicyKey])
+	}
+}
+
 func TestAPIServerWeakCipherSuites(t *testing.T) {
 	// Test allowed versions
 	for _, version := range []string{"1.10.0", "1.11.0", "1.12.0", "1.13.0", "1.14.0"} {

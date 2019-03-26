@@ -118,6 +118,13 @@ func (cs *ContainerService) setAPIServerConfig() {
 			if _, ok := o.KubernetesConfig.APIServerConfig[key]; !ok {
 				// then assign the default value
 				o.KubernetesConfig.APIServerConfig[key] = val
+			} else {
+				// Manual override of "--audit-policy-file" for back-compat
+				if key == "--audit-policy-file" {
+					if o.KubernetesConfig.APIServerConfig[key] == "/etc/kubernetes/manifests/audit-policy.yaml" {
+						o.KubernetesConfig.APIServerConfig[key] = val
+					}
+				}
 			}
 		}
 	}
