@@ -744,8 +744,8 @@ func (mc *MockAKSEngineClient) DeleteManagedDisk(ctx context.Context, resourceGr
 }
 
 // ListManagedDisksByResourceGroup is a wrapper around disksClient.ListManagedDisksByResourceGroup
-func (mc *MockAKSEngineClient) ListManagedDisksByResourceGroup(ctx context.Context, resourceGroupName string) (result compute.DiskListPage, err error) {
-	return compute.DiskListPage{}, nil
+func (mc *MockAKSEngineClient) ListManagedDisksByResourceGroup(ctx context.Context, resourceGroupName string) (result DiskListPage, err error) {
+	return &compute.DiskListPage{}, nil
 }
 
 //GetKubernetesClient mock
@@ -761,12 +761,12 @@ func (mc *MockAKSEngineClient) GetKubernetesClient(masterURL, kubeConfig string,
 }
 
 // ListProviders mock
-func (mc *MockAKSEngineClient) ListProviders(ctx context.Context) (resources.ProviderListResultPage, error) {
+func (mc *MockAKSEngineClient) ListProviders(ctx context.Context) (ProviderListResultPage, error) {
 	if mc.FailListProviders {
-		return resources.ProviderListResultPage{}, errors.New("ListProviders failed")
+		return &resources.ProviderListResultPage{}, errors.New("ListProviders failed")
 	}
 
-	return resources.ProviderListResultPage{}, nil
+	return &resources.ProviderListResultPage{}, nil
 }
 
 // ListDeploymentOperations gets all deployments operations for a deployment.
