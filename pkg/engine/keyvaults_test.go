@@ -68,7 +68,7 @@ func TestCreateKeyVault(t *testing.T) {
 		"properties": map[string]interface{}{
 			"accessPolicies": []interface{}{
 				map[string]interface{}{
-					"objectId": "[reference(concat('Microsoft.Compute/virtualMachines/', variables('masterVMNamePrefix'), 0'), '2017-03-30', 'Full').identity.principalId]",
+					"objectId": "[reference(concat('Microsoft.Compute/virtualMachines/', variables('masterVMNamePrefix'), '0'), '2017-03-30', 'Full').identity.principalId]",
 					"permissions": map[string]interface{}{
 						"keys": []string{"create", "encrypt", "decrypt", "get", "list"}},
 					"tenantId": "[variables('tenantID')]"}},

@@ -61,7 +61,7 @@ func CreateKeyVaultVMAS(cs *api.ContainerService) map[string]interface{} {
 		} else {
 			for i := 0; i < masterCount; i++ {
 				accessPolicy := map[string]interface{}{
-					"objectId": fmt.Sprintf("[reference(concat('Microsoft.Compute/virtualMachines/', variables('masterVMNamePrefix'), %d'), '2017-03-30', 'Full').identity.principalId]", i),
+					"objectId": fmt.Sprintf("[reference(concat('Microsoft.Compute/virtualMachines/', variables('masterVMNamePrefix'), '%d'), '2017-03-30', 'Full').identity.principalId]", i),
 					"permissions": map[string]interface{}{
 						"keys": []string{
 							"create",
