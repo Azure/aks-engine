@@ -199,11 +199,8 @@ func (sc *scaleCmd) load(cmd *cobra.Command) error {
 		return errors.Wrap(err, "error while trying to unmarshal the ARM template")
 	}
 
-	templateMap := template.(map[string]interface{})
-	templateParameters := templateMap["parameters"].(map[string]interface{})
-
-	nameSuffixParam := templateParameters["nameSuffix"].(map[string]interface{})
-	sc.nameSuffix = nameSuffixParam["defaultValue"].(string)
+	//allows to identify VMs in the resource group that belong to this cluster.
+	sc.nameSuffix = sc.containerService.Properties.GetClusterID()
 	log.Infof("Name suffix: %s", sc.nameSuffix)
 	return nil
 }

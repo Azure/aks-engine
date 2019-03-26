@@ -5,7 +5,6 @@ package cmd
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"io"
 	"os"
@@ -198,12 +197,7 @@ func (uc *upgradeCmd) initializeFromLocalState(armTemplateHandle io.Reader) erro
 	uc.containerService.Properties.OrchestratorProfile.OrchestratorVersion = uc.upgradeVersion
 
 	//allows to identify VMs in the resource group that belong to this cluster.
-	if nameSuffix, err := readNameSuffixFromARMTemplate(armTemplateHandle); err == nil {
-		uc.nameSuffix = nameSuffix
-	} else {
-		templatePath := path.Join(uc.deploymentDirectory, "azuredeploy.json")
-		return errors.Wrapf(err, "Failed to read nameSuffix from %s", templatePath)
-	}
+	uc.nameSuffix = uc.containerService.Properties.GetClusterID()
 
 	log.Infoln(fmt.Sprintf("Upgrading cluster with name suffix: %s", uc.nameSuffix))
 
@@ -213,40 +207,6 @@ func (uc *upgradeCmd) initializeFromLocalState(armTemplateHandle io.Reader) erro
 		uc.agentPoolsToUpgrade[agentPool.Name] = true
 	}
 	return nil
-}
-
-func readNameSuffixFromARMTemplate(armTemplateHandle io.Reader) (string, error) {
-	var azureDeployTemplate *map[string]interface{}
-	decoder := json.NewDecoder(armTemplateHandle)
-	if err := decoder.Decode(&azureDeployTemplate); err != nil {
-		return "", err
-	}
-
-	var templateParameters, nameSuffixParam map[string]interface{}
-	var okType bool
-
-	const (
-		parametersKey   = "parameters"
-		nameSuffixKey   = "nameSuffix"
-		defaultValueKey = "defaultValue"
-	)
-
-	if templateParameters, okType = (*azureDeployTemplate)[parametersKey].(map[string]interface{}); !okType {
-		return "", errors.Errorf("error asserting data from key \"%s\" in file %q",
-			parametersKey, "azuredeploy.json")
-	}
-
-	if nameSuffixParam, okType = templateParameters[nameSuffixKey].(map[string]interface{}); !okType {
-		return "", errors.Errorf("error asserting data from key \"%s.%s\" in file %q",
-			parametersKey, nameSuffixKey, "azuredeploy.json")
-	}
-
-	var nameSuffix string
-	if nameSuffix, okType = nameSuffixParam[defaultValueKey].(string); !okType {
-		return "", errors.Errorf("error asserting data from key \"%s.%s.%s\" in file %q",
-			parametersKey, nameSuffixKey, defaultValueKey, "azuredeploy.json")
-	}
-	return nameSuffix, nil
 }
 
 func (uc *upgradeCmd) run(cmd *cobra.Command, args []string) error {
