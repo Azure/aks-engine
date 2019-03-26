@@ -29,7 +29,7 @@ func TestCreateVmasRoleAssignment(t *testing.T) {
 			Name: to.StringPtr("[guid(concat('Microsoft.Compute/virtualMachines/', variables('masterVMNamePrefix'), copyIndex(), 'vmidentity'))]"),
 			Type: to.StringPtr("Microsoft.Authorization/roleAssignments"),
 			RoleAssignmentPropertiesWithScope: &authorization.RoleAssignmentPropertiesWithScope{
-				RoleDefinitionID: to.StringPtr("[variables('readerRoleDefinitionId')]"),
+				RoleDefinitionID: to.StringPtr("[variables('contributorRoleDefinitionId')]"),
 				PrincipalID:      to.StringPtr("[reference(concat('Microsoft.Compute/virtualMachines/', variables('masterVMNamePrefix'), copyIndex()), '2017-03-30', 'Full').identity.principalId]"),
 			},
 		},
