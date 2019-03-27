@@ -93,7 +93,9 @@ else
     cleanUpGPUDrivers
 fi
 installKubeletAndKubectl
-ensureRPC
+if [[ $OS != $COREOS_OS_NAME ]]; then
+    ensureRPC
+fi
 createKubeManifestDir
 if [[ "${SGX_NODE}" = true ]]; then
     installSGXDrivers
