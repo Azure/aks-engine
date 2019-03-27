@@ -67,7 +67,7 @@ if [[ ! -z "${MASTER_NODE}" ]] && [[ -z "${COSMOS_URI}" ]]; then
     	installEtcd
 fi
 
-if $FULL_INSTALL_REQUIRED; then
+if [[ $OS != $COREOS_OS_NAME ]] && [[ $FULL_INSTALL_REQUIRED ]]; then
     installDeps
 else 
     echo "Golden image; skipping dependencies installation"
