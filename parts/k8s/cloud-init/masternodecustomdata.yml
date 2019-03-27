@@ -412,9 +412,9 @@ MASTER_CONTAINER_ADDONS_PLACEHOLDER
     User=etcd
     PermissionsStartOnly=true
     {{if .MasterProfile.IsCoreOS}}
-    ExecStart=/usr/bin/etcd $DAEMON_ARGS
-    {{else}}
     ExecStart=/opt/bin/etcd $DAEMON_ARGS
+    {{else}}
+    ExecStart=/usr/bin/etcd $DAEMON_ARGS
     {{end}}
     Restart=always
     [Install]
