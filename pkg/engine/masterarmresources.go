@@ -110,6 +110,9 @@ func createKubernetesMasterResourcesVMAS(cs *api.ContainerService) []interface{}
 	}
 
 	masterCSE := CreateCustomScriptExtension(cs)
+	if isKMSEnabled {
+		masterCSE.ARMResource.DependsOn = append(masterCSE.ARMResource.DependsOn, "[concat('Microsoft.KeyVault/vaults/', variables('clusterKeyVaultName'))]")
+	}
 	masterResources = append(masterResources, masterCSE)
 
 	if cs.IsAKSBillingEnabled() {

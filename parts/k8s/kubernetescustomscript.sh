@@ -49,7 +49,7 @@ else
     REBOOTREQUIRED=false
 fi
 
-if [ -f /var/log/azure/golden-image-install.complete ]; then
+if [ -f /var/log.vhd/azure/golden-image-install.complete ]; then
     echo "detected golden image pre-install"
     FULL_INSTALL_REQUIRED=false
     rm -rf /home/packer

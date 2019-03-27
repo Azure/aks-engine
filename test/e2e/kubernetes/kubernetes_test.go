@@ -345,7 +345,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			d, _ := deployment.Get(longRunningApacheDeploymentName, "default")
 			if d == nil {
 				var err error
-				phpApacheDeploy, err = deployment.CreateLinuxDeploy("k8s.gcr.io/hpa-example", longRunningApacheDeploymentName, "default", "--requests=cpu=10m,memory=10M")
+				phpApacheDeploy, err = deployment.CreateLinuxDeploy("deis/hpa-example", longRunningApacheDeploymentName, "default", "--requests=cpu=10m,memory=10M")
 				if err != nil {
 					fmt.Println(err)
 				}

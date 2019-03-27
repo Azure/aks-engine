@@ -131,7 +131,7 @@ for KUBE_DNS_VERSION in ${KUBE_DNS_VERSIONS}; do
     echo "  - ${CONTAINER_IMAGE}" >> ${RELEASE_NOTES_FILEPATH}
 done
 
-KUBE_ADDON_MANAGER_VERSIONS="8.9 8.8 8.7 8.6"
+KUBE_ADDON_MANAGER_VERSIONS="9.0 8.9 8.8 8.7 8.6"
 for KUBE_ADDON_MANAGER_VERSION in ${KUBE_ADDON_MANAGER_VERSIONS}; do
     CONTAINER_IMAGE="k8s.gcr.io/kube-addon-manager-amd64:v${KUBE_ADDON_MANAGER_VERSION}"
     pullContainerImage "docker" ${CONTAINER_IMAGE}
@@ -159,7 +159,7 @@ for TILLER_VERSION in ${TILLER_VERSIONS}; do
     echo "  - ${CONTAINER_IMAGE}" >> ${RELEASE_NOTES_FILEPATH}
 done
 
-CLUSTER_AUTOSCALER_VERSIONS="1.13.2 1.13.1 1.12.3 1.12.2 1.3.7 1.3.4 1.3.3 1.2.2 1.1.2"
+CLUSTER_AUTOSCALER_VERSIONS="1.14.0 1.13.2 1.13.1 1.12.3 1.12.2 1.3.7 1.3.4 1.3.3 1.2.2 1.1.2"
 for CLUSTER_AUTOSCALER_VERSION in ${CLUSTER_AUTOSCALER_VERSIONS}; do
     CONTAINER_IMAGE="k8s.gcr.io/cluster-autoscaler:v${CLUSTER_AUTOSCALER_VERSION}"
     pullContainerImage "docker" ${CONTAINER_IMAGE}
@@ -173,7 +173,7 @@ for K8S_DNS_SIDECAR_VERSION in ${K8S_DNS_SIDECAR_VERSIONS}; do
     echo "  - ${CONTAINER_IMAGE}" >> ${RELEASE_NOTES_FILEPATH}
 done
 
-CORE_DNS_VERSIONS="1.2.6 1.2.2"
+CORE_DNS_VERSIONS="1.3.1 1.2.6 1.2.2"
 for CORE_DNS_VERSION in ${CORE_DNS_VERSIONS}; do
     CONTAINER_IMAGE="k8s.gcr.io/coredns:${CORE_DNS_VERSION}"
     pullContainerImage "docker" ${CONTAINER_IMAGE}
@@ -275,7 +275,7 @@ pullContainerImage "docker" "busybox"
 echo "  - busybox" >> ${RELEASE_NOTES_FILEPATH}
 
 # TODO: fetch supported k8s versions from an aks-engine command instead of hardcoding them here
-K8S_VERSIONS="1.9.10 1.9.11 1.10.12 1.10.13 1.11.7 1.11.8 1.12.6 1.12.7 1.13.4 1.13.5"
+K8S_VERSIONS="1.9.10 1.9.11 1.10.12 1.10.13 1.11.8 1.11.9 1.12.6 1.12.7 1.13.4 1.13.5 1.14.0"
 
 for KUBERNETES_VERSION in ${K8S_VERSIONS}; do
     HYPERKUBE_URL="k8s.gcr.io/hyperkube-amd64:v${KUBERNETES_VERSION}"

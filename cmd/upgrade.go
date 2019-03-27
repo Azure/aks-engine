@@ -113,20 +113,8 @@ func (uc *upgradeCmd) validate(cmd *cobra.Command) error {
 func (uc *upgradeCmd) loadCluster(cmd *cobra.Command) error {
 	var err error
 
-	if err = uc.getAuthArgs().validateAuthArgs(); err != nil {
-		return err
-	}
-
-	if uc.client, err = uc.getAuthArgs().getClient(); err != nil {
-		return errors.Wrap(err, "failed to get client")
-	}
-
 	ctx, cancel := context.WithTimeout(context.Background(), armhelpers.DefaultARMOperationTimeout)
 	defer cancel()
-	_, err = uc.client.EnsureResourceGroup(ctx, uc.resourceGroupName, uc.location, nil)
-	if err != nil {
-		return errors.Wrap(err, "error ensuring resource group")
-	}
 
 	// Load apimodel from the deployment directory.
 	apiModelPath := path.Join(uc.deploymentDirectory, "apimodel.json")
@@ -145,6 +133,24 @@ func (uc *upgradeCmd) loadCluster(cmd *cobra.Command) error {
 	uc.containerService, uc.apiVersion, err = apiloader.LoadContainerServiceFromFile(apiModelPath, true, true, nil)
 	if err != nil {
 		return errors.Wrap(err, "error parsing the api model")
+	}
+
+	if uc.containerService.Properties.IsAzureStackCloud() {
+		writeCustomCloudProfile(uc.containerService)
+		api.AzureCloudSpecEnvMap[api.AzureStackCloud] = *uc.containerService.Properties.CustomCloudProfile.AzureEnvironmentSpecConfig
+	}
+
+	if err = uc.getAuthArgs().validateAuthArgs(); err != nil {
+		return err
+	}
+
+	if uc.client, err = uc.getAuthArgs().getClient(); err != nil {
+		return errors.Wrap(err, "failed to get client")
+	}
+
+	_, err = uc.client.EnsureResourceGroup(ctx, uc.resourceGroupName, uc.location, nil)
+	if err != nil {
+		return errors.Wrap(err, "error ensuring resource group")
 	}
 
 	err = uc.initialize()

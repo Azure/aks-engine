@@ -83,7 +83,9 @@ func CreateNetworkInterfaces(cs *api.ContainerService) NetworkInterfaceARM {
 	if isAzureCNI {
 		ipConfigurations = append(ipConfigurations, getSecondaryNICIPConfigs(cs.Properties.MasterProfile.IPAddressCount)...)
 	} else {
-		nicProperties.EnableIPForwarding = to.BoolPtr(true)
+		if !cs.Properties.IsAzureStackCloud() {
+			nicProperties.EnableIPForwarding = to.BoolPtr(true)
+		}
 	}
 
 	linuxProfile := cs.Properties.LinuxProfile
@@ -182,7 +184,7 @@ func createPrivateClusterNetworkInterface(cs *api.ContainerService) NetworkInter
 		IPConfigurations: &ipConfigurations,
 	}
 
-	if !isAzureCNI {
+	if !isAzureCNI && !cs.Properties.IsAzureStackCloud() {
 		nicProperties.EnableIPForwarding = to.BoolPtr(true)
 	}
 
@@ -337,7 +339,7 @@ func createAgentVMASNetworkInterface(cs *api.ContainerService, profile *api.Agen
 
 	networkInterface.IPConfigurations = &ipConfigurations
 
-	if !isAzureCNI {
+	if !isAzureCNI && !cs.Properties.IsAzureStackCloud() {
 		networkInterface.EnableIPForwarding = to.BoolPtr(true)
 	}
 

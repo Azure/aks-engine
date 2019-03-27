@@ -4,8 +4,12 @@
 package cmd
 
 import (
+	"io/ioutil"
+	"os"
 	"testing"
 
+	"github.com/Azure/aks-engine/pkg/api"
+	"github.com/Azure/go-autorest/autorest/azure"
 	"github.com/gofrs/uuid"
 	"github.com/spf13/cobra"
 	ini "gopkg.in/ini.v1"
@@ -143,5 +147,106 @@ func TestGetCloudSubFromAzConfig(t *testing.T) {
 				t.Fatalf("expected %s, got %s", test.expect, uuid)
 			}
 		})
+	}
+}
+
+func TestWriteCustomCloudProfile(t *testing.T) {
+	const (
+		name                         = "azurestackcloud"
+		managementPortalURL          = "https://management.local.azurestack.external/"
+		publishSettingsURL           = "https://management.local.azurestack.external/publishsettings/index"
+		serviceManagementEndpoint    = "https://management.azurestackci15.onmicrosoft.com/36f71706-54df-4305-9847-5b038a4cf189"
+		resourceManagerEndpoint      = "https://management.local.azurestack.external/"
+		activeDirectoryEndpoint      = "https://login.windows.net/"
+		galleryEndpoint              = "https://portal.local.azurestack.external=30015/"
+		keyVaultEndpoint             = "https://vault.azurestack.external/"
+		graphEndpoint                = "https://graph.windows.net/"
+		serviceBusEndpoint           = "https://servicebus.azurestack.external/"
+		batchManagementEndpoint      = "https://batch.azurestack.external/"
+		storageEndpointSuffix        = "core.azurestack.external"
+		sqlDatabaseDNSSuffix         = "database.azurestack.external"
+		trafficManagerDNSSuffix      = "trafficmanager.cn"
+		keyVaultDNSSuffix            = "vault.azurestack.external"
+		serviceBusEndpointSuffix     = "servicebus.azurestack.external"
+		serviceManagementVMDNSSuffix = "chinacloudapp.cn"
+		resourceManagerVMDNSSuffix   = "cloudapp.azurestack.external"
+		containerRegistryDNSSuffix   = "azurecr.io"
+		tokenAudience                = "https://management.azurestack.external/"
+	)
+	cs := &api.ContainerService{
+		Properties: &api.Properties{
+			ServicePrincipalProfile: &api.ServicePrincipalProfile{
+				ClientID: "barClientID",
+				Secret:   "bazSecret",
+			},
+			MasterProfile: &api.MasterProfile{
+				Count:     1,
+				DNSPrefix: "blueorange",
+				VMSize:    "Standard_D2_v2",
+			},
+			OrchestratorProfile: &api.OrchestratorProfile{
+				OrchestratorType: api.Kubernetes,
+			},
+			LinuxProfile: &api.LinuxProfile{},
+			CustomCloudProfile: &api.CustomCloudProfile{
+				IdentitySystem:       api.AzureADIdentitySystem,
+				AuthenticationMethod: api.ClientSecretAuthMethod,
+				Environment: &azure.Environment{
+					Name:                         name,
+					ManagementPortalURL:          managementPortalURL,
+					PublishSettingsURL:           publishSettingsURL,
+					ServiceManagementEndpoint:    serviceManagementEndpoint,
+					ResourceManagerEndpoint:      resourceManagerEndpoint,
+					ActiveDirectoryEndpoint:      activeDirectoryEndpoint,
+					GalleryEndpoint:              galleryEndpoint,
+					KeyVaultEndpoint:             keyVaultEndpoint,
+					GraphEndpoint:                graphEndpoint,
+					ServiceBusEndpoint:           serviceBusEndpoint,
+					BatchManagementEndpoint:      batchManagementEndpoint,
+					StorageEndpointSuffix:        storageEndpointSuffix,
+					SQLDatabaseDNSSuffix:         sqlDatabaseDNSSuffix,
+					TrafficManagerDNSSuffix:      trafficManagerDNSSuffix,
+					KeyVaultDNSSuffix:            keyVaultDNSSuffix,
+					ServiceBusEndpointSuffix:     serviceBusEndpointSuffix,
+					ServiceManagementVMDNSSuffix: serviceManagementVMDNSSuffix,
+					ResourceManagerVMDNSSuffix:   resourceManagerVMDNSSuffix,
+					ContainerRegistryDNSSuffix:   containerRegistryDNSSuffix,
+					TokenAudience:                tokenAudience,
+				},
+			},
+			AgentPoolProfiles: []*api.AgentPoolProfile{
+				{
+					Name:   "agentpool1",
+					VMSize: "Standard_D2_v2",
+					Count:  2,
+				},
+			},
+		},
+	}
+
+	cs.SetPropertiesDefaults(false, false)
+
+	if err := writeCustomCloudProfile(cs); err != nil {
+		t.Fatalf("failed to write custom cloud profile: err - %s", err)
+	}
+
+	environmentFilePath := os.Getenv("AZURE_ENVIRONMENT_FILEPATH")
+	if environmentFilePath == "" {
+		t.Fatal("failed to write custom cloud profile: err - AZURE_ENVIRONMENT_FILEPATH is empty")
+	}
+
+	if _, err := os.Stat(environmentFilePath); os.IsNotExist(err) {
+		// path/to/whatever does not exist
+		t.Fatalf("failed to write custom cloud profile: file %s does not exist", environmentFilePath)
+	}
+
+	azurestackenvironment, err := ioutil.ReadFile(environmentFilePath)
+	if err != nil {
+		t.Fatalf("failed to write custom cloud profile: can not read file %s ", environmentFilePath)
+	}
+	azurestackenvironmentStr := string(azurestackenvironment)
+	expectedResult := `{"name":"azurestackcloud","managementPortalURL":"https://management.local.azurestack.external/","publishSettingsURL":"https://management.local.azurestack.external/publishsettings/index","serviceManagementEndpoint":"https://management.azurestackci15.onmicrosoft.com/36f71706-54df-4305-9847-5b038a4cf189","resourceManagerEndpoint":"https://management.local.azurestack.external/","activeDirectoryEndpoint":"https://login.windows.net/","galleryEndpoint":"https://portal.local.azurestack.external=30015/","keyVaultEndpoint":"https://vault.azurestack.external/","graphEndpoint":"https://graph.windows.net/","serviceBusEndpoint":"https://servicebus.azurestack.external/","batchManagementEndpoint":"https://batch.azurestack.external/","storageEndpointSuffix":"core.azurestack.external","sqlDatabaseDNSSuffix":"database.azurestack.external","trafficManagerDNSSuffix":"trafficmanager.cn","keyVaultDNSSuffix":"vault.azurestack.external","serviceBusEndpointSuffix":"servicebus.azurestack.external","serviceManagementVMDNSSuffix":"chinacloudapp.cn","resourceManagerVMDNSSuffix":"cloudapp.azurestack.external","containerRegistryDNSSuffix":"azurecr.io","tokenAudience":"https://management.azurestack.external/"}`
+	if azurestackenvironmentStr != expectedResult {
+		t.Fatalf("failed to write custom cloud profile: expected %s , got %s ", expectedResult, azurestackenvironmentStr)
 	}
 }
