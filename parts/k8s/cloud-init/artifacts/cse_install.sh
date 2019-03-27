@@ -9,7 +9,11 @@ CONTAINERD_DOWNLOADS_DIR="/opt/containerd/downloads"
 UBUNTU_RELEASE=$(lsb_release -r -s)
 
 removeEtcd() {
-    rm -rf /usr/bin/etcd
+    if [[ $OS == $COREOS_OS_NAME ]]; then
+        rm -rf /usr/bin/etcd
+    else
+        rm -rf /opt/bin/etcd
+    fi
 }
 
 removeMoby() {
@@ -23,7 +27,11 @@ installEtcd() {
     else
         retrycmd_get_tarball 120 5 /tmp/etcd-v${ETCD_VERSION}-linux-amd64.tar.gz ${ETCD_DOWNLOAD_URL}/etcd-v${ETCD_VERSION}-linux-amd64.tar.gz || exit $ERR_ETCD_DOWNLOAD_TIMEOUT
         removeEtcd
-        tar -xzvf /tmp/etcd-v${ETCD_VERSION}-linux-amd64.tar.gz -C /usr/bin/ --strip-components=1 || exit $ERR_ETCD_DOWNLOAD_TIMEOUT
+        if [[ $OS == $COREOS_OS_NAME ]]; then
+            tar -xzvf /tmp/etcd-v${ETCD_VERSION}-linux-amd64.tar.gz -C /usr/bin/ --strip-components=1 || exit $ERR_ETCD_DOWNLOAD_TIMEOUT
+        else
+            tar -xzvf /tmp/etcd-v${ETCD_VERSION}-linux-amd64.tar.gz -C /opt/bin/ --strip-components=1 || exit $ERR_ETCD_DOWNLOAD_TIMEOUT
+        fi
     fi
 }
 

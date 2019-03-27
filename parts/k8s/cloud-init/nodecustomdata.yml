@@ -59,7 +59,11 @@ write_files:
   content: !!binary |
     {{CloudInitData "systemConf"}}
 
+{{if .IsCoreOS}}
+- path: /opt/bin/health-monitor.sh
+{{else}}
 - path: /usr/local/bin/health-monitor.sh
+{{end}}
   permissions: "0544"
   encoding: gzip
   owner: root

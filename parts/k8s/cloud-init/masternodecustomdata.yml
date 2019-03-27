@@ -65,8 +65,11 @@ write_files:
   content: !!binary |
     {{CloudInitData "systemConf"}}
 
+{{if .MasterProfile.IsCoreOS}}
+- path: /opt/bin/health-monitor.sh
+{{else}}
 - path: /usr/local/bin/health-monitor.sh
-  permissions: "0544"
+{{end}}  permissions: "0544"
   encoding: gzip
   owner: root
   content: !!binary |
@@ -300,7 +303,11 @@ MASTER_CONTAINER_ADDONS_PLACEHOLDER
     #!/bin/bash
     set -e
   {{if IsMasterVirtualMachineScaleSets}}
+    {{if .MasterProfile.IsCoreOS}}
     PRIVATE_IP=$(hostname -I | cut -d" " -f1)
+    {{else}}
+    PRIVATE_IP=$(hostname -i | cut -d" " -f1)
+    {{end}}
     ETCD_CLIENT_PORT={{WrapAsVariable "masterEtcdClientPort"}}
   {{end}}
 {{if gt .MasterProfile.Count 1}}
@@ -385,8 +392,34 @@ MASTER_CONTAINER_ADDONS_PLACEHOLDER
   permissions: "0644"
   encoding: gzip
   owner: root
+<<<<<<< HEAD:parts/k8s/cloud-init/masternodecustomdata.yml
   content: !!binary |
     {{CloudInitData "etcdSystemdService"}}
+=======
+  content: |
+    [Unit]
+    Description=etcd - highly-available key value store
+    Documentation=https://github.com/coreos/etcd
+    Documentation=man:etcd
+    After=network.target
+    Wants=network-online.target
+    [Service]
+    Environment=DAEMON_ARGS=
+    Environment=ETCD_NAME=%H
+    Environment=ETCD_DATA_DIR=
+    EnvironmentFile=-/etc/default/%p
+    Type=notify
+    User=etcd
+    PermissionsStartOnly=true
+    {{if .MasterProfile.IsCoreOS}}
+    ExecStart=/usr/bin/etcd $DAEMON_ARGS
+    {{else}}
+    ExecStart=/opt/bin/etcd $DAEMON_ARGS
+    {{end}}
+    Restart=always
+    [Install]
+    WantedBy=multi-user.target
+>>>>>>> 025ebbe31... feat: enable coreos:parts/k8s/kubernetesmastercustomdata.yml
 
 - path: /opt/azure/containers/setup-etcd.sh
   permissions: "0744"
@@ -399,7 +432,11 @@ MASTER_CONTAINER_ADDONS_PLACEHOLDER
     MASTER_VM_NAME_BASE=$(hostname | sed "s/.$//")
     MASTER_FIRSTADDR={{WrapAsParameter "firstConsecutiveStaticIP"}}
     MASTER_INDEX=$(hostname | tail -c 2)
+    {{if .MasterProfile.IsCoreOS}}
     PRIVATE_IP=$(hostname -I | cut -d" " -f1)
+    {{else}}
+    PRIVATE_IP=$(hostname -i | cut -d" " -f1)
+    {{end}}
     MASTER_COUNT={{WrapAsVariable "masterCount"}}
     IPADDRESS_COUNT={{WrapAsVariable "masterIpAddressCount"}}
     echo $IPADDRESS_COUNT
