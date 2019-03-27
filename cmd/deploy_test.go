@@ -5,6 +5,7 @@ package cmd
 
 import (
 	"fmt"
+	"path"
 	"strconv"
 	"testing"
 
@@ -36,6 +37,20 @@ const ExampleAPIModelWithDNSPrefix = `{
 	"properties": {
 		  "orchestratorProfile": { "orchestratorType": "Kubernetes", "kubernetesConfig": { "useManagedIdentity": %s, "etcdVersion" : "2.3.8" } },
 	  "masterProfile": { "count": 1, "dnsPrefix": "mytestcluster", "vmSize": "Standard_D2_v2" },
+	  "agentPoolProfiles": [ { "name": "linuxpool1", "count": 2, "vmSize": "Standard_D2_v2", "availabilityProfile": "AvailabilitySet" } ],
+	  "windowsProfile": { "adminUsername": "azureuser", "adminPassword": "replacepassword1234$" },
+	  "linuxProfile": { "adminUsername": "azureuser", "ssh": { "publicKeys": [ { "keyData": "" } ] }
+	  },
+	  "servicePrincipalProfile": { "clientId": "%s", "secret": "%s" }
+	}
+  }
+  `
+
+const ExampleAPIModelWithoutDNSPrefix = `{
+	"apiVersion": "vlabs",
+	"properties": {
+		  "orchestratorProfile": { "orchestratorType": "Kubernetes", "kubernetesConfig": { "useManagedIdentity": %s, "etcdVersion" : "2.3.8" } },
+	  "masterProfile": { "count": 1, "vmSize": "Standard_D2_v2" },
 	  "agentPoolProfiles": [ { "name": "linuxpool1", "count": 2, "vmSize": "Standard_D2_v2", "availabilityProfile": "AvailabilitySet" } ],
 	  "windowsProfile": { "adminUsername": "azureuser", "adminPassword": "replacepassword1234$" },
 	  "linuxProfile": { "adminUsername": "azureuser", "ssh": { "publicKeys": [ { "keyData": "" } ] }
@@ -586,5 +601,42 @@ func TestDeployCmdRun(t *testing.T) {
 	err = d.run()
 	if err != nil {
 		t.Fatalf("Failed to call LoadAPIModel: %s", err)
+	}
+}
+
+func TestOutputDirectoryWithDNSPrefix(t *testing.T) {
+	apiloader := &api.Apiloader{
+		Translator: nil,
+	}
+
+	apimodel := getAPIModel(ExampleAPIModelWithoutDNSPrefix, false, "clientID", "clientSecret")
+	cs, ver, err := apiloader.DeserializeContainerService([]byte(apimodel), false, false, nil)
+	if err != nil {
+		t.Fatalf("unexpected error deserializing the example apimodel: %s", err)
+	}
+
+	d := &deployCmd{
+		apimodelPath:     "./this/is/unused.json",
+		outputDirectory:  "",
+		dnsPrefix:        "dnsPrefix1",
+		forceOverwrite:   true,
+		location:         "westus",
+		containerService: cs,
+		apiVersion:       ver,
+		client:           &armhelpers.MockAKSEngineClient{},
+		authProvider: &mockAuthProvider{
+			authArgs: &authArgs{},
+		},
+	}
+
+	err = autofillApimodel(d)
+	if err != nil {
+		t.Fatalf("unexpected error autofilling the example apimodel: %s", err)
+	}
+
+	defer os.RemoveAll(d.outputDirectory)
+
+	if d.outputDirectory != path.Join("_output", d.dnsPrefix) {
+		t.Fatalf("Calculated output directory should be %s, actual value %s", path.Join("_output", d.dnsPrefix), d.outputDirectory)
 	}
 }
