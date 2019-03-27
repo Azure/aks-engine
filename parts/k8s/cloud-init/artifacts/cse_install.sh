@@ -10,9 +10,9 @@ UBUNTU_RELEASE=$(lsb_release -r -s)
 
 removeEtcd() {
     if [[ $OS == $COREOS_OS_NAME ]]; then
-        rm -rf /usr/bin/etcd
-    else
         rm -rf /opt/bin/etcd
+    else
+        rm -rf /usr/bin/etcd
     fi
 }
 
