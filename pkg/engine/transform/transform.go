@@ -31,6 +31,7 @@ const (
 	createOptionFieldName          = "createOption"
 	tagsFieldName                  = "tags"
 	managedDiskFieldName           = "managedDisk"
+	windowsConfigurationFieldName  = "windowsConfiguration"
 
 	// ARM resource Types
 	nsgResourceType  = "Microsoft.Network/networkSecurityGroups"
@@ -268,7 +269,7 @@ func (t *Transformer) removeCustomData(logger *logrus.Entry, resourceProperties 
 		return ok
 	}
 
-	if osProfile[customDataFieldName] != nil {
+	if osProfile[customDataFieldName] != nil && osProfile[windowsConfigurationFieldName] == nil {
 		delete(osProfile, customDataFieldName)
 	}
 	return ok

@@ -46,6 +46,7 @@ type AgentPoolScaleSet struct {
 	Name         string
 	Sku          compute.Sku
 	Location     string
+	IsWindows    bool
 	VMsToUpgrade []AgentPoolScaleSetVM
 }
 
@@ -143,6 +144,12 @@ func (uc *UpgradeCluster) getClusterNodeStatus(az armhelpers.AKSEngineClient, re
 					Name:     *vmScaleSet.Name,
 					Sku:      *vmScaleSet.Sku,
 					Location: *vmScaleSet.Location,
+				}
+				if vmScaleSet.VirtualMachineProfile != nil &&
+					vmScaleSet.VirtualMachineProfile.OsProfile != nil &&
+					vmScaleSet.VirtualMachineProfile.OsProfile.WindowsConfiguration != nil {
+					scaleSetToUpgrade.IsWindows = true
+					uc.Logger.Infof("Set isWindows flag for vmss %s.", *vmScaleSet.Name)
 				}
 				for _, vm := range vmScaleSetVMsPage.Values() {
 					currentVersion := uc.getNodeVersion(kubeClient, *vm.Name, vm.Tags)
