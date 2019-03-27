@@ -69,7 +69,8 @@ write_files:
 - path: /opt/bin/health-monitor.sh
 {{else}}
 - path: /usr/local/bin/health-monitor.sh
-{{end}}  permissions: "0544"
+{{end}}  
+  permissions: "0544"
   encoding: gzip
   owner: root
   content: !!binary |
