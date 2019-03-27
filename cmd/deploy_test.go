@@ -46,6 +46,20 @@ const ExampleAPIModelWithDNSPrefix = `{
   }
   `
 
+const ExampleAPIModelWithoutDNSPrefix = `{
+	"apiVersion": "vlabs",
+	"properties": {
+		  "orchestratorProfile": { "orchestratorType": "Kubernetes", "kubernetesConfig": { "useManagedIdentity": %s, "etcdVersion" : "2.3.8" } },
+	  "masterProfile": { "count": 1, "vmSize": "Standard_D2_v2" },
+	  "agentPoolProfiles": [ { "name": "linuxpool1", "count": 2, "vmSize": "Standard_D2_v2", "availabilityProfile": "AvailabilitySet" } ],
+	  "windowsProfile": { "adminUsername": "azureuser", "adminPassword": "replacepassword1234$" },
+	  "linuxProfile": { "adminUsername": "azureuser", "ssh": { "publicKeys": [ { "keyData": "" } ] }
+	  },
+	  "servicePrincipalProfile": { "clientId": "%s", "secret": "%s" }
+	}
+  }
+  `
+
 const ExampleAPIModelWithoutServicePrincipalProfile = `{
 	"apiVersion": "vlabs",
 	"properties": {
@@ -558,12 +572,28 @@ func TestDeployCmdRun(t *testing.T) {
 	}
 
 	r := &cobra.Command{}
-	if err := setupFakeAuthArgs(d, r); err != nil {
-		t.Fatalf("Failed to setup mock authentication args for loadApiModel: %s", err)
-	}
-	d.apimodelPath = "../pkg/engine/testdata/simple/kubernetes.json"
+	f := r.Flags()
 
-	err := d.loadAPIModel(r, []string{})
+	addAuthFlags(d.getAuthArgs(), f)
+
+	fakeRawSubscriptionID := "6dc93fae-9a76-421f-bbe5-cc6460ea81cb"
+	fakeSubscriptionID, err := uuid.FromString(fakeRawSubscriptionID)
+	fakeClientID := "b829b379-ca1f-4f1d-91a2-0d26b244680d"
+	fakeClientSecret := "0se43bie-3zs5-303e-aav5-dcf231vb82ds"
+	if err != nil {
+		t.Fatalf("Invalid SubscriptionId in Test: %s", err)
+	}
+
+	d.apimodelPath = "../pkg/engine/testdata/simple/kubernetes.json"
+	d.getAuthArgs().SubscriptionID = fakeSubscriptionID
+	d.getAuthArgs().rawSubscriptionID = fakeRawSubscriptionID
+	d.getAuthArgs().rawClientID = fakeClientID
+	d.getAuthArgs().ClientSecret = fakeClientSecret
+	if err != nil {
+		t.Fatalf("Invalid SubscriptionId in Test: %s", err)
+	}
+
+	err = d.loadAPIModel(r, []string{})
 	if err != nil {
 		t.Fatalf("Failed to call LoadAPIModel: %s", err)
 	}
@@ -575,57 +605,38 @@ func TestDeployCmdRun(t *testing.T) {
 }
 
 func TestOutputDirectoryWithDNSPrefix(t *testing.T) {
+	apiloader := &api.Apiloader{
+		Translator: nil,
+	}
+
+	apimodel := getAPIModel(ExampleAPIModelWithoutDNSPrefix, false, "clientID", "clientSecret")
+	cs, ver, err := apiloader.DeserializeContainerService([]byte(apimodel), false, false, nil)
+	if err != nil {
+		t.Fatalf("unexpected error deserializing the example apimodel: %s", err)
+	}
+
 	d := &deployCmd{
-		apimodelPath:    "../pkg/engine/testdata/emptyDnsPrefix/kubernetes.json",
-		outputDirectory: "",
-		dnsPrefix:       "dnsPrefix1",
-		forceOverwrite:  true,
-		location:        "westus",
-		client:          &armhelpers.MockAKSEngineClient{},
+		apimodelPath:     "./this/is/unused.json",
+		outputDirectory:  "",
+		dnsPrefix:        "dnsPrefix1",
+		forceOverwrite:   true,
+		location:         "westus",
+		containerService: cs,
+		apiVersion:       ver,
+		client:           &armhelpers.MockAKSEngineClient{},
 		authProvider: &mockAuthProvider{
 			authArgs: &authArgs{},
 		},
 	}
 
-	r := &cobra.Command{}
-	if err := setupFakeAuthArgs(d, r); err != nil {
-		t.Fatalf("Failed to setup mock authentication args for loadApiModel: %s", err)
+	err = autofillApimodel(d)
+	if err != nil {
+		t.Fatalf("unexpected error autofilling the example apimodel: %s", err)
 	}
 
-	err := d.mergeAPIModel()
-	if err != nil {
-		t.Fatalf("unexpected error calling mergeAPIModel: %s", err)
-	}
-
-	err = d.loadAPIModel(r, []string{})
-	if err != nil {
-		t.Fatalf("Failed to call LoadAPIModel: %s", err)
-	}
+	defer os.RemoveAll(d.outputDirectory)
 
 	if d.outputDirectory != path.Join("_output", d.dnsPrefix) {
 		t.Fatalf("Calculated output directory should be %s, actual value %s", path.Join("_output", d.dnsPrefix), d.outputDirectory)
 	}
-}
-
-func setupFakeAuthArgs(src *deployCmd, dst *cobra.Command) error {
-	f := dst.Flags()
-
-	addAuthFlags(src.getAuthArgs(), f)
-
-	fakeRawSubscriptionID := "6dc93fae-9a76-421f-bbe5-cc6460ea81cb"
-	fakeSubscriptionID, err := uuid.FromString(fakeRawSubscriptionID)
-	fakeClientID := "b829b379-ca1f-4f1d-91a2-0d26b244680d"
-	fakeClientSecret := "0se43bie-3zs5-303e-aav5-dcf231vb82ds"
-	if err != nil {
-		return err
-	}
-
-	src.getAuthArgs().SubscriptionID = fakeSubscriptionID
-	src.getAuthArgs().rawSubscriptionID = fakeRawSubscriptionID
-	src.getAuthArgs().rawClientID = fakeClientID
-	src.getAuthArgs().ClientSecret = fakeClientSecret
-	if err != nil {
-		return err
-	}
-	return nil
 }
