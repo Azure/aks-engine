@@ -6,7 +6,6 @@ package cmd
 import (
 	"context"
 	"fmt"
-	"io"
 	"os"
 	"path"
 	"time"
@@ -148,13 +147,7 @@ func (uc *upgradeCmd) loadCluster(cmd *cobra.Command) error {
 		return errors.Wrap(err, "error parsing the api model")
 	}
 
-	templatePath := path.Join(uc.deploymentDirectory, "azuredeploy.json")
-	armTemplateHandle, err := os.Open(templatePath)
-	if err != nil {
-		return errors.Wrap(err, "error reading ARM file")
-	}
-	defer armTemplateHandle.Close()
-	err = uc.initializeFromLocalState(armTemplateHandle)
+	err = uc.initialize()
 	if err != nil {
 		return errors.Wrap(err, "error validating the api model")
 	}
@@ -181,7 +174,7 @@ func (uc *upgradeCmd) validateTargetVersion() error {
 	return nil
 }
 
-func (uc *upgradeCmd) initializeFromLocalState(armTemplateHandle io.Reader) error {
+func (uc *upgradeCmd) initialize() error {
 	if uc.containerService.Location == "" {
 		uc.containerService.Location = uc.location
 	} else if uc.containerService.Location != uc.location {
