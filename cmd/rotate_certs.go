@@ -8,6 +8,7 @@ import (
 	"context"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"os"
 	"strconv"
 	"strings"
@@ -111,15 +112,14 @@ func (rcc *rotateCertsCmd) run(cmd *cobra.Command, args []string) error {
 		return errors.Wrap(err, "error parsing the api model")
 	}
 
-	// reset the certificateProfile and use the exisiting certificate generation code to generate new certificates.
+	rcc.getClustertNodes()
 
+	// reset the certificateProfile and use the exisiting certificate generation code to generate new certificates.
 	rcc.containerService.Properties.CertificateProfile = &api.CertificateProfile{}
 	certsGenerated, _, err := rcc.containerService.SetDefaultCerts()
 	if !certsGenerated || err != nil {
 		return errors.Wrap(err, "error generating new certificates")
 	}
-
-	rcc.getClustertNodes()
 
 	rcc.rotateEtcd()
 
@@ -168,14 +168,13 @@ func (rcc *rotateCertsCmd) getClusterNodes() error {
 
 // Rotate etcd CA and certificates in all of the master nodes.
 func (rcc *rotateCertsCmd) rotateEtcd() {
-	masterCount := rcc.containerService.Properties.MasterProfile.Count
-	caPrivateKeyPath := "/etc/kubernetes/certs/ca.key"
-	caCertificatePath := "/etc/kubernetes/certs/ca.crt"
-	etcdServerPrivateKeyPath := "/etc/kubernetes/certs/etcdserver.key"
-	etcdServerCertificatePath := "/etc/kubernetes/certs/etcdserver.crt"
-	etcdClientPrivateKeyPath := "/etc/kubernetes/certs/etcdclient.key"
-	etcdClientCertificatePath := "/etc/kubernetes/certs/etcdclient.crt"
-	// ssh on first master
+	caPrivateKeyCmd := "echo " + rcc.containerService.Properties.CertificateProfile.CaPrivateKey + " | base64 --decode > /etc/kubernetes/certs/ca.key"
+	caCertificateCmd := "echo " + rcc.containerService.Properties.CertificateProfile.CaCertificate + " | base64 --decode > /etc/kubernetes/certs/ca.crt"
+	etcdServerPrivateKeyCmd := "echo " + rcc.containerService.Properties.CertificateProfile.EtcdServerPrivateKey + " | base64 --decode > /etc/kubernetes/certs/etcdserver.key"
+	etcdServerCertificateCmd := "echo " + rcc.containerService.Properties.CertificateProfile.EtcdServerCertificate + " | base64 --decode > /etc/kubernetes/certs/etcdserver.crt"
+	etcdClientPrivateKeyCmd := "echo " + rcc.containerService.Properties.CertificateProfile.EtcdClientPrivateKey + " | base64 --decode > /etc/kubernetes/certs/etcdclient.key"
+	etcdClientCertificateCmd := "echo " + rcc.containerService.Properties.CertificateProfile.EtcdClientCertificate + " | base64 --decode > /etc/kubernetes/certs/etcdclient.crt"
+
 	sshConfig := &ssh.ClientConfig{
 		User: "azureuser",
 		Auth: []ssh.AuthMethod{
@@ -183,10 +182,23 @@ func (rcc *rotateCertsCmd) rotateEtcd() {
 		},
 	}
 
-	for i := 0; i < masterCount; i++ {
-		etcdPeerPrivateKeyPath := "/etc/kubernetes/certs/etcdpeer" + strconv.Itoa(i) + ".key"
-		etcdPeerCertificatePath := "/etc/kubernetes/certs/etcdpeer" + strconv.Itoa(i) + ".crt"
-		out, err := executeCmd("ls /etc/kubernetes", rcc.masterFQDN, hostname, "22", sshConfig)
+	for i, host := range rcc.masterNodes {
+		etcdPeerPrivateKeyCmd := "echo " + rcc.containerService.Properties.CertificateProfile.EtcdPeerPrivateKey + " | base64 --decode > /etc/kubernetes/certs/etcdpeer" + strconv.Itoa(i) + ".key"
+		etcdPeerCertificateCmd := "echo " + rcc.containerService.Properties.CertificateProfile.EtcdPeerCertificate + " | base64 --decode > /etc/kubernetes/certs/etcdpeer" + strconv.Itoa(i) + ".crt"
+
+		for _, cmd := range []string{caPrivateKeyCmd, caCertificateCmd, etcdServerPrivateKeyCmd, etcdServerCertificateCmd, etcdClientPrivateKeyCmd, etcdClientCertificateCmd, etcdPeerPrivateKeyCmd, etcdPeerCertificateCmd} {
+			out, err := executeCmd(cmd, rcc.masterFQDN, host.Name, "22", sshConfig)
+			if err != nil {
+				log.Printf("Command %s output: %s\n", cmd, out)
+				return errors.Wrap(err, "failed replacing certificate file")
+			}
+		}
+
+		out, err := executeCmd("sudo systemctl restart etcd", rcc.masterFQDN, host.Name, "22", sshConfig)
+		if err != nil {
+			log.Printf("Command %s output: %s\n", cmd, out)
+			return errors.Wrap(err, "failed to restart etcd")
+		}
 	}
 
 }
