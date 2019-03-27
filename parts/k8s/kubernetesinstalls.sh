@@ -58,7 +58,7 @@ installGPUDrivers() {
       set -e -o pipefail
       cd "${tmpDir}"
 
-      retrycmd_if_failure 30 5 3600 apt-get download nvidia-docker2="${NVIDIA_DOCKER_VERSION}+docker18.09.2-1"
+      retrycmd_if_failure 30 5 3600 apt-get download nvidia-docker2="${NVIDIA_DOCKER_VERSION}+docker18.09.2-1" || exit $ERR_GPU_DRIVERS_INSTALL_TIMEOUT
 
       dpkg-deb -R ./nvidia-docker2*.deb "${tmpDir}/pkg"
       cp -r ${tmpDir}/pkg/usr/* /usr/

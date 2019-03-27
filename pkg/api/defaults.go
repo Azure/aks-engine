@@ -466,9 +466,12 @@ func (p *Properties) setAgentProfileDefaults(isUpgrade, isScale bool) {
 					profile.Distro = Ubuntu
 				}
 				// Ensure distro is set properly for N Series SKUs, because
-				// (1) At present, "aks-docker-engine" and "ubuntu" are the only working distro base for running GPU workloads on N Series SKUs
-				// (2) Previous versions of aks-engine had working implementations using the "aks" distro value,
-				//     so we need to hard override it in order to produce a working cluster in upgrade/scale contexts
+				// Previous versions of aks-engine required the docker-engine distro for N series vms,
+				// so we need to hard override it in order to produce a working cluster in upgrade/scale contexts
+			} else if p.OrchestratorProfile.IsKubernetes() && (isUpgrade || isScale) && profile.IsNSeriesSKU() {
+				if profile.Distro == AKSDockerEngine {
+					profile.Distro = AKS
+				}
 			}
 		}
 
