@@ -37,60 +37,50 @@ func TestUpgradeCommandShouldBeValidated(t *testing.T) {
 	}{
 		{
 			uc: &upgradeCmd{
-				resourceGroupName:   "",
-				deploymentDirectory: "_output/test",
-				upgradeVersion:      "1.8.9",
-				location:            "centralus",
-				timeoutInMinutes:    60,
+				resourceGroupName: "",
+				apiModelPath:      "./not/used",
+				upgradeVersion:    "1.8.9",
+				location:          "centralus",
+				timeoutInMinutes:  60,
 			},
 			expectedErr: errors.New("--resource-group must be specified"),
 		},
 		{
 			uc: &upgradeCmd{
-				resourceGroupName:   "test",
-				deploymentDirectory: "_output/test",
-				upgradeVersion:      "1.8.9",
-				location:            "",
-				timeoutInMinutes:    60,
+				resourceGroupName: "test",
+				apiModelPath:      "./not/used",
+				upgradeVersion:    "1.8.9",
+				location:          "",
+				timeoutInMinutes:  60,
 			},
 			expectedErr: errors.New("--location must be specified"),
 		},
 		{
 			uc: &upgradeCmd{
-				resourceGroupName:   "test",
-				deploymentDirectory: "_output/test",
-				upgradeVersion:      "",
-				location:            "southcentralus",
-				timeoutInMinutes:    60,
+				resourceGroupName: "test",
+				apiModelPath:      "./not/used",
+				upgradeVersion:    "",
+				location:          "southcentralus",
+				timeoutInMinutes:  60,
 			},
 			expectedErr: errors.New("--upgrade-version must be specified"),
 		},
 		{
 			uc: &upgradeCmd{
-				resourceGroupName:   "test",
-				deploymentDirectory: "",
-				upgradeVersion:      "1.9.0",
-				location:            "southcentralus",
-				timeoutInMinutes:    60,
+				resourceGroupName: "test",
+				apiModelPath:      "",
+				upgradeVersion:    "1.9.0",
+				location:          "southcentralus",
+				timeoutInMinutes:  60,
 			},
-			expectedErr: errors.New("--deployment-dir must be specified"),
+			expectedErr: errors.New("--api-model must be specified"),
 		},
 		{
 			uc: &upgradeCmd{
-				resourceGroupName:   "test",
-				deploymentDirectory: "",
-				upgradeVersion:      "1.9.0",
-				location:            "southcentralus",
-				timeoutInMinutes:    60,
-			},
-			expectedErr: errors.New("--deployment-dir must be specified"),
-		},
-		{
-			uc: &upgradeCmd{
-				resourceGroupName:   "test",
-				deploymentDirectory: "_output/mydir",
-				upgradeVersion:      "1.9.0",
-				location:            "southcentralus",
+				resourceGroupName: "test",
+				apiModelPath:      "./not/used",
+				upgradeVersion:    "1.9.0",
+				location:          "southcentralus",
 			},
 			expectedErr: nil,
 		},
@@ -116,7 +106,7 @@ func TestCreateUpgradeCommand(t *testing.T) {
 	g.Expect(command.Long).Should(Equal(upgradeLongDescription))
 	g.Expect(command.Flags().Lookup("location")).NotTo(BeNil())
 	g.Expect(command.Flags().Lookup("resource-group")).NotTo(BeNil())
-	g.Expect(command.Flags().Lookup("deployment-dir")).NotTo(BeNil())
+	g.Expect(command.Flags().Lookup("api-model")).NotTo(BeNil())
 	g.Expect(command.Flags().Lookup("upgrade-version")).NotTo(BeNil())
 
 	command.SetArgs([]string{})
@@ -131,11 +121,11 @@ func TestUpgradeShouldFailForSameVersion(t *testing.T) {
 	})
 	g := NewGomegaWithT(t)
 	upgradeCmd := &upgradeCmd{
-		resourceGroupName:   "rg",
-		deploymentDirectory: "_output/test",
-		upgradeVersion:      "1.10.13",
-		location:            "centralus",
-		timeoutInMinutes:    60,
+		resourceGroupName: "rg",
+		apiModelPath:      "./not/used",
+		upgradeVersion:    "1.10.13",
+		location:          "centralus",
+		timeoutInMinutes:  60,
 
 		client: &armhelpers.MockAKSEngineClient{},
 	}
@@ -156,11 +146,11 @@ func TestUpgradeShouldFailForInvalidUpgradePath(t *testing.T) {
 	})
 	g := NewGomegaWithT(t)
 	upgradeCmd := &upgradeCmd{
-		resourceGroupName:   "rg",
-		deploymentDirectory: "_output/test",
-		upgradeVersion:      "1.10.13",
-		location:            "centralus",
-		timeoutInMinutes:    60,
+		resourceGroupName: "rg",
+		apiModelPath:      "./not/used",
+		upgradeVersion:    "1.10.13",
+		location:          "centralus",
+		timeoutInMinutes:  60,
 
 		client: &armhelpers.MockAKSEngineClient{},
 	}
@@ -180,11 +170,11 @@ func TestUpgradeShouldSuceedForValidUpgradePath(t *testing.T) {
 	})
 	g := NewGomegaWithT(t)
 	upgradeCmd := &upgradeCmd{
-		resourceGroupName:   "rg",
-		deploymentDirectory: "_output/test",
-		upgradeVersion:      "1.10.13",
-		location:            "centralus",
-		timeoutInMinutes:    60,
+		resourceGroupName: "rg",
+		apiModelPath:      "./not/used",
+		upgradeVersion:    "1.10.13",
+		location:          "centralus",
+		timeoutInMinutes:  60,
 
 		client: &armhelpers.MockAKSEngineClient{},
 	}
@@ -200,13 +190,13 @@ func TestUpgradeShouldSuceedForValidUpgradePath(t *testing.T) {
 func TestUpgradeFailWithPathWhenAzureDeployJsonIsInvalid(t *testing.T) {
 	g := NewGomegaWithT(t)
 	upgradeCmd := &upgradeCmd{
-		resourceGroupName:   "rg",
-		deploymentDirectory: "_output/myspecialtestfolder",
-		upgradeVersion:      "1.13.3",
-		location:            "centralus",
-		timeoutInMinutes:    60,
-		force:               true,
-		client:              &armhelpers.MockAKSEngineClient{},
+		resourceGroupName: "rg",
+		apiModelPath:      "./not/used",
+		upgradeVersion:    "1.13.3",
+		location:          "centralus",
+		timeoutInMinutes:  60,
+		force:             true,
+		client:            &armhelpers.MockAKSEngineClient{},
 	}
 
 	containerServiceMock := api.CreateMockContainerService("testcluster", "1.13.2", 3, 2, false)
@@ -222,11 +212,11 @@ func TestUpgradeForceSameVersionShouldSucceed(t *testing.T) {
 	})
 	g := NewGomegaWithT(t)
 	upgradeCmd := &upgradeCmd{
-		resourceGroupName:   "rg",
-		deploymentDirectory: "_output/test",
-		upgradeVersion:      "1.10.13",
-		location:            "centralus",
-		timeoutInMinutes:    60,
+		resourceGroupName: "rg",
+		apiModelPath:      "./not/used",
+		upgradeVersion:    "1.10.13",
+		location:          "centralus",
+		timeoutInMinutes:  60,
 
 		client: &armhelpers.MockAKSEngineClient{},
 	}
@@ -247,11 +237,11 @@ func TestUpgradeForceDowngradeShouldSetVersionOnContainerService(t *testing.T) {
 	})
 	g := NewGomegaWithT(t)
 	upgradeCmd := &upgradeCmd{
-		resourceGroupName:   "rg",
-		deploymentDirectory: "_output/test",
-		upgradeVersion:      "1.10.12",
-		location:            "centralus",
-		timeoutInMinutes:    60,
+		resourceGroupName: "rg",
+		apiModelPath:      "./not/used",
+		upgradeVersion:    "1.10.12",
+		location:          "centralus",
+		timeoutInMinutes:  60,
 
 		client: &armhelpers.MockAKSEngineClient{},
 	}

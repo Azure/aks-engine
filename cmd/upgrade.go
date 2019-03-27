@@ -7,7 +7,7 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"path"
+	"path/filepath"
 	"time"
 
 	"github.com/Azure/aks-engine/pkg/api"
@@ -33,12 +33,12 @@ type upgradeCmd struct {
 	authProvider
 
 	// user input
-	resourceGroupName   string
-	deploymentDirectory string
-	upgradeVersion      string
-	location            string
-	timeoutInMinutes    int
-	force               bool
+	resourceGroupName string
+	apiModelPath      string
+	upgradeVersion    string
+	location          string
+	timeoutInMinutes  int
+	force             bool
 
 	// derived
 	containerService    *api.ContainerService
@@ -65,7 +65,7 @@ func newUpgradeCmd() *cobra.Command {
 	f := upgradeCmd.Flags()
 	f.StringVarP(&uc.location, "location", "l", "", "location the cluster is deployed in (required)")
 	f.StringVarP(&uc.resourceGroupName, "resource-group", "g", "", "the resource group where the cluster is deployed (required)")
-	f.StringVar(&uc.deploymentDirectory, "deployment-dir", "", "the location of the output from `generate` (required)")
+	f.StringVarP(&uc.apiModelPath, "api-model", "m", "", "path to the apimodel file")
 	f.StringVarP(&uc.upgradeVersion, "upgrade-version", "k", "", "desired kubernetes version (required)")
 	f.IntVar(&uc.timeoutInMinutes, "vm-timeout", -1, "how long to wait for each vm to be upgraded in minutes")
 	f.BoolVarP(&uc.force, "force", "f", false, "force upgrading the cluster to desired version. Allows same version upgrades and downgrades.")
@@ -103,10 +103,11 @@ func (uc *upgradeCmd) validate(cmd *cobra.Command) error {
 		return errors.New("--upgrade-version must be specified")
 	}
 
-	if uc.deploymentDirectory == "" {
+	if uc.apiModelPath == "" {
 		cmd.Usage()
-		return errors.New("--deployment-dir must be specified")
+		return errors.New("--api-model must be specified")
 	}
+
 	return nil
 }
 
@@ -117,10 +118,9 @@ func (uc *upgradeCmd) loadCluster(cmd *cobra.Command) error {
 	defer cancel()
 
 	// Load apimodel from the deployment directory.
-	apiModelPath := path.Join(uc.deploymentDirectory, "apimodel.json")
 
-	if _, err = os.Stat(apiModelPath); os.IsNotExist(err) {
-		return errors.Errorf("specified api model does not exist (%s)", apiModelPath)
+	if _, err = os.Stat(uc.apiModelPath); os.IsNotExist(err) {
+		return errors.Errorf("specified api model does not exist (%s)", uc.apiModelPath)
 	}
 
 	apiloader := &api.Apiloader{
@@ -130,7 +130,7 @@ func (uc *upgradeCmd) loadCluster(cmd *cobra.Command) error {
 	}
 
 	// Load the container service.
-	uc.containerService, uc.apiVersion, err = apiloader.LoadContainerServiceFromFile(apiModelPath, true, true, nil)
+	uc.containerService, uc.apiVersion, err = apiloader.LoadContainerServiceFromFile(uc.apiModelPath, true, true, nil)
 	if err != nil {
 		return errors.Wrap(err, "error parsing the api model")
 	}
@@ -262,5 +262,5 @@ func (uc *upgradeCmd) run(cmd *cobra.Command, args []string) error {
 		},
 	}
 
-	return f.SaveFile(uc.deploymentDirectory, "apimodel.json", b)
+	return f.SaveFile(filepath.Dir(uc.apiModelPath), apiModelFilename, b)
 }

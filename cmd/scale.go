@@ -7,10 +7,9 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"math/rand"
 	"os"
-	"path"
+	"path/filepath"
 	"sort"
 	"strings"
 	"time"
@@ -34,7 +33,6 @@ type scaleCmd struct {
 
 	// user input
 	resourceGroupName    string
-	deploymentDirectory  string
 	newDesiredAgentCount int
 	location             string
 	agentPoolToScale     string
@@ -73,7 +71,7 @@ func newScaleCmd() *cobra.Command {
 	f := scaleCmd.Flags()
 	f.StringVarP(&sc.location, "location", "l", "", "location the cluster is deployed in")
 	f.StringVarP(&sc.resourceGroupName, "resource-group", "g", "", "the resource group where the cluster is deployed")
-	f.StringVar(&sc.deploymentDirectory, "deployment-dir", "", "the location of the output from `generate`")
+	f.StringVarP(&sc.apiModelPath, "api-model", "m", "", "path to the apimodel file")
 	f.IntVarP(&sc.newDesiredAgentCount, "new-node-count", "c", 0, "desired number of nodes")
 	f.StringVar(&sc.agentPoolToScale, "node-pool", "", "node pool to scale")
 	f.StringVar(&sc.masterFQDN, "master-FQDN", "", "FQDN for the master load balancer, Needed to scale down Kubernetes agent pools")
@@ -109,9 +107,9 @@ func (sc *scaleCmd) validate(cmd *cobra.Command) error {
 		return errors.New("--new-node-count must be specified")
 	}
 
-	if sc.deploymentDirectory == "" {
+	if sc.apiModelPath == "" {
 		cmd.Usage()
-		return errors.New("--deployment-dir must be specified")
+		return errors.New("--api-model must be specified")
 	}
 
 	return nil
@@ -123,9 +121,6 @@ func (sc *scaleCmd) load(cmd *cobra.Command) error {
 
 	ctx, cancel := context.WithTimeout(context.Background(), armhelpers.DefaultARMOperationTimeout)
 	defer cancel()
-
-	// load apimodel from the deployment directory
-	sc.apiModelPath = path.Join(sc.deploymentDirectory, apiModelFilename)
 
 	if _, err = os.Stat(sc.apiModelPath); os.IsNotExist(err) {
 		return errors.Errorf("specified api model does not exist (%s)", sc.apiModelPath)
@@ -188,21 +183,6 @@ func (sc *scaleCmd) load(cmd *cobra.Command) error {
 		if agentPoolIndex == -1 {
 			return errors.Errorf("node pool %s was not found in the deployed api model", sc.agentPoolToScale)
 		}
-	}
-
-	templatePath := path.Join(sc.deploymentDirectory, "azuredeploy.json")
-
-	var contents []byte
-	contents, err = ioutil.ReadFile(templatePath)
-	if err != nil {
-		return errors.Wrap(err, "error while trying to load the ARM template JSON file")
-	}
-
-	var template interface{}
-
-	err = json.Unmarshal(contents, &template)
-	if err != nil {
-		return errors.Wrap(err, "error while trying to unmarshal the ARM template")
 	}
 
 	//allows to identify VMs in the resource group that belong to this cluster.
@@ -434,7 +414,7 @@ func (sc *scaleCmd) saveAPIModel() error {
 		},
 	}
 
-	return f.SaveFile(sc.deploymentDirectory, apiModelFilename, b)
+	return f.SaveFile(filepath.Dir(sc.apiModelPath), apiModelFilename, b)
 }
 
 func (sc *scaleCmd) vmInAgentPool(vmName string, tags map[string]*string) bool {
