@@ -421,5 +421,4 @@ configGPUDrivers() {
 ensureGPUDrivers() {
     configGPUDrivers
     systemctlEnableAndStart nvidia-modprobe || exit $ERR_GPU_DRIVERS_START_FAIL
-    retrycmd_if_failure 30 1 120 systemctl restart kubelet || exit $ERR_GPU_DRIVERS_START_FAIL
 }

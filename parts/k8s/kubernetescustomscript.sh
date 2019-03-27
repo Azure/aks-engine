@@ -75,9 +75,7 @@ if [[ "$CONTAINER_RUNTIME" == "clear-containers" ]] || [[ "$CONTAINER_RUNTIME" =
     installContainerd
 fi
 if [[ "${GPU_NODE}" = true ]]; then
-    if $FULL_INSTALL_REQUIRED; then
-        installGPUDrivers
-    fi
+    installGPUDrivers
     ensureGPUDrivers
 fi
 installKubeletAndKubectl

@@ -54,8 +54,6 @@ else
     MOBY_VERSION="3.0.4"
     installMoby
     echo "  - moby v${MOBY_VERSION}" >> ${RELEASE_NOTES_FILEPATH}
-    installGPUDrivers
-    echo "  - nvidia-docker2 nvidia-container-runtime" >> ${RELEASE_NOTES_FILEPATH}
 fi
 
 installClearContainersRuntime
