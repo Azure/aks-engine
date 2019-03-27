@@ -1,7 +1,11 @@
 #!/bin/bash
 NODE_INDEX=$(hostname | tail -c 2)
 NODE_NAME=$(hostname)
-PRIVATE_IP=$(hostname -I | cut -d' ' -f1)
+if [[ $OS == $COREOS_OS_NAME ]]; then
+    PRIVATE_IP=$(hostname -i | cut -d' ' -f1)
+else
+    PRIVATE_IP=$(hostname -i | cut -d' ' -f1)
+fi
 ETCD_PEER_URL="https://${PRIVATE_IP}:2380"
 ETCD_CLIENT_URL="https://${PRIVATE_IP}:2379"
 
