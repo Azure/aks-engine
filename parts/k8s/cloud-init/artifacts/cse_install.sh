@@ -28,9 +28,9 @@ installEtcd() {
         retrycmd_get_tarball 120 5 /tmp/etcd-v${ETCD_VERSION}-linux-amd64.tar.gz ${ETCD_DOWNLOAD_URL}/etcd-v${ETCD_VERSION}-linux-amd64.tar.gz || exit $ERR_ETCD_DOWNLOAD_TIMEOUT
         removeEtcd
         if [[ $OS == $COREOS_OS_NAME ]]; then
-            tar -xzvf /tmp/etcd-v${ETCD_VERSION}-linux-amd64.tar.gz -C /usr/bin/ --strip-components=1 || exit $ERR_ETCD_DOWNLOAD_TIMEOUT
-        else
             tar -xzvf /tmp/etcd-v${ETCD_VERSION}-linux-amd64.tar.gz -C /opt/bin/ --strip-components=1 || exit $ERR_ETCD_DOWNLOAD_TIMEOUT
+        else
+            tar -xzvf /tmp/etcd-v${ETCD_VERSION}-linux-amd64.tar.gz -C /usr/bin/ --strip-components=1 || exit $ERR_ETCD_DOWNLOAD_TIMEOUT
         fi
     fi
 }
