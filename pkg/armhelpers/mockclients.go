@@ -67,6 +67,7 @@ type MockStorageClient struct {
 //MockKubernetesClient mock implementation of KubernetesClient
 type MockKubernetesClient struct {
 	FailListPods          bool
+	FailListNodes         bool
 	FailGetNode           bool
 	UpdateNodeFunc        func(*v1.Node) (*v1.Node, error)
 	FailUpdateNode        bool
@@ -275,6 +276,23 @@ func (mkc *MockKubernetesClient) ListPods(node *v1.Node) (*v1.PodList, error) {
 		return mkc.PodsList, nil
 	}
 	return &v1.PodList{}, nil
+}
+
+// ListNodes returns a list of Nodes registered in the api server
+func (mkc *MockKubernetesClient) ListNodes() (*v1.NodeList, error) {
+	if mkc.FailListNodes {
+		return nil, errors.New("ListNodes failed")
+	}
+	node := &v1.Node{}
+	node.Status.Conditions = append(node.Status.Conditions, v1.NodeCondition{Type: v1.NodeReady, Status: v1.ConditionTrue})
+	node.Status.NodeInfo.KubeletVersion = "1.9.10"
+	node2 := &v1.Node{}
+	node2.Status.Conditions = append(node2.Status.Conditions, v1.NodeCondition{Type: v1.NodeOutOfDisk, Status: v1.ConditionTrue})
+	node2.Status.NodeInfo.KubeletVersion = "1.9.9"
+	nodeList := &v1.NodeList{}
+	nodeList.Items = append(nodeList.Items, *node)
+	nodeList.Items = append(nodeList.Items, *node2)
+	return nodeList, nil
 }
 
 //GetNode returns details about node with passed in name

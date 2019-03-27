@@ -181,20 +181,22 @@ type AKSStorageClient interface {
 
 // KubernetesClient interface models client for interacting with kubernetes api server
 type KubernetesClient interface {
-	//ListPods returns all Pods running on the passed in node
+	// ListPods returns all Pods running on the passed in node
 	ListPods(node *v1.Node) (*v1.PodList, error)
-	//GetNode returns details about node with passed in name
+	// ListNodes returns a list of Nodes registered in the api server
+	ListNodes() (*v1.NodeList, error)
+	// GetNode returns details about node with passed in name
 	GetNode(name string) (*v1.Node, error)
-	//UpdateNode updates the node in the api server with the passed in info
+	// UpdateNode updates the node in the api server with the passed in info
 	UpdateNode(node *v1.Node) (*v1.Node, error)
-	//DeleteNode deregisters node in the api server
+	// DeleteNode deregisters node in the api server
 	DeleteNode(name string) error
-	//SupportEviction queries the api server to discover if it supports eviction, and returns supported type if it is supported
+	// SupportEviction queries the api server to discover if it supports eviction, and returns supported type if it is supported
 	SupportEviction() (string, error)
-	//DeletePod deletes the passed in pod
+	// DeletePod deletes the passed in pod
 	DeletePod(pod *v1.Pod) error
-	//EvictPod evicts the passed in pod using the passed in api version
+	// EvictPod evicts the passed in pod using the passed in api version
 	EvictPod(pod *v1.Pod, policyGroupVersion string) error
-	//WaitForDelete waits until all pods are deleted. Returns all pods not deleted and an error on failure
+	// WaitForDelete waits until all pods are deleted. Returns all pods not deleted and an error on failure
 	WaitForDelete(logger *log.Entry, pods []v1.Pod, usingEviction bool) ([]v1.Pod, error)
 }
