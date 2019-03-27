@@ -63,6 +63,10 @@ else
     FULL_INSTALL_REQUIRED=true
 fi
 
+if [[ $OS != $COREOS_OS_NAME ]]; then
+    upgradeOs
+fi
+
 if [[ ! -z "${MASTER_NODE}" ]] && [[ -z "${COSMOS_URI}" ]]; then
     	installEtcd
 fi
@@ -73,7 +77,9 @@ else
     echo "Golden image; skipping dependencies installation"
 fi
 
-installContainerRuntime
+if [[ $OS != $COREOS_OS_NAME ]]; then
+    installContainerRuntime
+fi
 installNetworkPlugin
 if [[ "$CONTAINER_RUNTIME" == "clear-containers" ]] || [[ "$CONTAINER_RUNTIME" == "kata-containers" ]] || [[ "$CONTAINER_RUNTIME" == "containerd" ]]; then
     installContainerd
