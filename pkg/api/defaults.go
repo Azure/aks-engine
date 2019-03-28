@@ -562,7 +562,7 @@ func (cs *ContainerService) setDefaultCerts() (bool, []net.IP, error) {
 
 	// Include the Internal load balancer as well
 	if p.MasterProfile.IsVirtualMachineScaleSets() {
-		ips = append(ips, net.IP{firstMasterIP[0], firstMasterIP[1], byte(255), byte(DefaultInternalLbStaticIPOffset)})
+		ips = append(ips, net.IP{firstMasterIP[0], firstMasterIP[1], firstMasterIP[2], byte(DefaultInternalLbStaticIPOffset)})
 	} else {
 		// Add the Internal Loadbalancer IP which is always at p known offset from the firstMasterIP
 		ips = append(ips, net.IP{firstMasterIP[0], firstMasterIP[1], firstMasterIP[2], firstMasterIP[3] + byte(DefaultInternalLbStaticIPOffset)})

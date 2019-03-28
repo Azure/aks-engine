@@ -366,10 +366,9 @@ func getK8sMasterVars(cs *api.ContainerService) map[string]interface{} {
 			masterVars["masterInternalLbIPConfigID"] = "[concat(variables('masterInternalLbID'),'/frontendIPConfigurations/', variables('masterInternalLbIPConfigName'))]"
 			masterVars["masterInternalLbIPOffset"] = DefaultInternalLbStaticIPOffset
 			if isMasterVMSS {
-				masterVars["kubernetesAPIServerIP"] = "[concat(variables('masterFirstAddrOctets')[0],'.',variables('masterFirstAddrOctets')[1],'.255.', variables('masterInternalLbIPOffset'))]"
+				masterVars["kubernetesAPIServerIP"] = "[concat(variables('masterFirstAddrOctets')[0],'.',variables('masterFirstAddrOctets')[1],'.',variables('masterFirstAddrOctets')[2],'.', variables('masterInternalLbIPOffset'))]"
 			} else {
 				masterVars["kubernetesAPIServerIP"] = "[concat(variables('masterFirstAddrPrefix'), add(variables('masterInternalLbIPOffset'), int(variables('masterFirstAddrOctet4'))))]"
-
 			}
 		} else {
 			masterVars["kubernetesAPIServerIP"] = "[parameters('firstConsecutiveStaticIP')]"
