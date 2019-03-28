@@ -39,6 +39,7 @@ func TestScaleCmdValidate(t *testing.T) {
 		{
 			sc: &scaleCmd{
 				apiModelPath:         "./not/used",
+				deploymentDirectory:  "",
 				location:             "centralus",
 				resourceGroupName:    "",
 				agentPoolToScale:     "agentpool1",
@@ -50,6 +51,7 @@ func TestScaleCmdValidate(t *testing.T) {
 		{
 			sc: &scaleCmd{
 				apiModelPath:         "./not/used",
+				deploymentDirectory:  "",
 				location:             "",
 				resourceGroupName:    "testRG",
 				agentPoolToScale:     "agentpool1",
@@ -60,17 +62,19 @@ func TestScaleCmdValidate(t *testing.T) {
 		},
 		{
 			sc: &scaleCmd{
-				apiModelPath:      "./not/used",
-				location:          "centralus",
-				resourceGroupName: "testRG",
-				agentPoolToScale:  "agentpool1",
-				masterFQDN:        "test",
+				apiModelPath:        "./not/used",
+				deploymentDirectory: "",
+				location:            "centralus",
+				resourceGroupName:   "testRG",
+				agentPoolToScale:    "agentpool1",
+				masterFQDN:          "test",
 			},
 			expectedErr: errors.New("--new-node-count must be specified"),
 		},
 		{
 			sc: &scaleCmd{
 				apiModelPath:         "",
+				deploymentDirectory:  "",
 				location:             "centralus",
 				resourceGroupName:    "testRG",
 				agentPoolToScale:     "agentpool1",
@@ -81,7 +85,20 @@ func TestScaleCmdValidate(t *testing.T) {
 		},
 		{
 			sc: &scaleCmd{
+				apiModelPath:         "some/long/path",
+				deploymentDirectory:  "someDir",
+				location:             "centralus",
+				resourceGroupName:    "testRG",
+				agentPoolToScale:     "agentpool1",
+				newDesiredAgentCount: 5,
+				masterFQDN:           "test",
+			},
+			expectedErr: errors.New("ambiguous, please specify only one of --api-model and --deployment-dir"),
+		},
+		{
+			sc: &scaleCmd{
 				apiModelPath:         "./not/used",
+				deploymentDirectory:  "",
 				location:             "centralus",
 				resourceGroupName:    "testRG",
 				agentPoolToScale:     "agentpool1",

@@ -33,12 +33,13 @@ type upgradeCmd struct {
 	authProvider
 
 	// user input
-	resourceGroupName string
-	apiModelPath      string
-	upgradeVersion    string
-	location          string
-	timeoutInMinutes  int
-	force             bool
+	resourceGroupName   string
+	apiModelPath        string
+	deploymentDirectory string
+	upgradeVersion      string
+	location            string
+	timeoutInMinutes    int
+	force               bool
 
 	// derived
 	containerService    *api.ContainerService
@@ -66,10 +67,13 @@ func newUpgradeCmd() *cobra.Command {
 	f.StringVarP(&uc.location, "location", "l", "", "location the cluster is deployed in (required)")
 	f.StringVarP(&uc.resourceGroupName, "resource-group", "g", "", "the resource group where the cluster is deployed (required)")
 	f.StringVarP(&uc.apiModelPath, "api-model", "m", "", "path to the apimodel file")
+	f.StringVar(&uc.deploymentDirectory, "deployment-dir", "", "the location of the output from `generate`")
 	f.StringVarP(&uc.upgradeVersion, "upgrade-version", "k", "", "desired kubernetes version (required)")
 	f.IntVar(&uc.timeoutInMinutes, "vm-timeout", -1, "how long to wait for each vm to be upgraded in minutes")
 	f.BoolVarP(&uc.force, "force", "f", false, "force upgrading the cluster to desired version. Allows same version upgrades and downgrades.")
 	addAuthFlags(uc.getAuthArgs(), f)
+
+	f.MarkDeprecated("deployment-dir", "deployment-dir is no longer required for scale or upgrade. Please use --api-model.")
 
 	return upgradeCmd
 }
@@ -103,9 +107,14 @@ func (uc *upgradeCmd) validate(cmd *cobra.Command) error {
 		return errors.New("--upgrade-version must be specified")
 	}
 
-	if uc.apiModelPath == "" {
+	if uc.apiModelPath == "" && uc.deploymentDirectory == "" {
 		cmd.Usage()
 		return errors.New("--api-model must be specified")
+	}
+
+	if uc.apiModelPath != "" && uc.deploymentDirectory != "" {
+		cmd.Usage()
+		return errors.New("ambiguous, please specify only one of --api-model and --deployment-dir")
 	}
 
 	return nil
@@ -117,7 +126,10 @@ func (uc *upgradeCmd) loadCluster(cmd *cobra.Command) error {
 	ctx, cancel := context.WithTimeout(context.Background(), armhelpers.DefaultARMOperationTimeout)
 	defer cancel()
 
-	// Load apimodel from the deployment directory.
+	// Load apimodel from the directory.
+	if uc.apiModelPath == "" {
+		uc.apiModelPath = filepath.Join(uc.deploymentDirectory, apiModelFilename)
+	}
 
 	if _, err = os.Stat(uc.apiModelPath); os.IsNotExist(err) {
 		return errors.Errorf("specified api model does not exist (%s)", uc.apiModelPath)
@@ -261,6 +273,6 @@ func (uc *upgradeCmd) run(cmd *cobra.Command, args []string) error {
 			Locale: uc.locale,
 		},
 	}
-
-	return f.SaveFile(filepath.Dir(uc.apiModelPath), apiModelFilename, b)
+	dir, file := filepath.Split(uc.apiModelPath)
+	return f.SaveFile(dir, file, b)
 }

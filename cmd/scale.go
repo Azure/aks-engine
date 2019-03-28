@@ -34,6 +34,7 @@ type scaleCmd struct {
 	// user input
 	resourceGroupName    string
 	newDesiredAgentCount int
+	deploymentDirectory  string
 	location             string
 	agentPoolToScale     string
 	masterFQDN           string
@@ -72,9 +73,12 @@ func newScaleCmd() *cobra.Command {
 	f.StringVarP(&sc.location, "location", "l", "", "location the cluster is deployed in")
 	f.StringVarP(&sc.resourceGroupName, "resource-group", "g", "", "the resource group where the cluster is deployed")
 	f.StringVarP(&sc.apiModelPath, "api-model", "m", "", "path to the apimodel file")
+	f.StringVar(&sc.deploymentDirectory, "deployment-dir", "", "the location of the output from `generate`")
 	f.IntVarP(&sc.newDesiredAgentCount, "new-node-count", "c", 0, "desired number of nodes")
 	f.StringVar(&sc.agentPoolToScale, "node-pool", "", "node pool to scale")
 	f.StringVar(&sc.masterFQDN, "master-FQDN", "", "FQDN for the master load balancer, Needed to scale down Kubernetes agent pools")
+
+	f.MarkDeprecated("deployment-dir", "deployment-dir is no longer required for scale or upgrade. Please use --api-model.")
 
 	addAuthFlags(&sc.authArgs, f)
 
@@ -107,9 +111,14 @@ func (sc *scaleCmd) validate(cmd *cobra.Command) error {
 		return errors.New("--new-node-count must be specified")
 	}
 
-	if sc.apiModelPath == "" {
+	if sc.apiModelPath == "" && sc.deploymentDirectory == "" {
 		cmd.Usage()
 		return errors.New("--api-model must be specified")
+	}
+
+	if sc.apiModelPath != "" && sc.deploymentDirectory != "" {
+		cmd.Usage()
+		return errors.New("ambiguous, please specify only one of --api-model and --deployment-dir")
 	}
 
 	return nil
@@ -121,6 +130,10 @@ func (sc *scaleCmd) load(cmd *cobra.Command) error {
 
 	ctx, cancel := context.WithTimeout(context.Background(), armhelpers.DefaultARMOperationTimeout)
 	defer cancel()
+
+	if sc.apiModelPath == "" {
+		sc.apiModelPath = filepath.Join(sc.deploymentDirectory, apiModelFilename)
+	}
 
 	if _, err = os.Stat(sc.apiModelPath); os.IsNotExist(err) {
 		return errors.Errorf("specified api model does not exist (%s)", sc.apiModelPath)
@@ -413,8 +426,8 @@ func (sc *scaleCmd) saveAPIModel() error {
 			Locale: sc.locale,
 		},
 	}
-
-	return f.SaveFile(filepath.Dir(sc.apiModelPath), apiModelFilename, b)
+	dir, file := filepath.Split(sc.apiModelPath)
+	return f.SaveFile(dir, file, b)
 }
 
 func (sc *scaleCmd) vmInAgentPool(vmName string, tags map[string]*string) bool {
