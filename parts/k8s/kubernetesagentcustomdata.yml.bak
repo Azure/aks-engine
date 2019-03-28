@@ -6,36 +6,29 @@ write_files:
   encoding: gzip
   owner: root
   content: !!binary |
-    {{CloudInitData "provisionSource"}}
+    {{WrapAsVariable "provisionSource"}}
 
 - path: /opt/azure/containers/provision.sh
   permissions: "0744"
   encoding: gzip
   owner: root
   content: !!binary |
-    {{CloudInitData "provisionScript"}}
+    {{WrapAsVariable "provisionScript"}}
 
 - path: /opt/azure/containers/provision_installs.sh
   permissions: "0744"
   encoding: gzip
   owner: root
   content: !!binary |
-    {{CloudInitData "provisionInstalls"}}
+    {{WrapAsVariable "provisionInstalls"}}
 
 - path: /opt/azure/containers/provision_configs.sh
   permissions: "0744"
   encoding: gzip
   owner: root
   content: !!binary |
-    {{CloudInitData "provisionConfigs"}}
+    {{WrapAsVariable "provisionConfigs"}}
 
-- path: /opt/azure/containers/provision_cis.sh
-  permissions: "0744"
-  encoding: gzip
-  owner: root
-  content: !!binary |
-    {{CloudInitData "provisionCIS"}}
-    
 {{if IsAzureStackCloud}}
 - path: /opt/azure/containers/provision_configs_custom_cloud.sh
   permissions: "0744"
@@ -50,14 +43,14 @@ write_files:
   encoding: gzip
   owner: root
   content: !!binary |
-    {{CloudInitData "sshdConfig"}}
+    {{WrapAsVariable "sshdConfig"}}
 
 - path: /etc/systemd/system.conf
   permissions: "0644"
   encoding: gzip
   owner: root
   content: !!binary |
-    {{CloudInitData "systemConf"}}
+    {{WrapAsVariable "systemConf"}}
 
 {{if .IsCoreOS}}
 - path: /opt/bin/health-monitor.sh
@@ -68,65 +61,76 @@ write_files:
   encoding: gzip
   owner: root
   content: !!binary |
-    {{CloudInitData "healthMonitorScript"}}
+    {{WrapAsVariable "healthMonitorScript"}}
 
 - path: /etc/systemd/system/kubelet-monitor.timer
   permissions: "0644"
-  encoding: gzip
   owner: root
-  content: !!binary |
-    {{CloudInitData "kubeletMonitorSystemdTimer"}}
+  content: |
+    [Unit]
+    Description=a timer that delays kubelet-monitor from starting too soon after boot
+    [Timer]
+    OnBootSec=30min
+    [Install]
+    WantedBy=multi-user.target
 
 - path: /etc/systemd/system/kubelet-monitor.service
   permissions: "0644"
-  encoding: gzip
   owner: root
-  content: !!binary |
-    {{CloudInitData "kubeletMonitorSystemdService"}}
+  content: |
+    [Unit]
+    Description=a script that checks kubelet health and restarts if needed
+    After=kubelet.service
+    [Service]
+    Restart=always
+    RestartSec=10
+    RemainAfterExit=yes
+    {{if .IsCoreOS}}
+    ExecStart=/opt/bin/health-monitor.sh kubelet
+    {{else}}
+    ExecStart=/usr/local/bin/health-monitor.sh kubelet
+    {{end}}
 
 - path: /etc/systemd/system/docker-monitor.timer
   permissions: "0644"
-  encoding: gzip
   owner: root
-  content: !!binary |
-    {{CloudInitData "dockerMonitorSystemdTimer"}}
+  content: |
+    [Unit]
+    Description=a timer that delays docker-monitor from starting too soon after boot
+    [Timer]
+    OnBootSec=30min
+    [Install]
+    WantedBy=multi-user.target
 
 - path: /etc/systemd/system/docker-monitor.service
   permissions: "0644"
-  encoding: gzip
   owner: root
-  content: !!binary |
-    {{CloudInitData "dockerMonitorSystemdService"}}
-
-- path: /etc/systemd/system/kubelet.service
-  permissions: "0644"
-  encoding: gzip
-  owner: root
-  content: !!binary |
-    {{CloudInitData "kubeletSystemdService"}}
-
-- path: /etc/systemd/system/kms.service
-  permissions: "0644"
-  encoding: gzip
-  owner: root
-  content: !!binary |
-    {{CloudInitData "kmsSystemdService"}}
+  content: |
+    [Unit]
+    Description=a script that checks docker health and restarts if needed
+    After=docker.service
+    [Service]
+    Restart=always
+    RestartSec=10
+    RemainAfterExit=yes
+    ExecStart=/usr/local/bin/health-monitor.sh container-runtime
 
 - path: /etc/apt/preferences
   permissions: "0644"
-  encoding: gzip
   owner: root
-  content: !!binary |
-    {{CloudInitData "aptPreferences"}}
+  content: |
+    Package: walinuxagent
+    Pin: version 2.2.32.2
+    Pin-Priority: 550
 
 {{if .KubernetesConfig.RequiresDocker}}
     {{if not .IsCoreOS}}
 - path: /etc/systemd/system/docker.service.d/clear_mount_propagation_flags.conf
   permissions: "0644"
-  encoding: gzip
   owner: "root"
-  content: !!binary |
-    {{CloudInitData "dockerClearMountPropagationFlags"}}
+  content: |
+    [Service]
+    MountFlags=shared
     {{end}}
 
 - path: /etc/systemd/system/docker.service.d/exec_start.conf
@@ -135,11 +139,7 @@ write_files:
   content: |
     [Service]
     ExecStart=
-    {{if .IsCoreOS}}
-    ExecStart=/usr/bin/env PATH=${TORCX_BINDIR}:${PATH} ${TORCX_BINDIR}/dockerd --host=fd:// --containerd=/var/run/docker/libcontainerd/docker-containerd.sock --storage-driver=overlay2 --bip={{WrapAsParameter "dockerBridgeCidr"}} $DOCKER_SELINUX $DOCKER_OPTS $DOCKER_CGROUPS $DOCKER_OPT_BIP $DOCKER_OPT_MTU $DOCKER_OPT_IPMASQ
-    {{else}}
     ExecStart=/usr/bin/dockerd -H fd:// --storage-driver=overlay2 --bip={{WrapAsParameter "dockerBridgeCidr"}}
-	{{end}}
 
 - path: /etc/docker/daemon.json
   permissions: "0644"
@@ -166,8 +166,21 @@ write_files:
 - path: /etc/systemd/system/sys-fs-bpf.mount
   permissions: "0644"
   owner: root
-  content: !!binary |
-    {{WrapAsVariable "systemdBPFMount"}}
+  content: |
+    [Unit]
+    Description=Cilium BPF mounts
+    Documentation=http://docs.cilium.io/
+    DefaultDependencies=no
+    Before=local-fs.target umount.target
+    After=swap.target
+
+    [Mount]
+    What=bpffs
+    Where=/sys/fs/bpf
+    Type=bpf
+
+    [Install]
+    WantedBy=multi-user.target
 {{end}}
 
 {{if IsNSeriesSKU .}}
@@ -207,7 +220,7 @@ write_files:
   encoding: gzip
   owner: root
   content: !!binary |
-    {{CloudInitData "customSearchDomainsScript"}}
+    {{WrapAsVariable "customSearchDomainsScript"}}
 {{end}}{{end}}
 
 - path: /var/lib/kubelet/kubeconfig
@@ -246,9 +259,8 @@ write_files:
     KUBELET_IMAGE={{WrapAsParameter "kubernetesHyperkubeSpec"}}
     KUBELET_REGISTER_SCHEDULABLE=true
     KUBELET_NODE_LABELS={{GetAgentKubernetesLabels . "',variables('labelResourceGroup'),'"}}
-{{if IsAzureStackCloud }}
-    AZURE_ENVIRONMENT_FILEPATH=/etc/kubernetes/azurestackcloud.json
-{{end}}
+
+AGENT_ARTIFACTS_CONFIG_PLACEHOLDER
 
 - path: /opt/azure/containers/kubelet.sh
   permissions: "0755"
@@ -283,9 +295,9 @@ write_files:
   owner: root
   content: |
     #!/bin/bash
-    sudo /bin/sed -i "s/Description=Kubelet/Description=Kubelet\nRequires=rpc-statd.service/g" /etc/systemd/system/kubelet.service
     sudo /bin/sed -i "s/usr\/local\/bin\/kubelet/opt\/kubelet/g" /etc/systemd/system/kubelet.service
     /usr/bin/mkdir -p /etc/kubernetes/manifests
+    echo Wants=rpc-statd.service >> /etc/systemd/system/kubelet.service
     {{if .KubernetesConfig.RequiresDocker}}
     usermod -aG docker {{WrapAsParameter "linuxAdminUsername"}}
     {{end}}

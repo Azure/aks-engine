@@ -12,35 +12,28 @@ write_files:
   encoding: gzip
   owner: root
   content: !!binary |
-    {{CloudInitData "provisionSource"}}
+    {{WrapAsVariable "provisionSource"}}
 
 - path: /opt/azure/containers/provision.sh
   permissions: "0744"
   encoding: gzip
   owner: root
   content: !!binary |
-    {{CloudInitData "provisionScript"}}
+    {{WrapAsVariable "provisionScript"}}
 
 - path: /opt/azure/containers/provision_installs.sh
   permissions: "0744"
   encoding: gzip
   owner: root
   content: !!binary |
-    {{CloudInitData "provisionInstalls"}}
+    {{WrapAsVariable "provisionInstalls"}}
 
 - path: /opt/azure/containers/provision_configs.sh
   permissions: "0744"
   encoding: gzip
   owner: root
   content: !!binary |
-    {{CloudInitData "provisionConfigs"}}
-
-- path: /opt/azure/containers/provision_cis.sh
-  permissions: "0744"
-  encoding: gzip
-  owner: root
-  content: !!binary |
-    {{CloudInitData "provisionCIS"}}
+    {{WrapAsVariable "provisionConfigs"}}
 
 {{if IsAzureStackCloud}}
 - path: /opt/azure/containers/provision_configs_custom_cloud.sh
@@ -56,14 +49,14 @@ write_files:
   encoding: gzip
   owner: root
   content: !!binary |
-    {{CloudInitData "sshdConfig"}}
+    {{WrapAsVariable "sshdConfig"}}
 
 - path: /etc/systemd/system.conf
   permissions: "0644"
   encoding: gzip
   owner: root
   content: !!binary |
-    {{CloudInitData "systemConf"}}
+    {{WrapAsVariable "systemConf"}}
 
 {{if .MasterProfile.IsCoreOS}}
 - path: /opt/bin/health-monitor.sh
@@ -74,65 +67,76 @@ write_files:
   encoding: gzip
   owner: root
   content: !!binary |
-    {{CloudInitData "healthMonitorScript"}}
+    {{WrapAsVariable "healthMonitorScript"}}
 
 - path: /etc/systemd/system/kubelet-monitor.timer
   permissions: "0644"
-  encoding: gzip
   owner: root
-  content: !!binary |
-    {{CloudInitData "kubeletMonitorSystemdTimer"}}
+  content: |
+    [Unit]
+    Description=a timer that delays kubelet-monitor from starting too soon after boot
+    [Timer]
+    OnBootSec=30min
+    [Install]
+    WantedBy=multi-user.target
 
 - path: /etc/systemd/system/kubelet-monitor.service
   permissions: "0644"
-  encoding: gzip
   owner: root
-  content: !!binary |
-    {{CloudInitData "kubeletMonitorSystemdService"}}
+  content: |
+    [Unit]
+    Description=a script that checks kubelet health and restarts if needed
+    After=kubelet.service
+    [Service]
+    Restart=always
+    RestartSec=10
+    RemainAfterExit=yes
+    {{if .MasterProfile.IsCoreOS}}
+    ExecStart=/opt/bin/health-monitor.sh kubelet
+    {{else}}
+    ExecStart=/usr/local/bin/health-monitor.sh kubelet
+    {{end}}
 
 - path: /etc/systemd/system/docker-monitor.timer
   permissions: "0644"
-  encoding: gzip
   owner: root
-  content: !!binary |
-    {{CloudInitData "dockerMonitorSystemdTimer"}}
+  content: |
+    [Unit]
+    Description=a timer that delays docker-monitor from starting too soon after boot
+    [Timer]
+    OnBootSec=30min
+    [Install]
+    WantedBy=multi-user.target
 
 - path: /etc/systemd/system/docker-monitor.service
   permissions: "0644"
-  encoding: gzip
   owner: root
-  content: !!binary |
-    {{CloudInitData "dockerMonitorSystemdService"}}
-
-- path: /etc/systemd/system/kubelet.service
-  permissions: "0644"
-  encoding: gzip
-  owner: root
-  content: !!binary |
-    {{CloudInitData "kubeletSystemdService"}}
-
-- path: /etc/systemd/system/kms.service
-  permissions: "0644"
-  encoding: gzip
-  owner: root
-  content: !!binary |
-    {{CloudInitData "kmsSystemdService"}}
+  content: |
+    [Unit]
+    Description=a script that checks docker health and restarts if needed
+    After=docker.service
+    [Service]
+    Restart=always
+    RestartSec=10
+    RemainAfterExit=yes
+    ExecStart=/usr/local/bin/health-monitor.sh container-runtime
 
 - path: /etc/apt/preferences
   permissions: "0644"
-  encoding: gzip
   owner: root
-  content: !!binary |
-    {{CloudInitData "aptPreferences"}}
+  content: |
+    Package: walinuxagent
+    Pin: version 2.2.32.2
+    Pin-Priority: 550
 
 {{if .OrchestratorProfile.KubernetesConfig.RequiresDocker}}
     {{if not .MasterProfile.IsCoreOS}}
 - path: /etc/systemd/system/docker.service.d/clear_mount_propagation_flags.conf
   permissions: "0644"
-  encoding: gzip
   owner: root
-  content: !!binary |
-    {{CloudInitData "dockerClearMountPropagationFlags"}}
+  content: |
+    [Service]
+    MountFlags=shared
     {{end}}
 
 - path: /etc/systemd/system/docker.service.d/exec_start.conf
@@ -145,7 +149,7 @@ write_files:
     ExecStart=/usr/bin/env PATH=${TORCX_BINDIR}:${PATH} ${TORCX_BINDIR}/dockerd --host=fd:// --containerd=/var/run/docker/libcontainerd/docker-containerd.sock --storage-driver=overlay2 --bip={{WrapAsParameter "dockerBridgeCidr"}} $DOCKER_SELINUX $DOCKER_OPTS $DOCKER_CGROUPS $DOCKER_OPT_BIP $DOCKER_OPT_MTU $DOCKER_OPT_IPMASQ
     {{else}}
     ExecStart=/usr/bin/dockerd -H fd:// --storage-driver=overlay2 --bip={{WrapAsParameter "dockerBridgeCidr"}}
-	{{end}}
+    {{end}}
 
 - path: /etc/docker/daemon.json
   permissions: "0644"
@@ -164,10 +168,22 @@ write_files:
 {{if eq .OrchestratorProfile.KubernetesConfig.NetworkPlugin "cilium"}}
 - path: /etc/systemd/system/sys-fs-bpf.mount
   permissions: "0644"
-  encoding: gzip
   owner: root
-  content: !!binary |
-    {{WrapAsVariable "systemdBPFMount"}}
+  content: |
+    [Unit]
+    Description=Cilium BPF mounts
+    Documentation=http://docs.cilium.io/
+    DefaultDependencies=no
+    Before=local-fs.target umount.target
+    After=swap.target
+
+    [Mount]
+    What=bpffs
+    Where=/sys/fs/bpf
+    Type=bpf
+
+    [Install]
+    WantedBy=multi-user.target
 {{end}}
 
 - path: /etc/kubernetes/certs/ca.crt
@@ -190,7 +206,7 @@ write_files:
   encoding: gzip
   owner: root
   content: !!binary |
-    {{CloudInitData "generateProxyCertsScript"}}
+    {{WrapAsVariable "generateProxyCertsScript"}}
 {{end}}
 
 {{if HasLinuxProfile}}{{if HasCustomSearchDomain}}
@@ -199,7 +215,7 @@ write_files:
   encoding: gzip
   owner: root
   content: !!binary |
-    {{CloudInitData "customSearchDomainsScript"}}
+    {{WrapAsVariable "customSearchDomainsScript"}}
 {{end}}{{end}}
 
 - path: /var/lib/kubelet/kubeconfig
@@ -285,9 +301,6 @@ MASTER_CONTAINER_ADDONS_PLACEHOLDER
     KUBELET_CONFIG={{GetKubeletConfigKeyVals .MasterProfile.KubernetesConfig}}
     KUBELET_IMAGE={{WrapAsParameter "kubernetesHyperkubeSpec"}}
     KUBELET_NODE_LABELS={{GetMasterKubernetesLabels "',variables('labelResourceGroup'),'"}}
-{{if IsAzureStackCloud }}
-    AZURE_ENVIRONMENT_FILEPATH=/etc/kubernetes/azurestackcloud.json
-{{end}}
 {{if IsKubernetesVersionGe "1.6.0"}}
   {{if HasLinuxAgents}}
     KUBELET_REGISTER_NODE=--register-node=true
@@ -296,6 +309,8 @@ MASTER_CONTAINER_ADDONS_PLACEHOLDER
 {{else}}
     KUBELET_REGISTER_SCHEDULABLE={{WrapAsVariable "registerSchedulable"}}
 {{end}}
+
+MASTER_ARTIFACTS_CONFIG_PLACEHOLDER
 
 - path: /opt/azure/containers/kubelet.sh
   permissions: "0755"
@@ -359,10 +374,9 @@ MASTER_CONTAINER_ADDONS_PLACEHOLDER
 {{if eq .OrchestratorProfile.KubernetesConfig.NetworkPolicy "calico"}}
     sed -i "s|<kubeClusterCidr>|{{WrapAsParameter "kubeClusterCidr"}}|g" /etc/kubernetes/addons/calico-daemonset.yaml
     {{if eq .OrchestratorProfile.KubernetesConfig.NetworkPlugin "azure"}}
-    sed -i "/initContainers/,/cni-net-dir/d" /etc/kubernetes/addons/calico-daemonset.yaml
+    sed -i "s|<calicoIPAMConfig>|{\"type\": \"azure-vnet-ipam\"}|g" /etc/kubernetes/addons/calico-daemonset.yaml
     {{else}}
     sed -i "s|<calicoIPAMConfig>|{\"type\": \"host-local\", \"subnet\": \"usePodCidr\"}|g" /etc/kubernetes/addons/calico-daemonset.yaml
-    sed -i "s|azv|cali|g" /etc/kubernetes/addons/calico-daemonset.yaml
     {{end}}
 {{end}}
 {{if eq .OrchestratorProfile.KubernetesConfig.NetworkPlugin "flannel"}}
@@ -387,16 +401,11 @@ MASTER_CONTAINER_ADDONS_PLACEHOLDER
   encoding: gzip
   owner: root
   content: !!binary |
-    {{CloudInitData "mountEtcdScript"}}
+    {{WrapAsVariable "mountetcdScript"}}
 {{ if not HasCosmosEtcd  }}
 - path: /etc/systemd/system/etcd.service
   permissions: "0644"
-  encoding: gzip
   owner: root
-<<<<<<< HEAD:parts/k8s/cloud-init/masternodecustomdata.yml
-  content: !!binary |
-    {{CloudInitData "etcdSystemdService"}}
-=======
   content: |
     [Unit]
     Description=etcd - highly-available key value store
@@ -420,7 +429,6 @@ MASTER_CONTAINER_ADDONS_PLACEHOLDER
     Restart=always
     [Install]
     WantedBy=multi-user.target
->>>>>>> 025ebbe31... feat: enable coreos:parts/k8s/kubernetesmastercustomdata.yml
 
 - path: /opt/azure/containers/setup-etcd.sh
   permissions: "0744"
@@ -491,7 +499,6 @@ MASTER_CONTAINER_ADDONS_PLACEHOLDER
   content: |
     #!/bin/bash
     source /opt/azure/containers/provision_source.sh
-    sudo /bin/sed -i "s/Description=Kubelet/Description=Kubelet\nRequires=rpc-statd.service/g" /etc/systemd/system/kubelet.service
     echo Wants=rpc-statd.service >> /etc/systemd/system/kubelet.service
     sudo /bin/sed -i "s/usr\/local\/bin\/kubelet/opt\/kubelet/g" /etc/systemd/system/kubelet.service
     /bin/echo DAEMON_ARGS=--name "{{WrapAsVerbatim "variables('masterVMNames')[copyIndex(variables('masterOffset'))]"}}" --initial-advertise-peer-urls "{{WrapAsVerbatim "variables('masterEtcdPeerURLs')[copyIndex(variables('masterOffset'))]"}}" --listen-peer-urls "{{WrapAsVerbatim "variables('masterEtcdPeerURLs')[copyIndex(variables('masterOffset'))]"}}" --advertise-client-urls "{{WrapAsVerbatim "variables('masterEtcdClientURLs')[copyIndex(variables('masterOffset'))]"}}" --listen-client-urls "{{WrapAsVerbatim "concat(variables('masterEtcdClientURLs')[copyIndex(variables('masterOffset'))], ',http://127.0.0.1:', variables('masterEtcdClientPort'))"}}" --initial-cluster-token "k8s-etcd-cluster" --initial-cluster "{{WrapAsVerbatim "variables('masterEtcdClusterStates')[div(variables('masterCount'), 2)]"}} --data-dir "/var/lib/etcddisk"" --initial-cluster-state "new" | tee -a /etc/default/etcd
