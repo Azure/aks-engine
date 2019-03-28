@@ -62,3 +62,9 @@ Pros:
 Cons:
 
 - Potentially more work than a bash script.
+
+### Sources
+
+https://kubernetes.io/docs/tasks/tls/certificate-rotation/
+
+https://github.com/coreos/tls_rotate

@@ -43,8 +43,8 @@ After the above steps, you can verify the success of the CA and certs rotation:
 - All nodes are expected to be  `Ready`, all pods are expected to be  `Running`.
 - Try to fetch the logs of  `kube-apiserver`,  `kube-scheduler`  and  `kube-controller-namager`, they should all be running correctly without spitting errors. E.g. ```kubectl logs -lk8s-app=kube-scheduler -n kube-system`.
 
-### Sources
+## Known Limitations
 
-https://kubernetes.io/docs/tasks/tls/certificate-rotation/
-
-https://github.com/coreos/tls_rotate
+- Private clusters
+- Clusters using keyvault
+- Clusters using Cosmos Etcd

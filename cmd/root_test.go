@@ -20,7 +20,7 @@ func TestNewRootCmd(t *testing.T) {
 	if command.Use != rootName || command.Short != rootShortDescription || command.Long != rootLongDescription {
 		t.Fatalf("root command should have use %s equal %s, short %s equal %s and long %s equal to %s", command.Use, rootName, command.Short, rootShortDescription, command.Long, rootLongDescription)
 	}
-	expectedCommands := []*cobra.Command{getCompletionCmd(command), newDeployCmd(), newGenerateCmd(), newGetVersionsCmd(), newOrchestratorsCmd(), newScaleCmd(), newUpgradeCmd(), newVersionCmd()}
+	expectedCommands := []*cobra.Command{getCompletionCmd(command), newDeployCmd(), newGenerateCmd(), newGetVersionsCmd(), newOrchestratorsCmd(), newRotateCertsCmd(), newScaleCmd(), newUpgradeCmd(), newVersionCmd()}
 	rc := command.Commands()
 	for i, c := range expectedCommands {
 		if rc[i].Use != c.Use {

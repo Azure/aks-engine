@@ -50,6 +50,11 @@ func (c *KubernetesClientSetClient) ListPods(node *v1.Node) (*v1.PodList, error)
 		FieldSelector: fields.SelectorFromSet(fields.Set{"spec.nodeName": node.Name}).String()})
 }
 
+// ListNodes returns a list of Nodes registered in the api server
+func (c *KubernetesClientSetClient) ListNodes() (*v1.NodeList, error) {
+	return c.clientset.CoreV1().Nodes().List(metav1.ListOptions{})
+}
+
 //GetNode returns details about node with passed in name
 func (c *KubernetesClientSetClient) GetNode(name string) (*v1.Node, error) {
 	return c.clientset.CoreV1().Nodes().Get(name, metav1.GetOptions{})
