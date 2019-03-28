@@ -112,7 +112,7 @@ func (c *KubernetesClientSetClient) EvictPod(pod *v1.Pod, policyGroupVersion str
 			Namespace: pod.Namespace,
 		},
 	}
-	return c.clientset.Policy().Evictions(eviction.Namespace).Evict(eviction)
+	return c.clientset.PolicyV1beta1().Evictions(eviction.Namespace).Evict(eviction)
 }
 
 //GetPod returns the pod
