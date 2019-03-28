@@ -19,7 +19,7 @@ $ aks-engine scale --subscription-id 51ac25de-afdg-9201-d923-8d8e8e8e8e8e \
     --resource-group mycluster  --location westus2 \
     --client-id '<service principal client ID>' \
     --client-secret '<service principal client secret>' \
-    --api-mode  ./apimodel.json --new-node-count 5 \
+    --api-model  ./apimodel.json --new-node-count 5 \
     --node-pool agentpool1 --master-FQDN mycluster.westus2.cloudapp.azure.com
 ```
 
