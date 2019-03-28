@@ -10,7 +10,7 @@ This guide assumes you already have deployed a cluster using aks-engine. For mor
 
 The `aks-engine scale` command can increase or decrease the number of nodes in an existing agent pool in an `aks-engine` Kubernetes cluster. Nodes will always be added or removed from the end of the agent pool. Nodes will be cordoned and drained before deletion.
 
-This guide will assume you have a cluster deployed and the api model oroginally used to generate that cluster is stored at ./apimodel.json. It will also assume there is a node pool named "agentpool1" in your cluster.
+This guide will assume you have a cluster deployed and the apimodel originally used to deploy that cluster is stored at ./apimodel.json. It will also assume there is a node pool named "agentpool1" in your cluster.
 
 To scale the cluster you will run a command like:
 
