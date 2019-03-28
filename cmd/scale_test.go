@@ -16,7 +16,7 @@ func TestNewScaleCmd(t *testing.T) {
 		t.Fatalf("scale command should have use %s equal %s, short %s equal %s and long %s equal to %s", command.Use, scaleName, command.Short, scaleShortDescription, command.Long, scaleLongDescription)
 	}
 
-	expectedFlags := []string{"location", "resource-group", "deployment-dir", "new-node-count", "node-pool", "master-FQDN"}
+	expectedFlags := []string{"location", "resource-group", "api-model", "new-node-count", "node-pool", "master-FQDN"}
 	for _, f := range expectedFlags {
 		if command.Flags().Lookup(f) == nil {
 			t.Fatalf("scale command should have flag %s", f)
@@ -38,9 +38,10 @@ func TestScaleCmdValidate(t *testing.T) {
 	}{
 		{
 			sc: &scaleCmd{
+				apiModelPath:         "./not/used",
+				deploymentDirectory:  "",
 				location:             "centralus",
 				resourceGroupName:    "",
-				deploymentDirectory:  "_output/test",
 				agentPoolToScale:     "agentpool1",
 				newDesiredAgentCount: 5,
 				masterFQDN:           "test",
@@ -49,9 +50,10 @@ func TestScaleCmdValidate(t *testing.T) {
 		},
 		{
 			sc: &scaleCmd{
+				apiModelPath:         "./not/used",
+				deploymentDirectory:  "",
 				location:             "",
 				resourceGroupName:    "testRG",
-				deploymentDirectory:  "_output/test",
 				agentPoolToScale:     "agentpool1",
 				newDesiredAgentCount: 5,
 				masterFQDN:           "test",
@@ -60,9 +62,10 @@ func TestScaleCmdValidate(t *testing.T) {
 		},
 		{
 			sc: &scaleCmd{
+				apiModelPath:        "./not/used",
+				deploymentDirectory: "",
 				location:            "centralus",
 				resourceGroupName:   "testRG",
-				deploymentDirectory: "_output/test",
 				agentPoolToScale:    "agentpool1",
 				masterFQDN:          "test",
 			},
@@ -70,20 +73,34 @@ func TestScaleCmdValidate(t *testing.T) {
 		},
 		{
 			sc: &scaleCmd{
+				apiModelPath:         "",
+				deploymentDirectory:  "",
 				location:             "centralus",
 				resourceGroupName:    "testRG",
-				deploymentDirectory:  "",
 				agentPoolToScale:     "agentpool1",
 				newDesiredAgentCount: 5,
 				masterFQDN:           "test",
 			},
-			expectedErr: errors.New("--deployment-dir must be specified"),
+			expectedErr: errors.New("--api-model must be specified"),
 		},
 		{
 			sc: &scaleCmd{
+				apiModelPath:         "some/long/path",
+				deploymentDirectory:  "someDir",
 				location:             "centralus",
 				resourceGroupName:    "testRG",
-				deploymentDirectory:  "_output/test",
+				agentPoolToScale:     "agentpool1",
+				newDesiredAgentCount: 5,
+				masterFQDN:           "test",
+			},
+			expectedErr: errors.New("ambiguous, please specify only one of --api-model and --deployment-dir"),
+		},
+		{
+			sc: &scaleCmd{
+				apiModelPath:         "./not/used",
+				deploymentDirectory:  "",
+				location:             "centralus",
+				resourceGroupName:    "testRG",
 				agentPoolToScale:     "agentpool1",
 				newDesiredAgentCount: 5,
 				masterFQDN:           "test",

@@ -24,7 +24,7 @@ A complete example is contained in the `multipool.json` apimodel in this directo
 When scaling the size of a node pool up or down with aks-engine, make sure to specify which node pool:
 
 ```sh
-$ aks-engine scale -g mymultipoolRG --deployment-dir=_output/mycluster --new-node-count 10 --node-pool gpupool
+$ aks-engine scale -g mymultipoolRG --api-model ./multicluster/cluster.json --new-node-count 10 --node-pool gpupool
 ```
 
 [nodeSelectors]: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/

@@ -7,10 +7,9 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"math/rand"
 	"os"
-	"path"
+	"path/filepath"
 	"sort"
 	"strings"
 	"time"
@@ -33,9 +32,10 @@ type scaleCmd struct {
 	authArgs
 
 	// user input
+	apiModelPath         string
 	resourceGroupName    string
-	deploymentDirectory  string
 	newDesiredAgentCount int
+	deploymentDirectory  string
 	location             string
 	agentPoolToScale     string
 	masterFQDN           string
@@ -43,7 +43,6 @@ type scaleCmd struct {
 	// derived
 	containerService *api.ContainerService
 	apiVersion       string
-	apiModelPath     string
 	agentPool        *api.AgentPoolProfile
 	client           armhelpers.AKSEngineClient
 	locale           *gotext.Locale
@@ -73,10 +72,13 @@ func newScaleCmd() *cobra.Command {
 	f := scaleCmd.Flags()
 	f.StringVarP(&sc.location, "location", "l", "", "location the cluster is deployed in")
 	f.StringVarP(&sc.resourceGroupName, "resource-group", "g", "", "the resource group where the cluster is deployed")
+	f.StringVarP(&sc.apiModelPath, "api-model", "m", "", "path to the apimodel file")
 	f.StringVar(&sc.deploymentDirectory, "deployment-dir", "", "the location of the output from `generate`")
 	f.IntVarP(&sc.newDesiredAgentCount, "new-node-count", "c", 0, "desired number of nodes")
 	f.StringVar(&sc.agentPoolToScale, "node-pool", "", "node pool to scale")
 	f.StringVar(&sc.masterFQDN, "master-FQDN", "", "FQDN for the master load balancer, Needed to scale down Kubernetes agent pools")
+
+	f.MarkDeprecated("deployment-dir", "deployment-dir is no longer required for scale or upgrade. Please use --api-model.")
 
 	addAuthFlags(&sc.authArgs, f)
 
@@ -109,9 +111,14 @@ func (sc *scaleCmd) validate(cmd *cobra.Command) error {
 		return errors.New("--new-node-count must be specified")
 	}
 
-	if sc.deploymentDirectory == "" {
+	if sc.apiModelPath == "" && sc.deploymentDirectory == "" {
 		cmd.Usage()
-		return errors.New("--deployment-dir must be specified")
+		return errors.New("--api-model must be specified")
+	}
+
+	if sc.apiModelPath != "" && sc.deploymentDirectory != "" {
+		cmd.Usage()
+		return errors.New("ambiguous, please specify only one of --api-model and --deployment-dir")
 	}
 
 	return nil
@@ -124,8 +131,9 @@ func (sc *scaleCmd) load(cmd *cobra.Command) error {
 	ctx, cancel := context.WithTimeout(context.Background(), armhelpers.DefaultARMOperationTimeout)
 	defer cancel()
 
-	// load apimodel from the deployment directory
-	sc.apiModelPath = path.Join(sc.deploymentDirectory, apiModelFilename)
+	if sc.apiModelPath == "" {
+		sc.apiModelPath = filepath.Join(sc.deploymentDirectory, apiModelFilename)
+	}
 
 	if _, err = os.Stat(sc.apiModelPath); os.IsNotExist(err) {
 		return errors.Errorf("specified api model does not exist (%s)", sc.apiModelPath)
@@ -190,26 +198,8 @@ func (sc *scaleCmd) load(cmd *cobra.Command) error {
 		}
 	}
 
-	templatePath := path.Join(sc.deploymentDirectory, "azuredeploy.json")
-
-	var contents []byte
-	contents, err = ioutil.ReadFile(templatePath)
-	if err != nil {
-		return errors.Wrap(err, "error while trying to load the ARM template JSON file")
-	}
-
-	var template interface{}
-
-	err = json.Unmarshal(contents, &template)
-	if err != nil {
-		return errors.Wrap(err, "error while trying to unmarshal the ARM template")
-	}
-
-	templateMap := template.(map[string]interface{})
-	templateParameters := templateMap["parameters"].(map[string]interface{})
-
-	nameSuffixParam := templateParameters["nameSuffix"].(map[string]interface{})
-	sc.nameSuffix = nameSuffixParam["defaultValue"].(string)
+	//allows to identify VMs in the resource group that belong to this cluster.
+	sc.nameSuffix = sc.containerService.Properties.GetClusterID()
 	log.Infof("Name suffix: %s", sc.nameSuffix)
 	return nil
 }
@@ -436,8 +426,8 @@ func (sc *scaleCmd) saveAPIModel() error {
 			Locale: sc.locale,
 		},
 	}
-
-	return f.SaveFile(sc.deploymentDirectory, apiModelFilename, b)
+	dir, file := filepath.Split(sc.apiModelPath)
+	return f.SaveFile(dir, file, b)
 }
 
 func (sc *scaleCmd) vmInAgentPool(vmName string, tags map[string]*string) bool {

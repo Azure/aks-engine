@@ -10,11 +10,11 @@ fi
 
 [[ ! -z "${EXPECTED_ORCHESTRATOR_VERSION:-}" ]] || (echo "Must specify EXPECTED_ORCHESTRATOR_VERSION" && exit 1)
 
-OUTPUT="_output/${INSTANCE_NAME}"
+APIMODEL="_output/${INSTANCE_NAME}/apimodel.json"
 
 ./bin/aks-engine upgrade \
   --subscription-id ${SUBSCRIPTION_ID} \
-  --deployment-dir ${OUTPUT} \
+  --api-model ${APIMODEL} \
   --location ${LOCATION} \
   --resource-group ${RESOURCE_GROUP} \
   --upgrade-version ${EXPECTED_ORCHESTRATOR_VERSION} \
