@@ -48,6 +48,8 @@ spec:
             mountPath: /var/run
           - name: log
             mountPath: /var/log
+          - name: telemetry
+            mountPath: /opt/cni/bin
       hostNetwork: true
       volumes:
       - name: log
@@ -57,4 +59,8 @@ spec:
       - name: ebtables-rule-repo
         hostPath:
           path: /var/run/
+          type: Directory
+      - name: telemetry
+        hostPath:
+          path: /opt/cni/bin
           type: Directory
