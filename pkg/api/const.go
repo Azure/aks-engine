@@ -30,7 +30,7 @@ const (
 	RHEL            Distro = "rhel"
 	CoreOS          Distro = "coreos"
 	AKS             Distro = "aks"
-	AKSDockerEngine Distro = "aks-docker-engine"
+	AKSDockerEngine Distro = "aks-docker-engine" // deprecated docker-engine distro
 	AKS1804         Distro = "aks-18.04"
 	ACC1604         Distro = "acc-16.04"
 )

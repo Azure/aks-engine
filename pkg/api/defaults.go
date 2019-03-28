@@ -468,7 +468,7 @@ func (p *Properties) setAgentProfileDefaults(isUpgrade, isScale bool) {
 				// Ensure distro is set properly for N Series SKUs, because
 				// Previous versions of aks-engine required the docker-engine distro for N series vms,
 				// so we need to hard override it in order to produce a working cluster in upgrade/scale contexts
-			} else if p.OrchestratorProfile.IsKubernetes() && (isUpgrade || isScale) && profile.IsNSeriesSKU() {
+			} else if p.OrchestratorProfile.IsKubernetes() && (isUpgrade || isScale) {
 				if profile.Distro == AKSDockerEngine {
 					profile.Distro = AKS
 				}
