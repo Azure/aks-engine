@@ -32,6 +32,7 @@ type scaleCmd struct {
 	authArgs
 
 	// user input
+	apiModelPath         string
 	resourceGroupName    string
 	newDesiredAgentCount int
 	deploymentDirectory  string
@@ -42,7 +43,6 @@ type scaleCmd struct {
 	// derived
 	containerService *api.ContainerService
 	apiVersion       string
-	apiModelPath     string
 	agentPool        *api.AgentPoolProfile
 	client           armhelpers.AKSEngineClient
 	locale           *gotext.Locale
