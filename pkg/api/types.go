@@ -491,7 +491,7 @@ type ImageReference struct {
 	ResourceGroup  string `json:"resourceGroup,omitempty"`
 	SubscriptionID string `json:"subscriptionId,omitempty"`
 	Gallery        string `json:"gallery,omitempty"`
-	ImageVersion   string `json:"imageVersion,omitempty"`
+	Version        string `json:"version,omitempty"`
 }
 
 // ExtensionProfile represents an extension definition
@@ -1208,7 +1208,7 @@ func (m *MasterProfile) HasImageRef() bool {
 // HasImageGallery returns true if the customer brought os image from Shared Image Gallery
 func (m *MasterProfile) HasImageGallery() bool {
 	imageRef := m.ImageRef
-	return imageRef != nil && len(imageRef.SubscriptionID) > 0 && len(imageRef.Gallery) > 0 && len(imageRef.ImageVersion) > 0
+	return imageRef != nil && len(imageRef.SubscriptionID) > 0 && len(imageRef.Gallery) > 0 && len(imageRef.Version) > 0
 }
 
 // IsCustomVNET returns true if the customer brought their own VNET
@@ -1337,7 +1337,7 @@ func (a *AgentPoolProfile) HasImageRef() bool {
 // HasImageGallery returns true if the customer brought os image from Shared Image Gallery
 func (a *AgentPoolProfile) HasImageGallery() bool {
 	imageRef := a.ImageRef
-	return imageRef != nil && len(imageRef.SubscriptionID) > 0 && len(imageRef.Gallery) > 0 && len(imageRef.ImageVersion) > 0
+	return imageRef != nil && len(imageRef.SubscriptionID) > 0 && len(imageRef.Gallery) > 0 && len(imageRef.Version) > 0
 }
 
 // IsCustomVNET returns true if the customer brought their own VNET

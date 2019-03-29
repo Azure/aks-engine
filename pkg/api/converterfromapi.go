@@ -932,7 +932,7 @@ func convertMasterProfileToVLabs(api *MasterProfile, vlabsProfile *vlabs.MasterP
 		vlabsProfile.ImageRef.ResourceGroup = api.ImageRef.ResourceGroup
 		vlabsProfile.ImageRef.SubscriptionID = api.ImageRef.SubscriptionID
 		vlabsProfile.ImageRef.Gallery = api.ImageRef.Gallery
-		vlabsProfile.ImageRef.ImageVersion = api.ImageRef.ImageVersion
+		vlabsProfile.ImageRef.Version = api.ImageRef.Version
 	}
 	vlabsProfile.AvailabilityProfile = api.AvailabilityProfile
 	vlabsProfile.AgentSubnet = api.AgentSubnet
@@ -1055,7 +1055,7 @@ func convertAgentPoolProfileToVLabs(api *AgentPoolProfile, p *vlabs.AgentPoolPro
 		p.ImageRef.ResourceGroup = api.ImageRef.ResourceGroup
 		p.ImageRef.SubscriptionID = api.ImageRef.SubscriptionID
 		p.ImageRef.Gallery = api.ImageRef.Gallery
-		p.ImageRef.ImageVersion = api.ImageRef.ImageVersion
+		p.ImageRef.Version = api.ImageRef.Version
 	}
 	p.Role = vlabs.AgentPoolProfileRole(api.Role)
 }
