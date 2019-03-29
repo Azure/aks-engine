@@ -310,7 +310,7 @@ const (
 	// DefaultKubernetesMaxPods is the maximum number of pods to run on a node.
 	DefaultKubernetesMaxPods = 110
 	// DefaultKubernetesMaxPodsVNETIntegrated is the maximum number of pods to run on a node when VNET integration is enabled.
-	DefaultKubernetesMaxPodsVNETIntegrated = 110
+	DefaultKubernetesMaxPodsVNETIntegrated = 30
 	// DefaultKubernetesClusterDomain is the dns suffix used in the cluster (used as a SAN in the PKI generation)
 	DefaultKubernetesClusterDomain = "cluster.local"
 	// DefaultInternalLbStaticIPOffset specifies the offset of the internal LoadBalancer's IP
