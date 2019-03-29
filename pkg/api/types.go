@@ -490,6 +490,8 @@ type ImageReference struct {
 	Name           string `json:"name,omitempty"`
 	ResourceGroup  string `json:"resourceGroup,omitempty"`
 	SubscriptionID string `json:"subscriptionId,omitempty"`
+	Gallery        string `json:"gallery,omitempty"`
+	ImageVersion   string `json:"imageVersion,omitempty"`
 }
 
 // ExtensionProfile represents an extension definition
@@ -1203,6 +1205,12 @@ func (m *MasterProfile) HasImageRef() bool {
 	return imageRef != nil && len(imageRef.Name) > 0 && len(imageRef.ResourceGroup) > 0
 }
 
+// HasImageGallery returns true if the customer brought os image
+func (m *MasterProfile) HasImageGallery() bool {
+	imageRef := m.ImageRef
+	return imageRef != nil && len(imageRef.Gallery) > 0 && len(imageRef.ImageVersion) > 0
+}
+
 // IsCustomVNET returns true if the customer brought their own VNET
 func (m *MasterProfile) IsCustomVNET() bool {
 	return len(m.VnetSubnetID) > 0
@@ -1324,6 +1332,12 @@ func (m *MasterProfile) GetCosmosEndPointURI() string {
 func (a *AgentPoolProfile) HasImageRef() bool {
 	imageRef := a.ImageRef
 	return imageRef != nil && len(imageRef.Name) > 0 && len(imageRef.ResourceGroup) > 0
+}
+
+// HasImageGallery returns true if the customer brought os image
+func (a *AgentPoolProfile) HasImageGallery() bool {
+	imageRef := m.ImageRef
+	return imageRef != nil && len(imageRef.Gallery) > 0 && len(imageRef.ImageVersion) > 0
 }
 
 // IsCustomVNET returns true if the customer brought their own VNET
