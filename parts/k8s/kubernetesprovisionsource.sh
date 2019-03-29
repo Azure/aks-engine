@@ -46,6 +46,7 @@ ERR_SGX_DRIVERS_START_FAIL=91 # Failed to execute SGX driver binary
 ERR_APT_DAILY_TIMEOUT=98 # Timeout waiting for apt daily updates
 ERR_APT_UPDATE_TIMEOUT=99 # Timeout waiting for apt-get update to complete
 ERR_CSE_PROVISION_SCRIPT_NOT_READY_TIMEOUT=100 # Timeout waiting for cloud-init to place this (!) script on the vm
+ERR_APT_DIST_UPGRADE_TIMEOUT=101 # Timeout waiting for apt-get dist-upgrade to complete
 
 OS=$(cat /etc/*-release | grep ^ID= | tr -d 'ID="' | awk '{print toupper($0)}')
 UBUNTU_OS_NAME="UBUNTU"
@@ -140,7 +141,7 @@ wait_for_file() {
 wait_for_apt_locks() {
     while fuser /var/lib/dpkg/lock /var/lib/apt/lists/lock /var/cache/apt/archives/lock >/dev/null 2>&1; do
         echo 'Waiting for release of apt locks'
-        sleep 3
+        sleep 1
     done
 }
 apt_get_update() {
@@ -148,17 +149,47 @@ apt_get_update() {
     apt_update_output=/tmp/apt-get-update.out
     for i in $(seq 1 $retries); do
         wait_for_apt_locks
-        dpkg --configure -a
-        apt-get -f -y install
+        dpkg --configure -a && sleep 1
+        apt-get -f -y install && sleep 1
         apt-get update 2>&1 | tee $apt_update_output | grep -E "^([WE]:.*)|([eE]rr.*)$"
-        [ $? -ne 0  ] && cat $apt_update_output && break || \
-        cat $apt_update_output
+
+        if [ $? -ne 0  ]; then
+          cat $apt_update_output
+          break
+        else
+          cat $apt_update_output
+          sleep 3
+        fi
+
         if [ $i -eq $retries ]; then
             return 1
-        else sleep 30
         fi
     done
     echo Executed apt-get update $i times
+    wait_for_apt_locks
+}
+apt_get_dist_upgrade() {
+    retries=10
+    apt_dist_upgrade_output=/tmp/apt-get-dist-upgrade.out
+    for i in $(seq 1 $retries); do
+        wait_for_apt_locks
+        dpkg --configure -a && sleep 1
+        apt-get -f -y install && sleep 1
+        apt-get dist-upgrade -y 2>&1 | tee $apt_dist_upgrade_output | grep -E "^([WE]:.*)|([eE]rr.*)$"
+
+        if [ $? -ne 0  ]; then
+          cat $apt_dist_upgrade_output
+          break
+        else
+          cat $apt_dist_upgrade_output
+          sleep 3
+        fi
+
+        if [ $i -eq $retries ]; then
+            return 1
+        fi
+    done
+    echo Executed apt-get dist-upgrade $i times
     wait_for_apt_locks
 }
 apt_get_install() {
