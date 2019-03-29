@@ -278,7 +278,7 @@ Now that the group is created, create a service principal with Contributor acces
 
 ```powershell
 # Get the group id
-$groupId = (az group show --resource-group <group name> --query id).Replace("""","")
+$groupId = (az group show --resource-group <group name> --query id --output tsv)
 
 # Create the service principal
 $sp = az ad sp create-for-rbac --role="Contributor" --scopes=$groupId | ConvertFrom-JSON
@@ -298,10 +298,10 @@ Now that the group is created, create a service principal with Contributor acces
 
 ```console
 # Get the group id
-$ export RESOURCEGROUPID=$(az group show --resource-group $RESOURCEGROUP --query id | sed "s/\"//g")
+$ export RESOURCEGROUPID=$(az group show --resource-group $RESOURCEGROUP --query id --output tsv)
 
 # Create the service principal
-$ export SERVICEPRINCIPAL=$(az ad sp create-for-rbac --role="Contributor" --scopes=$RESOURCEGROUPID)
+$ export SERVICEPRINCIPAL=$(az ad sp create-for-rbac --role="Contributor" --scopes=$RESOURCEGROUPID --output json)
 ```
 
 ### Create an aks-engine apimodel
