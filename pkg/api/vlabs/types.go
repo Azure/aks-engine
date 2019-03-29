@@ -405,7 +405,7 @@ type ImageReference struct {
 	ResourceGroup  string `json:"resourceGroup,omitempty"`
 	SubscriptionID string `json:"subscriptionId,omitempty"`
 	Gallery        string `json:"gallery,omitempty"`
-	ImageVersion   string `json:"imageVersion,omitempty"`
+	Version        string `json:"version,omitempty"`
 }
 
 // ExtensionProfile represents an extension definition
