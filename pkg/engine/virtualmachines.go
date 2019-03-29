@@ -150,7 +150,6 @@ func CreateMasterVM(cs *api.ContainerService) VirtualMachineARM {
 
 	storageProfile := &compute.StorageProfile{}
 	imageRef := cs.Properties.MasterProfile.ImageRef
-	useMasterCustomImage := imageRef != nil && len(imageRef.Name) > 0 && len(imageRef.ResourceGroup) > 0
 	etcdSizeGB, _ := strconv.Atoi(kubernetesConfig.EtcdDiskSizeGB)
 	if !cs.Properties.MasterProfile.HasCosmosEtcd() {
 		dataDisk := compute.DataDisk{
@@ -169,15 +168,15 @@ func CreateMasterVM(cs *api.ContainerService) VirtualMachineARM {
 		}
 	}
 	imgReference := &compute.ImageReference{}
-	if useMasterCustomImage {
+	if cs.Properties.MasterProfile.HasImageRef() {
 		spewer := spew.ConfigState{
 			Indent:   "\t",
 			MaxDepth: 3,
 		}
 		spewer.Dump(imageRef)
-		if imageRef.SubscriptionID != "" {
-			fmt.Printf("[concat('/subscriptions/%s/resourceGroups', parameters('osImageResourceGroup'), '/provider/Microsoft.Compute/images/', parameters('osImageName'))]", imageRef.SubscriptionID)
-			imgReference.ID = to.StringPtr(fmt.Sprintf("[concat('/subscriptions/%s/resourceGroups', parameters('osImageResourceGroup'), '/provider/Microsoft.Compute/images/', parameters('osImageName'))]", imageRef.SubscriptionID))
+		if cs.Properties.MasterProfile.HasImageGallery() {
+			fmt.Printf("[resourceId('%s', parameters('osImageResourceGroup'), 'Microsoft.Compute/galleries/images/versions', '%s', parameters('osImageName'), '%s')]", imageRef.SubscriptionID, imageRef.Gallery, imageRef.ImageVersion)
+			imgReference.ID = to.StringPtr(fmt.Sprintf("[resourceId('%s', parameters('osImageResourceGroup'), 'Microsoft.Compute/galleries/images/versions', '%s', parameters('osImageName'), '%s')]", imageRef.SubscriptionID, imageRef.Gallery, imageRef.ImageVersion))
 		} else {
 			imgReference.ID = to.StringPtr("[resourceId(parameters('osImageResourceGroup'), 'Microsoft.Compute/images', parameters('osImageName'))]")
 		}
@@ -486,11 +485,10 @@ func createAgentAvailabilitySetVM(cs *api.ContainerService, profile *api.AgentPo
 
 	} else {
 		imageRef := profile.ImageRef
-		useAgentCustomImage := imageRef != nil && len(imageRef.Name) > 0 && len(imageRef.ResourceGroup) > 0
-		if useAgentCustomImage {
-			if imageRef.SubscriptionID != "" {
+		if profile.HasImageRef() {
+			if profile.HasImageGallery() {
 				storageProfile.ImageReference = &compute.ImageReference{
-					ID: to.StringPtr(fmt.Sprintf("[resourceId('%s', variables('%[2]sosImageResourceGroup'), 'Microsoft.Compute/images', variables('%[2]sosImageName'))]", imageRef.SubscriptionID, profile.Name)),
+					ID: to.StringPtr(fmt.Sprintf("[resourceId('%s', variables('%[2]sosImageResourceGroup'), 'Microsoft.Compute/galleries/images/versions', variables('%[2]sosImageName'))]", imageRef.SubscriptionID, imageRef.Gallery, imageRef.ImageVersion)),
 				}
 			} else {
 				storageProfile.ImageReference = &compute.ImageReference{

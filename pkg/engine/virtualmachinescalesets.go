@@ -233,8 +233,8 @@ func CreateMasterVMSS(cs *api.ContainerService) VirtualMachineScaleSetARM {
 	}
 	imgReference := &compute.ImageReference{}
 	if masterProfile.HasImageRef() {
-		if imageRef.SubscriptionID != "" {
-			imgReference.ID = to.StringPtr(fmt.Sprintf("[resourceId('%s', parameters('osImageResourceGroup'), 'Microsoft.Compute/images', parameters('osImageName'))]", imageRef.SubscriptionID))
+		if masterProfile.HasImageGallery() != "" {
+			imgReference.ID = to.StringPtr(fmt.Sprintf("[resourceId('%s', parameters('osImageResourceGroup'), 'Microsoft.Compute/galleries/images/versions', '%s', parameters('osImageName'), '%s')]", imageRef.SubscriptionID, imageRef.Gallery, imageRef.ImageVersion)),
 		} else {
 			imgReference.ID = to.StringPtr("[resourceId(parameters('osImageResourceGroup'), 'Microsoft.Compute/images', parameters('osImageName'))]")
 		}
@@ -587,7 +587,7 @@ func CreateAgentVMSS(cs *api.ContainerService, profile *api.AgentPoolProfile) Vi
 			if imageRef.SubscriptionID != "" {
 				fmt.Println("inside loopy")
 				vmssStorageProfile.ImageReference = &compute.ImageReference{
-					ID: to.StringPtr(fmt.Sprintf("[resourceId('%s', variables('%[2]sosImageResourceGroup'), 'Microsoft.Compute/images', variables('%[2]sosImageName'))]", imageRef.SubscriptionID, profile.Name)),
+					ID: to.StringPtr(fmt.Sprintf("[resourceId('%s', variables('%[2]sosImageResourceGroup'), 'Microsoft.Compute/galleries/images/versions', '%s', variables('%[2]sosImageName', '%s'))]", imageRef.SubscriptionID, profile.Name, imageRef.Gallery, imageRef.ImageVersion)),
 				}
 			} else {
 				vmssStorageProfile.ImageReference = &compute.ImageReference{
