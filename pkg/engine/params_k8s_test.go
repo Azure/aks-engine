@@ -62,10 +62,18 @@ func TestAssignKubernetesComponentImageOverrideParams(t *testing.T) {
 			KubernetesConfig: &api.KubernetesConfig{
 				KubernetesImageBase: "foo.com",
 				ImageRepoOverrides: map[string]api.ImageRepoOverride{
-					"hyperkube": {Registry: "bar.com", Repo: "override/hyperkube"},
+					"foo.com/hyperkube-amd64": {Registry: "bar.com", Repo: "override/hyperkube"},
 				},
 			},
 		},
+	}
+
+	// this is a manual mapping of overrides which listed in the config above
+	// mapping to real component names, since there is no way to otherwise get
+	// this mapping. Anything that is added or updated in the above config should
+	// be added/modified accordingly here.
+	overrideToComp := map[string]string{
+		"foo.com/hyperkube-amd64": "hyperkube",
 	}
 
 	params := paramsMap{}
@@ -75,7 +83,8 @@ func TestAssignKubernetesComponentImageOverrideParams(t *testing.T) {
 
 	cloudSpecConfig := api.AzureEnvironmentSpecConfig{}
 
-	for name := range p.OrchestratorProfile.KubernetesConfig.ImageRepoOverrides {
+	for o := range p.OrchestratorProfile.KubernetesConfig.ImageRepoOverrides {
+		name := overrideToComp[o]
 		expect, err := api.GetKubernetesComponentImage(name, api.K8sComponentsByVersionMap[p.OrchestratorProfile.OrchestratorVersion], p.OrchestratorProfile.KubernetesConfig, false, cloudSpecConfig)
 		if err != nil {
 			t.Fatal(err)

@@ -75,7 +75,7 @@ func TestGetKubernetesComponentImage(t *testing.T) {
 			desc: "with base image reference and empty override",
 			comp: "foo",
 			config: &KubernetesConfig{KubernetesImageBase: "foo.com", ImageRepoOverrides: map[string]ImageRepoOverride{
-				"foo": ImageRepoOverride{},
+				"foo.com/foo": {},
 			}},
 			expectValue: "foo.com/foo:v1.0.0",
 		},
@@ -83,7 +83,7 @@ func TestGetKubernetesComponentImage(t *testing.T) {
 			desc: "with base image reference and override registry name only",
 			comp: "foo",
 			config: &KubernetesConfig{KubernetesImageBase: "foo.com", ImageRepoOverrides: map[string]ImageRepoOverride{
-				"foo": ImageRepoOverride{
+				"foo.com/foo": {
 					Registry: "bar.com",
 				},
 			}},
@@ -93,7 +93,7 @@ func TestGetKubernetesComponentImage(t *testing.T) {
 			desc: "with base image reference and override image repo only",
 			comp: "foo",
 			config: &KubernetesConfig{KubernetesImageBase: "foo.com", ImageRepoOverrides: map[string]ImageRepoOverride{
-				"foo": ImageRepoOverride{
+				"foo.com/foo": {
 					Repo: "bar/baz",
 				},
 			}},
@@ -103,7 +103,7 @@ func TestGetKubernetesComponentImage(t *testing.T) {
 			desc: "with base image reference and override image tag only",
 			comp: "foo",
 			config: &KubernetesConfig{KubernetesImageBase: "foo.com", ImageRepoOverrides: map[string]ImageRepoOverride{
-				"foo": ImageRepoOverride{
+				"foo.com/foo": {
 					Tags: map[string]string{"v1.0.0": "whatever", "v2.0.0": "another"},
 				},
 			}},
@@ -113,7 +113,7 @@ func TestGetKubernetesComponentImage(t *testing.T) {
 			desc: "with base image reference and overrides for all",
 			comp: "foo",
 			config: &KubernetesConfig{KubernetesImageBase: "foo.com", ImageRepoOverrides: map[string]ImageRepoOverride{
-				"foo": ImageRepoOverride{
+				"foo.com/foo": {
 					Registry: "bar.com",
 					Repo:     "bar/baz",
 					Tags:     map[string]string{"v1.0.0": "whatever", "v2.0.0": "another"},
@@ -125,7 +125,7 @@ func TestGetKubernetesComponentImage(t *testing.T) {
 			desc: "with base image reference and overrides with invalid repo name",
 			comp: "foo",
 			config: &KubernetesConfig{KubernetesImageBase: "foo.com", ImageRepoOverrides: map[string]ImageRepoOverride{
-				"foo": ImageRepoOverride{
+				"foo.com/foo": {
 					Registry: "bar.com",
 					Repo:     "bar:baz",
 					Tags:     map[string]string{"v1.0.0": "whatever", "v2.0.0": "another"},
@@ -137,7 +137,7 @@ func TestGetKubernetesComponentImage(t *testing.T) {
 			desc: "with base image reference and overrides with invalid tag",
 			comp: "foo",
 			config: &KubernetesConfig{KubernetesImageBase: "foo.com", ImageRepoOverrides: map[string]ImageRepoOverride{
-				"foo": ImageRepoOverride{
+				"foo.com/foo": {
 					Registry: "bar.com",
 					Repo:     "bar/baz",
 					Tags:     map[string]string{"v1.0.0": "bro:ken", "v2.0.0": "another"},
@@ -149,7 +149,7 @@ func TestGetKubernetesComponentImage(t *testing.T) {
 			desc: "with base image reference and overrides with unmatched tag override",
 			comp: "foo",
 			config: &KubernetesConfig{KubernetesImageBase: "foo.com", ImageRepoOverrides: map[string]ImageRepoOverride{
-				"foo": ImageRepoOverride{
+				"foo.com/foo": {
 					Registry: "bar.com",
 					Repo:     "bar/baz",
 					Tags:     map[string]string{"unmatched1": "v1.0.0", "unmatched2": "v1.0.0"},
@@ -161,7 +161,7 @@ func TestGetKubernetesComponentImage(t *testing.T) {
 			desc: "with base image reference and overrides with empty tag override",
 			comp: "foo",
 			config: &KubernetesConfig{KubernetesImageBase: "foo.com", ImageRepoOverrides: map[string]ImageRepoOverride{
-				"foo": ImageRepoOverride{
+				"foo.com/foo": {
 					Registry: "bar.com",
 					Repo:     "bar/baz",
 					Tags:     map[string]string{"v1.0.0": ""},

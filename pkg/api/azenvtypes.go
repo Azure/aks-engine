@@ -82,13 +82,13 @@ var (
 		VnetCNIWindowsPluginsDownloadURL: "https://acs-mirror.azureedge.net/cni/azure-vnet-cni-windows-amd64-" + AzureCniPluginVerWindows + ".zip",
 		ContainerdDownloadURLBase:        "https://storage.googleapis.com/cri-containerd-release/",
 		ImageRepoOverrides: map[string]ImageRepoOverride{
-			"hyperkube": {
+			"k8s.gcr.io/hyperkube-amd64": {
 				Registry: "mcr.microsoft.com",
 				Repo:     "k8s/core/hyperkube-amd64",
 				// TODO: Setup tag overrides so we can map upstream versions to Azure k8s versions
 				// For now just using the upstream version works fine.
 			},
-			"pause": {
+			"k8s.gcr.io/pause-amd64": {
 				Registry: "mcr.microsoft.com",
 				Repo:     "k8s/core/pause",
 				Tags: map[string]string{

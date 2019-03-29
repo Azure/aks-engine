@@ -53,7 +53,8 @@ func GetKubernetesComponentImage(name string, components map[string]string, c *K
 	repo := reference.Path(named)
 	tag := named.(reference.Tagged).Tag()
 
-	if o, ok := c.ImageRepoOverrides[name]; ok {
+	noTag := reference.TrimNamed(named)
+	if o, ok := c.ImageRepoOverrides[noTag.String()]; ok {
 		if o.Registry != "" {
 			domain = o.Registry
 		}
