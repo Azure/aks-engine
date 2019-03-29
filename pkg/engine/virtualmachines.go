@@ -169,6 +169,9 @@ func CreateMasterVM(cs *api.ContainerService) VirtualMachineARM {
 	}
 	imgReference := &compute.ImageReference{}
 	if useMasterCustomImage {
+		if imageRef.SubscriptionID != "" {
+			imgReference.ID = to.StringPtr(fmt.Sprintf("[resourceId('%s', parameters('osImageResourceGroup'), 'Microsoft.Compute/images', parameters('osImageName'))]", imageRef.SubscriptionID))
+		}
 		imgReference.ID = to.StringPtr("[resourceId(parameters('osImageResourceGroup'), 'Microsoft.Compute/images', parameters('osImageName'))]")
 	} else {
 		imgReference.Offer = to.StringPtr("[parameters('osImageOffer')]")
@@ -477,6 +480,11 @@ func createAgentAvailabilitySetVM(cs *api.ContainerService, profile *api.AgentPo
 		imageRef := profile.ImageRef
 		useAgentCustomImage := imageRef != nil && len(imageRef.Name) > 0 && len(imageRef.ResourceGroup) > 0
 		if useAgentCustomImage {
+			if imageRef.SubscriptionID != "" {
+				storageProfile.ImageReference = &compute.ImageReference{
+					ID: to.StringPtr(fmt.Sprintf("[resourceId('%s', variables('%[2]sosImageResourceGroup'), 'Microsoft.Compute/images', variables('%[2]sosImageName'))]", imageRef.SubscriptionID, profile.Name)),
+				}
+			}
 			storageProfile.ImageReference = &compute.ImageReference{
 				ID: to.StringPtr(fmt.Sprintf("[resourceId(variables('%[1]sosImageResourceGroup'), 'Microsoft.Compute/images', variables('%[1]sosImageName'))]", profile.Name)),
 			}
