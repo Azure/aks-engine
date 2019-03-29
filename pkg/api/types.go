@@ -1197,6 +1197,12 @@ func (p *Properties) GetMasterFQDN() string {
 	return p.MasterProfile.FQDN
 }
 
+// HasImageRef returns true if the customer brought os image
+func (m *MasterProfile) HasImageRef() bool {
+	imageRef := m.ImageRef
+	return imageRef != nil && len(imageRef.Name) > 0 && len(imageRef.ResourceGroup) > 0
+}
+
 // IsCustomVNET returns true if the customer brought their own VNET
 func (m *MasterProfile) IsCustomVNET() bool {
 	return len(m.VnetSubnetID) > 0
@@ -1312,6 +1318,12 @@ func (m *MasterProfile) GetCosmosEndPointURI() string {
 		return fmt.Sprintf(etcdEndpointURIFmt, m.DNSPrefix)
 	}
 	return ""
+}
+
+// HasImageRef returns true if the customer brought os image
+func (a *AgentPoolProfile) HasImageRef() bool {
+	imageRef := a.ImageRef
+	return imageRef != nil && len(imageRef.Name) > 0 && len(imageRef.ResourceGroup) > 0
 }
 
 // IsCustomVNET returns true if the customer brought their own VNET
