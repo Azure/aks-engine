@@ -23,7 +23,7 @@ On Windows, you can install aks-engine via [Chocolatey][choco] by executing the 
 
 On Linux, if you prefer, you can install aks-engine via install script doing:
 ```bash
-$ curl -o get_akse.sh https://raw.githubusercontent.com/Azure/aks-engine/master/scripts/get_akse.sh
+$ curl -o get_akse.sh https://raw.githubusercontent.com/Azure/aks-engine/master/scripts/get-akse.sh
 $ chmod 700 get_akse.sh
 $ ./get_akse.sh
 ```
