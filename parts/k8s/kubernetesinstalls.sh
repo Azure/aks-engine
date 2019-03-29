@@ -18,7 +18,7 @@ removeMoby() {
 
 upgradeOs() {
     apt_get_update || exit $ERR_APT_UPDATE_TIMEOUT
-    apt_get_dist_upgrade
+    apt_get_dist_upgrade || exit $ERR_APT_DIST_UPGRADE_TIMEOUT
 }
 
 installEtcd() {
