@@ -941,6 +941,7 @@ func convertVLabsMasterProfile(vlabs *vlabs.MasterProfile, api *MasterProfile) {
 		api.ImageRef = &ImageReference{}
 		api.ImageRef.Name = vlabs.ImageRef.Name
 		api.ImageRef.ResourceGroup = vlabs.ImageRef.ResourceGroup
+		api.ImageRef.SubscriptionID = vlabs.ImageRef.SubscriptionID
 	}
 
 	api.AvailabilityProfile = vlabs.AvailabilityProfile
@@ -1067,6 +1068,7 @@ func convertVLabsAgentPoolProfile(vlabs *vlabs.AgentPoolProfile, api *AgentPoolP
 		api.ImageRef = &ImageReference{}
 		api.ImageRef.Name = vlabs.ImageRef.Name
 		api.ImageRef.ResourceGroup = vlabs.ImageRef.ResourceGroup
+		api.ImageRef.SubscriptionID = vlabs.ImageRef.SubscriptionID
 	}
 	api.Role = AgentPoolProfileRole(vlabs.Role)
 }
