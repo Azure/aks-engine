@@ -12,7 +12,6 @@ import (
 	"github.com/Azure/aks-engine/pkg/api/common"
 	"github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2018-10-01/compute"
 	"github.com/Azure/go-autorest/autorest/to"
-	"github.com/davecgh/go-spew/spew"
 )
 
 func CreateMasterVMSS(cs *api.ContainerService) VirtualMachineScaleSetARM {
@@ -233,8 +232,8 @@ func CreateMasterVMSS(cs *api.ContainerService) VirtualMachineScaleSetARM {
 	}
 	imgReference := &compute.ImageReference{}
 	if masterProfile.HasImageRef() {
-		if masterProfile.HasImageGallery() != "" {
-			imgReference.ID = to.StringPtr(fmt.Sprintf("[resourceId('%s', parameters('osImageResourceGroup'), 'Microsoft.Compute/galleries/images/versions', '%s', parameters('osImageName'), '%s')]", imageRef.SubscriptionID, imageRef.Gallery, imageRef.ImageVersion)),
+		if masterProfile.HasImageGallery() {
+			imgReference.ID = to.StringPtr(fmt.Sprintf("[resourceId('%s', parameters('osImageResourceGroup'), 'Microsoft.Compute/galleries/images/versions', '%s', parameters('osImageName'), '%s')]", imageRef.SubscriptionID, imageRef.Gallery, imageRef.ImageVersion))
 		} else {
 			imgReference.ID = to.StringPtr("[resourceId(parameters('osImageResourceGroup'), 'Microsoft.Compute/images', parameters('osImageName'))]")
 		}
@@ -583,11 +582,10 @@ func CreateAgentVMSS(cs *api.ContainerService, profile *api.AgentPoolProfile) Vi
 	} else {
 		if profile.HasImageRef() {
 			imageRef := profile.ImageRef
-			spew.Dump(imageRef)
-			if imageRef.SubscriptionID != "" {
-				fmt.Println("inside loopy")
+			if profile.HasImageGallery() {
+				v := fmt.Sprintf("[resourceId('%s', variables('%sosImageResourceGroup'), 'Microsoft.Compute/galleries/images/versions', '%s', variables('%sosImageName'), '%s')]", imageRef.SubscriptionID, profile.Name, imageRef.Gallery, profile.Name, imageRef.ImageVersion)
 				vmssStorageProfile.ImageReference = &compute.ImageReference{
-					ID: to.StringPtr(fmt.Sprintf("[resourceId('%s', variables('%[2]sosImageResourceGroup'), 'Microsoft.Compute/galleries/images/versions', '%s', variables('%[2]sosImageName', '%s'))]", imageRef.SubscriptionID, profile.Name, imageRef.Gallery, imageRef.ImageVersion)),
+					ID: to.StringPtr(v),
 				}
 			} else {
 				vmssStorageProfile.ImageReference = &compute.ImageReference{

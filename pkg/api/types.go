@@ -1187,10 +1187,10 @@ func (m *MasterProfile) HasImageRef() bool {
 	return imageRef != nil && len(imageRef.Name) > 0 && len(imageRef.ResourceGroup) > 0
 }
 
-// HasImageGallery returns true if the customer brought os image
+// HasImageGallery returns true if the customer brought os image from Shared Image Gallery
 func (m *MasterProfile) HasImageGallery() bool {
 	imageRef := m.ImageRef
-	return imageRef != nil && len(imageRef.Gallery) > 0 && len(imageRef.ImageVersion) > 0
+	return imageRef != nil && len(imageRef.SubscriptionID) > 0 && len(imageRef.Gallery) > 0 && len(imageRef.ImageVersion) > 0
 }
 
 // IsCustomVNET returns true if the customer brought their own VNET
@@ -1316,10 +1316,10 @@ func (a *AgentPoolProfile) HasImageRef() bool {
 	return imageRef != nil && len(imageRef.Name) > 0 && len(imageRef.ResourceGroup) > 0
 }
 
-// HasImageGallery returns true if the customer brought os image
+// HasImageGallery returns true if the customer brought os image from Shared Image Gallery
 func (a *AgentPoolProfile) HasImageGallery() bool {
-	imageRef := m.ImageRef
-	return imageRef != nil && len(imageRef.Gallery) > 0 && len(imageRef.ImageVersion) > 0
+	imageRef := a.ImageRef
+	return imageRef != nil && len(imageRef.SubscriptionID) > 0 && len(imageRef.Gallery) > 0 && len(imageRef.ImageVersion) > 0
 }
 
 // IsCustomVNET returns true if the customer brought their own VNET
