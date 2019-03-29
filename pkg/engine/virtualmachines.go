@@ -12,7 +12,6 @@ import (
 	"github.com/Azure/aks-engine/pkg/api"
 	"github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2018-10-01/compute"
 	"github.com/Azure/go-autorest/autorest/to"
-	"github.com/davecgh/go-spew/spew"
 )
 
 func CreateMasterVM(cs *api.ContainerService) VirtualMachineARM {
@@ -169,13 +168,7 @@ func CreateMasterVM(cs *api.ContainerService) VirtualMachineARM {
 	}
 	imgReference := &compute.ImageReference{}
 	if cs.Properties.MasterProfile.HasImageRef() {
-		spewer := spew.ConfigState{
-			Indent:   "\t",
-			MaxDepth: 3,
-		}
-		spewer.Dump(imageRef)
 		if cs.Properties.MasterProfile.HasImageGallery() {
-			fmt.Printf("[resourceId('%s', parameters('osImageResourceGroup'), 'Microsoft.Compute/galleries/images/versions', '%s', parameters('osImageName'), '%s')]", imageRef.SubscriptionID, imageRef.Gallery, imageRef.ImageVersion)
 			imgReference.ID = to.StringPtr(fmt.Sprintf("[resourceId('%s', parameters('osImageResourceGroup'), 'Microsoft.Compute/galleries/images/versions', '%s', parameters('osImageName'), '%s')]", imageRef.SubscriptionID, imageRef.Gallery, imageRef.ImageVersion))
 		} else {
 			imgReference.ID = to.StringPtr("[resourceId(parameters('osImageResourceGroup'), 'Microsoft.Compute/images', parameters('osImageName'))]")
@@ -488,7 +481,7 @@ func createAgentAvailabilitySetVM(cs *api.ContainerService, profile *api.AgentPo
 		if profile.HasImageRef() {
 			if profile.HasImageGallery() {
 				storageProfile.ImageReference = &compute.ImageReference{
-					ID: to.StringPtr(fmt.Sprintf("[resourceId('%s', variables('%[2]sosImageResourceGroup'), 'Microsoft.Compute/galleries/images/versions', variables('%[2]sosImageName'))]", imageRef.SubscriptionID, imageRef.Gallery, imageRef.ImageVersion)),
+					ID: to.StringPtr(fmt.Sprintf("[resourceId('%s', variables('%[2]sosImageResourceGroup'), 'Microsoft.Compute/galleries/images/versions', '%s', variables('%[2]sosImageName'), '%s')]", imageRef.SubscriptionID, profile.Name, imageRef.Gallery, imageRef.ImageVersion)),
 				}
 			} else {
 				storageProfile.ImageReference = &compute.ImageReference{
