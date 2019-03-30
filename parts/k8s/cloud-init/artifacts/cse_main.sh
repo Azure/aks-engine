@@ -68,7 +68,7 @@ if [[ $OS != $COREOS_OS_NAME ]]; then
 fi
 
 if [[ ! -z "${MASTER_NODE}" ]] && [[ -z "${COSMOS_URI}" ]]; then
-    	installEtcd
+    installEtcd
 fi
 
 if [[ $OS != $COREOS_OS_NAME ]] && [[ $FULL_INSTALL_REQUIRED ]]; then
