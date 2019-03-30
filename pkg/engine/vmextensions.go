@@ -52,7 +52,6 @@ func CreateCustomScriptExtension(cs *api.ContainerService) VirtualMachineExtensi
 	outBoundCmd := ""
 	registry := ""
 	ncBinary := "nc"
-	fmt.Printf("IsCoreOS: %s\n", cs.Properties.MasterProfile.IsCoreOS())
 	if cs.Properties.MasterProfile.IsCoreOS() {
 		ncBinary = "ncat"
 	}
