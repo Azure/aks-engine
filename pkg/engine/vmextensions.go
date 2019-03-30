@@ -98,7 +98,7 @@ func createAgentVMASCustomScriptExtension(cs *api.ContainerService, profile *api
 	outBoundCmd := ""
 	registry := ""
 	ncBinary := "nc"
-	if cs.Properties.MasterProfile.IsCoreOS() {
+	if profile.IsCoreOS() {
 		ncBinary = "ncat"
 	}
 	if !cs.Properties.FeatureFlags.IsFeatureEnabled("BlockOutboundInternet") {
