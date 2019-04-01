@@ -47,14 +47,10 @@ cat << EOF >> ${RELEASE_NOTES_FILEPATH}
   - zip
 EOF
 
-if [[ ${FEATURE_FLAGS} == *"docker-engine"* ]]; then
-    # deprecated
-    exit 1
-else
-    MOBY_VERSION="3.0.4"
-    installMoby
-    echo "  - moby v${MOBY_VERSION}" >> ${RELEASE_NOTES_FILEPATH}
-fi
+MOBY_VERSION="3.0.4"
+installMoby
+installGPUDrivers
+echo "  - moby v${MOBY_VERSION}" >> ${RELEASE_NOTES_FILEPATH}
 
 installClearContainersRuntime
 

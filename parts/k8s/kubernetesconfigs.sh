@@ -409,6 +409,18 @@ configAddons() {
 }
 
 configGPUDrivers() {
+    # only install the runtime since nvidia-docker2 has a hard dep on docker CE packages.
+    # we will manually install nvidia-docker2
+    rmmod nouveau
+    echo blacklist nouveau >> /etc/modprobe.d/blacklist.conf
+    retrycmd_if_failure_no_stats 120 5 25 update-initramfs -u || exit $ERR_GPU_DRIVERS_INSTALL_TIMEOUT
+    retrycmd_if_failure 30 5 3600 apt-get -o Dpkg::Options::="--force-confold" install -y nvidia-container-runtime="${NVIDIA_CONTAINER_RUNTIME_VERSION}+docker18.09.2-1" || exit $ERR_GPU_DRIVERS_INSTALL_TIMEOUT
+    dpkg-deb -R ./nvidia-docker2*.deb "${GPU_DEST}tmp/pkg"
+    cp -r ${GPU_DEST}/tmp/pkg/usr/* /usr/ || $ERR_GPU_DRIVERS_INSTALL_TIMEOUT
+    rm -rf $GPU_DEST/tmp
+    retrycmd_if_failure 120 5 25 pkill -SIGHUP dockerd || exit $ERR_GPU_DRIVERS_INSTALL_TIMEOUT
+    mkdir -p $GPU_DEST/lib64 $GPU_DEST/overlay-workdir
+    retrycmd_if_failure 120 5 25 mount -t overlay -o lowerdir=/usr/lib/x86_64-linux-gnu,upperdir=${GPU_DEST}/lib64,workdir=${GPU_DEST}/overlay-workdir none /usr/lib/x86_64-linux-gnu || exit $ERR_GPU_DRIVERS_INSTALL_TIMEOUT
     retrycmd_if_failure 3 1 600 sh $GPU_DEST/nvidia-drivers-$GPU_DV --silent --accept-license --no-drm --dkms --utility-prefix="${GPU_DEST}" --opengl-prefix="${GPU_DEST}" || exit $ERR_GPU_DRIVERS_START_FAIL
     echo "${GPU_DEST}/lib64" > /etc/ld.so.conf.d/nvidia.conf
     retrycmd_if_failure 120 5 25 ldconfig || exit $ERR_GPU_DRIVERS_START_FAIL
