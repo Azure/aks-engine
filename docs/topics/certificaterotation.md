@@ -10,7 +10,7 @@ Instructions on rotating TLS CA and certificates for an AKS Engine cluster.
 
 ## Preparation
 
-**CAUTION**: Before rotation, it's preferrable to back up your cluster:
+**CAUTION**: Rotating certificates can break component connectivity and leave the cluster in an unrecoverable state. Before performing any of these instructions on a live cluster, it is preferrable to backup your cluster state and migrate critical workloads to another cluster.
 
 // TODO: add more detailed instructions on backing up the etcd cluster data.
 
