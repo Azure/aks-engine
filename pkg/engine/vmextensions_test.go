@@ -125,7 +125,7 @@ func TestCreateAgentVMASAKSBillingExtension(t *testing.T) {
 				TypeHandlerVersion:      to.StringPtr("1.0"),
 				AutoUpgradeMinorVersion: to.BoolPtr(true),
 				Settings:                &map[string]interface{}{},
-				Type:                    to.StringPtr("Compute.AKS-Engine.Windows.Billing"),
+				Type:                    to.StringPtr("Compute.AKS.Windows.Billing"),
 			},
 			Type: to.StringPtr("Microsoft.Compute/virtualMachines/extensions"),
 		},

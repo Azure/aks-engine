@@ -170,11 +170,15 @@ func CreateAgentVMASAKSBillingExtension(cs *api.ContainerService, profile *api.A
 		Type: to.StringPtr("Microsoft.Compute/virtualMachines/extensions"),
 	}
 
-	if profile.IsWindows() {
-		vmExtension.VirtualMachineExtensionProperties.Type = to.StringPtr("Compute.AKS-Engine.Windows.Billing")
-	} else {
-		if cs.Properties.IsHostedMasterProfile() {
+	if cs.Properties.IsHostedMasterProfile() {
+		if profile.IsWindows() {
+			vmExtension.VirtualMachineExtensionProperties.Type = to.StringPtr("Compute.AKS.Windows.Billing")
+		} else {
 			vmExtension.VirtualMachineExtensionProperties.Type = to.StringPtr("Compute.AKS.Linux.Billing")
+		}
+	} else {
+		if profile.IsWindows() {
+			vmExtension.VirtualMachineExtensionProperties.Type = to.StringPtr("Compute.AKS-Engine.Windows.Billing")
 		} else {
 			vmExtension.VirtualMachineExtensionProperties.Type = to.StringPtr("Compute.AKS-Engine.Linux.Billing")
 		}
