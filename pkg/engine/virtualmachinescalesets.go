@@ -641,8 +641,18 @@ func CreateAgentVMSS(cs *api.ContainerService, profile *api.AgentPoolProfile) Vi
 			},
 		}
 
-		if profile.IsWindows() {
-			aksBillingExtension.Type = to.StringPtr("Compute.AKS-Engine.Windows.Billing")
+		if cs.Properties.IsHostedMasterProfile() {
+			if profile.IsWindows() {
+				aksBillingExtension.Type = to.StringPtr("Compute.AKS.Windows.Billing")
+			} else {
+				aksBillingExtension.Type = to.StringPtr("Compute.AKS.Linux.Billing")
+			}
+		} else {
+			if profile.IsWindows() {
+				aksBillingExtension.Type = to.StringPtr("Compute.AKS-Engine.Windows.Billing")
+			} else {
+				aksBillingExtension.Type = to.StringPtr("Compute.AKS-Engine.Linux.Billing")
+			}
 		}
 
 		vmssExtensions = append(vmssExtensions, aksBillingExtension)
