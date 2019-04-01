@@ -437,6 +437,12 @@ func (a *Properties) validateAgentPoolProfiles(isUpdate bool) error {
 			if a.AgentPoolProfiles[i].SinglePlacementGroup != nil && a.AgentPoolProfiles[i].AvailabilityProfile == AvailabilitySet {
 				return errors.New("singlePlacementGroup is only supported with VirtualMachineScaleSets")
 			}
+
+			if !isUpdate {
+				if agentPoolProfile.Distro == AKSDockerEngine {
+					return errors.New("The 'aks-docker-engine' distro is no longer supported for cluster creation scenarios!")
+				}
+			}
 		}
 
 		if e := agentPoolProfile.validateWindows(a.OrchestratorProfile, a.WindowsProfile, isUpdate); agentPoolProfile.OSType == Windows && e != nil {
