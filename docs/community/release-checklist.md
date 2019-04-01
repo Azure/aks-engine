@@ -118,8 +118,10 @@ Finally, let's make the new aks-engine release easy to install.
 Create a pull request to add the new release to [gofish][] through the [fish-food repository][gofish-food]. You will need to calculate the sha256 checksum for each of the .tar.gz archives:
 
 ```
-$ shasum -a 256 _dist/aks-engine-$TAG-darwin-amd64.tar.gz  # macOS example
-250c0b645ad22514f4af52393ebcda95f1f911032274801f17c295800741f75b  _dist/aks-engine-v0.32.3-darwin-amd64.tar.gz
+$ for tarball in darwin-amd64 linux-amd64 windows-amd64; do shasum -a 256 _dist/aks-engine-$TAG-$tarball.tar.gz; done
+9ce3b35fc1395d4086cc47f86cc5b881936b00dbbba23ec40761215c943c3757  _dist/aks-engine-v0.33.3-darwin-amd64.tar.gz
+52db041cba6822cebc028f5474c48f0017629d11016987d9b1fe5ea0128bdeb4  _dist/aks-engine-v0.33.3-linux-amd64.tar.gz
+2a8b934a456b05545ec4592f4e0c39dbc7289ac5363a10576e24e2ede19bda90  _dist/aks-engine-v0.33.3-windows-amd64.tar.gz
 ```
 
 Paste each checksum in the appropriate section and update the release version. The PR will look very similar to [this recent update][gofish-pr].
