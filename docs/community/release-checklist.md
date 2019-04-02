@@ -119,9 +119,9 @@ Create a pull request to add the new release to [gofish][] through the [fish-foo
 
 ```
 $ for tarball in darwin-amd64 linux-amd64 windows-amd64; do shasum -a 256 _dist/aks-engine-$TAG-$tarball.tar.gz; done
-9ce3b35fc1395d4086cc47f86cc5b881936b00dbbba23ec40761215c943c3757  _dist/aks-engine-v0.33.3-darwin-amd64.tar.gz
-52db041cba6822cebc028f5474c48f0017629d11016987d9b1fe5ea0128bdeb4  _dist/aks-engine-v0.33.3-linux-amd64.tar.gz
-2a8b934a456b05545ec4592f4e0c39dbc7289ac5363a10576e24e2ede19bda90  _dist/aks-engine-v0.33.3-windows-amd64.tar.gz
+857f5780aa1d4fc2b3f6eb40b22fb2a076de3ae5fd927141dd1984d0924656d4  _dist/aks-engine-v0.32.3-darwin-amd64.tar.gz
+19de96befe656c432fbde71c582fb3f9de8ab9abc681f1607852c4fc4a0bcb99  _dist/aks-engine-v0.32.3-linux-amd64.tar.gz
+830f7baf8b2d04e97f313c079170b6e4715f7cd410310479581a6627a6e95f41  _dist/aks-engine-v0.32.3-windows-amd64.tar.gz
 ```
 
 Paste each checksum in the appropriate section and update the release version. The PR will look very similar to [this recent update][gofish-pr].
