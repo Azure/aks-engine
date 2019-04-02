@@ -82,6 +82,26 @@ func Test_VMSSNameParts(t *testing.T) {
 	}
 }
 
+func Test_WindowsVMSSNameParts(t *testing.T) {
+	data := []struct {
+		poolIdentifier string
+	}{
+		{"winpo1"},
+		{"win2po"},
+	}
+
+	for _, el := range data {
+		vmssName := fmt.Sprintf("aks%s", el.poolIdentifier)
+		poolIdentifier, err := WindowsVmssNameParts(vmssName)
+		if err != nil {
+			t.Fatalf("unexpected error: %s", err)
+		}
+		if poolIdentifier != el.poolIdentifier {
+			t.Fatalf("incorrect poolIdentifier. expected=%s actual=%s", el.poolIdentifier, poolIdentifier)
+		}
+	}
+}
+
 func Test_WindowsVMNameParts(t *testing.T) {
 	data := []struct {
 		VMName, expectedPoolPrefix, expectedOrch string
