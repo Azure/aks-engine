@@ -609,7 +609,7 @@ func Test_Properties_ValidateDistro(t *testing.T) {
 	for _, distro := range DistroValues {
 		p.MasterProfile.Distro = distro
 		p.AgentPoolProfiles = []*AgentPoolProfile{
-			&AgentPoolProfile{
+			{
 				Name:   "pool1",
 				Distro: distro,
 			},
@@ -632,7 +632,7 @@ func Test_Properties_ValidateDistro(t *testing.T) {
 	for _, distro := range DistroValues {
 		p.MasterProfile.Distro = distro
 		p.AgentPoolProfiles = []*AgentPoolProfile{
-			&AgentPoolProfile{
+			{
 				Name:   "pool1",
 				Distro: distro,
 			},
@@ -656,7 +656,7 @@ func Test_Properties_ValidateDistro(t *testing.T) {
 	for _, distro := range bogusDistroValues {
 		p.MasterProfile.Distro = distro
 		p.AgentPoolProfiles = []*AgentPoolProfile{
-			&AgentPoolProfile{
+			{
 				Name:   "pool1",
 				Distro: distro,
 			},
@@ -680,7 +680,7 @@ func Test_Properties_ValidateDistro(t *testing.T) {
 	for _, distro := range oldDistros {
 		p.MasterProfile.Distro = distro
 		p.AgentPoolProfiles = []*AgentPoolProfile{
-			&AgentPoolProfile{
+			{
 				Name:   "pool1",
 				Distro: distro,
 			},
