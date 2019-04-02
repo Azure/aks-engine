@@ -1626,7 +1626,7 @@ func TestMasterProfileValidate(t *testing.T) {
 				},
 			}
 			cs.Properties.AgentPoolProfiles = test.agentPoolProfiles
-			err := cs.Properties.validateMasterProfile()
+			err := cs.Properties.validateMasterProfile(false)
 			if test.expectedErr == "" && err != nil ||
 				test.expectedErr != "" && (err == nil || test.expectedErr != err.Error()) {
 				t.Errorf("test %s: unexpected error %q\n", test.name, err)
@@ -2350,7 +2350,7 @@ func TestAgentPoolProfile_ValidateVirtualMachineScaleSet(t *testing.T) {
 		cs.Properties.MasterProfile.VnetSubnetID = "vnet"
 		cs.Properties.MasterProfile.FirstConsecutiveStaticIP = "10.10.10.240"
 		expectedMsg := fmt.Sprintf("when masterProfile's availabilityProfile is VirtualMachineScaleSets and a vnetSubnetID is specified, the firstConsecutiveStaticIP should be empty and will be determined by an offset from the first IP in the vnetCidr")
-		if err := cs.Properties.validateMasterProfile(); err.Error() != expectedMsg {
+		if err := cs.Properties.validateMasterProfile(false); err.Error() != expectedMsg {
 			t.Errorf("expected error with message : %s, but got %s", expectedMsg, err.Error())
 		}
 	})
@@ -2362,7 +2362,7 @@ func TestAgentPoolProfile_ValidateVirtualMachineScaleSet(t *testing.T) {
 		agentPoolProfiles := cs.Properties.AgentPoolProfiles
 		agentPoolProfiles[0].AvailabilityProfile = AvailabilitySet
 		expectedMsg := fmt.Sprintf("VirtualMachineScaleSets for master profile must be used together with virtualMachineScaleSets for agent profiles. Set \"availabilityProfile\" to \"VirtualMachineScaleSets\" for agent profiles")
-		if err := cs.Properties.validateMasterProfile(); err.Error() != expectedMsg {
+		if err := cs.Properties.validateMasterProfile(false); err.Error() != expectedMsg {
 			t.Errorf("expected error with message : %s, but got %s", expectedMsg, err.Error())
 		}
 	})

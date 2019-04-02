@@ -116,7 +116,7 @@ func (a *Properties) validate(isUpdate bool) error {
 	if e := a.ValidateOrchestratorProfile(isUpdate); e != nil {
 		return e
 	}
-	if e := a.validateMasterProfile(); e != nil {
+	if e := a.validateMasterProfile(isUpdate); e != nil {
 		return e
 	}
 	if e := a.validateAgentPoolProfiles(isUpdate); e != nil {
@@ -332,7 +332,7 @@ func (a *Properties) ValidateOrchestratorProfile(isUpdate bool) error {
 	return a.validateContainerRuntime()
 }
 
-func (a *Properties) validateMasterProfile() error {
+func (a *Properties) validateMasterProfile(isUpdate bool) error {
 	m := a.MasterProfile
 
 	if a.OrchestratorProfile.OrchestratorType == Kubernetes {
@@ -364,6 +364,13 @@ func (a *Properties) validateMasterProfile() error {
 	if m.SinglePlacementGroup != nil && m.AvailabilityProfile == AvailabilitySet {
 		return errors.New("singlePlacementGroup is only supported with VirtualMachineScaleSets")
 	}
+
+	if !isUpdate {
+		if m.Distro == AKSDockerEngine {
+			return errors.New("The 'aks-docker-engine' distro is no longer supported for cluster creation scenarios")
+		}
+	}
+
 	return common.ValidateDNSPrefix(m.DNSPrefix)
 }
 
@@ -440,7 +447,7 @@ func (a *Properties) validateAgentPoolProfiles(isUpdate bool) error {
 
 			if !isUpdate {
 				if agentPoolProfile.Distro == AKSDockerEngine {
-					return errors.New("The 'aks-docker-engine' distro is no longer supported for cluster creation scenarios!")
+					return errors.New("The 'aks-docker-engine' distro is no longer supported for cluster creation scenarios")
 				}
 			}
 		}
