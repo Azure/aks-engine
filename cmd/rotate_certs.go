@@ -141,13 +141,6 @@ func (rcc *rotateCertsCmd) run(cmd *cobra.Command, args []string) error {
 	}
 	log.Printf("New kubeconfig: \n %s", kubeConfig)
 
-	log.Printf("Rotate etcd")
-
-	err = rcc.rotateEtcd()
-	if err != nil {
-		return errors.Wrap(err, "error rotating etcd cluster")
-	}
-
 	log.Printf("Rotate apiserver")
 
 	err = rcc.rotateApiserver()
@@ -162,11 +155,22 @@ func (rcc *rotateCertsCmd) run(cmd *cobra.Command, args []string) error {
 		return errors.Wrap(err, "error rotating kubelet")
 	}
 
+	log.Printf("Rotate etcd")
+
+	err = rcc.rotateEtcd()
+	if err != nil {
+		return errors.Wrap(err, "error rotating etcd cluster")
+	}
+
+	log.Printf("Successfully rotated etcd and cluster certificates. Please reboot all the nodes.")
+
 	return nil
 
-	// TODO: save kubeconfig
+	// TODO proxy certs
 
-	// TODO: save apimodel certificateProfile?
+	// TODO: save kubeconfig + replace kubeconfig in master nodes
+
+	// TODO: save apimodel certificateProfile/cert files as output
 }
 
 func (rcc *rotateCertsCmd) getClusterNodes() error {
@@ -219,21 +223,33 @@ func (rcc *rotateCertsCmd) rotateEtcd() error {
 		etcdPeerPrivateKeyCmd := "sudo bash -c \"cat > /etc/kubernetes/certs/etcdpeer" + strconv.Itoa(i) + ".key << EOL \n" + rcc.containerService.Properties.CertificateProfile.EtcdPeerPrivateKeys[i] + "EOL\""
 		etcdPeerCertificateCmd := "sudo bash -c \"cat > /etc/kubernetes/certs/etcdpeer" + strconv.Itoa(i) + ".crt << EOL \n" + rcc.containerService.Properties.CertificateProfile.EtcdPeerCertificates[i] + "EOL\""
 
-		for _, cmd := range []string{caPrivateKeyCmd, caCertificateCmd, etcdServerPrivateKeyCmd, etcdServerCertificateCmd, etcdClientPrivateKeyCmd, etcdClientCertificateCmd, etcdPeerPrivateKeyCmd, etcdPeerCertificateCmd} {
+		for _, cmd := range []string{caPrivateKeyCmd, caCertificateCmd} {
 			out, err := executeCmd(cmd, rcc.masterFQDN, host.Name, "22", sshConfig)
 			if err != nil {
 				log.Printf("Command %s output: %s\n", cmd, out)
 				return errors.Wrap(err, "failed replacing certificate file")
 			}
 		}
-	}
 
-	for _, host := range rcc.masterNodes {
-		out, err := executeCmd("sudo systemctl restart etcd", rcc.masterFQDN, host.Name, "22", sshConfig)
-		if err != nil {
-			log.Printf("Command `sudo systemctl restart etcd` output: %s\n", out)
-			return errors.Wrap(err, "failed to restart etcd")
+		// out, err := executeCmd("sudo systemctl restart etcd", rcc.masterFQDN, host.Name, "22", sshConfig)
+		// if err != nil {
+		// 	log.Printf("Command `sudo systemctl restart etcd` output: %s\n", out)
+		// 	return errors.Wrap(err, "failed to restart etcd")
+		// }
+
+		for _, cmd := range []string{etcdServerPrivateKeyCmd, etcdServerCertificateCmd, etcdClientPrivateKeyCmd, etcdClientCertificateCmd, etcdPeerPrivateKeyCmd, etcdPeerCertificateCmd} {
+			out, err := executeCmd(cmd, rcc.masterFQDN, host.Name, "22", sshConfig)
+			if err != nil {
+				log.Printf("Command %s output: %s\n", cmd, out)
+				return errors.Wrap(err, "failed replacing certificate file")
+			}
 		}
+
+		// out, err = executeCmd("sudo systemctl restart etcd", rcc.masterFQDN, host.Name, "22", sshConfig)
+		// if err != nil {
+		// 	log.Printf("Command `sudo systemctl restart etcd` output: %s\n", out)
+		// 	return errors.Wrap(err, "failed to restart etcd")
+		// }
 	}
 
 	return nil
@@ -241,9 +257,9 @@ func (rcc *rotateCertsCmd) rotateEtcd() error {
 
 // From the first master node, rotate apiserver certificates in the nodes.
 func (rcc *rotateCertsCmd) rotateApiserver() error {
-	caCertificateCmd := "echo " + rcc.containerService.Properties.CertificateProfile.CaCertificate + " > /etc/kubernetes/certs/ca.crt"
-	apiServerPrivateKeyCmd := "echo " + rcc.containerService.Properties.CertificateProfile.APIServerPrivateKey + " > /etc/kubernetes/certs/apiserver.key"
-	apiServerCertificateCmd := "echo " + rcc.containerService.Properties.CertificateProfile.APIServerCertificate + " > /etc/kubernetes/certs/apiserver.crt"
+	caCertificateCmd := "sudo bash -c \"cat > /etc/kubernetes/certs/ca.crt << EOL \n" + rcc.containerService.Properties.CertificateProfile.CaCertificate + "EOL\""
+	apiServerPrivateKeyCmd := "sudo bash -c \"cat > /etc/kubernetes/certs/apiserver.key << EOL \n" + rcc.containerService.Properties.CertificateProfile.APIServerPrivateKey + "EOL\""
+	apiServerCertificateCmd := "sudo bash -c \"cat > /etc/kubernetes/certs/apiserver.crt << EOL \n" + rcc.containerService.Properties.CertificateProfile.APIServerCertificate + "EOL\""
 
 	sshConfig := &ssh.ClientConfig{
 		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
@@ -257,8 +273,8 @@ func (rcc *rotateCertsCmd) rotateApiserver() error {
 		log.Printf("Ranging over node: %s\n", host.Name)
 		for _, cmd := range []string{apiServerPrivateKeyCmd, apiServerCertificateCmd} {
 			out, err := executeCmd(cmd, rcc.masterFQDN, host.Name, "22", sshConfig)
-			log.Printf("Command %s output: %s\n", cmd, out)
 			if err != nil {
+				log.Printf("Command %s output: %s\n", cmd, out)
 				return errors.Wrap(err, "failed replacing certificate file")
 			}
 		}
@@ -268,8 +284,8 @@ func (rcc *rotateCertsCmd) rotateApiserver() error {
 		log.Printf("Ranging over node: %s\n", host.Name)
 		for _, cmd := range []string{caCertificateCmd, apiServerCertificateCmd} {
 			out, err := executeCmd(cmd, rcc.masterFQDN, host.Name, "22", sshConfig)
-			log.Printf("Command %s output: %s\n", cmd, out)
 			if err != nil {
+				log.Printf("Command %s output: %s\n", cmd, out)
 				return errors.Wrap(err, "failed replacing certificate file")
 			}
 		}
@@ -278,8 +294,8 @@ func (rcc *rotateCertsCmd) rotateApiserver() error {
 }
 
 func (rcc *rotateCertsCmd) rotateKubelet() error {
-	clientCertificateCmd := "echo " + rcc.containerService.Properties.CertificateProfile.ClientCertificate + " > /etc/kubernetes/certs/client.crt"
-	clientPrivateKeyCmd := "echo " + rcc.containerService.Properties.CertificateProfile.ClientPrivateKey + " > /etc/kubernetes/certs/client.key"
+	clientCertificateCmd := "sudo bash -c \"cat > /etc/kubernetes/certs/client.crt << EOL \n" + rcc.containerService.Properties.CertificateProfile.ClientCertificate + "EOL\""
+	clientPrivateKeyCmd := "sudo bash -c \"cat > /etc/kubernetes/certs/client.key << EOL \n" + rcc.containerService.Properties.CertificateProfile.ClientPrivateKey + "EOL\""
 
 	sshConfig := &ssh.ClientConfig{
 		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
@@ -316,8 +332,6 @@ func publicKeyFile(file string) ssh.AuthMethod {
 }
 
 func executeCmd(command, masterFQDN, hostname string, port string, config *ssh.ClientConfig) (string, error) {
-
-	log.Printf("Running %s on %s\n", command, hostname)
 
 	// Dial connection to the master via public load balancer
 	lbClient, err := ssh.Dial("tcp", fmt.Sprintf("%s:%s", masterFQDN, port), config)
