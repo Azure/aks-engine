@@ -597,6 +597,109 @@ func Test_Properties_ValidatePrivateAzureRegistryServer(t *testing.T) {
 	}
 }
 
+func Test_Properties_ValidateDistro(t *testing.T) {
+	p := &Properties{}
+	p.OrchestratorProfile = &OrchestratorProfile{}
+	p.OrchestratorProfile.OrchestratorType = Kubernetes
+	p.MasterProfile = &MasterProfile{
+		DNSPrefix: "foo",
+	}
+
+	// Should not error on valid distros in non-update scenarios
+	for _, distro := range DistroValues {
+		p.MasterProfile.Distro = distro
+		p.AgentPoolProfiles = []*AgentPoolProfile{
+			&AgentPoolProfile{
+				Name:   "pool1",
+				Distro: distro,
+			},
+		}
+		if err := p.validateMasterProfile(false); err != nil {
+			t.Errorf(
+				"should not error on distro=\"%s\"",
+				distro,
+			)
+		}
+		if err := p.validateAgentPoolProfiles(false); err != nil {
+			t.Errorf(
+				"should not error on distro=\"%s\"",
+				distro,
+			)
+		}
+	}
+
+	// Should not error on valid distros in update scenarios
+	for _, distro := range DistroValues {
+		p.MasterProfile.Distro = distro
+		p.AgentPoolProfiles = []*AgentPoolProfile{
+			&AgentPoolProfile{
+				Name:   "pool1",
+				Distro: distro,
+			},
+		}
+		if err := p.validateMasterProfile(true); err != nil {
+			t.Errorf(
+				"should not error on distro=\"%s\"",
+				distro,
+			)
+		}
+		if err := p.validateAgentPoolProfiles(true); err != nil {
+			t.Errorf(
+				"should not error on distro=\"%s\"",
+				distro,
+			)
+		}
+	}
+
+	// Should error for invalid distros on non-update scenarios
+	bogusDistroValues := [...]Distro{AKSDockerEngine}
+	for _, distro := range bogusDistroValues {
+		p.MasterProfile.Distro = distro
+		p.AgentPoolProfiles = []*AgentPoolProfile{
+			&AgentPoolProfile{
+				Name:   "pool1",
+				Distro: distro,
+			},
+		}
+		if err := p.validateMasterProfile(false); err == nil {
+			t.Errorf(
+				"should error on distro=\"%s\"",
+				distro,
+			)
+		}
+		if err := p.validateAgentPoolProfiles(false); err == nil {
+			t.Errorf(
+				"should error on distro=\"%s\"",
+				distro,
+			)
+		}
+	}
+
+	// Should not error for aks-docker-engine distro on update scenarios
+	oldDistros := [...]Distro{AKSDockerEngine}
+	for _, distro := range oldDistros {
+		p.MasterProfile.Distro = distro
+		p.AgentPoolProfiles = []*AgentPoolProfile{
+			&AgentPoolProfile{
+				Name:   "pool1",
+				Distro: distro,
+			},
+		}
+		if err := p.validateMasterProfile(true); err != nil {
+			t.Errorf(
+				"should error on distro=\"%s\"",
+				distro,
+			)
+		}
+		if err := p.validateAgentPoolProfiles(true); err != nil {
+			t.Errorf(
+				"should error on distro=\"%s\"",
+				distro,
+			)
+		}
+	}
+}
+
 func Test_Properties_ValidateNetworkPolicy(t *testing.T) {
 	p := &Properties{}
 	p.OrchestratorProfile = &OrchestratorProfile{}

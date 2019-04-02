@@ -35,6 +35,7 @@ const (
 	AKS             Distro = "aks"
 	AKSDockerEngine Distro = "aks-docker-engine" // deprecated docker-engine distro
 	AKS1804         Distro = "aks-18.04"
+	ACC1604         Distro = "acc-16.04"
 )
 
 // validation values
@@ -93,6 +94,9 @@ var (
 
 	// ContainerRuntimeValues holds the valid values for container runtimes
 	ContainerRuntimeValues = [...]string{"", Docker, ClearContainers, KataContainers, Containerd}
+
+	// DistroValues holds the valid values for OS distros
+	DistroValues = [...]Distro{"", Ubuntu, Ubuntu1804, RHEL, CoreOS, AKS, AKS1804, ACC1604}
 )
 
 // Kubernetes configuration
