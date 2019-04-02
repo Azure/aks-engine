@@ -79,6 +79,7 @@ $global:PrimaryScaleSetName = "{{WrapAsVariable "primaryScaleSetName"}}"
 
 $global:KubeClusterCIDR = "{{WrapAsParameter "kubeClusterCidr"}}"
 $global:KubeServiceCIDR = "{{WrapAsParameter "kubeServiceCidr"}}"
+$global:VNetCIDR = "{{WrapAsParameter "vnetCidr"}}"
 $global:KubeletNodeLabels = "{{GetAgentKubernetesLabels . "',variables('labelResourceGroup'),'"}}"
 $global:KubeletConfigArgs = @( {{GetKubeletConfigKeyValsPsh .KubernetesConfig }} )
 
@@ -220,7 +221,8 @@ try
                                -KubeDnsSearchPath $global:KubeDnsSearchPath `
                                -KubeClusterCIDR $global:KubeClusterCIDR `
                                -MasterSubnet $global:MasterSubnet `
-                               -KubeServiceCIDR $global:KubeServiceCIDR
+                               -KubeServiceCIDR $global:KubeServiceCIDR `
+                               -VNetCIDR $global:VNetCIDR
         } elseif ($global:NetworkPlugin -eq "kubenet") {
             Update-WinCNI -CNIPath $global:CNIPath
             Get-HnsPsm1 -HNSModule $global:HNSModule
