@@ -38,8 +38,9 @@ type Upgrader struct {
 type vmStatus int
 
 const (
-	defaultTimeout            = time.Minute * 20
-	vmStatusUpgraded vmStatus = iota
+	defaultTimeout                     = time.Minute * 20
+	nodePropertiesCopyTimeout          = time.Minute * 5
+	vmStatusUpgraded          vmStatus = iota
 	vmStatusNotUpgraded
 	vmStatusIgnored
 )
@@ -523,7 +524,12 @@ func (ku *Upgrader) upgradeAgentScaleSets(ctx context.Context) error {
 
 			// copy custom properties from old node to new node if the PreserveNodesProperties in AgentPoolProfile is not set to false explicitly.
 			preserveNodesProperties := api.DefaultPreserveNodesProperties
-			poolName, _, _ := utils.VmssNameParts(vmssToUpgrade.Name)
+			var poolName string
+			if vmssToUpgrade.IsWindows {
+				poolName, _ = utils.WindowsVmssNameParts(vmssToUpgrade.Name)
+			} else {
+				poolName, _, _ = utils.VmssNameParts(vmssToUpgrade.Name)
+			}
 			if agentPool, ok := agentPoolMap[poolName]; ok {
 				if agentPool != nil && agentPool.PreserveNodesProperties != nil {
 					preserveNodesProperties = *agentPool.PreserveNodesProperties
@@ -537,10 +543,27 @@ func (ku *Upgrader) upgradeAgentScaleSets(ctx context.Context) error {
 				}
 
 				ku.logger.Infof("Copying custom annotations, labels, taints from old node %s to new node %s...", vmToUpgrade.Name, newNodeName)
+				ch := make(chan struct{}, 1)
+				go func() {
+					for {
+						err = ku.copyCustomPropertiesToNewNode(client, vmToUpgrade.Name, newNodeName)
+						if err != nil {
+							ku.logger.Warningf("Failed to copy custom annotations, labels, taints from old node %s to new node %s: %v", vmToUpgrade.Name, newNodeName, err)
+							time.Sleep(time.Second * 5)
+						} else {
+							ch <- struct{}{}
+						}
+					}
+				}()
 
-				err = ku.copyCustomPropertiesToNewNode(client, vmToUpgrade.Name, newNodeName)
-				if err != nil {
-					ku.logger.Warningf("Failed to copy custom annotations, labels, taints from old node %s to new node %s: %v", vmToUpgrade.Name, newNodeName, err)
+				for {
+					select {
+					case <-ch:
+						ku.logger.Infof("Successfully copied custom annotations, labels, taints from old node %s to new node %s.", vmToUpgrade.Name, newNodeName)
+					case <-time.After(nodePropertiesCopyTimeout):
+						ku.logger.Errorf("Copying custom annotations, labels, taints from old node %s to new node %s can't complete within %v", vmToUpgrade.Name, newNodeName, nodePropertiesCopyTimeout)
+					}
+					break
 				}
 			}
 

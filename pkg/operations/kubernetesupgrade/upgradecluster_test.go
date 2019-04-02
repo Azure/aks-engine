@@ -264,9 +264,10 @@ var _ = Describe("Upgrade Kubernetes cluster tests", func() {
 				location := "eastus"
 				return []compute.VirtualMachineScaleSet{
 					{
-						Name:     &scalesetName,
-						Sku:      &sku,
-						Location: &location,
+						Name:                             &scalesetName,
+						Sku:                              &sku,
+						Location:                         &location,
+						VirtualMachineScaleSetProperties: &compute.VirtualMachineScaleSetProperties{},
 					},
 				}
 			}
@@ -333,6 +334,74 @@ var _ = Describe("Upgrade Kubernetes cluster tests", func() {
 			err := uc.UpgradeCluster(&mockClient, "kubeConfig", TestAKSEngineVersion)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(uc.AgentPoolScaleSetsToUpgrade[0].VMsToUpgrade).To(HaveLen(4))
+		})
+	})
+
+	Context("When upgrading a cluster with windows VMSS VMs", func() {
+		var (
+			cs         *api.ContainerService
+			uc         UpgradeCluster
+			mockClient armhelpers.MockAKSEngineClient
+		)
+
+		BeforeEach(func() {
+			mockClient = armhelpers.MockAKSEngineClient{}
+			cs = api.CreateMockContainerService("testcluster", "1.9.10", 3, 3, false)
+			uc = UpgradeCluster{
+				Translator: &i18n.Translator{},
+				Logger:     log.NewEntry(log.New()),
+			}
+			mockClient.FakeListVirtualMachineScaleSetsResult = func() []compute.VirtualMachineScaleSet {
+				windowsScalesetName := "akswinpoo"
+				linuxScalesetName := "aks-nodepool1-18178942-vmss"
+				sku := compute.Sku{}
+				location := "eastus"
+				return []compute.VirtualMachineScaleSet{
+					{
+						Name:     &windowsScalesetName,
+						Sku:      &sku,
+						Location: &location,
+						VirtualMachineScaleSetProperties: &compute.VirtualMachineScaleSetProperties{
+							VirtualMachineProfile: &compute.VirtualMachineScaleSetVMProfile{
+								OsProfile: &compute.VirtualMachineScaleSetOSProfile{
+									WindowsConfiguration: &compute.WindowsConfiguration{},
+								},
+							},
+						},
+					},
+					{
+						Name:                             &linuxScalesetName,
+						Sku:                              &sku,
+						Location:                         &location,
+						VirtualMachineScaleSetProperties: &compute.VirtualMachineScaleSetProperties{},
+					},
+				}
+			}
+			uc.Client = &mockClient
+			uc.ClusterTopology = ClusterTopology{}
+			uc.SubscriptionID = "DEC923E3-1EF1-4745-9516-37906D56DEC4"
+			uc.ResourceGroup = "TestRg"
+			uc.DataModel = cs
+			uc.NameSuffix = "12345678"
+			uc.UpgradeWorkFlow = fakeUpgradeWorkflow{}
+		})
+		It("Should mark scale sets as windows correctly.", func() {
+			mockClient.FakeListVirtualMachineScaleSetVMsResult = func() []compute.VirtualMachineScaleSetVM {
+				return []compute.VirtualMachineScaleSetVM{
+					mockClient.MakeFakeVirtualMachineScaleSetVM("Kubernetes:1.9.10"),
+					mockClient.MakeFakeVirtualMachineScaleSetVM("Kubernetes:1.9.9"),
+					mockClient.MakeFakeVirtualMachineScaleSetVM("Kubernetes:1.9.7"),
+					mockClient.MakeFakeVirtualMachineScaleSetVM("Kubernetes:1.9.10"),
+				}
+			}
+			uc.Force = false
+
+			err := uc.UpgradeCluster(&mockClient, "kubeConfig", TestAKSEngineVersion)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(uc.AgentPoolScaleSetsToUpgrade[0].IsWindows).To(BeTrue())
+			Expect(uc.AgentPoolScaleSetsToUpgrade[0].VMsToUpgrade).To(HaveLen(2))
+			Expect(uc.AgentPoolScaleSetsToUpgrade[1].IsWindows).To(BeFalse())
+			Expect(uc.AgentPoolScaleSetsToUpgrade[1].VMsToUpgrade).To(HaveLen(2))
 		})
 	})
 

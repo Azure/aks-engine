@@ -231,3 +231,11 @@ func unmarshalFromFile(filePath string, v interface{}) error {
 	}
 	return nil
 }
+
+func unmarshalFromString(jsonString string, v interface{}) error {
+	err := json.Unmarshal([]byte(jsonString), v)
+	if err != nil {
+		return fmt.Errorf("Fail to unmarshal, err -  %q", err)
+	}
+	return nil
+}

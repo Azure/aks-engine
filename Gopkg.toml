@@ -123,3 +123,8 @@ required = [
 [[constraint]]
   name = "gopkg.in/fsnotify.v1"
   source = "https://github.com/fsnotify/fsnotify.git"
+
+
+[[constraint]]
+  name = "gopkg.in/jarcoal/httpmock.v1"
+  version = "1.0.1"
