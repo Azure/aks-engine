@@ -23,6 +23,6 @@ steps:
     workingDirectory: $(modulePath)
   - task: PublishPipelineArtifact@0
     inputs:
-      artifactName: '${{ parameters.job }}_logs'
+      artifactName: '${{ parameters.job }}-$(Date:yyyyMMdd-HHmmss)_logs'
       targetPath: '$(modulePath)/_logs'
     condition: always()
