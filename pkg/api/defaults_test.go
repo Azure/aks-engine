@@ -1266,7 +1266,7 @@ func TestAlwaysSetEnableAggregatedAPIsToFalseIfRBACDisabled(t *testing.T) {
 	mockCS.setOrchestratorDefaults(true)
 
 	if properties.OrchestratorProfile.KubernetesConfig.EnableAggregatedAPIs {
-		t.Fatalf("got unexpected EnableAggregatedAPIs config value for EnableRbac=false: %t",
+		t.Fatalf("expected EnableAggregatedAPIs to be manually set to false in update scenario, instead got %t",
 			properties.OrchestratorProfile.KubernetesConfig.EnableAggregatedAPIs)
 	}
 }
