@@ -365,19 +365,11 @@ func (a *Properties) validateMasterProfile(isUpdate bool) error {
 		return errors.New("singlePlacementGroup is only supported with VirtualMachineScaleSets")
 	}
 
-	// Check that distro has a valid value.
-	valid := false
 	distroValues := DistroValues
 	if isUpdate {
 		distroValues = append(distroValues, AKSDockerEngine)
 	}
-	for _, d := range distroValues {
-		if m.Distro == d {
-			valid = true
-			break
-		}
-	}
-	if !valid {
+	if !validateDistro(m.Distro, distroValues) {
 		return errors.Errorf("The %s distro is not supported", m.Distro)
 	}
 
@@ -455,19 +447,11 @@ func (a *Properties) validateAgentPoolProfiles(isUpdate bool) error {
 				return errors.New("singlePlacementGroup is only supported with VirtualMachineScaleSets")
 			}
 
-			// Check that distro has a valid value.
-			valid := false
 			distroValues := DistroValues
 			if isUpdate {
 				distroValues = append(distroValues, AKSDockerEngine)
 			}
-			for _, d := range distroValues {
-				if agentPoolProfile.Distro == d {
-					valid = true
-					break
-				}
-			}
-			if !valid {
+			if !validateDistro(agentPoolProfile.Distro, distroValues) {
 				return errors.Errorf("The %s distro is not supported", agentPoolProfile.Distro)
 			}
 		}
@@ -1346,6 +1330,16 @@ func validateContainerdVersion(containerdVersion string) error {
 		}
 	}
 	return errors.Errorf("Invalid containerd version \"%s\", please use one of the following versions: %s", containerdVersion, containerdValidVersions)
+}
+
+// Check that distro has a valid value
+func validateDistro(distro Distro, distroValues []Distro) bool {
+	for _, d := range distroValues {
+		if distro == d {
+			return true
+		}
+	}
+	return false
 }
 
 func (i *ImageReference) validateImageNameAndGroup() error {
