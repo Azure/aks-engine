@@ -7,6 +7,7 @@ These cluster definition examples demonstrate how to create customized Docker En
 ## User Guides
 
 * [Kubernetes Windows Walkthrough](../../docs/topics/windows.md) - shows how to create a hybrid Kubernetes Windows enabled Docker cluster on Azure.
+* [Building Kubernetes Windows binaries](../../docs/howto/building-windows-kubernetes-binaries.md) - shows how to build kubernetes windows binaries for use in a Windows Kubernetes cluster.
 
 ## Sample Deployments
 
