@@ -43,6 +43,12 @@ if [[ $OS == $COREOS_OS_NAME ]]; then
     KUBECTL=/opt/kubectl
 fi
 
+if [ -f /var/run/reboot-required ]; then
+    REBOOTREQUIRED=true
+else
+    REBOOTREQUIRED=false
+fi
+
 if [ -f /var/log.vhd/azure/golden-image-install.complete ]; then
     echo "detected golden image pre-install"
     FULL_INSTALL_REQUIRED=false
@@ -52,8 +58,6 @@ if [ -f /var/log.vhd/azure/golden-image-install.complete ]; then
 else
     FULL_INSTALL_REQUIRED=true
 fi
-
-upgradeOs
 
 if [[ ! -z "${MASTER_NODE}" ]] && [[ -z "${COSMOS_URI}" ]]; then
     	installEtcd
@@ -159,9 +163,6 @@ if $FULL_INSTALL_REQUIRED; then
     fi
 fi
 
-# Re-enable unattended-upgrades
-rm -f /etc/apt/apt.conf.d/99periodic
-
 echo "Custom script finished successfully"
 
 echo `date`,`hostname`, endcustomscript>>/opt/m
@@ -172,18 +173,12 @@ if ! $FULL_INSTALL_REQUIRED; then
     cleanUpContainerImages
 fi
 
-if [ -f /var/run/reboot-required ]; then
-    REBOOTREQUIRED=true
-else
-    REBOOTREQUIRED=false
-fi
-
 if $REBOOTREQUIRED; then
   echo 'reboot required, rebooting node in 1 minute'
+  /bin/bash -c "shutdown -r 1 &"
   if [[ $OS == $UBUNTU_OS_NAME ]]; then
-      aptmarkWALinuxAgent unhold
+      aptmarkWALinuxAgent unhold &
   fi
-  nohup /bin/bash -c "sleep 3 && reboot" &
 else
   if [[ $OS == $UBUNTU_OS_NAME ]]; then
       /usr/lib/apt/apt.systemd.daily &
