@@ -1257,6 +1257,20 @@ func TestDefaultDisableRbac(t *testing.T) {
 	}
 }
 
+func TestAlwaysSetEnableAggregatedAPIsToFalseIfRBACDisabled(t *testing.T) {
+	mockCS := getMockBaseContainerService("1.10.3")
+	properties := mockCS.Properties
+	properties.OrchestratorProfile.OrchestratorType = Kubernetes
+	properties.OrchestratorProfile.KubernetesConfig.EnableRbac = to.BoolPtr(false)
+	properties.OrchestratorProfile.KubernetesConfig.EnableAggregatedAPIs = true
+	mockCS.setOrchestratorDefaults(true)
+
+	if properties.OrchestratorProfile.KubernetesConfig.EnableAggregatedAPIs {
+		t.Fatalf("got unexpected EnableAggregatedAPIs config value for EnableRbac=false: %t",
+			properties.OrchestratorProfile.KubernetesConfig.EnableAggregatedAPIs)
+	}
+}
+
 func TestDefaultCloudProvider(t *testing.T) {
 	mockCS := getMockBaseContainerService("1.10.3")
 	properties := mockCS.Properties
