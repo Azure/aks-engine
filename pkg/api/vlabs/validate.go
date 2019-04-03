@@ -365,10 +365,20 @@ func (a *Properties) validateMasterProfile(isUpdate bool) error {
 		return errors.New("singlePlacementGroup is only supported with VirtualMachineScaleSets")
 	}
 
-	if !isUpdate {
-		if m.Distro == AKSDockerEngine {
-			return errors.New("The 'aks-docker-engine' distro is no longer supported for cluster creation scenarios")
+	// Check that distro has a valid value.
+	valid := false
+	distroValues := DistroValues
+	if isUpdate {
+		distroValues = append(distroValues, AKSDockerEngine)
+	}
+	for _, d := range distroValues {
+		if m.Distro == d {
+			valid = true
+			break
 		}
+	}
+	if !valid {
+		return errors.Errorf("The %s distro is not supported", m.Distro)
 	}
 
 	return common.ValidateDNSPrefix(m.DNSPrefix)
@@ -445,10 +455,20 @@ func (a *Properties) validateAgentPoolProfiles(isUpdate bool) error {
 				return errors.New("singlePlacementGroup is only supported with VirtualMachineScaleSets")
 			}
 
-			if !isUpdate {
-				if agentPoolProfile.Distro == AKSDockerEngine {
-					return errors.New("The 'aks-docker-engine' distro is no longer supported for cluster creation scenarios")
+			// Check that distro has a valid value.
+			valid := false
+			distroValues := DistroValues
+			if isUpdate {
+				distroValues = append(distroValues, AKSDockerEngine)
+			}
+			for _, d := range distroValues {
+				if agentPoolProfile.Distro == d {
+					valid = true
+					break
 				}
+			}
+			if !valid {
+				return errors.Errorf("The %s distro is not supported", agentPoolProfile.Distro)
 			}
 		}
 

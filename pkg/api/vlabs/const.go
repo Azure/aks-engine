@@ -96,7 +96,7 @@ var (
 	ContainerRuntimeValues = [...]string{"", Docker, ClearContainers, KataContainers, Containerd}
 
 	// DistroValues holds the valid values for OS distros
-	DistroValues = [...]Distro{"", Ubuntu, Ubuntu1804, RHEL, CoreOS, AKS, AKS1804, ACC1604}
+	DistroValues = []Distro{"", Ubuntu, Ubuntu1804, RHEL, CoreOS, AKS, AKS1804, ACC1604}
 )
 
 // Kubernetes configuration

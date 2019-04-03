@@ -652,7 +652,7 @@ func Test_Properties_ValidateDistro(t *testing.T) {
 	}
 
 	// Should error for invalid distros on non-update scenarios
-	bogusDistroValues := [...]Distro{AKSDockerEngine}
+	bogusDistroValues := []Distro{AKSDockerEngine, "bogon"}
 	for _, distro := range bogusDistroValues {
 		p.MasterProfile.Distro = distro
 		p.AgentPoolProfiles = []*AgentPoolProfile{
@@ -676,7 +676,7 @@ func Test_Properties_ValidateDistro(t *testing.T) {
 	}
 
 	// Should not error for aks-docker-engine distro on update scenarios
-	oldDistros := [...]Distro{AKSDockerEngine}
+	oldDistros := []Distro{AKSDockerEngine}
 	for _, distro := range oldDistros {
 		p.MasterProfile.Distro = distro
 		p.AgentPoolProfiles = []*AgentPoolProfile{
