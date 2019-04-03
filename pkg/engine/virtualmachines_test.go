@@ -152,7 +152,7 @@ func TestCreateVirtualMachines(t *testing.T) {
 	}
 
 	expectedVM.VirtualMachine.Zones = &[]string{
-		"split(string(parameters('availabilityZones')[mod(copyIndex(variables('masterOffset')), length(parameters('availabilityZones')))]), ',')",
+		"[string(parameters('availabilityZones')[mod(copyIndex(variables('masterOffset')), length(parameters('availabilityZones')))])]",
 	}
 
 	diff = cmp.Diff(actualVM, expectedVM)
