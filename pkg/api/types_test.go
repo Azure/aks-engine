@@ -753,7 +753,7 @@ func TestUbuntuVersion(t *testing.T) {
 				AgentPoolProfiles: []*AgentPoolProfile{
 					{
 						Count:  1,
-						Distro: AKSDockerEngine,
+						Distro: AKS,
 						OSType: Linux,
 					},
 				},
@@ -3421,11 +3421,10 @@ func getMockPropertiesWithCustomCloudProfile(name string, hasCustomCloudProfile,
 					ResourceManagerVMDNSSuffix: "",
 				},
 				OSImageConfig: map[Distro]AzureOSImageConfig{
-					Ubuntu:          DefaultUbuntuImageConfig,
-					RHEL:            DefaultRHELOSImageConfig,
-					CoreOS:          DefaultCoreOSImageConfig,
-					AKS:             DefaultAKSOSImageConfig,
-					AKSDockerEngine: DefaultAKSDockerEngineOSImageConfig,
+					Ubuntu: DefaultUbuntuImageConfig,
+					RHEL:   DefaultRHELOSImageConfig,
+					CoreOS: DefaultCoreOSImageConfig,
+					AKS:    DefaultAKSOSImageConfig,
 				},
 			}
 			p.CustomCloudProfile.AzureEnvironmentSpecConfig = &azureStackCloudSpec

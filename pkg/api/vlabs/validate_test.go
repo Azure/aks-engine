@@ -597,6 +597,109 @@ func Test_Properties_ValidatePrivateAzureRegistryServer(t *testing.T) {
 	}
 }
 
+func Test_Properties_ValidateDistro(t *testing.T) {
+	p := &Properties{}
+	p.OrchestratorProfile = &OrchestratorProfile{}
+	p.OrchestratorProfile.OrchestratorType = Kubernetes
+	p.MasterProfile = &MasterProfile{
+		DNSPrefix: "foo",
+	}
+
+	// Should not error on valid distros in non-update scenarios
+	for _, distro := range DistroValues {
+		p.MasterProfile.Distro = distro
+		p.AgentPoolProfiles = []*AgentPoolProfile{
+			{
+				Name:   "pool1",
+				Distro: distro,
+			},
+		}
+		if err := p.validateMasterProfile(false); err != nil {
+			t.Errorf(
+				"should not error on distro=\"%s\"",
+				distro,
+			)
+		}
+		if err := p.validateAgentPoolProfiles(false); err != nil {
+			t.Errorf(
+				"should not error on distro=\"%s\"",
+				distro,
+			)
+		}
+	}
+
+	// Should not error on valid distros in update scenarios
+	for _, distro := range DistroValues {
+		p.MasterProfile.Distro = distro
+		p.AgentPoolProfiles = []*AgentPoolProfile{
+			{
+				Name:   "pool1",
+				Distro: distro,
+			},
+		}
+		if err := p.validateMasterProfile(true); err != nil {
+			t.Errorf(
+				"should not error on distro=\"%s\"",
+				distro,
+			)
+		}
+		if err := p.validateAgentPoolProfiles(true); err != nil {
+			t.Errorf(
+				"should not error on distro=\"%s\"",
+				distro,
+			)
+		}
+	}
+
+	// Should error for invalid distros on non-update scenarios
+	bogusDistroValues := []Distro{AKSDockerEngine, "bogon"}
+	for _, distro := range bogusDistroValues {
+		p.MasterProfile.Distro = distro
+		p.AgentPoolProfiles = []*AgentPoolProfile{
+			{
+				Name:   "pool1",
+				Distro: distro,
+			},
+		}
+		if err := p.validateMasterProfile(false); err == nil {
+			t.Errorf(
+				"should error on distro=\"%s\"",
+				distro,
+			)
+		}
+		if err := p.validateAgentPoolProfiles(false); err == nil {
+			t.Errorf(
+				"should error on distro=\"%s\"",
+				distro,
+			)
+		}
+	}
+
+	// Should not error for aks-docker-engine distro on update scenarios
+	oldDistros := []Distro{AKSDockerEngine}
+	for _, distro := range oldDistros {
+		p.MasterProfile.Distro = distro
+		p.AgentPoolProfiles = []*AgentPoolProfile{
+			{
+				Name:   "pool1",
+				Distro: distro,
+			},
+		}
+		if err := p.validateMasterProfile(true); err != nil {
+			t.Errorf(
+				"should error on distro=\"%s\"",
+				distro,
+			)
+		}
+		if err := p.validateAgentPoolProfiles(true); err != nil {
+			t.Errorf(
+				"should error on distro=\"%s\"",
+				distro,
+			)
+		}
+	}
+}
+
 func Test_Properties_ValidateNetworkPolicy(t *testing.T) {
 	p := &Properties{}
 	p.OrchestratorProfile = &OrchestratorProfile{}
@@ -1149,49 +1252,6 @@ func Test_Properties_ValidateContainerRuntime(t *testing.T) {
 	}
 }
 
-func TestAgentPoolProfileDistro(t *testing.T) {
-	p := &Properties{}
-	p.OrchestratorProfile = &OrchestratorProfile{}
-	p.OrchestratorProfile.OrchestratorType = Kubernetes
-	p.AgentPoolProfiles = []*AgentPoolProfile{
-		{
-			Distro: AKS,
-			VMSize: "Standard_NC6",
-		},
-		{
-			Distro: AKSDockerEngine,
-			VMSize: "Standard_NC6",
-		},
-		{
-			Distro: Ubuntu,
-			VMSize: "Standard_NC6",
-		},
-		{
-			Distro: AKS1804,
-			VMSize: "Standard_NC6",
-		},
-		{
-			Distro: Ubuntu1804,
-			VMSize: "Standard_NC6",
-		},
-	}
-	if err := p.AgentPoolProfiles[0].validateKubernetesDistro(); err == nil {
-		t.Errorf("should error on %s Distro with N Series VM SKU", AKS)
-	}
-	if err := p.AgentPoolProfiles[1].validateKubernetesDistro(); err != nil {
-		t.Errorf("should not error on %s Distro with N Series VM SKU", AKSDockerEngine)
-	}
-	if err := p.AgentPoolProfiles[2].validateKubernetesDistro(); err != nil {
-		t.Errorf("should not error on %s Distro with N Series VM SKU", Ubuntu)
-	}
-	if err := p.AgentPoolProfiles[3].validateKubernetesDistro(); err == nil {
-		t.Errorf("should error on %s Distro with N Series VM SKU", AKS1804)
-	}
-	if err := p.AgentPoolProfiles[4].validateKubernetesDistro(); err == nil {
-		t.Errorf("should error on %s Distro with N Series VM SKU", Ubuntu1804)
-	}
-}
-
 func Test_Properties_ValidateAddons(t *testing.T) {
 	p := &Properties{}
 	p.OrchestratorProfile = &OrchestratorProfile{}
@@ -1669,7 +1729,7 @@ func TestMasterProfileValidate(t *testing.T) {
 				},
 			}
 			cs.Properties.AgentPoolProfiles = test.agentPoolProfiles
-			err := cs.Properties.validateMasterProfile()
+			err := cs.Properties.validateMasterProfile(false)
 			if test.expectedErr == "" && err != nil ||
 				test.expectedErr != "" && (err == nil || test.expectedErr != err.Error()) {
 				t.Errorf("test %s: unexpected error %q\n", test.name, err)
@@ -2393,7 +2453,7 @@ func TestAgentPoolProfile_ValidateVirtualMachineScaleSet(t *testing.T) {
 		cs.Properties.MasterProfile.VnetSubnetID = "vnet"
 		cs.Properties.MasterProfile.FirstConsecutiveStaticIP = "10.10.10.240"
 		expectedMsg := fmt.Sprintf("when masterProfile's availabilityProfile is VirtualMachineScaleSets and a vnetSubnetID is specified, the firstConsecutiveStaticIP should be empty and will be determined by an offset from the first IP in the vnetCidr")
-		if err := cs.Properties.validateMasterProfile(); err.Error() != expectedMsg {
+		if err := cs.Properties.validateMasterProfile(false); err.Error() != expectedMsg {
 			t.Errorf("expected error with message : %s, but got %s", expectedMsg, err.Error())
 		}
 	})
@@ -2405,7 +2465,7 @@ func TestAgentPoolProfile_ValidateVirtualMachineScaleSet(t *testing.T) {
 		agentPoolProfiles := cs.Properties.AgentPoolProfiles
 		agentPoolProfiles[0].AvailabilityProfile = AvailabilitySet
 		expectedMsg := fmt.Sprintf("VirtualMachineScaleSets for master profile must be used together with virtualMachineScaleSets for agent profiles. Set \"availabilityProfile\" to \"VirtualMachineScaleSets\" for agent profiles")
-		if err := cs.Properties.validateMasterProfile(); err.Error() != expectedMsg {
+		if err := cs.Properties.validateMasterProfile(false); err.Error() != expectedMsg {
 			t.Errorf("expected error with message : %s, but got %s", expectedMsg, err.Error())
 		}
 	})

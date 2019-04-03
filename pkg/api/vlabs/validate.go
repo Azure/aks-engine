@@ -116,7 +116,7 @@ func (a *Properties) validate(isUpdate bool) error {
 	if e := a.ValidateOrchestratorProfile(isUpdate); e != nil {
 		return e
 	}
-	if e := a.validateMasterProfile(); e != nil {
+	if e := a.validateMasterProfile(isUpdate); e != nil {
 		return e
 	}
 	if e := a.validateAgentPoolProfiles(isUpdate); e != nil {
@@ -332,7 +332,7 @@ func (a *Properties) ValidateOrchestratorProfile(isUpdate bool) error {
 	return a.validateContainerRuntime()
 }
 
-func (a *Properties) validateMasterProfile() error {
+func (a *Properties) validateMasterProfile(isUpdate bool) error {
 	m := a.MasterProfile
 
 	if a.OrchestratorProfile.OrchestratorType == Kubernetes {
@@ -364,6 +364,15 @@ func (a *Properties) validateMasterProfile() error {
 	if m.SinglePlacementGroup != nil && m.AvailabilityProfile == AvailabilitySet {
 		return errors.New("singlePlacementGroup is only supported with VirtualMachineScaleSets")
 	}
+
+	distroValues := DistroValues
+	if isUpdate {
+		distroValues = append(distroValues, AKSDockerEngine)
+	}
+	if !validateDistro(m.Distro, distroValues) {
+		return errors.Errorf("The %s distro is not supported", m.Distro)
+	}
+
 	return common.ValidateDNSPrefix(m.DNSPrefix)
 }
 
@@ -436,6 +445,14 @@ func (a *Properties) validateAgentPoolProfiles(isUpdate bool) error {
 
 			if a.AgentPoolProfiles[i].SinglePlacementGroup != nil && a.AgentPoolProfiles[i].AvailabilityProfile == AvailabilitySet {
 				return errors.New("singlePlacementGroup is only supported with VirtualMachineScaleSets")
+			}
+
+			distroValues := DistroValues
+			if isUpdate {
+				distroValues = append(distroValues, AKSDockerEngine)
+			}
+			if !validateDistro(agentPoolProfile.Distro, distroValues) {
+				return errors.Errorf("The %s distro is not supported", agentPoolProfile.Distro)
 			}
 		}
 
@@ -765,17 +782,6 @@ func (a *AgentPoolProfile) validateCustomNodeLabels(orchestratorType string) err
 			return errors.New("Agent CustomNodeLabels are only supported for DCOS and Kubernetes")
 		}
 	}
-	return nil
-}
-
-func (a *AgentPoolProfile) validateKubernetesDistro() error {
-	switch a.Distro {
-	case AKS, AKS1804, Ubuntu1804:
-		if a.IsNSeriesSKU() {
-			return errors.Errorf("The %s VM SKU must use the %s or %s Distro as they require the docker-engine container runtime with Ubuntu 16.04-LTS", a.VMSize, AKSDockerEngine, Ubuntu)
-		}
-	}
-
 	return nil
 }
 
@@ -1324,6 +1330,16 @@ func validateContainerdVersion(containerdVersion string) error {
 		}
 	}
 	return errors.Errorf("Invalid containerd version \"%s\", please use one of the following versions: %s", containerdVersion, containerdValidVersions)
+}
+
+// Check that distro has a valid value
+func validateDistro(distro Distro, distroValues []Distro) bool {
+	for _, d := range distroValues {
+		if distro == d {
+			return true
+		}
+	}
+	return false
 }
 
 func (i *ImageReference) validateImageNameAndGroup() error {

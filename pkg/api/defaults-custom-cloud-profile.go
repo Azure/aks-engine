@@ -21,11 +21,10 @@ func (p *Properties) setCustomCloudProfileDefaults() {
 				ResourceManagerVMDNSSuffix: "",
 			},
 			OSImageConfig: map[Distro]AzureOSImageConfig{
-				Ubuntu:          DefaultUbuntuImageConfig,
-				RHEL:            DefaultRHELOSImageConfig,
-				CoreOS:          DefaultCoreOSImageConfig,
-				AKS:             DefaultAKSOSImageConfig,
-				AKSDockerEngine: DefaultAKSDockerEngineOSImageConfig,
+				Ubuntu: DefaultUbuntuImageConfig,
+				RHEL:   DefaultRHELOSImageConfig,
+				CoreOS: DefaultCoreOSImageConfig,
+				AKS:    DefaultAKSOSImageConfig,
 			},
 		}
 

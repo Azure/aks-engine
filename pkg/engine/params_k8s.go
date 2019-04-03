@@ -244,13 +244,6 @@ func assignKubernetesParameters(properties *api.Properties, parametersMap params
 			addValue(parametersMap, "kubernetesEndpoint", properties.HostedMasterProfile.FQDN)
 		}
 
-		// GPU nodes need docker-engine as the container runtime
-		if properties.HasNSeriesSKU() {
-			addValue(parametersMap, "dockerEngineDownloadRepo", cloudSpecConfig.DockerSpecConfig.DockerEngineRepo)
-		} else {
-			addValue(parametersMap, "dockerEngineDownloadRepo", "")
-		}
-
 		if properties.OrchestratorProfile.KubernetesConfig.MobyVersion != "" {
 			addValue(parametersMap, "mobyVersion", properties.OrchestratorProfile.KubernetesConfig.MobyVersion)
 		}

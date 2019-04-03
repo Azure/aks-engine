@@ -15,17 +15,7 @@ Capacity:
 [...]
 ```
 
-For Kubernetes v1.6, v1.7, v1.8 and v1.9 clusters:
-
-```
-[...]
-Capacity:
- alpha.kubernetes.io/nvidia-gpu:  2
- cpu:                            12
-[...]
-```
-
-If `alpha.kubernetes.io/nvidia-gpu` or `nvidia.com/gpu` is `0` and you just created the cluster, you might have to wait a little bit. The driver installation takes about 12 minutes, and the node might join the cluster before the installation is completed. After a few minute the node should restart, and report the correct number of GPUs.
+If `nvidia.com/gpu` is `0` and you just created the cluster, you might have to wait a little bit. The driver installation can add a few minutes to the cluster deployment time compared to non-GPU agent pool scenarios, and the node might join the cluster before the installation is completed. After a few minute the node should restart, and report the correct number of GPUs.
 
 ## Running a GPU-enabled container
 
@@ -35,8 +25,6 @@ You will also need to mount the drivers from the host (the kubernetes agent) int
 On the host, the drivers are installed under `/usr/local/nvidia`.
 
 Here is an example template running TensorFlow:
-
-For Kubernetes v1.10+ clusters (using NVIDIA Device Plugin):
 
 ```yaml
 apiVersion: extensions/v1beta1
@@ -61,40 +49,4 @@ spec:
             nvidia.com/gpu: 1
 ```
 
-For Kubernetes v1.6, v1.7, v1.8 and v1.9 clusters:
-
-```yaml
-apiVersion: extensions/v1beta1
-kind: Deployment
-metadata:
-  labels:
-    app: tensorflow
-  name: tensorflow
-spec:
-  template:
-    metadata:
-      labels:
-        app: tensorflow
-    spec:
-      containers:
-      - name: tensorflow
-        image: <SOME_IMAGE>
-        command: <SOME_COMMAND>
-        imagePullPolicy: IfNotPresent
-        resources:
-          limits:
-            alpha.kubernetes.io/nvidia-gpu: 1
-        volumeMounts:
-        - name: nvidia
-          mountPath: /usr/local/nvidia
-      volumes:
-        - name: nvidia
-          hostPath:
-            path: /usr/local/nvidia
-```
-
-We specify `nvidia.com/gpu: 1` or `alpha.kubernetes.io/nvidia-gpu: 1` in the resources limits. For v1.6 to v1.9 clusters, we need to mount the drivers from the host into the container.
-
-## Known incompatibilty with Moby
-
-GPU nodes are currently incompatible with the default Moby container runtime provided in the default `aks` image. Clusters containing GPU nodes will be set to use Docker Engine instead of Moby.
+We specify `nvidia.com/gpu: 1` in the resources limits.
