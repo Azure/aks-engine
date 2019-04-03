@@ -59,7 +59,7 @@ func CreateVirtualMachine(cs *api.ContainerService) VirtualMachineARM {
 
 	if hasAvailabilityZones {
 		virtualMachine.Zones = &[]string{
-			"split(string(parameters('availabilityZones')[mod(copyIndex(variables('masterOffset')), length(parameters('availabilityZones')))]), ',')",
+			"[string(parameters('availabilityZones')[mod(copyIndex(variables('masterOffset')), length(parameters('availabilityZones')))])]",
 		}
 	}
 
