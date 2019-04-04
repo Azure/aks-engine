@@ -92,7 +92,7 @@ func (cs *ContainerService) setAddonsConfig(isUpdate bool) {
 
 	defaultBlobfuseFlexVolumeAddonsConfig := KubernetesAddon{
 		Name:    DefaultBlobfuseFlexVolumeAddonName,
-		Enabled: to.BoolPtr(common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.8.0") && DefaultBlobfuseFlexVolumeAddonEnabled),
+		Enabled: to.BoolPtr(common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.8.0") && DefaultBlobfuseFlexVolumeAddonEnabled && !cs.Properties.HasCoreOS()),
 		Containers: []KubernetesContainerSpec{
 			{
 				Name:           DefaultBlobfuseFlexVolumeAddonName,
@@ -107,7 +107,7 @@ func (cs *ContainerService) setAddonsConfig(isUpdate bool) {
 
 	defaultSMBFlexVolumeAddonsConfig := KubernetesAddon{
 		Name:    DefaultSMBFlexVolumeAddonName,
-		Enabled: to.BoolPtr(common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.8.0") && DefaultSMBFlexVolumeAddonEnabled),
+		Enabled: to.BoolPtr(common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.8.0") && DefaultSMBFlexVolumeAddonEnabled && !cs.Properties.HasCoreOS()),
 		Containers: []KubernetesContainerSpec{
 			{
 				Name:           DefaultSMBFlexVolumeAddonName,
@@ -122,7 +122,7 @@ func (cs *ContainerService) setAddonsConfig(isUpdate bool) {
 
 	defaultKeyVaultFlexVolumeAddonsConfig := KubernetesAddon{
 		Name:    DefaultKeyVaultFlexVolumeAddonName,
-		Enabled: to.BoolPtr(DefaultKeyVaultFlexVolumeAddonEnabled),
+		Enabled: to.BoolPtr(DefaultKeyVaultFlexVolumeAddonEnabled && !cs.Properties.HasCoreOS()),
 		Containers: []KubernetesContainerSpec{
 			{
 				Name:           DefaultKeyVaultFlexVolumeAddonName,
@@ -178,7 +178,7 @@ func (cs *ContainerService) setAddonsConfig(isUpdate bool) {
 
 	defaultNVIDIADevicePluginAddonsConfig := KubernetesAddon{
 		Name:    NVIDIADevicePluginAddonName,
-		Enabled: to.BoolPtr(cs.Properties.HasNSeriesSKU() && common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.10.0")),
+		Enabled: to.BoolPtr(cs.Properties.HasNSeriesSKU() && common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.10.0") && !cs.Properties.HasCoreOS()),
 		Containers: []KubernetesContainerSpec{
 			{
 				Name: NVIDIADevicePluginAddonName,
