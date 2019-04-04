@@ -1208,7 +1208,8 @@ func convertCloudProfileToVLabs(api *CustomCloudProfile, vlabsccp *vlabs.CustomC
 	}
 	vlabsccp.IdentitySystem = api.IdentitySystem
 	vlabsccp.AuthenticationMethod = api.AuthenticationMethod
-
+	vlabsccp.DependenciesLocation = vlabs.DependenciesLocation(api.DependenciesLocation)
+	vlabsccp.PortalURL = api.PortalURL
 }
 
 func convertAzureEnvironmentSpecConfigToVLabs(api *AzureEnvironmentSpecConfig, vlabses *vlabs.AzureEnvironmentSpecConfig) {

@@ -5,6 +5,7 @@ package vlabs
 
 import (
 	"encoding/base64"
+	"fmt"
 	"net"
 	"net/url"
 	"regexp"
@@ -148,8 +149,7 @@ func (a *Properties) validate(isUpdate bool) error {
 	if e := a.validateAADProfile(); e != nil {
 		return e
 	}
-
-	return a.validateCustomCloudProfile()
+	return nil
 }
 
 func handleValidationErrors(e validator.ValidationErrors) error {
@@ -1352,34 +1352,25 @@ func (i *ImageReference) validateImageNameAndGroup() error {
 	return nil
 }
 
-func (a *Properties) validateCustomCloudProfile() error {
+func (cs *ContainerService) validateCustomCloudProfile() error {
+	a := cs.Properties
 	if a.CustomCloudProfile != nil {
-		if a.CustomCloudProfile.Environment == nil {
-			return errors.New("environment needs to be specified when CustomCloudProfile is provided")
+		if a.CustomCloudProfile.PortalURL == "" {
+			return errors.New("portalURL needs to be specified when CustomCloudProfile is provided")
 		}
-		if a.CustomCloudProfile.Environment.Name == "" {
-			return errors.New("name needs to be specified when Environment is provided")
-		}
-		if a.CustomCloudProfile.Environment.ServiceManagementEndpoint == "" {
-			return errors.New("serviceManagementEndpoint needs to be specified when Environment is provided")
-		}
-		if a.CustomCloudProfile.Environment.ResourceManagerEndpoint == "" {
-			return errors.New("resourceManagerEndpoint needs to be specified when Environment is provided")
-		}
-		if a.CustomCloudProfile.Environment.ActiveDirectoryEndpoint == "" {
-			return errors.New("activeDirectoryEndpoint needs to be specified when Environment is provided")
-		}
-		if a.CustomCloudProfile.Environment.GraphEndpoint == "" {
-			return errors.New("graphEndpoint needs to be specified when Environment is provided")
-		}
-		if a.CustomCloudProfile.Environment.ResourceManagerVMDNSSuffix == "" {
-			return errors.New("resourceManagerVMDNSSuffix needs to be specified when Environment is provided")
+		if !strings.HasPrefix(a.CustomCloudProfile.PortalURL, fmt.Sprintf("https://portal.%s.", cs.Location)) {
+			return fmt.Errorf("portalURL needs to start with https://portal.%s. ", cs.Location)
 		}
 		if a.CustomCloudProfile.AuthenticationMethod != "" && !(a.CustomCloudProfile.AuthenticationMethod == ClientSecretAuthMethod || a.CustomCloudProfile.AuthenticationMethod == ClientCertificateAuthMethod) {
 			return errors.Errorf("authenticationMethod allowed values are '%s' and '%s'", ClientCertificateAuthMethod, ClientSecretAuthMethod)
 		}
 		if a.CustomCloudProfile.IdentitySystem != "" && !(a.CustomCloudProfile.IdentitySystem == AzureADIdentitySystem || a.CustomCloudProfile.IdentitySystem == ADFSIdentitySystem) {
 			return errors.Errorf("identitySystem allowed values are '%s' and '%s'", AzureADIdentitySystem, ADFSIdentitySystem)
+		}
+
+		dependenciesLocationValues := DependenciesLocationValues
+		if !validateDependenciesLocation(a.CustomCloudProfile.DependenciesLocation, dependenciesLocationValues) {
+			return errors.Errorf("The %s dependenciesLocation is not supported. The supported vaules are %s", a.CustomCloudProfile.DependenciesLocation, dependenciesLocationValues)
 		}
 	}
 	return nil
@@ -1393,7 +1384,13 @@ func (cs *ContainerService) Validate(isUpdate bool) error {
 	if e := cs.validateLocation(); e != nil {
 		return e
 	}
-	return cs.Properties.validate(isUpdate)
+	if e := cs.validateCustomCloudProfile(); e != nil {
+		return e
+	}
+	if e := cs.Properties.validate(isUpdate); e != nil {
+		return e
+	}
+	return nil
 }
 
 func (cs *ContainerService) validateLocation() error {
@@ -1408,4 +1405,14 @@ func (cs *ContainerService) validateProperties() error {
 		return errors.New("missing ContainerService Properties")
 	}
 	return nil
+}
+
+// Check that dependenciesLocation has a valid value
+func validateDependenciesLocation(dependenciesLocation DependenciesLocation, dependenciesLocationValues []DependenciesLocation) bool {
+	for _, d := range dependenciesLocationValues {
+		if dependenciesLocation == d {
+			return true
+		}
+	}
+	return false
 }

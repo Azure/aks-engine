@@ -3,34 +3,113 @@
 
 package api
 
-import "github.com/Azure/aks-engine/pkg/helpers"
+import (
+	"encoding/json"
+	"fmt"
+	"io/ioutil"
+	"net/http"
+	"strings"
+	"time"
 
-func (p *Properties) setCustomCloudProfileDefaults() {
+	"github.com/Azure/aks-engine/pkg/helpers"
+	"github.com/Azure/go-autorest/autorest/azure"
+)
 
+func (cs *ContainerService) setCustomCloudProfileDefaults() error {
+	p := cs.Properties
 	if p.IsAzureStackCloud() {
+		p.CustomCloudProfile.AuthenticationMethod = helpers.EnsureString(p.CustomCloudProfile.AuthenticationMethod, ClientSecretAuthMethod)
+		p.CustomCloudProfile.IdentitySystem = helpers.EnsureString(p.CustomCloudProfile.IdentitySystem, AzureADIdentitySystem)
+		p.CustomCloudProfile.DependenciesLocation = DependenciesLocation(helpers.EnsureString(string(p.CustomCloudProfile.DependenciesLocation), AzureStackDependenciesLocationPublic))
+		p.SetAzureStackCloudSpec()
+		err := cs.SetCustomCloudProfileEnvironment()
+		if err != nil {
+			return fmt.Errorf("Failed to set environment - %s", err)
+		}
+	}
+	return nil
+}
 
-		//azureStackCloudSpec is the default configurations for azure stack with public Azure.
-		azureStackCloudSpec := AzureEnvironmentSpecConfig{
-			CloudName: AzureStackCloud,
-			//DockerSpecConfig specify the docker engine download repo
-			DockerSpecConfig: DefaultDockerSpecConfig,
-			//KubernetesSpecConfig is the default kubernetes container image url.
-			KubernetesSpecConfig: DefaultKubernetesSpecConfig,
-			DCOSSpecConfig:       DefaultDCOSSpecConfig,
-			EndpointConfig: AzureEndpointConfig{
-				ResourceManagerVMDNSSuffix: "",
-			},
-			OSImageConfig: map[Distro]AzureOSImageConfig{
-				Ubuntu: DefaultUbuntuImageConfig,
-				RHEL:   DefaultRHELOSImageConfig,
-				CoreOS: DefaultCoreOSImageConfig,
-				AKS:    DefaultAKSOSImageConfig,
-			},
+// SetCustomCloudProfileEnvironment retrieves the endpoints from Azure Stack metadata endpoint and sets the values for azure.Environment
+func (cs *ContainerService) SetCustomCloudProfileEnvironment() error {
+	p := cs.Properties
+	if p.IsAzureStackCloud() {
+		if p.CustomCloudProfile.Environment == nil {
+			p.CustomCloudProfile.Environment = &azure.Environment{}
 		}
 
-		//Set default value for ResourceManagerVMDNSSuffix
-		azureStackCloudSpec.EndpointConfig.ResourceManagerVMDNSSuffix = p.CustomCloudProfile.Environment.ResourceManagerVMDNSSuffix
+		env := p.CustomCloudProfile.Environment
+		if env.Name == "" || env.ResourceManagerEndpoint == "" || env.ServiceManagementEndpoint == "" || env.ActiveDirectoryEndpoint == "" || env.GraphEndpoint == "" || env.ResourceManagerVMDNSSuffix == "" {
+			env.Name = AzureStackCloud
+			if !strings.HasPrefix(p.CustomCloudProfile.PortalURL, fmt.Sprintf("https://portal.%s.", cs.Location)) {
+				return fmt.Errorf("portalURL needs to start with https://portal.%s. ", cs.Location)
+			}
+			azsFQDNSuffix := strings.Replace(p.CustomCloudProfile.PortalURL, fmt.Sprintf("https://portal.%s.", cs.Location), "", -1)
+			azsFQDNSuffix = strings.TrimSuffix(azsFQDNSuffix, "/")
+			env.ResourceManagerEndpoint = fmt.Sprintf("https://management.%s.%s/", cs.Location, azsFQDNSuffix)
+			metadataURL := fmt.Sprintf("%s/metadata/endpoints?api-version=1.0", strings.TrimSuffix(env.ResourceManagerEndpoint, "/"))
 
+			// Retrieve the metadata
+			httpClient := &http.Client{
+				Timeout: 30 * time.Second,
+			}
+			endpointsresp, err := httpClient.Get(metadataURL)
+			if err != nil || endpointsresp.StatusCode != 200 {
+				return fmt.Errorf("%s . apimodel invalid: failed to retrieve Azure Stack endpoints from %s", err, metadataURL)
+			}
+
+			body, err := ioutil.ReadAll(endpointsresp.Body)
+			if err != nil {
+				return fmt.Errorf("%s . apimodel invalid: failed to read the response from %s", err, metadataURL)
+			}
+
+			endpoints := AzureStackMetadataEndpoints{}
+			err = json.Unmarshal(body, &endpoints)
+			if err != nil {
+				return fmt.Errorf("%s . apimodel invalid: failed to parse the response from %s", err, metadataURL)
+			}
+
+			if endpoints.GraphEndpoint == "" || endpoints.Authentication == nil || endpoints.Authentication.LoginEndpoint == "" || len(endpoints.Authentication.Audiences) == 0 || endpoints.Authentication.Audiences[0] == "" {
+				return fmt.Errorf("%s . apimodel invalid: invalid response from %s", err, metadataURL)
+			}
+
+			env.GraphEndpoint = endpoints.GraphEndpoint
+			env.ServiceManagementEndpoint = endpoints.Authentication.Audiences[0]
+			env.GalleryEndpoint = endpoints.GalleryEndpoint
+			env.ActiveDirectoryEndpoint = endpoints.Authentication.LoginEndpoint
+			if p.CustomCloudProfile.IdentitySystem == ADFSIdentitySystem {
+				env.ActiveDirectoryEndpoint = strings.TrimSuffix(env.ActiveDirectoryEndpoint, "/")
+				env.ActiveDirectoryEndpoint = strings.TrimSuffix(env.ActiveDirectoryEndpoint, "adfs")
+			}
+
+			env.ManagementPortalURL = endpoints.PortalEndpoint
+			env.ResourceManagerVMDNSSuffix = fmt.Sprintf("cloudapp.%s", azsFQDNSuffix)
+			env.StorageEndpointSuffix = fmt.Sprintf("%s.%s", cs.Location, azsFQDNSuffix)
+			env.KeyVaultDNSSuffix = fmt.Sprintf("vault.%s.%s", cs.Location, azsFQDNSuffix)
+		}
+	}
+	return nil
+}
+
+// SetAzureStackCloudSpec sets the cloud spec for Azure Stack .
+func (p *Properties) SetAzureStackCloudSpec() {
+	if p.IsAzureStackCloud() {
+		var azureStackCloudSpec AzureEnvironmentSpecConfig
+		switch p.CustomCloudProfile.DependenciesLocation {
+		case AzureStackDependenciesLocationPublic:
+			azureStackCloudSpec = AzureCloudSpecEnvMap[AzurePublicCloud]
+		case AzureStackDependenciesLocationChina:
+			azureStackCloudSpec = AzureCloudSpecEnvMap[AzureChinaCloud]
+		case AzureStackDependenciesLocationGerman:
+			azureStackCloudSpec = AzureCloudSpecEnvMap[AzureGermanCloud]
+		case AzureStackDependenciesLocationUSGovernment:
+			azureStackCloudSpec = AzureCloudSpecEnvMap[AzureUSGovernmentCloud]
+		default:
+			azureStackCloudSpec = AzureCloudSpecEnvMap[AzurePublicCloud]
+		}
+
+		azureStackCloudSpec.EndpointConfig.ResourceManagerVMDNSSuffix = p.CustomCloudProfile.Environment.ResourceManagerVMDNSSuffix
+		azureStackCloudSpec.CloudName = AzureStackCloud
 		// Use the custom input to overwrite the default values in AzureStackCloudSpec
 		if p.CustomCloudProfile.AzureEnvironmentSpecConfig != nil {
 			ascc := p.CustomCloudProfile.AzureEnvironmentSpecConfig
@@ -68,11 +147,8 @@ func (p *Properties) setCustomCloudProfileDefaults() {
 			for k, v := range ascc.OSImageConfig {
 				azureStackCloudSpec.OSImageConfig[k] = v
 			}
+			p.CustomCloudProfile.AzureEnvironmentSpecConfig = &azureStackCloudSpec
 		}
-		p.CustomCloudProfile.AzureEnvironmentSpecConfig = &azureStackCloudSpec
 		AzureCloudSpecEnvMap[AzureStackCloud] = azureStackCloudSpec
-
-		p.CustomCloudProfile.AuthenticationMethod = helpers.EnsureString(p.CustomCloudProfile.AuthenticationMethod, ClientSecretAuthMethod)
-		p.CustomCloudProfile.IdentitySystem = helpers.EnsureString(p.CustomCloudProfile.IdentitySystem, AzureADIdentitySystem)
 	}
 }
