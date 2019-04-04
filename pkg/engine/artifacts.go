@@ -61,20 +61,20 @@ func kubernetesContainerAddonSettingsInit(profile *api.Properties) map[string]ku
 		DefaultBlobfuseFlexVolumeAddonName: {
 			"kubernetesmasteraddons-blobfuse-flexvolume-installer.yaml",
 			"blobfuse-flexvolume-installer.yaml",
-			profile.OrchestratorProfile.KubernetesConfig.IsBlobfuseFlexVolumeEnabled(),
+			profile.OrchestratorProfile.KubernetesConfig.IsBlobfuseFlexVolumeEnabled() && !profile.HasCoreOS(),
 			profile.OrchestratorProfile.KubernetesConfig.GetAddonScript(DefaultBlobfuseFlexVolumeAddonName),
 		},
 
 		DefaultSMBFlexVolumeAddonName: {
 			"kubernetesmasteraddons-smb-flexvolume-installer.yaml",
 			"smb-flexvolume-installer.yaml",
-			profile.OrchestratorProfile.KubernetesConfig.IsSMBFlexVolumeEnabled(),
+			profile.OrchestratorProfile.KubernetesConfig.IsSMBFlexVolumeEnabled() && !profile.HasCoreOS(),
 			profile.OrchestratorProfile.KubernetesConfig.GetAddonScript(DefaultSMBFlexVolumeAddonName),
 		},
 		DefaultKeyVaultFlexVolumeAddonName: {
 			"kubernetesmasteraddons-keyvault-flexvolume-installer.yaml",
 			"keyvault-flexvolume-installer.yaml",
-			profile.OrchestratorProfile.KubernetesConfig.IsKeyVaultFlexVolumeEnabled(),
+			profile.OrchestratorProfile.KubernetesConfig.IsKeyVaultFlexVolumeEnabled() && !profile.HasCoreOS(),
 			profile.OrchestratorProfile.KubernetesConfig.GetAddonScript(DefaultKeyVaultFlexVolumeAddonName),
 		},
 		DefaultDashboardAddonName: {

@@ -521,11 +521,11 @@ func (a *Properties) validateAddons() error {
 			}
 
 			switch addon.Name {
-			case "cluster-autoscaler":
+			case DefaultClusterAutoscalerAddonName:
 				if to.Bool(addon.Enabled) && isAvailabilitySets {
 					return errors.Errorf("Cluster Autoscaler add-on can only be used with VirtualMachineScaleSets. Please specify \"availabilityProfile\": \"%s\"", VirtualMachineScaleSets)
 				}
-			case "nvidia-device-plugin":
+			case NVIDIADevicePluginAddonName:
 				if to.Bool(addon.Enabled) {
 					version := common.RationalizeReleaseAndVersion(
 						a.OrchestratorProfile.OrchestratorType,
@@ -547,9 +547,23 @@ func (a *Properties) validateAddons() error {
 					if IsNSeriesSKU && sv.LT(minVersion) {
 						return errors.New("NVIDIA Device Plugin add-on can only be used Kubernetes 1.10 or above. Please specify \"orchestratorRelease\": \"1.10\"")
 					}
+					if a.HasCoreOS() {
+						return errors.New("NVIDIA Device Plugin add-on not currently supported on coreos. Please use node pools with Ubuntu only.")
+					}
+				}
+			case DefaultBlobfuseFlexVolumeAddonName:
+				if a.HasCoreOS() {
+					return errors.New("flexvolume add-ons not currently supported on coreos distro. Please use Ubuntu.")
+				}
+			case DefaultSMBFlexVolumeAddonName:
+				if a.HasCoreOS() {
+					return errors.New("flexvolume add-ons not currently supported on coreos distro. Please use Ubuntu.")
+				}
+			case DefaultKeyVaultFlexVolumeAddonName:
+				if a.HasCoreOS() {
+					return errors.New("flexvolume add-ons not currently supported on coreos distro. Please use Ubuntu.")
 				}
 			}
-		}
 	}
 	return nil
 }
