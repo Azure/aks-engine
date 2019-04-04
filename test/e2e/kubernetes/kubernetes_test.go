@@ -887,8 +887,8 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 		It("should create pv with zone labels and node affinity", func() {
 			if eng.ExpandedDefinition.Properties.HasZonesForAllAgentPools() {
 				By("Creating a persistent volume claim")
-				pvcName := "azure-managed-disk" // should be the same as in pvc-premium.yaml
-				pvc, err := persistentvolumeclaims.CreatePersistentVolumeClaimsFromFile(filepath.Join(WorkloadDir, "pvc-premium.yaml"), pvcName, "default")
+				pvcName := "azure-managed-disk" // should be the same as in pvc-standard.yaml
+				pvc, err := persistentvolumeclaims.CreatePersistentVolumeClaimsFromFile(filepath.Join(WorkloadDir, "pvc-standard.yaml"), pvcName, "default")
 				Expect(err).NotTo(HaveOccurred())
 				ready, err := pvc.WaitOnReady("default", 5*time.Second, cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())
