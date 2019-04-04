@@ -52,7 +52,7 @@ func CreateCustomScriptExtension(cs *api.ContainerService) VirtualMachineExtensi
 	outBoundCmd := ""
 	registry := ""
 	ncBinary := "nc"
-	if cs.Properties.MasterProfile.IsCoreOS() {
+	if cs.Properties.MasterProfile != nil && cs.Properties.MasterProfile.IsCoreOS() {
 		ncBinary = "ncat"
 	}
 	if !cs.Properties.FeatureFlags.IsFeatureEnabled("BlockOutboundInternet") {

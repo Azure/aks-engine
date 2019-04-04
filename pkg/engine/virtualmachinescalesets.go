@@ -269,7 +269,7 @@ func CreateMasterVMSS(cs *api.ContainerService) VirtualMachineScaleSetARM {
 	outBoundCmd := ""
 	registry := ""
 	ncBinary := "nc"
-	if cs.Properties.MasterProfile.IsCoreOS() {
+	if cs.Properties.MasterProfile != nil && cs.Properties.MasterProfile.IsCoreOS() {
 		ncBinary = "ncat"
 	}
 	if !cs.Properties.FeatureFlags.IsFeatureEnabled("BlockOutboundInternet") {
@@ -580,7 +580,7 @@ func CreateAgentVMSS(cs *api.ContainerService, profile *api.AgentPoolProfile) Vi
 	outBoundCmd := ""
 	registry := ""
 	ncBinary := "nc"
-	if cs.Properties.MasterProfile.IsCoreOS() {
+	if cs.Properties.MasterProfile != nil && cs.Properties.MasterProfile.IsCoreOS() {
 		ncBinary = "ncat"
 	}
 	featureFlags := cs.Properties.FeatureFlags
