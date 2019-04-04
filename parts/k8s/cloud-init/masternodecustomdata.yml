@@ -393,34 +393,8 @@ MASTER_CONTAINER_ADDONS_PLACEHOLDER
   permissions: "0644"
   encoding: gzip
   owner: root
-<<<<<<< HEAD:parts/k8s/cloud-init/masternodecustomdata.yml
   content: !!binary |
     {{CloudInitData "etcdSystemdService"}}
-=======
-  content: |
-    [Unit]
-    Description=etcd - highly-available key value store
-    Documentation=https://github.com/coreos/etcd
-    Documentation=man:etcd
-    After=network.target
-    Wants=network-online.target
-    [Service]
-    Environment=DAEMON_ARGS=
-    Environment=ETCD_NAME=%H
-    Environment=ETCD_DATA_DIR=
-    EnvironmentFile=-/etc/default/%p
-    Type=notify
-    User=etcd
-    PermissionsStartOnly=true
-    {{if .MasterProfile.IsCoreOS}}
-    ExecStart=/opt/bin/etcd $DAEMON_ARGS
-    {{else}}
-    ExecStart=/usr/bin/etcd $DAEMON_ARGS
-    {{end}}
-    Restart=always
-    [Install]
-    WantedBy=multi-user.target
->>>>>>> 025ebbe31... feat: enable coreos:parts/k8s/kubernetesmastercustomdata.yml
 
 - path: /opt/azure/containers/setup-etcd.sh
   permissions: "0744"
