@@ -30,6 +30,7 @@ jobs:
     RETAIN_SSH: false
     ENABLE_KMS_ENCRYPTION: true
     SUBSCRIPTION_ID: '$(SUBSCRIPTION_ID_E2E_KUBERNETES)'
+    COUNTER: $[counter($(build.buildID), 0)]
 
   steps:
     - template: e2e-step-template.yaml
