@@ -217,6 +217,10 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpdate bool) {
 				// TODO make EnableAggregatedAPIs a pointer to bool so that a user can opt out of it
 				a.OrchestratorProfile.KubernetesConfig.EnableAggregatedAPIs = true
 			}
+		} else if isUpdate && a.OrchestratorProfile.KubernetesConfig.EnableAggregatedAPIs {
+			// Upgrade scenario:
+			// We need to force set EnableAggregatedAPIs to false if RBAC was previously disabled
+			a.OrchestratorProfile.KubernetesConfig.EnableAggregatedAPIs = false
 		}
 
 		if a.OrchestratorProfile.KubernetesConfig.EnableSecureKubelet == nil {
