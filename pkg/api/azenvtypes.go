@@ -133,17 +133,17 @@ var (
 	// DefaultAKSOSImageConfig is the AKS image based on Ubuntu 16.04-LTS.
 	DefaultAKSOSImageConfig = AzureOSImageConfig{
 		ImageOffer:     "aks",
-		ImageSku:       "aks-ubuntu-1604-201903",
+		ImageSku:       "aks-ubuntu-1604-201904",
 		ImagePublisher: "microsoft-aks",
-		ImageVersion:   "2019.03.27",
+		ImageVersion:   "2019.04.03",
 	}
 
 	// DefaultAKS1804OSImageConfig is the AKS image based on Ubuntu 18.04-LTS.
 	DefaultAKS1804OSImageConfig = AzureOSImageConfig{
 		ImageOffer:     "aks",
-		ImageSku:       "aks-ubuntu-1804-201901",
+		ImageSku:       "aks-ubuntu-1804-201904",
 		ImagePublisher: "microsoft-aks",
-		ImageVersion:   "2019.03.27",
+		ImageVersion:   "2019.04.03",
 	}
 
 	// DefaultACC1604OSImageConfig is the ACC image based on Ubuntu 16.04.
