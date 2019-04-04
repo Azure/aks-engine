@@ -521,11 +521,11 @@ func (a *Properties) validateAddons() error {
 			}
 
 			switch addon.Name {
-			case DefaultClusterAutoscalerAddonName:
+			case "cluster-autoscaler":
 				if to.Bool(addon.Enabled) && isAvailabilitySets {
 					return errors.Errorf("Cluster Autoscaler add-on can only be used with VirtualMachineScaleSets. Please specify \"availabilityProfile\": \"%s\"", VirtualMachineScaleSets)
 				}
-			case NVIDIADevicePluginAddonName:
+			case "nvidia-device-plugin":
 				if to.Bool(addon.Enabled) {
 					version := common.RationalizeReleaseAndVersion(
 						a.OrchestratorProfile.OrchestratorType,
@@ -548,20 +548,20 @@ func (a *Properties) validateAddons() error {
 						return errors.New("NVIDIA Device Plugin add-on can only be used Kubernetes 1.10 or above. Please specify \"orchestratorRelease\": \"1.10\"")
 					}
 					if a.HasCoreOS() {
-						return errors.New("NVIDIA Device Plugin add-on not currently supported on coreos. Please use node pools with Ubuntu only.")
+						return errors.New("NVIDIA Device Plugin add-on not currently supported on coreos. Please use node pools with Ubuntu only")
 					}
 				}
-			case DefaultBlobfuseFlexVolumeAddonName:
+			case "blobfuse-flexvolume":
 				if a.HasCoreOS() {
-					return errors.New("flexvolume add-ons not currently supported on coreos distro. Please use Ubuntu.")
+					return errors.New("flexvolume add-ons not currently supported on coreos distro. Please use Ubuntu")
 				}
-			case DefaultSMBFlexVolumeAddonName:
+			case "smb-flexvolume":
 				if a.HasCoreOS() {
-					return errors.New("flexvolume add-ons not currently supported on coreos distro. Please use Ubuntu.")
+					return errors.New("flexvolume add-ons not currently supported on coreos distro. Please use Ubuntu")
 				}
-			case DefaultKeyVaultFlexVolumeAddonName:
+			case "keyvault-flexvolume":
 				if a.HasCoreOS() {
-					return errors.New("flexvolume add-ons not currently supported on coreos distro. Please use Ubuntu.")
+					return errors.New("flexvolume add-ons not currently supported on coreos distro. Please use Ubuntu")
 				}
 			}
 		}
