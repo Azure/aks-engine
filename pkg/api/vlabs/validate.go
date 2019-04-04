@@ -552,15 +552,15 @@ func (a *Properties) validateAddons() error {
 					}
 				}
 			case "blobfuse-flexvolume":
-				if a.HasCoreOS() {
+				if to.Bool(addon.Enabled) && a.HasCoreOS() {
 					return errors.New("flexvolume add-ons not currently supported on coreos distro. Please use Ubuntu")
 				}
 			case "smb-flexvolume":
-				if a.HasCoreOS() {
+				if to.Bool(addon.Enabled) && a.HasCoreOS() {
 					return errors.New("flexvolume add-ons not currently supported on coreos distro. Please use Ubuntu")
 				}
 			case "keyvault-flexvolume":
-				if a.HasCoreOS() {
+				if to.Bool(addon.Enabled) && a.HasCoreOS() {
 					return errors.New("flexvolume add-ons not currently supported on coreos distro. Please use Ubuntu")
 				}
 			}
