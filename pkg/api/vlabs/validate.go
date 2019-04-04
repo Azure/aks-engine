@@ -564,6 +564,7 @@ func (a *Properties) validateAddons() error {
 					return errors.New("flexvolume add-ons not currently supported on coreos distro. Please use Ubuntu.")
 				}
 			}
+		}
 	}
 	return nil
 }
