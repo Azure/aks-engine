@@ -15,6 +15,8 @@ steps:
     displayName: compile
     workingDirectory: $(modulePath)
   - script: |
+      DATE=$(date +%s)
+      echo "##vso[task.setvariable variable=timestamp]$DATE"
       export CLIENT_ID=$(SERVICE_PRINCIPAL_CLIENT_ID_E2E_KUBERNETES)
       export CLIENT_SECRET=$(SERVICE_PRINCIPAL_CLIENT_SECRET_E2E_KUBERNETES)
       export CLIENT_OBJECTID=$(SERVICE_PRINCIPAL_OBJECT_ID_E2E_KUBERNETES)
@@ -23,6 +25,6 @@ steps:
     workingDirectory: $(modulePath)
   - task: PublishPipelineArtifact@0
     inputs:
-      artifactName: '${{ parameters.job }}_logs'
+      artifactName: '${{ parameters.job }}-$(timestamp)_logs'
       targetPath: '$(modulePath)/_logs'
     condition: always()
