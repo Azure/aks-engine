@@ -55,6 +55,10 @@ func (kan *UpgradeAgentNode) DeleteNode(vmName *string, drain bool) error {
 		kubeAPIServerURL = kan.UpgradeContainerService.Properties.MasterProfile.FQDN
 	}
 
+	if vmName == nil || *vmName == "" {
+		return errors.Errorf("Error deleting VM: VM name was empty")
+	}
+
 	nodeName := strings.ToLower(*vmName)
 
 	client, err := kan.Client.GetKubernetesClient(kubeAPIServerURL, kan.kubeConfig, interval, kan.timeout)
