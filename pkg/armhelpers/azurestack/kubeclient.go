@@ -55,6 +55,11 @@ func (c *KubernetesClientSetClient) ListNodes() (*v1.NodeList, error) {
 	return c.clientset.CoreV1().Nodes().List(metav1.ListOptions{})
 }
 
+// ListServiceAccounts returns a list of Service Accounts in the provided namespace
+func (c *KubernetesClientSetClient) ListServiceAccounts(namespace string) (*v1.ServiceAccountList, error) {
+	return c.clientset.CoreV1().ServiceAccounts(namespace).List(metav1.ListOptions{})
+}
+
 //GetNode returns details about node with passed in name
 func (c *KubernetesClientSetClient) GetNode(name string) (*v1.Node, error) {
 	return c.clientset.CoreV1().Nodes().Get(name, metav1.GetOptions{})
@@ -68,6 +73,11 @@ func (c *KubernetesClientSetClient) UpdateNode(node *v1.Node) (*v1.Node, error) 
 //DeleteNode deregisters the node in the api server
 func (c *KubernetesClientSetClient) DeleteNode(name string) error {
 	return c.clientset.CoreV1().Nodes().Delete(name, &metav1.DeleteOptions{})
+}
+
+// DeleteServiceAccount deletes the passed in service account.
+func (c *KubernetesClientSetClient) DeleteServiceAccount(sa *v1.ServiceAccount) error {
+	return c.clientset.CoreV1().ServiceAccounts(sa.Namespace).Delete(sa.Name, &metav1.DeleteOptions{})
 }
 
 //SupportEviction queries the api server to discover if it supports eviction, and returns supported type if it is supported

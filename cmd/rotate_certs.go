@@ -4,6 +4,7 @@
 package cmd
 
 import (
+	"bufio"
 	"bytes"
 	"context"
 	"fmt"
@@ -29,6 +30,7 @@ const (
 	rotateCertsName             = "rotate-certs"
 	rotateCertsShortDescription = "Rotate certificates on an existing Kubernetes cluster"
 	rotateCertsLongDescription  = "Rotate certificates on an existing Kubernetes cluster"
+	kubeSystemNamespace         = "kube-system"
 )
 
 type rotateCertsCmd struct {
@@ -46,9 +48,10 @@ type rotateCertsCmd struct {
 	apiVersion       string
 	locale           *gotext.Locale
 	client           armhelpers.AKSEngineClient
-	masterNodes      []v1.Node
-	agentNodes       []v1.Node
-	sshConfig        *ssh.ClientConfig
+
+	masterNodes []v1.Node
+	agentNodes  []v1.Node
+	sshConfig   *ssh.ClientConfig
 }
 
 func newRotateCertsCmd() *cobra.Command {
@@ -161,8 +164,6 @@ func (rcc *rotateCertsCmd) run(cmd *cobra.Command, args []string) error {
 		return errors.Wrap(err, "error rotating etcd cluster")
 	}
 
-	log.Printf("Successfully rotated etcd and cluster certificates. Please reboot all the nodes.")
-
 	// TODO proxy certs?
 
 	// TODO: save kubeconfig in files
@@ -171,7 +172,18 @@ func (rcc *rotateCertsCmd) run(cmd *cobra.Command, args []string) error {
 		return errors.Wrap(err, "error updating kubeconfig")
 	}
 
+	// TODO do this programatically
+	log.Printf("Please reboot all the nodes. Press 'Enter' when all machines have been rebooted")
+	log.Print("Press 'Enter' to continue...")
+	bufio.NewReader(os.Stdin).ReadBytes('\n')
+
+	err = rcc.deleteServiceAccounts()
+	if err != nil {
+		return errors.Wrap(err, "error deleting service accounts")
+	}
 	// TODO: save apimodel certificateProfile/cert files as output
+
+	log.Printf("Successfully rotated etcd and cluster certificates.")
 
 	return nil
 }
@@ -190,6 +202,24 @@ func (rcc *rotateCertsCmd) getClusterNodes() error {
 			rcc.masterNodes = append(rcc.masterNodes, node)
 		} else {
 			rcc.agentNodes = append(rcc.agentNodes, node)
+		}
+	}
+	return nil
+}
+
+func (rcc *rotateCertsCmd) deleteServiceAccounts() error {
+	kubeClient, err := rcc.getKubeClient()
+	if err != nil {
+		return errors.Wrap(err, "failed to get cluster nodes")
+	}
+	saList, err := kubeClient.ListServiceAccounts(kubeSystemNamespace)
+	if err != nil {
+		return errors.Wrap(err, "failed to get cluster service accounts in namespace "+kubeSystemNamespace)
+	}
+	for _, sa := range saList.Items {
+		err = kubeClient.DeleteServiceAccount(&sa)
+		if err != nil {
+			return errors.Wrap(err, "failed to delete service account "+sa.Name)
 		}
 	}
 	return nil

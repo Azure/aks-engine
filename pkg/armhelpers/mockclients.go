@@ -66,18 +66,20 @@ type MockStorageClient struct {
 
 //MockKubernetesClient mock implementation of KubernetesClient
 type MockKubernetesClient struct {
-	FailListPods          bool
-	FailListNodes         bool
-	FailGetNode           bool
-	UpdateNodeFunc        func(*v1.Node) (*v1.Node, error)
-	FailUpdateNode        bool
-	FailDeleteNode        bool
-	FailSupportEviction   bool
-	FailDeletePod         bool
-	FailEvictPod          bool
-	FailWaitForDelete     bool
-	ShouldSupportEviction bool
-	PodsList              *v1.PodList
+	FailListPods             bool
+	FailListNodes            bool
+	FailListServiceAccounts  bool
+	FailGetNode              bool
+	UpdateNodeFunc           func(*v1.Node) (*v1.Node, error)
+	FailUpdateNode           bool
+	FailDeleteNode           bool
+	FailDeleteServiceAccount bool
+	FailSupportEviction      bool
+	FailDeletePod            bool
+	FailEvictPod             bool
+	FailWaitForDelete        bool
+	ShouldSupportEviction    bool
+	PodsList                 *v1.PodList
 }
 
 // MockVirtualMachineListResultPage contains a page of VirtualMachine values.
@@ -295,6 +297,23 @@ func (mkc *MockKubernetesClient) ListNodes() (*v1.NodeList, error) {
 	return nodeList, nil
 }
 
+// ListServiceAccounts returns a list of Service Accounts in the provided namespace
+func (mkc *MockKubernetesClient) ListServiceAccounts(namespace string) (*v1.ServiceAccountList, error) {
+	if mkc.FailListServiceAccounts {
+		return nil, errors.New("ListServiceAccounts failed")
+	}
+	sa := &v1.ServiceAccount{}
+	sa.Namespace = namespace
+	sa.Name = "service-account-1"
+	sa2 := &v1.ServiceAccount{}
+	sa2.Namespace = namespace
+	sa.Name = "service-account-2"
+	saList := &v1.ServiceAccountList{}
+	saList.Items = append(saList.Items, *sa)
+	saList.Items = append(saList.Items, *sa2)
+	return saList, nil
+}
+
 //GetNode returns details about node with passed in name
 func (mkc *MockKubernetesClient) GetNode(name string) (*v1.Node, error) {
 	if mkc.FailGetNode {
@@ -321,6 +340,14 @@ func (mkc *MockKubernetesClient) UpdateNode(node *v1.Node) (*v1.Node, error) {
 func (mkc *MockKubernetesClient) DeleteNode(name string) error {
 	if mkc.FailDeleteNode {
 		return errors.New("DeleteNode failed")
+	}
+	return nil
+}
+
+// DeleteServiceAccount deletes the provided service account
+func (mkc *MockKubernetesClient) DeleteServiceAccount(sa *v1.ServiceAccount) error {
+	if mkc.FailDeleteServiceAccount {
+		return errors.New("DeleteServiceAccount failed")
 	}
 	return nil
 }
