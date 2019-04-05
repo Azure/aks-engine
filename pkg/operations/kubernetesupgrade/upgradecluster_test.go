@@ -335,6 +335,21 @@ var _ = Describe("Upgrade Kubernetes cluster tests", func() {
 			Expect(err).NotTo(HaveOccurred())
 			Expect(uc.AgentPoolScaleSetsToUpgrade[0].VMsToUpgrade).To(HaveLen(4))
 		})
+		It("Should not skip any VMs with upper case index", func() {
+			mockClient.FakeListVirtualMachineScaleSetVMsResult = func() []compute.VirtualMachineScaleSetVM {
+				return []compute.VirtualMachineScaleSetVM{
+					mockClient.MakeFakeVirtualMachineScaleSetVMWithGivenName("Kubernetes:1.9.7", "aks-agentpool1-123456-vmss00000C"),
+					mockClient.MakeFakeVirtualMachineScaleSetVMWithGivenName("Kubernetes:1.9.7", "aks-agentpool1-123456-vmss00000B"),
+					mockClient.MakeFakeVirtualMachineScaleSetVMWithGivenName("Kubernetes:1.9.7", "aks-agentpool1-123456-vmss000004"),
+					mockClient.MakeFakeVirtualMachineScaleSetVMWithGivenName("Kubernetes:1.9.7", "aks-agentpool1-123456-vmss000005"),
+				}
+			}
+			uc.Force = false
+
+			err := uc.UpgradeCluster(&mockClient, "kubeConfig", TestAKSEngineVersion)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(uc.AgentPoolScaleSetsToUpgrade[0].VMsToUpgrade).To(HaveLen(4))
+		})
 	})
 
 	Context("When upgrading a cluster with windows VMSS VMs", func() {
@@ -547,35 +562,6 @@ var _ = Describe("Upgrade Kubernetes cluster tests", func() {
 
 		err := uc.UpgradeCluster(&mockClient, "kubeConfig", TestAKSEngineVersion)
 		Expect(err).To(BeNil())
-	})
-
-	It("Should upgrade VMSS nodes with an upper case letter index", func() {
-		mockClient := armhelpers.MockAKSEngineClient{}
-		mockClient.FakeListVirtualMachineScaleSetsResult = func() []compute.VirtualMachineScaleSet {
-			scalesetName := "scalesetName"
-			sku := compute.Sku{}
-			location := "eastus"
-			return []compute.VirtualMachineScaleSet{
-				{
-					Name:     &scalesetName,
-					Sku:      &sku,
-					Location: &location,
-				},
-			}
-		}
-		mockClient.FakeListVirtualMachineScaleSetVMsResult = func() []compute.VirtualMachineScaleSetVM {
-			return []compute.VirtualMachineScaleSetVM{
-				mockClient.MakeFakeVirtualMachineScaleSetVMWithGivenName("Kubernetes:1.12.7", "aks-agentpool1-123456-vmss00000C"),
-				mockClient.MakeFakeVirtualMachineScaleSetVMWithGivenName("Kubernetes:1.12.7", "aks-agentpool1-123456-vmss00000B"),
-				mockClient.MakeFakeVirtualMachineScaleSetVMWithGivenName("Kubernetes:1.12.7", "aks-agentpool1-123456-vmss000004"),
-				mockClient.MakeFakeVirtualMachineScaleSetVMWithGivenName("Kubernetes:1.12.7", "aks-agentpool1-123456-vmss000005"),
-			}
-		}
-		uc.AgentPoolsToUpgrade = map[string]bool{"agentpool1": true}
-
-		err := uc.UpgradeCluster(&mockClient, "kubeConfig", TestAKSEngineVersion)
-		Expect(err).NotTo(HaveOccurred())
-		Expect(*uc.AgentPools["agentpool1"].AgentVMs).To(HaveLen(4))
 	})
 
 	It("Tests GetLastVMNameInVMSS", func() {
