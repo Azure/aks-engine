@@ -4,7 +4,6 @@
 package cmd
 
 import (
-	"bufio"
 	"bytes"
 	"context"
 	"fmt"
@@ -167,21 +166,31 @@ func (rcc *rotateCertsCmd) run(cmd *cobra.Command, args []string) error {
 	// TODO proxy certs?
 
 	// TODO: save kubeconfig in files
+	log.Printf("Update kubeconfig in cluster")
 	err = rcc.updateKubeconfig()
 	if err != nil {
 		return errors.Wrap(err, "error updating kubeconfig")
 	}
 
-	// TODO do this programatically
-	log.Printf("Please reboot all the nodes. Press 'Enter' when all machines have been rebooted")
-	log.Print("Press 'Enter' to continue...")
-	bufio.NewReader(os.Stdin).ReadBytes('\n')
+	log.Printf("Reboot all nodes")
+	err = rcc.rebootAllNodes(ctx)
+	if err != nil {
+		return errors.Wrap(err, "error rebooting the nodes")
+	}
 
+	log.Printf("Delete Service Accoutns")
 	err = rcc.deleteServiceAccounts()
 	if err != nil {
 		return errors.Wrap(err, "error deleting service accounts")
 	}
 	// TODO: save apimodel certificateProfile/cert files as output
+
+	log.Printf("Reboot nodes to restart all pods")
+	// TODO delete all pods instead
+	err = rcc.rebootAllNodes(ctx)
+	if err != nil {
+		return errors.Wrap(err, "error rebooting the nodes")
+	}
 
 	log.Printf("Successfully rotated etcd and cluster certificates.")
 
@@ -207,6 +216,24 @@ func (rcc *rotateCertsCmd) getClusterNodes() error {
 	return nil
 }
 
+func (rcc *rotateCertsCmd) rebootAllNodes(ctx context.Context) error {
+	vmListPage, err := rcc.client.ListVirtualMachines(ctx, rcc.resourceGroupName)
+	if err != nil {
+		return errors.Wrap(err, "failed to list Virtual Machines in resource group"+rcc.resourceGroupName)
+	}
+	vmssListPage, err := rcc.client.ListVirtualMachineScaleSets(ctx, rcc.resourceGroupName)
+	if err != nil {
+		return errors.Wrap(err, "failed to list Virtual Machine Scale Sets in resource group"+rcc.resourceGroupName)
+	}
+	for _, vm := range vmListPage.Values() {
+		rcc.client.RestartVirtualMachine(ctx, rcc.resourceGroupName, *vm.Name)
+	}
+	for _, vmss := range vmssListPage.Values() {
+		rcc.client.RestartVirtualMachineScaleSets(ctx, rcc.resourceGroupName, *vmss.Name, nil)
+	}
+	return nil
+}
+
 func (rcc *rotateCertsCmd) deleteServiceAccounts() error {
 	kubeClient, err := rcc.getKubeClient()
 	if err != nil {
@@ -217,9 +244,12 @@ func (rcc *rotateCertsCmd) deleteServiceAccounts() error {
 		return errors.Wrap(err, "failed to get cluster service accounts in namespace "+kubeSystemNamespace)
 	}
 	for _, sa := range saList.Items {
-		err = kubeClient.DeleteServiceAccount(&sa)
-		if err != nil {
-			return errors.Wrap(err, "failed to delete service account "+sa.Name)
+		if sa.Name == "kube-dns" || "kubernetes-dashboard" || "metrics-server" {
+			log.Printf("Deleting service account %s", sa.Name)
+			err = kubeClient.DeleteServiceAccount(&sa)
+			if err != nil {
+				return errors.Wrap(err, "failed to delete service account "+sa.Name)
+			}
 		}
 	}
 	return nil

@@ -106,11 +106,17 @@ type AKSEngineClient interface {
 	// GetVirtualMachine retrieves the specified virtual machine.
 	GetVirtualMachine(ctx context.Context, resourceGroup, name string) (compute.VirtualMachine, error)
 
+	// RestartVirtualMachine restarts the specified virtual machine.
+	RestartVirtualMachine(ctx context.Context, resourceGroup, name string) error
+
 	// DeleteVirtualMachine deletes the specified virtual machine.
 	DeleteVirtualMachine(ctx context.Context, resourceGroup, name string) error
 
 	// ListVirtualMachineScaleSets lists the VMSS resources in the resource group
 	ListVirtualMachineScaleSets(ctx context.Context, resourceGroup string) (VirtualMachineScaleSetListResultPage, error)
+
+	// RestartVirtualMachineScaleSets restarts the specified VMSS
+	RestartVirtualMachineScaleSets(ctx context.Context, resourceGroup, virtualMachineScaleSet string, instanceIDs *compute.VirtualMachineScaleSetVMInstanceIDs) error
 
 	// ListVirtualMachineScaleSetVMs lists the virtual machines contained in a VMSS
 	ListVirtualMachineScaleSetVMs(ctx context.Context, resourceGroup, virtualMachineScaleSet string) (VirtualMachineScaleSetVMListResultPage, error)
