@@ -377,7 +377,7 @@ func (ku *Upgrader) upgradeAgentPools(ctx context.Context) error {
 					newNodeName := newCreatedVMs[0]
 					newCreatedVMs = newCreatedVMs[1:]
 					ku.logger.Infof("Copying custom annotations, labels, taints from old node %s to new node %s...", vm.name, newNodeName)
-					err = ku.copyCustomPropertiesToNewNode(client, vm.name, newNodeName)
+					err = ku.copyCustomPropertiesToNewNode(client, strings.ToLower(vm.name), newNodeName)
 					if err != nil {
 						ku.logger.Warningf("Failed to copy custom annotations, labels, taints from old node %s to new node %s: %v", vm.name, newNodeName, err)
 					}
@@ -508,7 +508,7 @@ func (ku *Upgrader) upgradeAgentScaleSets(ctx context.Context) error {
 			err = operations.SafelyDrainNodeWithClient(
 				client,
 				ku.logger,
-				vmToUpgrade.Name,
+				strings.ToLower(vmToUpgrade.Name),
 				cordonDrainTimeout,
 			)
 			if err != nil {
@@ -546,7 +546,7 @@ func (ku *Upgrader) upgradeAgentScaleSets(ctx context.Context) error {
 				ch := make(chan struct{}, 1)
 				go func() {
 					for {
-						err = ku.copyCustomPropertiesToNewNode(client, vmToUpgrade.Name, newNodeName)
+						err = ku.copyCustomPropertiesToNewNode(client, strings.ToLower(vmToUpgrade.Name), strings.ToLower(newNodeName))
 						if err != nil {
 							ku.logger.Warningf("Failed to copy custom annotations, labels, taints from old node %s to new node %s: %v", vmToUpgrade.Name, newNodeName, err)
 							time.Sleep(time.Second * 5)

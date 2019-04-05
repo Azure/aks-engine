@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"math/rand"
+	"strings"
 	"time"
 
 	"github.com/Azure/aks-engine/pkg/api"
@@ -54,13 +55,15 @@ func (kan *UpgradeAgentNode) DeleteNode(vmName *string, drain bool) error {
 		kubeAPIServerURL = kan.UpgradeContainerService.Properties.MasterProfile.FQDN
 	}
 
+	nodeName := strings.ToLower(*vmName)
+
 	client, err := kan.Client.GetKubernetesClient(kubeAPIServerURL, kan.kubeConfig, interval, kan.timeout)
 	if err != nil {
 		return err
 	}
 	// Cordon and drain the node
 	if drain {
-		err = operations.SafelyDrainNodeWithClient(client, kan.logger, *vmName, cordonDrainTimeout)
+		err = operations.SafelyDrainNodeWithClient(client, kan.logger, nodeName, cordonDrainTimeout)
 		if err != nil {
 			kan.logger.Warningf("Error draining agent VM %s. Proceeding with deletion. Error: %v", *vmName, err)
 			// Proceed with deletion anyways
@@ -71,7 +74,7 @@ func (kan *UpgradeAgentNode) DeleteNode(vmName *string, drain bool) error {
 		return err
 	}
 	// Delete VM in api server
-	if err = client.DeleteNode(*vmName); err != nil {
+	if err = client.DeleteNode(nodeName); err != nil {
 		statusErr, ok := err.(*errors.StatusError)
 		if ok && statusErr.ErrStatus.Reason != v1.StatusReasonNotFound {
 			kan.logger.Warnf("Node %s got an error while deregistering: %#v", *vmName, err)
@@ -108,7 +111,9 @@ func (kan *UpgradeAgentNode) Validate(vmName *string) error {
 		kan.logger.Warningf("VM name was empty. Skipping node condition check")
 		return nil
 	}
-	kan.logger.Infof("Validating %s", *vmName)
+	nodeName := strings.ToLower(*vmName)
+
+	kan.logger.Infof("Validating %s", nodeName)
 	var masterURL string
 	if kan.UpgradeContainerService.Properties.HostedMasterProfile != nil {
 		masterURL = kan.UpgradeContainerService.Properties.HostedMasterProfile.FQDN
@@ -129,16 +134,16 @@ func (kan *UpgradeAgentNode) Validate(vmName *string) error {
 			retryTimer.Stop()
 			return &armhelpers.DeploymentValidationError{Err: kan.Translator.Errorf("Node was not ready within %v", kan.timeout)}
 		case <-retryTimer.C:
-			agentNode, err := client.GetNode(*vmName)
+			agentNode, err := client.GetNode(nodeName)
 			if err != nil {
-				kan.logger.Infof("Agent VM: %s status error: %v", *vmName, err)
+				kan.logger.Infof("Agent node: %s status error: %v", nodeName, err)
 				retryTimer.Reset(retry)
 			} else if isNodeReady(agentNode) {
-				kan.logger.Infof("Agent VM: %s is ready", *vmName)
+				kan.logger.Infof("Agent node: %s is ready", nodeName)
 				timeoutTimer.Stop()
 				return nil
 			} else {
-				kan.logger.Infof("Agent VM: %s not ready yet...", *vmName)
+				kan.logger.Infof("Agent node: %s not ready yet...", nodeName)
 				retryTimer.Reset(retry)
 			}
 		}

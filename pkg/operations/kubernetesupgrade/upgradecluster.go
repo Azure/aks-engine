@@ -152,7 +152,7 @@ func (uc *UpgradeCluster) getClusterNodeStatus(az armhelpers.AKSEngineClient, re
 					uc.Logger.Infof("Set isWindows flag for vmss %s.", *vmScaleSet.Name)
 				}
 				for _, vm := range vmScaleSetVMsPage.Values() {
-					currentVersion := uc.getNodeVersion(kubeClient, *vm.Name, vm.Tags)
+					currentVersion := uc.getNodeVersion(kubeClient, strings.ToLower(*vm.Name), vm.Tags)
 					if uc.Force {
 						if currentVersion == "" {
 							currentVersion = "Unknown"
@@ -197,7 +197,7 @@ func (uc *UpgradeCluster) getClusterNodeStatus(az armhelpers.AKSEngineClient, re
 					*vm.Name, uc.NameSuffix)
 				continue
 			}
-			currentVersion := uc.getNodeVersion(kubeClient, *vm.Name, vm.Tags)
+			currentVersion := uc.getNodeVersion(kubeClient, strings.ToLower(*vm.Name), vm.Tags)
 
 			if uc.Force {
 				if currentVersion == "" {
