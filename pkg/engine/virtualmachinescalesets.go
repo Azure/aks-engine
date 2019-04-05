@@ -580,7 +580,7 @@ func CreateAgentVMSS(cs *api.ContainerService, profile *api.AgentPoolProfile) Vi
 	outBoundCmd := ""
 	registry := ""
 	ncBinary := "nc"
-	if cs.Properties.MasterProfile != nil && cs.Properties.MasterProfile.IsCoreOS() {
+	if profile.IsCoreOS() {
 		ncBinary = "ncat"
 	}
 	featureFlags := cs.Properties.FeatureFlags
