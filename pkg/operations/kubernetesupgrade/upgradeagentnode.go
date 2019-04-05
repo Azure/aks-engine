@@ -14,8 +14,8 @@ import (
 	"github.com/Azure/aks-engine/pkg/armhelpers"
 	"github.com/Azure/aks-engine/pkg/i18n"
 	"github.com/Azure/aks-engine/pkg/operations"
+	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
-	"k8s.io/apimachinery/pkg/api/errors"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
