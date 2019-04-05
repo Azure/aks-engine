@@ -734,7 +734,7 @@ type CustomCloudProfile struct {
 	PortalURL                  string                      `json:"portalURL,omitempty"`
 }
 
-// HasCoreOS returns true if the cluster contains windows
+// HasCoreOS returns true if the cluster contains coreos nodes
 func (p *Properties) HasCoreOS() bool {
 	for _, agentPoolProfile := range p.AgentPoolProfiles {
 		if agentPoolProfile.Distro == CoreOS {
