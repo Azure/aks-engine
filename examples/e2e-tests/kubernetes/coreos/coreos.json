@@ -93,19 +93,6 @@
         ],
         "availabilityProfile": "AvailabilitySet",
         "vnetSubnetId": "/subscriptions/SUB_ID/resourceGroups/RG_NAME/providers/Microsoft.Network/virtualNetworks/VNET_NAME/subnets/SUBNET_NAME"
-      },
-      {
-        "name": "agentsa",
-        "count": 3,
-        "distro": "coreos",
-        "vmSize": "Standard_D2_v2",
-        "OSDiskSizeGB": 200,
-        "storageProfile": "StorageAccount",
-        "diskSizesGB": [
-          128
-        ],
-        "availabilityProfile": "AvailabilitySet",
-        "vnetSubnetId": "/subscriptions/SUB_ID/resourceGroups/RG_NAME/providers/Microsoft.Network/virtualNetworks/VNET_NAME/subnets/SUBNET_NAME"
       }
     ],
     "linuxProfile": {
