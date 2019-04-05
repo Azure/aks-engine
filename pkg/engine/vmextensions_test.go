@@ -222,7 +222,6 @@ func TestCreateCustomScriptExtension(t *testing.T) {
 				BlockOutboundInternet:    false,
 				EnableCSERunInBackground: false,
 			},
-			MasterProfile: &api.MasterProfile{},
 		},
 	}
 
