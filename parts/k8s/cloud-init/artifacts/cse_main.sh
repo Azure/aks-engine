@@ -63,10 +63,6 @@ else
     FULL_INSTALL_REQUIRED=true
 fi
 
-if [[ $OS != $COREOS_OS_NAME ]]; then
-    upgradeOs
-fi
-
 if [[ ! -z "${MASTER_NODE}" ]] && [[ -z "${COSMOS_URI}" ]]; then
     installEtcd
 fi
