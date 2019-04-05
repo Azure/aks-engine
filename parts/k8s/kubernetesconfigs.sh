@@ -223,8 +223,6 @@ configureCNIIPTablesAKS() {
     fi
 }
 
-if [ "$IS_HOSTED_MASTER" = "false" ]; then
-
 setKubeletOpts () {
     KUBELET_DEFAULT_FILE=/etc/default/kubelet
     wait_for_file 1200 1 $KUBELET_DEFAULT_FILE || exit $ERR_FILE_WATCH_TIMEOUT
