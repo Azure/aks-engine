@@ -357,7 +357,6 @@ for KUBERNETES_VERSION in ${K8S_VERSIONS}; do
     extractHyperkube "docker"
     CONTAINER_IMAGE="k8s.gcr.io/cloud-controller-manager-amd64:v${KUBERNETES_VERSION}"
     pullContainerImage "docker" ${CONTAINER_IMAGE}
-    pullContainerImage "docker" ${CONTAINER_IMAGE}
     echo "  - ${HYPERKUBE_URL}" >> ${RELEASE_NOTES_FILEPATH}
     echo "  - ${CONTAINER_IMAGE}" >> ${RELEASE_NOTES_FILEPATH}
 done
