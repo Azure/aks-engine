@@ -158,7 +158,7 @@ func (rcc *rotateCertsCmd) run(cmd *cobra.Command, args []string) error {
 
 	log.Printf("Rotate etcd")
 
-	err = rcc.rotateEtcd()
+	err = rcc.rotateEtcd(ctx)
 	if err != nil {
 		return errors.Wrap(err, "error rotating etcd cluster")
 	}
@@ -307,7 +307,7 @@ func (rcc *rotateCertsCmd) getKubeClient() (armhelpers.KubernetesClient, error) 
 }
 
 // Rotate etcd CA and certificates in all of the master nodes.
-func (rcc *rotateCertsCmd) rotateEtcd() error {
+func (rcc *rotateCertsCmd) rotateEtcd(ctx context.Context) error {
 	caPrivateKeyCmd := "sudo bash -c \"cat > /etc/kubernetes/certs/ca.key << EOL \n" + rcc.containerService.Properties.CertificateProfile.CaPrivateKey + "EOL\""
 	caCertificateCmd := "sudo bash -c \"cat > /etc/kubernetes/certs/ca.crt << EOL \n" + rcc.containerService.Properties.CertificateProfile.CaCertificate + "EOL\""
 	etcdServerPrivateKeyCmd := "sudo bash -c \"cat > /etc/kubernetes/certs/etcdserver.key << EOL \n" + rcc.containerService.Properties.CertificateProfile.EtcdServerPrivateKey + "EOL\""
@@ -328,12 +328,6 @@ func (rcc *rotateCertsCmd) rotateEtcd() error {
 			}
 		}
 
-		out, err := executeCmd("sudo systemctl restart etcd", rcc.masterFQDN, host.Name, "22", rcc.sshConfig)
-		if err != nil {
-			log.Printf("Command `sudo systemctl restart etcd` output: %s\n", out)
-			return errors.Wrap(err, "failed to restart etcd")
-		}
-
 		for _, cmd := range []string{etcdServerPrivateKeyCmd, etcdServerCertificateCmd, etcdClientPrivateKeyCmd, etcdClientCertificateCmd, etcdPeerPrivateKeyCmd, etcdPeerCertificateCmd} {
 			out, err := executeCmd(cmd, rcc.masterFQDN, host.Name, "22", rcc.sshConfig)
 			if err != nil {
@@ -341,8 +335,17 @@ func (rcc *rotateCertsCmd) rotateEtcd() error {
 				return errors.Wrap(err, "failed replacing certificate file")
 			}
 		}
+	}
 
-		out, err = executeCmd("sudo systemctl restart etcd", rcc.masterFQDN, host.Name, "22", rcc.sshConfig)
+	log.Printf("Rebooting all nodes... This might take a few minutes")
+	err := rcc.rebootAllNodes(ctx)
+	if err != nil {
+		return errors.Wrap(err, "error rebooting the nodes")
+	}
+
+	for _, host := range rcc.masterNodes {
+		log.Printf("Restarting etcd on node %s", host.Name)
+		out, err := executeCmd("sudo systemctl restart etcd", rcc.masterFQDN, host.Name, "22", rcc.sshConfig)
 		if err != nil {
 			log.Printf("Command `sudo systemctl restart etcd` output: %s\n", out)
 			return errors.Wrap(err, "failed to restart etcd")
