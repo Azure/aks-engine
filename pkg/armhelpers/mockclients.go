@@ -269,10 +269,21 @@ func (page MockRoleAssignmentListResultPage) Values() []authorization.RoleAssign
 	return *page.Ralr.Value
 }
 
-//ListPods returns all Pods running on the passed in node
+//ListPods returns Pods running on the passed in node
 func (mkc *MockKubernetesClient) ListPods(node *v1.Node) (*v1.PodList, error) {
 	if mkc.FailListPods {
 		return nil, errors.New("ListPods failed")
+	}
+	if mkc.PodsList != nil {
+		return mkc.PodsList, nil
+	}
+	return &v1.PodList{}, nil
+}
+
+//ListAllPods returns all Pods running
+func (mkc *MockKubernetesClient) ListAllPods() (*v1.PodList, error) {
+	if mkc.FailListPods {
+		return nil, errors.New("ListAllPods failed")
 	}
 	if mkc.PodsList != nil {
 		return mkc.PodsList, nil

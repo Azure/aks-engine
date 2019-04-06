@@ -187,8 +187,10 @@ type AKSStorageClient interface {
 
 // KubernetesClient interface models client for interacting with kubernetes api server
 type KubernetesClient interface {
-	// ListPods returns all Pods running on the passed in node.
+	// ListPods returns Pods running on the passed in node.
 	ListPods(node *v1.Node) (*v1.PodList, error)
+	// ListPods returns all Pods running
+	ListAllPods() (*v1.PodList, error)
 	// ListNodes returns a list of Nodes registered in the api server.
 	ListNodes() (*v1.NodeList, error)
 	// ListServiceAccounts returns a list of Service Accounts in a namespace

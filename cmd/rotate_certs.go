@@ -172,7 +172,7 @@ func (rcc *rotateCertsCmd) run(cmd *cobra.Command, args []string) error {
 		return errors.Wrap(err, "error updating kubeconfig")
 	}
 
-	log.Printf("Reboot all nodes")
+	log.Printf("Rebooting all nodes... This might take a few minutes")
 	err = rcc.rebootAllNodes(ctx)
 	if err != nil {
 		return errors.Wrap(err, "error rebooting the nodes")
@@ -185,11 +185,10 @@ func (rcc *rotateCertsCmd) run(cmd *cobra.Command, args []string) error {
 	}
 	// TODO: save apimodel certificateProfile/cert files as output
 
-	log.Printf("Reboot nodes to restart all pods")
-	// TODO delete all pods instead
-	err = rcc.rebootAllNodes(ctx)
+	log.Printf("Delete all pods")
+	err = rcc.deleteAllPods()
 	if err != nil {
-		return errors.Wrap(err, "error rebooting the nodes")
+		return errors.Wrap(err, "error deleting all the pods")
 	}
 
 	log.Printf("Successfully rotated etcd and cluster certificates.")
@@ -200,7 +199,7 @@ func (rcc *rotateCertsCmd) run(cmd *cobra.Command, args []string) error {
 func (rcc *rotateCertsCmd) getClusterNodes() error {
 	kubeClient, err := rcc.getKubeClient()
 	if err != nil {
-		return errors.Wrap(err, "failed to get cluster nodes")
+		return errors.Wrap(err, "failed to get Kubernetes Client")
 	}
 	nodeList, err := kubeClient.ListNodes()
 	if err != nil {
@@ -234,17 +233,37 @@ func (rcc *rotateCertsCmd) rebootAllNodes(ctx context.Context) error {
 	return nil
 }
 
+func (rcc *rotateCertsCmd) deleteAllPods() error {
+	kubeClient, err := rcc.getKubeClient()
+	if err != nil {
+		return errors.Wrap(err, "failed to get Kubernetes Client")
+	}
+	pods, err := kubeClient.ListAllPods()
+	if err != nil {
+		return errors.Wrap(err, "failed to get pods")
+	}
+	for _, pod := range pods.Items {
+		log.Printf("Deleting pod %s", pod.Name)
+		err = kubeClient.DeletePod(&pod)
+		if err != nil {
+			return errors.Wrap(err, "failed to delete pod "+pod.Name)
+		}
+	}
+	return nil
+}
+
 func (rcc *rotateCertsCmd) deleteServiceAccounts() error {
 	kubeClient, err := rcc.getKubeClient()
 	if err != nil {
-		return errors.Wrap(err, "failed to get cluster nodes")
+		return errors.Wrap(err, "failed to get Kubernetes Client")
 	}
 	saList, err := kubeClient.ListServiceAccounts(kubeSystemNamespace)
 	if err != nil {
 		return errors.Wrap(err, "failed to get cluster service accounts in namespace "+kubeSystemNamespace)
 	}
 	for _, sa := range saList.Items {
-		if sa.Name == "kube-dns" || "kubernetes-dashboard" || "metrics-server" {
+		switch sa.Name {
+		case "kube-dns", "kubernetes-dashboard", "metrics-server":
 			log.Printf("Deleting service account %s", sa.Name)
 			err = kubeClient.DeleteServiceAccount(&sa)
 			if err != nil {
