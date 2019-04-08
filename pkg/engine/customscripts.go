@@ -23,6 +23,10 @@ func GetKubernetesB64Configs() string {
 	return getBase64CustomScript(kubernetesConfigurations)
 }
 
+func GetKubernetesB64CIS() string {
+	return getBase64CustomScript(kubernetesCISScript)
+}
+
 func GetKubernetesB64ConfigsCustomCloud() string {
 	return getBase64CustomScript(kubernetesConfigurationsCustomCloud)
 }

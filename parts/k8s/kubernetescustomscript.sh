@@ -25,6 +25,10 @@ config_script=/opt/azure/containers/provision_configs.sh
 wait_for_file 3600 1 $config_script || exit $ERR_FILE_WATCH_TIMEOUT
 source $config_script
 
+cis_script=/opt/azure/containers/provision_cis.sh
+wait_for_file 3600 1 $cis_script || exit $ERR_FILE_WATCH_TIMEOUT
+source $cis_script
+
 if [[ "${TARGET_ENVIRONMENT,,}" == "${AZURE_STACK_ENV}"  ]]; then 
     config_script_custom_cloud=/opt/azure/containers/provision_configs_custom_cloud.sh
     wait_for_file 3600 1 $config_script_custom_cloud || exit $ERR_FILE_WATCH_TIMEOUT
