@@ -921,11 +921,11 @@ func (t *TemplateGenerator) getTemplateFuncMap(cs *api.ContainerService) templat
 		"WrapAsVariable": func(s string) string {
 			return fmt.Sprintf("',variables('%s'),'", s)
 		},
+		"CloudInitData": func(s string) string {
+			return wrapAsVariableObject("cloudInitFiles", s)
+		},
 		"WrapAsParameter": func(s string) string {
 			return fmt.Sprintf("',parameters('%s'),'", s)
-		},
-		"WrapAsParameterObject": func(o, p string) string {
-			return fmt.Sprintf("',parameters('%s').%s,'", o, p)
 		},
 		"WrapAsVerbatim": func(s string) string {
 			return fmt.Sprintf("',%s,'", s)

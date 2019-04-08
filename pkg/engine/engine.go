@@ -1147,3 +1147,7 @@ func stringInSlice(a string, list []string) bool {
 func getSwarmVersions(orchestratorVersion, dockerComposeVersion string) string {
 	return fmt.Sprintf("\"orchestratorVersion\": \"%s\",\n\"dockerComposeVersion\": \"%s\",\n", orchestratorVersion, dockerComposeVersion)
 }
+
+func wrapAsVariableObject(o, v string) string {
+	return fmt.Sprintf("',variables('%s').%s,'", o, v)
+}

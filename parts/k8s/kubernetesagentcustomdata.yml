@@ -6,28 +6,28 @@ write_files:
   encoding: gzip
   owner: root
   content: !!binary |
-    {{WrapAsVariable "provisionSource"}}
+    {{CloudInitData "provisionSource"}}
 
 - path: /opt/azure/containers/provision.sh
   permissions: "0744"
   encoding: gzip
   owner: root
   content: !!binary |
-    {{WrapAsVariable "provisionScript"}}
+    {{CloudInitData "provisionScript"}}
 
 - path: /opt/azure/containers/provision_installs.sh
   permissions: "0744"
   encoding: gzip
   owner: root
   content: !!binary |
-    {{WrapAsVariable "provisionInstalls"}}
+    {{CloudInitData "provisionInstalls"}}
 
 - path: /opt/azure/containers/provision_configs.sh
   permissions: "0744"
   encoding: gzip
   owner: root
   content: !!binary |
-    {{WrapAsVariable "provisionConfigs"}}
+    {{CloudInitData "provisionConfigs"}}
     
 {{if IsAzureStackCloud}}
 - path: /opt/azure/containers/provision_configs_custom_cloud.sh
@@ -43,21 +43,21 @@ write_files:
   encoding: gzip
   owner: root
   content: !!binary |
-    {{WrapAsVariable "sshdConfig"}}
+    {{CloudInitData "sshdConfig"}}
 
 - path: /etc/systemd/system.conf
   permissions: "0644"
   encoding: gzip
   owner: root
   content: !!binary |
-    {{WrapAsVariable "systemConf"}}
+    {{CloudInitData "systemConf"}}
 
 - path: /usr/local/bin/health-monitor.sh
   permissions: "0544"
   encoding: gzip
   owner: root
   content: !!binary |
-    {{WrapAsVariable "healthMonitorScript"}}
+    {{CloudInitData "healthMonitorScript"}}
 
 - path: /etc/systemd/system/kubelet-monitor.timer
   permissions: "0644"
@@ -212,7 +212,7 @@ write_files:
   encoding: gzip
   owner: root
   content: !!binary |
-    {{WrapAsVariable "customSearchDomainsScript"}}
+    {{CloudInitData "customSearchDomainsScript"}}
 {{end}}{{end}}
 
 - path: /var/lib/kubelet/kubeconfig
