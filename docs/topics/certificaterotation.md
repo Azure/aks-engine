@@ -5,7 +5,7 @@ Instructions on rotating TLS CA and certificates for an AKS Engine cluster.
 ## Prerequesites
 
 - The etcd members MUST be in a healthy state before rotating the CA and certs (ie. `etcdctl cluster-health` shows all peers are healthy and cluster is healthy).
-- The apimodel file reflecting the current cluster configuration, a working ssh private key that has root access to all nodes, and a working kubeconfig file in order to establish an authenticated connection to the Kubernetes cluster API. These files are persisted at AKS Engine template generation time, by default to the _output/ child directory from the working parent directory at the time of the aks-engine invocation.
+- The apimodel file reflecting the current cluster configuration and a working ssh private key that has root access to all nodes. The apimodel file is persisted at AKS Engine template generation time, by default to the _output/ child directory from the working parent directory at the time of the aks-engine invocation.
 
 ## Preparation
 

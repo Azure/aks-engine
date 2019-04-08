@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"path"
 	"strconv"
 	"strings"
 	"time"
@@ -16,6 +17,7 @@ import (
 	"github.com/Azure/aks-engine/pkg/api"
 	"github.com/Azure/aks-engine/pkg/armhelpers"
 	"github.com/Azure/aks-engine/pkg/engine"
+	"github.com/Azure/aks-engine/pkg/helpers"
 	"github.com/Azure/aks-engine/pkg/i18n"
 	"github.com/leonelquinteros/gotext"
 	"github.com/pkg/errors"
@@ -41,6 +43,7 @@ type rotateCertsCmd struct {
 	masterFQDN        string
 	location          string
 	apiModelPath      string
+	kubeconfigPath    string
 
 	// derived
 	containerService *api.ContainerService
@@ -70,9 +73,10 @@ func newRotateCertsCmd() *cobra.Command {
 	f := command.Flags()
 	f.StringVarP(&rcc.location, "location", "l", "", "location the cluster is deployed in (required)")
 	f.StringVarP(&rcc.resourceGroupName, "resource-group", "g", "", "the resource group where the cluster is deployed (required)")
-	f.StringVarP(&rcc.apiModelPath, "apimodel", "", "", "the filepath of the cluster's apimodel (defaults to _output)")
-	f.StringVarP(&rcc.sshFilepath, "ssh", "", "", "the filepath of a valid private ssh key to access the cluster's nodes (defaults to _output)")
-	f.StringVar(&rcc.masterFQDN, "master-FQDN", "", "FQDN for the master load balancer")
+	f.StringVarP(&rcc.apiModelPath, "apimodel", "", "", "the filepath of the cluster's apimodel (required)")
+	f.StringVarP(&rcc.sshFilepath, "ssh", "", "", "the filepath of a valid private ssh key to access the cluster's nodes (required)")
+	f.StringVar(&rcc.masterFQDN, "master-FQDN", "", "FQDN for the master load balancer (required)")
+	f.StringVar(&rcc.kubeconfigPath, "kubeconfig", "", "filepath where the new kubeconfig should be saved")
 	addAuthFlags(rcc.getAuthArgs(), f)
 
 	return command
@@ -80,7 +84,7 @@ func newRotateCertsCmd() *cobra.Command {
 
 func (rcc *rotateCertsCmd) run(cmd *cobra.Command, args []string) error {
 
-	log.Debugln("Start rotating certs")
+	log.Debugf("Start rotating certs")
 
 	var err error
 
@@ -109,7 +113,7 @@ func (rcc *rotateCertsCmd) run(cmd *cobra.Command, args []string) error {
 		return errors.Wrap(err, "error loading translation files")
 	}
 
-	log.Debugln("Loading container service")
+	log.Debugf("Loading container service")
 
 	apiloader := &api.Apiloader{
 		Translator: &i18n.Translator{
@@ -121,7 +125,7 @@ func (rcc *rotateCertsCmd) run(cmd *cobra.Command, args []string) error {
 		return errors.Wrap(err, "error parsing the api model")
 	}
 
-	log.Debugln("Getting cluster nodes")
+	log.Debugf("Getting cluster nodes")
 
 	err = rcc.getClusterNodes()
 	if err != nil {
@@ -163,7 +167,6 @@ func (rcc *rotateCertsCmd) run(cmd *cobra.Command, args []string) error {
 		return errors.Wrap(err, "error rotating etcd cluster")
 	}
 
-	// TODO: save kubeconfig in files
 	log.Infoln("Updating kubeconfig")
 	err = rcc.updateKubeconfig()
 	if err != nil {
@@ -176,17 +179,31 @@ func (rcc *rotateCertsCmd) run(cmd *cobra.Command, args []string) error {
 		return errors.Wrap(err, "error rebooting the nodes")
 	}
 
-	log.Debugln("Deleting Service Accoutns")
+	log.Debugf("Deleting Service Accoutns")
 	err = rcc.deleteServiceAccounts()
 	if err != nil {
 		return errors.Wrap(err, "error deleting service accounts")
 	}
-	// TODO: save apimodel certificateProfile/cert files as output
 
-	log.Debugln("Deleting all pods")
+	log.Debugf("Deleting all pods")
 	err = rcc.deleteAllPods()
 	if err != nil {
 		return errors.Wrap(err, "error deleting all the pods")
+	}
+
+	b, err := apiloader.SerializeContainerService(rcc.containerService, rcc.apiVersion)
+	if err != nil {
+		return err
+	}
+	f := helpers.FileSaver{
+		Translator: &i18n.Translator{
+			Locale: rcc.locale,
+		},
+	}
+	dir, file := path.Split(rcc.apiModelPath)
+	err = f.SaveFile(dir, file, b)
+	if err != nil {
+		return errors.Wrap(err, "error saving updated apimodel file")
 	}
 
 	log.Infoln("Successfully rotated etcd and cluster certificates.")
@@ -241,7 +258,7 @@ func (rcc *rotateCertsCmd) deleteAllPods() error {
 		return errors.Wrap(err, "failed to get pods")
 	}
 	for _, pod := range pods.Items {
-		log.Debugln("Deleting pod %s", pod.Name)
+		log.Debugf("Deleting pod %s", pod.Name)
 		err = kubeClient.DeletePod(&pod)
 		if err != nil {
 			return errors.Wrap(err, "failed to delete pod "+pod.Name)
@@ -262,7 +279,7 @@ func (rcc *rotateCertsCmd) deleteServiceAccounts() error {
 	for _, sa := range saList.Items {
 		switch sa.Name {
 		case "kube-dns", "kubernetes-dashboard", "metrics-server":
-			log.Debugln("Deleting service account %s", sa.Name)
+			log.Debugf("Deleting service account %s", sa.Name)
 			err = kubeClient.DeleteServiceAccount(&sa)
 			if err != nil {
 				return errors.Wrap(err, "failed to delete service account "+sa.Name)
@@ -285,6 +302,16 @@ func (rcc *rotateCertsCmd) updateKubeconfig() error {
 			log.Printf("Command %s output: %s\n", cmd, out)
 			return errors.Wrap(err, "failed replacing kubeconfig file")
 		}
+	}
+
+	if rcc.kubeconfigPath != "" {
+		f := helpers.FileSaver{
+			Translator: &i18n.Translator{
+				Locale: rcc.locale,
+			},
+		}
+		dir, file := path.Split(rcc.kubeconfigPath)
+		return f.SaveFileString(dir, file, kubeconfig)
 	}
 	return nil
 }
@@ -314,7 +341,7 @@ func (rcc *rotateCertsCmd) rotateEtcd(ctx context.Context) error {
 	etcdClientCertificateCmd := "sudo bash -c \"cat > /etc/kubernetes/certs/etcdclient.crt << EOL \n" + rcc.containerService.Properties.CertificateProfile.EtcdClientCertificate + "EOL\""
 
 	for i, host := range rcc.masterNodes {
-		log.Debugln("Ranging over node: %s\n", host.Name)
+		log.Debugf("Ranging over node: %s\n", host.Name)
 		etcdPeerPrivateKeyCmd := "sudo bash -c \"cat > /etc/kubernetes/certs/etcdpeer" + strconv.Itoa(i) + ".key << EOL \n" + rcc.containerService.Properties.CertificateProfile.EtcdPeerPrivateKeys[i] + "EOL\""
 		etcdPeerCertificateCmd := "sudo bash -c \"cat > /etc/kubernetes/certs/etcdpeer" + strconv.Itoa(i) + ".crt << EOL \n" + rcc.containerService.Properties.CertificateProfile.EtcdPeerCertificates[i] + "EOL\""
 
@@ -335,19 +362,14 @@ func (rcc *rotateCertsCmd) rotateEtcd(ctx context.Context) error {
 		}
 	}
 
-	// log.Printf("Rebooting all nodes... This might take a few minutes")
-	// err := rcc.rebootAllNodes(ctx)
-	// if err != nil {
-	// 	return errors.Wrap(err, "error rebooting the nodes")
-	// }
-	log.Debugln("Deleting all pods")
-	err := rcc.deleteAllPods()
+	log.Infoln("Rebooting all nodes... This might take a few minutes")
+	err := rcc.rebootAllNodes(ctx)
 	if err != nil {
-		return errors.Wrap(err, "error deleting all the pods")
+		return errors.Wrap(err, "error rebooting the nodes")
 	}
 
 	for _, host := range rcc.masterNodes {
-		log.Debugln("Restarting etcd on node %s", host.Name)
+		log.Debugf("Restarting etcd on node %s", host.Name)
 		out, err := executeCmd("sudo systemctl restart etcd", rcc.masterFQDN, host.Name, "22", rcc.sshConfig)
 		if err != nil {
 			log.Printf("Command `sudo systemctl restart etcd` output: %s\n", out)
@@ -365,7 +387,7 @@ func (rcc *rotateCertsCmd) rotateApiserver() error {
 	apiServerCertificateCmd := "sudo bash -c \"cat > /etc/kubernetes/certs/apiserver.crt << EOL \n" + rcc.containerService.Properties.CertificateProfile.APIServerCertificate + "EOL\""
 
 	for _, host := range rcc.masterNodes {
-		log.Debugln("Ranging over node: %s\n", host.Name)
+		log.Debugf("Ranging over node: %s\n", host.Name)
 		for _, cmd := range []string{apiServerPrivateKeyCmd, apiServerCertificateCmd} {
 			out, err := executeCmd(cmd, rcc.masterFQDN, host.Name, "22", rcc.sshConfig)
 			if err != nil {
@@ -376,7 +398,7 @@ func (rcc *rotateCertsCmd) rotateApiserver() error {
 	}
 
 	for _, host := range rcc.agentNodes {
-		log.Debugln("Ranging over node: %s\n", host.Name)
+		log.Debugf("Ranging over node: %s\n", host.Name)
 		for _, cmd := range []string{caCertificateCmd, apiServerCertificateCmd} {
 			out, err := executeCmd(cmd, rcc.masterFQDN, host.Name, "22", rcc.sshConfig)
 			if err != nil {
@@ -393,7 +415,7 @@ func (rcc *rotateCertsCmd) rotateKubelet() error {
 	clientPrivateKeyCmd := "sudo bash -c \"cat > /etc/kubernetes/certs/client.key << EOL \n" + rcc.containerService.Properties.CertificateProfile.ClientPrivateKey + "EOL\""
 
 	for _, host := range append(rcc.masterNodes, rcc.agentNodes...) {
-		log.Debugln("Ranging over node: %s\n", host.Name)
+		log.Debugf("Ranging over node: %s\n", host.Name)
 		for _, cmd := range []string{clientCertificateCmd, clientPrivateKeyCmd} {
 			out, err := executeCmd(cmd, rcc.masterFQDN, host.Name, "22", rcc.sshConfig)
 			if err != nil {
