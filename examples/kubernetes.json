@@ -5,7 +5,7 @@
       "orchestratorType": "Kubernetes"
     },
     "masterProfile": {
-      "count": 3,
+      "count": 1,
       "dnsPrefix": "",
       "vmSize": "Standard_D2_v2"
     },

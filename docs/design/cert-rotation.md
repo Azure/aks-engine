@@ -15,6 +15,7 @@ Provide a process that is easy to follow for rotating CA, etcd, kubelet, kubecon
 - Providing a certificate rotation tool for AKS clusters.
 - Providing a tool for etcd backup.
 - Rotating certificates in an existing cluster with no downtime.
+- Rotating proxy certs.
 
 ## Alternative implementations considered
 
