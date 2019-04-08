@@ -1,18 +1,21 @@
 #!/usr/bin/env bash
+#
+# Copyright (c) Microsoft Corporation. All rights reserved.
+# Licensed under the MIT license.
 
 # DON'T RUN. This script requires PythonLocalizerTool which is not published yet.
 # TODO: make PythonLocalizerTool public
 set -eo pipefail
 
-langdirs=loc/*
+langdirs=( loc/* )
 
 convert_lcl_to_po() {
-  for dir in $langdirs
+  for dir in "${langdirs[@]}"
   do
-    loc_lang=`basename "$dir"`
-    translation_lang=`echo $loc_lang | tr - _`
-    publish/PythonLocalizerTool lcltopo $dir translations/$translation_lang/LC_MESSAGES/ translations/en_US/LC_MESSAGES/en-US/metadata acsengine ""
-    msgfmt -c -v -o translations/$translation_lang/LC_MESSAGES/acsengine.mo translations/$translation_lang/LC_MESSAGES/acsengine.po
+    loc_lang=$(basename "$dir")
+    translation_lang="$(echo "$loc_lang" | tr - _)"
+    publish/PythonLocalizerTool lcltopo "$dir" translations/"$translation_lang"/LC_MESSAGES/ translations/en_US/LC_MESSAGES/en-US/metadata acsengine ""
+    msgfmt -c -v -o translations/"$translation_lang"/LC_MESSAGES/acsengine.mo translations/"$translation_lang"/LC_MESSAGES/acsengine.po
   done
 }
 

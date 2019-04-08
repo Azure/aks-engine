@@ -1,12 +1,14 @@
 #!/usr/bin/env bash
-
+#
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT license.
 
+set -eo pipefail
+
 PROJECT_NAME="aks-engine"
 
-: ${USE_SUDO:="true"}
-: ${AKSE_INSTALL_DIR:="/usr/local/bin"}
+: "${USE_SUDO:="true"}"
+: "${AKSE_INSTALL_DIR:="/usr/local/bin"}"
 
 # initArch discovers the architecture for this system.
 initArch() {
@@ -25,7 +27,7 @@ initArch() {
 
 # initOS discovers the operating system for this system.
 initOS() {
-  OS=$(echo `uname`|tr '[:upper:]' '[:lower:]')
+  OS=$(uname | tr '[:upper:]' '[:lower:]')
 
   case "$OS" in
     # Minimalist GNU for Windows
@@ -37,7 +39,7 @@ initOS() {
 runAsRoot() {
   local CMD="$*"
 
-  if [ $EUID -ne 0 -a $USE_SUDO = "true" ]; then
+  if [ $EUID -ne 0 ] && [ $USE_SUDO = "true" ]; then
     CMD="sudo $CMD"
   fi
 
@@ -64,6 +66,7 @@ verifySupported() {
 checkDesiredVersion() {
   # Use the GitHub releases webpage for the project to find the desired version for this project.
   local release_url="https://github.com/Azure/aks-engine/releases/${DESIRED_VERSION:-latest}"
+  # shellcheck disable=SC2086
   if type "curl" > /dev/null; then
     TAG=$(curl -SsL $release_url | awk '/\/tag\//' | grep -v no-underline | grep "<a href=\"/Azure/aks-engine/releases" | head -n 1 | cut -d '"' -f 2 | awk '{n=split($NF,a,"/");print a[n]}' | awk 'a !~ $0{print}; {a=$0}')
   elif type "wget" > /dev/null; then
@@ -79,7 +82,8 @@ checkDesiredVersion() {
 # if it needs to be changed.
 checkAKSEInstalledVersion() {
   if [[ -f "${AKSE_INSTALL_DIR}/${PROJECT_NAME}" ]]; then
-    local version=$(aks-engine version | grep 'Version' | cut -d' ' -f2)
+    local version
+    version=$(aks-engine version | grep 'Version' | cut -d' ' -f2)
     if [[ "$version" == "$TAG" ]]; then
       echo "AKS-Engine ${version} is already ${DESIRED_VERSION:-latest}"
       return 0
@@ -110,7 +114,7 @@ downloadFile() {
 # installFile vunpacks and installs it.
 installFile() {
   AKSE_TMP="$AKSE_TMP_ROOT/$PROJECT_NAME"
-  
+
   mkdir -p "$AKSE_TMP"
   tar xf "$AKSE_TMP_FILE" -C "$AKSE_TMP"
   AKSE_TMP_BIN="$AKSE_TMP/$PROJECT_NAME-$TAG-$OS-$ARCH"
@@ -138,8 +142,8 @@ fail_trap() {
 # testVersion tests the installed client to make sure it is working.
 testVersion() {
   set +e
-  AKSE="$(which $PROJECT_NAME)"
   if [ "$?" = "1" ]; then
+    # shellcheck disable=SC2016
     echo "$PROJECT_NAME not found. Is $AKSE_INSTALL_DIR on your "'$PATH?'
     exit 1
   fi
@@ -170,7 +174,7 @@ trap "fail_trap" EXIT
 set -e
 
 # Parsing input arguments (if any)
-export INPUT_ARGUMENTS="${@}"
+export INPUT_ARGUMENTS=( "${@}" )
 set -u
 while [[ $# -gt 0 ]]; do
   case $1 in
