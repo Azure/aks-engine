@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"math/rand"
+	"strings"
 	"time"
 
 	"github.com/Azure/aks-engine/pkg/api"
@@ -77,6 +78,8 @@ func (kmn *UpgradeMasterNode) Validate(vmName *string) error {
 		return nil
 	}
 
+	nodeName := strings.ToLower(*vmName)
+
 	if kmn.UpgradeContainerService.Properties.MasterProfile == nil {
 		kmn.logger.Warningf("Master profile was empty. Skipping node condition check")
 		return nil
@@ -92,15 +95,15 @@ func (kmn *UpgradeMasterNode) Validate(vmName *string) error {
 	ch := make(chan struct{}, 1)
 	go func() {
 		for {
-			masterNode, err := client.GetNode(*vmName)
+			masterNode, err := client.GetNode(nodeName)
 			if err != nil {
-				kmn.logger.Infof("Master VM: %s status error: %v", *vmName, err)
+				kmn.logger.Infof("Master node: %s status error: %v", nodeName, err)
 				time.Sleep(time.Second * 5)
 			} else if isNodeReady(masterNode) {
-				kmn.logger.Infof("Master VM: %s is ready", *vmName)
+				kmn.logger.Infof("Master node: %s is ready", nodeName)
 				ch <- struct{}{}
 			} else {
-				kmn.logger.Infof("Master VM: %s not ready yet...", *vmName)
+				kmn.logger.Infof("Master node: %s not ready yet...", nodeName)
 				time.Sleep(time.Second * 5)
 			}
 		}
