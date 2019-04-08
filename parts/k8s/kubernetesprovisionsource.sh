@@ -46,6 +46,8 @@ ERR_SGX_DRIVERS_START_FAIL=91 # Failed to execute SGX driver binary
 ERR_APT_DAILY_TIMEOUT=98 # Timeout waiting for apt daily updates
 ERR_APT_UPDATE_TIMEOUT=99 # Timeout waiting for apt-get update to complete
 ERR_CSE_PROVISION_SCRIPT_NOT_READY_TIMEOUT=100 # Timeout waiting for cloud-init to place this (!) script on the vm
+ERR_APT_DIST_UPGRADE_TIMEOUT=101 # Timeout waiting for apt-get dist-upgrade to complete
+ERR_ROOT_PW_FAIL=102 # Failed to set root password
 
 OS=$(cat /etc/*-release | grep ^ID= | tr -d 'ID="' | awk '{print toupper($0)}')
 UBUNTU_OS_NAME="UBUNTU"
@@ -148,8 +150,8 @@ apt_get_update() {
     apt_update_output=/tmp/apt-get-update.out
     for i in $(seq 1 $retries); do
         wait_for_apt_locks
-        dpkg --configure -a
-        apt-get -f -y install
+        dpkg --configure -a; sleep 1
+        apt-get -f -y install; sleep 1
         apt-get update 2>&1 | tee $apt_update_output | grep -E "^([WE]:.*)|([eE]rr.*)$"
         [ $? -ne 0  ] && cat $apt_update_output && break || \
         cat $apt_update_output
@@ -159,6 +161,30 @@ apt_get_update() {
         fi
     done
     echo Executed apt-get update $i times
+    wait_for_apt_locks
+}
+apt_get_dist_upgrade() {
+    retries=10
+    apt_dist_upgrade_output=/tmp/apt-get-dist-upgrade.out
+    for i in $(seq 1 $retries); do
+        wait_for_apt_locks
+        dpkg --configure -a; sleep 1
+        apt-get -f -y install; sleep 1
+        apt-get dist-upgrade -y 2>&1 | tee $apt_dist_upgrade_output | grep -E "^([WE]:.*)|([eE]rr.*)$"
+
+        if [ $? -ne 0  ]; then
+            cat $apt_dist_upgrade_output
+            break
+        else
+            cat $apt_dist_upgrade_output
+            sleep 3
+        fi
+
+        if [ $i -eq $retries ]; then
+            return 1
+        fi
+    done
+    echo Executed apt-get dist-upgrade $i times
     wait_for_apt_locks
 }
 apt_get_install() {
@@ -190,4 +216,18 @@ systemctl_restart() {
             sleep $wait_sleep
         fi
     done
+}
+assign_root_pw() {
+    # assign a passwd to root account (only if it is locked):
+    grep '^root:[!*]:' /etc/shadow
+    if [ $? -eq '0' ] ; then
+        SALT=`openssl rand -base64 5`
+        SECRET=`openssl rand -base64 37`
+        CMD="import crypt, getpass, pwd; print crypt.crypt('$SECRET', '\$6\$$SALT\$')"
+        HASH=`python <<< "$CMD"`
+        echo 'root:'$HASH | /usr/sbin/chpasswd -e 2>/dev/null;
+    fi
+}
+set_log_perms() {
+    find /var/log -type f -perm '/o+r' -exec chmod 'g-wx,o-rwx' {} \;
 }

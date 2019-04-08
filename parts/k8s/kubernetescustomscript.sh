@@ -59,14 +59,15 @@ else
     FULL_INSTALL_REQUIRED=true
 fi
 
-if [[ ! -z "${MASTER_NODE}" ]] && [[ -z "${COSMOS_URI}" ]]; then
-    	installEtcd
-fi
-
 if $FULL_INSTALL_REQUIRED; then
+    hardenNode
     installDeps
 else 
     echo "Golden image; skipping dependencies installation"
+fi
+
+if [[ ! -z "${MASTER_NODE}" ]] && [[ -z "${COSMOS_URI}" ]]; then
+    	installEtcd
 fi
 
 installContainerRuntime
@@ -187,3 +188,4 @@ else
       aptmarkWALinuxAgent unhold &
   fi
 fi
+set_log_perms

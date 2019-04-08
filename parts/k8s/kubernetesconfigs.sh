@@ -5,6 +5,10 @@ PRIVATE_IP=$(hostname -I | cut -d' ' -f1)
 ETCD_PEER_URL="https://${PRIVATE_IP}:2380"
 ETCD_CLIENT_URL="https://${PRIVATE_IP}:2379"
 
+hardenNode(){
+    retrycmd_if_failure 10 5 30 assign_root_pw || exit $ERR_ROOT_PW_FAIL
+}
+
 systemctlEnableAndStart() {
     systemctl_restart 100 5 30 $1
     RESTART_STATUS=$?

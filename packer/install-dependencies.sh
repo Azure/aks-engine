@@ -15,12 +15,14 @@ if [[ ${UBUNTU_RELEASE} == "18.04" ]]; then
   overrideNetworkConfig
 fi
 
+hardenNode
+installDeps
+
 ETCD_VERSION="3.2.25"
 ETCD_DOWNLOAD_URL="https://acs-mirror.azureedge.net/github-coreos"
 installEtcd
 echo "  - etcd v${ETCD_VERSION}" >> ${RELEASE_NOTES_FILEPATH}
 
-installDeps
 cat << EOF >> ${RELEASE_NOTES_FILEPATH}
   - apt-transport-https
   - blobfuse
@@ -375,3 +377,5 @@ echo "START_OF_NOTES"
 cat ${RELEASE_NOTES_FILEPATH}
 echo "END_OF_NOTES"
 set -x
+# Set permissions for all log files under /var/log
+set_log_perms
