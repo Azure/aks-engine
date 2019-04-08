@@ -1,4 +1,7 @@
 #!/bin/bash
+#
+# Copyright (c) Microsoft Corporation. All rights reserved.
+# Licensed under the MIT license.
 
 GO_SOURCE="pkg/engine/*.go pkg/engine/transform/*.go pkg/api/*.go pkg/operations/*.go pkg/operations/kubernetesupgrade/*.go"
 LANGUAGE="en_US"
@@ -31,13 +34,13 @@ while getopts "hl:pm" opt; do
   esac
 done
 
-if ! which go-xgettext > /dev/null; then
+if ! command -v go-xgettext > /dev/null; then
   echo 'Can not find go-xgettext, install with:'
   echo 'go get github.com/JiangtianLi/gettext/go-xgettext'
   exit 1
 fi
 
-if ! which msginit > /dev/null; then
+if ! command -v msginit > /dev/null; then
   echo 'Can not find msginit, install with:'
   echo 'apt-get install gettext'
   exit 1
@@ -45,8 +48,8 @@ fi
 
 if [[ "${generate_po}" == "true" ]]; then
   echo "Extract strings and generate PO files..."
-  go-xgettext -o ${DOMAIN}.pot --keyword=Translator.Errorf --keyword-plural=Translator.NErrorf --msgid-bugs-address="" --sort-output ${GO_SOURCE}
-  msginit -l ${LANGUAGE} -o ${DOMAIN}.po -i ${DOMAIN}.pot
+  go-xgettext -o ${DOMAIN}.pot --keyword=Translator.Errorf --keyword-plural=Translator.NErrorf --msgid-bugs-address="" --sort-output "${GO_SOURCE}"
+  msginit -l "${LANGUAGE}" -o ${DOMAIN}.po -i ${DOMAIN}.pot
 fi
 
 if [[ "${generate_mo}" == "true" ]]; then

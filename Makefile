@@ -135,6 +135,7 @@ test: generate
 
 .PHONY: test-style
 test-style:
+	@scripts/validate-shell.sh
 	@scripts/validate-go.sh
 
 .PHONY: ensure-generated

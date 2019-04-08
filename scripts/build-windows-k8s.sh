@@ -1,9 +1,13 @@
 #!/bin/bash
+#
+# Copyright (c) Microsoft Corporation. All rights reserved.
+# Licensed under the MIT license.
+
 set -eo pipefail
 
 fetch_k8s() {
-	git clone https://github.com/Azure/kubernetes ${GOPATH}/src/k8s.io/kubernetes || true
-	cd $KUBEPATH
+	git clone https://github.com/Azure/kubernetes "${GOPATH}"/src/k8s.io/kubernetes || true
+	cd "$KUBEPATH"
 	git remote add upstream https://github.com/kubernetes/kubernetes || true
 	git fetch upstream
 }
@@ -14,15 +18,17 @@ set_git_config() {
 }
 
 create_version_branch() {
-	git checkout -b ${AKS_BRANCH_NAME} ${KUBERNETES_TAG_BRANCH} || true
+	git checkout -b "${AKS_BRANCH_NAME}" "${KUBERNETES_TAG_BRANCH}" || true
 }
 
 version_lt() {
-        [ "$1" != $(printf "$1\n$2" | sort -V | head -n 2 | tail -n 1) ]
+  # shellcheck disable=SC2046
+  [ "$1" != $(printf "%s\n%s" "$1" "$2" | sort -V | head -n 2 | tail -n 1) ]
 }
 
 version_ge() {
-        [ "$1" == $(printf "$1\n$2" | sort -V | head -n 2 | tail -n 1) ]
+  # shellcheck disable=SC2046
+  [ "$1" == $(printf "%s\n%s" "$1" "$2" | sort -V | head -n 2 | tail -n 1) ]
 }
 
 k8s_16_cherry_pick() {
@@ -228,32 +234,32 @@ apply_acs_cherry_picks() {
 }
 
 create_dist_dir() {
-	mkdir -p ${DIST_DIR}
+	mkdir -p "${DIST_DIR}"
 }
 
 build_kubelet() {
 	echo "building kubelet.exe..."
-	$KUBEPATH/build/run.sh make WHAT=cmd/kubelet KUBE_BUILD_PLATFORMS=windows/amd64
-	cp ${GOPATH}/src/k8s.io/kubernetes/_output/dockerized/bin/windows/amd64/kubelet.exe ${DIST_DIR}
+	"$KUBEPATH"/build/run.sh make WHAT=cmd/kubelet KUBE_BUILD_PLATFORMS=windows/amd64
+	cp "${GOPATH}"/src/k8s.io/kubernetes/_output/dockerized/bin/windows/amd64/kubelet.exe "${DIST_DIR}"
 }
 
 build_kubeproxy() {
 	echo "building kube-proxy.exe..."
-	$KUBEPATH/build/run.sh make WHAT=cmd/kube-proxy KUBE_BUILD_PLATFORMS=windows/amd64
-	cp ${GOPATH}/src/k8s.io/kubernetes/_output/dockerized/bin/windows/amd64/kube-proxy.exe ${DIST_DIR}
+	"$KUBEPATH"/build/run.sh make WHAT=cmd/kube-proxy KUBE_BUILD_PLATFORMS=windows/amd64
+	cp "${GOPATH}"/src/k8s.io/kubernetes/_output/dockerized/bin/windows/amd64/kube-proxy.exe "${DIST_DIR}"
 }
 
 build_kubectl() {
 	echo "building kubectl.exe..."
-    $KUBEPATH/build/run.sh make WHAT=cmd/kubectl KUBE_BUILD_PLATFORMS=windows/amd64
-    cp ${GOPATH}/src/k8s.io/kubernetes/_output/dockerized/bin/windows/amd64/kubectl.exe ${DIST_DIR}
+    "$KUBEPATH"/build/run.sh make WHAT=cmd/kubectl KUBE_BUILD_PLATFORMS=windows/amd64
+    cp "${GOPATH}"/src/k8s.io/kubernetes/_output/dockerized/bin/windows/amd64/kubectl.exe "${DIST_DIR}"
 }
 
 download_kubectl() {
 	kubectl="https://storage.googleapis.com/kubernetes-release/release/v${version}/bin/windows/amd64/kubectl.exe"
 	echo "dowloading ${kubectl} ..."
-	curl -L ${kubectl} -o ${DIST_DIR}/kubectl.exe
-	chmod 775 ${DIST_DIR}/kubectl.exe
+	curl -L "${kubectl}" -o "${DIST_DIR}"/kubectl.exe
+	chmod 775 "${DIST_DIR}"/kubectl.exe
 }
 
 get_kube_binaries() {
@@ -278,17 +284,17 @@ get_kube_binaries() {
 		echo "downloading kubelet/kubeproxy/kubectl from upstream..."
 		WIN_TAR=kubernetes-node-windows-amd64.tar.gz
 		SUB_DIR=kubernetes/node/bin
-		curl -L https://storage.googleapis.com/kubernetes-release/release/v${version}/${WIN_TAR} -o ${TOP_DIR}/${WIN_TAR}
-		tar -xzvf ${TOP_DIR}/${WIN_TAR} -C ${TOP_DIR}
-		cp ${TOP_DIR}/${SUB_DIR}/kubelet.exe ${DIST_DIR}
-		cp ${TOP_DIR}/${SUB_DIR}/kube-proxy.exe ${DIST_DIR}
-		cp ${TOP_DIR}/${SUB_DIR}/kubectl.exe ${DIST_DIR}
-		chmod 775 ${DIST_DIR}/kubectl.exe
+		curl -L https://storage.googleapis.com/kubernetes-release/release/v"${version}"/${WIN_TAR} -o "${TOP_DIR}"/${WIN_TAR}
+		tar -xzvf "${TOP_DIR}"/${WIN_TAR} -C "${TOP_DIR}"
+		cp "${TOP_DIR}"/${SUB_DIR}/kubelet.exe "${DIST_DIR}"
+		cp "${TOP_DIR}"/${SUB_DIR}/kube-proxy.exe "${DIST_DIR}"
+		cp "${TOP_DIR}"/${SUB_DIR}/kubectl.exe "${DIST_DIR}"
+		chmod 775 "${DIST_DIR}"/kubectl.exe
 	fi
 }
 
 build_kube_binaries_for_upstream_e2e() {
-		$KUBEPATH/build/run.sh make WHAT=cmd/kubelet KUBE_BUILD_PLATFORMS=linux/amd64
+		"$KUBEPATH"/build/run.sh make WHAT=cmd/kubelet KUBE_BUILD_PLATFORMS=linux/amd64
 
 		build_kubelet
 		build_kubeproxy
@@ -301,48 +307,48 @@ download_nssm() {
 	echo "downloading nssm ..."
 	curl ${NSSM_URL} -o /tmp/nssm-${NSSM_VERSION}.zip
 	unzip -q -d /tmp /tmp/nssm-${NSSM_VERSION}.zip
-	cp /tmp/nssm-${NSSM_VERSION}/win64/nssm.exe ${DIST_DIR}
-	chmod 775 ${DIST_DIR}/nssm.exe
+	cp /tmp/nssm-${NSSM_VERSION}/win64/nssm.exe "${DIST_DIR}"
+	chmod 775 "${DIST_DIR}"/nssm.exe
 	rm -rf /tmp/nssm-${NSSM_VERSION}*
 }
 
 download_wincni() {
-	mkdir -p ${DIST_DIR}/cni/config
+	mkdir -p "${DIST_DIR}"/cni/config
 	WINSDN_URL=https://github.com/Microsoft/SDN/raw/master/Kubernetes/windows/
 	WINCNI_EXE=cni/wincni.exe
 	HNS_PSM1=hns.psm1
-	curl -L ${WINSDN_URL}${WINCNI_EXE} -o ${DIST_DIR}/${WINCNI_EXE}
-	curl -L ${WINSDN_URL}${HNS_PSM1} -o ${DIST_DIR}/${HNS_PSM1}
+	curl -L ${WINSDN_URL}${WINCNI_EXE} -o "${DIST_DIR}"/${WINCNI_EXE}
+	curl -L ${WINSDN_URL}${HNS_PSM1} -o "${DIST_DIR}"/${HNS_PSM1}
 }
 
 create_zip() {
 	ZIP_NAME="${k8s_e2e_upstream_version:-"v${AKS_VERSION}int.zip"}"
-	cd ${DIST_DIR}/..
-	zip -r ../${ZIP_NAME} k/*
+	cd "${DIST_DIR}"/..
+	zip -r ../"${ZIP_NAME}" k/*
 	cd -
 }
 
 upload_zip_to_blob_storage() {
-	az storage blob upload -f ${TOP_DIR}/../v${AKS_VERSION}int.zip -c ${AZURE_STORAGE_CONTAINER_NAME} -n v${AKS_VERSION}int.zip
+	az storage blob upload -f "${TOP_DIR}"/../v"${AKS_VERSION}"int.zip -c "${AZURE_STORAGE_CONTAINER_NAME}" -n v"${AKS_VERSION}"int.zip
 }
 
 push_acs_branch() {
 	if version_lt "${KUBERNETES_RELEASE}" "1.9"; then
 		echo "push to azure repo..."
-		cd ${GOPATH}/src/k8s.io/kubernetes
-		git push origin ${AKS_BRANCH_NAME}
+		cd "${GOPATH}"/src/k8s.io/kubernetes
+		git push origin "${AKS_BRANCH_NAME}"
 	else
 		echo "no need to push to azure repo"
 	fi
 }
 
 cleanup_output() {
-	rm ${TOP_DIR}/../v${AKS_VERSION}int.zip
-	rm -r ${TOP_DIR}
+	rm "${TOP_DIR}"/../v"${AKS_VERSION}"int.zip
+	rm -r "${TOP_DIR}"
 }
 
 
-AKS_ENGINE_HOME=${GOPATH}/src/github.com/Azure/aks-engine
+AKS_ENGINE_HOME="${GOPATH}"/src/github.com/Azure/aks-engine
 
 usage() {
 	echo "$0 [-v version] [-p acs_patch_version]"
@@ -373,7 +379,7 @@ while getopts ":v:p:u:z:" opt; do
   esac
 done
 
-KUBEPATH=${GOPATH}/src/k8s.io/kubernetes
+KUBEPATH="${GOPATH}"/src/k8s.io/kubernetes
 
 if [ -z "${k8s_e2e_upstream_version}" ]; then
 
@@ -383,16 +389,17 @@ if [ -z "${k8s_e2e_upstream_version}" ]; then
 	fi
 
 	if [ -z "${AZURE_STORAGE_CONNECTION_STRING}" ] || [ -z "${AZURE_STORAGE_CONTAINER_NAME}" ]; then
+		# shellcheck disable=SC2016
 		echo '$AZURE_STORAGE_CONNECTION_STRING and $AZURE_STORAGE_CONTAINER_NAME need to be set for upload to Azure Blob Storage.'
 			exit 1
 	fi
 
-	KUBERNETES_RELEASE=$(echo $version | cut -d'.' -f1,2)
+	KUBERNETES_RELEASE=$(echo "$version" | cut -d'.' -f1,2)
 	KUBERNETES_TAG_BRANCH=v${version}
 	AKS_VERSION=${version}-${acs_patch_version}
 	AKS_BRANCH_NAME=acs-v${AKS_VERSION}
 	TOP_DIR=${AKS_ENGINE_HOME}/_dist/k8s-windows-v${AKS_VERSION}
-	DIST_DIR=${TOP_DIR}/k
+	DIST_DIR="${TOP_DIR}"/k
 
 	create_dist_dir
 	get_kube_binaries
