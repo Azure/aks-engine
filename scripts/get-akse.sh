@@ -39,7 +39,7 @@ initOS() {
 runAsRoot() {
   local CMD="$*"
 
-  if [ $EUID -ne 0 ] && [ $USE_SUDO = "true" ]; then
+  if [ $EUID -ne 0 ] && [ "$USE_SUDO" = "true" ]; then
     CMD="sudo $CMD"
   fi
 
