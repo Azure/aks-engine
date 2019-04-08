@@ -7,7 +7,7 @@ write_files:
   encoding: gzip
   owner: "root"
   content: !!binary |
-    {{WrapAsVariable "provisionSource"}}
+    {{CloudInitData "provisionSource"}}
 
 - path: "/home/{{WrapAsParameter "jumpboxUsername"}}/.kube/config"
   permissions: "0644"
