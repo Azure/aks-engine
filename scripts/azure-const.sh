@@ -25,7 +25,7 @@ az login --service-principal \
 		--tenant "${TENANT_ID}" &>/dev/null
 
 # set to the sub id we want to cleanup
-az account set -s $SUBSCRIPTION_ID
+az account set -s "$SUBSCRIPTION_ID"
 
 python pkg/helpers/generate_azure_constants.py
 git status | grep pkg/helpers/azureconst.go
