@@ -17,12 +17,6 @@ fi
 
 hardenNode
 installDeps
-
-ETCD_VERSION="3.2.25"
-ETCD_DOWNLOAD_URL="https://acs-mirror.azureedge.net/github-coreos"
-installEtcd
-echo "  - etcd v${ETCD_VERSION}" >> ${RELEASE_NOTES_FILEPATH}
-
 cat << EOF >> ${RELEASE_NOTES_FILEPATH}
   - apt-transport-https
   - blobfuse
@@ -48,6 +42,11 @@ cat << EOF >> ${RELEASE_NOTES_FILEPATH}
   - xz-utils
   - zip
 EOF
+
+ETCD_VERSION="3.2.25"
+ETCD_DOWNLOAD_URL="https://acs-mirror.azureedge.net/github-coreos"
+installEtcd
+echo "  - etcd v${ETCD_VERSION}" >> ${RELEASE_NOTES_FILEPATH}
 
 MOBY_VERSION="3.0.4"
 installMoby
