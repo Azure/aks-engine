@@ -87,8 +87,8 @@ Save the markdown that it prints so it can be pasted into the GitHub release.
 Make sure your repository has no local changes, then build the aks-engine distribution archives:
 
 ```
-$ git status -s --untracked-files=no  # check for local changes
-$ git clean -fdx && make clean dist
+$ make info  # check that the git tree state is clean and the tag is correct
+$ make clean dist
 ```
 
 When this finishes, the `_dist` directory will be populated with three .zip and three .tar.gz archive files.
