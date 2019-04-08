@@ -18,7 +18,7 @@ Instructions on rotating TLS CA and certificates for an AKS Engine cluster.
 run `aks-engine rotate-certs`. For example:
 
 ```bash
-CLUSTER="<CLUSTER_DNS_PREFIX>" && bin/aks-engine rotate-certs --apimodel _output/${CLUSTER}/apimodel.json --client-id "<YOUR_CLIENT_ID>" --client-secret "<YOUR_CLIENT_SECRET>" --location <CLUSTER_LOCATION> --master-FQDN ${CLUSTER}.<CLUSTER_LOCATION>.cloudapp.azure.com --ssh _output/${CLUSTER}-ssh --subscription-id "<YOUR_SUBSCRIPTION_ID>" -g ${CLUSTER}
+CLUSTER="<CLUSTER_DNS_PREFIX>" && bin/aks-engine rotate-certs --apimodel _output/${CLUSTER}/apimodel.json --client-id "<YOUR_CLIENT_ID>" --client-secret "<YOUR_CLIENT_SECRET>" --location <CLUSTER_LOCATION> --master-FQDN ${CLUSTER}.<CLUSTER_LOCATION>.cloudapp.azure.com --ssh _output/${CLUSTER}-ssh --subscription-id "<YOUR_SUBSCRIPTION_ID>" -g ${CLUSTER} -o _output/${CLUSTER}
 ```
 
 The above example command assumes a default `output/` directory with the resource group name being the same as the cluster's DNS prefix.
