@@ -68,68 +68,61 @@ write_files:
 
 - path: /etc/systemd/system/kubelet-monitor.timer
   permissions: "0644"
+  encoding: gzip
   owner: root
-  content: |
-    [Unit]
-    Description=a timer that delays kubelet-monitor from starting too soon after boot
-    [Timer]
-    OnBootSec=30min
-    [Install]
-    WantedBy=multi-user.target
+  content: !!binary |
+    {{CloudInitData "kubeletMonitorSystemdTimer"}}
 
 - path: /etc/systemd/system/kubelet-monitor.service
   permissions: "0644"
+  encoding: gzip
   owner: root
-  content: |
-    [Unit]
-    Description=a script that checks kubelet health and restarts if needed
-    After=kubelet.service
-    [Service]
-    Restart=always
-    RestartSec=10
-    RemainAfterExit=yes
-    ExecStart=/usr/local/bin/health-monitor.sh kubelet
+  content: !!binary |
+    {{CloudInitData "kubeletMonitorSystemdService"}}
 
 - path: /etc/systemd/system/docker-monitor.timer
   permissions: "0644"
+  encoding: gzip
   owner: root
-  content: |
-    [Unit]
-    Description=a timer that delays docker-monitor from starting too soon after boot
-    [Timer]
-    OnBootSec=30min
-    [Install]
-    WantedBy=multi-user.target
+  content: !!binary |
+    {{CloudInitData "dockerMonitorSystemdTimer"}}
 
 - path: /etc/systemd/system/docker-monitor.service
   permissions: "0644"
+  encoding: gzip
   owner: root
-  content: |
-    [Unit]
-    Description=a script that checks docker health and restarts if needed
-    After=docker.service
-    [Service]
-    Restart=always
-    RestartSec=10
-    RemainAfterExit=yes
-    ExecStart=/usr/local/bin/health-monitor.sh container-runtime
+  content: !!binary |
+    {{CloudInitData "dockerMonitorSystemdService"}}
+
+- path: /etc/systemd/system/kubelet.service
+  permissions: "0644"
+  encoding: gzip
+  owner: root
+  content: !!binary |
+    {{CloudInitData "kubeletSystemdService"}}
+
+- path: /etc/systemd/system/kms.service
+  permissions: "0644"
+  encoding: gzip
+  owner: root
+  content: !!binary |
+    {{CloudInitData "kmsSystemdService"}}
 
 - path: /etc/apt/preferences
   permissions: "0644"
+  encoding: gzip
   owner: root
-  content: |
-    Package: walinuxagent
-    Pin: version 2.2.32.2
-    Pin-Priority: 550
+  content: !!binary |
+    {{CloudInitData "aptPreferences"}}
 
 {{if .KubernetesConfig.RequiresDocker}}
     {{if not .IsCoreOS}}
 - path: /etc/systemd/system/docker.service.d/clear_mount_propagation_flags.conf
   permissions: "0644"
+  encoding: gzip
   owner: "root"
-  content: |
-    [Service]
-    MountFlags=shared
+  content: !!binary |
+    {{CloudInitData "dockerClearMountPropagationFlags"}}
     {{end}}
 
 - path: /etc/systemd/system/docker.service.d/exec_start.conf
@@ -165,21 +158,8 @@ write_files:
 - path: /etc/systemd/system/sys-fs-bpf.mount
   permissions: "0644"
   owner: root
-  content: |
-    [Unit]
-    Description=Cilium BPF mounts
-    Documentation=http://docs.cilium.io/
-    DefaultDependencies=no
-    Before=local-fs.target umount.target
-    After=swap.target
-
-    [Mount]
-    What=bpffs
-    Where=/sys/fs/bpf
-    Type=bpf
-
-    [Install]
-    WantedBy=multi-user.target
+  content: !!binary |
+    {{WrapAsVariable "systemdBPFMount"}}
 {{end}}
 
 {{if IsNSeriesSKU .}}

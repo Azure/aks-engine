@@ -475,7 +475,7 @@ func CreateAgentVMSS(cs *api.ContainerService, profile *api.AgentPoolProfile) Vi
 
 	if profile.IsWindows() {
 
-		customDataStr := getCustomDataFromJSON(t.GetKubernetesWindowsAgentCustomDataJSON(cs, profile))
+		customDataStr := getCustomDataFromJSON(t.GetKubernetesWindowsNodeCustomDataJSONObject(cs, profile))
 		windowsOsProfile := compute.VirtualMachineScaleSetOSProfile{
 			AdminUsername:      to.StringPtr("[parameters('windowsAdminUsername')]"),
 			AdminPassword:      to.StringPtr("[parameters('windowsAdminPassword')]"),
@@ -487,7 +487,7 @@ func CreateAgentVMSS(cs *api.ContainerService, profile *api.AgentPoolProfile) Vi
 		}
 		vmssVMProfile.OsProfile = &windowsOsProfile
 	} else {
-		customDataStr := getCustomDataFromJSON(t.GetKubernetesAgentCustomDataJSON(cs, profile))
+		customDataStr := getCustomDataFromJSON(t.GetKubernetesLinuxNodeCustomDataJSONObject(cs, profile))
 		linuxOsProfile := compute.VirtualMachineScaleSetOSProfile{
 			AdminUsername:      to.StringPtr("[parameters('linuxAdminUsername')]"),
 			ComputerNamePrefix: to.StringPtr(fmt.Sprintf("[variables('%sVMNamePrefix')]", profile.Name)),

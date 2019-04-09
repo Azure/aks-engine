@@ -633,8 +633,8 @@ func escapeSingleLine(escapedStr string) string {
 	return escapedStr
 }
 
-// getBase64CustomScript will return a base64 of the CSE
-func getBase64CustomScript(csFilename string) string {
+// getBase64EncodedGzippedCustomScript will return a base64 of the CSE
+func getBase64EncodedGzippedCustomScript(csFilename string) string {
 	b, err := Asset(csFilename)
 	if err != nil {
 		// this should never happen and this is a bug
@@ -643,7 +643,7 @@ func getBase64CustomScript(csFilename string) string {
 	// translate the parameters
 	csStr := string(b)
 	csStr = strings.Replace(csStr, "\r\n", "\n", -1)
-	return getBase64CustomScriptFromStr(csStr)
+	return getBase64EncodedGzippedCustomScriptFromStr(csStr)
 }
 
 func getStringFromBase64(str string) (string, error) {
@@ -651,8 +651,8 @@ func getStringFromBase64(str string) (string, error) {
 	return string(decodedBytes), err
 }
 
-// getBase64CustomScript will return a base64 of the CSE
-func getBase64CustomScriptFromStr(str string) string {
+// getBase64EncodedGzippedCustomScriptFromStr will return a base64-encoded string of the gzip'd source data
+func getBase64EncodedGzippedCustomScriptFromStr(str string) string {
 	var gzipB bytes.Buffer
 	w := gzip.NewWriter(&gzipB)
 	w.Write([]byte(str))
@@ -903,7 +903,7 @@ write_files:
 
 	filelines := ""
 	for _, file := range files {
-		b64GzipString := getBase64CustomScript(file)
+		b64GzipString := getBase64EncodedGzippedCustomScript(file)
 		fileNoPath := strings.TrimPrefix(file, "swarm/")
 		filelines += fmt.Sprintf(writeFileBlock, b64GzipString, fileNoPath)
 	}

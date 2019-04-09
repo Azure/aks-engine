@@ -129,20 +129,7 @@ const (
 )
 
 const (
-	kubernetesMasterCustomDataYaml           = "k8s/kubernetesmastercustomdata.yml"
-	kubernetesCustomScript                   = "k8s/kubernetescustomscript.sh"
-	kubernetesProvisionSourceScript          = "k8s/kubernetesprovisionsource.sh"
-	kubernetesHealthMonitorScript            = "k8s/health-monitor.sh"
-	kubernetesInstalls                       = "k8s/kubernetesinstalls.sh"
-	kubernetesConfigurations                 = "k8s/kubernetesconfigs.sh"
-	kubernetesCISScript                      = "k8s/cis.sh"
-	kubernetesConfigurationsCustomCloud      = "k8s/kubernetesconfigscustomcloud.sh"
-	kubernetesMountetcd                      = "k8s/kubernetes_mountetcd.sh"
-	kubernetesCustomSearchDomainsScript      = "k8s/setup-custom-search-domains.sh"
-	kubernetesMasterGenerateProxyCertsScript = "k8s/kubernetesmastergenerateproxycertscript.sh"
-	kubernetesAgentCustomDataYaml            = "k8s/kubernetesagentcustomdata.yml"
-	kubernetesJumpboxCustomDataYaml          = "k8s/kubernetesjumpboxcustomdata.yml"
-	kubeConfigJSON                           = "k8s/kubeconfig.json"
+	kubeConfigJSON = "k8s/kubeconfig.json"
 	// Windows custom scripts
 	kubernetesWindowsAgentCustomDataPS1   = "k8s/kuberneteswindowssetup.ps1"
 	kubernetesWindowsAgentFunctionsPS1    = "k8s/kuberneteswindowsfunctions.ps1"
@@ -151,8 +138,35 @@ const (
 	kubernetesWindowsCniFunctionsPS1      = "k8s/windowscnifunc.ps1"
 	kubernetesWindowsAzureCniFunctionsPS1 = "k8s/windowsazurecnifunc.ps1"
 	kubernetesWindowsOpenSSHFunctionPS1   = "k8s/windowsinstallopensshfunc.ps1"
-	sshdConfig                            = "k8s/sshd_config"
-	systemConf                            = "k8s/system.conf"
+)
+
+// cloud-init (i.e. ARM customData) file references
+const (
+	kubernetesMasterNodeCustomDataYaml       = "k8s/cloud-init/masternodecustomdata.yml"
+	kubernetesNodeCustomDataYaml             = "k8s/cloud-init/nodecustomdata.yml"
+	kubernetesJumpboxCustomDataYaml          = "k8s/cloud-init/jumpboxcustomdata.yml"
+	kubernetesCSEMainScript                  = "k8s/cloud-init/artifacts/cse_main.sh"
+	kubernetesCSEHelpersScript               = "k8s/cloud-init/artifacts/cse_helpers.sh"
+	kubernetesCSEInstall                     = "k8s/cloud-init/artifacts/cse_install.sh"
+	kubernetesCSEConfig                      = "k8s/cloud-init/artifacts/cse_config.sh"
+	kubernetesCISScript                      = "k8s/cloud-init/artifacts/cis.sh"
+	kubernetesCSECustomCloud                 = "k8s/cloud-init/artifacts/cse_customcloud.sh"
+	kubernetesHealthMonitorScript            = "k8s/cloud-init/artifacts/health-monitor.sh"
+	kubernetesKubeletMonitorSystemdTimer     = "k8s/cloud-init/artifacts/kubelet-monitor.timer"
+	kubernetesKubeletMonitorSystemdService   = "k8s/cloud-init/artifacts/kubelet-monitor.service"
+	kubernetesDockerMonitorSystemdTimer      = "k8s/cloud-init/artifacts/docker-monitor.timer"
+	kubernetesDockerMonitorSystemdService    = "k8s/cloud-init/artifacts/docker-monitor.service"
+	kubernetesMountEtcd                      = "k8s/cloud-init/artifacts/mountetcd.sh"
+	kubernetesMasterGenerateProxyCertsScript = "k8s/cloud-init/artifacts/generateproxycerts.sh"
+	kubernetesCustomSearchDomainsScript      = "k8s/cloud-init/artifacts/setup-custom-search-domains.sh"
+	sshdConfig                               = "k8s/cloud-init/artifacts/sshd_config"
+	systemConf                               = "k8s/cloud-init/artifacts/system.conf"
+	kubeletSystemdService                    = "k8s/cloud-init/artifacts/kubelet.service"
+	kmsSystemdService                        = "k8s/cloud-init/artifacts/kms.service"
+	aptPreferences                           = "k8s/cloud-init/artifacts/apt-preferences"
+	dockerClearMountPropagationFlags         = "k8s/cloud-init/artifacts/docker_clear_mount_propagation_flags.conf"
+	systemdBPFMount                          = "k8s/cloud-init/artifacts/sys-fs-bpf.mount"
+	etcdSystemdService                       = "k8s/cloud-init/artifacts/etcd.service"
 )
 
 const (

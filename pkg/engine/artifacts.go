@@ -262,36 +262,8 @@ func kubernetesManifestSettingsInit(profile *api.Properties) []kubernetesFeature
 	}
 }
 
-func kubernetesArtifactSettingsInitMaster(profile *api.Properties) []kubernetesFeatureSetting {
-	return []kubernetesFeatureSetting{
-		{
-			"kuberneteskubelet.service",
-			"kubelet.service",
-			true,
-			"",
-		},
-		{
-			"kubernetesazurekms.service",
-			"kms.service",
-			true,
-			"",
-		},
-	}
-}
-
-func kubernetesArtifactSettingsInitAgent(profile *api.Properties) []kubernetesFeatureSetting {
-	return []kubernetesFeatureSetting{
-		{
-			"kuberneteskubelet.service",
-			"kubelet.service",
-			true,
-			"",
-		},
-	}
-}
-
 func getAddonString(input, destinationPath, destinationFile string) string {
-	addonString := getBase64CustomScriptFromStr(input)
+	addonString := getBase64EncodedGzippedCustomScriptFromStr(input)
 	return buildConfigString(addonString, destinationFile, destinationPath)
 }
 
@@ -339,7 +311,7 @@ func buildConfigString(configString, destinationFile, destinationPath string) st
 
 func getCustomScriptFromFile(sourceFile, sourcePath, version string) string {
 	customDataFilePath := getCustomDataFilePath(sourceFile, sourcePath, version)
-	return getBase64CustomScript(customDataFilePath)
+	return getBase64EncodedGzippedCustomScript(customDataFilePath)
 }
 
 func getCustomDataFilePath(sourceFile, sourcePath, version string) string {
