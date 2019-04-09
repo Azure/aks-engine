@@ -241,7 +241,6 @@ write_files:
 {{if IsAzureStackCloud }}
     AZURE_ENVIRONMENT_FILEPATH=/etc/kubernetes/azurestackcloud.json
 {{end}}
-AGENT_ARTIFACTS_CONFIG_PLACEHOLDER
 
 - path: /opt/azure/containers/kubelet.sh
   permissions: "0755"
