@@ -172,7 +172,9 @@ func (t *TemplateGenerator) GetJumpboxCustomDataJSON(cs *api.ContainerService) s
 	return fmt.Sprintf("{\"customData\": \"[base64(concat('%s'))]\"}", str)
 }
 
-func (t *TemplateGenerator) GetMasterCustomDataJSON(cs *api.ContainerService) string {
+// GetMasterCustomDataJSONObject returns master customData JSON object in the form
+// { "customData": "[base64(concat(<customData string>))]" }
+func (t *TemplateGenerator) GetMasterCustomDataJSONObject(cs *api.ContainerService) string {
 	profile := cs.Properties
 
 	str, e := t.getSingleLineForTemplate(kubernetesMasterNodeCustomDataYaml, cs, profile)
@@ -212,7 +214,7 @@ func (t *TemplateGenerator) GetMasterCustomDataJSON(cs *api.ContainerService) st
 	return fmt.Sprintf("{\"customData\": \"[base64(concat('%s'))]\"}", str)
 }
 
-// GetKubernetesLinuxNodeCustomDataJSONObject returns a JSON object in the form
+// GetKubernetesLinuxNodeCustomDataJSONObject returns Linux customData JSON object in the form
 // { "customData": "[base64(concat(<customData string>))]" }
 func (t *TemplateGenerator) GetKubernetesLinuxNodeCustomDataJSONObject(cs *api.ContainerService, profile *api.AgentPoolProfile) string {
 	str, e := t.getSingleLineForTemplate(kubernetesNodeCustomDataYaml, cs, profile)
@@ -224,7 +226,7 @@ func (t *TemplateGenerator) GetKubernetesLinuxNodeCustomDataJSONObject(cs *api.C
 	return fmt.Sprintf("{\"customData\": \"[base64(concat('%s'))]\"}", str)
 }
 
-// GetKubernetesWindowsNodeCustomDataJSONObject returns a JSON object in the form
+// GetKubernetesWindowsNodeCustomDataJSONObject returns Windows customData JSON object in the form
 // { "customData": "[base64(concat(<customData string>))]" }
 func (t *TemplateGenerator) GetKubernetesWindowsNodeCustomDataJSONObject(cs *api.ContainerService, profile *api.AgentPoolProfile) string {
 	str, e := t.getSingleLineForTemplate(kubernetesWindowsAgentCustomDataPS1, cs, profile)

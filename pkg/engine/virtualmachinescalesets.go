@@ -201,7 +201,7 @@ func CreateMasterVMSS(cs *api.ContainerService) VirtualMachineScaleSetARM {
 
 	t, err := InitializeTemplateGenerator(Context{})
 
-	customDataStr := getCustomDataFromJSON(t.GetMasterCustomDataJSON(cs))
+	customDataStr := getCustomDataFromJSON(t.GetMasterCustomDataJSONObject(cs))
 	osProfile.CustomData = to.StringPtr(customDataStr)
 
 	if err != nil {

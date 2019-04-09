@@ -23,7 +23,7 @@ func TestCreateMasterVMSS(t *testing.T) {
 	json.Unmarshal([]byte(apiModelStr), &cs)
 
 	tg, _ := InitializeTemplateGenerator(Context{})
-	expectedCustomDataStr := getCustomDataFromJSON(tg.GetMasterCustomDataJSON(cs))
+	expectedCustomDataStr := getCustomDataFromJSON(tg.GetMasterCustomDataJSONObject(cs))
 
 	actual := CreateMasterVMSS(cs)
 	expected := VirtualMachineScaleSetARM{
@@ -158,7 +158,7 @@ func TestCreateMasterVMSS(t *testing.T) {
 
 	expected.Sku.Capacity = to.Int64Ptr(3)
 
-	expectedCustomDataStr = getCustomDataFromJSON(tg.GetMasterCustomDataJSON(cs))
+	expectedCustomDataStr = getCustomDataFromJSON(tg.GetMasterCustomDataJSONObject(cs))
 	expected.VirtualMachineProfile.OsProfile.CustomData = to.StringPtr(expectedCustomDataStr)
 
 	ipConfigs := *getIPConfigsMaster()

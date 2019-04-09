@@ -24,7 +24,7 @@ func TestCreateVirtualMachines(t *testing.T) {
 	}
 
 	tg, _ := InitializeTemplateGenerator(Context{})
-	expectedCustomDataStr := getCustomDataFromJSON(tg.GetMasterCustomDataJSON(cs))
+	expectedCustomDataStr := getCustomDataFromJSON(tg.GetMasterCustomDataJSONObject(cs))
 
 	actualVM := CreateVirtualMachine(cs)
 	expectedVM := VirtualMachineARM{

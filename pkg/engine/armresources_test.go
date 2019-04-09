@@ -352,7 +352,7 @@ func TestGenerateARMResources(t *testing.T) {
 		},
 	}
 
-	expectedCustomDataStr = getCustomDataFromJSON(tg.GetMasterCustomDataJSON(&cs))
+	expectedCustomDataStr = getCustomDataFromJSON(tg.GetMasterCustomDataJSONObject(&cs))
 
 	masterVM := VirtualMachineARM{
 		ARMResource: ARMResource{
@@ -508,7 +508,7 @@ func TestGenerateARMResources(t *testing.T) {
 	cs.Properties.OrchestratorProfile.KubernetesConfig.UserAssignedID = "fooUserAssignedID"
 	cs.Properties.AgentPoolProfiles[0].StorageProfile = api.StorageAccount
 
-	masterVM.VirtualMachineProperties.OsProfile.CustomData = to.StringPtr(getCustomDataFromJSON(tg.GetMasterCustomDataJSON(&cs)))
+	masterVM.VirtualMachineProperties.OsProfile.CustomData = to.StringPtr(getCustomDataFromJSON(tg.GetMasterCustomDataJSONObject(&cs)))
 	masterVM.VirtualMachine.Identity = &compute.VirtualMachineIdentity{
 		Type: compute.ResourceIdentityType("UserAssigned"),
 		UserAssignedIdentities: map[string]*compute.VirtualMachineIdentityUserAssignedIdentitiesValue{
@@ -794,7 +794,7 @@ func TestGenerateARMResourceWithVMASAgents(t *testing.T) {
 		},
 	}
 
-	expectedMasterCustomData := getCustomDataFromJSON(tg.GetMasterCustomDataJSON(&cs))
+	expectedMasterCustomData := getCustomDataFromJSON(tg.GetMasterCustomDataJSONObject(&cs))
 
 	masterVM := VirtualMachineARM{
 		ARMResource: ARMResource{

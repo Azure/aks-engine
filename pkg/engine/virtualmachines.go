@@ -132,7 +132,7 @@ func CreateVirtualMachine(cs *api.ContainerService) VirtualMachineARM {
 
 	t, err := InitializeTemplateGenerator(Context{})
 
-	customDataStr := getCustomDataFromJSON(t.GetMasterCustomDataJSON(cs))
+	customDataStr := getCustomDataFromJSON(t.GetMasterCustomDataJSONObject(cs))
 	osProfile.CustomData = to.StringPtr(customDataStr)
 
 	if err != nil {
