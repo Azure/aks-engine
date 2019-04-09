@@ -544,27 +544,33 @@ func (ku *Upgrader) upgradeAgentScaleSets(ctx context.Context) error {
 
 				ku.logger.Infof("Copying custom annotations, labels, taints from old node %s to new node %s...", vmToUpgrade.Name, newNodeName)
 				ch := make(chan struct{}, 1)
-				go func() {
-					for {
-						err = ku.copyCustomPropertiesToNewNode(client, strings.ToLower(vmToUpgrade.Name), strings.ToLower(newNodeName))
-						if err != nil {
-							ku.logger.Warningf("Failed to copy custom annotations, labels, taints from old node %s to new node %s: %v", vmToUpgrade.Name, newNodeName, err)
-							time.Sleep(time.Second * 5)
-						} else {
-							ch <- struct{}{}
-						}
-					}
-				}()
 
-				for {
-					select {
-					case <-ch:
-						ku.logger.Infof("Successfully copied custom annotations, labels, taints from old node %s to new node %s.", vmToUpgrade.Name, newNodeName)
-					case <-time.After(nodePropertiesCopyTimeout):
-						ku.logger.Errorf("Copying custom annotations, labels, taints from old node %s to new node %s can't complete within %v", vmToUpgrade.Name, newNodeName, nodePropertiesCopyTimeout)
+				ctx, cancel := context.WithTimeout(context.Background(), nodePropertiesCopyTimeout)
+				defer cancel()
+
+				go func(ctx context.Context) {
+					for {
+						select {
+						case <-ctx.Done():
+							ku.logger.Errorf("Copying custom annotations, labels, taints from old node %s to new node %s can't complete within %v", vmToUpgrade.Name, newNodeName, nodePropertiesCopyTimeout)
+							ch <- struct{}{}
+							return
+						default:
+							err = ku.copyCustomPropertiesToNewNode(client, vmToUpgrade.Name, newNodeName)
+							if err != nil {
+								ku.logger.Warningf("Failed to copy custom annotations, labels, taints from old node %s to new node %s: %v", vmToUpgrade.Name, newNodeName, err)
+							} else {
+								ku.logger.Infof("Successfully copied custom annotations, labels, taints from old node %s to new node %s.", vmToUpgrade.Name, newNodeName)
+								ch <- struct{}{}
+								return
+							}
+						}
+
+						time.Sleep(time.Second * 5)
 					}
-					break
-				}
+				}(ctx)
+
+				<-ch
 			}
 
 			// At this point we have our buffer node that will replace the node to delete
