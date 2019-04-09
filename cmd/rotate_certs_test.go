@@ -185,14 +185,16 @@ func TestDeleteServiceAccounts(t *testing.T) {
 }
 
 func TestWriteArtifacts(t *testing.T) {
+	g := NewGomegaWithT(t)
+	cs := api.CreateMockContainerService("testcluster", "1.10.13", 3, 2, false)
+	cs.SetPropertiesDefaults(false, false)
 	rcc := rotateCertsCmd{
 		authProvider:     &authArgs{},
-		client:           mockClient,
-		containerService: api.CreateMockContainerService("testcluster", "1.10.13", 3, 2, false),
+		containerService: cs,
 		apiVersion:       "vlabs",
 		outputDirectory:  "test_output",
 	}
 	defer os.RemoveAll(rcc.outputDirectory)
-	err = rcc.writeArtifacts()
+	err := rcc.writeArtifacts()
 	g.Expect(err).NotTo(HaveOccurred())
 }
