@@ -255,17 +255,23 @@ func (rcc *rotateCertsCmd) getClusterNodes() error {
 func (rcc *rotateCertsCmd) rebootAllNodes(ctx context.Context) error {
 	vmListPage, err := rcc.client.ListVirtualMachines(ctx, rcc.resourceGroupName)
 	if err != nil {
-		return errors.Wrap(err, "failed to list Virtual Machines in resource group"+rcc.resourceGroupName)
+		return errors.Wrap(err, "failed to list Virtual Machines in resource group "+rcc.resourceGroupName)
 	}
 	vmssListPage, err := rcc.client.ListVirtualMachineScaleSets(ctx, rcc.resourceGroupName)
 	if err != nil {
-		return errors.Wrap(err, "failed to list Virtual Machine Scale Sets in resource group"+rcc.resourceGroupName)
+		return errors.Wrap(err, "failed to list Virtual Machine Scale Sets in resource group "+rcc.resourceGroupName)
 	}
 	for _, vm := range vmListPage.Values() {
-		rcc.client.RestartVirtualMachine(ctx, rcc.resourceGroupName, *vm.Name)
+		err = rcc.client.RestartVirtualMachine(ctx, rcc.resourceGroupName, *vm.Name)
+		if err != nil {
+			return errors.Wrap(err, "failed to restart Virtual Machine "+*vm.Name)
+		}
 	}
 	for _, vmss := range vmssListPage.Values() {
-		rcc.client.RestartVirtualMachineScaleSets(ctx, rcc.resourceGroupName, *vmss.Name, nil)
+		err = rcc.client.RestartVirtualMachineScaleSets(ctx, rcc.resourceGroupName, *vmss.Name, nil)
+		if err != nil {
+			return errors.Wrap(err, "failed to restart Virtual Machine Scale Sets "+*vmss.Name)
+		}
 	}
 	return nil
 }
@@ -339,8 +345,9 @@ func (rcc *rotateCertsCmd) getKubeClient() (armhelpers.KubernetesClient, error) 
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to get a Kubernetes client")
 		}
+		return kubeClient, nil
 	}
-	return kubeClient, nil
+	return nil, errors.Wrap(err, "AKSEngineClient was nil")
 }
 
 // Rotate etcd CA and certificates in all of the master nodes.

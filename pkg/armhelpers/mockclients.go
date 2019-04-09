@@ -41,7 +41,9 @@ type MockAKSEngineClient struct {
 	FailListVirtualMachines                 bool
 	FailListVirtualMachinesTags             bool
 	FailListVirtualMachineScaleSets         bool
+	FailRestartVirtualMachineScaleSets      bool
 	FailGetVirtualMachine                   bool
+	FailRestartVirtualMachine               bool
 	FailDeleteVirtualMachine                bool
 	FailDeleteVirtualMachineScaleSetVM      bool
 	FailSetVirtualMachineScaleSetCapacity   bool
@@ -80,6 +82,7 @@ type MockKubernetesClient struct {
 	FailWaitForDelete        bool
 	ShouldSupportEviction    bool
 	PodsList                 *v1.PodList
+	ServiceAccountList       *v1.ServiceAccountList
 }
 
 // MockVirtualMachineListResultPage contains a page of VirtualMachine values.
@@ -315,6 +318,9 @@ func (mkc *MockKubernetesClient) ListServiceAccounts(namespace string) (*v1.Serv
 	if mkc.FailListServiceAccounts {
 		return nil, errors.New("ListServiceAccounts failed")
 	}
+	if mkc.ServiceAccountList != nil {
+		return mkc.ServiceAccountList, nil
+	}
 	sa := &v1.ServiceAccount{}
 	sa.Namespace = namespace
 	sa.Name = "service-account-1"
@@ -540,10 +546,10 @@ func (mc *MockAKSEngineClient) ListVirtualMachines(ctx context.Context, resource
 //ListVirtualMachineScaleSets mock
 func (mc *MockAKSEngineClient) ListVirtualMachineScaleSets(ctx context.Context, resourceGroup string) (VirtualMachineScaleSetListResultPage, error) {
 	if mc.FailListVirtualMachineScaleSets {
-		return &MockVirtualMachineScaleSetListResultPage{}, errors.New("ListVirtualMachines failed")
+		return &MockVirtualMachineScaleSetListResultPage{}, errors.New("ListVirtualMachineScaleSets failed")
 	}
 	if mc.FakeListVirtualMachineScaleSetsResult == nil {
-		//return 0 machined by default
+		//return 0 machines by default
 		mc.FakeListVirtualMachineScaleSetsResult = func() []compute.VirtualMachineScaleSet {
 			return []compute.VirtualMachineScaleSet{}
 		}
@@ -561,12 +567,28 @@ func (mc *MockAKSEngineClient) ListVirtualMachineScaleSets(ctx context.Context, 
 	}, nil
 }
 
+// RestartVirtualMachineScaleSets mock
+func (mc *MockAKSEngineClient) RestartVirtualMachineScaleSets(ctx context.Context, resourceGroup, name string, instanceIDs *compute.VirtualMachineScaleSetVMInstanceIDs) error {
+	if mc.FailRestartVirtualMachineScaleSets {
+		return errors.New("RestartVirtualMachineScaleSets failed")
+	}
+	return nil
+}
+
 //GetVirtualMachine mock
 func (mc *MockAKSEngineClient) GetVirtualMachine(ctx context.Context, resourceGroup, name string) (compute.VirtualMachine, error) {
 	if mc.FailGetVirtualMachine {
 		return compute.VirtualMachine{}, errors.New("GetVirtualMachine failed")
 	}
 	return mc.MakeFakeVirtualMachine(DefaultFakeVMName, defaultK8sVersionForFakeVMs), nil
+}
+
+// RestartVirtualMachine mock
+func (mc *MockAKSEngineClient) RestartVirtualMachine(ctx context.Context, resourceGroup, name string) error {
+	if mc.FailRestartVirtualMachine {
+		return errors.New("RestartVirtualMachine failed")
+	}
+	return nil
 }
 
 // MakeFakeVirtualMachineScaleSetVM creates a fake VMSS VM
