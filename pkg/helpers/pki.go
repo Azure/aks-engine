@@ -10,7 +10,6 @@ import (
 	"crypto/x509"
 	"crypto/x509/pkix"
 	"encoding/pem"
-	"errors"
 	"fmt"
 	"math/big"
 	"net"
@@ -236,7 +235,7 @@ func privateKeyToPem(privateKey *rsa.PrivateKey) []byte {
 func pemToCertificate(raw string) (*x509.Certificate, error) {
 	cpb, _ := pem.Decode([]byte(raw))
 	if cpb == nil {
-		return nil, errors.New(fmt.Sprintf("The raw pem is not a valid PEM formatted block:\n%s\n", raw))
+		return nil, fmt.Errorf("the raw pem is not a valid PEM formatted block:\n%s", raw)
 	}
 	return x509.ParseCertificate(cpb.Bytes)
 }
@@ -244,7 +243,7 @@ func pemToCertificate(raw string) (*x509.Certificate, error) {
 func pemToKey(raw string) (*rsa.PrivateKey, error) {
 	kpb, _ := pem.Decode([]byte(raw))
 	if kpb == nil {
-		return nil, errors.New(fmt.Sprintf("The raw pem is not a valid PEM formatted block:\n%s\n", raw))
+		return nil, fmt.Errorf("the raw pem is not a valid PEM formatted block:\n%s", raw)
 	}
 	return x509.ParsePKCS1PrivateKey(kpb.Bytes)
 }
