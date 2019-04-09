@@ -324,12 +324,12 @@ func TestIsAzureStackCloud(t *testing.T) {
 		{
 			"Empty environment name",
 			getMockPropertiesWithCustomCloudProfile("", true, true, false),
-			false,
+			true,
 		},
 		{
 			"Empty environment name with AzureEnvironmentSpecConfig",
 			getMockPropertiesWithCustomCloudProfile("", true, true, true),
-			false,
+			true,
 		},
 		{
 			"lower case cloud name",
@@ -344,7 +344,7 @@ func TestIsAzureStackCloud(t *testing.T) {
 		{
 			"incorrect cloud name",
 			getMockPropertiesWithCustomCloudProfile("NotAzureStackCloud", true, true, true),
-			false,
+			true,
 		},
 		{
 			"empty cloud profile",
@@ -354,7 +354,7 @@ func TestIsAzureStackCloud(t *testing.T) {
 		{
 			"empty environment ",
 			getMockPropertiesWithCustomCloudProfile("AzureStackCloud", true, false, true),
-			false,
+			true,
 		},
 	}
 	for _, testcase := range testcases {

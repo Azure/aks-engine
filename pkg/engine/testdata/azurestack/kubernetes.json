@@ -7,7 +7,6 @@
             "orchestratorRelease": "1.11",
             "kubernetesConfig": {
                 "kubernetesImageBase": "k8s.gcr.io/",
-                "customHyperkubeImage": "msazurestackqa/hyperkube-amd64:v1.11.6",
                 "useInstanceMetadata": false,
                 "networkPolicy": "none"
             }
@@ -15,9 +14,10 @@
         "customCloudProfile": {
             "identitySystem": "azure_ad",
             "authenticationMethod": "client_secret",
+            "portalURL": "https://portal.local.azurestack.external/",
             "environment":{
             "name": "AzureStackCloud",
-            "managementPortalURL": "",
+            "managementPortalURL": "https://portal.local.azurestack.external/",
             "publishSettingsURL": "",
             "serviceManagementEndpoint": "https://management.azurestackci15.onmicrosoft.com/36f71706-54df-4305-9847-5b038a4cf189",
             "resourceManagerEndpoint": "https://management.local.azurestack.external/",
@@ -33,63 +33,7 @@
             "serviceManagementVMDNSSuffix": "cloudapp.net",
             "resourceManagerVMDNSSuffix": "cloudapp.azurestack.external",
             "containerRegistryDNSSuffix": ""
-            },
-            "azureEnvironmentSpecConfig": {
-                "cloudName": "AzureStackCloud",
-                "dockerSpecConfig": {
-                  "dockerEngineRepo": "https://aptdocker.azureedge.net/repo1",
-                  "dockerComposeDownloadURL": "https://github.com/docker/compose/releases/download"
-                },
-                "kubernetesSpecConfig": {
-                  "kubernetesImageBase": "k8s.gcr.io/",
-                  "tillerImageBase": "gcr.io/kubernetes-helm/",
-                  "aciConnectorImageBase": "microsoft/",
-                  "nvidiaImageBase": "nvidia/",
-                  "azureCNIImageBase": "containernetworking/",
-                  "etcdDownloadURLBase": "https://acs-mirror.azureedge.net/github-coreos",
-                  "kubeBinariesSASURLBase": "https://acs-mirror.azureedge.net/wink8s/",
-                  "windowsTelemetryGUID": "fb801154-36b9-41bc-89c2-f4d4f05472b0",
-                  "cniPluginsDownloadURL": "https://acs-mirror.azureedge.net/cni/cni-plugins-amd64-v0.7.1.tgz",
-                  "vnetCNILinuxPluginsDownloadURL": "https://acs-mirror.azureedge.net/cni/azure-vnet-cni-linux-amd64-v1.0.15.tgz",
-                  "vnetCNIWindowsPluginsDownloadURL": "https://acs-mirror.azureedge.net/cni/azure-vnet-cni-windows-amd64-v1.0.15.zip",
-                  "containerdDownloadURLBase": "https://storage.googleapis.com/cri-containerd-release/"
-                },
-                "endpointConfig": {
-                  "resourceManagerVMDNSSuffix": "cloudapp.azurestack.external"
-                },
-                "osImageConfig": {
-                  "aks": {
-                    "imageOffer": "aks",
-                    "imageSku": "aks-ubuntu-1604-201812",
-                    "imagePublisher": "microsoft-aks",
-                    "imageVersion": "2018.12.19"
-                  },
-                  "aks-docker-engine": {
-                    "imageOffer": "aks",
-                    "imageSku": "aks-ubuntu-1604-docker-engine",
-                    "imagePublisher": "microsoft-aks",
-                    "imageVersion": "2018.12.19"
-                  },
-                  "test": {
-                    "imageOffer": "imageOffertest",
-                    "imageSku": "imageSkutest",
-                    "imagePublisher": "imagePublishertest",
-                    "imageVersion": "imageVersiontest"
-                  },
-                  "rhel": {
-                    "imageOffer": "RHEL",
-                    "imageSku": "7.3",
-                    "imagePublisher": "RedHat",
-                    "imageVersion": "latest"
-                  },
-                  "ubuntu": {
-                    "imageOffer": "UbuntuServer",
-                    "imageSku": "16.04-LTS",
-                    "imagePublisher": "Canonical",
-                    "imageVersion": "latest"
-                  }
-                }
-              }
+            }
         },
         "masterProfile": {
             "dnsPrefix": "k111007",

@@ -14,6 +14,9 @@ spec:
       imagePullPolicy: IfNotPresent
       command: ["/hyperkube", "controller-manager"]
       args: [<args>]
+      env:
+      - name: AZURE_ENVIRONMENT_FILEPATH
+        value: "/etc/kubernetes/azurestackcloud.json"
       volumeMounts:
         - name: etc-kubernetes
           mountPath: /etc/kubernetes

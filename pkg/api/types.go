@@ -708,12 +708,31 @@ type V20180331ARMManagedContainerService struct {
 	*v20180331.ManagedCluster
 }
 
+// AzureStackMetadataEndpoints is the type for Azure Stack metadata endpoints
+type AzureStackMetadataEndpoints struct {
+	GalleryEndpoint string                            `json:"galleryEndpoint,omitempty"`
+	GraphEndpoint   string                            `json:"graphEndpoint,omitempty"`
+	PortalEndpoint  string                            `json:"portalEndpoint,omitempty"`
+	Authentication  *AzureStackMetadataAuthentication `json:"authentication,omitempty"`
+}
+
+// AzureStackMetadataAuthentication is the type for Azure Stack metadata authentication endpoints
+type AzureStackMetadataAuthentication struct {
+	LoginEndpoint string   `json:"loginEndpoint,omitempty"`
+	Audiences     []string `json:"audiences,omitempty"`
+}
+
+// DependenciesLocation represents location to retrieve the dependencies.
+type DependenciesLocation string
+
 // CustomCloudProfile represents the custom cloud profile
 type CustomCloudProfile struct {
 	Environment                *azure.Environment          `json:"environment,omitempty"`
 	AzureEnvironmentSpecConfig *AzureEnvironmentSpecConfig `json:"azureEnvironmentSpecConfig,omitempty"`
 	IdentitySystem             string                      `json:"identitySystem,omitempty"`
 	AuthenticationMethod       string                      `json:"authenticationMethod,omitempty"`
+	DependenciesLocation       DependenciesLocation        `json:"dependenciesLocation,omitempty"`
+	PortalURL                  string                      `json:"portalURL,omitempty"`
 }
 
 // HasWindows returns true if the cluster contains windows
@@ -1477,13 +1496,7 @@ func (p *Properties) IsNVIDIADevicePluginEnabled() bool {
 
 // IsAzureStackCloud return true if the cloud is AzureStack
 func (p *Properties) IsAzureStackCloud() bool {
-	var cloudProfileName string
-	if p.CustomCloudProfile != nil {
-		if p.CustomCloudProfile.Environment != nil {
-			cloudProfileName = p.CustomCloudProfile.Environment.Name
-		}
-	}
-	return strings.EqualFold(cloudProfileName, AzureStackCloud)
+	return p.CustomCloudProfile != nil
 }
 
 // GetCustomEnvironmentJSON return the JSON format string for custom environment

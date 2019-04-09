@@ -8,10 +8,15 @@ import (
 	"encoding/binary"
 	"fmt"
 	"net"
+	"net/http"
 	"reflect"
 	"testing"
 
+	"github.com/Azure/aks-engine/pkg/helpers"
+	"github.com/Azure/go-autorest/autorest/azure"
 	"github.com/Azure/go-autorest/autorest/to"
+	"github.com/google/go-cmp/cmp"
+	"gopkg.in/jarcoal/httpmock.v1"
 )
 
 func TestCertsAlreadyPresent(t *testing.T) {
@@ -1472,25 +1477,6 @@ func TestProxyModeDefaults(t *testing.T) {
 }
 func TestSetCustomCloudProfileDefaults(t *testing.T) {
 
-	//azureStackCloudSpec is the default configurations for azure stack with public Azure.
-	azureStackCloudSpec := AzureEnvironmentSpecConfig{
-		CloudName: AzureStackCloud,
-		//DockerSpecConfig specify the docker engine download repo
-		DockerSpecConfig: DefaultDockerSpecConfig,
-		//KubernetesSpecConfig is the default kubernetes container image url.
-		KubernetesSpecConfig: DefaultKubernetesSpecConfig,
-		DCOSSpecConfig:       DefaultDCOSSpecConfig,
-		EndpointConfig: AzureEndpointConfig{
-			ResourceManagerVMDNSSuffix: "",
-		},
-		OSImageConfig: map[Distro]AzureOSImageConfig{
-			Ubuntu: DefaultUbuntuImageConfig,
-			RHEL:   DefaultRHELOSImageConfig,
-			CoreOS: DefaultCoreOSImageConfig,
-			AKS:    DefaultAKSOSImageConfig,
-		},
-	}
-
 	// Test that the ResourceManagerVMDNSSuffix is set in EndpointConfig
 	mockCS := getMockBaseContainerService("1.11.6")
 	mockCSP := getMockPropertiesWithCustomCloudProfile("azurestackcloud", true, true, false)
@@ -1499,12 +1485,8 @@ func TestSetCustomCloudProfileDefaults(t *testing.T) {
 	mockCS.Properties.CustomCloudProfile = mockCSP.CustomCloudProfile
 	mockCS.SetPropertiesDefaults(false, false)
 
-	if mockCS.Properties.CustomCloudProfile.AzureEnvironmentSpecConfig.EndpointConfig.ResourceManagerVMDNSSuffix != vmDNSSuffix {
-		t.Errorf("setCustomCloudProfileDefaults(): ResourceManagerVMDNSSuffix string not the expected default value, got %s, expected %s", mockCS.Properties.CustomCloudProfile.AzureEnvironmentSpecConfig.EndpointConfig.ResourceManagerVMDNSSuffix, vmDNSSuffix)
-	}
-
 	if AzureCloudSpecEnvMap[AzureStackCloud].EndpointConfig.ResourceManagerVMDNSSuffix != vmDNSSuffix {
-		t.Errorf("setCustomCloudProfileDefaults(): ResourceManagerVMDNSSuffix string in AzureCloudSpecEnvMap[AzureStackCloud] not the expected default value, got %s, expected %s", azureStackCloudSpec.EndpointConfig.ResourceManagerVMDNSSuffix, vmDNSSuffix)
+		t.Errorf("setCustomCloudProfileDefaults(): ResourceManagerVMDNSSuffix string in AzureCloudSpecEnvMap[AzureStackCloud] not the expected default value, got %s, expected %s", AzureCloudSpecEnvMap[AzureStackCloud].EndpointConfig.ResourceManagerVMDNSSuffix, vmDNSSuffix)
 	}
 
 	// Test that the AzureStackCloudSpec is default when azureEnvironmentSpecConfig is empty in api model JSON file
@@ -1513,9 +1495,37 @@ func TestSetCustomCloudProfileDefaults(t *testing.T) {
 	mockCSDefaultSpec.Properties.CustomCloudProfile = mockCSPDefaultSpec.CustomCloudProfile
 	mockCSDefaultSpec.SetPropertiesDefaults(false, false)
 
-	azsEnv := AzureCloudSpecEnvMap[AzureStackCloud]
-	if !reflect.DeepEqual(mockCSDefaultSpec.Properties.CustomCloudProfile.AzureEnvironmentSpecConfig, &azsEnv) {
-		t.Errorf("setCustomCloudProfileDefaults(): did not set AzureStackCloudSpec as default when azureEnvironmentSpecConfig is empty in api model JSON file")
+	actualEnv := AzureCloudSpecEnvMap[AzureStackCloud]
+	expectedEnv := AzureCloudSpecEnvMap[AzurePublicCloud]
+	expectedEnv.EndpointConfig.ResourceManagerVMDNSSuffix = mockCSPDefaultSpec.CustomCloudProfile.Environment.ResourceManagerVMDNSSuffix
+	expectedEnv.CloudName = AzureStackCloud
+	if diff := cmp.Diff(actualEnv, expectedEnv); diff != "" {
+		t.Errorf("setCustomCloudProfileDefaults(): did not set AzureStackCloudSpec as default when azureEnvironmentSpecConfig is empty in api model JSON file. %s", diff)
+	}
+
+	modeToSpec := map[string]string{
+		"public":       "AzurePublicCloud",
+		"china":        "AzureChinaCloud",
+		"german":       "AzureGermanCloud",
+		"usgovernment": "AzureUSGovernmentCloud",
+	}
+
+	for key, value := range modeToSpec {
+		mockCSAzureChinaSpec := getMockBaseContainerService("1.11.6")
+		mockCSPAzureChinaSpec := getMockPropertiesWithCustomCloudProfile("azurestackcloud", true, true, false)
+		mockCSPAzureChinaSpec.CustomCloudProfile.DependenciesLocation = DependenciesLocation(key)
+		mockCSAzureChinaSpec.Properties.CustomCloudProfile = mockCSPAzureChinaSpec.CustomCloudProfile
+
+		mockCSAzureChinaSpec.SetPropertiesDefaults(false, false)
+
+		actualEnvAzureChinaSpec := AzureCloudSpecEnvMap[AzureStackCloud]
+		expectedEnvAzureChinaSpec := AzureCloudSpecEnvMap[value]
+		expectedEnvAzureChinaSpec.EndpointConfig.ResourceManagerVMDNSSuffix = mockCSPDefaultSpec.CustomCloudProfile.Environment.ResourceManagerVMDNSSuffix
+		expectedEnvAzureChinaSpec.CloudName = AzureStackCloud
+		t.Logf("verifying dependenciesLocation: %s", key)
+		if diff := cmp.Diff(actualEnvAzureChinaSpec, expectedEnvAzureChinaSpec); diff != "" {
+			t.Errorf("setCustomCloudProfileDefaults(): did not set AzureStackCloudSpec as default when connection Mode is %s in api model JSON file. %s", key, diff)
+		}
 	}
 
 	// Test that default assignment flow doesn't overwrite a user-provided config
@@ -1563,10 +1573,11 @@ func TestSetCustomCloudProfileDefaults(t *testing.T) {
 	mockCSCustom.Properties.CustomCloudProfile = mockCSPCustom.CustomCloudProfile
 	mockCSCustom.SetPropertiesDefaults(false, false)
 
-	if !reflect.DeepEqual(AzureCloudSpecEnvMap[AzureStackCloud], customCloudSpec) {
-		t.Errorf("setCustomCloudProfileDefaults(): did not set AzureCloudSpecEnvMap[AzureStackCloud] with customer input")
+	if diff := cmp.Diff(AzureCloudSpecEnvMap[AzureStackCloud], customCloudSpec); diff != "" {
+		t.Errorf("setCustomCloudProfileDefaults(): did not set AzureStackCloudSpec as default when azureEnvironmentSpecConfig is empty in api model JSON file")
 	}
-	if !reflect.DeepEqual(mockCSCustom.Properties.CustomCloudProfile.AzureEnvironmentSpecConfig, &customCloudSpec) {
+
+	if diff := cmp.Diff(mockCSCustom.Properties.CustomCloudProfile.AzureEnvironmentSpecConfig, &customCloudSpec); diff != "" {
 		t.Errorf("setCustomCloudProfileDefaults(): did not set CustomCloudProfile.AzureEnvironmentSpecConfig with customer input")
 	}
 
@@ -1669,6 +1680,108 @@ func TestCustomCloudLocation(t *testing.T) {
 
 	if !reflect.DeepEqual(actual, expected) {
 		t.Errorf("expected formatted fqdns %s, but got %s", expected, actual)
+	}
+}
+
+func TestSetCustomCloudProfileEnvironmentDefaults(t *testing.T) {
+	location := "testlocation"
+	cs := ContainerService{
+		Location: location,
+		Properties: &Properties{
+			CustomCloudProfile: &CustomCloudProfile{
+				IdentitySystem: "adfs",
+				PortalURL:      "https://portal.testlocation.contoso.com/",
+			},
+		},
+	}
+
+	csPortal := ContainerService{
+		Location: location,
+		Properties: &Properties{
+			CustomCloudProfile: &CustomCloudProfile{
+				IdentitySystem: "adfs",
+				PortalURL:      "https://portal.testlocation.contoso.com",
+			},
+		},
+	}
+
+	expectedEnv := &azure.Environment{
+		Name:                       "AzureStackCloud",
+		ManagementPortalURL:        "https://portal.testlocation.contoso.com/",
+		ServiceManagementEndpoint:  "https://management.adfs.azurestack.testlocation/ce080287-be51-42e5-b99e-9de760fecae7",
+		ResourceManagerEndpoint:    fmt.Sprintf("https://management.%s.contoso.com/", location),
+		ActiveDirectoryEndpoint:    "https://adfs.testlocation.contoso.com/",
+		GalleryEndpoint:            "https://galleryartifacts.hosting.testlocation.contoso.com/galleryartifacts/",
+		GraphEndpoint:              "https://graph.testlocation.contoso.com/",
+		StorageEndpointSuffix:      "testlocation.contoso.com",
+		KeyVaultDNSSuffix:          "vault.testlocation.contoso.com",
+		ResourceManagerVMDNSSuffix: "cloudapp.contoso.com",
+	}
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+	httpmock.RegisterResponder("GET", fmt.Sprintf("%smetadata/endpoints?api-version=1.0", fmt.Sprintf("https://management.%s.contoso.com/", location)),
+		func(req *http.Request) (*http.Response, error) {
+			resp := httpmock.NewStringResponse(200, `{"galleryEndpoint":"https://galleryartifacts.hosting.testlocation.contoso.com/galleryartifacts/","graphEndpoint":"https://graph.testlocation.contoso.com/","portalEndpoint":"https://portal.testlocation.contoso.com/","authentication":{"loginEndpoint":"https://adfs.testlocation.contoso.com/adfs","audiences":["https://management.adfs.azurestack.testlocation/ce080287-be51-42e5-b99e-9de760fecae7"]}}`)
+			return resp, nil
+		},
+	)
+
+	err := cs.SetCustomCloudProfileEnvironment()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if diff := cmp.Diff(cs.Properties.CustomCloudProfile.Environment, expectedEnv); diff != "" {
+		t.Errorf("Fail to compare, Environment adfs %q", diff)
+	}
+
+	err = csPortal.SetCustomCloudProfileEnvironment()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if diff := cmp.Diff(csPortal.Properties.CustomCloudProfile.Environment, expectedEnv); diff != "" {
+		t.Errorf("Fail to compare, Environment portal url adfs %q", diff)
+	}
+
+	csAzureAD := ContainerService{
+		Location: location,
+		Properties: &Properties{
+			CustomCloudProfile: &CustomCloudProfile{
+				IdentitySystem: "azure_ad",
+				PortalURL:      "https://portal.testlocation.contoso.com/",
+			},
+		},
+	}
+	httpmock.DeactivateAndReset()
+	httpmock.Activate()
+	httpmock.RegisterResponder("GET", fmt.Sprintf("%smetadata/endpoints?api-version=1.0", fmt.Sprintf("https://management.%s.contoso.com/", location)),
+		func(req *http.Request) (*http.Response, error) {
+			resp := httpmock.NewStringResponse(200, `{"galleryEndpoint":"https://galleryartifacts.hosting.testlocation.contoso.com/galleryartifacts/","graphEndpoint":"https://graph.testlocation.contoso.com/","portalEndpoint":"https://portal.testlocation.contoso.com/","authentication":{"loginEndpoint":"https://adfs.testlocation.contoso.com/","audiences":["https://management.adfs.azurestack.testlocation/ce080287-be51-42e5-b99e-9de760fecae7"]}}`)
+			return resp, nil
+		},
+	)
+
+	err = csAzureAD.SetCustomCloudProfileEnvironment()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if diff := cmp.Diff(csAzureAD.Properties.CustomCloudProfile.Environment, expectedEnv); diff != "" {
+		t.Errorf("Fail to compare, Environment azure_ad %q", diff)
+	}
+
+	csError := ContainerService{
+		Location: location,
+		Properties: &Properties{
+			CustomCloudProfile: &CustomCloudProfile{
+				IdentitySystem: "azure_ad",
+				PortalURL:      "https://portal.abc.contoso.com/",
+			},
+		},
+	}
+
+	err = csError.SetCustomCloudProfileEnvironment()
+	expectedError := fmt.Errorf("portalURL needs to start with https://portal.%s. ", location)
+	if !helpers.EqualError(err, expectedError) {
+		t.Errorf("expected error %s, got %s", expectedError, err)
 	}
 }
 

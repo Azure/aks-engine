@@ -216,6 +216,11 @@ func (dc *deployCmd) loadAPIModel(cmd *cobra.Command, args []string) error {
 	}
 
 	if dc.containerService.Properties.IsAzureStackCloud() {
+		dc.containerService.SetCustomCloudProfileEnvironment()
+		err = dc.containerService.SetCustomCloudProfileEnvironment()
+		if err != nil {
+			return fmt.Errorf("Failed to set environment - %s", err)
+		}
 		writeCustomCloudProfile(dc.containerService)
 	}
 

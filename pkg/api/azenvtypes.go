@@ -180,7 +180,7 @@ var (
 
 	//AzureGermanCloudSpec is the German cloud config.
 	AzureGermanCloudSpec = AzureEnvironmentSpecConfig{
-		CloudName:            azureGermanCloud,
+		CloudName:            AzureGermanCloud,
 		DockerSpecConfig:     DefaultDockerSpecConfig,
 		KubernetesSpecConfig: DefaultKubernetesSpecConfig,
 		DCOSSpecConfig:       DefaultDCOSSpecConfig,
@@ -262,7 +262,7 @@ var (
 	// AzureCloudSpecEnvMap is the environment configuration map for all the Azure cloud environments.
 	AzureCloudSpecEnvMap = map[string]AzureEnvironmentSpecConfig{
 		AzureChinaCloud:        AzureChinaCloudSpec,
-		azureGermanCloud:       AzureGermanCloudSpec,
+		AzureGermanCloud:       AzureGermanCloudSpec,
 		AzureUSGovernmentCloud: AzureUSGovernmentCloudSpec,
 		AzurePublicCloud:       AzureCloudSpec,
 	}

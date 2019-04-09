@@ -28,7 +28,10 @@ func (cs *ContainerService) SetPropertiesDefaults(isUpgrade, isScale bool) (bool
 
 	// Set custom cloud profile defaults if this cluster configuration has custom cloud profile
 	if cs.Properties.CustomCloudProfile != nil {
-		properties.setCustomCloudProfileDefaults()
+		err := cs.setCustomCloudProfileDefaults()
+		if err != nil {
+			return false, err
+		}
 	}
 
 	cs.setOrchestratorDefaults(isUpgrade || isScale)

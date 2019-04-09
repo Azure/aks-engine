@@ -513,12 +513,17 @@ type OSType string
 // Distro represents Linux distro to use for Linux VMs
 type Distro string
 
+// DependenciesLocation represents location to retrieve the dependencies.
+type DependenciesLocation string
+
 // CustomCloudProfile represents the custom cloud profile
 type CustomCloudProfile struct {
 	Environment                *azure.Environment          `json:"environment,omitempty"`
 	AzureEnvironmentSpecConfig *AzureEnvironmentSpecConfig `json:"azureEnvironmentSpecConfig,omitempty"`
 	IdentitySystem             string                      `json:"identitySystem,omitempty"`
 	AuthenticationMethod       string                      `json:"authenticationMethod,omitempty"`
+	DependenciesLocation       DependenciesLocation        `json:"dependenciesLocation,omitempty"`
+	PortalURL                  string                      `json:"portalURL,omitempty"`
 }
 
 // HasWindows returns true if the cluster contains windows
@@ -547,13 +552,7 @@ func (p *Properties) HasAvailabilityZones() bool {
 
 // IsAzureStackCloud return true if the cloud is AzureStack
 func (p *Properties) IsAzureStackCloud() bool {
-	var cloudProfileName string
-	if p.CustomCloudProfile != nil {
-		if p.CustomCloudProfile.Environment != nil {
-			cloudProfileName = p.CustomCloudProfile.Environment.Name
-		}
-	}
-	return strings.EqualFold(cloudProfileName, AzureStackCloud)
+	return p.CustomCloudProfile != nil
 }
 
 // IsCustomVNET returns true if the customer brought their own VNET

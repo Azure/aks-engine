@@ -423,8 +423,9 @@ const (
 	// AzurePublicCloud is a const string reference identifier for public cloud
 	AzurePublicCloud = "AzurePublicCloud"
 	// AzureChinaCloud is a const string reference identifier for china cloud
-	AzureChinaCloud  = "AzureChinaCloud"
-	azureGermanCloud = "AzureGermanCloud"
+	AzureChinaCloud = "AzureChinaCloud"
+	// AzureGermanCloud is a const string reference identifier for german cloud
+	AzureGermanCloud = "AzureGermanCloud"
 	// AzureUSGovernmentCloud is a const string reference identifier for us government cloud
 	AzureUSGovernmentCloud = "AzureUSGovernmentCloud"
 	// AzureStackCloud is a const string reference identifier for Azure Stack cloud
@@ -432,16 +433,27 @@ const (
 )
 
 const (
-	//AzureADIdentitySystem Identity System
+	// AzureADIdentitySystem is a const string reference identifier for Azure AD identity System
 	AzureADIdentitySystem = "azure_ad"
-	//ADFS Identity System
+	// ADFSIdentitySystem is a const string reference identifier for ADFS identity System
 	ADFSIdentitySystem = "adfs"
 )
 
 const (
-	//ClientSecretAuthMethod Authentication method
+	// AzureStackDependenciesLocationPublic indicates to get dependencies from in AzurePublic cloud
+	AzureStackDependenciesLocationPublic = "public"
+	// AzureStackDependenciesLocationChina indicates to get dependencies from AzureChina cloud
+	AzureStackDependenciesLocationChina = "china"
+	// AzureStackDependenciesLocationGerman indicates to get dependencies from AzureGerman cloud
+	AzureStackDependenciesLocationGerman = "german"
+	// AzureStackDependenciesLocationUSGovernment indicates to get dependencies from AzureUSGovernment cloud
+	AzureStackDependenciesLocationUSGovernment = "usgovernment"
+)
+
+const (
+	// ClientSecretAuthMethod indicates to use client seret for authentication
 	ClientSecretAuthMethod = "client_secret"
-	//ClientCertificateAuthMethod Authentication method
+	// ClientCertificateAuthMethod indicates to use client certificate for authentication
 	ClientCertificateAuthMethod = "client_certificate"
 )
 

@@ -97,6 +97,9 @@ var (
 
 	// DistroValues holds the valid values for OS distros
 	DistroValues = []Distro{"", Ubuntu, Ubuntu1804, RHEL, CoreOS, AKS, AKS1804, ACC1604}
+
+	// DependenciesLocationValues holds the valid values for dependencies location
+	DependenciesLocationValues = []DependenciesLocation{"", AzureStackDependenciesLocationPublic, AzureStackDependenciesLocationChina, AzureStackDependenciesLocationGerman, AzureStackDependenciesLocationUSGovernment}
 )
 
 // Kubernetes configuration
@@ -132,15 +135,26 @@ const (
 )
 
 const (
-	//AzureADIdentitySystem Identity System
+	// AzureADIdentitySystem is a const string reference identifier for Azure AD identity System
 	AzureADIdentitySystem = "azure_ad"
-	//ADFS Identity System
+	// ADFSIdentitySystem is a const string reference identifier for ADFS identity System
 	ADFSIdentitySystem = "adfs"
 )
 
 const (
-	//ClientSecretAuthMethod Authentication method
+	// AzureStackDependenciesLocationPublic indicates to get dependencies from in AzurePublic cloud
+	AzureStackDependenciesLocationPublic = "public"
+	// AzureStackDependenciesLocationChina indicates to get dependencies from AzureChina cloud
+	AzureStackDependenciesLocationChina = "china"
+	// AzureStackDependenciesLocationGerman indicates to get dependencies from AzureGerman cloud
+	AzureStackDependenciesLocationGerman = "german"
+	// AzureStackDependenciesLocationUSGovernment indicates to get dependencies from AzureUSGovernment cloud
+	AzureStackDependenciesLocationUSGovernment = "usgovernment"
+)
+
+const (
+	// ClientSecretAuthMethod indicates to use client seret for authentication
 	ClientSecretAuthMethod = "client_secret"
-	//ClientCertificateAuthMethod Authentication method
+	// ClientCertificateAuthMethod indicates to use client certificate for authentication
 	ClientCertificateAuthMethod = "client_certificate"
 )
