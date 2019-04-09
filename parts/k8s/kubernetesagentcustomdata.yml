@@ -28,6 +28,13 @@ write_files:
   owner: root
   content: !!binary |
     {{CloudInitData "provisionConfigs"}}
+
+- path: /opt/azure/containers/provision_cis.sh
+  permissions: "0744"
+  encoding: gzip
+  owner: root
+  content: !!binary |
+    {{CloudInitData "provisionCIS"}}
     
 {{if IsAzureStackCloud}}
 - path: /opt/azure/containers/provision_configs_custom_cloud.sh

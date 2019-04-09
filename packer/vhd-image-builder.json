@@ -61,6 +61,11 @@
         },
         {
             "type": "file",
+            "source": "parts/k8s/cis.sh",
+            "destination": "/home/packer/cis.sh"
+        },
+        {
+            "type": "file",
             "source": "packer/install-dependencies.sh",
             "destination": "/home/packer/install-dependencies.sh"
         },
