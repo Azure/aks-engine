@@ -1950,3 +1950,51 @@ func TestSupportPodPidsLimitFeatureGateInAgentPool(t *testing.T) {
 	}
 
 }
+
+func TestReadOnlyPort(t *testing.T) {
+	cases := []struct {
+		name                                   string
+		cs                                     *ContainerService
+		expectedReadOnlyPort                     string
+	}{
+		{
+			name: "default pre-1.16",
+			cs: &ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorType:    Kubernetes,
+						OrchestratorVersion: "1.15.0",
+						KubernetesConfig:    &KubernetesConfig{},
+					},
+				},
+			},
+			expectedReadOnlyPort:                     "",
+		},
+		{
+			name: "default 1.16",
+			cs: &ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorType:    Kubernetes,
+						OrchestratorVersion: "1.16.0",
+						KubernetesConfig:    &KubernetesConfig{},
+					},
+				},
+			},
+			expectedReadOnlyPort:                     "0",
+		},
+	}
+
+	for _, c := range cases {
+		c := c
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+			c.cs.setKubeletConfig(false)
+			readOnlyPort := c.cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig["--read-only-port"]
+			if readOnlyPort != c.expectedReadOnlyPort {
+				t.Fatalf("expected --read-only-port be equal to %s, got %s", c.expectedReadOnlyPort, readOnlyPort)
+			}
+		})
+	}
+
+}
