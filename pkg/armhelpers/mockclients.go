@@ -297,9 +297,11 @@ func (mkc *MockKubernetesClient) ListNodes() (*v1.NodeList, error) {
 		return nil, errors.New("ListNodes failed")
 	}
 	node := &v1.Node{}
+	node.Name = "k8s-master-1234"
 	node.Status.Conditions = append(node.Status.Conditions, v1.NodeCondition{Type: v1.NodeReady, Status: v1.ConditionTrue})
 	node.Status.NodeInfo.KubeletVersion = "1.9.10"
 	node2 := &v1.Node{}
+	node2.Name = "k8s-agentpool3-1234"
 	node2.Status.Conditions = append(node2.Status.Conditions, v1.NodeCondition{Type: v1.NodeOutOfDisk, Status: v1.ConditionTrue})
 	node2.Status.NodeInfo.KubeletVersion = "1.9.9"
 	nodeList := &v1.NodeList{}
