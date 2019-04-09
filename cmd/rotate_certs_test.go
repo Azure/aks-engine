@@ -5,6 +5,7 @@ package cmd
 
 import (
 	"context"
+	"os"
 	"testing"
 
 	"github.com/Azure/aks-engine/pkg/api"
@@ -180,5 +181,18 @@ func TestDeleteServiceAccounts(t *testing.T) {
 
 	mockClient.MockKubernetesClient.FailDeleteServiceAccount = false
 	err = rcc.deleteServiceAccounts()
+	g.Expect(err).NotTo(HaveOccurred())
+}
+
+func TestWriteArtifacts(t *testing.T) {
+	rcc := rotateCertsCmd{
+		authProvider:     &authArgs{},
+		client:           mockClient,
+		containerService: api.CreateMockContainerService("testcluster", "1.10.13", 3, 2, false),
+		apiVersion:       "vlabs",
+		outputDirectory:  "test_output",
+	}
+	defer os.RemoveAll(rcc.outputDirectory)
+	err = rcc.writeArtifacts()
 	g.Expect(err).NotTo(HaveOccurred())
 }
