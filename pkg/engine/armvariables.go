@@ -155,7 +155,7 @@ func getK8sMasterVars(cs *api.ContainerService) (map[string]interface{}, error) 
 			return masterVars, err
 		}
 		masterVars["environmentJSON"] = environmentJSON
-		masterVars["provisionConfigsCustomCloud"] = GetKubernetesB64ConfigsCustomCloud()
+		masterVars["provisionConfigsCustomCloud"] = GetKubernetesB64CSECustomCloud()
 	}
 
 	if kubernetesConfig != nil {
