@@ -88,6 +88,22 @@ var _ = BeforeSuite(func() {
 
 var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", func() {
 	Describe("regardless of agent pool type", func() {
+		It("should set up ssh key forwarding to the master node", func() {
+			success := false
+			for i := 0; i < 3; i++ {
+				err := util.AddToSSHKeyChain(masterSSHPrivateKeyFilepath)
+				if err == nil {
+					success = true
+					break
+				}
+				if i > 1 {
+					log.Printf("Error while setting up ssh key forwarding:%s\n", err)
+				}
+				time.Sleep(10 * time.Second)
+			}
+			Expect(success).To(BeTrue())
+		})
+
 		It("should display the installed Ubuntu version on the master node", func() {
 			kubeConfig, err := GetConfig()
 			Expect(err).NotTo(HaveOccurred())
@@ -114,8 +130,6 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 
 		It("should display the installed docker runtime on all nodes", func() {
 			if eng.ExpandedDefinition.Properties.OrchestratorProfile.KubernetesConfig.RequiresDocker() {
-				err := util.AddToSSHKeyChain(masterSSHPrivateKeyFilepath)
-				Expect(err).NotTo(HaveOccurred())
 				kubeConfig, err := GetConfig()
 				Expect(err).NotTo(HaveOccurred())
 				master := fmt.Sprintf("azureuser@%s", kubeConfig.GetServerName())
@@ -139,8 +153,6 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 		It("should validate that every linux node has a root password", func() {
 			// TODO enable Windows checks on a per-node basis
 			if !eng.HasWindowsAgents() {
-				err := util.AddToSSHKeyChain(masterSSHPrivateKeyFilepath)
-				Expect(err).NotTo(HaveOccurred())
 				kubeConfig, err := GetConfig()
 				Expect(err).NotTo(HaveOccurred())
 				master := fmt.Sprintf("azureuser@%s", kubeConfig.GetServerName())
