@@ -12,9 +12,18 @@ import (
 	"github.com/Azure/aks-engine/pkg/armhelpers"
 	"github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2018-10-01/compute"
 	. "github.com/onsi/gomega"
+	"github.com/pkg/errors"
+	"golang.org/x/crypto/ssh"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
+
+func mockExecuteCmd(command, masterFQDN, hostname string, port string, config *ssh.ClientConfig) (string, error) {
+	if masterFQDN != "valid" {
+		return "error running command", errors.New("executeCmd failed")
+	}
+	return "success", nil
+}
 
 func TestNewRotateCertsCmd(t *testing.T) {
 	output := newRotateCertsCmd()
@@ -197,4 +206,102 @@ func TestWriteArtifacts(t *testing.T) {
 	defer os.RemoveAll(rcc.outputDirectory)
 	err := rcc.writeArtifacts()
 	g.Expect(err).NotTo(HaveOccurred())
+}
+
+func TestUpdateKubeconfig(t *testing.T) {
+	g := NewGomegaWithT(t)
+	cs := api.CreateMockContainerService("testcluster", "1.10.13", 3, 2, false)
+	cs.SetPropertiesDefaults(false, false)
+	rcc := rotateCertsCmd{
+		authProvider:       &authArgs{},
+		containerService:   cs,
+		apiVersion:         "vlabs",
+		sshCommandExecuter: mockExecuteCmd,
+		masterFQDN:         "valid",
+		masterNodes: []v1.Node{
+			{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: "k8s-master-1234-0",
+				},
+			},
+			{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: "k8s-master-1234-2",
+				},
+			},
+		},
+	}
+	err := rcc.updateKubeconfig()
+	g.Expect(err).NotTo(HaveOccurred())
+
+	rcc.masterFQDN = "invalid"
+	err = rcc.updateKubeconfig()
+	g.Expect(err).To(HaveOccurred())
+}
+
+func TestRotateCerts(t *testing.T) {
+	ctx := context.Background()
+	g := NewGomegaWithT(t)
+	cs := api.CreateMockContainerService("testcluster", "1.10.13", 3, 2, false)
+	cs.SetPropertiesDefaults(false, false)
+	mockClient := &armhelpers.MockAKSEngineClient{MockKubernetesClient: &armhelpers.MockKubernetesClient{}}
+	rcc := rotateCertsCmd{
+		authProvider:       &authArgs{},
+		containerService:   cs,
+		sshCommandExecuter: mockExecuteCmd,
+		masterFQDN:         "valid",
+		client:             mockClient,
+		masterNodes: []v1.Node{
+			{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: "k8s-master-1234-0",
+				},
+			},
+			{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: "k8s-master-1234-1",
+				},
+			},
+			{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: "k8s-master-1234-2",
+				},
+			},
+		},
+		agentNodes: []v1.Node{
+			{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: "k8s-agents-1234-0",
+				},
+			},
+			{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: "k8s-agents-1234-1",
+				},
+			},
+			{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: "k8s-agents-1234-2",
+				},
+			},
+		},
+	}
+	err := rcc.rotateEtcd(ctx)
+	g.Expect(err).NotTo(HaveOccurred())
+
+	err = rcc.rotateApiserver()
+	g.Expect(err).NotTo(HaveOccurred())
+
+	err = rcc.rotateKubelet()
+	g.Expect(err).NotTo(HaveOccurred())
+
+	rcc.masterFQDN = "invalid"
+	err = rcc.rotateEtcd(ctx)
+	g.Expect(err).To(HaveOccurred())
+
+	err = rcc.rotateApiserver()
+	g.Expect(err).To(HaveOccurred())
+
+	err = rcc.rotateKubelet()
+	g.Expect(err).To(HaveOccurred())
 }

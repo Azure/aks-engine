@@ -46,19 +46,20 @@ type rotateCertsCmd struct {
 	outputDirectory   string
 
 	// derived
-	containerService *api.ContainerService
-	apiVersion       string
-	locale           *gotext.Locale
-	client           armhelpers.AKSEngineClient
-
-	masterNodes []v1.Node
-	agentNodes  []v1.Node
-	sshConfig   *ssh.ClientConfig
+	containerService   *api.ContainerService
+	apiVersion         string
+	locale             *gotext.Locale
+	client             armhelpers.AKSEngineClient
+	masterNodes        []v1.Node
+	agentNodes         []v1.Node
+	sshConfig          *ssh.ClientConfig
+	sshCommandExecuter func(command, masterFQDN, hostname string, port string, config *ssh.ClientConfig) (string, error)
 }
 
 func newRotateCertsCmd() *cobra.Command {
 	rcc := rotateCertsCmd{
-		authProvider: &authArgs{},
+		authProvider:       &authArgs{},
+		sshCommandExecuter: executeCmd,
 	}
 
 	command := &cobra.Command{
@@ -325,7 +326,7 @@ func (rcc *rotateCertsCmd) updateKubeconfig() error {
 
 	for _, host := range rcc.masterNodes {
 		cmd := "sudo bash -c \"cat > ~/.kube/config << EOL \n" + strings.Replace(kubeconfig, "\"", "\\\"", -1) + "EOL\""
-		out, err := executeCmd(cmd, rcc.masterFQDN, host.Name, "22", rcc.sshConfig)
+		out, err := rcc.sshCommandExecuter(cmd, rcc.masterFQDN, host.Name, "22", rcc.sshConfig)
 		if err != nil {
 			log.Printf("Command %s output: %s\n", cmd, out)
 			return errors.Wrap(err, "failed replacing kubeconfig file")
@@ -365,7 +366,7 @@ func (rcc *rotateCertsCmd) rotateEtcd(ctx context.Context) error {
 		etcdPeerCertificateCmd := "sudo bash -c \"cat > /etc/kubernetes/certs/etcdpeer" + strconv.Itoa(i) + ".crt << EOL \n" + rcc.containerService.Properties.CertificateProfile.EtcdPeerCertificates[i] + "EOL\""
 
 		for _, cmd := range []string{caPrivateKeyCmd, caCertificateCmd} {
-			out, err := executeCmd(cmd, rcc.masterFQDN, host.Name, "22", rcc.sshConfig)
+			out, err := rcc.sshCommandExecuter(cmd, rcc.masterFQDN, host.Name, "22", rcc.sshConfig)
 			if err != nil {
 				log.Printf("Command %s output: %s\n", cmd, out)
 				return errors.Wrap(err, "failed replacing certificate file")
@@ -373,7 +374,7 @@ func (rcc *rotateCertsCmd) rotateEtcd(ctx context.Context) error {
 		}
 
 		for _, cmd := range []string{etcdServerPrivateKeyCmd, etcdServerCertificateCmd, etcdClientPrivateKeyCmd, etcdClientCertificateCmd, etcdPeerPrivateKeyCmd, etcdPeerCertificateCmd} {
-			out, err := executeCmd(cmd, rcc.masterFQDN, host.Name, "22", rcc.sshConfig)
+			out, err := rcc.sshCommandExecuter(cmd, rcc.masterFQDN, host.Name, "22", rcc.sshConfig)
 			if err != nil {
 				log.Printf("Command %s output: %s\n", cmd, out)
 				return errors.Wrap(err, "failed replacing certificate file")
@@ -389,7 +390,7 @@ func (rcc *rotateCertsCmd) rotateEtcd(ctx context.Context) error {
 
 	for _, host := range rcc.masterNodes {
 		log.Debugf("Restarting etcd on node %s", host.Name)
-		out, err := executeCmd("sudo systemctl restart etcd", rcc.masterFQDN, host.Name, "22", rcc.sshConfig)
+		out, err := rcc.sshCommandExecuter("sudo systemctl restart etcd", rcc.masterFQDN, host.Name, "22", rcc.sshConfig)
 		if err != nil {
 			log.Printf("Command `sudo systemctl restart etcd` output: %s\n", out)
 			return errors.Wrap(err, "failed to restart etcd")
@@ -408,7 +409,7 @@ func (rcc *rotateCertsCmd) rotateApiserver() error {
 	for _, host := range rcc.masterNodes {
 		log.Debugf("Ranging over node: %s\n", host.Name)
 		for _, cmd := range []string{apiServerPrivateKeyCmd, apiServerCertificateCmd} {
-			out, err := executeCmd(cmd, rcc.masterFQDN, host.Name, "22", rcc.sshConfig)
+			out, err := rcc.sshCommandExecuter(cmd, rcc.masterFQDN, host.Name, "22", rcc.sshConfig)
 			if err != nil {
 				log.Printf("Command %s output: %s\n", cmd, out)
 				return errors.Wrap(err, "failed replacing certificate file")
@@ -419,7 +420,7 @@ func (rcc *rotateCertsCmd) rotateApiserver() error {
 	for _, host := range rcc.agentNodes {
 		log.Debugf("Ranging over node: %s\n", host.Name)
 		for _, cmd := range []string{caCertificateCmd, apiServerCertificateCmd} {
-			out, err := executeCmd(cmd, rcc.masterFQDN, host.Name, "22", rcc.sshConfig)
+			out, err := rcc.sshCommandExecuter(cmd, rcc.masterFQDN, host.Name, "22", rcc.sshConfig)
 			if err != nil {
 				log.Printf("Command %s output: %s\n", cmd, out)
 				return errors.Wrap(err, "failed replacing certificate file")
@@ -436,7 +437,7 @@ func (rcc *rotateCertsCmd) rotateKubelet() error {
 	for _, host := range append(rcc.masterNodes, rcc.agentNodes...) {
 		log.Debugf("Ranging over node: %s\n", host.Name)
 		for _, cmd := range []string{clientCertificateCmd, clientPrivateKeyCmd} {
-			out, err := executeCmd(cmd, rcc.masterFQDN, host.Name, "22", rcc.sshConfig)
+			out, err := rcc.sshCommandExecuter(cmd, rcc.masterFQDN, host.Name, "22", rcc.sshConfig)
 			if err != nil {
 				log.Printf("Command %s output: %s\n", cmd, out)
 				return errors.Wrap(err, "failed replacing certificate file")
