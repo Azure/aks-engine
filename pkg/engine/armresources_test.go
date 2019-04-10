@@ -33,7 +33,7 @@ func TestGenerateARMResources(t *testing.T) {
 
 	tg, _ := InitializeTemplateGenerator(Context{})
 
-	expectedCustomDataStr := getCustomDataFromJSON(tg.GetKubernetesAgentCustomDataJSON(&cs, cs.Properties.AgentPoolProfiles[0]))
+	expectedCustomDataStr := getCustomDataFromJSON(tg.GetKubernetesLinuxNodeCustomDataJSONObject(&cs, cs.Properties.AgentPoolProfiles[0]))
 
 	var dataDisks []compute.VirtualMachineScaleSetDataDisk
 
@@ -352,7 +352,7 @@ func TestGenerateARMResources(t *testing.T) {
 		},
 	}
 
-	expectedCustomDataStr = getCustomDataFromJSON(tg.GetMasterCustomDataJSON(&cs))
+	expectedCustomDataStr = getCustomDataFromJSON(tg.GetMasterCustomDataJSONObject(&cs))
 
 	masterVM := VirtualMachineARM{
 		ARMResource: ARMResource{
@@ -508,7 +508,7 @@ func TestGenerateARMResources(t *testing.T) {
 	cs.Properties.OrchestratorProfile.KubernetesConfig.UserAssignedID = "fooUserAssignedID"
 	cs.Properties.AgentPoolProfiles[0].StorageProfile = api.StorageAccount
 
-	masterVM.VirtualMachineProperties.OsProfile.CustomData = to.StringPtr(getCustomDataFromJSON(tg.GetMasterCustomDataJSON(&cs)))
+	masterVM.VirtualMachineProperties.OsProfile.CustomData = to.StringPtr(getCustomDataFromJSON(tg.GetMasterCustomDataJSONObject(&cs)))
 	masterVM.VirtualMachine.Identity = &compute.VirtualMachineIdentity{
 		Type: compute.ResourceIdentityType("UserAssigned"),
 		UserAssignedIdentities: map[string]*compute.VirtualMachineIdentityUserAssignedIdentitiesValue{
@@ -533,7 +533,7 @@ func TestGenerateARMResources(t *testing.T) {
 		},
 	}
 
-	agentVM.VirtualMachineProfile.OsProfile.CustomData = to.StringPtr(getCustomDataFromJSON(tg.GetKubernetesAgentCustomDataJSON(&cs, cs.Properties.AgentPoolProfiles[0])))
+	agentVM.VirtualMachineProfile.OsProfile.CustomData = to.StringPtr(getCustomDataFromJSON(tg.GetKubernetesLinuxNodeCustomDataJSONObject(&cs, cs.Properties.AgentPoolProfiles[0])))
 	agentVM.VirtualMachineScaleSet.Identity = &compute.VirtualMachineScaleSetIdentity{
 		Type: compute.ResourceIdentityType("UserAssigned"),
 		UserAssignedIdentities: map[string]*compute.VirtualMachineScaleSetIdentityUserAssignedIdentitiesValue{
@@ -625,7 +625,7 @@ func TestGenerateARMResourceWithVMASAgents(t *testing.T) {
 
 	tg, _ := InitializeTemplateGenerator(Context{})
 
-	expectedCustomDataStr := getCustomDataFromJSON(tg.GetKubernetesAgentCustomDataJSON(&cs, cs.Properties.AgentPoolProfiles[0]))
+	expectedCustomDataStr := getCustomDataFromJSON(tg.GetKubernetesLinuxNodeCustomDataJSONObject(&cs, cs.Properties.AgentPoolProfiles[0]))
 
 	agentProfile := cs.Properties.AgentPoolProfiles[0]
 	agentNIC := NetworkInterfaceARM{
@@ -794,7 +794,7 @@ func TestGenerateARMResourceWithVMASAgents(t *testing.T) {
 		},
 	}
 
-	expectedMasterCustomData := getCustomDataFromJSON(tg.GetMasterCustomDataJSON(&cs))
+	expectedMasterCustomData := getCustomDataFromJSON(tg.GetMasterCustomDataJSONObject(&cs))
 
 	masterVM := VirtualMachineARM{
 		ARMResource: ARMResource{

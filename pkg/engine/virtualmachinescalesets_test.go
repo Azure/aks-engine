@@ -23,7 +23,7 @@ func TestCreateMasterVMSS(t *testing.T) {
 	json.Unmarshal([]byte(apiModelStr), &cs)
 
 	tg, _ := InitializeTemplateGenerator(Context{})
-	expectedCustomDataStr := getCustomDataFromJSON(tg.GetMasterCustomDataJSON(cs))
+	expectedCustomDataStr := getCustomDataFromJSON(tg.GetMasterCustomDataJSONObject(cs))
 
 	actual := CreateMasterVMSS(cs)
 	expected := VirtualMachineScaleSetARM{
@@ -158,7 +158,7 @@ func TestCreateMasterVMSS(t *testing.T) {
 
 	expected.Sku.Capacity = to.Int64Ptr(3)
 
-	expectedCustomDataStr = getCustomDataFromJSON(tg.GetMasterCustomDataJSON(cs))
+	expectedCustomDataStr = getCustomDataFromJSON(tg.GetMasterCustomDataJSONObject(cs))
 	expected.VirtualMachineProfile.OsProfile.CustomData = to.StringPtr(expectedCustomDataStr)
 
 	ipConfigs := *getIPConfigsMaster()
@@ -270,7 +270,7 @@ func TestCreateAgentVMSS(t *testing.T) {
 	var dataDisks []compute.VirtualMachineScaleSetDataDisk
 
 	tg, _ := InitializeTemplateGenerator(Context{})
-	expectedCustomDataStr := getCustomDataFromJSON(tg.GetKubernetesAgentCustomDataJSON(cs, cs.Properties.AgentPoolProfiles[0]))
+	expectedCustomDataStr := getCustomDataFromJSON(tg.GetKubernetesLinuxNodeCustomDataJSONObject(cs, cs.Properties.AgentPoolProfiles[0]))
 
 	expected := VirtualMachineScaleSetARM{
 		ARMResource: ARMResource{
@@ -387,7 +387,7 @@ func TestCreateAgentVMSS(t *testing.T) {
 
 	actual = CreateAgentVMSS(cs, cs.Properties.AgentPoolProfiles[0])
 
-	expectedCustomDataStr = getCustomDataFromJSON(tg.GetKubernetesWindowsAgentCustomDataJSON(cs, cs.Properties.AgentPoolProfiles[0]))
+	expectedCustomDataStr = getCustomDataFromJSON(tg.GetKubernetesWindowsNodeCustomDataJSONObject(cs, cs.Properties.AgentPoolProfiles[0]))
 
 	expected.VirtualMachineProfile.OsProfile = &compute.VirtualMachineScaleSetOSProfile{
 		AdminUsername:      to.StringPtr("[parameters('windowsAdminUsername')]"),
@@ -456,7 +456,7 @@ func TestCreateAgentVMSSHostedMasterProfile(t *testing.T) {
 	var dataDisks []compute.VirtualMachineScaleSetDataDisk
 
 	tg, _ := InitializeTemplateGenerator(Context{})
-	expectedCustomDataStr := getCustomDataFromJSON(tg.GetKubernetesAgentCustomDataJSON(cs, cs.Properties.AgentPoolProfiles[0]))
+	expectedCustomDataStr := getCustomDataFromJSON(tg.GetKubernetesLinuxNodeCustomDataJSONObject(cs, cs.Properties.AgentPoolProfiles[0]))
 
 	expected := VirtualMachineScaleSetARM{
 		ARMResource: ARMResource{
@@ -573,7 +573,7 @@ func TestCreateAgentVMSSHostedMasterProfile(t *testing.T) {
 
 	actual = CreateAgentVMSS(cs, cs.Properties.AgentPoolProfiles[0])
 
-	expectedCustomDataStr = getCustomDataFromJSON(tg.GetKubernetesWindowsAgentCustomDataJSON(cs, cs.Properties.AgentPoolProfiles[0]))
+	expectedCustomDataStr = getCustomDataFromJSON(tg.GetKubernetesWindowsNodeCustomDataJSONObject(cs, cs.Properties.AgentPoolProfiles[0]))
 
 	expected.VirtualMachineProfile.OsProfile = &compute.VirtualMachineScaleSetOSProfile{
 		AdminUsername:      to.StringPtr("[parameters('windowsAdminUsername')]"),

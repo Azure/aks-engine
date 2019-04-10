@@ -132,7 +132,7 @@ func CreateVirtualMachine(cs *api.ContainerService) VirtualMachineARM {
 
 	t, err := InitializeTemplateGenerator(Context{})
 
-	customDataStr := getCustomDataFromJSON(t.GetMasterCustomDataJSON(cs))
+	customDataStr := getCustomDataFromJSON(t.GetMasterCustomDataJSONObject(cs))
 	osProfile.CustomData = to.StringPtr(customDataStr)
 
 	if err != nil {
@@ -428,7 +428,7 @@ func createAgentAvailabilitySetVM(cs *api.ContainerService, profile *api.AgentPo
 			panic(err)
 		}
 
-		agentCustomData := getCustomDataFromJSON(t.GetKubernetesAgentCustomDataJSON(cs, profile))
+		agentCustomData := getCustomDataFromJSON(t.GetKubernetesLinuxNodeCustomDataJSONObject(cs, profile))
 		osProfile.CustomData = to.StringPtr(agentCustomData)
 
 		if linuxProfile != nil && linuxProfile.HasSecrets() {
@@ -441,7 +441,7 @@ func createAgentAvailabilitySetVM(cs *api.ContainerService, profile *api.AgentPo
 		osProfile.WindowsConfiguration = &compute.WindowsConfiguration{
 			EnableAutomaticUpdates: to.BoolPtr(cs.Properties.WindowsProfile.GetEnableWindowsUpdate()),
 		}
-		agentCustomData := getCustomDataFromJSON(t.GetKubernetesWindowsAgentCustomDataJSON(cs, profile))
+		agentCustomData := getCustomDataFromJSON(t.GetKubernetesWindowsNodeCustomDataJSONObject(cs, profile))
 		osProfile.CustomData = to.StringPtr(agentCustomData)
 	}
 

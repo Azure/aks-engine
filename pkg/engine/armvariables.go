@@ -104,17 +104,26 @@ func getK8sMasterVars(cs *api.ContainerService) (map[string]interface{}, error) 
 		"sshNatPorts":            []int{22, 2201, 2202, 2203, 2204},
 		"sshKeyPath":             "[concat('/home/',parameters('linuxAdminUsername'),'/.ssh/authorized_keys')]",
 		"cloudInitFiles": map[string]interface{}{
-			"provisionScript":           GetKubernetesB64Provision(),
-			"provisionSource":           GetKubernetesB64ProvisionSource(),
-			"provisionInstalls":         GetKubernetesB64Installs(),
-			"provisionConfigs":          GetKubernetesB64Configs(),
-			"provisionCIS":              GetKubernetesB64CIS(),
-			"sshdConfig":                GetB64sshdConfig(),
-			"systemConf":                GetB64systemConf(),
-			"healthMonitorScript":       GetKubernetesB64HealthMonitorScript(),
-			"customSearchDomainsScript": GetKubernetesB64CustomSearchDomainsScript(),
-			"generateProxyCertsScript":  GetKubernetesB64GenerateProxyCerts(),
-			"mountEtcdScript":           GetKubernetesB64Mountetcd(),
+			"provisionScript":                  GetKubernetesB64CSEMain(),
+			"provisionSource":                  GetKubernetesB64CSEHelpers(),
+			"provisionInstalls":                GetKubernetesB64CSEInstall(),
+			"provisionConfigs":                 GetKubernetesB64CSEConfig(),
+			"provisionCIS":                     GetKubernetesB64CIS(),
+			"sshdConfig":                       GetB64sshdConfig(),
+			"systemConf":                       GetB64systemConf(),
+			"healthMonitorScript":              GetKubernetesB64HealthMonitorScript(),
+			"customSearchDomainsScript":        GetKubernetesB64CustomSearchDomainsScript(),
+			"generateProxyCertsScript":         GetKubernetesB64GenerateProxyCerts(),
+			"mountEtcdScript":                  GetKubernetesB64MountEtcd(),
+			"kubeletSystemdService":            GetKubernetesKubeletSystemdService(),
+			"kmsSystemdService":                GetKubernetesKMSSystemdService(),
+			"kubeletMonitorSystemdTimer":       GetKubernetesB64KubeletMonitorSystemdTimer(),
+			"kubeletMonitorSystemdService":     GetKubernetesB64KubeletMonitorSystemdService(),
+			"dockerMonitorSystemdTimer":        GetKubernetesB64DockerMonitorSystemdTimer(),
+			"dockerMonitorSystemdService":      GetKubernetesB64DockerMonitorSystemdService(),
+			"aptPreferences":                   GetKubernetesB64AptPreferences(),
+			"dockerClearMountPropagationFlags": GetKubernetesB64DockerClearMountPropagationFlags(),
+			"etcdSystemdService":               GetKubernetesB64EtcdSystemdService(),
 		},
 		"provisionScriptParametersCommon": fmt.Sprintf("[concat('ADMINUSER=',parameters('linuxAdminUsername'),' ETCD_DOWNLOAD_URL=',parameters('etcdDownloadURLBase'),' ETCD_VERSION=',parameters('etcdVersion'),' CONTAINERD_VERSION=',parameters('containerdVersion'),' MOBY_VERSION=',parameters('mobyVersion'),' TENANT_ID=',variables('tenantID'),' KUBERNETES_VERSION=%s HYPERKUBE_URL=',parameters('kubernetesHyperkubeSpec'),' APISERVER_PUBLIC_KEY=',parameters('apiServerCertificate'),' SUBSCRIPTION_ID=',variables('subscriptionId'),' RESOURCE_GROUP=',variables('resourceGroup'),' LOCATION=',variables('location'),' VM_TYPE=',variables('vmType'),' SUBNET=',variables('subnetName'),' NETWORK_SECURITY_GROUP=',variables('nsgName'),' VIRTUAL_NETWORK=',variables('virtualNetworkName'),' VIRTUAL_NETWORK_RESOURCE_GROUP=',variables('virtualNetworkResourceGroupName'),' ROUTE_TABLE=',variables('routeTableName'),' PRIMARY_AVAILABILITY_SET=',variables('primaryAvailabilitySetName'),' PRIMARY_SCALE_SET=',variables('primaryScaleSetName'),' SERVICE_PRINCIPAL_CLIENT_ID=',variables('servicePrincipalClientId'),' SERVICE_PRINCIPAL_CLIENT_SECRET=',variables('singleQuote'),variables('servicePrincipalClientSecret'),variables('singleQuote'),' KUBELET_PRIVATE_KEY=',parameters('clientPrivateKey'),' TARGET_ENVIRONMENT=',parameters('targetEnvironment'),' NETWORK_PLUGIN=',parameters('networkPlugin'),' NETWORK_POLICY=',parameters('networkPolicy'),' VNET_CNI_PLUGINS_URL=',parameters('vnetCniLinuxPluginsURL'),' CNI_PLUGINS_URL=',parameters('cniPluginsURL'),' CLOUDPROVIDER_BACKOFF=',toLower(string(parameters('cloudproviderConfig').cloudProviderBackoff)),' CLOUDPROVIDER_BACKOFF_RETRIES=',parameters('cloudproviderConfig').cloudProviderBackoffRetries,' CLOUDPROVIDER_BACKOFF_EXPONENT=',parameters('cloudproviderConfig').cloudProviderBackoffExponent,' CLOUDPROVIDER_BACKOFF_DURATION=',parameters('cloudproviderConfig').cloudProviderBackoffDuration,' CLOUDPROVIDER_BACKOFF_JITTER=',parameters('cloudproviderConfig').cloudProviderBackoffJitter,' CLOUDPROVIDER_RATELIMIT=',toLower(string(parameters('cloudproviderConfig').cloudProviderRatelimit)),' CLOUDPROVIDER_RATELIMIT_QPS=',parameters('cloudproviderConfig').cloudProviderRatelimitQPS,' CLOUDPROVIDER_RATELIMIT_BUCKET=',parameters('cloudproviderConfig').cloudProviderRatelimitBucket,' USE_MANAGED_IDENTITY_EXTENSION=',variables('useManagedIdentityExtension'),' USER_ASSIGNED_IDENTITY_ID=',variables('userAssignedClientID'),' USE_INSTANCE_METADATA=',variables('useInstanceMetadata'),' LOAD_BALANCER_SKU=',variables('loadBalancerSku'),' EXCLUDE_MASTER_FROM_STANDARD_LB=',variables('excludeMasterFromStandardLB'),' MAXIMUM_LOADBALANCER_RULE_COUNT=',variables('maximumLoadBalancerRuleCount'),' CONTAINER_RUNTIME=',parameters('containerRuntime'),' CONTAINERD_DOWNLOAD_URL_BASE=',parameters('containerdDownloadURLBase'),' POD_INFRA_CONTAINER_SPEC=',parameters('kubernetesPodInfraContainerSpec'),' KMS_PROVIDER_VAULT_NAME=',variables('clusterKeyVaultName'),' IS_HOSTED_MASTER=%t',' PRIVATE_AZURE_REGISTRY_SERVER=',parameters('privateAzureRegistryServer'),' AUTHENTICATION_METHOD=',variables('customCloudAuthenticationMethod'),' IDENTITY_SYSTEM=',variables('customCloudIdentifySystem'))]",
 			orchProfile.OrchestratorVersion, isHostedMaster),
@@ -147,6 +156,12 @@ func getK8sMasterVars(cs *api.ContainerService) (map[string]interface{}, error) 
 		}
 		masterVars["environmentJSON"] = environmentJSON
 		masterVars["provisionConfigsCustomCloud"] = GetKubernetesB64ConfigsCustomCloud()
+	}
+
+	if kubernetesConfig != nil {
+		if kubernetesConfig.NetworkPlugin == NetworkPluginCilium {
+			masterVars["systemdBPFMount"] = GetKubernetesB64SystemdBPFMount()
+		}
 	}
 
 	masterVars["customCloudAuthenticationMethod"] = cs.Properties.GetCustomCloudAuthenticationMethod()

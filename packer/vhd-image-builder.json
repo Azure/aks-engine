@@ -51,17 +51,17 @@
         },
         {
             "type": "file",
-            "source": "parts/k8s/kubernetesinstalls.sh",
+            "source": "parts/k8s/cloud-init/artifacts/cse_install.sh",
             "destination": "/home/packer/provision_installs.sh"
         },
         {
             "type": "file",
-            "source": "parts/k8s/kubernetesprovisionsource.sh",
+            "source": "parts/k8s/cloud-init/artifacts/cse_helpers.sh",
             "destination": "/home/packer/provision_source.sh"
         },
         {
             "type": "file",
-            "source": "parts/k8s/cis.sh",
+            "source": "parts/k8s/cloud-init/artifacts/cis.sh",
             "destination": "/home/packer/cis.sh"
         },
         {
