@@ -90,3 +90,7 @@ func GetKubernetesB64SystemdBPFMount() string {
 func GetKubernetesB64EtcdSystemdService() string {
 	return getBase64EncodedGzippedCustomScript(etcdSystemdService)
 }
+
+func GetKubernetesB64EtcIssue() string {
+	return getBase64EncodedGzippedCustomScript(etcIssue)
+}
