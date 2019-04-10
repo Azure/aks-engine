@@ -7,6 +7,8 @@ Instructions on rotating TLS CA and certificates for an AKS Engine cluster.
 - The etcd members MUST be in a healthy state before rotating the CA and certs (ie. `etcdctl cluster-health` shows all peers are healthy and cluster is healthy).
 - The apimodel file reflecting the current cluster configuration and a working ssh private key that has root access to all nodes. The apimodel file is persisted at AKS Engine template generation time, by default to the _output/ child directory from the working parent directory at the time of the aks-engine invocation.
 
+<a name="preparation"></a>
+
 ## Preparation
 
 **CAUTION**: Rotating certificates can break component connectivity and leave the cluster in an unrecoverable state. Before performing any of these instructions on a live cluster, it is preferrable to backup your cluster state and migrate critical workloads to another cluster.
@@ -45,8 +47,11 @@ After the above steps, you can verify the success of the CA and certs rotation:
 
 The certificate rotation tool has not been tested on and is expected to fail with the following cluster configurations:
 
-- Private clusters
-- Clusters using keyvault references in Certificate Profile
-- Clusters using Cosmos Etcd
+- Private clusters.
+- Clusters using keyvault references in Certificate Profile.
+- Clusters using Cosmos etcd.
+- Clusters with already expired certificates with unhealthy etcd.
 
 The rotation involves rebooting the nodes. ALL VMs in the resource group will be restarted as part of running the `rotate-certs` command. If the resource group contains any VMs that are not part of the cluster, they will be restarted as well.
+
+The tool is not currently idempotent, meaning that if the rotation fails halfway though or is interrupted, you will most likely not be able to re-run the operation without any manual intervention. There is a risk that your cluster will become unrecoverable which is why it is strongly recommended to follow the steps in the [preparation step](#preparation).
