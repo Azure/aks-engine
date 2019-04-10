@@ -297,13 +297,15 @@ func writeCustomCloudProfile(cs *api.ContainerService) error {
 	tmpFile, err := ioutil.TempFile("", "azurestackcloud.json")
 	tmpFileName := tmpFile.Name()
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 	log.Infoln(fmt.Sprintf("Writing cloud profile to: %s", tmpFileName))
 
 	// Build content for the file
-	content := cs.Properties.GetCustomEnvironmentJSON(false)
-
+	content, err := cs.Properties.GetCustomEnvironmentJSON(false)
+	if err != nil {
+		return err
+	}
 	if err = ioutil.WriteFile(tmpFileName, []byte(content), os.ModeAppend); err != nil {
 		return err
 	}

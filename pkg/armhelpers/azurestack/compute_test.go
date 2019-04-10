@@ -14,7 +14,10 @@ import (
 
 func TestListVirtualMachineScaleSets(t *testing.T) {
 
-	mc := NewHTTPMockClient()
+	mc, err := NewHTTPMockClient()
+	if err != nil {
+		t.Fatalf("failed to create HttpMockClient - %s", err)
+	}
 	mc.Activate()
 	defer mc.DeactivateAndReset()
 	mc.RegisterLogin()
@@ -47,7 +50,10 @@ func TestListVirtualMachineScaleSets(t *testing.T) {
 }
 
 func TestListVirtualMachineScaleSetVMs(t *testing.T) {
-	mc := NewHTTPMockClient()
+	mc, err := NewHTTPMockClient()
+	if err != nil {
+		t.Fatalf("failed to create HttpMockClient - %s", err)
+	}
 	mc.Activate()
 	defer mc.DeactivateAndReset()
 	mc.RegisterLogin()
@@ -80,7 +86,10 @@ func TestListVirtualMachineScaleSetVMs(t *testing.T) {
 }
 
 func TestListVirtualMachines(t *testing.T) {
-	mc := NewHTTPMockClient()
+	mc, err := NewHTTPMockClient()
+	if err != nil {
+		t.Fatalf("failed to create HttpMockClient - %s", err)
+	}
 	mc.Activate()
 	defer mc.DeactivateAndReset()
 	mc.RegisterLogin()
@@ -112,7 +121,10 @@ func TestListVirtualMachines(t *testing.T) {
 }
 
 func TestGetVirtualMachine(t *testing.T) {
-	mc := NewHTTPMockClient()
+	mc, err := NewHTTPMockClient()
+	if err != nil {
+		t.Fatalf("failed to create HttpMockClient - %s", err)
+	}
 	mc.Activate()
 	defer mc.DeactivateAndReset()
 	mc.RegisterLogin()
@@ -153,7 +165,10 @@ func TestGetVirtualMachine(t *testing.T) {
 
 }
 func TestDeleteVirtualMachine(t *testing.T) {
-	mc := NewHTTPMockClient()
+	mc, err := NewHTTPMockClient()
+	if err != nil {
+		t.Fatalf("failed to create HttpMockClient - %s", err)
+	}
 	mc.Activate()
 	defer mc.DeactivateAndReset()
 	mc.RegisterLogin()

@@ -6,12 +6,10 @@ package azurestack
 import (
 	"github.com/Azure/azure-sdk-for-go/services/preview/msi/mgmt/2015-08-31-preview/msi"
 	"github.com/pkg/errors"
-	log "github.com/sirupsen/logrus"
 )
 
 //CreateUserAssignedID - Creates a user assigned msi.
 func (az *AzureClient) CreateUserAssignedID(location string, resourceGroup string, userAssignedID string) (id *msi.Identity, err error) {
 	errorMessage := "error azure stack does not support creating user assigned msi"
-	log.Fatal(errorMessage)
 	return &msi.Identity{}, errors.New(errorMessage)
 }

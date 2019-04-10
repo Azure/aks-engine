@@ -54,7 +54,10 @@ func TestK8sVars(t *testing.T) {
 
 	cs.SetPropertiesDefaults(false, false)
 
-	varMap := GetKubernetesVariables(cs)
+	varMap, err := GetKubernetesVariables(cs)
+	if err != nil {
+		t.Fatal(err)
+	}
 	expectedMap := map[string]interface{}{
 		"agentpool1Count":                "[parameters('agentpool1Count')]",
 		"agentpool1Index":                0,
@@ -177,7 +180,10 @@ func TestK8sVars(t *testing.T) {
 
 	// Test with CustomVnet enabled
 	cs.Properties.MasterProfile.VnetSubnetID = "fooSubnetID"
-	varMap = GetKubernetesVariables(cs)
+	varMap, err = GetKubernetesVariables(cs)
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	expectedMap["subnetName"] = "[split(parameters('masterVnetSubnetID'), '/')[variables('subnetNameResourceSegmentIndex')]]"
 	expectedMap["virtualNetworkName"] = "[split(parameters('masterVnetSubnetID'), '/')[variables('vnetNameResourceSegmentIndex')]]"
@@ -193,7 +199,10 @@ func TestK8sVars(t *testing.T) {
 
 	// Test with  3 Multiple Master Nodes
 	cs.Properties.MasterProfile.Count = 3
-	varMap = GetKubernetesVariables(cs)
+	varMap, err = GetKubernetesVariables(cs)
+	if err != nil {
+		t.Fatal(err)
+	}
 	expectedMap["etcdPeerCertificates"] = []string{
 		"[parameters('etcdPeerCertificate0')]",
 		"[parameters('etcdPeerCertificate1')]",
@@ -220,7 +229,10 @@ func TestK8sVars(t *testing.T) {
 
 	// Test with  5 Multiple Master Nodes
 	cs.Properties.MasterProfile.Count = 5
-	varMap = GetKubernetesVariables(cs)
+	varMap, err = GetKubernetesVariables(cs)
+	if err != nil {
+		t.Fatal(err)
+	}
 	expectedMap["etcdPeerCertificates"] = []string{
 		"[parameters('etcdPeerCertificate0')]",
 		"[parameters('etcdPeerCertificate1')]",
@@ -249,7 +261,10 @@ func TestK8sVars(t *testing.T) {
 		DNSPrefix: "fooDNSPrefix",
 	}
 	cs.Properties.AgentPoolProfiles[0].StorageProfile = api.StorageAccount
-	varMap = GetKubernetesVariables(cs)
+	varMap, err = GetKubernetesVariables(cs)
+	if err != nil {
+		t.Fatal(err)
+	}
 	expectedMap["agentNamePrefix"] = "[concat(parameters('orchestratorName'), '-agentpool-', parameters('nameSuffix'), '-')]"
 	expectedMap["agentpool1AccountName"] = "[concat(variables('storageAccountBaseName'), 'agnt0')]"
 	expectedMap["agentpool1StorageAccountOffset"] = "[mul(variables('maxStorageAccountsPerAgent'),variables('agentpool1Index'))]"
@@ -395,7 +410,10 @@ func TestK8sVars(t *testing.T) {
 
 	cs.SetPropertiesDefaults(false, false)
 
-	varMap = GetKubernetesVariables(cs)
+	varMap, err = GetKubernetesVariables(cs)
+	if err != nil {
+		t.Fatal(err)
+	}
 	expectedMap = map[string]interface{}{
 		"agentpool1Count":                 "[parameters('agentpool1Count')]",
 		"agentpool1Index":                 0,
@@ -546,7 +564,11 @@ func TestK8sVarsMastersOnly(t *testing.T) {
 
 	cs.SetPropertiesDefaults(false, false)
 
-	varMap := GetKubernetesVariables(cs)
+	varMap, err := GetKubernetesVariables(cs)
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	expectedMap := map[string]interface{}{
 		"apiVersionAuthorizationSystem":   "2018-01-01-preview",
 		"apiVersionAuthorizationUser":     "2018-09-01-preview",

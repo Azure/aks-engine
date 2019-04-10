@@ -6,7 +6,6 @@ package azurestack
 import (
 	"fmt"
 	"io/ioutil"
-	"log"
 	"net/http"
 
 	"github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2017-03-30/compute"
@@ -79,30 +78,54 @@ type VirtualMachineVMValues struct {
 }
 
 //NewHTTPMockClient creates HTTPMockClient with default values
-func NewHTTPMockClient() HTTPMockClient {
-	return HTTPMockClient{
-		SubscriptionID:                        subscriptionID,
-		TenantID:                              tenantID,
-		ResourceGroup:                         resourceGroup,
-		ComputeAPIVersion:                     computeAPIVersion,
-		NetworkAPIVersion:                     networkAPIVersion,
-		DeploymentAPIVersion:                  deploymentAPIVersion,
-		DeploymentName:                        deploymentName,
-		DeploymentStatus:                      deploymentStatus,
-		VirtualMachineScaleSetName:            virtualMachineScaleSetName,
-		VirtualMachineName:                    virtualMachineName,
-		VirtualNicName:                        virtualNicName,
-		VirutalDiskName:                       virutalDiskName,
-		Location:                              location,
-		OperationID:                           operationID,
-		TokenResponse:                         readFromFile(filePathTokenResponse),
-		ResponseListVirtualMachineScaleSets:   readFromFile(filePathListVirtualMachineScaleSets),
-		ResponseListVirtualMachineScaleSetVMs: readFromFile(filePathListVirtualMachineScaleSetVMs),
-		ResponseListVirtualMachines:           readFromFile(filePathListVirtualMachines),
-		ResponseGetVirtualMachine:             readFromFile(filePathGetVirtualMachine),
-		ResponseDeployVirtualMachine:          readFromFile(fileDeployVirtualMachine),
-		ResponseDeployVirtualMachineError:     readFromFile(fileDeployVirtualMachineError),
+func NewHTTPMockClient() (HTTPMockClient, error) {
+
+	client := HTTPMockClient{
+		SubscriptionID:             subscriptionID,
+		TenantID:                   tenantID,
+		ResourceGroup:              resourceGroup,
+		ComputeAPIVersion:          computeAPIVersion,
+		NetworkAPIVersion:          networkAPIVersion,
+		DeploymentAPIVersion:       deploymentAPIVersion,
+		DeploymentName:             deploymentName,
+		DeploymentStatus:           deploymentStatus,
+		VirtualMachineScaleSetName: virtualMachineScaleSetName,
+		VirtualMachineName:         virtualMachineName,
+		VirtualNicName:             virtualNicName,
+		VirutalDiskName:            virutalDiskName,
+		Location:                   location,
+		OperationID:                operationID,
 	}
+	var err error
+	client.TokenResponse, err = readFromFile(filePathTokenResponse)
+	if err != nil {
+		return client, err
+	}
+	client.ResponseListVirtualMachineScaleSets, err = readFromFile(filePathListVirtualMachineScaleSets)
+	if err != nil {
+		return client, err
+	}
+	client.ResponseListVirtualMachineScaleSetVMs, err = readFromFile(filePathListVirtualMachineScaleSetVMs)
+	if err != nil {
+		return client, err
+	}
+	client.ResponseListVirtualMachines, err = readFromFile(filePathListVirtualMachines)
+	if err != nil {
+		return client, err
+	}
+	client.ResponseGetVirtualMachine, err = readFromFile(filePathGetVirtualMachine)
+	if err != nil {
+		return client, err
+	}
+	client.ResponseDeployVirtualMachine, err = readFromFile(fileDeployVirtualMachine)
+	if err != nil {
+		return client, err
+	}
+	client.ResponseDeployVirtualMachineError, err = readFromFile(fileDeployVirtualMachineError)
+	if err != nil {
+		return client, err
+	}
+	return client, nil
 }
 
 //Activate starts the mock environment
@@ -332,11 +355,11 @@ func (mc HTTPMockClient) RegisterDeleteManagedDisk() {
 	)
 }
 
-func readFromFile(filePath string) string {
+func readFromFile(filePath string) (string, error) {
 	bytes, err := ioutil.ReadFile(filePath)
 	if err != nil {
-		log.Fatalf("Fail to read file %q , err -  %q", filePath, err)
+		return "", fmt.Errorf("Fail to read file %q , err -  %q", filePath, err)
 	}
 
-	return string(bytes)
+	return string(bytes), nil
 }

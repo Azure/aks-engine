@@ -5,7 +5,7 @@ package azurestack
 
 import (
 	"context"
-	"log"
+	"fmt"
 
 	"github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2017-03-30/compute"
 	azcompute "github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2018-10-01/compute"
@@ -39,7 +39,7 @@ func (page VirtualMachineListResultPageClient) Response() azcompute.VirtualMachi
 	r := azcompute.VirtualMachineListResult{}
 	err := DeepCopy(&r, page.vmlrp.Response())
 	if err != nil {
-		log.Fatalf("fail to get virtual machine list result, %v", err)
+		page.err = fmt.Errorf("fail to get virtual machine list result, %s", err)
 	}
 	return r
 }
@@ -49,7 +49,7 @@ func (page VirtualMachineListResultPageClient) Values() []azcompute.VirtualMachi
 	r := []azcompute.VirtualMachine{}
 	err := DeepCopy(&r, page.vmlrp.Values())
 	if err != nil {
-		log.Fatalf("fail to get virtual machine list, %v", err)
+		page.err = fmt.Errorf("fail to get virtual machine list, %s", err)
 	}
 	return r
 }
@@ -82,7 +82,7 @@ func (page VirtualMachineScaleSetListResultPageClient) Response() azcompute.Virt
 	r := azcompute.VirtualMachineScaleSetListResult{}
 	err := DeepCopy(&r, page.vmsslrp.Response())
 	if err != nil {
-		log.Fatalf("fail to get virtual machine scale set list result, %v", err)
+		page.err = fmt.Errorf("fail to get virtual machine scale set list result, %s", err)
 	}
 	return r
 }
@@ -92,7 +92,7 @@ func (page VirtualMachineScaleSetListResultPageClient) Values() []azcompute.Virt
 	r := []azcompute.VirtualMachineScaleSet{}
 	err := DeepCopy(&r, page.vmsslrp.Values())
 	if err != nil {
-		log.Fatalf("fail to get virtual machine scale set list, %v", err)
+		page.err = fmt.Errorf("fail to get virtual machine scale set list, %s", err)
 	}
 	return r
 }
@@ -125,7 +125,7 @@ func (page VirtualMachineScaleSetVMListResultPageClient) Response() azcompute.Vi
 	r := azcompute.VirtualMachineScaleSetVMListResult{}
 	err := DeepCopy(&r, page.vmssvlrp.Response())
 	if err != nil {
-		log.Fatalf("fail to get virtual machine scale set VM list result, %v", err)
+		page.err = fmt.Errorf("fail to get virtual machine scale set VM list result, %s", err)
 	}
 	return r
 }
@@ -135,7 +135,7 @@ func (page VirtualMachineScaleSetVMListResultPageClient) Values() []azcompute.Vi
 	r := []azcompute.VirtualMachineScaleSetVM{}
 	err := DeepCopy(&r, page.vmssvlrp.Values())
 	if err != nil {
-		log.Fatalf("fail to get virtual machine scale set VM list, %v", err)
+		page.err = fmt.Errorf("fail to get virtual machine scale set VM list, %s", err)
 	}
 	return r
 }
@@ -169,7 +169,7 @@ func (page DiskListPageClient) Response() azcompute.DiskList {
 	l := azcompute.DiskList{}
 	err := DeepCopy(&l, page.dlp.Response())
 	if err != nil {
-		log.Fatalf("fail to get disk list result, %v", err)
+		page.err = fmt.Errorf("fail to get disk list result, %s", err)
 	}
 	return l
 }
@@ -179,7 +179,7 @@ func (page DiskListPageClient) Values() []azcompute.Disk {
 	l := []azcompute.Disk{}
 	err := DeepCopy(&l, page.dlp.Values())
 	if err != nil {
-		log.Fatalf("fail to get disk list, %v", err)
+		page.err = fmt.Errorf("fail to get disk list, %s", err)
 	}
 	return l
 }
