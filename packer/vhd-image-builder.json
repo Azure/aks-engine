@@ -61,7 +61,7 @@
         },
         {
             "type": "file",
-            "source": "parts/k8s/cis.sh",
+            "source": "parts/k8s/cloud-init/artifacts/cis.sh",
             "destination": "/home/packer/cis.sh"
         },
         {
