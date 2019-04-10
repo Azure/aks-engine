@@ -86,9 +86,7 @@ installKubeletAndKubectl
 ensureRPC
 createKubeManifestDir
 if [[ "${SGX_NODE}" = true ]]; then
-    if $FULL_INSTALL_REQUIRED; then
-        installSGXDrivers
-    fi
+    installSGXDrivers
 fi
 
 # create etcd user if we are configured for etcd
