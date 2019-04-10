@@ -12,7 +12,6 @@ cat /proc/version | tee -a ${RELEASE_NOTES_FILEPATH}
 echo ""
 echo "Components downloaded in this VHD build (some of the below components might get deleted during cluster provisioning if they are not needed):" >> ${RELEASE_NOTES_FILEPATH}
 
-applyCIS
 installDeps
 cat << EOF >> ${RELEASE_NOTES_FILEPATH}
   - apt-transport-https
@@ -378,3 +377,5 @@ echo "START_OF_NOTES"
 cat ${RELEASE_NOTES_FILEPATH}
 echo "END_OF_NOTES"
 set -x
+
+applyCIS
