@@ -7,7 +7,6 @@ import (
 	"fmt"
 
 	"github.com/Azure/aks-engine/pkg/api"
-	"github.com/Azure/go-autorest/autorest/to"
 )
 
 func GetKubernetesOutputs(cs *api.ContainerService) map[string]interface{} {
@@ -79,9 +78,7 @@ func getMasterOutputs(cs *api.ContainerService) map[string]interface{} {
 	outputs := map[string]interface{}{}
 	masterFQDN := ""
 
-	isPrivateCluster := to.Bool(cs.Properties.OrchestratorProfile.KubernetesConfig.PrivateCluster.Enabled)
-
-	if !isPrivateCluster {
+	if !cs.Properties.OrchestratorProfile.IsPrivateCluster() {
 		masterFQDN = "[reference(concat('Microsoft.Network/publicIPAddresses/', variables('masterPublicIPAddressName'))).dnsSettings.fqdn]"
 	}
 

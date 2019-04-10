@@ -16,7 +16,7 @@ func createStorageAccount(cs *api.ContainerService) StorageAccountARM {
 		APIVersion: "[variables('apiVersionStorage')]",
 	}
 
-	if !to.Bool(cs.Properties.OrchestratorProfile.KubernetesConfig.PrivateCluster.Enabled) {
+	if !cs.Properties.OrchestratorProfile.IsPrivateCluster() {
 		armResource.DependsOn = []string{
 			"[concat('Microsoft.Network/publicIPAddresses/', variables('masterPublicIPAddressName'))]",
 		}
@@ -89,9 +89,7 @@ func createAgentVMASStorageAccount(cs *api.ContainerService, profile *api.AgentP
 		},
 	}
 
-	isPrivateCluster := to.Bool(cs.Properties.OrchestratorProfile.KubernetesConfig.PrivateCluster.Enabled)
-
-	if !cs.Properties.IsHostedMasterProfile() && !isPrivateCluster {
+	if !cs.Properties.IsHostedMasterProfile() && !cs.Properties.OrchestratorProfile.IsPrivateCluster() {
 		armResource.DependsOn = []string{
 			"[concat('Microsoft.Network/publicIPAddresses/', variables('masterPublicIPAddressName'))]",
 		}

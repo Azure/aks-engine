@@ -460,10 +460,7 @@ func (t *TemplateGenerator) getTemplateFuncMap(cs *api.ContainerService) templat
 			return cs.Properties.OrchestratorProfile.RequireRouteTable()
 		},
 		"IsPrivateCluster": func() bool {
-			if !cs.Properties.OrchestratorProfile.IsKubernetes() {
-				return false
-			}
-			return to.Bool(cs.Properties.OrchestratorProfile.KubernetesConfig.PrivateCluster.Enabled)
+			return cs.Properties.OrchestratorProfile.IsPrivateCluster()
 		},
 		"ProvisionJumpbox": func() bool {
 			return cs.Properties.OrchestratorProfile.KubernetesConfig.PrivateJumpboxProvision()

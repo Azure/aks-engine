@@ -1330,6 +1330,14 @@ func (o *OrchestratorProfile) RequireRouteTable() bool {
 	}
 }
 
+// IsPrivateCluster returns true if this deployment is a private cluster
+func (o *OrchestratorProfile) IsPrivateCluster() bool {
+	if !o.IsKubernetes() {
+		return false
+	}
+	return o.KubernetesConfig != nil && o.KubernetesConfig.PrivateCluster != nil && to.Bool(o.KubernetesConfig.PrivateCluster.Enabled)
+}
+
 // NeedsExecHealthz returns whether or not we have a configuration that requires exechealthz pod anywhere
 func (o *OrchestratorProfile) NeedsExecHealthz() bool {
 	return o.IsKubernetes() &&

@@ -51,7 +51,7 @@ func getK8sMasterVars(cs *api.ContainerService) map[string]interface{} {
 	profiles := cs.Properties.AgentPoolProfiles
 
 	var useManagedIdentity, userAssignedID, userAssignedClientID, enableEncryptionWithExternalKms bool
-	var excludeMasterFromStandardLB, provisionJumpbox, isPrivateCluster bool
+	var excludeMasterFromStandardLB, provisionJumpbox bool
 	var maxLoadBalancerCount int
 	var useInstanceMetadata *bool
 	if kubernetesConfig != nil {
@@ -62,9 +62,6 @@ func getK8sMasterVars(cs *api.ContainerService) map[string]interface{} {
 		useInstanceMetadata = kubernetesConfig.UseInstanceMetadata
 		excludeMasterFromStandardLB = to.Bool(kubernetesConfig.ExcludeMasterFromStandardLB)
 		maxLoadBalancerCount = kubernetesConfig.MaximumLoadBalancerRuleCount
-		if kubernetesConfig.PrivateCluster != nil {
-			isPrivateCluster = to.Bool(kubernetesConfig.PrivateCluster.Enabled)
-		}
 		provisionJumpbox = kubernetesConfig.PrivateJumpboxProvision()
 	}
 	isHostedMaster := cs.Properties.IsHostedMasterProfile()
@@ -327,7 +324,7 @@ func getK8sMasterVars(cs *api.ContainerService) map[string]interface{} {
 		masterVars["kubernetesAPIServerIP"] = "[parameters('kubernetesEndpoint')]"
 		masterVars["agentNamePrefix"] = "[concat(parameters('orchestratorName'), '-agentpool-', parameters('nameSuffix'), '-')]"
 	} else {
-		if isPrivateCluster {
+		if cs.Properties.OrchestratorProfile.IsPrivateCluster() {
 			masterVars["kubeconfigServer"] = "[concat('https://', variables('kubernetesAPIServerIP'), ':443')]"
 			if provisionJumpbox {
 				masterVars["jumpboxOSDiskName"] = "[concat(parameters('jumpboxVMName'), '-osdisk')]"
