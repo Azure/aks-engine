@@ -63,14 +63,14 @@ else
     FULL_INSTALL_REQUIRED=true
 fi
 
-if [[ ! -z "${MASTER_NODE}" ]] && [[ -z "${COSMOS_URI}" ]]; then
-    installEtcd
-fi
-
 if [[ $OS != $COREOS_OS_NAME ]] && [[ $FULL_INSTALL_REQUIRED ]]; then
     installDeps
 else 
     echo "Golden image; skipping dependencies installation"
+fi
+
+if [[ ! -z "${MASTER_NODE}" ]] && [[ -z "${COSMOS_URI}" ]]; then
+    installEtcd
 fi
 
 if [[ $OS != $COREOS_OS_NAME ]]; then
@@ -177,8 +177,10 @@ echo `date`,`hostname`, endcustomscript>>/opt/m
 mkdir -p /opt/azure/containers && touch /opt/azure/containers/provision.complete
 ps auxfww > /opt/azure/provision-ps.log &
 
-if ! $FULL_INSTALL_REQUIRED; then
-    cleanUpContainerImages
+if $FULL_INSTALL_REQUIRED; then
+  applyCIS || exit $ERR_CIS_HARDENING_ERROR
+else
+  cleanUpContainerImages
 fi
 
 if $REBOOTREQUIRED; then
