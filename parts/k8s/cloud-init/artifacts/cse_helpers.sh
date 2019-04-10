@@ -180,23 +180,23 @@ apt_get_install() {
     wait_for_apt_locks
 }
 apt_get_dist_upgrade() {
-	    retries=10
-	    apt_dist_upgrade_output=/tmp/apt-get-dist-upgrade.out
-	    for i in $(seq 1 $retries); do
-	        wait_for_apt_locks
-	        dpkg --configure -a
-	        apt-get -f -y install
-	        apt-get dist-upgrade -y 2>&1 | tee $apt_dist_upgrade_output | grep -E "^([WE]:.*)|([eE]rr.*)$"
-            [ $? -ne 0  ] && cat $apt_dist_upgrade_output && break || \
-            cat $apt_update_output
-            if [ $i -eq $retries ]; then
-                return 1
-            else sleep 5
-            fi
-	    done
-	    echo Executed apt-get dist-upgrade $i times
-	    wait_for_apt_locks
-	}
+  retries=10
+  apt_dist_upgrade_output=/tmp/apt-get-dist-upgrade.out
+  for i in $(seq 1 $retries); do
+    wait_for_apt_locks
+    dpkg --configure -a
+    apt-get -f -y install
+    apt-get dist-upgrade -y 2>&1 | tee $apt_dist_upgrade_output | grep -E "^([WE]:.*)|([eE]rr.*)$"
+    [ $? -ne 0  ] && cat $apt_dist_upgrade_output && break || \
+    cat $apt_update_output
+    if [ $i -eq $retries ]; then
+      return 1
+    else sleep 5
+    fi
+  done
+  echo Executed apt-get dist-upgrade $i times
+  wait_for_apt_locks
+}
 systemctl_restart() {
     retries=$1; wait_sleep=$2; timeout=$3 svcname=$4
     for i in $(seq 1 $retries); do
