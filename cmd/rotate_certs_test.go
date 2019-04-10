@@ -84,7 +84,7 @@ func TestRotateCertsCmdRun(t *testing.T) {
 		t.Fatalf("Invalid SubscriptionId in Test: %s", err)
 	}
 
-	err = rcc.run()
+	err = rcc.run(r, []string{})
 	if err != nil {
 		t.Fatalf("Failed to run rotate-certs command: %s", err)
 	}
