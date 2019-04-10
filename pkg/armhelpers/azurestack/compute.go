@@ -81,7 +81,7 @@ func (az *AzureClient) RestartVirtualMachineScaleSets(ctx context.Context, resou
 	ids := compute.VirtualMachineScaleSetVMInstanceIDs{}
 	err := DeepCopy(&ids, instanceIDs)
 	if err != nil {
-		log.Fatalf("fail to convert instance IDs, %v", err)
+		return fmt.Errorf("fail to convert instance IDs, %v", err)
 	}
 	future, err := az.virtualMachineScaleSetsClient.Restart(ctx, resourceGroup, virtualMachineScaleSet, &ids)
 	if err != nil {
@@ -139,7 +139,7 @@ func (az *AzureClient) SetVirtualMachineScaleSetCapacity(ctx context.Context, re
 	s := compute.Sku{}
 	err := DeepCopy(&s, sku)
 	if err != nil {
-		log.Fatalf("fail to convert SKU, %v", err)
+		return fmt.Errorf("fail to convert SKU, %v", err)
 	}
 	future, err := az.virtualMachineScaleSetsClient.CreateOrUpdate(
 		ctx,
