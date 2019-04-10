@@ -66,7 +66,7 @@ func newRotateCertsCmd() *cobra.Command {
 		Use:   rotateCertsName,
 		Short: rotateCertsShortDescription,
 		Long:  rotateCertsLongDescription,
-		RunE:  rcc.run(),
+		RunE:  rcc.run,
 	}
 
 	f := command.Flags()
@@ -81,7 +81,7 @@ func newRotateCertsCmd() *cobra.Command {
 	return command
 }
 
-func (rcc *rotateCertsCmd) run() error {
+func (rcc *rotateCertsCmd) run(cmd *cobra.Command, args []string) error {
 
 	log.Debugf("Start rotating certs")
 
