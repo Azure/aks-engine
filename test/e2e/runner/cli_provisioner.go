@@ -84,7 +84,9 @@ func (cli *CLIProvisioner) Run() error {
 }
 
 func createSaveSSH(outputPath string, privateKeyName string) (string, error) {
-	os.Mkdir(outputPath, 0755)
+	if err := os.Mkdir(outputPath, 0755); err != nil {
+		return "", err
+	}
 	keyPath := filepath.Join(outputPath, privateKeyName)
 	cmd := exec.Command("ssh-keygen", "-f", keyPath, "-q", "-N", "", "-b", "2048", "-t", "rsa")
 
@@ -94,7 +96,9 @@ func createSaveSSH(outputPath string, privateKeyName string) (string, error) {
 		return "", errors.Wrapf(err, "Error while trying to generate ssh key\nOutput:%s", out)
 	}
 
-	os.Chmod(keyPath, 0600)
+	if err = os.Chmod(keyPath, 0600); err != nil {
+		return "", err
+	}
 	publicSSHKeyBytes, err := ioutil.ReadFile(keyPath + ".pub")
 	if err != nil {
 		return "", errors.Wrap(err, "Error while trying to read public ssh key")

@@ -54,10 +54,14 @@ func (g *Ginkgo) Run() error {
 		if g.Config.IsKubernetes() {
 			kubectl := exec.Command("k", "get", "all", "--all-namespaces", "-o", "wide")
 			util.PrintCommand(kubectl)
-			kubectl.CombinedOutput()
+			if _, outputErr := kubectl.CombinedOutput(); outputErr != nil {
+				return outputErr
+			}
 			kubectl = exec.Command("k", "get", "nodes", "-o", "wide")
 			util.PrintCommand(kubectl)
-			kubectl.CombinedOutput()
+			if _, outputErr := kubectl.CombinedOutput(); outputErr != nil {
+				return outputErr
+			}
 		}
 		return err
 	}

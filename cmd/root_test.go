@@ -224,7 +224,9 @@ func TestWriteCustomCloudProfile(t *testing.T) {
 		},
 	}
 
-	cs.SetPropertiesDefaults(false, false)
+	if _, err := cs.SetPropertiesDefaults(false, false); err != nil {
+		t.Fatalf("failed to set default properties: err - %s", err)
+	}
 
 	if err := writeCustomCloudProfile(cs); err != nil {
 		t.Fatalf("failed to write custom cloud profile: err - %s", err)

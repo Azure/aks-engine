@@ -2953,7 +2953,9 @@ func TestFormatProdFQDNByLocation(t *testing.T) {
 	mockCSDefaultSpec.Properties.CustomCloudProfile = mockCSPDefaultSpec.CustomCloudProfile
 	mockCSDefaultSpec.Location = "randomlocation"
 	mockCSDefaultSpec.Properties.MasterProfile.DNSPrefix = "azurestackprefix"
-	mockCSDefaultSpec.SetPropertiesDefaults(false, false)
+	if _, err := mockCSDefaultSpec.SetPropertiesDefaults(false, false); err != nil {
+		t.Error(err)
+	}
 	var actualResult []string
 	for _, location := range mockCSDefaultSpec.GetLocations() {
 		actualResult = append(actualResult, FormatProdFQDNByLocation("azurestackprefix", location, mockCSDefaultSpec.Properties.GetCustomCloudName()))

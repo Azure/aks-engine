@@ -202,7 +202,10 @@ func (m *TestManager) Run() error {
 						FailureCount: 0,
 					}
 
-					promote.RunPromoteToFailure(sa, promToFailInfo)
+					_, err = promote.RunPromoteToFailure(sa, promToFailInfo)
+					if err != nil {
+						fmt.Printf("Got error from RunPromoteToFailure: %#v\n", err)
+					}
 
 				}
 
@@ -435,7 +438,7 @@ func (m *TestManager) runStep(name, step string, env []string, timeout time.Dura
 		return "", time.Since(start), err
 	}
 	timer := time.AfterFunc(timeout, func() {
-		cmd.Process.Kill()
+		_ = cmd.Process.Kill()
 	})
 	err := cmd.Wait()
 	timer.Stop()

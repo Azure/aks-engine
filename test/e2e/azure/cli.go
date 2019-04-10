@@ -286,7 +286,10 @@ func (a *Account) UpdateRouteTables(subnet, vnet string) error {
 		return err
 	}
 	rts := []RouteTable{}
-	json.Unmarshal(out, &rts)
+	if err = json.Unmarshal(out, &rts); err != nil {
+		log.Printf("Error while unmarshalling JSON: %s\n", err)
+		return err
+	}
 
 	if a.TimeoutCommands {
 		cmd = exec.Command("timeout", "60", "az", "network", "vnet", "subnet", "update",

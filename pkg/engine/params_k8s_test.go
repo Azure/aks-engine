@@ -15,7 +15,9 @@ import (
 func TestAssignKubernetesParameters(t *testing.T) {
 	// Initialize locale for translation
 	locale := gotext.NewLocale(path.Join("..", "..", "translations"), "en_US")
-	i18n.Initialize(locale)
+	if err := i18n.Initialize(locale); err != nil {
+		t.Errorf("failed to initialize i18n: %s", err)
+	}
 
 	apiloader := &api.Apiloader{
 		Translator: &i18n.Translator{

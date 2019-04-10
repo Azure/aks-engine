@@ -24,7 +24,8 @@ func TestNormalizeForVMSSScaling(t *testing.T) {
 	Expect(e).To(BeNil())
 	templateJSON := string(fileContents)
 	var template interface{}
-	json.Unmarshal([]byte(templateJSON), &template)
+	e = json.Unmarshal([]byte(templateJSON), &template)
+	Expect(e).NotTo(HaveOccurred())
 	templateMap := template.(map[string]interface{})
 	transformer := Transformer{}
 	e = transformer.NormalizeForVMSSScaling(logger, templateMap)
@@ -41,7 +42,8 @@ func TestNormalizeForK8sVMASScalingUp(t *testing.T) {
 	Expect(e).To(BeNil())
 	templateJSON := string(fileContents)
 	var template interface{}
-	json.Unmarshal([]byte(templateJSON), &template)
+	e = json.Unmarshal([]byte(templateJSON), &template)
+	Expect(e).NotTo(HaveOccurred())
 	templateMap := template.(map[string]interface{})
 	transformer := Transformer{}
 	e = transformer.NormalizeForK8sVMASScalingUp(logger, templateMap)
@@ -58,7 +60,8 @@ func TestNormalizeForK8sVMASScalingUpWithVnet(t *testing.T) {
 	Expect(e).To(BeNil())
 	templateJSON := string(fileContents)
 	var template interface{}
-	json.Unmarshal([]byte(templateJSON), &template)
+	e = json.Unmarshal([]byte(templateJSON), &template)
+	Expect(e).NotTo(HaveOccurred())
 	templateMap := template.(map[string]interface{})
 	transformer := Transformer{}
 	e = transformer.NormalizeForK8sVMASScalingUp(logger, templateMap)
@@ -75,7 +78,8 @@ func TestNormalizeResourcesForK8sMasterUpgrade(t *testing.T) {
 	Expect(e).To(BeNil())
 	templateJSON := string(fileContents)
 	var template interface{}
-	json.Unmarshal([]byte(templateJSON), &template)
+	e = json.Unmarshal([]byte(templateJSON), &template)
+	Expect(e).NotTo(HaveOccurred())
 	templateMap := template.(map[string]interface{})
 	transformer := &Transformer{
 		Translator: &i18n.Translator{
@@ -99,7 +103,8 @@ func TestNormalizeResourcesForK8sAgentUpgrade(t *testing.T) {
 	Expect(e).To(BeNil())
 	templateJSON := string(fileContents)
 	var template interface{}
-	json.Unmarshal([]byte(templateJSON), &template)
+	e = json.Unmarshal([]byte(templateJSON), &template)
+	Expect(e).NotTo(HaveOccurred())
 	templateMap := template.(map[string]interface{})
 	transformer := &Transformer{
 		Translator: &i18n.Translator{
@@ -122,7 +127,8 @@ func ValidateTemplate(templateMap map[string]interface{}, expectedFileContents [
 	prettyExpectedOutput, e := PrettyPrintArmTemplate(string(expectedFileContents))
 	Expect(e).To(BeNil())
 	if prettyOutput != prettyExpectedOutput {
-		ioutil.WriteFile(fmt.Sprintf("./transformtestfiles/%s.failure.json", testFileName), []byte(prettyOutput), 0600)
+		e = ioutil.WriteFile(fmt.Sprintf("./transformtestfiles/%s.failure.json", testFileName), []byte(prettyOutput), 0600)
+		Expect(e).NotTo(HaveOccurred())
 	}
 	Expect(prettyOutput).To(Equal(prettyExpectedOutput))
 }

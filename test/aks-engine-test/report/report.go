@@ -93,7 +93,10 @@ func makeErrorList(fileName string) logErrors {
 			// do not exit the tests
 			fmt.Printf("ERROR: %v\n", e)
 		}
-		json.Unmarshal(file, &dummy)
+		if e = json.Unmarshal(file, &dummy); e != nil {
+			// do not exit the tests
+			fmt.Printf("ERROR: %v\n", e)
+		}
 	}
 	return dummy
 }

@@ -504,7 +504,8 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			// "Pre"-delete the job in case a prior delete attempt failed, for long-running cluster scenarios
 			j, err := job.Get("validate-dns", "default")
 			if err == nil {
-				j.Delete(deleteResourceRetries)
+				err = j.Delete(deleteResourceRetries)
+				Expect(err).NotTo(HaveOccurred())
 				// Wait a minute before proceeding to create a new job w/ the same name
 				time.Sleep(1 * time.Minute)
 			}
@@ -666,7 +667,8 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 						pods, _ := pod.GetAllByPrefix("metrics-server", "kube-system")
 						if len(pods) != 0 {
 							for _, p := range pods {
-								p.Logs()
+								err = p.Logs()
+								Expect(err).NotTo(HaveOccurred())
 							}
 						}
 						log.Println(string(out))
@@ -682,7 +684,8 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				// "Pre"-delete the hpa in case a prior delete attempt failed, for long-running cluster scenarios
 				h, err := hpa.Get(longRunningApacheDeploymentName, "default")
 				if err == nil {
-					h.Delete(deleteResourceRetries)
+					err = h.Delete(deleteResourceRetries)
+					Expect(err).NotTo(HaveOccurred())
 					// Wait a minute before proceeding to create a new hpa w/ the same name
 					time.Sleep(1 * time.Minute)
 				}
@@ -1065,7 +1068,8 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				}
 
 				By("Cleaning up after ourselves")
-				networkpolicy.DeleteNetworkPolicy(nwpolicyName, namespace)
+				err = networkpolicy.DeleteNetworkPolicy(nwpolicyName, namespace)
+				Expect(err).NotTo(HaveOccurred())
 
 				if common.IsKubernetesVersionGe(eng.ExpandedDefinition.Properties.OrchestratorProfile.OrchestratorVersion, "1.11.0") {
 					By("Applying a network policy to only allow ingress access to app: webapp, role: backend pods in development namespace from pods in any namespace with the same labels")
@@ -1090,7 +1094,8 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 					}
 
 					By("Cleaning up after ourselves")
-					networkpolicy.DeleteNetworkPolicy(nwpolicyName, namespace)
+					err = networkpolicy.DeleteNetworkPolicy(nwpolicyName, namespace)
+					Expect(err).NotTo(HaveOccurred())
 
 					By("Applying a network policy to only allow ingress access to app: webapp role:backends in development namespace from pods with label app:webapp, role: frontendProd within namespace with label purpose: development")
 					nwpolicyName, namespace = "backend-policy-allow-ingress-pod-namespace-label", nsDev
@@ -1114,7 +1119,8 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 					}
 
 					By("Cleaning up after ourselves")
-					networkpolicy.DeleteNetworkPolicy(nwpolicyName, namespace)
+					err = networkpolicy.DeleteNetworkPolicy(nwpolicyName, namespace)
+					Expect(err).NotTo(HaveOccurred())
 				}
 
 				By("Cleaning up after ourselves")

@@ -102,7 +102,9 @@ func TestWriteTLSArtifacts(t *testing.T) {
 			TokenAudience:                "tokenAudience",
 		},
 	}
-	csCustom.SetPropertiesDefaults(false, false)
+	if _, err = csCustom.SetPropertiesDefaults(false, false); err != nil {
+		t.Fatalf("failed to set default properties: err - %s", err)
+	}
 	err = writer.WriteTLSArtifacts(csCustom, "vlabs", "fake template", "fake parameters", "", true, false)
 	if err != nil {
 		t.Fatalf("unexpected error trying to write TLS artifacts: %s", err.Error())

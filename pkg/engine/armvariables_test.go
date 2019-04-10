@@ -52,7 +52,9 @@ func TestK8sVars(t *testing.T) {
 		},
 	}
 
-	cs.SetPropertiesDefaults(false, false)
+	if _, err := cs.SetPropertiesDefaults(false, false); err != nil {
+		t.Fatal(err)
+	}
 
 	varMap, err := GetKubernetesVariables(cs)
 	if err != nil {
@@ -418,7 +420,9 @@ func TestK8sVars(t *testing.T) {
 		},
 	}
 
-	cs.SetPropertiesDefaults(false, false)
+	if _, err = cs.SetPropertiesDefaults(false, false); err != nil {
+		t.Fatal(err)
+	}
 
 	varMap, err = GetKubernetesVariables(cs)
 	if err != nil {
@@ -582,7 +586,9 @@ func TestK8sVarsMastersOnly(t *testing.T) {
 		},
 	}
 
-	cs.SetPropertiesDefaults(false, false)
+	if _, err := cs.SetPropertiesDefaults(false, false); err != nil {
+		t.Fatal(err)
+	}
 
 	varMap, err := GetKubernetesVariables(cs)
 	if err != nil {

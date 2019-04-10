@@ -122,7 +122,7 @@ func (pvc *PersistentVolumeClaims) WaitOnReady(namespace string, sleep, duration
 				if query != nil && query.Status.Phase == "Bound" {
 					readyCh <- true
 				} else {
-					Describe(pvc.Metadata.Name, namespace)
+					_ = Describe(pvc.Metadata.Name, namespace)
 					time.Sleep(sleep)
 				}
 			}

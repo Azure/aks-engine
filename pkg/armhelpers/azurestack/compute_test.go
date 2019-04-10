@@ -37,7 +37,9 @@ func TestListVirtualMachineScaleSets(t *testing.T) {
 	}
 
 	listExpected := []azcompute.VirtualMachineScaleSet{}
-	DeepCopy(&listExpected, list.Value)
+	if err = DeepCopy(&listExpected, list.Value); err != nil {
+		t.Error(err)
+	}
 
 	for page, err := azureClient.ListVirtualMachineScaleSets(context.Background(), resourceGroup); page.NotDone(); err = page.Next() {
 		if err != nil {
@@ -73,7 +75,9 @@ func TestListVirtualMachineScaleSetVMs(t *testing.T) {
 	}
 
 	listExpected := []azcompute.VirtualMachineScaleSetVM{}
-	DeepCopy(&listExpected, list.Value)
+	if err = DeepCopy(&listExpected, list.Value); err != nil {
+		t.Error(err)
+	}
 
 	for page, err := azureClient.ListVirtualMachineScaleSetVMs(context.Background(), resourceGroup, virtualMachineScaleSetName); page.NotDone(); err = page.Next() {
 		if err != nil {
@@ -108,7 +112,9 @@ func TestListVirtualMachines(t *testing.T) {
 	}
 
 	listExpected := []azcompute.VirtualMachine{}
-	DeepCopy(&listExpected, list.Value)
+	if err = DeepCopy(&listExpected, list.Value); err != nil {
+		t.Error(err)
+	}
 
 	for page, err := azureClient.ListVirtualMachines(context.Background(), resourceGroup); page.NotDone(); err = page.Next() {
 		if err != nil {
@@ -144,7 +150,9 @@ func TestGetVirtualMachine(t *testing.T) {
 	}
 
 	vmExpected := azcompute.VirtualMachine{}
-	DeepCopy(&vmExpected, vm)
+	if err = DeepCopy(&vmExpected, vm); err != nil {
+		t.Error(err)
+	}
 	vmActual, err := azureClient.GetVirtualMachine(context.Background(), resourceGroup, virtualMachineName)
 	if err != nil {
 		t.Error(err)

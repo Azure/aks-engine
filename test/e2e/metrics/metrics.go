@@ -185,6 +185,8 @@ func (p *Point) Write() {
 			log.Printf("Error trying to create metric point:%s\n", err)
 		}
 		bp.AddPoint(pt)
-		c.Write(bp)
+		if err := c.Write(bp); err != nil {
+			log.Printf("Error trying to write batch points:%s\n", err)
+		}
 	}
 }

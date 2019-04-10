@@ -93,9 +93,13 @@ func main() {
 		if provision || cfg.ForceDeploy {
 			log.Printf("Soak cluster %s does not exist or has expired\n", rg)
 			log.Printf("Deleting Resource Group:%s\n", rg)
-			acct.DeleteGroup(rg, true)
+			if err = acct.DeleteGroup(rg, true); err != nil {
+				log.Fatalf("Unexpected error deleting Resource Group: %s", err)
+			}
 			log.Printf("Deleting Storage files:%s\n", rg)
-			sa.DeleteFiles(cfg.SoakClusterName)
+			if err = sa.DeleteFiles(cfg.SoakClusterName); err != nil {
+				log.Fatalf("Unexpected error deleting Storage files: %s", err)
+			}
 			cfg.Name = ""
 		} else {
 			log.Printf("Soak cluster %s exists, downloading output files from storage...\n", rg)
@@ -103,12 +107,18 @@ func main() {
 			if err != nil {
 				log.Printf("Error while trying to download _output dir: %s, will provision a new cluster.\n", err)
 				log.Printf("Deleting Resource Group:%s\n", rg)
-				acct.DeleteGroup(rg, true)
+				if err = acct.DeleteGroup(rg, true); err != nil {
+					log.Fatalf("Unexpected error deleting Resource Group: %s", err)
+				}
 				log.Printf("Deleting Storage files:%s\n", rg)
-				sa.DeleteFiles(cfg.SoakClusterName)
+				if err = sa.DeleteFiles(cfg.SoakClusterName); err != nil {
+					log.Fatalf("Unexpected error deleting Storage files: %s", err)
+				}
 				cfg.Name = ""
 			} else {
-				cfg.SetSSHKeyPermissions()
+				if err = cfg.SetSSHKeyPermissions(); err != nil {
+					log.Fatalf("Unexpected error setting SSH key permissions: %s", err)
+				}
 			}
 		}
 	}
@@ -221,7 +231,9 @@ func teardown() {
 	if cfg.CleanUpOnExit {
 		for _, rg := range rgs {
 			log.Printf("Deleting Group:%s\n", rg)
-			acct.DeleteGroup(rg, false)
+			if err := acct.DeleteGroup(rg, false); err != nil {
+				log.Printf("failed to delete group %s: %s\n", rg, err)
+			}
 		}
 	}
 }

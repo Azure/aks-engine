@@ -53,7 +53,9 @@ func NewConnection(host, port, user, keyPath string) (*Connection, error) {
 		PrivateKey: privateKey,
 	}
 
-	ag.Add(addKey)
+	if err = ag.Add(addKey); err != nil {
+		return nil, err
+	}
 	signers, err := ag.Signers()
 	if err != nil {
 		log.Println("unable to add key to agent")

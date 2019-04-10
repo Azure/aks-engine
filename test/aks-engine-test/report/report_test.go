@@ -33,7 +33,9 @@ func TestReportParse(t *testing.T) {
 	}
 
 	h := &Manager{}
-	json.Unmarshal(raw, &h)
+	if err = json.Unmarshal(raw, &h); err != nil {
+		t.Fatalf("Error unmarshalling JSON: %s", err)
+	}
 
 	if len(h.LogErrors.LogErrors) != 0 {
 		t.Fatalf("Expected LogErrors to be empty, instead it is of size %d", len(h.LogErrors.LogErrors))

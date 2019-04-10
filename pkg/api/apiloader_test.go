@@ -30,7 +30,9 @@ func TestLoadContainerServiceFromFile(t *testing.T) {
 		Properties: &Properties{OrchestratorProfile: &OrchestratorProfile{OrchestratorType: Kubernetes, OrchestratorVersion: "1.7.16"}}}
 
 	locale := gotext.NewLocale(path.Join("..", "..", "translations"), "en_US")
-	i18n.Initialize(locale)
+	if err := i18n.Initialize(locale); err != nil {
+		t.Error(err.Error())
+	}
 	apiloader := &Apiloader{
 		Translator: &i18n.Translator{
 			Locale: locale,
@@ -121,7 +123,9 @@ func TestLoadContainerServiceFromFile(t *testing.T) {
 func TestLoadContainerServiceForAgentPoolOnlyCluster(t *testing.T) {
 	var _ = Describe("create/update cluster operations", func() {
 		locale := gotext.NewLocale(path.Join("../../..", "../../..", "translations"), "en_US")
-		i18n.Initialize(locale)
+		if err := i18n.Initialize(locale); err != nil {
+			t.Error(err.Error())
+		}
 		apiloader := &Apiloader{
 			Translator: &i18n.Translator{
 				Locale: locale,
