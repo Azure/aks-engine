@@ -25,6 +25,7 @@ func (cs *ContainerService) setKubeletConfig() {
 		"--cgroups-per-qos":             "true",
 		"--kubeconfig":                  "/var/lib/kubelet/kubeconfig",
 		"--keep-terminated-pod-volumes": "false",
+		"--protect-kernel-defaults":     "true",
 	}
 
 	// Start with copy of Linux config
