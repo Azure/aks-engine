@@ -890,6 +890,14 @@ func TestIsPrivateCluster(t *testing.T) {
 			p: Properties{
 				OrchestratorProfile: &OrchestratorProfile{
 					OrchestratorType: Kubernetes,
+				},
+			},
+			expected: false,
+		},
+		{
+			p: Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					OrchestratorType: Kubernetes,
 					KubernetesConfig: &KubernetesConfig{
 						PrivateCluster: &PrivateCluster{
 							Enabled: to.BoolPtr(true),
