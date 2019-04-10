@@ -14,7 +14,7 @@ import (
 	"github.com/Azure/go-autorest/autorest/to"
 )
 
-func GetKubernetesVariables(cs *api.ContainerService) map[string]interface{} {
+func GetKubernetesVariables(cs *api.ContainerService) (map[string]interface{}, error) {
 	k8sVars := map[string]interface{}{}
 	profiles := cs.Properties.AgentPoolProfiles
 	for i := 0; i < len(profiles); i++ {
@@ -34,16 +34,19 @@ func GetKubernetesVariables(cs *api.ContainerService) map[string]interface{} {
 		}
 	}
 
-	masterVars := getK8sMasterVars(cs)
+	masterVars, err := getK8sMasterVars(cs)
+	if err != nil {
+		return k8sVars, err
+	}
 
 	for k, v := range masterVars {
 		k8sVars[k] = v
 	}
 
-	return k8sVars
+	return k8sVars, nil
 }
 
-func getK8sMasterVars(cs *api.ContainerService) map[string]interface{} {
+func getK8sMasterVars(cs *api.ContainerService) (map[string]interface{}, error) {
 
 	orchProfile := cs.Properties.OrchestratorProfile
 	kubernetesConfig := orchProfile.KubernetesConfig
@@ -137,7 +140,12 @@ func getK8sMasterVars(cs *api.ContainerService) map[string]interface{} {
 		masterVars["apiVersionStorage"] = "2017-10-01"
 		masterVars["apiVersionNetwork"] = "2017-10-01"
 		masterVars["apiVersionKeyVault"] = "2016-10-01"
-		masterVars["environmentJSON"] = cs.Properties.GetCustomEnvironmentJSON(false)
+
+		environmentJSON, err := cs.Properties.GetCustomEnvironmentJSON(false)
+		if err != nil {
+			return masterVars, err
+		}
+		masterVars["environmentJSON"] = environmentJSON
 		masterVars["provisionConfigsCustomCloud"] = GetKubernetesB64ConfigsCustomCloud()
 	}
 
@@ -440,7 +448,7 @@ func getK8sMasterVars(cs *api.ContainerService) map[string]interface{} {
 		masterVars["clusterKeyVaultName"] = ""
 	}
 
-	return masterVars
+	return masterVars, nil
 }
 
 func getK8sAgentVars(cs *api.ContainerService, profile *api.AgentPoolProfile) map[string]interface{} {

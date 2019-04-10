@@ -9,7 +9,10 @@ import (
 )
 
 func TestDeleteManagedDisk(t *testing.T) {
-	mc := NewHTTPMockClient()
+	mc, err := NewHTTPMockClient()
+	if err != nil {
+		t.Fatalf("failed to create HttpMockClient - %s", err)
+	}
 	mc.Activate()
 	defer mc.DeactivateAndReset()
 	mc.RegisterLogin()

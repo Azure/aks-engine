@@ -3294,7 +3294,10 @@ func TestGetCustomEnvironmentJSON(t *testing.T) {
 		},
 	}
 	for _, testcase := range testcases {
-		actual := testcase.properties.GetCustomEnvironmentJSON(testcase.escape)
+		actual, err := testcase.properties.GetCustomEnvironmentJSON(testcase.escape)
+		if err != nil {
+			t.Error(err)
+		}
 		if testcase.expected != actual {
 			t.Errorf("Test \"%s\": expected GetCustomEnvironmentJSON() to return %s, but got %s . ", testcase.name, testcase.expected, actual)
 		}

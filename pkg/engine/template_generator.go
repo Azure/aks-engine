@@ -309,7 +309,7 @@ func (t *TemplateGenerator) getTemplateFuncMap(cs *api.ContainerService) templat
 		"IsAzureStackCloud": func() bool {
 			return cs.Properties.IsAzureStackCloud()
 		},
-		"GetCustomEnvironmentJSON": func() string {
+		"GetCustomEnvironmentJSON": func() (string, error) {
 			return cs.Properties.GetCustomEnvironmentJSON(true)
 		},
 		"GetCustomCloudAuthenticationMethod": func() string {
@@ -1138,7 +1138,10 @@ func (t *TemplateGenerator) GenerateTemplateV2(containerService *api.ContainerSe
 
 	armParams, _ := t.getParameterDescMap(containerService)
 	armResources := GenerateARMResources(containerService)
-	armVariables := GetKubernetesVariables(containerService)
+	armVariables, err := GetKubernetesVariables(containerService)
+	if err != nil {
+		return "", "", err
+	}
 	armOutputs := GetKubernetesOutputs(containerService)
 
 	armTemplate := ARMTemplate{

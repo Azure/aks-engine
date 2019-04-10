@@ -5,7 +5,7 @@ package azurestack
 
 import (
 	"context"
-	"log"
+	"fmt"
 
 	"github.com/Azure/aks-engine/pkg/armhelpers"
 	"github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2017-03-30/compute"
@@ -27,11 +27,11 @@ func (az *AzureClient) GetVirtualMachine(ctx context.Context, resourceGroup, nam
 	vm, err := az.virtualMachinesClient.Get(ctx, resourceGroup, name, "")
 	azVM := azcompute.VirtualMachine{}
 	if err != nil {
-		log.Fatalf("fail to get virtual machine, %v", err)
+		return azVM, fmt.Errorf("fail to get virtual machine, %s", err)
 	}
 	err = DeepCopy(&azVM, vm)
 	if err != nil {
-		log.Fatalf("fail to convert virtual machine, %v", err)
+		return azVM, fmt.Errorf("fail to convert virtual machine, %s", err)
 	}
 	return azVM, err
 }

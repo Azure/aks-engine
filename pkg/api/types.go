@@ -7,7 +7,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"hash/fnv"
-	"log"
 	"math/rand"
 	"net"
 	neturl "net/url"
@@ -1508,19 +1507,19 @@ func (p *Properties) IsAzureStackCloud() bool {
 }
 
 // GetCustomEnvironmentJSON return the JSON format string for custom environment
-func (p *Properties) GetCustomEnvironmentJSON(escape bool) string {
+func (p *Properties) GetCustomEnvironmentJSON(escape bool) (string, error) {
 	var environmentJSON string
 	if p.IsAzureStackCloud() {
 		bytes, err := json.Marshal(p.CustomCloudProfile.Environment)
 		if err != nil {
-			log.Fatalf("Could not serialize Environment object - %s", err.Error())
+			return "", fmt.Errorf("Could not serialize Environment object - %s", err.Error())
 		}
 		environmentJSON = string(bytes)
 		if escape {
 			environmentJSON = strings.Replace(environmentJSON, "\"", "\\\"", -1)
 		}
 	}
-	return environmentJSON
+	return environmentJSON, nil
 }
 
 // GetCustomCloudName returns name of environment if customCloudProfile is provided, returns empty string if customCloudProfile is empty.
