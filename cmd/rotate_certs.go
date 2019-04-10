@@ -93,7 +93,7 @@ func (rcc *rotateCertsCmd) run(cmd *cobra.Command, args []string) error {
 		return errors.Wrap(err, "failed to get validate auth args")
 	}
 
-	if rcc.client, err = rcc.getAuthArgs().getClient(); err != nil {
+	if rcc.client, err = rcc.authProvider.getClient(); err != nil {
 		return errors.Wrap(err, "failed to get client")
 	}
 

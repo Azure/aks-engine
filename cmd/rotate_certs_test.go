@@ -11,8 +11,10 @@ import (
 	"github.com/Azure/aks-engine/pkg/api"
 	"github.com/Azure/aks-engine/pkg/armhelpers"
 	"github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2018-10-01/compute"
+	"github.com/gofrs/uuid"
 	. "github.com/onsi/gomega"
 	"github.com/pkg/errors"
+	"github.com/spf13/cobra"
 	"golang.org/x/crypto/ssh"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -36,6 +38,55 @@ func TestNewRotateCertsCmd(t *testing.T) {
 		if output.Flags().Lookup(f) == nil {
 			t.Fatalf("rotate-certs command should have flag %s", f)
 		}
+	}
+}
+
+func TestRotateCertsCmdRun(t *testing.T) {
+	rcc := &rotateCertsCmd{
+		client: &armhelpers.MockAKSEngineClient{},
+		authProvider: &mockAuthProvider{
+			authArgs:      &authArgs{},
+			getClientMock: &armhelpers.MockAKSEngineClient{},
+		},
+		apiModelPath:       "../pkg/engine/testdata/key-vault-certs/kubernetes.json",
+		outputDirectory:    "_test_output",
+		location:           "westus",
+		sshFilepath:        "_test_ssh",
+		sshCommandExecuter: mockExecuteCmd,
+		masterFQDN:         "valid",
+	}
+
+	r := &cobra.Command{}
+	f := r.Flags()
+
+	addAuthFlags(rcc.getAuthArgs(), f)
+
+	_, err := os.Create(rcc.sshFilepath)
+	if err != nil {
+		t.Fatalf("unable to create test sshFilepath: %s", err.Error())
+	}
+	defer os.Remove(rcc.sshFilepath)
+	defer os.Remove(rcc.outputDirectory)
+
+	fakeRawSubscriptionID := "6dc93fae-9a76-421f-bbe5-cc6460ea81cb"
+	fakeSubscriptionID, err := uuid.FromString(fakeRawSubscriptionID)
+	fakeClientID := "b829b379-ca1f-4f1d-91a2-0d26b244680d"
+	fakeClientSecret := "0se43bie-3zs5-303e-aav5-dcf231vb82ds"
+	if err != nil {
+		t.Fatalf("Invalid SubscriptionId in Test: %s", err)
+	}
+
+	rcc.getAuthArgs().SubscriptionID = fakeSubscriptionID
+	rcc.getAuthArgs().rawSubscriptionID = fakeRawSubscriptionID
+	rcc.getAuthArgs().rawClientID = fakeClientID
+	rcc.getAuthArgs().ClientSecret = fakeClientSecret
+	if err != nil {
+		t.Fatalf("Invalid SubscriptionId in Test: %s", err)
+	}
+
+	err = rcc.run(r, []string{})
+	if err != nil {
+		t.Fatalf("Failed to run rotate-certs command: %s", err)
 	}
 }
 
@@ -201,7 +252,7 @@ func TestWriteArtifacts(t *testing.T) {
 		authProvider:     &authArgs{},
 		containerService: cs,
 		apiVersion:       "vlabs",
-		outputDirectory:  "test_output",
+		outputDirectory:  "_test_output",
 	}
 	defer os.RemoveAll(rcc.outputDirectory)
 	err := rcc.writeArtifacts()

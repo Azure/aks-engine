@@ -9,11 +9,29 @@ import (
 	"testing"
 
 	"github.com/Azure/aks-engine/pkg/api"
+	"github.com/Azure/aks-engine/pkg/armhelpers"
 	"github.com/Azure/go-autorest/autorest/azure"
 	"github.com/gofrs/uuid"
 	"github.com/spf13/cobra"
 	ini "gopkg.in/ini.v1"
 )
+
+//mockAuthProvider implements AuthProvider and allows in particular to stub out getClient()
+type mockAuthProvider struct {
+	getClientMock armhelpers.AKSEngineClient
+	*authArgs
+}
+
+func (provider *mockAuthProvider) getClient() (armhelpers.AKSEngineClient, error) {
+	if provider.getClientMock == nil {
+		return &armhelpers.MockAKSEngineClient{}, nil
+	}
+	return provider.getClientMock, nil
+
+}
+func (provider *mockAuthProvider) getAuthArgs() *authArgs {
+	return provider.authArgs
+}
 
 func TestNewRootCmd(t *testing.T) {
 	command := NewRootCmd()
