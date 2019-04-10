@@ -464,3 +464,42 @@ func TestUbuntu1804Flags(t *testing.T) {
 			ka["--resolv-conf"], "\"\"\"\"")
 	}
 }
+
+func TestKubeletConfigDefaultFeatureGates(t *testing.T) {
+	// test 1.7
+	cs := CreateMockContainerService("testcluster", "1.7.12", 3, 2, false)
+	cs.setKubeletConfig()
+	k := cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig
+	if k["--feature-gates"] != "" {
+		t.Fatalf("got unexpected '--feature-gates' kubelet config value for \"--feature-gates\": \"\": %s",
+			k["--feature-gates"])
+	}
+
+	// test 1.8
+	cs = CreateMockContainerService("testcluster", "1.8.15", 3, 2, false)
+	cs.setKubeletConfig()
+	k = cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig
+	if k["--feature-gates"] != "PodPriority=true" {
+		t.Fatalf("got unexpected '--feature-gates' kubelet config value for \"--feature-gates\": \"\": %s",
+			k["--feature-gates"])
+	}
+
+	// test 1.14
+	cs = CreateMockContainerService("testcluster", "1.14.1", 3, 2, false)
+	cs.setKubeletConfig()
+	k = cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig
+	if k["--feature-gates"] != "PodPriority=true" {
+		t.Fatalf("got unexpected '--feature-gates' kubelet config value for \"--feature-gates\": \"\": %s",
+			k["--feature-gates"])
+	}
+
+	// test user-overrides
+	cs = CreateMockContainerService("testcluster", "1.14.1", 3, 2, false)
+	k = cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig
+	k["--feature-gates"] = "DynamicKubeletConfig=true"
+	cs.setKubeletConfig()
+	if k["--feature-gates"] != "DynamicKubeletConfig=true,PodPriority=true" {
+		t.Fatalf("got unexpected '--feature-gates' kubelet config value for \"--feature-gates\": \"\": %s",
+			k["--feature-gates"])
+	}
+}
