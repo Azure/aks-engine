@@ -112,33 +112,20 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			}
 		})
 
-		It("should display the installed docker runtime on the master node", func() {
+		It("should display the installed docker runtime on all nodes", func() {
 			if eng.ExpandedDefinition.Properties.OrchestratorProfile.KubernetesConfig.RequiresDocker() {
+				err := util.AddToSSHKeyChain(masterSSHPrivateKeyFilepath)
+				Expect(err).NotTo(HaveOccurred())
 				kubeConfig, err := GetConfig()
 				Expect(err).NotTo(HaveOccurred())
 				master := fmt.Sprintf("azureuser@%s", kubeConfig.GetServerName())
-
-				cmd := exec.Command("ssh-add", "-D")
-				util.PrintCommand(cmd)
-				out, err := cmd.CombinedOutput()
-				log.Printf("%s\n", out)
-				if err != nil {
-					log.Printf("Error while cleaning ssh agent keychain: %s\n", err)
-				}
-				cmd = exec.Command("ssh-add", masterSSHPrivateKeyFilepath)
-				util.PrintCommand(cmd)
-				out, err = cmd.CombinedOutput()
-				log.Printf("%s\n", out)
-				if err != nil {
-					log.Printf("Error while adding private key to ssh agent keychain for forwarding: %s\n", err)
-				}
 				nodeList, err := node.Get()
 				Expect(err).NotTo(HaveOccurred())
 				dockerVersionCmd := fmt.Sprintf("\"docker version\"")
 				for _, node := range nodeList.Nodes {
-					cmd = exec.Command("ssh", "-A", "-i", masterSSHPrivateKeyFilepath, "-p", masterSSHPort, "-o", "ConnectTimeout=10", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", master, "ssh", "-o", "ConnectTimeout=10", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", node.Metadata.Name, dockerVersionCmd)
+					cmd := exec.Command("ssh", "-A", "-i", masterSSHPrivateKeyFilepath, "-p", masterSSHPort, "-o", "ConnectTimeout=10", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", master, "ssh", "-o", "ConnectTimeout=10", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", node.Metadata.Name, dockerVersionCmd)
 					util.PrintCommand(cmd)
-					out, err = cmd.CombinedOutput()
+					out, err := cmd.CombinedOutput()
 					log.Printf("%s\n", out)
 					if err != nil {
 						log.Printf("Error while getting docker version on node %s: %s\n", node.Metadata.Name, err)
@@ -146,6 +133,30 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				}
 			} else {
 				Skip("Skip docker validations on non-docker-backed clusters")
+			}
+		})
+
+		It("should validate that every linux node has a root password", func() {
+			// TODO enable Windows checks on a per-node basis
+			if !eng.HasWindowsAgents() {
+				err := util.AddToSSHKeyChain(masterSSHPrivateKeyFilepath)
+				Expect(err).NotTo(HaveOccurred())
+				kubeConfig, err := GetConfig()
+				Expect(err).NotTo(HaveOccurred())
+				master := fmt.Sprintf("azureuser@%s", kubeConfig.GetServerName())
+				nodeList, err := node.Get()
+				Expect(err).NotTo(HaveOccurred())
+				rootPasswdCmd := fmt.Sprintf("\"sudo grep '^root:[!*]:' /etc/shadow\"")
+				for _, node := range nodeList.Nodes {
+					cmd := exec.Command("ssh", "-A", "-i", masterSSHPrivateKeyFilepath, "-p", masterSSHPort, "-o", "ConnectTimeout=10", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", master, "ssh", "-o", "ConnectTimeout=10", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", node.Metadata.Name, rootPasswdCmd)
+					util.PrintCommand(cmd)
+					out, err := cmd.CombinedOutput()
+					log.Printf("%s\n", out)
+					if err == nil {
+						log.Printf("Error while validating root password on node %s\n", node.Metadata.Name)
+					}
+					Expect(err).To(HaveOccurred())
+				}
 			}
 		})
 
