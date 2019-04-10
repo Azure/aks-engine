@@ -910,7 +910,7 @@ func TestIsPrivateCluster(t *testing.T) {
 					},
 				},
 			},
-			expected: true,
+			expected: false,
 		},
 		{
 			p: Properties{
