@@ -41,12 +41,7 @@ func createKubernetesMasterResourcesVMAS(cs *api.ContainerService) []interface{}
 
 	kubernetesConfig := cs.Properties.OrchestratorProfile.KubernetesConfig
 
-	var isPrivateCluster bool
-	if kubernetesConfig != nil && kubernetesConfig.PrivateCluster != nil {
-		isPrivateCluster = to.Bool(kubernetesConfig.PrivateCluster.Enabled)
-	}
-
-	if !isPrivateCluster {
+	if !cs.Properties.OrchestratorProfile.IsPrivateCluster() {
 		publicIPAddress := CreatePublicIPAddress()
 		loadBalancer := CreateLoadBalancer(cs.Properties.MasterProfile.Count, false)
 		masterNic := CreateNetworkInterfaces(cs)

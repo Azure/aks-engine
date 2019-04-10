@@ -873,6 +873,65 @@ func TestRequireRouteTable(t *testing.T) {
 	}
 }
 
+func TestIsPrivateCluster(t *testing.T) {
+	cases := []struct {
+		p        Properties
+		expected bool
+	}{
+		{
+			p: Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					OrchestratorType: DCOS,
+				},
+			},
+			expected: false,
+		},
+		{
+			p: Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					OrchestratorType: Kubernetes,
+					KubernetesConfig: &KubernetesConfig{
+						PrivateCluster: &PrivateCluster{
+							Enabled: to.BoolPtr(true),
+						},
+					},
+				},
+			},
+			expected: true,
+		},
+		{
+			p: Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					OrchestratorType: Kubernetes,
+					KubernetesConfig: &KubernetesConfig{
+						PrivateCluster: &PrivateCluster{
+							Enabled: to.BoolPtr(false),
+						},
+					},
+				},
+			},
+			expected: true,
+		},
+		{
+			p: Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					OrchestratorType: Kubernetes,
+					KubernetesConfig: &KubernetesConfig{
+						PrivateCluster: &PrivateCluster{},
+					},
+				},
+			},
+			expected: false,
+		},
+	}
+
+	for _, c := range cases {
+		if c.p.OrchestratorProfile.IsPrivateCluster() != c.expected {
+			t.Fatalf("expected IsPrivateCluster() to return %t but instead got %t", c.expected, c.p.OrchestratorProfile.IsPrivateCluster())
+		}
+	}
+}
+
 func TestIsAzureCNI(t *testing.T) {
 	k := &KubernetesConfig{
 		NetworkPlugin: NetworkPluginAzure,
