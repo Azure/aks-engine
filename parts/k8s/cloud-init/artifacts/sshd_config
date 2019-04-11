@@ -1,6 +1,3 @@
-# Package generated configuration file
-# See the sshd_config(5) manpage for details
-
 # What ports, IPs and protocols we listen for
 Port 22
 # Use these options to restrict which interfaces/protocols sshd will bind to
@@ -8,10 +5,10 @@ Port 22
 #ListenAddress 0.0.0.0
 Protocol 2
 
-# 5.2.11 Ensure only approved MAC algorithms are used (Scored)
+# 5.2.11 Ensure only approved MAC algorithms are used
 MACs hmac-sha2-512-etm@openssh.com,hmac-sha2-256-etm@openssh.com,umac-128-etm@openssh.com,hmac-sha2-512,hmac-sha2-256,umac-128@openssh.com
 
-# 5.2.12 Ensure SSH Idle Timeout Interval is configured (Scored)
+# 5.2.12 Ensure SSH Idle Timeout Interval is configured
 ClientAliveInterval 300
 ClientAliveCountMax 3
 
@@ -34,9 +31,9 @@ LogLevel INFO
 # Authentication:
 LoginGraceTime 60
 
-# 5.2.8 Ensure SSH root login is disabled (Scored)
+# 5.2.8 Ensure SSH root login is disabled
 PermitRootLogin no
-# 5.2.10 Ensure SSH PermitUserEnvironment is disabled (Scored)
+# 5.2.10 Ensure SSH PermitUserEnvironment is disabled
 PermitUserEnvironment no
 
 StrictModes yes
@@ -73,10 +70,10 @@ ChallengeResponseAuthentication no
 #GSSAPIAuthentication no
 #GSSAPICleanupCredentials yes
 
-# 5.2.4 Ensure SSH X11 forwarding is disabled (Scored)
+# 5.2.4 Ensure SSH X11 forwarding is disabled
 X11Forwarding no
 
-# 5.2.5 Ensure SSH MaxAuthTries is set to 4 or less (Scored)
+# 5.2.5 Ensure SSH MaxAuthTries is set to 4 or less
 MaxAuthTries 4
 
 X11DisplayOffset 10
