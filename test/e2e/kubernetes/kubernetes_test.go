@@ -151,8 +151,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 		})
 
 		It("should validate that every linux node has a root password", func() {
-			// TODO enable Windows checks on a per-node basis
-			if eng.ExpandedDefinition.Properties.IsUbuntuDistroForAllAgentPools() {
+			if eng.ExpandedDefinition.Properties.IsUbuntuDistroForAllNodes() {
 				kubeConfig, err := GetConfig()
 				Expect(err).NotTo(HaveOccurred())
 				master := fmt.Sprintf("azureuser@%s", kubeConfig.GetServerName())

@@ -780,6 +780,15 @@ func TestHasUbuntuDistro(t *testing.T) {
 			p: Properties{
 				MasterProfile: &MasterProfile{
 					Count:  1,
+					Distro: Ubuntu1804,
+				},
+			},
+			expected: true,
+		},
+		{
+			p: Properties{
+				MasterProfile: &MasterProfile{
+					Count:  1,
 					Distro: Ubuntu,
 				},
 				AgentPoolProfiles: []*AgentPoolProfile{
@@ -790,6 +799,40 @@ func TestHasUbuntuDistro(t *testing.T) {
 					{
 						Count:  1,
 						Distro: Ubuntu,
+					},
+				},
+			},
+			expected: true,
+		},
+		{
+			p: Properties{
+				MasterProfile: &MasterProfile{
+					Count:  1,
+					Distro: Ubuntu1804,
+				},
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						Count:  1,
+						Distro: Ubuntu,
+					},
+					{
+						Count:  1,
+						Distro: Ubuntu1804,
+					},
+				},
+			},
+			expected: true,
+		},
+		{
+			p: Properties{
+				MasterProfile: &MasterProfile{
+					Count:  1,
+					Distro: Ubuntu1804,
+				},
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						Count:  1,
+						Distro: Ubuntu1804,
 					},
 				},
 			},
@@ -810,11 +853,26 @@ func TestHasUbuntuDistro(t *testing.T) {
 			},
 			expected: false,
 		},
+		{
+			p: Properties{
+				MasterProfile: &MasterProfile{
+					Count:  1,
+					Distro: Ubuntu1804,
+				},
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						Count:  1,
+						OSType: Windows,
+					},
+				},
+			},
+			expected: false,
+		},
 	}
 
 	for _, c := range cases {
-		if c.p.IsUbuntuDistroForAllAgentPools() != c.expected {
-			t.Fatalf("expected IsUbuntuDistroForAllAgentPools() to return %t but instead returned %t", c.expected, c.p.IsUbuntuDistroForAllAgentPools())
+		if c.p.IsUbuntuDistroForAllNodes() != c.expected {
+			t.Fatalf("expected IsUbuntuDistroForAllNodes() to return %t but instead returned %t", c.expected, c.p.IsUbuntuDistroForAllNodes())
 		}
 	}
 }
