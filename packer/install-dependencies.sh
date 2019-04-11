@@ -5,7 +5,7 @@ source /home/packer/cis.sh
 
 RELEASE_NOTES_FILEPATH=/var/log/azure/golden-image-install.complete
 
-echo "Starting build on " `date` > ${RELEASE_NOTES_FILEPATH}
+echo "Starting build on " $(date) > ${RELEASE_NOTES_FILEPATH}
 echo "Using kernel:" >> ${RELEASE_NOTES_FILEPATH}
 cat /proc/version | tee -a ${RELEASE_NOTES_FILEPATH}
 
@@ -387,7 +387,7 @@ df -h
 [ -s $(df -P | grep '/dev/sda1' | awk '0+$5 >= 90 {print}') ] || exit 1
 
 {
-  echo "Install completed successfully on " `date`
+  echo "Install completed successfully on " $(date)
   echo "VSTS Build NUMBER: ${BUILD_NUMBER}"
   echo "VSTS Build ID: ${BUILD_ID}"
   echo "Commit: ${COMMIT}"

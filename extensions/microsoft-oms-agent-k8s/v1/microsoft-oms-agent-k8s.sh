@@ -6,7 +6,7 @@ set -e
 parameters=$(echo $1 | base64 -d -)
 
 log() {
-  echo "`date +'[%Y-%m-%d %H:%M:%S:%N %Z]'` $1"
+  echo "$(date +'[%Y-%m-%d %H:%M:%S:%N %Z]') $1"
 }
 
 get_param() {
@@ -58,8 +58,8 @@ metadata:
   name: omsagent-secret
 type: Opaque
 data:
-  wsid: `echo $wsid | base64 -w0`
-  key: `echo $key | base64 -w0`
+  wsid: $(echo $wsid | base64 -w0)
+  key: $(echo $key | base64 -w0)
 EOFSECRET
 
   log 'done'

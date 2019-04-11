@@ -68,7 +68,7 @@ installGPUDrivers() {
 
 installSGXDrivers() {
     echo "Installing SGX driver"
-    local VERSION=`grep DISTRIB_RELEASE /etc/*-release| cut -f 2 -d "="`
+    local VERSION=$(grep DISTRIB_RELEASE /etc/*-release| cut -f 2 -d "=")
     case $VERSION in
     "18.04")
         SGX_DRIVER_URL="https://download.01.org/intel-sgx/dcap-1.0.1/dcap_installer/ubuntuServer1804/sgx_linux_x64_driver_dcap_4f32b98.bin"
