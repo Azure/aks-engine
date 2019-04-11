@@ -46,7 +46,7 @@ write_files:
 {{end}}
 
 - path: /etc/ssh/sshd_config
-  permissions: "0644"
+  permissions: "0600"
   encoding: gzip
   owner: root
   content: !!binary |
