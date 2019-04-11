@@ -2241,6 +2241,15 @@ func TestGetPrimaryScaleSetName(t *testing.T) {
 	if got != expected {
 		t.Errorf("expected primary availability set name %s, but got %s", expected, got)
 	}
+
+	// Test with Windows agentpool
+	p.AgentPoolProfiles[0].OSType = "Windows"
+
+	expected = "2851k8s00"
+	got = p.GetPrimaryScaleSetName()
+	if got != expected {
+		t.Errorf("expected primary availability set name %s, but got %s", expected, got)
+	}
 }
 
 func TestGetRouteTableName(t *testing.T) {

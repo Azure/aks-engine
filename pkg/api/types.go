@@ -903,7 +903,7 @@ func (p *Properties) GetPrimaryAvailabilitySetName() string {
 
 // GetPrimaryScaleSetName returns the name of the primary scale set node of the cluster
 func (p *Properties) GetPrimaryScaleSetName() string {
-	return p.K8sOrchestratorName() + "-" + p.AgentPoolProfiles[0].Name + "-" + p.GetClusterID() + "-vmss"
+	return p.GetAgentVMPrefix(p.AgentPoolProfiles[0])
 }
 
 // IsHostedMasterProfile returns true if the cluster has a hosted master
