@@ -25,7 +25,7 @@ test-kubernetes-with-container:
 	${TEST_CMD} -e ORCHESTRATOR=kubernetes ${DEV_ENV_IMAGE} test/e2e/runner
 
 test-kubernetes:
-	@ORCHESTRATOR=kubernetes go run ./test/e2e/runner.go
+	@ORCHESTRATOR=kubernetes bash -c 'pgrep ssh-agent || eval `ssh-agent` && go run ./test/e2e/runner.go'
 
 test-dcos:
 	@ORCHESTRATOR=dcos go run ./test/e2e/runner.go
