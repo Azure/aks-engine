@@ -1,3 +1,4 @@
+#!/bin/bash
 
 function log {
   local message="$1"
