@@ -159,6 +159,8 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 					log.Printf("%s\n", out)
 					Expect(err).To(HaveOccurred())
 				}
+			} else {
+				Skip("root password validation only works on ubuntu distro until this lands in a VHD")
 			}
 		})
 
