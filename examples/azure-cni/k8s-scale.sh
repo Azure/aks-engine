@@ -8,7 +8,7 @@ if [ -e "${ENV_FILE}" ]; then
   source "${ENV_FILE}"
 fi
 
-[[ ! -z "${NEW_AGENT_NODE_COUNT:-}" ]] || (echo "Must specify NEW_AGENT_NODE_COUNT" && exit 1)
+[[ -n "${NEW_AGENT_NODE_COUNT:-}" ]] || (echo "Must specify NEW_AGENT_NODE_COUNT" && exit 1)
 
 APIMODEL="_output/${INSTANCE_NAME}/apimodel.json"
 

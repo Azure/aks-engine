@@ -20,7 +20,7 @@ case "$OSTYPE" in
 esac
 
 # Attempt to load the server version from cache
-if [ ! -z "$KUBECONFIG" ]; then
+if [ -n "$KUBECONFIG" ]; then
   if [ "$OS" == "darwin" ]; then
     KUBECONFIG_HASH=$(echo "$KUBECONFIG" | shasum -a 256 | cut -c1-5)
   else
@@ -41,7 +41,7 @@ if [ "$TARGET_VERSION" == "null" ]; then
 fi
 
 # Fill the cache if possible
-if [ ! -z "$KUBECONFIG" ]; then
+if [ -n "$KUBECONFIG" ]; then
   echo "$TARGET_VERSION" > "$VERSION_CACHE_FILE"
 fi
 
