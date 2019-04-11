@@ -327,7 +327,6 @@ func getK8sMasterVars(cs *api.ContainerService) (map[string]interface{}, error) 
 	}
 
 	if cs.Properties.AnyAgentUsesVirtualMachineScaleSets() {
-		masterVars["primaryScaleSetName"] = cs.Properties.GetPrimaryScaleSetName()
 		masterVars["primaryAvailabilitySetName"] = ""
 		masterVars["vmType"] = "vmss"
 	} else {
@@ -336,9 +335,9 @@ func getK8sMasterVars(cs *api.ContainerService) (map[string]interface{}, error) 
 		} else {
 			masterVars["primaryAvailabilitySetName"] = ""
 		}
-		masterVars["primaryScaleSetName"] = ""
 		masterVars["vmType"] = "standard"
 	}
+	masterVars["primaryScaleSetName"] = cs.Properties.GetPrimaryScaleSetName()
 
 	if isHostedMaster {
 		masterVars["kubernetesAPIServerIP"] = "[parameters('kubernetesEndpoint')]"

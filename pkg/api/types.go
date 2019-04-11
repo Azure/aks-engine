@@ -899,7 +899,9 @@ func (p *Properties) GetNSGName() string {
 // GetPrimaryAvailabilitySetName returns the name of the primary availability set of the cluster
 func (p *Properties) GetPrimaryAvailabilitySetName() string {
 	if p.AgentPoolProfiles != nil {
-		return p.AgentPoolProfiles[0].Name + "-availabilitySet-" + p.GetClusterID()
+		if p.AgentPoolProfiles[0].AvailabilityProfile == AvailabilitySet {
+			return p.AgentPoolProfiles[0].Name + "-availabilitySet-" + p.GetClusterID()
+		}
 	}
 	return ""
 }
