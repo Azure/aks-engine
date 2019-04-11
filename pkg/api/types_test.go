@@ -176,7 +176,7 @@ func TestOSType(t *testing.T) {
 	}
 
 	if !p.HasCoreOS() {
-		t.Fatalf("expected HasCoreOS() to return false but instead returned true")
+		t.Fatalf("expected HasCoreOS() to return true but instead returned false")
 	}
 
 	if !p.AgentPoolProfiles[0].IsWindows() {
