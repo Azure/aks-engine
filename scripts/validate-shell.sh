@@ -12,7 +12,6 @@ files=$(find . -type f -name "*.sh" -not -path './vendor/*' -not -path "*dcos*" 
 
 IGNORED="
 SC1009
-SC1017
 SC1041
 SC1042
 SC1072
