@@ -5,7 +5,3 @@ rm -f /root/.ssh/authorized_keys
 rm -f /home/packer/.ssh/authorized_keys
 rm -f /etc/machine-id
 touch /etc/machine-id
-
-# Move logs from VHD creation out of /var/log 
-sudo mv /var/log /var/log.vhd
-sudo mkdir /var/log
