@@ -65,7 +65,11 @@ write_files:
   content: !!binary |
     {{CloudInitData "systemConf"}}
 
+{{if .MasterProfile.IsCoreOS}}
+- path: /opt/bin/health-monitor.sh
+{{else}}
 - path: /usr/local/bin/health-monitor.sh
+{{end}}
   permissions: "0544"
   encoding: gzip
   owner: root
@@ -307,7 +311,11 @@ MASTER_CONTAINER_ADDONS_PLACEHOLDER
     #!/bin/bash
     set -e
   {{if IsMasterVirtualMachineScaleSets}}
+    {{if .MasterProfile.IsCoreOS}}
     PRIVATE_IP=$(hostname -I | cut -d" " -f1)
+    {{else}}
+    PRIVATE_IP=$(hostname -i | cut -d" " -f1)
+    {{end}}
     ETCD_CLIENT_PORT={{WrapAsVariable "masterEtcdClientPort"}}
   {{end}}
 {{if gt .MasterProfile.Count 1}}
@@ -406,7 +414,11 @@ MASTER_CONTAINER_ADDONS_PLACEHOLDER
     MASTER_VM_NAME_BASE=$(hostname | sed "s/.$//")
     MASTER_FIRSTADDR={{WrapAsParameter "firstConsecutiveStaticIP"}}
     MASTER_INDEX=$(hostname | tail -c 2)
+    {{if .MasterProfile.IsCoreOS}}
     PRIVATE_IP=$(hostname -I | cut -d" " -f1)
+    {{else}}
+    PRIVATE_IP=$(hostname -i | cut -d" " -f1)
+    {{end}}
     MASTER_COUNT={{WrapAsVariable "masterCount"}}
     IPADDRESS_COUNT={{WrapAsVariable "masterIpAddressCount"}}
     echo $IPADDRESS_COUNT
@@ -460,6 +472,10 @@ MASTER_CONTAINER_ADDONS_PLACEHOLDER
   content: |
     #!/bin/bash
     source /opt/azure/containers/provision_source.sh
+    sudo /bin/sed -i "s/Description=Kubelet/Description=Kubelet\nRequires=rpc-statd.service/g" /etc/systemd/system/kubelet.service
+    echo Wants=rpc-statd.service >> /etc/systemd/system/kubelet.service
+    sudo /bin/sed -i "s/usr\/local\/bin\/kubelet/opt\/kubelet/g" /etc/systemd/system/kubelet.service
+    sudo /bin/sed -i "s/usr\/bin\/etcd/opt\/bin\/etcd/g" /etc/systemd/system/etcd.service
     /bin/echo DAEMON_ARGS=--name "{{WrapAsVerbatim "variables('masterVMNames')[copyIndex(variables('masterOffset'))]"}}" --initial-advertise-peer-urls "{{WrapAsVerbatim "variables('masterEtcdPeerURLs')[copyIndex(variables('masterOffset'))]"}}" --listen-peer-urls "{{WrapAsVerbatim "variables('masterEtcdPeerURLs')[copyIndex(variables('masterOffset'))]"}}" --advertise-client-urls "{{WrapAsVerbatim "variables('masterEtcdClientURLs')[copyIndex(variables('masterOffset'))]"}}" --listen-client-urls "{{WrapAsVerbatim "concat(variables('masterEtcdClientURLs')[copyIndex(variables('masterOffset'))], ',http://127.0.0.1:', variables('masterEtcdClientPort'))"}}" --initial-cluster-token "k8s-etcd-cluster" --initial-cluster "{{WrapAsVerbatim "variables('masterEtcdClusterStates')[div(variables('masterCount'), 2)]"}} --data-dir "/var/lib/etcddisk"" --initial-cluster-state "new" | tee -a /etc/default/etcd
     /opt/azure/containers/mountetcd.sh
     sudo /bin/chown -R etcd:etcd /var/lib/etcddisk

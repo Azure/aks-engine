@@ -1361,6 +1361,62 @@ func Test_Properties_ValidateAddons(t *testing.T) {
 			"should not error on providing valid addon.Data",
 		)
 	}
+
+	p.AgentPoolProfiles = []*AgentPoolProfile{
+		{
+			AvailabilityProfile: AvailabilitySet,
+			Distro:              CoreOS,
+		},
+	}
+
+	p.MasterProfile = &MasterProfile{
+		Distro: CoreOS,
+	}
+
+	p.OrchestratorProfile.KubernetesConfig = &KubernetesConfig{
+		Addons: []KubernetesAddon{
+			{
+				Name:    "smb-flexvolume",
+				Enabled: to.BoolPtr(true),
+			},
+		},
+	}
+
+	if err := p.validateAddons(); err == nil {
+		t.Errorf(
+			"should error using incompatible addon with coreos (smb-flexvolume)",
+		)
+	}
+
+	p.OrchestratorProfile.KubernetesConfig = &KubernetesConfig{
+		Addons: []KubernetesAddon{
+			{
+				Name:    "keyvault-flexvolume",
+				Enabled: to.BoolPtr(true),
+			},
+		},
+	}
+
+	if err := p.validateAddons(); err == nil {
+		t.Errorf(
+			"should error using incompatible addon with coreos (keyvault-flexvolume)",
+		)
+	}
+
+	p.OrchestratorProfile.KubernetesConfig = &KubernetesConfig{
+		Addons: []KubernetesAddon{
+			{
+				Name:    "blobfuse-flexvolume",
+				Enabled: to.BoolPtr(true),
+			},
+		},
+	}
+
+	if err := p.validateAddons(); err == nil {
+		t.Errorf(
+			"should error using incompatible addon with coreos (blobfuse-flexvolume)",
+		)
+	}
 }
 
 func TestWindowsVersions(t *testing.T) {

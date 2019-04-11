@@ -547,6 +547,21 @@ func (a *Properties) validateAddons() error {
 					if IsNSeriesSKU && sv.LT(minVersion) {
 						return errors.New("NVIDIA Device Plugin add-on can only be used Kubernetes 1.10 or above. Please specify \"orchestratorRelease\": \"1.10\"")
 					}
+					if a.HasCoreOS() {
+						return errors.New("NVIDIA Device Plugin add-on not currently supported on coreos. Please use node pools with Ubuntu only")
+					}
+				}
+			case "blobfuse-flexvolume":
+				if to.Bool(addon.Enabled) && a.HasCoreOS() {
+					return errors.New("flexvolume add-ons not currently supported on coreos distro. Please use Ubuntu")
+				}
+			case "smb-flexvolume":
+				if to.Bool(addon.Enabled) && a.HasCoreOS() {
+					return errors.New("flexvolume add-ons not currently supported on coreos distro. Please use Ubuntu")
+				}
+			case "keyvault-flexvolume":
+				if to.Bool(addon.Enabled) && a.HasCoreOS() {
+					return errors.New("flexvolume add-ons not currently supported on coreos distro. Please use Ubuntu")
 				}
 			}
 		}

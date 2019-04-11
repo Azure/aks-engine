@@ -268,13 +268,17 @@ func CreateMasterVMSS(cs *api.ContainerService) VirtualMachineScaleSetARM {
 
 	outBoundCmd := ""
 	registry := ""
+	ncBinary := "nc"
+	if cs.Properties.MasterProfile != nil && cs.Properties.MasterProfile.IsCoreOS() {
+		ncBinary = "ncat"
+	}
 	if !cs.Properties.FeatureFlags.IsFeatureEnabled("BlockOutboundInternet") {
 		if cs.GetCloudSpecConfig().CloudName == api.AzureChinaCloud {
 			registry = `gcr.azk8s.cn 80`
 		} else {
-			registry = `k8s.gcr.io 443 && retrycmd_if_failure 50 1 3 nc -vz gcr.io 443 && retrycmd_if_failure 50 1 3 nc -vz docker.io 443`
+			registry = `k8s.gcr.io 443 && retrycmd_if_failure 50 1 3 ` + ncBinary + ` -vz gcr.io 443 && retrycmd_if_failure 50 1 3 ` + ncBinary + ` -vz docker.io 443`
 		}
-		outBoundCmd = `ERR_OUTBOUND_CONN_FAIL=50; retrycmd_if_failure 50 1 3 nc -vz ` + registry + ` || exit $ERR_OUTBOUND_CONN_FAIL;`
+		outBoundCmd = `ERR_OUTBOUND_CONN_FAIL=50; retrycmd_if_failure 50 1 3 ` + ncBinary + ` -vz ` + registry + ` || exit $ERR_OUTBOUND_CONN_FAIL;`
 	}
 
 	vmssCSE := compute.VirtualMachineScaleSetExtension{
@@ -575,16 +579,19 @@ func CreateAgentVMSS(cs *api.ContainerService, profile *api.AgentPoolProfile) Vi
 
 	outBoundCmd := ""
 	registry := ""
-
+	ncBinary := "nc"
+	if profile.IsCoreOS() {
+		ncBinary = "ncat"
+	}
 	featureFlags := cs.Properties.FeatureFlags
 
 	if !featureFlags.IsFeatureEnabled("BlockOutboundInternet") {
 		if cs.GetCloudSpecConfig().CloudName == api.AzureChinaCloud {
 			registry = `gcr.azk8s.cn 80`
 		} else {
-			registry = `k8s.gcr.io 443 && retrycmd_if_failure 50 1 3 nc -vz gcr.io 443 && retrycmd_if_failure 50 1 3 nc -vz docker.io 443`
+			registry = `k8s.gcr.io 443 && retrycmd_if_failure 50 1 3 ` + ncBinary + ` -vz gcr.io 443 && retrycmd_if_failure 50 1 3 ` + ncBinary + ` -vz docker.io 443`
 		}
-		outBoundCmd = `ERR_OUTBOUND_CONN_FAIL=50; retrycmd_if_failure 50 1 3 nc -vz ` + registry + ` || exit $ERR_OUTBOUND_CONN_FAIL;`
+		outBoundCmd = `ERR_OUTBOUND_CONN_FAIL=50; retrycmd_if_failure 50 1 3 ` + ncBinary + ` -vz ` + registry + ` || exit $ERR_OUTBOUND_CONN_FAIL;`
 	}
 
 	var vmssCSE compute.VirtualMachineScaleSetExtension

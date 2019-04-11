@@ -132,6 +132,9 @@ func TestOSType(t *testing.T) {
 	if p.HasWindows() {
 		t.Fatalf("expected HasWindows() to return false but instead returned true")
 	}
+	if p.HasCoreOS() {
+		t.Fatalf("expected HasCoreOS() to return false but instead returned true")
+	}
 	if p.AgentPoolProfiles[0].IsWindows() {
 		t.Fatalf("expected IsWindows() to return false but instead returned true")
 	}
@@ -170,6 +173,10 @@ func TestOSType(t *testing.T) {
 
 	if !p.HasWindows() {
 		t.Fatalf("expected HasWindows() to return true but instead returned false")
+	}
+
+	if !p.HasCoreOS() {
+		t.Fatalf("expected HasCoreOS() to return true but instead returned false")
 	}
 
 	if !p.AgentPoolProfiles[0].IsWindows() {

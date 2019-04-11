@@ -64,16 +64,18 @@ else
 fi
 
 if [[ ! -z "${MASTER_NODE}" ]] && [[ -z "${COSMOS_URI}" ]]; then
-    	installEtcd
+    installEtcd
 fi
 
-if $FULL_INSTALL_REQUIRED; then
+if [[ $OS != $COREOS_OS_NAME ]] && [[ $FULL_INSTALL_REQUIRED ]]; then
     installDeps
 else 
     echo "Golden image; skipping dependencies installation"
 fi
 
-installContainerRuntime
+if [[ $OS != $COREOS_OS_NAME ]]; then
+    installContainerRuntime
+fi
 installNetworkPlugin
 if [[ "$CONTAINER_RUNTIME" == "clear-containers" ]] || [[ "$CONTAINER_RUNTIME" == "kata-containers" ]] || [[ "$CONTAINER_RUNTIME" == "containerd" ]]; then
     installContainerd
@@ -87,7 +89,9 @@ else
     cleanUpGPUDrivers
 fi
 installKubeletAndKubectl
-ensureRPC
+if [[ $OS != $COREOS_OS_NAME ]]; then
+    ensureRPC
+fi
 createKubeManifestDir
 if [[ "${SGX_NODE}" = true ]]; then
     installSGXDrivers
