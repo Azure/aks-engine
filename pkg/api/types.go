@@ -1025,6 +1025,18 @@ func (p *Properties) HasZonesForAllAgentPools() bool {
 	return false
 }
 
+// IsUbuntuDistroForAllNodes returns true if all of the agent pools plus masters are running the base Ubuntu image
+func (p *Properties) IsUbuntuDistroForAllNodes() bool {
+	if len(p.AgentPoolProfiles) > 0 {
+		for _, ap := range p.AgentPoolProfiles {
+			if ap.Distro != Ubuntu && ap.Distro != Ubuntu1804 {
+				return false
+			}
+		}
+	}
+	return p.MasterProfile.Distro == Ubuntu || p.MasterProfile.Distro == Ubuntu1804
+}
+
 // HasAvailabilityZones returns true if the cluster contains a profile with zones
 func (p *Properties) HasAvailabilityZones() bool {
 	hasZones := p.MasterProfile != nil && p.MasterProfile.HasAvailabilityZones()
@@ -1158,6 +1170,11 @@ func (m *MasterProfile) IsUbuntu1804() bool {
 	}
 }
 
+// IsUbuntu returns true if the master profile distro is any ubuntu distro
+func (m *MasterProfile) IsUbuntu() bool {
+	return m.IsUbuntu1604() || m.IsUbuntu1804()
+}
+
 // IsCustomVNET returns true if the customer brought their own VNET
 func (a *AgentPoolProfile) IsCustomVNET() bool {
 	return len(a.VnetSubnetID) > 0
@@ -1242,6 +1259,11 @@ func (a *AgentPoolProfile) IsUbuntu1804() bool {
 		}
 	}
 	return false
+}
+
+// IsUbuntu returns true if the master profile distro is any ubuntu distro
+func (a *AgentPoolProfile) IsUbuntu() bool {
+	return a.IsUbuntu1604() || a.IsUbuntu1804()
 }
 
 // HasSecrets returns true if the customer specified secrets to install

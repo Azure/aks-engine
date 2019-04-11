@@ -34,3 +34,22 @@ func RunAndLogCommand(cmd *exec.Cmd, timeout time.Duration) ([]byte, error) {
 	}
 	return out, err
 }
+
+// AddToSSHKeyChain is a helper func to setup ssh agent forwarding
+func AddToSSHKeyChain(keyfile string) error {
+	cmd := exec.Command("ssh-add", "-D")
+	PrintCommand(cmd)
+	out, err := cmd.CombinedOutput()
+	log.Printf("%s\n", out)
+	if err != nil {
+		return fmt.Errorf("Error while cleaning ssh agent keychain: %s", err)
+	}
+	cmd = exec.Command("ssh-add", keyfile)
+	PrintCommand(cmd)
+	out, err = cmd.CombinedOutput()
+	log.Printf("%s\n", out)
+	if err != nil {
+		return fmt.Errorf("Error while adding private key to ssh agent keychain for forwarding: %s", err)
+	}
+	return nil
+}

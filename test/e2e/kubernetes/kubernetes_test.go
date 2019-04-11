@@ -88,64 +88,83 @@ var _ = BeforeSuite(func() {
 
 var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", func() {
 	Describe("regardless of agent pool type", func() {
-		It("should display the installed Ubuntu version on the master node", func() {
-			kubeConfig, err := GetConfig()
-			Expect(err).NotTo(HaveOccurred())
-			master := fmt.Sprintf("azureuser@%s", kubeConfig.GetServerName())
-
-			lsbReleaseCmd := fmt.Sprintf("lsb_release -a && uname -r")
-			cmd := exec.Command("ssh", "-i", masterSSHPrivateKeyFilepath, "-p", masterSSHPort, "-o", "ConnectTimeout=10", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", master, lsbReleaseCmd)
-			util.PrintCommand(cmd)
-			out, err := cmd.CombinedOutput()
-			log.Printf("%s\n", out)
-			if err != nil {
-				log.Printf("Error while getting Ubuntu image version: %s\n", err)
+		It("should set up ssh key forwarding to the master node", func() {
+			success := false
+			for i := 0; i < 3; i++ {
+				err := util.AddToSSHKeyChain(masterSSHPrivateKeyFilepath)
+				if err == nil {
+					success = true
+					break
+				}
+				if i > 1 {
+					log.Printf("Error while setting up ssh key forwarding:%s\n", err)
+				}
+				time.Sleep(10 * time.Second)
 			}
-
-			kernelVerCmd := fmt.Sprintf("cat /proc/version")
-			cmd = exec.Command("ssh", "-i", masterSSHPrivateKeyFilepath, "-p", masterSSHPort, "-o", "ConnectTimeout=10", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", master, kernelVerCmd)
-			util.PrintCommand(cmd)
-			out, err = cmd.CombinedOutput()
-			log.Printf("%s\n", out)
-			if err != nil {
-				log.Printf("Error while getting LinuxKernel version: %s\n", err)
-			}
+			Expect(success).To(BeTrue())
 		})
 
-		It("should display the installed docker runtime on the master node", func() {
-			if eng.ExpandedDefinition.Properties.OrchestratorProfile.KubernetesConfig.RequiresDocker() {
+		It("should display the installed Ubuntu version on the master node", func() {
+			if eng.ExpandedDefinition.Properties.MasterProfile.IsUbuntu() {
 				kubeConfig, err := GetConfig()
 				Expect(err).NotTo(HaveOccurred())
 				master := fmt.Sprintf("azureuser@%s", kubeConfig.GetServerName())
 
-				cmd := exec.Command("ssh-add", "-D")
+				lsbReleaseCmd := fmt.Sprintf("lsb_release -a && uname -r")
+				cmd := exec.Command("ssh", "-i", masterSSHPrivateKeyFilepath, "-p", masterSSHPort, "-o", "ConnectTimeout=10", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-o", "LogLevel=ERROR", master, lsbReleaseCmd)
 				util.PrintCommand(cmd)
 				out, err := cmd.CombinedOutput()
 				log.Printf("%s\n", out)
-				if err != nil {
-					log.Printf("Error while cleaning ssh agent keychain: %s\n", err)
-				}
-				cmd = exec.Command("ssh-add", masterSSHPrivateKeyFilepath)
+				Expect(err).NotTo(HaveOccurred())
+
+				kernelVerCmd := fmt.Sprintf("cat /proc/version")
+				cmd = exec.Command("ssh", "-i", masterSSHPrivateKeyFilepath, "-p", masterSSHPort, "-o", "ConnectTimeout=10", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-o", "LogLevel=ERROR", master, kernelVerCmd)
 				util.PrintCommand(cmd)
 				out, err = cmd.CombinedOutput()
 				log.Printf("%s\n", out)
-				if err != nil {
-					log.Printf("Error while adding private key to ssh agent keychain for forwarding: %s\n", err)
-				}
+				Expect(err).NotTo(HaveOccurred())
+			} else {
+				Skip("This is not an ubuntu master")
+			}
+		})
+
+		It("should display the installed docker runtime on all nodes", func() {
+			if eng.ExpandedDefinition.Properties.OrchestratorProfile.KubernetesConfig.RequiresDocker() {
+				kubeConfig, err := GetConfig()
+				Expect(err).NotTo(HaveOccurred())
+				master := fmt.Sprintf("azureuser@%s", kubeConfig.GetServerName())
 				nodeList, err := node.Get()
 				Expect(err).NotTo(HaveOccurred())
 				dockerVersionCmd := fmt.Sprintf("\"docker version\"")
 				for _, node := range nodeList.Nodes {
-					cmd = exec.Command("ssh", "-A", "-i", masterSSHPrivateKeyFilepath, "-p", masterSSHPort, "-o", "ConnectTimeout=10", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", master, "ssh", "-o", "ConnectTimeout=10", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", node.Metadata.Name, dockerVersionCmd)
+					cmd := exec.Command("ssh", "-A", "-i", masterSSHPrivateKeyFilepath, "-p", masterSSHPort, "-o", "ConnectTimeout=10", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-o", "LogLevel=ERROR", master, "ssh", "-o", "ConnectTimeout=10", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-o", "LogLevel=ERROR", node.Metadata.Name, dockerVersionCmd)
 					util.PrintCommand(cmd)
-					out, err = cmd.CombinedOutput()
+					out, err := cmd.CombinedOutput()
 					log.Printf("%s\n", out)
-					if err != nil {
-						log.Printf("Error while getting docker version on node %s: %s\n", node.Metadata.Name, err)
-					}
+					Expect(err).NotTo(HaveOccurred())
 				}
 			} else {
 				Skip("Skip docker validations on non-docker-backed clusters")
+			}
+		})
+
+		It("should validate that every linux node has a root password", func() {
+			if eng.ExpandedDefinition.Properties.IsUbuntuDistroForAllNodes() {
+				kubeConfig, err := GetConfig()
+				Expect(err).NotTo(HaveOccurred())
+				master := fmt.Sprintf("azureuser@%s", kubeConfig.GetServerName())
+				nodeList, err := node.Get()
+				Expect(err).NotTo(HaveOccurred())
+				rootPasswdCmd := fmt.Sprintf("\"sudo grep '^root:[!*]:' /etc/shadow\"")
+				for _, node := range nodeList.Nodes {
+					cmd := exec.Command("ssh", "-A", "-i", masterSSHPrivateKeyFilepath, "-p", masterSSHPort, "-o", "ConnectTimeout=10", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-o", "LogLevel=ERROR", master, "ssh", "-o", "ConnectTimeout=10", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-o", "LogLevel=ERROR", node.Metadata.Name, rootPasswdCmd)
+					util.PrintCommand(cmd)
+					out, err := cmd.CombinedOutput()
+					log.Printf("%s\n", out)
+					Expect(err).To(HaveOccurred())
+				}
+			} else {
+				Skip("root password validation only works on ubuntu distro until this lands in a VHD")
 			}
 		})
 
@@ -420,7 +439,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			master := fmt.Sprintf("azureuser@%s", kubeConfig.GetServerName())
 
 			ifconfigCmd := fmt.Sprintf("ifconfig -a -v")
-			cmd := exec.Command("ssh", "-i", masterSSHPrivateKeyFilepath, "-p", masterSSHPort, "-o", "ConnectTimeout=10", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", master, ifconfigCmd)
+			cmd := exec.Command("ssh", "-i", masterSSHPrivateKeyFilepath, "-p", masterSSHPort, "-o", "ConnectTimeout=10", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-o", "LogLevel=ERROR", master, ifconfigCmd)
 			util.PrintCommand(cmd)
 			out, err := cmd.CombinedOutput()
 			log.Printf("%s\n", out)
@@ -429,7 +448,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			}
 
 			resolvCmd := fmt.Sprintf("cat /etc/resolv.conf")
-			cmd = exec.Command("ssh", "-i", masterSSHPrivateKeyFilepath, "-p", masterSSHPort, "-o", "ConnectTimeout=10", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", master, resolvCmd)
+			cmd = exec.Command("ssh", "-i", masterSSHPrivateKeyFilepath, "-p", masterSSHPort, "-o", "ConnectTimeout=10", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-o", "LogLevel=ERROR", master, resolvCmd)
 			util.PrintCommand(cmd)
 			out, err = cmd.CombinedOutput()
 			log.Printf("%s\n", out)
@@ -439,7 +458,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 
 			By("Ensuring that we have a valid connection to our resolver")
 			digCmd := fmt.Sprintf("dig +short +search +answer `hostname`")
-			cmd = exec.Command("ssh", "-i", masterSSHPrivateKeyFilepath, "-p", masterSSHPort, "-o", "ConnectTimeout=10", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", master, digCmd)
+			cmd = exec.Command("ssh", "-i", masterSSHPrivateKeyFilepath, "-p", masterSSHPort, "-o", "ConnectTimeout=10", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-o", "LogLevel=ERROR", master, digCmd)
 			util.PrintCommand(cmd)
 			out, err = cmd.CombinedOutput()
 			log.Printf("%s\n", out)
@@ -453,7 +472,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				By("Ensuring that we get a DNS lookup answer response for each node hostname")
 				digCmd = fmt.Sprintf("dig +short +search +answer %s | grep -v -e '^$'", node.Metadata.Name)
 
-				cmd = exec.Command("ssh", "-i", masterSSHPrivateKeyFilepath, "-p", masterSSHPort, "-o", "ConnectTimeout=10", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", master, digCmd)
+				cmd = exec.Command("ssh", "-i", masterSSHPrivateKeyFilepath, "-p", masterSSHPort, "-o", "ConnectTimeout=10", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-o", "LogLevel=ERROR", master, digCmd)
 				util.PrintCommand(cmd)
 				out, err = cmd.CombinedOutput()
 				log.Printf("%s\n", out)
@@ -465,14 +484,14 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 
 			By("Ensuring that we get a DNS lookup answer response for external names")
 			digCmd = fmt.Sprintf("dig +short +search www.bing.com | grep -v -e '^$'")
-			cmd = exec.Command("ssh", "-i", masterSSHPrivateKeyFilepath, "-p", masterSSHPort, "-o", "ConnectTimeout=10", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", master, digCmd)
+			cmd = exec.Command("ssh", "-i", masterSSHPrivateKeyFilepath, "-p", masterSSHPort, "-o", "ConnectTimeout=10", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-o", "LogLevel=ERROR", master, digCmd)
 			util.PrintCommand(cmd)
 			out, err = cmd.CombinedOutput()
 			if err != nil {
 				log.Printf("Error while querying DNS: %s\n", out)
 			}
 			digCmd = fmt.Sprintf("dig +short +search google.com | grep -v -e '^$'")
-			cmd = exec.Command("ssh", "-i", masterSSHPrivateKeyFilepath, "-p", masterSSHPort, "-o", "ConnectTimeout=10", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", master, digCmd)
+			cmd = exec.Command("ssh", "-i", masterSSHPrivateKeyFilepath, "-p", masterSSHPort, "-o", "ConnectTimeout=10", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-o", "LogLevel=ERROR", master, digCmd)
 			util.PrintCommand(cmd)
 			out, err = cmd.CombinedOutput()
 			log.Printf("%s\n", out)
@@ -482,7 +501,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 
 			By("Ensuring that we get a DNS lookup answer response for external names using external resolver")
 			digCmd = fmt.Sprintf("dig +short +search www.bing.com @8.8.8.8 | grep -v -e '^$'")
-			cmd = exec.Command("ssh", "-i", masterSSHPrivateKeyFilepath, "-p", masterSSHPort, "-o", "ConnectTimeout=10", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", master, digCmd)
+			cmd = exec.Command("ssh", "-i", masterSSHPrivateKeyFilepath, "-p", masterSSHPort, "-o", "ConnectTimeout=10", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-o", "LogLevel=ERROR", master, digCmd)
 			util.PrintCommand(cmd)
 			out, err = cmd.CombinedOutput()
 			log.Printf("%s\n", out)
@@ -490,7 +509,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				log.Printf("Error while querying DNS: %s\n", err)
 			}
 			digCmd = fmt.Sprintf("dig +short +search google.com @8.8.8.8 | grep -v -e '^$'")
-			cmd = exec.Command("ssh", "-i", masterSSHPrivateKeyFilepath, "-p", masterSSHPort, "-o", "ConnectTimeout=10", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", master, digCmd)
+			cmd = exec.Command("ssh", "-i", masterSSHPrivateKeyFilepath, "-p", masterSSHPort, "-o", "ConnectTimeout=10", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-o", "LogLevel=ERROR", master, digCmd)
 			util.PrintCommand(cmd)
 			out, err = cmd.CombinedOutput()
 			log.Printf("%s\n", out)
@@ -565,7 +584,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 							Expect(address).NotTo(BeNil())
 							dashboardURL := fmt.Sprintf("http://%s:%v", address.Address, port)
 							curlCMD := fmt.Sprintf("curl --max-time 60 %s", dashboardURL)
-							cmd := exec.Command("ssh", "-i", masterSSHPrivateKeyFilepath, "-p", masterSSHPort, "-o", "ConnectTimeout=10", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", master, curlCMD)
+							cmd := exec.Command("ssh", "-i", masterSSHPrivateKeyFilepath, "-p", masterSSHPort, "-o", "ConnectTimeout=10", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-o", "LogLevel=ERROR", master, curlCMD)
 							util.PrintCommand(cmd)
 							var out []byte
 							out, err = cmd.CombinedOutput()
