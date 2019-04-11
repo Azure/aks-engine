@@ -46,6 +46,7 @@ ERR_SGX_DRIVERS_START_FAIL=91 # Failed to execute SGX driver binary
 ERR_APT_DAILY_TIMEOUT=98 # Timeout waiting for apt daily updates
 ERR_APT_UPDATE_TIMEOUT=99 # Timeout waiting for apt-get update to complete
 ERR_CSE_PROVISION_SCRIPT_NOT_READY_TIMEOUT=100 # Timeout waiting for cloud-init to place this (!) script on the vm
+ERR_APT_DIST_UPGRADE_TIMEOUT=101 # Timeout waiting for apt-get dist-upgrade to complete
 
 OS=$(cat /etc/*-release | grep ^ID= | tr -d 'ID="' | awk '{print toupper($0)}')
 UBUNTU_OS_NAME="UBUNTU"
@@ -155,7 +156,7 @@ apt_get_update() {
         cat $apt_update_output
         if [ $i -eq $retries ]; then
             return 1
-        else sleep 30
+        else sleep 5
         fi
     done
     echo Executed apt-get update $i times
@@ -177,6 +178,24 @@ apt_get_install() {
     done
     echo Executed apt-get install --no-install-recommends -y \"$@\" $i times;
     wait_for_apt_locks
+}
+apt_get_dist_upgrade() {
+  retries=10
+  apt_dist_upgrade_output=/tmp/apt-get-dist-upgrade.out
+  for i in $(seq 1 $retries); do
+    wait_for_apt_locks
+    dpkg --configure -a
+    apt-get -f -y install
+    apt-get dist-upgrade -y 2>&1 | tee $apt_dist_upgrade_output | grep -E "^([WE]:.*)|([eE]rr.*)$"
+    [ $? -ne 0  ] && cat $apt_dist_upgrade_output && break || \
+    cat $apt_update_output
+    if [ $i -eq $retries ]; then
+      return 1
+    else sleep 5
+    fi
+  done
+  echo Executed apt-get dist-upgrade $i times
+  wait_for_apt_locks
 }
 systemctl_restart() {
     retries=$1; wait_sleep=$2; timeout=$3 svcname=$4
