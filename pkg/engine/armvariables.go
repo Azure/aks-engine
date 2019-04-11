@@ -327,11 +327,7 @@ func getK8sMasterVars(cs *api.ContainerService) (map[string]interface{}, error) 
 	}
 
 	if cs.Properties.AnyAgentUsesVirtualMachineScaleSets() {
-		if hasAgentPool {
-			masterVars["primaryScaleSetName"] = cs.Properties.GetPrimaryScaleSetName()
-		} else {
-			masterVars["primaryScaleSetName"] = ""
-		}
+		masterVars["primaryScaleSetName"] = cs.Properties.GetPrimaryScaleSetName()
 		masterVars["primaryAvailabilitySetName"] = ""
 		masterVars["vmType"] = "vmss"
 	} else {

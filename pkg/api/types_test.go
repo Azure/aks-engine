@@ -2577,7 +2577,7 @@ func TestProperties_GetClusterMetadata(t *testing.T) {
 		t.Errorf("expected PrimaryAvailabilitySetName name %s, but got %s", expectedPrimaryAvailabilitySetName, metadata.PrimaryAvailabilitySetName)
 	}
 
-	expectedPrimaryScaleSetName := "k8s-agentpool-28513887-vmss"
+	expectedPrimaryScaleSetName := ""
 	if metadata.PrimaryScaleSetName != expectedPrimaryScaleSetName {
 		t.Errorf("expected PrimaryScaleSetName name %s, but got %s", expectedPrimaryScaleSetName, metadata.PrimaryScaleSetName)
 	}
