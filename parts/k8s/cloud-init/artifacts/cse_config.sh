@@ -187,7 +187,7 @@ configureK8s() {
 }
 EOF
     set -x
-    if [[ ! -z "${MASTER_NODE}" ]]; then
+    if [[ -n "${MASTER_NODE}" ]]; then
         if [[ "${ENABLE_AGGREGATED_APIS}" = True ]]; then
             generateAggregatedAPICerts
         fi
