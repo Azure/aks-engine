@@ -1111,6 +1111,11 @@ func (m *MasterProfile) IsCoreOS() bool {
 	return m.Distro == CoreOS
 }
 
+// IsVHDDistro returns true if the distro uses VHD SKUs
+func (m *MasterProfile) IsVHDDistro() bool {
+	return m.Distro == AKS || m.Distro == AKS1804
+}
+
 // IsVirtualMachineScaleSets returns true if the master availability profile is VMSS
 func (m *MasterProfile) IsVirtualMachineScaleSets() bool {
 	return m.AvailabilityProfile == VirtualMachineScaleSets
@@ -1198,6 +1203,11 @@ func (a *AgentPoolProfile) IsRHEL() bool {
 // IsCoreOS returns true if the agent specified a CoreOS distro
 func (a *AgentPoolProfile) IsCoreOS() bool {
 	return a.OSType == Linux && a.Distro == CoreOS
+}
+
+// IsVHDDistro returns true if the distro uses VHD SKUs
+func (a *AgentPoolProfile) IsVHDDistro() bool {
+	return a.Distro == AKS || a.Distro == AKS1804
 }
 
 // IsAvailabilitySets returns true if the customer specified disks
