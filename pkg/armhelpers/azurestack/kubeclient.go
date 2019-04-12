@@ -24,13 +24,13 @@ const (
 	evictionSubresource = "pods/eviction"
 )
 
-//KubernetesClientSetClient kubernetes client hooked up to a live api server
+//KubernetesClientSetClient is a Kubernetes client hooked up to a live api server.
 type KubernetesClientSetClient struct {
 	clientset         *kubernetes.Clientset
 	interval, timeout time.Duration
 }
 
-//GetKubernetesClient returns a KubernetesClient hooked up to the api server at the masterURL
+//GetKubernetesClient returns a KubernetesClient hooked up to the api server at the masterURL.
 func (az *AzureClient) GetKubernetesClient(masterURL, kubeConfig string, interval, timeout time.Duration) (armhelpers.KubernetesClient, error) {
 	// creates the clientset
 	config, err := clientcmd.BuildConfigFromKubeconfigGetter(masterURL, func() (*clientcmdapi.Config, error) { return clientcmd.Load([]byte(kubeConfig)) })
@@ -44,28 +44,48 @@ func (az *AzureClient) GetKubernetesClient(masterURL, kubeConfig string, interva
 	return &KubernetesClientSetClient{clientset: clientset, interval: interval, timeout: timeout}, nil
 }
 
-//ListPods returns all Pods running on the passed in node
+// ListPods returns all Pods running on the passed in node.
 func (c *KubernetesClientSetClient) ListPods(node *v1.Node) (*v1.PodList, error) {
 	return c.clientset.CoreV1().Pods(metav1.NamespaceAll).List(metav1.ListOptions{
 		FieldSelector: fields.SelectorFromSet(fields.Set{"spec.nodeName": node.Name}).String()})
 }
 
-//GetNode returns details about node with passed in name
+// ListAllPods returns all Pods running.
+func (c *KubernetesClientSetClient) ListAllPods() (*v1.PodList, error) {
+	return c.clientset.CoreV1().Pods(metav1.NamespaceAll).List(metav1.ListOptions{})
+}
+
+// ListNodes returns a list of Nodes registered in the api server.
+func (c *KubernetesClientSetClient) ListNodes() (*v1.NodeList, error) {
+	return c.clientset.CoreV1().Nodes().List(metav1.ListOptions{})
+}
+
+// ListServiceAccounts returns a list of Service Accounts in the provided namespace.
+func (c *KubernetesClientSetClient) ListServiceAccounts(namespace string) (*v1.ServiceAccountList, error) {
+	return c.clientset.CoreV1().ServiceAccounts(namespace).List(metav1.ListOptions{})
+}
+
+// GetNode returns details about node with passed in name.
 func (c *KubernetesClientSetClient) GetNode(name string) (*v1.Node, error) {
 	return c.clientset.CoreV1().Nodes().Get(name, metav1.GetOptions{})
 }
 
-//UpdateNode updates the node in the api server with the passed in info
+// UpdateNode updates the node in the api server with the passed in info.
 func (c *KubernetesClientSetClient) UpdateNode(node *v1.Node) (*v1.Node, error) {
 	return c.clientset.CoreV1().Nodes().Update(node)
 }
 
-//DeleteNode deregisters the node in the api server
+// DeleteNode deregisters the node in the api server.
 func (c *KubernetesClientSetClient) DeleteNode(name string) error {
 	return c.clientset.CoreV1().Nodes().Delete(name, &metav1.DeleteOptions{})
 }
 
-//SupportEviction queries the api server to discover if it supports eviction, and returns supported type if it is supported
+// DeleteServiceAccount deletes the passed in service account.
+func (c *KubernetesClientSetClient) DeleteServiceAccount(sa *v1.ServiceAccount) error {
+	return c.clientset.CoreV1().ServiceAccounts(sa.Namespace).Delete(sa.Name, &metav1.DeleteOptions{})
+}
+
+// SupportEviction queries the api server to discover if it supports eviction, and returns supported type if it is supported.
 func (c *KubernetesClientSetClient) SupportEviction() (string, error) {
 	discoveryClient := c.clientset.Discovery()
 	groupList, err := discoveryClient.ServerGroups()
@@ -96,12 +116,12 @@ func (c *KubernetesClientSetClient) SupportEviction() (string, error) {
 	return "", nil
 }
 
-//DeletePod deletes the passed in pod
+// DeletePod deletes the passed in pod.
 func (c *KubernetesClientSetClient) DeletePod(pod *v1.Pod) error {
 	return c.clientset.CoreV1().Pods(pod.Namespace).Delete(pod.Name, &metav1.DeleteOptions{})
 }
 
-//EvictPod evicts the passed in pod using the passed in api version
+// EvictPod evicts the passed in pod using the passed in api version.
 func (c *KubernetesClientSetClient) EvictPod(pod *v1.Pod, policyGroupVersion string) error {
 	eviction := &policy.Eviction{
 		TypeMeta: metav1.TypeMeta{
@@ -116,12 +136,12 @@ func (c *KubernetesClientSetClient) EvictPod(pod *v1.Pod, policyGroupVersion str
 	return c.clientset.PolicyV1beta1().Evictions(eviction.Namespace).Evict(eviction)
 }
 
-//GetPod returns the pod
+// GetPod returns the pod with the provided name and namespace.
 func (c *KubernetesClientSetClient) getPod(namespace, name string) (*v1.Pod, error) {
 	return c.clientset.CoreV1().Pods(namespace).Get(name, metav1.GetOptions{})
 }
 
-//WaitForDelete waits until all pods are deleted. Returns all pods not deleted and an error on failure
+// WaitForDelete waits until all pods are deleted. Returns all pods not deleted and an error on failure.
 func (c *KubernetesClientSetClient) WaitForDelete(logger *log.Entry, pods []v1.Pod, usingEviction bool) ([]v1.Pod, error) {
 	var verbStr string
 	if usingEviction {

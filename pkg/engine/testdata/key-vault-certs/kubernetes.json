@@ -2,25 +2,483 @@
   "apiVersion": "vlabs",
   "properties": {
     "orchestratorProfile": {
-      "orchestratorType": "Kubernetes"
+      "orchestratorType": "Kubernetes",
+      "orchestratorRelease": "1.11",
+      "orchestratorVersion": "1.11.9",
+      "kubernetesConfig": {
+        "kubernetesImageBase": "k8s.gcr.io/",
+        "clusterSubnet": "10.240.0.0/12",
+        "dnsServiceIP": "10.0.0.10",
+        "serviceCidr": "10.0.0.0/16",
+        "networkPlugin": "azure",
+        "containerRuntime": "docker",
+        "dockerBridgeSubnet": "172.17.0.1/16",
+        "mobyVersion": "3.0.4",
+        "useInstanceMetadata": true,
+        "enableRbac": true,
+        "enableSecureKubelet": true,
+        "enableAggregatedAPIs": true,
+        "privateCluster": {
+          "enabled": false
+        },
+        "gchighthreshold": 85,
+        "gclowthreshold": 80,
+        "etcdVersion": "3.2.25",
+        "etcdDiskSizeGB": "512",
+        "addons": [
+          {
+            "name": "heapster",
+            "enabled": true,
+            "containers": [
+              {
+                "name": "heapster",
+                "image": "k8s.gcr.io/heapster-amd64:v1.5.4"
+              },
+              {
+                "name": "heapster-nanny",
+                "image": "k8s.gcr.io/addon-resizer:1.8.4"
+              }
+            ]
+          },
+          {
+            "name": "tiller",
+            "enabled": true,
+            "containers": [
+              {
+                "name": "tiller",
+                "image": "gcr.io/kubernetes-helm/tiller:v2.11.0",
+                "cpuRequests": "50m",
+                "memoryRequests": "150Mi",
+                "cpuLimits": "50m",
+                "memoryLimits": "150Mi"
+              }
+            ],
+            "config": {
+              "max-history": "0"
+            }
+          },
+          {
+            "name": "aci-connector",
+            "enabled": false,
+            "containers": [
+              {
+                "name": "aci-connector",
+                "image": "microsoft/virtual-kubelet:latest",
+                "cpuRequests": "50m",
+                "memoryRequests": "150Mi",
+                "cpuLimits": "50m",
+                "memoryLimits": "150Mi"
+              }
+            ],
+            "config": {
+              "nodeName": "aci-connector",
+              "os": "Linux",
+              "region": "westus",
+              "taint": "azure.com/aci"
+            }
+          },
+          {
+            "name": "cluster-autoscaler",
+            "enabled": false,
+            "containers": [
+              {
+                "name": "cluster-autoscaler",
+                "image": "k8s.gcr.io/cluster-autoscaler:v1.3.7",
+                "cpuRequests": "100m",
+                "memoryRequests": "300Mi",
+                "cpuLimits": "100m",
+                "memoryLimits": "300Mi"
+              }
+            ],
+            "config": {
+              "max-nodes": "5",
+              "min-nodes": "1",
+              "scan-interval": "10s"
+            }
+          },
+          {
+            "name": "blobfuse-flexvolume",
+            "enabled": true,
+            "containers": [
+              {
+                "name": "blobfuse-flexvolume",
+                "image": "mcr.microsoft.com/k8s/flexvolume/blobfuse-flexvolume:1.0.8",
+                "cpuRequests": "50m",
+                "memoryRequests": "10Mi",
+                "cpuLimits": "50m",
+                "memoryLimits": "10Mi"
+              }
+            ]
+          },
+          {
+            "name": "smb-flexvolume",
+            "enabled": false,
+            "containers": [
+              {
+                "name": "smb-flexvolume",
+                "image": "mcr.microsoft.com/k8s/flexvolume/smb-flexvolume:1.0.2",
+                "cpuRequests": "50m",
+                "memoryRequests": "10Mi",
+                "cpuLimits": "50m",
+                "memoryLimits": "10Mi"
+              }
+            ]
+          },
+          {
+            "name": "keyvault-flexvolume",
+            "enabled": true,
+            "containers": [
+              {
+                "name": "keyvault-flexvolume",
+                "image": "mcr.microsoft.com/k8s/flexvolume/keyvault-flexvolume:v0.0.7",
+                "cpuRequests": "50m",
+                "memoryRequests": "10Mi",
+                "cpuLimits": "50m",
+                "memoryLimits": "10Mi"
+              }
+            ]
+          },
+          {
+            "name": "kubernetes-dashboard",
+            "enabled": true,
+            "containers": [
+              {
+                "name": "kubernetes-dashboard",
+                "image": "k8s.gcr.io/kubernetes-dashboard-amd64:v1.10.1",
+                "cpuRequests": "300m",
+                "memoryRequests": "150Mi",
+                "cpuLimits": "300m",
+                "memoryLimits": "150Mi"
+              }
+            ]
+          },
+          {
+            "name": "rescheduler",
+            "enabled": false,
+            "containers": [
+              {
+                "name": "rescheduler",
+                "image": "k8s.gcr.io/rescheduler:v0.4.0",
+                "cpuRequests": "10m",
+                "memoryRequests": "100Mi",
+                "cpuLimits": "10m",
+                "memoryLimits": "100Mi"
+              }
+            ]
+          },
+          {
+            "name": "metrics-server",
+            "enabled": true,
+            "containers": [
+              {
+                "name": "metrics-server",
+                "image": "k8s.gcr.io/metrics-server-amd64:v0.2.1"
+              }
+            ]
+          },
+          {
+            "name": "nvidia-device-plugin",
+            "enabled": false,
+            "containers": [
+              {
+                "name": "nvidia-device-plugin",
+                "image": "nvidia/k8s-device-plugin:1.11",
+                "cpuRequests": "50m",
+                "memoryRequests": "10Mi",
+                "cpuLimits": "50m",
+                "memoryLimits": "10Mi"
+              }
+            ]
+          },
+          {
+            "name": "container-monitoring",
+            "enabled": false,
+            "containers": [
+              {
+                "name": "omsagent",
+                "image": "microsoft/oms:ciprod01092019",
+                "cpuRequests": "50m",
+                "memoryRequests": "200Mi",
+                "cpuLimits": "150m",
+                "memoryLimits": "750Mi"
+              }
+            ],
+            "config": {
+              "dockerProviderVersion": "3.0.0-3",
+              "omsAgentVersion": "1.8.1.256"
+            }
+          },
+          {
+            "name": "azure-cni-networkmonitor",
+            "enabled": true,
+            "containers": [
+              {
+                "name": "azure-cni-networkmonitor",
+                "image": "containernetworking/networkmonitor:v0.0.5"
+              }
+            ]
+          },
+          {
+            "name": "azure-npm-daemonset",
+            "enabled": false,
+            "containers": [
+              {
+                "name": "azure-npm-daemonset"
+              }
+            ]
+          },
+          {
+            "name": "ip-masq-agent",
+            "enabled": true,
+            "containers": [
+              {
+                "name": "ip-masq-agent",
+                "image": "k8s.gcr.io/ip-masq-agent-amd64:v2.0.0",
+                "cpuRequests": "50m",
+                "memoryRequests": "50Mi",
+                "cpuLimits": "50m",
+                "memoryLimits": "250Mi"
+              }
+            ],
+            "config": {
+              "non-masq-cni-cidr": "168.63.129.16/32",
+              "non-masquerade-cidr": "10.0.0.0/8"
+            }
+          },
+          {
+            "name": "dns-autoscaler",
+            "enabled": false,
+            "containers": [
+              {
+                "name": "dns-autoscaler",
+                "image": "k8s.gcr.io/cluster-proportional-autoscaler-amd64:1.1.1",
+                "cpuRequests": "20m",
+                "memoryRequests": "10Mi"
+              }
+            ]
+          }
+        ],
+        "kubeletConfig": {
+          "--address": "0.0.0.0",
+          "--allow-privileged": "true",
+          "--anonymous-auth": "false",
+          "--authorization-mode": "Webhook",
+          "--azure-container-registry-config": "/etc/kubernetes/azure.json",
+          "--cadvisor-port": "0",
+          "--cgroups-per-qos": "true",
+          "--client-ca-file": "/etc/kubernetes/certs/ca.crt",
+          "--cloud-config": "/etc/kubernetes/azure.json",
+          "--cloud-provider": "azure",
+          "--cluster-dns": "10.0.0.10",
+          "--cluster-domain": "cluster.local",
+          "--enforce-node-allocatable": "pods",
+          "--event-qps": "0",
+          "--eviction-hard": "memory.available<750Mi,nodefs.available<10%,nodefs.inodesFree<5%",
+          "--feature-gates": "PodPriority=true",
+          "--image-gc-high-threshold": "85",
+          "--image-gc-low-threshold": "80",
+          "--image-pull-progress-deadline": "30m",
+          "--keep-terminated-pod-volumes": "false",
+          "--kubeconfig": "/var/lib/kubelet/kubeconfig",
+          "--max-pods": "30",
+          "--network-plugin": "cni",
+          "--node-status-update-frequency": "10s",
+          "--non-masquerade-cidr": "0.0.0.0/0",
+          "--pod-infra-container-image": "k8s.gcr.io/pause-amd64:3.1",
+          "--pod-manifest-path": "/etc/kubernetes/manifests",
+          "--pod-max-pids": "100"
+        },
+        "controllerManagerConfig": {
+          "--allocate-node-cidrs": "false",
+          "--cloud-config": "/etc/kubernetes/azure.json",
+          "--cloud-provider": "azure",
+          "--cluster-cidr": "10.240.0.0/12",
+          "--cluster-name": "kubernetes-southcentralus-7764",
+          "--cluster-signing-cert-file": "/etc/kubernetes/certs/ca.crt",
+          "--cluster-signing-key-file": "/etc/kubernetes/certs/ca.key",
+          "--configure-cloud-routes": "false",
+          "--controllers": "*,bootstrapsigner,tokencleaner",
+          "--feature-gates": "LocalStorageCapacityIsolation=true,ServiceNodeExclusion=true",
+          "--kubeconfig": "/var/lib/kubelet/kubeconfig",
+          "--leader-elect": "true",
+          "--node-monitor-grace-period": "40s",
+          "--pod-eviction-timeout": "5m0s",
+          "--profiling": "false",
+          "--root-ca-file": "/etc/kubernetes/certs/ca.crt",
+          "--route-reconciliation-period": "10s",
+          "--service-account-private-key-file": "/etc/kubernetes/certs/apiserver.key",
+          "--terminated-pod-gc-threshold": "5000",
+          "--use-service-account-credentials": "true",
+          "--v": "2"
+        },
+        "cloudControllerManagerConfig": {
+          "--allocate-node-cidrs": "false",
+          "--cloud-config": "/etc/kubernetes/azure.json",
+          "--cloud-provider": "azure",
+          "--cluster-cidr": "10.240.0.0/12",
+          "--cluster-name": "kubernetes-southcentralus-7764",
+          "--configure-cloud-routes": "false",
+          "--kubeconfig": "/var/lib/kubelet/kubeconfig",
+          "--leader-elect": "true",
+          "--route-reconciliation-period": "10s",
+          "--v": "2"
+        },
+        "apiServerConfig": {
+          "--advertise-address": "<advertiseAddr>",
+          "--allow-privileged": "true",
+          "--anonymous-auth": "false",
+          "--audit-log-maxage": "30",
+          "--audit-log-maxbackup": "10",
+          "--audit-log-maxsize": "100",
+          "--audit-log-path": "/var/log/kubeaudit/audit.log",
+          "--audit-policy-file": "/etc/kubernetes/addons/audit-policy.yaml",
+          "--authorization-mode": "Node,RBAC",
+          "--bind-address": "0.0.0.0",
+          "--client-ca-file": "/etc/kubernetes/certs/ca.crt",
+          "--cloud-config": "/etc/kubernetes/azure.json",
+          "--cloud-provider": "azure",
+          "--enable-admission-plugins": "NamespaceLifecycle,LimitRanger,ServiceAccount,DefaultStorageClass,DefaultTolerationSeconds,ValidatingAdmissionWebhook,ResourceQuota,ExtendedResourceToleration",
+          "--enable-bootstrap-token-auth": "true",
+          "--etcd-cafile": "/etc/kubernetes/certs/ca.crt",
+          "--etcd-certfile": "/etc/kubernetes/certs/etcdclient.crt",
+          "--etcd-keyfile": "/etc/kubernetes/certs/etcdclient.key",
+          "--etcd-servers": "https://<etcdEndPointUri>:2379",
+          "--insecure-port": "8080",
+          "--kubelet-client-certificate": "/etc/kubernetes/certs/client.crt",
+          "--kubelet-client-key": "/etc/kubernetes/certs/client.key",
+          "--profiling": "false",
+          "--proxy-client-cert-file": "/etc/kubernetes/certs/proxy.crt",
+          "--proxy-client-key-file": "/etc/kubernetes/certs/proxy.key",
+          "--repair-malformed-updates": "false",
+          "--requestheader-allowed-names": "",
+          "--requestheader-client-ca-file": "/etc/kubernetes/certs/proxy-ca.crt",
+          "--requestheader-extra-headers-prefix": "X-Remote-Extra-",
+          "--requestheader-group-headers": "X-Remote-Group",
+          "--requestheader-username-headers": "X-Remote-User",
+          "--secure-port": "443",
+          "--service-account-key-file": "/etc/kubernetes/certs/apiserver.key",
+          "--service-account-lookup": "true",
+          "--service-cluster-ip-range": "10.0.0.0/16",
+          "--storage-backend": "etcd3",
+          "--tls-cert-file": "/etc/kubernetes/certs/apiserver.crt",
+          "--tls-cipher-suites": "TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305,TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305,TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA,TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA,TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA,TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA",
+          "--tls-private-key-file": "/etc/kubernetes/certs/apiserver.key",
+          "--v": "4"
+        },
+        "schedulerConfig": {
+          "--kubeconfig": "/var/lib/kubelet/kubeconfig",
+          "--leader-elect": "true",
+          "--profiling": "false",
+          "--v": "2"
+        },
+        "cloudProviderBackoff": true,
+        "cloudProviderBackoffRetries": 6,
+        "cloudProviderBackoffJitter": 1,
+        "cloudProviderBackoffDuration": 5,
+        "cloudProviderBackoffExponent": 1.5,
+        "cloudProviderRateLimit": true,
+        "cloudProviderRateLimitQPS": 3,
+        "cloudProviderRateLimitBucket": 10,
+        "loadBalancerSku": "Basic",
+        "azureCNIVersion": "v1.0.17",
+        "maximumLoadBalancerRuleCount": 250,
+        "kubeProxyMode": "iptables"
+      }
     },
     "masterProfile": {
-      "count": 1,
-      "dnsPrefix": "masterdns1",
-      "vmSize": "Standard_D2_v2"
+      "count": 3,
+      "dnsPrefix": "kubernetes-southcentralus-7764",
+      "subjectAltNames": null,
+      "vmSize": "Standard_D2_v2",
+      "firstConsecutiveStaticIP": "10.255.255.5",
+      "storageProfile": "ManagedDisks",
+      "oauthEnabled": false,
+      "preProvisionExtension": null,
+      "extensions": [],
+      "distro": "aks",
+      "kubernetesConfig": {
+        "kubeletConfig": {
+          "--address": "0.0.0.0",
+          "--allow-privileged": "true",
+          "--anonymous-auth": "false",
+          "--authorization-mode": "Webhook",
+          "--azure-container-registry-config": "/etc/kubernetes/azure.json",
+          "--cadvisor-port": "0",
+          "--cgroups-per-qos": "true",
+          "--client-ca-file": "/etc/kubernetes/certs/ca.crt",
+          "--cloud-config": "/etc/kubernetes/azure.json",
+          "--cloud-provider": "azure",
+          "--cluster-dns": "10.0.0.10",
+          "--cluster-domain": "cluster.local",
+          "--enforce-node-allocatable": "pods",
+          "--event-qps": "0",
+          "--eviction-hard": "memory.available<750Mi,nodefs.available<10%,nodefs.inodesFree<5%",
+          "--feature-gates": "PodPriority=true",
+          "--image-gc-high-threshold": "85",
+          "--image-gc-low-threshold": "80",
+          "--image-pull-progress-deadline": "30m",
+          "--keep-terminated-pod-volumes": "false",
+          "--kubeconfig": "/var/lib/kubelet/kubeconfig",
+          "--max-pods": "30",
+          "--network-plugin": "cni",
+          "--node-status-update-frequency": "10s",
+          "--non-masquerade-cidr": "0.0.0.0/0",
+          "--pod-infra-container-image": "k8s.gcr.io/pause-amd64:3.1",
+          "--pod-manifest-path": "/etc/kubernetes/manifests",
+          "--pod-max-pids": "100"
+        }
+      },
+      "availabilityProfile": "AvailabilitySet",
+      "cosmosEtcd": false
     },
     "agentPoolProfiles": [
       {
         "name": "agentpool1",
-        "count": 3,
+        "count": 2,
         "vmSize": "Standard_D2_v2",
-        "availabilityProfile": "AvailabilitySet"
-      },
-      {
-        "name": "agentpool2",
-        "count": 3,
-        "vmSize": "Standard_D2_v2",
-        "availabilityProfile": "AvailabilitySet"
+        "osType": "Linux",
+        "availabilityProfile": "VirtualMachineScaleSets",
+        "storageProfile": "ManagedDisks",
+        "distro": "aks",
+        "kubernetesConfig": {
+          "kubeletConfig": {
+            "--address": "0.0.0.0",
+            "--allow-privileged": "true",
+            "--anonymous-auth": "false",
+            "--authorization-mode": "Webhook",
+            "--azure-container-registry-config": "/etc/kubernetes/azure.json",
+            "--cadvisor-port": "0",
+            "--cgroups-per-qos": "true",
+            "--client-ca-file": "/etc/kubernetes/certs/ca.crt",
+            "--cloud-config": "/etc/kubernetes/azure.json",
+            "--cloud-provider": "azure",
+            "--cluster-dns": "10.0.0.10",
+            "--cluster-domain": "cluster.local",
+            "--enforce-node-allocatable": "pods",
+            "--event-qps": "0",
+            "--eviction-hard": "memory.available<750Mi,nodefs.available<10%,nodefs.inodesFree<5%",
+            "--feature-gates": "PodPriority=true",
+            "--image-gc-high-threshold": "85",
+            "--image-gc-low-threshold": "80",
+            "--image-pull-progress-deadline": "30m",
+            "--keep-terminated-pod-volumes": "false",
+            "--kubeconfig": "/var/lib/kubelet/kubeconfig",
+            "--max-pods": "30",
+            "--network-plugin": "cni",
+            "--node-status-update-frequency": "10s",
+            "--non-masquerade-cidr": "0.0.0.0/0",
+            "--pod-infra-container-image": "k8s.gcr.io/pause-amd64:3.1",
+            "--pod-manifest-path": "/etc/kubernetes/manifests",
+            "--pod-max-pids": "100"
+          }
+        },
+        "acceleratedNetworkingEnabled": true,
+        "acceleratedNetworkingEnabledWindows": false,
+        "vmssOverProvisioningEnabled": false,
+        "fqdn": "",
+        "preProvisionExtension": null,
+        "extensions": [],
+        "singlePlacementGroup": true
       }
     ],
     "linuxProfile": {

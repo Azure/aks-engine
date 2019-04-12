@@ -106,11 +106,17 @@ type AKSEngineClient interface {
 	// GetVirtualMachine retrieves the specified virtual machine.
 	GetVirtualMachine(ctx context.Context, resourceGroup, name string) (compute.VirtualMachine, error)
 
+	// RestartVirtualMachine restarts the specified virtual machine.
+	RestartVirtualMachine(ctx context.Context, resourceGroup, name string) error
+
 	// DeleteVirtualMachine deletes the specified virtual machine.
 	DeleteVirtualMachine(ctx context.Context, resourceGroup, name string) error
 
 	// ListVirtualMachineScaleSets lists the VMSS resources in the resource group
 	ListVirtualMachineScaleSets(ctx context.Context, resourceGroup string) (VirtualMachineScaleSetListResultPage, error)
+
+	// RestartVirtualMachineScaleSets restarts the specified VMSS
+	RestartVirtualMachineScaleSets(ctx context.Context, resourceGroup, virtualMachineScaleSet string, instanceIDs *compute.VirtualMachineScaleSetVMInstanceIDs) error
 
 	// ListVirtualMachineScaleSetVMs lists the virtual machines contained in a VMSS
 	ListVirtualMachineScaleSetVMs(ctx context.Context, resourceGroup, virtualMachineScaleSet string) (VirtualMachineScaleSetVMListResultPage, error)
@@ -181,20 +187,28 @@ type AKSStorageClient interface {
 
 // KubernetesClient interface models client for interacting with kubernetes api server
 type KubernetesClient interface {
-	//ListPods returns all Pods running on the passed in node
+	// ListPods returns Pods running on the passed in node.
 	ListPods(node *v1.Node) (*v1.PodList, error)
-	//GetNode returns details about node with passed in name
+	// ListPods returns all Pods running
+	ListAllPods() (*v1.PodList, error)
+	// ListNodes returns a list of Nodes registered in the api server.
+	ListNodes() (*v1.NodeList, error)
+	// ListServiceAccounts returns a list of Service Accounts in a namespace
+	ListServiceAccounts(namespace string) (*v1.ServiceAccountList, error)
+	// GetNode returns details about node with passed in name.
 	GetNode(name string) (*v1.Node, error)
-	//UpdateNode updates the node in the api server with the passed in info
+	// UpdateNode updates the node in the api server with the passed in info.
 	UpdateNode(node *v1.Node) (*v1.Node, error)
-	//DeleteNode deregisters node in the api server
+	// DeleteNode deregisters node in the api server.
 	DeleteNode(name string) error
-	//SupportEviction queries the api server to discover if it supports eviction, and returns supported type if it is supported
+	// SupportEviction queries the api server to discover if it supports eviction, and returns supported type if it is supported.
 	SupportEviction() (string, error)
-	//DeletePod deletes the passed in pod
+	// DeletePod deletes the passed in pod.
 	DeletePod(pod *v1.Pod) error
-	//EvictPod evicts the passed in pod using the passed in api version
+	// DeleteServiceAccount deletes the passed in service account.
+	DeleteServiceAccount(sa *v1.ServiceAccount) error
+	// EvictPod evicts the passed in pod using the passed in api version.
 	EvictPod(pod *v1.Pod, policyGroupVersion string) error
-	//WaitForDelete waits until all pods are deleted. Returns all pods not deleted and an error on failure
+	// WaitForDelete waits until all pods are deleted. Returns all pods not deleted and an error on failure.
 	WaitForDelete(logger *log.Entry, pods []v1.Pod, usingEviction bool) ([]v1.Pod, error)
 }
