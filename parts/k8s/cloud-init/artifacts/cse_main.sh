@@ -51,6 +51,7 @@ if [ -f /var/run/reboot-required ]; then
     REBOOTREQUIRED=true
 else
     REBOOTREQUIRED=false
+    systemctl_restart 20 5 10 ssh
 fi
 
 if [ -f /var/log.vhd/azure/golden-image-install.complete ]; then
