@@ -30,7 +30,7 @@ import (
 const (
 	rotateCertsName             = "rotate-certs"
 	rotateCertsShortDescription = "Rotate certificates on an existing Kubernetes cluster"
-	rotateCertsLongDescription  = "Rotate certificates on an existing Kubernetes cluster"
+	rotateCertsLongDescription  = "Rotate CA, etcd, kubelet, kubeconfig and apiserver certificates in a cluster built with AKS Engine. Rotating certificates can break component connectivity and leave the cluster in an unrecoverable state. Before performing any of these instructions on a live cluster, it is preferrable to backup your cluster state and migrate critical workloads to another cluster."
 	kubeSystemNamespace         = "kube-system"
 )
 
@@ -72,7 +72,7 @@ func newRotateCertsCmd() *cobra.Command {
 	f := command.Flags()
 	f.StringVarP(&rcc.location, "location", "l", "", "location the cluster is deployed in (required)")
 	f.StringVarP(&rcc.resourceGroupName, "resource-group", "g", "", "the resource group where the cluster is deployed (required)")
-	f.StringVarP(&rcc.apiModelPath, "apimodel", "m", "", "path to the generated apimodel file (required)")
+	f.StringVarP(&rcc.apiModelPath, "api-model", "m", "", "path to the generated apimodel file (required)")
 	f.StringVarP(&rcc.sshFilepath, "ssh", "", "", "the filepath of a valid private ssh key to access the cluster's nodes (required)")
 	f.StringVar(&rcc.masterFQDN, "master-FQDN", "", "FQDN for the master load balancer (required)")
 	f.StringVarP(&rcc.outputDirectory, "output-directory", "o", "", "output directory where generated TLS artifacts will be saved (derived from DNS prefix if absent)")
@@ -99,7 +99,7 @@ func (rcc *rotateCertsCmd) run(cmd *cobra.Command, args []string) error {
 	defer cancel()
 	_, err = rcc.client.EnsureResourceGroup(ctx, rcc.resourceGroupName, rcc.location, nil)
 	if err != nil {
-		return errors.Wrap(err, "error ensuring resource group")
+		return errors.Wrap(err, "ensuring resource group")
 	}
 
 	// load the cluster configuration.
@@ -109,7 +109,7 @@ func (rcc *rotateCertsCmd) run(cmd *cobra.Command, args []string) error {
 
 	rcc.locale, err = i18n.LoadTranslations()
 	if err != nil {
-		return errors.Wrap(err, "error loading translation files")
+		return errors.Wrap(err, "loading translation files")
 	}
 
 	log.Debugf("Loading container service")
@@ -121,7 +121,7 @@ func (rcc *rotateCertsCmd) run(cmd *cobra.Command, args []string) error {
 	}
 	rcc.containerService, rcc.apiVersion, err = apiloader.LoadContainerServiceFromFile(rcc.apiModelPath, true, true, nil)
 	if err != nil {
-		return errors.Wrap(err, "error parsing the api model")
+		return errors.Wrap(err, "parsing the api model")
 	}
 
 	if rcc.outputDirectory == "" {
@@ -136,7 +136,7 @@ func (rcc *rotateCertsCmd) run(cmd *cobra.Command, args []string) error {
 
 	err = rcc.getClusterNodes()
 	if err != nil {
-		return errors.Wrap(err, "error listing cluster nodes")
+		return errors.Wrap(err, "listing cluster nodes")
 	}
 
 	log.Infoln("Generating new certificates")
@@ -145,7 +145,7 @@ func (rcc *rotateCertsCmd) run(cmd *cobra.Command, args []string) error {
 	rcc.containerService.Properties.CertificateProfile = &api.CertificateProfile{}
 	certsGenerated, _, err := rcc.containerService.SetDefaultCerts()
 	if !certsGenerated || err != nil {
-		return errors.Wrap(err, "error generating new certificates")
+		return errors.Wrap(err, "generating new certificates")
 	}
 
 	if _, err = os.Stat(rcc.sshFilepath); os.IsNotExist(err) {
@@ -157,39 +157,39 @@ func (rcc *rotateCertsCmd) run(cmd *cobra.Command, args []string) error {
 
 	err = rcc.rotateApiserver()
 	if err != nil {
-		return errors.Wrap(err, "error rotating apiserver")
+		return errors.Wrap(err, "rotating apiserver")
 	}
 
 	log.Infoln("Rotating kubelet certificate")
 
 	err = rcc.rotateKubelet()
 	if err != nil {
-		return errors.Wrap(err, "error rotating kubelet")
+		return errors.Wrap(err, "rotating kubelet")
 	}
 
 	log.Infoln("Rotating etcd certificates")
 
 	err = rcc.rotateEtcd(ctx)
 	if err != nil {
-		return errors.Wrap(err, "error rotating etcd cluster")
+		return errors.Wrap(err, "rotating etcd cluster")
 	}
 
 	log.Infoln("Updating kubeconfig")
 	err = rcc.updateKubeconfig()
 	if err != nil {
-		return errors.Wrap(err, "error updating kubeconfig")
+		return errors.Wrap(err, "updating kubeconfig")
 	}
 
 	log.Debugf("Deleting Service Accoutns")
 	err = rcc.deleteServiceAccounts()
 	if err != nil {
-		return errors.Wrap(err, "error deleting service accounts")
+		return errors.Wrap(err, "deleting service accounts")
 	}
 
 	log.Debugf("Deleting all pods")
 	err = rcc.deleteAllPods()
 	if err != nil {
-		return errors.Wrap(err, "error deleting all the pods")
+		return errors.Wrap(err, "deleting all the pods")
 	}
 
 	err = rcc.writeArtifacts()
@@ -319,7 +319,7 @@ func (rcc *rotateCertsCmd) deleteServiceAccounts() error {
 func (rcc *rotateCertsCmd) updateKubeconfig() error {
 	kubeconfig, err := engine.GenerateKubeConfig(rcc.containerService.Properties, rcc.location)
 	if err != nil {
-		return errors.Wrap(err, "error generating kubeconfig")
+		return errors.Wrap(err, "generating kubeconfig")
 	}
 
 	for _, host := range rcc.masterNodes {
@@ -336,7 +336,7 @@ func (rcc *rotateCertsCmd) updateKubeconfig() error {
 func (rcc *rotateCertsCmd) getKubeClient() (armhelpers.KubernetesClient, error) {
 	kubeconfig, err := engine.GenerateKubeConfig(rcc.containerService.Properties, rcc.location)
 	if err != nil {
-		return nil, errors.Wrap(err, "error generating kubeconfig")
+		return nil, errors.Wrap(err, "generating kubeconfig")
 	}
 	var kubeClient armhelpers.KubernetesClient
 	if rcc.client != nil {
@@ -383,7 +383,7 @@ func (rcc *rotateCertsCmd) rotateEtcd(ctx context.Context) error {
 	log.Infoln("Rebooting all nodes... This might take a few minutes")
 	err := rcc.rebootAllNodes(ctx)
 	if err != nil {
-		return errors.Wrap(err, "error rebooting the nodes")
+		return errors.Wrap(err, "rebooting the nodes")
 	}
 
 	for _, host := range rcc.masterNodes {
@@ -471,18 +471,18 @@ func executeCmd(command, masterFQDN, hostname string, port string, config *ssh.C
 	// Dial connection to the master via public load balancer
 	lbClient, err := ssh.Dial("tcp", fmt.Sprintf("%s:%s", masterFQDN, port), config)
 	if err != nil {
-		return "", errors.Wrap(err, "error Dialing LB")
+		return "", errors.Wrap(err, "Dialing LB")
 	}
 
 	// Dial a connection to the agent host, from the master
 	conn, err := lbClient.Dial("tcp", fmt.Sprintf("%s:%s", hostname, port))
 	if err != nil {
-		return "", errors.Wrap(err, "error Dialing host")
+		return "", errors.Wrap(err, "Dialing host")
 	}
 
 	ncc, chans, reqs, err := ssh.NewClientConn(conn, hostname, config)
 	if err != nil {
-		return "", errors.Wrap(err, "error starting new client connection to host")
+		return "", errors.Wrap(err, "starting new client connection to host")
 	}
 
 	sClient := ssh.NewClient(ncc, chans, reqs)
@@ -490,7 +490,7 @@ func executeCmd(command, masterFQDN, hostname string, port string, config *ssh.C
 	session, err := sClient.NewSession()
 
 	if err != nil {
-		return "", errors.Wrap(err, "error opening SSH session")
+		return "", errors.Wrap(err, "opening SSH session")
 	}
 	defer session.Close()
 
@@ -499,7 +499,7 @@ func executeCmd(command, masterFQDN, hostname string, port string, config *ssh.C
 
 	err = session.Run(command)
 	if err != nil {
-		return fmt.Sprintf("%s -> %s", hostname, stdoutBuf.String()), errors.Wrap(err, "error running command")
+		return fmt.Sprintf("%s -> %s", hostname, stdoutBuf.String()), errors.Wrap(err, "running command")
 	}
 
 	return fmt.Sprintf("%s -> %s", hostname, stdoutBuf.String()), nil
