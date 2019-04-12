@@ -33,6 +33,7 @@ if [[ "${TARGET_ENVIRONMENT,,}" == "${AZURE_STACK_ENV}"  ]]; then
     config_script_custom_cloud=/opt/azure/containers/provision_configs_custom_cloud.sh
     wait_for_file 3600 1 $config_script_custom_cloud || exit $ERR_FILE_WATCH_TIMEOUT
     source $config_script_custom_cloud
+    CUSTOM_CLOUD_SUFFIX=${AZURE_STACK_SUFFIX}
 fi
 
 CUSTOM_SEARCH_DOMAIN_SCRIPT=/opt/azure/containers/setup-custom-search-domains.sh
@@ -88,7 +89,7 @@ if [[ "${GPU_NODE}" = true ]]; then
 else
     cleanUpGPUDrivers
 fi
-installKubeletAndKubectl
+installKubeletAndKubectl ${CUSTOM_CLOUD_SUFFIX}
 if [[ $OS != $COREOS_OS_NAME ]]; then
     ensureRPC
 fi
@@ -180,7 +181,7 @@ ps auxfww > /opt/azure/provision-ps.log &
 if $FULL_INSTALL_REQUIRED; then
   applyCIS || exit $ERR_CIS_HARDENING_ERROR
 else
-  cleanUpContainerImages
+  cleanUpContainerImages ${CUSTOM_CLOUD_SUFFIX}
 fi
 
 if $REBOOTREQUIRED; then

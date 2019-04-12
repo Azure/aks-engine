@@ -253,7 +253,10 @@ installImg() {
 
 extractHyperkube() {
     CLI_TOOL=$1
-    path="/home/hyperkube-downloads/${KUBERNETES_VERSION}"
+    # CUSTOM_CLOUD_SUFFIX only set when extracting custom Hyperkube builds (e.x.: Azure Stack)
+    CUSTOM_CLOUD_SUFFIX=$2
+    kubernetes_version="${KUBERNETES_VERSION}${CUSTOM_CLOUD_SUFFIX}"
+    path="/home/hyperkube-downloads/${kubernetes_version}"
     pullContainerImage $CLI_TOOL ${HYPERKUBE_URL}
     if [[ "$CLI_TOOL" == "docker" ]]; then
         mkdir -p "$path"
@@ -267,22 +270,25 @@ extractHyperkube() {
         mv "$path/hyperkube" "/opt/kubectl"
         chmod a+x /opt/kubelet /opt/kubectl
     else
-        cp "$path/hyperkube" "/usr/local/bin/kubelet-${KUBERNETES_VERSION}"
-        mv "$path/hyperkube" "/usr/local/bin/kubectl-${KUBERNETES_VERSION}"
+        cp "$path/hyperkube" "/usr/local/bin/kubelet-${kubernetes_version}"
+        mv "$path/hyperkube" "/usr/local/bin/kubectl-${kubernetes_version}"
     fi
 }
 
 installKubeletAndKubectl() {
-    if [[ ! -f "/usr/local/bin/kubectl-${KUBERNETES_VERSION}" ]]; then
+    # CUSTOM_CLOUD_SUFFIX only set when extracting custom Hyperkube builds (e.x.: Azure Stack)
+    CUSTOM_CLOUD_SUFFIX=$1
+    kubernetes_version=${KUBERNETES_VERSION}${CUSTOM_CLOUD_SUFFIX}
+    if [[ ! -f "/usr/local/bin/kubectl-${kubernetes_version}" ]]; then
         if [[ "$CONTAINER_RUNTIME" == "docker" ]]; then
-            extractHyperkube "docker"
+            extractHyperkube "docker" ${CUSTOM_CLOUD_SUFFIX}
         else
             installImg
             extractHyperkube "img"
         fi
     fi
-    mv "/usr/local/bin/kubelet-${KUBERNETES_VERSION}" "/usr/local/bin/kubelet"
-    mv "/usr/local/bin/kubectl-${KUBERNETES_VERSION}" "/usr/local/bin/kubectl"
+    mv "/usr/local/bin/kubelet-${kubernetes_version}" "/usr/local/bin/kubelet"
+    mv "/usr/local/bin/kubectl-${kubernetes_version}" "/usr/local/bin/kubectl"
     chmod a+x /usr/local/bin/kubelet /usr/local/bin/kubectl
     rm -rf /usr/local/bin/kubelet-* /usr/local/bin/kubectl-* /home/hyperkube-downloads &
 }
@@ -298,8 +304,15 @@ pullContainerImage() {
 
 cleanUpContainerImages() {
     # TODO remove all unused container images at runtime
+    # CUSTOM_CLOUD_SUFFIX only set when extracting custom Hyperkube builds (e.x.: Azure Stack)
+    CUSTOM_CLOUD_SUFFIX=$1
     docker rmi $(docker images --format '{{.Repository}}:{{.Tag}}' | grep -v ${KUBERNETES_VERSION} | grep 'hyperkube') &
     docker rmi $(docker images --format '{{.Repository}}:{{.Tag}}' | grep -v ${KUBERNETES_VERSION} | grep 'cloud-controller-manager') &
+    if [[ "${CUSTOM_CLOUD_SUFFIX}" == "${AZURE_STACK_SUFFIX}" ]]; then
+        docker rmi $(docker images --format '{{.Repository}}:{{.Tag}}' | grep -v ${AZURE_STACK_HYPERKUBE_REPOSITORY} | grep 'hyperkube') &
+    else
+        docker rmi $(docker images --format '{{.Repository}}:{{.Tag}}' | grep ${AZURE_STACK_HYPERKUBE_REPOSITORY} | grep 'hyperkube') &
+    fi
     if [ "$IS_HOSTED_MASTER" = "false" ]; then
         echo "Cleaning up AKS container images, not an AKS cluster"
         docker rmi $(docker images --format '{{.Repository}}:{{.Tag}}' | grep 'hcp-tunnel-front') &

@@ -363,6 +363,16 @@ for KUBERNETES_VERSION in ${K8S_VERSIONS}; do
     echo "  - ${CONTAINER_IMAGE}" >> ${RELEASE_NOTES_FILEPATH}
 done
 
+# TODO: fetch supported k8s versions from an aks-engine command instead of hardcoding them here
+AZURE_STACK_K8S_VERSIONS="
+1.11.7
+"
+for AZS_KUBERNETES_VERSION in ${AZURE_STACK_K8S_VERSIONS}; do
+    HYPERKUBE_URL="${AZURE_STACK_HYPERKUBE_REPOSITORY}:v${AZS_KUBERNETES_VERSION}"
+    extractHyperkube "docker" ${AZURE_STACK_SUFFIX}
+    echo "  - ${HYPERKUBE_URL}" >> ${RELEASE_NOTES_FILEPATH}
+done
+
 df -h
 
 echo "Install completed successfully on " `date` >> ${RELEASE_NOTES_FILEPATH}
