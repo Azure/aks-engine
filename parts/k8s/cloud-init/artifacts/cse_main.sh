@@ -179,6 +179,7 @@ ps auxfww > /opt/azure/provision-ps.log &
 
 if $FULL_INSTALL_REQUIRED; then
   applyCIS || exit $ERR_CIS_HARDENING_ERROR
+  sysctl_reload 20 5 10 || exit $ERR_SYSCTL_RELOAD
 else
   cleanUpContainerImages
 fi

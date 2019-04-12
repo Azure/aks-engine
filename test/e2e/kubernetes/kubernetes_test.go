@@ -168,6 +168,44 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			}
 		})
 
+		It("should validate Ubuntu host OS network configuration on all nodes", func() {
+			if eng.ExpandedDefinition.Properties.IsUbuntuDistroForAllNodes() {
+				kubeConfig, err := GetConfig()
+				Expect(err).NotTo(HaveOccurred())
+				master := fmt.Sprintf("azureuser@%s", kubeConfig.GetServerName())
+				nodeList, err := node.Get()
+				Expect(err).NotTo(HaveOccurred())
+				for _, node := range nodeList.Nodes {
+					netConfigs := map[string]int{
+						"/proc/sys/net/ipv4/conf/all/send_redirects":          0,
+						"/proc/sys/net/ipv4/conf/default/send_redirects":      0,
+						"/proc/sys/net/ipv4/conf/all/accept_source_route":     0,
+						"/proc/sys/net/ipv4/conf/default/accept_source_route": 0,
+						"/proc/sys/net/ipv4/conf/all/accept_redirects":        0,
+						"/proc/sys/net/ipv4/conf/default/accept_redirects":    0,
+						"/proc/sys/net/ipv4/conf/all/secure_redirects":        0,
+						"/proc/sys/net/ipv4/conf/default/secure_redirects":    0,
+						"/proc/sys/net/ipv4/conf/all/log_martians":            1,
+						"/proc/sys/net/ipv4/conf/default/log_martians":        1,
+						"/proc/sys/net/ipv6/conf/all/accept_ra":               0,
+						"/proc/sys/net/ipv6/conf/default/accept_ra":           0,
+						"/proc/sys/net/ipv6/conf/all/accept_redirects":        0,
+						"/proc/sys/net/ipv6/conf/default/accept_redirects":    0,
+					}
+					for setting, value := range netConfigs {
+						netConfigValidationCommand := fmt.Sprintf("\"sudo cat %s | grep %d\"", setting, value)
+						cmd := exec.Command("ssh", "-A", "-i", masterSSHPrivateKeyFilepath, "-p", masterSSHPort, "-o", "ConnectTimeout=10", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-o", "LogLevel=ERROR", master, "ssh", "-o", "ConnectTimeout=10", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-o", "LogLevel=ERROR", node.Metadata.Name, netConfigValidationCommand)
+						util.PrintCommand(cmd)
+						out, err := cmd.CombinedOutput()
+						log.Printf("%s\n", out)
+						Expect(err).NotTo(HaveOccurred())
+					}
+				}
+			} else {
+				Skip("root password validation only works on ubuntu distro until this lands in a VHD")
+			}
+		})
+
 		It("should report all nodes in a Ready state", func() {
 			nodeCount := eng.NodeCount()
 			log.Printf("Checking for %d Ready nodes\n", nodeCount)
