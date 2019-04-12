@@ -65,12 +65,14 @@ write_files:
   content: !!binary |
     {{CloudInitData "systemConf"}}
 
+{{if not .MasterProfile.IsVHDDistro}}
 - path: /etc/sysctl.d/60-CIS.conf
   permissions: "0644"
   encoding: gzip
   owner: root
   content: !!binary |
     {{CloudInitData "cisNetEnforcement"}}
+{{end}}
 
 {{if .MasterProfile.IsCoreOS}}
 - path: /opt/bin/health-monitor.sh

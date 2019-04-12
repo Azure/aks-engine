@@ -126,12 +126,14 @@ write_files:
   content: !!binary |
     {{CloudInitData "etcIssue"}}
 
+{{if not .IsVHDDistro}}
 - path: /etc/sysctl.d/60-CIS.conf
   permissions: "0644"
   encoding: gzip
   owner: root
   content: !!binary |
     {{CloudInitData "cisNetEnforcement"}}
+{{end}}
 
 {{if .KubernetesConfig.RequiresDocker}}
     {{if not .IsCoreOS}}
