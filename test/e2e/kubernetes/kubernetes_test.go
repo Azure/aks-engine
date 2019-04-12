@@ -31,12 +31,14 @@ import (
 	"github.com/Azure/aks-engine/test/e2e/kubernetes/service"
 	"github.com/Azure/aks-engine/test/e2e/kubernetes/storageclass"
 	"github.com/Azure/aks-engine/test/e2e/kubernetes/util"
+	"github.com/Azure/aks-engine/test/e2e/remote"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
 
 const (
 	WorkloadDir                     = "workloads"
+	ScriptsDir                      = "scripts"
 	PolicyDir                       = "workloads/policies"
 	deleteResourceRetries           = 10
 	retryCommandsTimeout            = 5 * time.Minute
@@ -108,7 +110,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			if eng.ExpandedDefinition.Properties.MasterProfile.IsUbuntu() {
 				kubeConfig, err := GetConfig()
 				Expect(err).NotTo(HaveOccurred())
-				master := fmt.Sprintf("azureuser@%s", kubeConfig.GetServerName())
+				master := fmt.Sprintf("%s@%s", eng.ExpandedDefinition.Properties.LinuxProfile.AdminUsername, kubeConfig.GetServerName())
 
 				lsbReleaseCmd := fmt.Sprintf("lsb_release -a && uname -r")
 				cmd := exec.Command("ssh", "-i", masterSSHPrivateKeyFilepath, "-p", masterSSHPort, "-o", "ConnectTimeout=10", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-o", "LogLevel=ERROR", master, lsbReleaseCmd)
@@ -132,7 +134,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			if eng.ExpandedDefinition.Properties.OrchestratorProfile.KubernetesConfig.RequiresDocker() {
 				kubeConfig, err := GetConfig()
 				Expect(err).NotTo(HaveOccurred())
-				master := fmt.Sprintf("azureuser@%s", kubeConfig.GetServerName())
+				master := fmt.Sprintf("%s@%s", eng.ExpandedDefinition.Properties.LinuxProfile.AdminUsername, kubeConfig.GetServerName())
 				nodeList, err := node.Get()
 				Expect(err).NotTo(HaveOccurred())
 				dockerVersionCmd := fmt.Sprintf("\"docker version\"")
@@ -152,7 +154,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			if eng.ExpandedDefinition.Properties.IsUbuntuDistroForAllNodes() {
 				kubeConfig, err := GetConfig()
 				Expect(err).NotTo(HaveOccurred())
-				master := fmt.Sprintf("azureuser@%s", kubeConfig.GetServerName())
+				master := fmt.Sprintf("%s@%s", eng.ExpandedDefinition.Properties.LinuxProfile.AdminUsername, kubeConfig.GetServerName())
 				nodeList, err := node.Get()
 				Expect(err).NotTo(HaveOccurred())
 				rootPasswdCmd := fmt.Sprintf("\"sudo grep '^root:[!*]:' /etc/shadow\"")
@@ -172,34 +174,27 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			if eng.ExpandedDefinition.Properties.IsUbuntuDistroForAllNodes() {
 				kubeConfig, err := GetConfig()
 				Expect(err).NotTo(HaveOccurred())
-				master := fmt.Sprintf("azureuser@%s", kubeConfig.GetServerName())
+				master := fmt.Sprintf("%s@%s", eng.ExpandedDefinition.Properties.LinuxProfile.AdminUsername, kubeConfig.GetServerName())
 				nodeList, err := node.Get()
 				Expect(err).NotTo(HaveOccurred())
+				netConfigValidateScript := "net-config-validate.sh"
+				cmd := exec.Command("scp", "-i", masterSSHPrivateKeyFilepath, "-o", "StrictHostKeyChecking=no", filepath.Join(ScriptsDir, netConfigValidateScript), master+":/tmp/"+netConfigValidateScript)
+				util.PrintCommand(cmd)
+				out, err := cmd.CombinedOutput()
+				log.Printf("%s\n", out)
+				Expect(err).NotTo(HaveOccurred())
+				var conn *remote.Connection
+				conn, err = remote.NewConnection(kubeConfig.GetServerName(), "22", eng.ExpandedDefinition.Properties.LinuxProfile.AdminUsername, masterSSHPrivateKeyFilepath)
+				Expect(err).NotTo(HaveOccurred())
 				for _, node := range nodeList.Nodes {
-					netConfigs := map[string]int{
-						"/proc/sys/net/ipv4/conf/all/send_redirects":          0,
-						"/proc/sys/net/ipv4/conf/default/send_redirects":      0,
-						"/proc/sys/net/ipv4/conf/all/accept_source_route":     0,
-						"/proc/sys/net/ipv4/conf/default/accept_source_route": 0,
-						"/proc/sys/net/ipv4/conf/all/accept_redirects":        0,
-						"/proc/sys/net/ipv4/conf/default/accept_redirects":    0,
-						"/proc/sys/net/ipv4/conf/all/secure_redirects":        0,
-						"/proc/sys/net/ipv4/conf/default/secure_redirects":    0,
-						"/proc/sys/net/ipv4/conf/all/log_martians":            1,
-						"/proc/sys/net/ipv4/conf/default/log_martians":        1,
-						"/proc/sys/net/ipv6/conf/all/accept_ra":               0,
-						"/proc/sys/net/ipv6/conf/default/accept_ra":           0,
-						"/proc/sys/net/ipv6/conf/all/accept_redirects":        0,
-						"/proc/sys/net/ipv6/conf/default/accept_redirects":    0,
-					}
-					for setting, value := range netConfigs {
-						netConfigValidationCommand := fmt.Sprintf("\"sudo cat %s | grep %d\"", setting, value)
-						cmd := exec.Command("ssh", "-A", "-i", masterSSHPrivateKeyFilepath, "-p", masterSSHPort, "-o", "ConnectTimeout=10", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-o", "LogLevel=ERROR", master, "ssh", "-o", "ConnectTimeout=10", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-o", "LogLevel=ERROR", node.Metadata.Name, netConfigValidationCommand)
-						util.PrintCommand(cmd)
-						out, err := cmd.CombinedOutput()
-						log.Printf("%s\n", out)
-						Expect(err).NotTo(HaveOccurred())
-					}
+					err := conn.CopyToRemote(node.Metadata.Name, "/tmp/"+netConfigValidateScript)
+					Expect(err).NotTo(HaveOccurred())
+					netConfigValidationCommand := fmt.Sprintf("\"/tmp/%s\"", netConfigValidateScript)
+					cmd = exec.Command("ssh", "-A", "-i", masterSSHPrivateKeyFilepath, "-p", masterSSHPort, "-o", "ConnectTimeout=10", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-o", "LogLevel=ERROR", master, "ssh", "-o", "ConnectTimeout=10", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-o", "LogLevel=ERROR", node.Metadata.Name, netConfigValidationCommand)
+					util.PrintCommand(cmd)
+					out, err = cmd.CombinedOutput()
+					log.Printf("%s\n", out)
+					Expect(err).NotTo(HaveOccurred())
 				}
 			} else {
 				Skip("root password validation only works on ubuntu distro until this lands in a VHD")
@@ -474,7 +469,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 		It("should have functional host OS DNS", func() {
 			kubeConfig, err := GetConfig()
 			Expect(err).NotTo(HaveOccurred())
-			master := fmt.Sprintf("azureuser@%s", kubeConfig.GetServerName())
+			master := fmt.Sprintf("%s@%s", eng.ExpandedDefinition.Properties.LinuxProfile.AdminUsername, kubeConfig.GetServerName())
 
 			ifconfigCmd := fmt.Sprintf("ifconfig -a -v")
 			cmd := exec.Command("ssh", "-i", masterSSHPrivateKeyFilepath, "-p", masterSSHPort, "-o", "ConnectTimeout=10", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-o", "LogLevel=ERROR", master, ifconfigCmd)
@@ -603,7 +598,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 
 					kubeConfig, err := GetConfig()
 					Expect(err).NotTo(HaveOccurred())
-					master := fmt.Sprintf("azureuser@%s", kubeConfig.GetServerName())
+					master := fmt.Sprintf("%s@%s", eng.ExpandedDefinition.Properties.LinuxProfile.AdminUsername, kubeConfig.GetServerName())
 
 					if dashboardPort == 80 {
 						By("Ensuring that we can connect via HTTP to the dashboard on any one node")

@@ -120,8 +120,8 @@ func (c *Connection) Read(path string) ([]byte, error) {
 	return out, nil
 }
 
-// CopyRemote uses this ssh connection to scp remote files
-func (c *Connection) CopyRemote(hostname, path string) error {
+// CopyFromRemote uses this ssh connection to get remote files via scp
+func (c *Connection) CopyFromRemote(hostname, path string) error {
 	cmd := exec.Command("ssh-add", c.PrivateKeyPath)
 	out, err := cmd.CombinedOutput()
 	if err != nil {
@@ -129,6 +129,26 @@ func (c *Connection) CopyRemote(hostname, path string) error {
 		return err
 	}
 	remoteCommand := fmt.Sprintf("scp -o StrictHostKeyChecking=no %s:%s /tmp/%s-%s", hostname, path, hostname, filepath.Base(path))
+	connectString := fmt.Sprintf("%s@%s", c.User, c.Host)
+	cmd = exec.Command("ssh", "-A", "-i", c.PrivateKeyPath, "-o", "ConnectTimeout=30", "-o", "StrictHostKeyChecking=no", connectString, "-p", c.Port, remoteCommand)
+	util.PrintCommand(cmd)
+	out, err = cmd.CombinedOutput()
+	if err != nil {
+		log.Printf("Error output:%s\n", out)
+		return err
+	}
+	return nil
+}
+
+// CopyToRemote uses this ssh connection to send files via scp
+func (c *Connection) CopyToRemote(hostname, path string) error {
+	cmd := exec.Command("ssh-add", c.PrivateKeyPath)
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		log.Printf("Error output:%s\n", out)
+		return err
+	}
+	remoteCommand := fmt.Sprintf("scp -o StrictHostKeyChecking=no %s %s:%s", path, hostname, path)
 	connectString := fmt.Sprintf("%s@%s", c.User, c.Host)
 	cmd = exec.Command("ssh", "-A", "-i", c.PrivateKeyPath, "-o", "ConnectTimeout=30", "-o", "StrictHostKeyChecking=no", connectString, "-p", c.Port, remoteCommand)
 	util.PrintCommand(cmd)
