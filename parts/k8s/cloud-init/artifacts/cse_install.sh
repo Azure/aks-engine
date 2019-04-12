@@ -253,8 +253,7 @@ installImg() {
 
 extractHyperkube() {
     CLI_TOOL=$1
-    kubernetes_version="${KUBERNETES_VERSION}${KUBERNETES_VERSION_SUFFIX}"
-    path="/home/hyperkube-downloads/${kubernetes_version}"
+    path="/home/hyperkube-downloads/${KUBERNETES_VERSION}"
     pullContainerImage $CLI_TOOL ${HYPERKUBE_URL}
     if [[ "$CLI_TOOL" == "docker" ]]; then
         mkdir -p "$path"
@@ -268,14 +267,13 @@ extractHyperkube() {
         mv "$path/hyperkube" "/opt/kubectl"
         chmod a+x /opt/kubelet /opt/kubectl
     else
-        cp "$path/hyperkube" "/usr/local/bin/kubelet-${kubernetes_version}"
-        mv "$path/hyperkube" "/usr/local/bin/kubectl-${kubernetes_version}"
+        cp "$path/hyperkube" "/usr/local/bin/kubelet-${KUBERNETES_VERSION}"
+        mv "$path/hyperkube" "/usr/local/bin/kubectl-${KUBERNETES_VERSION}"
     fi
 }
 
 installKubeletAndKubectl() {
-    kubernetes_version=${KUBERNETES_VERSION}${KUBERNETES_VERSION_SUFFIX}
-    if [[ ! -f "/usr/local/bin/kubectl-${kubernetes_version}" ]]; then
+    if [[ ! -f "/usr/local/bin/kubectl-${KUBERNETES_VERSION}" ]]; then
         if [[ "$CONTAINER_RUNTIME" == "docker" ]]; then
             extractHyperkube "docker"
         else
@@ -283,8 +281,8 @@ installKubeletAndKubectl() {
             extractHyperkube "img"
         fi
     fi
-    mv "/usr/local/bin/kubelet-${kubernetes_version}" "/usr/local/bin/kubelet"
-    mv "/usr/local/bin/kubectl-${kubernetes_version}" "/usr/local/bin/kubectl"
+    mv "/usr/local/bin/kubelet-${KUBERNETES_VERSION}" "/usr/local/bin/kubelet"
+    mv "/usr/local/bin/kubectl-${KUBERNETES_VERSION}" "/usr/local/bin/kubectl"
     chmod a+x /usr/local/bin/kubelet /usr/local/bin/kubectl
     rm -rf /usr/local/bin/kubelet-* /usr/local/bin/kubectl-* /home/hyperkube-downloads &
 }
@@ -302,7 +300,7 @@ cleanUpContainerImages() {
     # TODO remove all unused container images at runtime
     docker rmi $(docker images --format '{{.Repository}}:{{.Tag}}' | grep -v ${KUBERNETES_VERSION} | grep 'hyperkube') &
     docker rmi $(docker images --format '{{.Repository}}:{{.Tag}}' | grep -v ${KUBERNETES_VERSION} | grep 'cloud-controller-manager') &
-    if [[ "${KUBERNETES_VERSION_SUFFIX}" == "${AZURE_STACK_SUFFIX}" ]]; then
+    if [[ "${TARGET_ENVIRONMENT,,}" == "${AZURE_STACK_ENV}"  ]]; then 
         docker rmi $(docker images --format '{{.Repository}}:{{.Tag}}' | grep -v ${AZURE_STACK_HYPERKUBE_REPOSITORY} | grep 'hyperkube') &
     else
         docker rmi $(docker images --format '{{.Repository}}:{{.Tag}}' | grep ${AZURE_STACK_HYPERKUBE_REPOSITORY} | grep 'hyperkube') &

@@ -340,7 +340,6 @@ pullContainerImage "docker" "busybox"
 echo "  - busybox" >> ${RELEASE_NOTES_FILEPATH}
 
 # TODO: fetch supported k8s versions from an aks-engine command instead of hardcoding them here
-KUBERNETES_VERSION_SUFFIX=${AZURE_SUFFIX}
 K8S_VERSIONS="
 1.14.1
 1.14.0
@@ -365,11 +364,11 @@ for KUBERNETES_VERSION in ${K8S_VERSIONS}; do
 done
 
 # TODO: fetch supported k8s versions from an aks-engine command instead of hardcoding them here
-KUBERNETES_VERSION_SUFFIX=${AZURE_STACK_SUFFIX}
 AZURE_STACK_K8S_VERSIONS="
 1.11.7
 "
 for AZS_KUBERNETES_VERSION in ${AZURE_STACK_K8S_VERSIONS}; do
+    KUBERNETES_VERSION=${AZS_KUBERNETES_VERSION}${AZURE_STACK_SUFFIX}
     HYPERKUBE_URL="${AZURE_STACK_HYPERKUBE_REPOSITORY}:v${AZS_KUBERNETES_VERSION}"
     extractHyperkube "docker"
     echo "  - ${HYPERKUBE_URL}" >> ${RELEASE_NOTES_FILEPATH}
