@@ -291,6 +291,29 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			}
 		})
 
+		It("should validate that every linux node has the right sshd config", func() {
+			if eng.ExpandedDefinition.Properties.IsUbuntuDistroForAllNodes() {
+				kubeConfig, err := GetConfig()
+				Expect(err).NotTo(HaveOccurred())
+				master := fmt.Sprintf("azureuser@%s", kubeConfig.GetServerName())
+				nodeList, err := node.Get()
+				Expect(err).NotTo(HaveOccurred())
+				sshdConfigs := []string{"ClientAliveInterval 120", "ClientAliveCountMax 3", "UsePrivilegeSeparation yes", "KeyRegenerationInterval 3600", "ServerKeyBits 1024", "SyslogFacility AUTH", "LogLevel INFO", "LoginGraceTime 60", "PermitRootLogin no", "PermitUserEnvironment no", "StrictModes yes", "RSAAuthentication yes", "PubkeyAuthentication yes", "IgnoreRhosts yes", "RhostsRSAAuthentication no", "HostbasedAuthentication no", "X11Forwarding no", "MaxAuthTries 4", "Banner /etc/issue.net", "AcceptEnv LANG LC_*", "Subsystem sftp /usr/lib/openssh/sftp-server", "UsePAM yes", "UseDNS no", "GSSAPIAuthentication no"}
+				for _, node := range nodeList.Nodes {
+					for _, config := range sshdConfigs {
+						sshdCommdand := fmt.Sprintf("\"sshd -T | grep -i '" + config + "'\"")
+						cmd := exec.Command("ssh", "-A", "-i", masterSSHPrivateKeyFilepath, "-p", masterSSHPort, "-o", "ConnectTimeout=10", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-o", "LogLevel=ERROR", master, "ssh", "-o", "ConnectTimeout=10", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-o", "LogLevel=ERROR", node.Metadata.Name, sshdCommdand)
+						util.PrintCommand(cmd)
+						out, err := cmd.CombinedOutput()
+						log.Printf("%s\n", out)
+						Expect(err).NotTo(HaveOccurred())
+					}
+				}
+			} else {
+				Skip("sshd config validation only works on ubuntu distro until this lands in a VHD")
+			}
+		})
+
 		It("should report all nodes in a Ready state", func() {
 			nodeCount := eng.NodeCount()
 			log.Printf("Checking for %d Ready nodes\n", nodeCount)
