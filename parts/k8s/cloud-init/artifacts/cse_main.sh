@@ -63,7 +63,7 @@ else
     FULL_INSTALL_REQUIRED=true
 fi
 
-if [[ $OS != $COREOS_OS_NAME ]] && [[ $FULL_INSTALL_REQUIRED ]]; then
+if [[ $OS == $UBUNTU_OS_NAME ]] && [ "$FULL_INSTALL_REQUIRED" = "true" ]; then
     installDeps
 else 
     echo "Golden image; skipping dependencies installation"
