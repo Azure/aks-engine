@@ -57,4 +57,4 @@ The certificate rotation tool has not been tested on and is expected to fail wit
 
 The rotation involves rebooting the nodes. ALL VMs in the resource group will be restarted as part of running the `rotate-certs` command. If the resource group contains any VMs that are not part of the cluster, they will be restarted as well.
 
-The tool is not currently idempotent, meaning that if the rotation fails halfway though or is interrupted, you will most likely not be able to re-run the operation without any manual intervention. There is a risk that your cluster will become unrecoverable which is why it is strongly recommended to follow the steps in the [preparation step](#preparation).
+The tool is not currently idempotent, meaning that if the rotation fails halfway though or is interrupted, you will most likely not be able to re-run the operation without manual intervention. There is a risk that your cluster will become unrecoverable which is why it is strongly recommended to follow the [preparation step](#preparation).
