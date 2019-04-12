@@ -4,7 +4,6 @@ source /home/packer/provision_source.sh
 source /home/packer/cis.sh
 
 RELEASE_NOTES_FILEPATH=/var/log/azure/golden-image-install.complete
-SYSCTL_CONFIG_SRC=/home/packer/sysctl-d-60-CIS.conf
 
 echo "Starting build on " `date` > ${RELEASE_NOTES_FILEPATH}
 echo "Using kernel:" >> ${RELEASE_NOTES_FILEPATH}
