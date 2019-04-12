@@ -20,7 +20,10 @@ Instructions on rotating TLS CA and certificates for an AKS Engine cluster.
 run `aks-engine rotate-certs`. For example:
 
 ```bash
-CLUSTER="<CLUSTER_DNS_PREFIX>" && bin/aks-engine rotate-certs --api-model _output/${CLUSTER}/apimodel.json --client-id "<YOUR_CLIENT_ID>" --client-secret "<YOUR_CLIENT_SECRET>" --location <CLUSTER_LOCATION> --master-FQDN ${CLUSTER}.<CLUSTER_LOCATION>.cloudapp.azure.com --ssh _output/${CLUSTER}-ssh --subscription-id "<YOUR_SUBSCRIPTION_ID>" -g ${CLUSTER} -o _output/${CLUSTER}
+CLUSTER="<CLUSTER_DNS_PREFIX>" && bin/aks-engine rotate-certs --api-model _output/${CLUSTER}/apimodel.json \
+--client-id "<YOUR_CLIENT_ID>" --client-secret "<YOUR_CLIENT_SECRET>" --location <CLUSTER_LOCATION> \
+--master-FQDN ${CLUSTER}.<CLUSTER_LOCATION>.cloudapp.azure.com --ssh _output/${CLUSTER}-ssh \
+--subscription-id "<YOUR_SUBSCRIPTION_ID>" -g ${CLUSTER} -o _output/${CLUSTER}
 ```
 
 The above example command assumes a default `output/` directory with the resource group name being the same as the cluster's DNS prefix.
@@ -41,7 +44,7 @@ After the above steps, you can verify the success of the CA and certs rotation:
 
 - Old  `kubeconfig`  should  **NOT**  be able to contact the API server, however the new kubeconfig should be able to talk to it.
 - All nodes are expected to be  `Ready`, all pods are expected to be  `Running`.
-- Try to fetch the logs of  `kube-apiserver`,  `kube-scheduler`  and  `kube-controller-namager`, they should all be running correctly without spitting errors. E.g. ```kubectl logs -lk8s-app=kube-scheduler -n kube-system`.
+- Try to fetch the logs of  `kube-apiserver`,  `kube-scheduler`  and  `kube-controller-namager`. They should all be running correctly without printing errors. E.g. `kubectl logs kube-apiserver-k8s-master-58431286-0 -n kube-system`.
 
 ## Known Limitations
 
