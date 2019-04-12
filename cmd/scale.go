@@ -151,7 +151,10 @@ func (sc *scaleCmd) load(cmd *cobra.Command) error {
 
 	if sc.containerService.Properties.IsAzureStackCloud() {
 		writeCustomCloudProfile(sc.containerService)
-		sc.containerService.Properties.SetAzureStackCloudSpec()
+		err = sc.containerService.Properties.SetAzureStackCloudSpec()
+		if err != nil {
+			return errors.Wrap(err, "error parsing the api model")
+		}
 	}
 
 	if err = sc.authArgs.validateAuthArgs(); err != nil {

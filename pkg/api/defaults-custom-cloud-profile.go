@@ -13,6 +13,7 @@ import (
 
 	"github.com/Azure/aks-engine/pkg/helpers"
 	"github.com/Azure/go-autorest/autorest/azure"
+	"github.com/pkg/errors"
 )
 
 func (cs *ContainerService) setCustomCloudProfileDefaults() error {
@@ -21,10 +22,13 @@ func (cs *ContainerService) setCustomCloudProfileDefaults() error {
 		p.CustomCloudProfile.AuthenticationMethod = helpers.EnsureString(p.CustomCloudProfile.AuthenticationMethod, ClientSecretAuthMethod)
 		p.CustomCloudProfile.IdentitySystem = helpers.EnsureString(p.CustomCloudProfile.IdentitySystem, AzureADIdentitySystem)
 		p.CustomCloudProfile.DependenciesLocation = DependenciesLocation(helpers.EnsureString(string(p.CustomCloudProfile.DependenciesLocation), AzureStackDependenciesLocationPublic))
-		p.SetAzureStackCloudSpec()
 		err := cs.SetCustomCloudProfileEnvironment()
 		if err != nil {
 			return fmt.Errorf("Failed to set environment - %s", err)
+		}
+		err = p.SetAzureStackCloudSpec()
+		if err != nil {
+			return fmt.Errorf("Failed to set cloud spec - %s", err)
 		}
 	}
 	return nil
@@ -92,7 +96,7 @@ func (cs *ContainerService) SetCustomCloudProfileEnvironment() error {
 }
 
 // SetAzureStackCloudSpec sets the cloud spec for Azure Stack .
-func (p *Properties) SetAzureStackCloudSpec() {
+func (p *Properties) SetAzureStackCloudSpec() error {
 	if p.IsAzureStackCloud() {
 		var azureStackCloudSpec AzureEnvironmentSpecConfig
 		switch p.CustomCloudProfile.DependenciesLocation {
@@ -107,7 +111,9 @@ func (p *Properties) SetAzureStackCloudSpec() {
 		default:
 			azureStackCloudSpec = AzureCloudSpecEnvMap[AzurePublicCloud]
 		}
-
+		if p.CustomCloudProfile.Environment == nil || p.CustomCloudProfile.Environment.ResourceManagerVMDNSSuffix == "" {
+			return errors.New("Failed to set Cloud Spec for Azure Stack due to invalid environment")
+		}
 		azureStackCloudSpec.EndpointConfig.ResourceManagerVMDNSSuffix = p.CustomCloudProfile.Environment.ResourceManagerVMDNSSuffix
 		azureStackCloudSpec.CloudName = AzureStackCloud
 		// Use the custom input to overwrite the default values in AzureStackCloudSpec
@@ -151,4 +157,5 @@ func (p *Properties) SetAzureStackCloudSpec() {
 		}
 		AzureCloudSpecEnvMap[AzureStackCloud] = azureStackCloudSpec
 	}
+	return nil
 }

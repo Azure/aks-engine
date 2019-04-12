@@ -149,7 +149,10 @@ func (uc *upgradeCmd) loadCluster(cmd *cobra.Command) error {
 
 	if uc.containerService.Properties.IsAzureStackCloud() {
 		writeCustomCloudProfile(uc.containerService)
-		uc.containerService.Properties.SetAzureStackCloudSpec()
+		err = uc.containerService.Properties.SetAzureStackCloudSpec()
+		if err != nil {
+			return errors.Wrap(err, "error parsing the api model")
+		}
 	}
 
 	if err = uc.getAuthArgs().validateAuthArgs(); err != nil {
