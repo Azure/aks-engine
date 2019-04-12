@@ -181,7 +181,7 @@ mkdir -p /opt/azure/containers && touch /opt/azure/containers/provision.complete
 ps auxfww > /opt/azure/provision-ps.log &
 
 if $FULL_INSTALL_REQUIRED; then
-  if [[ $OS != $COREOS_OS_NAME ]]; then
+  if [[ $OS == $UBUNTU_OS_NAME ]]; then
     applyCIS || exit $ERR_CIS_HARDENING_ERROR
   fi
 else
