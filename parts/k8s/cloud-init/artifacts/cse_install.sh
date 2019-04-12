@@ -253,9 +253,7 @@ installImg() {
 
 extractHyperkube() {
     CLI_TOOL=$1
-    # CUSTOM_CLOUD_SUFFIX only set when extracting custom Hyperkube builds (e.x.: Azure Stack)
-    CUSTOM_CLOUD_SUFFIX=$2
-    kubernetes_version="${KUBERNETES_VERSION}${CUSTOM_CLOUD_SUFFIX}"
+    kubernetes_version="${KUBERNETES_VERSION}${KUBERNETES_VERSION_SUFFIX}"
     path="/home/hyperkube-downloads/${kubernetes_version}"
     pullContainerImage $CLI_TOOL ${HYPERKUBE_URL}
     if [[ "$CLI_TOOL" == "docker" ]]; then
@@ -276,12 +274,10 @@ extractHyperkube() {
 }
 
 installKubeletAndKubectl() {
-    # CUSTOM_CLOUD_SUFFIX only set when extracting custom Hyperkube builds (e.x.: Azure Stack)
-    CUSTOM_CLOUD_SUFFIX=$1
-    kubernetes_version=${KUBERNETES_VERSION}${CUSTOM_CLOUD_SUFFIX}
+    kubernetes_version=${KUBERNETES_VERSION}${KUBERNETES_VERSION_SUFFIX}
     if [[ ! -f "/usr/local/bin/kubectl-${kubernetes_version}" ]]; then
         if [[ "$CONTAINER_RUNTIME" == "docker" ]]; then
-            extractHyperkube "docker" ${CUSTOM_CLOUD_SUFFIX}
+            extractHyperkube "docker"
         else
             installImg
             extractHyperkube "img"
@@ -304,11 +300,9 @@ pullContainerImage() {
 
 cleanUpContainerImages() {
     # TODO remove all unused container images at runtime
-    # CUSTOM_CLOUD_SUFFIX only set when extracting custom Hyperkube builds (e.x.: Azure Stack)
-    CUSTOM_CLOUD_SUFFIX=$1
     docker rmi $(docker images --format '{{.Repository}}:{{.Tag}}' | grep -v ${KUBERNETES_VERSION} | grep 'hyperkube') &
     docker rmi $(docker images --format '{{.Repository}}:{{.Tag}}' | grep -v ${KUBERNETES_VERSION} | grep 'cloud-controller-manager') &
-    if [[ "${CUSTOM_CLOUD_SUFFIX}" == "${AZURE_STACK_SUFFIX}" ]]; then
+    if [[ "${KUBERNETES_VERSION_SUFFIX}" == "${AZURE_STACK_SUFFIX}" ]]; then
         docker rmi $(docker images --format '{{.Repository}}:{{.Tag}}' | grep -v ${AZURE_STACK_HYPERKUBE_REPOSITORY} | grep 'hyperkube') &
     else
         docker rmi $(docker images --format '{{.Repository}}:{{.Tag}}' | grep ${AZURE_STACK_HYPERKUBE_REPOSITORY} | grep 'hyperkube') &

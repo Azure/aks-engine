@@ -36,6 +36,7 @@ if [[ "${TARGET_ENVIRONMENT,,}" == "${AZURE_STACK_ENV}"  ]]; then
     CUSTOM_CLOUD_SUFFIX=${AZURE_STACK_SUFFIX}
 fi
 
+KUBERNETES_VERSION_SUFFIX="${CUSTOM_CLOUD_SUFFIX:-$AZURE_SUFFIX}"
 CUSTOM_SEARCH_DOMAIN_SCRIPT=/opt/azure/containers/setup-custom-search-domains.sh
 
 set +x
@@ -89,7 +90,7 @@ if [[ "${GPU_NODE}" = true ]]; then
 else
     cleanUpGPUDrivers
 fi
-installKubeletAndKubectl ${CUSTOM_CLOUD_SUFFIX}
+installKubeletAndKubectl
 if [[ $OS != $COREOS_OS_NAME ]]; then
     ensureRPC
 fi
@@ -181,7 +182,7 @@ ps auxfww > /opt/azure/provision-ps.log &
 if $FULL_INSTALL_REQUIRED; then
   applyCIS || exit $ERR_CIS_HARDENING_ERROR
 else
-  cleanUpContainerImages ${CUSTOM_CLOUD_SUFFIX}
+  cleanUpContainerImages
 fi
 
 if $REBOOTREQUIRED; then
