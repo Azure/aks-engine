@@ -725,6 +725,7 @@ func (ku *Upgrader) copyCustomNodeProperties(client armhelpers.KubernetesClient,
 		}
 	}
 
+	newNode.Spec.Unschedulable = false
 	_, err := client.UpdateNode(newNode)
 
 	return err
