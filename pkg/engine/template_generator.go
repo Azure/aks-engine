@@ -623,36 +623,6 @@ func (t *TemplateGenerator) getTemplateFuncMap(cs *api.ContainerService) templat
 			extensions := getLinkedTemplatesForExtensions(cs.Properties)
 			return extensions
 		},
-		"GetKubernetesB64CSEMain": func() string {
-			return getBase64EncodedGzippedCustomScript(kubernetesCSEMainScript)
-		},
-		"GetKubernetesB64CSEHelpers": func() string {
-			return getBase64EncodedGzippedCustomScript(kubernetesCSEHelpersScript)
-		},
-		"GetKubernetesB64CSEInstall": func() string {
-			return getBase64EncodedGzippedCustomScript(kubernetesCSEInstall)
-		},
-		"GetKubernetesB64CSEConfig": func() string {
-			return getBase64EncodedGzippedCustomScript(kubernetesCSEConfig)
-		},
-		"GetKubernetesB64CSECustomCloud": func() string {
-			return getBase64EncodedGzippedCustomScript(kubernetesCSECustomCloud)
-		},
-		"GetKubernetesB64MountEtcd": func() string {
-			return getBase64EncodedGzippedCustomScript(kubernetesMountEtcd)
-		},
-		"GetKubernetesB64CustomSearchDomainsScript": func() string {
-			return getBase64EncodedGzippedCustomScript(kubernetesCustomSearchDomainsScript)
-		},
-		"GetKubernetesB64GenerateProxyCerts": func() string {
-			return getBase64EncodedGzippedCustomScript(kubernetesMasterGenerateProxyCertsScript)
-		},
-		"GetB64sshdConfig": func() string {
-			return getBase64EncodedGzippedCustomScript(sshdConfig)
-		},
-		"GetB64systemConf": func() string {
-			return getBase64EncodedGzippedCustomScript(systemConf)
-		},
 		"HasMultipleSshKeys": func() bool {
 			return len(cs.Properties.LinuxProfile.SSH.PublicKeys) > 1
 		},
