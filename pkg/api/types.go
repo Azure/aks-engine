@@ -1180,6 +1180,11 @@ func (m *MasterProfile) IsUbuntu() bool {
 	return m.IsUbuntu1604() || m.IsUbuntu1804()
 }
 
+// IsUbuntuNonVHD returns true if the distro uses a base Ubuntu image
+func (m *MasterProfile) IsUbuntuNonVHD() bool {
+	return m.IsUbuntu() && !m.IsVHDDistro()
+}
+
 // IsCustomVNET returns true if the customer brought their own VNET
 func (a *AgentPoolProfile) IsCustomVNET() bool {
 	return len(a.VnetSubnetID) > 0
@@ -1274,6 +1279,11 @@ func (a *AgentPoolProfile) IsUbuntu1804() bool {
 // IsUbuntu returns true if the master profile distro is any ubuntu distro
 func (a *AgentPoolProfile) IsUbuntu() bool {
 	return a.IsUbuntu1604() || a.IsUbuntu1804()
+}
+
+// IsUbuntuNonVHD returns true if the distro uses a base Ubuntu image
+func (a *AgentPoolProfile) IsUbuntuNonVHD() bool {
+	return a.IsUbuntu() && !a.IsVHDDistro()
 }
 
 // HasSecrets returns true if the customer specified secrets to install

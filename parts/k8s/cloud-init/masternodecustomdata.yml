@@ -65,7 +65,7 @@ write_files:
   content: !!binary |
     {{CloudInitData "systemConf"}}
 
-{{if not .MasterProfile.IsVHDDistro}}
+{{if .MasterProfile.IsUbuntuNonVHD}}
 - path: /etc/sysctl.d/60-CIS.conf
   permissions: "0644"
   encoding: gzip

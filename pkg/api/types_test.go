@@ -256,6 +256,50 @@ func TestAgentPoolProfileIsVHDDistro(t *testing.T) {
 	}
 }
 
+func TestAgentPoolProfileIsUbuntuNonVHD(t *testing.T) {
+	cases := []struct {
+		ap       AgentPoolProfile
+		expected bool
+	}{
+		{
+			ap: AgentPoolProfile{
+				Distro: AKS,
+			},
+			expected: false,
+		},
+		{
+			ap: AgentPoolProfile{
+				Distro: AKS1804,
+			},
+			expected: false,
+		},
+		{
+			ap: AgentPoolProfile{
+				Distro: CoreOS,
+			},
+			expected: false,
+		},
+		{
+			ap: AgentPoolProfile{
+				Distro: Ubuntu,
+			},
+			expected: true,
+		},
+		{
+			ap: AgentPoolProfile{
+				Distro: Ubuntu1804,
+			},
+			expected: true,
+		},
+	}
+
+	for _, c := range cases {
+		if c.expected != c.ap.IsUbuntuNonVHD() {
+			t.Fatalf("Got unexpected AgentPoolProfile.IsUbuntuNonVHD() result. Expected: %t. Got: %t.", c.expected, c.ap.IsUbuntuNonVHD())
+		}
+	}
+}
+
 func TestMasterProfileIsVHDDistro(t *testing.T) {
 	cases := []struct {
 		m        MasterProfile
@@ -296,6 +340,50 @@ func TestMasterProfileIsVHDDistro(t *testing.T) {
 	for _, c := range cases {
 		if c.expected != c.m.IsVHDDistro() {
 			t.Fatalf("Got unexpected MasterProfile.IsVHDDistro() result. Expected: %t. Got: %t.", c.expected, c.m.IsVHDDistro())
+		}
+	}
+}
+
+func TestMasterProfileIsUbuntuNonVHD(t *testing.T) {
+	cases := []struct {
+		m        MasterProfile
+		expected bool
+	}{
+		{
+			m: MasterProfile{
+				Distro: AKS,
+			},
+			expected: false,
+		},
+		{
+			m: MasterProfile{
+				Distro: AKS1804,
+			},
+			expected: false,
+		},
+		{
+			m: MasterProfile{
+				Distro: CoreOS,
+			},
+			expected: false,
+		},
+		{
+			m: MasterProfile{
+				Distro: Ubuntu,
+			},
+			expected: true,
+		},
+		{
+			m: MasterProfile{
+				Distro: Ubuntu1804,
+			},
+			expected: true,
+		},
+	}
+
+	for _, c := range cases {
+		if c.expected != c.m.IsUbuntuNonVHD() {
+			t.Fatalf("Got unexpected MasterProfile.IsUbuntuNonVHD() result. Expected: %t. Got: %t.", c.expected, c.m.IsUbuntuNonVHD())
 		}
 	}
 }
