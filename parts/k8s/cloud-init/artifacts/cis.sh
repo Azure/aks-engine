@@ -16,7 +16,6 @@ assignFilePermissions() {
     FILES="
     auth.log
     alternatives.log
-    chef-client.log
     cloud-init.log
     cloud-init-output.log
     daemon.log
