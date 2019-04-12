@@ -29,6 +29,12 @@ cis_script=/opt/azure/containers/provision_cis.sh
 wait_for_file 3600 1 $cis_script || exit $ERR_FILE_WATCH_TIMEOUT
 source $cis_script
 
+if [[ $OS == $UBUNTU_OS_NAME ]]; then
+  cis_sysctl=/etc/sysctl.d/60-CIS.conf
+  wait_for_file 3600 1 $cis_sysctl || exit $ERR_FILE_WATCH_TIMEOUT
+  sysctl_reload 20 5 10 || exit $ERR_SYSCTL_RELOAD
+fi
+
 if [[ "${TARGET_ENVIRONMENT,,}" == "${AZURE_STACK_ENV}"  ]]; then 
     config_script_custom_cloud=/opt/azure/containers/provision_configs_custom_cloud.sh
     wait_for_file 3600 1 $config_script_custom_cloud || exit $ERR_FILE_WATCH_TIMEOUT
@@ -179,7 +185,6 @@ ps auxfww > /opt/azure/provision-ps.log &
 
 if $FULL_INSTALL_REQUIRED; then
   applyCIS || exit $ERR_CIS_HARDENING_ERROR
-  sysctl_reload 20 5 10 || exit $ERR_SYSCTL_RELOAD
 else
   cleanUpContainerImages
 fi
