@@ -10,7 +10,7 @@ SYSCTL_CONFIG_DEST=/etc/sysctl.d/60-CIS.conf
 echo "Starting build on " `date` > ${RELEASE_NOTES_FILEPATH}
 echo "Using kernel:" >> ${RELEASE_NOTES_FILEPATH}
 cat /proc/version | tee -a ${RELEASE_NOTES_FILEPATH}
-cp $SYSCTL_CONFIG $SYSCTL_CONFIG_DEST && chmod 0644 $SYSCTL_CONFIG_DEST
+cp $SYSCTL_CONFIG_SRC $SYSCTL_CONFIG_DEST && chmod 0644 $SYSCTL_CONFIG_DEST
 sysctl_reload 20 5 10
 
 echo ""
