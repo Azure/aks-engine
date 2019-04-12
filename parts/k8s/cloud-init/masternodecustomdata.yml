@@ -143,6 +143,13 @@ write_files:
     {{CloudInitData "etcIssue"}}
 {{end}}
 
+- path: /etc/issue.net
+  permissions: "0644"
+  encoding: gzip
+  owner: root
+  content: !!binary |
+    {{CloudInitData "etcIssueNet"}}
+
 {{if .OrchestratorProfile.KubernetesConfig.RequiresDocker}}
     {{if not .MasterProfile.IsCoreOS}}
 - path: /etc/systemd/system/docker.service.d/clear_mount_propagation_flags.conf

@@ -137,6 +137,13 @@ write_files:
     {{CloudInitData "cisNetEnforcement"}}
 {{end}}
 
+- path: /etc/issue.net
+  permissions: "0644"
+  encoding: gzip
+  owner: root
+  content: !!binary |
+    {{CloudInitData "etcIssueNet"}}
+
 {{if .KubernetesConfig.RequiresDocker}}
     {{if not .IsCoreOS}}
 - path: /etc/systemd/system/docker.service.d/clear_mount_propagation_flags.conf
