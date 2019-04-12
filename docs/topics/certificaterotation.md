@@ -42,7 +42,7 @@ The above example command assumes a default `output/` directory with the resourc
 
 After the above steps, you can verify the success of the CA and certs rotation:
 
-- Old  `kubeconfig`  should  **NOT**  be able to contact the API server, however the new kubeconfig should be able to talk to it.
+- The old  `kubeconfig`  should  **NOT**  be able to contact the API server, however the new `kubeconfig` should be able to talk to it.
 - All nodes are expected to be  `Ready`, all pods are expected to be  `Running`.
 - Try to fetch the logs of  `kube-apiserver`,  `kube-scheduler`  and  `kube-controller-namager`. They should all be running correctly without printing errors. E.g. `kubectl logs kube-apiserver-k8s-master-58431286-0 -n kube-system`.
 
