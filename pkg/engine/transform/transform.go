@@ -427,13 +427,13 @@ func (t *Transformer) NormalizeResourcesForK8sMasterUpgrade(logger *logrus.Entry
 func (t *Transformer) NormalizeResourcesForK8sAgentUpgrade(logger *logrus.Entry, templateMap map[string]interface{}, isMasterManagedDisk bool, agentPoolsToPreserve map[string]bool) error {
 	logger.Infoln(fmt.Sprintf("Running NormalizeResourcesForK8sMasterUpgrade...."))
 	if err := t.NormalizeResourcesForK8sMasterUpgrade(logger, templateMap, isMasterManagedDisk, agentPoolsToPreserve); err != nil {
-		log.Fatalln(err)
+		log.Println(err)
 		return err
 	}
 
 	logger.Infoln(fmt.Sprintf("Running NormalizeForK8sVMASScalingUp...."))
 	if err := t.NormalizeForK8sVMASScalingUp(logger, templateMap); err != nil {
-		log.Fatalln(err)
+		log.Println(err)
 		return err
 	}
 

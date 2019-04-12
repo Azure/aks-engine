@@ -131,13 +131,16 @@ func CreateVirtualMachine(cs *api.ContainerService) VirtualMachineARM {
 	}
 
 	t, err := InitializeTemplateGenerator(Context{})
-
-	customDataStr := getCustomDataFromJSON(t.GetMasterCustomDataJSONObject(cs))
-	osProfile.CustomData = to.StringPtr(customDataStr)
-
 	if err != nil {
 		panic(err)
 	}
+
+	customDataObj, err := t.GetMasterCustomDataJSONObject(cs)
+	if err != nil {
+		panic(err)
+	}
+	customDataStr := getCustomDataFromJSON(customDataObj)
+	osProfile.CustomData = to.StringPtr(customDataStr)
 
 	if linuxProfile != nil && linuxProfile.HasSecrets() {
 		vsg := getVaultSecretGroup(linuxProfile)

@@ -23,7 +23,6 @@ import (
 	"github.com/Azure/aks-engine/pkg/i18n"
 	"github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2018-10-01/compute"
 	"github.com/pkg/errors"
-	log "github.com/sirupsen/logrus"
 )
 
 type ARMTemplate struct {
@@ -174,12 +173,12 @@ func (t *TemplateGenerator) GetJumpboxCustomDataJSON(cs *api.ContainerService) s
 
 // GetMasterCustomDataJSONObject returns master customData JSON object in the form
 // { "customData": "[base64(concat(<customData string>))]" }
-func (t *TemplateGenerator) GetMasterCustomDataJSONObject(cs *api.ContainerService) string {
+func (t *TemplateGenerator) GetMasterCustomDataJSONObject(cs *api.ContainerService) (string, error) {
 	profile := cs.Properties
 
 	str, e := t.getSingleLineForTemplate(kubernetesMasterNodeCustomDataYaml, cs, profile)
 	if e != nil {
-		panic(e)
+		return "", errors.Wrap(e, "getting custom data YAML as single line for template")
 	}
 	// add manifests
 	str = substituteConfigString(str,
@@ -200,7 +199,7 @@ func (t *TemplateGenerator) GetMasterCustomDataJSONObject(cs *api.ContainerServi
 	// add custom files
 	customFilesReader, err := customfilesIntoReaders(masterCustomFiles(profile))
 	if err != nil {
-		log.Fatalf("Could not read custom files: %s", err.Error())
+		return "", errors.Wrap(err, "could not read custom files")
 	}
 	str = substituteConfigStringCustomFiles(str,
 		customFilesReader,
@@ -211,7 +210,7 @@ func (t *TemplateGenerator) GetMasterCustomDataJSONObject(cs *api.ContainerServi
 	str = strings.Replace(str, "MASTER_CONTAINER_ADDONS_PLACEHOLDER", addonStr, -1)
 
 	// return the custom data
-	return fmt.Sprintf("{\"customData\": \"[base64(concat('%s'))]\"}", str)
+	return fmt.Sprintf("{\"customData\": \"[base64(concat('%s'))]\"}", str), nil
 }
 
 // GetKubernetesLinuxNodeCustomDataJSONObject returns Linux customData JSON object in the form

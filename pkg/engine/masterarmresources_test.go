@@ -76,7 +76,11 @@ func TestCreateKubernetesMasterResourcesPVC(t *testing.T) {
 	}
 
 	tg, _ := InitializeTemplateGenerator(Context{})
-	expectedCustomDataStr := getCustomDataFromJSON(tg.GetMasterCustomDataJSONObject(&cs))
+	customDataObj, err := tg.GetMasterCustomDataJSONObject(&cs)
+	if err != nil {
+		t.Error(err)
+	}
+	expectedCustomDataStr := getCustomDataFromJSON(customDataObj)
 
 	masterVMAS := VirtualMachineARM{
 		ARMResource: ARMResource{
@@ -408,7 +412,11 @@ func TestCreateKubernetesMasterResourcesVMSS(t *testing.T) {
 	}
 
 	tg, _ := InitializeTemplateGenerator(Context{})
-	expectedCustomDataStr := getCustomDataFromJSON(tg.GetMasterCustomDataJSONObject(&cs))
+	customDataObj, err := tg.GetMasterCustomDataJSONObject(&cs)
+	if err != nil {
+		t.Error(err)
+	}
+	expectedCustomDataStr := getCustomDataFromJSON(customDataObj)
 
 	masterVMSS := VirtualMachineScaleSetARM{
 		ARMResource: ARMResource{
