@@ -378,4 +378,8 @@ cat ${RELEASE_NOTES_FILEPATH}
 echo "END_OF_NOTES"
 set -x
 
+# Move logs from VHD creation out of /var/log 
+sudo mv /var/log /var/log.vhd
+sudo mkdir /var/log
+
 applyCIS
