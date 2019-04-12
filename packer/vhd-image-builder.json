@@ -72,7 +72,7 @@
         {
             "type": "file",
             "source": "parts/k8s/cloud-init/artifacts/sysctl-d-60-CIS.conf",
-            "destination": "/etc/sysctl.d/60-CIS.conf"
+            "destination": "/home/packer/sysctl-d-60-CIS.conf"
         },
         {
             "type": "shell",

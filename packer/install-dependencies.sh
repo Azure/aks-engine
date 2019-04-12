@@ -4,10 +4,13 @@ source /home/packer/provision_source.sh
 source /home/packer/cis.sh
 
 RELEASE_NOTES_FILEPATH=/var/log/azure/golden-image-install.complete
+SYSCTL_CONFIG_SRC=/home/packer/sysctl-d-60-CIS.conf
+SYSCTL_CONFIG_DEST=/etc/sysctl.d/60-CIS.conf
 
 echo "Starting build on " `date` > ${RELEASE_NOTES_FILEPATH}
 echo "Using kernel:" >> ${RELEASE_NOTES_FILEPATH}
 cat /proc/version | tee -a ${RELEASE_NOTES_FILEPATH}
+cp $SYSCTL_CONFIG_SRC $SYSCTL_CONFIG_DEST
 sysctl_reload 20 5 10
 
 echo ""
