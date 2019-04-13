@@ -53,7 +53,6 @@ OS=$(cat /etc/*-release | grep ^ID= | tr -d 'ID="' | awk '{print toupper($0)}')
 UBUNTU_OS_NAME="UBUNTU"
 RHEL_OS_NAME="RHEL"
 COREOS_OS_NAME="COREOS"
-AZURE_SUFFIX=""
 AZURE_STACK_SUFFIX="-azs"
 AZURE_STACK_HYPERKUBE_REPOSITORY="msazurestackdocker/hyperkube-amd64"
 KUBECTL=/usr/local/bin/kubectl
