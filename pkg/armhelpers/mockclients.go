@@ -41,7 +41,9 @@ type MockAKSEngineClient struct {
 	FailListVirtualMachines                 bool
 	FailListVirtualMachinesTags             bool
 	FailListVirtualMachineScaleSets         bool
+	FailRestartVirtualMachineScaleSets      bool
 	FailGetVirtualMachine                   bool
+	FailRestartVirtualMachine               bool
 	FailDeleteVirtualMachine                bool
 	FailDeleteVirtualMachineScaleSetVM      bool
 	FailSetVirtualMachineScaleSetCapacity   bool
@@ -66,17 +68,21 @@ type MockStorageClient struct {
 
 //MockKubernetesClient mock implementation of KubernetesClient
 type MockKubernetesClient struct {
-	FailListPods          bool
-	FailGetNode           bool
-	UpdateNodeFunc        func(*v1.Node) (*v1.Node, error)
-	FailUpdateNode        bool
-	FailDeleteNode        bool
-	FailSupportEviction   bool
-	FailDeletePod         bool
-	FailEvictPod          bool
-	FailWaitForDelete     bool
-	ShouldSupportEviction bool
-	PodsList              *v1.PodList
+	FailListPods             bool
+	FailListNodes            bool
+	FailListServiceAccounts  bool
+	FailGetNode              bool
+	UpdateNodeFunc           func(*v1.Node) (*v1.Node, error)
+	FailUpdateNode           bool
+	FailDeleteNode           bool
+	FailDeleteServiceAccount bool
+	FailSupportEviction      bool
+	FailDeletePod            bool
+	FailEvictPod             bool
+	FailWaitForDelete        bool
+	ShouldSupportEviction    bool
+	PodsList                 *v1.PodList
+	ServiceAccountList       *v1.ServiceAccountList
 }
 
 // MockVirtualMachineListResultPage contains a page of VirtualMachine values.
@@ -266,7 +272,7 @@ func (page MockRoleAssignmentListResultPage) Values() []authorization.RoleAssign
 	return *page.Ralr.Value
 }
 
-//ListPods returns all Pods running on the passed in node
+//ListPods returns Pods running on the passed in node
 func (mkc *MockKubernetesClient) ListPods(node *v1.Node) (*v1.PodList, error) {
 	if mkc.FailListPods {
 		return nil, errors.New("ListPods failed")
@@ -275,6 +281,56 @@ func (mkc *MockKubernetesClient) ListPods(node *v1.Node) (*v1.PodList, error) {
 		return mkc.PodsList, nil
 	}
 	return &v1.PodList{}, nil
+}
+
+//ListAllPods returns all Pods running
+func (mkc *MockKubernetesClient) ListAllPods() (*v1.PodList, error) {
+	if mkc.FailListPods {
+		return nil, errors.New("ListAllPods failed")
+	}
+	if mkc.PodsList != nil {
+		return mkc.PodsList, nil
+	}
+	return &v1.PodList{}, nil
+}
+
+// ListNodes returns a list of Nodes registered in the api server
+func (mkc *MockKubernetesClient) ListNodes() (*v1.NodeList, error) {
+	if mkc.FailListNodes {
+		return nil, errors.New("ListNodes failed")
+	}
+	node := &v1.Node{}
+	node.Name = "k8s-master-1234"
+	node.Status.Conditions = append(node.Status.Conditions, v1.NodeCondition{Type: v1.NodeReady, Status: v1.ConditionTrue})
+	node.Status.NodeInfo.KubeletVersion = "1.9.10"
+	node2 := &v1.Node{}
+	node2.Name = "k8s-agentpool3-1234"
+	node2.Status.Conditions = append(node2.Status.Conditions, v1.NodeCondition{Type: v1.NodeOutOfDisk, Status: v1.ConditionTrue})
+	node2.Status.NodeInfo.KubeletVersion = "1.9.9"
+	nodeList := &v1.NodeList{}
+	nodeList.Items = append(nodeList.Items, *node)
+	nodeList.Items = append(nodeList.Items, *node2)
+	return nodeList, nil
+}
+
+// ListServiceAccounts returns a list of Service Accounts in the provided namespace
+func (mkc *MockKubernetesClient) ListServiceAccounts(namespace string) (*v1.ServiceAccountList, error) {
+	if mkc.FailListServiceAccounts {
+		return nil, errors.New("ListServiceAccounts failed")
+	}
+	if mkc.ServiceAccountList != nil {
+		return mkc.ServiceAccountList, nil
+	}
+	sa := &v1.ServiceAccount{}
+	sa.Namespace = namespace
+	sa.Name = "service-account-1"
+	sa2 := &v1.ServiceAccount{}
+	sa2.Namespace = namespace
+	sa.Name = "service-account-2"
+	saList := &v1.ServiceAccountList{}
+	saList.Items = append(saList.Items, *sa)
+	saList.Items = append(saList.Items, *sa2)
+	return saList, nil
 }
 
 //GetNode returns details about node with passed in name
@@ -303,6 +359,14 @@ func (mkc *MockKubernetesClient) UpdateNode(node *v1.Node) (*v1.Node, error) {
 func (mkc *MockKubernetesClient) DeleteNode(name string) error {
 	if mkc.FailDeleteNode {
 		return errors.New("DeleteNode failed")
+	}
+	return nil
+}
+
+// DeleteServiceAccount deletes the provided service account
+func (mkc *MockKubernetesClient) DeleteServiceAccount(sa *v1.ServiceAccount) error {
+	if mkc.FailDeleteServiceAccount {
+		return errors.New("DeleteServiceAccount failed")
 	}
 	return nil
 }
@@ -482,10 +546,10 @@ func (mc *MockAKSEngineClient) ListVirtualMachines(ctx context.Context, resource
 //ListVirtualMachineScaleSets mock
 func (mc *MockAKSEngineClient) ListVirtualMachineScaleSets(ctx context.Context, resourceGroup string) (VirtualMachineScaleSetListResultPage, error) {
 	if mc.FailListVirtualMachineScaleSets {
-		return &MockVirtualMachineScaleSetListResultPage{}, errors.New("ListVirtualMachines failed")
+		return &MockVirtualMachineScaleSetListResultPage{}, errors.New("ListVirtualMachineScaleSets failed")
 	}
 	if mc.FakeListVirtualMachineScaleSetsResult == nil {
-		//return 0 machined by default
+		//return 0 machines by default
 		mc.FakeListVirtualMachineScaleSetsResult = func() []compute.VirtualMachineScaleSet {
 			return []compute.VirtualMachineScaleSet{}
 		}
@@ -503,12 +567,28 @@ func (mc *MockAKSEngineClient) ListVirtualMachineScaleSets(ctx context.Context, 
 	}, nil
 }
 
+// RestartVirtualMachineScaleSets mock
+func (mc *MockAKSEngineClient) RestartVirtualMachineScaleSets(ctx context.Context, resourceGroup, name string, instanceIDs *compute.VirtualMachineScaleSetVMInstanceIDs) error {
+	if mc.FailRestartVirtualMachineScaleSets {
+		return errors.New("RestartVirtualMachineScaleSets failed")
+	}
+	return nil
+}
+
 //GetVirtualMachine mock
 func (mc *MockAKSEngineClient) GetVirtualMachine(ctx context.Context, resourceGroup, name string) (compute.VirtualMachine, error) {
 	if mc.FailGetVirtualMachine {
 		return compute.VirtualMachine{}, errors.New("GetVirtualMachine failed")
 	}
 	return mc.MakeFakeVirtualMachine(DefaultFakeVMName, defaultK8sVersionForFakeVMs), nil
+}
+
+// RestartVirtualMachine mock
+func (mc *MockAKSEngineClient) RestartVirtualMachine(ctx context.Context, resourceGroup, name string) error {
+	if mc.FailRestartVirtualMachine {
+		return errors.New("RestartVirtualMachine failed")
+	}
+	return nil
 }
 
 // MakeFakeVirtualMachineScaleSetVM creates a fake VMSS VM

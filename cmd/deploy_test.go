@@ -73,23 +73,6 @@ const ExampleAPIModelWithoutServicePrincipalProfile = `{
   }
   `
 
-//mockAuthProvider implements AuthProvider and allows in particular to stub out getClient()
-type mockAuthProvider struct {
-	getClientMock armhelpers.AKSEngineClient
-	*authArgs
-}
-
-func (provider *mockAuthProvider) getClient() (armhelpers.AKSEngineClient, error) {
-	if provider.getClientMock == nil {
-		return &armhelpers.MockAKSEngineClient{}, nil
-	}
-	return provider.getClientMock, nil
-
-}
-func (provider *mockAuthProvider) getAuthArgs() *authArgs {
-	return provider.authArgs
-}
-
 func getExampleAPIModel(useManagedIdentity bool, clientID, clientSecret string) string {
 	return getAPIModel(ExampleAPIModel, useManagedIdentity, clientID, clientSecret)
 }
@@ -565,7 +548,7 @@ func TestDeployCmdRun(t *testing.T) {
 			authArgs:      &authArgs{},
 			getClientMock: &armhelpers.MockAKSEngineClient{},
 		},
-		apimodelPath:    "./this/is/unused.json",
+		apimodelPath:    "../pkg/engine/testdata/simple/kubernetes.json",
 		outputDirectory: "_test_output",
 		forceOverwrite:  true,
 		location:        "westus",
@@ -584,7 +567,6 @@ func TestDeployCmdRun(t *testing.T) {
 		t.Fatalf("Invalid SubscriptionId in Test: %s", err)
 	}
 
-	d.apimodelPath = "../pkg/engine/testdata/simple/kubernetes.json"
 	d.getAuthArgs().SubscriptionID = fakeSubscriptionID
 	d.getAuthArgs().rawSubscriptionID = fakeRawSubscriptionID
 	d.getAuthArgs().rawClientID = fakeClientID

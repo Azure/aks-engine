@@ -20,6 +20,21 @@ func (az *AzureClient) GetVirtualMachine(ctx context.Context, resourceGroup, nam
 	return az.virtualMachinesClient.Get(ctx, resourceGroup, name, "")
 }
 
+// RestartVirtualMachine restarts the specified virtual machine.
+func (az *AzureClient) RestartVirtualMachine(ctx context.Context, resourceGroup, name string) error {
+	future, err := az.virtualMachinesClient.Restart(ctx, resourceGroup, name)
+	if err != nil {
+		return err
+	}
+
+	if err = future.WaitForCompletionRef(ctx, az.virtualMachinesClient.Client); err != nil {
+		return err
+	}
+
+	_, err = future.Result(az.virtualMachinesClient)
+	return err
+}
+
 // DeleteVirtualMachine handles deletion of a CRP/VMAS VM (aka, not a VMSS VM).
 func (az *AzureClient) DeleteVirtualMachine(ctx context.Context, resourceGroup, name string) error {
 	future, err := az.virtualMachinesClient.Delete(ctx, resourceGroup, name)
@@ -39,6 +54,21 @@ func (az *AzureClient) DeleteVirtualMachine(ctx context.Context, resourceGroup, 
 func (az *AzureClient) ListVirtualMachineScaleSets(ctx context.Context, resourceGroup string) (VirtualMachineScaleSetListResultPage, error) {
 	page, err := az.virtualMachineScaleSetsClient.List(ctx, resourceGroup)
 	return &page, err
+}
+
+// RestartVirtualMachineScaleSets restarts the specified VMSS
+func (az *AzureClient) RestartVirtualMachineScaleSets(ctx context.Context, resourceGroup string, virtualMachineScaleSet string, instanceIDs *compute.VirtualMachineScaleSetVMInstanceIDs) error {
+	future, err := az.virtualMachineScaleSetsClient.Restart(ctx, resourceGroup, virtualMachineScaleSet, instanceIDs)
+	if err != nil {
+		return err
+	}
+
+	if err = future.WaitForCompletionRef(ctx, az.virtualMachineScaleSetsClient.Client); err != nil {
+		return err
+	}
+
+	_, err = future.Result(az.virtualMachineScaleSetsClient)
+	return err
 }
 
 // ListVirtualMachineScaleSetVMs returns the list of VMs per VMSS

@@ -36,6 +36,21 @@ func (az *AzureClient) GetVirtualMachine(ctx context.Context, resourceGroup, nam
 	return azVM, err
 }
 
+// RestartVirtualMachine restarts the specified virtual machine.
+func (az *AzureClient) RestartVirtualMachine(ctx context.Context, resourceGroup, name string) error {
+	future, err := az.virtualMachinesClient.Restart(ctx, resourceGroup, name)
+	if err != nil {
+		return err
+	}
+
+	if err = future.WaitForCompletionRef(ctx, az.virtualMachinesClient.Client); err != nil {
+		return err
+	}
+
+	_, err = future.Result(az.virtualMachinesClient)
+	return err
+}
+
 // DeleteVirtualMachine handles deletion of a CRP/VMAS VM (aka, not a VMSS VM).
 func (az *AzureClient) DeleteVirtualMachine(ctx context.Context, resourceGroup, name string) error {
 	future, err := az.virtualMachinesClient.Delete(ctx, resourceGroup, name)
@@ -59,6 +74,26 @@ func (az *AzureClient) ListVirtualMachineScaleSets(ctx context.Context, resource
 		err:     err,
 	}
 	return &c, err
+}
+
+// RestartVirtualMachineScaleSets restarts the specified VMSS
+func (az *AzureClient) RestartVirtualMachineScaleSets(ctx context.Context, resourceGroup string, virtualMachineScaleSet string, instanceIDs *azcompute.VirtualMachineScaleSetVMInstanceIDs) error {
+	ids := compute.VirtualMachineScaleSetVMInstanceIDs{}
+	err := DeepCopy(&ids, instanceIDs)
+	if err != nil {
+		return fmt.Errorf("fail to convert instance IDs, %v", err)
+	}
+	future, err := az.virtualMachineScaleSetsClient.Restart(ctx, resourceGroup, virtualMachineScaleSet, &ids)
+	if err != nil {
+		return err
+	}
+
+	if err = future.WaitForCompletionRef(ctx, az.virtualMachineScaleSetsClient.Client); err != nil {
+		return err
+	}
+
+	_, err = future.Result(az.virtualMachineScaleSetsClient)
+	return err
 }
 
 // ListVirtualMachineScaleSetVMs returns the list of VMs per VMSS
@@ -102,7 +137,10 @@ func (az *AzureClient) DeleteVirtualMachineScaleSet(ctx context.Context, resourc
 // SetVirtualMachineScaleSetCapacity sets the VMSS capacity
 func (az *AzureClient) SetVirtualMachineScaleSetCapacity(ctx context.Context, resourceGroup, virtualMachineScaleSet string, sku azcompute.Sku, location string) error {
 	s := compute.Sku{}
-	DeepCopy(&s, sku)
+	err := DeepCopy(&s, sku)
+	if err != nil {
+		return fmt.Errorf("fail to convert SKU, %v", err)
+	}
 	future, err := az.virtualMachineScaleSetsClient.CreateOrUpdate(
 		ctx,
 		resourceGroup,
