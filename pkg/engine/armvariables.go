@@ -460,7 +460,7 @@ func getK8sAgentVars(cs *api.ContainerService, profile *api.AgentPoolProfile) ma
 	agentOffset := fmt.Sprintf("%sOffset", agentName)
 	agentAvailabilitySet := fmt.Sprintf("%sAvailabilitySet", agentName)
 	agentScaleSetPriority := fmt.Sprintf("%sScaleSetPriority", agentName)
-	agentScaleSetEvictionPolicy := fmt.Sprintf("%sEvictionPolicy", agentName)
+	agentScaleSetEvictionPolicy := fmt.Sprintf("%sScaleSetEvictionPolicy", agentName)
 	agentVMSize := fmt.Sprintf("%sVMSize", agentName)
 	agentVnetSubnetID := fmt.Sprintf("%sVnetSubnetID", agentName)
 	agentSubnetName := fmt.Sprintf("%sSubnetName", agentName)
