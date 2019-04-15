@@ -48,6 +48,7 @@ ERR_APT_UPDATE_TIMEOUT=99 # Timeout waiting for apt-get update to complete
 ERR_CSE_PROVISION_SCRIPT_NOT_READY_TIMEOUT=100 # Timeout waiting for cloud-init to place this (!) script on the vm
 ERR_APT_DIST_UPGRADE_TIMEOUT=101 # Timeout waiting for apt-get dist-upgrade to complete
 ERR_CIS_HARDENING_ERROR=102 # Error applying CIS enforcement
+ERR_SYSCTL_RELOAD=103 # Error reloading sysctl config
 
 OS=$(cat /etc/*-release | grep ^ID= | tr -d 'ID="' | awk '{print toupper($0)}')
 UBUNTU_OS_NAME="UBUNTU"
@@ -203,6 +204,18 @@ systemctl_restart() {
     for i in $(seq 1 $retries); do
         timeout $timeout systemctl daemon-reload
         timeout $timeout systemctl restart $svcname
+        [ $? -eq 0  ] && break || \
+        if [ $i -eq $retries ]; then
+            return 1
+        else
+            sleep $wait_sleep
+        fi
+    done
+}
+sysctl_reload() {
+    retries=$1; wait_sleep=$2; timeout=$3
+    for i in $(seq 1 $retries); do
+        timeout $timeout sysctl --system
         [ $? -eq 0  ] && break || \
         if [ $i -eq $retries ]; then
             return 1
