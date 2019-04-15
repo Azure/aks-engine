@@ -103,9 +103,8 @@ func AreAllReady(nodeCount int) bool {
 			nodeReady := node.IsReady()
 			if !nodeReady {
 				return false
-			} else {
-				ready++
 			}
+			ready++
 		}
 	}
 	if ready == nodeCount {
