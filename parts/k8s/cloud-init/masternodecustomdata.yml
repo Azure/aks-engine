@@ -134,12 +134,14 @@ write_files:
   content: !!binary |
     {{CloudInitData "aptPreferences"}}
 
+{{if .MasterProfile.IsUbuntuNonVHD}}
 - path: /etc/issue
   permissions: "0644"
   encoding: gzip
   owner: root
   content: !!binary |
     {{CloudInitData "etcIssue"}}
+{{end}}
 
 {{if .OrchestratorProfile.KubernetesConfig.RequiresDocker}}
     {{if not .MasterProfile.IsCoreOS}}
