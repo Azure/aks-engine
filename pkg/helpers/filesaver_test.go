@@ -30,12 +30,12 @@ func TestFileSaver(t *testing.T) {
 		Data string
 	}
 	saveFileEntries := []SaveFileEntry{
-		SaveFileEntry{
+		{
 			Dir:  "", // test that an empty dir doesn't error
 			File: tmpFile.Name(),
 			Data: "",
 		},
-		SaveFileEntry{
+		{
 			Dir:  tmpDir,
 			File: "ubernetes.json",
 			Data: "",
