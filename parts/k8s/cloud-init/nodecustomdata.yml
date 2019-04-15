@@ -126,16 +126,6 @@ write_files:
   owner: root
   content: !!binary |
     {{CloudInitData "etcIssue"}}
-{{end}}
-
-{{if .IsUbuntuNonVHD}}
-- path: /etc/sysctl.d/60-CIS.conf
-  permissions: "0644"
-  encoding: gzip
-  owner: root
-  content: !!binary |
-    {{CloudInitData "cisNetEnforcement"}}
-{{end}}
 
 - path: /etc/issue.net
   permissions: "0644"
@@ -143,6 +133,14 @@ write_files:
   owner: root
   content: !!binary |
     {{CloudInitData "etcIssueNet"}}
+
+- path: /etc/sysctl.d/60-CIS.conf
+  permissions: "0644"
+  encoding: gzip
+  owner: root
+  content: !!binary |
+    {{CloudInitData "cisNetEnforcement"}}
+{{end}}
 
 {{if .KubernetesConfig.RequiresDocker}}
     {{if not .IsCoreOS}}
