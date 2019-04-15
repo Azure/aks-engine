@@ -366,6 +366,8 @@ done
 # TODO: fetch supported k8s versions from an aks-engine command instead of hardcoding them here
 AZURE_STACK_K8S_VERSIONS="
 1.11.7
+1.11.8
+1.11.9
 "
 for AZURE_STACK_KUBERNETES_VERSION in ${AZURE_STACK_K8S_VERSIONS}; do
     KUBERNETES_VERSION=${AZURE_STACK_KUBERNETES_VERSION}${AZURE_STACK_SUFFIX}
