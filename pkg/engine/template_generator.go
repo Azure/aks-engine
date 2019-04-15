@@ -1064,12 +1064,6 @@ func (t *TemplateGenerator) getTemplateFuncMap(cs *api.ContainerService) templat
 		"GetMasterEtcdClientPort": func() int {
 			return DefaultMasterEtcdClientPort
 		},
-		"GetPrimaryAvailabilitySetName": func() string {
-			return cs.Properties.GetPrimaryAvailabilitySetName()
-		},
-		"GetPrimaryScaleSetName": func() string {
-			return cs.Properties.GetPrimaryScaleSetName()
-		},
 		"UseCloudControllerManager": func() bool {
 			return cs.Properties.OrchestratorProfile.KubernetesConfig.UseCloudControllerManager != nil && *cs.Properties.OrchestratorProfile.KubernetesConfig.UseCloudControllerManager
 		},
