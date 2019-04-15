@@ -124,7 +124,7 @@ func TestK8sVars(t *testing.T) {
 		"nsgName":                        "[concat(variables('masterVMNamePrefix'), 'nsg')]",
 		"orchestratorNameVersionTag":     "Kubernetes:" + testK8sVersion,
 		"primaryAvailabilitySetName":     "",
-		"primaryScaleSetName":            "[concat(parameters('orchestratorName'), '-agentpool1-',parameters('nameSuffix'), '-vmss')]",
+		"primaryScaleSetName":            cs.Properties.GetPrimaryScaleSetName(),
 		"cloudInitFiles": map[string]interface{}{
 			"provisionScript":                  getBase64EncodedGzippedCustomScript(kubernetesCSEMainScript),
 			"provisionSource":                  getBase64EncodedGzippedCustomScript(kubernetesCSEHelpersScript),
@@ -299,6 +299,7 @@ func TestK8sVars(t *testing.T) {
 	expectedMap["vmsPerStorageAccount"] = 20
 	expectedMap["vnetID"] = "[resourceId('Microsoft.Network/virtualNetworks',variables('virtualNetworkName'))]"
 	expectedMap["vnetSubnetID"] = "[concat(variables('vnetID'),'/subnets/',variables('subnetName'))]"
+	expectedMap["primaryScaleSetName"] = cs.Properties.GetPrimaryScaleSetName()
 
 	delete(expectedMap, "etcdCaFilepath")
 	delete(expectedMap, "etcdClientCertFilepath")
@@ -495,7 +496,7 @@ func TestK8sVars(t *testing.T) {
 		"nsgName":                         "[concat(variables('masterVMNamePrefix'), 'nsg')]",
 		"orchestratorNameVersionTag":      "Kubernetes:" + testK8sVersion,
 		"primaryAvailabilitySetName":      "",
-		"primaryScaleSetName":             "[concat(parameters('orchestratorName'), '-agentpool1-',parameters('nameSuffix'), '-vmss')]",
+		"primaryScaleSetName":             cs.Properties.GetPrimaryScaleSetName(),
 		"cloudInitFiles": map[string]interface{}{
 			"provisionScript":                  getBase64EncodedGzippedCustomScript(kubernetesCSEMainScript),
 			"provisionSource":                  getBase64EncodedGzippedCustomScript(kubernetesCSEHelpersScript),
