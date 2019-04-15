@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"strconv"
+	"strings"
 
 	"github.com/Azure/aks-engine/pkg/api"
 	"github.com/Azure/aks-engine/pkg/helpers"
@@ -141,6 +142,9 @@ func getK8sMasterVars(cs *api.ContainerService) map[string]interface{} {
 		masterVars["apiVersionKeyVault"] = "2016-10-01"
 		masterVars["environmentJSON"] = cs.Properties.GetCustomEnvironmentJSON(false)
 		masterVars["provisionConfigsCustomCloud"] = GetKubernetesB64ConfigsCustomCloud()
+		masterVars["masterPublicLbFQDN"] = fmt.Sprintf("%s.%s.%s", strings.ToLower(cs.Properties.MasterProfile.DNSPrefix),
+			strings.ToLower(cs.Location),
+			strings.ToLower(cs.GetCloudSpecConfig().EndpointConfig.ResourceManagerVMDNSSuffix))
 	}
 
 	masterVars["customCloudAuthenticationMethod"] = cs.Properties.GetCustomCloudAuthenticationMethod()

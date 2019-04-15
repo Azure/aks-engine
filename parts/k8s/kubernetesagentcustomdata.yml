@@ -225,7 +225,15 @@ write_files:
     - name: localcluster
       cluster:
         certificate-authority: /etc/kubernetes/certs/ca.crt
+        {{if IsAzureStackCloud}}
+        {{if IsMultipleMasters}}
+        server: https://<kubernetesAPIServerIP>:443
+        {{else}}
         server: https://{{WrapAsVariable "kubernetesAPIServerIP"}}:443
+        {{end}}
+        {{else}}
+        server: https://{{WrapAsVariable "kubernetesAPIServerIP"}}:443
+        {{end}}
     users:
     - name: client
       user:

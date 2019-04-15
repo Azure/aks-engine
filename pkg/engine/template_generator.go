@@ -318,6 +318,9 @@ func (t *TemplateGenerator) getTemplateFuncMap(cs *api.ContainerService) templat
 		"GetCustomCloudIdentitySystem": func() string {
 			return cs.Properties.GetCustomCloudIdentitySystem()
 		},
+		"IsMultipleMasters": func() bool {
+			return cs.Properties.MasterProfile != nil && cs.Properties.MasterProfile.Count > 1
+		},
 		"IsMasterVirtualMachineScaleSets": func() bool {
 			return cs.Properties.MasterProfile != nil && cs.Properties.MasterProfile.IsVirtualMachineScaleSets()
 		},
