@@ -140,6 +140,13 @@ write_files:
   owner: root
   content: !!binary |
     {{CloudInitData "cisNetEnforcement"}}
+
+- path: /etc/modprobe.d/CIS.conf
+  permissions: "0644"
+  encoding: gzip
+  owner: root
+  content: !!binary |
+    {{CloudInitData "modprobeConfCIS"}}
 {{end}}
 
 {{if .KubernetesConfig.RequiresDocker}}
