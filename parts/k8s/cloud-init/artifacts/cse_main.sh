@@ -182,7 +182,7 @@ ps auxfww > /opt/azure/provision-ps.log &
 
 if $FULL_INSTALL_REQUIRED; then
   if [[ $OS == $UBUNTU_OS_NAME ]]; then
-    applyCIS || exit $ERR_CIS_HARDENING_ERROR
+    applyCIS
   fi
 else
   cleanUpContainerImages
