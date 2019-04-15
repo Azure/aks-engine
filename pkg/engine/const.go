@@ -169,6 +169,10 @@ const (
 	etcdSystemdService                       = "k8s/cloud-init/artifacts/etcd.service"
 	etcIssue                                 = "k8s/cloud-init/artifacts/etc-issue"
 	cisNetEnforcement                        = "k8s/cloud-init/artifacts/sysctl-d-60-CIS.conf"
+	cisUFWConf                               = "k8s/cloud-init/artifacts/ufw.conf"
+	cisUFWUserRules                          = "k8s/cloud-init/artifacts/ufw-user.rules"
+	cisUFWBeforeRules                        = "k8s/cloud-init/artifacts/ufw-before.rules"
+	cisUFWSysctlConf                         = "k8s/cloud-init/artifacts/ufw-sysctl.conf"
 )
 
 const (

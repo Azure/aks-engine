@@ -80,6 +80,26 @@
             "destination": "/home/packer/etc-issue"
         },
         {
+            "type": "file",
+            "source": "parts/k8s/cloud-init/artifacts/ufw.conf",
+            "destination": "/home/packer/ufw.conf"
+        },
+        {
+            "type": "file",
+            "source": "parts/k8s/cloud-init/artifacts/ufw-before.rules",
+            "destination": "/home/packer/ufw-before.rules"
+        },
+        {
+            "type": "file",
+            "source": "parts/k8s/cloud-init/artifacts/ufw-user.rules",
+            "destination": "/home/packer/ufw-user.rules"
+        },
+        {
+            "type": "file",
+            "source": "parts/k8s/cloud-init/artifacts/ufw-sysctl.conf",
+            "destination": "/home/packer/ufw-sysctl.conf"
+        },
+        {
             "type": "shell",
             "inline": [
                 "sudo FEATURE_FLAGS={{user `feature_flags`}} BUILD_NUMBER={{user `build_number`}} BUILD_ID={{user `build_id`}} COMMIT={{user `commit`}} /bin/bash -ux /home/packer/install-dependencies.sh",

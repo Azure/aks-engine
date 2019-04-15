@@ -8,6 +8,11 @@ SYSCTL_CONFIG_SRC=/home/packer/sysctl-d-60-CIS.conf
 SYSCTL_CONFIG_DEST=/etc/sysctl.d/60-CIS.conf
 ETC_ISSUE_CONFIG_SRC=/home/packer/etc-issue
 ETC_ISSUE_CONFIG_DEST=/etc/issue
+UFW_CONF_SRC=/home/packer/ufw.conf
+UFW_BEFORE_RULES_SRC=/home/packer/ufw-before.rules
+UFW_USER_RULES_SRC=/home/packer/ufw-user.rules
+UFW_SYSCTL_CONF_SRC=/home/packer/ufw-sysctl.conf
+UFW_DIR=/etc/ufw/
 
 echo "Starting build on " `date` > ${RELEASE_NOTES_FILEPATH}
 echo "Using kernel:" >> ${RELEASE_NOTES_FILEPATH}
@@ -15,6 +20,10 @@ cat /proc/version | tee -a ${RELEASE_NOTES_FILEPATH}
 cp $SYSCTL_CONFIG_SRC $SYSCTL_CONFIG_DEST
 sysctl_reload 20 5 10
 cp $ETC_ISSUE_CONFIG_SRC $ETC_ISSUE_CONFIG_DEST
+UFW_FILES="${UFW_CONF_SRC} ${UFW_BEFORE_RULES_SRC} ${UFW_USER_RULES_SRC} ${UFW_SYSCTL_CONF_SRC}"
+for UFW_FILE in $UFW_FILES; do
+  cp $UFW_FILE $UFW_DIR
+done
 
 echo ""
 echo "Components downloaded in this VHD build (some of the below components might get deleted during cluster provisioning if they are not needed):" >> ${RELEASE_NOTES_FILEPATH}

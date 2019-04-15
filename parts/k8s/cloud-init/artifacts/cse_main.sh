@@ -93,6 +93,7 @@ else
 fi
 installKubeletAndKubectl
 if [[ $OS != $COREOS_OS_NAME ]]; then
+    ensureUFW
     ensureRPC
 fi
 createKubeManifestDir

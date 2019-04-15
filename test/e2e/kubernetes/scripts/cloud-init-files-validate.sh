@@ -2,6 +2,10 @@
 
 CLOUD_INIT_FILES="
 /etc/issue
+/etc/ufw/ufw.conf
+/etc/ufw/user.rules
+/etc/ufw/before.rules
+/etc/ufw/sysctl.conf
 "
 for CLOUD_INIT_FILE in ${CLOUD_INIT_FILES}; do
     ls -la $CLOUD_INIT_FILE || exit 2

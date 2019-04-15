@@ -65,15 +65,6 @@ write_files:
   content: !!binary |
     {{CloudInitData "systemConf"}}
 
-{{if .MasterProfile.IsUbuntuNonVHD}}
-- path: /etc/sysctl.d/60-CIS.conf
-  permissions: "0644"
-  encoding: gzip
-  owner: root
-  content: !!binary |
-    {{CloudInitData "cisNetEnforcement"}}
-{{end}}
-
 {{if .MasterProfile.IsCoreOS}}
 - path: /opt/bin/health-monitor.sh
 {{else}}
@@ -141,6 +132,41 @@ write_files:
   owner: root
   content: !!binary |
     {{CloudInitData "etcIssue"}}
+
+- path: /etc/sysctl.d/60-CIS.conf
+  permissions: "0644"
+  encoding: gzip
+  owner: root
+  content: !!binary |
+    {{CloudInitData "cisNetEnforcement"}}
+
+- path: /etc/ufw/ufw.conf
+  permissions: "0644"
+  encoding: gzip
+  owner: root
+  content: !!binary |
+    {{CloudInitData "cisUFWConf"}}
+
+- path: /etc/ufw/user.rules
+  permissions: "0644"
+  encoding: gzip
+  owner: root
+  content: !!binary |
+    {{CloudInitData "cisUFWUserRules"}}
+
+- path: /etc/ufw/before.rules
+  permissions: "0644"
+  encoding: gzip
+  owner: root
+  content: !!binary |
+    {{CloudInitData "cisUFWBeforeRules"}}
+
+- path: /etc/ufw/sysctl.conf
+  permissions: "0644"
+  encoding: gzip
+  owner: root
+  content: !!binary |
+    {{CloudInitData "cisUFWSysctlConf"}}
 {{end}}
 
 {{if .OrchestratorProfile.KubernetesConfig.RequiresDocker}}

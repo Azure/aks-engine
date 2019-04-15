@@ -174,6 +174,28 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			}
 		})
 
+		It("should validate that every linux node has ufw enabled", func() {
+			if eng.ExpandedDefinition.Properties.IsUbuntuDistroForAllNodes() {
+				kubeConfig, err := GetConfig()
+				Expect(err).NotTo(HaveOccurred())
+				master := fmt.Sprintf("%s@%s", eng.ExpandedDefinition.Properties.LinuxProfile.AdminUsername, kubeConfig.GetServerName())
+				nodeList, err := node.Get()
+				Expect(err).NotTo(HaveOccurred())
+				rootPasswdCmd := fmt.Sprintf("\"sudo ufw status | egrep 'Status: active'\"")
+				for _, node := range nodeList.Nodes {
+					if node.IsReady() {
+						cmd := exec.Command("ssh", "-A", "-i", masterSSHPrivateKeyFilepath, "-p", masterSSHPort, "-o", "ConnectTimeout=10", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-o", "LogLevel=ERROR", master, "ssh", "-o", "ConnectTimeout=10", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-o", "LogLevel=ERROR", node.Metadata.Name, rootPasswdCmd)
+						util.PrintCommand(cmd)
+						out, err := cmd.CombinedOutput()
+						log.Printf("%s\n", out)
+						Expect(err).NotTo(HaveOccurred())
+					}
+				}
+			} else {
+				Skip("ufw enabled validation only works on ubuntu distro until this lands in a VHD")
+			}
+		})
+
 		It("should validate Ubuntu host OS network configuration on all nodes", func() {
 			if eng.ExpandedDefinition.Properties.IsUbuntuDistroForAllNodes() {
 				kubeConfig, err := GetConfig()

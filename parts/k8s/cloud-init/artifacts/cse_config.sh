@@ -113,6 +113,10 @@ configureEtcd() {
     retrycmd_if_failure 120 5 25 sudo etcdctl member update $MEMBER ${ETCD_PEER_URL} || exit $ERR_ETCD_CONFIG_FAIL
 }
 
+ensureUFW() {
+    systemctlEnableAndStart ufw || exit $ERR_UFW_START_TIMEOUT
+}
+
 ensureRPC() {
     systemctlEnableAndStart rpcbind || exit $ERR_SYSTEMCTL_START_FAIL
     systemctlEnableAndStart rpc-statd || exit $ERR_SYSTEMCTL_START_FAIL

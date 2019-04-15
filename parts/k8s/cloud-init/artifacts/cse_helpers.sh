@@ -49,6 +49,7 @@ ERR_CSE_PROVISION_SCRIPT_NOT_READY_TIMEOUT=100 # Timeout waiting for cloud-init 
 ERR_APT_DIST_UPGRADE_TIMEOUT=101 # Timeout waiting for apt-get dist-upgrade to complete
 ERR_CIS_HARDENING_ERROR=102 # Error applying CIS enforcement
 ERR_SYSCTL_RELOAD=103 # Error reloading sysctl config
+ERR_UFW_START_TIMEOUT=104 # Unable to start ufw
 
 OS=$(cat /etc/*-release | grep ^ID= | tr -d 'ID="' | awk '{print toupper($0)}')
 UBUNTU_OS_NAME="UBUNTU"
