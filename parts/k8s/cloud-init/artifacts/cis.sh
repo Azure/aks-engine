@@ -24,6 +24,11 @@ assignFilePermissions() {
     lastlog
     waagent.log
     syslog
+    unattended-upgrades/unattended-upgrades.log
+    azure-vnet-ipam.log
+    azure-vnet-telemetry.log
+    azure-cnimonitor.log
+    azure-vnet.log
     "
     for FILE in ${FILES}; do
         touch /var/log/${FILE}

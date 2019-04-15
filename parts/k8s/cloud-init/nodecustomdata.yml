@@ -119,12 +119,14 @@ write_files:
   content: !!binary |
     {{CloudInitData "aptPreferences"}}
 
+{{if .IsUbuntuNonVHD}}
 - path: /etc/issue
   permissions: "0644"
   encoding: gzip
   owner: root
   content: !!binary |
     {{CloudInitData "etcIssue"}}
+{{end}}
 
 {{if .IsUbuntuNonVHD}}
 - path: /etc/sysctl.d/60-CIS.conf
