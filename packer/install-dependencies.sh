@@ -365,7 +365,6 @@ done
 
 # TODO: fetch supported k8s versions from an aks-engine command instead of hardcoding them here
 AZURE_STACK_K8S_VERSIONS="
-1.11.7
 1.11.8
 1.11.9
 "
