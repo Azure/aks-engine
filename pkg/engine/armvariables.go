@@ -158,7 +158,9 @@ func getK8sMasterVars(cs *api.ContainerService) (map[string]interface{}, error) 
 		}
 		masterVars["environmentJSON"] = environmentJSON
 		masterVars["provisionConfigsCustomCloud"] = getBase64EncodedGzippedCustomScript(kubernetesCSECustomCloud)
-		masterVars["masterPublicLbFQDN"] = fmt.Sprintf("%s.%s.%s", strings.ToLower(cs.Properties.MasterProfile.DNSPrefix), strings.ToLower(cs.Location), strings.ToLower(cs.GetCloudSpecConfig().EndpointConfig.ResourceManagerVMDNSSuffix))
+		masterVars["masterPublicLbFQDN"] = fmt.Sprintf("%s.%s.%s", strings.ToLower(cs.Properties.MasterProfile.DNSPrefix),
+			strings.ToLower(cs.Location),
+			strings.ToLower(cs.GetCloudSpecConfig().EndpointConfig.ResourceManagerVMDNSSuffix))
 	}
 
 	if kubernetesConfig != nil {
