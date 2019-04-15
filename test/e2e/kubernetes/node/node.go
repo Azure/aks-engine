@@ -84,22 +84,27 @@ type List struct {
 	Nodes []Node `json:"items"`
 }
 
+// IsReady returns if the node is in a Ready state
+func (n *Node) IsReady() bool {
+	for _, condition := range n.Status.Conditions {
+		if condition.Type == "Ready" && condition.Status == "True" {
+			return true
+		}
+	}
+	return false
+}
+
 // AreAllReady returns a bool depending on cluster state
 func AreAllReady(nodeCount int) bool {
 	list, _ := Get()
 	var ready int
 	if list != nil && len(list.Nodes) == nodeCount {
 		for _, node := range list.Nodes {
-			nodeReady := false
-			for _, condition := range node.Status.Conditions {
-				if condition.Type == "Ready" && condition.Status == "True" {
-					ready++
-					nodeReady = true
-				}
-			}
+			nodeReady := node.IsReady()
 			if !nodeReady {
 				return false
 			}
+			ready++
 		}
 	}
 	if ready == nodeCount {
