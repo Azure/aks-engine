@@ -29,6 +29,9 @@ assignFilePermissions() {
     azure-vnet-telemetry.log
     azure-cnimonitor.log
     azure-vnet.log
+    kv-driver.log
+    blobfuse-driver.log
+    blobfuse-flexvol-installer.log
     "
     for FILE in ${FILES}; do
         touch /var/log/${FILE}

@@ -9,4 +9,4 @@ for CLOUD_INIT_FILE in ${CLOUD_INIT_FILES}; do
 done
 
 # verify that no files under /var/log have read access to everyone
-find /var/log -type f -perm '/o+r' | (! grep ^) || exit 1
+sudo find /var/log -type f -perm '/o+r' | (! grep ^) || exit 1
