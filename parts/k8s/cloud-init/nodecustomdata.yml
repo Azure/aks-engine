@@ -126,6 +126,15 @@ write_files:
   content: !!binary |
     {{CloudInitData "etcIssue"}}
 
+{{if .IsUbuntuNonVHD}}
+- path: /etc/sysctl.d/60-CIS.conf
+  permissions: "0644"
+  encoding: gzip
+  owner: root
+  content: !!binary |
+    {{CloudInitData "cisNetEnforcement"}}
+{{end}}
+
 {{if .KubernetesConfig.RequiresDocker}}
     {{if not .IsCoreOS}}
 - path: /etc/systemd/system/docker.service.d/clear_mount_propagation_flags.conf

@@ -33,6 +33,7 @@ assignFilePermissions() {
     chmod 600 /etc/passwd-
     chmod 600 /etc/shadow-
     chmod 600 /etc/group-
+    chmod 644 /etc/sysctl.d/60-CIS.conf
 }
 
 applyCIS() {
