@@ -35,7 +35,7 @@ assignFilePermissions() {
     "
     for FILE in ${FILES}; do
         touch /var/log/${FILE}
-        chmod 640 ${FILE}
+        chmod 640 /var/log/${FILE}
     done
     find /var/log -type f -perm '/o+r' -exec chmod 'g-wx,o-rwx' {} \;
     chmod 600 /etc/passwd-
