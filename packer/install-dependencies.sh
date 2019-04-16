@@ -10,6 +10,8 @@ ETC_ISSUE_CONFIG_SRC=/home/packer/etc-issue
 ETC_ISSUE_CONFIG_DEST=/etc/issue
 ETC_ISSUE_NET_CONFIG_SRC=/home/packer/etc-issue.net
 ETC_ISSUE_NET_CONFIG_DEST=/etc/issue.net
+CHRONY_CONFIG_SRC=/home/packer/chrony.conf
+CHRONY_CONFIG_DEST=/etc/chrony/chrony.conf
 
 echo "Starting build on " `date` > ${RELEASE_NOTES_FILEPATH}
 echo "Using kernel:" >> ${RELEASE_NOTES_FILEPATH}
@@ -18,6 +20,7 @@ cp $SYSCTL_CONFIG_SRC $SYSCTL_CONFIG_DEST
 sysctl_reload 20 5 10
 cp $ETC_ISSUE_CONFIG_SRC $ETC_ISSUE_CONFIG_DEST
 cp $ETC_ISSUE_NET_CONFIG_SRC $ETC_ISSUE_NET_CONFIG_DEST
+cp $CHRONY_CONFIG_SRC $CHRONY_CONFIG_DEST
 
 echo ""
 echo "Components downloaded in this VHD build (some of the below components might get deleted during cluster provisioning if they are not needed):" >> ${RELEASE_NOTES_FILEPATH}
@@ -28,6 +31,7 @@ cat << EOF >> ${RELEASE_NOTES_FILEPATH}
   - blobfuse
   - ca-certificates
   - ceph-common
+  - chrony
   - cgroup-lite
   - cifs-utils
   - conntrack

@@ -169,6 +169,7 @@ apt_get_install() {
     retries=$1; wait_sleep=$2; timeout=$3; shift && shift && shift
     for i in $(seq 1 $retries); do
         wait_for_apt_locks
+        export DEBIAN_FRONTEND=noninteractive
         dpkg --configure -a
         apt-get install --no-install-recommends -y ${@}
         [ $? -eq 0  ] && break || \

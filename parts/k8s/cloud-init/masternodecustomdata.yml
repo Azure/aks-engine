@@ -146,6 +146,13 @@ write_files:
   owner: root
   content: !!binary |
     {{CloudInitData "cisNetEnforcement"}}
+
+- path: /etc/chrony/chrony.conf
+  permissions: "0644"
+  encoding: gzip
+  owner: root
+  content: !!binary |
+    {{CloudInitData "cisChrony"}}
 {{end}}
 
 {{if .OrchestratorProfile.KubernetesConfig.RequiresDocker}}

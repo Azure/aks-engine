@@ -170,6 +170,7 @@ const (
 	etcIssue                                 = "k8s/cloud-init/artifacts/etc-issue"
 	etcIssueNet                              = "k8s/cloud-init/artifacts/etc-issue.net"
 	cisNetEnforcement                        = "k8s/cloud-init/artifacts/sysctl-d-60-CIS.conf"
+	cisChrony                                = "k8s/cloud-init/artifacts/chrony.conf"
 )
 
 const (
