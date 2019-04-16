@@ -34,10 +34,11 @@ assignFilePermissions() {
     blobfuse-flexvol-installer.log
     "
     for FILE in ${FILES}; do
-        DIR=$(dirname "${FILE}")
+        FILEPATH="/var/log/${FILE}"
+        DIR=$(dirname "${FILEPATH}")
         mkdir -p ${DIR} || exit $ERR_CIS_ASSIGN_FILE_PERMISSION
-        touch /var/log/${FILE} || exit $ERR_CIS_ASSIGN_FILE_PERMISSION
-        chmod 640 /var/log/${FILE} || exit $ERR_CIS_ASSIGN_FILE_PERMISSION
+        touch ${FILEPATH} || exit $ERR_CIS_ASSIGN_FILE_PERMISSION
+        chmod 640 ${FILEPATH} || exit $ERR_CIS_ASSIGN_FILE_PERMISSION
     done
     find /var/log -type f -perm '/o+r' -exec chmod 'g-wx,o-rwx' {} \;
     chmod 600 /etc/passwd- || exit $ERR_CIS_ASSIGN_FILE_PERMISSION
