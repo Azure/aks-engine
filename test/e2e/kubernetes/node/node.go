@@ -50,7 +50,7 @@ type Taint struct {
 
 // Status parses information from the status key
 type Status struct {
-	Info          Info        `json:"Info"`
+	NodeInfo      Info        `json:"nodeInfo"`
 	NodeAddresses []Address   `json:"addresses"`
 	Conditions    []Condition `json:"conditions"`
 }
@@ -61,12 +61,13 @@ type Address struct {
 	Type    string `json:"type"`
 }
 
-// Info contains information like what version the kubelet is running
+// Info contains node information like what version the kubelet is running
 type Info struct {
 	ContainerRuntimeVersion string `json:"containerRuntimeVersion"`
 	KubeProxyVersion        string `json:"kubeProxyVersion"`
 	KubeletProxyVersion     string `json:"kubeletVersion"`
 	OperatingSystem         string `json:"operatingSystem"`
+	OSImage                 string `json:"osImage"`
 }
 
 // Condition contains various status information
@@ -90,6 +91,19 @@ func (n *Node) IsReady() bool {
 		if condition.Type == "Ready" && condition.Status == "True" {
 			return true
 		}
+	}
+	return false
+}
+
+// IsLinux returns if the node is in a Ready state
+func (n *Node) IsLinux() bool {
+	return n.Status.NodeInfo.OperatingSystem == "linux"
+}
+
+// IsUbuntu returns if the node is in a Ready state
+func (n *Node) IsUbuntu() bool {
+	if n.IsLinux() {
+		return strings.Contains(strings.ToLower(n.Status.NodeInfo.OSImage), "ubuntu")
 	}
 	return false
 }

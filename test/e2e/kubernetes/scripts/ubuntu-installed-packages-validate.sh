@@ -44,4 +44,6 @@ if [[ $OS == $UBUNTU_OS_NAME ]]; then
     for PACKAGE in ${ENSURE_INSTALLED}; do
         apt list --installed | egrep "^${PACKAGE}" || exit 1
     done
+else
+    exit 1
 fi
