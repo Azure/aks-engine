@@ -7,9 +7,11 @@ Protocol 2
 
 # 5.2.11 Ensure only approved MAC algorithms are used
 MACs hmac-sha2-512-etm@openssh.com,hmac-sha2-256-etm@openssh.com,umac-128-etm@openssh.com,hmac-sha2-512,hmac-sha2-256,umac-128@openssh.com
+KexAlgorithms curve25519-sha256@libssh.org
+Ciphers chacha20-poly1305@openssh.com,aes256-gcm@openssh.com,aes128-gcm@openssh.com,aes256-ctr,aes192-ctr,aes128-ctr
 
 # 5.2.12 Ensure SSH Idle Timeout Interval is configured
-ClientAliveInterval 300
+ClientAliveInterval 120
 ClientAliveCountMax 3
 
 # HostKeys for protocol version 2
@@ -17,6 +19,7 @@ HostKey /etc/ssh/ssh_host_rsa_key
 HostKey /etc/ssh/ssh_host_dsa_key
 HostKey /etc/ssh/ssh_host_ecdsa_key
 HostKey /etc/ssh/ssh_host_ed25519_key
+
 #Privilege Separation is turned on for security
 UsePrivilegeSeparation yes
 
@@ -47,8 +50,6 @@ IgnoreRhosts yes
 RhostsRSAAuthentication no
 # similar for protocol version 2
 HostbasedAuthentication no
-# Uncomment if you don't trust ~/.ssh/known_hosts for RhostsRSAAuthentication
-#IgnoreUserKnownHosts yes
 
 # To enable empty passwords, change to yes (NOT RECOMMENDED)
 PermitEmptyPasswords no
@@ -59,16 +60,6 @@ ChallengeResponseAuthentication no
 
 # Change to no to disable tunnelled clear text passwords
 PasswordAuthentication no
-
-# Kerberos options
-#KerberosAuthentication no
-#KerberosGetAFSToken no
-#KerberosOrLocalPasswd yes
-#KerberosTicketCleanup yes
-
-# GSSAPI options
-#GSSAPIAuthentication no
-#GSSAPICleanupCredentials yes
 
 # 5.2.4 Ensure SSH X11 forwarding is disabled
 X11Forwarding no
