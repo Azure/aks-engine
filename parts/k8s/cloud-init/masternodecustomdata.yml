@@ -51,13 +51,6 @@ write_files:
     {{WrapAsVariable "provisionConfigsCustomCloud"}}
 {{end}}
 
-- path: /etc/ssh/sshd_config
-  permissions: "0600"
-  encoding: gzip
-  owner: root
-  content: !!binary |
-    {{CloudInitData "sshdConfig"}}
-
 - path: /etc/systemd/system.conf
   permissions: "0644"
   encoding: gzip
@@ -126,6 +119,13 @@ write_files:
     {{CloudInitData "aptPreferences"}}
 
 {{if .MasterProfile.IsUbuntuNonVHD}}
+- path: /etc/ssh/sshd_config
+  permissions: "0600"
+  encoding: gzip
+  owner: root
+  content: !!binary |
+    {{CloudInitData "sshdConfig"}}
+
 - path: /etc/issue
   permissions: "0644"
   encoding: gzip

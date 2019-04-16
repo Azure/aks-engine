@@ -76,6 +76,11 @@
         },
         {
             "type": "file",
+            "source": "k8s/cloud-init/artifacts/sshd_config",
+            "destination": "/home/packer/sshd_config"
+        },
+        {
+            "type": "file",
             "source": "parts/k8s/cloud-init/artifacts/etc-issue",
             "destination": "/home/packer/etc-issue"
         },
