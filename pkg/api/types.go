@@ -1047,6 +1047,18 @@ func (p *Properties) IsUbuntuDistroForAllNodes() bool {
 	return p.MasterProfile.Distro == Ubuntu || p.MasterProfile.Distro == Ubuntu1804
 }
 
+// IsUbuntuForAllNodes returns true if all of the agent pools plus masters are running an Ubuntu-based OS
+func (p *Properties) IsUbuntuForAllNodes() bool {
+	if len(p.AgentPoolProfiles) > 0 {
+		for _, ap := range p.AgentPoolProfiles {
+			if !ap.IsUbuntu() {
+				return false
+			}
+		}
+	}
+	return p.MasterProfile.IsUbuntu()
+}
+
 // HasAvailabilityZones returns true if the cluster contains a profile with zones
 func (p *Properties) HasAvailabilityZones() bool {
 	hasZones := p.MasterProfile != nil && p.MasterProfile.HasAvailabilityZones()
