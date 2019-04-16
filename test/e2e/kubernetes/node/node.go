@@ -95,12 +95,12 @@ func (n *Node) IsReady() bool {
 	return false
 }
 
-// IsLinux returns if the node is in a Ready state
+// IsLinux checks for a Linux node
 func (n *Node) IsLinux() bool {
 	return n.Status.NodeInfo.OperatingSystem == "linux"
 }
 
-// IsUbuntu returns if the node is in a Ready state
+// IsUbuntu checks for an Ubuntu-backed node
 func (n *Node) IsUbuntu() bool {
 	if n.IsLinux() {
 		return strings.Contains(strings.ToLower(n.Status.NodeInfo.OSImage), "ubuntu")
