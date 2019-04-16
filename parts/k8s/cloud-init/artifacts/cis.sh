@@ -35,7 +35,7 @@ assignFilePermissions() {
     "
     for FILE in ${FILES}; do
         DIR=$(dirname "${FILE}")
-        mkdir -p ${DIR}
+        mkdir -p ${DIR} || exit $ERR_CIS_ASSIGN_FILE_PERMISSION
         touch /var/log/${FILE} || exit $ERR_CIS_ASSIGN_FILE_PERMISSION
         chmod 640 /var/log/${FILE} || exit $ERR_CIS_ASSIGN_FILE_PERMISSION
     done
