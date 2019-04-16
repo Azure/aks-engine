@@ -725,8 +725,14 @@ func (ku *Upgrader) copyCustomNodeProperties(client armhelpers.KubernetesClient,
 		}
 	}
 
+	newNode, err := client.UpdateNode(newNode)
+	if (err != nil) {
+		ku.logger.Warningf("Failed to update the new node %s: %v", newNodeName, err)
+		return err
+	}
+
 	newNode.Spec.Unschedulable = false
-	_, err := client.UpdateNode(newNode)
+	_, err = client.UpdateNode(newNode)
 
 	return err
 }
