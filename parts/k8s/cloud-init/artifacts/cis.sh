@@ -8,7 +8,7 @@ assignRootPW() {
     CMD="import crypt, getpass, pwd; print crypt.crypt('$SECRET', '\$6\$$SALT\$')"
     HASH=`python -c "$CMD"`
 
-    echo 'root:'$HASH | /usr/sbin/chpasswd -e 2>/dev/null;
+    echo 'root:'$HASH | /usr/sbin/chpasswd -e || exit $ERR_CIS_ASSIGN_FILE_PERMISSION
   fi
 }
 
@@ -34,14 +34,17 @@ assignFilePermissions() {
     blobfuse-flexvol-installer.log
     "
     for FILE in ${FILES}; do
-        touch /var/log/${FILE}
-        chmod 640 ${FILE}
+        FILEPATH="/var/log/${FILE}"
+        DIR=$(dirname "${FILEPATH}")
+        mkdir -p ${DIR} || exit $ERR_CIS_ASSIGN_FILE_PERMISSION
+        touch ${FILEPATH} || exit $ERR_CIS_ASSIGN_FILE_PERMISSION
+        chmod 640 ${FILEPATH} || exit $ERR_CIS_ASSIGN_FILE_PERMISSION
     done
     find /var/log -type f -perm '/o+r' -exec chmod 'g-wx,o-rwx' {} \;
-    chmod 600 /etc/passwd-
-    chmod 600 /etc/shadow-
-    chmod 600 /etc/group-
-    chmod 644 /etc/sysctl.d/60-CIS.conf
+    chmod 600 /etc/passwd- || exit $ERR_CIS_ASSIGN_FILE_PERMISSION
+    chmod 600 /etc/shadow- || exit $ERR_CIS_ASSIGN_FILE_PERMISSION
+    chmod 600 /etc/group- || exit $ERR_CIS_ASSIGN_FILE_PERMISSION
+    chmod 644 /etc/sysctl.d/60-CIS.conf || exit $ERR_CIS_ASSIGN_FILE_PERMISSION
 }
 
 applyCIS() {
