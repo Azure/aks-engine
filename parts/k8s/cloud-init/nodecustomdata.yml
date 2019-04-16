@@ -126,9 +126,14 @@ write_files:
   owner: root
   content: !!binary |
     {{CloudInitData "etcIssue"}}
-{{end}}
 
-{{if .IsUbuntuNonVHD}}
+- path: /etc/issue.net
+  permissions: "0644"
+  encoding: gzip
+  owner: root
+  content: !!binary |
+    {{CloudInitData "etcIssueNet"}}
+
 - path: /etc/sysctl.d/60-CIS.conf
   permissions: "0644"
   encoding: gzip

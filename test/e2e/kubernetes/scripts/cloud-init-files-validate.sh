@@ -2,6 +2,7 @@
 
 CLOUD_INIT_FILES="
 /etc/issue
+/etc/issue.net
 "
 for CLOUD_INIT_FILE in ${CLOUD_INIT_FILES}; do
     ls -la $CLOUD_INIT_FILE || exit 2
