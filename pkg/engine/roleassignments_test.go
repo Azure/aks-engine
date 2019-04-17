@@ -12,7 +12,8 @@ import (
 )
 
 func TestCreateMSIRoleAssignment(t *testing.T) {
-	actual := createMSIRoleAssignment()
+	// Test create Contributor role assignment
+	actual := createMSIRoleAssignment(IdentityContributorRole)
 	expected := RoleAssignmentARM{
 		ARMResource: ARMResource{
 			APIVersion: "[variables('apiVersionAuthorizationUser')]",
@@ -33,6 +34,33 @@ func TestCreateMSIRoleAssignment(t *testing.T) {
 	}
 
 	diff := cmp.Diff(actual, expected)
+
+	if diff != "" {
+		t.Errorf("unexpected diff while comparing: %s", diff)
+	}
+
+	// Test create Reader role assignment
+	actual = createMSIRoleAssignment(IdentityReaderRole)
+	expected = RoleAssignmentARM{
+		ARMResource: ARMResource{
+			APIVersion: "[variables('apiVersionAuthorizationUser')]",
+			DependsOn: []string{
+				"[concat('Microsoft.ManagedIdentity/userAssignedIdentities/', variables('userAssignedID'))]",
+			},
+		},
+		RoleAssignment: authorization.RoleAssignment{
+			Type: to.StringPtr("Microsoft.Authorization/roleAssignments"),
+			Name: to.StringPtr("[guid(concat(variables('userAssignedID'), 'roleAssignment', resourceGroup().id))]"),
+			RoleAssignmentPropertiesWithScope: &authorization.RoleAssignmentPropertiesWithScope{
+				RoleDefinitionID: to.StringPtr("[variables('readerRoleDefinitionId')]"),
+				PrincipalID:      to.StringPtr("[reference(concat('Microsoft.ManagedIdentity/userAssignedIdentities/', variables('userAssignedID'))).principalId]"),
+				PrincipalType:    authorization.ServicePrincipal,
+				Scope:            to.StringPtr("[resourceGroup().id]"),
+			},
+		},
+	}
+
+	diff = cmp.Diff(actual, expected)
 
 	if diff != "" {
 		t.Errorf("unexpected diff while comparing: %s", diff)
