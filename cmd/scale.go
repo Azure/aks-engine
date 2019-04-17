@@ -72,7 +72,7 @@ func newScaleCmd() *cobra.Command {
 	f := scaleCmd.Flags()
 	f.StringVarP(&sc.location, "location", "l", "", "location the cluster is deployed in")
 	f.StringVarP(&sc.resourceGroupName, "resource-group", "g", "", "the resource group where the cluster is deployed")
-	f.StringVarP(&sc.apiModelPath, "api-model", "m", "", "path to the generated apimodel file")
+	f.StringVarP(&sc.apiModelPath, "api-model", "m", "", "path to the generated apimodel.json file")
 	f.StringVar(&sc.deploymentDirectory, "deployment-dir", "", "the location of the output from `generate`")
 	f.IntVarP(&sc.newDesiredAgentCount, "new-node-count", "c", 0, "desired number of nodes")
 	f.StringVar(&sc.agentPoolToScale, "node-pool", "", "node pool to scale")
