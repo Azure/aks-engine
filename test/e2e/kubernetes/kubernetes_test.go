@@ -1648,7 +1648,8 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 					netConfigValidationCommand := fmt.Sprintf("\"/tmp/%s\"", timeSyncValidateScript)
 					cmd = exec.Command("ssh", "-A", "-i", masterSSHPrivateKeyFilepath, "-p", masterSSHPort, "-o", "ConnectTimeout=10", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-o", "LogLevel=ERROR", master, "ssh", "-o", "ConnectTimeout=10", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-o", "LogLevel=ERROR", node.Metadata.Name, netConfigValidationCommand)
 					util.PrintCommand(cmd)
-					_, err = cmd.CombinedOutput()
+					out, err = cmd.CombinedOutput()
+					log.Printf("%s\n", out)
 					Expect(err).NotTo(HaveOccurred())
 				}
 			}
