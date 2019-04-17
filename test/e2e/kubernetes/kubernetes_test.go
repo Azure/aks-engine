@@ -267,6 +267,34 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			}
 		})
 
+		It("should validate installed software packages", func() {
+			kubeConfig, err := GetConfig()
+			Expect(err).NotTo(HaveOccurred())
+			master := fmt.Sprintf("%s@%s", eng.ExpandedDefinition.Properties.LinuxProfile.AdminUsername, kubeConfig.GetServerName())
+			nodeList, err := node.Get()
+			Expect(err).NotTo(HaveOccurred())
+			installedPackagesValidateScript := "ubuntu-installed-packages-validate.sh"
+			cmd := exec.Command("scp", "-i", masterSSHPrivateKeyFilepath, "-o", "StrictHostKeyChecking=no", filepath.Join(ScriptsDir, installedPackagesValidateScript), master+":/tmp/"+installedPackagesValidateScript)
+			util.PrintCommand(cmd)
+			out, err := cmd.CombinedOutput()
+			log.Printf("%s\n", out)
+			Expect(err).NotTo(HaveOccurred())
+			var conn *remote.Connection
+			conn, err = remote.NewConnection(kubeConfig.GetServerName(), "22", eng.ExpandedDefinition.Properties.LinuxProfile.AdminUsername, masterSSHPrivateKeyFilepath)
+			Expect(err).NotTo(HaveOccurred())
+			for _, node := range nodeList.Nodes {
+				if node.IsUbuntu() {
+					err := conn.CopyToRemote(node.Metadata.Name, "/tmp/"+installedPackagesValidateScript)
+					Expect(err).NotTo(HaveOccurred())
+					netConfigValidationCommand := fmt.Sprintf("\"/tmp/%s\"", installedPackagesValidateScript)
+					cmd = exec.Command("ssh", "-A", "-i", masterSSHPrivateKeyFilepath, "-p", masterSSHPort, "-o", "ConnectTimeout=10", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-o", "LogLevel=ERROR", master, "ssh", "-o", "ConnectTimeout=10", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-o", "LogLevel=ERROR", node.Metadata.Name, netConfigValidationCommand)
+					util.PrintCommand(cmd)
+					_, err = cmd.CombinedOutput()
+					Expect(err).NotTo(HaveOccurred())
+				}
+			}
+		})
+
 		It("should report all nodes in a Ready state", func() {
 			nodeCount := eng.NodeCount()
 			log.Printf("Checking for %d Ready nodes\n", nodeCount)
