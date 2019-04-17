@@ -294,7 +294,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				kubeConfig, err := GetConfig()
 				Expect(err).NotTo(HaveOccurred())
 				master := fmt.Sprintf("%s@%s", eng.ExpandedDefinition.Properties.LinuxProfile.AdminUsername, kubeConfig.GetServerName())
-				nodeList, err := node.Get()
+				nodeList, err := node.GetReady()
 				Expect(err).NotTo(HaveOccurred())
 				sshdConfigValidateScript := "sshd-config-validate.sh"
 				cmd := exec.Command("scp", "-i", masterSSHPrivateKeyFilepath, "-o", "StrictHostKeyChecking=no", filepath.Join(ScriptsDir, sshdConfigValidateScript), master+":/tmp/"+sshdConfigValidateScript)
