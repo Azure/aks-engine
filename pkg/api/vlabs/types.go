@@ -457,12 +457,13 @@ type AgentPoolProfile struct {
 	// subnet is internal
 	subnet string
 
-	FQDN                  string            `json:"fqdn"`
-	CustomNodeLabels      map[string]string `json:"customNodeLabels,omitempty"`
-	PreProvisionExtension *Extension        `json:"preProvisionExtension"`
-	Extensions            []Extension       `json:"extensions"`
-	SinglePlacementGroup  *bool             `json:"singlePlacementGroup,omitempty"`
-	AvailabilityZones     []string          `json:"availabilityZones,omitempty"`
+	FQDN                   string            `json:"fqdn"`
+	CustomNodeLabels       map[string]string `json:"customNodeLabels,omitempty"`
+	PreProvisionExtension  *Extension        `json:"preProvisionExtension"`
+	Extensions             []Extension       `json:"extensions"`
+	SinglePlacementGroup   *bool             `json:"singlePlacementGroup,omitempty"`
+	AvailabilityZones      []string          `json:"availabilityZones,omitempty"`
+	EnableVMSSNodePublicIP *bool             `json:"enableVMSSNodePublicIP,omitempty"`
 }
 
 // AgentPoolProfileRole represents an agent role
