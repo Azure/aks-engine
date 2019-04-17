@@ -1630,7 +1630,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			kubeConfig, err := GetConfig()
 			Expect(err).NotTo(HaveOccurred())
 			master := fmt.Sprintf("%s@%s", eng.ExpandedDefinition.Properties.LinuxProfile.AdminUsername, kubeConfig.GetServerName())
-			nodeList, err := node.Get()
+			nodeList, err := node.GetReady()
 			Expect(err).NotTo(HaveOccurred())
 			timeSyncValidateScript := "time-sync-validate.sh"
 			cmd := exec.Command("scp", "-i", masterSSHPrivateKeyFilepath, "-o", "StrictHostKeyChecking=no", filepath.Join(ScriptsDir, timeSyncValidateScript), master+":/tmp/"+timeSyncValidateScript)
@@ -1642,7 +1642,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			conn, err = remote.NewConnection(kubeConfig.GetServerName(), "22", eng.ExpandedDefinition.Properties.LinuxProfile.AdminUsername, masterSSHPrivateKeyFilepath)
 			Expect(err).NotTo(HaveOccurred())
 			for _, node := range nodeList.Nodes {
-				if node.IsReady() && node.IsUbuntu() {
+				if node.IsUbuntu() {
 					err := conn.CopyToRemote(node.Metadata.Name, "/tmp/"+timeSyncValidateScript)
 					Expect(err).NotTo(HaveOccurred())
 					netConfigValidationCommand := fmt.Sprintf("\"/tmp/%s\"", timeSyncValidateScript)
