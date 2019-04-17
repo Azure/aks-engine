@@ -135,17 +135,15 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				kubeConfig, err := GetConfig()
 				Expect(err).NotTo(HaveOccurred())
 				master := fmt.Sprintf("%s@%s", eng.ExpandedDefinition.Properties.LinuxProfile.AdminUsername, kubeConfig.GetServerName())
-				nodeList, err := node.Get()
+				nodeList, err := node.GetReady()
 				Expect(err).NotTo(HaveOccurred())
 				dockerVersionCmd := fmt.Sprintf("\"docker version\"")
 				for _, node := range nodeList.Nodes {
-					if node.IsReady() {
-						cmd := exec.Command("ssh", "-A", "-i", masterSSHPrivateKeyFilepath, "-p", masterSSHPort, "-o", "ConnectTimeout=10", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-o", "LogLevel=ERROR", master, "ssh", "-o", "ConnectTimeout=10", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-o", "LogLevel=ERROR", node.Metadata.Name, dockerVersionCmd)
-						util.PrintCommand(cmd)
-						out, err := cmd.CombinedOutput()
-						log.Printf("%s\n", out)
-						Expect(err).NotTo(HaveOccurred())
-					}
+					cmd := exec.Command("ssh", "-A", "-i", masterSSHPrivateKeyFilepath, "-p", masterSSHPort, "-o", "ConnectTimeout=10", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-o", "LogLevel=ERROR", master, "ssh", "-o", "ConnectTimeout=10", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-o", "LogLevel=ERROR", node.Metadata.Name, dockerVersionCmd)
+					util.PrintCommand(cmd)
+					out, err := cmd.CombinedOutput()
+					log.Printf("%s\n", out)
+					Expect(err).NotTo(HaveOccurred())
 				}
 			} else {
 				Skip("Skip docker validations on non-docker-backed clusters")
@@ -157,17 +155,15 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				kubeConfig, err := GetConfig()
 				Expect(err).NotTo(HaveOccurred())
 				master := fmt.Sprintf("%s@%s", eng.ExpandedDefinition.Properties.LinuxProfile.AdminUsername, kubeConfig.GetServerName())
-				nodeList, err := node.Get()
+				nodeList, err := node.GetReady()
 				Expect(err).NotTo(HaveOccurred())
 				rootPasswdCmd := fmt.Sprintf("\"sudo grep '^root:[!*]:' /etc/shadow\"")
 				for _, node := range nodeList.Nodes {
-					if node.IsReady() {
-						cmd := exec.Command("ssh", "-A", "-i", masterSSHPrivateKeyFilepath, "-p", masterSSHPort, "-o", "ConnectTimeout=10", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-o", "LogLevel=ERROR", master, "ssh", "-o", "ConnectTimeout=10", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-o", "LogLevel=ERROR", node.Metadata.Name, rootPasswdCmd)
-						util.PrintCommand(cmd)
-						out, err := cmd.CombinedOutput()
-						log.Printf("%s\n", out)
-						Expect(err).To(HaveOccurred())
-					}
+					cmd := exec.Command("ssh", "-A", "-i", masterSSHPrivateKeyFilepath, "-p", masterSSHPort, "-o", "ConnectTimeout=10", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-o", "LogLevel=ERROR", master, "ssh", "-o", "ConnectTimeout=10", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-o", "LogLevel=ERROR", node.Metadata.Name, rootPasswdCmd)
+					util.PrintCommand(cmd)
+					out, err := cmd.CombinedOutput()
+					log.Printf("%s\n", out)
+					Expect(err).To(HaveOccurred())
 				}
 			} else {
 				Skip("root password validation only works on ubuntu distro until this lands in a VHD")
@@ -179,7 +175,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				kubeConfig, err := GetConfig()
 				Expect(err).NotTo(HaveOccurred())
 				master := fmt.Sprintf("%s@%s", eng.ExpandedDefinition.Properties.LinuxProfile.AdminUsername, kubeConfig.GetServerName())
-				nodeList, err := node.Get()
+				nodeList, err := node.GetReady()
 				Expect(err).NotTo(HaveOccurred())
 				netConfigValidateScript := "net-config-validate.sh"
 				cmd := exec.Command("scp", "-i", masterSSHPrivateKeyFilepath, "-o", "StrictHostKeyChecking=no", filepath.Join(ScriptsDir, netConfigValidateScript), master+":/tmp/"+netConfigValidateScript)
@@ -210,7 +206,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				kubeConfig, err := GetConfig()
 				Expect(err).NotTo(HaveOccurred())
 				master := fmt.Sprintf("%s@%s", eng.ExpandedDefinition.Properties.LinuxProfile.AdminUsername, kubeConfig.GetServerName())
-				nodeList, err := node.Get()
+				nodeList, err := node.GetReady()
 				Expect(err).NotTo(HaveOccurred())
 				cloudInitFilesValidateScript := "cloud-init-files-validate.sh"
 				cmd := exec.Command("scp", "-i", masterSSHPrivateKeyFilepath, "-o", "StrictHostKeyChecking=no", filepath.Join(ScriptsDir, cloudInitFilesValidateScript), master+":/tmp/"+cloudInitFilesValidateScript)
@@ -241,7 +237,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				kubeConfig, err := GetConfig()
 				Expect(err).NotTo(HaveOccurred())
 				master := fmt.Sprintf("%s@%s", eng.ExpandedDefinition.Properties.LinuxProfile.AdminUsername, kubeConfig.GetServerName())
-				nodeList, err := node.Get()
+				nodeList, err := node.GetReady()
 				Expect(err).NotTo(HaveOccurred())
 				modprobeConfigValidateScript := "modprobe-config-validate.sh"
 				cmd := exec.Command("scp", "-i", masterSSHPrivateKeyFilepath, "-o", "StrictHostKeyChecking=no", filepath.Join(ScriptsDir, modprobeConfigValidateScript), master+":/tmp/"+modprobeConfigValidateScript)
@@ -271,7 +267,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			kubeConfig, err := GetConfig()
 			Expect(err).NotTo(HaveOccurred())
 			master := fmt.Sprintf("%s@%s", eng.ExpandedDefinition.Properties.LinuxProfile.AdminUsername, kubeConfig.GetServerName())
-			nodeList, err := node.Get()
+			nodeList, err := node.GetReady()
 			Expect(err).NotTo(HaveOccurred())
 			installedPackagesValidateScript := "ubuntu-installed-packages-validate.sh"
 			cmd := exec.Command("scp", "-i", masterSSHPrivateKeyFilepath, "-o", "StrictHostKeyChecking=no", filepath.Join(ScriptsDir, installedPackagesValidateScript), master+":/tmp/"+installedPackagesValidateScript)
@@ -593,22 +589,20 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				log.Printf("Error while querying DNS: %s\n", err)
 			}
 
-			nodeList, err := node.Get()
+			nodeList, err := node.GetReady()
 			Expect(err).NotTo(HaveOccurred())
 			for _, node := range nodeList.Nodes {
-				if node.IsReady() {
-					By("Ensuring that we get a DNS lookup answer response for each node hostname")
-					digCmd = fmt.Sprintf("dig +short +search +answer %s | grep -v -e '^$'", node.Metadata.Name)
+				By("Ensuring that we get a DNS lookup answer response for each node hostname")
+				digCmd = fmt.Sprintf("dig +short +search +answer %s | grep -v -e '^$'", node.Metadata.Name)
 
-					cmd = exec.Command("ssh", "-i", masterSSHPrivateKeyFilepath, "-p", masterSSHPort, "-o", "ConnectTimeout=10", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-o", "LogLevel=ERROR", master, digCmd)
-					util.PrintCommand(cmd)
-					out, err = cmd.CombinedOutput()
-					log.Printf("%s\n", out)
-					if err != nil {
-						log.Printf("Error while querying DNS: %s\n", err)
-					}
-					Expect(err).NotTo(HaveOccurred())
+				cmd = exec.Command("ssh", "-i", masterSSHPrivateKeyFilepath, "-p", masterSSHPort, "-o", "ConnectTimeout=10", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-o", "LogLevel=ERROR", master, digCmd)
+				util.PrintCommand(cmd)
+				out, err = cmd.CombinedOutput()
+				log.Printf("%s\n", out)
+				if err != nil {
+					log.Printf("Error while querying DNS: %s\n", err)
 				}
+				Expect(err).NotTo(HaveOccurred())
 			}
 
 			By("Ensuring that we get a DNS lookup answer response for external names")
@@ -701,35 +695,33 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 					} else {
 						By("Ensuring that we can connect via HTTPS to the dashboard on any one node")
 					}
-					nodeList, err := node.Get()
+					nodeList, err := node.GetReady()
 					Expect(err).NotTo(HaveOccurred())
 					for _, node := range nodeList.Nodes {
-						if node.IsReady() {
-							success := false
-							for i := 0; i < 60; i++ {
-								address := node.Status.GetAddressByType("InternalIP")
-								if address == nil {
-									log.Printf("One of our nodes does not have an InternalIP value!: %s\n", node.Metadata.Name)
-								}
-								Expect(address).NotTo(BeNil())
-								dashboardURL := fmt.Sprintf("http://%s:%v", address.Address, port)
-								curlCMD := fmt.Sprintf("curl --max-time 60 %s", dashboardURL)
-								cmd := exec.Command("ssh", "-i", masterSSHPrivateKeyFilepath, "-p", masterSSHPort, "-o", "ConnectTimeout=10", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-o", "LogLevel=ERROR", master, curlCMD)
-								util.PrintCommand(cmd)
-								var out []byte
-								out, err = cmd.CombinedOutput()
-								if err == nil {
-									success = true
-									break
-								}
-								if i > 58 {
-									log.Printf("Error while connecting to Windows dashboard:%s\n", err)
-									log.Println(string(out))
-								}
-								time.Sleep(10 * time.Second)
+						success := false
+						for i := 0; i < 60; i++ {
+							address := node.Status.GetAddressByType("InternalIP")
+							if address == nil {
+								log.Printf("One of our nodes does not have an InternalIP value!: %s\n", node.Metadata.Name)
 							}
-							Expect(success).To(BeTrue())
+							Expect(address).NotTo(BeNil())
+							dashboardURL := fmt.Sprintf("http://%s:%v", address.Address, port)
+							curlCMD := fmt.Sprintf("curl --max-time 60 %s", dashboardURL)
+							cmd := exec.Command("ssh", "-i", masterSSHPrivateKeyFilepath, "-p", masterSSHPort, "-o", "ConnectTimeout=10", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-o", "LogLevel=ERROR", master, curlCMD)
+							util.PrintCommand(cmd)
+							var out []byte
+							out, err = cmd.CombinedOutput()
+							if err == nil {
+								success = true
+								break
+							}
+							if i > 58 {
+								log.Printf("Error while connecting to Windows dashboard:%s\n", err)
+								log.Println(string(out))
+							}
+							time.Sleep(10 * time.Second)
 						}
+						Expect(success).To(BeTrue())
 					}
 					By("Ensuring that the correct resources have been applied")
 					// Assuming one dashboard pod
