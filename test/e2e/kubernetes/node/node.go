@@ -173,6 +173,23 @@ func Get() (*List, error) {
 	return &nl, nil
 }
 
+// GetReady returns the current nodes for a given kubeconfig
+func GetReady() (*List, error) {
+	l, err := Get()
+	if err != nil {
+		return nil, err
+	}
+	nl := &List{
+		[]Node{},
+	}
+	for _, node := range l.Nodes {
+		if node.IsReady() {
+			nl.Nodes = append(nl.Nodes, node)
+		}
+	}
+	return nl, nil
+}
+
 // Version get the version of the server
 func Version() (string, error) {
 	cmd := exec.Command("k", "version", "--short")
