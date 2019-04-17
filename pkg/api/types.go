@@ -246,8 +246,25 @@ type OrchestratorVersionProfile struct {
 	OrchestratorProfile
 	// Whether this orchestrator version is deployed by default if orchestrator release is not specified
 	Default bool `json:"default,omitempty"`
+	// Whether version is in preview mode
+	IsPreview bool `json:"isPreview,omitempty"`
+	// Metadata for customers to help them select a healthy kubernetes version
+	Metadata string `json:"metadata,omitempty"`
 	// List of available upgrades for this orchestrator version
 	Upgrades []*OrchestratorProfile `json:"upgrades,omitempty"`
+}
+
+// OrchestratorVersionProfileListProperties contains properties of OrchestratorVersionProfileList
+type OrchestratorVersionProfileListProperties struct {
+	Orchestrators []*OrchestratorVersionProfile `json:"orchestrators"`
+}
+
+// OrchestratorVersionProfileList contains list of version profiles for supported orchestrators
+type OrchestratorVersionProfileList struct {
+	ID         string                                   `json:"id,omitempty"`
+	Name       string                                   `json:"name,omitempty"`
+	Type       string                                   `json:"type,omitempty"`
+	Properties OrchestratorVersionProfileListProperties `json:"properties"`
 }
 
 // KubernetesContainerSpec defines configuration for a container spec

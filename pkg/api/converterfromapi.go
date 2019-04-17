@@ -147,6 +147,7 @@ func ConvertOrchestratorVersionProfileToV20170930(api *OrchestratorVersionProfil
 		for i, h := range api.Upgrades {
 			vProfile.Upgrades[i] = &v20170930.OrchestratorProfile{
 				OrchestratorVersion: h.OrchestratorVersion,
+				OrchestratorType:    h.OrchestratorType,
 			}
 		}
 	}
