@@ -10,7 +10,7 @@ import (
 
 	"github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2017-03-30/compute"
 	"github.com/Azure/go-autorest/autorest/azure"
-	"gopkg.in/jarcoal/httpmock.v1"
+	"github.com/jarcoal/httpmock"
 )
 
 const (

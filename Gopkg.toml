@@ -76,7 +76,7 @@ required = [
 
 [[constraint]]
   name = "github.com/sirupsen/logrus"
-  version = "1.0.3"
+  version = "1.4.1"
 
 [[constraint]]
   name = "github.com/spf13/pflag"
@@ -126,5 +126,5 @@ required = [
 
 
 [[constraint]]
-  name = "gopkg.in/jarcoal/httpmock.v1"
-  version = "1.0.1"
+  name = "github.com/jarcoal/httpmock"
+  version = "1.0.3"

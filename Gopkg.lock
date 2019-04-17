@@ -297,6 +297,14 @@
   revision = "98469bf07613ffae6f025893761c1e7a5e96e4aa"
 
 [[projects]]
+  digest = "1:5ccb6b1276f8b4be1c9666848fbe5171787c509cdbfd6a07c1d9edc77695ef8c"
+  name = "github.com/jarcoal/httpmock"
+  packages = ["."]
+  pruneopts = "NUT"
+  revision = "e598472b238f5d2a505e1316886da2171f86bfa4"
+  version = "v1.0.3"
+
+[[projects]]
   digest = "1:8e36686e8b139f8fe240c1d5cf3a145bc675c22ff8e707857cdd3ae17b00d728"
   name = "github.com/json-iterator/go"
   packages = ["."]
@@ -452,12 +460,12 @@
   version = "v1.2.0"
 
 [[projects]]
-  digest = "1:e256b859ab89f005f2f639f5ed9807d0873d9135e27c6382f419b840ff9abe71"
+  digest = "1:998e4640c25e00ccb7b2569bf94562283937b8afb3485c0e1a0a05a15330240d"
   name = "github.com/sirupsen/logrus"
   packages = ["."]
   pruneopts = "NUT"
-  revision = "e1e72e9de974bd926e5c56f83753fba2df402ce5"
-  version = "v1.3.0"
+  revision = "8bdbc7bcc01dcbb8ec23dc8a28e332258d25251f"
+  version = "v1.4.1"
 
 [[projects]]
   digest = "1:343d44e06621142ab09ae0c76c1799104cdfddd3ffb445d78b1adf8dc3ffaf3d"
@@ -691,14 +699,6 @@
   version = "v1.41.0"
 
 [[projects]]
-  digest = "1:669d28d872dcb4e7a25ff7f15270c5f72da2ac129a9be4db2c5c4205b416f4bc"
-  name = "gopkg.in/jarcoal/httpmock.v1"
-  packages = ["."]
-  pruneopts = "NUT"
-  revision = "b43b330ad7ef975a5049e4cc58f948aa6d9cad89"
-  version = "v1.0.1"
-
-[[projects]]
   branch = "v1"
   digest = "1:8fb1ccb16a6cfecbfdfeb84d8ea1cc7afa8f9ef16526bc2326f72d993e32cef1"
   name = "gopkg.in/tomb.v1"
@@ -892,6 +892,7 @@
     "github.com/google/go-cmp/cmp",
     "github.com/imdario/mergo",
     "github.com/influxdata/influxdb/client/v2",
+    "github.com/jarcoal/httpmock",
     "github.com/kelseyhightower/envconfig",
     "github.com/leonelquinteros/gotext",
     "github.com/mattn/go-colorable",
@@ -909,7 +910,6 @@
     "gopkg.in/fsnotify.v1",
     "gopkg.in/go-playground/validator.v9",
     "gopkg.in/ini.v1",
-    "gopkg.in/jarcoal/httpmock.v1",
     "k8s.io/api/core/v1",
     "k8s.io/api/policy/v1beta1",
     "k8s.io/apimachinery/pkg/api/equality",
