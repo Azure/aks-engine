@@ -6,7 +6,6 @@ package operations
 import (
 	"bytes"
 	"fmt"
-	"log"
 	"net"
 
 	"golang.org/x/crypto/ssh"
@@ -17,7 +16,6 @@ func RemoteRun(user string, addr string, port int, sshKey []byte, cmd string) (s
 	// Create the Signer for this private key.
 	signer, err := ssh.ParsePrivateKey(sshKey)
 	if err != nil {
-		log.Printf("unable to parse private key: %v", err)
 		return "", err
 	}
 
