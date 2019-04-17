@@ -66,6 +66,8 @@ fi
 if [[ $OS == $UBUNTU_OS_NAME ]] && [ "$FULL_INSTALL_REQUIRED" = "true" ]; then
     cis_sysctl=/etc/sysctl.d/60-CIS.conf
     wait_for_file 3600 1 $cis_sysctl || exit $ERR_FILE_WATCH_TIMEOUT
+    cis_rsyslog=/etc/rsyslog.d/60-CIS.conf
+    wait_for_file 3600 1 $cis_rsyslog || exit $ERR_FILE_WATCH_TIMEOUT
     sysctl_reload 20 5 10 || exit $ERR_SYSCTL_RELOAD
     installDeps
 else 

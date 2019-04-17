@@ -147,6 +147,13 @@ write_files:
   content: !!binary |
     {{CloudInitData "cisNetEnforcement"}}
 
+- path: /etc/rsyslog.d/60-CIS.conf
+  permissions: "0644"
+  encoding: gzip
+  owner: root
+  content: !!binary |
+    {{CloudInitData "cisLogEnforcement"}}
+
 - path: /etc/modprobe.d/CIS.conf
   permissions: "0644"
   encoding: gzip
