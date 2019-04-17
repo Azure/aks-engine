@@ -6,14 +6,11 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"runtime"
 	"sort"
 	"strings"
 	"sync"
 )
-
-// Responder is a callback that receives and http request and returns
-// a mocked response.
-type Responder func(*http.Request) (*http.Response, error)
 
 // NoResponderFound is returned when no responders are found for a given HTTP method and URL.
 var NoResponderFound = errors.New("no responder found") // nolint: golint
@@ -141,9 +138,10 @@ func (m *MockTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 }
 
 func runCancelable(responder Responder, req *http.Request) (*http.Response, error) {
-	// TODO: replace req.Cancel by ctx
-	if req.Cancel == nil { // nolint: staticcheck
-		return responder(req)
+	ctx := req.Context()
+	if req.Cancel == nil && ctx.Done() == nil { // nolint: staticcheck
+		resp, err := responder(req)
+		return resp, checkStackTracer(req, err)
 	}
 
 	// Set up a goroutine that translates a close(req.Cancel) into a
@@ -159,11 +157,15 @@ func runCancelable(responder Responder, req *http.Request) (*http.Response, erro
 
 	go func() {
 		select {
-		// TODO: req.Cancel replace by ctx
 		case <-req.Cancel: // nolint: staticcheck
 			resultch <- result{
 				response: nil,
 				err:      errors.New("request canceled"),
+			}
+		case <-ctx.Done():
+			resultch <- result{
+				response: nil,
+				err:      ctx.Err(),
 			}
 		case <-done:
 		}
@@ -188,15 +190,89 @@ func runCancelable(responder Responder, req *http.Request) (*http.Response, erro
 
 	r := <-resultch
 
-	// if a close(req.Cancel) is never coming,
-	// we'll need to unblock the first goroutine.
+	// if a cancel() issued from context.WithCancel() or a
+	// close(req.Cancel) are never coming, we'll need to unblock the
+	// first goroutine.
 	done <- struct{}{}
 
-	return r.response, r.err
+	return r.response, checkStackTracer(req, r.err)
 }
 
-// CancelRequest does nothing with timeout.
-func (m *MockTransport) CancelRequest(req *http.Request) {}
+type stackTracer struct {
+	customFn func(...interface{})
+	err      error
+}
+
+func (n stackTracer) Error() string {
+	if n.err == nil {
+		return ""
+	}
+	return n.err.Error()
+}
+
+// checkStackTracer checks for specific error returned by
+// NewNotFoundResponder function or Debug Responder method.
+func checkStackTracer(req *http.Request, err error) error {
+	if nf, ok := err.(stackTracer); ok {
+		if nf.customFn != nil {
+			pc := make([]uintptr, 128)
+			npc := runtime.Callers(2, pc)
+			pc = pc[:npc]
+
+			var mesg bytes.Buffer
+			var netHTTPBegin, netHTTPEnd bool
+
+			// Start recording at first net/http call if any...
+			for {
+				frames := runtime.CallersFrames(pc)
+
+				var lastFn string
+				for {
+					frame, more := frames.Next()
+
+					if !netHTTPEnd {
+						if netHTTPBegin {
+							netHTTPEnd = !strings.HasPrefix(frame.Function, "net/http.")
+						} else {
+							netHTTPBegin = strings.HasPrefix(frame.Function, "net/http.")
+						}
+					}
+
+					if netHTTPEnd {
+						if lastFn != "" {
+							if mesg.Len() == 0 {
+								if nf.err != nil {
+									mesg.WriteString(nf.err.Error())
+								} else {
+									fmt.Fprintf(&mesg, "%s %s", req.Method, req.URL)
+								}
+								mesg.WriteString("\nCalled from ")
+							} else {
+								mesg.WriteString("\n  ")
+							}
+							fmt.Fprintf(&mesg, "%s()\n    at %s:%d", lastFn, frame.File, frame.Line)
+						}
+					}
+					lastFn = frame.Function
+
+					if !more {
+						break
+					}
+				}
+
+				// At least one net/http frame found
+				if mesg.Len() > 0 {
+					break
+				}
+				netHTTPEnd = true // retry without looking at net/http frames
+			}
+
+			nf.customFn(mesg.String())
+		}
+		err = nf.err
+	}
+	return err
+}
 
 // responderForKey returns a responder for a given key.
 func (m *MockTransport) responderForKey(key string) Responder {
@@ -442,7 +518,7 @@ func DeactivateAndReset() {
 // Example:
 // 		func TestFetchArticles(t *testing.T) {
 // 			httpmock.Activate()
-// 			httpmock.DeactivateAndReset()
+// 			defer httpmock.DeactivateAndReset()
 //
 // 			httpmock.RegisterResponder("GET", "http://example.com/",
 // 				httpmock.NewStringResponder(200, "hello world"))
@@ -471,7 +547,7 @@ func RegisterResponder(method, url string, responder Responder) {
 // Example using a net/url.Values:
 // 		func TestFetchArticles(t *testing.T) {
 // 			httpmock.Activate()
-// 			httpmock.DeactivateAndReset()
+// 			defer httpmock.DeactivateAndReset()
 //
 // 			expectedQuery := net.Values{
 //				"a": []string{"3", "1", "8"},
@@ -488,7 +564,7 @@ func RegisterResponder(method, url string, responder Responder) {
 // or using a map[string]string:
 // 		func TestFetchArticles(t *testing.T) {
 // 			httpmock.Activate()
-// 			httpmock.DeactivateAndReset()
+// 			defer httpmock.DeactivateAndReset()
 //
 // 			expectedQuery := map[string]string{
 //				"a": "1",
@@ -503,7 +579,7 @@ func RegisterResponder(method, url string, responder Responder) {
 // or using a query string:
 // 		func TestFetchArticles(t *testing.T) {
 // 			httpmock.Activate()
-// 			httpmock.DeactivateAndReset()
+// 			defer httpmock.DeactivateAndReset()
 //
 // 			expectedQuery := "a=3&b=4&b=2&a=1&a=8"
 // 			httpmock.RegisterResponderWithQueryValues("GET", "http://example.com/", expectedQuery,
@@ -517,17 +593,13 @@ func RegisterResponderWithQuery(method, path string, query interface{}, responde
 	DefaultTransport.RegisterResponderWithQuery(method, path, query, responder)
 }
 
-// RegisterResponderWithQueryValues it is same as RegisterResponder, but doesn't depends on query objects order.
-//
-// Example:
-
 // RegisterNoResponder adds a mock that will be called whenever a request for an unregistered URL
 // is received.  The default behavior is to return a connection error.
 //
 // In some cases you may not want all URLs to be mocked, in which case you can do this:
 // 		func TestFetchArticles(t *testing.T) {
 // 			httpmock.Activate()
-// 			httpmock.DeactivateAndReset()
+// 			defer httpmock.DeactivateAndReset()
 //			httpmock.RegisterNoResponder(httpmock.InitialTransport.RoundTrip)
 //
 // 			// any requests that don't have a registered URL will be fetched normally
