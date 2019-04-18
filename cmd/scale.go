@@ -375,8 +375,10 @@ func (sc *scaleCmd) run(cmd *cobra.Command, args []string) error {
 
 	addValue(parametersJSON, sc.agentPool.Name+"Count", countForTemplate)
 
+	// The agent pool is set to index 0 for the scale operation, we need to overwrite the template variables that rely on pool index.
 	if winPoolIndex != -1 {
 		templateJSON["variables"].(map[string]interface{})[sc.agentPool.Name+"Index"] = winPoolIndex
+		templateJSON["variables"].(map[string]interface{})[sc.agentPool.Name+"VMNamePrefix"] = sc.containerService.Properties.GetAgentVMPrefix(sc.agentPool, winPoolIndex)
 	}
 	if orchestratorInfo.OrchestratorType == api.Kubernetes {
 		err = transformer.NormalizeForK8sVMASScalingUp(sc.logger, templateJSON)

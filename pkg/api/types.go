@@ -819,7 +819,8 @@ func (p *Properties) K8sOrchestratorName() string {
 	return ""
 }
 
-func (p *Properties) getAgentPoolIndexByName(name string) int {
+// GetAgentPoolIndexByName returns the index of the provided agentpool.
+func (p *Properties) GetAgentPoolIndexByName(name string) int {
 	index := -1
 	for i, profile := range p.AgentPoolProfiles {
 		if profile.Name == name {
@@ -830,9 +831,8 @@ func (p *Properties) getAgentPoolIndexByName(name string) int {
 	return index
 }
 
-// GetAgentVMPrefix returns the VM prefix for an agentpool
-func (p *Properties) GetAgentVMPrefix(a *AgentPoolProfile) string {
-	index := p.getAgentPoolIndexByName(a.Name)
+// GetAgentVMPrefix returns the VM prefix for an agentpool.
+func (p *Properties) GetAgentVMPrefix(a *AgentPoolProfile, index int) string {
 	nameSuffix := p.GetClusterID()
 	vmPrefix := ""
 	if index != -1 {
@@ -910,7 +910,7 @@ func (p *Properties) GetPrimaryAvailabilitySetName() string {
 func (p *Properties) GetPrimaryScaleSetName() string {
 	if len(p.AgentPoolProfiles) > 0 {
 		if p.AgentPoolProfiles[0].AvailabilityProfile == VirtualMachineScaleSets {
-			return p.GetAgentVMPrefix(p.AgentPoolProfiles[0])
+			return p.GetAgentVMPrefix(p.AgentPoolProfiles[0], 0)
 		}
 	}
 	return ""
