@@ -28,7 +28,7 @@ write_files:
   owner: root
   content: !!binary |
     {{WrapAsVariable "provisionConfigs"}}
-    
+
 {{if IsAzureStackCloud}}
 - path: /opt/azure/containers/provision_configs_custom_cloud.sh
   permissions: "0744"
@@ -44,13 +44,6 @@ write_files:
   owner: root
   content: !!binary |
     {{WrapAsVariable "sshdConfig"}}
-
-- path: /etc/systemd/system.conf
-  permissions: "0644"
-  encoding: gzip
-  owner: root
-  content: !!binary |
-    {{WrapAsVariable "systemConf"}}
 
 - path: /usr/local/bin/health-monitor.sh
   permissions: "0544"
