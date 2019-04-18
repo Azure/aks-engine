@@ -160,7 +160,6 @@ const (
 	kubernetesMasterGenerateProxyCertsScript = "k8s/cloud-init/artifacts/generateproxycerts.sh"
 	kubernetesCustomSearchDomainsScript      = "k8s/cloud-init/artifacts/setup-custom-search-domains.sh"
 	sshdConfig                               = "k8s/cloud-init/artifacts/sshd_config"
-	systemConf                               = "k8s/cloud-init/artifacts/system.conf"
 	kubeletSystemdService                    = "k8s/cloud-init/artifacts/kubelet.service"
 	kmsSystemdService                        = "k8s/cloud-init/artifacts/kms.service"
 	aptPreferences                           = "k8s/cloud-init/artifacts/apt-preferences"
