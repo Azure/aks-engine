@@ -45,6 +45,7 @@ assignFilePermissions() {
     chmod 600 /etc/shadow- || exit $ERR_CIS_ASSIGN_FILE_PERMISSION
     chmod 600 /etc/group- || exit $ERR_CIS_ASSIGN_FILE_PERMISSION
     chmod 644 /etc/sysctl.d/60-CIS.conf || exit $ERR_CIS_ASSIGN_FILE_PERMISSION
+    chmod 644 /etc/rsyslog.d/60-CIS.conf || exit $ERR_CIS_ASSIGN_FILE_PERMISSION
     chmod 644 /etc/modprobe.d/CIS.conf || exit $ERR_CIS_ASSIGN_FILE_PERMISSION
     chmod 644 /etc/ssh/sshd_config || exit $ERR_CIS_ASSIGN_FILE_PERMISSION
 }

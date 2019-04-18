@@ -81,6 +81,11 @@
         },
         {
             "type": "file",
+            "source": "parts/k8s/cloud-init/artifacts/rsyslog-d-60-CIS.conf",
+            "destination": "/home/packer/rsyslog-d-60-CIS.conf"
+        },
+        {
+            "type": "file",
             "source": "parts/k8s/cloud-init/artifacts/etc-issue",
             "destination": "/home/packer/etc-issue"
         },
