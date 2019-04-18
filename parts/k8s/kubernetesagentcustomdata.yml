@@ -45,13 +45,6 @@ write_files:
   content: !!binary |
     {{CloudInitData "sshdConfig"}}
 
-- path: /etc/systemd/system.conf
-  permissions: "0644"
-  encoding: gzip
-  owner: root
-  content: !!binary |
-    {{CloudInitData "systemConf"}}
-
 - path: /usr/local/bin/health-monitor.sh
   permissions: "0544"
   encoding: gzip

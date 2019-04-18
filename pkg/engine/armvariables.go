@@ -110,7 +110,6 @@ func getK8sMasterVars(cs *api.ContainerService) map[string]interface{} {
 			"provisionInstalls":         GetKubernetesB64Installs(),
 			"provisionConfigs":          GetKubernetesB64Configs(),
 			"sshdConfig":                GetB64sshdConfig(),
-			"systemConf":                GetB64systemConf(),
 			"healthMonitorScript":       GetKubernetesB64HealthMonitorScript(),
 			"customSearchDomainsScript": GetKubernetesB64CustomSearchDomainsScript(),
 			"generateProxyCertsScript":  GetKubernetesB64GenerateProxyCerts(),
