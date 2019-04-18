@@ -70,6 +70,26 @@
             "destination": "/home/packer/install-dependencies.sh"
         },
         {
+            "type": "file",
+            "source": "parts/k8s/cloud-init/artifacts/sysctl-d-60-CIS.conf",
+            "destination": "/home/packer/sysctl-d-60-CIS.conf"
+        },
+        {
+            "type": "file",
+            "source": "parts/k8s/cloud-init/artifacts/etc-issue",
+            "destination": "/home/packer/etc-issue"
+        },
+        {
+            "type": "file",
+            "source": "parts/k8s/cloud-init/artifacts/etc-issue.net",
+            "destination": "/home/packer/etc-issue.net"
+        },
+        {
+            "type": "file",
+            "source": "parts/k8s/cloud-init/artifacts/modprobe-CIS.conf",
+            "destination": "/home/packer/modprobe-CIS.conf"
+        },
+        {
             "type": "shell",
             "inline": [
                 "sudo FEATURE_FLAGS={{user `feature_flags`}} BUILD_NUMBER={{user `build_number`}} BUILD_ID={{user `build_id`}} COMMIT={{user `commit`}} /bin/bash -ux /home/packer/install-dependencies.sh",

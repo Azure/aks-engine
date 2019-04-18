@@ -47,7 +47,9 @@ ERR_APT_DAILY_TIMEOUT=98 # Timeout waiting for apt daily updates
 ERR_APT_UPDATE_TIMEOUT=99 # Timeout waiting for apt-get update to complete
 ERR_CSE_PROVISION_SCRIPT_NOT_READY_TIMEOUT=100 # Timeout waiting for cloud-init to place this (!) script on the vm
 ERR_APT_DIST_UPGRADE_TIMEOUT=101 # Timeout waiting for apt-get dist-upgrade to complete
-ERR_CIS_HARDENING_ERROR=102 # Error applying CIS enforcement
+ERR_SYSCTL_RELOAD=103 # Error reloading sysctl config
+ERR_CIS_ASSIGN_ROOT_PW=111 # Error assigning root password in CIS enforcement
+ERR_CIS_ASSIGN_FILE_PERMISSION=112 # Error assigning permission to a file in CIS enforcement
 
 OS=$(cat /etc/*-release | grep ^ID= | tr -d 'ID="' | awk '{print toupper($0)}')
 UBUNTU_OS_NAME="UBUNTU"
@@ -187,6 +189,7 @@ apt_get_dist_upgrade() {
   apt_dist_upgrade_output=/tmp/apt-get-dist-upgrade.out
   for i in $(seq 1 $retries); do
     wait_for_apt_locks
+    export DEBIAN_FRONTEND=noninteractive
     dpkg --configure -a
     apt-get -f -y install
     apt-get dist-upgrade -y 2>&1 | tee $apt_dist_upgrade_output | grep -E "^([WE]:.*)|([eE]rr.*)$"
@@ -205,6 +208,18 @@ systemctl_restart() {
     for i in $(seq 1 $retries); do
         timeout $timeout systemctl daemon-reload
         timeout $timeout systemctl restart $svcname
+        [ $? -eq 0  ] && break || \
+        if [ $i -eq $retries ]; then
+            return 1
+        else
+            sleep $wait_sleep
+        fi
+    done
+}
+sysctl_reload() {
+    retries=$1; wait_sleep=$2; timeout=$3
+    for i in $(seq 1 $retries); do
+        timeout $timeout sysctl --system
         [ $? -eq 0  ] && break || \
         if [ $i -eq $retries ]; then
             return 1

@@ -31,12 +31,14 @@ import (
 	"github.com/Azure/aks-engine/test/e2e/kubernetes/service"
 	"github.com/Azure/aks-engine/test/e2e/kubernetes/storageclass"
 	"github.com/Azure/aks-engine/test/e2e/kubernetes/util"
+	"github.com/Azure/aks-engine/test/e2e/remote"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
 
 const (
 	WorkloadDir                     = "workloads"
+	ScriptsDir                      = "scripts"
 	PolicyDir                       = "workloads/policies"
 	deleteResourceRetries           = 10
 	retryCommandsTimeout            = 5 * time.Minute
@@ -108,7 +110,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			if eng.ExpandedDefinition.Properties.MasterProfile.IsUbuntu() {
 				kubeConfig, err := GetConfig()
 				Expect(err).NotTo(HaveOccurred())
-				master := fmt.Sprintf("azureuser@%s", kubeConfig.GetServerName())
+				master := fmt.Sprintf("%s@%s", eng.ExpandedDefinition.Properties.LinuxProfile.AdminUsername, kubeConfig.GetServerName())
 
 				lsbReleaseCmd := fmt.Sprintf("lsb_release -a && uname -r")
 				cmd := exec.Command("ssh", "-i", masterSSHPrivateKeyFilepath, "-p", masterSSHPort, "-o", "ConnectTimeout=10", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-o", "LogLevel=ERROR", master, lsbReleaseCmd)
@@ -132,8 +134,8 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			if eng.ExpandedDefinition.Properties.OrchestratorProfile.KubernetesConfig.RequiresDocker() {
 				kubeConfig, err := GetConfig()
 				Expect(err).NotTo(HaveOccurred())
-				master := fmt.Sprintf("azureuser@%s", kubeConfig.GetServerName())
-				nodeList, err := node.Get()
+				master := fmt.Sprintf("%s@%s", eng.ExpandedDefinition.Properties.LinuxProfile.AdminUsername, kubeConfig.GetServerName())
+				nodeList, err := node.GetReady()
 				Expect(err).NotTo(HaveOccurred())
 				dockerVersionCmd := fmt.Sprintf("\"docker version\"")
 				for _, node := range nodeList.Nodes {
@@ -152,8 +154,8 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			if eng.ExpandedDefinition.Properties.IsUbuntuDistroForAllNodes() {
 				kubeConfig, err := GetConfig()
 				Expect(err).NotTo(HaveOccurred())
-				master := fmt.Sprintf("azureuser@%s", kubeConfig.GetServerName())
-				nodeList, err := node.Get()
+				master := fmt.Sprintf("%s@%s", eng.ExpandedDefinition.Properties.LinuxProfile.AdminUsername, kubeConfig.GetServerName())
+				nodeList, err := node.GetReady()
 				Expect(err).NotTo(HaveOccurred())
 				rootPasswdCmd := fmt.Sprintf("\"sudo grep '^root:[!*]:' /etc/shadow\"")
 				for _, node := range nodeList.Nodes {
@@ -165,6 +167,127 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				}
 			} else {
 				Skip("root password validation only works on ubuntu distro until this lands in a VHD")
+			}
+		})
+
+		It("should validate Ubuntu host OS network configuration on all nodes", func() {
+			if eng.ExpandedDefinition.Properties.IsUbuntuDistroForAllNodes() {
+				kubeConfig, err := GetConfig()
+				Expect(err).NotTo(HaveOccurred())
+				master := fmt.Sprintf("%s@%s", eng.ExpandedDefinition.Properties.LinuxProfile.AdminUsername, kubeConfig.GetServerName())
+				nodeList, err := node.GetReady()
+				Expect(err).NotTo(HaveOccurred())
+				netConfigValidateScript := "net-config-validate.sh"
+				cmd := exec.Command("scp", "-i", masterSSHPrivateKeyFilepath, "-o", "StrictHostKeyChecking=no", filepath.Join(ScriptsDir, netConfigValidateScript), master+":/tmp/"+netConfigValidateScript)
+				util.PrintCommand(cmd)
+				out, err := cmd.CombinedOutput()
+				log.Printf("%s\n", out)
+				Expect(err).NotTo(HaveOccurred())
+				var conn *remote.Connection
+				conn, err = remote.NewConnection(kubeConfig.GetServerName(), "22", eng.ExpandedDefinition.Properties.LinuxProfile.AdminUsername, masterSSHPrivateKeyFilepath)
+				Expect(err).NotTo(HaveOccurred())
+				for _, node := range nodeList.Nodes {
+					err := conn.CopyToRemote(node.Metadata.Name, "/tmp/"+netConfigValidateScript)
+					Expect(err).NotTo(HaveOccurred())
+					netConfigValidationCommand := fmt.Sprintf("\"/tmp/%s\"", netConfigValidateScript)
+					cmd = exec.Command("ssh", "-A", "-i", masterSSHPrivateKeyFilepath, "-p", masterSSHPort, "-o", "ConnectTimeout=10", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-o", "LogLevel=ERROR", master, "ssh", "-o", "ConnectTimeout=10", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-o", "LogLevel=ERROR", node.Metadata.Name, netConfigValidationCommand)
+					util.PrintCommand(cmd)
+					out, err = cmd.CombinedOutput()
+					log.Printf("%s\n", out)
+					Expect(err).NotTo(HaveOccurred())
+				}
+			} else {
+				Skip("root password validation only works on ubuntu distro until this lands in a VHD")
+			}
+		})
+
+		It("should validate all cloud-init-paved files", func() {
+			if eng.ExpandedDefinition.Properties.IsUbuntuDistroForAllNodes() {
+				kubeConfig, err := GetConfig()
+				Expect(err).NotTo(HaveOccurred())
+				master := fmt.Sprintf("%s@%s", eng.ExpandedDefinition.Properties.LinuxProfile.AdminUsername, kubeConfig.GetServerName())
+				nodeList, err := node.GetReady()
+				Expect(err).NotTo(HaveOccurred())
+				cloudInitFilesValidateScript := "cloud-init-files-validate.sh"
+				cmd := exec.Command("scp", "-i", masterSSHPrivateKeyFilepath, "-o", "StrictHostKeyChecking=no", filepath.Join(ScriptsDir, cloudInitFilesValidateScript), master+":/tmp/"+cloudInitFilesValidateScript)
+				util.PrintCommand(cmd)
+				out, err := cmd.CombinedOutput()
+				log.Printf("%s\n", out)
+				Expect(err).NotTo(HaveOccurred())
+				var conn *remote.Connection
+				conn, err = remote.NewConnection(kubeConfig.GetServerName(), "22", eng.ExpandedDefinition.Properties.LinuxProfile.AdminUsername, masterSSHPrivateKeyFilepath)
+				Expect(err).NotTo(HaveOccurred())
+				for _, node := range nodeList.Nodes {
+					err := conn.CopyToRemote(node.Metadata.Name, "/tmp/"+cloudInitFilesValidateScript)
+					Expect(err).NotTo(HaveOccurred())
+					netConfigValidationCommand := fmt.Sprintf("\"/tmp/%s\"", cloudInitFilesValidateScript)
+					cmd = exec.Command("ssh", "-A", "-i", masterSSHPrivateKeyFilepath, "-p", masterSSHPort, "-o", "ConnectTimeout=10", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-o", "LogLevel=ERROR", master, "ssh", "-o", "ConnectTimeout=10", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-o", "LogLevel=ERROR", node.Metadata.Name, netConfigValidationCommand)
+					util.PrintCommand(cmd)
+					out, err = cmd.CombinedOutput()
+					log.Printf("%s\n", out)
+					Expect(err).NotTo(HaveOccurred())
+				}
+			} else {
+				Skip("cloud-init files validation only works on ubuntu distro until this lands in a VHD")
+			}
+		})
+
+		It("should validate kernel module configuration", func() {
+			if eng.ExpandedDefinition.Properties.IsUbuntuDistroForAllNodes() {
+				kubeConfig, err := GetConfig()
+				Expect(err).NotTo(HaveOccurred())
+				master := fmt.Sprintf("%s@%s", eng.ExpandedDefinition.Properties.LinuxProfile.AdminUsername, kubeConfig.GetServerName())
+				nodeList, err := node.GetReady()
+				Expect(err).NotTo(HaveOccurred())
+				modprobeConfigValidateScript := "modprobe-config-validate.sh"
+				cmd := exec.Command("scp", "-i", masterSSHPrivateKeyFilepath, "-o", "StrictHostKeyChecking=no", filepath.Join(ScriptsDir, modprobeConfigValidateScript), master+":/tmp/"+modprobeConfigValidateScript)
+				util.PrintCommand(cmd)
+				out, err := cmd.CombinedOutput()
+				log.Printf("%s\n", out)
+				Expect(err).NotTo(HaveOccurred())
+				var conn *remote.Connection
+				conn, err = remote.NewConnection(kubeConfig.GetServerName(), "22", eng.ExpandedDefinition.Properties.LinuxProfile.AdminUsername, masterSSHPrivateKeyFilepath)
+				Expect(err).NotTo(HaveOccurred())
+				for _, node := range nodeList.Nodes {
+					err := conn.CopyToRemote(node.Metadata.Name, "/tmp/"+modprobeConfigValidateScript)
+					Expect(err).NotTo(HaveOccurred())
+					netConfigValidationCommand := fmt.Sprintf("\"/tmp/%s\"", modprobeConfigValidateScript)
+					cmd = exec.Command("ssh", "-A", "-i", masterSSHPrivateKeyFilepath, "-p", masterSSHPort, "-o", "ConnectTimeout=10", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-o", "LogLevel=ERROR", master, "ssh", "-o", "ConnectTimeout=10", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-o", "LogLevel=ERROR", node.Metadata.Name, netConfigValidationCommand)
+					util.PrintCommand(cmd)
+					out, err = cmd.CombinedOutput()
+					log.Printf("%s\n", out)
+					Expect(err).NotTo(HaveOccurred())
+				}
+			} else {
+				Skip("cloud-init files validation only works on ubuntu distro until this lands in a VHD")
+			}
+		})
+
+		It("should validate installed software packages", func() {
+			kubeConfig, err := GetConfig()
+			Expect(err).NotTo(HaveOccurred())
+			master := fmt.Sprintf("%s@%s", eng.ExpandedDefinition.Properties.LinuxProfile.AdminUsername, kubeConfig.GetServerName())
+			nodeList, err := node.GetReady()
+			Expect(err).NotTo(HaveOccurred())
+			installedPackagesValidateScript := "ubuntu-installed-packages-validate.sh"
+			cmd := exec.Command("scp", "-i", masterSSHPrivateKeyFilepath, "-o", "StrictHostKeyChecking=no", filepath.Join(ScriptsDir, installedPackagesValidateScript), master+":/tmp/"+installedPackagesValidateScript)
+			util.PrintCommand(cmd)
+			out, err := cmd.CombinedOutput()
+			log.Printf("%s\n", out)
+			Expect(err).NotTo(HaveOccurred())
+			var conn *remote.Connection
+			conn, err = remote.NewConnection(kubeConfig.GetServerName(), "22", eng.ExpandedDefinition.Properties.LinuxProfile.AdminUsername, masterSSHPrivateKeyFilepath)
+			Expect(err).NotTo(HaveOccurred())
+			for _, node := range nodeList.Nodes {
+				if node.IsUbuntu() {
+					err := conn.CopyToRemote(node.Metadata.Name, "/tmp/"+installedPackagesValidateScript)
+					Expect(err).NotTo(HaveOccurred())
+					netConfigValidationCommand := fmt.Sprintf("\"/tmp/%s\"", installedPackagesValidateScript)
+					cmd = exec.Command("ssh", "-A", "-i", masterSSHPrivateKeyFilepath, "-p", masterSSHPort, "-o", "ConnectTimeout=10", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-o", "LogLevel=ERROR", master, "ssh", "-o", "ConnectTimeout=10", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-o", "LogLevel=ERROR", node.Metadata.Name, netConfigValidationCommand)
+					util.PrintCommand(cmd)
+					_, err = cmd.CombinedOutput()
+					Expect(err).NotTo(HaveOccurred())
+				}
 			}
 		})
 
@@ -436,7 +559,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 		It("should have functional host OS DNS", func() {
 			kubeConfig, err := GetConfig()
 			Expect(err).NotTo(HaveOccurred())
-			master := fmt.Sprintf("azureuser@%s", kubeConfig.GetServerName())
+			master := fmt.Sprintf("%s@%s", eng.ExpandedDefinition.Properties.LinuxProfile.AdminUsername, kubeConfig.GetServerName())
 
 			ifconfigCmd := fmt.Sprintf("ifconfig -a -v")
 			cmd := exec.Command("ssh", "-i", masterSSHPrivateKeyFilepath, "-p", masterSSHPort, "-o", "ConnectTimeout=10", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-o", "LogLevel=ERROR", master, ifconfigCmd)
@@ -466,7 +589,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				log.Printf("Error while querying DNS: %s\n", err)
 			}
 
-			nodeList, err := node.Get()
+			nodeList, err := node.GetReady()
 			Expect(err).NotTo(HaveOccurred())
 			for _, node := range nodeList.Nodes {
 				By("Ensuring that we get a DNS lookup answer response for each node hostname")
@@ -565,14 +688,14 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 
 					kubeConfig, err := GetConfig()
 					Expect(err).NotTo(HaveOccurred())
-					master := fmt.Sprintf("azureuser@%s", kubeConfig.GetServerName())
+					master := fmt.Sprintf("%s@%s", eng.ExpandedDefinition.Properties.LinuxProfile.AdminUsername, kubeConfig.GetServerName())
 
 					if dashboardPort == 80 {
 						By("Ensuring that we can connect via HTTP to the dashboard on any one node")
 					} else {
 						By("Ensuring that we can connect via HTTPS to the dashboard on any one node")
 					}
-					nodeList, err := node.Get()
+					nodeList, err := node.GetReady()
 					Expect(err).NotTo(HaveOccurred())
 					for _, node := range nodeList.Nodes {
 						success := false

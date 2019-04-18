@@ -125,12 +125,35 @@ write_files:
   content: !!binary |
     {{CloudInitData "aptPreferences"}}
 
+{{if .MasterProfile.IsUbuntuNonVHD}}
 - path: /etc/issue
   permissions: "0644"
   encoding: gzip
   owner: root
   content: !!binary |
     {{CloudInitData "etcIssue"}}
+
+- path: /etc/issue.net
+  permissions: "0644"
+  encoding: gzip
+  owner: root
+  content: !!binary |
+    {{CloudInitData "etcIssueNet"}}
+
+- path: /etc/sysctl.d/60-CIS.conf
+  permissions: "0644"
+  encoding: gzip
+  owner: root
+  content: !!binary |
+    {{CloudInitData "cisNetEnforcement"}}
+
+- path: /etc/modprobe.d/CIS.conf
+  permissions: "0644"
+  encoding: gzip
+  owner: root
+  content: !!binary |
+    {{CloudInitData "modprobeConfCIS"}}
+{{end}}
 
 {{if .OrchestratorProfile.KubernetesConfig.RequiresDocker}}
     {{if not .MasterProfile.IsCoreOS}}
@@ -334,6 +357,16 @@ MASTER_CONTAINER_ADDONS_PLACEHOLDER
 {{ else }}
     sed -i "s|<etcdEndPointUri>|127.0.0.1|g" $a
 {{ end }}
+{{if IsAzureStackCloud}}
+    {{if IsMultipleMasters}}
+    masterLBIP=`getent hosts {{WrapAsVariable "masterPublicLbFQDN"}} | cut -d " " -f1`
+    sed -i "s|<advertiseAddr>|$masterLBIP|g" $a
+    {{else}}
+    sed -i "s|<advertiseAddr>|{{WrapAsVariable "kubernetesAPIServerIP"}}|g" $a
+    {{end}}
+{{else}}
+    sed -i "s|<advertiseAddr>|{{WrapAsVariable "kubernetesAPIServerIP"}}|g" $a
+{{end}}
     sed -i "s|<advertiseAddr>|{{WrapAsVariable "kubernetesAPIServerIP"}}|g" $a
     sed -i "s|<args>|{{GetK8sRuntimeConfigKeyVals .OrchestratorProfile.KubernetesConfig.ControllerManagerConfig}}|g" /etc/kubernetes/manifests/kube-controller-manager.yaml
     sed -i "s|<args>|{{GetK8sRuntimeConfigKeyVals .OrchestratorProfile.KubernetesConfig.SchedulerConfig}}|g" /etc/kubernetes/manifests/kube-scheduler.yaml

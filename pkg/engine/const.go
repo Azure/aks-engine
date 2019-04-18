@@ -168,6 +168,9 @@ const (
 	systemdBPFMount                          = "k8s/cloud-init/artifacts/sys-fs-bpf.mount"
 	etcdSystemdService                       = "k8s/cloud-init/artifacts/etcd.service"
 	etcIssue                                 = "k8s/cloud-init/artifacts/etc-issue"
+	etcIssueNet                              = "k8s/cloud-init/artifacts/etc-issue.net"
+	cisNetEnforcement                        = "k8s/cloud-init/artifacts/sysctl-d-60-CIS.conf"
+	modprobeConfCIS                          = "k8s/cloud-init/artifacts/modprobe-CIS.conf"
 )
 
 const (

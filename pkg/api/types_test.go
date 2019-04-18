@@ -212,6 +212,182 @@ func TestOSType(t *testing.T) {
 	}
 }
 
+func TestAgentPoolProfileIsVHDDistro(t *testing.T) {
+	cases := []struct {
+		ap       AgentPoolProfile
+		expected bool
+	}{
+		{
+			ap: AgentPoolProfile{
+				Distro: AKS,
+			},
+			expected: true,
+		},
+		{
+			ap: AgentPoolProfile{
+				Distro: AKS1804,
+			},
+			expected: true,
+		},
+		{
+			ap: AgentPoolProfile{
+				Distro: CoreOS,
+			},
+			expected: false,
+		},
+		{
+			ap: AgentPoolProfile{
+				Distro: Ubuntu,
+			},
+			expected: false,
+		},
+		{
+			ap: AgentPoolProfile{
+				Distro: Ubuntu1804,
+			},
+			expected: false,
+		},
+	}
+
+	for _, c := range cases {
+		if c.expected != c.ap.IsVHDDistro() {
+			t.Fatalf("Got unexpected AgentPoolProfile.IsVHDDistro() result. Expected: %t. Got: %t.", c.expected, c.ap.IsVHDDistro())
+		}
+	}
+}
+
+func TestAgentPoolProfileIsUbuntuNonVHD(t *testing.T) {
+	cases := []struct {
+		ap       AgentPoolProfile
+		expected bool
+	}{
+		{
+			ap: AgentPoolProfile{
+				Distro: AKS,
+			},
+			expected: false,
+		},
+		{
+			ap: AgentPoolProfile{
+				Distro: AKS1804,
+			},
+			expected: false,
+		},
+		{
+			ap: AgentPoolProfile{
+				Distro: CoreOS,
+			},
+			expected: false,
+		},
+		{
+			ap: AgentPoolProfile{
+				Distro: Ubuntu,
+			},
+			expected: true,
+		},
+		{
+			ap: AgentPoolProfile{
+				Distro: Ubuntu1804,
+			},
+			expected: true,
+		},
+	}
+
+	for _, c := range cases {
+		if c.expected != c.ap.IsUbuntuNonVHD() {
+			t.Fatalf("Got unexpected AgentPoolProfile.IsUbuntuNonVHD() result. Expected: %t. Got: %t.", c.expected, c.ap.IsUbuntuNonVHD())
+		}
+	}
+}
+
+func TestMasterProfileIsVHDDistro(t *testing.T) {
+	cases := []struct {
+		m        MasterProfile
+		expected bool
+	}{
+		{
+			m: MasterProfile{
+				Distro: AKS,
+			},
+			expected: true,
+		},
+		{
+			m: MasterProfile{
+				Distro: AKS1804,
+			},
+			expected: true,
+		},
+		{
+			m: MasterProfile{
+				Distro: CoreOS,
+			},
+			expected: false,
+		},
+		{
+			m: MasterProfile{
+				Distro: Ubuntu,
+			},
+			expected: false,
+		},
+		{
+			m: MasterProfile{
+				Distro: Ubuntu1804,
+			},
+			expected: false,
+		},
+	}
+
+	for _, c := range cases {
+		if c.expected != c.m.IsVHDDistro() {
+			t.Fatalf("Got unexpected MasterProfile.IsVHDDistro() result. Expected: %t. Got: %t.", c.expected, c.m.IsVHDDistro())
+		}
+	}
+}
+
+func TestMasterProfileIsUbuntuNonVHD(t *testing.T) {
+	cases := []struct {
+		m        MasterProfile
+		expected bool
+	}{
+		{
+			m: MasterProfile{
+				Distro: AKS,
+			},
+			expected: false,
+		},
+		{
+			m: MasterProfile{
+				Distro: AKS1804,
+			},
+			expected: false,
+		},
+		{
+			m: MasterProfile{
+				Distro: CoreOS,
+			},
+			expected: false,
+		},
+		{
+			m: MasterProfile{
+				Distro: Ubuntu,
+			},
+			expected: true,
+		},
+		{
+			m: MasterProfile{
+				Distro: Ubuntu1804,
+			},
+			expected: true,
+		},
+	}
+
+	for _, c := range cases {
+		if c.expected != c.m.IsUbuntuNonVHD() {
+			t.Fatalf("Got unexpected MasterProfile.IsUbuntuNonVHD() result. Expected: %t. Got: %t.", c.expected, c.m.IsUbuntuNonVHD())
+		}
+	}
+}
+
 func TestHasStorageProfile(t *testing.T) {
 	cases := []struct {
 		p                 Properties
@@ -2556,6 +2732,27 @@ func TestGetPrimaryAvailabilitySetName(t *testing.T) {
 	if got != expected {
 		t.Errorf("expected primary availability set name %s, but got %s", expected, got)
 	}
+
+	p.AgentPoolProfiles = []*AgentPoolProfile{
+		{
+			Name:                "agentpool",
+			VMSize:              "Standard_D2_v2",
+			Count:               1,
+			AvailabilityProfile: VirtualMachineScaleSets,
+		},
+	}
+	expected = ""
+	got = p.GetPrimaryAvailabilitySetName()
+	if got != expected {
+		t.Errorf("expected primary availability set name %s, but got %s", expected, got)
+	}
+
+	p.AgentPoolProfiles = nil
+	expected = ""
+	got = p.GetPrimaryAvailabilitySetName()
+	if got != expected {
+		t.Errorf("expected primary availability set name %s, but got %s", expected, got)
+	}
 }
 
 func TestGetPrimaryScaleSetName(t *testing.T) {
@@ -2580,6 +2777,36 @@ func TestGetPrimaryScaleSetName(t *testing.T) {
 
 	expected := "k8s-agentpool-28513887-vmss"
 	got := p.GetPrimaryScaleSetName()
+	if got != expected {
+		t.Errorf("expected primary scaleset name %s, but got %s", expected, got)
+	}
+
+	// Test with Windows agentpool
+	p.AgentPoolProfiles[0].OSType = "Windows"
+
+	expected = "2851k8s00"
+	got = p.GetPrimaryScaleSetName()
+	if got != expected {
+		t.Errorf("expected primary scaleset name %s, but got %s", expected, got)
+	}
+
+	p.AgentPoolProfiles = []*AgentPoolProfile{
+		{
+			Name:                "agentpool",
+			VMSize:              "Standard_D2_v2",
+			Count:               1,
+			AvailabilityProfile: AvailabilitySet,
+		},
+	}
+	expected = ""
+	got = p.GetPrimaryScaleSetName()
+	if got != expected {
+		t.Errorf("expected primary availability set name %s, but got %s", expected, got)
+	}
+
+	p.AgentPoolProfiles = nil
+	expected = ""
+	got = p.GetPrimaryScaleSetName()
 	if got != expected {
 		t.Errorf("expected primary availability set name %s, but got %s", expected, got)
 	}
@@ -2910,7 +3137,7 @@ func TestProperties_GetClusterMetadata(t *testing.T) {
 		t.Errorf("expected PrimaryAvailabilitySetName name %s, but got %s", expectedPrimaryAvailabilitySetName, metadata.PrimaryAvailabilitySetName)
 	}
 
-	expectedPrimaryScaleSetName := "k8s-agentpool-28513887-vmss"
+	expectedPrimaryScaleSetName := ""
 	if metadata.PrimaryScaleSetName != expectedPrimaryScaleSetName {
 		t.Errorf("expected PrimaryScaleSetName name %s, but got %s", expectedPrimaryScaleSetName, metadata.PrimaryScaleSetName)
 	}

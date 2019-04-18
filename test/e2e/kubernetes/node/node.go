@@ -50,7 +50,7 @@ type Taint struct {
 
 // Status parses information from the status key
 type Status struct {
-	Info          Info        `json:"Info"`
+	NodeInfo      Info        `json:"nodeInfo"`
 	NodeAddresses []Address   `json:"addresses"`
 	Conditions    []Condition `json:"conditions"`
 }
@@ -61,12 +61,13 @@ type Address struct {
 	Type    string `json:"type"`
 }
 
-// Info contains information like what version the kubelet is running
+// Info contains node information like what version the kubelet is running
 type Info struct {
 	ContainerRuntimeVersion string `json:"containerRuntimeVersion"`
 	KubeProxyVersion        string `json:"kubeProxyVersion"`
 	KubeletProxyVersion     string `json:"kubeletVersion"`
 	OperatingSystem         string `json:"operatingSystem"`
+	OSImage                 string `json:"osImage"`
 }
 
 // Condition contains various status information
@@ -84,22 +85,40 @@ type List struct {
 	Nodes []Node `json:"items"`
 }
 
+// IsReady returns if the node is in a Ready state
+func (n *Node) IsReady() bool {
+	for _, condition := range n.Status.Conditions {
+		if condition.Type == "Ready" && condition.Status == "True" {
+			return true
+		}
+	}
+	return false
+}
+
+// IsLinux checks for a Linux node
+func (n *Node) IsLinux() bool {
+	return n.Status.NodeInfo.OperatingSystem == "linux"
+}
+
+// IsUbuntu checks for an Ubuntu-backed node
+func (n *Node) IsUbuntu() bool {
+	if n.IsLinux() {
+		return strings.Contains(strings.ToLower(n.Status.NodeInfo.OSImage), "ubuntu")
+	}
+	return false
+}
+
 // AreAllReady returns a bool depending on cluster state
 func AreAllReady(nodeCount int) bool {
 	list, _ := Get()
 	var ready int
 	if list != nil && len(list.Nodes) == nodeCount {
 		for _, node := range list.Nodes {
-			nodeReady := false
-			for _, condition := range node.Status.Conditions {
-				if condition.Type == "Ready" && condition.Status == "True" {
-					ready++
-					nodeReady = true
-				}
-			}
+			nodeReady := node.IsReady()
 			if !nodeReady {
 				return false
 			}
+			ready++
 		}
 	}
 	if ready == nodeCount {
@@ -152,6 +171,23 @@ func Get() (*List, error) {
 		log.Printf("Error unmarshalling nodes json:%s", err)
 	}
 	return &nl, nil
+}
+
+// GetReady returns the current nodes for a given kubeconfig
+func GetReady() (*List, error) {
+	l, err := Get()
+	if err != nil {
+		return nil, err
+	}
+	nl := &List{
+		[]Node{},
+	}
+	for _, node := range l.Nodes {
+		if node.IsReady() {
+			nl.Nodes = append(nl.Nodes, node)
+		}
+	}
+	return nl, nil
 }
 
 // Version get the version of the server

@@ -119,12 +119,35 @@ write_files:
   content: !!binary |
     {{CloudInitData "aptPreferences"}}
 
+{{if .IsUbuntuNonVHD}}
 - path: /etc/issue
   permissions: "0644"
   encoding: gzip
   owner: root
   content: !!binary |
     {{CloudInitData "etcIssue"}}
+
+- path: /etc/issue.net
+  permissions: "0644"
+  encoding: gzip
+  owner: root
+  content: !!binary |
+    {{CloudInitData "etcIssueNet"}}
+
+- path: /etc/sysctl.d/60-CIS.conf
+  permissions: "0644"
+  encoding: gzip
+  owner: root
+  content: !!binary |
+    {{CloudInitData "cisNetEnforcement"}}
+
+- path: /etc/modprobe.d/CIS.conf
+  permissions: "0644"
+  encoding: gzip
+  owner: root
+  content: !!binary |
+    {{CloudInitData "modprobeConfCIS"}}
+{{end}}
 
 {{if .KubernetesConfig.RequiresDocker}}
     {{if not .IsCoreOS}}
@@ -227,7 +250,15 @@ write_files:
     - name: localcluster
       cluster:
         certificate-authority: /etc/kubernetes/certs/ca.crt
+        {{if IsAzureStackCloud}}
+        {{if IsMultipleMasters}}
+        server: https://<kubernetesAPIServerIP>:443
+        {{else}}
         server: https://{{WrapAsVariable "kubernetesAPIServerIP"}}:443
+        {{end}}
+        {{else}}
+        server: https://{{WrapAsVariable "kubernetesAPIServerIP"}}:443
+        {{end}}
     users:
     - name: client
       user:

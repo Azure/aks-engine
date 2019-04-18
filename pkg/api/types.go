@@ -898,12 +898,22 @@ func (p *Properties) GetNSGName() string {
 
 // GetPrimaryAvailabilitySetName returns the name of the primary availability set of the cluster
 func (p *Properties) GetPrimaryAvailabilitySetName() string {
-	return p.AgentPoolProfiles[0].Name + "-availabilitySet-" + p.GetClusterID()
+	if len(p.AgentPoolProfiles) > 0 {
+		if p.AgentPoolProfiles[0].AvailabilityProfile == AvailabilitySet {
+			return p.AgentPoolProfiles[0].Name + "-availabilitySet-" + p.GetClusterID()
+		}
+	}
+	return ""
 }
 
 // GetPrimaryScaleSetName returns the name of the primary scale set node of the cluster
 func (p *Properties) GetPrimaryScaleSetName() string {
-	return p.K8sOrchestratorName() + "-" + p.AgentPoolProfiles[0].Name + "-" + p.GetClusterID() + "-vmss"
+	if len(p.AgentPoolProfiles) > 0 {
+		if p.AgentPoolProfiles[0].AvailabilityProfile == VirtualMachineScaleSets {
+			return p.GetAgentVMPrefix(p.AgentPoolProfiles[0])
+		}
+	}
+	return ""
 }
 
 // IsHostedMasterProfile returns true if the cluster has a hosted master
@@ -987,7 +997,7 @@ func (p *Properties) GetClusterID() string {
 			h.Write([]byte(p.MasterProfile.DNSPrefix))
 		} else if p.HostedMasterProfile != nil {
 			h.Write([]byte(p.HostedMasterProfile.DNSPrefix))
-		} else {
+		} else if len(p.AgentPoolProfiles) > 0 {
 			h.Write([]byte(p.AgentPoolProfiles[0].Name))
 		}
 		r := rand.New(rand.NewSource(int64(h.Sum64())))
@@ -1111,6 +1121,11 @@ func (m *MasterProfile) IsCoreOS() bool {
 	return m.Distro == CoreOS
 }
 
+// IsVHDDistro returns true if the distro uses VHD SKUs
+func (m *MasterProfile) IsVHDDistro() bool {
+	return m.Distro == AKS || m.Distro == AKS1804
+}
+
 // IsVirtualMachineScaleSets returns true if the master availability profile is VMSS
 func (m *MasterProfile) IsVirtualMachineScaleSets() bool {
 	return m.AvailabilityProfile == VirtualMachineScaleSets
@@ -1175,6 +1190,11 @@ func (m *MasterProfile) IsUbuntu() bool {
 	return m.IsUbuntu1604() || m.IsUbuntu1804()
 }
 
+// IsUbuntuNonVHD returns true if the distro uses a base Ubuntu image
+func (m *MasterProfile) IsUbuntuNonVHD() bool {
+	return m.IsUbuntu() && !m.IsVHDDistro()
+}
+
 // IsCustomVNET returns true if the customer brought their own VNET
 func (a *AgentPoolProfile) IsCustomVNET() bool {
 	return len(a.VnetSubnetID) > 0
@@ -1198,6 +1218,11 @@ func (a *AgentPoolProfile) IsRHEL() bool {
 // IsCoreOS returns true if the agent specified a CoreOS distro
 func (a *AgentPoolProfile) IsCoreOS() bool {
 	return a.OSType == Linux && a.Distro == CoreOS
+}
+
+// IsVHDDistro returns true if the distro uses VHD SKUs
+func (a *AgentPoolProfile) IsVHDDistro() bool {
+	return a.Distro == AKS || a.Distro == AKS1804
 }
 
 // IsAvailabilitySets returns true if the customer specified disks
@@ -1264,6 +1289,11 @@ func (a *AgentPoolProfile) IsUbuntu1804() bool {
 // IsUbuntu returns true if the master profile distro is any ubuntu distro
 func (a *AgentPoolProfile) IsUbuntu() bool {
 	return a.IsUbuntu1604() || a.IsUbuntu1804()
+}
+
+// IsUbuntuNonVHD returns true if the distro uses a base Ubuntu image
+func (a *AgentPoolProfile) IsUbuntuNonVHD() bool {
+	return a.IsUbuntu() && !a.IsVHDDistro()
 }
 
 // HasSecrets returns true if the customer specified secrets to install
