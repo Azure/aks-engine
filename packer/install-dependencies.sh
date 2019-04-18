@@ -361,31 +361,27 @@ K8S_VERSIONS="
 1.12.7
 1.12.6
 1.11.9
+1.11.9-azs
 1.11.8
+1.11.8-azs
 1.10.13
 1.10.12
 1.9.11
 1.9.10
 "
 for KUBERNETES_VERSION in ${K8S_VERSIONS}; do
-    HYPERKUBE_URL="k8s.gcr.io/hyperkube-amd64:v${KUBERNETES_VERSION}"
-    extractHyperkube "docker"
-    CONTAINER_IMAGE="k8s.gcr.io/cloud-controller-manager-amd64:v${KUBERNETES_VERSION}"
-    pullContainerImage "docker" ${CONTAINER_IMAGE}
-    echo "  - ${HYPERKUBE_URL}" >> ${RELEASE_NOTES_FILEPATH}
-    echo "  - ${CONTAINER_IMAGE}" >> ${RELEASE_NOTES_FILEPATH}
-done
-
-# TODO: fetch supported k8s versions from an aks-engine command instead of hardcoding them here
-AZURE_STACK_K8S_VERSIONS="
-1.11.8
-1.11.9
-"
-for AZURE_STACK_KUBERNETES_VERSION in ${AZURE_STACK_K8S_VERSIONS}; do
-    KUBERNETES_VERSION=${AZURE_STACK_KUBERNETES_VERSION}${AZURE_STACK_SUFFIX}
-    HYPERKUBE_URL="${AZURE_STACK_HYPERKUBE_REPOSITORY}:v${AZURE_STACK_KUBERNETES_VERSION}"
-    extractHyperkube "docker"
-    echo "  - ${HYPERKUBE_URL}" >> ${RELEASE_NOTES_FILEPATH}
+    if [[ $KUBERNETES_VERSION == *"azs"* ]]; then
+      HYPERKUBE_URL="msazurestackdocker/hyperkube-amd64:v${KUBERNETES_VERSION}"
+      extractHyperkube "docker"
+      echo "  - ${HYPERKUBE_URL}" >> ${RELEASE_NOTES_FILEPATH}
+    else
+      HYPERKUBE_URL="k8s.gcr.io/hyperkube-amd64:v${KUBERNETES_VERSION}"
+      extractHyperkube "docker"
+      CONTAINER_IMAGE="k8s.gcr.io/cloud-controller-manager-amd64:v${KUBERNETES_VERSION}"
+      pullContainerImage "docker" ${CONTAINER_IMAGE}
+      echo "  - ${HYPERKUBE_URL}" >> ${RELEASE_NOTES_FILEPATH}
+      echo "  - ${CONTAINER_IMAGE}" >> ${RELEASE_NOTES_FILEPATH}
+    fi
 done
 
 df -h

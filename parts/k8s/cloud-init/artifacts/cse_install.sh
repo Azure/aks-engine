@@ -300,11 +300,6 @@ cleanUpContainerImages() {
     # TODO remove all unused container images at runtime
     docker rmi $(docker images --format '{{.Repository}}:{{.Tag}}' | grep -v ${KUBERNETES_VERSION} | grep 'hyperkube') &
     docker rmi $(docker images --format '{{.Repository}}:{{.Tag}}' | grep -v ${KUBERNETES_VERSION} | grep 'cloud-controller-manager') &
-    if [[ "${TARGET_ENVIRONMENT,,}" == "${AZURE_STACK_ENV}"  ]]; then 
-        docker rmi $(docker images --format '{{.Repository}}:{{.Tag}}' | grep -v ${AZURE_STACK_HYPERKUBE_REPOSITORY} | grep 'hyperkube') &
-    else
-        docker rmi $(docker images --format '{{.Repository}}:{{.Tag}}' | grep ${AZURE_STACK_HYPERKUBE_REPOSITORY} | grep 'hyperkube') &
-    fi
     if [ "$IS_HOSTED_MASTER" = "false" ]; then
         echo "Cleaning up AKS container images, not an AKS cluster"
         docker rmi $(docker images --format '{{.Repository}}:{{.Tag}}' | grep 'hcp-tunnel-front') &

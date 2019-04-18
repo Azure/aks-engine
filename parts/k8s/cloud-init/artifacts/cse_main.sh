@@ -33,8 +33,6 @@ if [[ "${TARGET_ENVIRONMENT,,}" == "${AZURE_STACK_ENV}"  ]]; then
     config_script_custom_cloud=/opt/azure/containers/provision_configs_custom_cloud.sh
     wait_for_file 3600 1 $config_script_custom_cloud || exit $ERR_FILE_WATCH_TIMEOUT
     source $config_script_custom_cloud
-    KUBERNETES_VERSION_NO_SUFFIX="${KUBERNETES_VERSION}"
-    KUBERNETES_VERSION=${KUBERNETES_VERSION}${AZURE_STACK_SUFFIX}
 fi
 
 CUSTOM_SEARCH_DOMAIN_SCRIPT=/opt/azure/containers/setup-custom-search-domains.sh
@@ -187,7 +185,6 @@ if $FULL_INSTALL_REQUIRED; then
     applyCIS
   fi
 else
-  KUBERNETES_VERSION="${KUBERNETES_VERSION_NO_SUFFIX}"
   cleanUpContainerImages
 fi
 
