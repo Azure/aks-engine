@@ -1289,6 +1289,7 @@ func convertAzureEnvironmentSpecConfig(vlabses *vlabs.AzureEnvironmentSpecConfig
 		ACIConnectorImageBase:            vlabses.KubernetesSpecConfig.ACIConnectorImageBase,
 		NVIDIAImageBase:                  vlabses.KubernetesSpecConfig.NVIDIAImageBase,
 		AzureCNIImageBase:                vlabses.KubernetesSpecConfig.AzureCNIImageBase,
+		CalicoImageBase:                  vlabses.KubernetesSpecConfig.CalicoImageBase,
 		EtcdDownloadURLBase:              vlabses.KubernetesSpecConfig.EtcdDownloadURLBase,
 		KubeBinariesSASURLBase:           vlabses.KubernetesSpecConfig.KubeBinariesSASURLBase,
 		WindowsTelemetryGUID:             vlabses.KubernetesSpecConfig.WindowsTelemetryGUID,

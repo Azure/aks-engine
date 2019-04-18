@@ -190,6 +190,8 @@ const (
 	NVIDIADevicePluginAddonName = "nvidia-device-plugin"
 	// ContainerMonitoringAddonName is the name of the kubernetes Container Monitoring addon deployment
 	ContainerMonitoringAddonName = "container-monitoring"
+	// DefaultCalicoDaemonSetAddonName is the name of calico daemonset addon
+	DefaultCalicoDaemonSetAddonName = "calico-daemonset"
 	// IPMASQAgentAddonName is the name of the ip masq agent addon
 	IPMASQAgentAddonName = "ip-masq-agent"
 	// DefaultPrivateClusterEnabled determines the aks-engine provided default for enabling kubernetes Private Cluster

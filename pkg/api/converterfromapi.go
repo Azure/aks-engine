@@ -1239,6 +1239,7 @@ func convertAzureEnvironmentSpecConfigToVLabs(api *AzureEnvironmentSpecConfig, v
 		ACIConnectorImageBase:            api.KubernetesSpecConfig.ACIConnectorImageBase,
 		NVIDIAImageBase:                  api.KubernetesSpecConfig.NVIDIAImageBase,
 		AzureCNIImageBase:                api.KubernetesSpecConfig.AzureCNIImageBase,
+		CalicoImageBase:                  api.KubernetesSpecConfig.CalicoImageBase,
 		EtcdDownloadURLBase:              api.KubernetesSpecConfig.EtcdDownloadURLBase,
 		KubeBinariesSASURLBase:           api.KubernetesSpecConfig.KubeBinariesSASURLBase,
 		WindowsTelemetryGUID:             api.KubernetesSpecConfig.WindowsTelemetryGUID,

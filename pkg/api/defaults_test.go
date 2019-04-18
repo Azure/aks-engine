@@ -208,6 +208,7 @@ func TestAssignDefaultAddonImages(t *testing.T) {
 		AzureCNINetworkMonitoringAddonName: "containernetworking/networkmonitor:v0.0.6",
 		DefaultDNSAutoscalerAddonName:      "k8s.gcr.io/cluster-proportional-autoscaler-amd64:1.1.1",
 		DefaultHeapsterAddonName:           "k8s.gcr.io/heapster-amd64:v1.5.4",
+		DefaultCalicoDaemonSetAddonName:    "calico/typha:v3.5.0",
 	}
 
 	var addons []KubernetesAddon
@@ -1569,6 +1570,7 @@ func TestSetCustomCloudProfileDefaults(t *testing.T) {
 			ACIConnectorImageBase:            "ACIConnectorImageBase",
 			NVIDIAImageBase:                  "NVIDIAImageBase",
 			AzureCNIImageBase:                "AzureCNIImageBase",
+			CalicoImageBase:                  "CalicoImageBase",
 			EtcdDownloadURLBase:              "EtcdDownloadURLBase",
 			KubeBinariesSASURLBase:           "KubeBinariesSASURLBase",
 			WindowsTelemetryGUID:             "WindowsTelemetryGUID",
@@ -1620,6 +1622,7 @@ func TestSetCustomCloudProfileDefaults(t *testing.T) {
 			TillerImageBase:                "TillerImageBase",
 			NVIDIAImageBase:                "NVIDIAImageBase",
 			AzureCNIImageBase:              "AzureCNIImageBase",
+			CalicoImageBase:                "CalicoImageBase",
 			EtcdDownloadURLBase:            "EtcdDownloadURLBase",
 			WindowsTelemetryGUID:           "WindowsTelemetryGUID",
 			CNIPluginsDownloadURL:          "CNIPluginsDownloadURL",
