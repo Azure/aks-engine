@@ -384,7 +384,7 @@ done
 df -h
 
 # warn at 75% space taken
-[ -s $(df -P | grep '/dev/sda1' | awk '0+$5 >= 30 {print}') ] || echo "WARNING: 75% of /dev/sda1 is used" >> ${RELEASE_NOTES_FILEPATH}
+[ -s $(df -P | grep '/dev/sda1' | awk '0+$5 >= 75 {print}') ] || echo "WARNING: 75% of /dev/sda1 is used" >> ${RELEASE_NOTES_FILEPATH}
 # error at 90% space taken
 [ -s $(df -P | grep '/dev/sda1' | awk '0+$5 >= 90 {print}') ] || exit 1
 
