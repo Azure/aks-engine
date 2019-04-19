@@ -118,12 +118,12 @@ installMoby() {
         removeMoby
         mkdir -p /tmp/moby
         mkdir -p /tmp/moby-cli
-        retrycmd_if_failure_no_stats 120 5 25 curl "https://moby.blob.core.windows.net/moby/19-04-12/amd64/artifacts.tgz?sp=r&st=2019-04-14T17:07:54Z&se=2019-05-01T01:07:54Z&spr=https&sv=2018-03-28&sig=TuGb0sbpfh0bmGP9AOwlf7RRiiEc%2FdnR%2Fo7XR9DNnUk%3D&sr=b" > /tmp/moby/artifacts.tgz || exit $ERR_MOBY_APT_LIST_TIMEOUT
-        retrycmd_if_failure_no_stats 120 5 25 curl "https://moby.blob.core.windows.net/moby/19-04-12/amd64/artifacts.cli.tgz?sp=r&st=2019-04-14T17:08:59Z&se=2019-05-01T01:08:59Z&spr=https&sv=2018-03-28&sig=BOKCkfoFo8QB3t3KBVIe4J%2F8NvQhlPsfFkyL0n038J0%3D&sr=b" > /tmp/moby-cli/artifacts.tgz || exit $ERR_MOBY_APT_LIST_TIMEOUT
+        retrycmd_if_failure_no_stats 120 5 25 curl "https://moby.blob.core.windows.net/moby/3.0.5/amd64/artifacts.tgz?sv=2018-03-28&ss=b&srt=co&sp=r&se=2019-05-01T00:42:48Z&st=2019-04-18T16:42:48Z&spr=https&sig=%2FYsIjbyMxH2XsO5it649fgQZiRVTwLjonoh2cn59P0Y%3D" > /tmp/moby/artifacts.tgz || exit $ERR_MOBY_APT_LIST_TIMEOUT
+        retrycmd_if_failure_no_stats 120 5 25 curl "https://moby.blob.core.windows.net/moby/3.0.5/amd64/artifacts.cli.tgz?sv=2018-03-28&ss=b&srt=co&sp=r&se=2019-05-01T00:42:48Z&st=2019-04-18T16:42:48Z&spr=https&sig=%2FYsIjbyMxH2XsO5it649fgQZiRVTwLjonoh2cn59P0Y%3D" > /tmp/moby-cli/artifacts.tgz || exit $ERR_MOBY_APT_LIST_TIMEOUT
         retrycmd_if_failure_no_stats 120 5 25 tar -xvzf /tmp/moby/artifacts.tgz -C /tmp/moby/
         retrycmd_if_failure_no_stats 120 5 25 tar -xvzf /tmp/moby-cli/artifacts.tgz -C /tmp/moby-cli/
-        retrycmd_if_failure_no_stats 120 5 25 dpkg -i /tmp/moby/bundles/debbuild/ubuntu-xenial/moby-engine_99.99.99_amd64.deb
-        retrycmd_if_failure_no_stats 120 5 25 dpkg -i /tmp/moby-cli/bundles/debbuild/ubuntu-xenial/moby-cli_99.99.99_amd64.deb
+        retrycmd_if_failure_no_stats 120 5 25 dpkg -i /tmp/moby/bundles/debbuild/ubuntu-xenial/moby-engine_3.0.5_amd64.deb
+        retrycmd_if_failure_no_stats 120 5 25 dpkg -i /tmp/moby-cli/bundles/debbuild/ubuntu-xenial/moby-cli_3.0.5_amd64.deb
         retrycmd_if_failure_no_stats 120 5 25 apt-get install -f 
     fi
 }
