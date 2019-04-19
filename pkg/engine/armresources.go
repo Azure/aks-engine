@@ -111,7 +111,7 @@ func createKubernetesAgentVMASResources(cs *api.ContainerService, profile *api.A
 				Name: to.StringPtr(fmt.Sprintf("[variables('%sAvailabilitySet')]",
 					profile.Name)),
 				AvailabilitySetProperties: &compute.AvailabilitySetProperties{},
-				Type: to.StringPtr("Microsoft.Compute/availabilitySets"),
+				Type:                      to.StringPtr("Microsoft.Compute/availabilitySets"),
 			},
 		}
 
