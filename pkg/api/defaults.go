@@ -59,6 +59,10 @@ func (cs *ContainerService) SetPropertiesDefaults(isUpgrade, isScale bool) (bool
 		properties.setHostedMasterProfileDefaults()
 	}
 
+	if cs.Properties.WindowsProfile != nil {
+		properties.setWindowsProfileDefaults(isUpgrade, isScale)
+	}
+
 	certsGenerated, _, e := cs.SetDefaultCerts()
 	if e != nil {
 		return false, e
@@ -500,6 +504,25 @@ func (p *Properties) setAgentProfileDefaults(isUpgrade, isScale bool) {
 
 		if profile.EnableVMSSNodePublicIP == nil {
 			profile.EnableVMSSNodePublicIP = to.BoolPtr(DefaultEnableVMSSNodePublicIP)
+		}
+	}
+}
+
+// setWindowsProfileDefaults sets default WindowsProfile values
+func (p *Properties) setWindowsProfileDefaults(isUpgrade, isScale bool) {
+	windowsProfile := p.WindowsProfile
+	if !isUpgrade && !isScale {
+		if windowsProfile.WindowsPublisher == "" {
+			windowsProfile.WindowsPublisher = DefaultWindowsPublisher
+		}
+		if windowsProfile.WindowsOffer == "" {
+			windowsProfile.WindowsOffer = DefaultWindowsOffer
+		}
+		if windowsProfile.WindowsSku == "" {
+			windowsProfile.WindowsSku = DefaultWindowsSku
+		}
+		if windowsProfile.ImageVersion == "" {
+			windowsProfile.ImageVersion = DefaultImageVersion
 		}
 	}
 }

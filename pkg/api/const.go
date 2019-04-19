@@ -230,6 +230,18 @@ const (
 	DefaultEnableVMSSNodePublicIP = false
 )
 
+// WindowsProfile defaults
+const (
+	// DefaultWindowsPublisher sets the default WindowsPublisher value in WindowsProfile
+	DefaultWindowsPublisher = "MicrosoftWindowsServer"
+	// DefaultWindowsOffer sets the default WindowsOffer value in WindowsProfile
+	DefaultWindowsOffer = "WindowsServerSemiAnnual"
+	// DefaultWindowsSku sets the default WindowsSku value in WindowsProfile
+	DefaultWindowsSku = "Datacenter-Core-1809-with-Containers-smalldisk"
+	// DefaultImageVersion sets the default ImageVersion value in WindowsProfile
+	DefaultImageVersion = "1809.0.20190314"
+)
+
 const (
 	// AgentPoolProfileRoleEmpty is the empty role.  Deprecated; only used in
 	// aks-engine.
