@@ -20,5 +20,4 @@ modprobe -n -v hfs | egrep 'install /bin/true' || exit 1
 modprobe -n -v hfsplus | egrep 'install /bin/true' || exit 1
 [ -s `lsmod | grep hfsplus` ] || exit 1
 [ -s `lsmod | grep squashfs` ] || exit 1
-modprobe -n -v vfat | egrep 'install /bin/true' || exit 1
 [ -s `lsmod | grep vfat` ] || exit 1
