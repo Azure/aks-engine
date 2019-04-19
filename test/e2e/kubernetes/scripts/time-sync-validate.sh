@@ -1,6 +1,6 @@
 #!/bin/bash
 
-RELEASE=$(grep ^DISTRIB_RELEASE= /etc/lsb-release | tr -d 'DISTRIB_RELEASE="' | awk '{print toupper($0)}')
+RELEASE=$(grep -oP 'DISTRIB_RELEASE=\K(\S+)' /etc/lsb-release)
 # verify that timesyncd configuration is healthy
 set -x
 if [[ $RELEASE == "16.04" ]]; then
