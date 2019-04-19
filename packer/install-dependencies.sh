@@ -370,9 +370,9 @@ K8S_VERSIONS="
 1.9.10
 "
 for KUBERNETES_VERSION in ${K8S_VERSIONS}; do
-    if [[ $KUBERNETES_VERSION == *"azs"* ]]; then
+    if [[ $KUBERNETES_VERSION == *"azs"* ]]; then
       HYPERKUBE_URL="msazurestackdocker/hyperkube-amd64:v${KUBERNETES_VERSION}"
-    else
+    else
       HYPERKUBE_URL="k8s.gcr.io/hyperkube-amd64:v${KUBERNETES_VERSION}"
       CONTAINER_IMAGE="k8s.gcr.io/cloud-controller-manager-amd64:v${KUBERNETES_VERSION}"
       pullContainerImage "docker" ${CONTAINER_IMAGE}
