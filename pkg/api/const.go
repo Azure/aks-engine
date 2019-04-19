@@ -226,6 +226,8 @@ const (
 	DefaultEnableAutomaticUpdates = true
 	// DefaultPreserveNodesProperties determines the aks-engine provided default for preserving nodes properties
 	DefaultPreserveNodesProperties = true
+	// DefaultEnableVMSSNodePublicIP determines the aks-engine provided default for enable VMSS node public IP
+	DefaultEnableVMSSNodePublicIP = false
 )
 
 const (

@@ -445,6 +445,17 @@ func CreateAgentVMSS(cs *api.ContainerService, profile *api.AgentPoolProfile) Vi
 		}
 		if i == 1 {
 			ipconfig.Primary = to.BoolPtr(true)
+
+			// Set VMSS node public IP if requested
+			if to.Bool(profile.EnableVMSSNodePublicIP) {
+				publicIPAddressConfiguration := &compute.VirtualMachineScaleSetPublicIPAddressConfiguration{
+					Name: to.StringPtr(fmt.Sprintf("pub%d", i)),
+					VirtualMachineScaleSetPublicIPAddressConfigurationProperties: &compute.VirtualMachineScaleSetPublicIPAddressConfigurationProperties{
+						IdleTimeoutInMinutes: to.Int32Ptr(30),
+					},
+				}
+				ipconfig.PublicIPAddressConfiguration = publicIPAddressConfiguration
+			}
 		}
 		ipConfigurations = append(ipConfigurations, ipconfig)
 	}
