@@ -153,6 +153,13 @@ write_files:
   owner: root
   content: !!binary |
     {{CloudInitData "modprobeConfCIS"}}
+
+- path: /etc/security/pwquality.conf
+  permissions: "0600"
+  encoding: gzip
+  owner: root
+  content: !!binary |
+    {{CloudInitData "pwQuality"}}
 {{end}}
 
 {{if .OrchestratorProfile.KubernetesConfig.RequiresDocker}}

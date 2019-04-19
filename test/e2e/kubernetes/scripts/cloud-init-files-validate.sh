@@ -5,6 +5,7 @@ CLOUD_INIT_FILES="
 /etc/issue.net
 /etc/sysctl.d/60-CIS.conf
 /etc/rsyslog.d/60-CIS.conf
+/etc/security/pwquality.conf
 "
 for CLOUD_INIT_FILE in ${CLOUD_INIT_FILES}; do
     ls -la $CLOUD_INIT_FILE || exit 2
