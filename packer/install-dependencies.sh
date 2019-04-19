@@ -370,6 +370,11 @@ done
 
 df -h
 
+# warn at 75% space taken
+[ -s $(df -P | grep '/dev/sda1' | awk '0+$5 >= 75 {print}') ] || echo "WARNING: 75% of /dev/sda1 is used" >> ${RELEASE_NOTES_FILEPATH}
+# error at 90% space taken
+[ -s $(df -P | grep '/dev/sda1' | awk '0+$5 >= 90 {print}') ] || exit 1
+
 echo "Install completed successfully on " `date` >> ${RELEASE_NOTES_FILEPATH}
 echo "VSTS Build NUMBER: ${BUILD_NUMBER}" >> ${RELEASE_NOTES_FILEPATH}
 echo "VSTS Build ID: ${BUILD_ID}" >> ${RELEASE_NOTES_FILEPATH}
