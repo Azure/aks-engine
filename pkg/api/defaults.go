@@ -497,6 +497,10 @@ func (p *Properties) setAgentProfileDefaults(isUpgrade, isScale bool) {
 		if profile.PreserveNodesProperties == nil {
 			profile.PreserveNodesProperties = to.BoolPtr(DefaultPreserveNodesProperties)
 		}
+
+		if profile.EnableVMSSNodePublicIP == nil {
+			profile.EnableVMSSNodePublicIP = to.BoolPtr(DefaultEnableVMSSNodePublicIP)
+		}
 	}
 }
 
