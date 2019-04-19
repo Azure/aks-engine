@@ -74,10 +74,10 @@ func getK8sMasterVars(cs *api.ContainerService) (map[string]interface{}, error) 
 	isCustomVnet := cs.Properties.AreAgentProfilesCustomVNET()
 	hasAgentPool := len(profiles) > 0
 	hasCosmosEtcd := masterProfile != nil && to.Bool(masterProfile.CosmosEtcd)
-	
-	kubernetesVersion := orchProfile.OrchestratorVersion
-	if cs.Properties.IsAzureStackCloud() {
-		kubernetesVersion = orchProfile.OrchestratorVersion + "-azs"
+
+	kubernetesVersion := orchProfile.OrchestratorVersion
+	if cs.Properties.IsAzureStackCloud() {
+		kubernetesVersion = orchProfile.OrchestratorVersion + "-azs"
 	}
 
 	masterVars := map[string]interface{}{
