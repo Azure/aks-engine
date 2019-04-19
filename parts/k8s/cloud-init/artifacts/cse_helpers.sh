@@ -153,6 +153,7 @@ apt_get_update() {
     apt_update_output=/tmp/apt-get-update.out
     for i in $(seq 1 $retries); do
         wait_for_apt_locks
+        export DEBIAN_FRONTEND=noninteractive
         dpkg --configure -a
         apt-get -f -y install
         apt-get update 2>&1 | tee $apt_update_output | grep -E "^([WE]:.*)|([eE]rr.*)$"
@@ -170,6 +171,7 @@ apt_get_install() {
     retries=$1; wait_sleep=$2; timeout=$3; shift && shift && shift
     for i in $(seq 1 $retries); do
         wait_for_apt_locks
+        export DEBIAN_FRONTEND=noninteractive
         dpkg --configure -a
         apt-get install -o Dpkg::Options::="--force-confold" --no-install-recommends -y ${@}
         [ $? -eq 0  ] && break || \
