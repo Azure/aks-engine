@@ -372,7 +372,7 @@ func TestK8sVars(t *testing.T) {
 		tokenAudience                = "https://management.azurestack.external/"
 	)
 
-	customCloudK8sVersion = testK8sVersion
+	customCloudK8sVersion := testK8sVersion
 	if name == "azurestackcloud" {
 		customCloudK8sVersion = testK8sVersion + "-azs"
 	}
