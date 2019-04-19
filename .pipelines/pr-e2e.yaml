@@ -76,13 +76,6 @@ jobs:
 
 - template: e2e-job-template.yaml
   parameters:
-    name: 'coreos_1_14_e2e'
-    k8sRelease: '1.14'
-    apimodel: 'examples/e2e-tests/kubernetes/coreos/coreos.json'
-    createVNET: true
-
-- template: e2e-job-template.yaml
-  parameters:
     name: 'k8s_1_11_release_e2e'
     k8sRelease: '1.11'
     apimodel: 'examples/e2e-tests/kubernetes/release/default/definition.json'
