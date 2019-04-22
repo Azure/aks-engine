@@ -29,8 +29,6 @@ const (
 	deleteTimeout         = 5 * time.Minute
 )
 
-var externalURLs = []string{"www.bing.com", "google.com"}
-
 // List is a container that holds all pods returned from doing a kubectl get pods
 type List struct {
 	Pods []Pod `json:"items"`
@@ -1048,6 +1046,7 @@ func (c *Container) getMemoryLimits() string {
 
 // getExternalURL returns an external URL that is not in the passed-in array of strings
 func getExternalURL(urls []string) string {
+	externalURLs := []string{"www.bing.com", "google.com"}
 	m := map[string]bool{}
 	for _, url := range externalURLs {
 		m[url] = true
