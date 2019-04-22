@@ -18,4 +18,4 @@ sudo find /var/log -type f -perm '/o+r' | (! grep ^) || exit 1
 # specific file mode validations
 stat /boot/grub/grub.cfg | grep 'Access: (0400' || exit 1
 # validate grub configuration
-grep "^\s*linux" /boot/grub/grub.cfg | grep 'audit=1' || exit 1
+sudo grep "^\s*linux" /boot/grub/grub.cfg | grep 'audit=1' || exit 1
