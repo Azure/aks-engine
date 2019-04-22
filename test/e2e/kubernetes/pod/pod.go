@@ -698,7 +698,7 @@ func (p *Pod) CheckLinuxOutboundConnection(sleep, duration time.Duration) (bool,
 					if err == nil {
 						readyCh <- true
 					} else {
-						if i > (len(urls) - 1) {
+						if i == (len(urls) - 1) {
 							// if all are down let's say we don't have outbound internet access
 							log.Printf("Error:%s\n", err)
 							log.Printf("Out:%s\n", out)
@@ -816,7 +816,7 @@ func (p *Pod) CheckWindowsOutboundConnection(sleep, duration time.Duration) (boo
 					if err == nil && matched {
 						readyCh <- true
 					} else {
-						if i > (len(urls) - 1) {
+						if i == (len(urls) - 1) {
 							// if all are down let's say we don't have outbound internet access
 							log.Printf("Error:%s\n", err)
 							log.Printf("Out:%s\n", out)
