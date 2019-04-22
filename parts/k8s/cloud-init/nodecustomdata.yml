@@ -106,12 +106,21 @@ write_files:
     {{CloudInitData "aptPreferences"}}
 
 {{if .IsUbuntuNonVHD}}
+{{if .MasterProfile.IsUbuntu1604}}
+- path: /etc/ssh/sshd_config
+  permissions: "0600"
+  encoding: gzip
+  owner: root
+  content: !!binary |
+    {{CloudInitData "sshdConfig1604"}}
+{{else}}
 - path: /etc/ssh/sshd_config
   permissions: "0600"
   encoding: gzip
   owner: root
   content: !!binary |
     {{CloudInitData "sshdConfig"}}
+{{end}}
 
 - path: /etc/issue
   permissions: "0644"
