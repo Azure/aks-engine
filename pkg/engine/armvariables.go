@@ -478,7 +478,7 @@ func getK8sAgentVars(cs *api.ContainerService, profile *api.AgentPoolProfile) ma
 	}
 
 	agentVars[agentsCount] = fmt.Sprintf("[parameters('%s')]", agentsCount)
-	agentVars[agentsVMNamePrefix] = cs.Properties.GetAgentVMPrefix(profile)
+	agentVars[agentsVMNamePrefix] = cs.Properties.GetAgentVMPrefix(profile, cs.Properties.GetAgentPoolIndexByName(agentName))
 
 	if profile.IsWindows() {
 		agentVars["winResourceNamePrefix"] = "[substring(parameters('nameSuffix'), 0, 5)]"

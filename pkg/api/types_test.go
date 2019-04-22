@@ -2655,7 +2655,7 @@ func TestGetAgentPoolIndexByName(t *testing.T) {
 		test := test
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
-			actual := test.properties.getAgentPoolIndexByName(test.profileName)
+			actual := test.properties.GetAgentPoolIndexByName(test.profileName)
 
 			if actual != test.expectedIndex {
 				t.Errorf("expected agent pool index %d, but got %d", test.expectedIndex, actual)
@@ -2791,7 +2791,7 @@ func TestGetAgentVMPrefix(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 			p := test.properties
-			actual := p.GetAgentVMPrefix(test.profile)
+			actual := p.GetAgentVMPrefix(test.profile, p.GetAgentPoolIndexByName(test.profile.Name))
 
 			if actual != test.expectedVMPrefix {
 				t.Errorf("expected agent VM name %s, but got %s", test.expectedVMPrefix, actual)
