@@ -145,7 +145,7 @@ func convertKubernetesConfigToEnableRBACV20180331AgentPoolOnly(kc *KubernetesCon
 	}
 	// We use KubernetesConfig.EnableRbac to convert to versioned api model
 	// The assumption here is KubernetesConfig.EnableSecureKubelet is set to be same
-	if kc != nil && kc.EnableRbac != nil && *kc.EnableRbac {
+	if kc.EnableRbac != nil && *kc.EnableRbac {
 		return to.BoolPtr(true)
 	}
 	return to.BoolPtr(false)
