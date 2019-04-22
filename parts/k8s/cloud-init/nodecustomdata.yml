@@ -161,6 +161,13 @@ write_files:
   owner: root
   content: !!binary |
     {{CloudInitData "defaultGrub"}}
+
+- path: /etc/pam.d/su
+  permissions: "0644"
+  encoding: gzip
+  owner: root
+  content: !!binary |
+    {{CloudInitData "pamDotDSU"}}
 {{end}}
 
 {{if .KubernetesConfig.RequiresDocker}}
