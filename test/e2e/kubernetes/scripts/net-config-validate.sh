@@ -4,6 +4,7 @@ IPV4_ACCEPT_SOURCE_ROUTE_VALUE=0
 IPV4_ACCEPT_REDIRECTS_VALUE=0
 IPV4_SECURE_REDIRECTS_VALUE=0
 IPV4_LOG_MARTIANS_VALUE=1
+IPV4_TCP_RETRIES2_VALUE=8
 IPV6_ACCEPT_RA_VALUE=0
 IPV6_ACCEPT_REDIRECTS_VALUE=0
 
@@ -22,3 +23,6 @@ cat /proc/sys/net/ipv6/conf/all/accept_ra | grep $IPV6_ACCEPT_RA_VALUE || exit 1
 cat /proc/sys/net/ipv6/conf/default/accept_ra | grep $IPV6_ACCEPT_RA_VALUE || exit 1
 cat /proc/sys/net/ipv6/conf/all/accept_redirects | grep $IPV6_ACCEPT_REDIRECTS_VALUE || exit 1
 cat /proc/sys/net/ipv6/conf/default/accept_redirects | grep $IPV6_ACCEPT_REDIRECTS_VALUE || exit 1
+
+# validate net config workaround from kubelet.service
+cat /proc/sys/net/ipv4/tcp_retries2 | grep $IPV4_TCP_RETRIES2_VALUE || exit 1
