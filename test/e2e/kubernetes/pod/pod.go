@@ -692,13 +692,14 @@ func (p *Pod) CheckLinuxOutboundConnection(sleep, duration time.Duration) (bool,
 					installedCurl = true
 				}
 				// if we can curl an external URL we have outbound internet access
-				for i, url := range getExternalURLs() {
+				urls := getExternalURLs()
+				for i, url := range urls {
 					out, err := p.Exec("--", "curl", url)
 					if err == nil {
 						readyCh <- true
 					} else {
-						if i > 0 {
-							// if both are down let's say we don't have outbound internet access
+						if i > (len(urls) - 1) {
+							// if all are down let's say we don't have outbound internet access
 							log.Printf("Error:%s\n", err)
 							log.Printf("Out:%s\n", out)
 						}
@@ -808,14 +809,15 @@ func (p *Pod) CheckWindowsOutboundConnection(sleep, duration time.Duration) (boo
 				errCh <- errors.Errorf("Timeout exceeded (%s) while waiting for Pod (%s) to check outbound internet connection", duration.String(), p.Metadata.Name)
 			default:
 				// if we can curl an external URL we have outbound internet access
-				for i, url := range getExternalURLs() {
+				urls := getExternalURLs()
+				for i, url := range urls {
 					out, err := p.Exec("--", "powershell", "iwr", "-UseBasicParsing", "-TimeoutSec", "60", url)
 					matched := exp.MatchString(string(out))
 					if err == nil && matched {
 						readyCh <- true
 					} else {
-						if i > 0 {
-							// if both are down let's say we don't have outbound internet access
+						if i > (len(urls) - 1) {
+							// if all are down let's say we don't have outbound internet access
 							log.Printf("Error:%s\n", err)
 							log.Printf("Out:%s\n", out)
 						}
