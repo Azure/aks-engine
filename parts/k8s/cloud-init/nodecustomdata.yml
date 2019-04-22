@@ -154,6 +154,13 @@ write_files:
   owner: root
   content: !!binary |
     {{CloudInitData "pwQuality"}}
+
+- path: /etc/default/grub
+  permissions: "0644"
+  encoding: gzip
+  owner: root
+  content: !!binary |
+    {{CloudInitData "defaultGrub"}}
 {{end}}
 
 {{if .KubernetesConfig.RequiresDocker}}

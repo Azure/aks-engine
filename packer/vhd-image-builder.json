@@ -105,6 +105,11 @@
             "destination": "/home/packer/pwquality-CIS.conf"
         },
         {
+            "type": "file",
+            "source": "parts/k8s/cloud-init/artifacts/default-grub",
+            "destination": "/home/packer/default-grub"
+        },
+        {
             "type": "shell",
             "inline": [
                 "sudo FEATURE_FLAGS={{user `feature_flags`}} BUILD_NUMBER={{user `build_number`}} BUILD_ID={{user `build_id`}} COMMIT={{user `commit`}} /bin/bash -ux /home/packer/install-dependencies.sh",

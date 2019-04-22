@@ -172,6 +172,7 @@ const (
 	cisLogEnforcement                        = "k8s/cloud-init/artifacts/rsyslog-d-60-CIS.conf"
 	modprobeConfCIS                          = "k8s/cloud-init/artifacts/modprobe-CIS.conf"
 	pwQuality                                = "k8s/cloud-init/artifacts/pwquality-CIS.conf"
+	defaultGrub                              = "k8s/cloud-init/artifacts/default-grub"
 )
 
 const (
