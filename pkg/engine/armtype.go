@@ -78,6 +78,10 @@ func (a AvailabilitySetARM) MarshalJSON() ([]byte, error) {
 		return nil, err
 	}
 
+	if a.AvailabilitySet.PlatformFaultDomainCount != nil {
+		return bytes, nil
+	}
+
 	// armExpr is evaluated by Azure Resource Manager at deployment time:
 	//   if location is in the three-fault-domain list, return 3
 	//   else if location is "canary" (testing), return 1
@@ -94,9 +98,11 @@ func (a AvailabilitySetARM) MarshalJSON() ([]byte, error) {
 	))]"`
 	// strip all whitespace
 	armExpr = strings.Join(strings.Fields(armExpr), "")
-	// replace "platformFaultDomainCount":0 (engine.PlatformFaultDomainCountNotSet) with the ARM expression
-	re := regexp.MustCompile(`\"platformFaultDomainCount\" *: *\"?0\"?`)
-	s := re.ReplaceAllLiteralString(string(bytes), `"platformFaultDomainCount":`+armExpr)
+
+	// insert ARM expression for platformFaultDomainCount as the first JSON property
+	// NOTE: this relies on this field being omitted in JSON when its value is nil.
+	re := regexp.MustCompile(`"properties" *: *{ *"`)
+	s := re.ReplaceAllLiteralString(string(bytes), `"properties":{"platformFaultDomainCount":`+armExpr+`,"`)
 
 	return []byte(s), nil
 }

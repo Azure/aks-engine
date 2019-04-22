@@ -12,7 +12,6 @@ import (
 	"github.com/Azure/aks-engine/pkg/api"
 	"github.com/Azure/aks-engine/pkg/armhelpers"
 	"github.com/Azure/aks-engine/pkg/armhelpers/utils"
-	"github.com/Azure/aks-engine/pkg/engine"
 	"github.com/Azure/aks-engine/pkg/i18n"
 	"github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2018-10-01/compute"
 	"github.com/pkg/errors"
@@ -297,8 +296,10 @@ func (uc *UpgradeCluster) getClusterNodeStatus(kubeClient armhelpers.KubernetesC
 	return nil
 }
 
+// setFaultDomainCount finds the platformFaultDomainCount for existing VM availability sets in
+// the cluster and updates corresponding fields in the the internal api model.
 func (uc *UpgradeCluster) setFaultDomainCount(ctx context.Context, resourceGroup string, vmasIds []string) error {
-	count := engine.PlatformFaultDomainCountNotSet
+	var count int
 
 	for _, id := range vmasIds {
 		// extract the last element of the id for VMAS name
@@ -308,14 +309,15 @@ func (uc *UpgradeCluster) setFaultDomainCount(ctx context.Context, resourceGroup
 		if err != nil {
 			return err
 		}
-		// TODO: return error if all VMASes don't agree on this value?
+
+		// Assume that all VMASes in the cluster share a value for platformFaultDomainCount
 		count = int(*vmas.AvailabilitySetProperties.PlatformFaultDomainCount)
+		uc.DataModel.Properties.MasterProfile.PlatformFaultDomainCount = &count
+		for _, pool := range uc.DataModel.Properties.AgentPoolProfiles {
+			pool.PlatformFaultDomainCount = &count
+		}
 		break
 	}
-
-	// Set the global value used to populate fault domain count.
-	// This assumes all VMASes in a cluster share the same value.
-	engine.PlatformFaultDomainCount = int32(count)
 
 	return nil
 }

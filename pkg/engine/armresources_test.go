@@ -149,7 +149,6 @@ func TestGenerateARMResourcesWithVMSSAgentPool(t *testing.T) {
 				Name: to.StringPtr("Aligned"),
 			},
 			AvailabilitySetProperties: &compute.AvailabilitySetProperties{
-				PlatformFaultDomainCount:  to.Int32Ptr(PlatformFaultDomainCountNotSet),
 				PlatformUpdateDomainCount: to.Int32Ptr(3),
 			},
 		},
@@ -991,7 +990,6 @@ func TestGenerateARMResourceWithVMASAgents(t *testing.T) {
 		AvailabilitySet: compute.AvailabilitySet{
 			AvailabilitySetProperties: &compute.AvailabilitySetProperties{
 				PlatformUpdateDomainCount: to.Int32Ptr(3),
-				PlatformFaultDomainCount:  to.Int32Ptr(PlatformFaultDomainCountNotSet),
 			},
 			Sku: &compute.Sku{
 				Name: to.StringPtr("Aligned"),

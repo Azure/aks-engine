@@ -416,8 +416,10 @@ func (sc *scaleCmd) run(cmd *cobra.Command, args []string) error {
 	return sc.saveAPIModel()
 }
 
+// setFaultDomainCount finds the platformFaultDomainCount for existing VM availability sets in
+// the cluster and updates corresponding fields in the the internal api model.
 func (sc *scaleCmd) setFaultDomainCount(ctx context.Context, resourceGroup string, vmasIds []string) error {
-	count := engine.PlatformFaultDomainCountNotSet
+	var count int
 
 	for _, id := range vmasIds {
 		// extract the last element of the id for VMAS name
@@ -427,14 +429,15 @@ func (sc *scaleCmd) setFaultDomainCount(ctx context.Context, resourceGroup strin
 		if err != nil {
 			return err
 		}
-		// TODO: return error if all VMASes don't agree on this value?
+
+		// Assume that all VMASes in the cluster share a value for platformFaultDomainCount
 		count = int(*vmas.AvailabilitySetProperties.PlatformFaultDomainCount)
+		sc.containerService.Properties.MasterProfile.PlatformFaultDomainCount = &count
+		for _, pool := range sc.containerService.Properties.AgentPoolProfiles {
+			pool.PlatformFaultDomainCount = &count
+		}
 		break
 	}
-
-	// Set the global value used to populate fault domain count.
-	// This assumes all VMASes in a cluster share the same value.
-	engine.PlatformFaultDomainCount = int32(count)
 
 	return nil
 }

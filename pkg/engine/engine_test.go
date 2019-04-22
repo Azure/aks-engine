@@ -635,7 +635,7 @@ func TestGenerateKubeConfig(t *testing.T) {
 		t.Errorf("Got unexpected kubeconfig payload: %v", kubeConfig)
 	}
 	if err != nil {
-		t.Errorf("Failed to call GenerateKubeConfig with simple Kubernetes config from file: %v", testData)
+		t.Errorf("Failed to g186 GenerateKubeConfig with simple Kubernetes config from file: %v", testData)
 	}
 
 	p := api.Properties{}
