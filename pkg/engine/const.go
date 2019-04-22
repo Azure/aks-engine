@@ -176,6 +176,8 @@ const (
 	defaultGrub                              = "k8s/cloud-init/artifacts/default-grub"
 	pamDotDSU                                = "k8s/cloud-init/artifacts/pam-d-su"
 	profileDCISSh                            = "k8s/cloud-init/artifacts/profile-d-cis.sh"
+	pamDotDCommonAuth                        = "k8s/cloud-init/artifacts/pam-d-common-auth"
+	pamDotDCommonPassword                    = "k8s/cloud-init/artifacts/pam-d-common-password"
 )
 
 const (

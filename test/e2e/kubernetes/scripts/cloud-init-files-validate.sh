@@ -23,6 +23,10 @@ stat /boot/grub/grub.cfg | grep 'Access: (0400' || exit 1
 sudo grep "^\s*linux" /boot/grub/grub.cfg | grep 'audit=1' || exit 1
 # validate su configuration
 sudo grep "auth required pam_wheel.so use_uid" /etc/pam.d/su
+# validate password lockout config
+sudo grep "auth required pam_tally2.so onerr=fail audit silent deny=5 unlock_time=900" /etc/pam.d/common-auth
+# validate password change uniqueness config
+sudo grep "pam_unix.so obscure use_authtok try_first_pass sha512 remember=5" /etc/pam.d/common-password
 # validate umask configuration
 touch test-umask
 stat test-umask | grep 'Access: (0640' || exit 1
