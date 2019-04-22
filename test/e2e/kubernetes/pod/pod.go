@@ -693,17 +693,19 @@ func (p *Pod) CheckLinuxOutboundConnection(sleep, duration time.Duration) (bool,
 					}
 					installedCurl = true
 				}
-				// if we can curl bing.com we have outbound internet access
-				out, err := p.Exec("--", "curl", externalURLs[0])
+				// if we can curl an external URL we have outbound internet access
+				zeroURLs := []string{}
+				firstURL := getExternalURL(zeroURLs)
+				out, err := p.Exec("--", "curl", firstURL)
 				if err == nil {
 					readyCh <- true
 				} else {
-					// in case bing.com is down let's hope google.com is also not down
-					_, err := p.Exec("--", "curl", externalURLs[2])
+					// in case that external URL is down let's hope a 2nd one is also not down
+					_, err := p.Exec("--", "curl", getExternalURL([]string{firstURL}))
 					if err == nil {
 						readyCh <- true
 					} else {
-						// if both bing.com and google.com are down let's say we don't have outbound internet access
+						// if both are down let's say we don't have outbound internet access
 						log.Printf("Error:%s\n", err)
 						log.Printf("Out:%s\n", out)
 					}
@@ -811,7 +813,10 @@ func (p *Pod) CheckWindowsOutboundConnection(sleep, duration time.Duration) (boo
 			case <-ctx.Done():
 				errCh <- errors.Errorf("Timeout exceeded (%s) while waiting for Pod (%s) to check outbound internet connection", duration.String(), p.Metadata.Name)
 			default:
-				out, err := p.Exec("--", "powershell", "iwr", "-UseBasicParsing", "-TimeoutSec", "60", externalURLs[0])
+				// if we can curl an external URL we have outbound internet access
+				zeroURLs := []string{}
+				firstURL := getExternalURL(zeroURLs)
+				out, err := p.Exec("--", "powershell", "iwr", "-UseBasicParsing", "-TimeoutSec", "60", firstURL)
 				if err == nil {
 					matched := exp.MatchString(string(out))
 					if matched {
@@ -820,8 +825,8 @@ func (p *Pod) CheckWindowsOutboundConnection(sleep, duration time.Duration) (boo
 						readyCh <- false
 					}
 				} else {
-					// in case bing.com is down let's hope google.com is also not down
-					out, err := p.Exec("--", "powershell", "iwr", "-UseBasicParsing", "-TimeoutSec", "60", externalURLs[1])
+					// in case that external URL is down let's hope a 2nd one is also not down
+					out, err := p.Exec("--", "powershell", "iwr", "-UseBasicParsing", "-TimeoutSec", "60", getExternalURL([]string{firstURL}))
 					if err == nil {
 						matched := exp.MatchString(string(out))
 						if matched {
@@ -830,7 +835,7 @@ func (p *Pod) CheckWindowsOutboundConnection(sleep, duration time.Duration) (boo
 							readyCh <- false
 						}
 					} else {
-						// if both bing.com and google.com are down let's say we don't have outbound internet access
+						// if both are down let's say we don't have outbound internet access
 						log.Printf("Error:%s\n", err)
 						log.Printf("Out:%s\n", out)
 					}
@@ -1039,4 +1044,21 @@ func (c *Container) getMemoryRequests() string {
 // getMemoryLimits returns an the CPU Requests value from a container within a pod
 func (c *Container) getMemoryLimits() string {
 	return c.Resources.Limits.Memory
+}
+
+// getExternalURL returns an external URL that is not in the passed-in array of strings
+func getExternalURL(urls []string) string {
+	m := map[string]bool{}
+	for _, url := range externalURLs {
+		m[url] = true
+	}
+	for _, url := range urls {
+		m[url] = false
+	}
+	for key, val := range m {
+		if val {
+			return key
+		}
+	}
+	return ""
 }
