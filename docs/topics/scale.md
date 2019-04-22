@@ -15,12 +15,12 @@ This guide will assume you have a cluster deployed and the apimodel originally u
 To scale the cluster you will run a command like:
 
 ```console
-$ aks-engine scale --subscription-id 51ac25de-afdg-9201-d923-8d8e8e8e8e8e \
-    --resource-group mycluster --location westus2 \
+$ aks-engine scale --subscription-id <subscription_id> \
+    --resource-group mycluster --location <location> \
     --client-id '<service principal client ID>' \
     --client-secret '<service principal client secret>' \
-    --api-model _output/mycluster/apimodel.json --new-node-count 5 \
-    --node-pool agentpool1 --master-FQDN mycluster.westus2.cloudapp.azure.com
+    --api-model _output/mycluster/apimodel.json --new-node-count <desired node count> \
+    --node-pool agentpool1 --master-FQDN mycluster.<location>.cloudapp.azure.com
 ```
 
 This command will re-use the `apimodel.json` file inside the output directory as input for a new ARM template deployment that will execute the scaling operation against the desired agent pool. When the scaling operation is done it will update the cluster definition in that same `apimodel.json` file to reflect the new node count and thus the updated, current cluster configuration.
