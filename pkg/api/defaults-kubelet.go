@@ -25,7 +25,6 @@ func (cs *ContainerService) setKubeletConfig() {
 		"--cgroups-per-qos":             "true",
 		"--kubeconfig":                  "/var/lib/kubelet/kubeconfig",
 		"--keep-terminated-pod-volumes": "false",
-		"--protect-kernel-defaults":     "true",
 	}
 
 	// Start with copy of Linux config
@@ -80,6 +79,7 @@ func (cs *ContainerService) setKubeletConfig() {
 		"--image-pull-progress-deadline":      "30m",
 		"--enforce-node-allocatable":          "pods",
 		"--streaming-connection-idle-timeout": "5m",
+		"--protect-kernel-defaults":           "true",
 	}
 
 	// Set --non-masquerade-cidr if ip-masq-agent is disabled on AKS
