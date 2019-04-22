@@ -15,6 +15,8 @@ copyPackerFiles() {
   MODPROBE_CIS_DEST=/etc/modprobe.d/CIS.conf
   PWQUALITY_CONF_SRC=/home/packer/pwquality-CIS.conf
   PWQUALITY_CONF_DEST=/etc/security/pwquality.conf
+  DEFAULT_GRUB_SRC=/home/packer/default-grub
+  DEFAULT_GRUB_DEST=/etc/default/grub
   DIR=$(dirname "$SYSCTL_CONFIG_DEST") && mkdir -p ${DIR} && cp $SYSCTL_CONFIG_SRC $SYSCTL_CONFIG_DEST || exit $ERR_CIS_COPY_FILE
   DIR=$(dirname "$RSYSLOG_CONFIG_DEST") && mkdir -p ${DIR} && cp $RSYSLOG_CONFIG_SRC $RSYSLOG_CONFIG_DEST || exit $ERR_CIS_COPY_FILE
   DIR=$(dirname "$ETC_ISSUE_CONFIG_DEST") && mkdir -p ${DIR} && cp $ETC_ISSUE_CONFIG_SRC $ETC_ISSUE_CONFIG_DEST || exit $ERR_CIS_COPY_FILE
@@ -22,6 +24,7 @@ copyPackerFiles() {
   DIR=$(dirname "$SSHD_CONFIG_DEST") && mkdir -p ${DIR} && cp $SSHD_CONFIG_SRC $SSHD_CONFIG_DEST || exit $ERR_CIS_COPY_FILE
   DIR=$(dirname "$MODPROBE_CIS_DEST") && mkdir -p ${DIR} && cp $MODPROBE_CIS_SRC $MODPROBE_CIS_DEST || exit $ERR_CIS_COPY_FILE
   DIR=$(dirname "$PWQUALITY_CONF_DEST") && mkdir -p ${DIR} && cp $PWQUALITY_CONF_SRC $PWQUALITY_CONF_DEST || exit $ERR_CIS_COPY_FILE
+  DIR=$(dirname "$PWQUALITY_CONF_DEST") && mkdir -p ${DIR} && cp $DEFAULT_GRUB_SRC $DEFAULT_GRUB_DEST || exit $ERR_CIS_COPY_FILE
 }
 
 assignRootPW() {
@@ -74,6 +77,7 @@ assignFilePermissions() {
     chmod 644 /etc/ssh/sshd_config || exit $ERR_CIS_ASSIGN_FILE_PERMISSION
     chmod 600 /etc/security/pwquality.conf || exit $ERR_CIS_ASSIGN_FILE_PERMISSION
     chmod 400 /boot/grub/grub.cfg || exit $ERR_CIS_ASSIGN_FILE_PERMISSION
+    chmod 644 /etc/default/grub || exit $ERR_CIS_ASSIGN_FILE_PERMISSION
 }
 
 applyCIS() {
