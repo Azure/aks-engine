@@ -332,11 +332,3 @@ datasource:
         apply_network_config: false
 EOF
 }
-
-# refer to https://github.com/kubernetes/kubernetes/blob/75d45bdfc9eeda15fb550e00da662c12d7d37985/pkg/kubelet/cm/container_manager_linux.go#L359-L397
-setupKernelTunables() {
-    echo "set up kernel tunable flags..."
-    sudo sysctl -w vm.overcommit_memory=1
-    sudo sysctl -w kernel/panic=10
-    sudo sysctl -w kernel/panic_on_oops=1
-}

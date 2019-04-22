@@ -96,7 +96,6 @@ if [[ "${GPU_NODE}" = true ]]; then
 else
     cleanUpGPUDrivers
 fi
-setupKernelTunables
 installKubeletAndKubectl
 if [[ $OS != $COREOS_OS_NAME ]]; then
     ensureRPC
