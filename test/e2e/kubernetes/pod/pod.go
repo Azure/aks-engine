@@ -692,20 +692,16 @@ func (p *Pod) CheckLinuxOutboundConnection(sleep, duration time.Duration) (bool,
 					installedCurl = true
 				}
 				// if we can curl an external URL we have outbound internet access
-				zeroURLs := []string{}
-				firstURL := getExternalURL(zeroURLs)
-				out, err := p.Exec("--", "curl", firstURL)
-				if err == nil {
-					readyCh <- true
-				} else {
-					// in case that external URL is down let's hope a 2nd one is also not down
-					_, err := p.Exec("--", "curl", getExternalURL([]string{firstURL}))
+				for i, url := range getExternalURLs() {
+					out, err := p.Exec("--", "curl", url)
 					if err == nil {
 						readyCh <- true
 					} else {
-						// if both are down let's say we don't have outbound internet access
-						log.Printf("Error:%s\n", err)
-						log.Printf("Out:%s\n", out)
+						if i > 0 {
+							// if both are down let's say we don't have outbound internet access
+							log.Printf("Error:%s\n", err)
+							log.Printf("Out:%s\n", out)
+						}
 					}
 				}
 				time.Sleep(sleep)
@@ -812,30 +808,17 @@ func (p *Pod) CheckWindowsOutboundConnection(sleep, duration time.Duration) (boo
 				errCh <- errors.Errorf("Timeout exceeded (%s) while waiting for Pod (%s) to check outbound internet connection", duration.String(), p.Metadata.Name)
 			default:
 				// if we can curl an external URL we have outbound internet access
-				zeroURLs := []string{}
-				firstURL := getExternalURL(zeroURLs)
-				out, err := p.Exec("--", "powershell", "iwr", "-UseBasicParsing", "-TimeoutSec", "60", firstURL)
-				if err == nil {
+				for i, url := range getExternalURLs() {
+					out, err := p.Exec("--", "powershell", "iwr", "-UseBasicParsing", "-TimeoutSec", "60", url)
 					matched := exp.MatchString(string(out))
-					if matched {
+					if err == nil && matched {
 						readyCh <- true
 					} else {
-						readyCh <- false
-					}
-				} else {
-					// in case that external URL is down let's hope a 2nd one is also not down
-					out, err := p.Exec("--", "powershell", "iwr", "-UseBasicParsing", "-TimeoutSec", "60", getExternalURL([]string{firstURL}))
-					if err == nil {
-						matched := exp.MatchString(string(out))
-						if matched {
-							readyCh <- true
-						} else {
-							readyCh <- false
+						if i > 0 {
+							// if both are down let's say we don't have outbound internet access
+							log.Printf("Error:%s\n", err)
+							log.Printf("Out:%s\n", out)
 						}
-					} else {
-						// if both are down let's say we don't have outbound internet access
-						log.Printf("Error:%s\n", err)
-						log.Printf("Out:%s\n", out)
 					}
 				}
 				time.Sleep(sleep)
@@ -1044,20 +1027,7 @@ func (c *Container) getMemoryLimits() string {
 	return c.Resources.Limits.Memory
 }
 
-// getExternalURL returns an external URL that is not in the passed-in array of strings
-func getExternalURL(urls []string) string {
-	externalURLs := []string{"www.bing.com", "google.com"}
-	m := map[string]bool{}
-	for _, url := range externalURLs {
-		m[url] = true
-	}
-	for _, url := range urls {
-		m[url] = false
-	}
-	for key, val := range m {
-		if val {
-			return key
-		}
-	}
-	return ""
+// getExternalURLs returns a list of external URLs
+func getExternalURLs() []string {
+	return []string{"www.bing.com", "google.com"}
 }
