@@ -49,6 +49,7 @@ assignFilePermissions() {
     waagent.log
     syslog
     unattended-upgrades/unattended-upgrades.log
+    unattended-upgrades/unattended-upgrades-dpkg.log
     azure-vnet-ipam.log
     azure-vnet-telemetry.log
     azure-cnimonitor.log
@@ -56,6 +57,7 @@ assignFilePermissions() {
     kv-driver.log
     blobfuse-driver.log
     blobfuse-flexvol-installer.log
+    landscape/sysinfo.log
     "
     for FILE in ${FILES}; do
         FILEPATH="/var/log/${FILE}"
