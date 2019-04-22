@@ -347,19 +347,25 @@ K8S_VERSIONS="
 1.12.7
 1.12.6
 1.11.9
+1.11.9-azs
 1.11.8
+1.11.8-azs
 1.10.13
 1.10.12
 1.9.11
 1.9.10
 "
 for KUBERNETES_VERSION in ${K8S_VERSIONS}; do
-    HYPERKUBE_URL="k8s.gcr.io/hyperkube-amd64:v${KUBERNETES_VERSION}"
+    if [[ $KUBERNETES_VERSION == *"azs"* ]]; then
+      HYPERKUBE_URL="msazurestackdocker/hyperkube-amd64:v${KUBERNETES_VERSION}"
+    else
+      HYPERKUBE_URL="k8s.gcr.io/hyperkube-amd64:v${KUBERNETES_VERSION}"
+      CONTAINER_IMAGE="k8s.gcr.io/cloud-controller-manager-amd64:v${KUBERNETES_VERSION}"
+      pullContainerImage "docker" ${CONTAINER_IMAGE}
+      echo "  - ${CONTAINER_IMAGE}" >> ${RELEASE_NOTES_FILEPATH}
+    fi
     extractHyperkube "docker"
-    CONTAINER_IMAGE="k8s.gcr.io/cloud-controller-manager-amd64:v${KUBERNETES_VERSION}"
-    pullContainerImage "docker" ${CONTAINER_IMAGE}
     echo "  - ${HYPERKUBE_URL}" >> ${RELEASE_NOTES_FILEPATH}
-    echo "  - ${CONTAINER_IMAGE}" >> ${RELEASE_NOTES_FILEPATH}
 done
 
 df -h
