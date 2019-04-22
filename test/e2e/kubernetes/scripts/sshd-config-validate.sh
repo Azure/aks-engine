@@ -30,20 +30,21 @@ CONFIGS=("ClientAliveInterval 120"
 "UsePAM yes"
 "UseDNS no"
 "GSSAPIAuthentication no")
-1604_CONFIGS=("RSAAuthentication yes"
-"UsePrivilegeSeparation yes"
-"KeyRegenerationInterval 3600"
-"ServerKeyBits 1024"
-"RhostsRSAAuthentication no")
 
 for ((i = 0; i < ${#CONFIGS[@]}; i++))
 do
     sshd -T | grep -i "${CONFIGS[$i]}" || exit 1
 done
 
+CONFIGS=("RSAAuthentication yes"
+"UsePrivilegeSeparation yes"
+"KeyRegenerationInterval 3600"
+"ServerKeyBits 1024"
+"RhostsRSAAuthentication no")
+    
 if [[ ${UBUNTU_RELEASE} == "16.04" ]]; then
-    for ((i = 0; i < ${#1604_CONFIGS[@]}; i++))
+    for ((i = 0; i < ${#CONFIGS[@]}; i++))
     do
-        sshd -T | grep -i "${1604_CONFIGS[$i]}" || exit 1
+        sshd -T | grep -i "${CONFIGS[$i]}" || exit 1
     done
 fi
