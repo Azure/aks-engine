@@ -209,18 +209,18 @@ func CreateAgentVMASAKSBillingExtension(cs *api.ContainerService, profile *api.A
 
 func CreateCustomExtensions(cs *api.ContainerService) []VirtualMachineExtensionARM {
 	var result []VirtualMachineExtensionARM
-	for _, extensionProfile := range extensions {
-		masterOptedForExtension, singleOrAll := validateProfileOptedForExtension(properties.ExtensionProfiles.Name, properties.MasterProfile.Extensions)
+	for _, extensionProfile := range cs.Properties.ExtensionProfiles {
+		masterOptedForExtension, singleOrAll := validateProfileOptedForExtension(extensionProfile.Name, s.Properties.MasterProfile.Extensions)
 		if masterOptedForExtension {
+			// TODO
 			result = append(result, ext)
 		}
 
 		for _, agentPoolProfile := range properties.AgentPoolProfiles {
-			poolOptedForExtension, singleOrAll := validateProfileOptedForExtension(properties.ExtensionProfiles.Name, agentPoolProfile.Extensions)
-
+			poolOptedForExtension, singleOrAll := validateProfileOptedForExtension(extensionProfile.Name, agentPoolProfile.Extensions)
+			// TODO
 			result = append(result, ext)
 		}
 	}
-
 	return result
 }
