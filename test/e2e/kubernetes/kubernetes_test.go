@@ -110,7 +110,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			kubeConfig, err := GetConfig()
 			Expect(err).NotTo(HaveOccurred())
 			master := fmt.Sprintf("%s@%s", eng.ExpandedDefinition.Properties.LinuxProfile.AdminUsername, kubeConfig.GetServerName())
-			nodeList, err := node.Get()
+			nodeList, err := node.GetReady()
 			Expect(err).NotTo(HaveOccurred())
 			hostOSDNSValidateScript := "host-os-dns-validate.sh"
 			envString := "NODE_HOSTNAMES='"
