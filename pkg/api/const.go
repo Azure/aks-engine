@@ -385,7 +385,7 @@ const (
 	// DefaultJumpboxUsername specifies the default admin username for the private cluster jumpbox
 	DefaultJumpboxUsername = "azureuser"
 	// DefaultKubeletPodMaxPIDs specifies the default max pid authorized by pods
-	DefaultKubeletPodMaxPIDs = 100
+	DefaultKubeletPodMaxPIDs = -1
 	// DefaultKubernetesAgentSubnetVMSS specifies the default subnet for agents when master is VMSS
 	DefaultKubernetesAgentSubnetVMSS = "10.248.0.0/13"
 	// DefaultKubernetesClusterSubnet specifies the default subnet for pods.

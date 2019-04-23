@@ -11,13 +11,14 @@ import (
 )
 
 func TestKubeletConfigDefaults(t *testing.T) {
-	cs := CreateMockContainerService("testcluster", "1.8.6", 3, 2, false)
+	cs := CreateMockContainerService("testcluster", "1.12.7", 3, 2, false)
 	cs.setKubeletConfig()
 	k := cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig
 	// TODO test all default config values
 	for key, val := range map[string]string{
 		"--azure-container-registry-config": "/etc/kubernetes/azure.json",
 		"--image-pull-progress-deadline":    "30m",
+		"--pod-max-pids":                    "-1",
 	} {
 		if k[key] != val {
 			t.Fatalf("got unexpected kubelet config value for %s: %s, expected %s",
