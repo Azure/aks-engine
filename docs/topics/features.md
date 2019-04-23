@@ -134,7 +134,7 @@ Currently, the IP addresses that are pre-allocated aren't allowed by the default
     },
 ```
 
-When using Azure integrated networking the maxPods setting will be set to 30 by default. This number can be changed keeping in mind that there is a limit of 4,000 IPs per vnet.
+When using Azure integrated networking the maxPods setting will be set to 30 by default. This number can be changed keeping in mind that there is a limit of 65,536 IPs per vnet.
 
 ```json
       "kubernetesConfig": {
