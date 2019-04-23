@@ -7,7 +7,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"strconv"
-	"strings"
 
 	"github.com/Azure/aks-engine/pkg/api"
 	"github.com/Azure/aks-engine/pkg/api/common"
@@ -209,13 +208,39 @@ func CreateAgentVMASAKSBillingExtension(cs *api.ContainerService, profile *api.A
 	}
 }
 
-func CreateCustomExtensions(properties *api.Properties) interface{} {
-	var extensionsARM interface{}
-	data := getLinkedTemplatesForExtensions(properties)
-	data = strings.TrimPrefix(data, ",")
-	if err := json.Unmarshal([]byte(data), &extensionsARM); err != nil {
-		fmt.Println(err.Error())
-		return nil
+func CreateCustomExtensions(properties *api.Properties) []DeploymentARM {
+	var extensionsARM []DeploymentARM
+
+	for _, extensionProfile := range properties.ExtensionProfiles {
+		masterOptedForExtension, singleOrAll := validateProfileOptedForExtension(extensionProfile.Name, properties.MasterProfile.Extensions)
+		if masterOptedForExtension {
+			data, e := getMasterLinkedTemplateText(properties.MasterProfile, properties.OrchestratorProfile.OrchestratorType, extensionProfile, singleOrAll)
+			if e != nil {
+				fmt.Println(e.Error())
+			}
+			ext := DeploymentARM{}
+			if err := json.Unmarshal([]byte(data), &ext); err != nil {
+				fmt.Println(err.Error())
+			}
+			extensionsARM = append(extensionsARM, ext)
+		}
+
+		for _, agentPoolProfile := range properties.AgentPoolProfiles {
+			poolProfileExtensions := agentPoolProfile.Extensions
+			poolOptedForExtension, singleOrAll := validateProfileOptedForExtension(extensionProfile.Name, poolProfileExtensions)
+			if poolOptedForExtension {
+				data, e := getAgentPoolLinkedTemplateText(agentPoolProfile, properties.OrchestratorProfile.OrchestratorType, extensionProfile, singleOrAll)
+				if e != nil {
+					fmt.Println(e.Error())
+				}
+				ext := DeploymentARM{}
+				if err := json.Unmarshal([]byte(data), &ext); err != nil {
+					fmt.Println(err.Error())
+				}
+				extensionsARM = append(extensionsARM, ext)
+			}
+
+		}
 	}
 	return extensionsARM
 }
