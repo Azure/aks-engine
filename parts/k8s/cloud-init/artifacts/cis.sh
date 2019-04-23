@@ -19,6 +19,8 @@ copyPackerFiles() {
   DEFAULT_GRUB_DEST=/etc/default/grub
   PAM_D_SU_SRC=/home/packer/pam-d-su
   PAM_D_SU_DEST=/etc/pam.d/su
+  PROFILE_D_CIS_SH_SRC=/home/packer/profile-d-cis.sh
+  PROFILE_D_CIS_SH_DEST=/etc/profile.d/CIS.sh
   if [[ ${UBUNTU_RELEASE} == "16.04" ]]; then
     SSHD_CONFIG_SRC=/home/packer/sshd_config_1604
   fi
@@ -31,6 +33,7 @@ copyPackerFiles() {
   DIR=$(dirname "$PWQUALITY_CONF_DEST") && mkdir -p ${DIR} && cp $PWQUALITY_CONF_SRC $PWQUALITY_CONF_DEST || exit $ERR_CIS_COPY_FILE
   DIR=$(dirname "$DEFAULT_GRUB_DEST") && mkdir -p ${DIR} && cp $DEFAULT_GRUB_SRC $DEFAULT_GRUB_DEST || exit $ERR_CIS_COPY_FILE
   DIR=$(dirname "$PAM_D_SU_DEST") && mkdir -p ${DIR} && cp $PAM_D_SU_SRC $PAM_D_SU_DEST || exit $ERR_CIS_COPY_FILE
+  DIR=$(dirname "$PROFILE_D_CIS_SH_DEST") && mkdir -p ${DIR} && cp $PROFILE_D_CIS_SH_SRC $PROFILE_D_CIS_SH_DEST || exit $ERR_CIS_COPY_FILE
 }
 
 assignRootPW() {
@@ -85,8 +88,12 @@ assignFilePermissions() {
     chmod 644 /etc/ssh/sshd_config || exit $ERR_CIS_ASSIGN_FILE_PERMISSION
     chmod 600 /etc/security/pwquality.conf || exit $ERR_CIS_ASSIGN_FILE_PERMISSION
     chmod 400 /boot/grub/grub.cfg || exit $ERR_CIS_ASSIGN_FILE_PERMISSION
+<<<<<<< HEAD
     chmod 644 /etc/default/grub || exit $ERR_CIS_ASSIGN_FILE_PERMISSION
     chmod 644 /etc/pam.d/su || exit $ERR_CIS_ASSIGN_FILE_PERMISSION
+=======
+    chmod 755 /etc/profile.d/CIS.sh || exit $ERR_CIS_ASSIGN_FILE_PERMISSION
+>>>>>>> chore(CIS): set 027 umask for shells
 }
 
 applyCIS() {

@@ -177,6 +177,13 @@ write_files:
   owner: root
   content: !!binary |
     {{CloudInitData "pamDotDSU"}}
+
+- path: /etc/profile.d/CIS.sh
+  permissions: "0644"
+  encoding: gzip
+  owner: root
+  content: !!binary |
+    {{CloudInitData "profileDCISSh"}}
 {{end}}
 
 {{if .KubernetesConfig.RequiresDocker}}
