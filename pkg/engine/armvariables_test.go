@@ -186,8 +186,51 @@ func TestK8sVars(t *testing.T) {
 		t.Errorf("unexpected diff while expecting equal structs: %s", diff)
 	}
 
-	// Test with ubuntu distro
-	cs.Properties.AgentPoolProfiles[0].Distro = "ubuntu"
+	// Test with ubuntu 16.04 distro
+	cs.Properties.AgentPoolProfiles[0].Distro = api.Ubuntu
+	varMap, err = GetKubernetesVariables(cs)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	expectedMap["cloudInitFiles"] = map[string]interface{}{
+		"provisionScript":                  getBase64EncodedGzippedCustomScript(kubernetesCSEMainScript),
+		"provisionSource":                  getBase64EncodedGzippedCustomScript(kubernetesCSEHelpersScript),
+		"provisionInstalls":                getBase64EncodedGzippedCustomScript(kubernetesCSEInstall),
+		"provisionConfigs":                 getBase64EncodedGzippedCustomScript(kubernetesCSEConfig),
+		"provisionCIS":                     getBase64EncodedGzippedCustomScript(kubernetesCISScript),
+		"sshdConfig1604":                   getBase64EncodedGzippedCustomScript(sshdConfig1604),
+		"healthMonitorScript":              getBase64EncodedGzippedCustomScript(kubernetesHealthMonitorScript),
+		"customSearchDomainsScript":        getBase64EncodedGzippedCustomScript(kubernetesCustomSearchDomainsScript),
+		"generateProxyCertsScript":         getBase64EncodedGzippedCustomScript(kubernetesMasterGenerateProxyCertsScript),
+		"mountEtcdScript":                  getBase64EncodedGzippedCustomScript(kubernetesMountEtcd),
+		"kubeletSystemdService":            getBase64EncodedGzippedCustomScript(kubeletSystemdService),
+		"kmsSystemdService":                getBase64EncodedGzippedCustomScript(kmsSystemdService),
+		"kubeletMonitorSystemdTimer":       getBase64EncodedGzippedCustomScript(kubernetesKubeletMonitorSystemdTimer),
+		"kubeletMonitorSystemdService":     getBase64EncodedGzippedCustomScript(kubernetesKubeletMonitorSystemdService),
+		"dockerMonitorSystemdTimer":        getBase64EncodedGzippedCustomScript(kubernetesDockerMonitorSystemdTimer),
+		"dockerMonitorSystemdService":      getBase64EncodedGzippedCustomScript(kubernetesDockerMonitorSystemdService),
+		"aptPreferences":                   getBase64EncodedGzippedCustomScript(aptPreferences),
+		"dockerClearMountPropagationFlags": getBase64EncodedGzippedCustomScript(dockerClearMountPropagationFlags),
+		"etcdSystemdService":               getBase64EncodedGzippedCustomScript(etcdSystemdService),
+		"etcIssue":                         getBase64EncodedGzippedCustomScript(etcIssue),
+		"etcIssueNet":                      getBase64EncodedGzippedCustomScript(etcIssueNet),
+		"cisNetEnforcement":                getBase64EncodedGzippedCustomScript(cisNetEnforcement),
+		"cisLogEnforcement":                getBase64EncodedGzippedCustomScript(cisLogEnforcement),
+		"modprobeConfCIS":                  getBase64EncodedGzippedCustomScript(modprobeConfCIS),
+		"pwQuality":                        getBase64EncodedGzippedCustomScript(pwQuality),
+		"defaultGrub":                      getBase64EncodedGzippedCustomScript(defaultGrub),
+		"pamDotDSU":                        getBase64EncodedGzippedCustomScript(pamDotDSU),
+	}
+
+	diff = cmp.Diff(varMap, expectedMap)
+
+	if diff != "" {
+		t.Errorf("unexpected diff while expecting equal structs: %s", diff)
+	}
+
+	// Test with ubuntu 18.04 distro
+	cs.Properties.AgentPoolProfiles[0].Distro = api.Ubuntu1804
 	varMap, err = GetKubernetesVariables(cs)
 	if err != nil {
 		t.Fatal(err)
@@ -200,7 +243,6 @@ func TestK8sVars(t *testing.T) {
 		"provisionConfigs":                 getBase64EncodedGzippedCustomScript(kubernetesCSEConfig),
 		"provisionCIS":                     getBase64EncodedGzippedCustomScript(kubernetesCISScript),
 		"sshdConfig":                       getBase64EncodedGzippedCustomScript(sshdConfig),
-		"sshdConfig1604":                   getBase64EncodedGzippedCustomScript(sshdConfig1604),
 		"healthMonitorScript":              getBase64EncodedGzippedCustomScript(kubernetesHealthMonitorScript),
 		"customSearchDomainsScript":        getBase64EncodedGzippedCustomScript(kubernetesCustomSearchDomainsScript),
 		"generateProxyCertsScript":         getBase64EncodedGzippedCustomScript(kubernetesMasterGenerateProxyCertsScript),

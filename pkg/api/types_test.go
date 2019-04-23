@@ -1439,6 +1439,318 @@ func TestHasUbuntuDistroNodes(t *testing.T) {
 	}
 }
 
+func TestHasUbuntu1604DistroNodes(t *testing.T) {
+	cases := []struct {
+		p        Properties
+		expected bool
+	}{
+		{
+			p: Properties{
+				MasterProfile: &MasterProfile{
+					Count:  1,
+					Distro: Ubuntu,
+				},
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						Count:  1,
+						Distro: Ubuntu,
+					},
+					{
+						Count:  1,
+						Distro: AKS,
+					},
+				},
+			},
+			expected: true,
+		},
+		{
+			p: Properties{
+				MasterProfile: &MasterProfile{
+					Count:  1,
+					Distro: Ubuntu,
+				},
+			},
+			expected: true,
+		},
+		{
+			p: Properties{
+				MasterProfile: &MasterProfile{
+					Count:  1,
+					Distro: Ubuntu1804,
+				},
+			},
+			expected: false,
+		},
+		{
+			p: Properties{
+				MasterProfile: &MasterProfile{
+					Count:  1,
+					Distro: Ubuntu,
+				},
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						Count:  1,
+						Distro: Ubuntu,
+					},
+					{
+						Count:  1,
+						Distro: Ubuntu,
+					},
+				},
+			},
+			expected: true,
+		},
+		{
+			p: Properties{
+				MasterProfile: &MasterProfile{
+					Count:  1,
+					Distro: Ubuntu1804,
+				},
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						Count:  1,
+						Distro: Ubuntu,
+					},
+					{
+						Count:  1,
+						Distro: Ubuntu1804,
+					},
+				},
+			},
+			expected: true,
+		},
+		{
+			p: Properties{
+				MasterProfile: &MasterProfile{
+					Count:  1,
+					Distro: AKS,
+				},
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						Count:  1,
+						Distro: AKS,
+					},
+				},
+			},
+			expected: false,
+		},
+		{
+			p: Properties{
+				MasterProfile: &MasterProfile{
+					Count:  1,
+					Distro: Ubuntu,
+				},
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						Count:  1,
+						OSType: Windows,
+					},
+				},
+			},
+			expected: true,
+		},
+		{
+			p: Properties{
+				MasterProfile: &MasterProfile{
+					Count:  1,
+					Distro: Ubuntu1804,
+				},
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						Count:  1,
+						OSType: Windows,
+					},
+				},
+			},
+			expected: false,
+		},
+		{
+			p: Properties{
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						Count:  1,
+						Distro: Ubuntu,
+					},
+				},
+			},
+			expected: true,
+		},
+		{
+			p: Properties{
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						Count:  1,
+						OSType: Windows,
+					},
+				},
+			},
+			expected: false,
+		},
+	}
+
+	for _, c := range cases {
+		if c.p.HasUbuntu1604DistroNodes() != c.expected {
+			t.Fatalf("expected HasUbuntu1604DistroNodes() to return %t but instead returned %t", c.expected, c.p.HasUbuntu1604DistroNodes())
+		}
+	}
+}
+
+func TestHasUbuntu1804DistroNodes(t *testing.T) {
+	cases := []struct {
+		p        Properties
+		expected bool
+	}{
+		{
+			p: Properties{
+				MasterProfile: &MasterProfile{
+					Count:  1,
+					Distro: Ubuntu,
+				},
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						Count:  1,
+						Distro: Ubuntu,
+					},
+					{
+						Count:  1,
+						Distro: AKS,
+					},
+				},
+			},
+			expected: false,
+		},
+		{
+			p: Properties{
+				MasterProfile: &MasterProfile{
+					Count:  1,
+					Distro: Ubuntu,
+				},
+			},
+			expected: false,
+		},
+		{
+			p: Properties{
+				MasterProfile: &MasterProfile{
+					Count:  1,
+					Distro: Ubuntu1804,
+				},
+			},
+			expected: true,
+		},
+		{
+			p: Properties{
+				MasterProfile: &MasterProfile{
+					Count:  1,
+					Distro: Ubuntu,
+				},
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						Count:  1,
+						Distro: Ubuntu,
+					},
+					{
+						Count:  1,
+						Distro: Ubuntu,
+					},
+				},
+			},
+			expected: false,
+		},
+		{
+			p: Properties{
+				MasterProfile: &MasterProfile{
+					Count:  1,
+					Distro: Ubuntu1804,
+				},
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						Count:  1,
+						Distro: Ubuntu,
+					},
+					{
+						Count:  1,
+						Distro: Ubuntu1804,
+					},
+				},
+			},
+			expected: true,
+		},
+		{
+			p: Properties{
+				MasterProfile: &MasterProfile{
+					Count:  1,
+					Distro: AKS,
+				},
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						Count:  1,
+						Distro: AKS,
+					},
+				},
+			},
+			expected: false,
+		},
+		{
+			p: Properties{
+				MasterProfile: &MasterProfile{
+					Count:  1,
+					Distro: Ubuntu,
+				},
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						Count:  1,
+						OSType: Windows,
+					},
+				},
+			},
+			expected: false,
+		},
+		{
+			p: Properties{
+				MasterProfile: &MasterProfile{
+					Count:  1,
+					Distro: Ubuntu1804,
+				},
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						Count:  1,
+						OSType: Windows,
+					},
+				},
+			},
+			expected: true,
+		},
+		{
+			p: Properties{
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						Count:  1,
+						Distro: Ubuntu,
+					},
+				},
+			},
+			expected: false,
+		},
+		{
+			p: Properties{
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						Count:  1,
+						OSType: Windows,
+					},
+				},
+			},
+			expected: false,
+		},
+	}
+
+	for _, c := range cases {
+		if c.p.HasUbuntu1804DistroNodes() != c.expected {
+			t.Fatalf("expected HasUbuntu1804DistroNodes() to return %t but instead returned %t", c.expected, c.p.HasUbuntu1804DistroNodes())
+		}
+	}
+}
+
 func TestUbuntuVersion(t *testing.T) {
 	cases := []struct {
 		p                  Properties
