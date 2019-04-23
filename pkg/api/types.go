@@ -1045,7 +1045,10 @@ func (p *Properties) IsUbuntuDistroForAllNodes() bool {
 			}
 		}
 	}
-	return p.MasterProfile.Distro == Ubuntu || p.MasterProfile.Distro == Ubuntu1804
+	if p.MasterProfile != nil {
+		return p.MasterProfile.Distro == Ubuntu || p.MasterProfile.Distro == Ubuntu1804
+	}
+	return true
 }
 
 // HasAvailabilityZones returns true if the cluster contains a profile with zones
