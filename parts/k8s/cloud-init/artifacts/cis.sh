@@ -17,6 +17,9 @@ copyPackerFiles() {
   PWQUALITY_CONF_DEST=/etc/security/pwquality.conf
   DEFAULT_GRUB_SRC=/home/packer/default-grub
   DEFAULT_GRUB_DEST=/etc/default/grub
+  if [[ ${UBUNTU_RELEASE} == "16.04" ]]; then
+    SSHD_CONFIG_SRC=/home/packer/sshd_config_1604
+  fi
   DIR=$(dirname "$SYSCTL_CONFIG_DEST") && mkdir -p ${DIR} && cp $SYSCTL_CONFIG_SRC $SYSCTL_CONFIG_DEST || exit $ERR_CIS_COPY_FILE
   DIR=$(dirname "$RSYSLOG_CONFIG_DEST") && mkdir -p ${DIR} && cp $RSYSLOG_CONFIG_SRC $RSYSLOG_CONFIG_DEST || exit $ERR_CIS_COPY_FILE
   DIR=$(dirname "$ETC_ISSUE_CONFIG_DEST") && mkdir -p ${DIR} && cp $ETC_ISSUE_CONFIG_SRC $ETC_ISSUE_CONFIG_DEST || exit $ERR_CIS_COPY_FILE

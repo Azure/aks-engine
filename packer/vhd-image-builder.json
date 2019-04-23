@@ -81,6 +81,11 @@
         },
         {
             "type": "file",
+            "source": "parts/k8s/cloud-init/artifacts/sshd_config_1604",
+            "destination": "/home/packer/sshd_config_1604"
+        },
+        {
+            "type": "file",
             "source": "parts/k8s/cloud-init/artifacts/rsyslog-d-60-CIS.conf",
             "destination": "/home/packer/rsyslog-d-60-CIS.conf"
         },
