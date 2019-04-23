@@ -289,35 +289,12 @@ func (uc *UpgradeCluster) getClusterNodeStatus(kubeClient armhelpers.KubernetesC
 		}
 	}
 
-	if err := uc.setFaultDomainCount(ctx, resourceGroup, availabilitySetIDs); err != nil {
+	// set the VMAS platformFaultDomainCount to match the existing value
+	fdCount, err := uc.Client.GetAvailabilitySetFaultDomainCount(ctx, resourceGroup, availabilitySetIDs)
+	if err != nil {
 		return err
 	}
-
-	return nil
-}
-
-// setFaultDomainCount finds the platformFaultDomainCount for existing VM availability sets in
-// the cluster and updates corresponding fields in the the internal api model.
-func (uc *UpgradeCluster) setFaultDomainCount(ctx context.Context, resourceGroup string, vmasIds []string) error {
-	var count int
-
-	for _, id := range vmasIds {
-		// extract the last element of the id for VMAS name
-		ss := strings.Split(id, "/")
-		name := ss[len(ss)-1]
-		vmas, err := uc.Client.GetAvailabilitySet(ctx, resourceGroup, name)
-		if err != nil {
-			return err
-		}
-
-		// Assume that all VMASes in the cluster share a value for platformFaultDomainCount
-		count = int(*vmas.AvailabilitySetProperties.PlatformFaultDomainCount)
-		uc.DataModel.Properties.MasterProfile.PlatformFaultDomainCount = &count
-		for _, pool := range uc.DataModel.Properties.AgentPoolProfiles {
-			pool.PlatformFaultDomainCount = &count
-		}
-		break
-	}
+	uc.DataModel.SetPlatformFaultDomainCount(fdCount)
 
 	return nil
 }

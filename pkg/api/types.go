@@ -1844,6 +1844,15 @@ func (cs *ContainerService) GetAzureProdFQDN() string {
 	return FormatProdFQDNByLocation(cs.Properties.MasterProfile.DNSPrefix, cs.Location, cs.Properties.GetCustomCloudName())
 }
 
+// SetPlatformFaultDomainCount sets the fault domain count value for all VMASes in a cluster.
+func (cs *ContainerService) SetPlatformFaultDomainCount(count int) {
+	// Assume that all VMASes in the cluster share a value for platformFaultDomainCount
+	cs.Properties.MasterProfile.PlatformFaultDomainCount = &count
+	for _, pool := range cs.Properties.AgentPoolProfiles {
+		pool.PlatformFaultDomainCount = &count
+	}
+}
+
 // FormatAzureProdFQDNByLocation constructs an Azure prod fqdn
 func FormatAzureProdFQDNByLocation(fqdnPrefix string, location string) string {
 	targetEnv := helpers.GetCloudTargetEnv(location)

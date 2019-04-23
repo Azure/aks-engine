@@ -788,6 +788,11 @@ func (mc *MockAKSEngineClient) GetAvailabilitySet(ctx context.Context, resourceG
 	return compute.AvailabilitySet{}, errors.New("not implemented")
 }
 
+// GetAvailabilitySetFaultDomainCount mock
+func (mc *MockAKSEngineClient) GetAvailabilitySetFaultDomainCount(ctx context.Context, resourceGroup string, vmasIDs []string) (int, error) {
+	return 0, errors.New("not implemented")
+}
+
 //GetStorageClient mock
 func (mc *MockAKSEngineClient) GetStorageClient(ctx context.Context, resourceGroup, accountName string) (AKSStorageClient, error) {
 	if mc.FailGetStorageClient {
