@@ -184,6 +184,20 @@ write_files:
   content: !!binary |
     {{CloudInitData "pamDotDSU"}}
 
+- path: /etc/pam.d/common-auth
+  permissions: "0644"
+  encoding: gzip
+  owner: root
+  content: !!binary |
+    {{CloudInitData "pamDotDCommonAuth"}}
+	
+- path: /etc/pam.d/common-password
+  permissions: "0644"
+  encoding: gzip
+  owner: root
+  content: !!binary |
+    {{CloudInitData "pamDotDCommonPassword"}}
+
 - path: /etc/profile.d/CIS.sh
   permissions: "0755"
   encoding: gzip

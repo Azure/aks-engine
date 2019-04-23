@@ -121,6 +121,16 @@
         },
         {
             "type": "file",
+            "source": "parts/k8s/cloud-init/artifacts/pam-d-common-auth",
+            "destination": "/home/packer/pam-d-common-auth"
+        },
+        {
+            "type": "file",
+            "source": "parts/k8s/cloud-init/artifacts/pam-d-common-password",
+            "destination": "/home/packer/pam-d-common-password"
+        },
+        {
+            "type": "file",
             "source": "parts/k8s/cloud-init/artifacts/profile-d-cis.sh",
             "destination": "/home/packer/profile-d-cis.sh"
         },
