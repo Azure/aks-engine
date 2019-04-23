@@ -9,11 +9,11 @@
 				 "description": "Artifacts Location - URL"
 			 }
 		 },
-		 "apiVersionCompute": {
+		 "apiVersionStorage": {
 			 "type": "string",
 			 "minLength": 1,
 			 "metadata": {
-				 "description": "Compute API Version"
+				 "description": "Storage API Version"
 			 }
 		 },
 		 "targetVMName":{
@@ -47,7 +47,7 @@
 	"variables": {  },
 	"resources": [
 	 {
-	   "apiVersion": "[parameters('apiVersionCompute')]",
+	   "apiVersion": "[parameters('apiVersionStorage')]",
 	   "dependsOn": [],
 	   "location": "[resourceGroup().location]",
 	   "type": "Microsoft.Compute/virtualMachines/extensions",
