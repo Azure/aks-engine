@@ -190,7 +190,7 @@ write_files:
   owner: root
   content: !!binary |
     {{CloudInitData "pamDotDCommonAuth"}}
-	
+
 - path: /etc/pam.d/common-password
   permissions: "0644"
   encoding: gzip
