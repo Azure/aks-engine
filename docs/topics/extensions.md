@@ -136,11 +136,11 @@ The following is an example of the template.json file.
    "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
    "contentVersion": "1.0.0.0",
    "parameters": {
-        "apiVersionStorage": {
+        "apiVersionDeployments": {
             "type": "string",
             "minLength": 1,
             "metadata": {
-                "description": "Storage API Version"
+                "description": "Deployments API Version"
             }
         },
         "apiVersionCompute": {
@@ -179,7 +179,7 @@ The following is an example of the template.json file.
    },
    "resources": [
     {
-      "apiVersion": "[parameters('apiVersionStorage')]",
+      "apiVersion": "[parameters('apiVersionDeployments')]",
       "dependsOn": [],
       "location": "[resourceGroup().location]",
       "name": "[variables('sampleStorageAccountName')]",
