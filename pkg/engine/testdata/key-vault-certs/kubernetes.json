@@ -286,7 +286,7 @@
           "--non-masquerade-cidr": "0.0.0.0/0",
           "--pod-infra-container-image": "k8s.gcr.io/pause-amd64:3.1",
           "--pod-manifest-path": "/etc/kubernetes/manifests",
-          "--pod-max-pids": "100"
+          "--pod-max-pids": "-1"
         },
         "controllerManagerConfig": {
           "--allocate-node-cidrs": "false",
@@ -425,7 +425,7 @@
           "--non-masquerade-cidr": "0.0.0.0/0",
           "--pod-infra-container-image": "k8s.gcr.io/pause-amd64:3.1",
           "--pod-manifest-path": "/etc/kubernetes/manifests",
-          "--pod-max-pids": "100"
+          "--pod-max-pids": "-1"
         }
       },
       "availabilityProfile": "AvailabilitySet",
@@ -469,7 +469,7 @@
             "--non-masquerade-cidr": "0.0.0.0/0",
             "--pod-infra-container-image": "k8s.gcr.io/pause-amd64:3.1",
             "--pod-manifest-path": "/etc/kubernetes/manifests",
-            "--pod-max-pids": "100"
+            "--pod-max-pids": "-1"
           }
         },
         "acceleratedNetworkingEnabled": true,
