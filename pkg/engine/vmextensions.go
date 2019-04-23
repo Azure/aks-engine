@@ -4,8 +4,10 @@
 package engine
 
 import (
+	"encoding/json"
 	"fmt"
 	"strconv"
+	"strings"
 
 	"github.com/Azure/aks-engine/pkg/api"
 	"github.com/Azure/aks-engine/pkg/api/common"
@@ -207,20 +209,13 @@ func CreateAgentVMASAKSBillingExtension(cs *api.ContainerService, profile *api.A
 	}
 }
 
-func CreateCustomExtensions(cs *api.ContainerService) []VirtualMachineExtensionARM {
-	var result []VirtualMachineExtensionARM
-	for _, extensionProfile := range cs.Properties.ExtensionProfiles {
-		masterOptedForExtension, singleOrAll := validateProfileOptedForExtension(extensionProfile.Name, cs.Properties.MasterProfile.Extensions)
-		if masterOptedForExtension {
-			// TODO
-			result = append(result, ext)
-		}
-
-		for _, agentPoolProfile := range properties.AgentPoolProfiles {
-			poolOptedForExtension, singleOrAll := validateProfileOptedForExtension(extensionProfile.Name, agentPoolProfile.Extensions)
-			// TODO
-			result = append(result, ext)
-		}
+func CreateCustomExtensions(properties *api.Properties) interface{} {
+	var extensionsARM interface{}
+	data := getLinkedTemplatesForExtensions(properties)
+	data = strings.TrimPrefix(data, ",")
+	if err := json.Unmarshal([]byte(data), &extensionsARM); err != nil {
+		fmt.Println(err.Error())
+		return nil
 	}
-	return result
+	return extensionsARM
 }
