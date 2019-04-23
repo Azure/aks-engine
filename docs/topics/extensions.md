@@ -227,7 +227,7 @@ Replace "**EXTENSION-NAME**" with the name of the extension.
 {
     "name": "EXTENSION-NAME",
     "type": "Microsoft.Resources/deployments",
-    "apiVersion": "[variables('apiVersionCompute')]",
+    "apiVersion": "[variables('apiVersionDeployments')]",
     "dependsOn": [
         "vmLoopNode"
     ],
@@ -238,8 +238,8 @@ Replace "**EXTENSION-NAME**" with the name of the extension.
             "contentVersion": "1.0.0.0"
         },
         "parameters": {
-            "apiVersionCompute": {
-                "value": "[variables('apiVersionCompute')]"
+            "apiVersionDeployments": {
+                "value": "[variables('apiVersionDeployments')]"
             },
             "username": {
                 "value": "[parameters('linuxAdminUsername')]"
