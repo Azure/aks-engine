@@ -20,7 +20,7 @@ copyPackerFiles() {
   PAM_D_SU_SRC=/home/packer/pam-d-su
   PAM_D_SU_DEST=/etc/pam.d/su
   PROFILE_D_CIS_SH_SRC=/home/packer/profile-d-cis.sh
-	PROFILE_D_CIS_SH_DEST=/etc/profile.d/CIS.sh
+  PROFILE_D_CIS_SH_DEST=/etc/profile.d/CIS.sh
   if [[ ${UBUNTU_RELEASE} == "16.04" ]]; then
     SSHD_CONFIG_SRC=/home/packer/sshd_config_1604
   fi
