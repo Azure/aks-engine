@@ -622,7 +622,7 @@ func (t *TemplateGenerator) getTemplateFuncMap(cs *api.ContainerService) templat
 		"GetDefaultInternalLbStaticIPOffset": func() int {
 			return DefaultInternalLbStaticIPOffset
 		},
-		"WriteLinkedTemplatesForExtensions": func() string {
+		"getLinkedTemplatesForExtensions": func() string {
 			extensions := CreateLinkedTemplatesForExtensions(cs.Properties)
 			return extensions
 		},
