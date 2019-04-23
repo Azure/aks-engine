@@ -27,7 +27,7 @@ copyPackerFiles() {
   DIR=$(dirname "$SSHD_CONFIG_DEST") && mkdir -p ${DIR} && cp $SSHD_CONFIG_SRC $SSHD_CONFIG_DEST || exit $ERR_CIS_COPY_FILE
   DIR=$(dirname "$MODPROBE_CIS_DEST") && mkdir -p ${DIR} && cp $MODPROBE_CIS_SRC $MODPROBE_CIS_DEST || exit $ERR_CIS_COPY_FILE
   DIR=$(dirname "$PWQUALITY_CONF_DEST") && mkdir -p ${DIR} && cp $PWQUALITY_CONF_SRC $PWQUALITY_CONF_DEST || exit $ERR_CIS_COPY_FILE
-  DIR=$(dirname "$PWQUALITY_CONF_DEST") && mkdir -p ${DIR} && cp $DEFAULT_GRUB_SRC $DEFAULT_GRUB_DEST || exit $ERR_CIS_COPY_FILE
+  DIR=$(dirname "$DEFAULT_GRUB_DEST") && mkdir -p ${DIR} && cp $DEFAULT_GRUB_SRC $DEFAULT_GRUB_DEST || exit $ERR_CIS_COPY_FILE
 }
 
 assignRootPW() {
