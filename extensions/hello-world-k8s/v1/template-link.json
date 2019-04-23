@@ -1,7 +1,7 @@
 {
     "name": "[concat(EXTENSION_TARGET_VM_NAME_PREFIX, copyIndex(EXTENSION_LOOP_OFFSET), 'HelloWorldK8s')]",
     "type": "Microsoft.Resources/deployments",
-    "apiVersion": "[variables('apiVersionCompute')]",
+    "apiVersion": "[variables('apiVersionDeployments')]",
     "dependsOn": [
         "[concat('Microsoft.Compute/virtualMachines/', EXTENSION_TARGET_VM_NAME_PREFIX, copyIndex(EXTENSION_LOOP_OFFSET), '/extensions/cse', '-EXTENSION_TARGET_VM_TYPE-', copyIndex(EXTENSION_LOOP_OFFSET))]"
     ],
@@ -19,8 +19,8 @@
             "artifactsLocation": {
                 "value": "EXTENSION_URL_REPLACE"
             },
-            "apiVersionCompute": {
-                "value": "[variables('apiVersionCompute')]"
+            "apiVersionDeployments": {
+                "value": "[variables('apiVersionDeployments')]"
             },
             "targetVMName": {
                 "value": "[concat(EXTENSION_TARGET_VM_NAME_PREFIX, copyIndex(EXTENSION_LOOP_OFFSET))]"
