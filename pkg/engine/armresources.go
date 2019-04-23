@@ -22,9 +22,15 @@ func GenerateARMResources(cs *api.ContainerService) []interface{} {
 		userAssignedIDEnabled = useManagedIdentity && kubernetesConfig.UserAssignedID != ""
 	}
 
+	isHostedMaster := cs.Properties.IsHostedMasterProfile()
 	if userAssignedIDEnabled {
 		userAssignedID := createUserAssignedIdentities()
-		msiRoleAssignment := createMSIRoleAssignment()
+		var msiRoleAssignment RoleAssignmentARM
+		if isHostedMaster {
+			msiRoleAssignment = createMSIRoleAssignment(IdentityReaderRole)
+		} else {
+			msiRoleAssignment = createMSIRoleAssignment(IdentityContributorRole)
+		}
 		armResources = append(armResources, userAssignedID, msiRoleAssignment)
 	}
 
@@ -42,7 +48,6 @@ func GenerateARMResources(cs *api.ContainerService) []interface{} {
 		}
 	}
 
-	isHostedMaster := cs.Properties.IsHostedMasterProfile()
 	isCustomVnet := cs.Properties.AreAgentProfilesCustomVNET()
 	isAzureCNI := cs.Properties.OrchestratorProfile.IsAzureCNI()
 
