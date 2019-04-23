@@ -33,6 +33,12 @@ The easiest way to start hacking on AKS Engine is to use a Docker-based environm
 $ make dev
 ```
 
+Or on Windows:
+
+```console
+powershell ./makedev.ps1
+```
+
 This make target mounts the `aks-engine` source directory as a volume into the Docker container, which means you can edit your source code in your favorite editor on your machine, while still being able to compile and test inside of the Docker container. This environment mirrors the environment used in the AKS Engine continuous integration (CI) system.
 
 When `make dev` completes, you will be left at a command prompt inside a Docker container.
