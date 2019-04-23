@@ -120,6 +120,11 @@
             "destination": "/home/packer/pam-d-su"
         },
         {
+            "type": "file",
+            "source": "parts/k8s/cloud-init/artifacts/profile-d-cis.sh",
+            "destination": "/home/packer/profile-d-cis.sh"
+        },
+        {
             "type": "shell",
             "inline": [
                 "sudo FEATURE_FLAGS={{user `feature_flags`}} BUILD_NUMBER={{user `build_number`}} BUILD_ID={{user `build_id`}} COMMIT={{user `commit`}} /bin/bash -ux /home/packer/install-dependencies.sh",

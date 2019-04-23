@@ -221,6 +221,7 @@ func TestK8sVars(t *testing.T) {
 		"pwQuality":                        getBase64EncodedGzippedCustomScript(pwQuality),
 		"defaultGrub":                      getBase64EncodedGzippedCustomScript(defaultGrub),
 		"pamDotDSU":                        getBase64EncodedGzippedCustomScript(pamDotDSU),
+		"profileDCISSh":                    getBase64EncodedGzippedCustomScript(profileDCISSh),
 	}
 
 	diff = cmp.Diff(varMap, expectedMap)
@@ -264,6 +265,7 @@ func TestK8sVars(t *testing.T) {
 		"pwQuality":                        getBase64EncodedGzippedCustomScript(pwQuality),
 		"defaultGrub":                      getBase64EncodedGzippedCustomScript(defaultGrub),
 		"pamDotDSU":                        getBase64EncodedGzippedCustomScript(pamDotDSU),
+		"profileDCISSh":                    getBase64EncodedGzippedCustomScript(profileDCISSh),
 	}
 
 	diff = cmp.Diff(varMap, expectedMap)

@@ -175,6 +175,7 @@ const (
 	pwQuality                                = "k8s/cloud-init/artifacts/pwquality-CIS.conf"
 	defaultGrub                              = "k8s/cloud-init/artifacts/default-grub"
 	pamDotDSU                                = "k8s/cloud-init/artifacts/pam-d-su"
+	profileDCISSh                            = "k8s/cloud-init/artifacts/profile-d-cis.sh"
 )
 
 const (
