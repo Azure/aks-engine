@@ -17,7 +17,7 @@ removeEtcd() {
 }
 
 removeMoby() {
-    sudo apt-get purge -y moby-engine moby-cli
+    apt-get purge -y moby-engine moby-cli
 }
 
 installEtcd() {
@@ -102,11 +102,14 @@ installContainerRuntime() {
         else
             installMoby
         fi
-    elif [[ "$CONTAINER_RUNTIME" == "clear-containers" ]]; then
+    fi
+    if [[ "$CONTAINER_RUNTIME" == "clear-containers" ]]; then
 	    # Ensure we can nest virtualization
         if grep -q vmx /proc/cpuinfo; then
             installClearContainersRuntime
         fi
+    else
+        cleanUpClearContainers
     fi
 }
 
@@ -310,6 +313,14 @@ cleanUpContainerImages() {
 
 cleanUpGPUDrivers() {
     rm -Rf $GPU_DEST
+}
+
+cleanUpContainerd() {
+    rm -Rf $CONTAINERD_DOWNLOADS_DIR
+}
+
+cleanUpClearContainers() {
+    apt-get purge -y cc-runtime
 }
 
 overrideNetworkConfig() {
