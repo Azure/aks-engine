@@ -623,7 +623,7 @@ func (t *TemplateGenerator) getTemplateFuncMap(cs *api.ContainerService) templat
 			return DefaultInternalLbStaticIPOffset
 		},
 		"WriteLinkedTemplatesForExtensions": func() string {
-			extensions := getLinkedTemplatesForExtensions(cs.Properties)
+			extensions := CreateLinkedTemplatesForExtensions(cs.Properties)
 			return extensions
 		},
 		"HasMultipleSshKeys": func() bool {

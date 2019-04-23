@@ -115,7 +115,8 @@ func createKubernetesMasterResourcesVMAS(cs *api.ContainerService) []interface{}
 		masterResources = append(masterResources, aksBillingExtension)
 	}
 
-	//TODO: Implement Extensions
+	customExtensions := CreateLinkedTemplatesForExtensions(cs.Properties)
+	masterResources = append(masterResources, customExtensions)
 
 	return masterResources
 }
