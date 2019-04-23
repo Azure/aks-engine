@@ -282,7 +282,7 @@ write_files:
         certificate-authority: /etc/kubernetes/certs/ca.crt
         {{if IsAzureStackCloud}}
         {{if IsMultipleMasters}}
-        server: https://<kubernetesAPIServerIP>:443
+        server: https://{{WrapAsVariable "masterPublicLbFQDN"}}:443
         {{else}}
         server: https://{{WrapAsVariable "kubernetesAPIServerIP"}}:443
         {{end}}
