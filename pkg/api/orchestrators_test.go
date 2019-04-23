@@ -97,6 +97,17 @@ func TestGetOrchestratorVersionProfileListV20170930(t *testing.T) {
 	Expect(len(list.Properties.Orchestrators)).To(Equal(len(common.GetAllSupportedKubernetesVersions(false, false))))
 }
 
+func TestGetOrchestratorVersionProfileList(t *testing.T) {
+	RegisterTestingT(t)
+	// kubernetes only
+	list, e := GetOrchestratorVersionProfileList(common.Kubernetes, "", false)
+	Expect(e).To(BeNil())
+	Expect(len(list)).To(Equal(len(common.GetAllSupportedKubernetesVersions(false, false))))
+	for _, v := range list {
+		Expect(common.GetAllSupportedKubernetesVersions(false, false)).Should(ContainElement(v.OrchestratorProfile.OrchestratorVersion))
+	}
+}
+
 func TestKubernetesInfo(t *testing.T) {
 	RegisterTestingT(t)
 
