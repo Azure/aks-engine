@@ -23,6 +23,6 @@ sudo grep "^\s*linux" /boot/grub/grub.cfg | grep 'audit=1' || exit 1
 # validate su configuration
 sudo grep "auth required pam_wheel.so use_uid" /etc/pam.d/su
 # validate umask configuration
-touch test-umask
+sh -c "touch test-umask"
 stat test-umask | grep 'Access: (0640' || exit 1
 rm -f test-umask
