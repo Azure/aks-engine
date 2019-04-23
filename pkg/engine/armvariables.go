@@ -147,7 +147,7 @@ func getK8sMasterVars(cs *api.ContainerService) (map[string]interface{}, error) 
 		"vnetResourceGroupNameResourceSegmentIndex": 4,
 	}
 
-	if cs.Properties.IsUbuntuDistroForAllNodes() {
+	if cs.Properties.HasUbuntuDistroNodes() {
 		masterVars["cloudInitFiles"] = map[string]interface{}{
 			"provisionScript":                  getBase64EncodedGzippedCustomScript(kubernetesCSEMainScript),
 			"provisionSource":                  getBase64EncodedGzippedCustomScript(kubernetesCSEHelpersScript),

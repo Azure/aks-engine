@@ -187,7 +187,6 @@ func TestK8sVars(t *testing.T) {
 	}
 
 	// Test with ubuntu distro
-	cs.Properties.MasterProfile.Distro = "ubuntu"
 	cs.Properties.AgentPoolProfiles[0].Distro = "ubuntu"
 	varMap, err = GetKubernetesVariables(cs)
 	if err != nil {
