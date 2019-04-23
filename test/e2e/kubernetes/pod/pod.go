@@ -606,7 +606,7 @@ func (l *List) CheckOutboundConnection(sleep, duration time.Duration, osType api
 			case api.Linux:
 				ready, err = localPod.CheckLinuxOutboundConnection(sleep, duration)
 			case api.Windows:
-				ready, err = localPod.CheckWindowsOutboundConnection("www.bing.com", sleep, duration)
+				ready, err = localPod.CheckWindowsOutboundConnection(sleep, duration)
 			default:
 				ready, err = false, errors.Errorf("Invalid osType for Pod (%s)", localPod.Metadata.Name)
 			}
@@ -691,19 +691,18 @@ func (p *Pod) CheckLinuxOutboundConnection(sleep, duration time.Duration) (bool,
 					}
 					installedCurl = true
 				}
-				// if we can curl bing.com we have outbound internet access
-				out, err := p.Exec("--", "curl", "bing.com")
-				if err == nil {
-					readyCh <- true
-				} else {
-					// in case bing.com is down let's hope google.com is also not down
-					_, err := p.Exec("--", "curl", "google.com")
+				// if we can curl an external URL we have outbound internet access
+				urls := getExternalURLs()
+				for i, url := range urls {
+					out, err := p.Exec("--", "curl", url)
 					if err == nil {
 						readyCh <- true
 					} else {
-						// if both bing.com and google.com are down let's say we don't have outbound internet access
-						log.Printf("Error:%s\n", err)
-						log.Printf("Out:%s\n", out)
+						if i == (len(urls) - 1) {
+							// if all are down let's say we don't have outbound internet access
+							log.Printf("Error:%s\n", err)
+							log.Printf("Out:%s\n", out)
+						}
 					}
 				}
 				time.Sleep(sleep)
@@ -793,7 +792,7 @@ func (p *Pod) ValidateOmsAgentLogs(execCmdString string, sleep, duration time.Du
 }
 
 // CheckWindowsOutboundConnection will keep retrying the check if an error is received until the timeout occurs or it passes. This helps us when DNS may not be available for some time after a pod starts.
-func (p *Pod) CheckWindowsOutboundConnection(url string, sleep, duration time.Duration) (bool, error) {
+func (p *Pod) CheckWindowsOutboundConnection(sleep, duration time.Duration) (bool, error) {
 	exp, err := regexp.Compile(`(StatusCode\s*:\s*200)`)
 	if err != nil {
 		log.Printf("Error while trying to create regex for windows outbound check:%s\n", err)
@@ -809,17 +808,20 @@ func (p *Pod) CheckWindowsOutboundConnection(url string, sleep, duration time.Du
 			case <-ctx.Done():
 				errCh <- errors.Errorf("Timeout exceeded (%s) while waiting for Pod (%s) to check outbound internet connection", duration.String(), p.Metadata.Name)
 			default:
-				out, err := p.Exec("--", "powershell", "iwr", "-UseBasicParsing", "-TimeoutSec", "60", url)
-				if err == nil {
+				// if we can curl an external URL we have outbound internet access
+				urls := getExternalURLs()
+				for i, url := range urls {
+					out, err := p.Exec("--", "powershell", "iwr", "-UseBasicParsing", "-TimeoutSec", "60", url)
 					matched := exp.MatchString(string(out))
-					if matched {
+					if err == nil && matched {
 						readyCh <- true
 					} else {
-						readyCh <- false
+						if i == (len(urls) - 1) {
+							// if all are down let's say we don't have outbound internet access
+							log.Printf("Error:%s\n", err)
+							log.Printf("Out:%s\n", out)
+						}
 					}
-				} else {
-					log.Printf("Error:%s\n", err)
-					log.Printf("Out:%s\n", out)
 				}
 				time.Sleep(sleep)
 			}
@@ -1025,4 +1027,9 @@ func (c *Container) getMemoryRequests() string {
 // getMemoryLimits returns an the CPU Requests value from a container within a pod
 func (c *Container) getMemoryLimits() string {
 	return c.Resources.Limits.Memory
+}
+
+// getExternalURLs returns a list of external URLs
+func getExternalURLs() []string {
+	return []string{"www.bing.com", "google.com"}
 }
