@@ -220,32 +220,6 @@ func CreateCustomExtensions(cs *api.ContainerService) []VirtualMachineExtensionA
 
 			result = append(result, ext)
 		}
-
-		ext := VirtualMachineExtensionARM{
-			ARMResource: ARMResource{
-				APIVersion: "[variables('apiVersionCompute')]",
-				Copy: map[string]string{
-					"count": "[sub(variables('masterCount'), variables('masterOffset'))]",
-					"name":  "vmLoopNode",
-				},
-				DependsOn: []string{
-					dependentVM,
-				},
-			},
-			VirtualMachineExtension: compute.VirtualMachineExtension{
-				Location: to.StringPtr(location),
-				Name:     to.StringPtr(name),
-				VirtualMachineExtensionProperties: &compute.VirtualMachineExtensionProperties{
-					Publisher:               to.StringPtr("Microsoft.AKS"),
-					Type:                    to.StringPtr("Compute.AKS-Engine.Linux.Billing"),
-					TypeHandlerVersion:      to.StringPtr("1.0"),
-					AutoUpgradeMinorVersion: to.BoolPtr(true),
-					Settings:                &map[string]interface{}{},
-				},
-				Type: to.StringPtr("Microsoft.Compute/virtualMachines/extensions"),
-				Tags: map[string]*string{},
-			},
-		}
 	}
 
 	return result
