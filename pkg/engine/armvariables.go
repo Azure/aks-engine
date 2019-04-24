@@ -129,7 +129,6 @@ func getK8sMasterVars(cs *api.ContainerService) (map[string]interface{}, error) 
 		"mountEtcdScript":                  getBase64EncodedGzippedCustomScript(kubernetesMountEtcd),
 		"kubeletSystemdService":            getBase64EncodedGzippedCustomScript(kubeletSystemdService),
 		"kmsSystemdService":                getBase64EncodedGzippedCustomScript(kmsSystemdService),
-		"kubeletMonitorSystemdTimer":       getBase64EncodedGzippedCustomScript(kubernetesKubeletMonitorSystemdTimer),
 		"kubeletMonitorSystemdService":     getBase64EncodedGzippedCustomScript(kubernetesKubeletMonitorSystemdService),
 		"dockerMonitorSystemdTimer":        getBase64EncodedGzippedCustomScript(kubernetesDockerMonitorSystemdTimer),
 		"dockerMonitorSystemdService":      getBase64EncodedGzippedCustomScript(kubernetesDockerMonitorSystemdService),

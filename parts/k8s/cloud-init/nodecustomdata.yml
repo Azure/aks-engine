@@ -56,13 +56,6 @@ write_files:
   content: !!binary |
     {{CloudInitData "healthMonitorScript"}}
 
-- path: /etc/systemd/system/kubelet-monitor.timer
-  permissions: "0644"
-  encoding: gzip
-  owner: root
-  content: !!binary |
-    {{CloudInitData "kubeletMonitorSystemdTimer"}}
-
 - path: /etc/systemd/system/kubelet-monitor.service
   permissions: "0644"
   encoding: gzip
