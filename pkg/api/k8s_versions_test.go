@@ -152,6 +152,7 @@ func TestGetK8sVersionComponents(t *testing.T) {
 	}
 	expected = map[string]string{
 		"hyperkube":                        "hyperkube-amd64:v1.11.0-alpha.1",
+		"hyperkube-azs":                    "hyperkube-amd64:v1.11.0-alpha.1-azs",
 		"ccm":                              "cloud-controller-manager-amd64:v1.11.0-alpha.1",
 		"windowszip":                       "v1.11.0-alpha.1-1int.zip",
 		DefaultDashboardAddonName:          k8sComponentVersions["1.11"]["dashboard"],

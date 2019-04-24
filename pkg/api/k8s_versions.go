@@ -468,6 +468,7 @@ func getK8sVersionComponents(version string, overrides map[string]string) map[st
 	case "1.11":
 		ret = map[string]string{
 			"hyperkube":                        "hyperkube-amd64:v" + version,
+			"hyperkube-azs":                    "hyperkube-amd64:v" + version + "-azs",
 			"ccm":                              "cloud-controller-manager-amd64:v" + version,
 			"windowszip":                       "v" + version + "-1int.zip",
 			DefaultDashboardAddonName:          k8sComponentVersions["1.11"]["dashboard"],

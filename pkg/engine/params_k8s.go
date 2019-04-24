@@ -28,10 +28,12 @@ func assignKubernetesParameters(properties *api.Properties, parametersMap params
 		k8sComponents := api.K8sComponentsByVersionMap[k8sVersion]
 		kubernetesConfig := orchestratorProfile.KubernetesConfig
 		kubernetesImageBase := kubernetesConfig.KubernetesImageBase
-		hyperKubeImageBase := kubernetesConfig.KubernetesImageBase
+		hyperkubeImageBase := kubernetesConfig.KubernetesImageBase
+		hyperkubeComponent := k8sComponents["hyperkube"]
 
 		if properties.IsAzureStackCloud() {
 			kubernetesImageBase = cloudSpecConfig.KubernetesSpecConfig.KubernetesImageBase
+			hyperkubeComponent = k8sComponents["hyperkube-azs"]
 		}
 
 		if kubernetesConfig != nil {
@@ -44,7 +46,7 @@ func assignKubernetesParameters(properties *api.Properties, parametersMap params
 				addValue(parametersMap, "kubernetesCcmImageSpec", kubernetesCcmSpec)
 			}
 
-			kubernetesHyperkubeSpec := hyperKubeImageBase + k8sComponents["hyperkube"]
+			kubernetesHyperkubeSpec := hyperkubeImageBase + hyperkubeComponent
 			if kubernetesConfig.CustomHyperkubeImage != "" {
 				kubernetesHyperkubeSpec = kubernetesConfig.CustomHyperkubeImage
 			}
