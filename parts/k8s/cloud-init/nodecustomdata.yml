@@ -192,7 +192,7 @@ write_files:
   content: !!binary |
     {{CloudInitData "profileDCISSh"}}
 
-  {{if .AuditDEnabled}}
+  {{if .IsAuditDEnabled}}
 - path: /etc/audit/auditd.conf
   permissions: "0640"
   encoding: gzip
