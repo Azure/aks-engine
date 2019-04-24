@@ -350,8 +350,8 @@ K8S_VERSIONS="
 1.14.0
 1.13.5
 1.13.4
+1.12.8
 1.12.7
-1.12.6
 1.11.9
 1.11.9-azs
 1.11.8
@@ -394,7 +394,7 @@ cat ${RELEASE_NOTES_FILEPATH}
 echo "END_OF_NOTES"
 set -x
 
-# Move logs from VHD creation out of /var/log 
+# Move logs from VHD creation out of /var/log
 sudo mv /var/log /var/log.vhd
 sudo mkdir /var/log
 
