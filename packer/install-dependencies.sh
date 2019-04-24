@@ -181,6 +181,11 @@ for PAUSE_VERSION in ${PAUSE_VERSIONS}; do
     CONTAINER_IMAGE="k8s.gcr.io/pause-amd64:${PAUSE_VERSION}"
     pullContainerImage "docker" ${CONTAINER_IMAGE}
     echo "  - ${CONTAINER_IMAGE}" >> ${RELEASE_NOTES_FILEPATH}
+    # Image 'msazurestackdocker/pause-amd64' is the same as 'k8s.gcr.io/pause-amd64'
+    # Re-tagging seemed simpler than changing how `defaults-kubelet.go` sets `--pod-infra-container-image`
+    CONTAINER_IMAGE="msazurestackdocker/pause-amd64:${PAUSE_VERSION}"
+    pullContainerImage "docker" ${CONTAINER_IMAGE}
+    echo "  - ${CONTAINER_IMAGE}" >> ${RELEASE_NOTES_FILEPATH}
 done
 
 TILLER_VERSIONS="
