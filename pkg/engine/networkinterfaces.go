@@ -320,6 +320,17 @@ func createAgentVMASNetworkInterface(cs *api.ContainerService, profile *api.Agen
 		}
 		if i == 1 {
 			ipConfig.Primary = to.BoolPtr(true)
+			if profile.LoadBalancerBackendAddressPoolIDs != nil {
+				backendPools := make([]network.BackendAddressPool, 0)
+				for _, lbBackendPoolID := range profile.LoadBalancerBackendAddressPoolIDs {
+					backendPools = append(backendPools,
+						network.BackendAddressPool{
+							ID: to.StringPtr(lbBackendPoolID),
+						},
+					)
+				}
+				ipConfig.LoadBalancerBackendAddressPools = &backendPools
+			}
 		}
 		ipConfig.PrivateIPAllocationMethod = network.Dynamic
 		ipConfig.Subnet = &network.Subnet{
