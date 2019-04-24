@@ -138,7 +138,7 @@ ensureAuditD() {
 	if [[ "${AUDITD_ENABLED}" == true ]]; then
 		systemctlEnableAndStart auditd || exit $ERR_SYSTEMCTL_START_FAIL
 	else
-		systemctlDisableAndStop auditd || exit $ERR_SYSTEMCTL_START_FAIL
+	  apt list --installed | grep 'auditd' && systemctlDisableAndStop auditd || exit $ERR_SYSTEMCTL_START_FAIL
 	fi
 }
 
