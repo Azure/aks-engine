@@ -27,6 +27,10 @@ type ARMResource struct {
 	DependsOn  []string          `json:"dependsOn,omitempty"`
 }
 
+// DeploymentARMResource is an alias for the ARMResource type to avoid MarshalJSON override
+type DeploymentARMResource ARMResource
+
+// MarshalJSON is the custom marshaler for an ARMResource.
 func (arm ARMResource) MarshalJSON() ([]byte, error) {
 	return json.Marshal(arm)
 }
@@ -133,10 +137,8 @@ type ImageARM struct {
 	compute.Image
 }
 
-// DeploymentARM embeds the ARMResource type in resources.Deployment.
+// DeploymentARM embeds the ARMResource type in resources.DeploymentExtended.
 type DeploymentARM struct {
-	APIVersion string            `json:"apiVersion,omitempty"`
-	Copy       map[string]string `json:"copy,omitempty"`
-	DependsOn  []string          `json:"dependsOn,omitempty"`
+	DeploymentARMResource
 	resources.DeploymentExtended
 }
