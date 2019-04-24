@@ -790,7 +790,7 @@ func (mc *MockAKSEngineClient) GetAvailabilitySet(ctx context.Context, resourceG
 
 // GetAvailabilitySetFaultDomainCount mock
 func (mc *MockAKSEngineClient) GetAvailabilitySetFaultDomainCount(ctx context.Context, resourceGroup string, vmasIDs []string) (int, error) {
-	return 0, errors.New("not implemented")
+	return 3, nil // hat tip to Slipknot
 }
 
 //GetStorageClient mock
