@@ -135,6 +135,16 @@
             "destination": "/home/packer/profile-d-cis.sh"
         },
         {
+            "type": "file",
+            "source": "parts/k8s/cloud-init/artifacts/auditd.conf",
+            "destination": "/home/packer/auditd.conf"
+        },
+        {
+            "type": "file",
+            "source": "parts/k8s/cloud-init/artifacts/auditd-rules",
+            "destination": "/home/packer/auditd-rules"
+        },
+        {
             "type": "shell",
             "inline": [
                 "sudo FEATURE_FLAGS={{user `feature_flags`}} BUILD_NUMBER={{user `build_number`}} BUILD_ID={{user `build_id`}} COMMIT={{user `commit`}} /bin/bash -ux /home/packer/install-dependencies.sh",

@@ -197,6 +197,22 @@ write_files:
   owner: root
   content: !!binary |
     {{CloudInitData "profileDCISSh"}}
+
+  {{if .MasterProfile.AuditDEnabled}}
+- path: /etc/audit/auditd.conf
+  permissions: "0640"
+  encoding: gzip
+  owner: root
+  content: !!binary |
+    {{CloudInitData "auditdConf"}}
+
+- path: /etc/audit/rules.d/CIS.rules
+  permissions: "0640"
+  encoding: gzip
+  owner: root
+  content: !!binary |
+    {{CloudInitData "auditdRules"}}
+  {{end}}
 {{end}}
 
 {{if .OrchestratorProfile.KubernetesConfig.RequiresDocker}}

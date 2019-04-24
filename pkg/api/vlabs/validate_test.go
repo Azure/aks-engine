@@ -2605,6 +2605,29 @@ func TestAgentPoolProfile_ValidateVirtualMachineScaleSet(t *testing.T) {
 	})
 }
 
+func TestAgentPoolProfile_ValidateAuditDEnabled(t *testing.T) {
+	t.Run("Should have proper validation for auditd + distro combinations", func(t *testing.T) {
+		t.Parallel()
+		for _, distro := range DistroValues {
+			cs := getK8sDefaultContainerService(false)
+			agentPoolProfiles := cs.Properties.AgentPoolProfiles
+			agentPoolProfiles[0].Distro = distro
+			agentPoolProfiles[0].AuditDEnabled = to.BoolPtr(true)
+			switch distro {
+			case RHEL, CoreOS:
+				expectedMsg := fmt.Sprintf("You have enabled auditd in agent pool %s, but you did not specify an Ubuntu-based distro", agentPoolProfiles[0].Name)
+				if err := cs.Properties.validateAgentPoolProfiles(false); err.Error() != expectedMsg {
+					t.Errorf("expected error with message : %s, but got %s", expectedMsg, err.Error())
+				}
+			case Ubuntu, Ubuntu1804, AKS, AKS1804, ACC1604:
+				if err := cs.Properties.validateAgentPoolProfiles(false); err != nil {
+					t.Errorf("AuditDEnabled should work with distro %s, got error %s", distro, err.Error())
+				}
+			}
+		}
+	})
+}
+
 func TestValidateCustomCloudProfile(t *testing.T) {
 	tests := []struct {
 		name        string
