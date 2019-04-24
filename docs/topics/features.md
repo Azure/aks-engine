@@ -170,6 +170,16 @@ Per default Calico still allows all communication within the cluster. Using Kube
 - [NetworkPolicy Example Walkthrough](https://kubernetes.io/docs/getting-started-guides/network-policy/walkthrough/)
 - [Calico Kubernetes](https://github.com/Azure/aks-engine/blob/master/examples/networkpolicy)
 
+### Calico 3.3 cleanup after upgrading to 3.5
+
+Because Calico 3.3 is using Calico CNI, while Calico 3.5 moves to Azure CNI, if the cluster is upgraded from calico 3.3 to 3.5, then the following command should be run to cleanup the differences:
+
+```sh
+kubectl delete -f https://github.com/Azure/aks-engine/raw/master/docs/topics/calico-3.3.1-cleanup-after-upgrade.yaml
+```
+
+After this, addon-manager would enforce the correct spec for Calico 3.5.
+
 <a name="feat-cilium"></a>
 
 ## Network Policy Enforcement with Cilium
