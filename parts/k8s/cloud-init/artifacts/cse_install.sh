@@ -41,9 +41,6 @@ installDeps() {
     apt_get_update || exit $ERR_APT_UPDATE_TIMEOUT
     apt_get_dist_upgrade || exit $ERR_APT_DIST_UPGRADE_TIMEOUT
     apt_get_install 30 1 600 apt-transport-https blobfuse ca-certificates ceph-common cgroup-lite cifs-utils conntrack cracklib-runtime ebtables ethtool fuse git glusterfs-client init-system-helpers iproute2 ipset iptables jq libpam-pwquality libpwquality-tools mount nfs-common pigz socat util-linux xz-utils zip htop iotop iftop sysstat auditd || exit $ERR_APT_INSTALL_TIMEOUT
-		if [[ "${AUDITD_ENABLED}" != true ]]; then
-		  systemctlDisableAndStop auditd || exit $ERR_SYSTEMCTL_START_FAIL
-		fi
 }
 
 installGPUDrivers() {
