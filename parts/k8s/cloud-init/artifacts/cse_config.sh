@@ -27,6 +27,18 @@ systemctlEnableAndStart() {
         return 1
     fi
 }
+systemctlDisableAndStop() {
+    systemctl_stop 100 5 30 $1
+    if [ $? -ne 0 ]; then
+        echo "$1 could not be stopped"
+        return 1
+    fi
+    retrycmd_if_failure 120 5 25 systemctl disable $1
+    if [ $? -ne 0 ]; then
+        echo "$1 could not be disabled by systemctl"
+        return 1
+    fi
+}
 
 configureEtcdUser(){
     useradd -U "etcd"

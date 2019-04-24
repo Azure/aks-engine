@@ -18,6 +18,7 @@ AUDITD_ENABLED=false
 installDeps
 cat << EOF >> ${RELEASE_NOTES_FILEPATH}
   - apt-transport-https
+  - auditd
   - blobfuse
   - ca-certificates
   - ceph-common

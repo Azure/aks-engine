@@ -192,7 +192,6 @@ write_files:
   content: !!binary |
     {{CloudInitData "profileDCISSh"}}
 
-  {{if .IsAuditDEnabled}}
 - path: /etc/audit/auditd.conf
   permissions: "0640"
   encoding: gzip
@@ -206,7 +205,6 @@ write_files:
   owner: root
   content: !!binary |
     {{CloudInitData "auditdRules"}}
-  {{end}}
 {{end}}
 
 {{if .KubernetesConfig.RequiresDocker}}
