@@ -218,7 +218,7 @@ func CreateCustomExtensions(properties *api.Properties) []DeploymentARM {
 			if e != nil {
 				fmt.Println(e.Error())
 			}
-			ext := DeploymentARM{}
+			var ext DeploymentARM
 			if err := json.Unmarshal([]byte(data), &ext); err != nil {
 				fmt.Println(err.Error())
 			}
@@ -233,7 +233,7 @@ func CreateCustomExtensions(properties *api.Properties) []DeploymentARM {
 				if e != nil {
 					fmt.Println(e.Error())
 				}
-				ext := DeploymentARM{}
+				var ext DeploymentARM
 				if err := json.Unmarshal([]byte(data), &ext); err != nil {
 					fmt.Println(err.Error())
 				}
