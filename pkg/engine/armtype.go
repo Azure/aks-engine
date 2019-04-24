@@ -4,6 +4,8 @@
 package engine
 
 import (
+	"encoding/json"
+
 	"github.com/Azure/azure-sdk-for-go/services/cosmos-db/mgmt/2015-04-08/documentdb"
 	"github.com/Azure/azure-sdk-for-go/services/keyvault/mgmt/2018-02-14/keyvault"
 	sysauth "github.com/Azure/azure-sdk-for-go/services/preview/authorization/mgmt/2018-01-01-preview/authorization"
@@ -23,6 +25,10 @@ type ARMResource struct {
 	APIVersion string            `json:"apiVersion,omitempty"`
 	Copy       map[string]string `json:"copy,omitempty"`
 	DependsOn  []string          `json:"dependsOn,omitempty"`
+}
+
+func (arm ARMResource) MarshalJSON() ([]byte, error) {
+	return json.Marshal(arm)
 }
 
 // VirtualMachineARM embeds the ARMResource type in compute.VirtualMachine.
@@ -129,6 +135,8 @@ type ImageARM struct {
 
 // DeploymentARM embeds the ARMResource type in resources.Deployment.
 type DeploymentARM struct {
-	ARMResource
+	APIVersion string            `json:"apiVersion,omitempty"`
+	Copy       map[string]string `json:"copy,omitempty"`
+	DependsOn  []string          `json:"dependsOn,omitempty"`
 	resources.DeploymentExtended
 }
