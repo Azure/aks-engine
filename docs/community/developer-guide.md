@@ -319,3 +319,18 @@ The following steps constitute the AKS Engine CI pipeline:
 1. The PR is code reviewed by the members of AKS Engine team
 1. Once the PR is approved and the end-to-end job has passed, the PR can now be merged into the master branch
 1. Once merged, another job is triggered to verify integrity of the master branch. This job is similar to the PR job.
+
+## Pull Requests and Generated Code
+
+To make it easier use AKS Engine as a library and to `go get github.com/Azure/aks-engine`, some
+generated Go code is committed to the repository. Your pull request may need to regenerate those
+files before it will pass the required `make ensure-generated` step.
+	
+Always run `make build` before you submit a pull request to validate compilation and
+generated code hygiene. Run `make ensure-generated` yourself to validate that things check out. If there are
+discrepencies, `make ensure-generated` will output a brief error report.
+
+### What is generated?
+
+- Changes under the `parts/` folder require the `pkg/engine/templates_generated.go` file to be updated.
+- Changes under `pkg/i8n/translations` require the `pkg/engine/translations_generated.go` file to be updated.

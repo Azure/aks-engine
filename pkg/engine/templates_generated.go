@@ -66,6 +66,7 @@
 // ../../parts/k8s/cloud-init/artifacts/cse_helpers.sh
 // ../../parts/k8s/cloud-init/artifacts/cse_install.sh
 // ../../parts/k8s/cloud-init/artifacts/cse_main.sh
+// ../../parts/k8s/cloud-init/artifacts/default-grub
 // ../../parts/k8s/cloud-init/artifacts/docker-monitor.service
 // ../../parts/k8s/cloud-init/artifacts/docker-monitor.timer
 // ../../parts/k8s/cloud-init/artifacts/docker_clear_mount_propagation_flags.conf
@@ -80,11 +81,14 @@
 // ../../parts/k8s/cloud-init/artifacts/kubelet.service
 // ../../parts/k8s/cloud-init/artifacts/modprobe-CIS.conf
 // ../../parts/k8s/cloud-init/artifacts/mountetcd.sh
+// ../../parts/k8s/cloud-init/artifacts/pam-d-su
+// ../../parts/k8s/cloud-init/artifacts/pwquality-CIS.conf
+// ../../parts/k8s/cloud-init/artifacts/rsyslog-d-60-CIS.conf
 // ../../parts/k8s/cloud-init/artifacts/setup-custom-search-domains.sh
 // ../../parts/k8s/cloud-init/artifacts/sshd_config
+// ../../parts/k8s/cloud-init/artifacts/sshd_config_1604
 // ../../parts/k8s/cloud-init/artifacts/sys-fs-bpf.mount
 // ../../parts/k8s/cloud-init/artifacts/sysctl-d-60-CIS.conf
-// ../../parts/k8s/cloud-init/artifacts/system.conf
 // ../../parts/k8s/cloud-init/jumpboxcustomdata.yml
 // ../../parts/k8s/cloud-init/masternodecustomdata.yml
 // ../../parts/k8s/cloud-init/nodecustomdata.yml
@@ -14508,6 +14512,36 @@ func k8sCloudInitArtifactsAptPreferences() (*asset, error) {
 
 var _k8sCloudInitArtifactsCisSh = []byte(`#!/bin/bash
 
+copyPackerFiles() {
+  SYSCTL_CONFIG_SRC=/home/packer/sysctl-d-60-CIS.conf
+  SYSCTL_CONFIG_DEST=/etc/sysctl.d/60-CIS.conf
+  RSYSLOG_CONFIG_SRC=/home/packer/rsyslog-d-60-CIS.conf
+  RSYSLOG_CONFIG_DEST=/etc/rsyslog.d/60-CIS.conf
+  ETC_ISSUE_CONFIG_SRC=/home/packer/etc-issue
+  ETC_ISSUE_CONFIG_DEST=/etc/issue
+  ETC_ISSUE_NET_CONFIG_SRC=/home/packer/etc-issue.net
+  ETC_ISSUE_NET_CONFIG_DEST=/etc/issue.net
+  SSHD_CONFIG_SRC=/home/packer/sshd_config
+  SSHD_CONFIG_DEST=/etc/ssh/sshd_config
+  MODPROBE_CIS_SRC=/home/packer/modprobe-CIS.conf
+  MODPROBE_CIS_DEST=/etc/modprobe.d/CIS.conf
+  PWQUALITY_CONF_SRC=/home/packer/pwquality-CIS.conf
+  PWQUALITY_CONF_DEST=/etc/security/pwquality.conf
+  DEFAULT_GRUB_SRC=/home/packer/default-grub
+  DEFAULT_GRUB_DEST=/etc/default/grub
+  if [[ ${UBUNTU_RELEASE} == "16.04" ]]; then
+    SSHD_CONFIG_SRC=/home/packer/sshd_config_1604
+  fi
+  DIR=$(dirname "$SYSCTL_CONFIG_DEST") && mkdir -p ${DIR} && cp $SYSCTL_CONFIG_SRC $SYSCTL_CONFIG_DEST || exit $ERR_CIS_COPY_FILE
+  DIR=$(dirname "$RSYSLOG_CONFIG_DEST") && mkdir -p ${DIR} && cp $RSYSLOG_CONFIG_SRC $RSYSLOG_CONFIG_DEST || exit $ERR_CIS_COPY_FILE
+  DIR=$(dirname "$ETC_ISSUE_CONFIG_DEST") && mkdir -p ${DIR} && cp $ETC_ISSUE_CONFIG_SRC $ETC_ISSUE_CONFIG_DEST || exit $ERR_CIS_COPY_FILE
+  DIR=$(dirname "$ETC_ISSUE_NET_CONFIG_DEST") && mkdir -p ${DIR} && cp $ETC_ISSUE_NET_CONFIG_SRC $ETC_ISSUE_NET_CONFIG_DEST || exit $ERR_CIS_COPY_FILE
+  DIR=$(dirname "$SSHD_CONFIG_DEST") && mkdir -p ${DIR} && cp $SSHD_CONFIG_SRC $SSHD_CONFIG_DEST || exit $ERR_CIS_COPY_FILE
+  DIR=$(dirname "$MODPROBE_CIS_DEST") && mkdir -p ${DIR} && cp $MODPROBE_CIS_SRC $MODPROBE_CIS_DEST || exit $ERR_CIS_COPY_FILE
+  DIR=$(dirname "$PWQUALITY_CONF_DEST") && mkdir -p ${DIR} && cp $PWQUALITY_CONF_SRC $PWQUALITY_CONF_DEST || exit $ERR_CIS_COPY_FILE
+  DIR=$(dirname "$PWQUALITY_CONF_DEST") && mkdir -p ${DIR} && cp $DEFAULT_GRUB_SRC $DEFAULT_GRUB_DEST || exit $ERR_CIS_COPY_FILE
+}
+
 assignRootPW() {
   grep '^root:[!*]:' /etc/shadow
   if [ $? -eq '0' ] ; then
@@ -14533,6 +14567,7 @@ assignFilePermissions() {
     waagent.log
     syslog
     unattended-upgrades/unattended-upgrades.log
+    unattended-upgrades/unattended-upgrades-dpkg.log
     azure-vnet-ipam.log
     azure-vnet-telemetry.log
     azure-cnimonitor.log
@@ -14540,6 +14575,7 @@ assignFilePermissions() {
     kv-driver.log
     blobfuse-driver.log
     blobfuse-flexvol-installer.log
+    landscape/sysinfo.log
     "
     for FILE in ${FILES}; do
         FILEPATH="/var/log/${FILE}"
@@ -14553,7 +14589,12 @@ assignFilePermissions() {
     chmod 600 /etc/shadow- || exit $ERR_CIS_ASSIGN_FILE_PERMISSION
     chmod 600 /etc/group- || exit $ERR_CIS_ASSIGN_FILE_PERMISSION
     chmod 644 /etc/sysctl.d/60-CIS.conf || exit $ERR_CIS_ASSIGN_FILE_PERMISSION
+    chmod 644 /etc/rsyslog.d/60-CIS.conf || exit $ERR_CIS_ASSIGN_FILE_PERMISSION
     chmod 644 /etc/modprobe.d/CIS.conf || exit $ERR_CIS_ASSIGN_FILE_PERMISSION
+    chmod 644 /etc/ssh/sshd_config || exit $ERR_CIS_ASSIGN_FILE_PERMISSION
+    chmod 600 /etc/security/pwquality.conf || exit $ERR_CIS_ASSIGN_FILE_PERMISSION
+    chmod 400 /boot/grub/grub.cfg || exit $ERR_CIS_ASSIGN_FILE_PERMISSION
+    chmod 644 /etc/default/grub || exit $ERR_CIS_ASSIGN_FILE_PERMISSION
 }
 
 applyCIS() {
@@ -14586,6 +14627,10 @@ else
 fi
 ETCD_PEER_URL="https://${PRIVATE_IP}:2380"
 ETCD_CLIENT_URL="https://${PRIVATE_IP}:2379"
+
+applyOSConfig(){
+    retrycmd_if_failure 120 5 25 update-grub || exit $ERR_CIS_APPLY_GRUB_CONFIG
+}
 
 systemctlEnableAndStart() {
     systemctl_restart 100 5 30 $1
@@ -15179,6 +15224,8 @@ ERR_APT_DIST_UPGRADE_TIMEOUT=101 # Timeout waiting for apt-get dist-upgrade to c
 ERR_SYSCTL_RELOAD=103 # Error reloading sysctl config
 ERR_CIS_ASSIGN_ROOT_PW=111 # Error assigning root password in CIS enforcement
 ERR_CIS_ASSIGN_FILE_PERMISSION=112 # Error assigning permission to a file in CIS enforcement
+ERR_CIS_COPY_FILE=113 # Error writing a file to disk for CIS enforcement
+ERR_CIS_APPLY_GRUB_CONFIG=114 # Error applying CIS-recommended grub configuration
 
 OS=$(cat /etc/*-release | grep ^ID= | tr -d 'ID="' | awk '{print toupper($0)}')
 UBUNTU_OS_NAME="UBUNTU"
@@ -15281,6 +15328,7 @@ apt_get_update() {
     apt_update_output=/tmp/apt-get-update.out
     for i in $(seq 1 $retries); do
         wait_for_apt_locks
+        export DEBIAN_FRONTEND=noninteractive
         dpkg --configure -a
         apt-get -f -y install
         apt-get update 2>&1 | tee $apt_update_output | grep -E "^([WE]:.*)|([eE]rr.*)$"
@@ -15298,8 +15346,9 @@ apt_get_install() {
     retries=$1; wait_sleep=$2; timeout=$3; shift && shift && shift
     for i in $(seq 1 $retries); do
         wait_for_apt_locks
+        export DEBIAN_FRONTEND=noninteractive
         dpkg --configure -a
-        apt-get install --no-install-recommends -y ${@}
+        apt-get install -o Dpkg::Options::="--force-confold" --no-install-recommends -y ${@}
         [ $? -eq 0  ] && break || \
         if [ $i -eq $retries ]; then
             return 1
@@ -15413,7 +15462,7 @@ installDeps() {
     retrycmd_if_failure 60 5 10 dpkg -i /tmp/packages-microsoft-prod.deb || exit $ERR_MS_PROD_DEB_PKG_ADD_FAIL
     apt_get_update || exit $ERR_APT_UPDATE_TIMEOUT
     apt_get_dist_upgrade || exit $ERR_APT_DIST_UPGRADE_TIMEOUT
-    apt_get_install 30 1 600 apt-transport-https blobfuse ca-certificates ceph-common cgroup-lite cifs-utils conntrack ebtables ethtool fuse git glusterfs-client init-system-helpers iproute2 ipset iptables jq mount nfs-common pigz socat util-linux xz-utils zip htop iotop iftop sysstat || exit $ERR_APT_INSTALL_TIMEOUT
+    apt_get_install 30 1 600 apt-transport-https blobfuse ca-certificates ceph-common cgroup-lite cifs-utils conntrack cracklib-runtime ebtables ethtool fuse git glusterfs-client init-system-helpers iproute2 ipset iptables jq libpam-pwquality libpwquality-tools mount nfs-common pigz socat util-linux xz-utils zip htop iotop iftop sysstat || exit $ERR_APT_INSTALL_TIMEOUT
 }
 
 installGPUDrivers() {
@@ -15671,8 +15720,8 @@ pullContainerImage() {
 
 cleanUpContainerImages() {
     # TODO remove all unused container images at runtime
-    docker rmi $(docker images --format '{{.Repository}}:{{.Tag}}' | grep -v ${KUBERNETES_VERSION} | grep 'hyperkube') &
-    docker rmi $(docker images --format '{{.Repository}}:{{.Tag}}' | grep -v ${KUBERNETES_VERSION} | grep 'cloud-controller-manager') &
+    docker rmi $(docker images --format '{{.Repository}}:{{.Tag}}' | grep -v "${KUBERNETES_VERSION}$" | grep 'hyperkube') &
+    docker rmi $(docker images --format '{{.Repository}}:{{.Tag}}' | grep -v "${KUBERNETES_VERSION}$" | grep 'cloud-controller-manager') &
     if [ "$IS_HOSTED_MASTER" = "false" ]; then
         echo "Cleaning up AKS container images, not an AKS cluster"
         docker rmi $(docker images --format '{{.Repository}}:{{.Tag}}' | grep 'hcp-tunnel-front') &
@@ -15778,7 +15827,10 @@ fi
 if [[ $OS == $UBUNTU_OS_NAME ]] && [ "$FULL_INSTALL_REQUIRED" = "true" ]; then
     cis_sysctl=/etc/sysctl.d/60-CIS.conf
     wait_for_file 3600 1 $cis_sysctl || exit $ERR_FILE_WATCH_TIMEOUT
+    cis_rsyslog=/etc/rsyslog.d/60-CIS.conf
+    wait_for_file 3600 1 $cis_rsyslog || exit $ERR_FILE_WATCH_TIMEOUT
     sysctl_reload 20 5 10 || exit $ERR_SYSCTL_RELOAD
+    applyOSConfig
     installDeps
 else 
     echo "Golden image; skipping dependencies installation"
@@ -15929,6 +15981,57 @@ func k8sCloudInitArtifactsCse_mainSh() (*asset, error) {
 	return a, nil
 }
 
+var _k8sCloudInitArtifactsDefaultGrub = []byte(`# If you change this file, run 'update-grub' afterwards to update
+# /boot/grub/grub.cfg.
+# For full documentation of the options in this file, see:
+#   info -f grub -n 'Simple configuration'
+
+GRUB_DEFAULT=0
+GRUB_HIDDEN_TIMEOUT=0
+GRUB_HIDDEN_TIMEOUT_QUIET=true
+GRUB_TIMEOUT=0
+GRUB_DISTRIBUTOR=` + "`" + `lsb_release -i -s 2> /dev/null || echo Debian` + "`" + `
+GRUB_CMDLINE_LINUX_DEFAULT="console=tty1 console=ttyS0 earlyprintk=ttyS0 rootdelay=300"
+# 4.1.3 Ensure auditing for processes that start prior to auditd is enabled
+GRUB_CMDLINE_LINUX="audit=1 ipv6.disable=1"
+
+# Uncomment to enable BadRAM filtering, modify to suit your needs
+# This works with Linux (no patch required) and with any kernel that obtains
+# the memory map information from GRUB (GNU Mach, kernel of FreeBSD ...)
+#GRUB_BADRAM="0x01234567,0xfefefefe,0x89abcdef,0xefefefef"
+
+# Uncomment to disable graphical terminal (grub-pc only)
+#GRUB_TERMINAL=console
+
+# The resolution used on graphical terminal
+# note that you can use only modes which your graphic card supports via VBE
+# you can see them in real GRUB with the command ` + "`" + `vbeinfo'
+#GRUB_GFXMODE=640x480
+
+# Uncomment if you don't want GRUB to pass "root=UUID=xxx" parameter to Linux
+#GRUB_DISABLE_LINUX_UUID=true
+
+# Uncomment to disable generation of recovery mode menu entries
+#GRUB_DISABLE_RECOVERY="true"
+
+# Uncomment to get a beep at grub start
+#GRUB_INIT_TUNE="480 440 1"`)
+
+func k8sCloudInitArtifactsDefaultGrubBytes() ([]byte, error) {
+	return _k8sCloudInitArtifactsDefaultGrub, nil
+}
+
+func k8sCloudInitArtifactsDefaultGrub() (*asset, error) {
+	bytes, err := k8sCloudInitArtifactsDefaultGrubBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "k8s/cloud-init/artifacts/default-grub", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
 var _k8sCloudInitArtifactsDockerMonitorService = []byte(`[Unit]
 Description=a script that checks docker health and restarts if needed
 After=docker.service
@@ -15993,7 +16096,10 @@ func k8sCloudInitArtifactsDocker_clear_mount_propagation_flagsConf() (*asset, er
 	return a, nil
 }
 
-var _k8sCloudInitArtifactsEtcIssue = []byte(`Authorized uses only. All activity may be monitored and reported.`)
+var _k8sCloudInitArtifactsEtcIssue = []byte(`
+Authorized uses only. All activity may be monitored and reported.
+
+`)
 
 func k8sCloudInitArtifactsEtcIssueBytes() ([]byte, error) {
 	return _k8sCloudInitArtifactsEtcIssue, nil
@@ -16010,7 +16116,10 @@ func k8sCloudInitArtifactsEtcIssue() (*asset, error) {
 	return a, nil
 }
 
-var _k8sCloudInitArtifactsEtcIssueNet = []byte(`Authorized uses only. All activity may be monitored and reported.`)
+var _k8sCloudInitArtifactsEtcIssueNet = []byte(`
+Authorized uses only. All activity may be monitored and reported.
+
+`)
 
 func k8sCloudInitArtifactsEtcIssueNetBytes() ([]byte, error) {
 	return _k8sCloudInitArtifactsEtcIssueNet, nil
@@ -16363,9 +16472,6 @@ ExecStartPre=/bin/mkdir -p /var/lib/kubelet
 ExecStartPre=/bin/mkdir -p /var/lib/cni
 ExecStartPre=/bin/bash -c "if [ $(mount | grep \"/var/lib/kubelet\" | wc -l) -le 0 ] ; then /bin/mount --bind /var/lib/kubelet /var/lib/kubelet ; fi"
 ExecStartPre=/bin/mount --make-shared /var/lib/kubelet
-# This is a workaround to this upstream Kubernetes issue:
-#  https://github.com/kubernetes/kubernetes/issues/74839
-ExecStartPre=/sbin/sysctl -w net.netfilter.nf_conntrack_tcp_be_liberal=1
 # This is a partial workaround to this upstream Kubernetes issue:
 #  https://github.com/kubernetes/kubernetes/issues/41916#issuecomment-312428731
 ExecStartPre=/sbin/sysctl -w net.ipv4.tcp_retries2=8
@@ -16405,7 +16511,17 @@ install sctp /bin/true
 # 3.5.3 Ensure RDS is disabled
 install rds /bin/true
 # 3.5.4 Ensure TIPC is disabled
-install tipc /bin/true`)
+install tipc /bin/true
+# 1.1.1.1 Ensure mounting of cramfs filesystems is disabled
+install cramfs /bin/true
+# 1.1.1.2 Ensure mounting of freevxfs filesystems is disabled
+install freevxfs /bin/true
+# 1.1.1.3 Ensure mounting of jffs2 filesystems is disabled
+install jffs2 /bin/true
+# 1.1.1.4 Ensure mounting of hfs filesystems is disabled
+install hfs /bin/true
+# 1.1.1.5 Ensure mounting of hfsplus filesystems is disabled
+install hfsplus /bin/true`)
 
 func k8sCloudInitArtifactsModprobeCisConfBytes() ([]byte, error) {
 	return _k8sCloudInitArtifactsModprobeCisConf, nil
@@ -16467,6 +16583,138 @@ func k8sCloudInitArtifactsMountetcdSh() (*asset, error) {
 	return a, nil
 }
 
+var _k8sCloudInitArtifactsPamDSu = []byte(`#
+# The PAM configuration file for the Shadow ` + "`" + `su' service
+#
+
+# This allows root to su without passwords (normal operation)
+auth       sufficient pam_rootok.so
+
+# Uncomment this to force users to be a member of group root
+# before they can use ` + "`" + `su'. You can also add "group=foo"
+# to the end of this line if you want to use a group other
+# than the default "root" (but this may have side effect of
+# denying "root" user, unless she's a member of "foo" or explicitly
+# permitted earlier by e.g. "sufficient pam_rootok.so").
+# (Replaces the ` + "`" + `SU_WHEEL_ONLY' option from login.defs)
+
+# 5.6 Ensure access to the su command is restricted
+auth required pam_wheel.so use_uid
+
+# Uncomment this if you want wheel members to be able to
+# su without a password.
+# auth       sufficient pam_wheel.so trust
+
+# Uncomment this if you want members of a specific group to not
+# be allowed to use su at all.
+# auth       required   pam_wheel.so deny group=nosu
+
+# Uncomment and edit /etc/security/time.conf if you need to set
+# time restrainst on su usage.
+# (Replaces the ` + "`" + `PORTTIME_CHECKS_ENAB' option from login.defs
+# as well as /etc/porttime)
+# account    requisite  pam_time.so
+
+# This module parses environment configuration file(s)
+# and also allows you to use an extended config
+# file /etc/security/pam_env.conf.
+# 
+# parsing /etc/environment needs "readenv=1"
+session       required   pam_env.so readenv=1
+# locale variables are also kept into /etc/default/locale in etch
+# reading this file *in addition to /etc/environment* does not hurt
+session       required   pam_env.so readenv=1 envfile=/etc/default/locale
+
+# Defines the MAIL environment variable
+# However, userdel also needs MAIL_DIR and MAIL_FILE variables
+# in /etc/login.defs to make sure that removing a user 
+# also removes the user's mail spool file.
+# See comments in /etc/login.defs
+#
+# "nopen" stands to avoid reporting new mail when su'ing to another user
+session    optional   pam_mail.so nopen
+
+# Sets up user limits according to /etc/security/limits.conf
+# (Replaces the use of /etc/limits in old login)
+session    required   pam_limits.so
+
+# The standard Unix authentication modules, used with
+# NIS (man nsswitch) as well as normal /etc/passwd and
+# /etc/shadow entries.
+@include common-auth
+@include common-account
+@include common-session`)
+
+func k8sCloudInitArtifactsPamDSuBytes() ([]byte, error) {
+	return _k8sCloudInitArtifactsPamDSu, nil
+}
+
+func k8sCloudInitArtifactsPamDSu() (*asset, error) {
+	bytes, err := k8sCloudInitArtifactsPamDSuBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "k8s/cloud-init/artifacts/pam-d-su", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
+var _k8sCloudInitArtifactsPwqualityCisConf = []byte(`# 5.3.1 Ensure password creation requirements are configured (Scored)
+
+minlen=14
+dcredit=-1
+ucredit=-1
+ocredit=-1
+lcredit=-1`)
+
+func k8sCloudInitArtifactsPwqualityCisConfBytes() ([]byte, error) {
+	return _k8sCloudInitArtifactsPwqualityCisConf, nil
+}
+
+func k8sCloudInitArtifactsPwqualityCisConf() (*asset, error) {
+	bytes, err := k8sCloudInitArtifactsPwqualityCisConfBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "k8s/cloud-init/artifacts/pwquality-CIS.conf", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
+var _k8sCloudInitArtifactsRsyslogD60CisConf = []byte(`# 4.2.1.2 Ensure logging is configured (Not Scored)
+*.emerg                            :omusrmsg:*
+mail.*                             -/var/log/mail
+mail.info                          -/var/log/mail.info
+mail.warning                       -/var/log/mail.warn
+mail.err                           /var/log/mail.err
+news.crit                          -/var/log/news/news.crit
+news.err                           -/var/log/news/news.err
+news.notice                        -/var/log/news/news.notice
+*.=warning;*.=err                  -/var/log/warn
+*.crit                             /var/log/warn
+*.*;mail.none;news.none            -/var/log/messages
+local0,local1.*                    -/var/log/localmessages
+local2,local3.*                    -/var/log/localmessages
+local4,local5.*                    -/var/log/localmessages
+local6,local7.*                    -/var/log/localmessages`)
+
+func k8sCloudInitArtifactsRsyslogD60CisConfBytes() ([]byte, error) {
+	return _k8sCloudInitArtifactsRsyslogD60CisConf, nil
+}
+
+func k8sCloudInitArtifactsRsyslogD60CisConf() (*asset, error) {
+	bytes, err := k8sCloudInitArtifactsRsyslogD60CisConfBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "k8s/cloud-init/artifacts/rsyslog-d-60-CIS.conf", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
 var _k8sCloudInitArtifactsSetupCustomSearchDomainsSh = []byte(`#!/bin/bash
 set -x
 source /opt/azure/containers/provision_source.sh
@@ -16499,15 +16747,123 @@ Port 22
 #ListenAddress ::
 #ListenAddress 0.0.0.0
 Protocol 2
+
+# 5.2.11 Ensure only approved MAC algorithms are used
+MACs hmac-sha2-512-etm@openssh.com,hmac-sha2-256-etm@openssh.com,umac-128-etm@openssh.com,hmac-sha2-512,hmac-sha2-256,umac-128@openssh.com
+KexAlgorithms curve25519-sha256@libssh.org
+Ciphers chacha20-poly1305@openssh.com,aes256-gcm@openssh.com,aes128-gcm@openssh.com,aes256-ctr,aes192-ctr,aes128-ctr
+
+# 5.2.12 Ensure SSH Idle Timeout Interval is configured
+ClientAliveInterval 120
+ClientAliveCountMax 3
+
 # HostKeys for protocol version 2
 HostKey /etc/ssh/ssh_host_rsa_key
 HostKey /etc/ssh/ssh_host_dsa_key
 HostKey /etc/ssh/ssh_host_ecdsa_key
 HostKey /etc/ssh/ssh_host_ed25519_key
 
+# Logging
+SyslogFacility AUTH
+LogLevel INFO
+
+# Authentication:
+LoginGraceTime 60
+
+# 5.2.8 Ensure SSH root login is disabled
+PermitRootLogin no
+# 5.2.10 Ensure SSH PermitUserEnvironment is disabled
+PermitUserEnvironment no
+
+StrictModes yes
+PubkeyAuthentication yes
+#AuthorizedKeysFile	%h/.ssh/authorized_keys
+
+# Don't read the user's ~/.rhosts and ~/.shosts files
+IgnoreRhosts yes
+# similar for protocol version 2
+HostbasedAuthentication no
+
+# To enable empty passwords, change to yes (NOT RECOMMENDED)
+PermitEmptyPasswords no
+
+# Change to yes to enable challenge-response passwords (beware issues with
+# some PAM modules and threads)
+ChallengeResponseAuthentication no
+
+# Change to no to disable tunnelled clear text passwords
+PasswordAuthentication no
+
+# 5.2.4 Ensure SSH X11 forwarding is disabled
+X11Forwarding no
+
+# 5.2.5 Ensure SSH MaxAuthTries is set to 4 or less
+MaxAuthTries 4
+
+X11DisplayOffset 10
+PrintMotd no
+PrintLastLog yes
+TCPKeepAlive yes
+#UseLogin no
+
+#MaxStartups 10:30:60
+Banner /etc/issue.net
+
+# Allow client to pass locale environment variables
+AcceptEnv LANG LC_*
+
+Subsystem sftp /usr/lib/openssh/sftp-server
+
+# Set this to 'yes' to enable PAM authentication, account processing,
+# and session processing. If this is enabled, PAM authentication will
+# be allowed through the ChallengeResponseAuthentication and
+# PasswordAuthentication.  Depending on your PAM configuration,
+# PAM authentication via ChallengeResponseAuthentication may bypass
+# the setting of "PermitRootLogin without-password".
+# If you just want the PAM account and session checks to run without
+# PAM authentication, then enable this but set PasswordAuthentication
+# and ChallengeResponseAuthentication to 'no'.
+UsePAM yes
+UseDNS no
+GSSAPIAuthentication no
+`)
+
+func k8sCloudInitArtifactsSshd_configBytes() ([]byte, error) {
+	return _k8sCloudInitArtifactsSshd_config, nil
+}
+
+func k8sCloudInitArtifactsSshd_config() (*asset, error) {
+	bytes, err := k8sCloudInitArtifactsSshd_configBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "k8s/cloud-init/artifacts/sshd_config", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
+var _k8sCloudInitArtifactsSshd_config_1604 = []byte(`# What ports, IPs and protocols we listen for
+Port 22
+# Use these options to restrict which interfaces/protocols sshd will bind to
+#ListenAddress ::
+#ListenAddress 0.0.0.0
+Protocol 2
+
+# 5.2.11 Ensure only approved MAC algorithms are used
+MACs hmac-sha2-512-etm@openssh.com,hmac-sha2-256-etm@openssh.com,umac-128-etm@openssh.com,hmac-sha2-512,hmac-sha2-256,umac-128@openssh.com
 KexAlgorithms curve25519-sha256@libssh.org
 Ciphers chacha20-poly1305@openssh.com,aes256-gcm@openssh.com,aes128-gcm@openssh.com,aes256-ctr,aes192-ctr,aes128-ctr
-MACs hmac-sha2-512-etm@openssh.com,hmac-sha2-256-etm@openssh.com,umac-128-etm@openssh.com
+
+# 5.2.12 Ensure SSH Idle Timeout Interval is configured
+ClientAliveInterval 120
+ClientAliveCountMax 3
+
+# HostKeys for protocol version 2
+HostKey /etc/ssh/ssh_host_rsa_key
+HostKey /etc/ssh/ssh_host_dsa_key
+HostKey /etc/ssh/ssh_host_ecdsa_key
+HostKey /etc/ssh/ssh_host_ed25519_key
 
 #Privilege Separation is turned on for security
 UsePrivilegeSeparation yes
@@ -16521,12 +16877,17 @@ SyslogFacility AUTH
 LogLevel INFO
 
 # Authentication:
-LoginGraceTime 120
-PermitRootLogin prohibit-password
-StrictModes yes
+LoginGraceTime 60
 
+# 5.2.8 Ensure SSH root login is disabled
+PermitRootLogin no
+# 5.2.10 Ensure SSH PermitUserEnvironment is disabled
+PermitUserEnvironment no
+
+StrictModes yes
 RSAAuthentication yes
 PubkeyAuthentication yes
+#AuthorizedKeysFile	%h/.ssh/authorized_keys
 
 # Don't read the user's ~/.rhosts and ~/.shosts files
 IgnoreRhosts yes
@@ -16545,12 +16906,20 @@ ChallengeResponseAuthentication no
 # Change to no to disable tunnelled clear text passwords
 PasswordAuthentication no
 
+# 5.2.4 Ensure SSH X11 forwarding is disabled
 X11Forwarding no
+
+# 5.2.5 Ensure SSH MaxAuthTries is set to 4 or less
+MaxAuthTries 4
+
 X11DisplayOffset 10
 PrintMotd no
 PrintLastLog yes
 TCPKeepAlive yes
 #UseLogin no
+
+#MaxStartups 10:30:60
+Banner /etc/issue.net
 
 # Allow client to pass locale environment variables
 AcceptEnv LANG LC_*
@@ -16567,22 +16936,21 @@ Subsystem sftp /usr/lib/openssh/sftp-server
 # PAM authentication, then enable this but set PasswordAuthentication
 # and ChallengeResponseAuthentication to 'no'.
 UsePAM yes
-
-# CLOUD_IMG: This file was created/modified by the Cloud Image build process
-ClientAliveInterval 120
+UseDNS no
+GSSAPIAuthentication no
 `)
 
-func k8sCloudInitArtifactsSshd_configBytes() ([]byte, error) {
-	return _k8sCloudInitArtifactsSshd_config, nil
+func k8sCloudInitArtifactsSshd_config_1604Bytes() ([]byte, error) {
+	return _k8sCloudInitArtifactsSshd_config_1604, nil
 }
 
-func k8sCloudInitArtifactsSshd_config() (*asset, error) {
-	bytes, err := k8sCloudInitArtifactsSshd_configBytes()
+func k8sCloudInitArtifactsSshd_config_1604() (*asset, error) {
+	bytes, err := k8sCloudInitArtifactsSshd_config_1604Bytes()
 	if err != nil {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "k8s/cloud-init/artifacts/sshd_config", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	info := bindataFileInfo{name: "k8s/cloud-init/artifacts/sshd_config_1604", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -16650,24 +17018,6 @@ func k8sCloudInitArtifactsSysctlD60CisConf() (*asset, error) {
 	}
 
 	info := bindataFileInfo{name: "k8s/cloud-init/artifacts/sysctl-d-60-CIS.conf", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
-	a := &asset{bytes: bytes, info: info}
-	return a, nil
-}
-
-var _k8sCloudInitArtifactsSystemConf = []byte(`[Manager]
-JoinControllers=cpu,cpuacct,cpuset,net_cls,net_prio,hugetlb,memory`)
-
-func k8sCloudInitArtifactsSystemConfBytes() ([]byte, error) {
-	return _k8sCloudInitArtifactsSystemConf, nil
-}
-
-func k8sCloudInitArtifactsSystemConf() (*asset, error) {
-	bytes, err := k8sCloudInitArtifactsSystemConfBytes()
-	if err != nil {
-		return nil, err
-	}
-
-	info := bindataFileInfo{name: "k8s/cloud-init/artifacts/system.conf", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -16763,20 +17113,6 @@ write_files:
     {{WrapAsVariable "provisionConfigsCustomCloud"}}
 {{end}}
 
-- path: /etc/ssh/sshd_config
-  permissions: "0644"
-  encoding: gzip
-  owner: root
-  content: !!binary |
-    {{CloudInitData "sshdConfig"}}
-
-- path: /etc/systemd/system.conf
-  permissions: "0644"
-  encoding: gzip
-  owner: root
-  content: !!binary |
-    {{CloudInitData "systemConf"}}
-
 {{if .MasterProfile.IsCoreOS}}
 - path: /opt/bin/health-monitor.sh
 {{else}}
@@ -16838,6 +17174,22 @@ write_files:
     {{CloudInitData "aptPreferences"}}
 
 {{if .MasterProfile.IsUbuntuNonVHD}}
+{{if .MasterProfile.IsUbuntu1604}}
+- path: /etc/ssh/sshd_config
+  permissions: "0600"
+  encoding: gzip
+  owner: root
+  content: !!binary |
+    {{CloudInitData "sshdConfig1604"}}
+{{else}}
+- path: /etc/ssh/sshd_config
+  permissions: "0600"
+  encoding: gzip
+  owner: root
+  content: !!binary |
+    {{CloudInitData "sshdConfig"}}
+{{end}}
+
 - path: /etc/issue
   permissions: "0644"
   encoding: gzip
@@ -16859,12 +17211,40 @@ write_files:
   content: !!binary |
     {{CloudInitData "cisNetEnforcement"}}
 
+- path: /etc/rsyslog.d/60-CIS.conf
+  permissions: "0644"
+  encoding: gzip
+  owner: root
+  content: !!binary |
+    {{CloudInitData "cisLogEnforcement"}}
+
 - path: /etc/modprobe.d/CIS.conf
   permissions: "0644"
   encoding: gzip
   owner: root
   content: !!binary |
     {{CloudInitData "modprobeConfCIS"}}
+
+- path: /etc/security/pwquality.conf
+  permissions: "0600"
+  encoding: gzip
+  owner: root
+  content: !!binary |
+    {{CloudInitData "pwQuality"}}
+
+- path: /etc/default/grub
+  permissions: "0644"
+  encoding: gzip
+  owner: root
+  content: !!binary |
+    {{CloudInitData "defaultGrub"}}
+
+- path: /etc/pam.d/su
+  permissions: "0644"
+  encoding: gzip
+  owner: root
+  content: !!binary |
+    {{CloudInitData "pamDotDSU"}}
 {{end}}
 
 {{if .OrchestratorProfile.KubernetesConfig.RequiresDocker}}
@@ -17321,20 +17701,6 @@ write_files:
     {{WrapAsVariable "provisionConfigsCustomCloud"}}
 {{end}}
 
-- path: /etc/ssh/sshd_config
-  permissions: "0644"
-  encoding: gzip
-  owner: root
-  content: !!binary |
-    {{CloudInitData "sshdConfig"}}
-
-- path: /etc/systemd/system.conf
-  permissions: "0644"
-  encoding: gzip
-  owner: root
-  content: !!binary |
-    {{CloudInitData "systemConf"}}
-
 {{if .IsCoreOS}}
 - path: /opt/bin/health-monitor.sh
 {{else}}
@@ -17396,6 +17762,22 @@ write_files:
     {{CloudInitData "aptPreferences"}}
 
 {{if .IsUbuntuNonVHD}}
+{{if .IsUbuntu1604}}
+- path: /etc/ssh/sshd_config
+  permissions: "0600"
+  encoding: gzip
+  owner: root
+  content: !!binary |
+    {{CloudInitData "sshdConfig1604"}}
+{{else}}
+- path: /etc/ssh/sshd_config
+  permissions: "0600"
+  encoding: gzip
+  owner: root
+  content: !!binary |
+    {{CloudInitData "sshdConfig"}}
+{{end}}
+
 - path: /etc/issue
   permissions: "0644"
   encoding: gzip
@@ -17417,12 +17799,40 @@ write_files:
   content: !!binary |
     {{CloudInitData "cisNetEnforcement"}}
 
+- path: /etc/rsyslog.d/60-CIS.conf
+  permissions: "0644"
+  encoding: gzip
+  owner: root
+  content: !!binary |
+    {{CloudInitData "cisLogEnforcement"}}
+
 - path: /etc/modprobe.d/CIS.conf
   permissions: "0644"
   encoding: gzip
   owner: root
   content: !!binary |
     {{CloudInitData "modprobeConfCIS"}}
+
+- path: /etc/security/pwquality.conf
+  permissions: "0600"
+  encoding: gzip
+  owner: root
+  content: !!binary |
+    {{CloudInitData "pwQuality"}}
+
+- path: /etc/default/grub
+  permissions: "0644"
+  encoding: gzip
+  owner: root
+  content: !!binary |
+    {{CloudInitData "defaultGrub"}}
+
+- path: /etc/pam.d/su
+  permissions: "0644"
+  encoding: gzip
+  owner: root
+  content: !!binary |
+    {{CloudInitData "pamDotDSU"}}
 {{end}}
 
 {{if .KubernetesConfig.RequiresDocker}}
@@ -26177,6 +26587,7 @@ var _bindata = map[string]func() (*asset, error){
 	"k8s/cloud-init/artifacts/cse_helpers.sh":                                         k8sCloudInitArtifactsCse_helpersSh,
 	"k8s/cloud-init/artifacts/cse_install.sh":                                         k8sCloudInitArtifactsCse_installSh,
 	"k8s/cloud-init/artifacts/cse_main.sh":                                            k8sCloudInitArtifactsCse_mainSh,
+	"k8s/cloud-init/artifacts/default-grub":                                           k8sCloudInitArtifactsDefaultGrub,
 	"k8s/cloud-init/artifacts/docker-monitor.service":                                 k8sCloudInitArtifactsDockerMonitorService,
 	"k8s/cloud-init/artifacts/docker-monitor.timer":                                   k8sCloudInitArtifactsDockerMonitorTimer,
 	"k8s/cloud-init/artifacts/docker_clear_mount_propagation_flags.conf":              k8sCloudInitArtifactsDocker_clear_mount_propagation_flagsConf,
@@ -26191,11 +26602,14 @@ var _bindata = map[string]func() (*asset, error){
 	"k8s/cloud-init/artifacts/kubelet.service":                                        k8sCloudInitArtifactsKubeletService,
 	"k8s/cloud-init/artifacts/modprobe-CIS.conf":                                      k8sCloudInitArtifactsModprobeCisConf,
 	"k8s/cloud-init/artifacts/mountetcd.sh":                                           k8sCloudInitArtifactsMountetcdSh,
+	"k8s/cloud-init/artifacts/pam-d-su":                                               k8sCloudInitArtifactsPamDSu,
+	"k8s/cloud-init/artifacts/pwquality-CIS.conf":                                     k8sCloudInitArtifactsPwqualityCisConf,
+	"k8s/cloud-init/artifacts/rsyslog-d-60-CIS.conf":                                  k8sCloudInitArtifactsRsyslogD60CisConf,
 	"k8s/cloud-init/artifacts/setup-custom-search-domains.sh":                         k8sCloudInitArtifactsSetupCustomSearchDomainsSh,
 	"k8s/cloud-init/artifacts/sshd_config":                                            k8sCloudInitArtifactsSshd_config,
+	"k8s/cloud-init/artifacts/sshd_config_1604":                                       k8sCloudInitArtifactsSshd_config_1604,
 	"k8s/cloud-init/artifacts/sys-fs-bpf.mount":                                       k8sCloudInitArtifactsSysFsBpfMount,
 	"k8s/cloud-init/artifacts/sysctl-d-60-CIS.conf":                                   k8sCloudInitArtifactsSysctlD60CisConf,
-	"k8s/cloud-init/artifacts/system.conf":                                            k8sCloudInitArtifactsSystemConf,
 	"k8s/cloud-init/jumpboxcustomdata.yml":                                            k8sCloudInitJumpboxcustomdataYml,
 	"k8s/cloud-init/masternodecustomdata.yml":                                         k8sCloudInitMasternodecustomdataYml,
 	"k8s/cloud-init/nodecustomdata.yml":                                               k8sCloudInitNodecustomdataYml,
@@ -26380,6 +26794,7 @@ var _bintree = &bintree{nil, map[string]*bintree{
 				"cse_helpers.sh":         {k8sCloudInitArtifactsCse_helpersSh, map[string]*bintree{}},
 				"cse_install.sh":         {k8sCloudInitArtifactsCse_installSh, map[string]*bintree{}},
 				"cse_main.sh":            {k8sCloudInitArtifactsCse_mainSh, map[string]*bintree{}},
+				"default-grub":           {k8sCloudInitArtifactsDefaultGrub, map[string]*bintree{}},
 				"docker-monitor.service": {k8sCloudInitArtifactsDockerMonitorService, map[string]*bintree{}},
 				"docker-monitor.timer":   {k8sCloudInitArtifactsDockerMonitorTimer, map[string]*bintree{}},
 				"docker_clear_mount_propagation_flags.conf": {k8sCloudInitArtifactsDocker_clear_mount_propagation_flagsConf, map[string]*bintree{}},
@@ -26394,11 +26809,14 @@ var _bintree = &bintree{nil, map[string]*bintree{
 				"kubelet.service":                {k8sCloudInitArtifactsKubeletService, map[string]*bintree{}},
 				"modprobe-CIS.conf":              {k8sCloudInitArtifactsModprobeCisConf, map[string]*bintree{}},
 				"mountetcd.sh":                   {k8sCloudInitArtifactsMountetcdSh, map[string]*bintree{}},
+				"pam-d-su":                       {k8sCloudInitArtifactsPamDSu, map[string]*bintree{}},
+				"pwquality-CIS.conf":             {k8sCloudInitArtifactsPwqualityCisConf, map[string]*bintree{}},
+				"rsyslog-d-60-CIS.conf":          {k8sCloudInitArtifactsRsyslogD60CisConf, map[string]*bintree{}},
 				"setup-custom-search-domains.sh": {k8sCloudInitArtifactsSetupCustomSearchDomainsSh, map[string]*bintree{}},
 				"sshd_config":                    {k8sCloudInitArtifactsSshd_config, map[string]*bintree{}},
+				"sshd_config_1604":               {k8sCloudInitArtifactsSshd_config_1604, map[string]*bintree{}},
 				"sys-fs-bpf.mount":               {k8sCloudInitArtifactsSysFsBpfMount, map[string]*bintree{}},
 				"sysctl-d-60-CIS.conf":           {k8sCloudInitArtifactsSysctlD60CisConf, map[string]*bintree{}},
-				"system.conf":                    {k8sCloudInitArtifactsSystemConf, map[string]*bintree{}},
 			}},
 			"jumpboxcustomdata.yml":    {k8sCloudInitJumpboxcustomdataYml, map[string]*bintree{}},
 			"masternodecustomdata.yml": {k8sCloudInitMasternodecustomdataYml, map[string]*bintree{}},
