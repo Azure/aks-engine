@@ -642,9 +642,10 @@ func TestCreateAgentVMASNIC(t *testing.T) {
 	}
 
 	profile := &api.AgentPoolProfile{
-		Name:   "fooAgent",
-		OSType: "Linux",
-		Role:   "Infra",
+		Name:                              "fooAgent",
+		OSType:                            "Linux",
+		Role:                              "Infra",
+		LoadBalancerBackendAddressPoolIDs: []string{"/subscriptions/123/resourceGroups/rg/providers/Microsoft.Network/loadBalancers/mySLB/backendAddressPools/mySLBBEPool"},
 	}
 
 	actual := createAgentVMASNetworkInterface(cs, profile)

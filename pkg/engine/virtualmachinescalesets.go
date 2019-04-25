@@ -446,6 +446,18 @@ func CreateAgentVMSS(cs *api.ContainerService, profile *api.AgentPoolProfile) Vi
 		if i == 1 {
 			ipconfig.Primary = to.BoolPtr(true)
 
+			if profile.LoadBalancerBackendAddressPoolIDs != nil {
+				backendPools := make([]compute.SubResource, 0)
+				for _, lbBackendPoolID := range profile.LoadBalancerBackendAddressPoolIDs {
+					backendPools = append(backendPools,
+						compute.SubResource{
+							ID: to.StringPtr(lbBackendPoolID),
+						},
+					)
+				}
+				ipconfig.LoadBalancerBackendAddressPools = &backendPools
+			}
+
 			// Set VMSS node public IP if requested
 			if to.Bool(profile.EnableVMSSNodePublicIP) {
 				publicIPAddressConfiguration := &compute.VirtualMachineScaleSetPublicIPAddressConfiguration{
