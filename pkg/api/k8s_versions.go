@@ -390,6 +390,42 @@ func getK8sVersionComponents(version string, overrides map[string]string) map[st
 	majorMinor := strings.Join(s[:2], ".")
 	var ret map[string]string
 	switch majorMinor {
+	case "1.15":
+		ret = map[string]string{
+			"hyperkube":                        "hyperkube-amd64:v" + version,
+			"ccm":                              "cloud-controller-manager-amd64:v" + version,
+			"windowszip":                       "v" + version + "-1int.zip",
+			DefaultDashboardAddonName:          k8sComponentVersions["1.15"]["dashboard"],
+			"exechealthz":                      k8sComponentVersions["1.15"]["exechealthz"],
+			"addonresizer":                     k8sComponentVersions["1.15"]["addon-resizer"],
+			"heapster":                         k8sComponentVersions["1.15"]["heapster"],
+			DefaultMetricsServerAddonName:      k8sComponentVersions["1.15"]["metrics-server"],
+			"coredns":                          k8sComponentVersions["1.15"]["coredns"],
+			"kube-dns":                         k8sComponentVersions["1.15"]["kube-dns"],
+			"addonmanager":                     k8sComponentVersions["1.15"]["addon-manager"],
+			"dnsmasq":                          k8sComponentVersions["1.15"]["dnsmasq"],
+			"pause":                            k8sComponentVersions["1.15"]["pause"],
+			DefaultTillerAddonName:             k8sComponentVersions["1.15"]["tiller"],
+			DefaultReschedulerAddonName:        k8sComponentVersions["1.15"]["rescheduler"],
+			DefaultACIConnectorAddonName:       k8sComponentVersions["1.15"]["aci-connector"],
+			ContainerMonitoringAddonName:       k8sComponentVersions["1.15"][ContainerMonitoringAddonName],
+			AzureCNINetworkMonitoringAddonName: k8sComponentVersions["1.15"][AzureCNINetworkMonitoringAddonName],
+			DefaultClusterAutoscalerAddonName:  k8sComponentVersions["1.15"]["cluster-autoscaler"],
+			"k8s-dns-sidecar":                  k8sComponentVersions["1.15"]["k8s-dns-sidecar"],
+			"nodestatusfreq":                   k8sComponentVersions["1.15"]["nodestatusfreq"],
+			"nodegraceperiod":                  k8sComponentVersions["1.15"]["nodegraceperiod"],
+			"podeviction":                      k8sComponentVersions["1.15"]["podeviction"],
+			"routeperiod":                      k8sComponentVersions["1.15"]["routeperiod"],
+			"backoffretries":                   k8sComponentVersions["1.15"]["backoffretries"],
+			"backoffjitter":                    k8sComponentVersions["1.15"]["backoffjitter"],
+			"backoffduration":                  k8sComponentVersions["1.15"]["backoffduration"],
+			"backoffexponent":                  k8sComponentVersions["1.15"]["backoffexponent"],
+			"ratelimitqps":                     k8sComponentVersions["1.15"]["ratelimitqps"],
+			"ratelimitbucket":                  k8sComponentVersions["1.15"]["ratelimitbucket"],
+			"gchighthreshold":                  k8sComponentVersions["1.15"]["gchighthreshold"],
+			"gclowthreshold":                   k8sComponentVersions["1.15"]["gclowthreshold"],
+			NVIDIADevicePluginAddonName:        k8sComponentVersions["1.15"][NVIDIADevicePluginAddonName],
+		}
 	case "1.14":
 		ret = map[string]string{
 			"hyperkube":                        "hyperkube-amd64:v" + version,
