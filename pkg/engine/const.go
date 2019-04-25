@@ -147,17 +147,17 @@ const (
 
 // cloud-init (i.e. ARM customData) file references
 const (
-	kubernetesMasterNodeCustomDataYaml       = "k8s/cloud-init/masternodecustomdata.yml"
-	kubernetesNodeCustomDataYaml             = "k8s/cloud-init/nodecustomdata.yml"
-	kubernetesJumpboxCustomDataYaml          = "k8s/cloud-init/jumpboxcustomdata.yml"
-	kubernetesCSEMainScript                  = "k8s/cloud-init/artifacts/cse_main.sh"
-	kubernetesCSEHelpersScript               = "k8s/cloud-init/artifacts/cse_helpers.sh"
-	kubernetesCSEInstall                     = "k8s/cloud-init/artifacts/cse_install.sh"
-	kubernetesCSEConfig                      = "k8s/cloud-init/artifacts/cse_config.sh"
-	kubernetesCISScript                      = "k8s/cloud-init/artifacts/cis.sh"
-	kubernetesCSECustomCloud                 = "k8s/cloud-init/artifacts/cse_customcloud.sh"
-	kubernetesHealthMonitorScript            = "k8s/cloud-init/artifacts/health-monitor.sh"
-	kubernetesKubeletMonitorSystemdTimer     = "k8s/cloud-init/artifacts/kubelet-monitor.timer"
+	kubernetesMasterNodeCustomDataYaml = "k8s/cloud-init/masternodecustomdata.yml"
+	kubernetesNodeCustomDataYaml       = "k8s/cloud-init/nodecustomdata.yml"
+	kubernetesJumpboxCustomDataYaml    = "k8s/cloud-init/jumpboxcustomdata.yml"
+	kubernetesCSEMainScript            = "k8s/cloud-init/artifacts/cse_main.sh"
+	kubernetesCSEHelpersScript         = "k8s/cloud-init/artifacts/cse_helpers.sh"
+	kubernetesCSEInstall               = "k8s/cloud-init/artifacts/cse_install.sh"
+	kubernetesCSEConfig                = "k8s/cloud-init/artifacts/cse_config.sh"
+	kubernetesCISScript                = "k8s/cloud-init/artifacts/cis.sh"
+	kubernetesCSECustomCloud           = "k8s/cloud-init/artifacts/cse_customcloud.sh"
+	kubernetesHealthMonitorScript      = "k8s/cloud-init/artifacts/health-monitor.sh"
+	// kubernetesKubeletMonitorSystemdTimer     = "k8s/cloud-init/artifacts/kubelet-monitor.timer" // TODO enable
 	kubernetesKubeletMonitorSystemdService   = "k8s/cloud-init/artifacts/kubelet-monitor.service"
 	kubernetesDockerMonitorSystemdTimer      = "k8s/cloud-init/artifacts/docker-monitor.timer"
 	kubernetesDockerMonitorSystemdService    = "k8s/cloud-init/artifacts/docker-monitor.service"

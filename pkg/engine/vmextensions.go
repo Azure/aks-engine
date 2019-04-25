@@ -4,6 +4,7 @@
 package engine
 
 import (
+	"encoding/json"
 	"fmt"
 	"strconv"
 
@@ -205,4 +206,45 @@ func CreateAgentVMASAKSBillingExtension(cs *api.ContainerService, profile *api.A
 		},
 		VirtualMachineExtension: vmExtension,
 	}
+}
+
+// CreateCustomExtensions returns a list of DeploymentARM objects for the custom extensions to be deployed
+func CreateCustomExtensions(properties *api.Properties) []DeploymentARM {
+	var extensionsARM []DeploymentARM
+
+	for _, extensionProfile := range properties.ExtensionProfiles {
+		if properties.MasterProfile != nil {
+			masterOptedForExtension, singleOrAll := validateProfileOptedForExtension(extensionProfile.Name, properties.MasterProfile.Extensions)
+			if masterOptedForExtension {
+				data, e := getMasterLinkedTemplateText(properties.MasterProfile, properties.OrchestratorProfile.OrchestratorType, extensionProfile, singleOrAll)
+				if e != nil {
+					fmt.Println(e.Error())
+				}
+				var ext DeploymentARM
+				if err := json.Unmarshal([]byte(data), &ext); err != nil {
+					fmt.Println(err.Error())
+				}
+				extensionsARM = append(extensionsARM, ext)
+			}
+
+		}
+
+		for _, agentPoolProfile := range properties.AgentPoolProfiles {
+			poolProfileExtensions := agentPoolProfile.Extensions
+			poolOptedForExtension, singleOrAll := validateProfileOptedForExtension(extensionProfile.Name, poolProfileExtensions)
+			if poolOptedForExtension {
+				data, e := getAgentPoolLinkedTemplateText(agentPoolProfile, properties.OrchestratorProfile.OrchestratorType, extensionProfile, singleOrAll)
+				if e != nil {
+					fmt.Println(e.Error())
+				}
+				var ext DeploymentARM
+				if err := json.Unmarshal([]byte(data), &ext); err != nil {
+					fmt.Println(err.Error())
+				}
+				extensionsARM = append(extensionsARM, ext)
+			}
+
+		}
+	}
+	return extensionsARM
 }
