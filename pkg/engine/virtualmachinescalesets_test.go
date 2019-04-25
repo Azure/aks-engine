@@ -682,7 +682,7 @@ func getIPConfigs(lbBackendAddresPoolID *string) *[]compute.VirtualMachineScaleS
 			}
 			ipconfig.PublicIPAddressConfiguration = publicIPAddressConfiguration
 			if lbBackendAddresPoolID != nil {
-				ipconfig.LoadBalancerBackendAddressPools = &[]compute.SubResource{compute.SubResource{ID: lbBackendAddresPoolID}}
+				ipconfig.LoadBalancerBackendAddressPools = &[]compute.SubResource{{ID: lbBackendAddresPoolID}}
 			}
 		}
 		ipConfigs = append(ipConfigs, ipconfig)

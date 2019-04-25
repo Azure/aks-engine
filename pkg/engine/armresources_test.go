@@ -605,7 +605,7 @@ func getAgentNICIPConfigs(ipCount int, profileName string) *[]network.InterfaceI
 		}
 		if i == 1 {
 			ipConfig.Primary = to.BoolPtr(true)
-			ipConfig.LoadBalancerBackendAddressPools = &[]network.BackendAddressPool{network.BackendAddressPool{ID: to.StringPtr("/subscriptions/123/resourceGroups/rg/providers/Microsoft.Network/loadBalancers/mySLB/backendAddressPools/mySLBBEPool")}}
+			ipConfig.LoadBalancerBackendAddressPools = &[]network.BackendAddressPool{{ID: to.StringPtr("/subscriptions/123/resourceGroups/rg/providers/Microsoft.Network/loadBalancers/mySLB/backendAddressPools/mySLBBEPool")}}
 		}
 		ipConfig.PrivateIPAllocationMethod = network.Dynamic
 		ipConfig.Subnet = &network.Subnet{
