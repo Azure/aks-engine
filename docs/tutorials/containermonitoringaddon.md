@@ -7,7 +7,7 @@ Container Monitoring addon gives you performance monitoring ability by collectin
 - Review the resource utilization of workloads running on the host that are unrelated to the standard processes that support the pod.
 - Understand the behavior of the cluster under average and heaviest loads. This knowledge can help you identify capacity needs and determine the maximum load that the cluster can sustain.
 - Logs (stdout/stderr) of the Containers to troubleshoot the issues in containers
-  
+
 ## Components
 
 Your ability to monitor performance relies on a containerized Log Analytics agent for Linux, which collects performance and event data from all nodes in the cluster. The agent is automatically deployed and registered with the specified Log Analytics workspace after you enable container monitoring addon and specify the right encoded workspaceid and workspace key in the addon config.
@@ -21,4 +21,4 @@ Your ability to monitor performance relies on a containerized Log Analytics agen
 
 ## Onboarding
 
-Follow the instructions to [onboard the container monitoring addon for the AKS-Engine cluster(s)](../../examples/addons/container-monitoring/README.md)
+Follow the instructions to [onboard the container monitoring addon for the AKS Engine cluster(s)](../../examples/addons/container-monitoring/README.md)
