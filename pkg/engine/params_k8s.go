@@ -29,11 +29,9 @@ func assignKubernetesParameters(properties *api.Properties, parametersMap params
 		kubernetesConfig := orchestratorProfile.KubernetesConfig
 		kubernetesImageBase := kubernetesConfig.KubernetesImageBase
 		hyperkubeImageBase := kubernetesConfig.KubernetesImageBase
-		hyperkubeComponent := k8sComponents["hyperkube"]
 
 		if properties.IsAzureStackCloud() {
 			kubernetesImageBase = cloudSpecConfig.KubernetesSpecConfig.KubernetesImageBase
-			hyperkubeComponent = k8sComponents["hyperkube-azs"]
 		}
 
 		if kubernetesConfig != nil {
@@ -46,13 +44,16 @@ func assignKubernetesParameters(properties *api.Properties, parametersMap params
 				addValue(parametersMap, "kubernetesCcmImageSpec", kubernetesCcmSpec)
 			}
 
-			kubernetesHyperkubeSpec := hyperkubeImageBase + hyperkubeComponent
+			kubernetesHyperkubeSpec := hyperkubeImageBase + k8sComponents["hyperkube"]
+			if properties.IsAzureStackCloud() {
+				kubernetesHyperkubeSpec = kubernetesHyperkubeSpec + AzureStackSuffix
+			}
 			if kubernetesConfig.CustomHyperkubeImage != "" {
 				kubernetesHyperkubeSpec = kubernetesConfig.CustomHyperkubeImage
 			}
+			addValue(parametersMap, "kubernetesHyperkubeSpec", kubernetesHyperkubeSpec)
 
 			addValue(parametersMap, "kubeDNSServiceIP", kubernetesConfig.DNSServiceIP)
-			addValue(parametersMap, "kubernetesHyperkubeSpec", kubernetesHyperkubeSpec)
 			if kubernetesConfig.PrivateAzureRegistryServer != "" {
 				addValue(parametersMap, "privateAzureRegistryServer", kubernetesConfig.PrivateAzureRegistryServer)
 			}
