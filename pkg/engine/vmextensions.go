@@ -213,17 +213,20 @@ func CreateCustomExtensions(properties *api.Properties) []DeploymentARM {
 	var extensionsARM []DeploymentARM
 
 	for _, extensionProfile := range properties.ExtensionProfiles {
-		masterOptedForExtension, singleOrAll := validateProfileOptedForExtension(extensionProfile.Name, properties.MasterProfile.Extensions)
-		if masterOptedForExtension {
-			data, e := getMasterLinkedTemplateText(properties.MasterProfile, properties.OrchestratorProfile.OrchestratorType, extensionProfile, singleOrAll)
-			if e != nil {
-				fmt.Println(e.Error())
+		if properties.MasterProfile != nil {
+			masterOptedForExtension, singleOrAll := validateProfileOptedForExtension(extensionProfile.Name, properties.MasterProfile.Extensions)
+			if masterOptedForExtension {
+				data, e := getMasterLinkedTemplateText(properties.MasterProfile, properties.OrchestratorProfile.OrchestratorType, extensionProfile, singleOrAll)
+				if e != nil {
+					fmt.Println(e.Error())
+				}
+				var ext DeploymentARM
+				if err := json.Unmarshal([]byte(data), &ext); err != nil {
+					fmt.Println(err.Error())
+				}
+				extensionsARM = append(extensionsARM, ext)
 			}
-			var ext DeploymentARM
-			if err := json.Unmarshal([]byte(data), &ext); err != nil {
-				fmt.Println(err.Error())
-			}
-			extensionsARM = append(extensionsARM, ext)
+
 		}
 
 		for _, agentPoolProfile := range properties.AgentPoolProfiles {
