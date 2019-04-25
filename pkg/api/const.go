@@ -23,7 +23,7 @@ const (
 	Linux   OSType = "Linux"
 )
 
-// the LinuxDistros supported by vlabs
+// Distro string consts
 const (
 	Ubuntu          Distro = "ubuntu"
 	Ubuntu1804      Distro = "ubuntu-18.04"
