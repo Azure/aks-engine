@@ -392,6 +392,16 @@ func TestCreateCustomExtensions(t *testing.T) {
 					},
 				},
 			},
+			{
+				Name:                "windowspool2",
+				OSType:              api.Windows,
+				AvailabilityProfile: "AvailabilitySet",
+				Extensions: []api.Extension{
+					{
+						Name: "winrm",
+					},
+				},
+			},
 		},
 	}
 
@@ -421,6 +431,35 @@ func TestCreateCustomExtensions(t *testing.T) {
 						"targetVMName":          map[string]interface{}{"value": "[concat(variables('windowspool1VMNamePrefix'), copyIndex(variables('windowspool1Offset')))]"},
 						"targetVMType":          map[string]interface{}{"value": "agent"},
 						"vmIndex":               map[string]interface{}{"value": "[copyIndex(variables('windowspool1Offset'))]"},
+					},
+					Mode: resources.DeploymentMode("Incremental"),
+				},
+				Type: to.StringPtr("Microsoft.Resources/deployments"),
+			},
+		},
+		{
+			DeploymentARMResource: DeploymentARMResource{
+				APIVersion: "[variables('apiVersionDeployments')]",
+				Copy: map[string]string{
+					"count": "[sub(variables('windowspool2Count'), variables('windowspool2Offset'))]",
+					"name":  "winrmExtensionLoop",
+				},
+				DependsOn: []string{"[concat('Microsoft.Compute/virtualMachines/', variables('windowspool2VMNamePrefix'), copyIndex(variables('windowspool2Offset')), '/extensions/cse', '-agent-', copyIndex(variables('windowspool2Offset')))]"},
+			},
+			DeploymentExtended: resources.DeploymentExtended{
+				Name: to.StringPtr("[concat(variables('windowspool2VMNamePrefix'), copyIndex(variables('windowspool2Offset')), 'winrm')]"),
+				Properties: &resources.DeploymentPropertiesExtended{
+					TemplateLink: &resources.TemplateLink{
+						URI:            to.StringPtr("https://raw.githubusercontent.com/CecileRobertMichon/aks-engine/fix-extensions/extensions/winrm/v1/template.json"),
+						ContentVersion: to.StringPtr("1.0.0.0"),
+					},
+					Parameters: map[string]interface{}{
+						"apiVersionDeployments": map[string]interface{}{"value": "[variables('apiVersionDeployments')]"},
+						"artifactsLocation":     map[string]interface{}{"value": "https://raw.githubusercontent.com/CecileRobertMichon/aks-engine/fix-extensions/"},
+						"extensionParameters":   map[string]interface{}{"value": "[parameters('winrmParameters')]"},
+						"targetVMName":          map[string]interface{}{"value": "[concat(variables('windowspool2VMNamePrefix'), copyIndex(variables('windowspool2Offset')))]"},
+						"targetVMType":          map[string]interface{}{"value": "agent"},
+						"vmIndex":               map[string]interface{}{"value": "[copyIndex(variables('windowspool2Offset'))]"},
 					},
 					Mode: resources.DeploymentMode("Incremental"),
 				},
