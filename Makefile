@@ -123,7 +123,7 @@ build-container:
 
 .PHONY: clean
 clean:
-	@rm -rf $(BINDIR) ./_dist
+	@rm -rf $(BINDIR) ./_dist ./pkg/helpers/unit_tests ./pkg/**/*_generated.go
 
 GIT_BASEDIR    = $(shell git rev-parse --show-toplevel 2>/dev/null)
 ifneq ($(GIT_BASEDIR),)
