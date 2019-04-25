@@ -952,7 +952,6 @@ func getKubernetesPodStartIndex(properties *api.Properties) int {
 
 // getLinkedTemplatesForExtensions returns the
 // Microsoft.Resources/deployments for each extension
-//func getLinkedTemplatesForExtensions(properties api.Properties) string {
 func getLinkedTemplatesForExtensions(properties *api.Properties) string {
 	var result string
 

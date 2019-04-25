@@ -8,6 +8,7 @@ import (
 
 	"github.com/Azure/aks-engine/pkg/api"
 	"github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2018-10-01/compute"
+	"github.com/Azure/azure-sdk-for-go/services/resources/mgmt/2018-05-01/resources"
 	"github.com/Azure/go-autorest/autorest/to"
 	"github.com/google/go-cmp/cmp"
 )
@@ -362,6 +363,174 @@ func TestCreateAgentVMASCustomScriptExtension(t *testing.T) {
 	}
 
 	diff = cmp.Diff(cse, expectedCSE)
+
+	if diff != "" {
+		t.Errorf("unexpected diff while expecting equal structs: %s", diff)
+	}
+}
+
+func TestCreateCustomExtensions(t *testing.T) {
+	properties := &api.Properties{
+		OrchestratorProfile: &api.OrchestratorProfile{
+			OrchestratorType: Kubernetes,
+		},
+		ExtensionProfiles: []*api.ExtensionProfile{
+			{
+				Name:    "winrm",
+				Version: "v1",
+				RootURL: "https://raw.githubusercontent.com/CecileRobertMichon/aks-engine/fix-extensions/",
+			},
+		},
+		AgentPoolProfiles: []*api.AgentPoolProfile{
+			{
+				Name:                "windowspool1",
+				OSType:              api.Windows,
+				AvailabilityProfile: "AvailabilitySet",
+				Extensions: []api.Extension{
+					{
+						Name: "winrm",
+					},
+				},
+			},
+			{
+				Name:                "windowspool2",
+				OSType:              api.Windows,
+				AvailabilityProfile: "AvailabilitySet",
+				Extensions: []api.Extension{
+					{
+						Name: "winrm",
+					},
+				},
+			},
+		},
+	}
+
+	extensions := CreateCustomExtensions(properties)
+
+	expectedDeployments := []DeploymentARM{
+		{
+			DeploymentARMResource: DeploymentARMResource{
+				APIVersion: "[variables('apiVersionDeployments')]",
+				Copy: map[string]string{
+					"count": "[sub(variables('windowspool1Count'), variables('windowspool1Offset'))]",
+					"name":  "winrmExtensionLoop",
+				},
+				DependsOn: []string{"[concat('Microsoft.Compute/virtualMachines/', variables('windowspool1VMNamePrefix'), copyIndex(variables('windowspool1Offset')), '/extensions/cse', '-agent-', copyIndex(variables('windowspool1Offset')))]"},
+			},
+			DeploymentExtended: resources.DeploymentExtended{
+				Name: to.StringPtr("[concat(variables('windowspool1VMNamePrefix'), copyIndex(variables('windowspool1Offset')), 'winrm')]"),
+				Properties: &resources.DeploymentPropertiesExtended{
+					TemplateLink: &resources.TemplateLink{
+						URI:            to.StringPtr("https://raw.githubusercontent.com/CecileRobertMichon/aks-engine/fix-extensions/extensions/winrm/v1/template.json"),
+						ContentVersion: to.StringPtr("1.0.0.0"),
+					},
+					Parameters: map[string]interface{}{
+						"apiVersionDeployments": map[string]interface{}{"value": "[variables('apiVersionDeployments')]"},
+						"artifactsLocation":     map[string]interface{}{"value": "https://raw.githubusercontent.com/CecileRobertMichon/aks-engine/fix-extensions/"},
+						"extensionParameters":   map[string]interface{}{"value": "[parameters('winrmParameters')]"},
+						"targetVMName":          map[string]interface{}{"value": "[concat(variables('windowspool1VMNamePrefix'), copyIndex(variables('windowspool1Offset')))]"},
+						"targetVMType":          map[string]interface{}{"value": "agent"},
+						"vmIndex":               map[string]interface{}{"value": "[copyIndex(variables('windowspool1Offset'))]"},
+					},
+					Mode: resources.DeploymentMode("Incremental"),
+				},
+				Type: to.StringPtr("Microsoft.Resources/deployments"),
+			},
+		},
+		{
+			DeploymentARMResource: DeploymentARMResource{
+				APIVersion: "[variables('apiVersionDeployments')]",
+				Copy: map[string]string{
+					"count": "[sub(variables('windowspool2Count'), variables('windowspool2Offset'))]",
+					"name":  "winrmExtensionLoop",
+				},
+				DependsOn: []string{"[concat('Microsoft.Compute/virtualMachines/', variables('windowspool2VMNamePrefix'), copyIndex(variables('windowspool2Offset')), '/extensions/cse', '-agent-', copyIndex(variables('windowspool2Offset')))]"},
+			},
+			DeploymentExtended: resources.DeploymentExtended{
+				Name: to.StringPtr("[concat(variables('windowspool2VMNamePrefix'), copyIndex(variables('windowspool2Offset')), 'winrm')]"),
+				Properties: &resources.DeploymentPropertiesExtended{
+					TemplateLink: &resources.TemplateLink{
+						URI:            to.StringPtr("https://raw.githubusercontent.com/CecileRobertMichon/aks-engine/fix-extensions/extensions/winrm/v1/template.json"),
+						ContentVersion: to.StringPtr("1.0.0.0"),
+					},
+					Parameters: map[string]interface{}{
+						"apiVersionDeployments": map[string]interface{}{"value": "[variables('apiVersionDeployments')]"},
+						"artifactsLocation":     map[string]interface{}{"value": "https://raw.githubusercontent.com/CecileRobertMichon/aks-engine/fix-extensions/"},
+						"extensionParameters":   map[string]interface{}{"value": "[parameters('winrmParameters')]"},
+						"targetVMName":          map[string]interface{}{"value": "[concat(variables('windowspool2VMNamePrefix'), copyIndex(variables('windowspool2Offset')))]"},
+						"targetVMType":          map[string]interface{}{"value": "agent"},
+						"vmIndex":               map[string]interface{}{"value": "[copyIndex(variables('windowspool2Offset'))]"},
+					},
+					Mode: resources.DeploymentMode("Incremental"),
+				},
+				Type: to.StringPtr("Microsoft.Resources/deployments"),
+			},
+		},
+	}
+
+	diff := cmp.Diff(extensions, expectedDeployments)
+
+	if diff != "" {
+		t.Errorf("unexpected diff while expecting equal structs: %s", diff)
+	}
+	properties = &api.Properties{
+		OrchestratorProfile: &api.OrchestratorProfile{
+			OrchestratorType: Kubernetes,
+		},
+		ExtensionProfiles: []*api.ExtensionProfile{
+			{
+				Name:    "hello-world-k8s",
+				Version: "v1",
+				RootURL: "https://raw.githubusercontent.com/CecileRobertMichon/aks-engine/fix-extensions/",
+			},
+		},
+		MasterProfile: &api.MasterProfile{
+			Count:               3,
+			DNSPrefix:           "testcluster",
+			AvailabilityProfile: "AvailabilitySet",
+			Extensions: []api.Extension{
+				{
+					Name: "hello-world-k8s",
+				},
+			},
+		},
+	}
+
+	extensions = CreateCustomExtensions(properties)
+
+	expectedDeployments = []DeploymentARM{
+		{
+			DeploymentARMResource: DeploymentARMResource{
+				APIVersion: "[variables('apiVersionDeployments')]",
+				Copy: map[string]string{
+					"count": "[sub(variables('masterCount'), variables('masterOffset'))]",
+					"name":  "helloWorldExtensionLoop",
+				},
+				DependsOn: []string{"[concat('Microsoft.Compute/virtualMachines/', variables('masterVMNamePrefix'), copyIndex(variables('masterOffset')), '/extensions/cse', '-master-', copyIndex(variables('masterOffset')))]"},
+			},
+			DeploymentExtended: resources.DeploymentExtended{
+				Name: to.StringPtr("[concat(variables('masterVMNamePrefix'), copyIndex(variables('masterOffset')), 'HelloWorldK8s')]"),
+				Properties: &resources.DeploymentPropertiesExtended{
+					TemplateLink: &resources.TemplateLink{
+						URI:            to.StringPtr("https://raw.githubusercontent.com/CecileRobertMichon/aks-engine/fix-extensions/extensions/hello-world-k8s/v1/template.json"),
+						ContentVersion: to.StringPtr("1.0.0.0"),
+					},
+					Parameters: map[string]interface{}{
+						"apiVersionDeployments": map[string]interface{}{"value": "[variables('apiVersionDeployments')]"},
+						"artifactsLocation":     map[string]interface{}{"value": "https://raw.githubusercontent.com/CecileRobertMichon/aks-engine/fix-extensions/"},
+						"extensionParameters":   map[string]interface{}{"value": "[parameters('hello-world-k8sParameters')]"},
+						"targetVMName":          map[string]interface{}{"value": "[concat(variables('masterVMNamePrefix'), copyIndex(variables('masterOffset')))]"},
+						"targetVMType":          map[string]interface{}{"value": "master"},
+						"vmIndex":               map[string]interface{}{"value": "[copyIndex(variables('masterOffset'))]"},
+					},
+					Mode: resources.DeploymentMode("Incremental"),
+				},
+				Type: to.StringPtr("Microsoft.Resources/deployments"),
+			},
+		},
+	}
+
+	diff = cmp.Diff(extensions, expectedDeployments)
 
 	if diff != "" {
 		t.Errorf("unexpected diff while expecting equal structs: %s", diff)
