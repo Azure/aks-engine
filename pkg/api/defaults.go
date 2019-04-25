@@ -22,7 +22,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-// Distros currently supported
+// DistroValues is a list of currently supported distros
 var DistroValues = []Distro{"", Ubuntu, Ubuntu1804, RHEL, CoreOS, AKS, AKS1804, ACC1604}
 
 // SetPropertiesDefaults for the container Properties, returns true if certs are generated
