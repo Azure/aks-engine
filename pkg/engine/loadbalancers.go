@@ -91,7 +91,7 @@ func CreateLoadBalancer(prop *api.Properties, isVMSS bool) LoadBalancerARM {
 					ID: to.StringPtr("[concat(variables('masterLbID'), '/backendAddressPools/', variables('masterLbBackendPoolName'))]"),
 				},
 				Protocol:             network.TransportProtocolUDP,
-				FrontendPort:         to.Int32Ptr(123),
+				FrontendPort:         to.Int32Ptr(1123),
 				BackendPort:          to.Int32Ptr(1123),
 				EnableFloatingIP:     to.BoolPtr(false),
 				IdleTimeoutInMinutes: to.Int32Ptr(5),
@@ -241,7 +241,7 @@ func CreateMasterInternalLoadBalancer(cs *api.ContainerService) LoadBalancerARM 
 				FrontendIPConfiguration: &network.SubResource{
 					ID: to.StringPtr("[variables('masterInternalLbIPConfigID')]"),
 				},
-				FrontendPort:         to.Int32Ptr(123),
+				FrontendPort:         to.Int32Ptr(1123),
 				IdleTimeoutInMinutes: to.Int32Ptr(5),
 				Protocol:             network.TransportProtocolUDP,
 				Probe: &network.SubResource{
@@ -271,8 +271,8 @@ func getUDPLoadBalancingRule() network.LoadBalancingRule {
 				ID: to.StringPtr("[concat(variables('masterLbID'), '/backendAddressPools/', variables('masterLbBackendPoolName'))]"),
 			},
 			Protocol:             network.TransportProtocolUDP,
-			FrontendPort:         to.Int32Ptr(123),
-			BackendPort:          to.Int32Ptr(123),
+			FrontendPort:         to.Int32Ptr(1123),
+			BackendPort:          to.Int32Ptr(1123),
 			EnableFloatingIP:     to.BoolPtr(false),
 			IdleTimeoutInMinutes: to.Int32Ptr(5),
 			LoadDistribution:     network.Default,
