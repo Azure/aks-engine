@@ -69,7 +69,7 @@ type List struct {
 
 // Get returns the current pvs for a given kubeconfig
 func Get() (*List, error) {
-	cmd := exec.Command("kubectl", "get", "pv", "-o", "json")
+	cmd := exec.Command("k", "get", "pv", "-o", "json")
 	util.PrintCommand(cmd)
 	out, err := cmd.CombinedOutput()
 	if err != nil {

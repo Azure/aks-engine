@@ -7,6 +7,8 @@ import (
 	"encoding/json"
 	"strings"
 
+	"github.com/Azure/go-autorest/autorest/azure"
+
 	"github.com/Azure/aks-engine/pkg/api/common"
 	"github.com/Azure/go-autorest/autorest/to"
 	"github.com/pkg/errors"
@@ -47,6 +49,7 @@ type Properties struct {
 	CertificateProfile      *CertificateProfile      `json:"certificateProfile,omitempty"`
 	AADProfile              *AADProfile              `json:"aadProfile,omitempty"`
 	FeatureFlags            *FeatureFlags            `json:"featureFlags,omitempty"`
+	CustomCloudProfile      *CustomCloudProfile      `json:"customCloudProfile,omitempty"`
 }
 
 // FeatureFlags defines feature-flag restricted functionality
@@ -126,7 +129,7 @@ type CertificateProfile struct {
 type LinuxProfile struct {
 	AdminUsername string `json:"adminUsername" validate:"required"`
 	SSH           struct {
-		PublicKeys []PublicKey `json:"publicKeys" validate:"required,len=1"`
+		PublicKeys []PublicKey `json:"publicKeys" validate:"required,min=1"`
 	} `json:"ssh" validate:"required"`
 	Secrets            []KeyVaultSecrets   `json:"secrets,omitempty"`
 	ScriptRootURL      string              `json:"scriptroot,omitempty"`
@@ -153,15 +156,17 @@ type CustomNodesDNS struct {
 
 // WindowsProfile represents the windows parameters passed to the cluster
 type WindowsProfile struct {
-	AdminUsername         string            `json:"adminUsername,omitempty"`
-	AdminPassword         string            `json:"adminPassword,omitempty"`
-	ImageVersion          string            `json:"imageVersion,omitempty"`
-	WindowsImageSourceURL string            `json:"WindowsImageSourceUrl"`
-	WindowsPublisher      string            `json:"WindowsPublisher"`
-	WindowsOffer          string            `json:"WindowsOffer"`
-	WindowsSku            string            `json:"WindowsSku"`
-	WindowsDockerVersion  string            `json:"windowsDockerVersion"`
-	Secrets               []KeyVaultSecrets `json:"secrets,omitempty"`
+	AdminUsername          string            `json:"adminUsername,omitempty"`
+	AdminPassword          string            `json:"adminPassword,omitempty"`
+	ImageVersion           string            `json:"imageVersion,omitempty"`
+	WindowsImageSourceURL  string            `json:"WindowsImageSourceUrl"`
+	WindowsPublisher       string            `json:"WindowsPublisher"`
+	WindowsOffer           string            `json:"WindowsOffer"`
+	WindowsSku             string            `json:"WindowsSku"`
+	WindowsDockerVersion   string            `json:"windowsDockerVersion"`
+	Secrets                []KeyVaultSecrets `json:"secrets,omitempty"`
+	SSHEnabled             bool              `json:"sshEnabled,omitempty"`
+	EnableAutomaticUpdates *bool             `json:"enableAutomaticUpdates,omitempty"`
 }
 
 // ProvisioningState represents the current state of container service resource.
@@ -288,6 +293,8 @@ type KubernetesConfig struct {
 	UserAssignedClientID            string            `json:"userAssignedClientID,omitempty"` //Note: cannot be provided in config. Used *only* for transferring this to azure.json.
 	CustomHyperkubeImage            string            `json:"customHyperkubeImage,omitempty"`
 	DockerEngineVersion             string            `json:"dockerEngineVersion,omitempty"` // Deprecated
+	MobyVersion                     string            `json:"mobyVersion,omitempty"`
+	ContainerdVersion               string            `json:"containerdVersion,omitempty"`
 	CustomCcmImage                  string            `json:"customCcmImage,omitempty"`
 	UseCloudControllerManager       *bool             `json:"useCloudControllerManager,omitempty"`
 	CustomWindowsPackageURL         string            `json:"customWindowsPackageURL,omitempty"`
@@ -328,6 +335,7 @@ type KubernetesConfig struct {
 	KeyVaultSku                     string            `json:"keyVaultSku,omitempty"`
 	MaximumLoadBalancerRuleCount    int               `json:"maximumLoadBalancerRuleCount,omitempty"`
 	ProxyMode                       KubeProxyMode     `json:"kubeProxyMode,omitempty"`
+	PrivateAzureRegistryServer      string            `json:"privateAzureRegistryServer,omitempty"`
 }
 
 // CustomFile has source as the full absolute source path to a file and dest
@@ -444,16 +452,18 @@ type AgentPoolProfile struct {
 	Role                                AgentPoolProfileRole `json:"role,omitempty"`
 	AcceleratedNetworkingEnabled        *bool                `json:"acceleratedNetworkingEnabled,omitempty"`
 	AcceleratedNetworkingEnabledWindows *bool                `json:"acceleratedNetworkingEnabledWindows,omitempty"`
+	VMSSOverProvisioningEnabled         *bool                `json:"vmssOverProvisioningEnabled,omitempty"`
 
 	// subnet is internal
 	subnet string
 
-	FQDN                  string            `json:"fqdn"`
-	CustomNodeLabels      map[string]string `json:"customNodeLabels,omitempty"`
-	PreProvisionExtension *Extension        `json:"preProvisionExtension"`
-	Extensions            []Extension       `json:"extensions"`
-	SinglePlacementGroup  *bool             `json:"singlePlacementGroup,omitempty"`
-	AvailabilityZones     []string          `json:"availabilityZones,omitempty"`
+	FQDN                   string            `json:"fqdn"`
+	CustomNodeLabels       map[string]string `json:"customNodeLabels,omitempty"`
+	PreProvisionExtension  *Extension        `json:"preProvisionExtension"`
+	Extensions             []Extension       `json:"extensions"`
+	SinglePlacementGroup   *bool             `json:"singlePlacementGroup,omitempty"`
+	AvailabilityZones      []string          `json:"availabilityZones,omitempty"`
+	EnableVMSSNodePublicIP *bool             `json:"enableVMSSNodePublicIP,omitempty"`
 }
 
 // AgentPoolProfileRole represents an agent role
@@ -504,6 +514,29 @@ type OSType string
 // Distro represents Linux distro to use for Linux VMs
 type Distro string
 
+// DependenciesLocation represents location to retrieve the dependencies.
+type DependenciesLocation string
+
+// CustomCloudProfile represents the custom cloud profile
+type CustomCloudProfile struct {
+	Environment                *azure.Environment          `json:"environment,omitempty"`
+	AzureEnvironmentSpecConfig *AzureEnvironmentSpecConfig `json:"azureEnvironmentSpecConfig,omitempty"`
+	IdentitySystem             string                      `json:"identitySystem,omitempty"`
+	AuthenticationMethod       string                      `json:"authenticationMethod,omitempty"`
+	DependenciesLocation       DependenciesLocation        `json:"dependenciesLocation,omitempty"`
+	PortalURL                  string                      `json:"portalURL,omitempty"`
+}
+
+// HasCoreOS returns true if the cluster contains coreos nodes
+func (p *Properties) HasCoreOS() bool {
+	for _, agentPoolProfile := range p.AgentPoolProfiles {
+		if agentPoolProfile.Distro == CoreOS {
+			return true
+		}
+	}
+	return false
+}
+
 // HasWindows returns true if the cluster contains windows
 func (p *Properties) HasWindows() bool {
 	for _, agentPoolProfile := range p.AgentPoolProfiles {
@@ -526,6 +559,11 @@ func (p *Properties) HasAvailabilityZones() bool {
 		}
 	}
 	return hasZones
+}
+
+// IsAzureStackCloud return true if the cloud is AzureStack
+func (p *Properties) IsAzureStackCloud() bool {
+	return p.CustomCloudProfile != nil
 }
 
 // IsCustomVNET returns true if the customer brought their own VNET
@@ -700,7 +738,7 @@ func (o *OrchestratorProfile) IsSwarmMode() bool {
 // RequiresDocker returns if the kubernetes settings require docker binary to be installed.
 func (k *KubernetesConfig) RequiresDocker() bool {
 	runtime := strings.ToLower(k.ContainerRuntime)
-	return runtime == "docker" || runtime == ""
+	return runtime == Docker || runtime == ""
 }
 
 // IsRBACEnabled checks if RBAC is enabled

@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-set -eo pipefail
+set -euo pipefail
 
 covermode=${COVERMODE:-atomic}
 coverdir=$(mktemp -d /tmp/coverage.XXXXXXXXXX)
@@ -36,7 +36,7 @@ generate_cover_data() {
 }
 
 push_to_coveralls() {
-  goveralls -coverprofile="${profile}" -repotoken $COVERALLS_TOKEN
+  goveralls -coverprofile="${profile}" -repotoken "$COVERALLS_TOKEN"
 }
 
 generate_cover_data
@@ -47,11 +47,11 @@ case "${1-}" in
     go tool cover -html "${profile}"
     ;;
   --coveralls)
-		if [ -z $COVERALLS_TOKEN ]; then
+		if [ -z "$COVERALLS_TOKEN" ]; then
+			# shellcheck disable=SC2016
 			echo '$COVERALLS_TOKEN not set. Skipping pushing coverage report to coveralls.io'
 			exit
 		fi
     push_to_coveralls
     ;;
 esac
-

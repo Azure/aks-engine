@@ -71,8 +71,8 @@ required = [
   version = "0.8.0"
 
 [[constraint]]
-  name = "github.com/satori/go.uuid"
-  version = "1.2.0"
+  name = "github.com/gofrs/uuid"
+  version = "3.2.0"
 
 [[constraint]]
   name = "github.com/sirupsen/logrus"
@@ -123,3 +123,8 @@ required = [
 [[constraint]]
   name = "gopkg.in/fsnotify.v1"
   source = "https://github.com/fsnotify/fsnotify.git"
+
+
+[[constraint]]
+  name = "gopkg.in/jarcoal/httpmock.v1"
+  version = "1.0.1"

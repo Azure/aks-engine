@@ -92,29 +92,29 @@ func (cs *ContainerService) setAddonsConfig(isUpdate bool) {
 
 	defaultBlobfuseFlexVolumeAddonsConfig := KubernetesAddon{
 		Name:    DefaultBlobfuseFlexVolumeAddonName,
-		Enabled: to.BoolPtr(common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.8.0") && DefaultBlobfuseFlexVolumeAddonEnabled),
+		Enabled: to.BoolPtr(common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.8.0") && DefaultBlobfuseFlexVolumeAddonEnabled && !cs.Properties.HasCoreOS()),
 		Containers: []KubernetesContainerSpec{
 			{
 				Name:           DefaultBlobfuseFlexVolumeAddonName,
 				CPURequests:    "50m",
-				MemoryRequests: "10Mi",
+				MemoryRequests: "100Mi",
 				CPULimits:      "50m",
-				MemoryLimits:   "10Mi",
-				Image:          "mcr.microsoft.com/k8s/flexvolume/blobfuse-flexvolume:1.0.7",
+				MemoryLimits:   "100Mi",
+				Image:          "mcr.microsoft.com/k8s/flexvolume/blobfuse-flexvolume:1.0.8",
 			},
 		},
 	}
 
 	defaultSMBFlexVolumeAddonsConfig := KubernetesAddon{
 		Name:    DefaultSMBFlexVolumeAddonName,
-		Enabled: to.BoolPtr(common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.8.0") && DefaultSMBFlexVolumeAddonEnabled),
+		Enabled: to.BoolPtr(common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.8.0") && DefaultSMBFlexVolumeAddonEnabled && !cs.Properties.HasCoreOS()),
 		Containers: []KubernetesContainerSpec{
 			{
 				Name:           DefaultSMBFlexVolumeAddonName,
 				CPURequests:    "50m",
-				MemoryRequests: "10Mi",
+				MemoryRequests: "100Mi",
 				CPULimits:      "50m",
-				MemoryLimits:   "10Mi",
+				MemoryLimits:   "100Mi",
 				Image:          "mcr.microsoft.com/k8s/flexvolume/smb-flexvolume:1.0.2",
 			},
 		},
@@ -122,15 +122,15 @@ func (cs *ContainerService) setAddonsConfig(isUpdate bool) {
 
 	defaultKeyVaultFlexVolumeAddonsConfig := KubernetesAddon{
 		Name:    DefaultKeyVaultFlexVolumeAddonName,
-		Enabled: to.BoolPtr(DefaultKeyVaultFlexVolumeAddonEnabled),
+		Enabled: to.BoolPtr(DefaultKeyVaultFlexVolumeAddonEnabled && !cs.Properties.HasCoreOS()),
 		Containers: []KubernetesContainerSpec{
 			{
 				Name:           DefaultKeyVaultFlexVolumeAddonName,
 				CPURequests:    "50m",
-				MemoryRequests: "10Mi",
+				MemoryRequests: "100Mi",
 				CPULimits:      "50m",
-				MemoryLimits:   "10Mi",
-				Image:          "mcr.microsoft.com/k8s/flexvolume/keyvault-flexvolume:v0.0.5",
+				MemoryLimits:   "100Mi",
+				Image:          "mcr.microsoft.com/k8s/flexvolume/keyvault-flexvolume:v0.0.7",
 			},
 		},
 	}
@@ -178,15 +178,15 @@ func (cs *ContainerService) setAddonsConfig(isUpdate bool) {
 
 	defaultNVIDIADevicePluginAddonsConfig := KubernetesAddon{
 		Name:    NVIDIADevicePluginAddonName,
-		Enabled: to.BoolPtr(cs.Properties.HasNSeriesSKU() && common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.10.0")),
+		Enabled: to.BoolPtr(cs.Properties.HasNSeriesSKU() && common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.10.0") && !cs.Properties.HasCoreOS()),
 		Containers: []KubernetesContainerSpec{
 			{
 				Name: NVIDIADevicePluginAddonName,
 				// from https://github.com/kubernetes/kubernetes/blob/master/cluster/addons/device-plugins/nvidia-gpu/daemonset.yaml#L44
 				CPURequests:    "50m",
-				MemoryRequests: "10Mi",
+				MemoryRequests: "100Mi",
 				CPULimits:      "50m",
-				MemoryLimits:   "10Mi",
+				MemoryLimits:   "100Mi",
 				Image:          specConfig.NVIDIAImageBase + k8sComponents[NVIDIADevicePluginAddonName],
 			},
 		},
@@ -259,7 +259,7 @@ func (cs *ContainerService) setAddonsConfig(isUpdate bool) {
 				Name:           DefaultDNSAutoscalerAddonName,
 				Image:          specConfig.KubernetesImageBase + "cluster-proportional-autoscaler-amd64:1.1.1",
 				CPURequests:    "20m",
-				MemoryRequests: "10Mi",
+				MemoryRequests: "100Mi",
 			},
 		},
 	}
@@ -364,5 +364,5 @@ func azureNetworkPolicyAddonEnabled(o *OrchestratorProfile) *bool {
 }
 
 func azureCNINetworkMonitorAddonEnabled(o *OrchestratorProfile) *bool {
-	return to.BoolPtr(o.IsAzureCNI())
+	return to.BoolPtr(o.IsAzureCNI() && o.KubernetesConfig.NetworkPolicy != NetworkPolicyCalico)
 }

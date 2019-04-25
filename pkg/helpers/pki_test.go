@@ -168,7 +168,8 @@ func TestSubjectAltNameInCert(t *testing.T) {
 		if block == nil {
 			panic("failed to parse certificate PEM")
 		}
-		cert, err := x509.ParseCertificate(block.Bytes)
+		var cert *x509.Certificate
+		cert, err = x509.ParseCertificate(block.Bytes)
 
 		if err != nil {
 			t.Fatalf("Can not parse generated certificate %s", err)
@@ -180,7 +181,7 @@ func TestSubjectAltNameInCert(t *testing.T) {
 				Roots:   roots,
 			}
 
-			if _, err := cert.Verify(opts); err != nil {
+			if _, err = cert.Verify(opts); err != nil {
 				t.Fatalf("failed to verify certificate: %s", err)
 			}
 		}

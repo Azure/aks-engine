@@ -49,15 +49,15 @@ func newGenerateCmd() *cobra.Command {
 		Long:  generateLongDescription,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if err := gc.validate(cmd, args); err != nil {
-				log.Fatalf(fmt.Sprintf("error validating generateCmd: %s", err.Error()))
+				return errors.Wrap(err, "validating generateCmd")
 			}
 
 			if err := gc.mergeAPIModel(); err != nil {
-				log.Fatalf(fmt.Sprintf("error merging API model in generateCmd: %s", err.Error()))
+				return errors.Wrap(err, "merging API model in generateCmd")
 			}
 
 			if err := gc.loadAPIModel(cmd, args); err != nil {
-				log.Fatalf(fmt.Sprintf("error loading API model in generateCmd: %s", err.Error()))
+				return errors.Wrap(err, "loading API model in generateCmd")
 			}
 
 			return gc.run()
@@ -65,7 +65,7 @@ func newGenerateCmd() *cobra.Command {
 	}
 
 	f := generateCmd.Flags()
-	f.StringVarP(&gc.apimodelPath, "api-model", "m", "", "path to the apimodel file")
+	f.StringVarP(&gc.apimodelPath, "api-model", "m", "", "path to your cluster definition file")
 	f.StringVarP(&gc.outputDirectory, "output-directory", "o", "", "output directory (derived from FQDN if absent)")
 	f.StringVar(&gc.caCertificatePath, "ca-certificate-path", "", "path to the CA certificate to use for Kubernetes PKI assets")
 	f.StringVar(&gc.caPrivateKeyPath, "ca-private-key-path", "", "path to the CA private key to use for Kubernetes PKI assets")
@@ -179,26 +179,29 @@ func (gc *generateCmd) run() error {
 	}
 	templateGenerator, err := engine.InitializeTemplateGenerator(ctx)
 	if err != nil {
-		log.Fatalf("failed to initialize template generator: %s", err.Error())
+		return errors.Wrap(err, "initializing template generator")
 	}
 
 	certsGenerated, err := gc.containerService.SetPropertiesDefaults(false, false)
 	if err != nil {
-		log.Fatalf("error in SetPropertiesDefaults template %s: %s", gc.apimodelPath, err.Error())
-		os.Exit(1)
+		return errors.Wrapf(err, "in SetPropertiesDefaults template %s", gc.apimodelPath)
 	}
-	template, parameters, err := templateGenerator.GenerateTemplate(gc.containerService, engine.DefaultGeneratorCode, BuildTag)
+
+	//TODO remove these debug statements when we're new template generation implementation is enabled!
+	//bts, _ := json.Marshal(gc.containerService)
+	//log.Info(string(bts))
+
+	template, parameters, err := templateGenerator.GenerateTemplateV2(gc.containerService, engine.DefaultGeneratorCode, BuildTag)
 	if err != nil {
-		log.Fatalf("error generating template %s: %s", gc.apimodelPath, err.Error())
-		os.Exit(1)
+		return errors.Wrapf(err, "generating template %s", gc.apimodelPath)
 	}
 
 	if !gc.noPrettyPrint {
 		if template, err = transform.PrettyPrintArmTemplate(template); err != nil {
-			log.Fatalf("error pretty printing template: %s \n", err.Error())
+			return errors.Wrap(err, "pretty-printing template")
 		}
 		if parameters, err = transform.BuildAzureParametersFile(parameters); err != nil {
-			log.Fatalf("error pretty printing template parameters: %s \n", err.Error())
+			return errors.Wrap(err, "pretty-printing template parameters")
 		}
 	}
 
@@ -208,7 +211,7 @@ func (gc *generateCmd) run() error {
 		},
 	}
 	if err = writer.WriteTLSArtifacts(gc.containerService, gc.apiVersion, template, parameters, gc.outputDirectory, certsGenerated, gc.parametersOnly); err != nil {
-		log.Fatalf("error writing artifacts: %s \n", err.Error())
+		return errors.Wrap(err, "writing artifacts")
 	}
 
 	return nil

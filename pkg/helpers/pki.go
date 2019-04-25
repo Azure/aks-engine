@@ -23,7 +23,7 @@ import (
 
 const (
 	// ValidityDuration specifies the duration an TLS certificate is valid
-	ValidityDuration = time.Hour * 24 * 365 * 2
+	ValidityDuration = time.Hour * 24 * 365 * 30
 	// PkiKeySize is the size in bytes of the PKI key
 	PkiKeySize = 4096
 )

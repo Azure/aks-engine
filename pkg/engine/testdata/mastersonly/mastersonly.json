@@ -1,0 +1,32 @@
+{
+    "apiVersion": "2017-07-01",
+    "properties": {
+        "orchestratorProfile": {
+            "orchestratorType": "Kubernetes",
+            "orchestratorRelease": "1.11",
+            "kubernetesConfig": {
+                "loadBalancerSku": "Standard",
+                "excludeMasterFromStandardLB": true
+            }
+        },
+        "masterProfile": {
+            "count": 3,
+            "dnsPrefix": "prefix",
+            "vmSize": "Standard_D2_v2"
+        },
+        "linuxProfile": {
+            "adminUsername": "azureuser",
+            "ssh": {
+                "publicKeys": [
+                    {
+                        "keyData": "ssh-rsa PUBLICKEY azureuser@linuxvm"
+                    }
+                ]
+            }
+        },
+        "servicePrincipalProfile": {
+            "clientId": "ServicePrincipalClientID",
+            "secret": "myServicePrincipalClientSecret"
+        }
+    }
+}

@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
+// Package utils provides helper methods to assist with ARM operations.
 package utils
 
 import (
@@ -10,7 +11,7 @@ import (
 	"strings"
 
 	"github.com/Azure/aks-engine/pkg/api"
-	"github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2018-04-01/compute"
+	"github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2018-10-01/compute"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 )
@@ -31,12 +32,16 @@ const (
 
 	k8sWindowsOldVMNamingFormat = "^([a-fA-F0-9]{5})([0-9a-zA-Z]{3})([9])([a-zA-Z0-9]{3,5})$"
 	k8sWindowsVMNamingFormat    = "^([a-fA-F0-9]{4})([0-9a-zA-Z]{3})([0-9]{3,8})$"
+
+	windowsVmssNamingFormatV2       = "aks([0-9a-zA-Z]+)$"
+	windowsVmssAgentPoolNameIndexV2 = 1
 )
 
 var vmnameLinuxRegexp *regexp.Regexp
 var vmssnameRegexp *regexp.Regexp
 var vmnameWindowsRegexp *regexp.Regexp
 var oldvmnameWindowsRegexp *regexp.Regexp
+var windowsVmssRegexV2 *regexp.Regexp
 
 func init() {
 	vmnameLinuxRegexp = regexp.MustCompile(k8sLinuxVMNamingFormat)
@@ -44,11 +49,12 @@ func init() {
 	oldvmnameWindowsRegexp = regexp.MustCompile(k8sWindowsOldVMNamingFormat)
 
 	vmssnameRegexp = regexp.MustCompile(vmssNamingFormat)
+	windowsVmssRegexV2 = regexp.MustCompile(windowsVmssNamingFormatV2)
 }
 
 // ResourceName returns the last segment (the resource name) for the specified resource identifier.
-func ResourceName(ID string) (string, error) {
-	parts := strings.Split(ID, "/")
+func ResourceName(id string) (string, error) {
+	parts := strings.Split(id, "/")
 	name := parts[len(parts)-1]
 	if len(name) == 0 {
 		return "", errors.Errorf("resource name was missing from identifier")
@@ -58,14 +64,14 @@ func ResourceName(ID string) (string, error) {
 }
 
 // SplitBlobURI returns a decomposed blob URI parts: accountName, containerName, blobName.
-func SplitBlobURI(URI string) (string, string, string, error) {
-	uri, err := url.Parse(URI)
+func SplitBlobURI(uri string) (string, string, string, error) {
+	parsed, err := url.Parse(uri)
 	if err != nil {
 		return "", "", "", err
 	}
 
-	accountName := strings.Split(uri.Host, ".")[0]
-	urlParts := strings.Split(uri.Path, "/")
+	accountName := strings.Split(parsed.Host, ".")[0]
+	urlParts := strings.Split(parsed.Path, "/")
 
 	containerName := urlParts[1]
 	blobPath := strings.Join(urlParts[2:], "/")
@@ -97,6 +103,17 @@ func VmssNameParts(vmssName string) (poolIdentifier, nameSuffix string, err erro
 	}
 
 	return vmssNameParts[vmssAgentPoolNameIndex], vmssNameParts[vmssClusterIDIndex], nil
+}
+
+// WindowsVmssNameParts returns the agent pool name from the VMSS name.
+// For windows, the VMSS name is 'aks' concatenated with agentpool name
+func WindowsVmssNameParts(vmssName string) (poolIdentifier string, err error) {
+	vmssNameParts := windowsVmssRegexV2.FindStringSubmatch(vmssName)
+	if len(vmssNameParts) != 2 {
+		return "", errors.New("resource name was missing from identifier")
+	}
+
+	return vmssNameParts[windowsVmssAgentPoolNameIndexV2], nil
 }
 
 // WindowsVMNameParts returns parts of Windows VM name
@@ -150,12 +167,11 @@ func GetVMNameIndex(osType compute.OperatingSystemTypes, vmName string) (int, er
 }
 
 // GetK8sVMName reconstructs the VM name
-func GetK8sVMName(p *api.Properties, agentPoolIndex, agentIndex int) (string, error) {
-	if len(p.AgentPoolProfiles) > agentPoolIndex {
-		vmPrefix := p.GetAgentVMPrefix(p.AgentPoolProfiles[agentPoolIndex])
-		if vmPrefix != "" {
-			return vmPrefix + strconv.Itoa(agentIndex), nil
-		}
+func GetK8sVMName(p *api.Properties, agentPoolProfile *api.AgentPoolProfile, agentIndex int) (string, error) {
+	vmPrefix := p.GetAgentVMPrefix(agentPoolProfile, p.GetAgentPoolIndexByName(agentPoolProfile.Name))
+	if vmPrefix != "" {
+		return vmPrefix + strconv.Itoa(agentIndex), nil
 	}
+
 	return "", errors.Errorf("Failed to reconstruct VM Name")
 }

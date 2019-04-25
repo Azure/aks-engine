@@ -23,13 +23,15 @@ const (
 	Linux   OSType = "Linux"
 )
 
-// the LinuxDistros supported by vlabs
+// Distro string consts
 const (
 	Ubuntu          Distro = "ubuntu"
+	Ubuntu1804      Distro = "ubuntu-18.04"
 	RHEL            Distro = "rhel"
 	CoreOS          Distro = "coreos"
 	AKS             Distro = "aks"
-	AKSDockerEngine Distro = "aks-docker-engine"
+	AKSDockerEngine Distro = "aks-docker-engine" // deprecated docker-engine distro
+	AKS1804         Distro = "aks-18.04"
 	ACC1604         Distro = "acc-16.04"
 )
 
@@ -43,7 +45,7 @@ const (
 	// DockerCEDockerComposeVersion is the Docker Compose version
 	DockerCEDockerComposeVersion = "1.14.0"
 	// KubernetesWindowsDockerVersion is the default version for docker on Windows nodes in kubernetes
-	KubernetesWindowsDockerVersion = "18.09.0"
+	KubernetesWindowsDockerVersion = "18.09.2"
 	// KubernetesDefaultWindowsSku is the default SKU for Windows VMs in kubernetes
 	KubernetesDefaultWindowsSku = "Datacenter-Core-1809-with-Containers-smalldisk"
 )
@@ -100,6 +102,14 @@ const (
 	ScaleSetEvictionPolicyDeallocate = "Deallocate"
 )
 
+// Supported container runtimes
+const (
+	Docker          = "docker"
+	ClearContainers = "clear-containers"
+	KataContainers  = "kata-containers"
+	Containerd      = "containerd"
+)
+
 // storage profiles
 const (
 	// StorageAccount means that the nodes use raw storage accounts for their os and attached volumes
@@ -112,7 +122,7 @@ const (
 const publicAgentPoolSuffix = "-public"
 
 const (
-	// DefaultHeapsterAddonEnabled determines the acs-engine provided default for enabling heapster addon
+	// DefaultHeapsterAddonEnabled determines the aks-engine provided default for enabling heapster addon
 	DefaultHeapsterAddonEnabled = true
 	// DefaultTillerAddonEnabled determines the aks-engine provided default for enabling tiller addon
 	DefaultTillerAddonEnabled = true
@@ -203,6 +213,8 @@ const (
 	DefaultAcceleratedNetworkingWindowsEnabled = false
 	// DefaultAcceleratedNetworking determines the aks-engine provided default for enabling accelerated networking on Linux nodes
 	DefaultAcceleratedNetworking = true
+	// DefaultVMSSOverProvisioningEnabled determines the aks-engine provided default for enabling VMSS Overprovisioning
+	DefaultVMSSOverProvisioningEnabled = false
 	// DefaultDNSAutoscalerAddonName is the name of the dns-autoscaler addon
 	DefaultDNSAutoscalerAddonName = "dns-autoscaler"
 	// DefaultUseCosmos determines if the cluster will use cosmos as etcd storage
@@ -210,6 +222,24 @@ const (
 	// DefaultMaximumLoadBalancerRuleCount determines the default value of maximum allowed loadBalancer rule count according to
 	// https://docs.microsoft.com/en-us/azure/azure-subscription-service-limits#load-balancer.
 	DefaultMaximumLoadBalancerRuleCount = 250
+	// DefaultEnableAutomaticUpdates determines the aks-engine provided default for enabling automatic updates
+	DefaultEnableAutomaticUpdates = true
+	// DefaultPreserveNodesProperties determines the aks-engine provided default for preserving nodes properties
+	DefaultPreserveNodesProperties = true
+	// DefaultEnableVMSSNodePublicIP determines the aks-engine provided default for enable VMSS node public IP
+	DefaultEnableVMSSNodePublicIP = false
+)
+
+// WindowsProfile defaults
+const (
+	// DefaultWindowsPublisher sets the default WindowsPublisher value in WindowsProfile
+	DefaultWindowsPublisher = "MicrosoftWindowsServer"
+	// DefaultWindowsOffer sets the default WindowsOffer value in WindowsProfile
+	DefaultWindowsOffer = "WindowsServerSemiAnnual"
+	// DefaultWindowsSku sets the default WindowsSku value in WindowsProfile
+	DefaultWindowsSku = "Datacenter-Core-1809-with-Containers-smalldisk"
+	// DefaultImageVersion sets the default ImageVersion value in WindowsProfile
+	DefaultImageVersion = "1809.0.20190314"
 )
 
 const (
@@ -256,14 +286,14 @@ const (
 	// AzureCniPluginVerLinux specifies version of Azure CNI plugin, which has been mirrored from
 	// https://github.com/Azure/azure-container-networking/releases/download/${AZURE_PLUGIN_VER}/azure-vnet-cni-linux-amd64-${AZURE_PLUGIN_VER}.tgz
 	// to https://acs-mirror.azureedge.net/cni
-	AzureCniPluginVerLinux = "v1.0.16"
+	AzureCniPluginVerLinux = "v1.0.18"
 	// AzureCniPluginVerWindows specifies version of Azure CNI plugin, which has been mirrored from
 	// https://github.com/Azure/azure-container-networking/releases/download/${AZURE_PLUGIN_VER}/azure-vnet-cni-windows-amd64-${AZURE_PLUGIN_VER}.zip
 	// to https://acs-mirror.azureedge.net/cni
-	AzureCniPluginVerWindows = "v1.0.16"
+	AzureCniPluginVerWindows = "v1.0.18"
 	// CNIPluginVer specifies the version of CNI implementation
 	// https://github.com/containernetworking/plugins
-	CNIPluginVer = "v0.7.1"
+	CNIPluginVer = "v0.7.5"
 )
 
 const (
@@ -304,6 +334,8 @@ const (
 	NetworkPolicyCalico = "calico"
 	// NetworkPolicyCilium is the string expression for cilium network policy config option
 	NetworkPolicyCilium = "cilium"
+	// NetworkPluginCilium is the string expression for cilium network plugin config option
+	NetworkPluginCilium = NetworkPolicyCilium
 	// NetworkPluginFlannel is the string expression for flannel network policy config option
 	NetworkPluginFlannel = "flannel"
 	// DefaultNetworkPlugin defines the network plugin to use by default
@@ -315,11 +347,11 @@ const (
 	// DefaultNetworkPolicyWindows defines the network policy implementation to use by default for clusters with Windows agent pools
 	DefaultNetworkPolicyWindows = ""
 	// DefaultContainerRuntime is docker
-	DefaultContainerRuntime = "docker"
+	DefaultContainerRuntime = Docker
 	// DefaultKubernetesNodeStatusUpdateFrequency is 10s, see --node-status-update-frequency at https://kubernetes.io/docs/admin/kubelet/
 	DefaultKubernetesNodeStatusUpdateFrequency = "10s"
 	// DefaultKubernetesHardEvictionThreshold is memory.available<100Mi,nodefs.available<10%,nodefs.inodesFree<5%, see --eviction-hard at https://kubernetes.io/docs/admin/kubelet/
-	DefaultKubernetesHardEvictionThreshold = "memory.available<100Mi,nodefs.available<10%,nodefs.inodesFree<5%"
+	DefaultKubernetesHardEvictionThreshold = "memory.available<750Mi,nodefs.available<10%,nodefs.inodesFree<5%"
 	// DefaultKubernetesCtrlMgrNodeMonitorGracePeriod is 40s, see --node-monitor-grace-period at https://kubernetes.io/docs/admin/kube-controller-manager/
 	DefaultKubernetesCtrlMgrNodeMonitorGracePeriod = "40s"
 	// DefaultKubernetesCtrlMgrPodEvictionTimeout is 5m0s, see --pod-eviction-timeout at https://kubernetes.io/docs/admin/kube-controller-manager/
@@ -365,7 +397,7 @@ const (
 	// DefaultJumpboxUsername specifies the default admin username for the private cluster jumpbox
 	DefaultJumpboxUsername = "azureuser"
 	// DefaultKubeletPodMaxPIDs specifies the default max pid authorized by pods
-	DefaultKubeletPodMaxPIDs = 100
+	DefaultKubeletPodMaxPIDs = -1
 	// DefaultKubernetesAgentSubnetVMSS specifies the default subnet for agents when master is VMSS
 	DefaultKubernetesAgentSubnetVMSS = "10.248.0.0/13"
 	// DefaultKubernetesClusterSubnet specifies the default subnet for pods.
@@ -374,6 +406,10 @@ const (
 	DefaultKubernetesServiceCIDR = "10.0.0.0/16"
 	// DefaultKubernetesDNSServiceIP specifies the IP address that kube-dns listens on by default. must by in the default Service CIDR range.
 	DefaultKubernetesDNSServiceIP = "10.0.0.10"
+	// DefaultMobyVersion specifies the default Azure build version of Moby to install.
+	DefaultMobyVersion = "3.0.4"
+	// DefaultContainerdVersion specifies the default containerd version to install.
+	DefaultContainerdVersion = "1.1.5"
 	// DefaultDockerBridgeSubnet specifies the default subnet for the docker bridge network for masters and agents.
 	DefaultDockerBridgeSubnet = "172.17.0.1/16"
 	// DefaultKubernetesMaxPodsKubenet is the maximum number of pods to run on a node for Kubenet.
@@ -401,7 +437,38 @@ const (
 	// AzurePublicCloud is a const string reference identifier for public cloud
 	AzurePublicCloud = "AzurePublicCloud"
 	// AzureChinaCloud is a const string reference identifier for china cloud
-	AzureChinaCloud        = "AzureChinaCloud"
-	azureGermanCloud       = "AzureGermanCloud"
-	azureUSGovernmentCloud = "AzureUSGovernmentCloud"
+	AzureChinaCloud = "AzureChinaCloud"
+	// AzureGermanCloud is a const string reference identifier for german cloud
+	AzureGermanCloud = "AzureGermanCloud"
+	// AzureUSGovernmentCloud is a const string reference identifier for us government cloud
+	AzureUSGovernmentCloud = "AzureUSGovernmentCloud"
+	// AzureStackCloud is a const string reference identifier for Azure Stack cloud
+	AzureStackCloud = "AzureStackCloud"
 )
+
+const (
+	// AzureADIdentitySystem is a const string reference identifier for Azure AD identity System
+	AzureADIdentitySystem = "azure_ad"
+	// ADFSIdentitySystem is a const string reference identifier for ADFS identity System
+	ADFSIdentitySystem = "adfs"
+)
+
+const (
+	// AzureStackDependenciesLocationPublic indicates to get dependencies from in AzurePublic cloud
+	AzureStackDependenciesLocationPublic = "public"
+	// AzureStackDependenciesLocationChina indicates to get dependencies from AzureChina cloud
+	AzureStackDependenciesLocationChina = "china"
+	// AzureStackDependenciesLocationGerman indicates to get dependencies from AzureGerman cloud
+	AzureStackDependenciesLocationGerman = "german"
+	// AzureStackDependenciesLocationUSGovernment indicates to get dependencies from AzureUSGovernment cloud
+	AzureStackDependenciesLocationUSGovernment = "usgovernment"
+)
+
+const (
+	// ClientSecretAuthMethod indicates to use client seret for authentication
+	ClientSecretAuthMethod = "client_secret"
+	// ClientCertificateAuthMethod indicates to use client certificate for authentication
+	ClientCertificateAuthMethod = "client_certificate"
+)
+
+const TLSStrongCipherSuites = "TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305,TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305,TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA,TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA,TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA,TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA"

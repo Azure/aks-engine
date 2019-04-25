@@ -1,4 +1,7 @@
 #!/bin/bash
+#
+# Copyright (c) Microsoft Corporation. All rights reserved.
+# Licensed under the MIT license.
 
 scripts/update-translation.sh -l en_US -p
 

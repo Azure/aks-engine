@@ -189,7 +189,7 @@ func CreateSaveSSH(username, outputDirectory string, s *i18n.Translator) (privat
 
 // GetCloudTargetEnv determines and returns whether the region is a sovereign cloud which
 // have their own data compliance regulations (China/Germany/USGov) or standard
-//  Azure public cloud
+// Azure public cloud
 func GetCloudTargetEnv(location string) string {
 	loc := strings.ToLower(strings.Join(strings.Fields(location), ""))
 	switch {
@@ -202,4 +202,29 @@ func GetCloudTargetEnv(location string) string {
 	default:
 		return "AzurePublicCloud"
 	}
+}
+
+// GetTargetEnv determines and returns whether the region is a sovereign cloud which
+// have their own data compliance regulations (China/Germany/USGov) or standard
+// Azure public cloud
+// CustomCloudName is name of environment if customCloudProfile is provided, it will be empty string if customCloudProfile is empty.
+// Because customCloudProfile is empty for deployment for AzurePublicCloud, AzureChinaCloud,AzureGermanCloud,AzureUSGovernmentCloud,
+// The customCloudName value will be empty string for those clouds
+func GetTargetEnv(location, customCloudName string) string {
+	switch {
+	case customCloudName != "" && strings.EqualFold(customCloudName, "AzureStackCloud"):
+		return "AzureStackCloud"
+	default:
+		return GetCloudTargetEnv(location)
+	}
+}
+
+// EnsureString returns an string for the default value.
+// If val is not empty, return val
+// If val is empty, return defaultVal
+func EnsureString(val, defaultVal string) string {
+	if val != "" {
+		return val
+	}
+	return defaultVal
 }

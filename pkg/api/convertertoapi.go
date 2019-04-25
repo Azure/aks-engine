@@ -11,6 +11,7 @@ import (
 	v20170701 "github.com/Azure/aks-engine/pkg/api/v20170701"
 	"github.com/Azure/aks-engine/pkg/api/vlabs"
 	"github.com/Azure/aks-engine/pkg/helpers"
+	"github.com/Azure/go-autorest/autorest/azure"
 )
 
 ///////////////////////////////////////////////////////////
@@ -102,7 +103,7 @@ func ConvertV20170701ContainerService(v20170701 *v20170701.ContainerService, isU
 }
 
 // ConvertVLabsContainerService converts a vlabs ContainerService to an unversioned ContainerService
-func ConvertVLabsContainerService(vlabs *vlabs.ContainerService, isUpdate bool) *ContainerService {
+func ConvertVLabsContainerService(vlabs *vlabs.ContainerService, isUpdate bool) (*ContainerService, error) {
 	c := &ContainerService{}
 	c.ID = vlabs.ID
 	c.Location = helpers.NormalizeAzureRegion(vlabs.Location)
@@ -117,8 +118,10 @@ func ConvertVLabsContainerService(vlabs *vlabs.ContainerService, isUpdate bool) 
 	}
 	c.Type = vlabs.Type
 	c.Properties = &Properties{}
-	convertVLabsProperties(vlabs.Properties, c.Properties, isUpdate)
-	return c
+	if err := convertVLabsProperties(vlabs.Properties, c.Properties, isUpdate); err != nil {
+		return nil, err
+	}
+	return c, nil
 }
 
 // convertV20160930ResourcePurchasePlan converts a v20160930 ResourcePurchasePlan to an unversioned ResourcePurchasePlan
@@ -349,11 +352,13 @@ func convertV20170701Properties(v20170701 *v20170701.Properties, api *Properties
 	}
 }
 
-func convertVLabsProperties(vlabs *vlabs.Properties, api *Properties, isUpdate bool) {
+func convertVLabsProperties(vlabs *vlabs.Properties, api *Properties, isUpdate bool) error {
 	api.ProvisioningState = ProvisioningState(vlabs.ProvisioningState)
 	if vlabs.OrchestratorProfile != nil {
 		api.OrchestratorProfile = &OrchestratorProfile{}
-		convertVLabsOrchestratorProfile(vlabs, api.OrchestratorProfile, isUpdate)
+		if err := convertVLabsOrchestratorProfile(vlabs, api.OrchestratorProfile, isUpdate); err != nil {
+			return err
+		}
 	}
 	if vlabs.MasterProfile != nil {
 		api.MasterProfile = &MasterProfile{}
@@ -403,6 +408,13 @@ func convertVLabsProperties(vlabs *vlabs.Properties, api *Properties, isUpdate b
 		api.FeatureFlags = &FeatureFlags{}
 		convertVLabsFeatureFlags(vlabs.FeatureFlags, api.FeatureFlags)
 	}
+
+	if vlabs.CustomCloudProfile != nil {
+		api.CustomCloudProfile = &CustomCloudProfile{}
+		convertVLabsCustomCloudProfile(vlabs.CustomCloudProfile, api.CustomCloudProfile)
+	}
+
+	return nil
 }
 
 func convertVLabsFeatureFlags(vlabs *vlabs.FeatureFlags, api *FeatureFlags) {
@@ -529,6 +541,8 @@ func convertVLabsWindowsProfile(vlabs *vlabs.WindowsProfile, api *WindowsProfile
 		convertVLabsKeyVaultSecrets(&s, secret)
 		api.Secrets = append(api.Secrets, *secret)
 	}
+	api.SSHEnabled = vlabs.SSHEnabled
+	api.EnableAutomaticUpdates = vlabs.EnableAutomaticUpdates
 }
 
 func convertV20160930OrchestratorProfile(v20160930 *v20160930.OrchestratorProfile, api *OrchestratorProfile) {
@@ -581,7 +595,7 @@ func convertV20170701OrchestratorProfile(v20170701cs *v20170701.OrchestratorProf
 	}
 }
 
-func convertVLabsOrchestratorProfile(vp *vlabs.Properties, api *OrchestratorProfile, isUpdate bool) {
+func convertVLabsOrchestratorProfile(vp *vlabs.Properties, api *OrchestratorProfile, isUpdate bool) error {
 	vlabscs := vp.OrchestratorProfile
 	api.OrchestratorType = vlabscs.OrchestratorType
 	switch api.OrchestratorType {
@@ -591,12 +605,19 @@ func convertVLabsOrchestratorProfile(vp *vlabs.Properties, api *OrchestratorProf
 			convertVLabsKubernetesConfig(vlabscs.KubernetesConfig, api.KubernetesConfig)
 		}
 		setVlabsKubernetesDefaults(vp, api)
+
+		// TODO (hack): this validation should be done as part of the main validation, but deploy does it only after loading the container.
+		if err := vp.ValidateOrchestratorProfile(isUpdate); err != nil {
+			return err
+		}
+
 		api.OrchestratorVersion = common.RationalizeReleaseAndVersion(
 			vlabscs.OrchestratorType,
 			vlabscs.OrchestratorRelease,
 			vlabscs.OrchestratorVersion,
 			isUpdate,
 			vp.HasWindows())
+
 	case DCOS:
 		if vlabscs.DcosConfig != nil {
 			api.DcosConfig = &DcosConfig{}
@@ -609,6 +630,8 @@ func convertVLabsOrchestratorProfile(vp *vlabs.Properties, api *OrchestratorProf
 			isUpdate,
 			false)
 	}
+
+	return nil
 }
 
 func convertVLabsDcosConfig(vlabs *vlabs.DcosConfig, api *DcosConfig) {
@@ -650,6 +673,8 @@ func convertVLabsKubernetesConfig(vlabs *vlabs.KubernetesConfig, api *Kubernetes
 	api.ContainerRuntime = vlabs.ContainerRuntime
 	api.MaxPods = vlabs.MaxPods
 	api.DockerBridgeSubnet = vlabs.DockerBridgeSubnet
+	api.MobyVersion = vlabs.MobyVersion
+	api.ContainerdVersion = vlabs.ContainerdVersion
 	api.CloudProviderBackoff = vlabs.CloudProviderBackoff
 	api.CloudProviderBackoffDuration = vlabs.CloudProviderBackoffDuration
 	api.CloudProviderBackoffExponent = vlabs.CloudProviderBackoffExponent
@@ -686,6 +711,7 @@ func convertVLabsKubernetesConfig(vlabs *vlabs.KubernetesConfig, api *Kubernetes
 	api.KeyVaultSku = vlabs.KeyVaultSku
 	api.MaximumLoadBalancerRuleCount = vlabs.MaximumLoadBalancerRuleCount
 	api.ProxyMode = KubeProxyMode(vlabs.ProxyMode)
+	api.PrivateAzureRegistryServer = vlabs.PrivateAzureRegistryServer
 	convertAddonsToAPI(vlabs, api)
 	convertKubeletConfigToAPI(vlabs, api)
 	convertControllerManagerConfigToAPI(vlabs, api)
@@ -1003,8 +1029,10 @@ func convertVLabsAgentPoolProfile(vlabs *vlabs.AgentPoolProfile, api *AgentPoolP
 	api.FQDN = vlabs.FQDN
 	api.AcceleratedNetworkingEnabled = vlabs.AcceleratedNetworkingEnabled
 	api.AcceleratedNetworkingEnabledWindows = vlabs.AcceleratedNetworkingEnabledWindows
+	api.VMSSOverProvisioningEnabled = vlabs.VMSSOverProvisioningEnabled
 	api.AvailabilityZones = vlabs.AvailabilityZones
 	api.SinglePlacementGroup = vlabs.SinglePlacementGroup
+	api.EnableVMSSNodePublicIP = vlabs.EnableVMSSNodePublicIP
 
 	api.CustomNodeLabels = map[string]string{}
 	for k, v := range vlabs.CustomNodeLabels {
@@ -1198,4 +1226,85 @@ func addDCOSPublicAgentPool(api *Properties) {
 		publicPool.Count = 3
 	}
 	api.AgentPoolProfiles = append(api.AgentPoolProfiles, publicPool)
+}
+
+func convertVLabsCustomCloudProfile(vlabs *vlabs.CustomCloudProfile, api *CustomCloudProfile) {
+	if vlabs.Environment != nil {
+		api.Environment = &azure.Environment{}
+		api.Environment.Name = vlabs.Environment.Name
+		api.Environment.ManagementPortalURL = vlabs.Environment.ManagementPortalURL
+		api.Environment.PublishSettingsURL = vlabs.Environment.PublishSettingsURL
+		api.Environment.ServiceManagementEndpoint = vlabs.Environment.ServiceManagementEndpoint
+		api.Environment.ResourceManagerEndpoint = vlabs.Environment.ResourceManagerEndpoint
+		api.Environment.ActiveDirectoryEndpoint = vlabs.Environment.ActiveDirectoryEndpoint
+		api.Environment.GalleryEndpoint = vlabs.Environment.GalleryEndpoint
+		api.Environment.KeyVaultEndpoint = vlabs.Environment.KeyVaultEndpoint
+		api.Environment.GraphEndpoint = vlabs.Environment.GraphEndpoint
+		api.Environment.ServiceBusEndpoint = vlabs.Environment.ServiceBusEndpoint
+		api.Environment.BatchManagementEndpoint = vlabs.Environment.BatchManagementEndpoint
+		api.Environment.StorageEndpointSuffix = vlabs.Environment.StorageEndpointSuffix
+		api.Environment.SQLDatabaseDNSSuffix = vlabs.Environment.SQLDatabaseDNSSuffix
+		api.Environment.TrafficManagerDNSSuffix = vlabs.Environment.TrafficManagerDNSSuffix
+		api.Environment.KeyVaultDNSSuffix = vlabs.Environment.KeyVaultDNSSuffix
+		api.Environment.ServiceBusEndpointSuffix = vlabs.Environment.ServiceBusEndpointSuffix
+		api.Environment.ServiceManagementVMDNSSuffix = vlabs.Environment.ServiceManagementVMDNSSuffix
+		api.Environment.ResourceManagerVMDNSSuffix = vlabs.Environment.ResourceManagerVMDNSSuffix
+		api.Environment.ContainerRegistryDNSSuffix = vlabs.Environment.ContainerRegistryDNSSuffix
+		api.Environment.TokenAudience = vlabs.Environment.TokenAudience
+	}
+	if vlabs.AzureEnvironmentSpecConfig != nil {
+		api.AzureEnvironmentSpecConfig = &AzureEnvironmentSpecConfig{}
+		convertAzureEnvironmentSpecConfig(vlabs.AzureEnvironmentSpecConfig, api.AzureEnvironmentSpecConfig)
+	}
+
+	api.IdentitySystem = vlabs.IdentitySystem
+	api.AuthenticationMethod = vlabs.AuthenticationMethod
+	api.DependenciesLocation = DependenciesLocation(vlabs.DependenciesLocation)
+	api.PortalURL = vlabs.PortalURL
+}
+
+func convertAzureEnvironmentSpecConfig(vlabses *vlabs.AzureEnvironmentSpecConfig, api *AzureEnvironmentSpecConfig) {
+	api.CloudName = vlabses.CloudName
+	api.DCOSSpecConfig = DCOSSpecConfig{
+		DCOS188BootstrapDownloadURL:     vlabses.DCOSSpecConfig.DCOS188BootstrapDownloadURL,
+		DCOS190BootstrapDownloadURL:     vlabses.DCOSSpecConfig.DCOS190BootstrapDownloadURL,
+		DCOS198BootstrapDownloadURL:     vlabses.DCOSSpecConfig.DCOS198BootstrapDownloadURL,
+		DCOS110BootstrapDownloadURL:     vlabses.DCOSSpecConfig.DCOS110BootstrapDownloadURL,
+		DCOS111BootstrapDownloadURL:     vlabses.DCOSSpecConfig.DCOS111BootstrapDownloadURL,
+		DCOSWindowsBootstrapDownloadURL: vlabses.DCOSSpecConfig.DCOSWindowsBootstrapDownloadURL,
+		DcosRepositoryURL:               vlabses.DCOSSpecConfig.DcosRepositoryURL,
+		DcosClusterPackageListID:        vlabses.DCOSSpecConfig.DcosClusterPackageListID,
+		DcosProviderPackageID:           vlabses.DCOSSpecConfig.DcosProviderPackageID,
+	}
+
+	api.DockerSpecConfig = DockerSpecConfig{
+		DockerEngineRepo:         vlabses.DockerSpecConfig.DockerEngineRepo,
+		DockerComposeDownloadURL: vlabses.DockerSpecConfig.DockerComposeDownloadURL,
+	}
+	api.EndpointConfig = AzureEndpointConfig{
+		ResourceManagerVMDNSSuffix: vlabses.EndpointConfig.ResourceManagerVMDNSSuffix,
+	}
+	api.KubernetesSpecConfig = KubernetesSpecConfig{
+		KubernetesImageBase:              vlabses.KubernetesSpecConfig.KubernetesImageBase,
+		TillerImageBase:                  vlabses.KubernetesSpecConfig.TillerImageBase,
+		ACIConnectorImageBase:            vlabses.KubernetesSpecConfig.ACIConnectorImageBase,
+		NVIDIAImageBase:                  vlabses.KubernetesSpecConfig.NVIDIAImageBase,
+		AzureCNIImageBase:                vlabses.KubernetesSpecConfig.AzureCNIImageBase,
+		EtcdDownloadURLBase:              vlabses.KubernetesSpecConfig.EtcdDownloadURLBase,
+		KubeBinariesSASURLBase:           vlabses.KubernetesSpecConfig.KubeBinariesSASURLBase,
+		WindowsTelemetryGUID:             vlabses.KubernetesSpecConfig.WindowsTelemetryGUID,
+		CNIPluginsDownloadURL:            vlabses.KubernetesSpecConfig.CNIPluginsDownloadURL,
+		VnetCNILinuxPluginsDownloadURL:   vlabses.KubernetesSpecConfig.VnetCNILinuxPluginsDownloadURL,
+		VnetCNIWindowsPluginsDownloadURL: vlabses.KubernetesSpecConfig.VnetCNIWindowsPluginsDownloadURL,
+		ContainerdDownloadURLBase:        vlabses.KubernetesSpecConfig.ContainerdDownloadURLBase,
+	}
+	api.OSImageConfig = map[Distro]AzureOSImageConfig{}
+	for k, v := range vlabses.OSImageConfig {
+		api.OSImageConfig[Distro(string(k))] = AzureOSImageConfig{
+			ImageOffer:     v.ImageOffer,
+			ImageSku:       v.ImageSku,
+			ImagePublisher: v.ImagePublisher,
+			ImageVersion:   v.ImageVersion,
+		}
+	}
 }

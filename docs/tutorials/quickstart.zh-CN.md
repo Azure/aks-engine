@@ -25,23 +25,24 @@ make build
 
 ```
 # ./bin/aks-engine
-AKS Engine deploys and manages Kubernetes, Swarm Mode, and DC/OS clusters in Azure
-
 Usage:
+  aks-engine [flags]
   aks-engine [command]
 
 Available Commands:
+  completion    Generates bash completion scripts
   deploy        Deploy an Azure Resource Manager template
   generate      Generate an Azure Resource Manager template
+  get-versions  Display info about supported Kubernetes versions
   help          Help about any command
-  orchestrators Display info about supported orchestrators
   scale         Scale an existing Kubernetes cluster
   upgrade       Upgrade an existing Kubernetes cluster
   version       Print the version of AKS Engine
 
 Flags:
-      --debug   enable verbose debug logs
-  -h, --help    help for aks-engine
+      --debug                enable verbose debug logs
+  -h, --help                 help for aks-engine
+      --show-default-model   Dump the default API model to stdout
 
 Use "aks-engine [command] --help" for more information about a command.
 ```

@@ -5,16 +5,16 @@ Monitoring your Kubernetes cluster is important to be able to see your cluster's
 There are five main options to monitor your cluster:
 
 1. [Kubectl](#kubectl)
+1. [Azure Monitor for containers](#azure-monitor-for-containers)
 1. [Kubernetes dashboard](#kubernetes-dashboard)
 1. [Monitoring extension](#monitoring-extension)
 1. [Grafana and Influx DB](#grafana-and-influx-db)
-1. [Azure Operations Management Suite (OMS)](#oms)
 1. [Heapster REST API](#heapster-rest-api)
 
 ## Intro to Heapster
 
 Monitoring your cluster in Kubernetes is powered by a component called [Heapster](https://github.com/kubernetes/Heapster/). Heapster is a pod that is responsible for aggregating monitoring data from across all the nodes and pods in your cluster. Heapster is necessary for viewing monitoring data in the Kubernetes dashboard as well as in Grafana. Heapster comes preinstalled on `aks-engine` deployments. To ensure that Heapster is set up in your cluster and is running:
-1. Ensure you have set up a [working kubernetes cluster](../kubernetes.md) and are able to use kubectl
+1. Ensure you have set up a [working kubernetes cluster](../tutorials/quickstart.md) and are able to use kubectl
 2. Run `kubectl get pods --namespace=kube-system`
 
 ```shell
@@ -54,11 +54,34 @@ NAME            CPU(cores)   MEMORY(bytes)
 somePod         0m           11Mi
 ```
 
+## Azure Monitor for containers
+
+Azure Monitor for containers is a feature designed to monitor the performance of container workloads deployed to AKS Engine (formerly known as ACS-Engine) cluster(s) hosted on Azure. Monitoring your containers is critical, especially when you're running a production cluster, at scale, with multiple applications.
+
+Azure Monitor for containers gives you performance visibility by collecting memory and processor metrics from controllers, nodes, and containers that are available in Kubernetes through the Metrics API. Container logs are also collected. After you enable monitoring from Kubernetes clusters, these metrics and logs are automatically collected for you through a containerized version of the Log Analytics agent for Linux and stored in your Log Analytics workspace.
+
+Azure Monitor for containers for AKS Engine cluster(s) can be configured through following options
+
+1. Helm chart [azuremonitor-containers](https://github.com/helm/charts/tree/master/incubator/azuremonitor-containers)
+2. [Container-monitoring add-on](../../examples/addons/container-monitoring/README.md)
+
+> Note: If more than one AKS Engine cluster planned to configure to the same Azure Log Analytics Workspace then recommend option is to use Helm chart (i.e. option #1 above)
+
+Navigate to [azmon-containers](https://aka.ms/azmon-containers) to view the health, metrics and logs of AKS-engine cluster(s).
+
+For more details on how to use the product, see [Azure Monitor for containers](https://docs.microsoft.com/en-us/azure/azure-monitor/insights/container-insights-overview)
+
+Refer to [azuremonitor-containers-aks-engine](https://github.com/Microsoft/OMS-docker/blob/aks-engine/README.md) for the supported matrix, troubleshooting and supportability etc.
+
+![Image of Azure Monitor for containers](../static/img/azure_monitor_aks_engine.png)
+
+If you have any questions or feedback regarding the monitoring of your AKS Engine (or ACS-Engine) cluster(s), please reach us out through [this](mailto:askcoin@microsoft.com) email.
+
 ## Kubernetes dashboard
 
 The Kubernetes dashboard is an easy way to visualize your cluster metrics. The Kubernetes dashboard displays all the metrics that are collected by the Heapster. The dashboard comes preinstalled on your cluster. To access the dashboard:
 
-1. On Linux, run `kubectl proxy`. This will allow you to access the dashboard at http://localhost:8001/ui
+1. On Linux, run `kubectl proxy`. This will allow you to access the dashboard at `http://localhost:8001/ui`
     * If you are using Windows and sshing into the master to use kubectl, you will need to set up remote port forwarding from port 8001 on the master to your host in order to use `kubectl proxy`. To do this, under PUTTY > Connection > SSH > Tunnels, create a new forwarded port (source local port 8001 to destination 127.0.0.1:8001).
 
 Once you have opened the UI, you can explore node stats (CPU, Memory, etc...) under the nodes section on the left menu. You can also see pod level metrics under the pods section, and even drill into a specific container in a given pod.
@@ -124,26 +147,10 @@ If everything looks ok and Grafana and Influx DB were able to start up, you can 
 1. Run `kubectl proxy`.
     * If you are using Windows and sshing into the master to use kubectl, you will need to set up remote port forwarding from port 8001 on the master to your host in order to use `kubectl proxy`. To do this, under Putty > Connection > SSH > Tunnels, create a new forwarded port (source local port 8001 to destination 127.0.0.1:8001).
 
-1. To see cluster stats: http://localhost:8001/api/v1/namespaces/kube-system/services/monitoring-grafana/proxy/dashboard/db/cluster
-1. To see pod stats: http://localhost:8001/api/v1/namespaces/kube-system/services/monitoring-grafana/proxy/dashboard/db/pods
+1. To see cluster stats: `http://localhost:8001/api/v1/namespaces/kube-system/services/monitoring-grafana/proxy/dashboard/db/cluster`
+1. To see pod stats: `http://localhost:8001/api/v1/namespaces/kube-system/services/monitoring-grafana/proxy/dashboard/db/pods`
 
 ![Image of Grafana](../static/img/k8s-monitoring-grafana2.png)
-
-## Azure Monitor for containers
-
-Azure Monitor for containers is a feature designed to monitor the performance of container workloads deployed to AKS-engine (formerly known as ACS-engine) cluster(s) hosted on Azure. Monitoring your containers is critical, especially when you're running a production cluster, at scale, with multiple applications.
-
-Azure Monitor for containers gives you performance visibility by collecting memory and processor metrics from controllers, nodes, and containers that are available in Kubernetes through the Metrics API. Container logs are also collected. After you enable monitoring from Kubernetes clusters, these metrics and logs are automatically collected for you through a containerized version of the Log Analytics agent for Linux and stored in your Log Analytics workspace.
-
-To setup Azure Monitor for containers for aks-engine cluster, follow the instructions in [azuremonitor-containers](https://github.com/helm/charts/tree/master/incubator/azuremonitor-containers)
-
-Navigate to [azmon-containers](https://aka.ms/azmon-containers) to view the health, metrics and logs of AKS-engine cluster(s).
-
-For more details on how to use the product, see [Azure Monitor for containers](https://docs.microsoft.com/en-us/azure/azure-monitor/insights/container-insights-overview)
-
-Refer to [azuremonitor-containers-aks-engine](https://github.com/Microsoft/OMS-docker/blob/aks-engine/README.md) for the supported matrix, troubleshooting and supportability etc.
-
-![Image of Azure Monitor for containers](../static/img/azure_monitor_aks_engine.png)
 
 ## Heapster REST API
 
@@ -154,46 +161,46 @@ Here are a few examples on how to use the REST API.
 1. Run `kubectl proxy`
 1. `curl http://localhost:8001/api/v1/namespaces/kube-system/services/heapster/proxy/api/v1/model/nodes`
 
-    ```
-    [
+```json
+[
     "k8s-agentpool1-95363663-0",
     "k8s-master-95363663-0"
-    ]
-    ```
+]
+```
 
 1. `curl http://localhost:8001/api/v1/namespaces/kube-system/services/heapster/proxy/api/v1/model/nodes/k8s-master-95363663-0/metrics`
 
-    ```
-    [
+```json
+[
     "cpu/usage",
     "network/rx_errors",
     "memory/major_page_faults",
     "memory/page_faults_rate",
     "cpu/node_allocatable",
     ...
-    ]
-    ```
+]
+```
 
 1. `curl http://localhost:8001/api/v1/namespaces/kube-system/services/heapster/proxy/api/v1/model/nodes/k8s-master-95363663-0/metrics/cpu/usage`
 
-    ```
-    {
-        metrics: [
-            {
-                timestamp: "2017-08-31T00:08:00Z",
-                value: 1040133457832
-            },
-            {
-                timestamp: "2017-08-31T00:09:00Z",
-                value: 1046556719483
-            },
-            {
-                timestamp: "2017-08-31T00:10:00Z",
-                value: 1052835238099
-            }
-        ],
-            latestTimestamp: "2017-08-31T00:10:00Z"
-    }
-    ```
+```json
+{
+    metrics: [
+        {
+            timestamp: "2017-08-31T00:08:00Z",
+            value: 1040133457832
+        },
+        {
+            timestamp: "2017-08-31T00:09:00Z",
+            value: 1046556719483
+        },
+        {
+            timestamp: "2017-08-31T00:10:00Z",
+            value: 1052835238099
+        }
+    ],
+        latestTimestamp: "2017-08-31T00:10:00Z"
+}
+```
 
 For more details take a look at the [Heapster model documentation.](https://github.com/kubernetes/heapster/blob/master/docs/model.md)

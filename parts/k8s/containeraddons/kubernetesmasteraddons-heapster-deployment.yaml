@@ -104,7 +104,7 @@ spec:
       annotations:
         scheduler.alpha.kubernetes.io/critical-pod: ''
     spec:
-      priorityClassName: system-cluster-critical
+      priorityClassName: system-node-critical
       containers:
         - image: {{ContainerImage "heapster"}}
           imagePullPolicy: IfNotPresent

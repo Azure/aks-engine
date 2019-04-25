@@ -3,7 +3,7 @@
   "properties": {
     "dnsPrefix": "agents006",
     "fqdn": "agents006.azmk8s.io",
-    "kubernetesVersion": "1.7.16",
+    "kubernetesVersion": "1.9.11",
     "agentPoolProfiles": [
       {
         "name": "agentpool1",

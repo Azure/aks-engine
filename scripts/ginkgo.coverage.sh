@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-set -eo pipefail
+set -euo pipefail
 
 covermode=${COVERMODE:-atomic}
 coverdir=$(mktemp -d /tmp/coverage.XXXXXXXXXX)
@@ -27,13 +27,13 @@ hash godir 2>/dev/null || go get github.com/Masterminds/godir
 generate_cover_data() {
   ginkgo -skipPackage test/e2e/dcos,test/e2e/kubernetes -failFast -cover -r .
   echo "" > ${coveragetxt}
-  find . -type f -name "*.coverprofile" | while read -r file;  do cat $file >> ${coveragetxt} && mv $file ${coverdir}; done
+  find . -type f -name "*.coverprofile" | while read -r file;  do cat "$file" >> ${coveragetxt} && mv "$file" "${coverdir}"; done
   echo "mode: $covermode" >"$profile"
   grep -h -v "^mode:" "$coverdir"/*.coverprofile >>"$profile"
 }
 
 push_to_coveralls() {
-  goveralls -coverprofile="${profile}" -service=circle-ci -repotoken $COVERALLS_REPO_TOKEN || echo "push to coveralls failed"
+  goveralls -coverprofile="${profile}" -service=circle-ci -repotoken "$COVERALLS_REPO_TOKEN" || echo "push to coveralls failed"
 }
 
 push_to_codecov() {
@@ -48,7 +48,8 @@ case "${1-}" in
     go tool cover -html "${profile}"
     ;;
   --coveralls)
-		if [ -z $COVERALLS_REPO_TOKEN ]; then
+		if [ -z "$COVERALLS_REPO_TOKEN" ]; then
+			# shellcheck disable=SC2016
 			echo '$COVERALLS_REPO_TOKEN not set. Skipping pushing coverage report to coveralls.io'
 			exit
 		fi

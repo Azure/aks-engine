@@ -375,10 +375,9 @@ func TestCreateSaveSSH(t *testing.T) {
 		t.Fatalf("ssh file was not created")
 	}
 }
-
 func TestGetCloudTargetEnv(t *testing.T) {
 	testcases := []struct {
-		input    string
+		location string
 		expected string
 	}{
 		{
@@ -424,9 +423,115 @@ func TestGetCloudTargetEnv(t *testing.T) {
 	}
 
 	for _, testcase := range testcases {
-		actual := GetCloudTargetEnv(testcase.input)
+		actual := GetCloudTargetEnv(testcase.location)
 		if testcase.expected != actual {
 			t.Errorf("expected GetCloudTargetEnv to return %s, but got %s", testcase.expected, actual)
+		}
+	}
+}
+func TestGetTargetEnv(t *testing.T) {
+	testcases := []struct {
+		location   string
+		clouldName string
+		expected   string
+	}{
+		{
+			"chinaeast",
+			"",
+			"AzureChinaCloud",
+		},
+		{
+			"chinanorth",
+			"",
+			"AzureChinaCloud",
+		},
+		{
+			"chinaeast",
+			"",
+			"AzureChinaCloud",
+		},
+		{
+			"chinaeast2",
+			"",
+			"AzureChinaCloud",
+		},
+		{
+			"chinanorth2",
+			"",
+			"AzureChinaCloud",
+		},
+		{
+			"germanycentral",
+			"",
+			"AzureGermanCloud",
+		},
+		{
+			"germanynortheast",
+			"",
+			"AzureGermanCloud",
+		},
+		{
+			"usgov123",
+			"",
+			"AzureUSGovernmentCloud",
+		},
+		{
+			"usdod-123",
+			"",
+			"AzureUSGovernmentCloud",
+		},
+		{
+			"sampleinput",
+			"",
+			"AzurePublicCloud",
+		},
+		{
+			"azurestacklocation",
+			"azurestackcloud",
+			"AzureStackCloud",
+		},
+		{
+			"azurestacklocation",
+			"AzureStackcloud",
+			"AzureStackCloud",
+		},
+		{
+			"azurestacklocation",
+			"azurestacklocation",
+			"AzurePublicCloud",
+		},
+	}
+
+	for _, testcase := range testcases {
+		actual := GetTargetEnv(testcase.location, testcase.clouldName)
+		if testcase.expected != actual {
+			t.Errorf("expected GetCloudTargetEnv to return %s, but got %s", testcase.expected, actual)
+		}
+	}
+}
+
+func TestEnsureString(t *testing.T) {
+	testcases := []struct {
+		defaultstring string
+		overwrite     string
+		expected      string
+	}{
+		{
+			"",
+			"randomstring",
+			"randomstring",
+		},
+		{
+			"srcisnotempty",
+			"randomstring2",
+			"srcisnotempty",
+		},
+	}
+
+	for _, testcase := range testcases {
+		result := EnsureString(testcase.defaultstring, testcase.overwrite)
+		if testcase.expected != result {
+			t.Errorf("expected EnsureString to return %s, but got %s", testcase.expected, result)
 		}
 	}
 

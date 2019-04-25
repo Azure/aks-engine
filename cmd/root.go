@@ -5,17 +5,21 @@ package cmd
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
+	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/Azure/aks-engine/pkg/api"
 	"github.com/Azure/aks-engine/pkg/api/vlabs"
 	"github.com/Azure/aks-engine/pkg/armhelpers"
+	"github.com/Azure/aks-engine/pkg/armhelpers/azurestack"
 	"github.com/Azure/aks-engine/pkg/helpers"
 	"github.com/Azure/go-autorest/autorest/azure"
+	"github.com/gofrs/uuid"
 	"github.com/pkg/errors"
-	uuid "github.com/satori/go.uuid"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	flag "github.com/spf13/pflag"
@@ -24,8 +28,8 @@ import (
 
 const (
 	rootName             = "aks-engine"
-	rootShortDescription = "AKS-Engine deploys and manages Kubernetes clusters in Azure"
-	rootLongDescription  = "AKS-Engine deploys and manages Kubernetes clusters in Azure"
+	rootShortDescription = "AKS Engine deploys and manages Kubernetes clusters in Azure"
+	rootLongDescription  = "AKS Engine deploys and manages Kubernetes clusters in Azure"
 )
 
 var (
@@ -33,7 +37,7 @@ var (
 	dumpDefaultModel bool
 )
 
-// NewRootCmd returns the root command for AKS-Engine.
+// NewRootCmd returns the root command for AKS Engine.
 func NewRootCmd() *cobra.Command {
 	rootCmd := &cobra.Command{
 		Use:   rootName,
@@ -61,9 +65,11 @@ func NewRootCmd() *cobra.Command {
 	rootCmd.AddCommand(newVersionCmd())
 	rootCmd.AddCommand(newGenerateCmd())
 	rootCmd.AddCommand(newDeployCmd())
+	rootCmd.AddCommand(newGetVersionsCmd())
 	rootCmd.AddCommand(newOrchestratorsCmd())
 	rootCmd.AddCommand(newUpgradeCmd())
 	rootCmd.AddCommand(newScaleCmd())
+	rootCmd.AddCommand(newRotateCertsCmd())
 	rootCmd.AddCommand(getCompletionCmd(rootCmd))
 
 	return rootCmd
@@ -103,6 +109,7 @@ type authArgs struct {
 	ClientSecret    string
 	CertificatePath string
 	PrivateKeyPath  string
+	IdentitySystem  string
 	language        string
 }
 
@@ -114,12 +121,17 @@ func addAuthFlags(authArgs *authArgs, f *flag.FlagSet) {
 	f.StringVar(&authArgs.ClientSecret, "client-secret", "", "client secret (used with --auth-mode=client_secret)")
 	f.StringVar(&authArgs.CertificatePath, "certificate-path", "", "path to client certificate (used with --auth-method=client_certificate)")
 	f.StringVar(&authArgs.PrivateKeyPath, "private-key-path", "", "path to private key (used with --auth-method=client_certificate)")
+	f.StringVar(&authArgs.IdentitySystem, "identity-system", "azure_ad", "identity system (default:`azure_ad`, `adfs`)")
 	f.StringVar(&authArgs.language, "language", "en-us", "language to return error messages in")
 }
 
 //this allows the authArgs to be stubbed behind the authProvider interface, and be its own provider when not in tests.
 func (authArgs *authArgs) getAuthArgs() *authArgs {
 	return authArgs
+}
+
+func (authArgs *authArgs) isAzureStackCloud() bool {
+	return strings.EqualFold(authArgs.RawAzureEnvironment, api.AzureStackCloud)
 }
 
 func (authArgs *authArgs) validateAuthArgs() error {
@@ -193,6 +205,13 @@ func getCloudSubFromAzConfig(cloud string, f *ini.File) (uuid.UUID, error) {
 }
 
 func (authArgs *authArgs) getClient() (armhelpers.AKSEngineClient, error) {
+	if authArgs.isAzureStackCloud() {
+		return authArgs.getAzureStackClient()
+	}
+	return authArgs.getAzureClient()
+}
+
+func (authArgs *authArgs) getAzureClient() (armhelpers.AKSEngineClient, error) {
 	var client *armhelpers.AzureClient
 	env, err := azure.EnvironmentFromName(authArgs.RawAzureEnvironment)
 	if err != nil {
@@ -221,6 +240,39 @@ func (authArgs *authArgs) getClient() (armhelpers.AKSEngineClient, error) {
 	return client, nil
 }
 
+func (authArgs *authArgs) getAzureStackClient() (armhelpers.AKSEngineClient, error) {
+	var client *azurestack.AzureClient
+	env, err := azure.EnvironmentFromName(authArgs.RawAzureEnvironment)
+	if err != nil {
+		return nil, err
+	}
+	switch authArgs.AuthMethod {
+	case "client_secret":
+		client, err = azurestack.NewAzureClientWithClientSecret(env, authArgs.SubscriptionID.String(), authArgs.ClientID.String(), authArgs.ClientSecret)
+	case "client_certificate":
+		if authArgs.IdentitySystem == "azure_ad" {
+			client, err = azurestack.NewAzureClientWithClientCertificateFile(env, authArgs.SubscriptionID.String(), authArgs.ClientID.String(), authArgs.CertificatePath, authArgs.PrivateKeyPath)
+			break
+		} else if authArgs.IdentitySystem == "adfs" {
+			// for ADFS environment, it is single tenant environment and the tenant id is aways adfs
+			client, err = azurestack.NewAzureClientWithClientCertificateFileExternalTenant(env, authArgs.SubscriptionID.String(), "adfs", authArgs.ClientID.String(), authArgs.CertificatePath, authArgs.PrivateKeyPath)
+			break
+		}
+		fallthrough
+	default:
+		return nil, errors.Errorf("--auth-method: ERROR: method unsupported. method=%q identitysystem=%q", authArgs.AuthMethod, authArgs.IdentitySystem)
+	}
+	if err != nil {
+		return nil, err
+	}
+	err = client.EnsureProvidersRegistered(authArgs.SubscriptionID.String())
+	if err != nil {
+		return nil, err
+	}
+	client.AddAcceptLanguages([]string{authArgs.language})
+	return client, nil
+}
+
 func getCompletionCmd(root *cobra.Command) *cobra.Command {
 	var completionCmd = &cobra.Command{
 		Use:   "completion",
@@ -234,9 +286,32 @@ func getCompletionCmd(root *cobra.Command) *cobra.Command {
 	# ~/.bashrc or ~/.profile
 	source <(aks-engine completion)
 	`,
-		Run: func(cmd *cobra.Command, args []string) {
-			root.GenBashCompletion(os.Stdout)
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return root.GenBashCompletion(os.Stdout)
 		},
 	}
 	return completionCmd
+}
+
+func writeCustomCloudProfile(cs *api.ContainerService) error {
+
+	tmpFile, err := ioutil.TempFile("", "azurestackcloud.json")
+	tmpFileName := tmpFile.Name()
+	if err != nil {
+		return err
+	}
+	log.Infoln(fmt.Sprintf("Writing cloud profile to: %s", tmpFileName))
+
+	// Build content for the file
+	content, err := cs.Properties.GetCustomEnvironmentJSON(false)
+	if err != nil {
+		return err
+	}
+	if err = ioutil.WriteFile(tmpFileName, []byte(content), os.ModeAppend); err != nil {
+		return err
+	}
+
+	os.Setenv("AZURE_ENVIRONMENT_FILEPATH", tmpFileName)
+
+	return nil
 }

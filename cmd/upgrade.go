@@ -5,11 +5,9 @@ package cmd
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"os"
-	"path"
+	"path/filepath"
 	"time"
 
 	"github.com/Azure/aks-engine/pkg/api"
@@ -32,14 +30,16 @@ const (
 )
 
 type upgradeCmd struct {
-	authArgs
+	authProvider
 
 	// user input
 	resourceGroupName   string
+	apiModelPath        string
 	deploymentDirectory string
 	upgradeVersion      string
 	location            string
 	timeoutInMinutes    int
+	force               bool
 
 	// derived
 	containerService    *api.ContainerService
@@ -52,24 +52,28 @@ type upgradeCmd struct {
 }
 
 func newUpgradeCmd() *cobra.Command {
-	uc := upgradeCmd{}
+	uc := upgradeCmd{
+		authProvider: &authArgs{},
+	}
 
 	upgradeCmd := &cobra.Command{
 		Use:   upgradeName,
 		Short: upgradeShortDescription,
 		Long:  upgradeLongDescription,
-		RunE: func(cmd *cobra.Command, args []string) error {
-			return uc.run(cmd, args)
-		},
+		RunE:  uc.run,
 	}
 
 	f := upgradeCmd.Flags()
 	f.StringVarP(&uc.location, "location", "l", "", "location the cluster is deployed in (required)")
 	f.StringVarP(&uc.resourceGroupName, "resource-group", "g", "", "the resource group where the cluster is deployed (required)")
-	f.StringVar(&uc.deploymentDirectory, "deployment-dir", "", "the location of the output from `generate` (required)")
+	f.StringVarP(&uc.apiModelPath, "api-model", "m", "", "path to the generated apimodel.json file")
+	f.StringVar(&uc.deploymentDirectory, "deployment-dir", "", "the location of the output from `generate`")
 	f.StringVarP(&uc.upgradeVersion, "upgrade-version", "k", "", "desired kubernetes version (required)")
 	f.IntVar(&uc.timeoutInMinutes, "vm-timeout", -1, "how long to wait for each vm to be upgraded in minutes")
-	addAuthFlags(&uc.authArgs, f)
+	f.BoolVarP(&uc.force, "force", "f", false, "force upgrading the cluster to desired version. Allows same version upgrades and downgrades.")
+	addAuthFlags(uc.getAuthArgs(), f)
+
+	f.MarkDeprecated("deployment-dir", "deployment-dir is no longer required for scale or upgrade. Please use --api-model.")
 
 	return upgradeCmd
 }
@@ -103,36 +107,32 @@ func (uc *upgradeCmd) validate(cmd *cobra.Command) error {
 		return errors.New("--upgrade-version must be specified")
 	}
 
-	if uc.deploymentDirectory == "" {
+	if uc.apiModelPath == "" && uc.deploymentDirectory == "" {
 		cmd.Usage()
-		return errors.New("--deployment-dir must be specified")
+		return errors.New("--api-model must be specified")
 	}
+
+	if uc.apiModelPath != "" && uc.deploymentDirectory != "" {
+		cmd.Usage()
+		return errors.New("ambiguous, please specify only one of --api-model and --deployment-dir")
+	}
+
 	return nil
 }
 
 func (uc *upgradeCmd) loadCluster(cmd *cobra.Command) error {
 	var err error
 
-	if err = uc.authArgs.validateAuthArgs(); err != nil {
-		return err
-	}
-
-	if uc.client, err = uc.authArgs.getClient(); err != nil {
-		return errors.Wrap(err, "failed to get client")
-	}
-
 	ctx, cancel := context.WithTimeout(context.Background(), armhelpers.DefaultARMOperationTimeout)
 	defer cancel()
-	_, err = uc.client.EnsureResourceGroup(ctx, uc.resourceGroupName, uc.location, nil)
-	if err != nil {
-		return errors.Wrap(err, "error ensuring resource group")
+
+	// Load apimodel from the directory.
+	if uc.apiModelPath == "" {
+		uc.apiModelPath = filepath.Join(uc.deploymentDirectory, apiModelFilename)
 	}
 
-	// Load apimodel from the deployment directory.
-	apiModelPath := path.Join(uc.deploymentDirectory, "apimodel.json")
-
-	if _, err = os.Stat(apiModelPath); os.IsNotExist(err) {
-		return errors.Errorf("specified api model does not exist (%s)", apiModelPath)
+	if _, err = os.Stat(uc.apiModelPath); os.IsNotExist(err) {
+		return errors.Errorf("specified api model does not exist (%s)", uc.apiModelPath)
 	}
 
 	apiloader := &api.Apiloader{
@@ -142,78 +142,76 @@ func (uc *upgradeCmd) loadCluster(cmd *cobra.Command) error {
 	}
 
 	// Load the container service.
-	uc.containerService, uc.apiVersion, err = apiloader.LoadContainerServiceFromFile(apiModelPath, true, true, nil)
+	uc.containerService, uc.apiVersion, err = apiloader.LoadContainerServiceFromFile(uc.apiModelPath, true, true, nil)
 	if err != nil {
 		return errors.Wrap(err, "error parsing the api model")
 	}
 
-	if uc.containerService.Location == "" {
-		uc.containerService.Location = uc.location
-	} else if uc.containerService.Location != uc.location {
-		return errors.New("--location does not match api model location")
+	if uc.containerService.Properties.IsAzureStackCloud() {
+		writeCustomCloudProfile(uc.containerService)
+		err = uc.containerService.Properties.SetAzureStackCloudSpec()
+		if err != nil {
+			return errors.Wrap(err, "error parsing the api model")
+		}
 	}
 
+	if err = uc.getAuthArgs().validateAuthArgs(); err != nil {
+		return err
+	}
+
+	if uc.client, err = uc.getAuthArgs().getClient(); err != nil {
+		return errors.Wrap(err, "failed to get client")
+	}
+
+	_, err = uc.client.EnsureResourceGroup(ctx, uc.resourceGroupName, uc.location, nil)
+	if err != nil {
+		return errors.Wrap(err, "error ensuring resource group")
+	}
+
+	err = uc.initialize()
+	if err != nil {
+		return errors.Wrap(err, "error validating the api model")
+	}
+	return nil
+}
+
+func (uc *upgradeCmd) validateTargetVersion() error {
 	// Get available upgrades for container service.
 	orchestratorInfo, err := api.GetOrchestratorVersionProfile(uc.containerService.Properties.OrchestratorProfile, uc.containerService.Properties.HasWindows())
 	if err != nil {
 		return errors.Wrap(err, "error getting list of available upgrades")
 	}
 
-	// Add the current version to account for failed upgrades.
-	orchestratorInfo.Upgrades = append(orchestratorInfo.Upgrades, &api.OrchestratorProfile{
-		OrchestratorType:    uc.containerService.Properties.OrchestratorProfile.OrchestratorType,
-		OrchestratorVersion: uc.containerService.Properties.OrchestratorProfile.OrchestratorVersion})
-
-	// Validate desired upgrade version and set goal state.
 	found := false
 	for _, up := range orchestratorInfo.Upgrades {
 		if up.OrchestratorVersion == uc.upgradeVersion {
-			uc.containerService.Properties.OrchestratorProfile.OrchestratorVersion = uc.upgradeVersion
 			found = true
 			break
 		}
 	}
 	if !found {
-		return errors.Errorf("upgrading from Kubernetes version %s to version %s is not supported. To see a list of available upgrades, use 'aks-engine orchestrators --orchestrator kubernetes --version %s'", uc.containerService.Properties.OrchestratorProfile.OrchestratorVersion, uc.upgradeVersion, uc.containerService.Properties.OrchestratorProfile.OrchestratorVersion)
+		return errors.Errorf("upgrading from Kubernetes version %s to version %s is not supported. To see a list of available upgrades, use 'aks-engine get-versions --version %s'", uc.containerService.Properties.OrchestratorProfile.OrchestratorVersion, uc.upgradeVersion, uc.containerService.Properties.OrchestratorProfile.OrchestratorVersion)
+	}
+	return nil
+}
+
+func (uc *upgradeCmd) initialize() error {
+	if uc.containerService.Location == "" {
+		uc.containerService.Location = uc.location
+	} else if uc.containerService.Location != uc.location {
+		return errors.New("--location does not match api model location")
 	}
 
-	// Read the name suffix from the parameters to identify VMs in the resource group that belong to this cluster.
-	templatePath := path.Join(uc.deploymentDirectory, "azuredeploy.json")
-	contents, err := ioutil.ReadFile(templatePath)
-	if err != nil {
-		return errors.Wrap(err, "error reading ARM file")
+	if !uc.force {
+		err := uc.validateTargetVersion()
+		if err != nil {
+			return errors.Wrap(err, "Invalid upgrade target version. Consider using --force if you really want to proceed")
+		}
 	}
+	uc.containerService.Properties.OrchestratorProfile.OrchestratorVersion = uc.upgradeVersion
 
-	var template interface{}
-	json.Unmarshal(contents, &template)
-
-	var templateMap, templateParameters, nameSuffixParam map[string]interface{}
-	var okType bool
-
-	if templateMap, okType = template.(map[string]interface{}); !okType {
-		return errors.Errorf("error asserting data from file %q", templatePath)
-	}
-
-	const (
-		parametersKey   = "parameters"
-		nameSuffixKey   = "nameSuffix"
-		defaultValueKey = "defaultValue"
-	)
-
-	if templateParameters, okType = templateMap[parametersKey].(map[string]interface{}); !okType {
-		return errors.Errorf("error asserting data from key \"%s\" in file %q",
-			parametersKey, templatePath)
-	}
-
-	if nameSuffixParam, okType = templateParameters[nameSuffixKey].(map[string]interface{}); !okType {
-		return errors.Errorf("error asserting data from key \"%s.%s\" in file %q",
-			parametersKey, nameSuffixKey, templatePath)
-	}
-
-	if uc.nameSuffix, okType = nameSuffixParam[defaultValueKey].(string); !okType {
-		return errors.Errorf("error asserting data from key \"%s.%s.%s\" in file %q",
-			parametersKey, nameSuffixKey, defaultValueKey, templatePath)
-	}
+	//allows to identify VMs in the resource group that belong to this cluster.
+	uc.nameSuffix = uc.containerService.Properties.GetClusterID()
 
 	log.Infoln(fmt.Sprintf("Upgrading cluster with name suffix: %s", uc.nameSuffix))
 
@@ -228,12 +226,12 @@ func (uc *upgradeCmd) loadCluster(cmd *cobra.Command) error {
 func (uc *upgradeCmd) run(cmd *cobra.Command, args []string) error {
 	err := uc.validate(cmd)
 	if err != nil {
-		log.Fatalf("Error validating upgrade command: %v", err)
+		return errors.Wrap(err, "validating upgrade command")
 	}
 
 	err = uc.loadCluster(cmd)
 	if err != nil {
-		log.Fatalf("Error loading existing cluster: %v", err)
+		return errors.Wrap(err, "loading existing cluster")
 	}
 
 	upgradeCluster := kubernetesupgrade.UpgradeCluster{
@@ -246,19 +244,20 @@ func (uc *upgradeCmd) run(cmd *cobra.Command, args []string) error {
 	}
 
 	upgradeCluster.ClusterTopology = kubernetesupgrade.ClusterTopology{}
-	upgradeCluster.SubscriptionID = uc.authArgs.SubscriptionID.String()
+	upgradeCluster.SubscriptionID = uc.getAuthArgs().SubscriptionID.String()
 	upgradeCluster.ResourceGroup = uc.resourceGroupName
 	upgradeCluster.DataModel = uc.containerService
 	upgradeCluster.NameSuffix = uc.nameSuffix
 	upgradeCluster.AgentPoolsToUpgrade = uc.agentPoolsToUpgrade
+	upgradeCluster.Force = uc.force
 
 	kubeConfig, err := engine.GenerateKubeConfig(uc.containerService.Properties, uc.location)
 	if err != nil {
-		log.Fatalf("Failed to generate kubeconfig: %v", err)
+		return errors.Wrap(err, "generating kubeconfig")
 	}
 
 	if err = upgradeCluster.UpgradeCluster(uc.client, kubeConfig, BuildTag); err != nil {
-		log.Fatalf("Error upgrading cluster: %v\n", err)
+		return errors.Wrap(err, "upgrading cluster")
 	}
 
 	// Save the new apimodel to reflect the cluster's state.
@@ -277,6 +276,6 @@ func (uc *upgradeCmd) run(cmd *cobra.Command, args []string) error {
 			Locale: uc.locale,
 		},
 	}
-
-	return f.SaveFile(uc.deploymentDirectory, "apimodel.json", b)
+	dir, file := filepath.Split(uc.apiModelPath)
+	return f.SaveFile(dir, file, b)
 }

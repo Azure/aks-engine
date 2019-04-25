@@ -2,7 +2,7 @@
 
 ## Prerequisites
 
-1. First, deploy a cluster with both Windows & Linux nodes. See the [Kubernetes Windows Walkthrough](windows.md) for a step by step example.
+1. First, deploy a cluster with both Windows & Linux nodes. See the [Kubernetes Windows Walkthrough](../topics/windows.md) for a step by step example.
 1. Install [Helm](http://helm.sh), the Kubernetes package manager
 
 ## Steps

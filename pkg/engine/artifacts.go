@@ -61,20 +61,20 @@ func kubernetesContainerAddonSettingsInit(profile *api.Properties) map[string]ku
 		DefaultBlobfuseFlexVolumeAddonName: {
 			"kubernetesmasteraddons-blobfuse-flexvolume-installer.yaml",
 			"blobfuse-flexvolume-installer.yaml",
-			profile.OrchestratorProfile.KubernetesConfig.IsBlobfuseFlexVolumeEnabled(),
+			profile.OrchestratorProfile.KubernetesConfig.IsBlobfuseFlexVolumeEnabled() && !profile.HasCoreOS(),
 			profile.OrchestratorProfile.KubernetesConfig.GetAddonScript(DefaultBlobfuseFlexVolumeAddonName),
 		},
 
 		DefaultSMBFlexVolumeAddonName: {
 			"kubernetesmasteraddons-smb-flexvolume-installer.yaml",
 			"smb-flexvolume-installer.yaml",
-			profile.OrchestratorProfile.KubernetesConfig.IsSMBFlexVolumeEnabled(),
+			profile.OrchestratorProfile.KubernetesConfig.IsSMBFlexVolumeEnabled() && !profile.HasCoreOS(),
 			profile.OrchestratorProfile.KubernetesConfig.GetAddonScript(DefaultSMBFlexVolumeAddonName),
 		},
 		DefaultKeyVaultFlexVolumeAddonName: {
 			"kubernetesmasteraddons-keyvault-flexvolume-installer.yaml",
 			"keyvault-flexvolume-installer.yaml",
-			profile.OrchestratorProfile.KubernetesConfig.IsKeyVaultFlexVolumeEnabled(),
+			profile.OrchestratorProfile.KubernetesConfig.IsKeyVaultFlexVolumeEnabled() && !profile.HasCoreOS(),
 			profile.OrchestratorProfile.KubernetesConfig.GetAddonScript(DefaultKeyVaultFlexVolumeAddonName),
 		},
 		DefaultDashboardAddonName: {
@@ -125,7 +125,7 @@ func kubernetesContainerAddonSettingsInit(profile *api.Properties) map[string]ku
 }
 
 func kubernetesAddonSettingsInit(profile *api.Properties) []kubernetesFeatureSetting {
-	return []kubernetesFeatureSetting{
+	kubernetesFeatureSettings := []kubernetesFeatureSetting{
 		{
 			"kubernetesmasteraddons-kube-dns-deployment.yaml",
 			"kube-dns-deployment.yaml",
@@ -143,18 +143,6 @@ func kubernetesAddonSettingsInit(profile *api.Properties) []kubernetesFeatureSet
 			"kube-proxy-daemonset.yaml",
 			true,
 			profile.OrchestratorProfile.KubernetesConfig.GetAddonScript(DefaultKubeProxyAddonName),
-		},
-		{
-			"kubernetesmasteraddons-unmanaged-azure-storage-classes.yaml",
-			"azure-storage-classes.yaml",
-			profile.AgentPoolProfiles[0].StorageProfile != api.ManagedDisks,
-			profile.OrchestratorProfile.KubernetesConfig.GetAddonScript(DefaultAzureStorageClassesAddonName),
-		},
-		{
-			"kubernetesmasteraddons-managed-azure-storage-classes.yaml",
-			"azure-storage-classes.yaml",
-			profile.AgentPoolProfiles[0].StorageProfile == api.ManagedDisks,
-			profile.OrchestratorProfile.KubernetesConfig.GetAddonScript(DefaultAzureStorageClassesAddonName),
 		},
 		{
 			"kubernetesmasteraddons-azure-npm-daemonset.yaml",
@@ -202,10 +190,29 @@ func kubernetesAddonSettingsInit(profile *api.Properties) []kubernetesFeatureSet
 		{
 			"kubernetesmasteraddons-elb-svc.yaml",
 			"elb-svc.yaml",
-			profile.OrchestratorProfile.KubernetesConfig.LoadBalancerSku == "Standard",
+			profile.OrchestratorProfile.KubernetesConfig.LoadBalancerSku == "Standard" && !to.Bool(profile.OrchestratorProfile.KubernetesConfig.PrivateCluster.Enabled),
 			profile.OrchestratorProfile.KubernetesConfig.GetAddonScript(DefaultELBSVCAddonName),
 		},
 	}
+
+	if len(profile.AgentPoolProfiles) > 0 {
+		kubernetesFeatureSettings = append(kubernetesFeatureSettings,
+			kubernetesFeatureSetting{
+				"kubernetesmasteraddons-unmanaged-azure-storage-classes.yaml",
+				"azure-storage-classes.yaml",
+				profile.AgentPoolProfiles[0].StorageProfile != api.ManagedDisks,
+				profile.OrchestratorProfile.KubernetesConfig.GetAddonScript(DefaultAzureStorageClassesAddonName),
+			})
+		kubernetesFeatureSettings = append(kubernetesFeatureSettings,
+			kubernetesFeatureSetting{
+				"kubernetesmasteraddons-managed-azure-storage-classes.yaml",
+				"azure-storage-classes.yaml",
+				profile.AgentPoolProfiles[0].StorageProfile == api.ManagedDisks,
+				profile.OrchestratorProfile.KubernetesConfig.GetAddonScript(DefaultAzureStorageClassesAddonName),
+			})
+	}
+
+	return kubernetesFeatureSettings
 }
 
 func kubernetesManifestSettingsInit(profile *api.Properties) []kubernetesFeatureSetting {
@@ -219,7 +226,13 @@ func kubernetesManifestSettingsInit(profile *api.Properties) []kubernetesFeature
 		{
 			"kubernetesmaster-kube-controller-manager.yaml",
 			"kube-controller-manager.yaml",
-			true,
+			!profile.IsAzureStackCloud(),
+			profile.OrchestratorProfile.KubernetesConfig.ControllerManagerConfig["data"],
+		},
+		{
+			"kubernetesmaster-kube-controller-manager-custom.yaml",
+			"kube-controller-manager.yaml",
+			profile.IsAzureStackCloud(),
 			profile.OrchestratorProfile.KubernetesConfig.ControllerManagerConfig["data"],
 		},
 		{
@@ -249,45 +262,9 @@ func kubernetesManifestSettingsInit(profile *api.Properties) []kubernetesFeature
 	}
 }
 
-func kubernetesArtifactSettingsInitMaster(profile *api.Properties) []kubernetesFeatureSetting {
-	return []kubernetesFeatureSetting{
-		{
-			"kuberneteskubelet.service",
-			"kubelet.service",
-			true,
-			"",
-		},
-		{
-			"kubernetesazurekms.service",
-			"kms.service",
-			true,
-			"",
-		},
-	}
-}
-
-func kubernetesArtifactSettingsInitAgent(profile *api.Properties) []kubernetesFeatureSetting {
-	return []kubernetesFeatureSetting{
-		{
-			"kuberneteskubelet.service",
-			"kubelet.service",
-			true,
-			"",
-		},
-	}
-}
-
 func getAddonString(input, destinationPath, destinationFile string) string {
-	addonString := getBase64CustomScriptFromStr(input)
-	contents := []string{
-		fmt.Sprintf("- path: %s/%s", destinationPath, destinationFile),
-		"  permissions: \\\"0644\\\"",
-		"  encoding: gzip",
-		"  owner: \\\"root\\\"",
-		"  content: !!binary |",
-		fmt.Sprintf("    %s\\n\\n", addonString),
-	}
-	return strings.Join(contents, "\\n")
+	addonString := getBase64EncodedGzippedCustomScriptFromStr(input)
+	return buildConfigString(addonString, destinationFile, destinationPath)
 }
 
 func substituteConfigString(input string, kubernetesFeatureSettings []kubernetesFeatureSetting, sourcePath string, destinationPath string, placeholder string, orchestratorVersion string) string {
@@ -298,16 +275,21 @@ func substituteConfigString(input string, kubernetesFeatureSettings []kubernetes
 		if setting.isEnabled {
 			var cscript string
 			if setting.rawScript != "" {
-				cscript = setting.rawScript
+				var err error
+				cscript, err = getStringFromBase64(setting.rawScript)
+				if err != nil {
+					return ""
+				}
+				config += getAddonString(cscript, setting.destinationFile, destinationPath)
 			} else {
 				cscript = getCustomScriptFromFile(setting.sourceFile,
 					sourcePath,
 					versions[0]+"."+versions[1])
+				config += buildConfigString(
+					cscript,
+					setting.destinationFile,
+					destinationPath)
 			}
-			config += buildConfigString(
-				cscript,
-				setting.destinationFile,
-				destinationPath)
 		}
 	}
 
@@ -315,7 +297,6 @@ func substituteConfigString(input string, kubernetesFeatureSettings []kubernetes
 }
 
 func buildConfigString(configString, destinationFile, destinationPath string) string {
-
 	contents := []string{
 		fmt.Sprintf("- path: %s/%s", destinationPath, destinationFile),
 		"  permissions: \\\"0644\\\"",
@@ -330,7 +311,7 @@ func buildConfigString(configString, destinationFile, destinationPath string) st
 
 func getCustomScriptFromFile(sourceFile, sourcePath, version string) string {
 	customDataFilePath := getCustomDataFilePath(sourceFile, sourcePath, version)
-	return getBase64CustomScript(customDataFilePath)
+	return getBase64EncodedGzippedCustomScript(customDataFilePath)
 }
 
 func getCustomDataFilePath(sourceFile, sourcePath, version string) string {

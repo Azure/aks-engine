@@ -11,8 +11,11 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"time"
+
+	"github.com/Azure/aks-engine/pkg/api"
 
 	"github.com/Azure/go-autorest/autorest/to"
 
@@ -147,11 +150,13 @@ func (cli *CLIProvisioner) provision() error {
 
 			agentSubnetID = fmt.Sprintf("/subscriptions/%s/resourceGroups/%s/providers/Microsoft.Network/virtualNetworks/%s/subnets/%s", cli.Account.SubscriptionID, cli.Account.ResourceGroup.Name, vnetName, agentSubnetName)
 		} else {
-			config, err := engine.ParseConfig(cli.Config.CurrentWorkingDir, cli.Config.ClusterDefinition, cli.Config.Name)
+			var config *engine.Config
+			config, err = engine.ParseConfig(cli.Config.CurrentWorkingDir, cli.Config.ClusterDefinition, cli.Config.Name)
 			if err != nil {
 				log.Printf("Error while trying to build Engine Configuration:%s\n", err)
 			}
-			cs, err := engine.ParseInput(config.ClusterDefinitionPath)
+			var cs *api.VlabsARMContainerService
+			cs, err = engine.ParseInput(config.ClusterDefinitionPath)
 			if err != nil {
 				return err
 			}
@@ -277,7 +282,7 @@ func (cli *CLIProvisioner) waitForNodes() error {
 		if !cli.IsPrivate() {
 			log.Println("Waiting on nodes to go into ready state...")
 			ready := node.WaitOnReady(cli.Engine.NodeCount(), 10*time.Second, cli.Config.Timeout)
-			cmd := exec.Command("kubectl", "get", "nodes", "-o", "wide")
+			cmd := exec.Command("k", "get", "nodes", "-o", "wide")
 			out, _ := cmd.CombinedOutput()
 			log.Printf("%s\n", out)
 			if !ready {
@@ -292,6 +297,32 @@ func (cli *CLIProvisioner) waitForNodes() error {
 				log.Printf("Ready nodes did not return a version: %s", err)
 			}
 			log.Printf("Testing a %s %s cluster...\n", cli.Config.Orchestrator, version)
+			nodeList, err := node.Get()
+			if err != nil {
+				return errors.Wrap(err, "Unable to get the list of nodes")
+			}
+			for _, n := range nodeList.Nodes {
+				exp, err := regexp.Compile("k8s-master")
+				if err != nil {
+					return err
+				}
+				if !exp.MatchString(n.Metadata.Name) {
+					cmd := exec.Command("k", "label", "node", n.Metadata.Name, "foo=bar")
+					util.PrintCommand(cmd)
+					out, err := cmd.CombinedOutput()
+					log.Printf("%s\n", out)
+					if err != nil {
+						return errors.Wrapf(err, "Unable to assign label to node %s", n.Metadata.Name)
+					}
+					cmd = exec.Command("k", "annotate", "node", n.Metadata.Name, "foo=bar")
+					util.PrintCommand(cmd)
+					out, err = cmd.CombinedOutput()
+					log.Printf("%s\n", out)
+					if err != nil {
+						return errors.Wrapf(err, "Unable to add node annotation to node %s", n.Metadata.Name)
+					}
+				}
+			}
 		} else {
 			log.Println("This cluster is private")
 			if cli.Engine.ClusterDefinition.Properties.OrchestratorProfile.KubernetesConfig.PrivateCluster.JumpboxProfile == nil {
@@ -323,13 +354,14 @@ func (cli *CLIProvisioner) FetchProvisioningMetrics(path string, cfg *config.Con
 	}
 	authSock := strings.Split(strings.Split(string(out), "=")[1], ";")
 	os.Setenv("SSH_AUTH_SOCK", authSock[0])
-	conn, err := remote.NewConnection(hostname, "22", cli.Engine.ClusterDefinition.Properties.LinuxProfile.AdminUsername, cli.Config.GetSSHKeyPath())
+	var conn *remote.Connection
+	conn, err = remote.NewConnection(hostname, "22", cli.Engine.ClusterDefinition.Properties.LinuxProfile.AdminUsername, cli.Config.GetSSHKeyPath())
 	if err != nil {
 		return err
 	}
 	for _, master := range cli.Masters {
 		for _, fp := range masterFiles {
-			err := conn.CopyRemote(master.Name, fp)
+			err = conn.CopyFromRemote(master.Name, fp)
 			if err != nil {
 				log.Printf("Error reading file from path (%s):%s", path, err)
 			}
@@ -338,7 +370,7 @@ func (cli *CLIProvisioner) FetchProvisioningMetrics(path string, cfg *config.Con
 
 	for _, agent := range cli.Agents {
 		for _, fp := range agentFiles {
-			err := conn.CopyRemote(agent.Name, fp)
+			err = conn.CopyFromRemote(agent.Name, fp)
 			if err != nil {
 				log.Printf("Error reading file from path (%s):%s", path, err)
 			}

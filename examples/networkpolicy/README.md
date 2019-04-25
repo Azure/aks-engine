@@ -1,4 +1,4 @@
-# AKS-Engine - Network Policy
+# AKS Engine - Network Policy
 
 There are 2 different Network Policy options :
 
@@ -7,11 +7,11 @@ There are 2 different Network Policy options :
 
 ## Calico
 
-Before enabling Calico policy for the AKS-Engine cluster, you must first decide which network plugin to use for the cluster: Azure or Kubenet. 
+Before enabling Calico policy for the AKS Engine cluster, you must first decide which network plugin to use for the cluster: Azure or Kubenet.
 The difference between Azure and Kubenet lies in the way IP addresses get allocated; Azure uses Azure-native IPs while Kubenet does static IP assignment based on the node's pod CIDR.
 If you're not sure which one to go with, we recommend going with Azure.
 
-The kubernetes-calico deployment template enables Calico networking and policies for the AKS-Engine cluster via `"networkPolicy": "calico"` being present inside the `kubernetesConfig`.
+The kubernetes-calico deployment template enables Calico networking and policies for the AKS Engine cluster via `"networkPolicy": "calico"` being present inside the `kubernetesConfig`.
 
 ```json
   "properties": {
@@ -35,10 +35,10 @@ Once the template has been successfully deployed, following the [simple policy t
 
 > Note: `ping` (ICMP) traffic is blocked on the cluster by default.  Wherever `ping` is used in any tutorial substitute testing access with something like `wget -q --timeout=5 google.com -O -` instead.
 
-### Update guidance for clusters deployed by AKS-Engine releases prior to 0.17.0
+### Update guidance for clusters deployed by AKS Engine releases prior to 0.17.0
 Clusters deployed with calico networkPolicy enabled prior to `0.17.0` had calico `2.6.3` deployed, and a daemonset with an `updateStrategy` of `Ondelete`.
 
-AKS-Engine releases starting with 0.17.0 now produce an addon manifest for calico in `/etc/kubernetes/addons/calico-daemonset.yaml` contaning calico 3.1.x, and an `updateStrategy` of `RollingUpdate`. Due to breaking changes introduced by calico 3, one must first migrate through calico `2.6.5` or a later 2.6.x release in order to migrate to calico 3.1.x. as described in the [calico kubernetes upgrade documentation](https://docs.projectcalico.org/v3.1/getting-started/kubernetes/upgrade/). The AKS-Engine manifest for calico uses the [kubernetes API datastore, policy-only setup](https://docs.projectcalico.org/v3.1/getting-started/kubernetes/upgrade/upgrade#upgrading-an-installation-that-uses-the-kubernetes-api-datastore).
+AKS Engine releases starting with 0.17.0 now produce an addon manifest for calico in `/etc/kubernetes/addons/calico-daemonset.yaml` contaning calico 3.1.x, and an `updateStrategy` of `RollingUpdate`. Due to breaking changes introduced by calico 3, one must first migrate through calico `2.6.5` or a later 2.6.x release in order to migrate to calico 3.1.x. as described in the [calico kubernetes upgrade documentation](https://docs.projectcalico.org/v3.1/getting-started/kubernetes/upgrade/). The AKS Engine manifest for calico uses the [kubernetes API datastore, policy-only setup](https://docs.projectcalico.org/v3.1/getting-started/kubernetes/upgrade/upgrade#upgrading-an-installation-that-uses-the-kubernetes-api-datastore).
 
 1. To update to `2.6.5+` in preparation of an upgrade to 3.1.x as specified, edit `/etc/kubernetes/addons/calico-daemonset.yaml` on a master node, replacing `calico/node:v3.1.1` with `calico/node:v2.6.10` and `calico/cni:v3.1.1` with `calico/cni:v2.0.6`. Run `kubectl apply -f /etc/kubernetes/addons/calico-daemonset.yaml`.
 
@@ -64,7 +64,7 @@ If you have any customized calico resource manifests, you must also follow the [
 
 ## Cilium
 
-The kubernetes-cilium deployment template enables Cilium networking and policies for the AKS-Engine cluster via `"networkPolicy": "cilium"` or `"networkPlugin": "cilium"` being present inside the `kubernetesConfig`.
+The kubernetes-cilium deployment template enables Cilium networking and policies for the AKS Engine cluster via `"networkPolicy": "cilium"` or `"networkPlugin": "cilium"` being present inside the `kubernetesConfig`.
 
 ```json
   "properties": {
@@ -94,6 +94,6 @@ The kubernetes-cilium deployment template enables Cilium networking and policies
 
 ### Post installation
 
-Once the template has been successfully deployed, following the [deploy the demo application](http://cilium.readthedocs.io/en/latest/gettingstarted/minikube/#step-2-deploy-the-demo-application) tutorial will provide a good foundation for how to do L3/4 policy as well as more advanced Layer 7 inspection and routing. If you have [Istio](https://istio.io) you can try this [tutorial](http://cilium.readthedocs.io/en/latest/gettingstarted/istio/) where cilium is used to side by side with Istio to enforce security policies in a Kubernetes deployment. 
+Once the template has been successfully deployed, following the [deploy the demo application](http://cilium.readthedocs.io/en/latest/gettingstarted/minikube/#step-2-deploy-the-demo-application) tutorial will provide a good foundation for how to do L3/4 policy as well as more advanced Layer 7 inspection and routing. If you have [Istio](https://istio.io) you can try this [tutorial](http://cilium.readthedocs.io/en/latest/gettingstarted/istio/) where cilium is used to side by side with Istio to enforce security policies in a Kubernetes deployment.
 
 For the latest documentation on Cilium (including BPF and XDP reference guides), please refer to [this](http://cilium.readthedocs.io/en/latest/)

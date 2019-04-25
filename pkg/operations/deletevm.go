@@ -60,20 +60,22 @@ func CleanDeleteVirtualMachine(az armhelpers.AKSEngineClient, logger *log.Entry,
 	if len(nicName) > 0 {
 		logger.Infof("deleting nic: %s/%s", resourceGroup, nicName)
 		logger.Infof("waiting for nic deletion: %s/%s", resourceGroup, nicName)
-		if err := az.DeleteNetworkInterface(ctx, resourceGroup, nicName); err != nil {
+		if err = az.DeleteNetworkInterface(ctx, resourceGroup, nicName); err != nil {
 			return err
 		}
 	}
 
 	if vhd != nil {
-		accountName, vhdContainer, vhdBlob, err := utils.SplitBlobURI(*vhd.URI)
+		var accountName, vhdContainer, vhdBlob string
+		accountName, vhdContainer, vhdBlob, err = utils.SplitBlobURI(*vhd.URI)
 		if err != nil {
 			return err
 		}
 
 		logger.Infof("found os disk storage reference: %s %s %s", accountName, vhdContainer, vhdBlob)
 
-		as, err := az.GetStorageClient(ctx, resourceGroup, accountName)
+		var as armhelpers.AKSStorageClient
+		as, err = az.GetStorageClient(ctx, resourceGroup, accountName)
 		if err != nil {
 			return err
 		}

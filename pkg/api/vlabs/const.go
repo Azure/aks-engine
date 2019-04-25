@@ -29,10 +29,13 @@ const (
 // the LinuxDistros supported by vlabs
 const (
 	Ubuntu          Distro = "ubuntu"
+	Ubuntu1804      Distro = "ubuntu-18.04"
 	RHEL            Distro = "rhel"
 	CoreOS          Distro = "coreos"
 	AKS             Distro = "aks"
-	AKSDockerEngine Distro = "aks-docker-engine"
+	AKSDockerEngine Distro = "aks-docker-engine" // deprecated docker-engine distro
+	AKS1804         Distro = "aks-18.04"
+	ACC1604         Distro = "acc-16.04"
 )
 
 // validation values
@@ -73,16 +76,30 @@ const (
 	ManagedDisks = "ManagedDisks"
 )
 
+// Supported container runtimes
+const (
+	Docker          = "docker"
+	ClearContainers = "clear-containers"
+	KataContainers  = "kata-containers"
+	Containerd      = "containerd"
+)
+
 var (
 	// NetworkPluginValues holds the valid values for network plugin implementation
-	NetworkPluginValues = [...]string{"", "kubenet", "azure", "cilium", "flannel"}
+	NetworkPluginValues = [...]string{"", "kubenet", "azure", NetworkPluginCilium, "flannel"}
 
 	// NetworkPolicyValues holds the valid values for a network policy
 	// "azure" and "none" are there for backwards-compatibility
-	NetworkPolicyValues = [...]string{"", "calico", "cilium", "azure", "none"}
+	NetworkPolicyValues = [...]string{"", "calico", NetworkPolicyCilium, "azure", "none"}
 
 	// ContainerRuntimeValues holds the valid values for container runtimes
-	ContainerRuntimeValues = [...]string{"", "docker", "clear-containers", "kata-containers", "containerd"}
+	ContainerRuntimeValues = [...]string{"", Docker, ClearContainers, KataContainers, Containerd}
+
+	// DistroValues holds the valid values for OS distros
+	DistroValues = []Distro{"", Ubuntu, Ubuntu1804, RHEL, CoreOS, AKS, AKS1804, ACC1604}
+
+	// DependenciesLocationValues holds the valid values for dependencies location
+	DependenciesLocationValues = []DependenciesLocation{"", AzureStackDependenciesLocationPublic, AzureStackDependenciesLocationChina, AzureStackDependenciesLocationGerman, AzureStackDependenciesLocationUSGovernment}
 )
 
 // Kubernetes configuration
@@ -99,6 +116,10 @@ const (
 	DefaultNetworkPluginWindows = "azure"
 	// DefaultNetworkPolicy defines the network policy to use by default
 	DefaultNetworkPolicy = ""
+	// NetworkPolicyCilium is the string expression for cilium network policy config option
+	NetworkPolicyCilium = "cilium"
+	// NetworkPluginCilium is the string expression for cilium network policy config option
+	NetworkPluginCilium = NetworkPolicyCilium
 )
 
 const (
@@ -106,4 +127,34 @@ const (
 	AgentPoolProfileRoleEmpty AgentPoolProfileRole = ""
 	// AgentPoolProfileRoleInfra is the infra role
 	AgentPoolProfileRoleInfra AgentPoolProfileRole = "infra"
+)
+
+const (
+	// AzureStackCloud is a const string reference identifier for Azure Stack cloud
+	AzureStackCloud = "AzureStackCloud"
+)
+
+const (
+	// AzureADIdentitySystem is a const string reference identifier for Azure AD identity System
+	AzureADIdentitySystem = "azure_ad"
+	// ADFSIdentitySystem is a const string reference identifier for ADFS identity System
+	ADFSIdentitySystem = "adfs"
+)
+
+const (
+	// AzureStackDependenciesLocationPublic indicates to get dependencies from in AzurePublic cloud
+	AzureStackDependenciesLocationPublic = "public"
+	// AzureStackDependenciesLocationChina indicates to get dependencies from AzureChina cloud
+	AzureStackDependenciesLocationChina = "china"
+	// AzureStackDependenciesLocationGerman indicates to get dependencies from AzureGerman cloud
+	AzureStackDependenciesLocationGerman = "german"
+	// AzureStackDependenciesLocationUSGovernment indicates to get dependencies from AzureUSGovernment cloud
+	AzureStackDependenciesLocationUSGovernment = "usgovernment"
+)
+
+const (
+	// ClientSecretAuthMethod indicates to use client seret for authentication
+	ClientSecretAuthMethod = "client_secret"
+	// ClientCertificateAuthMethod indicates to use client certificate for authentication
+	ClientCertificateAuthMethod = "client_certificate"
 )

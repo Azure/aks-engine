@@ -203,6 +203,13 @@
       },
       "type": "string"
     },
+    "privateAzureRegistryServer": {
+      "defaultValue": "",
+      "metadata": {
+        "description": "The private Azure registry server for hyperkube."
+      },
+      "type": "string"
+    },
     "kubernetesCcmImageSpec": {
       "defaultValue": "",
       "metadata": {
@@ -312,11 +319,29 @@
       "type": "string"
     },
 {{end}}
-    "dockerEngineDownloadRepo": {
-      "defaultValue": "https://aptdocker.azureedge.net/repo",
+    "mobyVersion": {
+      "defaultValue": "3.0.4",
       "metadata": {
-        "description": "The Docker Engine download URL for Kubernetes."
+        "description": "The Azure Moby build version"
       },
+      "allowedValues": [
+         "3.0.1",
+         "3.0.2",
+         "3.0.3",
+         "3.0.4"
+       ],
+      "type": "string"
+    },
+    "containerdVersion": {
+      "defaultValue": "1.1.5",
+      "metadata": {
+        "description": "The Azure Moby build version"
+      },
+      "allowedValues": [
+         "1.1.5",
+         "1.1.6",
+         "1.2.4"
+       ],
       "type": "string"
     },
     "networkPolicy": {
@@ -501,7 +526,7 @@
       "type": "string"
     }
 {{end}}
-{{if HasCustomSearchDomain}}
+{{if HasLinuxProfile}}{{if HasCustomSearchDomain}}
     ,"searchDomainName": {
       "defaultValue": "",
       "metadata": {
@@ -523,8 +548,8 @@
       },
       "type": "securestring"
     }
-{{end}}
-{{if HasCustomNodesDNS}}
+{{end}}{{end}}
+{{if HasLinuxProfile}}{{if HasCustomNodesDNS}}
     ,"dnsServer": {
       "defaultValue": "",
       "metadata": {
@@ -532,7 +557,7 @@
       },
       "type": "string"
     }
-{{end}}
+{{end}}{{end}}
 
 {{if EnableEncryptionWithExternalKms}}
    ,

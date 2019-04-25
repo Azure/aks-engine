@@ -17,7 +17,7 @@ pr:
 resources:
   containers:
   - container: dev1
-    image: quay.io/deis/go-dev:v1.18.3
+    image: quay.io/deis/go-dev:v1.21.0
 
 jobs:
 - job: unit_tests
@@ -49,11 +49,11 @@ jobs:
   - script: make bootstrap
     displayName: Install dependencies
     workingDirectory: $(modulePath)
-  - script: make validate-copyright-headers test-style
-    displayName: Run linting rules
-    workingDirectory: $(modulePath)
   - script: make validate-dependencies
     displayName: Check if imports, Gopkg.toml, and Gopkg.lock are in sync
+    workingDirectory: $(modulePath)
+  - script: make validate-copyright-headers test-style
+    displayName: Run linting rules
     workingDirectory: $(modulePath)
   - script: make build-cross
     displayName: Build cross-architectural binaries
@@ -71,10 +71,8 @@ jobs:
 
 - template: e2e-job-template.yaml
   parameters:
-    name: 'k8s_1_10_release_e2e'
-    k8sRelease: '1.10'
-    apimodel: 'examples/e2e-tests/kubernetes/release/default/definition.json'
-    createVNET: true
+    name: 'ubuntu_18_04_linux_e2e'
+    apimodel: 'examples/ubuntu-1804/kubernetes.json'
 
 - template: e2e-job-template.yaml
   parameters:
@@ -99,15 +97,10 @@ jobs:
 
 - template: e2e-job-template.yaml
   parameters:
-    name: 'k8s_windows_1_10_release_e2e'
-    k8sRelease: '1.10'
-    apimodel: 'examples/e2e-tests/kubernetes/windows/hybrid/definition.json'
-
-- template: e2e-job-template.yaml
-  parameters:
-    name: 'k8s_windows_1_11_release_e2e'
-    k8sRelease: '1.11'
-    apimodel: 'examples/e2e-tests/kubernetes/windows/hybrid/definition.json'
+    name: 'k8s_1_14_release_e2e'
+    k8sRelease: '1.14'
+    apimodel: 'examples/e2e-tests/kubernetes/release/default/definition.json'
+    createVNET: true
 
 - template: e2e-job-template.yaml
   parameters:
@@ -119,4 +112,10 @@ jobs:
   parameters:
     name: 'k8s_windows_1_13_release_e2e'
     k8sRelease: '1.13'
+    apimodel: 'examples/e2e-tests/kubernetes/windows/hybrid/definition.json'
+
+- template: e2e-job-template.yaml
+  parameters:
+    name: 'k8s_windows_1_14_release_e2e'
+    k8sRelease: '1.14'
     apimodel: 'examples/e2e-tests/kubernetes/windows/hybrid/definition.json'

@@ -13,22 +13,27 @@ import (
 
 var _ = Describe("the version command", func() {
 	It("should create a version command", func() {
-		output := newVersionCmd()
-		Expect(output.Use).Should(Equal(versionName))
-		Expect(output.Short).Should(Equal(versionShortDescription))
-		Expect(output.Long).Should(Equal(versionLongDescription))
-		Expect(output.Flags().Lookup("output")).NotTo(BeNil())
+		command := newVersionCmd()
+		Expect(command.Use).Should(Equal(versionName))
+		Expect(command.Short).Should(Equal(versionShortDescription))
+		Expect(command.Long).Should(Equal(versionLongDescription))
+		Expect(command.Flags().Lookup("output")).NotTo(BeNil())
+
+		command.SetArgs([]string{})
+		err := command.Execute()
+		Expect(err).NotTo(HaveOccurred())
 	})
 
 	It("should print a json version of AKS Engine", func() {
-		output := getVersion("json")
+		output, _ := getVersion("json")
 
 		expectedOutput, _ := helpers.JSONMarshalIndent(version, "", "  ", false)
 
 		Expect(output).Should(Equal(string(expectedOutput)))
 	})
+
 	It("should print a humanized version of AKS Engine", func() {
-		output := getVersion("human")
+		output, _ := getVersion("human")
 
 		expectedOutput := fmt.Sprintf("Version: %s\nGitCommit: %s\nGitTreeState: %s",
 			BuildTag,
@@ -38,11 +43,11 @@ var _ = Describe("the version command", func() {
 		Expect(output).Should(Equal(expectedOutput))
 	})
 
-	It("should print a json version of AKS Engine", func() {
-		output := getVersion("json")
+	It("should error when asked for a yaml version of AKS Engine", func() {
+		output, err := getVersion("yaml")
 
-		expectedOutput, _ := helpers.JSONMarshalIndent(version, "", "  ", false)
-
-		Expect(output).Should(Equal(string(expectedOutput)))
+		Expect(err).To(HaveOccurred())
+		Expect(err.Error()).To(Equal("output format \"yaml\" is not supported"))
+		Expect(output).To(BeEmpty())
 	})
 })

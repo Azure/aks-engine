@@ -399,3 +399,74 @@ func TestAPIServerConfigEnableProfiling(t *testing.T) {
 			a["--profiling"])
 	}
 }
+
+func TestAPIServerConfigRepairMalformedUpdates(t *testing.T) {
+	// Test default
+	cs := CreateMockContainerService("testcluster", "1.13.0", 3, 2, false)
+	cs.setAPIServerConfig()
+	a := cs.Properties.OrchestratorProfile.KubernetesConfig.APIServerConfig
+	if a["--repair-malformed-updates"] != "false" {
+		t.Fatalf("got unexpected default value for '--repair-malformed-updates' API server config: %s",
+			a["--repair-malformed-updates"])
+	}
+
+	// Validate that 1.14.0 doesn't include --repair-malformed-updates at all
+	cs = CreateMockContainerService("testcluster", "1.14.0", 3, 2, false)
+	cs.setAPIServerConfig()
+	a = cs.Properties.OrchestratorProfile.KubernetesConfig.APIServerConfig
+	if _, ok := a["--repair-malformed-updates"]; ok {
+		t.Fatalf("got a value for the deprecated '--repair-malformed-updates' API server config: %s",
+			a["--repair-malformed-updates"])
+	}
+}
+
+func TestAPIServerAuditPolicyBackCompatOverride(t *testing.T) {
+	// Validate that we statically override "--audit-policy-file" values of "/etc/kubernetes/manifests/audit-policy.yaml" for back-compat
+	auditPolicyKey := "--audit-policy-file"
+	cs := CreateMockContainerService("testcluster", "1.10.8", 3, 2, false)
+	cs.Properties.OrchestratorProfile.KubernetesConfig.APIServerConfig = map[string]string{}
+	cs.Properties.OrchestratorProfile.KubernetesConfig.APIServerConfig[auditPolicyKey] = "/etc/kubernetes/manifests/audit-policy.yaml"
+	cs.setAPIServerConfig()
+	a := cs.Properties.OrchestratorProfile.KubernetesConfig.APIServerConfig
+	if a[auditPolicyKey] != "/etc/kubernetes/addons/audit-policy.yaml" {
+		t.Fatalf("got unexpected default value for '%s' API server config: %s",
+			auditPolicyKey, a[auditPolicyKey])
+	}
+}
+
+func TestAPIServerWeakCipherSuites(t *testing.T) {
+	// Test allowed versions
+	for _, version := range []string{"1.10.0", "1.11.0", "1.12.0", "1.13.0", "1.14.0"} {
+		cs := CreateMockContainerService("testcluster", version, 3, 2, false)
+		cs.setAPIServerConfig()
+		a := cs.Properties.OrchestratorProfile.KubernetesConfig.APIServerConfig
+		if a["--tls-cipher-suites"] != TLSStrongCipherSuites {
+			t.Fatalf("got unexpected default value for '--tls-cipher-suites' API server config for Kubernetes version %s: %s",
+				version, a["--tls-cipher-suites"])
+		}
+	}
+
+	// Validate that 1.9.0 doesn't include --tls-cipher-suites at all
+	cs := CreateMockContainerService("testcluster", "1.9.0", 3, 2, false)
+	cs.setAPIServerConfig()
+	a := cs.Properties.OrchestratorProfile.KubernetesConfig.APIServerConfig
+	if _, ok := a["--tls-cipher-suites"]; ok {
+		t.Fatalf("got a value for '--tls-cipher-suites' API server config, which is not enabled in versions of Kubernetes prior to 1.10: %s",
+			a["--tls-cipher-suites"])
+	}
+
+	allSuites := "TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA,TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256,TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA,TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305,TLS_ECDHE_ECDSA_WITH_RC4_128_SHA,TLS_ECDHE_RSA_WITH_3DES_EDE_CBC_SHA,TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA,TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256,TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA,TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305,TLS_ECDHE_RSA_WITH_RC4_128_SHA,TLS_RSA_WITH_3DES_EDE_CBC_SHA,TLS_RSA_WITH_AES_128_CBC_SHA,TLS_RSA_WITH_AES_128_CBC_SHA256,TLS_RSA_WITH_AES_128_GCM_SHA256,TLS_RSA_WITH_AES_256_CBC_SHA,TLS_RSA_WITH_AES_256_GCM_SHA384,TLS_RSA_WITH_RC4_128_SHA"
+	// Test user-override
+	for _, version := range []string{"1.10.0", "1.11.0", "1.12.0", "1.13.0", "1.14.0"} {
+		cs := CreateMockContainerService("testcluster", version, 3, 2, false)
+		cs.Properties.OrchestratorProfile.KubernetesConfig.APIServerConfig = map[string]string{
+			"--tls-cipher-suites": allSuites,
+		}
+		cs.setAPIServerConfig()
+		a := cs.Properties.OrchestratorProfile.KubernetesConfig.APIServerConfig
+		if a["--tls-cipher-suites"] != allSuites {
+			t.Fatalf("got unexpected default value for '--tls-cipher-suites' API server config for Kubernetes version %s: %s",
+				version, a["--tls-cipher-suites"])
+		}
+	}
+}

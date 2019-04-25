@@ -218,6 +218,7 @@ spec:
         component: oms-agent
         tier: node
     spec:
+      priorityClassName: system-node-critical
       serviceAccountName: omsagent
       containers:
         - name: omsagent

@@ -18,4 +18,9 @@ linters:
     - govet
     - ineffassign
     - misspell
+    - unconvert
     - unused
+
+linters-settings:
+  govet:
+    check-shadowing: true

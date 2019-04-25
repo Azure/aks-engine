@@ -72,5 +72,5 @@ func getBase64CustomFile(source io.Reader) string {
 	buf.ReadFrom(source)
 	cfStr := buf.String()
 	cfStr = strings.Replace(cfStr, "\r\n", "\n", -1)
-	return getBase64CustomScriptFromStr(cfStr)
+	return getBase64EncodedGzippedCustomScriptFromStr(cfStr)
 }

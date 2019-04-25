@@ -82,7 +82,7 @@ func RecordTestRun(sa StorageAccount, testRunQos TestRunQos) {
 	table1 := tsc.GetTableReference(RecordTestRunTableName)
 
 	// Create Table if it does not exist
-	if err := table1.Create(30, storage.FullMetadata, nil); err != nil && !strings.Contains(err.Error(), "The table specified already exists") {
+	if err = table1.Create(30, storage.FullMetadata, nil); err != nil && !strings.Contains(err.Error(), "The table specified already exists") {
 		fmt.Printf("Failed to create table: %s, Error: %s\n", RecordTestRunTableName, err.Error())
 		return
 	}
@@ -127,7 +127,7 @@ func RunPromoteToFailure(sa StorageAccount, testRunPromToFail DigitalSignalFilte
 	table1 := tsc.GetTableReference(PromoteToFailureTableName)
 
 	// Create Table if it does not exist
-	if err := table1.Create(30, storage.FullMetadata, nil); err != nil && !strings.Contains(err.Error(), "The table specified already exists") {
+	if err = table1.Create(30, storage.FullMetadata, nil); err != nil && !strings.Contains(err.Error(), "The table specified already exists") {
 		fmt.Printf("Failed to create table: %s, Error: %s\n", PromoteToFailureTableName, err.Error())
 		return false, err
 	}

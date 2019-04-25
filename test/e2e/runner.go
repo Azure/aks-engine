@@ -83,7 +83,8 @@ func main() {
 			log.Printf("Error while trying to set RG:%s\n", err)
 		} else {
 			// set expiration time to 7 days = 168h for now
-			d, err := time.ParseDuration("168h")
+			var d time.Duration
+			d, err = time.ParseDuration("168h")
 			if err != nil {
 				log.Fatalf("Unexpected error parsing duration: %s", err)
 			}

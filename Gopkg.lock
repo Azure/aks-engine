@@ -10,17 +10,24 @@
   version = "v0.2.0"
 
 [[projects]]
-  digest = "1:5c21f6fe78fcf62e7ec4b0213d271341dded178e7e2067ce2e0ef67177bd4f4a"
+  digest = "1:60e4d0dfed5ca7863d013f64beac7ea849125e61785221c6b18c3e5ed36dbc64"
   name = "github.com/Azure/azure-sdk-for-go"
   packages = [
     "services/apimanagement/mgmt/2017-03-01/apimanagement",
     "services/authorization/mgmt/2015-07-01/authorization",
-    "services/compute/mgmt/2018-04-01/compute",
+    "services/compute/mgmt/2017-03-30/compute",
+    "services/compute/mgmt/2018-10-01/compute",
+    "services/cosmos-db/mgmt/2015-04-08/documentdb",
     "services/graphrbac/1.6/graphrbac",
+    "services/keyvault/mgmt/2018-02-14/keyvault",
+    "services/network/mgmt/2017-10-01/network",
     "services/network/mgmt/2018-08-01/network",
+    "services/preview/authorization/mgmt/2018-01-01-preview/authorization",
+    "services/preview/authorization/mgmt/2018-09-01-preview/authorization",
     "services/preview/msi/mgmt/2015-08-31-preview/msi",
     "services/resources/mgmt/2016-06-01/subscriptions",
     "services/resources/mgmt/2018-05-01/resources",
+    "services/storage/mgmt/2017-10-01/storage",
     "services/storage/mgmt/2018-02-01/storage",
     "storage",
     "version",
@@ -109,6 +116,14 @@
   version = "v1.1.0"
 
 [[projects]]
+  digest = "1:aa3ed0a71c4e66e4ae6486bf97a3f4cab28edc78df2e50c5ad01dc7d91604b88"
+  name = "github.com/fatih/structs"
+  packages = ["."]
+  pruneopts = "NUT"
+  revision = "4966fc68f5b7593aafa6cbbba2d65ec6e1416047"
+  version = "v1.1.0"
+
+[[projects]]
   digest = "1:81466b4218bf6adddac2572a30ac733a9255919bc2f470b4827a317bd4ee1756"
   name = "github.com/ghodss/yaml"
   packages = ["."]
@@ -146,6 +161,14 @@
   version = "v0.16.0"
 
 [[projects]]
+  digest = "1:bde9f189072512ba353f3641d4839cb4c9c7edf421e467f2c03f267b402bd16c"
+  name = "github.com/gofrs/uuid"
+  packages = ["."]
+  pruneopts = "NUT"
+  revision = "6b08a5c5172ba18946672b49749cde22873dd7c2"
+  version = "v3.2.0"
+
+[[projects]]
   digest = "1:abea725bcf0210887f5da19d804fffa1dd45a42a56bdf5f02322345e3fee4f0d"
   name = "github.com/gogo/protobuf"
   packages = [
@@ -178,6 +201,19 @@
   pruneopts = "NUT"
   revision = "aa810b61a9c79d51363740d207bb46cf8e620ed5"
   version = "v1.2.0"
+
+[[projects]]
+  digest = "1:2e3c336fc7fde5c984d2841455a658a6d626450b1754a854b3b32e7a8f49a07a"
+  name = "github.com/google/go-cmp"
+  packages = [
+    "cmp",
+    "cmp/internal/diff",
+    "cmp/internal/function",
+    "cmp/internal/value",
+  ]
+  pruneopts = "NUT"
+  revision = "3af367b6b30c263d47e8895973edcca9a49cf029"
+  version = "v0.2.0"
 
 [[projects]]
   branch = "master"
@@ -258,7 +294,7 @@
     "pkg/escape",
   ]
   pruneopts = "NUT"
-  revision = "fef6d4618e96a760b6677113385dc6125823047e"
+  revision = "98469bf07613ffae6f025893761c1e7a5e96e4aa"
 
 [[projects]]
   digest = "1:8e36686e8b139f8fe240c1d5cf3a145bc675c22ff8e707857cdd3ae17b00d728"
@@ -483,7 +519,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:5998b576eaca757b9e0f9b6bd47d88219f958044832a095874321626b1028106"
+  digest = "1:c837db63b8329590f91c6a6bb713d5a9383f7b925ab0f219218f70c46af1cc59"
   name = "golang.org/x/net"
   packages = [
     "context",
@@ -498,7 +534,7 @@
     "trace",
   ]
   pruneopts = "NUT"
-  revision = "395948e2f546cb82afa9e1f6d1a6e87849b9af1d"
+  revision = "915654e7eabcea33ae277abbecf52f0d8b7a9fdc"
 
 [[projects]]
   branch = "master"
@@ -513,14 +549,14 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:29edb5eca830bfe65f504139807795dbc79844ebf1a44345aac6ecf644f73885"
+  digest = "1:a387cb801e1eacd9a2369522ea11d73077dcb6b7d9525d73c56d12754a0e8afc"
   name = "golang.org/x/sys"
   packages = [
     "unix",
     "windows",
   ]
   pruneopts = "NUT"
-  revision = "7fbe1cd0fcc20051e1fcb87fbabec4a1bacaaeba"
+  revision = "48ac38b7c8cbedd50b1613c0fccacfc7d88dfcdf"
 
 [[projects]]
   digest = "1:8a12cbc891b7130d3f660f8a309e5c0b083f831e6ac38cdaa1f12e63c12d6bea"
@@ -579,7 +615,7 @@
   name = "google.golang.org/genproto"
   packages = ["googleapis/rpc/status"]
   pruneopts = "NUT"
-  revision = "ae2f86662275e140f395167f1dab7081a5bd5fa8"
+  revision = "db91494dd46c1fdcbbde05e5ff5eb56df8f7d79a"
 
 [[projects]]
   digest = "1:638e6e596d67d0a0c8aeb76ebdcf73561b701ea43f21963b1db231d96ed7db68"
@@ -631,12 +667,12 @@
   version = "v1.4.7"
 
 [[projects]]
-  digest = "1:fedf9acce6acb7d1395211bb07c6a7747d80b64ed9517b59b86e8ae9ccda4044"
+  digest = "1:ce77b60a5a960206e689e397af69f7e60df7d03d310a4062c72da623ec16f754"
   name = "gopkg.in/go-playground/validator.v9"
   packages = ["."]
   pruneopts = "NUT"
-  revision = "0277b12d53df79c9dbf7311cb07fa9c81ed621bb"
-  version = "v9.24.0"
+  revision = "cdd5c28d217804eec51fa694927e6c57465748f6"
+  version = "v9.25.0"
 
 [[projects]]
   digest = "1:2d1fbdc6777e5408cabeb02bf336305e724b925ff4546ded0fa8715a7267922a"
@@ -653,6 +689,14 @@
   pruneopts = "NUT"
   revision = "6ed8d5f64cd79a498d1f3fab5880cc376ce41bbe"
   version = "v1.41.0"
+
+[[projects]]
+  digest = "1:669d28d872dcb4e7a25ff7f15270c5f72da2ac129a9be4db2c5c4205b416f4bc"
+  name = "gopkg.in/jarcoal/httpmock.v1"
+  packages = ["."]
+  pruneopts = "NUT"
+  revision = "b43b330ad7ef975a5049e4cc58f948aa6d9cad89"
+  version = "v1.0.1"
 
 [[projects]]
   branch = "v1"
@@ -816,12 +860,19 @@
   input-imports = [
     "github.com/Azure/azure-sdk-for-go/services/apimanagement/mgmt/2017-03-01/apimanagement",
     "github.com/Azure/azure-sdk-for-go/services/authorization/mgmt/2015-07-01/authorization",
-    "github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2018-04-01/compute",
+    "github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2017-03-30/compute",
+    "github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2018-10-01/compute",
+    "github.com/Azure/azure-sdk-for-go/services/cosmos-db/mgmt/2015-04-08/documentdb",
     "github.com/Azure/azure-sdk-for-go/services/graphrbac/1.6/graphrbac",
+    "github.com/Azure/azure-sdk-for-go/services/keyvault/mgmt/2018-02-14/keyvault",
+    "github.com/Azure/azure-sdk-for-go/services/network/mgmt/2017-10-01/network",
     "github.com/Azure/azure-sdk-for-go/services/network/mgmt/2018-08-01/network",
+    "github.com/Azure/azure-sdk-for-go/services/preview/authorization/mgmt/2018-01-01-preview/authorization",
+    "github.com/Azure/azure-sdk-for-go/services/preview/authorization/mgmt/2018-09-01-preview/authorization",
     "github.com/Azure/azure-sdk-for-go/services/preview/msi/mgmt/2015-08-31-preview/msi",
     "github.com/Azure/azure-sdk-for-go/services/resources/mgmt/2016-06-01/subscriptions",
     "github.com/Azure/azure-sdk-for-go/services/resources/mgmt/2018-05-01/resources",
+    "github.com/Azure/azure-sdk-for-go/services/storage/mgmt/2017-10-01/storage",
     "github.com/Azure/azure-sdk-for-go/services/storage/mgmt/2018-02-01/storage",
     "github.com/Azure/azure-sdk-for-go/storage",
     "github.com/Azure/go-autorest/autorest",
@@ -834,8 +885,11 @@
     "github.com/alexcesaro/statsd",
     "github.com/blang/semver",
     "github.com/davecgh/go-spew/spew",
+    "github.com/fatih/structs",
     "github.com/ghodss/yaml",
     "github.com/go-bindata/go-bindata/go-bindata",
+    "github.com/gofrs/uuid",
+    "github.com/google/go-cmp/cmp",
     "github.com/imdario/mergo",
     "github.com/influxdata/influxdb/client/v2",
     "github.com/kelseyhightower/envconfig",
@@ -846,7 +900,6 @@
     "github.com/onsi/ginkgo/reporters",
     "github.com/onsi/gomega",
     "github.com/pkg/errors",
-    "github.com/satori/go.uuid",
     "github.com/sirupsen/logrus",
     "github.com/spf13/cobra",
     "github.com/spf13/pflag",
@@ -856,6 +909,7 @@
     "gopkg.in/fsnotify.v1",
     "gopkg.in/go-playground/validator.v9",
     "gopkg.in/ini.v1",
+    "gopkg.in/jarcoal/httpmock.v1",
     "k8s.io/api/core/v1",
     "k8s.io/api/policy/v1beta1",
     "k8s.io/apimachinery/pkg/api/equality",

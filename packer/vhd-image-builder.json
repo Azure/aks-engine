@@ -9,7 +9,8 @@
         "build_number": "{{env `BUILD_NUMBER`}}",
         "build_id": "{{env `BUILD_ID`}}",
         "commit": "{{env `GIT_VERSION`}}",
-        "feature_flags": "{{env `FEATURE_FLAGS`}}"
+        "feature_flags": "{{env `FEATURE_FLAGS`}}",
+        "ubuntu_sku": "{{env `UBUNTU_SKU`}}"
     },
     "builders": [
         {
@@ -26,7 +27,7 @@
             "os_disk_size_gb": 30,
             "image_publisher": "Canonical",
             "image_offer": "UbuntuServer",
-            "image_sku": "16.04-LTS",
+            "image_sku": "{{user `ubuntu_sku`}}-LTS",
             "image_version": "latest",
             "azure_tags": {
                 "dept": "Azure Container Service"
@@ -50,18 +51,88 @@
         },
         {
             "type": "file",
-            "source": "parts/k8s/kubernetesinstalls.sh",
+            "source": "parts/k8s/cloud-init/artifacts/cse_install.sh",
             "destination": "/home/packer/provision_installs.sh"
         },
         {
             "type": "file",
-            "source": "parts/k8s/kubernetesprovisionsource.sh",
+            "source": "parts/k8s/cloud-init/artifacts/cse_helpers.sh",
             "destination": "/home/packer/provision_source.sh"
+        },
+        {
+            "type": "file",
+            "source": "parts/k8s/cloud-init/artifacts/cis.sh",
+            "destination": "/home/packer/cis.sh"
         },
         {
             "type": "file",
             "source": "packer/install-dependencies.sh",
             "destination": "/home/packer/install-dependencies.sh"
+        },
+        {
+            "type": "file",
+            "source": "parts/k8s/cloud-init/artifacts/sysctl-d-60-CIS.conf",
+            "destination": "/home/packer/sysctl-d-60-CIS.conf"
+        },
+        {
+            "type": "file",
+            "source": "parts/k8s/cloud-init/artifacts/sshd_config",
+            "destination": "/home/packer/sshd_config"
+        },
+        {
+            "type": "file",
+            "source": "parts/k8s/cloud-init/artifacts/sshd_config_1604",
+            "destination": "/home/packer/sshd_config_1604"
+        },
+        {
+            "type": "file",
+            "source": "parts/k8s/cloud-init/artifacts/rsyslog-d-60-CIS.conf",
+            "destination": "/home/packer/rsyslog-d-60-CIS.conf"
+        },
+        {
+            "type": "file",
+            "source": "parts/k8s/cloud-init/artifacts/etc-issue",
+            "destination": "/home/packer/etc-issue"
+        },
+        {
+            "type": "file",
+            "source": "parts/k8s/cloud-init/artifacts/etc-issue.net",
+            "destination": "/home/packer/etc-issue.net"
+        },
+        {
+            "type": "file",
+            "source": "parts/k8s/cloud-init/artifacts/modprobe-CIS.conf",
+            "destination": "/home/packer/modprobe-CIS.conf"
+        },
+        {
+            "type": "file",
+            "source": "parts/k8s/cloud-init/artifacts/pwquality-CIS.conf",
+            "destination": "/home/packer/pwquality-CIS.conf"
+        },
+        {
+            "type": "file",
+            "source": "parts/k8s/cloud-init/artifacts/default-grub",
+            "destination": "/home/packer/default-grub"
+        },
+        {
+            "type": "file",
+            "source": "parts/k8s/cloud-init/artifacts/pam-d-su",
+            "destination": "/home/packer/pam-d-su"
+        },
+        {
+            "type": "file",
+            "source": "parts/k8s/cloud-init/artifacts/pam-d-common-auth",
+            "destination": "/home/packer/pam-d-common-auth"
+        },
+        {
+            "type": "file",
+            "source": "parts/k8s/cloud-init/artifacts/pam-d-common-password",
+            "destination": "/home/packer/pam-d-common-password"
+        },
+        {
+            "type": "file",
+            "source": "parts/k8s/cloud-init/artifacts/profile-d-cis.sh",
+            "destination": "/home/packer/profile-d-cis.sh"
         },
         {
             "type": "shell",

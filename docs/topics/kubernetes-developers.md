@@ -43,4 +43,28 @@ For VERSION, we recommend that you provide a value which would help you identify
 }
 ```
 
-* Run `./bin/aks-engine deploy --api-model the_json_file_you_just_edited.json ...` [as normal](deploy.md).
+* If the container registry is private, for example Azure Container Registry, then provide the name of the private Azure registry along with the custom hyperkube image like this:
+
+```
+"kubernetesConfig": {
+    "customHyperkubeImage": "<your-private-registry>/hyperkube-amd64:<your-custom-version>",
+    "privateAzureRegistryServer": "<your-private-registry>"
+}
+```
+NOTE: Make sure the service principal provided to run `aks-engine deploy` has access to pull images from this private registry. https://docs.microsoft.com/en-us/azure/container-registry/container-registry-auth-service-principal#use-an-existing-service-principal
+
+* AKS Engine uses the `aks-ubuntu-1604` image for the master and Linux agents. This image contains prebuilt versions of kubelet and kubectl, thus the provision scripts will not copy the desired kubelet binary ( and kubectl ) from the custom hyperkube image. In order to get over this limitation it is required to specify `ubuntu` for the master and Linux agents in "masterProfile" and each agent pool under `agentPoolProfiles`.
+
+```
+"masterProfile": {
+    "distro": "ubuntu"
+}
+
+"agentPoolProfiles": [
+    {
+        "distro": "ubuntu"
+    }
+]
+```
+
+* Run `aks-engine deploy` [as normal](../tutorials/deploy.md).

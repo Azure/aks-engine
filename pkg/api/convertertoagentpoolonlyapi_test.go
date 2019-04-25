@@ -9,11 +9,12 @@ import (
 
 	"github.com/Azure/go-autorest/autorest/to"
 
+	v20170831 "github.com/Azure/aks-engine/pkg/api/agentPoolOnlyApi/v20170831"
 	v20180331 "github.com/Azure/aks-engine/pkg/api/agentPoolOnlyApi/v20180331"
 )
 
 func TestConvertV20180331AgentPoolOnlyOrchestratorProfile(t *testing.T) {
-	kubernetesVersion := "1.7.15"
+	kubernetesVersion := "1.9.11"
 	networkPlugin := v20180331.Azure
 	networkPolicy := v20180331.NetworkPolicyCalico
 	networkPluginKubenet := v20180331.Kubenet
@@ -143,7 +144,7 @@ func TestConvertV20180331AgentPoolOnlyAgentPoolProfile(t *testing.T) {
 	}
 
 	n := &v20180331.NetworkProfile{
-		NetworkPlugin: "azure",
+		NetworkPlugin: NetworkPluginAzure,
 	}
 
 	api := convertV20180331AgentPoolOnlyAgentPoolProfile(p, availabilityProfile, n)
@@ -167,7 +168,7 @@ func TestConvertV20180331AgentPoolOnlyAgentPoolProfile(t *testing.T) {
 	p = &v20180331.AgentPoolProfile{}
 
 	n = &v20180331.NetworkProfile{
-		NetworkPlugin: "kubenet",
+		NetworkPlugin: NetworkPluginKubenet,
 	}
 
 	api = convertV20180331AgentPoolOnlyAgentPoolProfile(p, availabilityProfile, n)
@@ -180,7 +181,7 @@ func TestConvertV20180331AgentPoolOnlyAgentPoolProfile(t *testing.T) {
 	p = &v20180331.AgentPoolProfile{}
 
 	n = &v20180331.NetworkProfile{
-		NetworkPlugin: "azure",
+		NetworkPlugin: NetworkPluginAzure,
 	}
 
 	api = convertV20180331AgentPoolOnlyAgentPoolProfile(p, availabilityProfile, n)
@@ -385,5 +386,61 @@ func TestConvertFromV20180331AADProfile(t *testing.T) {
 
 	if api.Authenticator != Webhook {
 		t.Error("Authenticator not set to Webhook")
+	}
+}
+
+func TestConvertV20170831AgentPoolOnly(t *testing.T) {
+	mc := &v20170831.ManagedCluster{
+		Location: "westus2",
+		ID:       "sampleID",
+		Plan: &v20170831.ResourcePurchasePlan{
+			Name:          "sampleRPPlan",
+			Product:       "fooProduct",
+			PromotionCode: "barPromoCode",
+			Publisher:     "bazPublisher",
+		},
+		Tags: map[string]string{
+			"abc": "def",
+			"123": "456",
+		},
+		Type: "sampleType",
+		Properties: &v20170831.Properties{
+			ProvisioningState: v20170831.Succeeded,
+			DNSPrefix:         "blueorange",
+			FQDN:              "blueorange.azure.com",
+			LinuxProfile: &v20170831.LinuxProfile{
+				AdminUsername: "azureuser",
+			},
+			WindowsProfile: &v20170831.WindowsProfile{
+				AdminUsername: "azureuser",
+				AdminPassword: "azurepassword",
+			},
+			ServicePrincipalProfile: &v20170831.ServicePrincipalProfile{
+				ClientID: "sampleClientID",
+				Secret:   "sampleSecret",
+			},
+			AgentPoolProfiles: []*v20170831.AgentPoolProfile{
+				{
+					Name:           "sampleAgent",
+					VMSize:         "Standard_DS1_v1",
+					OSDiskSizeGB:   512,
+					StorageProfile: ManagedDisks,
+					VnetSubnetID:   "sampleVnetSubnetID",
+					OSType:         "Linux",
+				},
+			},
+		},
+	}
+
+	mc.Properties.LinuxProfile.SSH.PublicKeys = []v20170831.PublicKey{
+		{
+			KeyData: ValidSSHPublicKey,
+		},
+	}
+
+	apOnly := ConvertV20170831AgentPoolOnly(mc)
+
+	if apOnly == nil {
+		t.Error("expected the agentPoolOnlyProfile object to be non-nil")
 	}
 }

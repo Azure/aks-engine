@@ -8,7 +8,7 @@ import (
 	"testing"
 
 	"github.com/Azure/aks-engine/pkg/api"
-	"github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2018-04-01/compute"
+	"github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2018-10-01/compute"
 )
 
 func Test_SplitBlobURI(t *testing.T) {
@@ -58,7 +58,7 @@ func Test_LinuxVMNameParts(t *testing.T) {
 	}
 }
 
-func Test_VmssNameParts(t *testing.T) {
+func Test_VMSSNameParts(t *testing.T) {
 	data := []struct {
 		poolIdentifier, nameSuffix string
 	}{
@@ -78,6 +78,26 @@ func Test_VmssNameParts(t *testing.T) {
 		}
 		if nameSuffix != el.nameSuffix {
 			t.Fatalf("incorrect nameSuffix. expected=%s actual=%s", el.nameSuffix, nameSuffix)
+		}
+	}
+}
+
+func Test_WindowsVMSSNameParts(t *testing.T) {
+	data := []struct {
+		poolIdentifier string
+	}{
+		{"winpo1"},
+		{"win2po"},
+	}
+
+	for _, el := range data {
+		vmssName := fmt.Sprintf("aks%s", el.poolIdentifier)
+		poolIdentifier, err := WindowsVmssNameParts(vmssName)
+		if err != nil {
+			t.Fatalf("unexpected error: %s", err)
+		}
+		if poolIdentifier != el.poolIdentifier {
+			t.Fatalf("incorrect poolIdentifier. expected=%s actual=%s", el.poolIdentifier, poolIdentifier)
 		}
 	}
 }
@@ -177,9 +197,8 @@ func Test_GetK8sVMName(t *testing.T) {
 	}{
 		{properties: p, agentPoolIndex: 0, agentIndex: 2, expected: "aks-linux1-28513887-2", expectedErr: false},
 		{properties: p, agentPoolIndex: 1, agentIndex: 1, expected: "2851aks011", expectedErr: false},
-		{properties: p, agentPoolIndex: 3, agentIndex: 0, expected: "", expectedErr: true},
 	} {
-		vmName, err := GetK8sVMName(s.properties, s.agentPoolIndex, s.agentIndex)
+		vmName, err := GetK8sVMName(s.properties, p.AgentPoolProfiles[s.agentPoolIndex], s.agentIndex)
 
 		if !s.expectedErr {
 			if err != nil {

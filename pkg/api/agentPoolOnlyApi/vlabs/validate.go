@@ -134,9 +134,9 @@ func validateVNET(a *Properties) error {
 				return err
 			}
 
-			subIDMap[agentSubID] = subIDMap[agentSubID] + 1
-			resourceGroupMap[agentRG] = resourceGroupMap[agentRG] + 1
-			agentVNETMap[agentVNET] = agentVNETMap[agentVNET] + 1
+			subIDMap[agentSubID]++
+			resourceGroupMap[agentRG]++
+			agentVNETMap[agentVNET]++
 		}
 
 		// TODO: Add more validation to ensure all agent pools belong to the same VNET, subscription, and resource group

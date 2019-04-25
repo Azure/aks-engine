@@ -15,6 +15,8 @@ import (
 	"github.com/pkg/errors"
 )
 
+const commandTimeout = 1 * time.Minute
+
 // PersistentVolumeClaims is used to parse data from kubectl get pvc
 type PersistentVolumeClaims struct {
 	Metadata Metadata `json:"metadata"`
@@ -42,7 +44,7 @@ type Status struct {
 
 // CreatePersistentVolumeClaimsFromFile will create a StorageClass from file with a name
 func CreatePersistentVolumeClaimsFromFile(filename, name, namespace string) (*PersistentVolumeClaims, error) {
-	cmd := exec.Command("kubectl", "apply", "-f", filename)
+	cmd := exec.Command("k", "apply", "-f", filename)
 	util.PrintCommand(cmd)
 	out, err := cmd.CombinedOutput()
 	if err != nil {
@@ -59,7 +61,7 @@ func CreatePersistentVolumeClaimsFromFile(filename, name, namespace string) (*Pe
 
 // Get will return a PersistentVolumeClaims with a given name and namespace
 func Get(pvcName, namespace string) (*PersistentVolumeClaims, error) {
-	cmd := exec.Command("kubectl", "get", "pvc", pvcName, "-n", namespace, "-o", "json")
+	cmd := exec.Command("k", "get", "pvc", pvcName, "-n", namespace, "-o", "json")
 	util.PrintCommand(cmd)
 	out, err := cmd.CombinedOutput()
 	if err != nil {
@@ -76,7 +78,7 @@ func Get(pvcName, namespace string) (*PersistentVolumeClaims, error) {
 
 // Describe gets the description for the given pvc and namespace.
 func Describe(pvcName, namespace string) error {
-	cmd := exec.Command("kubectl", "describe", "pvc", pvcName, "-n", namespace)
+	cmd := exec.Command("k", "describe", "pvc", pvcName, "-n", namespace)
 	util.PrintCommand(cmd)
 	out, err := cmd.CombinedOutput()
 	if err != nil {
@@ -92,8 +94,8 @@ func (pvc *PersistentVolumeClaims) Delete(retries int) error {
 	var kubectlOutput []byte
 	var kubectlError error
 	for i := 0; i < retries; i++ {
-		cmd := exec.Command("kubectl", "delete", "pvc", "-n", pvc.Metadata.NameSpace, pvc.Metadata.Name)
-		kubectlOutput, kubectlError = util.RunAndLogCommand(cmd)
+		cmd := exec.Command("k", "delete", "pvc", "-n", pvc.Metadata.NameSpace, pvc.Metadata.Name)
+		kubectlOutput, kubectlError = util.RunAndLogCommand(cmd, commandTimeout)
 		if kubectlError != nil {
 			log.Printf("Error while trying to delete PVC %s in namespace %s:%s\n", pvc.Metadata.Name, pvc.Metadata.NameSpace, string(kubectlOutput))
 			continue

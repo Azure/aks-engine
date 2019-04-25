@@ -110,7 +110,7 @@ func (m *TestManager) Run() error {
 	if err != nil {
 		return errors.Wrap(err, "Error [Atoi STAGE_TIMEOUT_MIN]")
 	}
-	timeout := time.Duration(time.Minute * time.Duration(timeoutMin))
+	timeout := time.Minute * time.Duration(timeoutMin)
 
 	usePromoteToFailure := os.Getenv("PROMOTE_TO_FAILURE") == "true"
 	promoteToFailureTestSuffix := os.Getenv("PROMOTE_TO_FAILURE_TEST_SUFFIX")
@@ -129,7 +129,7 @@ func (m *TestManager) Run() error {
 	}
 
 	// login to Azure
-	if _, _, err := m.runStep("init", stepInitAzure, os.Environ(), timeout); err != nil {
+	if _, _, err = m.runStep("init", stepInitAzure, os.Environ(), timeout); err != nil {
 		return err
 	}
 
@@ -176,7 +176,8 @@ func (m *TestManager) Run() error {
 							FailureCount: 1,
 						}
 
-						result, err := promote.RunPromoteToFailure(sa, promToFailInfo)
+						var result bool
+						result, err = promote.RunPromoteToFailure(sa, promToFailInfo)
 						if err != nil {
 							fmt.Printf("Got error from RunPromoteToFailure: %#v\n", err)
 						}
@@ -288,7 +289,8 @@ func (m *TestManager) testRun(d config.Deployment, index, attempt int, timeout t
 	// add scenario-specific environment variables
 	envFile := fmt.Sprintf("examples/%s.env", d.ClusterDefinition)
 	if _, err = os.Stat(envFile); err == nil {
-		envHandle, err := os.Open(envFile)
+		var envHandle *os.File
+		envHandle, err = os.Open(envFile)
 		if err != nil {
 			wrileLog(logFile, "Error [open %s] : %v", envFile, err)
 			return report.NewErrorInfo(testName, "pretest", "FileAccessError", "PreRun", d.Location)

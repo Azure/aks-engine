@@ -31,7 +31,7 @@ func (f *FileSaver) SaveFile(dir string, file string, data []byte) error {
 	}
 
 	path := path.Join(dir, file)
-	if err := ioutil.WriteFile(path, []byte(data), 0600); err != nil {
+	if err := ioutil.WriteFile(path, data, 0600); err != nil {
 		return err
 	}
 

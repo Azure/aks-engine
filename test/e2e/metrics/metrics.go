@@ -17,18 +17,8 @@ type Config struct {
 	Username   string `envconfig:"INFLUX_USERNAME" required:"true"`
 	Password   string `envconfig:"INFLUX_PASSWORD" required:"true"`
 	Database   string `envconfig:"INFLUX_DATABASE" required:"true"`
-	IsCircle   bool   `envconfig:"CIRCLECI"`
 	IsJenkins  bool   `envconfig:"IS_JENKINS"`
-	CircleEnv  *CircleCIEnvironment
 	JenkinsEnv *JenkinsCIEnvironment
-}
-
-// CircleCIEnvironment holds information about a test run within circleci
-type CircleCIEnvironment struct {
-	Branch      string `envconfig:"CIRCLE_BRANCH"`
-	BuildNumber string `envconfig:"CIRCLE_BUILD_NUM"`
-	CommitSha   string `envconfig:"CIRCLE_SHA1"`
-	Job         string `envconfig:"CIRCLE_JOB"`
 }
 
 // JenkinsCIEnvironment holds information about a test run within jenkins
@@ -60,14 +50,6 @@ func ParseConfig() (*Config, error) {
 	c := new(Config)
 	if err := envconfig.Process("config", c); err != nil {
 		return nil, err
-	}
-
-	if c.IsCircle {
-		circleci := new(CircleCIEnvironment)
-		if err := envconfig.Process("circleci-config", circleci); err != nil {
-			return nil, err
-		}
-		c.CircleEnv = circleci
 	}
 
 	if c.IsJenkins {
@@ -114,7 +96,7 @@ func (p *Point) SetProvisionStart() {
 // RecordProvisionError sets appropriate values for when a test error occurs
 func (p *Point) RecordProvisionError() {
 	p.ProvisionDuration = time.Since(p.ProvisionStart)
-	p.ProvisionErrorCount = p.ProvisionErrorCount + 1
+	p.ProvisionErrorCount++
 }
 
 // RecordProvisionSuccess sets TestErrorCount to 0 to mark tests succeeded
@@ -130,7 +112,7 @@ func (p *Point) SetNodeWaitStart() {
 // RecordNodeWait will set NodeWaitDuration to time.Since(p.NodeWaitStart)
 func (p *Point) RecordNodeWait(err error) {
 	if err != nil {
-		p.NodeWaitErrorCount = p.NodeWaitErrorCount + 1
+		p.NodeWaitErrorCount++
 	}
 	p.NodeWaitDuration = time.Since(p.NodeWaitStart)
 }
@@ -138,7 +120,7 @@ func (p *Point) RecordNodeWait(err error) {
 // RecordTestError sets appropriate values for when a test error occurs
 func (p *Point) RecordTestError() {
 	p.TestDuration = time.Since(p.TestStart)
-	p.TestErrorCount = p.TestErrorCount + 1
+	p.TestErrorCount++
 }
 
 // RecordTestSuccess sets TestErrorCount to 0 to mark tests succeeded
@@ -159,16 +141,7 @@ func (p *Point) SetProvisionMetrics(data []byte) {
 func (p *Point) Write() {
 	cfg, err := ParseConfig()
 	if err == nil {
-		log.Printf("Circle?:%v\n", cfg.IsCircle)
 		log.Printf("Jenkins?:%v\n", cfg.IsJenkins)
-
-		if cfg.IsCircle {
-			p.Tags["branch"] = cfg.CircleEnv.Branch
-			p.Tags["commit-sha"] = cfg.CircleEnv.CommitSha
-			p.Tags["build_number"] = cfg.CircleEnv.BuildNumber
-			p.Tags["job"] = cfg.CircleEnv.Job
-			p.Tags["ci"] = "circleci"
-		}
 
 		if cfg.IsJenkins {
 			p.Tags["branch"] = cfg.JenkinsEnv.Branch

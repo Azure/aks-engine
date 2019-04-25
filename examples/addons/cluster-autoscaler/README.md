@@ -7,9 +7,13 @@
 
 This is the Kubernetes Cluster Autoscaler add-on for Virtual Machine Scale Sets. Add this add-on to your json file as shown below to automatically enable cluster autoscaler in your new Kubernetes cluster.
 
+See [this document](../../../docs/topic/upgrade.md) for details on known limitiations with `aks-engine upgrade` and VMSS.
+
 To use this add-on, make sure your cluster's Kubernetes version is 1.10 or above and your agent pool `availabilityProfile` is set to `VirtualMachineScaleSets`. By default, the first agent pool will autoscale the node count between 1 and 5. You can override these settings in `config` section of the `cluster-autoscaler` add-on.
 
-> At this time, only the primaryScaleSet (the first agent pool) is monitored by the autoscaler. To configure autoscale to monitor (and scale) other node pools, you must manually edit the autoscaler YAML at `/etc/kubernetes/addons` on each master node. See the [cluster-autoscaler](https://github.com/kubernetes/autoscaler/blob/master/cluster-autoscaler/cloudprovider/azure/README.md) docs for guidance.
+> At this time, only the primaryScaleSet (the first agent pool) is monitored by the autoscaler. If you use this addon on your single agent pool cluster and later manually add more VMSS agent pools and want to use this cluster-autoscaler addon to monitor (and scale) other node pools, you must manually edit the autoscaler YAML at `/etc/kubernetes/addons` on each master node.
+
+> If you are creating a cluster with multiple VMSS agent pools, or you plan to manually evolve your agent pool count over time, we recommend you don't use this addon. See the [cluster-autoscaler](https://github.com/kubernetes/autoscaler/blob/master/cluster-autoscaler/cloudprovider/azure/README.md) docs for guidance on how to craft a cluster-autoscaler specification that can accommodate a multiple VMSS agent pool cluster.
 
 The following is an example:
 

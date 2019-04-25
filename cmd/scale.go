@@ -7,10 +7,9 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"math/rand"
 	"os"
-	"path"
+	"path/filepath"
 	"sort"
 	"strings"
 	"time"
@@ -33,9 +32,10 @@ type scaleCmd struct {
 	authArgs
 
 	// user input
+	apiModelPath         string
 	resourceGroupName    string
-	deploymentDirectory  string
 	newDesiredAgentCount int
+	deploymentDirectory  string
 	location             string
 	agentPoolToScale     string
 	masterFQDN           string
@@ -43,7 +43,6 @@ type scaleCmd struct {
 	// derived
 	containerService *api.ContainerService
 	apiVersion       string
-	apiModelPath     string
 	agentPool        *api.AgentPoolProfile
 	client           armhelpers.AKSEngineClient
 	locale           *gotext.Locale
@@ -67,18 +66,19 @@ func newScaleCmd() *cobra.Command {
 		Use:   scaleName,
 		Short: scaleShortDescription,
 		Long:  scaleLongDescription,
-		RunE: func(cmd *cobra.Command, args []string) error {
-			return sc.run(cmd, args)
-		},
+		RunE:  sc.run,
 	}
 
 	f := scaleCmd.Flags()
 	f.StringVarP(&sc.location, "location", "l", "", "location the cluster is deployed in")
 	f.StringVarP(&sc.resourceGroupName, "resource-group", "g", "", "the resource group where the cluster is deployed")
+	f.StringVarP(&sc.apiModelPath, "api-model", "m", "", "path to the generated apimodel.json file")
 	f.StringVar(&sc.deploymentDirectory, "deployment-dir", "", "the location of the output from `generate`")
 	f.IntVarP(&sc.newDesiredAgentCount, "new-node-count", "c", 0, "desired number of nodes")
 	f.StringVar(&sc.agentPoolToScale, "node-pool", "", "node pool to scale")
 	f.StringVar(&sc.masterFQDN, "master-FQDN", "", "FQDN for the master load balancer, Needed to scale down Kubernetes agent pools")
+
+	f.MarkDeprecated("deployment-dir", "deployment-dir is no longer required for scale or upgrade. Please use --api-model.")
 
 	addAuthFlags(&sc.authArgs, f)
 
@@ -111,9 +111,14 @@ func (sc *scaleCmd) validate(cmd *cobra.Command) error {
 		return errors.New("--new-node-count must be specified")
 	}
 
-	if sc.deploymentDirectory == "" {
+	if sc.apiModelPath == "" && sc.deploymentDirectory == "" {
 		cmd.Usage()
-		return errors.New("--deployment-dir must be specified")
+		return errors.New("--api-model must be specified")
+	}
+
+	if sc.apiModelPath != "" && sc.deploymentDirectory != "" {
+		cmd.Usage()
+		return errors.New("ambiguous, please specify only one of --api-model and --deployment-dir")
 	}
 
 	return nil
@@ -123,23 +128,12 @@ func (sc *scaleCmd) load(cmd *cobra.Command) error {
 	sc.logger = log.New().WithField("source", "scaling command line")
 	var err error
 
-	if err = sc.authArgs.validateAuthArgs(); err != nil {
-		return err
-	}
-
-	if sc.client, err = sc.authArgs.getClient(); err != nil {
-		return errors.Wrap(err, "failed to get client")
-	}
-
 	ctx, cancel := context.WithTimeout(context.Background(), armhelpers.DefaultARMOperationTimeout)
 	defer cancel()
-	_, err = sc.client.EnsureResourceGroup(ctx, sc.resourceGroupName, sc.location, nil)
-	if err != nil {
-		return err
-	}
 
-	// load apimodel from the deployment directory
-	sc.apiModelPath = path.Join(sc.deploymentDirectory, apiModelFilename)
+	if sc.apiModelPath == "" {
+		sc.apiModelPath = filepath.Join(sc.deploymentDirectory, apiModelFilename)
+	}
 
 	if _, err = os.Stat(sc.apiModelPath); os.IsNotExist(err) {
 		return errors.Errorf("specified api model does not exist (%s)", sc.apiModelPath)
@@ -153,6 +147,27 @@ func (sc *scaleCmd) load(cmd *cobra.Command) error {
 	sc.containerService, sc.apiVersion, err = apiloader.LoadContainerServiceFromFile(sc.apiModelPath, true, true, nil)
 	if err != nil {
 		return errors.Wrap(err, "error parsing the api model")
+	}
+
+	if sc.containerService.Properties.IsAzureStackCloud() {
+		writeCustomCloudProfile(sc.containerService)
+		err = sc.containerService.Properties.SetAzureStackCloudSpec()
+		if err != nil {
+			return errors.Wrap(err, "error parsing the api model")
+		}
+	}
+
+	if err = sc.authArgs.validateAuthArgs(); err != nil {
+		return err
+	}
+
+	if sc.client, err = sc.authArgs.getClient(); err != nil {
+		return errors.Wrap(err, "failed to get client")
+	}
+
+	_, err = sc.client.EnsureResourceGroup(ctx, sc.resourceGroupName, sc.location, nil)
+	if err != nil {
+		return err
 	}
 
 	if sc.containerService.Location == "" {
@@ -186,17 +201,8 @@ func (sc *scaleCmd) load(cmd *cobra.Command) error {
 		}
 	}
 
-	templatePath := path.Join(sc.deploymentDirectory, "azuredeploy.json")
-	contents, _ := ioutil.ReadFile(templatePath)
-
-	var template interface{}
-	json.Unmarshal(contents, &template)
-
-	templateMap := template.(map[string]interface{})
-	templateParameters := templateMap["parameters"].(map[string]interface{})
-
-	nameSuffixParam := templateParameters["nameSuffix"].(map[string]interface{})
-	sc.nameSuffix = nameSuffixParam["defaultValue"].(string)
+	//allows to identify VMs in the resource group that belong to this cluster.
+	sc.nameSuffix = sc.containerService.Properties.GetClusterID()
 	log.Infof("Name suffix: %s", sc.nameSuffix)
 	return nil
 }
@@ -267,8 +273,7 @@ func (sc *scaleCmd) run(cmd *cobra.Command, args []string) error {
 				vmsToDelete = append(vmsToDelete, indexToVM[index])
 			}
 
-			switch orchestratorInfo.OrchestratorType {
-			case api.Kubernetes:
+			if orchestratorInfo.OrchestratorType == api.Kubernetes {
 				kubeConfig, err := engine.GenerateKubeConfig(sc.containerService.Properties, sc.location)
 				if err != nil {
 					return errors.Wrap(err, "failed to generate kube config")
@@ -299,9 +304,9 @@ func (sc *scaleCmd) run(cmd *cobra.Command, args []string) error {
 			return sc.saveAPIModel()
 		}
 	} else {
-		for vmssListPage, err := sc.client.ListVirtualMachineScaleSets(ctx, sc.resourceGroupName); vmssListPage.NotDone(); vmssListPage.Next() {
+		for vmssListPage, err := sc.client.ListVirtualMachineScaleSets(ctx, sc.resourceGroupName); vmssListPage.NotDone(); err = vmssListPage.NextWithContext(ctx) {
 			if err != nil {
-				return errors.Wrap(err, "failed to get vmss list in the resource group")
+				return errors.Wrap(err, "failed to get VMSS list in the resource group")
 			}
 			for _, vmss := range vmssListPage.Values() {
 				vmName := *vmss.Name
@@ -331,14 +336,20 @@ func (sc *scaleCmd) run(cmd *cobra.Command, args []string) error {
 		return errors.Wrap(err, "failed to initialize template generator")
 	}
 
+	// Our templates generate a range of nodes based on a count and offset, it is possible for there to be holes in the template
+	// So we need to set the count in the template to get enough nodes for the range, if there are holes that number will be larger than the desired count
+	countForTemplate := sc.newDesiredAgentCount
+	if highestUsedIndex != 0 {
+		countForTemplate += highestUsedIndex + 1 - currentNodeCount
+	}
+	sc.agentPool.Count = countForTemplate
 	sc.containerService.Properties.AgentPoolProfiles = []*api.AgentPoolProfile{sc.agentPool}
 
 	_, err = sc.containerService.SetPropertiesDefaults(false, true)
 	if err != nil {
-		log.Fatalf("error in SetPropertiesDefaults template %s: %s", sc.apiModelPath, err.Error())
-		os.Exit(1)
+		return errors.Wrapf(err, "error in SetPropertiesDefaults template %s", sc.apiModelPath)
 	}
-	template, parameters, err := templateGenerator.GenerateTemplate(sc.containerService, engine.DefaultGeneratorCode, BuildTag)
+	template, parameters, err := templateGenerator.GenerateTemplateV2(sc.containerService, engine.DefaultGeneratorCode, BuildTag)
 	if err != nil {
 		return errors.Wrapf(err, "error generating template %s", sc.apiModelPath)
 	}
@@ -357,26 +368,22 @@ func (sc *scaleCmd) run(cmd *cobra.Command, args []string) error {
 
 	err = json.Unmarshal([]byte(parameters), &parametersJSON)
 	if err != nil {
-		return errors.Wrap(err, "errror unmarshalling parameters")
+		return errors.Wrap(err, "error unmarshaling parameters")
 	}
 
 	transformer := transform.Transformer{Translator: translator.Translator}
-	// Our templates generate a range of nodes based on a count and offset, it is possible for there to be holes in the template
-	// So we need to set the count in the template to get enough nodes for the range, if there are holes that number will be larger than the desired count
-	countForTemplate := sc.newDesiredAgentCount
-	if highestUsedIndex != 0 {
-		countForTemplate += highestUsedIndex + 1 - currentNodeCount
-	}
+
 	addValue(parametersJSON, sc.agentPool.Name+"Count", countForTemplate)
 
+	// The agent pool is set to index 0 for the scale operation, we need to overwrite the template variables that rely on pool index.
 	if winPoolIndex != -1 {
 		templateJSON["variables"].(map[string]interface{})[sc.agentPool.Name+"Index"] = winPoolIndex
+		templateJSON["variables"].(map[string]interface{})[sc.agentPool.Name+"VMNamePrefix"] = sc.containerService.Properties.GetAgentVMPrefix(sc.agentPool, winPoolIndex)
 	}
-	switch orchestratorInfo.OrchestratorType {
-	case api.Kubernetes:
+	if orchestratorInfo.OrchestratorType == api.Kubernetes {
 		err = transformer.NormalizeForK8sVMASScalingUp(sc.logger, templateJSON)
 		if err != nil {
-			return errors.Wrapf(err, "error tranforming the template for scaling template %s", sc.apiModelPath)
+			return errors.Wrapf(err, "error transforming the template for scaling template %s", sc.apiModelPath)
 		}
 		if sc.agentPool.IsAvailabilitySets() {
 			addValue(parametersJSON, fmt.Sprintf("%sOffset", sc.agentPool.Name), highestUsedIndex+1)
@@ -424,8 +431,8 @@ func (sc *scaleCmd) saveAPIModel() error {
 			Locale: sc.locale,
 		},
 	}
-
-	return f.SaveFile(sc.deploymentDirectory, apiModelFilename, b)
+	dir, file := filepath.Split(sc.apiModelPath)
+	return f.SaveFile(dir, file, b)
 }
 
 func (sc *scaleCmd) vmInAgentPool(vmName string, tags map[string]*string) bool {

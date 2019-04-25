@@ -24,7 +24,9 @@ import (
 )
 
 const (
-	testDir string = "testdirectory"
+	testDir        string = "testdirectory"
+	commandTimeout        = 1 * time.Minute
+	deleteTimeout         = 5 * time.Minute
 )
 
 // List is a container that holds all pods returned from doing a kubectl get pods
@@ -159,7 +161,7 @@ func ReplaceContainerImageFromFile(filename, containerImage string) (string, err
 
 // CreatePodFromFile will create a Pod from file with a name
 func CreatePodFromFile(filename, name, namespace string, sleep, duration time.Duration) (*Pod, error) {
-	cmd := exec.Command("kubectl", "apply", "-f", filename)
+	cmd := exec.Command("k", "apply", "-f", filename)
 	util.PrintCommand(cmd)
 	out, err := cmd.CombinedOutput()
 	if err != nil {
@@ -176,13 +178,13 @@ func CreatePodFromFile(filename, name, namespace string, sleep, duration time.Du
 
 // RunLinuxPod will create a pod that runs a bash command
 // --overrides := `"spec": {"nodeSelector":{"beta.kubernetes.io/os":"windows"}}}`
-func RunLinuxPod(image, name, namespace, command string, printOutput bool, sleep, duration time.Duration) (*Pod, error) {
+func RunLinuxPod(image, name, namespace, command string, printOutput bool, sleep, duration, timeout time.Duration) (*Pod, error) {
 	overrides := `{ "spec": {"nodeSelector":{"beta.kubernetes.io/os":"linux"}}}`
-	cmd := exec.Command("kubectl", "run", name, "-n", namespace, "--image", image, "--image-pull-policy=IfNotPresent", "--restart=Never", "--overrides", overrides, "--command", "--", "/bin/sh", "-c", command)
+	cmd := exec.Command("k", "run", name, "-n", namespace, "--image", image, "--image-pull-policy=IfNotPresent", "--restart=Never", "--overrides", overrides, "--command", "--", "/bin/sh", "-c", command)
 	var out []byte
 	var err error
 	if printOutput {
-		out, err = util.RunAndLogCommand(cmd)
+		out, err = util.RunAndLogCommand(cmd, timeout)
 	} else {
 		out, err = cmd.CombinedOutput()
 	}
@@ -200,13 +202,13 @@ func RunLinuxPod(image, name, namespace, command string, printOutput bool, sleep
 
 // RunWindowsPod will create a pod that runs a powershell command
 // --overrides := `"spec": {"nodeSelector":{"beta.kubernetes.io/os":"windows"}}}`
-func RunWindowsPod(image, name, namespace, command string, printOutput bool, sleep, duration time.Duration) (*Pod, error) {
+func RunWindowsPod(image, name, namespace, command string, printOutput bool, sleep, duration time.Duration, timeout time.Duration) (*Pod, error) {
 	overrides := `{ "spec": {"nodeSelector":{"beta.kubernetes.io/os":"windows"}}}`
-	cmd := exec.Command("kubectl", "run", name, "-n", namespace, "--image", image, "--image-pull-policy=IfNotPresent", "--restart=Never", "--overrides", overrides, "--command", "--", "powershell", command)
+	cmd := exec.Command("k", "run", name, "-n", namespace, "--image", image, "--image-pull-policy=IfNotPresent", "--restart=Never", "--overrides", overrides, "--command", "--", "powershell", command)
 	var out []byte
 	var err error
 	if printOutput {
-		out, err = util.RunAndLogCommand(cmd)
+		out, err = util.RunAndLogCommand(cmd, timeout)
 	} else {
 		out, err = cmd.CombinedOutput()
 	}
@@ -222,10 +224,10 @@ func RunWindowsPod(image, name, namespace, command string, printOutput bool, sle
 	return p, nil
 }
 
-type podRunnerCmd func(string, string, string, string, bool, time.Duration, time.Duration) (*Pod, error)
+type podRunnerCmd func(string, string, string, string, bool, time.Duration, time.Duration, time.Duration) (*Pod, error)
 
 // RunCommandMultipleTimes runs the same command 'desiredAttempts' times
-func RunCommandMultipleTimes(podRunnerCmd podRunnerCmd, image, name, command string, desiredAttempts int, sleep, duration time.Duration) (int, error) {
+func RunCommandMultipleTimes(podRunnerCmd podRunnerCmd, image, name, command string, desiredAttempts int, sleep, duration, timeout time.Duration) (int, error) {
 	var successfulAttempts int
 	var actualAttempts int
 	logResults := func() {
@@ -238,23 +240,18 @@ func RunCommandMultipleTimes(podRunnerCmd podRunnerCmd, image, name, command str
 		podName := fmt.Sprintf("%s-%d", name, r.Intn(99999))
 		var p *Pod
 		var err error
-		if i < 1 {
-			// Print the first attempt
-			p, err = podRunnerCmd(image, podName, "default", command, true, sleep, duration)
-		} else {
-			p, err = podRunnerCmd(image, podName, "default", command, false, sleep, duration)
-		}
+		p, err = podRunnerCmd(image, podName, "default", command, true, sleep, duration, timeout)
 
 		if err != nil {
 			return successfulAttempts, err
 		}
 		succeeded, _ := p.WaitOnSucceeded(sleep, duration)
-		cmd := exec.Command("kubectl", "logs", podName, "-n", "default")
+		cmd := exec.Command("k", "logs", podName, "-n", "default")
 		out, err := cmd.CombinedOutput()
 		if err != nil {
 			log.Printf("Unable to get logs from pod %s\n", podName)
 		} else {
-			log.Printf("%s\n", string(out[:]))
+			log.Printf("%s\n", string(out))
 		}
 
 		err = p.Delete(3)
@@ -272,7 +269,7 @@ func RunCommandMultipleTimes(podRunnerCmd podRunnerCmd, image, name, command str
 
 // GetAll will return all pods in a given namespace
 func GetAll(namespace string) (*List, error) {
-	cmd := exec.Command("kubectl", "get", "pods", "-n", namespace, "-o", "json")
+	cmd := exec.Command("k", "get", "pods", "-n", namespace, "-o", "json")
 	out, err := cmd.CombinedOutput()
 	if err != nil {
 		log.Printf("Error getting pod:\n")
@@ -325,7 +322,7 @@ func GetWithRetry(podPrefix, namespace string, sleep, duration time.Duration) (*
 
 // Get will return a pod with a given name and namespace
 func Get(podName, namespace string) (*Pod, error) {
-	cmd := exec.Command("kubectl", "get", "pods", podName, "-n", namespace, "-o", "json")
+	cmd := exec.Command("k", "get", "pods", podName, "-n", namespace, "-o", "json")
 	out, err := cmd.CombinedOutput()
 	if err != nil {
 		log.Printf("Error getting pod:\n")
@@ -343,7 +340,7 @@ func Get(podName, namespace string) (*Pod, error) {
 
 // GetTerminated will return a pod with a given name and namespace, including terminated pods
 func GetTerminated(podName, namespace string) (*Pod, error) {
-	cmd := exec.Command("kubectl", "get", "pods", podName, "-n", namespace, "-o", "json")
+	cmd := exec.Command("k", "get", "pods", podName, "-n", namespace, "-o", "json")
 	util.PrintCommand(cmd)
 	out, err := cmd.CombinedOutput()
 	if err != nil {
@@ -475,13 +472,13 @@ func WaitOnReady(podPrefix, namespace string, successesNeeded int, sleep, durati
 					return
 				}
 				if ready {
-					successCount = successCount + 1
+					successCount++
 					if successCount >= successesNeeded {
 						readyCh <- true
 					}
 				} else {
 					if successCount > 1 {
-						failureCount = failureCount + 1
+						failureCount++
 						if failureCount >= successesNeeded {
 							errCh <- errors.Errorf("Pods from deployment (%s) in namespace (%s) have been checked out as all Ready %d times, but NotReady %d times. This behavior may mean it is in a crashloop", podPrefix, namespace, successCount, failureCount)
 						}
@@ -499,7 +496,11 @@ func WaitOnReady(podPrefix, namespace string, successesNeeded int, sleep, durati
 				for _, p := range pods {
 					e := p.Logs()
 					if e != nil {
-						log.Printf("Unable to print pod logs for pod %s", p.Metadata.Name)
+						log.Printf("Unable to print pod logs for pod %s: %s", p.Metadata.Name, e)
+					}
+					e = p.Describe()
+					if e != nil {
+						log.Printf("Unable to describe pod %s: %s", p.Metadata.Name, e)
 					}
 				}
 			}
@@ -561,7 +562,7 @@ func (p *Pod) WaitOnSucceeded(sleep, duration time.Duration) (bool, error) {
 func (p *Pod) Exec(c ...string) ([]byte, error) {
 	execCmd := []string{"exec", p.Metadata.Name, "-n", p.Metadata.Namespace}
 	execCmd = append(execCmd, c...)
-	cmd := exec.Command("kubectl", execCmd...)
+	cmd := exec.Command("k", execCmd...)
 	util.PrintCommand(cmd)
 	out, err := cmd.CombinedOutput()
 	if err != nil {
@@ -577,8 +578,8 @@ func (p *Pod) Delete(retries int) error {
 	var kubectlOutput []byte
 	var kubectlError error
 	for i := 0; i < retries; i++ {
-		cmd := exec.Command("kubectl", "delete", "po", "-n", p.Metadata.Namespace, p.Metadata.Name)
-		kubectlOutput, kubectlError = util.RunAndLogCommand(cmd)
+		cmd := exec.Command("k", "delete", "po", "-n", p.Metadata.Namespace, p.Metadata.Name)
+		kubectlOutput, kubectlError = util.RunAndLogCommand(cmd, deleteTimeout)
 		if kubectlError != nil {
 			log.Printf("Error while trying to delete Pod %s in namespace %s:%s\n", p.Metadata.Namespace, p.Metadata.Name, string(kubectlOutput))
 			continue
@@ -587,6 +588,83 @@ func (p *Pod) Delete(retries int) error {
 	}
 
 	return kubectlError
+}
+
+// CheckOutboundConnection checks outbound connection for a list of pods.
+func (l *List) CheckOutboundConnection(sleep, duration time.Duration, osType api.OSType) (bool, error) {
+	readyCh := make(chan bool)
+	errCh := make(chan error)
+	ctx, cancel := context.WithTimeout(context.Background(), 2*duration)
+	defer cancel()
+
+	ready := false
+	err := errors.Errorf("Unspecified error")
+	for _, p := range l.Pods {
+		localPod := p
+		go func() {
+			switch osType {
+			case api.Linux:
+				ready, err = localPod.CheckLinuxOutboundConnection(sleep, duration)
+			case api.Windows:
+				ready, err = localPod.CheckWindowsOutboundConnection(sleep, duration)
+			default:
+				ready, err = false, errors.Errorf("Invalid osType for Pod (%s)", localPod.Metadata.Name)
+			}
+			readyCh <- ready
+			errCh <- err
+		}()
+	}
+
+	readyCount := 0
+	for {
+		select {
+		case <-ctx.Done():
+			return false, errors.Errorf("Timeout exceeded (%s) while waiting for PodList to check outbound internet connection", duration.String())
+		case err = <-errCh:
+			return false, err
+		case ready = <-readyCh:
+			if ready {
+				readyCount++
+				if readyCount == len(l.Pods) {
+					return true, nil
+				}
+			}
+		}
+	}
+}
+
+//ValidateCurlConnection checks curl connection for a list of Linux pods to a specified uri.
+func (l *List) ValidateCurlConnection(uri string, sleep, duration time.Duration) (bool, error) {
+	readyCh := make(chan bool)
+	errCh := make(chan error)
+	ctx, cancel := context.WithTimeout(context.Background(), 2*duration)
+	defer cancel()
+
+	for _, p := range l.Pods {
+		localPod := p
+		go func() {
+			ready, err := localPod.ValidateCurlConnection(uri, sleep, duration)
+			readyCh <- ready
+			errCh <- err
+		}()
+	}
+
+	readyCount := 0
+	for {
+		select {
+		case <-ctx.Done():
+			return false, errors.Errorf("Timeout exceeded (%s) while waiting for PodList to check outbound internet connection", duration.String())
+		case err := <-errCh:
+			return false, err
+		case ready := <-readyCh:
+			if ready {
+				readyCount++
+				if readyCount == len(l.Pods) {
+					return true, nil
+				}
+			}
+		}
+	}
 }
 
 // CheckLinuxOutboundConnection will keep retrying the check if an error is received until the timeout occurs or it passes. This helps us when DNS may not be available for some time after a pod starts.
@@ -613,19 +691,18 @@ func (p *Pod) CheckLinuxOutboundConnection(sleep, duration time.Duration) (bool,
 					}
 					installedCurl = true
 				}
-				// if we can curl bing.com we have outbound internet access
-				out, err := p.Exec("--", "curl", "bing.com")
-				if err == nil {
-					readyCh <- true
-				} else {
-					// in case bing.com is down let's hope google.com is also not down
-					_, err := p.Exec("--", "curl", "google.com")
+				// if we can curl an external URL we have outbound internet access
+				urls := getExternalURLs()
+				for i, url := range urls {
+					out, err := p.Exec("--", "curl", url)
 					if err == nil {
 						readyCh <- true
 					} else {
-						// if both bing.com and google.com are down let's say we don't have outbound internet access
-						log.Printf("Error:%s\n", err)
-						log.Printf("Out:%s\n", out)
+						if i == (len(urls) - 1) {
+							// if all are down let's say we don't have outbound internet access
+							log.Printf("Error:%s\n", err)
+							log.Printf("Out:%s\n", out)
+						}
 					}
 				}
 				time.Sleep(sleep)
@@ -715,7 +792,7 @@ func (p *Pod) ValidateOmsAgentLogs(execCmdString string, sleep, duration time.Du
 }
 
 // CheckWindowsOutboundConnection will keep retrying the check if an error is received until the timeout occurs or it passes. This helps us when DNS may not be available for some time after a pod starts.
-func (p *Pod) CheckWindowsOutboundConnection(url string, sleep, duration time.Duration) (bool, error) {
+func (p *Pod) CheckWindowsOutboundConnection(sleep, duration time.Duration) (bool, error) {
 	exp, err := regexp.Compile(`(StatusCode\s*:\s*200)`)
 	if err != nil {
 		log.Printf("Error while trying to create regex for windows outbound check:%s\n", err)
@@ -731,17 +808,20 @@ func (p *Pod) CheckWindowsOutboundConnection(url string, sleep, duration time.Du
 			case <-ctx.Done():
 				errCh <- errors.Errorf("Timeout exceeded (%s) while waiting for Pod (%s) to check outbound internet connection", duration.String(), p.Metadata.Name)
 			default:
-				out, err := p.Exec("--", "powershell", "iwr", "-UseBasicParsing", "-TimeoutSec", "60", url)
-				if err == nil {
+				// if we can curl an external URL we have outbound internet access
+				urls := getExternalURLs()
+				for i, url := range urls {
+					out, err := p.Exec("--", "powershell", "iwr", "-UseBasicParsing", "-TimeoutSec", "60", url)
 					matched := exp.MatchString(string(out))
-					if matched {
+					if err == nil && matched {
 						readyCh <- true
 					} else {
-						readyCh <- false
+						if i == (len(urls) - 1) {
+							// if all are down let's say we don't have outbound internet access
+							log.Printf("Error:%s\n", err)
+							log.Printf("Out:%s\n", out)
+						}
 					}
-				} else {
-					log.Printf("Error:%s\n", err)
-					log.Printf("Out:%s\n", out)
 				}
 				time.Sleep(sleep)
 			}
@@ -771,7 +851,7 @@ func (p *Pod) ValidateHostPort(check string, attempts int, sleep time.Duration, 
 
 	for i := 0; i < attempts; i++ {
 		cmd := exec.Command("ssh", "-i", sshKeyPath, "-o", "ConnectTimeout=10", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", master, curlCMD)
-		out, err := util.RunAndLogCommand(cmd)
+		out, err := util.RunAndLogCommand(cmd, commandTimeout)
 		if err == nil {
 			matched, _ := regexp.MatchString(check, string(out))
 			if matched {
@@ -786,14 +866,22 @@ func (p *Pod) ValidateHostPort(check string, attempts int, sleep time.Duration, 
 // Logs will get logs from all containers in a pod
 func (p *Pod) Logs() error {
 	for _, container := range p.Spec.Containers {
-		cmd := exec.Command("kubectl", "logs", p.Metadata.Name, "-c", container.Name, "-n", p.Metadata.Namespace)
-		out, err := util.RunAndLogCommand(cmd)
+		cmd := exec.Command("k", "logs", p.Metadata.Name, "-c", container.Name, "-n", p.Metadata.Namespace)
+		out, err := util.RunAndLogCommand(cmd, commandTimeout)
 		log.Printf("\n%s\n", string(out))
 		if err != nil {
 			return err
 		}
 	}
 	return nil
+}
+
+// Describe will describe a pod resource
+func (p *Pod) Describe() error {
+	cmd := exec.Command("k", "describe", "pod", p.Metadata.Name, "-n", p.Metadata.Namespace)
+	out, err := util.RunAndLogCommand(cmd, commandTimeout)
+	log.Printf("\n%s\n", string(out))
+	return err
 }
 
 // ValidateAzureFile will keep retrying the check if azure file is mounted in Pod
@@ -810,7 +898,7 @@ func (p *Pod) ValidateAzureFile(mountPath string, sleep, duration time.Duration)
 			default:
 				out, err := p.Exec("--", "powershell", "mkdir", "-force", mountPath+"\\"+testDir)
 				if err == nil && strings.Contains(string(out), testDir) {
-					out, err := p.Exec("--", "powershell", "ls", mountPath)
+					out, err = p.Exec("--", "powershell", "ls", mountPath)
 					if err == nil && strings.Contains(string(out), testDir) {
 						readyCh <- true
 					} else {
@@ -847,9 +935,11 @@ func (p *Pod) ValidatePVC(mountPath string, sleep, duration time.Duration) (bool
 			case <-ctx.Done():
 				errCh <- errors.Errorf("Timeout exceeded (%s) while waiting for Pod (%s) to check azure disk mounted", duration.String(), p.Metadata.Name)
 			default:
-				out, err := p.Exec("--", "mkdir", mountPath+"/"+testDir)
+				var out []byte
+				var err error
+				out, err = p.Exec("--", "mkdir", mountPath+"/"+testDir)
 				if err == nil {
-					out, err := p.Exec("--", "ls", mountPath)
+					out, err = p.Exec("--", "ls", mountPath)
 					if err == nil && strings.Contains(string(out), testDir) {
 						readyCh <- true
 					} else {
@@ -884,15 +974,16 @@ func (c *Container) ValidateResources(a api.KubernetesContainerSpec) error {
 	actualCPULimits := c.getCPULimits()
 	actualMemoryRequests := c.getMemoryRequests()
 	actualLimits := c.getMemoryLimits()
-	if expectedCPURequests != "" && expectedCPURequests != actualCPURequests {
+	switch {
+	case expectedCPURequests != "" && expectedCPURequests != actualCPURequests:
 		return errors.Errorf("expected CPU requests %s does not match %s", expectedCPURequests, actualCPURequests)
-	} else if expectedCPULimits != "" && expectedCPULimits != actualCPULimits {
+	case expectedCPULimits != "" && expectedCPULimits != actualCPULimits:
 		return errors.Errorf("expected CPU limits %s does not match %s", expectedCPULimits, actualCPULimits)
-	} else if expectedMemoryRequests != "" && expectedMemoryRequests != actualMemoryRequests {
+	case expectedMemoryRequests != "" && expectedMemoryRequests != actualMemoryRequests:
 		return errors.Errorf("expected Memory requests %s does not match %s", expectedMemoryRequests, actualMemoryRequests)
-	} else if expectedMemoryLimits != "" && expectedMemoryLimits != actualLimits {
+	case expectedMemoryLimits != "" && expectedMemoryLimits != actualLimits:
 		return errors.Errorf("expected Memory limits %s does not match %s", expectedMemoryLimits, actualLimits)
-	} else {
+	default:
 		return nil
 	}
 }
@@ -936,4 +1027,9 @@ func (c *Container) getMemoryRequests() string {
 // getMemoryLimits returns an the CPU Requests value from a container within a pod
 func (c *Container) getMemoryLimits() string {
 	return c.Resources.Limits.Memory
+}
+
+// getExternalURLs returns a list of external URLs
+func getExternalURLs() []string {
+	return []string{"www.bing.com", "google.com"}
 }

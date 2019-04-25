@@ -22,9 +22,20 @@ import (
 	"github.com/pkg/errors"
 )
 
+// DistroValues is a list of currently supported distros
+var DistroValues = []Distro{"", Ubuntu, Ubuntu1804, RHEL, CoreOS, AKS, AKS1804, ACC1604}
+
 // SetPropertiesDefaults for the container Properties, returns true if certs are generated
 func (cs *ContainerService) SetPropertiesDefaults(isUpgrade, isScale bool) (bool, error) {
 	properties := cs.Properties
+
+	// Set custom cloud profile defaults if this cluster configuration has custom cloud profile
+	if cs.Properties.CustomCloudProfile != nil {
+		err := cs.setCustomCloudProfileDefaults()
+		if err != nil {
+			return false, err
+		}
+	}
 
 	cs.setOrchestratorDefaults(isUpgrade || isScale)
 
@@ -51,7 +62,11 @@ func (cs *ContainerService) SetPropertiesDefaults(isUpgrade, isScale bool) (bool
 		properties.setHostedMasterProfileDefaults()
 	}
 
-	certsGenerated, _, e := properties.setDefaultCerts()
+	if cs.Properties.WindowsProfile != nil {
+		properties.setWindowsProfileDefaults(isUpgrade, isScale)
+	}
+
+	certsGenerated, _, e := cs.SetDefaultCerts()
 	if e != nil {
 		return false, e
 	}
@@ -95,7 +110,7 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpdate bool) {
 				o.KubernetesConfig.NetworkPlugin = NetworkPluginKubenet
 			}
 		case NetworkPolicyCilium:
-			o.KubernetesConfig.NetworkPlugin = NetworkPolicyCilium
+			o.KubernetesConfig.NetworkPlugin = NetworkPluginCilium
 		}
 
 		if o.KubernetesConfig.KubernetesImageBase == "" {
@@ -104,6 +119,7 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpdate bool) {
 		if o.KubernetesConfig.EtcdVersion == "" {
 			o.KubernetesConfig.EtcdVersion = DefaultEtcdVersion
 		}
+
 		if a.HasWindows() {
 			if o.KubernetesConfig.NetworkPlugin == "" {
 				o.KubernetesConfig.NetworkPlugin = DefaultNetworkPluginWindows
@@ -115,6 +131,16 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpdate bool) {
 		}
 		if o.KubernetesConfig.ContainerRuntime == "" {
 			o.KubernetesConfig.ContainerRuntime = DefaultContainerRuntime
+		}
+		switch o.KubernetesConfig.ContainerRuntime {
+		case Docker:
+			if o.KubernetesConfig.MobyVersion == "" {
+				o.KubernetesConfig.MobyVersion = DefaultMobyVersion
+			}
+		case Containerd, ClearContainers, KataContainers:
+			if o.KubernetesConfig.ContainerdVersion == "" {
+				o.KubernetesConfig.ContainerdVersion = DefaultContainerdVersion
+			}
 		}
 		if o.KubernetesConfig.ClusterSubnet == "" {
 			if o.IsAzureCNI() {
@@ -201,6 +227,10 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpdate bool) {
 				// TODO make EnableAggregatedAPIs a pointer to bool so that a user can opt out of it
 				a.OrchestratorProfile.KubernetesConfig.EnableAggregatedAPIs = true
 			}
+		} else if isUpdate && a.OrchestratorProfile.KubernetesConfig.EnableAggregatedAPIs {
+			// Upgrade scenario:
+			// We need to force set EnableAggregatedAPIs to false if RBAC was previously disabled
+			a.OrchestratorProfile.KubernetesConfig.EnableAggregatedAPIs = false
 		}
 
 		if a.OrchestratorProfile.KubernetesConfig.EnableSecureKubelet == nil {
@@ -434,28 +464,27 @@ func (p *Properties) setAgentProfileDefaults(isUpgrade, isScale bool) {
 			profile.AcceleratedNetworkingEnabledWindows = to.BoolPtr(DefaultAcceleratedNetworkingWindowsEnabled && !isUpgrade && !isScale && helpers.AcceleratedNetworkingSupported(profile.VMSize))
 		}
 
+		if profile.VMSSOverProvisioningEnabled == nil {
+			profile.VMSSOverProvisioningEnabled = to.BoolPtr(DefaultVMSSOverProvisioningEnabled && !isUpgrade && !isScale)
+		}
+
 		if profile.OSType != Windows {
 			if profile.Distro == "" {
 				if p.OrchestratorProfile.IsKubernetes() {
 					if profile.OSDiskSizeGB != 0 && profile.OSDiskSizeGB < VHDDiskSizeAKS {
 						profile.Distro = Ubuntu
 					} else {
-						if profile.IsNSeriesSKU() {
-							profile.Distro = AKSDockerEngine
-						} else {
-							profile.Distro = AKS
-						}
+						profile.Distro = AKS
 					}
 				} else {
 					profile.Distro = Ubuntu
 				}
 				// Ensure distro is set properly for N Series SKUs, because
-				// (1) At present, "aks-docker-engine" and "ubuntu" are the only working distro base for running GPU workloads on N Series SKUs
-				// (2) Previous versions of aks-engine had working implementations using the "aks" distro value,
-				//     so we need to hard override it in order to produce a working cluster in upgrade/scale contexts
-			} else if p.OrchestratorProfile.IsKubernetes() && (isUpgrade || isScale) && profile.IsNSeriesSKU() {
-				if profile.Distro == AKS {
-					profile.Distro = AKSDockerEngine
+				// Previous versions of aks-engine required the docker-engine distro for N series vms,
+				// so we need to hard override it in order to produce a working cluster in upgrade/scale contexts
+			} else if p.OrchestratorProfile.IsKubernetes() && (isUpgrade || isScale) {
+				if profile.Distro == AKSDockerEngine {
+					profile.Distro = AKS
 				}
 			}
 		}
@@ -470,6 +499,33 @@ func (p *Properties) setAgentProfileDefaults(isUpgrade, isScale bool) {
 				agentPoolMaxPods, _ := strconv.Atoi(profile.KubernetesConfig.KubeletConfig["--max-pods"])
 				profile.IPAddressCount += agentPoolMaxPods
 			}
+		}
+
+		if profile.PreserveNodesProperties == nil {
+			profile.PreserveNodesProperties = to.BoolPtr(DefaultPreserveNodesProperties)
+		}
+
+		if profile.EnableVMSSNodePublicIP == nil {
+			profile.EnableVMSSNodePublicIP = to.BoolPtr(DefaultEnableVMSSNodePublicIP)
+		}
+	}
+}
+
+// setWindowsProfileDefaults sets default WindowsProfile values
+func (p *Properties) setWindowsProfileDefaults(isUpgrade, isScale bool) {
+	windowsProfile := p.WindowsProfile
+	if !isUpgrade && !isScale {
+		if windowsProfile.WindowsPublisher == "" {
+			windowsProfile.WindowsPublisher = DefaultWindowsPublisher
+		}
+		if windowsProfile.WindowsOffer == "" {
+			windowsProfile.WindowsOffer = DefaultWindowsOffer
+		}
+		if windowsProfile.WindowsSku == "" {
+			windowsProfile.WindowsSku = DefaultWindowsSku
+		}
+		if windowsProfile.ImageVersion == "" {
+			windowsProfile.ImageVersion = DefaultImageVersion
 		}
 	}
 }
@@ -508,7 +564,9 @@ func (p *Properties) setHostedMasterProfileDefaults() {
 	p.HostedMasterProfile.Subnet = DefaultKubernetesMasterSubnet
 }
 
-func (p *Properties) setDefaultCerts() (bool, []net.IP, error) {
+// SetDefaultCerts generates and sets defaults for the container certificateProfile, returns true if certs are generated
+func (cs *ContainerService) SetDefaultCerts() (bool, []net.IP, error) {
+	p := cs.Properties
 	if p.MasterProfile == nil || p.OrchestratorProfile.OrchestratorType != Kubernetes {
 		return false, nil, nil
 	}
@@ -520,8 +578,8 @@ func (p *Properties) setDefaultCerts() (bool, []net.IP, error) {
 	}
 
 	var azureProdFQDNs []string
-	for _, location := range helpers.GetAzureLocations() {
-		azureProdFQDNs = append(azureProdFQDNs, FormatAzureProdFQDNByLocation(p.MasterProfile.DNSPrefix, location))
+	for _, location := range cs.GetLocations() {
+		azureProdFQDNs = append(azureProdFQDNs, FormatProdFQDNByLocation(p.MasterProfile.DNSPrefix, location, p.GetCustomCloudName()))
 	}
 
 	masterExtraFQDNs := append(azureProdFQDNs, p.MasterProfile.SubjectAltNames...)

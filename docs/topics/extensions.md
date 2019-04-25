@@ -1,8 +1,8 @@
 # Extensions
 
-Extensions in AKS-Engine provide an easy way for AKS-Engine users to add pre-packaged functionality into their cluster.  For example, an extension could configure a monitoring solution on an AKS cluster.  The user would not need to know the details of how to install the monitoring solution.  Rather, the user would simply add the extension into the extensionProfiles section of the template.
+Extensions in AKS Engine provide an easy way for AKS Engine users to add pre-packaged functionality into their cluster.  For example, an extension could configure a monitoring solution on an AKS cluster.  The user would not need to know the details of how to install the monitoring solution.  Rather, the user would simply add the extension into the extensionProfiles section of the template.
 
-# extensionProfiles
+## extensionProfiles
 
 The extensionProfiles contains the extensions that the cluster will install. The following illustrates a template with a hello-world-dcos extension.
 
@@ -29,16 +29,19 @@ The extensionProfiles contains the extensions that the cluster will install. The
 |rootURL|optional|url to the root location of extensions.  The rootURL must have an extensions child folder that follows the extensions convention.  The rootURL is mainly used for testing purposes.|
 |script|optional|Used for preprovision scripts this points to the location of the script to run inside of the extension folder.|
 
-# rootURL
+## rootURL
+
 You normally would not provide a rootURL.  The extensions are normally loaded from the extensions folder in GitHub.  However, you may specify the rootURL when testing a new extension.  The rootURL must adhere to the extensions conventions.  For example, in order to use an Azure Storage account to test an extension named extension-one, you would do the following:
+
 - Create a storage account.  For the purposes of this example, we will call it 'mystorageaccount'
 - Create a blob container called 'extensions'
 - Under 'extensions', create a folder called 'extension-one'
 - Under 'extension-one', create a folder called 'v1'
 - Under 'v1', upload your files (see Required Extension Files)
-- Set the rootURL to: 'https://mystorageaccount.blob.core.windows.net/'
+- Set the rootURL to: `https://mystorageaccount.blob.core.windows.net/`
 
-# masterProfile
+## masterProfile
+
 Extensions, in the current implementation run a script on a master node. The extensions array in the masterProfile define that the master pool will have the script run on a single node on it. If you want it to run on all pass in All to singleOrAll
 
 ``` javascript
@@ -65,7 +68,9 @@ Extensions, in the current implementation run a script on a master node. The ext
   ]
 }
 ```
+
 Or they can be referenced as a preprovision extension, this will run during cloud init before the cluster is brought up. Usually used for installing antivirus or the like. These will run on all the masters or the nodes in the agent pool it is specified to run on if it is specified. Single or all is a formality at this point.
+
 ``` javascript
 {
   "masterProfile": {
@@ -90,16 +95,16 @@ Or they can be referenced as a preprovision extension, this will run during clou
   ]
 }
 ```
+
 |Name|Required|Description|
 |---|---|---|
 |name|yes|The name of the extension. This must match the name in the extensionProfiles|
 
-# Required Extension Files
+## Required Extension Files
 
 In order to install a post provision extension, there are four required files - supported-orchestrators.json, template.json, template-link.json and EXTENSION-NAME.sh. Following is a description of each file.
 
 In order to install a preprovision extension, there are two required files - supported-orchestrators.json and EXTENSION-NAME.sh. Following is a description of each file.
-
 
 |File Name|Description|
 |-----------------------------|---|
@@ -108,7 +113,7 @@ In order to install a preprovision extension, there are two required files - sup
 |template-link.json          |The ARM template snippet which will be injected into azuredeploy.json to call template.json|
 |EXTENSION-NAME.sh           |The script file that will execute on the VM itself via Custom Script Extension to perform installation of the extension|
 
-# Creating supported-orchestrators.json
+## Creating supported-orchestrators.json
 
 The supported-orchestrators.json file is a simple one line file that contains the list of supported orchestrators for which the extension can be installed into.
 
@@ -116,7 +121,7 @@ The supported-orchestrators.json file is a simple one line file that contains th
 ["Kubernetes"]
 ```
 
-# Creating extension template.json
+## Creating extension template.json
 
 The template.json file is a linked template that will be called by the main cluster deployment template and must adhere to all the rules of a normal ARM template. All the necessary parameters needed from the azuredeploy.json file must be passed into this template and defined appropriately.
 
@@ -131,50 +136,50 @@ The following is an example of the template.json file.
    "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
    "contentVersion": "1.0.0.0",
    "parameters": {
-		"apiVersionStorage": {
-			"type": "string",
-			"minLength": 1,
-			"metadata": {
-				"description": "Storage API Version"
-			}
-		},
-		"apiVersionCompute": {
-			"type": "string",
-			"minLength": 1,
-			"metadata": {
-				"description": "Compute API Version"
-			}
-		},
-		"username": {
-			"type": "string",
-			"minLength": 1,
-			"metadata": {
-				"description": "Username for OS"
-			}
-		},
-		"storageAccountBaseName": {
-			"type": "string",
-			"minLength": 1,
-			"metadata": {
-				"description": "Base Name of Storage Account"
-			}
-		},
-		"extensionParameters": {
-			"type": "securestring",
-			"minLength": 1,
-			"metadata": {
-				"description": "Custom Parameter for Extension"
-			}
-		}
+        "apiVersionDeployments": {
+            "type": "string",
+            "minLength": 1,
+            "metadata": {
+                "description": "Deployments API Version"
+            }
+        },
+        "apiVersionCompute": {
+            "type": "string",
+            "minLength": 1,
+            "metadata": {
+                "description": "Compute API Version"
+            }
+        },
+        "username": {
+            "type": "string",
+            "minLength": 1,
+            "metadata": {
+                "description": "Username for OS"
+            }
+        },
+        "storageAccountBaseName": {
+            "type": "string",
+            "minLength": 1,
+            "metadata": {
+                "description": "Base Name of Storage Account"
+            }
+        },
+        "extensionParameters": {
+            "type": "securestring",
+            "minLength": 1,
+            "metadata": {
+                "description": "Custom Parameter for Extension"
+            }
+        }
    },
    "variables": {
-		"singleQuote": "'",
-		"sampleStorageAccountName": "[concat(uniqueString(concat(parameters('storageAccountBaseName'), 'sample')), 'aa')]"
-		"initScriptUrl": "https://raw.githubusercontent.com/Azure/aks-engine/master/extensions/EXTENSION-NAME/v1/EXTENSION-NAME.sh"
+        "singleQuote": "'",
+        "sampleStorageAccountName": "[concat(uniqueString(concat(parameters('storageAccountBaseName'), 'sample')), 'aa')]"
+        "initScriptUrl": "https://raw.githubusercontent.com/Azure/aks-engine/master/extensions/EXTENSION-NAME/v1/EXTENSION-NAME.sh"
    },
    "resources": [
-	{
-      "apiVersion": "[parameters('apiVersionStorage')]",
+    {
+      "apiVersion": "[parameters('apiVersionDeployments')]",
       "dependsOn": [],
       "location": "[resourceGroup().location]",
       "name": "[variables('sampleStorageAccountName')]",
@@ -182,35 +187,35 @@ The following is an example of the template.json file.
         "accountType": "Standard_LRS"
       },
       "type": "Microsoft.Storage/storageAccounts"
-	}, {
+    }, {
       "apiVersion": "[parameters('apiVersionCompute')]",
       "dependsOn": [],
       "location": "[resourceGroup().location]",
       "type": "Microsoft.Compute/virtualMachines/extensions",
-	  "name": "CustomExtension",
+      "name": "CustomExtension",
       "properties": {
         "publisher": "Microsoft.OSTCExtensions",
         "type": "CustomScriptForLinux",
         "typeHandlerVersion": "1.5",
         "autoUpgradeMinorVersion": true,
         "settings": {
-			"fileUris": [
-			   "[variables('initScriptUrl')]"
-			 ]
-		},
+            "fileUris": [
+               "[variables('initScriptUrl')]"
+             ]
+        },
         "protectedSettings": {
-			"commandToExecute": "[concat('/bin/bash -c \"/bin/bash ./EXTENSION-NAME.sh ', variables('singleQuote'), parameters('extensionParameters'), variables('singleQuote'), ' ', variables('singleQuote'), parameters('sampleStorageAccountName'), variables('singleQuote'), ' >> /var/log/azure/sysdig-provision.log 2>&1 &\" &')]"
+            "commandToExecute": "[concat('/bin/bash -c \"/bin/bash ./EXTENSION-NAME.sh ', variables('singleQuote'), parameters('extensionParameters'), variables('singleQuote'), ' ', variables('singleQuote'), parameters('sampleStorageAccountName'), variables('singleQuote'), ' >> /var/log/azure/sysdig-provision.log 2>&1 &\" &')]"
         }
       }
     }
-	],
+    ],
    "outputs": {  }
 }
 ```
 
-# Creating extension template-link.json
+## Creating extension template-link.json
 
-When AKS-Engine generates the azuredeploy.json file, this JSON snippet will be injected. This code calls the linked template (template.json) defined above.
+When AKS Engine generates the azuredeploy.json file, this JSON snippet will be injected. This code calls the linked template (template.json) defined above.
 
 Any parameters from the main azuredeploy.json file that is needed by template.json must be passed in via the parameters section. The parameter, "extensionParameters" is an optional parameter that is passed in directly by the user in the **extensionProfiles** section as defined in an earlier section. This special parameter can be used to pass in information such as an activation key or access code (as an example). If the extension does not need this capability, this optional parameter can be deleted.
 
@@ -222,7 +227,7 @@ Replace "**EXTENSION-NAME**" with the name of the extension.
 {
     "name": "EXTENSION-NAME",
     "type": "Microsoft.Resources/deployments",
-    "apiVersion": "[variables('apiVersionCompute')]",
+    "apiVersion": "[variables('apiVersionDeployments')]",
     "dependsOn": [
         "vmLoopNode"
     ],
@@ -233,8 +238,8 @@ Replace "**EXTENSION-NAME**" with the name of the extension.
             "contentVersion": "1.0.0.0"
         },
         "parameters": {
-            "apiVersionCompute": {
-                "value": "[variables('apiVersionCompute')]"
+            "apiVersionDeployments": {
+                "value": "[variables('apiVersionDeployments')]"
             },
             "username": {
                 "value": "[parameters('linuxAdminUsername')]"
@@ -250,7 +255,7 @@ Replace "**EXTENSION-NAME**" with the name of the extension.
 }
 ```
 
-# Creating extension script file
+## Creating extension script file
 
 The script file will get executed on the VM to install the extension. Following is an example of a script.sh file. For a preprovision extension the relative path of the file inside the version folder needs to be passed in as the "script" property in the extensions profile
 
@@ -291,9 +296,10 @@ install sample.yaml
 echo $(date) " - Script complete"
 ```
 
-# Current list of extensions
-- [hello-world-dcos](../extensions/hello-world-dcos/README.md)
-- [hello-world-k8s](../extensions/hello-world-k8s/README.md)
+## Current list of extensions
 
-# Known issues
+The current list of known extensions can be found [in extensions/](https://github.com/Azure/aks-engine/tree/master/extensions).
+
+## Known issues
+
 Kubernetes extensions that run after provisioning don't currently work if the VM needs to reboot for security reboots. this is a timing issue. the extension script is started before the vm reboots and it will be cutoff before it finishes but will still report success. I've tried to get the provision script to only finish as reboot happens and I haven't gotten that to work. An extension could work most of the time if it cancelled the restart at the start and checked if a restart was needed and scheduled one at the end of its work

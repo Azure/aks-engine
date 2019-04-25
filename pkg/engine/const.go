@@ -4,6 +4,19 @@
 package engine
 
 const (
+	// Mesos is the string constant for MESOS orchestrator type
+	Mesos string = "Mesos"
+	// DCOS is the string constant for DCOS orchestrator type and defaults to DCOS188
+	DCOS string = "DCOS"
+	// Swarm is the string constant for the Swarm orchestrator type
+	Swarm string = "Swarm"
+	// Kubernetes is the string constant for the Kubernetes orchestrator type
+	Kubernetes string = "Kubernetes"
+	// SwarmMode is the string constant for the Swarm Mode orchestrator type
+	SwarmMode string = "SwarmMode"
+)
+
+const (
 	// DefaultVNETCIDR is the default CIDR block for the VNET
 	DefaultVNETCIDR = "10.0.0.0/8"
 	// DefaultInternalLbStaticIPOffset specifies the offset of the internal LoadBalancer's IP
@@ -15,13 +28,15 @@ const (
 	NetworkPolicyCalico = "calico"
 	// NetworkPolicyCilium is the string expression for cilium network policy config option
 	NetworkPolicyCilium = "cilium"
+	// NetworkPluginCilium is the string expression for cilium network plugin config option
+	NetworkPluginCilium = NetworkPolicyCilium
 	// NetworkPolicyAzure is the string expression for Azure CNI network policy manager
 	NetworkPolicyAzure = "azure"
 	// NetworkPluginAzure is the string expression for Azure CNI plugin
 	NetworkPluginAzure = "azure"
 	// NetworkPluginKubenet is the string expression for kubenet network plugin
 	NetworkPluginKubenet = "kubenet"
-	// NetworkPluginFlannel is the string expression for flannel network policy config option
+	// NetworkPluginFlannel is the string expression for flannel network plugin
 	NetworkPluginFlannel = "flannel"
 	// DefaultKubeHeapsterDeploymentAddonName is the name of the kube-heapster-deployment addon
 	DefaultKubeHeapsterDeploymentAddonName = "kube-heapster-deployment"
@@ -114,18 +129,7 @@ const (
 )
 
 const (
-	kubernetesMasterCustomDataYaml           = "k8s/kubernetesmastercustomdata.yml"
-	kubernetesCustomScript                   = "k8s/kubernetescustomscript.sh"
-	kubernetesProvisionSourceScript          = "k8s/kubernetesprovisionsource.sh"
-	kubernetesHealthMonitorScript            = "k8s/health-monitor.sh"
-	kubernetesInstalls                       = "k8s/kubernetesinstalls.sh"
-	kubernetesConfigurations                 = "k8s/kubernetesconfigs.sh"
-	kubernetesMountetcd                      = "k8s/kubernetes_mountetcd.sh"
-	kubernetesCustomSearchDomainsScript      = "k8s/setup-custom-search-domains.sh"
-	kubernetesMasterGenerateProxyCertsScript = "k8s/kubernetesmastergenerateproxycertscript.sh"
-	kubernetesAgentCustomDataYaml            = "k8s/kubernetesagentcustomdata.yml"
-	kubernetesJumpboxCustomDataYaml          = "k8s/kubernetesjumpboxcustomdata.yml"
-	kubeConfigJSON                           = "k8s/kubeconfig.json"
+	kubeConfigJSON = "k8s/kubeconfig.json"
 	// Windows custom scripts
 	kubernetesWindowsAgentCustomDataPS1   = "k8s/kuberneteswindowssetup.ps1"
 	kubernetesWindowsAgentFunctionsPS1    = "k8s/kuberneteswindowsfunctions.ps1"
@@ -133,8 +137,47 @@ const (
 	kubernetesWindowsKubeletFunctionsPS1  = "k8s/windowskubeletfunc.ps1"
 	kubernetesWindowsCniFunctionsPS1      = "k8s/windowscnifunc.ps1"
 	kubernetesWindowsAzureCniFunctionsPS1 = "k8s/windowsazurecnifunc.ps1"
-	sshdConfig                            = "k8s/sshd_config"
-	systemConf                            = "k8s/system.conf"
+	kubernetesWindowsOpenSSHFunctionPS1   = "k8s/windowsinstallopensshfunc.ps1"
+)
+
+// cloud-init (i.e. ARM customData) file references
+const (
+	kubernetesMasterNodeCustomDataYaml = "k8s/cloud-init/masternodecustomdata.yml"
+	kubernetesNodeCustomDataYaml       = "k8s/cloud-init/nodecustomdata.yml"
+	kubernetesJumpboxCustomDataYaml    = "k8s/cloud-init/jumpboxcustomdata.yml"
+	kubernetesCSEMainScript            = "k8s/cloud-init/artifacts/cse_main.sh"
+	kubernetesCSEHelpersScript         = "k8s/cloud-init/artifacts/cse_helpers.sh"
+	kubernetesCSEInstall               = "k8s/cloud-init/artifacts/cse_install.sh"
+	kubernetesCSEConfig                = "k8s/cloud-init/artifacts/cse_config.sh"
+	kubernetesCISScript                = "k8s/cloud-init/artifacts/cis.sh"
+	kubernetesCSECustomCloud           = "k8s/cloud-init/artifacts/cse_customcloud.sh"
+	kubernetesHealthMonitorScript      = "k8s/cloud-init/artifacts/health-monitor.sh"
+	// kubernetesKubeletMonitorSystemdTimer     = "k8s/cloud-init/artifacts/kubelet-monitor.timer" // TODO enable
+	kubernetesKubeletMonitorSystemdService   = "k8s/cloud-init/artifacts/kubelet-monitor.service"
+	kubernetesDockerMonitorSystemdTimer      = "k8s/cloud-init/artifacts/docker-monitor.timer"
+	kubernetesDockerMonitorSystemdService    = "k8s/cloud-init/artifacts/docker-monitor.service"
+	kubernetesMountEtcd                      = "k8s/cloud-init/artifacts/mountetcd.sh"
+	kubernetesMasterGenerateProxyCertsScript = "k8s/cloud-init/artifacts/generateproxycerts.sh"
+	kubernetesCustomSearchDomainsScript      = "k8s/cloud-init/artifacts/setup-custom-search-domains.sh"
+	sshdConfig                               = "k8s/cloud-init/artifacts/sshd_config"
+	sshdConfig1604                           = "k8s/cloud-init/artifacts/sshd_config_1604"
+	kubeletSystemdService                    = "k8s/cloud-init/artifacts/kubelet.service"
+	kmsSystemdService                        = "k8s/cloud-init/artifacts/kms.service"
+	aptPreferences                           = "k8s/cloud-init/artifacts/apt-preferences"
+	dockerClearMountPropagationFlags         = "k8s/cloud-init/artifacts/docker_clear_mount_propagation_flags.conf"
+	systemdBPFMount                          = "k8s/cloud-init/artifacts/sys-fs-bpf.mount"
+	etcdSystemdService                       = "k8s/cloud-init/artifacts/etcd.service"
+	etcIssue                                 = "k8s/cloud-init/artifacts/etc-issue"
+	etcIssueNet                              = "k8s/cloud-init/artifacts/etc-issue.net"
+	cisNetEnforcement                        = "k8s/cloud-init/artifacts/sysctl-d-60-CIS.conf"
+	cisLogEnforcement                        = "k8s/cloud-init/artifacts/rsyslog-d-60-CIS.conf"
+	modprobeConfCIS                          = "k8s/cloud-init/artifacts/modprobe-CIS.conf"
+	pwQuality                                = "k8s/cloud-init/artifacts/pwquality-CIS.conf"
+	defaultGrub                              = "k8s/cloud-init/artifacts/default-grub"
+	pamDotDSU                                = "k8s/cloud-init/artifacts/pam-d-su"
+	profileDCISSh                            = "k8s/cloud-init/artifacts/profile-d-cis.sh"
+	pamDotDCommonAuth                        = "k8s/cloud-init/artifacts/pam-d-common-auth"
+	pamDotDCommonPassword                    = "k8s/cloud-init/artifacts/pam-d-common-password"
 )
 
 const (
@@ -161,6 +204,7 @@ const (
 const (
 	agentOutputs                  = "agentoutputs.t"
 	agentParams                   = "agentparams.t"
+	armParameters                 = "k8s/armparameters.t"
 	dcosAgentResourcesVMAS        = "dcos/dcosagentresourcesvmas.t"
 	dcosWindowsAgentResourcesVMAS = "dcos/dcosWindowsAgentResourcesVmas.t"
 	dcosAgentResourcesVMSS        = "dcos/dcosagentresourcesvmss.t"
@@ -178,16 +222,7 @@ const (
 	dcos2MasterVars               = "dcos/bstrap/dcosmastervars.t"
 	dcos2MasterResources          = "dcos/bstrap/dcosmasterresources.t"
 	iaasOutputs                   = "iaasoutputs.t"
-	kubernetesBaseFile            = "k8s/kubernetesbase.t"
-	kubernetesAgentResourcesVMAS  = "k8s/kubernetesagentresourcesvmas.t"
-	kubernetesAgentResourcesVMSS  = "k8s/kubernetesagentresourcesvmss.t"
-	kubernetesAgentVars           = "k8s/kubernetesagentvars.t"
-	kubernetesMasterResourcesVMAS = "k8s/kubernetesmasterresources.t"
-	kubernetesMasterResourcesVMSS = "k8s/kubernetesmasterresourcesvmss.t"
-	kubernetesMasterVars          = "k8s/kubernetesmastervars.t"
 	kubernetesParams              = "k8s/kubernetesparams.t"
-	kubernetesWinAgentVars        = "k8s/kuberneteswinagentresourcesvmas.t"
-	kubernetesWinAgentVarsVMSS    = "k8s/kuberneteswinagentresourcesvmss.t"
 	masterOutputs                 = "masteroutputs.t"
 	masterParams                  = "masterparams.t"
 	swarmBaseFile                 = "swarm/swarmbase.t"

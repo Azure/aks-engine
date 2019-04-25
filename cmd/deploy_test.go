@@ -5,6 +5,7 @@ package cmd
 
 import (
 	"fmt"
+	"path"
 	"strconv"
 	"testing"
 
@@ -12,8 +13,8 @@ import (
 
 	"github.com/Azure/aks-engine/pkg/api"
 	"github.com/Azure/aks-engine/pkg/armhelpers"
+	"github.com/gofrs/uuid"
 	"github.com/pkg/errors"
-	uuid "github.com/satori/go.uuid"
 	"github.com/spf13/cobra"
 )
 
@@ -45,6 +46,20 @@ const ExampleAPIModelWithDNSPrefix = `{
   }
   `
 
+const ExampleAPIModelWithoutDNSPrefix = `{
+	"apiVersion": "vlabs",
+	"properties": {
+		  "orchestratorProfile": { "orchestratorType": "Kubernetes", "kubernetesConfig": { "useManagedIdentity": %s, "etcdVersion" : "2.3.8" } },
+	  "masterProfile": { "count": 1, "vmSize": "Standard_D2_v2" },
+	  "agentPoolProfiles": [ { "name": "linuxpool1", "count": 2, "vmSize": "Standard_D2_v2", "availabilityProfile": "AvailabilitySet" } ],
+	  "windowsProfile": { "adminUsername": "azureuser", "adminPassword": "replacepassword1234$" },
+	  "linuxProfile": { "adminUsername": "azureuser", "ssh": { "publicKeys": [ { "keyData": "" } ] }
+	  },
+	  "servicePrincipalProfile": { "clientId": "%s", "secret": "%s" }
+	}
+  }
+  `
+
 const ExampleAPIModelWithoutServicePrincipalProfile = `{
 	"apiVersion": "vlabs",
 	"properties": {
@@ -57,23 +72,6 @@ const ExampleAPIModelWithoutServicePrincipalProfile = `{
 	}
   }
   `
-
-//mockAuthProvider implements AuthProvider and allows in particular to stub out getClient()
-type mockAuthProvider struct {
-	getClientMock armhelpers.AKSEngineClient
-	*authArgs
-}
-
-func (provider *mockAuthProvider) getClient() (armhelpers.AKSEngineClient, error) {
-	if provider.getClientMock == nil {
-		return &armhelpers.MockAKSEngineClient{}, nil
-	}
-	return provider.getClientMock, nil
-
-}
-func (provider *mockAuthProvider) getAuthArgs() *authArgs {
-	return provider.authArgs
-}
 
 func getExampleAPIModel(useManagedIdentity bool, clientID, clientSecret string) string {
 	return getAPIModel(ExampleAPIModel, useManagedIdentity, clientID, clientSecret)
@@ -94,16 +92,21 @@ func getAPIModelWithoutServicePrincipalProfile(baseAPIModel string, useManagedId
 }
 
 func TestNewDeployCmd(t *testing.T) {
-	output := newDeployCmd()
-	if output.Use != deployName || output.Short != deployShortDescription || output.Long != deployLongDescription {
-		t.Fatalf("deploy command should have use %s equal %s, short %s equal %s and long %s equal to %s", output.Use, deployName, output.Short, deployShortDescription, output.Long, versionLongDescription)
+	command := newDeployCmd()
+	if command.Use != deployName || command.Short != deployShortDescription || command.Long != deployLongDescription {
+		t.Fatalf("deploy command should have use %s equal %s, short %s equal %s and long %s equal to %s", command.Use, deployName, command.Short, deployShortDescription, command.Long, versionLongDescription)
 	}
 
 	expectedFlags := []string{"api-model", "dns-prefix", "auto-suffix", "output-directory", "ca-private-key-path", "resource-group", "location", "force-overwrite"}
 	for _, f := range expectedFlags {
-		if output.Flags().Lookup(f) == nil {
+		if command.Flags().Lookup(f) == nil {
 			t.Fatalf("deploy command should have flag %s", f)
 		}
+	}
+
+	command.SetArgs([]string{})
+	if err := command.Execute(); err == nil {
+		t.Fatalf("expected an error when calling deploy with no arguments")
 	}
 }
 
@@ -545,7 +548,7 @@ func TestDeployCmdRun(t *testing.T) {
 			authArgs:      &authArgs{},
 			getClientMock: &armhelpers.MockAKSEngineClient{},
 		},
-		apimodelPath:    "./this/is/unused.json",
+		apimodelPath:    "../pkg/engine/testdata/simple/kubernetes.json",
 		outputDirectory: "_test_output",
 		forceOverwrite:  true,
 		location:        "westus",
@@ -564,7 +567,6 @@ func TestDeployCmdRun(t *testing.T) {
 		t.Fatalf("Invalid SubscriptionId in Test: %s", err)
 	}
 
-	d.apimodelPath = "../pkg/engine/testdata/simple/kubernetes.json"
 	d.getAuthArgs().SubscriptionID = fakeSubscriptionID
 	d.getAuthArgs().rawSubscriptionID = fakeRawSubscriptionID
 	d.getAuthArgs().rawClientID = fakeClientID
@@ -581,5 +583,42 @@ func TestDeployCmdRun(t *testing.T) {
 	err = d.run()
 	if err != nil {
 		t.Fatalf("Failed to call LoadAPIModel: %s", err)
+	}
+}
+
+func TestOutputDirectoryWithDNSPrefix(t *testing.T) {
+	apiloader := &api.Apiloader{
+		Translator: nil,
+	}
+
+	apimodel := getAPIModel(ExampleAPIModelWithoutDNSPrefix, false, "clientID", "clientSecret")
+	cs, ver, err := apiloader.DeserializeContainerService([]byte(apimodel), false, false, nil)
+	if err != nil {
+		t.Fatalf("unexpected error deserializing the example apimodel: %s", err)
+	}
+
+	d := &deployCmd{
+		apimodelPath:     "./this/is/unused.json",
+		outputDirectory:  "",
+		dnsPrefix:        "dnsPrefix1",
+		forceOverwrite:   true,
+		location:         "westus",
+		containerService: cs,
+		apiVersion:       ver,
+		client:           &armhelpers.MockAKSEngineClient{},
+		authProvider: &mockAuthProvider{
+			authArgs: &authArgs{},
+		},
+	}
+
+	err = autofillApimodel(d)
+	if err != nil {
+		t.Fatalf("unexpected error autofilling the example apimodel: %s", err)
+	}
+
+	defer os.RemoveAll(d.outputDirectory)
+
+	if d.outputDirectory != path.Join("_output", d.dnsPrefix) {
+		t.Fatalf("Calculated output directory should be %s, actual value %s", path.Join("_output", d.dnsPrefix), d.outputDirectory)
 	}
 }

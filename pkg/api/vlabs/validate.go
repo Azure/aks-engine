@@ -17,8 +17,8 @@ import (
 	"github.com/Azure/aks-engine/pkg/api/common"
 	"github.com/Azure/aks-engine/pkg/helpers"
 	"github.com/blang/semver"
+	"github.com/gofrs/uuid"
 	"github.com/pkg/errors"
-	uuid "github.com/satori/go.uuid"
 	log "github.com/sirupsen/logrus"
 	validator "gopkg.in/go-playground/validator.v9"
 )
@@ -34,6 +34,7 @@ var (
 		"3.1.0", "3.1.1", "3.1.2", "3.1.2", "3.1.3", "3.1.4", "3.1.5", "3.1.6", "3.1.7", "3.1.8", "3.1.9", "3.1.10",
 		"3.2.0", "3.2.1", "3.2.2", "3.2.3", "3.2.4", "3.2.5", "3.2.6", "3.2.7", "3.2.8", "3.2.9", "3.2.11", "3.2.12",
 		"3.2.13", "3.2.14", "3.2.15", "3.2.16", "3.2.23", "3.2.24", "3.2.25", "3.3.0", "3.3.1", "3.3.8", "3.3.9", "3.3.10"}
+	containerdValidVersions        = [...]string{"1.1.5", "1.1.6", "1.2.4"}
 	networkPluginPlusPolicyAllowed = []k8sNetworkConfig{
 		{
 			networkPlugin: "",
@@ -56,12 +57,12 @@ var (
 			networkPolicy: "",
 		},
 		{
-			networkPlugin: "cilium",
+			networkPlugin: NetworkPolicyCilium,
 			networkPolicy: "",
 		},
 		{
-			networkPlugin: "cilium",
-			networkPolicy: "cilium",
+			networkPlugin: NetworkPluginCilium,
+			networkPolicy: NetworkPolicyCilium,
 		},
 		{
 			networkPlugin: "kubenet",
@@ -77,7 +78,7 @@ var (
 		},
 		{
 			networkPlugin: "",
-			networkPolicy: "cilium",
+			networkPolicy: NetworkPolicyCilium,
 		},
 		{
 			networkPlugin: "",
@@ -109,14 +110,14 @@ func init() {
 }
 
 // Validate implements APIObject
-func (a *Properties) Validate(isUpdate bool) error {
+func (a *Properties) validate(isUpdate bool) error {
 	if e := validate.Struct(a); e != nil {
 		return handleValidationErrors(e.(validator.ValidationErrors))
 	}
-	if e := a.validateOrchestratorProfile(isUpdate); e != nil {
+	if e := a.ValidateOrchestratorProfile(isUpdate); e != nil {
 		return e
 	}
-	if e := a.validateMasterProfile(); e != nil {
+	if e := a.validateMasterProfile(isUpdate); e != nil {
 		return e
 	}
 	if e := a.validateAgentPoolProfiles(isUpdate); e != nil {
@@ -148,7 +149,6 @@ func (a *Properties) Validate(isUpdate bool) error {
 	if e := a.validateAADProfile(); e != nil {
 		return e
 	}
-
 	return nil
 }
 
@@ -158,7 +158,8 @@ func handleValidationErrors(e validator.ValidationErrors) error {
 	return common.HandleValidationErrors(e)
 }
 
-func (a *Properties) validateOrchestratorProfile(isUpdate bool) error {
+//ValidateOrchestratorProfile validates the orchestrator profile and the addons dependent on the version of the orchestrator
+func (a *Properties) ValidateOrchestratorProfile(isUpdate bool) error {
 	o := a.OrchestratorProfile
 	// On updates we only need to make sure there is a supported patch version for the minor version
 	if !isUpdate {
@@ -328,14 +329,10 @@ func (a *Properties) validateOrchestratorProfile(isUpdate bool) error {
 		return errors.Errorf("DcosConfig can be specified only when OrchestratorType is DCOS")
 	}
 
-	if e := a.validateContainerRuntime(); e != nil {
-		return e
-	}
-
-	return nil
+	return a.validateContainerRuntime()
 }
 
-func (a *Properties) validateMasterProfile() error {
+func (a *Properties) validateMasterProfile(isUpdate bool) error {
 	m := a.MasterProfile
 
 	if a.OrchestratorProfile.OrchestratorType == Kubernetes {
@@ -367,6 +364,15 @@ func (a *Properties) validateMasterProfile() error {
 	if m.SinglePlacementGroup != nil && m.AvailabilityProfile == AvailabilitySet {
 		return errors.New("singlePlacementGroup is only supported with VirtualMachineScaleSets")
 	}
+
+	distroValues := DistroValues
+	if isUpdate {
+		distroValues = append(distroValues, AKSDockerEngine)
+	}
+	if !validateDistro(m.Distro, distroValues) {
+		return errors.Errorf("The %s distro is not supported", m.Distro)
+	}
+
 	return common.ValidateDNSPrefix(m.DNSPrefix)
 }
 
@@ -392,6 +398,18 @@ func (a *Properties) validateAgentPoolProfiles(isUpdate bool) error {
 		if to.Bool(agentPoolProfile.AcceleratedNetworkingEnabled) || to.Bool(agentPoolProfile.AcceleratedNetworkingEnabledWindows) {
 			if e := validatePoolAcceleratedNetworking(agentPoolProfile.VMSize); e != nil {
 				return e
+			}
+		}
+
+		if to.Bool(agentPoolProfile.VMSSOverProvisioningEnabled) {
+			if agentPoolProfile.AvailabilityProfile != VirtualMachineScaleSets {
+				return errors.Errorf("You have specified VMSS Overprovisioning in agent pool %s, but you did not specify VMSS", agentPoolProfile.Name)
+			}
+		}
+
+		if to.Bool(agentPoolProfile.EnableVMSSNodePublicIP) {
+			if agentPoolProfile.AvailabilityProfile != VirtualMachineScaleSets {
+				return errors.Errorf("You have enabled VMSS node public IP in agent pool %s, but you did not specify VMSS", agentPoolProfile.Name)
 			}
 		}
 
@@ -434,6 +452,14 @@ func (a *Properties) validateAgentPoolProfiles(isUpdate bool) error {
 			if a.AgentPoolProfiles[i].SinglePlacementGroup != nil && a.AgentPoolProfiles[i].AvailabilityProfile == AvailabilitySet {
 				return errors.New("singlePlacementGroup is only supported with VirtualMachineScaleSets")
 			}
+
+			distroValues := DistroValues
+			if isUpdate {
+				distroValues = append(distroValues, AKSDockerEngine)
+			}
+			if !validateDistro(agentPoolProfile.Distro, distroValues) {
+				return errors.Errorf("The %s distro is not supported", agentPoolProfile.Distro)
+			}
 		}
 
 		if e := agentPoolProfile.validateWindows(a.OrchestratorProfile, a.WindowsProfile, isUpdate); agentPoolProfile.OSType == Windows && e != nil {
@@ -467,8 +493,10 @@ func (a *Properties) validateZones() error {
 }
 
 func (a *Properties) validateLinuxProfile() error {
-	if e := validate.Var(a.LinuxProfile.SSH.PublicKeys[0].KeyData, "required"); e != nil {
-		return errors.New("KeyData in LinuxProfile.SSH.PublicKeys cannot be empty string")
+	for _, publicKey := range a.LinuxProfile.SSH.PublicKeys {
+		if e := validate.Var(publicKey.KeyData, "required"); e != nil {
+			return errors.New("KeyData in LinuxProfile.SSH.PublicKeys cannot be empty string")
+		}
 	}
 	return validateKeyVaultSecrets(a.LinuxProfile.Secrets, false)
 }
@@ -525,6 +553,21 @@ func (a *Properties) validateAddons() error {
 					if IsNSeriesSKU && sv.LT(minVersion) {
 						return errors.New("NVIDIA Device Plugin add-on can only be used Kubernetes 1.10 or above. Please specify \"orchestratorRelease\": \"1.10\"")
 					}
+					if a.HasCoreOS() {
+						return errors.New("NVIDIA Device Plugin add-on not currently supported on coreos. Please use node pools with Ubuntu only")
+					}
+				}
+			case "blobfuse-flexvolume":
+				if to.Bool(addon.Enabled) && a.HasCoreOS() {
+					return errors.New("flexvolume add-ons not currently supported on coreos distro. Please use Ubuntu")
+				}
+			case "smb-flexvolume":
+				if to.Bool(addon.Enabled) && a.HasCoreOS() {
+					return errors.New("flexvolume add-ons not currently supported on coreos distro. Please use Ubuntu")
+				}
+			case "keyvault-flexvolume":
+				if to.Bool(addon.Enabled) && a.HasCoreOS() {
+					return errors.New("flexvolume add-ons not currently supported on coreos distro. Please use Ubuntu")
 				}
 			}
 		}
@@ -763,16 +806,6 @@ func (a *AgentPoolProfile) validateCustomNodeLabels(orchestratorType string) err
 	return nil
 }
 
-func (a *AgentPoolProfile) validateKubernetesDistro() error {
-	switch a.Distro {
-	case AKS:
-		if a.IsNSeriesSKU() {
-			return errors.Errorf("The %s VM SKU must use the %s Distro as they require the docker-engine container runtime", a.VMSize, AKSDockerEngine)
-		}
-	}
-	return nil
-}
-
 func validateVMSS(o *OrchestratorProfile, isUpdate bool, storageProfile string) error {
 	if o.OrchestratorType == Kubernetes {
 		version := common.RationalizeReleaseAndVersion(
@@ -867,10 +900,8 @@ func (a *AgentPoolProfile) validateOrchestratorSpecificProperties(orchestratorTy
 		} else {
 			a.Ports = []int{80, 443, 8080}
 		}
-	} else {
-		if e := validate.Var(a.Ports, "len=0"); e != nil {
-			return errors.Errorf("AgentPoolProfile.Ports must be empty when AgentPoolProfile.DNSPrefix is empty for Orchestrator: %s", string(orchestratorType))
-		}
+	} else if e := validate.Var(a.Ports, "len=0"); e != nil {
+		return errors.Errorf("AgentPoolProfile.Ports must be empty when AgentPoolProfile.DNSPrefix is empty for Orchestrator: %s", orchestratorType)
 	}
 
 	if len(a.DiskSizesGB) > 0 {
@@ -1082,6 +1113,17 @@ func (k *KubernetesConfig) Validate(k8sVersion string, hasWindows bool) error {
 		return e
 	}
 
+	// Validate containerd scenarios
+	if k.ContainerRuntime == Docker || k.ContainerRuntime == "" {
+		if k.ContainerdVersion != "" {
+			return errors.Errorf("containerdVersion is only valid in a non-docker context, use %s, %s, or %s containerRuntime values instead if you wish to provide a containerdVersion", Containerd, ClearContainers, KataContainers)
+		}
+	} else {
+		if e := validateContainerdVersion(k.ContainerdVersion); e != nil {
+			return e
+		}
+	}
+
 	if k.UseCloudControllerManager != nil && *k.UseCloudControllerManager || k.CustomCcmImage != "" {
 		sv, err := semver.Make(k8sVersion)
 		if err != nil {
@@ -1104,6 +1146,24 @@ func (k *KubernetesConfig) Validate(k8sVersion string, hasWindows bool) error {
 	}
 	if e := k.validateNetworkPluginPlusPolicy(); e != nil {
 		return e
+	}
+	return k.validatePrivateAzureRegistryServer()
+}
+
+func (k *KubernetesConfig) validatePrivateAzureRegistryServer() error {
+
+	// Check PrivateAzureRegistryServer has a valid value.
+	valid := false
+	if k.PrivateAzureRegistryServer != "" {
+		if k.CustomHyperkubeImage != "" {
+			valid = true
+		}
+	} else {
+		valid = true
+	}
+
+	if !valid {
+		return errors.Errorf("customHyperkubeImage must be provided when privateAzureRegistryServer is provided")
 	}
 
 	return nil
@@ -1150,7 +1210,7 @@ func (k *KubernetesConfig) validateNetworkPolicy(k8sVersion string, hasWindows b
 	}
 
 	// Temporary safety check, to be removed when Windows support is added.
-	if (networkPolicy == "calico" || networkPolicy == "cilium" || networkPolicy == "flannel") && hasWindows {
+	if (networkPolicy == "calico" || networkPolicy == NetworkPolicyCilium || networkPolicy == "flannel") && hasWindows {
 		return errors.Errorf("networkPolicy '%s' is not supporting windows agents", networkPolicy)
 	}
 
@@ -1196,7 +1256,7 @@ func (a *Properties) validateContainerRuntime() error {
 	}
 
 	// Make sure we don't use unsupported container runtimes on windows.
-	if (containerRuntime == "clear-containers" || containerRuntime == "kata-containers" || containerRuntime == "containerd") && a.HasWindows() {
+	if (containerRuntime == ClearContainers || containerRuntime == KataContainers || containerRuntime == Containerd) && a.HasWindows() {
 		return errors.Errorf("containerRuntime %q is not supporting windows agents", containerRuntime)
 	}
 
@@ -1231,9 +1291,9 @@ func validatePoolOSType(os OSType) error {
 	return nil
 }
 
-func validatePoolAcceleratedNetworking(VMSize string) error {
-	if !helpers.AcceleratedNetworkingSupported(VMSize) {
-		return fmt.Errorf("AgentPoolProfile.vmsize %s does not support AgentPoolProfile.acceleratedNetworking", VMSize)
+func validatePoolAcceleratedNetworking(vmSize string) error {
+	if !helpers.AcceleratedNetworkingSupported(vmSize) {
+		return errors.Errorf("AgentPoolProfile.vmsize %s does not support AgentPoolProfile.acceleratedNetworking", vmSize)
 	}
 	return nil
 }
@@ -1280,6 +1340,29 @@ func validateEtcdVersion(etcdVersion string) error {
 	return errors.Errorf("Invalid etcd version \"%s\", please use one of the following versions: %s", etcdVersion, etcdValidVersions)
 }
 
+func validateContainerdVersion(containerdVersion string) error {
+	// "" is a valid containerd that maps to DefaultContainerdVersion
+	if containerdVersion == "" {
+		return nil
+	}
+	for _, ver := range containerdValidVersions {
+		if ver == containerdVersion {
+			return nil
+		}
+	}
+	return errors.Errorf("Invalid containerd version \"%s\", please use one of the following versions: %s", containerdVersion, containerdValidVersions)
+}
+
+// Check that distro has a valid value
+func validateDistro(distro Distro, distroValues []Distro) bool {
+	for _, d := range distroValues {
+		if distro == d {
+			return true
+		}
+	}
+	return false
+}
+
 func (i *ImageReference) validateImageNameAndGroup() error {
 	if i.Name == "" && i.ResourceGroup != "" {
 		return errors.New("imageName needs to be specified when imageResourceGroup is provided")
@@ -1288,4 +1371,69 @@ func (i *ImageReference) validateImageNameAndGroup() error {
 		return errors.New("imageResourceGroup needs to be specified when imageName is provided")
 	}
 	return nil
+}
+
+func (cs *ContainerService) validateCustomCloudProfile() error {
+	a := cs.Properties
+	if a.CustomCloudProfile != nil {
+		if a.CustomCloudProfile.PortalURL == "" {
+			return errors.New("portalURL needs to be specified when CustomCloudProfile is provided")
+		}
+		if !strings.HasPrefix(a.CustomCloudProfile.PortalURL, fmt.Sprintf("https://portal.%s.", cs.Location)) {
+			return fmt.Errorf("portalURL needs to start with https://portal.%s. ", cs.Location)
+		}
+		if a.CustomCloudProfile.AuthenticationMethod != "" && !(a.CustomCloudProfile.AuthenticationMethod == ClientSecretAuthMethod || a.CustomCloudProfile.AuthenticationMethod == ClientCertificateAuthMethod) {
+			return errors.Errorf("authenticationMethod allowed values are '%s' and '%s'", ClientCertificateAuthMethod, ClientSecretAuthMethod)
+		}
+		if a.CustomCloudProfile.IdentitySystem != "" && !(a.CustomCloudProfile.IdentitySystem == AzureADIdentitySystem || a.CustomCloudProfile.IdentitySystem == ADFSIdentitySystem) {
+			return errors.Errorf("identitySystem allowed values are '%s' and '%s'", AzureADIdentitySystem, ADFSIdentitySystem)
+		}
+
+		dependenciesLocationValues := DependenciesLocationValues
+		if !validateDependenciesLocation(a.CustomCloudProfile.DependenciesLocation, dependenciesLocationValues) {
+			return errors.Errorf("The %s dependenciesLocation is not supported. The supported vaules are %s", a.CustomCloudProfile.DependenciesLocation, dependenciesLocationValues)
+		}
+	}
+	return nil
+}
+
+// Validate implements validation for ContainerService
+func (cs *ContainerService) Validate(isUpdate bool) error {
+	if e := cs.validateProperties(); e != nil {
+		return e
+	}
+	if e := cs.validateLocation(); e != nil {
+		return e
+	}
+	if e := cs.validateCustomCloudProfile(); e != nil {
+		return e
+	}
+	if e := cs.Properties.validate(isUpdate); e != nil {
+		return e
+	}
+	return nil
+}
+
+func (cs *ContainerService) validateLocation() error {
+	if cs.Properties != nil && cs.Properties.IsAzureStackCloud() && cs.Location == "" {
+		return errors.New("missing ContainerService Location")
+	}
+	return nil
+}
+
+func (cs *ContainerService) validateProperties() error {
+	if cs.Properties == nil {
+		return errors.New("missing ContainerService Properties")
+	}
+	return nil
+}
+
+// Check that dependenciesLocation has a valid value
+func validateDependenciesLocation(dependenciesLocation DependenciesLocation, dependenciesLocationValues []DependenciesLocation) bool {
+	for _, d := range dependenciesLocationValues {
+		if dependenciesLocation == d {
+			return true
+		}
+	}
+	return false
 }

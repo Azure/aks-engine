@@ -36,6 +36,8 @@ func GetAzureLocations() []string {
 		"koreasouth",
 		"northcentralus",
 		"northeurope",
+		"southafricanorth",
+		"southafricawest",
 		"southcentralus",
 		"southeastasia",
 		"southindia",
@@ -202,11 +204,19 @@ func GetDCOSMasterAllowedSizes() string {
         "Standard_GS5-16",
         "Standard_GS5-8",
         "Standard_H16",
+        "Standard_H16_Promo",
         "Standard_H16m",
+        "Standard_H16m_Promo",
         "Standard_H16mr",
+        "Standard_H16mr_Promo",
         "Standard_H16r",
+        "Standard_H16r_Promo",
         "Standard_H8",
+        "Standard_H8_Promo",
         "Standard_H8m",
+        "Standard_H8m_Promo",
+        "Standard_HB60rs",
+        "Standard_HC44rs",
         "Standard_L16s",
         "Standard_L16s_v2",
         "Standard_L32s",
@@ -241,15 +251,19 @@ func GetDCOSMasterAllowedSizes() string {
         "Standard_M8-4ms",
         "Standard_M8ms",
         "Standard_NC12",
+        "Standard_NC12_Promo",
         "Standard_NC12s_v2",
         "Standard_NC12s_v3",
         "Standard_NC24",
+        "Standard_NC24_Promo",
         "Standard_NC24r",
+        "Standard_NC24r_Promo",
         "Standard_NC24rs_v2",
         "Standard_NC24rs_v3",
         "Standard_NC24s_v2",
         "Standard_NC24s_v3",
         "Standard_NC6",
+        "Standard_NC6_Promo",
         "Standard_NC6s_v2",
         "Standard_NC6s_v3",
         "Standard_ND12s",
@@ -257,10 +271,16 @@ func GetDCOSMasterAllowedSizes() string {
         "Standard_ND24s",
         "Standard_ND6s",
         "Standard_NV12",
+        "Standard_NV12_Promo",
         "Standard_NV12s_v2",
+        "Standard_NV12s_v3",
         "Standard_NV24",
+        "Standard_NV24_Promo",
         "Standard_NV24s_v2",
+        "Standard_NV24s_v3",
+        "Standard_NV48s_v3",
         "Standard_NV6",
+        "Standard_NV6_Promo",
         "Standard_NV6s_v2",
         "Standard_PB12s",
         "Standard_PB24s",
@@ -291,6 +311,7 @@ func GetKubernetesAllowedSizes() string {
         "Standard_A8_v2",
         "Standard_A8m_v2",
         "Standard_A9",
+        "Standard_B1ls",
         "Standard_B1ms",
         "Standard_B1s",
         "Standard_B2ms",
@@ -427,11 +448,19 @@ func GetKubernetesAllowedSizes() string {
         "Standard_GS5-16",
         "Standard_GS5-8",
         "Standard_H16",
+        "Standard_H16_Promo",
         "Standard_H16m",
+        "Standard_H16m_Promo",
         "Standard_H16mr",
+        "Standard_H16mr_Promo",
         "Standard_H16r",
+        "Standard_H16r_Promo",
         "Standard_H8",
+        "Standard_H8_Promo",
         "Standard_H8m",
+        "Standard_H8m_Promo",
+        "Standard_HB60rs",
+        "Standard_HC44rs",
         "Standard_L16s",
         "Standard_L16s_v2",
         "Standard_L32s",
@@ -466,15 +495,19 @@ func GetKubernetesAllowedSizes() string {
         "Standard_M8-4ms",
         "Standard_M8ms",
         "Standard_NC12",
+        "Standard_NC12_Promo",
         "Standard_NC12s_v2",
         "Standard_NC12s_v3",
         "Standard_NC24",
+        "Standard_NC24_Promo",
         "Standard_NC24r",
+        "Standard_NC24r_Promo",
         "Standard_NC24rs_v2",
         "Standard_NC24rs_v3",
         "Standard_NC24s_v2",
         "Standard_NC24s_v3",
         "Standard_NC6",
+        "Standard_NC6_Promo",
         "Standard_NC6s_v2",
         "Standard_NC6s_v3",
         "Standard_ND12s",
@@ -482,10 +515,16 @@ func GetKubernetesAllowedSizes() string {
         "Standard_ND24s",
         "Standard_ND6s",
         "Standard_NV12",
+        "Standard_NV12_Promo",
         "Standard_NV12s_v2",
+        "Standard_NV12s_v3",
         "Standard_NV24",
+        "Standard_NV24_Promo",
         "Standard_NV24s_v2",
+        "Standard_NV24s_v3",
+        "Standard_NV48s_v3",
         "Standard_NV6",
+        "Standard_NV6_Promo",
         "Standard_NV6s_v2",
         "Standard_PB12s",
         "Standard_PB24s",
@@ -553,6 +592,9 @@ func GetSizeMap() string {
     },
     "Standard_A9": {
       "storageAccountType": "Standard_LRS"
+    },
+    "Standard_B1ls": {
+      "storageAccountType": "Premium_LRS"
     },
     "Standard_B1ms": {
       "storageAccountType": "Premium_LRS"
@@ -962,20 +1004,44 @@ func GetSizeMap() string {
     "Standard_H16": {
       "storageAccountType": "Standard_LRS"
     },
+    "Standard_H16_Promo": {
+      "storageAccountType": "Standard_LRS"
+    },
     "Standard_H16m": {
+      "storageAccountType": "Standard_LRS"
+    },
+    "Standard_H16m_Promo": {
       "storageAccountType": "Standard_LRS"
     },
     "Standard_H16mr": {
       "storageAccountType": "Standard_LRS"
     },
+    "Standard_H16mr_Promo": {
+      "storageAccountType": "Standard_LRS"
+    },
     "Standard_H16r": {
+      "storageAccountType": "Standard_LRS"
+    },
+    "Standard_H16r_Promo": {
       "storageAccountType": "Standard_LRS"
     },
     "Standard_H8": {
       "storageAccountType": "Standard_LRS"
     },
+    "Standard_H8_Promo": {
+      "storageAccountType": "Standard_LRS"
+    },
     "Standard_H8m": {
       "storageAccountType": "Standard_LRS"
+    },
+    "Standard_H8m_Promo": {
+      "storageAccountType": "Standard_LRS"
+    },
+    "Standard_HB60rs": {
+      "storageAccountType": "Premium_LRS"
+    },
+    "Standard_HC44rs": {
+      "storageAccountType": "Premium_LRS"
     },
     "Standard_L16s": {
       "storageAccountType": "Premium_LRS"
@@ -1079,6 +1145,9 @@ func GetSizeMap() string {
     "Standard_NC12": {
       "storageAccountType": "Standard_LRS"
     },
+    "Standard_NC12_Promo": {
+      "storageAccountType": "Standard_LRS"
+    },
     "Standard_NC12s_v2": {
       "storageAccountType": "Premium_LRS"
     },
@@ -1088,7 +1157,13 @@ func GetSizeMap() string {
     "Standard_NC24": {
       "storageAccountType": "Standard_LRS"
     },
+    "Standard_NC24_Promo": {
+      "storageAccountType": "Standard_LRS"
+    },
     "Standard_NC24r": {
+      "storageAccountType": "Standard_LRS"
+    },
+    "Standard_NC24r_Promo": {
       "storageAccountType": "Standard_LRS"
     },
     "Standard_NC24rs_v2": {
@@ -1104,6 +1179,9 @@ func GetSizeMap() string {
       "storageAccountType": "Premium_LRS"
     },
     "Standard_NC6": {
+      "storageAccountType": "Standard_LRS"
+    },
+    "Standard_NC6_Promo": {
       "storageAccountType": "Standard_LRS"
     },
     "Standard_NC6s_v2": {
@@ -1127,16 +1205,34 @@ func GetSizeMap() string {
     "Standard_NV12": {
       "storageAccountType": "Standard_LRS"
     },
+    "Standard_NV12_Promo": {
+      "storageAccountType": "Standard_LRS"
+    },
     "Standard_NV12s_v2": {
+      "storageAccountType": "Premium_LRS"
+    },
+    "Standard_NV12s_v3": {
       "storageAccountType": "Premium_LRS"
     },
     "Standard_NV24": {
       "storageAccountType": "Standard_LRS"
     },
+    "Standard_NV24_Promo": {
+      "storageAccountType": "Standard_LRS"
+    },
     "Standard_NV24s_v2": {
       "storageAccountType": "Premium_LRS"
     },
+    "Standard_NV24s_v3": {
+      "storageAccountType": "Premium_LRS"
+    },
+    "Standard_NV48s_v3": {
+      "storageAccountType": "Premium_LRS"
+    },
     "Standard_NV6": {
+      "storageAccountType": "Standard_LRS"
+    },
+    "Standard_NV6_Promo": {
       "storageAccountType": "Standard_LRS"
     },
     "Standard_NV6s_v2": {

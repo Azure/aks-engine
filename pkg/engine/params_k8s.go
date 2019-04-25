@@ -28,6 +28,11 @@ func assignKubernetesParameters(properties *api.Properties, parametersMap params
 		k8sComponents := api.K8sComponentsByVersionMap[k8sVersion]
 		kubernetesConfig := orchestratorProfile.KubernetesConfig
 		kubernetesImageBase := kubernetesConfig.KubernetesImageBase
+		hyperKubeImageBase := kubernetesConfig.KubernetesImageBase
+
+		if properties.IsAzureStackCloud() {
+			kubernetesImageBase = cloudSpecConfig.KubernetesSpecConfig.KubernetesImageBase
+		}
 
 		if kubernetesConfig != nil {
 			if to.Bool(kubernetesConfig.UseCloudControllerManager) {
@@ -39,13 +44,16 @@ func assignKubernetesParameters(properties *api.Properties, parametersMap params
 				addValue(parametersMap, "kubernetesCcmImageSpec", kubernetesCcmSpec)
 			}
 
-			kubernetesHyperkubeSpec := kubernetesImageBase + k8sComponents["hyperkube"]
+			kubernetesHyperkubeSpec := hyperKubeImageBase + k8sComponents["hyperkube"]
 			if kubernetesConfig.CustomHyperkubeImage != "" {
 				kubernetesHyperkubeSpec = kubernetesConfig.CustomHyperkubeImage
 			}
 
 			addValue(parametersMap, "kubeDNSServiceIP", kubernetesConfig.DNSServiceIP)
 			addValue(parametersMap, "kubernetesHyperkubeSpec", kubernetesHyperkubeSpec)
+			if kubernetesConfig.PrivateAzureRegistryServer != "" {
+				addValue(parametersMap, "privateAzureRegistryServer", kubernetesConfig.PrivateAzureRegistryServer)
+			}
 			addValue(parametersMap, "kubernetesAddonManagerSpec", kubernetesImageBase+k8sComponents["addonmanager"])
 			if orchestratorProfile.NeedsExecHealthz() {
 				addValue(parametersMap, "kubernetesExecHealthzSpec", kubernetesImageBase+k8sComponents["exechealthz"])
@@ -74,7 +82,7 @@ func assignKubernetesParameters(properties *api.Properties, parametersMap params
 			} else {
 				addValue(parametersMap, "kubernetesClusterAutoscalerEnabled", false)
 			}
-			if kubernetesConfig.LoadBalancerSku == "Standard" {
+			if kubernetesConfig.LoadBalancerSku == "Standard" && !to.Bool(kubernetesConfig.PrivateCluster.Enabled) {
 				random := rand.New(rand.NewSource(time.Now().UnixNano()))
 				elbsvcName := random.Int()
 				addValue(parametersMap, "kuberneteselbsvcname", fmt.Sprintf("%d", elbsvcName))
@@ -143,23 +151,27 @@ func assignKubernetesParameters(properties *api.Properties, parametersMap params
 
 		if kubernetesConfig == nil ||
 			!kubernetesConfig.UseManagedIdentity {
+			servicePrincipalProfile := properties.ServicePrincipalProfile
 
-			addValue(parametersMap, "servicePrincipalClientId", properties.ServicePrincipalProfile.ClientID)
-			if properties.ServicePrincipalProfile.KeyvaultSecretRef != nil {
-				addKeyvaultReference(parametersMap, "servicePrincipalClientSecret",
-					properties.ServicePrincipalProfile.KeyvaultSecretRef.VaultID,
-					properties.ServicePrincipalProfile.KeyvaultSecretRef.SecretName,
-					properties.ServicePrincipalProfile.KeyvaultSecretRef.SecretVersion)
-			} else {
-				addValue(parametersMap, "servicePrincipalClientSecret", properties.ServicePrincipalProfile.Secret)
-			}
-
-			if kubernetesConfig != nil && to.Bool(kubernetesConfig.EnableEncryptionWithExternalKms) {
-				if kubernetesConfig.KeyVaultSku != "" {
-					addValue(parametersMap, "clusterKeyVaultSku", kubernetesConfig.KeyVaultSku)
+			if servicePrincipalProfile != nil {
+				addValue(parametersMap, "servicePrincipalClientId", servicePrincipalProfile.ClientID)
+				keyVaultSecretRef := servicePrincipalProfile.KeyvaultSecretRef
+				if keyVaultSecretRef != nil {
+					addKeyvaultReference(parametersMap, "servicePrincipalClientSecret",
+						keyVaultSecretRef.VaultID,
+						keyVaultSecretRef.SecretName,
+						keyVaultSecretRef.SecretVersion)
+				} else {
+					addValue(parametersMap, "servicePrincipalClientSecret", servicePrincipalProfile.Secret)
 				}
-				if !kubernetesConfig.UseManagedIdentity && properties.ServicePrincipalProfile.ObjectID != "" {
-					addValue(parametersMap, "servicePrincipalObjectId", properties.ServicePrincipalProfile.ObjectID)
+
+				if kubernetesConfig != nil && to.Bool(kubernetesConfig.EnableEncryptionWithExternalKms) {
+					if kubernetesConfig.KeyVaultSku != "" {
+						addValue(parametersMap, "clusterKeyVaultSku", kubernetesConfig.KeyVaultSku)
+					}
+					if !kubernetesConfig.UseManagedIdentity && servicePrincipalProfile.ObjectID != "" {
+						addValue(parametersMap, "servicePrincipalObjectId", servicePrincipalProfile.ObjectID)
+					}
 				}
 			}
 		}
@@ -232,11 +244,12 @@ func assignKubernetesParameters(properties *api.Properties, parametersMap params
 			addValue(parametersMap, "kubernetesEndpoint", properties.HostedMasterProfile.FQDN)
 		}
 
-		// GPU nodes need docker-engine as the container runtime
-		if properties.HasNSeriesSKU() {
-			addValue(parametersMap, "dockerEngineDownloadRepo", cloudSpecConfig.DockerSpecConfig.DockerEngineRepo)
-		} else {
-			addValue(parametersMap, "dockerEngineDownloadRepo", "")
+		if properties.OrchestratorProfile.KubernetesConfig.MobyVersion != "" {
+			addValue(parametersMap, "mobyVersion", properties.OrchestratorProfile.KubernetesConfig.MobyVersion)
+		}
+
+		if properties.OrchestratorProfile.KubernetesConfig.ContainerdVersion != "" {
+			addValue(parametersMap, "containerdVersion", properties.OrchestratorProfile.KubernetesConfig.ContainerdVersion)
 		}
 
 		if properties.AADProfile != nil {

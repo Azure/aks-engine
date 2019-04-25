@@ -4,10 +4,6 @@
 package cmd
 
 import (
-	"fmt"
-
-	"github.com/Azure/aks-engine/pkg/api"
-	"github.com/Azure/aks-engine/pkg/helpers"
 	"github.com/spf13/cobra"
 )
 
@@ -17,44 +13,22 @@ const (
 	orchestratorsLongDescription  = "Display supported versions and upgrade versions for each orchestrator"
 )
 
-type orchestratorsCmd struct {
-	// user input
-	orchestrator string
-	version      string
-	windows      bool
-}
-
 func newOrchestratorsCmd() *cobra.Command {
-	oc := orchestratorsCmd{}
+	gvc := getVersionsCmd{}
 
 	command := &cobra.Command{
-		Use:   orchestratorsName,
-		Short: orchestratorsShortDescription,
-		Long:  orchestratorsLongDescription,
-		RunE: func(cmd *cobra.Command, args []string) error {
-			return oc.run(cmd, args)
-		},
+		Use:    orchestratorsName,
+		Short:  orchestratorsShortDescription,
+		Long:   orchestratorsLongDescription,
+		RunE:   gvc.run,
+		Hidden: true,
 	}
 
 	f := command.Flags()
-	f.StringVar(&oc.orchestrator, "orchestrator", "", "orchestrator name (optional) ")
-	f.StringVar(&oc.version, "version", "", "orchestrator version (optional)")
-	f.BoolVar(&oc.windows, "windows", false, "orchestrator platform (optional, applies to Kubernetes only)")
+	f.StringVar(&gvc.orchestrator, "orchestrator", "", "orchestrator name (optional) ")
+	f.StringVar(&gvc.version, "version", "", "orchestrator version (optional)")
+	f.BoolVar(&gvc.windows, "windows", false, "orchestrator platform (optional, applies to Kubernetes only)")
+	gvc.output = "json" // output is always JSON
 
 	return command
-}
-
-func (oc *orchestratorsCmd) run(cmd *cobra.Command, args []string) error {
-	orchs, err := api.GetOrchestratorVersionProfileListVLabs(oc.orchestrator, oc.version, oc.windows)
-	if err != nil {
-		return err
-	}
-
-	data, err := helpers.JSONMarshalIndent(orchs, "", "  ", false)
-	if err != nil {
-		return err
-	}
-
-	fmt.Println(string(data))
-	return nil
 }

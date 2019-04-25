@@ -26,7 +26,7 @@ The Windows Server deployments default to 30GB for the OS drive (C:), which is n
 
 If you want to deploy a specific Windows Server version, you can. First, find available versions with `az vm image list` command:
 
-```
+```console
 $ az vm image list --publisher MicrosoftWindowsServer --all -o table
 
 Offer                    Publisher                      Sku                                             Urn                                                                                                            Version
@@ -50,46 +50,70 @@ You can use the Offer, Publisher and Sku to pick a specific version by adding `w
      },
 ```
 
+### Disabling automatic updates
 
+If you want to disable automatic Windows updates, you can use the `enableAutomaticUpdates` option.
+
+```json
+"windowsProfile": {
+            "adminUsername": "azureuser",
+            "adminPassword": "...",
+            "windowsPublisher": "MicrosoftWindowsServer",
+            "windowsOffer": "WindowsServerSemiAnnual",
+            "windowsSku": "Datacenter-Core-1809-with-Containers-smalldisk",
+            "enableAutomaticUpdates": false
+     },
+```
 
 ## More Examples
 
 ### Using Azure Files
 
-This example is modified after https://github.com/andyzhangx/Demo/tree/master/windows/azurefile/rs3
-
-For more background information, please check out  [Persistent Volumes](https://kubernetes.io/docs/concepts/storage/persistent-volumes/) in the Kubernetes documentation.
+For more background information, please check out [Persistent Volumes](https://kubernetes.io/docs/concepts/storage/persistent-volumes/) in the Kubernetes documentation.
 
 1. Create an azure file storage class
-```kubectl apply -f https://raw.githubusercontent.com/JiangtianLi/Examples/master/windows/azurefile/storageclass-azurefile.yaml```
+
+```console
+$ kubectl apply -f https://raw.githubusercontent.com/JiangtianLi/Examples/master/windows/azurefile/storageclass-azurefile.yaml
+```
 
 2. Make sure storageclass is created successfully
-```
-kubectl get storageclass/azurefile -o wide
+
+```console
+$ kubectl get storageclass/azurefile -o wide
 ```
 
 3. Create a pvc for azure file
-```kubectl apply -f https://raw.githubusercontent.com/JiangtianLi/Examples/master/windows/azurefile/pvc-azurefile.yaml```
+
+```console
+kubectl apply -f https://raw.githubusercontent.com/JiangtianLi/Examples/master/windows/azurefile/pvc-azurefile.yaml
+```
 
 4. Make sure pvc is created successfully
-```
-kubectl get pvc/pvc-azurefile -o wide
+
+```console
+$ kubectl get pvc/pvc-azurefile -o wide
 ```
 
 5. Create a pod with azure file pvc
-```kubectl apply -f https://raw.githubusercontent.com/JiangtianLi/Examples/master/windows/azurefile/iis-azurefile.yaml```
+
+```console
+$ kubectl apply -f https://raw.githubusercontent.com/JiangtianLi/Examples/master/windows/azurefile/iis-azurefile.yaml
+```
 
 6. Watch the status of pod until its `STATUS` is `Running`
+
 ```
 kubectl get po/iis-azurefile -o wide -w
 ```
 
 7. Enter the pod container to validate
-```
+
+```console
 kubectl exec -it iis-azurefile -- cmd
 ```
 
-```
+```cmd
 C:\>dir c:\mnt\azure
  Volume in drive C has no label.
  Volume Serial Number is F878-8D74
@@ -100,47 +124,59 @@ C:\>dir c:\mnt\azure
 11/16/2017  09:45 PM    <DIR>          ..
                0 File(s)              0 bytes
                2 Dir(s)   5,368,709,120 bytes free
-
 ```
 
 ### Using Azure Disks
 
-This example is modified after https://github.com/andyzhangx/Demo/tree/master/windows/azuredisk/rs3
-
 1. Create an azure disk storage class
 
-option#1: k8s agent pool is based on blob disk VM
-```kubectl apply -f https://raw.githubusercontent.com/JiangtianLi/Examples/master/windows/azuredisk/storageclass-azuredisk.yaml```
+option #1: k8s agent pool is based on blob disk VM
 
-option#2: k8s agent pool is based on managed disk VM
-```kubectl apply -f https://raw.githubusercontent.com/JiangtianLi/Examples/master/windows/azuredisk/storageclass-azuredisk-managed.yaml```
+```console
+$ kubectl apply -f https://raw.githubusercontent.com/JiangtianLi/Examples/master/windows/azuredisk/storageclass-azuredisk.yaml
+```
+
+option #2: k8s agent pool is based on managed disk VM
+
+```console
+$ kubectl apply -f https://raw.githubusercontent.com/JiangtianLi/Examples/master/windows/azuredisk/storageclass-azuredisk-managed.yaml
+```
 
 2. make sure storageclass is created successfully
-```
-kubectl get storageclass/azuredisk -o wide
+
+```console
+$ kubectl get storageclass/azuredisk -o wide
 ```
 
 3. Create a pvc for azure disk
-```kubectl apply -f https://raw.githubusercontent.com/JiangtianLi/Examples/master/windows/azuredisk/pvc-azuredisk.yaml```
+
+```console
+$ kubectl apply -f https://raw.githubusercontent.com/JiangtianLi/Examples/master/windows/azuredisk/pvc-azuredisk.yaml
+```
 
 4. Make sure pvc is created successfully
-```
-kubectl get pvc/pvc-azuredisk -o wide
+
+```console
+$ kubectl get pvc/pvc-azuredisk -o wide
 ```
 
 5. Create a pod with azure disk pvc
-```kubectl apply -f https://raw.githubusercontent.com/JiangtianLi/Examples/master/windows/azuredisk/iis-azuredisk.yaml```
+
+```console
+$ kubectl apply -f https://raw.githubusercontent.com/JiangtianLi/Examples/master/windows/azuredisk/iis-azuredisk.yaml
+```
 
 6. Watch the status of pod until its `STATUS` is `Running`
-```
-watch kubectl get po/iis-azuredisk -o wide
+
+```console
+$ watch kubectl get po/iis-azuredisk -o wide
 ```
 
 7. Enter the pod container to validate
-```
-kubectl exec -it iis-azuredisk -- cmd
-```
 
+```console
+$ kubectl exec -it iis-azuredisk -- cmd
+```
 
 ### Multiple containers in a POD
 
@@ -198,34 +234,31 @@ spec:
         beta.kubernetes.io/os: windows
 ```
 
-
 ## Troubleshooting
 
 Windows support is still in **active development** with many changes each week. Read on for known per-version issues and for help troubleshooting if you run into problems.
 
 ### Finding logs
 
-To connect to a Windows node using Remote Desktop and get logs, please read over this topic in the main [troubleshooting](troubleshooting.md#connecting-to-windows-nodes) page first.
+To connect to a Windows node using Remote Desktop and get logs, please read over this topic in the main [troubleshooting](../howto/troubleshooting.md#connecting-to-windows-nodes) page first.
 
 ### Checking versions
 
-Please be sure to include this info with any Windows bug reports.
+Please be sure to include this info with any Windows bug reports:
 
-Kubernetes
-`kubectl version`
--	“Server Version”
-`kubectl describe node <windows node>`
--	“kernel version”
--	Also note the IP Address for the next step, but you don't need to share it
+1. Basic version information:
 
-The Azure CNI plugin version and configuration is stored in `C:\k\azurecni\netconf\10-azure.conflist`. Get
--	mode
--	dns.Nameservers
--	dns.Search
-
-Get the Azure CNI build by running `C:\k\azurecni\bin\azure-vnet.exe --help`. It will dump some errors, but the version such as ` v1.0.4-1-gf0f090e` will be listed.
-
+```console
+$ kubectl version
+$ kubectl describe node <windows node>
 ```
+
+Also note any IP Addresses for the next step, but you don't need to share it
+
+1. The Azure CNI plugin version and configuration that is stored in `C:\k\azurecni\netconf\10-azure.conflist`
+1. The Azure CNI build by running `C:\k\azurecni\bin\azure-vnet.exe --help`. It will dump some errors, but the version such as `v1.0.4-1-gf0f090e` will be listed.
+
+```text
 ...
 2018/05/23 01:28:57 "Start Flag false CniSucceeded false Name CNI Version v1.0.4-1-gf0f090e ErrorMessage required env variables missing vnet []
 ...
@@ -233,11 +266,10 @@ Get the Azure CNI build by running `C:\k\azurecni\bin\azure-vnet.exe --help`. It
 
 ### Known Issues per Version
 
-
-AKS Engine | Windows Server |	Kubernetes | Azure CNI | Notes
+AKS Engine | Windows Server | Kubernetes | Azure CNI | Notes
 -----------|----------------|------------|-----------|----------
-V0.16.2	| Windows Server version 1709 (10.0.16299.____)	| V1.9.7 | ? | DNS resolution is not configured
-V0.17.0 | Windows Server version 1709	| V1.10.2 | v1.0.4 | Acs-engine version 0.17 defaults to Windows Server version 1803. You can override it to use 1709 instead [here](#choosing-the-windows-server-version). Manual workarounds needed on Windows for DNS Server list, DNS search suffix
+V0.16.2 | Windows Server version 1709 (10.0.16299.____) | V1.9.7 | ? | DNS resolution is not configured
+V0.17.0 | Windows Server version 1709 | V1.10.2 | v1.0.4 | Acs-engine version 0.17 defaults to Windows Server version 1803. You can override it to use 1709 instead [here](#choosing-the-windows-server-version). Manual workarounds needed on Windows for DNS Server list, DNS search suffix
 V0.17.0 | Windows Server version 1803 (10.0.17134.1) | V1.10.2 | v1.0.4 | Manual workarounds needed on Windows for DNS Server list, DNS search suffix, and dropped packets
 v0.17.1 | Windows Server version 1709 | v1.10.3 | v1.0.4-1-gf0f090e | Manual workarounds needed on Windows for DNS Server list and DNS search suffix. This AKS Engine version defaults to Windows Server version 1803, but you can override it to use 1709 instead [here](#choosing-the-windows-server-version)
 v0.18.3 | Windows Server version 1803 | v1.10.3 | v1.0.6 | Pods cannot resolve cluster DNS names
@@ -249,31 +281,31 @@ v0.20.9 | Windows Server version 1803 | v1.10.6 | v1.0.11 | Pods cannot resolve 
 
 Affects: Windows Server version 1803 (10.0.17134.1)
 
-Issues: https://github.com/Azure/aks-engine/issues/3037
+Issues: <https://github.com/Azure/acs-engine/issues/3037>
 
 There is a problem with the “L2Tunnel” networking mode not forwarding packets correctly specific to Windows Server version 1803. Windows Server version 1709 is not affected.
 
 Workarounds:
 **Fixes are still in development.** A Windows hotfix is needed, and will be deployed by AKS Engine once it's ready. The hotfix will be removed later when it's in a future cumulative rollup.
 
-
 #### Pods cannot resolve public DNS names
 
 Affects: Some builds of Azure CNI
 
-Issues: https://github.com/Azure/azure-container-networking/issues/147
+Issues: <https://github.com/Azure/azure-container-networking/issues/147>
 
 Run `ipconfig /all` in a pod, and check that the first DNS server listed is within your cluster IP range (10.x.x.x). If it's not listed, or not the first in the list, then an azure-cni update is needed.
 
 Workaround:
 
-1.	Get the kube-dns service IP with `kubectl get svc -n kube-system kube-dns`
-2.  Cordon & drain the node
-3.	Modify `C:\k\azurecni\netconf\10-azure.conflist` and make it the first entry under Nameservers
-4.  Uncordon the node
+1. Get the kube-dns service IP with `kubectl get svc -n kube-system kube-dns`
+2. Cordon & drain the node
+3. Modify `C:\k\azurecni\netconf\10-azure.conflist` and make it the first entry under Nameservers
+4. Uncordon the node
 
 Example:
-```
+
+```json
 {
     "cniVersion":  "0.3.0",
     "name":  "azure",
@@ -294,21 +326,21 @@ Example:
                                                    "default.svc.cluster.local"
                                                ]
                                 },
-…
+    ...
 ```
 
 #### Pods cannot resolve cluster DNS names
 
 Affects: Azure CNI plugin <= 0.3.0
 
-Issues: https://github.com/Azure/azure-container-networking/issues/146
+Issues: <https://github.com/Azure/azure-container-networking/issues/146>
 
 If you can't resolve internal service names within the same namespace, run `ipconfig /all` in a pod, and check that the DNS Suffix Search List matches the form `<namespace>.svc.cluster.local`. An Azure CNI update is needed to set the right DNS suffix.
 
 Workaround:
-1.	Use the FQDN in DNS lookups such as `kubernetes.kube-system.svc.cluster.local`
-2.	Instead of DNS, use environment variables `* _SERVICE_HOST` and `*_SERVICE_PORT` to find service IPs and ports in the same namespace
 
+1. Use the FQDN in DNS lookups such as `kubernetes.kube-system.svc.cluster.local`
+1. Instead of DNS, use environment variables `* _SERVICE_HOST` and `*_SERVICE_PORT` to find service IPs and ports in the same namespace
 
 #### Pods cannot ping default route or internet IPs
 
@@ -317,8 +349,6 @@ Affects: All clusters deployed by aks-engine
 ICMP traffic is not routed between private Azure vNETs or to the internet.
 
 Workaround: test network connections with another protocol (TCP/UDP). For example `Invoke-WebRequest -UseBasicParsing https://www.azure.com` or `curl https://www.azure.com`.
-
-
 
 ## Cluster Troubleshooting
 

@@ -21,7 +21,17 @@ import (
 	"github.com/Azure/aks-engine/pkg/helpers"
 	"github.com/Azure/aks-engine/pkg/i18n"
 	"github.com/pkg/errors"
-	log "github.com/sirupsen/logrus"
+)
+
+const (
+	defaultOrchestrator  = Kubernetes
+	defaultAPIVersion    = vlabs.APIVersion
+	defaultMasterCount   = 3
+	defaultVMSize        = "Standard_DS2_v2"
+	defaultOSDiskSizeGB  = 200
+	defaultAgentPoolName = "agent"
+	defaultAgentCount    = 3
+	defaultAdminUser     = "azureuser"
 )
 
 // Apiloader represents the object that loads api model
@@ -40,28 +50,28 @@ func (a *Apiloader) LoadContainerServiceFromFile(jsonFile string, validate, isUp
 
 // LoadDefaultContainerServiceProperties loads the default API model
 func LoadDefaultContainerServiceProperties() (TypeMeta, *vlabs.Properties) {
-	return TypeMeta{APIVersion: vlabs.APIVersion}, &vlabs.Properties{
+	return TypeMeta{APIVersion: defaultAPIVersion}, &vlabs.Properties{
 		OrchestratorProfile: &vlabs.OrchestratorProfile{
-			OrchestratorType: "kubernetes",
+			OrchestratorType: defaultOrchestrator,
 		},
 		MasterProfile: &vlabs.MasterProfile{
-			Count:        3,
-			VMSize:       "Standard_DS2_v2",
-			OSDiskSizeGB: 200,
+			Count:        defaultMasterCount,
+			VMSize:       defaultVMSize,
+			OSDiskSizeGB: defaultOSDiskSizeGB,
 		},
 		AgentPoolProfiles: []*vlabs.AgentPoolProfile{
 			{
-				Name:         "agent",
-				Count:        3,
-				VMSize:       "Standard_DS2_v2",
-				OSDiskSizeGB: 200,
+				Name:         defaultAgentPoolName,
+				Count:        defaultAgentCount,
+				VMSize:       defaultVMSize,
+				OSDiskSizeGB: defaultOSDiskSizeGB,
 			},
 		},
-		LinuxProfile: &vlabs.LinuxProfile{AdminUsername: "azureuser"},
+		LinuxProfile: &vlabs.LinuxProfile{AdminUsername: defaultAdminUser},
 	}
 }
 
-// DeserializeContainerService loads an AKS Cluster API Model, validates it, and returns the unversioned representation
+// DeserializeContainerService loads an AKS Engine Cluster API Model, validates it, and returns the unversioned representation
 func (a *Apiloader) DeserializeContainerService(contents []byte, validate, isUpdate bool, existingContainerService *ContainerService) (*ContainerService, string, error) {
 	m := &TypeMeta{}
 	if err := json.Unmarshal(contents, &m); err != nil {
@@ -69,15 +79,15 @@ func (a *Apiloader) DeserializeContainerService(contents []byte, validate, isUpd
 	}
 
 	version := m.APIVersion
-	service, err := a.LoadContainerService(contents, version, validate, isUpdate, existingContainerService)
-	if service == nil || err != nil {
-		if isAgentPoolOnlyClusterJSON(contents) {
-			log.Info("No masterProfile: interpreting API model as agent pool only")
-			service, _, err := a.LoadContainerServiceForAgentPoolOnlyCluster(contents, version, validate, isUpdate, "", existingContainerService)
-			return service, version, err
-		}
+	var cs *ContainerService
+	var err error
+	switch version {
+	case "2017-08-31", "2018-03-31":
+		cs, _, err = a.LoadContainerServiceForAgentPoolOnlyCluster(contents, version, validate, isUpdate, "", existingContainerService)
+	default:
+		cs, err = a.LoadContainerService(contents, version, validate, isUpdate, existingContainerService)
 	}
-	return service, version, err
+	return cs, version, err
 }
 
 // LoadContainerService loads an AKS Cluster API Model, validates it, and returns the unversioned representation
@@ -202,13 +212,15 @@ func (a *Apiloader) LoadContainerService(
 				return nil, e
 			}
 		}
-		if containerService.Properties == nil {
-			return nil, errors.New("missing ContainerService Properties")
-		}
-		if e := containerService.Properties.Validate(isUpdate); validate && e != nil {
+		if e := containerService.Validate(isUpdate); validate && e != nil {
 			return nil, e
 		}
-		unversioned := ConvertVLabsContainerService(containerService, isUpdate)
+
+		var unversioned *ContainerService
+		var err error
+		if unversioned, err = ConvertVLabsContainerService(containerService, isUpdate); err != nil {
+			return nil, err
+		}
 		if curOrchVersion != "" &&
 			(containerService.Properties.OrchestratorProfile == nil ||
 				(containerService.Properties.OrchestratorProfile.OrchestratorVersion == "" &&

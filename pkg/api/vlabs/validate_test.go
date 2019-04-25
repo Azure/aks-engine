@@ -62,6 +62,65 @@ func Test_OrchestratorProfile_Validate(t *testing.T) {
 			},
 			expectedError: "Invalid etcd version \"1.0.0\", please use one of the following versions: [2.2.5 2.3.0 2.3.1 2.3.2 2.3.3 2.3.4 2.3.5 2.3.6 2.3.7 2.3.8 3.0.0 3.0.1 3.0.2 3.0.3 3.0.4 3.0.5 3.0.6 3.0.7 3.0.8 3.0.9 3.0.10 3.0.11 3.0.12 3.0.13 3.0.14 3.0.15 3.0.16 3.0.17 3.1.0 3.1.1 3.1.2 3.1.2 3.1.3 3.1.4 3.1.5 3.1.6 3.1.7 3.1.8 3.1.9 3.1.10 3.2.0 3.2.1 3.2.2 3.2.3 3.2.4 3.2.5 3.2.6 3.2.7 3.2.8 3.2.9 3.2.11 3.2.12 3.2.13 3.2.14 3.2.15 3.2.16 3.2.23 3.2.24 3.2.25 3.3.0 3.3.1 3.3.8 3.3.9 3.3.10]",
 		},
+		"should error when KubernetesConfig has invalid containerd version for containerd runtime": {
+			properties: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					OrchestratorType: "Kubernetes",
+					KubernetesConfig: &KubernetesConfig{
+						ContainerRuntime:  Containerd,
+						ContainerdVersion: "1.0.0",
+					},
+				},
+			},
+			expectedError: "Invalid containerd version \"1.0.0\", please use one of the following versions: [1.1.5 1.1.6 1.2.4]",
+		},
+		"should error when KubernetesConfig has invalid containerd version for clear-containers runtime": {
+			properties: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					OrchestratorType: "Kubernetes",
+					KubernetesConfig: &KubernetesConfig{
+						ContainerRuntime:  ClearContainers,
+						ContainerdVersion: "1.0.0",
+					},
+				},
+			},
+			expectedError: "Invalid containerd version \"1.0.0\", please use one of the following versions: [1.1.5 1.1.6 1.2.4]",
+		},
+		"should error when KubernetesConfig has invalid containerd version for kata-containers runtime": {
+			properties: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					OrchestratorType: "Kubernetes",
+					KubernetesConfig: &KubernetesConfig{
+						ContainerRuntime:  KataContainers,
+						ContainerdVersion: "1.0.0",
+					},
+				},
+			},
+			expectedError: "Invalid containerd version \"1.0.0\", please use one of the following versions: [1.1.5 1.1.6 1.2.4]",
+		},
+		"should error when KubernetesConfig has containerdVersion value for docker container runtime": {
+			properties: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					OrchestratorType: "Kubernetes",
+					KubernetesConfig: &KubernetesConfig{
+						ContainerRuntime:  Docker,
+						ContainerdVersion: "1.0.0",
+					},
+				},
+			},
+			expectedError: fmt.Sprintf("containerdVersion is only valid in a non-docker context, use %s, %s, or %s containerRuntime values instead if you wish to provide a containerdVersion", Containerd, ClearContainers, KataContainers),
+		},
+		"should error when KubernetesConfig has containerdVersion value for default (empty string) container runtime": {
+			properties: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					OrchestratorType: "Kubernetes",
+					KubernetesConfig: &KubernetesConfig{
+						ContainerdVersion: "1.0.0",
+					},
+				},
+			},
+			expectedError: fmt.Sprintf("containerdVersion is only valid in a non-docker context, use %s, %s, or %s containerRuntime values instead if you wish to provide a containerdVersion", Containerd, ClearContainers, KataContainers),
+		},
 		"should error when KubernetesConfig has enableAggregatedAPIs enabled with an invalid version": {
 			properties: &Properties{
 				OrchestratorProfile: &OrchestratorProfile{
@@ -78,7 +137,7 @@ func Test_OrchestratorProfile_Validate(t *testing.T) {
 			properties: &Properties{
 				OrchestratorProfile: &OrchestratorProfile{
 					OrchestratorType:    "Kubernetes",
-					OrchestratorVersion: "1.7.16",
+					OrchestratorVersion: "1.9.11",
 					KubernetesConfig: &KubernetesConfig{
 						EnableAggregatedAPIs: true,
 						EnableRbac:           &falseVal,
@@ -103,7 +162,7 @@ func Test_OrchestratorProfile_Validate(t *testing.T) {
 			properties: &Properties{
 				OrchestratorProfile: &OrchestratorProfile{
 					OrchestratorType:    "Kubernetes",
-					OrchestratorVersion: "1.7.16",
+					OrchestratorVersion: "1.9.11",
 					KubernetesConfig: &KubernetesConfig{
 						EnableDataEncryptionAtRest: &trueVal,
 						EtcdEncryptionKey:          "fakeEncryptionKey",
@@ -140,7 +199,7 @@ func Test_OrchestratorProfile_Validate(t *testing.T) {
 			properties: &Properties{
 				OrchestratorProfile: &OrchestratorProfile{
 					OrchestratorType:    "Kubernetes",
-					OrchestratorVersion: "1.7.16",
+					OrchestratorVersion: "1.9.11",
 					KubernetesConfig: &KubernetesConfig{
 						EnablePodSecurityPolicy: &trueVal,
 					},
@@ -148,18 +207,18 @@ func Test_OrchestratorProfile_Validate(t *testing.T) {
 			},
 			expectedError: "enablePodSecurityPolicy requires the enableRbac feature as a prerequisite",
 		},
-		"should error when KubernetesConfig has enablePodSecurity enabled with invalid version": {
+		"should error when KubernetesConfig has enablePodSecurity has a k8s version lesser than 1.8.0": {
 			properties: &Properties{
 				OrchestratorProfile: &OrchestratorProfile{
 					OrchestratorType:    "Kubernetes",
-					OrchestratorVersion: "1.7.16",
+					OrchestratorVersion: "1.6.9",
 					KubernetesConfig: &KubernetesConfig{
-						EnableRbac:              &trueVal,
 						EnablePodSecurityPolicy: &trueVal,
+						EnableRbac:              &trueVal,
 					},
 				},
 			},
-			expectedError: "enablePodSecurityPolicy is only supported in aks-engine for Kubernetes version 1.8.0 or greater; unable to validate for Kubernetes version 1.7.16",
+			expectedError: "enablePodSecurityPolicy is only supported in aks-engine for Kubernetes version 1.8.0 or greater; unable to validate for Kubernetes version 1.6.9",
 		},
 		"should not error with empty object": {
 			properties: &Properties{
@@ -257,7 +316,7 @@ func Test_OrchestratorProfile_Validate(t *testing.T) {
 		test := test
 		t.Run(testName, func(t *testing.T) {
 			t.Parallel()
-			err := test.properties.validateOrchestratorProfile(test.isUpdate)
+			err := test.properties.ValidateOrchestratorProfile(test.isUpdate)
 
 			if test.expectedError == "" && err == nil {
 				return
@@ -479,7 +538,7 @@ func Test_KubernetesConfig_Validate(t *testing.T) {
 
 		for _, validProxyModeValue := range []KubeProxyMode{KubeProxyModeIPTables, KubeProxyModeIPVS} {
 			c = KubernetesConfig{
-				ProxyMode: KubeProxyMode(validProxyModeValue),
+				ProxyMode: validProxyModeValue,
 			}
 
 			if err := c.Validate(k8sVersion, false); err != nil {
@@ -487,7 +546,7 @@ func Test_KubernetesConfig_Validate(t *testing.T) {
 			}
 
 			c = KubernetesConfig{
-				ProxyMode: KubeProxyMode(validProxyModeValue),
+				ProxyMode: validProxyModeValue,
 			}
 
 			if err := c.Validate(k8sVersion, false); err != nil {
@@ -507,14 +566,135 @@ func Test_KubernetesConfig_Validate(t *testing.T) {
 		}
 	}
 
-	trueVal := true
 	// Tests that apply to 1.8 and later releases
 	for _, k8sVersion := range common.GetVersionsGt(common.GetAllSupportedKubernetesVersions(true, false), "1.8.0", true, true) {
 		c := KubernetesConfig{
-			UseCloudControllerManager: &trueVal,
+			UseCloudControllerManager: to.BoolPtr(true),
 		}
 		if err := c.Validate(k8sVersion, false); err != nil {
 			t.Error("should not error because UseCloudControllerManager is available since v1.8")
+		}
+	}
+}
+
+func Test_Properties_ValidatePrivateAzureRegistryServer(t *testing.T) {
+	p := &Properties{}
+	p.OrchestratorProfile = &OrchestratorProfile{}
+	p.OrchestratorProfile.OrchestratorType = Kubernetes
+	p.OrchestratorProfile.KubernetesConfig = &KubernetesConfig{}
+
+	p.OrchestratorProfile.KubernetesConfig.PrivateAzureRegistryServer = "example.azurecr.io"
+	err := p.OrchestratorProfile.KubernetesConfig.validatePrivateAzureRegistryServer()
+	expectedMsg := "customHyperkubeImage must be provided when privateAzureRegistryServer is provided"
+	if err.Error() != expectedMsg {
+		t.Errorf("expected error message : %s to be thrown, but got : %s", expectedMsg, err.Error())
+	}
+	p.OrchestratorProfile.KubernetesConfig.CustomHyperkubeImage = "example.azurecr.io/hyperkube-amd64:tag"
+	err = p.OrchestratorProfile.KubernetesConfig.validatePrivateAzureRegistryServer()
+	if err != nil {
+		t.Errorf("should not error because CustomHyperkubeImage is provided, got error : %s", err.Error())
+	}
+}
+
+func Test_Properties_ValidateDistro(t *testing.T) {
+	p := &Properties{}
+	p.OrchestratorProfile = &OrchestratorProfile{}
+	p.OrchestratorProfile.OrchestratorType = Kubernetes
+	p.MasterProfile = &MasterProfile{
+		DNSPrefix: "foo",
+	}
+
+	// Should not error on valid distros in non-update scenarios
+	for _, distro := range DistroValues {
+		p.MasterProfile.Distro = distro
+		p.AgentPoolProfiles = []*AgentPoolProfile{
+			{
+				Name:   "pool1",
+				Distro: distro,
+			},
+		}
+		if err := p.validateMasterProfile(false); err != nil {
+			t.Errorf(
+				"should not error on distro=\"%s\"",
+				distro,
+			)
+		}
+		if err := p.validateAgentPoolProfiles(false); err != nil {
+			t.Errorf(
+				"should not error on distro=\"%s\"",
+				distro,
+			)
+		}
+	}
+
+	// Should not error on valid distros in update scenarios
+	for _, distro := range DistroValues {
+		p.MasterProfile.Distro = distro
+		p.AgentPoolProfiles = []*AgentPoolProfile{
+			{
+				Name:   "pool1",
+				Distro: distro,
+			},
+		}
+		if err := p.validateMasterProfile(true); err != nil {
+			t.Errorf(
+				"should not error on distro=\"%s\"",
+				distro,
+			)
+		}
+		if err := p.validateAgentPoolProfiles(true); err != nil {
+			t.Errorf(
+				"should not error on distro=\"%s\"",
+				distro,
+			)
+		}
+	}
+
+	// Should error for invalid distros on non-update scenarios
+	bogusDistroValues := []Distro{AKSDockerEngine, "bogon"}
+	for _, distro := range bogusDistroValues {
+		p.MasterProfile.Distro = distro
+		p.AgentPoolProfiles = []*AgentPoolProfile{
+			{
+				Name:   "pool1",
+				Distro: distro,
+			},
+		}
+		if err := p.validateMasterProfile(false); err == nil {
+			t.Errorf(
+				"should error on distro=\"%s\"",
+				distro,
+			)
+		}
+		if err := p.validateAgentPoolProfiles(false); err == nil {
+			t.Errorf(
+				"should error on distro=\"%s\"",
+				distro,
+			)
+		}
+	}
+
+	// Should not error for aks-docker-engine distro on update scenarios
+	oldDistros := []Distro{AKSDockerEngine}
+	for _, distro := range oldDistros {
+		p.MasterProfile.Distro = distro
+		p.AgentPoolProfiles = []*AgentPoolProfile{
+			{
+				Name:   "pool1",
+				Distro: distro,
+			},
+		}
+		if err := p.validateMasterProfile(true); err != nil {
+			t.Errorf(
+				"should error on distro=\"%s\"",
+				distro,
+			)
+		}
+		if err := p.validateAgentPoolProfiles(true); err != nil {
+			t.Errorf(
+				"should error on distro=\"%s\"",
+				distro,
+			)
 		}
 	}
 }
@@ -560,7 +740,7 @@ func Test_Properties_ValidateNetworkPolicy(t *testing.T) {
 		)
 	}
 
-	p.OrchestratorProfile.KubernetesConfig.NetworkPolicy = "cilium"
+	p.OrchestratorProfile.KubernetesConfig.NetworkPolicy = NetworkPolicyCilium
 	if err := p.OrchestratorProfile.KubernetesConfig.validateNetworkPolicy(k8sVersion, true); err == nil {
 		t.Errorf(
 			"should error on cilium for windows clusters",
@@ -619,7 +799,7 @@ func Test_Properties_ValidateNetworkPluginPlusPolicy(t *testing.T) {
 	for _, config := range []k8sNetworkConfig{
 		{
 			networkPlugin: "azure",
-			networkPolicy: "cilium",
+			networkPolicy: NetworkPolicyCilium,
 		},
 		{
 			networkPlugin: "azure",
@@ -651,14 +831,31 @@ func Test_Properties_ValidateNetworkPluginPlusPolicy(t *testing.T) {
 }
 
 func TestProperties_ValidateLinuxProfile(t *testing.T) {
-	p := getK8sDefaultProperties(true)
-	p.LinuxProfile.SSH = struct {
-		PublicKeys []PublicKey `json:"publicKeys" validate:"required,len=1"`
+	cs := getK8sDefaultContainerService(true)
+	cs.Properties.LinuxProfile.SSH = struct {
+		PublicKeys []PublicKey `json:"publicKeys" validate:"required,min=1"`
 	}{
 		PublicKeys: []PublicKey{{}},
 	}
 	expectedMsg := "KeyData in LinuxProfile.SSH.PublicKeys cannot be empty string"
-	err := p.Validate(true)
+	err := cs.Validate(true)
+
+	if err.Error() != expectedMsg {
+		t.Errorf("expected error message : %s to be thrown, but got : %s", expectedMsg, err.Error())
+	}
+
+	cs.Properties.LinuxProfile.SSH = struct {
+		PublicKeys []PublicKey `json:"publicKeys" validate:"required,min=1"`
+	}{
+		PublicKeys: []PublicKey{
+			{
+				KeyData: "not empty",
+			},
+			{},
+		},
+	}
+	expectedMsg = "KeyData in LinuxProfile.SSH.PublicKeys cannot be empty string"
+	err = cs.Validate(true)
 
 	if err.Error() != expectedMsg {
 		t.Errorf("expected error message : %s to be thrown, but got : %s", expectedMsg, err.Error())
@@ -667,10 +864,10 @@ func TestProperties_ValidateLinuxProfile(t *testing.T) {
 
 func TestProperties_ValidateInvalidExtensions(t *testing.T) {
 
-	p := getK8sDefaultProperties(true)
-	p.OrchestratorProfile.OrchestratorVersion = "1.10.7"
+	cs := getK8sDefaultContainerService(true)
+	cs.Properties.OrchestratorProfile.OrchestratorVersion = "1.10.7"
 
-	p.AgentPoolProfiles = []*AgentPoolProfile{
+	cs.Properties.AgentPoolProfiles = []*AgentPoolProfile{
 		{
 			Name:                "agentpool",
 			VMSize:              "Standard_D2_v2",
@@ -685,7 +882,7 @@ func TestProperties_ValidateInvalidExtensions(t *testing.T) {
 			},
 		},
 	}
-	err := p.Validate(true)
+	err := cs.Validate(true)
 	expectedMsg := "Extensions are currently not supported with VirtualMachineScaleSets. Please specify \"availabilityProfile\": \"AvailabilitySet\""
 
 	if err.Error() != expectedMsg {
@@ -745,9 +942,9 @@ func TestProperties_ValidateInvalidExtensionProfiles(t *testing.T) {
 		test := test
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
-			p := getK8sDefaultProperties(true)
-			p.ExtensionProfiles = test.extensionProfiles
-			err := p.Validate(true)
+			cs := getK8sDefaultContainerService(true)
+			cs.Properties.ExtensionProfiles = test.extensionProfiles
+			err := cs.Validate(true)
 			if !helpers.EqualError(err, test.expectedErr) {
 				t.Errorf("expected error with message : %s, but got %s", test.expectedErr.Error(), err.Error())
 			}
@@ -759,65 +956,65 @@ func Test_ServicePrincipalProfile_ValidateSecretOrKeyvaultSecretRef(t *testing.T
 
 	t.Run("ServicePrincipalProfile with secret should pass", func(t *testing.T) {
 		t.Parallel()
-		p := getK8sDefaultProperties(false)
+		cs := getK8sDefaultContainerService(false)
 
-		if err := p.Validate(false); err != nil {
+		if err := cs.Validate(false); err != nil {
 			t.Errorf("should not error %v", err)
 		}
 	})
 
 	t.Run("ServicePrincipalProfile with KeyvaultSecretRef (with version) should pass", func(t *testing.T) {
 		t.Parallel()
-		p := getK8sDefaultProperties(false)
-		p.ServicePrincipalProfile.Secret = ""
-		p.ServicePrincipalProfile.KeyvaultSecretRef = &KeyvaultSecretRef{
+		cs := getK8sDefaultContainerService(false)
+		cs.Properties.ServicePrincipalProfile.Secret = ""
+		cs.Properties.ServicePrincipalProfile.KeyvaultSecretRef = &KeyvaultSecretRef{
 			VaultID:       "/subscriptions/SUB-ID/resourceGroups/RG-NAME/providers/Microsoft.KeyVault/vaults/KV-NAME",
 			SecretName:    "secret-name",
 			SecretVersion: "version",
 		}
-		if err := p.Validate(false); err != nil {
+		if err := cs.Validate(false); err != nil {
 			t.Errorf("should not error %v", err)
 		}
 	})
 
 	t.Run("ServicePrincipalProfile with KeyvaultSecretRef (without version) should pass", func(t *testing.T) {
 		t.Parallel()
-		p := getK8sDefaultProperties(false)
-		p.ServicePrincipalProfile.Secret = ""
-		p.ServicePrincipalProfile.KeyvaultSecretRef = &KeyvaultSecretRef{
+		cs := getK8sDefaultContainerService(false)
+		cs.Properties.ServicePrincipalProfile.Secret = ""
+		cs.Properties.ServicePrincipalProfile.KeyvaultSecretRef = &KeyvaultSecretRef{
 			VaultID:    "/subscriptions/SUB-ID/resourceGroups/RG-NAME/providers/Microsoft.KeyVault/vaults/KV-NAME",
 			SecretName: "secret-name",
 		}
 
-		if err := p.Validate(false); err != nil {
+		if err := cs.Validate(false); err != nil {
 			t.Errorf("should not error %v", err)
 		}
 	})
 
 	t.Run("ServicePrincipalProfile with Secret and KeyvaultSecretRef should NOT pass", func(t *testing.T) {
 		t.Parallel()
-		p := getK8sDefaultProperties(false)
-		p.ServicePrincipalProfile.Secret = "secret"
-		p.ServicePrincipalProfile.KeyvaultSecretRef = &KeyvaultSecretRef{
+		cs := getK8sDefaultContainerService(false)
+		cs.Properties.ServicePrincipalProfile.Secret = "secret"
+		cs.Properties.ServicePrincipalProfile.KeyvaultSecretRef = &KeyvaultSecretRef{
 			VaultID:    "/subscriptions/SUB-ID/resourceGroups/RG-NAME/providers/Microsoft.KeyVault/vaults/KV-NAME",
 			SecretName: "secret-name",
 		}
 
-		if err := p.Validate(false); err == nil {
+		if err := cs.Validate(false); err == nil {
 			t.Error("error should have occurred")
 		}
 	})
 
 	t.Run("ServicePrincipalProfile with incorrect KeyvaultSecretRef format should NOT pass", func(t *testing.T) {
 		t.Parallel()
-		p := getK8sDefaultProperties(false)
-		p.ServicePrincipalProfile.Secret = ""
-		p.ServicePrincipalProfile.KeyvaultSecretRef = &KeyvaultSecretRef{
+		cs := getK8sDefaultContainerService(false)
+		cs.Properties.ServicePrincipalProfile.Secret = ""
+		cs.Properties.ServicePrincipalProfile.KeyvaultSecretRef = &KeyvaultSecretRef{
 			VaultID:    "randomID",
 			SecretName: "secret-name",
 		}
 
-		if err := p.Validate(false); err == nil || err.Error() != "service principal client keyvault secret reference is of incorrect format" {
+		if err := cs.Validate(false); err == nil || err.Error() != "service principal client keyvault secret reference is of incorrect format" {
 			t.Error("error should have occurred")
 		}
 	})
@@ -862,7 +1059,7 @@ func TestValidateKubernetesLabelKey(t *testing.T) {
 func Test_AadProfile_Validate(t *testing.T) {
 	t.Run("Valid aadProfile should pass", func(t *testing.T) {
 		t.Parallel()
-		properties := getK8sDefaultProperties(false)
+		cs := getK8sDefaultContainerService(false)
 		for _, aadProfile := range []*AADProfile{
 			{
 				ClientAppID: "92444486-5bc3-4291-818b-d53ae480991b",
@@ -874,8 +1071,8 @@ func Test_AadProfile_Validate(t *testing.T) {
 				TenantID:    "feb784f6-7174-46da-aeae-da66e80c7a11",
 			},
 		} {
-			properties.AADProfile = aadProfile
-			if err := properties.validateAADProfile(); err != nil {
+			cs.Properties.AADProfile = aadProfile
+			if err := cs.Properties.validateAADProfile(); err != nil {
 				t.Errorf("should not error %v", err)
 			}
 		}
@@ -883,7 +1080,7 @@ func Test_AadProfile_Validate(t *testing.T) {
 
 	t.Run("Invalid aadProfiles should NOT pass", func(t *testing.T) {
 		t.Parallel()
-		properties := getK8sDefaultProperties(false)
+		cs := getK8sDefaultContainerService(false)
 		for _, aadProfile := range []*AADProfile{
 			{
 				ClientAppID: "1",
@@ -905,8 +1102,8 @@ func Test_AadProfile_Validate(t *testing.T) {
 			},
 			{},
 		} {
-			properties.AADProfile = aadProfile
-			if err := properties.Validate(true); err == nil {
+			cs.Properties.AADProfile = aadProfile
+			if err := cs.Validate(true); err == nil {
 				t.Errorf("error should have occurred")
 			}
 		}
@@ -914,31 +1111,31 @@ func Test_AadProfile_Validate(t *testing.T) {
 
 	t.Run("aadProfiles should not be supported non-Kubernetes orchestrators", func(t *testing.T) {
 		t.Parallel()
-		properties := getK8sDefaultProperties(false)
-		properties.OrchestratorProfile = &OrchestratorProfile{
+		cs := getK8sDefaultContainerService(false)
+		cs.Properties.OrchestratorProfile = &OrchestratorProfile{
 			OrchestratorType: DCOS,
 		}
-		properties.AADProfile = &AADProfile{
+		cs.Properties.AADProfile = &AADProfile{
 			ClientAppID: "92444486-5bc3-4291-818b-d53ae480991b",
 			ServerAppID: "403f018b-4d89-495b-b548-0cf9868cdb0a",
 		}
 		expectedMsg := "'aadProfile' is only supported by orchestrator 'Kubernetes'"
-		if err := properties.validateAADProfile(); err == nil || err.Error() != expectedMsg {
+		if err := cs.Properties.validateAADProfile(); err == nil || err.Error() != expectedMsg {
 			t.Errorf("error should have occurred with msg : %s, but got : %s", expectedMsg, err.Error())
 		}
 	})
 }
 
 func TestProperties_ValidateInvalidStruct(t *testing.T) {
-	p := getK8sDefaultProperties(false)
-	p.OrchestratorProfile = &OrchestratorProfile{}
+	cs := getK8sDefaultContainerService(false)
+	cs.Properties.OrchestratorProfile = &OrchestratorProfile{}
 	expectedMsg := "missing Properties.OrchestratorProfile.OrchestratorType"
-	if err := p.Validate(false); err == nil || err.Error() != expectedMsg {
+	if err := cs.Validate(false); err == nil || err.Error() != expectedMsg {
 		t.Errorf("expected validation error with message : %s", err.Error())
 	}
 }
 
-func getK8sDefaultProperties(hasWindows bool) *Properties {
+func getK8sDefaultContainerService(hasWindows bool) *ContainerService {
 	p := &Properties{
 		OrchestratorProfile: &OrchestratorProfile{
 			OrchestratorType: Kubernetes,
@@ -959,7 +1156,7 @@ func getK8sDefaultProperties(hasWindows bool) *Properties {
 		LinuxProfile: &LinuxProfile{
 			AdminUsername: "azureuser",
 			SSH: struct {
-				PublicKeys []PublicKey `json:"publicKeys" validate:"required,len=1"`
+				PublicKeys []PublicKey `json:"publicKeys" validate:"required,min=1"`
 			}{
 				PublicKeys: []PublicKey{{
 					KeyData: "publickeydata",
@@ -987,8 +1184,11 @@ func getK8sDefaultProperties(hasWindows bool) *Properties {
 			AdminPassword: "replacepassword1234$",
 		}
 	}
-
-	return p
+	cs := ContainerService{
+		Location:   "westus",
+		Properties: p,
+	}
+	return &cs
 }
 
 func Test_Properties_ValidateContainerRuntime(t *testing.T) {
@@ -1014,7 +1214,7 @@ func Test_Properties_ValidateContainerRuntime(t *testing.T) {
 		)
 	}
 
-	p.OrchestratorProfile.KubernetesConfig.ContainerRuntime = "clear-containers"
+	p.OrchestratorProfile.KubernetesConfig.ContainerRuntime = ClearContainers
 	p.AgentPoolProfiles = []*AgentPoolProfile{
 		{
 			OSType: Windows,
@@ -1026,7 +1226,7 @@ func Test_Properties_ValidateContainerRuntime(t *testing.T) {
 		)
 	}
 
-	p.OrchestratorProfile.KubernetesConfig.ContainerRuntime = "kata-containers"
+	p.OrchestratorProfile.KubernetesConfig.ContainerRuntime = KataContainers
 	p.AgentPoolProfiles = []*AgentPoolProfile{
 		{
 			OSType: Windows,
@@ -1038,7 +1238,7 @@ func Test_Properties_ValidateContainerRuntime(t *testing.T) {
 		)
 	}
 
-	p.OrchestratorProfile.KubernetesConfig.ContainerRuntime = "containerd"
+	p.OrchestratorProfile.KubernetesConfig.ContainerRuntime = Containerd
 	p.AgentPoolProfiles = []*AgentPoolProfile{
 		{
 			OSType: Windows,
@@ -1048,28 +1248,6 @@ func Test_Properties_ValidateContainerRuntime(t *testing.T) {
 		t.Errorf(
 			"should error on containerd for windows clusters",
 		)
-	}
-}
-
-func TestAgentPoolProfileDistro(t *testing.T) {
-	p := &Properties{}
-	p.OrchestratorProfile = &OrchestratorProfile{}
-	p.OrchestratorProfile.OrchestratorType = Kubernetes
-	p.AgentPoolProfiles = []*AgentPoolProfile{
-		{
-			Distro: AKS,
-			VMSize: "Standard_NC6",
-		},
-		{
-			Distro: AKSDockerEngine,
-			VMSize: "Standard_NC6",
-		},
-	}
-	if err := p.AgentPoolProfiles[0].validateKubernetesDistro(); err == nil {
-		t.Errorf("should error on %s Distro with N Series VM SKU", AKS)
-	}
-	if err := p.AgentPoolProfiles[1].validateKubernetesDistro(); err != nil {
-		t.Errorf("should not error on %s Distro with N Series VM SKU", AKSDockerEngine)
 	}
 }
 
@@ -1183,66 +1361,122 @@ func Test_Properties_ValidateAddons(t *testing.T) {
 			"should not error on providing valid addon.Data",
 		)
 	}
+
+	p.AgentPoolProfiles = []*AgentPoolProfile{
+		{
+			AvailabilityProfile: AvailabilitySet,
+			Distro:              CoreOS,
+		},
+	}
+
+	p.MasterProfile = &MasterProfile{
+		Distro: CoreOS,
+	}
+
+	p.OrchestratorProfile.KubernetesConfig = &KubernetesConfig{
+		Addons: []KubernetesAddon{
+			{
+				Name:    "smb-flexvolume",
+				Enabled: to.BoolPtr(true),
+			},
+		},
+	}
+
+	if err := p.validateAddons(); err == nil {
+		t.Errorf(
+			"should error using incompatible addon with coreos (smb-flexvolume)",
+		)
+	}
+
+	p.OrchestratorProfile.KubernetesConfig = &KubernetesConfig{
+		Addons: []KubernetesAddon{
+			{
+				Name:    "keyvault-flexvolume",
+				Enabled: to.BoolPtr(true),
+			},
+		},
+	}
+
+	if err := p.validateAddons(); err == nil {
+		t.Errorf(
+			"should error using incompatible addon with coreos (keyvault-flexvolume)",
+		)
+	}
+
+	p.OrchestratorProfile.KubernetesConfig = &KubernetesConfig{
+		Addons: []KubernetesAddon{
+			{
+				Name:    "blobfuse-flexvolume",
+				Enabled: to.BoolPtr(true),
+			},
+		},
+	}
+
+	if err := p.validateAddons(); err == nil {
+		t.Errorf(
+			"should error using incompatible addon with coreos (blobfuse-flexvolume)",
+		)
+	}
 }
 
 func TestWindowsVersions(t *testing.T) {
 	for _, version := range common.GetAllSupportedKubernetesVersions(false, true) {
-		p := getK8sDefaultProperties(true)
-		p.OrchestratorProfile.OrchestratorVersion = version
-		if err := p.Validate(false); err != nil {
+		cs := getK8sDefaultContainerService(true)
+		cs.Properties.OrchestratorProfile.OrchestratorVersion = version
+		if err := cs.Validate(false); err != nil {
 			t.Errorf(
 				"should not error on valid Windows version: %v", err,
 			)
 		}
-		p = getK8sDefaultProperties(true)
-		p.WindowsProfile.AdminPassword = "Password"
-		if err := p.Validate(false); err == nil {
+		cs = getK8sDefaultContainerService(true)
+		cs.Properties.WindowsProfile.AdminPassword = "Password"
+		if err := cs.Validate(false); err == nil {
 			t.Errorf(
 				"should error on windows password complexity not match because no digits and special characters found in the password ",
 			)
 		}
-		p = getK8sDefaultProperties(true)
-		p.WindowsProfile.AdminPassword = "123!@#"
-		if err := p.Validate(false); err == nil {
+		cs = getK8sDefaultContainerService(true)
+		cs.Properties.WindowsProfile.AdminPassword = "123!@#"
+		if err := cs.Validate(false); err == nil {
 			t.Errorf(
 				"should error on windows password complexity not match because uppercase and lowercase letters found in the password",
 			)
 		}
-		p = getK8sDefaultProperties(true)
-		p.WindowsProfile.AdminPassword = ""
-		if err := p.Validate(false); err == nil {
+		cs = getK8sDefaultContainerService(true)
+		cs.Properties.WindowsProfile.AdminPassword = ""
+		if err := cs.Validate(false); err == nil {
 			t.Errorf(
 				"should error on windows password length is zero",
 			)
 		}
-		p = getK8sDefaultProperties(true)
-		p.WindowsProfile.AdminUsername = "User@123"
-		p.WindowsProfile.AdminPassword = "User@123"
-		if err := p.Validate(false); err == nil {
+		cs = getK8sDefaultContainerService(true)
+		cs.Properties.WindowsProfile.AdminUsername = "User@123"
+		cs.Properties.WindowsProfile.AdminPassword = "User@123"
+		if err := cs.Validate(false); err == nil {
 			t.Errorf(
 				"should error on windows password complexity not match because username and password are  same",
 			)
 		}
 		sv, _ := semver.Make(version)
-		p = getK8sDefaultProperties(true)
-		p.OrchestratorProfile.OrchestratorRelease = fmt.Sprintf("%d.%d", sv.Major, sv.Minor)
-		if err := p.Validate(false); err != nil {
+		cs = getK8sDefaultContainerService(true)
+		cs.Properties.OrchestratorProfile.OrchestratorRelease = fmt.Sprintf("%d.%d", sv.Major, sv.Minor)
+		if err := cs.Validate(false); err != nil {
 			t.Errorf(
 				"should not error on valid Windows version: %v", err,
 			)
 		}
 	}
-	p := getK8sDefaultProperties(true)
-	p.OrchestratorProfile.OrchestratorRelease = "1.4"
-	if err := p.Validate(false); err == nil {
+	cs := getK8sDefaultContainerService(true)
+	cs.Properties.OrchestratorProfile.OrchestratorRelease = "1.4"
+	if err := cs.Validate(false); err == nil {
 		t.Errorf(
 			"should error on invalid Windows version",
 		)
 	}
 
-	p = getK8sDefaultProperties(true)
-	p.OrchestratorProfile.OrchestratorVersion = "1.4.0"
-	if err := p.Validate(false); err == nil {
+	cs = getK8sDefaultContainerService(true)
+	cs.Properties.OrchestratorProfile.OrchestratorVersion = "1.4.0"
+	if err := cs.Validate(false); err == nil {
 		t.Errorf(
 			"should error on invalid Windows version",
 		)
@@ -1251,33 +1485,33 @@ func TestWindowsVersions(t *testing.T) {
 
 func TestLinuxVersions(t *testing.T) {
 	for _, version := range common.GetAllSupportedKubernetesVersions(false, false) {
-		p := getK8sDefaultProperties(false)
-		p.OrchestratorProfile.OrchestratorVersion = version
-		if err := p.Validate(false); err != nil {
+		cs := getK8sDefaultContainerService(false)
+		cs.Properties.OrchestratorProfile.OrchestratorVersion = version
+		if err := cs.Validate(false); err != nil {
 			t.Errorf(
 				"should not error on valid Linux version: %v", err,
 			)
 		}
 		sv, _ := semver.Make(version)
-		p = getK8sDefaultProperties(false)
-		p.OrchestratorProfile.OrchestratorRelease = fmt.Sprintf("%d.%d", sv.Major, sv.Minor)
-		if err := p.Validate(false); err != nil {
+		cs = getK8sDefaultContainerService(false)
+		cs.Properties.OrchestratorProfile.OrchestratorRelease = fmt.Sprintf("%d.%d", sv.Major, sv.Minor)
+		if err := cs.Validate(false); err != nil {
 			t.Errorf(
 				"should not error on valid Linux version: %v", err,
 			)
 		}
 	}
-	p := getK8sDefaultProperties(false)
-	p.OrchestratorProfile.OrchestratorRelease = "1.4"
-	if err := p.Validate(false); err == nil {
+	cs := getK8sDefaultContainerService(false)
+	cs.Properties.OrchestratorProfile.OrchestratorRelease = "1.4"
+	if err := cs.Validate(false); err == nil {
 		t.Errorf(
 			"should error on invalid Linux version",
 		)
 	}
 
-	p = getK8sDefaultProperties(false)
-	p.OrchestratorProfile.OrchestratorVersion = "1.4.0"
-	if err := p.Validate(false); err == nil {
+	cs = getK8sDefaultContainerService(false)
+	cs.Properties.OrchestratorProfile.OrchestratorVersion = "1.4.0"
+	if err := cs.Validate(false); err == nil {
 		t.Errorf(
 			"should error on invalid Linux version",
 		)
@@ -1318,8 +1552,8 @@ func TestValidateImageNameAndGroup(t *testing.T) {
 		test := test
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
-			p := getK8sDefaultProperties(true)
-			p.AgentPoolProfiles = []*AgentPoolProfile{
+			cs := getK8sDefaultContainerService(true)
+			cs.Properties.AgentPoolProfiles = []*AgentPoolProfile{
 				{
 					Name:                "agentpool",
 					VMSize:              "Standard_D2_v2",
@@ -1328,7 +1562,7 @@ func TestValidateImageNameAndGroup(t *testing.T) {
 					ImageRef:            &test.image,
 				},
 			}
-			gotErr := p.validateAgentPoolProfiles(true)
+			gotErr := cs.Properties.validateAgentPoolProfiles(true)
 			if !helpers.EqualError(gotErr, test.expectedErr) {
 				t.Logf("scenario %q", test.name)
 				t.Errorf("expected error: %v, got: %v", test.expectedErr, gotErr)
@@ -1347,7 +1581,7 @@ func TestProperties_ValidateManagedIdentity(t *testing.T) {
 		agentPoolProfiles   []*AgentPoolProfile
 	}{
 		{
-			name:                "use managed identity with master vmss",
+			name:                "use managed identity with master VMSS",
 			orchestratorRelease: "1.11",
 			useManagedIdentity:  true,
 			userAssignedID:      "utaksenginetestid",
@@ -1401,7 +1635,7 @@ func TestProperties_ValidateManagedIdentity(t *testing.T) {
 			expectedErr: "user assigned identity can only be used with Kubernetes 1.12.0 or above. Please specify \"orchestratorRelease\": \"1.12\"",
 		},
 		{
-			name:                "user master vmss with empty user assigned ID",
+			name:                "user master VMSS with empty user assigned ID",
 			orchestratorRelease: "1.12",
 			useManagedIdentity:  true,
 			masterProfile: MasterProfile{
@@ -1424,10 +1658,10 @@ func TestProperties_ValidateManagedIdentity(t *testing.T) {
 		test := test
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
-			properties := getK8sDefaultProperties(true)
-			properties.MasterProfile = &test.masterProfile
-			properties.MasterProfile.VMSize = "Standard_DS2_v2"
-			properties.OrchestratorProfile = &OrchestratorProfile{
+			cs := getK8sDefaultContainerService(true)
+			cs.Properties.MasterProfile = &test.masterProfile
+			cs.Properties.MasterProfile.VMSize = "Standard_DS2_v2"
+			cs.Properties.OrchestratorProfile = &OrchestratorProfile{
 				OrchestratorRelease: test.orchestratorRelease,
 				OrchestratorType:    Kubernetes,
 				KubernetesConfig: &KubernetesConfig{
@@ -1435,8 +1669,8 @@ func TestProperties_ValidateManagedIdentity(t *testing.T) {
 					UserAssignedID:     test.userAssignedID,
 				},
 			}
-			properties.AgentPoolProfiles = test.agentPoolProfiles
-			err := properties.Validate(false)
+			cs.Properties.AgentPoolProfiles = test.agentPoolProfiles
+			err := cs.Validate(false)
 			if test.expectedErr == "" && err != nil ||
 				test.expectedErr != "" && (err == nil || test.expectedErr != err.Error()) {
 				t.Errorf("test %s: unexpected error %q\n", test.name, err)
@@ -1538,10 +1772,10 @@ func TestMasterProfileValidate(t *testing.T) {
 		test := test
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
-			properties := getK8sDefaultProperties(true)
-			properties.MasterProfile = &test.masterProfile
-			properties.MasterProfile.StorageProfile = test.masterProfile.StorageProfile
-			properties.OrchestratorProfile = &OrchestratorProfile{
+			cs := getK8sDefaultContainerService(true)
+			cs.Properties.MasterProfile = &test.masterProfile
+			cs.Properties.MasterProfile.StorageProfile = test.masterProfile.StorageProfile
+			cs.Properties.OrchestratorProfile = &OrchestratorProfile{
 				OrchestratorType:    test.orchestratorType,
 				OrchestratorVersion: test.orchestratorVersion,
 				OrchestratorRelease: test.orchestratorRelease,
@@ -1549,8 +1783,8 @@ func TestMasterProfileValidate(t *testing.T) {
 					UseInstanceMetadata: to.BoolPtr(test.useInstanceMetadata),
 				},
 			}
-			properties.AgentPoolProfiles = test.agentPoolProfiles
-			err := properties.validateMasterProfile()
+			cs.Properties.AgentPoolProfiles = test.agentPoolProfiles
+			err := cs.Properties.validateMasterProfile(false)
 			if test.expectedErr == "" && err != nil ||
 				test.expectedErr != "" && (err == nil || test.expectedErr != err.Error()) {
 				t.Errorf("test %s: unexpected error %q\n", test.name, err)
@@ -1560,8 +1794,8 @@ func TestMasterProfileValidate(t *testing.T) {
 }
 
 func TestProperties_ValidateAddon(t *testing.T) {
-	p := getK8sDefaultProperties(true)
-	p.AgentPoolProfiles = []*AgentPoolProfile{
+	cs := getK8sDefaultContainerService(true)
+	cs.Properties.AgentPoolProfiles = []*AgentPoolProfile{
 		{
 			Name:                "agentpool",
 			VMSize:              "Standard_NC6",
@@ -1569,8 +1803,8 @@ func TestProperties_ValidateAddon(t *testing.T) {
 			AvailabilityProfile: AvailabilitySet,
 		},
 	}
-	p.OrchestratorProfile.OrchestratorVersion = "1.9.10"
-	p.OrchestratorProfile.KubernetesConfig = &KubernetesConfig{
+	cs.Properties.OrchestratorProfile.OrchestratorVersion = "1.9.10"
+	cs.Properties.OrchestratorProfile.KubernetesConfig = &KubernetesConfig{
 		Addons: []KubernetesAddon{
 			{
 				Name:    "nvidia-device-plugin",
@@ -1579,7 +1813,7 @@ func TestProperties_ValidateAddon(t *testing.T) {
 		},
 	}
 
-	err := p.Validate(true)
+	err := cs.Validate(true)
 	expectedMsg := "NVIDIA Device Plugin add-on can only be used Kubernetes 1.10 or above. Please specify \"orchestratorRelease\": \"1.10\""
 	if err.Error() != expectedMsg {
 		t.Errorf("expected error with message : %s, but got : %s", expectedMsg, err.Error())
@@ -1740,16 +1974,16 @@ func TestProperties_ValidateZones(t *testing.T) {
 		test := test
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
-			p := getK8sDefaultProperties(true)
-			p.MasterProfile = test.masterProfile
-			p.AgentPoolProfiles = test.agentProfiles
-			p.OrchestratorProfile.OrchestratorRelease = test.orchestratorRelease
-			p.OrchestratorProfile.KubernetesConfig = &KubernetesConfig{
+			cs := getK8sDefaultContainerService(true)
+			cs.Properties.MasterProfile = test.masterProfile
+			cs.Properties.AgentPoolProfiles = test.agentProfiles
+			cs.Properties.OrchestratorProfile.OrchestratorRelease = test.orchestratorRelease
+			cs.Properties.OrchestratorProfile.KubernetesConfig = &KubernetesConfig{
 				LoadBalancerSku:             test.loadBalancerSku,
 				ExcludeMasterFromStandardLB: to.BoolPtr(test.excludeMasterFromStandardLB),
 			}
 
-			if err := p.Validate(false); err != nil {
+			if err := cs.Validate(false); err != nil {
 				expectedMsg := test.expectedErr
 				if err.Error() != expectedMsg {
 					t.Errorf("expected error with message : %s, but got : %s", expectedMsg, err.Error())
@@ -1825,11 +2059,11 @@ func TestProperties_ValidateSinglePlacementGroup(t *testing.T) {
 		test := test
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
-			p := getK8sDefaultProperties(true)
-			p.OrchestratorProfile.OrchestratorRelease = "1.12"
-			p.MasterProfile = test.masterProfile
-			p.AgentPoolProfiles = test.agentPoolProfiles
-			err := p.Validate(true)
+			cs := getK8sDefaultContainerService(true)
+			cs.Properties.OrchestratorProfile.OrchestratorRelease = "1.12"
+			cs.Properties.MasterProfile = test.masterProfile
+			cs.Properties.AgentPoolProfiles = test.agentPoolProfiles
+			err := cs.Validate(true)
 			if err.Error() != test.expectedMsg {
 				t.Errorf("expected error message : %s, but got %s", test.expectedMsg, err.Error())
 			}
@@ -1999,11 +2233,11 @@ func TestProperties_ValidateVNET(t *testing.T) {
 		test := test
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
-			p := getK8sDefaultProperties(true)
-			p.OrchestratorProfile.OrchestratorRelease = "1.10"
-			p.MasterProfile = test.masterProfile
-			p.AgentPoolProfiles = test.agentPoolProfiles
-			err := p.Validate(true)
+			cs := getK8sDefaultContainerService(true)
+			cs.Properties.OrchestratorProfile.OrchestratorRelease = "1.10"
+			cs.Properties.MasterProfile = test.masterProfile
+			cs.Properties.AgentPoolProfiles = test.agentPoolProfiles
+			err := cs.Validate(true)
 			if err.Error() != test.expectedMsg {
 				t.Errorf("expected error message : %s, but got %s", test.expectedMsg, err.Error())
 			}
@@ -2142,35 +2376,35 @@ func TestValidate_VaultKeySecrets(t *testing.T) {
 func TestValidateProperties_OrchestratorSpecificProperties(t *testing.T) {
 	t.Run("Should not support DNS prefix for Kubernetes orchestrators", func(t *testing.T) {
 		t.Parallel()
-		p := getK8sDefaultProperties(false)
-		agentPoolProfiles := p.AgentPoolProfiles
+		cs := getK8sDefaultContainerService(false)
+		agentPoolProfiles := cs.Properties.AgentPoolProfiles
 		agentPoolProfiles[0].DNSPrefix = "sampleprefix"
 		expectedMsg := "AgentPoolProfile.DNSPrefix must be empty for Kubernetes"
-		if err := p.validateAgentPoolProfiles(true); err.Error() != expectedMsg {
+		if err := cs.Properties.validateAgentPoolProfiles(true); err.Error() != expectedMsg {
 			t.Errorf("expected error with message : %s", expectedMsg)
 		}
 	})
 
 	t.Run("Should not contain agentPool ports for Kubernetes orchestrators", func(t *testing.T) {
 		t.Parallel()
-		p := getK8sDefaultProperties(false)
-		agentPoolProfiles := p.AgentPoolProfiles
+		cs := getK8sDefaultContainerService(false)
+		agentPoolProfiles := cs.Properties.AgentPoolProfiles
 		agentPoolProfiles[0].Ports = []int{80, 443, 8080}
 		expectedMsg := "AgentPoolProfile.Ports must be empty for Kubernetes"
-		if err := p.validateAgentPoolProfiles(true); err.Error() != expectedMsg {
+		if err := cs.Properties.validateAgentPoolProfiles(true); err.Error() != expectedMsg {
 			t.Errorf("expected error with message : %s, but got %s", expectedMsg, err.Error())
 		}
 	})
 
 	t.Run("Should not support ScaleSetEviction policies with regular priority", func(t *testing.T) {
 		t.Parallel()
-		p := getK8sDefaultProperties(false)
-		agentPoolProfiles := p.AgentPoolProfiles
+		cs := getK8sDefaultContainerService(false)
+		agentPoolProfiles := cs.Properties.AgentPoolProfiles
 		agentPoolProfiles[0].Ports = []int{}
 		agentPoolProfiles[0].ScaleSetPriority = "Regular"
 		agentPoolProfiles[0].ScaleSetEvictionPolicy = "Deallocate"
 		expectedMsg := "property 'AgentPoolProfile.ScaleSetEvictionPolicy' must be empty for AgentPoolProfile.Priority of Regular"
-		if err := p.validateAgentPoolProfiles(true); err.Error() != expectedMsg {
+		if err := cs.Properties.validateAgentPoolProfiles(true); err.Error() != expectedMsg {
 			t.Errorf("expected error with message : %s, but got %s", expectedMsg, err.Error())
 		}
 	})
@@ -2180,40 +2414,40 @@ func TestValidateProperties_CustomNodeLabels(t *testing.T) {
 
 	t.Run("Should throw error for invalid Kubernetes Label Keys", func(t *testing.T) {
 		t.Parallel()
-		p := getK8sDefaultProperties(false)
-		agentPoolProfiles := p.AgentPoolProfiles
+		cs := getK8sDefaultContainerService(false)
+		agentPoolProfiles := cs.Properties.AgentPoolProfiles
 		agentPoolProfiles[0].CustomNodeLabels = map[string]string{
 			"a/b/c": "a",
 		}
 		expectedMsg := "Label key 'a/b/c' is invalid. Valid label keys have two segments: an optional prefix and name, separated by a slash (/). The name segment is required and must be 63 characters or less, beginning and ending with an alphanumeric character ([a-z0-9A-Z]) with dashes (-), underscores (_), dots (.), and alphanumerics between. The prefix is optional. If specified, the prefix must be a DNS subdomain: a series of DNS labels separated by dots (.), not longer than 253 characters in total, followed by a slash (/)"
-		if err := p.validateAgentPoolProfiles(true); err.Error() != expectedMsg {
+		if err := cs.Properties.validateAgentPoolProfiles(true); err.Error() != expectedMsg {
 			t.Errorf("expected error with message : %s, but got %s", expectedMsg, err.Error())
 		}
 	})
 
 	t.Run("Should throw error for invalid Kubernetes Label Values", func(t *testing.T) {
 		t.Parallel()
-		p := getK8sDefaultProperties(false)
-		agentPoolProfiles := p.AgentPoolProfiles
+		cs := getK8sDefaultContainerService(false)
+		agentPoolProfiles := cs.Properties.AgentPoolProfiles
 		agentPoolProfiles[0].CustomNodeLabels = map[string]string{
 			"fookey": "b$$a$$r",
 		}
 		expectedMsg := "Label value 'b$$a$$r' is invalid. Valid label values must be 63 characters or less and must be empty or begin and end with an alphanumeric character ([a-z0-9A-Z]) with dashes (-), underscores (_), dots (.), and alphanumerics between"
-		if err := p.validateAgentPoolProfiles(true); err.Error() != expectedMsg {
+		if err := cs.Properties.validateAgentPoolProfiles(true); err.Error() != expectedMsg {
 			t.Errorf("expected error with message : %s, but got %s", expectedMsg, err.Error())
 		}
 	})
 
 	t.Run("Should not support orchestratorTypes other than Kubernetes/DCOS", func(t *testing.T) {
 		t.Parallel()
-		p := getK8sDefaultProperties(false)
-		p.OrchestratorProfile.OrchestratorType = SwarmMode
-		agentPoolProfiles := p.AgentPoolProfiles
+		cs := getK8sDefaultContainerService(false)
+		cs.Properties.OrchestratorProfile.OrchestratorType = SwarmMode
+		agentPoolProfiles := cs.Properties.AgentPoolProfiles
 		agentPoolProfiles[0].CustomNodeLabels = map[string]string{
 			"foo": "bar",
 		}
 		expectedMsg := "Agent CustomNodeLabels are only supported for DCOS and Kubernetes"
-		if err := p.validateAgentPoolProfiles(true); err.Error() != expectedMsg {
+		if err := cs.Properties.validateAgentPoolProfiles(true); err.Error() != expectedMsg {
 			t.Errorf("expected error with message : %s, but got %s", expectedMsg, err.Error())
 		}
 	})
@@ -2222,12 +2456,363 @@ func TestValidateProperties_CustomNodeLabels(t *testing.T) {
 func TestAgentPoolProfile_ValidateAvailabilityProfile(t *testing.T) {
 	t.Run("Should fail for invalid availability profile", func(t *testing.T) {
 		t.Parallel()
-		p := getK8sDefaultProperties(false)
-		agentPoolProfiles := p.AgentPoolProfiles
+		cs := getK8sDefaultContainerService(false)
+		agentPoolProfiles := cs.Properties.AgentPoolProfiles
 		agentPoolProfiles[0].AvailabilityProfile = "InvalidAvailabilityProfile"
 		expectedMsg := "unknown availability profile type 'InvalidAvailabilityProfile' for agent pool 'agentpool'.  Specify either AvailabilitySet, or VirtualMachineScaleSets"
-		if err := p.validateAgentPoolProfiles(true); err.Error() != expectedMsg {
+		if err := cs.Properties.validateAgentPoolProfiles(true); err.Error() != expectedMsg {
 			t.Errorf("expected error with message : %s, but got %s", expectedMsg, err.Error())
 		}
 	})
+
+	t.Run("Should fail for AvailabilitySet + SinglePlacementGroup true", func(t *testing.T) {
+		t.Parallel()
+		cs := getK8sDefaultContainerService(false)
+		agentPoolProfiles := cs.Properties.AgentPoolProfiles
+		agentPoolProfiles[0].SinglePlacementGroup = to.BoolPtr(true)
+		expectedMsg := fmt.Sprintf("singlePlacementGroup is only supported with VirtualMachineScaleSets")
+		if err := cs.Properties.validateAgentPoolProfiles(true); err.Error() != expectedMsg {
+			t.Errorf("expected error with message : %s, but got %s", expectedMsg, err.Error())
+		}
+	})
+
+	t.Run("Should fail for AvailabilitySet + SinglePlacementGroup false", func(t *testing.T) {
+		t.Parallel()
+		cs := getK8sDefaultContainerService(false)
+		agentPoolProfiles := cs.Properties.AgentPoolProfiles
+		agentPoolProfiles[0].SinglePlacementGroup = to.BoolPtr(false)
+		expectedMsg := fmt.Sprintf("singlePlacementGroup is only supported with VirtualMachineScaleSets")
+		if err := cs.Properties.validateAgentPoolProfiles(true); err.Error() != expectedMsg {
+			t.Errorf("expected error with message : %s, but got %s", expectedMsg, err.Error())
+		}
+	})
+}
+
+func TestAgentPoolProfile_ValidateVirtualMachineScaleSet(t *testing.T) {
+	t.Run("Should fail for invalid VMSS + Overprovisioning config", func(t *testing.T) {
+		t.Parallel()
+		cs := getK8sDefaultContainerService(false)
+		agentPoolProfiles := cs.Properties.AgentPoolProfiles
+		agentPoolProfiles[0].AvailabilityProfile = AvailabilitySet
+		agentPoolProfiles[0].VMSSOverProvisioningEnabled = to.BoolPtr(true)
+		expectedMsg := fmt.Sprintf("You have specified VMSS Overprovisioning in agent pool %s, but you did not specify VMSS", agentPoolProfiles[0].Name)
+		if err := cs.Properties.validateAgentPoolProfiles(false); err.Error() != expectedMsg {
+			t.Errorf("expected error with message : %s, but got %s", expectedMsg, err.Error())
+		}
+	})
+
+	t.Run("Should fail for invalid VMSS + Enable VMSS node public IP config", func(t *testing.T) {
+		t.Parallel()
+		cs := getK8sDefaultContainerService(false)
+		agentPoolProfiles := cs.Properties.AgentPoolProfiles
+		agentPoolProfiles[0].AvailabilityProfile = AvailabilitySet
+		agentPoolProfiles[0].EnableVMSSNodePublicIP = to.BoolPtr(true)
+		expectedMsg := fmt.Sprintf("You have enabled VMSS node public IP in agent pool %s, but you did not specify VMSS", agentPoolProfiles[0].Name)
+		if err := cs.Properties.validateAgentPoolProfiles(false); err.Error() != expectedMsg {
+			t.Errorf("expected error with message : %s, but got %s", expectedMsg, err.Error())
+		}
+	})
+
+	t.Run("Should fail for invalid VMSS + VnetSubnetID + FirstConsecutiveStaticIP config", func(t *testing.T) {
+		t.Parallel()
+		cs := getK8sDefaultContainerService(false)
+		cs.Properties.MasterProfile.AvailabilityProfile = VirtualMachineScaleSets
+		cs.Properties.MasterProfile.VnetSubnetID = "vnet"
+		cs.Properties.MasterProfile.FirstConsecutiveStaticIP = "10.10.10.240"
+		expectedMsg := fmt.Sprintf("when masterProfile's availabilityProfile is VirtualMachineScaleSets and a vnetSubnetID is specified, the firstConsecutiveStaticIP should be empty and will be determined by an offset from the first IP in the vnetCidr")
+		if err := cs.Properties.validateMasterProfile(false); err.Error() != expectedMsg {
+			t.Errorf("expected error with message : %s, but got %s", expectedMsg, err.Error())
+		}
+	})
+
+	t.Run("Should fail for VMSS master + AvailabilitySet agent pool", func(t *testing.T) {
+		t.Parallel()
+		cs := getK8sDefaultContainerService(false)
+		cs.Properties.MasterProfile.AvailabilityProfile = VirtualMachineScaleSets
+		agentPoolProfiles := cs.Properties.AgentPoolProfiles
+		agentPoolProfiles[0].AvailabilityProfile = AvailabilitySet
+		expectedMsg := fmt.Sprintf("VirtualMachineScaleSets for master profile must be used together with virtualMachineScaleSets for agent profiles. Set \"availabilityProfile\" to \"VirtualMachineScaleSets\" for agent profiles")
+		if err := cs.Properties.validateMasterProfile(false); err.Error() != expectedMsg {
+			t.Errorf("expected error with message : %s, but got %s", expectedMsg, err.Error())
+		}
+	})
+
+	t.Run("Should fail for VMSS + < 1.10 version", func(t *testing.T) {
+		t.Parallel()
+		cs := getK8sDefaultContainerService(false)
+		cs.Properties.OrchestratorProfile.OrchestratorRelease = "1.9"
+		agentPoolProfiles := cs.Properties.AgentPoolProfiles
+		agentPoolProfiles[0].AvailabilityProfile = VirtualMachineScaleSets
+		minVersion, _ := semver.Make("1.10.0")
+		expectedMsg := fmt.Sprintf("VirtualMachineScaleSets are only available in Kubernetes version %s or greater. Please set \"orchestratorVersion\" to %s or above", minVersion.String(), minVersion.String())
+		if err := cs.Properties.validateAgentPoolProfiles(false); err.Error() != expectedMsg {
+			t.Errorf("expected error with message : %s, but got %s", expectedMsg, err.Error())
+		}
+	})
+
+	t.Run("Should fail for VMSS + StorageAccount", func(t *testing.T) {
+		t.Parallel()
+		cs := getK8sDefaultContainerService(false)
+		agentPoolProfiles := cs.Properties.AgentPoolProfiles
+		agentPoolProfiles[0].AvailabilityProfile = VirtualMachineScaleSets
+		agentPoolProfiles[0].StorageProfile = StorageAccount
+		expectedMsg := fmt.Sprintf("VirtualMachineScaleSets does not support %s disks.  Please specify \"storageProfile\": \"%s\" (recommended) or \"availabilityProfile\": \"%s\"", StorageAccount, ManagedDisks, AvailabilitySet)
+		if err := cs.Properties.validateAgentPoolProfiles(false); err.Error() != expectedMsg {
+			t.Errorf("expected error with message : %s, but got %s", expectedMsg, err.Error())
+		}
+	})
+
+	t.Run("Should fail for VMSS + VMAS", func(t *testing.T) {
+		t.Parallel()
+		cs := getK8sDefaultContainerService(false)
+		cs.Properties.AgentPoolProfiles = append(cs.Properties.AgentPoolProfiles, &AgentPoolProfile{
+			Name:                "agentpool2",
+			VMSize:              "Standard_D2_v2",
+			Count:               1,
+			AvailabilityProfile: AvailabilitySet,
+		})
+		agentPoolProfiles := cs.Properties.AgentPoolProfiles
+		agentPoolProfiles[0].AvailabilityProfile = VirtualMachineScaleSets
+		agentPoolProfiles[1].AvailabilityProfile = AvailabilitySet
+		expectedMsg := fmt.Sprintf("mixed mode availability profiles are not allowed. Please set either VirtualMachineScaleSets or AvailabilitySet in availabilityProfile for all agent pools")
+		if err := cs.Properties.validateAgentPoolProfiles(false); err.Error() != expectedMsg {
+			t.Errorf("expected error with message : %s, but got %s", expectedMsg, err.Error())
+		}
+	})
+}
+
+func TestValidateCustomCloudProfile(t *testing.T) {
+	tests := []struct {
+		name        string
+		cs          *ContainerService
+		expectedErr error
+	}{
+		{
+			name: "valid run",
+			cs: &ContainerService{
+				Location: "testlocation",
+				Properties: &Properties{
+					CustomCloudProfile: &CustomCloudProfile{
+						PortalURL: "https://portal.testlocation.cotoso.com",
+					},
+				},
+			},
+			expectedErr: nil,
+		},
+		{
+			name: "custom profile is nil",
+			cs: &ContainerService{
+				Location: "testlocation",
+				Properties: &Properties{
+					LinuxProfile: &LinuxProfile{
+						AdminUsername: "abc",
+					},
+				},
+			},
+			expectedErr: nil,
+		},
+		{
+			name: "PortalURL is empty",
+			cs: &ContainerService{
+				Location: "testlocation",
+				Properties: &Properties{
+					CustomCloudProfile: &CustomCloudProfile{
+						AuthenticationMethod: "azure_ad",
+					},
+				},
+			},
+			expectedErr: errors.New("portalURL needs to be specified when CustomCloudProfile is provided"),
+		},
+		{
+			name: "PortalURL is invalid",
+			cs: &ContainerService{
+				Location: "testlocation",
+				Properties: &Properties{
+					CustomCloudProfile: &CustomCloudProfile{
+						PortalURL: "https://portal.testlocationinvalid.cotoso.com",
+					},
+				},
+			},
+			expectedErr: fmt.Errorf("portalURL needs to start with https://portal.%s. ", "testlocation"),
+		},
+
+		{
+			name: "authenticationMethod has invalid value",
+			cs: &ContainerService{
+				Location: "testlocation",
+				Properties: &Properties{
+					CustomCloudProfile: &CustomCloudProfile{
+						AuthenticationMethod: "invalidAuthMethod",
+						PortalURL:            "https://portal.testlocation.cotoso.com",
+					},
+				},
+			},
+			expectedErr: errors.Errorf("authenticationMethod allowed values are '%s' and '%s'", ClientCertificateAuthMethod, ClientSecretAuthMethod),
+		},
+		{
+			name: "identitySystem has invalid value",
+			cs: &ContainerService{
+				Location: "testlocation",
+				Properties: &Properties{
+					CustomCloudProfile: &CustomCloudProfile{
+						IdentitySystem: "invalidIdentySytem",
+						PortalURL:      "https://portal.testlocation.cotoso.com",
+					},
+				},
+			},
+			expectedErr: errors.Errorf("identitySystem allowed values are '%s' and '%s'", AzureADIdentitySystem, ADFSIdentitySystem),
+		},
+		{
+			name: "Dependencies location: china",
+			cs: &ContainerService{
+				Location: "testlocation",
+				Properties: &Properties{
+					CustomCloudProfile: &CustomCloudProfile{
+						DependenciesLocation: DependenciesLocation("china"),
+						PortalURL:            "https://portal.testlocation.cotoso.com",
+					},
+				},
+			},
+			expectedErr: nil,
+		},
+		{
+			name: "Dependencies location: public",
+			cs: &ContainerService{
+				Location: "testlocation",
+				Properties: &Properties{
+					CustomCloudProfile: &CustomCloudProfile{
+						DependenciesLocation: DependenciesLocation("public"),
+						PortalURL:            "https://portal.testlocation.cotoso.com",
+					},
+				},
+			},
+			expectedErr: nil,
+		},
+		{
+			name: "Dependencies location: german",
+			cs: &ContainerService{
+				Location: "testlocation",
+				Properties: &Properties{
+					CustomCloudProfile: &CustomCloudProfile{
+						DependenciesLocation: DependenciesLocation("german"),
+						PortalURL:            "https://portal.testlocation.cotoso.com",
+					},
+				},
+			},
+			expectedErr: nil,
+		},
+		{
+			name: "Dependencies location: usgovernment",
+			cs: &ContainerService{
+				Location: "testlocation",
+				Properties: &Properties{
+					CustomCloudProfile: &CustomCloudProfile{
+						DependenciesLocation: DependenciesLocation("usgovernment"),
+						PortalURL:            "https://portal.testlocation.cotoso.com",
+					},
+				},
+			},
+			expectedErr: nil,
+		},
+		{
+			name: "Dependencies location: invalid",
+			cs: &ContainerService{
+				Location: "testlocation",
+				Properties: &Properties{
+					CustomCloudProfile: &CustomCloudProfile{
+						DependenciesLocation: DependenciesLocation("invalidDependenciesLocation"),
+						PortalURL:            "https://portal.testlocation.cotoso.com",
+					},
+				},
+			},
+			expectedErr: errors.New("The invalidDependenciesLocation dependenciesLocation is not supported. The supported vaules are [ public china german usgovernment]"),
+		},
+		{
+			name: " valid AzureAD and ClientSecret",
+			cs: &ContainerService{
+				Location: "testlocation",
+				Properties: &Properties{
+					CustomCloudProfile: &CustomCloudProfile{
+						IdentitySystem:       "azure_ad",
+						AuthenticationMethod: "client_secret",
+						PortalURL:            "https://portal.testlocation.cotoso.com",
+					},
+				},
+			},
+			expectedErr: nil,
+		},
+		{
+			name: " valid ADFS and ClientCertificate",
+			cs: &ContainerService{
+				Location: "testlocation",
+				Properties: &Properties{
+					CustomCloudProfile: &CustomCloudProfile{
+						IdentitySystem:       "adfs",
+						AuthenticationMethod: "client_certificate",
+						PortalURL:            "https://portal.testlocation.cotoso.com",
+					},
+				},
+			},
+			expectedErr: nil,
+		},
+	}
+
+	for _, test := range tests {
+		test := test
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+			gotErr := test.cs.validateCustomCloudProfile()
+			if !helpers.EqualError(gotErr, test.expectedErr) {
+				t.Logf("scenario %q", test.name)
+				t.Errorf("expected error: %v, got: %v", test.expectedErr, gotErr)
+			}
+		})
+	}
+}
+
+func TestValidateLocation(t *testing.T) {
+
+	tests := []struct {
+		name          string
+		location      string
+		propertiesnil bool
+		cs            *ContainerService
+		expectedErr   error
+	}{
+
+		{
+			name:          "AzureStack location is empty",
+			location:      "",
+			propertiesnil: false,
+			cs: &ContainerService{
+				Properties: &Properties{
+					CustomCloudProfile: &CustomCloudProfile{
+						PortalURL: "https://portal.testlocation.cotoso.com",
+					},
+				},
+			},
+			expectedErr: errors.New("missing ContainerService Location"),
+		},
+	}
+
+	for _, test := range tests {
+		test := test
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+			cs := getK8sDefaultContainerService(true)
+			cs.Location = test.cs.Location
+			if test.cs.Properties != nil {
+				cs.Properties.CustomCloudProfile = test.cs.Properties.CustomCloudProfile
+			}
+
+			if test.propertiesnil {
+				cs.Properties = nil
+			}
+			gotErr := cs.Validate(false)
+			if !helpers.EqualError(gotErr, test.expectedErr) {
+				t.Logf("scenario %q", test.name)
+				t.Errorf("expected error: %v, got: %v", test.expectedErr, gotErr)
+			}
+		})
+	}
 }

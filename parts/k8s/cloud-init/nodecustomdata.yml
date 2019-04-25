@@ -1,0 +1,397 @@
+#cloud-config
+
+write_files:
+- path: /opt/azure/containers/provision_source.sh
+  permissions: "0744"
+  encoding: gzip
+  owner: root
+  content: !!binary |
+    {{CloudInitData "provisionSource"}}
+
+- path: /opt/azure/containers/provision.sh
+  permissions: "0744"
+  encoding: gzip
+  owner: root
+  content: !!binary |
+    {{CloudInitData "provisionScript"}}
+
+- path: /opt/azure/containers/provision_installs.sh
+  permissions: "0744"
+  encoding: gzip
+  owner: root
+  content: !!binary |
+    {{CloudInitData "provisionInstalls"}}
+
+- path: /opt/azure/containers/provision_configs.sh
+  permissions: "0744"
+  encoding: gzip
+  owner: root
+  content: !!binary |
+    {{CloudInitData "provisionConfigs"}}
+
+- path: /opt/azure/containers/provision_cis.sh
+  permissions: "0744"
+  encoding: gzip
+  owner: root
+  content: !!binary |
+    {{CloudInitData "provisionCIS"}}
+    
+{{if IsAzureStackCloud}}
+- path: /opt/azure/containers/provision_configs_custom_cloud.sh
+  permissions: "0744"
+  encoding: gzip
+  owner: root
+  content: !!binary |
+    {{WrapAsVariable "provisionConfigsCustomCloud"}}
+{{end}}
+
+{{if .IsCoreOS}}
+- path: /opt/bin/health-monitor.sh
+{{else}}
+- path: /usr/local/bin/health-monitor.sh
+{{end}}
+  permissions: "0544"
+  encoding: gzip
+  owner: root
+  content: !!binary |
+    {{CloudInitData "healthMonitorScript"}}
+
+- path: /etc/systemd/system/kubelet-monitor.service
+  permissions: "0644"
+  encoding: gzip
+  owner: root
+  content: !!binary |
+    {{CloudInitData "kubeletMonitorSystemdService"}}
+
+- path: /etc/systemd/system/docker-monitor.timer
+  permissions: "0644"
+  encoding: gzip
+  owner: root
+  content: !!binary |
+    {{CloudInitData "dockerMonitorSystemdTimer"}}
+
+- path: /etc/systemd/system/docker-monitor.service
+  permissions: "0644"
+  encoding: gzip
+  owner: root
+  content: !!binary |
+    {{CloudInitData "dockerMonitorSystemdService"}}
+
+- path: /etc/systemd/system/kubelet.service
+  permissions: "0644"
+  encoding: gzip
+  owner: root
+  content: !!binary |
+    {{CloudInitData "kubeletSystemdService"}}
+
+- path: /etc/systemd/system/kms.service
+  permissions: "0644"
+  encoding: gzip
+  owner: root
+  content: !!binary |
+    {{CloudInitData "kmsSystemdService"}}
+
+- path: /etc/apt/preferences
+  permissions: "0644"
+  encoding: gzip
+  owner: root
+  content: !!binary |
+    {{CloudInitData "aptPreferences"}}
+
+{{if .IsUbuntuNonVHD}}
+  {{if .IsUbuntu1604}}
+- path: /etc/ssh/sshd_config
+  permissions: "0600"
+  encoding: gzip
+  owner: root
+  content: !!binary |
+    {{CloudInitData "sshdConfig1604"}}
+  {{else}}
+- path: /etc/ssh/sshd_config
+  permissions: "0600"
+  encoding: gzip
+  owner: root
+  content: !!binary |
+    {{CloudInitData "sshdConfig"}}
+  {{end}}
+
+- path: /etc/issue
+  permissions: "0644"
+  encoding: gzip
+  owner: root
+  content: !!binary |
+    {{CloudInitData "etcIssue"}}
+
+- path: /etc/issue.net
+  permissions: "0644"
+  encoding: gzip
+  owner: root
+  content: !!binary |
+    {{CloudInitData "etcIssueNet"}}
+
+- path: /etc/sysctl.d/60-CIS.conf
+  permissions: "0644"
+  encoding: gzip
+  owner: root
+  content: !!binary |
+    {{CloudInitData "cisNetEnforcement"}}
+
+- path: /etc/rsyslog.d/60-CIS.conf
+  permissions: "0644"
+  encoding: gzip
+  owner: root
+  content: !!binary |
+    {{CloudInitData "cisLogEnforcement"}}
+
+- path: /etc/modprobe.d/CIS.conf
+  permissions: "0644"
+  encoding: gzip
+  owner: root
+  content: !!binary |
+    {{CloudInitData "modprobeConfCIS"}}
+
+- path: /etc/security/pwquality.conf
+  permissions: "0600"
+  encoding: gzip
+  owner: root
+  content: !!binary |
+    {{CloudInitData "pwQuality"}}
+
+- path: /etc/default/grub
+  permissions: "0644"
+  encoding: gzip
+  owner: root
+  content: !!binary |
+    {{CloudInitData "defaultGrub"}}
+
+- path: /etc/pam.d/su
+  permissions: "0644"
+  encoding: gzip
+  owner: root
+  content: !!binary |
+    {{CloudInitData "pamDotDSU"}}
+
+- path: /etc/pam.d/common-auth
+  permissions: "0644"
+  encoding: gzip
+  owner: root
+  content: !!binary |
+    {{CloudInitData "pamDotDCommonAuth"}}
+
+- path: /etc/pam.d/common-password
+  permissions: "0644"
+  encoding: gzip
+  owner: root
+  content: !!binary |
+    {{CloudInitData "pamDotDCommonPassword"}}
+
+- path: /etc/profile.d/CIS.sh
+  permissions: "0644"
+  encoding: gzip
+  owner: root
+  content: !!binary |
+    {{CloudInitData "profileDCISSh"}}
+{{end}}
+
+{{if .KubernetesConfig.RequiresDocker}}
+    {{if not .IsCoreOS}}
+- path: /etc/systemd/system/docker.service.d/clear_mount_propagation_flags.conf
+  permissions: "0644"
+  encoding: gzip
+  owner: "root"
+  content: !!binary |
+    {{CloudInitData "dockerClearMountPropagationFlags"}}
+    {{end}}
+
+- path: /etc/systemd/system/docker.service.d/exec_start.conf
+  permissions: "0644"
+  owner: root
+  content: |
+    [Service]
+    ExecStart=
+    {{if .IsCoreOS}}
+    ExecStart=/usr/bin/env PATH=${TORCX_BINDIR}:${PATH} ${TORCX_BINDIR}/dockerd --host=fd:// --containerd=/var/run/docker/libcontainerd/docker-containerd.sock --storage-driver=overlay2 --bip={{WrapAsParameter "dockerBridgeCidr"}} $DOCKER_SELINUX $DOCKER_OPTS $DOCKER_CGROUPS $DOCKER_OPT_BIP $DOCKER_OPT_MTU $DOCKER_OPT_IPMASQ
+    {{else}}
+    ExecStart=/usr/bin/dockerd -H fd:// --storage-driver=overlay2 --bip={{WrapAsParameter "dockerBridgeCidr"}}
+    {{end}}
+
+- path: /etc/docker/daemon.json
+  permissions: "0644"
+  owner: root
+  content: |
+    {
+      "live-restore": true,
+      "log-driver": "json-file",
+      "log-opts":  {
+         "max-size": "50m",
+         "max-file": "5"
+      }{{if IsNSeriesSKU .}}
+      ,"default-runtime": "nvidia",
+      "runtimes": {
+         "nvidia": {
+             "path": "/usr/bin/nvidia-container-runtime",
+             "runtimeArgs": []
+        }
+      }{{end}}
+    }
+{{end}}
+
+{{if HasCiliumNetworkPlugin }}
+- path: /etc/systemd/system/sys-fs-bpf.mount
+  permissions: "0644"
+  owner: root
+  content: !!binary |
+    {{WrapAsVariable "systemdBPFMount"}}
+{{end}}
+
+{{if IsNSeriesSKU .}}
+- path: /etc/systemd/system/nvidia-modprobe.service
+  permissions: "0644"
+  owner: root
+  content: |
+    [Unit]
+    Description=Installs and loads Nvidia GPU kernel module
+    [Service]
+    Type=oneshot
+    RemainAfterExit=true
+    ExecStartPre=/bin/sh -c "dkms autoinstall --verbose"
+    ExecStart=/bin/sh -c "nvidia-modprobe -u -c0"
+    ExecStartPost=/bin/sh -c "sleep 10 && systemctl restart kubelet"
+    [Install]
+    WantedBy=multi-user.target
+{{end}}
+
+- path: /etc/kubernetes/certs/ca.crt
+  permissions: "0644"
+  encoding: base64
+  owner: root
+  content: |
+    {{WrapAsParameter "caCertificate"}}
+
+- path: /etc/kubernetes/certs/client.crt
+  permissions: "0644"
+  encoding: base64
+  owner: root
+  content: |
+    {{WrapAsParameter "clientCertificate"}}
+
+{{if HasLinuxProfile}}{{if HasCustomSearchDomain}}
+- path: /opt/azure/containers/setup-custom-search-domains.sh
+  permissions: "0744"
+  encoding: gzip
+  owner: root
+  content: !!binary |
+    {{CloudInitData "customSearchDomainsScript"}}
+{{end}}{{end}}
+
+- path: /var/lib/kubelet/kubeconfig
+  permissions: "0644"
+  owner: root
+  content: |
+    apiVersion: v1
+    kind: Config
+    clusters:
+    - name: localcluster
+      cluster:
+        certificate-authority: /etc/kubernetes/certs/ca.crt
+        {{if IsAzureStackCloud}}
+        {{if IsMultipleMasters}}
+        server: https://{{WrapAsVariable "masterPublicLbFQDN"}}:443
+        {{else}}
+        server: https://{{WrapAsVariable "kubernetesAPIServerIP"}}:443
+        {{end}}
+        {{else}}
+        server: https://{{WrapAsVariable "kubernetesAPIServerIP"}}:443
+        {{end}}
+    users:
+    - name: client
+      user:
+        client-certificate: /etc/kubernetes/certs/client.crt
+        client-key: /etc/kubernetes/certs/client.key
+    contexts:
+    - context:
+        cluster: localcluster
+        user: client
+      name: localclustercontext
+    current-context: localclustercontext
+
+- path: /etc/default/kubelet
+  permissions: "0644"
+  owner: root
+  content: |
+{{if IsKubernetesVersionLt "1.8.0"}}
+    KUBELET_OPTS=--require-kubeconfig
+{{else}}
+    KUBELET_OPTS=
+{{end}}
+    KUBELET_CONFIG={{GetKubeletConfigKeyVals .KubernetesConfig }}
+    KUBELET_IMAGE={{WrapAsParameter "kubernetesHyperkubeSpec"}}
+    KUBELET_REGISTER_SCHEDULABLE=true
+    KUBELET_NODE_LABELS={{GetAgentKubernetesLabels . "',variables('labelResourceGroup'),'"}}
+{{if IsAzureStackCloud }}
+    AZURE_ENVIRONMENT_FILEPATH=/etc/kubernetes/azurestackcloud.json
+{{end}}
+
+- path: /opt/azure/containers/kubelet.sh
+  permissions: "0755"
+  owner: root
+  content: |
+    #!/bin/bash
+{{if not EnablePodSecurityPolicy}}
+    sed -i "s|apparmor_parser|d|g" "/etc/systemd/system/kubelet.service"
+{{end}}
+{{if not IsIPMasqAgentEnabled}}
+    {{if IsAzureCNI}}
+    iptables -t nat -A POSTROUTING -m iprange ! --dst-range 168.63.129.16 -m addrtype ! --dst-type local ! -d {{WrapAsParameter "vnetCidr"}} -j MASQUERADE
+    {{end}}
+{{end}}
+{{if HasLinuxProfile}}{{if HasCustomSearchDomain}}
+    sed -i "s|<searchDomainName>|{{WrapAsParameter "searchDomainName"}}|g" "/opt/azure/containers/setup-custom-search-domains.sh"
+    sed -i "s|<searchDomainRealmUser>|{{WrapAsParameter "searchDomainRealmUser"}}|g" "/opt/azure/containers/setup-custom-search-domains.sh"
+    sed -i "s|<searchDomainRealmPassword>|{{WrapAsParameter "searchDomainRealmPassword"}}|g" "/opt/azure/containers/setup-custom-search-domains.sh"
+{{end}}{{end}}
+
+{{if IsAzureStackCloud}}
+- path: "/etc/kubernetes/azurestackcloud.json"
+  permissions: "0600"
+  owner: "root"
+  content: |
+    {{WrapAsVariable "environmentJSON"}}
+{{end}}
+
+{{if .IsCoreOS}}
+- path: /opt/azure/containers/provision-setup.sh
+  permissions: "0755"
+  owner: root
+  content: |
+    #!/bin/bash
+    sudo /bin/sed -i "s/Description=Kubelet/Description=Kubelet\nRequires=rpc-statd.service/g" /etc/systemd/system/kubelet.service
+    sudo /bin/sed -i "s/usr\/local\/bin\/kubelet/opt\/kubelet/g" /etc/systemd/system/kubelet.service
+    /usr/bin/mkdir -p /etc/kubernetes/manifests
+    {{if .KubernetesConfig.RequiresDocker}}
+    usermod -aG docker {{WrapAsParameter "linuxAdminUsername"}}
+    {{end}}
+
+    systemctl enable rpcbind
+    systemctl enable kubelet
+    systemctl start rpcbind
+    systemctl start kubelet
+
+    touch /opt/azure/containers/runcmd.complete
+
+coreos:
+  units:
+    - name: start-provision-setup.service
+      command: "start"
+      content: |
+        [Unit]
+        Description=Start provision setup service
+
+        [Service]
+        ExecStart=/opt/azure/containers/provision-setup.sh
+{{else}}
+runcmd:
+- set -x
+- . /opt/azure/containers/provision_source.sh
+- aptmarkWALinuxAgent hold{{GetKubernetesAgentPreprovisionYaml .}}
+{{end}}

@@ -7,18 +7,18 @@ import "fmt"
 
 //AzureEnvironmentSpecConfig is the overall configuration differences in different cloud environments.
 type AzureEnvironmentSpecConfig struct {
-	CloudName            string
-	DockerSpecConfig     DockerSpecConfig
-	KubernetesSpecConfig KubernetesSpecConfig
-	DCOSSpecConfig       DCOSSpecConfig
-	EndpointConfig       AzureEndpointConfig
-	OSImageConfig        map[Distro]AzureOSImageConfig
+	CloudName            string                        `json:"cloudName,omitempty"`
+	DockerSpecConfig     DockerSpecConfig              `json:"dockerSpecConfig,omitempty"`
+	KubernetesSpecConfig KubernetesSpecConfig          `json:"kubernetesSpecConfig,omitempty"`
+	DCOSSpecConfig       DCOSSpecConfig                `json:"-"`
+	EndpointConfig       AzureEndpointConfig           `json:"endpointConfig,omitempty"`
+	OSImageConfig        map[Distro]AzureOSImageConfig `json:"osImageConfig,omitempty"`
 }
 
 //DockerSpecConfig is the configurations of docker
 type DockerSpecConfig struct {
-	DockerEngineRepo         string
-	DockerComposeDownloadURL string
+	DockerEngineRepo         string `json:"dockerEngineRepo,omitempty"`
+	DockerComposeDownloadURL string `json:"dockerComposeDownloadURL,omitempty"`
 }
 
 //DCOSSpecConfig is the configurations of DCOS
@@ -36,31 +36,31 @@ type DCOSSpecConfig struct {
 
 //KubernetesSpecConfig is the kubernetes container images used.
 type KubernetesSpecConfig struct {
-	KubernetesImageBase              string
-	TillerImageBase                  string
-	ACIConnectorImageBase            string
-	NVIDIAImageBase                  string
-	AzureCNIImageBase                string
-	EtcdDownloadURLBase              string
-	KubeBinariesSASURLBase           string
-	WindowsTelemetryGUID             string
-	CNIPluginsDownloadURL            string
-	VnetCNILinuxPluginsDownloadURL   string
-	VnetCNIWindowsPluginsDownloadURL string
-	ContainerdDownloadURLBase        string
+	KubernetesImageBase              string `json:"kubernetesImageBase,omitempty"`
+	TillerImageBase                  string `json:"tillerImageBase,omitempty"`
+	ACIConnectorImageBase            string `json:"aciConnectorImageBase,omitempty"`
+	NVIDIAImageBase                  string `json:"nvidiaImageBase,omitempty"`
+	AzureCNIImageBase                string `json:"azureCNIImageBase,omitempty"`
+	EtcdDownloadURLBase              string `json:"etcdDownloadURLBase,omitempty"`
+	KubeBinariesSASURLBase           string `json:"kubeBinariesSASURLBase,omitempty"`
+	WindowsTelemetryGUID             string `json:"windowsTelemetryGUID,omitempty"`
+	CNIPluginsDownloadURL            string `json:"cniPluginsDownloadURL,omitempty"`
+	VnetCNILinuxPluginsDownloadURL   string `json:"vnetCNILinuxPluginsDownloadURL,omitempty"`
+	VnetCNIWindowsPluginsDownloadURL string `json:"vnetCNIWindowsPluginsDownloadURL,omitempty"`
+	ContainerdDownloadURLBase        string `json:"containerdDownloadURLBase,omitempty"`
 }
 
 //AzureEndpointConfig describes an Azure endpoint
 type AzureEndpointConfig struct {
-	ResourceManagerVMDNSSuffix string
+	ResourceManagerVMDNSSuffix string `json:"resourceManagerVMDNSSuffix,omitempty"`
 }
 
 //AzureOSImageConfig describes an Azure OS image
 type AzureOSImageConfig struct {
-	ImageOffer     string
-	ImageSku       string
-	ImagePublisher string
-	ImageVersion   string
+	ImageOffer     string `json:"imageOffer,omitempty"`
+	ImageSku       string `json:"imageSku,omitempty"`
+	ImagePublisher string `json:"imagePublisher,omitempty"`
+	ImageVersion   string `json:"imageVersion,omitempty"`
 }
 
 var (
@@ -106,20 +106,12 @@ var (
 		ImageVersion:   "latest",
 	}
 
-	//SovereignCloudsUbuntuImageConfig is the Linux distribution for Azure Sovereign Clouds.
-	SovereignCloudsUbuntuImageConfig = AzureOSImageConfig{
+	//Ubuntu1804ImageConfig is the Ubunutu 18.04-LTS Linux distribution.
+	Ubuntu1804ImageConfig = AzureOSImageConfig{
 		ImageOffer:     "UbuntuServer",
-		ImageSku:       "16.04-LTS",
+		ImageSku:       "18.04-LTS",
 		ImagePublisher: "Canonical",
 		ImageVersion:   "latest",
-	}
-
-	//GermanCloudUbuntuImageConfig is the Linux distribution for Azure Sovereign Clouds.
-	GermanCloudUbuntuImageConfig = AzureOSImageConfig{
-		ImageOffer:     "UbuntuServer",
-		ImageSku:       "16.04-LTS",
-		ImagePublisher: "Canonical",
-		ImageVersion:   "16.04.201801050",
 	}
 
 	//DefaultRHELOSImageConfig is the RHEL Linux distribution.
@@ -138,20 +130,20 @@ var (
 		ImageVersion:   "latest",
 	}
 
-	// DefaultAKSOSImageConfig is the AKS image based on Ubuntu 16.04.
+	// DefaultAKSOSImageConfig is the AKS image based on Ubuntu 16.04-LTS.
 	DefaultAKSOSImageConfig = AzureOSImageConfig{
 		ImageOffer:     "aks",
-		ImageSku:       "aks-ubuntu-1604-201901",
+		ImageSku:       "aks-ubuntu-1604-201904",
 		ImagePublisher: "microsoft-aks",
-		ImageVersion:   "2019.01.11",
+		ImageVersion:   "2019.04.08",
 	}
 
-	// DefaultAKSDockerEngineOSImageConfig is the AKS image based on Ubuntu 16.04.
-	DefaultAKSDockerEngineOSImageConfig = AzureOSImageConfig{
+	// DefaultAKS1804OSImageConfig is the AKS image based on Ubuntu 18.04-LTS.
+	DefaultAKS1804OSImageConfig = AzureOSImageConfig{
 		ImageOffer:     "aks",
-		ImageSku:       "aks-ubuntu-1604-docker-engine",
+		ImageSku:       "aks-ubuntu-1804-201904",
 		ImagePublisher: "microsoft-aks",
-		ImageVersion:   "2019.01.11",
+		ImageVersion:   "2019.04.08",
 	}
 
 	// DefaultACC1604OSImageConfig is the ACC image based on Ubuntu 16.04.
@@ -176,18 +168,19 @@ var (
 		},
 
 		OSImageConfig: map[Distro]AzureOSImageConfig{
-			Ubuntu:          DefaultUbuntuImageConfig,
-			RHEL:            DefaultRHELOSImageConfig,
-			CoreOS:          DefaultCoreOSImageConfig,
-			AKS:             DefaultAKSOSImageConfig,
-			AKSDockerEngine: DefaultAKSDockerEngineOSImageConfig,
-			ACC1604:         DefaultACC1604OSImageConfig,
+			Ubuntu:     DefaultUbuntuImageConfig,
+			Ubuntu1804: Ubuntu1804ImageConfig,
+			RHEL:       DefaultRHELOSImageConfig,
+			CoreOS:     DefaultCoreOSImageConfig,
+			AKS:        DefaultAKSOSImageConfig,
+			AKS1804:    DefaultAKS1804OSImageConfig,
+			ACC1604:    DefaultACC1604OSImageConfig,
 		},
 	}
 
 	//AzureGermanCloudSpec is the German cloud config.
 	AzureGermanCloudSpec = AzureEnvironmentSpecConfig{
-		CloudName:            azureGermanCloud,
+		CloudName:            AzureGermanCloud,
 		DockerSpecConfig:     DefaultDockerSpecConfig,
 		KubernetesSpecConfig: DefaultKubernetesSpecConfig,
 		DCOSSpecConfig:       DefaultDCOSSpecConfig,
@@ -195,17 +188,18 @@ var (
 			ResourceManagerVMDNSSuffix: "cloudapp.microsoftazure.de",
 		},
 		OSImageConfig: map[Distro]AzureOSImageConfig{
-			Ubuntu:          GermanCloudUbuntuImageConfig,
-			RHEL:            DefaultRHELOSImageConfig,
-			CoreOS:          DefaultCoreOSImageConfig,
-			AKS:             GermanCloudUbuntuImageConfig,
-			AKSDockerEngine: GermanCloudUbuntuImageConfig,
+			Ubuntu:     DefaultUbuntuImageConfig,
+			Ubuntu1804: Ubuntu1804ImageConfig,
+			RHEL:       DefaultRHELOSImageConfig,
+			CoreOS:     DefaultCoreOSImageConfig,
+			AKS:        DefaultUbuntuImageConfig,
+			AKS1804:    Ubuntu1804ImageConfig,
 		},
 	}
 
-	//AzureUSGovernmentCloud is the US government config.
-	AzureUSGovernmentCloud = AzureEnvironmentSpecConfig{
-		CloudName:            azureUSGovernmentCloud,
+	//AzureUSGovernmentCloudSpec is the US government config.
+	AzureUSGovernmentCloudSpec = AzureEnvironmentSpecConfig{
+		CloudName:            AzureUSGovernmentCloud,
 		DockerSpecConfig:     DefaultDockerSpecConfig,
 		KubernetesSpecConfig: DefaultKubernetesSpecConfig,
 		DCOSSpecConfig:       DefaultDCOSSpecConfig,
@@ -213,11 +207,12 @@ var (
 			ResourceManagerVMDNSSuffix: "cloudapp.usgovcloudapi.net",
 		},
 		OSImageConfig: map[Distro]AzureOSImageConfig{
-			Ubuntu:          SovereignCloudsUbuntuImageConfig,
-			RHEL:            DefaultRHELOSImageConfig,
-			CoreOS:          DefaultCoreOSImageConfig,
-			AKS:             SovereignCloudsUbuntuImageConfig,
-			AKSDockerEngine: SovereignCloudsUbuntuImageConfig,
+			Ubuntu:     DefaultUbuntuImageConfig,
+			Ubuntu1804: Ubuntu1804ImageConfig,
+			RHEL:       DefaultRHELOSImageConfig,
+			CoreOS:     DefaultCoreOSImageConfig,
+			AKS:        DefaultUbuntuImageConfig,
+			AKS1804:    Ubuntu1804ImageConfig,
 		},
 	}
 
@@ -255,19 +250,20 @@ var (
 			ResourceManagerVMDNSSuffix: "cloudapp.chinacloudapi.cn",
 		},
 		OSImageConfig: map[Distro]AzureOSImageConfig{
-			Ubuntu:          SovereignCloudsUbuntuImageConfig,
-			RHEL:            DefaultRHELOSImageConfig,
-			CoreOS:          DefaultCoreOSImageConfig,
-			AKS:             DefaultAKSOSImageConfig,
-			AKSDockerEngine: DefaultAKSDockerEngineOSImageConfig,
+			Ubuntu:     DefaultUbuntuImageConfig,
+			Ubuntu1804: Ubuntu1804ImageConfig,
+			RHEL:       DefaultRHELOSImageConfig,
+			CoreOS:     DefaultCoreOSImageConfig,
+			AKS:        DefaultAKSOSImageConfig,
+			AKS1804:    DefaultAKS1804OSImageConfig,
 		},
 	}
 
 	// AzureCloudSpecEnvMap is the environment configuration map for all the Azure cloud environments.
 	AzureCloudSpecEnvMap = map[string]AzureEnvironmentSpecConfig{
 		AzureChinaCloud:        AzureChinaCloudSpec,
-		azureGermanCloud:       AzureGermanCloudSpec,
-		azureUSGovernmentCloud: AzureUSGovernmentCloud,
+		AzureGermanCloud:       AzureGermanCloudSpec,
+		AzureUSGovernmentCloud: AzureUSGovernmentCloudSpec,
 		AzurePublicCloud:       AzureCloudSpec,
 	}
 )

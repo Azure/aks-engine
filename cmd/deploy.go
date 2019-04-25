@@ -72,23 +72,23 @@ func newDeployCmd() *cobra.Command {
 		Long:  deployLongDescription,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if err := dc.validateArgs(cmd, args); err != nil {
-				log.Fatalf("error validating deployCmd: %s", err.Error())
+				return errors.Wrap(err, "validating deployCmd")
 			}
 			if err := dc.mergeAPIModel(); err != nil {
-				log.Fatalf("error merging API model in deployCmd: %s", err.Error())
+				return errors.Wrap(err, "merging API model in deployCmd")
 			}
 			if err := dc.loadAPIModel(cmd, args); err != nil {
-				log.Fatalf("failed to load apimodel: %s", err.Error())
+				return errors.Wrap(err, "loading API model")
 			}
 			if _, _, err := dc.validateApimodel(); err != nil {
-				log.Fatalf("Failed to validate the apimodel after populating values: %s", err.Error())
+				return errors.Wrap(err, "validating API model after populating values")
 			}
 			return dc.run()
 		},
 	}
 
 	f := deployCmd.Flags()
-	f.StringVarP(&dc.apimodelPath, "api-model", "m", "", "path to the apimodel file")
+	f.StringVarP(&dc.apimodelPath, "api-model", "m", "", "path to your cluster definition file")
 	f.StringVarP(&dc.dnsPrefix, "dns-prefix", "p", "", "dns prefix (unique name for the cluster)")
 	f.BoolVar(&dc.autoSuffix, "auto-suffix", false, "automatically append a compressed timestamp to the dnsPrefix to ensure unique cluster name automatically")
 	f.StringVarP(&dc.outputDirectory, "output-directory", "o", "", "output directory (derived from FQDN if absent)")
@@ -109,7 +109,7 @@ func (dc *deployCmd) validateArgs(cmd *cobra.Command, args []string) error {
 
 	dc.locale, err = i18n.LoadTranslations()
 	if err != nil {
-		return errors.Wrap(err, "error loading translation files")
+		return errors.Wrap(err, "loading translation files")
 	}
 
 	if dc.apimodelPath == "" {
@@ -140,14 +140,15 @@ func (dc *deployCmd) mergeAPIModel() error {
 
 	if dc.apimodelPath == "" {
 		log.Infoln("no --api-model was specified, using default model")
-		f, err := ioutil.TempFile("", fmt.Sprintf("%s-default-api-model_%s-%s_", filepath.Base(os.Args[0]), BuildSHA, GitTreeState))
+		var f *os.File
+		f, err = ioutil.TempFile("", fmt.Sprintf("%s-default-api-model_%s-%s_", filepath.Base(os.Args[0]), BuildSHA, GitTreeState))
 		if err != nil {
 			return errors.Wrap(err, "error creating temp file for default API model")
 		}
 		log.Infoln("default api model generated at", f.Name())
 
 		defer f.Close()
-		if err := writeDefaultModel(f); err != nil {
+		if err = writeDefaultModel(f); err != nil {
 			return err
 		}
 		dc.apimodelPath = f.Name()
@@ -187,14 +188,6 @@ func (dc *deployCmd) loadAPIModel(cmd *cobra.Command, args []string) error {
 		return errors.Wrap(err, "error parsing the api model")
 	}
 
-	if dc.outputDirectory == "" {
-		if dc.containerService.Properties.MasterProfile != nil {
-			dc.outputDirectory = path.Join("_output", dc.containerService.Properties.MasterProfile.DNSPrefix)
-		} else {
-			dc.outputDirectory = path.Join("_output", dc.containerService.Properties.HostedMasterProfile.DNSPrefix)
-		}
-	}
-
 	// consume dc.caCertificatePath and dc.caPrivateKeyPath
 	if (dc.caCertificatePath != "" && dc.caPrivateKeyPath == "") || (dc.caCertificatePath == "" && dc.caPrivateKeyPath != "") {
 		return errors.New("--ca-certificate-path and --ca-private-key-path must be specified together")
@@ -220,6 +213,14 @@ func (dc *deployCmd) loadAPIModel(cmd *cobra.Command, args []string) error {
 		dc.containerService.Location = dc.location
 	} else if dc.containerService.Location != dc.location {
 		return errors.New("--location does not match api model location")
+	}
+
+	if dc.containerService.Properties.IsAzureStackCloud() {
+		err = dc.containerService.SetCustomCloudProfileEnvironment()
+		if err != nil {
+			return errors.Wrap(err, "error parsing the api model")
+		}
+		writeCustomCloudProfile(dc.containerService)
 	}
 
 	if err = dc.getAuthArgs().validateAuthArgs(); err != nil {
@@ -267,10 +268,14 @@ func autofillApimodel(dc *deployCmd) error {
 	}
 
 	if dc.outputDirectory == "" {
-		dc.outputDirectory = path.Join("_output", dc.containerService.Properties.MasterProfile.DNSPrefix)
+		if dc.containerService.Properties.MasterProfile != nil {
+			dc.outputDirectory = path.Join("_output", dc.containerService.Properties.MasterProfile.DNSPrefix)
+		} else {
+			dc.outputDirectory = path.Join("_output", dc.containerService.Properties.HostedMasterProfile.DNSPrefix)
+		}
 	}
 
-	if _, err := os.Stat(dc.outputDirectory); !dc.forceOverwrite && err == nil {
+	if _, err = os.Stat(dc.outputDirectory); !dc.forceOverwrite && err == nil {
 		return errors.Errorf("Output directory already exists and forceOverwrite flag is not set: %s", dc.outputDirectory)
 	}
 
@@ -289,7 +294,8 @@ func autofillApimodel(dc *deployCmd) error {
 		translator := &i18n.Translator{
 			Locale: dc.locale,
 		}
-		_, publicKey, err := helpers.CreateSaveSSH(dc.containerService.Properties.LinuxProfile.AdminUsername, dc.outputDirectory, translator)
+		var publicKey string
+		_, publicKey, err = helpers.CreateSaveSSH(dc.containerService.Properties.LinuxProfile.AdminUsername, dc.outputDirectory, translator)
 		if err != nil {
 			return errors.Wrap(err, "Failed to generate SSH Key")
 		}
@@ -381,27 +387,25 @@ func (dc *deployCmd) run() error {
 
 	templateGenerator, err := engine.InitializeTemplateGenerator(ctx)
 	if err != nil {
-		log.Fatalf("failed to initialize template generator: %s", err.Error())
+		return errors.Wrap(err, "initializing template generator")
 	}
 
 	certsgenerated, err := dc.containerService.SetPropertiesDefaults(false, false)
 	if err != nil {
-		log.Fatalf("error in SetPropertiesDefaults template %s: %s", dc.apimodelPath, err.Error())
-		os.Exit(1)
+		return errors.Wrapf(err, "in SetPropertiesDefaults template %s", dc.apimodelPath)
 	}
 
-	template, parameters, err := templateGenerator.GenerateTemplate(dc.containerService, engine.DefaultGeneratorCode, BuildTag)
+	template, parameters, err := templateGenerator.GenerateTemplateV2(dc.containerService, engine.DefaultGeneratorCode, BuildTag)
 	if err != nil {
-		log.Fatalf("error generating template %s: %s", dc.apimodelPath, err.Error())
-		os.Exit(1)
+		return errors.Wrapf(err, "generating template %s", dc.apimodelPath)
 	}
 
 	if template, err = transform.PrettyPrintArmTemplate(template); err != nil {
-		log.Fatalf("error pretty printing template: %s \n", err.Error())
+		return errors.Wrap(err, "pretty-printing template")
 	}
 	var parametersFile string
 	if parametersFile, err = transform.BuildAzureParametersFile(parameters); err != nil {
-		log.Fatalf("error pretty printing template parameters: %s \n", err.Error())
+		return errors.Wrap(err, "pretty-printing template parameters")
 	}
 
 	writer := &engine.ArtifactWriter{
@@ -410,20 +414,18 @@ func (dc *deployCmd) run() error {
 		},
 	}
 	if err = writer.WriteTLSArtifacts(dc.containerService, dc.apiVersion, template, parametersFile, dc.outputDirectory, certsgenerated, dc.parametersOnly); err != nil {
-		log.Fatalf("error writing artifacts: %s \n", err.Error())
+		return errors.Wrap(err, "writing artifacts")
 	}
 
 	templateJSON := make(map[string]interface{})
 	parametersJSON := make(map[string]interface{})
 
-	err = json.Unmarshal([]byte(template), &templateJSON)
-	if err != nil {
-		log.Fatalln(err)
+	if err = json.Unmarshal([]byte(template), &templateJSON); err != nil {
+		return err
 	}
 
-	err = json.Unmarshal([]byte(parameters), &parametersJSON)
-	if err != nil {
-		log.Fatalln(err)
+	if err = json.Unmarshal([]byte(parameters), &parametersJSON); err != nil {
+		return err
 	}
 
 	deploymentSuffix := dc.random.Int31()
@@ -442,7 +444,7 @@ func (dc *deployCmd) run() error {
 			body, _ := ioutil.ReadAll(res.Body)
 			log.Errorf(string(body))
 		}
-		log.Fatalln(err)
+		return err
 	}
 
 	return nil

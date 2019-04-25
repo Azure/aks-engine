@@ -38,15 +38,18 @@ func getParameters(cs *api.ContainerService, generatorCode string, aksEngineVers
 	}
 
 	addValue(parametersMap, "fqdnEndpointSuffix", cloudSpecConfig.EndpointConfig.ResourceManagerVMDNSSuffix)
-	addValue(parametersMap, "targetEnvironment", helpers.GetCloudTargetEnv(cs.Location))
-	addValue(parametersMap, "linuxAdminUsername", properties.LinuxProfile.AdminUsername)
-	if properties.LinuxProfile.CustomSearchDomain != nil {
-		addValue(parametersMap, "searchDomainName", properties.LinuxProfile.CustomSearchDomain.Name)
-		addValue(parametersMap, "searchDomainRealmUser", properties.LinuxProfile.CustomSearchDomain.RealmUser)
-		addValue(parametersMap, "searchDomainRealmPassword", properties.LinuxProfile.CustomSearchDomain.RealmPassword)
-	}
-	if properties.LinuxProfile.CustomNodesDNS != nil {
-		addValue(parametersMap, "dnsServer", properties.LinuxProfile.CustomNodesDNS.DNSServer)
+	addValue(parametersMap, "targetEnvironment", helpers.GetTargetEnv(cs.Location, cs.Properties.GetCustomCloudName()))
+	linuxProfile := properties.LinuxProfile
+	if linuxProfile != nil {
+		addValue(parametersMap, "linuxAdminUsername", linuxProfile.AdminUsername)
+		if linuxProfile.CustomSearchDomain != nil {
+			addValue(parametersMap, "searchDomainName", linuxProfile.CustomSearchDomain.Name)
+			addValue(parametersMap, "searchDomainRealmUser", linuxProfile.CustomSearchDomain.RealmUser)
+			addValue(parametersMap, "searchDomainRealmPassword", linuxProfile.CustomSearchDomain.RealmPassword)
+		}
+		if linuxProfile.CustomNodesDNS != nil {
+			addValue(parametersMap, "dnsServer", linuxProfile.CustomNodesDNS.DNSServer)
+		}
 	}
 	// masterEndpointDNSNamePrefix is the basis for storage account creation across dcos, swarm, and k8s
 	if properties.MasterProfile != nil {
@@ -78,11 +81,14 @@ func getParameters(cs *api.ContainerService, generatorCode string, aksEngineVers
 	if properties.HostedMasterProfile != nil {
 		addValue(parametersMap, "masterSubnet", properties.HostedMasterProfile.Subnet)
 	}
-	addValue(parametersMap, "sshRSAPublicKey", properties.LinuxProfile.SSH.PublicKeys[0].KeyData)
-	for i, s := range properties.LinuxProfile.Secrets {
-		addValue(parametersMap, fmt.Sprintf("linuxKeyVaultID%d", i), s.SourceVault.ID)
-		for j, c := range s.VaultCertificates {
-			addValue(parametersMap, fmt.Sprintf("linuxKeyVaultID%dCertificateURL%d", i, j), c.CertificateURL)
+
+	if linuxProfile != nil {
+		addValue(parametersMap, "sshRSAPublicKey", linuxProfile.SSH.PublicKeys[0].KeyData)
+		for i, s := range linuxProfile.Secrets {
+			addValue(parametersMap, fmt.Sprintf("linuxKeyVaultID%d", i), s.SourceVault.ID)
+			for j, c := range s.VaultCertificates {
+				addValue(parametersMap, fmt.Sprintf("linuxKeyVaultID%dCertificateURL%d", i, j), c.CertificateURL)
+			}
 		}
 	}
 
@@ -115,8 +121,7 @@ func getParameters(cs *api.ContainerService, generatorCode string, aksEngineVers
 		dcosClusterPackageListID := cloudSpecConfig.DCOSSpecConfig.DcosClusterPackageListID
 		dcosProviderPackageID := cloudSpecConfig.DCOSSpecConfig.DcosProviderPackageID
 
-		switch properties.OrchestratorProfile.OrchestratorType {
-		case api.DCOS:
+		if properties.OrchestratorProfile.OrchestratorType == api.DCOS {
 			switch properties.OrchestratorProfile.OrchestratorVersion {
 			case common.DCOSVersion1Dot8Dot8:
 				dcosBootstrapURL = cloudSpecConfig.DCOSSpecConfig.DCOS188BootstrapDownloadURL

@@ -9,7 +9,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2018-04-01/compute"
+	"github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2018-10-01/compute"
 	"github.com/sirupsen/logrus"
 )
 
@@ -31,6 +31,7 @@ const (
 	createOptionFieldName          = "createOption"
 	tagsFieldName                  = "tags"
 	managedDiskFieldName           = "managedDisk"
+	windowsConfigurationFieldName  = "windowsConfiguration"
 
 	// ARM resource Types
 	nsgResourceType  = "Microsoft.Network/networkSecurityGroups"
@@ -213,7 +214,8 @@ func (t *Transformer) NormalizeMasterResourcesForScaling(logger *logrus.Entry, t
 
 		resourceType, ok := resourceMap[typeFieldName].(string)
 		if !ok || resourceType != vmResourceType {
-			resourceName, ok := resourceMap[nameFieldName].(string)
+			var resourceName string
+			resourceName, ok = resourceMap[nameFieldName].(string)
 			if !ok {
 				logger.Warnf("Template improperly formatted")
 				continue
@@ -267,7 +269,7 @@ func (t *Transformer) removeCustomData(logger *logrus.Entry, resourceProperties 
 		return ok
 	}
 
-	if osProfile[customDataFieldName] != nil {
+	if osProfile[customDataFieldName] != nil && osProfile[windowsConfigurationFieldName] == nil {
 		delete(osProfile, customDataFieldName)
 	}
 	return ok

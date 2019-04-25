@@ -23,7 +23,6 @@ func (cs *ContainerService) setKubeletConfig() {
 		"--pod-manifest-path":           "/etc/kubernetes/manifests",
 		"--cluster-dns":                 o.KubernetesConfig.DNSServiceIP,
 		"--cgroups-per-qos":             "true",
-		"--enforce-node-allocatable":    "pods",
 		"--kubeconfig":                  "/var/lib/kubelet/kubeconfig",
 		"--keep-terminated-pod-volumes": "false",
 	}
@@ -31,7 +30,18 @@ func (cs *ContainerService) setKubeletConfig() {
 	// Start with copy of Linux config
 	staticWindowsKubeletConfig := make(map[string]string)
 	for key, val := range staticLinuxKubeletConfig {
-		staticWindowsKubeletConfig[key] = val
+		switch key {
+		case "--pod-manifest-path": // Don't add Linux-specific config
+			break
+		case "--anonymous-auth", "--client-ca-file":
+			if !to.Bool(o.KubernetesConfig.EnableSecureKubelet) { // Don't add if EnableSecureKubelet is disabled
+				break
+			} else {
+				staticWindowsKubeletConfig[key] = val
+			}
+		default:
+			staticWindowsKubeletConfig[key] = val
+		}
 	}
 
 	// Add Windows-specific overrides
@@ -47,25 +57,34 @@ func (cs *ContainerService) setKubeletConfig() {
 	staticWindowsKubeletConfig["--hairpin-mode"] = "promiscuous-bridge"
 	staticWindowsKubeletConfig["--image-pull-progress-deadline"] = "20m"
 	staticWindowsKubeletConfig["--resolv-conf"] = "\"\"\"\""
+	staticWindowsKubeletConfig["--eviction-hard"] = "\"\"\"\""
 
 	// Default Kubelet config
 	defaultKubeletConfig := map[string]string{
-		"--cluster-domain":                  "cluster.local",
-		"--network-plugin":                  "cni",
-		"--pod-infra-container-image":       o.KubernetesConfig.KubernetesImageBase + K8sComponentsByVersionMap[o.OrchestratorVersion]["pause"],
-		"--max-pods":                        strconv.Itoa(DefaultKubernetesMaxPods),
-		"--eviction-hard":                   DefaultKubernetesHardEvictionThreshold,
-		"--node-status-update-frequency":    K8sComponentsByVersionMap[o.OrchestratorVersion]["nodestatusfreq"],
-		"--image-gc-high-threshold":         strconv.Itoa(DefaultKubernetesGCHighThreshold),
-		"--image-gc-low-threshold":          strconv.Itoa(DefaultKubernetesGCLowThreshold),
-		"--non-masquerade-cidr":             DefaultNonMasqueradeCIDR,
-		"--cloud-provider":                  "azure",
-		"--cloud-config":                    "/etc/kubernetes/azure.json",
-		"--azure-container-registry-config": "/etc/kubernetes/azure.json",
-		"--event-qps":                       DefaultKubeletEventQPS,
-		"--cadvisor-port":                   DefaultKubeletCadvisorPort,
-		"--pod-max-pids":                    strconv.Itoa(DefaultKubeletPodMaxPIDs),
-		"--image-pull-progress-deadline":    "30m",
+		"--cluster-domain":                    "cluster.local",
+		"--network-plugin":                    "cni",
+		"--pod-infra-container-image":         o.KubernetesConfig.KubernetesImageBase + K8sComponentsByVersionMap[o.OrchestratorVersion]["pause"],
+		"--max-pods":                          strconv.Itoa(DefaultKubernetesMaxPods),
+		"--eviction-hard":                     DefaultKubernetesHardEvictionThreshold,
+		"--node-status-update-frequency":      K8sComponentsByVersionMap[o.OrchestratorVersion]["nodestatusfreq"],
+		"--image-gc-high-threshold":           strconv.Itoa(DefaultKubernetesGCHighThreshold),
+		"--image-gc-low-threshold":            strconv.Itoa(DefaultKubernetesGCLowThreshold),
+		"--non-masquerade-cidr":               DefaultNonMasqueradeCIDR,
+		"--cloud-provider":                    "azure",
+		"--cloud-config":                      "/etc/kubernetes/azure.json",
+		"--azure-container-registry-config":   "/etc/kubernetes/azure.json",
+		"--event-qps":                         DefaultKubeletEventQPS,
+		"--cadvisor-port":                     DefaultKubeletCadvisorPort,
+		"--pod-max-pids":                      strconv.Itoa(DefaultKubeletPodMaxPIDs),
+		"--image-pull-progress-deadline":      "30m",
+		"--enforce-node-allocatable":          "pods",
+		"--streaming-connection-idle-timeout": "5m",
+	}
+
+	// "--protect-kernel-defaults" is true is currently only valid using base Ubuntu OS image
+	// until the changes are baked into a VHD
+	if cs.Properties.IsUbuntuDistroForAllNodes() {
+		defaultKubeletConfig["--protect-kernel-defaults"] = "true"
 	}
 
 	// Set --non-masquerade-cidr if ip-masq-agent is disabled on AKS
@@ -80,7 +99,6 @@ func (cs *ContainerService) setKubeletConfig() {
 
 	// If no user-configurable kubelet config values exists, use the defaults
 	setMissingKubeletValues(o.KubernetesConfig, defaultKubeletConfig)
-	addDefaultFeatureGates(o.KubernetesConfig.KubeletConfig, o.OrchestratorVersion, "", "")
 	addDefaultFeatureGates(o.KubernetesConfig.KubeletConfig, o.OrchestratorVersion, "1.8.0", "PodPriority=true")
 
 	// Override default cloud-provider?
@@ -119,6 +137,10 @@ func (cs *ContainerService) setKubeletConfig() {
 		setMissingKubeletValues(cs.Properties.MasterProfile.KubernetesConfig, o.KubernetesConfig.KubeletConfig)
 		addDefaultFeatureGates(cs.Properties.MasterProfile.KubernetesConfig.KubeletConfig, o.OrchestratorVersion, "", "")
 
+		if cs.Properties.MasterProfile.IsUbuntu1804() {
+			cs.Properties.MasterProfile.KubernetesConfig.KubeletConfig["--resolv-conf"] = "/run/systemd/resolve/resolv.conf"
+		}
+
 		removeKubeletFlags(cs.Properties.MasterProfile.KubernetesConfig.KubeletConfig, o.OrchestratorVersion)
 	}
 
@@ -127,18 +149,15 @@ func (cs *ContainerService) setKubeletConfig() {
 		if profile.KubernetesConfig == nil {
 			profile.KubernetesConfig = &KubernetesConfig{}
 			profile.KubernetesConfig.KubeletConfig = make(map[string]string)
-			if profile.OSType == "Windows" {
-				for key, val := range staticWindowsKubeletConfig {
-					profile.KubernetesConfig.KubeletConfig[key] = val
-				}
+		}
+
+		if profile.OSType == Windows {
+			for key, val := range staticWindowsKubeletConfig {
+				profile.KubernetesConfig.KubeletConfig[key] = val
 			}
 		}
-		setMissingKubeletValues(profile.KubernetesConfig, o.KubernetesConfig.KubeletConfig)
 
-		if profile.OSType == "Windows" {
-			// Remove Linux-specific values
-			delete(profile.KubernetesConfig.KubeletConfig, "--pod-manifest-path")
-		}
+		setMissingKubeletValues(profile.KubernetesConfig, o.KubernetesConfig.KubeletConfig)
 
 		// For N Series (GPU) VMs
 		if strings.Contains(profile.VMSize, "Standard_N") {
@@ -146,6 +165,10 @@ func (cs *ContainerService) setKubeletConfig() {
 				// enabling accelerators for Kubernetes >= 1.6 to <= 1.9
 				addDefaultFeatureGates(profile.KubernetesConfig.KubeletConfig, o.OrchestratorVersion, "1.6.0", "Accelerators=true")
 			}
+		}
+
+		if profile.IsUbuntu1804() {
+			profile.KubernetesConfig.KubeletConfig["--resolv-conf"] = "/run/systemd/resolve/resolv.conf"
 		}
 
 		removeKubeletFlags(profile.KubernetesConfig.KubeletConfig, o.OrchestratorVersion)

@@ -169,7 +169,7 @@ func Build(cfg *config.Config, masterSubnetID string, agentSubnetIDs []string, i
 func (e *Engine) NodeCount() int {
 	expectedCount := e.ExpandedDefinition.Properties.MasterProfile.Count
 	for _, pool := range e.ExpandedDefinition.Properties.AgentPoolProfiles {
-		expectedCount = expectedCount + pool.Count
+		expectedCount += pool.Count
 	}
 	return expectedCount
 }
@@ -206,17 +206,18 @@ func (e *Engine) GetWindowsTestImages() (*WindowsTestImages, error) {
 		return nil, errors.New("Can't guess a Windows version without Windows nodes in the cluster")
 	}
 
-	if strings.Contains(e.ExpandedDefinition.Properties.WindowsProfile.GetWindowsSku(), "1809") || strings.Contains(e.ExpandedDefinition.Properties.WindowsProfile.GetWindowsSku(), "2019") {
+	windowsSku := e.ExpandedDefinition.Properties.WindowsProfile.GetWindowsSku()
+	switch {
+	case strings.Contains(windowsSku, "1809"), strings.Contains(windowsSku, "2019"):
 		return &WindowsTestImages{IIS: "mcr.microsoft.com/windows/servercore/iis:windowsservercore-ltsc2019",
 			ServerCore: "mcr.microsoft.com/windows/servercore/iis:windowsservercore-ltsc2019"}, nil
-	} else if strings.Contains(e.ExpandedDefinition.Properties.WindowsProfile.GetWindowsSku(), "1803") {
+	case strings.Contains(windowsSku, "1803"):
 		return &WindowsTestImages{IIS: "microsoft/iis:windowsservercore-1803",
 			ServerCore: "microsoft/iis:windowsservercore-1803"}, nil
-	} else if strings.Contains(e.ExpandedDefinition.Properties.WindowsProfile.GetWindowsSku(), "1709") {
+	case strings.Contains(windowsSku, "1709"):
 		return nil, errors.New("Windows Server version 1709 hasn't been tested in a long time and is deprecated")
 	}
-
-	return nil, errors.New("Unknown Windows version. GetWindowsSku() = " + e.ExpandedDefinition.Properties.WindowsProfile.GetWindowsSku())
+	return nil, errors.New("Unknown Windows version. GetWindowsSku() = " + windowsSku)
 }
 
 // HasAddon will return true if an addon is enabled

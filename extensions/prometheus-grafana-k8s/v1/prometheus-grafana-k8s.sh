@@ -182,7 +182,7 @@ install_cadvisor() {
     DAEMONSET_API=$(daemonset_api)
     echo "$(date) - Using DaemonSet api group $DAEMONSET_API"
     sed -i 's|DAEMONSET_API|'"$DAEMONSET_API"'|g' cadvisor_ds.yml
-    kubectl apply -f ./cadvisor_ds.yml
+    kubectl apply -f ./cadvisor_ds.yml --namespace=$NAMESPACE
 }
 
 update_helm() {

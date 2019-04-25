@@ -12,6 +12,8 @@ import (
 	"github.com/Azure/aks-engine/test/e2e/kubernetes/util"
 )
 
+const commandTimeout = 1 * time.Minute
+
 // HPA represents a kubernetes HPA
 type HPA struct {
 	Metadata Metadata `json:"metadata"`
@@ -47,7 +49,7 @@ type LoadBalancer struct {
 
 // Get returns the HPA definition specified in a given namespace
 func Get(name, namespace string) (*HPA, error) {
-	cmd := exec.Command("kubectl", "get", "hpa", "-o", "json", "-n", namespace, name)
+	cmd := exec.Command("k", "get", "hpa", "-o", "json", "-n", namespace, name)
 	util.PrintCommand(cmd)
 	out, err := cmd.CombinedOutput()
 	if err != nil {
@@ -68,8 +70,8 @@ func (h *HPA) Delete(retries int) error {
 	var kubectlOutput []byte
 	var kubectlError error
 	for i := 0; i < retries; i++ {
-		cmd := exec.Command("kubectl", "delete", "hpa", "-n", h.Metadata.Namespace, h.Metadata.Name)
-		kubectlOutput, kubectlError = util.RunAndLogCommand(cmd)
+		cmd := exec.Command("k", "delete", "hpa", "-n", h.Metadata.Namespace, h.Metadata.Name)
+		kubectlOutput, kubectlError = util.RunAndLogCommand(cmd, commandTimeout)
 		if kubectlError != nil {
 			log.Printf("Error while trying to delete service %s in namespace %s:%s\n", h.Metadata.Namespace, h.Metadata.Name, string(kubectlOutput))
 			continue

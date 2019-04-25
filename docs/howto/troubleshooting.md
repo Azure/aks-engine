@@ -1,6 +1,6 @@
 ## Troubleshooting
 
-Common issues or questions that users have run into when using AKS-Engine are detailed below.
+Common issues or questions that users have run into when using AKS Engine are detailed below.
 
 ## VMExtensionProvisioningError or VMExtensionProvisioningTimeout
 
@@ -48,7 +48,7 @@ How to determine the above?
 execute command: command terminated with exit status=20\n[stdout]\n\n[stderr]\n"."
 ```
 
-Look for the exit code. In the above example, the exit code is `20`. The list of exit codes and their meaning can be found [here](../../parts/k8s/kubernetesprovisionsource.sh).
+Look for the exit code. In the above example, the exit code is `20`. The list of exit codes and their meaning can be found [here](../../parts/k8s/cloud-init/artifacts/cse_helpers.sh).
 
 If after following the above you are still unable to troubleshoot your deployment error, please open a Github issue with title "CSE error: exit code <INSERT_YOUR_EXIT_CODE>" and include the following in the description:
 
@@ -139,7 +139,7 @@ Follow the same steps [above](#how-to-debug-cse-errors-windows) to connect to Re
 
 
 
-# Misconfigured Service Principal
+## Misconfigured Service Principal
 
 If your Service Principal is misconfigured, none of the Kubernetes components will come up in a healthy manner.
 You can check to see if this the problem:
@@ -154,4 +154,8 @@ read and **write** permissions to the target Subscription.
 
 `Nov 10 16:35:22 k8s-master-43D6F832-0 docker[3177]: E1110 16:35:22.840688    3201 kubelet_node_status.go:69] Unable to construct api.Node object for kubelet: failed to get external ID from cloud provider: autorest#WithErrorUnlessStatusCode: POST https://login.microsoftonline.com/72f988bf-86f1-41af-91ab-2d7cd011db47/oauth2/token?api-version=1.0 failed with 400 Bad Request: StatusCode=400`
 
-[This documentation](../serviceprincipal.md) explains how to create/configure a service principal for an AKS Engine Kubernetes cluster.
+[This documentation](../topics/service-principals.md) explains how to create/configure a service principal for an AKS Engine Kubernetes cluster.
+
+## Failed upgrade
+
+Please review the [upgrade documentation](../topics/upgrade.md) for a guide on upgrading `aks-engine` Kubernetes clusters.

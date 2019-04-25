@@ -84,6 +84,25 @@ func TestControllerManagerConfigDefaultFeatureGates(t *testing.T) {
 		t.Fatalf("got unexpected '--feature-gates' Controller Manager config value for \"--feature-gates\": \"LocalStorageCapacityIsolation=true,ServiceNodeExclusion=true\": %s",
 			cm["--feature-gates"])
 	}
+
+	// test 1.14
+	cs = CreateMockContainerService("testcluster", "1.14.1", 3, 2, false)
+	cs.setControllerManagerConfig()
+	cm = cs.Properties.OrchestratorProfile.KubernetesConfig.ControllerManagerConfig
+	if cm["--feature-gates"] != "LocalStorageCapacityIsolation=true,ServiceNodeExclusion=true" {
+		t.Fatalf("got unexpected '--feature-gates' Controller Manager config value for \"--feature-gates\": \"LocalStorageCapacityIsolation=true,ServiceNodeExclusion=true\": %s",
+			cm["--feature-gates"])
+	}
+
+	// test user-overrides
+	cs = CreateMockContainerService("testcluster", "1.14.1", 3, 2, false)
+	cm = cs.Properties.OrchestratorProfile.KubernetesConfig.ControllerManagerConfig
+	cm["--feature-gates"] = "TaintBasedEvictions=true"
+	cs.setControllerManagerConfig()
+	if cm["--feature-gates"] != "LocalStorageCapacityIsolation=true,ServiceNodeExclusion=true,TaintBasedEvictions=true" {
+		t.Fatalf("got unexpected '--feature-gates' Controller Manager config value for \"--feature-gates\": \"LocalStorageCapacityIsolation=true,ServiceNodeExclusion=true\": %s",
+			cm["--feature-gates"])
+	}
 }
 
 func TestControllerManagerConfigHostedMasterProfile(t *testing.T) {

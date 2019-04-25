@@ -6,11 +6,11 @@ package armhelpers
 import (
 	"context"
 
-	"github.com/Azure/azure-sdk-for-go/services/resources/mgmt/2018-05-01/resources"
 	"github.com/Azure/go-autorest/autorest/to"
 )
 
 // ListProviders returns all the providers for a given AzureClient
-func (az *AzureClient) ListProviders(ctx context.Context) (resources.ProviderListResultPage, error) {
-	return az.providersClient.List(ctx, to.Int32Ptr(100), "")
+func (az *AzureClient) ListProviders(ctx context.Context) (ProviderListResultPage, error) {
+	page, err := az.providersClient.List(ctx, to.Int32Ptr(100), "")
+	return &page, err
 }

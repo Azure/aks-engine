@@ -5,13 +5,29 @@ package api
 
 import (
 	"github.com/Azure/go-autorest/autorest/to"
-	uuid "github.com/satori/go.uuid"
+	"github.com/gofrs/uuid"
 )
+
+// CreateMockAgentPoolProfile creates a mock AgentPoolResource for testing
+func CreateMockAgentPoolProfile(agentPoolName, orchestratorVersion string, provisioningState ProvisioningState, agentCount int) *AgentPoolResource {
+	agentPoolResource := AgentPoolResource{}
+	agentPoolResource.ID = uuid.Must(uuid.NewV4()).String()
+	agentPoolResource.Location = "westus2"
+	agentPoolResource.Name = agentPoolName
+
+	agentPoolResource.Properties = &AgentPoolProfile{}
+	// AgentPoolProfile needs to be remain same, so the name is repeated inside.
+	agentPoolResource.Properties.Name = agentPoolName
+	agentPoolResource.Properties.Count = agentCount
+	agentPoolResource.Properties.OrchestratorVersion = orchestratorVersion
+	agentPoolResource.Properties.ProvisioningState = provisioningState
+	return &agentPoolResource
+}
 
 // CreateMockContainerService returns a mock container service for testing purposes
 func CreateMockContainerService(containerServiceName, orchestratorVersion string, masterCount, agentCount int, certs bool) *ContainerService {
 	cs := ContainerService{}
-	cs.ID = uuid.NewV4().String()
+	cs.ID = uuid.Must(uuid.NewV4()).String()
 	cs.Location = "eastus"
 	cs.Name = containerServiceName
 
@@ -27,7 +43,7 @@ func CreateMockContainerService(containerServiceName, orchestratorVersion string
 	agentPool.Count = agentCount
 	agentPool.Name = "agentpool1"
 	agentPool.VMSize = "Standard_D2_v2"
-	agentPool.OSType = "Linux"
+	agentPool.OSType = Linux
 	agentPool.AvailabilityProfile = "AvailabilitySet"
 	agentPool.StorageProfile = "StorageAccount"
 
@@ -52,21 +68,23 @@ func CreateMockContainerService(containerServiceName, orchestratorVersion string
 	cs.Properties.OrchestratorProfile.OrchestratorType = Kubernetes
 	cs.Properties.OrchestratorProfile.OrchestratorVersion = orchestratorVersion
 	cs.Properties.OrchestratorProfile.KubernetesConfig = &KubernetesConfig{
-		EnableSecureKubelet: to.BoolPtr(DefaultSecureKubeletEnabled),
-		EnableRbac:          to.BoolPtr(DefaultRBACEnabled),
-		EtcdDiskSizeGB:      DefaultEtcdDiskSize,
-		ServiceCIDR:         DefaultKubernetesServiceCIDR,
-		DockerBridgeSubnet:  DefaultDockerBridgeSubnet,
-		DNSServiceIP:        DefaultKubernetesDNSServiceIP,
-		GCLowThreshold:      DefaultKubernetesGCLowThreshold,
-		GCHighThreshold:     DefaultKubernetesGCHighThreshold,
-		MaxPods:             DefaultKubernetesMaxPodsVNETIntegrated,
-		ClusterSubnet:       DefaultKubernetesSubnet,
-		ContainerRuntime:    DefaultContainerRuntime,
-		NetworkPlugin:       DefaultNetworkPlugin,
-		NetworkPolicy:       DefaultNetworkPolicy,
-		EtcdVersion:         DefaultEtcdVersion,
-		KubeletConfig:       make(map[string]string),
+		EnableSecureKubelet:     to.BoolPtr(DefaultSecureKubeletEnabled),
+		EnableRbac:              to.BoolPtr(DefaultRBACEnabled),
+		EtcdDiskSizeGB:          DefaultEtcdDiskSize,
+		ServiceCIDR:             DefaultKubernetesServiceCIDR,
+		DockerBridgeSubnet:      DefaultDockerBridgeSubnet,
+		DNSServiceIP:            DefaultKubernetesDNSServiceIP,
+		GCLowThreshold:          DefaultKubernetesGCLowThreshold,
+		GCHighThreshold:         DefaultKubernetesGCHighThreshold,
+		MaxPods:                 DefaultKubernetesMaxPodsVNETIntegrated,
+		ClusterSubnet:           DefaultKubernetesSubnet,
+		ContainerRuntime:        DefaultContainerRuntime,
+		NetworkPlugin:           DefaultNetworkPlugin,
+		NetworkPolicy:           DefaultNetworkPolicy,
+		EtcdVersion:             DefaultEtcdVersion,
+		MobyVersion:             DefaultMobyVersion,
+		KubeletConfig:           make(map[string]string),
+		ControllerManagerConfig: make(map[string]string),
 	}
 
 	cs.Properties.CertificateProfile = &CertificateProfile{}

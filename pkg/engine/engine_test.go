@@ -13,6 +13,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/Azure/go-autorest/autorest/to"
+
 	"github.com/Azure/aks-engine/pkg/api"
 	"github.com/Azure/aks-engine/pkg/api/common"
 	v20160330 "github.com/Azure/aks-engine/pkg/api/v20160330"
@@ -52,102 +54,104 @@ func TestExpected(t *testing.T) {
 			continue
 		}
 
-		if version != vlabs.APIVersion && version != v20160330.APIVersion {
-			// Set CertificateProfile here to avoid a new one generated.
-			// Kubernetes template needs certificate profile to match expected template
-			// API versions other than vlabs don't expose CertificateProfile
-			// API versions after v20160330 supports Kubernetes
-			containerService.Properties.CertificateProfile = &api.CertificateProfile{}
-			addTestCertificateProfile(containerService.Properties.CertificateProfile)
-		}
+		if containerService.Properties.OrchestratorProfile.OrchestratorType != Kubernetes {
+			// test the output container service 3 times:
+			// 1. first time tests loaded containerService
+			// 2. second time tests generated containerService
+			// 3. third time tests the generated containerService from the generated containerService
+			ctx := Context{
+				Translator: &i18n.Translator{
+					Locale: locale,
+				},
+			}
+			templateGenerator, e3 := InitializeTemplateGenerator(ctx)
+			if e3 != nil {
+				t.Error(e3.Error())
+				continue
+			}
 
-		// test the output container service 3 times:
-		// 1. first time tests loaded containerService
-		// 2. second time tests generated containerService
-		// 3. third time tests the generated containerService from the generated containerService
-		ctx := Context{
-			Translator: &i18n.Translator{
-				Locale: locale,
-			},
-		}
-		templateGenerator, e3 := InitializeTemplateGenerator(ctx)
-		if e3 != nil {
-			t.Error(e3.Error())
-			continue
-		}
+			certsGenerated, err := containerService.SetPropertiesDefaults(false, false)
+			if certsGenerated {
+				t.Errorf("cert generation unexpected for %s", containerService.Properties.OrchestratorProfile.OrchestratorType)
+			}
 
-		certsGenerated, err := containerService.SetPropertiesDefaults(false, false)
-
-		armTemplate, params, err := templateGenerator.GenerateTemplate(containerService, DefaultGeneratorCode, TestAKSEngineVersion)
-		if err != nil {
-			t.Error(errors.Errorf("error in file %s: %s", tuple.APIModelFilename, err.Error()))
-			continue
-		}
-
-		expectedPpArmTemplate, e1 := transform.PrettyPrintArmTemplate(armTemplate)
-		if e1 != nil {
-			t.Error(armTemplate)
-			t.Error(errors.Errorf("error in file %s: %s", tuple.APIModelFilename, e1.Error()))
-			break
-		}
-
-		expectedPpParams, e2 := transform.PrettyPrintJSON(params)
-		if e2 != nil {
-			t.Error(errors.Errorf("error in file %s: %s", tuple.APIModelFilename, e2.Error()))
-			continue
-		}
-
-		if certsGenerated {
-			t.Errorf("cert generation unexpected for %s", containerService.Properties.OrchestratorProfile.OrchestratorType)
-		}
-
-		for i := 0; i < 3; i++ {
-			certsGenerated, err = containerService.SetPropertiesDefaults(false, false)
 			armTemplate, params, err := templateGenerator.GenerateTemplate(containerService, DefaultGeneratorCode, TestAKSEngineVersion)
 			if err != nil {
 				t.Error(errors.Errorf("error in file %s: %s", tuple.APIModelFilename, err.Error()))
 				continue
 			}
-			generatedPpArmTemplate, e1 := transform.PrettyPrintArmTemplate(armTemplate)
+
+			expectedPpArmTemplate, e1 := transform.PrettyPrintArmTemplate(armTemplate)
 			if e1 != nil {
+				t.Error(armTemplate)
 				t.Error(errors.Errorf("error in file %s: %s", tuple.APIModelFilename, e1.Error()))
-				continue
+				break
 			}
 
-			generatedPpParams, e2 := transform.PrettyPrintJSON(params)
+			expectedPpParams, e2 := transform.PrettyPrintJSON(params)
 			if e2 != nil {
 				t.Error(errors.Errorf("error in file %s: %s", tuple.APIModelFilename, e2.Error()))
 				continue
 			}
 
-			if certsGenerated {
-				t.Errorf("cert generation unexpected for %s", containerService.Properties.OrchestratorProfile.OrchestratorType)
-			}
-
-			if !bytes.Equal([]byte(expectedPpArmTemplate), []byte(generatedPpArmTemplate)) {
-				diffstr, differr := tuple.WriteArmTemplateErrFilename([]byte(generatedPpArmTemplate))
-				if differr != nil {
-					diffstr += differr.Error()
+			for i := 0; i < 3; i++ {
+				if i > 0 {
+					certsGenerated, err = containerService.SetPropertiesDefaults(false, false)
+					if certsGenerated {
+						t.Errorf("cert generation unexpected for %s", containerService.Properties.OrchestratorProfile.OrchestratorType)
+					}
 				}
-				t.Errorf("generated output different from expected for model %s: '%s'", tuple.APIModelFilename, diffstr)
-			}
-
-			if !bytes.Equal([]byte(expectedPpParams), []byte(generatedPpParams)) {
-				diffstr, differr := tuple.WriteArmTemplateParamsErrFilename([]byte(generatedPpParams))
-				if differr != nil {
-					diffstr += differr.Error()
+				armTemplate, params, err := templateGenerator.GenerateTemplate(containerService, DefaultGeneratorCode, TestAKSEngineVersion)
+				if err != nil {
+					t.Error(errors.Errorf("error in file %s: %s", tuple.APIModelFilename, err.Error()))
+					continue
 				}
-				t.Errorf("generated parameters different from expected for model %s: '%s'", tuple.APIModelFilename, diffstr)
-			}
+				generatedPpArmTemplate, e1 := transform.PrettyPrintArmTemplate(armTemplate)
+				if e1 != nil {
+					t.Error(errors.Errorf("error in file %s: %s", tuple.APIModelFilename, e1.Error()))
+					continue
+				}
 
-			b, err := apiloader.SerializeContainerService(containerService, version)
-			if err != nil {
-				t.Error(err)
+				generatedPpParams, e2 := transform.PrettyPrintJSON(params)
+				if e2 != nil {
+					t.Error(errors.Errorf("error in file %s: %s", tuple.APIModelFilename, e2.Error()))
+					continue
+				}
+
+				if !bytes.Equal([]byte(expectedPpArmTemplate), []byte(generatedPpArmTemplate)) {
+					diffstr, differr := tuple.WriteArmTemplateErrFilename([]byte(generatedPpArmTemplate))
+					if differr != nil {
+						diffstr += differr.Error()
+					}
+					t.Errorf("generated output different from expected for model %s: '%s'", tuple.APIModelFilename, diffstr)
+				}
+
+				if !bytes.Equal([]byte(expectedPpParams), []byte(generatedPpParams)) {
+					diffstr, differr := tuple.WriteArmTemplateParamsErrFilename([]byte(generatedPpParams))
+					if differr != nil {
+						diffstr += differr.Error()
+					}
+					t.Errorf("generated parameters different from expected for model %s: '%s'", tuple.APIModelFilename, diffstr)
+				}
+
+				b, err := apiloader.SerializeContainerService(containerService, version)
+				if err != nil {
+					t.Error(err)
+				}
+				containerService, version, err = apiloader.DeserializeContainerService(b, true, false, nil)
+				if err != nil {
+					t.Error(err)
+				}
+				if version != vlabs.APIVersion && version != v20160330.APIVersion {
+					// Set CertificateProfile here to avoid a new one generated.
+					// Kubernetes template needs certificate profile to match expected template
+					// API versions other than vlabs don't expose CertificateProfile
+					// API versions after v20160330 supports Kubernetes
+					containerService.Properties.CertificateProfile = &api.CertificateProfile{}
+					addTestCertificateProfile(containerService.Properties.CertificateProfile)
+				}
 			}
-			containerService, version, err = apiloader.DeserializeContainerService(b, true, false, nil)
-			if err != nil {
-				t.Error(err)
-			}
+		} else {
 			if version != vlabs.APIVersion && version != v20160330.APIVersion {
 				// Set CertificateProfile here to avoid a new one generated.
 				// Kubernetes template needs certificate profile to match expected template
@@ -155,6 +159,104 @@ func TestExpected(t *testing.T) {
 				// API versions after v20160330 supports Kubernetes
 				containerService.Properties.CertificateProfile = &api.CertificateProfile{}
 				addTestCertificateProfile(containerService.Properties.CertificateProfile)
+			}
+
+			// test the output container service 3 times:
+			// 1. first time tests loaded containerService
+			// 2. second time tests generated containerService
+			// 3. third time tests the generated containerService from the generated containerService
+			ctx := Context{
+				Translator: &i18n.Translator{
+					Locale: locale,
+				},
+			}
+			templateGenerator, e3 := InitializeTemplateGenerator(ctx)
+			if e3 != nil {
+				t.Error(e3.Error())
+				continue
+			}
+
+			certsGenerated, err := containerService.SetPropertiesDefaults(false, false)
+			if certsGenerated {
+				t.Errorf("cert generation unexpected for %s", containerService.Properties.OrchestratorProfile.OrchestratorType)
+			}
+
+			armTemplate, params, err := templateGenerator.GenerateTemplateV2(containerService, DefaultGeneratorCode, TestAKSEngineVersion)
+			if err != nil {
+				t.Error(errors.Errorf("error in file %s: %s", tuple.APIModelFilename, err.Error()))
+				continue
+			}
+
+			expectedPpArmTemplate, e1 := transform.PrettyPrintArmTemplate(armTemplate)
+			if e1 != nil {
+				t.Error(armTemplate)
+				t.Error(errors.Errorf("error in file %s: %s", tuple.APIModelFilename, e1.Error()))
+				break
+			}
+
+			expectedPpParams, e2 := transform.PrettyPrintJSON(params)
+			if e2 != nil {
+				t.Error(errors.Errorf("error in file %s: %s", tuple.APIModelFilename, e2.Error()))
+				continue
+			}
+
+			for i := 0; i < 3; i++ {
+				if i > 0 {
+					certsGenerated, err = containerService.SetPropertiesDefaults(false, false)
+					if certsGenerated {
+						t.Errorf("cert generation unexpected for %s", containerService.Properties.OrchestratorProfile.OrchestratorType)
+					}
+				}
+
+				armTemplate, params, err := templateGenerator.GenerateTemplateV2(containerService, DefaultGeneratorCode, TestAKSEngineVersion)
+				if err != nil {
+					t.Error(errors.Errorf("error in file %s: %s", tuple.APIModelFilename, err.Error()))
+					continue
+				}
+				generatedPpArmTemplate, e1 := transform.PrettyPrintArmTemplate(armTemplate)
+				if e1 != nil {
+					t.Error(errors.Errorf("error in file %s: %s", tuple.APIModelFilename, e1.Error()))
+					continue
+				}
+
+				generatedPpParams, e2 := transform.PrettyPrintJSON(params)
+				if e2 != nil {
+					t.Error(errors.Errorf("error in file %s: %s", tuple.APIModelFilename, e2.Error()))
+					continue
+				}
+
+				if !bytes.Equal([]byte(expectedPpArmTemplate), []byte(generatedPpArmTemplate)) {
+					diffstr, differr := tuple.WriteArmTemplateErrFilename([]byte(generatedPpArmTemplate))
+					if differr != nil {
+						diffstr += differr.Error()
+					}
+					t.Errorf("generated output different from expected for model %s: '%s'", tuple.APIModelFilename, diffstr)
+				}
+
+				if !bytes.Equal([]byte(expectedPpParams), []byte(generatedPpParams)) {
+					diffstr, differr := tuple.WriteArmTemplateParamsErrFilename([]byte(generatedPpParams))
+					if differr != nil {
+						diffstr += differr.Error()
+					}
+					t.Errorf("generated parameters different from expected for model %s: '%s'", tuple.APIModelFilename, diffstr)
+				}
+
+				b, err := apiloader.SerializeContainerService(containerService, version)
+				if err != nil {
+					t.Error(err)
+				}
+				containerService, version, err = apiloader.DeserializeContainerService(b, true, false, nil)
+				if err != nil {
+					t.Error(err)
+				}
+				if version != vlabs.APIVersion && version != v20160330.APIVersion {
+					// Set CertificateProfile here to avoid a new one generated.
+					// Kubernetes template needs certificate profile to match expected template
+					// API versions other than vlabs don't expose CertificateProfile
+					// API versions after v20160330 supports Kubernetes
+					containerService.Properties.CertificateProfile = &api.CertificateProfile{}
+					addTestCertificateProfile(containerService.Properties.CertificateProfile)
+				}
 			}
 		}
 	}
@@ -184,7 +286,7 @@ func (a *APIModelTestFile) WriteArmTemplateParamsErrFilename(contents []byte) (s
 }
 
 // IterateTestFilesDirectory iterates the test data directory adding api model files to the test file slice.
-func IterateTestFilesDirectory(directory string, APIModelTestFiles *[]APIModelTestFile) error {
+func IterateTestFilesDirectory(directory string, apiModelTestFiles *[]APIModelTestFile) error {
 	files, err := ioutil.ReadDir(directory)
 	if err != nil {
 		return err
@@ -192,14 +294,14 @@ func IterateTestFilesDirectory(directory string, APIModelTestFiles *[]APIModelTe
 
 	for _, file := range files {
 		if file.IsDir() {
-			if e := IterateTestFilesDirectory(filepath.Join(directory, file.Name()), APIModelTestFiles); e != nil {
+			if e := IterateTestFilesDirectory(filepath.Join(directory, file.Name()), apiModelTestFiles); e != nil {
 				return e
 			}
 		} else {
 			if !strings.Contains(file.Name(), "_expected") && strings.HasSuffix(file.Name(), ".json") {
 				tuple := &APIModelTestFile{}
 				tuple.APIModelFilename = filepath.Join(directory, file.Name())
-				*APIModelTestFiles = append(*APIModelTestFiles, *tuple)
+				*apiModelTestFiles = append(*apiModelTestFiles, *tuple)
 			}
 		}
 	}
@@ -297,7 +399,7 @@ func TestTemplateOutputPresence(t *testing.T) {
 		t.Fatalf("Failed to load container service from file: %v", err)
 	}
 	containerService.SetPropertiesDefaults(false, false)
-	armTemplate, _, err := templateGenerator.GenerateTemplate(containerService, DefaultGeneratorCode, TestAKSEngineVersion)
+	armTemplate, _, err := templateGenerator.GenerateTemplateV2(containerService, DefaultGeneratorCode, TestAKSEngineVersion)
 	if err != nil {
 		t.Fatalf("Failed to generate arm template: %v", err)
 	}
@@ -542,25 +644,234 @@ func TestGenerateKubeConfig(t *testing.T) {
 
 	containerService, _, err := apiloader.LoadContainerServiceFromFile(testData, true, false, nil)
 	if err != nil {
-		t.Fatalf("Failed to load container service from file: %v", err)
+		t.Errorf("Failed to load container service from file: %v", err)
 	}
 	kubeConfig, err := GenerateKubeConfig(containerService.Properties, "westus2")
 	// TODO add actual kubeconfig validation
 	if len(kubeConfig) < 1 {
-		t.Fatalf("Got unexpected kubeconfig payload: %v", kubeConfig)
+		t.Errorf("Got unexpected kubeconfig payload: %v", kubeConfig)
 	}
 	if err != nil {
-		t.Fatalf("Failed to call GenerateKubeConfig with simple Kubernetes config from file: %v", testData)
+		t.Errorf("Failed to call GenerateKubeConfig with simple Kubernetes config from file: %v", testData)
 	}
 
 	p := api.Properties{}
 	_, err = GenerateKubeConfig(&p, "westus2")
 	if err == nil {
-		t.Fatalf("Expected an error result from nil Properties child properties")
+		t.Errorf("Expected an error result from nil Properties child properties")
 	}
 
 	_, err = GenerateKubeConfig(nil, "westus2")
 	if err == nil {
-		t.Fatalf("Expected an error result from nil Properties child properties")
+		t.Errorf("Expected an error result from nil Properties child properties")
+	}
+
+	containerService.Properties.OrchestratorProfile.KubernetesConfig.PrivateCluster = &api.PrivateCluster{
+		Enabled: to.BoolPtr(true),
+	}
+
+	_, err = GenerateKubeConfig(containerService.Properties, "westus2")
+	if err != nil {
+		t.Errorf("Failed to call GenerateKubeConfig with simple Kubernetes config from file: %v", testData)
+	}
+
+	containerService.Properties.MasterProfile.Count = 3
+	_, err = GenerateKubeConfig(containerService.Properties, "westus2")
+	if err == nil {
+		t.Errorf("expected an error result when Private Cluster is Enabled and no FirstConsecutiveStaticIP was specified")
+	}
+
+	containerService.Properties.MasterProfile.FirstConsecutiveStaticIP = "10.239.255.239"
+	_, err = GenerateKubeConfig(containerService.Properties, "westus2")
+	if err != nil {
+		t.Errorf("Failed to call GenerateKubeConfig with simple Kubernetes config from file: %v", testData)
+	}
+
+	containerService.Properties.AADProfile = &api.AADProfile{
+		ClientAppID: "fooClientAppID",
+		TenantID:    "fooTenantID",
+		ServerAppID: "fooServerAppID",
+	}
+
+	_, err = GenerateKubeConfig(containerService.Properties, "westus2")
+	if err != nil {
+		t.Errorf("Failed to call GenerateKubeConfig with simple Kubernetes config from file: %v", testData)
+	}
+}
+
+func TestGetDataDisks(t *testing.T) {
+	a := &api.AgentPoolProfile{
+		Name: "sampleAgent",
+		DiskSizesGB: []int{
+			128, 128, 128, 128, 128,
+		},
+		StorageProfile: api.ManagedDisks,
+	}
+	str := getDataDisks(a)
+	fmt.Println(str)
+
+	a = &api.AgentPoolProfile{
+		Name: "sampleAgentStorage",
+		DiskSizesGB: []int{
+			128, 128, 128, 128, 128,
+		},
+		StorageProfile: api.StorageAccount,
+	}
+	str = getDataDisks(a)
+	fmt.Println(str)
+}
+
+func TestValidateDistro(t *testing.T) {
+	// Test with Invalid Master Profile
+	cs := &api.ContainerService{
+		Properties: &api.Properties{
+			MasterProfile: &api.MasterProfile{
+				Distro: "rhel",
+			},
+			OrchestratorProfile: &api.OrchestratorProfile{
+				OrchestratorType: "Kubernetes",
+			},
+		},
+	}
+
+	result := validateDistro(cs)
+
+	if result {
+		t.Errorf("expected validateDistro to return false for Kubernetes type")
+	}
+
+	// Test with invalid Agent Pool Profile
+	cs.Properties.MasterProfile.Distro = "coreos"
+	cs.Properties.AgentPoolProfiles = []*api.AgentPoolProfile{
+		{
+			Distro: "rhel",
+		},
+	}
+
+	result = validateDistro(cs)
+
+	if result {
+		t.Errorf("expected validateDistro to return false for Kubernetes type")
+	}
+}
+
+func TestMakeMasterExtensionScriptCommands(t *testing.T) {
+	cs := &api.ContainerService{
+		Properties: &api.Properties{
+			ExtensionProfiles: []*api.ExtensionProfile{
+				{
+					Name:                "fooExtension",
+					RootURL:             "fooRootURL",
+					Version:             "1.0",
+					Script:              "fooBar Script",
+					URLQuery:            "fooURLQuery",
+					ExtensionParameters: "fooExtensionParams",
+				},
+			},
+		},
+	}
+
+	profile := &api.AgentPoolProfile{
+		OSType: "Windows",
+		PreprovisionExtension: &api.Extension{
+			Name: "fooExtension",
+		},
+	}
+
+	actual := makeAgentExtensionScriptCommands(cs, profile)
+
+	expected := `New-Item -ItemType Directory -Force -Path "$env:SystemDrive:/AzureData/extensions/fooExtension" ; Invoke-WebRequest -Uri "fooRootURLextensions/fooExtension/1.0/fooBar Script?fooURLQuery" -OutFile "$env:SystemDrive:/AzureData/extensions/fooExtension/fooBar Script" ; powershell "$env:SystemDrive:/AzureData/extensions/fooExtension/fooBar Script $preprovisionExtensionParams"
+`
+
+	if actual != expected {
+		t.Errorf("expected to get %s, but got %s instead", expected, actual)
+	}
+}
+
+func TestGetDCOSWindowsAgentPreprovisionParameters(t *testing.T) {
+	cs := &api.ContainerService{
+		Properties: &api.Properties{
+			ExtensionProfiles: []*api.ExtensionProfile{
+				{
+					Name:                "fooExtension",
+					ExtensionParameters: "fooExtensionParams",
+				},
+			},
+		},
+	}
+
+	profile := &api.AgentPoolProfile{
+		PreprovisionExtension: &api.Extension{
+			Name: "fooExtension",
+		},
+	}
+
+	actual := getDCOSWindowsAgentPreprovisionParameters(cs, profile)
+
+	expected := "fooExtensionParams"
+
+	if actual != expected {
+		t.Errorf("expected to get %s, but got %s instead", expected, actual)
+	}
+}
+
+func TestGetDCOSWindowsAgentCustomAttributes(t *testing.T) {
+	profile := &api.AgentPoolProfile{
+		OSType: api.Windows,
+		Ports: []int{
+			8000,
+			8080,
+		},
+		CustomNodeLabels: map[string]string{
+			"foo":   "bar",
+			"abc":   "xyz",
+			"lorem": "ipsum",
+		},
+	}
+
+	actual := getDCOSWindowsAgentCustomAttributes(profile)
+
+	if !strings.Contains(actual, "os:Windows;public_ip:yes;") {
+		t.Errorf("expected output string of getDCOSWindowsAgentCustomAttributes %s to contain os:Windows;public_ip:yes;", actual)
+	}
+
+	for k, v := range profile.CustomNodeLabels {
+		if !strings.Contains(actual, fmt.Sprintf("%s:%s", k, v)) {
+			t.Errorf("expected output string of getDCOSWindowsAgentCustomAttributes %s to contain key-value pairs %s:%s", actual, k, v)
+		}
+	}
+}
+
+func TestGetKubernetesSubnets(t *testing.T) {
+	props := &api.Properties{
+		AgentPoolProfiles: []*api.AgentPoolProfile{
+			{
+				OSType: api.Windows,
+				Count:  1,
+			},
+		},
+		MasterProfile: &api.MasterProfile{
+			Count: 1,
+		},
+	}
+
+	actual := getKubernetesSubnets(props)
+
+	expected := `,
+{
+            "name": "podCIDR2",
+            "properties": {
+              "addressPrefix": "10.244.2.0/24",
+              "networkSecurityGroup": {
+                "id": "[variables('nsgID')]"
+              },
+              "routeTable": {
+                "id": "[variables('routeTableID')]"
+              }
+            }
+          }`
+
+	if actual != expected {
+		t.Errorf("expected to get %s, but got %s instead", expected, actual)
 	}
 }

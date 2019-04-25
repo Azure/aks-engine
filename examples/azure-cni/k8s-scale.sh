@@ -10,14 +10,14 @@ fi
 
 [[ ! -z "${NEW_AGENT_NODE_COUNT:-}" ]] || (echo "Must specify NEW_AGENT_NODE_COUNT" && exit 1)
 
-OUTPUT="_output/${INSTANCE_NAME}"
+APIMODEL="_output/${INSTANCE_NAME}/apimodel.json"
 
 # allow nodes to run for a while before scaling
 sleep 180
 
 ./bin/aks-engine scale \
   --subscription-id ${SUBSCRIPTION_ID} \
-  --deployment-dir ${OUTPUT} \
+  --api-model ${APIMODEL} \
   --location ${LOCATION} \
   --resource-group ${RESOURCE_GROUP} \
   --master-FQDN "${INSTANCE_NAME}.${LOCATION}.cloudapp.azure.com" \

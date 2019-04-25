@@ -25,7 +25,7 @@ GITTAG := $(VERSION_SHORT)
 endif
 
 REPO_PATH := github.com/Azure/$(PROJECT)
-DEV_ENV_IMAGE := quay.io/deis/go-dev:v1.18.3
+DEV_ENV_IMAGE := quay.io/deis/go-dev:v1.21.0
 DEV_ENV_WORK_DIR := /go/src/${REPO_PATH}
 DEV_ENV_OPTS := --rm -v ${CURDIR}:${DEV_ENV_WORK_DIR} -w ${DEV_ENV_WORK_DIR} ${DEV_ENV_VARS}
 DEV_ENV_CMD := docker run ${DEV_ENV_OPTS} ${DEV_ENV_IMAGE}
@@ -72,7 +72,7 @@ generate: bootstrap
 
 .PHONY: generate-azure-constants
 generate-azure-constants:
-	python pkg/helpers/Get-AzureConstants.py
+	python pkg/helpers/generate_azure_constants.py
 
 .PHONY: build
 build: generate
@@ -94,7 +94,7 @@ build-windows-k8s:
 	./scripts/build-windows-k8s.sh -v ${K8S_VERSION} -p ${PATCH_VERSION}
 
 .PHONY: dist
-dist: build-cross
+dist: build-cross compress-binaries
 	( \
 		cd _dist && \
 		$(DIST_DIRS) cp ../LICENSE {} \; && \
@@ -103,15 +103,27 @@ dist: build-cross
 		$(DIST_DIRS) zip -r {}.zip {} \; \
 	)
 
+.PHONY: compress-binaries
+compress-binaries:
+	@which upx || (echo "Please install the upx executable packer tool. See https://upx.github.io/" && exit 1)
+	find _dist -type f \( -name "aks-engine" -o -name "aks-engine.exe" \) -exec upx -9 {} +
+
 .PHONY: checksum
 checksum:
 	for f in _dist/*.{gz,zip} ; do \
 		shasum -a 256 "$${f}"  | awk '{print $$1}' > "$${f}.sha256" ; \
 	done
 
+.PHONY: build-container
+build-container:
+	docker build --no-cache --build-arg BUILD_DATE=`date -u +"%Y-%m-%dT%H:%M:%SZ"` \
+		--build-arg AKSENGINE_VERSION="$(VERSION)" -t microsoft/aks-engine:${VERSION} \
+		--file ./releases/Dockerfile.linux ./releases || \
+	echo 'This target works only for published releases. For example, "VERSION=0.32.0 make build-container".'
+
 .PHONY: clean
 clean:
-	@rm -rf $(BINDIR) ./_dist
+	@rm -rf $(BINDIR) ./_dist ./pkg/helpers/unit_tests ./pkg/**/*_generated.go
 
 GIT_BASEDIR    = $(shell git rev-parse --show-toplevel 2>/dev/null)
 ifneq ($(GIT_BASEDIR),)
@@ -123,7 +135,13 @@ test: generate
 
 .PHONY: test-style
 test-style:
+	@scripts/validate-shell.sh
 	@scripts/validate-go.sh
+
+.PHONY: ensure-generated
+ensure-generated:
+	@echo "==> Checking generated files <=="
+	@scripts/ensure-generated.sh
 
 .PHONY: test-e2e
 test-e2e:
