@@ -18,7 +18,12 @@ set -euo pipefail
 exit_code=0
 
 echo
-echo "==> Running static validations and linters <=="
+echo "==> Running Go linter <=="
+golangci-lint --version
+if [ -f /.dockerenv ]; then
+    echo "Running inside container";
+fi
+
 # Run linters that should return errors
 golangci-lint run || exit_code=1
 
