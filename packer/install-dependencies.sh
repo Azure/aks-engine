@@ -180,7 +180,7 @@ PAUSE_VERSIONS="3.1"
 for PAUSE_VERSION in ${PAUSE_VERSIONS}; do
     # Image 'msazurestackdocker/pause-amd64' is the same as 'k8s.gcr.io/pause-amd64'
     # At the time, re-tagging and pushing to docker hub seemed simpler than changing how `defaults-kubelet.go` sets `--pod-infra-container-image`
-    for IMAGE_BASE in "k8s.gcr.io msazurestackdocker"; do
+    for IMAGE_BASE in k8s.gcr.io msazurestackdocker; do
       CONTAINER_IMAGE="${IMAGE_BASE}/pause-amd64:${PAUSE_VERSION}"
       pullContainerImage "docker" ${CONTAINER_IMAGE}
       echo "  - ${CONTAINER_IMAGE}" >> ${RELEASE_NOTES_FILEPATH}
