@@ -785,12 +785,12 @@ func (mc *MockAKSEngineClient) ListVirtualMachineScaleSetVMs(ctx context.Context
 
 // GetAvailabilitySet mock
 func (mc *MockAKSEngineClient) GetAvailabilitySet(ctx context.Context, resourceGroup, availabilitySetName string) (compute.AvailabilitySet, error) {
-	return compute.AvailabilitySet{}, errors.New("not implemented")
+	return compute.AvailabilitySet{}, nil
 }
 
 // GetAvailabilitySetFaultDomainCount mock
 func (mc *MockAKSEngineClient) GetAvailabilitySetFaultDomainCount(ctx context.Context, resourceGroup string, vmasIDs []string) (int, error) {
-	return 3, nil // hat tip to Slipknot
+	return 3, nil
 }
 
 //GetStorageClient mock
