@@ -8,6 +8,7 @@ import (
 
 	"github.com/Azure/aks-engine/pkg/api"
 	"github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2018-10-01/compute"
+	"github.com/Azure/azure-sdk-for-go/services/resources/mgmt/2018-05-01/resources"
 	"github.com/Azure/go-autorest/autorest/to"
 	"github.com/google/go-cmp/cmp"
 )
@@ -362,6 +363,82 @@ func TestCreateAgentVMASCustomScriptExtension(t *testing.T) {
 	}
 
 	diff = cmp.Diff(cse, expectedCSE)
+
+	if diff != "" {
+		t.Errorf("unexpected diff while expecting equal structs: %s", diff)
+	}
+}
+
+func TestCreateCustomExtensions(t *testing.T) {
+	properties := &api.Properties{
+		ExtensionProfiles: []*api.ExtensionProfile{
+			{
+				Name:    "winrm",
+				Version: "v1",
+			},
+		},
+		agentPoolProfiles: []*AgentPoolProfile{
+			{
+				Name: "windowspool1",
+				Extensions: []api.Extension{
+					{
+						Name: "winrm",
+					},
+				},
+			},
+		},
+	}
+
+	extensions := CreateCustomExtensions(properties)
+
+	expectedDeployments := []DeploymentARM{
+		{
+			ARMResource: ARMResource{
+				APIVersion: "[variables('apiVersionDeployment')]",
+				Copy: map[string]string{
+					"count": "[sub(variables('windowspool1Count'), variables('windowspool1Offset'))]",
+					"name":  "winrmExtensionLoop",
+				},
+				DependsOn: []string{"[concat('Microsoft.Compute/virtualMachines/', variables('windowspool1VMNamePrefix'), copyIndex(variables('windowspool1Offset')), '/extensions/cse', '-agent-', copyIndex(variables('windowspool1Offset')))]"},
+			},
+			DeploymentExtended: resources.DeploymentExtended{
+				Location: to.StringPtr("[variables('location')]"),
+				Name:     to.StringPtr("[concat(variables('windowspool1VMNamePrefix'), copyIndex(variables('windowspool1Offset')), 'winrm')]"),
+				Properties: &resources.DeploymentPropertiesExtended{
+					Parameters: {},
+					// "parameters": {
+					// 	"apiVersionDeployments": {
+					// 	  "value": "[variables('apiVersionDeployments')]"
+					// 	},
+					// 	"artifactsLocation": {
+					// 	  "value": "https://raw.githubusercontent.com/CecileRobertMichon/aks-engine/fix-extensions/"
+					// 	},
+					// 	"extensionParameters": {
+					// 	  "value": "[parameters('winrmParameters')]"
+					// 	},
+					// 	"targetVMName": {
+					// 	  "value": "[concat(variables('windowspool1VMNamePrefix'), copyIndex(variables('windowspool1Offset')))]"
+					// 	},
+					// 	"targetVMType": {
+					// 	  "value": "agent"
+					// 	},
+					// 	"vmIndex": {
+					// 	  "value": "[copyIndex(variables('windowspool1Offset'))]"
+					// 	}
+					//   },
+					//   "mode": "Incremental",
+					//   "templateLink": {
+					// 	"contentVersion": "1.0.0.0",
+					// 	"uri": "https://raw.githubusercontent.com/CecileRobertMichon/aks-engine/fix-extensions/extensions/winrm/v1/template.json"
+					//   }
+				},
+				Type: to.StringPtr("Microsoft.Resources/deployments"),
+				Tags: nil,
+			},
+		},
+	}
+
+	diff := cmp.Diff(extensions, expectedDeployments)
 
 	if diff != "" {
 		t.Errorf("unexpected diff while expecting equal structs: %s", diff)

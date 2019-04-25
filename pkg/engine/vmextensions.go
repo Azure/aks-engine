@@ -208,6 +208,7 @@ func CreateAgentVMASAKSBillingExtension(cs *api.ContainerService, profile *api.A
 	}
 }
 
+// CreateCustomExtensions returns a list of DeploymentARM objects for the custom extensions to be deployed
 func CreateCustomExtensions(properties *api.Properties) []DeploymentARM {
 	var extensionsARM []DeploymentARM
 
