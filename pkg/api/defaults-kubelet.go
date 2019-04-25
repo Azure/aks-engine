@@ -79,7 +79,12 @@ func (cs *ContainerService) setKubeletConfig() {
 		"--image-pull-progress-deadline":      "30m",
 		"--enforce-node-allocatable":          "pods",
 		"--streaming-connection-idle-timeout": "5m",
-		"--protect-kernel-defaults":           "true",
+	}
+
+	// "--protect-kernel-defaults" is true is currently only valid using base Ubuntu OS image
+	// until the changes are baked into a VHD
+	if cs.Properties.IsUbuntuDistroForAllNodes() {
+		defaultKubeletConfig["--protect-kernel-defaults"] = "true"
 	}
 
 	// Set --non-masquerade-cidr if ip-masq-agent is disabled on AKS
