@@ -259,26 +259,3 @@ func CreateMasterInternalLoadBalancer(cs *api.ContainerService) LoadBalancerARM 
 
 	return loadBalancerARM
 }
-
-func getUDPLoadBalancingRule() network.LoadBalancingRule {
-	return network.LoadBalancingRule{
-		Name: to.StringPtr("LBRuleUDP"),
-		LoadBalancingRulePropertiesFormat: &network.LoadBalancingRulePropertiesFormat{
-			FrontendIPConfiguration: &network.SubResource{
-				ID: to.StringPtr("[variables('masterLbIPConfigID')]"),
-			},
-			BackendAddressPool: &network.SubResource{
-				ID: to.StringPtr("[concat(variables('masterLbID'), '/backendAddressPools/', variables('masterLbBackendPoolName'))]"),
-			},
-			Protocol:             network.TransportProtocolUDP,
-			FrontendPort:         to.Int32Ptr(1123),
-			BackendPort:          to.Int32Ptr(1123),
-			EnableFloatingIP:     to.BoolPtr(false),
-			IdleTimeoutInMinutes: to.Int32Ptr(5),
-			LoadDistribution:     network.Default,
-			Probe: &network.SubResource{
-				ID: to.StringPtr("[concat(variables('masterLbID'),'/probes/tcpHTTPSProbe')]"),
-			},
-		},
-	}
-}

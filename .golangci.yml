@@ -6,7 +6,6 @@ run:
   skip-files:
     - pkg/i18n/i18n.go
     - pkg/i18n/translations.go
-    - exclude pkg/engine/templates.go
 
 linters:
   disable-all: true
