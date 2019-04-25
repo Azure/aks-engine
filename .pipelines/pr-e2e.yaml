@@ -56,7 +56,7 @@ jobs:
     displayName: Run linting rules
     workingDirectory: $(modulePath)
   - script: make ensure-generated
-	  displayName: Check if generated code is up to date
+    displayName: Check if generated code is up to date
     workingDirectory: $(modulePath)
   - script: make build-cross
     displayName: Build cross-architectural binaries
