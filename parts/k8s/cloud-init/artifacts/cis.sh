@@ -91,6 +91,9 @@ assignFilePermissions() {
     chmod 644 /etc/default/grub || exit $ERR_CIS_ASSIGN_FILE_PERMISSION
     chmod 644 /etc/pam.d/su || exit $ERR_CIS_ASSIGN_FILE_PERMISSION
     chmod 755 /etc/profile.d/CIS.sh || exit $ERR_CIS_ASSIGN_FILE_PERMISSION
+    for filepath in /etc/crontab /etc/cron.hourly /etc/cron.daily /etc/cron.weekly /etc/cron.monthly /etc/cron.d; do
+      chmod 0600 $filepath || exit $ERR_CIS_ASSIGN_FILE_PERMISSION
+    done
 }
 
 setPWExpiration() {
