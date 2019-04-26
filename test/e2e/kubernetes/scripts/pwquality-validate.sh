@@ -12,3 +12,7 @@ echo "UPPERRR12CASE@" | sudo pwscore && exit 1
 
 # a valid password should succeed
 echo "passSDWword1232rdw#@" | sudo pwscore || exit 1
+
+# validate password age settings
+grep 'PASS_MAX_DAYS 90' /etc/login.defs || exit 1
+grep 'PASS_MIN_DAYS 7' /etc/login.defs || exit 1
