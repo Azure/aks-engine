@@ -62,13 +62,6 @@ write_files:
   content: !!binary |
     {{CloudInitData "healthMonitorScript"}}
 
-- path: /etc/systemd/system/kubelet-monitor.timer
-  permissions: "0644"
-  encoding: gzip
-  owner: root
-  content: !!binary |
-    {{CloudInitData "kubeletMonitorSystemdTimer"}}
-
 - path: /etc/systemd/system/kubelet-monitor.service
   permissions: "0644"
   encoding: gzip
@@ -112,12 +105,21 @@ write_files:
     {{CloudInitData "aptPreferences"}}
 
 {{if .MasterProfile.IsUbuntuNonVHD}}
+  {{if .MasterProfile.IsUbuntu1604}}
+- path: /etc/ssh/sshd_config
+  permissions: "0600"
+  encoding: gzip
+  owner: root
+  content: !!binary |
+    {{CloudInitData "sshdConfig1604"}}
+  {{else}}
 - path: /etc/ssh/sshd_config
   permissions: "0600"
   encoding: gzip
   owner: root
   content: !!binary |
     {{CloudInitData "sshdConfig"}}
+  {{end}}
 
 - path: /etc/issue
   permissions: "0644"
@@ -160,6 +162,41 @@ write_files:
   owner: root
   content: !!binary |
     {{CloudInitData "pwQuality"}}
+
+- path: /etc/default/grub
+  permissions: "0644"
+  encoding: gzip
+  owner: root
+  content: !!binary |
+    {{CloudInitData "defaultGrub"}}
+
+- path: /etc/pam.d/su
+  permissions: "0644"
+  encoding: gzip
+  owner: root
+  content: !!binary |
+    {{CloudInitData "pamDotDSU"}}
+
+- path: /etc/pam.d/common-auth
+  permissions: "0644"
+  encoding: gzip
+  owner: root
+  content: !!binary |
+    {{CloudInitData "pamDotDCommonAuth"}}
+
+- path: /etc/pam.d/common-password
+  permissions: "0644"
+  encoding: gzip
+  owner: root
+  content: !!binary |
+    {{CloudInitData "pamDotDCommonPassword"}}
+
+- path: /etc/profile.d/CIS.sh
+  permissions: "0755"
+  encoding: gzip
+  owner: root
+  content: !!binary |
+    {{CloudInitData "profileDCISSh"}}
 {{end}}
 
 {{if .OrchestratorProfile.KubernetesConfig.RequiresDocker}}

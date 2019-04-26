@@ -81,6 +81,12 @@ func (cs *ContainerService) setKubeletConfig() {
 		"--streaming-connection-idle-timeout": "5m",
 	}
 
+	// "--protect-kernel-defaults" is true is currently only valid using base Ubuntu OS image
+	// until the changes are baked into a VHD
+	if cs.Properties.IsUbuntuDistroForAllNodes() {
+		defaultKubeletConfig["--protect-kernel-defaults"] = "true"
+	}
+
 	// Set --non-masquerade-cidr if ip-masq-agent is disabled on AKS
 	if !cs.Properties.IsIPMasqAgentEnabled() {
 		defaultKubeletConfig["--non-masquerade-cidr"] = cs.Properties.OrchestratorProfile.KubernetesConfig.ClusterSubnet

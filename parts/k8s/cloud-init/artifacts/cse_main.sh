@@ -69,6 +69,7 @@ if [[ $OS == $UBUNTU_OS_NAME ]] && [ "$FULL_INSTALL_REQUIRED" = "true" ]; then
     cis_rsyslog=/etc/rsyslog.d/60-CIS.conf
     wait_for_file 3600 1 $cis_rsyslog || exit $ERR_FILE_WATCH_TIMEOUT
     sysctl_reload 20 5 10 || exit $ERR_SYSCTL_RELOAD
+    applyOSConfig
     installDeps
 else 
     echo "Golden image; skipping dependencies installation"
@@ -84,6 +85,8 @@ fi
 installNetworkPlugin
 if [[ "$CONTAINER_RUNTIME" == "clear-containers" ]] || [[ "$CONTAINER_RUNTIME" == "kata-containers" ]] || [[ "$CONTAINER_RUNTIME" == "containerd" ]]; then
     installContainerd
+else
+    cleanUpContainerd
 fi
 if [[ "${GPU_NODE}" = true ]]; then
     if $FULL_INSTALL_REQUIRED; then

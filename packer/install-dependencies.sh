@@ -178,9 +178,13 @@ done
 
 PAUSE_VERSIONS="3.1"
 for PAUSE_VERSION in ${PAUSE_VERSIONS}; do
-    CONTAINER_IMAGE="k8s.gcr.io/pause-amd64:${PAUSE_VERSION}"
-    pullContainerImage "docker" ${CONTAINER_IMAGE}
-    echo "  - ${CONTAINER_IMAGE}" >> ${RELEASE_NOTES_FILEPATH}
+    # Image 'msazurestackdocker/pause-amd64' is the same as 'k8s.gcr.io/pause-amd64'
+    # At the time, re-tagging and pushing to docker hub seemed simpler than changing how `defaults-kubelet.go` sets `--pod-infra-container-image`
+    for IMAGE_BASE in k8s.gcr.io msazurestackdocker; do
+      CONTAINER_IMAGE="${IMAGE_BASE}/pause-amd64:${PAUSE_VERSION}"
+      pullContainerImage "docker" ${CONTAINER_IMAGE}
+      echo "  - ${CONTAINER_IMAGE}" >> ${RELEASE_NOTES_FILEPATH}
+    done
 done
 
 TILLER_VERSIONS="
@@ -350,8 +354,9 @@ K8S_VERSIONS="
 1.14.0
 1.13.5
 1.13.4
+1.12.8
 1.12.7
-1.12.6
+1.12.7-azs
 1.11.9
 1.11.9-azs
 1.11.8
@@ -394,7 +399,7 @@ cat ${RELEASE_NOTES_FILEPATH}
 echo "END_OF_NOTES"
 set -x
 
-# Move logs from VHD creation out of /var/log 
+# Move logs from VHD creation out of /var/log
 sudo mv /var/log /var/log.vhd
 sudo mkdir /var/log
 

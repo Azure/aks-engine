@@ -11,13 +11,14 @@ import (
 )
 
 func TestKubeletConfigDefaults(t *testing.T) {
-	cs := CreateMockContainerService("testcluster", "1.8.6", 3, 2, false)
+	cs := CreateMockContainerService("testcluster", "1.12.7", 3, 2, false)
 	cs.setKubeletConfig()
 	k := cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig
 	// TODO test all default config values
 	for key, val := range map[string]string{
 		"--azure-container-registry-config": "/etc/kubernetes/azure.json",
 		"--image-pull-progress-deadline":    "30m",
+		"--pod-max-pids":                    "-1",
 	} {
 		if k[key] != val {
 			t.Fatalf("got unexpected kubelet config value for %s: %s, expected %s",
@@ -357,6 +358,68 @@ func TestEnforceNodeAllocatable(t *testing.T) {
 	if k["--enforce-node-allocatable"] != "kube-reserved/system-reserved" {
 		t.Fatalf("got unexpected '--enforce-node-allocatable' kubelet config value %s, the expected value is %s",
 			k["--enforce-node-allocatable"], "kube-reserved/system-reserved")
+	}
+}
+
+func TestProtectKernelDefaults(t *testing.T) {
+	// Validate default
+	cs := CreateMockContainerService("testcluster", "1.12.7", 3, 2, false)
+	cs.setKubeletConfig()
+	k := cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig
+	if k["--protect-kernel-defaults"] != "" {
+		t.Fatalf("got unexpected '--protect-kernel-defaults' kubelet config value %s, the expected value is %s",
+			k["--protect-kernel-defaults"], "pods")
+	}
+
+	// Validate that --protect-kernel-defaults is "true" by default for Ubuntu distros
+	for _, distro := range DistroValues {
+		switch distro {
+		case Ubuntu, Ubuntu1804:
+			cs = CreateMockContainerService("testcluster", "1.10.13", 3, 2, false)
+			cs.Properties.MasterProfile.Distro = distro
+			cs.Properties.AgentPoolProfiles[0].Distro = distro
+			cs.setKubeletConfig()
+			k = cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig
+			if k["--protect-kernel-defaults"] != "true" {
+				t.Fatalf("got unexpected '--protect-kernel-defaults' kubelet config value %s, the expected value is %s",
+					k["--protect-kernel-defaults"], "true")
+			}
+		}
+	}
+
+	// Validate that --protect-kernel-defaults is overridable
+	cs = CreateMockContainerService("testcluster", "1.10.13", 3, 2, false)
+	cs.Properties.OrchestratorProfile.KubernetesConfig = &KubernetesConfig{
+		KubeletConfig: map[string]string{
+			"--protect-kernel-defaults": "false",
+		},
+	}
+	cs.setKubeletConfig()
+	k = cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig
+	if k["--protect-kernel-defaults"] != "false" {
+		t.Fatalf("got unexpected '--protect-kernel-defaults' kubelet config value %s, the expected value is %s",
+			k["--protect-kernel-defaults"], "false")
+	}
+
+	// Validate that --protect-kernel-defaults is overridable for Ubuntu distros
+	for _, distro := range DistroValues {
+		switch distro {
+		case Ubuntu, Ubuntu1804:
+			cs = CreateMockContainerService("testcluster", "1.10.13", 3, 2, false)
+			cs.Properties.MasterProfile.Distro = "ubuntu"
+			cs.Properties.AgentPoolProfiles[0].Distro = "ubuntu"
+			cs.Properties.OrchestratorProfile.KubernetesConfig = &KubernetesConfig{
+				KubeletConfig: map[string]string{
+					"--protect-kernel-defaults": "false",
+				},
+			}
+			cs.setKubeletConfig()
+			k = cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig
+			if k["--protect-kernel-defaults"] != "false" {
+				t.Fatalf("got unexpected '--protect-kernel-defaults' kubelet config value %s, the expected value is %s",
+					k["--protect-kernel-defaults"], "false")
+			}
+		}
 	}
 }
 

@@ -110,7 +110,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			kubeConfig, err := GetConfig()
 			Expect(err).NotTo(HaveOccurred())
 			master := fmt.Sprintf("%s@%s", eng.ExpandedDefinition.Properties.LinuxProfile.AdminUsername, kubeConfig.GetServerName())
-			nodeList, err := node.Get()
+			nodeList, err := node.GetReady()
 			Expect(err).NotTo(HaveOccurred())
 			hostOSDNSValidateScript := "host-os-dns-validate.sh"
 			envString := "NODE_HOSTNAMES='"
@@ -1317,7 +1317,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				Expect(len(iisPods)).ToNot(BeZero())
 				for _, iisPod := range iisPods {
 					var pass bool
-					pass, err = iisPod.CheckWindowsOutboundConnection("www.bing.com", 10*time.Second, cfg.Timeout)
+					pass, err = iisPod.CheckWindowsOutboundConnection(10*time.Second, cfg.Timeout)
 					Expect(err).NotTo(HaveOccurred())
 					Expect(pass).To(BeTrue())
 				}
@@ -1365,7 +1365,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				Expect(len(iisPods)).ToNot(BeZero())
 				for _, iisPod := range iisPods {
 					var pass bool
-					pass, err = iisPod.CheckWindowsOutboundConnection("www.bing.com", 10*time.Second, cfg.Timeout)
+					pass, err = iisPod.CheckWindowsOutboundConnection(10*time.Second, cfg.Timeout)
 					Expect(err).NotTo(HaveOccurred())
 					Expect(pass).To(BeTrue())
 				}
@@ -1394,7 +1394,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				Expect(len(iisPods)).ToNot(BeZero())
 				for _, iisPod := range iisPods {
 					var pass bool
-					pass, err = iisPod.CheckWindowsOutboundConnection("www.bing.com", 10*time.Second, cfg.Timeout)
+					pass, err = iisPod.CheckWindowsOutboundConnection(10*time.Second, cfg.Timeout)
 					Expect(err).NotTo(HaveOccurred())
 					Expect(pass).To(BeTrue())
 				}
@@ -1425,7 +1425,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				Expect(len(iisPods)).ToNot(BeZero())
 				for _, iisPod := range iisPods {
 					var pass bool
-					pass, err = iisPod.CheckWindowsOutboundConnection("www.bing.com", 10*time.Second, cfg.Timeout)
+					pass, err = iisPod.CheckWindowsOutboundConnection(10*time.Second, cfg.Timeout)
 					Expect(err).NotTo(HaveOccurred())
 					Expect(pass).To(BeTrue())
 				}

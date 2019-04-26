@@ -13,7 +13,7 @@ func TestCreateCosmosDB(t *testing.T) {
 	db := createCosmosDBAccount()
 	expected := map[string]interface{}{
 		"apiVersion": "[variables('apiVersionCosmos')]",
-		"name":       "Microsoft.DocumentDB/databaseAccounts",
+		"name":       "[variables('cosmosAccountName')]",
 		"location":   "[resourceGroup().location]",
 		"kind":       "GlobalDocumentDB",
 		"properties": map[string]interface{}{
@@ -38,16 +38,13 @@ func TestCreateCosmosDB(t *testing.T) {
 					"failoverPriority": 1,
 				},
 			},
+			"name":                             "[variables('cosmosAccountName')]",
+			"primaryClientCertificatePemBytes": "[variables('cosmosDBCertb64')]",
 		},
 		"tags": map[string]string{
 			"defaultExperience": "Etcd",
 		},
-		"consistencyPolicy": map[string]interface{}{
-			"defaultConsistencyLevel": "BoundedStaleness",
-			"maxIntervalInSeconds":    5,
-			"maxStalenessPrefix":      100,
-		},
-		"primaryClientCertificatePemBytes": "[variables('cosmosDBCertb64')]",
+		"type": "Microsoft.DocumentDB/databaseAccounts",
 	}
 
 	if diff := cmp.Diff(expected, db); diff != "" {

@@ -533,6 +533,7 @@ type AgentPoolProfile struct {
 	PreserveNodesProperties             *bool                `json:"preserveNodesProperties,omitempty"`
 	WindowsNameVersion                  string               `json:"windowsNameVersion,omitempty"`
 	EnableVMSSNodePublicIP              *bool                `json:"enableVMSSNodePublicIP,omitempty"`
+	LoadBalancerBackendAddressPoolIDs   []string             `json:"loadBalancerBackendAddressPoolIDs,omitempty"`
 }
 
 // AgentPoolProfileRole represents an agent role
@@ -1045,7 +1046,55 @@ func (p *Properties) IsUbuntuDistroForAllNodes() bool {
 			}
 		}
 	}
-	return p.MasterProfile.Distro == Ubuntu || p.MasterProfile.Distro == Ubuntu1804
+	if p.MasterProfile != nil {
+		return p.MasterProfile.Distro == Ubuntu || p.MasterProfile.Distro == Ubuntu1804
+	}
+	return true
+}
+
+// HasUbuntuDistroNodes returns true if any of the agent pools or masters are running the base Ubuntu image
+func (p *Properties) HasUbuntuDistroNodes() bool {
+	if len(p.AgentPoolProfiles) > 0 {
+		for _, ap := range p.AgentPoolProfiles {
+			if ap.Distro == Ubuntu || ap.Distro == Ubuntu1804 {
+				return true
+			}
+		}
+	}
+	if p.MasterProfile != nil {
+		return p.MasterProfile.Distro == Ubuntu || p.MasterProfile.Distro == Ubuntu1804
+	}
+	return false
+}
+
+// HasUbuntu1604DistroNodes returns true if any of the agent pools or masters are running the base Ubuntu 16.04-LTS image
+func (p *Properties) HasUbuntu1604DistroNodes() bool {
+	if len(p.AgentPoolProfiles) > 0 {
+		for _, ap := range p.AgentPoolProfiles {
+			if ap.Distro == Ubuntu {
+				return true
+			}
+		}
+	}
+	if p.MasterProfile != nil {
+		return p.MasterProfile.Distro == Ubuntu
+	}
+	return false
+}
+
+// HasUbuntu1804DistroNodes returns true if any of the agent pools or masters are running the base Ubuntu 18.04-LTS image
+func (p *Properties) HasUbuntu1804DistroNodes() bool {
+	if len(p.AgentPoolProfiles) > 0 {
+		for _, ap := range p.AgentPoolProfiles {
+			if ap.Distro == Ubuntu1804 {
+				return true
+			}
+		}
+	}
+	if p.MasterProfile != nil {
+		return p.MasterProfile.Distro == Ubuntu1804
+	}
+	return false
 }
 
 // HasAvailabilityZones returns true if the cluster contains a profile with zones

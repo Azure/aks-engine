@@ -9,6 +9,10 @@ fi
 ETCD_PEER_URL="https://${PRIVATE_IP}:2380"
 ETCD_CLIENT_URL="https://${PRIVATE_IP}:2379"
 
+applyOSConfig(){
+    retrycmd_if_failure 120 5 25 update-grub || exit $ERR_CIS_APPLY_GRUB_CONFIG
+}
+
 systemctlEnableAndStart() {
     systemctl_restart 100 5 30 $1
     RESTART_STATUS=$?
@@ -287,12 +291,6 @@ ensureKubelet() {
     KUBELET_RUNTIME_CONFIG_SCRIPT_FILE=/opt/azure/containers/kubelet.sh
     wait_for_file 1200 1 $KUBELET_RUNTIME_CONFIG_SCRIPT_FILE || exit $ERR_FILE_WATCH_TIMEOUT
     systemctlEnableAndStart kubelet || exit $ERR_KUBELET_START_FAIL
-    # Delay start of kubelet-monitor for 30 mins after booting
-    #KUBELET_MONITOR_SYSTEMD_TIMER_FILE=/etc/systemd/system/kubelet-monitor.timer
-    #wait_for_file 1200 1 $KUBELET_MONITOR_SYSTEMD_TIMER_FILE || exit $ERR_FILE_WATCH_TIMEOUT
-    #KUBELET_MONITOR_SYSTEMD_FILE=/etc/systemd/system/kubelet-monitor.service
-    #wait_for_file 1200 1 $KUBELET_MONITOR_SYSTEMD_FILE || exit $ERR_FILE_WATCH_TIMEOUT
-    #systemctlEnableAndStart kubelet-monitor.timer || exit $ERR_SYSTEMCTL_START_FAIL
 }
 
 ensureJournal(){

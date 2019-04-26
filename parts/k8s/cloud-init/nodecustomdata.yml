@@ -56,13 +56,6 @@ write_files:
   content: !!binary |
     {{CloudInitData "healthMonitorScript"}}
 
-- path: /etc/systemd/system/kubelet-monitor.timer
-  permissions: "0644"
-  encoding: gzip
-  owner: root
-  content: !!binary |
-    {{CloudInitData "kubeletMonitorSystemdTimer"}}
-
 - path: /etc/systemd/system/kubelet-monitor.service
   permissions: "0644"
   encoding: gzip
@@ -106,12 +99,21 @@ write_files:
     {{CloudInitData "aptPreferences"}}
 
 {{if .IsUbuntuNonVHD}}
+  {{if .IsUbuntu1604}}
+- path: /etc/ssh/sshd_config
+  permissions: "0600"
+  encoding: gzip
+  owner: root
+  content: !!binary |
+    {{CloudInitData "sshdConfig1604"}}
+  {{else}}
 - path: /etc/ssh/sshd_config
   permissions: "0600"
   encoding: gzip
   owner: root
   content: !!binary |
     {{CloudInitData "sshdConfig"}}
+  {{end}}
 
 - path: /etc/issue
   permissions: "0644"
@@ -154,6 +156,41 @@ write_files:
   owner: root
   content: !!binary |
     {{CloudInitData "pwQuality"}}
+
+- path: /etc/default/grub
+  permissions: "0644"
+  encoding: gzip
+  owner: root
+  content: !!binary |
+    {{CloudInitData "defaultGrub"}}
+
+- path: /etc/pam.d/su
+  permissions: "0644"
+  encoding: gzip
+  owner: root
+  content: !!binary |
+    {{CloudInitData "pamDotDSU"}}
+
+- path: /etc/pam.d/common-auth
+  permissions: "0644"
+  encoding: gzip
+  owner: root
+  content: !!binary |
+    {{CloudInitData "pamDotDCommonAuth"}}
+
+- path: /etc/pam.d/common-password
+  permissions: "0644"
+  encoding: gzip
+  owner: root
+  content: !!binary |
+    {{CloudInitData "pamDotDCommonPassword"}}
+
+- path: /etc/profile.d/CIS.sh
+  permissions: "0644"
+  encoding: gzip
+  owner: root
+  content: !!binary |
+    {{CloudInitData "profileDCISSh"}}
 {{end}}
 
 {{if .KubernetesConfig.RequiresDocker}}
@@ -259,7 +296,7 @@ write_files:
         certificate-authority: /etc/kubernetes/certs/ca.crt
         {{if IsAzureStackCloud}}
         {{if IsMultipleMasters}}
-        server: https://<kubernetesAPIServerIP>:443
+        server: https://{{WrapAsVariable "masterPublicLbFQDN"}}:443
         {{else}}
         server: https://{{WrapAsVariable "kubernetesAPIServerIP"}}:443
         {{end}}

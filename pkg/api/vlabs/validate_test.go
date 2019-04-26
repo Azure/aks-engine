@@ -2486,6 +2486,18 @@ func TestAgentPoolProfile_ValidateAvailabilityProfile(t *testing.T) {
 			t.Errorf("expected error with message : %s, but got %s", expectedMsg, err.Error())
 		}
 	})
+
+	t.Run("Should fail for AvailabilitySet + invalid LoadBalancerBackendAddressPoolIDs", func(t *testing.T) {
+		t.Parallel()
+		cs := getK8sDefaultContainerService(false)
+		agentPoolProfiles := cs.Properties.AgentPoolProfiles
+		agentPoolProfiles[0].AvailabilityProfile = AvailabilitySet
+		agentPoolProfiles[0].LoadBalancerBackendAddressPoolIDs = []string{"/subscriptions/123/resourceGroups/rg/providers/Microsoft.Network/loadBalancers/myVMSSSLB/backendAddressPools/myVMSSSLBBEPool", ""}
+		expectedMsg := fmt.Sprintf("AgentPoolProfile.LoadBalancerBackendAddressPoolIDs can not contain empty string. Agent pool name: %s", agentPoolProfiles[0].Name)
+		if err := cs.Properties.validateAgentPoolProfiles(false); err.Error() != expectedMsg {
+			t.Errorf("expected error with message : %s, but got %s", expectedMsg, err.Error())
+		}
+	})
 }
 
 func TestAgentPoolProfile_ValidateVirtualMachineScaleSet(t *testing.T) {
@@ -2575,6 +2587,18 @@ func TestAgentPoolProfile_ValidateVirtualMachineScaleSet(t *testing.T) {
 		agentPoolProfiles[0].AvailabilityProfile = VirtualMachineScaleSets
 		agentPoolProfiles[1].AvailabilityProfile = AvailabilitySet
 		expectedMsg := fmt.Sprintf("mixed mode availability profiles are not allowed. Please set either VirtualMachineScaleSets or AvailabilitySet in availabilityProfile for all agent pools")
+		if err := cs.Properties.validateAgentPoolProfiles(false); err.Error() != expectedMsg {
+			t.Errorf("expected error with message : %s, but got %s", expectedMsg, err.Error())
+		}
+	})
+
+	t.Run("Should fail for VMSS + invalid LoadBalancerBackendAddressPoolIDs", func(t *testing.T) {
+		t.Parallel()
+		cs := getK8sDefaultContainerService(false)
+		agentPoolProfiles := cs.Properties.AgentPoolProfiles
+		agentPoolProfiles[0].AvailabilityProfile = VirtualMachineScaleSets
+		agentPoolProfiles[0].LoadBalancerBackendAddressPoolIDs = []string{"/subscriptions/123/resourceGroups/rg/providers/Microsoft.Network/loadBalancers/myVMSSSLB/backendAddressPools/myVMSSSLBBEPool", ""}
+		expectedMsg := fmt.Sprintf("AgentPoolProfile.LoadBalancerBackendAddressPoolIDs can not contain empty string. Agent pool name: %s", agentPoolProfiles[0].Name)
 		if err := cs.Properties.validateAgentPoolProfiles(false); err.Error() != expectedMsg {
 			t.Errorf("expected error with message : %s, but got %s", expectedMsg, err.Error())
 		}

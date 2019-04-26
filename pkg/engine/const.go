@@ -129,6 +129,11 @@ const (
 )
 
 const (
+	// AzureStackSuffix is appended to kubernetes version on Azure Stack instances
+	AzureStackSuffix = "-azs"
+)
+
+const (
 	kubeConfigJSON = "k8s/kubeconfig.json"
 	// Windows custom scripts
 	kubernetesWindowsAgentCustomDataPS1   = "k8s/kuberneteswindowssetup.ps1"
@@ -142,17 +147,17 @@ const (
 
 // cloud-init (i.e. ARM customData) file references
 const (
-	kubernetesMasterNodeCustomDataYaml       = "k8s/cloud-init/masternodecustomdata.yml"
-	kubernetesNodeCustomDataYaml             = "k8s/cloud-init/nodecustomdata.yml"
-	kubernetesJumpboxCustomDataYaml          = "k8s/cloud-init/jumpboxcustomdata.yml"
-	kubernetesCSEMainScript                  = "k8s/cloud-init/artifacts/cse_main.sh"
-	kubernetesCSEHelpersScript               = "k8s/cloud-init/artifacts/cse_helpers.sh"
-	kubernetesCSEInstall                     = "k8s/cloud-init/artifacts/cse_install.sh"
-	kubernetesCSEConfig                      = "k8s/cloud-init/artifacts/cse_config.sh"
-	kubernetesCISScript                      = "k8s/cloud-init/artifacts/cis.sh"
-	kubernetesCSECustomCloud                 = "k8s/cloud-init/artifacts/cse_customcloud.sh"
-	kubernetesHealthMonitorScript            = "k8s/cloud-init/artifacts/health-monitor.sh"
-	kubernetesKubeletMonitorSystemdTimer     = "k8s/cloud-init/artifacts/kubelet-monitor.timer"
+	kubernetesMasterNodeCustomDataYaml = "k8s/cloud-init/masternodecustomdata.yml"
+	kubernetesNodeCustomDataYaml       = "k8s/cloud-init/nodecustomdata.yml"
+	kubernetesJumpboxCustomDataYaml    = "k8s/cloud-init/jumpboxcustomdata.yml"
+	kubernetesCSEMainScript            = "k8s/cloud-init/artifacts/cse_main.sh"
+	kubernetesCSEHelpersScript         = "k8s/cloud-init/artifacts/cse_helpers.sh"
+	kubernetesCSEInstall               = "k8s/cloud-init/artifacts/cse_install.sh"
+	kubernetesCSEConfig                = "k8s/cloud-init/artifacts/cse_config.sh"
+	kubernetesCISScript                = "k8s/cloud-init/artifacts/cis.sh"
+	kubernetesCSECustomCloud           = "k8s/cloud-init/artifacts/cse_customcloud.sh"
+	kubernetesHealthMonitorScript      = "k8s/cloud-init/artifacts/health-monitor.sh"
+	// kubernetesKubeletMonitorSystemdTimer     = "k8s/cloud-init/artifacts/kubelet-monitor.timer" // TODO enable
 	kubernetesKubeletMonitorSystemdService   = "k8s/cloud-init/artifacts/kubelet-monitor.service"
 	kubernetesDockerMonitorSystemdTimer      = "k8s/cloud-init/artifacts/docker-monitor.timer"
 	kubernetesDockerMonitorSystemdService    = "k8s/cloud-init/artifacts/docker-monitor.service"
@@ -160,6 +165,7 @@ const (
 	kubernetesMasterGenerateProxyCertsScript = "k8s/cloud-init/artifacts/generateproxycerts.sh"
 	kubernetesCustomSearchDomainsScript      = "k8s/cloud-init/artifacts/setup-custom-search-domains.sh"
 	sshdConfig                               = "k8s/cloud-init/artifacts/sshd_config"
+	sshdConfig1604                           = "k8s/cloud-init/artifacts/sshd_config_1604"
 	kubeletSystemdService                    = "k8s/cloud-init/artifacts/kubelet.service"
 	kmsSystemdService                        = "k8s/cloud-init/artifacts/kms.service"
 	aptPreferences                           = "k8s/cloud-init/artifacts/apt-preferences"
@@ -172,6 +178,11 @@ const (
 	cisLogEnforcement                        = "k8s/cloud-init/artifacts/rsyslog-d-60-CIS.conf"
 	modprobeConfCIS                          = "k8s/cloud-init/artifacts/modprobe-CIS.conf"
 	pwQuality                                = "k8s/cloud-init/artifacts/pwquality-CIS.conf"
+	defaultGrub                              = "k8s/cloud-init/artifacts/default-grub"
+	pamDotDSU                                = "k8s/cloud-init/artifacts/pam-d-su"
+	profileDCISSh                            = "k8s/cloud-init/artifacts/profile-d-cis.sh"
+	pamDotDCommonAuth                        = "k8s/cloud-init/artifacts/pam-d-common-auth"
+	pamDotDCommonPassword                    = "k8s/cloud-init/artifacts/pam-d-common-password"
 )
 
 const (
