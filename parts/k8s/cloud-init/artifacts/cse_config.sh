@@ -135,14 +135,14 @@ ensureRPC() {
 }
 
 ensureAuditD() {
-	if [[ "${AUDITD_ENABLED}" == true ]]; then
-	  systemctlEnableAndStart auditd || exit $ERR_SYSTEMCTL_START_FAIL
-	else
-	  apt list --installed | grep 'auditd'
-      if [ $? -eq 0 ]; then
-        systemctlDisableAndStop auditd || exit $ERR_SYSTEMCTL_START_FAIL
-      fi
-	fi
+  if [[ "${AUDITD_ENABLED}" == true ]]; then
+    systemctlEnableAndStart auditd || exit $ERR_SYSTEMCTL_START_FAIL
+  else
+    apt list --installed | grep 'auditd'
+    if [ $? -eq 0 ]; then
+      systemctlDisableAndStop auditd || exit $ERR_SYSTEMCTL_START_FAIL
+    fi
+  fi
 }
 
 generateAggregatedAPICerts() {

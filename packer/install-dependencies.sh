@@ -14,6 +14,12 @@ copyPackerFiles
 echo ""
 echo "Components downloaded in this VHD build (some of the below components might get deleted during cluster provisioning if they are not needed):" >> ${RELEASE_NOTES_FILEPATH}
 
+
+ls -la /etc/audit/auditd.conf
+cat /etc/audit/auditd.conf
+ls -la /etc/audit/rules.d/CIS.rules
+cat /etc/audit/rules.d/CIS.rules
+
 installDeps
 cat << EOF >> ${RELEASE_NOTES_FILEPATH}
   - apt-transport-https
