@@ -129,6 +129,11 @@ const (
 )
 
 const (
+	// AzureStackSuffix is appended to kubernetes version on Azure Stack instances
+	AzureStackSuffix = "-azs"
+)
+
+const (
 	kubeConfigJSON = "k8s/kubeconfig.json"
 	// Windows custom scripts
 	kubernetesWindowsAgentCustomDataPS1   = "k8s/kuberneteswindowssetup.ps1"

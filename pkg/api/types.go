@@ -533,6 +533,7 @@ type AgentPoolProfile struct {
 	PreserveNodesProperties             *bool                `json:"preserveNodesProperties,omitempty"`
 	WindowsNameVersion                  string               `json:"windowsNameVersion,omitempty"`
 	EnableVMSSNodePublicIP              *bool                `json:"enableVMSSNodePublicIP,omitempty"`
+	LoadBalancerBackendAddressPoolIDs   []string             `json:"loadBalancerBackendAddressPoolIDs,omitempty"`
 }
 
 // AgentPoolProfileRole represents an agent role

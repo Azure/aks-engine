@@ -465,6 +465,10 @@ func (a *Properties) validateAgentPoolProfiles(isUpdate bool) error {
 		if e := agentPoolProfile.validateWindows(a.OrchestratorProfile, a.WindowsProfile, isUpdate); agentPoolProfile.OSType == Windows && e != nil {
 			return e
 		}
+
+		if e := agentPoolProfile.validateLoadBalancerBackendAddressPoolIDs(); e != nil {
+			return e
+		}
 	}
 
 	return nil
@@ -915,6 +919,19 @@ func (a *AgentPoolProfile) validateOrchestratorSpecificProperties(orchestratorTy
 			return errors.Errorf("VirtualMachineScaleSets does not support storage account attached disks.  Instead specify 'StorageAccount': '%s' or specify AvailabilityProfile '%s'", ManagedDisks, AvailabilitySet)
 		}
 	}
+	return nil
+}
+
+func (a *AgentPoolProfile) validateLoadBalancerBackendAddressPoolIDs() error {
+
+	if a.LoadBalancerBackendAddressPoolIDs != nil {
+		for _, backendPoolID := range a.LoadBalancerBackendAddressPoolIDs {
+			if len(backendPoolID) == 0 {
+				return errors.Errorf("AgentPoolProfile.LoadBalancerBackendAddressPoolIDs can not contain empty string. Agent pool name: %s", a.Name)
+			}
+		}
+	}
+
 	return nil
 }
 

@@ -11,7 +11,7 @@ import (
 	"github.com/Azure/go-autorest/autorest/to"
 )
 
-func CreateLoadBalancer(masterCount int, isVMSS bool) LoadBalancerARM {
+func CreateLoadBalancer(prop *api.Properties, isVMSS bool) LoadBalancerARM {
 
 	loadBalancer := LoadBalancerARM{
 		ARMResource: ARMResource{
@@ -80,6 +80,30 @@ func CreateLoadBalancer(masterCount int, isVMSS bool) LoadBalancerARM {
 		},
 	}
 
+	if prop.OrchestratorProfile.KubernetesConfig.LoadBalancerSku == "Standard" {
+		udpRule := network.LoadBalancingRule{
+			Name: to.StringPtr("LBRuleUDP"),
+			LoadBalancingRulePropertiesFormat: &network.LoadBalancingRulePropertiesFormat{
+				FrontendIPConfiguration: &network.SubResource{
+					ID: to.StringPtr("[variables('masterLbIPConfigID')]"),
+				},
+				BackendAddressPool: &network.SubResource{
+					ID: to.StringPtr("[concat(variables('masterLbID'), '/backendAddressPools/', variables('masterLbBackendPoolName'))]"),
+				},
+				Protocol:             network.TransportProtocolUDP,
+				FrontendPort:         to.Int32Ptr(1123),
+				BackendPort:          to.Int32Ptr(1123),
+				EnableFloatingIP:     to.BoolPtr(false),
+				IdleTimeoutInMinutes: to.Int32Ptr(5),
+				LoadDistribution:     network.Default,
+				Probe: &network.SubResource{
+					ID: to.StringPtr("[concat(variables('masterLbID'),'/probes/tcpHTTPSProbe')]"),
+				},
+			},
+		}
+		*loadBalancer.LoadBalancer.LoadBalancerPropertiesFormat.LoadBalancingRules = append(*loadBalancer.LoadBalancer.LoadBalancerPropertiesFormat.LoadBalancingRules, udpRule)
+	}
+
 	if isVMSS {
 		inboundNATPools := []network.InboundNatPool{
 			{
@@ -107,7 +131,7 @@ func CreateLoadBalancer(masterCount int, isVMSS bool) LoadBalancerARM {
 			2203,
 			2204,
 		}
-		for i := 0; i < masterCount; i++ {
+		for i := 0; i < prop.MasterProfile.Count; i++ {
 			inboundNATRule := network.InboundNatRule{
 				Name: to.StringPtr(fmt.Sprintf("[concat('SSH-', variables('masterVMNamePrefix'), %d)]", i)),
 				InboundNatRulePropertiesFormat: &network.InboundNatRulePropertiesFormat{
@@ -204,10 +228,57 @@ func CreateMasterInternalLoadBalancer(cs *api.ContainerService) LoadBalancerARM 
 		},
 		Type: to.StringPtr("Microsoft.Network/loadBalancers"),
 	}
+
+	if cs.Properties.OrchestratorProfile.KubernetesConfig.LoadBalancerSku == "Standard" {
+		udpRule := network.LoadBalancingRule{
+			Name: to.StringPtr("LBRuleUDP"),
+			LoadBalancingRulePropertiesFormat: &network.LoadBalancingRulePropertiesFormat{
+				BackendAddressPool: &network.SubResource{
+					ID: to.StringPtr("[concat(variables('masterInternalLbID'), '/backendAddressPools/', variables('masterLbBackendPoolName'))]"),
+				},
+				BackendPort:      to.Int32Ptr(1123),
+				EnableFloatingIP: to.BoolPtr(false),
+				FrontendIPConfiguration: &network.SubResource{
+					ID: to.StringPtr("[variables('masterInternalLbIPConfigID')]"),
+				},
+				FrontendPort:         to.Int32Ptr(1123),
+				IdleTimeoutInMinutes: to.Int32Ptr(5),
+				Protocol:             network.TransportProtocolUDP,
+				Probe: &network.SubResource{
+					ID: to.StringPtr("[concat(variables('masterInternalLbID'),'/probes/tcpHTTPSProbe')]"),
+				},
+			},
+		}
+		*loadBalancer.LoadBalancerPropertiesFormat.LoadBalancingRules = append(*loadBalancer.LoadBalancerPropertiesFormat.LoadBalancingRules, udpRule)
+	}
+
 	loadBalancerARM := LoadBalancerARM{
 		ARMResource:  armResource,
 		LoadBalancer: loadBalancer,
 	}
 
 	return loadBalancerARM
+}
+
+func getUDPLoadBalancingRule() network.LoadBalancingRule {
+	return network.LoadBalancingRule{
+		Name: to.StringPtr("LBRuleUDP"),
+		LoadBalancingRulePropertiesFormat: &network.LoadBalancingRulePropertiesFormat{
+			FrontendIPConfiguration: &network.SubResource{
+				ID: to.StringPtr("[variables('masterLbIPConfigID')]"),
+			},
+			BackendAddressPool: &network.SubResource{
+				ID: to.StringPtr("[concat(variables('masterLbID'), '/backendAddressPools/', variables('masterLbBackendPoolName'))]"),
+			},
+			Protocol:             network.TransportProtocolUDP,
+			FrontendPort:         to.Int32Ptr(1123),
+			BackendPort:          to.Int32Ptr(1123),
+			EnableFloatingIP:     to.BoolPtr(false),
+			IdleTimeoutInMinutes: to.Int32Ptr(5),
+			LoadDistribution:     network.Default,
+			Probe: &network.SubResource{
+				ID: to.StringPtr("[concat(variables('masterLbID'),'/probes/tcpHTTPSProbe')]"),
+			},
+		},
+	}
 }
