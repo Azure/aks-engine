@@ -81,7 +81,10 @@
 // ../../parts/k8s/cloud-init/artifacts/kubelet.service
 // ../../parts/k8s/cloud-init/artifacts/modprobe-CIS.conf
 // ../../parts/k8s/cloud-init/artifacts/mountetcd.sh
+// ../../parts/k8s/cloud-init/artifacts/pam-d-common-auth
+// ../../parts/k8s/cloud-init/artifacts/pam-d-common-password
 // ../../parts/k8s/cloud-init/artifacts/pam-d-su
+// ../../parts/k8s/cloud-init/artifacts/profile-d-cis.sh
 // ../../parts/k8s/cloud-init/artifacts/pwquality-CIS.conf
 // ../../parts/k8s/cloud-init/artifacts/rsyslog-d-60-CIS.conf
 // ../../parts/k8s/cloud-init/artifacts/setup-custom-search-domains.sh
@@ -14529,6 +14532,10 @@ copyPackerFiles() {
   PWQUALITY_CONF_DEST=/etc/security/pwquality.conf
   DEFAULT_GRUB_SRC=/home/packer/default-grub
   DEFAULT_GRUB_DEST=/etc/default/grub
+  PAM_D_SU_SRC=/home/packer/pam-d-su
+  PAM_D_SU_DEST=/etc/pam.d/su
+  PROFILE_D_CIS_SH_SRC=/home/packer/profile-d-cis.sh
+  PROFILE_D_CIS_SH_DEST=/etc/profile.d/CIS.sh
   if [[ ${UBUNTU_RELEASE} == "16.04" ]]; then
     SSHD_CONFIG_SRC=/home/packer/sshd_config_1604
   fi
@@ -14539,7 +14546,9 @@ copyPackerFiles() {
   DIR=$(dirname "$SSHD_CONFIG_DEST") && mkdir -p ${DIR} && cp $SSHD_CONFIG_SRC $SSHD_CONFIG_DEST || exit $ERR_CIS_COPY_FILE
   DIR=$(dirname "$MODPROBE_CIS_DEST") && mkdir -p ${DIR} && cp $MODPROBE_CIS_SRC $MODPROBE_CIS_DEST || exit $ERR_CIS_COPY_FILE
   DIR=$(dirname "$PWQUALITY_CONF_DEST") && mkdir -p ${DIR} && cp $PWQUALITY_CONF_SRC $PWQUALITY_CONF_DEST || exit $ERR_CIS_COPY_FILE
-  DIR=$(dirname "$PWQUALITY_CONF_DEST") && mkdir -p ${DIR} && cp $DEFAULT_GRUB_SRC $DEFAULT_GRUB_DEST || exit $ERR_CIS_COPY_FILE
+  DIR=$(dirname "$DEFAULT_GRUB_DEST") && mkdir -p ${DIR} && cp $DEFAULT_GRUB_SRC $DEFAULT_GRUB_DEST || exit $ERR_CIS_COPY_FILE
+  DIR=$(dirname "$PAM_D_SU_DEST") && mkdir -p ${DIR} && cp $PAM_D_SU_SRC $PAM_D_SU_DEST || exit $ERR_CIS_COPY_FILE
+  DIR=$(dirname "$PROFILE_D_CIS_SH_DEST") && mkdir -p ${DIR} && cp $PROFILE_D_CIS_SH_SRC $PROFILE_D_CIS_SH_DEST || exit $ERR_CIS_COPY_FILE
 }
 
 assignRootPW() {
@@ -14595,6 +14604,8 @@ assignFilePermissions() {
     chmod 600 /etc/security/pwquality.conf || exit $ERR_CIS_ASSIGN_FILE_PERMISSION
     chmod 400 /boot/grub/grub.cfg || exit $ERR_CIS_ASSIGN_FILE_PERMISSION
     chmod 644 /etc/default/grub || exit $ERR_CIS_ASSIGN_FILE_PERMISSION
+    chmod 644 /etc/pam.d/su || exit $ERR_CIS_ASSIGN_FILE_PERMISSION
+    chmod 755 /etc/profile.d/CIS.sh || exit $ERR_CIS_ASSIGN_FILE_PERMISSION
 }
 
 applyCIS() {
@@ -14910,12 +14921,6 @@ ensureKubelet() {
     KUBELET_RUNTIME_CONFIG_SCRIPT_FILE=/opt/azure/containers/kubelet.sh
     wait_for_file 1200 1 $KUBELET_RUNTIME_CONFIG_SCRIPT_FILE || exit $ERR_FILE_WATCH_TIMEOUT
     systemctlEnableAndStart kubelet || exit $ERR_KUBELET_START_FAIL
-    # Delay start of kubelet-monitor for 30 mins after booting
-    #KUBELET_MONITOR_SYSTEMD_TIMER_FILE=/etc/systemd/system/kubelet-monitor.timer
-    #wait_for_file 1200 1 $KUBELET_MONITOR_SYSTEMD_TIMER_FILE || exit $ERR_FILE_WATCH_TIMEOUT
-    #KUBELET_MONITOR_SYSTEMD_FILE=/etc/systemd/system/kubelet-monitor.service
-    #wait_for_file 1200 1 $KUBELET_MONITOR_SYSTEMD_FILE || exit $ERR_FILE_WATCH_TIMEOUT
-    #systemctlEnableAndStart kubelet-monitor.timer || exit $ERR_SYSTEMCTL_START_FAIL
 }
 
 ensureJournal(){
@@ -15439,7 +15444,7 @@ removeEtcd() {
 }
 
 removeMoby() {
-    sudo apt-get purge -y moby-engine moby-cli
+    apt-get purge -y moby-engine moby-cli
 }
 
 installEtcd() {
@@ -15524,11 +15529,14 @@ installContainerRuntime() {
         else
             installMoby
         fi
-    elif [[ "$CONTAINER_RUNTIME" == "clear-containers" ]]; then
+    fi
+    if [[ "$CONTAINER_RUNTIME" == "clear-containers" ]]; then
 	    # Ensure we can nest virtualization
         if grep -q vmx /proc/cpuinfo; then
             installClearContainersRuntime
         fi
+    else
+        cleanUpClearContainers
     fi
 }
 
@@ -15734,6 +15742,14 @@ cleanUpGPUDrivers() {
     rm -Rf $GPU_DEST
 }
 
+cleanUpContainerd() {
+    rm -Rf $CONTAINERD_DOWNLOADS_DIR
+}
+
+cleanUpClearContainers() {
+    apt-get purge -y cc-runtime
+}
+
 overrideNetworkConfig() {
     CONFIG_FILEPATH="/etc/cloud/cloud.cfg.d/80_azure_net_config.cfg"
     touch ${CONFIG_FILEPATH}
@@ -15846,6 +15862,8 @@ fi
 installNetworkPlugin
 if [[ "$CONTAINER_RUNTIME" == "clear-containers" ]] || [[ "$CONTAINER_RUNTIME" == "kata-containers" ]] || [[ "$CONTAINER_RUNTIME" == "containerd" ]]; then
     installContainerd
+else
+    cleanUpContainerd
 fi
 if [[ "${GPU_NODE}" = true ]]; then
     if $FULL_INSTALL_REQUIRED; then
@@ -16325,7 +16343,7 @@ kubelet_monitoring() {
   sleep 120
   local -r max_seconds=10
   local output=""
-  while [ 1 ]; do
+  while true; do
     if ! output=$(curl -m "${max_seconds}" -f -s -S http://127.0.0.1:10255/healthz 2>&1); then
       echo $output
       echo "Kubelet is unhealthy!"
@@ -16583,6 +16601,104 @@ func k8sCloudInitArtifactsMountetcdSh() (*asset, error) {
 	return a, nil
 }
 
+var _k8sCloudInitArtifactsPamDCommonAuth = []byte(`#
+# /etc/pam.d/common-auth - authentication settings common to all services
+#
+# This file is included from other service-specific PAM config files,
+# and should contain a list of the authentication modules that define
+# the central authentication scheme for use on the system
+# (e.g., /etc/shadow, LDAP, Kerberos, etc.).  The default is to use the
+# traditional Unix authentication mechanisms.
+#
+# As of pam 1.0.1-6, this file is managed by pam-auth-update by default.
+# To take advantage of this, it is recommended that you configure any
+# local modules either before or after the default block, and use
+# pam-auth-update to manage selection of other modules.  See
+# pam-auth-update(8) for details.
+
+# here are the per-package modules (the "Primary" block)
+auth	[success=1 default=ignore]	pam_unix.so nullok_secure
+# here's the fallback if no module succeeds
+auth	requisite			pam_deny.so
+# prime the stack with a positive return value if there isn't one already;
+# this avoids us returning an error just because nothing sets a success code
+# since the modules above will each just jump around
+auth	required			pam_permit.so
+# and here are more per-package modules (the "Additional" block)
+# end of pam-auth-update config
+
+# 5.3.2 Ensure lockout for failed password attempts is configured
+auth required pam_tally2.so onerr=fail audit silent deny=5 unlock_time=900`)
+
+func k8sCloudInitArtifactsPamDCommonAuthBytes() ([]byte, error) {
+	return _k8sCloudInitArtifactsPamDCommonAuth, nil
+}
+
+func k8sCloudInitArtifactsPamDCommonAuth() (*asset, error) {
+	bytes, err := k8sCloudInitArtifactsPamDCommonAuthBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "k8s/cloud-init/artifacts/pam-d-common-auth", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
+var _k8sCloudInitArtifactsPamDCommonPassword = []byte(`#
+# /etc/pam.d/common-password - password-related modules common to all services
+#
+# This file is included from other service-specific PAM config files,
+# and should contain a list of modules that define the services to be
+# used to change user passwords.  The default is pam_unix.
+
+# Explanation of pam_unix options:
+#
+# The "sha512" option enables salted SHA512 passwords.  Without this option,
+# the default is Unix crypt.  Prior releases used the option "md5".
+#
+# The "obscure" option replaces the old ` + "`" + `OBSCURE_CHECKS_ENAB' option in
+# login.defs.
+#
+# See the pam_unix manpage for other options.
+
+# As of pam 1.0.1-6, this file is managed by pam-auth-update by default.
+# To take advantage of this, it is recommended that you configure any
+# local modules either before or after the default block, and use
+# pam-auth-update to manage selection of other modules.  See
+# pam-auth-update(8) for details.
+
+# here are the per-package modules (the "Primary" block)
+password	requisite			pam_pwquality.so retry=3
+password	[success=1 default=ignore]	pam_unix.so obscure use_authtok try_first_pass sha512
+# here's the fallback if no module succeeds
+password	requisite			pam_deny.so
+# prime the stack with a positive return value if there isn't one already;
+# this avoids us returning an error just because nothing sets a success code
+# since the modules above will each just jump around
+password	required			pam_permit.so
+# and here are more per-package modules (the "Additional" block)
+# end of pam-auth-update config
+
+# 5.3.3 Ensure password reuse is limited
+# 5.3.4 Ensure password hashing algorithm is SHA-512
+password	[success=1 default=ignore]	pam_unix.so obscure use_authtok try_first_pass sha512 remember=5`)
+
+func k8sCloudInitArtifactsPamDCommonPasswordBytes() ([]byte, error) {
+	return _k8sCloudInitArtifactsPamDCommonPassword, nil
+}
+
+func k8sCloudInitArtifactsPamDCommonPassword() (*asset, error) {
+	bytes, err := k8sCloudInitArtifactsPamDCommonPasswordBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "k8s/cloud-init/artifacts/pam-d-common-password", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
 var _k8sCloudInitArtifactsPamDSu = []byte(`#
 # The PAM configuration file for the Shadow ` + "`" + `su' service
 #
@@ -16656,6 +16772,24 @@ func k8sCloudInitArtifactsPamDSu() (*asset, error) {
 	}
 
 	info := bindataFileInfo{name: "k8s/cloud-init/artifacts/pam-d-su", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
+var _k8sCloudInitArtifactsProfileDCisSh = []byte(`# 5.4.4 Ensure default user umask is 027 or more restrictive
+umask 027`)
+
+func k8sCloudInitArtifactsProfileDCisShBytes() ([]byte, error) {
+	return _k8sCloudInitArtifactsProfileDCisSh, nil
+}
+
+func k8sCloudInitArtifactsProfileDCisSh() (*asset, error) {
+	bytes, err := k8sCloudInitArtifactsProfileDCisShBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "k8s/cloud-init/artifacts/profile-d-cis.sh", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -17005,7 +17139,12 @@ net.ipv6.conf.all.accept_ra = 0
 net.ipv6.conf.default.accept_ra = 0
 # 3.3.2 Ensure IPv6 redirects are not accepted
 net.ipv6.conf.all.accept_redirects = 0
-net.ipv6.conf.default.accept_redirects = 0`)
+net.ipv6.conf.default.accept_redirects = 0
+# refer to https://github.com/kubernetes/kubernetes/blob/75d45bdfc9eeda15fb550e00da662c12d7d37985/pkg/kubelet/cm/container_manager_linux.go#L359-L397
+vm.overcommit_memory = 1
+kernel.panic = 10
+kernel.panic_on_oops = 1
+`)
 
 func k8sCloudInitArtifactsSysctlD60CisConfBytes() ([]byte, error) {
 	return _k8sCloudInitArtifactsSysctlD60CisConf, nil
@@ -17124,13 +17263,6 @@ write_files:
   content: !!binary |
     {{CloudInitData "healthMonitorScript"}}
 
-- path: /etc/systemd/system/kubelet-monitor.timer
-  permissions: "0644"
-  encoding: gzip
-  owner: root
-  content: !!binary |
-    {{CloudInitData "kubeletMonitorSystemdTimer"}}
-
 - path: /etc/systemd/system/kubelet-monitor.service
   permissions: "0644"
   encoding: gzip
@@ -17174,21 +17306,21 @@ write_files:
     {{CloudInitData "aptPreferences"}}
 
 {{if .MasterProfile.IsUbuntuNonVHD}}
-{{if .MasterProfile.IsUbuntu1604}}
+  {{if .MasterProfile.IsUbuntu1604}}
 - path: /etc/ssh/sshd_config
   permissions: "0600"
   encoding: gzip
   owner: root
   content: !!binary |
     {{CloudInitData "sshdConfig1604"}}
-{{else}}
+  {{else}}
 - path: /etc/ssh/sshd_config
   permissions: "0600"
   encoding: gzip
   owner: root
   content: !!binary |
     {{CloudInitData "sshdConfig"}}
-{{end}}
+  {{end}}
 
 - path: /etc/issue
   permissions: "0644"
@@ -17245,6 +17377,27 @@ write_files:
   owner: root
   content: !!binary |
     {{CloudInitData "pamDotDSU"}}
+
+- path: /etc/pam.d/common-auth
+  permissions: "0644"
+  encoding: gzip
+  owner: root
+  content: !!binary |
+    {{CloudInitData "pamDotDCommonAuth"}}
+
+- path: /etc/pam.d/common-password
+  permissions: "0644"
+  encoding: gzip
+  owner: root
+  content: !!binary |
+    {{CloudInitData "pamDotDCommonPassword"}}
+
+- path: /etc/profile.d/CIS.sh
+  permissions: "0755"
+  encoding: gzip
+  owner: root
+  content: !!binary |
+    {{CloudInitData "profileDCISSh"}}
 {{end}}
 
 {{if .OrchestratorProfile.KubernetesConfig.RequiresDocker}}
@@ -17712,13 +17865,6 @@ write_files:
   content: !!binary |
     {{CloudInitData "healthMonitorScript"}}
 
-- path: /etc/systemd/system/kubelet-monitor.timer
-  permissions: "0644"
-  encoding: gzip
-  owner: root
-  content: !!binary |
-    {{CloudInitData "kubeletMonitorSystemdTimer"}}
-
 - path: /etc/systemd/system/kubelet-monitor.service
   permissions: "0644"
   encoding: gzip
@@ -17762,21 +17908,21 @@ write_files:
     {{CloudInitData "aptPreferences"}}
 
 {{if .IsUbuntuNonVHD}}
-{{if .IsUbuntu1604}}
+  {{if .IsUbuntu1604}}
 - path: /etc/ssh/sshd_config
   permissions: "0600"
   encoding: gzip
   owner: root
   content: !!binary |
     {{CloudInitData "sshdConfig1604"}}
-{{else}}
+  {{else}}
 - path: /etc/ssh/sshd_config
   permissions: "0600"
   encoding: gzip
   owner: root
   content: !!binary |
     {{CloudInitData "sshdConfig"}}
-{{end}}
+  {{end}}
 
 - path: /etc/issue
   permissions: "0644"
@@ -17833,6 +17979,27 @@ write_files:
   owner: root
   content: !!binary |
     {{CloudInitData "pamDotDSU"}}
+
+- path: /etc/pam.d/common-auth
+  permissions: "0644"
+  encoding: gzip
+  owner: root
+  content: !!binary |
+    {{CloudInitData "pamDotDCommonAuth"}}
+
+- path: /etc/pam.d/common-password
+  permissions: "0644"
+  encoding: gzip
+  owner: root
+  content: !!binary |
+    {{CloudInitData "pamDotDCommonPassword"}}
+
+- path: /etc/profile.d/CIS.sh
+  permissions: "0644"
+  encoding: gzip
+  owner: root
+  content: !!binary |
+    {{CloudInitData "profileDCISSh"}}
 {{end}}
 
 {{if .KubernetesConfig.RequiresDocker}}
@@ -17938,7 +18105,7 @@ write_files:
         certificate-authority: /etc/kubernetes/certs/ca.crt
         {{if IsAzureStackCloud}}
         {{if IsMultipleMasters}}
-        server: https://<kubernetesAPIServerIP>:443
+        server: https://{{WrapAsVariable "masterPublicLbFQDN"}}:443
         {{else}}
         server: https://{{WrapAsVariable "kubernetesAPIServerIP"}}:443
         {{end}}
@@ -26602,7 +26769,10 @@ var _bindata = map[string]func() (*asset, error){
 	"k8s/cloud-init/artifacts/kubelet.service":                                        k8sCloudInitArtifactsKubeletService,
 	"k8s/cloud-init/artifacts/modprobe-CIS.conf":                                      k8sCloudInitArtifactsModprobeCisConf,
 	"k8s/cloud-init/artifacts/mountetcd.sh":                                           k8sCloudInitArtifactsMountetcdSh,
+	"k8s/cloud-init/artifacts/pam-d-common-auth":                                      k8sCloudInitArtifactsPamDCommonAuth,
+	"k8s/cloud-init/artifacts/pam-d-common-password":                                  k8sCloudInitArtifactsPamDCommonPassword,
 	"k8s/cloud-init/artifacts/pam-d-su":                                               k8sCloudInitArtifactsPamDSu,
+	"k8s/cloud-init/artifacts/profile-d-cis.sh":                                       k8sCloudInitArtifactsProfileDCisSh,
 	"k8s/cloud-init/artifacts/pwquality-CIS.conf":                                     k8sCloudInitArtifactsPwqualityCisConf,
 	"k8s/cloud-init/artifacts/rsyslog-d-60-CIS.conf":                                  k8sCloudInitArtifactsRsyslogD60CisConf,
 	"k8s/cloud-init/artifacts/setup-custom-search-domains.sh":                         k8sCloudInitArtifactsSetupCustomSearchDomainsSh,
@@ -26809,7 +26979,10 @@ var _bintree = &bintree{nil, map[string]*bintree{
 				"kubelet.service":                {k8sCloudInitArtifactsKubeletService, map[string]*bintree{}},
 				"modprobe-CIS.conf":              {k8sCloudInitArtifactsModprobeCisConf, map[string]*bintree{}},
 				"mountetcd.sh":                   {k8sCloudInitArtifactsMountetcdSh, map[string]*bintree{}},
+				"pam-d-common-auth":              {k8sCloudInitArtifactsPamDCommonAuth, map[string]*bintree{}},
+				"pam-d-common-password":          {k8sCloudInitArtifactsPamDCommonPassword, map[string]*bintree{}},
 				"pam-d-su":                       {k8sCloudInitArtifactsPamDSu, map[string]*bintree{}},
+				"profile-d-cis.sh":               {k8sCloudInitArtifactsProfileDCisSh, map[string]*bintree{}},
 				"pwquality-CIS.conf":             {k8sCloudInitArtifactsPwqualityCisConf, map[string]*bintree{}},
 				"rsyslog-d-60-CIS.conf":          {k8sCloudInitArtifactsRsyslogD60CisConf, map[string]*bintree{}},
 				"setup-custom-search-domains.sh": {k8sCloudInitArtifactsSetupCustomSearchDomainsSh, map[string]*bintree{}},
