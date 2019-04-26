@@ -1,3 +1,5 @@
+#!/bin/bash
+
 function test_linux_deployment() {
   ###### Testing an nginx deployment
   log "Testing deployments"
