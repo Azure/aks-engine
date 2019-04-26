@@ -386,11 +386,13 @@ df -h
 # error at 90% space taken
 [ -s $(df -P | grep '/dev/sda1' | awk '0+$5 >= 90 {print}') ] || exit 1
 
-echo "Install completed successfully on " `date` >> ${RELEASE_NOTES_FILEPATH}
-echo "VSTS Build NUMBER: ${BUILD_NUMBER}" >> ${RELEASE_NOTES_FILEPATH}
-echo "VSTS Build ID: ${BUILD_ID}" >> ${RELEASE_NOTES_FILEPATH}
-echo "Commit: ${COMMIT}" >> ${RELEASE_NOTES_FILEPATH}
-echo "Feature flags: ${FEATURE_FLAGS}" >> ${RELEASE_NOTES_FILEPATH}
+{
+  echo "Install completed successfully on " `date`
+  echo "VSTS Build NUMBER: ${BUILD_NUMBER}"
+  echo "VSTS Build ID: ${BUILD_ID}"
+  echo "Commit: ${COMMIT}"
+  echo "Feature flags: ${FEATURE_FLAGS}"
+} >> ${RELEASE_NOTES_FILEPATH}
 
 # The below statements are used to extract release notes from the packer output
 set +x
