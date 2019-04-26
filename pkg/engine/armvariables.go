@@ -150,7 +150,6 @@ func getK8sMasterVars(cs *api.ContainerService) (map[string]interface{}, error) 
 		masterVars["cloudInitFiles"].(map[string]interface{})["profileDCISSh"] = getBase64EncodedGzippedCustomScript(profileDCISSh)
 		masterVars["cloudInitFiles"].(map[string]interface{})["pamDotDCommonAuth"] = getBase64EncodedGzippedCustomScript(pamDotDCommonAuth)
 		masterVars["cloudInitFiles"].(map[string]interface{})["pamDotDCommonPassword"] = getBase64EncodedGzippedCustomScript(pamDotDCommonPassword)
-		masterVars["cloudInitFiles"].(map[string]interface{})["auditdConf"] = getBase64EncodedGzippedCustomScript(auditdConf)
 		masterVars["cloudInitFiles"].(map[string]interface{})["auditdRules"] = getBase64EncodedGzippedCustomScript(auditdRules)
 	}
 	if cs.Properties.HasUbuntu1604DistroNodes() {

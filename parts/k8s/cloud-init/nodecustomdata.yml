@@ -35,7 +35,7 @@ write_files:
   owner: root
   content: !!binary |
     {{CloudInitData "provisionCIS"}}
-    
+
 {{if IsAzureStackCloud}}
 - path: /opt/azure/containers/provision_configs_custom_cloud.sh
   permissions: "0744"
@@ -191,13 +191,6 @@ write_files:
   owner: root
   content: !!binary |
     {{CloudInitData "profileDCISSh"}}
-
-- path: /etc/audit/auditd.conf
-  permissions: "0640"
-  encoding: gzip
-  owner: root
-  content: !!binary |
-    {{CloudInitData "auditdConf"}}
 
 - path: /etc/audit/rules.d/CIS.rules
   permissions: "0640"
