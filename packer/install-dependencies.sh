@@ -14,7 +14,7 @@ copyPackerFiles
 echo ""
 echo "Components downloaded in this VHD build (some of the below components might get deleted during cluster provisioning if they are not needed):" >> ${RELEASE_NOTES_FILEPATH}
 
-installDeps || ls -la /etc/audit/; sudo journalctl -u auditd; exit1
+installDeps
 cat << EOF >> ${RELEASE_NOTES_FILEPATH}
   - apt-transport-https
   - auditd
