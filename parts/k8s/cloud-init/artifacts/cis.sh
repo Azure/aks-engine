@@ -20,7 +20,7 @@ copyPackerFiles() {
   PAM_D_SU_SRC=/home/packer/pam-d-su
   PAM_D_SU_DEST=/etc/pam.d/su
   PROFILE_D_CIS_SH_SRC=/home/packer/profile-d-cis.sh
-  PROFILE_D_CIS_SH_DEST=/etc/profile.d/CIS.shv
+  PROFILE_D_CIS_SH_DEST=/etc/profile.d/CIS.sh
   AUDITD_CONF_SRC=/home/packer/auditd.conf
   AUDITD_CONF_DEST=/etc/audit/auditd.conf
   AUDITD_RULES_SRC=/home/packer/auditd-rules
