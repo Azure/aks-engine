@@ -482,6 +482,7 @@ func TestCreateCustomExtensions(t *testing.T) {
 				Name:    "hello-world-k8s",
 				Version: "v1",
 				RootURL: "https://raw.githubusercontent.com/Azure/aks-engine/master/",
+			},
 		},
 		MasterProfile: &api.MasterProfile{
 			Count:               3,
