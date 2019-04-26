@@ -77,7 +77,7 @@ func getK8sMasterVars(cs *api.ContainerService) (map[string]interface{}, error) 
 
 	kubernetesVersion := orchProfile.OrchestratorVersion
 	if cs.Properties.IsAzureStackCloud() {
-		kubernetesVersion = orchProfile.OrchestratorVersion + "-azs"
+		kubernetesVersion = orchProfile.OrchestratorVersion + AzureStackSuffix
 	}
 
 	masterVars := map[string]interface{}{

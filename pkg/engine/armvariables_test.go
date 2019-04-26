@@ -459,7 +459,7 @@ func TestK8sVars(t *testing.T) {
 
 	customCloudK8sVersion := testK8sVersion
 	if name == "azurestackcloud" {
-		customCloudK8sVersion = testK8sVersion + "-azs"
+		customCloudK8sVersion = testK8sVersion + AzureStackSuffix
 	}
 
 	cs = &api.ContainerService{
