@@ -378,7 +378,7 @@ func TestCreateCustomExtensions(t *testing.T) {
 			{
 				Name:    "winrm",
 				Version: "v1",
-				RootURL: "https://raw.githubusercontent.com/CecileRobertMichon/aks-engine/fix-extensions/",
+				RootURL: "https://raw.githubusercontent.com/Azure/aks-engine/master/",
 			},
 		},
 		AgentPoolProfiles: []*api.AgentPoolProfile{
@@ -421,12 +421,12 @@ func TestCreateCustomExtensions(t *testing.T) {
 				Name: to.StringPtr("[concat(variables('windowspool1VMNamePrefix'), copyIndex(variables('windowspool1Offset')), 'winrm')]"),
 				Properties: &resources.DeploymentPropertiesExtended{
 					TemplateLink: &resources.TemplateLink{
-						URI:            to.StringPtr("https://raw.githubusercontent.com/CecileRobertMichon/aks-engine/fix-extensions/extensions/winrm/v1/template.json"),
+						URI:            to.StringPtr("https://raw.githubusercontent.com/Azure/aks-engine/master/extensions/winrm/v1/template.json"),
 						ContentVersion: to.StringPtr("1.0.0.0"),
 					},
 					Parameters: map[string]interface{}{
 						"apiVersionDeployments": map[string]interface{}{"value": "[variables('apiVersionDeployments')]"},
-						"artifactsLocation":     map[string]interface{}{"value": "https://raw.githubusercontent.com/CecileRobertMichon/aks-engine/fix-extensions/"},
+						"artifactsLocation":     map[string]interface{}{"value": "https://raw.githubusercontent.com/Azure/aks-engine/master/"},
 						"extensionParameters":   map[string]interface{}{"value": "[parameters('winrmParameters')]"},
 						"targetVMName":          map[string]interface{}{"value": "[concat(variables('windowspool1VMNamePrefix'), copyIndex(variables('windowspool1Offset')))]"},
 						"targetVMType":          map[string]interface{}{"value": "agent"},
@@ -450,12 +450,12 @@ func TestCreateCustomExtensions(t *testing.T) {
 				Name: to.StringPtr("[concat(variables('windowspool2VMNamePrefix'), copyIndex(variables('windowspool2Offset')), 'winrm')]"),
 				Properties: &resources.DeploymentPropertiesExtended{
 					TemplateLink: &resources.TemplateLink{
-						URI:            to.StringPtr("https://raw.githubusercontent.com/CecileRobertMichon/aks-engine/fix-extensions/extensions/winrm/v1/template.json"),
+						URI:            to.StringPtr("https://raw.githubusercontent.com/Azure/aks-engine/master/extensions/winrm/v1/template.json"),
 						ContentVersion: to.StringPtr("1.0.0.0"),
 					},
 					Parameters: map[string]interface{}{
 						"apiVersionDeployments": map[string]interface{}{"value": "[variables('apiVersionDeployments')]"},
-						"artifactsLocation":     map[string]interface{}{"value": "https://raw.githubusercontent.com/CecileRobertMichon/aks-engine/fix-extensions/"},
+						"artifactsLocation":     map[string]interface{}{"value": "https://raw.githubusercontent.com/Azure/aks-engine/master/"},
 						"extensionParameters":   map[string]interface{}{"value": "[parameters('winrmParameters')]"},
 						"targetVMName":          map[string]interface{}{"value": "[concat(variables('windowspool2VMNamePrefix'), copyIndex(variables('windowspool2Offset')))]"},
 						"targetVMType":          map[string]interface{}{"value": "agent"},
@@ -481,8 +481,7 @@ func TestCreateCustomExtensions(t *testing.T) {
 			{
 				Name:    "hello-world-k8s",
 				Version: "v1",
-				RootURL: "https://raw.githubusercontent.com/CecileRobertMichon/aks-engine/fix-extensions/",
-			},
+				RootURL: "https://raw.githubusercontent.com/Azure/aks-engine/master/",
 		},
 		MasterProfile: &api.MasterProfile{
 			Count:               3,
@@ -512,12 +511,12 @@ func TestCreateCustomExtensions(t *testing.T) {
 				Name: to.StringPtr("[concat(variables('masterVMNamePrefix'), copyIndex(variables('masterOffset')), 'HelloWorldK8s')]"),
 				Properties: &resources.DeploymentPropertiesExtended{
 					TemplateLink: &resources.TemplateLink{
-						URI:            to.StringPtr("https://raw.githubusercontent.com/CecileRobertMichon/aks-engine/fix-extensions/extensions/hello-world-k8s/v1/template.json"),
+						URI:            to.StringPtr("https://raw.githubusercontent.com/Azure/aks-engine/master/extensions/hello-world-k8s/v1/template.json"),
 						ContentVersion: to.StringPtr("1.0.0.0"),
 					},
 					Parameters: map[string]interface{}{
 						"apiVersionDeployments": map[string]interface{}{"value": "[variables('apiVersionDeployments')]"},
-						"artifactsLocation":     map[string]interface{}{"value": "https://raw.githubusercontent.com/CecileRobertMichon/aks-engine/fix-extensions/"},
+						"artifactsLocation":     map[string]interface{}{"value": "https://raw.githubusercontent.com/Azure/aks-engine/master/"},
 						"extensionParameters":   map[string]interface{}{"value": "[parameters('hello-world-k8sParameters')]"},
 						"targetVMName":          map[string]interface{}{"value": "[concat(variables('masterVMNamePrefix'), copyIndex(variables('masterOffset')))]"},
 						"targetVMType":          map[string]interface{}{"value": "master"},
