@@ -293,7 +293,7 @@ installKubeletAndKubectl() {
 pullContainerImage() {
     CLI_TOOL=$1
     DOCKER_IMAGE_URL=$2
-    if [[ ! -z "${PRIVATE_AZURE_REGISTRY_SERVER:-}" ]]; then
+    if [[ -n "${PRIVATE_AZURE_REGISTRY_SERVER:-}" ]]; then
         $CLI_TOOL login -u $SERVICE_PRINCIPAL_CLIENT_ID -p $SERVICE_PRINCIPAL_CLIENT_SECRET $PRIVATE_AZURE_REGISTRY_SERVER
     fi
     retrycmd_if_failure 60 1 1200 $CLI_TOOL pull $DOCKER_IMAGE_URL || exit $ERR_CONTAINER_IMG_PULL_TIMEOUT
