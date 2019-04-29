@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/Azure/aks-engine/pkg/api"
+	"github.com/Azure/aks-engine/pkg/api/common"
 	"github.com/Azure/go-autorest/autorest/to"
 	"github.com/google/go-cmp/cmp"
 
@@ -197,7 +198,7 @@ func TestCreateKubernetesMasterResourcesPVC(t *testing.T) {
 				AutoUpgradeMinorVersion: to.BoolPtr(true),
 				Settings:                &map[string]interface{}{},
 				ProtectedSettings: &map[string]interface{}{
-					"commandToExecute": `[concat('retrycmd_if_failure() { r=$1; w=$2; t=$3; shift && shift && shift; for i in $(seq 1 $r); do timeout $t ${@}; [ $? -eq 0  ] && break || if [ $i -eq $r ]; then return 1; else sleep $w; fi; done }; ERR_OUTBOUND_CONN_FAIL=50; retrycmd_if_failure 50 1 3 nc -vz k8s.gcr.io 443 && retrycmd_if_failure 50 1 3 nc -vz gcr.io 443 && retrycmd_if_failure 50 1 3 nc -vz docker.io 443 || exit $ERR_OUTBOUND_CONN_FAIL; for i in $(seq 1 1200); do if [ -f /opt/azure/containers/provision.sh ]; then break; fi; if [ $i -eq 1200 ]; then exit 100; else sleep 1; fi; done; ', variables('provisionScriptParametersCommon'),' ',variables('provisionScriptParametersMaster'), ' /usr/bin/nohup /bin/bash -c "/bin/bash /opt/azure/containers/provision.sh >> /var/log/azure/cluster-provision.log 2>&1"')]`,
+					"commandToExecute": `[concat('retrycmd_if_failure() { r=$1; w=$2; t=$3; shift && shift && shift; for i in $(seq 1 $r); do timeout $t ${@}; [ $? -eq 0  ] && break || if [ $i -eq $r ]; then return 1; else sleep $w; fi; done }; ERR_OUTBOUND_CONN_FAIL=50; retrycmd_if_failure 50 1 3 nc -vz k8s.gcr.io 443 && retrycmd_if_failure 50 1 3 nc -vz gcr.io 443 && retrycmd_if_failure 50 1 3 nc -vz docker.io 443 || exit $ERR_OUTBOUND_CONN_FAIL; for i in $(seq 1 1200); do if [ -f /opt/azure/containers/provision.sh ]; then break; fi; if [ $i -eq 1200 ]; then exit 100; else sleep 1; fi; done; ', ` + common.GenerateProvisionScriptParameters(cs.Properties.OrchestratorProfile.OrchestratorVersion, cs.Properties.IsHostedMasterProfile(), cs.Properties.IsUserAssignedIdentityEnabled()) + `,' ',variables('provisionScriptParametersMaster'), ' /usr/bin/nohup /bin/bash -c "/bin/bash /opt/azure/containers/provision.sh >> /var/log/azure/cluster-provision.log 2>&1"')]`,
 				},
 			},
 			Name:     to.StringPtr("[concat(variables('masterVMNamePrefix'), copyIndex(variables('masterOffset')),'/cse', '-master-', copyIndex(variables('masterOffset')))]"),
@@ -332,9 +333,9 @@ func TestCreateKubernetesMasterResourcesPVC(t *testing.T) {
 							DestinationPortRange:     to.StringPtr("22"),
 							SourceAddressPrefix:      to.StringPtr("*"),
 							DestinationAddressPrefix: to.StringPtr("*"),
-							Access:                   network.SecurityRuleAccess("Allow"),
-							Priority:                 to.Int32Ptr(1000),
-							Direction:                network.SecurityRuleDirection("Inbound"),
+							Access:    network.SecurityRuleAccess("Allow"),
+							Priority:  to.Int32Ptr(1000),
+							Direction: network.SecurityRuleDirection("Inbound"),
 						},
 						Name: to.StringPtr("default-allow-ssh"),
 					},
@@ -524,7 +525,7 @@ func TestCreateKubernetesMasterResourcesVMSS(t *testing.T) {
 									AutoUpgradeMinorVersion: to.BoolPtr(true),
 									Settings:                map[string]interface{}{},
 									ProtectedSettings: map[string]interface{}{
-										"commandToExecute": `[concat('retrycmd_if_failure() { r=$1; w=$2; t=$3; shift && shift && shift; for i in $(seq 1 $r); do timeout $t ${@}; [ $? -eq 0  ] && break || if [ $i -eq $r ]; then return 1; else sleep $w; fi; done }; ERR_OUTBOUND_CONN_FAIL=50; retrycmd_if_failure 50 1 3 nc -vz k8s.gcr.io 443 && retrycmd_if_failure 50 1 3 nc -vz gcr.io 443 && retrycmd_if_failure 50 1 3 nc -vz docker.io 443 || exit $ERR_OUTBOUND_CONN_FAIL; for i in $(seq 1 1200); do if [ -f /opt/azure/containers/provision.sh ]; then break; fi; if [ $i -eq 1200 ]; then exit 100; else sleep 1; fi; done; ', variables('provisionScriptParametersCommon'),' ',variables('provisionScriptParametersMaster'), ' /usr/bin/nohup /bin/bash -c "/bin/bash /opt/azure/containers/provision.sh >> /var/log/azure/cluster-provision.log 2>&1"')]`,
+										"commandToExecute": `[concat('retrycmd_if_failure() { r=$1; w=$2; t=$3; shift && shift && shift; for i in $(seq 1 $r); do timeout $t ${@}; [ $? -eq 0  ] && break || if [ $i -eq $r ]; then return 1; else sleep $w; fi; done }; ERR_OUTBOUND_CONN_FAIL=50; retrycmd_if_failure 50 1 3 nc -vz k8s.gcr.io 443 && retrycmd_if_failure 50 1 3 nc -vz gcr.io 443 && retrycmd_if_failure 50 1 3 nc -vz docker.io 443 || exit $ERR_OUTBOUND_CONN_FAIL; for i in $(seq 1 1200); do if [ -f /opt/azure/containers/provision.sh ]; then break; fi; if [ $i -eq 1200 ]; then exit 100; else sleep 1; fi; done; ', ` + common.GenerateProvisionScriptParameters(cs.Properties.OrchestratorProfile.OrchestratorVersion, cs.Properties.IsHostedMasterProfile(), cs.Properties.IsUserAssignedIdentityEnabled()) + `,' ',variables('provisionScriptParametersMaster'), ' /usr/bin/nohup /bin/bash -c "/bin/bash /opt/azure/containers/provision.sh >> /var/log/azure/cluster-provision.log 2>&1"')]`,
 									},
 								},
 							},
@@ -668,9 +669,9 @@ func TestCreateKubernetesMasterResourcesVMSS(t *testing.T) {
 							DestinationPortRange:     to.StringPtr("22-22"),
 							SourceAddressPrefix:      to.StringPtr("*"),
 							DestinationAddressPrefix: to.StringPtr("*"),
-							Access:                   network.SecurityRuleAccess("Allow"),
-							Priority:                 to.Int32Ptr(101),
-							Direction:                network.SecurityRuleDirection("Inbound"),
+							Access:    network.SecurityRuleAccess("Allow"),
+							Priority:  to.Int32Ptr(101),
+							Direction: network.SecurityRuleDirection("Inbound"),
 						},
 						Name: to.StringPtr("allow_ssh"),
 					},
@@ -682,9 +683,9 @@ func TestCreateKubernetesMasterResourcesVMSS(t *testing.T) {
 							DestinationPortRange:     to.StringPtr("443-443"),
 							SourceAddressPrefix:      to.StringPtr("*"),
 							DestinationAddressPrefix: to.StringPtr("*"),
-							Access:                   network.SecurityRuleAccess("Allow"),
-							Priority:                 to.Int32Ptr(100),
-							Direction:                network.SecurityRuleDirection("Inbound"),
+							Access:    network.SecurityRuleAccess("Allow"),
+							Priority:  to.Int32Ptr(100),
+							Direction: network.SecurityRuleDirection("Inbound"),
 						}, Name: to.StringPtr("allow_kube_tls"),
 					},
 				},

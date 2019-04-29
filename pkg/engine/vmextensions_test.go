@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/Azure/aks-engine/pkg/api"
+	"github.com/Azure/aks-engine/pkg/api/common"
 	"github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2018-10-01/compute"
 	"github.com/Azure/azure-sdk-for-go/services/resources/mgmt/2018-05-01/resources"
 	"github.com/Azure/go-autorest/autorest/to"
@@ -219,6 +220,9 @@ func TestCreateCustomScriptExtension(t *testing.T) {
 	cs := &api.ContainerService{
 		Location: "westus2",
 		Properties: &api.Properties{
+			OrchestratorProfile: &api.OrchestratorProfile{
+				OrchestratorVersion: "1.12.8",
+			},
 			FeatureFlags: &api.FeatureFlags{
 				BlockOutboundInternet:    false,
 				EnableCSERunInBackground: false,
@@ -247,7 +251,7 @@ func TestCreateCustomScriptExtension(t *testing.T) {
 				AutoUpgradeMinorVersion: to.BoolPtr(true),
 				Settings:                &map[string]interface{}{},
 				ProtectedSettings: &map[string]interface{}{
-					"commandToExecute": `[concat('retrycmd_if_failure() { r=$1; w=$2; t=$3; shift && shift && shift; for i in $(seq 1 $r); do timeout $t ${@}; [ $? -eq 0  ] && break || if [ $i -eq $r ]; then return 1; else sleep $w; fi; done }; ERR_OUTBOUND_CONN_FAIL=50; retrycmd_if_failure 50 1 3 nc -vz k8s.gcr.io 443 && retrycmd_if_failure 50 1 3 nc -vz gcr.io 443 && retrycmd_if_failure 50 1 3 nc -vz docker.io 443 || exit $ERR_OUTBOUND_CONN_FAIL; for i in $(seq 1 1200); do if [ -f /opt/azure/containers/provision.sh ]; then break; fi; if [ $i -eq 1200 ]; then exit 100; else sleep 1; fi; done; ', variables('provisionScriptParametersCommon'),' ',variables('provisionScriptParametersMaster'), ' /usr/bin/nohup /bin/bash -c "/bin/bash /opt/azure/containers/provision.sh >> /var/log/azure/cluster-provision.log 2>&1"')]`,
+					"commandToExecute": `[concat('retrycmd_if_failure() { r=$1; w=$2; t=$3; shift && shift && shift; for i in $(seq 1 $r); do timeout $t ${@}; [ $? -eq 0  ] && break || if [ $i -eq $r ]; then return 1; else sleep $w; fi; done }; ERR_OUTBOUND_CONN_FAIL=50; retrycmd_if_failure 50 1 3 nc -vz k8s.gcr.io 443 && retrycmd_if_failure 50 1 3 nc -vz gcr.io 443 && retrycmd_if_failure 50 1 3 nc -vz docker.io 443 || exit $ERR_OUTBOUND_CONN_FAIL; for i in $(seq 1 1200); do if [ -f /opt/azure/containers/provision.sh ]; then break; fi; if [ $i -eq 1200 ]; then exit 100; else sleep 1; fi; done; ', ` + common.GenerateProvisionScriptParameters(cs.Properties.OrchestratorProfile.OrchestratorVersion, cs.Properties.IsHostedMasterProfile(), cs.Properties.IsUserAssignedIdentityEnabled()) + `,' ',variables('provisionScriptParametersMaster'), ' /usr/bin/nohup /bin/bash -c "/bin/bash /opt/azure/containers/provision.sh >> /var/log/azure/cluster-provision.log 2>&1"')]`,
 				},
 			},
 			Type: to.StringPtr("Microsoft.Compute/virtualMachines/extensions"),
@@ -266,7 +270,7 @@ func TestCreateCustomScriptExtension(t *testing.T) {
 	cse = CreateCustomScriptExtension(cs)
 
 	expectedCSE.ProtectedSettings = &map[string]interface{}{
-		"commandToExecute": `[concat('retrycmd_if_failure() { r=$1; w=$2; t=$3; shift && shift && shift; for i in $(seq 1 $r); do timeout $t ${@}; [ $? -eq 0  ] && break || if [ $i -eq $r ]; then return 1; else sleep $w; fi; done }; ERR_OUTBOUND_CONN_FAIL=50; retrycmd_if_failure 50 1 3 nc -vz gcr.azk8s.cn 80 || exit $ERR_OUTBOUND_CONN_FAIL; for i in $(seq 1 1200); do if [ -f /opt/azure/containers/provision.sh ]; then break; fi; if [ $i -eq 1200 ]; then exit 100; else sleep 1; fi; done; ', variables('provisionScriptParametersCommon'),' ',variables('provisionScriptParametersMaster'), ' /usr/bin/nohup /bin/bash -c "/bin/bash /opt/azure/containers/provision.sh >> /var/log/azure/cluster-provision.log 2>&1"')]`,
+		"commandToExecute": `[concat('retrycmd_if_failure() { r=$1; w=$2; t=$3; shift && shift && shift; for i in $(seq 1 $r); do timeout $t ${@}; [ $? -eq 0  ] && break || if [ $i -eq $r ]; then return 1; else sleep $w; fi; done }; ERR_OUTBOUND_CONN_FAIL=50; retrycmd_if_failure 50 1 3 nc -vz gcr.azk8s.cn 80 || exit $ERR_OUTBOUND_CONN_FAIL; for i in $(seq 1 1200); do if [ -f /opt/azure/containers/provision.sh ]; then break; fi; if [ $i -eq 1200 ]; then exit 100; else sleep 1; fi; done; ', ` + common.GenerateProvisionScriptParameters(cs.Properties.OrchestratorProfile.OrchestratorVersion, cs.Properties.IsHostedMasterProfile(), cs.Properties.IsUserAssignedIdentityEnabled()) + `,' ',variables('provisionScriptParametersMaster'), ' /usr/bin/nohup /bin/bash -c "/bin/bash /opt/azure/containers/provision.sh >> /var/log/azure/cluster-provision.log 2>&1"')]`,
 	}
 
 	diff = cmp.Diff(cse, expectedCSE)
@@ -280,6 +284,9 @@ func TestCreateAgentVMASCustomScriptExtension(t *testing.T) {
 	cs := &api.ContainerService{
 		Location: "westus2",
 		Properties: &api.Properties{
+			OrchestratorProfile: &api.OrchestratorProfile{
+				OrchestratorVersion: "1.12.8",
+			},
 			FeatureFlags: &api.FeatureFlags{
 				BlockOutboundInternet:    false,
 				EnableCSERunInBackground: false,
@@ -313,7 +320,7 @@ func TestCreateAgentVMASCustomScriptExtension(t *testing.T) {
 				AutoUpgradeMinorVersion: to.BoolPtr(true),
 				Settings:                &map[string]interface{}{},
 				ProtectedSettings: &map[string]interface{}{
-					"commandToExecute": `[concat('retrycmd_if_failure() { r=$1; w=$2; t=$3; shift && shift && shift; for i in $(seq 1 $r); do timeout $t ${@}; [ $? -eq 0  ] && break || if [ $i -eq $r ]; then return 1; else sleep $w; fi; done }; ERR_OUTBOUND_CONN_FAIL=50; retrycmd_if_failure 50 1 3 nc -vz k8s.gcr.io 443 && retrycmd_if_failure 50 1 3 nc -vz gcr.io 443 && retrycmd_if_failure 50 1 3 nc -vz docker.io 443 || exit $ERR_OUTBOUND_CONN_FAIL; for i in $(seq 1 1200); do if [ -f /opt/azure/containers/provision.sh ]; then break; fi; if [ $i -eq 1200 ]; then exit 100; else sleep 1; fi; done; ', variables('provisionScriptParametersCommon'),' GPU_NODE=false SGX_NODE=false /usr/bin/nohup /bin/bash -c "/bin/bash /opt/azure/containers/provision.sh >> /var/log/azure/cluster-provision.log 2>&1"')]`,
+					"commandToExecute": `[concat('retrycmd_if_failure() { r=$1; w=$2; t=$3; shift && shift && shift; for i in $(seq 1 $r); do timeout $t ${@}; [ $? -eq 0  ] && break || if [ $i -eq $r ]; then return 1; else sleep $w; fi; done }; ERR_OUTBOUND_CONN_FAIL=50; retrycmd_if_failure 50 1 3 nc -vz k8s.gcr.io 443 && retrycmd_if_failure 50 1 3 nc -vz gcr.io 443 && retrycmd_if_failure 50 1 3 nc -vz docker.io 443 || exit $ERR_OUTBOUND_CONN_FAIL; for i in $(seq 1 1200); do if [ -f /opt/azure/containers/provision.sh ]; then break; fi; if [ $i -eq 1200 ]; then exit 100; else sleep 1; fi; done; ', ` + common.GenerateProvisionScriptParameters(cs.Properties.OrchestratorProfile.OrchestratorVersion, cs.Properties.IsHostedMasterProfile(), cs.Properties.IsUserAssignedIdentityEnabled()) + `,' GPU_NODE=false SGX_NODE=false /usr/bin/nohup /bin/bash -c "/bin/bash /opt/azure/containers/provision.sh >> /var/log/azure/cluster-provision.log 2>&1"')]`,
 				},
 			},
 			Type: to.StringPtr("Microsoft.Compute/virtualMachines/extensions"),
@@ -337,7 +344,7 @@ func TestCreateAgentVMASCustomScriptExtension(t *testing.T) {
 	cse = createAgentVMASCustomScriptExtension(cs, profile)
 
 	expectedCSE.ProtectedSettings = &map[string]interface{}{
-		"commandToExecute": `[concat('retrycmd_if_failure() { r=$1; w=$2; t=$3; shift && shift && shift; for i in $(seq 1 $r); do timeout $t ${@}; [ $? -eq 0  ] && break || if [ $i -eq $r ]; then return 1; else sleep $w; fi; done }; ERR_OUTBOUND_CONN_FAIL=50; retrycmd_if_failure 50 1 3 nc -vz gcr.azk8s.cn 80 || exit $ERR_OUTBOUND_CONN_FAIL; for i in $(seq 1 1200); do if [ -f /opt/azure/containers/provision.sh ]; then break; fi; if [ $i -eq 1200 ]; then exit 100; else sleep 1; fi; done; ', variables('provisionScriptParametersCommon'),' GPU_NODE=false SGX_NODE=false /usr/bin/nohup /bin/bash -c "/bin/bash /opt/azure/containers/provision.sh >> /var/log/azure/cluster-provision.log 2>&1 &"')]`,
+		"commandToExecute": `[concat('retrycmd_if_failure() { r=$1; w=$2; t=$3; shift && shift && shift; for i in $(seq 1 $r); do timeout $t ${@}; [ $? -eq 0  ] && break || if [ $i -eq $r ]; then return 1; else sleep $w; fi; done }; ERR_OUTBOUND_CONN_FAIL=50; retrycmd_if_failure 50 1 3 nc -vz gcr.azk8s.cn 80 || exit $ERR_OUTBOUND_CONN_FAIL; for i in $(seq 1 1200); do if [ -f /opt/azure/containers/provision.sh ]; then break; fi; if [ $i -eq 1200 ]; then exit 100; else sleep 1; fi; done; ', ` + common.GenerateProvisionScriptParameters(cs.Properties.OrchestratorProfile.OrchestratorVersion, cs.Properties.IsHostedMasterProfile(), cs.Properties.IsUserAssignedIdentityEnabled()) + `,' GPU_NODE=false SGX_NODE=false /usr/bin/nohup /bin/bash -c "/bin/bash /opt/azure/containers/provision.sh >> /var/log/azure/cluster-provision.log 2>&1 &"')]`,
 	}
 
 	diff = cmp.Diff(cse, expectedCSE)
