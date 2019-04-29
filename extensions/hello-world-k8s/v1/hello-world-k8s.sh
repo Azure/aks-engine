@@ -1,6 +1,6 @@
-# Script file to install the docker hello-world container
-
 #!/bin/bash
+
+# Script file to install the docker hello-world container
 
 set -e
 
