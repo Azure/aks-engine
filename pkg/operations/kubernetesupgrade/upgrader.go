@@ -319,7 +319,7 @@ func (ku *Upgrader) upgradeAgentPools(ctx context.Context) error {
 		}
 
 		newCreatedVMs := []string{}
-		client, err := ku.getKubernetesClient()
+		client, err := ku.getKubernetesClient(10 * time.Second)
 		if err != nil {
 			ku.logger.Errorf("Error getting Kubernetes client: %v", err)
 			return err
@@ -498,7 +498,7 @@ func (ku *Upgrader) upgradeAgentScaleSets(ctx context.Context) error {
 			ku.logger.Infof("Successfully set capacity for VMSS %s", vmssToUpgrade.Name)
 
 			// Before we can delete the node we should safely and responsibly drain it
-			client, err := ku.getKubernetesClient()
+			client, err := ku.getKubernetesClient(cordonDrainTimeout)
 			if err != nil {
 				ku.logger.Errorf("Error getting Kubernetes client: %v", err)
 				return err
@@ -711,14 +711,13 @@ func (ku *Upgrader) copyCustomNodeProperties(client armhelpers.KubernetesClient,
 	return err
 }
 
-func (ku *Upgrader) getKubernetesClient() (armhelpers.KubernetesClient, error) {
-	getClientTimeout := 10 * time.Second
+func (ku *Upgrader) getKubernetesClient(timeout time.Duration) (armhelpers.KubernetesClient, error) {
 
 	return ku.Client.GetKubernetesClient(
 		ku.DataModel.Properties.GetMasterFQDN(),
 		ku.kubeConfig,
 		interval,
-		getClientTimeout)
+		timeout)
 }
 
 // return unused index within the range of agent indices, or subsequent index

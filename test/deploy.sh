@@ -50,7 +50,7 @@ if [[ -z "${CLUSTER_DEFINITION:-}" ]]; then
 fi
 
 # Set Instance Name for PR or random run
-if [[ ! -z "${PULL_NUMBER:-}" ]]; then
+if [[ -n "${PULL_NUMBER:-}" ]]; then
 	export INSTANCE_NAME="${JOB_NAME}-${PULL_NUMBER}-$(printf "%x" $(date '+%s'))"
 	# if we're running a pull request, assume we want to cleanup unless the user specified otherwise
 	if [[ -z "${CLEANUP:-}" ]]; then

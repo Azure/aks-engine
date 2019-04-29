@@ -1,3 +1,5 @@
+#!/bin/bash
+
 function test_linux_deployment() {
   ###### Testing an nginx deployment
   log "Testing deployments"
@@ -39,7 +41,7 @@ function test_linux_deployment() {
   while (( $count > 0 )); do
     log "  ... counting down $count"
     external_ip=$(k get svc --namespace ${namespace} nginx --template="{{range .status.loadBalancer.ingress}}{{.ip}}{{end}}" || echo "")
-    [[ ! -z "${external_ip}" ]] && break
+    [[ -n "${external_ip}" ]] && break
     sleep 10; count=$((count-1))
   done
   if [[ -z "${external_ip}" ]]; then
@@ -90,7 +92,7 @@ function test_windows_deployment() {
   while (( $count > 0 )); do
     log "  ... counting down $count"
     external_ip=$(k get svc --namespace default win-webserver --template="{{range .status.loadBalancer.ingress}}{{.ip}}{{end}}" || echo "")
-    [[ ! -z "${external_ip}" ]] && break
+    [[ -n "${external_ip}" ]] && break
     sleep 10; count=$((count-1))
   done
   if [[ -z "${external_ip}" ]]; then
@@ -120,7 +122,7 @@ function test_windows_deployment() {
   while (( $count > 0 )); do
     log "  ... counting down $count"
     winpodname=$(k get pods --namespace=default | grep win-webserver | awk '{print $1}')
-    [[ ! -z "${winpodname}" ]] && break
+    [[ -n "${winpodname}" ]] && break
     sleep 10; count=$((count-1))
   done
   if [[ -z "${winpodname}" ]]; then
