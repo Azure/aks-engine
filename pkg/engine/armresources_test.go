@@ -625,7 +625,7 @@ func getAgentNICIPConfigs(ipCount int, profileName string) *[]network.InterfaceI
 	var ipConfigurations []network.InterfaceIPConfiguration
 	for i := 1; i <= ipCount; i++ {
 		ipConfig := network.InterfaceIPConfiguration{
-			Name: to.StringPtr(fmt.Sprintf("ipconfig%d", i)),
+			Name:                                     to.StringPtr(fmt.Sprintf("ipconfig%d", i)),
 			InterfaceIPConfigurationPropertiesFormat: &network.InterfaceIPConfigurationPropertiesFormat{},
 		}
 		if i == 1 {
@@ -974,9 +974,9 @@ func TestGenerateARMResourceWithVMASAgents(t *testing.T) {
 		},
 		AvailabilitySet: compute.AvailabilitySet{
 			AvailabilitySetProperties: &compute.AvailabilitySetProperties{},
-			Name:     to.StringPtr("[variables('agentpool1AvailabilitySet')]"),
-			Type:     to.StringPtr("Microsoft.Compute/availabilitySets"),
-			Location: to.StringPtr("[variables('location')]"),
+			Name:                      to.StringPtr("[variables('agentpool1AvailabilitySet')]"),
+			Type:                      to.StringPtr("Microsoft.Compute/availabilitySets"),
+			Location:                  to.StringPtr("[variables('location')]"),
 		},
 	}
 
@@ -1111,9 +1111,9 @@ func TestGenerateARMResourceWithVMASAgents(t *testing.T) {
 							DestinationPortRange:     to.StringPtr("22-22"),
 							SourceAddressPrefix:      to.StringPtr("*"),
 							DestinationAddressPrefix: to.StringPtr("*"),
-							Access:    network.SecurityRuleAccess("Allow"),
-							Priority:  to.Int32Ptr(101),
-							Direction: network.SecurityRuleDirection("Inbound"),
+							Access:                   network.SecurityRuleAccess("Allow"),
+							Priority:                 to.Int32Ptr(101),
+							Direction:                network.SecurityRuleDirection("Inbound"),
 						},
 						Name: to.StringPtr("allow_ssh"),
 					},
@@ -1125,9 +1125,9 @@ func TestGenerateARMResourceWithVMASAgents(t *testing.T) {
 							DestinationPortRange:     to.StringPtr("443-443"),
 							SourceAddressPrefix:      to.StringPtr("*"),
 							DestinationAddressPrefix: to.StringPtr("*"),
-							Access:    network.SecurityRuleAccess("Allow"),
-							Priority:  to.Int32Ptr(100),
-							Direction: network.SecurityRuleDirection("Inbound"),
+							Access:                   network.SecurityRuleAccess("Allow"),
+							Priority:                 to.Int32Ptr(100),
+							Direction:                network.SecurityRuleDirection("Inbound"),
 						},
 						Name: to.StringPtr("allow_kube_tls"),
 					},
