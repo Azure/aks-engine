@@ -558,7 +558,11 @@ func (mc *MockAKSEngineClient) ListVirtualMachines(ctx context.Context, resource
 
 	if mc.FakeListVirtualMachineResult == nil {
 		mc.FakeListVirtualMachineResult = func() []compute.VirtualMachine {
-			return []compute.VirtualMachine{mc.MakeFakeVirtualMachine(DefaultFakeVMName, defaultK8sVersionForFakeVMs)}
+			machine := mc.MakeFakeVirtualMachine(DefaultFakeVMName, defaultK8sVersionForFakeVMs)
+			machine.AvailabilitySet = &compute.SubResource{
+				ID: to.StringPtr("MockAvailabilitySet"),
+			}
+			return []compute.VirtualMachine{machine}
 		}
 	}
 	vms := mc.FakeListVirtualMachineResult()
