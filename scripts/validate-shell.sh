@@ -5,7 +5,11 @@
 
 set -euo pipefail
 
-echo "==> Running shell script validator <=="
+echo "==> Running shell linter <=="
+shellcheck --version
+if [ -f /.dockerenv ]; then
+    echo "Running inside container";
+fi
 
 # All shell scripts, except those that support deprecated orchestrators or are in vendored code.
 files=$(find . -type f -name "*.sh" -not -path './vendor/*' -not -path "*dcos*" -not -path "*swarm*")
