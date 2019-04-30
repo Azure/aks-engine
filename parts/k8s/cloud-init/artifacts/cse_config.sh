@@ -251,7 +251,7 @@ setupContainerd() {
         echo "[plugins.cri.containerd.default_runtime]"
         echo "runtime_type = 'io.containerd.runtime.v1.linux'"
         echo "runtime_engine = '/usr/local/sbin/runc'"
-    } >> "$CRI_CONTAINERD_CONFIG"
+    } > "$CRI_CONTAINERD_CONFIG"
     setKubeletOpts " --container-runtime=remote --runtime-request-timeout=15m --container-runtime-endpoint=unix:///run/containerd/containerd.sock"
 }
 
