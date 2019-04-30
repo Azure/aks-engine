@@ -97,15 +97,15 @@ func (cs *ContainerService) setKubeletConfig() {
 		defaultKubeletConfig["--max-pods"] = strconv.Itoa(DefaultKubernetesMaxPodsVNETIntegrated)
 	}
 
-	minVersionRotateCerts := "1.11.0"
+	minVersionRotateCerts := "1.11.9"
 	if common.IsKubernetesVersionGe(o.OrchestratorVersion, minVersionRotateCerts) {
 		defaultKubeletConfig["--rotate-certificates"] = "true"
-		addDefaultFeatureGates(o.KubernetesConfig.KubeletConfig, o.OrchestratorVersion, minVersionRotateCerts, "RotateKubeletServerCertificate=true")
 	}
 
 	// If no user-configurable kubelet config values exists, use the defaults
 	setMissingKubeletValues(o.KubernetesConfig, defaultKubeletConfig)
 	addDefaultFeatureGates(o.KubernetesConfig.KubeletConfig, o.OrchestratorVersion, "1.8.0", "PodPriority=true")
+	addDefaultFeatureGates(o.KubernetesConfig.KubeletConfig, o.OrchestratorVersion, minVersionRotateCerts, "RotateKubeletServerCertificate=true")
 
 	// Override default cloud-provider?
 	if to.Bool(o.KubernetesConfig.UseCloudControllerManager) {
