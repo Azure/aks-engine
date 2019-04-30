@@ -11,10 +11,6 @@ echo "==> Running shell script validator <=="
 files=$(find . -type f -name "*.sh" -not -path './vendor/*' -not -path "*dcos*" -not -path "*swarm*")
 
 IGNORED="
-SC1041
-SC1042
-SC1072
-SC1073
 SC1090
 SC1091
 SC2001
@@ -38,7 +34,6 @@ SC2086
 SC2116
 SC2126
 SC2128
-SC2129
 SC2140
 SC2145
 SC2154
