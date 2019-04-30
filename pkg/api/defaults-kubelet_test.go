@@ -7,11 +7,12 @@ import (
 	"strconv"
 	"testing"
 
+	"github.com/Azure/aks-engine/pkg/api/common"
 	"github.com/Azure/go-autorest/autorest/to"
 )
 
 func TestKubeletConfigDefaults(t *testing.T) {
-	cs := CreateMockContainerService("testcluster", "1.12.7", 3, 2, false)
+	cs := CreateMockContainerService("testcluster", common.RationalizeReleaseAndVersion(Kubernetes, common.KubernetesDefaultRelease, "", false, false), 3, 2, false)
 	cs.setKubeletConfig()
 	k := cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig
 	// TODO test all default config values
@@ -19,6 +20,7 @@ func TestKubeletConfigDefaults(t *testing.T) {
 		"--azure-container-registry-config": "/etc/kubernetes/azure.json",
 		"--image-pull-progress-deadline":    "30m",
 		"--pod-max-pids":                    "-1",
+		"--rotate-certificates":             "true",
 	} {
 		if k[key] != val {
 			t.Fatalf("got unexpected kubelet config value for %s: %s, expected %s",
@@ -528,6 +530,44 @@ func TestUbuntu1804Flags(t *testing.T) {
 	}
 }
 
+func TestKubeletRotateCertificates(t *testing.T) {
+	cs := CreateMockContainerService("testcluster", defaultTestClusterVer, 3, 2, false)
+	cs.setKubeletConfig()
+	k := cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig
+	if k["--rotate-certificates"] != "" {
+		t.Fatalf("got unexpected '--rotate-certificates' kubelet config value for k8s version %s: %s",
+			defaultTestClusterVer, k["--rotate-certificates"])
+	}
+
+	// Test 1.11
+	cs = CreateMockContainerService("testcluster", common.RationalizeReleaseAndVersion(Kubernetes, "1.11", "", false, false), 3, 2, false)
+	cs.setKubeletConfig()
+	k = cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig
+	if k["--rotate-certificates"] != "true" {
+		t.Fatalf("got unexpected '--rotate-certificates' kubelet config value for k8s version %s: %s",
+			defaultTestClusterVer, k["--rotate-certificates"])
+	}
+
+	// Test 1.14
+	cs = CreateMockContainerService("testcluster", common.RationalizeReleaseAndVersion(Kubernetes, "1.14", "", false, false), 3, 2, false)
+	cs.setKubeletConfig()
+	k = cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig
+	if k["--rotate-certificates"] != "true" {
+		t.Fatalf("got unexpected '--rotate-certificates' kubelet config value for k8s version %s: %s",
+			defaultTestClusterVer, k["--rotate-certificates"])
+	}
+
+	// Test user-override
+	cs = CreateMockContainerService("testcluster", common.RationalizeReleaseAndVersion(Kubernetes, "1.14", "", false, false), 3, 2, false)
+	k = cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig
+	k["--rotate-certificates"] = "false"
+	cs.setKubeletConfig()
+	k = cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig
+	if k["--rotate-certificates"] != "false" {
+		t.Fatalf("got unexpected '--rotate-certificates' kubelet config value despite override value %s: %s",
+			"false", k["--rotate-certificates"])
+	}
+}
 func TestKubeletConfigDefaultFeatureGates(t *testing.T) {
 	// test 1.7
 	cs := CreateMockContainerService("testcluster", "1.7.12", 3, 2, false)
@@ -542,13 +582,22 @@ func TestKubeletConfigDefaultFeatureGates(t *testing.T) {
 	cs = CreateMockContainerService("testcluster", "1.8.15", 3, 2, false)
 	cs.setKubeletConfig()
 	k = cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig
+	if k["--feature-gates"] != "PodPriority=true" {
+		t.Fatalf("got unexpected '--feature-gates' kubelet config value for \"--feature-gates\": \"\": %s",
+			k["--feature-gates"])
+	}
+
+	// test 1.11
+	cs = CreateMockContainerService("testcluster", common.RationalizeReleaseAndVersion(Kubernetes, "1.11", "", false, false), 3, 2, false)
+	cs.setKubeletConfig()
+	k = cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig
 	if k["--feature-gates"] != "PodPriority=true,RotateKubeletServerCertificate=true" {
 		t.Fatalf("got unexpected '--feature-gates' kubelet config value for \"--feature-gates\": \"\": %s",
 			k["--feature-gates"])
 	}
 
 	// test 1.14
-	cs = CreateMockContainerService("testcluster", "1.14.1", 3, 2, false)
+	cs = CreateMockContainerService("testcluster", common.RationalizeReleaseAndVersion(Kubernetes, "1.14", "", false, false), 3, 2, false)
 	cs.setKubeletConfig()
 	k = cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig
 	if k["--feature-gates"] != "PodPriority=true,RotateKubeletServerCertificate=true" {
