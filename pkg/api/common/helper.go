@@ -246,7 +246,7 @@ func GenerateProvisionScriptParameters(kubernetesVersion string, isHostedMaster 
 	return fmt.Sprintf(
 		parametersTemplate,
 		kubernetesVersion,
-		"",
+		"''",
 		isHostedMaster,
 	)
 }
