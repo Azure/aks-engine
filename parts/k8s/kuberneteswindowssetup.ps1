@@ -40,7 +40,7 @@ param(
 
     [parameter(Mandatory=$true)]
     [ValidateNotNullOrEmpty()]
-    $AADClientSecret
+    $AADClientSecret # base64
 )
 
 
@@ -176,7 +176,7 @@ try
         Write-AzureConfig `
             -KubeDir $global:KubeDir `
             -AADClientId $AADClientId `
-            -AADClientSecret $AADClientSecret `
+            -AADClientSecret $([System.Text.Encoding]::ASCII.GetString([System.Convert]::FromBase64String($AADClientSecret))) `
             -TenantId $global:TenantId `
             -SubscriptionId $global:SubscriptionId `
             -ResourceGroup $global:ResourceGroup `
