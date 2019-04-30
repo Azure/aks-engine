@@ -1,7 +1,7 @@
 #!/bin/bash
 ERR_FILE_WATCH_TIMEOUT=6 # Timeout waiting for a file
 set -x
-echo `date`,`hostname`, startcustomscript>>/opt/m
+echo $(date),$(hostname), startcustomscript>>/opt/m
 AZURE_STACK_ENV="azurestackcloud"
 
 script_lib=/opt/azure/containers/provision_source.sh
@@ -181,7 +181,7 @@ fi
 
 echo "Custom script finished successfully"
 
-echo `date`,`hostname`, endcustomscript>>/opt/m
+echo $(date),$(hostname), endcustomscript>>/opt/m
 mkdir -p /opt/azure/containers && touch /opt/azure/containers/provision.complete
 ps auxfww > /opt/azure/provision-ps.log &
 

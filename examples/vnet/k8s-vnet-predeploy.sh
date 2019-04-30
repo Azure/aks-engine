@@ -8,7 +8,7 @@ trap "rm -rf \"${tempfile}\"" EXIT
 jq ".properties.masterProfile.vnetSubnetId = \"/subscriptions/${SUBSCRIPTION_ID}/resourceGroups/${RESOURCE_GROUP}/providers/Microsoft.Network/virtualNetworks/KubernetesCustomVNET/subnets/KubernetesSubnet\"" ${CLUSTER_DEFINITION} > $tempfile && mv $tempfile ${CLUSTER_DEFINITION}
 
 indx=0
-for poolname in `jq -r '.properties.agentPoolProfiles[].name' "${CLUSTER_DEFINITION}"`; do
+for poolname in $(jq -r '.properties.agentPoolProfiles[].name' "${CLUSTER_DEFINITION}"); do
   jq ".properties.agentPoolProfiles[$indx].vnetSubnetId = \"/subscriptions/${SUBSCRIPTION_ID}/resourceGroups/${RESOURCE_GROUP}/providers/Microsoft.Network/virtualNetworks/KubernetesCustomVNET/subnets/KubernetesSubnet\"" ${CLUSTER_DEFINITION} > $tempfile && mv $tempfile ${CLUSTER_DEFINITION}
   indx=$((indx+1))
 done
