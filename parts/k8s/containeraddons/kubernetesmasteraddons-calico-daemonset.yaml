@@ -109,7 +109,7 @@ spec:
       # as a host-networked pod.
       serviceAccountName: calico-node
       containers:
-      - image: calico/typha:v3.5.0
+      - image: {{ContainerImage "calico-typha"}}
         name: calico-typha
         ports:
         - containerPort: 5473
@@ -206,7 +206,7 @@ spec:
       # This container installs the Calico CNI binaries
       # and CNI network config file on each node.
       - name: install-cni
-        image: calico/cni:v3.5.0
+        image: {{ContainerImage "calico-cni"}}
         command: ["/install-cni.sh"]
         env:
         # Name of the CNI config file to create.
@@ -236,7 +236,7 @@ spec:
         # container programs network policy and routes on each
         # host.
       - name: calico-node
-        image: calico/node:v3.5.0
+        image: {{ContainerImage "calico-node"}}
         env:
         # Use Kubernetes API as the backing datastore.
         - name: DATASTORE_TYPE
@@ -649,7 +649,7 @@ spec:
         supplementalGroups: [65534]
         fsGroup: 65534
       containers:
-      - image: k8s.gcr.io/cluster-proportional-autoscaler-amd64:1.1.2-r2
+      - image: {{ContainerImage "calico-cluster-proportional-autoscaler"}}
         name: autoscaler
         command:
         - /cluster-proportional-autoscaler

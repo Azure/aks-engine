@@ -420,6 +420,7 @@ func TestConvertAzureEnvironmentSpecConfig(t *testing.T) {
 						ACIConnectorImageBase:            "ACIConnectorImageBase",
 						NVIDIAImageBase:                  "NVIDIAImageBase",
 						AzureCNIImageBase:                "AzureCNIImageBase",
+						CalicoImageBase:                  "CalicoImageBase",
 						EtcdDownloadURLBase:              "EtcdDownloadURLBase",
 						KubeBinariesSASURLBase:           "KubeBinariesSASURLBase",
 						WindowsTelemetryGUID:             "WindowsTelemetryGUID",
