@@ -198,7 +198,7 @@ func getK8sMasterVars(cs *api.ContainerService) (map[string]interface{}, error) 
 
 	auditDEnabled := "false"
 	if masterProfile != nil {
-		auditDEnabled = strconv.FormatBool(masterProfile.IsAuditDEnabled())
+		auditDEnabled = strconv.FormatBool(to.Bool(masterProfile.AuditDEnabled))
 	}
 	if !isHostedMaster {
 		if isMasterVMSS {

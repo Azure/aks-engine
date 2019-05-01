@@ -1247,14 +1247,6 @@ func (m *MasterProfile) IsUbuntuNonVHD() bool {
 	return m.IsUbuntu() && !m.IsVHDDistro()
 }
 
-// IsAuditDEnabled checks if auditd is enabled
-func (m *MasterProfile) IsAuditDEnabled() bool {
-	if m.AuditDEnabled != nil {
-		return to.Bool(m.AuditDEnabled)
-	}
-	return false
-}
-
 // IsCustomVNET returns true if the customer brought their own VNET
 func (a *AgentPoolProfile) IsCustomVNET() bool {
 	return len(a.VnetSubnetID) > 0
@@ -1354,14 +1346,6 @@ func (a *AgentPoolProfile) IsUbuntu() bool {
 // IsUbuntuNonVHD returns true if the distro uses a base Ubuntu image
 func (a *AgentPoolProfile) IsUbuntuNonVHD() bool {
 	return a.IsUbuntu() && !a.IsVHDDistro()
-}
-
-// IsAuditDEnabled checks if auditd is enabled
-func (a *AgentPoolProfile) IsAuditDEnabled() bool {
-	if a.AuditDEnabled != nil {
-		return to.Bool(a.AuditDEnabled)
-	}
-	return false
 }
 
 // HasSecrets returns true if the customer specified secrets to install

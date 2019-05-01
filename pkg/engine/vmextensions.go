@@ -119,7 +119,7 @@ func createAgentVMASCustomScriptExtension(cs *api.ContainerService, profile *api
 
 	nVidiaEnabled := strconv.FormatBool(common.IsNvidiaEnabledSKU(profile.VMSize))
 	sgxEnabled := strconv.FormatBool(common.IsSgxEnabledSKU(profile.VMSize))
-	auditDEnabled := strconv.FormatBool(profile.IsAuditDEnabled())
+	auditDEnabled := strconv.FormatBool(to.Bool(profile.AuditDEnabled))
 
 	vmExtension := compute.VirtualMachineExtension{
 		Location: to.StringPtr(location),
