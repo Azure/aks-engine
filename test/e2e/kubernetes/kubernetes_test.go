@@ -1721,5 +1721,5 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 })
 
 func hasSSHAbleMaster(m *api.MasterProfile) bool {
-	return m.IsVirtualMachineScaleSets()
+	return !m.IsVirtualMachineScaleSets()
 }
