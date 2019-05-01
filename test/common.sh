@@ -87,8 +87,8 @@ function set_azure_account() {
 	[[ -n "${TENANT_ID:-}" ]] || (echo "Must specify TENANT_ID" && exit -1)
 	[[ -n "${SERVICE_PRINCIPAL_CLIENT_ID:-}" ]] || (echo "Must specify SERVICE_PRINCIPAL_CLIENT_ID" && exit -1)
 	[[ -n "${SERVICE_PRINCIPAL_CLIENT_SECRET:-}" ]] || (echo "Must specify SERVICE_PRINCIPAL_CLIENT_SECRET" && exit -1)
-	which k || (echo "k must be on PATH" && exit -1)
-	which az || (echo "az must be on PATH" && exit -1)
+	command -v k || (echo "k must be on PATH" && exit -1)
+	command -v az || (echo "az must be on PATH" && exit -1)
 
 	# Login to Azure-Cli
 	az login --service-principal \
@@ -116,8 +116,8 @@ function deploy_template() {
 	[[ -n "${RESOURCE_GROUP:-}" ]] || (echo "Must specify RESOURCE_GROUP" && exit -1)
 	[[ -n "${OUTPUT:-}" ]] || (echo "Must specify OUTPUT" && exit -1)
 
-	which k || (echo "k must be on PATH" && exit -1)
-	which az || (echo "az must be on PATH" && exit -1)
+	command -v k || (echo "k must be on PATH" && exit -1)
+	command -v az || (echo "az must be on PATH" && exit -1)
 
 	create_resource_group
 
@@ -137,7 +137,7 @@ function scale_agent_pool() {
 	[[ -n "${RESOURCE_GROUP:-}" ]] || (echo "Must specify RESOURCE_GROUP" && exit -1)
 	[[ -n "${OUTPUT:-}" ]] || (echo "Must specify OUTPUT" && exit -1)
 
-	which az || (echo "az must be on PATH" && exit -1)
+	command -v az || (echo "az must be on PATH" && exit -1)
 
 	APIMODEL="${OUTPUT}/apimodel.json"
 	DEPLOYMENT_PARAMS="${OUTPUT}/azuredeploy.parameters.json"
