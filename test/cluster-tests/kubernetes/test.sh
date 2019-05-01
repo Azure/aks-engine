@@ -118,8 +118,7 @@ log "Checking $pods"
 count=60
 while (( $count > 0 )); do
   for pod in $pods; do
-    running=$(k get pods --all-namespaces | grep $pod | grep Running | wc -l)
-    if (( $running > 0 )); then
+    if k get pods --all-namespaces | grep $pod | grep -q Running; then
       log "... $pod is Running"
       pods=$(echo $pods | sed -e "s/ *$pod */ /")
     fi
