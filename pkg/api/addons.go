@@ -196,17 +196,17 @@ func (cs *ContainerService) setAddonsConfig(isUpdate bool) {
 		Name:    ContainerMonitoringAddonName,
 		Enabled: to.BoolPtr(DefaultContainerMonitoringAddonEnabled),
 		Config: map[string]string{
-			"omsAgentVersion":       "1.8.1.256",
-			"dockerProviderVersion": "3.0.0-3",
+			"omsAgentVersion":       "1.10.0.1",
+			"dockerProviderVersion": "4.0.0-0",
 		},
 		Containers: []KubernetesContainerSpec{
 			{
 				Name:           "omsagent",
 				CPURequests:    "50m",
-				MemoryRequests: "200Mi",
+				MemoryRequests: "225Mi",
 				CPULimits:      "150m",
-				MemoryLimits:   "750Mi",
-				Image:          "microsoft/oms:ciprod01092019",
+				MemoryLimits:   "500Mi",
+				Image:          "microsoft/oms:ciprod04232019",
 			},
 		},
 	}
