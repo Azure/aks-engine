@@ -136,7 +136,7 @@ function test_windows_deployment() {
   while (( $count > 0 )); do
     log "  ... counting down $count"
     query=$(k exec $winpodname -- powershell nslookup www.bing.com)
-    if [[ $(echo ${query} | grep "DNS request timed out" | wc -l) == 0 ]] && [[ $(echo ${query} | grep "UnKnown" | wc -l) == 0 ]]; then
+    if echo ${query} | grep -q "DNS request timed out" && echo ${query} | grep -q "UnKnown"; then
       success="y"
       break
     fi
