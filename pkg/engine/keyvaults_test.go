@@ -145,6 +145,7 @@ func TestCreateKeyVaultVMSS(t *testing.T) {
 		"properties": map[string]interface{}{
 			"accessPolicies": []interface{}{
 				map[string]interface{}{
+					"objectId": "[parameters('servicePrincipalObjectId')]",
 					"permissions": map[string]interface{}{
 						"keys": []string{"create", "encrypt", "decrypt", "get", "list"}},
 					"tenantId": "[variables('tenantID')]"}},
