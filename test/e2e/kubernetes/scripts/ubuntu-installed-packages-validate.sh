@@ -8,7 +8,7 @@ if [[ $OS == $UBUNTU_OS_NAME ]]; then
     postfix
     "
     for PACKAGE in ${ENSURE_NOT_INSTALLED}; do
-        apt list --installed | egrep "^${PACKAGE}" && exit 1
+        apt list --installed | grep -E "^${PACKAGE}" && exit 1
     done
 
     ENSURE_INSTALLED="
@@ -42,7 +42,7 @@ if [[ $OS == $UBUNTU_OS_NAME ]]; then
     sysstat
     "
     for PACKAGE in ${ENSURE_INSTALLED}; do
-        apt list --installed | egrep "^${PACKAGE}" || exit 1
+        apt list --installed | grep -E "^${PACKAGE}" || exit 1
     done
 else
     exit 1
