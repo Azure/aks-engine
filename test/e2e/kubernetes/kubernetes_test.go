@@ -403,7 +403,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				Expect(err).NotTo(HaveOccurred())
 				for _, node := range nodeList.Nodes {
 					var enabled bool
-					if node.IsAuditDEnabled(enabledProfiles) {
+					if node.IsInProfile(enabledProfiles) {
 						enabled = true
 					}
 					err := conn.CopyToRemote(node.Metadata.Name, "/tmp/"+auditdValidateScript)
