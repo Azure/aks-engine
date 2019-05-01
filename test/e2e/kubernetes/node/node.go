@@ -108,6 +108,18 @@ func (n *Node) IsUbuntu() bool {
 	return false
 }
 
+// IsAuditDEnabled determines if this node is running on a vm with auditd enabled
+func (n *Node) IsAuditDEnabled(profiles []string) bool {
+	if n.IsLinux() {
+		for _, profile := range profiles {
+			if strings.Contains(strings.ToLower(n.Metadata.Name), profile) {
+				return true
+			}
+		}
+	}
+	return false
+}
+
 // AreAllReady returns a bool depending on cluster state
 func AreAllReady(nodeCount int) bool {
 	list, _ := Get()
