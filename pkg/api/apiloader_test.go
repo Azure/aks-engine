@@ -503,7 +503,7 @@ func TestLoadContainerServiceForAgentPoolOnlyClusterWithRawJSON(t *testing.T) {
 		Translator: &i18n.Translator{},
 	}
 
-	cs, _, err := apiloader.LoadContainerServiceForAgentPoolOnlyCluster(rawJSON, v20170831.APIVersion, true, false, "1.11.8", nil)
+	cs, _, err := apiloader.LoadContainerServiceForAgentPoolOnlyCluster(rawJSON, v20170831.APIVersion, true, false, "1.11.10", nil)
 
 	if err != nil {
 		t.Errorf("unexpected error while executing LoadContainerServiceForAgentPoolOnlyCluster: %s", err.Error())
@@ -516,7 +516,7 @@ func TestLoadContainerServiceForAgentPoolOnlyClusterWithRawJSON(t *testing.T) {
 	rawJSONVlabs := []byte(`{"id":"sampleID","location":"westus2","plan":{"name":"sampleRPPlan","product":"fooProduct","promotionCode":"barPromoCode","publisher":"bazPublisher"},"tags":{"123":"456","abc":"def"},"type":"sampleType","properties":{"provisioningState":"Succeeded","kubernetesVersion":"","dnsPrefix":"blueorange","fqdn":"blueorange.azure.com","agentPoolProfiles":[{"name":"sampleAgent","count":0,"vmSize":"Standard_DS1_v1","osDiskSizeGB":512,"availabilityProfile":"","storageProfile":"ManagedDisks","vnetSubnetID":"/subscriptions/SUB_ID/resourceGroups/RG_NAME/providers/Microsoft.Network/virtualNetworks/sampleVnet/subnets/sampleVnetSubnetID","osType":"Linux"}],"linuxProfile":{"adminUsername":"azureuser","ssh":{"publicKeys":[{"keyData":"ssh-rsa AAAAB3NzaC1yc2EAAAABJQAAAQEApD8+lRvLtUcyfO8N2Cwq0zY9DG1Un9d+tcmU3HgnAzBr6UR/dDT5M07NV7DN1lmu/0dt6Ay/ItjF9xK//nwVJL3ezEX32yhLKkCKFMB1LcANNzlhT++SB5tlRBx65CTL8z9FORe4UCWVJNafxu3as/BshQSrSaYt3hjSeYuzTpwd4+4xQutzbTXEUBDUr01zEfjjzfUu0HDrg1IFae62hnLm3ajG6b432IIdUhFUmgjZDljUt5bI3OEz5IWPsNOOlVTuo6fqU8lJHClAtAlZEZkyv0VotidC7ZSCfV153rRsEk9IWscwL2PQIQnCw7YyEYEffDeLjBwkH6MIdJ6OgQ== rsa-key-20170510"}]}},"windowsProfile":{"adminUsername":"azureuser","adminPassword":"azurepassword"},"servicePrincipalProfile":{"clientId":"sampleClientID","secret":"sampleSecret"},"certificateProfile":{"caCertificate":"SampleCACert","caPrivateKey":"SampleCAPrivateKey","apiServerCertificate":"SampleAPIServerCert","apiServerPrivateKey":"SampleAPIServerPrivateKey","clientCertificate":"SampleClientCert","clientPrivateKey":"SampleClientPrivateKey","kubeConfigCertificate":"SampleKubeConfigCert","kubeConfigPrivateKey":"SampleKubeConfigPrivateKey"}}}`)
 
 	//Test with version vlabs
-	cs, _, err = apiloader.LoadContainerServiceForAgentPoolOnlyCluster(rawJSONVlabs, vlabs.APIVersion, true, false, "1.11.8", nil)
+	cs, _, err = apiloader.LoadContainerServiceForAgentPoolOnlyCluster(rawJSONVlabs, vlabs.APIVersion, true, false, "1.11.10", nil)
 
 	if err != nil {
 		t.Errorf("unexpected error while executing LoadContainerServiceForAgentPoolOnlyCluster: %s", err.Error())
@@ -529,7 +529,7 @@ func TestLoadContainerServiceForAgentPoolOnlyClusterWithRawJSON(t *testing.T) {
 	rawJSON20180331 := []byte(`{"id":"sampleID","location":"westus2","plan":{"name":"sampleRPPlan","product":"fooProduct","promotionCode":"barPromoCode","publisher":"bazPublisher"},"tags":{"123":"456","abc":"def"},"type":"sampleType","properties":{"provisioningState":"Succeeded","kubernetesVersion":"","dnsPrefix":"blueorange","fqdn":"blueorange.azure.com","agentPoolProfiles":[{"name":"sampleagent","count":0,"vmSize":"Standard_DS1_v1","osDiskSizeGB":512,"storageProfile":"ManagedDisks","vnetSubnetID":"/subscriptions/SUB_ID/resourceGroups/RG_NAME/providers/Microsoft.Network/virtualNetworks/sampleVnet/subnets/sampleVnetSubnetID","osType":"Linux"}],"windowsProfile":{"adminUsername":"azureuser","adminPassword":"azurepassword"},"servicePrincipalProfile":{"clientId":"sampleClientID","secret":"sampleSecret"}}}`)
 
 	//Test with version v20180331
-	cs, _, err = apiloader.LoadContainerServiceForAgentPoolOnlyCluster(rawJSON20180331, v20180331.APIVersion, true, false, "1.11.8", nil)
+	cs, _, err = apiloader.LoadContainerServiceForAgentPoolOnlyCluster(rawJSON20180331, v20180331.APIVersion, true, false, "1.11.10", nil)
 
 	if err != nil {
 		t.Errorf("unexpected error while executing LoadContainerServiceForAgentPoolOnlyCluster: %s", err.Error())
