@@ -41,6 +41,7 @@ type KubernetesSpecConfig struct {
 	ACIConnectorImageBase            string `json:"aciConnectorImageBase,omitempty"`
 	NVIDIAImageBase                  string `json:"nvidiaImageBase,omitempty"`
 	AzureCNIImageBase                string `json:"azureCNIImageBase,omitempty"`
+	CalicoImageBase                  string `json:"CalicoImageBase,omitempty"`
 	EtcdDownloadURLBase              string `json:"etcdDownloadURLBase,omitempty"`
 	KubeBinariesSASURLBase           string `json:"kubeBinariesSASURLBase,omitempty"`
 	WindowsTelemetryGUID             string `json:"windowsTelemetryGUID,omitempty"`
@@ -71,6 +72,7 @@ var (
 		ACIConnectorImageBase:            "microsoft/",
 		NVIDIAImageBase:                  "nvidia/",
 		AzureCNIImageBase:                "containernetworking/",
+		CalicoImageBase:                  "calico/",
 		EtcdDownloadURLBase:              "https://acs-mirror.azureedge.net/github-coreos",
 		KubeBinariesSASURLBase:           "https://acs-mirror.azureedge.net/wink8s/",
 		WindowsTelemetryGUID:             "fb801154-36b9-41bc-89c2-f4d4f05472b0",
@@ -231,6 +233,7 @@ var (
 			ACIConnectorImageBase:            "dockerhub.azk8s.cn/microsoft/",
 			NVIDIAImageBase:                  "dockerhub.azk8s.cn/nvidia/",
 			AzureCNIImageBase:                "dockerhub.azk8s.cn/containernetworking/",
+			CalicoImageBase:                  "dockerhub.azk8s.cn/calico/",
 			EtcdDownloadURLBase:              "https://mirror.azk8s.cn/kubernetes/etcd",
 			KubeBinariesSASURLBase:           DefaultKubernetesSpecConfig.KubeBinariesSASURLBase,
 			WindowsTelemetryGUID:             DefaultKubernetesSpecConfig.WindowsTelemetryGUID,

@@ -121,6 +121,12 @@ func kubernetesContainerAddonSettingsInit(profile *api.Properties) map[string]ku
 			false,
 			profile.OrchestratorProfile.KubernetesConfig.GetAddonScript(DefaultDNSAutoscalerAddonName),
 		},
+		DefaultCalicoDaemonSetAddonName: {
+			"kubernetesmasteraddons-calico-daemonset.yaml",
+			"calico-daemonset.yaml",
+			profile.OrchestratorProfile.KubernetesConfig.NetworkPolicy == NetworkPolicyCalico,
+			profile.OrchestratorProfile.KubernetesConfig.GetAddonScript(DefaultCalicoDaemonSetAddonName),
+		},
 	}
 }
 
@@ -149,13 +155,6 @@ func kubernetesAddonSettingsInit(profile *api.Properties) []kubernetesFeatureSet
 			"azure-npm-daemonset.yaml",
 			profile.OrchestratorProfile.KubernetesConfig.NetworkPolicy == NetworkPolicyAzure && profile.OrchestratorProfile.KubernetesConfig.NetworkPlugin == NetworkPluginAzure,
 			profile.OrchestratorProfile.KubernetesConfig.GetAddonScript(DefaultAzureNpmDaemonSetAddonName),
-		},
-		{
-
-			"kubernetesmasteraddons-calico-daemonset.yaml",
-			"calico-daemonset.yaml",
-			profile.OrchestratorProfile.KubernetesConfig.NetworkPolicy == NetworkPolicyCalico,
-			profile.OrchestratorProfile.KubernetesConfig.GetAddonScript(DefaultCalicoDaemonSetAddonName),
 		},
 		{
 			"kubernetesmasteraddons-cilium-daemonset.yaml",
