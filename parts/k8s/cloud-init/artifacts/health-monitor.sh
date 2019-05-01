@@ -75,5 +75,5 @@ if [[ "${component}" == "container-runtime" ]]; then
 elif [[ "${component}" == "kubelet" ]]; then
   kubelet_monitoring
 else
-  echo "Health monitoring for component "${component}" is not supported!"
+  echo "Health monitoring for component ${component} is not supported!"
 fi
