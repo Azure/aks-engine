@@ -11,7 +11,7 @@ ensureCertificates() {
         # Replace placeholder for ssl binding
         if [ -f $KUBE_CONTROLLER_MANAGER_FILE ]; then
             sed -i "s|<volumessl>|- name: ssl\n      hostPath:\n        path: \\/etc\\/ssl\\/certs|g" $KUBE_CONTROLLER_MANAGER_FILE
-            sed -i "s|<volumeMountssl>|- name: "ssl"\n          mountPath: \\/etc\\/ssl\\/certs\n          readOnly: true|g" $KUBE_CONTROLLER_MANAGER_FILE
+            sed -i "s|<volumeMountssl>|- name: ssl\n          mountPath: \\/etc\\/ssl\\/certs\n          readOnly: true|g" $KUBE_CONTROLLER_MANAGER_FILE
         fi
 
         # Copying the AzureStack root certificate to the appropriate store to be updated.
