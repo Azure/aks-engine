@@ -20,6 +20,11 @@ import (
 
 const commandTimeout = 1 * time.Minute
 
+// List holds a list of services returned from kubectl get svc
+type List struct {
+	Services []Service `json:"items"`
+}
+
 // Service represents a kubernetes service
 type Service struct {
 	Metadata Metadata `json:"metadata"`
@@ -76,6 +81,45 @@ func Get(name, namespace string) (*Service, error) {
 		return nil, err
 	}
 	return &s, nil
+}
+
+// GetAll will return all services in a given namespace
+func GetAll(namespace string) (*List, error) {
+	cmd := exec.Command("k", "get", "svc", "-n", namespace, "-o", "json")
+	fmt.Println("here")
+	util.PrintCommand(cmd)
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		log.Printf("Error getting all services:\n")
+		return nil, err
+	}
+	sl := List{}
+	err = json.Unmarshal(out, &sl)
+	if err != nil {
+		log.Printf("Error unmarshalling services json:%s\n", err)
+		return nil, err
+	}
+	return &sl, nil
+}
+
+// GetAllByPrefix will return all services in a given namespace that match a prefix
+func GetAllByPrefix(prefix, namespace string) ([]Service, error) {
+	sl, err := GetAll(namespace)
+	if err != nil {
+		return nil, err
+	}
+	services := []Service{}
+	for _, s := range sl.Services {
+		matched, err := regexp.MatchString(prefix+"-.*", s.Metadata.Name)
+		if err != nil {
+			log.Printf("Error trying to match service name:%s\n", err)
+			return nil, err
+		}
+		if matched {
+			services = append(services, s)
+		}
+	}
+	return services, nil
 }
 
 // Delete will delete a service in a given namespace
@@ -191,4 +235,18 @@ func CreateServiceFromFile(filename, name, namespace string) (*Service, error) {
 		return nil, err
 	}
 	return svc, nil
+}
+
+// CreateServiceFromFileDeleteIfExist will create a Service from file, deleting any pre-existing service with the same name
+func CreateServiceFromFileDeleteIfExist(filename, name, namespace string) (*Service, error) {
+	s, _ := Get(name, namespace)
+	if s != nil {
+		err := s.Delete(10)
+		if err != nil {
+			return nil, err
+		}
+		// Wait a minute before proceeding to create a new service w/ the same name
+		time.Sleep(1 * time.Minute)
+	}
+	return CreateServiceFromFile(filename, name, namespace)
 }

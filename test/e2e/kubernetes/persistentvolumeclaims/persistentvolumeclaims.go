@@ -42,7 +42,7 @@ type Status struct {
 	Phase string `json:"phase"`
 }
 
-// CreatePersistentVolumeClaimsFromFile will create a StorageClass from file with a name
+// CreatePersistentVolumeClaimsFromFile will create a PVC from file with a name
 func CreatePersistentVolumeClaimsFromFile(filename, name, namespace string) (*PersistentVolumeClaims, error) {
 	cmd := exec.Command("k", "apply", "-f", filename)
 	util.PrintCommand(cmd)
@@ -57,6 +57,20 @@ func CreatePersistentVolumeClaimsFromFile(filename, name, namespace string) (*Pe
 		return nil, err
 	}
 	return pvc, nil
+}
+
+// CreatePVCFromFileDeleteIfExist will create a PVC from file with a name
+func CreatePVCFromFileDeleteIfExist(filename, name, namespace string) (*PersistentVolumeClaims, error) {
+	pvc, _ := Get(name, namespace)
+	if pvc != nil {
+		err := pvc.Delete(10)
+		if err != nil {
+			return nil, err
+		}
+		// Wait a minute before proceeding to create a new pvc w/ the same name
+		time.Sleep(1 * time.Minute)
+	}
+	return CreatePersistentVolumeClaimsFromFile(filename, name, namespace)
 }
 
 // Get will return a PersistentVolumeClaims with a given name and namespace

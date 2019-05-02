@@ -168,12 +168,21 @@ func CreatePodFromFile(filename, name, namespace string, sleep, duration time.Du
 		log.Printf("Error trying to create Pod %s:%s\n", name, string(out))
 		return nil, err
 	}
-	pod, err := GetWithRetry(name, namespace, sleep, duration)
+	p, err := GetWithRetry(name, namespace, sleep, duration)
 	if err != nil {
 		log.Printf("Error while trying to fetch Pod %s:%s\n", name, err)
 		return nil, err
 	}
-	return pod, nil
+	return p, nil
+}
+
+// CreatePodFromFileIfNotExist will create a Pod from file with a name
+func CreatePodFromFileIfNotExist(filename, name, namespace string, sleep, duration time.Duration) (*Pod, error) {
+	p, err := Get("dns-liveness", "default")
+	if err != nil {
+		return CreatePodFromFile(filename, name, namespace, sleep, duration)
+	}
+	return p, nil
 }
 
 // RunLinuxPod will create a pod that runs a bash command
@@ -815,6 +824,7 @@ func (p *Pod) CheckWindowsOutboundConnection(sleep, duration time.Duration) (boo
 					matched := exp.MatchString(string(out))
 					if err == nil && matched {
 						readyCh <- true
+						break
 					} else {
 						if i == (len(urls) - 1) {
 							// if all are down let's say we don't have outbound internet access

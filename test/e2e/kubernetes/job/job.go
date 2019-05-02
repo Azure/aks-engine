@@ -57,6 +57,20 @@ func CreateJobFromFile(filename, name, namespace string) (*Job, error) {
 	return job, nil
 }
 
+// CreateJobFromFileDeleteIfExists will create a Job from file, deleting any pre-existing job with the same name
+func CreateJobFromFileDeleteIfExists(filename, name, namespace string) (*Job, error) {
+	j, err := Get(name, namespace)
+	if err == nil {
+		err := j.Delete(10)
+		if err != nil {
+			return nil, err
+		}
+		// Wait a minute before proceeding to create a new job w/ the same name
+		time.Sleep(1 * time.Minute)
+	}
+	return CreateJobFromFile(filename, name, namespace)
+}
+
 // GetAll will return all jobs in a given namespace
 func GetAll(namespace string) (*List, error) {
 	cmd := exec.Command("k", "get", "jobs", "-n", namespace, "-o", "json")
