@@ -3923,6 +3923,8 @@ func TestFormatAzureProdFQDN(t *testing.T) {
 		"santest.southindia.cloudapp.azure.com",
 		"santest.uksouth.cloudapp.azure.com",
 		"santest.ukwest.cloudapp.azure.com",
+		"santest.usdodcentral.cloudapp.usgovcloudapi.net",
+		"santest.usdodeast.cloudapp.usgovcloudapi.net",
 		"santest.westcentralus.cloudapp.azure.com",
 		"santest.westeurope.cloudapp.azure.com",
 		"santest.westindia.cloudapp.azure.com",
@@ -3991,6 +3993,8 @@ func TestFormatProdFQDNByLocation(t *testing.T) {
 		"santest.southindia.cloudapp.azure.com",
 		"santest.uksouth.cloudapp.azure.com",
 		"santest.ukwest.cloudapp.azure.com",
+		"santest.usdodcentral.cloudapp.usgovcloudapi.com",
+		"santest.usdodeast.cloudapp.usgovcloudapi.com",
 		"santest.westcentralus.cloudapp.azure.com",
 		"santest.westeurope.cloudapp.azure.com",
 		"santest.westindia.cloudapp.azure.com",
@@ -4388,7 +4392,8 @@ func TestGetLocations(t *testing.T) {
 	mockCSDefault := getMockBaseContainerService("1.11.6")
 	mockCSDefault.Location = "eastus"
 
-	expected := []string{"australiacentral",
+	expected := []string{
+		"australiacentral",
 		"australiacentral2",
 		"australiaeast",
 		"australiasoutheast",
@@ -4421,6 +4426,8 @@ func TestGetLocations(t *testing.T) {
 		"southindia",
 		"uksouth",
 		"ukwest",
+		"usdodcentral",
+		"usdodeast",
 		"westcentralus",
 		"westeurope",
 		"westindia",
@@ -4436,7 +4443,8 @@ func TestGetLocations(t *testing.T) {
 		"usgoviowa",
 		"usgovarizona",
 		"usgovtexas",
-		"francecentral"}
+		"francecentral",
+	}
 	actual := mockCSDefault.GetLocations()
 	if !reflect.DeepEqual(expected, actual) {
 		t.Errorf("Test TestGetLocations() : expected to return %s, but got %s . ", expected, actual)
