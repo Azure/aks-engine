@@ -101,6 +101,8 @@ func IsNvidiaEnabledSKU(vmSize string) bool {
 		"Standard_NC24s_v3":  true,
 		"Standard_NC24rs_v3": true,
 	}
+	// Trim the optional _Promo suffix.
+	vmSize = strings.TrimSuffix(vmSize, "_Promo")
 	if _, ok := dm[vmSize]; ok {
 		return dm[vmSize]
 	}
