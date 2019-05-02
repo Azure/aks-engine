@@ -20,7 +20,7 @@ grep $IPV4_ACCEPT_REDIRECTS_VALUE /proc/sys/net/ipv4/conf/all/accept_redirects |
 grep $IPV4_ACCEPT_REDIRECTS_VALUE /proc/sys/net/ipv4/conf/default/accept_redirects || exit 1
 grep $IPV4_SECURE_REDIRECTS_VALUE /proc/sys/net/ipv4/conf/all/secure_redirects || exit 1
 grep $IPV4_SECURE_REDIRECTS_VALUE /proc/sys/net/ipv4/conf/default/secure_redirects || exit 1
-grep $IPV4_LOG_MARTIANS_VALUE/proc/sys/net/ipv4/conf/all/log_martians || exit 1
+grep $IPV4_LOG_MARTIANS_VALUE /proc/sys/net/ipv4/conf/all/log_martians || exit 1
 grep $IPV4_LOG_MARTIANS_VALUE /proc/sys/net/ipv4/conf/default/log_martians || exit 1
 grep $IPV6_ACCEPT_RA_VALUE /proc/sys/net/ipv6/conf/all/accept_ra || exit 1
 grep $IPV6_ACCEPT_RA_VALUE /proc/sys/net/ipv6/conf/default/accept_ra || exit 1
