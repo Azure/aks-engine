@@ -568,8 +568,8 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			pods, err := phpApacheDeploy.Pods()
 			Expect(err).NotTo(HaveOccurred())
 			for _, p := range pods {
-				pass, err := p.CheckLinuxOutboundConnection(5*time.Second, cfg.Timeout)
-				Expect(err).NotTo(HaveOccurred())
+				pass, outboundErr := p.CheckLinuxOutboundConnection(5*time.Second, cfg.Timeout)
+				Expect(outboundErr).NotTo(HaveOccurred())
 				Expect(pass).To(BeTrue())
 			}
 
