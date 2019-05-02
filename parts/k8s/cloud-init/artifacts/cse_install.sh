@@ -133,7 +133,7 @@ installKataContainersRuntime() {
     wait_for_apt_locks
     retrycmd_if_failure 30 5 30 apt-key add $KATA_RELEASE_KEY_TMP || exit $ERR_KATA_APT_KEY_TIMEOUT
     echo "Adding Kata Containers repository..."
-    echo 'deb http://download.opensuse.org/repositories/home:/katacontainers:/release/xUbuntu_${UBUNTU_RELEASE}/ /' > /etc/apt/sources.list.d/kata-containers.list
+    echo "deb http://download.opensuse.org/repositories/home:/katacontainers:/release/xUbuntu_${UBUNTU_RELEASE}/ /" > /etc/apt/sources.list.d/kata-containers.list
     echo "Installing Kata Containers runtime..."
     apt_get_update || exit $ERR_APT_UPDATE_TIMEOUT
     apt_get_install 120 5 25 kata-runtime || exit $ERR_KATA_INSTALL_TIMEOUT
