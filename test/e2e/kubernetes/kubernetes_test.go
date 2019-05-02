@@ -360,13 +360,15 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			conn, err = remote.NewConnection(kubeConfig.GetServerName(), masterSSHPort, eng.ExpandedDefinition.Properties.LinuxProfile.AdminUsername, masterSSHPrivateKeyFilepath)
 			Expect(err).NotTo(HaveOccurred())
 			for _, node := range nodeList.Nodes {
-				err := conn.CopyToRemote(node.Metadata.Name, "/tmp/"+pwQualityValidateScript)
-				Expect(err).NotTo(HaveOccurred())
-				pwQualityValidationCommand := fmt.Sprintf("\"/tmp/%s\"", pwQualityValidateScript)
-				cmd = exec.Command("ssh", "-A", "-i", masterSSHPrivateKeyFilepath, "-p", masterSSHPort, "-o", "ConnectTimeout=10", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-o", "LogLevel=ERROR", master, "ssh", "-o", "ConnectTimeout=10", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-o", "LogLevel=ERROR", node.Metadata.Name, pwQualityValidationCommand)
-				util.PrintCommand(cmd)
-				_, err = cmd.CombinedOutput()
-				Expect(err).NotTo(HaveOccurred())
+				if node.IsUbuntu() {
+					err := conn.CopyToRemote(node.Metadata.Name, "/tmp/"+pwQualityValidateScript)
+					Expect(err).NotTo(HaveOccurred())
+					pwQualityValidationCommand := fmt.Sprintf("\"/tmp/%s\"", pwQualityValidateScript)
+					cmd = exec.Command("ssh", "-A", "-i", masterSSHPrivateKeyFilepath, "-p", masterSSHPort, "-o", "ConnectTimeout=10", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-o", "LogLevel=ERROR", master, "ssh", "-o", "ConnectTimeout=10", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-o", "LogLevel=ERROR", node.Metadata.Name, pwQualityValidationCommand)
+					util.PrintCommand(cmd)
+					_, err = cmd.CombinedOutput()
+					Expect(err).NotTo(HaveOccurred())
+				}
 			}
 		})
 
