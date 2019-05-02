@@ -122,6 +122,10 @@ func GetNSeriesVMCasesForTesting() []struct {
 			true,
 		},
 		{
+			"Standard_NC6_Promo",
+			true,
+		},
+		{
 			"Standard_NC12",
 			true,
 		},
