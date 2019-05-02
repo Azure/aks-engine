@@ -43,6 +43,8 @@ func GetAzureLocations() []string {
 		"southindia",
 		"uksouth",
 		"ukwest",
+		"usdodcentral",
+		"usdodeast",
 		"westcentralus",
 		"westeurope",
 		"westindia",
