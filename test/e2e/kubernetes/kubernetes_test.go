@@ -1260,7 +1260,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				Expect(err).NotTo(HaveOccurred())
 
 				By("Verifying that the service is reachable and returns the default IIS start page")
-				valid := iisService.Validate("(IIS Windows Server)", 10, 10*time.Second, cfg.Timeout)
+				valid := iisService.Validate("(IIS Windows Server)", 10, retryTimeWhenWaitingForPodReady, cfg.Timeout)
 				Expect(valid).To(BeTrue())
 
 				By("Checking that each pod can reach the internet")
@@ -1270,7 +1270,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				Expect(len(iisPods)).ToNot(BeZero())
 				for _, iisPod := range iisPods {
 					var pass bool
-					pass, err = iisPod.CheckWindowsOutboundConnection(10*time.Second, timeoutWhenWaitingForPodOutboundAccess)
+					pass, err = iisPod.CheckWindowsOutboundConnection(retryTimeWhenWaitingForPodReady, timeoutWhenWaitingForPodOutboundAccess)
 					Expect(err).NotTo(HaveOccurred())
 					Expect(pass).To(BeTrue())
 				}
@@ -1290,7 +1290,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				Expect(len(iisPods)).To(Equal(5))
 
 				By("Verifying that the service is reachable and returns the default IIS start page")
-				valid = iisService.Validate("(IIS Windows Server)", 10, 10*time.Second, cfg.Timeout)
+				valid = iisService.Validate("(IIS Windows Server)", 10, retryTimeWhenWaitingForPodReady, cfg.Timeout)
 				Expect(valid).To(BeTrue())
 
 				By("Checking that each pod can reach the internet")
@@ -1299,7 +1299,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				Expect(len(iisPods)).ToNot(BeZero())
 				for _, iisPod := range iisPods {
 					var pass bool
-					pass, err = iisPod.CheckWindowsOutboundConnection(10*time.Second, timeoutWhenWaitingForPodOutboundAccess)
+					pass, err = iisPod.CheckWindowsOutboundConnection(retryTimeWhenWaitingForPodReady, timeoutWhenWaitingForPodOutboundAccess)
 					Expect(err).NotTo(HaveOccurred())
 					Expect(pass).To(BeTrue())
 				}
@@ -1321,7 +1321,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				Expect(len(iisPods)).To(Equal(2))
 
 				By("Verifying that the service is reachable and returns the default IIS start page")
-				valid = iisService.Validate("(IIS Windows Server)", 10, 10*time.Second, cfg.Timeout)
+				valid = iisService.Validate("(IIS Windows Server)", 10, retryTimeWhenWaitingForPodReady, cfg.Timeout)
 				Expect(valid).To(BeTrue())
 
 				By("Checking that each pod can reach the internet")
@@ -1330,7 +1330,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				Expect(len(iisPods)).ToNot(BeZero())
 				for _, iisPod := range iisPods {
 					var pass bool
-					pass, err = iisPod.CheckWindowsOutboundConnection(10*time.Second, cfg.Timeout)
+					pass, err = iisPod.CheckWindowsOutboundConnection(retryTimeWhenWaitingForPodReady, cfg.Timeout)
 					Expect(err).NotTo(HaveOccurred())
 					Expect(pass).To(BeTrue())
 				}
