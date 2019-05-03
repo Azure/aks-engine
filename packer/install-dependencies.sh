@@ -62,7 +62,7 @@ echo "  - nvidia-docker2 nvidia-container-runtime" >> ${RELEASE_NOTES_FILEPATH}
 installClearContainersRuntime
 
 VNET_CNI_VERSIONS="
-1.0.21
+1.0.22
 1.0.18
 "
 for VNET_CNI_VERSION in $VNET_CNI_VERSIONS; do
