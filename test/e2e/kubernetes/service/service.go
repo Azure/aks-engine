@@ -241,7 +241,7 @@ func CreateServiceFromFile(filename, name, namespace string) (*Service, error) {
 func CreateServiceFromFileDeleteIfExist(filename, name, namespace string) (*Service, error) {
 	s, _ := Get(name, namespace)
 	if s != nil {
-		err := s.Delete(10)
+		err := s.Delete(util.DefaultDeleteRetries)
 		if err != nil {
 			return nil, err
 		}

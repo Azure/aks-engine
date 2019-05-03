@@ -63,7 +63,7 @@ func CreatePersistentVolumeClaimsFromFile(filename, name, namespace string) (*Pe
 func CreatePVCFromFileDeleteIfExist(filename, name, namespace string) (*PersistentVolumeClaims, error) {
 	pvc, _ := Get(name, namespace)
 	if pvc != nil {
-		err := pvc.Delete(10)
+		err := pvc.Delete(util.DefaultDeleteRetries)
 		if err != nil {
 			return nil, err
 		}

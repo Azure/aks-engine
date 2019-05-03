@@ -106,7 +106,7 @@ func CreateLinuxDeployDeleteIfExists(pattern, image, name, namespace, miscOpts s
 		return nil, err
 	}
 	for _, d := range deployments {
-		d.Delete(10)
+		d.Delete(util.DefaultDeleteRetries)
 	}
 	return CreateLinuxDeploy(image, name, namespace, miscOpts)
 }
@@ -164,7 +164,7 @@ func CreateWindowsDeployDeleteIfExist(pattern, image, name, namespace string, po
 		return nil, err
 	}
 	for _, d := range deployments {
-		d.Delete(10)
+		d.Delete(util.DefaultDeleteRetries)
 	}
 	return CreateWindowsDeploy(image, name, namespace, port, hostport)
 }
@@ -285,7 +285,7 @@ func (d *Deployment) ExposeDeleteIfExist(pattern, namespace, svcType string, tar
 		return err
 	}
 	for _, s := range services {
-		s.Delete(10)
+		s.Delete(util.DefaultDeleteRetries)
 	}
 	return d.Expose(svcType, targetPort, exposedPort)
 }
@@ -318,7 +318,7 @@ func (d *Deployment) CreateDeploymentHPA(cpuPercent, min, max int) error {
 func (d *Deployment) CreateDeploymentHPADeleteIfExist(cpuPercent, min, max int) error {
 	h, err := hpa.Get(d.Metadata.Name, d.Metadata.Namespace)
 	if err == nil {
-		err := h.Delete(10)
+		err := h.Delete(util.DefaultDeleteRetries)
 		if err != nil {
 			return err
 		}

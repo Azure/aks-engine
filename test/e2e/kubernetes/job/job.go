@@ -61,7 +61,7 @@ func CreateJobFromFile(filename, name, namespace string) (*Job, error) {
 func CreateJobFromFileDeleteIfExists(filename, name, namespace string) (*Job, error) {
 	j, err := Get(name, namespace)
 	if err == nil {
-		err := j.Delete(10)
+		err := j.Delete(util.DefaultDeleteRetries)
 		if err != nil {
 			return nil, err
 		}
