@@ -43,38 +43,38 @@ func kubernetesContainerAddonSettingsInit(profile *api.Properties) map[string]ku
 		DefaultAADPodIdentityAddonName: {
 			"kubernetesmasteraddons-aad-pod-identity-deployment.yaml",
 			"aad-pod-identity-deployment.yaml",
-			profile.OrchestratorProfile.KubernetesConfig.IsAADPodIdentityEnabled(),
+			profile.OrchestratorProfile.KubernetesConfig.IsAADPodIdentityEnabled() && !profile.IsAzureStackCloud(),
 			profile.OrchestratorProfile.KubernetesConfig.GetAddonScript(DefaultAADPodIdentityAddonName),
 		},
 		DefaultACIConnectorAddonName: {
 			"kubernetesmasteraddons-aci-connector-deployment.yaml",
 			"aci-connector-deployment.yaml",
-			profile.OrchestratorProfile.KubernetesConfig.IsACIConnectorEnabled(),
+			profile.OrchestratorProfile.KubernetesConfig.IsACIConnectorEnabled() && !profile.IsAzureStackCloud(),
 			profile.OrchestratorProfile.KubernetesConfig.GetAddonScript(DefaultACIConnectorAddonName),
 		},
 		DefaultClusterAutoscalerAddonName: {
 			"kubernetesmasteraddons-cluster-autoscaler-deployment.yaml",
 			"cluster-autoscaler-deployment.yaml",
-			profile.OrchestratorProfile.KubernetesConfig.IsClusterAutoscalerEnabled(),
+			profile.OrchestratorProfile.KubernetesConfig.IsClusterAutoscalerEnabled() && !profile.IsAzureStackCloud(),
 			profile.OrchestratorProfile.KubernetesConfig.GetAddonScript(DefaultClusterAutoscalerAddonName),
 		},
 		DefaultBlobfuseFlexVolumeAddonName: {
 			"kubernetesmasteraddons-blobfuse-flexvolume-installer.yaml",
 			"blobfuse-flexvolume-installer.yaml",
-			profile.OrchestratorProfile.KubernetesConfig.IsBlobfuseFlexVolumeEnabled() && !profile.HasCoreOS(),
+			profile.OrchestratorProfile.KubernetesConfig.IsBlobfuseFlexVolumeEnabled() && !profile.HasCoreOS() && !profile.IsAzureStackCloud(),
 			profile.OrchestratorProfile.KubernetesConfig.GetAddonScript(DefaultBlobfuseFlexVolumeAddonName),
 		},
 
 		DefaultSMBFlexVolumeAddonName: {
 			"kubernetesmasteraddons-smb-flexvolume-installer.yaml",
 			"smb-flexvolume-installer.yaml",
-			profile.OrchestratorProfile.KubernetesConfig.IsSMBFlexVolumeEnabled() && !profile.HasCoreOS(),
+			profile.OrchestratorProfile.KubernetesConfig.IsSMBFlexVolumeEnabled() && !profile.HasCoreOS() && !profile.IsAzureStackCloud(),
 			profile.OrchestratorProfile.KubernetesConfig.GetAddonScript(DefaultSMBFlexVolumeAddonName),
 		},
 		DefaultKeyVaultFlexVolumeAddonName: {
 			"kubernetesmasteraddons-keyvault-flexvolume-installer.yaml",
 			"keyvault-flexvolume-installer.yaml",
-			profile.OrchestratorProfile.KubernetesConfig.IsKeyVaultFlexVolumeEnabled() && !profile.HasCoreOS(),
+			profile.OrchestratorProfile.KubernetesConfig.IsKeyVaultFlexVolumeEnabled() && !profile.HasCoreOS() && !profile.IsAzureStackCloud(),
 			profile.OrchestratorProfile.KubernetesConfig.GetAddonScript(DefaultKeyVaultFlexVolumeAddonName),
 		},
 		DefaultDashboardAddonName: {
@@ -86,19 +86,19 @@ func kubernetesContainerAddonSettingsInit(profile *api.Properties) map[string]ku
 		DefaultReschedulerAddonName: {
 			"kubernetesmasteraddons-kube-rescheduler-deployment.yaml",
 			"kube-rescheduler-deployment.yaml",
-			profile.OrchestratorProfile.KubernetesConfig.IsReschedulerEnabled(),
+			profile.OrchestratorProfile.KubernetesConfig.IsReschedulerEnabled() && !profile.IsAzureStackCloud(),
 			profile.OrchestratorProfile.KubernetesConfig.GetAddonScript(DefaultReschedulerAddonName),
 		},
 		NVIDIADevicePluginAddonName: {
 			"kubernetesmasteraddons-nvidia-device-plugin-daemonset.yaml",
 			"nvidia-device-plugin.yaml",
-			profile.IsNVIDIADevicePluginEnabled(),
+			profile.IsNVIDIADevicePluginEnabled() && !profile.IsAzureStackCloud(),
 			profile.OrchestratorProfile.KubernetesConfig.GetAddonScript(NVIDIADevicePluginAddonName),
 		},
 		ContainerMonitoringAddonName: {
 			"kubernetesmasteraddons-omsagent-daemonset.yaml",
 			"omsagent-daemonset.yaml",
-			profile.OrchestratorProfile.KubernetesConfig.IsContainerMonitoringEnabled(),
+			profile.OrchestratorProfile.KubernetesConfig.IsContainerMonitoringEnabled() && !profile.IsAzureStackCloud(),
 			profile.OrchestratorProfile.KubernetesConfig.GetAddonScript(ContainerMonitoringAddonName),
 		},
 		IPMASQAgentAddonName: {
