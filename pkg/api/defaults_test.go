@@ -1087,7 +1087,7 @@ func TestSetComponentsNetworkDefaults(t *testing.T) {
 			OrchestratorProfile{
 				OrchestratorType: Kubernetes,
 			},
-			AKS,
+			AKS1804,
 		},
 		{
 			"default_swarm",

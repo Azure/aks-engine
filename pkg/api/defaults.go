@@ -308,7 +308,7 @@ func (p *Properties) setExtensionDefaults() {
 func (p *Properties) setMasterProfileDefaults(isUpgrade bool) {
 	if p.MasterProfile.Distro == "" {
 		if p.OrchestratorProfile.IsKubernetes() {
-			p.MasterProfile.Distro = AKS
+			p.MasterProfile.Distro = AKS1804
 		} else {
 			p.MasterProfile.Distro = Ubuntu
 		}
@@ -490,9 +490,14 @@ func (p *Properties) setAgentProfileDefaults(isUpgrade, isScale bool) {
 			if profile.Distro == "" {
 				if p.OrchestratorProfile.IsKubernetes() {
 					if profile.OSDiskSizeGB != 0 && profile.OSDiskSizeGB < VHDDiskSizeAKS {
-						profile.Distro = Ubuntu
+						if p.OrchestratorProfile.IsAzureCNI() {
+							// Workaround for https://github.com/Azure/aks-engine/issues/761.
+							profile.Distro = Ubuntu
+						} else {
+							profile.Distro = Ubuntu1804
+						}
 					} else {
-						profile.Distro = AKS
+						profile.Distro = AKS1804
 					}
 				} else {
 					profile.Distro = Ubuntu
@@ -502,7 +507,7 @@ func (p *Properties) setAgentProfileDefaults(isUpgrade, isScale bool) {
 				// so we need to hard override it in order to produce a working cluster in upgrade/scale contexts
 			} else if p.OrchestratorProfile.IsKubernetes() && (isUpgrade || isScale) {
 				if profile.Distro == AKSDockerEngine {
-					profile.Distro = AKS
+					profile.Distro = AKS1804
 				}
 			}
 		}
