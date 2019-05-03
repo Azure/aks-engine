@@ -2,7 +2,7 @@
 
 ensureCertificates() {
     AZURESTACK_ENVIRONMENT_JSON_PATH="/etc/kubernetes/azurestackcloud.json"
-    AZURESTACK_RESOURCE_MANAGER_ENDPOINT=$(cat $AZURESTACK_ENVIRONMENT_JSON_PATH | jq .resourceManagerEndpoint | tr -d "\"")
+    AZURESTACK_RESOURCE_MANAGER_ENDPOINT=$(jq .resourceManagerEndpoint $AZURESTACK_ENVIRONMENT_JSON_PATH | tr -d "\"")
     AZURESTACK_RESOURCE_METADATA_ENDPOINT="$AZURESTACK_RESOURCE_MANAGER_ENDPOINT/metadata/endpoints?api-version=2015-01-01"
     curl $AZURESTACK_RESOURCE_METADATA_ENDPOINT
     CURL_RETURNCODE=$?
@@ -58,6 +58,7 @@ configureK8sCustomCloud() {
         KUBERNETES_FILE_DIR=$(dirname "${AZURE_JSON_PATH}")
         K8S_CLIENT_CERT_PATH="${KUBERNETES_FILE_DIR}/k8s_auth_certificate.pfx"
         echo $SERVICE_PRINCIPAL_CLIENT_SECRET_CERT | base64 --decode > $K8S_CLIENT_CERT_PATH
+        # shellcheck disable=SC2002
         echo $(cat "${AZURE_JSON_PATH}" | \
             jq --arg K8S_CLIENT_CERT_PATH ${K8S_CLIENT_CERT_PATH} '. + {aadClientCertPath:($K8S_CLIENT_CERT_PATH)}' | \
             jq --arg SERVICE_PRINCIPAL_CLIENT_SECRET_PASSWORD ${SERVICE_PRINCIPAL_CLIENT_SECRET_PASSWORD} '. + {aadClientCertPassword:($SERVICE_PRINCIPAL_CLIENT_SECRET_PASSWORD)}' |\
@@ -66,6 +67,7 @@ configureK8sCustomCloud() {
 
     if [[ "${IDENTITY_SYSTEM,,}" == "adfs"  ]]; then
         # update the tenent id for ADFS environment.
+        # shellcheck disable=SC2002
         echo $(cat "${AZURE_JSON_PATH}" | jq '.tenantId = "adfs"') > ${AZURE_JSON_PATH}
     fi
     set -x

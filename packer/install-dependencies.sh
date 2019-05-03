@@ -7,7 +7,7 @@ RELEASE_NOTES_FILEPATH=/var/log/azure/golden-image-install.complete
 
 echo "Starting build on " $(date) > ${RELEASE_NOTES_FILEPATH}
 echo "Using kernel:" >> ${RELEASE_NOTES_FILEPATH}
-cat /proc/version | tee -a ${RELEASE_NOTES_FILEPATH}
+tee -a ${RELEASE_NOTES_FILEPATH} < /proc/version
 
 copyPackerFiles
 

@@ -12,23 +12,23 @@ KERNEL_PANIC_ON_OOPS_VALUE=1
 VM_OVERCOMMIT_MEMORY_VALUE=1
 
 set -x
-cat /proc/sys/net/ipv4/conf/all/send_redirects | grep $IPV4_SEND_REDIRECTS_VALUE || exit 1
-cat /proc/sys/net/ipv4/conf/default/send_redirects | grep $IPV4_SEND_REDIRECTS_VALUE || exit 1
-cat /proc/sys/net/ipv4/conf/all/accept_source_route | grep $IPV4_ACCEPT_SOURCE_ROUTE_VALUE || exit 1
-cat /proc/sys/net/ipv4/conf/default/accept_source_route | grep $IPV4_ACCEPT_SOURCE_ROUTE_VALUE || exit 1
-cat /proc/sys/net/ipv4/conf/all/accept_redirects | grep $IPV4_ACCEPT_REDIRECTS_VALUE || exit 1
-cat /proc/sys/net/ipv4/conf/default/accept_redirects | grep $IPV4_ACCEPT_REDIRECTS_VALUE || exit 1
-cat /proc/sys/net/ipv4/conf/all/secure_redirects | grep $IPV4_SECURE_REDIRECTS_VALUE || exit 1
-cat /proc/sys/net/ipv4/conf/default/secure_redirects | grep $IPV4_SECURE_REDIRECTS_VALUE || exit 1
-cat /proc/sys/net/ipv4/conf/all/log_martians | grep $IPV4_LOG_MARTIANS_VALUE || exit 1
-cat /proc/sys/net/ipv4/conf/default/log_martians | grep $IPV4_LOG_MARTIANS_VALUE || exit 1
-cat /proc/sys/net/ipv6/conf/all/accept_ra | grep $IPV6_ACCEPT_RA_VALUE || exit 1
-cat /proc/sys/net/ipv6/conf/default/accept_ra | grep $IPV6_ACCEPT_RA_VALUE || exit 1
-cat /proc/sys/net/ipv6/conf/all/accept_redirects | grep $IPV6_ACCEPT_REDIRECTS_VALUE || exit 1
-cat /proc/sys/net/ipv6/conf/default/accept_redirects | grep $IPV6_ACCEPT_REDIRECTS_VALUE || exit 1
+grep $IPV4_SEND_REDIRECTS_VALUE /proc/sys/net/ipv4/conf/all/send_redirects || exit 1
+grep $IPV4_SEND_REDIRECTS_VALUE /proc/sys/net/ipv4/conf/default/send_redirects || exit 1
+grep $IPV4_ACCEPT_SOURCE_ROUTE_VALUE /proc/sys/net/ipv4/conf/all/accept_source_route || exit 1
+grep $IPV4_ACCEPT_SOURCE_ROUTE_VALUE /proc/sys/net/ipv4/conf/default/accept_source_route || exit 1
+grep $IPV4_ACCEPT_REDIRECTS_VALUE /proc/sys/net/ipv4/conf/all/accept_redirects || exit 1
+grep $IPV4_ACCEPT_REDIRECTS_VALUE /proc/sys/net/ipv4/conf/default/accept_redirects || exit 1
+grep $IPV4_SECURE_REDIRECTS_VALUE /proc/sys/net/ipv4/conf/all/secure_redirects || exit 1
+grep $IPV4_SECURE_REDIRECTS_VALUE /proc/sys/net/ipv4/conf/default/secure_redirects || exit 1
+grep $IPV4_LOG_MARTIANS_VALUE /proc/sys/net/ipv4/conf/all/log_martians || exit 1
+grep $IPV4_LOG_MARTIANS_VALUE /proc/sys/net/ipv4/conf/default/log_martians || exit 1
+grep $IPV6_ACCEPT_RA_VALUE /proc/sys/net/ipv6/conf/all/accept_ra || exit 1
+grep $IPV6_ACCEPT_RA_VALUE /proc/sys/net/ipv6/conf/default/accept_ra || exit 1
+grep $IPV6_ACCEPT_REDIRECTS_VALUE /proc/sys/net/ipv6/conf/all/accept_redirects || exit 1
+grep $IPV6_ACCEPT_REDIRECTS_VALUE /proc/sys/net/ipv6/conf/default/accept_redirects || exit 1
 
 # validate net config workaround from kubelet.service
-cat /proc/sys/net/ipv4/tcp_retries2 | grep $IPV4_TCP_RETRIES2_VALUE || exit 1
-cat /proc/sys/kernel/panic | grep $KERNEL_PANIC_VALUE || exit 1
-cat /proc/sys/kernel/panic_on_oops | grep $KERNEL_PANIC_ON_OOPS_VALUE || exit 1
-cat /proc/sys/vm/overcommit_memory | grep $VM_OVERCOMMIT_MEMORY_VALUE || exit 1
+grep $IPV4_TCP_RETRIES2_VALUE /proc/sys/net/ipv4/tcp_retries2 || exit 1
+grep $KERNEL_PANIC_VALUE /proc/sys/kernel/panic || exit 1
+grep $KERNEL_PANIC_ON_OOPS_VALUE /proc/sys/kernel/panic_on_oops || exit 1
+grep $VM_OVERCOMMIT_MEMORY_VALUE /proc/sys/vm/overcommit_memory || exit 1
