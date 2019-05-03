@@ -7,7 +7,7 @@ This guide explains how to set up your environment for development on AKS Engine
 - [`git`](https://git-scm.com/)
 - [`go`](https://golang.org/dl) 1.12 or later
 - [`dep`](https://github.com/golang/dep) 0.5.1 or later
-- An [Azure](https://azure.microsoft.com/en-us/) account
+- An [Azure](https://azure.microsoft.com/en-us/) subscription
 - [`kubectl`](https://kubernetes.io/docs/tasks/tools/install-kubectl/)
 
 ## Contribution Guidelines
@@ -242,7 +242,7 @@ Debug panel open).
 
 Here is an example `launch.json` file that contains a configuration for debugging the
 `aks-engine generate` command using the `examples/kubernetes.json` file for its cluster
-configuration. Change the values in the `--set` arguments to reference your details.
+configuration.
 
 ```json
 {
@@ -268,8 +268,9 @@ configuration. Change the values in the `--set` arguments to reference your deta
 }
 ```
 
-Copy and paste the configuration and change its name and details as needed. It's easy to build up
-a `launch.json` file to debug `aks-engine upgrade`, `scale`, and other commands and variations.
+Copy and paste the configuration and change the values in the `--set` arguments to reference your
+details. You can create multiple configurations in `launch.json` to debug `aks-engine upgrade`,
+`scale`, and other commands.
 
 The `.vscode/launch.json` file is ignored by `git`, so your local version won't be overwritten when
 you push or pull changes.
