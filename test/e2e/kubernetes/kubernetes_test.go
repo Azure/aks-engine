@@ -718,22 +718,23 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 	})
 
 	Describe("with a linux agent pool", func() {
-		It("should be able to produce a working ILB connection", func() {
+		It("should be able to produce working LoadBalancers", func() {
 			if eng.HasLinuxAgents() {
 				By("Creating a nginx deployment")
 				r := rand.New(rand.NewSource(time.Now().UnixNano()))
 				serviceName := "ingress-nginx"
-				deploymentPrefix := fmt.Sprintf("ingress-nginx-%s", cfg.Name)
+				deploymentPrefix := fmt.Sprintf("%s-%s", serviceName, cfg.Name)
 				deploymentName := fmt.Sprintf("%s-%v", deploymentPrefix, r.Intn(99999))
 				deploy, err := deployment.CreateLinuxDeployDeleteIfExists(deploymentPrefix, "library/nginx:latest", deploymentName, "default", "--labels=app="+serviceName)
 				Expect(err).NotTo(HaveOccurred())
 
-				s, err := service.CreateServiceFromFileDeleteIfExist(filepath.Join(WorkloadDir, "ingress-nginx-ilb.yaml"), serviceName, "default")
+				By("Ensuring we can create an ILB service attachment")
+				sILB, err := service.CreateServiceFromFileDeleteIfExist(filepath.Join(WorkloadDir, "ingress-nginx-ilb.yaml"), serviceName+"-ilb", "default")
 				Expect(err).NotTo(HaveOccurred())
-				svc, err := s.WaitForExternalIP(cfg.Timeout, 5*time.Second)
+				svc, err := sILB.WaitForIngress(cfg.Timeout, 5*time.Second)
 				Expect(err).NotTo(HaveOccurred())
 
-				By("Ensuring the ILB IP is assigned to the service")
+				By("Ensuring we can create a curl pod to connect to the service")
 				deploymentPrefix = fmt.Sprintf("ilb-test-deployment-%s", cfg.Name)
 				curlDeploymentName := fmt.Sprintf("%s-%v", deploymentPrefix, r.Intn(99999))
 				curlDeploy, err := deployment.CreateLinuxDeployDeleteIfExists(deploymentPrefix, "library/nginx:latest", curlDeploymentName, "default", "")
@@ -743,6 +744,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				Expect(running).To(Equal(true))
 				curlPods, err := curlDeploy.Pods()
 				Expect(err).NotTo(HaveOccurred())
+				By("Ensuring we can connect to the ILB service from another pod")
 				for i, curlPod := range curlPods {
 					if i < 1 {
 						var pass bool
@@ -751,12 +753,33 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 						Expect(pass).To(BeTrue())
 					}
 				}
-				By("Cleaning up after ourselves")
+
+				By("Ensuring we can create an ELB service attachment")
+				sELB, err := service.CreateServiceFromFileDeleteIfExist(filepath.Join(WorkloadDir, "ingress-nginx-elb.yaml"), serviceName+"-elb", "default")
+				Expect(err).NotTo(HaveOccurred())
+				svc, err = sELB.WaitForIngress(cfg.Timeout, 5*time.Second)
+				Expect(err).NotTo(HaveOccurred())
+
+				By("Ensuring we can connect to the ELB service on the service IP")
+				valid := sELB.Validate("(Welcome to nginx)", 5, 30*time.Second, cfg.Timeout)
+				Expect(valid).To(BeTrue())
+				By("Ensuring we can connect to the ELB service from another pod")
+				for i, curlPod := range curlPods {
+					if i < 1 {
+						var pass bool
+						pass, err = curlPod.ValidateCurlConnection(svc.Status.LoadBalancer.Ingress[0]["ip"], 5*time.Second, cfg.Timeout)
+						Expect(err).NotTo(HaveOccurred())
+						Expect(pass).To(BeTrue())
+					}
+				}
+
+				err = sILB.Delete(util.DefaultDeleteRetries)
+				Expect(err).NotTo(HaveOccurred())
+				err = sELB.Delete(util.DefaultDeleteRetries)
+				Expect(err).NotTo(HaveOccurred())
 				err = curlDeploy.Delete(util.DefaultDeleteRetries)
 				Expect(err).NotTo(HaveOccurred())
 				err = deploy.Delete(util.DefaultDeleteRetries)
-				Expect(err).NotTo(HaveOccurred())
-				err = s.Delete(util.DefaultDeleteRetries)
 				Expect(err).NotTo(HaveOccurred())
 			} else {
 				Skip("No linux agent was provisioned for this Cluster Definition")
@@ -859,41 +882,6 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				Expect(err).NotTo(HaveOccurred())
 			} else {
 				Skip("This flavor/version of Kubernetes doesn't support hpa autoscale")
-			}
-		})
-
-		It("should be able to deploy an nginx service", func() {
-			if eng.HasLinuxAgents() {
-				By("Creating a nginx deployment")
-				r := rand.New(rand.NewSource(time.Now().UnixNano()))
-				deploymentName := fmt.Sprintf("nginx-%s-%v", cfg.Name, r.Intn(99999))
-				nginxDeploy, err := deployment.CreateLinuxDeploy("library/nginx:latest", deploymentName, "default", "")
-				Expect(err).NotTo(HaveOccurred())
-
-				By("Ensure there is a Running nginx pod")
-				running, err := pod.WaitOnReady(deploymentName, "default", 3, retryTimeWhenWaitingForPodReady, cfg.Timeout)
-				Expect(err).NotTo(HaveOccurred())
-				Expect(running).To(Equal(true))
-
-				By("Exposing TCP 80 LB on the nginx deployment")
-				err = nginxDeploy.Expose("LoadBalancer", 80, 80)
-				Expect(err).NotTo(HaveOccurred())
-
-				By("Ensuring we can connect to the service")
-				s, err := service.Get(deploymentName, "default")
-				Expect(err).NotTo(HaveOccurred())
-
-				By("Ensuring the service root URL returns the expected payload")
-				valid := s.Validate("(Welcome to nginx)", 5, 30*time.Second, cfg.Timeout)
-				Expect(valid).To(BeTrue())
-
-				By("Cleaning up after ourselves")
-				err = nginxDeploy.Delete(util.DefaultDeleteRetries)
-				Expect(err).NotTo(HaveOccurred())
-				err = s.Delete(util.DefaultDeleteRetries)
-				Expect(err).NotTo(HaveOccurred())
-			} else {
-				Skip("No linux agent was provisioned for this Cluster Definition")
 			}
 		})
 
