@@ -415,7 +415,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 					Expect(err).NotTo(HaveOccurred())
 				}
 			} else {
-				Skip("pwquality only works on ubuntu distro until this lands in a VHD")
+				Skip("auditd option only works on ubuntu distro until this lands in a VHD")
 			}
 		})
 
