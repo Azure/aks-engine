@@ -65,8 +65,10 @@ func CreateJobFromFileDeleteIfExists(filename, name, namespace string) (*Job, er
 		if err != nil {
 			return nil, err
 		}
-		// Wait a minute before proceeding to create a new job w/ the same name
-		time.Sleep(1 * time.Minute)
+		_, err = WaitOnDeleted(j.Metadata.Name, j.Metadata.Namespace, 5*time.Second, 1*time.Minute)
+		if err != nil {
+			return nil, err
+		}
 	}
 	return CreateJobFromFile(filename, name, namespace)
 }
@@ -86,6 +88,26 @@ func GetAll(namespace string) (*List, error) {
 		return nil, err
 	}
 	return &jl, nil
+}
+
+// GetAllByPrefix will return all jobs in a given namespace that match a prefix
+func GetAllByPrefix(prefix, namespace string) ([]Job, error) {
+	jl, err := GetAll(namespace)
+	if err != nil {
+		return nil, err
+	}
+	jobs := []Job{}
+	for _, j := range jl.Jobs {
+		matched, err := regexp.MatchString(prefix+"-.*", j.Metadata.Name)
+		if err != nil {
+			log.Printf("Error trying to match pod name:%s\n", err)
+			return nil, err
+		}
+		if matched {
+			jobs = append(jobs, j)
+		}
+	}
+	return jobs, nil
 }
 
 // Get will return a job with a given name and namespace
@@ -193,4 +215,37 @@ func (j *Job) Delete(retries int) error {
 	}
 
 	return kubectlError
+}
+
+// WaitOnDeleted returns when a job is successfully deleted
+func WaitOnDeleted(jobPrefix, namespace string, sleep, duration time.Duration) (bool, error) {
+	succeededCh := make(chan bool, 1)
+	errCh := make(chan error)
+	ctx, cancel := context.WithTimeout(context.Background(), duration)
+	defer cancel()
+	go func() {
+		for {
+			select {
+			case <-ctx.Done():
+				errCh <- errors.Errorf("Timeout exceeded (%s) while waiting for Jobs (%s) to be deleted in namespace (%s)", duration.String(), jobPrefix, namespace)
+			default:
+				p, err := GetAllByPrefix(jobPrefix, namespace)
+				if err != nil {
+					errCh <- errors.Errorf("Got error while getting Jobs with prefix \"%s\" in namespace \"%s\"", jobPrefix, namespace)
+				}
+				if len(p) == 0 {
+					succeededCh <- true
+				}
+				time.Sleep(sleep)
+			}
+		}
+	}()
+	for {
+		select {
+		case err := <-errCh:
+			return false, err
+		case deleted := <-succeededCh:
+			return deleted, nil
+		}
+	}
 }
