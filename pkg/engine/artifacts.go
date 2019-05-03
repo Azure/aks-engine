@@ -193,34 +193,28 @@ func kubernetesAddonSettingsInit(profile *api.Properties) []kubernetesFeatureSet
 			profile.OrchestratorProfile.KubernetesConfig.GetAddonScript(DefaultELBSVCAddonName),
 		},
 	}
+	
+	unmanagedStorageClassYaml := "kubernetesmasteraddons-unmanaged-azure-storage-classes.yaml"
+	managedStorageClassYaml := "kubernetesmasteraddons-managed-azure-storage-classes.yaml"
+	
+	if profile.IsAzureStackCloud() {
+		unmanagedStorageClassYaml = "kubernetesmasteraddons-unmanaged-azure-storage-classes-custom.yaml"
+		managedStorageClassYaml = "kubernetesmasteraddons-managed-azure-storage-classes-custom.yaml"
+	}
 
 	if len(profile.AgentPoolProfiles) > 0 {
 		kubernetesFeatureSettings = append(kubernetesFeatureSettings,
 			kubernetesFeatureSetting{
-				"kubernetesmasteraddons-unmanaged-azure-storage-classes.yaml",
+				unmanagedStorageClassYaml,
 				"azure-storage-classes.yaml",
-				profile.AgentPoolProfiles[0].StorageProfile != api.ManagedDisks && !profile.IsAzureStackCloud(),
+				profile.AgentPoolProfiles[0].StorageProfile != api.ManagedDisks,
 				profile.OrchestratorProfile.KubernetesConfig.GetAddonScript(DefaultAzureStorageClassesAddonName),
 			})
 		kubernetesFeatureSettings = append(kubernetesFeatureSettings,
 			kubernetesFeatureSetting{
-				"kubernetesmasteraddons-managed-azure-storage-classes.yaml",
+				managedStorageClassYaml,
 				"azure-storage-classes.yaml",
-				profile.AgentPoolProfiles[0].StorageProfile == api.ManagedDisks && !profile.IsAzureStackCloud(),
-				profile.OrchestratorProfile.KubernetesConfig.GetAddonScript(DefaultAzureStorageClassesAddonName),
-			})
-		kubernetesFeatureSettings = append(kubernetesFeatureSettings,
-			kubernetesFeatureSetting{
-				"kubernetesmasteraddons-unmanaged-azure-storage-classes-custom.yaml",
-				"azure-storage-classes.yaml",
-				profile.AgentPoolProfiles[0].StorageProfile != api.ManagedDisks && profile.IsAzureStackCloud(),
-				profile.OrchestratorProfile.KubernetesConfig.GetAddonScript(DefaultAzureStorageClassesAddonName),
-			})
-		kubernetesFeatureSettings = append(kubernetesFeatureSettings,
-			kubernetesFeatureSetting{
-				"kubernetesmasteraddons-managed-azure-storage-classes-custom.yaml",
-				"azure-storage-classes.yaml",
-				profile.AgentPoolProfiles[0].StorageProfile == api.ManagedDisks && profile.IsAzureStackCloud(),
+				profile.AgentPoolProfiles[0].StorageProfile == api.ManagedDisks,
 				profile.OrchestratorProfile.KubernetesConfig.GetAddonScript(DefaultAzureStorageClassesAddonName),
 			})
 	}
@@ -229,6 +223,12 @@ func kubernetesAddonSettingsInit(profile *api.Properties) []kubernetesFeatureSet
 }
 
 func kubernetesManifestSettingsInit(profile *api.Properties) []kubernetesFeatureSetting {
+	kubeControllerManagerYaml := "kubernetesmaster-kube-controller-manager.yaml"
+	
+	if profile.IsAzureStackCloud() {
+		kubeControllerManagerYaml = "kubernetesmaster-kube-controller-manager-custom.yaml"
+	}
+
 	return []kubernetesFeatureSetting{
 		{
 			"kubernetesmaster-kube-scheduler.yaml",
@@ -237,15 +237,9 @@ func kubernetesManifestSettingsInit(profile *api.Properties) []kubernetesFeature
 			profile.OrchestratorProfile.KubernetesConfig.SchedulerConfig["data"],
 		},
 		{
-			"kubernetesmaster-kube-controller-manager.yaml",
+			kubeControllerManagerYaml,
 			"kube-controller-manager.yaml",
-			!profile.IsAzureStackCloud(),
-			profile.OrchestratorProfile.KubernetesConfig.ControllerManagerConfig["data"],
-		},
-		{
-			"kubernetesmaster-kube-controller-manager-custom.yaml",
-			"kube-controller-manager.yaml",
-			profile.IsAzureStackCloud(),
+			true,
 			profile.OrchestratorProfile.KubernetesConfig.ControllerManagerConfig["data"],
 		},
 		{
