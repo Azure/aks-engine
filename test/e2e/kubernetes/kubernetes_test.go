@@ -615,8 +615,8 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 		})
 
 		It("should have functional container networking DNS", func() {
-			By("Ensuring that we have functional DNS resolution from a container")
-			j, err := job.CreateJobFromFileDeleteIfExists(filepath.Join(WorkloadDir, "validate-dns.yaml"), "validate-dns", "default")
+			By("Ensuring that we have functional DNS resolution from a linux container")
+			j, err := job.CreateJobFromFileDeleteIfExists(filepath.Join(WorkloadDir, "validate-dns-linux.yaml"), "validate-dns-linux", "default")
 			Expect(err).NotTo(HaveOccurred())
 			ready, err := j.WaitOnReady(retryTimeWhenWaitingForPodReady, cfg.Timeout)
 			delErr := j.Delete(deleteResourceRetries)
@@ -626,6 +626,20 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			}
 			Expect(err).NotTo(HaveOccurred())
 			Expect(ready).To(Equal(true))
+
+			if eng.HasWindowsAgents() {
+				By("Ensuring that we have functional DNS resolution from a windows container")
+				j, err = job.CreateJobFromFileDeleteIfExists(filepath.Join(WorkloadDir, "validate-dns-windows.yaml"), "validate-dns-windows", "default")
+				Expect(err).NotTo(HaveOccurred())
+				ready, err = j.WaitOnReady(retryTimeWhenWaitingForPodReady, cfg.Timeout)
+				delErr = j.Delete(deleteResourceRetries)
+				if delErr != nil {
+					fmt.Printf("could not delete job %s\n", j.Metadata.Name)
+					fmt.Println(delErr)
+				}
+				Expect(err).NotTo(HaveOccurred())
+				Expect(ready).To(Equal(true))
+			}
 
 			By("Ensuring that we have stable external DNS resolution as we recycle a bunch of pods")
 			name := fmt.Sprintf("alpine-%s", cfg.Name)

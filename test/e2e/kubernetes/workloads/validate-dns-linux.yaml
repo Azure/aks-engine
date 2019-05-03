@@ -1,7 +1,8 @@
+---
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: validate-dns
+  name: validate-dns-linux
 spec:
   template:
     spec:
@@ -14,4 +15,4 @@ spec:
         image: library/busybox
         command: ['sh', '-c', 'until nslookup google.com; do echo waiting for DNS resolution; sleep 1; done;']
       nodeSelector:
-        beta.kubernetes.io/os: linux 
+        beta.kubernetes.io/os: linux
