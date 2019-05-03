@@ -62,8 +62,8 @@ echo "  - nvidia-docker2 nvidia-container-runtime" >> ${RELEASE_NOTES_FILEPATH}
 installClearContainersRuntime
 
 VNET_CNI_VERSIONS="
+1.0.22
 1.0.18
-1.0.17
 "
 for VNET_CNI_VERSION in $VNET_CNI_VERSIONS; do
     VNET_CNI_PLUGINS_URL="https://acs-mirror.azureedge.net/cni/azure-vnet-cni-linux-amd64-v${VNET_CNI_VERSION}.tgz"
