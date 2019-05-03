@@ -42,7 +42,7 @@ const (
 	PolicyDir                              = "workloads/policies"
 	retryCommandsTimeout                   = 5 * time.Minute
 	kubeSystemPodsReadinessChecks          = 6
-	retryTimeWhenWaitingForPodReady        = 1 * time.Minute
+	retryTimeWhenWaitingForPodReady        = 10 * time.Second
 	timeoutWhenWaitingForPodOutboundAccess = 1 * time.Minute
 	stabilityCommandTimeout                = 5 * time.Second
 	windowsCommandTimeout                  = 1 * time.Minute
@@ -795,21 +795,14 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				By("Getting the long-running php-apache deployment")
 				// Inspired by http://blog.kubernetes.io/2016/07/autoscaling-in-kubernetes.html
 				r := rand.New(rand.NewSource(time.Now().UnixNano()))
-				phpApacheDeploy, err := deployment.Get(longRunningApacheDeploymentName, "default")
-				if err != nil {
-					fmt.Println(err)
-				}
+				By("Creating a php-apache deployment")
+				phpApacheDeploy, err := deployment.CreateLinuxDeployIfNotExist("deis/hpa-example", longRunningApacheDeploymentName, "default", "--requests=cpu=10m,memory=10M")
 				Expect(err).NotTo(HaveOccurred())
 
 				By("Ensuring that one php-apache pod is running before autoscale configuration or load applied")
 				running, err := pod.WaitOnReady(longRunningApacheDeploymentName, "default", 3, retryTimeWhenWaitingForPodReady, cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(running).To(Equal(true))
-
-				phpPods, err := phpApacheDeploy.Pods()
-				Expect(err).NotTo(HaveOccurred())
-				// We should have exactly 1 pod to begin
-				Expect(len(phpPods)).To(Equal(1))
 
 				By("Assigning hpa configuration to the php-apache deployment")
 				// Apply autoscale characteristics to deployment
@@ -819,9 +812,10 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				By("Sending load to the php-apache service by creating a 3 replica deployment")
 				// Launch a simple busybox pod that wget's continuously to the apache serviceto simulate load
 				commandString := fmt.Sprintf("while true; do wget -q -O- http://%s.default.svc.cluster.local; done", longRunningApacheDeploymentName)
-				loadTestName := fmt.Sprintf("load-test-%s-%v", cfg.Name, r.Intn(99999))
+				loadTestPrefix := fmt.Sprintf("load-test-%s", cfg.Name)
+				loadTestName := fmt.Sprintf("%s-%v", loadTestPrefix, r.Intn(99999))
 				numLoadTestPods := 3
-				loadTestDeploy, err := deployment.RunLinuxDeploy("busybox", loadTestName, "default", commandString, numLoadTestPods)
+				loadTestDeploy, err := deployment.RunLinuxDeployDeleteIfExists(loadTestPrefix, "busybox", loadTestName, "default", commandString, numLoadTestPods)
 				Expect(err).NotTo(HaveOccurred())
 
 				By("Ensuring there are 3 load test pods")

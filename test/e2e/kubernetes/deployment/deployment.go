@@ -129,6 +129,19 @@ func RunLinuxDeploy(image, name, namespace, command string, replicas int) (*Depl
 	return d, nil
 }
 
+// RunLinuxDeployDeleteIfExists will create a deployment that runs a bash command in a pod,
+// deleting any pre-existing deployment with the same name
+func RunLinuxDeployDeleteIfExists(pattern, image, name, namespace, command string, replicas int) (*Deployment, error) {
+	deployments, err := GetAllByPrefix(pattern, namespace)
+	if err != nil {
+		return nil, err
+	}
+	for _, d := range deployments {
+		d.Delete(util.DefaultDeleteRetries)
+	}
+	return RunLinuxDeploy(image, name, namespace, command, replicas)
+}
+
 // CreateWindowsDeploy will create a deployment for a given image with a name in a namespace
 func CreateWindowsDeploy(image, name, namespace string, port int, hostport int) (*Deployment, error) {
 	overrides := `{ "spec":{"template":{"spec": {"nodeSelector":{"beta.kubernetes.io/os":"windows"}}}}}`
@@ -322,8 +335,10 @@ func (d *Deployment) CreateDeploymentHPADeleteIfExist(cpuPercent, min, max int) 
 		if err != nil {
 			return err
 		}
-		// Wait a minute before proceeding to create a new hpa w/ the same name
-		time.Sleep(1 * time.Minute)
+		_, err = hpa.WaitOnDeleted(d.Metadata.Name, d.Metadata.Namespace, 5*time.Second, 1*time.Minute)
+		if err != nil {
+			return err
+		}
 	}
 	return d.CreateDeploymentHPA(cpuPercent, min, max)
 }
