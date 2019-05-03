@@ -35,6 +35,7 @@ func TestCreateKubernetesMasterResourcesPVC(t *testing.T) {
 
 	actualResources := createKubernetesMasterResourcesVMAS(&cs)
 
+	var lbBackendAddressPools []network.BackendAddressPool
 	masterNIC := NetworkInterfaceARM{
 		ARMResource: ARMResource{
 			APIVersion: "[variables('apiVersionNetwork')]",
@@ -42,6 +43,57 @@ func TestCreateKubernetesMasterResourcesPVC(t *testing.T) {
 				"count": "[sub(variables('masterCount'), variables('masterOffset'))]",
 				"name":  "nicLoopNode",
 			},
+			DependsOn: []string{
+				"[variables('vnetID')]",
+			},
+		},
+		Interface: network.Interface{
+			InterfacePropertiesFormat: &network.InterfacePropertiesFormat{
+				IPConfigurations: &[]network.InterfaceIPConfiguration{
+					{
+						InterfaceIPConfigurationPropertiesFormat: &network.InterfaceIPConfigurationPropertiesFormat{
+							LoadBalancerBackendAddressPools: &lbBackendAddressPools,
+							LoadBalancerInboundNatRules:     &[]network.InboundNatRule{},
+							PrivateIPAllocationMethod:       network.IPAllocationMethod("Static"),
+							PrivateIPAddress:                to.StringPtr("[variables('masterPrivateIpAddrs')[copyIndex(variables('masterOffset'))]]"),
+							Subnet: &network.Subnet{
+								ID: to.StringPtr("[variables('vnetSubnetID')]"),
+							},
+							Primary: to.BoolPtr(true),
+						},
+						Name: to.StringPtr("ipconfig1"),
+					},
+					{
+						InterfaceIPConfigurationPropertiesFormat: &network.InterfaceIPConfigurationPropertiesFormat{
+							PrivateIPAllocationMethod: network.Dynamic,
+							Subnet: &network.Subnet{
+								ID: to.StringPtr("[variables('vnetSubnetID')]"),
+							},
+							Primary: to.BoolPtr(false),
+						},
+						Name: to.StringPtr("ipconfig2"),
+					},
+					{
+						InterfaceIPConfigurationPropertiesFormat: &network.InterfaceIPConfigurationPropertiesFormat{
+							PrivateIPAllocationMethod: network.Dynamic,
+							Subnet: &network.Subnet{
+								ID: to.StringPtr("[variables('vnetSubnetID')]"),
+							},
+							Primary: to.BoolPtr(false),
+						},
+						Name: to.StringPtr("ipconfig3"),
+					},
+				},
+			},
+			Name:     to.StringPtr("[concat(variables('masterVMNamePrefix'), 'nic-', copyIndex(variables('masterOffset')))]"),
+			Type:     to.StringPtr("Microsoft.Network/networkInterfaces"),
+			Location: to.StringPtr("[variables('location')]"),
+		},
+	}
+
+	masterJumpboxNIC := NetworkInterfaceARM{
+		ARMResource: ARMResource{
+			APIVersion: "[variables('apiVersionNetwork')]",
 			DependsOn: []string{
 				"[concat('Microsoft.Network/publicIpAddresses/', variables('jumpboxPublicIpAddressName'))]",
 				"[concat('Microsoft.Network/networkSecurityGroups/', variables('jumpboxNetworkSecurityGroupName'))]",
@@ -55,21 +107,21 @@ func TestCreateKubernetesMasterResourcesPVC(t *testing.T) {
 				},
 				IPConfigurations: &[]network.InterfaceIPConfiguration{
 					{
+						Name: to.StringPtr("ipconfig1"),
 						InterfaceIPConfigurationPropertiesFormat: &network.InterfaceIPConfigurationPropertiesFormat{
-							PrivateIPAllocationMethod: network.IPAllocationMethod("Dynamic"),
 							Subnet: &network.Subnet{
 								ID: to.StringPtr("[variables('vnetSubnetID')]"),
 							},
-							Primary: to.BoolPtr(true),
+							Primary:                   to.BoolPtr(true),
+							PrivateIPAllocationMethod: network.Dynamic,
 							PublicIPAddress: &network.PublicIPAddress{
 								ID: to.StringPtr("[resourceId('Microsoft.Network/publicIpAddresses', variables('jumpboxPublicIpAddressName'))]"),
 							},
 						},
-						Name: to.StringPtr("ipconfig1"),
 					},
 				},
 			},
-			Name:     to.StringPtr("[concat(variables('masterVMNamePrefix'), 'nic-', copyIndex(variables('masterOffset')))]"),
+			Name:     to.StringPtr("[variables('jumpboxNetworkInterfaceName')]"),
 			Type:     to.StringPtr("Microsoft.Network/networkInterfaces"),
 			Location: to.StringPtr("[variables('location')]"),
 		},
@@ -382,6 +434,7 @@ func TestCreateKubernetesMasterResourcesPVC(t *testing.T) {
 		masterCSEExtension,
 		masterJumpboxVM,
 		masterJumpboxPublicIP,
+		masterJumpboxNIC,
 		masterJumpboxStorageAccount,
 		masterAVSet,
 		masterNSG,

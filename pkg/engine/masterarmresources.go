@@ -146,9 +146,11 @@ func createKubernetesMasterResourcesVMSS(cs *api.ContainerService) []interface{}
 		masterResources = append(masterResources, internalLb)
 	}
 
-	publicIPAddress := CreatePublicIPAddress()
-	loadBalancer := CreateLoadBalancer(cs.Properties, true)
-	masterResources = append(masterResources, publicIPAddress, loadBalancer)
+	if !cs.Properties.OrchestratorProfile.IsPrivateCluster() {
+		publicIPAddress := CreatePublicIPAddress()
+		loadBalancer := CreateLoadBalancer(cs.Properties, true)
+		masterResources = append(masterResources, publicIPAddress, loadBalancer)
+	}
 
 	kubernetesConfig := cs.Properties.OrchestratorProfile.KubernetesConfig
 
