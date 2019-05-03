@@ -187,6 +187,13 @@ func WaitOnReady(jobPrefix, namespace string, sleep, duration time.Duration) (bo
 	for {
 		select {
 		case err := <-errCh:
+			pods, err := pod.GetAllByPrefix(jobPrefix, namespace)
+			if err != nil {
+				log.Printf("Error trying to get job pods: %s\n", err)
+			}
+			for _, p := range pods {
+				p.Logs()
+			}
 			return false, err
 		case ready := <-readyCh:
 			return ready, nil

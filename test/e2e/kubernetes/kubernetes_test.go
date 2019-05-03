@@ -47,6 +47,7 @@ const (
 	stabilityCommandTimeout                = 5 * time.Second
 	windowsCommandTimeout                  = 1 * time.Minute
 	validateNetworkPolicyTimeout           = 3 * time.Minute
+	validateDNSTimeout                     = 2 * time.Minute
 )
 
 var (
@@ -617,7 +618,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			By("Ensuring that we have functional DNS resolution from a linux container")
 			j, err := job.CreateJobFromFileDeleteIfExists(filepath.Join(WorkloadDir, "validate-dns-linux.yaml"), "validate-dns-linux", "default")
 			Expect(err).NotTo(HaveOccurred())
-			ready, err := j.WaitOnReady(retryTimeWhenWaitingForPodReady, cfg.Timeout)
+			ready, err := j.WaitOnReady(retryTimeWhenWaitingForPodReady, validateDNSTimeout)
 			delErr := j.Delete(util.DefaultDeleteRetries)
 			if delErr != nil {
 				fmt.Printf("could not delete job %s\n", j.Metadata.Name)
@@ -630,7 +631,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				By("Ensuring that we have functional DNS resolution from a windows container")
 				j, err = job.CreateJobFromFileDeleteIfExists(filepath.Join(WorkloadDir, "validate-dns-windows.yaml"), "validate-dns-windows", "default")
 				Expect(err).NotTo(HaveOccurred())
-				ready, err = j.WaitOnReady(retryTimeWhenWaitingForPodReady, cfg.Timeout)
+				ready, err = j.WaitOnReady(retryTimeWhenWaitingForPodReady, validateDNSTimeout)
 				delErr = j.Delete(util.DefaultDeleteRetries)
 				if delErr != nil {
 					fmt.Printf("could not delete job %s\n", j.Metadata.Name)
