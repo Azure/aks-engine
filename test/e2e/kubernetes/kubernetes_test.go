@@ -40,7 +40,6 @@ const (
 	WorkloadDir                            = "workloads"
 	ScriptsDir                             = "scripts"
 	PolicyDir                              = "workloads/policies"
-	common.DefaultDeleteRetries                  = 10
 	retryCommandsTimeout                   = 5 * time.Minute
 	kubeSystemPodsReadinessChecks          = 6
 	retryTimeWhenWaitingForPodReady        = 1 * time.Minute
