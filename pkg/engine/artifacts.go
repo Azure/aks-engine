@@ -199,14 +199,28 @@ func kubernetesAddonSettingsInit(profile *api.Properties) []kubernetesFeatureSet
 			kubernetesFeatureSetting{
 				"kubernetesmasteraddons-unmanaged-azure-storage-classes.yaml",
 				"azure-storage-classes.yaml",
-				profile.AgentPoolProfiles[0].StorageProfile != api.ManagedDisks,
+				profile.AgentPoolProfiles[0].StorageProfile != api.ManagedDisks && !profile.IsAzureStackCloud(),
 				profile.OrchestratorProfile.KubernetesConfig.GetAddonScript(DefaultAzureStorageClassesAddonName),
 			})
 		kubernetesFeatureSettings = append(kubernetesFeatureSettings,
 			kubernetesFeatureSetting{
 				"kubernetesmasteraddons-managed-azure-storage-classes.yaml",
 				"azure-storage-classes.yaml",
-				profile.AgentPoolProfiles[0].StorageProfile == api.ManagedDisks,
+				profile.AgentPoolProfiles[0].StorageProfile == api.ManagedDisks && !profile.IsAzureStackCloud(),
+				profile.OrchestratorProfile.KubernetesConfig.GetAddonScript(DefaultAzureStorageClassesAddonName),
+			})
+		kubernetesFeatureSettings = append(kubernetesFeatureSettings,
+			kubernetesFeatureSetting{
+				"kubernetesmasteraddons-unmanaged-azure-storage-classes-custom.yaml",
+				"azure-storage-classes.yaml",
+				profile.AgentPoolProfiles[0].StorageProfile != api.ManagedDisks && profile.IsAzureStackCloud(),
+				profile.OrchestratorProfile.KubernetesConfig.GetAddonScript(DefaultAzureStorageClassesAddonName),
+			})
+		kubernetesFeatureSettings = append(kubernetesFeatureSettings,
+			kubernetesFeatureSetting{
+				"kubernetesmasteraddons-managed-azure-storage-classes-custom.yaml",
+				"azure-storage-classes.yaml",
+				profile.AgentPoolProfiles[0].StorageProfile == api.ManagedDisks && profile.IsAzureStackCloud(),
 				profile.OrchestratorProfile.KubernetesConfig.GetAddonScript(DefaultAzureStorageClassesAddonName),
 			})
 	}
