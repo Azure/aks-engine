@@ -263,7 +263,7 @@ func RunCommandMultipleTimes(podRunnerCmd podRunnerCmd, image, name, command str
 			log.Printf("%s\n", string(out))
 		}
 
-		err = p.Delete(3)
+		err = p.Delete(util.DefaultDeleteRetries)
 		if err != nil {
 			return successfulAttempts, err
 		}
