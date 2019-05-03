@@ -792,17 +792,29 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 
 		It("should be able to autoscale", func() {
 			if eng.HasLinuxAgents() && eng.ExpandedDefinition.Properties.OrchestratorProfile.KubernetesConfig.EnableAggregatedAPIs {
-				By("Getting the long-running php-apache deployment")
 				// Inspired by http://blog.kubernetes.io/2016/07/autoscaling-in-kubernetes.html
 				r := rand.New(rand.NewSource(time.Now().UnixNano()))
 				By("Creating a php-apache deployment")
 				phpApacheDeploy, err := deployment.CreateLinuxDeployIfNotExist("deis/hpa-example", longRunningApacheDeploymentName, "default", "--requests=cpu=10m,memory=10M")
 				Expect(err).NotTo(HaveOccurred())
 
-				By("Ensuring that one php-apache pod is running before autoscale configuration or load applied")
+				By("Ensuring that php-apache pod is running")
 				running, err := pod.WaitOnReady(longRunningApacheDeploymentName, "default", 3, retryTimeWhenWaitingForPodReady, cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(running).To(Equal(true))
+
+				By("Ensuing that the php-apache pod has outbound internet access")
+				pods, err := phpApacheDeploy.Pods()
+				Expect(err).NotTo(HaveOccurred())
+				for _, p := range pods {
+					pass, outboundErr := p.CheckLinuxOutboundConnection(5*time.Second, cfg.Timeout)
+					Expect(outboundErr).NotTo(HaveOccurred())
+					Expect(pass).To(BeTrue())
+				}
+
+				By("Exposing TCP 80 internally on the php-apache deployment")
+				err = phpApacheDeploy.ExposeIfNotExist("ClusterIP", 80, 80)
+				Expect(err).NotTo(HaveOccurred())
 
 				By("Assigning hpa configuration to the php-apache deployment")
 				// Apply autoscale characteristics to deployment
