@@ -44,6 +44,11 @@ func CreateNetworkSecurityGroup(cs *api.ContainerService) NetworkSecurityGroupAR
 		},
 	}
 
+	if cs.Properties.OrchestratorProfile.IsPrivateCluster() {
+		source := "VirtualNetwork"
+		kubeTLSRule.SourceAddressPrefix = &source
+	}
+
 	securityRules := []network.SecurityRule{
 		sshRule,
 		kubeTLSRule,
