@@ -59,16 +59,16 @@ configureK8sCustomCloud() {
         K8S_CLIENT_CERT_PATH="${KUBERNETES_FILE_DIR}/k8s_auth_certificate.pfx"
         echo $SERVICE_PRINCIPAL_CLIENT_SECRET_CERT | base64 --decode > $K8S_CLIENT_CERT_PATH
         # shellcheck disable=SC2002
-        echo $(cat "${AZURE_JSON_PATH}" | \
+        cat "${AZURE_JSON_PATH}" | \
             jq --arg K8S_CLIENT_CERT_PATH ${K8S_CLIENT_CERT_PATH} '. + {aadClientCertPath:($K8S_CLIENT_CERT_PATH)}' | \
             jq --arg SERVICE_PRINCIPAL_CLIENT_SECRET_PASSWORD ${SERVICE_PRINCIPAL_CLIENT_SECRET_PASSWORD} '. + {aadClientCertPassword:($SERVICE_PRINCIPAL_CLIENT_SECRET_PASSWORD)}' |\
-            jq 'del(.aadClientSecret)') > ${AZURE_JSON_PATH}
+            jq 'del(.aadClientSecret)' > ${AZURE_JSON_PATH}
     fi
 
     if [[ "${IDENTITY_SYSTEM,,}" == "adfs"  ]]; then
         # update the tenent id for ADFS environment.
         # shellcheck disable=SC2002
-        echo $(cat "${AZURE_JSON_PATH}" | jq '.tenantId = "adfs"') > ${AZURE_JSON_PATH}
+        cat "${AZURE_JSON_PATH}" | jq '.tenantId = "adfs"' > ${AZURE_JSON_PATH}
     fi
     set -x
 }
