@@ -16,6 +16,13 @@ import (
 func TestCreateNetworkSecurityGroup(t *testing.T) {
 	cs := &api.ContainerService{
 		Properties: &api.Properties{
+			OrchestratorProfile: &api.OrchestratorProfile{
+				KubernetesConfig: &api.KubernetesConfig{
+					PrivateCluster: &api.PrivateCluster{
+						Enabled: to.BoolPtr(true),
+					},
+				},
+			},
 			AgentPoolProfiles: []*api.AgentPoolProfile{
 				{
 					Name:   "fooAgent",

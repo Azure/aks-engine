@@ -429,7 +429,7 @@ func TestCreateKubernetesMasterResourcesPVC(t *testing.T) {
 							Direction:                network.SecurityRuleDirectionInbound,
 							Priority:                 to.Int32Ptr(100),
 							Protocol:                 network.SecurityRuleProtocolTCP,
-							SourceAddressPrefix:      to.StringPtr("*"),
+							SourceAddressPrefix:      to.StringPtr("VirtualNetwork"),
 							SourcePortRange:          to.StringPtr("*"),
 						},
 					},
