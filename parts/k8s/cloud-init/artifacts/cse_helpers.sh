@@ -219,6 +219,19 @@ systemctl_restart() {
         fi
     done
 }
+systemctl_stop() {
+    retries=$1; wait_sleep=$2; timeout=$3 svcname=$4
+    for i in $(seq 1 $retries); do
+        timeout $timeout systemctl daemon-reload
+        timeout $timeout systemctl stop $svcname
+        [ $? -eq 0  ] && break || \
+        if [ $i -eq $retries ]; then
+            return 1
+        else
+            sleep $wait_sleep
+        fi
+    done
+}
 sysctl_reload() {
     retries=$1; wait_sleep=$2; timeout=$3
     for i in $(seq 1 $retries); do

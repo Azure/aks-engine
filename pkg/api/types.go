@@ -460,6 +460,7 @@ type MasterProfile struct {
 	AgentSubnet              string            `json:"agentSubnet,omitempty"`
 	AvailabilityZones        []string          `json:"availabilityZones,omitempty"`
 	SinglePlacementGroup     *bool             `json:"singlePlacementGroup,omitempty"`
+	AuditDEnabled            *bool             `json:"auditDEnabled,omitempty"`
 
 	// Master LB public endpoint/FQDN with port
 	// The format will be FQDN:2376
@@ -534,6 +535,7 @@ type AgentPoolProfile struct {
 	WindowsNameVersion                  string               `json:"windowsNameVersion,omitempty"`
 	EnableVMSSNodePublicIP              *bool                `json:"enableVMSSNodePublicIP,omitempty"`
 	LoadBalancerBackendAddressPoolIDs   []string             `json:"loadBalancerBackendAddressPoolIDs,omitempty"`
+	AuditDEnabled                       *bool                `json:"auditDEnabled,omitempty"`
 }
 
 // AgentPoolProfileRole represents an agent role

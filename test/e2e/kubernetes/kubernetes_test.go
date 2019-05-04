@@ -15,6 +15,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Azure/go-autorest/autorest/to"
+
 	"github.com/Azure/aks-engine/pkg/api"
 	"github.com/Azure/aks-engine/pkg/api/common"
 	"github.com/Azure/aks-engine/test/e2e/config"
@@ -369,6 +371,51 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 					_, err = cmd.CombinedOutput()
 					Expect(err).NotTo(HaveOccurred())
 				}
+			}
+		})
+
+		It("should validate auditd configuration", func() {
+			if eng.ExpandedDefinition.Properties.IsUbuntuDistroForAllNodes() {
+				var enabledProfiles []string
+				if eng.ExpandedDefinition.Properties.MasterProfile != nil {
+					if to.Bool(eng.ExpandedDefinition.Properties.MasterProfile.AuditDEnabled) {
+						enabledProfiles = append(enabledProfiles, "k8s-master")
+					}
+				}
+				for _, profile := range eng.ExpandedDefinition.Properties.AgentPoolProfiles {
+					if to.Bool(profile.AuditDEnabled) {
+						enabledProfiles = append(enabledProfiles, profile.Name)
+					}
+				}
+				kubeConfig, err := GetConfig()
+				Expect(err).NotTo(HaveOccurred())
+				master := fmt.Sprintf("%s@%s", eng.ExpandedDefinition.Properties.LinuxProfile.AdminUsername, kubeConfig.GetServerName())
+				nodeList, err := node.GetReady()
+				Expect(err).NotTo(HaveOccurred())
+				auditdValidateScript := "auditd-validate.sh"
+				cmd := exec.Command("scp", "-i", masterSSHPrivateKeyFilepath, "-o", "StrictHostKeyChecking=no", filepath.Join(ScriptsDir, auditdValidateScript), master+":/tmp/"+auditdValidateScript)
+				util.PrintCommand(cmd)
+				out, err := cmd.CombinedOutput()
+				log.Printf("%s\n", out)
+				Expect(err).NotTo(HaveOccurred())
+				var conn *remote.Connection
+				conn, err = remote.NewConnection(kubeConfig.GetServerName(), "22", eng.ExpandedDefinition.Properties.LinuxProfile.AdminUsername, masterSSHPrivateKeyFilepath)
+				Expect(err).NotTo(HaveOccurred())
+				for _, node := range nodeList.Nodes {
+					var enabled bool
+					if node.IsInProfile(enabledProfiles) {
+						enabled = true
+					}
+					err := conn.CopyToRemote(node.Metadata.Name, "/tmp/"+auditdValidateScript)
+					Expect(err).NotTo(HaveOccurred())
+					auditdValidationCommand := fmt.Sprintf("\"ENABLED=%t /tmp/%s\"", enabled, auditdValidateScript)
+					cmd = exec.Command("ssh", "-A", "-i", masterSSHPrivateKeyFilepath, "-p", masterSSHPort, "-o", "ConnectTimeout=10", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-o", "LogLevel=ERROR", master, "ssh", "-o", "ConnectTimeout=10", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-o", "LogLevel=ERROR", node.Metadata.Name, auditdValidationCommand)
+					util.PrintCommand(cmd)
+					_, err = cmd.CombinedOutput()
+					Expect(err).NotTo(HaveOccurred())
+				}
+			} else {
+				Skip("auditd option only works on ubuntu distro until this lands in a VHD")
 			}
 		})
 

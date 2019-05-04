@@ -373,6 +373,12 @@ func (a *Properties) validateMasterProfile(isUpdate bool) error {
 		return errors.Errorf("The %s distro is not supported", m.Distro)
 	}
 
+	if to.Bool(m.AuditDEnabled) {
+		if !m.IsUbuntu() {
+			return errors.Errorf("You have enabled auditd for master vms, but you did not specify an Ubuntu-based distro.")
+		}
+	}
+
 	return common.ValidateDNSPrefix(m.DNSPrefix)
 }
 
@@ -404,6 +410,12 @@ func (a *Properties) validateAgentPoolProfiles(isUpdate bool) error {
 		if to.Bool(agentPoolProfile.VMSSOverProvisioningEnabled) {
 			if agentPoolProfile.AvailabilityProfile != VirtualMachineScaleSets {
 				return errors.Errorf("You have specified VMSS Overprovisioning in agent pool %s, but you did not specify VMSS", agentPoolProfile.Name)
+			}
+		}
+
+		if to.Bool(agentPoolProfile.AuditDEnabled) {
+			if !agentPoolProfile.IsUbuntu() {
+				return errors.Errorf("You have enabled auditd in agent pool %s, but you did not specify an Ubuntu-based distro", agentPoolProfile.Name)
 			}
 		}
 

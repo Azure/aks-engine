@@ -183,6 +183,7 @@ const (
 	profileDCISSh                            = "k8s/cloud-init/artifacts/profile-d-cis.sh"
 	pamDotDCommonAuth                        = "k8s/cloud-init/artifacts/pam-d-common-auth"
 	pamDotDCommonPassword                    = "k8s/cloud-init/artifacts/pam-d-common-password"
+	auditdRules                              = "k8s/cloud-init/artifacts/auditd-rules"
 )
 
 const (
