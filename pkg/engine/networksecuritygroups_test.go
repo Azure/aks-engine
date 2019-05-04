@@ -157,7 +157,7 @@ func TestCreateJumpboxNSG(t *testing.T) {
 		},
 		SecurityGroup: network.SecurityGroup{
 			Location: to.StringPtr("[variables('location')]"),
-			Name:     to.StringPtr("[variables('nsgName')]"),
+			Name:     to.StringPtr("[variables('jumpboxNetworkSecurityGroupName')]"),
 			Type:     to.StringPtr("Microsoft.Network/networkSecurityGroups"),
 			SecurityGroupPropertiesFormat: &network.SecurityGroupPropertiesFormat{
 				SecurityRules: &[]network.SecurityRule{

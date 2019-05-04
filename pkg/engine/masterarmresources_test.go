@@ -370,7 +370,7 @@ func TestCreateKubernetesMasterResourcesPVC(t *testing.T) {
 		},
 	}
 
-	masterNSG := NetworkSecurityGroupARM{
+	masterJumpboxNSG := NetworkSecurityGroupARM{
 		ARMResource: ARMResource{
 			APIVersion: "[variables('apiVersionNetwork')]",
 		},
@@ -389,6 +389,49 @@ func TestCreateKubernetesMasterResourcesPVC(t *testing.T) {
 							Direction:                network.SecurityRuleDirection("Inbound"),
 						},
 						Name: to.StringPtr("default-allow-ssh"),
+					},
+				},
+			},
+			Name:     to.StringPtr("[variables('jumpboxNetworkSecurityGroupName')]"),
+			Type:     to.StringPtr("Microsoft.Network/networkSecurityGroups"),
+			Location: to.StringPtr("[variables('location')]"),
+		},
+	}
+
+	masterNSG := NetworkSecurityGroupARM{
+		ARMResource: ARMResource{
+			APIVersion: "[variables('apiVersionNetwork')]",
+		},
+		SecurityGroup: network.SecurityGroup{
+			SecurityGroupPropertiesFormat: &network.SecurityGroupPropertiesFormat{
+				SecurityRules: &[]network.SecurityRule{
+					{
+						Name: to.StringPtr("allow_ssh"),
+						SecurityRulePropertiesFormat: &network.SecurityRulePropertiesFormat{
+							Access:                   network.SecurityRuleAccessAllow,
+							Description:              to.StringPtr("Allow SSH traffic to master"),
+							DestinationAddressPrefix: to.StringPtr("*"),
+							DestinationPortRange:     to.StringPtr("22-22"),
+							Direction:                network.SecurityRuleDirectionInbound,
+							Priority:                 to.Int32Ptr(101),
+							Protocol:                 network.SecurityRuleProtocolTCP,
+							SourceAddressPrefix:      to.StringPtr("*"),
+							SourcePortRange:          to.StringPtr("*"),
+						},
+					},
+					{
+						Name: to.StringPtr("allow_kube_tls"),
+						SecurityRulePropertiesFormat: &network.SecurityRulePropertiesFormat{
+							Access:                   network.SecurityRuleAccessAllow,
+							Description:              to.StringPtr("Allow kube-apiserver (tls) traffic to master"),
+							DestinationAddressPrefix: to.StringPtr("*"),
+							DestinationPortRange:     to.StringPtr("443-443"),
+							Direction:                network.SecurityRuleDirectionInbound,
+							Priority:                 to.Int32Ptr(100),
+							Protocol:                 network.SecurityRuleProtocolTCP,
+							SourceAddressPrefix:      to.StringPtr("*"),
+							SourcePortRange:          to.StringPtr("*"),
+						},
 					},
 				},
 			},
@@ -433,6 +476,7 @@ func TestCreateKubernetesMasterResourcesPVC(t *testing.T) {
 		masterAKSBillingExtension,
 		masterCSEExtension,
 		masterJumpboxVM,
+		masterJumpboxNSG,
 		masterJumpboxPublicIP,
 		masterJumpboxNIC,
 		masterJumpboxStorageAccount,
