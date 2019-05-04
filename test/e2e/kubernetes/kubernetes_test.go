@@ -631,7 +631,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				By("Ensuring that we have functional DNS resolution from a windows container")
 				j, err = job.CreateJobFromFileDeleteIfExists(filepath.Join(WorkloadDir, "validate-dns-windows.yaml"), "validate-dns-windows", "default")
 				Expect(err).NotTo(HaveOccurred())
-				ready, err = j.WaitOnReady(retryTimeWhenWaitingForPodReady, validateDNSTimeout)
+				ready, err = j.WaitOnReady(retryTimeWhenWaitingForPodReady, cfg.Timeout)
 				delErr = j.Delete(util.DefaultDeleteRetries)
 				if delErr != nil {
 					fmt.Printf("could not delete job %s\n", j.Metadata.Name)
