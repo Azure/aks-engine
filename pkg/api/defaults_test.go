@@ -1726,7 +1726,7 @@ func TestSetCustomCloudProfileDefaults(t *testing.T) {
 				ImagePublisher: "ImagePublisher",
 				ImageVersion:   "ImageVersion",
 			},
-			AKS: DefaultAKSOSImageConfig,
+			AKS: AKS1604OSImageConfig,
 		},
 	}
 	mockCSPCustom.CustomCloudProfile.AzureEnvironmentSpecConfig = &customCloudSpec
@@ -1776,7 +1776,7 @@ func TestSetCustomCloudProfileDefaults(t *testing.T) {
 				ImagePublisher: "ImagePublisher",
 				ImageVersion:   "ImageVersion",
 			},
-			AKS: DefaultAKSOSImageConfig,
+			AKS: AKS1604OSImageConfig,
 		},
 	}
 	mockCSPCustomP.CustomCloudProfile.AzureEnvironmentSpecConfig = &customCloudSpecP
