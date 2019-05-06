@@ -197,7 +197,7 @@ var (
 			CoreOS:     CoreOSImageConfig,
 			AKS:        Ubuntu1604ImageConfig,
 			AKS1604:    Ubuntu1604ImageConfig,
-			AKS1804:    Ubuntu1804ImageConfig,
+			AKS1804:    Ubuntu1604ImageConfig, // workaround for https://github.com/Azure/aks-engine/issues/761
 		},
 	}
 
@@ -217,7 +217,7 @@ var (
 			CoreOS:     CoreOSImageConfig,
 			AKS:        Ubuntu1604ImageConfig,
 			AKS1604:    Ubuntu1604ImageConfig,
-			AKS1804:    Ubuntu1804ImageConfig,
+			AKS1804:    Ubuntu1604ImageConfig, // workaround for https://github.com/Azure/aks-engine/issues/761
 		},
 	}
 
