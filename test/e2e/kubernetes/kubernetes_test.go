@@ -564,7 +564,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			Expect(err).NotTo(HaveOccurred())
 			Expect(running).To(Equal(true))
 
-			By("Ensuing that the php-apache pod has outbound internet access")
+			By("Ensuring that the php-apache pod has outbound internet access")
 			pods, err := phpApacheDeploy.Pods()
 			Expect(err).NotTo(HaveOccurred())
 			for _, p := range pods {
@@ -822,12 +822,12 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				phpApacheDeploy, err := deployment.CreateLinuxDeployIfNotExist("deis/hpa-example", longRunningApacheDeploymentName, "default", "--requests=cpu=10m,memory=10M")
 				Expect(err).NotTo(HaveOccurred())
 
-				By("Ensuring that php-apache pod is running")
+				By("Ensuring that the php-apache pod is running")
 				running, err := pod.WaitOnReady(longRunningApacheDeploymentName, "default", 3, retryTimeWhenWaitingForPodReady, cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(running).To(Equal(true))
 
-				By("Ensuing that the php-apache pod has outbound internet access")
+				By("Ensuring that the php-apache pod has outbound internet access")
 				pods, err := phpApacheDeploy.Pods()
 				Expect(err).NotTo(HaveOccurred())
 				for _, p := range pods {
