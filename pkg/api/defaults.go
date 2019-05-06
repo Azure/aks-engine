@@ -23,7 +23,7 @@ import (
 )
 
 // DistroValues is a list of currently supported distros
-var DistroValues = []Distro{"", Ubuntu, Ubuntu1804, RHEL, CoreOS, AKS, AKS1804, ACC1604}
+var DistroValues = []Distro{"", Ubuntu, Ubuntu1804, RHEL, CoreOS, AKS1604, AKS1804, ACC1604}
 
 // SetPropertiesDefaults for the container Properties, returns true if certs are generated
 func (cs *ContainerService) SetPropertiesDefaults(isUpgrade, isScale bool) (bool, error) {
@@ -502,12 +502,12 @@ func (p *Properties) setAgentProfileDefaults(isUpgrade, isScale bool) {
 				} else {
 					profile.Distro = Ubuntu
 				}
-				// Ensure distro is set properly for N Series SKUs, because
+				// Ensure deprecated distros are overriden
 				// Previous versions of aks-engine required the docker-engine distro for N series vms,
-				// so we need to hard override it in order to produce a working cluster in upgrade/scale contexts
+				// so we need to hard override it in order to produce a working cluster in upgrade/scale contexts.
 			} else if p.OrchestratorProfile.IsKubernetes() && (isUpgrade || isScale) {
-				if profile.Distro == AKSDockerEngine {
-					profile.Distro = AKS1804
+				if profile.Distro == AKSDockerEngine || profile.Distro == AKS {
+					profile.Distro = AKS1604
 				}
 			}
 		}

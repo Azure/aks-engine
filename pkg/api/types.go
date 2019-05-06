@@ -1190,7 +1190,7 @@ func (m *MasterProfile) IsCoreOS() bool {
 
 // IsVHDDistro returns true if the distro uses VHD SKUs
 func (m *MasterProfile) IsVHDDistro() bool {
-	return m.Distro == AKS || m.Distro == AKS1804
+	return m.Distro == AKS1604 || m.Distro == AKS1804
 }
 
 // IsVirtualMachineScaleSets returns true if the master availability profile is VMSS
@@ -1235,7 +1235,7 @@ func (m *MasterProfile) HasAvailabilityZones() bool {
 // IsUbuntu1604 returns true if the master profile distro is based on Ubuntu 16.04
 func (m *MasterProfile) IsUbuntu1604() bool {
 	switch m.Distro {
-	case AKS, Ubuntu, ACC1604:
+	case AKS1604, Ubuntu, ACC1604:
 		return true
 	default:
 		return false
@@ -1289,7 +1289,7 @@ func (a *AgentPoolProfile) IsCoreOS() bool {
 
 // IsVHDDistro returns true if the distro uses VHD SKUs
 func (a *AgentPoolProfile) IsVHDDistro() bool {
-	return a.Distro == AKS || a.Distro == AKS1804
+	return a.Distro == AKS1604 || a.Distro == AKS1804
 }
 
 // IsAvailabilitySets returns true if the customer specified disks
@@ -1331,7 +1331,7 @@ func (a *AgentPoolProfile) HasAvailabilityZones() bool {
 func (a *AgentPoolProfile) IsUbuntu1604() bool {
 	if a.OSType != Windows {
 		switch a.Distro {
-		case AKS, Ubuntu, ACC1604:
+		case AKS1604, Ubuntu, ACC1604:
 			return true
 		default:
 			return false

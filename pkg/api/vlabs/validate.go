@@ -367,7 +367,7 @@ func (a *Properties) validateMasterProfile(isUpdate bool) error {
 
 	distroValues := DistroValues
 	if isUpdate {
-		distroValues = append(distroValues, AKSDockerEngine)
+		distroValues = append(distroValues, AKSDockerEngine, AKS)
 	}
 	if !validateDistro(m.Distro, distroValues) {
 		return errors.Errorf("The %s distro is not supported", m.Distro)
@@ -467,7 +467,7 @@ func (a *Properties) validateAgentPoolProfiles(isUpdate bool) error {
 
 			distroValues := DistroValues
 			if isUpdate {
-				distroValues = append(distroValues, AKSDockerEngine)
+				distroValues = append(distroValues, AKSDockerEngine, AKS)
 			}
 			if !validateDistro(agentPoolProfile.Distro, distroValues) {
 				return errors.Errorf("The %s distro is not supported", agentPoolProfile.Distro)

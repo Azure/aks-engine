@@ -175,6 +175,7 @@ var (
 			RHEL:       DefaultRHELOSImageConfig,
 			CoreOS:     DefaultCoreOSImageConfig,
 			AKS:        DefaultAKSOSImageConfig,
+			AKS1604:    DefaultAKSOSImageConfig,
 			AKS1804:    DefaultAKS1804OSImageConfig,
 			ACC1604:    DefaultACC1604OSImageConfig,
 		},
@@ -195,6 +196,7 @@ var (
 			RHEL:       DefaultRHELOSImageConfig,
 			CoreOS:     DefaultCoreOSImageConfig,
 			AKS:        DefaultUbuntuImageConfig,
+			AKS1604:    DefaultUbuntuImageConfig,
 			AKS1804:    Ubuntu1804ImageConfig,
 		},
 	}
@@ -214,6 +216,7 @@ var (
 			RHEL:       DefaultRHELOSImageConfig,
 			CoreOS:     DefaultCoreOSImageConfig,
 			AKS:        DefaultUbuntuImageConfig,
+			AKS1604:    DefaultUbuntuImageConfig,
 			AKS1804:    Ubuntu1804ImageConfig,
 		},
 	}
@@ -258,6 +261,7 @@ var (
 			RHEL:       DefaultRHELOSImageConfig,
 			CoreOS:     DefaultCoreOSImageConfig,
 			AKS:        DefaultAKSOSImageConfig,
+			AKS1604:    DefaultAKSOSImageConfig,
 			AKS1804:    DefaultAKS1804OSImageConfig,
 		},
 	}

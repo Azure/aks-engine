@@ -32,8 +32,9 @@ const (
 	Ubuntu1804      Distro = "ubuntu-18.04"
 	RHEL            Distro = "rhel"
 	CoreOS          Distro = "coreos"
-	AKS             Distro = "aks"
-	AKSDockerEngine Distro = "aks-docker-engine" // deprecated docker-engine distro
+	AKS             Distro = "aks"               // deprecated AKS 16.04 distro. Equivalent to aks-16.04.
+	AKSDockerEngine Distro = "aks-docker-engine" // deprecated docker-engine distro.
+	AKS1604         Distro = "aks-16.04"
 	AKS1804         Distro = "aks-18.04"
 	ACC1604         Distro = "acc-16.04"
 )
@@ -96,7 +97,7 @@ var (
 	ContainerRuntimeValues = [...]string{"", Docker, ClearContainers, KataContainers, Containerd}
 
 	// DistroValues holds the valid values for OS distros
-	DistroValues = []Distro{"", Ubuntu, Ubuntu1804, RHEL, CoreOS, AKS, AKS1804, ACC1604}
+	DistroValues = []Distro{"", Ubuntu, Ubuntu1804, RHEL, CoreOS, AKS1604, AKS1804, ACC1604}
 
 	// DependenciesLocationValues holds the valid values for dependencies location
 	DependenciesLocationValues = []DependenciesLocation{"", AzureStackDependenciesLocationPublic, AzureStackDependenciesLocationChina, AzureStackDependenciesLocationGerman, AzureStackDependenciesLocationUSGovernment}

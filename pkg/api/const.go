@@ -29,8 +29,9 @@ const (
 	Ubuntu1804      Distro = "ubuntu-18.04"
 	RHEL            Distro = "rhel"
 	CoreOS          Distro = "coreos"
-	AKS             Distro = "aks"
-	AKSDockerEngine Distro = "aks-docker-engine" // deprecated docker-engine distro
+	AKS             Distro = "aks"               // deprecated AKS 16.04 distro. Equivalent to aks-16.04.
+	AKSDockerEngine Distro = "aks-docker-engine" // deprecated docker-engine distro.
+	AKS1604         Distro = "aks-16.04"
 	AKS1804         Distro = "aks-18.04"
 	ACC1604         Distro = "acc-16.04"
 )
