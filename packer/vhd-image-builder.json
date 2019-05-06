@@ -56,6 +56,11 @@
         },
         {
             "type": "file",
+            "source": "parts/k8s/cloud-init/artifacts/cse_config.sh",
+            "destination": "/home/packer/provision_configs.sh"
+        },
+        {
+            "type": "file",
             "source": "parts/k8s/cloud-init/artifacts/cse_helpers.sh",
             "destination": "/home/packer/provision_source.sh"
         },
