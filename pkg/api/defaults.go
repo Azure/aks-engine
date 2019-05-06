@@ -502,7 +502,7 @@ func (p *Properties) setAgentProfileDefaults(isUpgrade, isScale bool) {
 				} else {
 					profile.Distro = Ubuntu
 				}
-				// Ensure deprecated distros are overriden
+				// Ensure deprecated distros are overridden
 				// Previous versions of aks-engine required the docker-engine distro for N series vms,
 				// so we need to hard override it in order to produce a working cluster in upgrade/scale contexts.
 			} else if p.OrchestratorProfile.IsKubernetes() && (isUpgrade || isScale) {
