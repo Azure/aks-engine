@@ -244,7 +244,7 @@
       },
       "type": "string"
     },
-{{if .OrchestratorProfile.KubernetesConfig.IsAADPodIdentityEnabled}}
+{{if .IsAADPodIdentityEnabled}}
     "kubernetesAADPodIdentityEnabled": {
       "defaultValue": false,
       "metadata": {
@@ -265,7 +265,7 @@
       },
       "type": "bool"
     },
-{{if .OrchestratorProfile.KubernetesConfig.IsClusterAutoscalerEnabled}}
+{{if .IsClusterAutoscalerEnabled}}
     "kubernetesClusterAutoscalerAzureCloud": {
       "metadata": {
         "description": "Name of the Azure cloud for the cluster autoscaler."
