@@ -10,7 +10,8 @@ ETCD_PEER_URL="https://${PRIVATE_IP}:2380"
 ETCD_CLIENT_URL="https://${PRIVATE_IP}:2379"
 
 applyOSConfig(){
-    retrycmd_if_failure 120 5 25 update-grub || exit $ERR_CIS_APPLY_GRUB_CONFIG
+    grub-install --version
+    retrycmd_if_failure 120 5 25 /usr/sbin/update-grub || exit $ERR_CIS_APPLY_GRUB_CONFIG
 }
 
 systemctlEnableAndStart() {
