@@ -10,6 +10,7 @@ echo "Using kernel:" >> ${RELEASE_NOTES_FILEPATH}
 tee -a ${RELEASE_NOTES_FILEPATH} < /proc/version
 
 copyPackerFiles
+applyOSConfig
 
 echo ""
 echo "Components downloaded in this VHD build (some of the below components might get deleted during cluster provisioning if they are not needed):" >> ${RELEASE_NOTES_FILEPATH}
