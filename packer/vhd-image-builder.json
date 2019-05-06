@@ -56,11 +56,6 @@
         },
         {
             "type": "file",
-            "source": "parts/k8s/cloud-init/artifacts/cse_config.sh",
-            "destination": "/home/packer/provision_configs.sh"
-        },
-        {
-            "type": "file",
             "source": "parts/k8s/cloud-init/artifacts/cse_helpers.sh",
             "destination": "/home/packer/provision_source.sh"
         },
@@ -113,11 +108,6 @@
             "type": "file",
             "source": "parts/k8s/cloud-init/artifacts/pwquality-CIS.conf",
             "destination": "/home/packer/pwquality-CIS.conf"
-        },
-        {
-            "type": "file",
-            "source": "parts/k8s/cloud-init/artifacts/default-grub",
-            "destination": "/home/packer/default-grub"
         },
         {
             "type": "file",
