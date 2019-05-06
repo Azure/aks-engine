@@ -12,6 +12,7 @@ import (
 	"github.com/Azure/aks-engine/pkg/api"
 	"github.com/Azure/aks-engine/pkg/engine"
 	"github.com/Azure/aks-engine/pkg/engine/transform"
+	"github.com/Azure/aks-engine/pkg/helpers"
 	"github.com/Azure/aks-engine/pkg/i18n"
 	"github.com/leonelquinteros/gotext"
 	"github.com/pkg/errors"
@@ -166,6 +167,20 @@ func (gc *generateCmd) loadAPIModel(cmd *cobra.Command, args []string) error {
 		prop.CertificateProfile.CaPrivateKey = string(caKeyBytes)
 	}
 
+	// If no keypair has been supplied, generate one.
+	if gc.containerService.Properties.LinuxProfile != nil && (gc.containerService.Properties.LinuxProfile.SSH.PublicKeys == nil ||
+		len(gc.containerService.Properties.LinuxProfile.SSH.PublicKeys) == 0 ||
+		gc.containerService.Properties.LinuxProfile.SSH.PublicKeys[0].KeyData == "") {
+		translator := &i18n.Translator{
+			Locale: gc.locale,
+		}
+		var publicKey string
+		_, publicKey, err = helpers.CreateSaveSSH(gc.containerService.Properties.LinuxProfile.AdminUsername, gc.outputDirectory, translator)
+		if err != nil {
+			return errors.Wrap(err, "Failed to generate SSH Key")
+		}
+		gc.containerService.Properties.LinuxProfile.SSH.PublicKeys = []api.PublicKey{{KeyData: publicKey}}
+	}
 	return nil
 }
 
