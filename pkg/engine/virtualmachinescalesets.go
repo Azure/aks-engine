@@ -48,7 +48,9 @@ func CreateMasterVMSS(cs *api.ContainerService) VirtualMachineScaleSetARM {
 		dependencies = append(dependencies, "[resourceId('Microsoft.DocumentDB/databaseAccounts/', variables('cosmosAccountName'))]")
 	}
 
-	dependencies = append(dependencies, "[variables('masterLbID')]")
+	if !cs.Properties.OrchestratorProfile.IsPrivateCluster() {
+		dependencies = append(dependencies, "[variables('masterLbID')]")
+	}
 
 	armResource := ARMResource{
 		APIVersion: "[variables('apiVersionCompute')]",
@@ -122,10 +124,17 @@ func CreateMasterVMSS(cs *api.ContainerService) VirtualMachineScaleSetARM {
 		}
 		if i == 1 {
 			ipConfigProps.Primary = to.BoolPtr(true)
-			backendAddressPools := []compute.SubResource{
-				{
+			backendAddressPools := []compute.SubResource{}
+			if !cs.Properties.OrchestratorProfile.IsPrivateCluster() {
+				publicBackendAddressPools := compute.SubResource{
 					ID: to.StringPtr("[concat(variables('masterLbID'), '/backendAddressPools/', variables('masterLbBackendPoolName'))]"),
-				},
+				}
+				backendAddressPools = append(backendAddressPools, publicBackendAddressPools)
+				ipConfigProps.LoadBalancerInboundNatPools = &[]compute.SubResource{
+					{
+						ID: to.StringPtr("[concat(variables('masterLbID'),'/inboundNatPools/SSH-', variables('masterVMNamePrefix'), 'natpools')]"),
+					},
+				}
 			}
 			if masterCount > 1 {
 				internalLbBackendAddressPool := compute.SubResource{
@@ -135,11 +144,6 @@ func CreateMasterVMSS(cs *api.ContainerService) VirtualMachineScaleSetARM {
 			}
 			ipConfigProps.LoadBalancerBackendAddressPools = &backendAddressPools
 
-			ipConfigProps.LoadBalancerInboundNatPools = &[]compute.SubResource{
-				{
-					ID: to.StringPtr("[concat(variables('masterLbID'),'/inboundNatPools/SSH-', variables('masterVMNamePrefix'), 'natpools')]"),
-				},
-			}
 		} else {
 			ipConfigProps.Primary = to.BoolPtr(false)
 		}
