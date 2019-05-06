@@ -1,0 +1,18 @@
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: validate-dns-windows
+spec:
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+      - name: validate-bing
+        image: mcr.microsoft.com/windows/servercore/iis:windowsservercore-ltsc2019
+        command: ['powershell', 'Resolve-DnsName', '-Name', 'www.bing.com', '-DnsOnly', '-Type', 'CNAME', '-TcpOnly']
+      - name: validate-google
+        image: mcr.microsoft.com/windows/servercore/iis:windowsservercore-ltsc2019
+        command: ['powershell', 'Resolve-DnsName', '-Name', 'google.com', '-DnsOnly', '-Type', 'A', '-TcpOnly']
+      nodeSelector:
+        beta.kubernetes.io/os: windows
