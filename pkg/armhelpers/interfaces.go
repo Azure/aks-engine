@@ -15,6 +15,7 @@ import (
 	azStorage "github.com/Azure/azure-sdk-for-go/storage"
 	"github.com/Azure/go-autorest/autorest"
 	log "github.com/sirupsen/logrus"
+	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 )
 
@@ -211,4 +212,8 @@ type KubernetesClient interface {
 	EvictPod(pod *v1.Pod, policyGroupVersion string) error
 	// WaitForDelete waits until all pods are deleted. Returns all pods not deleted and an error on failure.
 	WaitForDelete(logger *log.Entry, pods []v1.Pod, usingEviction bool) ([]v1.Pod, error)
+	// GetDeployment returns a given deployment in a namespace.
+	GetDeployment(namespace, name string) (*appsv1.Deployment, error)
+	// UpdateDeployment updates a deployment to match the given specification.
+	UpdateDeployment(namespace string, deployment *appsv1.Deployment) (*appsv1.Deployment, error)
 }

@@ -22,6 +22,7 @@ import (
 	azStorage "github.com/Azure/azure-sdk-for-go/storage"
 	"github.com/Azure/go-autorest/autorest"
 	log "github.com/sirupsen/logrus"
+	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 )
 
@@ -408,6 +409,21 @@ func (mkc *MockKubernetesClient) WaitForDelete(logger *log.Entry, pods []v1.Pod,
 		return nil, errors.New("WaitForDelete failed")
 	}
 	return []v1.Pod{}, nil
+}
+
+// GetDeployment returns a given deployment in a namespace.
+func (mkc *MockKubernetesClient) GetDeployment(namespace, name string) (*appsv1.Deployment, error) {
+	var replicas int32 = 1
+	return &appsv1.Deployment{
+		Spec: appsv1.DeploymentSpec{
+			Replicas: &replicas,
+		},
+	}, nil
+}
+
+// UpdateDeployment updates a deployment to match the given specification.
+func (mkc *MockKubernetesClient) UpdateDeployment(namespace string, deployment *appsv1.Deployment) (*appsv1.Deployment, error) {
+	return &appsv1.Deployment{}, nil
 }
 
 //DeleteBlob mock
