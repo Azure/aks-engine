@@ -120,7 +120,7 @@ while (( $count > 0 )); do
   for pod in $pods; do
     if k get pods --all-namespaces | grep $pod | grep -q Running; then
       log "... $pod is Running"
-      pods=$(echo $pods | sed -e "s/ *$pod */ /")
+      pods=${pods/$pod/}
     fi
   done
   if [ -z "$(echo $pods | tr -d '[:space:]')" ]; then

@@ -17,6 +17,7 @@ echo "Components downloaded in this VHD build (some of the below components migh
 installDeps
 cat << EOF >> ${RELEASE_NOTES_FILEPATH}
   - apt-transport-https
+  - auditd
   - blobfuse
   - ca-certificates
   - ceph-common
@@ -62,8 +63,8 @@ echo "  - nvidia-docker2 nvidia-container-runtime" >> ${RELEASE_NOTES_FILEPATH}
 installClearContainersRuntime
 
 VNET_CNI_VERSIONS="
+1.0.22
 1.0.18
-1.0.17
 "
 for VNET_CNI_VERSION in $VNET_CNI_VERSIONS; do
     VNET_CNI_PLUGINS_URL="https://acs-mirror.azureedge.net/cni/azure-vnet-cni-linux-amd64-v${VNET_CNI_VERSION}.tgz"
@@ -203,6 +204,7 @@ CLUSTER_AUTOSCALER_VERSIONS="
 1.13.1
 1.12.3
 1.12.2
+1.3.8
 1.3.7
 1.3.4
 1.3.3
@@ -358,6 +360,7 @@ K8S_VERSIONS="
 1.12.8
 1.12.7
 1.12.7-azs
+1.11.10
 1.11.9
 1.11.9-azs
 1.11.8

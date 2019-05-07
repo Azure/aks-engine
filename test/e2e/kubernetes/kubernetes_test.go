@@ -15,6 +15,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Azure/go-autorest/autorest/to"
+
 	"github.com/Azure/aks-engine/pkg/api"
 	"github.com/Azure/aks-engine/pkg/api/common"
 	"github.com/Azure/aks-engine/test/e2e/config"
@@ -37,16 +39,17 @@ import (
 )
 
 const (
-	WorkloadDir                     = "workloads"
-	ScriptsDir                      = "scripts"
-	PolicyDir                       = "workloads/policies"
-	deleteResourceRetries           = 10
-	retryCommandsTimeout            = 5 * time.Minute
-	kubeSystemPodsReadinessChecks   = 6
-	retryTimeWhenWaitingForPodReady = 1 * time.Minute
-	stabilityCommandTimeout         = 5 * time.Second
-	windowsCommandTimeout           = 1 * time.Minute
-	validateNetworkPolicyTimeout    = 3 * time.Minute
+	WorkloadDir                            = "workloads"
+	ScriptsDir                             = "scripts"
+	PolicyDir                              = "workloads/policies"
+	retryCommandsTimeout                   = 5 * time.Minute
+	kubeSystemPodsReadinessChecks          = 6
+	retryTimeWhenWaitingForPodReady        = 10 * time.Second
+	timeoutWhenWaitingForPodOutboundAccess = 1 * time.Minute
+	stabilityCommandTimeout                = 5 * time.Second
+	windowsCommandTimeout                  = 1 * time.Minute
+	validateNetworkPolicyTimeout           = 3 * time.Minute
+	validateDNSTimeout                     = 2 * time.Minute
 )
 
 var (
@@ -372,6 +375,51 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			}
 		})
 
+		It("should validate auditd configuration", func() {
+			if eng.ExpandedDefinition.Properties.IsUbuntuDistroForAllNodes() {
+				var enabledProfiles []string
+				if eng.ExpandedDefinition.Properties.MasterProfile != nil {
+					if to.Bool(eng.ExpandedDefinition.Properties.MasterProfile.AuditDEnabled) {
+						enabledProfiles = append(enabledProfiles, "k8s-master")
+					}
+				}
+				for _, profile := range eng.ExpandedDefinition.Properties.AgentPoolProfiles {
+					if to.Bool(profile.AuditDEnabled) {
+						enabledProfiles = append(enabledProfiles, profile.Name)
+					}
+				}
+				kubeConfig, err := GetConfig()
+				Expect(err).NotTo(HaveOccurred())
+				master := fmt.Sprintf("%s@%s", eng.ExpandedDefinition.Properties.LinuxProfile.AdminUsername, kubeConfig.GetServerName())
+				nodeList, err := node.GetReady()
+				Expect(err).NotTo(HaveOccurred())
+				auditdValidateScript := "auditd-validate.sh"
+				cmd := exec.Command("scp", "-i", masterSSHPrivateKeyFilepath, "-o", "StrictHostKeyChecking=no", filepath.Join(ScriptsDir, auditdValidateScript), master+":/tmp/"+auditdValidateScript)
+				util.PrintCommand(cmd)
+				out, err := cmd.CombinedOutput()
+				log.Printf("%s\n", out)
+				Expect(err).NotTo(HaveOccurred())
+				var conn *remote.Connection
+				conn, err = remote.NewConnection(kubeConfig.GetServerName(), "22", eng.ExpandedDefinition.Properties.LinuxProfile.AdminUsername, masterSSHPrivateKeyFilepath)
+				Expect(err).NotTo(HaveOccurred())
+				for _, node := range nodeList.Nodes {
+					var enabled bool
+					if node.IsInProfile(enabledProfiles) {
+						enabled = true
+					}
+					err := conn.CopyToRemote(node.Metadata.Name, "/tmp/"+auditdValidateScript)
+					Expect(err).NotTo(HaveOccurred())
+					auditdValidationCommand := fmt.Sprintf("\"ENABLED=%t /tmp/%s\"", enabled, auditdValidateScript)
+					cmd = exec.Command("ssh", "-A", "-i", masterSSHPrivateKeyFilepath, "-p", masterSSHPort, "-o", "ConnectTimeout=10", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-o", "LogLevel=ERROR", master, "ssh", "-o", "ConnectTimeout=10", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-o", "LogLevel=ERROR", node.Metadata.Name, auditdValidationCommand)
+					util.PrintCommand(cmd)
+					_, err = cmd.CombinedOutput()
+					Expect(err).NotTo(HaveOccurred())
+				}
+			} else {
+				Skip("auditd option only works on ubuntu distro until this lands in a VHD")
+			}
+		})
+
 		It("should report all nodes in a Ready state", func() {
 			nodeCount := eng.NodeCount()
 			log.Printf("Checking for %d Ready nodes\n", nodeCount)
@@ -398,8 +446,8 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			Expect(len(nodeList)).To(Equal(nodes))
 		})
 
-		It("should print all pods", func() {
-			cmd := exec.Command("k", "get", "pods", "--all-namespaces", "-o", "wide")
+		It("should print cluster resources", func() {
+			cmd := exec.Command("k", "get", "deployments,pods,svc,daemonsets,configmaps,endpoints,jobs,clusterroles,clusterrolebindings,roles,rolebindings,storageclasses", "--all-namespaces", "-o", "wide")
 			out, err := cmd.CombinedOutput()
 			log.Printf("%s\n", out)
 			if err != nil {
@@ -543,17 +591,8 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 
 		It("should be able to launch a long-running container networking DNS liveness pod", func() {
 			if !eng.HasNetworkPolicy("calico") {
-				var err error
-				var p *pod.Pod
-				p, err = pod.CreatePodFromFile(filepath.Join(WorkloadDir, "dns-liveness.yaml"), "dns-liveness", "default", 1*time.Second, cfg.Timeout)
-				if cfg.SoakClusterName == "" {
-					Expect(err).NotTo(HaveOccurred())
-				} else {
-					if err != nil {
-						p, err = pod.Get("dns-liveness", "default")
-						Expect(err).NotTo(HaveOccurred())
-					}
-				}
+				p, err := pod.CreatePodFromFileIfNotExist(filepath.Join(WorkloadDir, "dns-liveness.yaml"), "dns-liveness", "default", 1*time.Second, cfg.Timeout)
+				Expect(err).NotTo(HaveOccurred())
 				running, err := p.WaitOnReady(retryTimeWhenWaitingForPodReady, cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(running).To(Equal(true))
@@ -564,41 +603,26 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 
 		It("should be able to launch a long running HTTP listener and svc endpoint", func() {
 			By("Creating a php-apache deployment")
-			var phpApacheDeploy *deployment.Deployment
-			d, _ := deployment.Get(longRunningApacheDeploymentName, "default")
-			if d == nil {
-				var err error
-				phpApacheDeploy, err = deployment.CreateLinuxDeploy("deis/hpa-example", longRunningApacheDeploymentName, "default", "--requests=cpu=10m,memory=10M")
-				if err != nil {
-					fmt.Println(err)
-				}
-				Expect(err).NotTo(HaveOccurred())
-			} else {
-				phpApacheDeploy = d
-			}
+			phpApacheDeploy, err := deployment.CreateLinuxDeployIfNotExist("deis/hpa-example", longRunningApacheDeploymentName, "default", "--requests=cpu=10m,memory=10M")
+			Expect(err).NotTo(HaveOccurred())
 
 			By("Ensuring that php-apache pod is running")
 			running, err := pod.WaitOnReady(longRunningApacheDeploymentName, "default", 3, retryTimeWhenWaitingForPodReady, cfg.Timeout)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(running).To(Equal(true))
 
-			By("Ensuing that the php-apache pod has outbound internet access")
+			By("Ensuring that the php-apache pod has outbound internet access")
 			pods, err := phpApacheDeploy.Pods()
 			Expect(err).NotTo(HaveOccurred())
 			for _, p := range pods {
-				pass, err := p.CheckLinuxOutboundConnection(5*time.Second, cfg.Timeout)
-				Expect(err).NotTo(HaveOccurred())
+				pass, outboundErr := p.CheckLinuxOutboundConnection(5*time.Second, cfg.Timeout)
+				Expect(outboundErr).NotTo(HaveOccurred())
 				Expect(pass).To(BeTrue())
 			}
 
 			By("Exposing TCP 80 internally on the php-apache deployment")
-			s, _ := service.Get(longRunningApacheDeploymentName, "default")
-			if s == nil {
-				err := phpApacheDeploy.Expose("ClusterIP", 80, 80)
-				Expect(err).NotTo(HaveOccurred())
-				_, err = service.Get(longRunningApacheDeploymentName, "default")
-				Expect(err).NotTo(HaveOccurred())
-			}
+			err = phpApacheDeploy.ExposeIfNotExist("ClusterIP", 80, 80)
+			Expect(err).NotTo(HaveOccurred())
 		})
 
 		It("should have stable external container networking as we recycle a bunch of pods", func() {
@@ -638,24 +662,31 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 		})
 
 		It("should have functional container networking DNS", func() {
-			By("Ensuring that we have functional DNS resolution from a container")
-			// "Pre"-delete the job in case a prior delete attempt failed, for long-running cluster scenarios
-			j, err := job.Get("validate-dns", "default")
-			if err == nil {
-				j.Delete(deleteResourceRetries)
-				// Wait a minute before proceeding to create a new job w/ the same name
-				time.Sleep(1 * time.Minute)
-			}
-			j, err = job.CreateJobFromFile(filepath.Join(WorkloadDir, "validate-dns.yaml"), "validate-dns", "default")
+			By("Ensuring that we have functional DNS resolution from a linux container")
+			j, err := job.CreateJobFromFileDeleteIfExists(filepath.Join(WorkloadDir, "validate-dns-linux.yaml"), "validate-dns-linux", "default")
 			Expect(err).NotTo(HaveOccurred())
-			ready, err := j.WaitOnReady(retryTimeWhenWaitingForPodReady, cfg.Timeout)
-			delErr := j.Delete(deleteResourceRetries)
+			ready, err := j.WaitOnReady(retryTimeWhenWaitingForPodReady, validateDNSTimeout)
+			delErr := j.Delete(util.DefaultDeleteRetries)
 			if delErr != nil {
 				fmt.Printf("could not delete job %s\n", j.Metadata.Name)
 				fmt.Println(delErr)
 			}
 			Expect(err).NotTo(HaveOccurred())
 			Expect(ready).To(Equal(true))
+
+			if eng.HasWindowsAgents() {
+				By("Ensuring that we have functional DNS resolution from a windows container")
+				j, err = job.CreateJobFromFileDeleteIfExists(filepath.Join(WorkloadDir, "validate-dns-windows.yaml"), "validate-dns-windows", "default")
+				Expect(err).NotTo(HaveOccurred())
+				ready, err = j.WaitOnReady(retryTimeWhenWaitingForPodReady, cfg.Timeout)
+				delErr = j.Delete(util.DefaultDeleteRetries)
+				if delErr != nil {
+					fmt.Printf("could not delete job %s\n", j.Metadata.Name)
+					fmt.Println(delErr)
+				}
+				Expect(err).NotTo(HaveOccurred())
+				Expect(ready).To(Equal(true))
+			}
 
 			By("Ensuring that we have stable external DNS resolution as we recycle a bunch of pods")
 			name := fmt.Sprintf("alpine-%s", cfg.Name)
@@ -735,39 +766,33 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 	})
 
 	Describe("with a linux agent pool", func() {
-		It("should be able to produce a working ILB connection", func() {
+		It("should be able to produce working LoadBalancers", func() {
 			if eng.HasLinuxAgents() {
 				By("Creating a nginx deployment")
 				r := rand.New(rand.NewSource(time.Now().UnixNano()))
 				serviceName := "ingress-nginx"
-				deploymentName := fmt.Sprintf("ingress-nginx-%s-%v", cfg.Name, r.Intn(99999))
-				d, _ := deployment.Get(deploymentName, "default")
-				if d != nil {
-					err := d.Delete(deleteResourceRetries)
-					Expect(err).NotTo(HaveOccurred())
-				}
-				deploy, err := deployment.CreateLinuxDeploy("library/nginx:latest", deploymentName, "default", "--labels=app="+serviceName)
+				deploymentPrefix := fmt.Sprintf("%s-%s", serviceName, cfg.Name)
+				deploymentName := fmt.Sprintf("%s-%v", deploymentPrefix, r.Intn(99999))
+				deploy, err := deployment.CreateLinuxDeployDeleteIfExists(deploymentPrefix, "library/nginx:latest", deploymentName, "default", "--labels=app="+serviceName)
 				Expect(err).NotTo(HaveOccurred())
 
-				s, _ := service.Get(serviceName, "default")
-				if s != nil {
-					err = s.Delete(deleteResourceRetries)
-					Expect(err).NotTo(HaveOccurred())
-				}
-				s, err = service.CreateServiceFromFile(filepath.Join(WorkloadDir, "ingress-nginx-ilb.yaml"), serviceName, "default")
+				By("Ensuring we can create an ILB service attachment")
+				sILB, err := service.CreateServiceFromFileDeleteIfExist(filepath.Join(WorkloadDir, "ingress-nginx-ilb.yaml"), serviceName+"-ilb", "default")
 				Expect(err).NotTo(HaveOccurred())
-				svc, err := s.WaitForExternalIP(cfg.Timeout, 5*time.Second)
+				svc, err := sILB.WaitForIngress(cfg.Timeout, 5*time.Second)
 				Expect(err).NotTo(HaveOccurred())
 
-				By("Ensuring the ILB IP is assigned to the service")
-				curlDeploymentName := fmt.Sprintf("ilb-test-deployment-%s", cfg.Name)
-				curlDeploy, err := deployment.CreateLinuxDeployIfNotExist("library/nginx:latest", curlDeploymentName, "default", "")
+				By("Ensuring we can create a curl pod to connect to the service")
+				deploymentPrefix = fmt.Sprintf("ilb-test-deployment-%s", cfg.Name)
+				curlDeploymentName := fmt.Sprintf("%s-%v", deploymentPrefix, r.Intn(99999))
+				curlDeploy, err := deployment.CreateLinuxDeployDeleteIfExists(deploymentPrefix, "library/nginx:latest", curlDeploymentName, "default", "")
 				Expect(err).NotTo(HaveOccurred())
 				running, err := pod.WaitOnReady(curlDeploymentName, "default", 3, retryTimeWhenWaitingForPodReady, cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(running).To(Equal(true))
 				curlPods, err := curlDeploy.Pods()
 				Expect(err).NotTo(HaveOccurred())
+				By("Ensuring we can connect to the ILB service from another pod")
 				for i, curlPod := range curlPods {
 					if i < 1 {
 						var pass bool
@@ -776,12 +801,33 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 						Expect(pass).To(BeTrue())
 					}
 				}
-				By("Cleaning up after ourselves")
-				err = curlDeploy.Delete(deleteResourceRetries)
+
+				By("Ensuring we can create an ELB service attachment")
+				sELB, err := service.CreateServiceFromFileDeleteIfExist(filepath.Join(WorkloadDir, "ingress-nginx-elb.yaml"), serviceName+"-elb", "default")
 				Expect(err).NotTo(HaveOccurred())
-				err = deploy.Delete(deleteResourceRetries)
+				svc, err = sELB.WaitForIngress(cfg.Timeout, 5*time.Second)
 				Expect(err).NotTo(HaveOccurred())
-				err = s.Delete(deleteResourceRetries)
+
+				By("Ensuring we can connect to the ELB service on the service IP")
+				valid := sELB.Validate("(Welcome to nginx)", 5, 30*time.Second, cfg.Timeout)
+				Expect(valid).To(BeTrue())
+				By("Ensuring we can connect to the ELB service from another pod")
+				for i, curlPod := range curlPods {
+					if i < 1 {
+						var pass bool
+						pass, err = curlPod.ValidateCurlConnection(svc.Status.LoadBalancer.Ingress[0]["ip"], 5*time.Second, cfg.Timeout)
+						Expect(err).NotTo(HaveOccurred())
+						Expect(pass).To(BeTrue())
+					}
+				}
+
+				err = sILB.Delete(util.DefaultDeleteRetries)
+				Expect(err).NotTo(HaveOccurred())
+				err = sELB.Delete(util.DefaultDeleteRetries)
+				Expect(err).NotTo(HaveOccurred())
+				err = curlDeploy.Delete(util.DefaultDeleteRetries)
+				Expect(err).NotTo(HaveOccurred())
+				err = deploy.Delete(util.DefaultDeleteRetries)
 				Expect(err).NotTo(HaveOccurred())
 			} else {
 				Skip("No linux agent was provisioned for this Cluster Definition")
@@ -817,43 +863,42 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 
 		It("should be able to autoscale", func() {
 			if eng.HasLinuxAgents() && eng.ExpandedDefinition.Properties.OrchestratorProfile.KubernetesConfig.EnableAggregatedAPIs {
-				// "Pre"-delete the hpa in case a prior delete attempt failed, for long-running cluster scenarios
-				h, err := hpa.Get(longRunningApacheDeploymentName, "default")
-				if err == nil {
-					h.Delete(deleteResourceRetries)
-					// Wait a minute before proceeding to create a new hpa w/ the same name
-					time.Sleep(1 * time.Minute)
-				}
-				By("Getting the long-running php-apache deployment")
 				// Inspired by http://blog.kubernetes.io/2016/07/autoscaling-in-kubernetes.html
 				r := rand.New(rand.NewSource(time.Now().UnixNano()))
-				phpApacheDeploy, err := deployment.Get(longRunningApacheDeploymentName, "default")
-				if err != nil {
-					fmt.Println(err)
-				}
+				By("Creating a php-apache deployment")
+				phpApacheDeploy, err := deployment.CreateLinuxDeployIfNotExist("deis/hpa-example", longRunningApacheDeploymentName, "default", "--requests=cpu=10m,memory=10M")
 				Expect(err).NotTo(HaveOccurred())
 
-				By("Ensuring that one php-apache pod is running before autoscale configuration or load applied")
+				By("Ensuring that the php-apache pod is running")
 				running, err := pod.WaitOnReady(longRunningApacheDeploymentName, "default", 3, retryTimeWhenWaitingForPodReady, cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(running).To(Equal(true))
 
-				phpPods, err := phpApacheDeploy.Pods()
+				By("Ensuring that the php-apache pod has outbound internet access")
+				pods, err := phpApacheDeploy.Pods()
 				Expect(err).NotTo(HaveOccurred())
-				// We should have exactly 1 pod to begin
-				Expect(len(phpPods)).To(Equal(1))
+				for _, p := range pods {
+					pass, outboundErr := p.CheckLinuxOutboundConnection(5*time.Second, cfg.Timeout)
+					Expect(outboundErr).NotTo(HaveOccurred())
+					Expect(pass).To(BeTrue())
+				}
+
+				By("Exposing TCP 80 internally on the php-apache deployment")
+				err = phpApacheDeploy.ExposeIfNotExist("ClusterIP", 80, 80)
+				Expect(err).NotTo(HaveOccurred())
 
 				By("Assigning hpa configuration to the php-apache deployment")
 				// Apply autoscale characteristics to deployment
-				err = phpApacheDeploy.CreateDeploymentHPA(5, 1, 10)
+				err = phpApacheDeploy.CreateDeploymentHPADeleteIfExist(5, 1, 10)
 				Expect(err).NotTo(HaveOccurred())
 
 				By("Sending load to the php-apache service by creating a 3 replica deployment")
 				// Launch a simple busybox pod that wget's continuously to the apache serviceto simulate load
 				commandString := fmt.Sprintf("while true; do wget -q -O- http://%s.default.svc.cluster.local; done", longRunningApacheDeploymentName)
-				loadTestName := fmt.Sprintf("load-test-%s-%v", cfg.Name, r.Intn(99999))
+				loadTestPrefix := fmt.Sprintf("load-test-%s", cfg.Name)
+				loadTestName := fmt.Sprintf("%s-%v", loadTestPrefix, r.Intn(99999))
 				numLoadTestPods := 3
-				loadTestDeploy, err := deployment.RunLinuxDeploy("busybox", loadTestName, "default", commandString, numLoadTestPods)
+				loadTestDeploy, err := deployment.RunLinuxDeployDeleteIfExists(loadTestPrefix, "busybox", loadTestName, "default", commandString, numLoadTestPods)
 				Expect(err).NotTo(HaveOccurred())
 
 				By("Ensuring there are 3 load test pods")
@@ -871,55 +916,20 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				Expect(err).NotTo(HaveOccurred())
 
 				By("Stopping load")
-				err = loadTestDeploy.Delete(deleteResourceRetries)
+				err = loadTestDeploy.Delete(util.DefaultDeleteRetries)
 				Expect(err).NotTo(HaveOccurred())
 
 				By("Ensuring we only have 1 apache-php pod after stopping load")
 				_, err = phpApacheDeploy.WaitForReplicas(-1, 1, 5*time.Second, 20*time.Minute)
 				Expect(err).NotTo(HaveOccurred())
-				h, err = hpa.Get(longRunningApacheDeploymentName, "default")
+				h, err := hpa.Get(longRunningApacheDeploymentName, "default")
 				Expect(err).NotTo(HaveOccurred())
 
 				By("Deleting HPA configuration")
-				err = h.Delete(deleteResourceRetries)
+				err = h.Delete(util.DefaultDeleteRetries)
 				Expect(err).NotTo(HaveOccurred())
 			} else {
 				Skip("This flavor/version of Kubernetes doesn't support hpa autoscale")
-			}
-		})
-
-		It("should be able to deploy an nginx service", func() {
-			if eng.HasLinuxAgents() {
-				By("Creating a nginx deployment")
-				r := rand.New(rand.NewSource(time.Now().UnixNano()))
-				deploymentName := fmt.Sprintf("nginx-%s-%v", cfg.Name, r.Intn(99999))
-				nginxDeploy, err := deployment.CreateLinuxDeploy("library/nginx:latest", deploymentName, "default", "")
-				Expect(err).NotTo(HaveOccurred())
-
-				By("Ensure there is a Running nginx pod")
-				running, err := pod.WaitOnReady(deploymentName, "default", 3, retryTimeWhenWaitingForPodReady, cfg.Timeout)
-				Expect(err).NotTo(HaveOccurred())
-				Expect(running).To(Equal(true))
-
-				By("Exposing TCP 80 LB on the nginx deployment")
-				err = nginxDeploy.Expose("LoadBalancer", 80, 80)
-				Expect(err).NotTo(HaveOccurred())
-
-				By("Ensuring we can connect to the service")
-				s, err := service.Get(deploymentName, "default")
-				Expect(err).NotTo(HaveOccurred())
-
-				By("Ensuring the service root URL returns the expected payload")
-				valid := s.Validate("(Welcome to nginx)", 5, 30*time.Second, cfg.Timeout)
-				Expect(valid).To(BeTrue())
-
-				By("Cleaning up after ourselves")
-				err = nginxDeploy.Delete(deleteResourceRetries)
-				Expect(err).NotTo(HaveOccurred())
-				err = s.Delete(deleteResourceRetries)
-				Expect(err).NotTo(HaveOccurred())
-			} else {
-				Skip("No linux agent was provisioned for this Cluster Definition")
 			}
 		})
 
@@ -940,7 +950,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			Expect(pass).To(BeTrue())
 
 			By("Cleaning up after ourselves")
-			err = p.Delete(deleteResourceRetries)
+			err = p.Delete(util.DefaultDeleteRetries)
 			Expect(err).NotTo(HaveOccurred())
 		})
 	})
@@ -958,7 +968,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 					j, err := job.CreateJobFromFile(filepath.Join(WorkloadDir, "cuda-vector-add.yaml"), "cuda-vector-add", "default")
 					Expect(err).NotTo(HaveOccurred())
 					ready, err := j.WaitOnReady(30*time.Second, cfg.Timeout)
-					delErr := j.Delete(deleteResourceRetries)
+					delErr := j.Delete(util.DefaultDeleteRetries)
 					if delErr != nil {
 						fmt.Printf("could not delete job %s\n", j.Metadata.Name)
 						fmt.Println(delErr)
@@ -969,7 +979,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 					j, err := job.CreateJobFromFile(filepath.Join(WorkloadDir, "nvidia-smi.yaml"), "nvidia-smi", "default")
 					Expect(err).NotTo(HaveOccurred())
 					ready, err := j.WaitOnReady(30*time.Second, cfg.Timeout)
-					delErr := j.Delete(deleteResourceRetries)
+					delErr := j.Delete(util.DefaultDeleteRetries)
 					if delErr != nil {
 						fmt.Printf("could not delete job %s\n", j.Metadata.Name)
 						fmt.Println(delErr)
@@ -1077,9 +1087,9 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				Expect(nodeZone == pvZone).To(Equal(true))
 
 				By("Cleaning up after ourselves")
-				err = testPod.Delete(deleteResourceRetries)
+				err = testPod.Delete(util.DefaultDeleteRetries)
 				Expect(err).NotTo(HaveOccurred())
-				err = pvc.Delete(deleteResourceRetries)
+				err = pvc.Delete(util.DefaultDeleteRetries)
 				Expect(err).NotTo(HaveOccurred())
 			} else {
 				Skip("Availability zones was not configured for this Cluster Definition")
@@ -1256,13 +1266,13 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				}
 
 				By("Cleaning up after ourselves")
-				err = frontendProdDeployment.Delete(deleteResourceRetries)
+				err = frontendProdDeployment.Delete(util.DefaultDeleteRetries)
 				Expect(err).NotTo(HaveOccurred())
-				err = frontendDevDeployment.Delete(deleteResourceRetries)
+				err = frontendDevDeployment.Delete(util.DefaultDeleteRetries)
 				Expect(err).NotTo(HaveOccurred())
-				err = backendDeployment.Delete(deleteResourceRetries)
+				err = backendDeployment.Delete(util.DefaultDeleteRetries)
 				Expect(err).NotTo(HaveOccurred())
-				err = nwpolicyDeployment.Delete(deleteResourceRetries)
+				err = nwpolicyDeployment.Delete(util.DefaultDeleteRetries)
 				Expect(err).NotTo(HaveOccurred())
 				err = namespaceDev.Delete()
 				Expect(err).NotTo(HaveOccurred())
@@ -1275,15 +1285,15 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 	})
 
 	Describe("with a windows agent pool", func() {
-		It("should be able to deploy an iis webserver", func() {
+		It("should be able to deploy and scale an iis webserver", func() {
 			if eng.HasWindowsAgents() {
 				windowsImages, err := eng.GetWindowsTestImages()
 				Expect(err).NotTo(HaveOccurred())
-
-				By("Creating a deployment with 1 pod running IIS")
 				r := rand.New(rand.NewSource(time.Now().UnixNano()))
-				deploymentName := fmt.Sprintf("iis-%s-%v", cfg.Name, r.Intn(99999))
-				iisDeploy, err := deployment.CreateWindowsDeploy(windowsImages.IIS, deploymentName, "default", 80, -1)
+				deploymentPrefix := fmt.Sprintf("iis-%s", cfg.Name)
+				deploymentName := fmt.Sprintf("%s-%v", deploymentPrefix, r.Intn(99999))
+				By("Creating a deployment with 1 pod running IIS")
+				iisDeploy, err := deployment.CreateWindowsDeployDeleteIfExist(deploymentPrefix, windowsImages.IIS, deploymentName, "default", 80, -1)
 				Expect(err).NotTo(HaveOccurred())
 
 				By("Waiting on pod to be Ready")
@@ -1292,70 +1302,23 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				Expect(running).To(Equal(true))
 
 				By("Exposing a LoadBalancer for the pod")
-				err = iisDeploy.Expose("LoadBalancer", 80, 80)
-				Expect(err).NotTo(HaveOccurred())
-				s, err := service.Get(deploymentName, "default")
-				Expect(err).NotTo(HaveOccurred())
-
-				By("Verifying that the service is reachable and returns the default IIS start page")
-				valid := s.Validate("(IIS Windows Server)", 10, 10*time.Second, cfg.Timeout)
-				Expect(valid).To(BeTrue())
-
-				By("Checking that each pod can reach http://www.bing.com")
-				iisPods, err := iisDeploy.Pods()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(len(iisPods)).ToNot(BeZero())
-				for _, iisPod := range iisPods {
-					var pass bool
-					pass, err = iisPod.CheckWindowsOutboundConnection(10*time.Second, cfg.Timeout)
-					Expect(err).NotTo(HaveOccurred())
-					Expect(pass).To(BeTrue())
-				}
-
-				By("Verifying pods & services can be deleted")
-				err = iisDeploy.Delete(deleteResourceRetries)
-				Expect(err).NotTo(HaveOccurred())
-				err = s.Delete(deleteResourceRetries)
-				Expect(err).NotTo(HaveOccurred())
-			} else {
-				Skip("No windows agent was provisioned for this Cluster Definition")
-			}
-		})
-
-		It("should be able to scale an iis webserver", func() {
-			if eng.HasWindowsAgents() {
-				windowsImages, err := eng.GetWindowsTestImages()
-				Expect(err).NotTo(HaveOccurred())
-
-				By("Creating a deployment with 1 pod running IIS")
-				r := rand.New(rand.NewSource(time.Now().UnixNano()))
-				deploymentName := fmt.Sprintf("iis-%s-%v", cfg.Name, r.Intn(99999))
-				iisDeploy, err := deployment.CreateWindowsDeploy(windowsImages.IIS, deploymentName, "default", 80, -1)
-				Expect(err).NotTo(HaveOccurred())
-
-				By("Waiting on pod to be Ready")
-				running, err := pod.WaitOnReady(deploymentName, "default", 3, retryTimeWhenWaitingForPodReady, cfg.Timeout)
-				Expect(err).NotTo(HaveOccurred())
-				Expect(running).To(Equal(true))
-
-				By("Exposing a LoadBalancer for the pod")
-				err = iisDeploy.Expose("LoadBalancer", 80, 80)
+				err = iisDeploy.ExposeDeleteIfExist(deploymentPrefix, "default", "LoadBalancer", 80, 80)
 				Expect(err).NotTo(HaveOccurred())
 				iisService, err := service.Get(deploymentName, "default")
 				Expect(err).NotTo(HaveOccurred())
 
 				By("Verifying that the service is reachable and returns the default IIS start page")
-				valid := iisService.Validate("(IIS Windows Server)", 10, 10*time.Second, cfg.Timeout)
+				valid := iisService.Validate("(IIS Windows Server)", 10, retryTimeWhenWaitingForPodReady, cfg.Timeout)
 				Expect(valid).To(BeTrue())
 
-				By("Checking that each pod can reach http://www.bing.com")
+				By("Checking that each pod can reach the internet")
 				var iisPods []pod.Pod
 				iisPods, err = iisDeploy.Pods()
 				Expect(err).NotTo(HaveOccurred())
 				Expect(len(iisPods)).ToNot(BeZero())
 				for _, iisPod := range iisPods {
 					var pass bool
-					pass, err = iisPod.CheckWindowsOutboundConnection(10*time.Second, cfg.Timeout)
+					pass, err = iisPod.CheckWindowsOutboundConnection(retryTimeWhenWaitingForPodReady, timeoutWhenWaitingForPodOutboundAccess)
 					Expect(err).NotTo(HaveOccurred())
 					Expect(pass).To(BeTrue())
 				}
@@ -1375,16 +1338,16 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				Expect(len(iisPods)).To(Equal(5))
 
 				By("Verifying that the service is reachable and returns the default IIS start page")
-				valid = iisService.Validate("(IIS Windows Server)", 10, 10*time.Second, cfg.Timeout)
+				valid = iisService.Validate("(IIS Windows Server)", 10, retryTimeWhenWaitingForPodReady, cfg.Timeout)
 				Expect(valid).To(BeTrue())
 
-				By("Checking that each pod can reach http://www.bing.com")
+				By("Checking that each pod can reach the internet")
 				iisPods, err = iisDeploy.Pods()
 				Expect(err).NotTo(HaveOccurred())
 				Expect(len(iisPods)).ToNot(BeZero())
 				for _, iisPod := range iisPods {
 					var pass bool
-					pass, err = iisPod.CheckWindowsOutboundConnection(10*time.Second, cfg.Timeout)
+					pass, err = iisPod.CheckWindowsOutboundConnection(retryTimeWhenWaitingForPodReady, timeoutWhenWaitingForPodOutboundAccess)
 					Expect(err).NotTo(HaveOccurred())
 					Expect(pass).To(BeTrue())
 				}
@@ -1406,24 +1369,24 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				Expect(len(iisPods)).To(Equal(2))
 
 				By("Verifying that the service is reachable and returns the default IIS start page")
-				valid = iisService.Validate("(IIS Windows Server)", 10, 10*time.Second, cfg.Timeout)
+				valid = iisService.Validate("(IIS Windows Server)", 10, retryTimeWhenWaitingForPodReady, cfg.Timeout)
 				Expect(valid).To(BeTrue())
 
-				By("Checking that each pod can reach http://www.bing.com")
+				By("Checking that each pod can reach the internet")
 				iisPods, err = iisDeploy.Pods()
 				Expect(err).NotTo(HaveOccurred())
 				Expect(len(iisPods)).ToNot(BeZero())
 				for _, iisPod := range iisPods {
 					var pass bool
-					pass, err = iisPod.CheckWindowsOutboundConnection(10*time.Second, cfg.Timeout)
+					pass, err = iisPod.CheckWindowsOutboundConnection(retryTimeWhenWaitingForPodReady, cfg.Timeout)
 					Expect(err).NotTo(HaveOccurred())
 					Expect(pass).To(BeTrue())
 				}
 
 				By("Verifying pods & services can be deleted")
-				err = iisDeploy.Delete(deleteResourceRetries)
+				err = iisDeploy.Delete(util.DefaultDeleteRetries)
 				Expect(err).NotTo(HaveOccurred())
-				err = iisService.Delete(deleteResourceRetries)
+				err = iisService.Delete(util.DefaultDeleteRetries)
 				Expect(err).NotTo(HaveOccurred())
 			} else {
 				Skip("No windows agent was provisioned for this Cluster Definition")
@@ -1434,16 +1397,17 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			if eng.HasWindowsAgents() {
 				windowsImages, err := eng.GetWindowsTestImages()
 				Expect(err).NotTo(HaveOccurred())
-
-				By("Creating a deployment running IIS")
 				r := rand.New(rand.NewSource(time.Now().UnixNano()))
-				windowsDeploymentName := fmt.Sprintf("iis-dns-%s-%v", cfg.Name, r.Intn(99999))
-				windowsIISDeployment, err := deployment.CreateWindowsDeploy(windowsImages.IIS, windowsDeploymentName, "default", 80, -1)
+				deploymentPrefix := fmt.Sprintf("iis-dns-%s", cfg.Name)
+				windowsDeploymentName := fmt.Sprintf("%s-%v", deploymentPrefix, r.Intn(99999))
+				By("Creating a deployment running IIS")
+				windowsIISDeployment, err := deployment.CreateWindowsDeployDeleteIfExist(deploymentPrefix, windowsImages.IIS, windowsDeploymentName, "default", 80, -1)
 				Expect(err).NotTo(HaveOccurred())
 
+				deploymentPrefix = fmt.Sprintf("nginx-dns-%s", cfg.Name)
+				nginxDeploymentName := fmt.Sprintf("%s-%v", deploymentPrefix, r.Intn(99999))
 				By("Creating a nginx deployment")
-				nginxDeploymentName := fmt.Sprintf("nginx-dns-%s-%v", cfg.Name, r.Intn(99999))
-				linuxNginxDeploy, err := deployment.CreateLinuxDeploy("library/nginx:latest", nginxDeploymentName, "default", "")
+				linuxNginxDeploy, err := deployment.CreateLinuxDeployDeleteIfExists(deploymentPrefix, "library/nginx:latest", nginxDeploymentName, "default", "")
 				Expect(err).NotTo(HaveOccurred())
 
 				By("Ensure there is a Running nginx pod")
@@ -1457,13 +1421,13 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				Expect(running).To(Equal(true))
 
 				By("Exposing a internal service for the linux nginx deployment")
-				err = linuxNginxDeploy.Expose("ClusterIP", 80, 80)
+				err = linuxNginxDeploy.ExposeIfNotExist("ClusterIP", 80, 80)
 				Expect(err).NotTo(HaveOccurred())
 				linuxService, err := service.Get(nginxDeploymentName, "default")
 				Expect(err).NotTo(HaveOccurred())
 
 				By("Exposing a internal service for the windows iis deployment")
-				err = windowsIISDeployment.Expose("ClusterIP", 80, 80)
+				err = windowsIISDeployment.ExposeIfNotExist("ClusterIP", 80, 80)
 				Expect(err).NotTo(HaveOccurred())
 				windowsService, err := service.Get(windowsDeploymentName, "default")
 				Expect(err).NotTo(HaveOccurred())
@@ -1490,13 +1454,13 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				Expect(successes).To(Equal(cfg.StabilityIterations))
 
 				By("Cleaning up after ourselves")
-				err = windowsIISDeployment.Delete(deleteResourceRetries)
+				err = windowsIISDeployment.Delete(util.DefaultDeleteRetries)
 				Expect(err).NotTo(HaveOccurred())
-				err = linuxNginxDeploy.Delete(deleteResourceRetries)
+				err = linuxNginxDeploy.Delete(util.DefaultDeleteRetries)
 				Expect(err).NotTo(HaveOccurred())
-				err = windowsService.Delete(deleteResourceRetries)
+				err = windowsService.Delete(util.DefaultDeleteRetries)
 				Expect(err).NotTo(HaveOccurred())
-				err = linuxService.Delete(deleteResourceRetries)
+				err = linuxService.Delete(util.DefaultDeleteRetries)
 				Expect(err).NotTo(HaveOccurred())
 			} else {
 				Skip("No windows agent was provisioned for this Cluster Definition")
@@ -1526,7 +1490,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 					r := rand.New(rand.NewSource(time.Now().UnixNano()))
 					hostport := 8123
 					deploymentName := fmt.Sprintf("iis-%s-%v", cfg.Name, r.Intn(99999))
-					iisDeploy, err := deployment.CreateWindowsDeploy(iisImage, deploymentName, "default", 80, hostport)
+					iisDeploy, err := deployment.CreateWindowsDeployIfNotExist(iisImage, deploymentName, "default", 80, hostport)
 					Expect(err).NotTo(HaveOccurred())
 					running, err := pod.WaitOnReady(deploymentName, "default", 3, 30*time.Second, cfg.Timeout)
 					Expect(err).NotTo(HaveOccurred())
@@ -1552,7 +1516,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			if eng.HasWindowsAgents() {
 				if eng.ExpandedDefinition.Properties.OrchestratorProfile.OrchestratorVersion == "1.11.0" {
 					// Failure in 1.11.0 - https://github.com/kubernetes/kubernetes/issues/65845, fixed in 1.11.1
-					Skip("Kubernetes 1.11.0 has a known issue creating Azure PersistentVolumeClaims")
+					Skip("Kubernetes 1.11.0 has a known issue creating Azure PersistentVolumeClaim")
 				} else if common.IsKubernetesVersionGe(eng.ExpandedDefinition.Properties.OrchestratorProfile.OrchestratorVersion, "1.8.0") {
 					windowsImages, err := eng.GetWindowsTestImages()
 					Expect(err).NotTo(HaveOccurred())
@@ -1571,7 +1535,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 
 					By("Creating a persistent volume claim")
 					pvcName := "pvc-azurefile" // should be the same as in pvc-azurefile.yaml
-					pvc, err := persistentvolumeclaims.CreatePersistentVolumeClaimsFromFile(filepath.Join(WorkloadDir, "pvc-azurefile.yaml"), pvcName, "default")
+					pvc, err := persistentvolumeclaims.CreatePVCFromFileDeleteIfExist(filepath.Join(WorkloadDir, "pvc-azurefile.yaml"), pvcName, "default")
 					Expect(err).NotTo(HaveOccurred())
 					ready, err = pvc.WaitOnReady("default", 5*time.Second, cfg.Timeout)
 					Expect(err).NotTo(HaveOccurred())
@@ -1590,7 +1554,9 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 					Expect(valid).To(BeTrue())
 					Expect(err).NotTo(HaveOccurred())
 
-					err = iisPod.Delete(deleteResourceRetries)
+					err = iisPod.Delete(util.DefaultDeleteRetries)
+					Expect(err).NotTo(HaveOccurred())
+					err = pvc.Delete(util.DefaultDeleteRetries)
 					Expect(err).NotTo(HaveOccurred())
 				} else {
 					Skip("Kubernetes version needs to be 1.8 and up for Azure File test")
@@ -1611,7 +1577,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				Expect(running).To(Equal(true))
 				restarts := pod.Status.ContainerStatuses[0].RestartCount
 				if cfg.SoakClusterName == "" {
-					err = pod.Delete(deleteResourceRetries)
+					err = pod.Delete(util.DefaultDeleteRetries)
 					Expect(err).NotTo(HaveOccurred())
 					Expect(restarts).To(Equal(0))
 				} else {
@@ -1661,9 +1627,9 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				s, err := service.Get(longRunningApacheDeploymentName, "default")
 				Expect(err).NotTo(HaveOccurred())
 
-				err = s.Delete(deleteResourceRetries)
+				err = s.Delete(util.DefaultDeleteRetries)
 				Expect(err).NotTo(HaveOccurred())
-				err = phpApacheDeploy.Delete(deleteResourceRetries)
+				err = phpApacheDeploy.Delete(util.DefaultDeleteRetries)
 				Expect(err).NotTo(HaveOccurred())
 			} else {
 				Skip("Keep long-running php-apache workloads running for soak clusters")

@@ -27,6 +27,18 @@ systemctlEnableAndStart() {
         return 1
     fi
 }
+systemctlDisableAndStop() {
+    systemctl_stop 100 5 30 $1
+    if [ $? -ne 0 ]; then
+        echo "$1 could not be stopped"
+        return 1
+    fi
+    retrycmd_if_failure 120 5 25 systemctl disable $1
+    if [ $? -ne 0 ]; then
+        echo "$1 could not be disabled by systemctl"
+        return 1
+    fi
+}
 
 configureEtcdUser(){
     useradd -U "etcd"
@@ -122,6 +134,17 @@ ensureRPC() {
     systemctlEnableAndStart rpc-statd || exit $ERR_SYSTEMCTL_START_FAIL
 }
 
+ensureAuditD() {
+  if [[ "${AUDITD_ENABLED}" == true ]]; then
+    systemctlEnableAndStart auditd || exit $ERR_SYSTEMCTL_START_FAIL
+  else
+    apt list --installed | grep 'auditd'
+    if [ $? -eq 0 ]; then
+      systemctlDisableAndStop auditd || exit $ERR_SYSTEMCTL_START_FAIL
+    fi
+  fi
+}
+
 generateAggregatedAPICerts() {
     AGGREGATED_API_CERTS_SETUP_FILE=/etc/kubernetes/generate-proxy-certs.sh
     wait_for_file 1200 1 $AGGREGATED_API_CERTS_SETUP_FILE || exit $ERR_FILE_WATCH_TIMEOUT
@@ -147,9 +170,9 @@ configureK8s() {
     set +x
     echo "${KUBELET_PRIVATE_KEY}" | base64 --decode > "${KUBELET_PRIVATE_KEY_PATH}"
     echo "${APISERVER_PUBLIC_KEY}" | base64 --decode > "${APISERVER_PUBLIC_KEY_PATH}"
-    # Perform the required JSON escaping for special characters " and \
-    SERVICE_PRINCIPAL_CLIENT_SECRET=$(echo $SERVICE_PRINCIPAL_CLIENT_SECRET | sed "s|\\\\|\\\\\\\|g")
-    SERVICE_PRINCIPAL_CLIENT_SECRET=$(echo $SERVICE_PRINCIPAL_CLIENT_SECRET | sed 's|"|\\"|g')
+    # Perform the required JSON escaping for special characters \ and "
+    SERVICE_PRINCIPAL_CLIENT_SECRET=${SERVICE_PRINCIPAL_CLIENT_SECRET//\\/\\\\}
+    SERVICE_PRINCIPAL_CLIENT_SECRET=${SERVICE_PRINCIPAL_CLIENT_SECRET//\"/\\\"}
     cat << EOF > "${AZURE_JSON_PATH}"
 {
     "cloud":"${TARGET_ENVIRONMENT}",

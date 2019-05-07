@@ -168,12 +168,21 @@ func CreatePodFromFile(filename, name, namespace string, sleep, duration time.Du
 		log.Printf("Error trying to create Pod %s:%s\n", name, string(out))
 		return nil, err
 	}
-	pod, err := GetWithRetry(name, namespace, sleep, duration)
+	p, err := GetWithRetry(name, namespace, sleep, duration)
 	if err != nil {
 		log.Printf("Error while trying to fetch Pod %s:%s\n", name, err)
 		return nil, err
 	}
-	return pod, nil
+	return p, nil
+}
+
+// CreatePodFromFileIfNotExist will create a Pod from file with a name
+func CreatePodFromFileIfNotExist(filename, name, namespace string, sleep, duration time.Duration) (*Pod, error) {
+	p, err := Get("dns-liveness", "default")
+	if err != nil {
+		return CreatePodFromFile(filename, name, namespace, sleep, duration)
+	}
+	return p, nil
 }
 
 // RunLinuxPod will create a pod that runs a bash command
@@ -254,7 +263,7 @@ func RunCommandMultipleTimes(podRunnerCmd podRunnerCmd, image, name, command str
 			log.Printf("%s\n", string(out))
 		}
 
-		err = p.Delete(3)
+		err = p.Delete(util.DefaultDeleteRetries)
 		if err != nil {
 			return successfulAttempts, err
 		}
@@ -793,7 +802,7 @@ func (p *Pod) ValidateOmsAgentLogs(execCmdString string, sleep, duration time.Du
 
 // CheckWindowsOutboundConnection will keep retrying the check if an error is received until the timeout occurs or it passes. This helps us when DNS may not be available for some time after a pod starts.
 func (p *Pod) CheckWindowsOutboundConnection(sleep, duration time.Duration) (bool, error) {
-	exp, err := regexp.Compile(`(StatusCode\s*:\s*200)`)
+	exp, err := regexp.Compile(`(Connected\s*:\s*True)`)
 	if err != nil {
 		log.Printf("Error while trying to create regex for windows outbound check:%s\n", err)
 		return false, err
@@ -808,20 +817,10 @@ func (p *Pod) CheckWindowsOutboundConnection(sleep, duration time.Duration) (boo
 			case <-ctx.Done():
 				errCh <- errors.Errorf("Timeout exceeded (%s) while waiting for Pod (%s) to check outbound internet connection", duration.String(), p.Metadata.Name)
 			default:
-				// if we can curl an external URL we have outbound internet access
-				urls := getExternalURLs()
-				for i, url := range urls {
-					out, err := p.Exec("--", "powershell", "iwr", "-UseBasicParsing", "-TimeoutSec", "60", url)
-					matched := exp.MatchString(string(out))
-					if err == nil && matched {
-						readyCh <- true
-					} else {
-						if i == (len(urls) - 1) {
-							// if all are down let's say we don't have outbound internet access
-							log.Printf("Error:%s\n", err)
-							log.Printf("Out:%s\n", out)
-						}
-					}
+				out, err := p.Exec("--", "powershell", "New-Object", "System.Net.Sockets.TcpClient('8.8.8.8', 443)")
+				matched := exp.MatchString(string(out))
+				if err == nil && matched {
+					readyCh <- true
 				}
 				time.Sleep(sleep)
 			}

@@ -217,6 +217,8 @@ const (
 	DefaultAcceleratedNetworking = true
 	// DefaultVMSSOverProvisioningEnabled determines the aks-engine provided default for enabling VMSS Overprovisioning
 	DefaultVMSSOverProvisioningEnabled = false
+	// DefaultAuditDEnabled determines the aks-engine provided default for enabling auditd
+	DefaultAuditDEnabled = false
 	// DefaultDNSAutoscalerAddonName is the name of the dns-autoscaler addon
 	DefaultDNSAutoscalerAddonName = "dns-autoscaler"
 	// DefaultUseCosmos determines if the cluster will use cosmos as etcd storage
@@ -288,11 +290,11 @@ const (
 	// AzureCniPluginVerLinux specifies version of Azure CNI plugin, which has been mirrored from
 	// https://github.com/Azure/azure-container-networking/releases/download/${AZURE_PLUGIN_VER}/azure-vnet-cni-linux-amd64-${AZURE_PLUGIN_VER}.tgz
 	// to https://acs-mirror.azureedge.net/cni
-	AzureCniPluginVerLinux = "v1.0.18"
+	AzureCniPluginVerLinux = "v1.0.22"
 	// AzureCniPluginVerWindows specifies version of Azure CNI plugin, which has been mirrored from
 	// https://github.com/Azure/azure-container-networking/releases/download/${AZURE_PLUGIN_VER}/azure-vnet-cni-windows-amd64-${AZURE_PLUGIN_VER}.zip
 	// to https://acs-mirror.azureedge.net/cni
-	AzureCniPluginVerWindows = "v1.0.18"
+	AzureCniPluginVerWindows = "v1.0.22"
 	// CNIPluginVer specifies the version of CNI implementation
 	// https://github.com/containernetworking/plugins
 	CNIPluginVer = "v0.7.5"

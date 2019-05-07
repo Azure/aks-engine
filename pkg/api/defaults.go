@@ -468,6 +468,10 @@ func (p *Properties) setAgentProfileDefaults(isUpgrade, isScale bool) {
 			profile.VMSSOverProvisioningEnabled = to.BoolPtr(DefaultVMSSOverProvisioningEnabled && !isUpgrade && !isScale)
 		}
 
+		if profile.AuditDEnabled == nil {
+			profile.AuditDEnabled = to.BoolPtr(DefaultAuditDEnabled && !isUpgrade && !isScale)
+		}
+
 		if profile.OSType != Windows {
 			if profile.Distro == "" {
 				if p.OrchestratorProfile.IsKubernetes() {

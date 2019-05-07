@@ -1,15 +1,14 @@
 # Developer Guide
 
-This guide explains how to set up your environment for developing on
-aks-engine.
+This guide explains how to set up your environment for development on AKS Engine.
 
 ## Prerequisites
 
-- [Go](https://golang.org/dl) 1.11 or later
-- Golang [dep](https://github.com/golang/dep) 0.5.0 or later
-- [kubectl](https://kubernetes.io/docs/tasks/tools/install-kubectl/) 1.7 or later
-- An Azure account (needed for deploying VMs and Azure infrastructure)
-- Git
+- [`git`](https://git-scm.com/)
+- [`go`](https://golang.org/dl) 1.12 or later
+- [`dep`](https://github.com/golang/dep) 0.5.1 or later
+- An [Azure](https://azure.microsoft.com/en-us/) subscription
+- [`kubectl`](https://kubernetes.io/docs/tasks/tools/install-kubectl/)
 
 ## Contribution Guidelines
 
@@ -206,45 +205,103 @@ matches the version of the Kubernetes server.
 
 ### Debugging
 
-For aks-engine code debugging you can use [Delve](https://github.com/derekparker/delve) debugger.
+To debug `aks-engine` code directly, use the [Go extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode.Go)
+for Visual Studio Code or use [Delve](https://github.com/go-delve/delve) at the command line.
 
-#### CLI
+#### Visual Studio Code
 
-Run command:
-```
-dlv debug github.com/Azure/aks-engine -- generate ~/Documents/azure/kubernetes.json
-```
+To debug `aks-engine` with [VS Code](https://code.visualstudio.com/), first ensure that you have the
+[Go extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode.Go) installed. Click
+the "Extensions" icon in the Activity Bar (on the far left), search for "go", then install the
+official Microsoft extension titled "Rich Go language support for Visual Studio Code."
 
-Test individual package and individual test:
-```
-dlv test github.com/Azure/aks-engine/pkg/engine
-dlv test github.com/Azure/aks-engine/pkg/engine -- -test.run ^TestNetworkPolicyDefaults$
-```
+![install_go_extension.png](../static/img/install-go-extension.png)
 
-#### Visual Code Studio
+Once installed, the Go extension will `go get` several helper applications, including Delve for
+debugging support. You can read more about VS Code integration with Delve
+[here](https://github.com/Microsoft/vscode-go/wiki/Debugging-Go-code-using-VS-Code).
 
-More on VSC integration with delve can be found [here](https://github.com/Microsoft/vscode-go/wiki/Debugging-Go-code-using-VS-Code)
+Make sure you have the `aks-engine` code checked out to the appropriate location in your `$GOPATH`
+and open that directory in VS Code.
 
-If delve is installed and configured, you can use native VS functionality to debug code or individual tests (`debug test`)
+##### Debugging Tests
 
-Example launch.json file:
+If you are writing tests (and if you are, we want to give you a hug!), you can debug them directly
+in Visual Studio code.
+
+Set a breakpoint inside a test, then move your mouse pointer to the top of the function definition.
+To the right of "run test" appears a link saying "debug test": click it!
+
+![debug_test.png](../static/img/debug-test.png)
+
+##### Debugging AKS Engine
+
+To debug `aks-engine` itself, the default Go debugging configuration in `.vscode/launch.json` needs
+to be edited. Open that file (or just click the gear-shaped "Open launch.json" icon if you have the
+Debug panel open).
+
+Here is an example `launch.json` file that contains a configuration for debugging the
+`aks-engine generate` command using the `examples/kubernetes.json` file for its cluster
+configuration.
 
 ```json
 {
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Launch",
+      "name": "aks-engine generate",
       "type": "go",
       "request": "launch",
       "mode": "debug",
       "program": "${workspaceRoot}",
       "env": {},
-      "args": ["generate", "${workspaceRoot}/examples/kubernetes.json"],
+      "args": [
+        "generate", "--api-model=${workspaceRoot}/examples/kubernetes.json",
+        "--set", "masterProfile.dnsPrefix=my-dns-prefix",
+        "--set", "linuxProfile.ssh.publicKeys[0].keyData=my-public-key-contents",
+        "--set", "servicePrincipalProfile.clientId=my-service-principal-client-id",
+        "--set", "servicePrincipalProfile.secret=my-service-principal-secret"
+      ],
       "showLog": true
     }
   ]
 }
+```
+
+Copy and paste the configuration and change the values in the `--set` arguments to reference your
+details. You can create multiple configurations in `launch.json` to debug `aks-engine upgrade`,
+`scale`, and other commands.
+
+The `.vscode/launch.json` file is ignored by `git`, so your local version won't be overwritten when
+you push or pull changes.
+
+To start debugging, set a breakpoint in the code of interest. Then choose your configuration in the
+Debug panel and click the green "Start Debugging" arrow.
+
+![debug_code.png](../static/img/debug-code.png)
+
+###### Next Steps for Debugging
+
+When the debugger hits your breakpoint, the variables and call stack will populate in the Debug
+panel. Now you can step through code and inspect memory at runtime using Visual Studio Code's
+standard debugging controls.
+
+This just scratches the surface. Please
+[read more about debugging](https://code.visualstudio.com/docs/editor/debugging) with VS Code.
+
+#### CLI
+
+To debug `aks-engine generate` from the command line:
+
+```shell
+dlv debug github.com/Azure/aks-engine -- generate ~/Documents/azure/kubernetes.json
+```
+
+To test an individual package or a single test:
+
+```shell
+dlv test github.com/Azure/aks-engine/pkg/engine
+dlv test github.com/Azure/aks-engine/pkg/engine -- -test.run ^TestNetworkPolicyDefaults$
 ```
 
 ## Test pipeline

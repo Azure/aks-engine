@@ -934,6 +934,7 @@ func convertMasterProfileToVLabs(api *MasterProfile, vlabsProfile *vlabs.MasterP
 	vlabsProfile.AvailabilityZones = api.AvailabilityZones
 	vlabsProfile.SinglePlacementGroup = api.SinglePlacementGroup
 	vlabsProfile.CosmosEtcd = api.CosmosEtcd
+	vlabsProfile.AuditDEnabled = api.AuditDEnabled
 	convertCustomFilesToVlabs(api, vlabsProfile)
 }
 
@@ -1019,6 +1020,7 @@ func convertAgentPoolProfileToVLabs(api *AgentPoolProfile, p *vlabs.AgentPoolPro
 	p.SinglePlacementGroup = api.SinglePlacementGroup
 	p.EnableVMSSNodePublicIP = api.EnableVMSSNodePublicIP
 	p.LoadBalancerBackendAddressPoolIDs = api.LoadBalancerBackendAddressPoolIDs
+	p.AuditDEnabled = api.AuditDEnabled
 
 	for k, v := range api.CustomNodeLabels {
 		p.CustomNodeLabels[k] = v
