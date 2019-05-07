@@ -48,8 +48,10 @@ create_secret_yaml() {
   log 'Creating oms-agentsecret.yaml file'
   log ''
 
-  local wsid=$(get_param 'WSID')
-  local key=$(get_param 'KEY')
+  local wsid
+  wsid=$(get_param 'WSID')
+  local key
+  key=$(get_param 'KEY')
 
   cat > ./oms-agentsecret.yaml <<EOFSECRET
 apiVersion: v1
