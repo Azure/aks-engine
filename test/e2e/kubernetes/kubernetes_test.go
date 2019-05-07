@@ -232,6 +232,8 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 						Expect(err).NotTo(HaveOccurred())
 					}
 				}
+			} else {
+				Skip("This config is only availble on VHD")
 			}
 		})
 
@@ -352,6 +354,8 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 						Expect(err).NotTo(HaveOccurred())
 					}
 				}
+			} else {
+				Skip("This config is only availble on VHD")
 			}
 		})
 
