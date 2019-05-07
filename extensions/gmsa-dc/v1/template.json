@@ -1,0 +1,40 @@
+{
+	"$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		 "apiVersionDeployments": {
+			 "type": "string",
+			 "minLength": 1,
+			 "metadata": {
+				 "description": "Compute API Version"
+			 }
+		 }
+	},
+	"variables": {  
+	    "initScriptUrl": "https://raw.githubusercontent.com/JeremyWx/gmsa-dc/master/extensions/gmsa-dc/v1/Promote-DC.ps1"
+		},
+	"resources": [
+	 {
+	   "apiVersion": "[parameters('apiVersionDeployments')]",
+	   "dependsOn": [],
+	   "location": "[resourceGroup().location]",
+	   "type": "Microsoft.Compute/virtualMachines/extensions",
+	   "name": "gmsa-dc", 
+	   "properties": {
+		 "publisher": "Microsoft.Compute",
+		 "type": "CustomScriptExtension",
+		 "typeHandlerVersion": "1.8",
+		 "autoUpgradeMinorVersion": true,
+		 "settings": {
+			 "fileUris": [
+				 "[variables('initScriptUrl')]"
+			  ]
+		 },
+		 "protectedSettings": {
+			 "commandToExecute": "[concat('powershell.exe -ExecutionPolicy Unrestricted ./Promote-DC.ps1')]"
+		 }
+	   }
+	 }
+	 ],
+	"outputs": {  }
+ }
