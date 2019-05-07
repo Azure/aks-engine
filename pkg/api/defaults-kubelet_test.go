@@ -49,6 +49,7 @@ func TestKubeletConfigDefaults(t *testing.T) {
 		"--pod-manifest-path":                 "/etc/kubernetes/manifests",
 		"--pod-infra-container-image":         cs.Properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBase + K8sComponentsByVersionMap[cs.Properties.OrchestratorProfile.OrchestratorVersion]["pause"],
 		"--pod-max-pids":                      strconv.Itoa(DefaultKubeletPodMaxPIDs),
+		"--protect-kernel-defaults":           "true",
 		"--rotate-certificates":               "true",
 		"--streaming-connection-idle-timeout": "5m",
 		"--feature-gates":                     "PodPriority=true,RotateKubeletServerCertificate=true",
@@ -434,15 +435,15 @@ func TestProtectKernelDefaults(t *testing.T) {
 	cs := CreateMockContainerService("testcluster", "1.12.7", 3, 2, false)
 	cs.setKubeletConfig()
 	k := cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig
-	if k["--protect-kernel-defaults"] != "" {
+	if k["--protect-kernel-defaults"] != "true" {
 		t.Fatalf("got unexpected '--protect-kernel-defaults' kubelet config value %s, the expected value is %s",
-			k["--protect-kernel-defaults"], "pods")
+			k["--protect-kernel-defaults"], "true")
 	}
 
-	// Validate that --protect-kernel-defaults is "true" by default for Ubuntu distros
+	// Validate that --protect-kernel-defaults is "true" by default for relevant distros
 	for _, distro := range DistroValues {
 		switch distro {
-		case Ubuntu, Ubuntu1804:
+		case Ubuntu, Ubuntu1804, AKS, AKS1804:
 			cs = CreateMockContainerService("testcluster", "1.10.13", 3, 2, false)
 			cs.Properties.MasterProfile.Distro = distro
 			cs.Properties.AgentPoolProfiles[0].Distro = distro
@@ -469,10 +470,10 @@ func TestProtectKernelDefaults(t *testing.T) {
 			k["--protect-kernel-defaults"], "false")
 	}
 
-	// Validate that --protect-kernel-defaults is overridable for Ubuntu distros
+	// Validate that --protect-kernel-defaults is overridable for relevant distros
 	for _, distro := range DistroValues {
 		switch distro {
-		case Ubuntu, Ubuntu1804:
+		case Ubuntu, Ubuntu1804, AKS, AKS1804:
 			cs = CreateMockContainerService("testcluster", "1.10.13", 3, 2, false)
 			cs.Properties.MasterProfile.Distro = "ubuntu"
 			cs.Properties.AgentPoolProfiles[0].Distro = "ubuntu"
