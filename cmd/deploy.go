@@ -12,7 +12,6 @@ import (
 	"path"
 	"path/filepath"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/leonelquinteros/gotext"
@@ -80,7 +79,7 @@ func newDeployCmd() *cobra.Command {
 			if err := dc.loadAPIModel(cmd, args); err != nil {
 				return errors.Wrap(err, "loading API model")
 			}
-			if _, _, err := dc.validateApimodel(); err != nil {
+			if _, _, err := api.ValidateApiModel(dc.locale, dc.containerService, dc.apiVersion); err != nil {
 				return errors.Wrap(err, "validating API model after populating values")
 			}
 			return dc.run()
@@ -352,30 +351,6 @@ func autofillApimodel(dc *deployCmd) error {
 		}
 	}
 	return nil
-}
-
-func (dc *deployCmd) validateApimodel() (*api.ContainerService, string, error) {
-	apiloader := &api.Apiloader{
-		Translator: &i18n.Translator{
-			Locale: dc.locale,
-		},
-	}
-
-	p := dc.containerService.Properties
-	if strings.ToLower(p.OrchestratorProfile.OrchestratorType) == "kubernetes" {
-		if p.ServicePrincipalProfile == nil || (p.ServicePrincipalProfile.ClientID == "" || (p.ServicePrincipalProfile.Secret == "" && p.ServicePrincipalProfile.KeyvaultSecretRef == nil)) {
-			if p.OrchestratorProfile.KubernetesConfig != nil && !p.OrchestratorProfile.KubernetesConfig.UseManagedIdentity {
-				return nil, "", errors.New("when using the kubernetes orchestrator, must either set useManagedIdentity in the kubernetes config or set --client-id and --client-secret or KeyvaultSecretRef of secret (also available in the API model)")
-			}
-		}
-	}
-
-	// This isn't terribly elegant, but it's the easiest way to go for now w/o duplicating a bunch of code
-	rawVersionedAPIModel, err := apiloader.SerializeContainerService(dc.containerService, dc.apiVersion)
-	if err != nil {
-		return nil, "", err
-	}
-	return apiloader.DeserializeContainerService(rawVersionedAPIModel, true, false, nil)
 }
 
 func (dc *deployCmd) run() error {

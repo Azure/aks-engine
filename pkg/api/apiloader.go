@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"reflect"
+	"strings"
 
 	v20170831 "github.com/Azure/aks-engine/pkg/api/agentPoolOnlyApi/v20170831"
 	v20180331 "github.com/Azure/aks-engine/pkg/api/agentPoolOnlyApi/v20180331"
@@ -20,6 +21,7 @@ import (
 	"github.com/Azure/aks-engine/pkg/api/vlabs"
 	"github.com/Azure/aks-engine/pkg/helpers"
 	"github.com/Azure/aks-engine/pkg/i18n"
+	"github.com/leonelquinteros/gotext"
 	"github.com/pkg/errors"
 )
 
@@ -473,4 +475,28 @@ func setContainerServiceDefaultsv20170131(c *v20170131.ContainerService) {
 			OrchestratorType: v20170131.DCOS,
 		}
 	}
+}
+
+func ValidateApiModel(locale *gotext.Locale, containerService *ContainerService, apiVersion string) (*ContainerService, string, error) {
+	apiloader := &Apiloader{
+		Translator: &i18n.Translator{
+			Locale: locale,
+		},
+	}
+
+	p := containerService.Properties
+	if strings.ToLower(p.OrchestratorProfile.OrchestratorType) == "kubernetes" {
+		if p.ServicePrincipalProfile == nil || (p.ServicePrincipalProfile.ClientID == "" || (p.ServicePrincipalProfile.Secret == "" && p.ServicePrincipalProfile.KeyvaultSecretRef == nil)) {
+			if p.OrchestratorProfile.KubernetesConfig != nil && !p.OrchestratorProfile.KubernetesConfig.UseManagedIdentity {
+				return nil, "", errors.New("when using the kubernetes orchestrator, must either set useManagedIdentity in the kubernetes config or set --client-id and --client-secret or KeyvaultSecretRef of secret (also available in the API model)")
+			}
+		}
+	}
+
+	// This isn't terribly elegant, but it's the easiest way to go for now w/o duplicating a bunch of code
+	rawVersionedAPIModel, err := apiloader.SerializeContainerService(containerService, apiVersion)
+	if err != nil {
+		return nil, "", err
+	}
+	return apiloader.DeserializeContainerService(rawVersionedAPIModel, true, false, nil)
 }
