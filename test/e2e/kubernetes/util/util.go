@@ -13,6 +13,9 @@ import (
 	"github.com/pkg/errors"
 )
 
+// DefaultDeleteRetries defines a default retry count for resource deletion operations
+const DefaultDeleteRetries = 10
+
 // PrintCommand prints a command string
 func PrintCommand(cmd *exec.Cmd) {
 	fmt.Printf("\n$ %s\n", strings.Join(cmd.Args, " "))
