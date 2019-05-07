@@ -166,7 +166,7 @@ ifndef HAS_GIT
 	$(error You must install Git)
 endif
 ifndef HAS_GOLANGCI
-	curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sh -s -- -b $(GOPATH)/bin
+	curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sh -s -- -b ${GOPATH}/bin
 endif
 ifndef HAS_GINKGO
 	go get -u github.com/onsi/ginkgo/ginkgo
