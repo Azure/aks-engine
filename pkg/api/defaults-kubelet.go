@@ -168,7 +168,7 @@ func (cs *ContainerService) setKubeletConfig() {
 		// The previous call may have copied values from the orchestartor profile, which are not valid
 		// for Windows. We have to fix that 
 		if profile.OSType == Windows {
-			// delete(profile.KubernetesConfig.KubeletConfig,"--pod-manifest-path")
+			delete(profile.KubernetesConfig.KubeletConfig,"--pod-manifest-path")
 		}
 
 			// For N Series (GPU) VMs
