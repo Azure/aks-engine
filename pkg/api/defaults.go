@@ -326,6 +326,9 @@ func (p *Properties) setMasterProfileDefaults(isUpgrade bool) {
 			p.MasterProfile.KubernetesConfig.KubeletConfig["--protect-kernel-defaults"] = "true"
 		}
 	}
+	if cs.Properties.MasterProfile.IsUbuntu1804() {
+		cs.Properties.MasterProfile.KubernetesConfig.KubeletConfig["--resolv-conf"] = "/run/systemd/resolve/resolv.conf"
+	}
 
 	// set default to VMAS for now
 	if len(p.MasterProfile.AvailabilityProfile) == 0 {
@@ -523,6 +526,9 @@ func (p *Properties) setAgentProfileDefaults(isUpgrade, isScale bool) {
 			if _, ok := profile.KubernetesConfig.KubeletConfig["--protect-kernel-defaults"]; !ok {
 				profile.KubernetesConfig.KubeletConfig["--protect-kernel-defaults"] = "true"
 			}
+		}
+		if profile.IsUbuntu1804() {
+			profile.KubernetesConfig.KubeletConfig["--resolv-conf"] = "/run/systemd/resolve/resolv.conf"
 		}
 
 		// Set the default number of IP addresses allocated for agents.
