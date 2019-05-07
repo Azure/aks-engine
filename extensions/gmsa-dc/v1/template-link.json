@@ -1,0 +1,20 @@
+{
+    "name": "gmsa-dc",
+    "type": "Microsoft.Resources/deployments",
+    "apiVersion": "[variables('apiVersionDeployments')]",
+    "dependsOn": [
+        "vmLoopNode"
+    ],
+    "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+            "uri": "https://raw.githubusercontent.com/JeremyWx/gmsa-dc/master/extensions/gmsa-dc/v1/template.json",
+            "contentVersion": "1.0.0.0"
+        },
+        "parameters": {
+            "apiVersionDeployments": {
+                "value": "[variables('apiVersionDeployments')]"
+            }
+        }
+    }
+}
