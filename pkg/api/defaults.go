@@ -328,6 +328,12 @@ func (p *Properties) setMasterProfileDefaults(isUpgrade bool) {
 	}
 	// Override the --resolv-conf kubelet config value for Ubuntu 18.04 after the distro value is set.
 	if p.MasterProfile.IsUbuntu1804() {
+		if p.MasterProfile.KubernetesConfig == nil {
+			p.MasterProfile.KubernetesConfig = &KubernetesConfig{}
+		}
+		if p.MasterProfile.KubernetesConfig.KubeletConfig == nil {
+			p.MasterProfile.KubernetesConfig.KubeletConfig = &KubeletConfig{}
+		}
 		p.MasterProfile.KubernetesConfig.KubeletConfig["--resolv-conf"] = "/run/systemd/resolve/resolv.conf"
 	}
 
@@ -530,6 +536,12 @@ func (p *Properties) setAgentProfileDefaults(isUpgrade, isScale bool) {
 		}
 		// Override the --resolv-conf kubelet config value for Ubuntu 18.04 after the distro value is set.
 		if profile.IsUbuntu1804() {
+			if profile.KubernetesConfig == nil {
+				profile.KubernetesConfig = &KubernetesConfig{}
+			}
+			if profile.KubernetesConfig.KubeletConfig == nil {
+				profile.KubernetesConfig.KubeletConfig = &KubeletConfig{}
+			}
 			profile.KubernetesConfig.KubeletConfig["--resolv-conf"] = "/run/systemd/resolve/resolv.conf"
 		}
 
