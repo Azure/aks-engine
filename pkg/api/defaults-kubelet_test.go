@@ -85,6 +85,7 @@ func TestKubeletConfigDefaults(t *testing.T) {
 	expected["--image-pull-progress-deadline"] = "20m"
 	expected["--resolv-conf"] = "\"\"\"\""
 	expected["--eviction-hard"] = "\"\"\"\""
+	delete(expected, "--pod-manifest-path")
 	for key, val := range expected {
 		if windowsProfileKubeletConfig[key] != val {
 			t.Fatalf("got unexpected kubelet config value for %s: %s, expected %s",
