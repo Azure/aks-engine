@@ -61,6 +61,10 @@ func newGenerateCmd() *cobra.Command {
 				return errors.Wrap(err, "loading API model in generateCmd")
 			}
 
+			if _, _, err := api.ValidateApiModel(gc.locale, gc.containerService, gc.apiVersion); err != nil {
+				return errors.Wrap(err, "validating API model after populating values")
+			}
+
 			return gc.run()
 		},
 	}
@@ -133,7 +137,8 @@ func (gc *generateCmd) loadAPIModel(cmd *cobra.Command, args []string) error {
 			Locale: gc.locale,
 		},
 	}
-	gc.containerService, gc.apiVersion, err = apiloader.LoadContainerServiceFromFile(gc.apimodelPath, true, false, nil)
+	// Don't validate right away, wait until all values have been populated.
+	gc.containerService, gc.apiVersion, err = apiloader.LoadContainerServiceFromFile(gc.apimodelPath, false, false, nil)
 	if err != nil {
 		return errors.Wrap(err, "error parsing the api model")
 	}
