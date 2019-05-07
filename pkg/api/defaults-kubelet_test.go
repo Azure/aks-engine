@@ -13,18 +13,83 @@ import (
 
 func TestKubeletConfigDefaults(t *testing.T) {
 	cs := CreateMockContainerService("testcluster", common.RationalizeReleaseAndVersion(Kubernetes, common.KubernetesDefaultRelease, "", false, false), 3, 2, false)
+	winProfile := &AgentPoolProfile{}
+	winProfile.Count = 1
+	winProfile.Name = "agentpool2"
+	winProfile.VMSize = "Standard_D2_v2"
+	winProfile.OSType = Windows
+	cs.Properties.AgentPoolProfiles = append(cs.Properties.AgentPoolProfiles, winProfile)
 	cs.setKubeletConfig()
-	k := cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig
-	// TODO test all default config values
-	for key, val := range map[string]string{
-		"--azure-container-registry-config": "/etc/kubernetes/azure.json",
-		"--image-pull-progress-deadline":    "30m",
-		"--pod-max-pids":                    "-1",
-		"--rotate-certificates":             "true",
-	} {
-		if k[key] != val {
+	kubeletConfig := cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig
+	expected := map[string]string{
+		"--address":                           "0.0.0.0",
+		"--allow-privileged":                  "true",
+		"--anonymous-auth":                    "false",
+		"--authorization-mode":                "Webhook",
+		"--azure-container-registry-config":   "/etc/kubernetes/azure.json",
+		"--cadvisor-port":                     "", // Validate that we delete this key for >= 1.12 clusters
+		"--cgroups-per-qos":                   "true",
+		"--client-ca-file":                    "/etc/kubernetes/certs/ca.crt",
+		"--cloud-provider":                    "azure",
+		"--cloud-config":                      "/etc/kubernetes/azure.json",
+		"--cluster-dns":                       DefaultKubernetesDNSServiceIP,
+		"--cluster-domain":                    "cluster.local",
+		"--enforce-node-allocatable":          "pods",
+		"--event-qps":                         DefaultKubeletEventQPS,
+		"--eviction-hard":                     DefaultKubernetesHardEvictionThreshold,
+		"--image-gc-high-threshold":           strconv.Itoa(DefaultKubernetesGCHighThreshold),
+		"--image-gc-low-threshold":            strconv.Itoa(DefaultKubernetesGCLowThreshold),
+		"--image-pull-progress-deadline":      "30m",
+		"--keep-terminated-pod-volumes":       "false",
+		"--kubeconfig":                        "/var/lib/kubelet/kubeconfig",
+		"--max-pods":                          strconv.Itoa(DefaultKubernetesMaxPods),
+		"--network-plugin":                    NetworkPluginKubenet,
+		"--node-status-update-frequency":      K8sComponentsByVersionMap[cs.Properties.OrchestratorProfile.OrchestratorVersion]["nodestatusfreq"],
+		"--non-masquerade-cidr":               DefaultNonMasqueradeCIDR,
+		"--pod-manifest-path":                 "/etc/kubernetes/manifests",
+		"--pod-infra-container-image":         cs.Properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBase + K8sComponentsByVersionMap[cs.Properties.OrchestratorProfile.OrchestratorVersion]["pause"],
+		"--pod-max-pids":                      strconv.Itoa(DefaultKubeletPodMaxPIDs),
+		"--rotate-certificates":               "true",
+		"--streaming-connection-idle-timeout": "5m",
+	}
+	for key, val := range expected {
+		if kubeletConfig[key] != val {
 			t.Fatalf("got unexpected kubelet config value for %s: %s, expected %s",
-				key, k[key], val)
+				key, kubeletConfig[key], val)
+		}
+	}
+	masterKubeletConfig := cs.Properties.MasterProfile.KubernetesConfig.KubeletConfig
+	for key, val := range expected {
+		if masterKubeletConfig[key] != val {
+			t.Fatalf("got unexpected kubelet config value for %s: %s, expected %s",
+				key, masterKubeletConfig[key], val)
+		}
+	}
+	linuxProfileKubeletConfig := cs.Properties.AgentPoolProfiles[0].KubernetesConfig.KubeletConfig
+	for key, val := range expected {
+		if linuxProfileKubeletConfig[key] != val {
+			t.Fatalf("got unexpected kubelet config value for %s: %s, expected %s",
+				key, linuxProfileKubeletConfig[key], val)
+		}
+	}
+	windowsProfileKubeletConfig := cs.Properties.AgentPoolProfiles[1].KubernetesConfig.KubeletConfig
+	expected["--azure-container-registry-config"] = "c:\\k\\azure.json"
+	expected["--pod-infra-container-image"] = "kubletwin/pause"
+	expected["--kubeconfig"] = "c:\\k\\config"
+	expected["--cloud-config"] = "c:\\k\\azure.json"
+	expected["--cgroups-per-qos"] = "false"
+	expected["--enforce-node-allocatable"] = "\"\"\"\""
+	expected["--system-reserved"] = "memory=2Gi"
+	expected["--client-ca-file"] = "c:\\k\\ca.crt"
+	expected["--hairpin-mode"] = "promiscuous-bridge"
+	expected["--image-pull-progress-deadline"] = "20m"
+	expected["--resolv-conf"] = "\"\"\"\""
+	expected["--eviction-hard"] = "\"\"\"\""
+	delete(expected, "--pod-manifest-path")
+	for key, val := range expected {
+		if windowsProfileKubeletConfig[key] != val {
+			t.Fatalf("got unexpected kubelet config value for %s: %s, expected %s",
+				key, windowsProfileKubeletConfig[key], val)
 		}
 	}
 
@@ -35,7 +100,7 @@ func TestKubeletConfigDefaults(t *testing.T) {
 		"--azure-container-registry-config": overrideVal,
 	}
 	cs.setKubeletConfig()
-	k = cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig
+	k := cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig
 	for key, val := range map[string]string{"--azure-container-registry-config": overrideVal} {
 		if k[key] != val {
 			t.Fatalf("got unexpected kubelet config value for %s: %s, expected %s",
@@ -444,32 +509,32 @@ func TestStaticWindowsConfig(t *testing.T) {
 		"--kubeconfig":                  "/var/lib/kubelet/kubeconfig",
 		"--keep-terminated-pod-volumes": "false",
 	}
-	staticWindowsKubeletConfig := make(map[string]string)
+	expected := make(map[string]string)
 	for key, val := range staticLinuxKubeletConfig {
 		if key != "--pod-manifest-path" {
-			staticWindowsKubeletConfig[key] = val
+			expected[key] = val
 		}
 	}
 
 	// Add Windows-specific overrides
 	// Eventually paths should not be hardcoded here. They should be relative to $global:KubeDir in the PowerShell script
-	staticWindowsKubeletConfig["--azure-container-registry-config"] = "c:\\k\\azure.json"
-	staticWindowsKubeletConfig["--pod-infra-container-image"] = "kubletwin/pause"
-	staticWindowsKubeletConfig["--kubeconfig"] = "c:\\k\\config"
-	staticWindowsKubeletConfig["--cloud-config"] = "c:\\k\\azure.json"
-	staticWindowsKubeletConfig["--cgroups-per-qos"] = "false"
-	staticWindowsKubeletConfig["--enforce-node-allocatable"] = "\"\"\"\""
-	staticWindowsKubeletConfig["--system-reserved"] = "memory=2Gi"
-	staticWindowsKubeletConfig["--client-ca-file"] = "c:\\k\\ca.crt"
-	staticWindowsKubeletConfig["--hairpin-mode"] = "promiscuous-bridge"
-	staticWindowsKubeletConfig["--image-pull-progress-deadline"] = "20m"
-	staticWindowsKubeletConfig["--resolv-conf"] = "\"\"\"\""
-	staticWindowsKubeletConfig["--eviction-hard"] = "\"\"\"\""
+	expected["--azure-container-registry-config"] = "c:\\k\\azure.json"
+	expected["--pod-infra-container-image"] = "kubletwin/pause"
+	expected["--kubeconfig"] = "c:\\k\\config"
+	expected["--cloud-config"] = "c:\\k\\azure.json"
+	expected["--cgroups-per-qos"] = "false"
+	expected["--enforce-node-allocatable"] = "\"\"\"\""
+	expected["--system-reserved"] = "memory=2Gi"
+	expected["--client-ca-file"] = "c:\\k\\ca.crt"
+	expected["--hairpin-mode"] = "promiscuous-bridge"
+	expected["--image-pull-progress-deadline"] = "20m"
+	expected["--resolv-conf"] = "\"\"\"\""
+	expected["--eviction-hard"] = "\"\"\"\""
 
 	cs.setKubeletConfig()
 	for _, profile := range cs.Properties.AgentPoolProfiles {
 		if profile.OSType == Windows {
-			for key, val := range staticWindowsKubeletConfig {
+			for key, val := range expected {
 				if val != profile.KubernetesConfig.KubeletConfig[key] {
 					t.Fatalf("got unexpected '%s' kubelet config value, expected %s, got %s",
 						key, val, profile.KubernetesConfig.KubeletConfig[key])

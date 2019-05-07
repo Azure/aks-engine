@@ -32,10 +32,10 @@ func (cs *ContainerService) setKubeletConfig() {
 	for key, val := range staticLinuxKubeletConfig {
 		switch key {
 		case "--pod-manifest-path": // Don't add Linux-specific config
-			break
+			staticWindowsKubeletConfig[key] = ""
 		case "--anonymous-auth", "--client-ca-file":
 			if !to.Bool(o.KubernetesConfig.EnableSecureKubelet) { // Don't add if EnableSecureKubelet is disabled
-				break
+				staticWindowsKubeletConfig[key] = ""
 			} else {
 				staticWindowsKubeletConfig[key] = val
 			}
@@ -161,13 +161,13 @@ func (cs *ContainerService) setKubeletConfig() {
 			for key, val := range staticWindowsKubeletConfig {
 				profile.KubernetesConfig.KubeletConfig[key] = val
 			}
+		} else {
+			for key, val := range staticLinuxKubeletConfig {
+				profile.KubernetesConfig.KubeletConfig[key] = val
+			}
 		}
 
 		setMissingKubeletValues(profile.KubernetesConfig, o.KubernetesConfig.KubeletConfig)
-		// The previous call may have copied values from the orchestartor profile, which are not valid on Windows
-		if profile.OSType == Windows {
-			delete(profile.KubernetesConfig.KubeletConfig, "--pod-manifest-path")
-		}
 
 		// For N Series (GPU) VMs
 		if strings.Contains(profile.VMSize, "Standard_N") {
@@ -196,6 +196,13 @@ func removeKubeletFlags(k map[string]string, v string) {
 	// Get rid of values not supported in v1.12 and up
 	if common.IsKubernetesVersionGe(v, "1.12.0") {
 		for _, key := range []string{"--cadvisor-port"} {
+			delete(k, key)
+		}
+	}
+
+	// Get rid of keys with empty string values
+	for key, val := range k {
+		if val == "" {
 			delete(k, key)
 		}
 	}
