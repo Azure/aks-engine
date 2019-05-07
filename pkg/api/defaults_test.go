@@ -1986,6 +1986,57 @@ func TestPreserveNodesProperties(t *testing.T) {
 	}
 }
 
+func TestUbuntu1804Flags(t *testing.T) {
+	// Validate --resolv-conf is missing with 16.04 distro and present with 18.04
+	cs := CreateMockContainerService("testcluster", "1.10.13", 3, 2, false)
+	cs.Properties.MasterProfile.Distro = AKS
+	cs.Properties.AgentPoolProfiles[0].Distro = AKS1804
+	cs.Properties.AgentPoolProfiles[0].OSType = Linux
+	cs.SetPropertiesDefaults(false, false)
+	km := cs.Properties.MasterProfile.KubernetesConfig.KubeletConfig
+	if _, ok := km["--resolv-conf"]; ok {
+		t.Fatalf("got unexpected '--resolv-conf' kubelet config value '%s' with Ubuntu 16.04 ",
+			km["--resolv-conf"])
+	}
+	ka := cs.Properties.AgentPoolProfiles[0].KubernetesConfig.KubeletConfig
+	if ka["--resolv-conf"] != "/run/systemd/resolve/resolv.conf" {
+		t.Fatalf("got unexpected '--resolv-conf' kubelet config value %s with Ubuntu 18.04, the expected value is %s",
+			ka["--resolv-conf"], "/run/systemd/resolve/resolv.conf")
+	}
+
+	cs = CreateMockContainerService("testcluster", "1.10.13", 3, 2, false)
+	cs.Properties.MasterProfile.Distro = Ubuntu1804
+	cs.Properties.AgentPoolProfiles[0].Distro = Ubuntu
+	cs.Properties.AgentPoolProfiles[0].OSType = Linux
+	cs.SetPropertiesDefaults(false, false)
+	km = cs.Properties.MasterProfile.KubernetesConfig.KubeletConfig
+	if km["--resolv-conf"] != "/run/systemd/resolve/resolv.conf" {
+		t.Fatalf("got unexpected '--resolv-conf' kubelet config value %s with Ubuntu 18.04, the expected value is %s",
+			km["--resolv-conf"], "/run/systemd/resolve/resolv.conf")
+	}
+	ka = cs.Properties.AgentPoolProfiles[0].KubernetesConfig.KubeletConfig
+	if _, ok := ka["--resolv-conf"]; ok {
+		t.Fatalf("got unexpected '--resolv-conf' kubelet config value '%s' with Ubuntu 16.04 ",
+			ka["--resolv-conf"])
+	}
+
+	cs = CreateMockContainerService("testcluster", "1.10.13", 3, 2, false)
+	cs.Properties.MasterProfile.Distro = Ubuntu
+	cs.Properties.AgentPoolProfiles[0].Distro = ""
+	cs.Properties.AgentPoolProfiles[0].OSType = Windows
+	cs.SetPropertiesDefaults(false, false)
+	km = cs.Properties.MasterProfile.KubernetesConfig.KubeletConfig
+	if _, ok := km["--resolv-conf"]; ok {
+		t.Fatalf("got unexpected '--resolv-conf' kubelet config value '%s' with Ubuntu 16.04 ",
+			km["--resolv-conf"])
+	}
+	ka = cs.Properties.AgentPoolProfiles[0].KubernetesConfig.KubeletConfig
+	if ka["--resolv-conf"] != "\"\"\"\"" {
+		t.Fatalf("got unexpected '--resolv-conf' kubelet config value %s with Windows, the expected value is %s",
+			ka["--resolv-conf"], "\"\"\"\"")
+	}
+}
+
 func getMockBaseContainerService(orchestratorVersion string) ContainerService {
 	mockAPIProperties := getMockAPIProperties(orchestratorVersion)
 	return ContainerService{
