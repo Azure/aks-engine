@@ -651,7 +651,7 @@ func Test_Properties_ValidateDistro(t *testing.T) {
 	}
 
 	// Should error for invalid distros on non-update scenarios
-	bogusDistroValues := []Distro{AKSDockerEngine, AKS, "bogon"}
+	bogusDistroValues := []Distro{AKSDockerEngine, AKS1604Deprecated, AKS1804Deprecated, "bogon"}
 	for _, distro := range bogusDistroValues {
 		p.MasterProfile.Distro = distro
 		p.AgentPoolProfiles = []*AgentPoolProfile{
@@ -675,7 +675,7 @@ func Test_Properties_ValidateDistro(t *testing.T) {
 	}
 
 	// Should not error for deprecated distro on update scenarios
-	oldDistros := []Distro{AKSDockerEngine, AKS}
+	oldDistros := []Distro{AKSDockerEngine, AKS1604Deprecated, AKS1804Deprecated}
 	for _, distro := range oldDistros {
 		p.MasterProfile.Distro = distro
 		p.AgentPoolProfiles = []*AgentPoolProfile{
@@ -2650,7 +2650,7 @@ func TestAgentPoolProfile_ValidateAuditDEnabled(t *testing.T) {
 				if err := cs.Properties.validateAgentPoolProfiles(false); err.Error() != expectedMsg {
 					t.Errorf("expected error with message : %s, but got %s", expectedMsg, err.Error())
 				}
-			case Ubuntu, Ubuntu1804, AKS, AKS1804, ACC1604:
+			case Ubuntu, Ubuntu1804, AKSUbuntu1604, AKSUbuntu1804, ACC1604:
 				if err := cs.Properties.validateAgentPoolProfiles(false); err != nil {
 					t.Errorf("AuditDEnabled should work with distro %s, got error %s", distro, err.Error())
 				}
@@ -2673,7 +2673,7 @@ func TestMasterProfile_ValidateAuditDEnabled(t *testing.T) {
 				if err := cs.Properties.validateMasterProfile(false); err.Error() != expectedMsg {
 					t.Errorf("expected error with message : %s, but got %s", expectedMsg, err.Error())
 				}
-			case Ubuntu, Ubuntu1804, AKS, AKS1804, ACC1604:
+			case Ubuntu, Ubuntu1804, AKSUbuntu1604, AKSUbuntu1804, ACC1604:
 				if err := cs.Properties.validateMasterProfile(false); err != nil {
 					t.Errorf("AuditDEnabled should work with distro %s, got error %s", distro, err.Error())
 				}

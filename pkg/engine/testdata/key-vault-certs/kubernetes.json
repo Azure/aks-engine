@@ -395,7 +395,7 @@
       "oauthEnabled": false,
       "preProvisionExtension": null,
       "extensions": [],
-      "distro": "aks-16.04",
+      "distro": "aks-ubuntu-18.04",
       "kubernetesConfig": {
         "kubeletConfig": {
           "--address": "0.0.0.0",
@@ -439,7 +439,7 @@
         "osType": "Linux",
         "availabilityProfile": "VirtualMachineScaleSets",
         "storageProfile": "ManagedDisks",
-        "distro": "aks-16.04",
+        "distro": "aks-ubuntu-18.04",
         "kubernetesConfig": {
           "kubeletConfig": {
             "--address": "0.0.0.0",

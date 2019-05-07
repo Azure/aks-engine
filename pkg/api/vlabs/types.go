@@ -607,7 +607,7 @@ func (m *MasterProfile) IsCoreOS() bool {
 // IsUbuntu1604 returns true if the master profile distro is based on Ubuntu 16.04
 func (m *MasterProfile) IsUbuntu1604() bool {
 	switch m.Distro {
-	case AKS, Ubuntu, ACC1604:
+	case AKSUbuntu1604, Ubuntu, ACC1604:
 		return true
 	default:
 		return false
@@ -617,7 +617,7 @@ func (m *MasterProfile) IsUbuntu1604() bool {
 // IsUbuntu1804 returns true if the master profile distro is based on Ubuntu 18.04
 func (m *MasterProfile) IsUbuntu1804() bool {
 	switch m.Distro {
-	case AKS1804, Ubuntu1804:
+	case AKSUbuntu1804, Ubuntu1804:
 		return true
 	default:
 		return false
@@ -742,7 +742,7 @@ func (a *AgentPoolProfile) HasAvailabilityZones() bool {
 func (a *AgentPoolProfile) IsUbuntu1604() bool {
 	if a.OSType != Windows {
 		switch a.Distro {
-		case AKS, Ubuntu, ACC1604:
+		case AKSUbuntu1604, Ubuntu, ACC1604:
 			return true
 		default:
 			return false
@@ -755,7 +755,7 @@ func (a *AgentPoolProfile) IsUbuntu1604() bool {
 func (a *AgentPoolProfile) IsUbuntu1804() bool {
 	if a.OSType != Windows {
 		switch a.Distro {
-		case AKS1804, Ubuntu1804:
+		case AKSUbuntu1804, Ubuntu1804:
 			return true
 		default:
 			return false

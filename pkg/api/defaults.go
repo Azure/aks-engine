@@ -23,7 +23,7 @@ import (
 )
 
 // DistroValues is a list of currently supported distros
-var DistroValues = []Distro{"", Ubuntu, Ubuntu1804, RHEL, CoreOS, AKS1604, AKS1804, ACC1604}
+var DistroValues = []Distro{"", Ubuntu, Ubuntu1804, RHEL, CoreOS, AKSUbuntu1604, AKSUbuntu1804, ACC1604}
 
 // SetPropertiesDefaults for the container Properties, returns true if certs are generated
 func (cs *ContainerService) SetPropertiesDefaults(isUpgrade, isScale bool) (bool, error) {
@@ -308,7 +308,7 @@ func (p *Properties) setExtensionDefaults() {
 func (p *Properties) setMasterProfileDefaults(isUpgrade bool) {
 	if p.MasterProfile.Distro == "" {
 		if p.OrchestratorProfile.IsKubernetes() {
-			p.MasterProfile.Distro = AKS1804
+			p.MasterProfile.Distro = AKSUbuntu1804
 		} else {
 			p.MasterProfile.Distro = Ubuntu
 		}
@@ -507,7 +507,7 @@ func (p *Properties) setAgentProfileDefaults(isUpgrade, isScale bool) {
 							profile.Distro = Ubuntu1804
 						}
 					} else {
-						profile.Distro = AKS1804
+						profile.Distro = AKSUbuntu1804
 					}
 				} else {
 					profile.Distro = Ubuntu
@@ -516,8 +516,10 @@ func (p *Properties) setAgentProfileDefaults(isUpgrade, isScale bool) {
 				// Previous versions of aks-engine required the docker-engine distro for N series vms,
 				// so we need to hard override it in order to produce a working cluster in upgrade/scale contexts.
 			} else if p.OrchestratorProfile.IsKubernetes() && (isUpgrade || isScale) {
-				if profile.Distro == AKSDockerEngine || profile.Distro == AKS {
-					profile.Distro = AKS1604
+				if profile.Distro == AKSDockerEngine || profile.Distro == AKS1604Deprecated {
+					profile.Distro = AKSUbuntu1604
+				} else if profile.Distro == AKS1804Deprecated {
+					profile.Distro = AKSUbuntu1804
 				}
 			}
 		}

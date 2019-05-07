@@ -1087,7 +1087,7 @@ func TestSetComponentsNetworkDefaults(t *testing.T) {
 			OrchestratorProfile{
 				OrchestratorType: Kubernetes,
 			},
-			AKS1804,
+			AKSUbuntu1804,
 		},
 		{
 			"default_swarm",
@@ -1726,7 +1726,7 @@ func TestSetCustomCloudProfileDefaults(t *testing.T) {
 				ImagePublisher: "ImagePublisher",
 				ImageVersion:   "ImageVersion",
 			},
-			AKS: AKS1604OSImageConfig,
+			AKSUbuntu1604: AKSUbuntu1604OSImageConfig,
 		},
 	}
 	mockCSPCustom.CustomCloudProfile.AzureEnvironmentSpecConfig = &customCloudSpec
@@ -1776,7 +1776,7 @@ func TestSetCustomCloudProfileDefaults(t *testing.T) {
 				ImagePublisher: "ImagePublisher",
 				ImageVersion:   "ImageVersion",
 			},
-			AKS: AKS1604OSImageConfig,
+			AKSUbuntu1604: AKSUbuntu1604OSImageConfig,
 		},
 	}
 	mockCSPCustomP.CustomCloudProfile.AzureEnvironmentSpecConfig = &customCloudSpecP
@@ -1989,8 +1989,8 @@ func TestPreserveNodesProperties(t *testing.T) {
 func TestUbuntu1804Flags(t *testing.T) {
 	// Validate --resolv-conf is missing with 16.04 distro and present with 18.04
 	cs := CreateMockContainerService("testcluster", "1.10.13", 3, 2, false)
-	cs.Properties.MasterProfile.Distro = AKS
-	cs.Properties.AgentPoolProfiles[0].Distro = AKS1804
+	cs.Properties.MasterProfile.Distro = AKSUbuntu1604
+	cs.Properties.AgentPoolProfiles[0].Distro = AKSUbuntu1804
 	cs.Properties.AgentPoolProfiles[0].OSType = Linux
 	cs.SetPropertiesDefaults(false, false)
 	km := cs.Properties.MasterProfile.KubernetesConfig.KubeletConfig

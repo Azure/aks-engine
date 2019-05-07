@@ -191,7 +191,7 @@ func TestConvertAzureEnvironmentSpecConfigToVLabs(t *testing.T) {
 							ImagePublisher: "ImagePublisher",
 							ImageVersion:   "ImageVersion",
 						},
-						AKS: AKS1604OSImageConfig,
+						AKSUbuntu1604: AKSUbuntu1604OSImageConfig,
 					},
 				},
 			},

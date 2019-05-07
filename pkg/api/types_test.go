@@ -219,13 +219,13 @@ func TestAgentPoolProfileIsVHDDistro(t *testing.T) {
 	}{
 		{
 			ap: AgentPoolProfile{
-				Distro: AKS1604,
+				Distro: AKSUbuntu1604,
 			},
 			expected: true,
 		},
 		{
 			ap: AgentPoolProfile{
-				Distro: AKS1804,
+				Distro: AKSUbuntu1804,
 			},
 			expected: true,
 		},
@@ -263,13 +263,13 @@ func TestAgentPoolProfileIsUbuntuNonVHD(t *testing.T) {
 	}{
 		{
 			ap: AgentPoolProfile{
-				Distro: AKS1604,
+				Distro: AKSUbuntu1604,
 			},
 			expected: false,
 		},
 		{
 			ap: AgentPoolProfile{
-				Distro: AKS1804,
+				Distro: AKSUbuntu1804,
 			},
 			expected: false,
 		},
@@ -307,13 +307,13 @@ func TestMasterProfileIsVHDDistro(t *testing.T) {
 	}{
 		{
 			m: MasterProfile{
-				Distro: AKS1604,
+				Distro: AKSUbuntu1604,
 			},
 			expected: true,
 		},
 		{
 			m: MasterProfile{
-				Distro: AKS1804,
+				Distro: AKSUbuntu1804,
 			},
 			expected: true,
 		},
@@ -351,13 +351,13 @@ func TestMasterProfileIsUbuntuNonVHD(t *testing.T) {
 	}{
 		{
 			m: MasterProfile{
-				Distro: AKS1604,
+				Distro: AKSUbuntu1604,
 			},
 			expected: false,
 		},
 		{
 			m: MasterProfile{
-				Distro: AKS1804,
+				Distro: AKSUbuntu1804,
 			},
 			expected: false,
 		},
@@ -928,7 +928,7 @@ func TestMasterIsUbuntu(t *testing.T) {
 			p: Properties{
 				MasterProfile: &MasterProfile{
 					Count:  1,
-					Distro: AKS1604,
+					Distro: AKSUbuntu1604,
 				},
 			},
 			expected: true,
@@ -964,7 +964,7 @@ func TestMasterIsUbuntu(t *testing.T) {
 			p: Properties{
 				MasterProfile: &MasterProfile{
 					Count:  1,
-					Distro: AKS1804,
+					Distro: AKSUbuntu1804,
 				},
 			},
 			expected: true,
@@ -1024,7 +1024,7 @@ func TestAgentPoolIsUbuntu(t *testing.T) {
 				AgentPoolProfiles: []*AgentPoolProfile{
 					{
 						Count:  1,
-						Distro: AKS1604,
+						Distro: AKSUbuntu1604,
 					},
 				},
 			},
@@ -1068,7 +1068,7 @@ func TestAgentPoolIsUbuntu(t *testing.T) {
 				AgentPoolProfiles: []*AgentPoolProfile{
 					{
 						Count:  1,
-						Distro: AKS1804,
+						Distro: AKSUbuntu1804,
 					},
 				},
 			},
@@ -1145,7 +1145,7 @@ func TestIsUbuntuDistroForAllNodes(t *testing.T) {
 					},
 					{
 						Count:  1,
-						Distro: AKS1604,
+						Distro: AKSUbuntu1604,
 					},
 				},
 			},
@@ -1301,7 +1301,7 @@ func TestIsVHDDistroForAllNodes(t *testing.T) {
 					},
 					{
 						Count:  1,
-						Distro: AKS1604,
+						Distro: AKSUbuntu1604,
 					},
 				},
 			},
@@ -1457,7 +1457,7 @@ func TestHasUbuntuDistroNodes(t *testing.T) {
 					},
 					{
 						Count:  1,
-						Distro: AKS1604,
+						Distro: AKSUbuntu1604,
 					},
 				},
 			},
@@ -1523,12 +1523,12 @@ func TestHasUbuntuDistroNodes(t *testing.T) {
 			p: Properties{
 				MasterProfile: &MasterProfile{
 					Count:  1,
-					Distro: AKS1604,
+					Distro: AKSUbuntu1604,
 				},
 				AgentPoolProfiles: []*AgentPoolProfile{
 					{
 						Count:  1,
-						Distro: AKS1604,
+						Distro: AKSUbuntu1604,
 					},
 				},
 			},
@@ -1613,7 +1613,7 @@ func TestHasUbuntu1604DistroNodes(t *testing.T) {
 					},
 					{
 						Count:  1,
-						Distro: AKS1604,
+						Distro: AKSUbuntu1604,
 					},
 				},
 			},
@@ -1679,12 +1679,12 @@ func TestHasUbuntu1604DistroNodes(t *testing.T) {
 			p: Properties{
 				MasterProfile: &MasterProfile{
 					Count:  1,
-					Distro: AKS1604,
+					Distro: AKSUbuntu1604,
 				},
 				AgentPoolProfiles: []*AgentPoolProfile{
 					{
 						Count:  1,
-						Distro: AKS1604,
+						Distro: AKSUbuntu1604,
 					},
 				},
 			},
@@ -1835,12 +1835,12 @@ func TestHasUbuntu1804DistroNodes(t *testing.T) {
 			p: Properties{
 				MasterProfile: &MasterProfile{
 					Count:  1,
-					Distro: AKS1604,
+					Distro: AKSUbuntu1604,
 				},
 				AgentPoolProfiles: []*AgentPoolProfile{
 					{
 						Count:  1,
-						Distro: AKS1604,
+						Distro: AKSUbuntu1604,
 					},
 				},
 			},
@@ -1919,12 +1919,12 @@ func TestUbuntuVersion(t *testing.T) {
 			p: Properties{
 				MasterProfile: &MasterProfile{
 					Count:  1,
-					Distro: AKS1604,
+					Distro: AKSUbuntu1604,
 				},
 				AgentPoolProfiles: []*AgentPoolProfile{
 					{
 						Count:  1,
-						Distro: AKS1604,
+						Distro: AKSUbuntu1604,
 						OSType: Linux,
 					},
 				},
@@ -1938,7 +1938,7 @@ func TestUbuntuVersion(t *testing.T) {
 			p: Properties{
 				MasterProfile: &MasterProfile{
 					Count:  1,
-					Distro: AKS1804,
+					Distro: AKSUbuntu1804,
 				},
 				AgentPoolProfiles: []*AgentPoolProfile{
 					{
@@ -4731,10 +4731,11 @@ func getMockPropertiesWithCustomCloudProfile(name string, hasCustomCloudProfile,
 					ResourceManagerVMDNSSuffix: "",
 				},
 				OSImageConfig: map[Distro]AzureOSImageConfig{
-					Ubuntu: Ubuntu1604ImageConfig,
-					RHEL:   RHELOSImageConfig,
-					CoreOS: CoreOSImageConfig,
-					AKS:    AKS1604OSImageConfig,
+					Ubuntu:        Ubuntu1604ImageConfig,
+					RHEL:          RHELOSImageConfig,
+					CoreOS:        CoreOSImageConfig,
+					AKSUbuntu1604: AKSUbuntu1604OSImageConfig,
+					AKSUbuntu1804: AKSUbuntu1804OSImageConfig,
 				},
 			}
 			p.CustomCloudProfile.AzureEnvironmentSpecConfig = &azureStackCloudSpec
