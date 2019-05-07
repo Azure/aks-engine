@@ -7,7 +7,6 @@ CLOUD_INIT_FILES="
 /etc/sysctl.d/60-CIS.conf
 /etc/rsyslog.d/60-CIS.conf
 /etc/security/pwquality.conf
-/etc/default/grub
 /etc/pam.d/su
 "
 for CLOUD_INIT_FILE in ${CLOUD_INIT_FILES}; do
@@ -22,8 +21,6 @@ stat /boot/grub/grub.cfg | grep 'Access: (0400' || exit 1
 for filepath in /etc/crontab /etc/cron.hourly /etc/cron.daily /etc/cron.weekly /etc/cron.monthly /etc/cron.d; do
   stat $filepath | grep 'Access: (0600' || exit 1
 done
-# validate grub configuration
-sudo grep "^\s*linux" /boot/grub/grub.cfg | grep 'audit=1' || exit 1
 # validate su configuration
 sudo grep "auth required pam_wheel.so use_uid" /etc/pam.d/su
 # validate password lockout config

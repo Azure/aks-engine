@@ -163,13 +163,6 @@ write_files:
   content: !!binary |
     {{CloudInitData "pwQuality"}}
 
-- path: /etc/default/grub
-  permissions: "0644"
-  encoding: gzip
-  owner: root
-  content: !!binary |
-    {{CloudInitData "defaultGrub"}}
-
 - path: /etc/pam.d/su
   permissions: "0644"
   encoding: gzip
