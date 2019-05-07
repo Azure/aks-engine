@@ -332,7 +332,7 @@ func (p *Properties) setMasterProfileDefaults(isUpgrade bool) {
 			p.MasterProfile.KubernetesConfig = &KubernetesConfig{}
 		}
 		if p.MasterProfile.KubernetesConfig.KubeletConfig == nil {
-			p.MasterProfile.KubernetesConfig.KubeletConfig = &KubeletConfig{}
+			p.MasterProfile.KubernetesConfig.KubeletConfig = map[string]string{}
 		}
 		p.MasterProfile.KubernetesConfig.KubeletConfig["--resolv-conf"] = "/run/systemd/resolve/resolv.conf"
 	}
@@ -540,7 +540,7 @@ func (p *Properties) setAgentProfileDefaults(isUpgrade, isScale bool) {
 				profile.KubernetesConfig = &KubernetesConfig{}
 			}
 			if profile.KubernetesConfig.KubeletConfig == nil {
-				profile.KubernetesConfig.KubeletConfig = &KubeletConfig{}
+				profile.KubernetesConfig.KubeletConfig = map[string]string{}
 			}
 			profile.KubernetesConfig.KubeletConfig["--resolv-conf"] = "/run/systemd/resolve/resolv.conf"
 		}
