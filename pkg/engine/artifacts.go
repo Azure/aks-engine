@@ -43,38 +43,38 @@ func kubernetesContainerAddonSettingsInit(profile *api.Properties) map[string]ku
 		DefaultAADPodIdentityAddonName: {
 			"kubernetesmasteraddons-aad-pod-identity-deployment.yaml",
 			"aad-pod-identity-deployment.yaml",
-			profile.OrchestratorProfile.KubernetesConfig.IsAADPodIdentityEnabled(),
+			profile.IsAADPodIdentityEnabled(),
 			profile.OrchestratorProfile.KubernetesConfig.GetAddonScript(DefaultAADPodIdentityAddonName),
 		},
 		DefaultACIConnectorAddonName: {
 			"kubernetesmasteraddons-aci-connector-deployment.yaml",
 			"aci-connector-deployment.yaml",
-			profile.OrchestratorProfile.KubernetesConfig.IsACIConnectorEnabled(),
+			profile.IsACIConnectorEnabled(),
 			profile.OrchestratorProfile.KubernetesConfig.GetAddonScript(DefaultACIConnectorAddonName),
 		},
 		DefaultClusterAutoscalerAddonName: {
 			"kubernetesmasteraddons-cluster-autoscaler-deployment.yaml",
 			"cluster-autoscaler-deployment.yaml",
-			profile.OrchestratorProfile.KubernetesConfig.IsClusterAutoscalerEnabled(),
+			profile.IsClusterAutoscalerEnabled(),
 			profile.OrchestratorProfile.KubernetesConfig.GetAddonScript(DefaultClusterAutoscalerAddonName),
 		},
 		DefaultBlobfuseFlexVolumeAddonName: {
 			"kubernetesmasteraddons-blobfuse-flexvolume-installer.yaml",
 			"blobfuse-flexvolume-installer.yaml",
-			profile.OrchestratorProfile.KubernetesConfig.IsBlobfuseFlexVolumeEnabled() && !profile.HasCoreOS(),
+			profile.IsBlobfuseFlexVolumeEnabled() && !profile.HasCoreOS(),
 			profile.OrchestratorProfile.KubernetesConfig.GetAddonScript(DefaultBlobfuseFlexVolumeAddonName),
 		},
 
 		DefaultSMBFlexVolumeAddonName: {
 			"kubernetesmasteraddons-smb-flexvolume-installer.yaml",
 			"smb-flexvolume-installer.yaml",
-			profile.OrchestratorProfile.KubernetesConfig.IsSMBFlexVolumeEnabled() && !profile.HasCoreOS(),
+			profile.IsSMBFlexVolumeEnabled() && !profile.HasCoreOS(),
 			profile.OrchestratorProfile.KubernetesConfig.GetAddonScript(DefaultSMBFlexVolumeAddonName),
 		},
 		DefaultKeyVaultFlexVolumeAddonName: {
 			"kubernetesmasteraddons-keyvault-flexvolume-installer.yaml",
 			"keyvault-flexvolume-installer.yaml",
-			profile.OrchestratorProfile.KubernetesConfig.IsKeyVaultFlexVolumeEnabled() && !profile.HasCoreOS(),
+			profile.IsKeyVaultFlexVolumeEnabled() && !profile.HasCoreOS(),
 			profile.OrchestratorProfile.KubernetesConfig.GetAddonScript(DefaultKeyVaultFlexVolumeAddonName),
 		},
 		DefaultDashboardAddonName: {
@@ -86,7 +86,7 @@ func kubernetesContainerAddonSettingsInit(profile *api.Properties) map[string]ku
 		DefaultReschedulerAddonName: {
 			"kubernetesmasteraddons-kube-rescheduler-deployment.yaml",
 			"kube-rescheduler-deployment.yaml",
-			profile.OrchestratorProfile.KubernetesConfig.IsReschedulerEnabled(),
+			profile.IsReschedulerEnabled(),
 			profile.OrchestratorProfile.KubernetesConfig.GetAddonScript(DefaultReschedulerAddonName),
 		},
 		NVIDIADevicePluginAddonName: {
@@ -98,7 +98,7 @@ func kubernetesContainerAddonSettingsInit(profile *api.Properties) map[string]ku
 		ContainerMonitoringAddonName: {
 			"kubernetesmasteraddons-omsagent-daemonset.yaml",
 			"omsagent-daemonset.yaml",
-			profile.OrchestratorProfile.KubernetesConfig.IsContainerMonitoringEnabled(),
+			profile.IsContainerMonitoringEnabled(),
 			profile.OrchestratorProfile.KubernetesConfig.GetAddonScript(ContainerMonitoringAddonName),
 		},
 		IPMASQAgentAddonName: {
