@@ -165,7 +165,13 @@ func (cs *ContainerService) setKubeletConfig() {
 
 		setMissingKubeletValues(profile.KubernetesConfig, o.KubernetesConfig.KubeletConfig)
 
-		// For N Series (GPU) VMs
+		// The previous call may have copied values from the orchestartor profile, which are not valid
+		// for Windows. We have to fix that 
+		if profile.OSType == Windows {
+			// delete(profile.KubernetesConfig.KubeletConfig,"--pod-manifest-path")
+		}
+
+			// For N Series (GPU) VMs
 		if strings.Contains(profile.VMSize, "Standard_N") {
 			if !cs.Properties.IsNVIDIADevicePluginEnabled() && !common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.11.0") {
 				// enabling accelerators for Kubernetes >= 1.6 to <= 1.9
