@@ -74,8 +74,8 @@ jobs:
 
 - template: e2e-job-template.yaml
   parameters:
-    name: 'ubuntu_18_04_linux_e2e'
-    apimodel: 'examples/ubuntu-1804/kubernetes.json'
+    name: 'ubuntu_16_04_linux_e2e'
+    apimodel: 'examples/ubuntu-1604/kubernetes.json'
 
 - template: e2e-job-template.yaml
   parameters:
