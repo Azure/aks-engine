@@ -11,16 +11,14 @@ kubernetesStarted=1
 for i in {1..600}; do
     if [ -e /usr/local/bin/kubectl ]
     then
-        /usr/local/bin/kubectl cluster-info
-        if [ "$?" = "0" ]
+        if /usr/local/bin/kubectl cluster-info
         then
             echo "kubernetes started"
             kubernetesStarted=0
             break
         fi
     else
-        /usr/bin/docker ps | grep apiserver
-        if [ "$?" = "0" ]
+        if /usr/bin/docker ps | grep apiserver
         then
             echo "kubernetes started"
             kubernetesStarted=0
@@ -107,8 +105,7 @@ should_this_node_run_extension() {
 }
 
 storageclass_param() {
-	kubectl get no -l kubernetes.io/role=agent -l storageprofile=managed --no-headers -o jsonpath="{.items[0].metadata.name}" > /dev/null 2> /dev/null
-	if [[ $? -eq 0 ]]; then
+	if kubectl get no -l kubernetes.io/role=agent -l storageprofile=managed --no-headers -o jsonpath="{.items[0].metadata.name}" >/dev/null 2>&1; then
 		echo '--set server.persistentVolume.storageClass=managed-standard'
 	fi
 }
@@ -121,9 +118,7 @@ wait_for_tiller() {
     while [[ $ITERATION -lt $ATTEMPTS ]]; do
         echo $(date) " - Is Helm running? (attempt $(( $ITERATION + 1 )) of $ATTEMPTS)"
 
-        helm version > /dev/null 2> /dev/null
-
-        if [[ $? -eq 0 ]]; then
+        if helm version >/dev/null 2>&1; then
             echo $(date) " - Helm is running"
             return
         fi
@@ -201,12 +196,10 @@ install_prometheus() {
 
     ITERATION=0
     while [[ $ITERATION -lt $ATTEMPTS ]]; do
-        helm install -f prometheus_values.yaml \
+        if helm install -f prometheus_values.yaml \
             --name $PROM_RELEASE_NAME \
             --version 5.1.3 \
-            --namespace $NAMESPACE stable/prometheus $(storageclass_param)
-
-        if [[ $? -eq 0 ]]; then
+            --namespace $NAMESPACE stable/prometheus $(storageclass_param); then
             echo $(date) " - Helm install successfully completed"
             break
         else
@@ -224,12 +217,10 @@ install_prometheus() {
     while [[ $ITERATION -lt $ATTEMPTS ]]; do
         echo $(date) " - Is the prometheus server pod ($PROM_POD_PREFIX-*) running? (attempt $(( $ITERATION + 1 )) of $ATTEMPTS)"
 
-        kubectl get po -n $NAMESPACE --no-headers |
+        if kubectl get po -n $NAMESPACE --no-headers |
             awk '{print $1 " " $3}' |
             grep $PROM_POD_PREFIX |
-            grep -q $DESIRED_POD_STATE
-
-        if [[ $? -eq 0 ]]; then
+            grep -q $DESIRED_POD_STATE; then
             echo $(date) " - $PROM_POD_PREFIX-* is $DESIRED_POD_STATE"
             break
         fi
@@ -259,12 +250,10 @@ install_grafana() {
     while [[ $ITERATION -lt $ATTEMPTS ]]; do
         echo $(date) " - Is the grafana pod ($GF_POD_PREFIX-*) running? (attempt $(( $ITERATION + 1 )) of $ATTEMPTS)"
 
-        kubectl get po -n $NAMESPACE --no-headers |
+        if kubectl get po -n $NAMESPACE --no-headers |
             awk '{print $1 " " $3}' |
             grep $GF_POD_PREFIX |
-            grep -q $DESIRED_POD_STATE
-
-        if [[ $? -eq 0 ]]; then
+            grep -q $DESIRED_POD_STATE; then
             echo $(date) " - $GF_POD_PREFIX-* is $DESIRED_POD_STATE"
             break
         fi
@@ -277,8 +266,7 @@ install_grafana() {
 ensure_k8s_namespace_exists() {
     NAMESPACE_TO_EXIST="$1"
 
-    kubectl get ns $NAMESPACE_TO_EXIST > /dev/null 2> /dev/null
-    if [[ $? -ne 0 ]]; then
+    if ! kubectl get ns $NAMESPACE_TO_EXIST >/dev/null 2>&1; then
         echo $(date) " - Creating namespace $NAMESPACE_TO_EXIST"
         kubectl create ns $NAMESPACE_TO_EXIST
     else
@@ -312,14 +300,12 @@ fi
 # should run the extension is to alphabetically determine
 # if this local machine is the first in the list of master nodes
 # if it is, then run the extension. if not, exit
-wait_for_master_nodes
-if [[ $? -ne 0 ]]; then
+if ! wait_for_master_nodes; then
     echo $(date) " - Error while waiting for kubectl to output master nodes. Exiting"
     exit 1
 fi
 
-wait_for_agent_nodes
-if [[ $? -ne 0 ]]; then
+if ! wait_for_agent_nodes; then
     echo $(date) " - Error while waiting for kubectl to output agent nodes. Exiting"
     exit 1
 fi
@@ -327,8 +313,7 @@ fi
 echo "$(date) - Dumping out sorted agent nodes"
 kubectl get no -L kubernetes.io/role -l kubernetes.io/role=agent --no-headers -o jsonpath="{.items[*].metadata.name}" | tr " " "\n" | sort
 
-should_this_node_run_extension
-if [[ $? -ne 0 ]]; then
+if ! should_this_node_run_extension; then
     echo $(date) " - Not the first master node or the first agent node, no longer continuing extension. Exiting"
     exit 1
 fi
@@ -345,8 +330,7 @@ PROM_URL=http://monitoring-prometheus-server
 kubectl create clusterrolebinding tiller-cluster-admin --clusterrole=cluster-admin --serviceaccount=kube-system:default
 
 install_helm "$RAW_PROMETHEUS_CHART_VALS"
-wait_for_tiller
-if [[ $? -ne 0 ]]; then
+if ! wait_for_tiller; then
     echo $(date) " - Tiller did not respond in a timely manner. Exiting"
     exit 1
 fi
@@ -367,8 +351,7 @@ echo $GF_URL
 
 echo retrieving current data sources...
 CURRENT_DS_LIST=$(curl -s --user "$GF_USER_NAME:$GF_PASSWORD" "$GF_URL/api/datasources")
-echo $CURRENT_DS_LIST | grep -q "\"name\":\"$DS_NAME\""
-if [[ $? -eq 0 ]]; then
+if echo $CURRENT_DS_LIST | grep -q "\"name\":\"$DS_NAME\""; then
     echo data source $DS_NAME already exists
     echo $CURRENT_DS_LIST | python -m json.tool
     exit 0

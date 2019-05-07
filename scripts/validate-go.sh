@@ -25,7 +25,6 @@ fi
 # exit 1 if golangci-lint output contains error text, to work
 # around https://github.com/golangci/golangci-lint/issues/276
 exec 5>&1
-OUTPUT=$(golangci-lint run 2>&1 | tee >(cat - >&5))
-if [ $? != 0 ] || grep 'skipped due to error' <<< $OUTPUT; then
+if ! OUTPUT=$(golangci-lint run 2>&1 | tee >(cat - >&5)) || grep 'skipped due to error' <<<$OUTPUT; then
   exit 1
 fi

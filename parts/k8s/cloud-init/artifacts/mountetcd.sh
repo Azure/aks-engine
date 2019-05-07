@@ -7,19 +7,16 @@ PARTITION=${DISK}1
 MOUNTPOINT=/var/lib/etcddisk
 udevadm settle
 mkdir -p $MOUNTPOINT
-mount | grep $MOUNTPOINT
-if [ $? -eq 0 ]
+if mount | grep $MOUNTPOINT
 then
     echo "disk is already mounted"
     exit 0
 fi
-grep "/dev/sdc1" /etc/fstab
-if [ $? -ne 0 ]
+if ! grep "/dev/sdc1" /etc/fstab
 then
     echo "$PARTITION       $MOUNTPOINT       auto    defaults,nofail       0       2" >> /etc/fstab
 fi
-ls $PARTITION
-if [ $? -ne 0 ]
+if ! ls $PARTITION
 then
     /sbin/sgdisk --new 1 $DISK
     /sbin/mkfs.ext4 $PARTITION -L etcd_disk -F -E lazy_itable_init=1,lazy_journal_init=1

@@ -13,11 +13,11 @@ HOSTS="${NODE_HOSTNAMES} www.bing.com google.com"
 for i in $(seq 1 $retries); do
   for host in $HOSTS; do
     set -x
-    [ -s $(dig +short +search +answer ${host}) ]
-      if [ $? -eq 0  ]; then
-        success="no"
-        break
-      fi
+    addrs=$(dig +short +search +answer ${host})
+    if [ -z "$addrs" ]; then
+      success="no"
+      break
+    fi
     set +x
     success="yes"
   done
@@ -36,11 +36,11 @@ HOSTS="www.bing.com google.com"
 for i in $(seq 1 $retries); do
   for host in $HOSTS; do
     set -x
-    [ -s $(dig +short +search +answer ${host} @8.8.8.8) ]
-      if [ $? -eq 0  ]; then
-        success="no"
-        break
-      fi
+    addrs=$(dig +short +search +answer ${host} @8.8.8.8)
+    if [ -z "$addrs" ]; then
+      success="no"
+      break
+    fi
     set +x
     success="yes"
   done
