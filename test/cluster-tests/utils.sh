@@ -2,7 +2,8 @@
 
 function log {
   local message="$1"
-  local caller="$(caller 0)"
+  local caller
+  caller="$(caller 0)"
   now=$(date +"%D %T %Z")
 
   if [[ -n "${LOGFILE:-}" ]]; then

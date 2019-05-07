@@ -29,7 +29,8 @@ function generate_template() {
 	# Prep SSH Key
 	ssh-keygen -b 2048 -t rsa -f "${OUTPUT}/id_rsa" -q -N ""
 	ssh-keygen -y -f "${OUTPUT}/id_rsa" > "${OUTPUT}/id_rsa.pub"
-	export SSH_KEY_DATA="$(cat "${OUTPUT}/id_rsa.pub")"
+	SSH_KEY_DATA="$(cat "${OUTPUT}/id_rsa.pub")"
+	export SSH_KEY_DATA
 
 	# Allow different credentials for cluster vs the deployment
 	export CLUSTER_SERVICE_PRINCIPAL_CLIENT_ID="${CLUSTER_SERVICE_PRINCIPAL_CLIENT_ID:-${SERVICE_PRINCIPAL_CLIENT_ID}}"
