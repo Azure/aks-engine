@@ -302,7 +302,7 @@ ensureJournal(){
 }
 
 ensurePodSecurityPolicy() {
-    POD_SECURITY_POLICY_FILE="/etc/kubernetes/manifests/pod-security-policy.yaml"
+    POD_SECURITY_POLICY_FILE="/etc/kubernetes/addons/pod-security-policy.yaml"
     if [ -f $POD_SECURITY_POLICY_FILE ]; then
         $KUBECTL create -f $POD_SECURITY_POLICY_FILE
     fi
