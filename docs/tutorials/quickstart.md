@@ -109,7 +109,6 @@ Finally, run `aks-engine deploy` with the appropriate arguments:
 
 ```console
 $ aks-engine deploy --subscription-id 51ac25de-afdg-9201-d923-8d8e8e8e8e8e \
-    --auth-method cli \
     --dns-prefix contoso-apple \
     --resource-group contoso-apple \
     --location westus2 \
