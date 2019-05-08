@@ -490,11 +490,6 @@ func testAutodeployCredentialHandling(t *testing.T, useManagedIdentity bool, cli
 	// cleanup, since auto-populations creates dirs and saves the SSH private key that it might create
 	defer os.RemoveAll(deployCmd.outputDirectory)
 
-	cs, _, err = deployCmd.validateApimodel()
-	if err != nil {
-		t.Fatalf("unexpected error validating apimodel after populating defaults: %s", err)
-	}
-
 	if useManagedIdentity {
 		if cs.Properties.ServicePrincipalProfile != nil &&
 			(cs.Properties.ServicePrincipalProfile.ClientID != "" || cs.Properties.ServicePrincipalProfile.Secret != "") {
