@@ -2782,10 +2782,16 @@ func TestIsNVIDIADevicePluginEnabled(t *testing.T) {
 	if p.IsNVIDIADevicePluginEnabled() {
 		t.Fatalf("Properties.IsNVIDIADevicePluginEnabled() should return false with N-series VMs with < k8s 1.10, instead returned %t", p.IsNVIDIADevicePluginEnabled())
 	}
+	if p.IsNvidiaDevicePluginCapable() {
+		t.Fatalf("IsNvidiaDevicePluginCapable should return false with N Series VM and k8s version < 1.10")
+	}
 
 	p.OrchestratorProfile.OrchestratorVersion = "1.10.0"
 	if !p.IsNVIDIADevicePluginEnabled() {
 		t.Fatalf("Properties.IsNVIDIADevicePluginEnabled() should return true with N-series VMs with k8s >= 1.10, instead returned %t", p.IsNVIDIADevicePluginEnabled())
+	}
+	if !p.IsNvidiaDevicePluginCapable() {
+		t.Fatalf("IsNvidiaDevicePluginCapable should return false with N Series VM and k8s version >= 1.10")
 	}
 
 	p.AgentPoolProfiles[0].VMSize = "Standard_D2_v2"
@@ -2801,6 +2807,9 @@ func TestIsNVIDIADevicePluginEnabled(t *testing.T) {
 	}
 	if p.IsNVIDIADevicePluginEnabled() {
 		t.Fatalf("Properties.IsNVIDIADevicePluginEnabled() should return false when explicitly disabled")
+	}
+	if p.IsNvidiaDevicePluginCapable() {
+		t.Fatalf("IsNvidiaDevicePluginCapable should return false with non-N Series regardless of k8s version")
 	}
 }
 

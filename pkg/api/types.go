@@ -1629,8 +1629,7 @@ func (p *Properties) IsNVIDIADevicePluginEnabled() bool {
 	if p.OrchestratorProfile == nil || p.OrchestratorProfile.KubernetesConfig == nil {
 		return false
 	}
-	k := p.OrchestratorProfile.KubernetesConfig
-	return k.isAddonEnabled(NVIDIADevicePluginAddonName, getDefaultNVIDIADevicePluginEnabled(p))
+	return p.OrchestratorProfile.KubernetesConfig.isAddonEnabled(NVIDIADevicePluginAddonName, p.IsNvidiaDevicePluginCapable())
 }
 
 // IsAzureStackCloud return true if the cloud is AzureStack
@@ -1698,15 +1697,9 @@ func (p *Properties) GetCustomCloudIdentitySystem() string {
 	return AzureADIdentitySystem
 }
 
-func getDefaultNVIDIADevicePluginEnabled(p *Properties) bool {
-	o := p.OrchestratorProfile
-	var addonEnabled bool
-	if p.HasNSeriesSKU() && common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.10.0") {
-		addonEnabled = true
-	} else {
-		addonEnabled = false
-	}
-	return addonEnabled
+// IsNvidiaDevicePluginCapable determines if the cluster definition is compatible with the nvidia-device-plugin daemonset
+func (p *Properties) IsNvidiaDevicePluginCapable() bool {
+	return p.HasNSeriesSKU() && common.IsKubernetesVersionGe(p.OrchestratorProfile.OrchestratorVersion, "1.10.0")
 }
 
 // IsReschedulerEnabled checks if the rescheduler addon is enabled
