@@ -1511,10 +1511,8 @@ func (k *KubernetesConfig) IsAzureCNIMonitoringEnabled() bool {
 
 // IsContainerMonitoringEnabled checks if the container monitoring addon is enabled
 func (p *Properties) IsContainerMonitoringEnabled() bool {
-	if p.OrchestratorProfile == nil || p.OrchestratorProfile.KubernetesConfig == nil || p.IsAzureStackCloud() {
-		return false
-	}
-	return p.OrchestratorProfile.KubernetesConfig.isAddonEnabled(ContainerMonitoringAddonName, DefaultContainerMonitoringAddonEnabled)
+	return p.isKubernetesAndNotAzureStack() &&
+		p.OrchestratorProfile.KubernetesConfig.isAddonEnabled(ContainerMonitoringAddonName, DefaultContainerMonitoringAddonEnabled)
 }
 
 // IsTillerEnabled checks if the tiller addon is enabled
@@ -1524,50 +1522,38 @@ func (k *KubernetesConfig) IsTillerEnabled() bool {
 
 // IsAADPodIdentityEnabled checks if the AAD pod identity addon is enabled
 func (p *Properties) IsAADPodIdentityEnabled() bool {
-	if p.OrchestratorProfile == nil || p.OrchestratorProfile.KubernetesConfig == nil || p.IsAzureStackCloud() {
-		return false
-	}
-	return p.OrchestratorProfile.KubernetesConfig.isAddonEnabled(DefaultAADPodIdentityAddonName, DefaultAADPodIdentityAddonEnabled)
+	return p.isKubernetesAndNotAzureStack() &&
+		p.OrchestratorProfile.KubernetesConfig.isAddonEnabled(DefaultAADPodIdentityAddonName, DefaultAADPodIdentityAddonEnabled)
 }
 
 // IsACIConnectorEnabled checks if the ACI Connector addon is enabled
 func (p *Properties) IsACIConnectorEnabled() bool {
-	if p.OrchestratorProfile == nil || p.OrchestratorProfile.KubernetesConfig == nil || p.IsAzureStackCloud() {
-		return false
-	}
-	return p.OrchestratorProfile.KubernetesConfig.isAddonEnabled(DefaultACIConnectorAddonName, DefaultACIConnectorAddonEnabled)
+	return p.isKubernetesAndNotAzureStack() &&
+		p.OrchestratorProfile.KubernetesConfig.isAddonEnabled(DefaultACIConnectorAddonName, DefaultACIConnectorAddonEnabled)
 }
 
 // IsClusterAutoscalerEnabled checks if the cluster autoscaler addon is enabled
 func (p *Properties) IsClusterAutoscalerEnabled() bool {
-	if p.OrchestratorProfile == nil || p.OrchestratorProfile.KubernetesConfig == nil || p.IsAzureStackCloud() {
-		return false
-	}
-	return p.OrchestratorProfile.KubernetesConfig.isAddonEnabled(DefaultClusterAutoscalerAddonName, DefaultClusterAutoscalerAddonEnabled)
+	return p.isKubernetesAndNotAzureStack() &&
+		p.OrchestratorProfile.KubernetesConfig.isAddonEnabled(DefaultClusterAutoscalerAddonName, DefaultClusterAutoscalerAddonEnabled)
 }
 
 // IsBlobfuseFlexVolumeEnabled checks if the Blobfuse FlexVolume addon is enabled
 func (p *Properties) IsBlobfuseFlexVolumeEnabled() bool {
-	if p.OrchestratorProfile == nil || p.OrchestratorProfile.KubernetesConfig == nil || p.IsAzureStackCloud() {
-		return false
-	}
-	return p.OrchestratorProfile.KubernetesConfig.isAddonEnabled(DefaultBlobfuseFlexVolumeAddonName, DefaultBlobfuseFlexVolumeAddonEnabled)
+	return p.isKubernetesAndNotAzureStack() &&
+		p.OrchestratorProfile.KubernetesConfig.isAddonEnabled(DefaultBlobfuseFlexVolumeAddonName, DefaultBlobfuseFlexVolumeAddonEnabled)
 }
 
 // IsSMBFlexVolumeEnabled checks if the SMB FlexVolume addon is enabled
 func (p *Properties) IsSMBFlexVolumeEnabled() bool {
-	if p.OrchestratorProfile == nil || p.OrchestratorProfile.KubernetesConfig == nil || p.IsAzureStackCloud() {
-		return false
-	}
-	return p.OrchestratorProfile.KubernetesConfig.isAddonEnabled(DefaultSMBFlexVolumeAddonName, DefaultSMBFlexVolumeAddonEnabled)
+	return p.isKubernetesAndNotAzureStack() &&
+		p.OrchestratorProfile.KubernetesConfig.isAddonEnabled(DefaultSMBFlexVolumeAddonName, DefaultSMBFlexVolumeAddonEnabled)
 }
 
 // IsKeyVaultFlexVolumeEnabled checks if the Key Vault FlexVolume addon is enabled
 func (p *Properties) IsKeyVaultFlexVolumeEnabled() bool {
-	if p.OrchestratorProfile == nil || p.OrchestratorProfile.KubernetesConfig == nil || p.IsAzureStackCloud() {
-		return false
-	}
-	return p.OrchestratorProfile.KubernetesConfig.isAddonEnabled(DefaultKeyVaultFlexVolumeAddonName, DefaultKeyVaultFlexVolumeAddonEnabled)
+	return p.isKubernetesAndNotAzureStack() &&
+		p.OrchestratorProfile.KubernetesConfig.isAddonEnabled(DefaultKeyVaultFlexVolumeAddonName, DefaultKeyVaultFlexVolumeAddonEnabled)
 }
 
 // IsDashboardEnabled checks if the kubernetes-dashboard addon is enabled
@@ -1632,11 +1618,9 @@ func (p *Properties) HasNSeriesSKU() bool {
 // IsNVIDIADevicePluginEnabled checks if the NVIDIA Device Plugin addon is enabled
 // It is enabled by default if agents contain a GPU and Kubernetes version is >= 1.10.0
 func (p *Properties) IsNVIDIADevicePluginEnabled() bool {
-	if p.OrchestratorProfile == nil || p.OrchestratorProfile.KubernetesConfig == nil || p.IsAzureStackCloud() {
-		return false
-	}
 	k := p.OrchestratorProfile.KubernetesConfig
-	return k.isAddonEnabled(NVIDIADevicePluginAddonName, getDefaultNVIDIADevicePluginEnabled(p))
+	return p.isKubernetesAndNotAzureStack() &&
+		k.isAddonEnabled(NVIDIADevicePluginAddonName, getDefaultNVIDIADevicePluginEnabled(p))
 }
 
 // IsAzureStackCloud return true if the cloud is AzureStack
@@ -1717,10 +1701,8 @@ func getDefaultNVIDIADevicePluginEnabled(p *Properties) bool {
 
 // IsReschedulerEnabled checks if the rescheduler addon is enabled
 func (p *Properties) IsReschedulerEnabled() bool {
-	if p.OrchestratorProfile == nil || p.OrchestratorProfile.KubernetesConfig == nil || p.IsAzureStackCloud() {
-		return false
-	}
-	return p.OrchestratorProfile.KubernetesConfig.isAddonEnabled(DefaultReschedulerAddonName, DefaultReschedulerAddonEnabled)
+	return p.isKubernetesAndNotAzureStack() &&
+		p.OrchestratorProfile.KubernetesConfig.isAddonEnabled(DefaultReschedulerAddonName, DefaultReschedulerAddonEnabled)
 }
 
 // PrivateJumpboxProvision checks if a private cluster has jumpbox auto-provisioning
@@ -1828,4 +1810,8 @@ func FormatProdFQDNByLocation(fqdnPrefix string, location string, cloudName stri
 	targetEnv := helpers.GetTargetEnv(location, cloudName)
 	FQDNFormat := AzureCloudSpecEnvMap[targetEnv].EndpointConfig.ResourceManagerVMDNSSuffix
 	return fmt.Sprintf("%s.%s."+FQDNFormat, fqdnPrefix, location)
+}
+
+func (p *Properties) isKubernetesAndNotAzureStack() bool {
+	return p.OrchestratorProfile != nil && p.OrchestratorProfile.KubernetesConfig != nil && !p.IsAzureStackCloud()
 }
