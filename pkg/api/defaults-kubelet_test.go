@@ -57,21 +57,21 @@ func TestKubeletConfigDefaults(t *testing.T) {
 	for key, val := range kubeletConfig {
 		if expected[key] != val {
 			t.Fatalf("got unexpected kubelet config value for %s: %s, expected %s",
-				key, expected[key], val)
+				key, val, expected[key])
 		}
 	}
 	masterKubeletConfig := cs.Properties.MasterProfile.KubernetesConfig.KubeletConfig
 	for key, val := range masterKubeletConfig {
 		if expected[key] != val {
 			t.Fatalf("got unexpected masterProfile kubelet config value for %s: %s, expected %s",
-				key, expected[key], val)
+				key, val, expected[key])
 		}
 	}
 	linuxProfileKubeletConfig := cs.Properties.AgentPoolProfiles[0].KubernetesConfig.KubeletConfig
 	for key, val := range linuxProfileKubeletConfig {
 		if expected[key] != val {
 			t.Fatalf("got unexpected Linux agent profile kubelet config value for %s: %s, expected %s",
-				key, expected[key], val)
+				key, val, expected[key])
 		}
 	}
 	windowsProfileKubeletConfig := cs.Properties.AgentPoolProfiles[1].KubernetesConfig.KubeletConfig
@@ -88,10 +88,11 @@ func TestKubeletConfigDefaults(t *testing.T) {
 	expected["--resolv-conf"] = "\"\"\"\""
 	expected["--eviction-hard"] = "\"\"\"\""
 	delete(expected, "--pod-manifest-path")
+	delete(expected, "--protect-kernel-defaults")
 	for key, val := range windowsProfileKubeletConfig {
 		if expected[key] != val {
 			t.Fatalf("got unexpected Windows agent profile kubelet config value for %s: %s, expected %s",
-				key, expected[key], val)
+				key, val, expected[key])
 		}
 	}
 
