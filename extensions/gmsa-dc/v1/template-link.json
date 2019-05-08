@@ -8,7 +8,7 @@
     "properties": {
         "mode": "Incremental",
         "templateLink": {
-            "uri": "https://raw.githubusercontent.com/JeremyWx/gmsa-dc/master/extensions/gmsa-dc/v1/template.json",
+            "uri": "https://raw.githubusercontent.com/JeremyWx/aks-engine/master/extensions/gmsa-dc/v1/template.json",
             "contentVersion": "1.0.0.0"
         },
         "parameters": {
