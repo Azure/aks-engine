@@ -346,7 +346,6 @@ func TestCreateAgentVMASCustomScriptExtension(t *testing.T) {
 		t.Errorf("unexpected diff while expecting equal structs: %s", diff)
 	}
 
-	/* TODO enable an Azure Stack CSE check
 	// Test with Azure Stack
 	cs.Properties.FeatureFlags.BlockOutboundInternet = false
 	cs.Properties.CustomCloudProfile = &api.CustomCloudProfile{}
@@ -364,10 +363,11 @@ func TestCreateAgentVMASCustomScriptExtension(t *testing.T) {
 
 	if diff != "" {
 		t.Errorf("unexpected diff while expecting equal structs: %s", diff)
-	}*/
+	}
 
 	// Test with EnableRunInBackground and China Location
 	cs.Properties.FeatureFlags.BlockOutboundInternet = false
+	cs.Properties.CustomCloudProfile = nil
 	cs.Properties.FeatureFlags.EnableCSERunInBackground = true
 	cs.Location = "chinanorth"
 	profile = &api.AgentPoolProfile{
