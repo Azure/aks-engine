@@ -49,6 +49,7 @@ func TestKubeletConfigDefaults(t *testing.T) {
 		"--pod-manifest-path":                 "/etc/kubernetes/manifests",
 		"--pod-infra-container-image":         cs.Properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBase + K8sComponentsByVersionMap[cs.Properties.OrchestratorProfile.OrchestratorVersion]["pause"],
 		"--pod-max-pids":                      strconv.Itoa(DefaultKubeletPodMaxPIDs),
+		"--protect-kernel-defaults":           "true",
 		"--rotate-certificates":               "true",
 		"--streaming-connection-idle-timeout": "5m",
 		"--feature-gates":                     "PodPriority=true,RotateKubeletServerCertificate=true",
@@ -56,21 +57,21 @@ func TestKubeletConfigDefaults(t *testing.T) {
 	for key, val := range kubeletConfig {
 		if expected[key] != val {
 			t.Fatalf("got unexpected kubelet config value for %s: %s, expected %s",
-				key, expected[key], val)
+				key, val, expected[key])
 		}
 	}
 	masterKubeletConfig := cs.Properties.MasterProfile.KubernetesConfig.KubeletConfig
 	for key, val := range masterKubeletConfig {
 		if expected[key] != val {
 			t.Fatalf("got unexpected masterProfile kubelet config value for %s: %s, expected %s",
-				key, expected[key], val)
+				key, val, expected[key])
 		}
 	}
 	linuxProfileKubeletConfig := cs.Properties.AgentPoolProfiles[0].KubernetesConfig.KubeletConfig
 	for key, val := range linuxProfileKubeletConfig {
 		if expected[key] != val {
 			t.Fatalf("got unexpected Linux agent profile kubelet config value for %s: %s, expected %s",
-				key, expected[key], val)
+				key, val, expected[key])
 		}
 	}
 	windowsProfileKubeletConfig := cs.Properties.AgentPoolProfiles[1].KubernetesConfig.KubeletConfig
@@ -87,10 +88,11 @@ func TestKubeletConfigDefaults(t *testing.T) {
 	expected["--resolv-conf"] = "\"\"\"\""
 	expected["--eviction-hard"] = "\"\"\"\""
 	delete(expected, "--pod-manifest-path")
+	delete(expected, "--protect-kernel-defaults")
 	for key, val := range windowsProfileKubeletConfig {
 		if expected[key] != val {
 			t.Fatalf("got unexpected Windows agent profile kubelet config value for %s: %s, expected %s",
-				key, expected[key], val)
+				key, val, expected[key])
 		}
 	}
 
@@ -434,15 +436,15 @@ func TestProtectKernelDefaults(t *testing.T) {
 	cs := CreateMockContainerService("testcluster", "1.12.7", 3, 2, false)
 	cs.setKubeletConfig()
 	k := cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig
-	if k["--protect-kernel-defaults"] != "" {
+	if k["--protect-kernel-defaults"] != "true" {
 		t.Fatalf("got unexpected '--protect-kernel-defaults' kubelet config value %s, the expected value is %s",
-			k["--protect-kernel-defaults"], "pods")
+			k["--protect-kernel-defaults"], "true")
 	}
 
-	// Validate that --protect-kernel-defaults is "true" by default for Ubuntu distros
+	// Validate that --protect-kernel-defaults is "true" by default for relevant distros
 	for _, distro := range DistroValues {
 		switch distro {
-		case Ubuntu, Ubuntu1804:
+		case Ubuntu, Ubuntu1804, AKS, AKS1804:
 			cs = CreateMockContainerService("testcluster", "1.10.13", 3, 2, false)
 			cs.Properties.MasterProfile.Distro = distro
 			cs.Properties.AgentPoolProfiles[0].Distro = distro
@@ -469,10 +471,10 @@ func TestProtectKernelDefaults(t *testing.T) {
 			k["--protect-kernel-defaults"], "false")
 	}
 
-	// Validate that --protect-kernel-defaults is overridable for Ubuntu distros
+	// Validate that --protect-kernel-defaults is overridable for relevant distros
 	for _, distro := range DistroValues {
 		switch distro {
-		case Ubuntu, Ubuntu1804:
+		case Ubuntu, Ubuntu1804, AKS, AKS1804:
 			cs = CreateMockContainerService("testcluster", "1.10.13", 3, 2, false)
 			cs.Properties.MasterProfile.Distro = "ubuntu"
 			cs.Properties.AgentPoolProfiles[0].Distro = "ubuntu"
