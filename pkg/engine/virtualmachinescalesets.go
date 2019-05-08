@@ -276,7 +276,8 @@ func CreateMasterVMSS(cs *api.ContainerService) VirtualMachineScaleSetARM {
 	if cs.Properties.MasterProfile != nil && cs.Properties.MasterProfile.IsCoreOS() {
 		ncBinary = "ncat"
 	}
-	if !cs.Properties.FeatureFlags.IsFeatureEnabled("BlockOutboundInternet") {
+	// TODO The AzureStack constraint has to be relaxed, it should only apply to *disconnected* instances
+	if !cs.Properties.FeatureFlags.IsFeatureEnabled("BlockOutboundInternet") && !cs.Properties.IsAzureStackCloud() {
 		if cs.GetCloudSpecConfig().CloudName == api.AzureChinaCloud {
 			registry = `gcr.azk8s.cn 80`
 		} else {
