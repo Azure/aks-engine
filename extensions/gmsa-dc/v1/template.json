@@ -8,14 +8,7 @@
 			 "metadata": {
 				 "description": "Compute API Version"
 			 }
-		 },
-		 "targetVMName":{
-			 "type": "string",
-			 "minLength": 1,
-			 "metadata": {
-				 "description": "Name of the vm to run the extension on"
-			 }
-		 }
+		}
 	},
 	"variables": {  
 	    "initScriptUrl": "https://raw.githubusercontent.com/JeremyWx/aks-engine/master/extensions/gmsa-dc/v1/Promote-DC.ps1"
@@ -26,7 +19,7 @@
 	   "dependsOn": [],
 	   "location": "[resourceGroup().location]",
 	   "type": "Microsoft.Compute/virtualMachines/extensions",
-	   "name": "[concat(parameters('targetVMName'),'/gmsa-dc-cse')]",
+	   "name": "cse/gmsa-dc')]",
 	   "properties": {
 		 "publisher": "Microsoft.Compute",
 		 "type": "CustomScriptExtension",
