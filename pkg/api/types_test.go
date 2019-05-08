@@ -2480,16 +2480,16 @@ func TestIsAADPodIdentityEnabled(t *testing.T) {
 			KubernetesConfig: &c,
 		},
 	}
-	enabled := p.IsAADPodIdentityEnabled()
+	enabled := c.IsAADPodIdentityEnabled()
 	enabledDefault := DefaultAADPodIdentityAddonEnabled
 	if enabled != enabledDefault {
-		t.Fatalf("Properties.IsAADPodIdentityEnabled() should return %t when no aad pod identity addon has been specified, instead returned %t", enabledDefault, enabled)
+		t.Fatalf("KubernetesConfig.IsAADPodIdentityEnabled() should return %t when no aad pod identity addon has been specified, instead returned %t", enabledDefault, enabled)
 	}
 	// Addon present, but enabled not specified
 	c.Addons = append(c.Addons, getMockAddon(AADPodIdentityAddonName))
-	enabled = p.IsAADPodIdentityEnabled()
+	enabled = c.IsAADPodIdentityEnabled()
 	if enabled != enabledDefault {
-		t.Fatalf("Properties.IsAADPodIdentityEnabled() should return default when aad pod identity addon has been specified w/ no enabled value, expected %t, instead returned %t", enabledDefault, enabled)
+		t.Fatalf("KubernetesConfig.IsAADPodIdentityEnabled() should return default when aad pod identity addon has been specified w/ no enabled value, expected %t, instead returned %t", enabledDefault, enabled)
 	}
 	// Addon present and enabled
 	b := true
@@ -2501,9 +2501,9 @@ func TestIsAADPodIdentityEnabled(t *testing.T) {
 			},
 		},
 	}
-	enabled = p.IsAADPodIdentityEnabled()
+	enabled = c.IsAADPodIdentityEnabled()
 	if !enabled {
-		t.Fatalf("Properties.IsAADPodIdentityEnabled() should return true when aad pod identity addon has been specified as enabled, instead returned %t", enabled)
+		t.Fatalf("KubernetesConfig.IsAADPodIdentityEnabled() should return true when aad pod identity addon has been specified as enabled, instead returned %t", enabled)
 	}
 	// Addon present and disabled
 	b = false
@@ -2515,15 +2515,15 @@ func TestIsAADPodIdentityEnabled(t *testing.T) {
 			},
 		},
 	}
-	enabled = p.IsAADPodIdentityEnabled()
+	enabled = c.IsAADPodIdentityEnabled()
 	if enabled {
-		t.Fatalf("Properties.IsAADPodIdentityEnabled() should return false when aad pod identity addon has been specified as disabled, instead returned %t", enabled)
+		t.Fatalf("KubernetesConfig.IsAADPodIdentityEnabled() should return false when aad pod identity addon has been specified as disabled, instead returned %t", enabled)
 	}
 	// Is AzureStack custom cloud
 	p.CustomCloudProfile = &CustomCloudProfile{}
-	enabled = p.IsAADPodIdentityEnabled()
+	enabled = c.IsAADPodIdentityEnabled()
 	if enabled {
-		t.Fatalf("Properties.IsAADPodIdentityEnabled() should always return false when custom cloud is set, instead returned %t", enabled)
+		t.Fatalf("KubernetesConfig.IsAADPodIdentityEnabled() should always return false when custom cloud is set, instead returned %t", enabled)
 	}
 }
 
@@ -2539,16 +2539,16 @@ func TestIsACIConnectorEnabled(t *testing.T) {
 			KubernetesConfig: &c,
 		},
 	}
-	enabled := p.IsACIConnectorEnabled()
+	enabled := c.IsACIConnectorEnabled()
 	enabledDefault := DefaultACIConnectorAddonEnabled
 	if enabled != enabledDefault {
-		t.Fatalf("Properties.IsACIConnectorEnabled() should return %t when no ACI connector addon has been specified, instead returned %t", enabledDefault, enabled)
+		t.Fatalf("KubernetesConfig.IsACIConnectorEnabled() should return %t when no ACI connector addon has been specified, instead returned %t", enabledDefault, enabled)
 	}
 	// Addon present, but enabled not specified
 	c.Addons = append(c.Addons, getMockAddon(ACIConnectorAddonName))
-	enabled = p.IsACIConnectorEnabled()
+	enabled = c.IsACIConnectorEnabled()
 	if enabled != enabledDefault {
-		t.Fatalf("Properties.IsACIConnectorEnabled() should return default when ACI connector has been specified w/ no enabled value, expected %t, instead returned %t", enabledDefault, enabled)
+		t.Fatalf("KubernetesConfig.IsACIConnectorEnabled() should return default when ACI connector has been specified w/ no enabled value, expected %t, instead returned %t", enabledDefault, enabled)
 	}
 	// Addon present and enabled
 	b := true
@@ -2560,9 +2560,9 @@ func TestIsACIConnectorEnabled(t *testing.T) {
 			},
 		},
 	}
-	enabled = p.IsACIConnectorEnabled()
+	enabled = c.IsACIConnectorEnabled()
 	if !enabled {
-		t.Fatalf("Properties.IsACIConnectorEnabled() should return true when ACI connector addon has been specified as enabled, instead returned %t", enabled)
+		t.Fatalf("KubernetesConfig.IsACIConnectorEnabled() should return true when ACI connector addon has been specified as enabled, instead returned %t", enabled)
 	}
 	// Addon present and disabled
 	b = false
@@ -2574,15 +2574,15 @@ func TestIsACIConnectorEnabled(t *testing.T) {
 			},
 		},
 	}
-	enabled = p.IsACIConnectorEnabled()
+	enabled = c.IsACIConnectorEnabled()
 	if enabled {
-		t.Fatalf("Properties.IsACIConnectorEnabled() should return false when ACI connector addon has been specified as disabled, instead returned %t", enabled)
+		t.Fatalf("KubernetesConfig.IsACIConnectorEnabled() should return false when ACI connector addon has been specified as disabled, instead returned %t", enabled)
 	}
 	// Is AzureStack custom cloud
 	p.CustomCloudProfile = &CustomCloudProfile{}
-	enabled = p.IsACIConnectorEnabled()
+	enabled = c.IsACIConnectorEnabled()
 	if enabled {
-		t.Fatalf("Properties.IsACIConnectorEnabled() should always return false when custom cloud is set, instead returned %t", enabled)
+		t.Fatalf("KubernetesConfig.IsACIConnectorEnabled() should always return false when custom cloud is set, instead returned %t", enabled)
 	}
 }
 
@@ -2598,16 +2598,16 @@ func TestIsClusterAutoscalerEnabled(t *testing.T) {
 			KubernetesConfig: &c,
 		},
 	}
-	enabled := p.IsClusterAutoscalerEnabled()
+	enabled := c.IsClusterAutoscalerEnabled()
 	enabledDefault := DefaultClusterAutoscalerAddonEnabled
 	if enabled != enabledDefault {
-		t.Fatalf("Properties.IsClusterAutoscalerEnabled() should return %t when no cluster autoscaler addon has been specified, instead returned %t", enabledDefault, enabled)
+		t.Fatalf("KubernetesConfig.IsClusterAutoscalerEnabled() should return %t when no cluster autoscaler addon has been specified, instead returned %t", enabledDefault, enabled)
 	}
 	// Addon present, but enabled not specified
 	c.Addons = append(c.Addons, getMockAddon(ClusterAutoscalerAddonName))
-	enabled = p.IsClusterAutoscalerEnabled()
+	enabled = c.IsClusterAutoscalerEnabled()
 	if enabled != enabledDefault {
-		t.Fatalf("Properties.IsClusterAutoscalerEnabled() should return default when cluster autoscaler has been specified w/ no enabled value, expected %t, instead returned %t", enabledDefault, enabled)
+		t.Fatalf("KubernetesConfig.IsClusterAutoscalerEnabled() should return default when cluster autoscaler has been specified w/ no enabled value, expected %t, instead returned %t", enabledDefault, enabled)
 	}
 	// Addon present and enabled
 	b := true
@@ -2619,9 +2619,9 @@ func TestIsClusterAutoscalerEnabled(t *testing.T) {
 			},
 		},
 	}
-	enabled = p.IsClusterAutoscalerEnabled()
+	enabled = c.IsClusterAutoscalerEnabled()
 	if !enabled {
-		t.Fatalf("Properties.IsClusterAutoscalerEnabled() should return true when cluster autoscaler addon has been specified as enabled, instead returned %t", enabled)
+		t.Fatalf("KubernetesConfig.IsClusterAutoscalerEnabled() should return true when cluster autoscaler addon has been specified as enabled, instead returned %t", enabled)
 	}
 	// Addon present and disabled
 	b = false
@@ -2633,15 +2633,15 @@ func TestIsClusterAutoscalerEnabled(t *testing.T) {
 			},
 		},
 	}
-	enabled = p.IsClusterAutoscalerEnabled()
+	enabled = c.IsClusterAutoscalerEnabled()
 	if enabled {
-		t.Fatalf("Properties.IsClusterAutoscalerEnabled() should return false when cluster autoscaler addon has been specified as disabled, instead returned %t", enabled)
+		t.Fatalf("KubernetesConfig.IsClusterAutoscalerEnabled() should return false when cluster autoscaler addon has been specified as disabled, instead returned %t", enabled)
 	}
 	// Is AzureStack custom cloud
 	p.CustomCloudProfile = &CustomCloudProfile{}
-	enabled = p.IsClusterAutoscalerEnabled()
+	enabled = c.IsClusterAutoscalerEnabled()
 	if enabled {
-		t.Fatalf("Properties.IsClusterAutoscalerEnabled() should always return false when custom cloud is set, instead returned %t", enabled)
+		t.Fatalf("KubernetesConfig.IsClusterAutoscalerEnabled() should always return false when custom cloud is set, instead returned %t", enabled)
 	}
 }
 
@@ -2657,16 +2657,16 @@ func TestIsBlobfuseFlexVolumeEnabled(t *testing.T) {
 			KubernetesConfig: &c,
 		},
 	}
-	enabled := p.IsBlobfuseFlexVolumeEnabled()
+	enabled := c.IsBlobfuseFlexVolumeEnabled()
 	enabledDefault := DefaultBlobfuseFlexVolumeAddonEnabled
 	if enabled != enabledDefault {
-		t.Fatalf("Properties.IsBlobfuseFlexVolumeEnabled() should return %t when no blobfuse flexvolume addon has been specified, instead returned %t", enabledDefault, enabled)
+		t.Fatalf("KubernetesConfig.IsBlobfuseFlexVolumeEnabled() should return %t when no blobfuse flexvolume addon has been specified, instead returned %t", enabledDefault, enabled)
 	}
 	// Addon present, but enabled not specified
 	c.Addons = append(c.Addons, getMockAddon(BlobfuseFlexVolumeAddonName))
-	enabled = p.IsBlobfuseFlexVolumeEnabled()
+	enabled = c.IsBlobfuseFlexVolumeEnabled()
 	if enabled != enabledDefault {
-		t.Fatalf("Properties.IsBlobfuseFlexVolumeEnabled() should return default when blobfuse flexvolume has been specified w/ no enabled value, expected %t, instead returned %t", enabledDefault, enabled)
+		t.Fatalf("KubernetesConfig.IsBlobfuseFlexVolumeEnabled() should return default when blobfuse flexvolume has been specified w/ no enabled value, expected %t, instead returned %t", enabledDefault, enabled)
 	}
 	// Addon present and enabled
 	b := true
@@ -2678,9 +2678,9 @@ func TestIsBlobfuseFlexVolumeEnabled(t *testing.T) {
 			},
 		},
 	}
-	enabled = p.IsBlobfuseFlexVolumeEnabled()
+	enabled = c.IsBlobfuseFlexVolumeEnabled()
 	if !enabled {
-		t.Fatalf("Properties.IsBlobfuseFlexVolumeEnabled() should return true when blobfuse flexvolume addon has been specified as enabled, instead returned %t", enabled)
+		t.Fatalf("KubernetesConfig.IsBlobfuseFlexVolumeEnabled() should return true when blobfuse flexvolume addon has been specified as enabled, instead returned %t", enabled)
 	}
 	// Addon present and disabled
 	b = false
@@ -2692,15 +2692,15 @@ func TestIsBlobfuseFlexVolumeEnabled(t *testing.T) {
 			},
 		},
 	}
-	enabled = p.IsBlobfuseFlexVolumeEnabled()
+	enabled = c.IsBlobfuseFlexVolumeEnabled()
 	if enabled {
-		t.Fatalf("Properties.IsBlobfuseFlexVolumeEnabled() should return false when blobfuse flexvolume addon has been specified as disabled, instead returned %t", enabled)
+		t.Fatalf("KubernetesConfig.IsBlobfuseFlexVolumeEnabled() should return false when blobfuse flexvolume addon has been specified as disabled, instead returned %t", enabled)
 	}
 	// Is AzureStack custom cloud
 	p.CustomCloudProfile = &CustomCloudProfile{}
-	enabled = p.IsBlobfuseFlexVolumeEnabled()
+	enabled = c.IsBlobfuseFlexVolumeEnabled()
 	if enabled {
-		t.Fatalf("Properties.IsBlobfuseFlexVolumeEnabled() should always return false when custom cloud is set, instead returned %t", enabled)
+		t.Fatalf("KubernetesConfig.IsBlobfuseFlexVolumeEnabled() should always return false when custom cloud is set, instead returned %t", enabled)
 	}
 }
 
@@ -2716,16 +2716,16 @@ func TestIsSMBFlexVolumeEnabled(t *testing.T) {
 			KubernetesConfig: &c,
 		},
 	}
-	enabled := p.IsSMBFlexVolumeEnabled()
+	enabled := c.IsSMBFlexVolumeEnabled()
 	enabledDefault := DefaultSMBFlexVolumeAddonEnabled
 	if enabled != enabledDefault {
-		t.Fatalf("Properties.IsSMBFlexVolumeEnabled() should return %t when no SMB flexvolume addon has been specified, instead returned %t", enabledDefault, enabled)
+		t.Fatalf("KubernetesConfig.IsSMBFlexVolumeEnabled() should return %t when no SMB flexvolume addon has been specified, instead returned %t", enabledDefault, enabled)
 	}
 	// Addon present, but enabled not specified
 	c.Addons = append(c.Addons, getMockAddon(SMBFlexVolumeAddonName))
-	enabled = p.IsSMBFlexVolumeEnabled()
+	enabled = c.IsSMBFlexVolumeEnabled()
 	if enabled != enabledDefault {
-		t.Fatalf("Properties.IsSMBFlexVolumeEnabled() should return default when SMB flexvolume has been specified w/ no enabled value, expected %t, instead returned %t", enabledDefault, enabled)
+		t.Fatalf("KubernetesConfig.IsSMBFlexVolumeEnabled() should return default when SMB flexvolume has been specified w/ no enabled value, expected %t, instead returned %t", enabledDefault, enabled)
 	}
 	// Addon present and enabled
 	b := true
@@ -2737,9 +2737,9 @@ func TestIsSMBFlexVolumeEnabled(t *testing.T) {
 			},
 		},
 	}
-	enabled = p.IsSMBFlexVolumeEnabled()
+	enabled = c.IsSMBFlexVolumeEnabled()
 	if !enabled {
-		t.Fatalf("Properties.IsSMBFlexVolumeEnabled() should return true when SMB flexvolume addon has been specified as enabled, instead returned %t", enabled)
+		t.Fatalf("KubernetesConfig.IsSMBFlexVolumeEnabled() should return true when SMB flexvolume addon has been specified as enabled, instead returned %t", enabled)
 	}
 	// Addon present and disabled
 	b = false
@@ -2751,15 +2751,15 @@ func TestIsSMBFlexVolumeEnabled(t *testing.T) {
 			},
 		},
 	}
-	enabled = p.IsSMBFlexVolumeEnabled()
+	enabled = c.IsSMBFlexVolumeEnabled()
 	if enabled {
-		t.Fatalf("Properties.IsSMBFlexVolumeEnabled() should return true when SMB flexvolume addon has been specified as enabled, instead returned %t", enabled)
+		t.Fatalf("KubernetesConfig.IsSMBFlexVolumeEnabled() should return true when SMB flexvolume addon has been specified as enabled, instead returned %t", enabled)
 	}
 	// Is AzureStack custom cloud
 	p.CustomCloudProfile = &CustomCloudProfile{}
-	enabled = p.IsSMBFlexVolumeEnabled()
+	enabled = c.IsSMBFlexVolumeEnabled()
 	if enabled {
-		t.Fatalf("Properties.IsSMBFlexVolumeEnabled() should always return false when custom cloud is set, instead returned %t", enabled)
+		t.Fatalf("KubernetesConfig.IsSMBFlexVolumeEnabled() should always return false when custom cloud is set, instead returned %t", enabled)
 	}
 }
 
@@ -2775,16 +2775,16 @@ func TestIsKeyVaultFlexVolumeEnabled(t *testing.T) {
 			KubernetesConfig: &c,
 		},
 	}
-	enabled := p.IsKeyVaultFlexVolumeEnabled()
+	enabled := c.IsKeyVaultFlexVolumeEnabled()
 	enabledDefault := DefaultKeyVaultFlexVolumeAddonEnabled
 	if enabled != enabledDefault {
-		t.Fatalf("Properties.IsKeyVaultFlexVolumeEnabled() should return %t when no key vault flexvolume addon has been specified, instead returned %t", enabledDefault, enabled)
+		t.Fatalf("KubernetesConfig.IsKeyVaultFlexVolumeEnabled() should return %t when no key vault flexvolume addon has been specified, instead returned %t", enabledDefault, enabled)
 	}
 	// Addon present, but enabled not specified
 	c.Addons = append(c.Addons, getMockAddon(KeyVaultFlexVolumeAddonName))
-	enabled = p.IsKeyVaultFlexVolumeEnabled()
+	enabled = c.IsKeyVaultFlexVolumeEnabled()
 	if enabled != enabledDefault {
-		t.Fatalf("Properties.IsKeyVaultFlexVolumeEnabled() should return default when no keyvault flexvolume has been specified w/ no enabled value, expected %t, instead returned %t", enabledDefault, enabled)
+		t.Fatalf("KubernetesConfig.IsKeyVaultFlexVolumeEnabled() should return default when no keyvault flexvolume has been specified w/ no enabled value, expected %t, instead returned %t", enabledDefault, enabled)
 	}
 	// Addon present and enabled
 	b := true
@@ -2796,9 +2796,9 @@ func TestIsKeyVaultFlexVolumeEnabled(t *testing.T) {
 			},
 		},
 	}
-	enabled = p.IsKeyVaultFlexVolumeEnabled()
+	enabled = c.IsKeyVaultFlexVolumeEnabled()
 	if !enabled {
-		t.Fatalf("Properties.IsKeyVaultFlexVolumeEnabled() should return true when keyvault flexvolume addon has been specified as enabled, instead returned %t", enabled)
+		t.Fatalf("KubernetesConfig.IsKeyVaultFlexVolumeEnabled() should return true when keyvault flexvolume addon has been specified as enabled, instead returned %t", enabled)
 	}
 	// Addon present and disabled
 	b = false
@@ -2810,15 +2810,15 @@ func TestIsKeyVaultFlexVolumeEnabled(t *testing.T) {
 			},
 		},
 	}
-	enabled = p.IsKeyVaultFlexVolumeEnabled()
+	enabled = c.IsKeyVaultFlexVolumeEnabled()
 	if enabled {
-		t.Fatalf("Properties.IsKeyVaultFlexVolumeEnabled() should return false when keyvault flexvolume addon has been specified as disabled, instead returned %t", enabled)
+		t.Fatalf("KubernetesConfig.IsKeyVaultFlexVolumeEnabled() should return false when keyvault flexvolume addon has been specified as disabled, instead returned %t", enabled)
 	}
 	// Is AzureStack custom cloud
 	p.CustomCloudProfile = &CustomCloudProfile{}
-	enabled = p.IsKeyVaultFlexVolumeEnabled()
+	enabled = c.IsKeyVaultFlexVolumeEnabled()
 	if enabled {
-		t.Fatalf("Properties.IsKeyVaultFlexVolumeEnabled() should always return false when custom cloud is set, instead returned %t", enabled)
+		t.Fatalf("KubernetesConfig.IsKeyVaultFlexVolumeEnabled() should always return false when custom cloud is set, instead returned %t", enabled)
 	}
 }
 
@@ -2913,19 +2913,20 @@ func TestIsContainerMonitoringEnabled(t *testing.T) {
 	p := Properties{
 		OrchestratorProfile: &o,
 	}
-	enabled := p.IsContainerMonitoringEnabled()
+	k := o.KubernetesConfig
+	enabled := k.IsContainerMonitoringEnabled()
 	enabledDefault := DefaultContainerMonitoringAddonEnabled
 	if enabled != enabledDefault {
-		t.Fatalf("Properties.IsContainerMonitoringEnabled() should return %t for kubernetes version %s when no container-monitoring addon has been specified, instead returned %t", enabledDefault, v, enabled)
+		t.Fatalf("KubernetesConfig.IsContainerMonitoringEnabled() should return %t for kubernetes version %s when no container-monitoring addon has been specified, instead returned %t", enabledDefault, v, enabled)
 	}
 
 	b := true
 	cm := getMockAddon(ContainerMonitoringAddonName)
 	cm.Enabled = &b
 	o.KubernetesConfig.Addons = append(o.KubernetesConfig.Addons, cm)
-	enabled = p.IsContainerMonitoringEnabled()
+	enabled = k.IsContainerMonitoringEnabled()
 	if !enabled {
-		t.Fatalf("Properties.IsContainerMonitoringEnabled() should return %t for kubernetes version %s when the container-monitoring addon has been specified, instead returned %t", true, v, enabled)
+		t.Fatalf("KubernetesConfig.IsContainerMonitoringEnabled() should return %t for kubernetes version %s when the container-monitoring addon has been specified, instead returned %t", true, v, enabled)
 	}
 
 	b = false
@@ -2940,15 +2941,15 @@ func TestIsContainerMonitoringEnabled(t *testing.T) {
 		},
 		},
 	}
-	enabled = p.IsContainerMonitoringEnabled()
+	enabled = k.IsContainerMonitoringEnabled()
 	if enabled {
-		t.Fatalf("Properties.IsContainerMonitoringEnabled() should return false when a custom container monitoring addon has been specified as disabled, instead returned %t", enabled)
+		t.Fatalf("KubernetesConfig.IsContainerMonitoringEnabled() should return false when a custom container monitoring addon has been specified as disabled, instead returned %t", enabled)
 	}
 	// Is AzureStack custom cloud
 	p.CustomCloudProfile = &CustomCloudProfile{}
-	enabled = p.IsContainerMonitoringEnabled()
+	enabled = k.IsContainerMonitoringEnabled()
 	if enabled {
-		t.Fatalf("Properties.IsContainerMonitoringEnabled() should always return false when custom cloud is set, instead returned %t", enabled)
+		t.Fatalf("KubernetesConfig.IsContainerMonitoringEnabled() should always return false when custom cloud is set, instead returned %t", enabled)
 	}
 }
 
@@ -2989,20 +2990,15 @@ func TestIsReschedulerEnabled(t *testing.T) {
 			getMockAddon("addon"),
 		},
 	}
-	p := Properties{
-		OrchestratorProfile: &OrchestratorProfile{
-			KubernetesConfig: &c,
-		},
-	}
-	enabled := p.IsReschedulerEnabled()
+	enabled := c.IsReschedulerEnabled()
 	enabledDefault := DefaultReschedulerAddonEnabled
 	if enabled != enabledDefault {
-		t.Fatalf("Properties.IsReschedulerEnabled() should return %t when no rescheduler addon has been specified, instead returned %t", enabledDefault, enabled)
+		t.Fatalf("KubernetesConfig.IsReschedulerEnabled() should return %t when no rescheduler addon has been specified, instead returned %t", enabledDefault, enabled)
 	}
 	c.Addons = append(c.Addons, getMockAddon(ReschedulerAddonName))
-	enabled = p.IsReschedulerEnabled()
+	enabled = c.IsReschedulerEnabled()
 	if enabled {
-		t.Fatalf("Properties.IsReschedulerEnabled() should return true when a custom rescheduler addon has been specified, instead returned %t", enabled)
+		t.Fatalf("KubernetesConfig.IsReschedulerEnabled() should return true when a custom rescheduler addon has been specified, instead returned %t", enabled)
 	}
 	b := true
 	c = KubernetesConfig{
@@ -3013,15 +3009,9 @@ func TestIsReschedulerEnabled(t *testing.T) {
 			},
 		},
 	}
-	enabled = p.IsReschedulerEnabled()
+	enabled = c.IsReschedulerEnabled()
 	if !enabled {
-		t.Fatalf("Properties.IsReschedulerEnabled() should return false when a custom rescheduler addon has been specified as enabled, instead returned %t", enabled)
-	}
-	// Is AzureStack custom cloud
-	p.CustomCloudProfile = &CustomCloudProfile{}
-	enabled = p.IsReschedulerEnabled()
-	if enabled {
-		t.Fatalf("Properties.IsReschedulerEnabled() should always return false when custom cloud is set, instead returned %t", enabled)
+		t.Fatalf("KubernetesConfig.IsReschedulerEnabled() should return false when a custom rescheduler addon has been specified as enabled, instead returned %t", enabled)
 	}
 }
 
