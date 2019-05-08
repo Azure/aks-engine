@@ -193,22 +193,22 @@ func TestAddonsIndexByName(t *testing.T) {
 
 func TestAssignDefaultAddonImages(t *testing.T) {
 	addonContainerMap := map[string]string{
-		TillerAddonName:             "gcr.io/kubernetes-helm/tiller:v2.11.0",
-		ACIConnectorAddonName:       "microsoft/virtual-kubelet:latest",
-		ClusterAutoscalerAddonName:  "k8s.gcr.io/cluster-autoscaler:v1.2.2",
-		BlobfuseFlexVolumeAddonName: "mcr.microsoft.com/k8s/flexvolume/blobfuse-flexvolume:1.0.8",
-		SMBFlexVolumeAddonName:      "mcr.microsoft.com/k8s/flexvolume/smb-flexvolume:1.0.2",
-		KeyVaultFlexVolumeAddonName: "mcr.microsoft.com/k8s/flexvolume/keyvault-flexvolume:v0.0.7",
-		DashboardAddonName:          "k8s.gcr.io/kubernetes-dashboard-amd64:v1.10.1",
-		ReschedulerAddonName:        "k8s.gcr.io/rescheduler:v0.3.1",
-		MetricsServerAddonName:      "k8s.gcr.io/metrics-server-amd64:v0.2.1",
+		TillerAddonName:                    "gcr.io/kubernetes-helm/tiller:v2.11.0",
+		ACIConnectorAddonName:              "microsoft/virtual-kubelet:latest",
+		ClusterAutoscalerAddonName:         "k8s.gcr.io/cluster-autoscaler:v1.2.2",
+		BlobfuseFlexVolumeAddonName:        "mcr.microsoft.com/k8s/flexvolume/blobfuse-flexvolume:1.0.8",
+		SMBFlexVolumeAddonName:             "mcr.microsoft.com/k8s/flexvolume/smb-flexvolume:1.0.2",
+		KeyVaultFlexVolumeAddonName:        "mcr.microsoft.com/k8s/flexvolume/keyvault-flexvolume:v0.0.7",
+		DashboardAddonName:                 "k8s.gcr.io/kubernetes-dashboard-amd64:v1.10.1",
+		ReschedulerAddonName:               "k8s.gcr.io/rescheduler:v0.3.1",
+		MetricsServerAddonName:             "k8s.gcr.io/metrics-server-amd64:v0.2.1",
 		NVIDIADevicePluginAddonName:        "nvidia/k8s-device-plugin:1.10",
 		ContainerMonitoringAddonName:       "microsoft/oms:ciprod04232019",
 		IPMASQAgentAddonName:               "k8s.gcr.io/ip-masq-agent-amd64:v2.0.0",
 		AzureCNINetworkMonitoringAddonName: "mcr.microsoft.com/containernetworking/networkmonitor:v0.0.6",
-		DNSAutoscalerAddonName:      "k8s.gcr.io/cluster-proportional-autoscaler-amd64:1.1.1",
+		DNSAutoscalerAddonName:             "k8s.gcr.io/cluster-proportional-autoscaler-amd64:1.1.1",
 		DefaultHeapsterAddonName:           "k8s.gcr.io/heapster-amd64:v1.5.4",
-		CalicoAddonName:    "calico/typha:v3.5.0",
+		CalicoAddonName:                    "calico/typha:v3.5.0",
 	}
 
 	var addons []KubernetesAddon
