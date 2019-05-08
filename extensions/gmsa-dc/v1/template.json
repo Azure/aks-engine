@@ -7,8 +7,8 @@
 			 "minLength": 1,
 			 "metadata": {
 				 "description": "Compute API Version"
-			 },
-		 }
+			 }
+		 },
 		 "targetVMName":{
 			 "type": "string",
 			 "minLength": 1,
