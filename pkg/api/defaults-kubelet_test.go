@@ -470,37 +470,20 @@ func TestProtectKernelDefaults(t *testing.T) {
 			cs.Properties.MasterProfile.Distro = distro
 			cs.Properties.AgentPoolProfiles[0].Distro = distro
 			cs.SetPropertiesDefaults()
-			km = cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig
+			km := cs.Properties.MasterProfile.KubernetesConfig.KubeletConfig
 			if _, ok := km["--protect-kernel-defaults"]; ok {
 				t.Fatalf("got unexpected '--protect-kernel-defaults' kubelet config value %s",
-					k["--protect-kernel-defaults"])
+					km["--protect-kernel-defaults"])
 			}
 			ka = cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig
 			if _, ok := ka["--protect-kernel-defaults"]; ok {
 				t.Fatalf("got unexpected '--protect-kernel-defaults' kubelet config value %s",
-					k["--protect-kernel-defaults"])
+					ka["--protect-kernel-defaults"])
 			}
 		}
 	}
 
 	// Validate that --protect-kernel-defaults is overridable
-	cs = CreateMockContainerService("testcluster", "1.10.13", 3, 2, false)
-	cs.Properties.OrchestratorProfile.KubernetesConfig = &KubernetesConfig{
-		KubeletConfig: map[string]string{
-			"--protect-kernel-defaults": "false",
-		},
-	}
-	cs.SetPropertiesDefaults()
-	if km["--protect-kernel-defaults"] != "false" {
-		t.Fatalf("got unexpected '--protect-kernel-defaults' kubelet config value %s, the expected value is %s",
-			km["--protect-kernel-defaults"], "false")
-	}
-	ka := cs.Properties.AgentPoolProfiles[0].KubernetesConfig.KubeletConfig
-	if ka["--protect-kernel-defaults"] != "false" {
-		t.Fatalf("got unexpected '--protect-kernel-defaults' kubelet config value %s, the expected value is %s",
-			ka["--protect-kernel-defaults"], "false")
-	}
-	// Validate that --protect-kernel-defaults is overridable for relevant distros
 	for _, distro := range DistroValues {
 		switch distro {
 		case Ubuntu, Ubuntu1804, AKS, AKS1804:
@@ -512,11 +495,16 @@ func TestProtectKernelDefaults(t *testing.T) {
 					"--protect-kernel-defaults": "false",
 				},
 			}
-			cs.setKubeletConfig()
-			k = cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig
-			if k["--protect-kernel-defaults"] != "false" {
+			cs.SetPropertiesDefaults()
+			km := cs.Properties.MasterProfile.KubernetesConfig.KubeletConfig
+			if km["--protect-kernel-defaults"] != "false" {
 				t.Fatalf("got unexpected '--protect-kernel-defaults' kubelet config value %s, the expected value is %s",
-					k["--protect-kernel-defaults"], "false")
+					km["--protect-kernel-defaults"], "false")
+			}
+			ka := cs.Properties.AgentPoolProfiles[0].KubernetesConfig.KubeletConfig
+			if ka["--protect-kernel-defaults"] != "false" {
+				t.Fatalf("got unexpected '--protect-kernel-defaults' kubelet config value %s, the expected value is %s",
+					ka["--protect-kernel-defaults"], "false")
 			}
 		}
 	}
