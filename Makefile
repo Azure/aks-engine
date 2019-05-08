@@ -26,15 +26,15 @@ endif
 
 REPO_PATH := github.com/Azure/$(PROJECT)
 DEV_ENV_IMAGE := quay.io/deis/go-dev:v1.21.0
-DEV_ENV_WORK_DIR := /go/src/${REPO_PATH}
-DEV_ENV_OPTS := --rm -v ${CURDIR}:${DEV_ENV_WORK_DIR} -w ${DEV_ENV_WORK_DIR} ${DEV_ENV_VARS}
-DEV_ENV_CMD := docker run ${DEV_ENV_OPTS} ${DEV_ENV_IMAGE}
-DEV_ENV_CMD_IT := docker run -it ${DEV_ENV_OPTS} ${DEV_ENV_IMAGE}
-DEV_CMD_RUN := docker run ${DEV_ENV_OPTS}
+DEV_ENV_WORK_DIR := /go/src/$(REPO_PATH)
+DEV_ENV_OPTS := --rm -v $(CURDIR):$(DEV_ENV_WORK_DIR) -w $(DEV_ENV_WORK_DIR) $(DEV_ENV_VARS)
+DEV_ENV_CMD := docker run $(DEV_ENV_OPTS) $(DEV_ENV_IMAGE)
+DEV_ENV_CMD_IT := docker run -it $(DEV_ENV_OPTS) $(DEV_ENV_IMAGE)
+DEV_CMD_RUN := docker run $(DEV_ENV_OPTS)
 ifdef DEBUG
-LDFLAGS := -X main.version=${VERSION}
+LDFLAGS := -X main.version=$(VERSION)
 else
-LDFLAGS := -s -X main.version=${VERSION}
+LDFLAGS := -s -X main.version=$(VERSION)
 endif
 BINARY_DEST_DIR ?= bin
 
@@ -80,18 +80,18 @@ build: generate
 	$(GO) build $(GOFLAGS) -o $(BINDIR)/aks-engine-test$(EXTENSION) $(REPO_PATH)/test/aks-engine-test
 
 build-binary: generate
-	go build $(GOFLAGS) -v -ldflags "${LDFLAGS}" -o ${BINARY_DEST_DIR}/aks-engine .
+	go build $(GOFLAGS) -v -ldflags "$(LDFLAGS)" -o $(BINARY_DEST_DIR)/aks-engine .
 
 # usage: make clean build-cross dist VERSION=v0.4.0
 .PHONY: build-cross
 build-cross: build
 build-cross: LDFLAGS += -extldflags "-static"
 build-cross:
-	CGO_ENABLED=0 gox -output="_dist/aks-engine-${GITTAG}-{{.OS}}-{{.Arch}}/{{.Dir}}" -osarch='$(TARGETS)' $(GOFLAGS) -tags '$(TAGS)' -ldflags '$(LDFLAGS)'
+	CGO_ENABLED=0 gox -output="_dist/aks-engine-$(GITTAG)-{{.OS}}-{{.Arch}}/{{.Dir}}" -osarch='$(TARGETS)' $(GOFLAGS) -tags '$(TAGS)' -ldflags '$(LDFLAGS)'
 
 .PHONY: build-windows-k8s
 build-windows-k8s:
-	./scripts/build-windows-k8s.sh -v ${K8S_VERSION} -p ${PATCH_VERSION}
+	./scripts/build-windows-k8s.sh -v $(K8S_VERSION) -p $(PATCH_VERSION)
 
 .PHONY: dist
 dist: build-cross compress-binaries
@@ -117,7 +117,7 @@ checksum:
 .PHONY: build-container
 build-container:
 	docker build --no-cache --build-arg BUILD_DATE=`date -u +"%Y-%m-%dT%H:%M:%SZ"` \
-		--build-arg AKSENGINE_VERSION="$(VERSION)" -t microsoft/aks-engine:${VERSION} \
+		--build-arg AKSENGINE_VERSION="$(VERSION)" -t microsoft/aks-engine:$(VERSION) \
 		--file ./releases/Dockerfile.linux ./releases || \
 	echo 'This target works only for published releases. For example, "VERSION=0.32.0 make build-container".'
 
@@ -127,7 +127,7 @@ clean:
 
 GIT_BASEDIR    = $(shell git rev-parse --show-toplevel 2>/dev/null)
 ifneq ($(GIT_BASEDIR),)
-	LDFLAGS += -X github.com/Azure/aks-engine/pkg/test.JUnitOutDir=${GIT_BASEDIR}/test/junit
+	LDFLAGS += -X github.com/Azure/aks-engine/pkg/test.JUnitOutDir=$(GIT_BASEDIR)/test/junit
 endif
 
 test: generate
@@ -173,7 +173,7 @@ ifndef HAS_GINKGO
 endif
 
 build-vendor:
-	${DEV_ENV_CMD} dep ensure
+	$(DEV_ENV_CMD) dep ensure
 	rm -rf vendor/github.com/docker/distribution/contrib/docker-integration/generated_certs.d
 
 ci: bootstrap test-style build test lint
