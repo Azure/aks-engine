@@ -526,11 +526,6 @@ func TestLoadContainerServiceForAgentPoolOnlyClusterWithRawJSON(t *testing.T) {
 		t.Error("expected the output ContainerService object to be non-nil")
 	}
 
-	_, _, err = ValidateAPIModel(apiloader.Translator.Locale, cs, vlabs.APIVersion)
-	if err != nil {
-		t.Fatalf("unexpected error validating apimodel after populating defaults: %s", err)
-	}
-
 	rawJSON20180331 := []byte(`{"id":"sampleID","location":"westus2","plan":{"name":"sampleRPPlan","product":"fooProduct","promotionCode":"barPromoCode","publisher":"bazPublisher"},"tags":{"123":"456","abc":"def"},"type":"sampleType","properties":{"provisioningState":"Succeeded","kubernetesVersion":"","dnsPrefix":"blueorange","fqdn":"blueorange.azure.com","agentPoolProfiles":[{"name":"sampleagent","count":0,"vmSize":"Standard_DS1_v1","osDiskSizeGB":512,"storageProfile":"ManagedDisks","vnetSubnetID":"/subscriptions/SUB_ID/resourceGroups/RG_NAME/providers/Microsoft.Network/virtualNetworks/sampleVnet/subnets/sampleVnetSubnetID","osType":"Linux"}],"windowsProfile":{"adminUsername":"azureuser","adminPassword":"azurepassword"},"servicePrincipalProfile":{"clientId":"sampleClientID","secret":"sampleSecret"}}}`)
 
 	//Test with version v20180331
@@ -663,5 +658,19 @@ func TestSerializeContainerService(t *testing.T) {
 	b, err = apiloader.SerializeContainerService(cs, vlabs.APIVersion)
 	if b == nil || err != nil {
 		t.Errorf("unexpected error while trying to Serialize Container Service with version v20180331: %s", err.Error())
+	}
+}
+
+func TestValidateAPIModel(t *testing.T) {
+	apiloader := &Apiloader{
+		Translator: &i18n.Translator{},
+	}
+	// Don't validate right away, wait until all values have been populated.
+	cs, apiVersion, err := apiloader.LoadContainerServiceFromFile("../engine/testdata/simple/kubernetes.json", false, false, nil)
+
+	// @todo: set missing/bad values.
+	_, _, err = ValidateAPIModel(apiloader.Translator.Locale, cs, apiVersion)
+	if err != nil {
+		t.Errorf("unexpected error validating apimodel after populating defaults: %s", err.Error())
 	}
 }
