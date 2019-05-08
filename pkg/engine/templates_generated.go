@@ -17486,14 +17486,30 @@ var _k8sKubernetesparamsT = []byte(`{{if .HasAadProfile}}
     "aadTenantId": {
       "defaultValue": "",
       "metadata": {
-        "description": "The AAD tenant ID to use for authentication. If not specified, will use the tenant of the deployment subscription."
+        "description": "Fake Change 1. The AAD tenant ID to use for authentication. If not specified, will use the tenant of the deployment subscription."
       },
       "type": "string"
     },
     "aadAdminGroupId": {
       "defaultValue": "",
       "metadata": {
-        "description": "The AAD default Admin group Object ID used to create a cluster-admin RBAC role."
+        "description": "Fake Change 1. The AAD default Admin group Object ID used to create a cluster-admin RBAC role."
+      },
+      "type": "string"
+    },
+{{end}}
+{{if .HasAadProfile}}
+    "aadTenantId": {
+      "defaultValue": "",
+      "metadata": {
+        "description": "Fake Change 1. The AAD tenant ID to use for authentication. If not specified, will use the tenant of the deployment subscription."
+      },
+      "type": "string"
+    },
+    "aadAdminGroupId": {
+      "defaultValue": "",
+      "metadata": {
+        "description": "Fake Change 1. The AAD default Admin group Object ID used to create a cluster-admin RBAC role."
       },
       "type": "string"
     },
@@ -17501,7 +17517,7 @@ var _k8sKubernetesparamsT = []byte(`{{if .HasAadProfile}}
 {{if IsHostedMaster}}
     "kubernetesEndpoint": {
       "metadata": {
-        "description": "The Kubernetes API endpoint https://<kubernetesEndpoint>:443"
+        "description": "Fake Change 1. The Kubernetes API endpoint https://<kubernetesEndpoint>:443"
       },
       "type": "string"
     },
