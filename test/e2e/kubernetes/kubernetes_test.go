@@ -646,6 +646,14 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			Expect(successes).To(Equal(cfg.StabilityIterations))
 		})
 
+		It("should have stable pod to wireserver connectivity", func() {
+			name := fmt.Sprintf("alpine-%s", cfg.Name)
+			command := fmt.Sprintf("nc -vz 168.63.129.16 80")
+			successes, err := pod.RunCommandMultipleTimes(pod.RunLinuxPod, "alpine", name, command, cfg.StabilityIterations, 1*time.Second, retryCommandsTimeout, stabilityCommandTimeout)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(successes).To(Equal(cfg.StabilityIterations))
+		})
+
 		It("should have stable pod-to-pod networking", func() {
 			if eng.HasLinuxAgents() {
 				By("Creating a test php-apache deployment")

@@ -342,7 +342,7 @@ write_files:
 {{end}}
 {{if not IsIPMasqAgentEnabled}}
     {{if IsAzureCNI}}
-    iptables -t nat -A POSTROUTING -m iprange ! --dst-range 168.63.129.16 -m addrtype ! --dst-type local ! -d {{WrapAsParameter "vnetCidr"}} -j MASQUERADE
+    iptables -t nat -A POSTROUTING -m addrtype ! --dst-type local ! -d {{WrapAsParameter "vnetCidr"}} -j MASQUERADE
     {{end}}
 {{end}}
 {{if HasLinuxProfile}}{{if HasCustomSearchDomain}}
