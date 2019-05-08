@@ -1511,7 +1511,7 @@ func (k *KubernetesConfig) IsAzureCNIMonitoringEnabled() bool {
 
 // IsContainerMonitoringEnabled checks if the container monitoring addon is enabled
 func (p *Properties) IsContainerMonitoringEnabled() bool {
-	return p.isKubernetesAndNotAzureStack() &&
+	return !p.isAzureStack() &&
 		p.OrchestratorProfile.KubernetesConfig.isAddonEnabled(ContainerMonitoringAddonName, DefaultContainerMonitoringAddonEnabled)
 }
 
@@ -1522,37 +1522,37 @@ func (k *KubernetesConfig) IsTillerEnabled() bool {
 
 // IsAADPodIdentityEnabled checks if the AAD pod identity addon is enabled
 func (p *Properties) IsAADPodIdentityEnabled() bool {
-	return p.isKubernetesAndNotAzureStack() &&
+	return !p.isAzureStack() &&
 		p.OrchestratorProfile.KubernetesConfig.isAddonEnabled(DefaultAADPodIdentityAddonName, DefaultAADPodIdentityAddonEnabled)
 }
 
 // IsACIConnectorEnabled checks if the ACI Connector addon is enabled
 func (p *Properties) IsACIConnectorEnabled() bool {
-	return p.isKubernetesAndNotAzureStack() &&
+	return !p.isAzureStack() &&
 		p.OrchestratorProfile.KubernetesConfig.isAddonEnabled(DefaultACIConnectorAddonName, DefaultACIConnectorAddonEnabled)
 }
 
 // IsClusterAutoscalerEnabled checks if the cluster autoscaler addon is enabled
 func (p *Properties) IsClusterAutoscalerEnabled() bool {
-	return p.isKubernetesAndNotAzureStack() &&
+	return !p.isAzureStack() &&
 		p.OrchestratorProfile.KubernetesConfig.isAddonEnabled(DefaultClusterAutoscalerAddonName, DefaultClusterAutoscalerAddonEnabled)
 }
 
 // IsBlobfuseFlexVolumeEnabled checks if the Blobfuse FlexVolume addon is enabled
 func (p *Properties) IsBlobfuseFlexVolumeEnabled() bool {
-	return p.isKubernetesAndNotAzureStack() &&
+	return !p.isAzureStack() &&
 		p.OrchestratorProfile.KubernetesConfig.isAddonEnabled(DefaultBlobfuseFlexVolumeAddonName, DefaultBlobfuseFlexVolumeAddonEnabled)
 }
 
 // IsSMBFlexVolumeEnabled checks if the SMB FlexVolume addon is enabled
 func (p *Properties) IsSMBFlexVolumeEnabled() bool {
-	return p.isKubernetesAndNotAzureStack() &&
+	return !p.isAzureStack() &&
 		p.OrchestratorProfile.KubernetesConfig.isAddonEnabled(DefaultSMBFlexVolumeAddonName, DefaultSMBFlexVolumeAddonEnabled)
 }
 
 // IsKeyVaultFlexVolumeEnabled checks if the Key Vault FlexVolume addon is enabled
 func (p *Properties) IsKeyVaultFlexVolumeEnabled() bool {
-	return p.isKubernetesAndNotAzureStack() &&
+	return !p.isAzureStack() &&
 		p.OrchestratorProfile.KubernetesConfig.isAddonEnabled(DefaultKeyVaultFlexVolumeAddonName, DefaultKeyVaultFlexVolumeAddonEnabled)
 }
 
@@ -1619,7 +1619,7 @@ func (p *Properties) HasNSeriesSKU() bool {
 // It is enabled by default if agents contain a GPU and Kubernetes version is >= 1.10.0
 func (p *Properties) IsNVIDIADevicePluginEnabled() bool {
 	k := p.OrchestratorProfile.KubernetesConfig
-	return p.isKubernetesAndNotAzureStack() &&
+	return !p.isAzureStack() &&
 		k.isAddonEnabled(NVIDIADevicePluginAddonName, getDefaultNVIDIADevicePluginEnabled(p))
 }
 
@@ -1701,7 +1701,7 @@ func getDefaultNVIDIADevicePluginEnabled(p *Properties) bool {
 
 // IsReschedulerEnabled checks if the rescheduler addon is enabled
 func (p *Properties) IsReschedulerEnabled() bool {
-	return p.isKubernetesAndNotAzureStack() &&
+	return !p.isAzureStack() &&
 		p.OrchestratorProfile.KubernetesConfig.isAddonEnabled(DefaultReschedulerAddonName, DefaultReschedulerAddonEnabled)
 }
 
@@ -1812,6 +1812,6 @@ func FormatProdFQDNByLocation(fqdnPrefix string, location string, cloudName stri
 	return fmt.Sprintf("%s.%s."+FQDNFormat, fqdnPrefix, location)
 }
 
-func (p *Properties) isKubernetesAndNotAzureStack() bool {
-	return p.OrchestratorProfile != nil && p.OrchestratorProfile.KubernetesConfig != nil && !p.IsAzureStackCloud()
+func (p *Properties) isAzureStack() bool {
+	return p.OrchestratorProfile != nil && p.OrchestratorProfile.KubernetesConfig != nil && p.IsAzureStackCloud()
 }
