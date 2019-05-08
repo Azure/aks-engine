@@ -58,7 +58,6 @@ func (cs *ContainerService) setKubeletConfig() {
 	staticWindowsKubeletConfig["--image-pull-progress-deadline"] = "20m"
 	staticWindowsKubeletConfig["--resolv-conf"] = "\"\"\"\""
 	staticWindowsKubeletConfig["--eviction-hard"] = "\"\"\"\""
-	staticWindowsKubeletConfig["--protect-kernel-defaults"] = ""
 
 	// Default Kubelet config
 	defaultKubeletConfig := map[string]string{
@@ -80,7 +79,6 @@ func (cs *ContainerService) setKubeletConfig() {
 		"--image-pull-progress-deadline":      "30m",
 		"--enforce-node-allocatable":          "pods",
 		"--streaming-connection-idle-timeout": "5m",
-		"--protect-kernel-defaults":           "true",
 	}
 
 	// Set --non-masquerade-cidr if ip-masq-agent is disabled on AKS

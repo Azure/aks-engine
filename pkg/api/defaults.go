@@ -313,6 +313,20 @@ func (p *Properties) setMasterProfileDefaults(isUpgrade bool) {
 			p.MasterProfile.Distro = Ubuntu
 		}
 	}
+
+	// "--protect-kernel-defaults" is only true for VHD based VMs since the base Ubuntu distros don't have a /etc/sysctl.d/60-CIS.conf file.
+	if p.MasterProfile.IsVHDDistro() {
+		if p.MasterProfile.KubernetesConfig == nil {
+			p.MasterProfile.KubernetesConfig = &KubernetesConfig{}
+		}
+		if p.MasterProfile.KubernetesConfig.KubeletConfig == nil {
+			p.MasterProfile.KubernetesConfig.KubeletConfig = map[string]string{}
+		}
+		if _, ok := p.MasterProfile.KubernetesConfig.KubeletConfig["--protect-kernel-defaults"]; !ok {
+			p.MasterProfile.KubernetesConfig.KubeletConfig["--protect-kernel-defaults"] = "true"
+		}
+	}
+
 	// set default to VMAS for now
 	if len(p.MasterProfile.AvailabilityProfile) == 0 {
 		p.MasterProfile.AvailabilityProfile = AvailabilitySet
@@ -490,6 +504,19 @@ func (p *Properties) setAgentProfileDefaults(isUpgrade, isScale bool) {
 				if profile.Distro == AKSDockerEngine {
 					profile.Distro = AKS
 				}
+			}
+		}
+
+		// "--protect-kernel-defaults" is only true for VHD based VMs since the base Ubuntu distros don't have a /etc/sysctl.d/60-CIS.conf file.
+		if profile.IsVHDDistro() {
+			if profile.KubernetesConfig == nil {
+				profile.KubernetesConfig = &KubernetesConfig{}
+			}
+			if profile.KubernetesConfig.KubeletConfig == nil {
+				profile.KubernetesConfig.KubeletConfig = map[string]string{}
+			}
+			if _, ok := profile.KubernetesConfig.KubeletConfig["--protect-kernel-defaults"]; !ok {
+				profile.KubernetesConfig.KubeletConfig["--protect-kernel-defaults"] = "true"
 			}
 		}
 
