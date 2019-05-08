@@ -11,7 +11,7 @@ write_files:
 
 - path: "/home/{{WrapAsParameter "jumpboxUsername"}}/.kube/config"
   permissions: "0644"
-  owner: "root"
+  owner: "{{WrapAsParameter "jumpboxUsername"}}"
   content: |
 {{WrapAsVariable "kubeconfig"}}
 
@@ -20,3 +20,7 @@ runcmd:
 - retrycmd_if_failure 10 5 10 curl -LO https://storage.googleapis.com/kubernetes-release/release/v{{.OrchestratorProfile.OrchestratorVersion}}/bin/linux/amd64/kubectl
 - chmod +x ./kubectl
 - sudo mv ./kubectl /usr/local/bin/kubectl
+- chown -R "{{WrapAsParameter "jumpboxUsername"}}" "/home/{{WrapAsParameter "jumpboxUsername"}}"
+- chgrp -R "{{WrapAsParameter "jumpboxUsername"}}" "/home/{{WrapAsParameter "jumpboxUsername"}}"
+- chown -R root "/home/{{WrapAsParameter "jumpboxUsername"}}/.kube"
+- chgrp -R root "/home/{{WrapAsParameter "jumpboxUsername"}}/.kube"
