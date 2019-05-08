@@ -11,7 +11,7 @@
 		 }
 	},
 	"variables": {  
-	    "initScriptUrl": "https://raw.githubusercontent.com/JeremyWx/gmsa-dc/master/extensions/gmsa-dc/v1/Promote-DC.ps1"
+	    "initScriptUrl": "https://raw.githubusercontent.com/JeremyWx/aks-engine/master/extensions/gmsa-dc/v1/Promote-DC.ps1"
 		},
 	"resources": [
 	 {
@@ -19,7 +19,7 @@
 	   "dependsOn": [],
 	   "location": "[resourceGroup().location]",
 	   "type": "Microsoft.Compute/virtualMachines/extensions",
-	   "name": "gmsa-dc", 
+	   "name": "[concat(parameters('targetVMName'),'/gmsa-dc-cse', '-', parameters('targetVMType'), '-', parameters('vmIndex'))]",
 	   "properties": {
 		 "publisher": "Microsoft.Compute",
 		 "type": "CustomScriptExtension",
