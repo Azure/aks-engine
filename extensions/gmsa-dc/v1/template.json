@@ -22,7 +22,13 @@
 			"metadata": {
 				"description": "Type of the vm to run the extension: master or agent "
 			}
-		}
+		},
+		"vmIndex": {
+			 "type": "int",
+			 "metadata": {
+				 "description": "index in the pool of the current agent, used so that we can get the extension name right"
+			 }
+		 }
 	},
 	"variables": {  
 	    "initScriptUrl": "https://raw.githubusercontent.com/JeremyWx/aks-engine/master/extensions/gmsa-dc/v1/Promote-DC.ps1"
