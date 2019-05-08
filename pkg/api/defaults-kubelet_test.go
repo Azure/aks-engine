@@ -454,12 +454,12 @@ func TestProtectKernelDefaults(t *testing.T) {
 			cs.Properties.MasterProfile.Distro = distro
 			cs.Properties.AgentPoolProfiles[0].Distro = distro
 			cs.SetPropertiesDefaults(false, false)
-			km := cs.Properties.MasterProfile.KubernetesConfig.KubeletConfig
+			km = cs.Properties.MasterProfile.KubernetesConfig.KubeletConfig
 			if km["--protect-kernel-defaults"] != "true" {
 				t.Fatalf("got unexpected '--protect-kernel-defaults' kubelet config value %s, the expected value is %s",
 					km["--protect-kernel-defaults"], "true")
 			}
-			ka := cs.Properties.AgentPoolProfiles[0].KubernetesConfig.KubeletConfig
+			ka = cs.Properties.AgentPoolProfiles[0].KubernetesConfig.KubeletConfig
 			if ka["--protect-kernel-defaults"] != "true" {
 				t.Fatalf("got unexpected '--protect-kernel-defaults' kubelet config value %s, the expected value is %s",
 					ka["--protect-kernel-defaults"], "true")
@@ -470,12 +470,12 @@ func TestProtectKernelDefaults(t *testing.T) {
 			cs.Properties.MasterProfile.Distro = distro
 			cs.Properties.AgentPoolProfiles[0].Distro = distro
 			cs.SetPropertiesDefaults(false, false)
-			km := cs.Properties.MasterProfile.KubernetesConfig.KubeletConfig
+			km = cs.Properties.MasterProfile.KubernetesConfig.KubeletConfig
 			if _, ok := km["--protect-kernel-defaults"]; ok {
 				t.Fatalf("got unexpected '--protect-kernel-defaults' kubelet config value %s",
 					km["--protect-kernel-defaults"])
 			}
-			ka = cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig
+			ka = cs.Properties.AgentPoolProfiles[0].KubernetesConfig.KubeletConfig
 			if _, ok := ka["--protect-kernel-defaults"]; ok {
 				t.Fatalf("got unexpected '--protect-kernel-defaults' kubelet config value %s",
 					ka["--protect-kernel-defaults"])
@@ -496,12 +496,12 @@ func TestProtectKernelDefaults(t *testing.T) {
 				},
 			}
 			cs.SetPropertiesDefaults(false, false)
-			km := cs.Properties.MasterProfile.KubernetesConfig.KubeletConfig
+			km = cs.Properties.MasterProfile.KubernetesConfig.KubeletConfig
 			if km["--protect-kernel-defaults"] != "false" {
 				t.Fatalf("got unexpected '--protect-kernel-defaults' kubelet config value %s, the expected value is %s",
 					km["--protect-kernel-defaults"], "false")
 			}
-			ka := cs.Properties.AgentPoolProfiles[0].KubernetesConfig.KubeletConfig
+			ka = cs.Properties.AgentPoolProfiles[0].KubernetesConfig.KubeletConfig
 			if ka["--protect-kernel-defaults"] != "false" {
 				t.Fatalf("got unexpected '--protect-kernel-defaults' kubelet config value %s, the expected value is %s",
 					ka["--protect-kernel-defaults"], "false")
