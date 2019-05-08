@@ -863,51 +863,62 @@ func TestProperties_ValidateLinuxProfile(t *testing.T) {
 }
 
 func TestProperties_ValidateInvalidExtensions(t *testing.T) {
-
-	cs := getK8sDefaultContainerService(true)
-	cs.Properties.OrchestratorProfile.OrchestratorVersion = "1.10.7"
-
-	cs.Properties.AgentPoolProfiles = []*AgentPoolProfile{
+	tests := []struct {
+		name              string
+		extensionProfiles []*ExtensionProfile
+		expectedErr       error
+	}{
 		{
-			Name:                "agentpool",
-			VMSize:              "Standard_D2_v2",
-			Count:               1,
-			AvailabilityProfile: VirtualMachineScaleSets,
-			Extensions: []Extension{
+			name: "Extensions for VirtualMachineScaleSets",
+			agentPoolProfiles: []*AgentPoolProfile{
 				{
-					Name:        "extensionName",
-					SingleOrAll: "single",
-					Template:    "fakeTemplate",
+					Name:                "agentpool",
+					VMSize:              "Standard_D2_v2",
+					Count:               1,
+					AvailabilityProfile: VirtualMachineScaleSets,
+					Extensions: []Extension{
+						{
+							Name:        "extensionName",
+							SingleOrAll: "single",
+							Template:    "fakeTemplate",
+						},
+					},
 				},
 			},
+			expectedErr: errors.New("Extensions are currently not supported with VirtualMachineScaleSets. Please specify \"availabilityProfile\": \"AvailabilitySet\""),
 		},
-	}
-	err := cs.Validate(true)
-	expectedMsg := "Extensions are currently not supported with VirtualMachineScaleSets. Please specify \"availabilityProfile\": \"AvailabilitySet\""
-
-	if err.Error() != expectedMsg {
-		t.Errorf("expected error message : %s to be thrown, but got %s", expectedMsg, err.Error())
-	}
-
-	cs.Properties.AgentPoolProfiles = []*AgentPoolProfile{
 		{
-			Name:   "agentpool",
-			VMSize: "Standard_D2_v2",
-			Count:  1,
-			OSType: "Windows",
-			Extensions: []Extension{
+			name: "prometheus-grafana-k8s extensions for Winows agents",
+			agentPoolProfiles: []*AgentPoolProfile{
 				{
-					Name: "prometheus-grafana-k8s",
+					Name:   "agentpool",
+					VMSize: "Standard_D2_v2",
+					Count:  1,
+					OSType: "Windows",
+					Extensions: []Extension{
+						{
+							Name: "prometheus-grafana-k8s",
+						},
+					},
 				},
 			},
+			expectedErr: errors.New("prometheus-grafana-k8s extension is currently not supported for Windows agents"),
 		},
 	}
-	err = cs.Validate(true)
-	expectedMsg = "prometheus-grafana-k8s extension is currently not supported for Windows agents"
 
-	if err.Error() != expectedMsg {
-		t.Errorf("expected error message : %s to be thrown, but got %s", expectedMsg, err.Error())
+	for _, test := range tests {
+		test := test
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+			cs := getK8sDefaultContainerService(true)
+			cs.Properties.AgentPoolProfiles = test.agentPoolProfiles
+			err := cs.Validate(true)
+			if !helpers.EqualError(err, test.expectedErr) {
+				t.Errorf("expected error with message : %s, but got %s", test.expectedErr.Error(), err.Error())
+			}
+		})
 	}
+	
 }
 
 func TestProperties_ValidateInvalidExtensionProfiles(t *testing.T) {
