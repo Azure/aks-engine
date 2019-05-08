@@ -2475,11 +2475,6 @@ func TestIsAADPodIdentityEnabled(t *testing.T) {
 			getMockAddon("addon"),
 		},
 	}
-	p := Properties{
-		OrchestratorProfile: &OrchestratorProfile{
-			KubernetesConfig: &c,
-		},
-	}
 	enabled := c.IsAADPodIdentityEnabled()
 	enabledDefault := DefaultAADPodIdentityAddonEnabled
 	if enabled != enabledDefault {
@@ -2526,11 +2521,6 @@ func TestIsACIConnectorEnabled(t *testing.T) {
 	c := KubernetesConfig{
 		Addons: []KubernetesAddon{
 			getMockAddon("addon"),
-		},
-	}
-	p := Properties{
-		OrchestratorProfile: &OrchestratorProfile{
-			KubernetesConfig: &c,
 		},
 	}
 	enabled := c.IsACIConnectorEnabled()
@@ -2581,11 +2571,6 @@ func TestIsClusterAutoscalerEnabled(t *testing.T) {
 			getMockAddon("addon"),
 		},
 	}
-	p := Properties{
-		OrchestratorProfile: &OrchestratorProfile{
-			KubernetesConfig: &c,
-		},
-	}
 	enabled := c.IsClusterAutoscalerEnabled()
 	enabledDefault := DefaultClusterAutoscalerAddonEnabled
 	if enabled != enabledDefault {
@@ -2632,11 +2617,6 @@ func TestIsBlobfuseFlexVolumeEnabled(t *testing.T) {
 	c := KubernetesConfig{
 		Addons: []KubernetesAddon{
 			getMockAddon("addon"),
-		},
-	}
-	p := Properties{
-		OrchestratorProfile: &OrchestratorProfile{
-			KubernetesConfig: &c,
 		},
 	}
 	enabled := c.IsBlobfuseFlexVolumeEnabled()
@@ -2687,11 +2667,6 @@ func TestIsSMBFlexVolumeEnabled(t *testing.T) {
 			getMockAddon("addon"),
 		},
 	}
-	p := Properties{
-		OrchestratorProfile: &OrchestratorProfile{
-			KubernetesConfig: &c,
-		},
-	}
 	enabled := c.IsSMBFlexVolumeEnabled()
 	enabledDefault := DefaultSMBFlexVolumeAddonEnabled
 	if enabled != enabledDefault {
@@ -2738,11 +2713,6 @@ func TestIsKeyVaultFlexVolumeEnabled(t *testing.T) {
 	c := KubernetesConfig{
 		Addons: []KubernetesAddon{
 			getMockAddon("addon"),
-		},
-	}
-	p := Properties{
-		OrchestratorProfile: &OrchestratorProfile{
-			KubernetesConfig: &c,
 		},
 	}
 	enabled := c.IsKeyVaultFlexVolumeEnabled()
@@ -2867,9 +2837,6 @@ func TestIsContainerMonitoringEnabled(t *testing.T) {
 			getMockAddon("addon"),
 		},
 		},
-	}
-	p := Properties{
-		OrchestratorProfile: &o,
 	}
 	k := o.KubernetesConfig
 	enabled := k.IsContainerMonitoringEnabled()
