@@ -522,6 +522,13 @@ func TestLoadContainerServiceForAgentPoolOnlyClusterWithRawJSON(t *testing.T) {
 		t.Errorf("unexpected error while executing LoadContainerServiceForAgentPoolOnlyCluster: %s", err.Error())
 	}
 
+	_, _, err = api.ValidateApimodel(apiloader.Translator.Locale, cs, vlabs.APIVersion)
+	if err != nil {
+			t.Fatalf("unexpected error validating apimodel after populating defaults: %s", err)
+	}
+
+}
+
 	if cs == nil {
 		t.Error("expected the output ContainerService object to be non-nil")
 	}
@@ -659,4 +666,3 @@ func TestSerializeContainerService(t *testing.T) {
 	if b == nil || err != nil {
 		t.Errorf("unexpected error while trying to Serialize Container Service with version v20180331: %s", err.Error())
 	}
-}
