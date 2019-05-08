@@ -15,19 +15,6 @@
 			 "metadata": {
 				 "description": "Name of the vm to run the extension on"
 			 }
-		 },
-		 "targetVMType":{
-			"type": "string",
-			"minLength": 1,
-			"metadata": {
-				"description": "Type of the vm to run the extension: master or agent "
-			}
-		 },
-		 "vmIndex": {
-			 "type": "int",
-			 "metadata": {
-				 "description": "index in the pool of the current agent, used so that we can get the extension name right"
-			 }
 		 }
 	},
 	"variables": {  
@@ -39,7 +26,7 @@
 	   "dependsOn": [],
 	   "location": "[resourceGroup().location]",
 	   "type": "Microsoft.Compute/virtualMachines/extensions",
-	   "name": "[concat(parameters('targetVMName'),'/gmsa-dc-cse', '-', parameters('targetVMType'), '-', parameters('vmIndex'))]",
+	   "name": "[concat(parameters('targetVMName'),'/gmsa-dc-cse')]",
 	   "properties": {
 		 "publisher": "Microsoft.Compute",
 		 "type": "CustomScriptExtension",
