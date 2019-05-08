@@ -79,7 +79,7 @@ func newDeployCmd() *cobra.Command {
 			if err := dc.loadAPIModel(cmd, args); err != nil {
 				return errors.Wrap(err, "loading API model")
 			}
-			if _, _, err := api.ValidateApiModel(dc.locale, dc.containerService, dc.apiVersion); err != nil {
+			if _, _, err := api.ValidateAPIModel(dc.locale, dc.containerService, dc.apiVersion); err != nil {
 				return errors.Wrap(err, "validating API model after populating values")
 			}
 			return dc.run()

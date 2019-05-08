@@ -61,7 +61,7 @@ func newGenerateCmd() *cobra.Command {
 				return errors.Wrap(err, "loading API model in generateCmd")
 			}
 
-			if _, _, err := api.ValidateApiModel(gc.locale, gc.containerService, gc.apiVersion); err != nil {
+			if _, _, err := api.ValidateAPIModel(gc.locale, gc.containerService, gc.apiVersion); err != nil {
 				return errors.Wrap(err, "validating API model after populating values")
 			}
 

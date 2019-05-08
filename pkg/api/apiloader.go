@@ -477,7 +477,7 @@ func setContainerServiceDefaultsv20170131(c *v20170131.ContainerService) {
 	}
 }
 
-func ValidateApiModel(locale *gotext.Locale, containerService *ContainerService, apiVersion string) (*ContainerService, string, error) {
+func ValidateAPIModel(locale *gotext.Locale, containerService *ContainerService, apiVersion string) (*ContainerService, string, error) {
 	apiloader := &Apiloader{
 		Translator: &i18n.Translator{
 			Locale: locale,

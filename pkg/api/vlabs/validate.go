@@ -510,9 +510,9 @@ func (a *Properties) validateZones() error {
 
 func (a *Properties) validateLinuxProfile() error {
 	for _, publicKey := range a.LinuxProfile.SSH.PublicKeys {
-   if e := validate.Var(publicKey.KeyData, "required"); e != nil {
-     return errors.New("KeyData in LinuxProfile.SSH.PublicKeys cannot be empty string")
-   }
+		if e := validate.Var(publicKey.KeyData, "required"); e != nil {
+			return errors.New("KeyData in LinuxProfile.SSH.PublicKeys cannot be empty string")
+		}
 	}
 	return validateKeyVaultSecrets(a.LinuxProfile.Secrets, false)
 }
