@@ -1,15 +1,11 @@
 {
-    "name": "[concat(EXTENSION_TARGET_VM_NAME_PREFIX, copyIndex(EXTENSION_LOOP_OFFSET), 'gmsa-dc')]",
+    "name": "[concat(EXTENSION_TARGET_VM_NAME_PREFIX, 'gmsa-dc')]",
     "type": "Microsoft.Resources/deployments",
     "apiVersion": "[variables('apiVersionDeployments')]",
     "dependsOn": [
 		"[concat('Microsoft.Compute/virtualMachines/', EXTENSION_TARGET_VM_NAME_PREFIX, '/extensions/cse', '-EXTENSION_TARGET_VM_TYPE-')]"
     ],
-		"copy": {
-		"count": "EXTENSION_LOOP_COUNT",
-		"name": "gmsa-dcExtensionLoop"
-	},
-    "properties": {
+	    "properties": {
         "mode": "Incremental",
         "templateLink": {
             "uri": "https://raw.githubusercontent.com/JeremyWx/aks-engine/master/extensions/gmsa-dc/v1/template.json",
@@ -20,7 +16,7 @@
                 "value": "[variables('apiVersionDeployments')]"
             },
 			"targetVMName": {
-				"value": "[concat(EXTENSION_TARGET_VM_NAME_PREFIX, copyIndex(EXTENSION_LOOP_OFFSET))]"
+				"value": "[concat(EXTENSION_TARGET_VM_NAME_PREFIX)]"
 			},
 			"targetVMType": {
             	"value": "EXTENSION_TARGET_VM_TYPE"
