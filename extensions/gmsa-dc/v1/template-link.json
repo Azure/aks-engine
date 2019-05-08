@@ -16,7 +16,7 @@
                 "value": "[variables('apiVersionDeployments')]"
             },
 			"targetVMName": {
-				"value": "[concat(EXTENSION_TARGET_VM_NAME_PREFIX)]"
+				"value": "[concat(EXTENSION_TARGET_VM_NAME_PREFIX, copyIndex(EXTENSION_LOOP_OFFSET))]"
 			},
 			"targetVMType": {
             	"value": "EXTENSION_TARGET_VM_TYPE"
