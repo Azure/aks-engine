@@ -51,25 +51,26 @@ func TestKubeletConfigDefaults(t *testing.T) {
 		"--pod-max-pids":                      strconv.Itoa(DefaultKubeletPodMaxPIDs),
 		"--rotate-certificates":               "true",
 		"--streaming-connection-idle-timeout": "5m",
+		"--feature-gates":                     "PodPriority=true,RotateKubeletServerCertificate=true",
 	}
-	for key, val := range expected {
-		if kubeletConfig[key] != val {
+	for key, val := range kubeletConfig {
+		if expected[key] != val {
 			t.Fatalf("got unexpected kubelet config value for %s: %s, expected %s",
-				key, kubeletConfig[key], val)
+				key, expected[key], val)
 		}
 	}
 	masterKubeletConfig := cs.Properties.MasterProfile.KubernetesConfig.KubeletConfig
-	for key, val := range expected {
-		if masterKubeletConfig[key] != val {
-			t.Fatalf("got unexpected kubelet config value for %s: %s, expected %s",
-				key, masterKubeletConfig[key], val)
+	for key, val := range masterKubeletConfig {
+		if expected[key] != val {
+			t.Fatalf("got unexpected masterProfile kubelet config value for %s: %s, expected %s",
+				key, expected[key], val)
 		}
 	}
 	linuxProfileKubeletConfig := cs.Properties.AgentPoolProfiles[0].KubernetesConfig.KubeletConfig
-	for key, val := range expected {
-		if linuxProfileKubeletConfig[key] != val {
-			t.Fatalf("got unexpected kubelet config value for %s: %s, expected %s",
-				key, linuxProfileKubeletConfig[key], val)
+	for key, val := range linuxProfileKubeletConfig {
+		if expected[key] != val {
+			t.Fatalf("got unexpected Linux agent profile kubelet config value for %s: %s, expected %s",
+				key, expected[key], val)
 		}
 	}
 	windowsProfileKubeletConfig := cs.Properties.AgentPoolProfiles[1].KubernetesConfig.KubeletConfig
@@ -86,10 +87,10 @@ func TestKubeletConfigDefaults(t *testing.T) {
 	expected["--resolv-conf"] = "\"\"\"\""
 	expected["--eviction-hard"] = "\"\"\"\""
 	delete(expected, "--pod-manifest-path")
-	for key, val := range expected {
-		if windowsProfileKubeletConfig[key] != val {
-			t.Fatalf("got unexpected kubelet config value for %s: %s, expected %s",
-				key, windowsProfileKubeletConfig[key], val)
+	for key, val := range windowsProfileKubeletConfig {
+		if expected[key] != val {
+			t.Fatalf("got unexpected Windows agent profile kubelet config value for %s: %s, expected %s",
+				key, expected[key], val)
 		}
 	}
 
