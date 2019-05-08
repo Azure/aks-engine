@@ -13,6 +13,7 @@ import (
 	"github.com/Azure/aks-engine/pkg/api/common"
 )
 
+// kubernetesComponentFileSpec defines a k8s component that we will deliver via file to a master node vm
 type kubernetesComponentFileSpec struct {
 	sourceFile      string // filename to source spec data from
 	base64Data      string // if not "", this base64-encoded string will take precedent over sourceFile
