@@ -188,20 +188,25 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 		})
 
 		It("should validate that every linux node has a root password", func() {
-			kubeConfig, err := GetConfig()
-			Expect(err).NotTo(HaveOccurred())
-			master := fmt.Sprintf("%s@%s", eng.ExpandedDefinition.Properties.LinuxProfile.AdminUsername, kubeConfig.GetServerName())
-			nodeList, err := node.GetReady()
-			Expect(err).NotTo(HaveOccurred())
-			rootPasswdCmd := fmt.Sprintf("\"sudo grep '^root:[!*]:' /etc/shadow\"")
-			for _, node := range nodeList.Nodes {
-				if node.IsUbuntu() {
-					cmd := exec.Command("ssh", "-A", "-i", masterSSHPrivateKeyFilepath, "-p", masterSSHPort, "-o", "ConnectTimeout=10", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-o", "LogLevel=ERROR", master, "ssh", "-o", "ConnectTimeout=10", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-o", "LogLevel=ERROR", node.Metadata.Name, rootPasswdCmd)
-					util.PrintCommand(cmd)
-					out, err := cmd.CombinedOutput()
-					log.Printf("%s\n", out)
-					Expect(err).To(HaveOccurred())
+			if eng.ExpandedDefinition.Properties.IsVHDDistroForAllNodes() {
+
+				kubeConfig, err := GetConfig()
+				Expect(err).NotTo(HaveOccurred())
+				master := fmt.Sprintf("%s@%s", eng.ExpandedDefinition.Properties.LinuxProfile.AdminUsername, kubeConfig.GetServerName())
+				nodeList, err := node.GetReady()
+				Expect(err).NotTo(HaveOccurred())
+				rootPasswdCmd := fmt.Sprintf("\"sudo grep '^root:[!*]:' /etc/shadow\"")
+				for _, node := range nodeList.Nodes {
+					if node.IsUbuntu() {
+						cmd := exec.Command("ssh", "-A", "-i", masterSSHPrivateKeyFilepath, "-p", masterSSHPort, "-o", "ConnectTimeout=10", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-o", "LogLevel=ERROR", master, "ssh", "-o", "ConnectTimeout=10", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-o", "LogLevel=ERROR", node.Metadata.Name, rootPasswdCmd)
+						util.PrintCommand(cmd)
+						out, err := cmd.CombinedOutput()
+						log.Printf("%s\n", out)
+						Expect(err).To(HaveOccurred())
+					}
 				}
+			} else {
+				Skip("This config is only available on VHD")
 			}
 		})
 
@@ -233,7 +238,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 					}
 				}
 			} else {
-				Skip("This config is only availble on VHD")
+				Skip("This config is only available on VHD")
 			}
 		})
 
@@ -263,7 +268,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 					Expect(err).NotTo(HaveOccurred())
 				}
 			} else {
-				Skip("This config is only availble on VHD")
+				Skip("This config is only available on VHD")
 			}
 		})
 
@@ -295,7 +300,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 					}
 				}
 			} else {
-				Skip("This config is only availble on VHD")
+				Skip("This config is only available on VHD")
 			}
 		})
 
@@ -355,7 +360,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 					}
 				}
 			} else {
-				Skip("This config is only availble on VHD")
+				Skip("This config is only available on VHD")
 			}
 		})
 
@@ -387,7 +392,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 					}
 				}
 			} else {
-				Skip("This config is only availble on VHD")
+				Skip("This config is only available on VHD")
 			}
 		})
 
