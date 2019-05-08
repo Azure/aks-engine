@@ -28,7 +28,7 @@
       "ssh": {
         "publicKeys": [
           {
-            "keyData": "ssh-rsa PUBLICKEY azureuser@linuxvm"
+            "keyData": ""
           }
         ]
       }
