@@ -1,9 +1,9 @@
 {
-    "name": "gmsa-dc",
+    "name": "[concat(EXTENSION_TARGET_VM_NAME_PREFIX, 'gmsa-dc')]",
     "type": "Microsoft.Resources/deployments",
     "apiVersion": "[variables('apiVersionDeployments')]",
     "dependsOn": [
-		"vmLoopNode"
+		"[concat('Microsoft.Compute/virtualMachines/', EXTENSION_TARGET_VM_NAME_PREFIX, '/extensions/cse', '-EXTENSION_TARGET_VM_TYPE-')]"
     ],
     "properties": {
         "mode": "Incremental",
@@ -14,6 +14,12 @@
         "parameters": {
             "apiVersionDeployments": {
                 "value": "[variables('apiVersionDeployments')]"
+            },
+			"targetVMName": {
+				"value": "[concat(EXTENSION_TARGET_VM_NAME_PREFIX)]"
+			},
+			"targetVMType": {
+            	"value": "EXTENSION_TARGET_VM_TYPE"
             }
         }
     }
