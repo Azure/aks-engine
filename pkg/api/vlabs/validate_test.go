@@ -889,6 +889,25 @@ func TestProperties_ValidateInvalidExtensions(t *testing.T) {
 		t.Errorf("expected error message : %s to be thrown, but got %s", expectedMsg, err.Error())
 	}
 
+	cs.Properties.AgentPoolProfiles = []*AgentPoolProfile{
+		{
+			Name:   "agentpool",
+			VMSize: "Standard_D2_v2",
+			Count:  1,
+			OSType: "Windows",
+			Extensions: []Extension{
+				{
+					Name: "prometheus-grafana-k8s",
+				},
+			},
+		},
+	}
+	err = cs.Validate(true)
+	expectedMsg = "prometheus-grafana-k8s extension is currently not supported for Windows agents"
+
+	if err.Error() != expectedMsg {
+		t.Errorf("expected error message : %s to be thrown, but got %s", expectedMsg, err.Error())
+	}
 }
 
 func TestProperties_ValidateInvalidExtensionProfiles(t *testing.T) {
