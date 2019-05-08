@@ -670,7 +670,30 @@ func TestValidateAPIModel(t *testing.T) {
 
 	// @todo: set missing/bad values.
 	_, _, err = ValidateAPIModel(apiloader.Translator.Locale, cs, apiVersion)
+	if err == nil {
+		t.Errorf("Got no error validating apimodel before populating keypair")
+	}
+	CheckCreateKeyPair(cs, apiloader.Translator.Locale, "output/test")
+	_, _, err = ValidateAPIModel(apiloader.Translator.Locale, cs, apiVersion)
 	if err != nil {
 		t.Errorf("unexpected error validating apimodel after populating defaults: %s", err.Error())
+	}
+}
+
+func TestCheckCreateKeyPair(t *testing.T) {
+	apiloader := &Apiloader{
+		Translator: &i18n.Translator{},
+	}
+	cs, _, _ := apiloader.LoadContainerServiceFromFile("../engine/testdata/simple/kubernetes.json", false, false, nil)
+	if !(cs.Properties.LinuxProfile.SSH.PublicKeys == nil ||
+		len(cs.Properties.LinuxProfile.SSH.PublicKeys) == 0 ||
+		cs.Properties.LinuxProfile.SSH.PublicKeys[0].KeyData == "") {
+		t.Error("Test data keypair was not empty")
+	}
+	CheckCreateKeyPair(cs, apiloader.Translator.Locale, "output/test")
+	if cs.Properties.LinuxProfile.SSH.PublicKeys == nil ||
+		len(cs.Properties.LinuxProfile.SSH.PublicKeys) == 0 ||
+		cs.Properties.LinuxProfile.SSH.PublicKeys[0].KeyData == "" {
+		t.Error("KeyPair was not generated")
 	}
 }
