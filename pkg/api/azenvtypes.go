@@ -100,16 +100,16 @@ var (
 		DockerComposeDownloadURL: "https://github.com/docker/compose/releases/download",
 	}
 
-	//Ubuntu1604ImageConfig is the default Linux distribution.
-	Ubuntu1604ImageConfig = AzureOSImageConfig{
+	//Ubuntu1604OSImageConfig is the default Linux distribution.
+	Ubuntu1604OSImageConfig = AzureOSImageConfig{
 		ImageOffer:     "UbuntuServer",
 		ImageSku:       "16.04-LTS",
 		ImagePublisher: "Canonical",
 		ImageVersion:   "latest",
 	}
 
-	//Ubuntu1804ImageConfig is the Ubunutu 18.04-LTS Linux distribution.
-	Ubuntu1804ImageConfig = AzureOSImageConfig{
+	//Ubuntu1804OSImageConfig is the Ubunutu 18.04-LTS Linux distribution.
+	Ubuntu1804OSImageConfig = AzureOSImageConfig{
 		ImageOffer:     "UbuntuServer",
 		ImageSku:       "18.04-LTS",
 		ImagePublisher: "Canonical",
@@ -170,8 +170,8 @@ var (
 		},
 
 		OSImageConfig: map[Distro]AzureOSImageConfig{
-			Ubuntu:        Ubuntu1604ImageConfig,
-			Ubuntu1804:    Ubuntu1804ImageConfig,
+			Ubuntu:        Ubuntu1604OSImageConfig,
+			Ubuntu1804:    Ubuntu1804OSImageConfig,
 			RHEL:          RHELOSImageConfig,
 			CoreOS:        CoreOSImageConfig,
 			AKSUbuntu1604: AKSUbuntu1604OSImageConfig,
@@ -190,12 +190,12 @@ var (
 			ResourceManagerVMDNSSuffix: "cloudapp.microsoftazure.de",
 		},
 		OSImageConfig: map[Distro]AzureOSImageConfig{
-			Ubuntu:        Ubuntu1604ImageConfig,
-			Ubuntu1804:    Ubuntu1804ImageConfig,
+			Ubuntu:        Ubuntu1604OSImageConfig,
+			Ubuntu1804:    Ubuntu1804OSImageConfig,
 			RHEL:          RHELOSImageConfig,
 			CoreOS:        CoreOSImageConfig,
-			AKSUbuntu1604: Ubuntu1604ImageConfig,
-			AKSUbuntu1804: Ubuntu1604ImageConfig, // workaround for https://github.com/Azure/aks-engine/issues/761
+			AKSUbuntu1604: Ubuntu1604OSImageConfig,
+			AKSUbuntu1804: Ubuntu1604OSImageConfig, // workaround for https://github.com/Azure/aks-engine/issues/761
 		},
 	}
 
@@ -209,12 +209,12 @@ var (
 			ResourceManagerVMDNSSuffix: "cloudapp.usgovcloudapi.net",
 		},
 		OSImageConfig: map[Distro]AzureOSImageConfig{
-			Ubuntu:        Ubuntu1604ImageConfig,
-			Ubuntu1804:    Ubuntu1804ImageConfig,
+			Ubuntu:        Ubuntu1604OSImageConfig,
+			Ubuntu1804:    Ubuntu1804OSImageConfig,
 			RHEL:          RHELOSImageConfig,
 			CoreOS:        CoreOSImageConfig,
-			AKSUbuntu1604: Ubuntu1604ImageConfig,
-			AKSUbuntu1804: Ubuntu1604ImageConfig, // workaround for https://github.com/Azure/aks-engine/issues/761
+			AKSUbuntu1604: Ubuntu1604OSImageConfig,
+			AKSUbuntu1804: Ubuntu1604OSImageConfig, // workaround for https://github.com/Azure/aks-engine/issues/761
 		},
 	}
 
@@ -253,8 +253,8 @@ var (
 			ResourceManagerVMDNSSuffix: "cloudapp.chinacloudapi.cn",
 		},
 		OSImageConfig: map[Distro]AzureOSImageConfig{
-			Ubuntu:        Ubuntu1604ImageConfig,
-			Ubuntu1804:    Ubuntu1804ImageConfig,
+			Ubuntu:        Ubuntu1604OSImageConfig,
+			Ubuntu1804:    Ubuntu1804OSImageConfig,
 			RHEL:          RHELOSImageConfig,
 			CoreOS:        CoreOSImageConfig,
 			AKSUbuntu1604: AKSUbuntu1604OSImageConfig,
