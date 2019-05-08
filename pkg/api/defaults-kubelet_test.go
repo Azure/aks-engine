@@ -465,7 +465,8 @@ func TestProtectKernelDefaults(t *testing.T) {
 					ka["--protect-kernel-defaults"], "true")
 			}
 
-		case Ubuntu, Ubuntu1804, ACC1604, CoreOS, "":
+		// Validate that --protect-kernel-defaults is not enabled for relevant distros
+		case Ubuntu, Ubuntu1804, ACC1604, CoreOS:
 			cs = CreateMockContainerService("testcluster", "1.10.13", 3, 2, false)
 			cs.Properties.MasterProfile.Distro = distro
 			cs.Properties.AgentPoolProfiles[0].Distro = distro
@@ -481,6 +482,22 @@ func TestProtectKernelDefaults(t *testing.T) {
 					ka["--protect-kernel-defaults"])
 			}
 		}
+	}
+
+	// Validate that --protect-kernel-defaults is not enabled for Windows
+	cs = CreateMockContainerService("testcluster", "1.10.13", 3, 2, false)
+	cs.Properties.MasterProfile.Distro = AKS
+	cs.Properties.AgentPoolProfiles[0].OSType = Windows
+	cs.SetPropertiesDefaults(false, false)
+	km = cs.Properties.MasterProfile.KubernetesConfig.KubeletConfig
+	if km["--protect-kernel-defaults"] != "true" {
+		t.Fatalf("got unexpected '--protect-kernel-defaults' kubelet config value %s, the expected value is %s",
+			km["--protect-kernel-defaults"], "true")
+	}
+	ka = cs.Properties.AgentPoolProfiles[0].KubernetesConfig.KubeletConfig
+	if _, ok := ka["--protect-kernel-defaults"]; ok {
+		t.Fatalf("got unexpected '--protect-kernel-defaults' kubelet config value %s",
+			ka["--protect-kernel-defaults"])
 	}
 
 	// Validate that --protect-kernel-defaults is overridable
