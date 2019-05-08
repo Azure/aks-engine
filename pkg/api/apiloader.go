@@ -477,6 +477,7 @@ func setContainerServiceDefaultsv20170131(c *v20170131.ContainerService) {
 	}
 }
 
+// Validates the API model after it has been loaded.
 func ValidateAPIModel(locale *gotext.Locale, containerService *ContainerService, apiVersion string) (*ContainerService, string, error) {
 	apiloader := &Apiloader{
 		Translator: &i18n.Translator{
@@ -499,4 +500,23 @@ func ValidateAPIModel(locale *gotext.Locale, containerService *ContainerService,
 		return nil, "", err
 	}
 	return apiloader.DeserializeContainerService(rawVersionedAPIModel, true, false, nil)
+}
+
+// Generates a missing pubkey pair.
+func CheckCreateKeyPair(cs *ContainerService, locale *gotext.Locale, outputDirectory string) (*ContainerService, error) {
+	// If no keypair has been supplied, generate one.
+	if cs.Properties.LinuxProfile != nil && (cs.Properties.LinuxProfile.SSH.PublicKeys == nil ||
+		len(cs.Properties.LinuxProfile.SSH.PublicKeys) == 0 ||
+		cs.Properties.LinuxProfile.SSH.PublicKeys[0].KeyData == "") {
+		translator := &i18n.Translator{
+			Locale: locale,
+		}
+		var publicKey string
+		_, publicKey, err := helpers.CreateSaveSSH(cs.Properties.LinuxProfile.AdminUsername, outputDirectory, translator)
+		if err != nil {
+			return cs, errors.Wrap(err, "Failed to generate SSH Key")
+		}
+		cs.Properties.LinuxProfile.SSH.PublicKeys = []PublicKey{{KeyData: publicKey}}
+	}
+	return cs, nil
 }
