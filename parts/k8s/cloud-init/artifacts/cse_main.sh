@@ -180,11 +180,7 @@ echo $(date),$(hostname), endcustomscript>>/opt/m
 mkdir -p /opt/azure/containers && touch /opt/azure/containers/provision.complete
 ps auxfww > /opt/azure/provision-ps.log &
 
-if $FULL_INSTALL_REQUIRED; then
-  if [[ $OS == $UBUNTU_OS_NAME ]]; then
-    applyCIS
-  fi
-else
+if ! $FULL_INSTALL_REQUIRED; then
   cleanUpContainerImages
 fi
 
