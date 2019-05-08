@@ -1515,7 +1515,7 @@ func (k *KubernetesConfig) isAddonEnabled(addonName string, defaultValue bool) b
 
 // IsMetricsServerEnabled checks if the metrics server addon is enabled
 func (o *OrchestratorProfile) IsMetricsServerEnabled() bool {
-	return o.KubernetesConfig.isAddonEnabled(DefaultMetricsServerAddonName,
+	return o.KubernetesConfig.isAddonEnabled(MetricsServerAddonName,
 		common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.9.0"))
 }
 
@@ -1534,7 +1534,7 @@ func (p *Properties) IsContainerMonitoringEnabled() bool {
 
 // IsTillerEnabled checks if the tiller addon is enabled
 func (k *KubernetesConfig) IsTillerEnabled() bool {
-	return k.isAddonEnabled(DefaultTillerAddonName, DefaultTillerAddonEnabled)
+	return k.isAddonEnabled(TillerAddonName, DefaultTillerAddonEnabled)
 }
 
 // IsAADPodIdentityEnabled checks if the AAD pod identity addon is enabled
@@ -1542,7 +1542,7 @@ func (p *Properties) IsAADPodIdentityEnabled() bool {
 	if p.OrchestratorProfile == nil || p.OrchestratorProfile.KubernetesConfig == nil || p.IsAzureStackCloud() {
 		return false
 	}
-	return p.OrchestratorProfile.KubernetesConfig.isAddonEnabled(DefaultAADPodIdentityAddonName, DefaultAADPodIdentityAddonEnabled)
+	return p.OrchestratorProfile.KubernetesConfig.isAddonEnabled(AADPodIdentityAddonName, DefaultAADPodIdentityAddonEnabled)
 }
 
 // IsACIConnectorEnabled checks if the ACI Connector addon is enabled
@@ -1550,7 +1550,7 @@ func (p *Properties) IsACIConnectorEnabled() bool {
 	if p.OrchestratorProfile == nil || p.OrchestratorProfile.KubernetesConfig == nil || p.IsAzureStackCloud() {
 		return false
 	}
-	return p.OrchestratorProfile.KubernetesConfig.isAddonEnabled(DefaultACIConnectorAddonName, DefaultACIConnectorAddonEnabled)
+	return p.OrchestratorProfile.KubernetesConfig.isAddonEnabled(ACIConnectorAddonName, DefaultACIConnectorAddonEnabled)
 }
 
 // IsClusterAutoscalerEnabled checks if the cluster autoscaler addon is enabled
@@ -1558,7 +1558,7 @@ func (p *Properties) IsClusterAutoscalerEnabled() bool {
 	if p.OrchestratorProfile == nil || p.OrchestratorProfile.KubernetesConfig == nil || p.IsAzureStackCloud() {
 		return false
 	}
-	return p.OrchestratorProfile.KubernetesConfig.isAddonEnabled(DefaultClusterAutoscalerAddonName, DefaultClusterAutoscalerAddonEnabled)
+	return p.OrchestratorProfile.KubernetesConfig.isAddonEnabled(ClusterAutoscalerAddonName, DefaultClusterAutoscalerAddonEnabled)
 }
 
 // IsBlobfuseFlexVolumeEnabled checks if the Blobfuse FlexVolume addon is enabled
@@ -1566,7 +1566,7 @@ func (p *Properties) IsBlobfuseFlexVolumeEnabled() bool {
 	if p.OrchestratorProfile == nil || p.OrchestratorProfile.KubernetesConfig == nil || p.IsAzureStackCloud() {
 		return false
 	}
-	return p.OrchestratorProfile.KubernetesConfig.isAddonEnabled(DefaultBlobfuseFlexVolumeAddonName, DefaultBlobfuseFlexVolumeAddonEnabled)
+	return p.OrchestratorProfile.KubernetesConfig.isAddonEnabled(BlobfuseFlexVolumeAddonName, DefaultBlobfuseFlexVolumeAddonEnabled)
 }
 
 // IsSMBFlexVolumeEnabled checks if the SMB FlexVolume addon is enabled
@@ -1574,7 +1574,7 @@ func (p *Properties) IsSMBFlexVolumeEnabled() bool {
 	if p.OrchestratorProfile == nil || p.OrchestratorProfile.KubernetesConfig == nil || p.IsAzureStackCloud() {
 		return false
 	}
-	return p.OrchestratorProfile.KubernetesConfig.isAddonEnabled(DefaultSMBFlexVolumeAddonName, DefaultSMBFlexVolumeAddonEnabled)
+	return p.OrchestratorProfile.KubernetesConfig.isAddonEnabled(SMBFlexVolumeAddonName, DefaultSMBFlexVolumeAddonEnabled)
 }
 
 // IsKeyVaultFlexVolumeEnabled checks if the Key Vault FlexVolume addon is enabled
@@ -1582,12 +1582,12 @@ func (p *Properties) IsKeyVaultFlexVolumeEnabled() bool {
 	if p.OrchestratorProfile == nil || p.OrchestratorProfile.KubernetesConfig == nil || p.IsAzureStackCloud() {
 		return false
 	}
-	return p.OrchestratorProfile.KubernetesConfig.isAddonEnabled(DefaultKeyVaultFlexVolumeAddonName, DefaultKeyVaultFlexVolumeAddonEnabled)
+	return p.OrchestratorProfile.KubernetesConfig.isAddonEnabled(KeyVaultFlexVolumeAddonName, DefaultKeyVaultFlexVolumeAddonEnabled)
 }
 
 // IsDashboardEnabled checks if the kubernetes-dashboard addon is enabled
 func (k *KubernetesConfig) IsDashboardEnabled() bool {
-	return k.isAddonEnabled(DefaultDashboardAddonName, DefaultDashboardAddonEnabled)
+	return k.isAddonEnabled(DashboardAddonName, DefaultDashboardAddonEnabled)
 }
 
 // IsIPMasqAgentEnabled checks if the ip-masq-agent addon is enabled
@@ -1735,7 +1735,7 @@ func (p *Properties) IsReschedulerEnabled() bool {
 	if p.OrchestratorProfile == nil || p.OrchestratorProfile.KubernetesConfig == nil || p.IsAzureStackCloud() {
 		return false
 	}
-	return p.OrchestratorProfile.KubernetesConfig.isAddonEnabled(DefaultReschedulerAddonName, DefaultReschedulerAddonEnabled)
+	return p.OrchestratorProfile.KubernetesConfig.isAddonEnabled(ReschedulerAddonName, DefaultReschedulerAddonEnabled)
 }
 
 // PrivateJumpboxProvision checks if a private cluster has jumpbox auto-provisioning

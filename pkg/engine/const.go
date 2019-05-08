@@ -38,60 +38,60 @@ const (
 	NetworkPluginKubenet = "kubenet"
 	// NetworkPluginFlannel is the string expression for flannel network plugin
 	NetworkPluginFlannel = "flannel"
-	// DefaultKubeHeapsterDeploymentAddonName is the name of the kube-heapster-deployment addon
-	DefaultKubeHeapsterDeploymentAddonName = "kube-heapster-deployment"
-	// DefaultKubeDNSDeploymentAddonName is the name of the kube-dns-deployment addon
-	DefaultKubeDNSDeploymentAddonName = "kube-dns-deployment"
-	// DefaultCoreDNSAddonName is the name of the coredns addon
-	DefaultCoreDNSAddonName = "coredns"
-	// DefaultDNSAutoscalerAddonName is the name of the coredns addon
-	DefaultDNSAutoscalerAddonName = "dns-autoscaler"
-	// DefaultKubeProxyAddonName is the name of the kube-proxy config addon
-	DefaultKubeProxyAddonName = "kube-proxy-daemonset"
-	// DefaultAzureStorageClassesAddonName is the name of the azure storage classes addon
-	DefaultAzureStorageClassesAddonName = "azure-storage-classes"
-	// DefaultAzureNpmDaemonSetAddonName is the name of the azure npm daemon set addon
-	DefaultAzureNpmDaemonSetAddonName = "azure-npm-daemonset"
-	// DefaultCalicoDaemonSetAddonName is the name of calico daemonset addon
-	DefaultCalicoDaemonSetAddonName = "calico-daemonset"
-	// DefaultCiliumDaemonSetAddonName is the name of cilium daemonset addon
-	DefaultCiliumDaemonSetAddonName = "cilium-daemonset"
-	// DefaultFlannelDaemonSetAddonName is the name of flannel plugin daemonset addon
-	DefaultFlannelDaemonSetAddonName = "flannel-daemonset"
-	// DefaultAADAdminGroupRBACAddonName is the name of the default admin group RBAC addon
-	DefaultAADAdminGroupRBACAddonName = "aad-default-admin-group-rbac"
-	// DefaultAzureCloudProviderDeploymentAddonName is the name of the azure cloud provider deployment addon
-	DefaultAzureCloudProviderDeploymentAddonName = "azure-cloud-provider-deployment"
-	// DefaultAzureCNINetworkMonitorAddonName is the name of the azure cni network monitor addon
-	DefaultAzureCNINetworkMonitorAddonName = "azure-cni-networkmonitor"
-	// DefaultAuditPolicyAddonName is the name of the audit policy addon
-	DefaultAuditPolicyAddonName = "audit-policy"
-	// DefaultTillerAddonName is the name of the tiller addon deployment
-	DefaultTillerAddonName = "tiller"
-	// DefaultAADPodIdentityAddonName is the name of the aad-pod-identity addon deployment
-	DefaultAADPodIdentityAddonName = "aad-pod-identity"
-	// DefaultACIConnectorAddonName is the name of the aci-connector addon deployment
-	DefaultACIConnectorAddonName = "aci-connector"
-	// DefaultDashboardAddonName is the name of the kubernetes-dashboard addon deployment
-	DefaultDashboardAddonName = "kubernetes-dashboard"
-	// DefaultClusterAutoscalerAddonName is the name of the autoscaler addon deployment
-	DefaultClusterAutoscalerAddonName = "cluster-autoscaler"
-	// DefaultBlobfuseFlexVolumeAddonName is the name of the blobfuse flexvolume addon
-	DefaultBlobfuseFlexVolumeAddonName = "blobfuse-flexvolume"
-	// DefaultSMBFlexVolumeAddonName is the name of the smb flexvolume addon
-	DefaultSMBFlexVolumeAddonName = "smb-flexvolume"
-	// DefaultKeyVaultFlexVolumeAddonName is the name of the keyvault flexvolume addon deployment
-	DefaultKeyVaultFlexVolumeAddonName = "keyvault-flexvolume"
-	// DefaultELBSVCAddonName is the name of the elb service addon deployment
-	DefaultELBSVCAddonName = "elb-svc"
+	// HeapsterAddonName is the name of the kube-heapster-deployment addon
+	HeapsterAddonName = "kube-heapster-deployment"
+	// KubeDNSAddonName is the name of the kube-dns-deployment addon
+	KubeDNSAddonName = "kube-dns-deployment"
+	// CoreDNSAddonName is the name of the coredns addon
+	CoreDNSAddonName = "coredns"
+	// DNSAutoscalerAddonName is the name of the coredns addon
+	DNSAutoscalerAddonName = "dns-autoscaler"
+	// KubeProxyAddonName is the name of the kube-proxy config addon
+	KubeProxyAddonName = "kube-proxy-daemonset"
+	// AzureStorageClassesAddonName is the name of the azure storage classes addon
+	AzureStorageClassesAddonName = "azure-storage-classes"
+	// AzureNetworkPolicyAddonName is the name of the azure npm daemon set addon
+	AzureNetworkPolicyAddonName = "azure-npm-daemonset"
+	// CalicoAddonName is the name of calico daemonset addon
+	CalicoAddonName = "calico-daemonset"
+	// CiliumAddonName is the name of cilium daemonset addon
+	CiliumAddonName = "cilium-daemonset"
+	// FlannelAddonName is the name of flannel plugin daemonset addon
+	FlannelAddonName = "flannel-daemonset"
+	// AADAdminGroupAddonName is the name of the default admin group RBAC addon
+	AADAdminGroupAddonName = "aad-default-admin-group-rbac"
+	// AzureCloudProviderAddonName is the name of the azure cloud provider deployment addon
+	AzureCloudProviderAddonName = "azure-cloud-provider-deployment"
+	// AzureCNINetworkMonitorAddonName is the name of the azure cni network monitor addon
+	AzureCNINetworkMonitorAddonName = "azure-cni-networkmonitor"
+	// AuditPolicyAddonName is the name of the audit policy addon
+	AuditPolicyAddonName = "audit-policy"
+	// TillerAddonName is the name of the tiller addon deployment
+	TillerAddonName = "tiller"
+	// AADPodIdentityAddonName is the name of the aad-pod-identity addon deployment
+	AADPodIdentityAddonName = "aad-pod-identity"
+	// ACIConnectorAddonName is the name of the aci-connector addon deployment
+	ACIConnectorAddonName = "aci-connector"
+	// DashboardAddonName is the name of the kubernetes-dashboard addon deployment
+	DashboardAddonName = "kubernetes-dashboard"
+	// ClusterAutoscalerAddonName is the name of the autoscaler addon deployment
+	ClusterAutoscalerAddonName = "cluster-autoscaler"
+	// BlobfuseFlexVolumeAddonName is the name of the blobfuse flexvolume addon
+	BlobfuseFlexVolumeAddonName = "blobfuse-flexvolume"
+	// SMBFlexVolumeAddonName is the name of the smb flexvolume addon
+	SMBFlexVolumeAddonName = "smb-flexvolume"
+	// KeyVaultFlexVolumeAddonName is the name of the keyvault flexvolume addon deployment
+	KeyVaultFlexVolumeAddonName = "keyvault-flexvolume"
+	// ELBServiceAddonName is the name of the elb service addon deployment
+	ELBServiceAddonName = "elb-svc"
 	// DefaultGeneratorCode specifies the source generator of the cluster template.
 	DefaultGeneratorCode = "aksengine"
-	// DefaultReschedulerAddonName is the name of the rescheduler addon deployment
-	DefaultReschedulerAddonName = "rescheduler"
+	// ReschedulerAddonName is the name of the rescheduler addon deployment
+	ReschedulerAddonName = "rescheduler"
 	// DefaultHeapsterAddonName is the name of the heapster addon deployment
 	DefaultHeapsterAddonName = "heapster"
-	// DefaultMetricsServerAddonName is the name of the kubernetes Metrics server addon deployment
-	DefaultMetricsServerAddonName = "metrics-server"
+	// MetricsServerAddonName is the name of the kubernetes Metrics server addon deployment
+	MetricsServerAddonName = "metrics-server"
 	// NVIDIADevicePluginAddonName is the name of the kubernetes NVIDIA Device Plugin daemon set
 	NVIDIADevicePluginAddonName = "nvidia-device-plugin"
 	// ContainerMonitoringAddonName is the name of the kubernetes Container Monitoring addon deployment

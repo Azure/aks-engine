@@ -13,258 +13,258 @@ import (
 	"github.com/Azure/aks-engine/pkg/api/common"
 )
 
-type kubernetesFeatureSetting struct {
-	sourceFile      string
-	destinationFile string
-	isEnabled       bool
-	rawScript       string
+type kubernetesComponentFileSpec struct {
+	sourceFile      string // filename to source spec data from
+	base64Data      string // if not "", this base64-encoded string will take precedent over sourceFile
+	destinationFile string // the filename to write to disk on the destination OS
+	isEnabled       bool   // is this spec enabled?
 }
 
-func kubernetesContainerAddonSettingsInit(profile *api.Properties) map[string]kubernetesFeatureSetting {
-	return map[string]kubernetesFeatureSetting{
+func kubernetesContainerAddonSettingsInit(profile *api.Properties) map[string]kubernetesComponentFileSpec {
+	return map[string]kubernetesComponentFileSpec{
 		DefaultHeapsterAddonName: {
-			"kubernetesmasteraddons-heapster-deployment.yaml",
-			"kube-heapster-deployment.yaml",
-			!common.IsKubernetesVersionGe(profile.OrchestratorProfile.OrchestratorVersion, "1.13.0"),
-			profile.OrchestratorProfile.KubernetesConfig.GetAddonScript(DefaultKubeHeapsterDeploymentAddonName),
+			sourceFile:      "kubernetesmasteraddons-heapster-deployment.yaml",
+			base64Data:      profile.OrchestratorProfile.KubernetesConfig.GetAddonScript(HeapsterAddonName),
+			destinationFile: "kube-heapster-deployment.yaml",
+			isEnabled:       !common.IsKubernetesVersionGe(profile.OrchestratorProfile.OrchestratorVersion, "1.13.0"),
 		},
-		DefaultMetricsServerAddonName: {
-			"kubernetesmasteraddons-metrics-server-deployment.yaml",
-			"kube-metrics-server-deployment.yaml",
-			profile.OrchestratorProfile.IsMetricsServerEnabled(),
-			profile.OrchestratorProfile.KubernetesConfig.GetAddonScript(DefaultMetricsServerAddonName),
+		MetricsServerAddonName: {
+			sourceFile:      "kubernetesmasteraddons-metrics-server-deployment.yaml",
+			base64Data:      profile.OrchestratorProfile.KubernetesConfig.GetAddonScript(MetricsServerAddonName),
+			destinationFile: "kube-metrics-server-deployment.yaml",
+			isEnabled:       profile.OrchestratorProfile.IsMetricsServerEnabled(),
 		},
-		DefaultTillerAddonName: {
-			"kubernetesmasteraddons-tiller-deployment.yaml",
-			"kube-tiller-deployment.yaml",
-			profile.OrchestratorProfile.KubernetesConfig.IsTillerEnabled(),
-			profile.OrchestratorProfile.KubernetesConfig.GetAddonScript(DefaultTillerAddonName),
+		TillerAddonName: {
+			sourceFile:      "kubernetesmasteraddons-tiller-deployment.yaml",
+			base64Data:      profile.OrchestratorProfile.KubernetesConfig.GetAddonScript(TillerAddonName),
+			destinationFile: "kube-tiller-deployment.yaml",
+			isEnabled:       profile.OrchestratorProfile.KubernetesConfig.IsTillerEnabled(),
 		},
-		DefaultAADPodIdentityAddonName: {
-			"kubernetesmasteraddons-aad-pod-identity-deployment.yaml",
-			"aad-pod-identity-deployment.yaml",
-			profile.IsAADPodIdentityEnabled(),
-			profile.OrchestratorProfile.KubernetesConfig.GetAddonScript(DefaultAADPodIdentityAddonName),
+		AADPodIdentityAddonName: {
+			sourceFile:      "kubernetesmasteraddons-aad-pod-identity-deployment.yaml",
+			base64Data:      profile.OrchestratorProfile.KubernetesConfig.GetAddonScript(AADPodIdentityAddonName),
+			destinationFile: "aad-pod-identity-deployment.yaml",
+			isEnabled:       profile.IsAADPodIdentityEnabled(),
 		},
-		DefaultACIConnectorAddonName: {
-			"kubernetesmasteraddons-aci-connector-deployment.yaml",
-			"aci-connector-deployment.yaml",
-			profile.IsACIConnectorEnabled(),
-			profile.OrchestratorProfile.KubernetesConfig.GetAddonScript(DefaultACIConnectorAddonName),
+		ACIConnectorAddonName: {
+			sourceFile:      "kubernetesmasteraddons-aci-connector-deployment.yaml",
+			base64Data:      profile.OrchestratorProfile.KubernetesConfig.GetAddonScript(ACIConnectorAddonName),
+			destinationFile: "aci-connector-deployment.yaml",
+			isEnabled:       profile.IsACIConnectorEnabled(),
 		},
-		DefaultClusterAutoscalerAddonName: {
-			"kubernetesmasteraddons-cluster-autoscaler-deployment.yaml",
-			"cluster-autoscaler-deployment.yaml",
-			profile.IsClusterAutoscalerEnabled(),
-			profile.OrchestratorProfile.KubernetesConfig.GetAddonScript(DefaultClusterAutoscalerAddonName),
+		ClusterAutoscalerAddonName: {
+			sourceFile:      "kubernetesmasteraddons-cluster-autoscaler-deployment.yaml",
+			base64Data:      profile.OrchestratorProfile.KubernetesConfig.GetAddonScript(ClusterAutoscalerAddonName),
+			destinationFile: "cluster-autoscaler-deployment.yaml",
+			isEnabled:       profile.IsClusterAutoscalerEnabled(),
 		},
-		DefaultBlobfuseFlexVolumeAddonName: {
-			"kubernetesmasteraddons-blobfuse-flexvolume-installer.yaml",
-			"blobfuse-flexvolume-installer.yaml",
-			profile.IsBlobfuseFlexVolumeEnabled() && !profile.HasCoreOS(),
-			profile.OrchestratorProfile.KubernetesConfig.GetAddonScript(DefaultBlobfuseFlexVolumeAddonName),
+		BlobfuseFlexVolumeAddonName: {
+			sourceFile:      "kubernetesmasteraddons-blobfuse-flexvolume-installer.yaml",
+			base64Data:      profile.OrchestratorProfile.KubernetesConfig.GetAddonScript(BlobfuseFlexVolumeAddonName),
+			destinationFile: "blobfuse-flexvolume-installer.yaml",
+			isEnabled:       profile.IsBlobfuseFlexVolumeEnabled() && !profile.HasCoreOS(),
 		},
 
-		DefaultSMBFlexVolumeAddonName: {
-			"kubernetesmasteraddons-smb-flexvolume-installer.yaml",
-			"smb-flexvolume-installer.yaml",
-			profile.IsSMBFlexVolumeEnabled() && !profile.HasCoreOS(),
-			profile.OrchestratorProfile.KubernetesConfig.GetAddonScript(DefaultSMBFlexVolumeAddonName),
+		SMBFlexVolumeAddonName: {
+			sourceFile:      "kubernetesmasteraddons-smb-flexvolume-installer.yaml",
+			base64Data:      profile.OrchestratorProfile.KubernetesConfig.GetAddonScript(SMBFlexVolumeAddonName),
+			destinationFile: "smb-flexvolume-installer.yaml",
+			isEnabled:       profile.IsSMBFlexVolumeEnabled() && !profile.HasCoreOS(),
 		},
-		DefaultKeyVaultFlexVolumeAddonName: {
-			"kubernetesmasteraddons-keyvault-flexvolume-installer.yaml",
-			"keyvault-flexvolume-installer.yaml",
-			profile.IsKeyVaultFlexVolumeEnabled() && !profile.HasCoreOS(),
-			profile.OrchestratorProfile.KubernetesConfig.GetAddonScript(DefaultKeyVaultFlexVolumeAddonName),
+		KeyVaultFlexVolumeAddonName: {
+			sourceFile:      "kubernetesmasteraddons-keyvault-flexvolume-installer.yaml",
+			base64Data:      profile.OrchestratorProfile.KubernetesConfig.GetAddonScript(KeyVaultFlexVolumeAddonName),
+			destinationFile: "keyvault-flexvolume-installer.yaml",
+			isEnabled:       profile.IsKeyVaultFlexVolumeEnabled() && !profile.HasCoreOS(),
 		},
-		DefaultDashboardAddonName: {
-			"kubernetesmasteraddons-kubernetes-dashboard-deployment.yaml",
-			"kubernetes-dashboard-deployment.yaml",
-			profile.OrchestratorProfile.KubernetesConfig.IsDashboardEnabled(),
-			profile.OrchestratorProfile.KubernetesConfig.GetAddonScript(DefaultDashboardAddonName),
+		DashboardAddonName: {
+			sourceFile:      "kubernetesmasteraddons-kubernetes-dashboard-deployment.yaml",
+			base64Data:      profile.OrchestratorProfile.KubernetesConfig.GetAddonScript(DashboardAddonName),
+			destinationFile: "kubernetes-dashboard-deployment.yaml",
+			isEnabled:       profile.OrchestratorProfile.KubernetesConfig.IsDashboardEnabled(),
 		},
-		DefaultReschedulerAddonName: {
-			"kubernetesmasteraddons-kube-rescheduler-deployment.yaml",
-			"kube-rescheduler-deployment.yaml",
-			profile.IsReschedulerEnabled(),
-			profile.OrchestratorProfile.KubernetesConfig.GetAddonScript(DefaultReschedulerAddonName),
+		ReschedulerAddonName: {
+			sourceFile:      "kubernetesmasteraddons-kube-rescheduler-deployment.yaml",
+			base64Data:      profile.OrchestratorProfile.KubernetesConfig.GetAddonScript(ReschedulerAddonName),
+			destinationFile: "kube-rescheduler-deployment.yaml",
+			isEnabled:       profile.IsReschedulerEnabled(),
 		},
 		NVIDIADevicePluginAddonName: {
-			"kubernetesmasteraddons-nvidia-device-plugin-daemonset.yaml",
-			"nvidia-device-plugin.yaml",
-			profile.IsNVIDIADevicePluginEnabled(),
-			profile.OrchestratorProfile.KubernetesConfig.GetAddonScript(NVIDIADevicePluginAddonName),
+			sourceFile:      "kubernetesmasteraddons-nvidia-device-plugin-daemonset.yaml",
+			base64Data:      profile.OrchestratorProfile.KubernetesConfig.GetAddonScript(NVIDIADevicePluginAddonName),
+			destinationFile: "nvidia-device-plugin.yaml",
+			isEnabled:       profile.IsNVIDIADevicePluginEnabled(),
 		},
 		ContainerMonitoringAddonName: {
-			"kubernetesmasteraddons-omsagent-daemonset.yaml",
-			"omsagent-daemonset.yaml",
-			profile.IsContainerMonitoringEnabled(),
-			profile.OrchestratorProfile.KubernetesConfig.GetAddonScript(ContainerMonitoringAddonName),
+			sourceFile:      "kubernetesmasteraddons-omsagent-daemonset.yaml",
+			base64Data:      profile.OrchestratorProfile.KubernetesConfig.GetAddonScript(ContainerMonitoringAddonName),
+			destinationFile: "omsagent-daemonset.yaml",
+			isEnabled:       profile.IsContainerMonitoringEnabled(),
 		},
 		IPMASQAgentAddonName: {
-			"ip-masq-agent.yaml",
-			"ip-masq-agent.yaml",
-			profile.OrchestratorProfile.KubernetesConfig.IsIPMasqAgentEnabled(),
-			profile.OrchestratorProfile.KubernetesConfig.GetAddonScript(IPMASQAgentAddonName),
+			sourceFile:      "ip-masq-agent.yaml",
+			base64Data:      profile.OrchestratorProfile.KubernetesConfig.GetAddonScript(IPMASQAgentAddonName),
+			destinationFile: "ip-masq-agent.yaml",
+			isEnabled:       profile.OrchestratorProfile.KubernetesConfig.IsIPMasqAgentEnabled(),
 		},
-		DefaultAzureCNINetworkMonitorAddonName: {
-			"azure-cni-networkmonitor.yaml",
-			"azure-cni-networkmonitor.yaml",
-			profile.OrchestratorProfile.IsAzureCNI() && profile.OrchestratorProfile.KubernetesConfig.IsAzureCNIMonitoringEnabled(),
-			profile.OrchestratorProfile.KubernetesConfig.GetAddonScript(DefaultAzureCNINetworkMonitorAddonName),
+		AzureCNINetworkMonitorAddonName: {
+			sourceFile:      "azure-cni-networkmonitor.yaml",
+			base64Data:      profile.OrchestratorProfile.KubernetesConfig.GetAddonScript(AzureCNINetworkMonitorAddonName),
+			destinationFile: "azure-cni-networkmonitor.yaml",
+			isEnabled:       profile.OrchestratorProfile.IsAzureCNI() && profile.OrchestratorProfile.KubernetesConfig.IsAzureCNIMonitoringEnabled(),
 		},
-		DefaultDNSAutoscalerAddonName: {
-			"dns-autoscaler.yaml",
-			"dns-autoscaler.yaml",
+		DNSAutoscalerAddonName: {
+			sourceFile:      "dns-autoscaler.yaml",
+			base64Data:      profile.OrchestratorProfile.KubernetesConfig.GetAddonScript(DNSAutoscalerAddonName),
+			destinationFile: "dns-autoscaler.yaml",
 			// TODO enable this when it has been smoke tested
 			//common.IsKubernetesVersionGe(profile.OrchestratorProfile.OrchestratorVersion, "1.12.0"),
-			false,
-			profile.OrchestratorProfile.KubernetesConfig.GetAddonScript(DefaultDNSAutoscalerAddonName),
+			isEnabled: false,
 		},
-		DefaultCalicoDaemonSetAddonName: {
-			"kubernetesmasteraddons-calico-daemonset.yaml",
-			"calico-daemonset.yaml",
-			profile.OrchestratorProfile.KubernetesConfig.NetworkPolicy == NetworkPolicyCalico,
-			profile.OrchestratorProfile.KubernetesConfig.GetAddonScript(DefaultCalicoDaemonSetAddonName),
+		CalicoAddonName: {
+			sourceFile:      "kubernetesmasteraddons-calico-daemonset.yaml",
+			base64Data:      profile.OrchestratorProfile.KubernetesConfig.GetAddonScript(CalicoAddonName),
+			destinationFile: "calico-daemonset.yaml",
+			isEnabled:       profile.OrchestratorProfile.KubernetesConfig.NetworkPolicy == NetworkPolicyCalico,
 		},
 	}
 }
 
-func kubernetesAddonSettingsInit(profile *api.Properties) []kubernetesFeatureSetting {
-	kubernetesFeatureSettings := []kubernetesFeatureSetting{
+func kubernetesAddonSettingsInit(profile *api.Properties) []kubernetesComponentFileSpec {
+	kubernetesFeatureSettings := []kubernetesComponentFileSpec{
 		{
-			"kubernetesmasteraddons-kube-dns-deployment.yaml",
-			"kube-dns-deployment.yaml",
-			!common.IsKubernetesVersionGe(profile.OrchestratorProfile.OrchestratorVersion, "1.12.0"),
-			profile.OrchestratorProfile.KubernetesConfig.GetAddonScript(DefaultKubeDNSDeploymentAddonName),
+			sourceFile:      "kubernetesmasteraddons-kube-dns-deployment.yaml",
+			base64Data:      profile.OrchestratorProfile.KubernetesConfig.GetAddonScript(KubeDNSAddonName),
+			destinationFile: "kube-dns-deployment.yaml",
+			isEnabled:       !common.IsKubernetesVersionGe(profile.OrchestratorProfile.OrchestratorVersion, "1.12.0"),
 		},
 		{
-			"coredns.yaml",
-			"coredns.yaml",
-			common.IsKubernetesVersionGe(profile.OrchestratorProfile.OrchestratorVersion, "1.12.0"),
-			profile.OrchestratorProfile.KubernetesConfig.GetAddonScript(DefaultCoreDNSAddonName),
+			sourceFile:      "coredns.yaml",
+			base64Data:      profile.OrchestratorProfile.KubernetesConfig.GetAddonScript(CoreDNSAddonName),
+			destinationFile: "coredns.yaml",
+			isEnabled:       common.IsKubernetesVersionGe(profile.OrchestratorProfile.OrchestratorVersion, "1.12.0"),
 		},
 		{
-			"kubernetesmasteraddons-kube-proxy-daemonset.yaml",
-			"kube-proxy-daemonset.yaml",
-			true,
-			profile.OrchestratorProfile.KubernetesConfig.GetAddonScript(DefaultKubeProxyAddonName),
+			sourceFile:      "kubernetesmasteraddons-kube-proxy-daemonset.yaml",
+			base64Data:      profile.OrchestratorProfile.KubernetesConfig.GetAddonScript(KubeProxyAddonName),
+			destinationFile: "kube-proxy-daemonset.yaml",
+			isEnabled:       true,
 		},
 		{
-			"kubernetesmasteraddons-azure-npm-daemonset.yaml",
-			"azure-npm-daemonset.yaml",
-			profile.OrchestratorProfile.KubernetesConfig.NetworkPolicy == NetworkPolicyAzure && profile.OrchestratorProfile.KubernetesConfig.NetworkPlugin == NetworkPluginAzure,
-			profile.OrchestratorProfile.KubernetesConfig.GetAddonScript(DefaultAzureNpmDaemonSetAddonName),
+			sourceFile:      "kubernetesmasteraddons-azure-npm-daemonset.yaml",
+			base64Data:      profile.OrchestratorProfile.KubernetesConfig.GetAddonScript(AzureNetworkPolicyAddonName),
+			destinationFile: "azure-npm-daemonset.yaml",
+			isEnabled:       profile.OrchestratorProfile.KubernetesConfig.NetworkPolicy == NetworkPolicyAzure && profile.OrchestratorProfile.KubernetesConfig.NetworkPlugin == NetworkPluginAzure,
 		},
 		{
-			"kubernetesmasteraddons-cilium-daemonset.yaml",
-			"cilium-daemonset.yaml",
-			profile.OrchestratorProfile.KubernetesConfig.NetworkPolicy == NetworkPolicyCilium,
-			profile.OrchestratorProfile.KubernetesConfig.GetAddonScript(DefaultCiliumDaemonSetAddonName),
+			sourceFile:      "kubernetesmasteraddons-cilium-daemonset.yaml",
+			base64Data:      profile.OrchestratorProfile.KubernetesConfig.GetAddonScript(CiliumAddonName),
+			destinationFile: "cilium-daemonset.yaml",
+			isEnabled:       profile.OrchestratorProfile.KubernetesConfig.NetworkPolicy == NetworkPolicyCilium,
 		},
 		{
-			"kubernetesmasteraddons-flannel-daemonset.yaml",
-			"flannel-daemonset.yaml",
-			profile.OrchestratorProfile.KubernetesConfig.NetworkPlugin == NetworkPluginFlannel,
-			profile.OrchestratorProfile.KubernetesConfig.GetAddonScript(DefaultFlannelDaemonSetAddonName),
+			sourceFile:      "kubernetesmasteraddons-flannel-daemonset.yaml",
+			base64Data:      profile.OrchestratorProfile.KubernetesConfig.GetAddonScript(FlannelAddonName),
+			destinationFile: "flannel-daemonset.yaml",
+			isEnabled:       profile.OrchestratorProfile.KubernetesConfig.NetworkPlugin == NetworkPluginFlannel,
 		},
 		{
-			"kubernetesmasteraddons-aad-default-admin-group-rbac.yaml",
-			"aad-default-admin-group-rbac.yaml",
-			profile.AADProfile != nil && profile.AADProfile.AdminGroupID != "",
-			profile.OrchestratorProfile.KubernetesConfig.GetAddonScript(DefaultAADAdminGroupRBACAddonName),
+			sourceFile:      "kubernetesmasteraddons-aad-default-admin-group-rbac.yaml",
+			base64Data:      profile.OrchestratorProfile.KubernetesConfig.GetAddonScript(AADAdminGroupAddonName),
+			destinationFile: "aad-default-admin-group-rbac.yaml",
+			isEnabled:       profile.AADProfile != nil && profile.AADProfile.AdminGroupID != "",
 		},
 		{
-			"kubernetesmasteraddons-azure-cloud-provider-deployment.yaml",
-			"azure-cloud-provider-deployment.yaml",
-			true,
-			profile.OrchestratorProfile.KubernetesConfig.GetAddonScript(DefaultAzureCloudProviderDeploymentAddonName),
+			sourceFile:      "kubernetesmasteraddons-azure-cloud-provider-deployment.yaml",
+			base64Data:      profile.OrchestratorProfile.KubernetesConfig.GetAddonScript(AzureCloudProviderAddonName),
+			destinationFile: "azure-cloud-provider-deployment.yaml",
+			isEnabled:       true,
 		},
 		{
-			"kubernetesmaster-audit-policy.yaml",
-			"audit-policy.yaml",
-			common.IsKubernetesVersionGe(profile.OrchestratorProfile.OrchestratorVersion, "1.8.0"),
-			profile.OrchestratorProfile.KubernetesConfig.GetAddonScript(DefaultAuditPolicyAddonName),
+			sourceFile:      "kubernetesmaster-audit-policy.yaml",
+			base64Data:      profile.OrchestratorProfile.KubernetesConfig.GetAddonScript(AuditPolicyAddonName),
+			destinationFile: "audit-policy.yaml",
+			isEnabled:       common.IsKubernetesVersionGe(profile.OrchestratorProfile.OrchestratorVersion, "1.8.0"),
 		},
 		{
-			"kubernetesmasteraddons-elb-svc.yaml",
-			"elb-svc.yaml",
-			profile.OrchestratorProfile.KubernetesConfig.LoadBalancerSku == "Standard" && !to.Bool(profile.OrchestratorProfile.KubernetesConfig.PrivateCluster.Enabled),
-			profile.OrchestratorProfile.KubernetesConfig.GetAddonScript(DefaultELBSVCAddonName),
+			sourceFile:      "kubernetesmasteraddons-elb-svc.yaml",
+			base64Data:      profile.OrchestratorProfile.KubernetesConfig.GetAddonScript(ELBServiceAddonName),
+			destinationFile: "elb-svc.yaml",
+			isEnabled:       profile.OrchestratorProfile.KubernetesConfig.LoadBalancerSku == "Standard" && !to.Bool(profile.OrchestratorProfile.KubernetesConfig.PrivateCluster.Enabled),
 		},
 		{
-			"kubernetesmasteraddons-pod-security-policy.yaml",
-			"pod-security-policy.yaml",
-			to.Bool(profile.OrchestratorProfile.KubernetesConfig.EnablePodSecurityPolicy),
-			profile.OrchestratorProfile.KubernetesConfig.PodSecurityPolicyConfig["data"],
+			sourceFile:      "kubernetesmasteraddons-pod-security-policy.yaml",
+			base64Data:      profile.OrchestratorProfile.KubernetesConfig.PodSecurityPolicyConfig["data"],
+			destinationFile: "pod-security-policy.yaml",
+			isEnabled:       to.Bool(profile.OrchestratorProfile.KubernetesConfig.EnablePodSecurityPolicy),
 		},
 	}
 
-	unmanagedStorageClassYaml := "kubernetesmasteraddons-unmanaged-azure-storage-classes.yaml"
-	managedStorageClassYaml := "kubernetesmasteraddons-managed-azure-storage-classes.yaml"
+	unmanagedStorageClassesSourceYaml := "kubernetesmasteraddons-unmanaged-azure-storage-classes.yaml"
+	managedStorageClassesSourceYaml := "kubernetesmasteraddons-managed-azure-storage-classes.yaml"
 
 	if profile.IsAzureStackCloud() {
-		unmanagedStorageClassYaml = "kubernetesmasteraddons-unmanaged-azure-storage-classes-custom.yaml"
-		managedStorageClassYaml = "kubernetesmasteraddons-managed-azure-storage-classes-custom.yaml"
+		unmanagedStorageClassesSourceYaml = "kubernetesmasteraddons-unmanaged-azure-storage-classes-custom.yaml"
+		managedStorageClassesSourceYaml = "kubernetesmasteraddons-managed-azure-storage-classes-custom.yaml"
 	}
 
 	if len(profile.AgentPoolProfiles) > 0 {
 		kubernetesFeatureSettings = append(kubernetesFeatureSettings,
-			kubernetesFeatureSetting{
-				unmanagedStorageClassYaml,
-				"azure-storage-classes.yaml",
-				profile.AgentPoolProfiles[0].StorageProfile != api.ManagedDisks,
-				profile.OrchestratorProfile.KubernetesConfig.GetAddonScript(DefaultAzureStorageClassesAddonName),
+			kubernetesComponentFileSpec{
+				sourceFile:      unmanagedStorageClassesSourceYaml,
+				base64Data:      profile.OrchestratorProfile.KubernetesConfig.GetAddonScript(AzureStorageClassesAddonName),
+				destinationFile: "azure-storage-classes.yaml",
+				isEnabled:       profile.AgentPoolProfiles[0].StorageProfile != api.ManagedDisks,
 			})
 		kubernetesFeatureSettings = append(kubernetesFeatureSettings,
-			kubernetesFeatureSetting{
-				managedStorageClassYaml,
-				"azure-storage-classes.yaml",
-				profile.AgentPoolProfiles[0].StorageProfile == api.ManagedDisks,
-				profile.OrchestratorProfile.KubernetesConfig.GetAddonScript(DefaultAzureStorageClassesAddonName),
+			kubernetesComponentFileSpec{
+				sourceFile:      managedStorageClassesSourceYaml,
+				base64Data:      profile.OrchestratorProfile.KubernetesConfig.GetAddonScript(AzureStorageClassesAddonName),
+				destinationFile: "azure-storage-classes.yaml",
+				isEnabled:       profile.AgentPoolProfiles[0].StorageProfile == api.ManagedDisks,
 			})
 	}
 
 	return kubernetesFeatureSettings
 }
 
-func kubernetesManifestSettingsInit(profile *api.Properties) []kubernetesFeatureSetting {
+func kubernetesManifestSettingsInit(profile *api.Properties) []kubernetesComponentFileSpec {
 	kubeControllerManagerYaml := "kubernetesmaster-kube-controller-manager.yaml"
 
 	if profile.IsAzureStackCloud() {
 		kubeControllerManagerYaml = "kubernetesmaster-kube-controller-manager-custom.yaml"
 	}
 
-	return []kubernetesFeatureSetting{
+	return []kubernetesComponentFileSpec{
 		{
-			"kubernetesmaster-kube-scheduler.yaml",
-			"kube-scheduler.yaml",
-			true,
-			profile.OrchestratorProfile.KubernetesConfig.SchedulerConfig["data"],
+			sourceFile:      "kubernetesmaster-kube-scheduler.yaml",
+			base64Data:      profile.OrchestratorProfile.KubernetesConfig.SchedulerConfig["data"],
+			destinationFile: "kube-scheduler.yaml",
+			isEnabled:       true,
 		},
 		{
-			kubeControllerManagerYaml,
-			"kube-controller-manager.yaml",
-			true,
-			profile.OrchestratorProfile.KubernetesConfig.ControllerManagerConfig["data"],
+			sourceFile:      kubeControllerManagerYaml,
+			base64Data:      profile.OrchestratorProfile.KubernetesConfig.ControllerManagerConfig["data"],
+			destinationFile: "kube-controller-manager.yaml",
+			isEnabled:       true,
 		},
 		{
-			"kubernetesmaster-cloud-controller-manager.yaml",
-			"cloud-controller-manager.yaml",
-			profile.OrchestratorProfile.KubernetesConfig.UseCloudControllerManager != nil && *profile.OrchestratorProfile.KubernetesConfig.UseCloudControllerManager,
-			profile.OrchestratorProfile.KubernetesConfig.CloudControllerManagerConfig["data"],
+			sourceFile:      "kubernetesmaster-cloud-controller-manager.yaml",
+			base64Data:      profile.OrchestratorProfile.KubernetesConfig.CloudControllerManagerConfig["data"],
+			destinationFile: "cloud-controller-manager.yaml",
+			isEnabled:       profile.OrchestratorProfile.KubernetesConfig.UseCloudControllerManager != nil && *profile.OrchestratorProfile.KubernetesConfig.UseCloudControllerManager,
 		},
 		{
-			"kubernetesmaster-kube-apiserver.yaml",
-			"kube-apiserver.yaml",
-			true,
-			profile.OrchestratorProfile.KubernetesConfig.APIServerConfig["data"],
+			sourceFile:      "kubernetesmaster-kube-apiserver.yaml",
+			base64Data:      profile.OrchestratorProfile.KubernetesConfig.APIServerConfig["data"],
+			destinationFile: "kube-apiserver.yaml",
+			isEnabled:       true,
 		},
 		{
-			"kubernetesmaster-kube-addon-manager.yaml",
-			"kube-addon-manager.yaml",
-			true,
-			"",
+			sourceFile:      "kubernetesmaster-kube-addon-manager.yaml",
+			base64Data:      "", // arbitrary user-provided data not enabled for kube-addon-manager spec
+			destinationFile: "kube-addon-manager.yaml",
+			isEnabled:       true,
 		},
 	}
 }
@@ -274,16 +274,16 @@ func getAddonString(input, destinationPath, destinationFile string) string {
 	return buildConfigString(addonString, destinationFile, destinationPath)
 }
 
-func substituteConfigString(input string, kubernetesFeatureSettings []kubernetesFeatureSetting, sourcePath string, destinationPath string, placeholder string, orchestratorVersion string) string {
+func substituteConfigString(input string, kubernetesFeatureSettings []kubernetesComponentFileSpec, sourcePath string, destinationPath string, placeholder string, orchestratorVersion string) string {
 	var config string
 
 	versions := strings.Split(orchestratorVersion, ".")
 	for _, setting := range kubernetesFeatureSettings {
 		if setting.isEnabled {
 			var cscript string
-			if setting.rawScript != "" {
+			if setting.base64Data != "" {
 				var err error
-				cscript, err = getStringFromBase64(setting.rawScript)
+				cscript, err = getStringFromBase64(setting.base64Data)
 				if err != nil {
 					return ""
 				}
