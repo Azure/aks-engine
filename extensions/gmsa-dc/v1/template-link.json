@@ -3,7 +3,7 @@
     "type": "Microsoft.Resources/deployments",
     "apiVersion": "[variables('apiVersionDeployments')]",
     "dependsOn": [
-        "[concat(EXTENSION_TARGET_VM_NAME_PREFIX)]"
+        "[concat('Microsoft.Compute/virtualMachines/', EXTENSION_TARGET_VM_NAME_PREFIX)]"
 	],
     "properties": {
         "mode": "Incremental",
