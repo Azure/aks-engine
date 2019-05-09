@@ -4,6 +4,8 @@ metadata:
   name: privileged
   annotations:
     seccomp.security.alpha.kubernetes.io/allowedProfileNames: "*"
+  labels:
+    addonmanager.kubernetes.io/mode: Reconcile
 spec:
   privileged: true
   allowPrivilegeEscalation: true
@@ -35,6 +37,8 @@ metadata:
     apparmor.security.beta.kubernetes.io/allowedProfileNames: runtime/default
     seccomp.security.alpha.kubernetes.io/defaultProfileName:  docker/default
     apparmor.security.beta.kubernetes.io/defaultProfileName:  runtime/default
+  labels:
+    addonmanager.kubernetes.io/mode: Reconcile
 spec:
   privileged: false
   allowPrivilegeEscalation: false
@@ -72,6 +76,8 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   name: psp:privileged
+  labels:
+    addonmanager.kubernetes.io/mode: Reconcile
 rules:
 - apiGroups: ['extensions']
   resources: ['podsecuritypolicies']
@@ -83,6 +89,8 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   name: psp:restricted
+  labels:
+    addonmanager.kubernetes.io/mode: Reconcile
 rules:
 - apiGroups: ['extensions']
   resources: ['podsecuritypolicies']
@@ -94,6 +102,8 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
   name: default:restricted
+  labels:
+    addonmanager.kubernetes.io/mode: Reconcile
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
@@ -108,6 +118,8 @@ kind: RoleBinding
 metadata:
   name: default:privileged
   namespace: kube-system
+  labels:
+    addonmanager.kubernetes.io/mode: Reconcile
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole

@@ -192,6 +192,12 @@ func kubernetesAddonSettingsInit(profile *api.Properties) []kubernetesFeatureSet
 			profile.OrchestratorProfile.KubernetesConfig.LoadBalancerSku == "Standard" && !to.Bool(profile.OrchestratorProfile.KubernetesConfig.PrivateCluster.Enabled),
 			profile.OrchestratorProfile.KubernetesConfig.GetAddonScript(DefaultELBSVCAddonName),
 		},
+		{
+			"kubernetesmasteraddons-pod-security-policy.yaml",
+			"pod-security-policy.yaml",
+			to.Bool(profile.OrchestratorProfile.KubernetesConfig.EnablePodSecurityPolicy),
+			profile.OrchestratorProfile.KubernetesConfig.PodSecurityPolicyConfig["data"],
+		},
 	}
 
 	unmanagedStorageClassYaml := "kubernetesmasteraddons-unmanaged-azure-storage-classes.yaml"
@@ -247,12 +253,6 @@ func kubernetesManifestSettingsInit(profile *api.Properties) []kubernetesFeature
 			"cloud-controller-manager.yaml",
 			profile.OrchestratorProfile.KubernetesConfig.UseCloudControllerManager != nil && *profile.OrchestratorProfile.KubernetesConfig.UseCloudControllerManager,
 			profile.OrchestratorProfile.KubernetesConfig.CloudControllerManagerConfig["data"],
-		},
-		{
-			"kubernetesmaster-pod-security-policy.yaml",
-			"pod-security-policy.yaml",
-			to.Bool(profile.OrchestratorProfile.KubernetesConfig.EnablePodSecurityPolicy),
-			profile.OrchestratorProfile.KubernetesConfig.PodSecurityPolicyConfig["data"],
 		},
 		{
 			"kubernetesmaster-kube-apiserver.yaml",
