@@ -1,5 +1,5 @@
 {
-    "name": "gmsa-dc",
+    "name": "[concat('gmsa-dc', copyIndex(gmsa-dcExtensionLoop))]",
     "type": "Microsoft.Resources/deployments",
     "apiVersion": "[variables('apiVersionDeployments')]",
     "dependsOn": [
