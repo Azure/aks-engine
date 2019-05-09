@@ -3,7 +3,7 @@
     "type": "Microsoft.Resources/deployments",
     "apiVersion": "[variables('apiVersionDeployments')]",
     "dependsOn": [
-        "vmLoop"
+        "vmLoopNode"
     ],
     "properties": {
         "mode": "Incremental",
