@@ -1,11 +1,10 @@
 {
-    "name": "[concat(EXTENSION_TARGET_VM_NAME_PREFIX, copyIndex(EXTENSION_LOOP_OFFSET), 'gmsa-dc')]",
+    "name": "[concat(EXTENSION_TARGET_VM_NAME_PREFIX, 'gmsa-dc')]",
     "type": "Microsoft.Resources/deployments",
     "apiVersion": "[variables('apiVersionDeployments')]",
     "dependsOn": [
-        "[concat('Microsoft.Compute/virtualMachines/', EXTENSION_TARGET_VM_NAME_PREFIX, copyIndex(EXTENSION_LOOP_OFFSET), '/extensions/cse', '-EXTENSION_TARGET_VM_TYPE-', copyIndex(EXTENSION_LOOP_OFFSET))]"
+        "vmLoop"
     ],
-
     "properties": {
         "mode": "Incremental",
         "templateLink": {
@@ -17,13 +16,10 @@
                 "value": "[variables('apiVersionDeployments')]"
             },
             "targetVMName": {
-                "value": "[concat(EXTENSION_TARGET_VM_NAME_PREFIX, copyIndex(EXTENSION_LOOP_OFFSET))]"
+                "value": "[concat(EXTENSION_TARGET_VM_NAME_PREFIX)]"
             },
             "targetVMType": {
                 "value": "EXTENSION_TARGET_VM_TYPE"
-            },
-            "vmIndex":{
-                "value": "[copyIndex(EXTENSION_LOOP_OFFSET)]"
             }
         }
     }
