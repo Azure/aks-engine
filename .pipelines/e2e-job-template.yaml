@@ -13,9 +13,9 @@ jobs:
     maxParallel: 0
   pool:
     vmImage: ubuntu-16.04
-  
+
   container: dev1
-  
+
   variables:
     GOBIN:  '$(GOPATH)/bin' # Go binaries path
     GOROOT: '/usr/local/go' # Go installation path
@@ -30,6 +30,7 @@ jobs:
     RETAIN_SSH: false
     ENABLE_KMS_ENCRYPTION: true
     SUBSCRIPTION_ID: '$(SUBSCRIPTION_ID_E2E_KUBERNETES)'
+    STABILITY_ITERATIONS: '3'
 
   steps:
     - template: e2e-step-template.yaml
