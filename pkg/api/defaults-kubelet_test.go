@@ -486,7 +486,7 @@ func TestProtectKernelDefaults(t *testing.T) {
 
 	// Validate that --protect-kernel-defaults is not enabled for Windows
 	cs = CreateMockContainerService("testcluster", "1.10.13", 3, 2, false)
-	cs.Properties.MasterProfile.Distro = AKS
+	cs.Properties.MasterProfile.Distro = AKSUbuntu1604
 	cs.Properties.AgentPoolProfiles[0].OSType = Windows
 	cs.SetPropertiesDefaults(false, false)
 	km = cs.Properties.MasterProfile.KubernetesConfig.KubeletConfig
