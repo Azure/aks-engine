@@ -412,6 +412,7 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 		expectedAzureCloudProvider bool
 		expectedAuditPolicy        bool
 		expectedELBService         bool
+		expectedPodSecurityPolicy  bool
 	}{
 		// Legacy default scenario
 		{
@@ -434,6 +435,7 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 			expectedAzureCloudProvider: true,
 			expectedAuditPolicy:        false,
 			expectedELBService:         false,
+			expectedPodSecurityPolicy:  false,
 		},
 		// 1.14 default scenario
 		{
@@ -456,6 +458,7 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 			expectedAzureCloudProvider: true,
 			expectedAuditPolicy:        true,
 			expectedELBService:         false,
+			expectedPodSecurityPolicy:  false,
 		},
 		// Azure network policy scenario
 		{
@@ -479,6 +482,7 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 			expectedAzureCloudProvider: true,
 			expectedAuditPolicy:        true,
 			expectedELBService:         false,
+			expectedPodSecurityPolicy:  false,
 		},
 		// Cilium scenario
 		{
@@ -501,6 +505,7 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 			expectedAzureCloudProvider: true,
 			expectedAuditPolicy:        true,
 			expectedELBService:         false,
+			expectedPodSecurityPolicy:  false,
 		},
 		// Flannel scenario
 		{
@@ -523,6 +528,7 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 			expectedAzureCloudProvider: true,
 			expectedAuditPolicy:        true,
 			expectedELBService:         false,
+			expectedPodSecurityPolicy:  false,
 		},
 		// AAD Admin Group scenario
 		{
@@ -548,6 +554,7 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 			expectedAzureCloudProvider: true,
 			expectedAuditPolicy:        true,
 			expectedELBService:         false,
+			expectedPodSecurityPolicy:  false,
 		},
 		// ELB service scenario
 		{
@@ -571,6 +578,30 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 			expectedAzureCloudProvider: true,
 			expectedAuditPolicy:        true,
 			expectedELBService:         true,
+			expectedPodSecurityPolicy:  false,
+		},
+		// PodSecurityPolicy scenario
+		{
+			p: &api.Properties{
+				OrchestratorProfile: &api.OrchestratorProfile{
+					OrchestratorType:    Kubernetes,
+					OrchestratorVersion: "1.14.1",
+					KubernetesConfig: &api.KubernetesConfig{
+						EnablePodSecurityPolicy: to.BoolPtr(true),
+					},
+				},
+			},
+			expectedKubeDNS:            false,
+			expectedCoreDNS:            true,
+			expectedKubeProxy:          true,
+			expectedAzureNetworkPolicy: false,
+			expectedCilium:             false,
+			expectedFlannel:            false,
+			expectedAADAdminGroup:      false,
+			expectedAzureCloudProvider: true,
+			expectedAuditPolicy:        true,
+			expectedELBService:         false,
+			expectedPodSecurityPolicy:  true,
 		},
 	}
 
@@ -617,6 +648,10 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 			case "elb-svc.yaml":
 				if c.expectedELBService != componentFileSpec.isEnabled {
 					t.Fatalf("Expected %s to be %t", ELBServiceAddonName, c.expectedELBService)
+				}
+			case "pod-security-policy.yaml":
+				if c.expectedPodSecurityPolicy != componentFileSpec.isEnabled {
+					t.Fatalf("Expected %s to be %t", "PodSecurityPolicy", c.expectedPodSecurityPolicy)
 				}
 			}
 		}
