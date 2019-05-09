@@ -79,7 +79,7 @@ generate-azure-constants:
 	python pkg/helpers/generate_azure_constants.py
 
 .PHONY: build
-build: generate
+build: validate-dependencies generate
 	$(GO) build $(GOFLAGS) -ldflags '$(LDFLAGS)' -o $(BINDIR)/$(PROJECT)$(EXTENSION) $(REPO_PATH)
 	$(GO) build $(GOFLAGS) -o $(BINDIR)/aks-engine-test$(EXTENSION) $(REPO_PATH)/test/aks-engine-test
 
