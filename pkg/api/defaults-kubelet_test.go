@@ -449,7 +449,7 @@ func TestProtectKernelDefaults(t *testing.T) {
 	// Validate that --protect-kernel-defaults is "true" by default for relevant distros
 	for _, distro := range DistroValues {
 		switch distro {
-		case AKS, AKS1804:
+		case AKSUbuntu1604, AKSUbuntu1804:
 			cs = CreateMockContainerService("testcluster", "1.10.13", 3, 2, false)
 			cs.Properties.MasterProfile.Distro = distro
 			cs.Properties.AgentPoolProfiles[0].Distro = distro
@@ -503,7 +503,7 @@ func TestProtectKernelDefaults(t *testing.T) {
 	// Validate that --protect-kernel-defaults is overridable
 	for _, distro := range DistroValues {
 		switch distro {
-		case Ubuntu, Ubuntu1804, AKS, AKS1804:
+		case Ubuntu, Ubuntu1804, AKSUbuntu1604, AKSUbuntu1804:
 			cs = CreateMockContainerService("testcluster", "1.10.13", 3, 2, false)
 			cs.Properties.MasterProfile.Distro = "ubuntu"
 			cs.Properties.AgentPoolProfiles[0].Distro = "ubuntu"

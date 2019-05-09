@@ -1292,7 +1292,7 @@ func TestIsVHDDistroForAllNodes(t *testing.T) {
 			p: Properties{
 				MasterProfile: &MasterProfile{
 					Count:  1,
-					Distro: AKS,
+					Distro: AKSUbuntu1604,
 				},
 				AgentPoolProfiles: []*AgentPoolProfile{
 					{
@@ -1311,7 +1311,7 @@ func TestIsVHDDistroForAllNodes(t *testing.T) {
 			p: Properties{
 				MasterProfile: &MasterProfile{
 					Count:  1,
-					Distro: AKS1804,
+					Distro: AKSUbuntu1804,
 				},
 			},
 			expected: true,
@@ -1329,16 +1329,16 @@ func TestIsVHDDistroForAllNodes(t *testing.T) {
 			p: Properties{
 				MasterProfile: &MasterProfile{
 					Count:  1,
-					Distro: AKS1804,
+					Distro: AKSUbuntu1804,
 				},
 				AgentPoolProfiles: []*AgentPoolProfile{
 					{
 						Count:  1,
-						Distro: AKS1804,
+						Distro: AKSUbuntu1804,
 					},
 					{
 						Count:  1,
-						Distro: AKS1804,
+						Distro: AKSUbuntu1804,
 					},
 				},
 			},
@@ -1382,7 +1382,7 @@ func TestIsVHDDistroForAllNodes(t *testing.T) {
 			p: Properties{
 				MasterProfile: &MasterProfile{
 					Count:  1,
-					Distro: AKS,
+					Distro: AKSUbuntu1604,
 				},
 				AgentPoolProfiles: []*AgentPoolProfile{
 					{
@@ -1397,7 +1397,7 @@ func TestIsVHDDistroForAllNodes(t *testing.T) {
 			p: Properties{
 				MasterProfile: &MasterProfile{
 					Count:  1,
-					Distro: AKS1804,
+					Distro: AKSUbuntu1804,
 				},
 				AgentPoolProfiles: []*AgentPoolProfile{
 					{
@@ -1413,7 +1413,7 @@ func TestIsVHDDistroForAllNodes(t *testing.T) {
 				AgentPoolProfiles: []*AgentPoolProfile{
 					{
 						Count:  1,
-						Distro: AKS,
+						Distro: AKSUbuntu1604,
 					},
 				},
 			},
@@ -1769,7 +1769,7 @@ func TestHasUbuntu1804DistroNodes(t *testing.T) {
 					},
 					{
 						Count:  1,
-						Distro: AKS,
+						Distro: AKSUbuntu1604,
 					},
 				},
 			},
