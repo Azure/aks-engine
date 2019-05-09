@@ -1,5 +1,5 @@
 {
-    "name": "[concat(EXTENSION_TARGET_VM_NAME_PREFIX, copyIndex(EXTENSION_LOOP_OFFSET), 'gmsa-dc')]",
+    "name": "[concat(EXTENSION_TARGET, copyIndex(EXTENSION_LOOP_OFFSET), 'gmsa-dc')]",
     "type": "Microsoft.Resources/deployments",
     "apiVersion": "[variables('apiVersionDeployments')]",
     "dependsOn": [
