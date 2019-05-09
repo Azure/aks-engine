@@ -30,7 +30,9 @@
 	"resources": [
 	 {
 	   "apiVersion": "[parameters('apiVersionDeployments')]",
-	   "dependsOn": [],
+	   "dependsOn": [
+	     "[concat(parameters('targetVMName')"
+	   ],
 	   "location": "[resourceGroup().location]",
 	   "type": "Microsoft.Compute/virtualMachines/extensions",
 	   "name": "[concat(parameters('targetVMName'),'/cse', '-', parameters('targetVMType'))]", 
