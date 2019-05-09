@@ -2,7 +2,7 @@
 	"$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
 	"contentVersion": "1.0.0.0",
 	"parameters": {
-		 "apiVersionDeployments": {
+		"apiVersionDeployments": {
 			 "type": "string",
 			 "minLength": 1,
 			 "metadata": {
@@ -16,7 +16,7 @@
 				 "description": "Name of the vm to run the extension on"
 			 }
 		 },
-		 "targetVMType":{
+		"targetVMType":{
 			"type": "string",
 			"minLength": 1,
 			"metadata": {
