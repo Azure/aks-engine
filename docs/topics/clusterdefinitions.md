@@ -418,7 +418,7 @@ Below is a list of apiserver options that aks-engine will configure by default:
 | "--oidc-client-id"              | _calculated value that represents OID client ID_ (_if has AADProfile_)                                                                                                                                                                  |
 | "--oidc-issuer-url"             | _calculated value that represents OID issuer URL_ (_if has AADProfile_)                                                                                                                                                                 |
 
-`*` In Kubernetes versions 1.9.0 and later the `--admission-control` flag is deprecated and `--enable-admission-plugins` is used in its stead.
+`*` In Kubernetes versions 1.10.0 and later the `--admission-control` flag is deprecated and `--enable-admission-plugins` is used in its stead.
 
 Below is a list of apiserver options that are _not_ currently user-configurable, either because a higher order configuration vector is available that enforces apiserver configuration, or because a static configuration is required to build a functional cluster:
 

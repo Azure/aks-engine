@@ -9,7 +9,7 @@ This is the Kubernetes Cluster Autoscaler add-on for Virtual Machine Scale Sets.
 
 See [this document](../../../docs/topic/upgrade.md) for details on known limitiations with `aks-engine upgrade` and VMSS.
 
-To use this add-on, make sure your cluster's Kubernetes version is 1.0 or above and your agent pool `availabilityProfile` is set to `VirtualMachineScaleSets`. By default, the first agent pool will autoscale the node count between 1 and 5. You can override these settings in `config` section of the `cluster-autoscaler` add-on.
+To use this add-on, make sure your cluster's Kubernetes version is 1.10.0 or above and your agent pool `availabilityProfile` is set to `VirtualMachineScaleSets`. By default, the first agent pool will autoscale the node count between 1 and 5. You can override these settings in `config` section of the `cluster-autoscaler` add-on.
 
 > At this time, only the primaryScaleSet (the first agent pool) is monitored by the autoscaler. If you use this addon on your single agent pool cluster and later manually add more VMSS agent pools and want to use this cluster-autoscaler addon to monitor (and scale) other node pools, you must manually edit the autoscaler YAML at `/etc/kubernetes/addons` on each master node.
 
