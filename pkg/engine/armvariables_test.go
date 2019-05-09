@@ -791,7 +791,7 @@ func TestK8sVarsMastersOnly(t *testing.T) {
 		"userAssignedIDReference":                   "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities/', variables('userAssignedID'))]",
 		"virtualNetworkName":                        "[concat(parameters('orchestratorName'), '-vnet-', parameters('nameSuffix'))]",
 		"virtualNetworkResourceGroupName":           "''",
-		"vmType":                                    api.StandardLoadBalancerSku,
+		"vmType":                                    "standard",
 		"vnetID":                                    "[resourceId('Microsoft.Network/virtualNetworks',variables('virtualNetworkName'))]",
 		"vnetNameResourceSegmentIndex":              8,
 		"vnetResourceGroupNameResourceSegmentIndex": 4,
