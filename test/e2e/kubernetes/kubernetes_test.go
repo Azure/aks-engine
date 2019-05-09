@@ -804,7 +804,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				Expect(err).NotTo(HaveOccurred())
 
 				By("Ensuring we can create a curl pod to connect to the service")
-				deploymentPrefix = fmt.Sprintf("ilb-test-deployment-%s", cfg.Name)
+				deploymentPrefix = fmt.Sprintf("ilb-test-curl-deployment")
 				curlDeploymentName := fmt.Sprintf("%s-%v", deploymentPrefix, r.Intn(99999))
 				curlDeploy, err := deployment.CreateLinuxDeployDeleteIfExists(deploymentPrefix, "library/nginx:latest", curlDeploymentName, "default", "")
 				Expect(err).NotTo(HaveOccurred())
