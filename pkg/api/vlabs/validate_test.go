@@ -891,11 +891,11 @@ func TestProperties_ValidateInvalidExtensions(t *testing.T) {
 			name: "prometheus-grafana-k8s extensions for Winows agents",
 			agentPoolProfiles: []*AgentPoolProfile{
 				{
-					Name:   "agentpool",
-					VMSize: "Standard_D2_v2",
-					Count:  1,
+					Name:                "agentpool",
+					VMSize:              "Standard_D2_v2",
+					Count:               1,
 					AvailabilityProfile: AvailabilitySet,
-					OSType: "Windows",
+					OSType:              "Windows",
 					Extensions: []Extension{
 						{
 							Name: "prometheus-grafana-k8s",
@@ -919,7 +919,7 @@ func TestProperties_ValidateInvalidExtensions(t *testing.T) {
 			}
 		})
 	}
-	
+
 }
 
 func TestProperties_ValidateInvalidExtensionProfiles(t *testing.T) {
@@ -2179,10 +2179,10 @@ func TestProperties_ValidateVNET(t *testing.T) {
 		{
 			name: "Invalid MasterProfile FirstConsecutiveStaticIP when master is VMAS",
 			masterProfile: &MasterProfile{
-				VnetSubnetID:             validVNetSubnetID,
-				Count:                    1,
-				DNSPrefix:                "foo",
-				VMSize:                   "Standard_DS2_v2",
+				VnetSubnetID: validVNetSubnetID,
+				Count:        1,
+				DNSPrefix:    "foo",
+				VMSize:       "Standard_DS2_v2",
 				FirstConsecutiveStaticIP: "10.0.0.invalid",
 			},
 			agentPoolProfiles: []*AgentPoolProfile{
@@ -2240,10 +2240,10 @@ func TestProperties_ValidateVNET(t *testing.T) {
 		{
 			name: "Invalid vnetcidr",
 			masterProfile: &MasterProfile{
-				VnetSubnetID:             validVNetSubnetID,
-				Count:                    1,
-				DNSPrefix:                "foo",
-				VMSize:                   "Standard_DS2_v2",
+				VnetSubnetID: validVNetSubnetID,
+				Count:        1,
+				DNSPrefix:    "foo",
+				VMSize:       "Standard_DS2_v2",
 				FirstConsecutiveStaticIP: "10.0.0.1",
 				VnetCidr:                 "10.1.0.0/invalid",
 			},
