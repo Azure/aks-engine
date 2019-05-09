@@ -166,9 +166,9 @@ az vm show -g <resource group of cluster> -n <name of Master or agent VM> --quer
 
 ```json
 {
-  "aksEngineVersion": "v0.15.0",
+  "aksEngineVersion": "v0.35.1",
   "creationSource": "aksengine-k8s-master-22116803-0",
-  "orchestrator": "Kubernetes:1.9.5",
+  "orchestrator": "Kubernetes:1.12.8",
   "poolName": "master",
   "resourceNameSuffix": "22116803"
 }

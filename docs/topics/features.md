@@ -82,7 +82,7 @@ In order to use these storage classes the following conditions must be met.
 ```console
 kubectl get nodes -l storageprofile=managed
 NAME                    STATUS    AGE       VERSION
-k8s-agent1-23731866-0   Ready     24m       v1.7.2
+k8s-agent1-23731866-0   Ready     24m       v1.12.8
 ```
 
 - The VM size must support the type of managed disk type requested. For example, Premium VM sizes with managed OS disks support both managed-standard and managed-premium storage classes whereas Standard VM sizes with managed OS disks only support managed-standard storage class.
