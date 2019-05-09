@@ -3,8 +3,8 @@
     "type": "Microsoft.Resources/deployments",
     "apiVersion": "[variables('apiVersionDeployments')]",
     "dependsOn": [
-        "vmLoopNode"
-    ],
+        "[concat(parameters('targetVMName')"
+	],
     "properties": {
         "mode": "Incremental",
         "templateLink": {
