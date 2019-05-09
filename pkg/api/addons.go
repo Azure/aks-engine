@@ -32,16 +32,16 @@ func (cs *ContainerService) setAddonsConfig(isUpdate bool) {
 	}
 
 	defaultTillerAddonsConfig := KubernetesAddon{
-		Name:    DefaultTillerAddonName,
+		Name:    TillerAddonName,
 		Enabled: to.BoolPtr(DefaultTillerAddonEnabled),
 		Containers: []KubernetesContainerSpec{
 			{
-				Name:           DefaultTillerAddonName,
+				Name:           TillerAddonName,
 				CPURequests:    "50m",
 				MemoryRequests: "150Mi",
 				CPULimits:      "50m",
 				MemoryLimits:   "150Mi",
-				Image:          specConfig.TillerImageBase + k8sComponents[DefaultTillerAddonName],
+				Image:          specConfig.TillerImageBase + k8sComponents[TillerAddonName],
 			},
 		},
 		Config: map[string]string{
@@ -50,7 +50,7 @@ func (cs *ContainerService) setAddonsConfig(isUpdate bool) {
 	}
 
 	defaultACIConnectorAddonsConfig := KubernetesAddon{
-		Name:    DefaultACIConnectorAddonName,
+		Name:    ACIConnectorAddonName,
 		Enabled: to.BoolPtr(DefaultACIConnectorAddonEnabled),
 		Config: map[string]string{
 			"region":   "westus",
@@ -60,18 +60,18 @@ func (cs *ContainerService) setAddonsConfig(isUpdate bool) {
 		},
 		Containers: []KubernetesContainerSpec{
 			{
-				Name:           DefaultACIConnectorAddonName,
+				Name:           ACIConnectorAddonName,
 				CPURequests:    "50m",
 				MemoryRequests: "150Mi",
 				CPULimits:      "50m",
 				MemoryLimits:   "150Mi",
-				Image:          specConfig.ACIConnectorImageBase + k8sComponents[DefaultACIConnectorAddonName],
+				Image:          specConfig.ACIConnectorImageBase + k8sComponents[ACIConnectorAddonName],
 			},
 		},
 	}
 
 	defaultClusterAutoscalerAddonsConfig := KubernetesAddon{
-		Name:    DefaultClusterAutoscalerAddonName,
+		Name:    ClusterAutoscalerAddonName,
 		Enabled: to.BoolPtr(DefaultClusterAutoscalerAddonEnabled),
 		Config: map[string]string{
 			"min-nodes":     "1",
@@ -80,22 +80,22 @@ func (cs *ContainerService) setAddonsConfig(isUpdate bool) {
 		},
 		Containers: []KubernetesContainerSpec{
 			{
-				Name:           DefaultClusterAutoscalerAddonName,
+				Name:           ClusterAutoscalerAddonName,
 				CPURequests:    "100m",
 				MemoryRequests: "300Mi",
 				CPULimits:      "100m",
 				MemoryLimits:   "300Mi",
-				Image:          specConfig.KubernetesImageBase + k8sComponents[DefaultClusterAutoscalerAddonName],
+				Image:          specConfig.KubernetesImageBase + k8sComponents[ClusterAutoscalerAddonName],
 			},
 		},
 	}
 
 	defaultBlobfuseFlexVolumeAddonsConfig := KubernetesAddon{
-		Name:    DefaultBlobfuseFlexVolumeAddonName,
+		Name:    BlobfuseFlexVolumeAddonName,
 		Enabled: to.BoolPtr(common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.8.0") && DefaultBlobfuseFlexVolumeAddonEnabled && !cs.Properties.HasCoreOS()),
 		Containers: []KubernetesContainerSpec{
 			{
-				Name:           DefaultBlobfuseFlexVolumeAddonName,
+				Name:           BlobfuseFlexVolumeAddonName,
 				CPURequests:    "50m",
 				MemoryRequests: "100Mi",
 				CPULimits:      "50m",
@@ -106,11 +106,11 @@ func (cs *ContainerService) setAddonsConfig(isUpdate bool) {
 	}
 
 	defaultSMBFlexVolumeAddonsConfig := KubernetesAddon{
-		Name:    DefaultSMBFlexVolumeAddonName,
+		Name:    SMBFlexVolumeAddonName,
 		Enabled: to.BoolPtr(common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.8.0") && DefaultSMBFlexVolumeAddonEnabled && !cs.Properties.HasCoreOS()),
 		Containers: []KubernetesContainerSpec{
 			{
-				Name:           DefaultSMBFlexVolumeAddonName,
+				Name:           SMBFlexVolumeAddonName,
 				CPURequests:    "50m",
 				MemoryRequests: "100Mi",
 				CPULimits:      "50m",
@@ -121,11 +121,11 @@ func (cs *ContainerService) setAddonsConfig(isUpdate bool) {
 	}
 
 	defaultKeyVaultFlexVolumeAddonsConfig := KubernetesAddon{
-		Name:    DefaultKeyVaultFlexVolumeAddonName,
+		Name:    KeyVaultFlexVolumeAddonName,
 		Enabled: to.BoolPtr(DefaultKeyVaultFlexVolumeAddonEnabled && !cs.Properties.HasCoreOS()),
 		Containers: []KubernetesContainerSpec{
 			{
-				Name:           DefaultKeyVaultFlexVolumeAddonName,
+				Name:           KeyVaultFlexVolumeAddonName,
 				CPURequests:    "50m",
 				MemoryRequests: "100Mi",
 				CPULimits:      "50m",
@@ -136,42 +136,42 @@ func (cs *ContainerService) setAddonsConfig(isUpdate bool) {
 	}
 
 	defaultDashboardAddonsConfig := KubernetesAddon{
-		Name:    DefaultDashboardAddonName,
+		Name:    DashboardAddonName,
 		Enabled: to.BoolPtr(DefaultDashboardAddonEnabled),
 		Containers: []KubernetesContainerSpec{
 			{
-				Name:           DefaultDashboardAddonName,
+				Name:           DashboardAddonName,
 				CPURequests:    "300m",
 				MemoryRequests: "150Mi",
 				CPULimits:      "300m",
 				MemoryLimits:   "150Mi",
-				Image:          specConfig.KubernetesImageBase + k8sComponents[DefaultDashboardAddonName],
+				Image:          specConfig.KubernetesImageBase + k8sComponents[DashboardAddonName],
 			},
 		},
 	}
 
 	defaultReschedulerAddonsConfig := KubernetesAddon{
-		Name:    DefaultReschedulerAddonName,
+		Name:    ReschedulerAddonName,
 		Enabled: to.BoolPtr(DefaultReschedulerAddonEnabled),
 		Containers: []KubernetesContainerSpec{
 			{
-				Name:           DefaultReschedulerAddonName,
+				Name:           ReschedulerAddonName,
 				CPURequests:    "10m",
 				MemoryRequests: "100Mi",
 				CPULimits:      "10m",
 				MemoryLimits:   "100Mi",
-				Image:          specConfig.KubernetesImageBase + k8sComponents[DefaultReschedulerAddonName],
+				Image:          specConfig.KubernetesImageBase + k8sComponents[ReschedulerAddonName],
 			},
 		},
 	}
 
 	defaultMetricsServerAddonsConfig := KubernetesAddon{
-		Name:    DefaultMetricsServerAddonName,
+		Name:    MetricsServerAddonName,
 		Enabled: k8sVersionMetricsServerAddonEnabled(o),
 		Containers: []KubernetesContainerSpec{
 			{
-				Name:  DefaultMetricsServerAddonName,
-				Image: specConfig.KubernetesImageBase + k8sComponents[DefaultMetricsServerAddonName],
+				Name:  MetricsServerAddonName,
+				Image: specConfig.KubernetesImageBase + k8sComponents[MetricsServerAddonName],
 			},
 		},
 	}
@@ -213,7 +213,7 @@ func (cs *ContainerService) setAddonsConfig(isUpdate bool) {
 
 	defaultIPMasqAgentAddonsConfig := KubernetesAddon{
 		Name:    IPMASQAgentAddonName,
-		Enabled: to.BoolPtr(IPMasqAgentAddonEnabled),
+		Enabled: to.BoolPtr(DefaultIPMasqAgentAddonEnabled),
 		Containers: []KubernetesContainerSpec{
 			{
 				Name:           IPMASQAgentAddonName,
@@ -252,11 +252,11 @@ func (cs *ContainerService) setAddonsConfig(isUpdate bool) {
 	}
 
 	defaultDNSAutoScalerAddonsConfig := KubernetesAddon{
-		Name:    DefaultDNSAutoscalerAddonName,
+		Name:    DNSAutoscalerAddonName,
 		Enabled: to.BoolPtr(DefaultDNSAutoscalerAddonEnabled),
 		Containers: []KubernetesContainerSpec{
 			{
-				Name:           DefaultDNSAutoscalerAddonName,
+				Name:           DNSAutoscalerAddonName,
 				Image:          specConfig.KubernetesImageBase + "cluster-proportional-autoscaler-amd64:1.1.1",
 				CPURequests:    "20m",
 				MemoryRequests: "100Mi",
@@ -265,11 +265,11 @@ func (cs *ContainerService) setAddonsConfig(isUpdate bool) {
 	}
 
 	defaultsCalicoDaemonSetAddonsConfig := KubernetesAddon{
-		Name:    DefaultCalicoDaemonSetAddonName,
+		Name:    CalicoAddonName,
 		Enabled: to.BoolPtr(false),
 		Containers: []KubernetesContainerSpec{
 			{
-				Name:  DefaultCalicoDaemonSetAddonName,
+				Name:  CalicoAddonName,
 				Image: specConfig.CalicoImageBase + "typha:v3.5.0",
 			},
 			{

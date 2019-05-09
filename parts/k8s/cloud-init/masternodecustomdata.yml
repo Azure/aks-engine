@@ -342,7 +342,7 @@ MASTER_CONTAINER_ADDONS_PLACEHOLDER
     sed -i "s|<gID>|{{WrapAsParameter "aadAdminGroupId"}}|g" "/etc/kubernetes/addons/aad-default-admin-group-rbac.yaml"
 {{end}}
 
-{{if .IsClusterAutoscalerEnabled}}
+{{if .OrchestratorProfile.KubernetesConfig.IsClusterAutoscalerEnabled}}
     sed -i "s|<cloud>|{{WrapAsParameter "kubernetesClusterAutoscalerAzureCloud"}}|g; s|<useManagedIdentity>|{{WrapAsParameter "kubernetesClusterAutoscalerUseManagedIdentity"}}|g" /etc/kubernetes/addons/cluster-autoscaler-deployment.yaml
 {{end}}
 

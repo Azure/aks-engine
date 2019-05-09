@@ -667,7 +667,7 @@ func TestK8sVarsMastersOnly(t *testing.T) {
 			OrchestratorProfile: &api.OrchestratorProfile{
 				OrchestratorType: api.Kubernetes,
 				KubernetesConfig: &api.KubernetesConfig{
-					LoadBalancerSku:             "Standard",
+					LoadBalancerSku:             api.StandardLoadBalancerSku,
 					ExcludeMasterFromStandardLB: to.BoolPtr(true),
 					NetworkPlugin:               "azure",
 				},
@@ -709,7 +709,7 @@ func TestK8sVarsMastersOnly(t *testing.T) {
 		"kubeconfigServer":                "[concat('https://', variables('masterFqdnPrefix'), '.', variables('location'), '.', parameters('fqdnEndpointSuffix'))]",
 		"kubernetesAPIServerIP":           "[concat(variables('masterFirstAddrPrefix'), add(variables('masterInternalLbIPOffset'), int(variables('masterFirstAddrOctet4'))))]",
 		"labelResourceGroup":              "[if(or(or(endsWith(variables('truncatedResourceGroup'), '-'), endsWith(variables('truncatedResourceGroup'), '_')), endsWith(variables('truncatedResourceGroup'), '.')), concat(take(variables('truncatedResourceGroup'), 62), 'z'), variables('truncatedResourceGroup'))]",
-		"loadBalancerSku":                 "Standard",
+		"loadBalancerSku":                 api.StandardLoadBalancerSku,
 		"location":                        "[variables('locations')[mod(add(2,length(parameters('location'))),add(1,length(parameters('location'))))]]",
 		"locations":                       []string{"[resourceGroup().location]", "[parameters('location')]"},
 		"masterAvailabilitySet":           "[concat('master-availabilityset-', parameters('nameSuffix'))]",

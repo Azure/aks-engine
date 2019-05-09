@@ -150,6 +150,8 @@ const (
 	DefaultUseInstanceMetadata = true
 	// DefaultLoadBalancerSku determines the aks-engine provided default for enabling Azure cloudprovider load balancer SKU
 	DefaultLoadBalancerSku = "Basic"
+	// StandardLoadBalancerSku is the string const for Azure Standard Load Balancer
+	StandardLoadBalancerSku = "Standard"
 	// DefaultExcludeMasterFromStandardLB determines the aks-engine provided default for excluding master nodes from standard load balancer.
 	DefaultExcludeMasterFromStandardLB = true
 	// DefaultSecureKubeletEnabled determines the aks-engine provided default for securing kubelet communications
@@ -162,36 +164,36 @@ const (
 	DefaultContainerMonitoringAddonEnabled = false
 	// DefaultDNSAutoscalerAddonEnabled determines the aks-engine provided default for dns-autoscaler addon
 	DefaultDNSAutoscalerAddonEnabled = false
-	// IPMasqAgentAddonEnabled enables the ip-masq-agent addon
-	IPMasqAgentAddonEnabled = true
+	// DefaultIPMasqAgentAddonEnabled enables the ip-masq-agent addon
+	DefaultIPMasqAgentAddonEnabled = true
 	// DefaultHeapsterAddonName is the name of the heapster addon
 	DefaultHeapsterAddonName = "heapster"
-	// DefaultTillerAddonName is the name of the tiller addon deployment
-	DefaultTillerAddonName = "tiller"
-	// DefaultAADPodIdentityAddonName is the name of the aad-pod-identity addon deployment
-	DefaultAADPodIdentityAddonName = "aad-pod-identity"
-	// DefaultACIConnectorAddonName is the name of the aci-connector addon deployment
-	DefaultACIConnectorAddonName = "aci-connector"
-	// DefaultClusterAutoscalerAddonName is the name of the cluster autoscaler addon deployment
-	DefaultClusterAutoscalerAddonName = "cluster-autoscaler"
-	// DefaultBlobfuseFlexVolumeAddonName is the name of the blobfuse flexvolume addon
-	DefaultBlobfuseFlexVolumeAddonName = "blobfuse-flexvolume"
-	// DefaultSMBFlexVolumeAddonName is the name of the smb flexvolume addon
-	DefaultSMBFlexVolumeAddonName = "smb-flexvolume"
-	// DefaultKeyVaultFlexVolumeAddonName is the name of the key vault flexvolume addon deployment
-	DefaultKeyVaultFlexVolumeAddonName = "keyvault-flexvolume"
-	// DefaultDashboardAddonName is the name of the kubernetes-dashboard addon deployment
-	DefaultDashboardAddonName = "kubernetes-dashboard"
-	// DefaultReschedulerAddonName is the name of the rescheduler addon deployment
-	DefaultReschedulerAddonName = "rescheduler"
-	// DefaultMetricsServerAddonName is the name of the kubernetes metrics server addon deployment
-	DefaultMetricsServerAddonName = "metrics-server"
+	// TillerAddonName is the name of the tiller addon deployment
+	TillerAddonName = "tiller"
+	// AADPodIdentityAddonName is the name of the aad-pod-identity addon deployment
+	AADPodIdentityAddonName = "aad-pod-identity"
+	// ACIConnectorAddonName is the name of the aci-connector addon deployment
+	ACIConnectorAddonName = "aci-connector"
+	// ClusterAutoscalerAddonName is the name of the cluster autoscaler addon deployment
+	ClusterAutoscalerAddonName = "cluster-autoscaler"
+	// BlobfuseFlexVolumeAddonName is the name of the blobfuse flexvolume addon
+	BlobfuseFlexVolumeAddonName = "blobfuse-flexvolume"
+	// SMBFlexVolumeAddonName is the name of the smb flexvolume addon
+	SMBFlexVolumeAddonName = "smb-flexvolume"
+	// KeyVaultFlexVolumeAddonName is the name of the key vault flexvolume addon deployment
+	KeyVaultFlexVolumeAddonName = "keyvault-flexvolume"
+	// DashboardAddonName is the name of the kubernetes-dashboard addon deployment
+	DashboardAddonName = "kubernetes-dashboard"
+	// ReschedulerAddonName is the name of the rescheduler addon deployment
+	ReschedulerAddonName = "rescheduler"
+	// MetricsServerAddonName is the name of the kubernetes metrics server addon deployment
+	MetricsServerAddonName = "metrics-server"
 	// NVIDIADevicePluginAddonName is the name of the NVIDIA device plugin addon deployment
 	NVIDIADevicePluginAddonName = "nvidia-device-plugin"
 	// ContainerMonitoringAddonName is the name of the kubernetes Container Monitoring addon deployment
 	ContainerMonitoringAddonName = "container-monitoring"
-	// DefaultCalicoDaemonSetAddonName is the name of calico daemonset addon
-	DefaultCalicoDaemonSetAddonName = "calico-daemonset"
+	// CalicoAddonName is the name of calico daemonset addon
+	CalicoAddonName = "calico-daemonset"
 	// IPMASQAgentAddonName is the name of the ip masq agent addon
 	IPMASQAgentAddonName = "ip-masq-agent"
 	// DefaultPrivateClusterEnabled determines the aks-engine provided default for enabling kubernetes Private Cluster
@@ -219,8 +221,8 @@ const (
 	DefaultVMSSOverProvisioningEnabled = false
 	// DefaultAuditDEnabled determines the aks-engine provided default for enabling auditd
 	DefaultAuditDEnabled = false
-	// DefaultDNSAutoscalerAddonName is the name of the dns-autoscaler addon
-	DefaultDNSAutoscalerAddonName = "dns-autoscaler"
+	// DNSAutoscalerAddonName is the name of the dns-autoscaler addon
+	DNSAutoscalerAddonName = "dns-autoscaler"
 	// DefaultUseCosmos determines if the cluster will use cosmos as etcd storage
 	DefaultUseCosmos = false
 	// DefaultMaximumLoadBalancerRuleCount determines the default value of maximum allowed loadBalancer rule count according to

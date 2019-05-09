@@ -80,7 +80,7 @@ func CreateLoadBalancer(prop *api.Properties, isVMSS bool) LoadBalancerARM {
 		},
 	}
 
-	if prop.OrchestratorProfile.KubernetesConfig.LoadBalancerSku == "Standard" {
+	if prop.OrchestratorProfile.KubernetesConfig.LoadBalancerSku == api.StandardLoadBalancerSku {
 		udpRule := network.LoadBalancingRule{
 			Name: to.StringPtr("LBRuleUDP"),
 			LoadBalancingRulePropertiesFormat: &network.LoadBalancingRulePropertiesFormat{
@@ -229,7 +229,7 @@ func CreateMasterInternalLoadBalancer(cs *api.ContainerService) LoadBalancerARM 
 		Type: to.StringPtr("Microsoft.Network/loadBalancers"),
 	}
 
-	if cs.Properties.OrchestratorProfile.KubernetesConfig.LoadBalancerSku == "Standard" {
+	if cs.Properties.OrchestratorProfile.KubernetesConfig.LoadBalancerSku == api.StandardLoadBalancerSku {
 		udpRule := network.LoadBalancingRule{
 			Name: to.StringPtr("LBRuleUDP"),
 			LoadBalancingRulePropertiesFormat: &network.LoadBalancingRulePropertiesFormat{
