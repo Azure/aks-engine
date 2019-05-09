@@ -29,10 +29,11 @@ type Upgrader struct {
 	Translator *i18n.Translator
 	logger     *logrus.Entry
 	ClusterTopology
-	Client           armhelpers.AKSEngineClient
-	kubeConfig       string
-	stepTimeout      *time.Duration
-	AKSEngineVersion string
+	Client             armhelpers.AKSEngineClient
+	kubeConfig         string
+	stepTimeout        *time.Duration
+	cordonDrainTimeout *time.Duration
+	AKSEngineVersion   string
 }
 
 type vmStatus int
@@ -51,13 +52,14 @@ type vmInfo struct {
 }
 
 // Init initializes an upgrader struct
-func (ku *Upgrader) Init(translator *i18n.Translator, logger *logrus.Entry, clusterTopology ClusterTopology, client armhelpers.AKSEngineClient, kubeConfig string, stepTimeout *time.Duration, aksEngineVersion string) {
+func (ku *Upgrader) Init(translator *i18n.Translator, logger *logrus.Entry, clusterTopology ClusterTopology, client armhelpers.AKSEngineClient, kubeConfig string, stepTimeout *time.Duration, cordonDrainTimeout *time.Duration, aksEngineVersion string) {
 	ku.Translator = translator
 	ku.logger = logger
 	ku.ClusterTopology = clusterTopology
 	ku.Client = client
 	ku.kubeConfig = kubeConfig
 	ku.stepTimeout = stepTimeout
+	ku.cordonDrainTimeout = cordonDrainTimeout
 	ku.AKSEngineVersion = aksEngineVersion
 }
 
@@ -263,6 +265,7 @@ func (ku *Upgrader) upgradeAgentPools(ctx context.Context) error {
 		} else {
 			upgradeAgentNode.timeout = *ku.stepTimeout
 		}
+		upgradeAgentNode.cordonDrainTimeout = *ku.cordonDrainTimeout
 
 		agentVMs := make(map[int]*vmInfo)
 		// Go over upgraded VMs and verify provisioning state
@@ -498,7 +501,7 @@ func (ku *Upgrader) upgradeAgentScaleSets(ctx context.Context) error {
 			ku.logger.Infof("Successfully set capacity for VMSS %s", vmssToUpgrade.Name)
 
 			// Before we can delete the node we should safely and responsibly drain it
-			client, err := ku.getKubernetesClient(cordonDrainTimeout)
+			client, err := ku.getKubernetesClient(*ku.cordonDrainTimeout)
 			if err != nil {
 				ku.logger.Errorf("Error getting Kubernetes client: %v", err)
 				return err
@@ -509,7 +512,7 @@ func (ku *Upgrader) upgradeAgentScaleSets(ctx context.Context) error {
 				client,
 				ku.logger,
 				strings.ToLower(vmToUpgrade.Name),
-				cordonDrainTimeout,
+				*ku.cordonDrainTimeout,
 			)
 			if err != nil {
 				ku.logger.Errorf("Error draining VM in VMSS: %v", err)
