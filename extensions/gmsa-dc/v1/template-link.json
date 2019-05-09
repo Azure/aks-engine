@@ -1,10 +1,14 @@
 {
-    "name": "gmsa-dc",
+    "name": "[concat(EXTENSION_TARGET_VM_NAME_PREFIX, copyIndex(EXTENSION_TARGET_LOOP_OFFSET), 'gmsa-dc')]",
     "type": "Microsoft.Resources/deployments",
     "apiVersion": "[variables('apiVersionDeployments')]",
     "dependsOn": [
-        "[concat('Microsoft.Compute/virtualMachines/', EXTENSION_TARGET_VM_NAME_PREFIX, '0', '/extensions/cse', '-EXTENSION_TARGET_VM_TYPE-', '0')]"
+        "[concat('Microsoft.Compute/virtualMachines/', EXTENSION_TARGET_VM_NAME_PREFIX, copyIndex(EXTENSION_TARGET_LOOP_OFFSET), '/extensions/cse', '-EXTENSION_TARGET_VM_TYPE-', copyIndex(EXTENSION_TARGET_LOOP_OFFSET))]"
 	],
+    "copy": {
+        "count": "[sub(variables(EXTENSION_TARGET_COUNT), variables(EXTENSION_TARGET_LOOP_OFFSET))]",
+         "name": "vmLoopNode"
+    },
     "properties": {
         "mode": "Incremental",
         "templateLink": {
@@ -16,10 +20,13 @@
                 "value": "[variables('apiVersionDeployments')]"
             },
             "targetVMName": {
-                "value": "[concat(EXTENSION_TARGET_VM_NAME_PREFIX)]"
+                "value": "[concat(EXTENSION_TARGET_VM_NAME_PREFIX, copyIndex(EXTENSION_TARGET_LOOP_OFFSET))]"
             },
             "targetVMType": {
                 "value": "EXTENSION_TARGET_VM_TYPE"
+            },
+            "vmIndex":{
+                "value": "[copyIndex(EXTENSION_TARGET_LOOP_OFFSET)]"
             }
         }
     }
