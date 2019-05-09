@@ -865,7 +865,7 @@ func TestProperties_ValidateLinuxProfile(t *testing.T) {
 func TestProperties_ValidateInvalidExtensions(t *testing.T) {
 	tests := []struct {
 		name              string
-		extensionProfiles []*ExtensionProfile
+		agentPoolProfiles []*AgentPoolProfile
 		expectedErr       error
 	}{
 		{
@@ -894,6 +894,7 @@ func TestProperties_ValidateInvalidExtensions(t *testing.T) {
 					Name:   "agentpool",
 					VMSize: "Standard_D2_v2",
 					Count:  1,
+					AvailabilityProfile: AvailabilitySet,
 					OSType: "Windows",
 					Extensions: []Extension{
 						{
