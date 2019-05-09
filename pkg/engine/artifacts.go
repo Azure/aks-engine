@@ -102,7 +102,7 @@ func kubernetesContainerAddonSettingsInit(p *api.Properties) map[string]kubernet
 			sourceFile:      "kubernetesmasteraddons-nvidia-device-plugin-daemonset.yaml",
 			base64Data:      k.GetAddonScript(NVIDIADevicePluginAddonName),
 			destinationFile: "nvidia-device-plugin.yaml",
-			isEnabled:       !p.IsAzureStackCloud() && p.IsNVIDIADevicePluginEnabled(),
+			isEnabled:       !p.IsAzureStackCloud() && p.IsNvidiaDevicePluginCapable() && p.IsNVIDIADevicePluginEnabled(),
 		},
 		ContainerMonitoringAddonName: {
 			sourceFile:      "kubernetesmasteraddons-omsagent-daemonset.yaml",
@@ -207,7 +207,7 @@ func kubernetesAddonSettingsInit(p *api.Properties) []kubernetesComponentFileSpe
 			sourceFile:      "kubernetesmasteraddons-elb-svc.yaml",
 			base64Data:      k.GetAddonScript(ELBServiceAddonName),
 			destinationFile: "elb-svc.yaml",
-			isEnabled:       k.LoadBalancerSku == "Standard" && !to.Bool(p.OrchestratorProfile.KubernetesConfig.PrivateCluster.Enabled),
+			isEnabled:       k.LoadBalancerSku == api.StandardLoadBalancerSku && !p.OrchestratorProfile.IsPrivateCluster(),
 		},
 		{
 			sourceFile:      "kubernetesmasteraddons-pod-security-policy.yaml",

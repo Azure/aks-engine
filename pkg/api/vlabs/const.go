@@ -158,3 +158,6 @@ const (
 	// ClientCertificateAuthMethod indicates to use client certificate for authentication
 	ClientCertificateAuthMethod = "client_certificate"
 )
+
+// StandardLoadBalancerSku is the string const for Azure Standard Load Balancer
+const StandardLoadBalancerSku = "Standard"

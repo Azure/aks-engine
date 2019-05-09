@@ -48,7 +48,7 @@ func TestGenerateARMResourcesWithVMSSAgentPool(t *testing.T) {
 			Name: to.StringPtr("[variables('agentpool1VMNamePrefix')]"),
 			Sku: &compute.Sku{
 				Name:     to.StringPtr("[variables('agentpool1VMSize')]"),
-				Tier:     to.StringPtr("Standard"),
+				Tier:     to.StringPtr(api.StandardLoadBalancerSku),
 				Capacity: to.Int64Ptr(2),
 			},
 			Location: to.StringPtr("[variables('location')]"),

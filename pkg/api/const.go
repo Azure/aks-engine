@@ -150,6 +150,8 @@ const (
 	DefaultUseInstanceMetadata = true
 	// DefaultLoadBalancerSku determines the aks-engine provided default for enabling Azure cloudprovider load balancer SKU
 	DefaultLoadBalancerSku = "Basic"
+	// StandardLoadBalancerSku is the string const for Azure Standard Load Balancer
+	StandardLoadBalancerSku = "Standard"
 	// DefaultExcludeMasterFromStandardLB determines the aks-engine provided default for excluding master nodes from standard load balancer.
 	DefaultExcludeMasterFromStandardLB = true
 	// DefaultSecureKubeletEnabled determines the aks-engine provided default for securing kubelet communications
@@ -162,8 +164,8 @@ const (
 	DefaultContainerMonitoringAddonEnabled = false
 	// DefaultDNSAutoscalerAddonEnabled determines the aks-engine provided default for dns-autoscaler addon
 	DefaultDNSAutoscalerAddonEnabled = false
-	// IPMasqAgentAddonEnabled enables the ip-masq-agent addon
-	IPMasqAgentAddonEnabled = true
+	// DefaultIPMasqAgentAddonEnabled enables the ip-masq-agent addon
+	DefaultIPMasqAgentAddonEnabled = true
 	// DefaultHeapsterAddonName is the name of the heapster addon
 	DefaultHeapsterAddonName = "heapster"
 	// TillerAddonName is the name of the tiller addon deployment

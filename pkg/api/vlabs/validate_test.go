@@ -189,7 +189,7 @@ func Test_OrchestratorProfile_Validate(t *testing.T) {
 					OrchestratorType:    "Kubernetes",
 					OrchestratorVersion: "1.6.9",
 					KubernetesConfig: &KubernetesConfig{
-						LoadBalancerSku: "Standard",
+						LoadBalancerSku: StandardLoadBalancerSku,
 					},
 				},
 			},
@@ -1948,7 +1948,7 @@ func TestProperties_ValidateZones(t *testing.T) {
 		{
 			name:                        "all zones with standard loadbalancer and false excludeMasterFromStandardLB",
 			orchestratorRelease:         "1.12",
-			loadBalancerSku:             "Standard",
+			loadBalancerSku:             StandardLoadBalancerSku,
 			excludeMasterFromStandardLB: false,
 			masterProfile: &MasterProfile{
 				Count:               5,

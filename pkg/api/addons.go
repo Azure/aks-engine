@@ -213,7 +213,7 @@ func (cs *ContainerService) setAddonsConfig(isUpdate bool) {
 
 	defaultIPMasqAgentAddonsConfig := KubernetesAddon{
 		Name:    IPMASQAgentAddonName,
-		Enabled: to.BoolPtr(IPMasqAgentAddonEnabled),
+		Enabled: to.BoolPtr(DefaultIPMasqAgentAddonEnabled),
 		Containers: []KubernetesContainerSpec{
 			{
 				Name:           IPMASQAgentAddonName,
