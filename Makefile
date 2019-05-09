@@ -56,15 +56,24 @@ dev:
 
 .PHONY: validate-dependencies
 validate-dependencies: bootstrap
-	./scripts/validate-dependencies.sh
+	@./scripts/validate-dependencies.sh
 
 .PHONY: validate-copyright-headers
 validate-copyright-headers:
-	./scripts/validate-copyright-header.sh
+	@./scripts/validate-copyright-header.sh
 
 .PHONY: validate-commit-msg
 validate-commit-msg:
 	./scripts/validate-commit-msg.sh
+
+.PHONY: validate-go
+validate-go:
+	@./scripts/validate-go.sh
+
+.PHONY: validate-shell
+validate-shell:
+	@./scripts/validate-shell.sh
+
 
 .PHONY: generate
 generate: bootstrap
@@ -134,9 +143,7 @@ test: generate
 	ginkgo -skipPackage test/e2e/dcos,test/e2e/kubernetes -failFast -r .
 
 .PHONY: test-style
-test-style:
-	@scripts/validate-shell.sh
-	@scripts/validate-go.sh
+test-style: validate-go validate-shell validate-copyright-headers
 
 .PHONY: ensure-generated
 ensure-generated:
