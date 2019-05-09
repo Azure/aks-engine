@@ -666,7 +666,7 @@ func TestValidateAPIModel(t *testing.T) {
 		Translator: &i18n.Translator{},
 	}
 	// Don't validate right away, wait until all values have been populated.
-	cs, apiVersion, err := apiloader.LoadContainerServiceFromFile("../engine/testdata/simple/kubernetes.json", false, false, nil)
+	cs, apiVersion, err := apiloader.LoadContainerServiceFromFile("../engine/testdata/simple/kubernetes-nocert.json", false, false, nil)
 
 	// @todo: set missing/bad values.
 	_, _, err = ValidateAPIModel(apiloader.Translator.Locale, cs, apiVersion)
@@ -684,7 +684,7 @@ func TestCheckCreateKeyPair(t *testing.T) {
 	apiloader := &Apiloader{
 		Translator: &i18n.Translator{},
 	}
-	cs, _, _ := apiloader.LoadContainerServiceFromFile("../engine/testdata/simple/kubernetes.json", false, false, nil)
+	cs, _, _ := apiloader.LoadContainerServiceFromFile("../engine/testdata/simple/kubernetes-nocert.json", false, false, nil)
 	if !(cs.Properties.LinuxProfile.SSH.PublicKeys == nil ||
 		len(cs.Properties.LinuxProfile.SSH.PublicKeys) == 0 ||
 		cs.Properties.LinuxProfile.SSH.PublicKeys[0].KeyData == "") {
