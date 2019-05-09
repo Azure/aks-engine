@@ -43,4 +43,3 @@ packer/sp.json
 
 # exclude vendor directory from gitignore
 !/vendor/**/*
-Makefile

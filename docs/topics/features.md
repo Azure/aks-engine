@@ -17,7 +17,7 @@
 
 Enabling Managed Identity configures aks-engine to include and use MSI identities for all interactions with the Azure Resource Manager (ARM) API.
 
-Instead of using a static servic principal written to `/etc/kubernetes/azure.json`, Kubernetes will use a dynamic, time-limited token fetched from the MSI extension running on master and agent nodes. This support is currently alpha and requires Kubernetes v1.12.8 or newer.
+Instead of using a static servic principal written to `/etc/kubernetes/azure.json`, Kubernetes will use a dynamic, time-limited token fetched from the MSI extension running on master and agent nodes. This support is currently alpha and requires Kubernetes v1.9.1 or newer.
 
 Enable Managed Identity by adding `useManagedIdentity` in `kubernetesConfig`.
 
@@ -76,13 +76,13 @@ They are managed-premium and managed-standard and map to Standard_LRS and Premiu
 
 In order to use these storage classes the following conditions must be met.
 
-- The cluster must be running Kubernetes release 1.12 or greater. Refer to this [example](../../examples/kubernetes-releases/kubernetes1.12.json) for how to provision a Kubernetes cluster of a specific version.
+- The cluster must be running Kubernetes release 1.7 or greater. Refer to this [example](../../examples/kubernetes-releases/kubernetes1.7.json) for how to provision a Kubernetes cluster of a specific version.
 - The node must support managed disks. See this [example](../../examples/disks-managed/kubernetes-vmas.json) to provision nodes with managed disks. You can also confirm if a node has managed disks using kubectl.
 
 ```console
 kubectl get nodes -l storageprofile=managed
 NAME                    STATUS    AGE       VERSION
-k8s-agent1-23731866-0   Ready     24m       v1.12
+k8s-agent1-23731866-0   Ready     24m       v1.12.8
 ```
 
 - The VM size must support the type of managed disk type requested. For example, Premium VM sizes with managed OS disks support both managed-standard and managed-premium storage classes whereas Standard VM sizes with managed OS disks only support managed-standard storage class.

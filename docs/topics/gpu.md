@@ -5,7 +5,7 @@ The NVIDIA drivers are automatically installed on every GPU agent in your cluste
 
 To make sure everything is fine, run `kubectl describe node <name-of-a-gpu-node>`. You should see the correct number of GPU reported (in this example shows 2 GPU for a NC12 VM):
 
-For Kubernetes v1.12+ clusters (using NVIDIA Device Plugin):
+For Kubernetes v1.10+ clusters (using NVIDIA Device Plugin):
 
 ```
 [...]
