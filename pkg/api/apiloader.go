@@ -504,6 +504,10 @@ func ValidateAPIModel(locale *gotext.Locale, containerService *ContainerService,
 
 // Generates a missing pubkey pair.
 func CheckCreateKeyPair(cs *ContainerService, locale *gotext.Locale, outputDirectory string) (*ContainerService, error) {
+	// If no ContainerService is supplied, don't bother.
+	if cs == nil {
+		return cs, nil
+	}
 	// If no keypair has been supplied, generate one.
 	if cs.Properties.LinuxProfile != nil && (cs.Properties.LinuxProfile.SSH.PublicKeys == nil ||
 		len(cs.Properties.LinuxProfile.SSH.PublicKeys) == 0 ||
