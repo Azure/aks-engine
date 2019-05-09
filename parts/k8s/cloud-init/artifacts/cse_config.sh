@@ -301,13 +301,6 @@ ensureJournal(){
     systemctlEnableAndStart systemd-journald || exit $ERR_SYSTEMCTL_START_FAIL
 }
 
-ensurePodSecurityPolicy() {
-    POD_SECURITY_POLICY_FILE="/etc/kubernetes/addons/pod-security-policy.yaml"
-    if [ -f $POD_SECURITY_POLICY_FILE ]; then
-        $KUBECTL create -f $POD_SECURITY_POLICY_FILE
-    fi
-}
-
 ensureK8sControlPlane() {
     if $REBOOTREQUIRED || [ "$NO_OUTBOUND" = "true" ]; then
         return

@@ -168,7 +168,6 @@ if [[ -n "${MASTER_NODE}" ]]; then
       ensureEtcd
     fi
     ensureK8sControlPlane
-    ensurePodSecurityPolicy
 fi
 
 if $FULL_INSTALL_REQUIRED; then
