@@ -167,7 +167,7 @@ func (dc *deployCmd) mergeAPIModel() error {
 		log.Infoln(fmt.Sprintf("new api model file has been generated during merge: %s", dc.apimodelPath))
 	}
 
-	dc.containerService, err = api.CheckCreateKeyPair(dc.containerService, dc.locale, dc.outputDirectory)
+	err = api.CheckCreateKeyPair(dc.containerService, dc.locale, dc.outputDirectory)
 	if err != nil {
 		return errors.Wrap(err, "error creating missing SSH Keypair")
 	}

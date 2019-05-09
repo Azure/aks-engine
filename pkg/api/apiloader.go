@@ -503,10 +503,10 @@ func ValidateAPIModel(locale *gotext.Locale, containerService *ContainerService,
 }
 
 // Generates a missing pubkey pair.
-func CheckCreateKeyPair(cs *ContainerService, locale *gotext.Locale, outputDirectory string) (*ContainerService, error) {
+func CheckCreateKeyPair(cs *ContainerService, locale *gotext.Locale, outputDirectory string) error {
 	// If no ContainerService is supplied, don't bother.
 	if cs == nil {
-		return cs, nil
+		return nil
 	}
 	// If no keypair has been supplied, generate one.
 	if cs.Properties.LinuxProfile != nil && (cs.Properties.LinuxProfile.SSH.PublicKeys == nil ||
@@ -518,9 +518,9 @@ func CheckCreateKeyPair(cs *ContainerService, locale *gotext.Locale, outputDirec
 		var publicKey string
 		_, publicKey, err := helpers.CreateSaveSSH(cs.Properties.LinuxProfile.AdminUsername, outputDirectory, translator)
 		if err != nil {
-			return cs, errors.Wrap(err, "Failed to generate SSH Key")
+			return errors.Wrap(err, "Failed to generate SSH Key")
 		}
 		cs.Properties.LinuxProfile.SSH.PublicKeys = []PublicKey{{KeyData: publicKey}}
 	}
-	return cs, nil
+	return nil
 }

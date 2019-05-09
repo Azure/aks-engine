@@ -171,7 +171,7 @@ func (gc *generateCmd) loadAPIModel(cmd *cobra.Command, args []string) error {
 		prop.CertificateProfile.CaPrivateKey = string(caKeyBytes)
 	}
 	// Create an SSH keypair if it's missing.
-	gc.containerService, err = api.CheckCreateKeyPair(gc.containerService, gc.locale, gc.outputDirectory)
+	err = api.CheckCreateKeyPair(gc.containerService, gc.locale, gc.outputDirectory)
 	if err != nil {
 		return errors.Wrap(err, "error creating missing SSH Keypair")
 	}
