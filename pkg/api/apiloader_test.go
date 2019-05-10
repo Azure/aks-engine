@@ -674,7 +674,7 @@ func TestValidateAPIModel(t *testing.T) {
 	if err != nil {
 		t.Errorf("unexpected error validating apimodel after populating defaults: %s", err.Error())
 	}
-	defer os.Remove(outputDir)
+	defer os.RemoveAll(outputDir)
 }
 
 func TestCheckCreateKeyPair(t *testing.T) {
@@ -687,12 +687,12 @@ func TestCheckCreateKeyPair(t *testing.T) {
 		cs.Properties.LinuxProfile.SSH.PublicKeys[0].KeyData == "") {
 		t.Error("Test data keypair was not empty")
 	}
-		outputDir := "output/test"
+	outputDir := "output/test"
 	CheckCreateKeyPair(cs, apiloader.Translator.Locale, outputDir)
 	if cs.Properties.LinuxProfile.SSH.PublicKeys == nil ||
 		len(cs.Properties.LinuxProfile.SSH.PublicKeys) == 0 ||
 		cs.Properties.LinuxProfile.SSH.PublicKeys[0].KeyData == "" {
 		t.Error("KeyPair was not generated")
 	}
-	defer os.Remove(outputDir)
+	defer os.RemoveAll(outputDir)
 }
