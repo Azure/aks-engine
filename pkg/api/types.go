@@ -925,15 +925,6 @@ func (p *Properties) IsHostedMasterProfile() bool {
 	return p.HostedMasterProfile != nil
 }
 
-// IsUserAssignedIdentityEnabled returns true if the cluster uses managed identity
-// and the identity type is user assigned identity
-func (p *Properties) IsUserAssignedIdentityEnabled() bool {
-	return p.OrchestratorProfile != nil &&
-		p.OrchestratorProfile.KubernetesConfig != nil &&
-		p.OrchestratorProfile.KubernetesConfig.UseManagedIdentity &&
-		p.OrchestratorProfile.KubernetesConfig.UserAssignedID != ""
-}
-
 // IsIPMasqAgentEnabled returns true if the cluster has a hosted master and IpMasqAgent is disabled
 func (p *Properties) IsIPMasqAgentEnabled() bool {
 	if p.HostedMasterProfile != nil {
