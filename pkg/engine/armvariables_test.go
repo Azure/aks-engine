@@ -199,7 +199,6 @@ func TestK8sVars(t *testing.T) {
 		"provisionInstalls":                getBase64EncodedGzippedCustomScript(kubernetesCSEInstall),
 		"provisionConfigs":                 getBase64EncodedGzippedCustomScript(kubernetesCSEConfig),
 		"provisionCIS":                     getBase64EncodedGzippedCustomScript(kubernetesCISScript),
-		"sshdConfig1604":                   getBase64EncodedGzippedCustomScript(sshdConfig1604),
 		"healthMonitorScript":              getBase64EncodedGzippedCustomScript(kubernetesHealthMonitorScript),
 		"customSearchDomainsScript":        getBase64EncodedGzippedCustomScript(kubernetesCustomSearchDomainsScript),
 		"generateProxyCertsScript":         getBase64EncodedGzippedCustomScript(kubernetesMasterGenerateProxyCertsScript),
@@ -212,16 +211,6 @@ func TestK8sVars(t *testing.T) {
 		"aptPreferences":                   getBase64EncodedGzippedCustomScript(aptPreferences),
 		"dockerClearMountPropagationFlags": getBase64EncodedGzippedCustomScript(dockerClearMountPropagationFlags),
 		"etcdSystemdService":               getBase64EncodedGzippedCustomScript(etcdSystemdService),
-		"etcIssue":                         getBase64EncodedGzippedCustomScript(etcIssue),
-		"etcIssueNet":                      getBase64EncodedGzippedCustomScript(etcIssueNet),
-		"cisNetEnforcement":                getBase64EncodedGzippedCustomScript(cisNetEnforcement),
-		"cisLogEnforcement":                getBase64EncodedGzippedCustomScript(cisLogEnforcement),
-		"modprobeConfCIS":                  getBase64EncodedGzippedCustomScript(modprobeConfCIS),
-		"pwQuality":                        getBase64EncodedGzippedCustomScript(pwQuality),
-		"pamDotDSU":                        getBase64EncodedGzippedCustomScript(pamDotDSU),
-		"profileDCISSh":                    getBase64EncodedGzippedCustomScript(profileDCISSh),
-		"pamDotDCommonAuth":                getBase64EncodedGzippedCustomScript(pamDotDCommonAuth),
-		"pamDotDCommonPassword":            getBase64EncodedGzippedCustomScript(pamDotDCommonPassword),
 	}
 
 	diff = cmp.Diff(varMap, expectedMap)
@@ -243,7 +232,6 @@ func TestK8sVars(t *testing.T) {
 		"provisionInstalls":                getBase64EncodedGzippedCustomScript(kubernetesCSEInstall),
 		"provisionConfigs":                 getBase64EncodedGzippedCustomScript(kubernetesCSEConfig),
 		"provisionCIS":                     getBase64EncodedGzippedCustomScript(kubernetesCISScript),
-		"sshdConfig":                       getBase64EncodedGzippedCustomScript(sshdConfig),
 		"healthMonitorScript":              getBase64EncodedGzippedCustomScript(kubernetesHealthMonitorScript),
 		"customSearchDomainsScript":        getBase64EncodedGzippedCustomScript(kubernetesCustomSearchDomainsScript),
 		"generateProxyCertsScript":         getBase64EncodedGzippedCustomScript(kubernetesMasterGenerateProxyCertsScript),
@@ -256,16 +244,6 @@ func TestK8sVars(t *testing.T) {
 		"aptPreferences":                   getBase64EncodedGzippedCustomScript(aptPreferences),
 		"dockerClearMountPropagationFlags": getBase64EncodedGzippedCustomScript(dockerClearMountPropagationFlags),
 		"etcdSystemdService":               getBase64EncodedGzippedCustomScript(etcdSystemdService),
-		"etcIssue":                         getBase64EncodedGzippedCustomScript(etcIssue),
-		"etcIssueNet":                      getBase64EncodedGzippedCustomScript(etcIssueNet),
-		"cisNetEnforcement":                getBase64EncodedGzippedCustomScript(cisNetEnforcement),
-		"cisLogEnforcement":                getBase64EncodedGzippedCustomScript(cisLogEnforcement),
-		"modprobeConfCIS":                  getBase64EncodedGzippedCustomScript(modprobeConfCIS),
-		"pwQuality":                        getBase64EncodedGzippedCustomScript(pwQuality),
-		"pamDotDSU":                        getBase64EncodedGzippedCustomScript(pamDotDSU),
-		"profileDCISSh":                    getBase64EncodedGzippedCustomScript(profileDCISSh),
-		"pamDotDCommonAuth":                getBase64EncodedGzippedCustomScript(pamDotDCommonAuth),
-		"pamDotDCommonPassword":            getBase64EncodedGzippedCustomScript(pamDotDCommonPassword),
 	}
 
 	diff = cmp.Diff(varMap, expectedMap)
