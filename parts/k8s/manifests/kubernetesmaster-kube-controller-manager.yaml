@@ -12,7 +12,7 @@ spec:
     - name: kube-controller-manager
       image: <img>
       imagePullPolicy: IfNotPresent
-      command: ["/hyperkube", "controller-manager"]
+      command: ["/hyperkube", "kube-controller-manager"]
       args: [<args>]
       volumeMounts:
         - name: etc-kubernetes
