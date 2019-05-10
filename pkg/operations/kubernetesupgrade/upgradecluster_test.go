@@ -7,7 +7,6 @@ import (
 	"context"
 	"os"
 	"testing"
-	"time"
 
 	"github.com/Azure/aks-engine/pkg/api"
 	"github.com/Azure/aks-engine/pkg/api/common"
@@ -22,8 +21,6 @@ import (
 )
 
 const TestAKSEngineVersion = "1.0.0"
-
-var defaultTestCordonTimeOut = time.Minute * 20
 
 type fakeUpgradeWorkflow struct {
 	RunUpgradeError error
@@ -57,9 +54,8 @@ var _ = Describe("Upgrade Kubernetes cluster tests", func() {
 	It("Should succeed when cluster VMs are missing expected tags during upgrade operation", func() {
 		cs := api.CreateMockContainerService("testcluster", "1.9.11", 1, 1, false)
 		uc := UpgradeCluster{
-			Translator:         &i18n.Translator{},
-			Logger:             log.NewEntry(log.New()),
-			CordonDrainTimeout: &defaultTestCordonTimeOut,
+			Translator: &i18n.Translator{},
+			Logger:     log.NewEntry(log.New()),
 		}
 
 		mockClient := armhelpers.MockAKSEngineClient{}
@@ -84,9 +80,8 @@ var _ = Describe("Upgrade Kubernetes cluster tests", func() {
 	It("Should return error message when failing to list VMs during upgrade operation", func() {
 		cs := api.CreateMockContainerService("testcluster", "1.9.11", 1, 1, false)
 		uc := UpgradeCluster{
-			Translator:         &i18n.Translator{},
-			Logger:             log.NewEntry(log.New()),
-			CordonDrainTimeout: &defaultTestCordonTimeOut,
+			Translator: &i18n.Translator{},
+			Logger:     log.NewEntry(log.New()),
 		}
 
 		mockClient := armhelpers.MockAKSEngineClient{}
@@ -111,9 +106,8 @@ var _ = Describe("Upgrade Kubernetes cluster tests", func() {
 	It("Should return error message when failing to delete VMs during upgrade operation", func() {
 		cs := api.CreateMockContainerService("testcluster", "1.9.11", 1, 1, false)
 		uc := UpgradeCluster{
-			Translator:         &i18n.Translator{},
-			Logger:             log.NewEntry(log.New()),
-			CordonDrainTimeout: &defaultTestCordonTimeOut,
+			Translator: &i18n.Translator{},
+			Logger:     log.NewEntry(log.New()),
 		}
 
 		mockClient := armhelpers.MockAKSEngineClient{}
@@ -135,9 +129,8 @@ var _ = Describe("Upgrade Kubernetes cluster tests", func() {
 	It("Should return error message when failing to deploy template during upgrade operation", func() {
 		cs := api.CreateMockContainerService("testcluster", "1.9.11", 1, 1, false)
 		uc := UpgradeCluster{
-			Translator:         &i18n.Translator{},
-			Logger:             log.NewEntry(log.New()),
-			CordonDrainTimeout: &defaultTestCordonTimeOut,
+			Translator: &i18n.Translator{},
+			Logger:     log.NewEntry(log.New()),
 		}
 
 		mockClient := armhelpers.MockAKSEngineClient{}
@@ -159,9 +152,8 @@ var _ = Describe("Upgrade Kubernetes cluster tests", func() {
 	It("Should return error message when failing to get a virtual machine during upgrade operation", func() {
 		cs := api.CreateMockContainerService("testcluster", "1.9.11", 1, 6, false)
 		uc := UpgradeCluster{
-			Translator:         &i18n.Translator{},
-			Logger:             log.NewEntry(log.New()),
-			CordonDrainTimeout: &defaultTestCordonTimeOut,
+			Translator: &i18n.Translator{},
+			Logger:     log.NewEntry(log.New()),
 		}
 
 		mockClient := armhelpers.MockAKSEngineClient{}
@@ -183,9 +175,8 @@ var _ = Describe("Upgrade Kubernetes cluster tests", func() {
 	It("Should return error message when failing to get storage client during upgrade operation", func() {
 		cs := api.CreateMockContainerService("testcluster", "1.9.11", 5, 1, false)
 		uc := UpgradeCluster{
-			Translator:         &i18n.Translator{},
-			Logger:             log.NewEntry(log.New()),
-			CordonDrainTimeout: &defaultTestCordonTimeOut,
+			Translator: &i18n.Translator{},
+			Logger:     log.NewEntry(log.New()),
 		}
 
 		mockClient := armhelpers.MockAKSEngineClient{}
@@ -207,9 +198,8 @@ var _ = Describe("Upgrade Kubernetes cluster tests", func() {
 	It("Should return error message when failing to delete network interface during upgrade operation", func() {
 		cs := api.CreateMockContainerService("testcluster", "1.9.11", 3, 2, false)
 		uc := UpgradeCluster{
-			Translator:         &i18n.Translator{},
-			Logger:             log.NewEntry(log.New()),
-			CordonDrainTimeout: &defaultTestCordonTimeOut,
+			Translator: &i18n.Translator{},
+			Logger:     log.NewEntry(log.New()),
 		}
 
 		mockClient := armhelpers.MockAKSEngineClient{}
@@ -233,9 +223,8 @@ var _ = Describe("Upgrade Kubernetes cluster tests", func() {
 		cs.Properties.OrchestratorProfile.KubernetesConfig = &api.KubernetesConfig{}
 		cs.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity = true
 		uc := UpgradeCluster{
-			Translator:         &i18n.Translator{},
-			Logger:             log.NewEntry(log.New()),
-			CordonDrainTimeout: &defaultTestCordonTimeOut,
+			Translator: &i18n.Translator{},
+			Logger:     log.NewEntry(log.New()),
 		}
 
 		mockClient := armhelpers.MockAKSEngineClient{}
@@ -266,9 +255,8 @@ var _ = Describe("Upgrade Kubernetes cluster tests", func() {
 			mockClient = armhelpers.MockAKSEngineClient{}
 			cs = api.CreateMockContainerService("testcluster", "1.9.10", 3, 3, false)
 			uc = UpgradeCluster{
-				Translator:         &i18n.Translator{},
-				Logger:             log.NewEntry(log.New()),
-				CordonDrainTimeout: &defaultTestCordonTimeOut,
+				Translator: &i18n.Translator{},
+				Logger:     log.NewEntry(log.New()),
 			}
 			mockClient.FakeListVirtualMachineScaleSetsResult = func() []compute.VirtualMachineScaleSet {
 				scalesetName := "scalesetName"
@@ -375,9 +363,8 @@ var _ = Describe("Upgrade Kubernetes cluster tests", func() {
 			mockClient = armhelpers.MockAKSEngineClient{}
 			cs = api.CreateMockContainerService("testcluster", "1.9.10", 3, 3, false)
 			uc = UpgradeCluster{
-				Translator:         &i18n.Translator{},
-				Logger:             log.NewEntry(log.New()),
-				CordonDrainTimeout: &defaultTestCordonTimeOut,
+				Translator: &i18n.Translator{},
+				Logger:     log.NewEntry(log.New()),
 			}
 			mockClient.FakeListVirtualMachineScaleSetsResult = func() []compute.VirtualMachineScaleSet {
 				windowsScalesetName := "akswinpoo"
@@ -450,9 +437,8 @@ var _ = Describe("Upgrade Kubernetes cluster tests", func() {
 			mockClient = armhelpers.MockAKSEngineClient{}
 			cs = api.CreateMockContainerService("testcluster", "1.9.10", 3, 3, false)
 			uc = UpgradeCluster{
-				Translator:         &i18n.Translator{},
-				Logger:             log.NewEntry(log.New()),
-				CordonDrainTimeout: &defaultTestCordonTimeOut,
+				Translator: &i18n.Translator{},
+				Logger:     log.NewEntry(log.New()),
 			}
 
 			uc.Client = &mockClient
@@ -560,9 +546,8 @@ var _ = Describe("Upgrade Kubernetes cluster tests", func() {
 		cs.Properties.OrchestratorProfile.KubernetesConfig = &api.KubernetesConfig{}
 		cs.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity = true
 		uc := UpgradeCluster{
-			Translator:         &i18n.Translator{},
-			Logger:             log.NewEntry(log.New()),
-			CordonDrainTimeout: &defaultTestCordonTimeOut,
+			Translator: &i18n.Translator{},
+			Logger:     log.NewEntry(log.New()),
 		}
 
 		mockClient := armhelpers.MockAKSEngineClient{}
@@ -605,7 +590,7 @@ var _ = Describe("Upgrade Kubernetes cluster tests", func() {
 		}
 
 		u := &Upgrader{}
-		u.Init(&i18n.Translator{}, log.NewEntry(log.New()), ClusterTopology{}, &mockClient, "", nil, &defaultTestCordonTimeOut, TestAKSEngineVersion)
+		u.Init(&i18n.Translator{}, log.NewEntry(log.New()), ClusterTopology{}, &mockClient, "", nil, nil, TestAKSEngineVersion)
 
 		vmname, err := u.getLastVMNameInVMSS(ctx, "resourcegroup", "scalesetName")
 		Expect(vmname).To(Equal("aks-agentnode1-123456-vmss000005"))
@@ -619,7 +604,7 @@ var _ = Describe("Upgrade Kubernetes cluster tests", func() {
 				mockClient.MakeFakeVirtualMachineScaleSetVMWithGivenName("Kubernetes:1.9.10", ""),
 			}
 		}
-		u.Init(&i18n.Translator{}, log.NewEntry(log.New()), ClusterTopology{}, &mockClient, "", nil, &defaultTestCordonTimeOut, TestAKSEngineVersion)
+		u.Init(&i18n.Translator{}, log.NewEntry(log.New()), ClusterTopology{}, &mockClient, "", nil, nil, TestAKSEngineVersion)
 
 		vmname, err = u.getLastVMNameInVMSS(ctx, "resourcegroup", "scalesetName")
 		Expect(vmname).To(Equal(""))
@@ -628,7 +613,7 @@ var _ = Describe("Upgrade Kubernetes cluster tests", func() {
 		mockClient.FakeListVirtualMachineScaleSetVMsResult = func() []compute.VirtualMachineScaleSetVM {
 			return []compute.VirtualMachineScaleSetVM{}
 		}
-		u.Init(&i18n.Translator{}, log.NewEntry(log.New()), ClusterTopology{}, &mockClient, "", nil, &defaultTestCordonTimeOut, TestAKSEngineVersion)
+		u.Init(&i18n.Translator{}, log.NewEntry(log.New()), ClusterTopology{}, &mockClient, "", nil, nil, TestAKSEngineVersion)
 
 		vmname, err = u.getLastVMNameInVMSS(ctx, "resourcegroup", "scalesetName")
 		Expect(vmname).To(Equal(""))
@@ -641,7 +626,7 @@ var _ = Describe("Upgrade Kubernetes cluster tests", func() {
 		mockClient := &armhelpers.MockAKSEngineClient{MockKubernetesClient: &armhelpers.MockKubernetesClient{}}
 		mockClient.MockKubernetesClient.FailGetNode = true
 
-		u.Init(&i18n.Translator{}, log.NewEntry(log.New()), ClusterTopology{}, nil, "", nil, &defaultTestCordonTimeOut, TestAKSEngineVersion)
+		u.Init(&i18n.Translator{}, log.NewEntry(log.New()), ClusterTopology{}, nil, "", nil, nil, TestAKSEngineVersion)
 		err := u.copyCustomPropertiesToNewNode(mockClient.MockKubernetesClient, "oldNodeName", "newNodeName")
 		Expect(err).Should(HaveOccurred())
 

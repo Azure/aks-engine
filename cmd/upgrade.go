@@ -72,7 +72,7 @@ func newUpgradeCmd() *cobra.Command {
 	f.StringVar(&uc.deploymentDirectory, "deployment-dir", "", "the location of the output from `generate`")
 	f.StringVarP(&uc.upgradeVersion, "upgrade-version", "k", "", "desired kubernetes version (required)")
 	f.IntVar(&uc.timeoutInMinutes, "vm-timeout", -1, "how long to wait for each vm to be upgraded in minutes")
-	f.IntVar(&uc.cordonDrainTimeoutInMinutes, "cordon-drain-timeout", 20, "how long to wait for each vm to be cordoned in minutes")
+	f.IntVar(&uc.cordonDrainTimeoutInMinutes, "cordon-drain-timeout", -1, "how long to wait for each vm to be cordoned in minutes")
 	f.BoolVarP(&uc.force, "force", "f", false, "force upgrading the cluster to desired version. Allows same version upgrades and downgrades.")
 	addAuthFlags(uc.getAuthArgs(), f)
 
@@ -105,8 +105,10 @@ func (uc *upgradeCmd) validate(cmd *cobra.Command) error {
 		uc.timeout = &timeout
 	}
 
-	cordonDrainTimeout := time.Duration(uc.cordonDrainTimeoutInMinutes) * time.Minute
-	uc.cordonDrainTimeout = &cordonDrainTimeout
+	if uc.cordonDrainTimeoutInMinutes != -1 {
+		cordonDrainTimeout := time.Duration(uc.cordonDrainTimeoutInMinutes) * time.Minute
+		uc.cordonDrainTimeout = &cordonDrainTimeout
+	}
 
 	if uc.upgradeVersion == "" {
 		cmd.Usage()

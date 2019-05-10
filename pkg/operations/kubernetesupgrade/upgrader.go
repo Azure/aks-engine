@@ -40,6 +40,7 @@ type vmStatus int
 
 const (
 	defaultTimeout                     = time.Minute * 20
+	defaultCordonDrainTimeout          = time.Minute * 20
 	nodePropertiesCopyTimeout          = time.Minute * 5
 	vmStatusUpgraded          vmStatus = iota
 	vmStatusNotUpgraded
@@ -265,7 +266,11 @@ func (ku *Upgrader) upgradeAgentPools(ctx context.Context) error {
 		} else {
 			upgradeAgentNode.timeout = *ku.stepTimeout
 		}
-		upgradeAgentNode.cordonDrainTimeout = *ku.cordonDrainTimeout
+		if ku.cordonDrainTimeout == nil {
+			upgradeAgentNode.cordonDrainTimeout = defaultCordonDrainTimeout
+		} else {
+			upgradeAgentNode.cordonDrainTimeout = *ku.cordonDrainTimeout
+		}
 
 		agentVMs := make(map[int]*vmInfo)
 		// Go over upgraded VMs and verify provisioning state
