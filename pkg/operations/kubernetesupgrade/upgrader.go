@@ -668,21 +668,21 @@ func (ku *Upgrader) copyCustomPropertiesToNewNode(client armhelpers.KubernetesCl
 		for {
 			oldNode, err := client.GetNode(oldNodeName)
 			if err != nil {
-				ku.logger.Warningf("Failed to get properties of the old node %s: %v", oldNodeName, err)
+				ku.logger.Debugf("Failed to get properties of the old node %s: %v", oldNodeName, err)
 				time.Sleep(time.Second * 5)
 				continue
 			}
 
 			newNode, err := client.GetNode(newNodeName)
 			if err != nil {
-				ku.logger.Warningf("Failed to get properties of the new node %s: %v", newNodeName, err)
+				ku.logger.Debugf("Failed to get properties of the new node %s: %v", newNodeName, err)
 				time.Sleep(time.Second * 5)
 				continue
 			}
 
 			err = ku.copyCustomNodeProperties(client, oldNodeName, oldNode, newNodeName, newNode)
 			if err != nil {
-				ku.logger.Warningf("Failed to copy custom annotations, labels, taints from old node %s to new node %s: %v", oldNodeName, newNodeName, err)
+				ku.logger.Debugf("Failed to copy custom annotations, labels, taints from old node %s to new node %s: %v", oldNodeName, newNodeName, err)
 				time.Sleep(time.Second * 5)
 			} else {
 				ch <- struct{}{}
@@ -700,7 +700,6 @@ func (ku *Upgrader) copyCustomPropertiesToNewNode(client armhelpers.KubernetesCl
 			ku.logger.Errorf(err.Error())
 			return err
 		}
-		break
 	}
 	return nil
 }
