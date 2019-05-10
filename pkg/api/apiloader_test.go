@@ -668,11 +668,6 @@ func TestValidateAPIModel(t *testing.T) {
 	// Don't validate right away, wait until all values have been populated.
 	cs, apiVersion, err := apiloader.LoadContainerServiceFromFile("../engine/testdata/simple/kubernetes-nocert.json", false, false, nil)
 
-	// @todo: set missing/bad values.
-	_, _, err = ValidateAPIModel(apiloader.Translator.Locale, cs, apiVersion)
-	if err == nil {
-		t.Errorf("Got no error validating apimodel before populating keypair")
-	}
 	CheckCreateKeyPair(cs, apiloader.Translator.Locale, "output/test")
 	_, _, err = ValidateAPIModel(apiloader.Translator.Locale, cs, apiVersion)
 	if err != nil {
