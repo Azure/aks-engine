@@ -231,7 +231,7 @@ func kubernetesAddonSettingsInit(p *api.Properties) []kubernetesComponentFileSpe
 				sourceFile:      unmanagedStorageClassesSourceYaml,
 				base64Data:      p.OrchestratorProfile.KubernetesConfig.GetAddonScript(AzureStorageClassesAddonName),
 				destinationFile: "azure-storage-classes.yaml",
-				isEnabled:       p.AgentPoolProfiles[0].StorageProfile != api.ManagedDisks,
+				isEnabled:       p.AgentPoolProfiles[0].StorageProfile == api.StorageAccount,
 			})
 		kubernetesComponentFileSpecs = append(kubernetesComponentFileSpecs,
 			kubernetesComponentFileSpec{

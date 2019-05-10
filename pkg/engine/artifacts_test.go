@@ -4,6 +4,7 @@
 package engine
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/Azure/aks-engine/pkg/api"
@@ -400,19 +401,22 @@ func TestKubernetesContainerAddonSettingsInit(t *testing.T) {
 }
 
 func TestKubernetesAddonSettingsInit(t *testing.T) {
+	mockAzureStackProperties := api.GetMockPropertiesWithCustomCloudProfile("azurestackcloud", true, true, false)
 	cases := []struct {
-		p                          *api.Properties
-		expectedKubeDNS            bool
-		expectedCoreDNS            bool
-		expectedKubeProxy          bool
-		expectedAzureNetworkPolicy bool
-		expectedCilium             bool
-		expectedFlannel            bool
-		expectedAADAdminGroup      bool
-		expectedAzureCloudProvider bool
-		expectedAuditPolicy        bool
-		expectedELBService         bool
-		expectedPodSecurityPolicy  bool
+		p                             *api.Properties
+		expectedKubeDNS               bool
+		expectedCoreDNS               bool
+		expectedKubeProxy             bool
+		expectedAzureNetworkPolicy    bool
+		expectedCilium                bool
+		expectedFlannel               bool
+		expectedAADAdminGroup         bool
+		expectedAzureCloudProvider    bool
+		expectedAuditPolicy           bool
+		expectedELBService            bool
+		expectedPodSecurityPolicy     bool
+		expectedManagedStorageClass   bool
+		expectedUnmanagedStorageClass bool
 	}{
 		// Legacy default scenario
 		{
@@ -424,18 +428,25 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 						NetworkPlugin: NetworkPluginAzure,
 					},
 				},
+				AgentPoolProfiles: []*api.AgentPoolProfile{
+					{
+						StorageProfile: api.ManagedDisks,
+					},
+				},
 			},
-			expectedKubeDNS:            true,
-			expectedCoreDNS:            false,
-			expectedKubeProxy:          true,
-			expectedAzureNetworkPolicy: false,
-			expectedCilium:             false,
-			expectedFlannel:            false,
-			expectedAADAdminGroup:      false,
-			expectedAzureCloudProvider: true,
-			expectedAuditPolicy:        false,
-			expectedELBService:         false,
-			expectedPodSecurityPolicy:  false,
+			expectedKubeDNS:               true,
+			expectedCoreDNS:               false,
+			expectedKubeProxy:             true,
+			expectedAzureNetworkPolicy:    false,
+			expectedCilium:                false,
+			expectedFlannel:               false,
+			expectedAADAdminGroup:         false,
+			expectedAzureCloudProvider:    true,
+			expectedAuditPolicy:           false,
+			expectedELBService:            false,
+			expectedPodSecurityPolicy:     false,
+			expectedManagedStorageClass:   true,
+			expectedUnmanagedStorageClass: false,
 		},
 		// 1.14 default scenario
 		{
@@ -448,17 +459,19 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 					},
 				},
 			},
-			expectedKubeDNS:            false,
-			expectedCoreDNS:            true,
-			expectedKubeProxy:          true,
-			expectedAzureNetworkPolicy: false,
-			expectedCilium:             false,
-			expectedFlannel:            false,
-			expectedAADAdminGroup:      false,
-			expectedAzureCloudProvider: true,
-			expectedAuditPolicy:        true,
-			expectedELBService:         false,
-			expectedPodSecurityPolicy:  false,
+			expectedKubeDNS:               false,
+			expectedCoreDNS:               true,
+			expectedKubeProxy:             true,
+			expectedAzureNetworkPolicy:    false,
+			expectedCilium:                false,
+			expectedFlannel:               false,
+			expectedAADAdminGroup:         false,
+			expectedAzureCloudProvider:    true,
+			expectedAuditPolicy:           true,
+			expectedELBService:            false,
+			expectedPodSecurityPolicy:     false,
+			expectedManagedStorageClass:   true,
+			expectedUnmanagedStorageClass: false,
 		},
 		// Azure network policy scenario
 		{
@@ -472,17 +485,19 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 					},
 				},
 			},
-			expectedKubeDNS:            false,
-			expectedCoreDNS:            true,
-			expectedKubeProxy:          true,
-			expectedAzureNetworkPolicy: true,
-			expectedCilium:             false,
-			expectedFlannel:            false,
-			expectedAADAdminGroup:      false,
-			expectedAzureCloudProvider: true,
-			expectedAuditPolicy:        true,
-			expectedELBService:         false,
-			expectedPodSecurityPolicy:  false,
+			expectedKubeDNS:               false,
+			expectedCoreDNS:               true,
+			expectedKubeProxy:             true,
+			expectedAzureNetworkPolicy:    true,
+			expectedCilium:                false,
+			expectedFlannel:               false,
+			expectedAADAdminGroup:         false,
+			expectedAzureCloudProvider:    true,
+			expectedAuditPolicy:           true,
+			expectedELBService:            false,
+			expectedPodSecurityPolicy:     false,
+			expectedManagedStorageClass:   true,
+			expectedUnmanagedStorageClass: false,
 		},
 		// Cilium scenario
 		{
@@ -495,17 +510,19 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 					},
 				},
 			},
-			expectedKubeDNS:            false,
-			expectedCoreDNS:            true,
-			expectedKubeProxy:          true,
-			expectedAzureNetworkPolicy: false,
-			expectedCilium:             true,
-			expectedFlannel:            false,
-			expectedAADAdminGroup:      false,
-			expectedAzureCloudProvider: true,
-			expectedAuditPolicy:        true,
-			expectedELBService:         false,
-			expectedPodSecurityPolicy:  false,
+			expectedKubeDNS:               false,
+			expectedCoreDNS:               true,
+			expectedKubeProxy:             true,
+			expectedAzureNetworkPolicy:    false,
+			expectedCilium:                true,
+			expectedFlannel:               false,
+			expectedAADAdminGroup:         false,
+			expectedAzureCloudProvider:    true,
+			expectedAuditPolicy:           true,
+			expectedELBService:            false,
+			expectedPodSecurityPolicy:     false,
+			expectedManagedStorageClass:   true,
+			expectedUnmanagedStorageClass: false,
 		},
 		// Flannel scenario
 		{
@@ -518,17 +535,19 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 					},
 				},
 			},
-			expectedKubeDNS:            false,
-			expectedCoreDNS:            true,
-			expectedKubeProxy:          true,
-			expectedAzureNetworkPolicy: false,
-			expectedCilium:             false,
-			expectedFlannel:            true,
-			expectedAADAdminGroup:      false,
-			expectedAzureCloudProvider: true,
-			expectedAuditPolicy:        true,
-			expectedELBService:         false,
-			expectedPodSecurityPolicy:  false,
+			expectedKubeDNS:               false,
+			expectedCoreDNS:               true,
+			expectedKubeProxy:             true,
+			expectedAzureNetworkPolicy:    false,
+			expectedCilium:                false,
+			expectedFlannel:               true,
+			expectedAADAdminGroup:         false,
+			expectedAzureCloudProvider:    true,
+			expectedAuditPolicy:           true,
+			expectedELBService:            false,
+			expectedPodSecurityPolicy:     false,
+			expectedManagedStorageClass:   true,
+			expectedUnmanagedStorageClass: false,
 		},
 		// AAD Admin Group scenario
 		{
@@ -544,17 +563,19 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 					AdminGroupID: "1234-5",
 				},
 			},
-			expectedKubeDNS:            false,
-			expectedCoreDNS:            true,
-			expectedKubeProxy:          true,
-			expectedAzureNetworkPolicy: false,
-			expectedCilium:             false,
-			expectedFlannel:            false,
-			expectedAADAdminGroup:      true,
-			expectedAzureCloudProvider: true,
-			expectedAuditPolicy:        true,
-			expectedELBService:         false,
-			expectedPodSecurityPolicy:  false,
+			expectedKubeDNS:               false,
+			expectedCoreDNS:               true,
+			expectedKubeProxy:             true,
+			expectedAzureNetworkPolicy:    false,
+			expectedCilium:                false,
+			expectedFlannel:               false,
+			expectedAADAdminGroup:         true,
+			expectedAzureCloudProvider:    true,
+			expectedAuditPolicy:           true,
+			expectedELBService:            false,
+			expectedPodSecurityPolicy:     false,
+			expectedManagedStorageClass:   true,
+			expectedUnmanagedStorageClass: false,
 		},
 		// ELB service scenario
 		{
@@ -568,17 +589,19 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 					},
 				},
 			},
-			expectedKubeDNS:            false,
-			expectedCoreDNS:            true,
-			expectedKubeProxy:          true,
-			expectedAzureNetworkPolicy: false,
-			expectedCilium:             false,
-			expectedFlannel:            false,
-			expectedAADAdminGroup:      false,
-			expectedAzureCloudProvider: true,
-			expectedAuditPolicy:        true,
-			expectedELBService:         true,
-			expectedPodSecurityPolicy:  false,
+			expectedKubeDNS:               false,
+			expectedCoreDNS:               true,
+			expectedKubeProxy:             true,
+			expectedAzureNetworkPolicy:    false,
+			expectedCilium:                false,
+			expectedFlannel:               false,
+			expectedAADAdminGroup:         false,
+			expectedAzureCloudProvider:    true,
+			expectedAuditPolicy:           true,
+			expectedELBService:            true,
+			expectedPodSecurityPolicy:     false,
+			expectedManagedStorageClass:   true,
+			expectedUnmanagedStorageClass: false,
 		},
 		// PodSecurityPolicy scenario
 		{
@@ -591,17 +614,111 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 					},
 				},
 			},
-			expectedKubeDNS:            false,
-			expectedCoreDNS:            true,
-			expectedKubeProxy:          true,
-			expectedAzureNetworkPolicy: false,
-			expectedCilium:             false,
-			expectedFlannel:            false,
-			expectedAADAdminGroup:      false,
-			expectedAzureCloudProvider: true,
-			expectedAuditPolicy:        true,
-			expectedELBService:         false,
-			expectedPodSecurityPolicy:  true,
+			expectedKubeDNS:               false,
+			expectedCoreDNS:               true,
+			expectedKubeProxy:             true,
+			expectedAzureNetworkPolicy:    false,
+			expectedCilium:                false,
+			expectedFlannel:               false,
+			expectedAADAdminGroup:         false,
+			expectedAzureCloudProvider:    true,
+			expectedAuditPolicy:           true,
+			expectedELBService:            false,
+			expectedPodSecurityPolicy:     true,
+			expectedManagedStorageClass:   true,
+			expectedUnmanagedStorageClass: false,
+		},
+		// non-Managed Disk scenario
+		{
+			p: &api.Properties{
+				OrchestratorProfile: &api.OrchestratorProfile{
+					OrchestratorType:    Kubernetes,
+					OrchestratorVersion: "1.7.10",
+					KubernetesConfig: &api.KubernetesConfig{
+						NetworkPlugin: NetworkPluginAzure,
+					},
+				},
+				AgentPoolProfiles: []*api.AgentPoolProfile{
+					{
+						StorageProfile: api.StorageAccount,
+					},
+				},
+			},
+			expectedKubeDNS:               true,
+			expectedCoreDNS:               false,
+			expectedKubeProxy:             true,
+			expectedAzureNetworkPolicy:    false,
+			expectedCilium:                false,
+			expectedFlannel:               false,
+			expectedAADAdminGroup:         false,
+			expectedAzureCloudProvider:    true,
+			expectedAuditPolicy:           false,
+			expectedELBService:            false,
+			expectedPodSecurityPolicy:     false,
+			expectedManagedStorageClass:   false,
+			expectedUnmanagedStorageClass: true,
+		},
+		// Azure Stack Managed Disk scenario
+		{
+			p: &api.Properties{
+				OrchestratorProfile: &api.OrchestratorProfile{
+					OrchestratorType:    Kubernetes,
+					OrchestratorVersion: "1.14.1",
+					KubernetesConfig: &api.KubernetesConfig{
+						NetworkPlugin: NetworkPluginAzure,
+					},
+				},
+				AgentPoolProfiles: []*api.AgentPoolProfile{
+					{
+						StorageProfile: api.ManagedDisks,
+					},
+				},
+				CustomCloudProfile: mockAzureStackProperties.CustomCloudProfile,
+			},
+			expectedKubeDNS:               false,
+			expectedCoreDNS:               true,
+			expectedKubeProxy:             true,
+			expectedAzureNetworkPolicy:    false,
+			expectedCilium:                false,
+			expectedFlannel:               false,
+			expectedAADAdminGroup:         false,
+			expectedAzureCloudProvider:    true,
+			expectedAuditPolicy:           true,
+			expectedELBService:            false,
+			expectedPodSecurityPolicy:     false,
+			expectedManagedStorageClass:   true,
+			expectedUnmanagedStorageClass: false,
+		},
+		// Azure Stack non-Managed Disk scenario
+		{
+			p: &api.Properties{
+				OrchestratorProfile: &api.OrchestratorProfile{
+					OrchestratorType:    Kubernetes,
+					OrchestratorVersion: "1.14.1",
+					KubernetesConfig: &api.KubernetesConfig{
+						NetworkPlugin: NetworkPluginAzure,
+					},
+				},
+				AgentPoolProfiles: []*api.AgentPoolProfile{
+					{
+						StorageProfile: api.StorageAccount,
+					},
+				},
+				CustomCloudProfile: mockAzureStackProperties.CustomCloudProfile,
+			},
+			expectedKubeDNS:               false,
+			expectedCoreDNS:               true,
+			expectedKubeProxy:             true,
+			expectedAzureNetworkPolicy:    false,
+			expectedCilium:                false,
+			expectedFlannel:               false,
+			expectedAADAdminGroup:         false,
+			expectedAzureCloudProvider:    true,
+			expectedAuditPolicy:           true,
+			expectedELBService:            false,
+			expectedPodSecurityPolicy:     false,
+			expectedManagedStorageClass:   false,
+			expectedUnmanagedStorageClass: true,
 		},
 	}
 
@@ -652,6 +769,34 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 			case "pod-security-policy.yaml":
 				if c.expectedPodSecurityPolicy != componentFileSpec.isEnabled {
 					t.Fatalf("Expected %s to be %t", "PodSecurityPolicy", c.expectedPodSecurityPolicy)
+				}
+			case "azure-storage-classes.yaml":
+				if strings.Contains(componentFileSpec.sourceFile, "unmanaged-azure-storage") {
+					if c.expectedUnmanagedStorageClass != componentFileSpec.isEnabled {
+						t.Fatalf("Expected %s to be %t", componentFileSpec.sourceFile, c.expectedUnmanagedStorageClass)
+					}
+					if c.p.CustomCloudProfile != nil {
+						if !strings.Contains(componentFileSpec.sourceFile, "-custom.yaml") {
+							t.Fatalf("Expected an Azure Stack-specific unmanaged disk spec, got %s instead", componentFileSpec.sourceFile)
+						}
+					} else {
+						if strings.Contains(componentFileSpec.sourceFile, "-custom.yaml") {
+							t.Fatalf("Got an unexpected Azure Stack-specific unmanaged disk spec in a non-Azure Stack cluster configuration")
+						}
+					}
+				} else {
+					if c.expectedManagedStorageClass != componentFileSpec.isEnabled {
+						t.Fatalf("Expected %s to be %t", componentFileSpec.sourceFile, c.expectedManagedStorageClass)
+					}
+					if c.p.CustomCloudProfile != nil {
+						if !strings.Contains(componentFileSpec.sourceFile, "-custom.yaml") {
+							t.Fatalf("Expected an Azure Stack-specific Managed disk spec, got %s instead", componentFileSpec.sourceFile)
+						}
+					} else {
+						if strings.Contains(componentFileSpec.sourceFile, "-custom.yaml") {
+							t.Fatalf("Got an unexpected Azure Stack-specific Managed disk spec in a non-Azure Stack cluster configuration")
+						}
+					}
 				}
 			}
 		}
