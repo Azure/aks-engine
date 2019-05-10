@@ -226,3 +226,10 @@ func IsSgxEnabledSKU(vmSize string) bool {
 	}
 	return false
 }
+
+func GenerateUserAssignedIdentityClientIDParameter(isUserAssignedIdentity bool) string {
+	if isUserAssignedIdentity {
+		return "' USER_ASSIGNED_IDENTITY_ID=',reference(concat('Microsoft.ManagedIdentity/userAssignedIdentities/', variables('userAssignedID')), '2018-11-30').clientId, ' '"
+	}
+	return "' USER_ASSIGNED_IDENTITY_ID=',' '"
+}
