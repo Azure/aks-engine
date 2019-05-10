@@ -98,15 +98,6 @@ write_files:
   content: !!binary |
     {{CloudInitData "aptPreferences"}}
 
-{{if .IsUbuntuNonVHD}}
-- path: /etc/audit/rules.d/CIS.rules
-  permissions: "0640"
-  encoding: gzip
-  owner: root
-  content: !!binary |
-    {{CloudInitData "auditdRules"}}
-{{end}}
-
 {{if .KubernetesConfig.RequiresDocker}}
     {{if not .IsCoreOS}}
 - path: /etc/systemd/system/docker.service.d/clear_mount_propagation_flags.conf

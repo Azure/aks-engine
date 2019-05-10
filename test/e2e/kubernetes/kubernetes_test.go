@@ -397,16 +397,16 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 		})
 
 		It("should validate auditd configuration", func() {
-			if eng.ExpandedDefinition.Properties.IsUbuntuDistroForAllNodes() {
-				var enabledProfiles []string
+			if eng.ExpandedDefinition.Properties.IsVHDDistroForAllNodes() {
+				var auditDNodePrefixes []string
 				if eng.ExpandedDefinition.Properties.MasterProfile != nil {
 					if to.Bool(eng.ExpandedDefinition.Properties.MasterProfile.AuditDEnabled) {
-						enabledProfiles = append(enabledProfiles, "k8s-master")
+						auditDNodePrefixes = append(auditDNodePrefixes, "k8s-master")
 					}
 				}
 				for _, profile := range eng.ExpandedDefinition.Properties.AgentPoolProfiles {
 					if to.Bool(profile.AuditDEnabled) {
-						enabledProfiles = append(enabledProfiles, profile.Name)
+						auditDNodePrefixes = append(auditDNodePrefixes, profile.Name)
 					}
 				}
 				kubeConfig, err := GetConfig()
@@ -425,7 +425,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				Expect(err).NotTo(HaveOccurred())
 				for _, node := range nodeList.Nodes {
 					var enabled bool
-					if node.IsInProfile(enabledProfiles) {
+					if node.HasSubstring(auditDNodePrefixes) {
 						enabled = true
 					}
 					err := conn.CopyToRemote(node.Metadata.Name, "/tmp/"+auditdValidateScript)
@@ -437,7 +437,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 					Expect(err).NotTo(HaveOccurred())
 				}
 			} else {
-				Skip("auditd option only works on ubuntu distro until this lands in a VHD")
+				Skip("This config is only available on VHD")
 			}
 		})
 

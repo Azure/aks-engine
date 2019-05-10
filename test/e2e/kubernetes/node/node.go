@@ -108,10 +108,10 @@ func (n *Node) IsUbuntu() bool {
 	return false
 }
 
-// IsInProfile determines if this node is running on a vm with auditd enabled
-func (n *Node) IsInProfile(profiles []string) bool {
-	for _, profile := range profiles {
-		if strings.Contains(strings.ToLower(n.Metadata.Name), profile) {
+// HasSubstring determines if a node name matches includes the passed in substring
+func (n *Node) HasSubstring(substrings []string) bool {
+	for _, substring := range substrings {
+		if strings.Contains(strings.ToLower(n.Metadata.Name), substring) {
 			return true
 		}
 	}

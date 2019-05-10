@@ -138,26 +138,6 @@ func getK8sMasterVars(cs *api.ContainerService) (map[string]interface{}, error) 
 		"etcdSystemdService":               getBase64EncodedGzippedCustomScript(etcdSystemdService),
 	}
 
-	if cs.Properties.HasUbuntuDistroNodes() {
-		masterVars["cloudInitFiles"].(map[string]interface{})["etcIssue"] = getBase64EncodedGzippedCustomScript(etcIssue)
-		masterVars["cloudInitFiles"].(map[string]interface{})["etcIssueNet"] = getBase64EncodedGzippedCustomScript(etcIssueNet)
-		masterVars["cloudInitFiles"].(map[string]interface{})["cisNetEnforcement"] = getBase64EncodedGzippedCustomScript(cisNetEnforcement)
-		masterVars["cloudInitFiles"].(map[string]interface{})["cisLogEnforcement"] = getBase64EncodedGzippedCustomScript(cisLogEnforcement)
-		masterVars["cloudInitFiles"].(map[string]interface{})["modprobeConfCIS"] = getBase64EncodedGzippedCustomScript(modprobeConfCIS)
-		masterVars["cloudInitFiles"].(map[string]interface{})["pwQuality"] = getBase64EncodedGzippedCustomScript(pwQuality)
-		masterVars["cloudInitFiles"].(map[string]interface{})["pamDotDSU"] = getBase64EncodedGzippedCustomScript(pamDotDSU)
-		masterVars["cloudInitFiles"].(map[string]interface{})["profileDCISSh"] = getBase64EncodedGzippedCustomScript(profileDCISSh)
-		masterVars["cloudInitFiles"].(map[string]interface{})["pamDotDCommonAuth"] = getBase64EncodedGzippedCustomScript(pamDotDCommonAuth)
-		masterVars["cloudInitFiles"].(map[string]interface{})["pamDotDCommonPassword"] = getBase64EncodedGzippedCustomScript(pamDotDCommonPassword)
-		masterVars["cloudInitFiles"].(map[string]interface{})["auditdRules"] = getBase64EncodedGzippedCustomScript(auditdRules)
-	}
-	if cs.Properties.HasUbuntu1604DistroNodes() {
-		masterVars["cloudInitFiles"].(map[string]interface{})["sshdConfig1604"] = getBase64EncodedGzippedCustomScript(sshdConfig1604)
-	}
-	if cs.Properties.HasUbuntu1804DistroNodes() {
-		masterVars["cloudInitFiles"].(map[string]interface{})["sshdConfig"] = getBase64EncodedGzippedCustomScript(sshdConfig)
-	}
-
 	blockOutboundInternet := cs.Properties.FeatureFlags.IsFeatureEnabled("BlockOutboundInternet")
 	var cosmosEndPointURI string
 	if hasCosmosEtcd {
