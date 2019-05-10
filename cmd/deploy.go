@@ -292,21 +292,6 @@ func autofillApimodel(dc *deployCmd) error {
 		}
 	}
 
-	if dc.containerService.Properties.LinuxProfile != nil && (dc.containerService.Properties.LinuxProfile.SSH.PublicKeys == nil ||
-		len(dc.containerService.Properties.LinuxProfile.SSH.PublicKeys) == 0 ||
-		dc.containerService.Properties.LinuxProfile.SSH.PublicKeys[0].KeyData == "") {
-		translator := &i18n.Translator{
-			Locale: dc.locale,
-		}
-		var publicKey string
-		_, publicKey, err = helpers.CreateSaveSSH(dc.containerService.Properties.LinuxProfile.AdminUsername, dc.outputDirectory, translator)
-		if err != nil {
-			return errors.Wrap(err, "Failed to generate SSH Key")
-		}
-
-		dc.containerService.Properties.LinuxProfile.SSH.PublicKeys = []api.PublicKey{{KeyData: publicKey}}
-	}
-
 	ctx, cancel := context.WithTimeout(context.Background(), armhelpers.DefaultARMOperationTimeout)
 	defer cancel()
 	_, err = dc.client.EnsureResourceGroup(ctx, dc.resourceGroup, dc.location, nil)
