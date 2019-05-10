@@ -723,6 +723,9 @@ func getVMSSDataDisks(profile *api.AgentPoolProfile) *[]compute.VirtualMachineSc
 
 func addCustomTagsToVMScaleSets(cs *api.ContainerService, vm *compute.VirtualMachineScaleSet) {
 	for key, value := range cs.Properties.MasterProfile.CustomVMTags {
-		vm.Tags[key] = &value
+		_, found := vm.Tags[key]
+		if !found {
+			vm.Tags[key] = &value
+		}
 	}
 }
