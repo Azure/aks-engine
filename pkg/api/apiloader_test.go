@@ -688,6 +688,12 @@ func TestCheckCreateKeyPair(t *testing.T) {
 		t.Error("Test data keypair was not empty")
 	}
 	outputDir := "output/test"
+	os.Mkdir(outputDir, 0000)
+	error := CheckCreateKeyPair(cs, apiloader.Translator.Locale, outputDir)
+	if error == nil {
+		t.Error("KeyPair creation error did not bubble up.")
+	}
+	os.Chmod(outputDir, 0777)
 	CheckCreateKeyPair(cs, apiloader.Translator.Locale, outputDir)
 	if cs.Properties.LinuxProfile.SSH.PublicKeys == nil ||
 		len(cs.Properties.LinuxProfile.SSH.PublicKeys) == 0 ||
