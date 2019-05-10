@@ -272,6 +272,10 @@ Copy and paste the configuration and change the values in the `--set` arguments 
 details. You can create multiple configurations in `launch.json` to debug `aks-engine upgrade`,
 `scale`, and other commands.
 
+For a more detailed debugging configuration, check out the [example launch.json](example-launch.json)
+in this directory. It assumes you have `$CLIENT_ID`, `$CLIENT_SECRET`, and `$AKSE_PUB_KEY` environment
+variables set, and will prompt you for other command inputs when starting the debugger.
+
 The `.vscode/launch.json` file is ignored by `git`, so your local version won't be overwritten when
 you push or pull changes.
 
