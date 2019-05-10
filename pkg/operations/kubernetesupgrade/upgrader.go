@@ -658,7 +658,13 @@ func (ku *Upgrader) copyCustomPropertiesToNewNode(client armhelpers.KubernetesCl
 	// The new node is created without any taints, Kubernetes might schedule some pods on this newly created node before the taints/annotations/labels
 	// are copied over from corresponding old node. So drain the new node first before copying over the node properties.
 	// Note: SafelyDrainNodeWithClient() sets the Unschedulable of the node to true, set Unschedulable to false in copyCustomNodeProperties
-	err := operations.SafelyDrainNodeWithClient(client, ku.logger, newNodeName, time.Minute)
+	var cordonDrainTimeout time.Duration
+	if ku.cordonDrainTimeout == nil {
+		cordonDrainTimeout = defaultCordonDrainTimeout
+	} else {
+		cordonDrainTimeout = *ku.cordonDrainTimeout
+	}
+	err := operations.SafelyDrainNodeWithClient(client, ku.logger, newNodeName, cordonDrainTimeout)
 	if err != nil {
 		ku.logger.Warningf("Error draining agent VM %s. Proceeding with copying node properties. Error: %v", newNodeName, err)
 	}
