@@ -505,8 +505,10 @@ func (ku *Upgrader) upgradeAgentScaleSets(ctx context.Context) error {
 
 			ku.logger.Infof("Successfully set capacity for VMSS %s", vmssToUpgrade.Name)
 
-			cordonDrainTimeout := defaultCordonDrainTimeout
-			if ku.cordonDrainTimeout != nil {
+			var cordonDrainTimeout time.Duration
+			if ku.cordonDrainTimeout == nil {
+				cordonDrainTimeout = defaultCordonDrainTimeout
+			} else {
 				cordonDrainTimeout = *ku.cordonDrainTimeout
 			}
 
