@@ -375,7 +375,7 @@ func CreateAgentVMSS(cs *api.ContainerService, profile *api.AgentPoolProfile) Vi
 		Tags: tags,
 	}
 
-	addCustomTagsToVMScaleSets(cs, &virtualMachineScaleSet)
+	addCustomTagsToVMScaleSets(cs.Properties.MasterProfile.CustomVMTags, &virtualMachineScaleSet)
 
 	if profile.HasAvailabilityZones() {
 		virtualMachineScaleSet.Zones = &profile.AvailabilityZones
@@ -721,8 +721,8 @@ func getVMSSDataDisks(profile *api.AgentPoolProfile) *[]compute.VirtualMachineSc
 	return &dataDisks
 }
 
-func addCustomTagsToVMScaleSets(cs *api.ContainerService, vm *compute.VirtualMachineScaleSet) {
-	for key, value := range cs.Properties.MasterProfile.CustomVMTags {
+func addCustomTagsToVMScaleSets(tags map[string]string, vm *compute.VirtualMachineScaleSet) {
+	for key, value := range tags {
 		_, found := vm.Tags[key]
 		if !found {
 			vm.Tags[key] = &value
