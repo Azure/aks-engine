@@ -507,7 +507,7 @@ func (ku *Upgrader) upgradeAgentScaleSets(ctx context.Context) error {
 
 			cordonDrainTimeout := defaultCordonDrainTimeout
 			if ku.cordonDrainTimeout != nil {
-				cordonDrainTimeout = defaultCordonDrainTimeout
+				cordonDrainTimeout = *ku.cordonDrainTimeout
 			}
 
 			// Before we can delete the node we should safely and responsibly drain it
