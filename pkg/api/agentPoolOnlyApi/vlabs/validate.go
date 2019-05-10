@@ -29,9 +29,6 @@ func (a *AgentPoolProfile) Validate() error {
 func (l *LinuxProfile) Validate() error {
 	// Don't need to call validate.Struct(l)
 	// It is handled by Properties.Validate()
-	if e := validate.Var(l.SSH.PublicKeys[0].KeyData, "required"); e != nil {
-		return errors.New("KeyData in LinuxProfile.SSH.PublicKeys cannot be empty string")
-	}
 	return nil
 }
 
