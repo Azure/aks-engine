@@ -428,7 +428,7 @@ func (t *TemplateGenerator) getTemplateFuncMap(cs *api.ContainerService) templat
 			return cs.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity
 		},
 		"UserAssignedIDEnabled": func() bool {
-			return cs.Properties.OrchestratorProfile.KubernetesConfig.UserAssignedIDEnabled()
+			return cs.Properties != nil && cs.Properties.OrchestratorProfile != nil && cs.Properties.OrchestratorProfile.KubernetesConfig != nil && cs.Properties.OrchestratorProfile.KubernetesConfig.UserAssignedIDEnabled()
 		},
 		"UserAssignedID": func() string {
 			return cs.Properties.OrchestratorProfile.KubernetesConfig.GetUserAssignedID()
