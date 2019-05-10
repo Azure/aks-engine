@@ -92,7 +92,7 @@ Depending on the orchestrator you want to deploy, the number of agent pools, the
 
 There are a lot of examples available on the [AKS Engine GitHub](https://github.com/Azure/aks-engine/tree/master/examples) and you can find [one dedicated for virtual network](https://github.com/Azure/aks-engine/blob/master/examples/vnet/README.md).
 
-In this case, we are going to use the following template:
+In this case, we are going to use the following template (this creates a cluster with AzureCNI network plugin):
 
 ```json
 {
