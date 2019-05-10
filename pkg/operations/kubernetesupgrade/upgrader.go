@@ -707,7 +707,6 @@ func (ku *Upgrader) copyCustomPropertiesToNewNode(client armhelpers.KubernetesCl
 			return err
 		}
 	}
-	return nil
 }
 
 func (ku *Upgrader) copyCustomNodeProperties(client armhelpers.KubernetesClient, oldNodeName string, oldNode *v1.Node, newNodeName string, newNode *v1.Node) error {
