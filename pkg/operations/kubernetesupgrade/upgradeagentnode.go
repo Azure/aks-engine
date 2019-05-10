@@ -22,9 +22,8 @@ import (
 )
 
 const (
-	interval           = time.Second * 1
-	retry              = time.Second * 5
-	cordonDrainTimeout = time.Minute * 20
+	interval = time.Second * 1
+	retry    = time.Second * 5
 )
 
 // Compiler to verify QueueMessageProcessor implements OperationsProcessor
@@ -42,6 +41,7 @@ type UpgradeAgentNode struct {
 	Client                  armhelpers.AKSEngineClient
 	kubeConfig              string
 	timeout                 time.Duration
+	cordonDrainTimeout      time.Duration
 }
 
 // DeleteNode takes state/resources of the master/agent node from ListNodeResources
@@ -69,7 +69,7 @@ func (kan *UpgradeAgentNode) DeleteNode(vmName *string, drain bool) error {
 	}
 	// Cordon and drain the node
 	if drain {
-		err = operations.SafelyDrainNodeWithClient(client, kan.logger, nodeName, cordonDrainTimeout)
+		err = operations.SafelyDrainNodeWithClient(client, kan.logger, nodeName, kan.cordonDrainTimeout)
 		if err != nil {
 			kan.logger.Warningf("Error draining agent VM %s. Proceeding with deletion. Error: %v", *vmName, err)
 			// Proceed with deletion anyways

@@ -70,10 +70,11 @@ type UpgradeCluster struct {
 	Translator *i18n.Translator
 	Logger     *logrus.Entry
 	ClusterTopology
-	Client          armhelpers.AKSEngineClient
-	StepTimeout     *time.Duration
-	UpgradeWorkFlow UpgradeWorkFlow
-	Force           bool
+	Client             armhelpers.AKSEngineClient
+	StepTimeout        *time.Duration
+	CordonDrainTimeout *time.Duration
+	UpgradeWorkFlow    UpgradeWorkFlow
+	Force              bool
 }
 
 // MasterVMNamePrefix is the prefix for all master VM names for Kubernetes clusters
@@ -108,7 +109,7 @@ func (uc *UpgradeCluster) getUpgradeWorkflow(kubeConfig string, aksEngineVersion
 		return uc.UpgradeWorkFlow
 	}
 	u := &Upgrader{}
-	u.Init(uc.Translator, uc.Logger, uc.ClusterTopology, uc.Client, kubeConfig, uc.StepTimeout, aksEngineVersion)
+	u.Init(uc.Translator, uc.Logger, uc.ClusterTopology, uc.Client, kubeConfig, uc.StepTimeout, uc.CordonDrainTimeout, aksEngineVersion)
 	return u
 }
 

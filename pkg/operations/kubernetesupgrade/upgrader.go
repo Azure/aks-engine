@@ -29,16 +29,18 @@ type Upgrader struct {
 	Translator *i18n.Translator
 	logger     *logrus.Entry
 	ClusterTopology
-	Client           armhelpers.AKSEngineClient
-	kubeConfig       string
-	stepTimeout      *time.Duration
-	AKSEngineVersion string
+	Client             armhelpers.AKSEngineClient
+	kubeConfig         string
+	stepTimeout        *time.Duration
+	cordonDrainTimeout *time.Duration
+	AKSEngineVersion   string
 }
 
 type vmStatus int
 
 const (
 	defaultTimeout                     = time.Minute * 20
+	defaultCordonDrainTimeout          = time.Minute * 20
 	nodePropertiesCopyTimeout          = time.Minute * 5
 	vmStatusUpgraded          vmStatus = iota
 	vmStatusNotUpgraded
@@ -51,13 +53,14 @@ type vmInfo struct {
 }
 
 // Init initializes an upgrader struct
-func (ku *Upgrader) Init(translator *i18n.Translator, logger *logrus.Entry, clusterTopology ClusterTopology, client armhelpers.AKSEngineClient, kubeConfig string, stepTimeout *time.Duration, aksEngineVersion string) {
+func (ku *Upgrader) Init(translator *i18n.Translator, logger *logrus.Entry, clusterTopology ClusterTopology, client armhelpers.AKSEngineClient, kubeConfig string, stepTimeout *time.Duration, cordonDrainTimeout *time.Duration, aksEngineVersion string) {
 	ku.Translator = translator
 	ku.logger = logger
 	ku.ClusterTopology = clusterTopology
 	ku.Client = client
 	ku.kubeConfig = kubeConfig
 	ku.stepTimeout = stepTimeout
+	ku.cordonDrainTimeout = cordonDrainTimeout
 	ku.AKSEngineVersion = aksEngineVersion
 }
 
@@ -262,6 +265,11 @@ func (ku *Upgrader) upgradeAgentPools(ctx context.Context) error {
 			upgradeAgentNode.timeout = defaultTimeout
 		} else {
 			upgradeAgentNode.timeout = *ku.stepTimeout
+		}
+		if ku.cordonDrainTimeout == nil {
+			upgradeAgentNode.cordonDrainTimeout = defaultCordonDrainTimeout
+		} else {
+			upgradeAgentNode.cordonDrainTimeout = *ku.cordonDrainTimeout
 		}
 
 		agentVMs := make(map[int]*vmInfo)
@@ -496,6 +504,13 @@ func (ku *Upgrader) upgradeAgentScaleSets(ctx context.Context) error {
 			}
 
 			ku.logger.Infof("Successfully set capacity for VMSS %s", vmssToUpgrade.Name)
+
+			var cordonDrainTimeout time.Duration
+			if ku.cordonDrainTimeout == nil {
+				cordonDrainTimeout = defaultCordonDrainTimeout
+			} else {
+				cordonDrainTimeout = *ku.cordonDrainTimeout
+			}
 
 			// Before we can delete the node we should safely and responsibly drain it
 			client, err := ku.getKubernetesClient(cordonDrainTimeout)
