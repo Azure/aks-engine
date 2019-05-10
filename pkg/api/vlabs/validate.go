@@ -596,6 +596,14 @@ func (a *Properties) validateExtensions() error {
 		if len(agentPool.Extensions) != 0 && (len(agentPool.AvailabilityProfile) == 0 || agentPool.IsVirtualMachineScaleSets()) {
 			return errors.Errorf("Extensions are currently not supported with VirtualMachineScaleSets. Please specify \"availabilityProfile\": \"%s\"", AvailabilitySet)
 		}
+
+		if agentPool.OSType == Windows && len(agentPool.Extensions) != 0 {
+			for _, e := range agentPool.Extensions {
+				if e.Name == "prometheus-grafana-k8s" {
+					return errors.Errorf("prometheus-grafana-k8s extension is currently not supported for Windows agents")
+				}
+			}
+		}
 	}
 
 	for _, extension := range a.ExtensionProfiles {
