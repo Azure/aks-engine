@@ -113,7 +113,7 @@ func TestGenerateCmdMLoadAPIModel(t *testing.T) {
 	g := &generateCmd{}
 	r := &cobra.Command{}
 
-	g.apimodelPath = "../pkg/engine/testdata/simple/kubernetes-nocert.json"
+	g.apimodelPath = "../pkg/engine/testdata/simple/kubernetes.json"
 	g.set = []string{"agentPoolProfiles[0].count=1"}
 
 	g.validate(r, []string{"../pkg/engine/testdata/simple/kubernetes.json"})
