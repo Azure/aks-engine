@@ -57,7 +57,7 @@ func CreateVirtualMachine(cs *api.ContainerService) VirtualMachineARM {
 		Type: to.StringPtr("Microsoft.Compute/virtualMachines"),
 	}
 
-	addCustomTagsToVirtualMachine(&virtualMachine, cs)
+	addCustomTagsToVM(cs, &virtualMachine)
 
 	if hasAvailabilityZones {
 		virtualMachine.Zones = &[]string{
@@ -566,11 +566,8 @@ func getVaultSecretGroup(linuxProfile *api.LinuxProfile) []compute.VaultSecretGr
 	return vaultSecretGroups
 }
 
-func addCustomTagsToVirtualMachine(vm *compute.VirtualMachine, cs *api.ContainerService) {
-	for key, value := range cs.Tags {
-		_, keyFound := vm.Tags[key]
-		if !keyFound {
-			vm.Tags[key] = &value
-		}
+func addCustomTagsToVM(cs *api.ContainerService, vm *compute.VirtualMachine) {
+	for key, value := range cs.Properties.MasterProfile.CustomVMTags {
+		vm.Tags[key] = &value
 	}
 }
