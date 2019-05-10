@@ -68,6 +68,8 @@ func CreateMasterVMSS(cs *api.ContainerService) VirtualMachineScaleSetARM {
 		Type: to.StringPtr("Microsoft.Compute/virtualMachineScaleSets"),
 	}
 
+	addCustomTagsToVMScaleSets(cs.Properties.MasterProfile.CustomVMTags, &virtualMachine)
+
 	if hasAvailabilityZones {
 		virtualMachine.Zones = &masterProfile.AvailabilityZones
 	}

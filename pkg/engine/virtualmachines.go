@@ -363,6 +363,8 @@ func createAgentAvailabilitySetVM(cs *api.ContainerService, profile *api.AgentPo
 		Tags: tags,
 	}
 
+	addCustomTagsToVM(cs.Properties.MasterProfile.CustomVMTags, &virtualMachine)
+
 	if useManagedIdentity {
 		if userAssignedIDEnabled && !profile.IsWindows() {
 			virtualMachine.Identity = &compute.VirtualMachineIdentity{
