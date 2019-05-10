@@ -72,7 +72,7 @@ func newScaleCmd() *cobra.Command {
 	f := scaleCmd.Flags()
 	f.StringVarP(&sc.location, "location", "l", "", "location the cluster is deployed in")
 	f.StringVarP(&sc.resourceGroupName, "resource-group", "g", "", "the resource group where the cluster is deployed")
-	f.StringVarP(&sc.apiModelPath, "api-model", "m", "", "path to the generated apimodel file")
+	f.StringVarP(&sc.apiModelPath, "api-model", "m", "", "path to the generated apimodel.json file")
 	f.StringVar(&sc.deploymentDirectory, "deployment-dir", "", "the location of the output from `generate`")
 	f.IntVarP(&sc.newDesiredAgentCount, "new-node-count", "c", 0, "desired number of nodes")
 	f.StringVar(&sc.agentPoolToScale, "node-pool", "", "node pool to scale")
@@ -375,8 +375,10 @@ func (sc *scaleCmd) run(cmd *cobra.Command, args []string) error {
 
 	addValue(parametersJSON, sc.agentPool.Name+"Count", countForTemplate)
 
+	// The agent pool is set to index 0 for the scale operation, we need to overwrite the template variables that rely on pool index.
 	if winPoolIndex != -1 {
 		templateJSON["variables"].(map[string]interface{})[sc.agentPool.Name+"Index"] = winPoolIndex
+		templateJSON["variables"].(map[string]interface{})[sc.agentPool.Name+"VMNamePrefix"] = sc.containerService.Properties.GetAgentVMPrefix(sc.agentPool, winPoolIndex)
 	}
 	if orchestratorInfo.OrchestratorType == api.Kubernetes {
 		err = transformer.NormalizeForK8sVMASScalingUp(sc.logger, templateJSON)

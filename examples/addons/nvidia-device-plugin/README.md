@@ -8,7 +8,7 @@ This is the [NVIDIA Device Plugin](https://github.com/NVIDIA/k8s-device-plugin) 
   "properties": {
     "orchestratorProfile": {
       "orchestratorType": "Kubernetes",
-      "orchestratorRelease": "1.10",
+      "orchestratorRelease": "1.12",
       "kubernetesConfig": {
         "addons": [
           {

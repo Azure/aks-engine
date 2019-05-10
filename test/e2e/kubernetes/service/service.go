@@ -20,6 +20,11 @@ import (
 
 const commandTimeout = 1 * time.Minute
 
+// List holds a list of services returned from kubectl get svc
+type List struct {
+	Services []Service `json:"items"`
+}
+
 // Service represents a kubernetes service
 type Service struct {
 	Metadata Metadata `json:"metadata"`
@@ -78,6 +83,44 @@ func Get(name, namespace string) (*Service, error) {
 	return &s, nil
 }
 
+// GetAll will return all services in a given namespace
+func GetAll(namespace string) (*List, error) {
+	cmd := exec.Command("k", "get", "svc", "-n", namespace, "-o", "json")
+	util.PrintCommand(cmd)
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		log.Printf("Error getting all services:\n")
+		return nil, err
+	}
+	sl := List{}
+	err = json.Unmarshal(out, &sl)
+	if err != nil {
+		log.Printf("Error unmarshalling services json:%s\n", err)
+		return nil, err
+	}
+	return &sl, nil
+}
+
+// GetAllByPrefix will return all services in a given namespace that match a prefix
+func GetAllByPrefix(prefix, namespace string) ([]Service, error) {
+	sl, err := GetAll(namespace)
+	if err != nil {
+		return nil, err
+	}
+	services := []Service{}
+	for _, s := range sl.Services {
+		matched, err := regexp.MatchString(prefix+"-.*", s.Metadata.Name)
+		if err != nil {
+			log.Printf("Error trying to match service name:%s\n", err)
+			return nil, err
+		}
+		if matched {
+			services = append(services, s)
+		}
+	}
+	return services, nil
+}
+
 // Delete will delete a service in a given namespace
 func (s *Service) Delete(retries int) error {
 	var kubectlOutput []byte
@@ -105,8 +148,8 @@ func (s *Service) GetNodePort(port int) int {
 	return 0
 }
 
-// WaitForExternalIP waits for an external ip to be provisioned
-func (s *Service) WaitForExternalIP(wait, sleep time.Duration) (*Service, error) {
+// WaitForIngress waits for an Ingress to be provisioned
+func (s *Service) WaitForIngress(wait, sleep time.Duration) (*Service, error) {
 	svcCh := make(chan *Service)
 	errCh := make(chan error)
 	ctx, cancel := context.WithTimeout(context.Background(), wait)
@@ -135,13 +178,46 @@ func (s *Service) WaitForExternalIP(wait, sleep time.Duration) (*Service, error)
 	}
 }
 
+// WaitOnDeleted returns when a service resource is successfully deleted
+func WaitOnDeleted(servicePrefix, namespace string, sleep, duration time.Duration) (bool, error) {
+	succeededCh := make(chan bool, 1)
+	errCh := make(chan error)
+	ctx, cancel := context.WithTimeout(context.Background(), duration)
+	defer cancel()
+	go func() {
+		for {
+			select {
+			case <-ctx.Done():
+				errCh <- errors.Errorf("Timeout exceeded (%s) while waiting for Services (%s) to be deleted in namespace (%s)", duration.String(), servicePrefix, namespace)
+			default:
+				s, err := GetAllByPrefix(servicePrefix, namespace)
+				if err != nil {
+					errCh <- errors.Errorf("Got error while getting Services with prefix \"%s\" in namespace \"%s\"", servicePrefix, namespace)
+				}
+				if len(s) == 0 {
+					succeededCh <- true
+				}
+				time.Sleep(sleep)
+			}
+		}
+	}()
+	for {
+		select {
+		case err := <-errCh:
+			return false, err
+		case deleted := <-succeededCh:
+			return deleted, nil
+		}
+	}
+}
+
 // Validate will attempt to run an http.Get against the root service url
 func (s *Service) Validate(check string, attempts int, sleep, wait time.Duration) bool {
 	var err error
 	var url string
 	var i int
 	var resp *http.Response
-	svc, waitErr := s.WaitForExternalIP(wait, 5*time.Second)
+	svc, waitErr := s.WaitForIngress(wait, 5*time.Second)
 	if waitErr != nil {
 		log.Printf("Unable to verify external IP, cannot validate service:%s\n", waitErr)
 		return false
@@ -173,11 +249,6 @@ func (s *Service) Validate(check string, attempts int, sleep, wait time.Duration
 
 // CreateServiceFromFile will create a Service from file with a name
 func CreateServiceFromFile(filename, name, namespace string) (*Service, error) {
-	svc, err := Get(name, namespace)
-	if err == nil {
-		log.Printf("Service %s already exists\n", name)
-		return svc, nil
-	}
 	cmd := exec.Command("k", "create", "-f", filename)
 	util.PrintCommand(cmd)
 	out, err := cmd.CombinedOutput()
@@ -185,10 +256,26 @@ func CreateServiceFromFile(filename, name, namespace string) (*Service, error) {
 		log.Printf("Error trying to create Service %s:%s\n", name, string(out))
 		return nil, err
 	}
-	svc, err = Get(name, namespace)
+	svc, err := Get(name, namespace)
 	if err != nil {
 		log.Printf("Error while trying to fetch Service %s:%s\n", name, err)
 		return nil, err
 	}
 	return svc, nil
+}
+
+// CreateServiceFromFileDeleteIfExist will create a Service from file, deleting any pre-existing service with the same name
+func CreateServiceFromFileDeleteIfExist(filename, name, namespace string) (*Service, error) {
+	s, _ := Get(name, namespace)
+	if s != nil {
+		err := s.Delete(util.DefaultDeleteRetries)
+		if err != nil {
+			return nil, err
+		}
+		_, err = WaitOnDeleted(name, namespace, 10*time.Second, 1*time.Minute)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return CreateServiceFromFile(filename, name, namespace)
 }

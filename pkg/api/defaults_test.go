@@ -193,21 +193,22 @@ func TestAddonsIndexByName(t *testing.T) {
 
 func TestAssignDefaultAddonImages(t *testing.T) {
 	addonContainerMap := map[string]string{
-		DefaultTillerAddonName:             "gcr.io/kubernetes-helm/tiller:v2.11.0",
-		DefaultACIConnectorAddonName:       "microsoft/virtual-kubelet:latest",
-		DefaultClusterAutoscalerAddonName:  "k8s.gcr.io/cluster-autoscaler:v1.2.2",
-		DefaultBlobfuseFlexVolumeAddonName: "mcr.microsoft.com/k8s/flexvolume/blobfuse-flexvolume:1.0.8",
-		DefaultSMBFlexVolumeAddonName:      "mcr.microsoft.com/k8s/flexvolume/smb-flexvolume:1.0.2",
-		DefaultKeyVaultFlexVolumeAddonName: "mcr.microsoft.com/k8s/flexvolume/keyvault-flexvolume:v0.0.7",
-		DefaultDashboardAddonName:          "k8s.gcr.io/kubernetes-dashboard-amd64:v1.10.1",
-		DefaultReschedulerAddonName:        "k8s.gcr.io/rescheduler:v0.3.1",
-		DefaultMetricsServerAddonName:      "k8s.gcr.io/metrics-server-amd64:v0.2.1",
+		TillerAddonName:                    "gcr.io/kubernetes-helm/tiller:v2.11.0",
+		ACIConnectorAddonName:              "microsoft/virtual-kubelet:latest",
+		ClusterAutoscalerAddonName:         "k8s.gcr.io/cluster-autoscaler:v1.2.2",
+		BlobfuseFlexVolumeAddonName:        "mcr.microsoft.com/k8s/flexvolume/blobfuse-flexvolume:1.0.8",
+		SMBFlexVolumeAddonName:             "mcr.microsoft.com/k8s/flexvolume/smb-flexvolume:1.0.2",
+		KeyVaultFlexVolumeAddonName:        "mcr.microsoft.com/k8s/flexvolume/keyvault-flexvolume:v0.0.7",
+		DashboardAddonName:                 "k8s.gcr.io/kubernetes-dashboard-amd64:v1.10.1",
+		ReschedulerAddonName:               "k8s.gcr.io/rescheduler:v0.3.1",
+		MetricsServerAddonName:             "k8s.gcr.io/metrics-server-amd64:v0.2.1",
 		NVIDIADevicePluginAddonName:        "nvidia/k8s-device-plugin:1.10",
-		ContainerMonitoringAddonName:       "microsoft/oms:ciprod01092019",
+		ContainerMonitoringAddonName:       "microsoft/oms:ciprod04232019",
 		IPMASQAgentAddonName:               "k8s.gcr.io/ip-masq-agent-amd64:v2.0.0",
-		AzureCNINetworkMonitoringAddonName: "containernetworking/networkmonitor:v0.0.6",
-		DefaultDNSAutoscalerAddonName:      "k8s.gcr.io/cluster-proportional-autoscaler-amd64:1.1.1",
+		AzureCNINetworkMonitoringAddonName: "mcr.microsoft.com/containernetworking/networkmonitor:v0.0.6",
+		DNSAutoscalerAddonName:             "k8s.gcr.io/cluster-proportional-autoscaler-amd64:1.1.1",
 		DefaultHeapsterAddonName:           "k8s.gcr.io/heapster-amd64:v1.5.4",
+		CalicoAddonName:                    "calico/typha:v3.5.0",
 	}
 
 	var addons []KubernetesAddon
@@ -542,6 +543,58 @@ func TestVMSSOverProvisioning(t *testing.T) {
 	// In create scenario with explicit false, VMSSOverProvisioningEnabled should be false
 	if to.Bool(mockCS.Properties.AgentPoolProfiles[0].VMSSOverProvisioningEnabled) {
 		t.Errorf("expected VMSSOverProvisioningEnabled to be false, instead got %t", to.Bool(mockCS.Properties.AgentPoolProfiles[0].VMSSOverProvisioningEnabled))
+	}
+}
+
+func TestAuditDEnabled(t *testing.T) {
+	mockCS := getMockBaseContainerService("1.12.7")
+	mockCS.Properties.OrchestratorProfile.OrchestratorType = Kubernetes
+	isUpgrade := true
+	mockCS.Properties.setAgentProfileDefaults(isUpgrade, false)
+
+	// In upgrade scenario, nil AuditDEnabled should always render as false (i.e., we never turn on this feature on an existing vm that didn't have it before)
+	if to.Bool(mockCS.Properties.AgentPoolProfiles[0].AuditDEnabled) {
+		t.Errorf("expected nil AuditDEnabled to be false after upgrade, instead got %t", to.Bool(mockCS.Properties.AgentPoolProfiles[0].AuditDEnabled))
+	}
+
+	mockCS = getMockBaseContainerService("1.12.7")
+	mockCS.Properties.OrchestratorProfile.OrchestratorType = Kubernetes
+	isScale := true
+	mockCS.Properties.setAgentProfileDefaults(false, isScale)
+
+	// In scale scenario, nil AuditDEnabled should always render as false (i.e., we never turn on this feature on an existing agent pool / vms that didn't have it before)
+	if to.Bool(mockCS.Properties.AgentPoolProfiles[0].AuditDEnabled) {
+		t.Errorf("expected nil AuditDEnabled to be false after upgrade, instead got %t", to.Bool(mockCS.Properties.AgentPoolProfiles[0].AuditDEnabled))
+	}
+
+	mockCS = getMockBaseContainerService("1.12.7")
+	mockCS.Properties.OrchestratorProfile.OrchestratorType = Kubernetes
+	mockCS.Properties.setAgentProfileDefaults(false, false)
+
+	// In create scenario, nil AuditDEnabled should be the defaults
+	auditDEnabledEnabled := DefaultAuditDEnabled
+	if to.Bool(mockCS.Properties.AgentPoolProfiles[0].AuditDEnabled) != auditDEnabledEnabled {
+		t.Errorf("expected default AuditDEnabled to be %t, instead got %t", auditDEnabledEnabled, to.Bool(mockCS.Properties.AgentPoolProfiles[0].AuditDEnabled))
+	}
+
+	mockCS = getMockBaseContainerService("1.10.8")
+	mockCS.Properties.OrchestratorProfile.OrchestratorType = Kubernetes
+	mockCS.Properties.AgentPoolProfiles[0].AuditDEnabled = to.BoolPtr(true)
+	mockCS.Properties.setAgentProfileDefaults(false, false)
+
+	// In create scenario with explicit true, AuditDEnabled should be true
+	if !to.Bool(mockCS.Properties.AgentPoolProfiles[0].AuditDEnabled) {
+		t.Errorf("expected AuditDEnabled to be true, instead got %t", to.Bool(mockCS.Properties.AgentPoolProfiles[0].AuditDEnabled))
+	}
+
+	mockCS = getMockBaseContainerService("1.10.8")
+	mockCS.Properties.OrchestratorProfile.OrchestratorType = Kubernetes
+	mockCS.Properties.AgentPoolProfiles[0].AuditDEnabled = to.BoolPtr(false)
+	mockCS.Properties.setAgentProfileDefaults(false, false)
+
+	// In create scenario with explicit false, AuditDEnabled should be false
+	if to.Bool(mockCS.Properties.AgentPoolProfiles[0].AuditDEnabled) {
+		t.Errorf("expected AuditDEnabled to be false, instead got %t", to.Bool(mockCS.Properties.AgentPoolProfiles[0].AuditDEnabled))
 	}
 }
 
@@ -979,7 +1032,7 @@ func TestMasterProfileDefaults(t *testing.T) {
 	mockCS = getMockBaseContainerService("1.11.6")
 	properties = mockCS.Properties
 	properties.OrchestratorProfile.OrchestratorType = Kubernetes
-	properties.OrchestratorProfile.KubernetesConfig.LoadBalancerSku = "Standard"
+	properties.OrchestratorProfile.KubernetesConfig.LoadBalancerSku = StandardLoadBalancerSku
 	mockCS.SetPropertiesDefaults(false, false)
 	excludeMaster := DefaultExcludeMasterFromStandardLB
 	if *properties.OrchestratorProfile.KubernetesConfig.ExcludeMasterFromStandardLB != excludeMaster {
@@ -1075,6 +1128,90 @@ func TestSetComponentsNetworkDefaults(t *testing.T) {
 	}
 }
 
+func TestWindowsProfileDefaults(t *testing.T) {
+
+	var tests = []struct {
+		name                   string // test case name
+		windowsProfile         WindowsProfile
+		expectedWindowsProfile WindowsProfile
+	}{
+		{
+			"defaults",
+			WindowsProfile{},
+			WindowsProfile{
+				WindowsPublisher:      DefaultWindowsPublisher,
+				WindowsOffer:          DefaultWindowsOffer,
+				WindowsSku:            DefaultWindowsSku,
+				ImageVersion:          DefaultImageVersion,
+				AdminUsername:         "",
+				AdminPassword:         "",
+				WindowsImageSourceURL: "",
+				WindowsDockerVersion:  "",
+				SSHEnabled:            false,
+			},
+		},
+		{
+			"user overrides",
+			WindowsProfile{
+				WindowsPublisher: "override",
+				WindowsOffer:     "override",
+				WindowsSku:       "override",
+				ImageVersion:     "override",
+			},
+			WindowsProfile{
+				WindowsPublisher:      "override",
+				WindowsOffer:          "override",
+				WindowsSku:            "override",
+				ImageVersion:          "override",
+				AdminUsername:         "",
+				AdminPassword:         "",
+				WindowsImageSourceURL: "",
+				WindowsDockerVersion:  "",
+				SSHEnabled:            false,
+			},
+		},
+	}
+
+	for _, test := range tests {
+		mockAPI := getMockAPIProperties("1.14.0")
+		mockAPI.WindowsProfile = &test.windowsProfile
+		mockAPI.setWindowsProfileDefaults(false, false)
+		if mockAPI.WindowsProfile.WindowsPublisher != test.expectedWindowsProfile.WindowsPublisher {
+			t.Fatalf("setWindowsProfileDefaults() test case %v did not return right default values %v != %v", test.name, mockAPI.WindowsProfile.WindowsPublisher, test.expectedWindowsProfile.WindowsPublisher)
+		}
+		if mockAPI.WindowsProfile.WindowsOffer != test.expectedWindowsProfile.WindowsOffer {
+			t.Fatalf("setWindowsProfileDefaults() test case %v did not return right default values %v != %v", test.name, mockAPI.WindowsProfile.WindowsOffer, test.expectedWindowsProfile.WindowsOffer)
+		}
+		if mockAPI.WindowsProfile.WindowsSku != test.expectedWindowsProfile.WindowsSku {
+			t.Fatalf("setWindowsProfileDefaults() test case %v did not return right default values %v != %v", test.name, mockAPI.WindowsProfile.WindowsSku, test.expectedWindowsProfile.WindowsSku)
+		}
+		if mockAPI.WindowsProfile.ImageVersion != test.expectedWindowsProfile.ImageVersion {
+			t.Fatalf("setWindowsProfileDefaults() test case %v did not return right default values %v != %v", test.name, mockAPI.WindowsProfile.ImageVersion, test.expectedWindowsProfile.ImageVersion)
+		}
+		if mockAPI.WindowsProfile.AdminUsername != test.expectedWindowsProfile.AdminUsername {
+			t.Fatalf("setWindowsProfileDefaults() test case %v did not return right default values %v != %v", test.name, mockAPI.WindowsProfile.AdminUsername, test.expectedWindowsProfile.AdminUsername)
+		}
+		if mockAPI.WindowsProfile.AdminPassword != test.expectedWindowsProfile.AdminPassword {
+			t.Fatalf("setWindowsProfileDefaults() test case %v did not return right default values %v != %v", test.name, mockAPI.WindowsProfile.AdminPassword, test.expectedWindowsProfile.AdminPassword)
+		}
+		if mockAPI.WindowsProfile.WindowsImageSourceURL != test.expectedWindowsProfile.WindowsImageSourceURL {
+			t.Fatalf("setWindowsProfileDefaults() test case %v did not return right default values %v != %v", test.name, mockAPI.WindowsProfile.WindowsImageSourceURL, test.expectedWindowsProfile.WindowsImageSourceURL)
+		}
+		if mockAPI.WindowsProfile.WindowsDockerVersion != test.expectedWindowsProfile.WindowsDockerVersion {
+			t.Fatalf("setWindowsProfileDefaults() test case %v did not return right default values %v != %v", test.name, mockAPI.WindowsProfile.WindowsDockerVersion, test.expectedWindowsProfile.WindowsDockerVersion)
+		}
+		if mockAPI.WindowsProfile.Secrets != nil {
+			t.Fatalf("setWindowsProfileDefaults() test case %v did not return right default values %v != %v", test.name, mockAPI.WindowsProfile.Secrets, nil)
+		}
+		if mockAPI.WindowsProfile.SSHEnabled != test.expectedWindowsProfile.SSHEnabled {
+			t.Fatalf("setWindowsProfileDefaults() test case %v did not return right default values %v != %v", test.name, mockAPI.WindowsProfile.SSHEnabled, test.expectedWindowsProfile.SSHEnabled)
+		}
+		if mockAPI.WindowsProfile.EnableAutomaticUpdates != nil {
+			t.Fatalf("setWindowsProfileDefaults() test case %v did not return right default values %v != %v", test.name, mockAPI.WindowsProfile.EnableAutomaticUpdates, nil)
+		}
+	}
+}
+
 func TestIsAzureCNINetworkmonitorAddon(t *testing.T) {
 	mockCS := getMockBaseContainerService("1.10.3")
 	properties := mockCS.Properties
@@ -1147,9 +1284,9 @@ func TestSetVMSSDefaultsAndZones(t *testing.T) {
 		t.Fatalf("MasterProfile.HasAvailabilityZones did not have the expected return, got %t, expected %t",
 			properties.MasterProfile.HasAvailabilityZones(), true)
 	}
-	if properties.OrchestratorProfile.KubernetesConfig.LoadBalancerSku != "Standard" {
+	if properties.OrchestratorProfile.KubernetesConfig.LoadBalancerSku != StandardLoadBalancerSku {
 		t.Fatalf("OrchestratorProfile.KubernetesConfig.LoadBalancerSku did not have the expected configuration, got %s, expected %s",
-			properties.OrchestratorProfile.KubernetesConfig.LoadBalancerSku, "Standard")
+			properties.OrchestratorProfile.KubernetesConfig.LoadBalancerSku, StandardLoadBalancerSku)
 	}
 	excludeMaster := DefaultExcludeMasterFromStandardLB
 	if *properties.OrchestratorProfile.KubernetesConfig.ExcludeMasterFromStandardLB != excludeMaster {
@@ -1190,9 +1327,9 @@ func TestSetVMSSDefaultsAndZones(t *testing.T) {
 		t.Fatalf("AgentPoolProfile[0].SinglePlacementGroup default did not have the expected configuration, got %t, expected %t",
 			*properties.AgentPoolProfiles[0].SinglePlacementGroup, singlePlacementGroup)
 	}
-	if properties.OrchestratorProfile.KubernetesConfig.LoadBalancerSku != "Standard" {
+	if properties.OrchestratorProfile.KubernetesConfig.LoadBalancerSku != StandardLoadBalancerSku {
 		t.Fatalf("OrchestratorProfile.KubernetesConfig.LoadBalancerSku did not have the expected configuration, got %s, expected %s",
-			properties.OrchestratorProfile.KubernetesConfig.LoadBalancerSku, "Standard")
+			properties.OrchestratorProfile.KubernetesConfig.LoadBalancerSku, StandardLoadBalancerSku)
 	}
 	excludeMaster = DefaultExcludeMasterFromStandardLB
 	if *properties.OrchestratorProfile.KubernetesConfig.ExcludeMasterFromStandardLB != excludeMaster {
@@ -1480,7 +1617,7 @@ func TestSetCustomCloudProfileDefaults(t *testing.T) {
 
 	// Test that the ResourceManagerVMDNSSuffix is set in EndpointConfig
 	mockCS := getMockBaseContainerService("1.11.6")
-	mockCSP := getMockPropertiesWithCustomCloudProfile("azurestackcloud", true, true, false)
+	mockCSP := GetMockPropertiesWithCustomCloudProfile("azurestackcloud", true, true, false)
 	vmDNSSuffix := "contoso.net"
 	mockCSP.CustomCloudProfile.Environment.ResourceManagerVMDNSSuffix = vmDNSSuffix
 	mockCS.Properties.CustomCloudProfile = mockCSP.CustomCloudProfile
@@ -1492,7 +1629,7 @@ func TestSetCustomCloudProfileDefaults(t *testing.T) {
 
 	// Test that the AzureStackCloudSpec is default when azureEnvironmentSpecConfig is empty in api model JSON file
 	mockCSDefaultSpec := getMockBaseContainerService("1.11.6")
-	mockCSPDefaultSpec := getMockPropertiesWithCustomCloudProfile("azurestackcloud", true, true, false)
+	mockCSPDefaultSpec := GetMockPropertiesWithCustomCloudProfile("azurestackcloud", true, true, false)
 	mockCSDefaultSpec.Properties.CustomCloudProfile = mockCSPDefaultSpec.CustomCloudProfile
 	mockCSDefaultSpec.SetPropertiesDefaults(false, false)
 
@@ -1513,7 +1650,7 @@ func TestSetCustomCloudProfileDefaults(t *testing.T) {
 
 	for key, value := range modeToSpec {
 		mockCSAzureChinaSpec := getMockBaseContainerService("1.11.6")
-		mockCSPAzureChinaSpec := getMockPropertiesWithCustomCloudProfile("azurestackcloud", true, true, false)
+		mockCSPAzureChinaSpec := GetMockPropertiesWithCustomCloudProfile("azurestackcloud", true, true, false)
 		mockCSPAzureChinaSpec.CustomCloudProfile.DependenciesLocation = DependenciesLocation(key)
 		mockCSAzureChinaSpec.Properties.CustomCloudProfile = mockCSPAzureChinaSpec.CustomCloudProfile
 
@@ -1531,7 +1668,7 @@ func TestSetCustomCloudProfileDefaults(t *testing.T) {
 
 	// Test that correct error message if ResourceManagerVMDNSSuffix is empty
 	mockCSEmptyResourceManagerVMDNSSuffix := getMockBaseContainerService("1.11.6")
-	mockCSPEmptyResourceManagerVMDNSSuffix := getMockPropertiesWithCustomCloudProfile("azurestackcloud", true, true, false)
+	mockCSPEmptyResourceManagerVMDNSSuffix := GetMockPropertiesWithCustomCloudProfile("azurestackcloud", true, true, false)
 	mockCSEmptyResourceManagerVMDNSSuffix.Properties.CustomCloudProfile = mockCSPEmptyResourceManagerVMDNSSuffix.CustomCloudProfile
 	mockCSEmptyResourceManagerVMDNSSuffix.Properties.CustomCloudProfile.Environment.ResourceManagerVMDNSSuffix = ""
 	acutalerr := mockCSEmptyResourceManagerVMDNSSuffix.Properties.SetAzureStackCloudSpec()
@@ -1542,7 +1679,7 @@ func TestSetCustomCloudProfileDefaults(t *testing.T) {
 
 	// Test that correct error message if environment is nil
 	mockCSNilEnvironment := getMockBaseContainerService("1.11.6")
-	mockCSPNilEnvironment := getMockPropertiesWithCustomCloudProfile("azurestackcloud", true, true, false)
+	mockCSPNilEnvironment := GetMockPropertiesWithCustomCloudProfile("azurestackcloud", true, true, false)
 	mockCSNilEnvironment.Properties.CustomCloudProfile = mockCSPNilEnvironment.CustomCloudProfile
 	mockCSNilEnvironment.Properties.CustomCloudProfile.Environment = nil
 	acutalerr = mockCSEmptyResourceManagerVMDNSSuffix.Properties.SetAzureStackCloudSpec()
@@ -1552,7 +1689,7 @@ func TestSetCustomCloudProfileDefaults(t *testing.T) {
 
 	// Test that default assignment flow doesn't overwrite a user-provided config
 	mockCSCustom := getMockBaseContainerService("1.11.6")
-	mockCSPCustom := getMockPropertiesWithCustomCloudProfile("azurestackcloud", true, true, false)
+	mockCSPCustom := GetMockPropertiesWithCustomCloudProfile("azurestackcloud", true, true, false)
 
 	//Mock AzureEnvironmentSpecConfig
 	customCloudSpec := AzureEnvironmentSpecConfig{
@@ -1569,6 +1706,7 @@ func TestSetCustomCloudProfileDefaults(t *testing.T) {
 			ACIConnectorImageBase:            "ACIConnectorImageBase",
 			NVIDIAImageBase:                  "NVIDIAImageBase",
 			AzureCNIImageBase:                "AzureCNIImageBase",
+			CalicoImageBase:                  "CalicoImageBase",
 			EtcdDownloadURLBase:              "EtcdDownloadURLBase",
 			KubeBinariesSASURLBase:           "KubeBinariesSASURLBase",
 			WindowsTelemetryGUID:             "WindowsTelemetryGUID",
@@ -1605,7 +1743,7 @@ func TestSetCustomCloudProfileDefaults(t *testing.T) {
 
 	// Test that default assignment flow set the value if the field is partially  missing in user-provided config
 	mockCSCustomP := getMockBaseContainerService("1.11.6")
-	mockCSPCustomP := getMockPropertiesWithCustomCloudProfile("azurestackcloud", true, true, false)
+	mockCSPCustomP := GetMockPropertiesWithCustomCloudProfile("azurestackcloud", true, true, false)
 
 	//Mock AzureEnvironmentSpecConfig
 	customCloudSpecP := AzureEnvironmentSpecConfig{
@@ -1620,6 +1758,7 @@ func TestSetCustomCloudProfileDefaults(t *testing.T) {
 			TillerImageBase:                "TillerImageBase",
 			NVIDIAImageBase:                "NVIDIAImageBase",
 			AzureCNIImageBase:              "AzureCNIImageBase",
+			CalicoImageBase:                "CalicoImageBase",
 			EtcdDownloadURLBase:            "EtcdDownloadURLBase",
 			WindowsTelemetryGUID:           "WindowsTelemetryGUID",
 			CNIPluginsDownloadURL:          "CNIPluginsDownloadURL",
@@ -1659,7 +1798,7 @@ func TestSetCustomCloudProfileDefaults(t *testing.T) {
 
 	// Test that the default values are set for IdentitySystem and AuthenticationMethod if they are not in the configuration
 	mockCSAuth := getMockBaseContainerService("1.11.6")
-	mockCSPAuth := getMockPropertiesWithCustomCloudProfile("azurestackcloud", true, true, true)
+	mockCSPAuth := GetMockPropertiesWithCustomCloudProfile("azurestackcloud", true, true, true)
 	mockCSPAuth.CustomCloudProfile.IdentitySystem = ""
 	mockCSPAuth.CustomCloudProfile.AuthenticationMethod = ""
 	mockCSAuth.Properties.CustomCloudProfile = mockCSPAuth.CustomCloudProfile
@@ -1674,7 +1813,7 @@ func TestSetCustomCloudProfileDefaults(t *testing.T) {
 
 	// Test that the custom input values are not overiwrited if they are in the configuration
 	mockCSI := getMockBaseContainerService("1.11.6")
-	mockCSPI := getMockPropertiesWithCustomCloudProfile("azurestackcloud", true, true, true)
+	mockCSPI := GetMockPropertiesWithCustomCloudProfile("azurestackcloud", true, true, true)
 	mockCSPI.CustomCloudProfile.IdentitySystem = ADFSIdentitySystem
 	mockCSPI.CustomCloudProfile.AuthenticationMethod = ClientCertificateAuthMethod
 	mockCSI.Properties.CustomCloudProfile = mockCSPI.CustomCloudProfile
@@ -1692,7 +1831,7 @@ func TestCustomCloudLocation(t *testing.T) {
 
 	// Test that the ResourceManagerVMDNSSuffix is set in EndpointConfig
 	mockCS := getMockBaseContainerService("1.11.6")
-	mockCSP := getMockPropertiesWithCustomCloudProfile("AzureStackCloud", true, true, true)
+	mockCSP := GetMockPropertiesWithCustomCloudProfile("AzureStackCloud", true, true, true)
 	mockCS.Properties = &mockCSP
 	mockCS.SetPropertiesDefaults(false, false)
 	dnsPrefix := "santest"

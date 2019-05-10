@@ -4,6 +4,7 @@
 package engine
 
 import (
+	"encoding/json"
 	"fmt"
 	"strconv"
 
@@ -55,7 +56,8 @@ func CreateCustomScriptExtension(cs *api.ContainerService) VirtualMachineExtensi
 	if cs.Properties.MasterProfile != nil && cs.Properties.MasterProfile.IsCoreOS() {
 		ncBinary = "ncat"
 	}
-	if !cs.Properties.FeatureFlags.IsFeatureEnabled("BlockOutboundInternet") {
+	// TODO The AzureStack constraint has to be relaxed, it should only apply to *disconnected* instances
+	if !cs.Properties.FeatureFlags.IsFeatureEnabled("BlockOutboundInternet") && !cs.Properties.IsAzureStackCloud() {
 		if cs.GetCloudSpecConfig().CloudName == api.AzureChinaCloud {
 			registry = `gcr.azk8s.cn 80`
 		} else {
@@ -101,7 +103,8 @@ func createAgentVMASCustomScriptExtension(cs *api.ContainerService, profile *api
 	if profile.IsCoreOS() {
 		ncBinary = "ncat"
 	}
-	if !cs.Properties.FeatureFlags.IsFeatureEnabled("BlockOutboundInternet") {
+	// TODO The AzureStack constraint has to be relaxed, it should only apply to *disconnected* instances
+	if !cs.Properties.FeatureFlags.IsFeatureEnabled("BlockOutboundInternet") && !cs.Properties.IsAzureStackCloud() {
 		if cs.GetCloudSpecConfig().CloudName == api.AzureChinaCloud {
 			registry = `gcr.azk8s.cn 80`
 		} else {
@@ -118,6 +121,7 @@ func createAgentVMASCustomScriptExtension(cs *api.ContainerService, profile *api
 
 	nVidiaEnabled := strconv.FormatBool(common.IsNvidiaEnabledSKU(profile.VMSize))
 	sgxEnabled := strconv.FormatBool(common.IsSgxEnabledSKU(profile.VMSize))
+	auditDEnabled := strconv.FormatBool(to.Bool(profile.AuditDEnabled))
 
 	vmExtension := compute.VirtualMachineExtension{
 		Location: to.StringPtr(location),
@@ -134,13 +138,13 @@ func createAgentVMASCustomScriptExtension(cs *api.ContainerService, profile *api
 		vmExtension.VirtualMachineExtensionProperties.Type = to.StringPtr("CustomScriptExtension")
 		vmExtension.TypeHandlerVersion = to.StringPtr("1.8")
 		vmExtension.ProtectedSettings = &map[string]interface{}{
-			"commandToExecute": "[concat('powershell.exe -ExecutionPolicy Unrestricted -command \"', '$arguments = ', variables('singleQuote'),'-MasterIP ',variables('kubernetesAPIServerIP'),' -KubeDnsServiceIp ',parameters('kubeDnsServiceIp'),' -MasterFQDNPrefix ',variables('masterFqdnPrefix'),' -Location ',variables('location'),' -AgentKey ',parameters('clientPrivateKey'),' -AADClientId ',variables('servicePrincipalClientId'),' -AADClientSecret ',variables('singleQuote'),variables('singleQuote'),variables('servicePrincipalClientSecret'),variables('singleQuote'),variables('singleQuote'), ' ',variables('singleQuote'), ' ; ', variables('windowsCustomScriptSuffix'), '\" > %SYSTEMDRIVE%\\AzureData\\CustomDataSetupScript.log 2>&1')]",
+			"commandToExecute": "[concat('powershell.exe -ExecutionPolicy Unrestricted -command \"', '$arguments = ', variables('singleQuote'),'-MasterIP ',variables('kubernetesAPIServerIP'),' -KubeDnsServiceIp ',parameters('kubeDnsServiceIp'),' -MasterFQDNPrefix ',variables('masterFqdnPrefix'),' -Location ',variables('location'),' -AgentKey ',parameters('clientPrivateKey'),' -AADClientId ',variables('servicePrincipalClientId'),' -AADClientSecret ',variables('singleQuote'),variables('singleQuote'),base64(variables('servicePrincipalClientSecret')),variables('singleQuote'),variables('singleQuote'), ' ',variables('singleQuote'), ' ; ', variables('windowsCustomScriptSuffix'), '\" > %SYSTEMDRIVE%\\AzureData\\CustomDataSetupScript.log 2>&1')]",
 		}
 	} else {
 		vmExtension.Publisher = to.StringPtr("Microsoft.Azure.Extensions")
 		vmExtension.VirtualMachineExtensionProperties.Type = to.StringPtr("CustomScript")
 		vmExtension.TypeHandlerVersion = to.StringPtr("2.0")
-		commandExec := fmt.Sprintf("[concat('retrycmd_if_failure() { r=$1; w=$2; t=$3; shift && shift && shift; for i in $(seq 1 $r); do timeout $t ${@}; [ $? -eq 0  ] && break || if [ $i -eq $r ]; then return 1; else sleep $w; fi; done }; %s for i in $(seq 1 1200); do if [ -f /opt/azure/containers/provision.sh ]; then break; fi; if [ $i -eq 1200 ]; then exit 100; else sleep 1; fi; done; ', variables('provisionScriptParametersCommon'),' GPU_NODE=%s SGX_NODE=%s /usr/bin/nohup /bin/bash -c \"/bin/bash /opt/azure/containers/provision.sh >> /var/log/azure/cluster-provision.log 2>&1%s\"')]", outBoundCmd, nVidiaEnabled, sgxEnabled, runInBackground)
+		commandExec := fmt.Sprintf("[concat('retrycmd_if_failure() { r=$1; w=$2; t=$3; shift && shift && shift; for i in $(seq 1 $r); do timeout $t ${@}; [ $? -eq 0  ] && break || if [ $i -eq $r ]; then return 1; else sleep $w; fi; done }; %s for i in $(seq 1 1200); do if [ -f /opt/azure/containers/provision.sh ]; then break; fi; if [ $i -eq 1200 ]; then exit 100; else sleep 1; fi; done; ', variables('provisionScriptParametersCommon'),' GPU_NODE=%s SGX_NODE=%s AUDITD_ENABLED=%s /usr/bin/nohup /bin/bash -c \"/bin/bash /opt/azure/containers/provision.sh >> /var/log/azure/cluster-provision.log 2>&1%s\"')]", outBoundCmd, nVidiaEnabled, sgxEnabled, auditDEnabled, runInBackground)
 		vmExtension.ProtectedSettings = &map[string]interface{}{
 			"commandToExecute": commandExec,
 		}
@@ -205,4 +209,45 @@ func CreateAgentVMASAKSBillingExtension(cs *api.ContainerService, profile *api.A
 		},
 		VirtualMachineExtension: vmExtension,
 	}
+}
+
+// CreateCustomExtensions returns a list of DeploymentARM objects for the custom extensions to be deployed
+func CreateCustomExtensions(properties *api.Properties) []DeploymentARM {
+	var extensionsARM []DeploymentARM
+
+	for _, extensionProfile := range properties.ExtensionProfiles {
+		if properties.MasterProfile != nil {
+			masterOptedForExtension, singleOrAll := validateProfileOptedForExtension(extensionProfile.Name, properties.MasterProfile.Extensions)
+			if masterOptedForExtension {
+				data, e := getMasterLinkedTemplateText(properties.MasterProfile, properties.OrchestratorProfile.OrchestratorType, extensionProfile, singleOrAll)
+				if e != nil {
+					fmt.Println(e.Error())
+				}
+				var ext DeploymentARM
+				if err := json.Unmarshal([]byte(data), &ext); err != nil {
+					fmt.Println(err.Error())
+				}
+				extensionsARM = append(extensionsARM, ext)
+			}
+
+		}
+
+		for _, agentPoolProfile := range properties.AgentPoolProfiles {
+			poolProfileExtensions := agentPoolProfile.Extensions
+			poolOptedForExtension, singleOrAll := validateProfileOptedForExtension(extensionProfile.Name, poolProfileExtensions)
+			if poolOptedForExtension {
+				data, e := getAgentPoolLinkedTemplateText(agentPoolProfile, properties.OrchestratorProfile.OrchestratorType, extensionProfile, singleOrAll)
+				if e != nil {
+					fmt.Println(e.Error())
+				}
+				var ext DeploymentARM
+				if err := json.Unmarshal([]byte(data), &ext); err != nil {
+					fmt.Println(err.Error())
+				}
+				extensionsARM = append(extensionsARM, ext)
+			}
+
+		}
+	}
+	return extensionsARM
 }

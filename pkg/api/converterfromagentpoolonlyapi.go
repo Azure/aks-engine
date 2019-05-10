@@ -140,15 +140,9 @@ func convertResourcePurchasePlanToV20180331AgentPoolOnly(api *ResourcePurchasePl
 }
 
 func convertKubernetesConfigToEnableRBACV20180331AgentPoolOnly(kc *KubernetesConfig) *bool {
-	if kc == nil {
-		return to.BoolPtr(false)
-	}
 	// We use KubernetesConfig.EnableRbac to convert to versioned api model
 	// The assumption here is KubernetesConfig.EnableSecureKubelet is set to be same
-	if kc != nil && kc.EnableRbac != nil && *kc.EnableRbac {
-		return to.BoolPtr(true)
-	}
-	return to.BoolPtr(false)
+	return to.BoolPtr(kc != nil && kc.EnableRbac != nil && *kc.EnableRbac)
 }
 
 func convertPropertiesToV20180331AgentPoolOnly(api *Properties, p *v20180331.Properties) {

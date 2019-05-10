@@ -70,6 +70,71 @@
             "destination": "/home/packer/install-dependencies.sh"
         },
         {
+            "type": "file",
+            "source": "parts/k8s/cloud-init/artifacts/sysctl-d-60-CIS.conf",
+            "destination": "/home/packer/sysctl-d-60-CIS.conf"
+        },
+        {
+            "type": "file",
+            "source": "parts/k8s/cloud-init/artifacts/sshd_config",
+            "destination": "/home/packer/sshd_config"
+        },
+        {
+            "type": "file",
+            "source": "parts/k8s/cloud-init/artifacts/sshd_config_1604",
+            "destination": "/home/packer/sshd_config_1604"
+        },
+        {
+            "type": "file",
+            "source": "parts/k8s/cloud-init/artifacts/rsyslog-d-60-CIS.conf",
+            "destination": "/home/packer/rsyslog-d-60-CIS.conf"
+        },
+        {
+            "type": "file",
+            "source": "parts/k8s/cloud-init/artifacts/etc-issue",
+            "destination": "/home/packer/etc-issue"
+        },
+        {
+            "type": "file",
+            "source": "parts/k8s/cloud-init/artifacts/etc-issue.net",
+            "destination": "/home/packer/etc-issue.net"
+        },
+        {
+            "type": "file",
+            "source": "parts/k8s/cloud-init/artifacts/modprobe-CIS.conf",
+            "destination": "/home/packer/modprobe-CIS.conf"
+        },
+        {
+            "type": "file",
+            "source": "parts/k8s/cloud-init/artifacts/pwquality-CIS.conf",
+            "destination": "/home/packer/pwquality-CIS.conf"
+        },
+        {
+            "type": "file",
+            "source": "parts/k8s/cloud-init/artifacts/pam-d-su",
+            "destination": "/home/packer/pam-d-su"
+        },
+        {
+            "type": "file",
+            "source": "parts/k8s/cloud-init/artifacts/pam-d-common-auth",
+            "destination": "/home/packer/pam-d-common-auth"
+        },
+        {
+            "type": "file",
+            "source": "parts/k8s/cloud-init/artifacts/pam-d-common-password",
+            "destination": "/home/packer/pam-d-common-password"
+        },
+        {
+            "type": "file",
+            "source": "parts/k8s/cloud-init/artifacts/profile-d-cis.sh",
+            "destination": "/home/packer/profile-d-cis.sh"
+        },
+        {
+            "type": "file",
+            "source": "parts/k8s/cloud-init/artifacts/auditd-rules",
+            "destination": "/home/packer/auditd-rules"
+        },
+        {
             "type": "shell",
             "inline": [
                 "sudo FEATURE_FLAGS={{user `feature_flags`}} BUILD_NUMBER={{user `build_number`}} BUILD_ID={{user `build_id`}} COMMIT={{user `commit`}} /bin/bash -ux /home/packer/install-dependencies.sh",

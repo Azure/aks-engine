@@ -105,6 +105,7 @@ func CreateKeyVaultVMSS(cs *api.ContainerService) map[string]interface{} {
 
 	accessPolicy := map[string]interface{}{
 		"tenantId": "[variables('tenantID')]",
+		"objectId": "[parameters('servicePrincipalObjectId')]",
 		"permissions": map[string]interface{}{
 			"keys": []string{"create", "encrypt", "decrypt", "get", "list"},
 		},
@@ -116,8 +117,6 @@ func CreateKeyVaultVMSS(cs *api.ContainerService) map[string]interface{} {
 		if userAssignedIDEnabled {
 			dependencies = append(dependencies, "[variables('userAssignedIDReference')]")
 			accessPolicy["objectId"] = "[reference(variables('userAssignedIDReference'), variables('apiVersionManagedIdentity')).principalId]"
-		} else {
-			accessPolicy["objectId"] = "[parameters('servicePrincipalObjectId')]"
 		}
 		keyVaultMap["dependsOn"] = dependencies
 	}

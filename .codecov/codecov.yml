@@ -31,4 +31,8 @@ comment:
 ignore:
   - "**/*_generated.go"
   - "test/**/*.go"
+  - "pkg/api/mocks.go"
+  - "pkg/armhelpers/azurestack/httpMockClient.go"
   - "pkg/armhelpers/mockclients.go"
+  - "pkg/engine/testutils.go"
+  - "pkg/test/*.go"

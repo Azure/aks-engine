@@ -159,6 +159,14 @@ func Build(cfg *config.Config, masterSubnetID string, agentSubnetIDs []string, i
 		prop.ServicePrincipalProfile.ObjectID = config.ClientObjectID
 	}
 
+	if prop.OrchestratorProfile.KubernetesConfig == nil {
+		prop.OrchestratorProfile.KubernetesConfig = &vlabs.KubernetesConfig{}
+		prop.OrchestratorProfile.KubernetesConfig.ControllerManagerConfig = map[string]string{
+			"--horizontal-pod-autoscaler-downscale-stabilization":   "30s",
+			"--horizontal-pod-autoscaler-cpu-initialization-period": "30s",
+		}
+	}
+
 	return &Engine{
 		Config:            config,
 		ClusterDefinition: cs,

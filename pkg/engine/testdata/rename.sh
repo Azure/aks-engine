@@ -1,4 +1,4 @@
-#/bin/bash
+#!/bin/bash
 
 for f in $(find . -name "*.err"); do
         len=${#f}

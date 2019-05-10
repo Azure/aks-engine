@@ -12,7 +12,7 @@ spec:
     - name: kube-apiserver
       image: <img>
       imagePullPolicy: IfNotPresent
-      command: ["/hyperkube", "apiserver"]
+      command: ["/hyperkube", "kube-apiserver"]
       args: [<args>]
       volumeMounts:
         - name: etc-kubernetes

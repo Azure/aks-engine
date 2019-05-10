@@ -22,6 +22,9 @@ import (
 	"github.com/pkg/errors"
 )
 
+// DistroValues is a list of currently supported distros
+var DistroValues = []Distro{"", Ubuntu, Ubuntu1804, RHEL, CoreOS, AKS, AKS1804, ACC1604}
+
 // SetPropertiesDefaults for the container Properties, returns true if certs are generated
 func (cs *ContainerService) SetPropertiesDefaults(isUpgrade, isScale bool) (bool, error) {
 	properties := cs.Properties
@@ -57,6 +60,10 @@ func (cs *ContainerService) SetPropertiesDefaults(isUpgrade, isScale bool) (bool
 	// Set hosted master profile defaults if this cluster configuration has a hosted control plane
 	if cs.Properties.HostedMasterProfile != nil {
 		properties.setHostedMasterProfileDefaults()
+	}
+
+	if cs.Properties.WindowsProfile != nil {
+		properties.setWindowsProfileDefaults(isUpgrade, isScale)
 	}
 
 	certsGenerated, _, e := cs.SetDefaultCerts()
@@ -238,7 +245,7 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpdate bool) {
 			a.OrchestratorProfile.KubernetesConfig.LoadBalancerSku = DefaultLoadBalancerSku
 		}
 
-		if common.IsKubernetesVersionGe(a.OrchestratorProfile.OrchestratorVersion, "1.11.0") && a.OrchestratorProfile.KubernetesConfig.LoadBalancerSku == "Standard" && a.OrchestratorProfile.KubernetesConfig.ExcludeMasterFromStandardLB == nil {
+		if common.IsKubernetesVersionGe(a.OrchestratorProfile.OrchestratorVersion, "1.11.0") && a.OrchestratorProfile.KubernetesConfig.LoadBalancerSku == StandardLoadBalancerSku && a.OrchestratorProfile.KubernetesConfig.ExcludeMasterFromStandardLB == nil {
 			a.OrchestratorProfile.KubernetesConfig.ExcludeMasterFromStandardLB = to.BoolPtr(DefaultExcludeMasterFromStandardLB)
 		}
 
@@ -306,6 +313,20 @@ func (p *Properties) setMasterProfileDefaults(isUpgrade bool) {
 			p.MasterProfile.Distro = Ubuntu
 		}
 	}
+
+	// "--protect-kernel-defaults" is only true for VHD based VMs since the base Ubuntu distros don't have a /etc/sysctl.d/60-CIS.conf file.
+	if p.MasterProfile.IsVHDDistro() {
+		if p.MasterProfile.KubernetesConfig == nil {
+			p.MasterProfile.KubernetesConfig = &KubernetesConfig{}
+		}
+		if p.MasterProfile.KubernetesConfig.KubeletConfig == nil {
+			p.MasterProfile.KubernetesConfig.KubeletConfig = map[string]string{}
+		}
+		if _, ok := p.MasterProfile.KubernetesConfig.KubeletConfig["--protect-kernel-defaults"]; !ok {
+			p.MasterProfile.KubernetesConfig.KubeletConfig["--protect-kernel-defaults"] = "true"
+		}
+	}
+
 	// set default to VMAS for now
 	if len(p.MasterProfile.AvailabilityProfile) == 0 {
 		p.MasterProfile.AvailabilityProfile = AvailabilitySet
@@ -398,7 +419,7 @@ func (p *Properties) setVMSSDefaultsForMasters() {
 		p.MasterProfile.SinglePlacementGroup = to.BoolPtr(DefaultSinglePlacementGroup)
 	}
 	if p.MasterProfile.HasAvailabilityZones() && (p.OrchestratorProfile.KubernetesConfig != nil && p.OrchestratorProfile.KubernetesConfig.LoadBalancerSku == "") {
-		p.OrchestratorProfile.KubernetesConfig.LoadBalancerSku = "Standard"
+		p.OrchestratorProfile.KubernetesConfig.LoadBalancerSku = StandardLoadBalancerSku
 		p.OrchestratorProfile.KubernetesConfig.ExcludeMasterFromStandardLB = to.BoolPtr(DefaultExcludeMasterFromStandardLB)
 	}
 }
@@ -414,7 +435,7 @@ func (p *Properties) setVMSSDefaultsForAgents() {
 				profile.SinglePlacementGroup = to.BoolPtr(DefaultSinglePlacementGroup)
 			}
 			if profile.HasAvailabilityZones() && (p.OrchestratorProfile.KubernetesConfig != nil && p.OrchestratorProfile.KubernetesConfig.LoadBalancerSku == "") {
-				p.OrchestratorProfile.KubernetesConfig.LoadBalancerSku = "Standard"
+				p.OrchestratorProfile.KubernetesConfig.LoadBalancerSku = StandardLoadBalancerSku
 				p.OrchestratorProfile.KubernetesConfig.ExcludeMasterFromStandardLB = to.BoolPtr(DefaultExcludeMasterFromStandardLB)
 			}
 		}
@@ -461,6 +482,10 @@ func (p *Properties) setAgentProfileDefaults(isUpgrade, isScale bool) {
 			profile.VMSSOverProvisioningEnabled = to.BoolPtr(DefaultVMSSOverProvisioningEnabled && !isUpgrade && !isScale)
 		}
 
+		if profile.AuditDEnabled == nil {
+			profile.AuditDEnabled = to.BoolPtr(DefaultAuditDEnabled && !isUpgrade && !isScale)
+		}
+
 		if profile.OSType != Windows {
 			if profile.Distro == "" {
 				if p.OrchestratorProfile.IsKubernetes() {
@@ -482,6 +507,19 @@ func (p *Properties) setAgentProfileDefaults(isUpgrade, isScale bool) {
 			}
 		}
 
+		// "--protect-kernel-defaults" is only true for VHD based VMs since the base Ubuntu distros don't have a /etc/sysctl.d/60-CIS.conf file.
+		if profile.IsVHDDistro() {
+			if profile.KubernetesConfig == nil {
+				profile.KubernetesConfig = &KubernetesConfig{}
+			}
+			if profile.KubernetesConfig.KubeletConfig == nil {
+				profile.KubernetesConfig.KubeletConfig = map[string]string{}
+			}
+			if _, ok := profile.KubernetesConfig.KubeletConfig["--protect-kernel-defaults"]; !ok {
+				profile.KubernetesConfig.KubeletConfig["--protect-kernel-defaults"] = "true"
+			}
+		}
+
 		// Set the default number of IP addresses allocated for agents.
 		if profile.IPAddressCount == 0 {
 			// Allocate one IP address for the node.
@@ -496,6 +534,29 @@ func (p *Properties) setAgentProfileDefaults(isUpgrade, isScale bool) {
 
 		if profile.PreserveNodesProperties == nil {
 			profile.PreserveNodesProperties = to.BoolPtr(DefaultPreserveNodesProperties)
+		}
+
+		if profile.EnableVMSSNodePublicIP == nil {
+			profile.EnableVMSSNodePublicIP = to.BoolPtr(DefaultEnableVMSSNodePublicIP)
+		}
+	}
+}
+
+// setWindowsProfileDefaults sets default WindowsProfile values
+func (p *Properties) setWindowsProfileDefaults(isUpgrade, isScale bool) {
+	windowsProfile := p.WindowsProfile
+	if !isUpgrade && !isScale {
+		if windowsProfile.WindowsPublisher == "" {
+			windowsProfile.WindowsPublisher = DefaultWindowsPublisher
+		}
+		if windowsProfile.WindowsOffer == "" {
+			windowsProfile.WindowsOffer = DefaultWindowsOffer
+		}
+		if windowsProfile.WindowsSku == "" {
+			windowsProfile.WindowsSku = DefaultWindowsSku
+		}
+		if windowsProfile.ImageVersion == "" {
+			windowsProfile.ImageVersion = DefaultImageVersion
 		}
 	}
 }

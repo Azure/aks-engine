@@ -52,7 +52,7 @@ jobs:
   - script: make validate-dependencies
     displayName: Check if imports, Gopkg.toml, and Gopkg.lock are in sync
     workingDirectory: $(modulePath)
-  - script: make validate-copyright-headers test-style
+  - script: make generate test-style
     displayName: Run linting rules
     workingDirectory: $(modulePath)
   - script: make build-cross
@@ -73,13 +73,6 @@ jobs:
   parameters:
     name: 'ubuntu_18_04_linux_e2e'
     apimodel: 'examples/ubuntu-1804/kubernetes.json'
-
-- template: e2e-job-template.yaml
-  parameters:
-    name: 'coreos_1_14_e2e'
-    k8sRelease: '1.14'
-    apimodel: 'examples/e2e-tests/kubernetes/coreos/coreos.json'
-    createVNET: true
 
 - template: e2e-job-template.yaml
   parameters:
@@ -111,6 +104,13 @@ jobs:
 
 - template: e2e-job-template.yaml
   parameters:
+    name: 'k8s_1_15_release_e2e'
+    k8sRelease: '1.15'
+    apimodel: 'examples/e2e-tests/kubernetes/release/default/definition.json'
+    createVNET: true
+
+- template: e2e-job-template.yaml
+  parameters:
     name: 'k8s_windows_1_12_release_e2e'
     k8sRelease: '1.12'
     apimodel: 'examples/e2e-tests/kubernetes/windows/hybrid/definition.json'
@@ -125,4 +125,10 @@ jobs:
   parameters:
     name: 'k8s_windows_1_14_release_e2e'
     k8sRelease: '1.14'
+    apimodel: 'examples/e2e-tests/kubernetes/windows/hybrid/definition.json'
+
+- template: e2e-job-template.yaml
+  parameters:
+    name: 'k8s_windows_1_15_release_e2e'
+    k8sRelease: '1.15'
     apimodel: 'examples/e2e-tests/kubernetes/windows/hybrid/definition.json'

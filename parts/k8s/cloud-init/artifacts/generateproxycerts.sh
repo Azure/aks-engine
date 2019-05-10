@@ -29,7 +29,8 @@ ETCDCTL_KEY_FILE="${ETCDCTL_KEY_FILE:=/etc/kubernetes/certs/etcdclient.key}"
 ETCDCTL_CERT_FILE="${ETCDCTL_CERT_FILE:=/etc/kubernetes/certs/etcdclient.crt}"
 
 ETCDCTL_PARAMS="--command-timeout=30s --cert=${ETCDCTL_CERT_FILE} --key=${ETCDCTL_KEY_FILE} ${ETCD_CA_PARAM} --endpoints=${ETCDCTL_ENDPOINTS}"
-export RANDFILE=$(mktemp)
+RANDFILE=$(mktemp)
+export RANDFILE
 
 openssl genrsa -out $PROXY_CA_KEY 2048
 openssl req -new -x509 -days 1826 -key $PROXY_CA_KEY -out $PROXY_CRT -subj '/CN=proxyClientCA'
@@ -58,7 +59,7 @@ is_etcd_healthy(){
         [ $? -eq 0  ] && break || sleep 5
     done
 }
-is_etcd_healthy 
+is_etcd_healthy
 # lock file to enable "only 1 master generates certs"
 rm -f "${PROXY_CERT_LOCK_FILE}"
 mkfifo "${PROXY_CERT_LOCK_FILE}"
@@ -69,18 +70,18 @@ echo "$(date) lock acquired"
 
 pid=$!
 if read lockthis < "${PROXY_CERT_LOCK_FILE}"; then
-  if [[ "" == "$(ETCDCTL_API=3 etcdctl ${ETCDCTL_PARAMS} get $ETCD_REQUESTHEADER_CLIENT_CA --print-value-only)" ]]; then 
+  if [[ "" == "$(ETCDCTL_API=3 etcdctl ${ETCDCTL_PARAMS} get $ETCD_REQUESTHEADER_CLIENT_CA --print-value-only)" ]]; then
     ETCDCTL_API=3 etcdctl ${ETCDCTL_PARAMS} put $ETCD_REQUESTHEADER_CLIENT_CA " $(cat ${PROXY_CRT})" > /dev/null 2>&1;
 	else
-		echo "found client request header ca, not creating one"	
+		echo "found client request header ca, not creating one"
   fi
-  if [[ "" == "$(ETCDCTL_API=3 etcdctl ${ETCDCTL_PARAMS} get $ETCD_PROXY_KEY --print-value-only)" ]]; then 
-    ETCDCTL_API=3 etcdctl ${ETCDCTL_PARAMS} put $ETCD_PROXY_KEY " $(cat ${PROXY_CLIENT_KEY})" > /dev/null 2>&1; 
+  if [[ "" == "$(ETCDCTL_API=3 etcdctl ${ETCDCTL_PARAMS} get $ETCD_PROXY_KEY --print-value-only)" ]]; then
+    ETCDCTL_API=3 etcdctl ${ETCDCTL_PARAMS} put $ETCD_PROXY_KEY " $(cat ${PROXY_CLIENT_KEY})" > /dev/null 2>&1;
 	else
 		 echo "found proxy key, not creating one"
   fi
-  if [[ "" == "$(ETCDCTL_API=3 etcdctl ${ETCDCTL_PARAMS} get $ETCD_PROXY_CERT --print-value-only)" ]]; then 
-    ETCDCTL_API=3 etcdctl ${ETCDCTL_PARAMS} put $ETCD_PROXY_CERT " $(cat ${PROXY_CLIENT_CRT})" > /dev/null 2>&1; 
+  if [[ "" == "$(ETCDCTL_API=3 etcdctl ${ETCDCTL_PARAMS} get $ETCD_PROXY_CERT --print-value-only)" ]]; then
+    ETCDCTL_API=3 etcdctl ${ETCDCTL_PARAMS} put $ETCD_PROXY_CERT " $(cat ${PROXY_CLIENT_CRT})" > /dev/null 2>&1;
 	else
 		echo "found proxy cert, not creating one"
   fi

@@ -12,7 +12,8 @@ function shunittest_validate_deployment {
     export EXPECTED_NODE_COUNT=${narr[0]}
     export EXPECTED_LINUX_AGENTS=${narr[1]}
     export EXPECTED_WINDOWS_AGENTS=${narr[1]}
-    export EXPECTED_ORCHESTRATOR_VERSION=$(${HOME}/test/step.sh get_orchestrator_release)
+    EXPECTED_ORCHESTRATOR_VERSION=$(${HOME}/test/step.sh get_orchestrator_release)
+    export EXPECTED_ORCHESTRATOR_VERSION
   fi
 
   script="${HOME}/test/cluster-tests/${ORCHESTRATOR}/test.sh"

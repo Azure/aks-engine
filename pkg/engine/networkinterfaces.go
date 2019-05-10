@@ -20,8 +20,6 @@ func CreateNetworkInterfaces(cs *api.ContainerService) NetworkInterfaceARM {
 		dependencies = append(dependencies, "[variables('vnetID')]")
 	}
 
-	dependencies = append(dependencies, "[variables('masterLbName')]")
-
 	if cs.Properties.MasterProfile.Count > 1 {
 		dependencies = append(dependencies, "[variables('masterInternalLbName')]")
 	}
@@ -32,6 +30,15 @@ func CreateNetworkInterfaces(cs *api.ContainerService) NetworkInterfaceARM {
 		dependencies = append(dependencies, "[resourceId('Microsoft.DocumentDB/databaseAccounts/', variables('cosmosAccountName'))]")
 	}
 
+	lbBackendAddressPools := []network.BackendAddressPool{}
+	if !cs.Properties.OrchestratorProfile.IsPrivateCluster() {
+		dependencies = append(dependencies, "[variables('masterLbName')]")
+		publicLbPool := network.BackendAddressPool{
+			ID: to.StringPtr("[concat(variables('masterLbID'), '/backendAddressPools/', variables('masterLbBackendPoolName'))]"),
+		}
+		lbBackendAddressPools = append(lbBackendAddressPools, publicLbPool)
+	}
+
 	armResource := ARMResource{
 		APIVersion: "[variables('apiVersionNetwork')]",
 		Copy: map[string]string{
@@ -39,12 +46,6 @@ func CreateNetworkInterfaces(cs *api.ContainerService) NetworkInterfaceARM {
 			"name":  "nicLoopNode",
 		},
 		DependsOn: dependencies,
-	}
-
-	lbBackendAddressPools := []network.BackendAddressPool{
-		{
-			ID: to.StringPtr("[concat(variables('masterLbID'), '/backendAddressPools/', variables('masterLbBackendPoolName'))]"),
-		},
 	}
 
 	if cs.Properties.MasterProfile.Count > 1 {
@@ -58,18 +59,22 @@ func CreateNetworkInterfaces(cs *api.ContainerService) NetworkInterfaceARM {
 		Name: to.StringPtr("ipconfig1"),
 		InterfaceIPConfigurationPropertiesFormat: &network.InterfaceIPConfigurationPropertiesFormat{
 			LoadBalancerBackendAddressPools: &lbBackendAddressPools,
-			LoadBalancerInboundNatRules: &[]network.InboundNatRule{
-				{
-					ID: to.StringPtr("[concat(variables('masterLbID'),'/inboundNatRules/SSH-',variables('masterVMNamePrefix'),copyIndex(variables('masterOffset')))]"),
-				},
-			},
-			PrivateIPAddress:          to.StringPtr("[variables('masterPrivateIpAddrs')[copyIndex(variables('masterOffset'))]]"),
-			Primary:                   to.BoolPtr(true),
-			PrivateIPAllocationMethod: network.Static,
+			PrivateIPAddress:                to.StringPtr("[variables('masterPrivateIpAddrs')[copyIndex(variables('masterOffset'))]]"),
+			Primary:                         to.BoolPtr(true),
+			PrivateIPAllocationMethod:       network.Static,
 			Subnet: &network.Subnet{
 				ID: to.StringPtr("[variables('vnetSubnetID')]"),
 			},
 		},
+	}
+
+	if !cs.Properties.OrchestratorProfile.IsPrivateCluster() {
+		publicNatRules := []network.InboundNatRule{
+			{
+				ID: to.StringPtr("[concat(variables('masterLbID'),'/inboundNatRules/SSH-',variables('masterVMNamePrefix'),copyIndex(variables('masterOffset')))]"),
+			},
+		}
+		loadBalancerIPConfig.LoadBalancerInboundNatRules = &publicNatRules
 	}
 
 	isAzureCNI := cs.Properties.OrchestratorProfile.IsAzureCNI()
@@ -228,11 +233,7 @@ func createJumpboxNetworkInterface(cs *api.ContainerService) NetworkInterfaceARM
 
 	armResource := ARMResource{
 		APIVersion: "[variables('apiVersionNetwork')]",
-		Copy: map[string]string{
-			"count": "[sub(variables('masterCount'), variables('masterOffset'))]",
-			"name":  "nicLoopNode",
-		},
-		DependsOn: dependencies,
+		DependsOn:  dependencies,
 	}
 
 	nicProperties := network.InterfacePropertiesFormat{
@@ -258,7 +259,7 @@ func createJumpboxNetworkInterface(cs *api.ContainerService) NetworkInterfaceARM
 
 	networkInterface := network.Interface{
 		Location:                  to.StringPtr("[variables('location')]"),
-		Name:                      to.StringPtr("[concat(variables('masterVMNamePrefix'), 'nic-', copyIndex(variables('masterOffset')))]"),
+		Name:                      to.StringPtr("[variables('jumpboxNetworkInterfaceName')]"),
 		InterfacePropertiesFormat: &nicProperties,
 		Type:                      to.StringPtr("Microsoft.Network/networkInterfaces"),
 	}
@@ -320,6 +321,17 @@ func createAgentVMASNetworkInterface(cs *api.ContainerService, profile *api.Agen
 		}
 		if i == 1 {
 			ipConfig.Primary = to.BoolPtr(true)
+			if profile.LoadBalancerBackendAddressPoolIDs != nil {
+				backendPools := make([]network.BackendAddressPool, 0)
+				for _, lbBackendPoolID := range profile.LoadBalancerBackendAddressPoolIDs {
+					backendPools = append(backendPools,
+						network.BackendAddressPool{
+							ID: to.StringPtr(lbBackendPoolID),
+						},
+					)
+				}
+				ipConfig.LoadBalancerBackendAddressPools = &backendPools
+			}
 		}
 		ipConfig.PrivateIPAllocationMethod = network.Dynamic
 		ipConfig.Subnet = &network.Subnet{

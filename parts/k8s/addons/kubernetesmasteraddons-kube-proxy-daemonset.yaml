@@ -27,7 +27,7 @@ spec:
       containers:
       - command:
         - /hyperkube
-        - proxy
+        - kube-proxy
         - --kubeconfig=/var/lib/kubelet/kubeconfig
         - --cluster-cidr=<CIDR>
         - --feature-gates=ExperimentalCriticalPodAnnotation=true

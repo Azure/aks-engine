@@ -23,7 +23,7 @@ const (
 	Linux   OSType = "Linux"
 )
 
-// the LinuxDistros supported by vlabs
+// Distro string consts
 const (
 	Ubuntu          Distro = "ubuntu"
 	Ubuntu1804      Distro = "ubuntu-18.04"
@@ -150,6 +150,8 @@ const (
 	DefaultUseInstanceMetadata = true
 	// DefaultLoadBalancerSku determines the aks-engine provided default for enabling Azure cloudprovider load balancer SKU
 	DefaultLoadBalancerSku = "Basic"
+	// StandardLoadBalancerSku is the string const for Azure Standard Load Balancer
+	StandardLoadBalancerSku = "Standard"
 	// DefaultExcludeMasterFromStandardLB determines the aks-engine provided default for excluding master nodes from standard load balancer.
 	DefaultExcludeMasterFromStandardLB = true
 	// DefaultSecureKubeletEnabled determines the aks-engine provided default for securing kubelet communications
@@ -162,34 +164,36 @@ const (
 	DefaultContainerMonitoringAddonEnabled = false
 	// DefaultDNSAutoscalerAddonEnabled determines the aks-engine provided default for dns-autoscaler addon
 	DefaultDNSAutoscalerAddonEnabled = false
-	// IPMasqAgentAddonEnabled enables the ip-masq-agent addon
-	IPMasqAgentAddonEnabled = true
+	// DefaultIPMasqAgentAddonEnabled enables the ip-masq-agent addon
+	DefaultIPMasqAgentAddonEnabled = true
 	// DefaultHeapsterAddonName is the name of the heapster addon
 	DefaultHeapsterAddonName = "heapster"
-	// DefaultTillerAddonName is the name of the tiller addon deployment
-	DefaultTillerAddonName = "tiller"
-	// DefaultAADPodIdentityAddonName is the name of the aad-pod-identity addon deployment
-	DefaultAADPodIdentityAddonName = "aad-pod-identity"
-	// DefaultACIConnectorAddonName is the name of the aci-connector addon deployment
-	DefaultACIConnectorAddonName = "aci-connector"
-	// DefaultClusterAutoscalerAddonName is the name of the cluster autoscaler addon deployment
-	DefaultClusterAutoscalerAddonName = "cluster-autoscaler"
-	// DefaultBlobfuseFlexVolumeAddonName is the name of the blobfuse flexvolume addon
-	DefaultBlobfuseFlexVolumeAddonName = "blobfuse-flexvolume"
-	// DefaultSMBFlexVolumeAddonName is the name of the smb flexvolume addon
-	DefaultSMBFlexVolumeAddonName = "smb-flexvolume"
-	// DefaultKeyVaultFlexVolumeAddonName is the name of the key vault flexvolume addon deployment
-	DefaultKeyVaultFlexVolumeAddonName = "keyvault-flexvolume"
-	// DefaultDashboardAddonName is the name of the kubernetes-dashboard addon deployment
-	DefaultDashboardAddonName = "kubernetes-dashboard"
-	// DefaultReschedulerAddonName is the name of the rescheduler addon deployment
-	DefaultReschedulerAddonName = "rescheduler"
-	// DefaultMetricsServerAddonName is the name of the kubernetes metrics server addon deployment
-	DefaultMetricsServerAddonName = "metrics-server"
+	// TillerAddonName is the name of the tiller addon deployment
+	TillerAddonName = "tiller"
+	// AADPodIdentityAddonName is the name of the aad-pod-identity addon deployment
+	AADPodIdentityAddonName = "aad-pod-identity"
+	// ACIConnectorAddonName is the name of the aci-connector addon deployment
+	ACIConnectorAddonName = "aci-connector"
+	// ClusterAutoscalerAddonName is the name of the cluster autoscaler addon deployment
+	ClusterAutoscalerAddonName = "cluster-autoscaler"
+	// BlobfuseFlexVolumeAddonName is the name of the blobfuse flexvolume addon
+	BlobfuseFlexVolumeAddonName = "blobfuse-flexvolume"
+	// SMBFlexVolumeAddonName is the name of the smb flexvolume addon
+	SMBFlexVolumeAddonName = "smb-flexvolume"
+	// KeyVaultFlexVolumeAddonName is the name of the key vault flexvolume addon deployment
+	KeyVaultFlexVolumeAddonName = "keyvault-flexvolume"
+	// DashboardAddonName is the name of the kubernetes-dashboard addon deployment
+	DashboardAddonName = "kubernetes-dashboard"
+	// ReschedulerAddonName is the name of the rescheduler addon deployment
+	ReschedulerAddonName = "rescheduler"
+	// MetricsServerAddonName is the name of the kubernetes metrics server addon deployment
+	MetricsServerAddonName = "metrics-server"
 	// NVIDIADevicePluginAddonName is the name of the NVIDIA device plugin addon deployment
 	NVIDIADevicePluginAddonName = "nvidia-device-plugin"
 	// ContainerMonitoringAddonName is the name of the kubernetes Container Monitoring addon deployment
 	ContainerMonitoringAddonName = "container-monitoring"
+	// CalicoAddonName is the name of calico daemonset addon
+	CalicoAddonName = "calico-daemonset"
 	// IPMASQAgentAddonName is the name of the ip masq agent addon
 	IPMASQAgentAddonName = "ip-masq-agent"
 	// DefaultPrivateClusterEnabled determines the aks-engine provided default for enabling kubernetes Private Cluster
@@ -215,8 +219,10 @@ const (
 	DefaultAcceleratedNetworking = true
 	// DefaultVMSSOverProvisioningEnabled determines the aks-engine provided default for enabling VMSS Overprovisioning
 	DefaultVMSSOverProvisioningEnabled = false
-	// DefaultDNSAutoscalerAddonName is the name of the dns-autoscaler addon
-	DefaultDNSAutoscalerAddonName = "dns-autoscaler"
+	// DefaultAuditDEnabled determines the aks-engine provided default for enabling auditd
+	DefaultAuditDEnabled = false
+	// DNSAutoscalerAddonName is the name of the dns-autoscaler addon
+	DNSAutoscalerAddonName = "dns-autoscaler"
 	// DefaultUseCosmos determines if the cluster will use cosmos as etcd storage
 	DefaultUseCosmos = false
 	// DefaultMaximumLoadBalancerRuleCount determines the default value of maximum allowed loadBalancer rule count according to
@@ -226,6 +232,20 @@ const (
 	DefaultEnableAutomaticUpdates = true
 	// DefaultPreserveNodesProperties determines the aks-engine provided default for preserving nodes properties
 	DefaultPreserveNodesProperties = true
+	// DefaultEnableVMSSNodePublicIP determines the aks-engine provided default for enable VMSS node public IP
+	DefaultEnableVMSSNodePublicIP = false
+)
+
+// WindowsProfile defaults
+const (
+	// DefaultWindowsPublisher sets the default WindowsPublisher value in WindowsProfile
+	DefaultWindowsPublisher = "MicrosoftWindowsServer"
+	// DefaultWindowsOffer sets the default WindowsOffer value in WindowsProfile
+	DefaultWindowsOffer = "WindowsServerSemiAnnual"
+	// DefaultWindowsSku sets the default WindowsSku value in WindowsProfile
+	DefaultWindowsSku = "Datacenter-Core-1809-with-Containers-smalldisk"
+	// DefaultImageVersion sets the default ImageVersion value in WindowsProfile
+	DefaultImageVersion = "1809.0.20190314"
 )
 
 const (
@@ -272,11 +292,11 @@ const (
 	// AzureCniPluginVerLinux specifies version of Azure CNI plugin, which has been mirrored from
 	// https://github.com/Azure/azure-container-networking/releases/download/${AZURE_PLUGIN_VER}/azure-vnet-cni-linux-amd64-${AZURE_PLUGIN_VER}.tgz
 	// to https://acs-mirror.azureedge.net/cni
-	AzureCniPluginVerLinux = "v1.0.18"
+	AzureCniPluginVerLinux = "v1.0.22"
 	// AzureCniPluginVerWindows specifies version of Azure CNI plugin, which has been mirrored from
 	// https://github.com/Azure/azure-container-networking/releases/download/${AZURE_PLUGIN_VER}/azure-vnet-cni-windows-amd64-${AZURE_PLUGIN_VER}.zip
 	// to https://acs-mirror.azureedge.net/cni
-	AzureCniPluginVerWindows = "v1.0.18"
+	AzureCniPluginVerWindows = "v1.0.22"
 	// CNIPluginVer specifies the version of CNI implementation
 	// https://github.com/containernetworking/plugins
 	CNIPluginVer = "v0.7.5"
@@ -383,7 +403,7 @@ const (
 	// DefaultJumpboxUsername specifies the default admin username for the private cluster jumpbox
 	DefaultJumpboxUsername = "azureuser"
 	// DefaultKubeletPodMaxPIDs specifies the default max pid authorized by pods
-	DefaultKubeletPodMaxPIDs = 100
+	DefaultKubeletPodMaxPIDs = -1
 	// DefaultKubernetesAgentSubnetVMSS specifies the default subnet for agents when master is VMSS
 	DefaultKubernetesAgentSubnetVMSS = "10.248.0.0/13"
 	// DefaultKubernetesClusterSubnet specifies the default subnet for pods.
@@ -393,7 +413,7 @@ const (
 	// DefaultKubernetesDNSServiceIP specifies the IP address that kube-dns listens on by default. must by in the default Service CIDR range.
 	DefaultKubernetesDNSServiceIP = "10.0.0.10"
 	// DefaultMobyVersion specifies the default Azure build version of Moby to install.
-	DefaultMobyVersion = "3.0.4"
+	DefaultMobyVersion = "3.0.5"
 	// DefaultContainerdVersion specifies the default containerd version to install.
 	DefaultContainerdVersion = "1.1.5"
 	// DefaultDockerBridgeSubnet specifies the default subnet for the docker bridge network for masters and agents.

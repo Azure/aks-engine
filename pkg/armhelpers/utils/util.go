@@ -168,8 +168,7 @@ func GetVMNameIndex(osType compute.OperatingSystemTypes, vmName string) (int, er
 
 // GetK8sVMName reconstructs the VM name
 func GetK8sVMName(p *api.Properties, agentPoolProfile *api.AgentPoolProfile, agentIndex int) (string, error) {
-
-	vmPrefix := p.GetAgentVMPrefix(agentPoolProfile)
+	vmPrefix := p.GetAgentVMPrefix(agentPoolProfile, p.GetAgentPoolIndexByName(agentPoolProfile.Name))
 	if vmPrefix != "" {
 		return vmPrefix + strconv.Itoa(agentIndex), nil
 	}

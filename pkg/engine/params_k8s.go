@@ -28,7 +28,7 @@ func assignKubernetesParameters(properties *api.Properties, parametersMap params
 		k8sComponents := api.K8sComponentsByVersionMap[k8sVersion]
 		kubernetesConfig := orchestratorProfile.KubernetesConfig
 		kubernetesImageBase := kubernetesConfig.KubernetesImageBase
-		hyperKubeImageBase := kubernetesConfig.KubernetesImageBase
+		hyperkubeImageBase := kubernetesConfig.KubernetesImageBase
 
 		if properties.IsAzureStackCloud() {
 			kubernetesImageBase = cloudSpecConfig.KubernetesSpecConfig.KubernetesImageBase
@@ -44,13 +44,16 @@ func assignKubernetesParameters(properties *api.Properties, parametersMap params
 				addValue(parametersMap, "kubernetesCcmImageSpec", kubernetesCcmSpec)
 			}
 
-			kubernetesHyperkubeSpec := hyperKubeImageBase + k8sComponents["hyperkube"]
+			kubernetesHyperkubeSpec := hyperkubeImageBase + k8sComponents["hyperkube"]
+			if properties.IsAzureStackCloud() {
+				kubernetesHyperkubeSpec = kubernetesHyperkubeSpec + AzureStackSuffix
+			}
 			if kubernetesConfig.CustomHyperkubeImage != "" {
 				kubernetesHyperkubeSpec = kubernetesConfig.CustomHyperkubeImage
 			}
+			addValue(parametersMap, "kubernetesHyperkubeSpec", kubernetesHyperkubeSpec)
 
 			addValue(parametersMap, "kubeDNSServiceIP", kubernetesConfig.DNSServiceIP)
-			addValue(parametersMap, "kubernetesHyperkubeSpec", kubernetesHyperkubeSpec)
 			if kubernetesConfig.PrivateAzureRegistryServer != "" {
 				addValue(parametersMap, "privateAzureRegistryServer", kubernetesConfig.PrivateAzureRegistryServer)
 			}
@@ -60,8 +63,8 @@ func assignKubernetesParameters(properties *api.Properties, parametersMap params
 			}
 			addValue(parametersMap, "kubernetesDNSSidecarSpec", kubernetesImageBase+k8sComponents["k8s-dns-sidecar"])
 			if kubernetesConfig.IsAADPodIdentityEnabled() {
-				aadPodIdentityAddon := kubernetesConfig.GetAddonByName(DefaultAADPodIdentityAddonName)
-				aadIndex := aadPodIdentityAddon.GetAddonContainersIndexByName(DefaultAADPodIdentityAddonName)
+				aadPodIdentityAddon := kubernetesConfig.GetAddonByName(AADPodIdentityAddonName)
+				aadIndex := aadPodIdentityAddon.GetAddonContainersIndexByName(AADPodIdentityAddonName)
 				if aadIndex > -1 {
 					addValue(parametersMap, "kubernetesAADPodIdentityEnabled", to.Bool(aadPodIdentityAddon.Enabled))
 				}
@@ -72,8 +75,8 @@ func assignKubernetesParameters(properties *api.Properties, parametersMap params
 				addValue(parametersMap, "kubernetesACIConnectorEnabled", false)
 			}
 			if kubernetesConfig.IsClusterAutoscalerEnabled() {
-				clusterAutoscalerAddon := kubernetesConfig.GetAddonByName(DefaultClusterAutoscalerAddonName)
-				clusterAutoScalerIndex := clusterAutoscalerAddon.GetAddonContainersIndexByName(DefaultClusterAutoscalerAddonName)
+				clusterAutoscalerAddon := kubernetesConfig.GetAddonByName(ClusterAutoscalerAddonName)
+				clusterAutoScalerIndex := clusterAutoscalerAddon.GetAddonContainersIndexByName(ClusterAutoscalerAddonName)
 				if clusterAutoScalerIndex > -1 {
 					addValue(parametersMap, "kubernetesClusterAutoscalerAzureCloud", cloudSpecConfig.CloudName)
 					addValue(parametersMap, "kubernetesClusterAutoscalerEnabled", true)

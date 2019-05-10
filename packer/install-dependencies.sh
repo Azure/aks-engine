@@ -5,9 +5,11 @@ source /home/packer/cis.sh
 
 RELEASE_NOTES_FILEPATH=/var/log/azure/golden-image-install.complete
 
-echo "Starting build on " `date` > ${RELEASE_NOTES_FILEPATH}
+echo "Starting build on " $(date) > ${RELEASE_NOTES_FILEPATH}
 echo "Using kernel:" >> ${RELEASE_NOTES_FILEPATH}
-cat /proc/version | tee -a ${RELEASE_NOTES_FILEPATH}
+tee -a ${RELEASE_NOTES_FILEPATH} < /proc/version
+
+copyPackerFiles
 
 echo ""
 echo "Components downloaded in this VHD build (some of the below components might get deleted during cluster provisioning if they are not needed):" >> ${RELEASE_NOTES_FILEPATH}
@@ -15,12 +17,14 @@ echo "Components downloaded in this VHD build (some of the below components migh
 installDeps
 cat << EOF >> ${RELEASE_NOTES_FILEPATH}
   - apt-transport-https
+  - auditd
   - blobfuse
   - ca-certificates
   - ceph-common
   - cgroup-lite
   - cifs-utils
   - conntrack
+  - cracklib-runtime
   - ebtables
   - ethtool
   - fuse
@@ -31,6 +35,8 @@ cat << EOF >> ${RELEASE_NOTES_FILEPATH}
   - ipset
   - iptables
   - jq
+  - libpam-pwquality
+  - libpwquality-tools
   - mount
   - nfs-common
   - pigz socat
@@ -48,7 +54,7 @@ ETCD_DOWNLOAD_URL="https://acs-mirror.azureedge.net/github-coreos"
 installEtcd
 echo "  - etcd v${ETCD_VERSION}" >> ${RELEASE_NOTES_FILEPATH}
 
-MOBY_VERSION="3.0.4"
+MOBY_VERSION="3.0.5"
 installMoby
 echo "  - moby v${MOBY_VERSION}" >> ${RELEASE_NOTES_FILEPATH}
 installGPUDrivers
@@ -57,8 +63,8 @@ echo "  - nvidia-docker2 nvidia-container-runtime" >> ${RELEASE_NOTES_FILEPATH}
 installClearContainersRuntime
 
 VNET_CNI_VERSIONS="
+1.0.22
 1.0.18
-1.0.17
 "
 for VNET_CNI_VERSION in $VNET_CNI_VERSIONS; do
     VNET_CNI_PLUGINS_URL="https://acs-mirror.azureedge.net/cni/azure-vnet-cni-linux-amd64-v${VNET_CNI_VERSION}.tgz"
@@ -147,6 +153,7 @@ for KUBE_DNS_VERSION in ${KUBE_DNS_VERSIONS}; do
 done
 
 KUBE_ADDON_MANAGER_VERSIONS="
+9.0.1
 9.0
 8.9
 8.8
@@ -173,9 +180,13 @@ done
 
 PAUSE_VERSIONS="3.1"
 for PAUSE_VERSION in ${PAUSE_VERSIONS}; do
-    CONTAINER_IMAGE="k8s.gcr.io/pause-amd64:${PAUSE_VERSION}"
-    pullContainerImage "docker" ${CONTAINER_IMAGE}
-    echo "  - ${CONTAINER_IMAGE}" >> ${RELEASE_NOTES_FILEPATH}
+    # Image 'msazurestackdocker/pause-amd64' is the same as 'k8s.gcr.io/pause-amd64'
+    # At the time, re-tagging and pushing to docker hub seemed simpler than changing how `defaults-kubelet.go` sets `--pod-infra-container-image`
+    for IMAGE_BASE in k8s.gcr.io msazurestackdocker; do
+      CONTAINER_IMAGE="${IMAGE_BASE}/pause-amd64:${PAUSE_VERSION}"
+      pullContainerImage "docker" ${CONTAINER_IMAGE}
+      echo "  - ${CONTAINER_IMAGE}" >> ${RELEASE_NOTES_FILEPATH}
+    done
 done
 
 TILLER_VERSIONS="
@@ -190,10 +201,12 @@ done
 
 CLUSTER_AUTOSCALER_VERSIONS="
 1.14.0
+1.13.4
 1.13.2
 1.13.1
 1.12.3
 1.12.2
+1.3.8
 1.3.7
 1.3.4
 1.3.3
@@ -245,19 +258,20 @@ for VIRTUAL_KUBELET_VERSION in ${VIRTUAL_KUBELET_VERSIONS}; do
     echo "  - ${CONTAINER_IMAGE}" >> ${RELEASE_NOTES_FILEPATH}
 done
 
+AZURE_CNIIMAGEBASE="mcr.microsoft.com/containernetworking"
 AZURE_CNI_NETWORKMONITOR_VERSIONS="
 0.0.6
 0.0.5
 "
 for AZURE_CNI_NETWORKMONITOR_VERSION in ${AZURE_CNI_NETWORKMONITOR_VERSIONS}; do
-    CONTAINER_IMAGE="containernetworking/networkmonitor:v${AZURE_CNI_NETWORKMONITOR_VERSION}"
+    CONTAINER_IMAGE="${AZURE_CNIIMAGEBASE}/networkmonitor:v${AZURE_CNI_NETWORKMONITOR_VERSION}"
     pullContainerImage "docker" ${CONTAINER_IMAGE}
     echo "  - ${CONTAINER_IMAGE}" >> ${RELEASE_NOTES_FILEPATH}
 done
 
 AZURE_NPM_VERSIONS="1.0.18"
 for AZURE_NPM_VERSION in ${AZURE_NPM_VERSIONS}; do
-    CONTAINER_IMAGE="containernetworking/azure-npm:v${AZURE_NPM_VERSION}"
+    CONTAINER_IMAGE="${AZURE_CNIIMAGEBASE}/azure-npm:v${AZURE_NPM_VERSION}"
     pullContainerImage "docker" ${CONTAINER_IMAGE}
     echo "  - ${CONTAINER_IMAGE}" >> ${RELEASE_NOTES_FILEPATH}
 done
@@ -343,33 +357,47 @@ echo "  - busybox" >> ${RELEASE_NOTES_FILEPATH}
 K8S_VERSIONS="
 1.14.1
 1.14.0
+1.13.6
 1.13.5
-1.13.4
+1.12.8
 1.12.7
-1.12.6
+1.12.7-azs
+1.11.10
+1.11.10-azs
 1.11.9
-1.11.8
+1.11.9-azs
 1.10.13
 1.10.12
 1.9.11
 1.9.10
 "
 for KUBERNETES_VERSION in ${K8S_VERSIONS}; do
-    HYPERKUBE_URL="k8s.gcr.io/hyperkube-amd64:v${KUBERNETES_VERSION}"
+    if [[ $KUBERNETES_VERSION == *"azs"* ]]; then
+      HYPERKUBE_URL="msazurestackdocker/hyperkube-amd64:v${KUBERNETES_VERSION}"
+    else
+      HYPERKUBE_URL="k8s.gcr.io/hyperkube-amd64:v${KUBERNETES_VERSION}"
+      CONTAINER_IMAGE="k8s.gcr.io/cloud-controller-manager-amd64:v${KUBERNETES_VERSION}"
+      pullContainerImage "docker" ${CONTAINER_IMAGE}
+      echo "  - ${CONTAINER_IMAGE}" >> ${RELEASE_NOTES_FILEPATH}
+    fi
     extractHyperkube "docker"
-    CONTAINER_IMAGE="k8s.gcr.io/cloud-controller-manager-amd64:v${KUBERNETES_VERSION}"
-    pullContainerImage "docker" ${CONTAINER_IMAGE}
     echo "  - ${HYPERKUBE_URL}" >> ${RELEASE_NOTES_FILEPATH}
-    echo "  - ${CONTAINER_IMAGE}" >> ${RELEASE_NOTES_FILEPATH}
 done
 
 df -h
 
-echo "Install completed successfully on " `date` >> ${RELEASE_NOTES_FILEPATH}
-echo "VSTS Build NUMBER: ${BUILD_NUMBER}" >> ${RELEASE_NOTES_FILEPATH}
-echo "VSTS Build ID: ${BUILD_ID}" >> ${RELEASE_NOTES_FILEPATH}
-echo "Commit: ${COMMIT}" >> ${RELEASE_NOTES_FILEPATH}
-echo "Feature flags: ${FEATURE_FLAGS}" >> ${RELEASE_NOTES_FILEPATH}
+# warn at 75% space taken
+[ -s $(df -P | grep '/dev/sda1' | awk '0+$5 >= 75 {print}') ] || echo "WARNING: 75% of /dev/sda1 is used" >> ${RELEASE_NOTES_FILEPATH}
+# error at 90% space taken
+[ -s $(df -P | grep '/dev/sda1' | awk '0+$5 >= 90 {print}') ] || exit 1
+
+{
+  echo "Install completed successfully on " $(date)
+  echo "VSTS Build NUMBER: ${BUILD_NUMBER}"
+  echo "VSTS Build ID: ${BUILD_ID}"
+  echo "Commit: ${COMMIT}"
+  echo "Feature flags: ${FEATURE_FLAGS}"
+} >> ${RELEASE_NOTES_FILEPATH}
 
 # The below statements are used to extract release notes from the packer output
 set +x
@@ -378,7 +406,7 @@ cat ${RELEASE_NOTES_FILEPATH}
 echo "END_OF_NOTES"
 set -x
 
-# Move logs from VHD creation out of /var/log 
+# Move logs from VHD creation out of /var/log
 sudo mv /var/log /var/log.vhd
 sudo mkdir /var/log
 

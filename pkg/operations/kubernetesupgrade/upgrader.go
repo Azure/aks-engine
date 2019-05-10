@@ -29,16 +29,18 @@ type Upgrader struct {
 	Translator *i18n.Translator
 	logger     *logrus.Entry
 	ClusterTopology
-	Client           armhelpers.AKSEngineClient
-	kubeConfig       string
-	stepTimeout      *time.Duration
-	AKSEngineVersion string
+	Client             armhelpers.AKSEngineClient
+	kubeConfig         string
+	stepTimeout        *time.Duration
+	cordonDrainTimeout *time.Duration
+	AKSEngineVersion   string
 }
 
 type vmStatus int
 
 const (
 	defaultTimeout                     = time.Minute * 20
+	defaultCordonDrainTimeout          = time.Minute * 20
 	nodePropertiesCopyTimeout          = time.Minute * 5
 	vmStatusUpgraded          vmStatus = iota
 	vmStatusNotUpgraded
@@ -51,13 +53,14 @@ type vmInfo struct {
 }
 
 // Init initializes an upgrader struct
-func (ku *Upgrader) Init(translator *i18n.Translator, logger *logrus.Entry, clusterTopology ClusterTopology, client armhelpers.AKSEngineClient, kubeConfig string, stepTimeout *time.Duration, aksEngineVersion string) {
+func (ku *Upgrader) Init(translator *i18n.Translator, logger *logrus.Entry, clusterTopology ClusterTopology, client armhelpers.AKSEngineClient, kubeConfig string, stepTimeout *time.Duration, cordonDrainTimeout *time.Duration, aksEngineVersion string) {
 	ku.Translator = translator
 	ku.logger = logger
 	ku.ClusterTopology = clusterTopology
 	ku.Client = client
 	ku.kubeConfig = kubeConfig
 	ku.stepTimeout = stepTimeout
+	ku.cordonDrainTimeout = cordonDrainTimeout
 	ku.AKSEngineVersion = aksEngineVersion
 }
 
@@ -263,6 +266,11 @@ func (ku *Upgrader) upgradeAgentPools(ctx context.Context) error {
 		} else {
 			upgradeAgentNode.timeout = *ku.stepTimeout
 		}
+		if ku.cordonDrainTimeout == nil {
+			upgradeAgentNode.cordonDrainTimeout = defaultCordonDrainTimeout
+		} else {
+			upgradeAgentNode.cordonDrainTimeout = *ku.cordonDrainTimeout
+		}
 
 		agentVMs := make(map[int]*vmInfo)
 		// Go over upgraded VMs and verify provisioning state
@@ -319,7 +327,7 @@ func (ku *Upgrader) upgradeAgentPools(ctx context.Context) error {
 		}
 
 		newCreatedVMs := []string{}
-		client, err := ku.getKubernetesClient()
+		client, err := ku.getKubernetesClient(10 * time.Second)
 		if err != nil {
 			ku.logger.Errorf("Error getting Kubernetes client: %v", err)
 			return err
@@ -497,8 +505,15 @@ func (ku *Upgrader) upgradeAgentScaleSets(ctx context.Context) error {
 
 			ku.logger.Infof("Successfully set capacity for VMSS %s", vmssToUpgrade.Name)
 
+			var cordonDrainTimeout time.Duration
+			if ku.cordonDrainTimeout == nil {
+				cordonDrainTimeout = defaultCordonDrainTimeout
+			} else {
+				cordonDrainTimeout = *ku.cordonDrainTimeout
+			}
+
 			// Before we can delete the node we should safely and responsibly drain it
-			client, err := ku.getKubernetesClient()
+			client, err := ku.getKubernetesClient(cordonDrainTimeout)
 			if err != nil {
 				ku.logger.Errorf("Error getting Kubernetes client: %v", err)
 				return err
@@ -737,14 +752,13 @@ func (ku *Upgrader) copyCustomNodeProperties(client armhelpers.KubernetesClient,
 	return err
 }
 
-func (ku *Upgrader) getKubernetesClient() (armhelpers.KubernetesClient, error) {
-	getClientTimeout := 10 * time.Second
+func (ku *Upgrader) getKubernetesClient(timeout time.Duration) (armhelpers.KubernetesClient, error) {
 
 	return ku.Client.GetKubernetesClient(
 		ku.DataModel.Properties.GetMasterFQDN(),
 		ku.kubeConfig,
 		interval,
-		getClientTimeout)
+		timeout)
 }
 
 // return unused index within the range of agent indices, or subsequent index

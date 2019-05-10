@@ -460,6 +460,7 @@ type MasterProfile struct {
 	AgentSubnet              string            `json:"agentSubnet,omitempty"`
 	AvailabilityZones        []string          `json:"availabilityZones,omitempty"`
 	SinglePlacementGroup     *bool             `json:"singlePlacementGroup,omitempty"`
+	AuditDEnabled            *bool             `json:"auditDEnabled,omitempty"`
 
 	// Master LB public endpoint/FQDN with port
 	// The format will be FQDN:2376
@@ -532,6 +533,9 @@ type AgentPoolProfile struct {
 	VnetCidrs                           []string             `json:"vnetCidrs,omitempty"`
 	PreserveNodesProperties             *bool                `json:"preserveNodesProperties,omitempty"`
 	WindowsNameVersion                  string               `json:"windowsNameVersion,omitempty"`
+	EnableVMSSNodePublicIP              *bool                `json:"enableVMSSNodePublicIP,omitempty"`
+	LoadBalancerBackendAddressPoolIDs   []string             `json:"loadBalancerBackendAddressPoolIDs,omitempty"`
+	AuditDEnabled                       *bool                `json:"auditDEnabled,omitempty"`
 }
 
 // AgentPoolProfileRole represents an agent role
@@ -819,7 +823,8 @@ func (p *Properties) K8sOrchestratorName() string {
 	return ""
 }
 
-func (p *Properties) getAgentPoolIndexByName(name string) int {
+// GetAgentPoolIndexByName returns the index of the provided agentpool.
+func (p *Properties) GetAgentPoolIndexByName(name string) int {
 	index := -1
 	for i, profile := range p.AgentPoolProfiles {
 		if profile.Name == name {
@@ -830,9 +835,8 @@ func (p *Properties) getAgentPoolIndexByName(name string) int {
 	return index
 }
 
-// GetAgentVMPrefix returns the VM prefix for an agentpool
-func (p *Properties) GetAgentVMPrefix(a *AgentPoolProfile) string {
-	index := p.getAgentPoolIndexByName(a.Name)
+// GetAgentVMPrefix returns the VM prefix for an agentpool.
+func (p *Properties) GetAgentVMPrefix(a *AgentPoolProfile, index int) string {
 	nameSuffix := p.GetClusterID()
 	vmPrefix := ""
 	if index != -1 {
@@ -898,12 +902,22 @@ func (p *Properties) GetNSGName() string {
 
 // GetPrimaryAvailabilitySetName returns the name of the primary availability set of the cluster
 func (p *Properties) GetPrimaryAvailabilitySetName() string {
-	return p.AgentPoolProfiles[0].Name + "-availabilitySet-" + p.GetClusterID()
+	if len(p.AgentPoolProfiles) > 0 {
+		if p.AgentPoolProfiles[0].AvailabilityProfile == AvailabilitySet {
+			return p.AgentPoolProfiles[0].Name + "-availabilitySet-" + p.GetClusterID()
+		}
+	}
+	return ""
 }
 
 // GetPrimaryScaleSetName returns the name of the primary scale set node of the cluster
 func (p *Properties) GetPrimaryScaleSetName() string {
-	return p.K8sOrchestratorName() + "-" + p.AgentPoolProfiles[0].Name + "-" + p.GetClusterID() + "-vmss"
+	if len(p.AgentPoolProfiles) > 0 {
+		if p.AgentPoolProfiles[0].AvailabilityProfile == VirtualMachineScaleSets {
+			return p.GetAgentVMPrefix(p.AgentPoolProfiles[0], 0)
+		}
+	}
+	return ""
 }
 
 // IsHostedMasterProfile returns true if the cluster has a hosted master
@@ -987,7 +1001,7 @@ func (p *Properties) GetClusterID() string {
 			h.Write([]byte(p.MasterProfile.DNSPrefix))
 		} else if p.HostedMasterProfile != nil {
 			h.Write([]byte(p.HostedMasterProfile.DNSPrefix))
-		} else {
+		} else if len(p.AgentPoolProfiles) > 0 {
 			h.Write([]byte(p.AgentPoolProfiles[0].Name))
 		}
 		r := rand.New(rand.NewSource(int64(h.Sum64())))
@@ -1025,6 +1039,21 @@ func (p *Properties) HasZonesForAllAgentPools() bool {
 	return false
 }
 
+// IsVHDDistroForAllNodes returns true if all of the agent pools plus masters are running the VHD image
+func (p *Properties) IsVHDDistroForAllNodes() bool {
+	if len(p.AgentPoolProfiles) > 0 {
+		for _, ap := range p.AgentPoolProfiles {
+			if !ap.IsVHDDistro() {
+				return false
+			}
+		}
+	}
+	if p.MasterProfile != nil {
+		return p.MasterProfile.IsVHDDistro()
+	}
+	return true
+}
+
 // IsUbuntuDistroForAllNodes returns true if all of the agent pools plus masters are running the base Ubuntu image
 func (p *Properties) IsUbuntuDistroForAllNodes() bool {
 	if len(p.AgentPoolProfiles) > 0 {
@@ -1034,7 +1063,55 @@ func (p *Properties) IsUbuntuDistroForAllNodes() bool {
 			}
 		}
 	}
-	return p.MasterProfile.Distro == Ubuntu || p.MasterProfile.Distro == Ubuntu1804
+	if p.MasterProfile != nil {
+		return p.MasterProfile.Distro == Ubuntu || p.MasterProfile.Distro == Ubuntu1804
+	}
+	return true
+}
+
+// HasUbuntuDistroNodes returns true if any of the agent pools or masters are running the base Ubuntu image
+func (p *Properties) HasUbuntuDistroNodes() bool {
+	if len(p.AgentPoolProfiles) > 0 {
+		for _, ap := range p.AgentPoolProfiles {
+			if ap.Distro == Ubuntu || ap.Distro == Ubuntu1804 {
+				return true
+			}
+		}
+	}
+	if p.MasterProfile != nil {
+		return p.MasterProfile.Distro == Ubuntu || p.MasterProfile.Distro == Ubuntu1804
+	}
+	return false
+}
+
+// HasUbuntu1604DistroNodes returns true if any of the agent pools or masters are running the base Ubuntu 16.04-LTS image
+func (p *Properties) HasUbuntu1604DistroNodes() bool {
+	if len(p.AgentPoolProfiles) > 0 {
+		for _, ap := range p.AgentPoolProfiles {
+			if ap.Distro == Ubuntu {
+				return true
+			}
+		}
+	}
+	if p.MasterProfile != nil {
+		return p.MasterProfile.Distro == Ubuntu
+	}
+	return false
+}
+
+// HasUbuntu1804DistroNodes returns true if any of the agent pools or masters are running the base Ubuntu 18.04-LTS image
+func (p *Properties) HasUbuntu1804DistroNodes() bool {
+	if len(p.AgentPoolProfiles) > 0 {
+		for _, ap := range p.AgentPoolProfiles {
+			if ap.Distro == Ubuntu1804 {
+				return true
+			}
+		}
+	}
+	if p.MasterProfile != nil {
+		return p.MasterProfile.Distro == Ubuntu1804
+	}
+	return false
 }
 
 // HasAvailabilityZones returns true if the cluster contains a profile with zones
@@ -1111,6 +1188,11 @@ func (m *MasterProfile) IsCoreOS() bool {
 	return m.Distro == CoreOS
 }
 
+// IsVHDDistro returns true if the distro uses VHD SKUs
+func (m *MasterProfile) IsVHDDistro() bool {
+	return m.Distro == AKS || m.Distro == AKS1804
+}
+
 // IsVirtualMachineScaleSets returns true if the master availability profile is VMSS
 func (m *MasterProfile) IsVirtualMachineScaleSets() bool {
 	return m.AvailabilityProfile == VirtualMachineScaleSets
@@ -1175,6 +1257,11 @@ func (m *MasterProfile) IsUbuntu() bool {
 	return m.IsUbuntu1604() || m.IsUbuntu1804()
 }
 
+// IsUbuntuNonVHD returns true if the distro uses a base Ubuntu image
+func (m *MasterProfile) IsUbuntuNonVHD() bool {
+	return m.IsUbuntu() && !m.IsVHDDistro()
+}
+
 // IsCustomVNET returns true if the customer brought their own VNET
 func (a *AgentPoolProfile) IsCustomVNET() bool {
 	return len(a.VnetSubnetID) > 0
@@ -1198,6 +1285,11 @@ func (a *AgentPoolProfile) IsRHEL() bool {
 // IsCoreOS returns true if the agent specified a CoreOS distro
 func (a *AgentPoolProfile) IsCoreOS() bool {
 	return a.OSType == Linux && a.Distro == CoreOS
+}
+
+// IsVHDDistro returns true if the distro uses VHD SKUs
+func (a *AgentPoolProfile) IsVHDDistro() bool {
+	return a.Distro == AKS || a.Distro == AKS1804
 }
 
 // IsAvailabilitySets returns true if the customer specified disks
@@ -1264,6 +1356,11 @@ func (a *AgentPoolProfile) IsUbuntu1804() bool {
 // IsUbuntu returns true if the master profile distro is any ubuntu distro
 func (a *AgentPoolProfile) IsUbuntu() bool {
 	return a.IsUbuntu1604() || a.IsUbuntu1804()
+}
+
+// IsUbuntuNonVHD returns true if the distro uses a base Ubuntu image
+func (a *AgentPoolProfile) IsUbuntuNonVHD() bool {
+	return a.IsUbuntu() && !a.IsVHDDistro()
 }
 
 // HasSecrets returns true if the customer specified secrets to install
@@ -1418,7 +1515,7 @@ func (k *KubernetesConfig) isAddonEnabled(addonName string, defaultValue bool) b
 
 // IsMetricsServerEnabled checks if the metrics server addon is enabled
 func (o *OrchestratorProfile) IsMetricsServerEnabled() bool {
-	return o.KubernetesConfig.isAddonEnabled(DefaultMetricsServerAddonName,
+	return o.KubernetesConfig.isAddonEnabled(MetricsServerAddonName,
 		common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.9.0"))
 }
 
@@ -1434,47 +1531,47 @@ func (k *KubernetesConfig) IsContainerMonitoringEnabled() bool {
 
 // IsTillerEnabled checks if the tiller addon is enabled
 func (k *KubernetesConfig) IsTillerEnabled() bool {
-	return k.isAddonEnabled(DefaultTillerAddonName, DefaultTillerAddonEnabled)
+	return k.isAddonEnabled(TillerAddonName, DefaultTillerAddonEnabled)
 }
 
-// IsAADPodIdentityEnabled checks if the tiller addon is enabled
+// IsAADPodIdentityEnabled checks if the AAD pod identity addon is enabled
 func (k *KubernetesConfig) IsAADPodIdentityEnabled() bool {
-	return k.isAddonEnabled(DefaultAADPodIdentityAddonName, DefaultAADPodIdentityAddonEnabled)
+	return k.isAddonEnabled(AADPodIdentityAddonName, DefaultAADPodIdentityAddonEnabled)
 }
 
 // IsACIConnectorEnabled checks if the ACI Connector addon is enabled
 func (k *KubernetesConfig) IsACIConnectorEnabled() bool {
-	return k.isAddonEnabled(DefaultACIConnectorAddonName, DefaultACIConnectorAddonEnabled)
+	return k.isAddonEnabled(ACIConnectorAddonName, DefaultACIConnectorAddonEnabled)
 }
 
 // IsClusterAutoscalerEnabled checks if the cluster autoscaler addon is enabled
 func (k *KubernetesConfig) IsClusterAutoscalerEnabled() bool {
-	return k.isAddonEnabled(DefaultClusterAutoscalerAddonName, DefaultClusterAutoscalerAddonEnabled)
+	return k.isAddonEnabled(ClusterAutoscalerAddonName, DefaultClusterAutoscalerAddonEnabled)
 }
 
 // IsBlobfuseFlexVolumeEnabled checks if the Blobfuse FlexVolume addon is enabled
 func (k *KubernetesConfig) IsBlobfuseFlexVolumeEnabled() bool {
-	return k.isAddonEnabled(DefaultBlobfuseFlexVolumeAddonName, DefaultBlobfuseFlexVolumeAddonEnabled)
+	return k.isAddonEnabled(BlobfuseFlexVolumeAddonName, DefaultBlobfuseFlexVolumeAddonEnabled)
 }
 
 // IsSMBFlexVolumeEnabled checks if the SMB FlexVolume addon is enabled
 func (k *KubernetesConfig) IsSMBFlexVolumeEnabled() bool {
-	return k.isAddonEnabled(DefaultSMBFlexVolumeAddonName, DefaultSMBFlexVolumeAddonEnabled)
+	return k.isAddonEnabled(SMBFlexVolumeAddonName, DefaultSMBFlexVolumeAddonEnabled)
 }
 
 // IsKeyVaultFlexVolumeEnabled checks if the Key Vault FlexVolume addon is enabled
 func (k *KubernetesConfig) IsKeyVaultFlexVolumeEnabled() bool {
-	return k.isAddonEnabled(DefaultKeyVaultFlexVolumeAddonName, DefaultKeyVaultFlexVolumeAddonEnabled)
+	return k.isAddonEnabled(KeyVaultFlexVolumeAddonName, DefaultKeyVaultFlexVolumeAddonEnabled)
 }
 
 // IsDashboardEnabled checks if the kubernetes-dashboard addon is enabled
 func (k *KubernetesConfig) IsDashboardEnabled() bool {
-	return k.isAddonEnabled(DefaultDashboardAddonName, DefaultDashboardAddonEnabled)
+	return k.isAddonEnabled(DashboardAddonName, DefaultDashboardAddonEnabled)
 }
 
 // IsIPMasqAgentEnabled checks if the ip-masq-agent addon is enabled
 func (k *KubernetesConfig) IsIPMasqAgentEnabled() bool {
-	return k.isAddonEnabled(IPMASQAgentAddonName, (k.NetworkPlugin != NetworkPluginCilium && IPMasqAgentAddonEnabled))
+	return k.isAddonEnabled(IPMASQAgentAddonName, (k.NetworkPlugin != NetworkPluginCilium && DefaultIPMasqAgentAddonEnabled))
 }
 
 // IsRBACEnabled checks if RBAC is enabled
@@ -1529,8 +1626,10 @@ func (p *Properties) HasNSeriesSKU() bool {
 // IsNVIDIADevicePluginEnabled checks if the NVIDIA Device Plugin addon is enabled
 // It is enabled by default if agents contain a GPU and Kubernetes version is >= 1.10.0
 func (p *Properties) IsNVIDIADevicePluginEnabled() bool {
-	k := p.OrchestratorProfile.KubernetesConfig
-	return k.isAddonEnabled(NVIDIADevicePluginAddonName, getDefaultNVIDIADevicePluginEnabled(p))
+	if p.OrchestratorProfile == nil || p.OrchestratorProfile.KubernetesConfig == nil {
+		return false
+	}
+	return p.OrchestratorProfile.KubernetesConfig.isAddonEnabled(NVIDIADevicePluginAddonName, p.IsNvidiaDevicePluginCapable())
 }
 
 // IsAzureStackCloud return true if the cloud is AzureStack
@@ -1598,20 +1697,14 @@ func (p *Properties) GetCustomCloudIdentitySystem() string {
 	return AzureADIdentitySystem
 }
 
-func getDefaultNVIDIADevicePluginEnabled(p *Properties) bool {
-	o := p.OrchestratorProfile
-	var addonEnabled bool
-	if p.HasNSeriesSKU() && common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.10.0") {
-		addonEnabled = true
-	} else {
-		addonEnabled = false
-	}
-	return addonEnabled
+// IsNvidiaDevicePluginCapable determines if the cluster definition is compatible with the nvidia-device-plugin daemonset
+func (p *Properties) IsNvidiaDevicePluginCapable() bool {
+	return p.HasNSeriesSKU() && common.IsKubernetesVersionGe(p.OrchestratorProfile.OrchestratorVersion, "1.10.0")
 }
 
 // IsReschedulerEnabled checks if the rescheduler addon is enabled
 func (k *KubernetesConfig) IsReschedulerEnabled() bool {
-	return k.isAddonEnabled(DefaultReschedulerAddonName, DefaultReschedulerAddonEnabled)
+	return k.isAddonEnabled(ReschedulerAddonName, DefaultReschedulerAddonEnabled)
 }
 
 // PrivateJumpboxProvision checks if a private cluster has jumpbox auto-provisioning

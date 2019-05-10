@@ -590,7 +590,7 @@ var _ = Describe("Upgrade Kubernetes cluster tests", func() {
 		}
 
 		u := &Upgrader{}
-		u.Init(&i18n.Translator{}, log.NewEntry(log.New()), ClusterTopology{}, &mockClient, "", nil, TestAKSEngineVersion)
+		u.Init(&i18n.Translator{}, log.NewEntry(log.New()), ClusterTopology{}, &mockClient, "", nil, nil, TestAKSEngineVersion)
 
 		vmname, err := u.getLastVMNameInVMSS(ctx, "resourcegroup", "scalesetName")
 		Expect(vmname).To(Equal("aks-agentnode1-123456-vmss000005"))
@@ -604,7 +604,7 @@ var _ = Describe("Upgrade Kubernetes cluster tests", func() {
 				mockClient.MakeFakeVirtualMachineScaleSetVMWithGivenName("Kubernetes:1.9.10", ""),
 			}
 		}
-		u.Init(&i18n.Translator{}, log.NewEntry(log.New()), ClusterTopology{}, &mockClient, "", nil, TestAKSEngineVersion)
+		u.Init(&i18n.Translator{}, log.NewEntry(log.New()), ClusterTopology{}, &mockClient, "", nil, nil, TestAKSEngineVersion)
 
 		vmname, err = u.getLastVMNameInVMSS(ctx, "resourcegroup", "scalesetName")
 		Expect(vmname).To(Equal(""))
@@ -613,7 +613,7 @@ var _ = Describe("Upgrade Kubernetes cluster tests", func() {
 		mockClient.FakeListVirtualMachineScaleSetVMsResult = func() []compute.VirtualMachineScaleSetVM {
 			return []compute.VirtualMachineScaleSetVM{}
 		}
-		u.Init(&i18n.Translator{}, log.NewEntry(log.New()), ClusterTopology{}, &mockClient, "", nil, TestAKSEngineVersion)
+		u.Init(&i18n.Translator{}, log.NewEntry(log.New()), ClusterTopology{}, &mockClient, "", nil, nil, TestAKSEngineVersion)
 
 		vmname, err = u.getLastVMNameInVMSS(ctx, "resourcegroup", "scalesetName")
 		Expect(vmname).To(Equal(""))
@@ -626,7 +626,7 @@ var _ = Describe("Upgrade Kubernetes cluster tests", func() {
 		mockClient := &armhelpers.MockAKSEngineClient{MockKubernetesClient: &armhelpers.MockKubernetesClient{}}
 		mockClient.MockKubernetesClient.FailGetNode = true
 
-		u.Init(&i18n.Translator{}, log.NewEntry(log.New()), ClusterTopology{}, nil, "", nil, TestAKSEngineVersion)
+		u.Init(&i18n.Translator{}, log.NewEntry(log.New()), ClusterTopology{}, nil, "", nil, nil, TestAKSEngineVersion)
 		err := u.copyCustomPropertiesToNewNode(mockClient.MockKubernetesClient, "oldNodeName", "newNodeName")
 		Expect(err).Should(HaveOccurred())
 

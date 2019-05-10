@@ -12,7 +12,7 @@ spec:
     - name: kube-scheduler
       image: <img>
       imagePullPolicy: IfNotPresent
-      command: ["/hyperkube", "scheduler"]
+      command: ["/hyperkube", "kube-scheduler"]
       args: [<args>]
       volumeMounts:
         - name: etc-kubernetes

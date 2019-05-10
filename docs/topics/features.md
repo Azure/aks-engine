@@ -82,7 +82,7 @@ In order to use these storage classes the following conditions must be met.
 ```console
 kubectl get nodes -l storageprofile=managed
 NAME                    STATUS    AGE       VERSION
-k8s-agent1-23731866-0   Ready     24m       v1.7.2
+k8s-agent1-23731866-0   Ready     24m       v1.12.8
 ```
 
 - The VM size must support the type of managed disk type requested. For example, Premium VM sizes with managed OS disks support both managed-standard and managed-premium storage classes whereas Standard VM sizes with managed OS disks only support managed-standard storage class.
@@ -134,7 +134,7 @@ Currently, the IP addresses that are pre-allocated aren't allowed by the default
     },
 ```
 
-When using Azure integrated networking the maxPods setting will be set to 30 by default. This number can be changed keeping in mind that there is a limit of 4,000 IPs per vnet.
+When using Azure integrated networking the maxPods setting will be set to 30 by default. This number can be changed keeping in mind that there is a limit of 65,536 IPs per vnet.
 
 ```json
       "kubernetesConfig": {
@@ -169,6 +169,25 @@ Per default Calico still allows all communication within the cluster. Using Kube
 - [NetworkPolicy User Guide](https://kubernetes.io/docs/user-guide/networkpolicies/)
 - [NetworkPolicy Example Walkthrough](https://kubernetes.io/docs/getting-started-guides/network-policy/walkthrough/)
 - [Calico Kubernetes](https://github.com/Azure/aks-engine/blob/master/examples/networkpolicy)
+
+### Calico 3.3 cleanup after upgrading to 3.5
+
+Because Calico 3.3 is using Calico CNI, while Calico 3.5 moves to Azure CNI, if the cluster is upgraded from calico 3.3 to 3.5, then some manual cluster resource cleanup will be required to successfully complete the upgrade. We've provided a sample resource spec here that can be used as an example:
+
+https://github.com/Azure/aks-engine/raw/master/docs/topics/calico-3.3.1-cleanup-after-upgrade.yaml
+
+There are some placeholder tokens in the above `yaml` file, so please reconcile those with the actual values in your cluster. Look for these placeholder strings in the spec, then compare with the running spec of the comparable pre-3.5 resource in your cluster, and modify the cleanup spec accordingly:
+
+- `<calicoIPAMConfig>`
+- `<kubeClusterCidr>`
+
+And then using your modified file, do something like this:
+
+```sh
+kubectl delete -f calico-3.3.1-cleanup-after-upgrade-modified-with-my-cluster-configuration.yaml
+```
+
+After this, addon-manager would enforce the correct spec for Calico 3.5.
 
 <a name="feat-cilium"></a>
 

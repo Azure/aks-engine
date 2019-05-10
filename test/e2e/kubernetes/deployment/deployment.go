@@ -9,10 +9,13 @@ import (
 	"fmt"
 	"log"
 	"os/exec"
+	"regexp"
 	"strconv"
 	"time"
 
+	"github.com/Azure/aks-engine/test/e2e/kubernetes/hpa"
 	"github.com/Azure/aks-engine/test/e2e/kubernetes/pod"
+	"github.com/Azure/aks-engine/test/e2e/kubernetes/service"
 	"github.com/Azure/aks-engine/test/e2e/kubernetes/util"
 	"github.com/pkg/errors"
 )
@@ -96,6 +99,18 @@ func CreateLinuxDeployIfNotExist(image, name, namespace, miscOpts string) (*Depl
 	return deployment, nil
 }
 
+// CreateLinuxDeployDeleteIfExists will create a deployment, deleting any pre-existing deployment with the same name
+func CreateLinuxDeployDeleteIfExists(pattern, image, name, namespace, miscOpts string) (*Deployment, error) {
+	deployments, err := GetAllByPrefix(pattern, namespace)
+	if err != nil {
+		return nil, err
+	}
+	for _, d := range deployments {
+		d.Delete(util.DefaultDeleteRetries)
+	}
+	return CreateLinuxDeploy(image, name, namespace, miscOpts)
+}
+
 // RunLinuxDeploy will create a deployment that runs a bash command in a pod
 // --overrides=' "spec":{"template":{"spec": {"nodeSelector":{"beta.kubernetes.io/os":"linux"}}}}}'
 func RunLinuxDeploy(image, name, namespace, command string, replicas int) (*Deployment, error) {
@@ -114,7 +129,20 @@ func RunLinuxDeploy(image, name, namespace, command string, replicas int) (*Depl
 	return d, nil
 }
 
-// CreateWindowsDeploy will crete a deployment for a given image with a name in a namespace
+// RunLinuxDeployDeleteIfExists will create a deployment that runs a bash command in a pod,
+// deleting any pre-existing deployment with the same name
+func RunLinuxDeployDeleteIfExists(pattern, image, name, namespace, command string, replicas int) (*Deployment, error) {
+	deployments, err := GetAllByPrefix(pattern, namespace)
+	if err != nil {
+		return nil, err
+	}
+	for _, d := range deployments {
+		d.Delete(util.DefaultDeleteRetries)
+	}
+	return RunLinuxDeploy(image, name, namespace, command, replicas)
+}
+
+// CreateWindowsDeploy will create a deployment for a given image with a name in a namespace
 func CreateWindowsDeploy(image, name, namespace string, port int, hostport int) (*Deployment, error) {
 	overrides := `{ "spec":{"template":{"spec": {"nodeSelector":{"beta.kubernetes.io/os":"windows"}}}}}`
 	cmd := exec.Command("k", "run", name, "-n", namespace, "--image", image, "--image-pull-policy=IfNotPresent", "--port", strconv.Itoa(port), "--hostport", strconv.Itoa(hostport), "--overrides", overrides)
@@ -129,6 +157,29 @@ func CreateWindowsDeploy(image, name, namespace string, port int, hostport int) 
 		return nil, err
 	}
 	return d, nil
+}
+
+// CreateWindowsDeployIfNotExist first checks if a deployment already exists, and return it if so
+// If not, we call CreateWindowsDeploy
+func CreateWindowsDeployIfNotExist(image, name, namespace string, port int, hostport int) (*Deployment, error) {
+	deployment, err := Get(name, namespace)
+	if err != nil {
+		return CreateWindowsDeploy(image, name, namespace, port, hostport)
+	}
+	return deployment, nil
+}
+
+// CreateWindowsDeployDeleteIfExist first checks if a deployment already exists according to a naming pattern
+// If a pre-existing deployment is found matching that pattern, it is deleted
+func CreateWindowsDeployDeleteIfExist(pattern, image, name, namespace string, port int, hostport int) (*Deployment, error) {
+	deployments, err := GetAllByPrefix(pattern, namespace)
+	if err != nil {
+		return nil, err
+	}
+	for _, d := range deployments {
+		d.Delete(util.DefaultDeleteRetries)
+	}
+	return CreateWindowsDeploy(image, name, namespace, port, hostport)
 }
 
 // Get returns a deployment from a name and namespace
@@ -146,6 +197,44 @@ func Get(name, namespace string) (*Deployment, error) {
 		return nil, err
 	}
 	return &d, nil
+}
+
+// GetAll will return all deployments in a given namespace
+func GetAll(namespace string) (*List, error) {
+	cmd := exec.Command("k", "get", "deployments", "-n", namespace, "-o", "json")
+	util.PrintCommand(cmd)
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		log.Printf("Error getting all deployments:\n")
+		return nil, err
+	}
+	dl := List{}
+	err = json.Unmarshal(out, &dl)
+	if err != nil {
+		log.Printf("Error unmarshalling deployments json:%s\n", err)
+		return nil, err
+	}
+	return &dl, nil
+}
+
+// GetAllByPrefix will return all pods in a given namespace that match a prefix
+func GetAllByPrefix(prefix, namespace string) ([]Deployment, error) {
+	dl, err := GetAll(namespace)
+	if err != nil {
+		return nil, err
+	}
+	deployments := []Deployment{}
+	for _, d := range dl.Deployments {
+		matched, err := regexp.MatchString(prefix+"-.*", d.Metadata.Name)
+		if err != nil {
+			log.Printf("Error trying to match deployment name:%s\n", err)
+			return nil, err
+		}
+		if matched {
+			deployments = append(deployments, d)
+		}
+	}
+	return deployments, nil
 }
 
 // Delete will delete a deployment in a given namespace
@@ -192,6 +281,28 @@ func (d *Deployment) Expose(svcType string, targetPort, exposedPort int) error {
 	return nil
 }
 
+// ExposeIfNotExist will create a load balancer and expose the deployment on a given port if the associated service doesn't already exist
+func (d *Deployment) ExposeIfNotExist(svcType string, targetPort, exposedPort int) error {
+	_, err := service.Get(d.Metadata.Name, d.Metadata.Namespace)
+	if err != nil {
+		return d.Expose(svcType, targetPort, exposedPort)
+	}
+	return nil
+}
+
+// ExposeDeleteIfExist will create a load balancer and expose the deployment on a given port
+// If a service matching the passed in pattern already exists, we'll delete it first
+func (d *Deployment) ExposeDeleteIfExist(pattern, namespace, svcType string, targetPort, exposedPort int) error {
+	services, err := service.GetAllByPrefix(pattern, namespace)
+	if err != nil {
+		return err
+	}
+	for _, s := range services {
+		s.Delete(util.DefaultDeleteRetries)
+	}
+	return d.Expose(svcType, targetPort, exposedPort)
+}
+
 // ScaleDeployment scales a deployment to n instancees
 func (d *Deployment) ScaleDeployment(n int) error {
 	cmd := exec.Command("k", "scale", fmt.Sprintf("--replicas=%d", n), "deployment", d.Metadata.Name)
@@ -214,6 +325,22 @@ func (d *Deployment) CreateDeploymentHPA(cpuPercent, min, max int) error {
 	}
 	d.Metadata.HasHPA = true
 	return nil
+}
+
+// CreateDeploymentHPADeleteIfExist applies autoscale characteristics to deployment, deleting any pre-existing HPA resource first
+func (d *Deployment) CreateDeploymentHPADeleteIfExist(cpuPercent, min, max int) error {
+	h, err := hpa.Get(d.Metadata.Name, d.Metadata.Namespace)
+	if err == nil {
+		err := h.Delete(util.DefaultDeleteRetries)
+		if err != nil {
+			return err
+		}
+		_, err = hpa.WaitOnDeleted(d.Metadata.Name, d.Metadata.Namespace, 5*time.Second, 1*time.Minute)
+		if err != nil {
+			return err
+		}
+	}
+	return d.CreateDeploymentHPA(cpuPercent, min, max)
 }
 
 // Pods will return all pods related to a deployment

@@ -169,8 +169,8 @@ func TestCreateNIC(t *testing.T) {
 
 	expected.DependsOn = []string{
 		"[variables('nsgID')]",
-		"[variables('masterLbName')]",
 		"[variables('masterInternalLbName')]",
+		"[variables('masterLbName')]",
 	}
 
 	expected.IPConfigurations = &[]network.InterfaceIPConfiguration{
@@ -254,9 +254,9 @@ func TestCreateNIC(t *testing.T) {
 	nic = CreateNetworkInterfaces(cs)
 	expected.DependsOn = []string{
 		"[variables('nsgID')]",
-		"[variables('masterLbName')]",
 		"[variables('masterInternalLbName')]",
 		"[resourceId('Microsoft.DocumentDB/databaseAccounts/', variables('cosmosAccountName'))]",
+		"[variables('masterLbName')]",
 	}
 	diff = cmp.Diff(nic, expected)
 
@@ -565,10 +565,6 @@ func TestCreateJumpboxNIC(t *testing.T) {
 	expected := NetworkInterfaceARM{
 		ARMResource: ARMResource{
 			APIVersion: "[variables('apiVersionNetwork')]",
-			Copy: map[string]string{
-				"count": "[sub(variables('masterCount'), variables('masterOffset'))]",
-				"name":  "nicLoopNode",
-			},
 			DependsOn: []string{
 				"[concat('Microsoft.Network/publicIpAddresses/', variables('jumpboxPublicIpAddressName'))]",
 				"[concat('Microsoft.Network/networkSecurityGroups/', variables('jumpboxNetworkSecurityGroupName'))]",
@@ -577,7 +573,7 @@ func TestCreateJumpboxNIC(t *testing.T) {
 		},
 		Interface: network.Interface{
 			Location: to.StringPtr("[variables('location')]"),
-			Name:     to.StringPtr("[concat(variables('masterVMNamePrefix'), 'nic-', copyIndex(variables('masterOffset')))]"),
+			Name:     to.StringPtr("[variables('jumpboxNetworkInterfaceName')]"),
 			InterfacePropertiesFormat: &network.InterfacePropertiesFormat{
 				IPConfigurations: &[]network.InterfaceIPConfiguration{
 					{
@@ -642,9 +638,10 @@ func TestCreateAgentVMASNIC(t *testing.T) {
 	}
 
 	profile := &api.AgentPoolProfile{
-		Name:   "fooAgent",
-		OSType: "Linux",
-		Role:   "Infra",
+		Name:                              "fooAgent",
+		OSType:                            "Linux",
+		Role:                              "Infra",
+		LoadBalancerBackendAddressPoolIDs: []string{"/subscriptions/123/resourceGroups/rg/providers/Microsoft.Network/loadBalancers/mySLB/backendAddressPools/mySLBBEPool"},
 	}
 
 	actual := createAgentVMASNetworkInterface(cs, profile)

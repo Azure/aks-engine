@@ -8,6 +8,7 @@ import (
 
 	"github.com/Azure/aks-engine/pkg/api"
 	"github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2018-10-01/compute"
+	"github.com/Azure/azure-sdk-for-go/services/resources/mgmt/2018-05-01/resources"
 	"github.com/Azure/go-autorest/autorest/to"
 	"github.com/google/go-cmp/cmp"
 )
@@ -312,7 +313,7 @@ func TestCreateAgentVMASCustomScriptExtension(t *testing.T) {
 				AutoUpgradeMinorVersion: to.BoolPtr(true),
 				Settings:                &map[string]interface{}{},
 				ProtectedSettings: &map[string]interface{}{
-					"commandToExecute": `[concat('retrycmd_if_failure() { r=$1; w=$2; t=$3; shift && shift && shift; for i in $(seq 1 $r); do timeout $t ${@}; [ $? -eq 0  ] && break || if [ $i -eq $r ]; then return 1; else sleep $w; fi; done }; ERR_OUTBOUND_CONN_FAIL=50; retrycmd_if_failure 50 1 3 nc -vz k8s.gcr.io 443 && retrycmd_if_failure 50 1 3 nc -vz gcr.io 443 && retrycmd_if_failure 50 1 3 nc -vz docker.io 443 || exit $ERR_OUTBOUND_CONN_FAIL; for i in $(seq 1 1200); do if [ -f /opt/azure/containers/provision.sh ]; then break; fi; if [ $i -eq 1200 ]; then exit 100; else sleep 1; fi; done; ', variables('provisionScriptParametersCommon'),' GPU_NODE=false SGX_NODE=false /usr/bin/nohup /bin/bash -c "/bin/bash /opt/azure/containers/provision.sh >> /var/log/azure/cluster-provision.log 2>&1"')]`,
+					"commandToExecute": `[concat('retrycmd_if_failure() { r=$1; w=$2; t=$3; shift && shift && shift; for i in $(seq 1 $r); do timeout $t ${@}; [ $? -eq 0  ] && break || if [ $i -eq $r ]; then return 1; else sleep $w; fi; done }; ERR_OUTBOUND_CONN_FAIL=50; retrycmd_if_failure 50 1 3 nc -vz k8s.gcr.io 443 && retrycmd_if_failure 50 1 3 nc -vz gcr.io 443 && retrycmd_if_failure 50 1 3 nc -vz docker.io 443 || exit $ERR_OUTBOUND_CONN_FAIL; for i in $(seq 1 1200); do if [ -f /opt/azure/containers/provision.sh ]; then break; fi; if [ $i -eq 1200 ]; then exit 100; else sleep 1; fi; done; ', variables('provisionScriptParametersCommon'),' GPU_NODE=false SGX_NODE=false AUDITD_ENABLED=false /usr/bin/nohup /bin/bash -c "/bin/bash /opt/azure/containers/provision.sh >> /var/log/azure/cluster-provision.log 2>&1"')]`,
 				},
 			},
 			Type: to.StringPtr("Microsoft.Compute/virtualMachines/extensions"),
@@ -326,7 +327,47 @@ func TestCreateAgentVMASCustomScriptExtension(t *testing.T) {
 		t.Errorf("unexpected diff while expecting equal structs: %s", diff)
 	}
 
+	// Test with BlockOutboundInternet=true
+	cseValNoOutboundInternetCheck := `[concat('retrycmd_if_failure() { r=$1; w=$2; t=$3; shift && shift && shift; for i in $(seq 1 $r); do timeout $t ${@}; [ $? -eq 0  ] && break || if [ $i -eq $r ]; then return 1; else sleep $w; fi; done };  for i in $(seq 1 1200); do if [ -f /opt/azure/containers/provision.sh ]; then break; fi; if [ $i -eq 1200 ]; then exit 100; else sleep 1; fi; done; ', variables('provisionScriptParametersCommon'),' GPU_NODE=false SGX_NODE=false AUDITD_ENABLED=false /usr/bin/nohup /bin/bash -c "/bin/bash /opt/azure/containers/provision.sh >> /var/log/azure/cluster-provision.log 2>&1"')]`
+	cs.Properties.FeatureFlags.BlockOutboundInternet = true
+	profile = &api.AgentPoolProfile{
+		Name:   "sample",
+		OSType: "Linux",
+	}
+	cse = createAgentVMASCustomScriptExtension(cs, profile)
+
+	expectedCSE.ProtectedSettings = &map[string]interface{}{
+		"commandToExecute": cseValNoOutboundInternetCheck,
+	}
+
+	diff = cmp.Diff(cse, expectedCSE)
+
+	if diff != "" {
+		t.Errorf("unexpected diff while expecting equal structs: %s", diff)
+	}
+
+	// Test with Azure Stack
+	cs.Properties.FeatureFlags.BlockOutboundInternet = false
+	cs.Properties.CustomCloudProfile = &api.CustomCloudProfile{}
+	profile = &api.AgentPoolProfile{
+		Name:   "sample",
+		OSType: "Linux",
+	}
+	cse = createAgentVMASCustomScriptExtension(cs, profile)
+
+	expectedCSE.ProtectedSettings = &map[string]interface{}{
+		"commandToExecute": cseValNoOutboundInternetCheck,
+	}
+
+	diff = cmp.Diff(cse, expectedCSE)
+
+	if diff != "" {
+		t.Errorf("unexpected diff while expecting equal structs: %s", diff)
+	}
+
 	// Test with EnableRunInBackground and China Location
+	cs.Properties.FeatureFlags.BlockOutboundInternet = false
+	cs.Properties.CustomCloudProfile = nil
 	cs.Properties.FeatureFlags.EnableCSERunInBackground = true
 	cs.Location = "chinanorth"
 	profile = &api.AgentPoolProfile{
@@ -336,7 +377,7 @@ func TestCreateAgentVMASCustomScriptExtension(t *testing.T) {
 	cse = createAgentVMASCustomScriptExtension(cs, profile)
 
 	expectedCSE.ProtectedSettings = &map[string]interface{}{
-		"commandToExecute": `[concat('retrycmd_if_failure() { r=$1; w=$2; t=$3; shift && shift && shift; for i in $(seq 1 $r); do timeout $t ${@}; [ $? -eq 0  ] && break || if [ $i -eq $r ]; then return 1; else sleep $w; fi; done }; ERR_OUTBOUND_CONN_FAIL=50; retrycmd_if_failure 50 1 3 nc -vz gcr.azk8s.cn 80 || exit $ERR_OUTBOUND_CONN_FAIL; for i in $(seq 1 1200); do if [ -f /opt/azure/containers/provision.sh ]; then break; fi; if [ $i -eq 1200 ]; then exit 100; else sleep 1; fi; done; ', variables('provisionScriptParametersCommon'),' GPU_NODE=false SGX_NODE=false /usr/bin/nohup /bin/bash -c "/bin/bash /opt/azure/containers/provision.sh >> /var/log/azure/cluster-provision.log 2>&1 &"')]`,
+		"commandToExecute": `[concat('retrycmd_if_failure() { r=$1; w=$2; t=$3; shift && shift && shift; for i in $(seq 1 $r); do timeout $t ${@}; [ $? -eq 0  ] && break || if [ $i -eq $r ]; then return 1; else sleep $w; fi; done }; ERR_OUTBOUND_CONN_FAIL=50; retrycmd_if_failure 50 1 3 nc -vz gcr.azk8s.cn 80 || exit $ERR_OUTBOUND_CONN_FAIL; for i in $(seq 1 1200); do if [ -f /opt/azure/containers/provision.sh ]; then break; fi; if [ $i -eq 1200 ]; then exit 100; else sleep 1; fi; done; ', variables('provisionScriptParametersCommon'),' GPU_NODE=false SGX_NODE=false AUDITD_ENABLED=false /usr/bin/nohup /bin/bash -c "/bin/bash /opt/azure/containers/provision.sh >> /var/log/azure/cluster-provision.log 2>&1 &"')]`,
 	}
 
 	diff = cmp.Diff(cse, expectedCSE)
@@ -358,10 +399,178 @@ func TestCreateAgentVMASCustomScriptExtension(t *testing.T) {
 	expectedCSE.VirtualMachineExtensionProperties.Type = to.StringPtr("CustomScriptExtension")
 	expectedCSE.TypeHandlerVersion = to.StringPtr("1.8")
 	expectedCSE.ProtectedSettings = &map[string]interface{}{
-		"commandToExecute": "[concat('powershell.exe -ExecutionPolicy Unrestricted -command \"', '$arguments = ', variables('singleQuote'),'-MasterIP ',variables('kubernetesAPIServerIP'),' -KubeDnsServiceIp ',parameters('kubeDnsServiceIp'),' -MasterFQDNPrefix ',variables('masterFqdnPrefix'),' -Location ',variables('location'),' -AgentKey ',parameters('clientPrivateKey'),' -AADClientId ',variables('servicePrincipalClientId'),' -AADClientSecret ',variables('singleQuote'),variables('singleQuote'),variables('servicePrincipalClientSecret'),variables('singleQuote'),variables('singleQuote'), ' ',variables('singleQuote'), ' ; ', variables('windowsCustomScriptSuffix'), '\" > %SYSTEMDRIVE%\\AzureData\\CustomDataSetupScript.log 2>&1')]",
+		"commandToExecute": "[concat('powershell.exe -ExecutionPolicy Unrestricted -command \"', '$arguments = ', variables('singleQuote'),'-MasterIP ',variables('kubernetesAPIServerIP'),' -KubeDnsServiceIp ',parameters('kubeDnsServiceIp'),' -MasterFQDNPrefix ',variables('masterFqdnPrefix'),' -Location ',variables('location'),' -AgentKey ',parameters('clientPrivateKey'),' -AADClientId ',variables('servicePrincipalClientId'),' -AADClientSecret ',variables('singleQuote'),variables('singleQuote'),base64(variables('servicePrincipalClientSecret')),variables('singleQuote'),variables('singleQuote'), ' ',variables('singleQuote'), ' ; ', variables('windowsCustomScriptSuffix'), '\" > %SYSTEMDRIVE%\\AzureData\\CustomDataSetupScript.log 2>&1')]",
 	}
 
 	diff = cmp.Diff(cse, expectedCSE)
+
+	if diff != "" {
+		t.Errorf("unexpected diff while expecting equal structs: %s", diff)
+	}
+}
+
+func TestCreateCustomExtensions(t *testing.T) {
+	properties := &api.Properties{
+		OrchestratorProfile: &api.OrchestratorProfile{
+			OrchestratorType: Kubernetes,
+		},
+		ExtensionProfiles: []*api.ExtensionProfile{
+			{
+				Name:    "winrm",
+				Version: "v1",
+				RootURL: "https://raw.githubusercontent.com/Azure/aks-engine/master/",
+			},
+		},
+		AgentPoolProfiles: []*api.AgentPoolProfile{
+			{
+				Name:                "windowspool1",
+				OSType:              api.Windows,
+				AvailabilityProfile: "AvailabilitySet",
+				Extensions: []api.Extension{
+					{
+						Name: "winrm",
+					},
+				},
+			},
+			{
+				Name:                "windowspool2",
+				OSType:              api.Windows,
+				AvailabilityProfile: "AvailabilitySet",
+				Extensions: []api.Extension{
+					{
+						Name: "winrm",
+					},
+				},
+			},
+		},
+	}
+
+	extensions := CreateCustomExtensions(properties)
+
+	expectedDeployments := []DeploymentARM{
+		{
+			DeploymentARMResource: DeploymentARMResource{
+				APIVersion: "[variables('apiVersionDeployments')]",
+				Copy: map[string]string{
+					"count": "[sub(variables('windowspool1Count'), variables('windowspool1Offset'))]",
+					"name":  "winrmExtensionLoop",
+				},
+				DependsOn: []string{"[concat('Microsoft.Compute/virtualMachines/', variables('windowspool1VMNamePrefix'), copyIndex(variables('windowspool1Offset')), '/extensions/cse', '-agent-', copyIndex(variables('windowspool1Offset')))]"},
+			},
+			DeploymentExtended: resources.DeploymentExtended{
+				Name: to.StringPtr("[concat(variables('windowspool1VMNamePrefix'), copyIndex(variables('windowspool1Offset')), 'winrm')]"),
+				Properties: &resources.DeploymentPropertiesExtended{
+					TemplateLink: &resources.TemplateLink{
+						URI:            to.StringPtr("https://raw.githubusercontent.com/Azure/aks-engine/master/extensions/winrm/v1/template.json"),
+						ContentVersion: to.StringPtr("1.0.0.0"),
+					},
+					Parameters: map[string]interface{}{
+						"apiVersionDeployments": map[string]interface{}{"value": "[variables('apiVersionDeployments')]"},
+						"artifactsLocation":     map[string]interface{}{"value": "https://raw.githubusercontent.com/Azure/aks-engine/master/"},
+						"extensionParameters":   map[string]interface{}{"value": "[parameters('winrmParameters')]"},
+						"targetVMName":          map[string]interface{}{"value": "[concat(variables('windowspool1VMNamePrefix'), copyIndex(variables('windowspool1Offset')))]"},
+						"targetVMType":          map[string]interface{}{"value": "agent"},
+						"vmIndex":               map[string]interface{}{"value": "[copyIndex(variables('windowspool1Offset'))]"},
+					},
+					Mode: resources.DeploymentMode("Incremental"),
+				},
+				Type: to.StringPtr("Microsoft.Resources/deployments"),
+			},
+		},
+		{
+			DeploymentARMResource: DeploymentARMResource{
+				APIVersion: "[variables('apiVersionDeployments')]",
+				Copy: map[string]string{
+					"count": "[sub(variables('windowspool2Count'), variables('windowspool2Offset'))]",
+					"name":  "winrmExtensionLoop",
+				},
+				DependsOn: []string{"[concat('Microsoft.Compute/virtualMachines/', variables('windowspool2VMNamePrefix'), copyIndex(variables('windowspool2Offset')), '/extensions/cse', '-agent-', copyIndex(variables('windowspool2Offset')))]"},
+			},
+			DeploymentExtended: resources.DeploymentExtended{
+				Name: to.StringPtr("[concat(variables('windowspool2VMNamePrefix'), copyIndex(variables('windowspool2Offset')), 'winrm')]"),
+				Properties: &resources.DeploymentPropertiesExtended{
+					TemplateLink: &resources.TemplateLink{
+						URI:            to.StringPtr("https://raw.githubusercontent.com/Azure/aks-engine/master/extensions/winrm/v1/template.json"),
+						ContentVersion: to.StringPtr("1.0.0.0"),
+					},
+					Parameters: map[string]interface{}{
+						"apiVersionDeployments": map[string]interface{}{"value": "[variables('apiVersionDeployments')]"},
+						"artifactsLocation":     map[string]interface{}{"value": "https://raw.githubusercontent.com/Azure/aks-engine/master/"},
+						"extensionParameters":   map[string]interface{}{"value": "[parameters('winrmParameters')]"},
+						"targetVMName":          map[string]interface{}{"value": "[concat(variables('windowspool2VMNamePrefix'), copyIndex(variables('windowspool2Offset')))]"},
+						"targetVMType":          map[string]interface{}{"value": "agent"},
+						"vmIndex":               map[string]interface{}{"value": "[copyIndex(variables('windowspool2Offset'))]"},
+					},
+					Mode: resources.DeploymentMode("Incremental"),
+				},
+				Type: to.StringPtr("Microsoft.Resources/deployments"),
+			},
+		},
+	}
+
+	diff := cmp.Diff(extensions, expectedDeployments)
+
+	if diff != "" {
+		t.Errorf("unexpected diff while expecting equal structs: %s", diff)
+	}
+	properties = &api.Properties{
+		OrchestratorProfile: &api.OrchestratorProfile{
+			OrchestratorType: Kubernetes,
+		},
+		ExtensionProfiles: []*api.ExtensionProfile{
+			{
+				Name:    "hello-world-k8s",
+				Version: "v1",
+				RootURL: "https://raw.githubusercontent.com/Azure/aks-engine/master/",
+			},
+		},
+		MasterProfile: &api.MasterProfile{
+			Count:               3,
+			DNSPrefix:           "testcluster",
+			AvailabilityProfile: "AvailabilitySet",
+			Extensions: []api.Extension{
+				{
+					Name: "hello-world-k8s",
+				},
+			},
+		},
+	}
+
+	extensions = CreateCustomExtensions(properties)
+
+	expectedDeployments = []DeploymentARM{
+		{
+			DeploymentARMResource: DeploymentARMResource{
+				APIVersion: "[variables('apiVersionDeployments')]",
+				Copy: map[string]string{
+					"count": "[sub(variables('masterCount'), variables('masterOffset'))]",
+					"name":  "helloWorldExtensionLoop",
+				},
+				DependsOn: []string{"[concat('Microsoft.Compute/virtualMachines/', variables('masterVMNamePrefix'), copyIndex(variables('masterOffset')), '/extensions/cse', '-master-', copyIndex(variables('masterOffset')))]"},
+			},
+			DeploymentExtended: resources.DeploymentExtended{
+				Name: to.StringPtr("[concat(variables('masterVMNamePrefix'), copyIndex(variables('masterOffset')), 'HelloWorldK8s')]"),
+				Properties: &resources.DeploymentPropertiesExtended{
+					TemplateLink: &resources.TemplateLink{
+						URI:            to.StringPtr("https://raw.githubusercontent.com/Azure/aks-engine/master/extensions/hello-world-k8s/v1/template.json"),
+						ContentVersion: to.StringPtr("1.0.0.0"),
+					},
+					Parameters: map[string]interface{}{
+						"apiVersionDeployments": map[string]interface{}{"value": "[variables('apiVersionDeployments')]"},
+						"artifactsLocation":     map[string]interface{}{"value": "https://raw.githubusercontent.com/Azure/aks-engine/master/"},
+						"extensionParameters":   map[string]interface{}{"value": "[parameters('hello-world-k8sParameters')]"},
+						"targetVMName":          map[string]interface{}{"value": "[concat(variables('masterVMNamePrefix'), copyIndex(variables('masterOffset')))]"},
+						"targetVMType":          map[string]interface{}{"value": "master"},
+						"vmIndex":               map[string]interface{}{"value": "[copyIndex(variables('masterOffset'))]"},
+					},
+					Mode: resources.DeploymentMode("Incremental"),
+				},
+				Type: to.StringPtr("Microsoft.Resources/deployments"),
+			},
+		},
+	}
+
+	diff = cmp.Diff(extensions, expectedDeployments)
 
 	if diff != "" {
 		t.Errorf("unexpected diff while expecting equal structs: %s", diff)

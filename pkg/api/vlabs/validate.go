@@ -272,7 +272,7 @@ func (a *Properties) ValidateOrchestratorProfile(isUpdate bool) error {
 					}
 				}
 
-				if o.KubernetesConfig.LoadBalancerSku == "Standard" {
+				if o.KubernetesConfig.LoadBalancerSku == StandardLoadBalancerSku {
 					minVersion, err := semver.Make("1.11.0")
 					if err != nil {
 						return errors.Errorf("could not validate version")
@@ -373,6 +373,12 @@ func (a *Properties) validateMasterProfile(isUpdate bool) error {
 		return errors.Errorf("The %s distro is not supported", m.Distro)
 	}
 
+	if to.Bool(m.AuditDEnabled) {
+		if !m.IsUbuntu() {
+			return errors.Errorf("You have enabled auditd for master vms, but you did not specify an Ubuntu-based distro.")
+		}
+	}
+
 	return common.ValidateDNSPrefix(m.DNSPrefix)
 }
 
@@ -404,6 +410,18 @@ func (a *Properties) validateAgentPoolProfiles(isUpdate bool) error {
 		if to.Bool(agentPoolProfile.VMSSOverProvisioningEnabled) {
 			if agentPoolProfile.AvailabilityProfile != VirtualMachineScaleSets {
 				return errors.Errorf("You have specified VMSS Overprovisioning in agent pool %s, but you did not specify VMSS", agentPoolProfile.Name)
+			}
+		}
+
+		if to.Bool(agentPoolProfile.AuditDEnabled) {
+			if !agentPoolProfile.IsUbuntu() {
+				return errors.Errorf("You have enabled auditd in agent pool %s, but you did not specify an Ubuntu-based distro", agentPoolProfile.Name)
+			}
+		}
+
+		if to.Bool(agentPoolProfile.EnableVMSSNodePublicIP) {
+			if agentPoolProfile.AvailabilityProfile != VirtualMachineScaleSets {
+				return errors.Errorf("You have enabled VMSS node public IP in agent pool %s, but you did not specify VMSS", agentPoolProfile.Name)
 			}
 		}
 
@@ -459,6 +477,10 @@ func (a *Properties) validateAgentPoolProfiles(isUpdate bool) error {
 		if e := agentPoolProfile.validateWindows(a.OrchestratorProfile, a.WindowsProfile, isUpdate); agentPoolProfile.OSType == Windows && e != nil {
 			return e
 		}
+
+		if e := agentPoolProfile.validateLoadBalancerBackendAddressPoolIDs(); e != nil {
+			return e
+		}
 	}
 
 	return nil
@@ -475,7 +497,7 @@ func (a *Properties) validateZones() error {
 						return errors.New("Availability Zones are not supported with an AvailabilitySet. Please either remove availabilityProfile or set availabilityProfile to VirtualMachineScaleSets")
 					}
 				}
-				if a.OrchestratorProfile.KubernetesConfig != nil && a.OrchestratorProfile.KubernetesConfig.LoadBalancerSku != "" && a.OrchestratorProfile.KubernetesConfig.LoadBalancerSku != "Standard" {
+				if a.OrchestratorProfile.KubernetesConfig != nil && a.OrchestratorProfile.KubernetesConfig.LoadBalancerSku != "" && a.OrchestratorProfile.KubernetesConfig.LoadBalancerSku != StandardLoadBalancerSku {
 					return errors.New("Availability Zones requires Standard LoadBalancer. Please set KubernetesConfig \"LoadBalancerSku\" to \"Standard\"")
 				}
 			} else {
@@ -573,6 +595,14 @@ func (a *Properties) validateExtensions() error {
 	for _, agentPool := range a.AgentPoolProfiles {
 		if len(agentPool.Extensions) != 0 && (len(agentPool.AvailabilityProfile) == 0 || agentPool.IsVirtualMachineScaleSets()) {
 			return errors.Errorf("Extensions are currently not supported with VirtualMachineScaleSets. Please specify \"availabilityProfile\": \"%s\"", AvailabilitySet)
+		}
+
+		if agentPool.OSType == Windows && len(agentPool.Extensions) != 0 {
+			for _, e := range agentPool.Extensions {
+				if e.Name == "prometheus-grafana-k8s" {
+					return errors.Errorf("prometheus-grafana-k8s extension is currently not supported for Windows agents")
+				}
+			}
 		}
 	}
 
@@ -909,6 +939,19 @@ func (a *AgentPoolProfile) validateOrchestratorSpecificProperties(orchestratorTy
 			return errors.Errorf("VirtualMachineScaleSets does not support storage account attached disks.  Instead specify 'StorageAccount': '%s' or specify AvailabilityProfile '%s'", ManagedDisks, AvailabilitySet)
 		}
 	}
+	return nil
+}
+
+func (a *AgentPoolProfile) validateLoadBalancerBackendAddressPoolIDs() error {
+
+	if a.LoadBalancerBackendAddressPoolIDs != nil {
+		for _, backendPoolID := range a.LoadBalancerBackendAddressPoolIDs {
+			if len(backendPoolID) == 0 {
+				return errors.Errorf("AgentPoolProfile.LoadBalancerBackendAddressPoolIDs can not contain empty string. Agent pool name: %s", a.Name)
+			}
+		}
+	}
+
 	return nil
 }
 

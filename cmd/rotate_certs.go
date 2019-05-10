@@ -72,7 +72,7 @@ func newRotateCertsCmd() *cobra.Command {
 	f := command.Flags()
 	f.StringVarP(&rcc.location, "location", "l", "", "location the cluster is deployed in (required)")
 	f.StringVarP(&rcc.resourceGroupName, "resource-group", "g", "", "the resource group where the cluster is deployed (required)")
-	f.StringVarP(&rcc.apiModelPath, "api-model", "m", "", "path to the generated apimodel file (required)")
+	f.StringVarP(&rcc.apiModelPath, "api-model", "m", "", "path to the generated apimodel.json file (required)")
 	f.StringVarP(&rcc.sshFilepath, "ssh", "", "", "the filepath of a valid private ssh key to access the cluster's nodes (required)")
 	f.StringVar(&rcc.masterFQDN, "master-FQDN", "", "FQDN for the master load balancer (required)")
 	f.StringVarP(&rcc.outputDirectory, "output-directory", "o", "", "output directory where generated TLS artifacts will be saved (derived from DNS prefix if absent)")

@@ -41,6 +41,7 @@ type KubernetesSpecConfig struct {
 	ACIConnectorImageBase            string `json:"aciConnectorImageBase,omitempty"`
 	NVIDIAImageBase                  string `json:"nvidiaImageBase,omitempty"`
 	AzureCNIImageBase                string `json:"azureCNIImageBase,omitempty"`
+	CalicoImageBase                  string `json:"CalicoImageBase,omitempty"`
 	EtcdDownloadURLBase              string `json:"etcdDownloadURLBase,omitempty"`
 	KubeBinariesSASURLBase           string `json:"kubeBinariesSASURLBase,omitempty"`
 	WindowsTelemetryGUID             string `json:"windowsTelemetryGUID,omitempty"`
@@ -70,7 +71,8 @@ var (
 		TillerImageBase:                  "gcr.io/kubernetes-helm/",
 		ACIConnectorImageBase:            "microsoft/",
 		NVIDIAImageBase:                  "nvidia/",
-		AzureCNIImageBase:                "containernetworking/",
+		CalicoImageBase:                  "calico/",
+		AzureCNIImageBase:                "mcr.microsoft.com/containernetworking/",
 		EtcdDownloadURLBase:              "https://acs-mirror.azureedge.net/github-coreos",
 		KubeBinariesSASURLBase:           "https://acs-mirror.azureedge.net/wink8s/",
 		WindowsTelemetryGUID:             "fb801154-36b9-41bc-89c2-f4d4f05472b0",
@@ -135,7 +137,7 @@ var (
 		ImageOffer:     "aks",
 		ImageSku:       "aks-ubuntu-1604-201904",
 		ImagePublisher: "microsoft-aks",
-		ImageVersion:   "2019.04.08",
+		ImageVersion:   "2019.04.30",
 	}
 
 	// DefaultAKS1804OSImageConfig is the AKS image based on Ubuntu 18.04-LTS.
@@ -143,7 +145,7 @@ var (
 		ImageOffer:     "aks",
 		ImageSku:       "aks-ubuntu-1804-201904",
 		ImagePublisher: "microsoft-aks",
-		ImageVersion:   "2019.04.08",
+		ImageVersion:   "2019.04.30",
 	}
 
 	// DefaultACC1604OSImageConfig is the ACC image based on Ubuntu 16.04.
@@ -231,6 +233,7 @@ var (
 			ACIConnectorImageBase:            "dockerhub.azk8s.cn/microsoft/",
 			NVIDIAImageBase:                  "dockerhub.azk8s.cn/nvidia/",
 			AzureCNIImageBase:                "dockerhub.azk8s.cn/containernetworking/",
+			CalicoImageBase:                  "dockerhub.azk8s.cn/calico/",
 			EtcdDownloadURLBase:              "https://mirror.azk8s.cn/kubernetes/etcd",
 			KubeBinariesSASURLBase:           DefaultKubernetesSpecConfig.KubeBinariesSASURLBase,
 			WindowsTelemetryGUID:             DefaultKubernetesSpecConfig.WindowsTelemetryGUID,

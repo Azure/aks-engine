@@ -261,6 +261,9 @@ func (t *TemplateGenerator) getTemplateFuncMap(cs *api.ContainerService) templat
 		"GetCustomCloudIdentitySystem": func() string {
 			return cs.Properties.GetCustomCloudIdentitySystem()
 		},
+		"IsMultipleMasters": func() bool {
+			return cs.Properties.MasterProfile != nil && cs.Properties.MasterProfile.Count > 1
+		},
 		"IsMasterVirtualMachineScaleSets": func() bool {
 			return cs.Properties.MasterProfile != nil && cs.Properties.MasterProfile.IsVirtualMachineScaleSets()
 		},
@@ -920,9 +923,6 @@ func (t *TemplateGenerator) getTemplateFuncMap(cs *api.ContainerService) templat
 			imageRef := cs.Properties.MasterProfile.ImageRef
 			return imageRef != nil && len(imageRef.Name) > 0 && len(imageRef.ResourceGroup) > 0
 		},
-		"GetAgentVMPrefix": func(profile *api.AgentPoolProfile) string {
-			return cs.Properties.GetAgentVMPrefix(profile)
-		},
 		"GetMasterVMPrefix": func() string {
 			return cs.Properties.GetMasterVMPrefix()
 		},
@@ -937,12 +937,6 @@ func (t *TemplateGenerator) getTemplateFuncMap(cs *api.ContainerService) templat
 		},
 		"GetMasterEtcdClientPort": func() int {
 			return DefaultMasterEtcdClientPort
-		},
-		"GetPrimaryAvailabilitySetName": func() string {
-			return cs.Properties.GetPrimaryAvailabilitySetName()
-		},
-		"GetPrimaryScaleSetName": func() string {
-			return cs.Properties.GetPrimaryScaleSetName()
 		},
 		"UseCloudControllerManager": func() bool {
 			return cs.Properties.OrchestratorProfile.KubernetesConfig.UseCloudControllerManager != nil && *cs.Properties.OrchestratorProfile.KubernetesConfig.UseCloudControllerManager

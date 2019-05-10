@@ -8,7 +8,7 @@ if [ -e "${ENV_FILE}" ]; then
   source "${ENV_FILE}"
 fi
 
-[[ ! -z "${EXPECTED_ORCHESTRATOR_VERSION:-}" ]] || (echo "Must specify EXPECTED_ORCHESTRATOR_VERSION" && exit 1)
+[[ -n "${EXPECTED_ORCHESTRATOR_VERSION:-}" ]] || (echo "Must specify EXPECTED_ORCHESTRATOR_VERSION" && exit 1)
 
 APIMODEL="_output/${INSTANCE_NAME}/apimodel.json"
 

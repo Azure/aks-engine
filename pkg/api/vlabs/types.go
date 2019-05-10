@@ -392,6 +392,7 @@ type MasterProfile struct {
 	AgentSubnet              string            `json:"agentSubnet,omitempty"`
 	AvailabilityZones        []string          `json:"availabilityZones,omitempty"`
 	SinglePlacementGroup     *bool             `json:"singlePlacementGroup,omitempty"`
+	AuditDEnabled            *bool             `json:"auditDEnabled,omitempty"`
 
 	// subnet is internal
 	subnet string
@@ -453,16 +454,19 @@ type AgentPoolProfile struct {
 	AcceleratedNetworkingEnabled        *bool                `json:"acceleratedNetworkingEnabled,omitempty"`
 	AcceleratedNetworkingEnabledWindows *bool                `json:"acceleratedNetworkingEnabledWindows,omitempty"`
 	VMSSOverProvisioningEnabled         *bool                `json:"vmssOverProvisioningEnabled,omitempty"`
+	AuditDEnabled                       *bool                `json:"auditDEnabled,omitempty"`
 
 	// subnet is internal
 	subnet string
 
-	FQDN                  string            `json:"fqdn"`
-	CustomNodeLabels      map[string]string `json:"customNodeLabels,omitempty"`
-	PreProvisionExtension *Extension        `json:"preProvisionExtension"`
-	Extensions            []Extension       `json:"extensions"`
-	SinglePlacementGroup  *bool             `json:"singlePlacementGroup,omitempty"`
-	AvailabilityZones     []string          `json:"availabilityZones,omitempty"`
+	FQDN                              string            `json:"fqdn"`
+	CustomNodeLabels                  map[string]string `json:"customNodeLabels,omitempty"`
+	PreProvisionExtension             *Extension        `json:"preProvisionExtension"`
+	Extensions                        []Extension       `json:"extensions"`
+	SinglePlacementGroup              *bool             `json:"singlePlacementGroup,omitempty"`
+	AvailabilityZones                 []string          `json:"availabilityZones,omitempty"`
+	EnableVMSSNodePublicIP            *bool             `json:"enableVMSSNodePublicIP,omitempty"`
+	LoadBalancerBackendAddressPoolIDs []string          `json:"loadBalancerBackendAddressPoolIDs,omitempty"`
 }
 
 // AgentPoolProfileRole represents an agent role
@@ -600,6 +604,31 @@ func (m *MasterProfile) IsCoreOS() bool {
 	return m.Distro == CoreOS
 }
 
+// IsUbuntu1604 returns true if the master profile distro is based on Ubuntu 16.04
+func (m *MasterProfile) IsUbuntu1604() bool {
+	switch m.Distro {
+	case AKS, Ubuntu, ACC1604:
+		return true
+	default:
+		return false
+	}
+}
+
+// IsUbuntu1804 returns true if the master profile distro is based on Ubuntu 18.04
+func (m *MasterProfile) IsUbuntu1804() bool {
+	switch m.Distro {
+	case AKS1804, Ubuntu1804:
+		return true
+	default:
+		return false
+	}
+}
+
+// IsUbuntu returns true if the master profile distro is any ubuntu distro
+func (m *MasterProfile) IsUbuntu() bool {
+	return m.IsUbuntu1604() || m.IsUbuntu1804()
+}
+
 // IsVirtualMachineScaleSets returns true if the master availability profile is VMSS
 func (m *MasterProfile) IsVirtualMachineScaleSets() bool {
 	return m.AvailabilityProfile == VirtualMachineScaleSets
@@ -707,6 +736,37 @@ func (a *AgentPoolProfile) SetSubnet(subnet string) {
 // HasAvailabilityZones returns true if the agent pool has availability zones
 func (a *AgentPoolProfile) HasAvailabilityZones() bool {
 	return a.AvailabilityZones != nil && len(a.AvailabilityZones) > 0
+}
+
+// IsUbuntu1604 returns true if the agent pool profile distro is based on Ubuntu 16.04
+func (a *AgentPoolProfile) IsUbuntu1604() bool {
+	if a.OSType != Windows {
+		switch a.Distro {
+		case AKS, Ubuntu, ACC1604:
+			return true
+		default:
+			return false
+		}
+	}
+	return false
+}
+
+// IsUbuntu1804 returns true if the agent pool profile distro is based on Ubuntu 16.04
+func (a *AgentPoolProfile) IsUbuntu1804() bool {
+	if a.OSType != Windows {
+		switch a.Distro {
+		case AKS1804, Ubuntu1804:
+			return true
+		default:
+			return false
+		}
+	}
+	return false
+}
+
+// IsUbuntu returns true if the master profile distro is any ubuntu distro
+func (a *AgentPoolProfile) IsUbuntu() bool {
+	return a.IsUbuntu1604() || a.IsUbuntu1804()
 }
 
 // HasSearchDomain returns true if the customer specified secrets to install

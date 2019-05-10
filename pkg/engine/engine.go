@@ -723,9 +723,9 @@ func getContainerAddonsString(properties *api.Properties, sourcePath string) str
 		setting := settingsMap[addonName]
 		if setting.isEnabled {
 			var input string
-			if setting.rawScript != "" {
+			if setting.base64Data != "" {
 				var err error
-				input, err = getStringFromBase64(setting.rawScript)
+				input, err = getStringFromBase64(setting.base64Data)
 				if err != nil {
 					return ""
 				}
@@ -952,7 +952,6 @@ func getKubernetesPodStartIndex(properties *api.Properties) int {
 
 // getLinkedTemplatesForExtensions returns the
 // Microsoft.Resources/deployments for each extension
-//func getLinkedTemplatesForExtensions(properties api.Properties) string {
 func getLinkedTemplatesForExtensions(properties *api.Properties) string {
 	var result string
 

@@ -10,6 +10,7 @@ import (
 	"github.com/Azure/azure-sdk-for-go/services/keyvault/mgmt/2018-02-14/keyvault"
 	sysauth "github.com/Azure/azure-sdk-for-go/services/preview/authorization/mgmt/2018-01-01-preview/authorization"
 	"github.com/Azure/azure-sdk-for-go/services/preview/authorization/mgmt/2018-09-01-preview/authorization"
+	"github.com/Azure/azure-sdk-for-go/services/resources/mgmt/2018-05-01/resources"
 
 	"github.com/Azure/azure-sdk-for-go/services/preview/msi/mgmt/2015-08-31-preview/msi"
 
@@ -26,6 +27,10 @@ type ARMResource struct {
 	DependsOn  []string          `json:"dependsOn,omitempty"`
 }
 
+// DeploymentARMResource is an alias for the ARMResource type to avoid MarshalJSON override
+type DeploymentARMResource ARMResource
+
+// MarshalJSON is the custom marshaler for an ARMResource.
 func (arm ARMResource) MarshalJSON() ([]byte, error) {
 	return json.Marshal(arm)
 }
@@ -130,4 +135,10 @@ type UserAssignedIdentitiesARM struct {
 type ImageARM struct {
 	ARMResource
 	compute.Image
+}
+
+// DeploymentARM embeds the ARMResource type in resources.DeploymentExtended.
+type DeploymentARM struct {
+	DeploymentARMResource
+	resources.DeploymentExtended
 }

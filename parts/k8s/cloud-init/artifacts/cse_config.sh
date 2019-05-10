@@ -23,6 +23,18 @@ systemctlEnableAndStart() {
         return 1
     fi
 }
+systemctlDisableAndStop() {
+    systemctl_stop 100 5 30 $1
+    if [ $? -ne 0 ]; then
+        echo "$1 could not be stopped"
+        return 1
+    fi
+    retrycmd_if_failure 120 5 25 systemctl disable $1
+    if [ $? -ne 0 ]; then
+        echo "$1 could not be disabled by systemctl"
+        return 1
+    fi
+}
 
 configureEtcdUser(){
     useradd -U "etcd"
@@ -118,6 +130,17 @@ ensureRPC() {
     systemctlEnableAndStart rpc-statd || exit $ERR_SYSTEMCTL_START_FAIL
 }
 
+ensureAuditD() {
+  if [[ "${AUDITD_ENABLED}" == true ]]; then
+    systemctlEnableAndStart auditd || exit $ERR_SYSTEMCTL_START_FAIL
+  else
+    apt list --installed | grep 'auditd'
+    if [ $? -eq 0 ]; then
+      systemctlDisableAndStop auditd || exit $ERR_SYSTEMCTL_START_FAIL
+    fi
+  fi
+}
+
 generateAggregatedAPICerts() {
     AGGREGATED_API_CERTS_SETUP_FILE=/etc/kubernetes/generate-proxy-certs.sh
     wait_for_file 1200 1 $AGGREGATED_API_CERTS_SETUP_FILE || exit $ERR_FILE_WATCH_TIMEOUT
@@ -143,9 +166,9 @@ configureK8s() {
     set +x
     echo "${KUBELET_PRIVATE_KEY}" | base64 --decode > "${KUBELET_PRIVATE_KEY_PATH}"
     echo "${APISERVER_PUBLIC_KEY}" | base64 --decode > "${APISERVER_PUBLIC_KEY_PATH}"
-    # Perform the required JSON escaping for special characters " and \
-    SERVICE_PRINCIPAL_CLIENT_SECRET=$(echo $SERVICE_PRINCIPAL_CLIENT_SECRET | sed "s|\\\\|\\\\\\\|g")
-    SERVICE_PRINCIPAL_CLIENT_SECRET=$(echo $SERVICE_PRINCIPAL_CLIENT_SECRET | sed 's|"|\\"|g')
+    # Perform the required JSON escaping for special characters \ and "
+    SERVICE_PRINCIPAL_CLIENT_SECRET=${SERVICE_PRINCIPAL_CLIENT_SECRET//\\/\\\\}
+    SERVICE_PRINCIPAL_CLIENT_SECRET=${SERVICE_PRINCIPAL_CLIENT_SECRET//\"/\\\"}
     cat << EOF > "${AZURE_JSON_PATH}"
 {
     "cloud":"${TARGET_ENVIRONMENT}",
@@ -183,7 +206,7 @@ configureK8s() {
 }
 EOF
     set -x
-    if [[ ! -z "${MASTER_NODE}" ]]; then
+    if [[ -n "${MASTER_NODE}" ]]; then
         if [[ "${ENABLE_AGGREGATED_APIS}" = True ]]; then
             generateAggregatedAPICerts
         fi
@@ -220,8 +243,8 @@ setKubeletOpts () {
 }
 
 ensureCCProxy() {
-    cat $CC_SERVICE_IN_TMP | sed 's#@libexecdir@#/usr/libexec#' > /etc/systemd/system/cc-proxy.service
-    cat $CC_SOCKET_IN_TMP sed 's#@localstatedir@#/var#' > /etc/systemd/system/cc-proxy.socket
+    sed 's#@libexecdir@#/usr/libexec#' $CC_SERVICE_IN_TMP > /etc/systemd/system/cc-proxy.service
+    sed 's#@localstatedir@#/var#' $CC_SOCKET_IN_TMP > /etc/systemd/system/cc-proxy.socket
 	echo "Enabling and starting Clear Containers proxy service..."
 	systemctlEnableAndStart cc-proxy || exit $ERR_SYSTEMCTL_START_FAIL
 }
@@ -230,22 +253,24 @@ setupContainerd() {
     echo "Configuring cri-containerd..."
     mkdir -p "/etc/containerd"
     CRI_CONTAINERD_CONFIG="/etc/containerd/config.toml"
-    echo "subreaper = false" > "$CRI_CONTAINERD_CONFIG"
-    echo "oom_score = 0" >> "$CRI_CONTAINERD_CONFIG"
-    echo "[plugins.cri]" >> "$CRI_CONTAINERD_CONFIG"
-    echo "sandbox_image = \"$POD_INFRA_CONTAINER_SPEC\"" >> "$CRI_CONTAINERD_CONFIG"
-    echo "[plugins.cri.containerd.untrusted_workload_runtime]" >> "$CRI_CONTAINERD_CONFIG"
-    echo "runtime_type = 'io.containerd.runtime.v1.linux'" >> "$CRI_CONTAINERD_CONFIG"
-    if [[ "$CONTAINER_RUNTIME" == "clear-containers" ]]; then
-        echo "runtime_engine = '/usr/bin/cc-runtime'" >> "$CRI_CONTAINERD_CONFIG"
-    elif [[ "$CONTAINER_RUNTIME" == "kata-containers" ]]; then
-        echo "runtime_engine = '/usr/bin/kata-runtime'" >> "$CRI_CONTAINERD_CONFIG"
-    else
-        echo "runtime_engine = '/usr/local/sbin/runc'" >> "$CRI_CONTAINERD_CONFIG"
-    fi
-    echo "[plugins.cri.containerd.default_runtime]" >> "$CRI_CONTAINERD_CONFIG"
-    echo "runtime_type = 'io.containerd.runtime.v1.linux'" >> "$CRI_CONTAINERD_CONFIG"
-    echo "runtime_engine = '/usr/local/sbin/runc'" >> "$CRI_CONTAINERD_CONFIG"
+    {
+        echo "subreaper = false"
+        echo "oom_score = 0"
+        echo "[plugins.cri]"
+        echo "sandbox_image = \"$POD_INFRA_CONTAINER_SPEC\""
+        echo "[plugins.cri.containerd.untrusted_workload_runtime]"
+        echo "runtime_type = 'io.containerd.runtime.v1.linux'"
+        if [[ "$CONTAINER_RUNTIME" == "clear-containers" ]]; then
+            echo "runtime_engine = '/usr/bin/cc-runtime'"
+        elif [[ "$CONTAINER_RUNTIME" == "kata-containers" ]]; then
+            echo "runtime_engine = '/usr/bin/kata-runtime'"
+        else
+            echo "runtime_engine = '/usr/local/sbin/runc'"
+        fi
+        echo "[plugins.cri.containerd.default_runtime]"
+        echo "runtime_type = 'io.containerd.runtime.v1.linux'"
+        echo "runtime_engine = '/usr/local/sbin/runc'"
+    } > "$CRI_CONTAINERD_CONFIG"
     setKubeletOpts " --container-runtime=remote --runtime-request-timeout=15m --container-runtime-endpoint=unix:///run/containerd/containerd.sock"
 }
 
@@ -287,27 +312,16 @@ ensureKubelet() {
     KUBELET_RUNTIME_CONFIG_SCRIPT_FILE=/opt/azure/containers/kubelet.sh
     wait_for_file 1200 1 $KUBELET_RUNTIME_CONFIG_SCRIPT_FILE || exit $ERR_FILE_WATCH_TIMEOUT
     systemctlEnableAndStart kubelet || exit $ERR_KUBELET_START_FAIL
-    # Delay start of kubelet-monitor for 30 mins after booting
-    #KUBELET_MONITOR_SYSTEMD_TIMER_FILE=/etc/systemd/system/kubelet-monitor.timer
-    #wait_for_file 1200 1 $KUBELET_MONITOR_SYSTEMD_TIMER_FILE || exit $ERR_FILE_WATCH_TIMEOUT
-    #KUBELET_MONITOR_SYSTEMD_FILE=/etc/systemd/system/kubelet-monitor.service
-    #wait_for_file 1200 1 $KUBELET_MONITOR_SYSTEMD_FILE || exit $ERR_FILE_WATCH_TIMEOUT
-    #systemctlEnableAndStart kubelet-monitor.timer || exit $ERR_SYSTEMCTL_START_FAIL
 }
 
-ensureJournal(){
-    echo "Storage=persistent" >> /etc/systemd/journald.conf
-    echo "SystemMaxUse=1G" >> /etc/systemd/journald.conf
-    echo "RuntimeMaxUse=1G" >> /etc/systemd/journald.conf
-    echo "ForwardToSyslog=yes" >> /etc/systemd/journald.conf
+ensureJournal() {
+    {
+        echo "Storage=persistent"
+        echo "SystemMaxUse=1G"
+        echo "RuntimeMaxUse=1G"
+        echo "ForwardToSyslog=yes"
+    } >> /etc/systemd/journald.conf
     systemctlEnableAndStart systemd-journald || exit $ERR_SYSTEMCTL_START_FAIL
-}
-
-ensurePodSecurityPolicy() {
-    POD_SECURITY_POLICY_FILE="/etc/kubernetes/manifests/pod-security-policy.yaml"
-    if [ -f $POD_SECURITY_POLICY_FILE ]; then
-        $KUBECTL create -f $POD_SECURITY_POLICY_FILE
-    fi
 }
 
 ensureK8sControlPlane() {
@@ -315,13 +329,7 @@ ensureK8sControlPlane() {
         return
     fi
     wait_for_file 3600 1 $KUBECTL || exit $ERR_FILE_WATCH_TIMEOUT
-    # workaround for 1.12 bug https://github.com/Azure/aks-engine/issues/3681
-    if [[ "${KUBERNETES_VERSION}" = 1.12.* ]]; then
-        ensureKubelet
-        retrycmd_if_failure 120 5 25 $KUBECTL 2>/dev/null cluster-info || ensureKubelet && retrycmd_if_failure 900 1 20 $KUBECTL 2>/dev/null cluster-info || exit $ERR_K8S_RUNNING_TIMEOUT
-    else
-        retrycmd_if_failure 120 5 25 $KUBECTL 2>/dev/null cluster-info || exit $ERR_K8S_RUNNING_TIMEOUT
-    fi
+    retrycmd_if_failure 120 5 25 $KUBECTL 2>/dev/null cluster-info || exit $ERR_K8S_RUNNING_TIMEOUT
 }
 
 ensureEtcd() {
@@ -394,7 +402,7 @@ configClusterAutoscalerAddon() {
 }
 
 configACIConnectorAddon() {
-    ACI_CONNECTOR_CREDENTIALS=$(printf "{\"clientId\": \"$(echo $SERVICE_PRINCIPAL_CLIENT_ID)\", \"clientSecret\": \"$(echo $SERVICE_PRINCIPAL_CLIENT_SECRET)\", \"tenantId\": \"$(echo $TENANT_ID)\", \"subscriptionId\": \"$(echo $SUBSCRIPTION_ID)\", \"activeDirectoryEndpointUrl\": \"https://login.microsoftonline.com\",\"resourceManagerEndpointUrl\": \"https://management.azure.com/\", \"activeDirectoryGraphResourceId\": \"https://graph.windows.net/\", \"sqlManagementEndpointUrl\": \"https://management.core.windows.net:8443/\", \"galleryEndpointUrl\": \"https://gallery.azure.com/\", \"managementEndpointUrl\": \"https://management.core.windows.net/\"}" | base64 -w 0)
+    ACI_CONNECTOR_CREDENTIALS=$(printf "{\"clientId\": \"%s\", \"clientSecret\": \"%s\", \"tenantId\": \"%s\", \"subscriptionId\": \"%s\", \"activeDirectoryEndpointUrl\": \"https://login.microsoftonline.com\",\"resourceManagerEndpointUrl\": \"https://management.azure.com/\", \"activeDirectoryGraphResourceId\": \"https://graph.windows.net/\", \"sqlManagementEndpointUrl\": \"https://management.core.windows.net:8443/\", \"galleryEndpointUrl\": \"https://gallery.azure.com/\", \"managementEndpointUrl\": \"https://management.core.windows.net/\"}" "$SERVICE_PRINCIPAL_CLIENT_ID" "$SERVICE_PRINCIPAL_CLIENT_SECRET" "$TENANT_ID" "$SUBSCRIPTION_ID" | base64 -w 0)
 
     openssl req -newkey rsa:4096 -new -nodes -x509 -days 3650 -keyout /etc/kubernetes/certs/aci-connector-key.pem -out /etc/kubernetes/certs/aci-connector-cert.pem -subj "/C=US/ST=CA/L=virtualkubelet/O=virtualkubelet/OU=virtualkubelet/CN=virtualkubelet"
     ACI_CONNECTOR_KEY=$(base64 /etc/kubernetes/certs/aci-connector-key.pem -w0)

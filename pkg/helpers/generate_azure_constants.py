@@ -9,13 +9,13 @@ DCOS_MASTERS_EPHEMERAL_DISK_MIN = 16384
 
 
 def get_all_sizes():
-    locations = json.loads(subprocess.check_output(['az', 'account', 'list-locations']).decode('utf-8'))
+    locations = json.loads(subprocess.check_output(['az', 'account', 'list-locations', '-o', 'json']).decode('utf-8'))
     size_map = {}
 
     for location in locations:
         try:
             # NOTE: "az vm list-sizes" fails in francesouth, australiacentral, australiacentral2, and southafricawest.
-            sizes = json.loads(subprocess.check_output(['az', 'vm', 'list-sizes', '-l', location['name']]).decode('utf-8'))
+            sizes = json.loads(subprocess.check_output(['az', 'vm', 'list-sizes', '-l', location['name'], '-o', 'json']).decode('utf-8'))
             for size in sizes:
                 if not size['name'] in size_map and not size['name'].split('_')[0] == 'Basic':
                     size_map[size['name']] = size
@@ -46,7 +46,7 @@ def get_dcos_master_map(size_map):
 
 
 def get_locations():
-    output = json.loads(subprocess.check_output(['az', 'account', 'list-locations']).decode('utf-8'))
+    output = json.loads(subprocess.check_output(['az', 'account', 'list-locations', '-o', 'json']).decode('utf-8'))
 
     locations = [l['name'] for l in output]
 
@@ -59,6 +59,10 @@ def get_locations():
     # Add two Canary locations
     locations.append('centraluseuap')
     locations.append('eastus2euap')
+
+    # Add US DoD locations
+    locations.append('usdodcentral')
+    locations.append('usdodeast')
 
     locations = sorted(locations)
     return locations
