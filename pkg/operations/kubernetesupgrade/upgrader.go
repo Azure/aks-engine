@@ -505,8 +505,13 @@ func (ku *Upgrader) upgradeAgentScaleSets(ctx context.Context) error {
 
 			ku.logger.Infof("Successfully set capacity for VMSS %s", vmssToUpgrade.Name)
 
+			cordonDrainTimeout := defaultCordonDrainTimeout
+			if ku.cordonDrainTimeout != nil {
+				cordonDrainTimeout = defaultCordonDrainTimeout
+			}
+
 			// Before we can delete the node we should safely and responsibly drain it
-			client, err := ku.getKubernetesClient(*ku.cordonDrainTimeout)
+			client, err := ku.getKubernetesClient(cordonDrainTimeout)
 			if err != nil {
 				ku.logger.Errorf("Error getting Kubernetes client: %v", err)
 				return err
@@ -517,7 +522,7 @@ func (ku *Upgrader) upgradeAgentScaleSets(ctx context.Context) error {
 				client,
 				ku.logger,
 				strings.ToLower(vmToUpgrade.Name),
-				*ku.cordonDrainTimeout,
+				cordonDrainTimeout,
 			)
 			if err != nil {
 				ku.logger.Errorf("Error draining VM in VMSS: %v", err)
