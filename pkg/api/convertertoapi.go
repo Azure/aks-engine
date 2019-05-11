@@ -719,7 +719,6 @@ func convertVLabsKubernetesConfig(vlabs *vlabs.KubernetesConfig, api *Kubernetes
 	convertAPIServerConfigToAPI(vlabs, api)
 	convertSchedulerConfigToAPI(vlabs, api)
 	convertPrivateClusterToAPI(vlabs, api)
-	convertPodSecurityPolicyConfigToAPI(vlabs, api)
 }
 
 func setVlabsKubernetesDefaults(vp *vlabs.Properties, api *OrchestratorProfile) {
@@ -822,13 +821,6 @@ func convertSchedulerConfigToAPI(v *vlabs.KubernetesConfig, a *KubernetesConfig)
 	a.SchedulerConfig = map[string]string{}
 	for key, val := range v.SchedulerConfig {
 		a.SchedulerConfig[key] = val
-	}
-}
-
-func convertPodSecurityPolicyConfigToAPI(v *vlabs.KubernetesConfig, a *KubernetesConfig) {
-	a.PodSecurityPolicyConfig = map[string]string{}
-	for key, val := range v.PodSecurityPolicyConfig {
-		a.PodSecurityPolicyConfig[key] = val
 	}
 }
 

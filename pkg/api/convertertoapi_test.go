@@ -985,9 +985,6 @@ func TestConvertVLabsContainerService(t *testing.T) {
 				StorageProfile: StorageAccount,
 			},
 		},
-		PodSecurityPolicyConfig: map[string]string{
-			"samplePSPConfigKey": "samplePSPConfigVal",
-		},
 	}
 
 	apiCs, err = ConvertVLabsContainerService(vlabsCS, false)

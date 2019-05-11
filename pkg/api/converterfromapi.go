@@ -757,7 +757,6 @@ func convertKubernetesConfigToVLabs(apiCfg *KubernetesConfig, vlabsCfg *vlabs.Ku
 	convertAPIServerConfigToVlabs(apiCfg, vlabsCfg)
 	convertSchedulerConfigToVlabs(apiCfg, vlabsCfg)
 	convertPrivateClusterToVlabs(apiCfg, vlabsCfg)
-	convertPodSecurityPolicyConfigToVlabs(apiCfg, vlabsCfg)
 }
 
 func convertKubeletConfigToVlabs(a *KubernetesConfig, v *vlabs.KubernetesConfig) {
@@ -804,13 +803,6 @@ func convertSchedulerConfigToVlabs(a *KubernetesConfig, v *vlabs.KubernetesConfi
 	v.SchedulerConfig = map[string]string{}
 	for key, val := range a.SchedulerConfig {
 		v.SchedulerConfig[key] = val
-	}
-}
-
-func convertPodSecurityPolicyConfigToVlabs(a *KubernetesConfig, v *vlabs.KubernetesConfig) {
-	v.PodSecurityPolicyConfig = map[string]string{}
-	for key, val := range a.PodSecurityPolicyConfig {
-		v.PodSecurityPolicyConfig[key] = val
 	}
 }
 

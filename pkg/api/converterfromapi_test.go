@@ -615,10 +615,7 @@ func getDefaultContainerService() *ContainerService {
 							PublicKey:      ValidSSHPublicKey,
 							StorageProfile: StorageAccount,
 						},
-					},
-					PodSecurityPolicyConfig: map[string]string{
-						"samplePSPConfigKey": "samplePSPConfigVal",
-					},
+					}
 				},
 			},
 			AgentPoolProfiles: []*AgentPoolProfile{
