@@ -615,7 +615,7 @@ func getDefaultContainerService() *ContainerService {
 							PublicKey:      ValidSSHPublicKey,
 							StorageProfile: StorageAccount,
 						},
-					}
+					},
 				},
 			},
 			AgentPoolProfiles: []*AgentPoolProfile{
