@@ -89,12 +89,13 @@ $ aks-engine get-versions
 | [smb-flexvolume](https://github.com/Azure/kubernetes-volume-drivers/tree/master/flexvolume/smb)                        | false               | as many as linux agent nodes                   | Access SMB server by using CIFS/SMB protocol |
 | [keyvault-flexvolume](../../examples/addons/keyvault-flexvolume/README.md)                        | true               | as many as linux agent nodes                   | Access secrets, keys, and certs in Azure Key Vault from pods |
 | [aad-pod-identity](../../examples/addons/aad-pod-identity/README.md)                        | false               | 1 + 1 on each linux agent nodes | Assign Azure Active Directory Identities to Kubernetes applications |
+| [pod-security-policy](https://kubernetes.io/docs/concepts/policy/pod-security-policy/)                        | false               | 0 | Pod Security Policies enable fine-grained authorization of pod creation and updates |
 
 To give a bit more info on the `addons` property: We've tried to expose the basic bits of data that allow useful configuration of these cluster features. Here are some example usage patterns that will unpack what `addons` provide:
 
 To enable an addon (using "tiller" as an example):
 
-```
+```json
 "kubernetesConfig": {
     "addons": [
         {
@@ -107,7 +108,7 @@ To enable an addon (using "tiller" as an example):
 
 As you can see above, `addons` is an array child property of `kubernetesConfig`. Each addon that you want to add custom configuration to would be represented as an object item in the array. For example, to disable both tiller and dashboard:
 
-```
+```json
 "kubernetesConfig": {
     "addons": [
         {
@@ -124,7 +125,7 @@ As you can see above, `addons` is an array child property of `kubernetesConfig`.
 
 More usefully, let's add some custom configuration to the above addons:
 
-```
+```json
 "kubernetesConfig": {
     "addons": [
         {
@@ -187,7 +188,7 @@ See https://kubernetes.io/docs/concepts/configuration/manage-compute-resources-c
 
 Additionally above, we specified a custom docker image for tiller, let's say we want to build a cluster and test an alpha version of tiller in it. **Important note!** customizing the image is not sticky across upgrade/scale, to ensure that aks-engine always delivers a version-curated, known-working addon when moving a cluster to a new version. Considering all that, providing a custom image reference for an addon configuration should be considered for testing/development, but not for a production cluster. If you'd like to entirely customize one of the addons available, including across scale/upgrade operations, you may include in an addon's spec a base64-encoded string of a Kubernetes yaml manifest. E.g.,
 
-```
+```json
 "kubernetesConfig": {
     "addons": [
         {
@@ -205,11 +206,11 @@ Finally, the `addons.enabled` boolean property was omitted above; that's by desi
 
 #### External Custom YAML scripts
 
-External YAML scripts can be configured for these supported addons and the manifest files for kube-scheduler, kube-controller-manager, cloud-controller-manager, kube-apiserver and PodSecurityPolicy. For addons, you will need to pass in a _base64_ encoded string of the kubernetes addon YAML file that you wish to use to `addons.Data` property. When `addons.Data` is provided with a value, the `containers` and `config` are required to be empty.
+External YAML scripts can be configured for these supported addons and the manifest files for kube-scheduler, kube-controller-manager, cloud-controller-manager and kube-apiserver. For addons, you will need to pass in a _base64_ encoded string of the kubernetes addon YAML file that you wish to use to `addons.Data` property. When `addons.Data` is provided with a value, the `containers` and `config` are required to be empty.
 
 CAVEAT: Please note that this is an experimental feature. Since Addons.Data allows you to provide your own scripts, you face the risk of any unintended/undesirable consequences of the errors and failures from running that script.
 
-```
+```json
 "kubernetesConfig": {
     "addons": [
         {
@@ -220,24 +221,17 @@ CAVEAT: Please note that this is an experimental feature. Since Addons.Data allo
     ]
 }
 ```
+
 For kubernetes component manifests, you will need to pass in a _base64_ encoded string of the kubernetes manifest YAML file to _KubernetesComponentConfig["data"]_ . For example, to pass a custom kube-scheduler config, do the following:
 
-```
+```json
 "kubernetesConfig": {
     "schedulerConfig": {
             "data" : "<base64 encoded string of your k8s manifest YAML>"
         }
 }
 ```
-and to pass a custom pod security policy config, do the following:
 
-```
-"kubernetesConfig": {
-    "podSecurityPolicyConfig": {
-            "data" : "<base64 encoded string of your k8s manifest YAML>"
-        }
-}
-```
 <a name="feat-kubelet-config"></a>
 
 #### kubeletConfig
@@ -295,7 +289,7 @@ Below is a list of kubelet options that are _not_ currently user-configurable, e
 
 `controllerManagerConfig` declares runtime configuration for the kube-controller-manager daemon running on all master nodes. Like `kubeletConfig` it is a generic key/value object, and a child property of `kubernetesConfig`. An example custom controller-manager config:
 
-```
+```json
 "kubernetesConfig": {
     "controllerManagerConfig": {
         "--node-monitor-grace-period": "40s",
@@ -343,7 +337,7 @@ Below is a list of controller-manager options that are _not_ currently user-conf
 
 `cloudControllerManagerConfig` declares runtime configuration for the cloud-controller-manager daemon running on all master nodes in a Cloud Controller Manager configuration. Like `kubeletConfig` it is a generic key/value object, and a child property of `kubernetesConfig`. An example custom cloud-controller-manager config:
 
-```
+```json
 "kubernetesConfig": {
     "cloudControllerManagerConfig": {
         "--route-reconciliation-period": "1m"
@@ -378,7 +372,7 @@ Below is a list of cloud-controller-manager options that are _not_ currently use
 
 `apiServerConfig` declares runtime configuration for the kube-apiserver daemon running on all master nodes. Like `kubeletConfig` and `controllerManagerConfig` it is a generic key/value object, and a child property of `kubernetesConfig`. An example custom apiserver config:
 
-```
+```json
 "kubernetesConfig": {
     "apiServerConfig": {
         "--request-timeout": "30s"
@@ -388,7 +382,7 @@ Below is a list of cloud-controller-manager options that are _not_ currently use
 
 Or perhaps you want to customize/override the set of admission-control flags passed to the API Server by default, you can omit the options you don't want and specify only the ones you need as follows:
 
-```
+```json
 "orchestratorProfile": {
       "orchestratorType": "Kubernetes",
       "orchestratorRelease": "1.8",
@@ -465,7 +459,7 @@ Below is a list of apiserver options that are _not_ currently user-configurable,
 
 `schedulerConfig` declares runtime configuration for the kube-scheduler daemon running on all master nodes. Like `kubeletConfig`, `controllerManagerConfig`, and `apiServerConfig` it is a generic key/value object, and a child property of `kubernetesConfig`. An example custom apiserver config:
 
-```
+```json
 "kubernetesConfig": {
     "schedulerConfig": {
         "--v": "2"
