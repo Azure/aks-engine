@@ -269,20 +269,16 @@ func (cs *ContainerService) setAddonsConfig(isUpdate bool) {
 		Enabled: to.BoolPtr(false),
 		Containers: []KubernetesContainerSpec{
 			{
-				Name:  CalicoAddonName,
-				Image: specConfig.CalicoImageBase + "typha:v3.5.0",
-			},
-			{
 				Name:  "calico-typha",
-				Image: specConfig.CalicoImageBase + "typha:v3.5.0",
+				Image: specConfig.CalicoImageBase + "typha:v3.7.2",
 			},
 			{
 				Name:  "calico-cni",
-				Image: specConfig.CalicoImageBase + "cni:v3.5.0",
+				Image: specConfig.CalicoImageBase + "cni:v3.7.2",
 			},
 			{
 				Name:  "calico-node",
-				Image: specConfig.CalicoImageBase + "node:v3.5.0",
+				Image: specConfig.CalicoImageBase + "node:v3.7.2",
 			},
 			{
 				Name:  "calico-cluster-proportional-autoscaler",
