@@ -27,6 +27,6 @@ elif [[ $RELEASE == "18.04" ]]; then
 
 fi
 sudo timedatectl status | grep 'RTC in local TZ: no' || exit 1
-retrycmd_if_failure 60 10 5 systemctl status systemd-timesyncd | grep 'Active: active' || exit 1
-retrycmd_if_failure 120 10 5 systemctl status systemd-timesyncd | grep 'Status: "Synchronized to time server' || exit 1
+retrycmd_if_failure 60 10 5 "systemctl status systemd-timesyncd | grep 'Active: active'" || exit 1
+retrycmd_if_failure 120 10 5 "systemctl status systemd-timesyncd | grep 'Status: \"Synchronized to time server'\"" || exit 1
 
