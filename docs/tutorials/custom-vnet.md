@@ -3,7 +3,7 @@
 In this tutorial you are going to learn how to use [AKS Engine](https://github.com/Azure/aks-engine) to deploy a brand new cluster into an existing or pre-created virtual network.
 By doing this, you will be able to control the properties of the virtual network or integrate a new cluster into your existing infrastructure.
 
-_For Kubernetes, the cluster should be deployed in the same resource group as the virtual network and the service principal you use for the cluster needs permissions on the VNET resource's group too._
+_The Kubernetes cluster should be deployed in the same resource group as the virtual network and the service principal you use for the cluster needs permissions on the VNET resource's group too._
 
 ## Prerequisites
 
@@ -92,7 +92,7 @@ Depending on the orchestrator you want to deploy, the number of agent pools, the
 
 There are a lot of examples available on the [AKS Engine GitHub](https://github.com/Azure/aks-engine/tree/master/examples) and you can find [one dedicated for virtual network](https://github.com/Azure/aks-engine/blob/master/examples/vnet/README.md).
 
-In this case, we are going to use the following template (this creates a cluster with AzureCNI network plugin):
+In this case, we are going to use the following template (this creates a cluster with the Azure CNI network plugin):
 
 ```json
 {
