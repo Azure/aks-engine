@@ -573,6 +573,7 @@ func TestHasStorageProfile(t *testing.T) {
 		expectedHasMD     bool
 		expectedHasSA     bool
 		expectedMasterMD  bool
+		expectedAgent0E   bool
 		expectedAgent0MD  bool
 		expectedPrivateJB bool
 		expectedHasDisks  bool
@@ -597,6 +598,7 @@ func TestHasStorageProfile(t *testing.T) {
 			expectedHasSA:    true,
 			expectedMasterMD: false,
 			expectedAgent0MD: false,
+			expectedAgent0E:  false,
 			expectedHasDisks: true,
 		},
 		{
@@ -618,6 +620,7 @@ func TestHasStorageProfile(t *testing.T) {
 			expectedHasSA:    true,
 			expectedMasterMD: true,
 			expectedAgent0MD: false,
+			expectedAgent0E:  false,
 		},
 		{
 			name: "both",
@@ -638,6 +641,7 @@ func TestHasStorageProfile(t *testing.T) {
 			expectedHasSA:    true,
 			expectedMasterMD: false,
 			expectedAgent0MD: true,
+			expectedAgent0E:  false,
 		},
 		{
 			name: "Managed Disk everywhere",
@@ -661,6 +665,29 @@ func TestHasStorageProfile(t *testing.T) {
 			expectedHasSA:     false,
 			expectedMasterMD:  true,
 			expectedAgent0MD:  true,
+			expectedAgent0E:   false,
+			expectedPrivateJB: false,
+		},
+		{
+			name: "Managed disk master with ephemeral agent",
+			p: Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					OrchestratorType: Kubernetes,
+				},
+				MasterProfile: &MasterProfile{
+					StorageProfile: ManagedDisks,
+				},
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						StorageProfile: Ephemeral,
+					},
+				},
+			},
+			expectedHasMD:     true,
+			expectedHasSA:     false,
+			expectedMasterMD:  true,
+			expectedAgent0MD:  false,
+			expectedAgent0E:   true,
 			expectedPrivateJB: false,
 		},
 		{
@@ -690,6 +717,7 @@ func TestHasStorageProfile(t *testing.T) {
 			expectedHasSA:     true,
 			expectedMasterMD:  false,
 			expectedAgent0MD:  false,
+			expectedAgent0E:   false,
 			expectedPrivateJB: true,
 		},
 
@@ -720,6 +748,7 @@ func TestHasStorageProfile(t *testing.T) {
 			expectedHasSA:     true,
 			expectedMasterMD:  true,
 			expectedAgent0MD:  true,
+			expectedAgent0E:   false,
 			expectedPrivateJB: true,
 		},
 	}
@@ -743,8 +772,12 @@ func TestHasStorageProfile(t *testing.T) {
 			if c.p.AgentPoolProfiles[0].IsManagedDisks() != c.expectedAgent0MD {
 				t.Fatalf("expected IsManagedDisks() to return %t but instead returned %t", c.expectedAgent0MD, c.p.AgentPoolProfiles[0].IsManagedDisks())
 			}
-			if c.p.AgentPoolProfiles[0].IsStorageAccount() == c.expectedAgent0MD {
-				t.Fatalf("expected IsStorageAccount() to return %t but instead returned %t", !c.expectedAgent0MD, c.p.AgentPoolProfiles[0].IsStorageAccount())
+			expectedAgentStorageAccount := !(c.expectedAgent0MD || c.expectedAgent0E)
+			if c.p.AgentPoolProfiles[0].IsStorageAccount() != expectedAgentStorageAccount {
+				t.Fatalf("expected IsStorageAccount() to return %t but instead returned %t", expectedAgentStorageAccount, c.p.AgentPoolProfiles[0].IsStorageAccount())
+			}
+			if c.p.AgentPoolProfiles[0].IsEphemeral() != c.expectedAgent0E {
+				t.Fatalf("expected IsEphemeral() to return %t but instead returned %t", c.expectedAgent0E, c.p.AgentPoolProfiles[0].IsEphemeral())
 			}
 			if c.p.OrchestratorProfile != nil && c.p.OrchestratorProfile.KubernetesConfig.PrivateJumpboxProvision() != c.expectedPrivateJB {
 				t.Fatalf("expected PrivateJumpboxProvision() to return %t but instead returned %t", c.expectedPrivateJB, c.p.OrchestratorProfile.KubernetesConfig.PrivateJumpboxProvision())

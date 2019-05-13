@@ -46,7 +46,7 @@ func HandleValidationErrors(e validator.ValidationErrors) error {
 			case strings.Contains(ns, ".Ports"):
 				return errors.Errorf("AgentPoolProfile Ports must be in the range[%d, %d]", MinPort, MaxPort)
 			case strings.HasSuffix(ns, ".StorageProfile"):
-				return errors.Errorf("Unknown storageProfile '%s'. Specify either %s or %s", err.Value().(string), StorageAccount, ManagedDisks)
+				return errors.Errorf("Unknown storageProfile '%s'. Specify %s, %s, or %s", err.Value().(string), StorageAccount, ManagedDisks, Ephemeral)
 			case strings.Contains(ns, ".DiskSizesGB"):
 				return errors.Errorf("A maximum of %d disks may be specified, The range of valid disk size values are [%d, %d]", MaxDisks, MinDiskSizeGB, MaxDiskSizeGB)
 			case strings.HasSuffix(ns, ".IPAddressCount"):

@@ -511,6 +511,13 @@ func createAgentAvailabilitySetVM(cs *api.ContainerService, profile *api.AgentPo
 		}
 	}
 
+	if profile.IsEphemeral() {
+		osDisk.Caching = compute.CachingTypesReadOnly
+		osDisk.DiffDiskSettings = &compute.DiffDiskSettings{
+			Option: compute.Local,
+		}
+	}
+
 	if profile.OSDiskSizeGB > 0 {
 		osDisk.DiskSizeGB = to.Int32Ptr(int32(profile.OSDiskSizeGB))
 	}

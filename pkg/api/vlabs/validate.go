@@ -877,6 +877,18 @@ func (a *AgentPoolProfile) validateStorageProfile(orchestratorType string) error
 		}
 	}
 
+	if a.StorageProfile == Ephemeral {
+		switch orchestratorType {
+		case Kubernetes:
+			break
+		case DCOS:
+		case Swarm:
+		case SwarmMode:
+		default:
+			return errors.Errorf("Ephemeral volumes are currently unsupported for Orchestrator %s", orchestratorType)
+		}
+	}
+
 	return nil
 }
 
