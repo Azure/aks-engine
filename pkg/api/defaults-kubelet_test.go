@@ -4,6 +4,7 @@
 package api
 
 import (
+	"path"
 	"strconv"
 	"testing"
 
@@ -19,8 +20,10 @@ func TestKubeletConfigDefaults(t *testing.T) {
 	winProfile.VMSize = "Standard_D2_v2"
 	winProfile.OSType = Windows
 	cs.Properties.AgentPoolProfiles = append(cs.Properties.AgentPoolProfiles, winProfile)
+	cs.Properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBase = "foo.com"
 	cs.setKubeletConfig()
 	kubeletConfig := cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig
+
 	expected := map[string]string{
 		"--address":                           "0.0.0.0",
 		"--allow-privileged":                  "true",
@@ -47,7 +50,7 @@ func TestKubeletConfigDefaults(t *testing.T) {
 		"--node-status-update-frequency":      K8sComponentsByVersionMap[cs.Properties.OrchestratorProfile.OrchestratorVersion]["nodestatusfreq"],
 		"--non-masquerade-cidr":               DefaultNonMasqueradeCIDR,
 		"--pod-manifest-path":                 "/etc/kubernetes/manifests",
-		"--pod-infra-container-image":         cs.Properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBase + K8sComponentsByVersionMap[cs.Properties.OrchestratorProfile.OrchestratorVersion]["pause"],
+		"--pod-infra-container-image":         path.Join(cs.Properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBase, K8sComponentsByVersionMap[cs.Properties.OrchestratorProfile.OrchestratorVersion]["pause"]),
 		"--pod-max-pids":                      strconv.Itoa(DefaultKubeletPodMaxPIDs),
 		"--protect-kernel-defaults":           "true",
 		"--rotate-certificates":               "true",

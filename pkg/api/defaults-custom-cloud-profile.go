@@ -144,6 +144,19 @@ func (p *Properties) SetAzureStackCloudSpec() error {
 			azureStackCloudSpec.KubernetesSpecConfig.VnetCNIWindowsPluginsDownloadURL = helpers.EnsureString(asccKubernetesSpecConfig.VnetCNIWindowsPluginsDownloadURL, azsKubernetesSpecConfig.VnetCNIWindowsPluginsDownloadURL)
 			azureStackCloudSpec.KubernetesSpecConfig.WindowsTelemetryGUID = helpers.EnsureString(asccKubernetesSpecConfig.WindowsTelemetryGUID, azsKubernetesSpecConfig.WindowsTelemetryGUID)
 
+			if asccKubernetesSpecConfig.ImageRepoOverrides == nil {
+				// Note that if ImageRepoOverrides are unst in the custom cloud profile, this will unset
+				// overrides in the base cloud profile!!!
+				azureStackCloudSpec.KubernetesSpecConfig.ImageRepoOverrides = nil
+			} else {
+				if asccKubernetesSpecConfig.ImageRepoOverrides != nil {
+					azureStackCloudSpec.KubernetesSpecConfig.ImageRepoOverrides = make(map[string]ImageRepoOverride, len(asccKubernetesSpecConfig.ImageRepoOverrides))
+				}
+			}
+			for k, v := range asccKubernetesSpecConfig.ImageRepoOverrides {
+				azureStackCloudSpec.KubernetesSpecConfig.ImageRepoOverrides[k] = v
+			}
+
 			//EndpointConfig
 			asccEndpointConfig := ascc.EndpointConfig
 			azsEndpointConfig := azureStackCloudSpec.EndpointConfig
