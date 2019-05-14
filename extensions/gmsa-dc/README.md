@@ -42,7 +42,7 @@ Kubernetes
 
 # Troubleshoot
 
-The different scripts that are run will log to the ```C:\gmsa``` directory.
+The different scripts that run will log to the ```C:\gmsa``` directory.
 
 Extension execution output is logged to files found under the following directory on the target virtual machine.
 
