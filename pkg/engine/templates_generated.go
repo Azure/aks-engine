@@ -52,6 +52,7 @@
 // ../../parts/k8s/addons/kubernetesmasteraddons-kube-proxy-daemonset.yaml
 // ../../parts/k8s/addons/kubernetesmasteraddons-managed-azure-storage-classes-custom.yaml
 // ../../parts/k8s/addons/kubernetesmasteraddons-managed-azure-storage-classes.yaml
+// ../../parts/k8s/addons/kubernetesmasteraddons-pod-security-policy.yaml
 // ../../parts/k8s/addons/kubernetesmasteraddons-unmanaged-azure-storage-classes-custom.yaml
 // ../../parts/k8s/addons/kubernetesmasteraddons-unmanaged-azure-storage-classes.yaml
 // ../../parts/k8s/armparameters.t
@@ -122,7 +123,6 @@
 // ../../parts/k8s/manifests/kubernetesmaster-kube-controller-manager-custom.yaml
 // ../../parts/k8s/manifests/kubernetesmaster-kube-controller-manager.yaml
 // ../../parts/k8s/manifests/kubernetesmaster-kube-scheduler.yaml
-// ../../parts/k8s/manifests/kubernetesmaster-pod-security-policy.yaml
 // ../../parts/k8s/windowsazurecnifunc.ps1
 // ../../parts/k8s/windowscnifunc.ps1
 // ../../parts/k8s/windowsconfigfunc.ps1
@@ -9699,7 +9699,7 @@ spec:
       containers:
       - command:
         - /hyperkube
-        - proxy
+        - kube-proxy
         - --kubeconfig=/var/lib/kubelet/kubeconfig
         - --cluster-cidr=<CIDR>
         - --feature-gates=ExperimentalCriticalPodAnnotation=true
@@ -9882,6 +9882,156 @@ func k8sAddonsKubernetesmasteraddonsManagedAzureStorageClassesYaml() (*asset, er
 	}
 
 	info := bindataFileInfo{name: "k8s/addons/kubernetesmasteraddons-managed-azure-storage-classes.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
+var _k8sAddonsKubernetesmasteraddonsPodSecurityPolicyYaml = []byte(`apiVersion: extensions/v1beta1
+kind: PodSecurityPolicy
+metadata:
+  name: privileged
+  annotations:
+    seccomp.security.alpha.kubernetes.io/allowedProfileNames: "*"
+  labels:
+    addonmanager.kubernetes.io/mode: Reconcile
+spec:
+  privileged: true
+  allowPrivilegeEscalation: true
+  allowedCapabilities:
+  - "*"
+  volumes:
+  - "*"
+  hostNetwork: true
+  hostPorts:
+  - min: 0
+    max: 65535
+  hostIPC: true
+  hostPID: true
+  runAsUser:
+    rule: RunAsAny
+  seLinux:
+    rule: RunAsAny
+  supplementalGroups:
+    rule: RunAsAny
+  fsGroup:
+    rule: RunAsAny
+---
+apiVersion: extensions/v1beta1
+kind: PodSecurityPolicy
+metadata:
+  name: restricted
+  annotations:
+    seccomp.security.alpha.kubernetes.io/allowedProfileNames: docker/default
+    apparmor.security.beta.kubernetes.io/allowedProfileNames: runtime/default
+    seccomp.security.alpha.kubernetes.io/defaultProfileName:  docker/default
+    apparmor.security.beta.kubernetes.io/defaultProfileName:  runtime/default
+  labels:
+    addonmanager.kubernetes.io/mode: Reconcile
+spec:
+  privileged: false
+  allowPrivilegeEscalation: false
+  requiredDropCapabilities:
+    - ALL
+  volumes:
+    - configMap
+    - emptyDir
+    - projected
+    - secret
+    - downwardAPI
+    - persistentVolumeClaim
+  hostNetwork: false
+  hostIPC: false
+  hostPID: false
+  runAsUser:
+    rule: MustRunAsNonRoot
+  seLinux:
+    rule: RunAsAny
+  supplementalGroups:
+    rule: MustRunAs
+    ranges:
+      # Forbid adding the root group.
+      - min: 1
+        max: 65535
+  fsGroup:
+    rule: MustRunAs
+    ranges:
+      # Forbid adding the root group.
+      - min: 1
+        max: 65535
+  readOnlyRootFilesystem: false
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: psp:privileged
+  labels:
+    addonmanager.kubernetes.io/mode: Reconcile
+rules:
+- apiGroups: ['extensions']
+  resources: ['podsecuritypolicies']
+  verbs:     ['use']
+  resourceNames:
+  - privileged
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: psp:restricted
+  labels:
+    addonmanager.kubernetes.io/mode: Reconcile
+rules:
+- apiGroups: ['extensions']
+  resources: ['podsecuritypolicies']
+  verbs:     ['use']
+  resourceNames:
+  - restricted
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: default:restricted
+  labels:
+    addonmanager.kubernetes.io/mode: Reconcile
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: psp:restricted
+subjects:
+- kind: Group
+  name: system:authenticated
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: default:privileged
+  namespace: kube-system
+  labels:
+    addonmanager.kubernetes.io/mode: Reconcile
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: psp:privileged
+subjects:
+- kind: Group
+  name: system:masters
+  apiGroup: rbac.authorization.k8s.io
+- kind: Group
+  name: system:serviceaccounts:kube-system
+  apiGroup: rbac.authorization.k8s.io
+`)
+
+func k8sAddonsKubernetesmasteraddonsPodSecurityPolicyYamlBytes() ([]byte, error) {
+	return _k8sAddonsKubernetesmasteraddonsPodSecurityPolicyYaml, nil
+}
+
+func k8sAddonsKubernetesmasteraddonsPodSecurityPolicyYaml() (*asset, error) {
+	bytes, err := k8sAddonsKubernetesmasteraddonsPodSecurityPolicyYamlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "k8s/addons/kubernetesmasteraddons-pod-security-policy.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -10636,13 +10786,6 @@ ensureJournal() {
         echo "ForwardToSyslog=yes"
     } >> /etc/systemd/journald.conf
     systemctlEnableAndStart systemd-journald || exit $ERR_SYSTEMCTL_START_FAIL
-}
-
-ensurePodSecurityPolicy() {
-    POD_SECURITY_POLICY_FILE="/etc/kubernetes/manifests/pod-security-policy.yaml"
-    if [ -f $POD_SECURITY_POLICY_FILE ]; then
-        $KUBECTL create -f $POD_SECURITY_POLICY_FILE
-    fi
 }
 
 ensureK8sControlPlane() {
@@ -11554,11 +11697,6 @@ else
 fi
 
 if [[ $OS == $UBUNTU_OS_NAME ]] && [ "$FULL_INSTALL_REQUIRED" = "true" ]; then
-    cis_sysctl=/etc/sysctl.d/60-CIS.conf
-    wait_for_file 3600 1 $cis_sysctl || exit $ERR_FILE_WATCH_TIMEOUT
-    cis_rsyslog=/etc/rsyslog.d/60-CIS.conf
-    wait_for_file 3600 1 $cis_rsyslog || exit $ERR_FILE_WATCH_TIMEOUT
-    sysctl_reload 20 5 10 || exit $ERR_SYSCTL_RELOAD
     installDeps
 else
     echo "Golden image; skipping dependencies installation"
@@ -11658,7 +11796,6 @@ if [[ -n "${MASTER_NODE}" ]]; then
       ensureEtcd
     fi
     ensureK8sControlPlane
-    ensurePodSecurityPolicy
 fi
 
 if $FULL_INSTALL_REQUIRED; then
@@ -11675,11 +11812,7 @@ echo $(date),$(hostname), endcustomscript>>/opt/m
 mkdir -p /opt/azure/containers && touch /opt/azure/containers/provision.complete
 ps auxfww > /opt/azure/provision-ps.log &
 
-if $FULL_INSTALL_REQUIRED; then
-  if [[ $OS == $UBUNTU_OS_NAME ]]; then
-    applyCIS
-  fi
-else
+if ! $FULL_INSTALL_REQUIRED; then
   cleanUpContainerImages
 fi
 
@@ -13007,101 +13140,6 @@ write_files:
   content: !!binary |
     {{CloudInitData "aptPreferences"}}
 
-{{if .MasterProfile.IsUbuntuNonVHD}}
-  {{if .MasterProfile.IsUbuntu1604}}
-- path: /etc/ssh/sshd_config
-  permissions: "0600"
-  encoding: gzip
-  owner: root
-  content: !!binary |
-    {{CloudInitData "sshdConfig1604"}}
-  {{else}}
-- path: /etc/ssh/sshd_config
-  permissions: "0600"
-  encoding: gzip
-  owner: root
-  content: !!binary |
-    {{CloudInitData "sshdConfig"}}
-  {{end}}
-
-- path: /etc/issue
-  permissions: "0644"
-  encoding: gzip
-  owner: root
-  content: !!binary |
-    {{CloudInitData "etcIssue"}}
-
-- path: /etc/issue.net
-  permissions: "0644"
-  encoding: gzip
-  owner: root
-  content: !!binary |
-    {{CloudInitData "etcIssueNet"}}
-
-- path: /etc/sysctl.d/60-CIS.conf
-  permissions: "0644"
-  encoding: gzip
-  owner: root
-  content: !!binary |
-    {{CloudInitData "cisNetEnforcement"}}
-
-- path: /etc/rsyslog.d/60-CIS.conf
-  permissions: "0644"
-  encoding: gzip
-  owner: root
-  content: !!binary |
-    {{CloudInitData "cisLogEnforcement"}}
-
-- path: /etc/modprobe.d/CIS.conf
-  permissions: "0644"
-  encoding: gzip
-  owner: root
-  content: !!binary |
-    {{CloudInitData "modprobeConfCIS"}}
-
-- path: /etc/security/pwquality.conf
-  permissions: "0600"
-  encoding: gzip
-  owner: root
-  content: !!binary |
-    {{CloudInitData "pwQuality"}}
-
-- path: /etc/pam.d/su
-  permissions: "0644"
-  encoding: gzip
-  owner: root
-  content: !!binary |
-    {{CloudInitData "pamDotDSU"}}
-
-- path: /etc/pam.d/common-auth
-  permissions: "0644"
-  encoding: gzip
-  owner: root
-  content: !!binary |
-    {{CloudInitData "pamDotDCommonAuth"}}
-
-- path: /etc/pam.d/common-password
-  permissions: "0644"
-  encoding: gzip
-  owner: root
-  content: !!binary |
-    {{CloudInitData "pamDotDCommonPassword"}}
-
-- path: /etc/profile.d/CIS.sh
-  permissions: "0755"
-  encoding: gzip
-  owner: root
-  content: !!binary |
-    {{CloudInitData "profileDCISSh"}}
-
-- path: /etc/audit/rules.d/CIS.rules
-  permissions: "0640"
-  encoding: gzip
-  owner: root
-  content: !!binary |
-    {{CloudInitData "auditdRules"}}
-{{end}}
-
 {{if .OrchestratorProfile.KubernetesConfig.RequiresDocker}}
     {{if not .MasterProfile.IsCoreOS}}
 - path: /etc/systemd/system/docker.service.d/clear_mount_propagation_flags.conf
@@ -13331,7 +13369,7 @@ MASTER_CONTAINER_ADDONS_PLACEHOLDER
     sed -i "s|<gID>|{{WrapAsParameter "aadAdminGroupId"}}|g" "/etc/kubernetes/addons/aad-default-admin-group-rbac.yaml"
 {{end}}
 
-{{if .IsClusterAutoscalerEnabled}}
+{{if .OrchestratorProfile.KubernetesConfig.IsClusterAutoscalerEnabled}}
     sed -i "s|<cloud>|{{WrapAsParameter "kubernetesClusterAutoscalerAzureCloud"}}|g; s|<useManagedIdentity>|{{WrapAsParameter "kubernetesClusterAutoscalerUseManagedIdentity"}}|g" /etc/kubernetes/addons/cluster-autoscaler-deployment.yaml
 {{end}}
 
@@ -13607,101 +13645,6 @@ write_files:
   owner: root
   content: !!binary |
     {{CloudInitData "aptPreferences"}}
-
-{{if .IsUbuntuNonVHD}}
-  {{if .IsUbuntu1604}}
-- path: /etc/ssh/sshd_config
-  permissions: "0600"
-  encoding: gzip
-  owner: root
-  content: !!binary |
-    {{CloudInitData "sshdConfig1604"}}
-  {{else}}
-- path: /etc/ssh/sshd_config
-  permissions: "0600"
-  encoding: gzip
-  owner: root
-  content: !!binary |
-    {{CloudInitData "sshdConfig"}}
-  {{end}}
-
-- path: /etc/issue
-  permissions: "0644"
-  encoding: gzip
-  owner: root
-  content: !!binary |
-    {{CloudInitData "etcIssue"}}
-
-- path: /etc/issue.net
-  permissions: "0644"
-  encoding: gzip
-  owner: root
-  content: !!binary |
-    {{CloudInitData "etcIssueNet"}}
-
-- path: /etc/sysctl.d/60-CIS.conf
-  permissions: "0644"
-  encoding: gzip
-  owner: root
-  content: !!binary |
-    {{CloudInitData "cisNetEnforcement"}}
-
-- path: /etc/rsyslog.d/60-CIS.conf
-  permissions: "0644"
-  encoding: gzip
-  owner: root
-  content: !!binary |
-    {{CloudInitData "cisLogEnforcement"}}
-
-- path: /etc/modprobe.d/CIS.conf
-  permissions: "0644"
-  encoding: gzip
-  owner: root
-  content: !!binary |
-    {{CloudInitData "modprobeConfCIS"}}
-
-- path: /etc/security/pwquality.conf
-  permissions: "0600"
-  encoding: gzip
-  owner: root
-  content: !!binary |
-    {{CloudInitData "pwQuality"}}
-
-- path: /etc/pam.d/su
-  permissions: "0644"
-  encoding: gzip
-  owner: root
-  content: !!binary |
-    {{CloudInitData "pamDotDSU"}}
-
-- path: /etc/pam.d/common-auth
-  permissions: "0644"
-  encoding: gzip
-  owner: root
-  content: !!binary |
-    {{CloudInitData "pamDotDCommonAuth"}}
-
-- path: /etc/pam.d/common-password
-  permissions: "0644"
-  encoding: gzip
-  owner: root
-  content: !!binary |
-    {{CloudInitData "pamDotDCommonPassword"}}
-
-- path: /etc/profile.d/CIS.sh
-  permissions: "0644"
-  encoding: gzip
-  owner: root
-  content: !!binary |
-    {{CloudInitData "profileDCISSh"}}
-
-- path: /etc/audit/rules.d/CIS.rules
-  permissions: "0640"
-  encoding: gzip
-  owner: root
-  content: !!binary |
-    {{CloudInitData "auditdRules"}}
-{{end}}
 
 {{if .KubernetesConfig.RequiresDocker}}
     {{if not .IsCoreOS}}
@@ -17728,7 +17671,7 @@ var _k8sKubernetesparamsT = []byte(`{{if .HasAadProfile}}
       },
       "type": "string"
     },
-{{if .IsAADPodIdentityEnabled}}
+{{if .OrchestratorProfile.KubernetesConfig.IsAADPodIdentityEnabled}}
     "kubernetesAADPodIdentityEnabled": {
       "defaultValue": false,
       "metadata": {
@@ -17749,7 +17692,7 @@ var _k8sKubernetesparamsT = []byte(`{{if .HasAadProfile}}
       },
       "type": "bool"
     },
-{{if .IsClusterAutoscalerEnabled}}
+{{if .OrchestratorProfile.KubernetesConfig.IsClusterAutoscalerEnabled}}
     "kubernetesClusterAutoscalerAzureCloud": {
       "metadata": {
         "description": "Name of the Azure cloud for the cluster autoscaler."
@@ -18582,7 +18525,7 @@ spec:
     - name: kube-apiserver
       image: <img>
       imagePullPolicy: IfNotPresent
-      command: ["/hyperkube", "apiserver"]
+      command: ["/hyperkube", "kube-apiserver"]
       args: [<args>]
       volumeMounts:
         - name: etc-kubernetes
@@ -18643,7 +18586,7 @@ spec:
     - name: kube-controller-manager
       image: <img>
       imagePullPolicy: IfNotPresent
-      command: ["/hyperkube", "controller-manager"]
+      command: ["/hyperkube", "kube-controller-manager"]
       args: [<args>]
       env:
       - name: AZURE_ENVIRONMENT_FILEPATH
@@ -18698,7 +18641,7 @@ spec:
     - name: kube-controller-manager
       image: <img>
       imagePullPolicy: IfNotPresent
-      command: ["/hyperkube", "controller-manager"]
+      command: ["/hyperkube", "kube-controller-manager"]
       args: [<args>]
       volumeMounts:
         - name: etc-kubernetes
@@ -18749,7 +18692,7 @@ spec:
     - name: kube-scheduler
       image: <img>
       imagePullPolicy: IfNotPresent
-      command: ["/hyperkube", "scheduler"]
+      command: ["/hyperkube", "kube-scheduler"]
       args: [<args>]
       volumeMounts:
         - name: etc-kubernetes
@@ -18782,144 +18725,6 @@ func k8sManifestsKubernetesmasterKubeSchedulerYaml() (*asset, error) {
 	}
 
 	info := bindataFileInfo{name: "k8s/manifests/kubernetesmaster-kube-scheduler.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
-	a := &asset{bytes: bytes, info: info}
-	return a, nil
-}
-
-var _k8sManifestsKubernetesmasterPodSecurityPolicyYaml = []byte(`apiVersion: extensions/v1beta1
-kind: PodSecurityPolicy
-metadata:
-  name: privileged
-  annotations:
-    seccomp.security.alpha.kubernetes.io/allowedProfileNames: "*"
-spec:
-  privileged: true
-  allowPrivilegeEscalation: true
-  allowedCapabilities:
-  - "*"
-  volumes:
-  - "*"
-  hostNetwork: true
-  hostPorts:
-  - min: 0
-    max: 65535
-  hostIPC: true
-  hostPID: true
-  runAsUser:
-    rule: RunAsAny
-  seLinux:
-    rule: RunAsAny
-  supplementalGroups:
-    rule: RunAsAny
-  fsGroup:
-    rule: RunAsAny
----
-apiVersion: extensions/v1beta1
-kind: PodSecurityPolicy
-metadata:
-  name: restricted
-  annotations:
-    seccomp.security.alpha.kubernetes.io/allowedProfileNames: docker/default
-    apparmor.security.beta.kubernetes.io/allowedProfileNames: runtime/default
-    seccomp.security.alpha.kubernetes.io/defaultProfileName:  docker/default
-    apparmor.security.beta.kubernetes.io/defaultProfileName:  runtime/default
-spec:
-  privileged: false
-  allowPrivilegeEscalation: false
-  requiredDropCapabilities:
-    - ALL
-  volumes:
-    - configMap
-    - emptyDir
-    - projected
-    - secret
-    - downwardAPI
-    - persistentVolumeClaim
-  hostNetwork: false
-  hostIPC: false
-  hostPID: false
-  runAsUser:
-    rule: MustRunAsNonRoot
-  seLinux:
-    rule: RunAsAny
-  supplementalGroups:
-    rule: MustRunAs
-    ranges:
-      # Forbid adding the root group.
-      - min: 1
-        max: 65535
-  fsGroup:
-    rule: MustRunAs
-    ranges:
-      # Forbid adding the root group.
-      - min: 1
-        max: 65535
-  readOnlyRootFilesystem: false
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRole
-metadata:
-  name: psp:privileged
-rules:
-- apiGroups: ['extensions']
-  resources: ['podsecuritypolicies']
-  verbs:     ['use']
-  resourceNames:
-  - privileged
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRole
-metadata:
-  name: psp:restricted
-rules:
-- apiGroups: ['extensions']
-  resources: ['podsecuritypolicies']
-  verbs:     ['use']
-  resourceNames:
-  - restricted
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRoleBinding
-metadata:
-  name: default:restricted
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: psp:restricted
-subjects:
-- kind: Group
-  name: system:authenticated
-  apiGroup: rbac.authorization.k8s.io
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: RoleBinding
-metadata:
-  name: default:privileged
-  namespace: kube-system
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: psp:privileged
-subjects:
-- kind: Group
-  name: system:masters
-  apiGroup: rbac.authorization.k8s.io
-- kind: Group
-  name: system:serviceaccounts:kube-system
-  apiGroup: rbac.authorization.k8s.io
-`)
-
-func k8sManifestsKubernetesmasterPodSecurityPolicyYamlBytes() ([]byte, error) {
-	return _k8sManifestsKubernetesmasterPodSecurityPolicyYaml, nil
-}
-
-func k8sManifestsKubernetesmasterPodSecurityPolicyYaml() (*asset, error) {
-	bytes, err := k8sManifestsKubernetesmasterPodSecurityPolicyYamlBytes()
-	if err != nil {
-		return nil, err
-	}
-
-	info := bindataFileInfo{name: "k8s/manifests/kubernetesmaster-pod-security-policy.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -23308,6 +23113,7 @@ var _bindata = map[string]func() (*asset, error){
 	"k8s/addons/kubernetesmasteraddons-kube-proxy-daemonset.yaml":                   k8sAddonsKubernetesmasteraddonsKubeProxyDaemonsetYaml,
 	"k8s/addons/kubernetesmasteraddons-managed-azure-storage-classes-custom.yaml":   k8sAddonsKubernetesmasteraddonsManagedAzureStorageClassesCustomYaml,
 	"k8s/addons/kubernetesmasteraddons-managed-azure-storage-classes.yaml":          k8sAddonsKubernetesmasteraddonsManagedAzureStorageClassesYaml,
+	"k8s/addons/kubernetesmasteraddons-pod-security-policy.yaml":                    k8sAddonsKubernetesmasteraddonsPodSecurityPolicyYaml,
 	"k8s/addons/kubernetesmasteraddons-unmanaged-azure-storage-classes-custom.yaml": k8sAddonsKubernetesmasteraddonsUnmanagedAzureStorageClassesCustomYaml,
 	"k8s/addons/kubernetesmasteraddons-unmanaged-azure-storage-classes.yaml":        k8sAddonsKubernetesmasteraddonsUnmanagedAzureStorageClassesYaml,
 	"k8s/armparameters.t":                                                             k8sArmparametersT,
@@ -23378,7 +23184,6 @@ var _bindata = map[string]func() (*asset, error){
 	"k8s/manifests/kubernetesmaster-kube-controller-manager-custom.yaml":              k8sManifestsKubernetesmasterKubeControllerManagerCustomYaml,
 	"k8s/manifests/kubernetesmaster-kube-controller-manager.yaml":                     k8sManifestsKubernetesmasterKubeControllerManagerYaml,
 	"k8s/manifests/kubernetesmaster-kube-scheduler.yaml":                              k8sManifestsKubernetesmasterKubeSchedulerYaml,
-	"k8s/manifests/kubernetesmaster-pod-security-policy.yaml":                         k8sManifestsKubernetesmasterPodSecurityPolicyYaml,
 	"k8s/windowsazurecnifunc.ps1":                                                     k8sWindowsazurecnifuncPs1,
 	"k8s/windowscnifunc.ps1":                                                          k8sWindowscnifuncPs1,
 	"k8s/windowsconfigfunc.ps1":                                                       k8sWindowsconfigfuncPs1,
@@ -23511,6 +23316,7 @@ var _bintree = &bintree{nil, map[string]*bintree{
 			"kubernetesmasteraddons-kube-proxy-daemonset.yaml":                   {k8sAddonsKubernetesmasteraddonsKubeProxyDaemonsetYaml, map[string]*bintree{}},
 			"kubernetesmasteraddons-managed-azure-storage-classes-custom.yaml":   {k8sAddonsKubernetesmasteraddonsManagedAzureStorageClassesCustomYaml, map[string]*bintree{}},
 			"kubernetesmasteraddons-managed-azure-storage-classes.yaml":          {k8sAddonsKubernetesmasteraddonsManagedAzureStorageClassesYaml, map[string]*bintree{}},
+			"kubernetesmasteraddons-pod-security-policy.yaml":                    {k8sAddonsKubernetesmasteraddonsPodSecurityPolicyYaml, map[string]*bintree{}},
 			"kubernetesmasteraddons-unmanaged-azure-storage-classes-custom.yaml": {k8sAddonsKubernetesmasteraddonsUnmanagedAzureStorageClassesCustomYaml, map[string]*bintree{}},
 			"kubernetesmasteraddons-unmanaged-azure-storage-classes.yaml":        {k8sAddonsKubernetesmasteraddonsUnmanagedAzureStorageClassesYaml, map[string]*bintree{}},
 		}},
@@ -23595,7 +23401,6 @@ var _bintree = &bintree{nil, map[string]*bintree{
 			"kubernetesmaster-kube-controller-manager-custom.yaml": {k8sManifestsKubernetesmasterKubeControllerManagerCustomYaml, map[string]*bintree{}},
 			"kubernetesmaster-kube-controller-manager.yaml":        {k8sManifestsKubernetesmasterKubeControllerManagerYaml, map[string]*bintree{}},
 			"kubernetesmaster-kube-scheduler.yaml":                 {k8sManifestsKubernetesmasterKubeSchedulerYaml, map[string]*bintree{}},
-			"kubernetesmaster-pod-security-policy.yaml":            {k8sManifestsKubernetesmasterPodSecurityPolicyYaml, map[string]*bintree{}},
 		}},
 		"windowsazurecnifunc.ps1":       {k8sWindowsazurecnifuncPs1, map[string]*bintree{}},
 		"windowscnifunc.ps1":            {k8sWindowscnifuncPs1, map[string]*bintree{}},
