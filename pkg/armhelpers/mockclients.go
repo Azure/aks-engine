@@ -73,6 +73,7 @@ type MockKubernetesClient struct {
 	FailListServiceAccounts  bool
 	FailGetNode              bool
 	UpdateNodeFunc           func(*v1.Node) (*v1.Node, error)
+	GetNodeFunc              func(name string) (*v1.Node, error)
 	FailUpdateNode           bool
 	FailDeleteNode           bool
 	FailDeleteServiceAccount bool
@@ -335,6 +336,9 @@ func (mkc *MockKubernetesClient) ListServiceAccounts(namespace string) (*v1.Serv
 
 //GetNode returns details about node with passed in name
 func (mkc *MockKubernetesClient) GetNode(name string) (*v1.Node, error) {
+	if mkc.GetNodeFunc != nil {
+		return mkc.GetNodeFunc(name)
+	}
 	if mkc.FailGetNode {
 		return nil, errors.New("GetNode failed")
 	}
@@ -622,12 +626,14 @@ func (mc *MockAKSEngineClient) MakeFakeVirtualMachineScaleSetVMWithGivenName(orc
 		tags = nil
 	}
 
+	trueVar := true
 	return compute.VirtualMachineScaleSetVM{
 		Name:       &vm1Name,
 		Tags:       tags,
 		InstanceID: &instanceID,
 		VirtualMachineScaleSetVMProperties: &compute.VirtualMachineScaleSetVMProperties{
-			OsProfile: &compute.OSProfile{ComputerName: &computerName},
+			LatestModelApplied: &trueVar,
+			OsProfile:          &compute.OSProfile{ComputerName: &computerName},
 			StorageProfile: &compute.StorageProfile{
 				OsDisk: &compute.OSDisk{
 					Vhd: &compute.VirtualHardDisk{

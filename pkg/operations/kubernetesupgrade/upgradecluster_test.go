@@ -252,7 +252,7 @@ var _ = Describe("Upgrade Kubernetes cluster tests", func() {
 		)
 
 		BeforeEach(func() {
-			mockClient = armhelpers.MockAKSEngineClient{}
+			mockClient = armhelpers.MockAKSEngineClient{MockKubernetesClient: &armhelpers.MockKubernetesClient{}}
 			cs = api.CreateMockContainerService("testcluster", "1.9.10", 3, 3, false)
 			uc = UpgradeCluster{
 				Translator: &i18n.Translator{},
@@ -349,6 +349,38 @@ var _ = Describe("Upgrade Kubernetes cluster tests", func() {
 			err := uc.UpgradeCluster(&mockClient, "kubeConfig", TestAKSEngineVersion)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(uc.AgentPoolScaleSetsToUpgrade[0].VMsToUpgrade).To(HaveLen(4))
+		})
+		It("Should use kubernetes api to get node versions for VMSS when latest model is not applied", func() {
+			trueVar := true
+			falseVar := false
+			vmWithoutLatestModelApplied := mockClient.MakeFakeVirtualMachineScaleSetVMWithGivenName("Kubernetes:1.9.10", "vmWithoutLatestModelApplied!")
+			vmWithoutLatestModelApplied.VirtualMachineScaleSetVMProperties.LatestModelApplied = &falseVar
+			vmWithLatestModelApplied := mockClient.MakeFakeVirtualMachineScaleSetVMWithGivenName("Kubernetes:1.9.10", "vmWithLatestModelApplied")
+			vmWithLatestModelApplied.VirtualMachineScaleSetVMProperties.LatestModelApplied = &trueVar
+
+			mockClient.MockKubernetesClient.GetNodeFunc = func(name string) (*v1.Node, error) {
+				node := &v1.Node{}
+				node.Status.NodeInfo.KubeletVersion = "v1.9.7"
+				node.Status = v1.NodeStatus{}
+				node.Status.NodeInfo = v1.NodeSystemInfo{
+					KubeletVersion: "v1.9.7",
+				}
+
+				return node, nil
+			}
+
+			mockClient.FakeListVirtualMachineScaleSetVMsResult = func() []compute.VirtualMachineScaleSetVM {
+				return []compute.VirtualMachineScaleSetVM{
+					vmWithoutLatestModelApplied,
+					vmWithLatestModelApplied,
+				}
+			}
+			uc.Force = false
+
+			err := uc.UpgradeCluster(&mockClient, "kubeConfig", TestAKSEngineVersion)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(uc.AgentPoolScaleSetsToUpgrade[0].VMsToUpgrade).To(HaveLen(1))
+			Expect(uc.AgentPoolScaleSetsToUpgrade[0].VMsToUpgrade[0].Name).To(Equal("vmWithoutLatestModelApplied!"))
 		})
 	})
 
