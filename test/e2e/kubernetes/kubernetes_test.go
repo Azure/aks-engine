@@ -421,7 +421,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				log.Printf("%s\n", out)
 				Expect(err).NotTo(HaveOccurred())
 				var conn *remote.Connection
-				conn, err = remote.NewConnection(kubeConfig.GetServerName(), "22", eng.ExpandedDefinition.Properties.LinuxProfile.AdminUsername, masterSSHPrivateKeyFilepath)
+				conn, err = remote.NewConnection(kubeConfig.GetServerName(), masterSSHPort, eng.ExpandedDefinition.Properties.LinuxProfile.AdminUsername, masterSSHPrivateKeyFilepath)
 				Expect(err).NotTo(HaveOccurred())
 				for _, node := range nodeList.Nodes {
 					var enabled bool
