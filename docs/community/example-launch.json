@@ -49,7 +49,7 @@
       "args": [
         "scale",
         "--debug",
-        "--api-model=${workspaceRoot}_output/${input:clusterName}/apimodel.json",
+        "--api-model=${workspaceRoot}/_output/${input:clusterName}/apimodel.json",
         "--master-FQDN=${input:clusterName}.eastus.cloudapp.azure.com",
         "--location=${input:location}",
         "--resource-group=${input:clusterName}",
@@ -68,11 +68,13 @@
       "args": [
         "upgrade",
         "--debug",
-        "--api-model=${workspaceRoot}_output/${input:clusterName}/apimodel.json",
+        "--api-model=${workspaceRoot}/_output/${input:clusterName}/apimodel.json",
         "--force",
         "--location=${input:location}",
         "--resource-group=${input:clusterName}",
-        "--kubernetes-version=${input:kubernetesVersion}"
+        "--upgrade-version=${input:kubernetesVersion}",
+        "--client-id=${env:CLIENT_ID}",
+        "--client-secret=${env:CLIENT_SECRET}"
       ]
     }
   ],
