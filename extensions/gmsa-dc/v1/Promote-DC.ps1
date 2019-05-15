@@ -47,5 +47,5 @@ New-NetFirewallRule -Name "SSH Server" -DisplayName "SSH Server" -Description "A
 Import-Module ServerManager
 Add-WindowsFeature -Name AD-Domain-Services,DNS -IncludeManagementTools
 # Create new Forest and Domain with new DC and DNS
-Install-ADDSForest -DomainName k8sgmsa.lan -SafeModeAdministratorPassword $admpassword -InstallDNS -DomainMode 6 -DomainNetbiosName k8sgmsa -ForestMode 6 -Confirm:$false
+Install-ADDSForest -DomainName k8sgmsa.lan -SafeModeAdministratorPassword $admpassword_secure -InstallDNS -DomainMode 6 -DomainNetbiosName k8sgmsa -ForestMode 6 -Confirm:$false
 
