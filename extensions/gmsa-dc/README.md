@@ -3,6 +3,8 @@
 This extension will create an Active Directory Forest and Domain using one of the agents nodes.  It will also create a Group Managed Service Account (gMSA) 
 and create the needed YAML file for creation of the gMSA credential spec resource.  We also enable ssh on the node for easier retrieval of the credspec file.
 
+It is required to make a separate pool of 1 member to house the DC for gMSA testing.
+
 # Configuration
 
 |Name               |Required|Acceptable Value     |
@@ -18,6 +20,12 @@ and create the needed YAML file for creation of the gMSA credential spec resourc
     "agentPoolProfiles": [
       {
         "name": "windowspool1",
+        "count": 2
+		...
+      },
+	  {
+        "name": "windowsgmsa",
+		"count": 1
         "extensions": [
           {
             "name": "gmsa-dc"
