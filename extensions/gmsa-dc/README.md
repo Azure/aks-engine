@@ -50,7 +50,10 @@ Kubernetes
 
 # Troubleshoot
 
-The different scripts that run will log to the ```C:\gmsa``` directory.
+The three scripts that run use PowerShell transcripts.  They log to the following directory
+```sh
+C:\gmsa
+```
 
 Extension execution output is logged to files found under the following directory on the target virtual machine.
 
