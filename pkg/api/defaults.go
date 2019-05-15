@@ -308,7 +308,7 @@ func (p *Properties) setExtensionDefaults() {
 func (p *Properties) setMasterProfileDefaults(isUpgrade bool) {
 	if p.MasterProfile.Distro == "" {
 		if p.OrchestratorProfile.IsKubernetes() {
-			p.MasterProfile.Distro = AKSUbuntu1804
+			p.MasterProfile.Distro = AKSUbuntu1604
 		} else {
 			p.MasterProfile.Distro = Ubuntu
 		}
@@ -500,14 +500,9 @@ func (p *Properties) setAgentProfileDefaults(isUpgrade, isScale bool) {
 			if profile.Distro == "" {
 				if p.OrchestratorProfile.IsKubernetes() {
 					if profile.OSDiskSizeGB != 0 && profile.OSDiskSizeGB < VHDDiskSizeAKS {
-						if p.OrchestratorProfile.IsAzureCNI() {
-							// Workaround for https://github.com/Azure/aks-engine/issues/761.
-							profile.Distro = Ubuntu
-						} else {
-							profile.Distro = Ubuntu1804
-						}
+						profile.Distro = Ubuntu
 					} else {
-						profile.Distro = AKSUbuntu1804
+						profile.Distro = AKSUbuntu1604
 					}
 				} else {
 					profile.Distro = Ubuntu
