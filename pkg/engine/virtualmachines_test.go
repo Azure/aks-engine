@@ -114,8 +114,14 @@ func TestCreateVirtualMachines(t *testing.T) {
 	cs.Properties.MasterProfile.CosmosEtcd = to.BoolPtr(true)
 	actualVM = CreateMasterVM(cs)
 	expectedVM.StorageProfile.DataDisks = nil
+	expectedCustomDataStr = getCustomDataFromJSON(tg.GetMasterCustomDataJSONObject(cs))
+	expectedVM.VirtualMachine.VirtualMachineProperties.OsProfile.CustomData = to.StringPtr(expectedCustomDataStr)
 
 	diff = cmp.Diff(actualVM, expectedVM)
+
+	if diff != "" {
+		t.Errorf("unexpected diff while expecting equal structs: %s", diff)
+	}
 
 	// Now test with ManagedIdentity, Availability Zones, and StorageAccount
 
@@ -162,6 +168,9 @@ func TestCreateVirtualMachines(t *testing.T) {
 	expectedVM.VirtualMachine.Zones = &[]string{
 		"[string(parameters('availabilityZones')[mod(copyIndex(variables('masterOffset')), length(parameters('availabilityZones')))])]",
 	}
+
+	expectedCustomDataStr = getCustomDataFromJSON(tg.GetMasterCustomDataJSONObject(cs))
+	expectedVM.VirtualMachine.VirtualMachineProperties.OsProfile.CustomData = to.StringPtr(expectedCustomDataStr)
 
 	diff = cmp.Diff(actualVM, expectedVM)
 
