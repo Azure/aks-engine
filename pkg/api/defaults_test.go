@@ -208,7 +208,7 @@ func TestAssignDefaultAddonImages(t *testing.T) {
 		AzureCNINetworkMonitoringAddonName: "mcr.microsoft.com/containernetworking/networkmonitor:v0.0.6",
 		DNSAutoscalerAddonName:             "k8s.gcr.io/cluster-proportional-autoscaler-amd64:1.1.1",
 		DefaultHeapsterAddonName:           "k8s.gcr.io/heapster-amd64:v1.5.4",
-		CalicoAddonName:                    "calico/typha:v3.5.0",
+		CalicoAddonName:                    "calico/typha:v3.7.2",
 	}
 
 	var addons []KubernetesAddon
@@ -216,6 +216,9 @@ func TestAssignDefaultAddonImages(t *testing.T) {
 		containerName := addonName
 		if addonName == ContainerMonitoringAddonName {
 			containerName = "omsagent"
+		}
+		if addonName == CalicoAddonName {
+			containerName = "calico-typha"
 		}
 		customAddon := KubernetesAddon{
 			Name:    addonName,
