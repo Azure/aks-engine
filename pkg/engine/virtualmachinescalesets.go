@@ -377,7 +377,7 @@ func CreateAgentVMSS(cs *api.ContainerService, profile *api.AgentPoolProfile) Vi
 		Tags: tags,
 	}
 
-	addCustomTagsToVMScaleSets(cs.Properties.MasterProfile.CustomVMTags, &virtualMachineScaleSet)
+	addCustomTagsToVMScaleSets(profile.CustomVMTags, &virtualMachineScaleSet)
 
 	if profile.HasAvailabilityZones() {
 		virtualMachineScaleSet.Zones = &profile.AvailabilityZones
