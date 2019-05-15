@@ -1073,9 +1073,8 @@ func TestAgentPoolProfile(t *testing.T) {
 	}
 }
 
-// TestSetComponentsNetworkDefaults covers tests for setMasterProfileDefaults and setAgentProfileDefaults
-// TODO: Currently this test covers only Distro setting. Extend test cases to cover network configuration too.
-func TestSetComponentsNetworkDefaults(t *testing.T) {
+// TestDistroDefaults covers tests for setMasterProfileDefaults and setAgentProfileDefaults
+func TestDistroDefaults(t *testing.T) {
 
 	var tests = []struct {
 		name                string              // test case name
@@ -1087,7 +1086,7 @@ func TestSetComponentsNetworkDefaults(t *testing.T) {
 			OrchestratorProfile{
 				OrchestratorType: Kubernetes,
 			},
-			AKSUbuntu1804,
+			AKSUbuntu1604,
 		},
 		{
 			"default_swarm",
