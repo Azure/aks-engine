@@ -18,7 +18,6 @@ done
 # TODO: re-enable after fixing permissions https://github.com/Azure/aks-engine/issues/1206
 #sudo find /var/log -type f -perm '/o+r' | (! grep ^) || exit 1
 # specific file mode validations
-stat /boot/grub/grub.cfg | grep 'Access: (0400' || exit 1
 for filepath in /etc/crontab /etc/cron.hourly /etc/cron.daily /etc/cron.weekly /etc/cron.monthly /etc/cron.d; do
   stat $filepath | grep 'Access: (0600' || exit 1
 done
