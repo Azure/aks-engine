@@ -3,7 +3,7 @@
 #
 # This is only for automated e2e testing.  DO NOT use this for production.
 # Jeremy Wood (JeremyWx)
-# Version: 2019041400
+# Version: 1.0.0.0
 ###################################################################################
 
 # Create a working directory and change to it
@@ -47,5 +47,5 @@ New-NetFirewallRule -Name "SSH Server" -DisplayName "SSH Server" -Description "A
 Import-Module ServerManager
 Add-WindowsFeature -Name AD-Domain-Services,DNS -IncludeManagementTools
 # Create new Forest and Domain with new DC and DNS
-Install-ADDSForest -DomainName k8sgmsa.lan -SafeModeAdministratorPassword ("#55p@$$w0rd" | ConvertTo-SecureString -AsPlainText -Force) -InstallDNS -DomainMode 6 -DomainNetbiosName k8sgmsa -ForestMode 6 -Confirm:$false
+Install-ADDSForest -DomainName k8sgmsa.lan -SafeModeAdministratorPassword $admpassword -InstallDNS -DomainMode 6 -DomainNetbiosName k8sgmsa -ForestMode 6 -Confirm:$false
 
