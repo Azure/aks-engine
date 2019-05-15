@@ -42,6 +42,7 @@ const (
 	defaultTimeout                     = time.Minute * 20
 	defaultCordonDrainTimeout          = time.Minute * 20
 	nodePropertiesCopyTimeout          = time.Minute * 5
+	clusterUpgradeTimeout              = time.Minute * 180
 	vmStatusUpgraded          vmStatus = iota
 	vmStatusNotUpgraded
 	vmStatusIgnored
@@ -66,7 +67,7 @@ func (ku *Upgrader) Init(translator *i18n.Translator, logger *logrus.Entry, clus
 
 // RunUpgrade runs the upgrade pipeline
 func (ku *Upgrader) RunUpgrade() error {
-	ctx, cancel := context.WithTimeout(context.Background(), 90*time.Minute)
+	ctx, cancel := context.WithTimeout(context.Background(), clusterUpgradeTimeout)
 	defer cancel()
 	if err := ku.upgradeMasterNodes(ctx); err != nil {
 		return err
