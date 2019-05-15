@@ -689,3 +689,34 @@ func getIPConfigs(lbBackendAddresPoolID *string) *[]compute.VirtualMachineScaleS
 	}
 	return &ipConfigs
 }
+
+func TestCreateVmScaleSetsWithCustomTags(t *testing.T) {
+	testTags := map[string]*string{
+		"orchestrator":     to.StringPtr("k8s"),
+		"aksEngineVersion": to.StringPtr("1.15"),
+		"poolName":         to.StringPtr("TestPool"),
+	}
+
+	testVirtualMachineScaleSet := compute.VirtualMachineScaleSet{
+		Tags: testTags,
+	}
+
+	testTagsToAdd := map[string]string{
+		"myTestKey": "myTestValue",
+	}
+
+	addCustomTagsToVMScaleSets(testTagsToAdd, &testVirtualMachineScaleSet)
+
+	expectedTags := map[string]*string{
+		"orchestrator":     to.StringPtr("k8s"),
+		"aksEngineVersion": to.StringPtr("1.15"),
+		"poolName":         to.StringPtr("TestPool"),
+		"myTestKey":        to.StringPtr("myTestValue"),
+	}
+
+	diff := cmp.Diff(testVirtualMachineScaleSet.Tags, expectedTags)
+
+	if diff != "" {
+		t.Errorf("unexpected diff while expecting equal structs: %s", diff)
+	}
+}
