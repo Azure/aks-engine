@@ -10365,8 +10365,8 @@ copyPackerFiles() {
 }
 
 assignRootPW() {
-  grep '^root:[!*]:' /etc/shadow
-  if [ $? -eq '0' ] ; then
+
+  if grep '^root:[!*]:' /etc/shadow; then
     SALT=$(openssl rand -base64 5)
     SECRET=$(openssl rand -base64 37)
     CMD="import crypt, getpass, pwd; print crypt.crypt('$SECRET', '\$6\$$SALT\$')"
@@ -10480,20 +10480,17 @@ systemctlEnableAndStart() {
         echo "$1 could not be started"
         return 1
     fi
-    retrycmd_if_failure 120 5 25 systemctl enable $1
-    if [ $? -ne 0 ]; then
+    if ! retrycmd_if_failure 120 5 25 systemctl enable $1; then
         echo "$1 could not be enabled by systemctl"
         return 1
     fi
 }
 systemctlDisableAndStop() {
-    systemctl_stop 100 5 30 $1
-    if [ $? -ne 0 ]; then
+    if ! systemctl_stop 100 5 30 $1; then
         echo "$1 could not be stopped"
         return 1
     fi
-    retrycmd_if_failure 120 5 25 systemctl disable $1
-    if [ $? -ne 0 ]; then
+    if ! retrycmd_if_failure 120 5 25 systemctl disable $1; then
         echo "$1 could not be disabled by systemctl"
         return 1
     fi
@@ -10597,8 +10594,7 @@ ensureAuditD() {
   if [[ "${AUDITD_ENABLED}" == true ]]; then
     systemctlEnableAndStart auditd || exit $ERR_SYSTEMCTL_START_FAIL
   else
-    apt list --installed | grep 'auditd'
-    if [ $? -eq 0 ]; then
+    if apt list --installed | grep 'auditd'; then
       systemctlDisableAndStop auditd || exit $ERR_SYSTEMCTL_START_FAIL
     fi
   fi
@@ -11108,8 +11104,7 @@ aptmarkWALinuxAgent() {
 retrycmd_if_failure() {
     retries=$1; wait_sleep=$2; timeout=$3; shift && shift && shift
     for i in $(seq 1 $retries); do
-        timeout $timeout ${@}
-        [ $? -eq 0  ] && break || \
+        timeout $timeout ${@} && break || \
         if [ $i -eq $retries ]; then
             echo Executed \"$@\" $i times;
             return 1
@@ -11122,8 +11117,7 @@ retrycmd_if_failure() {
 retrycmd_if_failure_no_stats() {
     retries=$1; wait_sleep=$2; timeout=$3; shift && shift && shift
     for i in $(seq 1 $retries); do
-        timeout $timeout ${@}
-        [ $? -eq 0  ] && break || \
+        timeout $timeout ${@} && break || \
         if [ $i -eq $retries ]; then
             return 1
         else
@@ -11135,8 +11129,7 @@ retrycmd_get_tarball() {
     tar_retries=$1; wait_sleep=$2; tarball=$3; url=$4
     echo "${tar_retries} retries"
     for i in $(seq 1 $tar_retries); do
-        tar -tzf $tarball
-        [ $? -eq 0  ] && break || \
+        tar -tzf $tarball && break || \
         if [ $i -eq $tar_retries ]; then
             return 1
         else
@@ -11149,8 +11142,7 @@ retrycmd_get_executable() {
     retries=$1; wait_sleep=$2; filepath=$3; url=$4; validation_args=$5
     echo "${retries} retries"
     for i in $(seq 1 $retries); do
-        $filepath $validation_args
-        [ $? -eq 0  ] && break || \
+        $filepath $validation_args && break || \
         if [ $i -eq $retries ]; then
             return 1
         else
@@ -11187,8 +11179,8 @@ apt_get_update() {
         export DEBIAN_FRONTEND=noninteractive
         dpkg --configure -a
         apt-get -f -y install
-        apt-get update 2>&1 | tee $apt_update_output | grep -E "^([WE]:.*)|([eE]rr.*)$"
-        [ $? -ne 0  ] && cat $apt_update_output && break || \
+        apt-get update 2>&1 | tee $apt_update_output | grep -E "^([WE]:.*)|([eE]rr.*)$" && \
+        cat $apt_update_output && break || \
         cat $apt_update_output
         if [ $i -eq $retries ]; then
             return 1
@@ -11204,8 +11196,7 @@ apt_get_install() {
         wait_for_apt_locks
         export DEBIAN_FRONTEND=noninteractive
         dpkg --configure -a
-        apt-get install -o Dpkg::Options::="--force-confold" --no-install-recommends -y ${@}
-        [ $? -eq 0  ] && break || \
+        apt-get install -o Dpkg::Options::="--force-confold" --no-install-recommends -y ${@} && break || \
         if [ $i -eq $retries ]; then
             return 1
         else
@@ -11224,8 +11215,8 @@ apt_get_dist_upgrade() {
     export DEBIAN_FRONTEND=noninteractive
     dpkg --configure -a
     apt-get -f -y install
-    apt-get dist-upgrade -y 2>&1 | tee $apt_dist_upgrade_output | grep -E "^([WE]:.*)|([eE]rr.*)$"
-    [ $? -ne 0  ] && cat $apt_dist_upgrade_output && break || \
+    apt-get dist-upgrade -y 2>&1 | tee $apt_dist_upgrade_output | grep -E "^([WE]:.*)|([eE]rr.*)$" && \
+    cat $apt_dist_upgrade_output && break || \
     cat $apt_update_output
     if [ $i -eq $retries ]; then
       return 1
@@ -11239,8 +11230,7 @@ systemctl_restart() {
     retries=$1; wait_sleep=$2; timeout=$3 svcname=$4
     for i in $(seq 1 $retries); do
         timeout $timeout systemctl daemon-reload
-        timeout $timeout systemctl restart $svcname
-        [ $? -eq 0  ] && break || \
+        timeout $timeout systemctl restart $svcname && break || \
         if [ $i -eq $retries ]; then
             return 1
         else
@@ -11252,8 +11242,7 @@ systemctl_stop() {
     retries=$1; wait_sleep=$2; timeout=$3 svcname=$4
     for i in $(seq 1 $retries); do
         timeout $timeout systemctl daemon-reload
-        timeout $timeout systemctl stop $svcname
-        [ $? -eq 0  ] && break || \
+        timeout $timeout systemctl stop $svcname && break || \
         if [ $i -eq $retries ]; then
             return 1
         else
@@ -11264,8 +11253,7 @@ systemctl_stop() {
 sysctl_reload() {
     retries=$1; wait_sleep=$2; timeout=$3
     for i in $(seq 1 $retries); do
-        timeout $timeout sysctl --system
-        [ $? -eq 0  ] && break || \
+        timeout $timeout sysctl --system && break || \
         if [ $i -eq $retries ]; then
             return 1
         else
@@ -11332,9 +11320,8 @@ installDeps() {
     retrycmd_if_failure 60 5 10 dpkg -i /tmp/packages-microsoft-prod.deb || exit $ERR_MS_PROD_DEB_PKG_ADD_FAIL
     apt_get_update || exit $ERR_APT_UPDATE_TIMEOUT
     apt_get_dist_upgrade || exit $ERR_APT_DIST_UPGRADE_TIMEOUT
-    for apt_package in apt-transport-https auditd blobfuse ca-certificates ceph-common cgroup-lite cifs-utils conntrack cracklib-runtime ebtables ethtool fuse git glusterfs-client init-system-helpers iproute2 ipset iptables jq libpam-pwquality libpwquality-tools mount nfs-common pigz socat util-linux xz-utils zip htop iotop iftop sysstat; do
-      apt_get_install 30 1 600 $apt_package
-      if [ $? -ne 0 ]; then
+    for apt_package in apt-transport-https auditd blobfuse ca-certificates ceph-common cgroup-lite cifs-utils conntrack cracklib-runtime ebtables ethtool fuse git glusterfs-client htop iftop init-system-helpers iotop iproute2 ipset iptables jq libpam-pwquality libpwquality-tools mount nfs-common pigz socat sysstat util-linux xz-utils zip; do
+      if ! apt_get_install 30 1 600 $apt_package; then
         journalctl --no-pager -u $apt_package
         exit $ERR_APT_INSTALL_TIMEOUT
       fi
@@ -11354,12 +11341,11 @@ installGPUDrivers() {
     retrycmd_if_failure 30 5 3600 apt-get install -y linux-headers-$(uname -r) gcc make dkms || exit $ERR_GPU_DRIVERS_INSTALL_TIMEOUT
     retrycmd_if_failure 30 5 60 curl -fLS https://us.download.nvidia.com/tesla/$GPU_DV/NVIDIA-Linux-x86_64-${GPU_DV}.run -o ${GPU_DEST}/nvidia-drivers-${GPU_DV} || exit $ERR_GPU_DRIVERS_INSTALL_TIMEOUT
     tmpDir=$GPU_DEST/tmp
-    (
+    if ! (
       set -e -o pipefail
       cd "${tmpDir}"
       retrycmd_if_failure 30 5 3600 apt-get download nvidia-docker2="${NVIDIA_DOCKER_VERSION}+docker18.09.2-1" || exit $ERR_GPU_DRIVERS_INSTALL_TIMEOUT
-    )
-    if [ ! $? -eq 0 ]; then
+    ); then
       exit $ERR_GPU_DRIVERS_INSTALL_TIMEOUT
     fi
 }
@@ -11440,8 +11426,7 @@ installKataContainersRuntime() {
 }
 
 installClearContainersRuntime() {
-    cc-runtime --version
-    if [ $? -eq 0 ]; then
+    if cc-runtime --version; then
         echo "cc-runtime is already installed, skipping download"
     else
         echo "Adding Clear Containers repository key..."
@@ -12063,14 +12048,12 @@ write_certs_to_disk() {
 
 write_certs_to_disk_with_retry() {
     for i in $(seq 1 12); do
-        write_certs_to_disk
-        [ $? -eq 0  ] && break || sleep 5
+        write_certs_to_disk && break || sleep 5
     done
 }
 is_etcd_healthy(){
     for i in $(seq 1 100); do
-        ETCDCTL_API=3 etcdctl ${ETCDCTL_PARAMS} endpoint health
-        [ $? -eq 0  ] && break || sleep 5
+        ETCDCTL_API=3 etcdctl ${ETCDCTL_PARAMS} endpoint health && break || sleep 5
     done
 }
 is_etcd_healthy
@@ -12085,17 +12068,17 @@ echo "$(date) lock acquired"
 pid=$!
 if read lockthis < "${PROXY_CERT_LOCK_FILE}"; then
   if [[ "" == "$(ETCDCTL_API=3 etcdctl ${ETCDCTL_PARAMS} get $ETCD_REQUESTHEADER_CLIENT_CA --print-value-only)" ]]; then
-    ETCDCTL_API=3 etcdctl ${ETCDCTL_PARAMS} put $ETCD_REQUESTHEADER_CLIENT_CA " $(cat ${PROXY_CRT})" > /dev/null 2>&1;
+    ETCDCTL_API=3 etcdctl ${ETCDCTL_PARAMS} put $ETCD_REQUESTHEADER_CLIENT_CA " $(cat ${PROXY_CRT})" >/dev/null 2>&1;
 	else
 		echo "found client request header ca, not creating one"
   fi
   if [[ "" == "$(ETCDCTL_API=3 etcdctl ${ETCDCTL_PARAMS} get $ETCD_PROXY_KEY --print-value-only)" ]]; then
-    ETCDCTL_API=3 etcdctl ${ETCDCTL_PARAMS} put $ETCD_PROXY_KEY " $(cat ${PROXY_CLIENT_KEY})" > /dev/null 2>&1;
+    ETCDCTL_API=3 etcdctl ${ETCDCTL_PARAMS} put $ETCD_PROXY_KEY " $(cat ${PROXY_CLIENT_KEY})" >/dev/null 2>&1;
 	else
 		 echo "found proxy key, not creating one"
   fi
   if [[ "" == "$(ETCDCTL_API=3 etcdctl ${ETCDCTL_PARAMS} get $ETCD_PROXY_CERT --print-value-only)" ]]; then
-    ETCDCTL_API=3 etcdctl ${ETCDCTL_PARAMS} put $ETCD_PROXY_CERT " $(cat ${PROXY_CLIENT_CRT})" > /dev/null 2>&1;
+    ETCDCTL_API=3 etcdctl ${ETCDCTL_PARAMS} put $ETCD_PROXY_CERT " $(cat ${PROXY_CLIENT_CRT})" >/dev/null 2>&1;
 	else
 		echo "found proxy cert, not creating one"
   fi
@@ -12391,19 +12374,16 @@ PARTITION=${DISK}1
 MOUNTPOINT=/var/lib/etcddisk
 udevadm settle
 mkdir -p $MOUNTPOINT
-mount | grep $MOUNTPOINT
-if [ $? -eq 0 ]
+if mount | grep $MOUNTPOINT
 then
     echo "disk is already mounted"
     exit 0
 fi
-grep "/dev/sdc1" /etc/fstab
-if [ $? -ne 0 ]
+if ! grep "/dev/sdc1" /etc/fstab
 then
     echo "$PARTITION       $MOUNTPOINT       auto    defaults,nofail       0       2" >> /etc/fstab
 fi
-ls $PARTITION
-if [ $? -ne 0 ]
+if ! ls $PARTITION
 then
     /sbin/sgdisk --new 1 $DISK
     /sbin/mkfs.ext4 $PARTITION -L etcd_disk -F -E lazy_itable_init=1,lazy_journal_init=1
