@@ -92,7 +92,7 @@ func createKubernetesMasterResourcesVMAS(cs *api.ContainerService) []interface{}
 		masterResources = append(masterResources, keyVaultStorageAccount, keyVault)
 	}
 
-	masterVM := CreateVirtualMachine(cs)
+	masterVM := CreateMasterVM(cs)
 	masterResources = append(masterResources, masterVM)
 
 	var useManagedIdentity, userAssignedIDEnabled bool

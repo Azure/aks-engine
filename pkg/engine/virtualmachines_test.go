@@ -26,7 +26,7 @@ func TestCreateVirtualMachines(t *testing.T) {
 	tg, _ := InitializeTemplateGenerator(Context{})
 	expectedCustomDataStr := getCustomDataFromJSON(tg.GetMasterCustomDataJSONObject(cs))
 
-	actualVM := CreateVirtualMachine(cs)
+	actualVM := CreateMasterVM(cs)
 	expectedVM := VirtualMachineARM{
 		ARMResource: ARMResource{
 			APIVersion: "[variables('apiVersionCompute')]",
@@ -110,14 +110,28 @@ func TestCreateVirtualMachines(t *testing.T) {
 		t.Errorf("unexpected diff while expecting equal structs: %s", diff)
 	}
 
+	// Validate cosmosetcd
+	cs.Properties.MasterProfile.CosmosEtcd = to.BoolPtr(true)
+	actualVM = CreateMasterVM(cs)
+	expectedVM.StorageProfile.DataDisks = nil
+	expectedCustomDataStr = getCustomDataFromJSON(tg.GetMasterCustomDataJSONObject(cs))
+	expectedVM.VirtualMachine.VirtualMachineProperties.OsProfile.CustomData = to.StringPtr(expectedCustomDataStr)
+
+	diff = cmp.Diff(actualVM, expectedVM)
+
+	if diff != "" {
+		t.Errorf("unexpected diff while expecting equal structs: %s", diff)
+	}
+
 	// Now test with ManagedIdentity, Availability Zones, and StorageAccount
 
+	cs.Properties.MasterProfile.CosmosEtcd = to.BoolPtr(false)
 	cs.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity = true
 	cs.Properties.OrchestratorProfile.KubernetesConfig.UserAssignedID = "fooAssignedID"
 	cs.Properties.MasterProfile.AvailabilityZones = []string{"barZone"}
 	cs.Properties.MasterProfile.StorageProfile = api.StorageAccount
 
-	actualVM = CreateVirtualMachine(cs)
+	actualVM = CreateMasterVM(cs)
 
 	expectedVM.DependsOn = []string{
 		"[concat('Microsoft.Network/networkInterfaces/', variables('masterVMNamePrefix'), 'nic-', copyIndex(variables('masterOffset')))]",
@@ -154,6 +168,9 @@ func TestCreateVirtualMachines(t *testing.T) {
 	expectedVM.VirtualMachine.Zones = &[]string{
 		"[string(parameters('availabilityZones')[mod(copyIndex(variables('masterOffset')), length(parameters('availabilityZones')))])]",
 	}
+
+	expectedCustomDataStr = getCustomDataFromJSON(tg.GetMasterCustomDataJSONObject(cs))
+	expectedVM.VirtualMachine.VirtualMachineProperties.OsProfile.CustomData = to.StringPtr(expectedCustomDataStr)
 
 	diff = cmp.Diff(actualVM, expectedVM)
 

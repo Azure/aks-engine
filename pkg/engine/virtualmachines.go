@@ -14,7 +14,7 @@ import (
 	"github.com/Azure/go-autorest/autorest/to"
 )
 
-func CreateVirtualMachine(cs *api.ContainerService) VirtualMachineARM {
+func CreateMasterVM(cs *api.ContainerService) VirtualMachineARM {
 	hasAvailabilityZones := cs.Properties.MasterProfile.HasAvailabilityZones()
 	isStorageAccount := cs.Properties.MasterProfile.IsStorageAccount()
 	kubernetesConfig := cs.Properties.OrchestratorProfile.KubernetesConfig
@@ -149,19 +149,21 @@ func CreateVirtualMachine(cs *api.ContainerService) VirtualMachineARM {
 	imageRef := cs.Properties.MasterProfile.ImageRef
 	useMasterCustomImage := imageRef != nil && len(imageRef.Name) > 0 && len(imageRef.ResourceGroup) > 0
 	etcdSizeGB, _ := strconv.Atoi(kubernetesConfig.EtcdDiskSizeGB)
-	dataDisk := compute.DataDisk{
-		CreateOption: compute.DiskCreateOptionTypesEmpty,
-		DiskSizeGB:   to.Int32Ptr(int32(etcdSizeGB)),
-		Lun:          to.Int32Ptr(0),
-		Name:         to.StringPtr("[concat(variables('masterVMNamePrefix'), copyIndex(variables('masterOffset')),'-etcddisk')]"),
-	}
-	if cs.Properties.MasterProfile.IsStorageAccount() {
-		dataDisk.Vhd = &compute.VirtualHardDisk{
-			URI: to.StringPtr("[concat(reference(concat('Microsoft.Storage/storageAccounts/',variables('masterStorageAccountName')),variables('apiVersionStorage')).primaryEndpoints.blob,'vhds/', variables('masterVMNamePrefix'),copyIndex(variables('masterOffset')),'-etcddisk.vhd')]"),
+	if !to.Bool(cs.Properties.MasterProfile.CosmosEtcd) {
+		dataDisk := compute.DataDisk{
+			CreateOption: compute.DiskCreateOptionTypesEmpty,
+			DiskSizeGB:   to.Int32Ptr(int32(etcdSizeGB)),
+			Lun:          to.Int32Ptr(0),
+			Name:         to.StringPtr("[concat(variables('masterVMNamePrefix'), copyIndex(variables('masterOffset')),'-etcddisk')]"),
 		}
-	}
-	storageProfile.DataDisks = &[]compute.DataDisk{
-		dataDisk,
+		if cs.Properties.MasterProfile.IsStorageAccount() {
+			dataDisk.Vhd = &compute.VirtualHardDisk{
+				URI: to.StringPtr("[concat(reference(concat('Microsoft.Storage/storageAccounts/',variables('masterStorageAccountName')),variables('apiVersionStorage')).primaryEndpoints.blob,'vhds/', variables('masterVMNamePrefix'),copyIndex(variables('masterOffset')),'-etcddisk.vhd')]"),
+			}
+		}
+		storageProfile.DataDisks = &[]compute.DataDisk{
+			dataDisk,
+		}
 	}
 	imgReference := &compute.ImageReference{}
 	if useMasterCustomImage {
