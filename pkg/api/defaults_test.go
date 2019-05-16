@@ -1077,45 +1077,94 @@ func TestAgentPoolProfile(t *testing.T) {
 func TestDistroDefaults(t *testing.T) {
 
 	var tests = []struct {
-		name                string              // test case name
-		orchestratorProfile OrchestratorProfile // orchestrator to be tested
-		expectedDistro      Distro              // expected result default disto to be used
+		name                   string              // test case name
+		orchestratorProfile    OrchestratorProfile // orchestrator to be tested
+		masterProfileDistro    Distro
+		agentPoolProfileDistro Distro
+		expectedDistro         Distro // expected result default disto to be used
+		isUpgrade              bool
 	}{
 		{
 			"default_kubernetes",
 			OrchestratorProfile{
 				OrchestratorType: Kubernetes,
 			},
+			"",
+			"",
 			AKSUbuntu1604,
+			false,
+		},
+		{
+			"1804_upgrade_kubernetes",
+			OrchestratorProfile{
+				OrchestratorType: Kubernetes,
+			},
+			AKSUbuntu1804,
+			AKSUbuntu1804,
+			AKSUbuntu1804,
+			true,
+		},
+		{
+			"deprecated_distro_kubernetes",
+			OrchestratorProfile{
+				OrchestratorType: Kubernetes,
+			},
+			AKS1604Deprecated,
+			AKS1604Deprecated,
+			AKSUbuntu1604,
+			true,
+		},
+		{
+			"docker_engine_kubernetes",
+			OrchestratorProfile{
+				OrchestratorType: Kubernetes,
+			},
+			AKSDockerEngine,
+			AKSDockerEngine,
+			AKSUbuntu1604,
+			true,
 		},
 		{
 			"default_swarm",
 			OrchestratorProfile{
 				OrchestratorType: Swarm,
 			},
+			"",
+			"",
 			Ubuntu,
+			false,
 		},
 		{
 			"default_swarmmode",
 			OrchestratorProfile{
 				OrchestratorType: SwarmMode,
 			},
+			"",
+			"",
 			Ubuntu,
+			false,
 		},
 		{
 			"default_dcos",
 			OrchestratorProfile{
 				OrchestratorType: DCOS,
 			},
+			"",
+			"",
 			Ubuntu,
+			false,
 		},
 	}
 
 	for _, test := range tests {
 		mockAPI := getMockAPIProperties("1.0.0")
 		mockAPI.OrchestratorProfile = &test.orchestratorProfile
-		mockAPI.setMasterProfileDefaults(false)
-		mockAPI.setAgentProfileDefaults(false, false)
+		mockAPI.MasterProfile.Distro = test.masterProfileDistro
+		for _, agent := range mockAPI.AgentPoolProfiles {
+			agent.Distro = test.agentPoolProfileDistro
+		}
+		mockAPI.setMasterProfileDefaults(test.isUpgrade, false)
+		mockAPI.setAgentProfileDefaults(test.isUpgrade, false)
 		if mockAPI.MasterProfile.Distro != test.expectedDistro {
 			t.Fatalf("setMasterProfileDefaults() test case %v did not return right Distro configurations %v != %v", test.name, mockAPI.MasterProfile.Distro, test.expectedDistro)
 		}
@@ -1480,7 +1529,7 @@ func TestSetCertDefaults(t *testing.T) {
 	}
 
 	cs.setOrchestratorDefaults(false)
-	cs.Properties.setMasterProfileDefaults(false)
+	cs.Properties.setMasterProfileDefaults(false, false)
 	result, ips, err := cs.SetDefaultCerts()
 
 	if !result {
@@ -1546,7 +1595,7 @@ func TestSetCertDefaultsVMSS(t *testing.T) {
 	}
 
 	cs.setOrchestratorDefaults(false)
-	cs.Properties.setMasterProfileDefaults(false)
+	cs.Properties.setMasterProfileDefaults(false, false)
 	result, ips, err := cs.SetDefaultCerts()
 
 	if !result {

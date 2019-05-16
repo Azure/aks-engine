@@ -41,7 +41,7 @@ func (cs *ContainerService) SetPropertiesDefaults(isUpgrade, isScale bool) (bool
 
 	// Set master profile defaults if this cluster configuration includes master node(s)
 	if cs.Properties.MasterProfile != nil {
-		properties.setMasterProfileDefaults(isUpgrade)
+		properties.setMasterProfileDefaults(isUpgrade, isScale)
 	}
 	// Set VMSS Defaults for Masters
 	if cs.Properties.MasterProfile != nil && cs.Properties.MasterProfile.IsVirtualMachineScaleSets() {
@@ -305,12 +305,18 @@ func (p *Properties) setExtensionDefaults() {
 	}
 }
 
-func (p *Properties) setMasterProfileDefaults(isUpgrade bool) {
+func (p *Properties) setMasterProfileDefaults(isUpgrade, isScale bool) {
 	if p.MasterProfile.Distro == "" {
 		if p.OrchestratorProfile.IsKubernetes() {
 			p.MasterProfile.Distro = AKSUbuntu1604
 		} else {
 			p.MasterProfile.Distro = Ubuntu
+		}
+	} else if p.OrchestratorProfile.IsKubernetes() && (isUpgrade || isScale) {
+		if p.MasterProfile.Distro == AKSDockerEngine || p.MasterProfile.Distro == AKS1604Deprecated {
+			p.MasterProfile.Distro = AKSUbuntu1604
+		} else if p.MasterProfile.Distro == AKS1804Deprecated {
+			p.MasterProfile.Distro = AKSUbuntu1804
 		}
 	}
 
