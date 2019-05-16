@@ -254,6 +254,18 @@ func kubernetesManifestSettingsInit(p *api.Properties) []kubernetesComponentFile
 	}
 	o := p.OrchestratorProfile
 	k := o.KubernetesConfig
+	if k.SchedulerConfig == nil {
+		k.SchedulerConfig = map[string]string{}
+	}
+	if k.ControllerManagerConfig == nil {
+		k.ControllerManagerConfig = map[string]string{}
+	}
+	if k.CloudControllerManagerConfig == nil {
+		k.CloudControllerManagerConfig = map[string]string{}
+	}
+	if k.APIServerConfig == nil {
+		k.APIServerConfig = map[string]string{}
+	}
 	kubeControllerManagerYaml := "kubernetesmaster-kube-controller-manager.yaml"
 
 	if p.IsAzureStackCloud() {
@@ -277,7 +289,7 @@ func kubernetesManifestSettingsInit(p *api.Properties) []kubernetesComponentFile
 			sourceFile:      "kubernetesmaster-cloud-controller-manager.yaml",
 			base64Data:      k.CloudControllerManagerConfig["data"],
 			destinationFile: "cloud-controller-manager.yaml",
-			isEnabled:       k.UseCloudControllerManager != nil && *p.OrchestratorProfile.KubernetesConfig.UseCloudControllerManager,
+			isEnabled:       to.Bool(k.UseCloudControllerManager),
 		},
 		{
 			sourceFile:      "kubernetesmaster-kube-apiserver.yaml",
