@@ -1081,7 +1081,8 @@ func TestDistroDefaults(t *testing.T) {
 		orchestratorProfile    OrchestratorProfile // orchestrator to be tested
 		masterProfileDistro    Distro
 		agentPoolProfileDistro Distro
-		expectedDistro         Distro // expected result default disto to be used
+		expectedAgentDistro    Distro // expected agent result default disto to be used
+		expectedMasterDistro   Distro // expected master result default disto to be used
 		isUpgrade              bool
 	}{
 		{
@@ -1092,6 +1093,7 @@ func TestDistroDefaults(t *testing.T) {
 			"",
 			"",
 			AKSUbuntu1604,
+			AKSUbuntu1604,
 			false,
 		},
 		{
@@ -1099,6 +1101,7 @@ func TestDistroDefaults(t *testing.T) {
 			OrchestratorProfile{
 				OrchestratorType: Kubernetes,
 			},
+			AKSUbuntu1804,
 			AKSUbuntu1804,
 			AKSUbuntu1804,
 			AKSUbuntu1804,
@@ -1112,6 +1115,7 @@ func TestDistroDefaults(t *testing.T) {
 			AKS1604Deprecated,
 			AKS1604Deprecated,
 			AKSUbuntu1604,
+			AKSUbuntu1604,
 			true,
 		},
 		{
@@ -1119,8 +1123,9 @@ func TestDistroDefaults(t *testing.T) {
 			OrchestratorProfile{
 				OrchestratorType: Kubernetes,
 			},
+			AKS1604Deprecated,
 			AKSDockerEngine,
-			AKSDockerEngine,
+			AKSUbuntu1604,
 			AKSUbuntu1604,
 			true,
 		},
@@ -1132,6 +1137,7 @@ func TestDistroDefaults(t *testing.T) {
 			"",
 			"",
 			Ubuntu,
+			Ubuntu,
 			false,
 		},
 		{
@@ -1142,6 +1148,7 @@ func TestDistroDefaults(t *testing.T) {
 			"",
 			"",
 			Ubuntu,
+			Ubuntu,
 			false,
 		},
 		{
@@ -1151,6 +1158,7 @@ func TestDistroDefaults(t *testing.T) {
 			},
 			"",
 			"",
+			Ubuntu,
 			Ubuntu,
 			false,
 		},
@@ -1165,12 +1173,12 @@ func TestDistroDefaults(t *testing.T) {
 		}
 		mockAPI.setMasterProfileDefaults(test.isUpgrade, false)
 		mockAPI.setAgentProfileDefaults(test.isUpgrade, false)
-		if mockAPI.MasterProfile.Distro != test.expectedDistro {
-			t.Fatalf("setMasterProfileDefaults() test case %v did not return right Distro configurations %v != %v", test.name, mockAPI.MasterProfile.Distro, test.expectedDistro)
+		if mockAPI.MasterProfile.Distro != test.expectedMasterDistro {
+			t.Fatalf("setMasterProfileDefaults() test case %v did not return right Distro configurations %v != %v", test.name, mockAPI.MasterProfile.Distro, test.expectedMasterDistro)
 		}
 		for _, agent := range mockAPI.AgentPoolProfiles {
-			if agent.Distro != test.expectedDistro {
-				t.Fatalf("setAgentProfileDefaults() test case %v did not return right Distro configurations %v != %v", test.name, agent.Distro, test.expectedDistro)
+			if agent.Distro != test.expectedAgentDistro {
+				t.Fatalf("setAgentProfileDefaults() test case %v did not return right Distro configurations %v != %v", test.name, agent.Distro, test.expectedAgentDistro)
 			}
 		}
 	}
