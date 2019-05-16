@@ -415,7 +415,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				nodeList, err := node.GetReady()
 				Expect(err).NotTo(HaveOccurred())
 				auditdValidateScript := "auditd-validate.sh"
-				cmd := exec.Command("scp", "-i", masterSSHPrivateKeyFilepath, "-o", "StrictHostKeyChecking=no", filepath.Join(ScriptsDir, auditdValidateScript), master+":/tmp/"+auditdValidateScript)
+				cmd := exec.Command("scp", "-i", masterSSHPrivateKeyFilepath, "-P", masterSSHPort, "-o", "StrictHostKeyChecking=no", filepath.Join(ScriptsDir, auditdValidateScript), master+":/tmp/"+auditdValidateScript)
 				util.PrintCommand(cmd)
 				out, err := cmd.CombinedOutput()
 				log.Printf("%s\n", out)
