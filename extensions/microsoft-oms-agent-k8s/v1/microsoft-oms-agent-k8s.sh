@@ -152,16 +152,14 @@ kubernetesStarted=1
 for i in {1..600}; do
     if [ -e /usr/local/bin/kubectl ]
     then
-        /usr/local/bin/kubectl cluster-info
-        if [ "$?" = "0" ]
+        if /usr/local/bin/kubectl cluster-info
         then
             log "kubernetes started"
             kubernetesStarted=0
             break
         fi
     else
-        /usr/bin/docker ps | grep apiserver
-        if [ "$?" = "0" ]
+        if /usr/bin/docker ps | grep apiserver
         then
             log "kubernetes started"
             kubernetesStarted=0

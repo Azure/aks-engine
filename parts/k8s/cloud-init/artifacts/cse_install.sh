@@ -40,9 +40,8 @@ installDeps() {
     retrycmd_if_failure 60 5 10 dpkg -i /tmp/packages-microsoft-prod.deb || exit $ERR_MS_PROD_DEB_PKG_ADD_FAIL
     apt_get_update || exit $ERR_APT_UPDATE_TIMEOUT
     apt_get_dist_upgrade || exit $ERR_APT_DIST_UPGRADE_TIMEOUT
-    for apt_package in apt-transport-https auditd blobfuse ca-certificates ceph-common cgroup-lite cifs-utils conntrack cracklib-runtime ebtables ethtool fuse git glusterfs-client init-system-helpers iproute2 ipset iptables jq libpam-pwquality libpwquality-tools mount nfs-common pigz socat util-linux xz-utils zip htop iotop iftop sysstat; do
-      apt_get_install 30 1 600 $apt_package
-      if [ $? -ne 0 ]; then
+    for apt_package in apt-transport-https auditd blobfuse ca-certificates ceph-common cgroup-lite cifs-utils conntrack cracklib-runtime ebtables ethtool fuse git glusterfs-client htop iftop init-system-helpers iotop iproute2 ipset iptables jq libpam-pwquality libpwquality-tools mount nfs-common pigz socat sysstat util-linux xz-utils zip; do
+      if ! apt_get_install 30 1 600 $apt_package; then
         journalctl --no-pager -u $apt_package
         exit $ERR_APT_INSTALL_TIMEOUT
       fi
@@ -62,12 +61,11 @@ installGPUDrivers() {
     retrycmd_if_failure 30 5 3600 apt-get install -y linux-headers-$(uname -r) gcc make dkms || exit $ERR_GPU_DRIVERS_INSTALL_TIMEOUT
     retrycmd_if_failure 30 5 60 curl -fLS https://us.download.nvidia.com/tesla/$GPU_DV/NVIDIA-Linux-x86_64-${GPU_DV}.run -o ${GPU_DEST}/nvidia-drivers-${GPU_DV} || exit $ERR_GPU_DRIVERS_INSTALL_TIMEOUT
     tmpDir=$GPU_DEST/tmp
-    (
+    if ! (
       set -e -o pipefail
       cd "${tmpDir}"
       retrycmd_if_failure 30 5 3600 apt-get download nvidia-docker2="${NVIDIA_DOCKER_VERSION}+docker18.09.2-1" || exit $ERR_GPU_DRIVERS_INSTALL_TIMEOUT
-    )
-    if [ ! $? -eq 0 ]; then
+    ); then
       exit $ERR_GPU_DRIVERS_INSTALL_TIMEOUT
     fi
 }
@@ -148,8 +146,7 @@ installKataContainersRuntime() {
 }
 
 installClearContainersRuntime() {
-    cc-runtime --version
-    if [ $? -eq 0 ]; then
+    if cc-runtime --version; then
         echo "cc-runtime is already installed, skipping download"
     else
         echo "Adding Clear Containers repository key..."

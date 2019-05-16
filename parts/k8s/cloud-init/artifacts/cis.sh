@@ -37,8 +37,8 @@ copyPackerFiles() {
 }
 
 assignRootPW() {
-  grep '^root:[!*]:' /etc/shadow
-  if [ $? -eq '0' ] ; then
+
+  if grep '^root:[!*]:' /etc/shadow; then
     SALT=$(openssl rand -base64 5)
     SECRET=$(openssl rand -base64 37)
     CMD="import crypt, getpass, pwd; print crypt.crypt('$SECRET', '\$6\$$SALT\$')"
