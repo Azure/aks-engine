@@ -5,7 +5,6 @@ package kubernetesupgrade
 
 import (
 	"context"
-	"fmt"
 	"strings"
 	"time"
 
@@ -153,7 +152,7 @@ func (uc *UpgradeCluster) getClusterNodeStatus(az armhelpers.AKSEngineClient, re
 					uc.Logger.Infof("Set isWindows flag for vmss %s.", *vmScaleSet.Name)
 				}
 				for _, vm := range vmScaleSetVMsPage.Values() {
-					currentVersion := uc.getNodeVersion(kubeClient, strings.ToLower(*vm.Name), vm.Tags)
+					currentVersion := uc.getNodeVersion(kubeClient, strings.ToLower(*vm.VirtualMachineScaleSetVMProperties.OsProfile.ComputerName), vm.Tags, *vm.VirtualMachineScaleSetVMProperties.LatestModelApplied)
 					if uc.Force {
 						if currentVersion == "" {
 							currentVersion = "Unknown"
@@ -198,7 +197,7 @@ func (uc *UpgradeCluster) getClusterNodeStatus(az armhelpers.AKSEngineClient, re
 					*vm.Name, uc.NameSuffix)
 				continue
 			}
-			currentVersion := uc.getNodeVersion(kubeClient, strings.ToLower(*vm.Name), vm.Tags)
+			currentVersion := uc.getNodeVersion(kubeClient, strings.ToLower(*vm.Name), vm.Tags, true)
 
 			if uc.Force {
 				if currentVersion == "" {
@@ -249,37 +248,29 @@ func (uc *UpgradeCluster) upgradable(currentVersion string) error {
 }
 
 // getNodeVersion returns a node's current Kubernetes version via Kubernetes API or VM tag.
-func (uc *UpgradeCluster) getNodeVersion(client armhelpers.KubernetesClient, name string, tags map[string]*string) string {
-	if tags != nil && tags["orchestrator"] != nil {
-		parts := strings.Split(*tags["orchestrator"], ":")
-		if len(parts) == 2 {
-			return parts[1]
+// For VMSS nodes, make sure OsProfile.ComputerName instead of VM name is used as the name here
+// because the former is used as the K8s node name.
+// Also, if the latest VMSS model is applied, then we can get the version info from the tags.
+// Otherwise, we have to get version via K8s API. This is because VMSS does not support tags
+// for individual instances and old/new instances have the same tags.
+func (uc *UpgradeCluster) getNodeVersion(client armhelpers.KubernetesClient, name string, tags map[string]*string, getVersionFromTags bool) string {
+	if getVersionFromTags {
+		if tags != nil && tags["orchestrator"] != nil {
+			parts := strings.Split(*tags["orchestrator"], ":")
+			if len(parts) == 2 {
+				return parts[1]
+			}
 		}
+
+		uc.Logger.Warnf("Expected tag \"orchestrator\" not found for VM: %s. Using Kubernetes API to retrieve Kubernetes version.", name)
 	}
-	uc.Logger.Warnf("Expected tag \"orchestrator\" not found for VM: %s. Using Kubernetes API to retrieve Kubernetes version.", name)
+
 	if client != nil {
 		node, err := client.GetNode(name)
 		if err == nil {
 			return strings.TrimPrefix(node.Status.NodeInfo.KubeletVersion, "v")
 		}
 		uc.Logger.Warnf("Failed to get node %s: %v", name, err)
-		// If it's a VMSS cluster, generate the likely Kubernetes node name and try again.
-		if strings.Contains(name, "vmss_") {
-			parts := strings.Split(name, "_")
-			if len(parts) == 2 {
-				end := 28 // keep the overall node name at 34 chars or less
-				if len(parts[0]) < end {
-					end = len(parts[0])
-				}
-				vmssName := fmt.Sprintf("%s%06s", parts[0][0:end], parts[1])
-				node, err := client.GetNode(vmssName)
-				if err == nil {
-					uc.Logger.Infof("Found VMSS node %s under the name %s", name, vmssName)
-					return strings.TrimPrefix(node.Status.NodeInfo.KubeletVersion, "v")
-				}
-				uc.Logger.Warnf("Failed to get node %s: %v", vmssName, err)
-			}
-		}
 	}
 	return ""
 }

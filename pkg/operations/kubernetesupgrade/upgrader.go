@@ -559,7 +559,7 @@ func (ku *Upgrader) upgradeAgentScaleSets(ctx context.Context) error {
 				}
 
 				ku.logger.Infof("Copying custom annotations, labels, taints from old node %s to new node %s...", vmToUpgrade.Name, newNodeName)
-				err = ku.copyCustomPropertiesToNewNode(client, vmToUpgrade.Name, newNodeName)
+				err = ku.copyCustomPropertiesToNewNode(client, strings.ToLower(vmToUpgrade.Name), strings.ToLower(newNodeName))
 				if err != nil {
 					ku.logger.Warningf("Failed to copy custom annotations, labels, taints from old node %s to new node %s: %v", vmToUpgrade.Name, newNodeName, err)
 				}
