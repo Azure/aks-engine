@@ -200,6 +200,7 @@ for TILLER_VERSION in ${TILLER_VERSIONS}; do
 done
 
 CLUSTER_AUTOSCALER_VERSIONS="
+1.14.2
 1.14.0
 1.13.4
 1.13.2
@@ -355,8 +356,8 @@ echo "  - busybox" >> ${RELEASE_NOTES_FILEPATH}
 
 # TODO: fetch supported k8s versions from an aks-engine command instead of hardcoding them here
 K8S_VERSIONS="
+1.14.2
 1.14.1
-1.14.0
 1.13.6
 1.13.5
 1.12.8
