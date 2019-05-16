@@ -4,6 +4,7 @@
 package engine
 
 import (
+	"encoding/base64"
 	"strings"
 	"testing"
 
@@ -804,5 +805,148 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 }
 
 func TestKubernetesManifestSettingsInit(t *testing.T) {
-	// TODO add tests for kubernetesManifestSettingsInit
+	mockAzureStackProperties := api.GetMockPropertiesWithCustomCloudProfile("azurestackcloud", true, true, false)
+	cases := []struct {
+		p                             *api.Properties
+		expectedKubeScheduler         bool
+		expectedKubeControllerManager bool
+		expectedKubeCCM               bool
+		expectedKubeAPIServer         bool
+		expectedKubeAddonManager      bool
+	}{
+		// Default scenario
+		{
+			p: &api.Properties{
+				OrchestratorProfile: &api.OrchestratorProfile{
+					OrchestratorType:    Kubernetes,
+					OrchestratorVersion: "1.14.1",
+					KubernetesConfig: &api.KubernetesConfig{
+						SchedulerConfig: map[string]string{},
+					},
+				},
+			},
+			expectedKubeScheduler:         true,
+			expectedKubeControllerManager: true,
+			expectedKubeCCM:               false,
+			expectedKubeAPIServer:         true,
+			expectedKubeAddonManager:      true,
+		},
+		// CCM scenario
+		{
+			p: &api.Properties{
+				OrchestratorProfile: &api.OrchestratorProfile{
+					OrchestratorType:    Kubernetes,
+					OrchestratorVersion: "1.14.1",
+					KubernetesConfig: &api.KubernetesConfig{
+						SchedulerConfig:              map[string]string{},
+						UseCloudControllerManager:    to.BoolPtr(true),
+						CloudControllerManagerConfig: map[string]string{},
+					},
+				},
+			},
+			expectedKubeScheduler:         true,
+			expectedKubeControllerManager: true,
+			expectedKubeCCM:               true,
+			expectedKubeAPIServer:         true,
+			expectedKubeAddonManager:      true,
+		},
+		// Azure Stack Scenario
+		{
+			p: &api.Properties{
+				OrchestratorProfile: &api.OrchestratorProfile{
+					OrchestratorType:    Kubernetes,
+					OrchestratorVersion: "1.14.1",
+					KubernetesConfig: &api.KubernetesConfig{
+						SchedulerConfig: map[string]string{},
+					},
+				},
+				CustomCloudProfile: mockAzureStackProperties.CustomCloudProfile,
+			},
+			expectedKubeScheduler:         true,
+			expectedKubeControllerManager: true,
+			expectedKubeCCM:               false,
+			expectedKubeAPIServer:         true,
+			expectedKubeAddonManager:      true,
+		},
+		// Custom data scenario
+		{
+			p: &api.Properties{
+				OrchestratorProfile: &api.OrchestratorProfile{
+					OrchestratorType:    Kubernetes,
+					OrchestratorVersion: "1.14.1",
+					KubernetesConfig: &api.KubernetesConfig{
+						SchedulerConfig: map[string]string{
+							"data": base64.StdEncoding.EncodeToString([]byte("foo")),
+						},
+						ControllerManagerConfig: map[string]string{
+							"data": base64.StdEncoding.EncodeToString([]byte("bar")),
+						},
+						CloudControllerManagerConfig: map[string]string{
+							"data": base64.StdEncoding.EncodeToString([]byte("baz")),
+						},
+						APIServerConfig: map[string]string{
+							"data": base64.StdEncoding.EncodeToString([]byte("bam")),
+						},
+						UseCloudControllerManager: to.BoolPtr(true),
+					},
+				},
+			},
+			expectedKubeScheduler:         true,
+			expectedKubeControllerManager: true,
+			expectedKubeCCM:               true,
+			expectedKubeAPIServer:         true,
+			expectedKubeAddonManager:      true,
+		},
+	}
+	for _, c := range cases {
+		componentFileSpecArray := kubernetesManifestSettingsInit(c.p)
+		for _, componentFileSpec := range componentFileSpecArray {
+			switch componentFileSpec.destinationFile {
+			case "kube-scheduler.yaml":
+				if c.expectedKubeScheduler != componentFileSpec.isEnabled {
+					t.Fatalf("Expected %s to be %t", "kube-scheduler", c.expectedKubeScheduler)
+				}
+				if c.p.OrchestratorProfile.KubernetesConfig.SchedulerConfig["data"] != componentFileSpec.base64Data {
+					t.Fatalf("Expected %s to be %s", componentFileSpec.base64Data, c.p.OrchestratorProfile.KubernetesConfig.SchedulerConfig["data"])
+				}
+			case "kube-controller-manager.yaml":
+				if c.p.CustomCloudProfile != nil {
+					if !strings.Contains(componentFileSpec.sourceFile, "-custom.yaml") {
+						t.Fatalf("Expected an Azure Stack-specific controller-manager spec, got %s instead", componentFileSpec.sourceFile)
+					}
+				} else {
+					if strings.Contains(componentFileSpec.sourceFile, "-custom.yaml") {
+						t.Fatalf("Got an unexpected Azure Stack-specific controller-manager spec in a non-Azure Stack cluster configuration")
+					}
+				}
+				if c.expectedKubeControllerManager != componentFileSpec.isEnabled {
+					t.Fatalf("Expected %s to be %t", "kube-controller-manager", c.expectedKubeControllerManager)
+				}
+				if c.p.OrchestratorProfile.KubernetesConfig.ControllerManagerConfig["data"] != componentFileSpec.base64Data {
+					t.Fatalf("Expected %s to be %s", componentFileSpec.base64Data, c.p.OrchestratorProfile.KubernetesConfig.ControllerManagerConfig["data"])
+				}
+			case "cloud-controller-manager.yaml":
+				if c.expectedKubeCCM != componentFileSpec.isEnabled {
+					t.Fatalf("Expected %s to be %t", "cloud-controller-manager", c.expectedKubeCCM)
+				}
+				if c.p.OrchestratorProfile.KubernetesConfig.CloudControllerManagerConfig["data"] != componentFileSpec.base64Data {
+					t.Fatalf("Expected %s to be %s", componentFileSpec.base64Data, c.p.OrchestratorProfile.KubernetesConfig.CloudControllerManagerConfig["data"])
+				}
+			case "kube-apiserver.yaml":
+				if c.expectedKubeAPIServer != componentFileSpec.isEnabled {
+					t.Fatalf("Expected %s to be %t", "kube-apiserver", c.expectedKubeAPIServer)
+				}
+				if c.p.OrchestratorProfile.KubernetesConfig.APIServerConfig["data"] != componentFileSpec.base64Data {
+					t.Fatalf("Expected %s to be %s", componentFileSpec.base64Data, c.p.OrchestratorProfile.KubernetesConfig.APIServerConfig["data"])
+				}
+			case "kube-addon-manager.yaml":
+				if c.expectedKubeAddonManager != componentFileSpec.isEnabled {
+					t.Fatalf("Expected %s to be %t", "kube-addon-manager", c.expectedKubeAddonManager)
+				}
+				if componentFileSpec.base64Data != "" {
+					t.Fatalf("Expected %s to be %s", componentFileSpec.base64Data, "")
+				}
+			}
+		}
+	}
 }
