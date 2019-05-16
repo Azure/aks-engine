@@ -393,6 +393,7 @@ type MasterProfile struct {
 	AvailabilityZones        []string          `json:"availabilityZones,omitempty"`
 	SinglePlacementGroup     *bool             `json:"singlePlacementGroup,omitempty"`
 	AuditDEnabled            *bool             `json:"auditDEnabled,omitempty"`
+	CustomVMTags             map[string]string `json:"customVMTags,omitempty"`
 
 	// subnet is internal
 	subnet string
@@ -455,6 +456,7 @@ type AgentPoolProfile struct {
 	AcceleratedNetworkingEnabledWindows *bool                `json:"acceleratedNetworkingEnabledWindows,omitempty"`
 	VMSSOverProvisioningEnabled         *bool                `json:"vmssOverProvisioningEnabled,omitempty"`
 	AuditDEnabled                       *bool                `json:"auditDEnabled,omitempty"`
+	CustomVMTags                        map[string]string    `json:"customVMTags,omitempty"`
 
 	// subnet is internal
 	subnet string

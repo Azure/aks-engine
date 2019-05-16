@@ -57,6 +57,8 @@ func CreateMasterVM(cs *api.ContainerService) VirtualMachineARM {
 		Type: to.StringPtr("Microsoft.Compute/virtualMachines"),
 	}
 
+	addCustomTagsToVM(cs.Properties.MasterProfile.CustomVMTags, &virtualMachine)
+
 	if hasAvailabilityZones {
 		virtualMachine.Zones = &[]string{
 			"[string(parameters('availabilityZones')[mod(copyIndex(variables('masterOffset')), length(parameters('availabilityZones')))])]",
@@ -363,6 +365,8 @@ func createAgentAvailabilitySetVM(cs *api.ContainerService, profile *api.AgentPo
 		Tags: tags,
 	}
 
+	addCustomTagsToVM(profile.CustomVMTags, &virtualMachine)
+
 	if useManagedIdentity {
 		if userAssignedIDEnabled && !profile.IsWindows() {
 			virtualMachine.Identity = &compute.VirtualMachineIdentity{
@@ -564,4 +568,13 @@ func getVaultSecretGroup(linuxProfile *api.LinuxProfile) []compute.VaultSecretGr
 		}
 	}
 	return vaultSecretGroups
+}
+
+func addCustomTagsToVM(tags map[string]string, vm *compute.VirtualMachine) {
+	for key, value := range tags {
+		_, found := vm.Tags[key]
+		if !found {
+			vm.Tags[key] = &value
+		}
+	}
 }

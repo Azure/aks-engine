@@ -298,3 +298,34 @@ func TestCreateAgentAvailabilitySetVM(t *testing.T) {
 		t.Errorf("unexpected diff while expecting equal structs: %s", diff)
 	}
 }
+
+func TestCreateVmWithCustomTags(t *testing.T) {
+	testTags := map[string]*string{
+		"orchestrator":     to.StringPtr("k8s"),
+		"aksEngineVersion": to.StringPtr("1.15"),
+		"poolName":         to.StringPtr("TestPool"),
+	}
+
+	testVirtualMachine := compute.VirtualMachine{
+		Tags: testTags,
+	}
+
+	testTagsToAdd := map[string]string{
+		"myTestKey": "myTestValue",
+	}
+
+	addCustomTagsToVM(testTagsToAdd, &testVirtualMachine)
+
+	expectedTags := map[string]*string{
+		"orchestrator":     to.StringPtr("k8s"),
+		"aksEngineVersion": to.StringPtr("1.15"),
+		"poolName":         to.StringPtr("TestPool"),
+		"myTestKey":        to.StringPtr("myTestValue"),
+	}
+
+	diff := cmp.Diff(testVirtualMachine.Tags, expectedTags)
+
+	if diff != "" {
+		t.Errorf("unexpected diff while expecting equal structs: %s", diff)
+	}
+}
