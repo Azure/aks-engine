@@ -674,6 +674,12 @@ func (t *TemplateGenerator) getTemplateFuncMap(cs *api.ContainerService) templat
 			}
 			return str
 		},
+		"GetWindowsMasterSubnetARMParam": func() string {
+			if cs.Properties.MasterProfile != nil && cs.Properties.MasterProfile.IsCustomVNET() {
+				return fmt.Sprintf("',parameters('vnetCidr'),'")
+			}
+			return fmt.Sprintf("',parameters('masterSubnet'),'")
+		},
 		"GetKubernetesMasterPreprovisionYaml": func() string {
 			str := ""
 			if cs.Properties.MasterProfile.PreprovisionExtension != nil {
