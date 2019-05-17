@@ -322,11 +322,11 @@ func (cs *ContainerService) setAddonsConfig(isUpdate bool) {
 	for _, addon := range defaultAddons {
 		synthesizeAddonsConfig(o.KubernetesConfig.Addons, addon, false, isUpdate)
 	}
-	
-	if len(o.KubernetesConfig.PodSecurityPolicyConfig) > 0  && isUpdate {
+
+	if len(o.KubernetesConfig.PodSecurityPolicyConfig) > 0 && isUpdate {
 		if base64Data, ok := o.KubernetesConfig.PodSecurityPolicyConfig["data"]; ok {
 			pspAddonsConfig := KubernetesAddon{
-				Name:    PodSecurityPolicyAddonName,
+				Name: PodSecurityPolicyAddonName,
 				Data: base64Data,
 			}
 			o.KubernetesConfig.Addons = appendAddonIfNotPresent(o.KubernetesConfig.Addons, pspAddonsConfig)
