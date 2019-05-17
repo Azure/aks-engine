@@ -159,7 +159,7 @@ endif
 ifndef HAS_GOX
 	go get -u github.com/mitchellh/gox
 endif
-	go install ./vendor/github.com/go-bindata/go-bindata/...
+	go install github.com/jteeuwen/go-bindata/...
 ifndef HAS_GIT
 	$(error You must install Git)
 endif
@@ -169,10 +169,6 @@ endif
 ifndef HAS_GINKGO
 	go get -u github.com/onsi/ginkgo/ginkgo
 endif
-
-build-vendor:
-	$(DEV_ENV_CMD) dep ensure
-	rm -rf vendor/github.com/docker/distribution/contrib/docker-integration/generated_certs.d
 
 ci: bootstrap test-style build test lint
 	./scripts/coverage.sh --coveralls
