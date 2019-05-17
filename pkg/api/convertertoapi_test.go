@@ -78,8 +78,8 @@ func makeAgentPoolProfile(count int, name, dNSPrefix, vMSize string, oSType OSTy
 func makeMasterProfile(count int, dNSPrefix, vMSize string) *MasterProfile {
 	return &MasterProfile{
 		Count:     count,
-		DNSPrefix: "test-dcos",
-		VMSize:    "Standard_D2_v2",
+		DNSPrefix: dNSPrefix,
+		VMSize:    vMSize,
 	}
 }
 

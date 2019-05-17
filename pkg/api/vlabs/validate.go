@@ -433,7 +433,7 @@ func (a *Properties) validateAgentPoolProfiles(isUpdate bool) error {
 			return agentPoolProfile.ImageRef.validateImageNameAndGroup()
 		}
 
-		if e := agentPoolProfile.validateAvailabilityProfile(a.OrchestratorProfile.OrchestratorType); e != nil {
+		if e := agentPoolProfile.validateAvailabilityProfile(); e != nil {
 			return e
 		}
 
@@ -765,7 +765,7 @@ func (a *Properties) validateAADProfile() error {
 	return nil
 }
 
-func (a *AgentPoolProfile) validateAvailabilityProfile(orchestratorType string) error {
+func (a *AgentPoolProfile) validateAvailabilityProfile() error {
 	switch a.AvailabilityProfile {
 	case AvailabilitySet:
 	case VirtualMachineScaleSets:

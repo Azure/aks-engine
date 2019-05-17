@@ -18,6 +18,7 @@ linters:
     - ineffassign
     - misspell
     - unconvert
+    - unparam
     - unused
 
 linters-settings:

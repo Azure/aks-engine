@@ -13,7 +13,7 @@ import (
 	"github.com/Azure/aks-engine/pkg/helpers"
 )
 
-func getParameters(cs *api.ContainerService, generatorCode string, aksEngineVersion string) (paramsMap, error) {
+func getParameters(cs *api.ContainerService, generatorCode string, aksEngineVersion string) paramsMap {
 	properties := cs.Properties
 	location := cs.Location
 	parametersMap := paramsMap{}
@@ -252,5 +252,5 @@ func getParameters(cs *api.ContainerService, generatorCode string, aksEngineVers
 		}
 	}
 
-	return parametersMap, nil
+	return parametersMap
 }

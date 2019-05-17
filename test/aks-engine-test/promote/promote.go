@@ -161,17 +161,14 @@ func RunPromoteToFailure(sa StorageAccount, testRunPromToFail DigitalSignalFilte
 
 	if existingFailureStr != testRunPromToFail.FailureStr {
 		// Perform Update of this entity with testRunPromToFail.FailureStr and testRunPromToFail.FailureCount
-		err = updateEntity(entity, testRunPromToFail.FailureCount, testRunPromToFail.FailureStr)
-		return false, err
+		updateEntity(entity, testRunPromToFail.FailureCount, testRunPromToFail.FailureStr)
+		return false, nil
 	}
 
 	if testRunPromToFail.FailureCount == 0 {
 		// Update the Entity with FailureCount 0
 		// Return False
-		if err = updateEntity(entity, testRunPromToFail.FailureCount, testRunPromToFail.FailureStr); err != nil {
-			fmt.Printf("Failed to reset Failure Count for %s to : %v!\n\n", testRunPromToFail.TestName, testRunPromToFail.FailureCount)
-			return false, err
-		}
+		updateEntity(entity, testRunPromToFail.FailureCount, testRunPromToFail.FailureStr)
 		fmt.Printf("Reset Failure Count for %s to : %v\n\n", testRunPromToFail.TestName, testRunPromToFail.FailureCount)
 		return false, nil
 	}
@@ -179,9 +176,7 @@ func RunPromoteToFailure(sa StorageAccount, testRunPromToFail DigitalSignalFilte
 	fmt.Printf("Existing Failure Count for %s : %v\n\n", testRunPromToFail.TestName, existingFailureCount)
 	newFailureCount := existingFailureCount.(float64) + testRunPromToFail.FailureCount
 	fmt.Printf("Incremented Failure Count for %s to : %v\n\n", testRunPromToFail.TestName, newFailureCount)
-	if err = updateEntity(entity, newFailureCount, testRunPromToFail.FailureStr); err != nil {
-		return false, err
-	}
+	updateEntity(entity, newFailureCount, testRunPromToFail.FailureStr)
 
 	if newFailureCount >= 3 {
 		return true, nil
@@ -207,8 +202,7 @@ func insertEntity(table *storage.Table, testRunPromToFail DigitalSignalFilter) e
 	return nil
 }
 
-func updateEntity(entity *storage.Entity, failureCount float64, failureStr string) error {
-
+func updateEntity(entity *storage.Entity, failureCount float64, failureStr string) {
 	props := map[string]interface{}{
 		"FailureStr":   failureStr,
 		"FailureCount": failureCount,
@@ -217,5 +211,4 @@ func updateEntity(entity *storage.Entity, failureCount float64, failureStr strin
 	if err := entity.Update(false, nil); err != nil {
 		fmt.Printf("Error in Updating Entity : %v\n\n", err)
 	}
-	return nil
 }

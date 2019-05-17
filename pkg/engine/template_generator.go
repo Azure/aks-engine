@@ -110,10 +110,7 @@ func (t *TemplateGenerator) GenerateTemplate(containerService *api.ContainerServ
 	}
 	templateRaw = b.String()
 
-	var parametersMap paramsMap
-	if parametersMap, err = getParameters(containerService, generatorCode, aksEngineVersion); err != nil {
-		return templateRaw, parametersRaw, err
-	}
+	var parametersMap = getParameters(containerService, generatorCode, aksEngineVersion)
 
 	var parameterBytes []byte
 	if parameterBytes, err = helpers.JSONMarshal(parametersMap, false); err != nil {
@@ -1039,10 +1036,7 @@ func (t *TemplateGenerator) GenerateTemplateV2(containerService *api.ContainerSe
 	}
 	templateRaw = string(templBytes)
 
-	var parametersMap paramsMap
-	if parametersMap, err = getParameters(containerService, generatorCode, acsengineVersion); err != nil {
-		return "", "", err
-	}
+	var parametersMap = getParameters(containerService, generatorCode, acsengineVersion)
 
 	var parameterBytes []byte
 	if parameterBytes, err = helpers.JSONMarshal(parametersMap, false); err != nil {

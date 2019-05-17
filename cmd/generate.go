@@ -56,7 +56,7 @@ func newGenerateCmd() *cobra.Command {
 				return errors.Wrap(err, "merging API model in generateCmd")
 			}
 
-			if err := gc.loadAPIModel(cmd, args); err != nil {
+			if err := gc.loadAPIModel(); err != nil {
 				return errors.Wrap(err, "loading API model in generateCmd")
 			}
 
@@ -122,7 +122,7 @@ func (gc *generateCmd) mergeAPIModel() error {
 	return nil
 }
 
-func (gc *generateCmd) loadAPIModel(cmd *cobra.Command, args []string) error {
+func (gc *generateCmd) loadAPIModel() error {
 	var caCertificateBytes []byte
 	var caKeyBytes []byte
 	var err error
