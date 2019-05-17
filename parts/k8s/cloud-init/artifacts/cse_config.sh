@@ -381,7 +381,7 @@ configClusterAutoscalerAddon() {
 
         sed -i "s|<volMounts>|${CLUSTER_AUTOSCALER_MSI_VOLUME_MOUNT}|g" $CLUSTER_AUTOSCALER_ADDON_FILE
         sed -i "s|<vols>|${CLUSTER_AUTOSCALER_MSI_VOLUME}|g" $CLUSTER_AUTOSCALER_ADDON_FILE
-        sed -i "s|<hostNet>|$(echo "${CLUSTER_AUTOSCALER_MSI_HOST_NETWORK}")|g" $CLUSTER_AUTOSCALER_ADDON_FILE
+        sed -i "s|<hostNet>|${CLUSTER_AUTOSCALER_MSI_HOST_NETWORK}|g" $CLUSTER_AUTOSCALER_ADDON_FILE
     elif [[ "${USE_MANAGED_IDENTITY_EXTENSION}" == false ]]; then
         sed -i "s|<volMounts>|""|g" $CLUSTER_AUTOSCALER_ADDON_FILE
         sed -i "s|<vols>|""|g" $CLUSTER_AUTOSCALER_ADDON_FILE
@@ -394,7 +394,7 @@ configClusterAutoscalerAddon() {
     sed -i "s|<tenantID>|$(echo $TENANT_ID | base64)|g" $CLUSTER_AUTOSCALER_ADDON_FILE
     sed -i "s|<rg>|$(echo $RESOURCE_GROUP | base64)|g" $CLUSTER_AUTOSCALER_ADDON_FILE
     sed -i "s|<vmType>|$(echo $VM_TYPE | base64)|g" $CLUSTER_AUTOSCALER_ADDON_FILE
-    sed -i "s|<vmssName>|$(echo $PRIMARY_SCALE_SET)|g" $CLUSTER_AUTOSCALER_ADDON_FILE
+    sed -i "s|<vmssName>|$PRIMARY_SCALE_SET|g" $CLUSTER_AUTOSCALER_ADDON_FILE
 }
 
 configACIConnectorAddon() {
@@ -407,9 +407,9 @@ configACIConnectorAddon() {
     ACI_CONNECTOR_ADDON_FILE=/etc/kubernetes/addons/aci-connector-deployment.yaml
     wait_for_file 1200 1 $ACI_CONNECTOR_ADDON_FILE || exit $ERR_FILE_WATCH_TIMEOUT
     sed -i "s|<creds>|$ACI_CONNECTOR_CREDENTIALS|g" $ACI_CONNECTOR_ADDON_FILE
-    sed -i "s|<rgName>|$(echo $RESOURCE_GROUP)|g" $ACI_CONNECTOR_ADDON_FILE
-    sed -i "s|<cert>|$(echo $ACI_CONNECTOR_CERT)|g" $ACI_CONNECTOR_ADDON_FILE
-    sed -i "s|<key>|$(echo $ACI_CONNECTOR_KEY)|g" $ACI_CONNECTOR_ADDON_FILE
+    sed -i "s|<rgName>|$RESOURCE_GROUP|g" $ACI_CONNECTOR_ADDON_FILE
+    sed -i "s|<cert>|$ACI_CONNECTOR_CERT|g" $ACI_CONNECTOR_ADDON_FILE
+    sed -i "s|<key>|$ACI_CONNECTOR_KEY|g" $ACI_CONNECTOR_ADDON_FILE
 }
 
 configAddons() {
