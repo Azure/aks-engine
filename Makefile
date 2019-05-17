@@ -153,9 +153,6 @@ HAS_GINKGO := $(shell $(CHECK) ginkgo)
 
 .PHONY: bootstrap
 bootstrap:
-ifndef HAS_DEP
-	go get -u github.com/golang/dep/cmd/dep
-endif
 ifndef HAS_GOX
 	go get -u github.com/mitchellh/gox
 endif
