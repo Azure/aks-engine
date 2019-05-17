@@ -8,7 +8,7 @@ DIST_DIRS         = find * -type d -exec
 ifdef DEBUG
 GOFLAGS   := -gcflags="-N -l"
 else
-GOFLAGS   :=
+GOFLAGS   := -mod=readonly
 endif
 
 # go option
@@ -54,10 +54,6 @@ all: build
 dev:
 	$(DEV_ENV_CMD_IT) bash
 
-.PHONY: validate-dependencies
-validate-dependencies: bootstrap
-	@./scripts/validate-dependencies.sh
-
 .PHONY: validate-copyright-headers
 validate-copyright-headers:
 	@./scripts/validate-copyright-header.sh
@@ -79,7 +75,7 @@ generate-azure-constants:
 	python pkg/helpers/generate_azure_constants.py
 
 .PHONY: build
-build: validate-dependencies generate
+build: generate
 	$(GO) build $(GOFLAGS) -ldflags '$(LDFLAGS)' -o $(BINDIR)/$(PROJECT)$(EXTENSION) $(REPO_PATH)
 	$(GO) build $(GOFLAGS) -o $(BINDIR)/aks-engine-test$(EXTENSION) $(REPO_PATH)/test/aks-engine-test
 
