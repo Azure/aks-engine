@@ -233,7 +233,7 @@ func CreateCustomExtensions(properties *api.Properties) []DeploymentARM {
 		if properties.MasterProfile != nil {
 			masterOptedForExtension, singleOrAll := validateProfileOptedForExtension(extensionProfile.Name, properties.MasterProfile.Extensions)
 			if masterOptedForExtension {
-				data, e := getMasterLinkedTemplateText(properties.MasterProfile, properties.OrchestratorProfile.OrchestratorType, extensionProfile, singleOrAll)
+				data, e := getMasterLinkedTemplateText(properties.OrchestratorProfile.OrchestratorType, extensionProfile, singleOrAll)
 				if e != nil {
 					fmt.Println(e.Error())
 				}

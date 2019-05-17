@@ -575,7 +575,7 @@ func TestDeployCmdRun(t *testing.T) {
 		t.Fatalf("Invalid SubscriptionId in Test: %s", err)
 	}
 
-	err = d.loadAPIModel(r, []string{})
+	err = d.loadAPIModel()
 	if err != nil {
 		t.Fatalf("Failed to call LoadAPIModel: %s", err)
 	}

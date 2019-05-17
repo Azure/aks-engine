@@ -124,7 +124,7 @@ func (sc *scaleCmd) validate(cmd *cobra.Command) error {
 	return nil
 }
 
-func (sc *scaleCmd) load(cmd *cobra.Command) error {
+func (sc *scaleCmd) load() error {
 	sc.logger = log.New().WithField("source", "scaling command line")
 	var err error
 
@@ -211,7 +211,7 @@ func (sc *scaleCmd) run(cmd *cobra.Command, args []string) error {
 	if err := sc.validate(cmd); err != nil {
 		return errors.Wrap(err, "failed to validate scale command")
 	}
-	if err := sc.load(cmd); err != nil {
+	if err := sc.load(); err != nil {
 		return errors.Wrap(err, "failed to load existing container service")
 	}
 

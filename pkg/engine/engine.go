@@ -181,28 +181,20 @@ func getStorageAccountType(sizeName string) (string, error) {
 }
 
 func makeMasterExtensionScriptCommands(cs *api.ContainerService) string {
-	copyIndex := "',copyIndex(),'"
-	if cs.Properties.OrchestratorProfile.IsKubernetes() {
-		copyIndex = "',copyIndex(variables('masterOffset')),'"
-	}
 	return makeExtensionScriptCommands(cs.Properties.MasterProfile.PreprovisionExtension,
-		cs.Properties.ExtensionProfiles, copyIndex)
+		cs.Properties.ExtensionProfiles)
 }
 
 func makeAgentExtensionScriptCommands(cs *api.ContainerService, profile *api.AgentPoolProfile) string {
-	copyIndex := "',copyIndex(),'"
-	if profile.IsAvailabilitySets() {
-		copyIndex = fmt.Sprintf("',copyIndex(variables('%sOffset')),'", profile.Name)
-	}
 	if profile.OSType == api.Windows {
 		return makeWindowsExtensionScriptCommands(profile.PreprovisionExtension,
-			cs.Properties.ExtensionProfiles, copyIndex)
+			cs.Properties.ExtensionProfiles)
 	}
 	return makeExtensionScriptCommands(profile.PreprovisionExtension,
-		cs.Properties.ExtensionProfiles, copyIndex)
+		cs.Properties.ExtensionProfiles)
 }
 
-func makeExtensionScriptCommands(extension *api.Extension, extensionProfiles []*api.ExtensionProfile, copyIndex string) string {
+func makeExtensionScriptCommands(extension *api.Extension, extensionProfiles []*api.ExtensionProfile) string {
 	var extensionProfile *api.ExtensionProfile
 	for _, eP := range extensionProfiles {
 		if strings.EqualFold(eP.Name, extension.Name) {
@@ -222,7 +214,7 @@ func makeExtensionScriptCommands(extension *api.Extension, extensionProfiles []*
 		scriptFilePath, scriptURL, scriptFilePath, scriptFilePath, extensionsParameterReference, extensionProfile.Name)
 }
 
-func makeWindowsExtensionScriptCommands(extension *api.Extension, extensionProfiles []*api.ExtensionProfile, copyIndex string) string {
+func makeWindowsExtensionScriptCommands(extension *api.Extension, extensionProfiles []*api.ExtensionProfile) string {
 	var extensionProfile *api.ExtensionProfile
 	for _, eP := range extensionProfiles {
 		if strings.EqualFold(eP.Name, extension.Name) {
@@ -965,7 +957,7 @@ func getLinkedTemplatesForExtensions(properties *api.Properties) string {
 		masterOptedForExtension, singleOrAll := validateProfileOptedForExtension(extensionProfile.Name, masterProfileExtensions)
 		if masterOptedForExtension {
 			result += ","
-			dta, e := getMasterLinkedTemplateText(properties.MasterProfile, orchestratorType, extensionProfile, singleOrAll)
+			dta, e := getMasterLinkedTemplateText(orchestratorType, extensionProfile, singleOrAll)
 			if e != nil {
 				fmt.Println(e.Error())
 				return ""
@@ -992,7 +984,7 @@ func getLinkedTemplatesForExtensions(properties *api.Properties) string {
 	return result
 }
 
-func getMasterLinkedTemplateText(masterProfile *api.MasterProfile, orchestratorType string, extensionProfile *api.ExtensionProfile, singleOrAll string) (string, error) {
+func getMasterLinkedTemplateText(orchestratorType string, extensionProfile *api.ExtensionProfile, singleOrAll string) (string, error) {
 	extTargetVMNamePrefix := "variables('masterVMNamePrefix')"
 
 	loopCount := "[variables('masterCount')]"

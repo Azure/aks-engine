@@ -77,7 +77,7 @@ func newDeployCmd() *cobra.Command {
 			if err := dc.mergeAPIModel(); err != nil {
 				return errors.Wrap(err, "merging API model in deployCmd")
 			}
-			if err := dc.loadAPIModel(cmd, args); err != nil {
+			if err := dc.loadAPIModel(); err != nil {
 				return errors.Wrap(err, "loading API model")
 			}
 			if _, _, err := dc.validateApimodel(); err != nil {
@@ -171,7 +171,7 @@ func (dc *deployCmd) mergeAPIModel() error {
 	return nil
 }
 
-func (dc *deployCmd) loadAPIModel(cmd *cobra.Command, args []string) error {
+func (dc *deployCmd) loadAPIModel() error {
 	var caCertificateBytes []byte
 	var caKeyBytes []byte
 	var err error

@@ -226,10 +226,7 @@ func dcosInfo(csOrch *OrchestratorProfile, hasWindows bool) ([]*OrchestratorVers
 	if csOrch.OrchestratorVersion == "" {
 		// get info for all supported versions
 		for _, ver := range common.AllDCOSSupportedVersions {
-			upgrades, err := dcosUpgrades(&OrchestratorProfile{OrchestratorVersion: ver})
-			if err != nil {
-				return nil, err
-			}
+			upgrades := dcosUpgrades(&OrchestratorProfile{OrchestratorVersion: ver})
 			orchs = append(orchs,
 				&OrchestratorVersionProfile{
 					OrchestratorProfile: OrchestratorProfile{
@@ -246,10 +243,7 @@ func dcosInfo(csOrch *OrchestratorProfile, hasWindows bool) ([]*OrchestratorVers
 		}
 
 		// get info for the specified version
-		upgrades, err := dcosUpgrades(csOrch)
-		if err != nil {
-			return nil, err
-		}
+		upgrades := dcosUpgrades(csOrch)
 		orchs = append(orchs,
 			&OrchestratorVersionProfile{
 				OrchestratorProfile: OrchestratorProfile{
@@ -263,7 +257,7 @@ func dcosInfo(csOrch *OrchestratorProfile, hasWindows bool) ([]*OrchestratorVers
 	return orchs, nil
 }
 
-func dcosUpgrades(csOrch *OrchestratorProfile) ([]*OrchestratorProfile, error) {
+func dcosUpgrades(csOrch *OrchestratorProfile) []*OrchestratorProfile {
 	ret := []*OrchestratorProfile{}
 
 	if csOrch.OrchestratorVersion == common.DCOSVersion1Dot11Dot0 {
@@ -272,7 +266,7 @@ func dcosUpgrades(csOrch *OrchestratorProfile) ([]*OrchestratorProfile, error) {
 			OrchestratorVersion: common.DCOSVersion1Dot11Dot2,
 		})
 	}
-	return ret, nil
+	return ret
 }
 
 func swarmInfo(csOrch *OrchestratorProfile, hasWindows bool) ([]*OrchestratorVersionProfile, error) {

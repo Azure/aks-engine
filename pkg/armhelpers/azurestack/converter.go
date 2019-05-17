@@ -25,11 +25,11 @@ func DeepCopy(dst, src interface{}) error {
 	if dstValue.Type().String() != srcValue.Type().String() {
 		return fmt.Errorf("the dst type (%q) and src type (%q) are not the same", dstValue.Type().String(), srcValue.Type().String())
 	}
-	deepCopyInternal(dstValue, srcValue, 0, "")
+	deepCopyInternal(dstValue, srcValue, 0)
 	return nil
 }
 
-func deepCopyInternal(dstValue, srcValue reflect.Value, depth int, path string) {
+func deepCopyInternal(dstValue, srcValue reflect.Value, depth int) {
 	if dstValue.CanSet() {
 		switch srcValue.Kind() {
 		case reflect.Bool:
@@ -48,7 +48,7 @@ func deepCopyInternal(dstValue, srcValue reflect.Value, depth int, path string) 
 			if !srcValue.IsNil() {
 				d := reflect.New(dstValue.Type().Elem())
 				dstValue.Set(d)
-				deepCopyInternal(dstValue.Elem(), srcValue.Elem(), depth+1, "")
+				deepCopyInternal(dstValue.Elem(), srcValue.Elem(), depth+1)
 			}
 		case reflect.Slice:
 			if !srcValue.IsNil() {
@@ -56,7 +56,7 @@ func deepCopyInternal(dstValue, srcValue reflect.Value, depth int, path string) 
 				dstValue.Set(d)
 				for i := 0; i < srcValue.Len(); i++ {
 					v := dstValue.Index(i)
-					deepCopyInternal(v, srcValue.Index(i), depth+1, "")
+					deepCopyInternal(v, srcValue.Index(i), depth+1)
 					v.Set(v)
 				}
 			}
@@ -64,7 +64,7 @@ func deepCopyInternal(dstValue, srcValue reflect.Value, depth int, path string) 
 			d := reflect.New(dstValue.Type()).Elem()
 			for i := 0; i < srcValue.Len(); i++ {
 				v := reflect.New(srcValue.Index(i).Type()).Elem()
-				deepCopyInternal(v, srcValue.Index(i), depth+1, "")
+				deepCopyInternal(v, srcValue.Index(i), depth+1)
 				d.Index(i).Set(v)
 			}
 			dstValue.Set(d)
@@ -74,7 +74,7 @@ func deepCopyInternal(dstValue, srcValue reflect.Value, depth int, path string) 
 				d := reflect.MakeMap(dstValue.Type())
 				for _, key := range srcValue.MapKeys() {
 					v := reflect.New(srcValue.MapIndex(key).Type()).Elem()
-					deepCopyInternal(v, srcValue.MapIndex(key), depth+1, "")
+					deepCopyInternal(v, srcValue.MapIndex(key), depth+1)
 					d.SetMapIndex(key, v)
 				}
 				dstValue.Set(d)
@@ -84,7 +84,7 @@ func deepCopyInternal(dstValue, srcValue reflect.Value, depth int, path string) 
 				srcField := srcValue.Field(i)
 				dstField := dstValue.FieldByName(srcValue.Type().Field(i).Name)
 				if dstField.IsValid() && dstField.CanAddr() && dstField.CanSet() {
-					deepCopyInternal(dstField, srcField, depth+1, "")
+					deepCopyInternal(dstField, srcField, depth+1)
 				}
 			}
 		default:

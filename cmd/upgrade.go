@@ -128,7 +128,7 @@ func (uc *upgradeCmd) validate(cmd *cobra.Command) error {
 	return nil
 }
 
-func (uc *upgradeCmd) loadCluster(cmd *cobra.Command) error {
+func (uc *upgradeCmd) loadCluster() error {
 	var err error
 
 	ctx, cancel := context.WithTimeout(context.Background(), armhelpers.DefaultARMOperationTimeout)
@@ -237,7 +237,7 @@ func (uc *upgradeCmd) run(cmd *cobra.Command, args []string) error {
 		return errors.Wrap(err, "validating upgrade command")
 	}
 
-	err = uc.loadCluster(cmd)
+	err = uc.loadCluster()
 	if err != nil {
 		return errors.Wrap(err, "loading existing cluster")
 	}
