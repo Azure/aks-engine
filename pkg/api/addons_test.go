@@ -70,7 +70,7 @@ func TestPodSecurityPolicyConfigUpgrade(t *testing.T) {
 
 	i := getAddonsIndexByName(o.KubernetesConfig.Addons, PodSecurityPolicyAddonName)
 	if i < 0 {
-		t.Errorf("expected addon %s to be present, instead got %d from getAddonsIndexByName", PodSecurityPolicyAddonName, i)
+		t.Errorf("expected a positive index for the addon %s, instead got %d from getAddonsIndexByName", PodSecurityPolicyAddonName, i)
 	}
 
 	if o.KubernetesConfig.Addons[i].Name != PodSecurityPolicyAddonName {
