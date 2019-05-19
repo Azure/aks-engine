@@ -3,7 +3,11 @@
 
 package api
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/Azure/go-autorest/autorest/to"
+)
 
 func TestAppendAddonIfNotPresent(t *testing.T) {
 	names := []string{"AddonA", "AddonB", "AddonC", "AddonD", "AddonE"}
@@ -47,5 +51,33 @@ func TestGetAddonsIndexByName(t *testing.T) {
 		if j != -1 {
 			t.Errorf("incorrect index by getAddonsIndexByName, expect: '%d', actual: '%d'", -1, j)
 		}
+	}
+}
+
+func TestPodSecurityPolicyConfigUpgrade(t *testing.T) {
+	mockCS := getMockBaseContainerService("1.8.0")
+	o := mockCS.Properties.OrchestratorProfile
+
+	isUpdate := true
+	base64DataPSP := "cHNwQ3VzdG9tRGF0YQ=="
+	o.OrchestratorType = Kubernetes
+	o.KubernetesConfig.EnablePodSecurityPolicy = to.BoolPtr(true)
+	o.KubernetesConfig.PodSecurityPolicyConfig = map[string]string{
+		"data": base64DataPSP,
+	}
+
+	mockCS.setAddonsConfig(isUpdate)
+
+	i := getAddonsIndexByName(o.KubernetesConfig.Addons, PodSecurityPolicyAddonName)
+	if i < 0 {
+		t.Errorf("expected addon %s to be present, instead got %d from getAddonsIndexByName", PodSecurityPolicyAddonName, i)
+	}
+
+	if o.KubernetesConfig.Addons[i].Name != PodSecurityPolicyAddonName {
+		t.Errorf("expected addon %s name to be present, instead got %s", PodSecurityPolicyAddonName, o.KubernetesConfig.Addons[i].Name)
+	}
+
+	if o.KubernetesConfig.Addons[i].Data != base64DataPSP {
+		t.Errorf("expected %s data to be present, instead got %s", base64DataPSP, o.KubernetesConfig.Addons[i].Data)
 	}
 }
