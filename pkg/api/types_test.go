@@ -387,6 +387,49 @@ func TestMasterProfileIsUbuntuNonVHD(t *testing.T) {
 	}
 }
 
+func TestMasterProfileHasMultipleNodes(t *testing.T) {
+	cases := []struct {
+		m        MasterProfile
+		expected bool
+	}{
+		{
+			m: MasterProfile{
+				Count: 1,
+			},
+			expected: false,
+		},
+		{
+			m: MasterProfile{
+				Count: 2,
+			},
+			expected: true,
+		},
+		{
+			m: MasterProfile{
+				Count: 3,
+			},
+			expected: true,
+		},
+		{
+			m: MasterProfile{
+				Count: 0,
+			},
+			expected: false,
+		},
+		{
+			m: MasterProfile{
+				Count: -1,
+			},
+			expected: false,
+		},
+	}
+
+	for _, c := range cases {
+		if c.expected != c.m.HasMultipleNodes() {
+			t.Fatalf("Got unexpected MasterProfile.HasMultipleNodes() result. Expected: %t. Got: %t.", c.expected, c.m.HasMultipleNodes())
+		}
+	}
+}
 func TestHasStorageProfile(t *testing.T) {
 	cases := []struct {
 		p                 Properties

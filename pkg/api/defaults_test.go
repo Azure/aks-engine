@@ -1570,7 +1570,7 @@ func TestSetCertDefaults(t *testing.T) {
 			t.Errorf("expected last IP of master vm from SetDefaultCerts %d, actual %d", expectedLastIP, ips[len(ips)-2])
 		}
 
-		if cs.Properties.MasterProfile.Count > 1 {
+		if cs.Properties.MasterProfile.HasMultipleNodes() {
 			expectedILBIP := net.IP{firstMasterIP[0], firstMasterIP[1], firstMasterIP[2], firstMasterIP[3] + byte(DefaultInternalLbStaticIPOffset)}
 			actualILBIPAddr := binary.BigEndian.Uint32(ips[2])
 			expectedILBIPAddr := binary.BigEndian.Uint32(expectedILBIP)
@@ -1636,7 +1636,7 @@ func TestSetCertDefaultsVMSS(t *testing.T) {
 			t.Errorf("expected last IP of master vm from SetDefaultCerts %d, actual %d", expectedLastIP, ips[len(ips)-2])
 		}
 
-		if cs.Properties.MasterProfile.Count > 1 {
+		if cs.Properties.MasterProfile.HasMultipleNodes() {
 			expectedILBIP := net.IP{firstMasterIP[0], firstMasterIP[1], byte(255), byte(DefaultInternalLbStaticIPOffset)}
 			actualILBIPAddr := binary.BigEndian.Uint32(ips[2])
 			expectedILBIPAddr := binary.BigEndian.Uint32(expectedILBIP)

@@ -20,7 +20,7 @@ func CreateNetworkInterfaces(cs *api.ContainerService) NetworkInterfaceARM {
 		dependencies = append(dependencies, "[variables('vnetID')]")
 	}
 
-	if cs.Properties.MasterProfile.Count > 1 {
+	if cs.Properties.MasterProfile.HasMultipleNodes() {
 		dependencies = append(dependencies, "[variables('masterInternalLbName')]")
 	}
 
@@ -48,7 +48,7 @@ func CreateNetworkInterfaces(cs *api.ContainerService) NetworkInterfaceARM {
 		DependsOn: dependencies,
 	}
 
-	if cs.Properties.MasterProfile.Count > 1 {
+	if cs.Properties.MasterProfile.HasMultipleNodes() {
 		internalLbPool := network.BackendAddressPool{
 			ID: to.StringPtr("[concat(variables('masterInternalLbID'), '/backendAddressPools/', variables('masterLbBackendPoolName'))]"),
 		}
@@ -129,7 +129,7 @@ func createPrivateClusterNetworkInterface(cs *api.ContainerService) NetworkInter
 		dependencies = append(dependencies, "[variables('vnetID')]")
 	}
 
-	if cs.Properties.MasterProfile.Count > 1 {
+	if cs.Properties.MasterProfile.HasMultipleNodes() {
 		dependencies = append(dependencies, "[variables('masterInternalLbName')]")
 	}
 
@@ -144,7 +144,7 @@ func createPrivateClusterNetworkInterface(cs *api.ContainerService) NetworkInter
 
 	var lbBackendAddressPools []network.BackendAddressPool
 
-	if cs.Properties.MasterProfile.Count > 1 {
+	if cs.Properties.MasterProfile.HasMultipleNodes() {
 		internalLbPool := network.BackendAddressPool{
 			ID: to.StringPtr("[concat(variables('masterInternalLbID'), '/backendAddressPools/', variables('masterLbBackendPoolName'))]"),
 		}
