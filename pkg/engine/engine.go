@@ -61,7 +61,7 @@ func GenerateKubeConfig(properties *api.Properties, location string) (string, er
 		properties.OrchestratorProfile.KubernetesConfig != nil &&
 		properties.OrchestratorProfile.KubernetesConfig.PrivateCluster != nil &&
 		to.Bool(properties.OrchestratorProfile.KubernetesConfig.PrivateCluster.Enabled) {
-		if properties.MasterProfile.Count > 1 {
+		if properties.MasterProfile.HasMultipleNodes() {
 			// more than 1 master, use the internal lb IP
 			firstMasterIP := net.ParseIP(properties.MasterProfile.FirstConsecutiveStaticIP).To4()
 			if firstMasterIP == nil {

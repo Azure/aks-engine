@@ -13322,7 +13322,7 @@ MASTER_CONTAINER_ADDONS_PLACEHOLDER
     sed -i "s|<etcdEndPointUri>|127.0.0.1|g" $a
 {{ end }}
 {{if IsAzureStackCloud}}
-    {{if IsMultipleMasters}}
+    {{if IsMultiMasterCluster}}
     masterLBIP=` + "`" + `getent hosts {{WrapAsVariable "masterPublicLbFQDN"}} | cut -d " " -f1` + "`" + `
     sed -i "s|<advertiseAddr>|$masterLBIP|g" $a
     {{else}}
@@ -13727,7 +13727,7 @@ write_files:
       cluster:
         certificate-authority: /etc/kubernetes/certs/ca.crt
         {{if IsAzureStackCloud}}
-        {{if IsMultipleMasters}}
+        {{if IsMultiMasterCluster}}
         server: https://{{WrapAsVariable "masterPublicLbFQDN"}}:443
         {{else}}
         server: https://{{WrapAsVariable "kubernetesAPIServerIP"}}:443

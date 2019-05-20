@@ -509,7 +509,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			Expect(err).NotTo(HaveOccurred())
 			By("Ensuring that the correct IP address has been applied to the apiserver")
 			expectedIPAddress := eng.ExpandedDefinition.Properties.MasterProfile.FirstConsecutiveStaticIP
-			if eng.ExpandedDefinition.Properties.MasterProfile.Count > 1 {
+			if eng.ExpandedDefinition.Properties.MasterProfile.HasMultipleNodes() {
 				firstMasterIP := net.ParseIP(eng.ExpandedDefinition.Properties.MasterProfile.FirstConsecutiveStaticIP).To4()
 				expectedIP := net.IP{firstMasterIP[0], firstMasterIP[1], firstMasterIP[2], firstMasterIP[3] + byte(common.DefaultInternalLbStaticIPOffset)}
 				if eng.ExpandedDefinition.Properties.MasterProfile.IsVirtualMachineScaleSets() {

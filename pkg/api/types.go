@@ -1263,6 +1263,11 @@ func (m *MasterProfile) IsUbuntuNonVHD() bool {
 	return m.IsUbuntu() && !m.IsVHDDistro()
 }
 
+// HasMultipleNodes returns true if there are more than one master nodes
+func (m *MasterProfile) HasMultipleNodes() bool {
+	return m.Count > 1
+}
+
 // IsCustomVNET returns true if the customer brought their own VNET
 func (a *AgentPoolProfile) IsCustomVNET() bool {
 	return len(a.VnetSubnetID) > 0

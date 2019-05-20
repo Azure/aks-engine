@@ -248,8 +248,8 @@ func (t *TemplateGenerator) getTemplateFuncMap(cs *api.ContainerService) templat
 		"IsAzureStackCloud": func() bool {
 			return cs.Properties.IsAzureStackCloud()
 		},
-		"IsMultipleMasters": func() bool {
-			return cs.Properties.MasterProfile != nil && cs.Properties.MasterProfile.Count > 1
+		"IsMultiMasterCluster": func() bool {
+			return cs.Properties.MasterProfile != nil && cs.Properties.MasterProfile.HasMultipleNodes()
 		},
 		"IsMasterVirtualMachineScaleSets": func() bool {
 			return cs.Properties.MasterProfile != nil && cs.Properties.MasterProfile.IsVirtualMachineScaleSets()

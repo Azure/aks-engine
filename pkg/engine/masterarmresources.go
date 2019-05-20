@@ -76,7 +76,7 @@ func createKubernetesMasterResourcesVMAS(cs *api.ContainerService) []interface{}
 
 	}
 
-	if p.MasterProfile.Count > 1 {
+	if p.MasterProfile.HasMultipleNodes() {
 		internalLB := CreateMasterInternalLoadBalancer(cs)
 		masterResources = append(masterResources, internalLB)
 	}
@@ -141,7 +141,7 @@ func createKubernetesMasterResourcesVMSS(cs *api.ContainerService) []interface{}
 		masterResources = append(masterResources, masterVNET)
 	}
 
-	if cs.Properties.MasterProfile.Count > 1 {
+	if cs.Properties.MasterProfile.HasMultipleNodes() {
 		internalLb := CreateMasterInternalLoadBalancer(cs)
 		masterResources = append(masterResources, internalLb)
 	}
