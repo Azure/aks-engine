@@ -3280,7 +3280,7 @@ func TestIsIPMasqAgentEnabled(t *testing.T) {
 					OrchestratorType: Kubernetes,
 					KubernetesConfig: &KubernetesConfig{
 						Addons: []KubernetesAddon{
-							KubernetesAddon{
+							{
 								Name: IPMASQAgentAddonName,
 								Containers: []KubernetesContainerSpec{
 									{
@@ -3301,7 +3301,7 @@ func TestIsIPMasqAgentEnabled(t *testing.T) {
 					OrchestratorType: Kubernetes,
 					KubernetesConfig: &KubernetesConfig{
 						Addons: []KubernetesAddon{
-							KubernetesAddon{
+							{
 								Name:    IPMASQAgentAddonName,
 								Enabled: to.BoolPtr(false),
 								Containers: []KubernetesContainerSpec{
@@ -3323,7 +3323,7 @@ func TestIsIPMasqAgentEnabled(t *testing.T) {
 					OrchestratorType: Kubernetes,
 					KubernetesConfig: &KubernetesConfig{
 						Addons: []KubernetesAddon{
-							KubernetesAddon{
+							{
 								Name:    IPMASQAgentAddonName,
 								Enabled: to.BoolPtr(false),
 								Containers: []KubernetesContainerSpec{
@@ -3348,7 +3348,7 @@ func TestIsIPMasqAgentEnabled(t *testing.T) {
 					OrchestratorType: Kubernetes,
 					KubernetesConfig: &KubernetesConfig{
 						Addons: []KubernetesAddon{
-							KubernetesAddon{
+							{
 								Name:    IPMASQAgentAddonName,
 								Enabled: to.BoolPtr(true),
 								Containers: []KubernetesContainerSpec{
@@ -3373,7 +3373,7 @@ func TestIsIPMasqAgentEnabled(t *testing.T) {
 					OrchestratorType: Kubernetes,
 					KubernetesConfig: &KubernetesConfig{
 						Addons: []KubernetesAddon{
-							KubernetesAddon{
+							{
 								Name:    IPMASQAgentAddonName,
 								Enabled: to.BoolPtr(true),
 								Containers: []KubernetesContainerSpec{
