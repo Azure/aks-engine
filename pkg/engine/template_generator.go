@@ -10,7 +10,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"runtime/debug"
-	"sort"
 	"strconv"
 	"strings"
 	"text/template"
@@ -243,6 +242,8 @@ func (t *TemplateGenerator) GetKubernetesWindowsNodeCustomDataJSONObject(cs *api
 }
 
 // getTemplateFuncMap returns all functions used in template generation
+// These funcs are a thin wrapper for template generation operations,
+// all business logic is implemented in the underlying func
 func (t *TemplateGenerator) getTemplateFuncMap(cs *api.ContainerService) template.FuncMap {
 	return template.FuncMap{
 		"IsAzureStackCloud": func() bool {
@@ -261,9 +262,7 @@ func (t *TemplateGenerator) getTemplateFuncMap(cs *api.ContainerService) templat
 			return cs.Properties.IsIPMasqAgentEnabled()
 		},
 		"IsDCOS19": func() bool {
-			return cs.Properties.OrchestratorProfile.OrchestratorType == api.DCOS &&
-				(cs.Properties.OrchestratorProfile.OrchestratorVersion == common.DCOSVersion1Dot9Dot0 ||
-					cs.Properties.OrchestratorProfile.OrchestratorVersion == common.DCOSVersion1Dot9Dot8)
+			return cs.Properties.OrchestratorProfile != nil && cs.Properties.OrchestratorProfile.IsDCOS19()
 		},
 		"IsKubernetesVersionGe": func(version string) bool {
 			return cs.Properties.OrchestratorProfile.IsKubernetes() && common.IsKubernetesVersionGe(cs.Properties.OrchestratorProfile.OrchestratorVersion, version)
@@ -272,82 +271,25 @@ func (t *TemplateGenerator) getTemplateFuncMap(cs *api.ContainerService) templat
 			return cs.Properties.OrchestratorProfile.IsKubernetes() && !common.IsKubernetesVersionGe(cs.Properties.OrchestratorProfile.OrchestratorVersion, version)
 		},
 		"GetMasterKubernetesLabels": func(rg string) string {
-			var buf bytes.Buffer
-			buf.WriteString("kubernetes.io/role=master")
-			buf.WriteString(",node-role.kubernetes.io/master=")
-			buf.WriteString(fmt.Sprintf(",kubernetes.azure.com/cluster=%s", rg))
-			return buf.String()
+			return common.GetMasterKubernetesLabels(rg)
 		},
 		"GetAgentKubernetesLabels": func(profile *api.AgentPoolProfile, rg string) string {
-			var buf bytes.Buffer
-			buf.WriteString("node-role.kubernetes.io/agent=")
-			buf.WriteString(fmt.Sprintf(",kubernetes.io/role=agent,agentpool=%s", profile.Name))
-			if profile.StorageProfile == api.ManagedDisks {
-				storagetier, _ := getStorageAccountType(profile.VMSize)
-				buf.WriteString(fmt.Sprintf(",storageprofile=managed,storagetier=%s", storagetier))
-			}
-			if common.IsNvidiaEnabledSKU(profile.VMSize) {
-				accelerator := "nvidia"
-				buf.WriteString(fmt.Sprintf(",accelerator=%s", accelerator))
-			}
-			buf.WriteString(fmt.Sprintf(",kubernetes.azure.com/cluster=%s", rg))
-			for k, v := range profile.CustomNodeLabels {
-				buf.WriteString(fmt.Sprintf(",%s=%s", k, v))
-			}
-			return buf.String()
+			return profile.GetKubernetesLabels(rg)
 		},
 		"GetKubeletConfigKeyVals": func(kc *api.KubernetesConfig) string {
 			if kc == nil {
 				return ""
 			}
-			kubeletConfig := cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig
-			if kc.KubeletConfig != nil {
-				kubeletConfig = kc.KubeletConfig
-			}
-			// Order by key for consistency
-			keys := []string{}
-			for key := range kubeletConfig {
-				keys = append(keys, key)
-			}
-			sort.Strings(keys)
-			var buf bytes.Buffer
-			for _, key := range keys {
-				buf.WriteString(fmt.Sprintf("%s=%s ", key, kubeletConfig[key]))
-			}
-			return buf.String()
+			return kc.GetOrderedKubeletConfigString()
 		},
 		"GetKubeletConfigKeyValsPsh": func(kc *api.KubernetesConfig) string {
 			if kc == nil {
 				return ""
 			}
-			kubeletConfig := cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig
-			if kc.KubeletConfig != nil {
-				kubeletConfig = kc.KubeletConfig
-			}
-			// Order by key for consistency
-			keys := []string{}
-			for key := range kubeletConfig {
-				keys = append(keys, key)
-			}
-			sort.Strings(keys)
-			var buf bytes.Buffer
-			for _, key := range keys {
-				buf.WriteString(fmt.Sprintf("\"%s=%s\", ", key, kubeletConfig[key]))
-			}
-			return strings.TrimSuffix(buf.String(), ", ")
+			return kc.GetOrderedKubeletConfigStringForPowershell()
 		},
 		"GetK8sRuntimeConfigKeyVals": func(config map[string]string) string {
-			// Order by key for consistency
-			keys := []string{}
-			for key := range config {
-				keys = append(keys, key)
-			}
-			sort.Strings(keys)
-			var buf bytes.Buffer
-			for _, key := range keys {
-				buf.WriteString(fmt.Sprintf("\\\"%s=%s\\\", ", key, config[key]))
-			}
-			return strings.TrimSuffix(buf.String(), ", ")
+			return common.GetOrderedEscapedKeyValsString(config)
 		},
 		"HasPrivateRegistry": func() bool {
 			if cs.Properties.OrchestratorProfile.DcosConfig != nil {

@@ -326,40 +326,6 @@ func addTestCertificateProfile(api *api.CertificateProfile) {
 	api.EtcdPeerPrivateKeys = []string{"etcdPeerPrivateKey0"}
 }
 
-func TestGetStorageAccountType(t *testing.T) {
-	validPremiumVMSize := "Standard_DS2_v2"
-	validStandardVMSize := "Standard_D2_v2"
-	expectedPremiumTier := "Premium_LRS"
-	expectedStandardTier := "Standard_LRS"
-	invalidVMSize := "D2v2"
-
-	// test premium VMSize returns premium managed disk tier
-	premiumTier, err := getStorageAccountType(validPremiumVMSize)
-	if err != nil {
-		t.Fatalf("Invalid sizeName: %s", err)
-	}
-
-	if premiumTier != expectedPremiumTier {
-		t.Fatalf("premium VM did no match premium managed storage tier")
-	}
-
-	// test standard VMSize returns standard managed disk tier
-	standardTier, err := getStorageAccountType(validStandardVMSize)
-	if err != nil {
-		t.Fatalf("Invalid sizeName: %s", err)
-	}
-
-	if standardTier != expectedStandardTier {
-		t.Fatalf("standard VM did no match standard managed storage tier")
-	}
-
-	// test invalid VMSize
-	result, err := getStorageAccountType(invalidVMSize)
-	if err == nil {
-		t.Errorf("getStorageAccountType() = (%s, nil), want error", result)
-	}
-}
-
 type TestARMTemplate struct {
 	Outputs map[string]OutputElement `json:"outputs"`
 	//Parameters *json.RawMessage `json:"parameters"`
