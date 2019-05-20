@@ -278,7 +278,7 @@ Now that the group is created, create a service principal with Contributor acces
 
 ```powershell
 # Get the group id
-$groupId = (az group show --resource-group <group name> --query id --output tsv)
+$groupId = (az group show --resource-group k8s-win1 --query id --output tsv)
 
 # Create the service principal
 $sp = az ad sp create-for-rbac --role="Contributor" --scopes=$groupId | ConvertFrom-JSON
@@ -373,10 +373,10 @@ Now that the AKS Engine cluster definition is complete, generate the Azure templ
 
 ```console
 $ aks-engine.exe generate kubernetes-windows-complete.json
-INFO[0000] Generating assets into _output/plangk8swin1...
+INFO[0000] Generating assets into _output/wink8s1...
 ```
 
-This will generate a `_output` directory with a subdirectory named after the dnsPrefix you set above. In this example, it's `_output/plangk8swin1`.
+This will generate a `_output` directory with a subdirectory named after the dnsPrefix you set above. In this example, it's `_output/wink8s1`.
 
 It will also create a working Kubernetes client config file in `_output/<dnsprefix>/kubeconfig` folder. We'll come back to that in a bit.
 
@@ -385,7 +385,7 @@ It will also create a working Kubernetes client config file in `_output/<dnspref
 Get the paths to `azuredeploy.json` and `azuredeploy.parameters.json` from the last step, and pass them into `az group deployment create --name <name for deployment> --resource-group <resource group name> --template-file <...azuredeploy.json> --parameters <...azuredeploy.parameters.json>`
 
 ```console
-$ az group deployment create --name plangk8swin1-deploy --resource-group k8s-win1 --template-file "./_output/plangk8swin1/azuredeploy.json" --parameters "./_output/plangk8swin1/azuredeploy.parameters.json"
+$ az group deployment create --name k8s-win1-deploy --resource-group k8s-win1 --template-file "./_output/wink8s1/azuredeploy.json" --parameters "./_output/wink8s1/azuredeploy.parameters.json"
 ```
 
 After several minutes, it will return the list of resources created in JSON. Look for `masterFQDN`.
@@ -393,22 +393,24 @@ After several minutes, it will return the list of resources created in JSON. Loo
 ```json
       "masterFQDN": {
         "type": "String",
-        "value": "plangk8swin1.westus2.cloudapp.azure.com"
+        "value": "wink8s1.westus2.cloudapp.azure.com"
       },
 ```
+
+The DNS prefix provided is used to generate the hostname of the cluster (e.g. staging, prodwest, blueberry) and must be unique for each cluster deployment.
 
 #### Check that the cluster is up
 
 As mentioned earlier, `aks-engine generate` also creates Kubernetes configuration files under `_output/<dnsprefix>/kubeconfig`. There will be one per possible region, so find the one matching the region you deployed in.
 
-In the example above with `dnsprefix`=`plangk8swin1` and the `westus2` region, the filename would be `_output/plangk8swin1/kubeconfig/kubeconfig.westus2.json`.
+In the example above with `dnsprefix`=`wink8s1` and the `westus2` region, the filename would be `_output/wink8s1/kubeconfig/kubeconfig.westus2.json`.
 
 ##### Setting KUBECONFIG on Windows
 
 Set `$ENV:KUBECONFIG` to the full path to that file.
 
 ```powershell
-$ENV:KUBECONFIG=(Get-Item _output\plangk8swin1\kubeconfig\kubeconfig.westus2.json).FullName
+$ENV:KUBECONFIG=(Get-Item _output\wink8s1\kubeconfig\kubeconfig.westus2.json).FullName
 ```
 
 ##### Setting KUBECONFIG on Mac or Linux
