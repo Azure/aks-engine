@@ -1635,7 +1635,7 @@ func (k *KubernetesConfig) GetUserAssignedID() string {
 	return ""
 }
 
-// GetUserAssignedClientID returns the user assigned client ID if it is enabled.v
+// GetUserAssignedClientID returns the user assigned client ID if it is enabled.
 func (k *KubernetesConfig) GetUserAssignedClientID() string {
 	if k.UserAssignedClientIDEnabled() {
 		return k.UserAssignedClientID
