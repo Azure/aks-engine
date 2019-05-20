@@ -21,7 +21,6 @@ import (
 	"github.com/Azure/aks-engine/pkg/api/common"
 	"github.com/Azure/aks-engine/pkg/helpers"
 	"github.com/Azure/aks-engine/pkg/i18n"
-	"github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2018-10-01/compute"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 )
@@ -249,15 +248,6 @@ func (t *TemplateGenerator) getTemplateFuncMap(cs *api.ContainerService) templat
 		"IsAzureStackCloud": func() bool {
 			return cs.Properties.IsAzureStackCloud()
 		},
-		"GetCustomEnvironmentJSON": func() (string, error) {
-			return cs.Properties.GetCustomEnvironmentJSON(true)
-		},
-		"GetCustomCloudAuthenticationMethod": func() string {
-			return cs.Properties.GetCustomCloudAuthenticationMethod()
-		},
-		"GetCustomCloudIdentitySystem": func() string {
-			return cs.Properties.GetCustomCloudIdentitySystem()
-		},
 		"IsMultipleMasters": func() bool {
 			return cs.Properties.MasterProfile != nil && cs.Properties.MasterProfile.Count > 1
 		},
@@ -365,9 +355,6 @@ func (t *TemplateGenerator) getTemplateFuncMap(cs *api.ContainerService) templat
 			}
 			return false
 		},
-		"RequiresFakeAgentOutput": func() bool {
-			return cs.Properties.OrchestratorProfile.IsKubernetes()
-		},
 		"IsSwarmMode": func() bool {
 			return cs.Properties.OrchestratorProfile.IsSwarmMode()
 		},
@@ -383,24 +370,11 @@ func (t *TemplateGenerator) getTemplateFuncMap(cs *api.ContainerService) templat
 		"HasCosmosEtcd": func() bool {
 			return nil != cs.Properties.MasterProfile && to.Bool(cs.Properties.MasterProfile.CosmosEtcd)
 		},
-		"GetCosmosAccountName": func() string {
-			if nil != cs.Properties.MasterProfile && to.Bool(cs.Properties.MasterProfile.CosmosEtcd) {
-				return fmt.Sprintf(etcdAccountNameFmt, cs.Properties.MasterProfile.DNSPrefix)
-			}
-			return "" // This will apply on both during unit tests as !HasCosmosEtcd
-		},
 		"GetCosmosEndPointUri": func() string {
 			if nil != cs.Properties.MasterProfile && to.Bool(cs.Properties.MasterProfile.CosmosEtcd) {
 				return fmt.Sprintf(etcdEndpointURIFmt, cs.Properties.MasterProfile.DNSPrefix)
 			}
 			return "" // This will apply on both during unit tests as !HasCosmosEtcd
-		},
-		"GetCosmosDBCert": func() string {
-			encoded := base64.StdEncoding.EncodeToString([]byte(cs.Properties.CertificateProfile.EtcdClientCertificate))
-			return encoded
-		},
-		"RequireRouteTable": func() bool {
-			return cs.Properties.OrchestratorProfile.RequireRouteTable()
 		},
 		"IsPrivateCluster": func() bool {
 			return cs.Properties.OrchestratorProfile.IsPrivateCluster()
@@ -408,52 +382,11 @@ func (t *TemplateGenerator) getTemplateFuncMap(cs *api.ContainerService) templat
 		"ProvisionJumpbox": func() bool {
 			return cs.Properties.OrchestratorProfile.KubernetesConfig.PrivateJumpboxProvision()
 		},
-		"JumpboxIsManagedDisks": func() bool {
-			if cs.Properties.OrchestratorProfile.KubernetesConfig.PrivateJumpboxProvision() && cs.Properties.OrchestratorProfile.KubernetesConfig.PrivateCluster.JumpboxProfile.StorageProfile == api.ManagedDisks {
-				return true
-			}
-			return false
-		},
-		"GetKubeConfig": func() string {
-			kubeConfig, err := GenerateKubeConfig(cs.Properties, cs.Location)
-			if err != nil {
-				panic(err)
-			}
-			return escapeSingleLine(kubeConfig)
-		},
 		"UseManagedIdentity": func() bool {
 			return cs.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity
 		},
-		"UserAssignedIDEnabled": func() bool {
-			return cs.Properties.OrchestratorProfile.KubernetesConfig.UserAssignedIDEnabled()
-		},
-		"UserAssignedID": func() string {
-			return cs.Properties.OrchestratorProfile.KubernetesConfig.GetUserAssignedID()
-		},
-		"UserAssignedClientID": func() string {
-			return cs.Properties.OrchestratorProfile.KubernetesConfig.GetUserAssignedClientID()
-		},
-		"UseAksExtension": func() bool {
-			return cs.IsAKSBillingEnabled()
-		},
-		"IsMooncake": func() bool {
-			cloudSpecConfig := cs.GetCloudSpecConfig()
-			return cloudSpecConfig.CloudName == api.AzureChinaCloud
-		},
-		"UseInstanceMetadata": func() bool {
-			return to.Bool(cs.Properties.OrchestratorProfile.KubernetesConfig.UseInstanceMetadata)
-		},
 		"NeedsKubeDNSWithExecHealthz": func() bool {
 			return cs.Properties.OrchestratorProfile.NeedsExecHealthz()
-		},
-		"LoadBalancerSku": func() string {
-			return cs.Properties.OrchestratorProfile.KubernetesConfig.LoadBalancerSku
-		},
-		"ExcludeMasterFromStandardLB": func() bool {
-			return to.Bool(cs.Properties.OrchestratorProfile.KubernetesConfig.ExcludeMasterFromStandardLB)
-		},
-		"MaximumLoadBalancerRuleCount": func() int {
-			return cs.Properties.OrchestratorProfile.KubernetesConfig.MaximumLoadBalancerRuleCount
 		},
 		"GetVNETSubnetDependencies": func() string {
 			return getVNETSubnetDependencies(cs.Properties)
@@ -487,9 +420,6 @@ func (t *TemplateGenerator) getTemplateFuncMap(cs *api.ContainerService) templat
 		},
 		"IsHostedBootstrap": func() bool {
 			return false
-		},
-		"IsFeatureEnabled": func(feature string) bool {
-			return cs.Properties.FeatureFlags.IsFeatureEnabled(feature)
 		},
 		"GetDCOSBootstrapCustomData": func() string {
 			masterIPList := generateIPList(cs.Properties.MasterProfile.Count, cs.Properties.MasterProfile.FirstConsecutiveStaticIP)
@@ -613,49 +543,9 @@ func (t *TemplateGenerator) getTemplateFuncMap(cs *api.ContainerService) templat
 		"GetSizeMap": func() string {
 			return helpers.GetSizeMap()
 		},
-		"Base64": func(s string) string {
-			return base64.StdEncoding.EncodeToString([]byte(s))
-		},
-		"GetDefaultInternalLbStaticIPOffset": func() int {
-			return DefaultInternalLbStaticIPOffset
-		},
 		"WriteLinkedTemplatesForExtensions": func() string {
 			extensions := getLinkedTemplatesForExtensions(cs.Properties)
 			return extensions
-		},
-		"HasMultipleSshKeys": func() bool {
-			return len(cs.Properties.LinuxProfile.SSH.PublicKeys) > 1
-		},
-		"GetSshPublicKeys": func() string {
-			// This generates the publicKeys array described at https://docs.microsoft.com/en-us/rest/api/compute/virtualmachines/createorupdate#sshconfiguration
-			// "ssh": {
-			//     "publicKeys": [
-			//       {
-			//         "keyData": "[parameters('sshRSAPublicKey')]",
-			//         "path": "[variables('sshKeyPath')]"
-			//       }
-			//     ]
-			//   }
-			publicKeyPath := "[variables('sshKeyPath')]"
-			publicKeys := []compute.SSHPublicKey{}
-			linuxProfile := cs.Properties.LinuxProfile
-			if linuxProfile != nil {
-				for _, publicKey := range linuxProfile.SSH.PublicKeys {
-					publicKeyTrimmed := strings.TrimSpace(publicKey.KeyData)
-					publicKeys = append(publicKeys, compute.SSHPublicKey{
-						Path:    &publicKeyPath,
-						KeyData: &publicKeyTrimmed,
-					})
-				}
-			}
-			ssh := compute.SSHConfiguration{
-				PublicKeys: &publicKeys,
-			}
-			sshJSON, err := json.Marshal(ssh)
-			if err != nil {
-				panic(err)
-			}
-			return string(sshJSON)
 		},
 		"GetSshPublicKeysPowerShell": func() string {
 			str := ""
@@ -762,23 +652,6 @@ func (t *TemplateGenerator) getTemplateFuncMap(cs *api.ContainerService) templat
 			}
 			return base64.StdEncoding.EncodeToString(buf.Bytes())
 		},
-		"GetKubernetesWindowsAgentCustomData": func(profile *api.AgentPoolProfile) string {
-			str, e := t.getSingleLineForTemplate(kubernetesWindowsAgentCustomDataPS1, cs, profile)
-
-			if e != nil {
-				panic(e)
-			}
-
-			preprovisionCmd := ""
-
-			if profile.PreprovisionExtension != nil {
-				preprovisionCmd = makeAgentExtensionScriptCommands(cs, profile)
-			}
-
-			str = strings.Replace(str, "PREPROVISION_EXTENSION", escapeSingleLine(strings.TrimSpace(preprovisionCmd)), -1)
-
-			return fmt.Sprintf("\"customData\": \"[base64(concat('%s'))]\",", str)
-		},
 		"GetMasterSwarmModeCustomData": func() string {
 			files := []string{swarmModeProvision}
 			str := buildYamlFileWithWriteFiles(files)
@@ -794,12 +667,6 @@ func (t *TemplateGenerator) getTemplateFuncMap(cs *api.ContainerService) templat
 			str := buildYamlFileWithWriteFiles(files)
 			str = escapeSingleLine(str)
 			return fmt.Sprintf("\"customData\": \"[base64(concat('%s',variables('%sRunCmdFile'),variables('%sRunCmd')))]\",", str, profile.Name, profile.Name)
-		},
-		"GetKubernetesSubnets": func() string {
-			return getKubernetesSubnets(cs.Properties)
-		},
-		"GetKubernetesPodStartIndex": func() string {
-			return fmt.Sprintf("%d", getKubernetesPodStartIndex(cs.Properties))
 		},
 		"WrapAsVariable": func(s string) string {
 			return fmt.Sprintf("',variables('%s'),'", s)
@@ -821,14 +688,6 @@ func (t *TemplateGenerator) getTemplateFuncMap(cs *api.ContainerService) templat
 			}
 			return false
 		},
-		"AnyAgentUsesVirtualMachineScaleSets": func() bool {
-			for _, agentProfile := range cs.Properties.AgentPoolProfiles {
-				if agentProfile.IsVirtualMachineScaleSets() {
-					return true
-				}
-			}
-			return false
-		},
 		"HasLinuxAgents": func() bool {
 			for _, agentProfile := range cs.Properties.AgentPoolProfiles {
 				if agentProfile.IsLinux() {
@@ -837,17 +696,8 @@ func (t *TemplateGenerator) getTemplateFuncMap(cs *api.ContainerService) templat
 			}
 			return false
 		},
-		"IsNVIDIADevicePluginEnabled": func() bool {
-			return cs.Properties.IsNVIDIADevicePluginEnabled()
-		},
 		"IsNSeriesSKU": func(profile *api.AgentPoolProfile) bool {
 			return common.IsNvidiaEnabledSKU(profile.VMSize)
-		},
-		"IsCSeriesSKU": func(profile *api.AgentPoolProfile) bool {
-			return common.IsSgxEnabledSKU(profile.VMSize)
-		},
-		"UseSinglePlacementGroup": func(profile *api.AgentPoolProfile) bool {
-			return *profile.SinglePlacementGroup
 		},
 		"HasAvailabilityZones": func(profile *api.AgentPoolProfile) bool {
 			return profile.HasAvailabilityZones()
@@ -875,9 +725,6 @@ func (t *TemplateGenerator) getTemplateFuncMap(cs *api.ContainerService) templat
 		},
 		"WindowsSSHEnabled": func() bool {
 			return cs.Properties.WindowsProfile.SSHEnabled
-		},
-		"WindowsAutomaticUpdateEnabled": func() bool {
-			return cs.Properties.WindowsProfile.GetEnableWindowsUpdate()
 		},
 		"GetConfigurationScriptRootURL": func() string {
 			linuxProfile := cs.Properties.LinuxProfile
@@ -918,29 +765,6 @@ func (t *TemplateGenerator) getTemplateFuncMap(cs *api.ContainerService) templat
 			cloudSpecConfig := cs.GetCloudSpecConfig()
 			return fmt.Sprintf("\"%s\"", cloudSpecConfig.OSImageConfig[profile.Distro].ImageVersion)
 		},
-		"UseAgentCustomImage": func(profile *api.AgentPoolProfile) bool {
-			imageRef := profile.ImageRef
-			return imageRef != nil && len(imageRef.Name) > 0 && len(imageRef.ResourceGroup) > 0
-		},
-		"UseMasterCustomImage": func() bool {
-			imageRef := cs.Properties.MasterProfile.ImageRef
-			return imageRef != nil && len(imageRef.Name) > 0 && len(imageRef.ResourceGroup) > 0
-		},
-		"GetMasterVMPrefix": func() string {
-			return cs.Properties.GetMasterVMPrefix()
-		},
-		"GetRouteTableName": func() string {
-			return cs.Properties.GetRouteTableName()
-		},
-		"GetNSGName": func() string {
-			return cs.Properties.GetNSGName()
-		},
-		"GetMasterEtcdServerPort": func() int {
-			return DefaultMasterEtcdServerPort
-		},
-		"GetMasterEtcdClientPort": func() int {
-			return DefaultMasterEtcdClientPort
-		},
 		"UseCloudControllerManager": func() bool {
 			return cs.Properties.OrchestratorProfile.KubernetesConfig.UseCloudControllerManager != nil && *cs.Properties.OrchestratorProfile.KubernetesConfig.UseCloudControllerManager
 		},
@@ -964,50 +788,9 @@ func (t *TemplateGenerator) getTemplateFuncMap(cs *api.ContainerService) templat
 		"EnablePodSecurityPolicy": func() bool {
 			return to.Bool(cs.Properties.OrchestratorProfile.KubernetesConfig.EnablePodSecurityPolicy)
 		},
-		"IsVMSSOverProvisioningEnabled": func() bool {
-			for _, agentProfile := range cs.Properties.AgentPoolProfiles {
-				if to.Bool(agentProfile.VMSSOverProvisioningEnabled) {
-					return true
-				}
-			}
-			return false
-		},
-		"IsAgentUbuntu1604": func(profile *api.AgentPoolProfile) bool {
-			return profile.IsUbuntu1604()
-		},
-		"IsMasterUbuntu1604": func() bool {
-			return cs.Properties.MasterProfile.IsUbuntu1604()
-		},
-		// inspired by http://stackoverflow.com/questions/18276173/calling-a-template-with-several-pipeline-parameters/18276968#18276968
-		"dict": func(values ...interface{}) (map[string]interface{}, error) {
-			if len(values)%2 != 0 {
-				return nil, errors.New("invalid dict call")
-			}
-			dict := make(map[string]interface{}, len(values)/2)
-			for i := 0; i < len(values); i += 2 {
-				key, ok := values[i].(string)
-				if !ok {
-					return nil, errors.New("dict keys must be strings")
-				}
-				dict[key] = values[i+1]
-			}
-			return dict, nil
-		},
-		"loop": func(min, max int) []int {
-			var s []int
-			for i := min; i <= max; i++ {
-				s = append(s, i)
-			}
-			return s
-		},
-		"subtract": func(a, b int) int {
-			return a - b
-		},
 		"IsCustomVNET": func() bool {
 			return cs.Properties.AreAgentProfilesCustomVNET()
 		},
-		"quote":      strconv.Quote,
-		"shellQuote": helpers.ShellQuote,
 	}
 }
 
