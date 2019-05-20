@@ -1076,56 +1076,112 @@ func TestAgentPoolProfile(t *testing.T) {
 	}
 }
 
-// TestSetComponentsNetworkDefaults covers tests for setMasterProfileDefaults and setAgentProfileDefaults
-// TODO: Currently this test covers only Distro setting. Extend test cases to cover network configuration too.
-func TestSetComponentsNetworkDefaults(t *testing.T) {
+// TestDistroDefaults covers tests for setMasterProfileDefaults and setAgentProfileDefaults
+func TestDistroDefaults(t *testing.T) {
 
 	var tests = []struct {
-		name                string              // test case name
-		orchestratorProfile OrchestratorProfile // orchestrator to be tested
-		expectedDistro      Distro              // expected result default disto to be used
+		name                   string              // test case name
+		orchestratorProfile    OrchestratorProfile // orchestrator to be tested
+		masterProfileDistro    Distro
+		agentPoolProfileDistro Distro
+		expectedAgentDistro    Distro // expected agent result default disto to be used
+		expectedMasterDistro   Distro // expected master result default disto to be used
+		isUpgrade              bool
 	}{
 		{
 			"default_kubernetes",
 			OrchestratorProfile{
 				OrchestratorType: Kubernetes,
 			},
-			AKS,
+			"",
+			"",
+			AKSUbuntu1604,
+			AKSUbuntu1604,
+			false,
+		},
+		{
+			"1804_upgrade_kubernetes",
+			OrchestratorProfile{
+				OrchestratorType: Kubernetes,
+			},
+			AKSUbuntu1804,
+			AKSUbuntu1804,
+			AKSUbuntu1804,
+			AKSUbuntu1804,
+			true,
+		},
+		{
+			"deprecated_distro_kubernetes",
+			OrchestratorProfile{
+				OrchestratorType: Kubernetes,
+			},
+			AKS1604Deprecated,
+			AKS1604Deprecated,
+			AKSUbuntu1604,
+			AKSUbuntu1604,
+			true,
+		},
+		{
+			"docker_engine_kubernetes",
+			OrchestratorProfile{
+				OrchestratorType: Kubernetes,
+			},
+			AKS1604Deprecated,
+			AKSDockerEngine,
+			AKSUbuntu1604,
+			AKSUbuntu1604,
+			true,
 		},
 		{
 			"default_swarm",
 			OrchestratorProfile{
 				OrchestratorType: Swarm,
 			},
+			"",
+			"",
 			Ubuntu,
+			Ubuntu,
+			false,
 		},
 		{
 			"default_swarmmode",
 			OrchestratorProfile{
 				OrchestratorType: SwarmMode,
 			},
+			"",
+			"",
 			Ubuntu,
+			Ubuntu,
+			false,
 		},
 		{
 			"default_dcos",
 			OrchestratorProfile{
 				OrchestratorType: DCOS,
 			},
+			"",
+			"",
 			Ubuntu,
+			Ubuntu,
+			false,
 		},
 	}
 
 	for _, test := range tests {
 		mockAPI := getMockAPIProperties("1.0.0")
 		mockAPI.OrchestratorProfile = &test.orchestratorProfile
-		mockAPI.setMasterProfileDefaults(false)
-		mockAPI.setAgentProfileDefaults(false, false)
-		if mockAPI.MasterProfile.Distro != test.expectedDistro {
-			t.Fatalf("setMasterProfileDefaults() test case %v did not return right Distro configurations %v != %v", test.name, mockAPI.MasterProfile.Distro, test.expectedDistro)
+		mockAPI.MasterProfile.Distro = test.masterProfileDistro
+		for _, agent := range mockAPI.AgentPoolProfiles {
+			agent.Distro = test.agentPoolProfileDistro
+		}
+		mockAPI.setMasterProfileDefaults(test.isUpgrade, false)
+		mockAPI.setAgentProfileDefaults(test.isUpgrade, false)
+		if mockAPI.MasterProfile.Distro != test.expectedMasterDistro {
+			t.Fatalf("setMasterProfileDefaults() test case %v did not return right Distro configurations %v != %v", test.name, mockAPI.MasterProfile.Distro, test.expectedMasterDistro)
 		}
 		for _, agent := range mockAPI.AgentPoolProfiles {
-			if agent.Distro != test.expectedDistro {
-				t.Fatalf("setAgentProfileDefaults() test case %v did not return right Distro configurations %v != %v", test.name, agent.Distro, test.expectedDistro)
+			if agent.Distro != test.expectedAgentDistro {
+				t.Fatalf("setAgentProfileDefaults() test case %v did not return right Distro configurations %v != %v", test.name, agent.Distro, test.expectedAgentDistro)
 			}
 		}
 	}
@@ -1484,7 +1540,7 @@ func TestSetCertDefaults(t *testing.T) {
 	}
 
 	cs.setOrchestratorDefaults(false)
-	cs.Properties.setMasterProfileDefaults(false)
+	cs.Properties.setMasterProfileDefaults(false, false)
 	result, ips, err := cs.SetDefaultCerts()
 
 	if !result {
@@ -1550,7 +1606,7 @@ func TestSetCertDefaultsVMSS(t *testing.T) {
 	}
 
 	cs.setOrchestratorDefaults(false)
-	cs.Properties.setMasterProfileDefaults(false)
+	cs.Properties.setMasterProfileDefaults(false, false)
 	result, ips, err := cs.SetDefaultCerts()
 
 	if !result {
@@ -1729,7 +1785,7 @@ func TestSetCustomCloudProfileDefaults(t *testing.T) {
 				ImagePublisher: "ImagePublisher",
 				ImageVersion:   "ImageVersion",
 			},
-			AKS: DefaultAKSOSImageConfig,
+			AKSUbuntu1604: AKSUbuntu1604OSImageConfig,
 		},
 	}
 	mockCSPCustom.CustomCloudProfile.AzureEnvironmentSpecConfig = &customCloudSpec
@@ -1779,7 +1835,7 @@ func TestSetCustomCloudProfileDefaults(t *testing.T) {
 				ImagePublisher: "ImagePublisher",
 				ImageVersion:   "ImageVersion",
 			},
-			AKS: DefaultAKSOSImageConfig,
+			AKSUbuntu1604: AKSUbuntu1604OSImageConfig,
 		},
 	}
 	mockCSPCustomP.CustomCloudProfile.AzureEnvironmentSpecConfig = &customCloudSpecP
@@ -1986,6 +2042,57 @@ func TestPreserveNodesProperties(t *testing.T) {
 	mockCS.SetPropertiesDefaults(false, false)
 	if !to.Bool(mockCS.Properties.AgentPoolProfiles[0].PreserveNodesProperties) {
 		t.Errorf("expected preserveNodesProperties to be %t instead got %t", true, to.Bool(mockCS.Properties.AgentPoolProfiles[0].PreserveNodesProperties))
+	}
+}
+
+func TestUbuntu1804Flags(t *testing.T) {
+	// Validate --resolv-conf is missing with 16.04 distro and present with 18.04
+	cs := CreateMockContainerService("testcluster", "1.10.13", 3, 2, false)
+	cs.Properties.MasterProfile.Distro = AKSUbuntu1604
+	cs.Properties.AgentPoolProfiles[0].Distro = AKSUbuntu1804
+	cs.Properties.AgentPoolProfiles[0].OSType = Linux
+	cs.SetPropertiesDefaults(false, false)
+	km := cs.Properties.MasterProfile.KubernetesConfig.KubeletConfig
+	if _, ok := km["--resolv-conf"]; ok {
+		t.Fatalf("got unexpected '--resolv-conf' kubelet config value '%s' with Ubuntu 16.04 ",
+			km["--resolv-conf"])
+	}
+	ka := cs.Properties.AgentPoolProfiles[0].KubernetesConfig.KubeletConfig
+	if ka["--resolv-conf"] != "/run/systemd/resolve/resolv.conf" {
+		t.Fatalf("got unexpected '--resolv-conf' kubelet config value %s with Ubuntu 18.04, the expected value is %s",
+			ka["--resolv-conf"], "/run/systemd/resolve/resolv.conf")
+	}
+
+	cs = CreateMockContainerService("testcluster", "1.10.13", 3, 2, false)
+	cs.Properties.MasterProfile.Distro = Ubuntu1804
+	cs.Properties.AgentPoolProfiles[0].Distro = Ubuntu
+	cs.Properties.AgentPoolProfiles[0].OSType = Linux
+	cs.SetPropertiesDefaults(false, false)
+	km = cs.Properties.MasterProfile.KubernetesConfig.KubeletConfig
+	if km["--resolv-conf"] != "/run/systemd/resolve/resolv.conf" {
+		t.Fatalf("got unexpected '--resolv-conf' kubelet config value %s with Ubuntu 18.04, the expected value is %s",
+			km["--resolv-conf"], "/run/systemd/resolve/resolv.conf")
+	}
+	ka = cs.Properties.AgentPoolProfiles[0].KubernetesConfig.KubeletConfig
+	if _, ok := ka["--resolv-conf"]; ok {
+		t.Fatalf("got unexpected '--resolv-conf' kubelet config value '%s' with Ubuntu 16.04 ",
+			ka["--resolv-conf"])
+	}
+
+	cs = CreateMockContainerService("testcluster", "1.10.13", 3, 2, false)
+	cs.Properties.MasterProfile.Distro = Ubuntu
+	cs.Properties.AgentPoolProfiles[0].Distro = ""
+	cs.Properties.AgentPoolProfiles[0].OSType = Windows
+	cs.SetPropertiesDefaults(false, false)
+	km = cs.Properties.MasterProfile.KubernetesConfig.KubeletConfig
+	if _, ok := km["--resolv-conf"]; ok {
+		t.Fatalf("got unexpected '--resolv-conf' kubelet config value '%s' with Ubuntu 16.04 ",
+			km["--resolv-conf"])
+	}
+	ka = cs.Properties.AgentPoolProfiles[0].KubernetesConfig.KubeletConfig
+	if ka["--resolv-conf"] != "\"\"\"\"" {
+		t.Fatalf("got unexpected '--resolv-conf' kubelet config value %s with Windows, the expected value is %s",
+			ka["--resolv-conf"], "\"\"\"\"")
 	}
 }
 

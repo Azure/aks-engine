@@ -367,10 +367,17 @@ func (a *Properties) validateMasterProfile(isUpdate bool) error {
 
 	distroValues := DistroValues
 	if isUpdate {
-		distroValues = append(distroValues, AKSDockerEngine)
+		distroValues = append(distroValues, AKSDockerEngine, AKS1604Deprecated, AKS1804Deprecated)
 	}
 	if !validateDistro(m.Distro, distroValues) {
-		return errors.Errorf("The %s distro is not supported", m.Distro)
+		switch m.Distro {
+		case AKSDockerEngine, AKS1604Deprecated:
+			return errors.Errorf("The %s distro is deprecated, please use %s instead", m.Distro, AKSUbuntu1604)
+		case AKS1804Deprecated:
+			return errors.Errorf("The %s distro is deprecated, please use %s instead", m.Distro, AKSUbuntu1804)
+		default:
+			return errors.Errorf("The %s distro is not supported", m.Distro)
+		}
 	}
 
 	if to.Bool(m.AuditDEnabled) {
@@ -467,10 +474,17 @@ func (a *Properties) validateAgentPoolProfiles(isUpdate bool) error {
 
 			distroValues := DistroValues
 			if isUpdate {
-				distroValues = append(distroValues, AKSDockerEngine)
+				distroValues = append(distroValues, AKSDockerEngine, AKS1604Deprecated, AKS1804Deprecated)
 			}
 			if !validateDistro(agentPoolProfile.Distro, distroValues) {
-				return errors.Errorf("The %s distro is not supported", agentPoolProfile.Distro)
+				switch agentPoolProfile.Distro {
+				case AKSDockerEngine, AKS1604Deprecated:
+					return errors.Errorf("The %s distro is deprecated, please use %s instead", agentPoolProfile.Distro, AKSUbuntu1604)
+				case AKS1804Deprecated:
+					return errors.Errorf("The %s distro is deprecated, please use %s instead", agentPoolProfile.Distro, AKSUbuntu1804)
+				default:
+					return errors.Errorf("The %s distro is not supported", agentPoolProfile.Distro)
+				}
 			}
 		}
 

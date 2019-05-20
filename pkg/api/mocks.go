@@ -219,10 +219,10 @@ func GetMockPropertiesWithCustomCloudProfile(name string, hasCustomCloudProfile,
 					ResourceManagerVMDNSSuffix: "",
 				},
 				OSImageConfig: map[Distro]AzureOSImageConfig{
-					Ubuntu: DefaultUbuntuImageConfig,
-					RHEL:   DefaultRHELOSImageConfig,
-					CoreOS: DefaultCoreOSImageConfig,
-					AKS:    DefaultAKSOSImageConfig,
+					Ubuntu:        Ubuntu1604OSImageConfig,
+					RHEL:          RHELOSImageConfig,
+					CoreOS:        CoreOSImageConfig,
+					AKSUbuntu1604: AKSUbuntu1604OSImageConfig,
 				},
 			}
 			p.CustomCloudProfile.AzureEnvironmentSpecConfig = &azureStackCloudSpec

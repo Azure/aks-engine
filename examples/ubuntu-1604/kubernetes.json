@@ -11,14 +11,14 @@
       "count": 1,
       "dnsPrefix": "",
       "vmSize": "Standard_D2_v2",
-      "distro": "aks-ubuntu-18.04"
+      "distro": "aks-ubuntu-16.04"
     },
     "agentPoolProfiles": [
       {
         "name": "agentpool1",
         "count": 2,
         "vmSize": "Standard_D2_v2",
-        "distro": "aks-ubuntu-18.04"
+        "distro": "aks-ubuntu-16.04"
       }
     ],
     "linuxProfile": {

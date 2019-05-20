@@ -449,7 +449,7 @@ func TestProtectKernelDefaults(t *testing.T) {
 	// Validate that --protect-kernel-defaults is "true" by default for relevant distros
 	for _, distro := range DistroValues {
 		switch distro {
-		case AKS, AKS1804:
+		case AKSUbuntu1604, AKSUbuntu1804:
 			cs = CreateMockContainerService("testcluster", "1.10.13", 3, 2, false)
 			cs.Properties.MasterProfile.Distro = distro
 			cs.Properties.AgentPoolProfiles[0].Distro = distro
@@ -486,7 +486,7 @@ func TestProtectKernelDefaults(t *testing.T) {
 
 	// Validate that --protect-kernel-defaults is not enabled for Windows
 	cs = CreateMockContainerService("testcluster", "1.10.13", 3, 2, false)
-	cs.Properties.MasterProfile.Distro = AKS
+	cs.Properties.MasterProfile.Distro = AKSUbuntu1604
 	cs.Properties.AgentPoolProfiles[0].OSType = Windows
 	cs.SetPropertiesDefaults(false, false)
 	km = cs.Properties.MasterProfile.KubernetesConfig.KubeletConfig
@@ -503,7 +503,7 @@ func TestProtectKernelDefaults(t *testing.T) {
 	// Validate that --protect-kernel-defaults is overridable
 	for _, distro := range DistroValues {
 		switch distro {
-		case Ubuntu, Ubuntu1804, AKS, AKS1804:
+		case Ubuntu, Ubuntu1804, AKSUbuntu1604, AKSUbuntu1804:
 			cs = CreateMockContainerService("testcluster", "1.10.13", 3, 2, false)
 			cs.Properties.MasterProfile.Distro = "ubuntu"
 			cs.Properties.AgentPoolProfiles[0].Distro = "ubuntu"
@@ -578,57 +578,6 @@ func TestStaticWindowsConfig(t *testing.T) {
 				}
 			}
 		}
-	}
-}
-
-func TestUbuntu1804Flags(t *testing.T) {
-	// Validate --resolv-conf is missing with 16.04 distro and present with 18.04
-	cs := CreateMockContainerService("testcluster", "1.10.13", 3, 2, false)
-	cs.Properties.MasterProfile.Distro = AKS
-	cs.Properties.AgentPoolProfiles[0].Distro = AKS1804
-	cs.Properties.AgentPoolProfiles[0].OSType = Linux
-	cs.setKubeletConfig()
-	km := cs.Properties.MasterProfile.KubernetesConfig.KubeletConfig
-	if _, ok := km["--resolv-conf"]; ok {
-		t.Fatalf("got unexpected '--resolv-conf' kubelet config value '%s' with Ubuntu 16.04 ",
-			km["--resolv-conf"])
-	}
-	ka := cs.Properties.AgentPoolProfiles[0].KubernetesConfig.KubeletConfig
-	if ka["--resolv-conf"] != "/run/systemd/resolve/resolv.conf" {
-		t.Fatalf("got unexpected '--resolv-conf' kubelet config value %s with Ubuntu 18.04, the expected value is %s",
-			ka["--resolv-conf"], "/run/systemd/resolve/resolv.conf")
-	}
-
-	cs = CreateMockContainerService("testcluster", "1.10.13", 3, 2, false)
-	cs.Properties.MasterProfile.Distro = Ubuntu1804
-	cs.Properties.AgentPoolProfiles[0].Distro = Ubuntu
-	cs.Properties.AgentPoolProfiles[0].OSType = Linux
-	cs.setKubeletConfig()
-	km = cs.Properties.MasterProfile.KubernetesConfig.KubeletConfig
-	if km["--resolv-conf"] != "/run/systemd/resolve/resolv.conf" {
-		t.Fatalf("got unexpected '--resolv-conf' kubelet config value %s with Ubuntu 18.04, the expected value is %s",
-			km["--resolv-conf"], "/run/systemd/resolve/resolv.conf")
-	}
-	ka = cs.Properties.AgentPoolProfiles[0].KubernetesConfig.KubeletConfig
-	if _, ok := ka["--resolv-conf"]; ok {
-		t.Fatalf("got unexpected '--resolv-conf' kubelet config value '%s' with Ubuntu 16.04 ",
-			ka["--resolv-conf"])
-	}
-
-	cs = CreateMockContainerService("testcluster", "1.10.13", 3, 2, false)
-	cs.Properties.MasterProfile.Distro = Ubuntu
-	cs.Properties.AgentPoolProfiles[0].Distro = ""
-	cs.Properties.AgentPoolProfiles[0].OSType = Windows
-	cs.setKubeletConfig()
-	km = cs.Properties.MasterProfile.KubernetesConfig.KubeletConfig
-	if _, ok := km["--resolv-conf"]; ok {
-		t.Fatalf("got unexpected '--resolv-conf' kubelet config value '%s' with Ubuntu 16.04 ",
-			km["--resolv-conf"])
-	}
-	ka = cs.Properties.AgentPoolProfiles[0].KubernetesConfig.KubeletConfig
-	if ka["--resolv-conf"] != "\"\"\"\"" {
-		t.Fatalf("got unexpected '--resolv-conf' kubelet config value %s with Windows, the expected value is %s",
-			ka["--resolv-conf"], "\"\"\"\"")
 	}
 }
 

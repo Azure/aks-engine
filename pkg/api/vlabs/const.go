@@ -28,14 +28,16 @@ const (
 
 // the LinuxDistros supported by vlabs
 const (
-	Ubuntu          Distro = "ubuntu"
-	Ubuntu1804      Distro = "ubuntu-18.04"
-	RHEL            Distro = "rhel"
-	CoreOS          Distro = "coreos"
-	AKS             Distro = "aks"
-	AKSDockerEngine Distro = "aks-docker-engine" // deprecated docker-engine distro
-	AKS1804         Distro = "aks-18.04"
-	ACC1604         Distro = "acc-16.04"
+	Ubuntu            Distro = "ubuntu"
+	Ubuntu1804        Distro = "ubuntu-18.04"
+	RHEL              Distro = "rhel"
+	CoreOS            Distro = "coreos"
+	AKS1604Deprecated Distro = "aks"               // deprecated AKS 16.04 distro. Equivalent to aks-ubuntu-16.04.
+	AKS1804Deprecated Distro = "aks-1804"          // deprecated AKS 18.04 distro. Equivalent to aks-ubuntu-18.04.
+	AKSDockerEngine   Distro = "aks-docker-engine" // deprecated docker-engine distro.
+	AKSUbuntu1604     Distro = "aks-ubuntu-16.04"
+	AKSUbuntu1804     Distro = "aks-ubuntu-18.04"
+	ACC1604           Distro = "acc-16.04"
 )
 
 // validation values
@@ -96,7 +98,7 @@ var (
 	ContainerRuntimeValues = [...]string{"", Docker, ClearContainers, KataContainers, Containerd}
 
 	// DistroValues holds the valid values for OS distros
-	DistroValues = []Distro{"", Ubuntu, Ubuntu1804, RHEL, CoreOS, AKS, AKS1804, ACC1604}
+	DistroValues = []Distro{"", Ubuntu, Ubuntu1804, RHEL, CoreOS, AKSUbuntu1604, AKSUbuntu1804, ACC1604}
 
 	// DependenciesLocationValues holds the valid values for dependencies location
 	DependenciesLocationValues = []DependenciesLocation{"", AzureStackDependenciesLocationPublic, AzureStackDependenciesLocationChina, AzureStackDependenciesLocationGerman, AzureStackDependenciesLocationUSGovernment}

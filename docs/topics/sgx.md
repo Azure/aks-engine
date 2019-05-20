@@ -8,7 +8,7 @@ Azure supports provisioning of SGX-enabled VMs under the umbrella of Azure Confi
 | OS           | distro      | Notes |
 | ------------ | ----------- |-------|
 | Ubuntu 16.04 | `acc-16.04` | specially built image with UEFI BIOS support
-| Ubuntu 18.04 | `aks-18.04` | AKS-maintained Ubuntu 18.04 image with preinstalled components
+| Ubuntu 18.04 | `aks-ubuntu-18.04` | AKS-maintained Ubuntu 18.04 image with preinstalled components
 
 The following example is a fragment of a cluster definition (apimodel) file declaring two ACC agent pools, one running `Ubuntu 16.04` image on `2 vCPU` nodes, and another running `Ubuntu 18.04` image on `4 vCPU` nodes:
 
@@ -23,7 +23,7 @@ The following example is a fragment of a cluster definition (apimodel) file decl
     {
       "name": "agentpool2",
       "count": 3,
-      "distro": "aks-18.04",
+      "distro": "aks-ubuntu-18.04",
       "vmSize": "Standard_DC4s"
     }
   ],

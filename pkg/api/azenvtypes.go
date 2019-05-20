@@ -100,56 +100,56 @@ var (
 		DockerComposeDownloadURL: "https://github.com/docker/compose/releases/download",
 	}
 
-	//DefaultUbuntuImageConfig is the default Linux distribution.
-	DefaultUbuntuImageConfig = AzureOSImageConfig{
+	//Ubuntu1604OSImageConfig is the default Linux distribution.
+	Ubuntu1604OSImageConfig = AzureOSImageConfig{
 		ImageOffer:     "UbuntuServer",
 		ImageSku:       "16.04-LTS",
 		ImagePublisher: "Canonical",
 		ImageVersion:   "latest",
 	}
 
-	//Ubuntu1804ImageConfig is the Ubunutu 18.04-LTS Linux distribution.
-	Ubuntu1804ImageConfig = AzureOSImageConfig{
+	//Ubuntu1804OSImageConfig is the Ubunutu 18.04-LTS Linux distribution.
+	Ubuntu1804OSImageConfig = AzureOSImageConfig{
 		ImageOffer:     "UbuntuServer",
 		ImageSku:       "18.04-LTS",
 		ImagePublisher: "Canonical",
 		ImageVersion:   "latest",
 	}
 
-	//DefaultRHELOSImageConfig is the RHEL Linux distribution.
-	DefaultRHELOSImageConfig = AzureOSImageConfig{
+	//RHELOSImageConfig is the RHEL Linux distribution.
+	RHELOSImageConfig = AzureOSImageConfig{
 		ImageOffer:     "RHEL",
 		ImageSku:       "7.3",
 		ImagePublisher: "RedHat",
 		ImageVersion:   "latest",
 	}
 
-	//DefaultCoreOSImageConfig is the CoreOS Linux distribution.
-	DefaultCoreOSImageConfig = AzureOSImageConfig{
+	//CoreOSImageConfig is the CoreOS Linux distribution.
+	CoreOSImageConfig = AzureOSImageConfig{
 		ImageOffer:     "CoreOS",
 		ImageSku:       "Stable",
 		ImagePublisher: "CoreOS",
 		ImageVersion:   "latest",
 	}
 
-	// DefaultAKSOSImageConfig is the AKS image based on Ubuntu 16.04-LTS.
-	DefaultAKSOSImageConfig = AzureOSImageConfig{
+	// AKSUbuntu1604OSImageConfig is the AKS image based on Ubuntu 16.04-LTS.
+	AKSUbuntu1604OSImageConfig = AzureOSImageConfig{
 		ImageOffer:     "aks",
 		ImageSku:       "aks-ubuntu-1604-201905",
 		ImagePublisher: "microsoft-aks",
 		ImageVersion:   "2019.05.16",
 	}
 
-	// DefaultAKS1804OSImageConfig is the AKS image based on Ubuntu 18.04-LTS.
-	DefaultAKS1804OSImageConfig = AzureOSImageConfig{
+	// AKSUbuntu1804OSImageConfig is the AKS image based on Ubuntu 18.04-LTS.
+	AKSUbuntu1804OSImageConfig = AzureOSImageConfig{
 		ImageOffer:     "aks",
 		ImageSku:       "aks-ubuntu-1804-201905",
 		ImagePublisher: "microsoft-aks",
 		ImageVersion:   "2019.05.16",
 	}
 
-	// DefaultACC1604OSImageConfig is the ACC image based on Ubuntu 16.04.
-	DefaultACC1604OSImageConfig = AzureOSImageConfig{
+	// ACC1604OSImageConfig is the ACC image based on Ubuntu 16.04.
+	ACC1604OSImageConfig = AzureOSImageConfig{
 		ImageOffer:     "confidential-compute-preview",
 		ImageSku:       "16.04-LTS",
 		ImagePublisher: "Canonical",
@@ -170,13 +170,13 @@ var (
 		},
 
 		OSImageConfig: map[Distro]AzureOSImageConfig{
-			Ubuntu:     DefaultUbuntuImageConfig,
-			Ubuntu1804: Ubuntu1804ImageConfig,
-			RHEL:       DefaultRHELOSImageConfig,
-			CoreOS:     DefaultCoreOSImageConfig,
-			AKS:        DefaultAKSOSImageConfig,
-			AKS1804:    DefaultAKS1804OSImageConfig,
-			ACC1604:    DefaultACC1604OSImageConfig,
+			Ubuntu:        Ubuntu1604OSImageConfig,
+			Ubuntu1804:    Ubuntu1804OSImageConfig,
+			RHEL:          RHELOSImageConfig,
+			CoreOS:        CoreOSImageConfig,
+			AKSUbuntu1604: AKSUbuntu1604OSImageConfig,
+			AKSUbuntu1804: AKSUbuntu1804OSImageConfig,
+			ACC1604:       ACC1604OSImageConfig,
 		},
 	}
 
@@ -190,12 +190,12 @@ var (
 			ResourceManagerVMDNSSuffix: "cloudapp.microsoftazure.de",
 		},
 		OSImageConfig: map[Distro]AzureOSImageConfig{
-			Ubuntu:     DefaultUbuntuImageConfig,
-			Ubuntu1804: Ubuntu1804ImageConfig,
-			RHEL:       DefaultRHELOSImageConfig,
-			CoreOS:     DefaultCoreOSImageConfig,
-			AKS:        DefaultUbuntuImageConfig,
-			AKS1804:    Ubuntu1804ImageConfig,
+			Ubuntu:        Ubuntu1604OSImageConfig,
+			Ubuntu1804:    Ubuntu1804OSImageConfig,
+			RHEL:          RHELOSImageConfig,
+			CoreOS:        CoreOSImageConfig,
+			AKSUbuntu1604: Ubuntu1604OSImageConfig,
+			AKSUbuntu1804: Ubuntu1604OSImageConfig, // workaround for https://github.com/Azure/aks-engine/issues/761
 		},
 	}
 
@@ -209,12 +209,12 @@ var (
 			ResourceManagerVMDNSSuffix: "cloudapp.usgovcloudapi.net",
 		},
 		OSImageConfig: map[Distro]AzureOSImageConfig{
-			Ubuntu:     DefaultUbuntuImageConfig,
-			Ubuntu1804: Ubuntu1804ImageConfig,
-			RHEL:       DefaultRHELOSImageConfig,
-			CoreOS:     DefaultCoreOSImageConfig,
-			AKS:        DefaultUbuntuImageConfig,
-			AKS1804:    Ubuntu1804ImageConfig,
+			Ubuntu:        Ubuntu1604OSImageConfig,
+			Ubuntu1804:    Ubuntu1804OSImageConfig,
+			RHEL:          RHELOSImageConfig,
+			CoreOS:        CoreOSImageConfig,
+			AKSUbuntu1604: Ubuntu1604OSImageConfig,
+			AKSUbuntu1804: Ubuntu1604OSImageConfig, // workaround for https://github.com/Azure/aks-engine/issues/761
 		},
 	}
 
@@ -253,12 +253,12 @@ var (
 			ResourceManagerVMDNSSuffix: "cloudapp.chinacloudapi.cn",
 		},
 		OSImageConfig: map[Distro]AzureOSImageConfig{
-			Ubuntu:     DefaultUbuntuImageConfig,
-			Ubuntu1804: Ubuntu1804ImageConfig,
-			RHEL:       DefaultRHELOSImageConfig,
-			CoreOS:     DefaultCoreOSImageConfig,
-			AKS:        DefaultAKSOSImageConfig,
-			AKS1804:    DefaultAKS1804OSImageConfig,
+			Ubuntu:        Ubuntu1604OSImageConfig,
+			Ubuntu1804:    Ubuntu1804OSImageConfig,
+			RHEL:          RHELOSImageConfig,
+			CoreOS:        CoreOSImageConfig,
+			AKSUbuntu1604: AKSUbuntu1604OSImageConfig,
+			AKSUbuntu1804: AKSUbuntu1804OSImageConfig,
 		},
 	}
 

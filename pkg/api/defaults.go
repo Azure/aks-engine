@@ -23,7 +23,7 @@ import (
 )
 
 // DistroValues is a list of currently supported distros
-var DistroValues = []Distro{"", Ubuntu, Ubuntu1804, RHEL, CoreOS, AKS, AKS1804, ACC1604}
+var DistroValues = []Distro{"", Ubuntu, Ubuntu1804, RHEL, CoreOS, AKSUbuntu1604, AKSUbuntu1804, ACC1604}
 
 // SetPropertiesDefaults for the container Properties, returns true if certs are generated
 func (cs *ContainerService) SetPropertiesDefaults(isUpgrade, isScale bool) (bool, error) {
@@ -41,7 +41,7 @@ func (cs *ContainerService) SetPropertiesDefaults(isUpgrade, isScale bool) (bool
 
 	// Set master profile defaults if this cluster configuration includes master node(s)
 	if cs.Properties.MasterProfile != nil {
-		properties.setMasterProfileDefaults(isUpgrade)
+		properties.setMasterProfileDefaults(isUpgrade, isScale)
 	}
 	// Set VMSS Defaults for Masters
 	if cs.Properties.MasterProfile != nil && cs.Properties.MasterProfile.IsVirtualMachineScaleSets() {
@@ -305,12 +305,18 @@ func (p *Properties) setExtensionDefaults() {
 	}
 }
 
-func (p *Properties) setMasterProfileDefaults(isUpgrade bool) {
+func (p *Properties) setMasterProfileDefaults(isUpgrade, isScale bool) {
 	if p.MasterProfile.Distro == "" {
 		if p.OrchestratorProfile.IsKubernetes() {
-			p.MasterProfile.Distro = AKS
+			p.MasterProfile.Distro = AKSUbuntu1604
 		} else {
 			p.MasterProfile.Distro = Ubuntu
+		}
+	} else if p.OrchestratorProfile.IsKubernetes() && (isUpgrade || isScale) {
+		if p.MasterProfile.Distro == AKSDockerEngine || p.MasterProfile.Distro == AKS1604Deprecated {
+			p.MasterProfile.Distro = AKSUbuntu1604
+		} else if p.MasterProfile.Distro == AKS1804Deprecated {
+			p.MasterProfile.Distro = AKSUbuntu1804
 		}
 	}
 
@@ -325,6 +331,16 @@ func (p *Properties) setMasterProfileDefaults(isUpgrade bool) {
 		if _, ok := p.MasterProfile.KubernetesConfig.KubeletConfig["--protect-kernel-defaults"]; !ok {
 			p.MasterProfile.KubernetesConfig.KubeletConfig["--protect-kernel-defaults"] = "true"
 		}
+	}
+	// Override the --resolv-conf kubelet config value for Ubuntu 18.04 after the distro value is set.
+	if p.MasterProfile.IsUbuntu1804() {
+		if p.MasterProfile.KubernetesConfig == nil {
+			p.MasterProfile.KubernetesConfig = &KubernetesConfig{}
+		}
+		if p.MasterProfile.KubernetesConfig.KubeletConfig == nil {
+			p.MasterProfile.KubernetesConfig.KubeletConfig = map[string]string{}
+		}
+		p.MasterProfile.KubernetesConfig.KubeletConfig["--resolv-conf"] = "/run/systemd/resolve/resolv.conf"
 	}
 
 	// set default to VMAS for now
@@ -492,17 +508,19 @@ func (p *Properties) setAgentProfileDefaults(isUpgrade, isScale bool) {
 					if profile.OSDiskSizeGB != 0 && profile.OSDiskSizeGB < VHDDiskSizeAKS {
 						profile.Distro = Ubuntu
 					} else {
-						profile.Distro = AKS
+						profile.Distro = AKSUbuntu1604
 					}
 				} else {
 					profile.Distro = Ubuntu
 				}
-				// Ensure distro is set properly for N Series SKUs, because
+				// Ensure deprecated distros are overridden
 				// Previous versions of aks-engine required the docker-engine distro for N series vms,
-				// so we need to hard override it in order to produce a working cluster in upgrade/scale contexts
+				// so we need to hard override it in order to produce a working cluster in upgrade/scale contexts.
 			} else if p.OrchestratorProfile.IsKubernetes() && (isUpgrade || isScale) {
-				if profile.Distro == AKSDockerEngine {
-					profile.Distro = AKS
+				if profile.Distro == AKSDockerEngine || profile.Distro == AKS1604Deprecated {
+					profile.Distro = AKSUbuntu1604
+				} else if profile.Distro == AKS1804Deprecated {
+					profile.Distro = AKSUbuntu1804
 				}
 			}
 		}
@@ -518,6 +536,16 @@ func (p *Properties) setAgentProfileDefaults(isUpgrade, isScale bool) {
 			if _, ok := profile.KubernetesConfig.KubeletConfig["--protect-kernel-defaults"]; !ok {
 				profile.KubernetesConfig.KubeletConfig["--protect-kernel-defaults"] = "true"
 			}
+		}
+		// Override the --resolv-conf kubelet config value for Ubuntu 18.04 after the distro value is set.
+		if profile.IsUbuntu1804() {
+			if profile.KubernetesConfig == nil {
+				profile.KubernetesConfig = &KubernetesConfig{}
+			}
+			if profile.KubernetesConfig.KubeletConfig == nil {
+				profile.KubernetesConfig.KubeletConfig = map[string]string{}
+			}
+			profile.KubernetesConfig.KubeletConfig["--resolv-conf"] = "/run/systemd/resolve/resolv.conf"
 		}
 
 		// Set the default number of IP addresses allocated for agents.
