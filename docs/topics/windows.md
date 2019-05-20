@@ -397,7 +397,7 @@ After several minutes, it will return the list of resources created in JSON. Loo
       },
 ```
 
-A dnsPrefix which forms part of the the hostname for your cluster (e.g. staging, prodwest, blueberry). The DNS prefix must be unique so pick a random name. In case you have not modified the dns prefix, it might error out.
+The DNS prefix provided is used to generate the hostname of the cluster (e.g. staging, prodwest, blueberry) and must be unique for each cluster deployment.
 
 #### Check that the cluster is up
 
