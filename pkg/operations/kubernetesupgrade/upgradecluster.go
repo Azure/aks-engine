@@ -5,6 +5,7 @@ package kubernetesupgrade
 
 import (
 	"context"
+	"math/rand"
 	"strings"
 	"time"
 
@@ -140,17 +141,28 @@ func (uc *UpgradeCluster) SetClusterAutoscalerReplicaCount(kubeClient armhelpers
 	if kubeClient == nil {
 		return 0, errors.New("no kubernetes client")
 	}
-	const namespace, name = "kube-system", "cluster-autoscaler"
-	deployment, err := kubeClient.GetDeployment(namespace, name)
+	var count int32
+	var err error
+	const namespace, name, retries = "kube-system", "cluster-autoscaler", 10
+	for attempt := 0; attempt < retries; attempt++ {
+		deployment, getErr := kubeClient.GetDeployment(namespace, name)
+		err = getErr
+		if getErr == nil {
+			count = *deployment.Spec.Replicas
+			deployment.Spec.Replicas = &replicaCount
+			if _, err = kubeClient.UpdateDeployment(namespace, deployment); err == nil {
+				break
+			}
+		}
+		sleepTime := time.Duration(5+rand.Intn(5)) * time.Second
+		uc.Logger.Warnf("Failed to update cluster-autoscaler deployment: %v", err)
+		uc.Logger.Info("Retry updating cluster-autoscaler after %d seconds", sleepTime)
+		time.Sleep(sleepTime)
+	}
 	if err != nil {
 		return 0, err
 	}
-	originalCount := deployment.Spec.Replicas
-	deployment.Spec.Replicas = &replicaCount
-	if deployment, err = kubeClient.UpdateDeployment(namespace, deployment); err != nil {
-		return 0, err
-	}
-	return *originalCount, nil
+	return count, nil
 }
 
 func (uc *UpgradeCluster) getUpgradeWorkflow(kubeConfig string, aksEngineVersion string) UpgradeWorkFlow {
