@@ -41,18 +41,26 @@ func TestGetTemplateFuncMap(t *testing.T) {
 		t.Errorf("unexpected error while unmarshalling the apiModel JSON: %s", err.Error())
 	}
 	funcmap := tg.getTemplateFuncMap(cs)
-	cases := []struct {
-		key string
-	}{
-		{
-			key: "IsMultiMasterCluster",
-		},
+	cases := []string{
+		"IsAzureStackCloud",
+		"IsMultiMasterCluster",
+		"IsMasterVirtualMachineScaleSets",
+		"IsHostedMaster",
+		"IsIPMasqAgentEnabled",
+		"IsKubernetesVersionGe",
+		"IsKubernetesVersionLt",
+		"GetMasterKubernetesLabels",
+		"GetAgentKubernetesLabels",
+		"GetKubeletConfigKeyVals",
+		"GetKubeletConfigKeyValsPsh",
+		"GetK8sRuntimeConfigKeyVals",
+		// TODO validate that the remaining func strings in getTemplateFuncMap are thinly wrapped and unit tested
 	}
 
 	for _, c := range cases {
-		_, ok := funcmap[c.key]
+		_, ok := funcmap[c]
 		if !ok {
-			t.Fatalf("Didn't find expected funcmap key %s.", c.key)
+			t.Fatalf("Didn't find expected funcmap key %s.", c)
 		}
 	}
 }

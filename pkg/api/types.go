@@ -4,12 +4,14 @@
 package api
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"hash/fnv"
 	"math/rand"
 	"net"
 	neturl "net/url"
+	"sort"
 	"strconv"
 	"strings"
 	"sync"
@@ -1369,6 +1371,26 @@ func (a *AgentPoolProfile) IsUbuntuNonVHD() bool {
 	return a.IsUbuntu() && !a.IsVHDDistro()
 }
 
+// GetKubernetesLabels returns a k8s API-compliant labels string for nodes in this profile
+func (a *AgentPoolProfile) GetKubernetesLabels(rg string) string {
+	var buf bytes.Buffer
+	buf.WriteString("node-role.kubernetes.io/agent=")
+	buf.WriteString(fmt.Sprintf(",kubernetes.io/role=agent,agentpool=%s", a.Name))
+	if a.StorageProfile == ManagedDisks {
+		storagetier, _ := common.GetStorageAccountType(a.VMSize)
+		buf.WriteString(fmt.Sprintf(",storageprofile=managed,storagetier=%s", storagetier))
+	}
+	if common.IsNvidiaEnabledSKU(a.VMSize) {
+		accelerator := "nvidia"
+		buf.WriteString(fmt.Sprintf(",accelerator=%s", accelerator))
+	}
+	buf.WriteString(fmt.Sprintf(",kubernetes.azure.com/cluster=%s", rg))
+	for k, v := range a.CustomNodeLabels {
+		buf.WriteString(fmt.Sprintf(",%s=%s", k, v))
+	}
+	return buf.String()
+}
+
 // HasSecrets returns true if the customer specified secrets to install
 func (w *WindowsProfile) HasSecrets() bool {
 	return len(w.Secrets) > 0
@@ -1441,6 +1463,13 @@ func (o *OrchestratorProfile) IsKubernetes() bool {
 // IsDCOS returns true if this template is for DCOS orchestrator
 func (o *OrchestratorProfile) IsDCOS() bool {
 	return o.OrchestratorType == DCOS
+}
+
+// IsDCOS19 returns true if this is a DCOS 1.9 orchestrator using the latest version
+func (o *OrchestratorProfile) IsDCOS19() bool {
+	return o.OrchestratorType == DCOS &&
+		(o.OrchestratorVersion == common.DCOSVersion1Dot9Dot0 ||
+			o.OrchestratorVersion == common.DCOSVersion1Dot9Dot8)
 }
 
 // IsAzureCNI returns true if Azure CNI network plugin is enabled
@@ -1612,6 +1641,34 @@ func (k *KubernetesConfig) GetUserAssignedClientID() string {
 		return k.UserAssignedClientID
 	}
 	return ""
+}
+
+// GetOrderedKubeletConfigString returns an ordered string of key/val pairs
+func (k *KubernetesConfig) GetOrderedKubeletConfigString() string {
+	keys := []string{}
+	for key := range k.KubeletConfig {
+		keys = append(keys, key)
+	}
+	sort.Strings(keys)
+	var buf bytes.Buffer
+	for _, key := range keys {
+		buf.WriteString(fmt.Sprintf("%s=%s ", key, k.KubeletConfig[key]))
+	}
+	return buf.String()
+}
+
+// GetOrderedKubeletConfigStringForPowershell returns an ordered string of key/val pairs for Powershell script consumption
+func (k *KubernetesConfig) GetOrderedKubeletConfigStringForPowershell() string {
+	keys := []string{}
+	for key := range k.KubeletConfig {
+		keys = append(keys, key)
+	}
+	sort.Strings(keys)
+	var buf bytes.Buffer
+	for _, key := range keys {
+		buf.WriteString(fmt.Sprintf("\"%s=%s\", ", key, k.KubeletConfig[key]))
+	}
+	return strings.TrimSuffix(buf.String(), ", ")
 }
 
 // IsNSeriesSKU returns true if the agent pool contains an N-series (NVIDIA GPU) VM

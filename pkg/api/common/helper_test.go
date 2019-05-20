@@ -113,3 +113,86 @@ func TestIsSGXEnabledSKU(t *testing.T) {
 		}
 	}
 }
+
+func TestGetMasterKubernetesLabels(t *testing.T) {
+	cases := []struct {
+		rg       string
+		expected string
+	}{
+		{
+			"my-resource-group",
+			"kubernetes.io/role=master,node-role.kubernetes.io/master=,kubernetes.azure.com/cluster=my-resource-group",
+		},
+		{
+			"",
+			"kubernetes.io/role=master,node-role.kubernetes.io/master=,kubernetes.azure.com/cluster=",
+		},
+	}
+
+	for _, c := range cases {
+		ret := GetMasterKubernetesLabels(c.rg)
+		if ret != c.expected {
+			t.Fatalf("expected GetMasterKubernetesLabels(%s) to return %s, but instead got %s", c.rg, c.expected, ret)
+		}
+	}
+}
+
+func TestGetK8sRuntimeConfigKeyVals(t *testing.T) {
+	cases := []struct {
+		input    map[string]string
+		expected string
+	}{
+		{
+			input:    map[string]string{},
+			expected: "",
+		},
+		{
+			input: map[string]string{
+				"foo": "bar",
+				"yes": "please",
+			},
+			expected: `\"foo=bar\", \"yes=please\"`,
+		},
+	}
+
+	for _, c := range cases {
+		ret := GetOrderedEscapedKeyValsString(c.input)
+		if ret != c.expected {
+			t.Fatalf("expected GetK8sRuntimeConfigKeyVals(%s) to return %s, but instead got %s", c.input, c.expected, ret)
+		}
+	}
+}
+
+func TestGetStorageAccountType(t *testing.T) {
+	validPremiumVMSize := "Standard_DS2_v2"
+	validStandardVMSize := "Standard_D2_v2"
+	expectedPremiumTier := "Premium_LRS"
+	expectedStandardTier := "Standard_LRS"
+	invalidVMSize := "D2v2"
+
+	// test premium VMSize returns premium managed disk tier
+	premiumTier, err := GetStorageAccountType(validPremiumVMSize)
+	if err != nil {
+		t.Fatalf("Invalid sizeName: %s", err)
+	}
+
+	if premiumTier != expectedPremiumTier {
+		t.Fatalf("premium VM did no match premium managed storage tier")
+	}
+
+	// test standard VMSize returns standard managed disk tier
+	standardTier, err := GetStorageAccountType(validStandardVMSize)
+	if err != nil {
+		t.Fatalf("Invalid sizeName: %s", err)
+	}
+
+	if standardTier != expectedStandardTier {
+		t.Fatalf("standard VM did no match standard managed storage tier")
+	}
+
+	// test invalid VMSize
+	result, err := GetStorageAccountType(invalidVMSize)
+	if err == nil {
+		t.Errorf("GetStorageAccountType() = (%s, nil), want error", result)
+	}
+}

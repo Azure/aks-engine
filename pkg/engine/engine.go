@@ -167,19 +167,6 @@ func addSecret(m paramsMap, k string, v interface{}, encode bool) {
 	addKeyvaultReference(m, k, parts[1], parts[2], parts[4])
 }
 
-// getStorageAccountType returns the support managed disk storage tier for a give VM size
-func getStorageAccountType(sizeName string) (string, error) {
-	spl := strings.Split(sizeName, "_")
-	if len(spl) < 2 {
-		return "", errors.Errorf("Invalid sizeName: %s", sizeName)
-	}
-	capability := spl[1]
-	if strings.Contains(strings.ToLower(capability), "s") {
-		return "Premium_LRS", nil
-	}
-	return "Standard_LRS", nil
-}
-
 func makeMasterExtensionScriptCommands(cs *api.ContainerService) string {
 	return makeExtensionScriptCommands(cs.Properties.MasterProfile.PreprovisionExtension,
 		cs.Properties.ExtensionProfiles)

@@ -4,7 +4,10 @@
 package common
 
 import (
+	"bytes"
+	"fmt"
 	"regexp"
+	"sort"
 	"strings"
 
 	"github.com/pkg/errors"
@@ -225,4 +228,40 @@ func IsSgxEnabledSKU(vmSize string) bool {
 		return true
 	}
 	return false
+}
+
+// GetMasterKubernetesLabels returns a k8s API-compliant labels string
+func GetMasterKubernetesLabels(rg string) string {
+	var buf bytes.Buffer
+	buf.WriteString("kubernetes.io/role=master")
+	buf.WriteString(",node-role.kubernetes.io/master=")
+	buf.WriteString(fmt.Sprintf(",kubernetes.azure.com/cluster=%s", rg))
+	return buf.String()
+}
+
+// GetStorageAccountType returns the support managed disk storage tier for a give VM size
+func GetStorageAccountType(sizeName string) (string, error) {
+	spl := strings.Split(sizeName, "_")
+	if len(spl) < 2 {
+		return "", errors.Errorf("Invalid sizeName: %s", sizeName)
+	}
+	capability := spl[1]
+	if strings.Contains(strings.ToLower(capability), "s") {
+		return "Premium_LRS", nil
+	}
+	return "Standard_LRS", nil
+}
+
+// GetOrderedEscapedKeyValsString returns an ordered string of escaped, quoted key=val
+func GetOrderedEscapedKeyValsString(config map[string]string) string {
+	keys := []string{}
+	for key := range config {
+		keys = append(keys, key)
+	}
+	sort.Strings(keys)
+	var buf bytes.Buffer
+	for _, key := range keys {
+		buf.WriteString(fmt.Sprintf("\\\"%s=%s\\\", ", key, config[key]))
+	}
+	return strings.TrimSuffix(buf.String(), ", ")
 }
