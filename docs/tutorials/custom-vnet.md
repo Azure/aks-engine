@@ -103,7 +103,7 @@ In this case, we are going to use the following template:
     },
     "masterProfile": {
       "count": 1,
-      "dnsPrefix": "test",
+      "dnsPrefix": "",
       "vmSize": "Standard_D2_v2",
       "vnetSubnetId": "/subscriptions/SUBSCRIPTION_ID/resourceGroups/RESOURCE_GROUP_NAME/providers/Microsoft.Network/virtualNetworks/ExampleCustomVNET/subnets/ExampleMasterSubnet",
       "firstConsecutiveStaticIP": "10.239.255.239" 
