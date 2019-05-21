@@ -9893,7 +9893,7 @@ metadata:
   annotations:
     seccomp.security.alpha.kubernetes.io/allowedProfileNames: "*"
   labels:
-    addonmanager.kubernetes.io/mode: Reconcile
+    addonmanager.kubernetes.io/mode: EnsureExists
 spec:
   privileged: true
   allowPrivilegeEscalation: true
@@ -9926,7 +9926,7 @@ metadata:
     seccomp.security.alpha.kubernetes.io/defaultProfileName:  docker/default
     apparmor.security.beta.kubernetes.io/defaultProfileName:  runtime/default
   labels:
-    addonmanager.kubernetes.io/mode: Reconcile
+    addonmanager.kubernetes.io/mode: EnsureExists
 spec:
   privileged: false
   allowPrivilegeEscalation: false
@@ -9965,7 +9965,7 @@ kind: ClusterRole
 metadata:
   name: psp:privileged
   labels:
-    addonmanager.kubernetes.io/mode: Reconcile
+    addonmanager.kubernetes.io/mode: EnsureExists
 rules:
 - apiGroups: ['extensions']
   resources: ['podsecuritypolicies']
@@ -9978,7 +9978,7 @@ kind: ClusterRole
 metadata:
   name: psp:restricted
   labels:
-    addonmanager.kubernetes.io/mode: Reconcile
+    addonmanager.kubernetes.io/mode: EnsureExists
 rules:
 - apiGroups: ['extensions']
   resources: ['podsecuritypolicies']
@@ -9991,7 +9991,7 @@ kind: ClusterRoleBinding
 metadata:
   name: default:restricted
   labels:
-    addonmanager.kubernetes.io/mode: Reconcile
+    addonmanager.kubernetes.io/mode: EnsureExists
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
@@ -10007,7 +10007,7 @@ metadata:
   name: default:privileged
   namespace: kube-system
   labels:
-    addonmanager.kubernetes.io/mode: Reconcile
+    addonmanager.kubernetes.io/mode: EnsureExists
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
