@@ -1385,8 +1385,13 @@ func (a *AgentPoolProfile) GetKubernetesLabels(rg string) string {
 		buf.WriteString(fmt.Sprintf(",accelerator=%s", accelerator))
 	}
 	buf.WriteString(fmt.Sprintf(",kubernetes.azure.com/cluster=%s", rg))
-	for k, v := range a.CustomNodeLabels {
-		buf.WriteString(fmt.Sprintf(",%s=%s", k, v))
+	keys := []string{}
+	for key := range a.CustomNodeLabels {
+		keys = append(keys, key)
+	}
+	sort.Strings(keys)
+	for _, key := range keys {
+		buf.WriteString(fmt.Sprintf(",%s=%s", key, a.CustomNodeLabels[key]))
 	}
 	return buf.String()
 }
