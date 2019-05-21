@@ -96,19 +96,22 @@ In this case, we are going to use the following template:
   "apiVersion": "vlabs",
   "properties": {
     "orchestratorProfile": {
-      "orchestratorType": "Swarm"
+      "orchestratorType": "Kubernetes",
+      "kubernetesConfig": {
+        "networkPlugin": "kubenet"
+      }
     },
     "masterProfile": {
-      "count": 3,
+      "count": 1,
       "dnsPrefix": "",
       "vmSize": "Standard_D2_v2",
       "vnetSubnetId": "/subscriptions/SUBSCRIPTION_ID/resourceGroups/RESOURCE_GROUP_NAME/providers/Microsoft.Network/virtualNetworks/ExampleCustomVNET/subnets/ExampleMasterSubnet",
-      "firstConsecutiveStaticIP": "10.100.0.5"
+      "firstConsecutiveStaticIP": "10.239.255.239" 
     },
     "agentPoolProfiles": [
       {
         "name": "agentprivate",
-        "count": 3,
+        "count": 2,
         "vmSize": "Standard_D2_v2",
         "vnetSubnetId": "/subscriptions/SUBSCRIPTION_ID/resourceGroups/RESOURCE_GROUP_NAME/providers/Microsoft.Network/virtualNetworks/ExampleCustomVNET/subnets/ExampleAgentSubnet"
       },
@@ -134,6 +137,10 @@ In this case, we are going to use the following template:
           }
         ]
       }
+    },
+    "servicePrincipalProfile": {
+      "clientId": "",
+      "secret": ""
     }
   }
 }
@@ -148,15 +155,32 @@ As you can see, for all node pools definition (master or agents) you can use the
 Once your are ready with the cluster definition file, you can use AKS Engine to generate the ARM template that will be used to deploy the cluster on Azure:
 
 ```bash
-aks-engine azuredeploy.swarm.clusterdefinition.json
+aks-engine generate --api-model clusterdefinition.json
 ```
 
-This command will output three files:
+This command will output the following files in `_output/test`:
 
 ```console
-wrote _output/Swarm-12652785/apimodel.json
-wrote _output/Swarm-12652785/azuredeploy.json
-wrote _output/Swarm-12652785/azuredeploy.parameters.json
+INFO[0000] Generating assets into _output/test...
+DEBU[0011] pki: PKI asset creation took 7.9016753s
+DEBU[0011] output: wrote _output/test/apimodel.json
+DEBU[0011] output: wrote _output/test/azuredeploy.json
+DEBU[0011] output: wrote _output/test/azuredeploy.parameters.json
+DEBU[0011] output: wrote _output/test/kubeconfig/kubeconfig.southcentralus.json
+DEBU[0011] output: wrote _output/test/ca.key
+DEBU[0011] output: wrote _output/test/ca.crt
+DEBU[0011] output: wrote _output/test/apiserver.key
+DEBU[0011] output: wrote _output/test/apiserver.crt
+DEBU[0011] output: wrote _output/test/client.key
+DEBU[0011] output: wrote _output/test/client.crt
+DEBU[0011] output: wrote _output/test/kubectlClient.key
+DEBU[0011] output: wrote _output/test/kubectlClient.crt
+DEBU[0011] output: wrote _output/test/etcdserver.key
+DEBU[0011] output: wrote _output/test/etcdserver.crt
+DEBU[0011] output: wrote _output/test/etcdclient.key
+DEBU[0011] output: wrote _output/test/etcdclient.crt
+DEBU[0011] output: wrote _output/test/etcdpeer0.key
+DEBU[0011] output: wrote _output/test/etcdpeer0.crt
 aksengine took 37.1384ms
 ```
 
