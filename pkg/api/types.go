@@ -436,6 +436,11 @@ type DcosConfig struct {
 	BootstrapProfile         *BootstrapProfile `json:"bootstrapProfile,omitempty"`
 }
 
+// HasPrivateRegistry returns if a private registry is specified
+func (d *DcosConfig) HasPrivateRegistry() bool {
+	return len(d.Registry) > 0
+}
+
 // MasterProfile represents the definition of the master cluster
 type MasterProfile struct {
 	Count                    int               `json:"count"`
@@ -1268,6 +1273,19 @@ func (m *MasterProfile) IsUbuntuNonVHD() bool {
 // HasMultipleNodes returns true if there are more than one master nodes
 func (m *MasterProfile) HasMultipleNodes() bool {
 	return m.Count > 1
+}
+
+// HasCosmosEtcd returns true if cosmos etcd configuration is enabled
+func (m *MasterProfile) HasCosmosEtcd() bool {
+	return to.Bool(m.CosmosEtcd)
+}
+
+// GetCosmosEndPointURI returns the URI string for the cosmos etcd endpoint
+func (m *MasterProfile) GetCosmosEndPointURI() string {
+	if m.HasCosmosEtcd() {
+		return fmt.Sprintf(etcdEndpointURIFmt, m.DNSPrefix)
+	}
+	return ""
 }
 
 // IsCustomVNET returns true if the customer brought their own VNET

@@ -54,6 +54,19 @@ func TestGetTemplateFuncMap(t *testing.T) {
 		"GetKubeletConfigKeyVals",
 		"GetKubeletConfigKeyValsPsh",
 		"GetK8sRuntimeConfigKeyVals",
+		"HasPrivateRegistry",
+		"IsSwarmMode",
+		"IsKubernetes",
+		"IsPublic",
+		"IsAzureCNI",
+		"HasCosmosEtcd",
+		"GetCosmosEndPointUri",
+		"IsPrivateCluster",
+		"ProvisionJumpbox",
+		"UseManagedIdentity",
+		"NeedsKubeDNSWithExecHealthz",
+		"GetVNETSubnetDependencies",
+		"GetLBRules",
 		// TODO validate that the remaining func strings in getTemplateFuncMap are thinly wrapped and unit tested
 	}
 

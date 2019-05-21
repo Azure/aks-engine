@@ -30,6 +30,28 @@ const (
 	TestAKSEngineVersion = "1.0.0"
 )
 
+// LBRuleBaseString is a raw string that represents a template that we will compose an LB rule from
+const LBRuleBaseString string = `	          {
+            "name": "LBRule%d",
+            "properties": {
+              "backendAddressPool": {
+                "id": "[concat(variables('%sLbID'), '/backendAddressPools/', variables('%sLbBackendPoolName'))]"
+              },
+              "backendPort": %d,
+              "enableFloatingIP": false,
+              "frontendIPConfiguration": {
+                "id": "[variables('%sLbIPConfigID')]"
+              },
+              "frontendPort": %d,
+              "idleTimeoutInMinutes": 5,
+              "loadDistribution": "Default",
+              "probe": {
+                "id": "[concat(variables('%sLbID'),'/probes/tcp%dProbe')]"
+              },
+              "protocol": "Tcp"
+            }
+          }`
+
 func TestExpected(t *testing.T) {
 	// Initialize locale for translation
 	locale := gotext.NewLocale(path.Join("..", "..", "translations"), "en_US")
@@ -824,5 +846,121 @@ func TestGetKubernetesSubnets(t *testing.T) {
 
 	if actual != expected {
 		t.Errorf("expected to get %s, but got %s instead", expected, actual)
+	}
+}
+
+func TestGetVNETSubnetDependencies(t *testing.T) {
+	baseString := `        "[concat('Microsoft.Network/networkSecurityGroups/', variables('%sNSGName'))]"`
+	cases := []struct {
+		p        *api.Properties
+		expected string
+	}{
+		{
+			p:        &api.Properties{},
+			expected: "",
+		},
+		{
+			p: &api.Properties{
+				AgentPoolProfiles: []*api.AgentPoolProfile{},
+			},
+			expected: "",
+		},
+		{
+			p: &api.Properties{
+				AgentPoolProfiles: []*api.AgentPoolProfile{
+					{
+						Name: "pool1",
+					},
+				},
+			},
+			expected: fmt.Sprintf(baseString, "pool1"),
+		},
+		{
+			p: &api.Properties{
+				AgentPoolProfiles: []*api.AgentPoolProfile{
+					{
+						Name: "pool1",
+					},
+					{
+						Name: "pool2",
+					},
+					{
+						Name: "pool3",
+					},
+				},
+			},
+			expected: fmt.Sprintf(baseString, "pool1") + ",\n" + fmt.Sprintf(baseString, "pool2") + ",\n" + fmt.Sprintf(baseString, "pool3"),
+		},
+	}
+
+	for _, c := range cases {
+		if getVNETSubnetDependencies(c.p) != c.expected {
+			t.Fatalf("expected getVNETSubnetDependencies() to return %s but instead got %s", c.expected, getVNETSubnetDependencies(c.p))
+		}
+	}
+}
+
+func TestGetLBRule(t *testing.T) {
+	cases := []struct {
+		name     string
+		port     int
+		expected string
+	}{
+		{
+			name:     "foo",
+			port:     80,
+			expected: fmt.Sprintf(LBRuleBaseString, 80, "foo", "foo", 80, "foo", 80, "foo", 80),
+		},
+		{
+			name:     "bar",
+			port:     8080,
+			expected: fmt.Sprintf(LBRuleBaseString, 8080, "bar", "bar", 8080, "bar", 8080, "bar", 8080),
+		},
+		{
+			name:     "",
+			port:     0,
+			expected: fmt.Sprintf(LBRuleBaseString, 0, "", "", 0, "", 0, "", 0),
+		},
+	}
+
+	for _, c := range cases {
+		if getLBRule(c.name, c.port) != c.expected {
+			t.Fatalf("expected getLBRule() to return %s but instead got %s", c.expected, getLBRule(c.name, c.port))
+		}
+	}
+}
+
+func TestGetLBRules(t *testing.T) {
+	cases := []struct {
+		name     string
+		ports    []int
+		expected string
+	}{
+		{
+			name:     "foo",
+			ports:    []int{80},
+			expected: fmt.Sprintf(LBRuleBaseString, 80, "foo", "foo", 80, "foo", 80, "foo", 80),
+		},
+		{
+			name:     "bar",
+			ports:    []int{8080},
+			expected: fmt.Sprintf(LBRuleBaseString, 8080, "bar", "bar", 8080, "bar", 8080, "bar", 8080),
+		},
+		{
+			name:     "baz",
+			ports:    []int{80, 8080},
+			expected: fmt.Sprintf(LBRuleBaseString, 80, "baz", "baz", 80, "baz", 80, "baz", 80) + ",\n" + fmt.Sprintf(LBRuleBaseString, 8080, "baz", "baz", 8080, "baz", 8080, "baz", 8080),
+		},
+		{
+			name:     "",
+			ports:    []int{},
+			expected: "",
+		},
+	}
+
+	for _, c := range cases {
+		if getLBRules(c.name, c.ports) != c.expected {
+			t.Fatalf("expected getLBRules() to return %s but instead got %s", c.expected, getLBRules(c.name, c.ports))
+		}
 	}
 }

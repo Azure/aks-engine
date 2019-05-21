@@ -271,3 +271,8 @@ func GetOrderedEscapedKeyValsString(config map[string]string) string {
 	}
 	return strings.TrimSuffix(buf.String(), ", ")
 }
+
+// SliceIntIsNonEmpty is a simple convenience to determine if a []int is non-empty
+func SliceIntIsNonEmpty(s []int) bool {
+	return len(s) > 0
+}
