@@ -16,7 +16,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-var compToParamImage = map[string]string{
+var componentToParamImage = map[string]string{
 	"ccm":             "kubernetesCcmImageSpec",
 	"hyperkube":       "kubernetesHyperkubeSpec",
 	"addonmanager":    "kubernetesAddonManagerSpec",
@@ -286,7 +286,7 @@ func assignKubernetesParameters(properties *api.Properties, parametersMap params
 }
 
 func setComponentImage(name, customImage string, params paramsMap, components map[string]string, config *api.KubernetesConfig, isAzureStack bool, cloudSpecConfig api.AzureEnvironmentSpecConfig) error {
-	paramName, ok := compToParamImage[name]
+	paramName, ok := componentToParamImage[name]
 	if !ok {
 		panic(fmt.Sprintf("no param image spec name registered for component %s", name))
 	}

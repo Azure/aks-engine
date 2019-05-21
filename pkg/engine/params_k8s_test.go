@@ -90,13 +90,13 @@ func TestAssignKubernetesComponentImageOverrideParams(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		actual := params[compToParamImage[name]].(paramsMap)["value"].(string)
+		actual := params[componentToParamImage[name]].(paramsMap)["value"].(string)
 		if actual != expect {
 			t.Fatalf("expected %q, got %q", expect, actual)
 		}
 	}
 
-	for comp, paramName := range compToParamImage {
+	for comp, paramName := range componentToParamImage {
 		if comp == "hyperkube" {
 			continue
 		}
