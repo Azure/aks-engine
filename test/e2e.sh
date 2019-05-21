@@ -16,14 +16,14 @@ set -o pipefail
 ROOT="${DIR}/.."
 
 # Check pre-requisites
-[[ -n "${SERVICE_PRINCIPAL_CLIENT_ID:-}" ]]             || (echo "Must specify SERVICE_PRINCIPAL_CLIENT_ID" && exit -1)
-[[ -n "${SERVICE_PRINCIPAL_CLIENT_SECRET:-}" ]]         || (echo "Must specify SERVICE_PRINCIPAL_CLIENT_SECRET" && exit -1)
-[[ -n "${TENANT_ID:-}" ]]                               || (echo "Must specify TENANT_ID" && exit -1)
-[[ -n "${SUBSCRIPTION_ID:-}" ]]                         || (echo "Must specify SUBSCRIPTION_ID" && exit -1)
-[[ -n "${CLUSTER_SERVICE_PRINCIPAL_CLIENT_ID:-}" ]]     || (echo "Must specify CLUSTER_SERVICE_PRINCIPAL_CLIENT_ID" && exit -1)
-[[ -n "${CLUSTER_SERVICE_PRINCIPAL_CLIENT_SECRET:-}" ]] || (echo "Must specify CLUSTER_SERVICE_PRINCIPAL_CLIENT_SECRET" && exit -1)
-[[ -n "${STAGE_TIMEOUT_MIN:-}" ]]                       || (echo "Must specify STAGE_TIMEOUT_MIN" && exit -1)
-[[ -n "${TEST_CONFIG:-}" ]]                             || (echo "Must specify TEST_CONFIG" && exit -1)
+[[ -n "${SERVICE_PRINCIPAL_CLIENT_ID:-}" ]]             || (echo "Must specify SERVICE_PRINCIPAL_CLIENT_ID" >&2 && exit 1)
+[[ -n "${SERVICE_PRINCIPAL_CLIENT_SECRET:-}" ]]         || (echo "Must specify SERVICE_PRINCIPAL_CLIENT_SECRET" >&2 && exit 1)
+[[ -n "${TENANT_ID:-}" ]]                               || (echo "Must specify TENANT_ID" >&2 && exit 1)
+[[ -n "${SUBSCRIPTION_ID:-}" ]]                         || (echo "Must specify SUBSCRIPTION_ID" >&2 && exit 1)
+[[ -n "${CLUSTER_SERVICE_PRINCIPAL_CLIENT_ID:-}" ]]     || (echo "Must specify CLUSTER_SERVICE_PRINCIPAL_CLIENT_ID" >&2 && exit 1)
+[[ -n "${CLUSTER_SERVICE_PRINCIPAL_CLIENT_SECRET:-}" ]] || (echo "Must specify CLUSTER_SERVICE_PRINCIPAL_CLIENT_SECRET" >&2 && exit 1)
+[[ -n "${STAGE_TIMEOUT_MIN:-}" ]]                       || (echo "Must specify STAGE_TIMEOUT_MIN" >&2 && exit 1)
+[[ -n "${TEST_CONFIG:-}" ]]                             || (echo "Must specify TEST_CONFIG" >&2 && exit 1)
 
 make bootstrap build
 

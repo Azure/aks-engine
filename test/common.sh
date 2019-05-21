@@ -17,11 +17,11 @@ function jqi() { filename="${1}"; jqexpr="${2}"; jq "${jqexpr}" "${filename}" > 
 
 function generate_template() {
 	# Check pre-requisites
-	[[ -n "${INSTANCE_NAME:-}" ]] || (echo "Must specify INSTANCE_NAME" && exit -1)
-	[[ -n "${CLUSTER_DEFINITION:-}" ]] || (echo "Must specify CLUSTER_DEFINITION" && exit -1)
-	[[ -n "${SERVICE_PRINCIPAL_CLIENT_ID:-}" ]] || [[ -n "${CLUSTER_SERVICE_PRINCIPAL_CLIENT_ID:-}" ]] || (echo "Must specify SERVICE_PRINCIPAL_CLIENT_ID" && exit -1)
-	[[ -n "${SERVICE_PRINCIPAL_CLIENT_SECRET:-}" ]] || [[ -n "${CLUSTER_SERVICE_PRINCIPAL_CLIENT_SECRET:-}" ]] || (echo "Must specify SERVICE_PRINCIPAL_CLIENT_SECRET" && exit -1)
-	[[ -n "${OUTPUT:-}" ]] || (echo "Must specify OUTPUT" && exit -1)
+	[[ -n "${INSTANCE_NAME:-}" ]] || (echo "Must specify INSTANCE_NAME" >&2 && exit 1)
+	[[ -n "${CLUSTER_DEFINITION:-}" ]] || (echo "Must specify CLUSTER_DEFINITION" >&2 && exit 1)
+	[[ -n "${SERVICE_PRINCIPAL_CLIENT_ID:-}" ]] || [[ -n "${CLUSTER_SERVICE_PRINCIPAL_CLIENT_ID:-}" ]] || (echo "Must specify SERVICE_PRINCIPAL_CLIENT_ID" >&2 && exit 1)
+	[[ -n "${SERVICE_PRINCIPAL_CLIENT_SECRET:-}" ]] || [[ -n "${CLUSTER_SERVICE_PRINCIPAL_CLIENT_SECRET:-}" ]] || (echo "Must specify SERVICE_PRINCIPAL_CLIENT_SECRET" >&2 && exit 1)
+	[[ -n "${OUTPUT:-}" ]] || (echo "Must specify OUTPUT" >&2 && exit 1)
 
 	# Set output directory
 	mkdir -p "${OUTPUT}"
@@ -59,15 +59,15 @@ function generate_template() {
 
 	secrets=$(jq 'getpath(["properties","linuxProfile","secrets"])' ${FINAL_CLUSTER_DEFINITION})
 	if [[ "${secrets}" != "null" ]]; then
-		[[ -n "${CERT_KEYVAULT_ID:-}" ]] || (echo "Must specify CERT_KEYVAULT_ID" && exit -1)
-		[[ -n "${CERT_SECRET_URL:-}" ]] || (echo "Must specify CERT_SECRET_URL" && exit -1)
+		[[ -n "${CERT_KEYVAULT_ID:-}" ]] || (echo "Must specify CERT_KEYVAULT_ID" >&2 && exit 1)
+		[[ -n "${CERT_SECRET_URL:-}" ]] || (echo "Must specify CERT_SECRET_URL" >&2 && exit 1)
 		jqi "${FINAL_CLUSTER_DEFINITION}" ".properties.linuxProfile.secrets[0].sourceVault.id = \"${CERT_KEYVAULT_ID}\""
 		jqi "${FINAL_CLUSTER_DEFINITION}" ".properties.linuxProfile.secrets[0].vaultCertificates[0].certificateUrl = \"${CERT_SECRET_URL}\""
 	fi
 	secrets=$(jq 'getpath(["properties","windowsProfile","secrets"])' ${FINAL_CLUSTER_DEFINITION})
 	if [[ "${secrets}" != "null" ]]; then
-		[[ -n "${CERT_KEYVAULT_ID:-}" ]] || (echo "Must specify CERT_KEYVAULT_ID" && exit -1)
-		[[ -n "${CERT_SECRET_URL:-}" ]] || (echo "Must specify CERT_SECRET_URL" && exit -1)
+		[[ -n "${CERT_KEYVAULT_ID:-}" ]] || (echo "Must specify CERT_KEYVAULT_ID" >&2 && exit 1)
+		[[ -n "${CERT_SECRET_URL:-}" ]] || (echo "Must specify CERT_SECRET_URL" >&2 && exit 1)
 		jqi "${FINAL_CLUSTER_DEFINITION}" ".properties.windowsProfile.secrets[0].sourceVault.id = \"${CERT_KEYVAULT_ID}\""
 		jqi "${FINAL_CLUSTER_DEFINITION}" ".properties.windowsProfile.secrets[0].vaultCertificates[0].certificateUrl = \"${CERT_SECRET_URL}\""
 		jqi "${FINAL_CLUSTER_DEFINITION}" ".properties.windowsProfile.secrets[0].vaultCertificates[0].certificateStore = \"My\""
@@ -84,12 +84,12 @@ function generate_template() {
 
 function set_azure_account() {
 	# Check pre-requisites
-	[[ -n "${SUBSCRIPTION_ID:-}" ]] || (echo "Must specify SUBSCRIPTION_ID" && exit -1)
-	[[ -n "${TENANT_ID:-}" ]] || (echo "Must specify TENANT_ID" && exit -1)
-	[[ -n "${SERVICE_PRINCIPAL_CLIENT_ID:-}" ]] || (echo "Must specify SERVICE_PRINCIPAL_CLIENT_ID" && exit -1)
-	[[ -n "${SERVICE_PRINCIPAL_CLIENT_SECRET:-}" ]] || (echo "Must specify SERVICE_PRINCIPAL_CLIENT_SECRET" && exit -1)
-	command -v k || (echo "k must be on PATH" && exit -1)
-	command -v az || (echo "az must be on PATH" && exit -1)
+	[[ -n "${SUBSCRIPTION_ID:-}" ]] || (echo "Must specify SUBSCRIPTION_ID" >&2 && exit 1)
+	[[ -n "${TENANT_ID:-}" ]] || (echo "Must specify TENANT_ID" >&2 && exit 1)
+	[[ -n "${SERVICE_PRINCIPAL_CLIENT_ID:-}" ]] || (echo "Must specify SERVICE_PRINCIPAL_CLIENT_ID" >&2 && exit 1)
+	[[ -n "${SERVICE_PRINCIPAL_CLIENT_SECRET:-}" ]] || (echo "Must specify SERVICE_PRINCIPAL_CLIENT_SECRET" >&2 && exit 1)
+	command -v k || (echo "k must be on PATH" >&2 && exit 1)
+	command -v az || (echo "az must be on PATH" >&2 && exit 1)
 
 	# Login to Azure-Cli
 	az login --service-principal \
@@ -101,24 +101,24 @@ function set_azure_account() {
 }
 
 function create_resource_group() {
-	[[ -n "${LOCATION:-}" ]] || (echo "Must specify LOCATION" && exit -1)
-	[[ -n "${RESOURCE_GROUP:-}" ]] || (echo "Must specify RESOURCE_GROUP" && exit -1)
+	[[ -n "${LOCATION:-}" ]] || (echo "Must specify LOCATION" >&2 && exit 1)
+	[[ -n "${RESOURCE_GROUP:-}" ]] || (echo "Must specify RESOURCE_GROUP" >&2 && exit 1)
 
 	# Create resource group if doesn't exist
-	az group show --name="${RESOURCE_GROUP}" || [ $? -eq 3  ] && echo "will create resource group ${RESOURCE_GROUP}" || exit -1
+	az group show --name="${RESOURCE_GROUP}" || [ $? -eq 3 ] && echo "will create resource group ${RESOURCE_GROUP}" || exit 1
 	az group create --name="${RESOURCE_GROUP}" --location="${LOCATION}" --tags "type=${RESOURCE_GROUP_TAG_TYPE:-}" "now=$(date +%s)" "job=${JOB_BASE_NAME:-}" "buildno=${BUILD_NUM:-}"
 		sleep 3 # TODO: investigate why this is needed (eventual consistency in ARM)
 }
 
 function deploy_template() {
 	# Check pre-requisites
-	[[ -n "${DEPLOYMENT_NAME:-}" ]] || (echo "Must specify DEPLOYMENT_NAME" && exit -1)
-	[[ -n "${LOCATION:-}" ]] || (echo "Must specify LOCATION" && exit -1)
-	[[ -n "${RESOURCE_GROUP:-}" ]] || (echo "Must specify RESOURCE_GROUP" && exit -1)
-	[[ -n "${OUTPUT:-}" ]] || (echo "Must specify OUTPUT" && exit -1)
+	[[ -n "${DEPLOYMENT_NAME:-}" ]] || (echo "Must specify DEPLOYMENT_NAME" >&2 && exit 1)
+	[[ -n "${LOCATION:-}" ]] || (echo "Must specify LOCATION" >&2 && exit 1)
+	[[ -n "${RESOURCE_GROUP:-}" ]] || (echo "Must specify RESOURCE_GROUP" >&2 && exit 1)
+	[[ -n "${OUTPUT:-}" ]] || (echo "Must specify OUTPUT" >&2 && exit 1)
 
-	command -v k || (echo "k must be on PATH" && exit -1)
-	command -v az || (echo "az must be on PATH" && exit -1)
+	command -v k || (echo "k must be on PATH" >&2 && exit 1)
+	command -v az || (echo "az must be on PATH" >&2 && exit 1)
 
 	create_resource_group
 
@@ -132,13 +132,13 @@ function deploy_template() {
 
 function scale_agent_pool() {
 	# Check pre-requisites
-	[[ -n "${AGENT_POOL_SIZE:-}" ]] || (echo "Must specify AGENT_POOL_SIZE" && exit -1)
-	[[ -n "${DEPLOYMENT_NAME:-}" ]] || (echo "Must specify DEPLOYMENT_NAME" && exit -1)
-	[[ -n "${LOCATION:-}" ]] || (echo "Must specify LOCATION" && exit -1)
-	[[ -n "${RESOURCE_GROUP:-}" ]] || (echo "Must specify RESOURCE_GROUP" && exit -1)
-	[[ -n "${OUTPUT:-}" ]] || (echo "Must specify OUTPUT" && exit -1)
+	[[ -n "${AGENT_POOL_SIZE:-}" ]] || (echo "Must specify AGENT_POOL_SIZE" >&2 && exit 1)
+	[[ -n "${DEPLOYMENT_NAME:-}" ]] || (echo "Must specify DEPLOYMENT_NAME" >&2 && exit 1)
+	[[ -n "${LOCATION:-}" ]] || (echo "Must specify LOCATION" >&2 && exit 1)
+	[[ -n "${RESOURCE_GROUP:-}" ]] || (echo "Must specify RESOURCE_GROUP" >&2 && exit 1)
+	[[ -n "${OUTPUT:-}" ]] || (echo "Must specify OUTPUT" >&2 && exit 1)
 
-	command -v az || (echo "az must be on PATH" && exit -1)
+	command -v az || (echo "az must be on PATH" >&2 && exit 1)
 
 	APIMODEL="${OUTPUT}/apimodel.json"
 	DEPLOYMENT_PARAMS="${OUTPUT}/azuredeploy.parameters.json"
@@ -158,7 +158,7 @@ function scale_agent_pool() {
 }
 
 function get_node_count() {
-	[[ -n "${CLUSTER_DEFINITION:-}" ]] || (echo "Must specify CLUSTER_DEFINITION" && exit -1)
+	[[ -n "${CLUSTER_DEFINITION:-}" ]] || (echo "Must specify CLUSTER_DEFINITION" >&2 && exit 1)
 
 	count=$(jq '.properties.masterProfile.count' ${CLUSTER_DEFINITION})
 	linux_agents=0
@@ -183,7 +183,7 @@ function get_node_count() {
 }
 
 function get_orchestrator_type() {
-	[[ -n "${CLUSTER_DEFINITION:-}" ]] || (echo "Must specify CLUSTER_DEFINITION" && exit -1)
+	[[ -n "${CLUSTER_DEFINITION:-}" ]] || (echo "Must specify CLUSTER_DEFINITION" >&2 && exit 1)
 
 	orchestratorType=$(jq -r 'getpath(["properties","orchestratorProfile","orchestratorType"])' ${CLUSTER_DEFINITION} | tr '[:upper:]' '[:lower:]')
 
@@ -191,7 +191,7 @@ function get_orchestrator_type() {
 }
 
 function get_orchestrator_version() {
-	[[ -n "${CLUSTER_DEFINITION:-}" ]] || (echo "Must specify CLUSTER_DEFINITION" && exit -1)
+	[[ -n "${CLUSTER_DEFINITION:-}" ]] || (echo "Must specify CLUSTER_DEFINITION" >&2 && exit 1)
 
 	orchestratorVersion=$(jq -r 'getpath(["properties","orchestratorProfile","orchestratorVersion"])' ${CLUSTER_DEFINITION})
 	if [[ "$orchestratorVersion" == "null" ]]; then
@@ -202,7 +202,7 @@ function get_orchestrator_version() {
 }
 
 function get_api_version() {
-	[[ -n "${CLUSTER_DEFINITION:-}" ]] || (echo "Must specify CLUSTER_DEFINITION" && exit -1)
+	[[ -n "${CLUSTER_DEFINITION:-}" ]] || (echo "Must specify CLUSTER_DEFINITION" >&2 && exit 1)
 
 	apiVersion=$(jq -r 'getpath(["apiVersion"])' ${CLUSTER_DEFINITION})
 	if [[ "$apiVersion" == "null" ]]; then
