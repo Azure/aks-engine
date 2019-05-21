@@ -226,25 +226,3 @@ const (
 	swarmWinAgentResourcesVMSS    = "swarm/swarmwinagentresourcesvmss.t"
 	windowsParams                 = "windowsparams.t"
 )
-
-// LBRuleBaseString is a raw string that represents a template that we will compose an LB rule from
-const LBRuleBaseString string = `	          {
-	"name": "LBRule%d",
-	"properties": {
-	  "backendAddressPool": {
-		"id": "[concat(variables('%sLbID'), '/backendAddressPools/', variables('%sLbBackendPoolName'))]"
-	  },
-	  "backendPort": %d,
-	  "enableFloatingIP": false,
-	  "frontendIPConfiguration": {
-		"id": "[variables('%sLbIPConfigID')]"
-	  },
-	  "frontendPort": %d,
-	  "idleTimeoutInMinutes": 5,
-	  "loadDistribution": "Default",
-	  "probe": {
-		"id": "[concat(variables('%sLbID'),'/probes/tcp%dProbe')]"
-	  },
-	  "protocol": "Tcp"
-	}
-  }`
