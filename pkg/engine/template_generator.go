@@ -293,7 +293,7 @@ func (t *TemplateGenerator) getTemplateFuncMap(cs *api.ContainerService) templat
 		},
 		"HasPrivateRegistry": func() bool {
 			if cs.Properties.OrchestratorProfile.DcosConfig != nil {
-				return len(cs.Properties.OrchestratorProfile.DcosConfig.Registry) > 0
+				return cs.Properties.OrchestratorProfile.DcosConfig.HasPrivateRegistry()
 			}
 			return false
 		},
@@ -304,19 +304,19 @@ func (t *TemplateGenerator) getTemplateFuncMap(cs *api.ContainerService) templat
 			return cs.Properties.OrchestratorProfile.IsKubernetes()
 		},
 		"IsPublic": func(ports []int) bool {
-			return len(ports) > 0
+			return common.SliceIntIsNonEmpty(ports)
 		},
 		"IsAzureCNI": func() bool {
 			return cs.Properties.OrchestratorProfile.IsAzureCNI()
 		},
 		"HasCosmosEtcd": func() bool {
-			return nil != cs.Properties.MasterProfile && to.Bool(cs.Properties.MasterProfile.CosmosEtcd)
+			return cs.Properties.MasterProfile != nil && cs.Properties.MasterProfile.HasCosmosEtcd()
 		},
 		"GetCosmosEndPointUri": func() string {
-			if nil != cs.Properties.MasterProfile && to.Bool(cs.Properties.MasterProfile.CosmosEtcd) {
-				return fmt.Sprintf(etcdEndpointURIFmt, cs.Properties.MasterProfile.DNSPrefix)
+			if cs.Properties.MasterProfile != nil {
+				return cs.Properties.MasterProfile.GetCosmosEndPointURI()
 			}
-			return "" // This will apply on both during unit tests as !HasCosmosEtcd
+			return ""
 		},
 		"IsPrivateCluster": func() bool {
 			return cs.Properties.OrchestratorProfile.IsPrivateCluster()

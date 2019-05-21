@@ -447,26 +447,7 @@ func getVNETSubnets(properties *api.Properties, addNSG bool) string {
 }
 
 func getLBRule(name string, port int) string {
-	return fmt.Sprintf(`	          {
-            "name": "LBRule%d",
-            "properties": {
-              "backendAddressPool": {
-                "id": "[concat(variables('%sLbID'), '/backendAddressPools/', variables('%sLbBackendPoolName'))]"
-              },
-              "backendPort": %d,
-              "enableFloatingIP": false,
-              "frontendIPConfiguration": {
-                "id": "[variables('%sLbIPConfigID')]"
-              },
-              "frontendPort": %d,
-              "idleTimeoutInMinutes": 5,
-              "loadDistribution": "Default",
-              "probe": {
-                "id": "[concat(variables('%sLbID'),'/probes/tcp%dProbe')]"
-              },
-              "protocol": "Tcp"
-            }
-          }`, port, name, name, port, name, port, name, port)
+	return fmt.Sprintf(LBRuleBaseString, port, name, name, port, name, port, name, port)
 }
 
 func getLBRules(name string, ports []int) string {

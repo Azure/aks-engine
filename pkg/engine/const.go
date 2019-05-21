@@ -110,8 +110,6 @@ const (
 	DefaultMasterEtcdClientPort = 2379
 	// etcdAccountNameFmt is the name format for a typical etcd account on Cosmos
 	etcdAccountNameFmt = "%sk8s"
-	// etcdEndpointURIFmt is the name format for a typical etcd account uri
-	etcdEndpointURIFmt = "%sk8s.etcd.cosmosdb.azure.com"
 )
 
 const (
@@ -228,3 +226,25 @@ const (
 	swarmWinAgentResourcesVMSS    = "swarm/swarmwinagentresourcesvmss.t"
 	windowsParams                 = "windowsparams.t"
 )
+
+// LBRuleBaseString is a raw string that represents a template that we will compose an LB rule from
+const LBRuleBaseString string = `	          {
+	"name": "LBRule%d",
+	"properties": {
+	  "backendAddressPool": {
+		"id": "[concat(variables('%sLbID'), '/backendAddressPools/', variables('%sLbBackendPoolName'))]"
+	  },
+	  "backendPort": %d,
+	  "enableFloatingIP": false,
+	  "frontendIPConfiguration": {
+		"id": "[variables('%sLbIPConfigID')]"
+	  },
+	  "frontendPort": %d,
+	  "idleTimeoutInMinutes": 5,
+	  "loadDistribution": "Default",
+	  "probe": {
+		"id": "[concat(variables('%sLbID'),'/probes/tcp%dProbe')]"
+	  },
+	  "protocol": "Tcp"
+	}
+  }`

@@ -73,7 +73,7 @@ func getK8sMasterVars(cs *api.ContainerService) (map[string]interface{}, error) 
 	hasStorageAccountDisks := cs.Properties.HasStorageAccountDisks()
 	isCustomVnet := cs.Properties.AreAgentProfilesCustomVNET()
 	hasAgentPool := len(profiles) > 0
-	hasCosmosEtcd := masterProfile != nil && to.Bool(masterProfile.CosmosEtcd)
+	hasCosmosEtcd := masterProfile != nil && masterProfile.HasCosmosEtcd()
 
 	kubernetesVersion := orchProfile.OrchestratorVersion
 	if cs.Properties.IsAzureStackCloud() {

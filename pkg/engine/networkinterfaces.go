@@ -14,19 +14,17 @@ import (
 func CreateNetworkInterfaces(cs *api.ContainerService) NetworkInterfaceARM {
 
 	var dependencies []string
-	if cs.Properties.MasterProfile.IsCustomVNET() {
+	if cs.Properties.MasterProfile != nil && cs.Properties.MasterProfile.IsCustomVNET() {
 		dependencies = append(dependencies, "[variables('nsgID')]")
 	} else {
 		dependencies = append(dependencies, "[variables('vnetID')]")
 	}
 
-	if cs.Properties.MasterProfile.HasMultipleNodes() {
+	if cs.Properties.MasterProfile != nil && cs.Properties.MasterProfile.HasMultipleNodes() {
 		dependencies = append(dependencies, "[variables('masterInternalLbName')]")
 	}
 
-	hasCosmosEtcd := nil != cs.Properties.MasterProfile && to.Bool(cs.Properties.MasterProfile.CosmosEtcd)
-
-	if hasCosmosEtcd {
+	if cs.Properties.MasterProfile != nil && cs.Properties.MasterProfile.HasCosmosEtcd() {
 		dependencies = append(dependencies, "[resourceId('Microsoft.DocumentDB/databaseAccounts/', variables('cosmosAccountName'))]")
 	}
 
@@ -48,7 +46,7 @@ func CreateNetworkInterfaces(cs *api.ContainerService) NetworkInterfaceARM {
 		DependsOn: dependencies,
 	}
 
-	if cs.Properties.MasterProfile.HasMultipleNodes() {
+	if cs.Properties.MasterProfile != nil && cs.Properties.MasterProfile.HasMultipleNodes() {
 		internalLbPool := network.BackendAddressPool{
 			ID: to.StringPtr("[concat(variables('masterInternalLbID'), '/backendAddressPools/', variables('masterLbBackendPoolName'))]"),
 		}
@@ -102,7 +100,7 @@ func CreateNetworkInterfaces(cs *api.ContainerService) NetworkInterfaceARM {
 		}
 	}
 
-	if cs.Properties.MasterProfile.IsCustomVNET() {
+	if cs.Properties.MasterProfile != nil && cs.Properties.MasterProfile.IsCustomVNET() {
 		nicProperties.NetworkSecurityGroup = &network.SecurityGroup{
 			ID: to.StringPtr("[variables('nsgID')]"),
 		}

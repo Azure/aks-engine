@@ -151,7 +151,7 @@ func CreateMasterVM(cs *api.ContainerService) VirtualMachineARM {
 	imageRef := cs.Properties.MasterProfile.ImageRef
 	useMasterCustomImage := imageRef != nil && len(imageRef.Name) > 0 && len(imageRef.ResourceGroup) > 0
 	etcdSizeGB, _ := strconv.Atoi(kubernetesConfig.EtcdDiskSizeGB)
-	if !to.Bool(cs.Properties.MasterProfile.CosmosEtcd) {
+	if !cs.Properties.MasterProfile.HasCosmosEtcd() {
 		dataDisk := compute.DataDisk{
 			CreateOption: compute.DiskCreateOptionTypesEmpty,
 			DiskSizeGB:   to.Int32Ptr(int32(etcdSizeGB)),

@@ -826,3 +826,119 @@ func TestGetKubernetesSubnets(t *testing.T) {
 		t.Errorf("expected to get %s, but got %s instead", expected, actual)
 	}
 }
+
+func TestGetVNETSubnetDependencies(t *testing.T) {
+	baseString := `        "[concat('Microsoft.Network/networkSecurityGroups/', variables('%sNSGName'))]"`
+	cases := []struct {
+		p        *api.Properties
+		expected string
+	}{
+		{
+			p:        &api.Properties{},
+			expected: "",
+		},
+		{
+			p: &api.Properties{
+				AgentPoolProfiles: []*api.AgentPoolProfile{},
+			},
+			expected: "",
+		},
+		{
+			p: &api.Properties{
+				AgentPoolProfiles: []*api.AgentPoolProfile{
+					{
+						Name: "pool1",
+					},
+				},
+			},
+			expected: fmt.Sprintf(baseString, "pool1"),
+		},
+		{
+			p: &api.Properties{
+				AgentPoolProfiles: []*api.AgentPoolProfile{
+					{
+						Name: "pool1",
+					},
+					{
+						Name: "pool2",
+					},
+					{
+						Name: "pool3",
+					},
+				},
+			},
+			expected: fmt.Sprintf(baseString, "pool1") + ",\n" + fmt.Sprintf(baseString, "pool2") + ",\n" + fmt.Sprintf(baseString, "pool3"),
+		},
+	}
+
+	for _, c := range cases {
+		if getVNETSubnetDependencies(c.p) != c.expected {
+			t.Fatalf("expected getVNETSubnetDependencies() to return %s but instead got %s", c.expected, getVNETSubnetDependencies(c.p))
+		}
+	}
+}
+
+func TestGetLBRule(t *testing.T) {
+	cases := []struct {
+		name     string
+		port     int
+		expected string
+	}{
+		{
+			name:     "foo",
+			port:     80,
+			expected: fmt.Sprintf(LBRuleBaseString, 80, "foo", "foo", 80, "foo", 80, "foo", 80),
+		},
+		{
+			name:     "bar",
+			port:     8080,
+			expected: fmt.Sprintf(LBRuleBaseString, 8080, "bar", "bar", 8080, "bar", 8080, "bar", 8080),
+		},
+		{
+			name:     "",
+			port:     0,
+			expected: fmt.Sprintf(LBRuleBaseString, 0, "", "", 0, "", 0, "", 0),
+		},
+	}
+
+	for _, c := range cases {
+		if getLBRule(c.name, c.port) != c.expected {
+			t.Fatalf("expected getLBRule() to return %s but instead got %s", c.expected, getLBRule(c.name, c.port))
+		}
+	}
+}
+
+func TestGetLBRules(t *testing.T) {
+	cases := []struct {
+		name     string
+		ports    []int
+		expected string
+	}{
+		{
+			name:     "foo",
+			ports:    []int{80},
+			expected: fmt.Sprintf(LBRuleBaseString, 80, "foo", "foo", 80, "foo", 80, "foo", 80),
+		},
+		{
+			name:     "bar",
+			ports:    []int{8080},
+			expected: fmt.Sprintf(LBRuleBaseString, 8080, "bar", "bar", 8080, "bar", 8080, "bar", 8080),
+		},
+		{
+			name:     "baz",
+			ports:    []int{80, 8080},
+			expected: fmt.Sprintf(LBRuleBaseString, 80, "baz", "baz", 80, "baz", 80, "baz", 80) + ",\n" + fmt.Sprintf(LBRuleBaseString, 8080, "baz", "baz", 8080, "baz", 8080, "baz", 8080),
+		},
+		{
+			name:     "",
+			ports:    []int{},
+			expected: "",
+		},
+	}
+
+	for _, c := range cases {
+		if getLBRules(c.name, c.ports) != c.expected {
+			t.Fatalf("expected getLBRules() to return %s but instead got %s", c.expected, getLBRules(c.name, c.ports))
+		}
+	}
+}
