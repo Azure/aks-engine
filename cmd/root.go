@@ -248,7 +248,14 @@ func (authArgs *authArgs) getAzureStackClient() (armhelpers.AKSEngineClient, err
 	}
 	switch authArgs.AuthMethod {
 	case "client_secret":
-		client, err = azurestack.NewAzureClientWithClientSecret(env, authArgs.SubscriptionID.String(), authArgs.ClientID.String(), authArgs.ClientSecret)
+		if authArgs.IdentitySystem == "azure_ad" {
+			client, err = azurestack.NewAzureClientWithClientSecret(env, authArgs.SubscriptionID.String(), authArgs.ClientID.String(), authArgs.ClientSecret)
+		} else if authArgs.IdentitySystem == "adfs" {
+			// for ADFS environment, it is single tenant environment and the tenant id is aways adfs
+			client, err = azurestack.NewAzureClientWithClientSecretExternalTenant(env, authArgs.SubscriptionID.String(), "adfs", authArgs.ClientID.String(), authArgs.ClientSecret)
+		} else {
+			return nil, errors.Errorf("--auth-method: ERROR: method unsupported. method=%q identitysystem=%q", authArgs.AuthMethod, authArgs.IdentitySystem)
+		}
 	case "client_certificate":
 		if authArgs.IdentitySystem == "azure_ad" {
 			client, err = azurestack.NewAzureClientWithClientCertificateFile(env, authArgs.SubscriptionID.String(), authArgs.ClientID.String(), authArgs.CertificatePath, authArgs.PrivateKeyPath)
