@@ -1,14 +1,3 @@
-{{if HasBootstrapPublicIP}}
-    {
-      "apiVersion": "[variables('apiVersionDefault')]",
-      "location": "[variables('location')]",
-      "name": "bootstrapPublicIP",
-      "properties": {
-        "publicIPAllocationMethod": "Dynamic"
-      },
-      "type": "Microsoft.Network/publicIPAddresses"
-    },
-{{end}}
     {
       "apiVersion": "[variables('apiVersionDefault')]",
       "location": "[variables('location')]",
@@ -53,9 +42,6 @@
 {{if not .MasterProfile.IsCustomVNET}}
         "[variables('vnetID')]",
 {{end}}
-{{if HasBootstrapPublicIP}}
-        "bootstrapPublicIP",
-{{end}}
         "[variables('bootstrapNSGID')]"
       ],
       "location": "[variables('location')]",
@@ -67,11 +53,6 @@
             "properties": {
               "privateIPAddress": "[variables('bootstrapStaticIP')]",
               "privateIPAllocationMethod": "Static",
-{{if HasBootstrapPublicIP}}
-              "publicIpAddress": {
-                "id": "[resourceId('Microsoft.Network/publicIpAddresses', 'bootstrapPublicIP')]"
-              },
-{{end}}
               "subnet": {
                 "id": "[variables('masterVnetSubnetID')]"
               }

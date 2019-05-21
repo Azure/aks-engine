@@ -52,6 +52,31 @@ const LBRuleBaseString string = `	          {
             }
           }`
 
+const TCPProbeBaseString string = `          {
+            "name": "tcp%dProbe",
+            "properties": {
+              "intervalInSeconds": 5,
+              "numberOfProbes": 2,
+              "port": %d,
+              "protocol": "Tcp"
+            }
+          }`
+
+const securityRuleBaseString string = `          {
+            "name": "Allow_%d",
+            "properties": {
+              "access": "Allow",
+              "description": "Allow traffic from the Internet to port %d",
+              "destinationAddressPrefix": "*",
+              "destinationPortRange": "%d",
+              "direction": "Inbound",
+              "priority": %d,
+              "protocol": "*",
+              "sourceAddressPrefix": "Internet",
+              "sourcePortRange": "*"
+            }
+          }`
+
 func TestExpected(t *testing.T) {
 	// Initialize locale for translation
 	locale := gotext.NewLocale(path.Join("..", "..", "translations"), "en_US")
@@ -672,28 +697,6 @@ func TestGenerateKubeConfig(t *testing.T) {
 	}
 }
 
-func TestGetDataDisks(t *testing.T) {
-	a := &api.AgentPoolProfile{
-		Name: "sampleAgent",
-		DiskSizesGB: []int{
-			128, 128, 128, 128, 128,
-		},
-		StorageProfile: api.ManagedDisks,
-	}
-	str := getDataDisks(a)
-	fmt.Println(str)
-
-	a = &api.AgentPoolProfile{
-		Name: "sampleAgentStorage",
-		DiskSizesGB: []int{
-			128, 128, 128, 128, 128,
-		},
-		StorageProfile: api.StorageAccount,
-	}
-	str = getDataDisks(a)
-	fmt.Println(str)
-}
-
 func TestValidateDistro(t *testing.T) {
 	// Test with Invalid Master Profile
 	cs := &api.ContainerService{
@@ -961,6 +964,295 @@ func TestGetLBRules(t *testing.T) {
 	for _, c := range cases {
 		if getLBRules(c.name, c.ports) != c.expected {
 			t.Fatalf("expected getLBRules() to return %s but instead got %s", c.expected, getLBRules(c.name, c.ports))
+		}
+	}
+}
+
+func TestGetProbe(t *testing.T) {
+	cases := []struct {
+		port     int
+		expected string
+	}{
+		{
+			port:     80,
+			expected: fmt.Sprintf(TCPProbeBaseString, 80, 80),
+		},
+		{
+			port:     0,
+			expected: fmt.Sprintf(TCPProbeBaseString, 0, 0),
+		},
+	}
+
+	for _, c := range cases {
+		if getProbe(c.port) != c.expected {
+			t.Fatalf("expected getProbe() to return %s but instead got %s", c.expected, getProbe(c.port))
+		}
+	}
+}
+
+func TestGetProbes(t *testing.T) {
+	cases := []struct {
+		ports    []int
+		expected string
+	}{
+		{
+			ports:    []int{80, 81},
+			expected: fmt.Sprintf(TCPProbeBaseString, 80, 80) + ",\n" + fmt.Sprintf(TCPProbeBaseString, 81, 81),
+		},
+		{
+			ports:    []int{8080},
+			expected: fmt.Sprintf(TCPProbeBaseString, 8080, 8080),
+		},
+	}
+
+	for _, c := range cases {
+		if getProbes(c.ports) != c.expected {
+			t.Fatalf("expected getProbes() to return %s but instead got %s", c.expected, getProbes(c.ports))
+		}
+	}
+}
+
+func TestGetSecurityRule(t *testing.T) {
+	cases := []struct {
+		port      int
+		portIndex int
+		expected  string
+	}{
+		{
+			port:      80,
+			portIndex: 0,
+			expected:  fmt.Sprintf(securityRuleBaseString, 80, 80, 80, 200),
+		},
+		{
+			port:      0,
+			portIndex: 1,
+			expected:  fmt.Sprintf(securityRuleBaseString, 0, 0, 0, 201),
+		},
+	}
+
+	for _, c := range cases {
+		if getSecurityRule(c.port, c.portIndex) != c.expected {
+			t.Fatalf("expected getSecurityRule() to return %s but instead got %s", c.expected, getSecurityRule(c.port, c.portIndex))
+		}
+	}
+}
+
+func TestGetSecurityRules(t *testing.T) {
+	cases := []struct {
+		ports    []int
+		expected string
+	}{
+		{
+			ports:    []int{80, 81},
+			expected: fmt.Sprintf(securityRuleBaseString, 80, 80, 80, 200) + ",\n" + fmt.Sprintf(securityRuleBaseString, 81, 81, 81, 201),
+		},
+		{
+			ports:    []int{80},
+			expected: fmt.Sprintf(securityRuleBaseString, 80, 80, 80, 200),
+		},
+	}
+
+	for _, c := range cases {
+		if getSecurityRules(c.ports) != c.expected {
+			t.Fatalf("expected getSecurityRules() to return %s but instead got %s", c.expected, getSecurityRules(c.ports))
+		}
+	}
+}
+
+func TestGetVNETAddressPrefixes(t *testing.T) {
+	baseString := `"[variables('masterSubnet')]"`
+	cases := []struct {
+		p        *api.Properties
+		expected string
+	}{
+		{
+			p: &api.Properties{
+				MasterProfile: &api.MasterProfile{},
+			},
+			expected: baseString,
+		},
+		{
+			p: &api.Properties{
+				MasterProfile: &api.MasterProfile{},
+				AgentPoolProfiles: []*api.AgentPoolProfile{
+					{
+						Name:   "foo",
+						Subnet: "10.0.0.0/24",
+					},
+				},
+			},
+			expected: baseString + fmt.Sprintf(",\n            \"[variables('%sSubnet')]\"", "foo"),
+		},
+		{
+			p: &api.Properties{
+				MasterProfile: &api.MasterProfile{},
+				AgentPoolProfiles: []*api.AgentPoolProfile{
+					{
+						Name:   "foo",
+						Subnet: "10.0.0.0/24",
+					},
+					{
+						Name:   "bar",
+						Subnet: "10.0.0.0/24",
+					},
+				},
+			},
+			expected: baseString + fmt.Sprintf(",\n            \"[variables('%sSubnet')]\"", "foo") + fmt.Sprintf(",\n            \"[variables('%sSubnet')]\"", "bar"),
+		},
+	}
+
+	for _, c := range cases {
+		if getVNETAddressPrefixes(c.p) != c.expected {
+			t.Fatalf("expected getVNETAddressPrefixes() to return %s but instead got %s", c.expected, getVNETAddressPrefixes(c.p))
+		}
+	}
+}
+
+func TestGetVNETSubnets(t *testing.T) {
+	masterString := `{
+            "name": "[variables('masterSubnetName')]",
+            "properties": {
+              "addressPrefix": "[variables('masterSubnet')]"
+            }
+          }`
+	agentString := `          {
+            "name": "[variables('%sSubnetName')]",
+            "properties": {
+              "addressPrefix": "[variables('%sSubnet')]"
+            }
+          }`
+	agentStringNSG := `          {
+            "name": "[variables('%sSubnetName')]",
+            "properties": {
+              "addressPrefix": "[variables('%sSubnet')]",
+              "networkSecurityGroup": {
+                "id": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('%sNSGName'))]"
+              }
+            }
+          }`
+	cases := []struct {
+		p        *api.Properties
+		addNSG   bool
+		expected string
+	}{
+		{
+			p: &api.Properties{
+				AgentPoolProfiles: []*api.AgentPoolProfile{},
+			},
+			addNSG:   false,
+			expected: masterString,
+		},
+		{
+			p: &api.Properties{
+				AgentPoolProfiles: []*api.AgentPoolProfile{
+					{
+						Name: "foo",
+					},
+					{
+						Name: "bar",
+					},
+				},
+			},
+			addNSG:   false,
+			expected: masterString + ",\n" + fmt.Sprintf(agentString, "foo", "foo") + ",\n" + fmt.Sprintf(agentString, "bar", "bar"),
+		},
+		{
+			p: &api.Properties{
+				AgentPoolProfiles: []*api.AgentPoolProfile{
+					{
+						Name: "foo",
+					},
+					{
+						Name: "bar",
+					},
+				},
+			},
+			addNSG:   true,
+			expected: masterString + ",\n" + fmt.Sprintf(agentStringNSG, "foo", "foo", "foo") + ",\n" + fmt.Sprintf(agentStringNSG, "bar", "bar", "bar"),
+		},
+	}
+
+	for _, c := range cases {
+		if getVNETSubnets(c.p, c.addNSG) != c.expected {
+			t.Fatalf("expected getVNETSubnets() to return %s but instead got %s", c.expected, getVNETSubnets(c.p, c.addNSG))
+		}
+	}
+}
+
+func TestGetDataDisks(t *testing.T) {
+	baseString := "\"dataDisks\": [\n"
+	dataDisks := `            {
+              "createOption": "Empty",
+              "diskSizeGB": "%d",
+              "lun": %d,
+              "caching": "ReadOnly",
+              "name": "[concat(variables('%sVMNamePrefix'), copyIndex(),'-datadisk%d')]",
+              "vhd": {
+                "uri": "[concat('http://',variables('storageAccountPrefixes')[mod(add(add(div(copyIndex(),variables('maxVMsPerStorageAccount')),variables('%sStorageAccountOffset')),variables('dataStorageAccountPrefixSeed')),variables('storageAccountPrefixesCount'))],variables('storageAccountPrefixes')[div(add(add(div(copyIndex(),variables('maxVMsPerStorageAccount')),variables('%sStorageAccountOffset')),variables('dataStorageAccountPrefixSeed')),variables('storageAccountPrefixesCount'))],variables('%sDataAccountName'),'.blob.core.windows.net/vhds/',variables('%sVMNamePrefix'),copyIndex(), '--datadisk%d.vhd')]"
+              }
+            }`
+	managedDataDisks := `            {
+              "diskSizeGB": "%d",
+              "lun": %d,
+              "caching": "ReadOnly",
+              "createOption": "Empty"
+            }`
+	cases := []struct {
+		p        *api.AgentPoolProfile
+		addNSG   bool
+		expected string
+	}{
+		{
+			p:        &api.AgentPoolProfile{},
+			expected: "",
+		},
+		{
+			p: &api.AgentPoolProfile{
+				Name: "foo",
+				DiskSizesGB: []int{
+					128,
+				},
+				StorageProfile: api.ManagedDisks,
+			},
+			expected: baseString + fmt.Sprintf(managedDataDisks, 128, 0) + "\n          ],",
+		},
+		{
+			p: &api.AgentPoolProfile{
+				Name: "bar",
+				DiskSizesGB: []int{
+					128,
+				},
+				StorageProfile: api.StorageAccount,
+			},
+			expected: baseString + fmt.Sprintf(dataDisks, 128, 0, "bar", 0, "bar", "bar", "bar", "bar", 0) + "\n          ],",
+		},
+		{
+			p: &api.AgentPoolProfile{
+				Name: "foo",
+				DiskSizesGB: []int{
+					128,
+					384,
+				},
+				StorageProfile: api.ManagedDisks,
+			},
+			expected: baseString + fmt.Sprintf(managedDataDisks, 128, 0) + ",\n" + fmt.Sprintf(managedDataDisks, 384, 1) + "\n          ],",
+		},
+		{
+			p: &api.AgentPoolProfile{
+				Name: "bar",
+				DiskSizesGB: []int{
+					128,
+					256,
+				},
+				StorageProfile: api.StorageAccount,
+			},
+			expected: baseString + fmt.Sprintf(dataDisks, 128, 0, "bar", 0, "bar", "bar", "bar", "bar", 0) + ",\n" + fmt.Sprintf(dataDisks, 256, 1, "bar", 1, "bar", "bar", "bar", "bar", 1) + "\n          ],",
+		},
+	}
+
+	for _, c := range cases {
+		if getDataDisks(c.p) != c.expected {
+			t.Fatalf("expected getDataDisks() to return %s but instead got %s", c.expected, getDataDisks(c.p))
 		}
 	}
 }

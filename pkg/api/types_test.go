@@ -5235,3 +5235,37 @@ func TestDcosConfigHasPrivateRegistry(t *testing.T) {
 		}
 	}
 }
+
+func TestDcosConfigHasBootstrap(t *testing.T) {
+	cases := []struct {
+		p        Properties
+		expected bool
+	}{
+		{
+			p: Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					OrchestratorType: DCOS,
+					DcosConfig:       &DcosConfig{},
+				},
+			},
+			expected: false,
+		},
+		{
+			p: Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					OrchestratorType: DCOS,
+					DcosConfig: &DcosConfig{
+						BootstrapProfile: &BootstrapProfile{},
+					},
+				},
+			},
+			expected: true,
+		},
+	}
+
+	for _, c := range cases {
+		if c.p.OrchestratorProfile.DcosConfig.HasBootstrap() != c.expected {
+			t.Fatalf("expected HasBootstrap() to return %t but instead got %t", c.expected, c.p.OrchestratorProfile.DcosConfig.HasBootstrap())
+		}
+	}
+}

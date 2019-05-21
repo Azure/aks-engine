@@ -67,6 +67,13 @@ func TestGetTemplateFuncMap(t *testing.T) {
 		"NeedsKubeDNSWithExecHealthz",
 		"GetVNETSubnetDependencies",
 		"GetLBRules",
+		"GetProbes",
+		"GetSecurityRules",
+		"GetUniqueNameSuffix",
+		"GetVNETAddressPrefixes",
+		"GetVNETSubnets",
+		"GetDataDisks",
+		"HasBootstrap",
 		// TODO validate that the remaining func strings in getTemplateFuncMap are thinly wrapped and unit tested
 	}
 
