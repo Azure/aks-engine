@@ -1199,7 +1199,6 @@ func TestGetDataDisks(t *testing.T) {
             }`
 	cases := []struct {
 		p        *api.AgentPoolProfile
-		addNSG   bool
 		expected string
 	}{
 		{
