@@ -23,6 +23,7 @@ import (
 	"github.com/Azure/aks-engine/pkg/i18n"
 	"github.com/leonelquinteros/gotext"
 	"github.com/pkg/errors"
+	k8sClientAPI "k8s.io/client-go/tools/clientcmd/api"
 )
 
 const (
@@ -613,12 +614,38 @@ func TestGenerateKubeConfig(t *testing.T) {
 		t.Errorf("Failed to load container service from file: %v", err)
 	}
 	kubeConfig, err := GenerateKubeConfig(containerService.Properties, "westus2")
-	// TODO add actual kubeconfig validation
-	if len(kubeConfig) < 1 {
-		t.Errorf("Got unexpected kubeconfig payload: %v", kubeConfig)
-	}
 	if err != nil {
 		t.Errorf("Failed to call GenerateKubeConfig with simple Kubernetes config from file: %v", testData)
+	}
+	_, err = json.Marshal(kubeConfig)
+	if err != nil {
+		t.Errorf("Failed to call validate that kubeconfig is valid JSON: %v", err)
+	}
+	clientConfig := &k8sClientAPI.Config{}
+	err = json.Unmarshal([]byte(kubeConfig), &clientConfig)
+	if err != nil {
+		t.Errorf("unexpected error while unmarshalling the kubeConfig JSON: %s", err.Error())
+	}
+	if clientConfig.APIVersion != "v1" {
+		t.Errorf("unexpected APIVersion value in k8s client API config object: %s", clientConfig.APIVersion)
+	}
+	if clientConfig.Kind != "Config" {
+		t.Errorf("unexpected Kind value in k8s client API config object: %s", clientConfig.Kind)
+	}
+	if _, ok := clientConfig.Clusters["masterdns1"]; !ok {
+		t.Errorf("didn't find clusters object in k8s client API config object: %v", clientConfig.Clusters)
+	}
+	if clientConfig.Clusters["masterdns1"].Server != "https://masterdns1.westus2.cloudapp.azure.com" {
+		t.Errorf("unexpected Server value in k8s client API cluster config object: %s", clientConfig.Clusters["masterdns1"].Server)
+	}
+	if clientConfig.Clusters["masterdns1"].InsecureSkipTLSVerify {
+		t.Errorf("unexpected InsecureSkipTLSVerify value in k8s client API cluster config object: %t", clientConfig.Clusters["masterdns1"].InsecureSkipTLSVerify)
+	}
+	if clientConfig.Clusters["masterdns1"].CertificateAuthority != "" {
+		t.Errorf("unexpected CertificateAuthority value in k8s client API cluster config object: %s", clientConfig.Clusters["masterdns1"].CertificateAuthority)
+	}
+	if clientConfig.Clusters["masterdns1"].CertificateAuthority != "" {
+		t.Errorf("unexpected CertificateAuthority value in k8s client API cluster config object: %s", clientConfig.Clusters["masterdns1"].CertificateAuthority)
 	}
 
 	p := api.Properties{}

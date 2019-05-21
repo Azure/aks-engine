@@ -17377,35 +17377,26 @@ func k8sContaineraddonsKubernetesmasteraddonsTillerDeploymentYaml() (*asset, err
 	return a, nil
 }
 
-var _k8sKubeconfigJson = []byte(`    {
-        "apiVersion": "v1",
-        "clusters": [
-            {
-                "cluster": {
-                    "certificate-authority-data": "{{WrapAsVerbatim "parameters('caCertificate')"}}",
-                    "server": "https://{{WrapAsVerbatim "reference(concat('Microsoft.Network/publicIPAddresses/', variables('masterPublicIPAddressName'))).dnsSettings.fqdn"}}"
-                },
-                "name": "{{WrapAsVariable "resourceGroup"}}"
-            }
-        ],
-        "contexts": [
-            {
-                "context": {
-                    "cluster": "{{WrapAsVariable "resourceGroup"}}",
-                    "user": "{{WrapAsVariable "resourceGroup"}}-admin"
-                },
-                "name": "{{WrapAsVariable "resourceGroup"}}"
-            }
-        ],
-        "current-context": "{{WrapAsVariable "resourceGroup"}}",
-        "kind": "Config",
-        "users": [
-            {
-                "name": "{{WrapAsVariable "resourceGroup"}}-admin",
-                "user": {{authInfo}}
-            }
-        ]
-    }
+var _k8sKubeconfigJson = []byte(`{
+	"apiVersion": "v1",
+	"clusters": {
+		"{{WrapAsVariable "resourceGroup"}}": {
+			"certificate-authority-data": "{{WrapAsVerbatim "parameters('caCertificate')"}}",
+			"server": "https://{{WrapAsVerbatim "reference(concat('Microsoft.Network/publicIPAddresses/', variables('masterPublicIPAddressName'))).dnsSettings.fqdn"}}"
+		}
+	},
+	"contexts": {
+		"{{WrapAsVariable "resourceGroup"}}": {
+			"cluster": "{{WrapAsVariable "resourceGroup"}}",
+			"user": "{{WrapAsVariable "resourceGroup"}}-admin"
+		}
+	},
+	"current-context": "{{WrapAsVariable "resourceGroup"}}",
+	"kind": "Config",
+	"users": {
+		"{{WrapAsVariable "resourceGroup"}}-admin": {{authInfo}}
+	}
+}
 `)
 
 func k8sKubeconfigJsonBytes() ([]byte, error) {
