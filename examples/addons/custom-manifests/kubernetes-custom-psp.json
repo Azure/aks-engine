@@ -1,14 +1,11 @@
 {
   "apiVersion": "vlabs",
-  "plan": {},
   "properties": {
-    "provisioningState": "",
     "orchestratorProfile": {
       "orchestratorType": "Kubernetes",
-      "orchestratorRelease": "1.10",
       "kubernetesConfig": {
-        "enablePodSecurityPolicy": true,
         "enableRbac": true,
+        "enablePodSecurityPolicy": true,
         "addons": [
           {
             "name": "pod-security-policy",
@@ -19,14 +16,15 @@
     },
     "masterProfile": {
       "count": 1,
-      "dnsPrefix": "masterdns1",
-      "vmSize": "Standard_D2_v2"
+      "dnsPrefix": "",
+      "vmSize": "Standard_DS2_v2"
     },
     "agentPoolProfiles": [
       {
-        "name": "agentpool1",
+        "name": "agentpool",
         "count": 3,
-        "vmSize": "Standard_D2_v2"
+        "vmSize": "Standard_DS2_v2",
+        "availabilityProfile": "VirtualMachineScaleSets"
       }
     ],
     "linuxProfile": {
@@ -34,35 +32,14 @@
       "ssh": {
         "publicKeys": [
           {
-            "keyData": "ssh-rsa PUBLICKEY azureuser@linuxvm"
+            "keyData": ""
           }
         ]
       }
     },
-    "windowsProfile": {},
     "servicePrincipalProfile": {
-      "clientId": "ServicePrincipalClientID",
-      "secret": "myServicePrincipalClientSecret"
-    },
-    "certificateProfile": {
-      "caCertificate": "caCertificate",
-      "caPrivateKey": "caPrivateKey",
-      "apiServerCertificate": "apiServerCertificate",
-      "apiServerPrivateKey": "apiServerPrivateKey",
-      "clientCertificate": "clientCertificate",
-      "clientPrivateKey": "clientPrivateKey",
-      "kubeConfigCertificate": "kubeConfigCertificate",
-      "kubeConfigPrivateKey": "kubeConfigPrivateKey",
-      "etcdClientCertificate": "etcdClientCertificate",
-      "etcdClientPrivateKey": "etcdClientPrivateKey",
-      "etcdServerCertificate": "etcdServerCertificate",
-      "etcdServerPrivateKey": "etcdServerPrivateKey",
-      "etcdPeerCertificates": [
-        "etcdPeerCertificate0"
-      ],
-      "etcdPeerPrivateKeys": [
-        "etcdPeerPrivateKey0"
-      ]
+      "clientId": "",
+      "secret": ""
     }
   }
 }

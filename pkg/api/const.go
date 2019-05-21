@@ -198,6 +198,8 @@ const (
 	CalicoAddonName = "calico-daemonset"
 	// IPMASQAgentAddonName is the name of the ip masq agent addon
 	IPMASQAgentAddonName = "ip-masq-agent"
+	// PodSecurityPolicyAddonName is the name of the PodSecurityPolicy addon
+	PodSecurityPolicyAddonName = "pod-security-policy"
 	// DefaultPrivateClusterEnabled determines the aks-engine provided default for enabling kubernetes Private Cluster
 	DefaultPrivateClusterEnabled = false
 	// NetworkPolicyAzure is the string expression for Azure CNI network policy manager

@@ -270,6 +270,9 @@ func (a *Properties) ValidateOrchestratorProfile(isUpdate bool) error {
 						return errors.Errorf("enablePodSecurityPolicy is only supported in aks-engine for Kubernetes version %s or greater; unable to validate for Kubernetes version %s",
 							minVersion.String(), version)
 					}
+					if len(o.KubernetesConfig.PodSecurityPolicyConfig) > 0 {
+						log.Warnf("Raw manifest for PodSecurityPolicy using PodSecurityPolicyConfig is deprecated in favor of the addon pod-security-policy. This will be ignored.")
+					}
 				}
 
 				if o.KubernetesConfig.LoadBalancerSku == StandardLoadBalancerSku {

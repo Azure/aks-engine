@@ -311,16 +311,31 @@ func (cs *ContainerService) setAddonsConfig(isUpdate bool) {
 		o.KubernetesConfig.Addons = defaultAddons
 	} else {
 		for _, addon := range defaultAddons {
-			i := getAddonsIndexByName(o.KubernetesConfig.Addons, addon.Name)
-			if i < 0 {
-				o.KubernetesConfig.Addons = append(o.KubernetesConfig.Addons, addon)
-			}
+			o.KubernetesConfig.Addons = appendAddonIfNotPresent(o.KubernetesConfig.Addons, addon)
 		}
 	}
 
 	for _, addon := range defaultAddons {
 		synthesizeAddonsConfig(o.KubernetesConfig.Addons, addon, false, isUpdate)
 	}
+
+	if len(o.KubernetesConfig.PodSecurityPolicyConfig) > 0 && isUpdate {
+		if base64Data, ok := o.KubernetesConfig.PodSecurityPolicyConfig["data"]; ok {
+			pspAddonsConfig := KubernetesAddon{
+				Name: PodSecurityPolicyAddonName,
+				Data: base64Data,
+			}
+			o.KubernetesConfig.Addons = appendAddonIfNotPresent(o.KubernetesConfig.Addons, pspAddonsConfig)
+		}
+	}
+}
+
+func appendAddonIfNotPresent(addons []KubernetesAddon, addon KubernetesAddon) []KubernetesAddon {
+	i := getAddonsIndexByName(addons, addon.Name)
+	if i < 0 {
+		return append(addons, addon)
+	}
+	return addons
 }
 
 func getAddonsIndexByName(addons []KubernetesAddon, name string) int {
