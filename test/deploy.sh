@@ -45,7 +45,7 @@ fi
 
 # Ensure Cluster Definition
 if [[ -z "${CLUSTER_DEFINITION:-}" ]]; then
-	if [[ -z "${1:-}" ]]; then echo "You must specify a parameterized apimodel.json clusterdefinition"; exit -1; fi
+	if [[ -z "${1:-}" ]]; then echo "You must specify a parameterized apimodel.json clusterdefinition" >&2; exit 1; fi
 	CLUSTER_DEFINITION="${1}"
 fi
 

@@ -29,7 +29,6 @@ SC2145
 SC2154
 SC2162
 SC2206
-SC2242
 "
 
 shellcheck $(printf -- "-e %s " $IGNORED) $files
