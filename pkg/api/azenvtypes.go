@@ -83,7 +83,7 @@ var (
 		ContainerdDownloadURLBase:        "https://storage.googleapis.com/cri-containerd-release/",
 		ImageRepoOverrides: map[string]ImageRepoOverride{
 			"k8s.gcr.io/hyperkube-amd64": {
-				Registry: "mcr.microsoft.com",
+				Registry: "upstream.azurecr.io",
 				Repo:     "k8s/core/hyperkube-amd64",
 				// TODO: Setup tag overrides so we can map upstream versions to Azure k8s versions
 				// For now just using the upstream version works fine.

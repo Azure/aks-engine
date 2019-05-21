@@ -376,7 +376,7 @@ for KUBERNETES_VERSION in ${K8S_VERSIONS}; do
     if [[ $KUBERNETES_VERSION == *"azs"* ]]; then
       HYPERKUBE_URL="msazurestackdocker/hyperkube-amd64:v${KUBERNETES_VERSION}"
     else
-      HYPERKUBE_URL="mcr.microsoft.com/k8s/core/hyperkube-amd64:v${KUBERNETES_VERSION}"
+      HYPERKUBE_URL="upstream.azurecr.io/k8s/core/hyperkube-amd64:v${KUBERNETES_VERSION}"
       CONTAINER_IMAGE="k8s.gcr.io/cloud-controller-manager-amd64:v${KUBERNETES_VERSION}"
       pullContainerImage "docker" ${CONTAINER_IMAGE}
       echo "  - ${CONTAINER_IMAGE}" >> ${RELEASE_NOTES_FILEPATH}
