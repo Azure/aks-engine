@@ -36,3 +36,4 @@ ignore:
   - "pkg/armhelpers/mockclients.go"
   - "pkg/engine/testutils.go"
   - "pkg/test/*.go"
+  - pkg/engine/engine_dcos.go
