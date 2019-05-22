@@ -10993,17 +10993,17 @@ configureK8sCustomCloud() {
         KUBERNETES_FILE_DIR=$(dirname "${AZURE_JSON_PATH}")
         K8S_CLIENT_CERT_PATH="${KUBERNETES_FILE_DIR}/k8s_auth_certificate.pfx"
         echo $SERVICE_PRINCIPAL_CLIENT_SECRET_CERT | base64 --decode > $K8S_CLIENT_CERT_PATH
-        # shellcheck disable=SC2002
-        cat "${AZURE_JSON_PATH}" | \
+        # shellcheck disable=SC2002,SC2005
+        echo $(cat "${AZURE_JSON_PATH}" | \
             jq --arg K8S_CLIENT_CERT_PATH ${K8S_CLIENT_CERT_PATH} '. + {aadClientCertPath:($K8S_CLIENT_CERT_PATH)}' | \
             jq --arg SERVICE_PRINCIPAL_CLIENT_SECRET_PASSWORD ${SERVICE_PRINCIPAL_CLIENT_SECRET_PASSWORD} '. + {aadClientCertPassword:($SERVICE_PRINCIPAL_CLIENT_SECRET_PASSWORD)}' |\
-            jq 'del(.aadClientSecret)' > ${AZURE_JSON_PATH}
+            jq 'del(.aadClientSecret)') > ${AZURE_JSON_PATH}
     fi
 
     if [[ "${IDENTITY_SYSTEM,,}" == "adfs"  ]]; then
         # update the tenent id for ADFS environment.
-        # shellcheck disable=SC2002
-        cat "${AZURE_JSON_PATH}" | jq '.tenantId = "adfs"' > ${AZURE_JSON_PATH}
+        # shellcheck disable=SC2002,SC2005
+        echo $(cat "${AZURE_JSON_PATH}" | jq '.tenantId = "adfs"') > ${AZURE_JSON_PATH}
     fi
     set -x
 }
@@ -13321,16 +13321,6 @@ MASTER_CONTAINER_ADDONS_PLACEHOLDER
 {{ else }}
     sed -i "s|<etcdEndPointUri>|127.0.0.1|g" $a
 {{ end }}
-{{if IsAzureStackCloud}}
-    {{if IsMultiMasterCluster}}
-    masterLBIP=` + "`" + `getent hosts {{WrapAsVariable "masterPublicLbFQDN"}} | cut -d " " -f1` + "`" + `
-    sed -i "s|<advertiseAddr>|$masterLBIP|g" $a
-    {{else}}
-    sed -i "s|<advertiseAddr>|{{WrapAsVariable "kubernetesAPIServerIP"}}|g" $a
-    {{end}}
-{{else}}
-    sed -i "s|<advertiseAddr>|{{WrapAsVariable "kubernetesAPIServerIP"}}|g" $a
-{{end}}
     sed -i "s|<advertiseAddr>|{{WrapAsVariable "kubernetesAPIServerIP"}}|g" $a
     sed -i "s|<args>|{{GetK8sRuntimeConfigKeyVals .OrchestratorProfile.KubernetesConfig.ControllerManagerConfig}}|g" /etc/kubernetes/manifests/kube-controller-manager.yaml
     sed -i "s|<args>|{{GetK8sRuntimeConfigKeyVals .OrchestratorProfile.KubernetesConfig.SchedulerConfig}}|g" /etc/kubernetes/manifests/kube-scheduler.yaml
@@ -13726,15 +13716,7 @@ write_files:
     - name: localcluster
       cluster:
         certificate-authority: /etc/kubernetes/certs/ca.crt
-        {{if IsAzureStackCloud}}
-            {{if IsMultiMasterCluster}}
-        server: https://{{WrapAsVariable "masterPublicLbFQDN"}}:443
-            {{else}}
         server: https://{{WrapAsVariable "kubernetesAPIServerIP"}}:443
-            {{end}}
-        {{else}}
-        server: https://{{WrapAsVariable "kubernetesAPIServerIP"}}:443
-        {{end}}
     users:
     - name: client
       user:
