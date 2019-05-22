@@ -26,6 +26,7 @@ import (
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
+	prefixed "github.com/x-cray/logrus-prefixed-formatter"
 )
 
 type scaleCmd struct {
@@ -86,7 +87,7 @@ func newScaleCmd() *cobra.Command {
 }
 
 func (sc *scaleCmd) validate(cmd *cobra.Command) error {
-	log.Infoln("validating...")
+	log.Debugln("validating scale command line arguments...")
 	var err error
 
 	sc.locale, err = i18n.LoadTranslations()
@@ -125,6 +126,8 @@ func (sc *scaleCmd) validate(cmd *cobra.Command) error {
 }
 
 func (sc *scaleCmd) load() error {
+	logger := log.New()
+	logger.Formatter = new(prefixed.TextFormatter)
 	sc.logger = log.NewEntry(log.New())
 	var err error
 
@@ -203,7 +206,7 @@ func (sc *scaleCmd) load() error {
 
 	//allows to identify VMs in the resource group that belong to this cluster.
 	sc.nameSuffix = sc.containerService.Properties.GetClusterID()
-	log.Infof("Name suffix: %s", sc.nameSuffix)
+	log.Debugf("Cluster ID used in all agent pools: %s", sc.nameSuffix)
 	return nil
 }
 

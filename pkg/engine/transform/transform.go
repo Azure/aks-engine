@@ -194,7 +194,7 @@ func (t *Transformer) NormalizeForK8sVMASScalingUp(logger *logrus.Entry, templat
 	}
 
 	if rtIndex == -1 {
-		logger.Infof("Found no resources with type %s in the template.", rtResourceType)
+		logger.Debugf("Found no resources with type %s in the template.", rtResourceType)
 	} else {
 		indexesToRemove = append(indexesToRemove, rtIndex)
 	}

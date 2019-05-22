@@ -78,7 +78,10 @@ func (o *drainOperation) deleteOrEvictPodsSimple() error {
 	if err != nil {
 		return err
 	}
-	o.logger.Infof("%d pods need to be deleted from %s", len(pods), o.node.Name)
+	o.logger.WithFields(log.Fields{
+		"prefix": "drain",
+		"node":   o.node.Name,
+	}).Infof("%d pods will be deleted", len(pods))
 
 	err = o.deleteOrEvictPods(pods)
 	if err != nil {
