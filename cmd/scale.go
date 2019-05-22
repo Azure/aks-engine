@@ -125,7 +125,7 @@ func (sc *scaleCmd) validate(cmd *cobra.Command) error {
 }
 
 func (sc *scaleCmd) load() error {
-	sc.logger = log.New()
+	sc.logger = log.NewEntry(log.New())
 	var err error
 
 	ctx, cancel := context.WithTimeout(context.Background(), armhelpers.DefaultARMOperationTimeout)
