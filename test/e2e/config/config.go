@@ -5,6 +5,7 @@ package config
 
 import (
 	"bufio"
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -14,7 +15,9 @@ import (
 	"path/filepath"
 	"strings"
 	"time"
-
+         
+	"github.com/Azure/aks-engine/pkg/api"
+	"github.com/Azure/aks-engine/pkg/api/vlabs"
 	"github.com/Azure/aks-engine/test/e2e/kubernetes/util"
 	"github.com/kelseyhightower/envconfig"
 )
