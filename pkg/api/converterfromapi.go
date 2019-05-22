@@ -1182,6 +1182,7 @@ func convertAADProfileToVLabs(api *AADProfile, vlabs *vlabs.AADProfile) {
 func convertFeatureFlagsToVLabs(api *FeatureFlags, vlabs *vlabs.FeatureFlags) {
 	vlabs.EnableCSERunInBackground = api.EnableCSERunInBackground
 	vlabs.BlockOutboundInternet = api.BlockOutboundInternet
+	vlabs.EnableIPv6DualStack = api.EnableIPv6DualStack
 }
 
 func convertCloudProfileToVLabs(api *CustomCloudProfile, vlabsccp *vlabs.CustomCloudProfile) {

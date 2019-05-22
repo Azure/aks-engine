@@ -420,6 +420,7 @@ func convertVLabsProperties(vlabs *vlabs.Properties, api *Properties, isUpdate b
 func convertVLabsFeatureFlags(vlabs *vlabs.FeatureFlags, api *FeatureFlags) {
 	api.EnableCSERunInBackground = vlabs.EnableCSERunInBackground
 	api.BlockOutboundInternet = vlabs.BlockOutboundInternet
+	api.EnableIPv6DualStack = vlabs.EnableIPv6DualStack
 }
 
 func convertV20160930LinuxProfile(obj *v20160930.LinuxProfile, api *LinuxProfile) {
