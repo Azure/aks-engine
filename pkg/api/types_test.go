@@ -4,6 +4,7 @@
 package api
 
 import (
+	"fmt"
 	"log"
 	"reflect"
 	"strings"
@@ -430,6 +431,75 @@ func TestMasterProfileHasMultipleNodes(t *testing.T) {
 		}
 	}
 }
+
+func TestMasterProfileHasCosmosEtcd(t *testing.T) {
+	cases := []struct {
+		m        MasterProfile
+		expected bool
+	}{
+		{
+			m: MasterProfile{
+				CosmosEtcd: to.BoolPtr(true),
+			},
+			expected: true,
+		},
+		{
+			m: MasterProfile{
+				CosmosEtcd: to.BoolPtr(false),
+			},
+			expected: false,
+		},
+		{
+			m:        MasterProfile{},
+			expected: false,
+		},
+	}
+
+	for _, c := range cases {
+		if c.expected != c.m.HasCosmosEtcd() {
+			t.Fatalf("Got unexpected MasterProfile.HasCosmosEtcd() result. Expected: %t. Got: %t.", c.expected, c.m.HasCosmosEtcd())
+		}
+	}
+}
+
+func TestMasterProfileGetCosmosEndPointURI(t *testing.T) {
+	dnsPrefix := "my-prefix"
+	cases := []struct {
+		m        MasterProfile
+		expected string
+	}{
+		{
+			m: MasterProfile{
+				CosmosEtcd: to.BoolPtr(true),
+				DNSPrefix:  dnsPrefix,
+			},
+			expected: fmt.Sprintf(etcdEndpointURIFmt, dnsPrefix),
+		},
+		{
+			m: MasterProfile{
+				CosmosEtcd: to.BoolPtr(true),
+			},
+			expected: fmt.Sprintf(etcdEndpointURIFmt, ""),
+		},
+		{
+			m: MasterProfile{
+				CosmosEtcd: to.BoolPtr(false),
+			},
+			expected: "",
+		},
+		{
+			m:        MasterProfile{},
+			expected: "",
+		},
+	}
+
+	for _, c := range cases {
+		if c.expected != c.m.GetCosmosEndPointURI() {
+			t.Fatalf("Got unexpected MasterProfile.GetCosmosEndPointURI() result. Expected: %s. Got: %s.", c.expected, c.m.GetCosmosEndPointURI())
+		}
+	}
+}
+
 func TestHasStorageProfile(t *testing.T) {
 	cases := []struct {
 		p                 Properties
@@ -2311,6 +2381,70 @@ func TestIsPrivateCluster(t *testing.T) {
 	for _, c := range cases {
 		if c.p.OrchestratorProfile.IsPrivateCluster() != c.expected {
 			t.Fatalf("expected IsPrivateCluster() to return %t but instead got %t", c.expected, c.p.OrchestratorProfile.IsPrivateCluster())
+		}
+	}
+}
+
+func TestOrchestratorProfileNeedsExecHealthz(t *testing.T) {
+	cases := []struct {
+		p        Properties
+		expected bool
+	}{
+		{
+			p: Properties{
+				OrchestratorProfile: &OrchestratorProfile{},
+			},
+			expected: false,
+		},
+		{
+			p: Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					OrchestratorType: Kubernetes,
+				},
+			},
+			expected: false,
+		},
+		{
+			p: Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					OrchestratorType:    Kubernetes,
+					OrchestratorVersion: "1.7.0",
+				},
+			},
+			expected: true,
+		},
+		{
+			p: Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					OrchestratorType:    Kubernetes,
+					OrchestratorVersion: "1.8.99",
+				},
+			},
+			expected: true,
+		},
+		{
+			p: Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					OrchestratorType:    Kubernetes,
+					OrchestratorVersion: "1.9.0",
+				},
+			},
+			expected: false,
+		},
+		{
+			p: Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					OrchestratorType:    Kubernetes,
+					OrchestratorVersion: "1.6.99",
+				},
+			},
+			expected: false,
+		},
+	}
+
+	for _, c := range cases {
+		if c.p.OrchestratorProfile.NeedsExecHealthz() != c.expected {
+			t.Fatalf("expected NeedsExecHealthz() to return %t but instead got %t", c.expected, c.p.OrchestratorProfile.NeedsExecHealthz())
 		}
 	}
 }
@@ -5054,5 +5188,50 @@ func TestGetMasterFQDN(t *testing.T) {
 				t.Errorf("expected fqdn %s, but got %s", test.expectedFQDN, actual)
 			}
 		})
+	}
+}
+
+func TestDcosConfigHasPrivateRegistry(t *testing.T) {
+	cases := []struct {
+		p        Properties
+		expected bool
+	}{
+		{
+			p: Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					OrchestratorType: DCOS,
+					DcosConfig: &DcosConfig{
+						Registry: "my-custom-registry",
+					},
+				},
+			},
+			expected: true,
+		},
+		{
+			p: Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					OrchestratorType: DCOS,
+					DcosConfig: &DcosConfig{
+						Registry: "",
+					},
+				},
+			},
+			expected: false,
+		},
+		{
+			p: Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					OrchestratorType: DCOS,
+					DcosConfig:       &DcosConfig{},
+				},
+			},
+			expected: false,
+		},
+	}
+
+	for _, c := range cases {
+		if c.p.OrchestratorProfile.DcosConfig.HasPrivateRegistry() != c.expected {
+			t.Fatalf("expected HasPrivateRegistry() to return %t but instead got %t", c.expected, c.p.OrchestratorProfile.DcosConfig.HasPrivateRegistry())
+		}
 	}
 }

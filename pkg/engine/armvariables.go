@@ -8,7 +8,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"strconv"
-	"strings"
 
 	"github.com/Azure/aks-engine/pkg/api"
 	"github.com/Azure/aks-engine/pkg/helpers"
@@ -73,7 +72,7 @@ func getK8sMasterVars(cs *api.ContainerService) (map[string]interface{}, error) 
 	hasStorageAccountDisks := cs.Properties.HasStorageAccountDisks()
 	isCustomVnet := cs.Properties.AreAgentProfilesCustomVNET()
 	hasAgentPool := len(profiles) > 0
-	hasCosmosEtcd := masterProfile != nil && to.Bool(masterProfile.CosmosEtcd)
+	hasCosmosEtcd := masterProfile != nil && masterProfile.HasCosmosEtcd()
 
 	kubernetesVersion := orchProfile.OrchestratorVersion
 	if cs.Properties.IsAzureStackCloud() {
@@ -161,9 +160,6 @@ func getK8sMasterVars(cs *api.ContainerService) (map[string]interface{}, error) 
 		}
 		masterVars["environmentJSON"] = environmentJSON
 		masterVars["provisionConfigsCustomCloud"] = getBase64EncodedGzippedCustomScript(kubernetesCSECustomCloud)
-		masterVars["masterPublicLbFQDN"] = fmt.Sprintf("%s.%s.%s", strings.ToLower(cs.Properties.MasterProfile.DNSPrefix),
-			strings.ToLower(cs.Location),
-			strings.ToLower(cs.GetCloudSpecConfig().EndpointConfig.ResourceManagerVMDNSSuffix))
 	}
 
 	if kubernetesConfig != nil {

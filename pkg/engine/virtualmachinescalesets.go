@@ -44,7 +44,7 @@ func CreateMasterVMSS(cs *api.ContainerService) VirtualMachineScaleSetARM {
 		dependencies = append(dependencies, "[variables('masterInternalLbName')]")
 	}
 
-	if to.Bool(masterProfile.CosmosEtcd) {
+	if masterProfile.HasCosmosEtcd() {
 		dependencies = append(dependencies, "[resourceId('Microsoft.DocumentDB/databaseAccounts/', variables('cosmosAccountName'))]")
 	}
 

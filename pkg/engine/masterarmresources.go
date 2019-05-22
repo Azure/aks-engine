@@ -13,7 +13,7 @@ func createKubernetesMasterResourcesVMAS(cs *api.ContainerService) []interface{}
 
 	p := cs.Properties
 
-	if to.Bool(p.MasterProfile.CosmosEtcd) {
+	if p.MasterProfile.HasCosmosEtcd() {
 		masterResources = append(masterResources, createCosmosDBAccount())
 	}
 
@@ -126,7 +126,7 @@ func createKubernetesMasterResourcesVMAS(cs *api.ContainerService) []interface{}
 func createKubernetesMasterResourcesVMSS(cs *api.ContainerService) []interface{} {
 	var masterResources []interface{}
 
-	if to.Bool(cs.Properties.MasterProfile.CosmosEtcd) {
+	if cs.Properties.MasterProfile.HasCosmosEtcd() {
 		masterResources = append(masterResources, createCosmosDBAccount())
 	}
 

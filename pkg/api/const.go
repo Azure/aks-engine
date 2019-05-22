@@ -229,6 +229,8 @@ const (
 	DNSAutoscalerAddonName = "dns-autoscaler"
 	// DefaultUseCosmos determines if the cluster will use cosmos as etcd storage
 	DefaultUseCosmos = false
+	// etcdEndpointURIFmt is the name format for a typical etcd account uri
+	etcdEndpointURIFmt = "%sk8s.etcd.cosmosdb.azure.com"
 	// DefaultMaximumLoadBalancerRuleCount determines the default value of maximum allowed loadBalancer rule count according to
 	// https://docs.microsoft.com/en-us/azure/azure-subscription-service-limits#load-balancer.
 	DefaultMaximumLoadBalancerRuleCount = 250

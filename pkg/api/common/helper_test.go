@@ -137,7 +137,8 @@ func TestGetMasterKubernetesLabels(t *testing.T) {
 	}
 }
 
-func TestGetK8sRuntimeConfigKeyVals(t *testing.T) {
+func TestGetOrderedEscapedKeyValsString(t *testing.T) {
+	alphabetizedString := `\"foo=bar\", \"yes=please\"`
 	cases := []struct {
 		input    map[string]string
 		expected string
@@ -151,14 +152,21 @@ func TestGetK8sRuntimeConfigKeyVals(t *testing.T) {
 				"foo": "bar",
 				"yes": "please",
 			},
-			expected: `\"foo=bar\", \"yes=please\"`,
+			expected: alphabetizedString,
+		},
+		{
+			input: map[string]string{
+				"yes": "please",
+				"foo": "bar",
+			},
+			expected: alphabetizedString,
 		},
 	}
 
 	for _, c := range cases {
 		ret := GetOrderedEscapedKeyValsString(c.input)
 		if ret != c.expected {
-			t.Fatalf("expected GetK8sRuntimeConfigKeyVals(%s) to return %s, but instead got %s", c.input, c.expected, ret)
+			t.Fatalf("expected GetOrderedEscapedKeyValsString(%s) to return %s, but instead got %s", c.input, c.expected, ret)
 		}
 	}
 }
@@ -194,5 +202,34 @@ func TestGetStorageAccountType(t *testing.T) {
 	result, err := GetStorageAccountType(invalidVMSize)
 	if err == nil {
 		t.Errorf("GetStorageAccountType() = (%s, nil), want error", result)
+	}
+}
+
+func TestSliceIntIsNonEmpty(t *testing.T) {
+	cases := []struct {
+		input    []int
+		expected bool
+	}{
+		{
+			input: []int{
+				1, 2, 3,
+			},
+			expected: true,
+		},
+		{
+			input:    []int{},
+			expected: false,
+		},
+		{
+			input:    nil,
+			expected: false,
+		},
+	}
+
+	for _, c := range cases {
+		ret := SliceIntIsNonEmpty(c.input)
+		if ret != c.expected {
+			t.Fatalf("expected SliceIntIsNonEmpty(%v) to return %t, but instead got %t", c.input, c.expected, ret)
+		}
 	}
 }
