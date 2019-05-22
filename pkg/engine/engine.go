@@ -25,7 +25,6 @@ import (
 	"github.com/Azure/aks-engine/pkg/api"
 	"github.com/Azure/aks-engine/pkg/api/common"
 	"github.com/Azure/aks-engine/pkg/helpers"
-	"github.com/ghodss/yaml"
 	"github.com/pkg/errors"
 )
 
@@ -119,16 +118,25 @@ func validateDistro(cs *api.ContainerService) bool {
 	return true
 }
 
-func generateIPList(count int, firstAddr string) []string {
+// generateConsecutiveIPsList takes a starting IP address and returns a string slice of length "count" of subsequent, consecutive IP addresses
+func generateConsecutiveIPsList(count int, firstAddr string) ([]string, error) {
 	ipaddr := net.ParseIP(firstAddr).To4()
 	if ipaddr == nil {
-		panic(fmt.Sprintf("IPAddr '%s' is an invalid IP address", firstAddr))
+		return nil, errors.Errorf("IPAddr '%s' is an invalid IP address", firstAddr)
+	}
+	if int(ipaddr[3])+count >= 255 {
+		return nil, errors.Errorf("IPAddr '%s' + %d will overflow the fourth octet", firstAddr, count)
 	}
 	ret := make([]string, count)
 	for i := 0; i < count; i++ {
-		ret[i] = fmt.Sprintf("%d.%d.%d.%d", ipaddr[0], ipaddr[1], ipaddr[2], ipaddr[3]+byte(i))
+		nextAddress := fmt.Sprintf("%d.%d.%d.%d", ipaddr[0], ipaddr[1], ipaddr[2], ipaddr[3]+byte(i))
+		ipaddr := net.ParseIP(nextAddress).To4()
+		if ipaddr == nil {
+			return nil, errors.Errorf("IPAddr '%s' is an invalid IP address", nextAddress)
+		}
+		ret[i] = nextAddress
 	}
-	return ret
+	return ret, nil
 }
 
 func addValue(m paramsMap, k string, v interface{}) {
@@ -314,20 +322,6 @@ func getDCOSDefaultRepositoryURL(orchestratorType string, orchestratorVersion st
 		default:
 			return "https://dcosio.azureedge.net/dcos/stable"
 		}
-	}
-	return ""
-}
-
-func getDCOSCustomDataPublicIPStr(orchestratorType string, masterCount int) string {
-	if orchestratorType == api.DCOS {
-		var buf bytes.Buffer
-		for i := 0; i < masterCount; i++ {
-			buf.WriteString(fmt.Sprintf("reference(variables('masterVMNic')[%d]).ipConfigurations[0].properties.privateIPAddress,", i))
-			if i < (masterCount - 1) {
-				buf.WriteString(`'\\\", \\\"', `)
-			}
-		}
-		return buf.String()
 	}
 	return ""
 }
@@ -639,21 +633,6 @@ func getBase64EncodedGzippedCustomScriptFromStr(str string) string {
 	return base64.StdEncoding.EncodeToString(gzipB.Bytes())
 }
 
-func getDCOSProvisionScript(script string) string {
-	// add the provision script
-	bp, err := Asset(script)
-	if err != nil {
-		panic(fmt.Sprintf("BUG: %s", err.Error()))
-	}
-
-	provisionScript := string(bp)
-	if strings.Contains(provisionScript, "'") {
-		panic(fmt.Sprintf("BUG: %s may not contain character '", script))
-	}
-
-	return strings.Replace(strings.Replace(provisionScript, "\r\n", "\n", -1), "\n", "\n\n    ", -1)
-}
-
 func getAddonFuncMap(addon api.KubernetesAddon) template.FuncMap {
 	return template.FuncMap{
 		"ContainerImage": func(name string) string {
@@ -803,68 +782,6 @@ touch /etc/mesosphere/roles/azure_master`
 	b.WriteString("\n")
 
 	return strings.Replace(strings.Replace(b.String(), "\r\n", "\n", -1), "\n", "\n\n    ", -1)
-}
-
-func getDCOSCustomDataTemplate(orchestratorType, orchestratorVersion string) string {
-	switch orchestratorType {
-	case api.DCOS:
-		switch orchestratorVersion {
-		case common.DCOSVersion1Dot8Dot8:
-			return dcosCustomData188
-		case common.DCOSVersion1Dot9Dot0:
-			return dcosCustomData190
-		case common.DCOSVersion1Dot9Dot8:
-			return dcosCustomData198
-		case common.DCOSVersion1Dot10Dot0:
-			return dcosCustomData110
-		case common.DCOSVersion1Dot11Dot0:
-			return dcos2CustomData1110
-		case common.DCOSVersion1Dot11Dot2:
-			return dcos2CustomData1112
-		}
-	default:
-		// it is a bug to get here
-		panic(fmt.Sprintf("BUG: invalid orchestrator %s", orchestratorType))
-	}
-	return ""
-}
-
-// getSingleLineForTemplate returns the file as a single line for embedding in an arm template
-func getSingleLineDCOSCustomData(orchestratorType, yamlFilename string, masterCount int, replaceMap map[string]string) string {
-	b, err := Asset(yamlFilename)
-	if err != nil {
-		panic(fmt.Sprintf("BUG getting yaml custom data file: %s", err.Error()))
-	}
-	yamlStr := string(b)
-	for k, v := range replaceMap {
-		yamlStr = strings.Replace(yamlStr, k, v, -1)
-	}
-
-	// convert to json
-	jsonBytes, err4 := yaml.YAMLToJSON([]byte(yamlStr))
-	if err4 != nil {
-		panic(fmt.Sprintf("BUG: %s", err4.Error()))
-	}
-	yamlStr = string(jsonBytes)
-
-	// convert to one line
-	yamlStr = strings.Replace(yamlStr, "\\", "\\\\", -1)
-	yamlStr = strings.Replace(yamlStr, "\r\n", "\\n", -1)
-	yamlStr = strings.Replace(yamlStr, "\n", "\\n", -1)
-	yamlStr = strings.Replace(yamlStr, "\"", "\\\"", -1)
-
-	// variable replacement
-	rVariable, e1 := regexp.Compile("{{{([^}]*)}}}")
-	if e1 != nil {
-		panic(fmt.Sprintf("BUG: %s", e1.Error()))
-	}
-	yamlStr = rVariable.ReplaceAllString(yamlStr, "',variables('$1'),'")
-
-	// replace the internal values
-	publicIPStr := getDCOSCustomDataPublicIPStr(orchestratorType, masterCount)
-	yamlStr = strings.Replace(yamlStr, "DCOSCUSTOMDATAPUBLICIPSTR", publicIPStr, -1)
-
-	return yamlStr
 }
 
 func buildYamlFileWithWriteFiles(files []string) string {
