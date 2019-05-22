@@ -95,7 +95,7 @@ func ParseCustomCloudConfig() (*CustomCloudConfig, error) {
 func (c *Config) GetKubeConfig() string {
 	var kubeconfigPath string
 
-	if c.IsKubernetes(){
+	if c.IsKubernetes() {
 		file := fmt.Sprintf("kubeconfig.%s.json", c.Location)
 		kubeconfigPath = filepath.Join(c.CurrentWorkingDir, "_output", c.Name, "kubeconfig", file)
 	}
@@ -117,7 +117,7 @@ func (c *Config) UpdateCustomCloudClusterDefinition(ccc *CustomCloudConfig) erro
 	cs.Location = c.Location
 	cs.Properties.CustomCloudProfile.PortalURL = ccc.PortalURL
 	cs.Properties.ServicePrincipalProfile.ClientID = ccc.CustomCloudClientID
-	
+
 	if ccc.IdentitySystem == "azure_ad" {
 		cs.Properties.ServicePrincipalProfile.Secret = ccc.CustomCloudSecret
 	}
