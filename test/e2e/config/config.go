@@ -15,7 +15,7 @@ import (
 	"path/filepath"
 	"strings"
 	"time"
-         
+
 	"github.com/Azure/aks-engine/pkg/api"
 	"github.com/Azure/aks-engine/pkg/api/vlabs"
 	"github.com/Azure/aks-engine/test/e2e/kubernetes/util"
@@ -62,6 +62,7 @@ type CustomCloudConfig struct {
 	CustomCloudClientID          string `envconfig:"CUSTOM_CLOUD_CLIENT_ID"`
 	CustomCloudSecret            string `envconfig:"CUSTOM_CLOUD_SECRET"`
 	APIProfile                   string `envconfig:"API_PROFILE"`
+	PortalURL                    string `envconfig:"PORTAL_ENDPOINT"`
 	TimeoutCommands              bool
 }
 
@@ -94,8 +95,7 @@ func ParseCustomCloudConfig() (*CustomCloudConfig, error) {
 func (c *Config) GetKubeConfig() string {
 	var kubeconfigPath string
 
-	switch {
-	case c.IsKubernetes():
+	if c.IsKubernetes(){
 		file := fmt.Sprintf("kubeconfig.%s.json", c.Location)
 		kubeconfigPath = filepath.Join(c.CurrentWorkingDir, "_output", c.Name, "kubeconfig", file)
 	}
@@ -115,21 +115,9 @@ func (c *Config) UpdateCustomCloudClusterDefinition(ccc *CustomCloudConfig) erro
 	cs := parseVlabsContainerSerice(clusterDefinitionFullPath)
 
 	cs.Location = c.Location
-	cs.Properties.CustomCloudProfile.Environment.ServiceManagementEndpoint = ccc.ServiceManagementEndpoint
-	cs.Properties.CustomCloudProfile.Environment.ResourceManagerEndpoint = ccc.ResourceManagerEndpoint
-	cs.Properties.CustomCloudProfile.Environment.ActiveDirectoryEndpoint = ccc.ActiveDirectoryEndpoint
-	if ccc.IdentitySystem == "adfs" {
-		trimStr := strings.TrimSuffix(ccc.ActiveDirectoryEndpoint, "/")
-		trimStr = strings.TrimSuffix(trimStr, "adfs")
-		cs.Properties.CustomCloudProfile.Environment.ActiveDirectoryEndpoint = trimStr
-	}
-	cs.Properties.CustomCloudProfile.Environment.GalleryEndpoint = ccc.GalleryEndpoint
-	cs.Properties.CustomCloudProfile.Environment.GraphEndpoint = ccc.GraphEndpoint
-	cs.Properties.CustomCloudProfile.Environment.KeyVaultDNSSuffix = ccc.KeyVaultDNSSuffix
-	cs.Properties.CustomCloudProfile.Environment.ServiceManagementVMDNSSuffix = ccc.ServiceManagementVMDNSSuffix
-	cs.Properties.CustomCloudProfile.Environment.ResourceManagerVMDNSSuffix = ccc.ResourceManagerVMDNSSuffix
-
+	cs.Properties.CustomCloudProfile.PortalURL = ccc.PortalURL
 	cs.Properties.ServicePrincipalProfile.ClientID = ccc.CustomCloudClientID
+	
 	if ccc.IdentitySystem == "azure_ad" {
 		cs.Properties.ServicePrincipalProfile.Secret = ccc.CustomCloudSecret
 	}
