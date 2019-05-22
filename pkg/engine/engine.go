@@ -711,49 +711,6 @@ func getContainerAddonsString(properties *api.Properties, sourcePath string) str
 	return result
 }
 
-func getDCOSAgentProvisionScript(profile *api.AgentPoolProfile, orchProfile *api.OrchestratorProfile, bootstrapIP string) string {
-	// add the provision script
-	scriptname := dcos2Provision
-	if orchProfile.DcosConfig == nil || orchProfile.DcosConfig.BootstrapProfile == nil {
-		if profile.OSType == api.Windows {
-			scriptname = dcosWindowsProvision
-		} else {
-			scriptname = dcosProvision
-		}
-	}
-
-	bp, err := Asset(scriptname)
-	if err != nil {
-		panic(fmt.Sprintf("BUG: %s", err.Error()))
-	}
-
-	provisionScript := string(bp)
-	if strings.Contains(provisionScript, "'") {
-		panic(fmt.Sprintf("BUG: %s may not contain character '", dcosProvision))
-	}
-
-	// the embedded roleFileContents
-	var roleFileContents string
-	if len(profile.Ports) > 0 {
-		// public agents
-		roleFileContents = "touch /etc/mesosphere/roles/slave_public"
-	} else {
-		roleFileContents = "touch /etc/mesosphere/roles/slave"
-	}
-	provisionScript = strings.Replace(provisionScript, "ROLESFILECONTENTS", roleFileContents, -1)
-	provisionScript = strings.Replace(provisionScript, "BOOTSTRAP_IP", bootstrapIP, -1)
-
-	var b bytes.Buffer
-	b.WriteString(provisionScript)
-	b.WriteString("\n")
-
-	if len(orchProfile.DcosConfig.Registry) == 0 {
-		b.WriteString("rm /etc/docker.tar.gz\n")
-	}
-
-	return strings.Replace(strings.Replace(b.String(), "\r\n", "\n", -1), "\n", "\n\n    ", -1)
-}
-
 func getDCOSMasterProvisionScript(orchProfile *api.OrchestratorProfile, bootstrapIP string) string {
 	scriptname := dcos2Provision
 	if orchProfile.DcosConfig == nil || orchProfile.DcosConfig.BootstrapProfile == nil {

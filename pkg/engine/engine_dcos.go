@@ -155,3 +155,96 @@ func getDCOSMasterCustomData(cs *api.ContainerService) string {
 
 	return fmt.Sprintf("\"customData\": \"[base64(concat('#cloud-config\\n\\n', '%s'))]\",", str)
 }
+
+func getDCOSAgentProvisionScript(profile *api.AgentPoolProfile, orchProfile *api.OrchestratorProfile, bootstrapIP string) string {
+	// add the provision script
+	scriptname := dcos2Provision
+	if orchProfile.DcosConfig == nil || orchProfile.DcosConfig.BootstrapProfile == nil {
+		if profile.OSType == api.Windows {
+			scriptname = dcosWindowsProvision
+		} else {
+			scriptname = dcosProvision
+		}
+	}
+
+	bp, err := Asset(scriptname)
+	if err != nil {
+		panic(fmt.Sprintf("BUG: %s", err.Error()))
+	}
+
+	provisionScript := string(bp)
+	if strings.Contains(provisionScript, "'") {
+		panic(fmt.Sprintf("BUG: %s may not contain character '", dcosProvision))
+	}
+
+	// the embedded roleFileContents
+	var roleFileContents string
+	if len(profile.Ports) > 0 {
+		// public agents
+		roleFileContents = "touch /etc/mesosphere/roles/slave_public"
+	} else {
+		roleFileContents = "touch /etc/mesosphere/roles/slave"
+	}
+	provisionScript = strings.Replace(provisionScript, "ROLESFILECONTENTS", roleFileContents, -1)
+	provisionScript = strings.Replace(provisionScript, "BOOTSTRAP_IP", bootstrapIP, -1)
+
+	var b bytes.Buffer
+	b.WriteString(provisionScript)
+	b.WriteString("\n")
+
+	if len(orchProfile.DcosConfig.Registry) == 0 {
+		b.WriteString("rm /etc/docker.tar.gz\n")
+	}
+
+	return strings.Replace(strings.Replace(b.String(), "\r\n", "\n", -1), "\n", "\n\n    ", -1)
+}
+
+func getDCOSAgentCustomData(cs *api.ContainerService, profile *api.AgentPoolProfile) string {
+	attributeContents := getDCOSAgentCustomNodeLabels(profile)
+	agentPreprovisionExtension := ""
+	if profile.PreprovisionExtension != nil {
+		agentPreprovisionExtension += "\n"
+		agentPreprovisionExtension += makeAgentExtensionScriptCommands(cs, profile)
+	}
+	var agentRoleName, bootstrapIP string
+	if len(profile.Ports) > 0 {
+		agentRoleName = "slave_public"
+	} else {
+		agentRoleName = "slave"
+	}
+	if cs.Properties.OrchestratorProfile.DcosConfig != nil && cs.Properties.OrchestratorProfile.DcosConfig.BootstrapProfile != nil {
+		bootstrapIP = cs.Properties.OrchestratorProfile.DcosConfig.BootstrapProfile.StaticIP
+	}
+
+	str := getSingleLineDCOSCustomData(
+		cs.Properties.OrchestratorProfile.OrchestratorType,
+		getDCOSCustomDataTemplate(cs.Properties.OrchestratorProfile.OrchestratorType, cs.Properties.OrchestratorProfile.OrchestratorVersion),
+		cs.Properties.MasterProfile.Count,
+		map[string]string{
+			"PROVISION_SOURCE_STR":   getDCOSProvisionScript(dcosProvisionSource),
+			"PROVISION_STR":          getDCOSAgentProvisionScript(profile, cs.Properties.OrchestratorProfile, bootstrapIP),
+			"ATTRIBUTES_STR":         attributeContents,
+			"PREPROVISION_EXTENSION": agentPreprovisionExtension,
+			"ROLENAME":               agentRoleName})
+
+	return fmt.Sprintf("\"customData\": \"[base64(concat('#cloud-config\\n\\n', '%s'))]\",", str)
+}
+
+func getDCOSWindowsAgentCustomData(cs *api.ContainerService, profile *api.AgentPoolProfile) string {
+	agentPreprovisionExtension := ""
+	if profile.PreprovisionExtension != nil {
+		agentPreprovisionExtension += "\n"
+		agentPreprovisionExtension += makeAgentExtensionScriptCommands(cs, profile)
+	}
+	b, err := Asset(dcosWindowsProvision)
+	if err != nil {
+		// this should never happen and this is a bug
+		panic(fmt.Sprintf("BUG: %s", err.Error()))
+	}
+	// translate the parameters
+	csStr := string(b)
+	csStr = strings.Replace(csStr, "PREPROVISION_EXTENSION", agentPreprovisionExtension, -1)
+	csStr = strings.Replace(csStr, "\r\n", "\n", -1)
+	str := getBase64EncodedGzippedCustomScriptFromStr(csStr)
+	return fmt.Sprintf("\"customData\": \"%s\"", str)
+}

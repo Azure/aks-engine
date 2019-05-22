@@ -360,87 +360,22 @@ func (t *TemplateGenerator) getTemplateFuncMap(cs *api.ContainerService) templat
 			return getDCOSBootstrapCustomData(cs.Properties)
 		},
 		"GetDCOSMasterCustomData": func() string {
-			masterAttributeContents := getDCOSMasterCustomNodeLabels()
-			masterPreprovisionExtension := ""
-			if cs.Properties.MasterProfile.PreprovisionExtension != nil {
-				masterPreprovisionExtension += "\n"
-				masterPreprovisionExtension += makeMasterExtensionScriptCommands(cs)
-			}
-			var bootstrapIP string
-			if cs.Properties.OrchestratorProfile.DcosConfig != nil && cs.Properties.OrchestratorProfile.DcosConfig.BootstrapProfile != nil {
-				bootstrapIP = cs.Properties.OrchestratorProfile.DcosConfig.BootstrapProfile.StaticIP
-			}
-
-			str := getSingleLineDCOSCustomData(
-				cs.Properties.OrchestratorProfile.OrchestratorType,
-				getDCOSCustomDataTemplate(cs.Properties.OrchestratorProfile.OrchestratorType, cs.Properties.OrchestratorProfile.OrchestratorVersion),
-				cs.Properties.MasterProfile.Count,
-				map[string]string{
-					"PROVISION_SOURCE_STR":   getDCOSProvisionScript(dcosProvisionSource),
-					"PROVISION_STR":          getDCOSMasterProvisionScript(cs.Properties.OrchestratorProfile, bootstrapIP),
-					"ATTRIBUTES_STR":         masterAttributeContents,
-					"PREPROVISION_EXTENSION": masterPreprovisionExtension,
-					"ROLENAME":               "master"})
-
-			return fmt.Sprintf("\"customData\": \"[base64(concat('#cloud-config\\n\\n', '%s'))]\",", str)
+			return getDCOSMasterCustomData(cs)
 		},
 		"GetDCOSAgentCustomData": func(profile *api.AgentPoolProfile) string {
-			attributeContents := getDCOSAgentCustomNodeLabels(profile)
-			agentPreprovisionExtension := ""
-			if profile.PreprovisionExtension != nil {
-				agentPreprovisionExtension += "\n"
-				agentPreprovisionExtension += makeAgentExtensionScriptCommands(cs, profile)
-			}
-			var agentRoleName, bootstrapIP string
-			if len(profile.Ports) > 0 {
-				agentRoleName = "slave_public"
-			} else {
-				agentRoleName = "slave"
-			}
-			if cs.Properties.OrchestratorProfile.DcosConfig != nil && cs.Properties.OrchestratorProfile.DcosConfig.BootstrapProfile != nil {
-				bootstrapIP = cs.Properties.OrchestratorProfile.DcosConfig.BootstrapProfile.StaticIP
-			}
-
-			str := getSingleLineDCOSCustomData(
-				cs.Properties.OrchestratorProfile.OrchestratorType,
-				getDCOSCustomDataTemplate(cs.Properties.OrchestratorProfile.OrchestratorType, cs.Properties.OrchestratorProfile.OrchestratorVersion),
-				cs.Properties.MasterProfile.Count,
-				map[string]string{
-					"PROVISION_SOURCE_STR":   getDCOSProvisionScript(dcosProvisionSource),
-					"PROVISION_STR":          getDCOSAgentProvisionScript(profile, cs.Properties.OrchestratorProfile, bootstrapIP),
-					"ATTRIBUTES_STR":         attributeContents,
-					"PREPROVISION_EXTENSION": agentPreprovisionExtension,
-					"ROLENAME":               agentRoleName})
-
-			return fmt.Sprintf("\"customData\": \"[base64(concat('#cloud-config\\n\\n', '%s'))]\",", str)
+			return getDCOSAgentCustomData(cs, profile)
 		},
 		"GetDCOSWindowsAgentCustomData": func(profile *api.AgentPoolProfile) string {
-			agentPreprovisionExtension := ""
-			if profile.PreprovisionExtension != nil {
-				agentPreprovisionExtension += "\n"
-				agentPreprovisionExtension += makeAgentExtensionScriptCommands(cs, profile)
-			}
-			b, err := Asset(dcosWindowsProvision)
-			if err != nil {
-				// this should never happen and this is a bug
-				panic(fmt.Sprintf("BUG: %s", err.Error()))
-			}
-			// translate the parameters
-			csStr := string(b)
-			csStr = strings.Replace(csStr, "PREPROVISION_EXTENSION", agentPreprovisionExtension, -1)
-			csStr = strings.Replace(csStr, "\r\n", "\n", -1)
-			str := getBase64EncodedGzippedCustomScriptFromStr(csStr)
-			return fmt.Sprintf("\"customData\": \"%s\"", str)
+			return getDCOSWindowsAgentCustomData(cs, profile)
 		},
 		"GetDCOSWindowsAgentCustomNodeAttributes": func(profile *api.AgentPoolProfile) string {
 			return getDCOSWindowsAgentCustomAttributes(profile)
 		},
 		"GetDCOSWindowsAgentPreprovisionParameters": func(profile *api.AgentPoolProfile) string {
-			agentPreprovisionExtensionParameters := ""
 			if profile.PreprovisionExtension != nil {
-				agentPreprovisionExtensionParameters = getDCOSWindowsAgentPreprovisionParameters(cs, profile)
+				return getDCOSWindowsAgentPreprovisionParameters(cs, profile)
 			}
-			return agentPreprovisionExtensionParameters
+			return ""
 		},
 		"GetMasterAllowedSizes": func() string {
 			if cs.Properties.OrchestratorProfile.OrchestratorType == api.DCOS {
