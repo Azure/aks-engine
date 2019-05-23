@@ -11005,6 +11005,13 @@ configureK8sCustomCloud() {
         # shellcheck disable=SC2002
         cat "${AZURE_JSON_PATH}" | jq '.tenantId = "adfs"' > ${AZURE_JSON_PATH}
     fi
+
+    # Decrease eth0 MTU to mitigate Azure Stack's NRP issue
+    echo "iface eth0 inet dhcp" | sudo tee -a /etc/network/interfaces
+    echo "    post-up /sbin/ifconfig eth0 mtu 1350" | sudo tee -a /etc/network/interfaces
+    
+    ifconfig eth0 mtu 1350
+
     set -x
 }
 `)
@@ -13325,16 +13332,6 @@ MASTER_CONTAINER_ADDONS_PLACEHOLDER
 {{ else }}
     sed -i "s|<etcdEndPointUri>|127.0.0.1|g" $a
 {{ end }}
-{{if IsAzureStackCloud}}
-    {{if IsMultipleMasters}}
-    masterLBIP=` + "`" + `getent hosts {{WrapAsVariable "masterPublicLbFQDN"}} | cut -d " " -f1` + "`" + `
-    sed -i "s|<advertiseAddr>|$masterLBIP|g" $a
-    {{else}}
-    sed -i "s|<advertiseAddr>|{{WrapAsVariable "kubernetesAPIServerIP"}}|g" $a
-    {{end}}
-{{else}}
-    sed -i "s|<advertiseAddr>|{{WrapAsVariable "kubernetesAPIServerIP"}}|g" $a
-{{end}}
     sed -i "s|<advertiseAddr>|{{WrapAsVariable "kubernetesAPIServerIP"}}|g" $a
     sed -i "s|<args>|{{GetK8sRuntimeConfigKeyVals .OrchestratorProfile.KubernetesConfig.ControllerManagerConfig}}|g" /etc/kubernetes/manifests/kube-controller-manager.yaml
     sed -i "s|<args>|{{GetK8sRuntimeConfigKeyVals .OrchestratorProfile.KubernetesConfig.SchedulerConfig}}|g" /etc/kubernetes/manifests/kube-scheduler.yaml
@@ -13730,6 +13727,7 @@ write_files:
     - name: localcluster
       cluster:
         certificate-authority: /etc/kubernetes/certs/ca.crt
+<<<<<<< HEAD
         {{if IsAzureStackCloud}}
         {{if IsMultipleMasters}}
         server: https://{{WrapAsVariable "masterPublicLbFQDN"}}:443
@@ -13739,6 +13737,9 @@ write_files:
         {{else}}
         server: https://{{WrapAsVariable "kubernetesAPIServerIP"}}:443
         {{end}}
+=======
+        server: https://{{WrapAsVariable "kubernetesAPIServerIP"}}:443
+>>>>>>> 4343ddea0... fix: decrease default host MTU for Azure Stack (#1346)
     users:
     - name: client
       user:
