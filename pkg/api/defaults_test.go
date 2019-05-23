@@ -1582,7 +1582,7 @@ func TestSetCertDefaults(t *testing.T) {
 	}
 
 	cs.setOrchestratorDefaults(false)
-	cs.Properties.setMasterProfileDefaults(false, false)
+	cs.Properties.setMasterProfileDefaults(false, false, AzurePublicCloud)
 	result, ips, err := cs.SetDefaultCerts()
 
 	if !result {
@@ -1648,7 +1648,7 @@ func TestSetCertDefaultsVMSS(t *testing.T) {
 	}
 
 	cs.setOrchestratorDefaults(false)
-	cs.Properties.setMasterProfileDefaults(false, false)
+	cs.Properties.setMasterProfileDefaults(false, false, AzurePublicCloud)
 	result, ips, err := cs.SetDefaultCerts()
 
 	if !result {
