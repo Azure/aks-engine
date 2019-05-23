@@ -1087,6 +1087,8 @@ func TestDistroDefaults(t *testing.T) {
 		expectedAgentDistro    Distro // expected agent result default disto to be used
 		expectedMasterDistro   Distro // expected master result default disto to be used
 		isUpgrade              bool
+		isScale                bool
+		cloudName              string
 	}{
 		{
 			"default_kubernetes",
@@ -1098,6 +1100,21 @@ func TestDistroDefaults(t *testing.T) {
 			AKSUbuntu1604,
 			AKSUbuntu1604,
 			false,
+			false,
+			AzurePublicCloud,
+		},
+		{
+			"default_kubernetes_usgov",
+			OrchestratorProfile{
+				OrchestratorType: Kubernetes,
+			},
+			"",
+			"",
+			Ubuntu,
+			Ubuntu,
+			false,
+			false,
+			AzureUSGovernmentCloud,
 		},
 		{
 			"1804_upgrade_kubernetes",
@@ -1109,6 +1126,21 @@ func TestDistroDefaults(t *testing.T) {
 			AKSUbuntu1804,
 			AKSUbuntu1804,
 			true,
+			false,
+			AzurePublicCloud,
+		},
+		{
+			"default_kubernetes_usgov",
+			OrchestratorProfile{
+				OrchestratorType: Kubernetes,
+			},
+			AKS1604Deprecated,
+			AKS1604Deprecated,
+			Ubuntu,
+			Ubuntu,
+			true,
+			false,
+			AzureGermanCloud,
 		},
 		{
 			"deprecated_distro_kubernetes",
@@ -1120,6 +1152,8 @@ func TestDistroDefaults(t *testing.T) {
 			AKSUbuntu1604,
 			AKSUbuntu1604,
 			true,
+			false,
+			AzureChinaCloud,
 		},
 		{
 			"docker_engine_kubernetes",
@@ -1130,7 +1164,9 @@ func TestDistroDefaults(t *testing.T) {
 			AKSDockerEngine,
 			AKSUbuntu1604,
 			AKSUbuntu1604,
+			false,
 			true,
+			AzurePublicCloud,
 		},
 		{
 			"default_swarm",
@@ -1142,6 +1178,8 @@ func TestDistroDefaults(t *testing.T) {
 			Ubuntu,
 			Ubuntu,
 			false,
+			false,
+			AzurePublicCloud,
 		},
 		{
 			"default_swarmmode",
@@ -1153,6 +1191,8 @@ func TestDistroDefaults(t *testing.T) {
 			Ubuntu,
 			Ubuntu,
 			false,
+			false,
+			AzurePublicCloud,
 		},
 		{
 			"default_dcos",
@@ -1164,6 +1204,8 @@ func TestDistroDefaults(t *testing.T) {
 			Ubuntu,
 			Ubuntu,
 			false,
+			false,
+			AzurePublicCloud,
 		},
 	}
 
@@ -1174,8 +1216,8 @@ func TestDistroDefaults(t *testing.T) {
 		for _, agent := range mockAPI.AgentPoolProfiles {
 			agent.Distro = test.agentPoolProfileDistro
 		}
-		mockAPI.setMasterProfileDefaults(test.isUpgrade, false)
-		mockAPI.setAgentProfileDefaults(test.isUpgrade, false)
+		mockAPI.setMasterProfileDefaults(test.isUpgrade, test.isScale, test.cloudName)
+		mockAPI.setAgentProfileDefaults(test.isUpgrade, test.isScale, test.cloudName)
 		if mockAPI.MasterProfile.Distro != test.expectedMasterDistro {
 			t.Fatalf("setMasterProfileDefaults() test case %v did not return right Distro configurations %v != %v", test.name, mockAPI.MasterProfile.Distro, test.expectedMasterDistro)
 		}
