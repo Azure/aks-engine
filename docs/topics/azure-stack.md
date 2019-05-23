@@ -3,14 +3,14 @@
 <!-- vscode-markdown-toc -->
 * [Introduction](#Introduction)
 * [Service Principals and Identity Providers](#ServicePrincipalsandIdentityProviders)
-* [Extra CLI Parameters](#ExtraCLIParameters)
-* [Cluster Definition](#ClusterDefinition)
+* [CLI flags](#CLIflags)
+* [Cluster Definition (aka API Model)](#ClusterDefinitionakaAPIModel)
 	* [location](#location)
 	* [kubernetesConfig](#kubernetesConfig)
 	* [customCloudProfile](#customCloudProfile)
 	* [masterProfile](#masterProfile)
 	* [agentPoolProfiles](#agentPoolProfiles)
-* [Azure Stack Instances Registered with Mooncake AAD](#AzureStackInstancesRegisteredwithMooncakeAAD)
+* [Azure Stack Instances Registered with Azure's China cloud](#AzureStackInstancesRegisteredwithAzuresChinacloud)
 * [Disconnected Azure Stack Instances](#DisconnectedAzureStackInstances)
 * [Unsupported Addons](#UnsupportedAddons)
 
@@ -22,21 +22,19 @@
 
 ## <a name='Introduction'></a>Introduction
 
-Starting from release 0.36.XX, AKS Engine can be used to provision self-managed Kubernetes clusters on Azure Stack. It is now possible to execute AKS Engine's `deploy`, `upgrade`, and `scale` commands as if you were targeting Azure's public cloud. You are only required to slighly update your cluster definition to provide some extra information about your Azure Stack instance.
+Starting from release 0.36.XX, AKS Engine can be used to provision self-managed Kubernetes clusters on Azure Stack. It is now possible to execute AKS Engine's `generate`, `deploy`, `upgrade`, and `scale` commands as if you were targeting Azure's public cloud. You are only required to slighly update your cluster definition to provide some extra information about your Azure Stack instance.
 
-Bear in mind as well that not every AKS Engine feature or configuration option is currently supported on Azure Stack. In most cases, these are not yet available because a required Azure service did not make it to Azure Stack at this point in time.
-
-The goal of this guide is to explain how to provision Kubernetes clusters to Azure Stack using AKS Engine and to capture the differences between Azure and Azure Stack.
+The goal of this guide is to explain how to provision Kubernetes clusters to Azure Stack using AKS Engine and to capture the differences between Azure and Azure Stack. Bear in mind as well that not every AKS Engine feature or configuration option is currently supported on Azure Stack. In most cases, these are not available because dependent Azure components are not part of Azure Stack.
 
 ## <a name='ServicePrincipalsandIdentityProviders'></a>Service Principals and Identity Providers
 
-Kubernetes uses a `service principal` to talk to Azure Stack APIs to dynamically manage resources such a storage or load balances. Therefore, you will need to create a service principal before you can provision a Kubernetes cluster using AKS Engine.
-
+Kubernetes uses a `service principal` identity to talk to Azure Stack APIs to dynamically manage resources such a storage or load balances. Therefore, you will need to create a service principal before you can provision a Kubernetes cluster using AKS Engine.
 This [guide](https://docs.microsoft.com/en-us/azure-stack/operator/azure-stack-create-service-principals) explains how to create and manage service principals on Azure Stack for both Azure Active Directory (AAD) and Active Directory Federation Services (ADFS) identity providers. This other [guide](../../docs/topics/service-principals.md) is a good resource to understand the permissions that the service principal requires to deploy under your subscription.
 
-## <a name='ExtraCLIParameters'></a>Extra CLI Parameters
 
-All AKS Engine commands require CLI parameter `azure-env` to be set to `"AzureStackCloud"` when the target platform is Azure Stack.
+## <a name='CLIflags'></a>CLI flags
+
+To indicate AKS Engine that your target platform is Azure Stack, all commands require CLI flag `azure-env` to be set to `"AzureStackCloud"`.
 
 ```
 aks-engine deploy \
@@ -50,7 +48,7 @@ aks-engine deploy \
     --azure-env AzureStackCloud
 ```
 
-## <a name='ClusterDefinition'></a>Cluster Definition
+## <a name='ClusterDefinitionakaAPIModel'></a>Cluster Definition (aka API Model)
 
 This section details how to tailor your cluster definitions in order to make them compatible with Azure Stack. You can start off from this [template](../../examples/azure-stack/kubernetes-azurestack-azure-ad.json) if your identity provier is AAD or this other [template](../../examples/azure-stack/kubernetes-azurestack-adfs.json) if you are using ADFS instead.
 
@@ -105,7 +103,7 @@ Unless otherwise specified down below, standard [cluster definition](../../docs/
 | availabilityProfile             | yes      | Only `"AvailabilitySet"` is currently supported. |
 | acceleratedNetworkingEnabled    | yes      | Use `Azure Accelerated Networking` feature for Linux agents. This property should be always set to `"true"`. |
 
-## <a name='AzureStackInstancesRegisteredwithMooncakeAAD'></a>Azure Stack Instances Registered with Mooncake AAD
+## <a name='AzureStackInstancesRegisteredwithAzuresChinacloud'></a>Azure Stack Instances Registered with Azure's China cloud
 
 If your Azure Stack instance is located in China, then the `dependenciesLocation` property on your cluster definition should be set to `"china"`. This switch ensures that the provisioning process fetches software dependencies from reachable hosts.
 
