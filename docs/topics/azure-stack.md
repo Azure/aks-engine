@@ -52,7 +52,7 @@ aks-engine deploy \
 
 ## <a name='ClusterDefinition'></a>Cluster Definition
 
-This section details how to tailor your cluster definitions in order to make them compatible with Azure Stack. You can start off from this [template](../../examples/azure-stack/aad.json) if your identity provier is AAD or this other [template](../../examples/azure-stack/adfs.json) if you are using ADFS instead.
+This section details how to tailor your cluster definitions in order to make them compatible with Azure Stack. You can start off from this [template](../../examples/azure-stack/kubernetes-azurestack-azure-ad.json) if your identity provier is AAD or this other [template](../../examples/azure-stack/kubernetes-azurestack-adfs.json) if you are using ADFS instead.
 
 Unless otherwise specified down below, standard [cluster definition](../../docs/topics/clusterdefinitions.md) properties should also work with Azure Stack. Please create an [issue](https://github.com/Azure/aks-engine/issues/new) if you find that we missed something.
 
@@ -60,7 +60,7 @@ Unless otherwise specified down below, standard [cluster definition](../../docs/
 
 | Name       | Required | Description                                                   |
 | ---------- | -------- | ------------------------------------------------------------- |
-| location   | yes      | The region name of the targe Azure Stack. |
+| location   | yes      | The region name of the target Azure Stack. |
 
 ### <a name='kubernetesConfig'></a>kubernetesConfig
 
@@ -69,10 +69,10 @@ Unless otherwise specified down below, standard [cluster definition](../../docs/
 | Name                            | Required | Description                          |
 | ------------------------------- | -------- | ------------------------------------ |
 | addons                          | no       | A few addons are not supported on Azure Stack. See the [complete list]() down below.|
-| kubernetesImageBase             | yes      | Specifies the default image base URL to be used for all kubernetes-related containers such as hyperkube, cloud-controller-manager, pause, addon-manager, etc. This property should be set to `"msazurestackdocker"/`.|
+| kubernetesImageBase             | yes      | Specifies the default image base URL to be used for all kubernetes-related containers such as hyperkube, cloud-controller-manager, pause, addon-manager, etc. This property should be set to `"msazurestackdocker/"`.|
 | networkPlugin                   | yes      | Specifies the network plugin implementation for the cluster. Valid values are:<br>`"kubenet"` for k8s software networking implementation <br> `"flannel"` for using CoreOS Flannel. |
 | networkPolicy                   | no       | Network policies can be enforced using [Canal](). **TODO EXPAND** |
-| useInstanceMetadata             | yes      | Use the Azure cloudprovider instance metadata service for appropriate resource discovery operations. This property should be always set to `"true"`. |
+| useInstanceMetadata             | yes      | Use the Azure cloudprovider instance metadata service for appropriate resource discovery operations. This property should be always set to `"false"`. |
 
 ### <a name='customCloudProfile'></a>customCloudProfile
 

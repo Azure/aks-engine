@@ -5,7 +5,6 @@
         "orchestratorProfile": {
             "orchestratorType": "Kubernetes",
             "orchestratorRelease": "1.11",
-            "orchestratorVersion": "1.11.9",
             "kubernetesConfig": {
                 "kubernetesImageBase": "msazurestackdocker/",
                 "useInstanceMetadata": false,
@@ -13,28 +12,22 @@
             }
         },
         "customCloudProfile": {
-            "environment": {
-                "name": "AzureStackCloud"
-            },
-            "identitySystem": "adfs",
-            "authenticationMethod": "client_certificate",
-            "dependenciesLocation": "public",
-            "portalUrl": ""
+            "portalURL": ""
         },
         "masterProfile": {
             "dnsPrefix": "",
             "distro": "ubuntu",
-            "count": 3,
-            "osDiskSizeGB": 50,
+            "osDiskSizeGB": 200,
+            "count": 1,
             "vmSize": "Standard_D2_v2"
         },
         "agentPoolProfiles": [
             {
-                "distro": "ubuntu",
                 "name": "linuxpool",
+                "osDiskSizeGB": 200,
                 "count": 3,
-                "osDiskSizeGB": 50,
                 "vmSize": "Standard_D2_v2",
+                "distro": "ubuntu",
                 "availabilityProfile": "AvailabilitySet",
                 "AcceleratedNetworkingEnabled": false
             }

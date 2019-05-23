@@ -14,7 +14,7 @@
         "customCloudProfile": {
             "identitySystem": "adfs",
             "authenticationMethod": "client_certificate",
-            "portalURL": "https://<portal Url>/"
+            "portalURL": ""
         },
         "masterProfile": {
             "dnsPrefix": "",
