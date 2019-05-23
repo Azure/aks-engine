@@ -38,7 +38,7 @@ func main() {
 	}
 	cfg.CurrentWorkingDir = cwd
 	
-    if cfg.IsAzureStackCloud() {
+	if cfg.IsAzureStackCloud() {
 		cccfg, err = config.ParseCustomCloudConfig()
 		
 		if err != nil {
