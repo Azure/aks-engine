@@ -13321,16 +13321,6 @@ MASTER_CONTAINER_ADDONS_PLACEHOLDER
 {{ else }}
     sed -i "s|<etcdEndPointUri>|127.0.0.1|g" $a
 {{ end }}
-{{if IsAzureStackCloud}}
-    {{if IsMultiMasterCluster}}
-    masterLBIP=` + "`" + `getent hosts {{WrapAsVariable "masterPublicLbFQDN"}} | cut -d " " -f1` + "`" + `
-    sed -i "s|<advertiseAddr>|$masterLBIP|g" $a
-    {{else}}
-    sed -i "s|<advertiseAddr>|{{WrapAsVariable "kubernetesAPIServerIP"}}|g" $a
-    {{end}}
-{{else}}
-    sed -i "s|<advertiseAddr>|{{WrapAsVariable "kubernetesAPIServerIP"}}|g" $a
-{{end}}
     sed -i "s|<advertiseAddr>|{{WrapAsVariable "kubernetesAPIServerIP"}}|g" $a
     sed -i "s|<args>|{{GetK8sRuntimeConfigKeyVals .OrchestratorProfile.KubernetesConfig.ControllerManagerConfig}}|g" /etc/kubernetes/manifests/kube-controller-manager.yaml
     sed -i "s|<args>|{{GetK8sRuntimeConfigKeyVals .OrchestratorProfile.KubernetesConfig.SchedulerConfig}}|g" /etc/kubernetes/manifests/kube-scheduler.yaml
@@ -13726,15 +13716,7 @@ write_files:
     - name: localcluster
       cluster:
         certificate-authority: /etc/kubernetes/certs/ca.crt
-        {{if IsAzureStackCloud}}
-            {{if IsMultiMasterCluster}}
-        server: https://{{WrapAsVariable "masterPublicLbFQDN"}}:443
-            {{else}}
         server: https://{{WrapAsVariable "kubernetesAPIServerIP"}}:443
-            {{end}}
-        {{else}}
-        server: https://{{WrapAsVariable "kubernetesAPIServerIP"}}:443
-        {{end}}
     users:
     - name: client
       user:
