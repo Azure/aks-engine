@@ -33,7 +33,7 @@ auth required pam_wheel.so use_uid
 # This module parses environment configuration file(s)
 # and also allows you to use an extended config
 # file /etc/security/pam_env.conf.
-# 
+#
 # parsing /etc/environment needs "readenv=1"
 session       required   pam_env.so readenv=1
 # locale variables are also kept into /etc/default/locale in etch
@@ -42,7 +42,7 @@ session       required   pam_env.so readenv=1 envfile=/etc/default/locale
 
 # Defines the MAIL environment variable
 # However, userdel also needs MAIL_DIR and MAIL_FILE variables
-# in /etc/login.defs to make sure that removing a user 
+# in /etc/login.defs to make sure that removing a user
 # also removes the user's mail spool file.
 # See comments in /etc/login.defs
 #
