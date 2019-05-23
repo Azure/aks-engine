@@ -22,3 +22,8 @@ We will assert that a fully implemented Kubernetes on IaaS solution would includ
 - No SDK-like interface(s) for 3rd party code re-use
 - Cluster configuration is managed monolithically, all cluster configuration delivered via ARM template
 - No in-place Kubernetes version upgrade functionality
+- Functional variance between VMAS and VMSS cluster operations
+  - VMSS scale
+    - relies exclusively upon the VMSS API to scale out/in, does not cordon/drain + explicitly delete nodes
+  - VMSS upgrade
+    - vm reboot side-effects
