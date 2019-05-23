@@ -233,5 +233,7 @@ sysctl_reload() {
 }
 fix_crlf() {
     apt_get_install 3 1 60 dos2unix
-    dos2unix /etc/default/grub
+    for crlf_file in /etc/default/grub /etc/pam.d/su /etc/issue /etc/issue.net /etc/pam.d/common-auth /etc/pam.d/common-password; do
+      dos2unix $crlf_file
+    done
 }
