@@ -906,9 +906,9 @@ func TestEtcdVersion(t *testing.T) {
 		properties.OrchestratorProfile.OrchestratorType = Kubernetes
 		properties.OrchestratorProfile.KubernetesConfig.EtcdVersion = etcdVersion
 		mockCS.setOrchestratorDefaults(true)
-		if properties.OrchestratorProfile.KubernetesConfig.EtcdVersion != etcdVersion {
-			t.Fatalf("MobyVersion did not have the expected value, got %s, expected %s",
-				properties.OrchestratorProfile.KubernetesConfig.MobyVersion, etcdVersion)
+		if properties.OrchestratorProfile.KubernetesConfig.EtcdVersion != DefaultEtcdVersion {
+			t.Fatalf("EtcdVersion did not have the expected value, got %s, expected %s",
+				properties.OrchestratorProfile.KubernetesConfig.EtcdVersion, DefaultEtcdVersion)
 		}
 
 		mockCS = getMockBaseContainerService("1.10.13")
@@ -916,9 +916,9 @@ func TestEtcdVersion(t *testing.T) {
 		properties.OrchestratorProfile.OrchestratorType = Kubernetes
 		properties.OrchestratorProfile.KubernetesConfig.EtcdVersion = etcdVersion
 		mockCS.setOrchestratorDefaults(false)
-		if properties.OrchestratorProfile.KubernetesConfig.EtcdVersion != DefaultEtcdVersion {
-			t.Fatalf("MobyVersion did not have the expected value, got %s, expected %s",
-				properties.OrchestratorProfile.KubernetesConfig.MobyVersion, DefaultEtcdVersion)
+		if properties.OrchestratorProfile.KubernetesConfig.EtcdVersion != etcdVersion {
+			t.Fatalf("EtcdVersion did not have the expected value, got %s, expected %s",
+				properties.OrchestratorProfile.KubernetesConfig.EtcdVersion, etcdVersion)
 		}
 	}
 }
