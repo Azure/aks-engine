@@ -77,9 +77,11 @@ func newScaleCmd() *cobra.Command {
 	f.StringVar(&sc.deploymentDirectory, "deployment-dir", "", "the location of the output from `generate`")
 	f.IntVarP(&sc.newDesiredAgentCount, "new-node-count", "c", 0, "desired number of nodes")
 	f.StringVar(&sc.agentPoolToScale, "node-pool", "", "node pool to scale")
-	f.StringVar(&sc.masterFQDN, "master-FQDN", "", "FQDN for the master load balancer, Needed to scale down Kubernetes agent pools")
+	f.StringVar(&sc.masterFQDN, "master-FQDN", "", "FQDN for the master load balancer that maps to the apiserver endpoint")
+	f.StringVar(&sc.masterFQDN, "apiserver", "", "apiserver endpoint, needed to cordon/drain vms")
 
-	f.MarkDeprecated("deployment-dir", "deployment-dir is no longer required for scale or upgrade. Please use --api-model.")
+	f.MarkDeprecated("deployment-dir", "--deployment-dir is no longer required for scale or upgrade. Please use --api-model.")
+	f.MarkDeprecated("master-FQDN", "--apiserver is preferred")
 
 	addAuthFlags(&sc.authArgs, f)
 
@@ -280,7 +282,7 @@ func (sc *scaleCmd) run(cmd *cobra.Command, args []string) error {
 		if currentNodeCount > sc.newDesiredAgentCount {
 			if sc.masterFQDN == "" {
 				cmd.Usage()
-				return errors.New("master-FQDN is required to scale down a kubernetes cluster's agent pool")
+				return errors.New("master-FQDN is required to scale in a kubernetes cluster's agent pool")
 			}
 
 			vmsToDelete := make([]string, 0)
@@ -338,6 +340,7 @@ func (sc *scaleCmd) run(cmd *cobra.Command, args []string) error {
 
 				currentNodeCount = int(*vmss.Sku.Capacity)
 				highestUsedIndex = 0
+				log.Warnf("VMSS vm nodes will not be cordon/drained before scaling in!")
 			}
 		}
 	}
