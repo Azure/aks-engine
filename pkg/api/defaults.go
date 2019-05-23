@@ -134,7 +134,7 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpdate bool) {
 		}
 		switch o.KubernetesConfig.ContainerRuntime {
 		case Docker:
-			if o.KubernetesConfig.MobyVersion == "" {
+			if o.KubernetesConfig.MobyVersion == "" || isUpdate {
 				o.KubernetesConfig.MobyVersion = DefaultMobyVersion
 			}
 		case Containerd, ClearContainers, KataContainers:
