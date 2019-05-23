@@ -772,7 +772,43 @@ func TestContainerRuntime(t *testing.T) {
 	mockCS := getMockBaseContainerService("1.10.13")
 	properties := mockCS.Properties
 	properties.OrchestratorProfile.OrchestratorType = Kubernetes
+	properties.OrchestratorProfile.KubernetesConfig.MobyVersion = "3.0.4"
 	mockCS.setOrchestratorDefaults(true)
+	if properties.OrchestratorProfile.KubernetesConfig.ContainerRuntime != Docker {
+		t.Fatalf("ContainerRuntime did not have the expected value, got %s, expected %s",
+			properties.OrchestratorProfile.KubernetesConfig.ContainerRuntime, Docker)
+	}
+	if properties.OrchestratorProfile.KubernetesConfig.MobyVersion != DefaultMobyVersion {
+		t.Fatalf("MobyVersion did not have the expected value, got %s, expected %s",
+			properties.OrchestratorProfile.KubernetesConfig.MobyVersion, DefaultMobyVersion)
+	}
+	if properties.OrchestratorProfile.KubernetesConfig.ContainerdVersion != "" {
+		t.Fatalf("MobyVersion did not have the expected value, got %s, expected %s",
+			properties.OrchestratorProfile.KubernetesConfig.ContainerdVersion, "")
+	}
+
+	mockCS = getMockBaseContainerService("1.10.13")
+	properties = mockCS.Properties
+	properties.OrchestratorProfile.OrchestratorType = Kubernetes
+	properties.OrchestratorProfile.KubernetesConfig.MobyVersion = "3.0.4"
+	mockCS.setOrchestratorDefaults(false)
+	if properties.OrchestratorProfile.KubernetesConfig.ContainerRuntime != Docker {
+		t.Fatalf("ContainerRuntime did not have the expected value, got %s, expected %s",
+			properties.OrchestratorProfile.KubernetesConfig.ContainerRuntime, Docker)
+	}
+	if properties.OrchestratorProfile.KubernetesConfig.MobyVersion != "3.0.4" {
+		t.Fatalf("MobyVersion did not have the expected value, got %s, expected %s",
+			properties.OrchestratorProfile.KubernetesConfig.MobyVersion, "3.0.4")
+	}
+	if properties.OrchestratorProfile.KubernetesConfig.ContainerdVersion != "" {
+		t.Fatalf("MobyVersion did not have the expected value, got %s, expected %s",
+			properties.OrchestratorProfile.KubernetesConfig.ContainerdVersion, "")
+	}
+
+	mockCS = getMockBaseContainerService("1.10.13")
+	properties = mockCS.Properties
+	properties.OrchestratorProfile.OrchestratorType = Kubernetes
+	mockCS.setOrchestratorDefaults(false)
 	if properties.OrchestratorProfile.KubernetesConfig.ContainerRuntime != Docker {
 		t.Fatalf("ContainerRuntime did not have the expected value, got %s, expected %s",
 			properties.OrchestratorProfile.KubernetesConfig.ContainerRuntime, Docker)
