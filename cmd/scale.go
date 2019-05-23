@@ -27,6 +27,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	prefixed "github.com/x-cray/logrus-prefixed-formatter"
+	v1 "k8s.io/api/core/v1"
 )
 
 type scaleCmd struct {
@@ -50,6 +51,9 @@ type scaleCmd struct {
 	nameSuffix       string
 	agentPoolIndex   int
 	logger           *log.Entry
+	apiserverURL     string
+	kubeconfig       string
+	nodes            []v1.Node
 }
 
 const (
@@ -78,7 +82,7 @@ func newScaleCmd() *cobra.Command {
 	f.IntVarP(&sc.newDesiredAgentCount, "new-node-count", "c", 0, "desired number of nodes")
 	f.StringVar(&sc.agentPoolToScale, "node-pool", "", "node pool to scale")
 	f.StringVar(&sc.masterFQDN, "master-FQDN", "", "FQDN for the master load balancer that maps to the apiserver endpoint")
-	f.StringVar(&sc.masterFQDN, "apiserver", "", "apiserver endpoint, needed to cordon/drain vms")
+	f.StringVar(&sc.masterFQDN, "apiserver", "", "apiserver endpoint, needed to cordon/drain VMs")
 
 	f.MarkDeprecated("deployment-dir", "--deployment-dir is no longer required for scale or upgrade. Please use --api-model.")
 	f.MarkDeprecated("master-FQDN", "--apiserver is preferred")
@@ -209,6 +213,21 @@ func (sc *scaleCmd) load() error {
 	//allows to identify VMs in the resource group that belong to this cluster.
 	sc.nameSuffix = sc.containerService.Properties.GetClusterID()
 	log.Debugf("Cluster ID used in all agent pools: %s", sc.nameSuffix)
+
+	if sc.masterFQDN != "" {
+		if strings.HasPrefix(sc.masterFQDN, "https://") {
+			sc.apiserverURL = sc.masterFQDN
+		} else if strings.HasPrefix(sc.masterFQDN, "http://") {
+			return errors.New("apiserver URL cannot be insecure http://")
+		} else {
+			sc.apiserverURL = fmt.Sprintf("https://%s", sc.masterFQDN)
+		}
+	}
+
+	sc.kubeconfig, err = engine.GenerateKubeConfig(sc.containerService.Properties, sc.location)
+	if err != nil {
+		return errors.New("Unable to derive kubeconfig from api model")
+	}
 	return nil
 }
 
@@ -265,6 +284,14 @@ func (sc *scaleCmd) run(cmd *cobra.Command, args []string) error {
 		indexes = []int(sortedIndexes)
 		currentNodeCount = len(indexes)
 
+		if sc.masterFQDN != "" && orchestratorInfo.OrchestratorType == api.Kubernetes {
+			nodes, err := operations.GetNodes(sc.client, sc.logger, sc.apiserverURL, sc.kubeconfig, time.Duration(5)*time.Minute)
+			if err == nil && nodes != nil {
+				sc.nodes = nodes
+			}
+			// TODO do something with this
+		}
+
 		if currentNodeCount == sc.newDesiredAgentCount {
 			log.Info("Cluster is currently at the desired agent count.")
 			return nil
@@ -278,7 +305,7 @@ func (sc *scaleCmd) run(cmd *cobra.Command, args []string) error {
 		}
 		sc.containerService.SetPlatformFaultDomainCount(fdCount)
 
-		// Scale down Scenario
+		// VMAS Scale down Scenario
 		if currentNodeCount > sc.newDesiredAgentCount {
 			if sc.masterFQDN == "" {
 				cmd.Usage()
@@ -292,11 +319,7 @@ func (sc *scaleCmd) run(cmd *cobra.Command, args []string) error {
 			}
 
 			if orchestratorInfo.OrchestratorType == api.Kubernetes {
-				kubeConfig, err := engine.GenerateKubeConfig(sc.containerService.Properties, sc.location)
-				if err != nil {
-					return errors.Wrap(err, "failed to generate kube config")
-				}
-				err = sc.drainNodes(kubeConfig, vmsToDelete)
+				err := sc.drainNodes(vmsToDelete)
 				if err != nil {
 					return errors.Wrap(err, "Got error while draining the nodes to be deleted")
 				}
@@ -327,6 +350,9 @@ func (sc *scaleCmd) run(cmd *cobra.Command, args []string) error {
 				return errors.Wrap(err, "failed to get VMSS list in the resource group")
 			}
 			for _, vmss := range vmssListPage.Values() {
+				if vmss.Sku != nil && int(*vmss.Sku.Capacity) > sc.newDesiredAgentCount {
+					log.Warnf("VMSS vm nodes will not be cordon/drained before scaling in!")
+				}
 				vmName := *vmss.Name
 				if !sc.vmInAgentPool(vmName, vmss.Tags) {
 					continue
@@ -340,7 +366,6 @@ func (sc *scaleCmd) run(cmd *cobra.Command, args []string) error {
 
 				currentNodeCount = int(*vmss.Sku.Capacity)
 				highestUsedIndex = 0
-				log.Warnf("VMSS vm nodes will not be cordon/drained before scaling in!")
 			}
 		}
 	}
@@ -486,18 +511,14 @@ func addValue(m paramsMap, k string, v interface{}) {
 	}
 }
 
-func (sc *scaleCmd) drainNodes(kubeConfig string, vmsToDelete []string) error {
-	masterURL := sc.masterFQDN
-	if !strings.HasPrefix(masterURL, "https://") {
-		masterURL = fmt.Sprintf("https://%s", masterURL)
-	}
+func (sc *scaleCmd) drainNodes(vmsToDelete []string) error {
 	numVmsToDrain := len(vmsToDelete)
 	errChan := make(chan *operations.VMScalingErrorDetails, numVmsToDrain)
 	defer close(errChan)
 	for _, vmName := range vmsToDelete {
 		go func(vmName string) {
 			err := operations.SafelyDrainNode(sc.client, sc.logger,
-				masterURL, kubeConfig, vmName, time.Duration(60)*time.Minute)
+				sc.apiserverURL, sc.kubeconfig, vmName, time.Duration(60)*time.Minute)
 			if err != nil {
 				log.Errorf("Failed to drain node %s, got error %v", vmName, err)
 				errChan <- &operations.VMScalingErrorDetails{Error: err, Name: vmName}

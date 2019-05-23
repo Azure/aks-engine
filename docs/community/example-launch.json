@@ -50,7 +50,7 @@
         "scale",
         "--debug",
         "--api-model=${workspaceRoot}/_output/${input:clusterName}/apimodel.json",
-        "--master-FQDN=${input:clusterName}.eastus.cloudapp.azure.com",
+        "--apiserver=${input:clusterName}.eastus.cloudapp.azure.com",
         "--location=${input:location}",
         "--resource-group=${input:clusterName}",
         "--new-node-count=${input:newNodeCount}",

@@ -34,9 +34,9 @@ type drainOperation struct {
 type podFilter func(v1.Pod) bool
 
 // SafelyDrainNode safely drains a node so that it can be deleted from the cluster
-func SafelyDrainNode(az armhelpers.AKSEngineClient, logger *log.Entry, masterURL, kubeConfig, nodeName string, timeout time.Duration) error {
+func SafelyDrainNode(az armhelpers.AKSEngineClient, logger *log.Entry, apiserverURL, kubeConfig, nodeName string, timeout time.Duration) error {
 	//get client using kubeconfig
-	client, err := az.GetKubernetesClient(masterURL, kubeConfig, interval, timeout)
+	client, err := az.GetKubernetesClient(apiserverURL, kubeConfig, interval, timeout)
 	if err != nil {
 		return err
 	}
