@@ -231,3 +231,7 @@ sysctl_reload() {
         fi
     done
 }
+fix_crlf() {
+    apt_get_install 3 1 60 dos2unix
+    dos2unix /etc/default/grub
+}

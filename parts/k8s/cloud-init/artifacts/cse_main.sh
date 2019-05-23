@@ -16,6 +16,7 @@ for i in $(seq 1 3600); do
     fi
 done
 source $script_lib
+fix_crlf # temporary fix for v0.35.3
 
 install_script=/opt/azure/containers/provision_installs.sh
 wait_for_file 3600 1 $install_script || exit $ERR_FILE_WATCH_TIMEOUT
@@ -192,9 +193,6 @@ if $FULL_INSTALL_REQUIRED; then
 else
   cleanUpContainerImages
 fi
-
-apt_get_install 3 1 60 dos2unix
-dos2unix /etc/default/grub
 
 if $REBOOTREQUIRED; then
   echo 'reboot required, rebooting node in 1 minute'
