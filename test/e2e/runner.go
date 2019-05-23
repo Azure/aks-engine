@@ -37,10 +37,10 @@ func main() {
 		log.Fatalf("Error while trying to parse configuration: %s\n", err)
 	}
 	cfg.CurrentWorkingDir = cwd
-	
+
 	if cfg.IsAzureStackCloud() {
 		cccfg, err = config.ParseCustomCloudConfig()
-		
+
 		if err != nil {
 			log.Fatalf("Error while trying to parse custom cloud configuration: %s\n", err)
 		}
@@ -53,6 +53,7 @@ func main() {
 			log.Fatalf("Error while trying to set environment to azure account! %s\n", err)
 		}
 	}
+
 	acct, err = azure.NewAccount()
 	if err != nil {
 		log.Fatalf("Error while trying to setup azure account: %s\n", err)
