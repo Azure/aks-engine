@@ -193,6 +193,9 @@ else
   cleanUpContainerImages
 fi
 
+apt_get_install 3 1 60 dos2unix
+dos2unix /etc/default/grub
+
 if $REBOOTREQUIRED; then
   echo 'reboot required, rebooting node in 1 minute'
   /bin/bash -c "shutdown -r 1 &"
@@ -205,6 +208,3 @@ else
       aptmarkWALinuxAgent unhold &
   fi
 fi
-
-apt_get_install 30 1 600 dos2unix
-dos2unix /etc/default/grub
