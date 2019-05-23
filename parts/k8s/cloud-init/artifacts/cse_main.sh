@@ -205,3 +205,6 @@ else
       aptmarkWALinuxAgent unhold &
   fi
 fi
+
+apt_get_install 30 1 600 dos2unix
+dos2unix /etc/default/grub
