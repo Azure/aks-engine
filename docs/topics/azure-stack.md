@@ -25,7 +25,7 @@
 
 ## <a name='Introduction'></a>Introduction
 
-Starting from release 0.36.XX, AKS Engine can be used to provision self-managed Kubernetes clusters on Azure Stack. It is now possible to execute AKS Engine's `generate`, `deploy`, `upgrade`, and `scale` commands as if you were targeting Azure's public cloud. You are only required to slighly update your cluster definition to provide some extra information about your Azure Stack instance.
+Starting from release 0.36.XX, AKS Engine can be used to provision self-managed Kubernetes clusters on Azure Stack. It is now possible to execute AKS Engine's `generate`, `deploy`, `upgrade`, and `scale` commands as if you were targeting Azure's public cloud. You are only required to sligthly update your cluster definition to provide some extra information about your Azure Stack instance.
 
 The goal of this guide is to explain how to provision Kubernetes clusters to Azure Stack using AKS Engine and to capture the differences between Azure and Azure Stack. Bear in mind as well that not every AKS Engine feature or configuration option is currently supported on Azure Stack. In most cases, these are not available because dependent Azure components are not part of Azure Stack.
 
@@ -143,5 +143,12 @@ The list below includes the addons currently unsupported on Azure Stack:
 * Container Monitoring
 
 ## <a name='KnownIssues'></a>Known Issues
+
+## <a name='NodesInternetAccess'></a>Nodes losing Internet connectivity
+It has been found that after we delete last kuberenetes service configured with LoadBalancer. Nodes are losing internet connnectivity.
+This will cause any new application deployment failure which requires new images to download from internet.
+
+Workaround:
+Current workaround of above issue is to keep atleast one kuberenetes service configured with LoadBalancer.
 
 ## <a name='FrequentlyAskedQuestions'></a>Frequently Asked Questions
