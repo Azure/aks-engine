@@ -86,7 +86,7 @@ func CleanDeleteVirtualMachine(az armhelpers.AKSEngineClient, logger *log.Entry,
 		if osDiskName == nil {
 			logger.Warnf("managed disk Name is not set for VM %s in resource group %s", name, resourceGroup)
 		} else {
-			logger.Infof("deleting managed disk %s in resource group %s...", *osDiskName, resourceGroup)
+			logger.Infof("deleting managed disk %s in resource group %s ...", *osDiskName, resourceGroup)
 			if err = az.DeleteManagedDisk(ctx, resourceGroup, *osDiskName); err != nil {
 				return err
 			}
