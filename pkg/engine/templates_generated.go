@@ -10993,17 +10993,17 @@ configureK8sCustomCloud() {
         KUBERNETES_FILE_DIR=$(dirname "${AZURE_JSON_PATH}")
         K8S_CLIENT_CERT_PATH="${KUBERNETES_FILE_DIR}/k8s_auth_certificate.pfx"
         echo $SERVICE_PRINCIPAL_CLIENT_SECRET_CERT | base64 --decode > $K8S_CLIENT_CERT_PATH
-        # shellcheck disable=SC2002
-        cat "${AZURE_JSON_PATH}" | \
+        # shellcheck disable=SC2002,SC2005
+        echo $(cat "${AZURE_JSON_PATH}" | \
             jq --arg K8S_CLIENT_CERT_PATH ${K8S_CLIENT_CERT_PATH} '. + {aadClientCertPath:($K8S_CLIENT_CERT_PATH)}' | \
             jq --arg SERVICE_PRINCIPAL_CLIENT_SECRET_PASSWORD ${SERVICE_PRINCIPAL_CLIENT_SECRET_PASSWORD} '. + {aadClientCertPassword:($SERVICE_PRINCIPAL_CLIENT_SECRET_PASSWORD)}' |\
-            jq 'del(.aadClientSecret)' > ${AZURE_JSON_PATH}
+            jq 'del(.aadClientSecret)') > ${AZURE_JSON_PATH}
     fi
 
     if [[ "${IDENTITY_SYSTEM,,}" == "adfs"  ]]; then
         # update the tenent id for ADFS environment.
-        # shellcheck disable=SC2002
-        cat "${AZURE_JSON_PATH}" | jq '.tenantId = "adfs"' > ${AZURE_JSON_PATH}
+        # shellcheck disable=SC2002,SC2005
+        echo $(cat "${AZURE_JSON_PATH}" | jq '.tenantId = "adfs"') > ${AZURE_JSON_PATH}
     fi
 
     # Decrease eth0 MTU to mitigate Azure Stack's NRP issue
@@ -11936,7 +11936,6 @@ func k8sCloudInitArtifactsDocker_clear_mount_propagation_flagsConf() (*asset, er
 
 var _k8sCloudInitArtifactsEtcIssue = []byte(`
 Authorized uses only. All activity may be monitored and reported.
-
 `)
 
 func k8sCloudInitArtifactsEtcIssueBytes() ([]byte, error) {
@@ -11956,7 +11955,6 @@ func k8sCloudInitArtifactsEtcIssue() (*asset, error) {
 
 var _k8sCloudInitArtifactsEtcIssueNet = []byte(`
 Authorized uses only. All activity may be monitored and reported.
-
 `)
 
 func k8sCloudInitArtifactsEtcIssueNetBytes() ([]byte, error) {
@@ -12445,7 +12443,8 @@ auth	required			pam_permit.so
 # end of pam-auth-update config
 
 # 5.3.2 Ensure lockout for failed password attempts is configured
-auth required pam_tally2.so onerr=fail audit silent deny=5 unlock_time=900`)
+auth required pam_tally2.so onerr=fail audit silent deny=5 unlock_time=900
+`)
 
 func k8sCloudInitArtifactsPamDCommonAuthBytes() ([]byte, error) {
 	return _k8sCloudInitArtifactsPamDCommonAuth, nil
@@ -12499,7 +12498,8 @@ password	required			pam_permit.so
 
 # 5.3.3 Ensure password reuse is limited
 # 5.3.4 Ensure password hashing algorithm is SHA-512
-password	[success=1 default=ignore]	pam_unix.so obscure use_authtok try_first_pass sha512 remember=5`)
+password	[success=1 default=ignore]	pam_unix.so obscure use_authtok try_first_pass sha512 remember=5
+`)
 
 func k8sCloudInitArtifactsPamDCommonPasswordBytes() ([]byte, error) {
 	return _k8sCloudInitArtifactsPamDCommonPassword, nil
@@ -12551,7 +12551,7 @@ auth required pam_wheel.so use_uid
 # This module parses environment configuration file(s)
 # and also allows you to use an extended config
 # file /etc/security/pam_env.conf.
-# 
+#
 # parsing /etc/environment needs "readenv=1"
 session       required   pam_env.so readenv=1
 # locale variables are also kept into /etc/default/locale in etch
@@ -12560,7 +12560,7 @@ session       required   pam_env.so readenv=1 envfile=/etc/default/locale
 
 # Defines the MAIL environment variable
 # However, userdel also needs MAIL_DIR and MAIL_FILE variables
-# in /etc/login.defs to make sure that removing a user 
+# in /etc/login.defs to make sure that removing a user
 # also removes the user's mail spool file.
 # See comments in /etc/login.defs
 #
@@ -12576,7 +12576,8 @@ session    required   pam_limits.so
 # /etc/shadow entries.
 @include common-auth
 @include common-account
-@include common-session`)
+@include common-session
+`)
 
 func k8sCloudInitArtifactsPamDSuBytes() ([]byte, error) {
 	return _k8sCloudInitArtifactsPamDSu, nil
@@ -13007,7 +13008,8 @@ runcmd:
 - chown -R "{{WrapAsParameter "jumpboxUsername"}}" "/home/{{WrapAsParameter "jumpboxUsername"}}"
 - chgrp -R "{{WrapAsParameter "jumpboxUsername"}}" "/home/{{WrapAsParameter "jumpboxUsername"}}"
 - chown -R root "/home/{{WrapAsParameter "jumpboxUsername"}}/.kube"
-- chgrp -R root "/home/{{WrapAsParameter "jumpboxUsername"}}/.kube"`)
+- chgrp -R root "/home/{{WrapAsParameter "jumpboxUsername"}}/.kube"
+`)
 
 func k8sCloudInitJumpboxcustomdataYmlBytes() ([]byte, error) {
 	return _k8sCloudInitJumpboxcustomdataYml, nil
@@ -16291,7 +16293,8 @@ spec:
         command:
         - sh
         - -c
-        - '/rescheduler'`)
+        - '/rescheduler'
+`)
 
 func k8sContaineraddonsKubernetesmasteraddonsKubeReschedulerDeploymentYamlBytes() ([]byte, error) {
 	return _k8sContaineraddonsKubernetesmasteraddonsKubeReschedulerDeploymentYaml, nil
@@ -16752,7 +16755,7 @@ roleRef:
 kind: ConfigMap
 apiVersion: v1
 data:
-  kube.conf: |- 
+  kube.conf: |-
      # Fluentd config file for OMS Docker - cluster components (kubeAPI)
      #Kubernetes pod inventory
      <source>
@@ -16908,7 +16911,7 @@ data:
       max_retry_wait 9m
      </match>
 
-     <match oms.api.KubePerf**>	
+     <match oms.api.KubePerf**>
       type out_oms
       log_level debug
       num_threads 5
@@ -17114,7 +17117,7 @@ spec:
     spec:
       serviceAccountName: omsagent
       containers:
-        - name: omsagent 
+        - name: omsagent
           image: {{ContainerImage "omsagent"}}
           imagePullPolicy: IfNotPresent
           resources:
@@ -17141,15 +17144,15 @@ spec:
             privileged: true
           ports:
             - containerPort: 25225
-              protocol: TCP 
+              protocol: TCP
             - containerPort: 25224
               protocol: UDP
           volumeMounts:
             - mountPath: /var/run/host
               name: docker-sock
-            - mountPath: /var/log 
+            - mountPath: /var/log
               name: host-log
-            - mountPath: /var/lib/docker/containers 
+            - mountPath: /var/lib/docker/containers
               name: containerlog-path
             - mountPath: /etc/kubernetes/host
               name: azure-json-path
@@ -17170,7 +17173,7 @@ spec:
         beta.kubernetes.io/os: linux
         kubernetes.io/role: agent
       volumes:
-        - name: docker-sock 
+        - name: docker-sock
           hostPath:
             path: /var/run
         - name: container-hostname
