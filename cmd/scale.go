@@ -246,6 +246,15 @@ func (sc *scaleCmd) run(cmd *cobra.Command, args []string) error {
 	winPoolIndex = -1
 	indexes := make([]int, 0)
 	indexToVM := make(map[int]string)
+
+	// Get nodes list from the k8s API before scaling for the desired pool
+	if sc.apiserverURL != "" && orchestratorInfo.OrchestratorType == api.Kubernetes {
+		nodes, err := operations.GetNodes(sc.client, sc.logger, sc.apiserverURL, sc.kubeconfig, time.Duration(5)*time.Minute, sc.agentPoolToScale, -1)
+		if err == nil && nodes != nil {
+			sc.nodes = nodes
+		}
+	}
+
 	if sc.agentPool.IsAvailabilitySets() {
 		availabilitySetIDs := []string{}
 
@@ -284,28 +293,8 @@ func (sc *scaleCmd) run(cmd *cobra.Command, args []string) error {
 		indexes = []int(sortedIndexes)
 		currentNodeCount = len(indexes)
 
-		if sc.apiserverURL != "" && orchestratorInfo.OrchestratorType == api.Kubernetes {
-			nodes, err := operations.GetNodes(sc.client, sc.logger, sc.apiserverURL, sc.kubeconfig, time.Duration(5)*time.Minute, sc.agentPoolToScale, -1)
-			if err == nil && nodes != nil {
-				sc.nodes = nodes
-			}
-		}
-
 		if currentNodeCount == sc.newDesiredAgentCount {
-			var printNodes bool
-			trailingChar := "."
-			if sc.nodes != nil {
-				printNodes = true
-				trailingChar = ":"
-			}
-			log.Infof("Node pool %s is already at the desired count %d%s", sc.agentPoolToScale, sc.newDesiredAgentCount, trailingChar)
-			if printNodes {
-				operations.PrintNodes(sc.nodes)
-			}
-			numNodesFromK8sAPI := len(sc.nodes)
-			if currentNodeCount != numNodesFromK8sAPI {
-				sc.logger.Warnf("The Kubernetes API reports %d vms in pool %s", numNodesFromK8sAPI, sc.agentPoolToScale)
-			}
+			sc.printScaleTargetEqualsExisting(currentNodeCount)
 			return nil
 		}
 		highestUsedIndex = indexes[len(indexes)-1]
@@ -397,12 +386,19 @@ func (sc *scaleCmd) run(cmd *cobra.Command, args []string) error {
 				return errors.Wrap(err, "failed to get VMSS list in the resource group")
 			}
 			for _, vmss := range vmssListPage.Values() {
-				if vmss.Sku != nil && int(*vmss.Sku.Capacity) > sc.newDesiredAgentCount {
-					log.Warnf("VMSS vm nodes will not be cordon/drained before scaling in!")
-				}
 				vmName := *vmss.Name
 				if !sc.vmInAgentPool(vmName, vmss.Tags) {
 					continue
+				}
+
+				if vmss.Sku != nil {
+					currentNodeCount = int(*vmss.Sku.Capacity)
+					if int(*vmss.Sku.Capacity) == sc.newDesiredAgentCount {
+						sc.printScaleTargetEqualsExisting(currentNodeCount)
+						return nil
+					} else if int(*vmss.Sku.Capacity) > sc.newDesiredAgentCount {
+						log.Warnf("VMSS vm nodes will not be cordon/drained before scaling in!")
+					}
 				}
 
 				osPublisher := vmss.VirtualMachineProfile.StorageProfile.ImageReference.Publisher
@@ -597,4 +593,21 @@ func (sc *scaleCmd) drainNodes(vmsToDelete []string) error {
 	}
 
 	return nil
+}
+
+func (sc *scaleCmd) printScaleTargetEqualsExisting(currentNodeCount int) {
+	var printNodes bool
+	trailingChar := "."
+	if sc.nodes != nil {
+		printNodes = true
+		trailingChar = ":"
+	}
+	log.Infof("Node pool %s is already at the desired count %d%s", sc.agentPoolToScale, sc.newDesiredAgentCount, trailingChar)
+	if printNodes {
+		operations.PrintNodes(sc.nodes)
+	}
+	numNodesFromK8sAPI := len(sc.nodes)
+	if currentNodeCount != numNodesFromK8sAPI {
+		sc.logger.Warnf("The Kubernetes API reports %d vms in pool %s", numNodesFromK8sAPI, sc.agentPoolToScale)
+	}
 }
