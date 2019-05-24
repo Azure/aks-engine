@@ -325,13 +325,21 @@ func (sc *scaleCmd) run(cmd *cobra.Command, args []string) error {
 			}
 
 			if sc.nodes != nil {
-				sc.logger.Infof("There are %d nodes in pool %s before scaling in to %d:\n", len(sc.nodes), sc.agentPoolToScale, sc.newDesiredAgentCount)
+				if len(sc.nodes) > 1 {
+					sc.logger.Infof("There are %d nodes in pool %s before scaling in to %d:\n", len(sc.nodes), sc.agentPoolToScale, sc.newDesiredAgentCount)
+				} else {
+					sc.logger.Infof("There is %d node in pool %s before scaling in to %d:\n", len(sc.nodes), sc.agentPoolToScale, sc.newDesiredAgentCount)
+				}
 				operations.PrintNodes(sc.nodes)
 				numNodesFromK8sAPI := len(sc.nodes)
 				if currentNodeCount != numNodesFromK8sAPI {
 					sc.logger.Warnf("The Azure API reports %d vms in pool %s", currentNodeCount, sc.agentPoolToScale)
 				} else {
-					sc.logger.Infof("%d nodes will be deleted\n", currentNodeCount-sc.newDesiredAgentCount)
+					if len(sc.nodes) > 1 {
+						sc.logger.Infof("%d nodes will be deleted\n", currentNodeCount-sc.newDesiredAgentCount)
+					} else {
+						sc.logger.Infof("%d node will be deleted\n", currentNodeCount-sc.newDesiredAgentCount)
+					}
 				}
 			}
 
