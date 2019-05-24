@@ -355,13 +355,7 @@ func (t *TemplateGenerator) getTemplateFuncMap(cs *api.ContainerService) templat
 			return getDataDisks(profile)
 		},
 		"HasBootstrap": func() bool {
-			return cs.Properties.OrchestratorProfile.DcosConfig != nil && cs.Properties.OrchestratorProfile.DcosConfig.BootstrapProfile != nil
-		},
-		"HasBootstrapPublicIP": func() bool {
-			return false
-		},
-		"IsHostedBootstrap": func() bool {
-			return false
+			return cs.Properties.OrchestratorProfile.DcosConfig != nil && cs.Properties.OrchestratorProfile.DcosConfig.HasBootstrap()
 		},
 		"GetDCOSBootstrapCustomData": func() string {
 			masterIPList := generateIPList(cs.Properties.MasterProfile.Count, cs.Properties.MasterProfile.FirstConsecutiveStaticIP)

@@ -497,22 +497,6 @@ var _dcosBstrapBootstrapparamsT = []byte(`    "linuxAdminUsername": {
       "type": "securestring"
       },
     {{end}}
-{{if IsHostedBootstrap}}
-    "bootstrapSubnet": {
-      "defaultValue": "{{.HostedBootstrapProfile.Subnet}}",
-      "metadata": {
-        "description": "Sets the subnet for the VMs in the cluster."
-      },
-      "type": "string"
-    },
-    "bootstrapEndpoint": {
-      "defaultValue": "{{.HostedBootstrapProfile.FQDN}}",
-      "metadata": {
-        "description": "Sets the static IP of the first bootstrap"
-      },
-      "type": "string"
-    },
-{{else}}
     "bootstrapStaticIP": {
       "metadata": {
         "description": "Sets the static IP of the first bootstrap"
@@ -526,7 +510,6 @@ var _dcosBstrapBootstrapparamsT = []byte(`    "linuxAdminUsername": {
       },
       "type": "string"
     },
-{{end}}
     "sshRSAPublicKey": {
       "metadata": {
         "description": "SSH public key used for auth to all Linux machines.  Not Required.  If not set, you must provide a password key."
@@ -717,18 +700,7 @@ func dcosBstrapBootstrapprovisionSh() (*asset, error) {
 	return a, nil
 }
 
-var _dcosBstrapBootstrapresourcesT = []byte(`{{if HasBootstrapPublicIP}}
-    {
-      "apiVersion": "[variables('apiVersionDefault')]",
-      "location": "[variables('location')]",
-      "name": "bootstrapPublicIP",
-      "properties": {
-        "publicIPAllocationMethod": "Dynamic"
-      },
-      "type": "Microsoft.Network/publicIPAddresses"
-    },
-{{end}}
-    {
+var _dcosBstrapBootstrapresourcesT = []byte(`    {
       "apiVersion": "[variables('apiVersionDefault')]",
       "location": "[variables('location')]",
       "name": "[variables('bootstrapNSGName')]",
@@ -772,9 +744,6 @@ var _dcosBstrapBootstrapresourcesT = []byte(`{{if HasBootstrapPublicIP}}
 {{if not .MasterProfile.IsCustomVNET}}
         "[variables('vnetID')]",
 {{end}}
-{{if HasBootstrapPublicIP}}
-        "bootstrapPublicIP",
-{{end}}
         "[variables('bootstrapNSGID')]"
       ],
       "location": "[variables('location')]",
@@ -786,11 +755,6 @@ var _dcosBstrapBootstrapresourcesT = []byte(`{{if HasBootstrapPublicIP}}
             "properties": {
               "privateIPAddress": "[variables('bootstrapStaticIP')]",
               "privateIPAllocationMethod": "Static",
-{{if HasBootstrapPublicIP}}
-              "publicIpAddress": {
-                "id": "[resourceId('Microsoft.Network/publicIpAddresses', 'bootstrapPublicIP')]"
-              },
-{{end}}
               "subnet": {
                 "id": "[variables('masterVnetSubnetID')]"
               }
@@ -1507,9 +1471,7 @@ var _dcosBstrapDcosmasterresourcesT = []byte(`{{if .MasterProfile.IsManagedDisks
         "[variables('masterStorageAccountName')]",
 {{end}}
         "[variables('masterStorageAccountExhibitorName')]"
-{{if not IsHostedBootstrap}}
        ,"[concat('Microsoft.Compute/virtualMachines/', variables('bootstrapVMName'), '/extensions/bootstrapready')]"
-{{end}}
       ],
       "tags":
       {
@@ -2807,7 +2769,7 @@ var _dcosDcosagentresourcesvmasT = []byte(`    {
 {{end}}
         "[concat('Microsoft.Network/networkInterfaces/', variables('{{.Name}}VMNamePrefix'), 'nic-', copyIndex(variables('{{.Name}}Offset')))]",
         "[concat('Microsoft.Compute/availabilitySets/', variables('{{.Name}}AvailabilitySet'))]"
-{{if and HasBootstrap (not IsHostedBootstrap)}}
+{{if HasBootstrap}}
        ,"[concat('Microsoft.Compute/virtualMachines/', variables('bootstrapVMName'), /extensions/bootstrapready')]"
 {{end}}
       ],
@@ -2995,7 +2957,7 @@ var _dcosDcosagentresourcesvmssT = []byte(`    {
 {{if IsPublic .Ports}}
        ,"[concat('Microsoft.Network/loadBalancers/', variables('{{.Name}}LbName'))]"
 {{end}}
-{{if and HasBootstrap (not IsHostedBootstrap)}}
+{{if HasBootstrap}}
        ,"[concat('Microsoft.Compute/virtualMachines/', variables('bootstrapVMName'), '/extensions/bootstrapready')]"
 {{end}}
       ],

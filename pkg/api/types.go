@@ -441,6 +441,11 @@ func (d *DcosConfig) HasPrivateRegistry() bool {
 	return len(d.Registry) > 0
 }
 
+// HasBootstrap returns if a bootstrap profile is specified
+func (d *DcosConfig) HasBootstrap() bool {
+	return d.BootstrapProfile != nil
+}
+
 // MasterProfile represents the definition of the master cluster
 type MasterProfile struct {
 	Count                    int               `json:"count"`
