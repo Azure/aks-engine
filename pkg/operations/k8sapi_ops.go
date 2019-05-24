@@ -17,8 +17,6 @@ import (
 	v1 "k8s.io/api/core/v1"
 )
 
-const listNodesRetries = 5
-
 type getNodesResult struct {
 	nodes []v1.Node
 	err   error
