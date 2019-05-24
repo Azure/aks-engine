@@ -239,6 +239,7 @@ New-NSSMService {
     & "$KubeDir\nssm.exe" set Kubelet AppParameters $KubeletStartFile
     & "$KubeDir\nssm.exe" set Kubelet DisplayName Kubelet
     & "$KubeDir\nssm.exe" set Kubelet AppRestartDelay 5000
+    & "$KubeDir\nssm.exe" set Kubelet DependOnService docker
     & "$KubeDir\nssm.exe" set Kubelet Description Kubelet
     & "$KubeDir\nssm.exe" set Kubelet Start SERVICE_AUTO_START
     & "$KubeDir\nssm.exe" set Kubelet ObjectName LocalSystem
