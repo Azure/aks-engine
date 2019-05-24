@@ -285,15 +285,27 @@ func (sc *scaleCmd) run(cmd *cobra.Command, args []string) error {
 		currentNodeCount = len(indexes)
 
 		if sc.masterFQDN != "" && orchestratorInfo.OrchestratorType == api.Kubernetes {
-			nodes, err := operations.GetNodes(sc.client, sc.logger, sc.apiserverURL, sc.kubeconfig, time.Duration(5)*time.Minute)
+			nodes, err := operations.GetNodes(sc.client, sc.logger, sc.apiserverURL, sc.kubeconfig, time.Duration(5)*time.Minute, sc.agentPoolToScale, -1)
 			if err == nil && nodes != nil {
 				sc.nodes = nodes
 			}
-			// TODO do something with this
 		}
 
 		if currentNodeCount == sc.newDesiredAgentCount {
-			log.Info("Cluster is currently at the desired agent count.")
+			var printNodes bool
+			trailingChar := "."
+			if sc.nodes != nil {
+				printNodes = true
+				trailingChar = ":"
+			}
+			log.Infof("Node pool %s is already at the desired count %d%s", sc.agentPoolToScale, sc.newDesiredAgentCount, trailingChar)
+			if printNodes {
+				operations.PrintNodes(sc.nodes)
+			}
+			numNodesFromK8sAPI := len(sc.nodes)
+			if currentNodeCount != numNodesFromK8sAPI {
+				sc.logger.Warnf("The Kubernetes API reports %d vms in pool %s", numNodesFromK8sAPI, sc.agentPoolToScale)
+			}
 			return nil
 		}
 		highestUsedIndex = indexes[len(indexes)-1]
@@ -309,7 +321,18 @@ func (sc *scaleCmd) run(cmd *cobra.Command, args []string) error {
 		if currentNodeCount > sc.newDesiredAgentCount {
 			if sc.masterFQDN == "" {
 				cmd.Usage()
-				return errors.New("master-FQDN is required to scale in a kubernetes cluster's agent pool")
+				return errors.New("--apiserver (or the deprecated --master-FQDN) is required to scale in a kubernetes cluster's agent pool")
+			}
+
+			if sc.nodes != nil {
+				sc.logger.Infof("There are %d nodes in pool %s before scaling in to %d:\n", len(sc.nodes), sc.agentPoolToScale, sc.newDesiredAgentCount)
+				operations.PrintNodes(sc.nodes)
+				numNodesFromK8sAPI := len(sc.nodes)
+				if currentNodeCount != numNodesFromK8sAPI {
+					sc.logger.Warnf("The Azure API reports %d vms in pool %s", currentNodeCount, sc.agentPoolToScale)
+				} else {
+					sc.logger.Infof("%d nodes will be deleted\n", currentNodeCount-sc.newDesiredAgentCount)
+				}
 			}
 
 			vmsToDelete := make([]string, 0)
@@ -318,6 +341,9 @@ func (sc *scaleCmd) run(cmd *cobra.Command, args []string) error {
 				vmsToDelete = append(vmsToDelete, indexToVM[index])
 			}
 
+			for _, node := range vmsToDelete {
+				sc.logger.Infof("Node %s will be cordon/drained\n", node)
+			}
 			if orchestratorInfo.OrchestratorType == api.Kubernetes {
 				err := sc.drainNodes(vmsToDelete)
 				if err != nil {
@@ -325,6 +351,9 @@ func (sc *scaleCmd) run(cmd *cobra.Command, args []string) error {
 				}
 			}
 
+			for _, node := range vmsToDelete {
+				sc.logger.Infof("Node %s's vm will be deleted\n", node)
+			}
 			errList := operations.ScaleDownVMs(sc.client, sc.logger, sc.SubscriptionID.String(), sc.resourceGroupName, vmsToDelete...)
 			if errList != nil {
 				var err error
@@ -340,6 +369,16 @@ func (sc *scaleCmd) run(cmd *cobra.Command, args []string) error {
 					}
 				}
 				return err
+			}
+			if sc.nodes != nil {
+				nodes, err := operations.GetNodes(sc.client, sc.logger, sc.apiserverURL, sc.kubeconfig, time.Duration(5)*time.Minute, sc.agentPoolToScale, sc.newDesiredAgentCount)
+				if err == nil && nodes != nil {
+					sc.nodes = nodes
+					sc.logger.Infof("Nodes in pool %s cluster after scaling:\n", sc.agentPoolToScale)
+					operations.PrintNodes(sc.nodes)
+				} else {
+					sc.logger.Warningf("Unable to get nodes in pool %s after scaling:\n", sc.agentPoolToScale)
+				}
 			}
 
 			return sc.saveAPIModel()
@@ -443,6 +482,10 @@ func (sc *scaleCmd) run(cmd *cobra.Command, args []string) error {
 	random := rand.New(rand.NewSource(time.Now().UnixNano()))
 	deploymentSuffix := random.Int31()
 
+	if sc.nodes != nil {
+		sc.logger.Infof("Nodes in pool %s before scaling:\n", sc.agentPoolToScale)
+		operations.PrintNodes(sc.nodes)
+	}
 	_, err = sc.client.DeployTemplate(
 		ctx,
 		sc.resourceGroupName,
@@ -451,6 +494,16 @@ func (sc *scaleCmd) run(cmd *cobra.Command, args []string) error {
 		parametersJSON)
 	if err != nil {
 		return err
+	}
+	if sc.nodes != nil {
+		nodes, err := operations.GetNodes(sc.client, sc.logger, sc.apiserverURL, sc.kubeconfig, time.Duration(5)*time.Minute, sc.agentPoolToScale, sc.newDesiredAgentCount)
+		if err == nil && nodes != nil {
+			sc.nodes = nodes
+			sc.logger.Infof("Nodes in pool %s cluster after scaling:\n", sc.agentPoolToScale)
+			operations.PrintNodes(sc.nodes)
+		} else {
+			sc.logger.Warningf("Unable to get nodes in pool %s after scaling:\n", sc.agentPoolToScale)
+		}
 	}
 
 	return sc.saveAPIModel()

@@ -78,10 +78,14 @@ func (o *drainOperation) deleteOrEvictPodsSimple() error {
 	if err != nil {
 		return err
 	}
-	o.logger.WithFields(log.Fields{
-		"prefix": "drain",
-		"node":   o.node.Name,
-	}).Infof("%d pods will be deleted", len(pods))
+	if len(pods) > 0 {
+		o.logger.WithFields(log.Fields{
+			"prefix": "drain",
+			"node":   o.node.Name,
+		}).Infof("%d pods will be deleted", len(pods))
+	} else {
+		o.logger.Infof("Node %s has no scheduled pods", o.node.Name)
+	}
 
 	err = o.deleteOrEvictPods(pods)
 	if err != nil {
