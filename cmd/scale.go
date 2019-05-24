@@ -284,7 +284,7 @@ func (sc *scaleCmd) run(cmd *cobra.Command, args []string) error {
 		indexes = []int(sortedIndexes)
 		currentNodeCount = len(indexes)
 
-		if sc.masterFQDN != "" && orchestratorInfo.OrchestratorType == api.Kubernetes {
+		if sc.apiserverURL != "" && orchestratorInfo.OrchestratorType == api.Kubernetes {
 			nodes, err := operations.GetNodes(sc.client, sc.logger, sc.apiserverURL, sc.kubeconfig, time.Duration(5)*time.Minute, sc.agentPoolToScale, -1)
 			if err == nil && nodes != nil {
 				sc.nodes = nodes
@@ -319,7 +319,7 @@ func (sc *scaleCmd) run(cmd *cobra.Command, args []string) error {
 
 		// VMAS Scale down Scenario
 		if currentNodeCount > sc.newDesiredAgentCount {
-			if sc.masterFQDN == "" {
+			if sc.apiserverURL == "" {
 				cmd.Usage()
 				return errors.New("--apiserver (or the deprecated --master-FQDN) is required to scale in a kubernetes cluster's agent pool")
 			}
