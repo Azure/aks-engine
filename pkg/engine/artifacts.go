@@ -324,7 +324,7 @@ func substituteConfigString(input string, kubernetesFeatureSettings []kubernetes
 				if err != nil {
 					return ""
 				}
-				config += getAddonString(cscript, setting.destinationFile, destinationPath)
+				config += getAddonString(cscript, destinationPath, setting.destinationFile)
 			} else {
 				cscript = getCustomScriptFromFile(setting.sourceFile,
 					sourcePath,
