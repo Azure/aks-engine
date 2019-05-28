@@ -23,7 +23,7 @@
         },
         "gchighthreshold": 85,
         "gclowthreshold": 80,
-        "etcdVersion": "3.2.25",
+        "etcdVersion": "3.2.26",
         "etcdDiskSizeGB": "512",
         "addons": [
           {
