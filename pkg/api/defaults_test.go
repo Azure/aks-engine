@@ -770,11 +770,11 @@ func TestNetworkPolicyDefaults(t *testing.T) {
 
 func TestContainerRuntime(t *testing.T) {
 
-	for _, version := range []string{"3.0.1", "3.0.3", "3.0.4", "3.0.5"} {
+	for _, mobyVersion := range []string{"3.0.1", "3.0.3", "3.0.4", "3.0.5"} {
 		mockCS := getMockBaseContainerService("1.10.13")
 		properties := mockCS.Properties
 		properties.OrchestratorProfile.OrchestratorType = Kubernetes
-		properties.OrchestratorProfile.KubernetesConfig.MobyVersion = version
+		properties.OrchestratorProfile.KubernetesConfig.MobyVersion = mobyVersion
 		mockCS.setOrchestratorDefaults(true)
 		if properties.OrchestratorProfile.KubernetesConfig.ContainerRuntime != Docker {
 			t.Fatalf("ContainerRuntime did not have the expected value, got %s, expected %s",
@@ -785,25 +785,25 @@ func TestContainerRuntime(t *testing.T) {
 				properties.OrchestratorProfile.KubernetesConfig.MobyVersion, DefaultMobyVersion)
 		}
 		if properties.OrchestratorProfile.KubernetesConfig.ContainerdVersion != "" {
-			t.Fatalf("MobyVersion did not have the expected value, got %s, expected %s",
+			t.Fatalf("Containerd did not have the expected value, got %s, expected %s",
 				properties.OrchestratorProfile.KubernetesConfig.ContainerdVersion, "")
 		}
 
 		mockCS = getMockBaseContainerService("1.10.13")
 		properties = mockCS.Properties
 		properties.OrchestratorProfile.OrchestratorType = Kubernetes
-		properties.OrchestratorProfile.KubernetesConfig.MobyVersion = version
+		properties.OrchestratorProfile.KubernetesConfig.MobyVersion = mobyVersion
 		mockCS.setOrchestratorDefaults(false)
 		if properties.OrchestratorProfile.KubernetesConfig.ContainerRuntime != Docker {
 			t.Fatalf("ContainerRuntime did not have the expected value, got %s, expected %s",
 				properties.OrchestratorProfile.KubernetesConfig.ContainerRuntime, Docker)
 		}
-		if properties.OrchestratorProfile.KubernetesConfig.MobyVersion != version {
+		if properties.OrchestratorProfile.KubernetesConfig.MobyVersion != mobyVersion {
 			t.Fatalf("MobyVersion did not have the expected value, got %s, expected %s",
-				properties.OrchestratorProfile.KubernetesConfig.MobyVersion, version)
+				properties.OrchestratorProfile.KubernetesConfig.MobyVersion, mobyVersion)
 		}
 		if properties.OrchestratorProfile.KubernetesConfig.ContainerdVersion != "" {
-			t.Fatalf("MobyVersion did not have the expected value, got %s, expected %s",
+			t.Fatalf("Containerd did not have the expected value, got %s, expected %s",
 				properties.OrchestratorProfile.KubernetesConfig.ContainerdVersion, "")
 		}
 	}
@@ -821,7 +821,7 @@ func TestContainerRuntime(t *testing.T) {
 			properties.OrchestratorProfile.KubernetesConfig.MobyVersion, DefaultMobyVersion)
 	}
 	if properties.OrchestratorProfile.KubernetesConfig.ContainerdVersion != "" {
-		t.Fatalf("MobyVersion did not have the expected value, got %s, expected %s",
+		t.Fatalf("Containerd did not have the expected value, got %s, expected %s",
 			properties.OrchestratorProfile.KubernetesConfig.ContainerdVersion, "")
 	}
 
@@ -829,7 +829,7 @@ func TestContainerRuntime(t *testing.T) {
 	properties = mockCS.Properties
 	properties.OrchestratorProfile.OrchestratorType = Kubernetes
 	properties.OrchestratorProfile.KubernetesConfig.ContainerRuntime = Containerd
-	mockCS.setOrchestratorDefaults(true)
+	mockCS.setOrchestratorDefaults(false)
 	if properties.OrchestratorProfile.KubernetesConfig.ContainerRuntime != Containerd {
 		t.Fatalf("ContainerRuntime did not have the expected value, got %s, expected %s",
 			properties.OrchestratorProfile.KubernetesConfig.ContainerRuntime, Containerd)
@@ -839,7 +839,7 @@ func TestContainerRuntime(t *testing.T) {
 			properties.OrchestratorProfile.KubernetesConfig.MobyVersion, "")
 	}
 	if properties.OrchestratorProfile.KubernetesConfig.ContainerdVersion != DefaultContainerdVersion {
-		t.Fatalf("MobyVersion did not have the expected value, got %s, expected %s",
+		t.Fatalf("Containerd did not have the expected value, got %s, expected %s",
 			properties.OrchestratorProfile.KubernetesConfig.ContainerdVersion, DefaultContainerdVersion)
 	}
 
@@ -847,7 +847,7 @@ func TestContainerRuntime(t *testing.T) {
 	properties = mockCS.Properties
 	properties.OrchestratorProfile.OrchestratorType = Kubernetes
 	properties.OrchestratorProfile.KubernetesConfig.ContainerRuntime = ClearContainers
-	mockCS.setOrchestratorDefaults(true)
+	mockCS.setOrchestratorDefaults(false)
 	if properties.OrchestratorProfile.KubernetesConfig.ContainerRuntime != ClearContainers {
 		t.Fatalf("ContainerRuntime did not have the expected value, got %s, expected %s",
 			properties.OrchestratorProfile.KubernetesConfig.ContainerRuntime, ClearContainers)
@@ -857,7 +857,7 @@ func TestContainerRuntime(t *testing.T) {
 			properties.OrchestratorProfile.KubernetesConfig.MobyVersion, "")
 	}
 	if properties.OrchestratorProfile.KubernetesConfig.ContainerdVersion != DefaultContainerdVersion {
-		t.Fatalf("MobyVersion did not have the expected value, got %s, expected %s",
+		t.Fatalf("Containerd did not have the expected value, got %s, expected %s",
 			properties.OrchestratorProfile.KubernetesConfig.ContainerdVersion, DefaultContainerdVersion)
 	}
 
@@ -865,7 +865,7 @@ func TestContainerRuntime(t *testing.T) {
 	properties = mockCS.Properties
 	properties.OrchestratorProfile.OrchestratorType = Kubernetes
 	properties.OrchestratorProfile.KubernetesConfig.ContainerRuntime = KataContainers
-	mockCS.setOrchestratorDefaults(true)
+	mockCS.setOrchestratorDefaults(false)
 	if properties.OrchestratorProfile.KubernetesConfig.ContainerRuntime != KataContainers {
 		t.Fatalf("ContainerRuntime did not have the expected value, got %s, expected %s",
 			properties.OrchestratorProfile.KubernetesConfig.ContainerRuntime, KataContainers)
@@ -875,27 +875,73 @@ func TestContainerRuntime(t *testing.T) {
 			properties.OrchestratorProfile.KubernetesConfig.MobyVersion, "")
 	}
 	if properties.OrchestratorProfile.KubernetesConfig.ContainerdVersion != DefaultContainerdVersion {
-		t.Fatalf("MobyVersion did not have the expected value, got %s, expected %s",
+		t.Fatalf("Containerd did not have the expected value, got %s, expected %s",
 			properties.OrchestratorProfile.KubernetesConfig.ContainerdVersion, DefaultContainerdVersion)
 	}
 
-	mockCS = getMockBaseContainerService("1.10.13")
-	properties = mockCS.Properties
-	properties.OrchestratorProfile.OrchestratorType = Kubernetes
-	properties.OrchestratorProfile.KubernetesConfig.ContainerRuntime = Containerd
-	properties.OrchestratorProfile.KubernetesConfig.ContainerdVersion = "1.1.6"
-	mockCS.setOrchestratorDefaults(true)
-	if properties.OrchestratorProfile.KubernetesConfig.ContainerRuntime != Containerd {
-		t.Fatalf("ContainerRuntime did not have the expected value, got %s, expected %s",
-			properties.OrchestratorProfile.KubernetesConfig.ContainerRuntime, Containerd)
+	for _, containerdVersion := range []string{"1.1.2", "1.1.4", "1.1.5"} {
+
+		mockCS = getMockBaseContainerService("1.10.13")
+		properties = mockCS.Properties
+		properties.OrchestratorProfile.OrchestratorType = Kubernetes
+		properties.OrchestratorProfile.KubernetesConfig.ContainerRuntime = Containerd
+		properties.OrchestratorProfile.KubernetesConfig.ContainerdVersion = containerdVersion
+		mockCS.setOrchestratorDefaults(true)
+		if properties.OrchestratorProfile.KubernetesConfig.ContainerRuntime != Containerd {
+			t.Fatalf("ContainerRuntime did not have the expected value, got %s, expected %s",
+				properties.OrchestratorProfile.KubernetesConfig.ContainerRuntime, Containerd)
+		}
+		if properties.OrchestratorProfile.KubernetesConfig.MobyVersion != "" {
+			t.Fatalf("MobyVersion did not have the expected value, got %s, expected %s",
+				properties.OrchestratorProfile.KubernetesConfig.MobyVersion, "")
+		}
+		if properties.OrchestratorProfile.KubernetesConfig.ContainerdVersion != DefaultContainerdVersion {
+			t.Fatalf("Containerd did not have the expected value, got %s, expected %s",
+				properties.OrchestratorProfile.KubernetesConfig.ContainerdVersion, DefaultContainerdVersion)
+		}
+
+		mockCS = getMockBaseContainerService("1.10.13")
+		properties = mockCS.Properties
+		properties.OrchestratorProfile.OrchestratorType = Kubernetes
+		properties.OrchestratorProfile.KubernetesConfig.ContainerRuntime = Containerd
+		properties.OrchestratorProfile.KubernetesConfig.ContainerdVersion = containerdVersion
+		mockCS.setOrchestratorDefaults(false)
+		if properties.OrchestratorProfile.KubernetesConfig.ContainerRuntime != Containerd {
+			t.Fatalf("ContainerRuntime did not have the expected value, got %s, expected %s",
+				properties.OrchestratorProfile.KubernetesConfig.ContainerRuntime, Containerd)
+		}
+		if properties.OrchestratorProfile.KubernetesConfig.MobyVersion != "" {
+			t.Fatalf("MobyVersion did not have the expected value, got %s, expected %s",
+				properties.OrchestratorProfile.KubernetesConfig.MobyVersion, "")
+		}
+		if properties.OrchestratorProfile.KubernetesConfig.ContainerdVersion != containerdVersion {
+			t.Fatalf("Containerd did not have the expected value, got %s, expected %s",
+				properties.OrchestratorProfile.KubernetesConfig.ContainerdVersion, containerdVersion)
+		}
 	}
-	if properties.OrchestratorProfile.KubernetesConfig.MobyVersion != "" {
-		t.Fatalf("MobyVersion did not have the expected value, got %s, expected %s",
-			properties.OrchestratorProfile.KubernetesConfig.MobyVersion, "")
-	}
-	if properties.OrchestratorProfile.KubernetesConfig.ContainerdVersion != "1.1.6" {
-		t.Fatalf("MobyVersion did not have the expected value, got %s, expected %s",
-			properties.OrchestratorProfile.KubernetesConfig.ContainerdVersion, "1.1.6")
+}
+
+func TestEtcdVersion(t *testing.T) {
+	for _, etcdVersion := range []string{"2.2.5", "3.2.24", "3.2.25", "3.3.0"} {
+		mockCS := getMockBaseContainerService("1.10.13")
+		properties := mockCS.Properties
+		properties.OrchestratorProfile.OrchestratorType = Kubernetes
+		properties.OrchestratorProfile.KubernetesConfig.EtcdVersion = etcdVersion
+		mockCS.setOrchestratorDefaults(true)
+		if properties.OrchestratorProfile.KubernetesConfig.EtcdVersion != DefaultEtcdVersion {
+			t.Fatalf("EtcdVersion did not have the expected value, got %s, expected %s",
+				properties.OrchestratorProfile.KubernetesConfig.EtcdVersion, DefaultEtcdVersion)
+		}
+
+		mockCS = getMockBaseContainerService("1.10.13")
+		properties = mockCS.Properties
+		properties.OrchestratorProfile.OrchestratorType = Kubernetes
+		properties.OrchestratorProfile.KubernetesConfig.EtcdVersion = etcdVersion
+		mockCS.setOrchestratorDefaults(false)
+		if properties.OrchestratorProfile.KubernetesConfig.EtcdVersion != etcdVersion {
+			t.Fatalf("EtcdVersion did not have the expected value, got %s, expected %s",
+				properties.OrchestratorProfile.KubernetesConfig.EtcdVersion, etcdVersion)
+		}
 	}
 }
 

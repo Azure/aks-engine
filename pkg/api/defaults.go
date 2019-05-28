@@ -118,7 +118,7 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpdate bool) {
 		if o.KubernetesConfig.KubernetesImageBase == "" {
 			o.KubernetesConfig.KubernetesImageBase = cloudSpecConfig.KubernetesSpecConfig.KubernetesImageBase
 		}
-		if o.KubernetesConfig.EtcdVersion == "" {
+		if o.KubernetesConfig.EtcdVersion == "" || isUpdate {
 			o.KubernetesConfig.EtcdVersion = DefaultEtcdVersion
 		}
 
@@ -140,7 +140,7 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpdate bool) {
 				o.KubernetesConfig.MobyVersion = DefaultMobyVersion
 			}
 		case Containerd, ClearContainers, KataContainers:
-			if o.KubernetesConfig.ContainerdVersion == "" {
+			if o.KubernetesConfig.ContainerdVersion == "" || isUpdate {
 				o.KubernetesConfig.ContainerdVersion = DefaultContainerdVersion
 			}
 		}
