@@ -5,6 +5,7 @@ package engine
 
 import (
 	"encoding/json"
+	"reflect"
 	"testing"
 
 	"github.com/Azure/aks-engine/pkg/api"
@@ -74,13 +75,26 @@ func TestGetTemplateFuncMap(t *testing.T) {
 		"GetVNETSubnets",
 		"GetDataDisks",
 		"HasBootstrap",
+		"GetMasterAllowedSizes",
+		"GetDefaultVNETCIDR",
+		"GetKubernetesAllowedVMSKUs",
+		"GetSizeMap",
 		// TODO validate that the remaining func strings in getTemplateFuncMap are thinly wrapped and unit tested
 	}
 
 	for _, c := range cases {
-		_, ok := funcmap[c]
+		f, ok := funcmap[c]
+		v := reflect.ValueOf(f)
 		if !ok {
 			t.Fatalf("Didn't find expected funcmap key %s.", c)
+		}
+		switch c {
+		case "GetDefaultVNETCIDR":
+			rargs := make([]reflect.Value, 0)
+			ret := v.Call(rargs)
+			if ret[0].Interface() != DefaultVNETCIDR {
+				t.Fatalf("Got unexpected default VNET CIDR")
+			}
 		}
 	}
 }

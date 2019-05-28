@@ -279,9 +279,9 @@ func TestGetDCOSMasterAllowedSizes(t *testing.T) {
 }
 
 func TestKubernetesAllowedSizes(t *testing.T) {
-	sizes := GetKubernetesAllowedSizes()
+	sizes := GetKubernetesAllowedVMSKUs()
 	if len(sizes) == 0 {
-		t.Errorf("expected GetKubernetesAllowedSizes to return a non empty string")
+		t.Errorf("expected GetKubernetesAllowedVMSKUs to return a non empty string")
 	}
 
 	expectedSizes := []string{

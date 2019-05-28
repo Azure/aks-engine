@@ -381,13 +381,13 @@ func (t *TemplateGenerator) getTemplateFuncMap(cs *api.ContainerService) templat
 			if cs.Properties.OrchestratorProfile.OrchestratorType == api.DCOS {
 				return helpers.GetDCOSMasterAllowedSizes()
 			}
-			return helpers.GetKubernetesAllowedSizes()
+			return helpers.GetKubernetesAllowedVMSKUs()
 		},
 		"GetDefaultVNETCIDR": func() string {
 			return DefaultVNETCIDR
 		},
-		"GetAgentAllowedSizes": func() string {
-			return helpers.GetKubernetesAllowedSizes()
+		"GetKubernetesAllowedVMSKUs": func() string {
+			return helpers.GetKubernetesAllowedVMSKUs()
 		},
 		"getSwarmVersions": func() string {
 			return getSwarmVersions(api.SwarmVersion, api.SwarmDockerComposeVersion)
