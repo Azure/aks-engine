@@ -255,7 +255,7 @@ func TestAssignDefaultAddonImages(t *testing.T) {
 		addon.Containers[0].Image = "customTestImage"
 	}
 
-	// Image should not be overriden in create scenarios.
+	// Image should not be overridden in create scenarios.
 	mockCS = getMockBaseContainerService("1.10.8")
 	mockCS.Properties.OrchestratorProfile.OrchestratorType = Kubernetes
 	mockCS.Properties.OrchestratorProfile.KubernetesConfig.Addons = addons
@@ -270,7 +270,7 @@ func TestAssignDefaultAddonImages(t *testing.T) {
 		}
 	}
 
-	// Image should be overriden in update scenarios.
+	// Image should be overridden in update scenarios.
 	mockCS = getMockBaseContainerService("1.10.8")
 	mockCS.Properties.OrchestratorProfile.OrchestratorType = Kubernetes
 	mockCS.Properties.OrchestratorProfile.KubernetesConfig.Addons = addons
