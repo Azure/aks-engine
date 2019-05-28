@@ -17,18 +17,18 @@
 
 ## Introduction
 
-Starting from release v0.36.2, AKS Engine can be used to provision self-managed Kubernetes clusters on Azure Stack. It is now possible to execute AKS Engine's `generate`, `deploy`, `upgrade`, and `scale` commands as if you were targeting Azure's public cloud. You are only required to slightly update your cluster definition to provide some extra information about your Azure Stack instance.
+Starting from [release](https://github.com/Azure/aks-engine/releases/) v0.36.2, AKS Engine can be used to provision self-managed Kubernetes clusters on Azure Stack. It is now possible to execute AKS Engine's `generate`, `deploy`, `upgrade`, and `scale` commands as if you were targeting Azure's public cloud. You are only required to slightly update your cluster definition to provide some extra information about your Azure Stack instance.
 
 The goal of this guide is to explain how to provision Kubernetes clusters to Azure Stack using AKS Engine and to capture the differences between Azure and Azure Stack. Bear in mind as well that not every AKS Engine feature or configuration option is currently supported on Azure Stack. In most cases, these are not available because dependent Azure components are not part of Azure Stack.
 
 ## Service Principals and Identity Providers
 
-Kubernetes uses a `service principal` identity to talk to Azure Stack APIs to dynamically manage resources such a storage or load balancers. Therefore, you will need to create a service principal before you can provision a Kubernetes cluster using AKS Engine.
+Kubernetes uses a `service principal` identity to talk to Azure Stack APIs to dynamically manage resources such as storage or load balancers. Therefore, you will need to create a service principal before you can provision a Kubernetes cluster using AKS Engine.
 This [guide](https://docs.microsoft.com/en-us/azure-stack/operator/azure-stack-create-service-principals) explains how to create and manage service principals on Azure Stack for both Azure Active Directory (AAD) and Active Directory Federation Services (ADFS) identity providers. This other [guide](../../docs/topics/service-principals.md) is a good resource to understand the permissions that the service principal requires to deploy under your subscription.
 
 ## CLI flags
 
-To indicate AKS Engine that your target platform is Azure Stack, all commands require CLI flag `azure-env` to be set to `"AzureStackCloud"`.
+To indicate to AKS Engine that your target platform is Azure Stack, all commands require CLI flag `azure-env` to be set to `"AzureStackCloud"`.
 
 If your Azure Stack instance uses ADFS to authenticate identities, then flag `identity-system` is also required.
 
@@ -123,13 +123,13 @@ The list below includes the addons currently unsupported on Azure Stack:
 
 * AAD Pod Identity
 * ACI Connector
-* Cluster Autoscaler
 * Blobfuse Flex Volume
-* SMB Flex Volume
-* KeyVault Flex Volume
-* Rescheduler
-* NVIDIA Device Plugin
+* Cluster Autoscaler
 * Container Monitoring
+* KeyVault Flex Volume
+* NVIDIA Device Plugin
+* Rescheduler
+* SMB Flex Volume
 
 ## Known Issues and Limitations
 
