@@ -284,6 +284,20 @@ func TestAssignDefaultAddonImages(t *testing.T) {
 			t.Errorf("expected setDefaults to set Image %s in addon %s, but got %s", expected, addon.Name, actual)
 		}
 	}
+
+	mockCS = getMockBaseContainerService("1.10.8")
+	mockCS.Properties.OrchestratorProfile.OrchestratorType = Kubernetes
+	mockCS.Properties.OrchestratorProfile.KubernetesConfig.Addons = addons
+	mockCS.SetPropertiesDefaults(false, true)
+	modifiedAddons = mockCS.Properties.OrchestratorProfile.KubernetesConfig.Addons
+
+	for _, addon := range modifiedAddons {
+		expected := addonContainerMap[addon.Name]
+		actual := addon.Containers[0].Image
+		if actual != expected {
+			t.Errorf("expected setDefaults to set Image %s in addon %s, but got %s", expected, addon.Name, actual)
+		}
+	}
 }
 
 func TestAssignDefaultAddonVals(t *testing.T) {
