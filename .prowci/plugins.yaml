@@ -1,8 +1,8 @@
 approve:
 - repos:
   - Azure/aks-engine
-  implicit_self_approve: true
   lgtm_acts_as_approve: true
+  require_self_approval: false
 
 config_updater:
   maps:
