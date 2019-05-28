@@ -310,14 +310,14 @@ func (sc *scaleCmd) run(cmd *cobra.Command, args []string) error {
 		if currentNodeCount > sc.newDesiredAgentCount {
 			if sc.apiserverURL == "" {
 				cmd.Usage()
-				return errors.New("--apiserver (or the deprecated --master-FQDN) is required to scale in a kubernetes cluster's agent pool")
+				return errors.New("--apiserver (or the deprecated --master-FQDN) is required to scale down a kubernetes cluster's agent pool")
 			}
 
 			if sc.nodes != nil {
 				if len(sc.nodes) > 1 {
-					sc.logger.Infof("There are %d nodes in pool %s before scaling in to %d:\n", len(sc.nodes), sc.agentPoolToScale, sc.newDesiredAgentCount)
+					sc.logger.Infof("There are %d nodes in pool %s before scaling down to %d:\n", len(sc.nodes), sc.agentPoolToScale, sc.newDesiredAgentCount)
 				} else {
-					sc.logger.Infof("There is %d node in pool %s before scaling in to %d:\n", len(sc.nodes), sc.agentPoolToScale, sc.newDesiredAgentCount)
+					sc.logger.Infof("There is %d node in pool %s before scaling down to %d:\n", len(sc.nodes), sc.agentPoolToScale, sc.newDesiredAgentCount)
 				}
 				operations.PrintNodes(sc.nodes)
 				numNodesFromK8sAPI := len(sc.nodes)
@@ -397,7 +397,7 @@ func (sc *scaleCmd) run(cmd *cobra.Command, args []string) error {
 						sc.printScaleTargetEqualsExisting(currentNodeCount)
 						return nil
 					} else if int(*vmss.Sku.Capacity) > sc.newDesiredAgentCount {
-						log.Warnf("VMSS vm nodes will not be cordon/drained before scaling in!")
+						log.Warnf("VMSS vm nodes will not be cordon/drained before scaling down!")
 					}
 				}
 
