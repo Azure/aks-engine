@@ -150,9 +150,9 @@ As you can see, for all node pools definition (master or agents) you can use the
 
 *Note: Make sure the the vnetSubnetId matches with your subnet, by giving your **SUBSCRIPTION_ID**, **RESOURCE_GROUP_NAME**, virtual network and subnet names. You also need to fill DNS prefix for all the public pools you want to create, give an SSH keys...*
 
-## Deploy the Azure Kubernetes Service cluster
+## Deploy the AKS Engine template
 
-Once you are ready with the cluster definition file, you can use AKS engine to deploy the cluster on Azure or you can use AKS engine to generate an ARM template to deploy using Azure CLI. 
+Once you are ready with the cluster definition file, you can either use AKS engine to deploy the cluster on Azure or you can use AKS Engine to generate an ARM template to deploy using Azure CLI. 
 
 ### Deploy using AKS Engine
 
