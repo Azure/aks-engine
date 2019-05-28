@@ -803,48 +803,6 @@ func getKubernetesPodStartIndex(properties *api.Properties) int {
 	return nodeCount + 1
 }
 
-// getLinkedTemplatesForExtensions returns the
-// Microsoft.Resources/deployments for each extension
-func getLinkedTemplatesForExtensions(properties *api.Properties) string {
-	var result string
-
-	extensions := properties.ExtensionProfiles
-	masterProfileExtensions := properties.MasterProfile.Extensions
-	orchestratorType := properties.OrchestratorProfile.OrchestratorType
-
-	for err, extensionProfile := range extensions {
-		_ = err
-
-		masterOptedForExtension, singleOrAll := validateProfileOptedForExtension(extensionProfile.Name, masterProfileExtensions)
-		if masterOptedForExtension {
-			result += ","
-			dta, e := getMasterLinkedTemplateText(orchestratorType, extensionProfile, singleOrAll)
-			if e != nil {
-				fmt.Println(e.Error())
-				return ""
-			}
-			result += dta
-		}
-
-		for _, agentPoolProfile := range properties.AgentPoolProfiles {
-			poolProfileExtensions := agentPoolProfile.Extensions
-			poolOptedForExtension, singleOrAll := validateProfileOptedForExtension(extensionProfile.Name, poolProfileExtensions)
-			if poolOptedForExtension {
-				result += ","
-				dta, e := getAgentPoolLinkedTemplateText(agentPoolProfile, orchestratorType, extensionProfile, singleOrAll)
-				if e != nil {
-					fmt.Println(e.Error())
-					return ""
-				}
-				result += dta
-			}
-
-		}
-	}
-
-	return result
-}
-
 func getMasterLinkedTemplateText(orchestratorType string, extensionProfile *api.ExtensionProfile, singleOrAll string) (string, error) {
 	extTargetVMNamePrefix := "variables('masterVMNamePrefix')"
 
