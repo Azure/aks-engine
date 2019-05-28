@@ -129,7 +129,7 @@ metadata:
   labels:
     app: cluster-autoscaler
     kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: EnsureExists
+    addonmanager.kubernetes.io/mode: Reconcile
   name: cluster-autoscaler
   namespace: kube-system
 spec:
