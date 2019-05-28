@@ -922,7 +922,7 @@ func TestContainerRuntime(t *testing.T) {
 }
 
 func TestEtcdVersion(t *testing.T) {
-	for _, etcdVersion := range []string{"2.2.5", "3.2.24", "3.2.25", "3.3.0"} {
+	for _, etcdVersion := range []string{"2.2.5", "3.2.24", "3.2.25", "3.2.26", "3.3.0"} {
 		mockCS := getMockBaseContainerService("1.10.13")
 		properties := mockCS.Properties
 		properties.OrchestratorProfile.OrchestratorType = Kubernetes
