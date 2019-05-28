@@ -5,7 +5,6 @@ package operations
 
 import (
 	"fmt"
-	"os"
 	"testing"
 	"time"
 
@@ -23,11 +22,6 @@ func TestGetNodes(t *testing.T) {
 }
 
 var _ = Describe("GetNodes tests", func() {
-	AfterEach(func() {
-		// delete temp template directory
-		os.RemoveAll("_output")
-	})
-
 	It("listNodes should return a result set with nodes", func() {
 		mockClient := armhelpers.MockAKSEngineClient{MockKubernetesClient: &armhelpers.MockKubernetesClient{}}
 		logger := log.NewEntry(log.New())
