@@ -106,7 +106,7 @@ In this case, we are going to use the following template:
       "dnsPrefix": "",
       "vmSize": "Standard_D2_v2",
       "vnetSubnetId": "/subscriptions/SUBSCRIPTION_ID/resourceGroups/RESOURCE_GROUP_NAME/providers/Microsoft.Network/virtualNetworks/ExampleCustomVNET/subnets/ExampleMasterSubnet",
-      "firstConsecutiveStaticIP": "10.239.255.239" 
+      "firstConsecutiveStaticIP": "10.100.0.79" 
     },
     "agentPoolProfiles": [
       {
@@ -150,7 +150,15 @@ As you can see, for all node pools definition (master or agents) you can use the
 
 *Note: Make sure the the vnetSubnetId matches with your subnet, by giving your **SUBSCRIPTION_ID**, **RESOURCE_GROUP_NAME**, virtual network and subnet names. You also need to fill DNS prefix for all the public pools you want to create, give an SSH keys...*
 
-## Generate the cluster Azure Resource Manager template
+## Deploy the Azure Kubernetes Service cluster
+
+Once you are ready with the cluster definition file, you can use AKS engine to deploy the cluster on Azure or you can use AKS engine to generate an ARM template to deploy using Azure CLI. 
+
+### Deploy using AKS Engine
+
+ Follow the [instructions on how to deploy](deploy.md#deploy) using the cluster definition (API model) file you prepared.
+
+### Generate the cluster Azure Resource Manager template
 
 Once your are ready with the cluster definition file, you can use AKS Engine to generate the ARM template that will be used to deploy the cluster on Azure:
 
@@ -188,7 +196,7 @@ aksengine took 37.1384ms
 - azuredeploy.json: this is the Azure Resource Manager JSON template that you are going to use to deploy the cluster
 - azuredeploy.parameters.json: this is the parameters file that you are going to use to deploy the cluster
 
-## Deploy the Azure Container Service cluster
+#### Deploy the Azure Container Service cluster
 
 Now that you have generated the ARM templates and its parameters file using AKS Engine, you can use Azure CLI 2.0 to start the deployment of the cluster:
 
@@ -196,7 +204,7 @@ Now that you have generated the ARM templates and its parameters file using AKS 
 az group deployment create -g aks-custom-vnet --name "ClusterDeployment" --template-file azuredeploy.json --parameters "@azuredeploy.parameters.json"
 ```
 
-Depending on the number of agent you have asked for the deployment can take a while.
+Depending on the number of agents you have asked for the deployment can take a while.
 
 ## Post-Deployment: Attach Cluster Route Table to VNET
 
