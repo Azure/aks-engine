@@ -209,6 +209,7 @@ func TestAssignDefaultAddonImages(t *testing.T) {
 		DNSAutoscalerAddonName:             "k8s.gcr.io/cluster-proportional-autoscaler-amd64:1.1.1",
 		DefaultHeapsterAddonName:           "k8s.gcr.io/heapster-amd64:v1.5.4",
 		CalicoAddonName:                    "calico/typha:v3.7.2",
+		AzureNetworkPolicyAddonName:        "",
 	}
 
 	var addons []KubernetesAddon
@@ -241,6 +242,40 @@ func TestAssignDefaultAddonImages(t *testing.T) {
 	mockCS.Properties.OrchestratorProfile.KubernetesConfig.Addons = addons
 	mockCS.SetPropertiesDefaults(false, false)
 	modifiedAddons := mockCS.Properties.OrchestratorProfile.KubernetesConfig.Addons
+
+	for _, addon := range modifiedAddons {
+		expected := addonContainerMap[addon.Name]
+		actual := addon.Containers[0].Image
+		if actual != expected {
+			t.Errorf("expected setDefaults to set Image %s in addon %s, but got %s", expected, addon.Name, actual)
+		}
+	}
+
+	for _, addon := range addons {
+		addon.Containers[0].Image = "customTestImage"
+	}
+
+	// Image should not be overriden in create scenarios.
+	mockCS = getMockBaseContainerService("1.10.8")
+	mockCS.Properties.OrchestratorProfile.OrchestratorType = Kubernetes
+	mockCS.Properties.OrchestratorProfile.KubernetesConfig.Addons = addons
+	mockCS.SetPropertiesDefaults(false, false)
+	modifiedAddons = mockCS.Properties.OrchestratorProfile.KubernetesConfig.Addons
+
+	for _, addon := range modifiedAddons {
+		expected := "customTestImage"
+		actual := addon.Containers[0].Image
+		if actual != expected {
+			t.Errorf("expected setDefaults to set Image %s in addon %s, but got %s", expected, addon.Name, actual)
+		}
+	}
+
+	// Image should be overriden in update scenarios.
+	mockCS = getMockBaseContainerService("1.10.8")
+	mockCS.Properties.OrchestratorProfile.OrchestratorType = Kubernetes
+	mockCS.Properties.OrchestratorProfile.KubernetesConfig.Addons = addons
+	mockCS.SetPropertiesDefaults(true, false)
+	modifiedAddons = mockCS.Properties.OrchestratorProfile.KubernetesConfig.Addons
 
 	for _, addon := range modifiedAddons {
 		expected := addonContainerMap[addon.Name]
