@@ -18,29 +18,8 @@ import (
 	v1 "k8s.io/api/core/v1"
 )
 
-const TestAKSEngineVersion = "1.0.0"
-
-type fakeUpgradeWorkflow struct {
-	RunUpgradeError error
-	ValidateError   error
-}
-
-func (workflow fakeUpgradeWorkflow) RunUpgrade() error {
-	if workflow.RunUpgradeError != nil {
-		return workflow.RunUpgradeError
-	}
-	return nil
-}
-
-func (workflow fakeUpgradeWorkflow) Validate() error {
-	if workflow.ValidateError != nil {
-		return workflow.ValidateError
-	}
-	return nil
-}
-
 func TestGetNodes(t *testing.T) {
-	RunSpecsWithReporters(t, "operations", "Server Suite")
+	RunSpecsWithReporters(t, "Kubernetes API Operations conveniences library", "Server Suite")
 }
 
 var _ = Describe("GetNodes tests", func() {
