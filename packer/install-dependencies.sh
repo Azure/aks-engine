@@ -49,7 +49,7 @@ if [[ ${UBUNTU_RELEASE} == "18.04" ]]; then
   overrideNetworkConfig
 fi
 
-ETCD_VERSION="3.2.25"
+ETCD_VERSION="3.2.26"
 ETCD_DOWNLOAD_URL="https://acs-mirror.azureedge.net/github-coreos"
 installEtcd
 echo "  - etcd v${ETCD_VERSION}" >> ${RELEASE_NOTES_FILEPATH}
@@ -363,6 +363,7 @@ K8S_VERSIONS="
 1.14.1
 1.13.6
 1.13.5
+1.12.9
 1.12.8
 1.12.7
 1.12.7-azs

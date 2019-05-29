@@ -39,16 +39,18 @@ func (cs *ContainerService) SetPropertiesDefaults(isUpgrade, isScale bool) (bool
 
 	cs.setOrchestratorDefaults(isUpgrade || isScale)
 
+	cloudName := cs.GetCloudSpecConfig().CloudName
+
 	// Set master profile defaults if this cluster configuration includes master node(s)
 	if cs.Properties.MasterProfile != nil {
-		properties.setMasterProfileDefaults(isUpgrade, isScale)
+		properties.setMasterProfileDefaults(isUpgrade, isScale, cloudName)
 	}
 	// Set VMSS Defaults for Masters
 	if cs.Properties.MasterProfile != nil && cs.Properties.MasterProfile.IsVirtualMachineScaleSets() {
 		properties.setVMSSDefaultsForMasters()
 	}
 
-	properties.setAgentProfileDefaults(isUpgrade, isScale)
+	properties.setAgentProfileDefaults(isUpgrade, isScale, cloudName)
 
 	properties.setStorageDefaults()
 	properties.setExtensionDefaults()
@@ -116,7 +118,7 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpdate bool) {
 		if o.KubernetesConfig.KubernetesImageBase == "" {
 			o.KubernetesConfig.KubernetesImageBase = cloudSpecConfig.KubernetesSpecConfig.KubernetesImageBase
 		}
-		if o.KubernetesConfig.EtcdVersion == "" {
+		if o.KubernetesConfig.EtcdVersion == "" || isUpdate {
 			o.KubernetesConfig.EtcdVersion = DefaultEtcdVersion
 		}
 
@@ -134,11 +136,11 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpdate bool) {
 		}
 		switch o.KubernetesConfig.ContainerRuntime {
 		case Docker:
-			if o.KubernetesConfig.MobyVersion == "" {
+			if o.KubernetesConfig.MobyVersion == "" || isUpdate {
 				o.KubernetesConfig.MobyVersion = DefaultMobyVersion
 			}
 		case Containerd, ClearContainers, KataContainers:
-			if o.KubernetesConfig.ContainerdVersion == "" {
+			if o.KubernetesConfig.ContainerdVersion == "" || isUpdate {
 				o.KubernetesConfig.ContainerdVersion = DefaultContainerdVersion
 			}
 		}
@@ -305,7 +307,7 @@ func (p *Properties) setExtensionDefaults() {
 	}
 }
 
-func (p *Properties) setMasterProfileDefaults(isUpgrade, isScale bool) {
+func (p *Properties) setMasterProfileDefaults(isUpgrade, isScale bool, cloudName string) {
 	if p.MasterProfile.Distro == "" {
 		if p.OrchestratorProfile.IsKubernetes() {
 			p.MasterProfile.Distro = AKSUbuntu1604
@@ -318,6 +320,11 @@ func (p *Properties) setMasterProfileDefaults(isUpgrade, isScale bool) {
 		} else if p.MasterProfile.Distro == AKS1804Deprecated {
 			p.MasterProfile.Distro = AKSUbuntu1804
 		}
+	}
+
+	// The AKS Distro is not available in US Governmnent Cloud and German Cloud.
+	if cloudName == AzureUSGovernmentCloud || cloudName == AzureGermanCloud {
+		p.MasterProfile.Distro = Ubuntu
 	}
 
 	// "--protect-kernel-defaults" is only true for VHD based VMs since the base Ubuntu distros don't have a /etc/sysctl.d/60-CIS.conf file.
@@ -459,7 +466,7 @@ func (p *Properties) setVMSSDefaultsForAgents() {
 	}
 }
 
-func (p *Properties) setAgentProfileDefaults(isUpgrade, isScale bool) {
+func (p *Properties) setAgentProfileDefaults(isUpgrade, isScale bool, cloudName string) {
 	// configure the subnets if not in custom VNET
 	if p.MasterProfile != nil && !p.MasterProfile.IsCustomVNET() {
 		subnetCounter := 0
@@ -522,6 +529,10 @@ func (p *Properties) setAgentProfileDefaults(isUpgrade, isScale bool) {
 				} else if profile.Distro == AKS1804Deprecated {
 					profile.Distro = AKSUbuntu1804
 				}
+			}
+			// The AKS Distro is not available in US Governmnent Cloud and German Cloud.
+			if cloudName == AzureUSGovernmentCloud || cloudName == AzureGermanCloud {
+				profile.Distro = Ubuntu
 			}
 		}
 
