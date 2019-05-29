@@ -1564,3 +1564,68 @@ func TestGetAgentPoolLinkedTemplateText(t *testing.T) {
 		}
 	}
 }
+
+func TestGetSSHPublicKeysPowerShell(t *testing.T) {
+	cases := []struct {
+		publicKeys []api.PublicKey
+		expected   string
+	}{
+		{
+			publicKeys: []api.PublicKey{
+				{
+					KeyData: "foo   ",
+				},
+			},
+			expected: "\"foo\"",
+		},
+		{
+			publicKeys: []api.PublicKey{
+				{
+					KeyData: "  foo",
+				},
+				{
+					KeyData: " bar   ",
+				},
+			},
+			expected: "\"foo\", \"bar\"",
+		},
+	}
+
+	for _, c := range cases {
+		linuxProfile := &api.LinuxProfile{}
+		linuxProfile.SSH.PublicKeys = c.publicKeys
+		ret := getSSHPublicKeysPowerShell(linuxProfile)
+		if ret != c.expected {
+			t.Fatalf("expected getSSHPublicKeysPowerShell(%v) to return %s but instead got %s", linuxProfile, c.expected, ret)
+		}
+	}
+}
+
+func TestGetWindowsMasterSubnetARMParam(t *testing.T) {
+	cases := []struct {
+		m        *api.MasterProfile
+		expected string
+	}{
+		{
+			m:        &api.MasterProfile{},
+			expected: "',parameters('masterSubnet'),'",
+		},
+		{
+			m:        nil,
+			expected: "',parameters('masterSubnet'),'",
+		},
+		{
+			m: &api.MasterProfile{
+				VnetSubnetID: "/my/subnet",
+			},
+			expected: "',parameters('vnetCidr'),'",
+		},
+	}
+
+	for _, c := range cases {
+		ret := getWindowsMasterSubnetARMParam(c.m)
+		if ret != c.expected {
+			t.Fatalf("expected getWindowsMasterSubnetARMParam(%v) to return %s but instead got %s", c.m, c.expected, ret)
+		}
+	}
+}

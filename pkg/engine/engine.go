@@ -961,3 +961,24 @@ func getSwarmVersions(orchestratorVersion, dockerComposeVersion string) string {
 func wrapAsVariableObject(o, v string) string {
 	return fmt.Sprintf("',variables('%s').%s,'", o, v)
 }
+
+func getSSHPublicKeysPowerShell(linuxProfile *api.LinuxProfile) string {
+	str := ""
+	if linuxProfile != nil {
+		lastItem := len(linuxProfile.SSH.PublicKeys) - 1
+		for i, publicKey := range linuxProfile.SSH.PublicKeys {
+			str += `"` + strings.TrimSpace(publicKey.KeyData) + `"`
+			if i < lastItem {
+				str += ", "
+			}
+		}
+	}
+	return str
+}
+
+func getWindowsMasterSubnetARMParam(masterProfile *api.MasterProfile) string {
+	if masterProfile != nil && masterProfile.IsCustomVNET() {
+		return fmt.Sprintf("',parameters('vnetCidr'),'")
+	}
+	return fmt.Sprintf("',parameters('masterSubnet'),'")
+}

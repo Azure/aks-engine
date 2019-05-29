@@ -402,24 +402,10 @@ func (t *TemplateGenerator) getTemplateFuncMap(cs *api.ContainerService) templat
 			return getLinkedTemplatesForExtensions(cs.Properties)
 		},
 		"GetSshPublicKeysPowerShell": func() string {
-			str := ""
-			linuxProfile := cs.Properties.LinuxProfile
-			if linuxProfile != nil {
-				lastItem := len(linuxProfile.SSH.PublicKeys) - 1
-				for i, publicKey := range linuxProfile.SSH.PublicKeys {
-					str += `"` + strings.TrimSpace(publicKey.KeyData) + `"`
-					if i < lastItem {
-						str += ", "
-					}
-				}
-			}
-			return str
+			return getSSHPublicKeysPowerShell(cs.Properties.LinuxProfile)
 		},
 		"GetWindowsMasterSubnetARMParam": func() string {
-			if cs.Properties.MasterProfile != nil && cs.Properties.MasterProfile.IsCustomVNET() {
-				return fmt.Sprintf("',parameters('vnetCidr'),'")
-			}
-			return fmt.Sprintf("',parameters('masterSubnet'),'")
+			return getWindowsMasterSubnetARMParam(cs.Properties.MasterProfile)
 		},
 		"GetKubernetesMasterPreprovisionYaml": func() string {
 			str := ""

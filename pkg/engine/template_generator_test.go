@@ -79,6 +79,9 @@ func TestGetTemplateFuncMap(t *testing.T) {
 		"GetDefaultVNETCIDR",
 		"GetKubernetesAllowedVMSKUs",
 		"GetSizeMap",
+		"WriteLinkedTemplatesForExtensions",
+		"GetSshPublicKeysPowerShell",
+		"GetWindowsMasterSubnetARMParam",
 		// TODO validate that the remaining func strings in getTemplateFuncMap are thinly wrapped and unit tested
 	}
 
