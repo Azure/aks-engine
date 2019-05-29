@@ -399,8 +399,7 @@ func (t *TemplateGenerator) getTemplateFuncMap(cs *api.ContainerService) templat
 			return helpers.GetSizeMap()
 		},
 		"WriteLinkedTemplatesForExtensions": func() string {
-			extensions := getLinkedTemplatesForExtensions(cs.Properties)
-			return extensions
+			return getLinkedTemplatesForExtensions(cs.Properties)
 		},
 		"GetSshPublicKeysPowerShell": func() string {
 			str := ""
