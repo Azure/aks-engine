@@ -4,6 +4,7 @@
 package api
 
 import (
+	"reflect"
 	"testing"
 
 	"github.com/Azure/go-autorest/autorest/to"
@@ -80,4 +81,86 @@ func TestPodSecurityPolicyConfigUpgrade(t *testing.T) {
 	if o.KubernetesConfig.Addons[i].Data != base64DataPSP {
 		t.Errorf("expected %s data to be present, instead got %s", base64DataPSP, o.KubernetesConfig.Addons[i].Data)
 	}
+}
+
+func TestDisabledAddons(t *testing.T) {
+	defaultAddon := KubernetesAddon{
+		Name:    "mockAddon",
+		Enabled: to.BoolPtr(false),
+		Containers: []KubernetesContainerSpec{
+			{
+				Name:           "mockAddon",
+				CPURequests:    "50m",
+				MemoryRequests: "50Mi",
+				CPULimits:      "50m",
+				MemoryLimits:   "250Mi",
+				Image:          "mockImage",
+			},
+		},
+		Config: map[string]string{
+			"fake-config-1": "someValue1",
+			"fake-config-2": "someValue2",
+		},
+	}
+
+	cases := []struct {
+		myAddon             KubernetesAddon
+		isUpdate            bool
+		expectedResultAddon KubernetesAddon
+	}{
+		{
+			myAddon: KubernetesAddon{
+				Name:    "mockAddon",
+				Enabled: to.BoolPtr(true),
+			},
+			isUpdate: false,
+			expectedResultAddon: KubernetesAddon{
+				Name:    "mockAddon",
+				Enabled: to.BoolPtr(true),
+				Containers: []KubernetesContainerSpec{
+					{
+						Name:           "mockAddon",
+						CPURequests:    "50m",
+						MemoryRequests: "50Mi",
+						CPULimits:      "50m",
+						MemoryLimits:   "250Mi",
+						Image:          "mockImage",
+					},
+				},
+				Config: map[string]string{
+					"fake-config-1": "someValue1",
+					"fake-config-2": "someValue2",
+				},
+			},
+		},
+		{
+			myAddon: KubernetesAddon{
+				Name: "mockAddon",
+			},
+			isUpdate: false,
+			expectedResultAddon: KubernetesAddon{
+				Name:    "mockAddon",
+				Enabled: to.BoolPtr(false),
+			},
+		},
+		{
+			myAddon: KubernetesAddon{
+				Name:    "mockAddon",
+				Enabled: to.BoolPtr(false),
+			},
+			isUpdate: true,
+			expectedResultAddon: KubernetesAddon{
+				Name:    "mockAddon",
+				Enabled: to.BoolPtr(false),
+			},
+		},
+	}
+
+	for _, c := range cases {
+		result := assignDefaultAddonVals(c.myAddon, defaultAddon, c.isUpdate)
+		if !reflect.DeepEqual(result, c.expectedResultAddon) {
+			t.Fatalf("expected result addon %v to be equal to %v", result, c.expectedResultAddon)
+		}
+	}
+
 }

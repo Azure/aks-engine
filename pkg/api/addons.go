@@ -352,6 +352,12 @@ func assignDefaultAddonVals(addon, defaults KubernetesAddon, isUpdate bool) Kube
 	if addon.Enabled == nil {
 		addon.Enabled = defaults.Enabled
 	}
+	if !to.Bool(addon.Enabled) {
+		return KubernetesAddon{
+			Name:    addon.Name,
+			Enabled: addon.Enabled,
+		}
+	}
 	for i := range defaults.Containers {
 		c := addon.GetAddonContainersIndexByName(defaults.Containers[i].Name)
 		if c < 0 {
