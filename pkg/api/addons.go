@@ -316,7 +316,7 @@ func (cs *ContainerService) setAddonsConfig(isUpdate bool) {
 	}
 
 	for _, addon := range defaultAddons {
-		synthesizeAddonsConfig(o.KubernetesConfig.Addons, addon, false, isUpdate)
+		synthesizeAddonsConfig(o.KubernetesConfig.Addons, addon, isUpdate)
 	}
 
 	if len(o.KubernetesConfig.PodSecurityPolicyConfig) > 0 && isUpdate {
@@ -385,12 +385,10 @@ func assignDefaultAddonVals(addon, defaults KubernetesAddon, isUpdate bool) Kube
 	return addon
 }
 
-func synthesizeAddonsConfig(addons []KubernetesAddon, addon KubernetesAddon, enableIfNil bool, isUpdate bool) {
+func synthesizeAddonsConfig(addons []KubernetesAddon, addon KubernetesAddon, isUpdate bool) {
 	i := getAddonsIndexByName(addons, addon.Name)
 	if i >= 0 {
-		if addons[i].IsEnabled(enableIfNil) {
-			addons[i] = assignDefaultAddonVals(addons[i], addon, isUpdate)
-		}
+		addons[i] = assignDefaultAddonVals(addons[i], addon, isUpdate)
 	}
 }
 
