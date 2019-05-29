@@ -99,7 +99,7 @@ func (uc *UpgradeCluster) UpgradeCluster(az armhelpers.AKSEngineClient, kubeConf
 		kubeClient = k
 	}
 
-	if err := uc.getClusterNodeStatus(az, kubeClient, uc.ResourceGroup, kubeConfig); err != nil {
+	if err := uc.getClusterNodeStatus(kubeClient, uc.ResourceGroup); err != nil {
 		return uc.Translator.Errorf("Error while querying ARM for resources: %+v", err)
 	}
 
@@ -156,7 +156,7 @@ func (uc *UpgradeCluster) SetClusterAutoscalerReplicaCount(kubeClient armhelpers
 		}
 		sleepTime := time.Duration(5+rand.Intn(5)) * time.Second
 		uc.Logger.Warnf("Failed to update cluster-autoscaler deployment: %v", err)
-		uc.Logger.Info("Retry updating cluster-autoscaler after %d seconds", sleepTime)
+		uc.Logger.Infof("Retry updating cluster-autoscaler after %d seconds", sleepTime)
 		time.Sleep(sleepTime)
 	}
 	if err != nil {
@@ -174,7 +174,7 @@ func (uc *UpgradeCluster) getUpgradeWorkflow(kubeConfig string, aksEngineVersion
 	return u
 }
 
-func (uc *UpgradeCluster) getClusterNodeStatus(az armhelpers.AKSEngineClient, kubeClient armhelpers.KubernetesClient, resourceGroup, kubeConfig string) error {
+func (uc *UpgradeCluster) getClusterNodeStatus(kubeClient armhelpers.KubernetesClient, resourceGroup string) error {
 	goalVersion := uc.DataModel.Properties.OrchestratorProfile.OrchestratorVersion
 
 	ctx, cancel := context.WithTimeout(context.Background(), armhelpers.DefaultARMOperationTimeout)

@@ -383,6 +383,7 @@ var _ = Describe("Upgrade Kubernetes cluster tests", func() {
 			Expect(err).NotTo(HaveOccurred())
 			Expect(uc.AgentPoolScaleSetsToUpgrade[0].VMsToUpgrade).To(HaveLen(1))
 			Expect(uc.AgentPoolScaleSetsToUpgrade[0].VMsToUpgrade[0].Name).To(Equal("vmWithoutLatestModelApplied!"))
+		})
 		It("Should set agent pool count to current VMSS capacity", func() {
 			mockClient.FakeListVirtualMachineScaleSetVMsResult = func() []compute.VirtualMachineScaleSetVM {
 				return []compute.VirtualMachineScaleSetVM{
