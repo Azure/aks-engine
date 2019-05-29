@@ -86,7 +86,7 @@ Unless otherwise specified down below, standard [cluster definition](../../docs/
 | Name                            | Required | Description|
 | ------------------------------- | -------- | ---------- |
 | vmsize                          | yes      | Specifies a valid [Azure Stack VM size](https://docs.microsoft.com/en-us/azure-stack/user/azure-stack-vm-sizes). |
-| distro                          | yes      | Specifies the masters' Linux distribution. Currently supported values are: `"ubuntu"` and `"aks-ubuntu-16.04"` (previously `"aks"`). `"aks-ubuntu-16.04"` is a custom image based on ubuntu-16.04 that comes with pre-installed software necessary for Kubernetes deployments. `"aks-ubuntu-16.04"` should be selected if you target a disconnected Azure Stack instance. |
+| distro                          | yes      | Specifies the masters' Linux distribution. Currently supported values are: `"ubuntu"` and `"aks"`. The latter is a custom image based on ubuntu-16.04 that comes with pre-installed software necessary for Kubernetes deployments. `"aks"` should be selected if you target a disconnected Azure Stack instance. |
 
 ### agentPoolProfiles
 
@@ -95,7 +95,7 @@ Unless otherwise specified down below, standard [cluster definition](../../docs/
 | Name                            | Required | Description|
 | ------------------------------- | -------- | ---------- |
 | vmsize                          | yes      | Describes a valid [Azure Stack VM size](https://docs.microsoft.com/en-us/azure-stack/user/azure-stack-vm-sizes). |
-| distro                          | yes      | Specifies the masters' Linux distribution. Currently supported values are: `"ubuntu"` and `"aks-ubuntu-16.04"` (previously `"aks"`). `"aks-ubuntu-16.04"` is a custom image based on ubuntu-16.04 that comes with pre-installed software necessary for Kubernetes deployments. `"aks-ubuntu-16.04"` should be selected if you target a disconnected Azure Stack instance. |
+| distro                          | yes      | Specifies the masters' Linux distribution. Currently supported values are: `"ubuntu"` and `"aks"`. The latter is a custom image based on ubuntu-16.04 that comes with pre-installed software necessary for Kubernetes deployments. `"aks"` should be selected if you target a disconnected Azure Stack instance. |
 | availabilityProfile             | yes      | Only `"AvailabilitySet"` is currently supported. |
 | acceleratedNetworkingEnabled    | yes      | Use `Azure Accelerated Networking` feature for Linux agents. This property should be always set to `"false"`. |
 
@@ -109,7 +109,7 @@ By default, the AKS Engine provisioning process relies on an internet connection
 
 If your Azure Stack instance is air-gapped or if network connectivity in your geographical location is not reliable, then the default approach will not work, take a long time or timeout due to transient networking issues.
 
-With these challenges in mind, you can choose to set the `distro` property of your cluster definition to `"aks-ubuntu-16.04"`. This change will instruct AKS Engine to deploy VM nodes using a base OS image call `AKS Base Image`. This custom image already contains the required software dependencies in its file system. Hence, internet connectivity won’t be required during the provisioning process.
+With these challenges in mind, you can choose to set the `distro` property of your cluster definition to `"aks"`. This change will instruct AKS Engine to deploy VM nodes using a base OS image call `AKS Base Image`. This custom image already contains the required software dependencies in its file system. Hence, internet connectivity won’t be required during the provisioning process.
 
 The `AKS Base Image` gallery item has to be available in your Azure Stack's Marketplace before it could be used by AKS Engine. Follow this [guide](https://docs.microsoft.com/en-us/azure-stack/operator/azure-stack-download-azure-marketplace-item) for a general explanation about how to download gallery items from Azure.
 
