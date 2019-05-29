@@ -72,7 +72,7 @@ var _ = Describe("Upgrade Kubernetes cluster tests", func() {
 		uc.AgentPoolsToUpgrade = map[string]bool{"agentpool1": true}
 
 		err := uc.UpgradeCluster(&mockClient, "kubeConfig", TestAKSEngineVersion)
-		Expect(err).To(BeNil())
+		Expect(err).NotTo(HaveOccurred())
 		Expect(uc.ClusterTopology.AgentPools).NotTo(BeEmpty())
 
 		// Clean up
@@ -98,8 +98,8 @@ var _ = Describe("Upgrade Kubernetes cluster tests", func() {
 		uc.AgentPoolsToUpgrade = map[string]bool{"agentpool1": true}
 
 		err := uc.UpgradeCluster(&mockClient, "kubeConfig", TestAKSEngineVersion)
-		Expect(err).NotTo(BeNil())
-		Expect(err.Error()).To(Equal("Error while querying ARM for resources: ListVirtualMachines failed"))
+		Expect(err).To(HaveOccurred())
+		Expect(err).To(MatchError("Error while querying ARM for resources: ListVirtualMachines failed"))
 
 		// Clean up
 		os.RemoveAll("./translations")
@@ -124,7 +124,7 @@ var _ = Describe("Upgrade Kubernetes cluster tests", func() {
 		uc.AgentPoolsToUpgrade = map[string]bool{"agentpool1": true}
 
 		err := uc.UpgradeCluster(&mockClient, "kubeConfig", TestAKSEngineVersion)
-		Expect(err).NotTo(BeNil())
+		Expect(err).To(HaveOccurred())
 		Expect(err.Error()).To(Equal("DeleteVirtualMachine failed"))
 	})
 
@@ -147,7 +147,7 @@ var _ = Describe("Upgrade Kubernetes cluster tests", func() {
 		uc.AgentPoolsToUpgrade = map[string]bool{"agentpool1": true}
 
 		err := uc.UpgradeCluster(&mockClient, "kubeConfig", TestAKSEngineVersion)
-		Expect(err).NotTo(BeNil())
+		Expect(err).To(HaveOccurred())
 		Expect(err.Error()).To(Equal("DeployTemplate failed"))
 	})
 
@@ -170,7 +170,7 @@ var _ = Describe("Upgrade Kubernetes cluster tests", func() {
 		uc.AgentPoolsToUpgrade = map[string]bool{"agentpool1": true}
 
 		err := uc.UpgradeCluster(&mockClient, "kubeConfig", TestAKSEngineVersion)
-		Expect(err).NotTo(BeNil())
+		Expect(err).To(HaveOccurred())
 		Expect(err.Error()).To(Equal("GetVirtualMachine failed"))
 	})
 
@@ -193,7 +193,7 @@ var _ = Describe("Upgrade Kubernetes cluster tests", func() {
 		uc.AgentPoolsToUpgrade = map[string]bool{"agentpool1": true}
 
 		err := uc.UpgradeCluster(&mockClient, "kubeConfig", TestAKSEngineVersion)
-		Expect(err).NotTo(BeNil())
+		Expect(err).To(HaveOccurred())
 		Expect(err.Error()).To(Equal("GetStorageClient failed"))
 	})
 
@@ -216,7 +216,7 @@ var _ = Describe("Upgrade Kubernetes cluster tests", func() {
 		uc.AgentPoolsToUpgrade = map[string]bool{"agentpool1": true}
 
 		err := uc.UpgradeCluster(&mockClient, "kubeConfig", TestAKSEngineVersion)
-		Expect(err).NotTo(BeNil())
+		Expect(err).To(HaveOccurred())
 		Expect(err.Error()).To(Equal("DeleteNetworkInterface failed"))
 	})
 
@@ -242,7 +242,7 @@ var _ = Describe("Upgrade Kubernetes cluster tests", func() {
 		uc.AgentPoolsToUpgrade = map[string]bool{"agentpool1": true}
 
 		err := uc.UpgradeCluster(&mockClient, "kubeConfig", TestAKSEngineVersion)
-		Expect(err).NotTo(BeNil())
+		Expect(err).To(HaveOccurred())
 		Expect(err.Error()).To(Equal("DeleteRoleAssignmentByID failed"))
 	})
 
@@ -636,7 +636,41 @@ var _ = Describe("Upgrade Kubernetes cluster tests", func() {
 		uc.AgentPoolsToUpgrade = map[string]bool{"agentpool1": true}
 
 		err := uc.UpgradeCluster(&mockClient, "kubeConfig", TestAKSEngineVersion)
-		Expect(err).To(BeNil())
+		Expect(err).NotTo(HaveOccurred())
+	})
+
+	It("Should not fail if a Kubernetes client cannot be created", func() {
+		cs := api.CreateMockContainerService("testcluster", "1.9.11", 3, 2, false)
+		uc := UpgradeCluster{
+			Translator: &i18n.Translator{},
+			Logger:     log.NewEntry(log.New()),
+		}
+
+		mockClient := armhelpers.MockAKSEngineClient{
+			FailGetKubernetesClient: true,
+		}
+		uc.Client = &mockClient
+		uc.DataModel = cs
+
+		logger, hook := logtest.NewNullLogger()
+		uc.Logger.Logger = logger
+		defer hook.Reset()
+		err := uc.UpgradeCluster(&mockClient, "kubeConfig", TestAKSEngineVersion)
+		Expect(err).NotTo(HaveOccurred())
+		// check log messages to see that we logged the failure
+		messages := []string{
+			"failed to get a kubernetes client",
+		}
+		for _, m := range messages {
+			found := false
+			for _, entry := range hook.Entries {
+				if strings.Contains(strings.ToLower(entry.Message), m) {
+					found = true
+					break
+				}
+			}
+			Expect(found).To(BeTrue())
+		}
 	})
 
 	It("Should pause cluster-autoscaler during upgrade operation", func() {
@@ -666,7 +700,7 @@ var _ = Describe("Upgrade Kubernetes cluster tests", func() {
 		uc.Logger.Logger = logger
 		defer hook.Reset()
 		err := uc.UpgradeCluster(&mockClient, "kubeConfig", TestAKSEngineVersion)
-		Expect(err).To(BeNil())
+		Expect(err).NotTo(HaveOccurred())
 		// check log messages to see that we paused the cluster-autoscaler
 		messages := []string{
 			"pausing cluster autoscaler",
@@ -819,7 +853,7 @@ var _ = Describe("Upgrade Kubernetes cluster tests", func() {
 
 		u.Init(&i18n.Translator{}, log.NewEntry(log.New()), ClusterTopology{}, nil, "", nil, nil, TestAKSEngineVersion)
 		err := u.copyCustomPropertiesToNewNode(mockClient.MockKubernetesClient, "oldNodeName", "newNodeName")
-		Expect(err).Should(HaveOccurred())
+		Expect(err).To(HaveOccurred())
 
 		oldNode := &v1.Node{}
 		oldNode.Annotations = map[string]string{}
