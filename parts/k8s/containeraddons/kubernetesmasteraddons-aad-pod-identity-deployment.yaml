@@ -87,7 +87,7 @@ kind: DaemonSet
 metadata:
   labels:
     kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
+    addonmanager.kubernetes.io/mode: EnsureExists
     component: nmi
     tier: node
     k8s-app: aad-pod-id
@@ -190,7 +190,7 @@ metadata:
     component: mic
     k8s-app: aad-pod-id
     kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
+    addonmanager.kubernetes.io/mode: EnsureExists
   name: mic
   namespace: default
 spec:

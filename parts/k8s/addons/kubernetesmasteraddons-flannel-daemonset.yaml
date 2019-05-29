@@ -43,7 +43,7 @@ metadata:
   labels:
     tier: node
     app: flannel
-    addonmanager.kubernetes.io/mode: Reconcile
+    addonmanager.kubernetes.io/mode: EnsureExists
 spec:
   template:
     metadata:
