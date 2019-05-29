@@ -70,7 +70,7 @@ metadata:
     app: aci-connector
     name: aci-connector
     kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: EnsureExists
+    addonmanager.kubernetes.io/mode: Reconcile
 spec:
   replicas: 1
   template:

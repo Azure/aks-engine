@@ -50,7 +50,7 @@ metadata:
     app: helm
     name: tiller
     kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: EnsureExists
+    addonmanager.kubernetes.io/mode: Reconcile
   name: tiller-deploy
   namespace: kube-system
 spec:
