@@ -142,7 +142,7 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpdate bool) {
 		case Docker:
 			if o.KubernetesConfig.MobyVersion == "" || isUpdate {
 				if isUpdate && o.KubernetesConfig.MobyVersion != DefaultMobyVersion {
-					log.Warnf("moby will be upgraded to version %s\n", DefaultMobyVersion)
+					log.Warnf("Moby will be upgraded to version %s\n", DefaultMobyVersion)
 				}
 				o.KubernetesConfig.MobyVersion = DefaultMobyVersion
 			}
