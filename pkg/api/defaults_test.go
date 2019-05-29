@@ -212,7 +212,7 @@ func TestAssignDefaultAddonImages(t *testing.T) {
 		AzureNetworkPolicyAddonName:        "",
 	}
 
-	var addons []KubernetesAddon
+	var fakeCustomAddons []KubernetesAddon
 	for addonName := range addonContainerMap {
 		containerName := addonName
 		if addonName == ContainerMonitoringAddonName {
@@ -234,12 +234,12 @@ func TestAssignDefaultAddonImages(t *testing.T) {
 				},
 			},
 		}
-		addons = append(addons, customAddon)
+		fakeCustomAddons = append(fakeCustomAddons, customAddon)
 	}
 
 	mockCS := getMockBaseContainerService("1.10.8")
 	mockCS.Properties.OrchestratorProfile.OrchestratorType = Kubernetes
-	mockCS.Properties.OrchestratorProfile.KubernetesConfig.Addons = addons
+	mockCS.Properties.OrchestratorProfile.KubernetesConfig.Addons = fakeCustomAddons
 	mockCS.SetPropertiesDefaults(false, false)
 	modifiedAddons := mockCS.Properties.OrchestratorProfile.KubernetesConfig.Addons
 
@@ -251,14 +251,15 @@ func TestAssignDefaultAddonImages(t *testing.T) {
 		}
 	}
 
-	for _, addon := range addons {
+	// Update the custom addons to test with image overrides.
+	for _, addon := range fakeCustomAddons {
 		addon.Containers[0].Image = "customTestImage"
 	}
 
 	// Image should not be overridden in create scenarios.
 	mockCS = getMockBaseContainerService("1.10.8")
 	mockCS.Properties.OrchestratorProfile.OrchestratorType = Kubernetes
-	mockCS.Properties.OrchestratorProfile.KubernetesConfig.Addons = addons
+	mockCS.Properties.OrchestratorProfile.KubernetesConfig.Addons = fakeCustomAddons
 	mockCS.SetPropertiesDefaults(false, false)
 	modifiedAddons = mockCS.Properties.OrchestratorProfile.KubernetesConfig.Addons
 
@@ -273,7 +274,7 @@ func TestAssignDefaultAddonImages(t *testing.T) {
 	// Image should be overridden in update scenarios.
 	mockCS = getMockBaseContainerService("1.10.8")
 	mockCS.Properties.OrchestratorProfile.OrchestratorType = Kubernetes
-	mockCS.Properties.OrchestratorProfile.KubernetesConfig.Addons = addons
+	mockCS.Properties.OrchestratorProfile.KubernetesConfig.Addons = fakeCustomAddons
 	mockCS.SetPropertiesDefaults(true, false)
 	modifiedAddons = mockCS.Properties.OrchestratorProfile.KubernetesConfig.Addons
 
@@ -287,7 +288,7 @@ func TestAssignDefaultAddonImages(t *testing.T) {
 
 	mockCS = getMockBaseContainerService("1.10.8")
 	mockCS.Properties.OrchestratorProfile.OrchestratorType = Kubernetes
-	mockCS.Properties.OrchestratorProfile.KubernetesConfig.Addons = addons
+	mockCS.Properties.OrchestratorProfile.KubernetesConfig.Addons = fakeCustomAddons
 	mockCS.SetPropertiesDefaults(false, true)
 	modifiedAddons = mockCS.Properties.OrchestratorProfile.KubernetesConfig.Addons
 
