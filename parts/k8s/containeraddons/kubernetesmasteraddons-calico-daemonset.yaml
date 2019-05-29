@@ -6,7 +6,7 @@ metadata:
   name: calico-config
   namespace: kube-system
   labels:
-    addonmanager.kubernetes.io/mode: "EnsureExists"
+    addonmanager.kubernetes.io/mode: "Reconcile"
 data:
   # You must set a non-zero value for Typha replicas below.
   typha_service_name: "calico-typha"
@@ -47,7 +47,7 @@ kind: CustomResourceDefinition
 metadata:
   name: felixconfigurations.crd.projectcalico.org
   labels:
-    addonmanager.kubernetes.io/mode: "EnsureExists"
+    addonmanager.kubernetes.io/mode: "Reconcile"
 spec:
   scope: Cluster
   group: crd.projectcalico.org
@@ -63,7 +63,7 @@ kind: CustomResourceDefinition
 metadata:
   name: bgpconfigurations.crd.projectcalico.org
   labels:
-    addonmanager.kubernetes.io/mode: "EnsureExists"
+    addonmanager.kubernetes.io/mode: "Reconcile"
 spec:
   scope: Cluster
   group: crd.projectcalico.org
@@ -79,7 +79,7 @@ kind: CustomResourceDefinition
 metadata:
   name: ippools.crd.projectcalico.org
   labels:
-    addonmanager.kubernetes.io/mode: "EnsureExists"
+    addonmanager.kubernetes.io/mode: "Reconcile"
 spec:
   scope: Cluster
   group: crd.projectcalico.org
@@ -95,7 +95,7 @@ kind: CustomResourceDefinition
 metadata:
   name: hostendpoints.crd.projectcalico.org
   labels:
-    addonmanager.kubernetes.io/mode: "EnsureExists"
+    addonmanager.kubernetes.io/mode: "Reconcile"
 spec:
   scope: Cluster
   group: crd.projectcalico.org
@@ -111,7 +111,7 @@ kind: CustomResourceDefinition
 metadata:
   name: clusterinformations.crd.projectcalico.org
   labels:
-    addonmanager.kubernetes.io/mode: "EnsureExists"
+    addonmanager.kubernetes.io/mode: "Reconcile"
 spec:
   scope: Cluster
   group: crd.projectcalico.org
@@ -127,7 +127,7 @@ kind: CustomResourceDefinition
 metadata:
   name: globalnetworkpolicies.crd.projectcalico.org
   labels:
-    addonmanager.kubernetes.io/mode: "EnsureExists"
+    addonmanager.kubernetes.io/mode: "Reconcile"
 spec:
   scope: Cluster
   group: crd.projectcalico.org
@@ -143,7 +143,7 @@ kind: CustomResourceDefinition
 metadata:
   name: globalnetworksets.crd.projectcalico.org
   labels:
-    addonmanager.kubernetes.io/mode: "EnsureExists"
+    addonmanager.kubernetes.io/mode: "Reconcile"
 spec:
   scope: Cluster
   group: crd.projectcalico.org
@@ -159,7 +159,7 @@ kind: CustomResourceDefinition
 metadata:
   name: networkpolicies.crd.projectcalico.org
   labels:
-    addonmanager.kubernetes.io/mode: "EnsureExists"
+    addonmanager.kubernetes.io/mode: "Reconcile"
 spec:
   scope: Namespaced
   group: crd.projectcalico.org
@@ -175,7 +175,7 @@ kind: CustomResourceDefinition
 metadata:
   name: networksets.crd.projectcalico.org
   labels:
-    addonmanager.kubernetes.io/mode: "EnsureExists"
+    addonmanager.kubernetes.io/mode: "Reconcile"
 spec:
   scope: Namespaced
   group: crd.projectcalico.org
@@ -194,7 +194,7 @@ apiVersion: rbac.authorization.k8s.io/v1beta1
 metadata:
   name: calico-node
   labels:
-    addonmanager.kubernetes.io/mode: "EnsureExists"
+    addonmanager.kubernetes.io/mode: "Reconcile"
 rules:
 # The CNI plugin needs to get pods, nodes, and namespaces.
 - apiGroups: [""]
@@ -297,7 +297,7 @@ metadata:
   name: calico-node
   labels:
     kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: "EnsureExists"
+    addonmanager.kubernetes.io/mode: "Reconcile"
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
@@ -319,7 +319,7 @@ metadata:
   namespace: kube-system
   labels:
     k8s-app: calico-typha
-    addonmanager.kubernetes.io/mode: "EnsureExists"
+    addonmanager.kubernetes.io/mode: "Reconcile"
 spec:
   ports:
   - port: 5473
@@ -339,7 +339,7 @@ metadata:
   namespace: kube-system
   labels:
     k8s-app: calico-typha
-    addonmanager.kubernetes.io/mode: "EnsureExists"
+    addonmanager.kubernetes.io/mode: "Reconcile"
 spec:
   # Number of Typha replicas.  To enable Typha, set this to a non-zero value *and* set the
   # typha_service_name variable in the calico-config ConfigMap above.
@@ -430,7 +430,7 @@ metadata:
   namespace: kube-system
   labels:
     k8s-app: calico-node
-    addonmanager.kubernetes.io/mode: "EnsureExists"
+    addonmanager.kubernetes.io/mode: "Reconcile"
 spec:
   selector:
     matchLabels:
@@ -613,7 +613,7 @@ metadata:
   name: calico-node
   namespace: kube-system
   labels:
-    addonmanager.kubernetes.io/mode: "EnsureExists"
+    addonmanager.kubernetes.io/mode: "Reconcile"
 ---
 
 # Typha Horizontal Autoscaler ConfigMap
@@ -624,7 +624,7 @@ metadata:
   namespace: kube-system
   labels:
     kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: "EnsureExists"
+    addonmanager.kubernetes.io/mode: "Reconcile"
 data:
   ladder: |-
     {
@@ -653,7 +653,7 @@ metadata:
   labels:
     k8s-app: calico-typha-autoscaler
     kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: "EnsureExists"
+    addonmanager.kubernetes.io/mode: "Reconcile"
 spec:
   replicas: 1
   template:
@@ -692,7 +692,7 @@ metadata:
   name: typha-cpha
   labels:
     kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: "EnsureExists"
+    addonmanager.kubernetes.io/mode: "Reconcile"
 rules:
 - apiGroups: [""]
   resources: ["nodes"]
@@ -707,7 +707,7 @@ metadata:
   name: typha-cpha
   labels:
     kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: "EnsureExists"
+    addonmanager.kubernetes.io/mode: "Reconcile"
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
@@ -726,7 +726,7 @@ metadata:
   namespace: kube-system
   labels:
     kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: "EnsureExists"
+    addonmanager.kubernetes.io/mode: "Reconcile"
 rules:
 - apiGroups: [""]
   resources: ["configmaps"]
@@ -745,7 +745,7 @@ metadata:
   namespace: kube-system
   labels:
     kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: "EnsureExists"
+    addonmanager.kubernetes.io/mode: "Reconcile"
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role

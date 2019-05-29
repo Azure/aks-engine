@@ -59,7 +59,7 @@ metadata:
   labels:
     component: azure-ip-masq-agent
     kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: EnsureExists
+    addonmanager.kubernetes.io/mode: Reconcile
 data:
   ip-masq-agent: |-
     nonMasqueradeCIDRs:
