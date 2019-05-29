@@ -11386,13 +11386,15 @@ installMoby() {
 installKataContainersRuntime() {
     # TODO incorporate this into packer CI so that it is pre-baked into the VHD image
     echo "Adding Kata Containers repository key..."
+    ARCH=$(arch)
+    BRANCH=stable-1.7
     KATA_RELEASE_KEY_TMP=/tmp/kata-containers-release.key
-    KATA_URL=http://download.opensuse.org/repositories/home:/katacontainers:/release/xUbuntu_${UBUNTU_RELEASE}/Release.key
+    KATA_URL=http://download.opensuse.org/repositories/home:/katacontainers:/releases:/${ARCH}:/${BRANCH}/xUbuntu_${UBUNTU_RELEASE}/Release.key
     retrycmd_if_failure_no_stats 120 5 25 curl -fsSL $KATA_URL > $KATA_RELEASE_KEY_TMP || exit $ERR_KATA_KEY_DOWNLOAD_TIMEOUT
     wait_for_apt_locks
     retrycmd_if_failure 30 5 30 apt-key add $KATA_RELEASE_KEY_TMP || exit $ERR_KATA_APT_KEY_TIMEOUT
     echo "Adding Kata Containers repository..."
-    echo "deb http://download.opensuse.org/repositories/home:/katacontainers:/release/xUbuntu_${UBUNTU_RELEASE}/ /" > /etc/apt/sources.list.d/kata-containers.list
+    echo "deb http://download.opensuse.org/repositories/home:/katacontainers:/releases:/${ARCH}:/${BRANCH}/xUbuntu_${UBUNTU_RELEASE}/ /" > /etc/apt/sources.list.d/kata-containers.list
     echo "Installing Kata Containers runtime..."
     apt_get_update || exit $ERR_APT_UPDATE_TIMEOUT
     apt_get_install 120 5 25 kata-runtime || exit $ERR_KATA_INSTALL_TIMEOUT
@@ -15728,7 +15730,7 @@ metadata:
     k8s-addon: cluster-autoscaler.addons.k8s.io
     k8s-app: cluster-autoscaler
     kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: EnsureExists
+    addonmanager.kubernetes.io/mode: Reconcile
   name: cluster-autoscaler
   namespace: kube-system
 ---
@@ -15740,7 +15742,7 @@ metadata:
     k8s-addon: cluster-autoscaler.addons.k8s.io
     k8s-app: cluster-autoscaler
     kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: EnsureExists
+    addonmanager.kubernetes.io/mode: Reconcile
 rules:
 - apiGroups: [""]
   resources: ["events","endpoints"]
@@ -15801,7 +15803,7 @@ metadata:
     k8s-addon: cluster-autoscaler.addons.k8s.io
     k8s-app: cluster-autoscaler
     kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: EnsureExists
+    addonmanager.kubernetes.io/mode: Reconcile
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
@@ -15820,7 +15822,7 @@ metadata:
     k8s-addon: cluster-autoscaler.addons.k8s.io
     k8s-app: cluster-autoscaler
     kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: EnsureExists
+    addonmanager.kubernetes.io/mode: Reconcile
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
@@ -15844,7 +15846,7 @@ metadata:
   namespace: kube-system
   labels:
     kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: EnsureExists
+    addonmanager.kubernetes.io/mode: Reconcile
 ---
 apiVersion: extensions/v1beta1
 kind: Deployment
@@ -15852,7 +15854,7 @@ metadata:
   labels:
     app: cluster-autoscaler
     kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: EnsureExists
+    addonmanager.kubernetes.io/mode: Reconcile
   name: cluster-autoscaler
   namespace: kube-system
 spec:
