@@ -154,10 +154,10 @@ func (uc *UpgradeCluster) SetClusterAutoscalerReplicaCount(kubeClient armhelpers
 				break
 			}
 		}
-		sleepTime := time.Duration(5+rand.Intn(5)) * time.Second
+		sleepTime := time.Duration(rand.Intn(5))
 		uc.Logger.Warnf("Failed to update cluster-autoscaler deployment: %v", err)
 		uc.Logger.Infof("Retry updating cluster-autoscaler after %d seconds", sleepTime)
-		time.Sleep(sleepTime)
+		time.Sleep(sleepTime * time.Second)
 	}
 	if err != nil {
 		return 0, err

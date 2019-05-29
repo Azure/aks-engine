@@ -684,6 +684,77 @@ var _ = Describe("Upgrade Kubernetes cluster tests", func() {
 		}
 	})
 
+	It("Tests SetClusterAutoscalerReplicaCount", func() {
+		uc := UpgradeCluster{
+			Translator: &i18n.Translator{},
+			Logger:     log.NewEntry(log.New()),
+		}
+
+		// test with nil KubernetesClient
+		count, err := uc.SetClusterAutoscalerReplicaCount(nil, 10)
+		Expect(count).To(Equal(int32(0)))
+		Expect(err).To(MatchError("no kubernetes client"))
+
+		// test happy path
+		mockClient := armhelpers.MockKubernetesClient{}
+		count, err = uc.SetClusterAutoscalerReplicaCount(&mockClient, 10)
+		Expect(count).To(Equal(int32(1)))
+		Expect(err).NotTo(HaveOccurred())
+
+		// test retrying with some KubernetesClient errors
+		mockClient = armhelpers.MockKubernetesClient{
+			FailGetDeploymentCount:    1,
+			FailUpdateDeploymentCount: 3,
+		}
+		logger, hook := logtest.NewNullLogger()
+		uc.Logger.Logger = logger
+		defer hook.Reset()
+		count, err = uc.SetClusterAutoscalerReplicaCount(&mockClient, 10)
+		Expect(count).To(Equal(int32(1)))
+		Expect(err).NotTo(HaveOccurred())
+		// check log messages to see that we retried after errors
+		messages := []string{
+			"failed to update cluster-autoscaler",
+			"retry updating cluster-autoscaler",
+		}
+		for _, m := range messages {
+			found := false
+			for _, entry := range hook.Entries {
+				if strings.Contains(strings.ToLower(entry.Message), m) {
+					found = true
+					break
+				}
+			}
+			Expect(found).To(BeTrue())
+		}
+		// test retrying with too many KubernetesClient errors
+		mockClient = armhelpers.MockKubernetesClient{
+			FailGetDeploymentCount:    10,
+			FailUpdateDeploymentCount: 0,
+		}
+		logger, hook = logtest.NewNullLogger()
+		uc.Logger.Logger = logger
+		defer hook.Reset()
+		count, err = uc.SetClusterAutoscalerReplicaCount(&mockClient, 10)
+		Expect(count).To(Equal(int32(0)))
+		Expect(err).To(MatchError("GetDeployment failed"))
+		// check log messages to see that we retried after errors
+		messages = []string{
+			"failed to update cluster-autoscaler",
+			"retry updating cluster-autoscaler",
+		}
+		for _, m := range messages {
+			found := false
+			for _, entry := range hook.Entries {
+				if strings.Contains(strings.ToLower(entry.Message), m) {
+					found = true
+					break
+				}
+			}
+			Expect(found).To(BeTrue())
+		}
+	})
+
 	It("Tests GetLastVMNameInVMSS", func() {
 		ctx := context.Background()
 
