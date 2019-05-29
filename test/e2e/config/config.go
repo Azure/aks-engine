@@ -117,13 +117,11 @@ func (c *Config) UpdateCustomCloudClusterDefinition(ccc *CustomCloudConfig) erro
 	cs.Location = c.Location
 	cs.Properties.CustomCloudProfile.PortalURL = ccc.PortalURL
 	cs.Properties.ServicePrincipalProfile.ClientID = ccc.CustomCloudClientID
+	cs.Properties.ServicePrincipalProfile.Secret = ccc.CustomCloudSecret
+	cs.Properties.CustomCloudProfile.AuthenticationMethod = ccc.AuthenticationMethod
+	cs.Properties.CustomCloudProfile.IdentitySystem = ccc.IdentitySystem
 
-	if ccc.IdentitySystem == "azure_ad" {
-		cs.Properties.ServicePrincipalProfile.Secret = ccc.CustomCloudSecret
-	}
-	if ccc.IdentitySystem == "adfs" {
-		cs.Properties.CustomCloudProfile.IdentitySystem = ccc.IdentitySystem
-		cs.Properties.CustomCloudProfile.AuthenticationMethod = ccc.AuthenticationMethod
+	if ccc.AuthenticationMethod == "client_certificate" {
 		cs.Properties.ServicePrincipalProfile.Secret = ""
 		cs.Properties.ServicePrincipalProfile.KeyvaultSecretRef = &vlabs.KeyvaultSecretRef{
 			VaultID:    ccc.VaultID,
