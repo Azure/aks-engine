@@ -120,7 +120,7 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpdate bool) {
 			o.KubernetesConfig.KubernetesImageBase = cloudSpecConfig.KubernetesSpecConfig.KubernetesImageBase
 		}
 		if o.KubernetesConfig.EtcdVersion == "" || isUpdate {
-			if isUpdate && o.KubernetesConfig.EtcdVersion != "" {
+			if isUpdate && o.KubernetesConfig.EtcdVersion != DefaultEtcdVersion {
 				log.Warnf("etcd will be upgraded to version %s\n", DefaultEtcdVersion)
 			}
 			o.KubernetesConfig.EtcdVersion = DefaultEtcdVersion
@@ -141,7 +141,7 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpdate bool) {
 		switch o.KubernetesConfig.ContainerRuntime {
 		case Docker:
 			if o.KubernetesConfig.MobyVersion == "" || isUpdate {
-				if isUpdate && o.KubernetesConfig.MobyVersion != "" {
+				if isUpdate && o.KubernetesConfig.MobyVersion != DefaultEtcdVersion {
 					log.Warnf("moby will be upgraded to version %s\n", DefaultMobyVersion)
 				}
 				o.KubernetesConfig.MobyVersion = DefaultMobyVersion
@@ -149,7 +149,7 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpdate bool) {
 		case Containerd, ClearContainers, KataContainers:
 			if o.KubernetesConfig.ContainerdVersion == "" || isUpdate {
 				if isUpdate && o.KubernetesConfig.ContainerdVersion != "" {
-					log.Warnf("moby will be upgraded to version %s\n", DefaultContainerdVersion)
+					log.Warnf("containerd will be upgraded to version %s\n", DefaultContainerdVersion)
 				}
 				o.KubernetesConfig.ContainerdVersion = DefaultContainerdVersion
 			}
