@@ -194,6 +194,13 @@ func removeKubeletFlags(k map[string]string, v string) {
 		}
 	}
 
+	// Get rid of values not supported in v1.15 and up
+	if common.IsKubernetesVersionGe(v, "1.15.0-beta.1") {
+		for _, key := range []string{"--allow-privileged"} {
+			delete(k, key)
+		}
+	}
+
 	// Get rid of keys with empty string values
 	for key, val := range k {
 		if val == "" {
