@@ -20,6 +20,7 @@ import (
 	"github.com/Azure/aks-engine/pkg/helpers"
 	"github.com/blang/semver"
 	"github.com/pkg/errors"
+	log "github.com/sirupsen/logrus"
 )
 
 // DistroValues is a list of currently supported distros
@@ -119,6 +120,9 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpdate bool) {
 			o.KubernetesConfig.KubernetesImageBase = cloudSpecConfig.KubernetesSpecConfig.KubernetesImageBase
 		}
 		if o.KubernetesConfig.EtcdVersion == "" || isUpdate {
+			if isUpdate && o.KubernetesConfig.EtcdVersion != "" {
+				log.Warnf("etcd will be upgraded to version %s\n", DefaultEtcdVersion)
+			}
 			o.KubernetesConfig.EtcdVersion = DefaultEtcdVersion
 		}
 
@@ -137,10 +141,16 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpdate bool) {
 		switch o.KubernetesConfig.ContainerRuntime {
 		case Docker:
 			if o.KubernetesConfig.MobyVersion == "" || isUpdate {
+				if isUpdate && o.KubernetesConfig.MobyVersion != "" {
+					log.Warnf("moby will be upgraded to version %s\n", DefaultMobyVersion)
+				}
 				o.KubernetesConfig.MobyVersion = DefaultMobyVersion
 			}
 		case Containerd, ClearContainers, KataContainers:
 			if o.KubernetesConfig.ContainerdVersion == "" || isUpdate {
+				if isUpdate && o.KubernetesConfig.ContainerdVersion != "" {
+					log.Warnf("moby will be upgraded to version %s\n", DefaultContainerdVersion)
+				}
 				o.KubernetesConfig.ContainerdVersion = DefaultContainerdVersion
 			}
 		}
