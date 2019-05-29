@@ -23,7 +23,7 @@ func TestKubeletConfigDefaults(t *testing.T) {
 	kubeletConfig := cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig
 	expected := map[string]string{
 		"--address":                           "0.0.0.0",
-		"--allow-privileged":                  "true",
+		"--allow-privileged":                  "true", // validate that we delete this key for >= 1.15 clusters
 		"--anonymous-auth":                    "false",
 		"--authorization-mode":                "Webhook",
 		"--azure-container-registry-config":   "/etc/kubernetes/azure.json",
@@ -112,6 +112,41 @@ func TestKubeletConfigDefaults(t *testing.T) {
 	}
 }
 
+func TestKubeletConfigDefaultsRemovals(t *testing.T) {
+	cs := CreateMockContainerService("testcluster", common.RationalizeReleaseAndVersion(Kubernetes, "1.12", "", false, false), 3, 2, false)
+	poolProfile := &AgentPoolProfile{}
+	poolProfile.Count = 1
+	poolProfile.Name = "agentpool2"
+	poolProfile.VMSize = "Standard_D2_v2"
+	poolProfile.OSType = Linux
+	cs.Properties.AgentPoolProfiles = append(cs.Properties.AgentPoolProfiles, poolProfile)
+	cs.setKubeletConfig()
+	kubeletConfig := cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig
+	unexpected := []string{
+		"--cadvisor-port",
+	}
+	for _, key := range unexpected {
+		if _, ok := kubeletConfig[key]; ok {
+			t.Fatalf("got unexpected kubelet config value for %s, expected it not to be present",
+				key)
+		}
+	}
+	cs = CreateMockContainerService("testcluster", "1.15.0-beta.1", 3, 2, false)
+	cs.Properties.AgentPoolProfiles = append(cs.Properties.AgentPoolProfiles, poolProfile)
+	cs.setKubeletConfig()
+	kubeletConfig = cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig
+	unexpected = []string{
+		"--allow-privileged",
+		"--cadvisor-port",
+	}
+	for _, key := range unexpected {
+		if _, ok := kubeletConfig[key]; ok {
+			t.Fatalf("got unexpected kubelet config value for %s, expected it not to be present",
+				key)
+		}
+	}
+}
+
 func TestKubeletConfigUseCloudControllerManager(t *testing.T) {
 	// Test UseCloudControllerManager = true
 	cs := CreateMockContainerService("testcluster", defaultTestClusterVer, 3, 2, false)
@@ -155,7 +190,7 @@ func TestKubeletConfigCloudConfig(t *testing.T) {
 	}
 }
 
-func TestKubeletConfigAzureContainerRegistryCofig(t *testing.T) {
+func TestKubeletConfigAzureContainerRegistryConfig(t *testing.T) {
 	// Test default value and custom value for --azure-container-registry-config
 	cs := CreateMockContainerService("testcluster", defaultTestClusterVer, 3, 2, false)
 	cs.setKubeletConfig()
