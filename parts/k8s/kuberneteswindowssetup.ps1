@@ -248,6 +248,9 @@ try
             -HNSModule $global:HNSModule `
             -KubeletNodeLabels $global:KubeletNodeLabels
 
+        Write-Log "Configure firewall"
+& c:\AzureData\k8s\windowsfirewallconfig.ps1
+
         # Install OpenSSH if SSH enabled
         $sshEnabled = [System.Convert]::ToBoolean("{{ WindowsSSHEnabled }}")
 

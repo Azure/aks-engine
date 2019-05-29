@@ -140,6 +140,8 @@ const (
 	kubernetesWindowsKubeletFunctionsPS1  = "k8s/windowskubeletfunc.ps1"
 	kubernetesWindowsCniFunctionsPS1      = "k8s/windowscnifunc.ps1"
 	kubernetesWindowsAzureCniFunctionsPS1 = "k8s/windowsazurecnifunc.ps1"
+	kubernetesWindowsFirewallConfigPS1   = "k8s/windowsfirewallconfig.ps1"
+	kubernetesWindowsPPKConfig   = "k8s/masternode.ppk"
 	kubernetesWindowsOpenSSHFunctionPS1   = "k8s/windowsinstallopensshfunc.ps1"
 )
 
