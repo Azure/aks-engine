@@ -3,9 +3,7 @@
 In this tutorial you are going to learn how to use [AKS Engine](https://github.com/Azure/aks-engine) to deploy a brand new cluster into an existing or pre-created virtual network.
 By doing this, you will be able to control the properties of the virtual network or integrate a new cluster into your existing infrastructure.
 
-*Note: This article describes the procedure with Docker Swarm but it will work in the exact same way with the all the orchestrators available with AKS Engine: Docker Swarm, Kubernetes and DC/OS.*
-
-*For Kubernetes, the cluster should be deployed in the same resource group as the virtual network and the service principal you use for the cluster needs permissions on the VNET resource's group too. Custom VNET for Kubernetes Windows cluster has a [known issue](https://github.com/Azure/aks-engine/issues/371).*
+_The Kubernetes cluster should be deployed in the same resource group as the virtual network and the service principal you use for the cluster needs permissions on the VNET resource's group too._
 
 ## Prerequisites
 
@@ -17,7 +15,7 @@ You can run this walkthrough on OS X, Windows, or Linux.
 
 ## Create the virtual network
 
-*You need a virtual network before creating the new cluster. If you already have one, you can skip this step.*
+_You need a virtual network before creating the new cluster. If you already have one, you can skip this step._
 
 For this example, we deployed a virtual network that contains two subnets:
 
@@ -32,8 +30,8 @@ The Azure Resource Manager template used to deploy this virtual network is:
 {
   "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
   "contentVersion": "1.0.0.0",
-  "parameters": {  },
-  "variables": {  },
+  "parameters": {},
+  "variables": {},
   "resources": [
     {
       "apiVersion": "2018-06-01",
@@ -41,10 +39,7 @@ The Azure Resource Manager template used to deploy this virtual network is:
       "name": "ExampleCustomVNET",
       "properties": {
         "addressSpace": {
-          "addressPrefixes": [
-            "10.100.0.0/24",
-            "10.200.0.0/24"
-          ]
+          "addressPrefixes": ["10.100.0.0/24", "10.200.0.0/24"]
         },
         "subnets": [
           {
@@ -79,6 +74,14 @@ Then you can deploy the virtual network using the JSON description above and the
 az group deployment create -g aks-custom-vnet --name "CustomVNet" --template-file azuredeploy.swarm.vnet.json
 ```
 
+Alternatively, you can use Azure CLI to create the vnet and the subnet directly:
+
+```bash
+az network vnet create --resource-group aks-custom-vnet --name CustomVNET --address-prefixes 10.100.0.0/24 10.200.0.0/24 --subnet-name ExampleMasterSubnet --subnet-prefixes 10.100.0.0/24
+
+az network vnet subnet create --resource-group aks-custom-vnet --vnet-name CustomVNET -n ExampleAgentSubnet --address-prefixes 10.200.0.0/24
+```
+
 Once the deployment is completed you should see the virtual network in the resource group.
 
 ## Create the template for AKS Engine
@@ -89,43 +92,28 @@ Depending on the orchestrator you want to deploy, the number of agent pools, the
 
 There are a lot of examples available on the [AKS Engine GitHub](https://github.com/Azure/aks-engine/tree/master/examples) and you can find [one dedicated for virtual network](https://github.com/Azure/aks-engine/blob/master/examples/vnet/README.md).
 
-In this case, we are going to use the following template:
+In this case, we are going to use the following template (this creates a cluster with the Azure CNI network plugin):
 
 ```json
 {
   "apiVersion": "vlabs",
   "properties": {
     "orchestratorProfile": {
-      "orchestratorType": "Kubernetes",
-      "kubernetesConfig": {
-        "networkPlugin": "kubenet"
-      }
+      "orchestratorType": "Kubernetes"
     },
     "masterProfile": {
       "count": 1,
       "dnsPrefix": "",
       "vmSize": "Standard_D2_v2",
-      "vnetSubnetId": "/subscriptions/SUBSCRIPTION_ID/resourceGroups/RESOURCE_GROUP_NAME/providers/Microsoft.Network/virtualNetworks/ExampleCustomVNET/subnets/ExampleMasterSubnet",
-      "firstConsecutiveStaticIP": "10.100.0.79" 
+      "vnetSubnetId": "/subscriptions/SUBSCRIPTION_ID/resourceGroups/RESOURCE_GROUP_NAME/providers/Microsoft.Network/virtualNetworks/CustomVNET/subnets/ExampleMasterSubnet",
+      "firstConsecutiveStaticIP": "10.100.0.5"
     },
     "agentPoolProfiles": [
       {
-        "name": "agentprivate",
-        "count": 2,
-        "vmSize": "Standard_D2_v2",
-        "vnetSubnetId": "/subscriptions/SUBSCRIPTION_ID/resourceGroups/RESOURCE_GROUP_NAME/providers/Microsoft.Network/virtualNetworks/ExampleCustomVNET/subnets/ExampleAgentSubnet"
-      },
-      {
-        "name": "agentpublic",
+        "name": "agents",
         "count": 3,
         "vmSize": "Standard_D2_v2",
-        "dnsPrefix": "",
-        "vnetSubnetId": "/subscriptions/SUBSCRIPTION_ID/resourceGroups/RESOURCE_GROUP_NAME/providers/Microsoft.Network/virtualNetworks/ExampleCustomVNET/subnets/ExampleAgentSubnet",
-        "ports": [
-          80,
-          443,
-          8080
-        ]
+        "vnetSubnetId": "/subscriptions/SUBSCRIPTION_ID/resourceGroups/RESOURCE_GROUP_NAME/providers/Microsoft.Network/virtualNetworks/CustomVNET/subnets/ExampleAgentSubnet"
       }
     ],
     "linuxProfile": {
@@ -148,7 +136,7 @@ In this case, we are going to use the following template:
 
 As you can see, for all node pools definition (master or agents) you can use the **vnetSubnetId** and **firstConsecutiveStaticIP** properties to defines the virtual network where you want to deploy the cluster and the first IP address that should be used by the first machine in the pool.
 
-*Note: Make sure the the vnetSubnetId matches with your subnet, by giving your **SUBSCRIPTION_ID**, **RESOURCE_GROUP_NAME**, virtual network and subnet names. You also need to fill DNS prefix for all the public pools you want to create, give an SSH keys...*
+_Note: Make sure the the vnetSubnetId matches with your subnet, by giving your **SUBSCRIPTION_ID**, **RESOURCE_GROUP_NAME**, virtual network and subnet names. You also need to fill DNS prefix for all the public pools you want to create, give an SSH keys..._
 
 ## Deploy the AKS Engine template
 
@@ -208,7 +196,7 @@ Depending on the number of agents you have asked for the deployment can take a w
 
 ## Post-Deployment: Attach Cluster Route Table to VNET
 
-*NOTE: This section is applicable only to Kubernetes clusters that use Kubenet. If AzureCNI is enabled in your cluster, you may disregard.*
+_NOTE: This section is applicable only to Kubernetes clusters that use Kubenet. If AzureCNI is enabled in your cluster, you may disregard._
 
 For Kubernetes clusters, we need to update the VNET to attach to the route table created by the above `az group deployment create` command. An example in bash form if the VNET is in the same ResourceGroup as the Kubernetes Cluster:
 
@@ -234,7 +222,7 @@ az network vnet subnet update \
 --ids "/subscriptions/SUBSCRIPTION_ID/resourceGroups/RESOURCE_GROUP_NAME_VNET/providers/Microsoft.Network/VirtualNetworks/KUBERNETES_CUSTOM_VNET/subnets/KUBERNETES_SUBNET"
 ```
 
-... where `RESOURCE_GROUP_NAME_KUBE` is the name of the Resource Group that contains the Kubernetes cluster, `SUBSCRIPTION_ID` is the id of the Azure subscription that both the VNET & Cluster are in, `RESOURCE_GROUP_NAME_VNET` is the name of the Resource Group that the VNET is in,  `KUBERNETES_SUBNET` is the name of the vnet subnet, and `KUBERNETES_CUSTOM_VNET` is the name of the custom VNET itself.
+... where `RESOURCE_GROUP_NAME_KUBE` is the name of the Resource Group that contains the Kubernetes cluster, `SUBSCRIPTION_ID` is the id of the Azure subscription that both the VNET & Cluster are in, `RESOURCE_GROUP_NAME_VNET` is the name of the Resource Group that the VNET is in, `KUBERNETES_SUBNET` is the name of the vnet subnet, and `KUBERNETES_CUSTOM_VNET` is the name of the custom VNET itself.
 
 ## Connect to your new cluster
 
