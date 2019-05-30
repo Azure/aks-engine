@@ -1831,7 +1831,7 @@
                 "value": "latest"
             },
             "servicePrincipalClientId": {
-                "value": "servicePrincipalClientId"
+                "value": "fakeClientId"
             },
             "servicePrincipalClientSecret": {
                 "value": "servicePrincipalClientSecret"
