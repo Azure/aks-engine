@@ -92,9 +92,11 @@ func Build(cfg *config.Config, masterSubnetID string, agentSubnetIDs []string, i
 	prop := cs.ContainerService.Properties
 
 	if config.ClientID != "" && config.ClientSecret != "" {
-		prop.ServicePrincipalProfile = &vlabs.ServicePrincipalProfile{
-			ClientID: config.ClientID,
-			Secret:   config.ClientSecret,
+		if !prop.IsAzureStackCloud() {
+			prop.ServicePrincipalProfile = &vlabs.ServicePrincipalProfile{
+				ClientID: config.ClientID,
+				Secret:   config.ClientSecret,
+			}
 		}
 	}
 
