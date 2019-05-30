@@ -243,8 +243,8 @@ type KubernetesAddon struct {
 	Data       string                    `json:"data,omitempty"`
 }
 
-// IsEnabled returns if the addon is explicitly enabled, or the user-provided default if non explicitly enabled
-func (a *KubernetesAddon) IsEnabled(ifNil bool) bool {
+// GetEnabledIfNil returns if the addon is explicitly enabled, or the user-provided default if non explicitly enabled
+func (a *KubernetesAddon) GetEnabledIfNil(ifNil bool) bool {
 	if a.Enabled == nil {
 		return ifNil
 	}

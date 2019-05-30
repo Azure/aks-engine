@@ -271,8 +271,16 @@ type KubernetesAddon struct {
 	Data       string                    `json:"data,omitempty"`
 }
 
-// IsEnabled returns if the addon is explicitly enabled, or the user-provided default if non explicitly enabled
-func (a *KubernetesAddon) IsEnabled(ifNil bool) bool {
+// IsEnabled returns if the addon is enabled
+func (a *KubernetesAddon) IsEnabled() bool {
+	if a.Enabled == nil {
+		return false
+	}
+	return *a.Enabled
+}
+
+// GetEnabledIfNil returns if the addon is explicitly enabled, or the user-provided default if non explicitly enabled
+func (a *KubernetesAddon) GetEnabledIfNil(ifNil bool) bool {
 	if a.Enabled == nil {
 		return ifNil
 	}
@@ -1569,72 +1577,38 @@ func (k *KubernetesConfig) GetAddonScript(addonName string) string {
 	return kubeAddon.Data
 }
 
-// isAddonEnabled checks whether a k8s addon with name "addonName" is enabled or not based on the Enabled field of KubernetesAddon.
+// IsAddonEnabled checks whether a k8s addon with name "addonName" is enabled or not based on the Enabled field of KubernetesAddon.
 // If the value of Enabled in nil, the "defaultValue" is returned.
-func (k *KubernetesConfig) isAddonEnabled(addonName string, defaultValue bool) bool {
+func (k *KubernetesConfig) IsAddonEnabled(addonName string) bool {
 	kubeAddon := k.GetAddonByName(addonName)
-	return kubeAddon.IsEnabled(defaultValue)
+	return kubeAddon.IsEnabled()
 }
 
-// IsMetricsServerEnabled checks if the metrics server addon is enabled
-func (o *OrchestratorProfile) IsMetricsServerEnabled() bool {
-	return o.KubernetesConfig.isAddonEnabled(MetricsServerAddonName,
-		common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.9.0"))
-}
-
-// IsAzureCNIMonitoringEnabled checks if the azure cni monitoring addon is enabled
-func (k *KubernetesConfig) IsAzureCNIMonitoringEnabled() bool {
-	return k.isAddonEnabled(AzureCNINetworkMonitoringAddonName, DefaultAzureCNIMonitoringAddonEnabled)
-}
-
-// IsContainerMonitoringEnabled checks if the container monitoring addon is enabled
-func (k *KubernetesConfig) IsContainerMonitoringEnabled() bool {
-	return k.isAddonEnabled(ContainerMonitoringAddonName, DefaultContainerMonitoringAddonEnabled)
-}
-
-// IsTillerEnabled checks if the tiller addon is enabled
-func (k *KubernetesConfig) IsTillerEnabled() bool {
-	return k.isAddonEnabled(TillerAddonName, DefaultTillerAddonEnabled)
+// getAddonEnabledIfNil checks whether a k8s addon with name "addonName" is enabled or not based on the Enabled field of KubernetesAddon.
+// If the value of Enabled in nil, the "defaultValue" is returned.
+func (k *KubernetesConfig) getAddonEnabledIfNil(addonName string, defaultValue bool) bool {
+	kubeAddon := k.GetAddonByName(addonName)
+	return kubeAddon.GetEnabledIfNil(defaultValue)
 }
 
 // IsAADPodIdentityEnabled checks if the AAD pod identity addon is enabled
 func (k *KubernetesConfig) IsAADPodIdentityEnabled() bool {
-	return k.isAddonEnabled(AADPodIdentityAddonName, DefaultAADPodIdentityAddonEnabled)
+	return k.getAddonEnabledIfNil(AADPodIdentityAddonName, DefaultAADPodIdentityAddonEnabled)
 }
 
 // IsACIConnectorEnabled checks if the ACI Connector addon is enabled
 func (k *KubernetesConfig) IsACIConnectorEnabled() bool {
-	return k.isAddonEnabled(ACIConnectorAddonName, DefaultACIConnectorAddonEnabled)
+	return k.getAddonEnabledIfNil(ACIConnectorAddonName, DefaultACIConnectorAddonEnabled)
 }
 
 // IsClusterAutoscalerEnabled checks if the cluster autoscaler addon is enabled
 func (k *KubernetesConfig) IsClusterAutoscalerEnabled() bool {
-	return k.isAddonEnabled(ClusterAutoscalerAddonName, DefaultClusterAutoscalerAddonEnabled)
-}
-
-// IsBlobfuseFlexVolumeEnabled checks if the Blobfuse FlexVolume addon is enabled
-func (k *KubernetesConfig) IsBlobfuseFlexVolumeEnabled() bool {
-	return k.isAddonEnabled(BlobfuseFlexVolumeAddonName, DefaultBlobfuseFlexVolumeAddonEnabled)
-}
-
-// IsSMBFlexVolumeEnabled checks if the SMB FlexVolume addon is enabled
-func (k *KubernetesConfig) IsSMBFlexVolumeEnabled() bool {
-	return k.isAddonEnabled(SMBFlexVolumeAddonName, DefaultSMBFlexVolumeAddonEnabled)
-}
-
-// IsKeyVaultFlexVolumeEnabled checks if the Key Vault FlexVolume addon is enabled
-func (k *KubernetesConfig) IsKeyVaultFlexVolumeEnabled() bool {
-	return k.isAddonEnabled(KeyVaultFlexVolumeAddonName, DefaultKeyVaultFlexVolumeAddonEnabled)
-}
-
-// IsDashboardEnabled checks if the kubernetes-dashboard addon is enabled
-func (k *KubernetesConfig) IsDashboardEnabled() bool {
-	return k.isAddonEnabled(DashboardAddonName, DefaultDashboardAddonEnabled)
+	return k.getAddonEnabledIfNil(ClusterAutoscalerAddonName, DefaultClusterAutoscalerAddonEnabled)
 }
 
 // IsIPMasqAgentEnabled checks if the ip-masq-agent addon is enabled
 func (k *KubernetesConfig) IsIPMasqAgentEnabled() bool {
-	return k.isAddonEnabled(IPMASQAgentAddonName, (k.NetworkPlugin != NetworkPluginCilium && DefaultIPMasqAgentAddonEnabled))
+	return k.getAddonEnabledIfNil(IPMASQAgentAddonName, (k.NetworkPlugin != NetworkPluginCilium && DefaultIPMasqAgentAddonEnabled))
 }
 
 // IsRBACEnabled checks if RBAC is enabled
@@ -1720,7 +1694,7 @@ func (p *Properties) IsNVIDIADevicePluginEnabled() bool {
 	if p.OrchestratorProfile == nil || p.OrchestratorProfile.KubernetesConfig == nil {
 		return false
 	}
-	return p.OrchestratorProfile.KubernetesConfig.isAddonEnabled(NVIDIADevicePluginAddonName, p.IsNvidiaDevicePluginCapable())
+	return p.OrchestratorProfile.KubernetesConfig.getAddonEnabledIfNil(NVIDIADevicePluginAddonName, p.IsNvidiaDevicePluginCapable())
 }
 
 // IsAzureStackCloud return true if the cloud is AzureStack
@@ -1795,7 +1769,7 @@ func (p *Properties) IsNvidiaDevicePluginCapable() bool {
 
 // IsReschedulerEnabled checks if the rescheduler addon is enabled
 func (k *KubernetesConfig) IsReschedulerEnabled() bool {
-	return k.isAddonEnabled(ReschedulerAddonName, DefaultReschedulerAddonEnabled)
+	return k.getAddonEnabledIfNil(ReschedulerAddonName, DefaultReschedulerAddonEnabled)
 }
 
 // PrivateJumpboxProvision checks if a private cluster has jumpbox auto-provisioning

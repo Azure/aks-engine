@@ -2787,76 +2787,28 @@ func TestUserAssignedMSI(t *testing.T) {
 
 func TestKubernetesAddon(t *testing.T) {
 	addon := getMockAddon("addon")
-	if !addon.IsEnabled(true) {
-		t.Fatalf("KubernetesAddon.IsEnabled(true) should always return true when Enabled property is not specified")
+	if !addon.GetEnabledIfNil(true) {
+		t.Fatalf("KubernetesAddon.GetEnabledIfNil(true) should always return true when Enabled property is not specified")
 	}
 
-	if addon.IsEnabled(false) {
-		t.Fatalf("KubernetesAddon.IsEnabled(false) should always return false when Enabled property is not specified")
+	if addon.GetEnabledIfNil(false) {
+		t.Fatalf("KubernetesAddon.GetEnabledIfNil(false) should always return false when Enabled property is not specified")
 	}
 	e := true
 	addon.Enabled = &e
-	if !addon.IsEnabled(false) {
-		t.Fatalf("KubernetesAddon.IsEnabled(false) should always return true when Enabled property is set to true")
+	if !addon.GetEnabledIfNil(false) {
+		t.Fatalf("KubernetesAddon.GetEnabledIfNil(false) should always return true when Enabled property is set to true")
 	}
-	if !addon.IsEnabled(true) {
-		t.Fatalf("KubernetesAddon.IsEnabled(true) should always return true when Enabled property is set to true")
+	if !addon.GetEnabledIfNil(true) {
+		t.Fatalf("KubernetesAddon.GetEnabledIfNil(true) should always return true when Enabled property is set to true")
 	}
 	e = false
 	addon.Enabled = &e
-	if addon.IsEnabled(false) {
-		t.Fatalf("KubernetesAddon.IsEnabled(false) should always return false when Enabled property is set to false")
+	if addon.GetEnabledIfNil(false) {
+		t.Fatalf("KubernetesAddon.GetEnabledIfNil(false) should always return false when Enabled property is set to false")
 	}
-	if addon.IsEnabled(true) {
-		t.Fatalf("KubernetesAddon.IsEnabled(true) should always return false when Enabled property is set to false")
-	}
-}
-
-func TestIsTillerEnabled(t *testing.T) {
-	// Default case
-	c := KubernetesConfig{
-		Addons: []KubernetesAddon{
-			getMockAddon("addon"),
-		},
-	}
-	enabled := c.IsTillerEnabled()
-	enabledDefault := DefaultTillerAddonEnabled
-	if enabled != enabledDefault {
-		t.Fatalf("KubernetesConfig.IsTillerEnabled() should return %t when no tiller addon has been specified, instead returned %t", enabledDefault, enabled)
-	}
-	// Addon present, but enabled not specified
-	c.Addons = append(c.Addons, getMockAddon(TillerAddonName))
-	enabled = c.IsTillerEnabled()
-	if enabled != enabledDefault {
-		t.Fatalf("KubernetesConfig.IsTillerEnabled() should return default when a custom tiller addon has been specified w/ no enabled value, expected %t, instead returned %t", enabledDefault, enabled)
-	}
-	// Addon present and enabled
-	b := true
-	c = KubernetesConfig{
-		Addons: []KubernetesAddon{
-			{
-				Name:    TillerAddonName,
-				Enabled: &b,
-			},
-		},
-	}
-	enabled = c.IsTillerEnabled()
-	if !enabled {
-		t.Fatalf("KubernetesConfig.IsTillerEnabled() should return true when a custom tiller addon has been specified as enabled, instead returned %t", enabled)
-	}
-	// Addon present and disabled
-	b = false
-	c = KubernetesConfig{
-		Addons: []KubernetesAddon{
-			{
-				Name:    TillerAddonName,
-				Enabled: &b,
-			},
-		},
-	}
-	enabled = c.IsTillerEnabled()
-	if enabled {
-		t.Fatalf("KubernetesConfig.IsTillerEnabled() should return false when a custom tiller addon has been specified as disabled, instead returned %t", enabled)
+	if addon.GetEnabledIfNil(true) {
+		t.Fatalf("KubernetesAddon.GetEnabledIfNil(true) should always return false when Enabled property is set to false")
 	}
 }
 
@@ -3004,150 +2956,6 @@ func TestIsClusterAutoscalerEnabled(t *testing.T) {
 	}
 }
 
-func TestIsBlobfuseFlexVolumeEnabled(t *testing.T) {
-	// Default case
-	c := KubernetesConfig{
-		Addons: []KubernetesAddon{
-			getMockAddon("addon"),
-		},
-	}
-	enabled := c.IsBlobfuseFlexVolumeEnabled()
-	enabledDefault := DefaultBlobfuseFlexVolumeAddonEnabled
-	if enabled != enabledDefault {
-		t.Fatalf("KubernetesConfig.IsBlobfuseFlexVolumeEnabled() should return %t when no blobfuse flexvolume addon has been specified, instead returned %t", enabledDefault, enabled)
-	}
-	// Addon present, but enabled not specified
-	c.Addons = append(c.Addons, getMockAddon(BlobfuseFlexVolumeAddonName))
-	enabled = c.IsBlobfuseFlexVolumeEnabled()
-	if enabled != enabledDefault {
-		t.Fatalf("KubernetesConfig.IsBlobfuseFlexVolumeEnabled() should return default when blobfuse flexvolume has been specified w/ no enabled value, expected %t, instead returned %t", enabledDefault, enabled)
-	}
-	// Addon present and enabled
-	b := true
-	c = KubernetesConfig{
-		Addons: []KubernetesAddon{
-			{
-				Name:    BlobfuseFlexVolumeAddonName,
-				Enabled: &b,
-			},
-		},
-	}
-	enabled = c.IsBlobfuseFlexVolumeEnabled()
-	if !enabled {
-		t.Fatalf("KubernetesConfig.IsBlobfuseFlexVolumeEnabled() should return true when blobfuse flexvolume addon has been specified as enabled, instead returned %t", enabled)
-	}
-	// Addon present and disabled
-	b = false
-	c = KubernetesConfig{
-		Addons: []KubernetesAddon{
-			{
-				Name:    BlobfuseFlexVolumeAddonName,
-				Enabled: &b,
-			},
-		},
-	}
-	enabled = c.IsBlobfuseFlexVolumeEnabled()
-	if enabled {
-		t.Fatalf("KubernetesConfig.IsBlobfuseFlexVolumeEnabled() should return false when blobfuse flexvolume addon has been specified as disabled, instead returned %t", enabled)
-	}
-}
-
-func TestIsSMBFlexVolumeEnabled(t *testing.T) {
-	// Default case
-	c := KubernetesConfig{
-		Addons: []KubernetesAddon{
-			getMockAddon("addon"),
-		},
-	}
-	enabled := c.IsSMBFlexVolumeEnabled()
-	enabledDefault := DefaultSMBFlexVolumeAddonEnabled
-	if enabled != enabledDefault {
-		t.Fatalf("KubernetesConfig.IsSMBFlexVolumeEnabled() should return %t when no SMB flexvolume addon has been specified, instead returned %t", enabledDefault, enabled)
-	}
-	// Addon present, but enabled not specified
-	c.Addons = append(c.Addons, getMockAddon(SMBFlexVolumeAddonName))
-	enabled = c.IsSMBFlexVolumeEnabled()
-	if enabled != enabledDefault {
-		t.Fatalf("KubernetesConfig.IsSMBFlexVolumeEnabled() should return default when SMB flexvolume has been specified w/ no enabled value, expected %t, instead returned %t", enabledDefault, enabled)
-	}
-	// Addon present and enabled
-	b := true
-	c = KubernetesConfig{
-		Addons: []KubernetesAddon{
-			{
-				Name:    SMBFlexVolumeAddonName,
-				Enabled: &b,
-			},
-		},
-	}
-	enabled = c.IsSMBFlexVolumeEnabled()
-	if !enabled {
-		t.Fatalf("KubernetesConfig.IsSMBFlexVolumeEnabled() should return true when SMB flexvolume addon has been specified as enabled, instead returned %t", enabled)
-	}
-	// Addon present and disabled
-	b = false
-	c = KubernetesConfig{
-		Addons: []KubernetesAddon{
-			{
-				Name:    SMBFlexVolumeAddonName,
-				Enabled: &b,
-			},
-		},
-	}
-	enabled = c.IsSMBFlexVolumeEnabled()
-	if enabled {
-		t.Fatalf("KubernetesConfig.IsSMBFlexVolumeEnabled() should return true when SMB flexvolume addon has been specified as enabled, instead returned %t", enabled)
-	}
-}
-
-func TestIsKeyVaultFlexVolumeEnabled(t *testing.T) {
-	// Default case
-	c := KubernetesConfig{
-		Addons: []KubernetesAddon{
-			getMockAddon("addon"),
-		},
-	}
-	enabled := c.IsKeyVaultFlexVolumeEnabled()
-	enabledDefault := DefaultKeyVaultFlexVolumeAddonEnabled
-	if enabled != enabledDefault {
-		t.Fatalf("KubernetesConfig.IsKeyVaultFlexVolumeEnabled() should return %t when no key vault flexvolume addon has been specified, instead returned %t", enabledDefault, enabled)
-	}
-	// Addon present, but enabled not specified
-	c.Addons = append(c.Addons, getMockAddon(KeyVaultFlexVolumeAddonName))
-	enabled = c.IsKeyVaultFlexVolumeEnabled()
-	if enabled != enabledDefault {
-		t.Fatalf("KubernetesConfig.IsKeyVaultFlexVolumeEnabled() should return default when no keyvault flexvolume has been specified w/ no enabled value, expected %t, instead returned %t", enabledDefault, enabled)
-	}
-	// Addon present and enabled
-	b := true
-	c = KubernetesConfig{
-		Addons: []KubernetesAddon{
-			{
-				Name:    KeyVaultFlexVolumeAddonName,
-				Enabled: &b,
-			},
-		},
-	}
-	enabled = c.IsKeyVaultFlexVolumeEnabled()
-	if !enabled {
-		t.Fatalf("KubernetesConfig.IsKeyVaultFlexVolumeEnabled() should return true when keyvault flexvolume addon has been specified as enabled, instead returned %t", enabled)
-	}
-	// Addon present and disabled
-	b = false
-	c = KubernetesConfig{
-		Addons: []KubernetesAddon{
-			{
-				Name:    KeyVaultFlexVolumeAddonName,
-				Enabled: &b,
-			},
-		},
-	}
-	enabled = c.IsKeyVaultFlexVolumeEnabled()
-	if enabled {
-		t.Fatalf("KubernetesConfig.IsKeyVaultFlexVolumeEnabled() should return false when keyvault flexvolume addon has been specified as disabled, instead returned %t", enabled)
-	}
-}
-
 func TestIsNVIDIADevicePluginEnabled(t *testing.T) {
 	p := Properties{
 		AgentPoolProfiles: []*AgentPoolProfile{
@@ -3229,81 +3037,6 @@ func TestAgentPoolIsNSeriesSKU(t *testing.T) {
 	}
 }
 
-func TestIsContainerMonitoringEnabled(t *testing.T) {
-	v := "1.9.0"
-	o := OrchestratorProfile{
-		OrchestratorType:    "Kubernetes",
-		OrchestratorVersion: v,
-		KubernetesConfig: &KubernetesConfig{Addons: []KubernetesAddon{
-			getMockAddon("addon"),
-		},
-		},
-	}
-	k := o.KubernetesConfig
-	enabled := k.IsContainerMonitoringEnabled()
-	enabledDefault := DefaultContainerMonitoringAddonEnabled
-	if enabled != enabledDefault {
-		t.Fatalf("KubernetesConfig.IsContainerMonitoringEnabled() should return %t for kubernetes version %s when no container-monitoring addon has been specified, instead returned %t", enabledDefault, v, enabled)
-	}
-
-	b := true
-	cm := getMockAddon(ContainerMonitoringAddonName)
-	cm.Enabled = &b
-	o.KubernetesConfig.Addons = append(o.KubernetesConfig.Addons, cm)
-	enabled = k.IsContainerMonitoringEnabled()
-	if !enabled {
-		t.Fatalf("KubernetesConfig.IsContainerMonitoringEnabled() should return %t for kubernetes version %s when the container-monitoring addon has been specified, instead returned %t", true, v, enabled)
-	}
-
-	b = false
-	o = OrchestratorProfile{
-		OrchestratorType:    "Kubernetes",
-		OrchestratorVersion: v,
-		KubernetesConfig: &KubernetesConfig{Addons: []KubernetesAddon{
-			{
-				Name:    ContainerMonitoringAddonName,
-				Enabled: &b,
-			},
-		},
-		},
-	}
-	enabled = k.IsContainerMonitoringEnabled()
-	if enabled {
-		t.Fatalf("KubernetesConfig.IsContainerMonitoringEnabled() should return false when a custom container monitoring addon has been specified as disabled, instead returned %t", enabled)
-	}
-}
-
-func TestIsDashboardEnabled(t *testing.T) {
-	c := KubernetesConfig{
-		Addons: []KubernetesAddon{
-			getMockAddon("addon"),
-		},
-	}
-	enabled := c.IsDashboardEnabled()
-	enabledDefault := DefaultDashboardAddonEnabled
-	if enabled != enabledDefault {
-		t.Fatalf("KubernetesConfig.IsDashboardEnabled() should return %t when no kubernetes-dashboard addon has been specified, instead returned %t", enabledDefault, enabled)
-	}
-	c.Addons = append(c.Addons, getMockAddon(DashboardAddonName))
-	enabled = c.IsDashboardEnabled()
-	if !enabled {
-		t.Fatalf("KubernetesConfig.IsDashboardEnabled() should return true when a custom kubernetes-dashboard addon has been specified, instead returned %t", enabled)
-	}
-	b := false
-	c = KubernetesConfig{
-		Addons: []KubernetesAddon{
-			{
-				Name:    DashboardAddonName,
-				Enabled: &b,
-			},
-		},
-	}
-	enabled = c.IsDashboardEnabled()
-	if enabled {
-		t.Fatalf("KubernetesConfig.IsDashboardEnabled() should return false when a custom kubernetes-dashboard addon has been specified as disabled, instead returned %t", enabled)
-	}
-}
-
 func TestIsReschedulerEnabled(t *testing.T) {
 	c := KubernetesConfig{
 		Addons: []KubernetesAddon{
@@ -3332,47 +3065,6 @@ func TestIsReschedulerEnabled(t *testing.T) {
 	enabled = c.IsReschedulerEnabled()
 	if !enabled {
 		t.Fatalf("KubernetesConfig.IsReschedulerEnabled() should return false when a custom rescheduler addon has been specified as enabled, instead returned %t", enabled)
-	}
-}
-
-func TestIsMetricsServerEnabled(t *testing.T) {
-	v := "1.8.0"
-	o := OrchestratorProfile{
-		OrchestratorType:    "Kubernetes",
-		OrchestratorVersion: v,
-		KubernetesConfig: &KubernetesConfig{Addons: []KubernetesAddon{
-			getMockAddon("addon"),
-		},
-		},
-	}
-	enabled := o.IsMetricsServerEnabled()
-	enabledDefault := DefaultMetricsServerAddonEnabled
-	if enabled != enabledDefault {
-		t.Fatalf("KubernetesConfig.IsMetricsServerEnabled() should return %t for kubernetes version %s when no metrics-server addon has been specified, instead returned %t", enabledDefault, v, enabled)
-	}
-
-	o.KubernetesConfig.Addons = append(o.KubernetesConfig.Addons, getMockAddon(MetricsServerAddonName))
-	enabled = o.IsMetricsServerEnabled()
-	enabledDefault = DefaultMetricsServerAddonEnabled
-	if enabled != enabledDefault {
-		t.Fatalf("KubernetesConfig.IsMetricsServerEnabled() should return %t for kubernetes version %s when the metrics-server addon has been specified, instead returned %t", enabledDefault, v, enabled)
-	}
-
-	b := true
-	o = OrchestratorProfile{
-		OrchestratorType:    "Kubernetes",
-		OrchestratorVersion: v,
-		KubernetesConfig: &KubernetesConfig{Addons: []KubernetesAddon{
-			{
-				Name:    MetricsServerAddonName,
-				Enabled: &b,
-			},
-		},
-		},
-	}
-	enabled = o.IsMetricsServerEnabled()
-	if !enabled {
-		t.Fatalf("KubernetesConfig.IsMetricsServerEnabled() should return true for kubernetes version %s when the metrics-server addon has been specified as enabled, instead returned %t", v, enabled)
 	}
 }
 

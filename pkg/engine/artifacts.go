@@ -30,24 +30,25 @@ func kubernetesContainerAddonSettingsInit(p *api.Properties) map[string]kubernet
 	}
 	o := p.OrchestratorProfile
 	k := o.KubernetesConfig
+	// TODO validate that each of these addons are actually wired in to the conveniences in getAddonFuncMap
 	return map[string]kubernetesComponentFileSpec{
 		DefaultHeapsterAddonName: {
 			sourceFile:      "kubernetesmasteraddons-heapster-deployment.yaml",
 			base64Data:      k.GetAddonScript(HeapsterAddonName),
 			destinationFile: "kube-heapster-deployment.yaml",
-			isEnabled:       !common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.13.0"),
+			isEnabled:       k.IsAddonEnabled(HeapsterAddonName),
 		},
 		MetricsServerAddonName: {
 			sourceFile:      "kubernetesmasteraddons-metrics-server-deployment.yaml",
 			base64Data:      k.GetAddonScript(MetricsServerAddonName),
 			destinationFile: "kube-metrics-server-deployment.yaml",
-			isEnabled:       o.IsMetricsServerEnabled(),
+			isEnabled:       k.IsAddonEnabled(MetricsServerAddonName),
 		},
 		TillerAddonName: {
 			sourceFile:      "kubernetesmasteraddons-tiller-deployment.yaml",
 			base64Data:      k.GetAddonScript(TillerAddonName),
 			destinationFile: "kube-tiller-deployment.yaml",
-			isEnabled:       k.IsTillerEnabled(),
+			isEnabled:       k.IsAddonEnabled(TillerAddonName),
 		},
 		AADPodIdentityAddonName: {
 			sourceFile:      "kubernetesmasteraddons-aad-pod-identity-deployment.yaml",
@@ -59,82 +60,85 @@ func kubernetesContainerAddonSettingsInit(p *api.Properties) map[string]kubernet
 			sourceFile:      "kubernetesmasteraddons-aci-connector-deployment.yaml",
 			base64Data:      k.GetAddonScript(ACIConnectorAddonName),
 			destinationFile: "aci-connector-deployment.yaml",
-			isEnabled:       !p.IsAzureStackCloud() && k.IsACIConnectorEnabled(),
+			isEnabled:       k.IsAddonEnabled(ACIConnectorAddonName),
 		},
 		ClusterAutoscalerAddonName: {
 			sourceFile:      "kubernetesmasteraddons-cluster-autoscaler-deployment.yaml",
 			base64Data:      k.GetAddonScript(ClusterAutoscalerAddonName),
 			destinationFile: "cluster-autoscaler-deployment.yaml",
-			isEnabled:       !p.IsAzureStackCloud() && k.IsClusterAutoscalerEnabled(),
+			isEnabled:       k.IsAddonEnabled(ClusterAutoscalerAddonName),
 		},
 		BlobfuseFlexVolumeAddonName: {
 			sourceFile:      "kubernetesmasteraddons-blobfuse-flexvolume-installer.yaml",
 			base64Data:      k.GetAddonScript(BlobfuseFlexVolumeAddonName),
 			destinationFile: "blobfuse-flexvolume-installer.yaml",
-			isEnabled:       !p.IsAzureStackCloud() && k.IsBlobfuseFlexVolumeEnabled() && !p.HasCoreOS(),
+			isEnabled:       k.IsAddonEnabled(BlobfuseFlexVolumeAddonName),
 		},
-
 		SMBFlexVolumeAddonName: {
 			sourceFile:      "kubernetesmasteraddons-smb-flexvolume-installer.yaml",
 			base64Data:      k.GetAddonScript(SMBFlexVolumeAddonName),
 			destinationFile: "smb-flexvolume-installer.yaml",
-			isEnabled:       !p.IsAzureStackCloud() && k.IsSMBFlexVolumeEnabled() && !p.HasCoreOS(),
+			isEnabled:       k.IsAddonEnabled(SMBFlexVolumeAddonName),
 		},
 		KeyVaultFlexVolumeAddonName: {
 			sourceFile:      "kubernetesmasteraddons-keyvault-flexvolume-installer.yaml",
 			base64Data:      k.GetAddonScript(KeyVaultFlexVolumeAddonName),
 			destinationFile: "keyvault-flexvolume-installer.yaml",
-			isEnabled:       !p.IsAzureStackCloud() && k.IsKeyVaultFlexVolumeEnabled() && !p.HasCoreOS(),
+			isEnabled:       k.IsAddonEnabled(KeyVaultFlexVolumeAddonName),
 		},
 		DashboardAddonName: {
 			sourceFile:      "kubernetesmasteraddons-kubernetes-dashboard-deployment.yaml",
 			base64Data:      k.GetAddonScript(DashboardAddonName),
 			destinationFile: "kubernetes-dashboard-deployment.yaml",
-			isEnabled:       k.IsDashboardEnabled(),
+			isEnabled:       k.IsAddonEnabled(DashboardAddonName),
 		},
 		ReschedulerAddonName: {
 			sourceFile:      "kubernetesmasteraddons-kube-rescheduler-deployment.yaml",
 			base64Data:      k.GetAddonScript(ReschedulerAddonName),
 			destinationFile: "kube-rescheduler-deployment.yaml",
-			isEnabled:       !p.IsAzureStackCloud() && k.IsReschedulerEnabled(),
+			isEnabled:       k.IsAddonEnabled(ReschedulerAddonName),
 		},
 		NVIDIADevicePluginAddonName: {
 			sourceFile:      "kubernetesmasteraddons-nvidia-device-plugin-daemonset.yaml",
 			base64Data:      k.GetAddonScript(NVIDIADevicePluginAddonName),
 			destinationFile: "nvidia-device-plugin.yaml",
-			isEnabled:       !p.IsAzureStackCloud() && p.IsNvidiaDevicePluginCapable() && p.IsNVIDIADevicePluginEnabled(),
+			isEnabled:       k.IsAddonEnabled(NVIDIADevicePluginAddonName),
 		},
 		ContainerMonitoringAddonName: {
 			sourceFile:      "kubernetesmasteraddons-omsagent-daemonset.yaml",
 			base64Data:      k.GetAddonScript(ContainerMonitoringAddonName),
 			destinationFile: "omsagent-daemonset.yaml",
-			isEnabled:       !p.IsAzureStackCloud() && k.IsContainerMonitoringEnabled(),
+			isEnabled:       k.IsAddonEnabled(ContainerMonitoringAddonName),
 		},
 		IPMASQAgentAddonName: {
 			sourceFile:      "ip-masq-agent.yaml",
 			base64Data:      k.GetAddonScript(IPMASQAgentAddonName),
 			destinationFile: "ip-masq-agent.yaml",
-			isEnabled:       k.IsIPMasqAgentEnabled(),
+			isEnabled:       k.IsAddonEnabled(IPMASQAgentAddonName),
 		},
 		AzureCNINetworkMonitorAddonName: {
 			sourceFile:      "azure-cni-networkmonitor.yaml",
 			base64Data:      k.GetAddonScript(AzureCNINetworkMonitorAddonName),
 			destinationFile: "azure-cni-networkmonitor.yaml",
-			isEnabled:       o.IsAzureCNI() && k.IsAzureCNIMonitoringEnabled(),
+			isEnabled:       k.IsAddonEnabled(AzureCNINetworkMonitorAddonName),
 		},
 		DNSAutoscalerAddonName: {
 			sourceFile:      "dns-autoscaler.yaml",
 			base64Data:      k.GetAddonScript(DNSAutoscalerAddonName),
 			destinationFile: "dns-autoscaler.yaml",
-			// TODO enable this when it has been smoke tested
-			//common.IsKubernetesVersionGe(p.OrchestratorProfile.OrchestratorVersion, "1.12.0"),
-			isEnabled: false,
+			isEnabled:       k.IsAddonEnabled(DNSAutoscalerAddonName),
 		},
 		CalicoAddonName: {
 			sourceFile:      "kubernetesmasteraddons-calico-daemonset.yaml",
 			base64Data:      k.GetAddonScript(CalicoAddonName),
 			destinationFile: "calico-daemonset.yaml",
-			isEnabled:       k.NetworkPolicy == NetworkPolicyCalico,
+			isEnabled:       k.IsAddonEnabled(CalicoAddonName),
+		},
+		AzureNetworkPolicyAddonName: {
+			sourceFile:      "kubernetesmasteraddons-azure-npm-daemonset.yaml",
+			base64Data:      k.GetAddonScript(AzureNetworkPolicyAddonName),
+			destinationFile: "azure-npm-daemonset.yaml",
+			isEnabled:       k.IsAddonEnabled(AzureNetworkPolicyAddonName),
 		},
 	}
 }
@@ -166,12 +170,6 @@ func kubernetesAddonSettingsInit(p *api.Properties) []kubernetesComponentFileSpe
 			base64Data:      k.GetAddonScript(KubeProxyAddonName),
 			destinationFile: "kube-proxy-daemonset.yaml",
 			isEnabled:       true,
-		},
-		{
-			sourceFile:      "kubernetesmasteraddons-azure-npm-daemonset.yaml",
-			base64Data:      k.GetAddonScript(AzureNetworkPolicyAddonName),
-			destinationFile: "azure-npm-daemonset.yaml",
-			isEnabled:       k.NetworkPolicy == NetworkPolicyAzure && p.OrchestratorProfile.KubernetesConfig.NetworkPlugin == NetworkPluginAzure,
 		},
 		{
 			sourceFile:      "kubernetesmasteraddons-cilium-daemonset.yaml",
