@@ -1834,7 +1834,7 @@
                 "value": "fakeClientId"
             },
             "servicePrincipalClientSecret": {
-                "value": "servicePrincipalClientSecret"
+                "value": "fakeClientSecret"
             },
             "sshRSAPublicKey": {
                 "value": "ssh-rsa public key"
