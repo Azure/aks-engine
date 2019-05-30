@@ -1837,7 +1837,7 @@
                 "value": "fakeClientSecret"
             },
             "sshRSAPublicKey": {
-                "value": "ssh-rsa public key"
+                "value": "ssh-rsa fake public key"
             },
             "targetEnvironment": {
                 "value": "AzureStackCloud"
