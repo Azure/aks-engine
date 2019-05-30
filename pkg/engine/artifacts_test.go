@@ -43,7 +43,7 @@ func TestKubernetesContainerAddonSettingsInit(t *testing.T) {
 						NetworkPlugin: NetworkPluginAzure,
 						Addons: []api.KubernetesAddon{
 							{
-								Name:    HeapsterAddonName,
+								Name:    DefaultHeapsterAddonName,
 								Enabled: to.BoolPtr(false),
 							},
 							{
@@ -142,7 +142,7 @@ func TestKubernetesContainerAddonSettingsInit(t *testing.T) {
 						NetworkPlugin: NetworkPluginAzure,
 						Addons: []api.KubernetesAddon{
 							{
-								Name:    HeapsterAddonName,
+								Name:    DefaultHeapsterAddonName,
 								Enabled: to.BoolPtr(true),
 							},
 							{

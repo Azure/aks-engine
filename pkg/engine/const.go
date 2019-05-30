@@ -38,8 +38,6 @@ const (
 	NetworkPluginKubenet = "kubenet"
 	// NetworkPluginFlannel is the string expression for flannel network plugin
 	NetworkPluginFlannel = "flannel"
-	// HeapsterAddonName is the name of the kube-heapster-deployment addon
-	HeapsterAddonName = "kube-heapster-deployment"
 	// KubeDNSAddonName is the name of the kube-dns-deployment addon
 	KubeDNSAddonName = "kube-dns-deployment"
 	// CoreDNSAddonName is the name of the coredns addon

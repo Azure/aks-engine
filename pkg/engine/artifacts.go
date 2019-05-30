@@ -34,9 +34,9 @@ func kubernetesContainerAddonSettingsInit(p *api.Properties) map[string]kubernet
 	return map[string]kubernetesComponentFileSpec{
 		DefaultHeapsterAddonName: {
 			sourceFile:      "kubernetesmasteraddons-heapster-deployment.yaml",
-			base64Data:      k.GetAddonScript(HeapsterAddonName),
+			base64Data:      k.GetAddonScript(DefaultHeapsterAddonName),
 			destinationFile: "kube-heapster-deployment.yaml",
-			isEnabled:       k.IsAddonEnabled(HeapsterAddonName),
+			isEnabled:       k.IsAddonEnabled(DefaultHeapsterAddonName),
 		},
 		MetricsServerAddonName: {
 			sourceFile:      "kubernetesmasteraddons-metrics-server-deployment.yaml",
