@@ -14392,9 +14392,9 @@ spec:
       - name: autoscaler
         image: {{ContainerImage "dns-autoscaler"}}
         resources:
-            requests:
-                cpu: {{ContainerCPUReqs "dns-autoscaler"}}
-                memory: {{ContainerMemReqs "dns-autoscaler"}}
+          requests:
+            cpu: {{ContainerCPUReqs "dns-autoscaler"}}
+            memory: {{ContainerMemReqs "dns-autoscaler"}}
         command:
           - /cluster-proportional-autoscaler
           - --namespace=kube-system
@@ -14404,7 +14404,8 @@ spec:
           # If using small nodes, "nodesPerReplica" should dominate.
           - --default-params={"linear":{"coresPerReplica":256,"nodesPerReplica":16,"min":1}}
           - --logtostderr=true
-          - --v=2`)
+          - --v=2
+`)
 
 func k8sContaineraddonsDnsAutoscalerYamlBytes() ([]byte, error) {
 	return _k8sContaineraddonsDnsAutoscalerYaml, nil
@@ -16083,11 +16084,11 @@ spec:
           name: heapster
           resources:
             requests:
-            cpu: {{ContainerCPUReqs "heapster"}}
-            memory: {{ContainerMemReqs "heapster"}}
-          limits:
-            cpu: {{ContainerCPULimits "heapster"}}
-            memory: {{ContainerMemLimits "heapster"}}
+              cpu: {{ContainerCPUReqs "heapster"}}
+              memory: {{ContainerMemReqs "heapster"}}
+            limits:
+              cpu: {{ContainerCPULimits "heapster"}}
+              memory: {{ContainerMemLimits "heapster"}}
           livenessProbe:
             httpGet:
               path: /healthz
@@ -16103,11 +16104,11 @@ spec:
           name: heapster-nanny
           resources:
             requests:
-            cpu: {{ContainerCPUReqs "heapster-nanny"}}
-            memory: {{ContainerMemReqs "heapster-nanny"}}
-          limits:
-            cpu: {{ContainerCPULimits "heapster-nanny"}}
-            memory: {{ContainerMemLimits "heapster-nanny"}}
+              cpu: {{ContainerCPUReqs "heapster-nanny"}}
+              memory: {{ContainerMemReqs "heapster-nanny"}}
+            limits:
+              cpu: {{ContainerCPULimits "heapster-nanny"}}
+              memory: {{ContainerMemLimits "heapster-nanny"}}
           env:
             - name: MY_POD_NAME
               valueFrom:
