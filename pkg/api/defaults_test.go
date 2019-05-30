@@ -192,6 +192,7 @@ func TestAddonsIndexByName(t *testing.T) {
 }
 
 func TestAssignDefaultAddonImages(t *testing.T) {
+	customImage := "myimage"
 	defaultAddonImages := map[string]string{
 		TillerAddonName:                    "gcr.io/kubernetes-helm/tiller:v2.11.0",
 		ACIConnectorAddonName:              "microsoft/virtual-kubelet:latest",
@@ -212,9 +213,9 @@ func TestAssignDefaultAddonImages(t *testing.T) {
 		AzureNetworkPolicyAddonName:        "",
 	}
 
-	customAddonImages := defaultAddonImages
-	for k := range customAddonImages {
-		customAddonImages[k] = "customTestImage"
+	customAddonImages := make(map[string]string)
+	for k := range defaultAddonImages {
+		customAddonImages[k] = customImage
 	}
 
 	cases := []struct {
@@ -230,25 +231,25 @@ func TestAssignDefaultAddonImages(t *testing.T) {
 			expectedImages: defaultAddonImages,
 		},
 		{
-			myAddons:       getFakeAddons(defaultAddonImages, "customTestImage"),
+			myAddons:       getFakeAddons(defaultAddonImages, customImage),
 			isUpgrade:      false,
 			isScale:        false,
 			expectedImages: customAddonImages, // Image should not be overridden in create scenarios.
 		},
 		{
-			myAddons:       getFakeAddons(defaultAddonImages, "customTestImage"),
+			myAddons:       getFakeAddons(defaultAddonImages, customImage),
 			isUpgrade:      true,
 			isScale:        false,
 			expectedImages: defaultAddonImages, // Image should be overridden in update scenarios.
 		},
 		{
-			myAddons:       getFakeAddons(defaultAddonImages, "customTestImage"),
+			myAddons:       getFakeAddons(defaultAddonImages, customImage),
 			isUpgrade:      false,
 			isScale:        true,
 			expectedImages: defaultAddonImages, // Image should be overridden in update scenarios.
 		},
 		{
-			myAddons:       getFakeAddons(defaultAddonImages, "customTestImage"),
+			myAddons:       getFakeAddons(defaultAddonImages, customImage),
 			isUpgrade:      true,
 			isScale:        true,
 			expectedImages: defaultAddonImages, // Image should be overridden in update scenarios.
