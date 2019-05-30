@@ -20,9 +20,9 @@ spec:
       - name: autoscaler
         image: {{ContainerImage "dns-autoscaler"}}
         resources:
-            requests:
-                cpu: {{ContainerCPUReqs "dns-autoscaler"}}
-                memory: {{ContainerMemReqs "dns-autoscaler"}}
+          requests:
+            cpu: {{ContainerCPUReqs "dns-autoscaler"}}
+            memory: {{ContainerMemReqs "dns-autoscaler"}}
         command:
           - /cluster-proportional-autoscaler
           - --namespace=kube-system

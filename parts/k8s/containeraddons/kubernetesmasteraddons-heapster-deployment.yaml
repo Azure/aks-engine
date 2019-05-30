@@ -111,11 +111,11 @@ spec:
           name: heapster
           resources:
             requests:
-            cpu: {{ContainerCPUReqs "heapster"}}
-            memory: {{ContainerMemReqs "heapster"}}
-          limits:
-            cpu: {{ContainerCPULimits "heapster"}}
-            memory: {{ContainerMemLimits "heapster"}}
+              cpu: {{ContainerCPUReqs "heapster"}}
+              memory: {{ContainerMemReqs "heapster"}}
+            limits:
+              cpu: {{ContainerCPULimits "heapster"}}
+              memory: {{ContainerMemLimits "heapster"}}
           livenessProbe:
             httpGet:
               path: /healthz
@@ -131,11 +131,11 @@ spec:
           name: heapster-nanny
           resources:
             requests:
-            cpu: {{ContainerCPUReqs "heapster-nanny"}}
-            memory: {{ContainerMemReqs "heapster-nanny"}}
-          limits:
-            cpu: {{ContainerCPULimits "heapster-nanny"}}
-            memory: {{ContainerMemLimits "heapster-nanny"}}
+              cpu: {{ContainerCPUReqs "heapster-nanny"}}
+              memory: {{ContainerMemReqs "heapster-nanny"}}
+            limits:
+              cpu: {{ContainerCPULimits "heapster-nanny"}}
+              memory: {{ContainerMemLimits "heapster-nanny"}}
           env:
             - name: MY_POD_NAME
               valueFrom:
