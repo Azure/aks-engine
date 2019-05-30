@@ -54,7 +54,7 @@ func kubernetesContainerAddonSettingsInit(p *api.Properties) map[string]kubernet
 			sourceFile:      "kubernetesmasteraddons-aad-pod-identity-deployment.yaml",
 			base64Data:      k.GetAddonScript(AADPodIdentityAddonName),
 			destinationFile: "aad-pod-identity-deployment.yaml",
-			isEnabled:       !p.IsAzureStackCloud() && k.IsAADPodIdentityEnabled(),
+			isEnabled:       k.IsAddonEnabled(AADPodIdentityAddonName),
 		},
 		ACIConnectorAddonName: {
 			sourceFile:      "kubernetesmasteraddons-aci-connector-deployment.yaml",

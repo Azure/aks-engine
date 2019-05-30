@@ -21,12 +21,20 @@ func (cs *ContainerService) setAddonsConfig(isUpdate bool) {
 		Enabled: to.BoolPtr(DefaultHeapsterAddonEnabled && !common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.13.0")),
 		Containers: []KubernetesContainerSpec{
 			{
-				Name:  DefaultHeapsterAddonName,
-				Image: specConfig.KubernetesImageBase + k8sComponents["heapster"],
+				Name:           DefaultHeapsterAddonName,
+				Image:          specConfig.KubernetesImageBase + k8sComponents["heapster"],
+				CPURequests:    "88m",
+				MemoryRequests: "204Mi",
+				CPULimits:      "88m",
+				MemoryLimits:   "204Mi",
 			},
 			{
-				Name:  "heapster-nanny",
-				Image: specConfig.KubernetesImageBase + k8sComponents["addonresizer"],
+				Name:           "heapster-nanny",
+				Image:          specConfig.KubernetesImageBase + k8sComponents["addonresizer"],
+				CPURequests:    "88m",
+				MemoryRequests: "204Mi",
+				CPULimits:      "88m",
+				MemoryLimits:   "204Mi",
 			},
 		},
 	}
@@ -201,7 +209,15 @@ func (cs *ContainerService) setAddonsConfig(isUpdate bool) {
 		},
 		Containers: []KubernetesContainerSpec{
 			{
-				Name:           "omsagent",
+				Name:           "omsagent-deployment",
+				CPURequests:    "50m",
+				MemoryRequests: "225Mi",
+				CPULimits:      "150m",
+				MemoryLimits:   "500Mi",
+				Image:          "microsoft/oms:ciprod04232019",
+			},
+			{
+				Name:           "omsagent-daemonset",
 				CPURequests:    "50m",
 				MemoryRequests: "225Mi",
 				CPULimits:      "150m",
@@ -246,7 +262,8 @@ func (cs *ContainerService) setAddonsConfig(isUpdate bool) {
 		Enabled: to.BoolPtr(o.KubernetesConfig.NetworkPlugin == NetworkPluginAzure && o.KubernetesConfig.NetworkPolicy == NetworkPolicyAzure),
 		Containers: []KubernetesContainerSpec{
 			{
-				Name: AzureNetworkPolicyAddonName,
+				Name:  AzureNetworkPolicyAddonName,
+				Image: "mcr.microsoft.com/containernetworking/azure-npm:v1.0.18",
 			},
 		},
 	}
@@ -289,6 +306,29 @@ func (cs *ContainerService) setAddonsConfig(isUpdate bool) {
 		},
 	}
 
+	defaultsAADPodIdentityAddonsConfig := KubernetesAddon{
+		Name:    AADPodIdentityAddonName,
+		Enabled: to.BoolPtr(DefaultAADPodIdentityAddonEnabled && !cs.Properties.IsAzureStackCloud()),
+		Containers: []KubernetesContainerSpec{
+			{
+				Name:           "nmi",
+				Image:          "mcr.microsoft.com/k8s/aad-pod-identity/nmi:1.2",
+				CPURequests:    "100m",
+				MemoryRequests: "300Mi",
+				CPULimits:      "100m",
+				MemoryLimits:   "300Mi",
+			},
+			{
+				Name:           "mic",
+				Image:          "mcr.microsoft.com/k8s/aad-pod-identity/mic:1.2",
+				CPURequests:    "100m",
+				MemoryRequests: "300Mi",
+				CPULimits:      "100m",
+				MemoryLimits:   "300Mi",
+			},
+		},
+	}
+
 	defaultAddons := []KubernetesAddon{
 		defaultsHeapsterAddonsConfig,
 		defaultTillerAddonsConfig,
@@ -307,6 +347,7 @@ func (cs *ContainerService) setAddonsConfig(isUpdate bool) {
 		defaultIPMasqAgentAddonsConfig,
 		defaultDNSAutoScalerAddonsConfig,
 		defaultsCalicoDaemonSetAddonsConfig,
+		defaultsAADPodIdentityAddonsConfig,
 	}
 	// Add default addons specification, if no user-provided spec exists
 	if o.KubernetesConfig.Addons == nil {

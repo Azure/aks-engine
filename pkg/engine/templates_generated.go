@@ -8276,7 +8276,7 @@ spec:
         beta.kubernetes.io/os: linux
       containers:
         - name: azure-npm
-          image: mcr.microsoft.com/containernetworking/azure-npm:v1.0.18
+          image: {{ContainerImage "azure-npm-daemonset"}}
           securityContext:
             privileged: true
           env:
@@ -14616,15 +14616,15 @@ spec:
       hostNetwork: true
       containers:
       - name: nmi
-        image: "mcr.microsoft.com/k8s/aad-pod-identity/nmi:1.2"
+        image: {{ContainerImage "nmi"}}
         imagePullPolicy: IfNotPresent
         resources:
           requests:
-            cpu: "100m"
-            memory: "300Mi"
+            cpu: {{ContainerCPUReqs "nmi"}}
+            memory: {{ContainerMemReqs "nmi"}}
           limits:
-            cpu: "100m"
-            memory: "300Mi"
+            cpu: {{ContainerCPULimits "nmi"}}
+            memory: {{ContainerMemLimits "nmi"}}
         args:
           - "--host-ip=$(HOST_IP)"
           - "--node=$(NODE_NAME)"
@@ -14714,15 +14714,15 @@ spec:
       serviceAccountName: aad-pod-id-mic-service-account
       containers:
       - name: mic
-        image: mcr.microsoft.com/k8s/aad-pod-identity/mic:1.2
+        image: {{ContainerImage "mic"}}
         imagePullPolicy: IfNotPresent
         resources:
           requests:
-            cpu: 100m
-            memory: 300Mi
+            cpu: {{ContainerCPUReqs "mic"}}
+            memory: {{ContainerMemReqs "mic"}}
           limits:
-            cpu: 100m
-            memory: 300Mi
+            cpu: {{ContainerCPULimits "mic"}}
+            memory: {{ContainerMemLimits "mic"}}
         args:
           - --cloudconfig=/etc/kubernetes/azure.json
           - --logtostderr
@@ -14733,7 +14733,8 @@ spec:
       volumes:
       - name: k8s-azure-file
         hostPath:
-          path: /etc/kubernetes/azure.json`)
+          path: /etc/kubernetes/azure.json
+`)
 
 func k8sContaineraddonsKubernetesmasteraddonsAadPodIdentityDeploymentYamlBytes() ([]byte, error) {
 	return _k8sContaineraddonsKubernetesmasteraddonsAadPodIdentityDeploymentYaml, nil
@@ -16081,12 +16082,12 @@ spec:
           imagePullPolicy: IfNotPresent
           name: heapster
           resources:
-            limits:
-              cpu: 88m
-              memory: 204Mi
             requests:
-              cpu: 88m
-              memory: 204Mi
+            cpu: {{ContainerCPUReqs "heapster"}}
+            memory: {{ContainerMemReqs "heapster"}}
+          limits:
+            cpu: {{ContainerCPULimits "heapster"}}
+            memory: {{ContainerMemLimits "heapster"}}
           livenessProbe:
             httpGet:
               path: /healthz
@@ -16101,12 +16102,12 @@ spec:
           imagePullPolicy: IfNotPresent
           name: heapster-nanny
           resources:
-            limits:
-              cpu: 88m
-              memory: 204Mi
             requests:
-              cpu: 88m
-              memory: 204Mi
+            cpu: {{ContainerCPUReqs "heapster-nanny"}}
+            memory: {{ContainerMemReqs "heapster-nanny"}}
+          limits:
+            cpu: {{ContainerCPULimits "heapster-nanny"}}
+            memory: {{ContainerMemLimits "heapster-nanny"}}
           env:
             - name: MY_POD_NAME
               valueFrom:
@@ -16967,15 +16968,15 @@ spec:
       serviceAccountName: omsagent
       containers:
         - name: omsagent
-          image: {{ContainerImage "omsagent"}}
+          image: {{ContainerImage "omsagent-daemonset"}}
           imagePullPolicy: Always
           resources:
             limits:
-              cpu: {{ContainerCPULimits "omsagent"}}
-              memory: {{ContainerMemLimits "omsagent"}}
+              cpu: {{ContainerCPULimits "omsagent-daemonset"}}
+              memory: {{ContainerMemLimits "omsagent-daemonset"}}
             requests:
-              cpu: {{ContainerCPUReqs "omsagent"}}
-              memory: {{ContainerMemReqs "omsagent"}}
+              cpu: {{ContainerCPUReqs "omsagent-daemonset"}}
+              memory: {{ContainerMemReqs "omsagent-daemonset"}}
           env:
             - name: NODE_IP
               valueFrom:
@@ -17078,15 +17079,15 @@ spec:
       serviceAccountName: omsagent
       containers:
         - name: omsagent
-          image: {{ContainerImage "omsagent"}}
+          image: {{ContainerImage "omsagent-deployment"}}
           imagePullPolicy: IfNotPresent
           resources:
             limits:
-              cpu: {{ContainerCPULimits "omsagent"}}
-              memory: {{ContainerMemLimits "omsagent"}}
+              cpu: {{ContainerCPULimits "omsagent-deployment"}}
+              memory: {{ContainerMemLimits "omsagent-deployment"}}
             requests:
-              cpu: {{ContainerCPUReqs "omsagent"}}
-              memory: {{ContainerMemReqs "omsagent"}}
+              cpu: {{ContainerCPUReqs "omsagent-deployment"}}
+              memory: {{ContainerMemReqs "omsagent-deployment"}}
           env:
             - name: NODE_IP
               valueFrom:

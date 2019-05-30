@@ -1593,7 +1593,7 @@ func (k *KubernetesConfig) getAddonEnabledIfNil(addonName string, defaultValue b
 
 // IsAADPodIdentityEnabled checks if the AAD pod identity addon is enabled
 func (k *KubernetesConfig) IsAADPodIdentityEnabled() bool {
-	return k.getAddonEnabledIfNil(AADPodIdentityAddonName, DefaultAADPodIdentityAddonEnabled)
+	return k.IsAddonEnabled(AADPodIdentityAddonName)
 }
 
 // IsACIConnectorEnabled checks if the ACI Connector addon is enabled

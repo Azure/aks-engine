@@ -104,15 +104,15 @@ spec:
       hostNetwork: true
       containers:
       - name: nmi
-        image: "mcr.microsoft.com/k8s/aad-pod-identity/nmi:1.2"
+        image: {{ContainerImage "nmi"}}
         imagePullPolicy: IfNotPresent
         resources:
           requests:
-            cpu: "100m"
-            memory: "300Mi"
+            cpu: {{ContainerCPUReqs "nmi"}}
+            memory: {{ContainerMemReqs "nmi"}}
           limits:
-            cpu: "100m"
-            memory: "300Mi"
+            cpu: {{ContainerCPULimits "nmi"}}
+            memory: {{ContainerMemLimits "nmi"}}
         args:
           - "--host-ip=$(HOST_IP)"
           - "--node=$(NODE_NAME)"
@@ -202,15 +202,15 @@ spec:
       serviceAccountName: aad-pod-id-mic-service-account
       containers:
       - name: mic
-        image: mcr.microsoft.com/k8s/aad-pod-identity/mic:1.2
+        image: {{ContainerImage "mic"}}
         imagePullPolicy: IfNotPresent
         resources:
           requests:
-            cpu: 100m
-            memory: 300Mi
+            cpu: {{ContainerCPUReqs "mic"}}
+            memory: {{ContainerMemReqs "mic"}}
           limits:
-            cpu: 100m
-            memory: 300Mi
+            cpu: {{ContainerCPULimits "mic"}}
+            memory: {{ContainerMemLimits "mic"}}
         args:
           - --cloudconfig=/etc/kubernetes/azure.json
           - --logtostderr
