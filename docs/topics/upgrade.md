@@ -41,7 +41,7 @@ In order to ensure that your `aks-engine upgrade` operation runs smoothly, there
 6) `aks-engine upgrade` will automatically re-generate your cluster configuration to best pair with the desired new version of Kubernetes, and/or the version of AKS Engine that is used to execute `aks-engine upgrade`. To use an example of both:
 
 - When you upgrade to (for example) Kubernetes 1.14 from 1.13, AKS Engine will automatically change your control plane configuration (e.g., `coredns`, `metrics-server`, `kube-proxy`) so that the cluster component configurations have a close, known-working affinity with 1.14.
-- When you do even a minor upgrade, say, from 1.14.1 to 1.14.2, but you use a newer version of AKS Engine for the upgrade, a newer version of `etcd` (for example) may have been validated and configured as default since the original version of AKS Engine used to build the cluster was released. So, for example, without any explicit user direction, the newly upgraded cluster will now be running etcd v3.2.26 instead of v3.2.25. _This is by design._
+- When you perform an upgrade, even if it is a Kubernetes patch release upgrade such as 1.14.1 to 1.14.2, but you use a newer version of AKS Engine, a newer version of `etcd` (for example) may have been validated and configured as default since the original version of AKS Engine used to build the cluster was released. So, for example, without any explicit user direction, the newly upgraded cluster will now be running etcd v3.2.26 instead of v3.2.25. _This is by design._
 
 In summary, using `aks-engine upgrade` means you will freshen and re-pave the entire stack that underlies Kubernetes to reflect the best-known, recent implementation of Azure IaaS + OS + OS config + Kubernetes config.
 
