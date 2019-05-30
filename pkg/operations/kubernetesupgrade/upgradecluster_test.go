@@ -673,6 +673,58 @@ var _ = Describe("Upgrade Kubernetes cluster tests", func() {
 		}
 	})
 
+	It("Should fail if cluster-autoscaler cannot be paused unless --force is specified", func() {
+		cs := api.CreateMockContainerService("testcluster", "1.9.11", 3, 2, false)
+		enabled := true
+		addon := api.KubernetesAddon{
+			Name:    "cluster-autoscaler",
+			Enabled: &enabled,
+		}
+		cs.Properties.OrchestratorProfile.KubernetesConfig = &api.KubernetesConfig{
+			Addons: []api.KubernetesAddon{
+				addon,
+			},
+		}
+
+		uc := UpgradeCluster{
+			Translator: &i18n.Translator{},
+			Logger:     log.NewEntry(log.New()),
+		}
+
+		mockClient := armhelpers.MockAKSEngineClient{}
+		mockK8sClient := armhelpers.MockKubernetesClient{
+			FailGetDeploymentCount: 10,
+		}
+		mockClient.MockKubernetesClient = &mockK8sClient
+		uc.Client = &mockClient
+		uc.DataModel = cs
+
+		err := uc.UpgradeCluster(&mockClient, "kubeConfig", TestAKSEngineVersion)
+		Expect(err).To(MatchError("GetDeployment failed"))
+
+		logger, hook := logtest.NewNullLogger()
+		uc.Logger.Logger = logger
+		defer hook.Reset()
+		uc.Force = true
+		mockK8sClient.FailUpdateDeploymentCount = 10
+		err = uc.UpgradeCluster(&mockClient, "kubeConfig", TestAKSEngineVersion)
+		Expect(err).NotTo(HaveOccurred())
+		// check log messages to see that we logged the failure
+		messages := []string{
+			"failed to pause cluster-autoscaler",
+		}
+		for _, m := range messages {
+			found := false
+			for _, entry := range hook.Entries {
+				if strings.Contains(strings.ToLower(entry.Message), m) {
+					found = true
+					break
+				}
+			}
+			Expect(found).To(BeTrue())
+		}
+	})
+
 	It("Should pause cluster-autoscaler during upgrade operation", func() {
 		cs := api.CreateMockContainerService("testcluster", "1.9.11", 3, 2, false)
 		enabled := true
@@ -748,32 +800,6 @@ var _ = Describe("Upgrade Kubernetes cluster tests", func() {
 		Expect(err).NotTo(HaveOccurred())
 		// check log messages to see that we retried after errors
 		messages := []string{
-			"failed to update cluster-autoscaler",
-			"retry updating cluster-autoscaler",
-		}
-		for _, m := range messages {
-			found := false
-			for _, entry := range hook.Entries {
-				if strings.Contains(strings.ToLower(entry.Message), m) {
-					found = true
-					break
-				}
-			}
-			Expect(found).To(BeTrue())
-		}
-		// test retrying with too many KubernetesClient errors
-		mockClient = armhelpers.MockKubernetesClient{
-			FailGetDeploymentCount:    10,
-			FailUpdateDeploymentCount: 0,
-		}
-		logger, hook = logtest.NewNullLogger()
-		uc.Logger.Logger = logger
-		defer hook.Reset()
-		count, err = uc.SetClusterAutoscalerReplicaCount(&mockClient, 10)
-		Expect(count).To(Equal(int32(0)))
-		Expect(err).To(MatchError("GetDeployment failed"))
-		// check log messages to see that we retried after errors
-		messages = []string{
 			"failed to update cluster-autoscaler",
 			"retry updating cluster-autoscaler",
 		}
