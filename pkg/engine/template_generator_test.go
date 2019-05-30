@@ -98,6 +98,12 @@ func TestGetTemplateFuncMap(t *testing.T) {
 			if ret[0].Interface() != DefaultVNETCIDR {
 				t.Fatalf("Got unexpected default VNET CIDR")
 			}
+		case "IsMultiMasterCluster":
+			rargs := make([]reflect.Value, 0)
+			ret := v.Call(rargs)
+			if ret[0].Interface() != false {
+				t.Fatalf("Got unexpected IsMultiMasterCluster response")
+			}
 		}
 	}
 }
