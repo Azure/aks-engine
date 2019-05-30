@@ -1831,13 +1831,13 @@
                 "value": "latest"
             },
             "servicePrincipalClientId": {
-                "value": "85115f84-ef7b-4ddb-b44d-b3a9d3b1990d"
+                "value": "servicePrincipalClientId"
             },
             "servicePrincipalClientSecret": {
-                "value": "ii2KWPitrAFwinYvs+w7FeaCAsqC8S1C1R0RCWKV9rw="
+                "value": "servicePrincipalClientSecret"
             },
             "sshRSAPublicKey": {
-                "value": "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQC57Mr5GJ9Vpu9Y5Kuheu/lCrwZvtq+Xirw+9qIu4tsbKHW96lWfN9xptxN3CaGlP4PX/2c43EBlFLb/zl6B6SEZHrfFcy4+Azb2C3x3qdbvIwm3bNUxcCxj+5DbxGn8w5fYNUZ0jAFtmUdFIo1PPjcIsLq5WGx+1PQAecw7grfGGAb2qiljFcc0mIYUSAsGusmYFM0rLHJqeSjxA8CgkJYxPqxF7AhCBshTGNB+0F2H+Xymld6ee5YGEQt9K90pCxoJwsUt0uLAOWqp1hSydx3gnLH65nxE349vlW8QU3rR27FoJHB64q3jGb8yJ8LCHmfekXiXxk05xz/Gy57B/pW/86YTH2hXG2ZD8JxrySgsVx8ypeZz1sTIUhBOZDhxySnLb+zeE2R/+29bcy5gGDTohmCyh3+wDikG69ZJTqu5I43IzyLJTYW9KLaYuMJpqVoMCpGHAPtSlm1ezS/39ogyN/yj+fyl3YEyfOfP2I6xV5R2z6PqpQAJt71mee8HUePJA9RE6W4Luvez7QnBGg+iY4zrU8ITmU+0bsYgah+9w8xP3TDDmJCUsuzfXmHgPQ2aMBkKDBH/0xMl9Pl8Kac6q/5ltLGkUyp02iHIhCx/WMiLtGNOxjBks5JLploZII/3JLVDXEzkxGUOA1B+o+u9osgzrZxk0kyavlxH1n36Q== honcao@Hongbins-MBP.guest.corp.microsoft.com"
+                "value": "ssh-rsa public key"
             },
             "targetEnvironment": {
                 "value": "AzureStackCloud"
