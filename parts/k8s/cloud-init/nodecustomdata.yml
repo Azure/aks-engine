@@ -160,6 +160,7 @@ write_files:
 {{if HasCiliumNetworkPlugin }}
 - path: /etc/systemd/system/sys-fs-bpf.mount
   permissions: "0644"
+  encoding: gzip
   owner: root
   content: !!binary |
     {{WrapAsVariable "systemdBPFMount"}}
