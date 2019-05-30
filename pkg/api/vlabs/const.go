@@ -102,6 +102,15 @@ var (
 
 	// DependenciesLocationValues holds the valid values for dependencies location
 	DependenciesLocationValues = []DependenciesLocation{"", AzureStackDependenciesLocationPublic, AzureStackDependenciesLocationChina, AzureStackDependenciesLocationGerman, AzureStackDependenciesLocationUSGovernment}
+
+	// HeapsterAddonContainerValues holds the valid values for heapster addon container names
+	HeapsterAddonContainerValues = [...]string{"heapster", "heapster-nanny"}
+
+	// TillerAddonContainerValues holds the valid values for tiller addon container names
+	TillerAddonContainerValues = [...]string{"tiller"}
+
+	// TillerAddonConfigValues holds the valid values for tiller addon configuration overrides
+	TillerAddonConfigValues = [...]string{"max-history"}
 )
 
 // Kubernetes configuration

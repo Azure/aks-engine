@@ -5,6 +5,7 @@ package vlabs
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 	"testing"
 
@@ -2913,6 +2914,295 @@ func TestValidateLocation(t *testing.T) {
 			if !helpers.EqualError(gotErr, test.expectedErr) {
 				t.Logf("scenario %q", test.name)
 				t.Errorf("expected error: %v, got: %v", test.expectedErr, gotErr)
+			}
+		})
+	}
+}
+
+func TestValidateHeapsterAddon(t *testing.T) {
+	tests := []struct {
+		name        string
+		p           *Properties
+		expectedErr error
+	}{
+		{
+			name: "has unrecognized config",
+			p: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					KubernetesConfig: &KubernetesConfig{
+						Addons: []KubernetesAddon{
+							{
+								Name: "heapster",
+								Config: map[string]string{
+									"foo": "bar",
+								},
+							},
+						},
+					},
+				},
+			},
+			expectedErr: errors.New("heapster addon does not currently support custom configuration"),
+		},
+		{
+			name: "has too many containers",
+			p: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					KubernetesConfig: &KubernetesConfig{
+						Addons: []KubernetesAddon{
+							{
+								Name: "heapster",
+								Containers: []KubernetesContainerSpec{
+									{
+										Name: "heapster",
+									},
+									{
+										Name: "heapster-nanny",
+									},
+									{
+										Name: "heapster-extra",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			expectedErr: errors.New("heapster addon does not currently support more than 2 containers specs"),
+		},
+		{
+			name: "one container with the wrong name",
+			p: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					KubernetesConfig: &KubernetesConfig{
+						Addons: []KubernetesAddon{
+							{
+								Name: "heapster",
+								Containers: []KubernetesContainerSpec{
+									{
+										Name: "heapster-bogon",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			expectedErr: errors.New(fmt.Sprintf("heapster addon spec included an unrecognized container name, valid values are %s", HeapsterAddonContainerValues)),
+		},
+		{
+			name: "two containers with the wrong name",
+			p: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					KubernetesConfig: &KubernetesConfig{
+						Addons: []KubernetesAddon{
+							{
+								Name: "heapster",
+								Containers: []KubernetesContainerSpec{
+									{
+										Name: "heapster-bogon",
+									},
+									{
+										Name: "heapster-bogon-2",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			expectedErr: errors.New(fmt.Sprintf("heapster addon spec included an unrecognized container name, valid values are %s", HeapsterAddonContainerValues)),
+		},
+		{
+			name: "two containers, one with the wrong name",
+			p: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					KubernetesConfig: &KubernetesConfig{
+						Addons: []KubernetesAddon{
+							{
+								Name: "heapster",
+								Containers: []KubernetesContainerSpec{
+									{
+										Name: "heapster",
+									},
+									{
+										Name: "heapster-bogon-2",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			expectedErr: errors.New(fmt.Sprintf("heapster addon spec included an unrecognized container name, valid values are %s", HeapsterAddonContainerValues)),
+		},
+		{
+			name: "valid spec",
+			p: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					KubernetesConfig: &KubernetesConfig{
+						Addons: []KubernetesAddon{
+							{
+								Name: "heapster",
+								Containers: []KubernetesContainerSpec{
+									{
+										Name:           "heapster",
+										CPURequests:    "88m",
+										MemoryRequests: "204Mi",
+										CPULimits:      "88m",
+										MemoryLimits:   "204Mi",
+									},
+									{
+										Name:           "heapster-nanny",
+										CPURequests:    "88m",
+										MemoryRequests: "204Mi",
+										CPULimits:      "88m",
+										MemoryLimits:   "204Mi",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			expectedErr: nil,
+		},
+	}
+
+	for _, test := range tests {
+		test := test
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+			err := test.p.validateAddons()
+			if test.expectedErr != nil {
+				if err != nil {
+					if err.Error() != test.expectedErr.Error() {
+						t.Errorf("expected error to be thrown with msg : %s", test.expectedErr.Error())
+					}
+				} else {
+					t.Errorf("expected error to be thrown, instead got nil")
+				}
+			} else {
+				if err != nil {
+					t.Errorf("expected nil error, instead got : %s", err.Error())
+				}
+			}
+		})
+	}
+}
+
+func TestValidateTillerAddon(t *testing.T) {
+	tests := []struct {
+		name        string
+		p           *Properties
+		expectedErr error
+	}{
+		{
+			name: "has unrecognized config",
+			p: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					KubernetesConfig: &KubernetesConfig{
+						Addons: []KubernetesAddon{
+							{
+								Name: "tiller",
+								Config: map[string]string{
+									"foo": "bar",
+								},
+							},
+						},
+					},
+				},
+			},
+			expectedErr: errors.New(fmt.Sprintf("tiller addon spec included an unrecognized configuration key, valid values are %s", TillerAddonConfigValues)),
+		},
+		{
+			name: "has too many containers",
+			p: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					KubernetesConfig: &KubernetesConfig{
+						Addons: []KubernetesAddon{
+							{
+								Name: "tiller",
+								Containers: []KubernetesContainerSpec{
+									{
+										Name: "tiller",
+									},
+									{
+										Name: "tiller-extra",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			expectedErr: errors.New("tiller addon does not currently support more than 1 containers spec"),
+		},
+		{
+			name: "one container with the wrong name",
+			p: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					KubernetesConfig: &KubernetesConfig{
+						Addons: []KubernetesAddon{
+							{
+								Name: "tiller",
+								Containers: []KubernetesContainerSpec{
+									{
+										Name: "tiller-bogon",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			expectedErr: errors.New(fmt.Sprintf("tiller addon spec included an unrecognized container name, valid values are %s", TillerAddonContainerValues)),
+		},
+		{
+			name: "valid spec",
+			p: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					KubernetesConfig: &KubernetesConfig{
+						Addons: []KubernetesAddon{
+							{
+								Name: "tiller",
+								Containers: []KubernetesContainerSpec{
+									{
+										Name:           "tiller",
+										CPURequests:    "50m",
+										MemoryRequests: "150Mi",
+										CPULimits:      "50m",
+										MemoryLimits:   "150Mi",
+									},
+								},
+								Config: map[string]string{
+									"max-history": strconv.Itoa(0),
+								},
+							},
+						},
+					},
+				},
+			},
+			expectedErr: nil,
+		},
+	}
+
+	for _, test := range tests {
+		test := test
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+			err := test.p.validateAddons()
+			if test.expectedErr != nil {
+				if err != nil {
+					if err.Error() != test.expectedErr.Error() {
+						t.Errorf("expected error to be thrown with msg : %s", test.expectedErr.Error())
+					}
+				} else {
+					t.Errorf("expected error to be thrown, instead got nil")
+				}
+			} else {
+				if err != nil {
+					t.Errorf("expected nil error, instead got : %s", err.Error())
+				}
 			}
 		})
 	}

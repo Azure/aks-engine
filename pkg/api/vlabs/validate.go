@@ -560,11 +560,77 @@ func (a *Properties) validateAddons() error {
 			}
 
 			switch addon.Name {
+			case "heapster":
+				if addon.Config != nil {
+					return errors.New("heapster addon does not currently support custom configuration")
+				}
+				if len(addon.Containers) > 2 {
+					return errors.New("heapster addon does not currently support more than 2 containers specs")
+				}
+				valid := make([]bool, len(addon.Containers))
+				for i, container := range addon.Containers {
+					for _, name := range HeapsterAddonContainerValues {
+						if container.Name == name {
+							valid[i] = true
+						}
+					}
+				}
+				for _, found := range valid {
+					if !found {
+						return errors.New(fmt.Sprintf("heapster addon spec included an unrecognized container name, valid values are %s", HeapsterAddonContainerValues))
+					}
+				}
+			case "tiller":
+				if addon.Config != nil {
+					valid := make([]bool, len(addon.Config))
+					for key := range addon.Config {
+						for i, name := range TillerAddonConfigValues {
+							if key == name {
+								valid[i] = true
+							}
+						}
+					}
+					for _, found := range valid {
+						if !found {
+							return errors.New(fmt.Sprintf("tiller addon spec included an unrecognized configuration key, valid values are %s", TillerAddonConfigValues))
+						}
+					}
+				}
+				if len(addon.Containers) > 1 {
+					return errors.New("tiller addon does not currently support more than 1 containers spec")
+				}
+				valid := make([]bool, len(addon.Containers))
+				for i, container := range addon.Containers {
+					for _, name := range TillerAddonContainerValues {
+						if container.Name == name {
+							valid[i] = true
+						}
+					}
+				}
+				for _, found := range valid {
+					if !found {
+						return errors.New(fmt.Sprintf("tiller addon spec included an unrecognized container name, valid values are %s", TillerAddonContainerValues))
+					}
+				}
+			case "aci-connector":
+				// TODO add validation
+			case "kubernetes-dashboard":
+				// TODO add validation
+			case "rescheduler":
+				// TODO add validation
+			case "container-monitoring":
+				// TODO add validation
+			case "ip-masq-agent":
+				// TODO add validation
+			case "aad-pod-identity":
+				// TODO add validation
 			case "cluster-autoscaler":
+				// TODO add complete validation
 				if to.Bool(addon.Enabled) && isAvailabilitySets {
 					return errors.Errorf("Cluster Autoscaler add-on can only be used with VirtualMachineScaleSets. Please specify \"availabilityProfile\": \"%s\"", VirtualMachineScaleSets)
 				}
 			case "nvidia-device-plugin":
+				// TODO add complete validation
 				if to.Bool(addon.Enabled) {
 					version := common.RationalizeReleaseAndVersion(
 						a.OrchestratorProfile.OrchestratorType,
@@ -591,16 +657,87 @@ func (a *Properties) validateAddons() error {
 					}
 				}
 			case "blobfuse-flexvolume":
+				// TODO add complete validation
 				if to.Bool(addon.Enabled) && a.HasCoreOS() {
 					return errors.New("flexvolume add-ons not currently supported on coreos distro. Please use Ubuntu")
 				}
 			case "smb-flexvolume":
+				// TODO add complete validation
 				if to.Bool(addon.Enabled) && a.HasCoreOS() {
 					return errors.New("flexvolume add-ons not currently supported on coreos distro. Please use Ubuntu")
 				}
 			case "keyvault-flexvolume":
+				// TODO add complete validation
 				if to.Bool(addon.Enabled) && a.HasCoreOS() {
 					return errors.New("flexvolume add-ons not currently supported on coreos distro. Please use Ubuntu")
+				}
+			case "metrics-server":
+				// TODO add complete validation
+				if addon.Config != nil {
+					return errors.New("metrics-server addon does not currently support custom configuration")
+				}
+				if len(addon.Containers) > 1 {
+					return errors.New("metrics-server addon does not currently support more than one containers spec")
+				}
+				if len(addon.Containers) == 1 {
+					if addon.Containers[0].HasResourceConfig() {
+						return errors.New("metrics-server addon does not currently support configurable CPU and memory resource limits or requests")
+					}
+				}
+			case "azure-cni-networkmonitor":
+				// TODO add complete validation
+				if addon.Config != nil {
+					return errors.New("azure-cni-networkmonitor addon does not currently support custom configuration")
+				}
+				if len(addon.Containers) > 1 {
+					return errors.New("azure-cni-networkmonitor addon does not currently support more than one containers spec")
+				}
+				if len(addon.Containers) == 1 {
+					if addon.Containers[0].HasResourceConfig() {
+						return errors.New("azure-cni-networkmonitor addon does not currently support configurable CPU and memory resource limits or requests")
+					}
+				}
+			case "dns-autoscaler":
+				// TODO add complete validation
+				if addon.Config != nil {
+					return errors.New("dns-autoscaler addon does not currently support custom configuration")
+				}
+				if len(addon.Containers) > 1 {
+					return errors.New("dns-autoscaler addon does not currently support more than one containers spec")
+				}
+				if len(addon.Containers) == 1 {
+					if addon.Containers[0].CPULimits != "" {
+						return errors.New("dns-autoscaler addon does not currently support configurable CPU limits")
+					}
+					if addon.Containers[0].MemoryLimits != "" {
+						return errors.New("dns-autoscaler addon does not currently support configurable memory limits")
+					}
+				}
+			case "calico-daemonset":
+				// TODO add complete validation
+				if addon.Config != nil {
+					return errors.New("calico-daemonset addon does not currently support custom configuration")
+				}
+				if len(addon.Containers) > 4 {
+					return errors.New("dns-autoscaler addon does not currently support more than 4 containers specs")
+				}
+				for _, container := range addon.Containers {
+					if container.HasResourceConfig() {
+						return errors.New("calico-daemonset addon does not currently support configurable CPU and memory resource limits or requests")
+					}
+				}
+			case "azure-npm-daemonset":
+				// TODO add complete validation
+				if addon.Config != nil {
+					return errors.New("azure-npm-daemonset addon does not currently support custom configuration")
+				}
+				if len(addon.Containers) > 1 {
+					return errors.New("azure-npm-daemonset addon does not currently support more than one containers spec")
+				}
+				if len(addon.Containers) == 1 {
+					if addon.Containers[0].HasResourceConfig() {
+						return errors.New("azure-npm-daemonset addon does not currently support configurable CPU and memory resource limits or requests")
+					}
 				}
 			}
 		}
