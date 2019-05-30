@@ -9,6 +9,7 @@ import (
 
 	"github.com/Azure/aks-engine/pkg/api/common"
 	"github.com/Azure/go-autorest/autorest/azure"
+	"github.com/Azure/go-autorest/autorest/to"
 )
 
 func TestKubernetesAddon(t *testing.T) {
@@ -715,8 +716,7 @@ func GetMockPropertiesWithCustomCloudProfile(name string, hasCustomCloudProfile,
 	}
 	return p
 }
-
-func TestHasResourceConfig(t *testing.T) {
+func TestKubernetesContainerSpecHasResourceConfig(t *testing.T) {
 	cases := []struct {
 		c        KubernetesContainerSpec
 		expected bool

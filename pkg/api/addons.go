@@ -17,11 +17,11 @@ func (cs *ContainerService) setAddonsConfig(isUpdate bool) {
 	k8sComponents := K8sComponentsByVersionMap[o.OrchestratorVersion]
 	specConfig := cloudSpecConfig.KubernetesSpecConfig
 	defaultsHeapsterAddonsConfig := KubernetesAddon{
-		Name:    DefaultHeapsterAddonName,
+		Name:    HeapsterAddonName,
 		Enabled: to.BoolPtr(DefaultHeapsterAddonEnabled && !common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.13.0")),
 		Containers: []KubernetesContainerSpec{
 			{
-				Name:           DefaultHeapsterAddonName,
+				Name:           HeapsterAddonName,
 				Image:          specConfig.KubernetesImageBase + k8sComponents["heapster"],
 				CPURequests:    "88m",
 				MemoryRequests: "204Mi",

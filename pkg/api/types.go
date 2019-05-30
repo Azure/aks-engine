@@ -271,7 +271,7 @@ type KubernetesAddon struct {
 	Data       string                    `json:"data,omitempty"`
 }
 
-// IsEnabled returns if the addon is enabled
+// IsEnabled returns true if the addon is enabled
 func (a *KubernetesAddon) IsEnabled() bool {
 	if a.Enabled == nil {
 		return false
@@ -1578,14 +1578,14 @@ func (k *KubernetesConfig) GetAddonScript(addonName string) string {
 }
 
 // IsAddonEnabled checks whether a k8s addon with name "addonName" is enabled or not based on the Enabled field of KubernetesAddon.
-// If the value of Enabled in nil, the "defaultValue" is returned.
+// If the value of Enabled is nil, the "defaultValue" is returned.
 func (k *KubernetesConfig) IsAddonEnabled(addonName string) bool {
 	kubeAddon := k.GetAddonByName(addonName)
 	return kubeAddon.IsEnabled()
 }
 
 // getAddonEnabledIfNil checks whether a k8s addon with name "addonName" is enabled or not based on the Enabled field of KubernetesAddon.
-// If the value of Enabled in nil, the "defaultValue" is returned.
+// If the value of Enabled is nil, the "defaultValue" is returned.
 func (k *KubernetesConfig) getAddonEnabledIfNil(addonName string, defaultValue bool) bool {
 	kubeAddon := k.GetAddonByName(addonName)
 	return kubeAddon.GetEnabledIfNil(defaultValue)

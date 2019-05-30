@@ -168,8 +168,8 @@ const (
 	DefaultDNSAutoscalerAddonEnabled = false
 	// DefaultIPMasqAgentAddonEnabled enables the ip-masq-agent addon
 	DefaultIPMasqAgentAddonEnabled = true
-	// DefaultHeapsterAddonName is the name of the heapster addon
-	DefaultHeapsterAddonName = "heapster"
+	// HeapsterAddonName is the name of the heapster addon
+	HeapsterAddonName = "heapster"
 	// TillerAddonName is the name of the tiller addon deployment
 	TillerAddonName = "tiller"
 	// AADPodIdentityAddonName is the name of the aad-pod-identity addon deployment

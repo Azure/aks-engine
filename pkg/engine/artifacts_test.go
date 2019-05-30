@@ -43,7 +43,7 @@ func TestKubernetesContainerAddonSettingsInit(t *testing.T) {
 						NetworkPlugin: NetworkPluginAzure,
 						Addons: []api.KubernetesAddon{
 							{
-								Name:    DefaultHeapsterAddonName,
+								Name:    HeapsterAddonName,
 								Enabled: to.BoolPtr(false),
 							},
 							{
@@ -142,7 +142,7 @@ func TestKubernetesContainerAddonSettingsInit(t *testing.T) {
 						NetworkPlugin: NetworkPluginAzure,
 						Addons: []api.KubernetesAddon{
 							{
-								Name:    DefaultHeapsterAddonName,
+								Name:    HeapsterAddonName,
 								Enabled: to.BoolPtr(true),
 							},
 							{
@@ -235,8 +235,8 @@ func TestKubernetesContainerAddonSettingsInit(t *testing.T) {
 
 	for _, c := range cases {
 		componentFileSpec := kubernetesContainerAddonSettingsInit(c.p)
-		if c.expectedHeapster != componentFileSpec[DefaultHeapsterAddonName].isEnabled {
-			t.Fatalf("Expected componentFileSpec[%s] to be %t", DefaultHeapsterAddonName, c.expectedHeapster)
+		if c.expectedHeapster != componentFileSpec[HeapsterAddonName].isEnabled {
+			t.Fatalf("Expected componentFileSpec[%s] to be %t", HeapsterAddonName, c.expectedHeapster)
 		}
 		if c.expectedMetricsServer != componentFileSpec[MetricsServerAddonName].isEnabled {
 			t.Fatalf("Expected componentFileSpec[%s] to be %t", MetricsServerAddonName, c.expectedMetricsServer)
