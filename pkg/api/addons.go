@@ -316,7 +316,7 @@ func (cs *ContainerService) setAddonsConfig(isUpdate bool) {
 	}
 
 	for _, addon := range defaultAddons {
-		synthesizeAddonsConfig(o.KubernetesConfig.Addons, addon, false, isUpdate)
+		synthesizeAddonsConfig(o.KubernetesConfig.Addons, addon, isUpdate)
 	}
 
 	if len(o.KubernetesConfig.PodSecurityPolicyConfig) > 0 && isUpdate {
@@ -352,6 +352,12 @@ func assignDefaultAddonVals(addon, defaults KubernetesAddon, isUpdate bool) Kube
 	if addon.Enabled == nil {
 		addon.Enabled = defaults.Enabled
 	}
+	if !to.Bool(addon.Enabled) {
+		return KubernetesAddon{
+			Name:    addon.Name,
+			Enabled: addon.Enabled,
+		}
+	}
 	for i := range defaults.Containers {
 		c := addon.GetAddonContainersIndexByName(defaults.Containers[i].Name)
 		if c < 0 {
@@ -385,12 +391,10 @@ func assignDefaultAddonVals(addon, defaults KubernetesAddon, isUpdate bool) Kube
 	return addon
 }
 
-func synthesizeAddonsConfig(addons []KubernetesAddon, addon KubernetesAddon, enableIfNil bool, isUpdate bool) {
+func synthesizeAddonsConfig(addons []KubernetesAddon, addon KubernetesAddon, isUpdate bool) {
 	i := getAddonsIndexByName(addons, addon.Name)
 	if i >= 0 {
-		if addons[i].IsEnabled(enableIfNil) {
-			addons[i] = assignDefaultAddonVals(addons[i], addon, isUpdate)
-		}
+		addons[i] = assignDefaultAddonVals(addons[i], addon, isUpdate)
 	}
 }
 
