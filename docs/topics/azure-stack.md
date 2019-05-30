@@ -109,9 +109,9 @@ By default, the AKS Engine provisioning process relies on an internet connection
 
 If your Azure Stack instance is air-gapped or if network connectivity in your geographical location is not reliable, then the default approach will not work, take a long time or timeout due to transient networking issues.
 
-With these challenges in mind, you can choose to set the `distro` property of your cluster definition to `"aks"`. This change will instruct AKS Engine to deploy VM nodes using a base OS image call `AKS Base Image`. This custom image already contains the required software dependencies in its file system. Hence, internet connectivity won’t be required during the provisioning process.
+With these challenges in mind, you can choose to set the `distro` property of your cluster definition to `"aks"`. This change will instruct AKS Engine to deploy VM nodes using a base OS image called `AKS Base Image`. This custom image, generally based on Ubuntu Server, already contains the required software dependencies in its file system. Hence, internet connectivity won’t be required during the provisioning process.
 
-The `AKS Base Image` gallery item has to be available in your Azure Stack's Marketplace before it could be used by AKS Engine. Follow this [guide](https://docs.microsoft.com/en-us/azure-stack/operator/azure-stack-download-azure-marketplace-item) for a general explanation about how to download gallery items from Azure.
+The `AKS Base Image` gallery item has to be available in your Azure Stack's Marketplace before it could be used by AKS Engine. Your Azure Stack administrator can follow this [guide](https://docs.microsoft.com/en-us/azure-stack/operator/azure-stack-download-azure-marketplace-item) for a general explanation about how to download gallery items from Azure.
 
 Each AKS Engine release is validated and tied to a specific version of the AKS Base Image. Therefore, you need to take note of the base image version required by the AKS Engine release that you plan to use, and then download exactly that base image version. New builds of the `AKS Base Image` are frequently released to ensure that your disconnected cluster can be upgraded to the latest supported version of each component.
 
@@ -149,6 +149,14 @@ If you need to expose more than 5 services, then the recommendation is to route 
 
 ## Frequently Asked Questions
 
-### Network Policies
+### Network policies enforcement
 
 To enforce network policies, you are required to manually deploy the [Canal](https://docs.projectcalico.org/v3.7/getting-started/kubernetes/installation/flannel) daemonset.
+
+### Sample extensions are not working
+
+Extensions in AKS Engine provide an easy way to include your own customization at provisioning time.
+
+Because Azure and Azure Stack currently rely on a different version of the Compute Resource Provider API, you may find that some of sample [extensions](https://github.com/Azure/aks-engine/tree/master/extensions) fail to deploy correctly.
+
+This can be resolved by making a small modification to the extension `template.json` file. Replacing all usages of template parameter `apiVersionDeployments` by the hard-code value `2017-12-01` (or whatever API version Azure Stack runs at the time you try to deploy) should be all you need.
