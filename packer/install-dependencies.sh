@@ -416,5 +416,3 @@ sudo mv /var/log /var/log.vhd
 sudo mkdir /var/log
 
 applyCIS
-
-ls -l /var/log

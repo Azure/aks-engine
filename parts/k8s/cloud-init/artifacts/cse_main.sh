@@ -63,6 +63,9 @@ else
     FULL_INSTALL_REQUIRED=true
 fi
 
+# CIS 4.2.4
+find /var/log -type f -perm '/o+r' -exec chmod 'g-wx,o-rwx' {} \;
+
 if [[ $OS == $UBUNTU_OS_NAME ]] && [ "$FULL_INSTALL_REQUIRED" = "true" ]; then
     installDeps
 else
