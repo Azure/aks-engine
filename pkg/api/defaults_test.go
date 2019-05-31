@@ -268,7 +268,7 @@ func getFakeAddons(defaultAddonMap map[string]string, customImage string) []Kube
 	for addonName := range defaultAddonMap {
 		containerName := addonName
 		if addonName == ContainerMonitoringAddonName {
-			containerName = "omsagent-deployment"
+			containerName = "omsagent"
 		}
 		if addonName == CalicoAddonName {
 			containerName = "calico-typha"
