@@ -209,15 +209,7 @@ func (cs *ContainerService) setAddonsConfig(isUpdate bool) {
 		},
 		Containers: []KubernetesContainerSpec{
 			{
-				Name:           "omsagent-deployment",
-				CPURequests:    "50m",
-				MemoryRequests: "225Mi",
-				CPULimits:      "150m",
-				MemoryLimits:   "500Mi",
-				Image:          "microsoft/oms:ciprod04232019",
-			},
-			{
-				Name:           "omsagent-daemonset",
+				Name:           "omsagent",
 				CPURequests:    "50m",
 				MemoryRequests: "225Mi",
 				CPULimits:      "150m",

@@ -16969,15 +16969,15 @@ spec:
       serviceAccountName: omsagent
       containers:
         - name: omsagent
-          image: {{ContainerImage "omsagent-daemonset"}}
+          image: {{ContainerImage "omsagent"}}
           imagePullPolicy: Always
           resources:
             limits:
-              cpu: {{ContainerCPULimits "omsagent-daemonset"}}
-              memory: {{ContainerMemLimits "omsagent-daemonset"}}
+              cpu: {{ContainerCPULimits "omsagent"}}
+              memory: {{ContainerMemLimits "omsagent"}}
             requests:
-              cpu: {{ContainerCPUReqs "omsagent-daemonset"}}
-              memory: {{ContainerMemReqs "omsagent-daemonset"}}
+              cpu: {{ContainerCPUReqs "omsagent"}}
+              memory: {{ContainerMemReqs "omsagent"}}
           env:
             - name: NODE_IP
               valueFrom:
@@ -17080,15 +17080,15 @@ spec:
       serviceAccountName: omsagent
       containers:
         - name: omsagent
-          image: {{ContainerImage "omsagent-deployment"}}
+          image: {{ContainerImage "omsagent"}}
           imagePullPolicy: IfNotPresent
           resources:
             limits:
-              cpu: {{ContainerCPULimits "omsagent-deployment"}}
-              memory: {{ContainerMemLimits "omsagent-deployment"}}
+              cpu: {{ContainerCPULimits "omsagent"}}
+              memory: {{ContainerMemLimits "omsagent"}}
             requests:
-              cpu: {{ContainerCPUReqs "omsagent-deployment"}}
-              memory: {{ContainerMemReqs "omsagent-deployment"}}
+              cpu: {{ContainerCPUReqs "omsagent"}}
+              memory: {{ContainerMemReqs "omsagent"}}
           env:
             - name: NODE_IP
               valueFrom:
