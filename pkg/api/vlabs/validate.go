@@ -719,7 +719,7 @@ func (a *Properties) validateAddons() error {
 					return errors.New("calico-daemonset addon does not currently support custom configuration")
 				}
 				if len(addon.Containers) > 4 {
-					return errors.New("dns-autoscaler addon does not currently support more than 4 containers specs")
+					return errors.New("calico-daemonset addon does not currently support more than 4 containers specs")
 				}
 				for _, container := range addon.Containers {
 					if container.HasResourceConfig() {
