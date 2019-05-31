@@ -149,7 +149,18 @@ If you need to expose more than 5 services, then the recommendation is to route 
 
 ## Frequently Asked Questions
 
-### Network policies enforcement
+### Supported Kubernetes Versions
+
+These are the Kubernetes versions that you can deploy to Azure Stack using AKS Engine:
+
+- 1.13.5
+- 1.12.9
+- 1.12.8
+- 1.12.7
+- 1.11.10
+- 1.11.9
+
+### Network Policies
 
 To enforce network policies, you are required to manually deploy the [Canal](https://docs.projectcalico.org/v3.7/getting-started/kubernetes/installation/flannel) daemonset.
 
