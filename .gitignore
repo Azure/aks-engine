@@ -16,6 +16,7 @@ bin/
 coverage.txt
 
 test/junit/
+test/e2e/kubernetes/junit.xml
 test/aks-engine-test/aks-engine-test.exe
 pkg/operations/junit.xml
 pkg/operations/kubernetesupgrade/junit.xml
