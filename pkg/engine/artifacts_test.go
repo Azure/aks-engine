@@ -32,6 +32,7 @@ func TestKubernetesContainerAddonSettingsInit(t *testing.T) {
 		expectedAzureCNINetworkMonitor bool
 		expectedDNSAutoscaler          bool
 		expectedCalico                 bool
+		expectedAzureNetworkPolicy     bool
 	}{
 		// addons disabled scenario
 		{
@@ -110,6 +111,10 @@ func TestKubernetesContainerAddonSettingsInit(t *testing.T) {
 								Name:    CalicoAddonName,
 								Enabled: to.BoolPtr(false),
 							},
+							{
+								Name:    AzureNetworkPolicyAddonName,
+								Enabled: to.BoolPtr(false),
+							},
 						},
 					},
 				},
@@ -131,6 +136,7 @@ func TestKubernetesContainerAddonSettingsInit(t *testing.T) {
 			expectedAzureCNINetworkMonitor: false,
 			expectedDNSAutoscaler:          false,
 			expectedCalico:                 false,
+			expectedAzureNetworkPolicy:     false,
 		},
 		// addons enabled scenario
 		{
@@ -209,6 +215,10 @@ func TestKubernetesContainerAddonSettingsInit(t *testing.T) {
 								Name:    CalicoAddonName,
 								Enabled: to.BoolPtr(true),
 							},
+							{
+								Name:    AzureNetworkPolicyAddonName,
+								Enabled: to.BoolPtr(true),
+							},
 						},
 					},
 				},
@@ -230,6 +240,7 @@ func TestKubernetesContainerAddonSettingsInit(t *testing.T) {
 			expectedAzureCNINetworkMonitor: true,
 			expectedDNSAutoscaler:          true,
 			expectedCalico:                 true,
+			expectedAzureNetworkPolicy:     true,
 		},
 	}
 
@@ -286,6 +297,9 @@ func TestKubernetesContainerAddonSettingsInit(t *testing.T) {
 		if c.expectedCalico != componentFileSpec[CalicoAddonName].isEnabled {
 			t.Fatalf("Expected componentFileSpec[%s] to be %t", CalicoAddonName, c.expectedCalico)
 		}
+		if c.expectedAzureNetworkPolicy != componentFileSpec[AzureNetworkPolicyAddonName].isEnabled {
+			t.Fatalf("Expected componentFileSpec[%s] to be %t", AzureNetworkPolicyAddonName, c.expectedAzureNetworkPolicy)
+		}
 	}
 }
 
@@ -296,7 +310,6 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 		expectedKubeDNS               bool
 		expectedCoreDNS               bool
 		expectedKubeProxy             bool
-		expectedAzureNetworkPolicy    bool
 		expectedCilium                bool
 		expectedFlannel               bool
 		expectedAADAdminGroup         bool
@@ -326,7 +339,6 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 			expectedKubeDNS:               true,
 			expectedCoreDNS:               false,
 			expectedKubeProxy:             true,
-			expectedAzureNetworkPolicy:    false,
 			expectedCilium:                false,
 			expectedFlannel:               false,
 			expectedAADAdminGroup:         false,
@@ -351,33 +363,6 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 			expectedKubeDNS:               false,
 			expectedCoreDNS:               true,
 			expectedKubeProxy:             true,
-			expectedAzureNetworkPolicy:    false,
-			expectedCilium:                false,
-			expectedFlannel:               false,
-			expectedAADAdminGroup:         false,
-			expectedAzureCloudProvider:    true,
-			expectedAuditPolicy:           true,
-			expectedELBService:            false,
-			expectedPodSecurityPolicy:     false,
-			expectedManagedStorageClass:   true,
-			expectedUnmanagedStorageClass: false,
-		},
-		// Azure network policy scenario
-		{
-			p: &api.Properties{
-				OrchestratorProfile: &api.OrchestratorProfile{
-					OrchestratorType:    Kubernetes,
-					OrchestratorVersion: "1.14.1",
-					KubernetesConfig: &api.KubernetesConfig{
-						NetworkPlugin: NetworkPluginAzure,
-						NetworkPolicy: NetworkPolicyAzure,
-					},
-				},
-			},
-			expectedKubeDNS:               false,
-			expectedCoreDNS:               true,
-			expectedKubeProxy:             true,
-			expectedAzureNetworkPolicy:    true,
 			expectedCilium:                false,
 			expectedFlannel:               false,
 			expectedAADAdminGroup:         false,
@@ -402,7 +387,6 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 			expectedKubeDNS:               false,
 			expectedCoreDNS:               true,
 			expectedKubeProxy:             true,
-			expectedAzureNetworkPolicy:    false,
 			expectedCilium:                true,
 			expectedFlannel:               false,
 			expectedAADAdminGroup:         false,
@@ -427,7 +411,6 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 			expectedKubeDNS:               false,
 			expectedCoreDNS:               true,
 			expectedKubeProxy:             true,
-			expectedAzureNetworkPolicy:    false,
 			expectedCilium:                false,
 			expectedFlannel:               true,
 			expectedAADAdminGroup:         false,
@@ -455,7 +438,6 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 			expectedKubeDNS:               false,
 			expectedCoreDNS:               true,
 			expectedKubeProxy:             true,
-			expectedAzureNetworkPolicy:    false,
 			expectedCilium:                false,
 			expectedFlannel:               false,
 			expectedAADAdminGroup:         true,
@@ -481,7 +463,6 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 			expectedKubeDNS:               false,
 			expectedCoreDNS:               true,
 			expectedKubeProxy:             true,
-			expectedAzureNetworkPolicy:    false,
 			expectedCilium:                false,
 			expectedFlannel:               false,
 			expectedAADAdminGroup:         false,
@@ -506,7 +487,6 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 			expectedKubeDNS:               false,
 			expectedCoreDNS:               true,
 			expectedKubeProxy:             true,
-			expectedAzureNetworkPolicy:    false,
 			expectedCilium:                false,
 			expectedFlannel:               false,
 			expectedAADAdminGroup:         false,
@@ -536,7 +516,6 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 			expectedKubeDNS:               true,
 			expectedCoreDNS:               false,
 			expectedKubeProxy:             true,
-			expectedAzureNetworkPolicy:    false,
 			expectedCilium:                false,
 			expectedFlannel:               false,
 			expectedAADAdminGroup:         false,
@@ -567,7 +546,6 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 			expectedKubeDNS:               false,
 			expectedCoreDNS:               true,
 			expectedKubeProxy:             true,
-			expectedAzureNetworkPolicy:    false,
 			expectedCilium:                false,
 			expectedFlannel:               false,
 			expectedAADAdminGroup:         false,
@@ -598,7 +576,6 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 			expectedKubeDNS:               false,
 			expectedCoreDNS:               true,
 			expectedKubeProxy:             true,
-			expectedAzureNetworkPolicy:    false,
 			expectedCilium:                false,
 			expectedFlannel:               false,
 			expectedAADAdminGroup:         false,
@@ -626,10 +603,6 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 			case "kube-proxy-daemonset.yaml":
 				if c.expectedKubeProxy != componentFileSpec.isEnabled {
 					t.Fatalf("Expected %s to be %t", KubeProxyAddonName, c.expectedKubeProxy)
-				}
-			case "azure-npm-daemonset.yaml":
-				if c.expectedAzureNetworkPolicy != componentFileSpec.isEnabled {
-					t.Fatalf("Expected %s to be %t", AzureNetworkPolicyAddonName, c.expectedAzureNetworkPolicy)
 				}
 			case "cilium-daemonset.yaml":
 				if c.expectedCilium != componentFileSpec.isEnabled {
