@@ -2785,33 +2785,6 @@ func TestUserAssignedMSI(t *testing.T) {
 	}
 }
 
-func TestKubernetesAddon(t *testing.T) {
-	addon := getMockAddon("addon")
-	if !addon.GetEnabledIfNil(true) {
-		t.Fatalf("KubernetesAddon.GetEnabledIfNil(true) should always return true when Enabled property is not specified")
-	}
-
-	if addon.GetEnabledIfNil(false) {
-		t.Fatalf("KubernetesAddon.GetEnabledIfNil(false) should always return false when Enabled property is not specified")
-	}
-	e := true
-	addon.Enabled = &e
-	if !addon.GetEnabledIfNil(false) {
-		t.Fatalf("KubernetesAddon.GetEnabledIfNil(false) should always return true when Enabled property is set to true")
-	}
-	if !addon.GetEnabledIfNil(true) {
-		t.Fatalf("KubernetesAddon.GetEnabledIfNil(true) should always return true when Enabled property is set to true")
-	}
-	e = false
-	addon.Enabled = &e
-	if addon.GetEnabledIfNil(false) {
-		t.Fatalf("KubernetesAddon.GetEnabledIfNil(false) should always return false when Enabled property is set to false")
-	}
-	if addon.GetEnabledIfNil(true) {
-		t.Fatalf("KubernetesAddon.GetEnabledIfNil(true) should always return false when Enabled property is set to false")
-	}
-}
-
 func TestIsAADPodIdentityEnabled(t *testing.T) {
 	// Default case
 	c := KubernetesConfig{
@@ -2860,54 +2833,6 @@ func TestIsAADPodIdentityEnabled(t *testing.T) {
 	}
 }
 
-func TestIsACIConnectorEnabled(t *testing.T) {
-	// Default case
-	c := KubernetesConfig{
-		Addons: []KubernetesAddon{
-			getMockAddon("addon"),
-		},
-	}
-	enabled := c.IsACIConnectorEnabled()
-	enabledDefault := DefaultACIConnectorAddonEnabled
-	if enabled != enabledDefault {
-		t.Fatalf("KubernetesConfig.IsACIConnectorEnabled() should return %t when no ACI connector addon has been specified, instead returned %t", enabledDefault, enabled)
-	}
-	// Addon present, but enabled not specified
-	c.Addons = append(c.Addons, getMockAddon(ACIConnectorAddonName))
-	enabled = c.IsACIConnectorEnabled()
-	if enabled != enabledDefault {
-		t.Fatalf("KubernetesConfig.IsACIConnectorEnabled() should return default when ACI connector has been specified w/ no enabled value, expected %t, instead returned %t", enabledDefault, enabled)
-	}
-	// Addon present and enabled
-	b := true
-	c = KubernetesConfig{
-		Addons: []KubernetesAddon{
-			{
-				Name:    ACIConnectorAddonName,
-				Enabled: &b,
-			},
-		},
-	}
-	enabled = c.IsACIConnectorEnabled()
-	if !enabled {
-		t.Fatalf("KubernetesConfig.IsACIConnectorEnabled() should return true when ACI connector addon has been specified as enabled, instead returned %t", enabled)
-	}
-	// Addon present and disabled
-	b = false
-	c = KubernetesConfig{
-		Addons: []KubernetesAddon{
-			{
-				Name:    ACIConnectorAddonName,
-				Enabled: &b,
-			},
-		},
-	}
-	enabled = c.IsACIConnectorEnabled()
-	if enabled {
-		t.Fatalf("KubernetesConfig.IsACIConnectorEnabled() should return false when ACI connector addon has been specified as disabled, instead returned %t", enabled)
-	}
-}
-
 func TestIsClusterAutoscalerEnabled(t *testing.T) {
 	// Default case
 	c := KubernetesConfig{
@@ -2916,15 +2841,14 @@ func TestIsClusterAutoscalerEnabled(t *testing.T) {
 		},
 	}
 	enabled := c.IsClusterAutoscalerEnabled()
-	enabledDefault := DefaultClusterAutoscalerAddonEnabled
-	if enabled != enabledDefault {
-		t.Fatalf("KubernetesConfig.IsClusterAutoscalerEnabled() should return %t when no cluster autoscaler addon has been specified, instead returned %t", enabledDefault, enabled)
+	if enabled {
+		t.Fatalf("KubernetesConfig.IsClusterAutoscalerEnabled() should return %t when no cluster autoscaler addon has been specified, instead returned %t", false, enabled)
 	}
 	// Addon present, but enabled not specified
 	c.Addons = append(c.Addons, getMockAddon(ClusterAutoscalerAddonName))
 	enabled = c.IsClusterAutoscalerEnabled()
-	if enabled != enabledDefault {
-		t.Fatalf("KubernetesConfig.IsClusterAutoscalerEnabled() should return default when cluster autoscaler has been specified w/ no enabled value, expected %t, instead returned %t", enabledDefault, enabled)
+	if enabled {
+		t.Fatalf("KubernetesConfig.IsClusterAutoscalerEnabled() should return false when cluster autoscaler has been specified w/ no enabled value, instead returned %t", enabled)
 	}
 	// Addon present and enabled
 	b := true
@@ -2958,58 +2882,32 @@ func TestIsClusterAutoscalerEnabled(t *testing.T) {
 
 func TestIsNVIDIADevicePluginEnabled(t *testing.T) {
 	p := Properties{
-		AgentPoolProfiles: []*AgentPoolProfile{
-			{
-				Name:   "agentpool",
-				VMSize: "Standard_N",
-				Count:  1,
-			},
-		},
 		OrchestratorProfile: &OrchestratorProfile{
-			OrchestratorType:    Kubernetes,
-			OrchestratorVersion: "1.9.0",
+			OrchestratorType: Kubernetes,
 			KubernetesConfig: &KubernetesConfig{
-				Addons: []KubernetesAddon{
-					getMockAddon("addon"),
-				},
+				Addons: []KubernetesAddon{},
 			},
 		},
 	}
-
-	if !p.HasNSeriesSKU() {
-		t.Fatalf("HasNSeriesSKU should return true when explicitly using VM Size %s", p.AgentPoolProfiles[0].VMSize)
-	}
-	if p.IsNVIDIADevicePluginEnabled() {
-		t.Fatalf("Properties.IsNVIDIADevicePluginEnabled() should return false with N-series VMs with < k8s 1.10, instead returned %t", p.IsNVIDIADevicePluginEnabled())
-	}
-	if p.IsNvidiaDevicePluginCapable() {
-		t.Fatalf("IsNvidiaDevicePluginCapable should return false with N Series VM and k8s version < 1.10")
+	p.OrchestratorProfile.KubernetesConfig.Addons = []KubernetesAddon{
+		{
+			Name:    NVIDIADevicePluginAddonName,
+			Enabled: to.BoolPtr(true),
+		},
 	}
 
-	p.OrchestratorProfile.OrchestratorVersion = "1.10.0"
 	if !p.IsNVIDIADevicePluginEnabled() {
-		t.Fatalf("Properties.IsNVIDIADevicePluginEnabled() should return true with N-series VMs with k8s >= 1.10, instead returned %t", p.IsNVIDIADevicePluginEnabled())
-	}
-	if !p.IsNvidiaDevicePluginCapable() {
-		t.Fatalf("IsNvidiaDevicePluginCapable should return false with N Series VM and k8s version >= 1.10")
+		t.Fatalf("Properties.IsNVIDIADevicePluginEnabled() should return true with addon enabled, instead returned %t", p.IsNVIDIADevicePluginEnabled())
 	}
 
-	p.AgentPoolProfiles[0].VMSize = "Standard_D2_v2"
 	p.OrchestratorProfile.KubernetesConfig.Addons = []KubernetesAddon{
 		{
 			Name:    NVIDIADevicePluginAddonName,
 			Enabled: to.BoolPtr(false),
 		},
 	}
-
-	if p.HasNSeriesSKU() {
-		t.Fatalf("HasNSeriesSKU should return false when explicitly using VM Size %s", p.AgentPoolProfiles[0].VMSize)
-	}
 	if p.IsNVIDIADevicePluginEnabled() {
 		t.Fatalf("Properties.IsNVIDIADevicePluginEnabled() should return false when explicitly disabled")
-	}
-	if p.IsNvidiaDevicePluginCapable() {
-		t.Fatalf("IsNvidiaDevicePluginCapable should return false with non-N Series regardless of k8s version")
 	}
 }
 
@@ -3085,8 +2983,8 @@ func TestIsIPMasqAgentEnabled(t *testing.T) {
 					},
 				},
 			},
-			expectedPropertiesIsIPMasqAgentEnabled:       true,
-			expectedKubernetesConfigIsIPMasqAgentEnabled: true,
+			expectedPropertiesIsIPMasqAgentEnabled:       false,
+			expectedKubernetesConfigIsIPMasqAgentEnabled: false,
 		},
 		{
 			p: Properties{
@@ -3097,8 +2995,8 @@ func TestIsIPMasqAgentEnabled(t *testing.T) {
 					},
 				},
 			},
-			expectedPropertiesIsIPMasqAgentEnabled:       true,
-			expectedKubernetesConfigIsIPMasqAgentEnabled: true,
+			expectedPropertiesIsIPMasqAgentEnabled:       false,
+			expectedKubernetesConfigIsIPMasqAgentEnabled: false,
 		},
 		{
 			p: Properties{
@@ -3118,8 +3016,8 @@ func TestIsIPMasqAgentEnabled(t *testing.T) {
 					},
 				},
 			},
-			expectedPropertiesIsIPMasqAgentEnabled:       true,
-			expectedKubernetesConfigIsIPMasqAgentEnabled: true,
+			expectedPropertiesIsIPMasqAgentEnabled:       false,
+			expectedKubernetesConfigIsIPMasqAgentEnabled: false,
 		},
 		{
 			p: Properties{

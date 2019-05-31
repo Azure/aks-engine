@@ -266,8 +266,11 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpdate bool) {
 			a.OrchestratorProfile.KubernetesConfig.ProxyMode = DefaultKubeProxyMode
 		}
 
-		// Configure addons
+		// First, Configure addons
 		cs.setAddonsConfig(isUpdate)
+		// Defaults enforcement flows below inherit from addons configuration,
+		// so it's critical to enforce default addons configuration first
+
 		// Configure kubelet
 		cs.setKubeletConfig()
 		// Configure controller-manager

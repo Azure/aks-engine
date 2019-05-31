@@ -11,44 +11,6 @@ import (
 	"github.com/Azure/go-autorest/autorest/azure"
 )
 
-func TestKubernetesAddon(t *testing.T) {
-	addon := KubernetesAddon{
-		Name: "addon",
-		Containers: []KubernetesContainerSpec{
-			{
-				Name:           "addon",
-				CPURequests:    "50m",
-				MemoryRequests: "150Mi",
-				CPULimits:      "50m",
-				MemoryLimits:   "150Mi",
-			},
-		},
-	}
-	if !addon.GetEnabledIfNil(true) {
-		t.Fatalf("KubernetesAddon.GetEnabledIfNil(true) should always return true when Enabled property is not specified")
-	}
-
-	if addon.GetEnabledIfNil(false) {
-		t.Fatalf("KubernetesAddon.GetEnabledIfNil(false) should always return false when Enabled property is not specified")
-	}
-	e := true
-	addon.Enabled = &e
-	if !addon.GetEnabledIfNil(false) {
-		t.Fatalf("KubernetesAddon.GetEnabledIfNil(false) should always return true when Enabled property is set to true")
-	}
-	if !addon.GetEnabledIfNil(true) {
-		t.Fatalf("KubernetesAddon.GetEnabledIfNil(true) should always return true when Enabled property is set to true")
-	}
-	e = false
-	addon.Enabled = &e
-	if addon.GetEnabledIfNil(false) {
-		t.Fatalf("KubernetesAddon.GetEnabledIfNil(false) should always return false when Enabled property is set to false")
-	}
-	if addon.GetEnabledIfNil(true) {
-		t.Fatalf("KubernetesAddon.GetEnabledIfNil(true) should always return false when Enabled property is set to false")
-	}
-}
-
 func TestOrchestratorProfile(t *testing.T) {
 	OrchestratorProfileText := `{ "orchestratorType": "Mesos" }`
 	op := &OrchestratorProfile{}

@@ -45,7 +45,7 @@ func TestKubeletConfigDefaults(t *testing.T) {
 		"--max-pods":                          strconv.Itoa(DefaultKubernetesMaxPods),
 		"--network-plugin":                    NetworkPluginKubenet,
 		"--node-status-update-frequency":      K8sComponentsByVersionMap[cs.Properties.OrchestratorProfile.OrchestratorVersion]["nodestatusfreq"],
-		"--non-masquerade-cidr":               DefaultNonMasqueradeCIDR,
+		"--non-masquerade-cidr":               "10.240.0.0/12",
 		"--pod-manifest-path":                 "/etc/kubernetes/manifests",
 		"--pod-infra-container-image":         cs.Properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBase + K8sComponentsByVersionMap[cs.Properties.OrchestratorProfile.OrchestratorVersion]["pause"],
 		"--pod-max-pids":                      strconv.Itoa(DefaultKubeletPodMaxPIDs),
@@ -369,6 +369,13 @@ func TestKubeletHostedMasterIPMasqAgentDisabled(t *testing.T) {
 		IPMasqAgent: false,
 	}
 	cs.Properties.OrchestratorProfile.KubernetesConfig.ClusterSubnet = subnet
+	cs.Properties.OrchestratorProfile.KubernetesConfig.Addons = []KubernetesAddon{
+		{
+			Name:    IPMASQAgentAddonName,
+			Enabled: to.BoolPtr(true),
+		},
+	}
+
 	cs.setKubeletConfig()
 	k := cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig
 	if k["--non-masquerade-cidr"] != subnet {
@@ -382,6 +389,12 @@ func TestKubeletHostedMasterIPMasqAgentDisabled(t *testing.T) {
 		IPMasqAgent: true,
 	}
 	cs.Properties.OrchestratorProfile.KubernetesConfig.ClusterSubnet = subnet
+	cs.Properties.OrchestratorProfile.KubernetesConfig.Addons = []KubernetesAddon{
+		{
+			Name:    IPMASQAgentAddonName,
+			Enabled: to.BoolPtr(true),
+		},
+	}
 	cs.setKubeletConfig()
 	k = cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig
 	if k["--non-masquerade-cidr"] != DefaultNonMasqueradeCIDR {
@@ -392,6 +405,12 @@ func TestKubeletHostedMasterIPMasqAgentDisabled(t *testing.T) {
 	// no HostedMasterProfile, --non-masquerade-cidr should be 0.0.0.0/0
 	cs = CreateMockContainerService("testcluster", defaultTestClusterVer, 3, 2, false)
 	cs.Properties.OrchestratorProfile.KubernetesConfig.ClusterSubnet = subnet
+	cs.Properties.OrchestratorProfile.KubernetesConfig.Addons = []KubernetesAddon{
+		{
+			Name:    IPMASQAgentAddonName,
+			Enabled: to.BoolPtr(true),
+		},
+	}
 	cs.setKubeletConfig()
 	k = cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig
 	if k["--non-masquerade-cidr"] != DefaultNonMasqueradeCIDR {

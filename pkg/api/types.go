@@ -279,14 +279,6 @@ func (a *KubernetesAddon) IsEnabled() bool {
 	return *a.Enabled
 }
 
-// GetEnabledIfNil returns if the addon is explicitly enabled, or the user-provided default if non explicitly enabled
-func (a *KubernetesAddon) GetEnabledIfNil(ifNil bool) bool {
-	if a.Enabled == nil {
-		return ifNil
-	}
-	return *a.Enabled
-}
-
 // GetAddonContainersIndexByName returns the KubernetesAddon containers index with the name `containerName`
 func (a KubernetesAddon) GetAddonContainersIndexByName(containerName string) int {
 	for i := range a.Containers {
@@ -1584,31 +1576,19 @@ func (k *KubernetesConfig) IsAddonEnabled(addonName string) bool {
 	return kubeAddon.IsEnabled()
 }
 
-// getAddonEnabledIfNil checks whether a k8s addon with name "addonName" is enabled or not based on the Enabled field of KubernetesAddon.
-// If the value of Enabled is nil, the "defaultValue" is returned.
-func (k *KubernetesConfig) getAddonEnabledIfNil(addonName string, defaultValue bool) bool {
-	kubeAddon := k.GetAddonByName(addonName)
-	return kubeAddon.GetEnabledIfNil(defaultValue)
-}
-
 // IsAADPodIdentityEnabled checks if the AAD pod identity addon is enabled
 func (k *KubernetesConfig) IsAADPodIdentityEnabled() bool {
 	return k.IsAddonEnabled(AADPodIdentityAddonName)
 }
 
-// IsACIConnectorEnabled checks if the ACI Connector addon is enabled
-func (k *KubernetesConfig) IsACIConnectorEnabled() bool {
-	return k.getAddonEnabledIfNil(ACIConnectorAddonName, DefaultACIConnectorAddonEnabled)
-}
-
 // IsClusterAutoscalerEnabled checks if the cluster autoscaler addon is enabled
 func (k *KubernetesConfig) IsClusterAutoscalerEnabled() bool {
-	return k.getAddonEnabledIfNil(ClusterAutoscalerAddonName, DefaultClusterAutoscalerAddonEnabled)
+	return k.IsAddonEnabled(ClusterAutoscalerAddonName)
 }
 
 // IsIPMasqAgentEnabled checks if the ip-masq-agent addon is enabled
 func (k *KubernetesConfig) IsIPMasqAgentEnabled() bool {
-	return k.getAddonEnabledIfNil(IPMASQAgentAddonName, (k.NetworkPlugin != NetworkPluginCilium && DefaultIPMasqAgentAddonEnabled))
+	return k.IsAddonEnabled(IPMASQAgentAddonName)
 }
 
 // IsRBACEnabled checks if RBAC is enabled
@@ -1694,7 +1674,7 @@ func (p *Properties) IsNVIDIADevicePluginEnabled() bool {
 	if p.OrchestratorProfile == nil || p.OrchestratorProfile.KubernetesConfig == nil {
 		return false
 	}
-	return p.OrchestratorProfile.KubernetesConfig.getAddonEnabledIfNil(NVIDIADevicePluginAddonName, p.IsNvidiaDevicePluginCapable())
+	return p.OrchestratorProfile.KubernetesConfig.IsAddonEnabled(NVIDIADevicePluginAddonName)
 }
 
 // IsAzureStackCloud return true if the cloud is AzureStack
@@ -1769,7 +1749,7 @@ func (p *Properties) IsNvidiaDevicePluginCapable() bool {
 
 // IsReschedulerEnabled checks if the rescheduler addon is enabled
 func (k *KubernetesConfig) IsReschedulerEnabled() bool {
-	return k.getAddonEnabledIfNil(ReschedulerAddonName, DefaultReschedulerAddonEnabled)
+	return k.IsAddonEnabled(ReschedulerAddonName)
 }
 
 // PrivateJumpboxProvision checks if a private cluster has jumpbox auto-provisioning
