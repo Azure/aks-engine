@@ -19,7 +19,7 @@ var k8sComponentVersions = map[string]map[string]string{
 		"exechealthz":                      "exechealthz-amd64:1.2",
 		"addon-resizer":                    "addon-resizer:1.8.5",
 		"heapster":                         "heapster-amd64:v1.5.4",
-		"metrics-server":                   "metrics-server-amd64:v0.2.1",
+		"metrics-server":                   "metrics-server-amd64:v0.3.1",
 		"coredns":                          "coredns:1.6.2",
 		"kube-dns":                         "k8s-dns-kube-dns-amd64:1.15.4",
 		"addon-manager":                    "kube-addon-manager-amd64:v9.0.2",

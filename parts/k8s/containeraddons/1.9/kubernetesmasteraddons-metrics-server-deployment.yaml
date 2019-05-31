@@ -5,7 +5,7 @@ metadata:
   namespace: kube-system
   labels:
     kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
+    addonmanager.kubernetes.io/mode: EnsureExists
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
@@ -13,14 +13,13 @@ metadata:
   name: system:metrics-server
   labels:
     kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
+    addonmanager.kubernetes.io/mode: EnsureExists
 rules:
 - apiGroups:
   - ""
   resources:
   - pods
   - nodes
-  - nodes/stats
   - namespaces
   verbs:
   - get
@@ -41,7 +40,7 @@ metadata:
   name: system:metrics-server
   labels:
     kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
+    addonmanager.kubernetes.io/mode: EnsureExists
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
@@ -58,7 +57,7 @@ metadata:
   namespace: kube-system
   labels:
     kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
+    addonmanager.kubernetes.io/mode: EnsureExists
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
@@ -74,7 +73,7 @@ metadata:
   name: metrics-server:system:auth-delegator
   labels:
     kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
+    addonmanager.kubernetes.io/mode: EnsureExists
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
@@ -90,7 +89,7 @@ metadata:
   name: metrics-server
   namespace: kube-system
   labels:
-    addonmanager.kubernetes.io/mode: Reconcile
+    addonmanager.kubernetes.io/mode: EnsureExists
     kubernetes.io/name: "Metrics-server"
     kubernetes.io/cluster-service: "true"
 spec:
@@ -127,7 +126,7 @@ spec:
         imagePullPolicy: IfNotPresent
         command:
         - /metrics-server
-        - --kubelet-insecure-tls
+        - --source=kubernetes.summary_api:''
       nodeSelector:
         beta.kubernetes.io/os: linux
 ---
@@ -137,7 +136,7 @@ metadata:
   name: v1beta1.metrics.k8s.io
   labels:
     kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
+    addonmanager.kubernetes.io/mode: EnsureExists
 spec:
   service:
     name: metrics-server
