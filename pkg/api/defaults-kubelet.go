@@ -120,6 +120,8 @@ func (cs *ContainerService) setKubeletConfig(isUpgrade bool) {
 	if common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.16.0-beta.1") {
 		// for enabling metrics-server v0.3.0+
 		defaultKubeletConfig["--authentication-token-webhook"] = "true"
+		// disable read-only-port by set as 0 since it's not needed for metrics-server v0.3.0+
+		defaultKubeletConfig["--read-only-port"] = "0"
 	}
 
 	// If no user-configurable kubelet config values exists, use the defaults

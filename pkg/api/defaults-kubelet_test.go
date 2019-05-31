@@ -123,6 +123,7 @@ func TestKubeletConfigDefaults(t *testing.T) {
 	kubeletConfig = cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig
 	expectedKeys := []string{
 		"--authentication-token-webhook",
+		"--read-only-port",
 	}
 	for _, key := range expectedKeys {
 		if _, ok := kubeletConfig[key]; !ok {
