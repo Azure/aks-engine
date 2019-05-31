@@ -613,21 +613,6 @@ func TestIsNSeriesSKU(t *testing.T) {
 	}
 }
 
-func TestGenerateIpList(t *testing.T) {
-	count := 3
-	forth := 240
-	ipList := generateIPList(count, fmt.Sprintf("10.0.0.%d", forth))
-	if len(ipList) != 3 {
-		t.Fatalf("IP list size should be %d", count)
-	}
-	for i, ip := range ipList {
-		expected := fmt.Sprintf("10.0.0.%d", forth+i)
-		if ip != expected {
-			t.Fatalf("wrong IP %s. Expected %s", ip, expected)
-		}
-	}
-}
-
 func TestGenerateKubeConfig(t *testing.T) {
 	locale := gotext.NewLocale(path.Join("..", "..", "translations"), "en_US")
 	i18n.Initialize(locale)
@@ -1252,6 +1237,64 @@ func TestGetDataDisks(t *testing.T) {
 	for _, c := range cases {
 		if getDataDisks(c.p) != c.expected {
 			t.Fatalf("expected getDataDisks() to return %s but instead got %s", c.expected, getDataDisks(c.p))
+		}
+	}
+}
+
+func TestGenerateConsecutiveIPsList(t *testing.T) {
+	cases := []struct {
+		count            int
+		firstThreeOctets string
+		fourthOctet      int
+		expectError      bool
+	}{
+		{
+			count:            3,
+			firstThreeOctets: "10.0.0",
+			fourthOctet:      240,
+		},
+		{
+			count:            45,
+			firstThreeOctets: "192.168.1",
+			fourthOctet:      201,
+		},
+		{
+			count:            45,
+			firstThreeOctets: "192.168.1.5.6.7", // Too many octets
+			fourthOctet:      1,
+			expectError:      true,
+		},
+		{
+			count:            10, // This will result in fourth octet overflow
+			firstThreeOctets: "4.5.6",
+			fourthOctet:      254,
+			expectError:      true,
+		},
+		{
+			count:            1, // This is the broadcast address
+			firstThreeOctets: "192.168.1",
+			fourthOctet:      254,
+			expectError:      true,
+		},
+	}
+
+	for _, c := range cases {
+		firstIPAddress := fmt.Sprintf("%s.%d", c.firstThreeOctets, c.fourthOctet)
+		ret, err := generateConsecutiveIPsList(c.count, fmt.Sprintf("%s.%d", c.firstThreeOctets, c.fourthOctet))
+		if c.expectError {
+			if err == nil {
+				t.Fatalf("expected error from generateConsecutiveIPsList(%d, %s)!", c.count, firstIPAddress)
+			}
+		} else {
+			if len(ret) != c.count {
+				t.Fatalf("expected %d IP addresses from generateConsecutiveIPsList() response, but instead got %d", c.count, len(ret))
+			}
+			for i, ip := range ret {
+				expected := fmt.Sprintf("%s.%d", c.firstThreeOctets, c.fourthOctet+i)
+				if ip != expected {
+					t.Fatalf("expected %s in generateConsecutiveIPsList() response set at index %d, but instead got %s", expected, i, ip)
+				}
+			}
 		}
 	}
 }
