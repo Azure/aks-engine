@@ -38,7 +38,7 @@ func (cs *ContainerService) SetPropertiesDefaults(isUpgrade, isScale bool) (bool
 		}
 	}
 
-	cs.setOrchestratorDefaults(isUpgrade || isScale)
+	cs.setOrchestratorDefaults(isUpgrade, isScale)
 
 	cloudName := cs.GetCloudSpecConfig().CloudName
 
@@ -77,7 +77,8 @@ func (cs *ContainerService) SetPropertiesDefaults(isUpgrade, isScale bool) (bool
 }
 
 // setOrchestratorDefaults for orchestrators
-func (cs *ContainerService) setOrchestratorDefaults(isUpdate bool) {
+func (cs *ContainerService) setOrchestratorDefaults(isUpgrade, isScale bool) {
+	isUpdate := isUpgrade || isScale
 	a := cs.Properties
 
 	cloudSpecConfig := cs.GetCloudSpecConfig()
@@ -119,11 +120,17 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpdate bool) {
 		if o.KubernetesConfig.KubernetesImageBase == "" {
 			o.KubernetesConfig.KubernetesImageBase = cloudSpecConfig.KubernetesSpecConfig.KubernetesImageBase
 		}
-		if o.KubernetesConfig.EtcdVersion == "" || isUpdate {
-			if isUpdate && o.KubernetesConfig.EtcdVersion != DefaultEtcdVersion {
-				log.Warnf("etcd will be upgraded to version %s\n", DefaultEtcdVersion)
-			}
+		if o.KubernetesConfig.EtcdVersion == "" {
 			o.KubernetesConfig.EtcdVersion = DefaultEtcdVersion
+		} else if isUpgrade {
+			if o.KubernetesConfig.EtcdVersion != DefaultEtcdVersion {
+				// Override (i.e., upgrade) the etcd version if the default is newer in an upgrade scenario
+				if common.GetMinVersion([]string{o.KubernetesConfig.EtcdVersion, DefaultEtcdVersion}, true) == o.KubernetesConfig.EtcdVersion {
+					log.Warnf("etcd will be upgraded to version %s\n", DefaultEtcdVersion)
+					o.KubernetesConfig.EtcdVersion = DefaultEtcdVersion
+				}
+			}
+
 		}
 
 		if a.HasWindows() {
