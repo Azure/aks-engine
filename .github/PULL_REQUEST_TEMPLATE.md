@@ -28,6 +28,7 @@ And read this for faster PR reviews: https://github.com/kubernetes/community/blo
         refactor: Code Refactoring 💎
         revert: Revert Change ◀️
         style: Code Style 🎶
+        security: Security Fix 🛡️
         test: Testing 💚 -->
 - [ ] includes documentation
 - [ ] adds unit tests
