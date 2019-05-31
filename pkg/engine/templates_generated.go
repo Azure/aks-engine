@@ -33,7 +33,6 @@
 // ../../parts/dcos/dcosprovisionsource.sh
 // ../../parts/iaasoutputs.t
 // ../../parts/k8s/addons/1.10/kubernetesmasteraddons-kube-dns-deployment.yaml
-// ../../parts/k8s/addons/1.15/coredns.yaml
 // ../../parts/k8s/addons/1.6/kubernetesmasteraddons-calico-daemonset.yaml
 // ../../parts/k8s/addons/1.6/kubernetesmasteraddons-kubernetes-dashboard-deployment.yaml
 // ../../parts/k8s/addons/1.7/kubernetesmasteraddons-kube-dns-deployment.yaml
@@ -6578,246 +6577,6 @@ func k8sAddons110KubernetesmasteraddonsKubeDnsDeploymentYaml() (*asset, error) {
 	return a, nil
 }
 
-var _k8sAddons115CorednsYaml = []byte(`apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: coredns
-  namespace: kube-system
-  labels:
-      kubernetes.io/cluster-service: "true"
-      addonmanager.kubernetes.io/mode: Reconcile
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRole
-metadata:
-  labels:
-    kubernetes.io/bootstrapping: rbac-defaults
-    addonmanager.kubernetes.io/mode: Reconcile
-  name: system:coredns
-rules:
-- apiGroups:
-  - ""
-  resources:
-  - endpoints
-  - services
-  - pods
-  - namespaces
-  verbs:
-  - list
-  - watch
-- apiGroups:
-  - ""
-  resources:
-  - nodes
-  verbs:
-  - get
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRoleBinding
-metadata:
-  annotations:
-    rbac.authorization.kubernetes.io/autoupdate: "true"
-  labels:
-    kubernetes.io/bootstrapping: rbac-defaults
-    addonmanager.kubernetes.io/mode: Reconcile
-  name: system:coredns
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: system:coredns
-subjects:
-- kind: ServiceAccount
-  name: coredns
-  namespace: kube-system
----
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: coredns
-  namespace: kube-system
-  labels:
-      addonmanager.kubernetes.io/mode: Reconcile
-data:
-  Corefile: |
-    .:53 {
-        errors
-        health
-        ready
-        kubernetes <domain> in-addr.arpa ip6.arpa {
-            pods insecure
-            fallthrough in-addr.arpa ip6.arpa
-        }
-        prometheus :9153
-        forward . /etc/resolv.conf
-        cache 30
-        loop
-        reload
-        loadbalance
-    }
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: coredns
-  namespace: kube-system
-  labels:
-    k8s-app: kube-dns
-    kubernetes.io/name: "CoreDNS"
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
-spec:
-  # replicas: not specified here:
-  # 1. In order to make Addon Manager do not reconcile this replicas parameter.
-  # 2. Default is 1.
-  # 3. Will be tuned in real time if DNS horizontal auto-scaling is turned on.
-  strategy:
-    type: RollingUpdate
-    rollingUpdate:
-      maxUnavailable: 1
-  selector:
-    matchLabels:
-      k8s-app: kube-dns
-  template:
-    metadata:
-      labels:
-        k8s-app: kube-dns
-      annotations:
-        seccomp.security.alpha.kubernetes.io/pod: docker/default
-    spec:
-      priorityClassName: system-cluster-critical
-      affinity:
-        podAntiAffinity:
-          preferredDuringSchedulingIgnoredDuringExecution:
-          - podAffinityTerm:
-              labelSelector:
-                matchExpressions:
-                - key: k8s-app
-                  operator: In
-                  values:
-                  - kube-dns
-              topologyKey: failure-domain.beta.kubernetes.io/zone
-            weight: 10
-          - podAffinityTerm:
-              labelSelector:
-                matchExpressions:
-                - key: k8s-app
-                  operator: In
-                  values:
-                  - kube-dns
-              topologyKey: kubernetes.io/hostname
-            weight: 5
-      serviceAccountName: coredns
-      tolerations:
-        - key: node-role.kubernetes.io/master
-          effect: NoSchedule
-        - key: CriticalAddonsOnly
-          operator: "Exists"
-        - operator: "Exists"
-          effect: NoExecute
-        - operator: "Exists"
-          effect: NoSchedule
-      nodeSelector:
-        beta.kubernetes.io/os: linux
-      containers:
-      - name: coredns
-        image: <img>
-        imagePullPolicy: IfNotPresent
-        resources:
-          limits:
-            memory: 170Mi
-          requests:
-            cpu: 100m
-            memory: 70Mi
-        args: [ "-conf", "/etc/coredns/Corefile" ]
-        volumeMounts:
-        - name: config-volume
-          mountPath: /etc/coredns
-          readOnly: true
-        ports:
-        - containerPort: 53
-          name: dns
-          protocol: UDP
-        - containerPort: 53
-          name: dns-tcp
-          protocol: TCP
-        - containerPort: 9153
-          name: metrics
-          protocol: TCP
-        livenessProbe:
-          httpGet:
-            path: /health
-            port: 8080
-            scheme: HTTP
-          initialDelaySeconds: 60
-          timeoutSeconds: 5
-          successThreshold: 1
-          failureThreshold: 5
-        readinessProbe:
-          httpGet:
-            path: /ready
-            port: 8181
-            scheme: HTTP
-        securityContext:
-          allowPrivilegeEscalation: false
-          capabilities:
-            add:
-            - NET_BIND_SERVICE
-            drop:
-            - all
-          readOnlyRootFilesystem: true
-      dnsPolicy: Default
-      volumes:
-        - name: config-volume
-          configMap:
-            name: coredns
-            items:
-            - key: Corefile
-              path: Corefile
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: kube-dns
-  namespace: kube-system
-  annotations:
-    prometheus.io/port: "9153"
-    prometheus.io/scrape: "true"
-  labels:
-    k8s-app: kube-dns
-    kubernetes.io/cluster-service: "true"
-    kubernetes.io/name: CoreDNS
-    addonmanager.kubernetes.io/mode: Reconcile
-spec:
-  selector:
-    k8s-app: kube-dns
-  clusterIP: <clustIP>
-  ports:
-  - name: dns
-    port: 53
-    protocol: UDP
-  - name: dns-tcp
-    port: 53
-    protocol: TCP
-  - name: metrics
-    port: 9153
-    protocol: TCP
-`)
-
-func k8sAddons115CorednsYamlBytes() ([]byte, error) {
-	return _k8sAddons115CorednsYaml, nil
-}
-
-func k8sAddons115CorednsYaml() (*asset, error) {
-	bytes, err := k8sAddons115CorednsYamlBytes()
-	if err != nil {
-		return nil, err
-	}
-
-	info := bindataFileInfo{name: "k8s/addons/1.15/coredns.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
-	a := &asset{bytes: bytes, info: info}
-	return a, nil
-}
-
 var _k8sAddons16KubernetesmasteraddonsCalicoDaemonsetYaml = []byte(`# Calico Version v2.4.1
 # https://docs.projectcalico.org/v2.4/releases#v2.4.1
 # This manifest includes the following component versions:
@@ -8038,9 +7797,7 @@ func k8sAddons19KubernetesmasteraddonsKubeDnsDeploymentYaml() (*asset, error) {
 	return a, nil
 }
 
-var _k8sAddonsCorednsYaml = []byte(`# Warning: This is a file generated from the base underscore template file: coredns.yaml.base
-
-apiVersion: v1
+var _k8sAddonsCorednsYaml = []byte(`apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: coredns
@@ -8067,6 +7824,12 @@ rules:
   verbs:
   - list
   - watch
+- apiGroups:
+  - ""
+  resources:
+  - nodes
+  verbs:
+  - get
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
@@ -8075,7 +7838,7 @@ metadata:
     rbac.authorization.kubernetes.io/autoupdate: "true"
   labels:
     kubernetes.io/bootstrapping: rbac-defaults
-    addonmanager.kubernetes.io/mode: EnsureExists
+    addonmanager.kubernetes.io/mode: Reconcile
   name: system:coredns
 roleRef:
   apiGroup: rbac.authorization.k8s.io
@@ -8092,35 +7855,35 @@ metadata:
   name: coredns
   namespace: kube-system
   labels:
-      addonmanager.kubernetes.io/mode: EnsureExists
+      addonmanager.kubernetes.io/mode: Reconcile
 data:
   Corefile: |
     .:53 {
         errors
         health
+        ready
         kubernetes <domain> in-addr.arpa ip6.arpa {
             pods insecure
-            upstream
             fallthrough in-addr.arpa ip6.arpa
         }
         prometheus :9153
-        proxy . /etc/resolv.conf
+        forward . /etc/resolv.conf
         cache 30
         loop
         reload
         loadbalance
     }
 ---
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: coredns
   namespace: kube-system
   labels:
     k8s-app: kube-dns
+    kubernetes.io/name: "CoreDNS"
     kubernetes.io/cluster-service: "true"
     addonmanager.kubernetes.io/mode: Reconcile
-    kubernetes.io/name: CoreDNS
 spec:
   # replicas: not specified here:
   # 1. In order to make Addon Manager do not reconcile this replicas parameter.
@@ -8140,6 +7903,7 @@ spec:
       annotations:
         seccomp.security.alpha.kubernetes.io/pod: docker/default
     spec:
+      priorityClassName: system-cluster-critical
       affinity:
         podAntiAffinity:
           preferredDuringSchedulingIgnoredDuringExecution:
@@ -8162,7 +7926,6 @@ spec:
               topologyKey: kubernetes.io/hostname
             weight: 5
       serviceAccountName: coredns
-      priorityClassName: system-node-critical
       tolerations:
         - key: node-role.kubernetes.io/master
           effect: NoSchedule
@@ -8189,8 +7952,6 @@ spec:
         - name: config-volume
           mountPath: /etc/coredns
           readOnly: true
-        - name: tmp
-          mountPath: /tmp
         ports:
         - containerPort: 53
           name: dns
@@ -8210,6 +7971,11 @@ spec:
           timeoutSeconds: 5
           successThreshold: 1
           failureThreshold: 5
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: 8181
+            scheme: HTTP
         securityContext:
           allowPrivilegeEscalation: false
           capabilities:
@@ -8220,8 +7986,6 @@ spec:
           readOnlyRootFilesystem: true
       dnsPolicy: Default
       volumes:
-        - name: tmp
-          emptyDir: {}
         - name: config-volume
           configMap:
             name: coredns
@@ -8240,8 +8004,8 @@ metadata:
   labels:
     k8s-app: kube-dns
     kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
     kubernetes.io/name: CoreDNS
+    addonmanager.kubernetes.io/mode: Reconcile
 spec:
   selector:
     k8s-app: kube-dns
@@ -8252,6 +8016,9 @@ spec:
     protocol: UDP
   - name: dns-tcp
     port: 53
+    protocol: TCP
+  - name: metrics
+    port: 9153
     protocol: TCP
 `)
 
@@ -23293,7 +23060,6 @@ var _bindata = map[string]func() (*asset, error){
 	"dcos/dcosprovisionsource.sh":                                     dcosDcosprovisionsourceSh,
 	"iaasoutputs.t":                                                   iaasoutputsT,
 	"k8s/addons/1.10/kubernetesmasteraddons-kube-dns-deployment.yaml": k8sAddons110KubernetesmasteraddonsKubeDnsDeploymentYaml,
-	"k8s/addons/1.15/coredns.yaml":                                    k8sAddons115CorednsYaml,
 	"k8s/addons/1.6/kubernetesmasteraddons-calico-daemonset.yaml":     k8sAddons16KubernetesmasteraddonsCalicoDaemonsetYaml,
 	"k8s/addons/1.6/kubernetesmasteraddons-kubernetes-dashboard-deployment.yaml": k8sAddons16KubernetesmasteraddonsKubernetesDashboardDeploymentYaml,
 	"k8s/addons/1.7/kubernetesmasteraddons-kube-dns-deployment.yaml":             k8sAddons17KubernetesmasteraddonsKubeDnsDeploymentYaml,
@@ -23488,9 +23254,6 @@ var _bintree = &bintree{nil, map[string]*bintree{
 		"addons": {nil, map[string]*bintree{
 			"1.10": {nil, map[string]*bintree{
 				"kubernetesmasteraddons-kube-dns-deployment.yaml": {k8sAddons110KubernetesmasteraddonsKubeDnsDeploymentYaml, map[string]*bintree{}},
-			}},
-			"1.15": {nil, map[string]*bintree{
-				"coredns.yaml": {k8sAddons115CorednsYaml, map[string]*bintree{}},
 			}},
 			"1.6": {nil, map[string]*bintree{
 				"kubernetesmasteraddons-calico-daemonset.yaml":                {k8sAddons16KubernetesmasteraddonsCalicoDaemonsetYaml, map[string]*bintree{}},
