@@ -129,10 +129,8 @@ func (a *Properties) validate(isUpdate bool) error {
 	if e := a.validateLinuxProfile(); e != nil {
 		return e
 	}
-	if !isUpdate {
-		if e := a.validateAddons(); e != nil {
-			return e
-		}
+	if e := a.validateAddons(); e != nil {
+		return e
 	}
 	if e := a.validateExtensions(); e != nil {
 		return e
@@ -551,7 +549,6 @@ func (a *Properties) validateAddons() error {
 			}
 		}
 		for _, addon := range a.OrchestratorProfile.KubernetesConfig.Addons {
-
 			if addon.Data != "" {
 				if len(addon.Config) > 0 || len(addon.Containers) > 0 {
 					return errors.New("Config and containers should be empty when addon.Data is specified")
@@ -569,67 +566,115 @@ func (a *Properties) validateAddons() error {
 				if len(addon.Containers) > 2 {
 					return errors.New("heapster addon does not currently support more than 2 containers specs")
 				}
-				valid := make([]bool, len(addon.Containers))
-				for i, container := range addon.Containers {
-					for _, name := range HeapsterAddonContainerValues {
-						if container.Name == name {
-							valid[i] = true
-						}
-					}
-				}
-				for _, found := range valid {
-					if !found {
-						return errors.New(fmt.Sprintf("heapster addon spec included an unrecognized container name, valid values are %s", HeapsterAddonContainerValues))
-					}
+				err := hasValidAddonContainerNames(HeapsterAddonContainerValues, addon.Containers)
+				if err != nil {
+					return errors.New(fmt.Sprintf("heapster addon spec included an unrecognized container name, valid values are %s", HeapsterAddonContainerValues))
 				}
 			case "tiller":
 				if addon.Config != nil {
-					valid := make([]bool, len(addon.Config))
-					for key := range addon.Config {
-						for i, name := range TillerAddonConfigValues {
-							if key == name {
-								valid[i] = true
-							}
-						}
-					}
-					for _, found := range valid {
-						if !found {
-							return errors.New(fmt.Sprintf("tiller addon spec included an unrecognized configuration key, valid values are %s", TillerAddonConfigValues))
-						}
+					err := hasValidAddonConfigKeys(TillerAddonConfigValues, addon.Config)
+					if err != nil {
+						return errors.New(fmt.Sprintf("tiller addon spec included an unrecognized configuration key, valid values are %s", TillerAddonConfigValues))
 					}
 				}
 				if len(addon.Containers) > 1 {
 					return errors.New("tiller addon does not currently support more than 1 containers spec")
 				}
-				valid := make([]bool, len(addon.Containers))
-				for i, container := range addon.Containers {
-					for _, name := range TillerAddonContainerValues {
-						if container.Name == name {
-							valid[i] = true
-						}
-					}
-				}
-				for _, found := range valid {
-					if !found {
-						return errors.New(fmt.Sprintf("tiller addon spec included an unrecognized container name, valid values are %s", TillerAddonContainerValues))
-					}
+				err := hasValidAddonContainerNames(TillerAddonContainerValues, addon.Containers)
+				if err != nil {
+					return errors.New(fmt.Sprintf("tiller addon spec included an unrecognized container name, valid values are %s", TillerAddonContainerValues))
 				}
 			case "aci-connector":
-				// TODO add validation
+				if addon.Config != nil {
+					err := hasValidAddonConfigKeys(ACIConnectorAddonConfigValues, addon.Config)
+					if err != nil {
+						return errors.New(fmt.Sprintf("aci-connector addon spec included an unrecognized configuration key, valid values are %s", ACIConnectorAddonConfigValues))
+					}
+				}
+				if len(addon.Containers) > 1 {
+					return errors.New("aci-connector addon does not currently support more than 1 containers spec")
+				}
+				err := hasValidAddonContainerNames(ACIConnectorAddonContainerValues, addon.Containers)
+				if err != nil {
+					return errors.New(fmt.Sprintf("aci-connector addon spec included an unrecognized container name, valid values are %s", ACIConnectorAddonContainerValues))
+				}
 			case "kubernetes-dashboard":
-				// TODO add validation
+				if addon.Config != nil {
+					return errors.New("kubernetes-dashboard addon does not currently support custom configuration")
+				}
+				if len(addon.Containers) > 1 {
+					return errors.New("kubernetes-dashboard addon does not currently support more than 1 container specs")
+				}
+				err := hasValidAddonContainerNames(DashboardAddonContainerValues, addon.Containers)
+				if err != nil {
+					return errors.New(fmt.Sprintf("kubernetes-dashboard addon spec included an unrecognized container name, valid values are %s", DashboardAddonContainerValues))
+				}
 			case "rescheduler":
-				// TODO add validation
+				if addon.Config != nil {
+					return errors.New("rescheduler addon does not currently support custom configuration")
+				}
+				if len(addon.Containers) > 1 {
+					return errors.New("rescheduler addon does not currently support more than 1 container specs")
+				}
+				err := hasValidAddonContainerNames(ReschedulerAddonContainerValues, addon.Containers)
+				if err != nil {
+					return errors.New(fmt.Sprintf("rescheduler addon spec included an unrecognized container name, valid values are %s", ReschedulerAddonContainerValues))
+				}
 			case "container-monitoring":
-				// TODO add validation
+				if addon.Config != nil {
+					err := hasValidAddonConfigKeys(ContainerMonitoringAddonConfigValues, addon.Config)
+					if err != nil {
+						return errors.New(fmt.Sprintf("container-monitoring addon spec included an unrecognized configuration key, valid values are %s", ContainerMonitoringAddonConfigValues))
+					}
+				}
+				if len(addon.Containers) > 1 {
+					return errors.New("container-monitoring addon does not currently support more than 1 containers spec")
+				}
+				err := hasValidAddonContainerNames(ContainerMonitoringAddonContainerValues, addon.Containers)
+				if err != nil {
+					return errors.New(fmt.Sprintf("container-monitoring addon spec included an unrecognized container name, valid values are %s", ContainerMonitoringAddonContainerValues))
+				}
 			case "ip-masq-agent":
-				// TODO add validation
+				if addon.Config != nil {
+					err := hasValidAddonConfigKeys(IPMasqAgentAddonConfigValues, addon.Config)
+					if err != nil {
+						return errors.New(fmt.Sprintf("ip-masq-agent addon spec included an unrecognized configuration key, valid values are %s", IPMasqAgentAddonConfigValues))
+					}
+				}
+				if len(addon.Containers) > 1 {
+					return errors.New("ip-masq-agent addon does not currently support more than 1 containers spec")
+				}
+				err := hasValidAddonContainerNames(IPMasqAgentAddonContainerValues, addon.Containers)
+				if err != nil {
+					return errors.New(fmt.Sprintf("ip-masq-agent addon spec included an unrecognized container name, valid values are %s", IPMasqAgentAddonContainerValues))
+				}
 			case "aad-pod-identity":
-				// TODO add validation
+				if addon.Config != nil {
+					return errors.New("aad-pod-identity addon does not currently support custom configuration")
+				}
+				if len(addon.Containers) > 2 {
+					return errors.New("aad-pod-identity addon does not currently support more than 2 container specs")
+				}
+				err := hasValidAddonContainerNames(AADPodIdentityAddonContainerValues, addon.Containers)
+				if err != nil {
+					return errors.New(fmt.Sprintf("aad-pod-identity addon spec included an unrecognized container name, valid values are %s", AADPodIdentityAddonContainerValues))
+				}
 			case "cluster-autoscaler":
-				// TODO add complete validation
 				if to.Bool(addon.Enabled) && isAvailabilitySets {
 					return errors.Errorf("Cluster Autoscaler add-on can only be used with VirtualMachineScaleSets. Please specify \"availabilityProfile\": \"%s\"", VirtualMachineScaleSets)
+				}
+				if addon.Config != nil {
+					err := hasValidAddonConfigKeys(ClusterAutoscalerAddonConfigValues, addon.Config)
+					if err != nil {
+						return errors.New(fmt.Sprintf("cluster-autoscaler addon spec included an unrecognized configuration key, valid values are %s", ClusterAutoscalerAddonConfigValues))
+					}
+				}
+				if len(addon.Containers) > 1 {
+					return errors.New("cluster-autoscaler addon does not currently support more than 1 containers spec")
+				}
+				err := hasValidAddonContainerNames(ClusterAutoscalerAddonContainerValues, addon.Containers)
+				if err != nil {
+					return errors.New(fmt.Sprintf("cluster-autoscaler addon spec included an unrecognized container name, valid values are %s", ClusterAutoscalerAddonContainerValues))
 				}
 			case "nvidia-device-plugin":
 				// TODO add complete validation
@@ -1629,4 +1674,42 @@ func validateDependenciesLocation(dependenciesLocation DependenciesLocation, dep
 		}
 	}
 	return false
+}
+
+func hasValidAddonConfigKeys(allowed []string, vals map[string]string) error {
+	var found int
+	valid := make([]bool, len(vals))
+	for key := range vals {
+		for _, name := range allowed {
+			if key == name {
+				valid[found] = true
+				found++
+			}
+		}
+	}
+	for _, v := range valid {
+		if !v {
+			return errors.New("not all vals are allowed")
+		}
+	}
+	return nil
+}
+
+func hasValidAddonContainerNames(allowed []string, specs []KubernetesContainerSpec) error {
+	var found int
+	valid := make([]bool, len(specs))
+	for _, spec := range specs {
+		for _, name := range allowed {
+			if spec.Name == name {
+				valid[found] = true
+				found++
+			}
+		}
+	}
+	for _, v := range valid {
+		if !v {
+			return errors.New("not all vals are allowed")
+		}
+	}
+	return nil
 }

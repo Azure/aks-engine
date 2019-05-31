@@ -104,13 +104,46 @@ var (
 	DependenciesLocationValues = []DependenciesLocation{"", AzureStackDependenciesLocationPublic, AzureStackDependenciesLocationChina, AzureStackDependenciesLocationGerman, AzureStackDependenciesLocationUSGovernment}
 
 	// HeapsterAddonContainerValues holds the valid values for heapster addon container names
-	HeapsterAddonContainerValues = [...]string{"heapster", "heapster-nanny"}
+	HeapsterAddonContainerValues = []string{"heapster", "heapster-nanny"}
 
 	// TillerAddonContainerValues holds the valid values for tiller addon container names
-	TillerAddonContainerValues = [...]string{"tiller"}
+	TillerAddonContainerValues = []string{"tiller"}
 
 	// TillerAddonConfigValues holds the valid values for tiller addon configuration overrides
-	TillerAddonConfigValues = [...]string{"max-history"}
+	TillerAddonConfigValues = []string{"max-history"}
+
+	// ACIConnectorAddonContainerValues holds the valid values for aci-connector addon container names
+	ACIConnectorAddonContainerValues = []string{"aci-connector"}
+
+	// ACIConnectorAddonConfigValues holds the valid values for aci-connector addon configuration overrides
+	ACIConnectorAddonConfigValues = []string{"region", "nodeName", "os", "taint"}
+
+	// DashboardAddonContainerValues holds the valid values for dashboard addon container names
+	DashboardAddonContainerValues = []string{"kubernetes-dashboard"}
+
+	// ReschedulerAddonContainerValues holds the valid values for rescheduler addon container names
+	ReschedulerAddonContainerValues = []string{"rescheduler"}
+
+	// ContainerMonitoringAddonContainerValues holds the valid values for container monitoring addon container names
+	ContainerMonitoringAddonContainerValues = []string{"omsagent"}
+
+	// ContainerMonitoringAddonConfigValues holds the valid values for container monitoring addon configuration overrides
+	ContainerMonitoringAddonConfigValues = []string{"omsAgentVersion", "dockerProviderVersion", "workspaceGuid", "workspaceKey"}
+
+	// IPMasqAgentAddonContainerValues holds the valid values for ip-masq-agent addon container names
+	IPMasqAgentAddonContainerValues = []string{"ip-masq-agent"}
+
+	// IPMasqAgentAddonConfigValues holds the valid values for ip-masq-agent addon configuration overrides
+	IPMasqAgentAddonConfigValues = []string{"non-masquerade-cidr", "non-masq-cni-cidr"}
+
+	// AADPodIdentityAddonContainerValues holds the valid values for aad-pod-identity addon container names
+	AADPodIdentityAddonContainerValues = []string{"nmi", "mic"}
+
+	// ClusterAutoscalerAddonContainerValues holds the valid values for cluster-autoscaler addon container names
+	ClusterAutoscalerAddonContainerValues = []string{"cluster-autoscaler"}
+
+	// ClusterAutoscalerAddonConfigValues holds the valid values for cluster-autoscaler addon configuration overrides
+	ClusterAutoscalerAddonConfigValues = []string{"min-nodes", "max-nodes", "scan-interval"}
 )
 
 // Kubernetes configuration
