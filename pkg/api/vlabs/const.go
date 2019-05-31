@@ -144,6 +144,33 @@ var (
 
 	// ClusterAutoscalerAddonConfigValues holds the valid values for cluster-autoscaler addon configuration overrides
 	ClusterAutoscalerAddonConfigValues = []string{"min-nodes", "max-nodes", "scan-interval"}
+
+	// NvidiaAddonContainerValues holds the valid values for nvidia addon container names
+	NvidiaAddonContainerValues = []string{"nvidia-device-plugin"}
+
+	// BlobfuseFlexvolumeAddonContainerValues holds the valid values for blobfuse-flexvolume addon container names
+	BlobfuseFlexvolumeAddonContainerValues = []string{"blobfuse-flexvolume"}
+
+	// SMBFlexvolumeAddonContainerValues holds the valid values for smb-flexvolume addon container names
+	SMBFlexvolumeAddonContainerValues = []string{"smb-flexvolume"}
+
+	// KeyvaultFlexvolumeAddonContainerValues holds the valid values for keyvault-flexvolume addon container names
+	KeyvaultFlexvolumeAddonContainerValues = []string{"keyvault-flexvolume"}
+
+	// MetricsServerAddonContainerValues holds the valid values for metrics-server addon container names
+	MetricsServerAddonContainerValues = []string{"metrics-server"}
+
+	// AzureCNINetworkMonitorAddonContainerValues holds the valid values for azure-cni-networkmonitor addon container names
+	AzureCNINetworkMonitorAddonContainerValues = []string{"azure-cni-networkmonitor"}
+
+	// DNSAutoscalerAddonContainerValues holds the valid values for dns-autoscaler addon container names
+	DNSAutoscalerAddonContainerValues = []string{"dns-autoscaler"}
+
+	// CalicoAddonContainerValues holds the valid values for calico addon container names
+	CalicoAddonContainerValues = []string{"calico-typha", "calico-cni", "calico-node", "calico-cluster-proportional-autoscaler"}
+
+	// AzureNetworkPolicyAddonContainerValues holds the valid values for azure-npm-daemonset addon container names
+	AzureNetworkPolicyAddonContainerValues = []string{"azure-npm-daemonset"}
 )
 
 // Kubernetes configuration

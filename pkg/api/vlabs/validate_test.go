@@ -4138,3 +4138,1294 @@ func TestValidateClusterAutoscalerAddon(t *testing.T) {
 		})
 	}
 }
+
+func TestValidateNvidiaAddon(t *testing.T) {
+	tests := []struct {
+		name        string
+		p           *Properties
+		expectedErr error
+	}{
+		{
+			name: "has unrecognized config",
+			p: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					KubernetesConfig: &KubernetesConfig{
+						Addons: []KubernetesAddon{
+							{
+								Name: "nvidia-device-plugin",
+								Config: map[string]string{
+									"foo": "bar",
+								},
+							},
+						},
+					},
+				},
+			},
+			expectedErr: errors.New("nvidia-device-plugin addon does not currently support custom configuration"),
+		},
+		{
+			name: "has too many containers",
+			p: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					KubernetesConfig: &KubernetesConfig{
+						Addons: []KubernetesAddon{
+							{
+								Name: "nvidia-device-plugin",
+								Containers: []KubernetesContainerSpec{
+									{
+										Name: "nvidia-device-plugin",
+									},
+									{
+										Name: "nvidia-device-plugin-extra",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			expectedErr: errors.New("nvidia-device-plugin addon does not currently support more than 1 container specs"),
+		},
+		{
+			name: "one container with the wrong name",
+			p: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					KubernetesConfig: &KubernetesConfig{
+						Addons: []KubernetesAddon{
+							{
+								Name: "nvidia-device-plugin",
+								Containers: []KubernetesContainerSpec{
+									{
+										Name: "nvidia-device-plugin-bogon",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			expectedErr: errors.New(fmt.Sprintf("nvidia-device-plugin addon spec included an unrecognized container name, valid values are %s", NvidiaAddonContainerValues)),
+		},
+		{
+			name: "valid spec",
+			p: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					KubernetesConfig: &KubernetesConfig{
+						Addons: []KubernetesAddon{
+							{
+								Name: "nvidia-device-plugin",
+								Containers: []KubernetesContainerSpec{
+									{
+										Name:           "nvidia-device-plugin",
+										CPURequests:    "50m",
+										MemoryRequests: "100Mi",
+										CPULimits:      "50m",
+										MemoryLimits:   "100Mi",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			expectedErr: nil,
+		},
+	}
+
+	for _, test := range tests {
+		test := test
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+			err := test.p.validateAddons()
+			if test.expectedErr != nil {
+				if err != nil {
+					if err.Error() != test.expectedErr.Error() {
+						t.Errorf("expected error to be thrown with msg : %s", test.expectedErr.Error())
+					}
+				} else {
+					t.Errorf("expected error to be thrown, instead got nil")
+				}
+			} else {
+				if err != nil {
+					t.Errorf("expected nil error, instead got : %s", err.Error())
+				}
+			}
+		})
+	}
+}
+
+func TestValidateBlobfuseFlexvolumeAddon(t *testing.T) {
+	tests := []struct {
+		name        string
+		p           *Properties
+		expectedErr error
+	}{
+		{
+			name: "has unrecognized config",
+			p: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					KubernetesConfig: &KubernetesConfig{
+						Addons: []KubernetesAddon{
+							{
+								Name: "blobfuse-flexvolume",
+								Config: map[string]string{
+									"foo": "bar",
+								},
+							},
+						},
+					},
+				},
+			},
+			expectedErr: errors.New("blobfuse-flexvolume addon does not currently support custom configuration"),
+		},
+		{
+			name: "has too many containers",
+			p: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					KubernetesConfig: &KubernetesConfig{
+						Addons: []KubernetesAddon{
+							{
+								Name: "blobfuse-flexvolume",
+								Containers: []KubernetesContainerSpec{
+									{
+										Name: "blobfuse-flexvolume",
+									},
+									{
+										Name: "blobfuse-flexvolume-extra",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			expectedErr: errors.New("blobfuse-flexvolume addon does not currently support more than 1 container specs"),
+		},
+		{
+			name: "one container with the wrong name",
+			p: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					KubernetesConfig: &KubernetesConfig{
+						Addons: []KubernetesAddon{
+							{
+								Name: "blobfuse-flexvolume",
+								Containers: []KubernetesContainerSpec{
+									{
+										Name: "blobfuse-flexvolume-bogon",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			expectedErr: errors.New(fmt.Sprintf("blobfuse-flexvolume addon spec included an unrecognized container name, valid values are %s", BlobfuseFlexvolumeAddonContainerValues)),
+		},
+		{
+			name: "valid spec",
+			p: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					KubernetesConfig: &KubernetesConfig{
+						Addons: []KubernetesAddon{
+							{
+								Name: "blobfuse-flexvolume",
+								Containers: []KubernetesContainerSpec{
+									{
+										Name:           "blobfuse-flexvolume",
+										CPURequests:    "50m",
+										MemoryRequests: "100Mi",
+										CPULimits:      "50m",
+										MemoryLimits:   "100Mi",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			expectedErr: nil,
+		},
+	}
+
+	for _, test := range tests {
+		test := test
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+			err := test.p.validateAddons()
+			if test.expectedErr != nil {
+				if err != nil {
+					if err.Error() != test.expectedErr.Error() {
+						t.Errorf("expected error to be thrown with msg : %s", test.expectedErr.Error())
+					}
+				} else {
+					t.Errorf("expected error to be thrown, instead got nil")
+				}
+			} else {
+				if err != nil {
+					t.Errorf("expected nil error, instead got : %s", err.Error())
+				}
+			}
+		})
+	}
+}
+
+func TestValidateSMBFlexvolumeAddon(t *testing.T) {
+	tests := []struct {
+		name        string
+		p           *Properties
+		expectedErr error
+	}{
+		{
+			name: "has unrecognized config",
+			p: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					KubernetesConfig: &KubernetesConfig{
+						Addons: []KubernetesAddon{
+							{
+								Name: "smb-flexvolume",
+								Config: map[string]string{
+									"foo": "bar",
+								},
+							},
+						},
+					},
+				},
+			},
+			expectedErr: errors.New("smb-flexvolume addon does not currently support custom configuration"),
+		},
+		{
+			name: "has too many containers",
+			p: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					KubernetesConfig: &KubernetesConfig{
+						Addons: []KubernetesAddon{
+							{
+								Name: "smb-flexvolume",
+								Containers: []KubernetesContainerSpec{
+									{
+										Name: "smb-flexvolume",
+									},
+									{
+										Name: "smb-flexvolume-extra",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			expectedErr: errors.New("smb-flexvolume addon does not currently support more than 1 container specs"),
+		},
+		{
+			name: "one container with the wrong name",
+			p: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					KubernetesConfig: &KubernetesConfig{
+						Addons: []KubernetesAddon{
+							{
+								Name: "smb-flexvolume",
+								Containers: []KubernetesContainerSpec{
+									{
+										Name: "smb-flexvolume-bogon",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			expectedErr: errors.New(fmt.Sprintf("smb-flexvolume addon spec included an unrecognized container name, valid values are %s", SMBFlexvolumeAddonContainerValues)),
+		},
+		{
+			name: "valid spec",
+			p: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					KubernetesConfig: &KubernetesConfig{
+						Addons: []KubernetesAddon{
+							{
+								Name: "smb-flexvolume",
+								Containers: []KubernetesContainerSpec{
+									{
+										Name:           "smb-flexvolume",
+										CPURequests:    "50m",
+										MemoryRequests: "100Mi",
+										CPULimits:      "50m",
+										MemoryLimits:   "100Mi",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			expectedErr: nil,
+		},
+	}
+
+	for _, test := range tests {
+		test := test
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+			err := test.p.validateAddons()
+			if test.expectedErr != nil {
+				if err != nil {
+					if err.Error() != test.expectedErr.Error() {
+						t.Errorf("expected error to be thrown with msg : %s", test.expectedErr.Error())
+					}
+				} else {
+					t.Errorf("expected error to be thrown, instead got nil")
+				}
+			} else {
+				if err != nil {
+					t.Errorf("expected nil error, instead got : %s", err.Error())
+				}
+			}
+		})
+	}
+}
+
+func TestValidateKeyvaultFlexvolumeAddon(t *testing.T) {
+	tests := []struct {
+		name        string
+		p           *Properties
+		expectedErr error
+	}{
+		{
+			name: "has unrecognized config",
+			p: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					KubernetesConfig: &KubernetesConfig{
+						Addons: []KubernetesAddon{
+							{
+								Name: "keyvault-flexvolume",
+								Config: map[string]string{
+									"foo": "bar",
+								},
+							},
+						},
+					},
+				},
+			},
+			expectedErr: errors.New("keyvault-flexvolume addon does not currently support custom configuration"),
+		},
+		{
+			name: "has too many containers",
+			p: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					KubernetesConfig: &KubernetesConfig{
+						Addons: []KubernetesAddon{
+							{
+								Name: "keyvault-flexvolume",
+								Containers: []KubernetesContainerSpec{
+									{
+										Name: "keyvault-flexvolume",
+									},
+									{
+										Name: "keyvault-flexvolume-extra",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			expectedErr: errors.New("keyvault-flexvolume addon does not currently support more than 1 container specs"),
+		},
+		{
+			name: "one container with the wrong name",
+			p: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					KubernetesConfig: &KubernetesConfig{
+						Addons: []KubernetesAddon{
+							{
+								Name: "keyvault-flexvolume",
+								Containers: []KubernetesContainerSpec{
+									{
+										Name: "keyvault-flexvolume-bogon",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			expectedErr: errors.New(fmt.Sprintf("keyvault-flexvolume addon spec included an unrecognized container name, valid values are %s", KeyvaultFlexvolumeAddonContainerValues)),
+		},
+		{
+			name: "valid spec",
+			p: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					KubernetesConfig: &KubernetesConfig{
+						Addons: []KubernetesAddon{
+							{
+								Name: "keyvault-flexvolume",
+								Containers: []KubernetesContainerSpec{
+									{
+										Name:           "keyvault-flexvolume",
+										CPURequests:    "50m",
+										MemoryRequests: "100Mi",
+										CPULimits:      "50m",
+										MemoryLimits:   "100Mi",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			expectedErr: nil,
+		},
+	}
+
+	for _, test := range tests {
+		test := test
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+			err := test.p.validateAddons()
+			if test.expectedErr != nil {
+				if err != nil {
+					if err.Error() != test.expectedErr.Error() {
+						t.Errorf("expected error to be thrown with msg : %s", test.expectedErr.Error())
+					}
+				} else {
+					t.Errorf("expected error to be thrown, instead got nil")
+				}
+			} else {
+				if err != nil {
+					t.Errorf("expected nil error, instead got : %s", err.Error())
+				}
+			}
+		})
+	}
+}
+
+func TestValidateMetricsServerAddon(t *testing.T) {
+	tests := []struct {
+		name        string
+		p           *Properties
+		expectedErr error
+	}{
+		{
+			name: "has unrecognized config",
+			p: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					KubernetesConfig: &KubernetesConfig{
+						Addons: []KubernetesAddon{
+							{
+								Name: "metrics-server",
+								Config: map[string]string{
+									"foo": "bar",
+								},
+							},
+						},
+					},
+				},
+			},
+			expectedErr: errors.New("metrics-server addon does not currently support custom configuration"),
+		},
+		{
+			name: "has too many containers",
+			p: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					KubernetesConfig: &KubernetesConfig{
+						Addons: []KubernetesAddon{
+							{
+								Name: "metrics-server",
+								Containers: []KubernetesContainerSpec{
+									{
+										Name: "metrics-server",
+									},
+									{
+										Name: "metrics-server-extra",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			expectedErr: errors.New("metrics-server addon does not currently support more than 1 container specs"),
+		},
+		{
+			name: "includes unsupported resource configuration",
+			p: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					KubernetesConfig: &KubernetesConfig{
+						Addons: []KubernetesAddon{
+							{
+								Name: "metrics-server",
+								Containers: []KubernetesContainerSpec{
+									{
+										Name:           "metrics-server",
+										CPURequests:    "10m",
+										MemoryRequests: "100Mi",
+										CPULimits:      "10m",
+										MemoryLimits:   "100Mi",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			expectedErr: errors.New(fmt.Sprintf("metrics-server addon does not currently support configurable CPU and memory resource limits or requests")),
+		},
+		{
+			name: "one container with the wrong name",
+			p: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					KubernetesConfig: &KubernetesConfig{
+						Addons: []KubernetesAddon{
+							{
+								Name: "metrics-server",
+								Containers: []KubernetesContainerSpec{
+									{
+										Name: "metrics-server-bogon",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			expectedErr: errors.New(fmt.Sprintf("metrics-server addon spec included an unrecognized container name, valid values are %s", MetricsServerAddonContainerValues)),
+		},
+		{
+			name: "valid spec",
+			p: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					KubernetesConfig: &KubernetesConfig{
+						Addons: []KubernetesAddon{
+							{
+								Name: "metrics-server",
+								Containers: []KubernetesContainerSpec{
+									{
+										Name:  "metrics-server",
+										Image: "my-custom-image",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			expectedErr: nil,
+		},
+	}
+
+	for _, test := range tests {
+		test := test
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+			err := test.p.validateAddons()
+			if test.expectedErr != nil {
+				if err != nil {
+					if err.Error() != test.expectedErr.Error() {
+						t.Errorf("expected error to be thrown with msg : %s", test.expectedErr.Error())
+					}
+				} else {
+					t.Errorf("expected error to be thrown, instead got nil")
+				}
+			} else {
+				if err != nil {
+					t.Errorf("expected nil error, instead got : %s", err.Error())
+				}
+			}
+		})
+	}
+}
+
+func TestValidateAzureCNINetworkMonitorAddon(t *testing.T) {
+	tests := []struct {
+		name        string
+		p           *Properties
+		expectedErr error
+	}{
+		{
+			name: "has unrecognized config",
+			p: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					KubernetesConfig: &KubernetesConfig{
+						Addons: []KubernetesAddon{
+							{
+								Name: "azure-cni-networkmonitor",
+								Config: map[string]string{
+									"foo": "bar",
+								},
+							},
+						},
+					},
+				},
+			},
+			expectedErr: errors.New("azure-cni-networkmonitor addon does not currently support custom configuration"),
+		},
+		{
+			name: "has too many containers",
+			p: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					KubernetesConfig: &KubernetesConfig{
+						Addons: []KubernetesAddon{
+							{
+								Name: "azure-cni-networkmonitor",
+								Containers: []KubernetesContainerSpec{
+									{
+										Name: "azure-cni-networkmonitor",
+									},
+									{
+										Name: "v-extra",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			expectedErr: errors.New("azure-cni-networkmonitor addon does not currently support more than 1 container specs"),
+		},
+		{
+			name: "includes unsupported resource configuration",
+			p: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					KubernetesConfig: &KubernetesConfig{
+						Addons: []KubernetesAddon{
+							{
+								Name: "azure-cni-networkmonitor",
+								Containers: []KubernetesContainerSpec{
+									{
+										Name:           "azure-cni-networkmonitor",
+										CPURequests:    "10m",
+										MemoryRequests: "100Mi",
+										CPULimits:      "10m",
+										MemoryLimits:   "100Mi",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			expectedErr: errors.New(fmt.Sprintf("azure-cni-networkmonitor addon does not currently support configurable CPU and memory resource limits or requests")),
+		},
+		{
+			name: "one container with the wrong name",
+			p: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					KubernetesConfig: &KubernetesConfig{
+						Addons: []KubernetesAddon{
+							{
+								Name: "azure-cni-networkmonitor",
+								Containers: []KubernetesContainerSpec{
+									{
+										Name: "azure-cni-networkmonitor-bogon",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			expectedErr: errors.New(fmt.Sprintf("azure-cni-networkmonitor addon spec included an unrecognized container name, valid values are %s", AzureCNINetworkMonitorAddonContainerValues)),
+		},
+		{
+			name: "valid spec",
+			p: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					KubernetesConfig: &KubernetesConfig{
+						Addons: []KubernetesAddon{
+							{
+								Name: "azure-cni-networkmonitor",
+								Containers: []KubernetesContainerSpec{
+									{
+										Name:  "azure-cni-networkmonitor",
+										Image: "my-custom-image",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			expectedErr: nil,
+		},
+	}
+
+	for _, test := range tests {
+		test := test
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+			err := test.p.validateAddons()
+			if test.expectedErr != nil {
+				if err != nil {
+					if err.Error() != test.expectedErr.Error() {
+						t.Errorf("expected error to be thrown with msg : %s", test.expectedErr.Error())
+					}
+				} else {
+					t.Errorf("expected error to be thrown, instead got nil")
+				}
+			} else {
+				if err != nil {
+					t.Errorf("expected nil error, instead got : %s", err.Error())
+				}
+			}
+		})
+	}
+}
+
+func TestValidateDNSAutoscalerAddon(t *testing.T) {
+	tests := []struct {
+		name        string
+		p           *Properties
+		expectedErr error
+	}{
+		{
+			name: "has unrecognized config",
+			p: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					KubernetesConfig: &KubernetesConfig{
+						Addons: []KubernetesAddon{
+							{
+								Name: "dns-autoscaler",
+								Config: map[string]string{
+									"foo": "bar",
+								},
+							},
+						},
+					},
+				},
+			},
+			expectedErr: errors.New("dns-autoscaler addon does not currently support custom configuration"),
+		},
+		{
+			name: "has too many containers",
+			p: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					KubernetesConfig: &KubernetesConfig{
+						Addons: []KubernetesAddon{
+							{
+								Name: "dns-autoscaler",
+								Containers: []KubernetesContainerSpec{
+									{
+										Name: "dns-autoscaler",
+									},
+									{
+										Name: "dns-autoscaler-extra",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			expectedErr: errors.New("dns-autoscaler addon does not currently support more than 1 container specs"),
+		},
+		{
+			name: "includes unsupported resource configuration",
+			p: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					KubernetesConfig: &KubernetesConfig{
+						Addons: []KubernetesAddon{
+							{
+								Name: "dns-autoscaler",
+								Containers: []KubernetesContainerSpec{
+									{
+										Name:           "dns-autoscaler",
+										CPURequests:    "10m",
+										MemoryRequests: "100Mi",
+										CPULimits:      "10m",
+										MemoryLimits:   "100Mi",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			expectedErr: errors.New("dns-autoscaler addon does not currently support configurable CPU limits"),
+		},
+		{
+			name: "includes unsupported resource configuration",
+			p: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					KubernetesConfig: &KubernetesConfig{
+						Addons: []KubernetesAddon{
+							{
+								Name: "dns-autoscaler",
+								Containers: []KubernetesContainerSpec{
+									{
+										Name:           "dns-autoscaler",
+										CPURequests:    "10m",
+										MemoryRequests: "100Mi",
+										MemoryLimits:   "100Mi",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			expectedErr: errors.New("dns-autoscaler addon does not currently support configurable memory limits"),
+		},
+		{
+			name: "one container with the wrong name",
+			p: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					KubernetesConfig: &KubernetesConfig{
+						Addons: []KubernetesAddon{
+							{
+								Name: "dns-autoscaler",
+								Containers: []KubernetesContainerSpec{
+									{
+										Name: "dns-autoscaler-bogon",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			expectedErr: errors.New(fmt.Sprintf("dns-autoscaler addon spec included an unrecognized container name, valid values are %s", DNSAutoscalerAddonContainerValues)),
+		},
+		{
+			name: "valid spec",
+			p: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					KubernetesConfig: &KubernetesConfig{
+						Addons: []KubernetesAddon{
+							{
+								Name: "dns-autoscaler",
+								Containers: []KubernetesContainerSpec{
+									{
+										Name:           "dns-autoscaler",
+										Image:          "my-custom-image",
+										CPURequests:    "20m",
+										MemoryRequests: "100Mi",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			expectedErr: nil,
+		},
+	}
+
+	for _, test := range tests {
+		test := test
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+			err := test.p.validateAddons()
+			if test.expectedErr != nil {
+				if err != nil {
+					if err.Error() != test.expectedErr.Error() {
+						t.Errorf("expected error to be thrown with msg : %s", test.expectedErr.Error())
+					}
+				} else {
+					t.Errorf("expected error to be thrown, instead got nil")
+				}
+			} else {
+				if err != nil {
+					t.Errorf("expected nil error, instead got : %s", err.Error())
+				}
+			}
+		})
+	}
+}
+
+func TestValidateCalicoAddon(t *testing.T) {
+	tests := []struct {
+		name        string
+		p           *Properties
+		expectedErr error
+	}{
+		{
+			name: "has unrecognized config",
+			p: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					KubernetesConfig: &KubernetesConfig{
+						Addons: []KubernetesAddon{
+							{
+								Name: "calico-daemonset",
+								Config: map[string]string{
+									"foo": "bar",
+								},
+							},
+						},
+					},
+				},
+			},
+			expectedErr: errors.New("calico-daemonset addon does not currently support custom configuration"),
+		},
+		{
+			name: "has too many containers",
+			p: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					KubernetesConfig: &KubernetesConfig{
+						Addons: []KubernetesAddon{
+							{
+								Name: "calico-daemonset",
+								Containers: []KubernetesContainerSpec{
+									{
+										Name: "calico-typha",
+									},
+									{
+										Name: "calico-cni",
+									},
+									{
+										Name: "calico-node",
+									},
+									{
+										Name: "calico-cluster-proportional-autoscaler",
+									},
+									{
+										Name: "calico-extra",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			expectedErr: errors.New("calico-daemonset addon does not currently support more than 4 container specs"),
+		},
+		{
+			name: "includes unsupported resource configuration",
+			p: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					KubernetesConfig: &KubernetesConfig{
+						Addons: []KubernetesAddon{
+							{
+								Name: "calico-daemonset",
+								Containers: []KubernetesContainerSpec{
+									{
+										Name:           "calico-typha",
+										CPURequests:    "10m",
+										MemoryRequests: "100Mi",
+										CPULimits:      "10m",
+										MemoryLimits:   "100Mi",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			expectedErr: errors.New("calico-daemonset addon does not currently support configurable CPU and memory resource limits or requests"),
+		},
+		{
+			name: "one container with the wrong name",
+			p: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					KubernetesConfig: &KubernetesConfig{
+						Addons: []KubernetesAddon{
+							{
+								Name: "calico-daemonset",
+								Containers: []KubernetesContainerSpec{
+									{
+										Name: "calico-daemonset-bogon",
+									},
+									{
+										Name:  "calico-cni",
+										Image: "my-custom-image",
+									},
+									{
+										Name:  "calico-node",
+										Image: "my-custom-image",
+									},
+									{
+										Name:  "calico-cluster-proportional-autoscaler",
+										Image: "my-custom-image",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			expectedErr: errors.New(fmt.Sprintf("calico-daemonset addon spec included an unrecognized container name, valid values are %s", CalicoAddonContainerValues)),
+		},
+		{
+			name: "two containers with the wrong name",
+			p: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					KubernetesConfig: &KubernetesConfig{
+						Addons: []KubernetesAddon{
+							{
+								Name: "calico-daemonset",
+								Containers: []KubernetesContainerSpec{
+									{
+										Name: "calico-daemonset-bogon",
+									},
+									{
+										Name: "calico-daemonset-bogon-2",
+									},
+									{
+										Name:  "calico-cni",
+										Image: "my-custom-image",
+									},
+									{
+										Name:  "calico-node",
+										Image: "my-custom-image",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			expectedErr: errors.New(fmt.Sprintf("calico-daemonset addon spec included an unrecognized container name, valid values are %s", CalicoAddonContainerValues)),
+		},
+		{
+			name: "three containers with the wrong name",
+			p: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					KubernetesConfig: &KubernetesConfig{
+						Addons: []KubernetesAddon{
+							{
+								Name: "calico-daemonset",
+								Containers: []KubernetesContainerSpec{
+									{
+										Name: "calico-daemonset-bogon",
+									},
+									{
+										Name: "calico-daemonset-bogon-2",
+									},
+									{
+										Name:  "calico-bogon-3",
+										Image: "my-custom-image",
+									},
+									{
+										Name:  "calico-node",
+										Image: "my-custom-image",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			expectedErr: errors.New(fmt.Sprintf("calico-daemonset addon spec included an unrecognized container name, valid values are %s", CalicoAddonContainerValues)),
+		},
+		{
+			name: "four containers with the wrong name",
+			p: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					KubernetesConfig: &KubernetesConfig{
+						Addons: []KubernetesAddon{
+							{
+								Name: "calico-daemonset",
+								Containers: []KubernetesContainerSpec{
+									{
+										Name: "calico-daemonset-bogon",
+									},
+									{
+										Name: "calico-daemonset-bogon-2",
+									},
+									{
+										Name:  "calico-bogon-3",
+										Image: "my-custom-image",
+									},
+									{
+										Name:  "calico-node-bogon",
+										Image: "my-custom-image",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			expectedErr: errors.New(fmt.Sprintf("calico-daemonset addon spec included an unrecognized container name, valid values are %s", CalicoAddonContainerValues)),
+		},
+		{
+			name: "valid spec",
+			p: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					KubernetesConfig: &KubernetesConfig{
+						Addons: []KubernetesAddon{
+							{
+								Name: "calico-daemonset",
+								Containers: []KubernetesContainerSpec{
+									{
+										Name:  "calico-typha",
+										Image: "my-custom-image",
+									},
+									{
+										Name:  "calico-cni",
+										Image: "my-custom-image",
+									},
+									{
+										Name:  "calico-node",
+										Image: "my-custom-image",
+									},
+									{
+										Name:  "calico-cluster-proportional-autoscaler",
+										Image: "my-custom-image",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			expectedErr: nil,
+		},
+	}
+
+	for _, test := range tests {
+		test := test
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+			err := test.p.validateAddons()
+			if test.expectedErr != nil {
+				if err != nil {
+					if err.Error() != test.expectedErr.Error() {
+						t.Errorf("expected error to be thrown with msg : %s", test.expectedErr.Error())
+					}
+				} else {
+					t.Errorf("expected error to be thrown, instead got nil")
+				}
+			} else {
+				if err != nil {
+					t.Errorf("expected nil error, instead got : %s", err.Error())
+				}
+			}
+		})
+	}
+}
+
+func TestValidateAzureNetworkPolicyAddon(t *testing.T) {
+	tests := []struct {
+		name        string
+		p           *Properties
+		expectedErr error
+	}{
+		{
+			name: "has unrecognized config",
+			p: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					KubernetesConfig: &KubernetesConfig{
+						Addons: []KubernetesAddon{
+							{
+								Name: "azure-npm-daemonset",
+								Config: map[string]string{
+									"foo": "bar",
+								},
+							},
+						},
+					},
+				},
+			},
+			expectedErr: errors.New("azure-npm-daemonset addon does not currently support custom configuration"),
+		},
+		{
+			name: "has too many containers",
+			p: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					KubernetesConfig: &KubernetesConfig{
+						Addons: []KubernetesAddon{
+							{
+								Name: "azure-npm-daemonset",
+								Containers: []KubernetesContainerSpec{
+									{
+										Name: "azure-npm-daemonset",
+									},
+									{
+										Name: "azure-npm-daemonset-extra",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			expectedErr: errors.New("azure-npm-daemonset addon does not currently support more than 1 container specs"),
+		},
+		{
+			name: "includes unsupported resource configuration",
+			p: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					KubernetesConfig: &KubernetesConfig{
+						Addons: []KubernetesAddon{
+							{
+								Name: "azure-npm-daemonset",
+								Containers: []KubernetesContainerSpec{
+									{
+										Name:           "azure-npm-daemonset",
+										CPURequests:    "10m",
+										MemoryRequests: "100Mi",
+										CPULimits:      "10m",
+										MemoryLimits:   "100Mi",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			expectedErr: errors.New(fmt.Sprintf("azure-npm-daemonset addon does not currently support configurable CPU and memory resource limits or requests")),
+		},
+		{
+			name: "one container with the wrong name",
+			p: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					KubernetesConfig: &KubernetesConfig{
+						Addons: []KubernetesAddon{
+							{
+								Name: "azure-npm-daemonset",
+								Containers: []KubernetesContainerSpec{
+									{
+										Name: "azure-npm-daemonset-bogon",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			expectedErr: errors.New(fmt.Sprintf("azure-npm-daemonset addon spec included an unrecognized container name, valid values are %s", AzureNetworkPolicyAddonContainerValues)),
+		},
+		{
+			name: "valid spec",
+			p: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					KubernetesConfig: &KubernetesConfig{
+						Addons: []KubernetesAddon{
+							{
+								Name: "azure-npm-daemonset",
+								Containers: []KubernetesContainerSpec{
+									{
+										Name:  "azure-npm-daemonset",
+										Image: "my-custom-image",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			expectedErr: nil,
+		},
+	}
+
+	for _, test := range tests {
+		test := test
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+			err := test.p.validateAddons()
+			if test.expectedErr != nil {
+				if err != nil {
+					if err.Error() != test.expectedErr.Error() {
+						t.Errorf("expected error to be thrown with msg : %s", test.expectedErr.Error())
+					}
+				} else {
+					t.Errorf("expected error to be thrown, instead got nil")
+				}
+			} else {
+				if err != nil {
+					t.Errorf("expected nil error, instead got : %s", err.Error())
+				}
+			}
+		})
+	}
+}
