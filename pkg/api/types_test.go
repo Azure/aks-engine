@@ -4905,17 +4905,6 @@ func TestKubernetesConfigIsAddonEnabled(t *testing.T) {
 			k: &KubernetesConfig{
 				Addons: []KubernetesAddon{
 					{
-						Name: "bar",
-					},
-				},
-			},
-			addonName: "foo",
-			expected:  false,
-		},
-		{
-			k: &KubernetesConfig{
-				Addons: []KubernetesAddon{
-					{
 						Name: "foo",
 					},
 				},
@@ -4946,6 +4935,18 @@ func TestKubernetesConfigIsAddonEnabled(t *testing.T) {
 			},
 			addonName: "foo",
 			expected:  true,
+		},
+		{
+			k: &KubernetesConfig{
+				Addons: []KubernetesAddon{
+					{
+						Name:    "bar",
+						Enabled: to.BoolPtr(true),
+					},
+				},
+			},
+			addonName: "foo",
+			expected:  false,
 		},
 	}
 
