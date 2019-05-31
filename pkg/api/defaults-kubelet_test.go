@@ -54,6 +54,8 @@ func TestKubeletConfigDefaults(t *testing.T) {
 		"--streaming-connection-idle-timeout": "5m",
 		"--feature-gates":                     "PodPriority=true,RotateKubeletServerCertificate=true",
 		"--tls-cipher-suites":                 TLSStrongCipherSuitesKubelet,
+		"--tls-cert-file":                     "/etc/kubernetes/certs/kubeletserver.crt",
+		"--tls-private-key-file":              "/etc/kubernetes/certs/kubeletserver.key",
 	}
 	for key, val := range kubeletConfig {
 		if expected[key] != val {
@@ -90,6 +92,8 @@ func TestKubeletConfigDefaults(t *testing.T) {
 	expected["--eviction-hard"] = "\"\"\"\""
 	delete(expected, "--pod-manifest-path")
 	delete(expected, "--protect-kernel-defaults")
+	delete(expected, "--tls-cert-file")
+	delete(expected, "--tls-private-key-file")
 	for key, val := range windowsProfileKubeletConfig {
 		if expected[key] != val {
 			t.Fatalf("got unexpected Windows agent profile kubelet config value for %s: %s, expected %s",
