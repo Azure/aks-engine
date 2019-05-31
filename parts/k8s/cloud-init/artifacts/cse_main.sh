@@ -63,9 +63,6 @@ else
     FULL_INSTALL_REQUIRED=true
 fi
 
-# CIS 4.2.4
-find /var/log -type f -perm '/o+r' -exec chmod 'g-wx,o-rwx' {} \;
-
 if [[ $OS == $UBUNTU_OS_NAME ]] && [ "$FULL_INSTALL_REQUIRED" = "true" ]; then
     installDeps
 else
@@ -175,6 +172,9 @@ if $FULL_INSTALL_REQUIRED; then
         sed -i "13i\echo 2dd1ce17-079e-403c-b352-a1921ee207ee > /sys/bus/vmbus/drivers/hv_util/unbind\n" /etc/rc.local
     fi
 fi
+
+# CIS 4.2.4
+find /var/log -type f -perm '/o+r' -exec chmod 'g-wx,o-rwx' {} \;
 
 echo "Custom script finished successfully"
 
