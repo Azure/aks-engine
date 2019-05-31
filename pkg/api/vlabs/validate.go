@@ -129,8 +129,10 @@ func (a *Properties) validate(isUpdate bool) error {
 	if e := a.validateLinuxProfile(); e != nil {
 		return e
 	}
-	if e := a.validateAddons(); e != nil {
-		return e
+	if !isUpdate {
+		if e := a.validateAddons(); e != nil {
+			return e
+		}
 	}
 	if e := a.validateExtensions(); e != nil {
 		return e
