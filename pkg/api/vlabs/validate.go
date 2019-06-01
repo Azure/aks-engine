@@ -129,7 +129,7 @@ func (a *Properties) validate(isUpdate bool) error {
 	if e := a.validateLinuxProfile(); e != nil {
 		return e
 	}
-	if e := a.validateAddons(); e != nil {
+	if e := a.validateAddons(isUpdate); e != nil {
 		return e
 	}
 	if e := a.validateExtensions(); e != nil {
@@ -534,7 +534,7 @@ func (a *Properties) validateLinuxProfile() error {
 	return validateKeyVaultSecrets(a.LinuxProfile.Secrets, false)
 }
 
-func (a *Properties) validateAddons() error {
+func (a *Properties) validateAddons(isUpdate bool) error {
 	if a.OrchestratorProfile.KubernetesConfig != nil && a.OrchestratorProfile.KubernetesConfig.Addons != nil {
 		var isAvailabilitySets bool
 		var IsNSeriesSKU bool
@@ -806,19 +806,23 @@ func (a *Properties) validateAddons() error {
 					}
 				}
 			case "calico-daemonset":
-				if addon.Config != nil {
-					return errors.New("calico-daemonset addon does not currently support custom configuration")
-				}
-				if len(addon.Containers) > 4 {
-					return errors.New("calico-daemonset addon does not currently support more than 4 container specs")
-				}
-				err := hasValidAddonContainerNames(CalicoAddonContainerValues, addon.Containers)
-				if err != nil {
-					return errors.New(fmt.Sprintf("calico-daemonset addon spec included an unrecognized container name, valid values are %s", CalicoAddonContainerValues))
-				}
-				for _, container := range addon.Containers {
-					if container.HasResourceConfig() {
-						return errors.New("calico-daemonset addon does not currently support configurable CPU and memory resource limits or requests")
+				// We are permissive with previously built clusters, as the addon spec has changed over time
+				// No api model validation for updgrade/scale scenarios
+				if !isUpdate {
+					if addon.Config != nil {
+						return errors.New("calico-daemonset addon does not currently support custom configuration")
+					}
+					if len(addon.Containers) > 4 {
+						return errors.New("calico-daemonset addon does not currently support more than 4 container specs")
+					}
+					err := hasValidAddonContainerNames(CalicoAddonContainerValues, addon.Containers)
+					if err != nil {
+						return errors.New(fmt.Sprintf("calico-daemonset addon spec included an unrecognized container name, valid values are %s", CalicoAddonContainerValues))
+					}
+					for _, container := range addon.Containers {
+						if container.HasResourceConfig() {
+							return errors.New("calico-daemonset addon does not currently support configurable CPU and memory resource limits or requests")
+						}
 					}
 				}
 			case "azure-npm-daemonset":

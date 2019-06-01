@@ -1301,7 +1301,7 @@ func Test_Properties_ValidateAddons(t *testing.T) {
 			AvailabilityProfile: AvailabilitySet,
 		},
 	}
-	if err := p.validateAddons(); err == nil {
+	if err := p.validateAddons(false); err == nil {
 		t.Errorf(
 			"should error on cluster-autoscaler with availability sets",
 		)
@@ -1321,14 +1321,14 @@ func Test_Properties_ValidateAddons(t *testing.T) {
 		},
 	}
 	p.OrchestratorProfile.OrchestratorRelease = "1.9"
-	if err := p.validateAddons(); err == nil {
+	if err := p.validateAddons(false); err == nil {
 		t.Errorf(
 			"should error on nvidia-device-plugin with k8s < 1.10",
 		)
 	}
 
 	p.OrchestratorProfile.OrchestratorRelease = "1.10"
-	if err := p.validateAddons(); err != nil {
+	if err := p.validateAddons(false); err != nil {
 		t.Errorf(
 			"should not error on nvidia-device-plugin with k8s >= 1.10",
 		)
@@ -1344,7 +1344,7 @@ func Test_Properties_ValidateAddons(t *testing.T) {
 			},
 		},
 	}
-	if err := p.validateAddons(); err == nil {
+	if err := p.validateAddons(false); err == nil {
 		t.Errorf(
 			"expected error for non-empty Config with non-empty Data",
 		)
@@ -1362,7 +1362,7 @@ func Test_Properties_ValidateAddons(t *testing.T) {
 			},
 		},
 	}
-	if err := p.validateAddons(); err == nil {
+	if err := p.validateAddons(false); err == nil {
 		t.Errorf(
 			"expected error for non-empty Containers with non-empty Data",
 		)
@@ -1375,7 +1375,7 @@ func Test_Properties_ValidateAddons(t *testing.T) {
 			},
 		},
 	}
-	if err := p.validateAddons(); err == nil {
+	if err := p.validateAddons(false); err == nil {
 		t.Errorf(
 			"expected error for invalid base64",
 		)
@@ -1388,7 +1388,7 @@ func Test_Properties_ValidateAddons(t *testing.T) {
 			},
 		},
 	}
-	if err := p.validateAddons(); err != nil {
+	if err := p.validateAddons(false); err != nil {
 		t.Errorf(
 			"should not error on providing valid addon.Data",
 		)
@@ -1414,7 +1414,7 @@ func Test_Properties_ValidateAddons(t *testing.T) {
 		},
 	}
 
-	if err := p.validateAddons(); err == nil {
+	if err := p.validateAddons(false); err == nil {
 		t.Errorf(
 			"should error using incompatible addon with coreos (smb-flexvolume)",
 		)
@@ -1429,7 +1429,7 @@ func Test_Properties_ValidateAddons(t *testing.T) {
 		},
 	}
 
-	if err := p.validateAddons(); err == nil {
+	if err := p.validateAddons(false); err == nil {
 		t.Errorf(
 			"should error using incompatible addon with coreos (keyvault-flexvolume)",
 		)
@@ -1444,7 +1444,7 @@ func Test_Properties_ValidateAddons(t *testing.T) {
 		},
 	}
 
-	if err := p.validateAddons(); err == nil {
+	if err := p.validateAddons(false); err == nil {
 		t.Errorf(
 			"should error using incompatible addon with coreos (blobfuse-flexvolume)",
 		)
@@ -3096,7 +3096,7 @@ func TestValidateHeapsterAddon(t *testing.T) {
 		test := test
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
-			err := test.p.validateAddons()
+			err := test.p.validateAddons(false)
 			if test.expectedErr != nil {
 				if err != nil {
 					if err.Error() != test.expectedErr.Error() {
@@ -3214,7 +3214,7 @@ func TestValidateTillerAddon(t *testing.T) {
 		test := test
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
-			err := test.p.validateAddons()
+			err := test.p.validateAddons(false)
 			if test.expectedErr != nil {
 				if err != nil {
 					if err.Error() != test.expectedErr.Error() {
@@ -3335,7 +3335,7 @@ func TestValidateACIConnectorAddon(t *testing.T) {
 		test := test
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
-			err := test.p.validateAddons()
+			err := test.p.validateAddons(false)
 			if test.expectedErr != nil {
 				if err != nil {
 					if err.Error() != test.expectedErr.Error() {
@@ -3450,7 +3450,7 @@ func TestValidateDashboardAddon(t *testing.T) {
 		test := test
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
-			err := test.p.validateAddons()
+			err := test.p.validateAddons(false)
 			if test.expectedErr != nil {
 				if err != nil {
 					if err.Error() != test.expectedErr.Error() {
@@ -3565,7 +3565,7 @@ func TestValidateReschedulerAddon(t *testing.T) {
 		test := test
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
-			err := test.p.validateAddons()
+			err := test.p.validateAddons(false)
 			if test.expectedErr != nil {
 				if err != nil {
 					if err.Error() != test.expectedErr.Error() {
@@ -3687,7 +3687,7 @@ func TestValidateContainerMonitoringAddon(t *testing.T) {
 		test := test
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
-			err := test.p.validateAddons()
+			err := test.p.validateAddons(false)
 			if test.expectedErr != nil {
 				if err != nil {
 					if err.Error() != test.expectedErr.Error() {
@@ -3806,7 +3806,7 @@ func TestValidateIPMasqAgentAddon(t *testing.T) {
 		test := test
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
-			err := test.p.validateAddons()
+			err := test.p.validateAddons(false)
 			if test.expectedErr != nil {
 				if err != nil {
 					if err.Error() != test.expectedErr.Error() {
@@ -4001,7 +4001,7 @@ func TestAADPodIdentityAddon(t *testing.T) {
 		test := test
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
-			err := test.p.validateAddons()
+			err := test.p.validateAddons(false)
 			if test.expectedErr != nil {
 				if err != nil {
 					if err.Error() != test.expectedErr.Error() {
@@ -4121,7 +4121,7 @@ func TestValidateClusterAutoscalerAddon(t *testing.T) {
 		test := test
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
-			err := test.p.validateAddons()
+			err := test.p.validateAddons(false)
 			if test.expectedErr != nil {
 				if err != nil {
 					if err.Error() != test.expectedErr.Error() {
@@ -4236,7 +4236,7 @@ func TestValidateNvidiaAddon(t *testing.T) {
 		test := test
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
-			err := test.p.validateAddons()
+			err := test.p.validateAddons(false)
 			if test.expectedErr != nil {
 				if err != nil {
 					if err.Error() != test.expectedErr.Error() {
@@ -4351,7 +4351,7 @@ func TestValidateBlobfuseFlexvolumeAddon(t *testing.T) {
 		test := test
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
-			err := test.p.validateAddons()
+			err := test.p.validateAddons(false)
 			if test.expectedErr != nil {
 				if err != nil {
 					if err.Error() != test.expectedErr.Error() {
@@ -4466,7 +4466,7 @@ func TestValidateSMBFlexvolumeAddon(t *testing.T) {
 		test := test
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
-			err := test.p.validateAddons()
+			err := test.p.validateAddons(false)
 			if test.expectedErr != nil {
 				if err != nil {
 					if err.Error() != test.expectedErr.Error() {
@@ -4581,7 +4581,7 @@ func TestValidateKeyvaultFlexvolumeAddon(t *testing.T) {
 		test := test
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
-			err := test.p.validateAddons()
+			err := test.p.validateAddons(false)
 			if test.expectedErr != nil {
 				if err != nil {
 					if err.Error() != test.expectedErr.Error() {
@@ -4717,7 +4717,7 @@ func TestValidateMetricsServerAddon(t *testing.T) {
 		test := test
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
-			err := test.p.validateAddons()
+			err := test.p.validateAddons(false)
 			if test.expectedErr != nil {
 				if err != nil {
 					if err.Error() != test.expectedErr.Error() {
@@ -4853,7 +4853,7 @@ func TestValidateAzureCNINetworkMonitorAddon(t *testing.T) {
 		test := test
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
-			err := test.p.validateAddons()
+			err := test.p.validateAddons(false)
 			if test.expectedErr != nil {
 				if err != nil {
 					if err.Error() != test.expectedErr.Error() {
@@ -5014,7 +5014,7 @@ func TestValidateDNSAutoscalerAddon(t *testing.T) {
 		test := test
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
-			err := test.p.validateAddons()
+			err := test.p.validateAddons(false)
 			if test.expectedErr != nil {
 				if err != nil {
 					if err.Error() != test.expectedErr.Error() {
@@ -5036,6 +5036,7 @@ func TestValidateCalicoAddon(t *testing.T) {
 	tests := []struct {
 		name        string
 		p           *Properties
+		isUpdate    bool
 		expectedErr error
 	}{
 		{
@@ -5270,13 +5271,51 @@ func TestValidateCalicoAddon(t *testing.T) {
 			},
 			expectedErr: nil,
 		},
+		{
+			name:     "invalid spec, but update scenario",
+			isUpdate: true,
+			p: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					KubernetesConfig: &KubernetesConfig{
+						Addons: []KubernetesAddon{
+							{
+								Name: "calico-daemonset",
+								Containers: []KubernetesContainerSpec{
+									{
+										Name:  "calico-daemonset",
+										Image: "my-custom-image",
+									},
+									{
+										Name:  "calico-typha",
+										Image: "my-custom-image",
+									},
+									{
+										Name:  "calico-cni",
+										Image: "my-custom-image",
+									},
+									{
+										Name:  "calico-node",
+										Image: "my-custom-image",
+									},
+									{
+										Name:  "calico-cluster-proportional-autoscaler",
+										Image: "my-custom-image",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			expectedErr: nil,
+		},
 	}
 
 	for _, test := range tests {
 		test := test
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
-			err := test.p.validateAddons()
+			err := test.p.validateAddons(test.isUpdate)
 			if test.expectedErr != nil {
 				if err != nil {
 					if err.Error() != test.expectedErr.Error() {
@@ -5412,7 +5451,7 @@ func TestValidateAzureNetworkPolicyAddon(t *testing.T) {
 		test := test
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
-			err := test.p.validateAddons()
+			err := test.p.validateAddons(false)
 			if test.expectedErr != nil {
 				if err != nil {
 					if err.Error() != test.expectedErr.Error() {
