@@ -91,6 +91,11 @@ func CreateNetworkInterfaces(cs *api.ContainerService) NetworkInterfaceARM {
 		}
 	}
 
+	// add ipv6 nic config for dual stack
+	if cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6DualStack") {
+		ipConfigurations = append(ipConfigurations, getIPv6NICIPConfig("[variables('vnetSubnetID')]"))
+	}
+
 	linuxProfile := cs.Properties.LinuxProfile
 	if linuxProfile != nil && linuxProfile.HasCustomNodesDNS() {
 		nicProperties.DNSSettings = &network.InterfaceDNSSettings{
@@ -347,6 +352,11 @@ func createAgentVMASNetworkInterface(cs *api.ContainerService, profile *api.Agen
 		ipConfigurations = append(ipConfigurations, ipConfig)
 	}
 
+	// add ipv6 nic config for dual stack
+	if cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6DualStack") {
+		ipConfigurations = append(ipConfigurations, getIPv6NICIPConfig(fmt.Sprintf("[variables('%sVnetSubnetID')]", profile.Name)))
+	}
+
 	networkInterface.IPConfigurations = &ipConfigurations
 
 	if !isAzureCNI && !cs.Properties.IsAzureStackCloud() {
@@ -375,4 +385,17 @@ func getSecondaryNICIPConfigs(n int) []network.InterfaceIPConfiguration {
 		ipConfigurations = append(ipConfigurations, ipConfig)
 	}
 	return ipConfigurations
+}
+
+func getIPv6NICIPConfig(subnet string) network.InterfaceIPConfiguration {
+	return network.InterfaceIPConfiguration{
+		Name: to.StringPtr("ipconfigv6"),
+		InterfaceIPConfigurationPropertiesFormat: &network.InterfaceIPConfigurationPropertiesFormat{
+			PrivateIPAddress: to.StringPtr("IPv6"),
+			Primary:          to.BoolPtr(false),
+			Subnet: &network.Subnet{
+				ID: to.StringPtr(subnet),
+			},
+		},
+	}
 }

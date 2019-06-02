@@ -1829,6 +1829,8 @@ func (f *FeatureFlags) IsFeatureEnabled(feature string) bool {
 			return f.EnableCSERunInBackground
 		case "BlockOutboundInternet":
 			return f.BlockOutboundInternet
+		case "EnableIPv6DualStack":
+			return f.EnableIPv6DualStack
 		default:
 			return false
 		}
