@@ -459,6 +459,7 @@ type MasterProfile struct {
 	AgentVnetSubnetID        string            `json:"agentVnetSubnetID,omitempty"`
 	FirstConsecutiveStaticIP string            `json:"firstConsecutiveStaticIP,omitempty"`
 	Subnet                   string            `json:"subnet"`
+	SubnetIPv6               string            `json:"subnetIPv6"`
 	IPAddressCount           int               `json:"ipAddressCount,omitempty"`
 	StorageProfile           string            `json:"storageProfile,omitempty"`
 	HTTPSourceAddressPrefix  string            `json:"HTTPSourceAddressPrefix,omitempty"`

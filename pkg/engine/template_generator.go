@@ -389,6 +389,9 @@ func (t *TemplateGenerator) getTemplateFuncMap(cs *api.ContainerService) templat
 		"GetKubernetesAllowedVMSKUs": func() string {
 			return helpers.GetKubernetesAllowedVMSKUs()
 		},
+		"GetDefaultVNETCIDRIPv6": func() string {
+			return DefaultVNETCIDRIPv6
+		},
 		"getSwarmVersions": func() string {
 			return getSwarmVersions(api.SwarmVersion, api.SwarmDockerComposeVersion)
 		},

@@ -47,6 +47,13 @@
       },
       "type": "string"
     },
+    "masterSubnetIPv6": {
+      "defaultValue": "",
+      "metadata": {
+        "description": "Sets the IPv6 subnet of the master node(s)"
+      },
+      "type": "string"
+    },
   {{else}}
     "masterSubnet": {
       "defaultValue": "{{.MasterProfile.Subnet}}",
@@ -59,6 +66,13 @@
       "defaultValue": "{{.MasterProfile.AgentSubnet}}",
       "metadata": {
         "description": "Sets the subnet of the agent node(s)."
+      },
+      "type": "string"
+    },
+    "masterSubnetIPv6": {
+      "defaultValue": "{{.MasterProfile.SubnetIPv6}}",
+      "metadata": {
+        "description": "Sets the IPv6 subnet of the master node(s)."
       },
       "type": "string"
     },

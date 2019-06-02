@@ -17785,6 +17785,13 @@ var _k8sKubernetesparamsT = []byte(`{{if .HasAadProfile}}
       },
       "type": "string"
     },
+    "vnetCidrIPv6": {
+      "defaultValue": "{{GetDefaultVNETCIDRIPv6}}",
+      "metadata": {
+        "description": "Cluster vnet cidr IPv6"
+      },
+      "type": "string"
+    },
     "gcHighThreshold": {
       "defaultValue": 85,
       "metadata": {
@@ -19708,6 +19715,13 @@ var _masterparamsT = []byte(`    "linuxAdminUsername": {
       },
       "type": "string"
     },
+    "masterSubnetIPv6": {
+      "defaultValue": "",
+      "metadata": {
+        "description": "Sets the IPv6 subnet of the master node(s)"
+      },
+      "type": "string"
+    },
   {{else}}
     "masterSubnet": {
       "defaultValue": "{{.MasterProfile.Subnet}}",
@@ -19720,6 +19734,13 @@ var _masterparamsT = []byte(`    "linuxAdminUsername": {
       "defaultValue": "{{.MasterProfile.AgentSubnet}}",
       "metadata": {
         "description": "Sets the subnet of the agent node(s)."
+      },
+      "type": "string"
+    },
+    "masterSubnetIPv6": {
+      "defaultValue": "{{.MasterProfile.SubnetIPv6}}",
+      "metadata": {
+        "description": "Sets the IPv6 subnet of the master node(s)."
       },
       "type": "string"
     },

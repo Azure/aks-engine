@@ -19,6 +19,8 @@ const (
 const (
 	// DefaultVNETCIDR is the default CIDR block for the VNET
 	DefaultVNETCIDR = "10.0.0.0/8"
+	// DefaultVNETCIDRIPv6 is the default IPv6 CIDR block for the VNET
+	DefaultVNETCIDRIPv6 = "2001:1234:5678:9abc::/64"
 	// DefaultInternalLbStaticIPOffset specifies the offset of the internal LoadBalancer's IP
 	// address relative to the first consecutive Kubernetes static IP
 	DefaultInternalLbStaticIPOffset = 10

@@ -396,6 +396,7 @@ func (p *Properties) setMasterProfileDefaults(isUpgrade, isScale bool, cloudName
 				}
 			} else {
 				p.MasterProfile.Subnet = DefaultKubernetesMasterSubnet
+				p.MasterProfile.SubnetIPv6 = DefaultKubernetesMasterSubnetIPv6
 				// FirstConsecutiveStaticIP is not reset if it is upgrade and some value already exists
 				if !isUpgrade || len(p.MasterProfile.FirstConsecutiveStaticIP) == 0 {
 					if p.MasterProfile.IsVirtualMachineScaleSets() {
