@@ -36,7 +36,7 @@ $ aks-engine get-versions
 
 | Name                            | Required | Description                                                                                                                                                                                                                                                                                                                                                                                                   |
 | ------------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| addons                          | no       | Configure various Kubernetes addons configuration. See `addons` configuration below                                                                                                                                                                                                                                                                       |
+| addons                          | no       | Configure various Kubernetes addons configuration. See `addons` configuration [below](#addons)                                                                                                                                                                                                                                                                       |
 | apiServerConfig                 | no       | Configure various runtime configuration for apiserver. See `apiServerConfig` [below](#feat-apiserver-config)                                                                                                                                                                                                                                                                                                  |
 | cloudControllerManagerConfig    | no       | Configure various runtime configuration for cloud-controller-manager. See `cloudControllerManagerConfig` [below](#feat-cloud-controller-manager-config)                                                                                                                                                                                                                                                       |
 | clusterSubnet                   | no       | The IP subnet used for allocating IP addresses for pod network interfaces. The subnet must be in the VNET address space. With Azure CNI enabled, the default value is 10.240.0.0/12. Without Azure CNI, the default value is 10.244.0.0/16.                                            |
@@ -75,7 +75,7 @@ $ aks-engine get-versions
 
 #### addons
 
-`addons` is an interface to define user-configurable, "base" Kubernetes componentry. It is a child property of `kubernetesConfig`. Below is a list of currently available `addons`:
+`addons` is an interface to define user-configurable Kubernetes componentry. It is a child property of `kubernetesConfig`. Below is a list of currently available `addons`:
 
 | Name of addon                                                         | Enabled by default? | How many containers | Description                                                                                                                                                         |
 | --------------------------------------------------------------------- | ------------------- | ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -455,9 +455,9 @@ Below is a list of kube-scheduler options that are _not_ currently user-configur
 
 We consider `kubeletConfig`, `controllerManagerConfig`, `apiServerConfig`, and `schedulerConfig` to be generic conveniences that add power/flexibility to cluster deployments. Their usage comes with no operational guarantees! They are manual tuning features that enable low-level configuration of a kubernetes cluster.
 
-#### Arbitary YAML for Kubernetes component manifests
+#### Custom YAML for Kubernetes component manifests
 
-Arbitrary YAML specifications can be configured for kube-scheduler, kube-controller-manager, cloud-controller-manager and kube-apiserver as well. You will need to pass in a _base64_ encoded string of the kubernetes manifest YAML file to _KubernetesComponentConfig["data"]_ . For example, to pass a custom kube-scheduler config, do the following:
+Custom YAML specifications can be configured for kube-scheduler, kube-controller-manager, cloud-controller-manager and kube-apiserver in addition to the addons described [above](#addons). You will need to pass in a _base64_ encoded string of the kubernetes manifest YAML file to _KubernetesComponentConfig["data"]_ . For example, to pass a custom kube-scheduler config, do the following:
 
 ```json
 "kubernetesConfig": {
