@@ -102,6 +102,75 @@ var (
 
 	// DependenciesLocationValues holds the valid values for dependencies location
 	DependenciesLocationValues = []DependenciesLocation{"", AzureStackDependenciesLocationPublic, AzureStackDependenciesLocationChina, AzureStackDependenciesLocationGerman, AzureStackDependenciesLocationUSGovernment}
+
+	// HeapsterAddonContainerValues holds the valid values for heapster addon container names
+	HeapsterAddonContainerValues = []string{"heapster", "heapster-nanny"}
+
+	// TillerAddonContainerValues holds the valid values for tiller addon container names
+	TillerAddonContainerValues = []string{"tiller"}
+
+	// TillerAddonConfigValues holds the valid values for tiller addon configuration overrides
+	TillerAddonConfigValues = []string{"max-history"}
+
+	// ACIConnectorAddonContainerValues holds the valid values for aci-connector addon container names
+	ACIConnectorAddonContainerValues = []string{"aci-connector"}
+
+	// ACIConnectorAddonConfigValues holds the valid values for aci-connector addon configuration overrides
+	ACIConnectorAddonConfigValues = []string{"region", "nodeName", "os", "taint"}
+
+	// DashboardAddonContainerValues holds the valid values for dashboard addon container names
+	DashboardAddonContainerValues = []string{"kubernetes-dashboard"}
+
+	// ReschedulerAddonContainerValues holds the valid values for rescheduler addon container names
+	ReschedulerAddonContainerValues = []string{"rescheduler"}
+
+	// ContainerMonitoringAddonContainerValues holds the valid values for container monitoring addon container names
+	ContainerMonitoringAddonContainerValues = []string{"omsagent"}
+
+	// ContainerMonitoringAddonConfigValues holds the valid values for container monitoring addon configuration overrides
+	ContainerMonitoringAddonConfigValues = []string{"omsAgentVersion", "dockerProviderVersion", "workspaceGuid", "workspaceKey"}
+
+	// IPMasqAgentAddonContainerValues holds the valid values for ip-masq-agent addon container names
+	IPMasqAgentAddonContainerValues = []string{"ip-masq-agent"}
+
+	// IPMasqAgentAddonConfigValues holds the valid values for ip-masq-agent addon configuration overrides
+	IPMasqAgentAddonConfigValues = []string{"non-masquerade-cidr", "non-masq-cni-cidr"}
+
+	// AADPodIdentityAddonContainerValues holds the valid values for aad-pod-identity addon container names
+	AADPodIdentityAddonContainerValues = []string{"nmi", "mic"}
+
+	// ClusterAutoscalerAddonContainerValues holds the valid values for cluster-autoscaler addon container names
+	ClusterAutoscalerAddonContainerValues = []string{"cluster-autoscaler"}
+
+	// ClusterAutoscalerAddonConfigValues holds the valid values for cluster-autoscaler addon configuration overrides
+	ClusterAutoscalerAddonConfigValues = []string{"min-nodes", "max-nodes", "scan-interval"}
+
+	// NvidiaAddonContainerValues holds the valid values for nvidia addon container names
+	NvidiaAddonContainerValues = []string{"nvidia-device-plugin"}
+
+	// BlobfuseFlexvolumeAddonContainerValues holds the valid values for blobfuse-flexvolume addon container names
+	BlobfuseFlexvolumeAddonContainerValues = []string{"blobfuse-flexvolume"}
+
+	// SMBFlexvolumeAddonContainerValues holds the valid values for smb-flexvolume addon container names
+	SMBFlexvolumeAddonContainerValues = []string{"smb-flexvolume"}
+
+	// KeyvaultFlexvolumeAddonContainerValues holds the valid values for keyvault-flexvolume addon container names
+	KeyvaultFlexvolumeAddonContainerValues = []string{"keyvault-flexvolume"}
+
+	// MetricsServerAddonContainerValues holds the valid values for metrics-server addon container names
+	MetricsServerAddonContainerValues = []string{"metrics-server"}
+
+	// AzureCNINetworkMonitorAddonContainerValues holds the valid values for azure-cni-networkmonitor addon container names
+	AzureCNINetworkMonitorAddonContainerValues = []string{"azure-cni-networkmonitor"}
+
+	// DNSAutoscalerAddonContainerValues holds the valid values for dns-autoscaler addon container names
+	DNSAutoscalerAddonContainerValues = []string{"dns-autoscaler"}
+
+	// CalicoAddonContainerValues holds the valid values for calico addon container names
+	CalicoAddonContainerValues = []string{"calico-typha", "calico-cni", "calico-node", "calico-cluster-proportional-autoscaler"}
+
+	// AzureNetworkPolicyAddonContainerValues holds the valid values for azure-npm-daemonset addon container names
+	AzureNetworkPolicyAddonContainerValues = []string{"azure-npm-daemonset"}
 )
 
 // Kubernetes configuration
