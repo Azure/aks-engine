@@ -8,6 +8,7 @@ import (
 
 	"github.com/Azure/aks-engine/pkg/armhelpers"
 	log "github.com/sirupsen/logrus"
+	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	policy "k8s.io/api/policy/v1beta1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -169,4 +170,14 @@ func (c *KubernetesClientSetClient) WaitForDelete(logger *log.Entry, pods []v1.P
 		return true, nil
 	})
 	return pods, err
+}
+
+// GetDeployment returns a given deployment in a namespace.
+func (c *KubernetesClientSetClient) GetDeployment(namespace, name string) (*appsv1.Deployment, error) {
+	return c.clientset.AppsV1().Deployments(namespace).Get(name, metav1.GetOptions{})
+}
+
+// UpdateDeployment updates a deployment to match the given specification.
+func (c *KubernetesClientSetClient) UpdateDeployment(namespace string, deployment *appsv1.Deployment) (*appsv1.Deployment, error) {
+	return c.clientset.AppsV1().Deployments(namespace).Update(deployment)
 }

@@ -579,7 +579,6 @@ func (ku *Upgrader) upgradeAgentScaleSets(ctx context.Context) error {
 					vmssToUpgrade.Name)
 				return err
 			}
-
 			ku.logger.Infof(
 				"Successfully deleted VM %s in VMSS %s",
 				vmToUpgrade.Name,

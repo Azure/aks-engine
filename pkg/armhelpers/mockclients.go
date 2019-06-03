@@ -22,6 +22,7 @@ import (
 	azStorage "github.com/Azure/azure-sdk-for-go/storage"
 	"github.com/Azure/go-autorest/autorest"
 	log "github.com/sirupsen/logrus"
+	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 )
 
@@ -68,22 +69,24 @@ type MockStorageClient struct {
 
 //MockKubernetesClient mock implementation of KubernetesClient
 type MockKubernetesClient struct {
-	FailListPods             bool
-	FailListNodes            bool
-	FailListServiceAccounts  bool
-	FailGetNode              bool
-	UpdateNodeFunc           func(*v1.Node) (*v1.Node, error)
-	GetNodeFunc              func(name string) (*v1.Node, error)
-	FailUpdateNode           bool
-	FailDeleteNode           bool
-	FailDeleteServiceAccount bool
-	FailSupportEviction      bool
-	FailDeletePod            bool
-	FailEvictPod             bool
-	FailWaitForDelete        bool
-	ShouldSupportEviction    bool
-	PodsList                 *v1.PodList
-	ServiceAccountList       *v1.ServiceAccountList
+	FailListPods              bool
+	FailListNodes             bool
+	FailListServiceAccounts   bool
+	FailGetNode               bool
+	UpdateNodeFunc            func(*v1.Node) (*v1.Node, error)
+	GetNodeFunc               func(name string) (*v1.Node, error)
+	FailUpdateNode            bool
+	FailDeleteNode            bool
+	FailDeleteServiceAccount  bool
+	FailSupportEviction       bool
+	FailDeletePod             bool
+	FailEvictPod              bool
+	FailWaitForDelete         bool
+	ShouldSupportEviction     bool
+	PodsList                  *v1.PodList
+	ServiceAccountList        *v1.ServiceAccountList
+	FailGetDeploymentCount    int
+	FailUpdateDeploymentCount int
 }
 
 // MockVirtualMachineListResultPage contains a page of VirtualMachine values.
@@ -408,6 +411,29 @@ func (mkc *MockKubernetesClient) WaitForDelete(logger *log.Entry, pods []v1.Pod,
 		return nil, errors.New("WaitForDelete failed")
 	}
 	return []v1.Pod{}, nil
+}
+
+// GetDeployment returns a given deployment in a namespace.
+func (mkc *MockKubernetesClient) GetDeployment(namespace, name string) (*appsv1.Deployment, error) {
+	if mkc.FailGetDeploymentCount > 0 {
+		mkc.FailGetDeploymentCount--
+		return nil, errors.New("GetDeployment failed")
+	}
+	var replicas int32 = 1
+	return &appsv1.Deployment{
+		Spec: appsv1.DeploymentSpec{
+			Replicas: &replicas,
+		},
+	}, nil
+}
+
+// UpdateDeployment updates a deployment to match the given specification.
+func (mkc *MockKubernetesClient) UpdateDeployment(namespace string, deployment *appsv1.Deployment) (*appsv1.Deployment, error) {
+	if mkc.FailUpdateDeploymentCount > 0 {
+		mkc.FailUpdateDeploymentCount--
+		return nil, errors.New("UpdateDeployment failed")
+	}
+	return &appsv1.Deployment{}, nil
 }
 
 //DeleteBlob mock
