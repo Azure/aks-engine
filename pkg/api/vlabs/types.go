@@ -234,11 +234,6 @@ type KubernetesContainerSpec struct {
 	MemoryLimits   string `json:"memoryLimits,omitempty"`
 }
 
-// HasResourceConfig returns if a KubernetesContainerSpec has any CPU or memory resource configuration
-func (c KubernetesContainerSpec) HasResourceConfig() bool {
-	return c.CPURequests != "" || c.MemoryRequests != "" || c.CPULimits != "" || c.MemoryLimits != ""
-}
-
 // KubernetesAddon defines a list of addons w/ configuration to include with the cluster deployment
 type KubernetesAddon struct {
 	Name       string                    `json:"name,omitempty"`
