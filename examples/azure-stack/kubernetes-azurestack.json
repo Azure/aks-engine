@@ -6,7 +6,7 @@
             "orchestratorType": "Kubernetes",
             "orchestratorRelease": "1.11",
             "kubernetesConfig": {
-                "kubernetesImageBase": "msazurestackdocker/",
+                "kubernetesImageBase": "mcr.microsoft.com/k8s/azurestack/core/",
                 "useInstanceMetadata": false,
                 "networkPlugin": "flannel"
             }
