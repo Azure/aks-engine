@@ -51,3 +51,50 @@ func createJumpboxPublicIPAddress() PublicIPAddressARM {
 		},
 	}
 }
+
+// CreateClusterPublicIPAddress returns public ipv4 address resource for cluster
+func CreateClusterPublicIPAddress() PublicIPAddressARM {
+	return PublicIPAddressARM{
+		ARMResource: ARMResource{
+			APIVersion: "[variables('apiVersionNetwork')]",
+		},
+		PublicIPAddress: network.PublicIPAddress{
+			Location: to.StringPtr("[variables('location')]"),
+			Name:     to.StringPtr("fee-ipv4"),
+			PublicIPAddressPropertiesFormat: &network.PublicIPAddressPropertiesFormat{
+				/*DNSSettings: &network.PublicIPAddressDNSSettings{
+					DomainNameLabel: to.StringPtr("[variables('clusterFqdnPrefix')]"),
+				},*/
+				PublicIPAllocationMethod: network.Static,
+			},
+			Sku: &network.PublicIPAddressSku{
+				Name: "[variables('loadBalancerSku')]",
+			},
+			Type: to.StringPtr("Microsoft.Network/publicIPAddresses"),
+		},
+	}
+}
+
+// CreateClusterPublicIPv6Address returns public ipv6 address resource for cluster
+func CreateClusterPublicIPv6Address() PublicIPAddressARM {
+	return PublicIPAddressARM{
+		ARMResource: ARMResource{
+			APIVersion: "[variables('apiVersionNetwork')]",
+		},
+		PublicIPAddress: network.PublicIPAddress{
+			Location: to.StringPtr("[variables('location')]"),
+			Name:     to.StringPtr("fee-ipv6"),
+			PublicIPAddressPropertiesFormat: &network.PublicIPAddressPropertiesFormat{
+				/*DNSSettings: &network.PublicIPAddressDNSSettings{
+					DomainNameLabel: to.StringPtr("[variables('clusterIPv6FqdnPrefix')]"),
+				},*/
+				PublicIPAllocationMethod: network.Dynamic,
+				PublicIPAddressVersion:   "IPv6",
+			},
+			Sku: &network.PublicIPAddressSku{
+				Name: "[variables('loadBalancerSku')]",
+			},
+			Type: to.StringPtr("Microsoft.Network/publicIPAddresses"),
+		},
+	}
+}

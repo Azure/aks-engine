@@ -93,7 +93,18 @@ func CreateNetworkInterfaces(cs *api.ContainerService) NetworkInterfaceARM {
 
 	// add ipv6 nic config for dual stack
 	if cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6DualStack") {
-		ipConfigurations = append(ipConfigurations, getIPv6NICIPConfig("[variables('vnetSubnetID')]"))
+		ipv6Config := network.InterfaceIPConfiguration{
+			Name: to.StringPtr("ipconfigv6"),
+			InterfaceIPConfigurationPropertiesFormat: &network.InterfaceIPConfigurationPropertiesFormat{
+				PrivateIPAddressVersion: "IPv6",
+				Primary:                 to.BoolPtr(false),
+				Subnet: &network.Subnet{
+					ID: to.StringPtr("[variables('vnetSubnetID')]"),
+				},
+			},
+		}
+
+		ipConfigurations = append(ipConfigurations, ipv6Config)
 	}
 
 	linuxProfile := cs.Properties.LinuxProfile
@@ -349,12 +360,38 @@ func createAgentVMASNetworkInterface(cs *api.ContainerService, profile *api.Agen
 				}
 			}
 		}
+
+		if cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6DualStack") {
+			var backendPools []network.BackendAddressPool
+			if ipConfig.LoadBalancerBackendAddressPools != nil {
+				backendPools = *ipConfig.LoadBalancerBackendAddressPools
+			}
+			backendPools = append(backendPools, network.BackendAddressPool{
+				ID: to.StringPtr("[concat(resourceId('Microsoft.Network/loadBalancers',parameters('masterEndpointDNSNamePrefix')), '/backendAddressPools/', parameters('masterEndpointDNSNamePrefix'), '-ipv4')]"),
+			})
+			ipConfig.LoadBalancerBackendAddressPools = &backendPools
+		}
 		ipConfigurations = append(ipConfigurations, ipConfig)
 	}
 
 	// add ipv6 nic config for dual stack
 	if cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6DualStack") {
-		ipConfigurations = append(ipConfigurations, getIPv6NICIPConfig(fmt.Sprintf("[variables('%sVnetSubnetID')]", profile.Name)))
+		ipv6Config := network.InterfaceIPConfiguration{
+			Name: to.StringPtr("ipconfigv6"),
+			InterfaceIPConfigurationPropertiesFormat: &network.InterfaceIPConfigurationPropertiesFormat{
+				PrivateIPAddressVersion: "IPv6",
+				Primary:                 to.BoolPtr(false),
+				Subnet: &network.Subnet{
+					ID: to.StringPtr(fmt.Sprintf("[variables('%sVnetSubnetID')]", profile.Name)),
+				},
+				LoadBalancerBackendAddressPools: &[]network.BackendAddressPool{
+					{
+						ID: to.StringPtr("[concat(resourceId('Microsoft.Network/loadBalancers',parameters('masterEndpointDNSNamePrefix')), '/backendAddressPools/', parameters('masterEndpointDNSNamePrefix'), '-ipv6')]"),
+					},
+				},
+			},
+		}
+		ipConfigurations = append(ipConfigurations, ipv6Config)
 	}
 
 	networkInterface.IPConfigurations = &ipConfigurations
@@ -385,17 +422,4 @@ func getSecondaryNICIPConfigs(n int) []network.InterfaceIPConfiguration {
 		ipConfigurations = append(ipConfigurations, ipConfig)
 	}
 	return ipConfigurations
-}
-
-func getIPv6NICIPConfig(subnet string) network.InterfaceIPConfiguration {
-	return network.InterfaceIPConfiguration{
-		Name: to.StringPtr("ipconfigv6"),
-		InterfaceIPConfigurationPropertiesFormat: &network.InterfaceIPConfigurationPropertiesFormat{
-			PrivateIPAddress: to.StringPtr("IPv6"),
-			Primary:          to.BoolPtr(false),
-			Subnet: &network.Subnet{
-				ID: to.StringPtr(subnet),
-			},
-		},
-	}
 }
