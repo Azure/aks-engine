@@ -14,8 +14,6 @@ for CIS_FILE in ${CIS_FILES}; do
     [ -s $CIS_FILE ] || exit 1
 done
 
-#verify that no files under /var/log have read access to everyone
-sudo find /var/log -type f -perm '/o+r' | (! grep ^) || exit 1
 # specific file mode validations
 for filepath in /etc/crontab /etc/cron.hourly /etc/cron.daily /etc/cron.weekly /etc/cron.monthly /etc/cron.d; do
   stat $filepath | grep 'Access: (0600' || exit 1

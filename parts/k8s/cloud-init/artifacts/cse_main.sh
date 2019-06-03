@@ -173,9 +173,6 @@ if $FULL_INSTALL_REQUIRED; then
     fi
 fi
 
-# CIS 4.2.4
-find /var/log -type f -perm '/o+r' -exec chmod 'g-wx,o-rwx' {} \;
-
 echo "Custom script finished successfully"
 
 echo $(date),$(hostname), endcustomscript>>/opt/m
