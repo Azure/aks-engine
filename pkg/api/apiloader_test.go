@@ -101,6 +101,21 @@ func TestLoadContainerServiceFromFile(t *testing.T) {
 		t.Errorf("Failed to set orcherstator version to windows default when it is not set in the json API v20170131, got %s but expected %s", containerService.Properties.OrchestratorProfile.OrchestratorVersion, common.GetDefaultKubernetesVersion(true))
 	}
 
+	containerService, _, err = apiloader.LoadContainerServiceFromFile("../engine/testdata/v20170701/kubernetes.json", false, false, nil)
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	containerService, _, err = apiloader.LoadContainerServiceFromFile("../engine/testdata/v20170131/kubernetes.json", false, false, nil)
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	containerService, _, err = apiloader.LoadContainerServiceFromFile("../engine/testdata/simple/kubernetes.json", false, false, nil)
+	if err != nil {
+		t.Error(err.Error())
+	}
+
 	// Test ACS scale scenario
 	existingContainerService.Properties.OrchestratorProfile.OrchestratorVersion = "1.8.12"
 	containerService, _, err = apiloader.LoadContainerServiceFromFile("../engine/testdata/v20170701/kubernetes.json", true, true, existingContainerService)
