@@ -7838,7 +7838,7 @@ metadata:
     rbac.authorization.kubernetes.io/autoupdate: "true"
   labels:
     kubernetes.io/bootstrapping: rbac-defaults
-    addonmanager.kubernetes.io/mode: Reconcile
+    addonmanager.kubernetes.io/mode: EnsureExists
   name: system:coredns
 roleRef:
   apiGroup: rbac.authorization.k8s.io
@@ -7855,7 +7855,7 @@ metadata:
   name: coredns
   namespace: kube-system
   labels:
-      addonmanager.kubernetes.io/mode: Reconcile
+      addonmanager.kubernetes.io/mode: EnsureExists
 data:
   Corefile: |
     .:53 {
