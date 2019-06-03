@@ -219,54 +219,46 @@ func TestAssignDefaultAddonImages(t *testing.T) {
 	}
 
 	cases := []struct {
+		name           string
 		myAddons       []KubernetesAddon
-		isUpgrade      bool
-		isScale        bool
+		isUpdate       bool
 		expectedImages map[string]string
 	}{
 		{
+			name:           "default",
 			myAddons:       getFakeAddons(defaultAddonImages, ""),
-			isUpgrade:      false,
-			isScale:        false,
+			isUpdate:       false,
 			expectedImages: defaultAddonImages,
 		},
 		{
+			name:           "create scenario",
 			myAddons:       getFakeAddons(defaultAddonImages, customImage),
-			isUpgrade:      false,
-			isScale:        false,
+			isUpdate:       false,
 			expectedImages: customAddonImages, // Image should not be overridden in create scenarios.
 		},
 		{
+			name:           "upgrade + scale scenario",
 			myAddons:       getFakeAddons(defaultAddonImages, customImage),
-			isUpgrade:      true,
-			isScale:        false,
-			expectedImages: defaultAddonImages, // Image should be overridden in update scenarios.
-		},
-		{
-			myAddons:       getFakeAddons(defaultAddonImages, customImage),
-			isUpgrade:      false,
-			isScale:        true,
-			expectedImages: defaultAddonImages, // Image should be overridden in update scenarios.
-		},
-		{
-			myAddons:       getFakeAddons(defaultAddonImages, customImage),
-			isUpgrade:      true,
-			isScale:        true,
+			isUpdate:       true,
 			expectedImages: defaultAddonImages, // Image should be overridden in update scenarios.
 		},
 	}
 
 	for _, c := range cases {
-		mockCS := getMockBaseContainerService("1.10.8")
-		mockCS.Properties.OrchestratorProfile.OrchestratorType = Kubernetes
-		mockCS.Properties.OrchestratorProfile.KubernetesConfig.Addons = c.myAddons
-		mockCS.SetPropertiesDefaults(c.isUpgrade, c.isScale)
-		resultAddons := mockCS.Properties.OrchestratorProfile.KubernetesConfig.Addons
-		for _, result := range resultAddons {
-			if result.Containers[0].Image != c.expectedImages[result.Name] {
-				t.Errorf("expected setDefaults to set Image to \"%s\" in addon %s, but got \"%s\"", c.expectedImages[result.Name], result.Name, result.Containers[0].Image)
+		c := c
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+			mockCS := getMockBaseContainerService("1.10.8")
+			mockCS.Properties.OrchestratorProfile.OrchestratorType = Kubernetes
+			mockCS.Properties.OrchestratorProfile.KubernetesConfig.Addons = c.myAddons
+			mockCS.setOrchestratorDefaults(c.isUpdate)
+			resultAddons := mockCS.Properties.OrchestratorProfile.KubernetesConfig.Addons
+			for _, result := range resultAddons {
+				if result.Containers[0].Image != c.expectedImages[result.Name] {
+					t.Errorf("expected setDefaults to set Image to \"%s\" in addon %s, but got \"%s\"", c.expectedImages[result.Name], result.Name, result.Containers[0].Image)
+				}
 			}
-		}
+		})
 	}
 }
 
