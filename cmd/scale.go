@@ -260,9 +260,9 @@ func (sc *scaleCmd) run(cmd *cobra.Command, args []string) error {
 
 		for vmsListPage, err := sc.client.ListVirtualMachines(ctx, sc.resourceGroupName); vmsListPage.NotDone(); err = vmsListPage.Next() {
 			if err != nil {
-				return errors.Wrap(err, "failed to get vms in the resource group")
+				return errors.Wrap(err, "failed to get VMs in the resource group")
 			} else if len(vmsListPage.Values()) < 1 {
-				return errors.New("The provided resource group does not contain any vms")
+				return errors.New("The provided resource group does not contain any VMs")
 			}
 			for _, vm := range vmsListPage.Values() {
 				vmName := *vm.Name
@@ -314,15 +314,15 @@ func (sc *scaleCmd) run(cmd *cobra.Command, args []string) error {
 			}
 
 			if sc.nodes != nil {
-				if len(sc.nodes) > 1 {
-					sc.logger.Infof("There are %d nodes in pool %s before scaling down to %d:\n", len(sc.nodes), sc.agentPoolToScale, sc.newDesiredAgentCount)
-				} else {
+				if len(sc.nodes) == 1 {
 					sc.logger.Infof("There is %d node in pool %s before scaling down to %d:\n", len(sc.nodes), sc.agentPoolToScale, sc.newDesiredAgentCount)
+				} else {
+					sc.logger.Infof("There are %d nodes in pool %s before scaling down to %d:\n", len(sc.nodes), sc.agentPoolToScale, sc.newDesiredAgentCount)
 				}
 				operations.PrintNodes(sc.nodes)
 				numNodesFromK8sAPI := len(sc.nodes)
 				if currentNodeCount != numNodesFromK8sAPI {
-					sc.logger.Warnf("The Azure API reports %d vms in pool %s", currentNodeCount, sc.agentPoolToScale)
+					sc.logger.Warnf("There are %d VMs named \"*%s*\" in the resource group %s, but there are %d nodes named \"*%s*\" in the Kubernetes cluster\n", currentNodeCount, sc.agentPoolToScale, sc.resourceGroupName, numNodesFromK8sAPI, sc.agentPoolToScale)
 				} else {
 					if len(sc.nodes) > 1 {
 						sc.logger.Infof("%d nodes will be deleted\n", currentNodeCount-sc.newDesiredAgentCount)
@@ -349,7 +349,7 @@ func (sc *scaleCmd) run(cmd *cobra.Command, args []string) error {
 			}
 
 			for _, node := range vmsToDelete {
-				sc.logger.Infof("Node %s's vm will be deleted\n", node)
+				sc.logger.Infof("Node %s's VM will be deleted\n", node)
 			}
 			errList := operations.ScaleDownVMs(sc.client, sc.logger, sc.SubscriptionID.String(), sc.resourceGroupName, vmsToDelete...)
 			if errList != nil {
@@ -371,7 +371,7 @@ func (sc *scaleCmd) run(cmd *cobra.Command, args []string) error {
 				nodes, err := operations.GetNodes(sc.client, sc.logger, sc.apiserverURL, sc.kubeconfig, time.Duration(5)*time.Minute, sc.agentPoolToScale, sc.newDesiredAgentCount)
 				if err == nil && nodes != nil {
 					sc.nodes = nodes
-					sc.logger.Infof("Nodes in pool %s cluster after scaling:\n", sc.agentPoolToScale)
+					sc.logger.Infof("Nodes in pool %s after scaling:\n", sc.agentPoolToScale)
 					operations.PrintNodes(sc.nodes)
 				} else {
 					sc.logger.Warningf("Unable to get nodes in pool %s after scaling:\n", sc.agentPoolToScale)
@@ -397,7 +397,7 @@ func (sc *scaleCmd) run(cmd *cobra.Command, args []string) error {
 						sc.printScaleTargetEqualsExisting(currentNodeCount)
 						return nil
 					} else if int(*vmss.Sku.Capacity) > sc.newDesiredAgentCount {
-						log.Warnf("VMSS vm nodes will not be cordon/drained before scaling down!")
+						log.Warnf("VMSS scale down is an alpha feature: VMSS VM nodes will not be cordon/drained before scaling down!")
 					}
 				}
 
@@ -608,6 +608,6 @@ func (sc *scaleCmd) printScaleTargetEqualsExisting(currentNodeCount int) {
 	}
 	numNodesFromK8sAPI := len(sc.nodes)
 	if currentNodeCount != numNodesFromK8sAPI {
-		sc.logger.Warnf("The Kubernetes API reports %d vms in pool %s", numNodesFromK8sAPI, sc.agentPoolToScale)
+		sc.logger.Warnf("There are %d nodes named \"*%s*\" in the Kubernetes cluster, but there are %d VMs named \"*%s*\" in the resource group %s\n", numNodesFromK8sAPI, sc.agentPoolToScale, currentNodeCount, sc.agentPoolToScale, sc.resourceGroupName)
 	}
 }
