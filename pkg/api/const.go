@@ -126,6 +126,8 @@ const publicAgentPoolSuffix = "-public"
 const (
 	// DefaultHeapsterAddonEnabled determines the aks-engine provided default for enabling heapster addon
 	DefaultHeapsterAddonEnabled = true
+	// DefaultMetricsServerAddonEnabled determines the aks-engine provided default for enabling heapster addon
+	DefaultMetricsServerAddonEnabled = true
 	// DefaultTillerAddonEnabled determines the aks-engine provided default for enabling tiller addon
 	DefaultTillerAddonEnabled = true
 	// DefaultAADPodIdentityAddonEnabled determines the aks-engine provided default for enabling aad-pod-identity addon

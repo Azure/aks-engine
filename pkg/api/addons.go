@@ -175,7 +175,7 @@ func (cs *ContainerService) setAddonsConfig(isUpdate bool) {
 
 	defaultMetricsServerAddonsConfig := KubernetesAddon{
 		Name:    MetricsServerAddonName,
-		Enabled: to.BoolPtr(common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.9.0")),
+		Enabled: to.BoolPtr(DefaultMetricsServerAddonEnabled && common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.9.0")),
 		Containers: []KubernetesContainerSpec{
 			{
 				Name:  MetricsServerAddonName,
