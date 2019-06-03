@@ -5,7 +5,7 @@ metadata:
   name: cilium-config
   namespace: kube-system
   labels:
-    addonmanager.kubernetes.io/mode: "Reconcile"
+    addonmanager.kubernetes.io/mode: "EnsureExists"
 data:
   etcd-config: |-
     ---

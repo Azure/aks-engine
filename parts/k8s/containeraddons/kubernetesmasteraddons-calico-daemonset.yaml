@@ -6,7 +6,7 @@ metadata:
   name: calico-config
   namespace: kube-system
   labels:
-    addonmanager.kubernetes.io/mode: "Reconcile"
+    addonmanager.kubernetes.io/mode: "EnsureExists"
 data:
   # You must set a non-zero value for Typha replicas below.
   typha_service_name: "calico-typha"
@@ -624,7 +624,7 @@ metadata:
   namespace: kube-system
   labels:
     kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: "Reconcile"
+    addonmanager.kubernetes.io/mode: "EnsureExists"
 data:
   ladder: |-
     {

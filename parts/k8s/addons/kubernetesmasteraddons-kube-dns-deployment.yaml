@@ -52,7 +52,7 @@ metadata:
   name: kube-dns
   namespace: kube-system
   labels:
-    addonmanager.kubernetes.io/mode: Reconcile
+    addonmanager.kubernetes.io/mode: EnsureExists
 ---
 apiVersion: extensions/v1beta1
 kind: Deployment
