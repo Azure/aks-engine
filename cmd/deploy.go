@@ -12,7 +12,6 @@ import (
 	"path"
 	"path/filepath"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/leonelquinteros/gotext"
