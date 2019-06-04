@@ -300,12 +300,12 @@
   revision = "98469bf07613ffae6f025893761c1e7a5e96e4aa"
 
 [[projects]]
-  digest = "1:5ccb6b1276f8b4be1c9666848fbe5171787c509cdbfd6a07c1d9edc77695ef8c"
+  digest = "1:cca5705493135a0dcb7134cf28baac3953137fc3dfc2ae8738eb508fb2f5f430"
   name = "github.com/jarcoal/httpmock"
   packages = ["."]
   pruneopts = "NUT"
-  revision = "e598472b238f5d2a505e1316886da2171f86bfa4"
-  version = "v1.0.3"
+  revision = "ac2099de8d3789d30b99b740d1a9d242097462df"
+  version = "v1.0.4"
 
 [[projects]]
   digest = "1:8e36686e8b139f8fe240c1d5cf3a145bc675c22ff8e707857cdd3ae17b00d728"
@@ -479,11 +479,7 @@
   version = "v1.2.0"
 
 [[projects]]
-<<<<<<< HEAD
   digest = "1:2a20ef0a9a39e355435826bd34951b4cfbcf4a2442f31681abb576e12d5f3c46"
-=======
-  digest = "1:998e4640c25e00ccb7b2569bf94562283937b8afb3485c0e1a0a05a15330240d"
->>>>>>> chore: add go mod support
   name = "github.com/sirupsen/logrus"
   packages = [
     ".",
@@ -753,6 +749,14 @@
   version = "v1.41.0"
 
 [[projects]]
+  digest = "1:cca5705493135a0dcb7134cf28baac3953137fc3dfc2ae8738eb508fb2f5f430"
+  name = "gopkg.in/jarcoal/httpmock.v1"
+  packages = ["."]
+  pruneopts = "NUT"
+  revision = "ac2099de8d3789d30b99b740d1a9d242097462df"
+  version = "v1.0.4"
+
+[[projects]]
   branch = "v1"
   digest = "1:8fb1ccb16a6cfecbfdfeb84d8ea1cc7afa8f9ef16526bc2326f72d993e32cef1"
   name = "gopkg.in/tomb.v1"
@@ -992,6 +996,8 @@
     "gopkg.in/fsnotify.v1",
     "gopkg.in/go-playground/validator.v9",
     "gopkg.in/ini.v1",
+    "gopkg.in/jarcoal/httpmock.v1",
+    "k8s.io/api/apps/v1",
     "k8s.io/api/core/v1",
     "k8s.io/api/policy/v1beta1",
     "k8s.io/apimachinery/pkg/api/equality",

@@ -27,7 +27,7 @@ require (
 	github.com/imdario/mergo v0.3.6
 	github.com/influxdata/influxdb v1.7.2
 	github.com/influxdata/platform v0.0.0-20190111200105-98469bf07613 // indirect
-	github.com/jarcoal/httpmock v1.0.3
+	github.com/jarcoal/httpmock v1.0.4
 	github.com/json-iterator/go v1.1.5 // indirect
 	github.com/kelseyhightower/envconfig v1.3.0
 	github.com/leodido/go-urn v1.1.0 // indirect
