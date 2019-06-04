@@ -53,6 +53,7 @@ func TestKubeletConfigDefaults(t *testing.T) {
 		"--rotate-certificates":               "true",
 		"--streaming-connection-idle-timeout": "5m",
 		"--feature-gates":                     "PodPriority=true,RotateKubeletServerCertificate=true",
+		"--tls-cipher-suites":                 TLSStrongCipherSuitesKubelet,
 	}
 	for key, val := range kubeletConfig {
 		if expected[key] != val {
