@@ -7797,9 +7797,7 @@ func k8sAddons19KubernetesmasteraddonsKubeDnsDeploymentYaml() (*asset, error) {
 	return a, nil
 }
 
-var _k8sAddonsCorednsYaml = []byte(`# Warning: This is a file generated from the base underscore template file: coredns.yaml.base
-
-apiVersion: v1
+var _k8sAddonsCorednsYaml = []byte(`apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: coredns
@@ -7826,6 +7824,12 @@ rules:
   verbs:
   - list
   - watch
+- apiGroups:
+  - ""
+  resources:
+  - nodes
+  verbs:
+  - get
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
@@ -7857,29 +7861,29 @@ data:
     .:53 {
         errors
         health
+        ready
         kubernetes <domain> in-addr.arpa ip6.arpa {
             pods insecure
-            upstream
             fallthrough in-addr.arpa ip6.arpa
         }
         prometheus :9153
-        proxy . /etc/resolv.conf
+        forward . /etc/resolv.conf
         cache 30
         loop
         reload
         loadbalance
     }
 ---
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: coredns
   namespace: kube-system
   labels:
     k8s-app: kube-dns
+    kubernetes.io/name: "CoreDNS"
     kubernetes.io/cluster-service: "true"
     addonmanager.kubernetes.io/mode: Reconcile
-    kubernetes.io/name: CoreDNS
 spec:
   # replicas: not specified here:
   # 1. In order to make Addon Manager do not reconcile this replicas parameter.
@@ -7899,6 +7903,7 @@ spec:
       annotations:
         seccomp.security.alpha.kubernetes.io/pod: docker/default
     spec:
+      priorityClassName: system-cluster-critical
       affinity:
         podAntiAffinity:
           preferredDuringSchedulingIgnoredDuringExecution:
@@ -7921,7 +7926,6 @@ spec:
               topologyKey: kubernetes.io/hostname
             weight: 5
       serviceAccountName: coredns
-      priorityClassName: system-node-critical
       tolerations:
         - key: node-role.kubernetes.io/master
           effect: NoSchedule
@@ -7948,8 +7952,6 @@ spec:
         - name: config-volume
           mountPath: /etc/coredns
           readOnly: true
-        - name: tmp
-          mountPath: /tmp
         ports:
         - containerPort: 53
           name: dns
@@ -7969,6 +7971,11 @@ spec:
           timeoutSeconds: 5
           successThreshold: 1
           failureThreshold: 5
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: 8181
+            scheme: HTTP
         securityContext:
           allowPrivilegeEscalation: false
           capabilities:
@@ -7979,8 +7986,6 @@ spec:
           readOnlyRootFilesystem: true
       dnsPolicy: Default
       volumes:
-        - name: tmp
-          emptyDir: {}
         - name: config-volume
           configMap:
             name: coredns
@@ -7999,8 +8004,8 @@ metadata:
   labels:
     k8s-app: kube-dns
     kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
     kubernetes.io/name: CoreDNS
+    addonmanager.kubernetes.io/mode: Reconcile
 spec:
   selector:
     k8s-app: kube-dns
@@ -8011,6 +8016,9 @@ spec:
     protocol: UDP
   - name: dns-tcp
     port: 53
+    protocol: TCP
+  - name: metrics
+    port: 9153
     protocol: TCP
 `)
 
