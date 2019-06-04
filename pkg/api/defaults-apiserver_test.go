@@ -440,7 +440,7 @@ func TestAPIServerWeakCipherSuites(t *testing.T) {
 		cs := CreateMockContainerService("testcluster", version, 3, 2, false)
 		cs.setAPIServerConfig()
 		a := cs.Properties.OrchestratorProfile.KubernetesConfig.APIServerConfig
-		if a["--tls-cipher-suites"] != TLSStrongCipherSuites {
+		if a["--tls-cipher-suites"] != TLSStrongCipherSuitesAPIServer {
 			t.Fatalf("got unexpected default value for '--tls-cipher-suites' API server config for Kubernetes version %s: %s",
 				version, a["--tls-cipher-suites"])
 		}

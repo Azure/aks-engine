@@ -701,3 +701,40 @@ func TestKubeletConfigDefaultFeatureGates(t *testing.T) {
 			k["--feature-gates"])
 	}
 }
+
+func TestKubeletStrongCipherSuites(t *testing.T) {
+	// Test allowed versions
+	for _, version := range []string{"1.10.0", "1.11.0", "1.12.0", "1.13.0", "1.14.0"} {
+		cs := CreateMockContainerService("testcluster", version, 3, 2, false)
+		cs.setKubeletConfig()
+		k := cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig
+		if k["--tls-cipher-suites"] != TLSStrongCipherSuitesKubelet {
+			t.Fatalf("got unexpected default value for '--tls-cipher-suites' kubelet config for Kubernetes version %s: %s",
+				version, k["--tls-cipher-suites"])
+		}
+	}
+
+	// Validate that 1.9.0 doesn't include --tls-cipher-suites at all
+	cs := CreateMockContainerService("testcluster", "1.9.0", 3, 2, false)
+	cs.setKubeletConfig()
+	k := cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig
+	if _, ok := k["--tls-cipher-suites"]; ok {
+		t.Fatalf("got a value for '--tls-cipher-suites' kubelet config, which is not enabled in versions of Kubernetes prior to 1.10: %s",
+			k["--tls-cipher-suites"])
+	}
+
+	allSuites := "TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA,TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256,TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA,TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305,TLS_ECDHE_ECDSA_WITH_RC4_128_SHA,TLS_ECDHE_RSA_WITH_3DES_EDE_CBC_SHA,TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA,TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256,TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA,TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305,TLS_ECDHE_RSA_WITH_RC4_128_SHA,TLS_RSA_WITH_3DES_EDE_CBC_SHA,TLS_RSA_WITH_AES_128_CBC_SHA,TLS_RSA_WITH_AES_128_CBC_SHA256,TLS_RSA_WITH_AES_128_GCM_SHA256,TLS_RSA_WITH_AES_256_CBC_SHA,TLS_RSA_WITH_AES_256_GCM_SHA384,TLS_RSA_WITH_RC4_128_SHA"
+	// Test user-override
+	for _, version := range []string{"1.10.0", "1.11.0", "1.12.0", "1.13.0", "1.14.0"} {
+		cs := CreateMockContainerService("testcluster", version, 3, 2, false)
+		cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig = map[string]string{
+			"--tls-cipher-suites": allSuites,
+		}
+		cs.setKubeletConfig()
+		k := cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig
+		if k["--tls-cipher-suites"] != allSuites {
+			t.Fatalf("got unexpected default value for '--tls-cipher-suites' API server config for Kubernetes version %s: %s",
+				version, k["--tls-cipher-suites"])
+		}
+	}
+}

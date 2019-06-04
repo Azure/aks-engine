@@ -96,6 +96,11 @@ func (cs *ContainerService) setKubeletConfig() {
 		defaultKubeletConfig["--rotate-certificates"] = "true"
 	}
 
+	// Disable Weak TLS Cipher Suites for 1.10 and above
+	if common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.10.0") {
+		defaultKubeletConfig["--tls-cipher-suites"] = TLSStrongCipherSuitesKubelet
+	}
+
 	// If no user-configurable kubelet config values exists, use the defaults
 	setMissingKubeletValues(o.KubernetesConfig, defaultKubeletConfig)
 	addDefaultFeatureGates(o.KubernetesConfig.KubeletConfig, o.OrchestratorVersion, "1.8.0", "PodPriority=true")
