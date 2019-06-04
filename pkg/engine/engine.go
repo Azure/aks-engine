@@ -580,6 +580,7 @@ func (t *TemplateGenerator) getSingleLine(textFilename string, cs *api.Container
 
 	var buffer bytes.Buffer
 	if err = templ.ExecuteTemplate(&buffer, textFilename, profile); err != nil {
+		fmt.Println("error here", err)
 		return "", t.Translator.Errorf("error executing template for file %s: %v", textFilename, err)
 	}
 	expandedTemplate := buffer.String()

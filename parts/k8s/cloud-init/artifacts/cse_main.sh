@@ -154,6 +154,15 @@ if [[ -n "${MASTER_NODE}" && "${KMS_PROVIDER_VAULT_NAME}" != "" ]]; then
     ensureKMS
 fi
 
+CUSTOM_SEARCH_DOMAIN_SCRIPT=/opt/azure/containers/setup-custom-search-domains.sh
+
+DHCPV6_SYSTEMD_SERVICE=/etc/systemd/system/dhcpv6.service
+DHCPV6_CONFIGURATION_SCRIPT=/opt/azure/containers/enable-dhcpv6.sh
+
+if [[ -f ${DHCPV6_SYSTEMD_SERVICE} ]] && [[ -f ${DHCPV6_CONFIGURATION_SCRIPT} ]];then
+    ensureDHCPv6
+fi
+
 ensureKubelet
 ensureJournal
 

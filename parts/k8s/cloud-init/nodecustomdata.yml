@@ -98,6 +98,24 @@ write_files:
   content: !!binary |
     {{CloudInitData "aptPreferences"}}
 
+{{if not .IsCoreOS}}
+    {{if IsIPv6DualStackFeatureEnabled}}
+- path: /etc/systemd/system/dhcpv6.service
+  permissions: "0644"
+  encoding: gzip
+  owner: root
+  content: !!binary |
+    {{CloudInitData "dhcpv6SystemdService"}}
+
+- path: /opt/azure/containers/enable-dhcpv6.sh
+  permissions: "0544"
+  encoding: gzip
+  owner: root
+  content: !!binary |
+    {{CloudInitData "dhcpv6ConfigurationScript"}}
+    {{end}}
+{{end}}
+
 {{if .KubernetesConfig.RequiresDocker}}
     {{if not .IsCoreOS}}
 - path: /etc/systemd/system/docker.service.d/clear_mount_propagation_flags.conf

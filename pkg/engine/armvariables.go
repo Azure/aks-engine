@@ -135,6 +135,8 @@ func getK8sMasterVars(cs *api.ContainerService) (map[string]interface{}, error) 
 		"aptPreferences":                   getBase64EncodedGzippedCustomScript(aptPreferences),
 		"dockerClearMountPropagationFlags": getBase64EncodedGzippedCustomScript(dockerClearMountPropagationFlags),
 		"etcdSystemdService":               getBase64EncodedGzippedCustomScript(etcdSystemdService),
+		"dhcpv6SystemdService":             getBase64EncodedGzippedCustomScript(dhcpv6SystemdService),
+		"dhcpv6ConfigurationScript":        getBase64EncodedGzippedCustomScript(dhcpv6ConfigurationScript),
 	}
 
 	blockOutboundInternet := cs.Properties.FeatureFlags.IsFeatureEnabled("BlockOutboundInternet")

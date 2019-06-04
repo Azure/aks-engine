@@ -65,9 +65,11 @@
 // ../../parts/k8s/cloud-init/artifacts/cse_install.sh
 // ../../parts/k8s/cloud-init/artifacts/cse_main.sh
 // ../../parts/k8s/cloud-init/artifacts/default-grub
+// ../../parts/k8s/cloud-init/artifacts/dhcpv6.service
 // ../../parts/k8s/cloud-init/artifacts/docker-monitor.service
 // ../../parts/k8s/cloud-init/artifacts/docker-monitor.timer
 // ../../parts/k8s/cloud-init/artifacts/docker_clear_mount_propagation_flags.conf
+// ../../parts/k8s/cloud-init/artifacts/enable-dhcpv6.sh
 // ../../parts/k8s/cloud-init/artifacts/etc-issue
 // ../../parts/k8s/cloud-init/artifacts/etc-issue.net
 // ../../parts/k8s/cloud-init/artifacts/etcd.service
@@ -10592,6 +10594,10 @@ ensureKMS() {
     systemctlEnableAndStart kms || exit $ERR_SYSTEMCTL_START_FAIL
 }
 
+ensureDHCPv6() {
+    systemctlEnableAndStart dhcpv6 || exit $ERR_SYSTEMCTL_START_FAIL
+}
+
 ensureKubelet() {
     KUBELET_DEFAULT_FILE=/etc/default/kubelet
     wait_for_file 1200 1 $KUBELET_DEFAULT_FILE || exit $ERR_FILE_WATCH_TIMEOUT
@@ -11615,6 +11621,15 @@ if [[ -n "${MASTER_NODE}" && "${KMS_PROVIDER_VAULT_NAME}" != "" ]]; then
     ensureKMS
 fi
 
+CUSTOM_SEARCH_DOMAIN_SCRIPT=/opt/azure/containers/setup-custom-search-domains.sh
+
+DHCPV6_SYSTEMD_SERVICE=/etc/systemd/system/dhcpv6.service
+DHCPV6_CONFIGURATION_SCRIPT=/opt/azure/containers/enable-dhcpv6.sh
+
+if [[ -f ${DHCPV6_SYSTEMD_SERVICE} ]] && [[ -f ${DHCPV6_CONFIGURATION_SCRIPT} ]];then
+    ensureDHCPv6
+fi
+
 ensureKubelet
 ensureJournal
 
@@ -11703,6 +11718,32 @@ func k8sCloudInitArtifactsDefaultGrub() (*asset, error) {
 	return a, nil
 }
 
+var _k8sCloudInitArtifactsDhcpv6Service = []byte(`[Unit]
+Description=enabledhcpv6
+After=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/opt/azure/containers/enable-dhcpv6.sh
+
+[Install]
+WantedBy=multi-user.target`)
+
+func k8sCloudInitArtifactsDhcpv6ServiceBytes() ([]byte, error) {
+	return _k8sCloudInitArtifactsDhcpv6Service, nil
+}
+
+func k8sCloudInitArtifactsDhcpv6Service() (*asset, error) {
+	bytes, err := k8sCloudInitArtifactsDhcpv6ServiceBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "k8s/cloud-init/artifacts/dhcpv6.service", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
 var _k8sCloudInitArtifactsDockerMonitorService = []byte(`[Unit]
 Description=a script that checks docker health and restarts if needed
 After=docker.service
@@ -11763,6 +11804,44 @@ func k8sCloudInitArtifactsDocker_clear_mount_propagation_flagsConf() (*asset, er
 	}
 
 	info := bindataFileInfo{name: "k8s/cloud-init/artifacts/docker_clear_mount_propagation_flags.conf", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
+var _k8sCloudInitArtifactsEnableDhcpv6Sh = []byte(`#!/usr/bin/env bash
+
+DHCLIENT6_CONF_FILE=/etc/dhcp/dhclient6.conf
+CLOUD_INIT_CFG=/etc/network/interfaces.d/50-cloud-init.cfg
+
+read -r -d '' NETWORK_CONFIGURATION << EOC 
+iface eth0 inet6 auto 
+    up sleep 5 
+    up dhclient -1 -6 -cf /etc/dhcp/dhclient6.conf -lf /var/lib/dhcp/dhclient6.eth0.leases -v eth0 || true
+EOC
+
+add_if_not_exists() {
+    grep -qxF "${1}" ${2} || echo "${1}" >> ${2}
+}
+
+echo "Configuring dhcpv6 ..."
+
+touch /etc/dhcp/dhclient6.conf && add_if_not_exists "timeout 10;" ${DHCLIENT6_CONF_FILE} && \
+    add_if_not_exists "${NETWORK_CONFIGURATION}" ${CLOUD_INIT_CFG} && \
+    sudo ifdown eth0 && sudo ifup eth0
+
+echo "Configuration complete"`)
+
+func k8sCloudInitArtifactsEnableDhcpv6ShBytes() ([]byte, error) {
+	return _k8sCloudInitArtifactsEnableDhcpv6Sh, nil
+}
+
+func k8sCloudInitArtifactsEnableDhcpv6Sh() (*asset, error) {
+	bytes, err := k8sCloudInitArtifactsEnableDhcpv6ShBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "k8s/cloud-init/artifacts/enable-dhcpv6.sh", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -12965,6 +13044,24 @@ write_files:
   content: !!binary |
     {{CloudInitData "aptPreferences"}}
 
+{{if not .MasterProfile.IsCoreOS}}
+    {{if IsIPv6DualStackFeatureEnabled}}
+- path: /etc/systemd/system/dhcpv6.service
+  permissions: "0644"
+  encoding: gzip
+  owner: root
+  content: !!binary |
+    {{CloudInitData "dhcpv6SystemdService"}}
+
+- path: /opt/azure/containers/enable-dhcpv6.sh
+  permissions: "0544"
+  encoding: gzip
+  owner: root
+  content: !!binary |
+    {{CloudInitData "dhcpv6ConfigurationScript"}}
+    {{end}}
+{{end}}
+
 {{if .OrchestratorProfile.KubernetesConfig.RequiresDocker}}
     {{if not .MasterProfile.IsCoreOS}}
 - path: /etc/systemd/system/docker.service.d/clear_mount_propagation_flags.conf
@@ -13457,6 +13554,24 @@ write_files:
   owner: root
   content: !!binary |
     {{CloudInitData "aptPreferences"}}
+
+{{if not .IsCoreOS}}
+    {{if IsIPv6DualStackFeatureEnabled}}
+- path: /etc/systemd/system/dhcpv6.service
+  permissions: "0644"
+  encoding: gzip
+  owner: root
+  content: !!binary |
+    {{CloudInitData "dhcpv6SystemdService"}}
+
+- path: /opt/azure/containers/enable-dhcpv6.sh
+  permissions: "0544"
+  encoding: gzip
+  owner: root
+  content: !!binary |
+    {{CloudInitData "dhcpv6ConfigurationScript"}}
+    {{end}}
+{{end}}
 
 {{if .KubernetesConfig.RequiresDocker}}
     {{if not .IsCoreOS}}
@@ -23092,9 +23207,11 @@ var _bindata = map[string]func() (*asset, error){
 	"k8s/cloud-init/artifacts/cse_install.sh":                                         k8sCloudInitArtifactsCse_installSh,
 	"k8s/cloud-init/artifacts/cse_main.sh":                                            k8sCloudInitArtifactsCse_mainSh,
 	"k8s/cloud-init/artifacts/default-grub":                                           k8sCloudInitArtifactsDefaultGrub,
+	"k8s/cloud-init/artifacts/dhcpv6.service":                                         k8sCloudInitArtifactsDhcpv6Service,
 	"k8s/cloud-init/artifacts/docker-monitor.service":                                 k8sCloudInitArtifactsDockerMonitorService,
 	"k8s/cloud-init/artifacts/docker-monitor.timer":                                   k8sCloudInitArtifactsDockerMonitorTimer,
 	"k8s/cloud-init/artifacts/docker_clear_mount_propagation_flags.conf":              k8sCloudInitArtifactsDocker_clear_mount_propagation_flagsConf,
+	"k8s/cloud-init/artifacts/enable-dhcpv6.sh":                                       k8sCloudInitArtifactsEnableDhcpv6Sh,
 	"k8s/cloud-init/artifacts/etc-issue":                                              k8sCloudInitArtifactsEtcIssue,
 	"k8s/cloud-init/artifacts/etc-issue.net":                                          k8sCloudInitArtifactsEtcIssueNet,
 	"k8s/cloud-init/artifacts/etcd.service":                                           k8sCloudInitArtifactsEtcdService,

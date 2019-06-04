@@ -624,6 +624,9 @@ func (t *TemplateGenerator) getTemplateFuncMap(cs *api.ContainerService) templat
 		"IsCustomVNET": func() bool {
 			return cs.Properties.AreAgentProfilesCustomVNET()
 		},
+		"IsIPv6DualStackFeatureEnabled": func() bool {
+			return cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6DualStack")
+		},
 	}
 }
 
