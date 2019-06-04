@@ -121,8 +121,8 @@ func GetDCOSMasterAllowedSizes() string {
 `
 }
 
-// GetKubernetesAllowedSizes returns the allowed sizes for Kubernetes agent
- func GetKubernetesAllowedSizes() string {
+// GetKubernetesAllowedVMSKUs returns the allowed sizes for Kubernetes agent
+ func GetKubernetesAllowedVMSKUs() string {
         return `      "allowedValues": [
 """
     kubernetes_agent_map_keys = sorted(kubernetes_size_map.keys())

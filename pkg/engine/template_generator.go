@@ -381,13 +381,13 @@ func (t *TemplateGenerator) getTemplateFuncMap(cs *api.ContainerService) templat
 			if cs.Properties.OrchestratorProfile.OrchestratorType == api.DCOS {
 				return helpers.GetDCOSMasterAllowedSizes()
 			}
-			return helpers.GetKubernetesAllowedSizes()
+			return helpers.GetKubernetesAllowedVMSKUs()
 		},
 		"GetDefaultVNETCIDR": func() string {
 			return DefaultVNETCIDR
 		},
-		"GetAgentAllowedSizes": func() string {
-			return helpers.GetKubernetesAllowedSizes()
+		"GetKubernetesAllowedVMSKUs": func() string {
+			return helpers.GetKubernetesAllowedVMSKUs()
 		},
 		"getSwarmVersions": func() string {
 			return getSwarmVersions(api.SwarmVersion, api.SwarmDockerComposeVersion)
@@ -399,28 +399,13 @@ func (t *TemplateGenerator) getTemplateFuncMap(cs *api.ContainerService) templat
 			return helpers.GetSizeMap()
 		},
 		"WriteLinkedTemplatesForExtensions": func() string {
-			extensions := getLinkedTemplatesForExtensions(cs.Properties)
-			return extensions
+			return getLinkedTemplatesForExtensions(cs.Properties)
 		},
 		"GetSshPublicKeysPowerShell": func() string {
-			str := ""
-			linuxProfile := cs.Properties.LinuxProfile
-			if linuxProfile != nil {
-				lastItem := len(linuxProfile.SSH.PublicKeys) - 1
-				for i, publicKey := range linuxProfile.SSH.PublicKeys {
-					str += `"` + strings.TrimSpace(publicKey.KeyData) + `"`
-					if i < lastItem {
-						str += ", "
-					}
-				}
-			}
-			return str
+			return getSSHPublicKeysPowerShell(cs.Properties.LinuxProfile)
 		},
 		"GetWindowsMasterSubnetARMParam": func() string {
-			if cs.Properties.MasterProfile != nil && cs.Properties.MasterProfile.IsCustomVNET() {
-				return fmt.Sprintf("',parameters('vnetCidr'),'")
-			}
-			return fmt.Sprintf("',parameters('masterSubnet'),'")
+			return getWindowsMasterSubnetARMParam(cs.Properties.MasterProfile)
 		},
 		"GetKubernetesMasterPreprovisionYaml": func() string {
 			str := ""

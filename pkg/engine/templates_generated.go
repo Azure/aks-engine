@@ -267,7 +267,7 @@ var _agentparamsT = []byte(`    "{{.Name}}Count": {
     },
     {{end}}
     "{{.Name}}VMSize": {
-      {{GetAgentAllowedSizes}}
+      {{GetKubernetesAllowedVMSKUs}}
       "defaultValue": "{{.VMSize}}",
       "metadata": {
         "description": "The size of the Virtual Machine."

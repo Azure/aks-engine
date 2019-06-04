@@ -263,8 +263,8 @@ func GetDCOSMasterAllowedSizes() string {
 `
 }
 
-// GetKubernetesAllowedSizes returns the allowed sizes for Kubernetes agent
-func GetKubernetesAllowedSizes() string {
+// GetKubernetesAllowedVMSKUs returns the allowed sizes for Kubernetes agent
+func GetKubernetesAllowedVMSKUs() string {
 	return `      "allowedValues": [
         "Standard_A0",
         "Standard_A1",
