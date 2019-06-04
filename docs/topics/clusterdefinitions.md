@@ -199,7 +199,7 @@ Additionally above, we specified a custom docker image for tiller, let's say we 
 }
 ```
 
-The reason for the unsightly base64 encoded input type is to optimize delivery payload, and to squash a human-maintainable yaml file representation into something that can be tightly pasted into a JSON string value without the arguably more unsightly carriage returns / whitespace that would be delivered with a literal copy/paste of a Kubernetes manifest.
+The reason for the unsightly base64-encoded input type is to optimize delivery payload, and to squash a human-maintainable yaml file representation into something that can be tightly pasted into a JSON string value without the arguably more unsightly carriage returns / whitespace that would be delivered with a literal copy/paste of a Kubernetes manifest.
 
 <a name="feat-kubelet-config"></a>
 
@@ -457,17 +457,17 @@ We consider `kubeletConfig`, `controllerManagerConfig`, `apiServerConfig`, and `
 
 #### Custom YAML for Kubernetes component manifests
 
-Custom YAML specifications can be configured for kube-scheduler, kube-controller-manager, cloud-controller-manager and kube-apiserver in addition to the addons described [above](#addons). You will need to pass in a _base64_ encoded string of the kubernetes manifest YAML file to _KubernetesComponentConfig["data"]_ . For example, to pass a custom kube-scheduler config, do the following:
+Custom YAML specifications can be configured for kube-scheduler, kube-controller-manager, cloud-controller-manager and kube-apiserver in addition to the addons described [above](#addons). You will need to pass in a _base64-encoded_ string of the kubernetes manifest YAML file to _KubernetesComponentConfig["data"]_ . For example, to pass a custom kube-scheduler config, do the following:
 
 ```json
 "kubernetesConfig": {
     "schedulerConfig": {
-            "data" : "<base64 encoded string of your k8s manifest YAML>"
+            "data" : "<base64-encoded string of your k8s manifest YAML>"
         }
 }
 ```
 
-CAVEAT: Please note that this is an experimental feature. Since Addons.Data allows you to provide your own scripts, you face the risk of any unintended/undesirable consequences of the errors and failures from running that script.
+> _**NOTE**_: Custom YAML for addons is an experimental feature. Since `Addons.Data` allows you to provide your own scripts, you are responsible for any undesirable consequences of their errors or failures. Use at your own risk.
 
 <a name="feat-private-cluster"></a>
 
