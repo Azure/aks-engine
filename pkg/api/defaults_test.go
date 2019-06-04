@@ -251,7 +251,7 @@ func TestAssignDefaultAddonImages(t *testing.T) {
 			mockCS := getMockBaseContainerService("1.10.8")
 			mockCS.Properties.OrchestratorProfile.OrchestratorType = Kubernetes
 			mockCS.Properties.OrchestratorProfile.KubernetesConfig.Addons = c.myAddons
-			mockCS.setOrchestratorDefaults(c.isUpdate)
+			mockCS.setOrchestratorDefaults(c.isUpdate, c.isUpdate)
 			resultAddons := mockCS.Properties.OrchestratorProfile.KubernetesConfig.Addons
 			for _, result := range resultAddons {
 				if result.Containers[0].Image != c.expectedImages[result.Name] {
