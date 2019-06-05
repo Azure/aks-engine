@@ -174,7 +174,6 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpgrade, isScale bool) {
 				}
 			}
 		} else {
-			fmt.Println("coming into this loop")
 			// ensure 2 subnets exists if ipv6 dual stack feature is enabled
 			if cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6DualStack") && !o.IsAzureCNI() {
 				clusterSubnets := strings.Split(o.KubernetesConfig.ClusterSubnet, ",")
