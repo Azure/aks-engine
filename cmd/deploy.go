@@ -80,9 +80,11 @@ func newDeployCmd() *cobra.Command {
 				return errors.Wrap(err, "loading API model")
 			}
 			if dc.apiVersion == "vlabs" {
-				if err := dc.validateApimodel(); err != nil {
+				if err := dc.validateAPIModelAsVLabs(); err != nil {
 					return errors.Wrap(err, "validating API model after populating values")
 				}
+			} else {
+				log.Warnf("API model validation is only available for \"apiVersion\": \"vlabs\", skipping validation...")
 			}
 			return dc.run()
 		},
@@ -355,9 +357,9 @@ func autofillApimodel(dc *deployCmd) error {
 	return nil
 }
 
-func (dc *deployCmd) validateApimodel() error {
-	vlabsCS := api.ConvertContainerServiceToVLabs(dc.containerService)
-	return vlabsCS.Validate(false)
+// validateAPIModelAsVLabs converts the ContainerService object to a vlabs ContainerService object and validates it
+func (dc *deployCmd) validateAPIModelAsVLabs() error {
+	return api.ConvertContainerServiceToVLabs(dc.containerService).Validate(false)
 }
 
 func (dc *deployCmd) run() error {
