@@ -12,6 +12,10 @@ import (
 )
 
 // CreateClusterLoadBalancerForIPv6 creates the cluster loadbalancer with IPv4 and IPv6 FE config
+// this loadbalancer is created for the ipv6 dual stack feature and configured with 1 ipv4 FE, 1 ipv6 FE
+// and 2 backend address pools - v4 and v6, 2 rules - v4 and v6. Atleast existence of 1 rule is a
+// requirement now to allow egress. This can be removed later.
+// TODO (aramase)
 func CreateClusterLoadBalancerForIPv6() LoadBalancerARM {
 	loadbalancer := LoadBalancerARM{
 		ARMResource: ARMResource{

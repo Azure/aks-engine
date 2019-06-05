@@ -1049,6 +1049,7 @@ func (k *KubernetesConfig) Validate(k8sVersion string, hasWindows, ipv6DualStack
 	// number of minimum retries allowed for kubelet to post node status
 	const minKubeletRetries = 4
 
+	// ipv6 dual stack feature is currently only supported with kubenet
 	if ipv6DualStackEnabled && k.NetworkPlugin != "kubenet" {
 		return errors.Errorf("OrchestratorProfile.KubernetesConfig.NetworkPlugin '%s' is invalid. IPv6 dual stack supported only with kubenet.", k.NetworkPlugin)
 	}
