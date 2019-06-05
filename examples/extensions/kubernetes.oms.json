@@ -7,9 +7,9 @@
     "masterProfile": {
       "count": 1,
       "dnsPrefix": "",
-      "vmSize": "Standard_D2_v2",
+      "vmSize": "Standard_D2_v3",
       "extensions": [
-        { 
+        {
           "name": "microsoft-oms-agent-k8s"
         }
      ]
@@ -18,7 +18,7 @@
       {
         "name": "agentpool1",
         "count": 3,
-        "vmSize": "Standard_D2_v2",
+        "vmSize": "Standard_D2_v3",
         "availabilityProfile": "AvailabilitySet"
       }
     ],
@@ -33,9 +33,9 @@
       }
     },
     "extensionProfiles": [
-      { 
-        "name": "microsoft-oms-agent-k8s", 
-        "version": "v1", 
+      {
+        "name": "microsoft-oms-agent-k8s",
+        "version": "v1",
         "extensionParameters": ""
       }
     ],

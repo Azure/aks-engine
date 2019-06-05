@@ -11,7 +11,7 @@ A complete example is contained in the `multipool.json` apimodel in this directo
       {
         "name": "workerpool",
         "count": 2,
-        "vmSize": "Standard_D2_v2"
+        "vmSize": "Standard_D2_v3"
       },
       {
         "name": "gpupool",

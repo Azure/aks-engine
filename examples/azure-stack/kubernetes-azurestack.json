@@ -19,14 +19,14 @@
             "distro": "ubuntu",
             "osDiskSizeGB": 200,
             "count": 1,
-            "vmSize": "Standard_D2_v2"
+            "vmSize": "Standard_D2_v3"
         },
         "agentPoolProfiles": [
             {
                 "name": "linuxpool",
                 "osDiskSizeGB": 200,
                 "count": 3,
-                "vmSize": "Standard_D2_v2",
+                "vmSize": "Standard_D2_v3",
                 "distro": "ubuntu",
                 "availabilityProfile": "AvailabilitySet",
                 "AcceleratedNetworkingEnabled": false

@@ -12,7 +12,7 @@ The definition below adds 2 labels `"bar"` and `"baz"` to all nodes in the `firs
       {
         "name": "firstpool",
         "count": 3,
-        "vmSize": "Standard_D2_v2",
+        "vmSize": "Standard_D2_v3",
         "availabilityProfile": "AvailabilitySet",
         "customNodeLabels": {
           "bar": "lulz",
