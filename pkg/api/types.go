@@ -1166,7 +1166,11 @@ func (p *Properties) GetNonMasqueradeCIDR() string {
 				nonMasqCidr = DefaultVNETCIDR
 			}
 		} else {
-			nonMasqCidr = p.OrchestratorProfile.KubernetesConfig.ClusterSubnet
+			if p.FeatureFlags.IsFeatureEnabled("EnableIPv6DualStack") {
+				nonMasqCidr = strings.Split(p.OrchestratorProfile.KubernetesConfig.ClusterSubnet, ",")[0]
+			} else {
+				nonMasqCidr = p.OrchestratorProfile.KubernetesConfig.ClusterSubnet
+			}
 		}
 	}
 	return nonMasqCidr
