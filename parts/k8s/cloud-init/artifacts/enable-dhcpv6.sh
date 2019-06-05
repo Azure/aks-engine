@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
 
+set -e
+set -o pipefail
+set -u
+
 DHCLIENT6_CONF_FILE=/etc/dhcp/dhclient6.conf
 CLOUD_INIT_CFG=/etc/network/interfaces.d/50-cloud-init.cfg
 

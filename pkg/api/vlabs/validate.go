@@ -401,6 +401,11 @@ func (a *Properties) validateAgentPoolProfiles(isUpdate bool) error {
 			return e
 		}
 
+		// validate os type is linux if dual stack feature is enabled
+		if a.FeatureFlags.IsFeatureEnabled("EnableIPv6DualStack") && agentPoolProfile.OSType != Linux {
+			return errors.Errorf("Dual stack feature is supported only with Linux, but agent pool '%s' is of os type %s", agentPoolProfile.Name, agentPoolProfile.OSType)
+		}
+
 		// validate that each AgentPoolProfile Name is unique
 		if _, ok := profileNames[agentPoolProfile.Name]; ok {
 			return errors.Errorf("profile name '%s' already exists, profile names must be unique across pools", agentPoolProfile.Name)
@@ -1045,7 +1050,7 @@ func (k *KubernetesConfig) Validate(k8sVersion string, hasWindows, ipv6DualStack
 	const minKubeletRetries = 4
 
 	if ipv6DualStackEnabled && k.NetworkPlugin != "kubenet" {
-		return errors.Errorf("OrchestratorProfile.KubernetesConfig.NetworkPlugin '%s' is invalid. IPv6 dual stack works only with kubenet.", k.NetworkPlugin)
+		return errors.Errorf("OrchestratorProfile.KubernetesConfig.NetworkPlugin '%s' is invalid. IPv6 dual stack supported only with kubenet.", k.NetworkPlugin)
 	}
 
 	if k.ClusterSubnet != "" {
