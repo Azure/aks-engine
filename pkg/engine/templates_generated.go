@@ -9842,7 +9842,9 @@ subjects:
 - kind: Group
   name: system:serviceaccounts:kube-system
   apiGroup: rbac.authorization.k8s.io
-`)
+- kind: Group
+  name: system:nodes
+  apiGroup: rbac.authorization.k8s.io`)
 
 func k8sAddonsKubernetesmasteraddonsPodSecurityPolicyYamlBytes() ([]byte, error) {
 	return _k8sAddonsKubernetesmasteraddonsPodSecurityPolicyYaml, nil
@@ -11621,8 +11623,7 @@ if [[ -n "${MASTER_NODE}" && "${KMS_PROVIDER_VAULT_NAME}" != "" ]]; then
     ensureKMS
 fi
 
-CUSTOM_SEARCH_DOMAIN_SCRIPT=/opt/azure/containers/setup-custom-search-domains.sh
-
+# configure and enable dhcpv6 for dual stack feature
 DHCPV6_SYSTEMD_SERVICE=/etc/systemd/system/dhcpv6.service
 DHCPV6_CONFIGURATION_SCRIPT=/opt/azure/containers/enable-dhcpv6.sh
 
@@ -11809,6 +11810,10 @@ func k8sCloudInitArtifactsDocker_clear_mount_propagation_flagsConf() (*asset, er
 }
 
 var _k8sCloudInitArtifactsEnableDhcpv6Sh = []byte(`#!/usr/bin/env bash
+
+set -e
+set -o pipefail
+set -u
 
 DHCLIENT6_CONF_FILE=/etc/dhcp/dhclient6.conf
 CLOUD_INIT_CFG=/etc/network/interfaces.d/50-cloud-init.cfg
