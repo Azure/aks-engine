@@ -38,8 +38,6 @@ const (
 	NetworkPluginKubenet = "kubenet"
 	// NetworkPluginFlannel is the string expression for flannel network plugin
 	NetworkPluginFlannel = "flannel"
-	// HeapsterAddonName is the name of the kube-heapster-deployment addon
-	HeapsterAddonName = "kube-heapster-deployment"
 	// KubeDNSAddonName is the name of the kube-dns-deployment addon
 	KubeDNSAddonName = "kube-dns-deployment"
 	// CoreDNSAddonName is the name of the coredns addon
@@ -88,8 +86,8 @@ const (
 	DefaultGeneratorCode = "aksengine"
 	// ReschedulerAddonName is the name of the rescheduler addon deployment
 	ReschedulerAddonName = "rescheduler"
-	// DefaultHeapsterAddonName is the name of the heapster addon deployment
-	DefaultHeapsterAddonName = "heapster"
+	// HeapsterAddonName is the name of the heapster addon deployment
+	HeapsterAddonName = "heapster"
 	// MetricsServerAddonName is the name of the kubernetes Metrics server addon deployment
 	MetricsServerAddonName = "metrics-server"
 	// NVIDIADevicePluginAddonName is the name of the kubernetes NVIDIA Device Plugin daemon set

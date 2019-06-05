@@ -208,9 +208,10 @@ func TestAssignDefaultAddonImages(t *testing.T) {
 		IPMASQAgentAddonName:               "k8s.gcr.io/ip-masq-agent-amd64:v2.0.0",
 		AzureCNINetworkMonitoringAddonName: "mcr.microsoft.com/containernetworking/networkmonitor:v0.0.6",
 		DNSAutoscalerAddonName:             "k8s.gcr.io/cluster-proportional-autoscaler-amd64:1.1.1",
-		DefaultHeapsterAddonName:           "k8s.gcr.io/heapster-amd64:v1.5.4",
+		HeapsterAddonName:                  "k8s.gcr.io/heapster-amd64:v1.5.4",
 		CalicoAddonName:                    "calico/typha:v3.7.2",
-		AzureNetworkPolicyAddonName:        "",
+		AzureNetworkPolicyAddonName:        "mcr.microsoft.com/containernetworking/azure-npm:v1.0.18",
+		AADPodIdentityAddonName:            "mcr.microsoft.com/k8s/aad-pod-identity/nmi:1.2",
 	}
 
 	customAddonImages := make(map[string]string)
@@ -271,6 +272,9 @@ func getFakeAddons(defaultAddonMap map[string]string, customImage string) []Kube
 		}
 		if addonName == CalicoAddonName {
 			containerName = "calico-typha"
+		}
+		if addonName == AADPodIdentityAddonName {
+			containerName = "nmi"
 		}
 		customAddon := KubernetesAddon{
 			Name:    addonName,

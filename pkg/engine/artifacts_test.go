@@ -13,7 +13,6 @@ import (
 )
 
 func TestKubernetesContainerAddonSettingsInit(t *testing.T) {
-	mockAzureStackProperties := api.GetMockPropertiesWithCustomCloudProfile("azurestackcloud", true, true, false)
 	cases := []struct {
 		p                              *api.Properties
 		expectedHeapster               bool
@@ -33,37 +32,9 @@ func TestKubernetesContainerAddonSettingsInit(t *testing.T) {
 		expectedAzureCNINetworkMonitor bool
 		expectedDNSAutoscaler          bool
 		expectedCalico                 bool
+		expectedAzureNetworkPolicy     bool
 	}{
-		// Legacy default scenario
-		{
-			p: &api.Properties{
-				OrchestratorProfile: &api.OrchestratorProfile{
-					OrchestratorType:    Kubernetes,
-					OrchestratorVersion: "1.8.15",
-					KubernetesConfig: &api.KubernetesConfig{
-						NetworkPlugin: NetworkPluginAzure,
-					},
-				},
-			},
-			expectedHeapster:               true,
-			expectedMetricsServer:          false,
-			expectedTiller:                 true,
-			expectedAADPodIdentity:         false,
-			expectedACIConnector:           false,
-			expectedClusterAutoscaler:      false,
-			expectedBlobfuseFlexvolume:     true,
-			expectedSMBFlexvolume:          false,
-			expectedKeyvaultFlexvolume:     true,
-			expectedDashboard:              true,
-			expectedRescheduler:            false,
-			expectedNvidia:                 false,
-			expectedContainerMonitoring:    false,
-			expectedIPMasqAgent:            true,
-			expectedAzureCNINetworkMonitor: true,
-			expectedDNSAutoscaler:          false,
-			expectedCalico:                 false,
-		},
-		// 1.14 scenario w/ explicit addons config
+		// addons disabled scenario
 		{
 			p: &api.Properties{
 				OrchestratorProfile: &api.OrchestratorProfile{
@@ -73,8 +44,120 @@ func TestKubernetesContainerAddonSettingsInit(t *testing.T) {
 						NetworkPlugin: NetworkPluginAzure,
 						Addons: []api.KubernetesAddon{
 							{
+								Name:    HeapsterAddonName,
+								Enabled: to.BoolPtr(false),
+							},
+							{
+								Name:    MetricsServerAddonName,
+								Enabled: to.BoolPtr(false),
+							},
+							{
 								Name:    TillerAddonName,
 								Enabled: to.BoolPtr(false),
+							},
+							{
+								Name:    AADPodIdentityAddonName,
+								Enabled: to.BoolPtr(false),
+							},
+							{
+								Name:    ACIConnectorAddonName,
+								Enabled: to.BoolPtr(false),
+							},
+							{
+								Name:    ClusterAutoscalerAddonName,
+								Enabled: to.BoolPtr(false),
+							},
+							{
+								Name:    BlobfuseFlexVolumeAddonName,
+								Enabled: to.BoolPtr(false),
+							},
+							{
+								Name:    SMBFlexVolumeAddonName,
+								Enabled: to.BoolPtr(false),
+							},
+							{
+								Name:    KeyVaultFlexVolumeAddonName,
+								Enabled: to.BoolPtr(false),
+							},
+							{
+								Name:    DashboardAddonName,
+								Enabled: to.BoolPtr(false),
+							},
+							{
+								Name:    ReschedulerAddonName,
+								Enabled: to.BoolPtr(false),
+							},
+							{
+								Name:    NVIDIADevicePluginAddonName,
+								Enabled: to.BoolPtr(false),
+							},
+							{
+								Name:    ContainerMonitoringAddonName,
+								Enabled: to.BoolPtr(false),
+							},
+							{
+								Name:    IPMASQAgentAddonName,
+								Enabled: to.BoolPtr(false),
+							},
+							{
+								Name:    AzureCNINetworkMonitorAddonName,
+								Enabled: to.BoolPtr(false),
+							},
+							{
+								Name:    DNSAutoscalerAddonName,
+								Enabled: to.BoolPtr(false),
+							},
+							{
+								Name:    CalicoAddonName,
+								Enabled: to.BoolPtr(false),
+							},
+							{
+								Name:    AzureNetworkPolicyAddonName,
+								Enabled: to.BoolPtr(false),
+							},
+						},
+					},
+				},
+			},
+			expectedHeapster:               false,
+			expectedMetricsServer:          false,
+			expectedTiller:                 false,
+			expectedAADPodIdentity:         false,
+			expectedACIConnector:           false,
+			expectedClusterAutoscaler:      false,
+			expectedBlobfuseFlexvolume:     false,
+			expectedSMBFlexvolume:          false,
+			expectedKeyvaultFlexvolume:     false,
+			expectedDashboard:              false,
+			expectedRescheduler:            false,
+			expectedNvidia:                 false,
+			expectedContainerMonitoring:    false,
+			expectedIPMasqAgent:            false,
+			expectedAzureCNINetworkMonitor: false,
+			expectedDNSAutoscaler:          false,
+			expectedCalico:                 false,
+			expectedAzureNetworkPolicy:     false,
+		},
+		// addons enabled scenario
+		{
+			p: &api.Properties{
+				OrchestratorProfile: &api.OrchestratorProfile{
+					OrchestratorType:    Kubernetes,
+					OrchestratorVersion: "1.14.1",
+					KubernetesConfig: &api.KubernetesConfig{
+						NetworkPlugin: NetworkPluginAzure,
+						Addons: []api.KubernetesAddon{
+							{
+								Name:    HeapsterAddonName,
+								Enabled: to.BoolPtr(true),
+							},
+							{
+								Name:    MetricsServerAddonName,
+								Enabled: to.BoolPtr(true),
+							},
+							{
+								Name:    TillerAddonName,
+								Enabled: to.BoolPtr(true),
 							},
 							{
 								Name:    AADPodIdentityAddonName,
@@ -90,7 +173,7 @@ func TestKubernetesContainerAddonSettingsInit(t *testing.T) {
 							},
 							{
 								Name:    BlobfuseFlexVolumeAddonName,
-								Enabled: to.BoolPtr(false),
+								Enabled: to.BoolPtr(true),
 							},
 							{
 								Name:    SMBFlexVolumeAddonName,
@@ -98,11 +181,11 @@ func TestKubernetesContainerAddonSettingsInit(t *testing.T) {
 							},
 							{
 								Name:    KeyVaultFlexVolumeAddonName,
-								Enabled: to.BoolPtr(false),
+								Enabled: to.BoolPtr(true),
 							},
 							{
 								Name:    DashboardAddonName,
-								Enabled: to.BoolPtr(false),
+								Enabled: to.BoolPtr(true),
 							},
 							{
 								Name:    ReschedulerAddonName,
@@ -118,11 +201,11 @@ func TestKubernetesContainerAddonSettingsInit(t *testing.T) {
 							},
 							{
 								Name:    IPMASQAgentAddonName,
-								Enabled: to.BoolPtr(false),
+								Enabled: to.BoolPtr(true),
 							},
 							{
 								Name:    AzureCNINetworkMonitorAddonName,
-								Enabled: to.BoolPtr(false),
+								Enabled: to.BoolPtr(true),
 							},
 							{
 								Name:    DNSAutoscalerAddonName,
@@ -132,223 +215,39 @@ func TestKubernetesContainerAddonSettingsInit(t *testing.T) {
 								Name:    CalicoAddonName,
 								Enabled: to.BoolPtr(true),
 							},
+							{
+								Name:    AzureNetworkPolicyAddonName,
+								Enabled: to.BoolPtr(true),
+							},
 						},
 					},
 				},
 			},
-			expectedHeapster:               false,
+			expectedHeapster:               true,
 			expectedMetricsServer:          true,
-			expectedTiller:                 false,
+			expectedTiller:                 true,
 			expectedAADPodIdentity:         true,
 			expectedACIConnector:           true,
 			expectedClusterAutoscaler:      true,
-			expectedBlobfuseFlexvolume:     false,
+			expectedBlobfuseFlexvolume:     true,
 			expectedSMBFlexvolume:          true,
-			expectedKeyvaultFlexvolume:     false,
-			expectedDashboard:              false,
+			expectedKeyvaultFlexvolume:     true,
+			expectedDashboard:              true,
 			expectedRescheduler:            true,
-			expectedNvidia:                 false,
-			expectedContainerMonitoring:    true,
-			expectedIPMasqAgent:            false,
-			expectedAzureCNINetworkMonitor: false,
-			expectedDNSAutoscaler:          false,
-			expectedCalico:                 false,
-		},
-		// Azure Stack scenario
-		{
-			p: &api.Properties{
-				OrchestratorProfile: &api.OrchestratorProfile{
-					OrchestratorType:    Kubernetes,
-					OrchestratorVersion: "1.14.1",
-					KubernetesConfig: &api.KubernetesConfig{
-						NetworkPlugin: NetworkPluginAzure,
-						Addons: []api.KubernetesAddon{
-							{
-								Name:    AADPodIdentityAddonName,
-								Enabled: to.BoolPtr(true),
-							},
-							{
-								Name:    ACIConnectorAddonName,
-								Enabled: to.BoolPtr(true),
-							},
-							{
-								Name:    ClusterAutoscalerAddonName,
-								Enabled: to.BoolPtr(true),
-							},
-							{
-								Name:    BlobfuseFlexVolumeAddonName,
-								Enabled: to.BoolPtr(true),
-							},
-							{
-								Name:    SMBFlexVolumeAddonName,
-								Enabled: to.BoolPtr(true),
-							},
-							{
-								Name:    KeyVaultFlexVolumeAddonName,
-								Enabled: to.BoolPtr(true),
-							},
-							{
-								Name:    ReschedulerAddonName,
-								Enabled: to.BoolPtr(true),
-							},
-							{
-								Name:    NVIDIADevicePluginAddonName,
-								Enabled: to.BoolPtr(true),
-							},
-							{
-								Name:    ContainerMonitoringAddonName,
-								Enabled: to.BoolPtr(true),
-							},
-						},
-					},
-				},
-				CustomCloudProfile: mockAzureStackProperties.CustomCloudProfile,
-			},
-			expectedHeapster:               false,
-			expectedMetricsServer:          true,
-			expectedTiller:                 true,
-			expectedAADPodIdentity:         false,
-			expectedACIConnector:           false,
-			expectedClusterAutoscaler:      false,
-			expectedBlobfuseFlexvolume:     false,
-			expectedSMBFlexvolume:          false,
-			expectedKeyvaultFlexvolume:     false,
-			expectedDashboard:              true,
-			expectedRescheduler:            false,
-			expectedNvidia:                 false,
-			expectedContainerMonitoring:    false,
-			expectedIPMasqAgent:            true,
-			expectedAzureCNINetworkMonitor: true,
-			expectedDNSAutoscaler:          false,
-			expectedCalico:                 false,
-		},
-		// N Series SKU scenario
-		{
-			p: &api.Properties{
-				OrchestratorProfile: &api.OrchestratorProfile{
-					OrchestratorType:    Kubernetes,
-					OrchestratorVersion: "1.14.1",
-					KubernetesConfig: &api.KubernetesConfig{
-						NetworkPlugin: NetworkPluginAzure,
-					},
-				},
-				AgentPoolProfiles: []*api.AgentPoolProfile{
-					{
-						VMSize: "Standard_NC6",
-					},
-				},
-			},
-			expectedHeapster:               false,
-			expectedMetricsServer:          true,
-			expectedTiller:                 true,
-			expectedAADPodIdentity:         false,
-			expectedACIConnector:           false,
-			expectedClusterAutoscaler:      false,
-			expectedBlobfuseFlexvolume:     true,
-			expectedSMBFlexvolume:          false,
-			expectedKeyvaultFlexvolume:     true,
-			expectedDashboard:              true,
-			expectedRescheduler:            false,
 			expectedNvidia:                 true,
-			expectedContainerMonitoring:    false,
+			expectedContainerMonitoring:    true,
 			expectedIPMasqAgent:            true,
 			expectedAzureCNINetworkMonitor: true,
-			expectedDNSAutoscaler:          false,
-			expectedCalico:                 false,
-		},
-		// cilium scenario
-		{
-			p: &api.Properties{
-				OrchestratorProfile: &api.OrchestratorProfile{
-					OrchestratorType:    Kubernetes,
-					OrchestratorVersion: "1.14.1",
-					KubernetesConfig: &api.KubernetesConfig{
-						NetworkPlugin: NetworkPluginCilium,
-					},
-				},
-			},
-			expectedHeapster:               false,
-			expectedMetricsServer:          true,
-			expectedTiller:                 true,
-			expectedAADPodIdentity:         false,
-			expectedACIConnector:           false,
-			expectedClusterAutoscaler:      false,
-			expectedBlobfuseFlexvolume:     true,
-			expectedSMBFlexvolume:          false,
-			expectedKeyvaultFlexvolume:     true,
-			expectedDashboard:              true,
-			expectedRescheduler:            false,
-			expectedNvidia:                 false,
-			expectedContainerMonitoring:    false,
-			expectedIPMasqAgent:            false,
-			expectedAzureCNINetworkMonitor: false,
-			expectedDNSAutoscaler:          false,
-			expectedCalico:                 false,
-		},
-		// kubenet scenario
-		{
-			p: &api.Properties{
-				OrchestratorProfile: &api.OrchestratorProfile{
-					OrchestratorType:    Kubernetes,
-					OrchestratorVersion: "1.14.1",
-					KubernetesConfig: &api.KubernetesConfig{
-						NetworkPlugin: NetworkPluginKubenet,
-					},
-				},
-			},
-			expectedHeapster:               false,
-			expectedMetricsServer:          true,
-			expectedTiller:                 true,
-			expectedAADPodIdentity:         false,
-			expectedACIConnector:           false,
-			expectedClusterAutoscaler:      false,
-			expectedBlobfuseFlexvolume:     true,
-			expectedSMBFlexvolume:          false,
-			expectedKeyvaultFlexvolume:     true,
-			expectedDashboard:              true,
-			expectedRescheduler:            false,
-			expectedNvidia:                 false,
-			expectedContainerMonitoring:    false,
-			expectedIPMasqAgent:            true,
-			expectedAzureCNINetworkMonitor: false,
-			expectedDNSAutoscaler:          false,
-			expectedCalico:                 false,
-		},
-		// calico scenario
-		{
-			p: &api.Properties{
-				OrchestratorProfile: &api.OrchestratorProfile{
-					OrchestratorType:    Kubernetes,
-					OrchestratorVersion: "1.14.1",
-					KubernetesConfig: &api.KubernetesConfig{
-						NetworkPolicy: NetworkPolicyCalico,
-					},
-				},
-			},
-			expectedHeapster:               false,
-			expectedMetricsServer:          true,
-			expectedTiller:                 true,
-			expectedAADPodIdentity:         false,
-			expectedACIConnector:           false,
-			expectedClusterAutoscaler:      false,
-			expectedBlobfuseFlexvolume:     true,
-			expectedSMBFlexvolume:          false,
-			expectedKeyvaultFlexvolume:     true,
-			expectedDashboard:              true,
-			expectedRescheduler:            false,
-			expectedNvidia:                 false,
-			expectedContainerMonitoring:    false,
-			expectedIPMasqAgent:            true,
-			expectedAzureCNINetworkMonitor: false,
-			expectedDNSAutoscaler:          false,
+			expectedDNSAutoscaler:          true,
 			expectedCalico:                 true,
+			expectedAzureNetworkPolicy:     true,
 		},
 	}
 
 	for _, c := range cases {
 		componentFileSpec := kubernetesContainerAddonSettingsInit(c.p)
-		if c.expectedHeapster != componentFileSpec[DefaultHeapsterAddonName].isEnabled {
-			t.Fatalf("Expected componentFileSpec[%s] to be %t", DefaultHeapsterAddonName, c.expectedHeapster)
+		if c.expectedHeapster != componentFileSpec[HeapsterAddonName].isEnabled {
+			t.Fatalf("Expected componentFileSpec[%s] to be %t", HeapsterAddonName, c.expectedHeapster)
 		}
 		if c.expectedMetricsServer != componentFileSpec[MetricsServerAddonName].isEnabled {
 			t.Fatalf("Expected componentFileSpec[%s] to be %t", MetricsServerAddonName, c.expectedMetricsServer)
@@ -398,6 +297,9 @@ func TestKubernetesContainerAddonSettingsInit(t *testing.T) {
 		if c.expectedCalico != componentFileSpec[CalicoAddonName].isEnabled {
 			t.Fatalf("Expected componentFileSpec[%s] to be %t", CalicoAddonName, c.expectedCalico)
 		}
+		if c.expectedAzureNetworkPolicy != componentFileSpec[AzureNetworkPolicyAddonName].isEnabled {
+			t.Fatalf("Expected componentFileSpec[%s] to be %t", AzureNetworkPolicyAddonName, c.expectedAzureNetworkPolicy)
+		}
 	}
 }
 
@@ -408,7 +310,6 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 		expectedKubeDNS               bool
 		expectedCoreDNS               bool
 		expectedKubeProxy             bool
-		expectedAzureNetworkPolicy    bool
 		expectedCilium                bool
 		expectedFlannel               bool
 		expectedAADAdminGroup         bool
@@ -438,7 +339,6 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 			expectedKubeDNS:               true,
 			expectedCoreDNS:               false,
 			expectedKubeProxy:             true,
-			expectedAzureNetworkPolicy:    false,
 			expectedCilium:                false,
 			expectedFlannel:               false,
 			expectedAADAdminGroup:         false,
@@ -463,33 +363,6 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 			expectedKubeDNS:               false,
 			expectedCoreDNS:               true,
 			expectedKubeProxy:             true,
-			expectedAzureNetworkPolicy:    false,
-			expectedCilium:                false,
-			expectedFlannel:               false,
-			expectedAADAdminGroup:         false,
-			expectedAzureCloudProvider:    true,
-			expectedAuditPolicy:           true,
-			expectedELBService:            false,
-			expectedPodSecurityPolicy:     false,
-			expectedManagedStorageClass:   true,
-			expectedUnmanagedStorageClass: false,
-		},
-		// Azure network policy scenario
-		{
-			p: &api.Properties{
-				OrchestratorProfile: &api.OrchestratorProfile{
-					OrchestratorType:    Kubernetes,
-					OrchestratorVersion: "1.14.1",
-					KubernetesConfig: &api.KubernetesConfig{
-						NetworkPlugin: NetworkPluginAzure,
-						NetworkPolicy: NetworkPolicyAzure,
-					},
-				},
-			},
-			expectedKubeDNS:               false,
-			expectedCoreDNS:               true,
-			expectedKubeProxy:             true,
-			expectedAzureNetworkPolicy:    true,
 			expectedCilium:                false,
 			expectedFlannel:               false,
 			expectedAADAdminGroup:         false,
@@ -514,7 +387,6 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 			expectedKubeDNS:               false,
 			expectedCoreDNS:               true,
 			expectedKubeProxy:             true,
-			expectedAzureNetworkPolicy:    false,
 			expectedCilium:                true,
 			expectedFlannel:               false,
 			expectedAADAdminGroup:         false,
@@ -539,7 +411,6 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 			expectedKubeDNS:               false,
 			expectedCoreDNS:               true,
 			expectedKubeProxy:             true,
-			expectedAzureNetworkPolicy:    false,
 			expectedCilium:                false,
 			expectedFlannel:               true,
 			expectedAADAdminGroup:         false,
@@ -567,7 +438,6 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 			expectedKubeDNS:               false,
 			expectedCoreDNS:               true,
 			expectedKubeProxy:             true,
-			expectedAzureNetworkPolicy:    false,
 			expectedCilium:                false,
 			expectedFlannel:               false,
 			expectedAADAdminGroup:         true,
@@ -593,7 +463,6 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 			expectedKubeDNS:               false,
 			expectedCoreDNS:               true,
 			expectedKubeProxy:             true,
-			expectedAzureNetworkPolicy:    false,
 			expectedCilium:                false,
 			expectedFlannel:               false,
 			expectedAADAdminGroup:         false,
@@ -618,7 +487,6 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 			expectedKubeDNS:               false,
 			expectedCoreDNS:               true,
 			expectedKubeProxy:             true,
-			expectedAzureNetworkPolicy:    false,
 			expectedCilium:                false,
 			expectedFlannel:               false,
 			expectedAADAdminGroup:         false,
@@ -648,7 +516,6 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 			expectedKubeDNS:               true,
 			expectedCoreDNS:               false,
 			expectedKubeProxy:             true,
-			expectedAzureNetworkPolicy:    false,
 			expectedCilium:                false,
 			expectedFlannel:               false,
 			expectedAADAdminGroup:         false,
@@ -679,7 +546,6 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 			expectedKubeDNS:               false,
 			expectedCoreDNS:               true,
 			expectedKubeProxy:             true,
-			expectedAzureNetworkPolicy:    false,
 			expectedCilium:                false,
 			expectedFlannel:               false,
 			expectedAADAdminGroup:         false,
@@ -710,7 +576,6 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 			expectedKubeDNS:               false,
 			expectedCoreDNS:               true,
 			expectedKubeProxy:             true,
-			expectedAzureNetworkPolicy:    false,
 			expectedCilium:                false,
 			expectedFlannel:               false,
 			expectedAADAdminGroup:         false,
@@ -738,10 +603,6 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 			case "kube-proxy-daemonset.yaml":
 				if c.expectedKubeProxy != componentFileSpec.isEnabled {
 					t.Fatalf("Expected %s to be %t", KubeProxyAddonName, c.expectedKubeProxy)
-				}
-			case "azure-npm-daemonset.yaml":
-				if c.expectedAzureNetworkPolicy != componentFileSpec.isEnabled {
-					t.Fatalf("Expected %s to be %t", AzureNetworkPolicyAddonName, c.expectedAzureNetworkPolicy)
 				}
 			case "cilium-daemonset.yaml":
 				if c.expectedCilium != componentFileSpec.isEnabled {

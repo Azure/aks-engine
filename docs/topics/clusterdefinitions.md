@@ -36,7 +36,7 @@ $ aks-engine get-versions
 
 | Name                            | Required | Description                                                                                                                                                                                                                                                                                                                                                                                                   |
 | ------------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| addons                          | no       | Configure various Kubernetes addons configuration (currently supported: tiller, kubernetes-dashboard). See `addons` configuration below                                                                                                                                                                                                                                                                       |
+| addons                          | no       | Configure various Kubernetes addons configuration. See `addons` configuration [below](#addons)                                                                                                                                                                                                                                                                       |
 | apiServerConfig                 | no       | Configure various runtime configuration for apiserver. See `apiServerConfig` [below](#feat-apiserver-config)                                                                                                                                                                                                                                                                                                  |
 | cloudControllerManagerConfig    | no       | Configure various runtime configuration for cloud-controller-manager. See `cloudControllerManagerConfig` [below](#feat-cloud-controller-manager-config)                                                                                                                                                                                                                                                       |
 | clusterSubnet                   | no       | The IP subnet used for allocating IP addresses for pod network interfaces. The subnet must be in the VNET address space. With Azure CNI enabled, the default value is 10.240.0.0/12. Without Azure CNI, the default value is 10.244.0.0/16.                                            |
@@ -75,21 +75,20 @@ $ aks-engine get-versions
 
 #### addons
 
-`addons` describes various addons configuration. It is a child property of `kubernetesConfig`. Below is a list of currently available addons:
+`addons` is an interface to define user-configurable Kubernetes componentry. It is a child property of `kubernetesConfig`. Below is a list of currently available `addons`:
 
 | Name of addon                                                         | Enabled by default? | How many containers | Description                                                                                                                                                         |
 | --------------------------------------------------------------------- | ------------------- | ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | tiller                                                                | true                | 1                   | Delivers the Helm server-side component: tiller. See https://github.com/kubernetes/helm for more info                                                               |
 | kubernetes-dashboard                                                  | true                | 1                   | Delivers the Kubernetes dashboard component. See https://github.com/kubernetes/dashboard for more info                                                              |
 | rescheduler                                                           | false               | 1                   | Delivers the Kubernetes rescheduler component                                                                                                                       |
-| [cluster-autoscaler](../../examples/addons/cluster-autoscaler/README.md) | false               | 1                   | Delivers the Kubernetes cluster autoscaler component. See https://github.com/kubernetes/autoscaler/tree/master/cluster-autoscaler/cloudprovider/azure for more info |
+| [cluster-autoscaler](../../examples/addons/cluster-autoscaler/README.md) | false               | 1                   | Delivers the Kubernetes cluster autoscaler component. See https://github.com/kubernetes/autoscaler/tree/master/cluster-autoscaler/cloudprovider/azure for more info; only supported for VMSS clusters on the first agent pool. |
 | [nvidia-device-plugin](../../examples/addons/nvidia-device-plugin/README.md) | true if using a Kubernetes cluster (v1.10+) with an N-series agent pool               | 1                   | Delivers the Kubernetes NVIDIA device plugin component. See https://github.com/NVIDIA/k8s-device-plugin for more info |
 | container-monitoring                       | false               | 1                   | Delivers the Kubernetes container monitoring component |
 | [blobfuse-flexvolume](https://github.com/Azure/kubernetes-volume-drivers/tree/master/flexvolume/blobfuse)                        | true               | as many as linux agent nodes                   | Access virtual filesystem backed by the Azure Blob storage |
 | [smb-flexvolume](https://github.com/Azure/kubernetes-volume-drivers/tree/master/flexvolume/smb)                        | false               | as many as linux agent nodes                   | Access SMB server by using CIFS/SMB protocol |
 | [keyvault-flexvolume](../../examples/addons/keyvault-flexvolume/README.md)                        | true               | as many as linux agent nodes                   | Access secrets, keys, and certs in Azure Key Vault from pods |
 | [aad-pod-identity](../../examples/addons/aad-pod-identity/README.md)                        | false               | 1 + 1 on each linux agent nodes | Assign Azure Active Directory Identities to Kubernetes applications |
-| [pod-security-policy](https://kubernetes.io/docs/concepts/policy/pod-security-policy/)                        | false               | 0 | Pod Security Policies enable fine-grained authorization of pod creation and updates |
 
 To give a bit more info on the `addons` property: We've tried to expose the basic bits of data that allow useful configuration of these cluster features. Here are some example usage patterns that will unpack what `addons` provide:
 
@@ -200,37 +199,7 @@ Additionally above, we specified a custom docker image for tiller, let's say we 
 }
 ```
 
-The reason for the unsightly base64 encoded input type is to optimize delivery payload, and to squash a human-maintainable yaml file representation into something that can be tightly pasted into a JSON string value without the arguably more unsightly carriage returns / whitespace that would be delivered with a literal copy/paste of a Kubernetes manifest.
-
-Finally, the `addons.enabled` boolean property was omitted above; that's by design. If you specify a `containers` configuration, aks-engine assumes you're enabling the addon. The very first example above demonstrates a simple "enable this addon with default configuration" declaration.
-
-#### External Custom YAML scripts
-
-External YAML scripts can be configured for these supported addons and the manifest files for kube-scheduler, kube-controller-manager, cloud-controller-manager and kube-apiserver. For addons, you will need to pass in a _base64_ encoded string of the kubernetes addon YAML file that you wish to use to `addons.Data` property. When `addons.Data` is provided with a value, the `containers` and `config` are required to be empty.
-
-CAVEAT: Please note that this is an experimental feature. Since Addons.Data allows you to provide your own scripts, you face the risk of any unintended/undesirable consequences of the errors and failures from running that script.
-
-```json
-"kubernetesConfig": {
-    "addons": [
-        {
-            "name": "kube-proxy-daemonset",
-            "enabled" : true,
-            "data" : <base64 encoded string of your k8s addon YAML>,
-        }
-    ]
-}
-```
-
-For kubernetes component manifests, you will need to pass in a _base64_ encoded string of the kubernetes manifest YAML file to _KubernetesComponentConfig["data"]_ . For example, to pass a custom kube-scheduler config, do the following:
-
-```json
-"kubernetesConfig": {
-    "schedulerConfig": {
-            "data" : "<base64 encoded string of your k8s manifest YAML>"
-        }
-}
-```
+The reason for the unsightly base64-encoded input type is to optimize delivery payload, and to squash a human-maintainable yaml file representation into something that can be tightly pasted into a JSON string value without the arguably more unsightly carriage returns / whitespace that would be delivered with a literal copy/paste of a Kubernetes manifest.
 
 <a name="feat-kubelet-config"></a>
 
@@ -485,6 +454,20 @@ Below is a list of kube-scheduler options that are _not_ currently user-configur
 | "--profiling"         | "false"                       |
 
 We consider `kubeletConfig`, `controllerManagerConfig`, `apiServerConfig`, and `schedulerConfig` to be generic conveniences that add power/flexibility to cluster deployments. Their usage comes with no operational guarantees! They are manual tuning features that enable low-level configuration of a kubernetes cluster.
+
+#### Custom YAML for Kubernetes component manifests
+
+Custom YAML specifications can be configured for kube-scheduler, kube-controller-manager, cloud-controller-manager and kube-apiserver in addition to the addons described [above](#addons). You will need to pass in a _base64-encoded_ string of the kubernetes manifest YAML file to _KubernetesComponentConfig["data"]_ . For example, to pass a custom kube-scheduler config, do the following:
+
+```json
+"kubernetesConfig": {
+    "schedulerConfig": {
+            "data" : "<base64-encoded string of your k8s manifest YAML>"
+        }
+}
+```
+
+> _**NOTE**_: Custom YAML for addons is an experimental feature. Since `Addons.Data` allows you to provide your own scripts, you are responsible for any undesirable consequences of their errors or failures. Use at your own risk.
 
 <a name="feat-private-cluster"></a>
 

@@ -243,14 +243,6 @@ type KubernetesAddon struct {
 	Data       string                    `json:"data,omitempty"`
 }
 
-// IsEnabled returns if the addon is explicitly enabled, or the user-provided default if non explicitly enabled
-func (a *KubernetesAddon) IsEnabled(ifNil bool) bool {
-	if a.Enabled == nil {
-		return ifNil
-	}
-	return *a.Enabled
-}
-
 // PrivateCluster defines the configuration for a private cluster
 type PrivateCluster struct {
 	Enabled        *bool                  `json:"enabled,omitempty"`

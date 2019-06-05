@@ -549,7 +549,6 @@ func (a *Properties) validateAddons() error {
 			}
 		}
 		for _, addon := range a.OrchestratorProfile.KubernetesConfig.Addons {
-
 			if addon.Data != "" {
 				if len(addon.Config) > 0 || len(addon.Containers) > 0 {
 					return errors.New("Config and containers should be empty when addon.Data is specified")

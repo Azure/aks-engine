@@ -17,16 +17,24 @@ func (cs *ContainerService) setAddonsConfig(isUpdate bool) {
 	k8sComponents := K8sComponentsByVersionMap[o.OrchestratorVersion]
 	specConfig := cloudSpecConfig.KubernetesSpecConfig
 	defaultsHeapsterAddonsConfig := KubernetesAddon{
-		Name:    DefaultHeapsterAddonName,
-		Enabled: to.BoolPtr(DefaultHeapsterAddonEnabled),
+		Name:    HeapsterAddonName,
+		Enabled: to.BoolPtr(DefaultHeapsterAddonEnabled && !common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.13.0")),
 		Containers: []KubernetesContainerSpec{
 			{
-				Name:  DefaultHeapsterAddonName,
-				Image: specConfig.KubernetesImageBase + k8sComponents["heapster"],
+				Name:           HeapsterAddonName,
+				Image:          specConfig.KubernetesImageBase + k8sComponents["heapster"],
+				CPURequests:    "88m",
+				MemoryRequests: "204Mi",
+				CPULimits:      "88m",
+				MemoryLimits:   "204Mi",
 			},
 			{
-				Name:  "heapster-nanny",
-				Image: specConfig.KubernetesImageBase + k8sComponents["addonresizer"],
+				Name:           "heapster-nanny",
+				Image:          specConfig.KubernetesImageBase + k8sComponents["addonresizer"],
+				CPURequests:    "88m",
+				MemoryRequests: "204Mi",
+				CPULimits:      "88m",
+				MemoryLimits:   "204Mi",
 			},
 		},
 	}
@@ -51,7 +59,7 @@ func (cs *ContainerService) setAddonsConfig(isUpdate bool) {
 
 	defaultACIConnectorAddonsConfig := KubernetesAddon{
 		Name:    ACIConnectorAddonName,
-		Enabled: to.BoolPtr(DefaultACIConnectorAddonEnabled),
+		Enabled: to.BoolPtr(DefaultACIConnectorAddonEnabled && !cs.Properties.IsAzureStackCloud()),
 		Config: map[string]string{
 			"region":   "westus",
 			"nodeName": "aci-connector",
@@ -72,7 +80,7 @@ func (cs *ContainerService) setAddonsConfig(isUpdate bool) {
 
 	defaultClusterAutoscalerAddonsConfig := KubernetesAddon{
 		Name:    ClusterAutoscalerAddonName,
-		Enabled: to.BoolPtr(DefaultClusterAutoscalerAddonEnabled),
+		Enabled: to.BoolPtr(DefaultClusterAutoscalerAddonEnabled && !cs.Properties.IsAzureStackCloud()),
 		Config: map[string]string{
 			"min-nodes":     "1",
 			"max-nodes":     "5",
@@ -92,7 +100,7 @@ func (cs *ContainerService) setAddonsConfig(isUpdate bool) {
 
 	defaultBlobfuseFlexVolumeAddonsConfig := KubernetesAddon{
 		Name:    BlobfuseFlexVolumeAddonName,
-		Enabled: to.BoolPtr(common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.8.0") && DefaultBlobfuseFlexVolumeAddonEnabled && !cs.Properties.HasCoreOS()),
+		Enabled: to.BoolPtr(DefaultBlobfuseFlexVolumeAddonEnabled && common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.8.0") && !cs.Properties.HasCoreOS() && !cs.Properties.IsAzureStackCloud()),
 		Containers: []KubernetesContainerSpec{
 			{
 				Name:           BlobfuseFlexVolumeAddonName,
@@ -107,7 +115,7 @@ func (cs *ContainerService) setAddonsConfig(isUpdate bool) {
 
 	defaultSMBFlexVolumeAddonsConfig := KubernetesAddon{
 		Name:    SMBFlexVolumeAddonName,
-		Enabled: to.BoolPtr(common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.8.0") && DefaultSMBFlexVolumeAddonEnabled && !cs.Properties.HasCoreOS()),
+		Enabled: to.BoolPtr(DefaultSMBFlexVolumeAddonEnabled && common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.8.0") && !cs.Properties.HasCoreOS() && !cs.Properties.IsAzureStackCloud()),
 		Containers: []KubernetesContainerSpec{
 			{
 				Name:           SMBFlexVolumeAddonName,
@@ -122,7 +130,7 @@ func (cs *ContainerService) setAddonsConfig(isUpdate bool) {
 
 	defaultKeyVaultFlexVolumeAddonsConfig := KubernetesAddon{
 		Name:    KeyVaultFlexVolumeAddonName,
-		Enabled: to.BoolPtr(DefaultKeyVaultFlexVolumeAddonEnabled && !cs.Properties.HasCoreOS()),
+		Enabled: to.BoolPtr(DefaultKeyVaultFlexVolumeAddonEnabled && !cs.Properties.HasCoreOS() && !cs.Properties.IsAzureStackCloud()),
 		Containers: []KubernetesContainerSpec{
 			{
 				Name:           KeyVaultFlexVolumeAddonName,
@@ -152,7 +160,7 @@ func (cs *ContainerService) setAddonsConfig(isUpdate bool) {
 
 	defaultReschedulerAddonsConfig := KubernetesAddon{
 		Name:    ReschedulerAddonName,
-		Enabled: to.BoolPtr(DefaultReschedulerAddonEnabled),
+		Enabled: to.BoolPtr(DefaultReschedulerAddonEnabled && !cs.Properties.IsAzureStackCloud()),
 		Containers: []KubernetesContainerSpec{
 			{
 				Name:           ReschedulerAddonName,
@@ -167,7 +175,7 @@ func (cs *ContainerService) setAddonsConfig(isUpdate bool) {
 
 	defaultMetricsServerAddonsConfig := KubernetesAddon{
 		Name:    MetricsServerAddonName,
-		Enabled: k8sVersionMetricsServerAddonEnabled(o),
+		Enabled: to.BoolPtr(DefaultMetricsServerAddonEnabled && common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.9.0")),
 		Containers: []KubernetesContainerSpec{
 			{
 				Name:  MetricsServerAddonName,
@@ -178,7 +186,7 @@ func (cs *ContainerService) setAddonsConfig(isUpdate bool) {
 
 	defaultNVIDIADevicePluginAddonsConfig := KubernetesAddon{
 		Name:    NVIDIADevicePluginAddonName,
-		Enabled: to.BoolPtr(cs.Properties.HasNSeriesSKU() && common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.10.0") && !cs.Properties.HasCoreOS()),
+		Enabled: to.BoolPtr(cs.Properties.IsNvidiaDevicePluginCapable() && !cs.Properties.HasCoreOS() && !cs.Properties.IsAzureStackCloud()),
 		Containers: []KubernetesContainerSpec{
 			{
 				Name: NVIDIADevicePluginAddonName,
@@ -194,7 +202,7 @@ func (cs *ContainerService) setAddonsConfig(isUpdate bool) {
 
 	defaultContainerMonitoringAddonsConfig := KubernetesAddon{
 		Name:    ContainerMonitoringAddonName,
-		Enabled: to.BoolPtr(DefaultContainerMonitoringAddonEnabled),
+		Enabled: to.BoolPtr(DefaultContainerMonitoringAddonEnabled && !cs.Properties.IsAzureStackCloud()),
 		Config: map[string]string{
 			"omsAgentVersion":       "1.10.0.1",
 			"dockerProviderVersion": "4.0.0-0",
@@ -213,7 +221,7 @@ func (cs *ContainerService) setAddonsConfig(isUpdate bool) {
 
 	defaultIPMasqAgentAddonsConfig := KubernetesAddon{
 		Name:    IPMASQAgentAddonName,
-		Enabled: to.BoolPtr(DefaultIPMasqAgentAddonEnabled),
+		Enabled: to.BoolPtr(DefaultIPMasqAgentAddonEnabled && o.KubernetesConfig.NetworkPlugin != NetworkPluginCilium),
 		Containers: []KubernetesContainerSpec{
 			{
 				Name:           IPMASQAgentAddonName,
@@ -232,7 +240,7 @@ func (cs *ContainerService) setAddonsConfig(isUpdate bool) {
 
 	defaultAzureCNINetworkMonitorAddonsConfig := KubernetesAddon{
 		Name:    AzureCNINetworkMonitoringAddonName,
-		Enabled: azureCNINetworkMonitorAddonEnabled(o),
+		Enabled: to.BoolPtr(o.IsAzureCNI() && o.KubernetesConfig.NetworkPolicy != NetworkPolicyCalico),
 		Containers: []KubernetesContainerSpec{
 			{
 				Name:  AzureCNINetworkMonitoringAddonName,
@@ -243,16 +251,19 @@ func (cs *ContainerService) setAddonsConfig(isUpdate bool) {
 
 	defaultAzureNetworkPolicyAddonsConfig := KubernetesAddon{
 		Name:    AzureNetworkPolicyAddonName,
-		Enabled: azureNetworkPolicyAddonEnabled(o),
+		Enabled: to.BoolPtr(o.KubernetesConfig.NetworkPlugin == NetworkPluginAzure && o.KubernetesConfig.NetworkPolicy == NetworkPolicyAzure),
 		Containers: []KubernetesContainerSpec{
 			{
-				Name: AzureNetworkPolicyAddonName,
+				Name:  AzureNetworkPolicyAddonName,
+				Image: "mcr.microsoft.com/containernetworking/azure-npm:v1.0.18",
 			},
 		},
 	}
 
 	defaultDNSAutoScalerAddonsConfig := KubernetesAddon{
-		Name:    DNSAutoscalerAddonName,
+		Name: DNSAutoscalerAddonName,
+		// TODO enable this when it has been smoke tested
+		//common.IsKubernetesVersionGe(p.OrchestratorProfile.OrchestratorVersion, "1.12.0"),
 		Enabled: to.BoolPtr(DefaultDNSAutoscalerAddonEnabled),
 		Containers: []KubernetesContainerSpec{
 			{
@@ -266,7 +277,7 @@ func (cs *ContainerService) setAddonsConfig(isUpdate bool) {
 
 	defaultsCalicoDaemonSetAddonsConfig := KubernetesAddon{
 		Name:    CalicoAddonName,
-		Enabled: to.BoolPtr(false),
+		Enabled: to.BoolPtr(o.KubernetesConfig.NetworkPolicy == NetworkPolicyCalico),
 		Containers: []KubernetesContainerSpec{
 			{
 				Name:  "calico-typha",
@@ -283,6 +294,29 @@ func (cs *ContainerService) setAddonsConfig(isUpdate bool) {
 			{
 				Name:  "calico-cluster-proportional-autoscaler",
 				Image: specConfig.KubernetesImageBase + "cluster-proportional-autoscaler-amd64:1.1.2-r2",
+			},
+		},
+	}
+
+	defaultsAADPodIdentityAddonsConfig := KubernetesAddon{
+		Name:    AADPodIdentityAddonName,
+		Enabled: to.BoolPtr(DefaultAADPodIdentityAddonEnabled && !cs.Properties.IsAzureStackCloud()),
+		Containers: []KubernetesContainerSpec{
+			{
+				Name:           "nmi",
+				Image:          "mcr.microsoft.com/k8s/aad-pod-identity/nmi:1.2",
+				CPURequests:    "100m",
+				MemoryRequests: "300Mi",
+				CPULimits:      "100m",
+				MemoryLimits:   "300Mi",
+			},
+			{
+				Name:           "mic",
+				Image:          "mcr.microsoft.com/k8s/aad-pod-identity/mic:1.2",
+				CPURequests:    "100m",
+				MemoryRequests: "300Mi",
+				CPULimits:      "100m",
+				MemoryLimits:   "300Mi",
 			},
 		},
 	}
@@ -305,6 +339,7 @@ func (cs *ContainerService) setAddonsConfig(isUpdate bool) {
 		defaultIPMasqAgentAddonsConfig,
 		defaultDNSAutoScalerAddonsConfig,
 		defaultsCalicoDaemonSetAddonsConfig,
+		defaultsAADPodIdentityAddonsConfig,
 	}
 	// Add default addons specification, if no user-provided spec exists
 	if o.KubernetesConfig.Addons == nil {
@@ -396,16 +431,4 @@ func synthesizeAddonsConfig(addons []KubernetesAddon, addon KubernetesAddon, isU
 	if i >= 0 {
 		addons[i] = assignDefaultAddonVals(addons[i], addon, isUpdate)
 	}
-}
-
-func k8sVersionMetricsServerAddonEnabled(o *OrchestratorProfile) *bool {
-	return to.BoolPtr(common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.9.0"))
-}
-
-func azureNetworkPolicyAddonEnabled(o *OrchestratorProfile) *bool {
-	return to.BoolPtr(o.KubernetesConfig.NetworkPlugin == NetworkPluginAzure && o.KubernetesConfig.NetworkPolicy == NetworkPolicyAzure)
-}
-
-func azureCNINetworkMonitorAddonEnabled(o *OrchestratorProfile) *bool {
-	return to.BoolPtr(o.IsAzureCNI() && o.KubernetesConfig.NetworkPolicy != NetworkPolicyCalico)
 }

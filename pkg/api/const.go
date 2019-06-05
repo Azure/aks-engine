@@ -159,7 +159,7 @@ const (
 	// DefaultSecureKubeletEnabled determines the aks-engine provided default for securing kubelet communications
 	DefaultSecureKubeletEnabled = true
 	// DefaultMetricsServerAddonEnabled determines the aks-engine provided default for enabling kubernetes metrics-server addon
-	DefaultMetricsServerAddonEnabled = false
+	DefaultMetricsServerAddonEnabled = true
 	// DefaultNVIDIADevicePluginAddonEnabled determines the aks-engine provided default for enabling NVIDIA Device Plugin
 	DefaultNVIDIADevicePluginAddonEnabled = false
 	// DefaultContainerMonitoringAddonEnabled determines the aks-engine provided default for enabling kubernetes container monitoring addon
@@ -168,8 +168,8 @@ const (
 	DefaultDNSAutoscalerAddonEnabled = false
 	// DefaultIPMasqAgentAddonEnabled enables the ip-masq-agent addon
 	DefaultIPMasqAgentAddonEnabled = true
-	// DefaultHeapsterAddonName is the name of the heapster addon
-	DefaultHeapsterAddonName = "heapster"
+	// HeapsterAddonName is the name of the heapster addon
+	HeapsterAddonName = "heapster"
 	// TillerAddonName is the name of the tiller addon deployment
 	TillerAddonName = "tiller"
 	// AADPodIdentityAddonName is the name of the aad-pod-identity addon deployment
