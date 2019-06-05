@@ -614,6 +614,32 @@ var _ = Describe("Upgrade Kubernetes cluster tests", func() {
 			Expect(*uc.MasterVMs).To(HaveLen(1))
 			Expect(*uc.UpgradedMasterVMs).To(HaveLen(0))
 		})
+		It("Should set platform fault domain count based on availability sets", func() {
+			cs := api.CreateMockContainerService("testcluster", "1.9.11", 3, 2, false)
+			cs.Properties.OrchestratorProfile.KubernetesConfig = &api.KubernetesConfig{}
+			cs.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity = true
+			uc := UpgradeCluster{
+				Translator: &i18n.Translator{},
+				Logger:     log.NewEntry(log.New()),
+			}
+
+			mockClient := armhelpers.MockAKSEngineClient{}
+			uc.Client = &mockClient
+
+			uc.ClusterTopology = ClusterTopology{}
+			uc.SubscriptionID = "DEC923E3-1EF1-4745-9516-37906D56DEC4"
+			uc.ResourceGroup = "TestRg"
+			uc.DataModel = cs
+			uc.NameSuffix = "12345678"
+			uc.AgentPoolsToUpgrade = map[string]bool{"agentpool1": true}
+
+			err := uc.UpgradeCluster(&mockClient, "kubeConfig", TestAKSEngineVersion)
+			Expect(err).To(BeNil())
+			Expect(*cs.Properties.MasterProfile.PlatformFaultDomainCount).To(Equal(3))
+			for _, pool := range cs.Properties.AgentPoolProfiles {
+				Expect(*pool.PlatformFaultDomainCount).To(Equal(3))
+			}
+		})
 	})
 
 	It("Should not fail if no managed identity is returned by azure during upgrade operation", func() {

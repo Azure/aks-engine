@@ -361,7 +361,6 @@ func TestCreateKubernetesMasterResourcesPVC(t *testing.T) {
 		AvailabilitySet: compute.AvailabilitySet{
 			AvailabilitySetProperties: &compute.AvailabilitySetProperties{
 				PlatformUpdateDomainCount: to.Int32Ptr(3),
-				PlatformFaultDomainCount:  to.Int32Ptr(2),
 			},
 			Sku: &compute.Sku{
 				Name: to.StringPtr("Aligned"),

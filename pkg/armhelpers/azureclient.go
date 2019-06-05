@@ -67,6 +67,7 @@ type AzureClient struct {
 	virtualMachineScaleSetVMsClient compute.VirtualMachineScaleSetVMsClient
 	virtualMachineExtensionsClient  compute.VirtualMachineExtensionsClient
 	disksClient                     compute.DisksClient
+	availabilitySetsClient          compute.AvailabilitySetsClient
 
 	applicationsClient      graphrbac.ApplicationsClient
 	servicePrincipalsClient graphrbac.ServicePrincipalsClient
@@ -348,6 +349,7 @@ func getClient(env azure.Environment, subscriptionID, tenantID string, armAuthor
 		virtualMachineScaleSetVMsClient: compute.NewVirtualMachineScaleSetVMsClientWithBaseURI(env.ResourceManagerEndpoint, subscriptionID),
 		virtualMachineExtensionsClient:  compute.NewVirtualMachineExtensionsClientWithBaseURI(env.ResourceManagerEndpoint, subscriptionID),
 		disksClient:                     compute.NewDisksClientWithBaseURI(env.ResourceManagerEndpoint, subscriptionID),
+		availabilitySetsClient:          compute.NewAvailabilitySetsClientWithBaseURI(env.ResourceManagerEndpoint, subscriptionID),
 
 		applicationsClient:      graphrbac.NewApplicationsClientWithBaseURI(env.GraphEndpoint, tenantID),
 		servicePrincipalsClient: graphrbac.NewServicePrincipalsClientWithBaseURI(env.GraphEndpoint, tenantID),
@@ -366,6 +368,7 @@ func getClient(env azure.Environment, subscriptionID, tenantID string, armAuthor
 	c.virtualMachineScaleSetsClient.Authorizer = armAuthorizer
 	c.virtualMachineScaleSetVMsClient.Authorizer = armAuthorizer
 	c.disksClient.Authorizer = armAuthorizer
+	c.availabilitySetsClient.Authorizer = armAuthorizer
 
 	c.deploymentsClient.PollingDelay = time.Second * 5
 	c.resourcesClient.PollingDelay = time.Second * 5
@@ -384,6 +387,7 @@ func getClient(env azure.Environment, subscriptionID, tenantID string, armAuthor
 	c.virtualMachineScaleSetsClient.PollingDuration = DefaultARMOperationTimeout
 	c.virtualMachineScaleSetVMsClient.PollingDuration = DefaultARMOperationTimeout
 	c.virtualMachinesClient.PollingDuration = DefaultARMOperationTimeout
+	c.availabilitySetsClient.PollingDuration = DefaultARMOperationTimeout
 
 	c.applicationsClient.Authorizer = graphAuthorizer
 	c.servicePrincipalsClient.Authorizer = graphAuthorizer

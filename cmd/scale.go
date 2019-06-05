@@ -223,6 +223,8 @@ func (sc *scaleCmd) run(cmd *cobra.Command, args []string) error {
 	indexes := make([]int, 0)
 	indexToVM := make(map[int]string)
 	if sc.agentPool.IsAvailabilitySets() {
+		availabilitySetIDs := []string{}
+
 		for vmsListPage, err := sc.client.ListVirtualMachines(ctx, sc.resourceGroupName); vmsListPage.NotDone(); err = vmsListPage.Next() {
 			if err != nil {
 				return errors.Wrap(err, "failed to get vms in the resource group")
@@ -233,6 +235,10 @@ func (sc *scaleCmd) run(cmd *cobra.Command, args []string) error {
 				vmName := *vm.Name
 				if !sc.vmInAgentPool(vmName, vm.Tags) {
 					continue
+				}
+
+				if vm.AvailabilitySet != nil {
+					availabilitySetIDs = append(availabilitySetIDs, *vm.AvailabilitySet.ID)
 				}
 
 				osPublisher := vm.StorageProfile.ImageReference.Publisher
@@ -259,6 +265,13 @@ func (sc *scaleCmd) run(cmd *cobra.Command, args []string) error {
 			return nil
 		}
 		highestUsedIndex = indexes[len(indexes)-1]
+
+		// set the VMAS platformFaultDomainCount to match the existing value
+		fdCount, err := sc.client.GetAvailabilitySetFaultDomainCount(ctx, sc.resourceGroupName, availabilitySetIDs)
+		if err != nil {
+			return err
+		}
+		sc.containerService.SetPlatformFaultDomainCount(fdCount)
 
 		// Scale down Scenario
 		if currentNodeCount > sc.newDesiredAgentCount {

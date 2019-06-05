@@ -469,6 +469,7 @@ type MasterProfile struct {
 	ImageRef                 *ImageReference   `json:"imageReference,omitempty"`
 	CustomFiles              *[]CustomFile     `json:"customFiles,omitempty"`
 	AvailabilityProfile      string            `json:"availabilityProfile"`
+	PlatformFaultDomainCount *int              `json:"platformFaultDomainCount"`
 	AgentSubnet              string            `json:"agentSubnet,omitempty"`
 	AvailabilityZones        []string          `json:"availabilityZones,omitempty"`
 	SinglePlacementGroup     *bool             `json:"singlePlacementGroup,omitempty"`
@@ -518,6 +519,7 @@ type AgentPoolProfile struct {
 	Ports                               []int                `json:"ports,omitempty"`
 	ProvisioningState                   ProvisioningState    `json:"provisioningState,omitempty"`
 	AvailabilityProfile                 string               `json:"availabilityProfile"`
+	PlatformFaultDomainCount            *int                 `json:"platformFaultDomainCount"`
 	ScaleSetPriority                    string               `json:"scaleSetPriority,omitempty"`
 	ScaleSetEvictionPolicy              string               `json:"scaleSetEvictionPolicy,omitempty"`
 	StorageProfile                      string               `json:"storageProfile,omitempty"`
@@ -1840,6 +1842,15 @@ func (cs *ContainerService) IsAKSBillingEnabled() bool {
 // GetAzureProdFQDN returns the formatted FQDN string for a given apimodel.
 func (cs *ContainerService) GetAzureProdFQDN() string {
 	return FormatProdFQDNByLocation(cs.Properties.MasterProfile.DNSPrefix, cs.Location, cs.Properties.GetCustomCloudName())
+}
+
+// SetPlatformFaultDomainCount sets the fault domain count value for all VMASes in a cluster.
+func (cs *ContainerService) SetPlatformFaultDomainCount(count int) {
+	// Assume that all VMASes in the cluster share a value for platformFaultDomainCount
+	cs.Properties.MasterProfile.PlatformFaultDomainCount = &count
+	for _, pool := range cs.Properties.AgentPoolProfiles {
+		pool.PlatformFaultDomainCount = &count
+	}
 }
 
 // FormatAzureProdFQDNByLocation constructs an Azure prod fqdn
