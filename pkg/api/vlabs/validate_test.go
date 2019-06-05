@@ -553,6 +553,33 @@ func Test_KubernetesConfig_Validate(t *testing.T) {
 				t.Error("should error when ProxyMode has a valid string value")
 			}
 		}
+
+		c = KubernetesConfig{
+			NetworkPlugin: "kubenet",
+			ClusterSubnet: "10.244.0.0/16,ace:cab:deca::/8",
+		}
+
+		if err := c.Validate(k8sVersion, false, false); err == nil {
+			t.Error("should error when more than 1 cluster subnet provided with ipv6dualstack feature disabled")
+		}
+
+		// validate config when ipv6 dual stack feature is enabled
+		c = KubernetesConfig{
+			NetworkPlugin: "azure",
+		}
+
+		if err := c.Validate(k8sVersion, false, true); err == nil {
+			t.Error("should error when network plugin is not kubenet")
+		}
+
+		c = KubernetesConfig{
+			NetworkPlugin: "kubenet",
+			ClusterSubnet: "10.244.0.0/16,ace:cab:deca::/8,fec0::/7",
+		}
+
+		if err := c.Validate(k8sVersion, false, true); err == nil {
+			t.Error("should error when more than 2 cluster subnets provided")
+		}
 	}
 
 	// Tests that apply to 1.6 and later releases
@@ -2399,6 +2426,18 @@ func TestValidateProperties_OrchestratorSpecificProperties(t *testing.T) {
 		agentPoolProfiles[0].ScaleSetEvictionPolicy = "Deallocate"
 		expectedMsg := "property 'AgentPoolProfile.ScaleSetEvictionPolicy' must be empty for AgentPoolProfile.Priority of Regular"
 		if err := cs.Properties.validateAgentPoolProfiles(true); err.Error() != expectedMsg {
+			t.Errorf("expected error with message : %s, but got %s", expectedMsg, err.Error())
+		}
+	})
+
+	t.Run("Should not support os type other than linux for ipv6 dual stack feature", func(t *testing.T) {
+		t.Parallel()
+		cs := getK8sDefaultContainerService(true)
+		agentPoolProfiles := cs.Properties.AgentPoolProfiles
+		agentPoolProfiles[0].OSType = Windows
+		cs.Properties.FeatureFlags = &FeatureFlags{EnableIPv6DualStack: true}
+		expectedMsg := fmt.Sprintf("Dual stack feature is supported only with Linux, but agent pool '%s' is of os type %s", agentPoolProfiles[0].Name, agentPoolProfiles[0].OSType)
+		if err := cs.Properties.validateAgentPoolProfiles(false); err.Error() != expectedMsg {
 			t.Errorf("expected error with message : %s, but got %s", expectedMsg, err.Error())
 		}
 	})

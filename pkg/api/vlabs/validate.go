@@ -402,7 +402,7 @@ func (a *Properties) validateAgentPoolProfiles(isUpdate bool) error {
 		}
 
 		// validate os type is linux if dual stack feature is enabled
-		if a.FeatureFlags.IsFeatureEnabled("EnableIPv6DualStack") && agentPoolProfile.OSType != Linux {
+		if a.FeatureFlags.IsFeatureEnabled("EnableIPv6DualStack") && agentPoolProfile.OSType == Windows {
 			return errors.Errorf("Dual stack feature is supported only with Linux, but agent pool '%s' is of os type %s", agentPoolProfile.Name, agentPoolProfile.OSType)
 		}
 
@@ -1057,10 +1057,10 @@ func (k *KubernetesConfig) Validate(k8sVersion string, hasWindows, ipv6DualStack
 	if k.ClusterSubnet != "" {
 		clusterSubnets := strings.Split(k.ClusterSubnet, ",")
 		if !ipv6DualStackEnabled && len(clusterSubnets) > 1 {
-			return errors.Errorf("OrchestratorProfile.KubernetesConfig.NetworkPlugin '%s' is an invalid subnet", k.ClusterSubnet)
+			return errors.Errorf("OrchestratorProfile.KubernetesConfig.ClusterSubnet '%s' is an invalid subnet", k.ClusterSubnet)
 		}
 		if ipv6DualStackEnabled && len(clusterSubnets) > 2 {
-			return errors.Errorf("OrchestratorProfile.KubernetesConfig.NetworkPlugin '%s' is an invalid subnet. Not more than 2 subnets for ipv6 dual stack.", k.ClusterSubnet)
+			return errors.Errorf("OrchestratorProfile.KubernetesConfig.ClusterSubnet '%s' is an invalid subnet. Not more than 2 subnets for ipv6 dual stack.", k.ClusterSubnet)
 		}
 
 		for _, clusterSubnet := range clusterSubnets {
