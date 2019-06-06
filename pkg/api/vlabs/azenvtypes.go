@@ -43,7 +43,7 @@ type KubernetesSpecConfig struct {
 	AzureCNIImageBase         string `json:"azureCNIImageBase,omitempty"`
 	CalicoImageBase           string `json:"calicoImageBase,omitempty"`
 	EtcdDownloadURLBase       string `json:"etcdDownloadURLBase,omitempty"`
-	WindowsBinariesBase    string `json:"kubeBinariesSASURLBase,omitempty"`
+	WindowsBinariesBase       string `json:"kubeBinariesSASURLBase,omitempty"`
 	WindowsTelemetryGUID      string `json:"windowsTelemetryGUID,omitempty"`
 	CNIPluginsDownloadURL     string `json:"cniPluginsDownloadURL,omitempty"`
 	AzureCNIURLLinux          string `json:"azureCNIURLLinux,omitempty"`
