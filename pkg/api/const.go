@@ -337,7 +337,7 @@ const (
 	// DefaultVNETCIDR is the default CIDR block for the VNET
 	DefaultVNETCIDR = "10.0.0.0/8"
 	// DefaultVNETCIDRIPv6 is the default IPv6 CIDR block for the VNET
-	DefaultVNETCIDRIPv6 = "2001:1234:5678:9abc::/64"
+	DefaultVNETCIDRIPv6 = "2001:1234:5678:9a00::/56"
 	// DefaultKubernetesMaxPods is the maximum number of pods to run on a node.
 	DefaultKubernetesMaxPods = 110
 	// DefaultKubernetesMaxPodsVNETIntegrated is the maximum number of pods to run on a node when VNET integration is enabled.
@@ -420,7 +420,7 @@ const (
 	// DefaultKubernetesClusterSubnet specifies the default subnet for pods.
 	DefaultKubernetesClusterSubnet = "10.244.0.0/16"
 	// DefaultKubernetesClusterSubnetIPv6 specifies the IPv6 default subnet for pods.
-	DefaultKubernetesClusterSubnetIPv6 = "fec0::/7"
+	DefaultKubernetesClusterSubnetIPv6 = "fd00:101::/8"
 	// DefaultKubernetesServiceCIDR specifies the IP subnet that kubernetes will create Service IPs within.
 	DefaultKubernetesServiceCIDR = "10.0.0.0/16"
 	// DefaultKubernetesDNSServiceIP specifies the IP address that kube-dns listens on by default. must by in the default Service CIDR range.
