@@ -40,10 +40,7 @@ func TestAssignParameters(t *testing.T) {
 		if _, err = containerService.SetPropertiesDefaults(false, false); err != nil {
 			t.Errorf("setting properties defaults for apimodel %s: %s", tuple.APIModelFilename, err)
 		}
-		parametersMap, err := getParameters(containerService, DefaultGeneratorCode, "testversion")
-		if err != nil {
-			t.Errorf("should not get error when populating parameters")
-		}
+		parametersMap := getParameters(containerService, DefaultGeneratorCode, "testversion")
 		for k, v := range parametersMap {
 			switch val := v.(paramsMap)["value"].(type) {
 			case *bool:
