@@ -65,7 +65,7 @@ func (cs *ContainerService) setKubeletConfig() {
 	defaultKubeletConfig := map[string]string{
 		"--cluster-domain":                    "cluster.local",
 		"--network-plugin":                    "cni",
-		"--pod-infra-container-image":         o.KubernetesConfig.KubernetesImageBase + K8sComponentsByVersionMap[o.OrchestratorVersion]["pause"],
+		"--pod-infra-container-image":         o.KubernetesConfig.KubernetesImagesConfig.ImageBaseConfig.PauseImageBase + K8sComponentsByVersionMap[o.OrchestratorVersion]["pause"],
 		"--max-pods":                          strconv.Itoa(DefaultKubernetesMaxPods),
 		"--eviction-hard":                     DefaultKubernetesHardEvictionThreshold,
 		"--node-status-update-frequency":      K8sComponentsByVersionMap[o.OrchestratorVersion]["nodestatusfreq"],
@@ -81,6 +81,10 @@ func (cs *ContainerService) setKubeletConfig() {
 		"--image-pull-progress-deadline":      "30m",
 		"--enforce-node-allocatable":          "pods",
 		"--streaming-connection-idle-timeout": "5m",
+	}
+
+	if url, ok := o.KubernetesConfig.KubernetesImagesConfig.ImageConfig["pause"]; ok {
+		defaultKubeletConfig["--pod-infra-container-image"] = url
 	}
 
 	// Set --non-masquerade-cidr if ip-masq-agent is disabled on AKS

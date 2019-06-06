@@ -36,19 +36,27 @@ type DCOSSpecConfig struct {
 
 //KubernetesSpecConfig is the kubernetes container images used.
 type KubernetesSpecConfig struct {
-	KubernetesImageBase              string `json:"kubernetesImageBase,omitempty"`
-	TillerImageBase                  string `json:"tillerImageBase,omitempty"`
-	ACIConnectorImageBase            string `json:"aciConnectorImageBase,omitempty"`
-	NVIDIAImageBase                  string `json:"nvidiaImageBase,omitempty"`
-	AzureCNIImageBase                string `json:"azureCNIImageBase,omitempty"`
-	CalicoImageBase                  string `json:"CalicoImageBase,omitempty"`
-	EtcdDownloadURLBase              string `json:"etcdDownloadURLBase,omitempty"`
-	KubeBinariesSASURLBase           string `json:"kubeBinariesSASURLBase,omitempty"`
-	WindowsTelemetryGUID             string `json:"windowsTelemetryGUID,omitempty"`
-	CNIPluginsDownloadURL            string `json:"cniPluginsDownloadURL,omitempty"`
-	VnetCNILinuxPluginsDownloadURL   string `json:"vnetCNILinuxPluginsDownloadURL,omitempty"`
-	VnetCNIWindowsPluginsDownloadURL string `json:"vnetCNIWindowsPluginsDownloadURL,omitempty"`
-	ContainerdDownloadURLBase        string `json:"containerdDownloadURLBase,omitempty"`
+	KubernetesImageBase       string `json:"kubernetesImageBase,omitempty"`
+	HyperkubeImageBase        string `json:"hyperkubeImageBase,omitempty"`
+	PauseImageBase            string `json:"pauseImageBase,omitempty"`
+	TillerImageBase           string `json:"tillerImageBase,omitempty"`
+	ACIConnectorImageBase     string `json:"aciConnectorImageBase,omitempty"`
+	NVIDIAImageBase           string `json:"nvidiaImageBase,omitempty"`
+	AzureCNIImageBase         string `json:"azureCNIImageBase,omitempty"`
+	CalicoImageBase           string `json:"CalicoImageBase,omitempty"`
+	EtcdDownloadURLBase       string `json:"etcdDownloadURLBase,omitempty"`
+	WindowsBinariesBase       string `json:"windowsBinariesBase,omitempty"`
+	WindowsTelemetryGUID      string `json:"windowsTelemetryGUID,omitempty"`
+	CNIPluginsDownloadURL     string `json:"cniPluginsDownloadURL,omitempty"`
+	AzureCNIURLLinux          string `json:"azureCNIURLLinux,omitempty"`
+	AzureCNIURLWindows        string `json:"azureCNIURLWindows,omitempty"`
+	ContainerdDownloadURLBase string `json:"containerdDownloadURLBase,omitempty"`
+}
+
+// KubernetesImagesConfig defines where to reference container images
+type KubernetesImagesConfig struct {
+	ImageBaseConfig *KubernetesSpecConfig `json:"imageBaseConfig,omitempty"`
+	ImageConfig     map[string]string     `json:"imageConfig,omitempty"`
 }
 
 //AzureEndpointConfig describes an Azure endpoint
@@ -67,19 +75,21 @@ type AzureOSImageConfig struct {
 var (
 	//DefaultKubernetesSpecConfig is the default Docker image source of Kubernetes
 	DefaultKubernetesSpecConfig = KubernetesSpecConfig{
-		KubernetesImageBase:              "k8s.gcr.io/",
-		TillerImageBase:                  "gcr.io/kubernetes-helm/",
-		ACIConnectorImageBase:            "microsoft/",
-		NVIDIAImageBase:                  "nvidia/",
-		CalicoImageBase:                  "calico/",
-		AzureCNIImageBase:                "mcr.microsoft.com/containernetworking/",
-		EtcdDownloadURLBase:              "https://acs-mirror.azureedge.net/github-coreos",
-		KubeBinariesSASURLBase:           "https://acs-mirror.azureedge.net/wink8s/",
-		WindowsTelemetryGUID:             "fb801154-36b9-41bc-89c2-f4d4f05472b0",
-		CNIPluginsDownloadURL:            "https://acs-mirror.azureedge.net/cni/cni-plugins-amd64-" + CNIPluginVer + ".tgz",
-		VnetCNILinuxPluginsDownloadURL:   "https://acs-mirror.azureedge.net/cni/azure-vnet-cni-linux-amd64-" + AzureCniPluginVerLinux + ".tgz",
-		VnetCNIWindowsPluginsDownloadURL: "https://acs-mirror.azureedge.net/cni/azure-vnet-cni-windows-amd64-" + AzureCniPluginVerWindows + ".zip",
-		ContainerdDownloadURLBase:        "https://storage.googleapis.com/cri-containerd-release/",
+		KubernetesImageBase:       "k8s.gcr.io/",
+		HyperkubeImageBase:        "k8s.gcr.io/",
+		PauseImageBase:            "k8s.gcr.io/",
+		TillerImageBase:           "gcr.io/kubernetes-helm/",
+		ACIConnectorImageBase:     "microsoft/",
+		NVIDIAImageBase:           "nvidia/",
+		CalicoImageBase:           "calico/",
+		AzureCNIImageBase:         "mcr.microsoft.com/containernetworking/",
+		EtcdDownloadURLBase:       "https://acs-mirror.azureedge.net/github-coreos",
+		WindowsBinariesBase:       "https://acs-mirror.azureedge.net/wink8s/",
+		WindowsTelemetryGUID:      "fb801154-36b9-41bc-89c2-f4d4f05472b0",
+		CNIPluginsDownloadURL:     "https://acs-mirror.azureedge.net/cni/cni-plugins-amd64-" + CNIPluginVer + ".tgz",
+		AzureCNIURLLinux:          "https://acs-mirror.azureedge.net/cni/azure-vnet-cni-linux-amd64-" + AzureCniPluginVerLinux + ".tgz",
+		AzureCNIURLWindows:        "https://acs-mirror.azureedge.net/cni/azure-vnet-cni-windows-amd64-" + AzureCniPluginVerWindows + ".zip",
+		ContainerdDownloadURLBase: "https://storage.googleapis.com/cri-containerd-release/",
 	}
 
 	//DefaultDCOSSpecConfig is the default DC/OS binary download URL.
@@ -228,19 +238,21 @@ var (
 		},
 		//KubernetesSpecConfig - Due to Chinese firewall issue, the default containers from google is blocked, use the Chinese local mirror instead
 		KubernetesSpecConfig: KubernetesSpecConfig{
-			KubernetesImageBase:              "gcr.azk8s.cn/google_containers/",
-			TillerImageBase:                  "gcr.azk8s.cn/kubernetes-helm/",
-			ACIConnectorImageBase:            "dockerhub.azk8s.cn/microsoft/",
-			NVIDIAImageBase:                  "dockerhub.azk8s.cn/nvidia/",
-			AzureCNIImageBase:                "dockerhub.azk8s.cn/containernetworking/",
-			CalicoImageBase:                  "dockerhub.azk8s.cn/calico/",
-			EtcdDownloadURLBase:              "https://mirror.azk8s.cn/kubernetes/etcd",
-			KubeBinariesSASURLBase:           DefaultKubernetesSpecConfig.KubeBinariesSASURLBase,
-			WindowsTelemetryGUID:             DefaultKubernetesSpecConfig.WindowsTelemetryGUID,
-			CNIPluginsDownloadURL:            "https://mirror.azk8s.cn/kubernetes/containernetworking-plugins/cni-plugins-amd64-" + CNIPluginVer + ".tgz",
-			VnetCNILinuxPluginsDownloadURL:   "https://mirror.azk8s.cn/kubernetes/azure-container-networking/azure-vnet-cni-linux-amd64-" + AzureCniPluginVerLinux + ".tgz",
-			VnetCNIWindowsPluginsDownloadURL: "https://mirror.azk8s.cn/kubernetes/azure-container-networking/azure-vnet-cni-windows-amd64-" + AzureCniPluginVerWindows + ".zip",
-			ContainerdDownloadURLBase:        "https://mirror.azk8s.cn/kubernetes/containerd/",
+			KubernetesImageBase:       "gcr.azk8s.cn/google_containers/",
+			HyperkubeImageBase:        "gcr.azk8s.cn/google_containers/",
+			PauseImageBase:            "gcr.azk8s.cn/google_containers/",
+			TillerImageBase:           "gcr.azk8s.cn/kubernetes-helm/",
+			ACIConnectorImageBase:     "dockerhub.azk8s.cn/microsoft/",
+			NVIDIAImageBase:           "dockerhub.azk8s.cn/nvidia/",
+			AzureCNIImageBase:         "dockerhub.azk8s.cn/containernetworking/",
+			CalicoImageBase:           "dockerhub.azk8s.cn/calico/",
+			EtcdDownloadURLBase:       "https://mirror.azk8s.cn/kubernetes/etcd",
+			WindowsBinariesBase:       DefaultKubernetesSpecConfig.WindowsBinariesBase,
+			WindowsTelemetryGUID:      DefaultKubernetesSpecConfig.WindowsTelemetryGUID,
+			CNIPluginsDownloadURL:     "https://mirror.azk8s.cn/kubernetes/containernetworking-plugins/cni-plugins-amd64-" + CNIPluginVer + ".tgz",
+			AzureCNIURLLinux:          "https://mirror.azk8s.cn/kubernetes/azure-container-networking/azure-vnet-cni-linux-amd64-" + AzureCniPluginVerLinux + ".tgz",
+			AzureCNIURLWindows:        "https://mirror.azk8s.cn/kubernetes/azure-container-networking/azure-vnet-cni-windows-amd64-" + AzureCniPluginVerWindows + ".zip",
+			ContainerdDownloadURLBase: "https://mirror.azk8s.cn/kubernetes/containerd/",
 		},
 		DCOSSpecConfig: DCOSSpecConfig{
 			DCOS188BootstrapDownloadURL:     fmt.Sprintf(AzureChinaCloudDCOSBootstrapDownloadURL, "5df43052907c021eeb5de145419a3da1898c58a5"),

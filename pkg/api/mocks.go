@@ -86,6 +86,10 @@ func CreateMockContainerService(containerServiceName, orchestratorVersion string
 		MobyVersion:             DefaultMobyVersion,
 		KubeletConfig:           make(map[string]string),
 		ControllerManagerConfig: make(map[string]string),
+		KubernetesImagesConfig: &KubernetesImagesConfig{
+			ImageBaseConfig: &KubernetesSpecConfig{},
+			ImageConfig:     map[string]string{},
+		},
 	}
 
 	cs.Properties.CertificateProfile = &CertificateProfile{}
@@ -115,7 +119,12 @@ func GetK8sDefaultProperties(hasWindows bool) *Properties {
 	p := &Properties{
 		OrchestratorProfile: &OrchestratorProfile{
 			OrchestratorType: Kubernetes,
-			KubernetesConfig: &KubernetesConfig{},
+			KubernetesConfig: &KubernetesConfig{
+				KubernetesImagesConfig: &KubernetesImagesConfig{
+					ImageBaseConfig: &KubernetesSpecConfig{},
+					ImageConfig:     map[string]string{},
+				},
+			},
 		},
 		MasterProfile: &MasterProfile{
 			Count:     1,

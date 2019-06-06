@@ -136,12 +136,14 @@ func (p *Properties) SetAzureStackCloudSpec() error {
 			azureStackCloudSpec.KubernetesSpecConfig.CNIPluginsDownloadURL = helpers.EnsureString(asccKubernetesSpecConfig.CNIPluginsDownloadURL, azsKubernetesSpecConfig.CNIPluginsDownloadURL)
 			azureStackCloudSpec.KubernetesSpecConfig.ContainerdDownloadURLBase = helpers.EnsureString(asccKubernetesSpecConfig.ContainerdDownloadURLBase, azsKubernetesSpecConfig.ContainerdDownloadURLBase)
 			azureStackCloudSpec.KubernetesSpecConfig.EtcdDownloadURLBase = helpers.EnsureString(asccKubernetesSpecConfig.EtcdDownloadURLBase, azsKubernetesSpecConfig.EtcdDownloadURLBase)
-			azureStackCloudSpec.KubernetesSpecConfig.KubeBinariesSASURLBase = helpers.EnsureString(asccKubernetesSpecConfig.KubeBinariesSASURLBase, azsKubernetesSpecConfig.KubeBinariesSASURLBase)
+			azureStackCloudSpec.KubernetesSpecConfig.WindowsBinariesBase = helpers.EnsureString(asccKubernetesSpecConfig.WindowsBinariesBase, azsKubernetesSpecConfig.WindowsBinariesBase)
 			azureStackCloudSpec.KubernetesSpecConfig.KubernetesImageBase = helpers.EnsureString(asccKubernetesSpecConfig.KubernetesImageBase, azsKubernetesSpecConfig.KubernetesImageBase)
+			azureStackCloudSpec.KubernetesSpecConfig.HyperkubeImageBase = helpers.EnsureString(asccKubernetesSpecConfig.HyperkubeImageBase, azsKubernetesSpecConfig.HyperkubeImageBase)
+			azureStackCloudSpec.KubernetesSpecConfig.PauseImageBase = helpers.EnsureString(asccKubernetesSpecConfig.PauseImageBase, azsKubernetesSpecConfig.PauseImageBase)
 			azureStackCloudSpec.KubernetesSpecConfig.NVIDIAImageBase = helpers.EnsureString(asccKubernetesSpecConfig.NVIDIAImageBase, azsKubernetesSpecConfig.NVIDIAImageBase)
 			azureStackCloudSpec.KubernetesSpecConfig.TillerImageBase = helpers.EnsureString(asccKubernetesSpecConfig.TillerImageBase, azsKubernetesSpecConfig.TillerImageBase)
-			azureStackCloudSpec.KubernetesSpecConfig.VnetCNILinuxPluginsDownloadURL = helpers.EnsureString(asccKubernetesSpecConfig.VnetCNILinuxPluginsDownloadURL, azsKubernetesSpecConfig.VnetCNILinuxPluginsDownloadURL)
-			azureStackCloudSpec.KubernetesSpecConfig.VnetCNIWindowsPluginsDownloadURL = helpers.EnsureString(asccKubernetesSpecConfig.VnetCNIWindowsPluginsDownloadURL, azsKubernetesSpecConfig.VnetCNIWindowsPluginsDownloadURL)
+			azureStackCloudSpec.KubernetesSpecConfig.AzureCNIURLLinux = helpers.EnsureString(asccKubernetesSpecConfig.AzureCNIURLLinux, azsKubernetesSpecConfig.AzureCNIURLLinux)
+			azureStackCloudSpec.KubernetesSpecConfig.AzureCNIURLWindows = helpers.EnsureString(asccKubernetesSpecConfig.AzureCNIURLWindows, azsKubernetesSpecConfig.AzureCNIURLWindows)
 			azureStackCloudSpec.KubernetesSpecConfig.WindowsTelemetryGUID = helpers.EnsureString(asccKubernetesSpecConfig.WindowsTelemetryGUID, azsKubernetesSpecConfig.WindowsTelemetryGUID)
 
 			//EndpointConfig

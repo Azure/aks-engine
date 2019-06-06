@@ -18109,7 +18109,7 @@ $global:CACertificate = "{{WrapAsParameter "caCertificate"}}"
 $global:AgentCertificate = "{{WrapAsParameter "clientCertificate"}}"
 
 ## Download sources provided by aks-engine
-$global:KubeBinariesPackageSASURL = "{{WrapAsParameter "kubeBinariesSASURL"}}"
+$global:WindowsK8sDownloadURL = "{{WrapAsParameter "windowsK8sDownloadURL"}}"
 $global:WindowsKubeBinariesURL = "{{WrapAsParameter "windowsKubeBinariesURL"}}"
 $global:KubeBinariesVersion = "{{WrapAsParameter "kubeBinariesVersion"}}"
 
@@ -18213,7 +18213,7 @@ try
         Install-Docker -DockerVersion $global:DockerVersion
 
         Write-Log "Download kubelet binaries and unzip"
-        Get-KubePackage -KubeBinariesSASURL $global:KubeBinariesPackageSASURL
+        Get-KubePackage -DownloadURL $global:WindowsK8sDownloadURL
 
         # this overwrite the binaries that are download from the custom packge with binaries
         # The custom package has a few files that are nessary for future steps (nssm.exe)
@@ -19151,12 +19151,12 @@ function
 Get-KubePackage {
     Param(
         [Parameter(Mandatory = $true)][string]
-        $KubeBinariesSASURL
+        $DownloadURL
     )
 
     $zipfile = "c:\k.zip"
     for ($i = 0; $i -le 10; $i++) {
-        DownloadFileOverHttp -Url $KubeBinariesSASURL -DestinationPath $zipfile
+        DownloadFileOverHttp -Url $DownloadURL -DestinationPath $zipfile
         if ($?) {
             break
         }
@@ -22852,7 +22852,7 @@ func swarmSwarmwinagentresourcesvmssT() (*asset, error) {
 }
 
 var _windowsparamsT = []byte(` {{if IsKubernetes}}
-    "kubeBinariesSASURL": {
+    "windowsK8sDownloadURL": {
       "metadata": {
         "description": "The download url for kubernetes windows binaries package that is created by scripts/build-windows-k8s.sh"
       },

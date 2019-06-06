@@ -23,22 +23,25 @@ func assignKubernetesParameters(properties *api.Properties, parametersMap params
 	orchestratorProfile := properties.OrchestratorProfile
 
 	if orchestratorProfile.IsKubernetes() {
-
 		k8sVersion := orchestratorProfile.OrchestratorVersion
 		k8sComponents := api.K8sComponentsByVersionMap[k8sVersion]
 		kubernetesConfig := orchestratorProfile.KubernetesConfig
-		kubernetesImageBase := kubernetesConfig.KubernetesImageBase
-		hyperkubeImageBase := kubernetesConfig.KubernetesImageBase
-
-		if properties.IsAzureStackCloud() {
-			kubernetesImageBase = cloudSpecConfig.KubernetesSpecConfig.KubernetesImageBase
+		if kubernetesConfig.KubernetesImagesConfig == nil {
+			kubernetesConfig.KubernetesImagesConfig = &api.KubernetesImagesConfig{
+				ImageBaseConfig: &cloudSpecConfig.KubernetesSpecConfig,
+				ImageConfig:     map[string]string{},
+			}
 		}
+		kubernetesImageBase := kubernetesConfig.KubernetesImagesConfig.ImageBaseConfig.KubernetesImageBase
+		hyperkubeImageBase := kubernetesConfig.KubernetesImagesConfig.ImageBaseConfig.HyperkubeImageBase
 
 		if kubernetesConfig != nil {
 			if to.Bool(kubernetesConfig.UseCloudControllerManager) {
 				kubernetesCcmSpec := kubernetesImageBase + k8sComponents["ccm"]
 				if kubernetesConfig.CustomCcmImage != "" {
 					kubernetesCcmSpec = kubernetesConfig.CustomCcmImage
+				} else if url, ok := kubernetesConfig.KubernetesImagesConfig.ImageConfig["ccm"]; ok {
+					kubernetesCcmSpec = url
 				}
 
 				addValue(parametersMap, "kubernetesCcmImageSpec", kubernetesCcmSpec)
@@ -50,6 +53,8 @@ func assignKubernetesParameters(properties *api.Properties, parametersMap params
 			}
 			if kubernetesConfig.CustomHyperkubeImage != "" {
 				kubernetesHyperkubeSpec = kubernetesConfig.CustomHyperkubeImage
+			} else if url, ok := kubernetesConfig.KubernetesImagesConfig.ImageConfig["hyperkube"]; ok {
+				kubernetesHyperkubeSpec = url
 			}
 			addValue(parametersMap, "kubernetesHyperkubeSpec", kubernetesHyperkubeSpec)
 
@@ -57,7 +62,11 @@ func assignKubernetesParameters(properties *api.Properties, parametersMap params
 			if kubernetesConfig.PrivateAzureRegistryServer != "" {
 				addValue(parametersMap, "privateAzureRegistryServer", kubernetesConfig.PrivateAzureRegistryServer)
 			}
-			addValue(parametersMap, "kubernetesAddonManagerSpec", kubernetesImageBase+k8sComponents["addonmanager"])
+			addonManagerImage := kubernetesImageBase + k8sComponents["addonmanager"]
+			if url, ok := kubernetesConfig.KubernetesImagesConfig.ImageConfig["addonmanager"]; ok {
+				addonManagerImage = url
+			}
+			addValue(parametersMap, "kubernetesAddonManagerSpec", addonManagerImage)
 			if orchestratorProfile.NeedsExecHealthz() {
 				addValue(parametersMap, "kubernetesExecHealthzSpec", kubernetesImageBase+k8sComponents["exechealthz"])
 			}
@@ -96,7 +105,11 @@ func assignKubernetesParameters(properties *api.Properties, parametersMap params
 				addValue(parametersMap, "kubernetesKubeDNSSpec", kubernetesImageBase+k8sComponents["kube-dns"])
 				addValue(parametersMap, "kubernetesDNSMasqSpec", kubernetesImageBase+k8sComponents["dnsmasq"])
 			}
-			addValue(parametersMap, "kubernetesPodInfraContainerSpec", kubernetesImageBase+k8sComponents["pause"])
+			pauseImage := kubernetesImageBase + k8sComponents["pause"]
+			if url, ok := kubernetesConfig.KubernetesImagesConfig.ImageConfig["pause"]; ok {
+				pauseImage = url
+			}
+			addValue(parametersMap, "kubernetesPodInfraContainerSpec", pauseImage)
 			addValue(parametersMap, "cloudproviderConfig", api.CloudProviderConfig{
 				CloudProviderBackoff:         kubernetesConfig.CloudProviderBackoff,
 				CloudProviderBackoffRetries:  kubernetesConfig.CloudProviderBackoffRetries,
@@ -113,13 +126,13 @@ func assignKubernetesParameters(properties *api.Properties, parametersMap params
 			addValue(parametersMap, "networkPolicy", kubernetesConfig.NetworkPolicy)
 			addValue(parametersMap, "networkPlugin", kubernetesConfig.NetworkPlugin)
 			addValue(parametersMap, "containerRuntime", kubernetesConfig.ContainerRuntime)
-			addValue(parametersMap, "containerdDownloadURLBase", cloudSpecConfig.KubernetesSpecConfig.ContainerdDownloadURLBase)
-			addValue(parametersMap, "cniPluginsURL", cloudSpecConfig.KubernetesSpecConfig.CNIPluginsDownloadURL)
-			addValue(parametersMap, "vnetCniLinuxPluginsURL", kubernetesConfig.GetAzureCNIURLLinux(cloudSpecConfig))
-			addValue(parametersMap, "vnetCniWindowsPluginsURL", kubernetesConfig.GetAzureCNIURLWindows(cloudSpecConfig))
+			addValue(parametersMap, "containerdDownloadURLBase", kubernetesConfig.KubernetesImagesConfig.ImageBaseConfig.ContainerdDownloadURLBase)
+			addValue(parametersMap, "cniPluginsURL", kubernetesConfig.KubernetesImagesConfig.ImageBaseConfig.CNIPluginsDownloadURL)
+			addValue(parametersMap, "vnetCniLinuxPluginsURL", kubernetesConfig.KubernetesImagesConfig.ImageBaseConfig.AzureCNIURLLinux)
+			addValue(parametersMap, "vnetCniWindowsPluginsURL", kubernetesConfig.KubernetesImagesConfig.ImageBaseConfig.AzureCNIURLWindows)
 			addValue(parametersMap, "gchighthreshold", kubernetesConfig.GCHighThreshold)
 			addValue(parametersMap, "gclowthreshold", kubernetesConfig.GCLowThreshold)
-			addValue(parametersMap, "etcdDownloadURLBase", cloudSpecConfig.KubernetesSpecConfig.EtcdDownloadURLBase)
+			addValue(parametersMap, "etcdDownloadURLBase", kubernetesConfig.KubernetesImagesConfig.ImageBaseConfig.EtcdDownloadURLBase)
 			addValue(parametersMap, "etcdVersion", kubernetesConfig.EtcdVersion)
 			addValue(parametersMap, "etcdDiskSizeGB", kubernetesConfig.EtcdDiskSizeGB)
 			addValue(parametersMap, "etcdEncryptionKey", kubernetesConfig.EtcdEncryptionKey)
@@ -137,18 +150,20 @@ func assignKubernetesParameters(properties *api.Properties, parametersMap params
 			if properties.HasWindows() {
 				// Kubernetes packages as zip file as created by scripts/build-windows-k8s.sh
 				// will be removed in future release as if gets phased out (https://github.com/Azure/aks-engine/issues/3851)
-				kubeBinariesSASURL := kubernetesConfig.CustomWindowsPackageURL
-				if kubeBinariesSASURL == "" {
-					kubeBinariesSASURL = cloudSpecConfig.KubernetesSpecConfig.KubeBinariesSASURLBase + k8sComponents["windowszip"]
+				windowsK8sDownloadURL := kubernetesConfig.CustomWindowsPackageURL
+				if windowsK8sDownloadURL == "" {
+					windowsK8sDownloadURL = kubernetesConfig.KubernetesImagesConfig.ImageBaseConfig.WindowsBinariesBase + k8sComponents["windowszip"]
+				} else if url, ok := kubernetesConfig.KubernetesImagesConfig.ImageConfig["windowszip"]; ok {
+					windowsK8sDownloadURL = url
 				}
-				addValue(parametersMap, "kubeBinariesSASURL", kubeBinariesSASURL)
+				addValue(parametersMap, "windowsK8sDownloadURL", windowsK8sDownloadURL)
 
 				// Kubernetes node binaries as packaged by upstream kubernetes
 				// example at https://github.com/kubernetes/kubernetes/blob/master/CHANGELOG-1.11.md#node-binaries-1
 				addValue(parametersMap, "windowsKubeBinariesURL", kubernetesConfig.WindowsNodeBinariesURL)
 				addValue(parametersMap, "kubeServiceCidr", kubernetesConfig.ServiceCIDR)
 				addValue(parametersMap, "kubeBinariesVersion", k8sVersion)
-				addValue(parametersMap, "windowsTelemetryGUID", cloudSpecConfig.KubernetesSpecConfig.WindowsTelemetryGUID)
+				addValue(parametersMap, "windowsTelemetryGUID", kubernetesConfig.KubernetesImagesConfig.ImageBaseConfig.WindowsTelemetryGUID)
 			}
 		}
 

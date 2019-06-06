@@ -56,7 +56,7 @@ $global:CACertificate = "{{WrapAsParameter "caCertificate"}}"
 $global:AgentCertificate = "{{WrapAsParameter "clientCertificate"}}"
 
 ## Download sources provided by aks-engine
-$global:KubeBinariesPackageSASURL = "{{WrapAsParameter "kubeBinariesSASURL"}}"
+$global:WindowsK8sDownloadURL = "{{WrapAsParameter "windowsK8sDownloadURL"}}"
 $global:WindowsKubeBinariesURL = "{{WrapAsParameter "windowsKubeBinariesURL"}}"
 $global:KubeBinariesVersion = "{{WrapAsParameter "kubeBinariesVersion"}}"
 
@@ -160,7 +160,7 @@ try
         Install-Docker -DockerVersion $global:DockerVersion
 
         Write-Log "Download kubelet binaries and unzip"
-        Get-KubePackage -KubeBinariesSASURL $global:KubeBinariesPackageSASURL
+        Get-KubePackage -DownloadURL $global:WindowsK8sDownloadURL
 
         # this overwrite the binaries that are download from the custom packge with binaries
         # The custom package has a few files that are nessary for future steps (nssm.exe)

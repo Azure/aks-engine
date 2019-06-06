@@ -69,6 +69,7 @@ func TestPodSecurityPolicyConfigUpgrade(t *testing.T) {
 		"data": base64DataPSP,
 	}
 
+	mockCS.setKubernetesImagesConfig()
 	mockCS.setAddonsConfig(isUpdate)
 
 	i := getAddonsIndexByName(o.KubernetesConfig.Addons, PodSecurityPolicyAddonName)
@@ -187,11 +188,11 @@ func TestSetAddonsConfig(t *testing.T) {
 			AzureCNIImageBase:                "AzureCNIImageBase",
 			CalicoImageBase:                  "CalicoImageBase",
 			EtcdDownloadURLBase:              "EtcdDownloadURLBase",
-			KubeBinariesSASURLBase:           "KubeBinariesSASURLBase",
+			WindowsBinariesBase:           "WindowsBinariesBase",
 			WindowsTelemetryGUID:             "WindowsTelemetryGUID",
 			CNIPluginsDownloadURL:            "CNIPluginsDownloadURL",
-			VnetCNILinuxPluginsDownloadURL:   "VnetCNILinuxPluginsDownloadURL",
-			VnetCNIWindowsPluginsDownloadURL: "VnetCNIWindowsPluginsDownloadURL",
+			AzureCNIURLLinux:   "AzureCNIURLLinux",
+			AzureCNIURLWindows: "AzureCNIURLWindows",
 			ContainerdDownloadURLBase:        "ContainerdDownloadURLBase",
 		},
 		EndpointConfig: AzureEndpointConfig{
@@ -2906,6 +2907,7 @@ func TestSetAddonsConfig(t *testing.T) {
 		test := test
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
+			test.cs.setKubernetesImagesConfig()
 			test.cs.setAddonsConfig(test.isUpdate)
 			for _, addonName := range []string{
 				HeapsterAddonName,

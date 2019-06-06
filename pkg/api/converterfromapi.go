@@ -757,6 +757,7 @@ func convertKubernetesConfigToVLabs(apiCfg *KubernetesConfig, vlabsCfg *vlabs.Ku
 	convertAPIServerConfigToVlabs(apiCfg, vlabsCfg)
 	convertSchedulerConfigToVlabs(apiCfg, vlabsCfg)
 	convertPrivateClusterToVlabs(apiCfg, vlabsCfg)
+	convertKubernetesImagesConfigToVlabs(apiCfg, vlabsCfg)
 	convertPodSecurityPolicyConfigToVlabs(apiCfg, vlabsCfg)
 }
 
@@ -822,6 +823,16 @@ func convertPrivateClusterToVlabs(a *KubernetesConfig, v *vlabs.KubernetesConfig
 			v.PrivateCluster.JumpboxProfile = &vlabs.PrivateJumpboxProfile{}
 			convertPrivateJumpboxProfileToVlabs(a.PrivateCluster.JumpboxProfile, v.PrivateCluster.JumpboxProfile)
 		}
+	}
+}
+
+func convertKubernetesImagesConfigToVlabs(a *KubernetesConfig, v *vlabs.KubernetesConfig) {
+	if a.KubernetesImagesConfig != nil {
+		specConfig := convertKubernetesSpecConfigToVlabs(a.KubernetesImagesConfig.ImageBaseConfig)
+		v.KubernetesImagesConfig = &vlabs.KubernetesImagesConfig{
+			ImageBaseConfig: &specConfig,
+		}
+		convertImageConfigToVlabs(a.KubernetesImagesConfig, v.KubernetesImagesConfig)
 	}
 }
 
@@ -1240,21 +1251,8 @@ func convertAzureEnvironmentSpecConfigToVLabs(api *AzureEnvironmentSpecConfig, v
 	vlabses.EndpointConfig = vlabs.AzureEndpointConfig{
 		ResourceManagerVMDNSSuffix: api.EndpointConfig.ResourceManagerVMDNSSuffix,
 	}
-	vlabses.KubernetesSpecConfig = vlabs.KubernetesSpecConfig{
-		KubernetesImageBase:              api.KubernetesSpecConfig.KubernetesImageBase,
-		TillerImageBase:                  api.KubernetesSpecConfig.TillerImageBase,
-		ACIConnectorImageBase:            api.KubernetesSpecConfig.ACIConnectorImageBase,
-		NVIDIAImageBase:                  api.KubernetesSpecConfig.NVIDIAImageBase,
-		AzureCNIImageBase:                api.KubernetesSpecConfig.AzureCNIImageBase,
-		CalicoImageBase:                  api.KubernetesSpecConfig.CalicoImageBase,
-		EtcdDownloadURLBase:              api.KubernetesSpecConfig.EtcdDownloadURLBase,
-		KubeBinariesSASURLBase:           api.KubernetesSpecConfig.KubeBinariesSASURLBase,
-		WindowsTelemetryGUID:             api.KubernetesSpecConfig.WindowsTelemetryGUID,
-		CNIPluginsDownloadURL:            api.KubernetesSpecConfig.CNIPluginsDownloadURL,
-		VnetCNILinuxPluginsDownloadURL:   api.KubernetesSpecConfig.VnetCNILinuxPluginsDownloadURL,
-		VnetCNIWindowsPluginsDownloadURL: api.KubernetesSpecConfig.VnetCNIWindowsPluginsDownloadURL,
-		ContainerdDownloadURLBase:        api.KubernetesSpecConfig.ContainerdDownloadURLBase,
-	}
+
+	vlabses.KubernetesSpecConfig = convertKubernetesSpecConfigToVlabs(&api.KubernetesSpecConfig)
 	vlabses.OSImageConfig = map[vlabs.Distro]vlabs.AzureOSImageConfig{}
 	for k, v := range api.OSImageConfig {
 		vlabses.OSImageConfig[vlabs.Distro(string(k))] = vlabs.AzureOSImageConfig{
@@ -1263,5 +1261,35 @@ func convertAzureEnvironmentSpecConfigToVLabs(api *AzureEnvironmentSpecConfig, v
 			ImagePublisher: v.ImagePublisher,
 			ImageVersion:   v.ImageVersion,
 		}
+	}
+}
+
+func convertKubernetesSpecConfigToVlabs(spec *KubernetesSpecConfig) vlabs.KubernetesSpecConfig {
+	if spec != nil {
+		return vlabs.KubernetesSpecConfig{
+			KubernetesImageBase:       spec.KubernetesImageBase,
+			HyperkubeImageBase:        spec.HyperkubeImageBase,
+			PauseImageBase:            spec.PauseImageBase,
+			TillerImageBase:           spec.TillerImageBase,
+			ACIConnectorImageBase:     spec.ACIConnectorImageBase,
+			NVIDIAImageBase:           spec.NVIDIAImageBase,
+			AzureCNIImageBase:         spec.AzureCNIImageBase,
+			CalicoImageBase:           spec.CalicoImageBase,
+			EtcdDownloadURLBase:       spec.EtcdDownloadURLBase,
+			WindowsBinariesBase:    spec.WindowsBinariesBase,
+			WindowsTelemetryGUID:      spec.WindowsTelemetryGUID,
+			CNIPluginsDownloadURL:     spec.CNIPluginsDownloadURL,
+			AzureCNIURLLinux:          spec.AzureCNIURLLinux,
+			AzureCNIURLWindows:        spec.AzureCNIURLWindows,
+			ContainerdDownloadURLBase: spec.ContainerdDownloadURLBase,
+		}
+	}
+	return vlabs.KubernetesSpecConfig{}
+}
+
+func convertImageConfigToVlabs(a *KubernetesImagesConfig, v *vlabs.KubernetesImagesConfig) {
+	v.ImageConfig = map[string]string{}
+	for key, val := range a.ImageConfig {
+		v.ImageConfig[key] = val
 	}
 }

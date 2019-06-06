@@ -81,7 +81,6 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpgrade, isScale bool) {
 	isUpdate := isUpgrade || isScale
 	a := cs.Properties
 
-	cloudSpecConfig := cs.GetCloudSpecConfig()
 	if a.OrchestratorProfile == nil {
 		return
 	}
@@ -117,9 +116,6 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpgrade, isScale bool) {
 			o.KubernetesConfig.NetworkPlugin = NetworkPluginCilium
 		}
 
-		if o.KubernetesConfig.KubernetesImageBase == "" {
-			o.KubernetesConfig.KubernetesImageBase = cloudSpecConfig.KubernetesSpecConfig.KubernetesImageBase
-		}
 		if o.KubernetesConfig.EtcdVersion == "" {
 			o.KubernetesConfig.EtcdVersion = DefaultEtcdVersion
 		} else if isUpgrade {
@@ -287,10 +283,12 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpgrade, isScale bool) {
 			a.OrchestratorProfile.KubernetesConfig.ProxyMode = DefaultKubeProxyMode
 		}
 
-		// First, Configure addons
+		// First, wired up any user-configurable Kubernetes images config
+		cs.setKubernetesImagesConfig()
+		// Next, Configure addons
 		cs.setAddonsConfig(isUpdate)
 		// Defaults enforcement flows below inherit from addons configuration,
-		// so it's critical to enforce default addons configuration first
+		// so it's critical to enforce default addons configuration before we continue
 
 		// Configure kubelet
 		cs.setKubeletConfig()

@@ -342,69 +342,70 @@ const (
 // KubernetesConfig contains the Kubernetes config structure, containing
 // Kubernetes specific configuration
 type KubernetesConfig struct {
-	KubernetesImageBase              string            `json:"kubernetesImageBase,omitempty"`
-	ClusterSubnet                    string            `json:"clusterSubnet,omitempty"`
-	NetworkPolicy                    string            `json:"networkPolicy,omitempty"`
-	NetworkPlugin                    string            `json:"networkPlugin,omitempty"`
-	ContainerRuntime                 string            `json:"containerRuntime,omitempty"`
-	MaxPods                          int               `json:"maxPods,omitempty"`
-	DockerBridgeSubnet               string            `json:"dockerBridgeSubnet,omitempty"`
-	DNSServiceIP                     string            `json:"dnsServiceIP,omitempty"`
-	ServiceCIDR                      string            `json:"serviceCidr,omitempty"`
-	UseManagedIdentity               bool              `json:"useManagedIdentity,omitempty"`
-	UserAssignedID                   string            `json:"userAssignedID,omitempty"`
-	UserAssignedClientID             string            `json:"userAssignedClientID,omitempty"` //Note: cannot be provided in config. Used *only* for transferring this to azure.json.
-	CustomHyperkubeImage             string            `json:"customHyperkubeImage,omitempty"`
-	DockerEngineVersion              string            `json:"dockerEngineVersion,omitempty"` // Deprecated
-	MobyVersion                      string            `json:"mobyVersion,omitempty"`
-	ContainerdVersion                string            `json:"containerdVersion,omitempty"`
-	CustomCcmImage                   string            `json:"customCcmImage,omitempty"` // Image for cloud-controller-manager
-	UseCloudControllerManager        *bool             `json:"useCloudControllerManager,omitempty"`
-	CustomWindowsPackageURL          string            `json:"customWindowsPackageURL,omitempty"`
-	WindowsNodeBinariesURL           string            `json:"windowsNodeBinariesURL,omitempty"`
-	UseInstanceMetadata              *bool             `json:"useInstanceMetadata,omitempty"`
-	EnableRbac                       *bool             `json:"enableRbac,omitempty"`
-	EnableSecureKubelet              *bool             `json:"enableSecureKubelet,omitempty"`
-	EnableAggregatedAPIs             bool              `json:"enableAggregatedAPIs,omitempty"`
-	PrivateCluster                   *PrivateCluster   `json:"privateCluster,omitempty"`
-	GCHighThreshold                  int               `json:"gchighthreshold,omitempty"`
-	GCLowThreshold                   int               `json:"gclowthreshold,omitempty"`
-	EtcdVersion                      string            `json:"etcdVersion,omitempty"`
-	EtcdDiskSizeGB                   string            `json:"etcdDiskSizeGB,omitempty"`
-	EtcdEncryptionKey                string            `json:"etcdEncryptionKey,omitempty"`
-	EnableDataEncryptionAtRest       *bool             `json:"enableDataEncryptionAtRest,omitempty"`
-	EnableEncryptionWithExternalKms  *bool             `json:"enableEncryptionWithExternalKms,omitempty"`
-	EnablePodSecurityPolicy          *bool             `json:"enablePodSecurityPolicy,omitempty"`
-	Addons                           []KubernetesAddon `json:"addons,omitempty"`
-	KubeletConfig                    map[string]string `json:"kubeletConfig,omitempty"`
-	ControllerManagerConfig          map[string]string `json:"controllerManagerConfig,omitempty"`
-	CloudControllerManagerConfig     map[string]string `json:"cloudControllerManagerConfig,omitempty"`
-	APIServerConfig                  map[string]string `json:"apiServerConfig,omitempty"`
-	SchedulerConfig                  map[string]string `json:"schedulerConfig,omitempty"`
-	PodSecurityPolicyConfig          map[string]string `json:"podSecurityPolicyConfig,omitempty"` // Deprecated
-	CloudProviderBackoff             *bool             `json:"cloudProviderBackoff,omitempty"`
-	CloudProviderBackoffRetries      int               `json:"cloudProviderBackoffRetries,omitempty"`
-	CloudProviderBackoffJitter       float64           `json:"cloudProviderBackoffJitter,omitempty"`
-	CloudProviderBackoffDuration     int               `json:"cloudProviderBackoffDuration,omitempty"`
-	CloudProviderBackoffExponent     float64           `json:"cloudProviderBackoffExponent,omitempty"`
-	CloudProviderRateLimit           *bool             `json:"cloudProviderRateLimit,omitempty"`
-	CloudProviderRateLimitQPS        float64           `json:"cloudProviderRateLimitQPS,omitempty"`
-	CloudProviderRateLimitBucket     int               `json:"cloudProviderRateLimitBucket,omitempty"`
-	NonMasqueradeCidr                string            `json:"nonMasqueradeCidr,omitempty"`
-	NodeStatusUpdateFrequency        string            `json:"nodeStatusUpdateFrequency,omitempty"`
-	HardEvictionThreshold            string            `json:"hardEvictionThreshold,omitempty"`
-	CtrlMgrNodeMonitorGracePeriod    string            `json:"ctrlMgrNodeMonitorGracePeriod,omitempty"`
-	CtrlMgrPodEvictionTimeout        string            `json:"ctrlMgrPodEvictionTimeout,omitempty"`
-	CtrlMgrRouteReconciliationPeriod string            `json:"ctrlMgrRouteReconciliationPeriod,omitempty"`
-	LoadBalancerSku                  string            `json:"loadBalancerSku,omitempty"`
-	ExcludeMasterFromStandardLB      *bool             `json:"excludeMasterFromStandardLB,omitempty"`
-	AzureCNIVersion                  string            `json:"azureCNIVersion,omitempty"`
-	AzureCNIURLLinux                 string            `json:"azureCNIURLLinux,omitempty"`
-	AzureCNIURLWindows               string            `json:"azureCNIURLWindows,omitempty"`
-	KeyVaultSku                      string            `json:"keyVaultSku,omitempty"`
-	MaximumLoadBalancerRuleCount     int               `json:"maximumLoadBalancerRuleCount,omitempty"`
-	ProxyMode                        KubeProxyMode     `json:"kubeProxyMode,omitempty"`
-	PrivateAzureRegistryServer       string            `json:"privateAzureRegistryServer,omitempty"`
+	KubernetesImageBase              string                  `json:"kubernetesImageBase,omitempty"`
+	ClusterSubnet                    string                  `json:"clusterSubnet,omitempty"`
+	NetworkPolicy                    string                  `json:"networkPolicy,omitempty"`
+	NetworkPlugin                    string                  `json:"networkPlugin,omitempty"`
+	ContainerRuntime                 string                  `json:"containerRuntime,omitempty"`
+	MaxPods                          int                     `json:"maxPods,omitempty"`
+	DockerBridgeSubnet               string                  `json:"dockerBridgeSubnet,omitempty"`
+	DNSServiceIP                     string                  `json:"dnsServiceIP,omitempty"`
+	ServiceCIDR                      string                  `json:"serviceCidr,omitempty"`
+	UseManagedIdentity               bool                    `json:"useManagedIdentity,omitempty"`
+	UserAssignedID                   string                  `json:"userAssignedID,omitempty"`
+	UserAssignedClientID             string                  `json:"userAssignedClientID,omitempty"` //Note: cannot be provided in config. Used *only* for transferring this to azure.json.
+	CustomHyperkubeImage             string                  `json:"customHyperkubeImage,omitempty"`
+	DockerEngineVersion              string                  `json:"dockerEngineVersion,omitempty"` // Deprecated
+	MobyVersion                      string                  `json:"mobyVersion,omitempty"`
+	ContainerdVersion                string                  `json:"containerdVersion,omitempty"`
+	CustomCcmImage                   string                  `json:"customCcmImage,omitempty"` // Image for cloud-controller-manager
+	UseCloudControllerManager        *bool                   `json:"useCloudControllerManager,omitempty"`
+	CustomWindowsPackageURL          string                  `json:"customWindowsPackageURL,omitempty"`
+	WindowsNodeBinariesURL           string                  `json:"windowsNodeBinariesURL,omitempty"`
+	UseInstanceMetadata              *bool                   `json:"useInstanceMetadata,omitempty"`
+	EnableRbac                       *bool                   `json:"enableRbac,omitempty"`
+	EnableSecureKubelet              *bool                   `json:"enableSecureKubelet,omitempty"`
+	EnableAggregatedAPIs             bool                    `json:"enableAggregatedAPIs,omitempty"`
+	PrivateCluster                   *PrivateCluster         `json:"privateCluster,omitempty"`
+	GCHighThreshold                  int                     `json:"gchighthreshold,omitempty"`
+	GCLowThreshold                   int                     `json:"gclowthreshold,omitempty"`
+	EtcdVersion                      string                  `json:"etcdVersion,omitempty"`
+	EtcdDiskSizeGB                   string                  `json:"etcdDiskSizeGB,omitempty"`
+	EtcdEncryptionKey                string                  `json:"etcdEncryptionKey,omitempty"`
+	EnableDataEncryptionAtRest       *bool                   `json:"enableDataEncryptionAtRest,omitempty"`
+	EnableEncryptionWithExternalKms  *bool                   `json:"enableEncryptionWithExternalKms,omitempty"`
+	EnablePodSecurityPolicy          *bool                   `json:"enablePodSecurityPolicy,omitempty"`
+	Addons                           []KubernetesAddon       `json:"addons,omitempty"`
+	KubeletConfig                    map[string]string       `json:"kubeletConfig,omitempty"`
+	ControllerManagerConfig          map[string]string       `json:"controllerManagerConfig,omitempty"`
+	CloudControllerManagerConfig     map[string]string       `json:"cloudControllerManagerConfig,omitempty"`
+	APIServerConfig                  map[string]string       `json:"apiServerConfig,omitempty"`
+	SchedulerConfig                  map[string]string       `json:"schedulerConfig,omitempty"`
+	PodSecurityPolicyConfig          map[string]string       `json:"podSecurityPolicyConfig,omitempty"` // Deprecated
+	CloudProviderBackoff             *bool                   `json:"cloudProviderBackoff,omitempty"`
+	CloudProviderBackoffRetries      int                     `json:"cloudProviderBackoffRetries,omitempty"`
+	CloudProviderBackoffJitter       float64                 `json:"cloudProviderBackoffJitter,omitempty"`
+	CloudProviderBackoffDuration     int                     `json:"cloudProviderBackoffDuration,omitempty"`
+	CloudProviderBackoffExponent     float64                 `json:"cloudProviderBackoffExponent,omitempty"`
+	CloudProviderRateLimit           *bool                   `json:"cloudProviderRateLimit,omitempty"`
+	CloudProviderRateLimitQPS        float64                 `json:"cloudProviderRateLimitQPS,omitempty"`
+	CloudProviderRateLimitBucket     int                     `json:"cloudProviderRateLimitBucket,omitempty"`
+	NonMasqueradeCidr                string                  `json:"nonMasqueradeCidr,omitempty"`
+	NodeStatusUpdateFrequency        string                  `json:"nodeStatusUpdateFrequency,omitempty"`
+	HardEvictionThreshold            string                  `json:"hardEvictionThreshold,omitempty"`
+	CtrlMgrNodeMonitorGracePeriod    string                  `json:"ctrlMgrNodeMonitorGracePeriod,omitempty"`
+	CtrlMgrPodEvictionTimeout        string                  `json:"ctrlMgrPodEvictionTimeout,omitempty"`
+	CtrlMgrRouteReconciliationPeriod string                  `json:"ctrlMgrRouteReconciliationPeriod,omitempty"`
+	LoadBalancerSku                  string                  `json:"loadBalancerSku,omitempty"`
+	ExcludeMasterFromStandardLB      *bool                   `json:"excludeMasterFromStandardLB,omitempty"`
+	AzureCNIVersion                  string                  `json:"azureCNIVersion,omitempty"`
+	AzureCNIURLLinux                 string                  `json:"azureCNIURLLinux,omitempty"`
+	AzureCNIURLWindows               string                  `json:"azureCNIURLWindows,omitempty"`
+	KeyVaultSku                      string                  `json:"keyVaultSku,omitempty"`
+	MaximumLoadBalancerRuleCount     int                     `json:"maximumLoadBalancerRuleCount,omitempty"`
+	ProxyMode                        KubeProxyMode           `json:"kubeProxyMode,omitempty"`
+	PrivateAzureRegistryServer       string                  `json:"privateAzureRegistryServer,omitempty"`
+	KubernetesImagesConfig           *KubernetesImagesConfig `json:"kubernetesImagesConfig,omitempty"`
 }
 
 // CustomFile has source as the full absolute source path to a file and dest
@@ -1802,22 +1803,6 @@ func (k *KubernetesConfig) SetCloudProviderRateLimitDefaults() {
 	if k.CloudProviderRateLimitBucket == 0 {
 		k.CloudProviderRateLimitBucket = DefaultKubernetesCloudProviderRateLimitBucket
 	}
-}
-
-// GetAzureCNIURLLinux returns the full URL to source Azure CNI binaries from
-func (k *KubernetesConfig) GetAzureCNIURLLinux(cloudSpecConfig AzureEnvironmentSpecConfig) string {
-	if k.AzureCNIURLLinux != "" {
-		return k.AzureCNIURLLinux
-	}
-	return cloudSpecConfig.KubernetesSpecConfig.VnetCNILinuxPluginsDownloadURL
-}
-
-// GetAzureCNIURLWindows returns the full URL to source Azure CNI binaries from
-func (k *KubernetesConfig) GetAzureCNIURLWindows(cloudSpecConfig AzureEnvironmentSpecConfig) string {
-	if k.AzureCNIURLWindows != "" {
-		return k.AzureCNIURLWindows
-	}
-	return cloudSpecConfig.KubernetesSpecConfig.VnetCNIWindowsPluginsDownloadURL
 }
 
 // IsFeatureEnabled returns true if a feature flag is on for the provided feature

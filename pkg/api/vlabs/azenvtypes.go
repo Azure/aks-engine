@@ -34,19 +34,27 @@ type DCOSSpecConfig struct {
 
 //KubernetesSpecConfig is the kubernetes container images used.
 type KubernetesSpecConfig struct {
-	KubernetesImageBase              string `json:"kubernetesImageBase,omitempty"`
-	TillerImageBase                  string `json:"tillerImageBase,omitempty"`
-	ACIConnectorImageBase            string `json:"aciConnectorImageBase,omitempty"`
-	NVIDIAImageBase                  string `json:"nvidiaImageBase,omitempty"`
-	AzureCNIImageBase                string `json:"azureCNIImageBase,omitempty"`
-	CalicoImageBase                  string `json:"calicoImageBase,omitempty"`
-	EtcdDownloadURLBase              string `json:"etcdDownloadURLBase,omitempty"`
-	KubeBinariesSASURLBase           string `json:"kubeBinariesSASURLBase,omitempty"`
-	WindowsTelemetryGUID             string `json:"windowsTelemetryGUID,omitempty"`
-	CNIPluginsDownloadURL            string `json:"cniPluginsDownloadURL,omitempty"`
-	VnetCNILinuxPluginsDownloadURL   string `json:"vnetCNILinuxPluginsDownloadURL,omitempty"`
-	VnetCNIWindowsPluginsDownloadURL string `json:"vnetCNIWindowsPluginsDownloadURL,omitempty"`
-	ContainerdDownloadURLBase        string `json:"containerdDownloadURLBase,omitempty"`
+	KubernetesImageBase       string `json:"kubernetesImageBase,omitempty"`
+	HyperkubeImageBase        string `json:"hyperkubeImageBase,omitempty"`
+	PauseImageBase            string `json:"pauseImageBase,omitempty"`
+	TillerImageBase           string `json:"tillerImageBase,omitempty"`
+	ACIConnectorImageBase     string `json:"aciConnectorImageBase,omitempty"`
+	NVIDIAImageBase           string `json:"nvidiaImageBase,omitempty"`
+	AzureCNIImageBase         string `json:"azureCNIImageBase,omitempty"`
+	CalicoImageBase           string `json:"calicoImageBase,omitempty"`
+	EtcdDownloadURLBase       string `json:"etcdDownloadURLBase,omitempty"`
+	WindowsBinariesBase    string `json:"kubeBinariesSASURLBase,omitempty"`
+	WindowsTelemetryGUID      string `json:"windowsTelemetryGUID,omitempty"`
+	CNIPluginsDownloadURL     string `json:"cniPluginsDownloadURL,omitempty"`
+	AzureCNIURLLinux          string `json:"azureCNIURLLinux,omitempty"`
+	AzureCNIURLWindows        string `json:"azureCNIURLWindows,omitempty"`
+	ContainerdDownloadURLBase string `json:"containerdDownloadURLBase,omitempty"`
+}
+
+// KubernetesImagesConfig defines where to reference container images
+type KubernetesImagesConfig struct {
+	ImageBaseConfig *KubernetesSpecConfig `json:"imageBaseConfig,omitempty"`
+	ImageConfig     map[string]string     `json:"imageConfig,omitempty"`
 }
 
 //AzureEndpointConfig describes an Azure endpoint

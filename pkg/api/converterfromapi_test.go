@@ -163,11 +163,11 @@ func TestConvertAzureEnvironmentSpecConfigToVLabs(t *testing.T) {
 						AzureCNIImageBase:                "AzureCNIImageBase",
 						CalicoImageBase:                  "CalicoImageBase",
 						EtcdDownloadURLBase:              "EtcdDownloadURLBase",
-						KubeBinariesSASURLBase:           "KubeBinariesSASURLBase",
+						WindowsBinariesBase:           "WindowsBinariesBase",
 						WindowsTelemetryGUID:             "WindowsTelemetryGUID",
 						CNIPluginsDownloadURL:            "CNIPluginsDownloadURL",
-						VnetCNILinuxPluginsDownloadURL:   "VnetCNILinuxPluginsDownloadURL",
-						VnetCNIWindowsPluginsDownloadURL: "VnetCNIWindowsPluginsDownloadURL",
+						AzureCNIURLLinux:   "AzureCNIURLLinux",
+						AzureCNIURLWindows: "AzureCNIURLWindows",
 						ContainerdDownloadURLBase:        "ContainerdDownloadURLBase",
 					},
 					DCOSSpecConfig: DCOSSpecConfig{
@@ -230,8 +230,8 @@ func TestConvertAzureEnvironmentSpecConfigToVLabs(t *testing.T) {
 	if vlabscsSpec.KubernetesSpecConfig.EtcdDownloadURLBase != csSpec.KubernetesSpecConfig.EtcdDownloadURLBase {
 		t.Errorf("incorrect EtcdDownloadURLBase, expect: '%s', actual: '%s'", csSpec.KubernetesSpecConfig.EtcdDownloadURLBase, vlabscsSpec.KubernetesSpecConfig.EtcdDownloadURLBase)
 	}
-	if vlabscsSpec.KubernetesSpecConfig.KubeBinariesSASURLBase != csSpec.KubernetesSpecConfig.KubeBinariesSASURLBase {
-		t.Errorf("incorrect KubeBinariesSASURLBase, expect: '%s', actual: '%s'", csSpec.KubernetesSpecConfig.KubeBinariesSASURLBase, vlabscsSpec.KubernetesSpecConfig.KubeBinariesSASURLBase)
+	if vlabscsSpec.KubernetesSpecConfig.WindowsBinariesBase != csSpec.KubernetesSpecConfig.WindowsBinariesBase {
+		t.Errorf("incorrect WindowsBinariesBase, expect: '%s', actual: '%s'", csSpec.KubernetesSpecConfig.WindowsBinariesBase, vlabscsSpec.KubernetesSpecConfig.WindowsBinariesBase)
 	}
 	if vlabscsSpec.KubernetesSpecConfig.WindowsTelemetryGUID != csSpec.KubernetesSpecConfig.WindowsTelemetryGUID {
 		t.Errorf("incorrect WindowsTelemetryGUID, expect: '%s', actual: '%s'", csSpec.KubernetesSpecConfig.WindowsTelemetryGUID, vlabscsSpec.KubernetesSpecConfig.WindowsTelemetryGUID)
@@ -239,11 +239,11 @@ func TestConvertAzureEnvironmentSpecConfigToVLabs(t *testing.T) {
 	if vlabscsSpec.KubernetesSpecConfig.CNIPluginsDownloadURL != csSpec.KubernetesSpecConfig.CNIPluginsDownloadURL {
 		t.Errorf("incorrect CNIPluginsDownloadURL, expect: '%s', actual: '%s'", csSpec.KubernetesSpecConfig.CNIPluginsDownloadURL, vlabscsSpec.KubernetesSpecConfig.CNIPluginsDownloadURL)
 	}
-	if vlabscsSpec.KubernetesSpecConfig.VnetCNILinuxPluginsDownloadURL != csSpec.KubernetesSpecConfig.VnetCNILinuxPluginsDownloadURL {
-		t.Errorf("incorrect VnetCNILinuxPluginsDownloadURL, expect: '%s', actual: '%s'", csSpec.KubernetesSpecConfig.VnetCNILinuxPluginsDownloadURL, vlabscsSpec.KubernetesSpecConfig.VnetCNILinuxPluginsDownloadURL)
+	if vlabscsSpec.KubernetesSpecConfig.AzureCNIURLLinux != csSpec.KubernetesSpecConfig.AzureCNIURLLinux {
+		t.Errorf("incorrect AzureCNIURLLinux, expect: '%s', actual: '%s'", csSpec.KubernetesSpecConfig.AzureCNIURLLinux, vlabscsSpec.KubernetesSpecConfig.AzureCNIURLLinux)
 	}
-	if vlabscsSpec.KubernetesSpecConfig.VnetCNIWindowsPluginsDownloadURL != csSpec.KubernetesSpecConfig.VnetCNIWindowsPluginsDownloadURL {
-		t.Errorf("incorrect VnetCNIWindowsPluginsDownloadURL, expect: '%s', actual: '%s'", csSpec.KubernetesSpecConfig.VnetCNIWindowsPluginsDownloadURL, vlabscsSpec.KubernetesSpecConfig.VnetCNIWindowsPluginsDownloadURL)
+	if vlabscsSpec.KubernetesSpecConfig.AzureCNIURLWindows != csSpec.KubernetesSpecConfig.AzureCNIURLWindows {
+		t.Errorf("incorrect AzureCNIURLWindows, expect: '%s', actual: '%s'", csSpec.KubernetesSpecConfig.AzureCNIURLWindows, vlabscsSpec.KubernetesSpecConfig.AzureCNIURLWindows)
 	}
 	if vlabscsSpec.KubernetesSpecConfig.ContainerdDownloadURLBase != csSpec.KubernetesSpecConfig.ContainerdDownloadURLBase {
 		t.Errorf("incorrect ContainerdDownloadURLBase, expect: '%s', actual: '%s'", csSpec.KubernetesSpecConfig.ContainerdDownloadURLBase, vlabscsSpec.KubernetesSpecConfig.ContainerdDownloadURLBase)

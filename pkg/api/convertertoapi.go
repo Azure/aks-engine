@@ -719,6 +719,7 @@ func convertVLabsKubernetesConfig(vlabs *vlabs.KubernetesConfig, api *Kubernetes
 	convertAPIServerConfigToAPI(vlabs, api)
 	convertSchedulerConfigToAPI(vlabs, api)
 	convertPrivateClusterToAPI(vlabs, api)
+	convertKubernetesImagesConfigToAPI(vlabs, api)
 	convertPodSecurityPolicyConfigToAPI(vlabs, api)
 }
 
@@ -840,6 +841,16 @@ func convertPrivateClusterToAPI(v *vlabs.KubernetesConfig, a *KubernetesConfig) 
 			a.PrivateCluster.JumpboxProfile = &PrivateJumpboxProfile{}
 			convertPrivateJumpboxProfileToAPI(v.PrivateCluster.JumpboxProfile, a.PrivateCluster.JumpboxProfile)
 		}
+	}
+}
+
+func convertKubernetesImagesConfigToAPI(v *vlabs.KubernetesConfig, a *KubernetesConfig) {
+	if v.KubernetesImagesConfig != nil {
+		specConfig := convertVLabsKubernetesSpecConfig(v.KubernetesImagesConfig.ImageBaseConfig)
+		a.KubernetesImagesConfig = &KubernetesImagesConfig{
+			ImageBaseConfig: &specConfig,
+		}
+		convertVLabsImageConfig(v.KubernetesImagesConfig, a.KubernetesImagesConfig)
 	}
 }
 
@@ -1289,21 +1300,8 @@ func convertAzureEnvironmentSpecConfig(vlabses *vlabs.AzureEnvironmentSpecConfig
 	api.EndpointConfig = AzureEndpointConfig{
 		ResourceManagerVMDNSSuffix: vlabses.EndpointConfig.ResourceManagerVMDNSSuffix,
 	}
-	api.KubernetesSpecConfig = KubernetesSpecConfig{
-		KubernetesImageBase:              vlabses.KubernetesSpecConfig.KubernetesImageBase,
-		TillerImageBase:                  vlabses.KubernetesSpecConfig.TillerImageBase,
-		ACIConnectorImageBase:            vlabses.KubernetesSpecConfig.ACIConnectorImageBase,
-		NVIDIAImageBase:                  vlabses.KubernetesSpecConfig.NVIDIAImageBase,
-		AzureCNIImageBase:                vlabses.KubernetesSpecConfig.AzureCNIImageBase,
-		CalicoImageBase:                  vlabses.KubernetesSpecConfig.CalicoImageBase,
-		EtcdDownloadURLBase:              vlabses.KubernetesSpecConfig.EtcdDownloadURLBase,
-		KubeBinariesSASURLBase:           vlabses.KubernetesSpecConfig.KubeBinariesSASURLBase,
-		WindowsTelemetryGUID:             vlabses.KubernetesSpecConfig.WindowsTelemetryGUID,
-		CNIPluginsDownloadURL:            vlabses.KubernetesSpecConfig.CNIPluginsDownloadURL,
-		VnetCNILinuxPluginsDownloadURL:   vlabses.KubernetesSpecConfig.VnetCNILinuxPluginsDownloadURL,
-		VnetCNIWindowsPluginsDownloadURL: vlabses.KubernetesSpecConfig.VnetCNIWindowsPluginsDownloadURL,
-		ContainerdDownloadURLBase:        vlabses.KubernetesSpecConfig.ContainerdDownloadURLBase,
-	}
+
+	api.KubernetesSpecConfig = convertVLabsKubernetesSpecConfig(&vlabses.KubernetesSpecConfig)
 	api.OSImageConfig = map[Distro]AzureOSImageConfig{}
 	for k, v := range vlabses.OSImageConfig {
 		api.OSImageConfig[Distro(string(k))] = AzureOSImageConfig{
@@ -1312,5 +1310,35 @@ func convertAzureEnvironmentSpecConfig(vlabses *vlabs.AzureEnvironmentSpecConfig
 			ImagePublisher: v.ImagePublisher,
 			ImageVersion:   v.ImageVersion,
 		}
+	}
+}
+
+func convertVLabsKubernetesSpecConfig(spec *vlabs.KubernetesSpecConfig) KubernetesSpecConfig {
+	if spec != nil {
+		return KubernetesSpecConfig{
+			KubernetesImageBase:       spec.KubernetesImageBase,
+			HyperkubeImageBase:        spec.HyperkubeImageBase,
+			PauseImageBase:            spec.PauseImageBase,
+			TillerImageBase:           spec.TillerImageBase,
+			ACIConnectorImageBase:     spec.ACIConnectorImageBase,
+			NVIDIAImageBase:           spec.NVIDIAImageBase,
+			AzureCNIImageBase:         spec.AzureCNIImageBase,
+			CalicoImageBase:           spec.CalicoImageBase,
+			EtcdDownloadURLBase:       spec.EtcdDownloadURLBase,
+			WindowsBinariesBase:    spec.WindowsBinariesBase,
+			WindowsTelemetryGUID:      spec.WindowsTelemetryGUID,
+			CNIPluginsDownloadURL:     spec.CNIPluginsDownloadURL,
+			AzureCNIURLLinux:          spec.AzureCNIURLLinux,
+			AzureCNIURLWindows:        spec.AzureCNIURLWindows,
+			ContainerdDownloadURLBase: spec.ContainerdDownloadURLBase,
+		}
+	}
+	return KubernetesSpecConfig{}
+}
+
+func convertVLabsImageConfig(vlabs *vlabs.KubernetesImagesConfig, a *KubernetesImagesConfig) {
+	a.ImageConfig = map[string]string{}
+	for key, val := range vlabs.ImageConfig {
+		a.ImageConfig[key] = val
 	}
 }

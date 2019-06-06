@@ -47,18 +47,18 @@ type DCOSSpecConfig struct {
 
 //KubernetesSpecConfig is the kubernetes container images used.
 type KubernetesSpecConfig struct {
-	KubernetesImageBase              string
-	TillerImageBase                  string
-	ACIConnectorImageBase            string
-	NVIDIAImageBase                  string
-	AzureCNIImageBase                string
-	EtcdDownloadURLBase              string
-	KubeBinariesSASURLBase           string
-	WindowsTelemetryGUID             string
-	CNIPluginsDownloadURL            string
-	VnetCNILinuxPluginsDownloadURL   string
-	VnetCNIWindowsPluginsDownloadURL string
-	ContainerdDownloadURLBase        string
+	KubernetesImageBase       string
+	TillerImageBase           string
+	ACIConnectorImageBase     string
+	NVIDIAImageBase           string
+	AzureCNIImageBase         string
+	EtcdDownloadURLBase       string
+	WindowsBinariesBase    string
+	WindowsTelemetryGUID      string
+	CNIPluginsDownloadURL     string
+	AzureCNIURLLinux          string
+	AzureCNIURLWindows        string
+	ContainerdDownloadURLBase string
 }
 
 //AzureEndpointConfig describes an Azure endpoint

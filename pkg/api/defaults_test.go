@@ -653,7 +653,7 @@ func TestKubeletFeatureGatesEnsureFeatureGatesOnAgentsFor1_6_0(t *testing.T) {
 
 	// No KubernetesConfig.KubeletConfig set for MasterProfile or AgentProfile
 	// so they will inherit the top-level config
-	properties.OrchestratorProfile.KubernetesConfig = getKubernetesConfigWithFeatureGates("TopLevel=true")
+	properties.OrchestratorProfile.KubernetesConfig.KubeletConfig = map[string]string{"--feature-gates": "TopLevel=true"}
 
 	mockCS.setKubeletConfig()
 
@@ -675,9 +675,11 @@ func TestKubeletFeatureGatesEnsureMasterAndAgentConfigUsedFor1_6_0(t *testing.T)
 
 	// Set MasterProfile and AgentProfiles KubernetesConfig.KubeletConfig values
 	// Verify that they are used instead of the top-level config
-	properties.OrchestratorProfile.KubernetesConfig = getKubernetesConfigWithFeatureGates("TopLevel=true")
-	properties.MasterProfile = &MasterProfile{KubernetesConfig: getKubernetesConfigWithFeatureGates("MasterLevel=true")}
-	properties.AgentPoolProfiles[0].KubernetesConfig = getKubernetesConfigWithFeatureGates("AgentLevel=true")
+	properties.OrchestratorProfile.KubernetesConfig.KubeletConfig = map[string]string{"--feature-gates": "TopLevel=true"}
+	properties.MasterProfile.KubernetesConfig.KubeletConfig = map[string]string{"--feature-gates": "MasterLevel=true"}
+	properties.AgentPoolProfiles[0].KubernetesConfig = &KubernetesConfig{
+		KubeletConfig: map[string]string{"--feature-gates": "AgentLevel=true"},
+	}
 
 	mockCS.setKubeletConfig()
 
@@ -2021,19 +2023,21 @@ func TestSetCustomCloudProfileDefaults(t *testing.T) {
 		},
 		//KubernetesSpecConfig - Due to Chinese firewall issue, the default containers from google is blocked, use the Chinese local mirror instead
 		KubernetesSpecConfig: KubernetesSpecConfig{
-			KubernetesImageBase:              "KubernetesImageBase",
-			TillerImageBase:                  "TillerImageBase",
-			ACIConnectorImageBase:            "ACIConnectorImageBase",
-			NVIDIAImageBase:                  "NVIDIAImageBase",
-			AzureCNIImageBase:                "AzureCNIImageBase",
-			CalicoImageBase:                  "CalicoImageBase",
-			EtcdDownloadURLBase:              "EtcdDownloadURLBase",
-			KubeBinariesSASURLBase:           "KubeBinariesSASURLBase",
-			WindowsTelemetryGUID:             "WindowsTelemetryGUID",
-			CNIPluginsDownloadURL:            "CNIPluginsDownloadURL",
-			VnetCNILinuxPluginsDownloadURL:   "VnetCNILinuxPluginsDownloadURL",
-			VnetCNIWindowsPluginsDownloadURL: "VnetCNIWindowsPluginsDownloadURL",
-			ContainerdDownloadURLBase:        "ContainerdDownloadURLBase",
+			KubernetesImageBase:       "KubernetesImageBase",
+			HyperkubeImageBase:        "HyperkubeImageBase",
+			PauseImageBase:            "PauseImageBase",
+			TillerImageBase:           "TillerImageBase",
+			ACIConnectorImageBase:     "ACIConnectorImageBase",
+			NVIDIAImageBase:           "NVIDIAImageBase",
+			AzureCNIImageBase:         "AzureCNIImageBase",
+			CalicoImageBase:           "CalicoImageBase",
+			EtcdDownloadURLBase:       "EtcdDownloadURLBase",
+			WindowsBinariesBase:    "WindowsBinariesBase",
+			WindowsTelemetryGUID:      "WindowsTelemetryGUID",
+			CNIPluginsDownloadURL:     "CNIPluginsDownloadURL",
+			AzureCNIURLLinux:          "AzureCNIURLLinux",
+			AzureCNIURLWindows:        "AzureCNIURLWindows",
+			ContainerdDownloadURLBase: "ContainerdDownloadURLBase",
 		},
 		DCOSSpecConfig: DefaultDCOSSpecConfig,
 		EndpointConfig: AzureEndpointConfig{
@@ -2074,16 +2078,16 @@ func TestSetCustomCloudProfileDefaults(t *testing.T) {
 		},
 		//KubernetesSpecConfig - Due to Chinese firewall issue, the default containers from google is blocked, use the Chinese local mirror instead
 		KubernetesSpecConfig: KubernetesSpecConfig{
-			KubernetesImageBase:            "KubernetesImageBase",
-			TillerImageBase:                "TillerImageBase",
-			NVIDIAImageBase:                "NVIDIAImageBase",
-			AzureCNIImageBase:              "AzureCNIImageBase",
-			CalicoImageBase:                "CalicoImageBase",
-			EtcdDownloadURLBase:            "EtcdDownloadURLBase",
-			WindowsTelemetryGUID:           "WindowsTelemetryGUID",
-			CNIPluginsDownloadURL:          "CNIPluginsDownloadURL",
-			VnetCNILinuxPluginsDownloadURL: "VnetCNILinuxPluginsDownloadURL",
-			ContainerdDownloadURLBase:      "ContainerdDownloadURLBase",
+			KubernetesImageBase:       "KubernetesImageBase",
+			TillerImageBase:           "TillerImageBase",
+			NVIDIAImageBase:           "NVIDIAImageBase",
+			AzureCNIImageBase:         "AzureCNIImageBase",
+			CalicoImageBase:           "CalicoImageBase",
+			EtcdDownloadURLBase:       "EtcdDownloadURLBase",
+			WindowsTelemetryGUID:      "WindowsTelemetryGUID",
+			CNIPluginsDownloadURL:     "CNIPluginsDownloadURL",
+			AzureCNIURLLinux:          "AzureCNIURLLinux",
+			ContainerdDownloadURLBase: "ContainerdDownloadURLBase",
 		},
 		DCOSSpecConfig: DefaultDCOSSpecConfig,
 		EndpointConfig: AzureEndpointConfig{
@@ -2109,11 +2113,11 @@ func TestSetCustomCloudProfileDefaults(t *testing.T) {
 	if mockCSCustomP.Properties.CustomCloudProfile.AzureEnvironmentSpecConfig.KubernetesSpecConfig.ACIConnectorImageBase != DefaultKubernetesSpecConfig.ACIConnectorImageBase {
 		t.Errorf("setCustomCloudProfileDefaults(): did not set ACIConnectorImageBase with default Value, got '%s', expected %s", mockCSCustomP.Properties.CustomCloudProfile.AzureEnvironmentSpecConfig.KubernetesSpecConfig.ACIConnectorImageBase, DefaultKubernetesSpecConfig.ACIConnectorImageBase)
 	}
-	if mockCSCustomP.Properties.CustomCloudProfile.AzureEnvironmentSpecConfig.KubernetesSpecConfig.KubeBinariesSASURLBase != DefaultKubernetesSpecConfig.KubeBinariesSASURLBase {
-		t.Errorf("setCustomCloudProfileDefaults(): did not set KubeBinariesSASURLBase with default Value, got '%s', expected %s", mockCSCustomP.Properties.CustomCloudProfile.AzureEnvironmentSpecConfig.KubernetesSpecConfig.KubeBinariesSASURLBase, DefaultKubernetesSpecConfig.KubeBinariesSASURLBase)
+	if mockCSCustomP.Properties.CustomCloudProfile.AzureEnvironmentSpecConfig.KubernetesSpecConfig.WindowsBinariesBase != DefaultKubernetesSpecConfig.WindowsBinariesBase {
+		t.Errorf("setCustomCloudProfileDefaults(): did not set WindowsBinariesBase with default Value, got '%s', expected %s", mockCSCustomP.Properties.CustomCloudProfile.AzureEnvironmentSpecConfig.KubernetesSpecConfig.WindowsBinariesBase, DefaultKubernetesSpecConfig.WindowsBinariesBase)
 	}
-	if mockCSCustomP.Properties.CustomCloudProfile.AzureEnvironmentSpecConfig.KubernetesSpecConfig.VnetCNIWindowsPluginsDownloadURL != DefaultKubernetesSpecConfig.VnetCNIWindowsPluginsDownloadURL {
-		t.Errorf("setCustomCloudProfileDefaults(): did not set VnetCNIWindowsPluginsDownloadURL with default Value, got '%s', expected %s", mockCSCustomP.Properties.CustomCloudProfile.AzureEnvironmentSpecConfig.KubernetesSpecConfig.VnetCNIWindowsPluginsDownloadURL, DefaultKubernetesSpecConfig.VnetCNIWindowsPluginsDownloadURL)
+	if mockCSCustomP.Properties.CustomCloudProfile.AzureEnvironmentSpecConfig.KubernetesSpecConfig.AzureCNIURLWindows != DefaultKubernetesSpecConfig.AzureCNIURLWindows {
+		t.Errorf("setCustomCloudProfileDefaults(): did not set AzureCNIURLWindows with default Value, got '%s', expected %s", mockCSCustomP.Properties.CustomCloudProfile.AzureEnvironmentSpecConfig.KubernetesSpecConfig.AzureCNIURLWindows, DefaultKubernetesSpecConfig.AzureCNIURLWindows)
 	}
 
 	// Test that the default values are set for IdentitySystem and AuthenticationMethod if they are not in the configuration
@@ -2369,9 +2373,16 @@ func getMockAPIProperties(orchestratorVersion string) Properties {
 		ProvisioningState: "",
 		OrchestratorProfile: &OrchestratorProfile{
 			OrchestratorVersion: orchestratorVersion,
-			KubernetesConfig:    &KubernetesConfig{},
+			KubernetesConfig: &KubernetesConfig{
+				KubernetesImagesConfig: &KubernetesImagesConfig{
+					ImageBaseConfig: &KubernetesSpecConfig{},
+					ImageConfig:     map[string]string{},
+				},
+			},
 		},
-		MasterProfile: &MasterProfile{},
+		MasterProfile: &MasterProfile{
+			KubernetesConfig: &KubernetesConfig{},
+		},
 		AgentPoolProfiles: []*AgentPoolProfile{
 			{},
 			{},

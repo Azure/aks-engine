@@ -47,7 +47,7 @@ func TestKubeletConfigDefaults(t *testing.T) {
 		"--node-status-update-frequency":      K8sComponentsByVersionMap[cs.Properties.OrchestratorProfile.OrchestratorVersion]["nodestatusfreq"],
 		"--non-masquerade-cidr":               DefaultKubernetesSubnet,
 		"--pod-manifest-path":                 "/etc/kubernetes/manifests",
-		"--pod-infra-container-image":         cs.Properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBase + K8sComponentsByVersionMap[cs.Properties.OrchestratorProfile.OrchestratorVersion]["pause"],
+		"--pod-infra-container-image":         cs.Properties.OrchestratorProfile.KubernetesConfig.KubernetesImagesConfig.ImageBaseConfig.PauseImageBase + K8sComponentsByVersionMap[cs.Properties.OrchestratorProfile.OrchestratorVersion]["pause"],
 		"--pod-max-pids":                      strconv.Itoa(DefaultKubeletPodMaxPIDs),
 		"--protect-kernel-defaults":           "true",
 		"--rotate-certificates":               "true",
@@ -429,12 +429,10 @@ func TestKubeletIPMasqAgentEnabledOrDisabled(t *testing.T) {
 	// MasterIPMasqAgent disabled, --non-masquerade-cidr should be subnet
 	cs := CreateMockContainerService("testcluster", defaultTestClusterVer, 3, 2, false)
 	b := false
-	cs.Properties.OrchestratorProfile.KubernetesConfig = &KubernetesConfig{
-		Addons: []KubernetesAddon{
-			{
-				Name:    IPMASQAgentAddonName,
-				Enabled: &b,
-			},
+	cs.Properties.OrchestratorProfile.KubernetesConfig.Addons = []KubernetesAddon{
+		{
+			Name:    IPMASQAgentAddonName,
+			Enabled: &b,
 		},
 	}
 	cs.Properties.OrchestratorProfile.KubernetesConfig.ClusterSubnet = subnet
@@ -448,12 +446,10 @@ func TestKubeletIPMasqAgentEnabledOrDisabled(t *testing.T) {
 	// MasterIPMasqAgent enabled, --non-masquerade-cidr should be 0.0.0.0/0
 	cs = CreateMockContainerService("testcluster", defaultTestClusterVer, 3, 2, false)
 	b = true
-	cs.Properties.OrchestratorProfile.KubernetesConfig = &KubernetesConfig{
-		Addons: []KubernetesAddon{
-			{
-				Name:    IPMASQAgentAddonName,
-				Enabled: &b,
-			},
+	cs.Properties.OrchestratorProfile.KubernetesConfig.Addons = []KubernetesAddon{
+		{
+			Name:    IPMASQAgentAddonName,
+			Enabled: &b,
 		},
 	}
 	cs.Properties.OrchestratorProfile.KubernetesConfig.ClusterSubnet = subnet
@@ -477,10 +473,8 @@ func TestEnforceNodeAllocatable(t *testing.T) {
 
 	// Validate that --enforce-node-allocatable is overridable
 	cs = CreateMockContainerService("testcluster", "1.10.13", 3, 2, false)
-	cs.Properties.OrchestratorProfile.KubernetesConfig = &KubernetesConfig{
-		KubeletConfig: map[string]string{
-			"--enforce-node-allocatable": "kube-reserved/system-reserved",
-		},
+	cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig = map[string]string{
+		"--enforce-node-allocatable": "kube-reserved/system-reserved",
 	}
 	cs.setKubeletConfig()
 	k = cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig
