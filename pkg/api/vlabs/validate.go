@@ -214,7 +214,7 @@ func (a *Properties) ValidateOrchestratorProfile(isUpdate bool) error {
 			}
 
 			if o.KubernetesConfig != nil {
-				err := o.KubernetesConfig.Validate(version, a.HasWindows(), a.FeatureFlags.IsFeatureEnabled("EnableIPv6DualStack"))
+				err := o.KubernetesConfig.Validate(version, a.HasWindows(), a.FeatureFlags.IsIPv6DualStackEnabled())
 				if err != nil {
 					return err
 				}
@@ -402,8 +402,13 @@ func (a *Properties) validateAgentPoolProfiles(isUpdate bool) error {
 		}
 
 		// validate os type is linux if dual stack feature is enabled
-		if a.FeatureFlags.IsFeatureEnabled("EnableIPv6DualStack") && agentPoolProfile.OSType == Windows {
-			return errors.Errorf("Dual stack feature is supported only with Linux, but agent pool '%s' is of os type %s", agentPoolProfile.Name, agentPoolProfile.OSType)
+		if a.FeatureFlags.IsIPv6DualStackEnabled() {
+			if agentPoolProfile.OSType == Windows {
+				return errors.Errorf("Dual stack feature is supported only with Linux, but agent pool '%s' is of os type %s", agentPoolProfile.Name, agentPoolProfile.OSType)
+			}
+			if agentPoolProfile.Distro == CoreOS {
+				return errors.Errorf("Dual stack feature is currently supported only with Ubuntu, but agent pool '%s' is of distro type %s", agentPoolProfile.Name, agentPoolProfile.Distro)
+			}
 		}
 
 		// validate that each AgentPoolProfile Name is unique

@@ -815,15 +815,7 @@ func (k *KubernetesConfig) IsRBACEnabled() bool {
 	return false
 }
 
-// IsFeatureEnabled returns true if a feature flag is on for the provided feature
-func (f *FeatureFlags) IsFeatureEnabled(feature string) bool {
-	if f != nil {
-		switch feature {
-		case "EnableIPv6DualStack":
-			return f.EnableIPv6DualStack
-		default:
-			return false
-		}
-	}
-	return false
+// IsIPv6DualStackEnabled checks if IPv6DualStack feature is enabled
+func (f *FeatureFlags) IsIPv6DualStackEnabled() bool {
+	return f != nil && f.EnableIPv6DualStack
 }

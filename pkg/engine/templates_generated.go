@@ -13564,8 +13564,7 @@ write_files:
   content: !!binary |
     {{CloudInitData "aptPreferences"}}
 
-{{if not .IsCoreOS}}
-    {{if IsIPv6DualStackFeatureEnabled}}
+{{if IsIPv6DualStackFeatureEnabled}}
 - path: /etc/systemd/system/dhcpv6.service
   permissions: "0644"
   encoding: gzip
@@ -13579,7 +13578,6 @@ write_files:
   owner: root
   content: !!binary |
     {{CloudInitData "dhcpv6ConfigurationScript"}}
-    {{end}}
 {{end}}
 
 {{if .KubernetesConfig.RequiresDocker}}
@@ -19839,13 +19837,6 @@ var _masterparamsT = []byte(`    "linuxAdminUsername": {
       },
       "type": "string"
     },
-    "masterSubnetIPv6": {
-      "defaultValue": "",
-      "metadata": {
-        "description": "Sets the IPv6 subnet of the master node(s)"
-      },
-      "type": "string"
-    },
   {{else}}
     "masterSubnet": {
       "defaultValue": "{{.MasterProfile.Subnet}}",
@@ -19861,14 +19852,14 @@ var _masterparamsT = []byte(`    "linuxAdminUsername": {
       },
       "type": "string"
     },
-    "masterSubnetIPv6": {
+  {{end}}
+  "masterSubnetIPv6": {
       "defaultValue": "{{.MasterProfile.SubnetIPv6}}",
       "metadata": {
         "description": "Sets the IPv6 subnet of the master node(s)."
       },
       "type": "string"
     },
-  {{end}}
   {{if .MasterProfile.HasAvailabilityZones}}
   "availabilityZones": {
     "metadata": {

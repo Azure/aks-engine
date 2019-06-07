@@ -47,13 +47,6 @@
       },
       "type": "string"
     },
-    "masterSubnetIPv6": {
-      "defaultValue": "",
-      "metadata": {
-        "description": "Sets the IPv6 subnet of the master node(s)"
-      },
-      "type": "string"
-    },
   {{else}}
     "masterSubnet": {
       "defaultValue": "{{.MasterProfile.Subnet}}",
@@ -69,14 +62,14 @@
       },
       "type": "string"
     },
-    "masterSubnetIPv6": {
+  {{end}}
+  "masterSubnetIPv6": {
       "defaultValue": "{{.MasterProfile.SubnetIPv6}}",
       "metadata": {
         "description": "Sets the IPv6 subnet of the master node(s)."
       },
       "type": "string"
     },
-  {{end}}
   {{if .MasterProfile.HasAvailabilityZones}}
   "availabilityZones": {
     "metadata": {
