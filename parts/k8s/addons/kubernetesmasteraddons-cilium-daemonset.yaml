@@ -37,7 +37,7 @@ metadata:
   labels:
     k8s-app: cilium
     kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: "EnsureExists"
+    addonmanager.kubernetes.io/mode: "Reconcile"
   name: cilium
   namespace: kube-system
 spec:
@@ -364,7 +364,7 @@ metadata:
   name: cilium-operator
   namespace: kube-system
   labels:
-    addonmanager.kubernetes.io/mode: "EnsureExists"
+    addonmanager.kubernetes.io/mode: "Reconcile"
 spec:
   replicas: 1
   selector:
@@ -477,14 +477,14 @@ metadata:
   name: cilium-operator
   namespace: kube-system
   labels:
-    addonmanager.kubernetes.io/mode: "EnsureExists"
+    addonmanager.kubernetes.io/mode: "Reconcile"
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   name: cilium-operator
   labels:
-    addonmanager.kubernetes.io/mode: "EnsureExists"
+    addonmanager.kubernetes.io/mode: "Reconcile"
 rules:
 - apiGroups:
   - ""
@@ -518,7 +518,7 @@ kind: ClusterRoleBinding
 metadata:
   name: cilium-operator
   labels:
-    addonmanager.kubernetes.io/mode: "EnsureExists"
+    addonmanager.kubernetes.io/mode: "Reconcile"
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
@@ -533,7 +533,7 @@ kind: ClusterRole
 metadata:
   name: cilium-etcd-operator
   labels:
-    addonmanager.kubernetes.io/mode: "EnsureExists"
+    addonmanager.kubernetes.io/mode: "Reconcile"
 rules:
 - apiGroups:
   - etcd.database.coreos.com
@@ -605,7 +605,7 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
   labels:
-    addonmanager.kubernetes.io/mode: "EnsureExists"
+    addonmanager.kubernetes.io/mode: "Reconcile"
   name: cilium-etcd-operator
 roleRef:
   apiGroup: rbac.authorization.k8s.io
@@ -621,7 +621,7 @@ kind: ClusterRole
 metadata:
   name: etcd-operator
   labels:
-    addonmanager.kubernetes.io/mode: "EnsureExists"
+    addonmanager.kubernetes.io/mode: "Reconcile"
 rules:
 - apiGroups:
   - etcd.database.coreos.com
@@ -676,7 +676,7 @@ kind: ClusterRoleBinding
 metadata:
   name: etcd-operator
   labels:
-    addonmanager.kubernetes.io/mode: "EnsureExists"
+    addonmanager.kubernetes.io/mode: "Reconcile"
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
@@ -692,7 +692,7 @@ metadata:
   name: cilium-etcd-operator
   namespace: kube-system
   labels:
-    addonmanager.kubernetes.io/mode: "EnsureExists"
+    addonmanager.kubernetes.io/mode: "Reconcile"
 ---
 apiVersion: v1
 kind: ServiceAccount
@@ -700,7 +700,7 @@ metadata:
   name: cilium-etcd-sa
   namespace: kube-system
   labels:
-    addonmanager.kubernetes.io/mode: "EnsureExists"
+    addonmanager.kubernetes.io/mode: "Reconcile"
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -708,7 +708,7 @@ metadata:
   labels:
     io.cilium/app: etcd-operator
     name: cilium-etcd-operator
-    addonmanager.kubernetes.io/mode: "EnsureExists"
+    addonmanager.kubernetes.io/mode: "Reconcile"
   name: cilium-etcd-operator
   namespace: kube-system
 spec:
@@ -768,7 +768,7 @@ kind: ClusterRoleBinding
 metadata:
   name: cilium
   labels:
-    addonmanager.kubernetes.io/mode: "EnsureExists"
+    addonmanager.kubernetes.io/mode: "Reconcile"
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
@@ -786,7 +786,7 @@ kind: ClusterRole
 metadata:
   name: cilium
   labels:
-    addonmanager.kubernetes.io/mode: "EnsureExists"
+    addonmanager.kubernetes.io/mode: "Reconcile"
 rules:
 - apiGroups:
   - networking.k8s.io
@@ -853,4 +853,4 @@ metadata:
   name: cilium
   namespace: kube-system
   labels:
-    addonmanager.kubernetes.io/mode: "EnsureExists"
+    addonmanager.kubernetes.io/mode: "Reconcile"

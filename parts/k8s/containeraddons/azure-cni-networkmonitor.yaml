@@ -5,7 +5,7 @@ metadata:
   namespace: kube-system
   labels:
     app: azure-cnms
-    addonmanager.kubernetes.io/mode: EnsureExists
+    addonmanager.kubernetes.io/mode: Reconcile
 spec:
   selector:
     matchLabels:
