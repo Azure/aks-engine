@@ -2032,7 +2032,7 @@ func TestSetCustomCloudProfileDefaults(t *testing.T) {
 			AzureCNIImageBase:         "AzureCNIImageBase",
 			CalicoImageBase:           "CalicoImageBase",
 			EtcdDownloadURLBase:       "EtcdDownloadURLBase",
-			WindowsBinariesBase:    "WindowsBinariesBase",
+			WindowsBinariesBase:       "WindowsBinariesBase",
 			WindowsTelemetryGUID:      "WindowsTelemetryGUID",
 			CNIPluginsDownloadURL:     "CNIPluginsDownloadURL",
 			AzureCNIURLLinux:          "AzureCNIURLLinux",

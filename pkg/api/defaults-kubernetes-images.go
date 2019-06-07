@@ -103,7 +103,7 @@ func getImageBaseConfigFromCloudSpecConfig(imageConfigFromCloud KubernetesSpecCo
 		CalicoImageBase:           imageConfigFromCloud.CalicoImageBase,
 		AzureCNIImageBase:         imageConfigFromCloud.AzureCNIImageBase,
 		EtcdDownloadURLBase:       imageConfigFromCloud.EtcdDownloadURLBase,
-		WindowsBinariesBase:    imageConfigFromCloud.WindowsBinariesBase,
+		WindowsBinariesBase:       imageConfigFromCloud.WindowsBinariesBase,
 		WindowsTelemetryGUID:      imageConfigFromCloud.WindowsTelemetryGUID,
 		CNIPluginsDownloadURL:     imageConfigFromCloud.CNIPluginsDownloadURL,
 		AzureCNIURLLinux:          imageConfigFromCloud.AzureCNIURLLinux,

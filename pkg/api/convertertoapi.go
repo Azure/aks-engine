@@ -1325,7 +1325,7 @@ func convertVLabsKubernetesSpecConfig(spec *vlabs.KubernetesSpecConfig) Kubernet
 			AzureCNIImageBase:         spec.AzureCNIImageBase,
 			CalicoImageBase:           spec.CalicoImageBase,
 			EtcdDownloadURLBase:       spec.EtcdDownloadURLBase,
-			WindowsBinariesBase:    spec.WindowsBinariesBase,
+			WindowsBinariesBase:       spec.WindowsBinariesBase,
 			WindowsTelemetryGUID:      spec.WindowsTelemetryGUID,
 			CNIPluginsDownloadURL:     spec.CNIPluginsDownloadURL,
 			AzureCNIURLLinux:          spec.AzureCNIURLLinux,
