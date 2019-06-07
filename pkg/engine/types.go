@@ -53,7 +53,7 @@ type KubernetesSpecConfig struct {
 	NVIDIAImageBase           string
 	AzureCNIImageBase         string
 	EtcdDownloadURLBase       string
-	WindowsBinariesBase    string
+	WindowsBinariesBase       string
 	WindowsTelemetryGUID      string
 	CNIPluginsDownloadURL     string
 	AzureCNIURLLinux          string
