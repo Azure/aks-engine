@@ -2391,12 +2391,6 @@ func getMockAPIProperties(orchestratorVersion string) Properties {
 		}}
 }
 
-func getKubernetesConfigWithFeatureGates(featureGates string) *KubernetesConfig {
-	return &KubernetesConfig{
-		KubeletConfig: map[string]string{"--feature-gates": featureGates},
-	}
-}
-
 func TestDefaultEnablePodSecurityPolicy(t *testing.T) {
 	cases := []struct {
 		name     string
