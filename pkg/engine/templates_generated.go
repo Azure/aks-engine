@@ -6698,7 +6698,7 @@ metadata:
   namespace: kube-system
   labels:
     kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: "Reconcile"
+    addonmanager.kubernetes.io/mode: "EnsureExists"
 data:
   cni_network_config: |-
     {
@@ -8237,7 +8237,7 @@ metadata:
   labels:
     k8s-app: cilium
     kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: "EnsureExists"
+    addonmanager.kubernetes.io/mode: "Reconcile"
   name: cilium
   namespace: kube-system
 spec:
@@ -8564,7 +8564,7 @@ metadata:
   name: cilium-operator
   namespace: kube-system
   labels:
-    addonmanager.kubernetes.io/mode: "EnsureExists"
+    addonmanager.kubernetes.io/mode: "Reconcile"
 spec:
   replicas: 1
   selector:
@@ -8677,14 +8677,14 @@ metadata:
   name: cilium-operator
   namespace: kube-system
   labels:
-    addonmanager.kubernetes.io/mode: "EnsureExists"
+    addonmanager.kubernetes.io/mode: "Reconcile"
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   name: cilium-operator
   labels:
-    addonmanager.kubernetes.io/mode: "EnsureExists"
+    addonmanager.kubernetes.io/mode: "Reconcile"
 rules:
 - apiGroups:
   - ""
@@ -8718,7 +8718,7 @@ kind: ClusterRoleBinding
 metadata:
   name: cilium-operator
   labels:
-    addonmanager.kubernetes.io/mode: "EnsureExists"
+    addonmanager.kubernetes.io/mode: "Reconcile"
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
@@ -8733,7 +8733,7 @@ kind: ClusterRole
 metadata:
   name: cilium-etcd-operator
   labels:
-    addonmanager.kubernetes.io/mode: "EnsureExists"
+    addonmanager.kubernetes.io/mode: "Reconcile"
 rules:
 - apiGroups:
   - etcd.database.coreos.com
@@ -8805,7 +8805,7 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
   labels:
-    addonmanager.kubernetes.io/mode: "EnsureExists"
+    addonmanager.kubernetes.io/mode: "Reconcile"
   name: cilium-etcd-operator
 roleRef:
   apiGroup: rbac.authorization.k8s.io
@@ -8821,7 +8821,7 @@ kind: ClusterRole
 metadata:
   name: etcd-operator
   labels:
-    addonmanager.kubernetes.io/mode: "EnsureExists"
+    addonmanager.kubernetes.io/mode: "Reconcile"
 rules:
 - apiGroups:
   - etcd.database.coreos.com
@@ -8876,7 +8876,7 @@ kind: ClusterRoleBinding
 metadata:
   name: etcd-operator
   labels:
-    addonmanager.kubernetes.io/mode: "EnsureExists"
+    addonmanager.kubernetes.io/mode: "Reconcile"
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
@@ -8892,7 +8892,7 @@ metadata:
   name: cilium-etcd-operator
   namespace: kube-system
   labels:
-    addonmanager.kubernetes.io/mode: "EnsureExists"
+    addonmanager.kubernetes.io/mode: "Reconcile"
 ---
 apiVersion: v1
 kind: ServiceAccount
@@ -8900,7 +8900,7 @@ metadata:
   name: cilium-etcd-sa
   namespace: kube-system
   labels:
-    addonmanager.kubernetes.io/mode: "EnsureExists"
+    addonmanager.kubernetes.io/mode: "Reconcile"
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -8908,7 +8908,7 @@ metadata:
   labels:
     io.cilium/app: etcd-operator
     name: cilium-etcd-operator
-    addonmanager.kubernetes.io/mode: "EnsureExists"
+    addonmanager.kubernetes.io/mode: "Reconcile"
   name: cilium-etcd-operator
   namespace: kube-system
 spec:
@@ -8968,7 +8968,7 @@ kind: ClusterRoleBinding
 metadata:
   name: cilium
   labels:
-    addonmanager.kubernetes.io/mode: "EnsureExists"
+    addonmanager.kubernetes.io/mode: "Reconcile"
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
@@ -8986,7 +8986,7 @@ kind: ClusterRole
 metadata:
   name: cilium
   labels:
-    addonmanager.kubernetes.io/mode: "EnsureExists"
+    addonmanager.kubernetes.io/mode: "Reconcile"
 rules:
 - apiGroups:
   - networking.k8s.io
@@ -9053,7 +9053,7 @@ metadata:
   name: cilium
   namespace: kube-system
   labels:
-    addonmanager.kubernetes.io/mode: "EnsureExists"`)
+    addonmanager.kubernetes.io/mode: "Reconcile"`)
 
 func k8sAddonsKubernetesmasteraddonsCiliumDaemonsetYamlBytes() ([]byte, error) {
 	return _k8sAddonsKubernetesmasteraddonsCiliumDaemonsetYaml, nil
@@ -9129,7 +9129,7 @@ metadata:
   name: flannel
   namespace: kube-system
   labels:
-    addonmanager.kubernetes.io/mode: EnsureExists
+    addonmanager.kubernetes.io/mode: Reconcile
 ---
 kind: ConfigMap
 apiVersion: v1
@@ -9165,7 +9165,7 @@ metadata:
   labels:
     tier: node
     app: flannel
-    addonmanager.kubernetes.io/mode: EnsureExists
+    addonmanager.kubernetes.io/mode: Reconcile
 spec:
   template:
     metadata:
@@ -9238,7 +9238,7 @@ apiVersion: rbac.authorization.k8s.io/v1beta1
 metadata:
   name: flannel
   labels:
-    addonmanager.kubernetes.io/mode: EnsureExists
+    addonmanager.kubernetes.io/mode: Reconcile
 rules:
   - apiGroups:
       - ""
@@ -9265,7 +9265,7 @@ apiVersion: rbac.authorization.k8s.io/v1beta1
 metadata:
   name: flannel
   labels:
-    addonmanager.kubernetes.io/mode: EnsureExists
+    addonmanager.kubernetes.io/mode: Reconcile
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
@@ -9743,7 +9743,7 @@ metadata:
   annotations:
     seccomp.security.alpha.kubernetes.io/allowedProfileNames: "*"
   labels:
-    addonmanager.kubernetes.io/mode: EnsureExists
+    addonmanager.kubernetes.io/mode: Reconcile
 spec:
   privileged: true
   allowPrivilegeEscalation: true
@@ -9776,7 +9776,7 @@ metadata:
     seccomp.security.alpha.kubernetes.io/defaultProfileName:  docker/default
     apparmor.security.beta.kubernetes.io/defaultProfileName:  runtime/default
   labels:
-    addonmanager.kubernetes.io/mode: EnsureExists
+    addonmanager.kubernetes.io/mode: Reconcile
 spec:
   privileged: false
   allowPrivilegeEscalation: false
@@ -9815,7 +9815,7 @@ kind: ClusterRole
 metadata:
   name: psp:privileged
   labels:
-    addonmanager.kubernetes.io/mode: EnsureExists
+    addonmanager.kubernetes.io/mode: Reconcile
 rules:
 - apiGroups: ['extensions']
   resources: ['podsecuritypolicies']
@@ -9828,7 +9828,7 @@ kind: ClusterRole
 metadata:
   name: psp:restricted
   labels:
-    addonmanager.kubernetes.io/mode: EnsureExists
+    addonmanager.kubernetes.io/mode: Reconcile
 rules:
 - apiGroups: ['extensions']
   resources: ['podsecuritypolicies']
@@ -9841,7 +9841,7 @@ kind: ClusterRoleBinding
 metadata:
   name: default:restricted
   labels:
-    addonmanager.kubernetes.io/mode: EnsureExists
+    addonmanager.kubernetes.io/mode: Reconcile
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
@@ -9857,7 +9857,7 @@ metadata:
   name: default:privileged
   namespace: kube-system
   labels:
-    addonmanager.kubernetes.io/mode: EnsureExists
+    addonmanager.kubernetes.io/mode: Reconcile
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
@@ -11253,22 +11253,16 @@ installContainerRuntime() {
 }
 
 installMoby() {
-    CURRENT_VERSION=$(dockerd --version | grep "Docker version" | cut -d "," -f 1 | cut -d " " -f 3)
-    if [[ "$CURRENT_VERSION" == "${MOBY_VERSION}" ]]; then
-        echo "dockerd $MOBY_VERSION is already installed, skipping Moby download"
-    else
-        removeMoby
-        retrycmd_if_failure_no_stats 120 5 25 curl https://packages.microsoft.com/config/ubuntu/${UBUNTU_RELEASE}/prod.list > /tmp/microsoft-prod.list || exit $ERR_MOBY_APT_LIST_TIMEOUT
-        retrycmd_if_failure 10 5 10 cp /tmp/microsoft-prod.list /etc/apt/sources.list.d/ || exit $ERR_MOBY_APT_LIST_TIMEOUT
-        retrycmd_if_failure_no_stats 120 5 25 curl https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > /tmp/microsoft.gpg || exit $ERR_MS_GPG_KEY_DOWNLOAD_TIMEOUT
-        retrycmd_if_failure 10 5 10 cp /tmp/microsoft.gpg /etc/apt/trusted.gpg.d/ || exit $ERR_MS_GPG_KEY_DOWNLOAD_TIMEOUT
-        apt_get_update || exit $ERR_APT_UPDATE_TIMEOUT
-        MOBY_CLI=${MOBY_VERSION}
-        if [[ "${MOBY_CLI}" == "3.0.4" ]]; then
-            MOBY_CLI="3.0.3"
-        fi
-        apt_get_install 20 30 120 moby-engine=${MOBY_VERSION} moby-cli=${MOBY_CLI} --allow-downgrades || exit $ERR_MOBY_INSTALL_TIMEOUT
-    fi
+    removeMoby
+    mkdir -p /tmp/moby
+    mkdir -p /tmp/moby-cli
+    retrycmd_if_failure_no_stats 120 5 25 curl "https://moby.blob.core.windows.net/moby/3.0.6/amd64/artifacts.tgz" > /tmp/moby/artifacts.tgz || exit $ERR_MOBY_APT_LIST_TIMEOUT
+    retrycmd_if_failure_no_stats 120 5 25 curl "https://moby.blob.core.windows.net/moby/3.0.6/amd64/artifacts.cli.tgz" > /tmp/moby-cli/artifacts.tgz || exit $ERR_MOBY_APT_LIST_TIMEOUT
+    retrycmd_if_failure_no_stats 120 5 25 tar -xvzf /tmp/moby/artifacts.tgz -C /tmp/moby/
+    retrycmd_if_failure_no_stats 120 5 25 tar -xvzf /tmp/moby-cli/artifacts.tgz -C /tmp/moby-cli/
+    retrycmd_if_failure_no_stats 120 5 25 dpkg -i /tmp/moby/bundles/debbuild/ubuntu-xenial/moby-engine_3.0.6_amd64.deb
+    retrycmd_if_failure_no_stats 120 5 25 dpkg -i /tmp/moby-cli/bundles/debbuild/ubuntu-xenial/moby-cli_3.0.6_amd64.deb
+    retrycmd_if_failure_no_stats 120 5 25 apt-get install -f
 }
 
 installKataContainersRuntime() {
@@ -14175,7 +14169,7 @@ metadata:
   namespace: kube-system
   labels:
     app: azure-cnms
-    addonmanager.kubernetes.io/mode: EnsureExists
+    addonmanager.kubernetes.io/mode: Reconcile
 spec:
   selector:
     matchLabels:
@@ -14398,7 +14392,7 @@ metadata:
   namespace: default
   labels:
     kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: EnsureExists
+    addonmanager.kubernetes.io/mode: Reconcile
 ---
 apiVersion: apiextensions.k8s.io/v1beta1
 kind: CustomResourceDefinition
@@ -14406,7 +14400,7 @@ metadata:
   name: azureassignedidentities.aadpodidentity.k8s.io
   labels:
     kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: EnsureExists
+    addonmanager.kubernetes.io/mode: Reconcile
 spec:
   group: aadpodidentity.k8s.io
   version: v1
@@ -14421,7 +14415,7 @@ metadata:
   name: azureidentitybindings.aadpodidentity.k8s.io
   labels:
     kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: EnsureExists
+    addonmanager.kubernetes.io/mode: Reconcile
 spec:
   group: aadpodidentity.k8s.io
   version: v1
@@ -14436,7 +14430,7 @@ metadata:
   name: azureidentities.aadpodidentity.k8s.io
   labels:
     kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: EnsureExists
+    addonmanager.kubernetes.io/mode: Reconcile
 spec:
   group: aadpodidentity.k8s.io
   version: v1
@@ -14452,7 +14446,7 @@ metadata:
   name: aad-pod-id-nmi-role
   labels:
     kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: EnsureExists
+    addonmanager.kubernetes.io/mode: Reconcile
 rules:
 - apiGroups: ["*"]
   resources: ["*"]
@@ -14464,7 +14458,7 @@ metadata:
   name: aad-pod-id-nmi-binding
   labels:
     kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: EnsureExists
+    addonmanager.kubernetes.io/mode: Reconcile
     k8s-app: aad-pod-id-nmi-binding
 subjects:
 - kind: ServiceAccount
@@ -14480,7 +14474,7 @@ kind: DaemonSet
 metadata:
   labels:
     kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: EnsureExists
+    addonmanager.kubernetes.io/mode: Reconcile
     component: nmi
     tier: node
     k8s-app: aad-pod-id
@@ -14533,7 +14527,7 @@ metadata:
   namespace: default
   labels:
     kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: EnsureExists
+    addonmanager.kubernetes.io/mode: Reconcile
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
@@ -14541,7 +14535,7 @@ metadata:
   name: aad-pod-id-mic-role
   labels:
     kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: EnsureExists
+    addonmanager.kubernetes.io/mode: Reconcile
 rules:
 - apiGroups: ["apiextensions.k8s.io"]
   resources: ["customresourcedefinitions"]
@@ -14565,7 +14559,7 @@ metadata:
   name: aad-pod-id-mic-binding
   labels:
     kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: EnsureExists
+    addonmanager.kubernetes.io/mode: Reconcile
     k8s-app: aad-pod-id-mic-binding
 subjects:
 - kind: ServiceAccount
@@ -14583,7 +14577,7 @@ metadata:
     component: mic
     k8s-app: aad-pod-id
     kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: EnsureExists
+    addonmanager.kubernetes.io/mode: Reconcile
   name: mic
   namespace: default
 spec:
@@ -14639,7 +14633,7 @@ metadata:
   namespace: kube-system
   labels:
     kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: EnsureExists
+    addonmanager.kubernetes.io/mode: Reconcile
 ---
 apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: ClusterRole
@@ -14648,7 +14642,7 @@ metadata:
   labels:
     app: aci-connector
     kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: EnsureExists
+    addonmanager.kubernetes.io/mode: Reconcile
 rules:
 - apiGroups:
   - ""
@@ -14671,7 +14665,7 @@ metadata:
   name: aci-connector
   labels:
     kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: EnsureExists
+    addonmanager.kubernetes.io/mode: Reconcile
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
@@ -14688,7 +14682,7 @@ metadata:
   namespace: kube-system
   labels:
     kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: EnsureExists
+    addonmanager.kubernetes.io/mode: Reconcile
 type: Opaque
 data:
   credentials.json: <creds>
@@ -14704,7 +14698,7 @@ metadata:
     app: aci-connector
     name: aci-connector
     kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: EnsureExists
+    addonmanager.kubernetes.io/mode: Reconcile
 spec:
   replicas: 1
   template:
@@ -14775,7 +14769,7 @@ metadata:
   name: azure-npm
   namespace: kube-system
   labels:
-    addonmanager.kubernetes.io/mode: EnsureExists
+    addonmanager.kubernetes.io/mode: Reconcile
 ---
 apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: ClusterRole
@@ -14783,7 +14777,7 @@ metadata:
   name: azure-npm
   namespace: kube-system
   labels:
-    addonmanager.kubernetes.io/mode: EnsureExists
+    addonmanager.kubernetes.io/mode: Reconcile
 rules:
   - apiGroups:
     - ""
@@ -14810,7 +14804,7 @@ metadata:
   name: azure-npm-binding
   namespace: kube-system
   labels:
-    addonmanager.kubernetes.io/mode: EnsureExists
+    addonmanager.kubernetes.io/mode: Reconcile
 subjects:
   - kind: ServiceAccount
     name: azure-npm
@@ -14827,7 +14821,7 @@ metadata:
   namespace: kube-system
   labels:
     app: azure-npm
-    addonmanager.kubernetes.io/mode: EnsureExists
+    addonmanager.kubernetes.io/mode: Reconcile
 spec:
   selector:
     matchLabels:
@@ -14998,7 +14992,7 @@ kind: CustomResourceDefinition
 metadata:
   name: felixconfigurations.crd.projectcalico.org
   labels:
-    addonmanager.kubernetes.io/mode: "EnsureExists"
+    addonmanager.kubernetes.io/mode: "Reconcile"
 spec:
   scope: Cluster
   group: crd.projectcalico.org
@@ -15014,7 +15008,7 @@ kind: CustomResourceDefinition
 metadata:
   name: bgpconfigurations.crd.projectcalico.org
   labels:
-    addonmanager.kubernetes.io/mode: "EnsureExists"
+    addonmanager.kubernetes.io/mode: "Reconcile"
 spec:
   scope: Cluster
   group: crd.projectcalico.org
@@ -15030,7 +15024,7 @@ kind: CustomResourceDefinition
 metadata:
   name: ippools.crd.projectcalico.org
   labels:
-    addonmanager.kubernetes.io/mode: "EnsureExists"
+    addonmanager.kubernetes.io/mode: "Reconcile"
 spec:
   scope: Cluster
   group: crd.projectcalico.org
@@ -15046,7 +15040,7 @@ kind: CustomResourceDefinition
 metadata:
   name: hostendpoints.crd.projectcalico.org
   labels:
-    addonmanager.kubernetes.io/mode: "EnsureExists"
+    addonmanager.kubernetes.io/mode: "Reconcile"
 spec:
   scope: Cluster
   group: crd.projectcalico.org
@@ -15062,7 +15056,7 @@ kind: CustomResourceDefinition
 metadata:
   name: clusterinformations.crd.projectcalico.org
   labels:
-    addonmanager.kubernetes.io/mode: "EnsureExists"
+    addonmanager.kubernetes.io/mode: "Reconcile"
 spec:
   scope: Cluster
   group: crd.projectcalico.org
@@ -15078,7 +15072,7 @@ kind: CustomResourceDefinition
 metadata:
   name: globalnetworkpolicies.crd.projectcalico.org
   labels:
-    addonmanager.kubernetes.io/mode: "EnsureExists"
+    addonmanager.kubernetes.io/mode: "Reconcile"
 spec:
   scope: Cluster
   group: crd.projectcalico.org
@@ -15094,7 +15088,7 @@ kind: CustomResourceDefinition
 metadata:
   name: globalnetworksets.crd.projectcalico.org
   labels:
-    addonmanager.kubernetes.io/mode: "EnsureExists"
+    addonmanager.kubernetes.io/mode: "Reconcile"
 spec:
   scope: Cluster
   group: crd.projectcalico.org
@@ -15110,7 +15104,7 @@ kind: CustomResourceDefinition
 metadata:
   name: networkpolicies.crd.projectcalico.org
   labels:
-    addonmanager.kubernetes.io/mode: "EnsureExists"
+    addonmanager.kubernetes.io/mode: "Reconcile"
 spec:
   scope: Namespaced
   group: crd.projectcalico.org
@@ -15126,7 +15120,7 @@ kind: CustomResourceDefinition
 metadata:
   name: networksets.crd.projectcalico.org
   labels:
-    addonmanager.kubernetes.io/mode: "EnsureExists"
+    addonmanager.kubernetes.io/mode: "Reconcile"
 spec:
   scope: Namespaced
   group: crd.projectcalico.org
@@ -15145,7 +15139,7 @@ apiVersion: rbac.authorization.k8s.io/v1beta1
 metadata:
   name: calico-node
   labels:
-    addonmanager.kubernetes.io/mode: "EnsureExists"
+    addonmanager.kubernetes.io/mode: "Reconcile"
 rules:
 # The CNI plugin needs to get pods, nodes, and namespaces.
 - apiGroups: [""]
@@ -15248,7 +15242,7 @@ metadata:
   name: calico-node
   labels:
     kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: "EnsureExists"
+    addonmanager.kubernetes.io/mode: "Reconcile"
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
@@ -15270,7 +15264,7 @@ metadata:
   namespace: kube-system
   labels:
     k8s-app: calico-typha
-    addonmanager.kubernetes.io/mode: "EnsureExists"
+    addonmanager.kubernetes.io/mode: "Reconcile"
 spec:
   ports:
   - port: 5473
@@ -15290,7 +15284,7 @@ metadata:
   namespace: kube-system
   labels:
     k8s-app: calico-typha
-    addonmanager.kubernetes.io/mode: "EnsureExists"
+    addonmanager.kubernetes.io/mode: "Reconcile"
 spec:
   # Number of Typha replicas.  To enable Typha, set this to a non-zero value *and* set the
   # typha_service_name variable in the calico-config ConfigMap above.
@@ -15381,7 +15375,7 @@ metadata:
   namespace: kube-system
   labels:
     k8s-app: calico-node
-    addonmanager.kubernetes.io/mode: "EnsureExists"
+    addonmanager.kubernetes.io/mode: "Reconcile"
 spec:
   selector:
     matchLabels:
@@ -15564,7 +15558,7 @@ metadata:
   name: calico-node
   namespace: kube-system
   labels:
-    addonmanager.kubernetes.io/mode: "EnsureExists"
+    addonmanager.kubernetes.io/mode: "Reconcile"
 ---
 
 # Typha Horizontal Autoscaler ConfigMap
@@ -15604,7 +15598,7 @@ metadata:
   labels:
     k8s-app: calico-typha-autoscaler
     kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: "EnsureExists"
+    addonmanager.kubernetes.io/mode: "Reconcile"
 spec:
   replicas: 1
   template:
@@ -15643,7 +15637,7 @@ metadata:
   name: typha-cpha
   labels:
     kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: "EnsureExists"
+    addonmanager.kubernetes.io/mode: "Reconcile"
 rules:
 - apiGroups: [""]
   resources: ["nodes"]
@@ -15658,7 +15652,7 @@ metadata:
   name: typha-cpha
   labels:
     kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: "EnsureExists"
+    addonmanager.kubernetes.io/mode: "Reconcile"
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
@@ -15677,7 +15671,7 @@ metadata:
   namespace: kube-system
   labels:
     kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: "EnsureExists"
+    addonmanager.kubernetes.io/mode: "Reconcile"
 rules:
 - apiGroups: [""]
   resources: ["configmaps"]
@@ -15696,7 +15690,7 @@ metadata:
   namespace: kube-system
   labels:
     kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: "EnsureExists"
+    addonmanager.kubernetes.io/mode: "Reconcile"
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
@@ -16166,7 +16160,7 @@ metadata:
   labels:
     app: keyvault-flexvolume
     kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: EnsureExists
+    addonmanager.kubernetes.io/mode: Reconcile
   name: keyvault-flexvolume
   namespace: kube-system
 spec:
@@ -16175,7 +16169,7 @@ spec:
       labels:
         app: keyvault-flexvolume
         kubernetes.io/cluster-service: "true"
-        addonmanager.kubernetes.io/mode: EnsureExists
+        addonmanager.kubernetes.io/mode: Reconcile
     spec:
       tolerations:
       containers:
@@ -16426,7 +16420,7 @@ metadata:
   namespace: kube-system
   labels:
     kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: EnsureExists
+    addonmanager.kubernetes.io/mode: Reconcile
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
@@ -16434,7 +16428,7 @@ metadata:
   name: system:metrics-server
   labels:
     kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: EnsureExists
+    addonmanager.kubernetes.io/mode: Reconcile
 rules:
 - apiGroups:
   - ""
@@ -16461,7 +16455,7 @@ metadata:
   name: system:metrics-server
   labels:
     kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: EnsureExists
+    addonmanager.kubernetes.io/mode: Reconcile
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
@@ -16478,7 +16472,7 @@ metadata:
   namespace: kube-system
   labels:
     kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: EnsureExists
+    addonmanager.kubernetes.io/mode: Reconcile
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
@@ -16494,7 +16488,7 @@ metadata:
   name: metrics-server:system:auth-delegator
   labels:
     kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: EnsureExists
+    addonmanager.kubernetes.io/mode: Reconcile
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
@@ -16510,7 +16504,7 @@ metadata:
   name: metrics-server
   namespace: kube-system
   labels:
-    addonmanager.kubernetes.io/mode: EnsureExists
+    addonmanager.kubernetes.io/mode: Reconcile
     kubernetes.io/name: "Metrics-server"
     kubernetes.io/cluster-service: "true"
 spec:
@@ -16557,7 +16551,7 @@ metadata:
   name: v1beta1.metrics.k8s.io
   labels:
     kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: EnsureExists
+    addonmanager.kubernetes.io/mode: Reconcile
 spec:
   service:
     name: metrics-server
@@ -17241,7 +17235,7 @@ metadata:
   namespace: kube-system
   labels:
     kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: EnsureExists
+    addonmanager.kubernetes.io/mode: Reconcile
 ---
 apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: ClusterRoleBinding
@@ -17249,7 +17243,7 @@ metadata:
   name: tiller
   labels:
     kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: EnsureExists
+    addonmanager.kubernetes.io/mode: Reconcile
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
@@ -17266,7 +17260,7 @@ metadata:
     app: helm
     name: tiller
     kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: EnsureExists
+    addonmanager.kubernetes.io/mode: Reconcile
   name: tiller-deploy
   namespace: kube-system
 spec:
@@ -17286,7 +17280,7 @@ metadata:
     app: helm
     name: tiller
     kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: EnsureExists
+    addonmanager.kubernetes.io/mode: Reconcile
   name: tiller-deploy
   namespace: kube-system
 spec:
