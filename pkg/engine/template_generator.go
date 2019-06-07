@@ -631,6 +631,14 @@ func (t *TemplateGenerator) getTemplateFuncMap(cs *api.ContainerService) templat
 		"IsCustomVNET": func() bool {
 			return cs.Properties.AreAgentProfilesCustomVNET()
 		},
+		"GetEscapedEnvironmentJSON": func() string {
+			customEnvironmentJSON, _ := cs.Properties.GetCustomEnvironmentJSON(false)
+			customEnvironmentJSON = strings.Replace(customEnvironmentJSON, `"`, `""`, -1)
+			return customEnvironmentJSON
+		},
+		"IsIdentitySystemADFS": func() bool {
+			return cs.Properties.IsAzureStackCloud() && cs.Properties.CustomCloudProfile.IdentitySystem == api.ADFSIdentitySystem
+		},
 	}
 }
 

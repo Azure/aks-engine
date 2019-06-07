@@ -18118,7 +18118,11 @@ param(
 
     [parameter(Mandatory=$true)]
     [ValidateNotNullOrEmpty()]
-    $AADClientSecret # base64
+    $AADClientSecret, # base64
+
+    [parameter(Mandatory=$true)]
+    [ValidateNotNullOrEmpty()]
+    $TargetEnvironment
 )
 
 
@@ -18143,7 +18147,11 @@ $global:DockerVersion = "{{WrapAsParameter "windowsDockerVersion"}}"
 
 ## VM configuration passed by Azure
 $global:WindowsTelemetryGUID = "{{WrapAsParameter "windowsTelemetryGUID"}}"
+{{if IsIdentitySystemADFS}}
+$global:TenantId = "adfs"
+{{else}}
 $global:TenantId = "{{WrapAsVariable "tenantID"}}"
+{{end}}
 $global:SubscriptionId = "{{WrapAsVariable "subscriptionId"}}"
 $global:ResourceGroup = "{{WrapAsVariable "resourceGroup"}}"
 $global:VmType = "{{WrapAsVariable "vmType"}}"
@@ -18270,7 +18278,13 @@ try
             -UserAssignedClientID $global:UserAssignedClientID ` + "`" + `
             -UseInstanceMetadata $global:UseInstanceMetadata ` + "`" + `
             -LoadBalancerSku $global:LoadBalancerSku ` + "`" + `
-            -ExcludeMasterFromStandardLB $global:ExcludeMasterFromStandardLB
+            -ExcludeMasterFromStandardLB $global:ExcludeMasterFromStandardLB ` + "`" + `
+            -TargetEnvironment $TargetEnvironment
+
+        {{if IsAzureStackCloud}}
+        $azureStackConfigFile = [io.path]::Combine($global:KubeDir, "azurestackcloud.json")
+        "{{ GetEscapedEnvironmentJSON }}" | Out-File -encoding ASCII -filepath "$azureStackConfigFile"
+        {{end}}
 
         Write-Log "Write ca root"
         Write-CACert -CACertificate $global:CACertificate ` + "`" + `
@@ -19052,7 +19066,9 @@ Write-AzureConfig {
         [Parameter(Mandatory = $true)][string]
         $ExcludeMasterFromStandardLB,
         [Parameter(Mandatory = $true)][string]
-        $KubeDir
+        $KubeDir,
+        [Parameter(Mandatory = $true)][string]
+        $TargetEnvironment
     )
 
     if ( -Not $PrimaryAvailabilitySetName -And -Not $PrimaryScaleSetName ) {
@@ -19063,6 +19079,7 @@ Write-AzureConfig {
 
     $azureConfig = @"
 {
+    "cloud": "$TargetEnvironment",
     "tenantId": "$TenantId",
     "subscriptionId": "$SubscriptionId",
     "aadClientId": "$AADClientId",
@@ -19536,6 +19553,8 @@ Update-CNIConfig(` + "`" + `$podCIDR, ` + "`" + `$masterSubnetGW)
 
 try
 {
+    ` + "`" + `$env:AZURE_ENVIRONMENT_FILEPATH="c:\k\azurestackcloud.json"
+
     ` + "`" + `$masterSubnetGW = Get-DefaultGateway ` + "`" + `$global:MasterSubnet
     ` + "`" + `$podCIDR=Get-PodCIDR
     ` + "`" + `$podCidrDiscovered=Test-PodCIDR(` + "`" + `$podCIDR)

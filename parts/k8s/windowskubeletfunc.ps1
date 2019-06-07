@@ -39,7 +39,9 @@ Write-AzureConfig {
         [Parameter(Mandatory = $true)][string]
         $ExcludeMasterFromStandardLB,
         [Parameter(Mandatory = $true)][string]
-        $KubeDir
+        $KubeDir,
+        [Parameter(Mandatory = $true)][string]
+        $TargetEnvironment
     )
 
     if ( -Not $PrimaryAvailabilitySetName -And -Not $PrimaryScaleSetName ) {
@@ -50,6 +52,7 @@ Write-AzureConfig {
 
     $azureConfig = @"
 {
+    "cloud": "$TargetEnvironment",
     "tenantId": "$TenantId",
     "subscriptionId": "$SubscriptionId",
     "aadClientId": "$AADClientId",
@@ -523,6 +526,8 @@ Update-CNIConfig(`$podCIDR, `$masterSubnetGW)
 
 try
 {
+    `$env:AZURE_ENVIRONMENT_FILEPATH="c:\k\azurestackcloud.json"
+
     `$masterSubnetGW = Get-DefaultGateway `$global:MasterSubnet
     `$podCIDR=Get-PodCIDR
     `$podCidrDiscovered=Test-PodCIDR(`$podCIDR)
