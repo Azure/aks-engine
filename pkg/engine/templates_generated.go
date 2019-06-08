@@ -33,6 +33,7 @@
 // ../../parts/dcos/dcosprovisionsource.sh
 // ../../parts/iaasoutputs.t
 // ../../parts/k8s/addons/1.10/kubernetesmasteraddons-kube-dns-deployment.yaml
+// ../../parts/k8s/addons/1.15/kubernetesmasteraddons-azure-cloud-provider-deployment.yaml
 // ../../parts/k8s/addons/1.6/kubernetesmasteraddons-calico-daemonset.yaml
 // ../../parts/k8s/addons/1.6/kubernetesmasteraddons-kubernetes-dashboard-deployment.yaml
 // ../../parts/k8s/addons/1.7/kubernetesmasteraddons-kube-dns-deployment.yaml
@@ -6577,6 +6578,105 @@ func k8sAddons110KubernetesmasteraddonsKubeDnsDeploymentYaml() (*asset, error) {
 	return a, nil
 }
 
+var _k8sAddons115KubernetesmasteraddonsAzureCloudProviderDeploymentYaml = []byte(`---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRole
+metadata:
+  labels:
+    kubernetes.io/cluster-service: "true"
+  name: system:azure-cloud-provider
+rules:
+- apiGroups: [""]
+  resources: ["events"]
+  verbs:
+  - create
+  - patch
+  - update
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRoleBinding
+metadata:
+  labels:
+    kubernetes.io/cluster-service: "true"
+  name: system:azure-cloud-provider
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: system:azure-cloud-provider
+subjects:
+- kind: ServiceAccount
+  name: azure-cloud-provider
+  namespace: kube-system
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRole
+metadata:
+  name: system:azure-persistent-volume-binder
+  labels:
+    kubernetes.io/cluster-service: "true"
+rules:
+- apiGroups: ['']
+  resources: ['secrets']
+  verbs:     ['get','create']
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRoleBinding
+metadata:
+  name: system:azure-persistent-volume-binder
+  labels:
+    kubernetes.io/cluster-service: "true"
+roleRef:
+  kind: ClusterRole
+  apiGroup: rbac.authorization.k8s.io
+  name: system:azure-persistent-volume-binder
+subjects:
+- kind: ServiceAccount
+  name: persistent-volume-binder
+  namespace: kube-system
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRole
+metadata:
+  labels:
+    kubernetes.io/cluster-service: "true"
+  name: system:azure-cloud-provider-secret-getter
+rules:
+- apiGroups: [""]
+  resources: ["secrets"]
+  verbs:
+  - get
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRoleBinding
+metadata:
+  labels:
+    kubernetes.io/cluster-service: "true"
+  name: system:azure-cloud-provider-secret-getter
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: system:azure-cloud-provider-secret-getter
+subjects:
+- kind: ServiceAccount
+  name: azure-cloud-provider
+  namespace: kube-system
+`)
+
+func k8sAddons115KubernetesmasteraddonsAzureCloudProviderDeploymentYamlBytes() ([]byte, error) {
+	return _k8sAddons115KubernetesmasteraddonsAzureCloudProviderDeploymentYaml, nil
+}
+
+func k8sAddons115KubernetesmasteraddonsAzureCloudProviderDeploymentYaml() (*asset, error) {
+	bytes, err := k8sAddons115KubernetesmasteraddonsAzureCloudProviderDeploymentYamlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "k8s/addons/1.15/kubernetesmasteraddons-azure-cloud-provider-deployment.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
 var _k8sAddons16KubernetesmasteraddonsCalicoDaemonsetYaml = []byte(`# Calico Version v2.4.1
 # https://docs.projectcalico.org/v2.4/releases#v2.4.1
 # This manifest includes the following component versions:
@@ -8159,7 +8259,7 @@ subjects:
 apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: ClusterRole
 metadata:
-  name: system:azure-persistent-volume-binder 
+  name: system:azure-persistent-volume-binder
   labels:
     kubernetes.io/cluster-service: "true"
 rules:
@@ -8176,7 +8276,7 @@ metadata:
 roleRef:
   kind: ClusterRole
   apiGroup: rbac.authorization.k8s.io
-  name: system:azure-persistent-volume-binder 
+  name: system:azure-persistent-volume-binder
 subjects:
 - kind: ServiceAccount
   name: persistent-volume-binder
@@ -23062,13 +23162,14 @@ var _bindata = map[string]func() (*asset, error){
 	"dcos/dcosprovisionsource.sh":                                     dcosDcosprovisionsourceSh,
 	"iaasoutputs.t":                                                   iaasoutputsT,
 	"k8s/addons/1.10/kubernetesmasteraddons-kube-dns-deployment.yaml": k8sAddons110KubernetesmasteraddonsKubeDnsDeploymentYaml,
-	"k8s/addons/1.6/kubernetesmasteraddons-calico-daemonset.yaml":     k8sAddons16KubernetesmasteraddonsCalicoDaemonsetYaml,
-	"k8s/addons/1.6/kubernetesmasteraddons-kubernetes-dashboard-deployment.yaml": k8sAddons16KubernetesmasteraddonsKubernetesDashboardDeploymentYaml,
-	"k8s/addons/1.7/kubernetesmasteraddons-kube-dns-deployment.yaml":             k8sAddons17KubernetesmasteraddonsKubeDnsDeploymentYaml,
-	"k8s/addons/1.7/kubernetesmasteraddons-kubernetes-dashboard-deployment.yaml": k8sAddons17KubernetesmasteraddonsKubernetesDashboardDeploymentYaml,
-	"k8s/addons/1.8/kubernetesmasteraddons-kube-dns-deployment.yaml":             k8sAddons18KubernetesmasteraddonsKubeDnsDeploymentYaml,
-	"k8s/addons/1.8/kubernetesmasteraddons-kubernetes-dashboard-deployment.yaml": k8sAddons18KubernetesmasteraddonsKubernetesDashboardDeploymentYaml,
-	"k8s/addons/1.9/kubernetesmasteraddons-kube-dns-deployment.yaml":             k8sAddons19KubernetesmasteraddonsKubeDnsDeploymentYaml,
+	"k8s/addons/1.15/kubernetesmasteraddons-azure-cloud-provider-deployment.yaml": k8sAddons115KubernetesmasteraddonsAzureCloudProviderDeploymentYaml,
+	"k8s/addons/1.6/kubernetesmasteraddons-calico-daemonset.yaml":                 k8sAddons16KubernetesmasteraddonsCalicoDaemonsetYaml,
+	"k8s/addons/1.6/kubernetesmasteraddons-kubernetes-dashboard-deployment.yaml":  k8sAddons16KubernetesmasteraddonsKubernetesDashboardDeploymentYaml,
+	"k8s/addons/1.7/kubernetesmasteraddons-kube-dns-deployment.yaml":              k8sAddons17KubernetesmasteraddonsKubeDnsDeploymentYaml,
+	"k8s/addons/1.7/kubernetesmasteraddons-kubernetes-dashboard-deployment.yaml":  k8sAddons17KubernetesmasteraddonsKubernetesDashboardDeploymentYaml,
+	"k8s/addons/1.8/kubernetesmasteraddons-kube-dns-deployment.yaml":              k8sAddons18KubernetesmasteraddonsKubeDnsDeploymentYaml,
+	"k8s/addons/1.8/kubernetesmasteraddons-kubernetes-dashboard-deployment.yaml":  k8sAddons18KubernetesmasteraddonsKubernetesDashboardDeploymentYaml,
+	"k8s/addons/1.9/kubernetesmasteraddons-kube-dns-deployment.yaml":              k8sAddons19KubernetesmasteraddonsKubeDnsDeploymentYaml,
 	"k8s/addons/coredns.yaml":                                                       k8sAddonsCorednsYaml,
 	"k8s/addons/kubernetesmaster-audit-policy.yaml":                                 k8sAddonsKubernetesmasterAuditPolicyYaml,
 	"k8s/addons/kubernetesmasteraddons-aad-default-admin-group-rbac.yaml":           k8sAddonsKubernetesmasteraddonsAadDefaultAdminGroupRbacYaml,
@@ -23256,6 +23357,9 @@ var _bintree = &bintree{nil, map[string]*bintree{
 		"addons": {nil, map[string]*bintree{
 			"1.10": {nil, map[string]*bintree{
 				"kubernetesmasteraddons-kube-dns-deployment.yaml": {k8sAddons110KubernetesmasteraddonsKubeDnsDeploymentYaml, map[string]*bintree{}},
+			}},
+			"1.15": {nil, map[string]*bintree{
+				"kubernetesmasteraddons-azure-cloud-provider-deployment.yaml": {k8sAddons115KubernetesmasteraddonsAzureCloudProviderDeploymentYaml, map[string]*bintree{}},
 			}},
 			"1.6": {nil, map[string]*bintree{
 				"kubernetesmasteraddons-calico-daemonset.yaml":                {k8sAddons16KubernetesmasteraddonsCalicoDaemonsetYaml, map[string]*bintree{}},
