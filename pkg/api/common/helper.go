@@ -276,3 +276,18 @@ func GetOrderedEscapedKeyValsString(config map[string]string) string {
 func SliceIntIsNonEmpty(s []int) bool {
 	return len(s) > 0
 }
+
+// WrapAsARMVariable formats a string for inserting an ARM variable into an ARM expression
+func WrapAsARMVariable(s string) string {
+	return fmt.Sprintf("',variables('%s'),'", s)
+}
+
+// WrapAsParameter formats a string for inserting an ARM paramter into an ARM expression
+func WrapAsParameter(s string) string {
+	return fmt.Sprintf("',parameters('%s'),'", s)
+}
+
+// WrapAsVerbatim formats a string for inserting an ARM paramter into an ARM expression
+func WrapAsVerbatim(s string) string {
+	return fmt.Sprintf("',%s,'", s)
+}
