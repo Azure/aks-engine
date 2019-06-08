@@ -282,12 +282,12 @@ func WrapAsARMVariable(s string) string {
 	return fmt.Sprintf("',variables('%s'),'", s)
 }
 
-// WrapAsParameter formats a string for inserting an ARM paramter into an ARM expression
+// WrapAsParameter formats a string for inserting an ARM parameter into an ARM expression
 func WrapAsParameter(s string) string {
 	return fmt.Sprintf("',parameters('%s'),'", s)
 }
 
-// WrapAsVerbatim formats a string for inserting an ARM paramter into an ARM expression
+// WrapAsVerbatim formats a string for inserting a literal string into an ARM expression
 func WrapAsVerbatim(s string) string {
 	return fmt.Sprintf("',%s,'", s)
 }
