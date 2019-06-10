@@ -1629,3 +1629,36 @@ func TestGetWindowsMasterSubnetARMParam(t *testing.T) {
 		}
 	}
 }
+
+func TestWrapAsVariableObject(t *testing.T) {
+	tests := []struct {
+		name     string
+		o        string
+		s        string
+		expected string
+	}{
+		{
+			name:     "just a string",
+			o:        "cloudInitFiles",
+			s:        "foo",
+			expected: "',variables('cloudInitFiles').foo,'",
+		},
+		{
+			name:     "empty string",
+			o:        "cloudInitFiles",
+			s:        "",
+			expected: "',variables('cloudInitFiles').,'",
+		},
+	}
+
+	for _, test := range tests {
+		test := test
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+			ret := wrapAsVariableObject(test.o, test.s)
+			if test.expected != ret {
+				t.Errorf("expected %s, instead got : %s", test.expected, ret)
+			}
+		})
+	}
+}

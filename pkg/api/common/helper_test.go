@@ -233,3 +233,93 @@ func TestSliceIntIsNonEmpty(t *testing.T) {
 		}
 	}
 }
+
+func TestWrapAsARMVariable(t *testing.T) {
+	tests := []struct {
+		name     string
+		s        string
+		expected string
+	}{
+		{
+			name:     "just a string",
+			s:        "foo",
+			expected: "',variables('foo'),'",
+		},
+		{
+			name:     "empty string",
+			s:        "",
+			expected: "',variables(''),'",
+		},
+	}
+
+	for _, test := range tests {
+		test := test
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+			ret := WrapAsARMVariable(test.s)
+			if test.expected != ret {
+				t.Errorf("expected %s, instead got : %s", test.expected, ret)
+			}
+		})
+	}
+}
+
+func TestWrapAsParameter(t *testing.T) {
+	tests := []struct {
+		name     string
+		s        string
+		expected string
+	}{
+		{
+			name:     "just a string",
+			s:        "foo",
+			expected: "',parameters('foo'),'",
+		},
+		{
+			name:     "empty string",
+			s:        "",
+			expected: "',parameters(''),'",
+		},
+	}
+
+	for _, test := range tests {
+		test := test
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+			ret := WrapAsParameter(test.s)
+			if test.expected != ret {
+				t.Errorf("expected %s, instead got : %s", test.expected, ret)
+			}
+		})
+	}
+}
+
+func TestWrapAsVerbatim(t *testing.T) {
+	tests := []struct {
+		name     string
+		s        string
+		expected string
+	}{
+		{
+			name:     "just a string",
+			s:        "foo",
+			expected: "',foo,'",
+		},
+		{
+			name:     "empty string",
+			s:        "",
+			expected: "',,'",
+		},
+	}
+
+	for _, test := range tests {
+		test := test
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+			ret := WrapAsVerbatim(test.s)
+			if test.expected != ret {
+				t.Errorf("expected %s, instead got : %s", test.expected, ret)
+			}
+		})
+	}
+}
