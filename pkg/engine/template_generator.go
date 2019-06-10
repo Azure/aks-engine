@@ -521,20 +521,10 @@ func (t *TemplateGenerator) getTemplateFuncMap(cs *api.ContainerService) templat
 			return common.WrapAsVerbatim(s)
 		},
 		"AnyAgentUsesAvailabilitySets": func() bool {
-			for _, agentProfile := range cs.Properties.AgentPoolProfiles {
-				if agentProfile.IsAvailabilitySets() {
-					return true
-				}
-			}
-			return false
+			return cs.Properties.AnyAgentUsesAvailabilitySets()
 		},
-		"HasLinuxAgents": func() bool {
-			for _, agentProfile := range cs.Properties.AgentPoolProfiles {
-				if agentProfile.IsLinux() {
-					return true
-				}
-			}
-			return false
+		"AnyAgentIsLinux": func() bool {
+			return cs.Properties.AnyAgentIsLinux()
 		},
 		"IsNSeriesSKU": func(profile *api.AgentPoolProfile) bool {
 			return common.IsNvidiaEnabledSKU(profile.VMSize)

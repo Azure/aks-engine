@@ -94,9 +94,13 @@ func TestGetTemplateFuncMap(t *testing.T) {
 		"GetMasterSwarmModeCustomData",
 		"GetAgentSwarmModeCustomData",
 		"WrapAsVariable",
-		// TODO CloudInitData - wrapAsVariableObject needs its own unit tests
+		"CloudInitData",
 		"WrapAsParameter",
 		"WrapAsVerbatim",
+		"AnyAgentUsesAvailabilitySets",
+		"AnyAgentIsLinux",
+		"IsNSeriesSKU",
+		"HasAvailabilityZones",
 		// TODO validate that the remaining func strings in getTemplateFuncMap are thinly wrapped and unit tested
 	}
 

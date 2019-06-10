@@ -184,8 +184,8 @@ func (e *Engine) NodeCount() int {
 	return expectedCount
 }
 
-// HasLinuxAgents will return true if there is at least 1 linux agent pool
-func (e *Engine) HasLinuxAgents() bool {
+// AnyAgentIsLinux will return true if there is at least 1 linux agent pool
+func (e *Engine) AnyAgentIsLinux() bool {
 	for _, ap := range e.ExpandedDefinition.Properties.AgentPoolProfiles {
 		if ap.OSType == "" || ap.OSType == "Linux" {
 			return true
