@@ -101,7 +101,7 @@ func (cs *ContainerService) setAPIServerConfig() {
 
 	// Disable Weak TLS Cipher Suites for 1.10 and abov
 	if common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.10.0") {
-		defaultAPIServerConfig["--tls-cipher-suites"] = TLSStrongCipherSuites
+		defaultAPIServerConfig["--tls-cipher-suites"] = TLSStrongCipherSuitesAPIServer
 	}
 
 	// Set default admission controllers
