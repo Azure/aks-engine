@@ -78,6 +78,25 @@ func TestGetTemplateFuncMap(t *testing.T) {
 		"WriteLinkedTemplatesForExtensions",
 		"GetSshPublicKeysPowerShell",
 		"GetWindowsMasterSubnetARMParam",
+		"GetKubernetesMasterPreprovisionYaml",
+		"GetKubernetesAgentPreprovisionYaml",
+		"GetMasterSwarmCustomData",
+		"GetAgentSwarmCustomData",
+		"GetSwarmAgentPreprovisionExtensionCommands",
+		"GetLocation",
+		"GetWinAgentSwarmCustomData",
+		"GetWinAgentSwarmModeCustomData",
+		"GetKubernetesWindowsAgentFunctions",
+		"GetMasterSwarmModeCustomData",
+		"GetAgentSwarmModeCustomData",
+		"WrapAsVariable",
+		"CloudInitData",
+		"WrapAsParameter",
+		"WrapAsVerbatim",
+		"AnyAgentUsesAvailabilitySets",
+		"AnyAgentIsLinux",
+		"IsNSeriesSKU",
+		"HasAvailabilityZones",
 		"GetEscapedEnvironmentJSON",
 		"IsIdentitySystemADFS",
 		// TODO validate that the remaining func strings in getTemplateFuncMap are thinly wrapped and unit tested
@@ -101,6 +120,12 @@ func TestGetTemplateFuncMap(t *testing.T) {
 			ret := v.Call(rargs)
 			if ret[0].Interface() != false {
 				t.Fatalf("Got unexpected IsMultiMasterCluster response")
+			}
+		case "GetKubernetesMasterPreprovisionYaml":
+			rargs := make([]reflect.Value, 0)
+			ret := v.Call(rargs)
+			if ret[0].Interface() != "" {
+				t.Fatalf("Got unexpected GetKubernetesMasterPreprovisionYaml response")
 			}
 		}
 	}

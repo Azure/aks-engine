@@ -20,6 +20,7 @@ import (
 	"github.com/Azure/aks-engine/pkg/helpers"
 	"github.com/blang/semver"
 	"github.com/pkg/errors"
+	log "github.com/sirupsen/logrus"
 )
 
 // DistroValues is a list of currently supported distros
@@ -37,7 +38,7 @@ func (cs *ContainerService) SetPropertiesDefaults(isUpgrade, isScale bool) (bool
 		}
 	}
 
-	cs.setOrchestratorDefaults(isUpgrade || isScale)
+	cs.setOrchestratorDefaults(isUpgrade, isScale)
 
 	cloudName := cs.GetCloudSpecConfig().CloudName
 
@@ -76,7 +77,8 @@ func (cs *ContainerService) SetPropertiesDefaults(isUpgrade, isScale bool) (bool
 }
 
 // setOrchestratorDefaults for orchestrators
-func (cs *ContainerService) setOrchestratorDefaults(isUpdate bool) {
+func (cs *ContainerService) setOrchestratorDefaults(isUpgrade, isScale bool) {
+	isUpdate := isUpgrade || isScale
 	a := cs.Properties
 
 	cloudSpecConfig := cs.GetCloudSpecConfig()
@@ -118,8 +120,17 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpdate bool) {
 		if o.KubernetesConfig.KubernetesImageBase == "" {
 			o.KubernetesConfig.KubernetesImageBase = cloudSpecConfig.KubernetesSpecConfig.KubernetesImageBase
 		}
-		if o.KubernetesConfig.EtcdVersion == "" || isUpdate {
+		if o.KubernetesConfig.EtcdVersion == "" {
 			o.KubernetesConfig.EtcdVersion = DefaultEtcdVersion
+		} else if isUpgrade {
+			if o.KubernetesConfig.EtcdVersion != DefaultEtcdVersion {
+				// Override (i.e., upgrade) the etcd version if the default is newer in an upgrade scenario
+				if common.GetMinVersion([]string{o.KubernetesConfig.EtcdVersion, DefaultEtcdVersion}, true) == o.KubernetesConfig.EtcdVersion {
+					log.Warnf("etcd will be upgraded to version %s\n", DefaultEtcdVersion)
+					o.KubernetesConfig.EtcdVersion = DefaultEtcdVersion
+				}
+			}
+
 		}
 
 		if a.HasWindows() {
@@ -137,10 +148,16 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpdate bool) {
 		switch o.KubernetesConfig.ContainerRuntime {
 		case Docker:
 			if o.KubernetesConfig.MobyVersion == "" || isUpdate {
+				if isUpdate && o.KubernetesConfig.MobyVersion != DefaultMobyVersion {
+					log.Warnf("Moby will be upgraded to version %s\n", DefaultMobyVersion)
+				}
 				o.KubernetesConfig.MobyVersion = DefaultMobyVersion
 			}
 		case Containerd, ClearContainers, KataContainers:
 			if o.KubernetesConfig.ContainerdVersion == "" || isUpdate {
+				if isUpdate && o.KubernetesConfig.ContainerdVersion != DefaultContainerdVersion {
+					log.Warnf("containerd will be upgraded to version %s\n", DefaultContainerdVersion)
+				}
 				o.KubernetesConfig.ContainerdVersion = DefaultContainerdVersion
 			}
 		}

@@ -4,7 +4,7 @@ metadata:
   name: azure-npm
   namespace: kube-system
   labels:
-    addonmanager.kubernetes.io/mode: EnsureExists
+    addonmanager.kubernetes.io/mode: Reconcile
 ---
 apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: ClusterRole
@@ -12,7 +12,7 @@ metadata:
   name: azure-npm
   namespace: kube-system
   labels:
-    addonmanager.kubernetes.io/mode: EnsureExists
+    addonmanager.kubernetes.io/mode: Reconcile
 rules:
   - apiGroups:
     - ""
@@ -39,7 +39,7 @@ metadata:
   name: azure-npm-binding
   namespace: kube-system
   labels:
-    addonmanager.kubernetes.io/mode: EnsureExists
+    addonmanager.kubernetes.io/mode: Reconcile
 subjects:
   - kind: ServiceAccount
     name: azure-npm
@@ -56,7 +56,7 @@ metadata:
   namespace: kube-system
   labels:
     app: azure-npm
-    addonmanager.kubernetes.io/mode: EnsureExists
+    addonmanager.kubernetes.io/mode: Reconcile
 spec:
   selector:
     matchLabels:

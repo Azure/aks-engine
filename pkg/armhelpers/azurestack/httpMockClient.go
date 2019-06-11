@@ -23,6 +23,7 @@ const (
 	deploymentName                        = "testDeplomentName"
 	deploymentStatus                      = "08586474508192185203"
 	virtualMachineScaleSetName            = "vmscalesetName"
+	virtualMachineAvailabilitySetName     = "vmavailabilitysetName"
 	virtualMachineName                    = "testVirtualMachineName"
 	virtualNicName                        = "testVirtualNicName"
 	virutalDiskName                       = "testVirtualdickName"
@@ -35,6 +36,7 @@ const (
 	filePathGetVirtualMachine             = "httpMockClientData/getVirtualMachine.json"
 	fileDeployVirtualMachine              = "httpMockClientData/deployVMResponse.json"
 	fileDeployVirtualMachineError         = "httpMockClientData/deploymentVMError.json"
+	filePathGetAvailabilitySet            = "httpMockClientData/getAvailabilitySet.json"
 )
 
 //HTTPMockClient is an wrapper of httpmock
@@ -60,6 +62,7 @@ type HTTPMockClient struct {
 	ResponseGetVirtualMachine             string
 	ResponseDeployVirtualMachine          string
 	ResponseDeployVirtualMachineError     string
+	ResponseGetAvailabilitySet            string
 }
 
 //VirtualMachineScaleSetListValues is an wrapper of virtual machine scale set list response values
@@ -122,6 +125,10 @@ func NewHTTPMockClient() (HTTPMockClient, error) {
 		return client, err
 	}
 	client.ResponseDeployVirtualMachineError, err = readFromFile(fileDeployVirtualMachineError)
+	if err != nil {
+		return client, err
+	}
+	client.ResponseGetAvailabilitySet, err = readFromFile(filePathGetAvailabilitySet)
 	if err != nil {
 		return client, err
 	}
@@ -189,6 +196,26 @@ func (mc HTTPMockClient) RegisterListVirtualMachines() {
 
 		func(req *http.Request) (*http.Response, error) {
 			resp := httpmock.NewStringResponse(200, mc.ResponseListVirtualMachines)
+			return resp, nil
+		},
+	)
+}
+
+// RegisterGetAvailabilitySet registers the mock response for GetAvailabilitySet.
+func (mc HTTPMockClient) RegisterGetAvailabilitySet() {
+	httpmock.RegisterResponder("GET", fmt.Sprintf("https://management.azure.com/subscriptions/%s/resourceGroups/%s/providers/Microsoft.Compute/availabilitySets/vmavailabilitysetName?api-version=%s", mc.SubscriptionID, mc.ResourceGroup, mc.ComputeAPIVersion),
+		func(req *http.Request) (*http.Response, error) {
+			resp := httpmock.NewStringResponse(200, mc.ResponseGetAvailabilitySet)
+			return resp, nil
+		},
+	)
+}
+
+// RegisterGetAvailabilitySetFaultDomainCount registers a mock response for GetAvailabilitySet.
+func (mc HTTPMockClient) RegisterGetAvailabilitySetFaultDomainCount() {
+	httpmock.RegisterResponder("GET", fmt.Sprintf("https://management.azure.com/subscriptions/%s/resourceGroups/%s/providers/Microsoft.Compute/availabilitySets/id1?api-version=%s", mc.SubscriptionID, mc.ResourceGroup, mc.ComputeAPIVersion),
+		func(req *http.Request) (*http.Response, error) {
+			resp := httpmock.NewStringResponse(200, mc.ResponseGetAvailabilitySet)
 			return resp, nil
 		},
 	)

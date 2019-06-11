@@ -33,6 +33,7 @@
 // ../../parts/dcos/dcosprovisionsource.sh
 // ../../parts/iaasoutputs.t
 // ../../parts/k8s/addons/1.10/kubernetesmasteraddons-kube-dns-deployment.yaml
+// ../../parts/k8s/addons/1.15/kubernetesmasteraddons-azure-cloud-provider-deployment.yaml
 // ../../parts/k8s/addons/1.6/kubernetesmasteraddons-calico-daemonset.yaml
 // ../../parts/k8s/addons/1.6/kubernetesmasteraddons-kubernetes-dashboard-deployment.yaml
 // ../../parts/k8s/addons/1.7/kubernetesmasteraddons-kube-dns-deployment.yaml
@@ -2369,7 +2370,7 @@ var _dcosDcoswindowsprovisionPs1 = []byte(`<#
         Provisions VM as a DCOS agent.
 
      Invoke by:
-       
+
 #>
 
 [CmdletBinding(DefaultParameterSetName="Standard")]
@@ -2381,7 +2382,7 @@ param(
     [string]
     [ValidateNotNullOrEmpty()]
     $firstMasterIP,
-    
+
     [string]
     [ValidateNotNullOrEmpty()]
     $bootstrapUri,
@@ -2435,7 +2436,7 @@ Expand-ZIPFile($file, $destination)
 }
 
 
-function 
+function
 Remove-Directory($dirname)
 {
 
@@ -2452,25 +2453,25 @@ Remove-Directory($dirname)
 }
 
 
-function 
+function
 Check-Subnet ([string]$cidr, [string]$ip)
 {
     try {
 
         $network, [int]$subnetlen = $cidr.Split('/')
-    
+
         if ($subnetlen -eq 0)
         {
             $subnetlen = 8 # Default in case we get an IP addr, not CIDR
         }
         $a = ([IPAddress] $network)
         [uint32] $unetwork = [uint32]$a.Address
-    
+
         $mask = -bnot ((-bnot [uint32]0) -shl (32 - $subnetlen))
-    
+
         $a = [IPAddress]$ip
         [uint32] $uip = [uint32]$a.Address
-    
+
         return ($unetwork -eq ($mask -band $uip))
     }
     catch {
@@ -2496,7 +2497,7 @@ Get-BootstrapScript($download_uri, $download_dir)
 try
 {
     # Set to false for debugging.  This will output the start script to
-    # c:\AzureData\dcosProvisionScript.log, and then you can RDP 
+    # c:\AzureData\dcosProvisionScript.log, and then you can RDP
     # to the windows machine, and run the script manually to watch
     # the output.
     Write-Log "Get the install script"
@@ -2513,16 +2514,16 @@ try
     $ip = ([IPAddress]($ip -join '.')).Address
 
     $MasterIP = @([IPAddress]$null)
-    
-    for ($i = 0; $i -lt $MasterCount; $i++ ) 
+
+    for ($i = 0; $i -lt $MasterCount; $i++ )
     {
        $new_ip = ([IPAddress]$ip).getAddressBytes()
        [Array]::Reverse($new_ip)
        $new_ip = [IPAddress]($new_ip -join '.')
        $MasterIP += $new_ip
-      
+
        $ip++
-     
+
     }
     $master_str  = $MasterIP.IPAddressToString
 
@@ -2531,7 +2532,7 @@ try
         $master_str += ":2181"
     }
     else {
-        for ($i = 0; $i -lt $master_str.count; $i++) 
+        for ($i = 0; $i -lt $master_str.count; $i++)
         {
             $master_str[$i] += ":2181"
         }
@@ -2544,12 +2545,12 @@ try
 
     if ($isAgent)
     {
-        $run_cmd = $global:BootstrapInstallDir+"\DCOSWindowsAgentSetup.ps1 -MasterIP '$master_json' -AgentPrivateIP "+($private_ip.IPAddress) +" -BootstrapUrl '$bootstrapUri' " 
-        if ($isPublic) 
+        $run_cmd = $global:BootstrapInstallDir+"\DCOSWindowsAgentSetup.ps1 -MasterIP '$master_json' -AgentPrivateIP "+($private_ip.IPAddress) +" -BootstrapUrl '$bootstrapUri' "
+        if ($isPublic)
         {
             $run_cmd += " -isPublic:` + "`" + `$true "
         }
-        if ($customAttrs) 
+        if ($customAttrs)
         {
             $run_cmd += " -customAttrs '$customAttrs'"
         }
@@ -4063,13 +4064,13 @@ runcmd: PREPROVISION_EXTENSION
   - --now
   - lxc-net.service
 - - tar
-  - czf 
+  - czf
   - /etc/docker.tar.gz
   - -C
   - /tmp/xtoph
   - .docker
-- - rm 
-  - -rf 
+- - rm
+  - -rf
   - /tmp/xtoph
 - /opt/azure/containers/provision.sh
 - - cp
@@ -4444,13 +4445,13 @@ runcmd: PREPROVISION_EXTENSION
   - --now
   - lxc-net.service
 - - tar
-  - czf 
+  - czf
   - /etc/docker.tar.gz
   - -C
   - /tmp/xtoph
   - .docker
-- - rm 
-  - -rf 
+- - rm
+  - -rf
   - /tmp/xtoph
 - /opt/azure/containers/provision.sh
 - - cp
@@ -4839,16 +4840,16 @@ runcmd: PREPROVISION_EXTENSION
   - --now
   - unscd.service
 - sed -i "s/^Port 22$/Port 22\nPort 2222/1" /etc/ssh/sshd_config
-- service ssh restart 
+- service ssh restart
 - /opt/azure/containers/setup_ephemeral_disk.sh
 - - tar
-  - czf 
+  - czf
   - /etc/docker.tar.gz
   - -C
   - /tmp/xtoph
   - .docker
-- - rm 
-  - -rf 
+- - rm
+  - -rf
   - /tmp/xtoph
 - /opt/azure/containers/provision.sh
 - - cp
@@ -5212,16 +5213,16 @@ runcmd: PREPROVISION_EXTENSION
   - --now
   - unscd.service
 - sed -i "s/^Port 22$/Port 22\nPort 2222/1" /etc/ssh/sshd_config
-- service ssh restart 
+- service ssh restart
 - /opt/azure/containers/setup_ephemeral_disk.sh
 - - tar
-  - czf 
+  - czf
   - /etc/docker.tar.gz
   - -C
   - /tmp/xtoph
   - .docker
-- - rm 
-  - -rf 
+- - rm
+  - -rf
   - /tmp/xtoph
 - /opt/azure/containers/provision.sh
 - - cp
@@ -6125,21 +6126,21 @@ var _dcosDcosparamsT = []byte(`    "dcosBootstrapURL": {
       "defaultValue": "https://dcosio.azureedge.net/dcos/stable",
       "metadata": {
         "description": "The repository URL"
-      }, 
+      },
       "type": "string"
     },
     "dcosClusterPackageListID": {
       "defaultValue": "77282d8864a5bf36db345b54a0d1de3674a0e937",
       "metadata": {
         "description": "The default cluster package list IDs."
-      }, 
+      },
       "type": "string"
     },
     "dcosProviderPackageID": {
       "defaultValue": "",
       "metadata": {
         "description": "The guid for provider dcos-provider package."
-      }, 
+      },
       "type": "string"
     },
 `)
@@ -6577,6 +6578,105 @@ func k8sAddons110KubernetesmasteraddonsKubeDnsDeploymentYaml() (*asset, error) {
 	return a, nil
 }
 
+var _k8sAddons115KubernetesmasteraddonsAzureCloudProviderDeploymentYaml = []byte(`---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRole
+metadata:
+  labels:
+    kubernetes.io/cluster-service: "true"
+  name: system:azure-cloud-provider
+rules:
+- apiGroups: [""]
+  resources: ["events"]
+  verbs:
+  - create
+  - patch
+  - update
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRoleBinding
+metadata:
+  labels:
+    kubernetes.io/cluster-service: "true"
+  name: system:azure-cloud-provider
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: system:azure-cloud-provider
+subjects:
+- kind: ServiceAccount
+  name: azure-cloud-provider
+  namespace: kube-system
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRole
+metadata:
+  name: system:azure-persistent-volume-binder
+  labels:
+    kubernetes.io/cluster-service: "true"
+rules:
+- apiGroups: ['']
+  resources: ['secrets']
+  verbs:     ['get','create']
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRoleBinding
+metadata:
+  name: system:azure-persistent-volume-binder
+  labels:
+    kubernetes.io/cluster-service: "true"
+roleRef:
+  kind: ClusterRole
+  apiGroup: rbac.authorization.k8s.io
+  name: system:azure-persistent-volume-binder
+subjects:
+- kind: ServiceAccount
+  name: persistent-volume-binder
+  namespace: kube-system
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRole
+metadata:
+  labels:
+    kubernetes.io/cluster-service: "true"
+  name: system:azure-cloud-provider-secret-getter
+rules:
+- apiGroups: [""]
+  resources: ["secrets"]
+  verbs:
+  - get
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRoleBinding
+metadata:
+  labels:
+    kubernetes.io/cluster-service: "true"
+  name: system:azure-cloud-provider-secret-getter
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: system:azure-cloud-provider-secret-getter
+subjects:
+- kind: ServiceAccount
+  name: azure-cloud-provider
+  namespace: kube-system
+`)
+
+func k8sAddons115KubernetesmasteraddonsAzureCloudProviderDeploymentYamlBytes() ([]byte, error) {
+	return _k8sAddons115KubernetesmasteraddonsAzureCloudProviderDeploymentYaml, nil
+}
+
+func k8sAddons115KubernetesmasteraddonsAzureCloudProviderDeploymentYaml() (*asset, error) {
+	bytes, err := k8sAddons115KubernetesmasteraddonsAzureCloudProviderDeploymentYamlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "k8s/addons/1.15/kubernetesmasteraddons-azure-cloud-provider-deployment.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
 var _k8sAddons16KubernetesmasteraddonsCalicoDaemonsetYaml = []byte(`# Calico Version v2.4.1
 # https://docs.projectcalico.org/v2.4/releases#v2.4.1
 # This manifest includes the following component versions:
@@ -6698,7 +6798,7 @@ metadata:
   namespace: kube-system
   labels:
     kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: "Reconcile"
+    addonmanager.kubernetes.io/mode: "EnsureExists"
 data:
   cni_network_config: |-
     {
@@ -8159,7 +8259,7 @@ subjects:
 apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: ClusterRole
 metadata:
-  name: system:azure-persistent-volume-binder 
+  name: system:azure-persistent-volume-binder
   labels:
     kubernetes.io/cluster-service: "true"
 rules:
@@ -8176,7 +8276,7 @@ metadata:
 roleRef:
   kind: ClusterRole
   apiGroup: rbac.authorization.k8s.io
-  name: system:azure-persistent-volume-binder 
+  name: system:azure-persistent-volume-binder
 subjects:
 - kind: ServiceAccount
   name: persistent-volume-binder
@@ -8237,7 +8337,7 @@ metadata:
   labels:
     k8s-app: cilium
     kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: "EnsureExists"
+    addonmanager.kubernetes.io/mode: "Reconcile"
   name: cilium
   namespace: kube-system
 spec:
@@ -8564,7 +8664,7 @@ metadata:
   name: cilium-operator
   namespace: kube-system
   labels:
-    addonmanager.kubernetes.io/mode: "EnsureExists"
+    addonmanager.kubernetes.io/mode: "Reconcile"
 spec:
   replicas: 1
   selector:
@@ -8677,14 +8777,14 @@ metadata:
   name: cilium-operator
   namespace: kube-system
   labels:
-    addonmanager.kubernetes.io/mode: "EnsureExists"
+    addonmanager.kubernetes.io/mode: "Reconcile"
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   name: cilium-operator
   labels:
-    addonmanager.kubernetes.io/mode: "EnsureExists"
+    addonmanager.kubernetes.io/mode: "Reconcile"
 rules:
 - apiGroups:
   - ""
@@ -8718,7 +8818,7 @@ kind: ClusterRoleBinding
 metadata:
   name: cilium-operator
   labels:
-    addonmanager.kubernetes.io/mode: "EnsureExists"
+    addonmanager.kubernetes.io/mode: "Reconcile"
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
@@ -8733,7 +8833,7 @@ kind: ClusterRole
 metadata:
   name: cilium-etcd-operator
   labels:
-    addonmanager.kubernetes.io/mode: "EnsureExists"
+    addonmanager.kubernetes.io/mode: "Reconcile"
 rules:
 - apiGroups:
   - etcd.database.coreos.com
@@ -8805,7 +8905,7 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
   labels:
-    addonmanager.kubernetes.io/mode: "EnsureExists"
+    addonmanager.kubernetes.io/mode: "Reconcile"
   name: cilium-etcd-operator
 roleRef:
   apiGroup: rbac.authorization.k8s.io
@@ -8821,7 +8921,7 @@ kind: ClusterRole
 metadata:
   name: etcd-operator
   labels:
-    addonmanager.kubernetes.io/mode: "EnsureExists"
+    addonmanager.kubernetes.io/mode: "Reconcile"
 rules:
 - apiGroups:
   - etcd.database.coreos.com
@@ -8876,7 +8976,7 @@ kind: ClusterRoleBinding
 metadata:
   name: etcd-operator
   labels:
-    addonmanager.kubernetes.io/mode: "EnsureExists"
+    addonmanager.kubernetes.io/mode: "Reconcile"
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
@@ -8892,7 +8992,7 @@ metadata:
   name: cilium-etcd-operator
   namespace: kube-system
   labels:
-    addonmanager.kubernetes.io/mode: "EnsureExists"
+    addonmanager.kubernetes.io/mode: "Reconcile"
 ---
 apiVersion: v1
 kind: ServiceAccount
@@ -8900,7 +9000,7 @@ metadata:
   name: cilium-etcd-sa
   namespace: kube-system
   labels:
-    addonmanager.kubernetes.io/mode: "EnsureExists"
+    addonmanager.kubernetes.io/mode: "Reconcile"
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -8908,7 +9008,7 @@ metadata:
   labels:
     io.cilium/app: etcd-operator
     name: cilium-etcd-operator
-    addonmanager.kubernetes.io/mode: "EnsureExists"
+    addonmanager.kubernetes.io/mode: "Reconcile"
   name: cilium-etcd-operator
   namespace: kube-system
 spec:
@@ -8968,7 +9068,7 @@ kind: ClusterRoleBinding
 metadata:
   name: cilium
   labels:
-    addonmanager.kubernetes.io/mode: "EnsureExists"
+    addonmanager.kubernetes.io/mode: "Reconcile"
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
@@ -8986,7 +9086,7 @@ kind: ClusterRole
 metadata:
   name: cilium
   labels:
-    addonmanager.kubernetes.io/mode: "EnsureExists"
+    addonmanager.kubernetes.io/mode: "Reconcile"
 rules:
 - apiGroups:
   - networking.k8s.io
@@ -9053,7 +9153,7 @@ metadata:
   name: cilium
   namespace: kube-system
   labels:
-    addonmanager.kubernetes.io/mode: "EnsureExists"`)
+    addonmanager.kubernetes.io/mode: "Reconcile"`)
 
 func k8sAddonsKubernetesmasteraddonsCiliumDaemonsetYamlBytes() ([]byte, error) {
 	return _k8sAddonsKubernetesmasteraddonsCiliumDaemonsetYaml, nil
@@ -9129,7 +9229,7 @@ metadata:
   name: flannel
   namespace: kube-system
   labels:
-    addonmanager.kubernetes.io/mode: EnsureExists
+    addonmanager.kubernetes.io/mode: Reconcile
 ---
 kind: ConfigMap
 apiVersion: v1
@@ -9165,7 +9265,7 @@ metadata:
   labels:
     tier: node
     app: flannel
-    addonmanager.kubernetes.io/mode: EnsureExists
+    addonmanager.kubernetes.io/mode: Reconcile
 spec:
   template:
     metadata:
@@ -9238,7 +9338,7 @@ apiVersion: rbac.authorization.k8s.io/v1beta1
 metadata:
   name: flannel
   labels:
-    addonmanager.kubernetes.io/mode: EnsureExists
+    addonmanager.kubernetes.io/mode: Reconcile
 rules:
   - apiGroups:
       - ""
@@ -9265,7 +9365,7 @@ apiVersion: rbac.authorization.k8s.io/v1beta1
 metadata:
   name: flannel
   labels:
-    addonmanager.kubernetes.io/mode: EnsureExists
+    addonmanager.kubernetes.io/mode: Reconcile
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
@@ -9743,7 +9843,7 @@ metadata:
   annotations:
     seccomp.security.alpha.kubernetes.io/allowedProfileNames: "*"
   labels:
-    addonmanager.kubernetes.io/mode: EnsureExists
+    addonmanager.kubernetes.io/mode: Reconcile
 spec:
   privileged: true
   allowPrivilegeEscalation: true
@@ -9776,7 +9876,7 @@ metadata:
     seccomp.security.alpha.kubernetes.io/defaultProfileName:  docker/default
     apparmor.security.beta.kubernetes.io/defaultProfileName:  runtime/default
   labels:
-    addonmanager.kubernetes.io/mode: EnsureExists
+    addonmanager.kubernetes.io/mode: Reconcile
 spec:
   privileged: false
   allowPrivilegeEscalation: false
@@ -9815,7 +9915,7 @@ kind: ClusterRole
 metadata:
   name: psp:privileged
   labels:
-    addonmanager.kubernetes.io/mode: EnsureExists
+    addonmanager.kubernetes.io/mode: Reconcile
 rules:
 - apiGroups: ['extensions']
   resources: ['podsecuritypolicies']
@@ -9828,7 +9928,7 @@ kind: ClusterRole
 metadata:
   name: psp:restricted
   labels:
-    addonmanager.kubernetes.io/mode: EnsureExists
+    addonmanager.kubernetes.io/mode: Reconcile
 rules:
 - apiGroups: ['extensions']
   resources: ['podsecuritypolicies']
@@ -9841,7 +9941,7 @@ kind: ClusterRoleBinding
 metadata:
   name: default:restricted
   labels:
-    addonmanager.kubernetes.io/mode: EnsureExists
+    addonmanager.kubernetes.io/mode: Reconcile
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
@@ -9857,7 +9957,7 @@ metadata:
   name: default:privileged
   namespace: kube-system
   labels:
-    addonmanager.kubernetes.io/mode: EnsureExists
+    addonmanager.kubernetes.io/mode: Reconcile
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
@@ -10456,6 +10556,14 @@ generateAggregatedAPICerts() {
     $AGGREGATED_API_CERTS_SETUP_FILE
 }
 
+configureKubeletServerCert() {
+    KUBELET_SERVER_PRIVATE_KEY_PATH="/etc/kubernetes/certs/kubeletserver.key"
+    KUBELET_SERVER_CERT_PATH="/etc/kubernetes/certs/kubeletserver.crt"
+
+    openssl genrsa -out $KUBELET_SERVER_PRIVATE_KEY_PATH 2048
+    openssl req -new -x509 -days 7300 -key $KUBELET_SERVER_PRIVATE_KEY_PATH -out $KUBELET_SERVER_CERT_PATH -subj "/CN=${NODE_NAME}"
+}
+
 configureK8s() {
     KUBELET_PRIVATE_KEY_PATH="/etc/kubernetes/certs/client.key"
     touch "${KUBELET_PRIVATE_KEY_PATH}"
@@ -10520,6 +10628,8 @@ EOF
             generateAggregatedAPICerts
         fi
     fi
+
+    configureKubeletServerCert
 }
 
 configureCNI() {
@@ -10859,7 +10969,7 @@ configureK8sCustomCloud() {
     # Decrease eth0 MTU to mitigate Azure Stack's NRP issue
     echo "iface eth0 inet dhcp" | sudo tee -a /etc/network/interfaces
     echo "    post-up /sbin/ifconfig eth0 mtu 1350" | sudo tee -a /etc/network/interfaces
-    
+
     ifconfig eth0 mtu 1350
 
     set -x
@@ -12796,7 +12906,7 @@ func k8sCloudInitArtifactsSysFsBpfMount() (*asset, error) {
 var _k8sCloudInitArtifactsSysctlD60CisConf = []byte(`# 3.1.2 Ensure packet redirect sending is disabled
 net.ipv4.conf.all.send_redirects = 0
 net.ipv4.conf.default.send_redirects = 0
-# 3.2.1 Ensure source routed packets are not accepted 
+# 3.2.1 Ensure source routed packets are not accepted
 net.ipv4.conf.all.accept_source_route = 0
 net.ipv4.conf.default.accept_source_route = 0
 # 3.2.2 Ensure ICMP redirects are not accepted
@@ -13148,7 +13258,7 @@ MASTER_CONTAINER_ADDONS_PLACEHOLDER
     AZURE_ENVIRONMENT_FILEPATH=/etc/kubernetes/azurestackcloud.json
 {{end}}
 {{if IsKubernetesVersionGe "1.6.0"}}
-  {{if HasLinuxAgents}}
+  {{if AnyAgentIsLinux}}
     KUBELET_REGISTER_NODE=--register-node=true
     KUBELET_REGISTER_WITH_TAINTS=--register-with-taints=node-role.kubernetes.io/master=true:NoSchedule
   {{end}}
@@ -14175,7 +14285,7 @@ metadata:
   namespace: kube-system
   labels:
     app: azure-cnms
-    addonmanager.kubernetes.io/mode: EnsureExists
+    addonmanager.kubernetes.io/mode: Reconcile
 spec:
   selector:
     matchLabels:
@@ -14398,7 +14508,7 @@ metadata:
   namespace: default
   labels:
     kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: EnsureExists
+    addonmanager.kubernetes.io/mode: Reconcile
 ---
 apiVersion: apiextensions.k8s.io/v1beta1
 kind: CustomResourceDefinition
@@ -14406,7 +14516,7 @@ metadata:
   name: azureassignedidentities.aadpodidentity.k8s.io
   labels:
     kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: EnsureExists
+    addonmanager.kubernetes.io/mode: Reconcile
 spec:
   group: aadpodidentity.k8s.io
   version: v1
@@ -14421,7 +14531,7 @@ metadata:
   name: azureidentitybindings.aadpodidentity.k8s.io
   labels:
     kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: EnsureExists
+    addonmanager.kubernetes.io/mode: Reconcile
 spec:
   group: aadpodidentity.k8s.io
   version: v1
@@ -14436,7 +14546,7 @@ metadata:
   name: azureidentities.aadpodidentity.k8s.io
   labels:
     kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: EnsureExists
+    addonmanager.kubernetes.io/mode: Reconcile
 spec:
   group: aadpodidentity.k8s.io
   version: v1
@@ -14452,7 +14562,7 @@ metadata:
   name: aad-pod-id-nmi-role
   labels:
     kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: EnsureExists
+    addonmanager.kubernetes.io/mode: Reconcile
 rules:
 - apiGroups: ["*"]
   resources: ["*"]
@@ -14464,7 +14574,7 @@ metadata:
   name: aad-pod-id-nmi-binding
   labels:
     kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: EnsureExists
+    addonmanager.kubernetes.io/mode: Reconcile
     k8s-app: aad-pod-id-nmi-binding
 subjects:
 - kind: ServiceAccount
@@ -14480,7 +14590,7 @@ kind: DaemonSet
 metadata:
   labels:
     kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: EnsureExists
+    addonmanager.kubernetes.io/mode: Reconcile
     component: nmi
     tier: node
     k8s-app: aad-pod-id
@@ -14533,7 +14643,7 @@ metadata:
   namespace: default
   labels:
     kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: EnsureExists
+    addonmanager.kubernetes.io/mode: Reconcile
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
@@ -14541,7 +14651,7 @@ metadata:
   name: aad-pod-id-mic-role
   labels:
     kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: EnsureExists
+    addonmanager.kubernetes.io/mode: Reconcile
 rules:
 - apiGroups: ["apiextensions.k8s.io"]
   resources: ["customresourcedefinitions"]
@@ -14565,7 +14675,7 @@ metadata:
   name: aad-pod-id-mic-binding
   labels:
     kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: EnsureExists
+    addonmanager.kubernetes.io/mode: Reconcile
     k8s-app: aad-pod-id-mic-binding
 subjects:
 - kind: ServiceAccount
@@ -14583,7 +14693,7 @@ metadata:
     component: mic
     k8s-app: aad-pod-id
     kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: EnsureExists
+    addonmanager.kubernetes.io/mode: Reconcile
   name: mic
   namespace: default
 spec:
@@ -14639,7 +14749,7 @@ metadata:
   namespace: kube-system
   labels:
     kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: EnsureExists
+    addonmanager.kubernetes.io/mode: Reconcile
 ---
 apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: ClusterRole
@@ -14648,7 +14758,7 @@ metadata:
   labels:
     app: aci-connector
     kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: EnsureExists
+    addonmanager.kubernetes.io/mode: Reconcile
 rules:
 - apiGroups:
   - ""
@@ -14671,7 +14781,7 @@ metadata:
   name: aci-connector
   labels:
     kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: EnsureExists
+    addonmanager.kubernetes.io/mode: Reconcile
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
@@ -14688,7 +14798,7 @@ metadata:
   namespace: kube-system
   labels:
     kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: EnsureExists
+    addonmanager.kubernetes.io/mode: Reconcile
 type: Opaque
 data:
   credentials.json: <creds>
@@ -14704,7 +14814,7 @@ metadata:
     app: aci-connector
     name: aci-connector
     kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: EnsureExists
+    addonmanager.kubernetes.io/mode: Reconcile
 spec:
   replicas: 1
   template:
@@ -14775,7 +14885,7 @@ metadata:
   name: azure-npm
   namespace: kube-system
   labels:
-    addonmanager.kubernetes.io/mode: EnsureExists
+    addonmanager.kubernetes.io/mode: Reconcile
 ---
 apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: ClusterRole
@@ -14783,7 +14893,7 @@ metadata:
   name: azure-npm
   namespace: kube-system
   labels:
-    addonmanager.kubernetes.io/mode: EnsureExists
+    addonmanager.kubernetes.io/mode: Reconcile
 rules:
   - apiGroups:
     - ""
@@ -14810,7 +14920,7 @@ metadata:
   name: azure-npm-binding
   namespace: kube-system
   labels:
-    addonmanager.kubernetes.io/mode: EnsureExists
+    addonmanager.kubernetes.io/mode: Reconcile
 subjects:
   - kind: ServiceAccount
     name: azure-npm
@@ -14827,7 +14937,7 @@ metadata:
   namespace: kube-system
   labels:
     app: azure-npm
-    addonmanager.kubernetes.io/mode: EnsureExists
+    addonmanager.kubernetes.io/mode: Reconcile
 spec:
   selector:
     matchLabels:
@@ -14922,11 +15032,11 @@ spec:
         - name: volplugins
           mountPath: /etc/kubernetes/volumeplugins/
         - name: varlog
-          mountPath: /var/log/      
+          mountPath: /var/log/
       volumes:
       - name: varlog
         hostPath:
-          path: /var/log/              
+          path: /var/log/
       - name: volplugins
         hostPath:
           path: /etc/kubernetes/volumeplugins/
@@ -14998,7 +15108,7 @@ kind: CustomResourceDefinition
 metadata:
   name: felixconfigurations.crd.projectcalico.org
   labels:
-    addonmanager.kubernetes.io/mode: "EnsureExists"
+    addonmanager.kubernetes.io/mode: "Reconcile"
 spec:
   scope: Cluster
   group: crd.projectcalico.org
@@ -15014,7 +15124,7 @@ kind: CustomResourceDefinition
 metadata:
   name: bgpconfigurations.crd.projectcalico.org
   labels:
-    addonmanager.kubernetes.io/mode: "EnsureExists"
+    addonmanager.kubernetes.io/mode: "Reconcile"
 spec:
   scope: Cluster
   group: crd.projectcalico.org
@@ -15030,7 +15140,7 @@ kind: CustomResourceDefinition
 metadata:
   name: ippools.crd.projectcalico.org
   labels:
-    addonmanager.kubernetes.io/mode: "EnsureExists"
+    addonmanager.kubernetes.io/mode: "Reconcile"
 spec:
   scope: Cluster
   group: crd.projectcalico.org
@@ -15046,7 +15156,7 @@ kind: CustomResourceDefinition
 metadata:
   name: hostendpoints.crd.projectcalico.org
   labels:
-    addonmanager.kubernetes.io/mode: "EnsureExists"
+    addonmanager.kubernetes.io/mode: "Reconcile"
 spec:
   scope: Cluster
   group: crd.projectcalico.org
@@ -15062,7 +15172,7 @@ kind: CustomResourceDefinition
 metadata:
   name: clusterinformations.crd.projectcalico.org
   labels:
-    addonmanager.kubernetes.io/mode: "EnsureExists"
+    addonmanager.kubernetes.io/mode: "Reconcile"
 spec:
   scope: Cluster
   group: crd.projectcalico.org
@@ -15078,7 +15188,7 @@ kind: CustomResourceDefinition
 metadata:
   name: globalnetworkpolicies.crd.projectcalico.org
   labels:
-    addonmanager.kubernetes.io/mode: "EnsureExists"
+    addonmanager.kubernetes.io/mode: "Reconcile"
 spec:
   scope: Cluster
   group: crd.projectcalico.org
@@ -15094,7 +15204,7 @@ kind: CustomResourceDefinition
 metadata:
   name: globalnetworksets.crd.projectcalico.org
   labels:
-    addonmanager.kubernetes.io/mode: "EnsureExists"
+    addonmanager.kubernetes.io/mode: "Reconcile"
 spec:
   scope: Cluster
   group: crd.projectcalico.org
@@ -15110,7 +15220,7 @@ kind: CustomResourceDefinition
 metadata:
   name: networkpolicies.crd.projectcalico.org
   labels:
-    addonmanager.kubernetes.io/mode: "EnsureExists"
+    addonmanager.kubernetes.io/mode: "Reconcile"
 spec:
   scope: Namespaced
   group: crd.projectcalico.org
@@ -15126,7 +15236,7 @@ kind: CustomResourceDefinition
 metadata:
   name: networksets.crd.projectcalico.org
   labels:
-    addonmanager.kubernetes.io/mode: "EnsureExists"
+    addonmanager.kubernetes.io/mode: "Reconcile"
 spec:
   scope: Namespaced
   group: crd.projectcalico.org
@@ -15145,7 +15255,7 @@ apiVersion: rbac.authorization.k8s.io/v1beta1
 metadata:
   name: calico-node
   labels:
-    addonmanager.kubernetes.io/mode: "EnsureExists"
+    addonmanager.kubernetes.io/mode: "Reconcile"
 rules:
 # The CNI plugin needs to get pods, nodes, and namespaces.
 - apiGroups: [""]
@@ -15248,7 +15358,7 @@ metadata:
   name: calico-node
   labels:
     kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: "EnsureExists"
+    addonmanager.kubernetes.io/mode: "Reconcile"
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
@@ -15270,7 +15380,7 @@ metadata:
   namespace: kube-system
   labels:
     k8s-app: calico-typha
-    addonmanager.kubernetes.io/mode: "EnsureExists"
+    addonmanager.kubernetes.io/mode: "Reconcile"
 spec:
   ports:
   - port: 5473
@@ -15290,7 +15400,7 @@ metadata:
   namespace: kube-system
   labels:
     k8s-app: calico-typha
-    addonmanager.kubernetes.io/mode: "EnsureExists"
+    addonmanager.kubernetes.io/mode: "Reconcile"
 spec:
   # Number of Typha replicas.  To enable Typha, set this to a non-zero value *and* set the
   # typha_service_name variable in the calico-config ConfigMap above.
@@ -15381,7 +15491,7 @@ metadata:
   namespace: kube-system
   labels:
     k8s-app: calico-node
-    addonmanager.kubernetes.io/mode: "EnsureExists"
+    addonmanager.kubernetes.io/mode: "Reconcile"
 spec:
   selector:
     matchLabels:
@@ -15564,7 +15674,7 @@ metadata:
   name: calico-node
   namespace: kube-system
   labels:
-    addonmanager.kubernetes.io/mode: "EnsureExists"
+    addonmanager.kubernetes.io/mode: "Reconcile"
 ---
 
 # Typha Horizontal Autoscaler ConfigMap
@@ -15604,7 +15714,7 @@ metadata:
   labels:
     k8s-app: calico-typha-autoscaler
     kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: "EnsureExists"
+    addonmanager.kubernetes.io/mode: "Reconcile"
 spec:
   replicas: 1
   template:
@@ -15643,7 +15753,7 @@ metadata:
   name: typha-cpha
   labels:
     kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: "EnsureExists"
+    addonmanager.kubernetes.io/mode: "Reconcile"
 rules:
 - apiGroups: [""]
   resources: ["nodes"]
@@ -15658,7 +15768,7 @@ metadata:
   name: typha-cpha
   labels:
     kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: "EnsureExists"
+    addonmanager.kubernetes.io/mode: "Reconcile"
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
@@ -15669,7 +15779,7 @@ subjects:
   namespace: kube-system
 ---
 
-# Typha Horizontal Autoscaler Role 
+# Typha Horizontal Autoscaler Role
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
@@ -15677,7 +15787,7 @@ metadata:
   namespace: kube-system
   labels:
     kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: "EnsureExists"
+    addonmanager.kubernetes.io/mode: "Reconcile"
 rules:
 - apiGroups: [""]
   resources: ["configmaps"]
@@ -15696,7 +15806,7 @@ metadata:
   namespace: kube-system
   labels:
     kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: "EnsureExists"
+    addonmanager.kubernetes.io/mode: "Reconcile"
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
@@ -16166,7 +16276,7 @@ metadata:
   labels:
     app: keyvault-flexvolume
     kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: EnsureExists
+    addonmanager.kubernetes.io/mode: Reconcile
   name: keyvault-flexvolume
   namespace: kube-system
 spec:
@@ -16175,7 +16285,7 @@ spec:
       labels:
         app: keyvault-flexvolume
         kubernetes.io/cluster-service: "true"
-        addonmanager.kubernetes.io/mode: EnsureExists
+        addonmanager.kubernetes.io/mode: Reconcile
     spec:
       tolerations:
       containers:
@@ -16426,7 +16536,7 @@ metadata:
   namespace: kube-system
   labels:
     kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: EnsureExists
+    addonmanager.kubernetes.io/mode: Reconcile
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
@@ -16434,7 +16544,7 @@ metadata:
   name: system:metrics-server
   labels:
     kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: EnsureExists
+    addonmanager.kubernetes.io/mode: Reconcile
 rules:
 - apiGroups:
   - ""
@@ -16461,7 +16571,7 @@ metadata:
   name: system:metrics-server
   labels:
     kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: EnsureExists
+    addonmanager.kubernetes.io/mode: Reconcile
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
@@ -16478,7 +16588,7 @@ metadata:
   namespace: kube-system
   labels:
     kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: EnsureExists
+    addonmanager.kubernetes.io/mode: Reconcile
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
@@ -16494,7 +16604,7 @@ metadata:
   name: metrics-server:system:auth-delegator
   labels:
     kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: EnsureExists
+    addonmanager.kubernetes.io/mode: Reconcile
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
@@ -16510,7 +16620,7 @@ metadata:
   name: metrics-server
   namespace: kube-system
   labels:
-    addonmanager.kubernetes.io/mode: EnsureExists
+    addonmanager.kubernetes.io/mode: Reconcile
     kubernetes.io/name: "Metrics-server"
     kubernetes.io/cluster-service: "true"
 spec:
@@ -16557,7 +16667,7 @@ metadata:
   name: v1beta1.metrics.k8s.io
   labels:
     kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: EnsureExists
+    addonmanager.kubernetes.io/mode: Reconcile
 spec:
   service:
     name: metrics-server
@@ -17206,11 +17316,11 @@ spec:
         - name: volplugins
           mountPath: /etc/kubernetes/volumeplugins/
         - name: varlog
-          mountPath: /var/log/      
+          mountPath: /var/log/
       volumes:
       - name: varlog
         hostPath:
-          path: /var/log/              
+          path: /var/log/
       - name: volplugins
         hostPath:
           path: /etc/kubernetes/volumeplugins/
@@ -17241,7 +17351,7 @@ metadata:
   namespace: kube-system
   labels:
     kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: EnsureExists
+    addonmanager.kubernetes.io/mode: Reconcile
 ---
 apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: ClusterRoleBinding
@@ -17249,7 +17359,7 @@ metadata:
   name: tiller
   labels:
     kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: EnsureExists
+    addonmanager.kubernetes.io/mode: Reconcile
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
@@ -17266,7 +17376,7 @@ metadata:
     app: helm
     name: tiller
     kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: EnsureExists
+    addonmanager.kubernetes.io/mode: Reconcile
   name: tiller-deploy
   namespace: kube-system
 spec:
@@ -17286,7 +17396,7 @@ metadata:
     app: helm
     name: tiller
     kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: EnsureExists
+    addonmanager.kubernetes.io/mode: Reconcile
   name: tiller-deploy
   namespace: kube-system
 spec:
@@ -18961,7 +19071,7 @@ func k8sWindowsconfigfuncPs1() (*asset, error) {
 var _k8sWindowsinstallopensshfuncPs1 = []byte(`function
 Install-OpenSSH {
     Param(
-        [Parameter(Mandatory = $true)][string[]] 
+        [Parameter(Mandatory = $true)][string[]]
         $SSHKeys
     )
 
@@ -19000,7 +19110,7 @@ Install-OpenSSH {
     # OPTIONAL but recommended:
     Set-Service -Name sshd -StartupType 'Automatic'
 
-    # Confirm the Firewall rule is configured. It should be created automatically by setup. 
+    # Confirm the Firewall rule is configured. It should be created automatically by setup.
     $firewall = Get-NetFirewallRule -Name *ssh*
 
     if (!$firewall) {
@@ -20003,14 +20113,14 @@ Start-Docker()
 {
     Write-Log "Starting $global:DockerServiceName..."
     $startTime = Get-Date
-        
+
     while (-not $dockerReady)
     {
         try
         {
             Start-Service -Name $global:DockerServiceName -ea Stop
 
-            $dockerReady = $true            
+            $dockerReady = $true
         }
         catch
         {
@@ -20022,7 +20132,7 @@ Start-Docker()
             }
 
             $errorStr = $_.Exception.Message
-            Write-Log "Starting Service failed: $errorStr" 
+            Write-Log "Starting Service failed: $errorStr"
             Write-Log "sleeping for 10 seconds..."
             Start-Sleep -sec 10
         }
@@ -20036,7 +20146,7 @@ Stop-Docker()
     Write-Log "Stopping $global:DockerServiceName..."
     try
     {
-        Stop-Service -Name $global:DockerServiceName -ea Stop   
+        Stop-Service -Name $global:DockerServiceName -ea Stop
     }
     catch
     {
@@ -20049,7 +20159,7 @@ Update-DockerServiceRecoveryPolicy()
 {
     $dockerReady = $false
     $startTime = Get-Date
-    
+
     # wait until the service exists
     while (-not $dockerReady)
     {
@@ -20057,7 +20167,7 @@ Update-DockerServiceRecoveryPolicy()
         {
             $dockerReady = $true
         }
-        else 
+        else
         {
             $timeElapsed = $(Get-Date) - $startTime
             if ($($timeElapsed).TotalMinutes -ge 5)
@@ -20069,7 +20179,7 @@ Update-DockerServiceRecoveryPolicy()
             Start-Sleep -sec 5
         }
     }
-    
+
     Write-Log "Updating docker restart policy, to ensure it restarts on error"
     $services = Get-WMIObject win32_service | Where-Object {$_.name -imatch $global:DockerServiceName}
     foreach ($service in $services)
@@ -20143,7 +20253,7 @@ try
 
     Write-Log "Update Docker restart policy"
     Update-DockerServiceRecoveryPolicy
-    
+
     Write-Log "Start Docker"
     Start-Docker
 
@@ -20235,14 +20345,14 @@ function Start-Docker()
 {
     Write-Log "Starting $global:DockerServiceName..."
     $startTime = Get-Date
-        
+
     while (-not $dockerReady)
     {
         try
         {
             Start-Service -Name $global:DockerServiceName -ea Stop
 
-            $dockerReady = $true            
+            $dockerReady = $true
         }
         catch
         {
@@ -20254,7 +20364,7 @@ function Start-Docker()
             }
 
             $errorStr = $_.Exception.Message
-            Write-Log "Starting Service failed: $errorStr" 
+            Write-Log "Starting Service failed: $errorStr"
             Write-Log "sleeping for 10 seconds..."
             Start-Sleep -sec 10
         }
@@ -20266,7 +20376,7 @@ function Stop-Docker()
     Write-Log "Stopping $global:DockerServiceName..."
     try
     {
-        Stop-Service -Name $global:DockerServiceName -ea Stop   
+        Stop-Service -Name $global:DockerServiceName -ea Stop
     }
     catch
     {
@@ -20319,7 +20429,7 @@ function Install-DockerBinaries()
             $currentRetry = $currentRetry + 1;
         }
     } while (!$success);
-      
+
     Write-Log "Expanding zip file at destination: $global:DockerExePath"
     Expand-ZIPFile -File $zipfile -Destination $global:DockerExePath
 
@@ -20331,7 +20441,7 @@ function Update-DockerServiceRecoveryPolicy()
 {
     $dockerReady = $false
     $startTime = Get-Date
-    
+
     # wait until the service exists
     while (-not $dockerReady)
     {
@@ -20339,7 +20449,7 @@ function Update-DockerServiceRecoveryPolicy()
         {
             $dockerReady = $true
         }
-        else 
+        else
         {
             $timeElapsed = $(Get-Date) - $startTime
             if ($($timeElapsed).TotalMinutes -ge 5)
@@ -20351,7 +20461,7 @@ function Update-DockerServiceRecoveryPolicy()
             Start-Sleep -sec 5
         }
     }
-    
+
     Write-Log "Updating docker restart policy, to ensure it restarts on error"
     $services = Get-WMIObject win32_service | Where-Object {$_.name -imatch $global:DockerServiceName}
     foreach ($service in $services)
@@ -20455,7 +20565,7 @@ function Confirm-DockerVersion()
    $dockerClientVersion = Invoke-Expression -Command:$dockerClientVersionCmd
 
    Write-Log "Docker Server version: $dockerServerVersion, Docker Client verison: $dockerClientVersion"
-   
+
    $serverVersionData = $dockerServerVersion.Split(".")
    $isNewServerVersion = $false;
    if(($serverVersionData[0] -ge 1) -and ($serverVersionData[1] -ge 13)){
@@ -20467,7 +20577,7 @@ function Confirm-DockerVersion()
    $isNewClientVersion = $false;
    if(($clientVersionData[0] -ge 1) -and ($clientVersionData[1] -ge 13)){
        $isNewClientVersion = $true;
-       Write-Log "Setting  isNewClientVersion to $isNewClientVersion"   
+       Write-Log "Setting  isNewClientVersion to $isNewClientVersion"
    }
 
    if($isNewServerVersion -and $isNewClientVersion)
@@ -20498,10 +20608,10 @@ try
 
     Write-Log "Update Docker restart policy"
     Update-DockerServiceRecoveryPolicy
-    
+
     Write-Log "Start Docker"
     Start-Docker
-    
+
     Write-Log "Join existing Swarm"
     Join-Swarm
 
@@ -20698,7 +20808,7 @@ installDocker()
 {
   for i in {1..10}; do
     apt-get install -y apt-transport-https ca-certificates curl software-properties-common
-    curl --max-time 60 -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add - 
+    curl --max-time 60 -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add -
     add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
     apt-get update
     apt-get install -y docker-ce=${DOCKER_CE_VERSION}
@@ -21016,7 +21126,7 @@ installDockerUbuntu()
 {
   for i in {1..10}; do
     apt-get install -y apt-transport-https ca-certificates curl software-properties-common
-    curl --max-time 60 -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add - 
+    curl --max-time 60 -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add -
     add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
     apt-get update
     apt-get install -y docker-ce=${DOCKER_CE_VERSION}
@@ -21414,10 +21524,10 @@ var _swarmSwarmagentresourcesvmasT = []byte(`    {
           "computername": "[concat(variables('{{.Name}}VMNamePrefix'), copyIndex(variables('{{.Name}}Offset')))]",
 {{if IsSwarmMode}}
   {{if not .IsRHEL}}
-            {{GetAgentSwarmModeCustomData .}} 
+            {{GetAgentSwarmModeCustomData .}}
   {{end}}
 {{else}}
-            {{GetAgentSwarmCustomData .}} 
+            {{GetAgentSwarmCustomData .}}
 {{end}}
           "linuxConfiguration": {
               "disablePasswordAuthentication": true,
@@ -22393,11 +22503,11 @@ func swarmSwarmparamsT() (*asset, error) {
 }
 
 var _swarmSwarmwinagentresourcesvmasT = []byte(`    {
-      "apiVersion": "[variables('apiVersionDefault')]", 
+      "apiVersion": "[variables('apiVersionDefault')]",
       "copy": {
-        "count": "[sub(variables('{{.Name}}Count'), variables('{{.Name}}Offset'))]", 
+        "count": "[sub(variables('{{.Name}}Count'), variables('{{.Name}}Offset'))]",
         "name": "loop"
-      }, 
+      },
       "dependsOn": [
 {{if not .IsCustomVNET}}
       "[variables('vnetID')]"
@@ -22405,13 +22515,13 @@ var _swarmSwarmwinagentresourcesvmasT = []byte(`    {
 {{if IsPublic .Ports}}
 	  ,"[variables('{{.Name}}LbID')]"
 {{end}}
-      ], 
-      "location": "[variables('location')]", 
+      ],
+      "location": "[variables('location')]",
       "name": "[concat(variables('{{.Name}}VMNamePrefix'), 'nic-', copyIndex(variables('{{.Name}}Offset')))]",
       "properties": {
         "ipConfigurations": [
           {
-            "name": "ipConfigNode", 
+            "name": "ipConfigNode",
             "properties": {
 {{if IsPublic .Ports}}
               "loadBalancerBackendAddressPools": [
@@ -22424,24 +22534,24 @@ var _swarmSwarmwinagentresourcesvmasT = []byte(`    {
                   "id": "[concat(variables('{{.Name}}LbID'), '/inboundNatPools/', 'RDP-', variables('{{.Name}}VMNamePrefix'))]"
                 }
               ],
-{{end}}  
-              "privateIPAllocationMethod": "Dynamic", 
+{{end}}
+              "privateIPAllocationMethod": "Dynamic",
               "subnet": {
                 "id": "[variables('{{.Name}}VnetSubnetID')]"
              }
             }
           }
         ]
-      }, 
+      },
       "type": "Microsoft.Network/networkInterfaces"
     },
 {{if .IsManagedDisks}}
     {
-      "apiVersion": "[variables('apiVersionStorageManagedDisks')]", 
-      "location": "[variables('location')]", 
-      "name": "[variables('{{.Name}}AvailabilitySet')]", 
-      "properties": { 
-        "platformFaultDomainCount": 2, 
+      "apiVersion": "[variables('apiVersionStorageManagedDisks')]",
+      "location": "[variables('location')]",
+      "name": "[variables('{{.Name}}AvailabilitySet')]",
+      "properties": {
+        "platformFaultDomainCount": 2,
         "platformUpdateDomainCount": 3,
         "managed": "true"
       },
@@ -22449,76 +22559,76 @@ var _swarmSwarmwinagentresourcesvmasT = []byte(`    {
     },
 {{else if .IsStorageAccount}}
     {
-      "apiVersion": "[variables('apiVersionStorage')]", 
+      "apiVersion": "[variables('apiVersionStorage')]",
       "copy": {
-        "count": "[variables('{{.Name}}StorageAccountsCount')]", 
+        "count": "[variables('{{.Name}}StorageAccountsCount')]",
         "name": "vmLoopNode"
-      }, 
+      },
       "dependsOn": [
         "[concat('Microsoft.Network/publicIPAddresses/', variables('masterPublicIPAddressName'))]"
-      ], 
-      "location": "[variables('location')]", 
-      "name": "[concat(variables('storageAccountPrefixes')[mod(add(copyIndex(),variables('{{.Name}}StorageAccountOffset')),variables('storageAccountPrefixesCount'))],variables('storageAccountPrefixes')[div(add(copyIndex(),variables('{{.Name}}StorageAccountOffset')),variables('storageAccountPrefixesCount'))],variables('{{.Name}}AccountName'))]", 
+      ],
+      "location": "[variables('location')]",
+      "name": "[concat(variables('storageAccountPrefixes')[mod(add(copyIndex(),variables('{{.Name}}StorageAccountOffset')),variables('storageAccountPrefixesCount'))],variables('storageAccountPrefixes')[div(add(copyIndex(),variables('{{.Name}}StorageAccountOffset')),variables('storageAccountPrefixesCount'))],variables('{{.Name}}AccountName'))]",
       "properties": {
         "accountType": "[variables('vmSizesMap')[variables('{{.Name}}VMSize')].storageAccountType]"
-      }, 
+      },
       "type": "Microsoft.Storage/storageAccounts"
     },
   {{if .HasDisks}}
       {
-        "apiVersion": "[variables('apiVersionStorage')]", 
+        "apiVersion": "[variables('apiVersionStorage')]",
         "copy": {
-          "count": "[variables('{{.Name}}StorageAccountsCount')]", 
+          "count": "[variables('{{.Name}}StorageAccountsCount')]",
           "name": "datadiskLoop"
-        }, 
+        },
         "dependsOn": [
           "[concat('Microsoft.Network/publicIPAddresses/', variables('masterPublicIPAddressName'))]"
-        ], 
-        "location": "[variables('location')]", 
-        "name": "[concat(variables('storageAccountPrefixes')[mod(add(copyIndex(variables('dataStorageAccountPrefixSeed')),variables('{{.Name}}StorageAccountOffset')),variables('storageAccountPrefixesCount'))],variables('storageAccountPrefixes')[div(add(copyIndex(variables('dataStorageAccountPrefixSeed')),variables('{{.Name}}StorageAccountOffset')),variables('storageAccountPrefixesCount'))],variables('{{.Name}}DataAccountName'))]", 
+        ],
+        "location": "[variables('location')]",
+        "name": "[concat(variables('storageAccountPrefixes')[mod(add(copyIndex(variables('dataStorageAccountPrefixSeed')),variables('{{.Name}}StorageAccountOffset')),variables('storageAccountPrefixesCount'))],variables('storageAccountPrefixes')[div(add(copyIndex(variables('dataStorageAccountPrefixSeed')),variables('{{.Name}}StorageAccountOffset')),variables('storageAccountPrefixesCount'))],variables('{{.Name}}DataAccountName'))]",
         "properties": {
           "accountType": "[variables('vmSizesMap')[variables('{{.Name}}VMSize')].storageAccountType]"
-        }, 
+        },
         "type": "Microsoft.Storage/storageAccounts"
-      }, 
+      },
   {{end}}
     {
-      "apiVersion": "[variables('apiVersionDefault')]", 
-      "location": "[variables('location')]", 
-      "name": "[variables('{{.Name}}AvailabilitySet')]", 
-      "properties": {}, 
+      "apiVersion": "[variables('apiVersionDefault')]",
+      "location": "[variables('location')]",
+      "name": "[variables('{{.Name}}AvailabilitySet')]",
+      "properties": {},
       "type": "Microsoft.Compute/availabilitySets"
     },
 {{end}}
 {{if IsPublic .Ports}}
     {
-      "apiVersion": "[variables('apiVersionDefault')]", 
-      "location": "[variables('location')]", 
-      "name": "[variables('{{.Name}}IPAddressName')]", 
+      "apiVersion": "[variables('apiVersionDefault')]",
+      "location": "[variables('location')]",
+      "name": "[variables('{{.Name}}IPAddressName')]",
       "properties": {
         "dnsSettings": {
           "domainNameLabel": "[variables('{{.Name}}EndpointDNSNamePrefix')]"
-        }, 
+        },
         "publicIPAllocationMethod": "Dynamic"
-      }, 
+      },
       "type": "Microsoft.Network/publicIPAddresses"
-    }, 
+    },
     {
-      "apiVersion": "[variables('apiVersionDefault')]", 
+      "apiVersion": "[variables('apiVersionDefault')]",
       "dependsOn": [
         "[concat('Microsoft.Network/publicIPAddresses/', variables('{{.Name}}IPAddressName'))]"
-      ], 
-      "location": "[variables('location')]", 
-      "name": "[variables('{{.Name}}LbName')]", 
+      ],
+      "location": "[variables('location')]",
+      "name": "[variables('{{.Name}}LbName')]",
       "properties": {
         "backendAddressPools": [
           {
             "name": "[variables('{{.Name}}LbBackendPoolName')]"
           }
-        ], 
+        ],
         "frontendIPConfigurations": [
           {
-            "name": "[variables('{{.Name}}LbIPConfigName')]", 
+            "name": "[variables('{{.Name}}LbIPConfigName')]",
             "properties": {
               "publicIPAddress": {
                 "id": "[resourceId('Microsoft.Network/publicIPAddresses',variables('{{.Name}}IPAddressName'))]"
@@ -22539,16 +22649,16 @@ var _swarmSwarmwinagentresourcesvmasT = []byte(`    {
               "backendPort": "[variables('agentWindowsBackendPort')]"
             }
           }
-        ], 
+        ],
         "loadBalancingRules": [
           {{(GetLBRules .Name .Ports)}}
-        ], 
+        ],
         "probes": [
           {{(GetProbes .Ports)}}
         ]
-      }, 
+      },
       "type": "Microsoft.Network/loadBalancers"
-    }, 
+    },
 {{end}}
     {
 {{if .IsManagedDisks}}
@@ -22557,9 +22667,9 @@ var _swarmSwarmwinagentresourcesvmasT = []byte(`    {
     "apiVersion": "[variables('apiVersionDefault')]",
 {{end}}
       "copy": {
-        "count": "[sub(variables('{{.Name}}Count'), variables('{{.Name}}Offset'))]", 
+        "count": "[sub(variables('{{.Name}}Count'), variables('{{.Name}}Offset'))]",
         "name": "vmLoopNode"
-      }, 
+      },
       "dependsOn": [
 {{if .IsStorageAccount}}
         "[concat('Microsoft.Storage/storageAccounts/',variables('storageAccountPrefixes')[mod(add(div(copyIndex(variables('{{.Name}}Offset')),variables('maxVMsPerStorageAccount')),variables('{{.Name}}StorageAccountOffset')),variables('storageAccountPrefixesCount'))],variables('storageAccountPrefixes')[div(add(div(copyIndex(variables('{{.Name}}Offset')),variables('maxVMsPerStorageAccount')),variables('{{.Name}}StorageAccountOffset')),variables('storageAccountPrefixesCount'))],variables('{{.Name}}AccountName'))]",
@@ -22567,35 +22677,35 @@ var _swarmSwarmwinagentresourcesvmasT = []byte(`    {
           "[concat('Microsoft.Storage/storageAccounts/',variables('storageAccountPrefixes')[mod(add(add(div(copyIndex(variables('{{.Name}}Offset')),variables('maxVMsPerStorageAccount')),variables('{{.Name}}StorageAccountOffset')),variables('dataStorageAccountPrefixSeed')),variables('storageAccountPrefixesCount'))],variables('storageAccountPrefixes')[div(add(add(div(copyIndex(variables('{{.Name}}Offset')),variables('maxVMsPerStorageAccount')),variables('{{.Name}}StorageAccountOffset')),variables('dataStorageAccountPrefixSeed')),variables('storageAccountPrefixesCount'))],variables('{{.Name}}DataAccountName'))]",
   {{end}}
 {{end}}
-        "[concat('Microsoft.Network/networkInterfaces/', variables('{{.Name}}VMNamePrefix'), 'nic-', copyIndex(variables('{{.Name}}Offset')))]", 
+        "[concat('Microsoft.Network/networkInterfaces/', variables('{{.Name}}VMNamePrefix'), 'nic-', copyIndex(variables('{{.Name}}Offset')))]",
         "[concat('Microsoft.Compute/availabilitySets/', variables('{{.Name}}AvailabilitySet'))]"
       ],
       "tags":
       {
         "creationSource" : "[concat('acsengine-', variables('{{.Name}}VMNamePrefix'), copyIndex(variables('{{.Name}}Offset')))]"
       },
-      "location": "[variables('location')]",  
+      "location": "[variables('location')]",
       "name": "[concat(variables('{{.Name}}VMNamePrefix'), copyIndex(variables('{{.Name}}Offset')))]",
       "properties": {
         "availabilitySet": {
           "id": "[resourceId('Microsoft.Compute/availabilitySets',variables('{{.Name}}AvailabilitySet'))]"
-        }, 
+        },
         "hardwareProfile": {
           "vmSize": "[variables('{{.Name}}VMSize')]"
-        }, 
+        },
         "networkProfile": {
           "networkInterfaces": [
             {
               "id": "[resourceId('Microsoft.Network/networkInterfaces',concat(variables('{{.Name}}VMNamePrefix'), 'nic-', copyIndex(variables('{{.Name}}Offset'))))]"
             }
           ]
-        }, 
+        },
         "osProfile": {
           "computername": "[concat(substring(variables('nameSuffix'), 0, 5), 'acs', copyIndex(variables('{{.Name}}Offset')), add(900,variables('{{.Name}}Index')))]",
           "adminUsername": "[variables('windowsAdminUsername')]",
           "adminPassword": "[variables('windowsAdminPassword')]",
           {{if IsSwarmMode}}
-            {{GetWinAgentSwarmModeCustomData}}           
+            {{GetWinAgentSwarmModeCustomData}}
           {{else}}
             {{GetWinAgentSwarmCustomData}}
           {{end}}
@@ -22603,7 +22713,7 @@ var _swarmSwarmwinagentresourcesvmasT = []byte(`    {
               ,
               "secrets": "[variables('windowsProfileSecrets')]"
           {{end}}
-        }, 
+        },
         "storageProfile": {
           {{GetDataDisks .}}
           "imageReference": {
@@ -22626,19 +22736,19 @@ var _swarmSwarmwinagentresourcesvmasT = []byte(`    {
 {{end}}
           }
         }
-      }, 
+      },
       "type": "Microsoft.Compute/virtualMachines"
-    }, 
+    },
     {
-      "apiVersion": "[variables('apiVersionDefault')]", 
+      "apiVersion": "[variables('apiVersionDefault')]",
       "copy": {
-        "count": "[sub(variables('{{.Name}}Count'), variables('{{.Name}}Offset'))]", 
+        "count": "[sub(variables('{{.Name}}Count'), variables('{{.Name}}Offset'))]",
         "name": "vmLoopNode"
-      }, 
+      },
       "dependsOn": [
         "[concat('Microsoft.Compute/virtualMachines/', variables('{{.Name}}VMNamePrefix'), copyIndex(variables('{{.Name}}Offset')))]"
-      ], 
-      "location": "[variables('location')]", 
+      ],
+      "location": "[variables('location')]",
       "name": "[concat(variables('{{.Name}}VMNamePrefix'), copyIndex(variables('{{.Name}}Offset')), '/cse')]",
       "properties": {
         "publisher": "Microsoft.Compute",
@@ -22648,7 +22758,7 @@ var _swarmSwarmwinagentresourcesvmasT = []byte(`    {
         "settings": {
           "commandToExecute": "[variables('windowsCustomScript')]"
         }
-      }, 
+      },
       "type": "Microsoft.Compute/virtualMachines/extensions"
     }
 `)
@@ -23081,13 +23191,14 @@ var _bindata = map[string]func() (*asset, error){
 	"dcos/dcosprovisionsource.sh":                                     dcosDcosprovisionsourceSh,
 	"iaasoutputs.t":                                                   iaasoutputsT,
 	"k8s/addons/1.10/kubernetesmasteraddons-kube-dns-deployment.yaml": k8sAddons110KubernetesmasteraddonsKubeDnsDeploymentYaml,
-	"k8s/addons/1.6/kubernetesmasteraddons-calico-daemonset.yaml":     k8sAddons16KubernetesmasteraddonsCalicoDaemonsetYaml,
-	"k8s/addons/1.6/kubernetesmasteraddons-kubernetes-dashboard-deployment.yaml": k8sAddons16KubernetesmasteraddonsKubernetesDashboardDeploymentYaml,
-	"k8s/addons/1.7/kubernetesmasteraddons-kube-dns-deployment.yaml":             k8sAddons17KubernetesmasteraddonsKubeDnsDeploymentYaml,
-	"k8s/addons/1.7/kubernetesmasteraddons-kubernetes-dashboard-deployment.yaml": k8sAddons17KubernetesmasteraddonsKubernetesDashboardDeploymentYaml,
-	"k8s/addons/1.8/kubernetesmasteraddons-kube-dns-deployment.yaml":             k8sAddons18KubernetesmasteraddonsKubeDnsDeploymentYaml,
-	"k8s/addons/1.8/kubernetesmasteraddons-kubernetes-dashboard-deployment.yaml": k8sAddons18KubernetesmasteraddonsKubernetesDashboardDeploymentYaml,
-	"k8s/addons/1.9/kubernetesmasteraddons-kube-dns-deployment.yaml":             k8sAddons19KubernetesmasteraddonsKubeDnsDeploymentYaml,
+	"k8s/addons/1.15/kubernetesmasteraddons-azure-cloud-provider-deployment.yaml": k8sAddons115KubernetesmasteraddonsAzureCloudProviderDeploymentYaml,
+	"k8s/addons/1.6/kubernetesmasteraddons-calico-daemonset.yaml":                 k8sAddons16KubernetesmasteraddonsCalicoDaemonsetYaml,
+	"k8s/addons/1.6/kubernetesmasteraddons-kubernetes-dashboard-deployment.yaml":  k8sAddons16KubernetesmasteraddonsKubernetesDashboardDeploymentYaml,
+	"k8s/addons/1.7/kubernetesmasteraddons-kube-dns-deployment.yaml":              k8sAddons17KubernetesmasteraddonsKubeDnsDeploymentYaml,
+	"k8s/addons/1.7/kubernetesmasteraddons-kubernetes-dashboard-deployment.yaml":  k8sAddons17KubernetesmasteraddonsKubernetesDashboardDeploymentYaml,
+	"k8s/addons/1.8/kubernetesmasteraddons-kube-dns-deployment.yaml":              k8sAddons18KubernetesmasteraddonsKubeDnsDeploymentYaml,
+	"k8s/addons/1.8/kubernetesmasteraddons-kubernetes-dashboard-deployment.yaml":  k8sAddons18KubernetesmasteraddonsKubernetesDashboardDeploymentYaml,
+	"k8s/addons/1.9/kubernetesmasteraddons-kube-dns-deployment.yaml":              k8sAddons19KubernetesmasteraddonsKubeDnsDeploymentYaml,
 	"k8s/addons/coredns.yaml":                                                       k8sAddonsCorednsYaml,
 	"k8s/addons/kubernetesmaster-audit-policy.yaml":                                 k8sAddonsKubernetesmasterAuditPolicyYaml,
 	"k8s/addons/kubernetesmasteraddons-aad-default-admin-group-rbac.yaml":           k8sAddonsKubernetesmasteraddonsAadDefaultAdminGroupRbacYaml,
@@ -23275,6 +23386,9 @@ var _bintree = &bintree{nil, map[string]*bintree{
 		"addons": {nil, map[string]*bintree{
 			"1.10": {nil, map[string]*bintree{
 				"kubernetesmasteraddons-kube-dns-deployment.yaml": {k8sAddons110KubernetesmasteraddonsKubeDnsDeploymentYaml, map[string]*bintree{}},
+			}},
+			"1.15": {nil, map[string]*bintree{
+				"kubernetesmasteraddons-azure-cloud-provider-deployment.yaml": {k8sAddons115KubernetesmasteraddonsAzureCloudProviderDeploymentYaml, map[string]*bintree{}},
 			}},
 			"1.6": {nil, map[string]*bintree{
 				"kubernetesmasteraddons-calico-daemonset.yaml":                {k8sAddons16KubernetesmasteraddonsCalicoDaemonsetYaml, map[string]*bintree{}},

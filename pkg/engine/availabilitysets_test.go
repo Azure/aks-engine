@@ -65,7 +65,6 @@ func TestCreateAvailabilitySet(t *testing.T) {
 				Name: to.StringPtr("Aligned"),
 			},
 			AvailabilitySetProperties: &compute.AvailabilitySetProperties{
-				PlatformFaultDomainCount:  to.Int32Ptr(2),
 				PlatformUpdateDomainCount: to.Int32Ptr(3),
 			},
 		},
@@ -106,6 +105,41 @@ func TestCreateAvailabilitySet(t *testing.T) {
 		t.Errorf("unexpected error while comparing availability sets: %s", diff)
 	}
 
+	// Test availability set with platform fault domain count set
+	count := 3
+	cs = &api.ContainerService{
+		Properties: &api.Properties{
+			MasterProfile: &api.MasterProfile{
+				PlatformFaultDomainCount: &count,
+			},
+		},
+	}
+
+	avSet = CreateAvailabilitySet(cs, true)
+
+	expectedAvSet = AvailabilitySetARM{
+		ARMResource: ARMResource{
+			APIVersion: "[variables('apiVersionCompute')]",
+		},
+		AvailabilitySet: compute.AvailabilitySet{
+			Name:     to.StringPtr("[variables('masterAvailabilitySet')]"),
+			Location: to.StringPtr("[variables('location')]"),
+			Type:     to.StringPtr("Microsoft.Compute/availabilitySets"),
+			Sku: &compute.Sku{
+				Name: to.StringPtr("Aligned"),
+			},
+			AvailabilitySetProperties: &compute.AvailabilitySetProperties{
+				PlatformFaultDomainCount:  to.Int32Ptr(int32(count)),
+				PlatformUpdateDomainCount: to.Int32Ptr(3),
+			},
+		},
+	}
+
+	diff = cmp.Diff(avSet, expectedAvSet)
+
+	if diff != "" {
+		t.Errorf("unexpected error while comparing availability sets: %s", diff)
+	}
 }
 
 func TestCreateAgentAvailabilitySets(t *testing.T) {
@@ -152,7 +186,6 @@ func TestCreateAgentAvailabilitySets(t *testing.T) {
 			Location: to.StringPtr("[variables('location')]"),
 			Type:     to.StringPtr("Microsoft.Compute/availabilitySets"),
 			AvailabilitySetProperties: &compute.AvailabilitySetProperties{
-				PlatformFaultDomainCount:  to.Int32Ptr(2),
 				PlatformUpdateDomainCount: to.Int32Ptr(3),
 			},
 			Sku: &compute.Sku{
@@ -167,4 +200,37 @@ func TestCreateAgentAvailabilitySets(t *testing.T) {
 		t.Errorf("unexpected error while comparing availability sets: %s", diff)
 	}
 
+	// Test availability set with platform fault domain count set
+	count := 3
+	profile = &api.AgentPoolProfile{
+		Name:                     "foobar",
+		StorageProfile:           api.ManagedDisks,
+		PlatformFaultDomainCount: &count,
+	}
+
+	avSet = createAgentAvailabilitySets(profile)
+
+	expectedAvSet = AvailabilitySetARM{
+		ARMResource: ARMResource{
+			APIVersion: "[variables('apiVersionCompute')]",
+		},
+		AvailabilitySet: compute.AvailabilitySet{
+			Name:     to.StringPtr("[variables('foobarAvailabilitySet')]"),
+			Location: to.StringPtr("[variables('location')]"),
+			Type:     to.StringPtr("Microsoft.Compute/availabilitySets"),
+			AvailabilitySetProperties: &compute.AvailabilitySetProperties{
+				PlatformFaultDomainCount:  to.Int32Ptr(int32(count)),
+				PlatformUpdateDomainCount: to.Int32Ptr(3),
+			},
+			Sku: &compute.Sku{
+				Name: to.StringPtr("Aligned"),
+			},
+		},
+	}
+
+	diff = cmp.Diff(avSet, expectedAvSet)
+
+	if diff != "" {
+		t.Errorf("unexpected error while comparing availability sets: %s", diff)
+	}
 }

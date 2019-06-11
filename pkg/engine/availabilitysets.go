@@ -26,8 +26,11 @@ func CreateAvailabilitySet(cs *api.ContainerService, isManagedDisks bool) Availa
 	if !cs.Properties.MasterProfile.HasAvailabilityZones() {
 		if isManagedDisks {
 			avSet.AvailabilitySetProperties = &compute.AvailabilitySetProperties{
-				PlatformFaultDomainCount:  to.Int32Ptr(2),
 				PlatformUpdateDomainCount: to.Int32Ptr(3),
+			}
+			if cs.Properties.MasterProfile.PlatformFaultDomainCount != nil {
+				p := int32(*cs.Properties.MasterProfile.PlatformFaultDomainCount)
+				avSet.PlatformFaultDomainCount = to.Int32Ptr(p)
 			}
 			avSet.Sku = &compute.Sku{
 				Name: to.StringPtr("Aligned"),
@@ -57,7 +60,10 @@ func createAgentAvailabilitySets(profile *api.AgentPoolProfile) AvailabilitySetA
 	}
 
 	if profile.IsManagedDisks() {
-		avSet.PlatformFaultDomainCount = to.Int32Ptr(2)
+		if profile.PlatformFaultDomainCount != nil {
+			p := int32(*profile.PlatformFaultDomainCount)
+			avSet.PlatformFaultDomainCount = to.Int32Ptr(p)
+		}
 		avSet.PlatformUpdateDomainCount = to.Int32Ptr(3)
 		avSet.Sku = &compute.Sku{
 			Name: to.StringPtr("Aligned"),

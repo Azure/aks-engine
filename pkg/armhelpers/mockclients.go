@@ -558,7 +558,11 @@ func (mc *MockAKSEngineClient) ListVirtualMachines(ctx context.Context, resource
 
 	if mc.FakeListVirtualMachineResult == nil {
 		mc.FakeListVirtualMachineResult = func() []compute.VirtualMachine {
-			return []compute.VirtualMachine{mc.MakeFakeVirtualMachine(DefaultFakeVMName, defaultK8sVersionForFakeVMs)}
+			machine := mc.MakeFakeVirtualMachine(DefaultFakeVMName, defaultK8sVersionForFakeVMs)
+			machine.AvailabilitySet = &compute.SubResource{
+				ID: to.StringPtr("MockAvailabilitySet"),
+			}
+			return []compute.VirtualMachine{machine}
 		}
 	}
 	vms := mc.FakeListVirtualMachineResult()
@@ -781,6 +785,16 @@ func (mc *MockAKSEngineClient) ListVirtualMachineScaleSetVMs(ctx context.Context
 		},
 		Vmssvlr: compute.VirtualMachineScaleSetVMListResult{Value: &vms},
 	}, nil
+}
+
+// GetAvailabilitySet mock
+func (mc *MockAKSEngineClient) GetAvailabilitySet(ctx context.Context, resourceGroup, availabilitySetName string) (compute.AvailabilitySet, error) {
+	return compute.AvailabilitySet{}, nil
+}
+
+// GetAvailabilitySetFaultDomainCount mock
+func (mc *MockAKSEngineClient) GetAvailabilitySetFaultDomainCount(ctx context.Context, resourceGroup string, vmasIDs []string) (int, error) {
+	return 3, nil
 }
 
 //GetStorageClient mock

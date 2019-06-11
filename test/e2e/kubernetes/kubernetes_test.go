@@ -668,7 +668,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 		})
 
 		It("should have stable pod-to-pod networking", func() {
-			if eng.HasLinuxAgents() {
+			if eng.AnyAgentIsLinux() {
 				By("Creating a test php-apache deployment")
 				r := rand.New(rand.NewSource(time.Now().UnixNano()))
 				By("Creating another pod that will connect to the php-apache pod")
@@ -788,7 +788,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 
 	Describe("with a linux agent pool", func() {
 		It("should be able to produce working LoadBalancers", func() {
-			if eng.HasLinuxAgents() {
+			if eng.AnyAgentIsLinux() {
 				By("Creating a nginx deployment")
 				r := rand.New(rand.NewSource(time.Now().UnixNano()))
 				serviceName := "ingress-nginx"
@@ -883,7 +883,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 		})
 
 		It("should be able to autoscale", func() {
-			if eng.HasLinuxAgents() && eng.ExpandedDefinition.Properties.OrchestratorProfile.KubernetesConfig.EnableAggregatedAPIs {
+			if eng.AnyAgentIsLinux() && eng.ExpandedDefinition.Properties.OrchestratorProfile.KubernetesConfig.EnableAggregatedAPIs {
 				// Inspired by http://blog.kubernetes.io/2016/07/autoscaling-in-kubernetes.html
 				r := rand.New(rand.NewSource(time.Now().UnixNano()))
 				By("Creating a php-apache deployment")

@@ -143,6 +143,14 @@ generateAggregatedAPICerts() {
     $AGGREGATED_API_CERTS_SETUP_FILE
 }
 
+configureKubeletServerCert() {
+    KUBELET_SERVER_PRIVATE_KEY_PATH="/etc/kubernetes/certs/kubeletserver.key"
+    KUBELET_SERVER_CERT_PATH="/etc/kubernetes/certs/kubeletserver.crt"
+
+    openssl genrsa -out $KUBELET_SERVER_PRIVATE_KEY_PATH 2048
+    openssl req -new -x509 -days 7300 -key $KUBELET_SERVER_PRIVATE_KEY_PATH -out $KUBELET_SERVER_CERT_PATH -subj "/CN=${NODE_NAME}"
+}
+
 configureK8s() {
     KUBELET_PRIVATE_KEY_PATH="/etc/kubernetes/certs/client.key"
     touch "${KUBELET_PRIVATE_KEY_PATH}"
@@ -207,6 +215,8 @@ EOF
             generateAggregatedAPICerts
         fi
     fi
+
+    configureKubeletServerCert
 }
 
 configureCNI() {

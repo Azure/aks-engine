@@ -4956,3 +4956,299 @@ func TestKubernetesConfigIsAddonEnabled(t *testing.T) {
 		}
 	}
 }
+
+func TestSetPlatformFaultDomainCount(t *testing.T) {
+	// check that the default value is nil
+	cs := CreateMockContainerService("testcluster", defaultTestClusterVer, 1, 3, false)
+	if cs.Properties.MasterProfile.PlatformFaultDomainCount != nil {
+		t.Errorf("expected master platformFaultDomainCount to be nil, not %v", cs.Properties.MasterProfile.PlatformFaultDomainCount)
+	}
+	for _, pool := range cs.Properties.AgentPoolProfiles {
+		if pool.PlatformFaultDomainCount != nil {
+			t.Errorf("expected agent platformFaultDomainCount to be nil, not %v", pool.PlatformFaultDomainCount)
+		}
+	}
+
+	// check that pfdc can be set to legal values
+	for i := 1; i <= 3; i++ {
+		cs.SetPlatformFaultDomainCount(i)
+		if *cs.Properties.MasterProfile.PlatformFaultDomainCount != i {
+			t.Errorf("expected master platformFaultDomainCount to be %d, not %v", i, cs.Properties.MasterProfile.PlatformFaultDomainCount)
+		}
+		for _, pool := range cs.Properties.AgentPoolProfiles {
+			if *pool.PlatformFaultDomainCount != i {
+				t.Errorf("expected agent platformFaultDomainCount to be %d, not %v", i, pool.PlatformFaultDomainCount)
+			}
+		}
+	}
+}
+
+func TestAnyAgentUsesAvailabilitySets(t *testing.T) {
+	tests := []struct {
+		name     string
+		p        *Properties
+		expected bool
+	}{
+		{
+			name: "one agent pool w/ AvailabilitySet",
+			p: &Properties{
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						Name:                "agentpool1",
+						VMSize:              "Standard_D2_v2",
+						Count:               2,
+						AvailabilityProfile: AvailabilitySet,
+					},
+				},
+			},
+			expected: true,
+		},
+		{
+			name: "two agent pools, one w/ AvailabilitySet",
+			p: &Properties{
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						Name:                "agentpool1",
+						VMSize:              "Standard_D2_v2",
+						Count:               2,
+						AvailabilityProfile: AvailabilitySet,
+					},
+					{
+						Name:   "agentpool1",
+						VMSize: "Standard_D2_v2",
+						Count:  100,
+					},
+				},
+			},
+			expected: true,
+		},
+		{
+			name: "two agent pools",
+			p: &Properties{
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						Name:   "agentpool1",
+						VMSize: "Standard_D2_v2",
+						Count:  2,
+					},
+					{
+						Name:   "agentpool1",
+						VMSize: "Standard_D2_v2",
+						Count:  100,
+					},
+				},
+			},
+			expected: false,
+		},
+		{
+			name: "two agent pools, one w/ VirtualMachineScaleSets",
+			p: &Properties{
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						Name:   "agentpool1",
+						VMSize: "Standard_D2_v2",
+						Count:  2,
+					},
+					{
+						Name:                "agentpool1",
+						VMSize:              "Standard_D2_v2",
+						Count:               100,
+						AvailabilityProfile: VirtualMachineScaleSets,
+					},
+				},
+			},
+			expected: false,
+		},
+	}
+
+	for _, test := range tests {
+		test := test
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+			ret := test.p.AnyAgentUsesAvailabilitySets()
+			if test.expected != ret {
+				t.Errorf("expected %t, instead got : %t", test.expected, ret)
+			}
+		})
+	}
+}
+
+func TestAnyAgentUsesVirtualMachineScaleSets(t *testing.T) {
+	tests := []struct {
+		name     string
+		p        *Properties
+		expected bool
+	}{
+		{
+			name: "one agent pool w/ AvailabilitySet",
+			p: &Properties{
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						Name:                "agentpool1",
+						VMSize:              "Standard_D2_v2",
+						Count:               2,
+						AvailabilityProfile: AvailabilitySet,
+					},
+				},
+			},
+			expected: false,
+		},
+		{
+			name: "two agent pools, one w/ AvailabilitySet",
+			p: &Properties{
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						Name:                "agentpool1",
+						VMSize:              "Standard_D2_v2",
+						Count:               2,
+						AvailabilityProfile: AvailabilitySet,
+					},
+					{
+						Name:   "agentpool1",
+						VMSize: "Standard_D2_v2",
+						Count:  100,
+					},
+				},
+			},
+			expected: false,
+		},
+		{
+			name: "two agent pools",
+			p: &Properties{
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						Name:   "agentpool1",
+						VMSize: "Standard_D2_v2",
+						Count:  2,
+					},
+					{
+						Name:   "agentpool1",
+						VMSize: "Standard_D2_v2",
+						Count:  100,
+					},
+				},
+			},
+			expected: false,
+		},
+		{
+			name: "two agent pools, one w/ VirtualMachineScaleSets",
+			p: &Properties{
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						Name:   "agentpool1",
+						VMSize: "Standard_D2_v2",
+						Count:  2,
+					},
+					{
+						Name:                "agentpool1",
+						VMSize:              "Standard_D2_v2",
+						Count:               100,
+						AvailabilityProfile: VirtualMachineScaleSets,
+					},
+				},
+			},
+			expected: true,
+		},
+	}
+
+	for _, test := range tests {
+		test := test
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+			ret := test.p.AnyAgentUsesVirtualMachineScaleSets()
+			if test.expected != ret {
+				t.Errorf("expected %t, instead got : %t", test.expected, ret)
+			}
+		})
+	}
+}
+
+func TestAnyAgentIsLinux(t *testing.T) {
+	tests := []struct {
+		name     string
+		p        *Properties
+		expected bool
+	}{
+		{
+			name: "one agent pool w/ Linux",
+			p: &Properties{
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						Name:   "agentpool1",
+						VMSize: "Standard_D2_v2",
+						Count:  2,
+						OSType: Linux,
+					},
+				},
+			},
+			expected: true,
+		},
+		{
+			name: "two agent pools, one w/ Linux",
+			p: &Properties{
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						Name:   "agentpool1",
+						VMSize: "Standard_D2_v2",
+						Count:  2,
+						OSType: Windows,
+					},
+					{
+						Name:   "agentpool1",
+						VMSize: "Standard_D2_v2",
+						OSType: Linux,
+					},
+				},
+			},
+			expected: true,
+		},
+		{
+			name: "two agent pools",
+			p: &Properties{
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						Name:   "agentpool1",
+						VMSize: "Standard_D2_v2",
+						Count:  2,
+					},
+					{
+						Name:   "agentpool1",
+						VMSize: "Standard_D2_v2",
+						Count:  100,
+					},
+				},
+			},
+			expected: false,
+		},
+		{
+			name: "two agent pools, one w/ Windows",
+			p: &Properties{
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						Name:   "agentpool1",
+						VMSize: "Standard_D2_v2",
+						Count:  2,
+					},
+					{
+						Name:   "agentpool1",
+						VMSize: "Standard_D2_v2",
+						Count:  100,
+						OSType: Windows,
+					},
+				},
+			},
+			expected: false,
+		},
+	}
+
+	for _, test := range tests {
+		test := test
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+			ret := test.p.AnyAgentIsLinux()
+			if test.expected != ret {
+				t.Errorf("expected %t, instead got : %t", test.expected, ret)
+			}
+		})
+	}
+}
