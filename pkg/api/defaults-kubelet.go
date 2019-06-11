@@ -25,13 +25,15 @@ func (cs *ContainerService) setKubeletConfig() {
 		"--cgroups-per-qos":             "true",
 		"--kubeconfig":                  "/var/lib/kubelet/kubeconfig",
 		"--keep-terminated-pod-volumes": "false",
+		"--tls-cert-file":               "/etc/kubernetes/certs/kubeletserver.crt",
+		"--tls-private-key-file":        "/etc/kubernetes/certs/kubeletserver.key",
 	}
 
 	// Start with copy of Linux config
 	staticWindowsKubeletConfig := make(map[string]string)
 	for key, val := range staticLinuxKubeletConfig {
 		switch key {
-		case "--pod-manifest-path": // Don't add Linux-specific config
+		case "--pod-manifest-path", "--tls-cert-file", "--tls-private-key-file": // Don't add Linux-specific config
 			staticWindowsKubeletConfig[key] = ""
 		case "--anonymous-auth", "--client-ca-file":
 			if !to.Bool(o.KubernetesConfig.EnableSecureKubelet) { // Don't add if EnableSecureKubelet is disabled
