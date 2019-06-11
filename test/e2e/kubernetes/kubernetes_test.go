@@ -611,15 +611,11 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 		})
 
 		It("should be able to launch a long-running container networking DNS liveness pod", func() {
-			if !eng.HasNetworkPolicy("calico") {
-				p, err := pod.CreatePodFromFileIfNotExist(filepath.Join(WorkloadDir, "dns-liveness.yaml"), "dns-liveness", "default", 1*time.Second, cfg.Timeout)
-				Expect(err).NotTo(HaveOccurred())
-				running, err := p.WaitOnReady(retryTimeWhenWaitingForPodReady, cfg.Timeout)
-				Expect(err).NotTo(HaveOccurred())
-				Expect(running).To(Equal(true))
-			} else {
-				Skip("We don't run DNS liveness checks on calico clusters ( //TODO )")
-			}
+			p, err := pod.CreatePodFromFileIfNotExist(filepath.Join(WorkloadDir, "dns-liveness.yaml"), "dns-liveness", "default", 1*time.Second, cfg.Timeout)
+			Expect(err).NotTo(HaveOccurred())
+			running, err := p.WaitOnReady(retryTimeWhenWaitingForPodReady, cfg.Timeout)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(running).To(Equal(true))
 		})
 
 		It("should be able to launch a long running HTTP listener and svc endpoint", func() {
@@ -1590,22 +1586,18 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 
 	Describe("after the cluster has been up for awhile", func() {
 		It("dns-liveness pod should not have any restarts", func() {
-			if !eng.HasNetworkPolicy("calico") {
-				pod, err := pod.Get("dns-liveness", "default")
+			pod, err := pod.Get("dns-liveness", "default")
+			Expect(err).NotTo(HaveOccurred())
+			running, err := pod.WaitOnReady(retryTimeWhenWaitingForPodReady, 3*time.Minute)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(running).To(Equal(true))
+			restarts := pod.Status.ContainerStatuses[0].RestartCount
+			if cfg.SoakClusterName == "" {
+				err = pod.Delete(util.DefaultDeleteRetries)
 				Expect(err).NotTo(HaveOccurred())
-				running, err := pod.WaitOnReady(retryTimeWhenWaitingForPodReady, 3*time.Minute)
-				Expect(err).NotTo(HaveOccurred())
-				Expect(running).To(Equal(true))
-				restarts := pod.Status.ContainerStatuses[0].RestartCount
-				if cfg.SoakClusterName == "" {
-					err = pod.Delete(util.DefaultDeleteRetries)
-					Expect(err).NotTo(HaveOccurred())
-					Expect(restarts).To(Equal(0))
-				} else {
-					log.Printf("%d DNS livenessProbe restarts since this cluster was created...\n", restarts)
-				}
+				Expect(restarts).To(Equal(0))
 			} else {
-				Skip("We don't run DNS liveness checks on calico clusters ( //TODO )")
+				log.Printf("%d DNS livenessProbe restarts since this cluster was created...\n", restarts)
 			}
 		})
 
