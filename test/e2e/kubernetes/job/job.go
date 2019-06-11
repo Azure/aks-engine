@@ -4,13 +4,17 @@
 package job
 
 import (
+	"bufio"
 	"context"
 	"encoding/json"
+	"io/ioutil"
 	"log"
 	"os/exec"
 	"regexp"
+	"text/template"
 	"time"
 
+	"github.com/Azure/aks-engine/test/e2e/engine"
 	"github.com/Azure/aks-engine/test/e2e/kubernetes/pod"
 	"github.com/Azure/aks-engine/test/e2e/kubernetes/util"
 	"github.com/pkg/errors"
@@ -55,6 +59,45 @@ func CreateJobFromFile(filename, name, namespace string) (*Job, error) {
 		return nil, err
 	}
 	return job, nil
+}
+
+// CreateWindowsJobFromTemplate will create a Job from file with a name
+func CreateWindowsJobFromTemplate(filename, name, namespace string, windowsTestImages *engine.WindowsTestImages) (*Job, error) {
+	t, err := template.ParseFiles(filename)
+	if err != nil {
+		return nil, err
+	}
+
+	tempfile, err := ioutil.TempFile("", "*.yaml")
+	if err != nil {
+		return nil, err
+	}
+	defer tempfile.Close()
+
+	w := bufio.NewWriter(tempfile)
+	err = t.Execute(w, windowsTestImages)
+	if err != nil {
+		return nil, err
+	}
+	w.Flush()
+
+	return CreateJobFromFile(tempfile.Name(), name, namespace)
+}
+
+// CreateWindowsJobFromTemplateDeleteIfExists will create a Job from file, deleting any pre-existing job with the same name
+func CreateWindowsJobFromTemplateDeleteIfExists(filename, name, namespace string, windowsTestImages *engine.WindowsTestImages) (*Job, error) {
+	j, err := Get(name, namespace)
+	if err == nil {
+		err := j.Delete(util.DefaultDeleteRetries)
+		if err != nil {
+			return nil, err
+		}
+		_, err = WaitOnDeleted(j.Metadata.Name, j.Metadata.Namespace, 5*time.Second, 1*time.Minute)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return CreateWindowsJobFromTemplate(filename, name, namespace, windowsTestImages)
 }
 
 // CreateJobFromFileDeleteIfExists will create a Job from file, deleting any pre-existing job with the same name
