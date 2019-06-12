@@ -10002,9 +10002,7 @@ func k8sArmparametersT() (*asset, error) {
 	return a, nil
 }
 
-var _k8sCloudInitArtifactsAptPreferences = []byte(`Package: walinuxagent
-Pin: version 2.2.32.2
-Pin-Priority: 550`)
+var _k8sCloudInitArtifactsAptPreferences = []byte(``)
 
 func k8sCloudInitArtifactsAptPreferencesBytes() ([]byte, error) {
 	return _k8sCloudInitArtifactsAptPreferences, nil
