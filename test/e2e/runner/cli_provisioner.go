@@ -15,8 +15,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Azure/aks-engine/pkg/api"
-
 	"github.com/Azure/go-autorest/autorest/to"
 
 	"github.com/Azure/aks-engine/test/e2e/azure"
