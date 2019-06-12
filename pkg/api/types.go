@@ -894,6 +894,16 @@ func (p *Properties) AnyAgentUsesAvailabilitySets() bool {
 	return false
 }
 
+// AnyAgentIsLinux checks whether any of the agents in the AgentPools are linux
+func (p *Properties) AnyAgentIsLinux() bool {
+	for _, agentProfile := range p.AgentPoolProfiles {
+		if agentProfile.IsLinux() {
+			return true
+		}
+	}
+	return false
+}
+
 // GetMasterVMPrefix returns the prefix of master VMs
 func (p *Properties) GetMasterVMPrefix() string {
 	return p.K8sOrchestratorName() + "-master-" + p.GetClusterID() + "-"

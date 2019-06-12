@@ -4,7 +4,7 @@ metadata:
   labels:
     app: keyvault-flexvolume
     kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: EnsureExists
+    addonmanager.kubernetes.io/mode: Reconcile
   name: keyvault-flexvolume
   namespace: kube-system
 spec:
@@ -13,7 +13,7 @@ spec:
       labels:
         app: keyvault-flexvolume
         kubernetes.io/cluster-service: "true"
-        addonmanager.kubernetes.io/mode: EnsureExists
+        addonmanager.kubernetes.io/mode: Reconcile
     spec:
       tolerations:
       containers:

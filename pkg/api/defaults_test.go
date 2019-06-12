@@ -2385,3 +2385,75 @@ func getKubernetesConfigWithFeatureGates(featureGates string) *KubernetesConfig 
 		KubeletConfig: map[string]string{"--feature-gates": featureGates},
 	}
 }
+
+func TestDefaultEnablePodSecurityPolicy(t *testing.T) {
+	cases := []struct {
+		name     string
+		cs       ContainerService
+		expected bool
+	}{
+		{
+			name: "default",
+			cs: ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorType:    Kubernetes,
+						OrchestratorVersion: "1.14.0",
+					},
+					MasterProfile: &MasterProfile{},
+				},
+			},
+			expected: false,
+		},
+		{
+			name: "default",
+			cs: ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorType:    Kubernetes,
+						OrchestratorVersion: "1.15.0-alpha.1",
+					},
+					MasterProfile: &MasterProfile{},
+				},
+			},
+			expected: false,
+		},
+		{
+			name: "default",
+			cs: ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorType:    Kubernetes,
+						OrchestratorVersion: "1.15.0-beta.1",
+					},
+					MasterProfile: &MasterProfile{},
+				},
+			},
+			expected: true,
+		},
+		{
+			name: "default",
+			cs: ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorType:    Kubernetes,
+						OrchestratorVersion: "1.15.0",
+					},
+					MasterProfile: &MasterProfile{},
+				},
+			},
+			expected: true,
+		},
+	}
+
+	for _, c := range cases {
+		c := c
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+			c.cs.setOrchestratorDefaults(false, false)
+			if to.Bool(c.cs.Properties.OrchestratorProfile.KubernetesConfig.EnablePodSecurityPolicy) != c.expected {
+				t.Errorf("expected  %t, but got %t", c.expected, to.Bool(c.cs.Properties.OrchestratorProfile.KubernetesConfig.EnablePodSecurityPolicy))
+			}
+		})
+	}
+}

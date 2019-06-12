@@ -114,10 +114,9 @@ subjects:
   apiGroup: rbac.authorization.k8s.io
 ---
 apiVersion: rbac.authorization.k8s.io/v1
-kind: RoleBinding
+kind: ClusterRoleBinding
 metadata:
   name: default:privileged
-  namespace: kube-system
   labels:
     addonmanager.kubernetes.io/mode: Reconcile
 roleRef:
@@ -126,8 +125,8 @@ roleRef:
   name: psp:privileged
 subjects:
 - kind: Group
-  name: system:masters
+  name: system:authenticated
   apiGroup: rbac.authorization.k8s.io
 - kind: Group
-  name: system:serviceaccounts:kube-system
+  name: system:nodes
   apiGroup: rbac.authorization.k8s.io

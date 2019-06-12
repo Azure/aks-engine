@@ -586,6 +586,30 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 			expectedManagedStorageClass:   false,
 			expectedUnmanagedStorageClass: true,
 		},
+		// 1.15.0-beta.1 scenario
+		{
+			p: &api.Properties{
+				OrchestratorProfile: &api.OrchestratorProfile{
+					OrchestratorType:    Kubernetes,
+					OrchestratorVersion: "1.15.0-beta.1",
+					KubernetesConfig: &api.KubernetesConfig{
+						NetworkPlugin: NetworkPluginAzure,
+					},
+				},
+			},
+			expectedKubeDNS:               false,
+			expectedCoreDNS:               true,
+			expectedKubeProxy:             true,
+			expectedCilium:                false,
+			expectedFlannel:               false,
+			expectedAADAdminGroup:         false,
+			expectedAzureCloudProvider:    true,
+			expectedAuditPolicy:           true,
+			expectedELBService:            false,
+			expectedPodSecurityPolicy:     true,
+			expectedManagedStorageClass:   true,
+			expectedUnmanagedStorageClass: false,
+		},
 	}
 
 	for _, c := range cases {

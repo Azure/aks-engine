@@ -106,11 +106,13 @@ func TestDisabledAddons(t *testing.T) {
 	}
 
 	cases := []struct {
+		name                string
 		myAddon             KubernetesAddon
 		isUpdate            bool
 		expectedResultAddon KubernetesAddon
 	}{
 		{
+			name: "default addon enabled",
 			myAddon: KubernetesAddon{
 				Name:    "mockAddon",
 				Enabled: to.BoolPtr(true),
@@ -136,6 +138,7 @@ func TestDisabledAddons(t *testing.T) {
 			},
 		},
 		{
+			name: "addon disabled, isUpdate=false",
 			myAddon: KubernetesAddon{
 				Name: "mockAddon",
 			},
@@ -146,6 +149,7 @@ func TestDisabledAddons(t *testing.T) {
 			},
 		},
 		{
+			name: "addon disabled, isUpdate=true",
 			myAddon: KubernetesAddon{
 				Name:    "mockAddon",
 				Enabled: to.BoolPtr(false),
@@ -159,10 +163,14 @@ func TestDisabledAddons(t *testing.T) {
 	}
 
 	for _, c := range cases {
-		result := assignDefaultAddonVals(c.myAddon, defaultAddon, c.isUpdate)
-		if !reflect.DeepEqual(result, c.expectedResultAddon) {
-			t.Fatalf("expected result addon %v to be equal to %v", result, c.expectedResultAddon)
-		}
+		c := c
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+			result := assignDefaultAddonVals(c.myAddon, defaultAddon, c.isUpdate)
+			if !reflect.DeepEqual(result, c.expectedResultAddon) {
+				t.Fatalf("expected result addon %v to be equal to %v", result, c.expectedResultAddon)
+			}
+		})
 	}
 
 }

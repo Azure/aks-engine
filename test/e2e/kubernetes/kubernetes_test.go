@@ -611,15 +611,11 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 		})
 
 		It("should be able to launch a long-running container networking DNS liveness pod", func() {
-			if !eng.HasNetworkPolicy("calico") {
-				p, err := pod.CreatePodFromFileIfNotExist(filepath.Join(WorkloadDir, "dns-liveness.yaml"), "dns-liveness", "default", 1*time.Second, cfg.Timeout)
-				Expect(err).NotTo(HaveOccurred())
-				running, err := p.WaitOnReady(retryTimeWhenWaitingForPodReady, cfg.Timeout)
-				Expect(err).NotTo(HaveOccurred())
-				Expect(running).To(Equal(true))
-			} else {
-				Skip("We don't run DNS liveness checks on calico clusters ( //TODO )")
-			}
+			p, err := pod.CreatePodFromFileIfNotExist(filepath.Join(WorkloadDir, "dns-liveness.yaml"), "dns-liveness", "default", 1*time.Second, cfg.Timeout)
+			Expect(err).NotTo(HaveOccurred())
+			running, err := p.WaitOnReady(retryTimeWhenWaitingForPodReady, cfg.Timeout)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(running).To(Equal(true))
 		})
 
 		It("should be able to launch a long running HTTP listener and svc endpoint", func() {
@@ -668,7 +664,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 		})
 
 		It("should have stable pod-to-pod networking", func() {
-			if eng.HasLinuxAgents() {
+			if eng.AnyAgentIsLinux() {
 				By("Creating a test php-apache deployment")
 				r := rand.New(rand.NewSource(time.Now().UnixNano()))
 				By("Creating another pod that will connect to the php-apache pod")
@@ -788,7 +784,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 
 	Describe("with a linux agent pool", func() {
 		It("should be able to produce working LoadBalancers", func() {
-			if eng.HasLinuxAgents() {
+			if eng.AnyAgentIsLinux() {
 				By("Creating a nginx deployment")
 				r := rand.New(rand.NewSource(time.Now().UnixNano()))
 				serviceName := "ingress-nginx"
@@ -883,7 +879,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 		})
 
 		It("should be able to autoscale", func() {
-			if eng.HasLinuxAgents() && eng.ExpandedDefinition.Properties.OrchestratorProfile.KubernetesConfig.EnableAggregatedAPIs {
+			if eng.AnyAgentIsLinux() && eng.ExpandedDefinition.Properties.OrchestratorProfile.KubernetesConfig.EnableAggregatedAPIs {
 				// Inspired by http://blog.kubernetes.io/2016/07/autoscaling-in-kubernetes.html
 				r := rand.New(rand.NewSource(time.Now().UnixNano()))
 				By("Creating a php-apache deployment")
@@ -1590,22 +1586,18 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 
 	Describe("after the cluster has been up for awhile", func() {
 		It("dns-liveness pod should not have any restarts", func() {
-			if !eng.HasNetworkPolicy("calico") {
-				pod, err := pod.Get("dns-liveness", "default")
+			pod, err := pod.Get("dns-liveness", "default")
+			Expect(err).NotTo(HaveOccurred())
+			running, err := pod.WaitOnReady(retryTimeWhenWaitingForPodReady, 3*time.Minute)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(running).To(Equal(true))
+			restarts := pod.Status.ContainerStatuses[0].RestartCount
+			if cfg.SoakClusterName == "" {
+				err = pod.Delete(util.DefaultDeleteRetries)
 				Expect(err).NotTo(HaveOccurred())
-				running, err := pod.WaitOnReady(retryTimeWhenWaitingForPodReady, 3*time.Minute)
-				Expect(err).NotTo(HaveOccurred())
-				Expect(running).To(Equal(true))
-				restarts := pod.Status.ContainerStatuses[0].RestartCount
-				if cfg.SoakClusterName == "" {
-					err = pod.Delete(util.DefaultDeleteRetries)
-					Expect(err).NotTo(HaveOccurred())
-					Expect(restarts).To(Equal(0))
-				} else {
-					log.Printf("%d DNS livenessProbe restarts since this cluster was created...\n", restarts)
-				}
+				Expect(restarts).To(Equal(0))
 			} else {
-				Skip("We don't run DNS liveness checks on calico clusters ( //TODO )")
+				log.Printf("%d DNS livenessProbe restarts since this cluster was created...\n", restarts)
 			}
 		})
 

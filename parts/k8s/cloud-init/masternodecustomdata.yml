@@ -268,7 +268,7 @@ MASTER_CONTAINER_ADDONS_PLACEHOLDER
     AZURE_ENVIRONMENT_FILEPATH=/etc/kubernetes/azurestackcloud.json
 {{end}}
 {{if IsKubernetesVersionGe "1.6.0"}}
-  {{if HasLinuxAgents}}
+  {{if AnyAgentIsLinux}}
     KUBELET_REGISTER_NODE=--register-node=true
     KUBELET_REGISTER_WITH_TAINTS=--register-with-taints=node-role.kubernetes.io/master=true:NoSchedule
   {{end}}
@@ -350,9 +350,6 @@ MASTER_CONTAINER_ADDONS_PLACEHOLDER
 {{if UseCloudControllerManager }}
     sed -i "s|<img>|{{WrapAsParameter "kubernetesCcmImageSpec"}}|g" /etc/kubernetes/manifests/cloud-controller-manager.yaml
     sed -i "s|<config>|{{GetK8sRuntimeConfigKeyVals .OrchestratorProfile.KubernetesConfig.CloudControllerManagerConfig}}|g" /etc/kubernetes/manifests/cloud-controller-manager.yaml
-{{end}}
-{{if not EnablePodSecurityPolicy}}
-    sed -i "s|apparmor_parser|d|g" /etc/systemd/system/kubelet.service
 {{end}}
 {{if EnableEncryptionWithExternalKms}}
     sed -i "s|# Required|Requires=kms.service|g" /etc/systemd/system/kubelet.service

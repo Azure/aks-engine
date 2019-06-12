@@ -33,7 +33,8 @@
 // ../../parts/dcos/dcosprovisionsource.sh
 // ../../parts/iaasoutputs.t
 // ../../parts/k8s/addons/1.10/kubernetesmasteraddons-kube-dns-deployment.yaml
-// ../../parts/k8s/addons/1.6/kubernetesmasteraddons-calico-daemonset.yaml
+// ../../parts/k8s/addons/1.15/kubernetesmasteraddons-azure-cloud-provider-deployment.yaml
+// ../../parts/k8s/addons/1.15/kubernetesmasteraddons-pod-security-policy.yaml
 // ../../parts/k8s/addons/1.6/kubernetesmasteraddons-kubernetes-dashboard-deployment.yaml
 // ../../parts/k8s/addons/1.7/kubernetesmasteraddons-kube-dns-deployment.yaml
 // ../../parts/k8s/addons/1.7/kubernetesmasteraddons-kubernetes-dashboard-deployment.yaml
@@ -6577,280 +6578,250 @@ func k8sAddons110KubernetesmasteraddonsKubeDnsDeploymentYaml() (*asset, error) {
 	return a, nil
 }
 
-var _k8sAddons16KubernetesmasteraddonsCalicoDaemonsetYaml = []byte(`# Calico Version v2.4.1
-# https://docs.projectcalico.org/v2.4/releases#v2.4.1
-# This manifest includes the following component versions:
-#   calico/node:v2.4.1
-#   calico/cni:v1.10.0
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: calico-node
-  namespace: kube-system
-  labels:
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: "Reconcile"
----
+var _k8sAddons115KubernetesmasteraddonsAzureCloudProviderDeploymentYaml = []byte(`---
+apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: ClusterRole
-apiVersion: rbac.authorization.k8s.io/v1alpha1
 metadata:
-  name: calico-node
-  namespace: kube-system
   labels:
     kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: "Reconcile"
+  name: system:azure-cloud-provider
 rules:
-  - apiGroups: [""]
-    resources:
-      - namespaces
-    verbs:
-      - get
-      - list
-      - watch
-  - apiGroups: [""]
-    resources:
-      - pods/status
-    verbs:
-      - update
-  - apiGroups: [""]
-    resources:
-      - pods
-    verbs:
-      - get
-      - list
-      - watch
-  - apiGroups: [""]
-    resources:
-      - nodes
-    verbs:
-      - get
-      - list
-      - update
-      - watch
-  - apiGroups: ["extensions"]
-    resources:
-      - thirdpartyresources
-    verbs:
-      - create
-      - get
-      - list
-      - watch
-  - apiGroups: ["extensions"]
-    resources:
-      - networkpolicies
-    verbs:
-      - get
-      - list
-      - watch
-  - apiGroups: ["projectcalico.org"]
-    resources:
-      - globalbgppeers
-    verbs:
-      - get
-      - list
-  - apiGroups: ["projectcalico.org"]
-    resources:
-      - globalconfigs
-      - globalbgpconfigs
-    verbs:
-      - create
-      - get
-      - list
-      - update
-      - watch
-  - apiGroups: ["projectcalico.org"]
-    resources:
-      - ippools
-    verbs:
-      - create
-      - get
-      - list
-      - update
-      - watch
-  - apiGroups: ["alpha.projectcalico.org"]
-    resources:
-      - systemnetworkpolicies
-    verbs:
-      - get
-      - list
-      - watch
+- apiGroups: [""]
+  resources: ["events"]
+  verbs:
+  - create
+  - patch
+  - update
 ---
+apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: ClusterRoleBinding
-apiVersion: rbac.authorization.k8s.io/v1alpha1
 metadata:
-  name: calico-node
   labels:
     kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: "Reconcile"
+  name: system:azure-cloud-provider
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: calico-node
+  name: system:azure-cloud-provider
 subjects:
 - kind: ServiceAccount
-  name: calico-node
+  name: azure-cloud-provider
   namespace: kube-system
 ---
-kind: ConfigMap
-apiVersion: v1
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRole
 metadata:
-  name: calico-config
-  namespace: kube-system
+  name: system:azure-persistent-volume-binder
   labels:
     kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: "Reconcile"
-data:
-  cni_network_config: |-
-    {
-        "name": "k8s-pod-network",
-        "cniVersion": "0.1.0",
-        "type": "calico",
-        "log_level": "info",
-        "datastore_type": "kubernetes",
-        "nodename": "__KUBERNETES_NODE_NAME__",
-        "ipam": {
-            "type": "host-local",
-            "subnet": "usePodCidr"
-        },
-        "policy": {
-            "type": "k8s",
-            "k8s_auth_token": "__SERVICEACCOUNT_TOKEN__"
-        },
-        "kubernetes": {
-            "k8s_api_root": "https://__KUBERNETES_SERVICE_HOST__:__KUBERNETES_SERVICE_PORT__",
-            "kubeconfig": "__KUBECONFIG_FILEPATH__"
-        }
-    }
+rules:
+- apiGroups: ['']
+  resources: ['secrets']
+  verbs:     ['get','create']
 ---
-kind: DaemonSet
-apiVersion: extensions/v1beta1
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRoleBinding
 metadata:
-  name: calico-node
-  namespace: kube-system
+  name: system:azure-persistent-volume-binder
   labels:
-    k8s-app: calico-node
     kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: "Reconcile"
-spec:
-  selector:
-    matchLabels:
-      k8s-app: calico-node
-  template:
-    metadata:
-      labels:
-        k8s-app: calico-node
-      annotations:
-        scheduler.alpha.kubernetes.io/critical-pod: ''
-        scheduler.alpha.kubernetes.io/tolerations: |
-          [{"key": "dedicated", "value": "master", "effect": "NoSchedule" },
-           {"key":"CriticalAddonsOnly", "operator":"Exists"}]
-    spec:
-      hostNetwork: true
-      serviceAccountName: calico-node
-      containers:
-        - name: calico-node
-          image: quay.io/calico/node:v2.4.1
-          env:
-            - name: DATASTORE_TYPE
-              value: "kubernetes"
-            - name: FELIX_LOGSEVERITYSCREEN
-              value: "info"
-            - name: FELIX_IPTABLESREFRESHINTERVAL
-              value: "60"
-            - name: FELIX_IPV6SUPPORT
-              value: "false"
-            - name: CALICO_NETWORKING_BACKEND
-              value: "none"
-            - name: CLUSTER_TYPE
-              value: "k8s,acse"
-            - name: CALICO_DISABLE_FILE_LOGGING
-              value: "true"
-            - name: WAIT_FOR_DATASTORE
-              value: "true"
-            - name: IP
-              value: ""
-            - name: CALICO_IPV4POOL_CIDR
-              value: "<kubeClusterCidr>"
-            - name: CALICO_IPV4POOL_IPIP
-              value: "off"
-            - name: FELIX_IPINIPENABLED
-              value: "false"
-            - name: FELIX_HEALTHENABLED
-              value: "true"
-            - name: NODENAME
-              valueFrom:
-                fieldRef:
-                  fieldPath: spec.nodeName
-            - name: FELIX_DEFAULTENDPOINTTOHOSTACTION
-              value: "ACCEPT"
-          securityContext:
-            privileged: true
-          resources:
-            requests:
-              cpu: 250m
-          livenessProbe:
-            httpGet:
-              path: /liveness
-              port: 9099
-            periodSeconds: 10
-            initialDelaySeconds: 10
-            failureThreshold: 6
-          readinessProbe:
-            httpGet:
-              path: /readiness
-              port: 9099
-            periodSeconds: 10
-          volumeMounts:
-            - mountPath: /lib/modules
-              name: lib-modules
-              readOnly: true
-            - mountPath: /var/run/calico
-              name: var-run-calico
-              readOnly: false
-        - name: install-cni
-          image: quay.io/calico/cni:v1.10.0
-          command: ["/install-cni.sh"]
-          env:
-            - name: CNI_NETWORK_CONFIG
-              valueFrom:
-                configMapKeyRef:
-                  name: calico-config
-                  key: cni_network_config
-            - name: KUBERNETES_NODE_NAME
-              valueFrom:
-                fieldRef:
-                  fieldPath: spec.nodeName
-          volumeMounts:
-            - mountPath: /host/opt/cni/bin
-              name: cni-bin-dir
-            - mountPath: /host/etc/cni/net.d
-              name: cni-net-dir
-      volumes:
-        - name: lib-modules
-          hostPath:
-            path: /lib/modules
-        - name: var-run-calico
-          hostPath:
-            path: /var/run/calico
-        - name: cni-bin-dir
-          hostPath:
-            path: /opt/cni/bin
-        - name: cni-net-dir
-          hostPath:
-            path: /etc/cni/net.d
+roleRef:
+  kind: ClusterRole
+  apiGroup: rbac.authorization.k8s.io
+  name: system:azure-persistent-volume-binder
+subjects:
+- kind: ServiceAccount
+  name: persistent-volume-binder
+  namespace: kube-system
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRole
+metadata:
+  labels:
+    kubernetes.io/cluster-service: "true"
+  name: system:azure-cloud-provider-secret-getter
+rules:
+- apiGroups: [""]
+  resources: ["secrets"]
+  verbs:
+  - get
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRoleBinding
+metadata:
+  labels:
+    kubernetes.io/cluster-service: "true"
+  name: system:azure-cloud-provider-secret-getter
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: system:azure-cloud-provider-secret-getter
+subjects:
+- kind: ServiceAccount
+  name: azure-cloud-provider
+  namespace: kube-system
 `)
 
-func k8sAddons16KubernetesmasteraddonsCalicoDaemonsetYamlBytes() ([]byte, error) {
-	return _k8sAddons16KubernetesmasteraddonsCalicoDaemonsetYaml, nil
+func k8sAddons115KubernetesmasteraddonsAzureCloudProviderDeploymentYamlBytes() ([]byte, error) {
+	return _k8sAddons115KubernetesmasteraddonsAzureCloudProviderDeploymentYaml, nil
 }
 
-func k8sAddons16KubernetesmasteraddonsCalicoDaemonsetYaml() (*asset, error) {
-	bytes, err := k8sAddons16KubernetesmasteraddonsCalicoDaemonsetYamlBytes()
+func k8sAddons115KubernetesmasteraddonsAzureCloudProviderDeploymentYaml() (*asset, error) {
+	bytes, err := k8sAddons115KubernetesmasteraddonsAzureCloudProviderDeploymentYamlBytes()
 	if err != nil {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "k8s/addons/1.6/kubernetesmasteraddons-calico-daemonset.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	info := bindataFileInfo{name: "k8s/addons/1.15/kubernetesmasteraddons-azure-cloud-provider-deployment.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
+var _k8sAddons115KubernetesmasteraddonsPodSecurityPolicyYaml = []byte(`apiVersion: extensions/v1beta1
+kind: PodSecurityPolicy
+metadata:
+  name: privileged
+  annotations:
+    seccomp.security.alpha.kubernetes.io/allowedProfileNames: "*"
+  labels:
+    addonmanager.kubernetes.io/mode: Reconcile
+spec:
+  privileged: true
+  allowPrivilegeEscalation: true
+  allowedCapabilities:
+  - "*"
+  volumes:
+  - "*"
+  hostNetwork: true
+  hostPorts:
+  - min: 0
+    max: 65535
+  hostIPC: true
+  hostPID: true
+  runAsUser:
+    rule: RunAsAny
+  seLinux:
+    rule: RunAsAny
+  supplementalGroups:
+    rule: RunAsAny
+  fsGroup:
+    rule: RunAsAny
+---
+apiVersion: extensions/v1beta1
+kind: PodSecurityPolicy
+metadata:
+  name: restricted
+  annotations:
+    seccomp.security.alpha.kubernetes.io/allowedProfileNames: docker/default
+    apparmor.security.beta.kubernetes.io/allowedProfileNames: runtime/default
+    seccomp.security.alpha.kubernetes.io/defaultProfileName:  docker/default
+    apparmor.security.beta.kubernetes.io/defaultProfileName:  runtime/default
+  labels:
+    addonmanager.kubernetes.io/mode: Reconcile
+spec:
+  privileged: false
+  allowPrivilegeEscalation: false
+  requiredDropCapabilities:
+    - ALL
+  volumes:
+    - configMap
+    - emptyDir
+    - projected
+    - secret
+    - downwardAPI
+    - persistentVolumeClaim
+  hostNetwork: false
+  hostIPC: false
+  hostPID: false
+  runAsUser:
+    rule: MustRunAsNonRoot
+  seLinux:
+    rule: RunAsAny
+  supplementalGroups:
+    rule: MustRunAs
+    ranges:
+      # Forbid adding the root group.
+      - min: 1
+        max: 65535
+  fsGroup:
+    rule: MustRunAs
+    ranges:
+      # Forbid adding the root group.
+      - min: 1
+        max: 65535
+  readOnlyRootFilesystem: false
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: psp:privileged
+  labels:
+    addonmanager.kubernetes.io/mode: Reconcile
+rules:
+- apiGroups: ['extensions']
+  resources: ['podsecuritypolicies']
+  verbs:     ['use']
+  resourceNames:
+  - privileged
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: psp:restricted
+  labels:
+    addonmanager.kubernetes.io/mode: Reconcile
+rules:
+- apiGroups: ['extensions']
+  resources: ['podsecuritypolicies']
+  verbs:     ['use']
+  resourceNames:
+  - restricted
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: default:restricted
+  labels:
+    addonmanager.kubernetes.io/mode: Reconcile
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: psp:restricted
+subjects:
+- kind: Group
+  name: system:authenticated
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: default:privileged
+  labels:
+    addonmanager.kubernetes.io/mode: Reconcile
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: psp:privileged
+subjects:
+- kind: Group
+  name: system:authenticated
+  apiGroup: rbac.authorization.k8s.io
+- kind: Group
+  name: system:nodes
+  apiGroup: rbac.authorization.k8s.io
+`)
+
+func k8sAddons115KubernetesmasteraddonsPodSecurityPolicyYamlBytes() ([]byte, error) {
+	return _k8sAddons115KubernetesmasteraddonsPodSecurityPolicyYaml, nil
+}
+
+func k8sAddons115KubernetesmasteraddonsPodSecurityPolicyYaml() (*asset, error) {
+	bytes, err := k8sAddons115KubernetesmasteraddonsPodSecurityPolicyYamlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "k8s/addons/1.15/kubernetesmasteraddons-pod-security-policy.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -8159,7 +8130,7 @@ subjects:
 apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: ClusterRole
 metadata:
-  name: system:azure-persistent-volume-binder 
+  name: system:azure-persistent-volume-binder
   labels:
     kubernetes.io/cluster-service: "true"
 rules:
@@ -8176,7 +8147,7 @@ metadata:
 roleRef:
   kind: ClusterRole
   apiGroup: rbac.authorization.k8s.io
-  name: system:azure-persistent-volume-binder 
+  name: system:azure-persistent-volume-binder
 subjects:
 - kind: ServiceAccount
   name: persistent-volume-binder
@@ -8237,7 +8208,7 @@ metadata:
   labels:
     k8s-app: cilium
     kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: "EnsureExists"
+    addonmanager.kubernetes.io/mode: "Reconcile"
   name: cilium
   namespace: kube-system
 spec:
@@ -8564,7 +8535,7 @@ metadata:
   name: cilium-operator
   namespace: kube-system
   labels:
-    addonmanager.kubernetes.io/mode: "EnsureExists"
+    addonmanager.kubernetes.io/mode: "Reconcile"
 spec:
   replicas: 1
   selector:
@@ -8677,14 +8648,14 @@ metadata:
   name: cilium-operator
   namespace: kube-system
   labels:
-    addonmanager.kubernetes.io/mode: "EnsureExists"
+    addonmanager.kubernetes.io/mode: "Reconcile"
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   name: cilium-operator
   labels:
-    addonmanager.kubernetes.io/mode: "EnsureExists"
+    addonmanager.kubernetes.io/mode: "Reconcile"
 rules:
 - apiGroups:
   - ""
@@ -8718,7 +8689,7 @@ kind: ClusterRoleBinding
 metadata:
   name: cilium-operator
   labels:
-    addonmanager.kubernetes.io/mode: "EnsureExists"
+    addonmanager.kubernetes.io/mode: "Reconcile"
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
@@ -8733,7 +8704,7 @@ kind: ClusterRole
 metadata:
   name: cilium-etcd-operator
   labels:
-    addonmanager.kubernetes.io/mode: "EnsureExists"
+    addonmanager.kubernetes.io/mode: "Reconcile"
 rules:
 - apiGroups:
   - etcd.database.coreos.com
@@ -8805,7 +8776,7 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
   labels:
-    addonmanager.kubernetes.io/mode: "EnsureExists"
+    addonmanager.kubernetes.io/mode: "Reconcile"
   name: cilium-etcd-operator
 roleRef:
   apiGroup: rbac.authorization.k8s.io
@@ -8821,7 +8792,7 @@ kind: ClusterRole
 metadata:
   name: etcd-operator
   labels:
-    addonmanager.kubernetes.io/mode: "EnsureExists"
+    addonmanager.kubernetes.io/mode: "Reconcile"
 rules:
 - apiGroups:
   - etcd.database.coreos.com
@@ -8876,7 +8847,7 @@ kind: ClusterRoleBinding
 metadata:
   name: etcd-operator
   labels:
-    addonmanager.kubernetes.io/mode: "EnsureExists"
+    addonmanager.kubernetes.io/mode: "Reconcile"
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
@@ -8892,7 +8863,7 @@ metadata:
   name: cilium-etcd-operator
   namespace: kube-system
   labels:
-    addonmanager.kubernetes.io/mode: "EnsureExists"
+    addonmanager.kubernetes.io/mode: "Reconcile"
 ---
 apiVersion: v1
 kind: ServiceAccount
@@ -8900,7 +8871,7 @@ metadata:
   name: cilium-etcd-sa
   namespace: kube-system
   labels:
-    addonmanager.kubernetes.io/mode: "EnsureExists"
+    addonmanager.kubernetes.io/mode: "Reconcile"
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -8908,7 +8879,7 @@ metadata:
   labels:
     io.cilium/app: etcd-operator
     name: cilium-etcd-operator
-    addonmanager.kubernetes.io/mode: "EnsureExists"
+    addonmanager.kubernetes.io/mode: "Reconcile"
   name: cilium-etcd-operator
   namespace: kube-system
 spec:
@@ -8968,7 +8939,7 @@ kind: ClusterRoleBinding
 metadata:
   name: cilium
   labels:
-    addonmanager.kubernetes.io/mode: "EnsureExists"
+    addonmanager.kubernetes.io/mode: "Reconcile"
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
@@ -8986,7 +8957,7 @@ kind: ClusterRole
 metadata:
   name: cilium
   labels:
-    addonmanager.kubernetes.io/mode: "EnsureExists"
+    addonmanager.kubernetes.io/mode: "Reconcile"
 rules:
 - apiGroups:
   - networking.k8s.io
@@ -9053,7 +9024,7 @@ metadata:
   name: cilium
   namespace: kube-system
   labels:
-    addonmanager.kubernetes.io/mode: "EnsureExists"`)
+    addonmanager.kubernetes.io/mode: "Reconcile"`)
 
 func k8sAddonsKubernetesmasteraddonsCiliumDaemonsetYamlBytes() ([]byte, error) {
 	return _k8sAddonsKubernetesmasteraddonsCiliumDaemonsetYaml, nil
@@ -9129,7 +9100,7 @@ metadata:
   name: flannel
   namespace: kube-system
   labels:
-    addonmanager.kubernetes.io/mode: EnsureExists
+    addonmanager.kubernetes.io/mode: Reconcile
 ---
 kind: ConfigMap
 apiVersion: v1
@@ -9165,7 +9136,7 @@ metadata:
   labels:
     tier: node
     app: flannel
-    addonmanager.kubernetes.io/mode: EnsureExists
+    addonmanager.kubernetes.io/mode: Reconcile
 spec:
   template:
     metadata:
@@ -9238,7 +9209,7 @@ apiVersion: rbac.authorization.k8s.io/v1beta1
 metadata:
   name: flannel
   labels:
-    addonmanager.kubernetes.io/mode: EnsureExists
+    addonmanager.kubernetes.io/mode: Reconcile
 rules:
   - apiGroups:
       - ""
@@ -9265,7 +9236,7 @@ apiVersion: rbac.authorization.k8s.io/v1beta1
 metadata:
   name: flannel
   labels:
-    addonmanager.kubernetes.io/mode: EnsureExists
+    addonmanager.kubernetes.io/mode: Reconcile
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
@@ -9743,7 +9714,7 @@ metadata:
   annotations:
     seccomp.security.alpha.kubernetes.io/allowedProfileNames: "*"
   labels:
-    addonmanager.kubernetes.io/mode: EnsureExists
+    addonmanager.kubernetes.io/mode: Reconcile
 spec:
   privileged: true
   allowPrivilegeEscalation: true
@@ -9776,7 +9747,7 @@ metadata:
     seccomp.security.alpha.kubernetes.io/defaultProfileName:  docker/default
     apparmor.security.beta.kubernetes.io/defaultProfileName:  runtime/default
   labels:
-    addonmanager.kubernetes.io/mode: EnsureExists
+    addonmanager.kubernetes.io/mode: Reconcile
 spec:
   privileged: false
   allowPrivilegeEscalation: false
@@ -9815,7 +9786,7 @@ kind: ClusterRole
 metadata:
   name: psp:privileged
   labels:
-    addonmanager.kubernetes.io/mode: EnsureExists
+    addonmanager.kubernetes.io/mode: Reconcile
 rules:
 - apiGroups: ['extensions']
   resources: ['podsecuritypolicies']
@@ -9828,7 +9799,7 @@ kind: ClusterRole
 metadata:
   name: psp:restricted
   labels:
-    addonmanager.kubernetes.io/mode: EnsureExists
+    addonmanager.kubernetes.io/mode: Reconcile
 rules:
 - apiGroups: ['extensions']
   resources: ['podsecuritypolicies']
@@ -9841,7 +9812,7 @@ kind: ClusterRoleBinding
 metadata:
   name: default:restricted
   labels:
-    addonmanager.kubernetes.io/mode: EnsureExists
+    addonmanager.kubernetes.io/mode: Reconcile
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
@@ -9857,7 +9828,7 @@ metadata:
   name: default:privileged
   namespace: kube-system
   labels:
-    addonmanager.kubernetes.io/mode: EnsureExists
+    addonmanager.kubernetes.io/mode: Reconcile
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
@@ -10456,6 +10427,14 @@ generateAggregatedAPICerts() {
     $AGGREGATED_API_CERTS_SETUP_FILE
 }
 
+configureKubeletServerCert() {
+    KUBELET_SERVER_PRIVATE_KEY_PATH="/etc/kubernetes/certs/kubeletserver.key"
+    KUBELET_SERVER_CERT_PATH="/etc/kubernetes/certs/kubeletserver.crt"
+
+    openssl genrsa -out $KUBELET_SERVER_PRIVATE_KEY_PATH 2048
+    openssl req -new -x509 -days 7300 -key $KUBELET_SERVER_PRIVATE_KEY_PATH -out $KUBELET_SERVER_CERT_PATH -subj "/CN=${NODE_NAME}"
+}
+
 configureK8s() {
     KUBELET_PRIVATE_KEY_PATH="/etc/kubernetes/certs/client.key"
     touch "${KUBELET_PRIVATE_KEY_PATH}"
@@ -10520,6 +10499,8 @@ EOF
             generateAggregatedAPICerts
         fi
     fi
+
+    configureKubeletServerCert
 }
 
 configureCNI() {
@@ -11074,7 +11055,7 @@ apt_get_dist_upgrade() {
     apt-get -f -y install
     ! (apt-get dist-upgrade -y 2>&1 | tee $apt_dist_upgrade_output | grep -E "^([WE]:.*)|([eE]rr.*)$") && \
     cat $apt_dist_upgrade_output && break || \
-    cat $apt_update_output
+    cat $apt_dist_upgrade_output
     if [ $i -eq $retries ]; then
       return 1
     else sleep 5
@@ -13148,7 +13129,7 @@ MASTER_CONTAINER_ADDONS_PLACEHOLDER
     AZURE_ENVIRONMENT_FILEPATH=/etc/kubernetes/azurestackcloud.json
 {{end}}
 {{if IsKubernetesVersionGe "1.6.0"}}
-  {{if HasLinuxAgents}}
+  {{if AnyAgentIsLinux}}
     KUBELET_REGISTER_NODE=--register-node=true
     KUBELET_REGISTER_WITH_TAINTS=--register-with-taints=node-role.kubernetes.io/master=true:NoSchedule
   {{end}}
@@ -13230,9 +13211,6 @@ MASTER_CONTAINER_ADDONS_PLACEHOLDER
 {{if UseCloudControllerManager }}
     sed -i "s|<img>|{{WrapAsParameter "kubernetesCcmImageSpec"}}|g" /etc/kubernetes/manifests/cloud-controller-manager.yaml
     sed -i "s|<config>|{{GetK8sRuntimeConfigKeyVals .OrchestratorProfile.KubernetesConfig.CloudControllerManagerConfig}}|g" /etc/kubernetes/manifests/cloud-controller-manager.yaml
-{{end}}
-{{if not EnablePodSecurityPolicy}}
-    sed -i "s|apparmor_parser|d|g" /etc/systemd/system/kubelet.service
 {{end}}
 {{if EnableEncryptionWithExternalKms}}
     sed -i "s|# Required|Requires=kms.service|g" /etc/systemd/system/kubelet.service
@@ -13616,9 +13594,6 @@ write_files:
   owner: root
   content: |
     #!/bin/bash
-{{if not EnablePodSecurityPolicy}}
-    sed -i "s|apparmor_parser|d|g" "/etc/systemd/system/kubelet.service"
-{{end}}
 {{if not IsIPMasqAgentEnabled}}
     {{if IsAzureCNI}}
     iptables -t nat -A POSTROUTING -m iprange ! --dst-range 168.63.129.16 -m addrtype ! --dst-type local ! -d {{WrapAsParameter "vnetCidr"}} -j MASQUERADE
@@ -14175,7 +14150,7 @@ metadata:
   namespace: kube-system
   labels:
     app: azure-cnms
-    addonmanager.kubernetes.io/mode: EnsureExists
+    addonmanager.kubernetes.io/mode: Reconcile
 spec:
   selector:
     matchLabels:
@@ -14398,7 +14373,7 @@ metadata:
   namespace: default
   labels:
     kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: EnsureExists
+    addonmanager.kubernetes.io/mode: Reconcile
 ---
 apiVersion: apiextensions.k8s.io/v1beta1
 kind: CustomResourceDefinition
@@ -14406,7 +14381,7 @@ metadata:
   name: azureassignedidentities.aadpodidentity.k8s.io
   labels:
     kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: EnsureExists
+    addonmanager.kubernetes.io/mode: Reconcile
 spec:
   group: aadpodidentity.k8s.io
   version: v1
@@ -14421,7 +14396,7 @@ metadata:
   name: azureidentitybindings.aadpodidentity.k8s.io
   labels:
     kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: EnsureExists
+    addonmanager.kubernetes.io/mode: Reconcile
 spec:
   group: aadpodidentity.k8s.io
   version: v1
@@ -14436,7 +14411,7 @@ metadata:
   name: azureidentities.aadpodidentity.k8s.io
   labels:
     kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: EnsureExists
+    addonmanager.kubernetes.io/mode: Reconcile
 spec:
   group: aadpodidentity.k8s.io
   version: v1
@@ -14452,7 +14427,7 @@ metadata:
   name: aad-pod-id-nmi-role
   labels:
     kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: EnsureExists
+    addonmanager.kubernetes.io/mode: Reconcile
 rules:
 - apiGroups: ["*"]
   resources: ["*"]
@@ -14464,7 +14439,7 @@ metadata:
   name: aad-pod-id-nmi-binding
   labels:
     kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: EnsureExists
+    addonmanager.kubernetes.io/mode: Reconcile
     k8s-app: aad-pod-id-nmi-binding
 subjects:
 - kind: ServiceAccount
@@ -14480,7 +14455,7 @@ kind: DaemonSet
 metadata:
   labels:
     kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: EnsureExists
+    addonmanager.kubernetes.io/mode: Reconcile
     component: nmi
     tier: node
     k8s-app: aad-pod-id
@@ -14533,7 +14508,7 @@ metadata:
   namespace: default
   labels:
     kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: EnsureExists
+    addonmanager.kubernetes.io/mode: Reconcile
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
@@ -14541,7 +14516,7 @@ metadata:
   name: aad-pod-id-mic-role
   labels:
     kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: EnsureExists
+    addonmanager.kubernetes.io/mode: Reconcile
 rules:
 - apiGroups: ["apiextensions.k8s.io"]
   resources: ["customresourcedefinitions"]
@@ -14565,7 +14540,7 @@ metadata:
   name: aad-pod-id-mic-binding
   labels:
     kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: EnsureExists
+    addonmanager.kubernetes.io/mode: Reconcile
     k8s-app: aad-pod-id-mic-binding
 subjects:
 - kind: ServiceAccount
@@ -14583,7 +14558,7 @@ metadata:
     component: mic
     k8s-app: aad-pod-id
     kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: EnsureExists
+    addonmanager.kubernetes.io/mode: Reconcile
   name: mic
   namespace: default
 spec:
@@ -14639,7 +14614,7 @@ metadata:
   namespace: kube-system
   labels:
     kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: EnsureExists
+    addonmanager.kubernetes.io/mode: Reconcile
 ---
 apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: ClusterRole
@@ -14648,7 +14623,7 @@ metadata:
   labels:
     app: aci-connector
     kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: EnsureExists
+    addonmanager.kubernetes.io/mode: Reconcile
 rules:
 - apiGroups:
   - ""
@@ -14671,7 +14646,7 @@ metadata:
   name: aci-connector
   labels:
     kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: EnsureExists
+    addonmanager.kubernetes.io/mode: Reconcile
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
@@ -14688,7 +14663,7 @@ metadata:
   namespace: kube-system
   labels:
     kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: EnsureExists
+    addonmanager.kubernetes.io/mode: Reconcile
 type: Opaque
 data:
   credentials.json: <creds>
@@ -14704,7 +14679,7 @@ metadata:
     app: aci-connector
     name: aci-connector
     kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: EnsureExists
+    addonmanager.kubernetes.io/mode: Reconcile
 spec:
   replicas: 1
   template:
@@ -14775,7 +14750,7 @@ metadata:
   name: azure-npm
   namespace: kube-system
   labels:
-    addonmanager.kubernetes.io/mode: EnsureExists
+    addonmanager.kubernetes.io/mode: Reconcile
 ---
 apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: ClusterRole
@@ -14783,7 +14758,7 @@ metadata:
   name: azure-npm
   namespace: kube-system
   labels:
-    addonmanager.kubernetes.io/mode: EnsureExists
+    addonmanager.kubernetes.io/mode: Reconcile
 rules:
   - apiGroups:
     - ""
@@ -14810,7 +14785,7 @@ metadata:
   name: azure-npm-binding
   namespace: kube-system
   labels:
-    addonmanager.kubernetes.io/mode: EnsureExists
+    addonmanager.kubernetes.io/mode: Reconcile
 subjects:
   - kind: ServiceAccount
     name: azure-npm
@@ -14827,7 +14802,7 @@ metadata:
   namespace: kube-system
   labels:
     app: azure-npm
-    addonmanager.kubernetes.io/mode: EnsureExists
+    addonmanager.kubernetes.io/mode: Reconcile
 spec:
   selector:
     matchLabels:
@@ -14998,7 +14973,7 @@ kind: CustomResourceDefinition
 metadata:
   name: felixconfigurations.crd.projectcalico.org
   labels:
-    addonmanager.kubernetes.io/mode: "EnsureExists"
+    addonmanager.kubernetes.io/mode: "Reconcile"
 spec:
   scope: Cluster
   group: crd.projectcalico.org
@@ -15014,7 +14989,7 @@ kind: CustomResourceDefinition
 metadata:
   name: bgpconfigurations.crd.projectcalico.org
   labels:
-    addonmanager.kubernetes.io/mode: "EnsureExists"
+    addonmanager.kubernetes.io/mode: "Reconcile"
 spec:
   scope: Cluster
   group: crd.projectcalico.org
@@ -15030,7 +15005,7 @@ kind: CustomResourceDefinition
 metadata:
   name: ippools.crd.projectcalico.org
   labels:
-    addonmanager.kubernetes.io/mode: "EnsureExists"
+    addonmanager.kubernetes.io/mode: "Reconcile"
 spec:
   scope: Cluster
   group: crd.projectcalico.org
@@ -15046,7 +15021,7 @@ kind: CustomResourceDefinition
 metadata:
   name: hostendpoints.crd.projectcalico.org
   labels:
-    addonmanager.kubernetes.io/mode: "EnsureExists"
+    addonmanager.kubernetes.io/mode: "Reconcile"
 spec:
   scope: Cluster
   group: crd.projectcalico.org
@@ -15062,7 +15037,7 @@ kind: CustomResourceDefinition
 metadata:
   name: clusterinformations.crd.projectcalico.org
   labels:
-    addonmanager.kubernetes.io/mode: "EnsureExists"
+    addonmanager.kubernetes.io/mode: "Reconcile"
 spec:
   scope: Cluster
   group: crd.projectcalico.org
@@ -15078,7 +15053,7 @@ kind: CustomResourceDefinition
 metadata:
   name: globalnetworkpolicies.crd.projectcalico.org
   labels:
-    addonmanager.kubernetes.io/mode: "EnsureExists"
+    addonmanager.kubernetes.io/mode: "Reconcile"
 spec:
   scope: Cluster
   group: crd.projectcalico.org
@@ -15094,7 +15069,7 @@ kind: CustomResourceDefinition
 metadata:
   name: globalnetworksets.crd.projectcalico.org
   labels:
-    addonmanager.kubernetes.io/mode: "EnsureExists"
+    addonmanager.kubernetes.io/mode: "Reconcile"
 spec:
   scope: Cluster
   group: crd.projectcalico.org
@@ -15110,7 +15085,7 @@ kind: CustomResourceDefinition
 metadata:
   name: networkpolicies.crd.projectcalico.org
   labels:
-    addonmanager.kubernetes.io/mode: "EnsureExists"
+    addonmanager.kubernetes.io/mode: "Reconcile"
 spec:
   scope: Namespaced
   group: crd.projectcalico.org
@@ -15126,7 +15101,7 @@ kind: CustomResourceDefinition
 metadata:
   name: networksets.crd.projectcalico.org
   labels:
-    addonmanager.kubernetes.io/mode: "EnsureExists"
+    addonmanager.kubernetes.io/mode: "Reconcile"
 spec:
   scope: Namespaced
   group: crd.projectcalico.org
@@ -15145,7 +15120,7 @@ apiVersion: rbac.authorization.k8s.io/v1beta1
 metadata:
   name: calico-node
   labels:
-    addonmanager.kubernetes.io/mode: "EnsureExists"
+    addonmanager.kubernetes.io/mode: "Reconcile"
 rules:
 # The CNI plugin needs to get pods, nodes, and namespaces.
 - apiGroups: [""]
@@ -15248,7 +15223,7 @@ metadata:
   name: calico-node
   labels:
     kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: "EnsureExists"
+    addonmanager.kubernetes.io/mode: "Reconcile"
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
@@ -15270,7 +15245,7 @@ metadata:
   namespace: kube-system
   labels:
     k8s-app: calico-typha
-    addonmanager.kubernetes.io/mode: "EnsureExists"
+    addonmanager.kubernetes.io/mode: "Reconcile"
 spec:
   ports:
   - port: 5473
@@ -15290,7 +15265,7 @@ metadata:
   namespace: kube-system
   labels:
     k8s-app: calico-typha
-    addonmanager.kubernetes.io/mode: "EnsureExists"
+    addonmanager.kubernetes.io/mode: "Reconcile"
 spec:
   # Number of Typha replicas.  To enable Typha, set this to a non-zero value *and* set the
   # typha_service_name variable in the calico-config ConfigMap above.
@@ -15381,7 +15356,7 @@ metadata:
   namespace: kube-system
   labels:
     k8s-app: calico-node
-    addonmanager.kubernetes.io/mode: "EnsureExists"
+    addonmanager.kubernetes.io/mode: "Reconcile"
 spec:
   selector:
     matchLabels:
@@ -15564,7 +15539,7 @@ metadata:
   name: calico-node
   namespace: kube-system
   labels:
-    addonmanager.kubernetes.io/mode: "EnsureExists"
+    addonmanager.kubernetes.io/mode: "Reconcile"
 ---
 
 # Typha Horizontal Autoscaler ConfigMap
@@ -15604,7 +15579,7 @@ metadata:
   labels:
     k8s-app: calico-typha-autoscaler
     kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: "EnsureExists"
+    addonmanager.kubernetes.io/mode: "Reconcile"
 spec:
   replicas: 1
   template:
@@ -15643,7 +15618,7 @@ metadata:
   name: typha-cpha
   labels:
     kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: "EnsureExists"
+    addonmanager.kubernetes.io/mode: "Reconcile"
 rules:
 - apiGroups: [""]
   resources: ["nodes"]
@@ -15658,7 +15633,7 @@ metadata:
   name: typha-cpha
   labels:
     kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: "EnsureExists"
+    addonmanager.kubernetes.io/mode: "Reconcile"
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
@@ -15677,7 +15652,7 @@ metadata:
   namespace: kube-system
   labels:
     kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: "EnsureExists"
+    addonmanager.kubernetes.io/mode: "Reconcile"
 rules:
 - apiGroups: [""]
   resources: ["configmaps"]
@@ -15696,7 +15671,7 @@ metadata:
   namespace: kube-system
   labels:
     kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: "EnsureExists"
+    addonmanager.kubernetes.io/mode: "Reconcile"
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
@@ -16166,7 +16141,7 @@ metadata:
   labels:
     app: keyvault-flexvolume
     kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: EnsureExists
+    addonmanager.kubernetes.io/mode: Reconcile
   name: keyvault-flexvolume
   namespace: kube-system
 spec:
@@ -16175,7 +16150,7 @@ spec:
       labels:
         app: keyvault-flexvolume
         kubernetes.io/cluster-service: "true"
-        addonmanager.kubernetes.io/mode: EnsureExists
+        addonmanager.kubernetes.io/mode: Reconcile
     spec:
       tolerations:
       containers:
@@ -16426,7 +16401,7 @@ metadata:
   namespace: kube-system
   labels:
     kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: EnsureExists
+    addonmanager.kubernetes.io/mode: Reconcile
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
@@ -16434,7 +16409,7 @@ metadata:
   name: system:metrics-server
   labels:
     kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: EnsureExists
+    addonmanager.kubernetes.io/mode: Reconcile
 rules:
 - apiGroups:
   - ""
@@ -16461,7 +16436,7 @@ metadata:
   name: system:metrics-server
   labels:
     kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: EnsureExists
+    addonmanager.kubernetes.io/mode: Reconcile
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
@@ -16478,7 +16453,7 @@ metadata:
   namespace: kube-system
   labels:
     kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: EnsureExists
+    addonmanager.kubernetes.io/mode: Reconcile
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
@@ -16494,7 +16469,7 @@ metadata:
   name: metrics-server:system:auth-delegator
   labels:
     kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: EnsureExists
+    addonmanager.kubernetes.io/mode: Reconcile
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
@@ -16510,7 +16485,7 @@ metadata:
   name: metrics-server
   namespace: kube-system
   labels:
-    addonmanager.kubernetes.io/mode: EnsureExists
+    addonmanager.kubernetes.io/mode: Reconcile
     kubernetes.io/name: "Metrics-server"
     kubernetes.io/cluster-service: "true"
 spec:
@@ -16557,7 +16532,7 @@ metadata:
   name: v1beta1.metrics.k8s.io
   labels:
     kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: EnsureExists
+    addonmanager.kubernetes.io/mode: Reconcile
 spec:
   service:
     name: metrics-server
@@ -17241,7 +17216,7 @@ metadata:
   namespace: kube-system
   labels:
     kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: EnsureExists
+    addonmanager.kubernetes.io/mode: Reconcile
 ---
 apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: ClusterRoleBinding
@@ -17249,7 +17224,7 @@ metadata:
   name: tiller
   labels:
     kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: EnsureExists
+    addonmanager.kubernetes.io/mode: Reconcile
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
@@ -17266,7 +17241,7 @@ metadata:
     app: helm
     name: tiller
     kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: EnsureExists
+    addonmanager.kubernetes.io/mode: Reconcile
   name: tiller-deploy
   namespace: kube-system
 spec:
@@ -17286,7 +17261,7 @@ metadata:
     app: helm
     name: tiller
     kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: EnsureExists
+    addonmanager.kubernetes.io/mode: Reconcile
   name: tiller-deploy
   namespace: kube-system
 spec:
@@ -23062,13 +23037,14 @@ var _bindata = map[string]func() (*asset, error){
 	"dcos/dcosprovisionsource.sh":                                     dcosDcosprovisionsourceSh,
 	"iaasoutputs.t":                                                   iaasoutputsT,
 	"k8s/addons/1.10/kubernetesmasteraddons-kube-dns-deployment.yaml": k8sAddons110KubernetesmasteraddonsKubeDnsDeploymentYaml,
-	"k8s/addons/1.6/kubernetesmasteraddons-calico-daemonset.yaml":     k8sAddons16KubernetesmasteraddonsCalicoDaemonsetYaml,
-	"k8s/addons/1.6/kubernetesmasteraddons-kubernetes-dashboard-deployment.yaml": k8sAddons16KubernetesmasteraddonsKubernetesDashboardDeploymentYaml,
-	"k8s/addons/1.7/kubernetesmasteraddons-kube-dns-deployment.yaml":             k8sAddons17KubernetesmasteraddonsKubeDnsDeploymentYaml,
-	"k8s/addons/1.7/kubernetesmasteraddons-kubernetes-dashboard-deployment.yaml": k8sAddons17KubernetesmasteraddonsKubernetesDashboardDeploymentYaml,
-	"k8s/addons/1.8/kubernetesmasteraddons-kube-dns-deployment.yaml":             k8sAddons18KubernetesmasteraddonsKubeDnsDeploymentYaml,
-	"k8s/addons/1.8/kubernetesmasteraddons-kubernetes-dashboard-deployment.yaml": k8sAddons18KubernetesmasteraddonsKubernetesDashboardDeploymentYaml,
-	"k8s/addons/1.9/kubernetesmasteraddons-kube-dns-deployment.yaml":             k8sAddons19KubernetesmasteraddonsKubeDnsDeploymentYaml,
+	"k8s/addons/1.15/kubernetesmasteraddons-azure-cloud-provider-deployment.yaml": k8sAddons115KubernetesmasteraddonsAzureCloudProviderDeploymentYaml,
+	"k8s/addons/1.15/kubernetesmasteraddons-pod-security-policy.yaml":             k8sAddons115KubernetesmasteraddonsPodSecurityPolicyYaml,
+	"k8s/addons/1.6/kubernetesmasteraddons-kubernetes-dashboard-deployment.yaml":  k8sAddons16KubernetesmasteraddonsKubernetesDashboardDeploymentYaml,
+	"k8s/addons/1.7/kubernetesmasteraddons-kube-dns-deployment.yaml":              k8sAddons17KubernetesmasteraddonsKubeDnsDeploymentYaml,
+	"k8s/addons/1.7/kubernetesmasteraddons-kubernetes-dashboard-deployment.yaml":  k8sAddons17KubernetesmasteraddonsKubernetesDashboardDeploymentYaml,
+	"k8s/addons/1.8/kubernetesmasteraddons-kube-dns-deployment.yaml":              k8sAddons18KubernetesmasteraddonsKubeDnsDeploymentYaml,
+	"k8s/addons/1.8/kubernetesmasteraddons-kubernetes-dashboard-deployment.yaml":  k8sAddons18KubernetesmasteraddonsKubernetesDashboardDeploymentYaml,
+	"k8s/addons/1.9/kubernetesmasteraddons-kube-dns-deployment.yaml":              k8sAddons19KubernetesmasteraddonsKubeDnsDeploymentYaml,
 	"k8s/addons/coredns.yaml":                                                       k8sAddonsCorednsYaml,
 	"k8s/addons/kubernetesmaster-audit-policy.yaml":                                 k8sAddonsKubernetesmasterAuditPolicyYaml,
 	"k8s/addons/kubernetesmasteraddons-aad-default-admin-group-rbac.yaml":           k8sAddonsKubernetesmasteraddonsAadDefaultAdminGroupRbacYaml,
@@ -23257,8 +23233,11 @@ var _bintree = &bintree{nil, map[string]*bintree{
 			"1.10": {nil, map[string]*bintree{
 				"kubernetesmasteraddons-kube-dns-deployment.yaml": {k8sAddons110KubernetesmasteraddonsKubeDnsDeploymentYaml, map[string]*bintree{}},
 			}},
+			"1.15": {nil, map[string]*bintree{
+				"kubernetesmasteraddons-azure-cloud-provider-deployment.yaml": {k8sAddons115KubernetesmasteraddonsAzureCloudProviderDeploymentYaml, map[string]*bintree{}},
+				"kubernetesmasteraddons-pod-security-policy.yaml":             {k8sAddons115KubernetesmasteraddonsPodSecurityPolicyYaml, map[string]*bintree{}},
+			}},
 			"1.6": {nil, map[string]*bintree{
-				"kubernetesmasteraddons-calico-daemonset.yaml":                {k8sAddons16KubernetesmasteraddonsCalicoDaemonsetYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-kubernetes-dashboard-deployment.yaml": {k8sAddons16KubernetesmasteraddonsKubernetesDashboardDeploymentYaml, map[string]*bintree{}},
 			}},
 			"1.7": {nil, map[string]*bintree{
