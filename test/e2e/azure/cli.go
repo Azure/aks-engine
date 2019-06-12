@@ -4,6 +4,7 @@
 package azure
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -14,6 +15,7 @@ import (
 
 	"github.com/Azure/aks-engine/test/e2e/engine"
 	"github.com/Azure/aks-engine/test/e2e/kubernetes/util"
+	"github.com/Azure/azure-sdk-for-go/services/network/mgmt/2018-08-01/network"
 
 	"github.com/kelseyhightower/envconfig"
 )
@@ -242,6 +244,96 @@ func (a *Account) CreateVnet(vnet, addressPrefixes string) error {
 		return err
 	}
 	return nil
+}
+
+// ListRGRouteTableResult defines a struct for making a multi-value channel result type
+type ListRGRouteTableResult struct {
+	routeTables []network.RouteTable
+	err         error
+}
+
+// ListRGRouteTable will list the route table for a resource group
+func (a *Account) ListRGRouteTable() ListRGRouteTableResult {
+	var cmd *exec.Cmd
+	if a.TimeoutCommands {
+		cmd = exec.Command("timeout", "60", "az", "network", "route-table", "list", "-g",
+			a.ResourceGroup.Name, "-o", "json")
+	} else {
+		cmd = exec.Command("az", "network", "route-table", "list", "-g",
+			a.ResourceGroup.Name, "-o", "json")
+	}
+	util.PrintCommand(cmd)
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		log.Printf("Error while trying to list route table with the following command:\n az network route-table list -g %s -o json | jq -r '.[].id'\n Output:%s\n", a.ResourceGroup.Name, out)
+		return ListRGRouteTableResult{
+			routeTables: nil,
+			err:         err,
+		}
+	}
+	routeTables := []network.RouteTable{}
+	err = json.Unmarshal(out, &routeTables)
+	if err != nil {
+		log.Printf("Error unmarshalling route tables json:%s\n", err)
+		return ListRGRouteTableResult{
+			routeTables: nil,
+			err:         err,
+		}
+	}
+	return ListRGRouteTableResult{
+		routeTables: routeTables,
+		err:         err,
+	}
+}
+
+// AddSubnetsToRouteTable will add the subnets in this cluster config to the VNET route table
+func (a *Account) AddSubnetsToRouteTable(routeTableID, vnetName string, subnets []string) error {
+	for _, subnet := range subnets {
+		var cmd *exec.Cmd
+		if a.TimeoutCommands {
+			cmd = exec.Command("timeout", "60", "az", "network", "vnet", "subnet", "update", "-n", subnet, "-g",
+				a.ResourceGroup.Name, "--vnet-name", vnetName, "--route-table", routeTableID)
+		} else {
+			cmd = exec.Command("az", "network", "vnet", "subnet", "update", "-n", subnet, "-g",
+				a.ResourceGroup.Name, "--vnet-name", vnetName, "--route-table", routeTableID)
+		}
+		util.PrintCommand(cmd)
+		out, err := cmd.CombinedOutput()
+		if err != nil {
+			log.Printf("Error while trying to add route table to subnet: %s\n", out)
+			return err
+		}
+	}
+	return nil
+}
+
+// GetRGRouteTable continuously calls the Azure API until we get a route table result
+func (a *Account) GetRGRouteTable(timeout time.Duration) (network.RouteTable, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+	ch := make(chan ListRGRouteTableResult)
+	var mostRecentListRGRouteTableError error
+	go func() {
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case ch <- a.ListRGRouteTable():
+				time.Sleep(5 * time.Second)
+			}
+		}
+	}()
+	for {
+		select {
+		case result := <-ch:
+			mostRecentListRGRouteTableError = result.err
+			if result.err == nil && result.routeTables != nil && len(result.routeTables) == 1 {
+				return result.routeTables[0], nil
+			}
+		case <-ctx.Done():
+			return network.RouteTable{}, mostRecentListRGRouteTableError
+		}
+	}
 }
 
 // CreateSubnet will create a subnet in a vnet in a resource group

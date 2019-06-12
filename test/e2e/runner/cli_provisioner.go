@@ -131,6 +131,7 @@ func (cli *CLIProvisioner) provision() error {
 	masterSubnetID := fmt.Sprintf("/subscriptions/%s/resourceGroups/%s/providers/Microsoft.Network/virtualNetworks/%s/subnets/%s", cli.Account.SubscriptionID, cli.Account.ResourceGroup.Name, vnetName, masterSubnetName)
 	agentSubnetID := ""
 	agentSubnetIDs := []string{}
+	subnets := []string{}
 
 	if cli.CreateVNET {
 		if cli.MasterVMSS {
@@ -143,12 +144,14 @@ func (cli *CLIProvisioner) provision() error {
 			if err != nil {
 				return errors.Errorf("Error trying to create subnet:%s", err.Error())
 			}
+			subnets = append(subnets, masterSubnetName)
 			err = cli.Account.CreateSubnet(vnetName, agentSubnetName, "10.239.128.0/17")
 			if err != nil {
 				return errors.Errorf("Error trying to create subnet in subnet:%s", err.Error())
 			}
-
+			subnets = append(subnets, agentSubnetName)
 			agentSubnetID = fmt.Sprintf("/subscriptions/%s/resourceGroups/%s/providers/Microsoft.Network/virtualNetworks/%s/subnets/%s", cli.Account.SubscriptionID, cli.Account.ResourceGroup.Name, vnetName, agentSubnetName)
+
 		} else {
 			var config *engine.Config
 			config, err = engine.ParseConfig(cli.Config.CurrentWorkingDir, cli.Config.ClusterDefinition, cli.Config.Name)
@@ -168,12 +171,14 @@ func (cli *CLIProvisioner) provision() error {
 			if err != nil {
 				return errors.Errorf("Error trying to create subnet:%s", err.Error())
 			}
+			subnets = append(subnets, masterSubnetName)
 			for i, pool := range cs.ContainerService.Properties.AgentPoolProfiles {
 				subnetName := fmt.Sprintf("%sCustomSubnet", pool.Name)
 				err = cli.Account.CreateSubnet(vnetName, subnetName, fmt.Sprintf("10.239.%d.0/24", i+1))
 				if err != nil {
 					return errors.Errorf("Error trying to create subnet:%s", err.Error())
 				}
+				subnets = append(subnets, subnetName)
 				subnetID = fmt.Sprintf("/subscriptions/%s/resourceGroups/%s/providers/Microsoft.Network/virtualNetworks/%s/subnets/%s", cli.Account.SubscriptionID, cli.Account.ResourceGroup.Name, vnetName, subnetName)
 				agentSubnetIDs = append(agentSubnetIDs, subnetID)
 			}
@@ -202,6 +207,17 @@ func (cli *CLIProvisioner) provision() error {
 	err = cli.generateAndDeploy()
 	if err != nil {
 		return errors.Wrap(err, "Error in generateAndDeploy:%s")
+	}
+
+	if cli.CreateVNET {
+		routeTable, err := cli.Account.GetRGRouteTable(10 * time.Minute)
+		if err != nil {
+			return errors.Errorf("Error trying to get route table in VNET: %s", err.Error())
+		}
+		err = cli.Account.AddSubnetsToRouteTable(*routeTable.ID, vnetName, subnets)
+		if err != nil {
+			return errors.Errorf("Error trying to add subnets to route table %s in VNET: %s", *routeTable.ID, err.Error())
+		}
 	}
 
 	if cli.Config.IsKubernetes() {
