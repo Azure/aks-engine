@@ -91,60 +91,73 @@ func TestGetVersionsGt(t *testing.T) {
 
 func TestIsKubernetesVersionGe(t *testing.T) {
 	cases := []struct {
+		name           string
 		version        string
 		actualVersion  string
 		expectedResult bool
 	}{
 		{
+			name:           "is 1.11.0-alpha.1 >= 1.6.0?",
 			version:        "1.6.0",
 			actualVersion:  "1.11.0-alpha.1",
 			expectedResult: true,
 		},
 		{
+			name:           "is 1.7.12 >= 1.8.0?",
 			version:        "1.8.0",
 			actualVersion:  "1.7.12",
 			expectedResult: false,
 		},
 		{
+			name:           "is 1.9.6 >= 1.9.6?",
 			version:        "1.9.6",
 			actualVersion:  "1.9.6",
 			expectedResult: true,
 		},
 		{
+			name:           "is 1.10.0-beta.2 >= 1.9.0?",
 			version:        "1.9.0",
 			actualVersion:  "1.10.0-beta.2",
 			expectedResult: true,
 		},
 		{
+			name:           "is 1.8.7 >= 1.7.0?",
 			version:        "1.7.0",
 			actualVersion:  "1.8.7",
 			expectedResult: true,
 		},
 		{
+			name:           "is 1.10.0-beta.2 >= 1.10.0-beta.1?",
 			version:        "1.10.0-beta.1",
 			actualVersion:  "1.10.0-beta.2",
 			expectedResult: true,
 		},
 		{
+			name:           "is 1.11.0-beta.1 >= 1.11.0-alpha.1?",
 			version:        "1.11.0-alpha.1",
 			actualVersion:  "1.11.0-beta.1",
 			expectedResult: true,
 		},
 		{
+			name:           "is 1.10.0-alpha.1 >= 1.10.0-rc.1?",
 			version:        "1.10.0-rc.1",
 			actualVersion:  "1.10.0-alpha.1",
 			expectedResult: false,
 		},
 	}
 	for _, c := range cases {
-		if c.expectedResult != IsKubernetesVersionGe(c.actualVersion, c.version) {
-			if c.expectedResult {
-				t.Errorf("Expected version %s to be greater or equal than version %s", c.actualVersion, c.version)
-			} else {
-				t.Errorf("Expected version %s to not be greater or equal than version %s", c.actualVersion, c.version)
-			}
+		c := c
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+			if c.expectedResult != IsKubernetesVersionGe(c.actualVersion, c.version) {
+				if c.expectedResult {
+					t.Errorf("Expected version %s to be greater or equal than version %s", c.actualVersion, c.version)
+				} else {
+					t.Errorf("Expected version %s to not be greater or equal than version %s", c.actualVersion, c.version)
+				}
 
-		}
+			}
+		})
 	}
 }
 
@@ -394,48 +407,56 @@ func TestGetLatestPatchVersion(t *testing.T) {
 
 func TestGetMinMaxVersion(t *testing.T) {
 	cases := []struct {
+		name        string
 		expectedMin string
 		expectedMax string
 		versions    []string
 		preRelease  bool
 	}{
 		{
+			name:        "list of released versions",
 			expectedMin: "1.0.0",
 			expectedMax: "1.0.3",
 			versions:    []string{"1.0.1", "1.0.2", "1.0.0", "1.0.3"},
 			preRelease:  false,
 		},
 		{
+			name:        "list of released versions alternate",
 			expectedMin: "0.0.20",
 			expectedMax: "1.3.1",
 			versions:    []string{"1.0.1", "1.1.2", "1.3.1", "0.0.20"},
 			preRelease:  false,
 		},
 		{
+			name:        "list of versions with pre-release but pre-release ignored",
 			expectedMin: "1.0.1",
 			expectedMax: "1.1.2",
 			versions:    []string{"1.0.1", "1.1.2", "1.2.3-alpha.1"},
 			preRelease:  false,
 		},
 		{
+			name:        "list of versions with pre-release include pre-release versions",
 			expectedMin: "1.0.1",
 			expectedMax: "1.2.3-alpha.1",
 			versions:    []string{"1.0.1", "1.1.2", "1.2.3-alpha.1"},
 			preRelease:  true,
 		},
 		{
+			name:        "list of versions with pre-release include pre-release versions alternate",
 			expectedMin: "0.1.3-beta.1",
 			expectedMax: "1.1.2",
 			versions:    []string{"1.0.1", "1.1.2", "0.1.3-beta.1", "1.0.0-alpha.1"},
 			preRelease:  true,
 		},
 		{
+			name:        "empty slice ignore pre-release versions",
 			expectedMin: "",
 			expectedMax: "",
 			versions:    []string{},
 			preRelease:  false,
 		},
 		{
+			name:        "empty slice include pre-release versions",
 			expectedMin: "",
 			expectedMax: "",
 			versions:    []string{},
@@ -444,14 +465,18 @@ func TestGetMinMaxVersion(t *testing.T) {
 	}
 
 	for _, c := range cases {
-		min := GetMinVersion(c.versions, c.preRelease)
-		if min != c.expectedMin {
-			t.Errorf("GetMinVersion returned the wrong min version, expected %s, got %s", c.expectedMin, min)
-		}
-		max := GetMaxVersion(c.versions, c.preRelease)
-		if max != c.expectedMax {
-			t.Errorf("GetMaxVersion returned the wrong max version, expected %s, got %s", c.expectedMax, max)
-		}
+		c := c
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+			min := GetMinVersion(c.versions, c.preRelease)
+			if min != c.expectedMin {
+				t.Errorf("GetMinVersion returned the wrong min version, expected %s, got %s", c.expectedMin, min)
+			}
+			max := GetMaxVersion(c.versions, c.preRelease)
+			if max != c.expectedMax {
+				t.Errorf("GetMaxVersion returned the wrong max version, expected %s, got %s", c.expectedMax, max)
+			}
+		})
 	}
 }
 
