@@ -132,6 +132,7 @@ func (cli *CLIProvisioner) provision() error {
 	agentSubnetID := ""
 	agentSubnetIDs := []string{}
 	subnets := []string{}
+	var cs *api.VlabsARMContainerService
 
 	if cli.CreateVNET {
 		if cli.MasterVMSS {
@@ -158,7 +159,7 @@ func (cli *CLIProvisioner) provision() error {
 			if err != nil {
 				log.Printf("Error while trying to build Engine Configuration:%s\n", err)
 			}
-			var cs *api.VlabsARMContainerService
+
 			cs, err = engine.ParseInput(config.ClusterDefinitionPath)
 			if err != nil {
 				return err
@@ -209,14 +210,16 @@ func (cli *CLIProvisioner) provision() error {
 		return errors.Wrap(err, "Error in generateAndDeploy:%s")
 	}
 
-	if cli.CreateVNET {
-		routeTable, err := cli.Account.GetRGRouteTable(10 * time.Minute)
-		if err != nil {
-			return errors.Errorf("Error trying to get route table in VNET: %s", err.Error())
-		}
-		err = cli.Account.AddSubnetsToRouteTable(*routeTable.ID, vnetName, subnets)
-		if err != nil {
-			return errors.Errorf("Error trying to add subnets to route table %s in VNET: %s", *routeTable.ID, err.Error())
+	if cs.Properties.OrchestratorProfile != nil && cs.Properties.OrchestratorProfile.KubernetesConfig != nil {
+		if cli.CreateVNET && cs.Properties.OrchestratorProfile.KubernetesConfig.NetworkPlugin == "kubenet" {
+			routeTable, err := cli.Account.GetRGRouteTable(10 * time.Minute)
+			if err != nil {
+				return errors.Errorf("Error trying to get route table in VNET: %s", err.Error())
+			}
+			err = cli.Account.AddSubnetsToRouteTable(*routeTable.ID, vnetName, subnets)
+			if err != nil {
+				return errors.Errorf("Error trying to add subnets to route table %s in VNET: %s", *routeTable.ID, err.Error())
+			}
 		}
 	}
 
