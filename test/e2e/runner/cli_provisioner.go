@@ -132,7 +132,14 @@ func (cli *CLIProvisioner) provision() error {
 	agentSubnetID := ""
 	agentSubnetIDs := []string{}
 	subnets := []string{}
-	var cs *api.VlabsARMContainerService
+	config, err := engine.ParseConfig(cli.Config.CurrentWorkingDir, cli.Config.ClusterDefinition, cli.Config.Name)
+	if err != nil {
+		log.Printf("Error while trying to build Engine Configuration:%s\n", err)
+	}
+	cs, err := engine.ParseInput(config.ClusterDefinitionPath)
+	if err != nil {
+		return err
+	}
 
 	if cli.CreateVNET {
 		if cli.MasterVMSS {
@@ -154,16 +161,6 @@ func (cli *CLIProvisioner) provision() error {
 			agentSubnetID = fmt.Sprintf("/subscriptions/%s/resourceGroups/%s/providers/Microsoft.Network/virtualNetworks/%s/subnets/%s", cli.Account.SubscriptionID, cli.Account.ResourceGroup.Name, vnetName, agentSubnetName)
 
 		} else {
-			var config *engine.Config
-			config, err = engine.ParseConfig(cli.Config.CurrentWorkingDir, cli.Config.ClusterDefinition, cli.Config.Name)
-			if err != nil {
-				log.Printf("Error while trying to build Engine Configuration:%s\n", err)
-			}
-
-			cs, err = engine.ParseInput(config.ClusterDefinitionPath)
-			if err != nil {
-				return err
-			}
 			err = cli.Account.CreateVnet(vnetName, "10.239.0.0/16")
 			if err != nil {
 				return errors.Errorf("Error trying to create vnet:%s", err.Error())
