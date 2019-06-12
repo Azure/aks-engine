@@ -189,6 +189,7 @@ apt_get_dist_upgrade() {
     export DEBIAN_FRONTEND=noninteractive
     dpkg --configure -a
     apt-get -f -y install
+    apt-mark showhold
     ! (apt-get dist-upgrade -y 2>&1 | tee $apt_dist_upgrade_output | grep -E "^([WE]:.*)|([eE]rr.*)$") && \
     cat $apt_dist_upgrade_output && break || \
     cat $apt_dist_upgrade_output
