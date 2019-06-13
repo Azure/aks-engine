@@ -23,13 +23,13 @@ func (cs *ContainerService) setKubernetesImagesConfig() {
 			k.KubernetesImagesConfig.ImageBaseConfig.HyperkubeImageBase = k.KubernetesImageBase
 			k.KubernetesImagesConfig.ImageBaseConfig.PauseImageBase = k.KubernetesImageBase
 		}
-		// ditto KubernetesConfig.VnetCNILinuxPluginsDownloadURL
-		if k.VnetCNILinuxPluginsDownloadURL != "" {
-			k.KubernetesImagesConfig.ImageBaseConfig.VnetCNILinuxPluginsDownloadURL = k.VnetCNILinuxPluginsDownloadURL
+		// ditto KubernetesConfig.AzureCNIURLLinux
+		if k.AzureCNIURLLinux != "" {
+			k.KubernetesImagesConfig.ImageBaseConfig.VnetCNILinuxPluginsDownloadURL = k.AzureCNIURLLinux
 		}
-		// ditto KubernetesConfig.VnetCNIWindowsPluginsDownloadURL
-		if k.VnetCNIWindowsPluginsDownloadURL != "" {
-			k.KubernetesImagesConfig.ImageBaseConfig.VnetCNIWindowsPluginsDownloadURL = k.VnetCNIWindowsPluginsDownloadURL
+		// ditto KubernetesConfig.AzureCNIURLWindows
+		if k.AzureCNIURLWindows != "" {
+			k.KubernetesImagesConfig.ImageBaseConfig.VnetCNIWindowsPluginsDownloadURL = k.AzureCNIURLWindows
 		}
 	} else {
 		if k.KubernetesImagesConfig.ImageBaseConfig != nil {
@@ -82,15 +82,15 @@ func (cs *ContainerService) setKubernetesImagesConfig() {
 				k.KubernetesImagesConfig.ImageBaseConfig.CNIPluginsDownloadURL = imageConfigFromCloud.CNIPluginsDownloadURL
 			}
 			if k.KubernetesImagesConfig.ImageBaseConfig.VnetCNILinuxPluginsDownloadURL == "" {
-				if k.VnetCNILinuxPluginsDownloadURL != "" {
-					k.KubernetesImagesConfig.ImageBaseConfig.VnetCNILinuxPluginsDownloadURL = k.VnetCNILinuxPluginsDownloadURL
+				if k.AzureCNIURLLinux != "" {
+					k.KubernetesImagesConfig.ImageBaseConfig.VnetCNILinuxPluginsDownloadURL = k.AzureCNIURLLinux
 				} else {
 					k.KubernetesImagesConfig.ImageBaseConfig.VnetCNILinuxPluginsDownloadURL = imageConfigFromCloud.VnetCNILinuxPluginsDownloadURL
 				}
 			}
 			if k.KubernetesImagesConfig.ImageBaseConfig.VnetCNIWindowsPluginsDownloadURL == "" {
-				if k.VnetCNIWindowsPluginsDownloadURL != "" {
-					k.KubernetesImagesConfig.ImageBaseConfig.VnetCNIWindowsPluginsDownloadURL = k.VnetCNIWindowsPluginsDownloadURL
+				if k.AzureCNIURLWindows != "" {
+					k.KubernetesImagesConfig.ImageBaseConfig.VnetCNIWindowsPluginsDownloadURL = k.AzureCNIURLWindows
 				} else {
 					k.KubernetesImagesConfig.ImageBaseConfig.VnetCNIWindowsPluginsDownloadURL = imageConfigFromCloud.VnetCNIWindowsPluginsDownloadURL
 				}

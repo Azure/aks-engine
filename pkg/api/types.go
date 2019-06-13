@@ -399,8 +399,8 @@ type KubernetesConfig struct {
 	LoadBalancerSku                  string                  `json:"loadBalancerSku,omitempty"`
 	ExcludeMasterFromStandardLB      *bool                   `json:"excludeMasterFromStandardLB,omitempty"`
 	AzureCNIVersion                  string                  `json:"azureCNIVersion,omitempty"`
-	VnetCNILinuxPluginsDownloadURL   string                  `json:"vnetCNILinuxPluginsDownloadURL,omitempty"`
-	VnetCNIWindowsPluginsDownloadURL string                  `json:"vnetCNIWindowsPluginsDownloadURL,omitempty"`
+	AzureCNIURLLinux                 string                  `json:"azureCNIURLLinux,omitempty"`
+	AzureCNIURLWindows               string                  `json:"azureCNIURLWindows,omitempty"`
 	KeyVaultSku                      string                  `json:"keyVaultSku,omitempty"`
 	MaximumLoadBalancerRuleCount     int                     `json:"maximumLoadBalancerRuleCount,omitempty"`
 	ProxyMode                        KubeProxyMode           `json:"kubeProxyMode,omitempty"`

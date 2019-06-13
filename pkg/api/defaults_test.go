@@ -303,13 +303,13 @@ func TestAssignDefaultImages(t *testing.T) {
 	}
 
 	cases := []struct {
-		name                             string
-		kubernetesImageBase              string
-		vnetCNILinuxPluginsDownloadURL   string
-		vnetCNIWindowsPluginsDownloadURL string
-		myKubernetesImagesConfig         *KubernetesSpecConfig
-		isUpdate                         bool
-		expectedImages                   *KubernetesSpecConfig
+		name                     string
+		kubernetesImageBase      string
+		AzureCNIURLLinux         string
+		AzureCNIURLWindows       string
+		myKubernetesImagesConfig *KubernetesSpecConfig
+		isUpdate                 bool
+		expectedImages           *KubernetesSpecConfig
 	}{
 		{
 			name:           "default",
@@ -323,12 +323,12 @@ func TestAssignDefaultImages(t *testing.T) {
 			expectedImages:           customImages,
 		},
 		{
-			name:                             "custom legacy image overrides",
-			kubernetesImageBase:              "customBase",
-			vnetCNILinuxPluginsDownloadURL:   "customAzureCNIURLLinux",
-			vnetCNIWindowsPluginsDownloadURL: "customAzureCNIURLWindows",
-			isUpdate:                         false,
-			expectedImages:                   defaultImages,
+			name:                "custom legacy image overrides",
+			kubernetesImageBase: "customBase",
+			AzureCNIURLLinux:    "customAzureCNIURLLinux",
+			AzureCNIURLWindows:  "customAzureCNIURLWindows",
+			isUpdate:            false,
+			expectedImages:      defaultImages,
 		},
 	}
 
@@ -347,11 +347,11 @@ func TestAssignDefaultImages(t *testing.T) {
 			if c.kubernetesImageBase != "" {
 				mockCS.Properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBase = c.kubernetesImageBase
 			}
-			if c.vnetCNILinuxPluginsDownloadURL != "" {
-				mockCS.Properties.OrchestratorProfile.KubernetesConfig.VnetCNILinuxPluginsDownloadURL = c.vnetCNILinuxPluginsDownloadURL
+			if c.AzureCNIURLLinux != "" {
+				mockCS.Properties.OrchestratorProfile.KubernetesConfig.AzureCNIURLLinux = c.AzureCNIURLLinux
 			}
-			if c.vnetCNIWindowsPluginsDownloadURL != "" {
-				mockCS.Properties.OrchestratorProfile.KubernetesConfig.VnetCNIWindowsPluginsDownloadURL = c.vnetCNIWindowsPluginsDownloadURL
+			if c.AzureCNIURLWindows != "" {
+				mockCS.Properties.OrchestratorProfile.KubernetesConfig.AzureCNIURLWindows = c.AzureCNIURLWindows
 			}
 			mockCS.setOrchestratorDefaults(c.isUpdate, c.isUpdate)
 			resultKubernetesImagesConfig := mockCS.Properties.OrchestratorProfile.KubernetesConfig.KubernetesImagesConfig
@@ -379,18 +379,18 @@ func TestAssignDefaultImages(t *testing.T) {
 					t.Errorf("expected setOrchestratorDefaults to set HyperkubeImageBase to \"%s\", but got \"%s\"", c.expectedImages.HyperkubeImageBase, resultKubernetesImagesConfig.ImageBaseConfig.HyperkubeImageBase)
 				}
 			}
-			if c.vnetCNILinuxPluginsDownloadURL != "" && c.myKubernetesImagesConfig == nil {
-				if resultKubernetesImagesConfig.ImageBaseConfig.VnetCNILinuxPluginsDownloadURL != c.vnetCNILinuxPluginsDownloadURL {
-					t.Errorf("expected setOrchestratorDefaults to set VnetCNILinuxPluginsDownloadURL to \"%s\", but got \"%s\"", c.vnetCNILinuxPluginsDownloadURL, resultKubernetesImagesConfig.ImageBaseConfig.VnetCNILinuxPluginsDownloadURL)
+			if c.AzureCNIURLLinux != "" && c.myKubernetesImagesConfig == nil {
+				if resultKubernetesImagesConfig.ImageBaseConfig.VnetCNILinuxPluginsDownloadURL != c.AzureCNIURLLinux {
+					t.Errorf("expected setOrchestratorDefaults to set VnetCNILinuxPluginsDownloadURL to \"%s\", but got \"%s\"", c.AzureCNIURLLinux, resultKubernetesImagesConfig.ImageBaseConfig.VnetCNILinuxPluginsDownloadURL)
 				}
 			} else {
 				if resultKubernetesImagesConfig.ImageBaseConfig.VnetCNILinuxPluginsDownloadURL != c.expectedImages.VnetCNILinuxPluginsDownloadURL {
 					t.Errorf("expected setOrchestratorDefaults to set VnetCNILinuxPluginsDownloadURL to \"%s\", but got \"%s\"", c.expectedImages.VnetCNILinuxPluginsDownloadURL, resultKubernetesImagesConfig.ImageBaseConfig.VnetCNILinuxPluginsDownloadURL)
 				}
 			}
-			if c.vnetCNIWindowsPluginsDownloadURL != "" && c.myKubernetesImagesConfig == nil {
-				if resultKubernetesImagesConfig.ImageBaseConfig.VnetCNIWindowsPluginsDownloadURL != c.vnetCNIWindowsPluginsDownloadURL {
-					t.Errorf("expected setOrchestratorDefaults to set VnetCNIWindowsPluginsDownloadURL to \"%s\", but got \"%s\"", c.vnetCNIWindowsPluginsDownloadURL, resultKubernetesImagesConfig.ImageBaseConfig.VnetCNIWindowsPluginsDownloadURL)
+			if c.AzureCNIURLWindows != "" && c.myKubernetesImagesConfig == nil {
+				if resultKubernetesImagesConfig.ImageBaseConfig.VnetCNIWindowsPluginsDownloadURL != c.AzureCNIURLWindows {
+					t.Errorf("expected setOrchestratorDefaults to set VnetCNIWindowsPluginsDownloadURL to \"%s\", but got \"%s\"", c.AzureCNIURLWindows, resultKubernetesImagesConfig.ImageBaseConfig.VnetCNIWindowsPluginsDownloadURL)
 				}
 			} else {
 				if resultKubernetesImagesConfig.ImageBaseConfig.VnetCNIWindowsPluginsDownloadURL != c.expectedImages.VnetCNIWindowsPluginsDownloadURL {

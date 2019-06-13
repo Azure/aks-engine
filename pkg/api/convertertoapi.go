@@ -706,8 +706,8 @@ func convertVLabsKubernetesConfig(vlabs *vlabs.KubernetesConfig, api *Kubernetes
 	api.EtcdDiskSizeGB = vlabs.EtcdDiskSizeGB
 	api.EtcdEncryptionKey = vlabs.EtcdEncryptionKey
 	api.AzureCNIVersion = vlabs.AzureCNIVersion
-	api.VnetCNILinuxPluginsDownloadURL = vlabs.VnetCNILinuxPluginsDownloadURL
-	api.VnetCNIWindowsPluginsDownloadURL = vlabs.VnetCNIWindowsPluginsDownloadURL
+	api.AzureCNIURLLinux = vlabs.AzureCNIURLLinux
+	api.AzureCNIURLWindows = vlabs.AzureCNIURLWindows
 	api.KeyVaultSku = vlabs.KeyVaultSku
 	api.MaximumLoadBalancerRuleCount = vlabs.MaximumLoadBalancerRuleCount
 	api.ProxyMode = KubeProxyMode(vlabs.ProxyMode)
