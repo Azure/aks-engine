@@ -56,7 +56,7 @@ $global:CACertificate = "{{WrapAsParameter "caCertificate"}}"
 $global:AgentCertificate = "{{WrapAsParameter "clientCertificate"}}"
 
 ## Download sources provided by aks-engine
-$global:WindowsK8sDownloadURL = "{{WrapAsParameter "windowsK8sDownloadURL"}}"
+$global:WindowsK8sDownloadURL = "{{WrapAsParameter "kubeBinariesSASURL"}}"
 $global:WindowsKubeBinariesURL = "{{WrapAsParameter "windowsKubeBinariesURL"}}"
 $global:KubeBinariesVersion = "{{WrapAsParameter "kubeBinariesVersion"}}"
 

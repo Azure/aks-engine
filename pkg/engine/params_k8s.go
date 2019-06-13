@@ -150,13 +150,13 @@ func assignKubernetesParameters(properties *api.Properties, parametersMap params
 			if properties.HasWindows() {
 				// Kubernetes packages as zip file as created by scripts/build-windows-k8s.sh
 				// will be removed in future release as if gets phased out (https://github.com/Azure/aks-engine/issues/3851)
-				windowsK8sDownloadURL := kubernetesConfig.CustomWindowsPackageURL
-				if windowsK8sDownloadURL == "" {
-					windowsK8sDownloadURL = kubernetesConfig.KubernetesImagesConfig.ImageBaseConfig.KubeBinariesSASURLBase + k8sComponents["windowszip"]
+				kubeBinariesSASURL := kubernetesConfig.CustomWindowsPackageURL
+				if kubeBinariesSASURL == "" {
+					kubeBinariesSASURL = kubernetesConfig.KubernetesImagesConfig.ImageBaseConfig.KubeBinariesSASURLBase + k8sComponents["windowszip"]
 				} else if url, ok := kubernetesConfig.KubernetesImagesConfig.ImageConfig["windowszip"]; ok {
-					windowsK8sDownloadURL = url
+					kubeBinariesSASURL = url
 				}
-				addValue(parametersMap, "windowsK8sDownloadURL", windowsK8sDownloadURL)
+				addValue(parametersMap, "kubeBinariesSASURL", kubeBinariesSASURL)
 
 				// Kubernetes node binaries as packaged by upstream kubernetes
 				// example at https://github.com/kubernetes/kubernetes/blob/master/CHANGELOG-1.11.md#node-binaries-1

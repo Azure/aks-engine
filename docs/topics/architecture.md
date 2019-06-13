@@ -33,7 +33,7 @@ Once the input is validated, the template generator is invoked which will conver
   "parameters": {
     {{range .AgentPoolProfiles}}{{template "agentparams.t" .}},{{end}}
     {{if .HasWindows}}
-      "windowsK8sDownloadURL": {
+      "kubeBinariesSASURL": {
         "metadata": {
           "description": "The download url for kubernetes windows binaries package that is created by scripts/build-windows-k8s.sh"
         },
