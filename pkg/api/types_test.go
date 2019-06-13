@@ -3244,6 +3244,50 @@ func TestIsIPMasqAgentEnabled(t *testing.T) {
 	}
 }
 
+func TestGetAzureCNIURLFuncs(t *testing.T) {
+	// Default case
+	cs := CreateMockContainerService("testcluster", defaultTestClusterVer, 1, 3, false)
+	cs.Location = "eastus"
+	cloudSpecConfig := cs.GetCloudSpecConfig()
+
+	o := OrchestratorProfile{
+		OrchestratorType: "Kubernetes",
+		KubernetesConfig: &KubernetesConfig{},
+	}
+	linuxURL := o.KubernetesConfig.GetAzureCNIURLLinux(cloudSpecConfig)
+	windowsURL := o.KubernetesConfig.GetAzureCNIURLWindows(cloudSpecConfig)
+	if linuxURL != cloudSpecConfig.KubernetesSpecConfig.VnetCNILinuxPluginsDownloadURL {
+		t.Fatalf("GetAzureCNIURLLinux() should return default %s, instead returned %s", cloudSpecConfig.KubernetesSpecConfig.VnetCNILinuxPluginsDownloadURL, linuxURL)
+	}
+	if windowsURL != cloudSpecConfig.KubernetesSpecConfig.VnetCNIWindowsPluginsDownloadURL {
+		t.Fatalf("GetAzureCNIURLWindows() should return default %s, instead returned %s", cloudSpecConfig.KubernetesSpecConfig.VnetCNIWindowsPluginsDownloadURL, windowsURL)
+	}
+
+	// User-configurable case
+	cs = CreateMockContainerService("testcluster", defaultTestClusterVer, 1, 3, false)
+	cs.Location = "eastus"
+	cloudSpecConfig = cs.GetCloudSpecConfig()
+
+	customLinuxURL := "https://custom-url/azure-cni-linux.0.0.1.tgz"
+	customWindowsURL := "https://custom-url/azure-cni-windows.0.0.1.tgz"
+	o = OrchestratorProfile{
+		OrchestratorType: "Kubernetes",
+		KubernetesConfig: &KubernetesConfig{
+			AzureCNIURLLinux:   customLinuxURL,
+			AzureCNIURLWindows: customWindowsURL,
+		},
+	}
+
+	linuxURL = o.KubernetesConfig.GetAzureCNIURLLinux(cloudSpecConfig)
+	windowsURL = o.KubernetesConfig.GetAzureCNIURLWindows(cloudSpecConfig)
+	if linuxURL != customLinuxURL {
+		t.Fatalf("GetAzureCNIURLLinux() should return custom URL %s, instead returned %s", customLinuxURL, linuxURL)
+	}
+	if windowsURL != customWindowsURL {
+		t.Fatalf("GetAzureCNIURLWindows() should return custom URL %s, instead returned %s", customWindowsURL, windowsURL)
+	}
+}
+
 func TestCloudProviderDefaults(t *testing.T) {
 	// Test cloudprovider defaults when no user-provided values
 	v := "1.8.0"

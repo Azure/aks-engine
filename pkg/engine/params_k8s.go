@@ -40,8 +40,6 @@ func assignKubernetesParameters(properties *api.Properties, parametersMap params
 				kubernetesCcmSpec := kubernetesImageBase + k8sComponents["ccm"]
 				if kubernetesConfig.CustomCcmImage != "" {
 					kubernetesCcmSpec = kubernetesConfig.CustomCcmImage
-				} else if url, ok := kubernetesConfig.KubernetesImagesConfig.ImageConfig["ccm"]; ok {
-					kubernetesCcmSpec = url
 				}
 
 				addValue(parametersMap, "kubernetesCcmImageSpec", kubernetesCcmSpec)
@@ -53,8 +51,6 @@ func assignKubernetesParameters(properties *api.Properties, parametersMap params
 			}
 			if kubernetesConfig.CustomHyperkubeImage != "" {
 				kubernetesHyperkubeSpec = kubernetesConfig.CustomHyperkubeImage
-			} else if url, ok := kubernetesConfig.KubernetesImagesConfig.ImageConfig["hyperkube"]; ok {
-				kubernetesHyperkubeSpec = url
 			}
 			addValue(parametersMap, "kubernetesHyperkubeSpec", kubernetesHyperkubeSpec)
 
@@ -62,11 +58,7 @@ func assignKubernetesParameters(properties *api.Properties, parametersMap params
 			if kubernetesConfig.PrivateAzureRegistryServer != "" {
 				addValue(parametersMap, "privateAzureRegistryServer", kubernetesConfig.PrivateAzureRegistryServer)
 			}
-			addonManagerImage := kubernetesImageBase + k8sComponents["addonmanager"]
-			if url, ok := kubernetesConfig.KubernetesImagesConfig.ImageConfig["addonmanager"]; ok {
-				addonManagerImage = url
-			}
-			addValue(parametersMap, "kubernetesAddonManagerSpec", addonManagerImage)
+			addValue(parametersMap, "kubernetesAddonManagerSpec", kubernetesImageBase+k8sComponents["addonmanager"])
 			if orchestratorProfile.NeedsExecHealthz() {
 				addValue(parametersMap, "kubernetesExecHealthzSpec", kubernetesImageBase+k8sComponents["exechealthz"])
 			}
@@ -105,11 +97,7 @@ func assignKubernetesParameters(properties *api.Properties, parametersMap params
 				addValue(parametersMap, "kubernetesKubeDNSSpec", kubernetesImageBase+k8sComponents["kube-dns"])
 				addValue(parametersMap, "kubernetesDNSMasqSpec", kubernetesImageBase+k8sComponents["dnsmasq"])
 			}
-			pauseImage := kubernetesImageBase + k8sComponents["pause"]
-			if url, ok := kubernetesConfig.KubernetesImagesConfig.ImageConfig["pause"]; ok {
-				pauseImage = url
-			}
-			addValue(parametersMap, "kubernetesPodInfraContainerSpec", pauseImage)
+			addValue(parametersMap, "kubernetesPodInfraContainerSpec", kubernetesImageBase+k8sComponents["pause"])
 			addValue(parametersMap, "cloudproviderConfig", api.CloudProviderConfig{
 				CloudProviderBackoff:         kubernetesConfig.CloudProviderBackoff,
 				CloudProviderBackoffRetries:  kubernetesConfig.CloudProviderBackoffRetries,
@@ -128,8 +116,8 @@ func assignKubernetesParameters(properties *api.Properties, parametersMap params
 			addValue(parametersMap, "containerRuntime", kubernetesConfig.ContainerRuntime)
 			addValue(parametersMap, "containerdDownloadURLBase", cloudSpecConfig.KubernetesSpecConfig.ContainerdDownloadURLBase)
 			addValue(parametersMap, "cniPluginsURL", cloudSpecConfig.KubernetesSpecConfig.CNIPluginsDownloadURL)
-			addValue(parametersMap, "vnetCniLinuxPluginsURL", cloudSpecConfig.KubernetesSpecConfig.VnetCNILinuxPluginsDownloadURL)
-			addValue(parametersMap, "vnetCniWindowsPluginsURL", cloudSpecConfig.KubernetesSpecConfig.VnetCNIWindowsPluginsDownloadURL)
+			addValue(parametersMap, "vnetCniLinuxPluginsURL", kubernetesConfig.GetAzureCNIURLLinux(cloudSpecConfig))
+			addValue(parametersMap, "vnetCniWindowsPluginsURL", kubernetesConfig.GetAzureCNIURLWindows(cloudSpecConfig))
 			addValue(parametersMap, "gchighthreshold", kubernetesConfig.GCHighThreshold)
 			addValue(parametersMap, "gclowthreshold", kubernetesConfig.GCLowThreshold)
 			addValue(parametersMap, "etcdDownloadURLBase", cloudSpecConfig.KubernetesSpecConfig.EtcdDownloadURLBase)
@@ -153,8 +141,6 @@ func assignKubernetesParameters(properties *api.Properties, parametersMap params
 				kubeBinariesSASURL := kubernetesConfig.CustomWindowsPackageURL
 				if kubeBinariesSASURL == "" {
 					kubeBinariesSASURL = cloudSpecConfig.KubernetesSpecConfig.KubeBinariesSASURLBase + k8sComponents["windowszip"]
-				} else if url, ok := kubernetesConfig.KubernetesImagesConfig.ImageConfig["windowszip"]; ok {
-					kubeBinariesSASURL = url
 				}
 				addValue(parametersMap, "kubeBinariesSASURL", kubeBinariesSASURL)
 

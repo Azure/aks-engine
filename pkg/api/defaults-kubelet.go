@@ -83,10 +83,6 @@ func (cs *ContainerService) setKubeletConfig() {
 		"--streaming-connection-idle-timeout": "5m",
 	}
 
-	if url, ok := o.KubernetesConfig.KubernetesImagesConfig.ImageConfig["pause"]; ok {
-		defaultKubeletConfig["--pod-infra-container-image"] = url
-	}
-
 	// Set --non-masquerade-cidr if ip-masq-agent is disabled on AKS
 	if !cs.Properties.IsIPMasqAgentEnabled() {
 		defaultKubeletConfig["--non-masquerade-cidr"] = cs.Properties.OrchestratorProfile.KubernetesConfig.ClusterSubnet

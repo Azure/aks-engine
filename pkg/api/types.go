@@ -1805,6 +1805,22 @@ func (k *KubernetesConfig) SetCloudProviderRateLimitDefaults() {
 	}
 }
 
+// GetAzureCNIURLLinux returns the full URL to source Azure CNI binaries from
+func (k *KubernetesConfig) GetAzureCNIURLLinux(cloudSpecConfig AzureEnvironmentSpecConfig) string {
+	if k.AzureCNIURLLinux != "" {
+		return k.AzureCNIURLLinux
+	}
+	return cloudSpecConfig.KubernetesSpecConfig.VnetCNILinuxPluginsDownloadURL
+}
+
+// GetAzureCNIURLWindows returns the full URL to source Azure CNI binaries from
+func (k *KubernetesConfig) GetAzureCNIURLWindows(cloudSpecConfig AzureEnvironmentSpecConfig) string {
+	if k.AzureCNIURLWindows != "" {
+		return k.AzureCNIURLWindows
+	}
+	return cloudSpecConfig.KubernetesSpecConfig.VnetCNIWindowsPluginsDownloadURL
+}
+
 // IsFeatureEnabled returns true if a feature flag is on for the provided feature
 func (f *FeatureFlags) IsFeatureEnabled(feature string) bool {
 	if f != nil {
