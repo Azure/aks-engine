@@ -14,10 +14,14 @@ func (cs *ContainerService) setKubernetesImagesConfig() {
 			ImageConfig:     map[string]string{},
 		}
 		// Permit the deprecated KubernetesConfig.KubernetesImageBase property
-		// to act as the value for KubernetesImagesConfig.ImageBaseConfig.KubernetesImageBase,
-		// If KubernetesImagesConfig.ImageBaseConfig.KubernetesImageBase is not already present
+		// to act as the value for KubernetesImagesConfig.ImageBaseConfig.KubernetesImageBase
+		// and KubernetesImagesConfig.ImageBaseConfig.HyperkubeImageBase
+		// and KubernetesImagesConfig.ImageBaseConfig.PauseImageBase,
+		// if KubernetesImagesConfig.ImageBaseConfig.KubernetesImageBase is not already present
 		if k.KubernetesImageBase != "" {
 			k.KubernetesImagesConfig.ImageBaseConfig.KubernetesImageBase = k.KubernetesImageBase
+			k.KubernetesImagesConfig.ImageBaseConfig.HyperkubeImageBase = k.KubernetesImageBase
+			k.KubernetesImagesConfig.ImageBaseConfig.PauseImageBase = k.KubernetesImageBase
 		}
 		// ditto KubernetesConfig.AzureCNIURLLinux
 		if k.AzureCNIURLLinux != "" {
@@ -37,10 +41,18 @@ func (cs *ContainerService) setKubernetesImagesConfig() {
 				}
 			}
 			if k.KubernetesImagesConfig.ImageBaseConfig.HyperkubeImageBase == "" {
-				k.KubernetesImagesConfig.ImageBaseConfig.HyperkubeImageBase = imageConfigFromCloud.HyperkubeImageBase
+				if k.KubernetesImageBase != "" {
+					k.KubernetesImagesConfig.ImageBaseConfig.HyperkubeImageBase = k.KubernetesImageBase
+				} else {
+					k.KubernetesImagesConfig.ImageBaseConfig.HyperkubeImageBase = imageConfigFromCloud.HyperkubeImageBase
+				}
 			}
 			if k.KubernetesImagesConfig.ImageBaseConfig.PauseImageBase == "" {
-				k.KubernetesImagesConfig.ImageBaseConfig.PauseImageBase = imageConfigFromCloud.PauseImageBase
+				if k.KubernetesImageBase != "" {
+					k.KubernetesImagesConfig.ImageBaseConfig.PauseImageBase = k.KubernetesImageBase
+				} else {
+					k.KubernetesImagesConfig.ImageBaseConfig.PauseImageBase = imageConfigFromCloud.PauseImageBase
+				}
 			}
 			if k.KubernetesImagesConfig.ImageBaseConfig.TillerImageBase == "" {
 				k.KubernetesImagesConfig.ImageBaseConfig.TillerImageBase = imageConfigFromCloud.TillerImageBase

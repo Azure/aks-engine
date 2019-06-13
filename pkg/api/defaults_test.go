@@ -220,10 +220,11 @@ func TestAssignDefaultAddonImages(t *testing.T) {
 	}
 
 	cases := []struct {
-		name           string
-		myAddons       []KubernetesAddon
-		isUpdate       bool
-		expectedImages map[string]string
+		name                string
+		kubernetesImageBase string
+		myAddons            []KubernetesAddon
+		isUpdate            bool
+		expectedImages      map[string]string
 	}{
 		{
 			name:           "default",
@@ -258,6 +259,173 @@ func TestAssignDefaultAddonImages(t *testing.T) {
 				if result.Containers[0].Image != c.expectedImages[result.Name] {
 					t.Errorf("expected setDefaults to set Image to \"%s\" in addon %s, but got \"%s\"", c.expectedImages[result.Name], result.Name, result.Containers[0].Image)
 				}
+			}
+		})
+	}
+}
+
+func TestAssignDefaultImages(t *testing.T) {
+	customImage := "custom"
+	defaultImages := &KubernetesSpecConfig{
+		KubernetesImageBase:       "k8s.gcr.io/",
+		HyperkubeImageBase:        "k8s.gcr.io/",
+		PauseImageBase:            "k8s.gcr.io/",
+		TillerImageBase:           "gcr.io/kubernetes-helm/",
+		ACIConnectorImageBase:     "microsoft/",
+		NVIDIAImageBase:           "nvidia/",
+		CalicoImageBase:           "calico/",
+		AzureCNIImageBase:         "mcr.microsoft.com/containernetworking/",
+		EtcdDownloadURLBase:       "https://acs-mirror.azureedge.net/github-coreos",
+		WindowsBinariesBase:       "https://acs-mirror.azureedge.net/wink8s/",
+		WindowsTelemetryGUID:      "fb801154-36b9-41bc-89c2-f4d4f05472b0",
+		CNIPluginsDownloadURL:     "https://acs-mirror.azureedge.net/cni/cni-plugins-amd64-" + CNIPluginVer + ".tgz",
+		AzureCNIURLLinux:          "https://acs-mirror.azureedge.net/cni/azure-vnet-cni-linux-amd64-" + AzureCniPluginVerLinux + ".tgz",
+		AzureCNIURLWindows:        "https://acs-mirror.azureedge.net/cni/azure-vnet-cni-windows-amd64-" + AzureCniPluginVerWindows + ".zip",
+		ContainerdDownloadURLBase: "https://storage.googleapis.com/cri-containerd-release/",
+	}
+
+	customImages := &KubernetesSpecConfig{
+		KubernetesImageBase:       customImage,
+		HyperkubeImageBase:        customImage,
+		PauseImageBase:            customImage,
+		TillerImageBase:           customImage,
+		ACIConnectorImageBase:     customImage,
+		NVIDIAImageBase:           customImage,
+		CalicoImageBase:           customImage,
+		AzureCNIImageBase:         customImage,
+		EtcdDownloadURLBase:       customImage,
+		WindowsBinariesBase:       customImage,
+		WindowsTelemetryGUID:      customImage,
+		CNIPluginsDownloadURL:     customImage,
+		AzureCNIURLLinux:          customImage,
+		AzureCNIURLWindows:        customImage,
+		ContainerdDownloadURLBase: customImage,
+	}
+
+	cases := []struct {
+		name                     string
+		kubernetesImageBase      string
+		azureCNIURLLinux         string
+		azureCNIURLWindows       string
+		myKubernetesImagesConfig *KubernetesSpecConfig
+		isUpdate                 bool
+		expectedImages           *KubernetesSpecConfig
+	}{
+		{
+			name:           "default",
+			isUpdate:       false,
+			expectedImages: defaultImages,
+		},
+		{
+			name:                     "custom",
+			myKubernetesImagesConfig: customImages,
+			isUpdate:                 false,
+			expectedImages:           customImages,
+		},
+		{
+			name:                "custom legacy image overrides",
+			kubernetesImageBase: "customBase",
+			azureCNIURLLinux:    "customAzureCNIURLLinux",
+			azureCNIURLWindows:  "customAzureCNIURLWindows",
+			isUpdate:            false,
+			expectedImages:      defaultImages,
+		},
+	}
+
+	for _, c := range cases {
+		c := c
+		t.Run(c.name, func(t *testing.T) {
+			//t.Parallel()
+			mockCS := getMockBaseContainerService("1.14.1")
+			mockCS.Properties.OrchestratorProfile.OrchestratorType = Kubernetes
+			if c.myKubernetesImagesConfig != nil {
+				mockCS.Properties.OrchestratorProfile.KubernetesConfig.KubernetesImagesConfig = &KubernetesImagesConfig{
+					ImageBaseConfig: c.myKubernetesImagesConfig,
+					ImageConfig:     map[string]string{},
+				}
+			}
+			if c.kubernetesImageBase != "" {
+				mockCS.Properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBase = c.kubernetesImageBase
+			}
+			if c.azureCNIURLLinux != "" {
+				mockCS.Properties.OrchestratorProfile.KubernetesConfig.AzureCNIURLLinux = c.azureCNIURLLinux
+			}
+			if c.azureCNIURLWindows != "" {
+				mockCS.Properties.OrchestratorProfile.KubernetesConfig.AzureCNIURLWindows = c.azureCNIURLWindows
+			}
+			mockCS.setOrchestratorDefaults(c.isUpdate, c.isUpdate)
+			resultKubernetesImagesConfig := mockCS.Properties.OrchestratorProfile.KubernetesConfig.KubernetesImagesConfig
+			if resultKubernetesImagesConfig == nil {
+				t.Errorf("got nil KubernetesImagesConfig after setOrchestratorDefaults")
+			}
+			if resultKubernetesImagesConfig.ImageBaseConfig == nil {
+				t.Errorf("got nil ImageBaseConfig after setOrchestratorDefaults")
+			}
+			if c.kubernetesImageBase != "" && c.myKubernetesImagesConfig == nil {
+				if resultKubernetesImagesConfig.ImageBaseConfig.KubernetesImageBase != c.kubernetesImageBase {
+					t.Errorf("expected setOrchestratorDefaults to set KubernetesImageBase to \"%s\", but got \"%s\"", c.kubernetesImageBase, resultKubernetesImagesConfig.ImageBaseConfig.KubernetesImageBase)
+				}
+				if resultKubernetesImagesConfig.ImageBaseConfig.HyperkubeImageBase != c.kubernetesImageBase {
+					t.Errorf("expected setOrchestratorDefaults to set HyperkubeImageBase to \"%s\", but got \"%s\"", c.kubernetesImageBase, resultKubernetesImagesConfig.ImageBaseConfig.HyperkubeImageBase)
+				}
+				if resultKubernetesImagesConfig.ImageBaseConfig.PauseImageBase != c.kubernetesImageBase {
+					t.Errorf("expected setOrchestratorDefaults to set PauseImageBase to \"%s\", but got \"%s\"", c.kubernetesImageBase, resultKubernetesImagesConfig.ImageBaseConfig.PauseImageBase)
+				}
+			} else {
+				if resultKubernetesImagesConfig.ImageBaseConfig.KubernetesImageBase != c.expectedImages.KubernetesImageBase {
+					t.Errorf("expected setOrchestratorDefaults to set KubernetesImageBase to \"%s\", but got \"%s\"", c.expectedImages.KubernetesImageBase, resultKubernetesImagesConfig.ImageBaseConfig.KubernetesImageBase)
+				}
+				if resultKubernetesImagesConfig.ImageBaseConfig.HyperkubeImageBase != c.expectedImages.HyperkubeImageBase {
+					t.Errorf("expected setOrchestratorDefaults to set HyperkubeImageBase to \"%s\", but got \"%s\"", c.expectedImages.HyperkubeImageBase, resultKubernetesImagesConfig.ImageBaseConfig.HyperkubeImageBase)
+				}
+			}
+			if c.azureCNIURLLinux != "" && c.myKubernetesImagesConfig == nil {
+				if resultKubernetesImagesConfig.ImageBaseConfig.AzureCNIURLLinux != c.azureCNIURLLinux {
+					t.Errorf("expected setOrchestratorDefaults to set AzureCNIURLLinux to \"%s\", but got \"%s\"", c.azureCNIURLLinux, resultKubernetesImagesConfig.ImageBaseConfig.AzureCNIURLLinux)
+				}
+			} else {
+				if resultKubernetesImagesConfig.ImageBaseConfig.AzureCNIURLLinux != c.expectedImages.AzureCNIURLLinux {
+					t.Errorf("expected setOrchestratorDefaults to set AzureCNIURLLinux to \"%s\", but got \"%s\"", c.expectedImages.AzureCNIURLLinux, resultKubernetesImagesConfig.ImageBaseConfig.AzureCNIURLLinux)
+				}
+			}
+			if c.azureCNIURLWindows != "" && c.myKubernetesImagesConfig == nil {
+				if resultKubernetesImagesConfig.ImageBaseConfig.AzureCNIURLWindows != c.azureCNIURLWindows {
+					t.Errorf("expected setOrchestratorDefaults to set AzureCNIURLWindows to \"%s\", but got \"%s\"", c.azureCNIURLWindows, resultKubernetesImagesConfig.ImageBaseConfig.AzureCNIURLWindows)
+				}
+			} else {
+				if resultKubernetesImagesConfig.ImageBaseConfig.AzureCNIURLWindows != c.expectedImages.AzureCNIURLWindows {
+					t.Errorf("expected setOrchestratorDefaults to set AzureCNIURLWindows to \"%s\", but got \"%s\"", c.expectedImages.AzureCNIURLWindows, resultKubernetesImagesConfig.ImageBaseConfig.AzureCNIURLWindows)
+				}
+			}
+			if resultKubernetesImagesConfig.ImageBaseConfig.TillerImageBase != c.expectedImages.TillerImageBase {
+				t.Errorf("expected setOrchestratorDefaults to set TillerImageBase to \"%s\", but got \"%s\"", c.expectedImages.TillerImageBase, resultKubernetesImagesConfig.ImageBaseConfig.TillerImageBase)
+			}
+			if resultKubernetesImagesConfig.ImageBaseConfig.ACIConnectorImageBase != c.expectedImages.ACIConnectorImageBase {
+				t.Errorf("expected setOrchestratorDefaults to set ACIConnectorImageBase to \"%s\", but got \"%s\"", c.expectedImages.ACIConnectorImageBase, resultKubernetesImagesConfig.ImageBaseConfig.ACIConnectorImageBase)
+			}
+			if resultKubernetesImagesConfig.ImageBaseConfig.NVIDIAImageBase != c.expectedImages.NVIDIAImageBase {
+				t.Errorf("expected setOrchestratorDefaults to set NVIDIAImageBase to \"%s\", but got \"%s\"", c.expectedImages.NVIDIAImageBase, resultKubernetesImagesConfig.ImageBaseConfig.NVIDIAImageBase)
+			}
+			if resultKubernetesImagesConfig.ImageBaseConfig.CalicoImageBase != c.expectedImages.CalicoImageBase {
+				t.Errorf("expected setOrchestratorDefaults to set CalicoImageBase to \"%s\", but got \"%s\"", c.expectedImages.CalicoImageBase, resultKubernetesImagesConfig.ImageBaseConfig.CalicoImageBase)
+			}
+			if resultKubernetesImagesConfig.ImageBaseConfig.AzureCNIImageBase != c.expectedImages.AzureCNIImageBase {
+				t.Errorf("expected setOrchestratorDefaults to set AzureCNIImageBase to \"%s\", but got \"%s\"", c.expectedImages.AzureCNIImageBase, resultKubernetesImagesConfig.ImageBaseConfig.AzureCNIImageBase)
+			}
+			if resultKubernetesImagesConfig.ImageBaseConfig.EtcdDownloadURLBase != c.expectedImages.EtcdDownloadURLBase {
+				t.Errorf("expected setOrchestratorDefaults to set EtcdDownloadURLBase to \"%s\", but got \"%s\"", c.expectedImages.EtcdDownloadURLBase, resultKubernetesImagesConfig.ImageBaseConfig.EtcdDownloadURLBase)
+			}
+			if resultKubernetesImagesConfig.ImageBaseConfig.WindowsBinariesBase != c.expectedImages.WindowsBinariesBase {
+				t.Errorf("expected setOrchestratorDefaults to set WindowsBinariesBase to \"%s\", but got \"%s\"", c.expectedImages.WindowsBinariesBase, resultKubernetesImagesConfig.ImageBaseConfig.WindowsBinariesBase)
+			}
+			if resultKubernetesImagesConfig.ImageBaseConfig.WindowsTelemetryGUID != c.expectedImages.WindowsTelemetryGUID {
+				t.Errorf("expected setOrchestratorDefaults to set WindowsTelemetryGUID to \"%s\", but got \"%s\"", c.expectedImages.WindowsTelemetryGUID, resultKubernetesImagesConfig.ImageBaseConfig.WindowsTelemetryGUID)
+			}
+			if resultKubernetesImagesConfig.ImageBaseConfig.CNIPluginsDownloadURL != c.expectedImages.CNIPluginsDownloadURL {
+				t.Errorf("expected setOrchestratorDefaults to set CNIPluginsDownloadURL to \"%s\", but got \"%s\"", c.expectedImages.CNIPluginsDownloadURL, resultKubernetesImagesConfig.ImageBaseConfig.CNIPluginsDownloadURL)
+			}
+			if resultKubernetesImagesConfig.ImageBaseConfig.ContainerdDownloadURLBase != c.expectedImages.ContainerdDownloadURLBase {
+				t.Errorf("expected setOrchestratorDefaults to set ContainerdDownloadURLBase to \"%s\", but got \"%s\"", c.expectedImages.ContainerdDownloadURLBase, resultKubernetesImagesConfig.ImageBaseConfig.ContainerdDownloadURLBase)
 			}
 		})
 	}
