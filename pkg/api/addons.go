@@ -17,7 +17,7 @@ func (cs *ContainerService) setAddonsConfig(isUpdate bool) {
 	k := o.KubernetesConfig
 	if k.KubernetesImagesConfig == nil {
 		k.KubernetesImagesConfig = &KubernetesImagesConfig{
-			ImageBaseConfig: &cloudSpecConfig.KubernetesSpecConfig,
+			ImageBaseConfig: GetImageBaseConfigFromKubernetesSpecConfig(cloudSpecConfig.KubernetesSpecConfig),
 			ImageConfig:     map[string]string{},
 		}
 	}

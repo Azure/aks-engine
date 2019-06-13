@@ -28,7 +28,7 @@ func assignKubernetesParameters(properties *api.Properties, parametersMap params
 		kubernetesConfig := orchestratorProfile.KubernetesConfig
 		if kubernetesConfig.KubernetesImagesConfig == nil {
 			kubernetesConfig.KubernetesImagesConfig = &api.KubernetesImagesConfig{
-				ImageBaseConfig: &cloudSpecConfig.KubernetesSpecConfig,
+				ImageBaseConfig: api.GetImageBaseConfigFromKubernetesSpecConfig(cloudSpecConfig.KubernetesSpecConfig),
 				ImageConfig:     map[string]string{},
 			}
 		}
@@ -126,13 +126,13 @@ func assignKubernetesParameters(properties *api.Properties, parametersMap params
 			addValue(parametersMap, "networkPolicy", kubernetesConfig.NetworkPolicy)
 			addValue(parametersMap, "networkPlugin", kubernetesConfig.NetworkPlugin)
 			addValue(parametersMap, "containerRuntime", kubernetesConfig.ContainerRuntime)
-			addValue(parametersMap, "containerdDownloadURLBase", kubernetesConfig.KubernetesImagesConfig.ImageBaseConfig.ContainerdDownloadURLBase)
-			addValue(parametersMap, "cniPluginsURL", kubernetesConfig.KubernetesImagesConfig.ImageBaseConfig.CNIPluginsDownloadURL)
-			addValue(parametersMap, "vnetCniLinuxPluginsURL", kubernetesConfig.KubernetesImagesConfig.ImageBaseConfig.VnetCNILinuxPluginsDownloadURL)
-			addValue(parametersMap, "vnetCniWindowsPluginsURL", kubernetesConfig.KubernetesImagesConfig.ImageBaseConfig.VnetCNIWindowsPluginsDownloadURL)
+			addValue(parametersMap, "containerdDownloadURLBase", cloudSpecConfig.KubernetesSpecConfig.ContainerdDownloadURLBase)
+			addValue(parametersMap, "cniPluginsURL", cloudSpecConfig.KubernetesSpecConfig.CNIPluginsDownloadURL)
+			addValue(parametersMap, "vnetCniLinuxPluginsURL", cloudSpecConfig.KubernetesSpecConfig.VnetCNILinuxPluginsDownloadURL)
+			addValue(parametersMap, "vnetCniWindowsPluginsURL", cloudSpecConfig.KubernetesSpecConfig.VnetCNIWindowsPluginsDownloadURL)
 			addValue(parametersMap, "gchighthreshold", kubernetesConfig.GCHighThreshold)
 			addValue(parametersMap, "gclowthreshold", kubernetesConfig.GCLowThreshold)
-			addValue(parametersMap, "etcdDownloadURLBase", kubernetesConfig.KubernetesImagesConfig.ImageBaseConfig.EtcdDownloadURLBase)
+			addValue(parametersMap, "etcdDownloadURLBase", cloudSpecConfig.KubernetesSpecConfig.EtcdDownloadURLBase)
 			addValue(parametersMap, "etcdVersion", kubernetesConfig.EtcdVersion)
 			addValue(parametersMap, "etcdDiskSizeGB", kubernetesConfig.EtcdDiskSizeGB)
 			addValue(parametersMap, "etcdEncryptionKey", kubernetesConfig.EtcdEncryptionKey)
@@ -152,7 +152,7 @@ func assignKubernetesParameters(properties *api.Properties, parametersMap params
 				// will be removed in future release as if gets phased out (https://github.com/Azure/aks-engine/issues/3851)
 				kubeBinariesSASURL := kubernetesConfig.CustomWindowsPackageURL
 				if kubeBinariesSASURL == "" {
-					kubeBinariesSASURL = kubernetesConfig.KubernetesImagesConfig.ImageBaseConfig.KubeBinariesSASURLBase + k8sComponents["windowszip"]
+					kubeBinariesSASURL = cloudSpecConfig.KubernetesSpecConfig.KubeBinariesSASURLBase + k8sComponents["windowszip"]
 				} else if url, ok := kubernetesConfig.KubernetesImagesConfig.ImageConfig["windowszip"]; ok {
 					kubeBinariesSASURL = url
 				}
@@ -163,7 +163,7 @@ func assignKubernetesParameters(properties *api.Properties, parametersMap params
 				addValue(parametersMap, "windowsKubeBinariesURL", kubernetesConfig.WindowsNodeBinariesURL)
 				addValue(parametersMap, "kubeServiceCidr", kubernetesConfig.ServiceCIDR)
 				addValue(parametersMap, "kubeBinariesVersion", k8sVersion)
-				addValue(parametersMap, "windowsTelemetryGUID", kubernetesConfig.KubernetesImagesConfig.ImageBaseConfig.WindowsTelemetryGUID)
+				addValue(parametersMap, "windowsTelemetryGUID", cloudSpecConfig.KubernetesSpecConfig.WindowsTelemetryGUID)
 			}
 		}
 

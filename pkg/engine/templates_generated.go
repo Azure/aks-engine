@@ -8130,7 +8130,7 @@ subjects:
 apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: ClusterRole
 metadata:
-  name: system:azure-persistent-volume-binder 
+  name: system:azure-persistent-volume-binder
   labels:
     kubernetes.io/cluster-service: "true"
 rules:
@@ -8147,7 +8147,7 @@ metadata:
 roleRef:
   kind: ClusterRole
   apiGroup: rbac.authorization.k8s.io
-  name: system:azure-persistent-volume-binder 
+  name: system:azure-persistent-volume-binder
 subjects:
 - kind: ServiceAccount
   name: persistent-volume-binder

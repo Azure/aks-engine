@@ -87,7 +87,7 @@ func CreateMockContainerService(containerServiceName, orchestratorVersion string
 		KubeletConfig:           make(map[string]string),
 		ControllerManagerConfig: make(map[string]string),
 		KubernetesImagesConfig: &KubernetesImagesConfig{
-			ImageBaseConfig: &KubernetesSpecConfig{},
+			ImageBaseConfig: &ImageBaseConfig{},
 			ImageConfig:     map[string]string{},
 		},
 	}
@@ -121,7 +121,7 @@ func GetK8sDefaultProperties(hasWindows bool) *Properties {
 			OrchestratorType: Kubernetes,
 			KubernetesConfig: &KubernetesConfig{
 				KubernetesImagesConfig: &KubernetesImagesConfig{
-					ImageBaseConfig: &KubernetesSpecConfig{},
+					ImageBaseConfig: &ImageBaseConfig{},
 					ImageConfig:     map[string]string{},
 				},
 			},

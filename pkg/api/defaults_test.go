@@ -265,40 +265,26 @@ func TestAssignDefaultAddonImages(t *testing.T) {
 
 func TestAssignDefaultImages(t *testing.T) {
 	customImage := "custom"
-	defaultImages := &KubernetesSpecConfig{
-		KubernetesImageBase:              "k8s.gcr.io/",
-		HyperkubeImageBase:               "k8s.gcr.io/",
-		PauseImageBase:                   "k8s.gcr.io/",
-		TillerImageBase:                  "gcr.io/kubernetes-helm/",
-		ACIConnectorImageBase:            "microsoft/",
-		NVIDIAImageBase:                  "nvidia/",
-		CalicoImageBase:                  "calico/",
-		AzureCNIImageBase:                "mcr.microsoft.com/containernetworking/",
-		EtcdDownloadURLBase:              "https://acs-mirror.azureedge.net/github-coreos",
-		KubeBinariesSASURLBase:           "https://acs-mirror.azureedge.net/wink8s/",
-		WindowsTelemetryGUID:             "fb801154-36b9-41bc-89c2-f4d4f05472b0",
-		CNIPluginsDownloadURL:            "https://acs-mirror.azureedge.net/cni/cni-plugins-amd64-" + CNIPluginVer + ".tgz",
-		VnetCNILinuxPluginsDownloadURL:   "https://acs-mirror.azureedge.net/cni/azure-vnet-cni-linux-amd64-" + AzureCniPluginVerLinux + ".tgz",
-		VnetCNIWindowsPluginsDownloadURL: "https://acs-mirror.azureedge.net/cni/azure-vnet-cni-windows-amd64-" + AzureCniPluginVerWindows + ".zip",
-		ContainerdDownloadURLBase:        "https://storage.googleapis.com/cri-containerd-release/",
+	defaultImages := &ImageBaseConfig{
+		KubernetesImageBase:   "k8s.gcr.io/",
+		HyperkubeImageBase:    "k8s.gcr.io/",
+		PauseImageBase:        "k8s.gcr.io/",
+		TillerImageBase:       "gcr.io/kubernetes-helm/",
+		ACIConnectorImageBase: "microsoft/",
+		NVIDIAImageBase:       "nvidia/",
+		CalicoImageBase:       "calico/",
+		AzureCNIImageBase:     "mcr.microsoft.com/containernetworking/",
 	}
 
-	customImages := &KubernetesSpecConfig{
-		KubernetesImageBase:              customImage,
-		HyperkubeImageBase:               customImage,
-		PauseImageBase:                   customImage,
-		TillerImageBase:                  customImage,
-		ACIConnectorImageBase:            customImage,
-		NVIDIAImageBase:                  customImage,
-		CalicoImageBase:                  customImage,
-		AzureCNIImageBase:                customImage,
-		EtcdDownloadURLBase:              customImage,
-		KubeBinariesSASURLBase:           customImage,
-		WindowsTelemetryGUID:             customImage,
-		CNIPluginsDownloadURL:            customImage,
-		VnetCNILinuxPluginsDownloadURL:   customImage,
-		VnetCNIWindowsPluginsDownloadURL: customImage,
-		ContainerdDownloadURLBase:        customImage,
+	customImages := &ImageBaseConfig{
+		KubernetesImageBase:   customImage,
+		HyperkubeImageBase:    customImage,
+		PauseImageBase:        customImage,
+		TillerImageBase:       customImage,
+		ACIConnectorImageBase: customImage,
+		NVIDIAImageBase:       customImage,
+		CalicoImageBase:       customImage,
+		AzureCNIImageBase:     customImage,
 	}
 
 	cases := []struct {
@@ -306,9 +292,9 @@ func TestAssignDefaultImages(t *testing.T) {
 		kubernetesImageBase      string
 		AzureCNIURLLinux         string
 		AzureCNIURLWindows       string
-		myKubernetesImagesConfig *KubernetesSpecConfig
+		myKubernetesImagesConfig *ImageBaseConfig
 		isUpdate                 bool
-		expectedImages           *KubernetesSpecConfig
+		expectedImages           *ImageBaseConfig
 	}{
 		{
 			name:           "default",
@@ -378,24 +364,6 @@ func TestAssignDefaultImages(t *testing.T) {
 					t.Errorf("expected setOrchestratorDefaults to set HyperkubeImageBase to \"%s\", but got \"%s\"", c.expectedImages.HyperkubeImageBase, resultKubernetesImagesConfig.ImageBaseConfig.HyperkubeImageBase)
 				}
 			}
-			if c.AzureCNIURLLinux != "" && c.myKubernetesImagesConfig == nil {
-				if resultKubernetesImagesConfig.ImageBaseConfig.VnetCNILinuxPluginsDownloadURL != c.AzureCNIURLLinux {
-					t.Errorf("expected setOrchestratorDefaults to set VnetCNILinuxPluginsDownloadURL to \"%s\", but got \"%s\"", c.AzureCNIURLLinux, resultKubernetesImagesConfig.ImageBaseConfig.VnetCNILinuxPluginsDownloadURL)
-				}
-			} else {
-				if resultKubernetesImagesConfig.ImageBaseConfig.VnetCNILinuxPluginsDownloadURL != c.expectedImages.VnetCNILinuxPluginsDownloadURL {
-					t.Errorf("expected setOrchestratorDefaults to set VnetCNILinuxPluginsDownloadURL to \"%s\", but got \"%s\"", c.expectedImages.VnetCNILinuxPluginsDownloadURL, resultKubernetesImagesConfig.ImageBaseConfig.VnetCNILinuxPluginsDownloadURL)
-				}
-			}
-			if c.AzureCNIURLWindows != "" && c.myKubernetesImagesConfig == nil {
-				if resultKubernetesImagesConfig.ImageBaseConfig.VnetCNIWindowsPluginsDownloadURL != c.AzureCNIURLWindows {
-					t.Errorf("expected setOrchestratorDefaults to set VnetCNIWindowsPluginsDownloadURL to \"%s\", but got \"%s\"", c.AzureCNIURLWindows, resultKubernetesImagesConfig.ImageBaseConfig.VnetCNIWindowsPluginsDownloadURL)
-				}
-			} else {
-				if resultKubernetesImagesConfig.ImageBaseConfig.VnetCNIWindowsPluginsDownloadURL != c.expectedImages.VnetCNIWindowsPluginsDownloadURL {
-					t.Errorf("expected setOrchestratorDefaults to set VnetCNIWindowsPluginsDownloadURL to \"%s\", but got \"%s\"", c.expectedImages.VnetCNIWindowsPluginsDownloadURL, resultKubernetesImagesConfig.ImageBaseConfig.VnetCNIWindowsPluginsDownloadURL)
-				}
-			}
 			if resultKubernetesImagesConfig.ImageBaseConfig.TillerImageBase != c.expectedImages.TillerImageBase {
 				t.Errorf("expected setOrchestratorDefaults to set TillerImageBase to \"%s\", but got \"%s\"", c.expectedImages.TillerImageBase, resultKubernetesImagesConfig.ImageBaseConfig.TillerImageBase)
 			}
@@ -410,21 +378,6 @@ func TestAssignDefaultImages(t *testing.T) {
 			}
 			if resultKubernetesImagesConfig.ImageBaseConfig.AzureCNIImageBase != c.expectedImages.AzureCNIImageBase {
 				t.Errorf("expected setOrchestratorDefaults to set AzureCNIImageBase to \"%s\", but got \"%s\"", c.expectedImages.AzureCNIImageBase, resultKubernetesImagesConfig.ImageBaseConfig.AzureCNIImageBase)
-			}
-			if resultKubernetesImagesConfig.ImageBaseConfig.EtcdDownloadURLBase != c.expectedImages.EtcdDownloadURLBase {
-				t.Errorf("expected setOrchestratorDefaults to set EtcdDownloadURLBase to \"%s\", but got \"%s\"", c.expectedImages.EtcdDownloadURLBase, resultKubernetesImagesConfig.ImageBaseConfig.EtcdDownloadURLBase)
-			}
-			if resultKubernetesImagesConfig.ImageBaseConfig.KubeBinariesSASURLBase != c.expectedImages.KubeBinariesSASURLBase {
-				t.Errorf("expected setOrchestratorDefaults to set KubeBinariesSASURLBase to \"%s\", but got \"%s\"", c.expectedImages.KubeBinariesSASURLBase, resultKubernetesImagesConfig.ImageBaseConfig.KubeBinariesSASURLBase)
-			}
-			if resultKubernetesImagesConfig.ImageBaseConfig.WindowsTelemetryGUID != c.expectedImages.WindowsTelemetryGUID {
-				t.Errorf("expected setOrchestratorDefaults to set WindowsTelemetryGUID to \"%s\", but got \"%s\"", c.expectedImages.WindowsTelemetryGUID, resultKubernetesImagesConfig.ImageBaseConfig.WindowsTelemetryGUID)
-			}
-			if resultKubernetesImagesConfig.ImageBaseConfig.CNIPluginsDownloadURL != c.expectedImages.CNIPluginsDownloadURL {
-				t.Errorf("expected setOrchestratorDefaults to set CNIPluginsDownloadURL to \"%s\", but got \"%s\"", c.expectedImages.CNIPluginsDownloadURL, resultKubernetesImagesConfig.ImageBaseConfig.CNIPluginsDownloadURL)
-			}
-			if resultKubernetesImagesConfig.ImageBaseConfig.ContainerdDownloadURLBase != c.expectedImages.ContainerdDownloadURLBase {
-				t.Errorf("expected setOrchestratorDefaults to set ContainerdDownloadURLBase to \"%s\", but got \"%s\"", c.expectedImages.ContainerdDownloadURLBase, resultKubernetesImagesConfig.ImageBaseConfig.ContainerdDownloadURLBase)
 			}
 		})
 	}
@@ -2191,8 +2144,6 @@ func TestSetCustomCloudProfileDefaults(t *testing.T) {
 		//KubernetesSpecConfig - Due to Chinese firewall issue, the default containers from google is blocked, use the Chinese local mirror instead
 		KubernetesSpecConfig: KubernetesSpecConfig{
 			KubernetesImageBase:              "KubernetesImageBase",
-			HyperkubeImageBase:               "HyperkubeImageBase",
-			PauseImageBase:                   "PauseImageBase",
 			TillerImageBase:                  "TillerImageBase",
 			ACIConnectorImageBase:            "ACIConnectorImageBase",
 			NVIDIAImageBase:                  "NVIDIAImageBase",
@@ -2542,7 +2493,7 @@ func getMockAPIProperties(orchestratorVersion string) Properties {
 			OrchestratorVersion: orchestratorVersion,
 			KubernetesConfig: &KubernetesConfig{
 				KubernetesImagesConfig: &KubernetesImagesConfig{
-					ImageBaseConfig: &KubernetesSpecConfig{},
+					ImageBaseConfig: &ImageBaseConfig{},
 					ImageConfig:     map[string]string{},
 				},
 			},

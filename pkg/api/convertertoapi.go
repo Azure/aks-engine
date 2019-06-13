@@ -846,11 +846,13 @@ func convertPrivateClusterToAPI(v *vlabs.KubernetesConfig, a *KubernetesConfig) 
 
 func convertKubernetesImagesConfigToAPI(v *vlabs.KubernetesConfig, a *KubernetesConfig) {
 	if v.KubernetesImagesConfig != nil {
-		specConfig := convertVLabsKubernetesSpecConfig(v.KubernetesImagesConfig.ImageBaseConfig)
-		a.KubernetesImagesConfig = &KubernetesImagesConfig{
-			ImageBaseConfig: &specConfig,
+		a.KubernetesImagesConfig = &KubernetesImagesConfig{}
+		if v.KubernetesImagesConfig.ImageBaseConfig != nil {
+			convertVLabsImageBaseConfig(v.KubernetesImagesConfig.ImageBaseConfig, a.KubernetesImagesConfig.ImageBaseConfig)
 		}
-		convertVLabsImageConfig(v.KubernetesImagesConfig, a.KubernetesImagesConfig)
+		if v.KubernetesImagesConfig.ImageConfig != nil {
+			convertVLabsImageConfig(v.KubernetesImagesConfig.ImageConfig, a.KubernetesImagesConfig.ImageConfig)
+		}
 	}
 }
 
@@ -1317,8 +1319,6 @@ func convertVLabsKubernetesSpecConfig(spec *vlabs.KubernetesSpecConfig) Kubernet
 	if spec != nil {
 		return KubernetesSpecConfig{
 			KubernetesImageBase:              spec.KubernetesImageBase,
-			HyperkubeImageBase:               spec.HyperkubeImageBase,
-			PauseImageBase:                   spec.PauseImageBase,
 			TillerImageBase:                  spec.TillerImageBase,
 			ACIConnectorImageBase:            spec.ACIConnectorImageBase,
 			NVIDIAImageBase:                  spec.NVIDIAImageBase,
@@ -1336,9 +1336,20 @@ func convertVLabsKubernetesSpecConfig(spec *vlabs.KubernetesSpecConfig) Kubernet
 	return KubernetesSpecConfig{}
 }
 
-func convertVLabsImageConfig(vlabs *vlabs.KubernetesImagesConfig, a *KubernetesImagesConfig) {
-	a.ImageConfig = map[string]string{}
-	for key, val := range vlabs.ImageConfig {
-		a.ImageConfig[key] = val
+func convertVLabsImageBaseConfig(vlabs *vlabs.ImageBaseConfig, api *ImageBaseConfig) {
+	api.KubernetesImageBase = vlabs.KubernetesImageBase
+	api.HyperkubeImageBase = vlabs.HyperkubeImageBase
+	api.PauseImageBase = vlabs.PauseImageBase
+	api.TillerImageBase = vlabs.TillerImageBase
+	api.ACIConnectorImageBase = vlabs.ACIConnectorImageBase
+	api.NVIDIAImageBase = vlabs.NVIDIAImageBase
+	api.AzureCNIImageBase = vlabs.AzureCNIImageBase
+	api.CalicoImageBase = vlabs.CalicoImageBase
+}
+
+func convertVLabsImageConfig(v, a map[string]string) {
+	a = map[string]string{}
+	for key, val := range v {
+		a[key] = val
 	}
 }
