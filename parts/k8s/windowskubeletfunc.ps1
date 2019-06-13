@@ -163,12 +163,12 @@ function
 Get-KubePackage {
     Param(
         [Parameter(Mandatory = $true)][string]
-        $DownloadURL
+        $KubeBinariesSASURL
     )
 
     $zipfile = "c:\k.zip"
     for ($i = 0; $i -le 10; $i++) {
-        DownloadFileOverHttp -Url $DownloadURL -DestinationPath $zipfile
+        DownloadFileOverHttp -Url $KubeBinariesSASURL -DestinationPath $zipfile
         if ($?) {
             break
         }
