@@ -100,6 +100,11 @@ func (n *Node) IsLinux() bool {
 	return n.Status.NodeInfo.OperatingSystem == "linux"
 }
 
+// IsWindows checks for a Windows node
+func (n *Node) IsWindows() bool {
+	return n.Status.NodeInfo.OperatingSystem == "windows"
+}
+
 // IsUbuntu checks for an Ubuntu-backed node
 func (n *Node) IsUbuntu() bool {
 	if n.IsLinux() {

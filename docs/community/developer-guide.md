@@ -199,9 +199,19 @@ environment variables to be set:
 * `SUBSCRIPTION_ID`: Azure subscription UUID
 * `TENANT_ID`: Azure tenant UUID
 
+You can set these optional environment variable to configure how the end-to-end tests run
+* `CLUSTER_DEFINITION`: Input apimodel. Defaults to `examples/kubernetes.json`
+* `LOCATION`: Azure region where the resources for the test cluster will be created.
+* `NAME`: Name of an existing cluster to use for testing
+
 The end-to-end tests also require the `k` script from the `scripts/` folder in to
 be in your search $PATH. This ensures that testing uses a `kubectl` client that
 matches the version of the Kubernetes server.
+
+Below is an example command to run end-to-end tests for Kubernetes. Make sure the `NAME` environment variable is not set if you want a new cluster to be deployed.
+```bash
+CLUSTER_DEFINITION=examples/kubernetes.json SUBSCRIPTION_ID="<YOUR_SUB_ID>" CLIENT_ID="<YOUR_CLIENT_ID" CLIENT_SECRET="<YOUR_CLIENT_SECRET>" TENANT_ID="<YOUR_TENANT_ID>" LOCATION=<REGION> CLEANUP_ON_EXIT=true make test-kubernetes
+```
 
 ### Debugging
 
