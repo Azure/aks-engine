@@ -13049,8 +13049,7 @@ write_files:
   content: !!binary |
     {{CloudInitData "aptPreferences"}}
 
-{{if not .MasterProfile.IsCoreOS}}
-    {{if IsIPv6DualStackFeatureEnabled}}
+{{if IsIPv6DualStackFeatureEnabled}}
 - path: /etc/systemd/system/dhcpv6.service
   permissions: "0644"
   encoding: gzip
@@ -13064,7 +13063,6 @@ write_files:
   owner: root
   content: !!binary |
     {{CloudInitData "dhcpv6ConfigurationScript"}}
-    {{end}}
 {{end}}
 
 {{if .OrchestratorProfile.KubernetesConfig.RequiresDocker}}

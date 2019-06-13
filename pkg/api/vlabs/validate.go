@@ -342,6 +342,12 @@ func (a *Properties) validateMasterProfile(isUpdate bool) error {
 		if m.IsVirtualMachineScaleSets() && m.VnetSubnetID != "" && m.FirstConsecutiveStaticIP != "" {
 			return errors.New("when masterProfile's availabilityProfile is VirtualMachineScaleSets and a vnetSubnetID is specified, the firstConsecutiveStaticIP should be empty and will be determined by an offset from the first IP in the vnetCidr")
 		}
+		// validate os type is linux if dual stack feature is enabled
+		if a.FeatureFlags.IsIPv6DualStackEnabled() {
+			if m.Distro == CoreOS {
+				return errors.Errorf("Dual stack feature is currently supported only with Ubuntu, but master is of distro type %s", m.Distro)
+			}
+		}
 	}
 
 	if m.ImageRef != nil {

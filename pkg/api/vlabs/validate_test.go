@@ -2433,10 +2433,25 @@ func TestValidateProperties_OrchestratorSpecificProperties(t *testing.T) {
 	t.Run("Should not support os type other than linux for ipv6 dual stack feature", func(t *testing.T) {
 		t.Parallel()
 		cs := getK8sDefaultContainerService(true)
+		cs.Properties.FeatureFlags = &FeatureFlags{EnableIPv6DualStack: true}
+		masterProfile := cs.Properties.MasterProfile
+		masterProfile.Distro = CoreOS
+		expectedMsg := fmt.Sprintf("Dual stack feature is currently supported only with Ubuntu, but master is of distro type %s", masterProfile.Distro)
+		if err := cs.Properties.validateMasterProfile(false); err.Error() != expectedMsg {
+			t.Errorf("expected error with message : %s, but got %s", expectedMsg, err.Error())
+		}
+
+		masterProfile.Distro = Ubuntu
 		agentPoolProfiles := cs.Properties.AgentPoolProfiles
 		agentPoolProfiles[0].OSType = Windows
-		cs.Properties.FeatureFlags = &FeatureFlags{EnableIPv6DualStack: true}
-		expectedMsg := fmt.Sprintf("Dual stack feature is supported only with Linux, but agent pool '%s' is of os type %s", agentPoolProfiles[0].Name, agentPoolProfiles[0].OSType)
+		expectedMsg = fmt.Sprintf("Dual stack feature is supported only with Linux, but agent pool '%s' is of os type %s", agentPoolProfiles[0].Name, agentPoolProfiles[0].OSType)
+		if err := cs.Properties.validateAgentPoolProfiles(false); err.Error() != expectedMsg {
+			t.Errorf("expected error with message : %s, but got %s", expectedMsg, err.Error())
+		}
+
+		agentPoolProfiles[0].OSType = Linux
+		agentPoolProfiles[0].Distro = CoreOS
+		expectedMsg = fmt.Sprintf("Dual stack feature is currently supported only with Ubuntu, but agent pool '%s' is of distro type %s", agentPoolProfiles[0].Name, agentPoolProfiles[0].Distro)
 		if err := cs.Properties.validateAgentPoolProfiles(false); err.Error() != expectedMsg {
 			t.Errorf("expected error with message : %s, but got %s", expectedMsg, err.Error())
 		}
