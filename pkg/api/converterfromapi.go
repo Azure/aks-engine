@@ -828,7 +828,10 @@ func convertPrivateClusterToVlabs(a *KubernetesConfig, v *vlabs.KubernetesConfig
 
 func convertKubernetesImagesConfigToVlabs(a *KubernetesConfig, v *vlabs.KubernetesConfig) {
 	if a.KubernetesImagesConfig != nil {
-		v.KubernetesImagesConfig = &vlabs.KubernetesImagesConfig{}
+		v.KubernetesImagesConfig = &vlabs.KubernetesImagesConfig{
+			ImageBaseConfig: &vlabs.ImageBaseConfig{},
+			ImageConfig:     map[string]string{},
+		}
 		if a.KubernetesImagesConfig.ImageBaseConfig != nil {
 			convertImageBaseConfigToVlabs(a.KubernetesImagesConfig.ImageBaseConfig, v.KubernetesImagesConfig.ImageBaseConfig)
 		}

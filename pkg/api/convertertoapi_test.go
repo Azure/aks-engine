@@ -1000,3 +1000,69 @@ func TestConvertVLabsContainerService(t *testing.T) {
 	}
 
 }
+
+func TestConvertVLabsKubernetesImagesConfig(t *testing.T) {
+	const (
+		kubernetesImageBase   = "k8s.gcr.io"
+		hyperkubeImageBase    = "k8s.gcr.io"
+		pauseImageBase        = "k8s.gcr.io"
+		tillerImageBase       = "gcr.io/kubernetes-helm/"
+		aciConnectorImageBase = "microsoft/"
+		nvidiaImageBase       = "nvidia/"
+		azureCNIImageBase     = "mcr.microsoft.com/containernetworking/"
+		calicoImageBase       = "calico/"
+	)
+
+	vlabscs := &vlabs.ContainerService{
+		Properties: &vlabs.Properties{
+			OrchestratorProfile: &vlabs.OrchestratorProfile{
+				OrchestratorType: Kubernetes,
+				KubernetesConfig: &vlabs.KubernetesConfig{
+					KubernetesImagesConfig: &vlabs.KubernetesImagesConfig{
+						ImageBaseConfig: &vlabs.ImageBaseConfig{
+							KubernetesImageBase:   kubernetesImageBase,
+							HyperkubeImageBase:    hyperkubeImageBase,
+							PauseImageBase:        pauseImageBase,
+							TillerImageBase:       tillerImageBase,
+							ACIConnectorImageBase: aciConnectorImageBase,
+							NVIDIAImageBase:       nvidiaImageBase,
+							AzureCNIImageBase:     azureCNIImageBase,
+							CalicoImageBase:       calicoImageBase,
+						},
+						ImageConfig: map[string]string{},
+					},
+				},
+			},
+		},
+	}
+
+	cs, err := ConvertVLabsContainerService(vlabscs, false)
+	if err != nil {
+		t.Errorf("unexpected error while executing ConvertVLabsContainerService: %s", err.Error())
+	}
+
+	if cs.Properties.OrchestratorProfile.KubernetesConfig.KubernetesImagesConfig.ImageBaseConfig.KubernetesImageBase != kubernetesImageBase {
+		t.Errorf("incorrect ImageBaseConfig.KubernetesImageBase, expect: '%s', actual: '%s'", kubernetesImageBase, cs.Properties.OrchestratorProfile.KubernetesConfig.KubernetesImagesConfig.ImageBaseConfig.KubernetesImageBase)
+	}
+	if cs.Properties.OrchestratorProfile.KubernetesConfig.KubernetesImagesConfig.ImageBaseConfig.HyperkubeImageBase != hyperkubeImageBase {
+		t.Errorf("incorrect ImageBaseConfig.HyperkubeImageBase, expect: '%s', actual: '%s'", hyperkubeImageBase, cs.Properties.OrchestratorProfile.KubernetesConfig.KubernetesImagesConfig.ImageBaseConfig.HyperkubeImageBase)
+	}
+	if cs.Properties.OrchestratorProfile.KubernetesConfig.KubernetesImagesConfig.ImageBaseConfig.PauseImageBase != pauseImageBase {
+		t.Errorf("incorrect ImageBaseConfig.PauseImageBase, expect: '%s', actual: '%s'", pauseImageBase, cs.Properties.OrchestratorProfile.KubernetesConfig.KubernetesImagesConfig.ImageBaseConfig.PauseImageBase)
+	}
+	if cs.Properties.OrchestratorProfile.KubernetesConfig.KubernetesImagesConfig.ImageBaseConfig.TillerImageBase != tillerImageBase {
+		t.Errorf("incorrect ImageBaseConfig.TillerImageBase, expect: '%s', actual: '%s'", tillerImageBase, cs.Properties.OrchestratorProfile.KubernetesConfig.KubernetesImagesConfig.ImageBaseConfig.TillerImageBase)
+	}
+	if cs.Properties.OrchestratorProfile.KubernetesConfig.KubernetesImagesConfig.ImageBaseConfig.ACIConnectorImageBase != aciConnectorImageBase {
+		t.Errorf("incorrect ImageBaseConfig.ACIConnectorImageBase, expect: '%s', actual: '%s'", aciConnectorImageBase, cs.Properties.OrchestratorProfile.KubernetesConfig.KubernetesImagesConfig.ImageBaseConfig.ACIConnectorImageBase)
+	}
+	if cs.Properties.OrchestratorProfile.KubernetesConfig.KubernetesImagesConfig.ImageBaseConfig.NVIDIAImageBase != nvidiaImageBase {
+		t.Errorf("incorrect ImageBaseConfig.NVIDIAImageBase, expect: '%s', actual: '%s'", nvidiaImageBase, cs.Properties.OrchestratorProfile.KubernetesConfig.KubernetesImagesConfig.ImageBaseConfig.NVIDIAImageBase)
+	}
+	if cs.Properties.OrchestratorProfile.KubernetesConfig.KubernetesImagesConfig.ImageBaseConfig.AzureCNIImageBase != azureCNIImageBase {
+		t.Errorf("incorrect ImageBaseConfig.AzureCNIImageBase, expect: '%s', actual: '%s'", azureCNIImageBase, cs.Properties.OrchestratorProfile.KubernetesConfig.KubernetesImagesConfig.ImageBaseConfig.AzureCNIImageBase)
+	}
+	if cs.Properties.OrchestratorProfile.KubernetesConfig.KubernetesImagesConfig.ImageBaseConfig.CalicoImageBase != calicoImageBase {
+		t.Errorf("incorrect ImageBaseConfig.CalicoImageBase, expect: '%s', actual: '%s'", calicoImageBase, cs.Properties.OrchestratorProfile.KubernetesConfig.KubernetesImagesConfig.ImageBaseConfig.CalicoImageBase)
+	}
+}

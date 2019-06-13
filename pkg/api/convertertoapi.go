@@ -846,7 +846,10 @@ func convertPrivateClusterToAPI(v *vlabs.KubernetesConfig, a *KubernetesConfig) 
 
 func convertKubernetesImagesConfigToAPI(v *vlabs.KubernetesConfig, a *KubernetesConfig) {
 	if v.KubernetesImagesConfig != nil {
-		a.KubernetesImagesConfig = &KubernetesImagesConfig{}
+		a.KubernetesImagesConfig = &KubernetesImagesConfig{
+			ImageBaseConfig: &ImageBaseConfig{},
+			ImageConfig:     map[string]string{},
+		}
 		if v.KubernetesImagesConfig.ImageBaseConfig != nil {
 			convertVLabsImageBaseConfig(v.KubernetesImagesConfig.ImageBaseConfig, a.KubernetesImagesConfig.ImageBaseConfig)
 		}
