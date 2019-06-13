@@ -220,11 +220,10 @@ func TestAssignDefaultAddonImages(t *testing.T) {
 	}
 
 	cases := []struct {
-		name                string
-		kubernetesImageBase string
-		myAddons            []KubernetesAddon
-		isUpdate            bool
-		expectedImages      map[string]string
+		name           string
+		myAddons       []KubernetesAddon
+		isUpdate       bool
+		expectedImages map[string]string
 	}{
 		{
 			name:           "default",
