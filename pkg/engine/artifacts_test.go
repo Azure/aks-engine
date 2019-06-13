@@ -33,6 +33,7 @@ func TestKubernetesContainerAddonSettingsInit(t *testing.T) {
 		expectedDNSAutoscaler          bool
 		expectedCalico                 bool
 		expectedAzureNetworkPolicy     bool
+		expectedKubeDNS                bool
 	}{
 		// addons disabled scenario
 		{
@@ -115,6 +116,10 @@ func TestKubernetesContainerAddonSettingsInit(t *testing.T) {
 								Name:    AzureNetworkPolicyAddonName,
 								Enabled: to.BoolPtr(false),
 							},
+							{
+								Name:    KubeDNSAddonName,
+								Enabled: to.BoolPtr(false),
+							},
 						},
 					},
 				},
@@ -137,6 +142,7 @@ func TestKubernetesContainerAddonSettingsInit(t *testing.T) {
 			expectedDNSAutoscaler:          false,
 			expectedCalico:                 false,
 			expectedAzureNetworkPolicy:     false,
+			expectedKubeDNS:                false,
 		},
 		// addons enabled scenario
 		{
@@ -219,6 +225,10 @@ func TestKubernetesContainerAddonSettingsInit(t *testing.T) {
 								Name:    AzureNetworkPolicyAddonName,
 								Enabled: to.BoolPtr(true),
 							},
+							{
+								Name:    KubeDNSAddonName,
+								Enabled: to.BoolPtr(true),
+							},
 						},
 					},
 				},
@@ -241,6 +251,7 @@ func TestKubernetesContainerAddonSettingsInit(t *testing.T) {
 			expectedDNSAutoscaler:          true,
 			expectedCalico:                 true,
 			expectedAzureNetworkPolicy:     true,
+			expectedKubeDNS:                true,
 		},
 	}
 
@@ -300,6 +311,9 @@ func TestKubernetesContainerAddonSettingsInit(t *testing.T) {
 		if c.expectedAzureNetworkPolicy != componentFileSpec[AzureNetworkPolicyAddonName].isEnabled {
 			t.Fatalf("Expected componentFileSpec[%s] to be %t", AzureNetworkPolicyAddonName, c.expectedAzureNetworkPolicy)
 		}
+		if c.expectedKubeDNS != componentFileSpec[KubeDNSAddonName].isEnabled {
+			t.Fatalf("Expected componentFileSpec[%s] to be %t", KubeDNSAddonName, c.expectedKubeDNS)
+		}
 	}
 }
 
@@ -307,7 +321,6 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 	mockAzureStackProperties := api.GetMockPropertiesWithCustomCloudProfile("azurestackcloud", true, true, false)
 	cases := []struct {
 		p                             *api.Properties
-		expectedKubeDNS               bool
 		expectedCoreDNS               bool
 		expectedKubeProxy             bool
 		expectedCilium                bool
@@ -336,7 +349,6 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 					},
 				},
 			},
-			expectedKubeDNS:               true,
 			expectedCoreDNS:               false,
 			expectedKubeProxy:             true,
 			expectedCilium:                false,
@@ -360,7 +372,6 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 					},
 				},
 			},
-			expectedKubeDNS:               false,
 			expectedCoreDNS:               true,
 			expectedKubeProxy:             true,
 			expectedCilium:                false,
@@ -384,7 +395,6 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 					},
 				},
 			},
-			expectedKubeDNS:               false,
 			expectedCoreDNS:               true,
 			expectedKubeProxy:             true,
 			expectedCilium:                true,
@@ -408,7 +418,6 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 					},
 				},
 			},
-			expectedKubeDNS:               false,
 			expectedCoreDNS:               true,
 			expectedKubeProxy:             true,
 			expectedCilium:                false,
@@ -435,7 +444,6 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 					AdminGroupID: "1234-5",
 				},
 			},
-			expectedKubeDNS:               false,
 			expectedCoreDNS:               true,
 			expectedKubeProxy:             true,
 			expectedCilium:                false,
@@ -460,7 +468,6 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 					},
 				},
 			},
-			expectedKubeDNS:               false,
 			expectedCoreDNS:               true,
 			expectedKubeProxy:             true,
 			expectedCilium:                false,
@@ -515,7 +522,6 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 					},
 				},
 			},
-			expectedKubeDNS:               false,
 			expectedCoreDNS:               true,
 			expectedKubeProxy:             true,
 			expectedCilium:                false,
@@ -544,7 +550,6 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 					},
 				},
 			},
-			expectedKubeDNS:               true,
 			expectedCoreDNS:               false,
 			expectedKubeProxy:             true,
 			expectedCilium:                false,
@@ -574,7 +579,6 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 				},
 				CustomCloudProfile: mockAzureStackProperties.CustomCloudProfile,
 			},
-			expectedKubeDNS:               false,
 			expectedCoreDNS:               true,
 			expectedKubeProxy:             true,
 			expectedCilium:                false,
@@ -604,7 +608,6 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 				},
 				CustomCloudProfile: mockAzureStackProperties.CustomCloudProfile,
 			},
-			expectedKubeDNS:               false,
 			expectedCoreDNS:               true,
 			expectedKubeProxy:             true,
 			expectedCilium:                false,
@@ -628,7 +631,6 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 					},
 				},
 			},
-			expectedKubeDNS:               false,
 			expectedCoreDNS:               true,
 			expectedKubeProxy:             true,
 			expectedCilium:                false,
@@ -647,10 +649,6 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 		componentFileSpecArray := kubernetesAddonSettingsInit(c.p)
 		for _, componentFileSpec := range componentFileSpecArray {
 			switch componentFileSpec.destinationFile {
-			case "kube-dns-deployment.yaml":
-				if c.expectedKubeDNS != componentFileSpec.isEnabled {
-					t.Fatalf("Expected %s to be %t", KubeDNSAddonName, c.expectedKubeDNS)
-				}
 			case "coredns.yaml":
 				if c.expectedCoreDNS != componentFileSpec.isEnabled {
 					t.Fatalf("Expected %s to be %t", CoreDNSAddonName, c.expectedCoreDNS)

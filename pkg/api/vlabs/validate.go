@@ -577,6 +577,19 @@ func (a *Properties) validateAddons() error {
 	if a.OrchestratorProfile.KubernetesConfig != nil && a.OrchestratorProfile.KubernetesConfig.Addons != nil {
 		var isAvailabilitySets bool
 		var IsNSeriesSKU bool
+		version := common.RationalizeReleaseAndVersion(
+			a.OrchestratorProfile.OrchestratorType,
+			a.OrchestratorProfile.OrchestratorRelease,
+			a.OrchestratorProfile.OrchestratorVersion,
+			false,
+			false)
+		if version == "" {
+			return errors.Errorf("the following user supplied OrchestratorProfile configuration is not supported: OrchestratorType: %s, OrchestratorRelease: %s, OrchestratorVersion: %s. Please check supported Release or Version for this build of aks-engine", a.OrchestratorProfile.OrchestratorType, a.OrchestratorProfile.OrchestratorRelease, a.OrchestratorProfile.OrchestratorVersion)
+		}
+		sv, err := semver.Make(version)
+		if err != nil {
+			return errors.Errorf("could not validate version %s", version)
+		}
 
 		for _, agentPool := range a.AgentPoolProfiles {
 			if agentPool.IsAvailabilitySets() {
@@ -604,19 +617,6 @@ func (a *Properties) validateAddons() error {
 				}
 			case "nvidia-device-plugin":
 				if to.Bool(addon.Enabled) {
-					version := common.RationalizeReleaseAndVersion(
-						a.OrchestratorProfile.OrchestratorType,
-						a.OrchestratorProfile.OrchestratorRelease,
-						a.OrchestratorProfile.OrchestratorVersion,
-						false,
-						false)
-					if version == "" {
-						return errors.Errorf("the following user supplied OrchestratorProfile configuration is not supported: OrchestratorType: %s, OrchestratorRelease: %s, OrchestratorVersion: %s. Please check supported Release or Version for this build of aks-engine", a.OrchestratorProfile.OrchestratorType, a.OrchestratorProfile.OrchestratorRelease, a.OrchestratorProfile.OrchestratorVersion)
-					}
-					sv, err := semver.Make(version)
-					if err != nil {
-						return errors.Errorf("could not validate version %s", version)
-					}
 					minVersion, err := semver.Make("1.10.0")
 					if err != nil {
 						return errors.New("could not validate version")
@@ -653,6 +653,16 @@ func (a *Properties) validateAddons() error {
 
 					if len(addon.Config["appgw-subnet"]) == 0 {
 						return errors.New("appgw-ingress add-ons requires 'appgw-subnet' in the Config. It is used to provision the subnet for Application Gateway in the vnet")
+					}
+				}
+			case "kube-dns":
+				if to.Bool(addon.Enabled) {
+					maxVersion, err := semver.Make("1.12.0-alpha.1")
+					if err != nil {
+						return errors.New("could not validate version")
+					}
+					if !sv.LT(maxVersion) {
+						return errors.New("kube-dns is not supported on Kubernetes versions 1.12 or greater")
 					}
 				}
 			}

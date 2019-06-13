@@ -341,6 +341,16 @@ func (cs *ContainerService) setAddonsConfig(isUpdate bool) {
 		},
 	}
 
+	defaultKubeDNSAddonsConfig := KubernetesAddon{
+		Name:    KubeDNSAddonName,
+		Enabled: to.BoolPtr(!common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.12.0")),
+		Config: map[string]string{
+			"domain":    getKubeDNSClusterDomain(cs),
+			"clusterIP": o.KubernetesConfig.DNSServiceIP,
+		},
+		Containers: getKubeDNSAddonContainersSpec(cs, specConfig),
+	}
+
 	defaultAddons := []KubernetesAddon{
 		defaultsHeapsterAddonsConfig,
 		defaultTillerAddonsConfig,
@@ -361,6 +371,7 @@ func (cs *ContainerService) setAddonsConfig(isUpdate bool) {
 		defaultsCalicoDaemonSetAddonsConfig,
 		defaultsAADPodIdentityAddonsConfig,
 		defaultAppGwAddonsConfig,
+		defaultKubeDNSAddonsConfig,
 	}
 	// Add default addons specification, if no user-provided spec exists
 	if o.KubernetesConfig.Addons == nil {
@@ -463,4 +474,52 @@ func synthesizeAddonsConfig(addons []KubernetesAddon, addon KubernetesAddon, isU
 	if i >= 0 {
 		addons[i] = assignDefaultAddonVals(addons[i], addon, isUpdate)
 	}
+}
+
+func getKubeDNSAddonContainersSpec(cs *ContainerService, specConfig KubernetesSpecConfig) []KubernetesContainerSpec {
+	k8sComponents := K8sComponentsByVersionMap[cs.Properties.OrchestratorProfile.OrchestratorVersion]
+	spec := []KubernetesContainerSpec{
+		{
+			Name:           "kube-dns-deployment",
+			Image:          specConfig.KubernetesImageBase + k8sComponents["kube-dns"],
+			CPURequests:    "100m",
+			MemoryRequests: "70Mi",
+			MemoryLimits:   "170Mi",
+		},
+		{
+			Name:           "dnsmasq-nanny",
+			Image:          specConfig.KubernetesImageBase + k8sComponents["dnsmasq"],
+			CPURequests:    "150m",
+			MemoryRequests: "20Mi",
+		},
+	}
+
+	if cs.Properties.OrchestratorProfile.NeedsExecHealthz() {
+		execHealthzSpec := KubernetesContainerSpec{
+			Name:           "exechealthz",
+			Image:          specConfig.KubernetesImageBase + k8sComponents["exechealthz"],
+			CPURequests:    "10m",
+			MemoryRequests: "50Mi",
+			MemoryLimits:   "50Mi",
+		}
+		spec = append(spec, execHealthzSpec)
+	} else {
+		sidecarSpec := KubernetesContainerSpec{
+			Name:           "k8s-dns-sidecar",
+			Image:          specConfig.KubernetesImageBase + k8sComponents["k8s-dns-sidecar"],
+			CPURequests:    "150m",
+			MemoryRequests: "20Mi",
+		}
+		spec = append(spec, sidecarSpec)
+	}
+	return spec
+}
+
+func getKubeDNSClusterDomain(cs *ContainerService) string {
+	if cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig != nil {
+		if val, ok := cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig["--cluster-domain"]; ok {
+			return val
+		}
+	}
+	return DefaultKubernetesClusterDomain
 }

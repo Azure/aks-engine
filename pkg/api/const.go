@@ -435,6 +435,8 @@ const (
 	AzureNetworkPolicyAddonName = "azure-npm-daemonset"
 	// AzureVnetTelemetryAddonName is the name of the Azure vnet telemetry addon
 	AzureVnetTelemetryAddonName = "azure-vnet-telemetry-daemonset"
+	// KubeDNSAddonName is the name of the kube-dns addon
+	KubeDNSAddonName = "kube-dns"
 	// DefaultMasterEtcdClientPort is the default etcd client port for Kubernetes master nodes
 	DefaultMasterEtcdClientPort = 2379
 	// DefaultKubeletEventQPS is 0, see --event-qps at https://kubernetes.io/docs/reference/generated/kubelet/

@@ -17,7 +17,7 @@ metadata:
   name: kube-dns
   namespace: kube-system
 spec:
-  clusterIP: <clustIP>
+  clusterIP: {{ContainerConfig "clusterIP"}}
   ports:
   - name: dns
     port: 53
@@ -76,14 +76,14 @@ spec:
           optional: true
       containers:
       - args:
-        - "--domain=<domain>."
+        - "--domain={{ContainerConfig "domain"}}."
         - "--dns-port=10053"
         - "--v=2"
         - "--config-dir=/kube-dns-config"
         env:
         - name: PROMETHEUS_PORT
           value: "10055"
-        image: <img>
+        image: {{ContainerImage "kube-dns-deployment"}}
         imagePullPolicy: IfNotPresent
         livenessProbe:
           failureThreshold: 5
@@ -114,10 +114,10 @@ spec:
           timeoutSeconds: 5
         resources:
           limits:
-            memory: 170Mi
+            memory: {{ContainerMemLimits "kube-dns-deployment"}}
           requests:
-            cpu: 100m
-            memory: 70Mi
+            cpu: {{ContainerCPUReqs "kube-dns-deployment"}}
+            memory: {{ContainerMemReqs "kube-dns-deployment"}}
         volumeMounts:
         - name: kube-dns-config
           mountPath: /kube-dns-config
@@ -134,7 +134,7 @@ spec:
         - "--server=/in-addr.arpa/127.0.0.1#10053"
         - "--server=/ip6.arpa/127.0.0.1#10053"
         - "--log-facility=-"
-        image: <imgMasq>
+        image: {{ContainerImage "dnsmasq-nanny"}}
         imagePullPolicy: IfNotPresent
         name: dnsmasq
         ports:
@@ -156,8 +156,8 @@ spec:
         - "--quiet"
         env:
         - name: PROBE_DOMAINS
-          value: bing.com kubernetes.default.svc.<domain>
-        image: <imgHealthz>
+          value: bing.com kubernetes.default.svc.{{ContainerConfig "domain"}}
+        image: {{ContainerImage "exechealthz"}}
         imagePullPolicy: IfNotPresent
         livenessProbe:
           failureThreshold: 5
@@ -174,10 +174,10 @@ spec:
           protocol: TCP
         resources:
           limits:
-            memory: 50Mi
+            memory: {{ContainerMemLimits "exechealthz"}}
           requests:
-            cpu: 10m
-            memory: 50Mi
+            cpu: {{ContainerCPUReqs "exechealthz"}}
+            memory: {{ContainerMemReqs "exechealthz"}}
       dnsPolicy: Default
       serviceAccountName: kube-dns
       nodeSelector:

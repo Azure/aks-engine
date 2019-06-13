@@ -1572,6 +1572,23 @@ func Test_Properties_ValidateAddons(t *testing.T) {
 			"should error when missing the subnet for Application Gateway",
 		)
 	}
+
+	// Test with kube-dns on > 1.11
+	p.OrchestratorProfile.OrchestratorRelease = "1.12"
+	p.OrchestratorProfile.KubernetesConfig = &KubernetesConfig{
+		Addons: []KubernetesAddon{
+			{
+				Name:    "kube-dns",
+				Enabled: to.BoolPtr(true),
+			},
+		},
+	}
+
+	if err := p.validateAddons(); err == nil {
+		t.Errorf(
+			"kube-dns is not supported on Kubernetes versions 1.12 or greater",
+		)
+	}
 }
 
 func TestWindowsVersions(t *testing.T) {

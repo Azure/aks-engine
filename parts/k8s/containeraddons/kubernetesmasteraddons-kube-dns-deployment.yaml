@@ -28,7 +28,7 @@ metadata:
 spec:
   selector:
     k8s-app: kube-dns
-  clusterIP: <clustIP>
+  clusterIP: {{ContainerConfig "clusterIP"}}
   ports:
   - name: dns
     port: 53
@@ -94,7 +94,7 @@ spec:
           optional: true
       containers:
       - name: kubedns
-        image: <img>
+        image: {{ContainerImage "kube-dns-deployment"}}
         imagePullPolicy: IfNotPresent
         resources:
           # TODO: Set memory limits when we've profiled the container for large
@@ -102,10 +102,10 @@ spec:
           # guaranteed class. Currently, this container falls into the
           # "burstable" category so the kubelet doesn't backoff from restarting it.
           limits:
-            memory: 170Mi
+            memory: {{ContainerMemLimits "kube-dns-deployment"}}
           requests:
-            cpu: 100m
-            memory: 70Mi
+            cpu: {{ContainerCPUReqs "kube-dns-deployment"}}
+            memory: {{ContainerMemReqs "kube-dns-deployment"}}
         livenessProbe:
           httpGet:
             path: /healthcheck/kubedns
@@ -123,7 +123,7 @@ spec:
           initialDelaySeconds: 3
           timeoutSeconds: 5
         args:
-        - --domain=<domain>.
+        - --domain={{ContainerConfig "domain"}}.
         - --dns-port=10053
         - --config-dir=/kube-dns-config
         - --v=2
@@ -144,7 +144,7 @@ spec:
         - name: kube-dns-config
           mountPath: /kube-dns-config
       - name: dnsmasq
-        image: <imgMasq>
+        image: {{ContainerImage "dnsmasq-nanny"}}
         imagePullPolicy: IfNotPresent
         livenessProbe:
           httpGet:
@@ -177,13 +177,13 @@ spec:
           protocol: TCP
         resources:
           requests:
-            cpu: 150m
-            memory: 20Mi
+            cpu: {{ContainerCPUReqs "dnsmasq-nanny"}}
+            memory: {{ContainerMemReqs "dnsmasq-nanny"}}
         volumeMounts:
         - name: kube-dns-config
           mountPath: /etc/k8s/dns/dnsmasq-nanny
       - name: sidecar
-        image: <imgSidecar>
+        image: {{ContainerImage "k8s-dns-sidecar"}}
         imagePullPolicy: IfNotPresent
         livenessProbe:
           httpGet:
@@ -197,16 +197,16 @@ spec:
         args:
         - --v=2
         - --logtostderr
-        - --probe=kubedns,127.0.0.1:10053,kubernetes.default.svc.<domain>,5,SRV
-        - --probe=dnsmasq,127.0.0.1:53,kubernetes.default.svc.<domain>,5,SRV
+        - --probe=kubedns,127.0.0.1:10053,kubernetes.default.svc.{{ContainerConfig "domain"}},5,SRV
+        - --probe=dnsmasq,127.0.0.1:53,kubernetes.default.svc.{{ContainerConfig "domain"}},5,SRV
         ports:
         - containerPort: 10054
           name: metrics
           protocol: TCP
         resources:
           requests:
-            memory: 20Mi
-            cpu: 10m
+            memory: {{ContainerMemReqs "k8s-dns-sidecar"}}
+            cpu: {{ContainerCPUReqs "k8s-dns-sidecar"}}
       dnsPolicy: Default
       serviceAccountName: kube-dns
       nodeSelector:

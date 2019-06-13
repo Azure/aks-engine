@@ -77,7 +77,7 @@ func (cs *ContainerService) setKubeletConfig(isUpgrade bool) {
 
 	// Default Kubelet config
 	defaultKubeletConfig := map[string]string{
-		"--cluster-domain":                    "cluster.local",
+		"--cluster-domain":                    DefaultKubernetesClusterDomain,
 		"--network-plugin":                    "cni",
 		"--pod-infra-container-image":         o.KubernetesConfig.KubernetesImageBase + K8sComponentsByVersionMap[o.OrchestratorVersion]["pause"],
 		"--max-pods":                          strconv.Itoa(DefaultKubernetesMaxPods),
