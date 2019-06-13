@@ -128,8 +128,8 @@ func assignKubernetesParameters(properties *api.Properties, parametersMap params
 			addValue(parametersMap, "containerRuntime", kubernetesConfig.ContainerRuntime)
 			addValue(parametersMap, "containerdDownloadURLBase", kubernetesConfig.KubernetesImagesConfig.ImageBaseConfig.ContainerdDownloadURLBase)
 			addValue(parametersMap, "cniPluginsURL", kubernetesConfig.KubernetesImagesConfig.ImageBaseConfig.CNIPluginsDownloadURL)
-			addValue(parametersMap, "vnetCniLinuxPluginsURL", kubernetesConfig.KubernetesImagesConfig.ImageBaseConfig.AzureCNIURLLinux)
-			addValue(parametersMap, "vnetCniWindowsPluginsURL", kubernetesConfig.KubernetesImagesConfig.ImageBaseConfig.AzureCNIURLWindows)
+			addValue(parametersMap, "vnetCniLinuxPluginsURL", kubernetesConfig.KubernetesImagesConfig.ImageBaseConfig.VnetCNILinuxPluginsDownloadURL)
+			addValue(parametersMap, "vnetCniWindowsPluginsURL", kubernetesConfig.KubernetesImagesConfig.ImageBaseConfig.VnetCNIWindowsPluginsDownloadURL)
 			addValue(parametersMap, "gchighthreshold", kubernetesConfig.GCHighThreshold)
 			addValue(parametersMap, "gclowthreshold", kubernetesConfig.GCLowThreshold)
 			addValue(parametersMap, "etcdDownloadURLBase", kubernetesConfig.KubernetesImagesConfig.ImageBaseConfig.EtcdDownloadURLBase)
@@ -152,7 +152,7 @@ func assignKubernetesParameters(properties *api.Properties, parametersMap params
 				// will be removed in future release as if gets phased out (https://github.com/Azure/aks-engine/issues/3851)
 				windowsK8sDownloadURL := kubernetesConfig.CustomWindowsPackageURL
 				if windowsK8sDownloadURL == "" {
-					windowsK8sDownloadURL = kubernetesConfig.KubernetesImagesConfig.ImageBaseConfig.WindowsBinariesBase + k8sComponents["windowszip"]
+					windowsK8sDownloadURL = kubernetesConfig.KubernetesImagesConfig.ImageBaseConfig.KubeBinariesSASURLBase + k8sComponents["windowszip"]
 				} else if url, ok := kubernetesConfig.KubernetesImagesConfig.ImageConfig["windowszip"]; ok {
 					windowsK8sDownloadURL = url
 				}

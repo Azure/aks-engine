@@ -23,13 +23,13 @@ func (cs *ContainerService) setKubernetesImagesConfig() {
 			k.KubernetesImagesConfig.ImageBaseConfig.HyperkubeImageBase = k.KubernetesImageBase
 			k.KubernetesImagesConfig.ImageBaseConfig.PauseImageBase = k.KubernetesImageBase
 		}
-		// ditto KubernetesConfig.AzureCNIURLLinux
-		if k.AzureCNIURLLinux != "" {
-			k.KubernetesImagesConfig.ImageBaseConfig.AzureCNIURLLinux = k.AzureCNIURLLinux
+		// ditto KubernetesConfig.VnetCNILinuxPluginsDownloadURL
+		if k.VnetCNILinuxPluginsDownloadURL != "" {
+			k.KubernetesImagesConfig.ImageBaseConfig.VnetCNILinuxPluginsDownloadURL = k.VnetCNILinuxPluginsDownloadURL
 		}
-		// ditto KubernetesConfig.AzureCNIURLWindows
-		if k.AzureCNIURLWindows != "" {
-			k.KubernetesImagesConfig.ImageBaseConfig.AzureCNIURLWindows = k.AzureCNIURLWindows
+		// ditto KubernetesConfig.VnetCNIWindowsPluginsDownloadURL
+		if k.VnetCNIWindowsPluginsDownloadURL != "" {
+			k.KubernetesImagesConfig.ImageBaseConfig.VnetCNIWindowsPluginsDownloadURL = k.VnetCNIWindowsPluginsDownloadURL
 		}
 	} else {
 		if k.KubernetesImagesConfig.ImageBaseConfig != nil {
@@ -72,8 +72,8 @@ func (cs *ContainerService) setKubernetesImagesConfig() {
 			if k.KubernetesImagesConfig.ImageBaseConfig.EtcdDownloadURLBase == "" {
 				k.KubernetesImagesConfig.ImageBaseConfig.EtcdDownloadURLBase = imageConfigFromCloud.EtcdDownloadURLBase
 			}
-			if k.KubernetesImagesConfig.ImageBaseConfig.WindowsBinariesBase == "" {
-				k.KubernetesImagesConfig.ImageBaseConfig.WindowsBinariesBase = imageConfigFromCloud.WindowsBinariesBase
+			if k.KubernetesImagesConfig.ImageBaseConfig.KubeBinariesSASURLBase == "" {
+				k.KubernetesImagesConfig.ImageBaseConfig.KubeBinariesSASURLBase = imageConfigFromCloud.KubeBinariesSASURLBase
 			}
 			if k.KubernetesImagesConfig.ImageBaseConfig.WindowsTelemetryGUID == "" {
 				k.KubernetesImagesConfig.ImageBaseConfig.WindowsTelemetryGUID = imageConfigFromCloud.WindowsTelemetryGUID
@@ -81,18 +81,18 @@ func (cs *ContainerService) setKubernetesImagesConfig() {
 			if k.KubernetesImagesConfig.ImageBaseConfig.CNIPluginsDownloadURL == "" {
 				k.KubernetesImagesConfig.ImageBaseConfig.CNIPluginsDownloadURL = imageConfigFromCloud.CNIPluginsDownloadURL
 			}
-			if k.KubernetesImagesConfig.ImageBaseConfig.AzureCNIURLLinux == "" {
-				if k.AzureCNIURLLinux != "" {
-					k.KubernetesImagesConfig.ImageBaseConfig.AzureCNIURLLinux = k.AzureCNIURLLinux
+			if k.KubernetesImagesConfig.ImageBaseConfig.VnetCNILinuxPluginsDownloadURL == "" {
+				if k.VnetCNILinuxPluginsDownloadURL != "" {
+					k.KubernetesImagesConfig.ImageBaseConfig.VnetCNILinuxPluginsDownloadURL = k.VnetCNILinuxPluginsDownloadURL
 				} else {
-					k.KubernetesImagesConfig.ImageBaseConfig.AzureCNIURLLinux = imageConfigFromCloud.AzureCNIURLLinux
+					k.KubernetesImagesConfig.ImageBaseConfig.VnetCNILinuxPluginsDownloadURL = imageConfigFromCloud.VnetCNILinuxPluginsDownloadURL
 				}
 			}
-			if k.KubernetesImagesConfig.ImageBaseConfig.AzureCNIURLWindows == "" {
-				if k.AzureCNIURLWindows != "" {
-					k.KubernetesImagesConfig.ImageBaseConfig.AzureCNIURLWindows = k.AzureCNIURLWindows
+			if k.KubernetesImagesConfig.ImageBaseConfig.VnetCNIWindowsPluginsDownloadURL == "" {
+				if k.VnetCNIWindowsPluginsDownloadURL != "" {
+					k.KubernetesImagesConfig.ImageBaseConfig.VnetCNIWindowsPluginsDownloadURL = k.VnetCNIWindowsPluginsDownloadURL
 				} else {
-					k.KubernetesImagesConfig.ImageBaseConfig.AzureCNIURLWindows = imageConfigFromCloud.AzureCNIURLWindows
+					k.KubernetesImagesConfig.ImageBaseConfig.VnetCNIWindowsPluginsDownloadURL = imageConfigFromCloud.VnetCNIWindowsPluginsDownloadURL
 				}
 			}
 			if k.KubernetesImagesConfig.ImageBaseConfig.ContainerdDownloadURLBase == "" {
@@ -106,20 +106,20 @@ func (cs *ContainerService) setKubernetesImagesConfig() {
 
 func getImageBaseConfigFromCloudSpecConfig(imageConfigFromCloud KubernetesSpecConfig) *KubernetesSpecConfig {
 	return &KubernetesSpecConfig{
-		KubernetesImageBase:       imageConfigFromCloud.KubernetesImageBase,
-		HyperkubeImageBase:        imageConfigFromCloud.HyperkubeImageBase,
-		PauseImageBase:            imageConfigFromCloud.PauseImageBase,
-		TillerImageBase:           imageConfigFromCloud.TillerImageBase,
-		ACIConnectorImageBase:     imageConfigFromCloud.ACIConnectorImageBase,
-		NVIDIAImageBase:           imageConfigFromCloud.NVIDIAImageBase,
-		CalicoImageBase:           imageConfigFromCloud.CalicoImageBase,
-		AzureCNIImageBase:         imageConfigFromCloud.AzureCNIImageBase,
-		EtcdDownloadURLBase:       imageConfigFromCloud.EtcdDownloadURLBase,
-		WindowsBinariesBase:       imageConfigFromCloud.WindowsBinariesBase,
-		WindowsTelemetryGUID:      imageConfigFromCloud.WindowsTelemetryGUID,
-		CNIPluginsDownloadURL:     imageConfigFromCloud.CNIPluginsDownloadURL,
-		AzureCNIURLLinux:          imageConfigFromCloud.AzureCNIURLLinux,
-		AzureCNIURLWindows:        imageConfigFromCloud.AzureCNIURLWindows,
-		ContainerdDownloadURLBase: imageConfigFromCloud.ContainerdDownloadURLBase,
+		KubernetesImageBase:              imageConfigFromCloud.KubernetesImageBase,
+		HyperkubeImageBase:               imageConfigFromCloud.HyperkubeImageBase,
+		PauseImageBase:                   imageConfigFromCloud.PauseImageBase,
+		TillerImageBase:                  imageConfigFromCloud.TillerImageBase,
+		ACIConnectorImageBase:            imageConfigFromCloud.ACIConnectorImageBase,
+		NVIDIAImageBase:                  imageConfigFromCloud.NVIDIAImageBase,
+		CalicoImageBase:                  imageConfigFromCloud.CalicoImageBase,
+		AzureCNIImageBase:                imageConfigFromCloud.AzureCNIImageBase,
+		EtcdDownloadURLBase:              imageConfigFromCloud.EtcdDownloadURLBase,
+		KubeBinariesSASURLBase:           imageConfigFromCloud.KubeBinariesSASURLBase,
+		WindowsTelemetryGUID:             imageConfigFromCloud.WindowsTelemetryGUID,
+		CNIPluginsDownloadURL:            imageConfigFromCloud.CNIPluginsDownloadURL,
+		VnetCNILinuxPluginsDownloadURL:   imageConfigFromCloud.VnetCNILinuxPluginsDownloadURL,
+		VnetCNIWindowsPluginsDownloadURL: imageConfigFromCloud.VnetCNIWindowsPluginsDownloadURL,
+		ContainerdDownloadURLBase:        imageConfigFromCloud.ContainerdDownloadURLBase,
 	}
 }

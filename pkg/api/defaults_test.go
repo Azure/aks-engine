@@ -267,49 +267,49 @@ func TestAssignDefaultAddonImages(t *testing.T) {
 func TestAssignDefaultImages(t *testing.T) {
 	customImage := "custom"
 	defaultImages := &KubernetesSpecConfig{
-		KubernetesImageBase:       "k8s.gcr.io/",
-		HyperkubeImageBase:        "k8s.gcr.io/",
-		PauseImageBase:            "k8s.gcr.io/",
-		TillerImageBase:           "gcr.io/kubernetes-helm/",
-		ACIConnectorImageBase:     "microsoft/",
-		NVIDIAImageBase:           "nvidia/",
-		CalicoImageBase:           "calico/",
-		AzureCNIImageBase:         "mcr.microsoft.com/containernetworking/",
-		EtcdDownloadURLBase:       "https://acs-mirror.azureedge.net/github-coreos",
-		WindowsBinariesBase:       "https://acs-mirror.azureedge.net/wink8s/",
-		WindowsTelemetryGUID:      "fb801154-36b9-41bc-89c2-f4d4f05472b0",
-		CNIPluginsDownloadURL:     "https://acs-mirror.azureedge.net/cni/cni-plugins-amd64-" + CNIPluginVer + ".tgz",
-		AzureCNIURLLinux:          "https://acs-mirror.azureedge.net/cni/azure-vnet-cni-linux-amd64-" + AzureCniPluginVerLinux + ".tgz",
-		AzureCNIURLWindows:        "https://acs-mirror.azureedge.net/cni/azure-vnet-cni-windows-amd64-" + AzureCniPluginVerWindows + ".zip",
-		ContainerdDownloadURLBase: "https://storage.googleapis.com/cri-containerd-release/",
+		KubernetesImageBase:              "k8s.gcr.io/",
+		HyperkubeImageBase:               "k8s.gcr.io/",
+		PauseImageBase:                   "k8s.gcr.io/",
+		TillerImageBase:                  "gcr.io/kubernetes-helm/",
+		ACIConnectorImageBase:            "microsoft/",
+		NVIDIAImageBase:                  "nvidia/",
+		CalicoImageBase:                  "calico/",
+		AzureCNIImageBase:                "mcr.microsoft.com/containernetworking/",
+		EtcdDownloadURLBase:              "https://acs-mirror.azureedge.net/github-coreos",
+		KubeBinariesSASURLBase:           "https://acs-mirror.azureedge.net/wink8s/",
+		WindowsTelemetryGUID:             "fb801154-36b9-41bc-89c2-f4d4f05472b0",
+		CNIPluginsDownloadURL:            "https://acs-mirror.azureedge.net/cni/cni-plugins-amd64-" + CNIPluginVer + ".tgz",
+		VnetCNILinuxPluginsDownloadURL:   "https://acs-mirror.azureedge.net/cni/azure-vnet-cni-linux-amd64-" + AzureCniPluginVerLinux + ".tgz",
+		VnetCNIWindowsPluginsDownloadURL: "https://acs-mirror.azureedge.net/cni/azure-vnet-cni-windows-amd64-" + AzureCniPluginVerWindows + ".zip",
+		ContainerdDownloadURLBase:        "https://storage.googleapis.com/cri-containerd-release/",
 	}
 
 	customImages := &KubernetesSpecConfig{
-		KubernetesImageBase:       customImage,
-		HyperkubeImageBase:        customImage,
-		PauseImageBase:            customImage,
-		TillerImageBase:           customImage,
-		ACIConnectorImageBase:     customImage,
-		NVIDIAImageBase:           customImage,
-		CalicoImageBase:           customImage,
-		AzureCNIImageBase:         customImage,
-		EtcdDownloadURLBase:       customImage,
-		WindowsBinariesBase:       customImage,
-		WindowsTelemetryGUID:      customImage,
-		CNIPluginsDownloadURL:     customImage,
-		AzureCNIURLLinux:          customImage,
-		AzureCNIURLWindows:        customImage,
-		ContainerdDownloadURLBase: customImage,
+		KubernetesImageBase:              customImage,
+		HyperkubeImageBase:               customImage,
+		PauseImageBase:                   customImage,
+		TillerImageBase:                  customImage,
+		ACIConnectorImageBase:            customImage,
+		NVIDIAImageBase:                  customImage,
+		CalicoImageBase:                  customImage,
+		AzureCNIImageBase:                customImage,
+		EtcdDownloadURLBase:              customImage,
+		KubeBinariesSASURLBase:           customImage,
+		WindowsTelemetryGUID:             customImage,
+		CNIPluginsDownloadURL:            customImage,
+		VnetCNILinuxPluginsDownloadURL:   customImage,
+		VnetCNIWindowsPluginsDownloadURL: customImage,
+		ContainerdDownloadURLBase:        customImage,
 	}
 
 	cases := []struct {
-		name                     string
-		kubernetesImageBase      string
-		azureCNIURLLinux         string
-		azureCNIURLWindows       string
-		myKubernetesImagesConfig *KubernetesSpecConfig
-		isUpdate                 bool
-		expectedImages           *KubernetesSpecConfig
+		name                             string
+		kubernetesImageBase              string
+		vnetCNILinuxPluginsDownloadURL   string
+		vnetCNIWindowsPluginsDownloadURL string
+		myKubernetesImagesConfig         *KubernetesSpecConfig
+		isUpdate                         bool
+		expectedImages                   *KubernetesSpecConfig
 	}{
 		{
 			name:           "default",
@@ -323,12 +323,12 @@ func TestAssignDefaultImages(t *testing.T) {
 			expectedImages:           customImages,
 		},
 		{
-			name:                "custom legacy image overrides",
-			kubernetesImageBase: "customBase",
-			azureCNIURLLinux:    "customAzureCNIURLLinux",
-			azureCNIURLWindows:  "customAzureCNIURLWindows",
-			isUpdate:            false,
-			expectedImages:      defaultImages,
+			name:                             "custom legacy image overrides",
+			kubernetesImageBase:              "customBase",
+			vnetCNILinuxPluginsDownloadURL:   "customAzureCNIURLLinux",
+			vnetCNIWindowsPluginsDownloadURL: "customAzureCNIURLWindows",
+			isUpdate:                         false,
+			expectedImages:                   defaultImages,
 		},
 	}
 
@@ -347,11 +347,11 @@ func TestAssignDefaultImages(t *testing.T) {
 			if c.kubernetesImageBase != "" {
 				mockCS.Properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBase = c.kubernetesImageBase
 			}
-			if c.azureCNIURLLinux != "" {
-				mockCS.Properties.OrchestratorProfile.KubernetesConfig.AzureCNIURLLinux = c.azureCNIURLLinux
+			if c.vnetCNILinuxPluginsDownloadURL != "" {
+				mockCS.Properties.OrchestratorProfile.KubernetesConfig.VnetCNILinuxPluginsDownloadURL = c.vnetCNILinuxPluginsDownloadURL
 			}
-			if c.azureCNIURLWindows != "" {
-				mockCS.Properties.OrchestratorProfile.KubernetesConfig.AzureCNIURLWindows = c.azureCNIURLWindows
+			if c.vnetCNIWindowsPluginsDownloadURL != "" {
+				mockCS.Properties.OrchestratorProfile.KubernetesConfig.VnetCNIWindowsPluginsDownloadURL = c.vnetCNIWindowsPluginsDownloadURL
 			}
 			mockCS.setOrchestratorDefaults(c.isUpdate, c.isUpdate)
 			resultKubernetesImagesConfig := mockCS.Properties.OrchestratorProfile.KubernetesConfig.KubernetesImagesConfig
@@ -379,22 +379,22 @@ func TestAssignDefaultImages(t *testing.T) {
 					t.Errorf("expected setOrchestratorDefaults to set HyperkubeImageBase to \"%s\", but got \"%s\"", c.expectedImages.HyperkubeImageBase, resultKubernetesImagesConfig.ImageBaseConfig.HyperkubeImageBase)
 				}
 			}
-			if c.azureCNIURLLinux != "" && c.myKubernetesImagesConfig == nil {
-				if resultKubernetesImagesConfig.ImageBaseConfig.AzureCNIURLLinux != c.azureCNIURLLinux {
-					t.Errorf("expected setOrchestratorDefaults to set AzureCNIURLLinux to \"%s\", but got \"%s\"", c.azureCNIURLLinux, resultKubernetesImagesConfig.ImageBaseConfig.AzureCNIURLLinux)
+			if c.vnetCNILinuxPluginsDownloadURL != "" && c.myKubernetesImagesConfig == nil {
+				if resultKubernetesImagesConfig.ImageBaseConfig.VnetCNILinuxPluginsDownloadURL != c.vnetCNILinuxPluginsDownloadURL {
+					t.Errorf("expected setOrchestratorDefaults to set VnetCNILinuxPluginsDownloadURL to \"%s\", but got \"%s\"", c.vnetCNILinuxPluginsDownloadURL, resultKubernetesImagesConfig.ImageBaseConfig.VnetCNILinuxPluginsDownloadURL)
 				}
 			} else {
-				if resultKubernetesImagesConfig.ImageBaseConfig.AzureCNIURLLinux != c.expectedImages.AzureCNIURLLinux {
-					t.Errorf("expected setOrchestratorDefaults to set AzureCNIURLLinux to \"%s\", but got \"%s\"", c.expectedImages.AzureCNIURLLinux, resultKubernetesImagesConfig.ImageBaseConfig.AzureCNIURLLinux)
+				if resultKubernetesImagesConfig.ImageBaseConfig.VnetCNILinuxPluginsDownloadURL != c.expectedImages.VnetCNILinuxPluginsDownloadURL {
+					t.Errorf("expected setOrchestratorDefaults to set VnetCNILinuxPluginsDownloadURL to \"%s\", but got \"%s\"", c.expectedImages.VnetCNILinuxPluginsDownloadURL, resultKubernetesImagesConfig.ImageBaseConfig.VnetCNILinuxPluginsDownloadURL)
 				}
 			}
-			if c.azureCNIURLWindows != "" && c.myKubernetesImagesConfig == nil {
-				if resultKubernetesImagesConfig.ImageBaseConfig.AzureCNIURLWindows != c.azureCNIURLWindows {
-					t.Errorf("expected setOrchestratorDefaults to set AzureCNIURLWindows to \"%s\", but got \"%s\"", c.azureCNIURLWindows, resultKubernetesImagesConfig.ImageBaseConfig.AzureCNIURLWindows)
+			if c.vnetCNIWindowsPluginsDownloadURL != "" && c.myKubernetesImagesConfig == nil {
+				if resultKubernetesImagesConfig.ImageBaseConfig.VnetCNIWindowsPluginsDownloadURL != c.vnetCNIWindowsPluginsDownloadURL {
+					t.Errorf("expected setOrchestratorDefaults to set VnetCNIWindowsPluginsDownloadURL to \"%s\", but got \"%s\"", c.vnetCNIWindowsPluginsDownloadURL, resultKubernetesImagesConfig.ImageBaseConfig.VnetCNIWindowsPluginsDownloadURL)
 				}
 			} else {
-				if resultKubernetesImagesConfig.ImageBaseConfig.AzureCNIURLWindows != c.expectedImages.AzureCNIURLWindows {
-					t.Errorf("expected setOrchestratorDefaults to set AzureCNIURLWindows to \"%s\", but got \"%s\"", c.expectedImages.AzureCNIURLWindows, resultKubernetesImagesConfig.ImageBaseConfig.AzureCNIURLWindows)
+				if resultKubernetesImagesConfig.ImageBaseConfig.VnetCNIWindowsPluginsDownloadURL != c.expectedImages.VnetCNIWindowsPluginsDownloadURL {
+					t.Errorf("expected setOrchestratorDefaults to set VnetCNIWindowsPluginsDownloadURL to \"%s\", but got \"%s\"", c.expectedImages.VnetCNIWindowsPluginsDownloadURL, resultKubernetesImagesConfig.ImageBaseConfig.VnetCNIWindowsPluginsDownloadURL)
 				}
 			}
 			if resultKubernetesImagesConfig.ImageBaseConfig.TillerImageBase != c.expectedImages.TillerImageBase {
@@ -415,8 +415,8 @@ func TestAssignDefaultImages(t *testing.T) {
 			if resultKubernetesImagesConfig.ImageBaseConfig.EtcdDownloadURLBase != c.expectedImages.EtcdDownloadURLBase {
 				t.Errorf("expected setOrchestratorDefaults to set EtcdDownloadURLBase to \"%s\", but got \"%s\"", c.expectedImages.EtcdDownloadURLBase, resultKubernetesImagesConfig.ImageBaseConfig.EtcdDownloadURLBase)
 			}
-			if resultKubernetesImagesConfig.ImageBaseConfig.WindowsBinariesBase != c.expectedImages.WindowsBinariesBase {
-				t.Errorf("expected setOrchestratorDefaults to set WindowsBinariesBase to \"%s\", but got \"%s\"", c.expectedImages.WindowsBinariesBase, resultKubernetesImagesConfig.ImageBaseConfig.WindowsBinariesBase)
+			if resultKubernetesImagesConfig.ImageBaseConfig.KubeBinariesSASURLBase != c.expectedImages.KubeBinariesSASURLBase {
+				t.Errorf("expected setOrchestratorDefaults to set KubeBinariesSASURLBase to \"%s\", but got \"%s\"", c.expectedImages.KubeBinariesSASURLBase, resultKubernetesImagesConfig.ImageBaseConfig.KubeBinariesSASURLBase)
 			}
 			if resultKubernetesImagesConfig.ImageBaseConfig.WindowsTelemetryGUID != c.expectedImages.WindowsTelemetryGUID {
 				t.Errorf("expected setOrchestratorDefaults to set WindowsTelemetryGUID to \"%s\", but got \"%s\"", c.expectedImages.WindowsTelemetryGUID, resultKubernetesImagesConfig.ImageBaseConfig.WindowsTelemetryGUID)
@@ -2191,21 +2191,21 @@ func TestSetCustomCloudProfileDefaults(t *testing.T) {
 		},
 		//KubernetesSpecConfig - Due to Chinese firewall issue, the default containers from google is blocked, use the Chinese local mirror instead
 		KubernetesSpecConfig: KubernetesSpecConfig{
-			KubernetesImageBase:       "KubernetesImageBase",
-			HyperkubeImageBase:        "HyperkubeImageBase",
-			PauseImageBase:            "PauseImageBase",
-			TillerImageBase:           "TillerImageBase",
-			ACIConnectorImageBase:     "ACIConnectorImageBase",
-			NVIDIAImageBase:           "NVIDIAImageBase",
-			AzureCNIImageBase:         "AzureCNIImageBase",
-			CalicoImageBase:           "CalicoImageBase",
-			EtcdDownloadURLBase:       "EtcdDownloadURLBase",
-			WindowsBinariesBase:       "WindowsBinariesBase",
-			WindowsTelemetryGUID:      "WindowsTelemetryGUID",
-			CNIPluginsDownloadURL:     "CNIPluginsDownloadURL",
-			AzureCNIURLLinux:          "AzureCNIURLLinux",
-			AzureCNIURLWindows:        "AzureCNIURLWindows",
-			ContainerdDownloadURLBase: "ContainerdDownloadURLBase",
+			KubernetesImageBase:              "KubernetesImageBase",
+			HyperkubeImageBase:               "HyperkubeImageBase",
+			PauseImageBase:                   "PauseImageBase",
+			TillerImageBase:                  "TillerImageBase",
+			ACIConnectorImageBase:            "ACIConnectorImageBase",
+			NVIDIAImageBase:                  "NVIDIAImageBase",
+			AzureCNIImageBase:                "AzureCNIImageBase",
+			CalicoImageBase:                  "CalicoImageBase",
+			EtcdDownloadURLBase:              "EtcdDownloadURLBase",
+			KubeBinariesSASURLBase:           "KubeBinariesSASURLBase",
+			WindowsTelemetryGUID:             "WindowsTelemetryGUID",
+			CNIPluginsDownloadURL:            "CNIPluginsDownloadURL",
+			VnetCNILinuxPluginsDownloadURL:   "VnetCNILinuxPluginsDownloadURL",
+			VnetCNIWindowsPluginsDownloadURL: "VnetCNIWindowsPluginsDownloadURL",
+			ContainerdDownloadURLBase:        "ContainerdDownloadURLBase",
 		},
 		DCOSSpecConfig: DefaultDCOSSpecConfig,
 		EndpointConfig: AzureEndpointConfig{
@@ -2246,16 +2246,16 @@ func TestSetCustomCloudProfileDefaults(t *testing.T) {
 		},
 		//KubernetesSpecConfig - Due to Chinese firewall issue, the default containers from google is blocked, use the Chinese local mirror instead
 		KubernetesSpecConfig: KubernetesSpecConfig{
-			KubernetesImageBase:       "KubernetesImageBase",
-			TillerImageBase:           "TillerImageBase",
-			NVIDIAImageBase:           "NVIDIAImageBase",
-			AzureCNIImageBase:         "AzureCNIImageBase",
-			CalicoImageBase:           "CalicoImageBase",
-			EtcdDownloadURLBase:       "EtcdDownloadURLBase",
-			WindowsTelemetryGUID:      "WindowsTelemetryGUID",
-			CNIPluginsDownloadURL:     "CNIPluginsDownloadURL",
-			AzureCNIURLLinux:          "AzureCNIURLLinux",
-			ContainerdDownloadURLBase: "ContainerdDownloadURLBase",
+			KubernetesImageBase:            "KubernetesImageBase",
+			TillerImageBase:                "TillerImageBase",
+			NVIDIAImageBase:                "NVIDIAImageBase",
+			AzureCNIImageBase:              "AzureCNIImageBase",
+			CalicoImageBase:                "CalicoImageBase",
+			EtcdDownloadURLBase:            "EtcdDownloadURLBase",
+			WindowsTelemetryGUID:           "WindowsTelemetryGUID",
+			CNIPluginsDownloadURL:          "CNIPluginsDownloadURL",
+			VnetCNILinuxPluginsDownloadURL: "VnetCNILinuxPluginsDownloadURL",
+			ContainerdDownloadURLBase:      "ContainerdDownloadURLBase",
 		},
 		DCOSSpecConfig: DefaultDCOSSpecConfig,
 		EndpointConfig: AzureEndpointConfig{
@@ -2281,11 +2281,11 @@ func TestSetCustomCloudProfileDefaults(t *testing.T) {
 	if mockCSCustomP.Properties.CustomCloudProfile.AzureEnvironmentSpecConfig.KubernetesSpecConfig.ACIConnectorImageBase != DefaultKubernetesSpecConfig.ACIConnectorImageBase {
 		t.Errorf("setCustomCloudProfileDefaults(): did not set ACIConnectorImageBase with default Value, got '%s', expected %s", mockCSCustomP.Properties.CustomCloudProfile.AzureEnvironmentSpecConfig.KubernetesSpecConfig.ACIConnectorImageBase, DefaultKubernetesSpecConfig.ACIConnectorImageBase)
 	}
-	if mockCSCustomP.Properties.CustomCloudProfile.AzureEnvironmentSpecConfig.KubernetesSpecConfig.WindowsBinariesBase != DefaultKubernetesSpecConfig.WindowsBinariesBase {
-		t.Errorf("setCustomCloudProfileDefaults(): did not set WindowsBinariesBase with default Value, got '%s', expected %s", mockCSCustomP.Properties.CustomCloudProfile.AzureEnvironmentSpecConfig.KubernetesSpecConfig.WindowsBinariesBase, DefaultKubernetesSpecConfig.WindowsBinariesBase)
+	if mockCSCustomP.Properties.CustomCloudProfile.AzureEnvironmentSpecConfig.KubernetesSpecConfig.KubeBinariesSASURLBase != DefaultKubernetesSpecConfig.KubeBinariesSASURLBase {
+		t.Errorf("setCustomCloudProfileDefaults(): did not set KubeBinariesSASURLBase with default Value, got '%s', expected %s", mockCSCustomP.Properties.CustomCloudProfile.AzureEnvironmentSpecConfig.KubernetesSpecConfig.KubeBinariesSASURLBase, DefaultKubernetesSpecConfig.KubeBinariesSASURLBase)
 	}
-	if mockCSCustomP.Properties.CustomCloudProfile.AzureEnvironmentSpecConfig.KubernetesSpecConfig.AzureCNIURLWindows != DefaultKubernetesSpecConfig.AzureCNIURLWindows {
-		t.Errorf("setCustomCloudProfileDefaults(): did not set AzureCNIURLWindows with default Value, got '%s', expected %s", mockCSCustomP.Properties.CustomCloudProfile.AzureEnvironmentSpecConfig.KubernetesSpecConfig.AzureCNIURLWindows, DefaultKubernetesSpecConfig.AzureCNIURLWindows)
+	if mockCSCustomP.Properties.CustomCloudProfile.AzureEnvironmentSpecConfig.KubernetesSpecConfig.VnetCNIWindowsPluginsDownloadURL != DefaultKubernetesSpecConfig.VnetCNIWindowsPluginsDownloadURL {
+		t.Errorf("setCustomCloudProfileDefaults(): did not set VnetCNIWindowsPluginsDownloadURL with default Value, got '%s', expected %s", mockCSCustomP.Properties.CustomCloudProfile.AzureEnvironmentSpecConfig.KubernetesSpecConfig.VnetCNIWindowsPluginsDownloadURL, DefaultKubernetesSpecConfig.VnetCNIWindowsPluginsDownloadURL)
 	}
 
 	// Test that the default values are set for IdentitySystem and AuthenticationMethod if they are not in the configuration

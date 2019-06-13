@@ -706,8 +706,8 @@ func convertVLabsKubernetesConfig(vlabs *vlabs.KubernetesConfig, api *Kubernetes
 	api.EtcdDiskSizeGB = vlabs.EtcdDiskSizeGB
 	api.EtcdEncryptionKey = vlabs.EtcdEncryptionKey
 	api.AzureCNIVersion = vlabs.AzureCNIVersion
-	api.AzureCNIURLLinux = vlabs.AzureCNIURLLinux
-	api.AzureCNIURLWindows = vlabs.AzureCNIURLWindows
+	api.VnetCNILinuxPluginsDownloadURL = vlabs.VnetCNILinuxPluginsDownloadURL
+	api.VnetCNIWindowsPluginsDownloadURL = vlabs.VnetCNIWindowsPluginsDownloadURL
 	api.KeyVaultSku = vlabs.KeyVaultSku
 	api.MaximumLoadBalancerRuleCount = vlabs.MaximumLoadBalancerRuleCount
 	api.ProxyMode = KubeProxyMode(vlabs.ProxyMode)
@@ -1316,21 +1316,21 @@ func convertAzureEnvironmentSpecConfig(vlabses *vlabs.AzureEnvironmentSpecConfig
 func convertVLabsKubernetesSpecConfig(spec *vlabs.KubernetesSpecConfig) KubernetesSpecConfig {
 	if spec != nil {
 		return KubernetesSpecConfig{
-			KubernetesImageBase:       spec.KubernetesImageBase,
-			HyperkubeImageBase:        spec.HyperkubeImageBase,
-			PauseImageBase:            spec.PauseImageBase,
-			TillerImageBase:           spec.TillerImageBase,
-			ACIConnectorImageBase:     spec.ACIConnectorImageBase,
-			NVIDIAImageBase:           spec.NVIDIAImageBase,
-			AzureCNIImageBase:         spec.AzureCNIImageBase,
-			CalicoImageBase:           spec.CalicoImageBase,
-			EtcdDownloadURLBase:       spec.EtcdDownloadURLBase,
-			WindowsBinariesBase:       spec.WindowsBinariesBase,
-			WindowsTelemetryGUID:      spec.WindowsTelemetryGUID,
-			CNIPluginsDownloadURL:     spec.CNIPluginsDownloadURL,
-			AzureCNIURLLinux:          spec.AzureCNIURLLinux,
-			AzureCNIURLWindows:        spec.AzureCNIURLWindows,
-			ContainerdDownloadURLBase: spec.ContainerdDownloadURLBase,
+			KubernetesImageBase:              spec.KubernetesImageBase,
+			HyperkubeImageBase:               spec.HyperkubeImageBase,
+			PauseImageBase:                   spec.PauseImageBase,
+			TillerImageBase:                  spec.TillerImageBase,
+			ACIConnectorImageBase:            spec.ACIConnectorImageBase,
+			NVIDIAImageBase:                  spec.NVIDIAImageBase,
+			AzureCNIImageBase:                spec.AzureCNIImageBase,
+			CalicoImageBase:                  spec.CalicoImageBase,
+			EtcdDownloadURLBase:              spec.EtcdDownloadURLBase,
+			KubeBinariesSASURLBase:           spec.KubeBinariesSASURLBase,
+			WindowsTelemetryGUID:             spec.WindowsTelemetryGUID,
+			CNIPluginsDownloadURL:            spec.CNIPluginsDownloadURL,
+			VnetCNILinuxPluginsDownloadURL:   spec.VnetCNILinuxPluginsDownloadURL,
+			VnetCNIWindowsPluginsDownloadURL: spec.VnetCNIWindowsPluginsDownloadURL,
+			ContainerdDownloadURLBase:        spec.ContainerdDownloadURLBase,
 		}
 	}
 	return KubernetesSpecConfig{}

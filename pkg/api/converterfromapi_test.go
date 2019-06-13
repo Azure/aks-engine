@@ -156,19 +156,19 @@ func TestConvertAzureEnvironmentSpecConfigToVLabs(t *testing.T) {
 					},
 					//KubernetesSpecConfig - Due to Chinese firewall issue, the default containers from google is blocked, use the Chinese local mirror instead
 					KubernetesSpecConfig: KubernetesSpecConfig{
-						KubernetesImageBase:       "KubernetesImageBase",
-						TillerImageBase:           "TillerImageBase",
-						ACIConnectorImageBase:     "ACIConnectorImageBase",
-						NVIDIAImageBase:           "NVIDIAImageBase",
-						AzureCNIImageBase:         "AzureCNIImageBase",
-						CalicoImageBase:           "CalicoImageBase",
-						EtcdDownloadURLBase:       "EtcdDownloadURLBase",
-						WindowsBinariesBase:       "WindowsBinariesBase",
-						WindowsTelemetryGUID:      "WindowsTelemetryGUID",
-						CNIPluginsDownloadURL:     "CNIPluginsDownloadURL",
-						AzureCNIURLLinux:          "AzureCNIURLLinux",
-						AzureCNIURLWindows:        "AzureCNIURLWindows",
-						ContainerdDownloadURLBase: "ContainerdDownloadURLBase",
+						KubernetesImageBase:              "KubernetesImageBase",
+						TillerImageBase:                  "TillerImageBase",
+						ACIConnectorImageBase:            "ACIConnectorImageBase",
+						NVIDIAImageBase:                  "NVIDIAImageBase",
+						AzureCNIImageBase:                "AzureCNIImageBase",
+						CalicoImageBase:                  "CalicoImageBase",
+						EtcdDownloadURLBase:              "EtcdDownloadURLBase",
+						KubeBinariesSASURLBase:           "KubeBinariesSASURLBase",
+						WindowsTelemetryGUID:             "WindowsTelemetryGUID",
+						CNIPluginsDownloadURL:            "CNIPluginsDownloadURL",
+						VnetCNILinuxPluginsDownloadURL:   "VnetCNILinuxPluginsDownloadURL",
+						VnetCNIWindowsPluginsDownloadURL: "VnetCNIWindowsPluginsDownloadURL",
+						ContainerdDownloadURLBase:        "ContainerdDownloadURLBase",
 					},
 					DCOSSpecConfig: DCOSSpecConfig{
 						DCOS188BootstrapDownloadURL:     "DCOS188BootstrapDownloadURL",
@@ -230,8 +230,8 @@ func TestConvertAzureEnvironmentSpecConfigToVLabs(t *testing.T) {
 	if vlabscsSpec.KubernetesSpecConfig.EtcdDownloadURLBase != csSpec.KubernetesSpecConfig.EtcdDownloadURLBase {
 		t.Errorf("incorrect EtcdDownloadURLBase, expect: '%s', actual: '%s'", csSpec.KubernetesSpecConfig.EtcdDownloadURLBase, vlabscsSpec.KubernetesSpecConfig.EtcdDownloadURLBase)
 	}
-	if vlabscsSpec.KubernetesSpecConfig.WindowsBinariesBase != csSpec.KubernetesSpecConfig.WindowsBinariesBase {
-		t.Errorf("incorrect WindowsBinariesBase, expect: '%s', actual: '%s'", csSpec.KubernetesSpecConfig.WindowsBinariesBase, vlabscsSpec.KubernetesSpecConfig.WindowsBinariesBase)
+	if vlabscsSpec.KubernetesSpecConfig.KubeBinariesSASURLBase != csSpec.KubernetesSpecConfig.KubeBinariesSASURLBase {
+		t.Errorf("incorrect KubeBinariesSASURLBase, expect: '%s', actual: '%s'", csSpec.KubernetesSpecConfig.KubeBinariesSASURLBase, vlabscsSpec.KubernetesSpecConfig.KubeBinariesSASURLBase)
 	}
 	if vlabscsSpec.KubernetesSpecConfig.WindowsTelemetryGUID != csSpec.KubernetesSpecConfig.WindowsTelemetryGUID {
 		t.Errorf("incorrect WindowsTelemetryGUID, expect: '%s', actual: '%s'", csSpec.KubernetesSpecConfig.WindowsTelemetryGUID, vlabscsSpec.KubernetesSpecConfig.WindowsTelemetryGUID)
@@ -239,11 +239,11 @@ func TestConvertAzureEnvironmentSpecConfigToVLabs(t *testing.T) {
 	if vlabscsSpec.KubernetesSpecConfig.CNIPluginsDownloadURL != csSpec.KubernetesSpecConfig.CNIPluginsDownloadURL {
 		t.Errorf("incorrect CNIPluginsDownloadURL, expect: '%s', actual: '%s'", csSpec.KubernetesSpecConfig.CNIPluginsDownloadURL, vlabscsSpec.KubernetesSpecConfig.CNIPluginsDownloadURL)
 	}
-	if vlabscsSpec.KubernetesSpecConfig.AzureCNIURLLinux != csSpec.KubernetesSpecConfig.AzureCNIURLLinux {
-		t.Errorf("incorrect AzureCNIURLLinux, expect: '%s', actual: '%s'", csSpec.KubernetesSpecConfig.AzureCNIURLLinux, vlabscsSpec.KubernetesSpecConfig.AzureCNIURLLinux)
+	if vlabscsSpec.KubernetesSpecConfig.VnetCNILinuxPluginsDownloadURL != csSpec.KubernetesSpecConfig.VnetCNILinuxPluginsDownloadURL {
+		t.Errorf("incorrect VnetCNILinuxPluginsDownloadURL, expect: '%s', actual: '%s'", csSpec.KubernetesSpecConfig.VnetCNILinuxPluginsDownloadURL, vlabscsSpec.KubernetesSpecConfig.VnetCNILinuxPluginsDownloadURL)
 	}
-	if vlabscsSpec.KubernetesSpecConfig.AzureCNIURLWindows != csSpec.KubernetesSpecConfig.AzureCNIURLWindows {
-		t.Errorf("incorrect AzureCNIURLWindows, expect: '%s', actual: '%s'", csSpec.KubernetesSpecConfig.AzureCNIURLWindows, vlabscsSpec.KubernetesSpecConfig.AzureCNIURLWindows)
+	if vlabscsSpec.KubernetesSpecConfig.VnetCNIWindowsPluginsDownloadURL != csSpec.KubernetesSpecConfig.VnetCNIWindowsPluginsDownloadURL {
+		t.Errorf("incorrect VnetCNIWindowsPluginsDownloadURL, expect: '%s', actual: '%s'", csSpec.KubernetesSpecConfig.VnetCNIWindowsPluginsDownloadURL, vlabscsSpec.KubernetesSpecConfig.VnetCNIWindowsPluginsDownloadURL)
 	}
 	if vlabscsSpec.KubernetesSpecConfig.ContainerdDownloadURLBase != csSpec.KubernetesSpecConfig.ContainerdDownloadURLBase {
 		t.Errorf("incorrect ContainerdDownloadURLBase, expect: '%s', actual: '%s'", csSpec.KubernetesSpecConfig.ContainerdDownloadURLBase, vlabscsSpec.KubernetesSpecConfig.ContainerdDownloadURLBase)
@@ -533,46 +533,46 @@ func getDefaultContainerService() *ContainerService {
 					ResourceGroup: "FooImageRefResourceGroup",
 				},
 				KubernetesConfig: &KubernetesConfig{
-					KubernetesImageBase:             "quay.io",
-					ClusterSubnet:                   "fooClusterSubnet",
-					NetworkPolicy:                   "calico",
-					NetworkPlugin:                   "azure-cni",
-					ContainerRuntime:                "docker",
-					MaxPods:                         3,
-					DockerBridgeSubnet:              "sampleDockerSubnet",
-					DNSServiceIP:                    "172.0.0.1",
-					ServiceCIDR:                     "172.0.0.1/16",
-					UseManagedIdentity:              true,
-					UserAssignedID:                  "fooUserAssigneID",
-					UserAssignedClientID:            "fooUserAssigneClientID",
-					MobyVersion:                     "3.0.0",
-					CustomHyperkubeImage:            "",
-					ContainerdVersion:               "1.2.4",
-					CustomCcmImage:                  "sampleCCMImage",
-					UseCloudControllerManager:       to.BoolPtr(true),
-					CustomWindowsPackageURL:         "https://deisartifacts.windows.net",
-					WindowsNodeBinariesURL:          "https://deisartifacts.windows.net",
-					UseInstanceMetadata:             to.BoolPtr(true),
-					LoadBalancerSku:                 "Basic",
-					ExcludeMasterFromStandardLB:     to.BoolPtr(false),
-					EnableRbac:                      to.BoolPtr(true),
-					EnableSecureKubelet:             to.BoolPtr(true),
-					EnableAggregatedAPIs:            true,
-					EnableDataEncryptionAtRest:      to.BoolPtr(true),
-					EnablePodSecurityPolicy:         to.BoolPtr(true),
-					EnableEncryptionWithExternalKms: to.BoolPtr(true),
-					GCHighThreshold:                 85,
-					GCLowThreshold:                  80,
-					EtcdVersion:                     "3.0.0",
-					EtcdDiskSizeGB:                  "256",
-					EtcdEncryptionKey:               "sampleEncruptionKey",
-					AzureCNIVersion:                 "1.0.22",
-					AzureCNIURLLinux:                "https://mirror.azk8s.cn/kubernetes/azure-container-networking/linux",
-					AzureCNIURLWindows:              "https://mirror.azk8s.cn/kubernetes/azure-container-networking/windows",
-					KeyVaultSku:                     "Basic",
-					MaximumLoadBalancerRuleCount:    3,
-					ProxyMode:                       KubeProxyModeIPTables,
-					PrivateAzureRegistryServer:      "sampleRegistryServerURL",
+					KubernetesImageBase:              "quay.io",
+					ClusterSubnet:                    "fooClusterSubnet",
+					NetworkPolicy:                    "calico",
+					NetworkPlugin:                    "azure-cni",
+					ContainerRuntime:                 "docker",
+					MaxPods:                          3,
+					DockerBridgeSubnet:               "sampleDockerSubnet",
+					DNSServiceIP:                     "172.0.0.1",
+					ServiceCIDR:                      "172.0.0.1/16",
+					UseManagedIdentity:               true,
+					UserAssignedID:                   "fooUserAssigneID",
+					UserAssignedClientID:             "fooUserAssigneClientID",
+					MobyVersion:                      "3.0.0",
+					CustomHyperkubeImage:             "",
+					ContainerdVersion:                "1.2.4",
+					CustomCcmImage:                   "sampleCCMImage",
+					UseCloudControllerManager:        to.BoolPtr(true),
+					CustomWindowsPackageURL:          "https://deisartifacts.windows.net",
+					WindowsNodeBinariesURL:           "https://deisartifacts.windows.net",
+					UseInstanceMetadata:              to.BoolPtr(true),
+					LoadBalancerSku:                  "Basic",
+					ExcludeMasterFromStandardLB:      to.BoolPtr(false),
+					EnableRbac:                       to.BoolPtr(true),
+					EnableSecureKubelet:              to.BoolPtr(true),
+					EnableAggregatedAPIs:             true,
+					EnableDataEncryptionAtRest:       to.BoolPtr(true),
+					EnablePodSecurityPolicy:          to.BoolPtr(true),
+					EnableEncryptionWithExternalKms:  to.BoolPtr(true),
+					GCHighThreshold:                  85,
+					GCLowThreshold:                   80,
+					EtcdVersion:                      "3.0.0",
+					EtcdDiskSizeGB:                   "256",
+					EtcdEncryptionKey:                "sampleEncruptionKey",
+					AzureCNIVersion:                  "1.0.22",
+					VnetCNILinuxPluginsDownloadURL:   "https://mirror.azk8s.cn/kubernetes/azure-container-networking/linux",
+					VnetCNIWindowsPluginsDownloadURL: "https://mirror.azk8s.cn/kubernetes/azure-container-networking/windows",
+					KeyVaultSku:                      "Basic",
+					MaximumLoadBalancerRuleCount:     3,
+					ProxyMode:                        KubeProxyModeIPTables,
+					PrivateAzureRegistryServer:       "sampleRegistryServerURL",
 					KubeletConfig: map[string]string{
 						"barKey": "bazValue",
 					},
