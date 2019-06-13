@@ -230,20 +230,6 @@
       "defaultValue": false,
       "type": "bool"
     },
-{{if NeedsKubeDNSWithExecHealthz}}
-    "kubernetesExecHealthzSpec": {
-      "metadata": {
-        "description": "The container spec for exechealthz-amd64."
-      },
-      "type": "string"
-    },
-{{end}}
-    "kubernetesDNSSidecarSpec": {
-      "metadata": {
-        "description": "The container spec for k8s-dns-sidecar-amd64."
-      },
-      "type": "string"
-    },
 {{if .OrchestratorProfile.KubernetesConfig.IsAADPodIdentityEnabled}}
     "kubernetesAADPodIdentityEnabled": {
       "defaultValue": false,
@@ -302,19 +288,6 @@
     "kubernetesCoreDNSSpec": {
       "metadata": {
         "description": "The container spec for coredns"
-      },
-      "type": "string"
-    },
-{{else}}
-    "kubernetesKubeDNSSpec": {
-      "metadata": {
-        "description": "The container spec for kubedns-amd64."
-      },
-      "type": "string"
-    },
-    "kubernetesDNSMasqSpec": {
-      "metadata": {
-        "description": "The container spec for kube-dnsmasq-amd64."
       },
       "type": "string"
     },

@@ -332,9 +332,6 @@ func (t *TemplateGenerator) getTemplateFuncMap(cs *api.ContainerService) templat
 		"UseManagedIdentity": func() bool {
 			return cs.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity
 		},
-		"NeedsKubeDNSWithExecHealthz": func() bool {
-			return cs.Properties.OrchestratorProfile.NeedsExecHealthz()
-		},
 		"GetVNETSubnetDependencies": func() string {
 			return getVNETSubnetDependencies(cs.Properties)
 		},
