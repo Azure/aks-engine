@@ -167,7 +167,7 @@ These are the Kubernetes versions that you can deploy to Azure Stack using AKS E
 - 1.11.10
 - 1.11.9
 
-If the Azure Stack instance is air gapped, then the syndicated [AKS Base Image](#disconnected-azure-stack-instances) will determine the Kubernetes version that you can deploy or the target upgrade version. The table below lists the pre-pulled versions on each AKS Base Image version.
+If the Azure Stack instance is air-gapped, then the syndicated [AKS Base Image](#disconnected-azure-stack-instances) will determine the Kubernetes version that you can deploy or the target upgrade version. The table below lists the pre-pulled versions on each AKS Base Image version.
 
 _Note: AKS Engine on disconnected Azure Stack instances is a private preview feature_
 
@@ -187,8 +187,8 @@ Because Azure and Azure Stack currently rely on a different version of the Compu
 
 This can be resolved by making a small modification to the extension `template.json` file. Replacing all usages of template parameter `apiVersionDeployments` by the hard-code value `2017-12-01` (or whatever API version Azure Stack runs at the time you try to deploy) should be all you need.
 
-Once your are done updating the extension template, host the extension directory in your own Github repository or storage account. Finally, at deployment time, make sure that your cluster definition points to the new [rootURL](https://github.com/Azure/aks-engine/blob/master/docs/topics/extensions.md#rooturl).
+Once you are done updating the extension template, host the extension directory in your own Github repository or storage account. Finally, at deployment time, make sure that your cluster definition points to the new [rootURL](https://github.com/Azure/aks-engine/blob/master/docs/topics/extensions.md#rooturl).
 
 ### Troubleshoting
 
-This [how-to guide](/docs/howto/troubleshooting.md) has a good high level explanation of how AKS Engine interacts with the Azure Resource Manager (ARM) and lists a few potential issues that can cause AKS Engine commands to fail. Checkout the scripts in this [repository](https://github.com/msazurestackworkloads/azurestack-gallery/tree/master/diagnosis) to simplify the logs collection task.
+This [how-to guide](/docs/howto/troubleshooting.md) has a good high-level explanation of how AKS Engine interacts with the Azure Resource Manager (ARM) and lists a few potential issues that can cause AKS Engine commands to fail. Checkout the scripts in this [repository](https://github.com/msazurestackworkloads/azurestack-gallery/tree/master/diagnosis) to simplify the logs collection task.
