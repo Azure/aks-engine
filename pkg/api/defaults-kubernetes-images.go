@@ -191,6 +191,9 @@ func (cs *ContainerService) setKubernetesImagesConfig() {
 
 // GetImageBaseConfigFromKubernetesSpecConfig converts a subset of KubernetesSpecConfig properties to a fully populated ImageBaseConfig
 func GetImageBaseConfigFromKubernetesSpecConfig(imageConfigFromCloud KubernetesSpecConfig) *ImageBaseConfig {
+	// TODO In order to provide a path forward for cloud-specific image base defaults,
+	// let's add the new image base keys (e.g., HyperkubeImageBase) to the KubernetesSpecConfig type,
+	// and use them if they are non-empty, but if they are empty, use the KubernetesImageBase value for all
 	return &ImageBaseConfig{
 		KubernetesImageBase:                    imageConfigFromCloud.KubernetesImageBase,
 		HyperkubeImageBase:                     imageConfigFromCloud.KubernetesImageBase,
