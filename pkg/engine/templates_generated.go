@@ -11624,10 +11624,11 @@ if [[ -n "${MASTER_NODE}" && "${KMS_PROVIDER_VAULT_NAME}" != "" ]]; then
 fi
 
 # configure and enable dhcpv6 for dual stack feature
-DHCPV6_SYSTEMD_SERVICE=/etc/systemd/system/dhcpv6.service
-DHCPV6_CONFIGURATION_SCRIPT=/opt/azure/containers/enable-dhcpv6.sh
-
-if [[ -f ${DHCPV6_SYSTEMD_SERVICE} ]] && [[ -f ${DHCPV6_CONFIGURATION_SCRIPT} ]];then
+if [ "$IS_IPV6_DUALSTACK_FEATURE_ENABLED" = "true" ]; then
+    dhcpv6_systemd_service=/etc/systemd/system/dhcpv6.service
+    dhcpv6_configuration_script=/opt/azure/containers/enable-dhcpv6.sh
+    wait_for_file 3600 1 $dhcpv6_systemd_service || exit $ERR_FILE_WATCH_TIMEOUT
+    wait_for_file 3600 1 $dhcpv6_configuration_script || exit $ERR_FILE_WATCH_TIMEOUT
     ensureDHCPv6
 fi
 
