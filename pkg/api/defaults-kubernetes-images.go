@@ -6,8 +6,20 @@ package api
 func (cs *ContainerService) setKubernetesImagesConfig() {
 	cloudSpecConfig := cs.GetCloudSpecConfig()
 	imageConfigFromCloud := cloudSpecConfig.KubernetesSpecConfig
+	if cs.Properties == nil {
+		cs.Properties = &Properties{}
+	}
+	if cs.Properties.OrchestratorProfile == nil {
+		cs.Properties.OrchestratorProfile = &OrchestratorProfile{}
+	}
+	if cs.Properties.OrchestratorProfile.KubernetesConfig == nil {
+		cs.Properties.OrchestratorProfile.KubernetesConfig = &KubernetesConfig{}
+	}
 	k := cs.Properties.OrchestratorProfile.KubernetesConfig
 
+	if cs.Properties.IsAzureStackCloud() {
+		cs.GetCloudSpecConfig()
+	}
 	// Use the cloud-specific config if KubernetesImagesConfig, or if Azure Stack context
 	if k.KubernetesImagesConfig == nil || cs.Properties.IsAzureStackCloud() {
 		k.KubernetesImagesConfig = &KubernetesImagesConfig{
