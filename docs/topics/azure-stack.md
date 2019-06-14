@@ -24,7 +24,10 @@ The goal of this guide is to explain how to provision Kubernetes clusters to Azu
 ## Service Principals and Identity Providers
 
 Kubernetes uses a `service principal` identity to talk to Azure Stack APIs to dynamically manage resources such as storage or load balancers. Therefore, you will need to create a service principal before you can provision a Kubernetes cluster using AKS Engine.
+
 This [guide](https://docs.microsoft.com/en-us/azure-stack/operator/azure-stack-create-service-principals) explains how to create and manage service principals on Azure Stack for both Azure Active Directory (AAD) and Active Directory Federation Services (ADFS) identity providers. This other [guide](../../docs/topics/service-principals.md) is a good resource to understand the permissions that the service principal requires to deploy under your subscription.
+
+Once you have created the required service principal, make sure to assign it the `contributor` role at the target subscription scope.
 
 ## CLI flags
 
@@ -105,6 +108,8 @@ If your Azure Stack instance is located in China, then the `dependenciesLocation
 
 ## Disconnected Azure Stack Instances
 
+_Note: AKS Engine on disconnected Azure Stack instances is a private preview feature_
+
 By default, the AKS Engine provisioning process relies on an internet connection to download the software dependencies required to create or upgrade a cluster (Kubernetes images, etcd binaries, network plugins and so on).
 
 If your Azure Stack instance is air-gapped or if network connectivity in your geographical location is not reliable, then the default approach will not work, take a long time or timeout due to transient networking issues.
@@ -153,10 +158,22 @@ If you need to expose more than 5 services, then the recommendation is to route 
 
 These are the Kubernetes versions that you can deploy to Azure Stack using AKS Engine:
 
+<!-- - 1.14.3 build and push to mcr -->
+<!-- - 1.13.7 build and push to mcr -->
+- 1.14.1
 - 1.13.5
 - 1.12.8
+- 1.12.7
 - 1.11.10
 - 1.11.9
+
+If the Azure Stack instance is air gapped, then the syndicated [AKS Base Image](#disconnected-azure-stack-instances) will determine the Kubernetes version that you can deploy or the target upgrade version. The table below lists the pre-pulled versions on each AKS Base Image version.
+
+_Note: AKS Engine on disconnected Azure Stack instances is a private preview feature_
+
+| AKS Engine                 | AKS Base Image     | Kubernetes versions |  
+|----------------------------|--------------------|---------------------|
+| from v0.36.2 to v0.36.5    | [AKS Base Ubuntu 16.04-LTS Image Distro, May 2019](../../releases/vhd-notes/aks-ubuntu-1604/aks-ubuntu-1604-201904_2019.05.16.txt) | 1.12.7 - 1.11.10 - 1.11.9 |
 
 ### Network Policies
 
@@ -171,3 +188,7 @@ Because Azure and Azure Stack currently rely on a different version of the Compu
 This can be resolved by making a small modification to the extension `template.json` file. Replacing all usages of template parameter `apiVersionDeployments` by the hard-code value `2017-12-01` (or whatever API version Azure Stack runs at the time you try to deploy) should be all you need.
 
 Once your are done updating the extension template, host the extension directory in your own Github repository or storage account. Finally, at deployment time, make sure that your cluster definition points to the new [rootURL](https://github.com/Azure/aks-engine/blob/master/docs/topics/extensions.md#rooturl).
+
+### Troubleshoting
+
+This [how-to guide](/docs/howto/troubleshooting.md) has a good high level explanation of how AKS Engine interacts with the Azure Resource Manager (ARM) and lists a few potential issues that can cause AKS Engine commands to fail. Checkout the scripts in this [repository](https://github.com/msazurestackworkloads/azurestack-gallery/tree/master/diagnosis) to simplify the logs collection task.
