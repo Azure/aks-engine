@@ -3653,3 +3653,147 @@ func TestSetAddonsConfig(t *testing.T) {
 		})
 	}
 }
+
+func TestGetKubeDNSAddonContainersSpec(t *testing.T) {
+	cases := []struct {
+		name       string
+		cs         *ContainerService
+		specConfig KubernetesSpecConfig
+		expected   []KubernetesContainerSpec
+	}{
+		{
+			name: "1.12 cluster config",
+			cs: &ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorType:    Kubernetes,
+						OrchestratorVersion: "1.12.8",
+						KubernetesConfig: &KubernetesConfig{
+							NetworkPlugin: NetworkPluginAzure,
+						},
+					},
+				},
+			},
+			specConfig: KubernetesSpecConfig{
+				KubernetesImageBase: "k8s.gcr.io/",
+			},
+			expected: []KubernetesContainerSpec{
+				{
+					Name:           "kube-dns-deployment",
+					Image:          "k8s.gcr.io/k8s-dns-kube-dns-amd64:1.15.0",
+					CPURequests:    "100m",
+					MemoryRequests: "70Mi",
+					MemoryLimits:   "170Mi",
+				},
+				{
+					Name:           "dnsmasq-nanny",
+					Image:          "k8s.gcr.io/k8s-dns-dnsmasq-nanny-amd64:1.15.0",
+					CPURequests:    "150m",
+					MemoryRequests: "20Mi",
+				},
+				{
+					Name:           "k8s-dns-sidecar",
+					Image:          "k8s.gcr.io/k8s-dns-sidecar-amd64:1.14.10",
+					CPURequests:    "150m",
+					MemoryRequests: "20Mi",
+				},
+			},
+		},
+		{
+			name: "1.8 cluster config",
+			cs: &ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorVersion: "1.8.15",
+						OrchestratorType:    Kubernetes,
+						KubernetesConfig: &KubernetesConfig{
+							NetworkPlugin: NetworkPluginAzure,
+						},
+					},
+				},
+			},
+			specConfig: KubernetesSpecConfig{
+				KubernetesImageBase: "k8s.gcr.io/",
+			},
+			expected: []KubernetesContainerSpec{
+				{
+					Name:           "kube-dns-deployment",
+					Image:          "k8s.gcr.io/k8s-dns-kube-dns-amd64:1.14.13",
+					CPURequests:    "100m",
+					MemoryRequests: "70Mi",
+					MemoryLimits:   "170Mi",
+				},
+				{
+					Name:           "dnsmasq-nanny",
+					Image:          "k8s.gcr.io/k8s-dns-dnsmasq-nanny-amd64:1.14.8",
+					CPURequests:    "150m",
+					MemoryRequests: "20Mi",
+				},
+				{
+					Name:           "exechealthz",
+					Image:          "k8s.gcr.io/exechealthz-amd64:1.2",
+					CPURequests:    "10m",
+					MemoryRequests: "50Mi",
+					MemoryLimits:   "50Mi",
+				},
+			},
+		},
+	}
+
+	for _, c := range cases {
+		c := c
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+			result := getKubeDNSAddonContainersSpec(c.cs, c.specConfig)
+			if !reflect.DeepEqual(result, c.expected) {
+				t.Fatalf("expected result addon %v to be equal to %v", result, c.expected)
+			}
+		})
+	}
+
+}
+
+func TestGetKubeDNSClusterDomain(t *testing.T) {
+	overrideClusterDomain := "cluster.override"
+	cases := []struct {
+		name     string
+		k        *KubernetesConfig
+		expected string
+	}{
+		{
+			name:     "default",
+			k:        &KubernetesConfig{},
+			expected: DefaultKubernetesClusterDomain,
+		},
+		{
+			name: "kubeletConfig override",
+			k: &KubernetesConfig{
+				KubeletConfig: map[string]string{
+					"--cluster-domain": overrideClusterDomain,
+				},
+			},
+			expected: overrideClusterDomain,
+		},
+		{
+			name: "kubeletConfig non-override",
+			k: &KubernetesConfig{
+				KubeletConfig: map[string]string{
+					"--some-other-config": overrideClusterDomain,
+				},
+			},
+			expected: DefaultKubernetesClusterDomain,
+		},
+	}
+
+	for _, c := range cases {
+		c := c
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+			result := getKubeDNSClusterDomain(c.k)
+			if result != c.expected {
+				t.Fatalf("expected getKubeDNSClusterDomain(%v) to return %s, got %s", c.k, c.expected, result)
+			}
+		})
+	}
+
+}

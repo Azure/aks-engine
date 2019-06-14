@@ -17,6 +17,9 @@ func (cs *ContainerService) setAddonsConfig(isUpdate bool) {
 	if cs != nil && cs.Properties != nil && cs.Properties.MasterProfile != nil && cs.Properties.MasterProfile.DNSPrefix != "" {
 		clusterDNSPrefix = cs.Properties.MasterProfile.DNSPrefix
 	}
+	if o.KubernetesConfig == nil {
+		o.KubernetesConfig = &KubernetesConfig{}
+	}
 	cloudSpecConfig := cs.GetCloudSpecConfig()
 	k8sComponents := K8sComponentsByVersionMap[o.OrchestratorVersion]
 	specConfig := cloudSpecConfig.KubernetesSpecConfig
@@ -345,7 +348,7 @@ func (cs *ContainerService) setAddonsConfig(isUpdate bool) {
 		Name:    KubeDNSAddonName,
 		Enabled: to.BoolPtr(!common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.12.0")),
 		Config: map[string]string{
-			"domain":    getKubeDNSClusterDomain(cs),
+			"domain":    getKubeDNSClusterDomain(o.KubernetesConfig),
 			"clusterIP": o.KubernetesConfig.DNSServiceIP,
 		},
 		Containers: getKubeDNSAddonContainersSpec(cs, specConfig),
@@ -515,9 +518,9 @@ func getKubeDNSAddonContainersSpec(cs *ContainerService, specConfig KubernetesSp
 	return spec
 }
 
-func getKubeDNSClusterDomain(cs *ContainerService) string {
-	if cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig != nil {
-		if val, ok := cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig["--cluster-domain"]; ok {
+func getKubeDNSClusterDomain(k *KubernetesConfig) string {
+	if k.KubeletConfig != nil {
+		if val, ok := k.KubeletConfig["--cluster-domain"]; ok {
 			return val
 		}
 	}
