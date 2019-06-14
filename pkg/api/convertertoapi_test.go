@@ -1003,14 +1003,20 @@ func TestConvertVLabsContainerService(t *testing.T) {
 
 func TestConvertVLabsKubernetesImagesConfig(t *testing.T) {
 	const (
-		kubernetesImageBase   = "k8s.gcr.io"
-		hyperkubeImageBase    = "k8s.gcr.io"
-		pauseImageBase        = "k8s.gcr.io"
-		tillerImageBase       = "gcr.io/kubernetes-helm/"
-		aciConnectorImageBase = "microsoft/"
-		nvidiaImageBase       = "nvidia/"
-		azureCNIImageBase     = "mcr.microsoft.com/containernetworking/"
-		calicoImageBase       = "calico/"
+		kubernetesImageBase             = "k8s.gcr.io"
+		hyperkubeImageBase              = "k8s.gcr.io"
+		pauseImageBase                  = "k8s.gcr.io"
+		addonManagerImageBase           = "k8s.gcr.io"
+		cloudControllerManagerImageBase = "k8s.gcr.io"
+		k8sDNSSidecarImageBase          = "k8s.gcr.io"
+		coreDNSImageBase                = "k8s.gcr.io"
+		kubeDNSImageBase                = "k8s.gcr.io"
+		dnsMasqImageBase                = "k8s.gcr.io"
+		tillerImageBase                 = "gcr.io/kubernetes-helm/"
+		aciConnectorImageBase           = "microsoft/"
+		nvidiaImageBase                 = "nvidia/"
+		azureCNIImageBase               = "mcr.microsoft.com/containernetworking/"
+		calicoImageBase                 = "calico/"
 	)
 
 	vlabscs := &vlabs.ContainerService{
@@ -1020,14 +1026,20 @@ func TestConvertVLabsKubernetesImagesConfig(t *testing.T) {
 				KubernetesConfig: &vlabs.KubernetesConfig{
 					KubernetesImagesConfig: &vlabs.KubernetesImagesConfig{
 						ImageBaseConfig: &vlabs.ImageBaseConfig{
-							KubernetesImageBase:   kubernetesImageBase,
-							HyperkubeImageBase:    hyperkubeImageBase,
-							PauseImageBase:        pauseImageBase,
-							TillerImageBase:       tillerImageBase,
-							ACIConnectorImageBase: aciConnectorImageBase,
-							NVIDIAImageBase:       nvidiaImageBase,
-							AzureCNIImageBase:     azureCNIImageBase,
-							CalicoImageBase:       calicoImageBase,
+							KubernetesImageBase:             kubernetesImageBase,
+							HyperkubeImageBase:              hyperkubeImageBase,
+							PauseImageBase:                  pauseImageBase,
+							AddonManagerImageBase:           addonManagerImageBase,
+							CloudControllerManagerImageBase: cloudControllerManagerImageBase,
+							K8sDNSSidecarImageBase:          k8sDNSSidecarImageBase,
+							CoreDNSImageBase:                coreDNSImageBase,
+							KubeDNSImageBase:                kubeDNSImageBase,
+							DNSMasqImageBase:                dnsMasqImageBase,
+							TillerImageBase:                 tillerImageBase,
+							ACIConnectorImageBase:           aciConnectorImageBase,
+							NVIDIAImageBase:                 nvidiaImageBase,
+							AzureCNIImageBase:               azureCNIImageBase,
+							CalicoImageBase:                 calicoImageBase,
 						},
 						ImageConfig: map[string]string{},
 					},
@@ -1049,6 +1061,24 @@ func TestConvertVLabsKubernetesImagesConfig(t *testing.T) {
 	}
 	if cs.Properties.OrchestratorProfile.KubernetesConfig.KubernetesImagesConfig.ImageBaseConfig.PauseImageBase != pauseImageBase {
 		t.Errorf("incorrect ImageBaseConfig.PauseImageBase, expect: '%s', actual: '%s'", pauseImageBase, cs.Properties.OrchestratorProfile.KubernetesConfig.KubernetesImagesConfig.ImageBaseConfig.PauseImageBase)
+	}
+	if cs.Properties.OrchestratorProfile.KubernetesConfig.KubernetesImagesConfig.ImageBaseConfig.AddonManagerImageBase != addonManagerImageBase {
+		t.Errorf("incorrect ImageBaseConfig.AddonManagerImageBase, expect: '%s', actual: '%s'", addonManagerImageBase, cs.Properties.OrchestratorProfile.KubernetesConfig.KubernetesImagesConfig.ImageBaseConfig.AddonManagerImageBase)
+	}
+	if cs.Properties.OrchestratorProfile.KubernetesConfig.KubernetesImagesConfig.ImageBaseConfig.CloudControllerManagerImageBase != cloudControllerManagerImageBase {
+		t.Errorf("incorrect ImageBaseConfig.CloudControllerManagerImageBase, expect: '%s', actual: '%s'", cloudControllerManagerImageBase, cs.Properties.OrchestratorProfile.KubernetesConfig.KubernetesImagesConfig.ImageBaseConfig.CloudControllerManagerImageBase)
+	}
+	if cs.Properties.OrchestratorProfile.KubernetesConfig.KubernetesImagesConfig.ImageBaseConfig.K8sDNSSidecarImageBase != k8sDNSSidecarImageBase {
+		t.Errorf("incorrect ImageBaseConfig.K8sDNSSidecarImageBase, expect: '%s', actual: '%s'", k8sDNSSidecarImageBase, cs.Properties.OrchestratorProfile.KubernetesConfig.KubernetesImagesConfig.ImageBaseConfig.K8sDNSSidecarImageBase)
+	}
+	if cs.Properties.OrchestratorProfile.KubernetesConfig.KubernetesImagesConfig.ImageBaseConfig.CoreDNSImageBase != coreDNSImageBase {
+		t.Errorf("incorrect ImageBaseConfig.CoreDNSImageBase, expect: '%s', actual: '%s'", coreDNSImageBase, cs.Properties.OrchestratorProfile.KubernetesConfig.KubernetesImagesConfig.ImageBaseConfig.CoreDNSImageBase)
+	}
+	if cs.Properties.OrchestratorProfile.KubernetesConfig.KubernetesImagesConfig.ImageBaseConfig.KubeDNSImageBase != kubeDNSImageBase {
+		t.Errorf("incorrect ImageBaseConfig.KubeDNSImageBase, expect: '%s', actual: '%s'", kubeDNSImageBase, cs.Properties.OrchestratorProfile.KubernetesConfig.KubernetesImagesConfig.ImageBaseConfig.KubeDNSImageBase)
+	}
+	if cs.Properties.OrchestratorProfile.KubernetesConfig.KubernetesImagesConfig.ImageBaseConfig.DNSMasqImageBase != dnsMasqImageBase {
+		t.Errorf("incorrect ImageBaseConfig.DNSMasqImageBase, expect: '%s', actual: '%s'", dnsMasqImageBase, cs.Properties.OrchestratorProfile.KubernetesConfig.KubernetesImagesConfig.ImageBaseConfig.DNSMasqImageBase)
 	}
 	if cs.Properties.OrchestratorProfile.KubernetesConfig.KubernetesImagesConfig.ImageBaseConfig.TillerImageBase != tillerImageBase {
 		t.Errorf("incorrect ImageBaseConfig.TillerImageBase, expect: '%s', actual: '%s'", tillerImageBase, cs.Properties.OrchestratorProfile.KubernetesConfig.KubernetesImagesConfig.ImageBaseConfig.TillerImageBase)

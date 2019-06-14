@@ -266,32 +266,42 @@ func TestAssignDefaultAddonImages(t *testing.T) {
 func TestAssignDefaultImages(t *testing.T) {
 	customImage := "custom"
 	defaultImages := &ImageBaseConfig{
-		KubernetesImageBase:   "k8s.gcr.io/",
-		HyperkubeImageBase:    "k8s.gcr.io/",
-		PauseImageBase:        "k8s.gcr.io/",
-		TillerImageBase:       "gcr.io/kubernetes-helm/",
-		ACIConnectorImageBase: "microsoft/",
-		NVIDIAImageBase:       "nvidia/",
-		CalicoImageBase:       "calico/",
-		AzureCNIImageBase:     "mcr.microsoft.com/containernetworking/",
+		KubernetesImageBase:             "k8s.gcr.io/",
+		HyperkubeImageBase:              "k8s.gcr.io/",
+		PauseImageBase:                  "k8s.gcr.io/",
+		AddonManagerImageBase:           "k8s.gcr.io/",
+		CloudControllerManagerImageBase: "k8s.gcr.io/",
+		K8sDNSSidecarImageBase:          "k8s.gcr.io/",
+		CoreDNSImageBase:                "k8s.gcr.io/",
+		KubeDNSImageBase:                "k8s.gcr.io/",
+		DNSMasqImageBase:                "k8s.gcr.io/",
+		TillerImageBase:                 "gcr.io/kubernetes-helm/",
+		ACIConnectorImageBase:           "microsoft/",
+		NVIDIAImageBase:                 "nvidia/",
+		CalicoImageBase:                 "calico/",
+		AzureCNIImageBase:               "mcr.microsoft.com/containernetworking/",
 	}
 
 	customImages := &ImageBaseConfig{
-		KubernetesImageBase:   customImage,
-		HyperkubeImageBase:    customImage,
-		PauseImageBase:        customImage,
-		TillerImageBase:       customImage,
-		ACIConnectorImageBase: customImage,
-		NVIDIAImageBase:       customImage,
-		CalicoImageBase:       customImage,
-		AzureCNIImageBase:     customImage,
+		KubernetesImageBase:             customImage,
+		HyperkubeImageBase:              customImage,
+		PauseImageBase:                  customImage,
+		AddonManagerImageBase:           customImage,
+		CloudControllerManagerImageBase: customImage,
+		K8sDNSSidecarImageBase:          customImage,
+		CoreDNSImageBase:                customImage,
+		KubeDNSImageBase:                customImage,
+		DNSMasqImageBase:                customImage,
+		TillerImageBase:                 customImage,
+		ACIConnectorImageBase:           customImage,
+		NVIDIAImageBase:                 customImage,
+		CalicoImageBase:                 customImage,
+		AzureCNIImageBase:               customImage,
 	}
 
 	cases := []struct {
 		name                     string
 		kubernetesImageBase      string
-		AzureCNIURLLinux         string
-		AzureCNIURLWindows       string
 		myKubernetesImagesConfig *ImageBaseConfig
 		isUpdate                 bool
 		expectedImages           *ImageBaseConfig
@@ -310,8 +320,6 @@ func TestAssignDefaultImages(t *testing.T) {
 		{
 			name:                "custom legacy image overrides",
 			kubernetesImageBase: "customBase",
-			AzureCNIURLLinux:    "customAzureCNIURLLinux",
-			AzureCNIURLWindows:  "customAzureCNIURLWindows",
 			isUpdate:            false,
 			expectedImages:      defaultImages,
 		},
@@ -332,12 +340,6 @@ func TestAssignDefaultImages(t *testing.T) {
 			if c.kubernetesImageBase != "" {
 				mockCS.Properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBase = c.kubernetesImageBase
 			}
-			if c.AzureCNIURLLinux != "" {
-				mockCS.Properties.OrchestratorProfile.KubernetesConfig.AzureCNIURLLinux = c.AzureCNIURLLinux
-			}
-			if c.AzureCNIURLWindows != "" {
-				mockCS.Properties.OrchestratorProfile.KubernetesConfig.AzureCNIURLWindows = c.AzureCNIURLWindows
-			}
 			mockCS.setOrchestratorDefaults(c.isUpdate, c.isUpdate)
 			resultKubernetesImagesConfig := mockCS.Properties.OrchestratorProfile.KubernetesConfig.KubernetesImagesConfig
 			if resultKubernetesImagesConfig == nil {
@@ -356,12 +358,51 @@ func TestAssignDefaultImages(t *testing.T) {
 				if resultKubernetesImagesConfig.ImageBaseConfig.PauseImageBase != c.kubernetesImageBase {
 					t.Errorf("expected setOrchestratorDefaults to set PauseImageBase to \"%s\", but got \"%s\"", c.kubernetesImageBase, resultKubernetesImagesConfig.ImageBaseConfig.PauseImageBase)
 				}
+				if resultKubernetesImagesConfig.ImageBaseConfig.AddonManagerImageBase != c.kubernetesImageBase {
+					t.Errorf("expected setOrchestratorDefaults to set AddonManagerImageBase to \"%s\", but got \"%s\"", c.kubernetesImageBase, resultKubernetesImagesConfig.ImageBaseConfig.AddonManagerImageBase)
+				}
+				if resultKubernetesImagesConfig.ImageBaseConfig.CloudControllerManagerImageBase != c.kubernetesImageBase {
+					t.Errorf("expected setOrchestratorDefaults to set CloudControllerManagerImageBase to \"%s\", but got \"%s\"", c.kubernetesImageBase, resultKubernetesImagesConfig.ImageBaseConfig.CloudControllerManagerImageBase)
+				}
+				if resultKubernetesImagesConfig.ImageBaseConfig.K8sDNSSidecarImageBase != c.kubernetesImageBase {
+					t.Errorf("expected setOrchestratorDefaults to set K8sDNSSidecarImageBase to \"%s\", but got \"%s\"", c.kubernetesImageBase, resultKubernetesImagesConfig.ImageBaseConfig.K8sDNSSidecarImageBase)
+				}
+				if resultKubernetesImagesConfig.ImageBaseConfig.CoreDNSImageBase != c.kubernetesImageBase {
+					t.Errorf("expected setOrchestratorDefaults to set CoreDNSImageBase to \"%s\", but got \"%s\"", c.kubernetesImageBase, resultKubernetesImagesConfig.ImageBaseConfig.CoreDNSImageBase)
+				}
+				if resultKubernetesImagesConfig.ImageBaseConfig.KubeDNSImageBase != c.kubernetesImageBase {
+					t.Errorf("expected setOrchestratorDefaults to set KubeDNSImageBase to \"%s\", but got \"%s\"", c.kubernetesImageBase, resultKubernetesImagesConfig.ImageBaseConfig.KubeDNSImageBase)
+				}
+				if resultKubernetesImagesConfig.ImageBaseConfig.DNSMasqImageBase != c.kubernetesImageBase {
+					t.Errorf("expected setOrchestratorDefaults to set DNSMasqImageBase to \"%s\", but got \"%s\"", c.kubernetesImageBase, resultKubernetesImagesConfig.ImageBaseConfig.DNSMasqImageBase)
+				}
 			} else {
 				if resultKubernetesImagesConfig.ImageBaseConfig.KubernetesImageBase != c.expectedImages.KubernetesImageBase {
 					t.Errorf("expected setOrchestratorDefaults to set KubernetesImageBase to \"%s\", but got \"%s\"", c.expectedImages.KubernetesImageBase, resultKubernetesImagesConfig.ImageBaseConfig.KubernetesImageBase)
 				}
 				if resultKubernetesImagesConfig.ImageBaseConfig.HyperkubeImageBase != c.expectedImages.HyperkubeImageBase {
 					t.Errorf("expected setOrchestratorDefaults to set HyperkubeImageBase to \"%s\", but got \"%s\"", c.expectedImages.HyperkubeImageBase, resultKubernetesImagesConfig.ImageBaseConfig.HyperkubeImageBase)
+				}
+				if resultKubernetesImagesConfig.ImageBaseConfig.PauseImageBase != c.expectedImages.PauseImageBase {
+					t.Errorf("expected setOrchestratorDefaults to set PauseImageBase to \"%s\", but got \"%s\"", c.expectedImages.PauseImageBase, resultKubernetesImagesConfig.ImageBaseConfig.PauseImageBase)
+				}
+				if resultKubernetesImagesConfig.ImageBaseConfig.AddonManagerImageBase != c.expectedImages.AddonManagerImageBase {
+					t.Errorf("expected setOrchestratorDefaults to set AddonManagerImageBase to \"%s\", but got \"%s\"", c.expectedImages.AddonManagerImageBase, resultKubernetesImagesConfig.ImageBaseConfig.AddonManagerImageBase)
+				}
+				if resultKubernetesImagesConfig.ImageBaseConfig.CloudControllerManagerImageBase != c.expectedImages.CloudControllerManagerImageBase {
+					t.Errorf("expected setOrchestratorDefaults to set CloudControllerManagerImageBase to \"%s\", but got \"%s\"", c.expectedImages.CloudControllerManagerImageBase, resultKubernetesImagesConfig.ImageBaseConfig.CloudControllerManagerImageBase)
+				}
+				if resultKubernetesImagesConfig.ImageBaseConfig.K8sDNSSidecarImageBase != c.expectedImages.K8sDNSSidecarImageBase {
+					t.Errorf("expected setOrchestratorDefaults to set K8sDNSSidecarImageBase to \"%s\", but got \"%s\"", c.expectedImages.K8sDNSSidecarImageBase, resultKubernetesImagesConfig.ImageBaseConfig.K8sDNSSidecarImageBase)
+				}
+				if resultKubernetesImagesConfig.ImageBaseConfig.CoreDNSImageBase != c.expectedImages.CoreDNSImageBase {
+					t.Errorf("expected setOrchestratorDefaults to set CoreDNSImageBase to \"%s\", but got \"%s\"", c.expectedImages.CoreDNSImageBase, resultKubernetesImagesConfig.ImageBaseConfig.CoreDNSImageBase)
+				}
+				if resultKubernetesImagesConfig.ImageBaseConfig.KubeDNSImageBase != c.expectedImages.KubeDNSImageBase {
+					t.Errorf("expected setOrchestratorDefaults to set KubeDNSImageBase to \"%s\", but got \"%s\"", c.expectedImages.KubeDNSImageBase, resultKubernetesImagesConfig.ImageBaseConfig.KubeDNSImageBase)
+				}
+				if resultKubernetesImagesConfig.ImageBaseConfig.DNSMasqImageBase != c.expectedImages.DNSMasqImageBase {
+					t.Errorf("expected setOrchestratorDefaults to set DNSMasqImageBase to \"%s\", but got \"%s\"", c.expectedImages.DNSMasqImageBase, resultKubernetesImagesConfig.ImageBaseConfig.DNSMasqImageBase)
 				}
 			}
 			if resultKubernetesImagesConfig.ImageBaseConfig.TillerImageBase != c.expectedImages.TillerImageBase {

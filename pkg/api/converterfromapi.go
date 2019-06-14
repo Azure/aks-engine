@@ -1294,6 +1294,12 @@ func convertImageBaseConfigToVlabs(api *ImageBaseConfig, vlabs *vlabs.ImageBaseC
 	vlabs.KubernetesImageBase = api.KubernetesImageBase
 	vlabs.HyperkubeImageBase = api.HyperkubeImageBase
 	vlabs.PauseImageBase = api.PauseImageBase
+	vlabs.AddonManagerImageBase = api.AddonManagerImageBase
+	vlabs.CloudControllerManagerImageBase = api.CloudControllerManagerImageBase
+	vlabs.K8sDNSSidecarImageBase = api.K8sDNSSidecarImageBase
+	vlabs.CoreDNSImageBase = api.CoreDNSImageBase
+	vlabs.KubeDNSImageBase = api.KubeDNSImageBase
+	vlabs.DNSMasqImageBase = api.DNSMasqImageBase
 	vlabs.TillerImageBase = api.TillerImageBase
 	vlabs.ACIConnectorImageBase = api.ACIConnectorImageBase
 	vlabs.NVIDIAImageBase = api.NVIDIAImageBase

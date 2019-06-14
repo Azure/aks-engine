@@ -32,12 +32,11 @@ func assignKubernetesParameters(properties *api.Properties, parametersMap params
 				ImageConfig:     map[string]string{},
 			}
 		}
-		kubernetesImageBase := kubernetesConfig.KubernetesImagesConfig.ImageBaseConfig.KubernetesImageBase
-		hyperkubeImageBase := kubernetesConfig.KubernetesImagesConfig.ImageBaseConfig.HyperkubeImageBase
+		imageBaseConfig := kubernetesConfig.KubernetesImagesConfig.ImageBaseConfig
 
 		if kubernetesConfig != nil {
 			if to.Bool(kubernetesConfig.UseCloudControllerManager) {
-				kubernetesCcmSpec := kubernetesImageBase + k8sComponents["ccm"]
+				kubernetesCcmSpec := imageBaseConfig.CloudControllerManagerImageBase + k8sComponents["ccm"]
 				if kubernetesConfig.CustomCcmImage != "" {
 					kubernetesCcmSpec = kubernetesConfig.CustomCcmImage
 				}
@@ -45,7 +44,7 @@ func assignKubernetesParameters(properties *api.Properties, parametersMap params
 				addValue(parametersMap, "kubernetesCcmImageSpec", kubernetesCcmSpec)
 			}
 
-			kubernetesHyperkubeSpec := hyperkubeImageBase + k8sComponents["hyperkube"]
+			kubernetesHyperkubeSpec := imageBaseConfig.HyperkubeImageBase + k8sComponents["hyperkube"]
 			if properties.IsAzureStackCloud() {
 				kubernetesHyperkubeSpec = kubernetesHyperkubeSpec + AzureStackSuffix
 			}
@@ -58,11 +57,11 @@ func assignKubernetesParameters(properties *api.Properties, parametersMap params
 			if kubernetesConfig.PrivateAzureRegistryServer != "" {
 				addValue(parametersMap, "privateAzureRegistryServer", kubernetesConfig.PrivateAzureRegistryServer)
 			}
-			addValue(parametersMap, "kubernetesAddonManagerSpec", kubernetesImageBase+k8sComponents["addonmanager"])
+			addValue(parametersMap, "kubernetesAddonManagerSpec", imageBaseConfig.AddonManagerImageBase+k8sComponents["addonmanager"])
 			if orchestratorProfile.NeedsExecHealthz() {
-				addValue(parametersMap, "kubernetesExecHealthzSpec", kubernetesImageBase+k8sComponents["exechealthz"])
+				addValue(parametersMap, "kubernetesExecHealthzSpec", imageBaseConfig.KubernetesImageBase+k8sComponents["exechealthz"])
 			}
-			addValue(parametersMap, "kubernetesDNSSidecarSpec", kubernetesImageBase+k8sComponents["k8s-dns-sidecar"])
+			addValue(parametersMap, "kubernetesDNSSidecarSpec", imageBaseConfig.K8sDNSSidecarImageBase+k8sComponents["k8s-dns-sidecar"])
 			if kubernetesConfig.IsAADPodIdentityEnabled() {
 				aadPodIdentityAddon := kubernetesConfig.GetAddonByName(AADPodIdentityAddonName)
 				aadIndex := aadPodIdentityAddon.GetAddonContainersIndexByName(AADPodIdentityAddonName)
@@ -92,12 +91,12 @@ func assignKubernetesParameters(properties *api.Properties, parametersMap params
 				addValue(parametersMap, "kuberneteselbsvcname", fmt.Sprintf("%d", elbsvcName))
 			}
 			if common.IsKubernetesVersionGe(k8sVersion, "1.12.0") {
-				addValue(parametersMap, "kubernetesCoreDNSSpec", kubernetesImageBase+k8sComponents["coredns"])
+				addValue(parametersMap, "kubernetesCoreDNSSpec", imageBaseConfig.CoreDNSImageBase+k8sComponents["coredns"])
 			} else {
-				addValue(parametersMap, "kubernetesKubeDNSSpec", kubernetesImageBase+k8sComponents["kube-dns"])
-				addValue(parametersMap, "kubernetesDNSMasqSpec", kubernetesImageBase+k8sComponents["dnsmasq"])
+				addValue(parametersMap, "kubernetesKubeDNSSpec", imageBaseConfig.KubeDNSImageBase+k8sComponents["kube-dns"])
+				addValue(parametersMap, "kubernetesDNSMasqSpec", imageBaseConfig.DNSMasqImageBase+k8sComponents["dnsmasq"])
 			}
-			addValue(parametersMap, "kubernetesPodInfraContainerSpec", kubernetesImageBase+k8sComponents["pause"])
+			addValue(parametersMap, "kubernetesPodInfraContainerSpec", imageBaseConfig.PauseImageBase+k8sComponents["pause"])
 			addValue(parametersMap, "cloudproviderConfig", api.CloudProviderConfig{
 				CloudProviderBackoff:         kubernetesConfig.CloudProviderBackoff,
 				CloudProviderBackoffRetries:  kubernetesConfig.CloudProviderBackoffRetries,

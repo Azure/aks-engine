@@ -51,14 +51,20 @@ type KubernetesSpecConfig struct {
 
 //ImageBaseConfig defines base URL strings for supported container images
 type ImageBaseConfig struct {
-	KubernetesImageBase   string `json:"kubernetesImageBase,omitempty"`
-	HyperkubeImageBase    string `json:"hyperkubeImageBase,omitempty"`
-	PauseImageBase        string `json:"pauseImageBase,omitempty"`
-	TillerImageBase       string `json:"tillerImageBase,omitempty"`
-	ACIConnectorImageBase string `json:"aciConnectorImageBase,omitempty"`
-	NVIDIAImageBase       string `json:"nvidiaImageBase,omitempty"`
-	AzureCNIImageBase     string `json:"azureCNIImageBase,omitempty"`
-	CalicoImageBase       string `json:"CalicoImageBase,omitempty"`
+	KubernetesImageBase             string `json:"kubernetesImageBase,omitempty"`
+	HyperkubeImageBase              string `json:"hyperkubeImageBase,omitempty"`
+	PauseImageBase                  string `json:"pauseImageBase,omitempty"`
+	AddonManagerImageBase           string `json:"addonManagerImageBase,omitempty"`
+	CloudControllerManagerImageBase string `json:"cloudControllerManagerImageBase,omitempty"`
+	K8sDNSSidecarImageBase          string `json:"k8sDNSSidecarImageBase,omitempty"`
+	CoreDNSImageBase                string `json:"coreDNSImageBase,omitempty"`
+	KubeDNSImageBase                string `json:"kubeDNSImageBase,omitempty"`
+	DNSMasqImageBase                string `json:"dnsMasqImageBase,omitempty"`
+	TillerImageBase                 string `json:"tillerImageBase,omitempty"`
+	ACIConnectorImageBase           string `json:"aciConnectorImageBase,omitempty"`
+	NVIDIAImageBase                 string `json:"nvidiaImageBase,omitempty"`
+	AzureCNIImageBase               string `json:"azureCNIImageBase,omitempty"`
+	CalicoImageBase                 string `json:"CalicoImageBase,omitempty"`
 }
 
 // KubernetesImagesConfig defines where to reference container images
