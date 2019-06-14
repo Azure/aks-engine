@@ -66,7 +66,7 @@ type ImageBaseConfig struct {
 	ACIConnectorImageBase           string `json:"aciConnectorImageBase,omitempty"`
 	NVIDIAImageBase                 string `json:"nvidiaImageBase,omitempty"`
 	AzureCNIImageBase               string `json:"azureCNIImageBase,omitempty"`
-	CalicoImageBase                 string `json:"CalicoImageBase,omitempty"`
+	CalicoImageBase                 string `json:"calicoImageBase,omitempty"`
 }
 
 // KubernetesImagesConfig defines where to reference container images
