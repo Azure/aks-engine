@@ -15,7 +15,7 @@
 * [Known Issues and Limitations](#known-issues-and-limitations)
 * [Frequently Asked Questions](#frequently-asked-questions)
 
-## Introduction to the AKS Engine for Azure Stack
+## Introduction to AKS Engine for Azure Stack
 
 Starting from [release](https://github.com/Azure/aks-engine/releases/) v0.36.2, AKS Engine can be used to provision self-managed Kubernetes clusters on Azure Stack. It is now possible to execute AKS Engine's `generate`, `deploy`, `upgrade`, and `scale` commands as if you were targeting Azure's public cloud. You are only required to slightly update your cluster definition to provide some extra information about your Azure Stack instance.
 
@@ -105,7 +105,9 @@ If your Azure Stack instance is located in China, then the `dependenciesLocation
 
 ## Disconnected Azure Stack instances
 
-By default, the AKS Engine provisioning process relies on an internet connection to download the software dependencies required to create or upgrade a cluster (Kubernetes images, etcd binaries, network plugins and so on).
+_Note: AKS Engine on disconnected Azure Stack instances is a private preview feature_
+
+By default, AKS Engine provisioning process relies on an internet connection to download the software dependencies required to create or upgrade a cluster (Kubernetes images, etcd binaries, network plugins and so on).
 
 If your Azure Stack instance is air-gapped or if network connectivity in your geographical location is not reliable, then the default approach will not work due to the length of time for the download or a timeout due to transient networking issues.
 
@@ -113,7 +115,7 @@ With these challenges in mind, you can choose to set the `distro` property of yo
 
 The `AKS Base Image` gallery item has to be available in your Azure Stack's Marketplace before it can be used by AKS Engine. Your Azure Stack administrator can follow this [guide](https://docs.microsoft.com/azure-stack/operator/azure-stack-download-azure-marketplace-item) for a general explanation about how to download gallery items from Azure.
 
-Each AKS Engine release is validated and tied to a specific version of the AKS Base Image. Therefore, you need to take note of the base image version required by the AKS Engine release that you plan to use, and then download exactly that base image version. New builds of the `AKS Base Image` are frequently released to ensure that your disconnected cluster can be upgraded to the latest supported version of each component.
+Each AKS Engine release is validated and tied to a specific version of AKS Base Image. Therefore, you need to take note of the base image version required by AKS Engine release that you plan to use, and then download exactly that base image version. New builds of the `AKS Base Image` are frequently released to ensure that your disconnected cluster can be upgraded to the latest supported version of each component.
 
 ## Unsupported addons
 
@@ -153,12 +155,25 @@ If you need to expose more than 5 services, then the recommendation is to route 
 
 These are the Kubernetes versions that you can deploy to Azure Stack using AKS Engine:
 
+<!-- - 1.14.3 build and push to mcr -->
+<!-- - 1.13.7 build and push to mcr -->
+- 1.14.1
 - 1.13.5
 - 1.12.8
+- 1.12.7
 - 1.11.10
 - 1.11.9
 
 ### Network policies
+
+If the Azure Stack instance is air-gapped, then the syndicated [AKS Base Image](#disconnected-azure-stack-instances) will determine the Kubernetes version that you can deploy or the target upgrade version. The table below lists the pre-pulled versions on each AKS Base Image version.
+
+_Note: AKS Engine on disconnected Azure Stack instances is a private preview feature_
+
+| AKS Engine                 | AKS Base Image     | Kubernetes versions | Notes |  
+|----------------------------|--------------------|---------------------|-------|
+| from v0.36.2 to v0.36.5    | [AKS Base Ubuntu 16.04-LTS Image Distro, May 2019](../../releases/vhd-notes/aks-ubuntu-1604/aks-ubuntu-1604-201904_2019.05.16.txt) | 1.12.7 - 1.11.10 - 1.11.9 | Only network plugin `"kubenet"` is supported |
+
 
 To enforce network policies, you are required to manually deploy the [Canal](https://docs.projectcalico.org/v3.7/getting-started/kubernetes/installation/flannel) daemonset.
 
@@ -170,4 +185,8 @@ Because Azure and Azure Stack currently rely on a different version of the Compu
 
 This can be resolved by making a small modification to the extension `template.json` file. Replacing all usages of template parameter `apiVersionDeployments` by the hard-code value `2017-12-01` (or whatever API version Azure Stack runs at the time you try to deploy) should be all you need.
 
-Once your are done updating the extension template, host the extension directory in your own Github repository or storage account. Finally, at deployment time, make sure that your cluster definition points to the new [rootURL](https://github.com/Azure/aks-engine/blob/master/docs/topics/extensions.md#rooturl).
+Once you are done updating the extension template, host the extension directory in your own Github repository or storage account. Finally, at deployment time, make sure that your cluster definition points to the new [rootURL](https://github.com/Azure/aks-engine/blob/master/docs/topics/extensions.md#rooturl).
+
+### Troubleshoting
+
+This [how-to guide](/docs/howto/troubleshooting.md) has a good high-level explanation of how AKS Engine interacts with the Azure Resource Manager (ARM) and lists a few potential issues that can cause AKS Engine commands to fail. Checkout the scripts in this [repository](https://github.com/msazurestackworkloads/azurestack-gallery/tree/master/diagnosis) to simplify the logs collection task.

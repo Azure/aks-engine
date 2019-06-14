@@ -14,6 +14,7 @@ import (
 	"github.com/Azure/go-autorest/autorest/to"
 
 	"github.com/Azure/aks-engine/pkg/api"
+	"github.com/Azure/aks-engine/pkg/api/common"
 	"github.com/Azure/aks-engine/pkg/api/vlabs"
 	"github.com/Azure/aks-engine/pkg/helpers"
 	"github.com/Azure/aks-engine/pkg/i18n"
@@ -161,8 +162,16 @@ func Build(cfg *config.Config, masterSubnetID string, agentSubnetIDs []string, i
 		prop.ServicePrincipalProfile.ObjectID = config.ClientObjectID
 	}
 
-	if prop.OrchestratorProfile.KubernetesConfig == nil {
-		prop.OrchestratorProfile.KubernetesConfig = &vlabs.KubernetesConfig{}
+	var version string
+	if prop.OrchestratorProfile.OrchestratorRelease != "" {
+		version = prop.OrchestratorProfile.OrchestratorRelease + ".0"
+	} else if prop.OrchestratorProfile.OrchestratorVersion != "" {
+		version = prop.OrchestratorProfile.OrchestratorVersion
+	}
+	if common.IsKubernetesVersionGe(version, "1.12.0") {
+		if prop.OrchestratorProfile.KubernetesConfig == nil {
+			prop.OrchestratorProfile.KubernetesConfig = &vlabs.KubernetesConfig{}
+		}
 		prop.OrchestratorProfile.KubernetesConfig.ControllerManagerConfig = map[string]string{
 			"--horizontal-pod-autoscaler-downscale-stabilization":   "30s",
 			"--horizontal-pod-autoscaler-cpu-initialization-period": "30s",
