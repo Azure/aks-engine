@@ -171,9 +171,9 @@ If the Azure Stack instance is air-gapped, then the syndicated [AKS Base Image](
 
 _Note: AKS Engine on disconnected Azure Stack instances is a private preview feature_
 
-| AKS Engine                 | AKS Base Image     | Kubernetes versions |  
-|----------------------------|--------------------|---------------------|
-| from v0.36.2 to v0.36.5    | [AKS Base Ubuntu 16.04-LTS Image Distro, May 2019](../../releases/vhd-notes/aks-ubuntu-1604/aks-ubuntu-1604-201904_2019.05.16.txt) | 1.12.7 - 1.11.10 - 1.11.9 |
+| AKS Engine                 | AKS Base Image     | Kubernetes versions | Notes |  
+|----------------------------|--------------------|---------------------|-------|
+| from v0.36.2 to v0.36.5    | [AKS Base Ubuntu 16.04-LTS Image Distro, May 2019](../../releases/vhd-notes/aks-ubuntu-1604/aks-ubuntu-1604-201904_2019.05.16.txt) | 1.12.7 - 1.11.10 - 1.11.9 | Only network pluging `"kubenet"` is supported |
 
 ### Network Policies
 
