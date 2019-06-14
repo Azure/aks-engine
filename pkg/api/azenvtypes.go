@@ -99,7 +99,7 @@ type AzureOSImageConfig struct {
 var (
 	//DefaultKubernetesSpecConfig is the default Docker image source of Kubernetes
 	DefaultKubernetesSpecConfig = KubernetesSpecConfig{
-		KubernetesImageBase:              "k8s.gcr.io/",
+		KubernetesImageBase:              DefaultExternalContainerImageRegistry,
 		TillerImageBase:                  "gcr.io/kubernetes-helm/",
 		ACIConnectorImageBase:            "microsoft/",
 		NVIDIAImageBase:                  "nvidia/",
@@ -260,7 +260,7 @@ var (
 		},
 		//KubernetesSpecConfig - Due to Chinese firewall issue, the default containers from google is blocked, use the Chinese local mirror instead
 		KubernetesSpecConfig: KubernetesSpecConfig{
-			KubernetesImageBase:              "gcr.azk8s.cn/google_containers/",
+			KubernetesImageBase:              DefaultExternalContainerImageRegistryChinaCloud,
 			TillerImageBase:                  "gcr.azk8s.cn/kubernetes-helm/",
 			ACIConnectorImageBase:            "dockerhub.azk8s.cn/microsoft/",
 			NVIDIAImageBase:                  "dockerhub.azk8s.cn/nvidia/",

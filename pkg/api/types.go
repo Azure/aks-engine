@@ -342,7 +342,7 @@ const (
 // KubernetesConfig contains the Kubernetes config structure, containing
 // Kubernetes specific configuration
 type KubernetesConfig struct {
-	KubernetesImageBase              string                  `json:"kubernetesImageBase,omitempty"`
+	KubernetesImageBase              string                  `json:"kubernetesImageBase,omitempty"` // Deprecated, moved to ImageBaseConfig.KubernetesImageBase
 	ClusterSubnet                    string                  `json:"clusterSubnet,omitempty"`
 	NetworkPolicy                    string                  `json:"networkPolicy,omitempty"`
 	NetworkPlugin                    string                  `json:"networkPlugin,omitempty"`

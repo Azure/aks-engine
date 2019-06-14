@@ -413,5 +413,92 @@ func TestGetImageBaseConfigFromKubernetesSpecConfig(t *testing.T) {
 			}
 		})
 	}
+}
 
+func TestIsCustomKubernetesImageBase(t *testing.T) {
+	azureStackKubernetesSpecConfig := KubernetesSpecConfig{
+		KubernetesImageBase:              "KubernetesImageBase",
+		TillerImageBase:                  "TillerImageBase",
+		ACIConnectorImageBase:            "ACIConnectorImageBase",
+		NVIDIAImageBase:                  "NVIDIAImageBase",
+		AzureCNIImageBase:                "AzureCNIImageBase",
+		CalicoImageBase:                  "CalicoImageBase",
+		EtcdDownloadURLBase:              "EtcdDownloadURLBase",
+		KubeBinariesSASURLBase:           "KubeBinariesSASURLBase",
+		WindowsTelemetryGUID:             "WindowsTelemetryGUID",
+		CNIPluginsDownloadURL:            "CNIPluginsDownloadURL",
+		VnetCNILinuxPluginsDownloadURL:   "VnetCNILinuxPluginsDownloadURL",
+		VnetCNIWindowsPluginsDownloadURL: "VnetCNIWindowsPluginsDownloadURL",
+		ContainerdDownloadURLBase:        "ContainerdDownloadURLBase",
+	}
+	azureStackCloudSpec := AzureEnvironmentSpecConfig{
+		CloudName:            "AzurePublicCloud",
+		KubernetesSpecConfig: azureStackKubernetesSpecConfig,
+		EndpointConfig: AzureEndpointConfig{
+			ResourceManagerVMDNSSuffix: "ResourceManagerVMDNSSuffix",
+		},
+	}
+	AzureCloudSpecEnvMap[AzureStackCloud] = azureStackCloudSpec
+	cases := []struct {
+		name     string
+		cs       *ContainerService
+		expected bool
+	}{
+		{
+			name: "Azure Stack case",
+			cs: &ContainerService{
+				Properties: &Properties{
+					CustomCloudProfile: &CustomCloudProfile{
+						Environment: &azure.Environment{
+							Name: "AzureStackCloud",
+						},
+					},
+					OrchestratorProfile: &OrchestratorProfile{
+						KubernetesConfig: &KubernetesConfig{
+							KubernetesImageBase: "this should be ignored in Azure Stack scenario",
+						},
+					},
+				},
+			},
+			expected: false,
+		},
+		{
+			name: "China cloud case",
+			cs: &ContainerService{
+				Location: "chinaeast",
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						KubernetesConfig: &KubernetesConfig{
+							KubernetesImageBase: "this should be considered a customer override in China cloud scenario",
+						},
+					},
+				},
+			},
+			expected: true,
+		},
+		{
+			name: "default override case",
+			cs: &ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						KubernetesConfig: &KubernetesConfig{
+							KubernetesImageBase: "this should be considered a customer override",
+						},
+					},
+				},
+			},
+			expected: true,
+		},
+	}
+
+	for _, c := range cases {
+		c := c
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+			result := c.cs.isCustomKubernetesImageBase()
+			if result != c.expected {
+				t.Fatalf("expected %t, got %t", c.expected, result)
+			}
+		})
+	}
 }

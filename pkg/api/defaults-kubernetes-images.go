@@ -28,7 +28,7 @@ func (cs *ContainerService) setKubernetesImagesConfig() {
 		}
 		// if KubernetesImagesConfig.ImageBaseConfig.KubernetesImageBase is not user-configured, then
 		// inherit the deprecated KubernetesConfig.KubernetesImageBase property for backwards compatibility
-		if k.KubernetesImageBase != "" {
+		if cs.isCustomKubernetesImageBase() {
 			k.KubernetesImagesConfig.ImageBaseConfig.KubernetesImageBase = k.KubernetesImageBase
 			k.KubernetesImagesConfig.ImageBaseConfig.HyperkubeImageBase = k.KubernetesImageBase
 			k.KubernetesImagesConfig.ImageBaseConfig.PauseImageBase = k.KubernetesImageBase
@@ -50,119 +50,119 @@ func (cs *ContainerService) setKubernetesImagesConfig() {
 	} else {
 		if k.KubernetesImagesConfig.ImageBaseConfig != nil {
 			if k.KubernetesImagesConfig.ImageBaseConfig.KubernetesImageBase == "" {
-				if k.KubernetesImageBase != "" {
+				if cs.isCustomKubernetesImageBase() {
 					k.KubernetesImagesConfig.ImageBaseConfig.KubernetesImageBase = k.KubernetesImageBase
 				} else {
 					k.KubernetesImagesConfig.ImageBaseConfig.KubernetesImageBase = imageConfigFromCloud.KubernetesImageBase
 				}
 			}
 			if k.KubernetesImagesConfig.ImageBaseConfig.HyperkubeImageBase == "" {
-				if k.KubernetesImageBase != "" {
+				if cs.isCustomKubernetesImageBase() {
 					k.KubernetesImagesConfig.ImageBaseConfig.HyperkubeImageBase = k.KubernetesImageBase
 				} else {
 					k.KubernetesImagesConfig.ImageBaseConfig.HyperkubeImageBase = imageConfigFromCloud.KubernetesImageBase
 				}
 			}
 			if k.KubernetesImagesConfig.ImageBaseConfig.PauseImageBase == "" {
-				if k.KubernetesImageBase != "" {
+				if cs.isCustomKubernetesImageBase() {
 					k.KubernetesImagesConfig.ImageBaseConfig.PauseImageBase = k.KubernetesImageBase
 				} else {
 					k.KubernetesImagesConfig.ImageBaseConfig.PauseImageBase = imageConfigFromCloud.KubernetesImageBase
 				}
 			}
 			if k.KubernetesImagesConfig.ImageBaseConfig.AddonManagerImageBase == "" {
-				if k.KubernetesImageBase != "" {
+				if cs.isCustomKubernetesImageBase() {
 					k.KubernetesImagesConfig.ImageBaseConfig.AddonManagerImageBase = k.KubernetesImageBase
 				} else {
 					k.KubernetesImagesConfig.ImageBaseConfig.AddonManagerImageBase = imageConfigFromCloud.KubernetesImageBase
 				}
 			}
 			if k.KubernetesImagesConfig.ImageBaseConfig.CloudControllerManagerImageBase == "" {
-				if k.KubernetesImageBase != "" {
+				if cs.isCustomKubernetesImageBase() {
 					k.KubernetesImagesConfig.ImageBaseConfig.CloudControllerManagerImageBase = k.KubernetesImageBase
 				} else {
 					k.KubernetesImagesConfig.ImageBaseConfig.CloudControllerManagerImageBase = imageConfigFromCloud.KubernetesImageBase
 				}
 			}
 			if k.KubernetesImagesConfig.ImageBaseConfig.K8sDNSSidecarImageBase == "" {
-				if k.KubernetesImageBase != "" {
+				if cs.isCustomKubernetesImageBase() {
 					k.KubernetesImagesConfig.ImageBaseConfig.K8sDNSSidecarImageBase = k.KubernetesImageBase
 				} else {
 					k.KubernetesImagesConfig.ImageBaseConfig.K8sDNSSidecarImageBase = imageConfigFromCloud.KubernetesImageBase
 				}
 			}
 			if k.KubernetesImagesConfig.ImageBaseConfig.CoreDNSImageBase == "" {
-				if k.KubernetesImageBase != "" {
+				if cs.isCustomKubernetesImageBase() {
 					k.KubernetesImagesConfig.ImageBaseConfig.CoreDNSImageBase = k.KubernetesImageBase
 				} else {
 					k.KubernetesImagesConfig.ImageBaseConfig.CoreDNSImageBase = imageConfigFromCloud.KubernetesImageBase
 				}
 			}
 			if k.KubernetesImagesConfig.ImageBaseConfig.KubeDNSImageBase == "" {
-				if k.KubernetesImageBase != "" {
+				if cs.isCustomKubernetesImageBase() {
 					k.KubernetesImagesConfig.ImageBaseConfig.KubeDNSImageBase = k.KubernetesImageBase
 				} else {
 					k.KubernetesImagesConfig.ImageBaseConfig.KubeDNSImageBase = imageConfigFromCloud.KubernetesImageBase
 				}
 			}
 			if k.KubernetesImagesConfig.ImageBaseConfig.DNSMasqImageBase == "" {
-				if k.KubernetesImageBase != "" {
+				if cs.isCustomKubernetesImageBase() {
 					k.KubernetesImagesConfig.ImageBaseConfig.DNSMasqImageBase = k.KubernetesImageBase
 				} else {
 					k.KubernetesImagesConfig.ImageBaseConfig.DNSMasqImageBase = imageConfigFromCloud.KubernetesImageBase
 				}
 			}
 			if k.KubernetesImagesConfig.ImageBaseConfig.HeapsterImageBase == "" {
-				if k.KubernetesImageBase != "" {
+				if cs.isCustomKubernetesImageBase() {
 					k.KubernetesImagesConfig.ImageBaseConfig.HeapsterImageBase = k.KubernetesImageBase
 				} else {
 					k.KubernetesImagesConfig.ImageBaseConfig.HeapsterImageBase = imageConfigFromCloud.KubernetesImageBase
 				}
 			}
 			if k.KubernetesImagesConfig.ImageBaseConfig.AddonResizerImageBase == "" {
-				if k.KubernetesImageBase != "" {
+				if cs.isCustomKubernetesImageBase() {
 					k.KubernetesImagesConfig.ImageBaseConfig.AddonResizerImageBase = k.KubernetesImageBase
 				} else {
 					k.KubernetesImagesConfig.ImageBaseConfig.AddonResizerImageBase = imageConfigFromCloud.KubernetesImageBase
 				}
 			}
 			if k.KubernetesImagesConfig.ImageBaseConfig.ClusterAutoscalerImageBase == "" {
-				if k.KubernetesImageBase != "" {
+				if cs.isCustomKubernetesImageBase() {
 					k.KubernetesImagesConfig.ImageBaseConfig.ClusterAutoscalerImageBase = k.KubernetesImageBase
 				} else {
 					k.KubernetesImagesConfig.ImageBaseConfig.ClusterAutoscalerImageBase = imageConfigFromCloud.KubernetesImageBase
 				}
 			}
 			if k.KubernetesImagesConfig.ImageBaseConfig.DashboardImageBase == "" {
-				if k.KubernetesImageBase != "" {
+				if cs.isCustomKubernetesImageBase() {
 					k.KubernetesImagesConfig.ImageBaseConfig.DashboardImageBase = k.KubernetesImageBase
 				} else {
 					k.KubernetesImagesConfig.ImageBaseConfig.DashboardImageBase = imageConfigFromCloud.KubernetesImageBase
 				}
 			}
 			if k.KubernetesImagesConfig.ImageBaseConfig.ReschedulerImageBase == "" {
-				if k.KubernetesImageBase != "" {
+				if cs.isCustomKubernetesImageBase() {
 					k.KubernetesImagesConfig.ImageBaseConfig.ReschedulerImageBase = k.KubernetesImageBase
 				} else {
 					k.KubernetesImagesConfig.ImageBaseConfig.ReschedulerImageBase = imageConfigFromCloud.KubernetesImageBase
 				}
 			}
 			if k.KubernetesImagesConfig.ImageBaseConfig.MetricsServerImageBase == "" {
-				if k.KubernetesImageBase != "" {
+				if cs.isCustomKubernetesImageBase() {
 					k.KubernetesImagesConfig.ImageBaseConfig.MetricsServerImageBase = k.KubernetesImageBase
 				} else {
 					k.KubernetesImagesConfig.ImageBaseConfig.MetricsServerImageBase = imageConfigFromCloud.KubernetesImageBase
 				}
 			}
 			if k.KubernetesImagesConfig.ImageBaseConfig.IPMasqAgentImageBase == "" {
-				if k.KubernetesImageBase != "" {
+				if cs.isCustomKubernetesImageBase() {
 					k.KubernetesImagesConfig.ImageBaseConfig.IPMasqAgentImageBase = k.KubernetesImageBase
 				} else {
 					k.KubernetesImagesConfig.ImageBaseConfig.IPMasqAgentImageBase = imageConfigFromCloud.KubernetesImageBase
 				}
 			}
 			if k.KubernetesImagesConfig.ImageBaseConfig.ClusterProportionalAutoscalerImageBase == "" {
-				if k.KubernetesImageBase != "" {
+				if cs.isCustomKubernetesImageBase() {
 					k.KubernetesImagesConfig.ImageBaseConfig.ClusterProportionalAutoscalerImageBase = k.KubernetesImageBase
 				} else {
 					k.KubernetesImagesConfig.ImageBaseConfig.ClusterProportionalAutoscalerImageBase = imageConfigFromCloud.KubernetesImageBase
@@ -215,4 +215,24 @@ func GetImageBaseConfigFromKubernetesSpecConfig(imageConfigFromCloud KubernetesS
 		CalicoImageBase:                        imageConfigFromCloud.CalicoImageBase,
 		AzureCNIImageBase:                      imageConfigFromCloud.AzureCNIImageBase,
 	}
+}
+
+func (cs *ContainerService) isCustomKubernetesImageBase() bool {
+	if cs.Properties == nil || cs.Properties.OrchestratorProfile == nil || cs.Properties.OrchestratorProfile.KubernetesConfig == nil {
+		return false
+	}
+	kubernetesImageBase := cs.Properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBase
+	if kubernetesImageBase != "" {
+		if cs.GetCloudSpecConfig().CloudName == AzureChinaCloud {
+			if cs.Properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBase != DefaultExternalContainerImageRegistryChinaCloud {
+				return true
+			}
+		} else if cs.Properties.IsAzureStackCloud() {
+			return false
+		}
+		if cs.Properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBase != DefaultExternalContainerImageRegistry {
+			return true
+		}
+	}
+	return false
 }
