@@ -137,7 +137,7 @@ func Test_OrchestratorProfile_Validate(t *testing.T) {
 			properties: &Properties{
 				OrchestratorProfile: &OrchestratorProfile{
 					OrchestratorType:    "Kubernetes",
-					OrchestratorVersion: "1.9.11",
+					OrchestratorVersion: "1.10.13",
 					KubernetesConfig: &KubernetesConfig{
 						EnableAggregatedAPIs: true,
 						EnableRbac:           &falseVal,
@@ -162,7 +162,7 @@ func Test_OrchestratorProfile_Validate(t *testing.T) {
 			properties: &Properties{
 				OrchestratorProfile: &OrchestratorProfile{
 					OrchestratorType:    "Kubernetes",
-					OrchestratorVersion: "1.9.11",
+					OrchestratorVersion: "1.10.13",
 					KubernetesConfig: &KubernetesConfig{
 						EnableDataEncryptionAtRest: &trueVal,
 						EtcdEncryptionKey:          "fakeEncryptionKey",
@@ -199,7 +199,7 @@ func Test_OrchestratorProfile_Validate(t *testing.T) {
 			properties: &Properties{
 				OrchestratorProfile: &OrchestratorProfile{
 					OrchestratorType:    "Kubernetes",
-					OrchestratorVersion: "1.9.11",
+					OrchestratorVersion: "1.10.13",
 					KubernetesConfig: &KubernetesConfig{
 						EnablePodSecurityPolicy: &trueVal,
 					},
@@ -295,7 +295,7 @@ func Test_OrchestratorProfile_Validate(t *testing.T) {
 			properties: &Properties{
 				OrchestratorProfile: &OrchestratorProfile{
 					OrchestratorType:    "Kubernetes",
-					OrchestratorVersion: "v1.9.10",
+					OrchestratorVersion: "v1.10.13",
 				},
 			},
 		},
@@ -1756,17 +1756,6 @@ func TestMasterProfileValidate(t *testing.T) {
 			expectedErr: "imageName needs to be specified when imageResourceGroup is provided",
 		},
 		{
-			name:                "Master Profile with VMSS and Kubernetes v1.9.6",
-			orchestratorType:    Kubernetes,
-			orchestratorRelease: "1.9",
-			masterProfile: MasterProfile{
-				DNSPrefix:           "dummy",
-				Count:               3,
-				AvailabilityProfile: VirtualMachineScaleSets,
-			},
-			expectedErr: "VirtualMachineScaleSets are only available in Kubernetes version 1.10.0 or greater. Please set \"orchestratorVersion\" to 1.10.0 or above",
-		},
-		{
 			name:                "Master Profile with VMSS and storage account",
 			orchestratorType:    Kubernetes,
 			orchestratorRelease: "1.10",
@@ -1824,32 +1813,6 @@ func TestMasterProfileValidate(t *testing.T) {
 	}
 }
 
-func TestProperties_ValidateAddon(t *testing.T) {
-	cs := getK8sDefaultContainerService(true)
-	cs.Properties.AgentPoolProfiles = []*AgentPoolProfile{
-		{
-			Name:                "agentpool",
-			VMSize:              "Standard_NC6",
-			Count:               1,
-			AvailabilityProfile: AvailabilitySet,
-		},
-	}
-	cs.Properties.OrchestratorProfile.OrchestratorVersion = "1.9.10"
-	cs.Properties.OrchestratorProfile.KubernetesConfig = &KubernetesConfig{
-		Addons: []KubernetesAddon{
-			{
-				Name:    "nvidia-device-plugin",
-				Enabled: &trueVal,
-			},
-		},
-	}
-
-	err := cs.Validate(true)
-	expectedMsg := "NVIDIA Device Plugin add-on can only be used Kubernetes 1.10 or above. Please specify \"orchestratorRelease\": \"1.10\""
-	if err.Error() != expectedMsg {
-		t.Errorf("expected error with message : %s, but got : %s", expectedMsg, err.Error())
-	}
-}
 func TestProperties_ValidateZones(t *testing.T) {
 	tests := []struct {
 		name                        string
@@ -2576,19 +2539,6 @@ func TestAgentPoolProfile_ValidateVirtualMachineScaleSet(t *testing.T) {
 		agentPoolProfiles[0].AvailabilityProfile = AvailabilitySet
 		expectedMsg := fmt.Sprintf("VirtualMachineScaleSets for master profile must be used together with virtualMachineScaleSets for agent profiles. Set \"availabilityProfile\" to \"VirtualMachineScaleSets\" for agent profiles")
 		if err := cs.Properties.validateMasterProfile(false); err.Error() != expectedMsg {
-			t.Errorf("expected error with message : %s, but got %s", expectedMsg, err.Error())
-		}
-	})
-
-	t.Run("Should fail for VMSS + < 1.10 version", func(t *testing.T) {
-		t.Parallel()
-		cs := getK8sDefaultContainerService(false)
-		cs.Properties.OrchestratorProfile.OrchestratorRelease = "1.9"
-		agentPoolProfiles := cs.Properties.AgentPoolProfiles
-		agentPoolProfiles[0].AvailabilityProfile = VirtualMachineScaleSets
-		minVersion, _ := semver.Make("1.10.0")
-		expectedMsg := fmt.Sprintf("VirtualMachineScaleSets are only available in Kubernetes version %s or greater. Please set \"orchestratorVersion\" to %s or above", minVersion.String(), minVersion.String())
-		if err := cs.Properties.validateAgentPoolProfiles(false); err.Error() != expectedMsg {
 			t.Errorf("expected error with message : %s, but got %s", expectedMsg, err.Error())
 		}
 	})
