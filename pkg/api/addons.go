@@ -28,7 +28,7 @@ func (cs *ContainerService) setAddonsConfig(isUpdate bool) {
 		Containers: []KubernetesContainerSpec{
 			{
 				Name:           HeapsterAddonName,
-				Image:          k.KubernetesImagesConfig.ImageBaseConfig.KubernetesImageBase + k8sComponents["heapster"],
+				Image:          k.KubernetesImagesConfig.ImageBaseConfig.HeapsterImageBase + k8sComponents["heapster"],
 				CPURequests:    "88m",
 				MemoryRequests: "204Mi",
 				CPULimits:      "88m",
@@ -36,7 +36,7 @@ func (cs *ContainerService) setAddonsConfig(isUpdate bool) {
 			},
 			{
 				Name:           "heapster-nanny",
-				Image:          k.KubernetesImagesConfig.ImageBaseConfig.KubernetesImageBase + k8sComponents["addonresizer"],
+				Image:          k.KubernetesImagesConfig.ImageBaseConfig.AddonResizerImageBase + k8sComponents["addonresizer"],
 				CPURequests:    "88m",
 				MemoryRequests: "204Mi",
 				CPULimits:      "88m",
@@ -99,7 +99,7 @@ func (cs *ContainerService) setAddonsConfig(isUpdate bool) {
 				MemoryRequests: "300Mi",
 				CPULimits:      "100m",
 				MemoryLimits:   "300Mi",
-				Image:          k.KubernetesImagesConfig.ImageBaseConfig.KubernetesImageBase + k8sComponents[ClusterAutoscalerAddonName],
+				Image:          k.KubernetesImagesConfig.ImageBaseConfig.ClusterAutoscalerImageBase + k8sComponents[ClusterAutoscalerAddonName],
 			},
 		},
 	}
@@ -159,7 +159,7 @@ func (cs *ContainerService) setAddonsConfig(isUpdate bool) {
 				MemoryRequests: "150Mi",
 				CPULimits:      "300m",
 				MemoryLimits:   "150Mi",
-				Image:          k.KubernetesImagesConfig.ImageBaseConfig.KubernetesImageBase + k8sComponents[DashboardAddonName],
+				Image:          k.KubernetesImagesConfig.ImageBaseConfig.DashboardImageBase + k8sComponents[DashboardAddonName],
 			},
 		},
 	}
@@ -174,7 +174,7 @@ func (cs *ContainerService) setAddonsConfig(isUpdate bool) {
 				MemoryRequests: "100Mi",
 				CPULimits:      "10m",
 				MemoryLimits:   "100Mi",
-				Image:          k.KubernetesImagesConfig.ImageBaseConfig.KubernetesImageBase + k8sComponents[ReschedulerAddonName],
+				Image:          k.KubernetesImagesConfig.ImageBaseConfig.ReschedulerImageBase + k8sComponents[ReschedulerAddonName],
 			},
 		},
 	}
@@ -185,7 +185,7 @@ func (cs *ContainerService) setAddonsConfig(isUpdate bool) {
 		Containers: []KubernetesContainerSpec{
 			{
 				Name:  MetricsServerAddonName,
-				Image: k.KubernetesImagesConfig.ImageBaseConfig.KubernetesImageBase + k8sComponents[MetricsServerAddonName],
+				Image: k.KubernetesImagesConfig.ImageBaseConfig.MetricsServerImageBase + k8sComponents[MetricsServerAddonName],
 			},
 		},
 	}
@@ -235,7 +235,7 @@ func (cs *ContainerService) setAddonsConfig(isUpdate bool) {
 				MemoryRequests: "50Mi",
 				CPULimits:      "50m",
 				MemoryLimits:   "250Mi",
-				Image:          k.KubernetesImagesConfig.ImageBaseConfig.KubernetesImageBase + "ip-masq-agent-amd64:v2.0.0",
+				Image:          k.KubernetesImagesConfig.ImageBaseConfig.IPMasqAgentImageBase + "ip-masq-agent-amd64:v2.0.0",
 			},
 		},
 		Config: map[string]string{
@@ -274,7 +274,7 @@ func (cs *ContainerService) setAddonsConfig(isUpdate bool) {
 		Containers: []KubernetesContainerSpec{
 			{
 				Name:           DNSAutoscalerAddonName,
-				Image:          k.KubernetesImagesConfig.ImageBaseConfig.KubernetesImageBase + "cluster-proportional-autoscaler-amd64:1.1.1",
+				Image:          k.KubernetesImagesConfig.ImageBaseConfig.ClusterProportionalAutoscalerImageBase + "cluster-proportional-autoscaler-amd64:1.1.1",
 				CPURequests:    "20m",
 				MemoryRequests: "100Mi",
 			},
@@ -299,7 +299,7 @@ func (cs *ContainerService) setAddonsConfig(isUpdate bool) {
 			},
 			{
 				Name:  "calico-cluster-proportional-autoscaler",
-				Image: k.KubernetesImagesConfig.ImageBaseConfig.KubernetesImageBase + "cluster-proportional-autoscaler-amd64:1.1.2-r2",
+				Image: k.KubernetesImagesConfig.ImageBaseConfig.ClusterProportionalAutoscalerImageBase + "cluster-proportional-autoscaler-amd64:1.1.2-r2",
 			},
 		},
 	}

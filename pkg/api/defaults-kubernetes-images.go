@@ -8,22 +8,14 @@ func (cs *ContainerService) setKubernetesImagesConfig() {
 	imageConfigFromCloud := cloudSpecConfig.KubernetesSpecConfig
 	k := cs.Properties.OrchestratorProfile.KubernetesConfig
 
-	if k.KubernetesImagesConfig == nil {
+	// Use the cloud-specific config if KubernetesImagesConfig, or if Azure Stack context
+	if k.KubernetesImagesConfig == nil || cs.Properties.IsAzureStackCloud() {
 		k.KubernetesImagesConfig = &KubernetesImagesConfig{
 			ImageBaseConfig: GetImageBaseConfigFromKubernetesSpecConfig(imageConfigFromCloud),
 			ImageConfig:     map[string]string{},
 		}
-		// Permit the deprecated KubernetesConfig.KubernetesImageBase property
-		// to act as the value for KubernetesImagesConfig.ImageBaseConfig.KubernetesImageBase
-		// and KubernetesImagesConfig.ImageBaseConfig.HyperkubeImageBase
-		// and KubernetesImagesConfig.ImageBaseConfig.PauseImageBase
-		// and KubernetesImagesConfig.ImageBaseConfig.AddonManagerImageBase
-		// and KubernetesImagesConfig.ImageBaseConfig.CloudControllerManagerImageBase
-		// and KubernetesImagesConfig.ImageBaseConfig.K8sDNSSidecarImageBase
-		// and KubernetesImagesConfig.ImageBaseConfig.CoreDNSImageBase
-		// and KubernetesImagesConfig.ImageBaseConfig.KubeDNSImageBase
-		// and KubernetesImagesConfig.ImageBaseConfig.DNSMasqImageBase,
-		// if KubernetesImagesConfig.ImageBaseConfig.KubernetesImageBase is not already present
+		// if KubernetesImagesConfig.ImageBaseConfig.KubernetesImageBase is not user-configured, then
+		// inherit the deprecated KubernetesConfig.KubernetesImageBase property for backwards compatibility
 		if k.KubernetesImageBase != "" {
 			k.KubernetesImagesConfig.ImageBaseConfig.KubernetesImageBase = k.KubernetesImageBase
 			k.KubernetesImagesConfig.ImageBaseConfig.HyperkubeImageBase = k.KubernetesImageBase
@@ -34,6 +26,14 @@ func (cs *ContainerService) setKubernetesImagesConfig() {
 			k.KubernetesImagesConfig.ImageBaseConfig.CoreDNSImageBase = k.KubernetesImageBase
 			k.KubernetesImagesConfig.ImageBaseConfig.KubeDNSImageBase = k.KubernetesImageBase
 			k.KubernetesImagesConfig.ImageBaseConfig.DNSMasqImageBase = k.KubernetesImageBase
+			k.KubernetesImagesConfig.ImageBaseConfig.HeapsterImageBase = k.KubernetesImageBase
+			k.KubernetesImagesConfig.ImageBaseConfig.AddonResizerImageBase = k.KubernetesImageBase
+			k.KubernetesImagesConfig.ImageBaseConfig.ClusterAutoscalerImageBase = k.KubernetesImageBase
+			k.KubernetesImagesConfig.ImageBaseConfig.DashboardImageBase = k.KubernetesImageBase
+			k.KubernetesImagesConfig.ImageBaseConfig.ReschedulerImageBase = k.KubernetesImageBase
+			k.KubernetesImagesConfig.ImageBaseConfig.MetricsServerImageBase = k.KubernetesImageBase
+			k.KubernetesImagesConfig.ImageBaseConfig.IPMasqAgentImageBase = k.KubernetesImageBase
+			k.KubernetesImagesConfig.ImageBaseConfig.ClusterProportionalAutoscalerImageBase = k.KubernetesImageBase
 		}
 	} else {
 		if k.KubernetesImagesConfig.ImageBaseConfig != nil {
@@ -100,6 +100,62 @@ func (cs *ContainerService) setKubernetesImagesConfig() {
 					k.KubernetesImagesConfig.ImageBaseConfig.DNSMasqImageBase = imageConfigFromCloud.KubernetesImageBase
 				}
 			}
+			if k.KubernetesImagesConfig.ImageBaseConfig.HeapsterImageBase == "" {
+				if k.KubernetesImageBase != "" {
+					k.KubernetesImagesConfig.ImageBaseConfig.HeapsterImageBase = k.KubernetesImageBase
+				} else {
+					k.KubernetesImagesConfig.ImageBaseConfig.HeapsterImageBase = imageConfigFromCloud.KubernetesImageBase
+				}
+			}
+			if k.KubernetesImagesConfig.ImageBaseConfig.AddonResizerImageBase == "" {
+				if k.KubernetesImageBase != "" {
+					k.KubernetesImagesConfig.ImageBaseConfig.AddonResizerImageBase = k.KubernetesImageBase
+				} else {
+					k.KubernetesImagesConfig.ImageBaseConfig.AddonResizerImageBase = imageConfigFromCloud.KubernetesImageBase
+				}
+			}
+			if k.KubernetesImagesConfig.ImageBaseConfig.ClusterAutoscalerImageBase == "" {
+				if k.KubernetesImageBase != "" {
+					k.KubernetesImagesConfig.ImageBaseConfig.ClusterAutoscalerImageBase = k.KubernetesImageBase
+				} else {
+					k.KubernetesImagesConfig.ImageBaseConfig.ClusterAutoscalerImageBase = imageConfigFromCloud.KubernetesImageBase
+				}
+			}
+			if k.KubernetesImagesConfig.ImageBaseConfig.DashboardImageBase == "" {
+				if k.KubernetesImageBase != "" {
+					k.KubernetesImagesConfig.ImageBaseConfig.DashboardImageBase = k.KubernetesImageBase
+				} else {
+					k.KubernetesImagesConfig.ImageBaseConfig.DashboardImageBase = imageConfigFromCloud.KubernetesImageBase
+				}
+			}
+			if k.KubernetesImagesConfig.ImageBaseConfig.ReschedulerImageBase == "" {
+				if k.KubernetesImageBase != "" {
+					k.KubernetesImagesConfig.ImageBaseConfig.ReschedulerImageBase = k.KubernetesImageBase
+				} else {
+					k.KubernetesImagesConfig.ImageBaseConfig.ReschedulerImageBase = imageConfigFromCloud.KubernetesImageBase
+				}
+			}
+			if k.KubernetesImagesConfig.ImageBaseConfig.MetricsServerImageBase == "" {
+				if k.KubernetesImageBase != "" {
+					k.KubernetesImagesConfig.ImageBaseConfig.MetricsServerImageBase = k.KubernetesImageBase
+				} else {
+					k.KubernetesImagesConfig.ImageBaseConfig.MetricsServerImageBase = imageConfigFromCloud.KubernetesImageBase
+				}
+			}
+			if k.KubernetesImagesConfig.ImageBaseConfig.IPMasqAgentImageBase == "" {
+				if k.KubernetesImageBase != "" {
+					k.KubernetesImagesConfig.ImageBaseConfig.IPMasqAgentImageBase = k.KubernetesImageBase
+				} else {
+					k.KubernetesImagesConfig.ImageBaseConfig.IPMasqAgentImageBase = imageConfigFromCloud.KubernetesImageBase
+				}
+			}
+			if k.KubernetesImagesConfig.ImageBaseConfig.ClusterProportionalAutoscalerImageBase == "" {
+				if k.KubernetesImageBase != "" {
+					k.KubernetesImagesConfig.ImageBaseConfig.ClusterProportionalAutoscalerImageBase = k.KubernetesImageBase
+				} else {
+					k.KubernetesImagesConfig.ImageBaseConfig.ClusterProportionalAutoscalerImageBase = imageConfigFromCloud.KubernetesImageBase
+				}
+			}
 			if k.KubernetesImagesConfig.ImageBaseConfig.TillerImageBase == "" {
 				k.KubernetesImagesConfig.ImageBaseConfig.TillerImageBase = imageConfigFromCloud.TillerImageBase
 			}
@@ -124,19 +180,27 @@ func (cs *ContainerService) setKubernetesImagesConfig() {
 // GetImageBaseConfigFromKubernetesSpecConfig converts a subset of KubernetesSpecConfig properties to a fully populated ImageBaseConfig
 func GetImageBaseConfigFromKubernetesSpecConfig(imageConfigFromCloud KubernetesSpecConfig) *ImageBaseConfig {
 	return &ImageBaseConfig{
-		KubernetesImageBase:             imageConfigFromCloud.KubernetesImageBase,
-		HyperkubeImageBase:              imageConfigFromCloud.KubernetesImageBase,
-		PauseImageBase:                  imageConfigFromCloud.KubernetesImageBase,
-		AddonManagerImageBase:           imageConfigFromCloud.KubernetesImageBase,
-		CloudControllerManagerImageBase: imageConfigFromCloud.KubernetesImageBase,
-		K8sDNSSidecarImageBase:          imageConfigFromCloud.KubernetesImageBase,
-		CoreDNSImageBase:                imageConfigFromCloud.KubernetesImageBase,
-		KubeDNSImageBase:                imageConfigFromCloud.KubernetesImageBase,
-		DNSMasqImageBase:                imageConfigFromCloud.KubernetesImageBase,
-		TillerImageBase:                 imageConfigFromCloud.TillerImageBase,
-		ACIConnectorImageBase:           imageConfigFromCloud.ACIConnectorImageBase,
-		NVIDIAImageBase:                 imageConfigFromCloud.NVIDIAImageBase,
-		CalicoImageBase:                 imageConfigFromCloud.CalicoImageBase,
-		AzureCNIImageBase:               imageConfigFromCloud.AzureCNIImageBase,
+		KubernetesImageBase:                    imageConfigFromCloud.KubernetesImageBase,
+		HyperkubeImageBase:                     imageConfigFromCloud.KubernetesImageBase,
+		PauseImageBase:                         imageConfigFromCloud.KubernetesImageBase,
+		AddonManagerImageBase:                  imageConfigFromCloud.KubernetesImageBase,
+		CloudControllerManagerImageBase:        imageConfigFromCloud.KubernetesImageBase,
+		K8sDNSSidecarImageBase:                 imageConfigFromCloud.KubernetesImageBase,
+		CoreDNSImageBase:                       imageConfigFromCloud.KubernetesImageBase,
+		KubeDNSImageBase:                       imageConfigFromCloud.KubernetesImageBase,
+		DNSMasqImageBase:                       imageConfigFromCloud.KubernetesImageBase,
+		HeapsterImageBase:                      imageConfigFromCloud.KubernetesImageBase,
+		AddonResizerImageBase:                  imageConfigFromCloud.KubernetesImageBase,
+		ClusterAutoscalerImageBase:             imageConfigFromCloud.KubernetesImageBase,
+		DashboardImageBase:                     imageConfigFromCloud.KubernetesImageBase,
+		ReschedulerImageBase:                   imageConfigFromCloud.KubernetesImageBase,
+		MetricsServerImageBase:                 imageConfigFromCloud.KubernetesImageBase,
+		IPMasqAgentImageBase:                   imageConfigFromCloud.KubernetesImageBase,
+		ClusterProportionalAutoscalerImageBase: imageConfigFromCloud.KubernetesImageBase,
+		TillerImageBase:                        imageConfigFromCloud.TillerImageBase,
+		ACIConnectorImageBase:                  imageConfigFromCloud.ACIConnectorImageBase,
+		NVIDIAImageBase:                        imageConfigFromCloud.NVIDIAImageBase,
+		CalicoImageBase:                        imageConfigFromCloud.CalicoImageBase,
+		AzureCNIImageBase:                      imageConfigFromCloud.AzureCNIImageBase,
 	}
 }

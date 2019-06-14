@@ -1349,6 +1349,14 @@ func convertVLabsImageBaseConfig(vlabs *vlabs.ImageBaseConfig, api *ImageBaseCon
 	api.CoreDNSImageBase = vlabs.CoreDNSImageBase
 	api.KubeDNSImageBase = vlabs.KubeDNSImageBase
 	api.DNSMasqImageBase = vlabs.DNSMasqImageBase
+	api.HeapsterImageBase = vlabs.HeapsterImageBase
+	api.AddonResizerImageBase = vlabs.AddonResizerImageBase
+	api.ClusterAutoscalerImageBase = vlabs.ClusterAutoscalerImageBase
+	api.DashboardImageBase = vlabs.DashboardImageBase
+	api.ReschedulerImageBase = vlabs.ReschedulerImageBase
+	api.MetricsServerImageBase = vlabs.MetricsServerImageBase
+	api.IPMasqAgentImageBase = vlabs.IPMasqAgentImageBase
+	api.ClusterProportionalAutoscalerImageBase = vlabs.ClusterProportionalAutoscalerImageBase
 	api.TillerImageBase = vlabs.TillerImageBase
 	api.ACIConnectorImageBase = vlabs.ACIConnectorImageBase
 	api.NVIDIAImageBase = vlabs.NVIDIAImageBase
