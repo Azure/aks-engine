@@ -624,6 +624,7 @@ func (t *TemplateGenerator) getTemplateFuncMap(cs *api.ContainerService) templat
 		"GetEscapedEnvironmentJSON": func() string {
 			customEnvironmentJSON, _ := cs.Properties.GetCustomEnvironmentJSON(false)
 			customEnvironmentJSON = strings.Replace(customEnvironmentJSON, `"`, `""`, -1)
+			customEnvironmentJSON = strings.Replace(customEnvironmentJSON, `'`, `''`, -1)
 			return customEnvironmentJSON
 		},
 		"IsIdentitySystemADFS": func() bool {
