@@ -24,11 +24,14 @@ The goal of this guide is to explain how to provision Kubernetes clusters to Azu
 ## Service principals and identity providers
 
 Kubernetes uses a `service principal` identity to talk to Azure Stack APIs to dynamically manage resources such as storage or load balancers. Therefore, you will need to create a service principal before you can provision a Kubernetes cluster using AKS Engine.
+
 This [guide](https://docs.microsoft.com/azure-stack/operator/azure-stack-create-service-principals) explains how to create and manage service principals on Azure Stack for both Azure Active Directory (Azure AD) and Active Directory Federation Services (AD FS) identity providers. This other [guide](../../docs/topics/service-principals.md) is a good resource to understand the permissions that the service principal requires to deploy under your subscription.
 
-## Azure CLI flags
+Once you have created the required service principal, make sure to assign it the `contributor` role at the target subscription scope.
 
-To indicate to AKS Engine that your target platform is Azure Stack, all commands require Azure CLI flag `azure-env` to be set to `"AzureStackCloud"`.
+## CLI flags
+
+To indicate to AKS Engine that your target platform is Azure Stack, all commands require the CLI flag `azure-env` to be set to `"AzureStackCloud"`.
 
 If your Azure Stack instance uses AD FS to authenticate identities, then the flag `identity-system` is also required.
 
@@ -147,7 +150,7 @@ To work around this issue, do not delete `LoadBalancer` services as part of your
 
 The `Basic` load balancer SKU available on Azure Stack limits the number of frontend IPs to five (5). That implies that each cluster's agents pool is limited to five (5) public IPs.
 
-If you need to expose more than 5 services, then the recommendation is to route traffic to those services using an ingress controller.
+If you need to expose more than five (5) services, then the recommendation is to route traffic to those services using an ingress controller.
 
 ## Frequently asked questions
 
@@ -156,13 +159,14 @@ If you need to expose more than 5 services, then the recommendation is to route 
 These are the Kubernetes versions that you can deploy to Azure Stack using AKS Engine:
 
 <!-- - 1.14.3 build and push to mcr -->
-<!-- - 1.13.7 build and push to mcr -->
+<!-- - 1.13.7 build and push to mcr -->s
 - 1.14.1
 - 1.13.5
 - 1.12.8
 - 1.12.7
 - 1.11.10
 - 1.11.9
+
 
 ### Network policies
 
