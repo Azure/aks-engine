@@ -58,6 +58,7 @@ func TestGetAddonsIndexByName(t *testing.T) {
 }
 
 func TestPodSecurityPolicyConfigUpgrade(t *testing.T) {
+	cloudConfig := AzureCloudSpecEnvMap[AzurePublicCloud]
 	mockCS := getMockBaseContainerService("1.8.0")
 	o := mockCS.Properties.OrchestratorProfile
 
@@ -69,7 +70,7 @@ func TestPodSecurityPolicyConfigUpgrade(t *testing.T) {
 		"data": base64DataPSP,
 	}
 
-	mockCS.setAddonsConfig(isUpdate)
+	mockCS.setAddonsConfig(isUpdate, cloudConfig)
 
 	i := getAddonsIndexByName(o.KubernetesConfig.Addons, PodSecurityPolicyAddonName)
 	if i < 0 {
@@ -176,8 +177,9 @@ func TestDisabledAddons(t *testing.T) {
 }
 
 func TestSetAddonsConfig(t *testing.T) {
-	specConfig := AzureCloudSpecEnvMap["AzurePublicCloud"].KubernetesSpecConfig
-	azureStackCloudSpec := AzureEnvironmentSpecConfig{
+	publicCloudConfig := AzureCloudSpecEnvMap[AzurePublicCloud]
+	publicSpecConfig := publicCloudConfig.KubernetesSpecConfig
+	azureStackCloudConfig := AzureEnvironmentSpecConfig{
 		CloudName: "AzureStackCloud",
 		KubernetesSpecConfig: KubernetesSpecConfig{
 			KubernetesImageBase:              "KubernetesImageBase",
@@ -198,10 +200,12 @@ func TestSetAddonsConfig(t *testing.T) {
 			ResourceManagerVMDNSSuffix: "ResourceManagerVMDNSSuffix",
 		},
 	}
-	AzureCloudSpecEnvMap[AzureStackCloud] = azureStackCloudSpec
+	AzureCloudSpecEnvMap[AzureStackCloud] = azureStackCloudConfig
+	azureStackSpecConfig := azureStackCloudConfig.KubernetesSpecConfig
 	tests := []struct {
 		name           string
 		cs             *ContainerService
+		cloudSpec      AzureEnvironmentSpecConfig
 		isUpdate       bool
 		expectedAddons []KubernetesAddon
 	}{
@@ -217,7 +221,8 @@ func TestSetAddonsConfig(t *testing.T) {
 					},
 				},
 			},
-			isUpdate: false,
+			cloudSpec: publicCloudConfig,
+			isUpdate:  false,
 			expectedAddons: []KubernetesAddon{
 				{
 					Name:    HeapsterAddonName,
@@ -225,7 +230,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:           HeapsterAddonName,
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.12.8"]["heapster"],
+							Image:          publicSpecConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.12.8"]["heapster"],
 							CPURequests:    "88m",
 							MemoryRequests: "204Mi",
 							CPULimits:      "88m",
@@ -233,7 +238,7 @@ func TestSetAddonsConfig(t *testing.T) {
 						},
 						{
 							Name:           "heapster-nanny",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.12.8"]["addonresizer"],
+							Image:          publicSpecConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.12.8"]["addonresizer"],
 							CPURequests:    "88m",
 							MemoryRequests: "204Mi",
 							CPULimits:      "88m",
@@ -251,7 +256,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "150Mi",
 							CPULimits:      "50m",
 							MemoryLimits:   "150Mi",
-							Image:          specConfig.TillerImageBase + K8sComponentsByVersionMap["1.12.8"][TillerAddonName],
+							Image:          publicSpecConfig.TillerImageBase + K8sComponentsByVersionMap["1.12.8"][TillerAddonName],
 						},
 					},
 					Config: map[string]string{
@@ -308,7 +313,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "150Mi",
 							CPULimits:      "300m",
 							MemoryLimits:   "150Mi",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.12.8"][DashboardAddonName],
+							Image:          publicSpecConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.12.8"][DashboardAddonName],
 						},
 					},
 				},
@@ -322,7 +327,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:  MetricsServerAddonName,
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.12.8"][MetricsServerAddonName],
+							Image: publicSpecConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.12.8"][MetricsServerAddonName],
 						},
 					},
 				},
@@ -344,7 +349,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "50Mi",
 							CPULimits:      "50m",
 							MemoryLimits:   "250Mi",
-							Image:          specConfig.KubernetesImageBase + "ip-masq-agent-amd64:v2.3.0",
+							Image:          publicSpecConfig.KubernetesImageBase + "ip-masq-agent-amd64:v2.3.0",
 						},
 					},
 					Config: map[string]string{
@@ -358,7 +363,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:  AzureCNINetworkMonitoringAddonName,
-							Image: specConfig.AzureCNIImageBase + K8sComponentsByVersionMap["1.12.8"][AzureCNINetworkMonitoringAddonName],
+							Image: publicSpecConfig.AzureCNIImageBase + K8sComponentsByVersionMap["1.12.8"][AzureCNINetworkMonitoringAddonName],
 						},
 					},
 				},
@@ -398,7 +403,8 @@ func TestSetAddonsConfig(t *testing.T) {
 					},
 				},
 			},
-			isUpdate: false,
+			cloudSpec: publicCloudConfig,
+			isUpdate:  false,
 			expectedAddons: []KubernetesAddon{
 				{
 					Name:    HeapsterAddonName,
@@ -406,7 +412,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:           HeapsterAddonName,
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.12.8"]["heapster"],
+							Image:          publicSpecConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.12.8"]["heapster"],
 							CPURequests:    "88m",
 							MemoryRequests: "204Mi",
 							CPULimits:      "88m",
@@ -414,7 +420,7 @@ func TestSetAddonsConfig(t *testing.T) {
 						},
 						{
 							Name:           "heapster-nanny",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.12.8"]["addonresizer"],
+							Image:          publicSpecConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.12.8"]["addonresizer"],
 							CPURequests:    "88m",
 							MemoryRequests: "204Mi",
 							CPULimits:      "88m",
@@ -432,7 +438,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "150Mi",
 							CPULimits:      "50m",
 							MemoryLimits:   "150Mi",
-							Image:          specConfig.TillerImageBase + K8sComponentsByVersionMap["1.12.8"][TillerAddonName],
+							Image:          publicSpecConfig.TillerImageBase + K8sComponentsByVersionMap["1.12.8"][TillerAddonName],
 						},
 					},
 					Config: map[string]string{
@@ -455,7 +461,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "150Mi",
 							CPULimits:      "50m",
 							MemoryLimits:   "150Mi",
-							Image:          specConfig.ACIConnectorImageBase + K8sComponentsByVersionMap["1.12.8"][ACIConnectorAddonName],
+							Image:          publicSpecConfig.ACIConnectorImageBase + K8sComponentsByVersionMap["1.12.8"][ACIConnectorAddonName],
 						},
 					},
 				},
@@ -505,7 +511,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "150Mi",
 							CPULimits:      "300m",
 							MemoryLimits:   "150Mi",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.12.8"][DashboardAddonName],
+							Image:          publicSpecConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.12.8"][DashboardAddonName],
 						},
 					},
 				},
@@ -519,7 +525,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:  MetricsServerAddonName,
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.12.8"][MetricsServerAddonName],
+							Image: publicSpecConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.12.8"][MetricsServerAddonName],
 						},
 					},
 				},
@@ -541,7 +547,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "50Mi",
 							CPULimits:      "50m",
 							MemoryLimits:   "250Mi",
-							Image:          specConfig.KubernetesImageBase + "ip-masq-agent-amd64:v2.3.0",
+							Image:          publicSpecConfig.KubernetesImageBase + "ip-masq-agent-amd64:v2.3.0",
 						},
 					},
 					Config: map[string]string{
@@ -555,7 +561,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:  AzureCNINetworkMonitoringAddonName,
-							Image: specConfig.AzureCNIImageBase + K8sComponentsByVersionMap["1.12.8"][AzureCNINetworkMonitoringAddonName],
+							Image: publicSpecConfig.AzureCNIImageBase + K8sComponentsByVersionMap["1.12.8"][AzureCNINetworkMonitoringAddonName],
 						},
 					},
 				},
@@ -595,7 +601,8 @@ func TestSetAddonsConfig(t *testing.T) {
 					},
 				},
 			},
-			isUpdate: false,
+			cloudSpec: publicCloudConfig,
+			isUpdate:  false,
 			expectedAddons: []KubernetesAddon{
 				{
 					Name:    HeapsterAddonName,
@@ -603,7 +610,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:           HeapsterAddonName,
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.12.8"]["heapster"],
+							Image:          publicSpecConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.12.8"]["heapster"],
 							CPURequests:    "88m",
 							MemoryRequests: "204Mi",
 							CPULimits:      "88m",
@@ -611,7 +618,7 @@ func TestSetAddonsConfig(t *testing.T) {
 						},
 						{
 							Name:           "heapster-nanny",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.12.8"]["addonresizer"],
+							Image:          publicSpecConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.12.8"]["addonresizer"],
 							CPURequests:    "88m",
 							MemoryRequests: "204Mi",
 							CPULimits:      "88m",
@@ -629,7 +636,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "150Mi",
 							CPULimits:      "50m",
 							MemoryLimits:   "150Mi",
-							Image:          specConfig.TillerImageBase + K8sComponentsByVersionMap["1.12.8"][TillerAddonName],
+							Image:          publicSpecConfig.TillerImageBase + K8sComponentsByVersionMap["1.12.8"][TillerAddonName],
 						},
 					},
 					Config: map[string]string{
@@ -655,7 +662,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "300Mi",
 							CPULimits:      "100m",
 							MemoryLimits:   "300Mi",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.12.8"][ClusterAutoscalerAddonName],
+							Image:          publicSpecConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.12.8"][ClusterAutoscalerAddonName],
 						},
 					},
 				},
@@ -701,7 +708,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "150Mi",
 							CPULimits:      "300m",
 							MemoryLimits:   "150Mi",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.12.8"][DashboardAddonName],
+							Image:          publicSpecConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.12.8"][DashboardAddonName],
 						},
 					},
 				},
@@ -715,7 +722,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:  MetricsServerAddonName,
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.12.8"][MetricsServerAddonName],
+							Image: publicSpecConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.12.8"][MetricsServerAddonName],
 						},
 					},
 				},
@@ -737,7 +744,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "50Mi",
 							CPULimits:      "50m",
 							MemoryLimits:   "250Mi",
-							Image:          specConfig.KubernetesImageBase + "ip-masq-agent-amd64:v2.3.0",
+							Image:          publicSpecConfig.KubernetesImageBase + "ip-masq-agent-amd64:v2.3.0",
 						},
 					},
 					Config: map[string]string{
@@ -751,7 +758,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:  AzureCNINetworkMonitoringAddonName,
-							Image: specConfig.AzureCNIImageBase + K8sComponentsByVersionMap["1.12.8"][AzureCNINetworkMonitoringAddonName],
+							Image: publicSpecConfig.AzureCNIImageBase + K8sComponentsByVersionMap["1.12.8"][AzureCNINetworkMonitoringAddonName],
 						},
 					},
 				},
@@ -791,7 +798,8 @@ func TestSetAddonsConfig(t *testing.T) {
 					},
 				},
 			},
-			isUpdate: false,
+			cloudSpec: publicCloudConfig,
+			isUpdate:  false,
 			expectedAddons: []KubernetesAddon{
 				{
 					Name:    HeapsterAddonName,
@@ -799,7 +807,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:           HeapsterAddonName,
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.12.8"]["heapster"],
+							Image:          publicSpecConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.12.8"]["heapster"],
 							CPURequests:    "88m",
 							MemoryRequests: "204Mi",
 							CPULimits:      "88m",
@@ -807,7 +815,7 @@ func TestSetAddonsConfig(t *testing.T) {
 						},
 						{
 							Name:           "heapster-nanny",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.12.8"]["addonresizer"],
+							Image:          publicSpecConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.12.8"]["addonresizer"],
 							CPURequests:    "88m",
 							MemoryRequests: "204Mi",
 							CPULimits:      "88m",
@@ -825,7 +833,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "150Mi",
 							CPULimits:      "50m",
 							MemoryLimits:   "150Mi",
-							Image:          specConfig.TillerImageBase + K8sComponentsByVersionMap["1.12.8"][TillerAddonName],
+							Image:          publicSpecConfig.TillerImageBase + K8sComponentsByVersionMap["1.12.8"][TillerAddonName],
 						},
 					},
 					Config: map[string]string{
@@ -892,7 +900,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "150Mi",
 							CPULimits:      "300m",
 							MemoryLimits:   "150Mi",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.12.8"][DashboardAddonName],
+							Image:          publicSpecConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.12.8"][DashboardAddonName],
 						},
 					},
 				},
@@ -906,7 +914,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:  MetricsServerAddonName,
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.12.8"][MetricsServerAddonName],
+							Image: publicSpecConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.12.8"][MetricsServerAddonName],
 						},
 					},
 				},
@@ -928,7 +936,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "50Mi",
 							CPULimits:      "50m",
 							MemoryLimits:   "250Mi",
-							Image:          specConfig.KubernetesImageBase + "ip-masq-agent-amd64:v2.3.0",
+							Image:          publicSpecConfig.KubernetesImageBase + "ip-masq-agent-amd64:v2.3.0",
 						},
 					},
 					Config: map[string]string{
@@ -942,7 +950,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:  AzureCNINetworkMonitoringAddonName,
-							Image: specConfig.AzureCNIImageBase + K8sComponentsByVersionMap["1.12.8"][AzureCNINetworkMonitoringAddonName],
+							Image: publicSpecConfig.AzureCNIImageBase + K8sComponentsByVersionMap["1.12.8"][AzureCNINetworkMonitoringAddonName],
 						},
 					},
 				},
@@ -982,7 +990,8 @@ func TestSetAddonsConfig(t *testing.T) {
 					},
 				},
 			},
-			isUpdate: false,
+			cloudSpec: publicCloudConfig,
+			isUpdate:  false,
 			expectedAddons: []KubernetesAddon{
 				{
 					Name:    HeapsterAddonName,
@@ -990,7 +999,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:           HeapsterAddonName,
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.12.8"]["heapster"],
+							Image:          publicSpecConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.12.8"]["heapster"],
 							CPURequests:    "88m",
 							MemoryRequests: "204Mi",
 							CPULimits:      "88m",
@@ -998,7 +1007,7 @@ func TestSetAddonsConfig(t *testing.T) {
 						},
 						{
 							Name:           "heapster-nanny",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.12.8"]["addonresizer"],
+							Image:          publicSpecConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.12.8"]["addonresizer"],
 							CPURequests:    "88m",
 							MemoryRequests: "204Mi",
 							CPULimits:      "88m",
@@ -1016,7 +1025,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "150Mi",
 							CPULimits:      "50m",
 							MemoryLimits:   "150Mi",
-							Image:          specConfig.TillerImageBase + K8sComponentsByVersionMap["1.12.8"][TillerAddonName],
+							Image:          publicSpecConfig.TillerImageBase + K8sComponentsByVersionMap["1.12.8"][TillerAddonName],
 						},
 					},
 					Config: map[string]string{
@@ -1073,7 +1082,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "150Mi",
 							CPULimits:      "300m",
 							MemoryLimits:   "150Mi",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.12.8"][DashboardAddonName],
+							Image:          publicSpecConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.12.8"][DashboardAddonName],
 						},
 					},
 				},
@@ -1087,7 +1096,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "100Mi",
 							CPULimits:      "10m",
 							MemoryLimits:   "100Mi",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.12.8"][ReschedulerAddonName],
+							Image:          publicSpecConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.12.8"][ReschedulerAddonName],
 						},
 					},
 				},
@@ -1097,7 +1106,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:  MetricsServerAddonName,
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.12.8"][MetricsServerAddonName],
+							Image: publicSpecConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.12.8"][MetricsServerAddonName],
 						},
 					},
 				},
@@ -1119,7 +1128,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "50Mi",
 							CPULimits:      "50m",
 							MemoryLimits:   "250Mi",
-							Image:          specConfig.KubernetesImageBase + "ip-masq-agent-amd64:v2.3.0",
+							Image:          publicSpecConfig.KubernetesImageBase + "ip-masq-agent-amd64:v2.3.0",
 						},
 					},
 					Config: map[string]string{
@@ -1133,7 +1142,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:  AzureCNINetworkMonitoringAddonName,
-							Image: specConfig.AzureCNIImageBase + K8sComponentsByVersionMap["1.12.8"][AzureCNINetworkMonitoringAddonName],
+							Image: publicSpecConfig.AzureCNIImageBase + K8sComponentsByVersionMap["1.12.8"][AzureCNINetworkMonitoringAddonName],
 						},
 					},
 				},
@@ -1172,7 +1181,8 @@ func TestSetAddonsConfig(t *testing.T) {
 					},
 				},
 			},
-			isUpdate: false,
+			cloudSpec: publicCloudConfig,
+			isUpdate:  false,
 			expectedAddons: []KubernetesAddon{
 				{
 					Name:    HeapsterAddonName,
@@ -1180,7 +1190,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:           HeapsterAddonName,
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.12.8"]["heapster"],
+							Image:          publicSpecConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.12.8"]["heapster"],
 							CPURequests:    "88m",
 							MemoryRequests: "204Mi",
 							CPULimits:      "88m",
@@ -1188,7 +1198,7 @@ func TestSetAddonsConfig(t *testing.T) {
 						},
 						{
 							Name:           "heapster-nanny",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.12.8"]["addonresizer"],
+							Image:          publicSpecConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.12.8"]["addonresizer"],
 							CPURequests:    "88m",
 							MemoryRequests: "204Mi",
 							CPULimits:      "88m",
@@ -1206,7 +1216,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "150Mi",
 							CPULimits:      "50m",
 							MemoryLimits:   "150Mi",
-							Image:          specConfig.TillerImageBase + K8sComponentsByVersionMap["1.12.8"][TillerAddonName],
+							Image:          publicSpecConfig.TillerImageBase + K8sComponentsByVersionMap["1.12.8"][TillerAddonName],
 						},
 					},
 					Config: map[string]string{
@@ -1263,7 +1273,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "150Mi",
 							CPULimits:      "300m",
 							MemoryLimits:   "150Mi",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.12.8"][DashboardAddonName],
+							Image:          publicSpecConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.12.8"][DashboardAddonName],
 						},
 					},
 				},
@@ -1277,7 +1287,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:  MetricsServerAddonName,
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.12.8"][MetricsServerAddonName],
+							Image: publicSpecConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.12.8"][MetricsServerAddonName],
 						},
 					},
 				},
@@ -1291,7 +1301,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "100Mi",
 							CPULimits:      "50m",
 							MemoryLimits:   "100Mi",
-							Image:          specConfig.NVIDIAImageBase + K8sComponentsByVersionMap["1.12.8"][NVIDIADevicePluginAddonName],
+							Image:          publicSpecConfig.NVIDIAImageBase + K8sComponentsByVersionMap["1.12.8"][NVIDIADevicePluginAddonName],
 						},
 					},
 				},
@@ -1309,7 +1319,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "50Mi",
 							CPULimits:      "50m",
 							MemoryLimits:   "250Mi",
-							Image:          specConfig.KubernetesImageBase + "ip-masq-agent-amd64:v2.3.0",
+							Image:          publicSpecConfig.KubernetesImageBase + "ip-masq-agent-amd64:v2.3.0",
 						},
 					},
 					Config: map[string]string{
@@ -1323,7 +1333,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:  AzureCNINetworkMonitoringAddonName,
-							Image: specConfig.AzureCNIImageBase + K8sComponentsByVersionMap["1.12.8"][AzureCNINetworkMonitoringAddonName],
+							Image: publicSpecConfig.AzureCNIImageBase + K8sComponentsByVersionMap["1.12.8"][AzureCNINetworkMonitoringAddonName],
 						},
 					},
 				},
@@ -1363,7 +1373,8 @@ func TestSetAddonsConfig(t *testing.T) {
 					},
 				},
 			},
-			isUpdate: false,
+			cloudSpec: publicCloudConfig,
+			isUpdate:  false,
 			expectedAddons: []KubernetesAddon{
 				{
 					Name:    HeapsterAddonName,
@@ -1371,7 +1382,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:           HeapsterAddonName,
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.12.8"]["heapster"],
+							Image:          publicSpecConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.12.8"]["heapster"],
 							CPURequests:    "88m",
 							MemoryRequests: "204Mi",
 							CPULimits:      "88m",
@@ -1379,7 +1390,7 @@ func TestSetAddonsConfig(t *testing.T) {
 						},
 						{
 							Name:           "heapster-nanny",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.12.8"]["addonresizer"],
+							Image:          publicSpecConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.12.8"]["addonresizer"],
 							CPURequests:    "88m",
 							MemoryRequests: "204Mi",
 							CPULimits:      "88m",
@@ -1397,7 +1408,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "150Mi",
 							CPULimits:      "50m",
 							MemoryLimits:   "150Mi",
-							Image:          specConfig.TillerImageBase + K8sComponentsByVersionMap["1.12.8"][TillerAddonName],
+							Image:          publicSpecConfig.TillerImageBase + K8sComponentsByVersionMap["1.12.8"][TillerAddonName],
 						},
 					},
 					Config: map[string]string{
@@ -1454,7 +1465,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "150Mi",
 							CPULimits:      "300m",
 							MemoryLimits:   "150Mi",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.12.8"][DashboardAddonName],
+							Image:          publicSpecConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.12.8"][DashboardAddonName],
 						},
 					},
 				},
@@ -1468,7 +1479,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:  MetricsServerAddonName,
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.12.8"][MetricsServerAddonName],
+							Image: publicSpecConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.12.8"][MetricsServerAddonName],
 						},
 					},
 				},
@@ -1506,7 +1517,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "50Mi",
 							CPULimits:      "50m",
 							MemoryLimits:   "250Mi",
-							Image:          specConfig.KubernetesImageBase + "ip-masq-agent-amd64:v2.3.0",
+							Image:          publicSpecConfig.KubernetesImageBase + "ip-masq-agent-amd64:v2.3.0",
 						},
 					},
 					Config: map[string]string{
@@ -1520,7 +1531,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:  AzureCNINetworkMonitoringAddonName,
-							Image: specConfig.AzureCNIImageBase + K8sComponentsByVersionMap["1.12.8"][AzureCNINetworkMonitoringAddonName],
+							Image: publicSpecConfig.AzureCNIImageBase + K8sComponentsByVersionMap["1.12.8"][AzureCNINetworkMonitoringAddonName],
 						},
 					},
 				},
@@ -1555,7 +1566,8 @@ func TestSetAddonsConfig(t *testing.T) {
 					},
 				},
 			},
-			isUpdate: false,
+			cloudSpec: publicCloudConfig,
+			isUpdate:  false,
 			expectedAddons: []KubernetesAddon{
 				{
 					Name:    HeapsterAddonName,
@@ -1563,7 +1575,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:           HeapsterAddonName,
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.12.8"]["heapster"],
+							Image:          publicSpecConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.12.8"]["heapster"],
 							CPURequests:    "88m",
 							MemoryRequests: "204Mi",
 							CPULimits:      "88m",
@@ -1571,7 +1583,7 @@ func TestSetAddonsConfig(t *testing.T) {
 						},
 						{
 							Name:           "heapster-nanny",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.12.8"]["addonresizer"],
+							Image:          publicSpecConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.12.8"]["addonresizer"],
 							CPURequests:    "88m",
 							MemoryRequests: "204Mi",
 							CPULimits:      "88m",
@@ -1589,7 +1601,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "150Mi",
 							CPULimits:      "50m",
 							MemoryLimits:   "150Mi",
-							Image:          specConfig.TillerImageBase + K8sComponentsByVersionMap["1.12.8"][TillerAddonName],
+							Image:          publicSpecConfig.TillerImageBase + K8sComponentsByVersionMap["1.12.8"][TillerAddonName],
 						},
 					},
 					Config: map[string]string{
@@ -1646,7 +1658,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "150Mi",
 							CPULimits:      "300m",
 							MemoryLimits:   "150Mi",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.12.8"][DashboardAddonName],
+							Image:          publicSpecConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.12.8"][DashboardAddonName],
 						},
 					},
 				},
@@ -1660,7 +1672,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:  MetricsServerAddonName,
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.12.8"][MetricsServerAddonName],
+							Image: publicSpecConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.12.8"][MetricsServerAddonName],
 						},
 					},
 				},
@@ -1682,7 +1694,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "50Mi",
 							CPULimits:      "50m",
 							MemoryLimits:   "250Mi",
-							Image:          specConfig.KubernetesImageBase + "ip-masq-agent-amd64:v2.3.0",
+							Image:          publicSpecConfig.KubernetesImageBase + "ip-masq-agent-amd64:v2.3.0",
 						},
 					},
 					Config: map[string]string{
@@ -1696,7 +1708,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:  AzureCNINetworkMonitoringAddonName,
-							Image: specConfig.AzureCNIImageBase + K8sComponentsByVersionMap["1.12.8"][AzureCNINetworkMonitoringAddonName],
+							Image: publicSpecConfig.AzureCNIImageBase + K8sComponentsByVersionMap["1.12.8"][AzureCNINetworkMonitoringAddonName],
 						},
 					},
 				},
@@ -1746,7 +1758,8 @@ func TestSetAddonsConfig(t *testing.T) {
 					},
 				},
 			},
-			isUpdate: false,
+			cloudSpec: publicCloudConfig,
+			isUpdate:  false,
 			expectedAddons: []KubernetesAddon{
 				{
 					Name:    HeapsterAddonName,
@@ -1754,7 +1767,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:           HeapsterAddonName,
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.12.8"]["heapster"],
+							Image:          publicSpecConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.12.8"]["heapster"],
 							CPURequests:    "88m",
 							MemoryRequests: "204Mi",
 							CPULimits:      "88m",
@@ -1762,7 +1775,7 @@ func TestSetAddonsConfig(t *testing.T) {
 						},
 						{
 							Name:           "heapster-nanny",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.12.8"]["addonresizer"],
+							Image:          publicSpecConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.12.8"]["addonresizer"],
 							CPURequests:    "88m",
 							MemoryRequests: "204Mi",
 							CPULimits:      "88m",
@@ -1780,7 +1793,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "150Mi",
 							CPULimits:      "50m",
 							MemoryLimits:   "150Mi",
-							Image:          specConfig.TillerImageBase + K8sComponentsByVersionMap["1.12.8"][TillerAddonName],
+							Image:          publicSpecConfig.TillerImageBase + K8sComponentsByVersionMap["1.12.8"][TillerAddonName],
 						},
 					},
 					Config: map[string]string{
@@ -1837,7 +1850,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "150Mi",
 							CPULimits:      "300m",
 							MemoryLimits:   "150Mi",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.12.8"][DashboardAddonName],
+							Image:          publicSpecConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.12.8"][DashboardAddonName],
 						},
 					},
 				},
@@ -1851,7 +1864,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:  MetricsServerAddonName,
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.12.8"][MetricsServerAddonName],
+							Image: publicSpecConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.12.8"][MetricsServerAddonName],
 						},
 					},
 				},
@@ -1873,7 +1886,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "50Mi",
 							CPULimits:      "50m",
 							MemoryLimits:   "250Mi",
-							Image:          specConfig.KubernetesImageBase + "ip-masq-agent-amd64:v2.3.0",
+							Image:          publicSpecConfig.KubernetesImageBase + "ip-masq-agent-amd64:v2.3.0",
 						},
 					},
 					Config: map[string]string{
@@ -1887,7 +1900,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:  AzureCNINetworkMonitoringAddonName,
-							Image: specConfig.AzureCNIImageBase + K8sComponentsByVersionMap["1.12.8"][AzureCNINetworkMonitoringAddonName],
+							Image: publicSpecConfig.AzureCNIImageBase + K8sComponentsByVersionMap["1.12.8"][AzureCNINetworkMonitoringAddonName],
 						},
 					},
 				},
@@ -1901,7 +1914,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:           DNSAutoscalerAddonName,
-							Image:          specConfig.KubernetesImageBase + "cluster-proportional-autoscaler-amd64:1.1.1",
+							Image:          publicSpecConfig.KubernetesImageBase + "cluster-proportional-autoscaler-amd64:1.1.1",
 							CPURequests:    "20m",
 							MemoryRequests: "100Mi",
 						},
@@ -1930,7 +1943,8 @@ func TestSetAddonsConfig(t *testing.T) {
 					},
 				},
 			},
-			isUpdate: false,
+			cloudSpec: publicCloudConfig,
+			isUpdate:  false,
 			expectedAddons: []KubernetesAddon{
 				{
 					Name:    HeapsterAddonName,
@@ -1938,7 +1952,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:           HeapsterAddonName,
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.12.8"]["heapster"],
+							Image:          publicSpecConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.12.8"]["heapster"],
 							CPURequests:    "88m",
 							MemoryRequests: "204Mi",
 							CPULimits:      "88m",
@@ -1946,7 +1960,7 @@ func TestSetAddonsConfig(t *testing.T) {
 						},
 						{
 							Name:           "heapster-nanny",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.12.8"]["addonresizer"],
+							Image:          publicSpecConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.12.8"]["addonresizer"],
 							CPURequests:    "88m",
 							MemoryRequests: "204Mi",
 							CPULimits:      "88m",
@@ -1964,7 +1978,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "150Mi",
 							CPULimits:      "50m",
 							MemoryLimits:   "150Mi",
-							Image:          specConfig.TillerImageBase + K8sComponentsByVersionMap["1.12.8"][TillerAddonName],
+							Image:          publicSpecConfig.TillerImageBase + K8sComponentsByVersionMap["1.12.8"][TillerAddonName],
 						},
 					},
 					Config: map[string]string{
@@ -2021,7 +2035,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "150Mi",
 							CPULimits:      "300m",
 							MemoryLimits:   "150Mi",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.12.8"][DashboardAddonName],
+							Image:          publicSpecConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.12.8"][DashboardAddonName],
 						},
 					},
 				},
@@ -2035,7 +2049,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:  MetricsServerAddonName,
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.12.8"][MetricsServerAddonName],
+							Image: publicSpecConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.12.8"][MetricsServerAddonName],
 						},
 					},
 				},
@@ -2057,7 +2071,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "50Mi",
 							CPULimits:      "50m",
 							MemoryLimits:   "250Mi",
-							Image:          specConfig.KubernetesImageBase + "ip-masq-agent-amd64:v2.3.0",
+							Image:          publicSpecConfig.KubernetesImageBase + "ip-masq-agent-amd64:v2.3.0",
 						},
 					},
 					Config: map[string]string{
@@ -2083,23 +2097,23 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:  "calico-typha",
-							Image: specConfig.CalicoImageBase + "typha:v3.8.0",
+							Image: publicSpecConfig.CalicoImageBase + "typha:v3.8.0",
 						},
 						{
 							Name:  "calico-cni",
-							Image: specConfig.CalicoImageBase + "cni:v3.8.0",
+							Image: publicSpecConfig.CalicoImageBase + "cni:v3.8.0",
 						},
 						{
 							Name:  "calico-node",
-							Image: specConfig.CalicoImageBase + "node:v3.8.0",
+							Image: publicSpecConfig.CalicoImageBase + "node:v3.8.0",
 						},
 						{
 							Name:  "calico-pod2daemon",
-							Image: specConfig.CalicoImageBase + "pod2daemon-flexvol:v3.8.0",
+							Image: publicSpecConfig.CalicoImageBase + "pod2daemon-flexvol:v3.8.0",
 						},
 						{
 							Name:  "calico-cluster-proportional-autoscaler",
-							Image: specConfig.KubernetesImageBase + "cluster-proportional-autoscaler-amd64:1.1.2-r2",
+							Image: publicSpecConfig.KubernetesImageBase + "cluster-proportional-autoscaler-amd64:1.1.2-r2",
 						},
 					},
 				},
@@ -2125,23 +2139,23 @@ func TestSetAddonsConfig(t *testing.T) {
 									Containers: []KubernetesContainerSpec{
 										{
 											Name:  "calico-typha",
-											Image: specConfig.CalicoImageBase + "typha:old", // confirm that upgrade will change this to default image
+											Image: publicSpecConfig.CalicoImageBase + "typha:old", // confirm that upgrade will change this to default image
 										},
 										{
 											Name:  "calico-cni",
-											Image: specConfig.CalicoImageBase + "cni:v3.8.0",
+											Image: publicSpecConfig.CalicoImageBase + "cni:v3.8.0",
 										},
 										{
 											Name:  "calico-node",
-											Image: specConfig.CalicoImageBase + "node:v3.8.0",
+											Image: publicSpecConfig.CalicoImageBase + "node:v3.8.0",
 										},
 										{
 											Name:  "calico-pod2daemon",
-											Image: specConfig.CalicoImageBase + "pod2daemon-flexvol:v3.8.0",
+											Image: publicSpecConfig.CalicoImageBase + "pod2daemon-flexvol:v3.8.0",
 										},
 										{
 											Name:  "calico-cluster-proportional-autoscaler",
-											Image: specConfig.KubernetesImageBase + "cluster-proportional-autoscaler-amd64:1.1.2-r2",
+											Image: publicSpecConfig.KubernetesImageBase + "cluster-proportional-autoscaler-amd64:1.1.2-r2",
 										},
 									},
 								},
@@ -2150,7 +2164,8 @@ func TestSetAddonsConfig(t *testing.T) {
 					},
 				},
 			},
-			isUpdate: true,
+			cloudSpec: publicCloudConfig,
+			isUpdate:  true,
 			expectedAddons: []KubernetesAddon{
 				{
 					Name:    HeapsterAddonName,
@@ -2158,7 +2173,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:           HeapsterAddonName,
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.12.8"]["heapster"],
+							Image:          publicSpecConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.12.8"]["heapster"],
 							CPURequests:    "88m",
 							MemoryRequests: "204Mi",
 							CPULimits:      "88m",
@@ -2166,7 +2181,7 @@ func TestSetAddonsConfig(t *testing.T) {
 						},
 						{
 							Name:           "heapster-nanny",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.12.8"]["addonresizer"],
+							Image:          publicSpecConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.12.8"]["addonresizer"],
 							CPURequests:    "88m",
 							MemoryRequests: "204Mi",
 							CPULimits:      "88m",
@@ -2184,7 +2199,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "150Mi",
 							CPULimits:      "50m",
 							MemoryLimits:   "150Mi",
-							Image:          specConfig.TillerImageBase + K8sComponentsByVersionMap["1.12.8"][TillerAddonName],
+							Image:          publicSpecConfig.TillerImageBase + K8sComponentsByVersionMap["1.12.8"][TillerAddonName],
 						},
 					},
 					Config: map[string]string{
@@ -2241,7 +2256,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "150Mi",
 							CPULimits:      "300m",
 							MemoryLimits:   "150Mi",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.12.8"][DashboardAddonName],
+							Image:          publicSpecConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.12.8"][DashboardAddonName],
 						},
 					},
 				},
@@ -2255,7 +2270,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:  MetricsServerAddonName,
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.12.8"][MetricsServerAddonName],
+							Image: publicSpecConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.12.8"][MetricsServerAddonName],
 						},
 					},
 				},
@@ -2277,7 +2292,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "50Mi",
 							CPULimits:      "50m",
 							MemoryLimits:   "250Mi",
-							Image:          specConfig.KubernetesImageBase + "ip-masq-agent-amd64:v2.3.0",
+							Image:          publicSpecConfig.KubernetesImageBase + "ip-masq-agent-amd64:v2.3.0",
 						},
 					},
 					Config: map[string]string{
@@ -2303,23 +2318,23 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:  "calico-typha",
-							Image: specConfig.CalicoImageBase + "typha:v3.8.0",
+							Image: publicSpecConfig.CalicoImageBase + "typha:v3.8.0",
 						},
 						{
 							Name:  "calico-cni",
-							Image: specConfig.CalicoImageBase + "cni:v3.8.0",
+							Image: publicSpecConfig.CalicoImageBase + "cni:v3.8.0",
 						},
 						{
 							Name:  "calico-node",
-							Image: specConfig.CalicoImageBase + "node:v3.8.0",
+							Image: publicSpecConfig.CalicoImageBase + "node:v3.8.0",
 						},
 						{
 							Name:  "calico-pod2daemon",
-							Image: specConfig.CalicoImageBase + "pod2daemon-flexvol:v3.8.0",
+							Image: publicSpecConfig.CalicoImageBase + "pod2daemon-flexvol:v3.8.0",
 						},
 						{
 							Name:  "calico-cluster-proportional-autoscaler",
-							Image: specConfig.KubernetesImageBase + "cluster-proportional-autoscaler-amd64:1.1.2-r2",
+							Image: publicSpecConfig.KubernetesImageBase + "cluster-proportional-autoscaler-amd64:1.1.2-r2",
 						},
 					},
 				},
@@ -2347,7 +2362,8 @@ func TestSetAddonsConfig(t *testing.T) {
 					},
 				},
 			},
-			isUpdate: false,
+			cloudSpec: publicCloudConfig,
+			isUpdate:  false,
 			expectedAddons: []KubernetesAddon{
 				{
 					Name:    HeapsterAddonName,
@@ -2355,7 +2371,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:           HeapsterAddonName,
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.12.8"]["heapster"],
+							Image:          publicSpecConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.12.8"]["heapster"],
 							CPURequests:    "88m",
 							MemoryRequests: "204Mi",
 							CPULimits:      "88m",
@@ -2363,7 +2379,7 @@ func TestSetAddonsConfig(t *testing.T) {
 						},
 						{
 							Name:           "heapster-nanny",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.12.8"]["addonresizer"],
+							Image:          publicSpecConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.12.8"]["addonresizer"],
 							CPURequests:    "88m",
 							MemoryRequests: "204Mi",
 							CPULimits:      "88m",
@@ -2381,7 +2397,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "150Mi",
 							CPULimits:      "50m",
 							MemoryLimits:   "150Mi",
-							Image:          specConfig.TillerImageBase + K8sComponentsByVersionMap["1.12.8"][TillerAddonName],
+							Image:          publicSpecConfig.TillerImageBase + K8sComponentsByVersionMap["1.12.8"][TillerAddonName],
 						},
 					},
 					Config: map[string]string{
@@ -2438,7 +2454,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "150Mi",
 							CPULimits:      "300m",
 							MemoryLimits:   "150Mi",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.12.8"][DashboardAddonName],
+							Image:          publicSpecConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.12.8"][DashboardAddonName],
 						},
 					},
 				},
@@ -2452,7 +2468,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:  MetricsServerAddonName,
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.12.8"][MetricsServerAddonName],
+							Image: publicSpecConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.12.8"][MetricsServerAddonName],
 						},
 					},
 				},
@@ -2474,7 +2490,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "50Mi",
 							CPULimits:      "50m",
 							MemoryLimits:   "250Mi",
-							Image:          specConfig.KubernetesImageBase + "ip-masq-agent-amd64:v2.3.0",
+							Image:          publicSpecConfig.KubernetesImageBase + "ip-masq-agent-amd64:v2.3.0",
 						},
 					},
 					Config: map[string]string{
@@ -2488,7 +2504,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:  AzureCNINetworkMonitoringAddonName,
-							Image: specConfig.AzureCNIImageBase + K8sComponentsByVersionMap["1.12.8"][AzureCNINetworkMonitoringAddonName],
+							Image: publicSpecConfig.AzureCNIImageBase + K8sComponentsByVersionMap["1.12.8"][AzureCNINetworkMonitoringAddonName],
 						},
 					},
 				},
@@ -2540,7 +2556,8 @@ func TestSetAddonsConfig(t *testing.T) {
 					},
 				},
 			},
-			isUpdate: false,
+			cloudSpec: publicCloudConfig,
+			isUpdate:  false,
 			expectedAddons: []KubernetesAddon{
 				{
 					Name:    HeapsterAddonName,
@@ -2548,7 +2565,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:           HeapsterAddonName,
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.12.8"]["heapster"],
+							Image:          publicSpecConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.12.8"]["heapster"],
 							CPURequests:    "88m",
 							MemoryRequests: "204Mi",
 							CPULimits:      "88m",
@@ -2556,7 +2573,7 @@ func TestSetAddonsConfig(t *testing.T) {
 						},
 						{
 							Name:           "heapster-nanny",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.12.8"]["addonresizer"],
+							Image:          publicSpecConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.12.8"]["addonresizer"],
 							CPURequests:    "88m",
 							MemoryRequests: "204Mi",
 							CPULimits:      "88m",
@@ -2574,7 +2591,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "150Mi",
 							CPULimits:      "50m",
 							MemoryLimits:   "150Mi",
-							Image:          specConfig.TillerImageBase + K8sComponentsByVersionMap["1.12.8"][TillerAddonName],
+							Image:          publicSpecConfig.TillerImageBase + K8sComponentsByVersionMap["1.12.8"][TillerAddonName],
 						},
 					},
 					Config: map[string]string{
@@ -2631,7 +2648,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "150Mi",
 							CPULimits:      "300m",
 							MemoryLimits:   "150Mi",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.12.8"][DashboardAddonName],
+							Image:          publicSpecConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.12.8"][DashboardAddonName],
 						},
 					},
 				},
@@ -2645,7 +2662,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:  MetricsServerAddonName,
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.12.8"][MetricsServerAddonName],
+							Image: publicSpecConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.12.8"][MetricsServerAddonName],
 						},
 					},
 				},
@@ -2695,7 +2712,8 @@ func TestSetAddonsConfig(t *testing.T) {
 					},
 				},
 			},
-			isUpdate: false,
+			cloudSpec: publicCloudConfig,
+			isUpdate:  false,
 			expectedAddons: []KubernetesAddon{
 				{
 					Name:    HeapsterAddonName,
@@ -2711,7 +2729,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "150Mi",
 							CPULimits:      "50m",
 							MemoryLimits:   "150Mi",
-							Image:          specConfig.TillerImageBase + K8sComponentsByVersionMap["1.13.0"][TillerAddonName],
+							Image:          publicSpecConfig.TillerImageBase + K8sComponentsByVersionMap["1.13.0"][TillerAddonName],
 						},
 					},
 					Config: map[string]string{
@@ -2768,7 +2786,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "150Mi",
 							CPULimits:      "300m",
 							MemoryLimits:   "150Mi",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.13.0"][DashboardAddonName],
+							Image:          publicSpecConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.13.0"][DashboardAddonName],
 						},
 					},
 				},
@@ -2782,7 +2800,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:  MetricsServerAddonName,
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.13.0"][MetricsServerAddonName],
+							Image: publicSpecConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.13.0"][MetricsServerAddonName],
 						},
 					},
 				},
@@ -2804,7 +2822,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "50Mi",
 							CPULimits:      "50m",
 							MemoryLimits:   "250Mi",
-							Image:          specConfig.KubernetesImageBase + "ip-masq-agent-amd64:v2.3.0",
+							Image:          publicSpecConfig.KubernetesImageBase + "ip-masq-agent-amd64:v2.3.0",
 						},
 					},
 					Config: map[string]string{
@@ -2818,7 +2836,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:  AzureCNINetworkMonitoringAddonName,
-							Image: specConfig.AzureCNIImageBase + K8sComponentsByVersionMap["1.13.0"][AzureCNINetworkMonitoringAddonName],
+							Image: publicSpecConfig.AzureCNIImageBase + K8sComponentsByVersionMap["1.13.0"][AzureCNINetworkMonitoringAddonName],
 						},
 					},
 				},
@@ -2862,7 +2880,8 @@ func TestSetAddonsConfig(t *testing.T) {
 					},
 				},
 			},
-			isUpdate: false,
+			cloudSpec: azureStackCloudConfig,
+			isUpdate:  false,
 			expectedAddons: []KubernetesAddon{
 				{
 					Name:    HeapsterAddonName,
@@ -2878,7 +2897,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "150Mi",
 							CPULimits:      "50m",
 							MemoryLimits:   "150Mi",
-							Image:          "TillerImageBase" + K8sComponentsByVersionMap["1.14.0"][TillerAddonName],
+							Image:          azureStackSpecConfig.TillerImageBase + K8sComponentsByVersionMap["1.14.0"][TillerAddonName],
 						},
 					},
 					Config: map[string]string{
@@ -2915,7 +2934,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "150Mi",
 							CPULimits:      "300m",
 							MemoryLimits:   "150Mi",
-							Image:          "KubernetesImageBase" + K8sComponentsByVersionMap["1.14.0"][DashboardAddonName],
+							Image:          azureStackSpecConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.14.0"][DashboardAddonName],
 						},
 					},
 				},
@@ -2929,7 +2948,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:  MetricsServerAddonName,
-							Image: "KubernetesImageBase" + K8sComponentsByVersionMap["1.14.0"][MetricsServerAddonName],
+							Image: azureStackSpecConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.14.0"][MetricsServerAddonName],
 						},
 					},
 				},
@@ -2951,7 +2970,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "50Mi",
 							CPULimits:      "50m",
 							MemoryLimits:   "250Mi",
-							Image:          "KubernetesImageBase" + "ip-masq-agent-amd64:v2.3.0",
+							Image:          azureStackSpecConfig.KubernetesImageBase + "ip-masq-agent-amd64:v2.3.0",
 						},
 					},
 					Config: map[string]string{
@@ -2965,7 +2984,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:  AzureCNINetworkMonitoringAddonName,
-							Image: "AzureCNIImageBase" + K8sComponentsByVersionMap["1.14.0"][AzureCNINetworkMonitoringAddonName],
+							Image: azureStackSpecConfig.AzureCNIImageBase + K8sComponentsByVersionMap["1.14.0"][AzureCNINetworkMonitoringAddonName],
 						},
 					},
 				},
@@ -3005,7 +3024,8 @@ func TestSetAddonsConfig(t *testing.T) {
 					},
 				},
 			},
-			isUpdate: false,
+			cloudSpec: publicCloudConfig,
+			isUpdate:  false,
 			expectedAddons: []KubernetesAddon{
 				{
 					Name:    HeapsterAddonName,
@@ -3021,7 +3041,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "150Mi",
 							CPULimits:      "50m",
 							MemoryLimits:   "150Mi",
-							Image:          specConfig.TillerImageBase + K8sComponentsByVersionMap["1.13.0"][TillerAddonName],
+							Image:          publicSpecConfig.TillerImageBase + K8sComponentsByVersionMap["1.13.0"][TillerAddonName],
 						},
 					},
 					Config: map[string]string{
@@ -3058,7 +3078,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "150Mi",
 							CPULimits:      "300m",
 							MemoryLimits:   "150Mi",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.13.0"][DashboardAddonName],
+							Image:          publicSpecConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.13.0"][DashboardAddonName],
 						},
 					},
 				},
@@ -3072,7 +3092,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:  MetricsServerAddonName,
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.13.0"][MetricsServerAddonName],
+							Image: publicSpecConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.13.0"][MetricsServerAddonName],
 						},
 					},
 				},
@@ -3094,7 +3114,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "50Mi",
 							CPULimits:      "50m",
 							MemoryLimits:   "250Mi",
-							Image:          specConfig.KubernetesImageBase + "ip-masq-agent-amd64:v2.3.0",
+							Image:          publicSpecConfig.KubernetesImageBase + "ip-masq-agent-amd64:v2.3.0",
 						},
 					},
 					Config: map[string]string{
@@ -3108,7 +3128,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:  AzureCNINetworkMonitoringAddonName,
-							Image: specConfig.AzureCNIImageBase + K8sComponentsByVersionMap["1.13.0"][AzureCNINetworkMonitoringAddonName],
+							Image: publicSpecConfig.AzureCNIImageBase + K8sComponentsByVersionMap["1.13.0"][AzureCNINetworkMonitoringAddonName],
 						},
 					},
 				},
@@ -3136,7 +3156,7 @@ func TestSetAddonsConfig(t *testing.T) {
 		test := test
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
-			test.cs.setAddonsConfig(test.isUpdate)
+			test.cs.setAddonsConfig(test.isUpdate, test.cloudSpec)
 			for _, addonName := range []string{
 				HeapsterAddonName,
 				TillerAddonName,

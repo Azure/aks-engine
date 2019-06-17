@@ -117,9 +117,6 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpgrade, isScale bool) {
 			o.KubernetesConfig.NetworkPlugin = NetworkPluginCilium
 		}
 
-		if o.KubernetesConfig.KubernetesImageBase == "" {
-			o.KubernetesConfig.KubernetesImageBase = cloudSpecConfig.KubernetesSpecConfig.KubernetesImageBase
-		}
 		if o.KubernetesConfig.EtcdVersion == "" {
 			o.KubernetesConfig.EtcdVersion = DefaultEtcdVersion
 		} else if isUpgrade {
@@ -344,12 +341,12 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpgrade, isScale bool) {
 		}
 
 		// First, Configure addons
-		cs.setAddonsConfig(isUpdate)
+		cs.setAddonsConfig(isUpdate, cloudSpecConfig)
 		// Defaults enforcement flows below inherit from addons configuration,
 		// so it's critical to enforce default addons configuration first
 
 		// Configure kubelet
-		cs.setKubeletConfig(isUpgrade)
+		cs.setKubeletConfig(isUpgrade, cloudSpecConfig)
 		// Configure controller-manager
 		cs.setControllerManagerConfig()
 		// Configure cloud-controller-manager

@@ -346,7 +346,7 @@ const (
 // KubernetesConfig contains the Kubernetes config structure, containing
 // Kubernetes specific configuration
 type KubernetesConfig struct {
-	KubernetesImageBase               string            `json:"kubernetesImageBase,omitempty"`
+	KubernetesImageBase               string            `json:"kubernetesImageBase,omitempty"` // Deprecated
 	ClusterSubnet                     string            `json:"clusterSubnet,omitempty"`
 	NetworkPolicy                     string            `json:"networkPolicy,omitempty"`
 	NetworkPlugin                     string            `json:"networkPlugin,omitempty"`
@@ -1974,8 +1974,21 @@ func (f *FeatureFlags) IsFeatureEnabled(feature string) bool {
 //for example: if the target is the public azure, then the default container image url should be k8s.gcr.io/...
 //if the target is azure china, then the default container image should be mirror.azure.cn:5000/google_container/...
 func (cs *ContainerService) GetCloudSpecConfig() AzureEnvironmentSpecConfig {
-	targetEnv := helpers.GetTargetEnv(cs.Location, cs.Properties.GetCustomCloudName())
-	return AzureCloudSpecEnvMap[targetEnv]
+	var customCloudName string
+	if cs.Properties != nil {
+		customCloudName = cs.Properties.GetCustomCloudName()
+	}
+	targetEnv := helpers.GetTargetEnv(cs.Location, customCloudName)
+	spec := AzureCloudSpecEnvMap[targetEnv]
+	if spec.CloudName == AzurePublicCloud {
+		if cs.Properties != nil && cs.Properties.OrchestratorProfile != nil && cs.Properties.OrchestratorProfile.OrchestratorType == Kubernetes {
+			if common.IsKubernetesVersionGe(cs.Properties.OrchestratorProfile.OrchestratorVersion, "1.14.1") {
+				spec.KubernetesSpecConfig.HyperkubeImageBase = "upstream.azurecr.io/k8s/core/"
+			}
+		}
+	}
+	return spec
+
 }
 
 // IsAKSBillingEnabled checks if the AKS Billing Extension should be enabled for a cloud environment.

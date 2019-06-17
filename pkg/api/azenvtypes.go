@@ -37,6 +37,7 @@ type DCOSSpecConfig struct {
 //KubernetesSpecConfig is the kubernetes container images used.
 type KubernetesSpecConfig struct {
 	KubernetesImageBase              string `json:"kubernetesImageBase,omitempty"`
+	HyperkubeImageBase               string `json:"hyperkubeImageBase,omitempty"`
 	TillerImageBase                  string `json:"tillerImageBase,omitempty"`
 	ACIConnectorImageBase            string `json:"aciConnectorImageBase,omitempty"`
 	NVIDIAImageBase                  string `json:"nvidiaImageBase,omitempty"`
@@ -68,6 +69,7 @@ var (
 	//DefaultKubernetesSpecConfig is the default Docker image source of Kubernetes
 	DefaultKubernetesSpecConfig = KubernetesSpecConfig{
 		KubernetesImageBase:              "k8s.gcr.io/",
+		HyperkubeImageBase:               "k8s.gcr.io/",
 		TillerImageBase:                  "gcr.io/kubernetes-helm/",
 		ACIConnectorImageBase:            "microsoft/",
 		NVIDIAImageBase:                  "nvidia/",
@@ -235,6 +237,7 @@ var (
 		//KubernetesSpecConfig - Due to Chinese firewall issue, the default containers from google is blocked, use the Chinese local mirror instead
 		KubernetesSpecConfig: KubernetesSpecConfig{
 			KubernetesImageBase:              "gcr.azk8s.cn/google_containers/",
+			HyperkubeImageBase:               "gcr.azk8s.cn/google_containers/",
 			TillerImageBase:                  "gcr.azk8s.cn/kubernetes-helm/",
 			ACIConnectorImageBase:            "dockerhub.azk8s.cn/microsoft/",
 			NVIDIAImageBase:                  "dockerhub.azk8s.cn/nvidia/",

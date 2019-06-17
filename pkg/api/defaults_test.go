@@ -649,6 +649,7 @@ func TestAuditDEnabled(t *testing.T) {
 }
 
 func TestKubeletFeatureGatesEnsureFeatureGatesOnAgentsFor1_6_0(t *testing.T) {
+	publicCloudConfig := AzureCloudSpecEnvMap[AzurePublicCloud]
 	mockCS := getMockBaseContainerService("1.6.0")
 	properties := mockCS.Properties
 
@@ -656,7 +657,7 @@ func TestKubeletFeatureGatesEnsureFeatureGatesOnAgentsFor1_6_0(t *testing.T) {
 	// so they will inherit the top-level config
 	properties.OrchestratorProfile.KubernetesConfig = getKubernetesConfigWithFeatureGates("TopLevel=true")
 
-	mockCS.setKubeletConfig(false)
+	mockCS.setKubeletConfig(false, publicCloudConfig)
 
 	agentFeatureGates := properties.AgentPoolProfiles[0].KubernetesConfig.KubeletConfig["--feature-gates"]
 	if agentFeatureGates != "TopLevel=true" {
@@ -671,6 +672,7 @@ func TestKubeletFeatureGatesEnsureFeatureGatesOnAgentsFor1_6_0(t *testing.T) {
 }
 
 func TestKubeletFeatureGatesEnsureMasterAndAgentConfigUsedFor1_6_0(t *testing.T) {
+	publicCloudConfig := AzureCloudSpecEnvMap[AzurePublicCloud]
 	mockCS := getMockBaseContainerService("1.6.0")
 	properties := mockCS.Properties
 
@@ -680,7 +682,7 @@ func TestKubeletFeatureGatesEnsureMasterAndAgentConfigUsedFor1_6_0(t *testing.T)
 	properties.MasterProfile = &MasterProfile{KubernetesConfig: getKubernetesConfigWithFeatureGates("MasterLevel=true")}
 	properties.AgentPoolProfiles[0].KubernetesConfig = getKubernetesConfigWithFeatureGates("AgentLevel=true")
 
-	mockCS.setKubeletConfig(false)
+	mockCS.setKubeletConfig(false, publicCloudConfig)
 
 	agentFeatureGates := properties.AgentPoolProfiles[0].KubernetesConfig.KubeletConfig["--feature-gates"]
 	if agentFeatureGates != "AgentLevel=true" {
@@ -2076,6 +2078,7 @@ func TestSetCustomCloudProfileDefaults(t *testing.T) {
 		//KubernetesSpecConfig - Due to Chinese firewall issue, the default containers from google is blocked, use the Chinese local mirror instead
 		KubernetesSpecConfig: KubernetesSpecConfig{
 			KubernetesImageBase:              "KubernetesImageBase",
+			HyperkubeImageBase:               "KubernetesImageBase",
 			TillerImageBase:                  "TillerImageBase",
 			ACIConnectorImageBase:            "ACIConnectorImageBase",
 			NVIDIAImageBase:                  "NVIDIAImageBase",
@@ -2129,6 +2132,7 @@ func TestSetCustomCloudProfileDefaults(t *testing.T) {
 		//KubernetesSpecConfig - Due to Chinese firewall issue, the default containers from google is blocked, use the Chinese local mirror instead
 		KubernetesSpecConfig: KubernetesSpecConfig{
 			KubernetesImageBase:            "KubernetesImageBase",
+			HyperkubeImageBase:             "KubernetesImageBase",
 			TillerImageBase:                "TillerImageBase",
 			NVIDIAImageBase:                "NVIDIAImageBase",
 			AzureCNIImageBase:              "AzureCNIImageBase",

@@ -6183,3 +6183,43 @@ func TestHasContainerd(t *testing.T) {
 		})
 	}
 }
+
+func TestGetCloudSpecConfig(t *testing.T) {
+	tests := []struct {
+		name     string
+		cs       *ContainerService
+		expected AzureEnvironmentSpecConfig
+	}{
+		{
+			name:     "Azure Public Cloud",
+			cs:       &ContainerService{},
+			expected: AzureCloudSpecEnvMap[AzurePublicCloud],
+		},
+	}
+
+	for _, test := range tests {
+		test := test
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+			ret := test.cs.GetCloudSpecConfig()
+			if test.expected.CloudName != ret.CloudName {
+				t.Errorf("expected %s, instead got : %s", test.expected.CloudName, ret.CloudName)
+			}
+			if test.expected.DockerSpecConfig != ret.DockerSpecConfig {
+				t.Errorf("expected %v, instead got : %v", test.expected.DockerSpecConfig, ret.DockerSpecConfig)
+			}
+			if test.expected.KubernetesSpecConfig != ret.KubernetesSpecConfig {
+				t.Errorf("expected %v, instead got : %v", test.expected.KubernetesSpecConfig, ret.KubernetesSpecConfig)
+			}
+			if test.expected.DCOSSpecConfig != ret.DCOSSpecConfig {
+				t.Errorf("expected %v, instead got : %v", test.expected.DCOSSpecConfig, ret.DCOSSpecConfig)
+			}
+			if test.expected.EndpointConfig != ret.EndpointConfig {
+				t.Errorf("expected %v, instead got : %v", test.expected.EndpointConfig, ret.EndpointConfig)
+			}
+			if !reflect.DeepEqual(test.expected.OSImageConfig, ret.OSImageConfig) {
+				t.Errorf("expected %v, instead got : %v", test.expected.OSImageConfig, ret.OSImageConfig)
+			}
+		})
+	}
+}

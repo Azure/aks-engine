@@ -12,7 +12,7 @@ import (
 	"github.com/Azure/aks-engine/pkg/api/common"
 )
 
-func (cs *ContainerService) setKubeletConfig(isUpgrade bool) {
+func (cs *ContainerService) setKubeletConfig(isUpgrade bool, cloudSpecConfig AzureEnvironmentSpecConfig) {
 	o := cs.Properties.OrchestratorProfile
 	staticLinuxKubeletConfig := map[string]string{
 		"--address":                     "0.0.0.0",
@@ -79,7 +79,7 @@ func (cs *ContainerService) setKubeletConfig(isUpgrade bool) {
 	defaultKubeletConfig := map[string]string{
 		"--cluster-domain":                    "cluster.local",
 		"--network-plugin":                    "cni",
-		"--pod-infra-container-image":         o.KubernetesConfig.KubernetesImageBase + K8sComponentsByVersionMap[o.OrchestratorVersion]["pause"],
+		"--pod-infra-container-image":         cloudSpecConfig.KubernetesSpecConfig.KubernetesImageBase + K8sComponentsByVersionMap[o.OrchestratorVersion]["pause"],
 		"--max-pods":                          strconv.Itoa(DefaultKubernetesMaxPods),
 		"--eviction-hard":                     DefaultKubernetesHardEvictionThreshold,
 		"--node-status-update-frequency":      K8sComponentsByVersionMap[o.OrchestratorVersion]["nodestatusfreq"],

@@ -11,13 +11,12 @@ import (
 	"github.com/Azure/aks-engine/pkg/api/common"
 )
 
-func (cs *ContainerService) setAddonsConfig(isUpdate bool) {
+func (cs *ContainerService) setAddonsConfig(isUpdate bool, cloudSpecConfig AzureEnvironmentSpecConfig) {
 	o := cs.Properties.OrchestratorProfile
 	clusterDNSPrefix := "aks-engine-cluster"
 	if cs != nil && cs.Properties != nil && cs.Properties.MasterProfile != nil && cs.Properties.MasterProfile.DNSPrefix != "" {
 		clusterDNSPrefix = cs.Properties.MasterProfile.DNSPrefix
 	}
-	cloudSpecConfig := cs.GetCloudSpecConfig()
 	k8sComponents := K8sComponentsByVersionMap[o.OrchestratorVersion]
 	specConfig := cloudSpecConfig.KubernetesSpecConfig
 	defaultsHeapsterAddonsConfig := KubernetesAddon{

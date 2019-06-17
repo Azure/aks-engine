@@ -158,6 +158,7 @@ func TestConvertAzureEnvironmentSpecConfigToVLabs(t *testing.T) {
 					//KubernetesSpecConfig - Due to Chinese firewall issue, the default containers from google is blocked, use the Chinese local mirror instead
 					KubernetesSpecConfig: KubernetesSpecConfig{
 						KubernetesImageBase:              "KubernetesImageBase",
+						HyperkubeImageBase:               "HyperkubeImageBase",
 						TillerImageBase:                  "TillerImageBase",
 						ACIConnectorImageBase:            "ACIConnectorImageBase",
 						NVIDIAImageBase:                  "NVIDIAImageBase",
@@ -215,6 +216,9 @@ func TestConvertAzureEnvironmentSpecConfigToVLabs(t *testing.T) {
 	//KubernetesSpecConfig
 	if vlabscsSpec.KubernetesSpecConfig.KubernetesImageBase != csSpec.KubernetesSpecConfig.KubernetesImageBase {
 		t.Errorf("incorrect KubernetesImageBase, expect: '%s', actual: '%s'", csSpec.KubernetesSpecConfig.KubernetesImageBase, vlabscsSpec.KubernetesSpecConfig.KubernetesImageBase)
+	}
+	if vlabscsSpec.KubernetesSpecConfig.HyperkubeImageBase != csSpec.KubernetesSpecConfig.HyperkubeImageBase {
+		t.Errorf("incorrect HyperkubeImageBase, expect: '%s', actual: '%s'", csSpec.KubernetesSpecConfig.HyperkubeImageBase, vlabscsSpec.KubernetesSpecConfig.HyperkubeImageBase)
 	}
 	if vlabscsSpec.KubernetesSpecConfig.TillerImageBase != csSpec.KubernetesSpecConfig.TillerImageBase {
 		t.Errorf("incorrect TillerImageBase, expect: '%s', actual: '%s'", csSpec.KubernetesSpecConfig.TillerImageBase, vlabscsSpec.KubernetesSpecConfig.TillerImageBase)
