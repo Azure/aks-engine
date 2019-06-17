@@ -351,7 +351,7 @@ FLANNEL_VERSIONS="
 0.8.0
 "
 for FLANNEL_VERSION in ${FLANNEL_VERSIONS}; do
-    CONTAINER_IMAGE="quay.io/coreos/flannel:v${FLANNEL_VERSION}"
+    CONTAINER_IMAGE="quay.io/coreos/flannel:v${FLANNEL_VERSION}-amd64"
     pullContainerImage "docker" ${CONTAINER_IMAGE}
     echo "  - ${CONTAINER_IMAGE}" >> ${RELEASE_NOTES_FILEPATH}
 done
@@ -363,6 +363,7 @@ echo "  - busybox" >> ${RELEASE_NOTES_FILEPATH}
 K8S_VERSIONS="
 1.14.3
 1.14.1
+1.14.1-azs
 1.13.7
 1.13.5
 1.13.5-azs
