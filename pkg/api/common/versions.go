@@ -120,9 +120,10 @@ var AllKubernetesSupportedVersions = map[string]bool{
 	"1.14.0-beta.2":  false,
 	"1.14.0-rc.1":    false,
 	"1.14.0":         false,
-	"1.14.1":         true,
+	"1.14.1":         false,
 	"1.14.2":         false, // disabled because of https://github.com/kubernetes/kubernetes/issues/78308
 	"1.14.3":         true,
+	"1.14.4":         true,
 	"1.15.0-alpha.1": false,
 	"1.15.0-alpha.2": false,
 	"1.15.0-alpha.3": false,
