@@ -247,6 +247,9 @@ if $FULL_INSTALL_REQUIRED; then
 fi
 {{end}}
 
+# re-enable unattended upgrades
+rm -f /etc/apt/apt.conf.d/99periodic
+
 {{- if not IsAzureStackCloud}}
 if [[ $OS == $UBUNTU_OS_NAME ]]; then
     time_metric "PurgeApt" apt_get_purge apache2-utils &

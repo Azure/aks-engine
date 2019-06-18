@@ -41272,6 +41272,9 @@ if $FULL_INSTALL_REQUIRED; then
 fi
 {{end}}
 
+# re-enable unattended upgrades
+rm -f /etc/apt/apt.conf.d/99periodic
+
 {{- if not IsAzureStackCloud}}
 if [[ $OS == $UBUNTU_OS_NAME ]]; then
     time_metric "PurgeApt" apt_get_purge apache2-utils &
@@ -42788,6 +42791,17 @@ write_files:
     {{CloudInitData "aptPreferences"}}
 {{end}}
 
+- path: /etc/apt/apt.conf.d/99periodic
+  permissions: "0644"
+  owner: root
+  content: |
+    // Disable unattended upgrades at first boot
+    // This file must be removed by the provision script
+    APT::Periodic::Update-Package-Lists "0";
+    APT::Periodic::Download-Upgradeable-Packages "0";
+    APT::Periodic::AutocleanInterval "0";
+    APT::Periodic::Unattended-Upgrade "0";
+
 {{if IsIPv6Enabled}}
 - path: {{GetDHCPv6ServiceCSEScriptFilepath}}
   permissions: "0644"
@@ -43301,6 +43315,17 @@ write_files:
   content: !!binary |
     {{CloudInitData "aptPreferences"}}
 {{end}}
+
+- path: /etc/apt/apt.conf.d/99periodic
+  permissions: "0644"
+  owner: root
+  content: |
+    // Disable unattended upgrades at first boot
+    // This file must be removed by the provision script
+    APT::Periodic::Update-Package-Lists "0";
+    APT::Periodic::Download-Upgradeable-Packages "0";
+    APT::Periodic::AutocleanInterval "0";
+    APT::Periodic::Unattended-Upgrade "0";
 
 {{if IsIPv6Enabled}}
 - path: {{GetDHCPv6ServiceCSEScriptFilepath}}
