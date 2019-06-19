@@ -1,6 +1,7 @@
 # AKS Engine on Azure Stack - Public Preview
 
 * [Introduction](#introduction)
+* [Marketplace Prerequisites](#marketplace-prerequisites)
 * [Service Principals and Identity Providers](#service-principals-and-identity-providers)
 * [CLI flags](#cli-flags)
 * [Cluster Definition (aka API Model)](#cluster-definition-aka-api-model)
@@ -17,9 +18,20 @@
 
 ## Introduction
 
-Starting from [release](https://github.com/Azure/aks-engine/releases/) v0.36.2, AKS Engine can be used to provision self-managed Kubernetes clusters on Azure Stack. It is now possible to execute AKS Engine's `generate`, `deploy`, `upgrade`, and `scale` commands as if you were targeting Azure's public cloud. You are only required to slightly update your cluster definition to provide some extra information about your Azure Stack instance.
+Starting from [release](https://github.com/Azure/aks-engine/releases/) v0.36.2, AKS Engine can be used to provision self-managed Kubernetes clusters on Azure Stack. It is now possible to execute AKS Engine's `generate`, [deploy](../tutorials/deploy.md), [upgrade](upgrade.md), and [scale](scale.md) commands as if you were targeting Azure's public cloud. You are only required to slightly update your cluster definition to provide some extra information about your Azure Stack instance.
 
 The goal of this guide is to explain how to provision Kubernetes clusters to Azure Stack using AKS Engine and to capture the differences between Azure and Azure Stack. Bear in mind as well that not every AKS Engine feature or configuration option is currently supported on Azure Stack. In most cases, these are not available because dependent Azure components are not part of Azure Stack.
+
+## Marketplace prerequisites
+
+Because Azure Stack instances do not have infinite storage, Azure Stack administrators are in charge of managing which marketplace items are downloaded from Azure's marketplace. Your Azure Stack administrator can follow this [guide](https://docs.microsoft.com/en-us/azure-stack/operator/azure-stack-download-azure-marketplace-item) for a general explanation about how to download gallery items from Azure.
+
+Before you try to deploy your first Kubernetes cluster, make sure these marketplace items were made available to the target subscription by the Azure Stack administrator.
+
+- `Custom Script for Linux 2.0` virtual machine extension
+- `Ubuntu Server 16.04 LTS` or `AKS Base Image` virtual machines
+
+The `AKS Base Image` is the only viable option if you are deploying to a [disconnected instance](#disconnected-azure-stack-instances).
 
 ## Service Principals and Identity Providers
 
@@ -37,14 +49,15 @@ If your Azure Stack instance uses ADFS to authenticate identities, then flag `id
 
 ``` bash
 aks-engine deploy \
+    --api-model kubernetes.json \
     --location local \
-    --api-model ./kubernetes.json \
-    --resource-group aks-engine-rg \
-    --output-directory aks-engine \
+    --resource-group kube-rg \
+    --identity-system adfs # Optional if azure_ad
     --client-id $SPN_CLIENT_ID \
     --client-secret $SPN_CLIENT_SECRET \
     --subscription-id $TENANT_SUBSCRIPTION_ID \
-    --azure-env AzureStackCloud
+    --azure-env AzureStackCloud \
+    --output-directory kube-rg
 ```
 
 ## Cluster Definition (aka API Model)
