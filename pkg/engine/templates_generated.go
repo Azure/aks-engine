@@ -65,9 +65,11 @@
 // ../../parts/k8s/cloud-init/artifacts/cse_install.sh
 // ../../parts/k8s/cloud-init/artifacts/cse_main.sh
 // ../../parts/k8s/cloud-init/artifacts/default-grub
+// ../../parts/k8s/cloud-init/artifacts/dhcpv6.service
 // ../../parts/k8s/cloud-init/artifacts/docker-monitor.service
 // ../../parts/k8s/cloud-init/artifacts/docker-monitor.timer
 // ../../parts/k8s/cloud-init/artifacts/docker_clear_mount_propagation_flags.conf
+// ../../parts/k8s/cloud-init/artifacts/enable-dhcpv6.sh
 // ../../parts/k8s/cloud-init/artifacts/etc-issue
 // ../../parts/k8s/cloud-init/artifacts/etc-issue.net
 // ../../parts/k8s/cloud-init/artifacts/etcd.service
@@ -9840,7 +9842,9 @@ subjects:
 - kind: Group
   name: system:serviceaccounts:kube-system
   apiGroup: rbac.authorization.k8s.io
-`)
+- kind: Group
+  name: system:nodes
+  apiGroup: rbac.authorization.k8s.io`)
 
 func k8sAddonsKubernetesmasteraddonsPodSecurityPolicyYamlBytes() ([]byte, error) {
 	return _k8sAddonsKubernetesmasteraddonsPodSecurityPolicyYaml, nil
@@ -10590,6 +10594,10 @@ ensureDocker() {
 
 ensureKMS() {
     systemctlEnableAndStart kms || exit $ERR_SYSTEMCTL_START_FAIL
+}
+
+ensureDHCPv6() {
+    systemctlEnableAndStart dhcpv6 || exit $ERR_SYSTEMCTL_START_FAIL
 }
 
 ensureKubelet() {
@@ -11615,6 +11623,15 @@ if [[ -n "${MASTER_NODE}" && "${KMS_PROVIDER_VAULT_NAME}" != "" ]]; then
     ensureKMS
 fi
 
+# configure and enable dhcpv6 for dual stack feature
+if [ "$IS_IPV6_DUALSTACK_FEATURE_ENABLED" = "true" ]; then
+    dhcpv6_systemd_service=/etc/systemd/system/dhcpv6.service
+    dhcpv6_configuration_script=/opt/azure/containers/enable-dhcpv6.sh
+    wait_for_file 3600 1 $dhcpv6_systemd_service || exit $ERR_FILE_WATCH_TIMEOUT
+    wait_for_file 3600 1 $dhcpv6_configuration_script || exit $ERR_FILE_WATCH_TIMEOUT
+    ensureDHCPv6
+fi
+
 ensureKubelet
 ensureJournal
 
@@ -11703,6 +11720,32 @@ func k8sCloudInitArtifactsDefaultGrub() (*asset, error) {
 	return a, nil
 }
 
+var _k8sCloudInitArtifactsDhcpv6Service = []byte(`[Unit]
+Description=enabledhcpv6
+After=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/opt/azure/containers/enable-dhcpv6.sh
+
+[Install]
+WantedBy=multi-user.target`)
+
+func k8sCloudInitArtifactsDhcpv6ServiceBytes() ([]byte, error) {
+	return _k8sCloudInitArtifactsDhcpv6Service, nil
+}
+
+func k8sCloudInitArtifactsDhcpv6Service() (*asset, error) {
+	bytes, err := k8sCloudInitArtifactsDhcpv6ServiceBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "k8s/cloud-init/artifacts/dhcpv6.service", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
 var _k8sCloudInitArtifactsDockerMonitorService = []byte(`[Unit]
 Description=a script that checks docker health and restarts if needed
 After=docker.service
@@ -11763,6 +11806,48 @@ func k8sCloudInitArtifactsDocker_clear_mount_propagation_flagsConf() (*asset, er
 	}
 
 	info := bindataFileInfo{name: "k8s/cloud-init/artifacts/docker_clear_mount_propagation_flags.conf", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
+var _k8sCloudInitArtifactsEnableDhcpv6Sh = []byte(`#!/usr/bin/env bash
+
+set -e
+set -o pipefail
+set -u
+
+DHCLIENT6_CONF_FILE=/etc/dhcp/dhclient6.conf
+CLOUD_INIT_CFG=/etc/network/interfaces.d/50-cloud-init.cfg
+
+read -r -d '' NETWORK_CONFIGURATION << EOC || true
+iface eth0 inet6 auto 
+    up sleep 5 
+    up dhclient -1 -6 -cf /etc/dhcp/dhclient6.conf -lf /var/lib/dhcp/dhclient6.eth0.leases -v eth0 || true
+EOC
+
+add_if_not_exists() {
+    grep -qxF "${1}" "${2}" || echo "${1}" >> "${2}"
+}
+
+echo "Configuring dhcpv6 ..."
+
+touch /etc/dhcp/dhclient6.conf && add_if_not_exists "timeout 10;" ${DHCLIENT6_CONF_FILE} && \
+    add_if_not_exists "${NETWORK_CONFIGURATION}" ${CLOUD_INIT_CFG} && \
+    sudo ifdown eth0 && sudo ifup eth0
+
+echo "Configuration complete"`)
+
+func k8sCloudInitArtifactsEnableDhcpv6ShBytes() ([]byte, error) {
+	return _k8sCloudInitArtifactsEnableDhcpv6Sh, nil
+}
+
+func k8sCloudInitArtifactsEnableDhcpv6Sh() (*asset, error) {
+	bytes, err := k8sCloudInitArtifactsEnableDhcpv6ShBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "k8s/cloud-init/artifacts/enable-dhcpv6.sh", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -12965,6 +13050,22 @@ write_files:
   content: !!binary |
     {{CloudInitData "aptPreferences"}}
 
+{{if IsIPv6DualStackFeatureEnabled}}
+- path: /etc/systemd/system/dhcpv6.service
+  permissions: "0644"
+  encoding: gzip
+  owner: root
+  content: !!binary |
+    {{CloudInitData "dhcpv6SystemdService"}}
+
+- path: /opt/azure/containers/enable-dhcpv6.sh
+  permissions: "0544"
+  encoding: gzip
+  owner: root
+  content: !!binary |
+    {{CloudInitData "dhcpv6ConfigurationScript"}}
+{{end}}
+
 {{if .OrchestratorProfile.KubernetesConfig.RequiresDocker}}
     {{if not .MasterProfile.IsCoreOS}}
 - path: /etc/systemd/system/docker.service.d/clear_mount_propagation_flags.conf
@@ -13170,7 +13271,11 @@ MASTER_CONTAINER_ADDONS_PLACEHOLDER
     sed -i "s|<advertiseAddr>|{{WrapAsVariable "kubernetesAPIServerIP"}}|g" $a
     sed -i "s|<args>|{{GetK8sRuntimeConfigKeyVals .OrchestratorProfile.KubernetesConfig.ControllerManagerConfig}}|g" /etc/kubernetes/manifests/kube-controller-manager.yaml
     sed -i "s|<args>|{{GetK8sRuntimeConfigKeyVals .OrchestratorProfile.KubernetesConfig.SchedulerConfig}}|g" /etc/kubernetes/manifests/kube-scheduler.yaml
+    {{ if IsIPv6DualStackFeatureEnabled }}
+    sed -i "s|<img>|{{WrapAsParameter "kubernetesHyperkubeSpec"}}|g; s|<CIDR>|',first(split(parameters('kubeClusterCidr'),',')),'|g; s|<kubeProxyMode>|{{ .OrchestratorProfile.KubernetesConfig.ProxyMode}}|g" /etc/kubernetes/addons/kube-proxy-daemonset.yaml
+    {{ else }}
     sed -i "s|<img>|{{WrapAsParameter "kubernetesHyperkubeSpec"}}|g; s|<CIDR>|{{WrapAsParameter "kubeClusterCidr"}}|g; s|<kubeProxyMode>|{{ .OrchestratorProfile.KubernetesConfig.ProxyMode}}|g" /etc/kubernetes/addons/kube-proxy-daemonset.yaml
+    {{ end }}
     KUBEDNS=/etc/kubernetes/addons/kube-dns-deployment.yaml
 {{if NeedsKubeDNSWithExecHealthz}}
     sed -i "s|<img>|{{WrapAsParameter "kubernetesKubeDNSSpec"}}|g; s|<imgMasq>|{{WrapAsParameter "kubernetesDNSMasqSpec"}}|g; s|<imgHealthz>|{{WrapAsParameter "kubernetesExecHealthzSpec"}}|g; s|<imgSidecar>|{{WrapAsParameter "kubernetesDNSSidecarSpec"}}|g; s|<domain>|{{WrapAsParameter "kubernetesKubeletClusterDomain"}}|g; s|<clustIP>|{{WrapAsParameter "kubeDNSServiceIP"}}|g" $KUBEDNS
@@ -13457,6 +13562,22 @@ write_files:
   owner: root
   content: !!binary |
     {{CloudInitData "aptPreferences"}}
+
+{{if IsIPv6DualStackFeatureEnabled}}
+- path: /etc/systemd/system/dhcpv6.service
+  permissions: "0644"
+  encoding: gzip
+  owner: root
+  content: !!binary |
+    {{CloudInitData "dhcpv6SystemdService"}}
+
+- path: /opt/azure/containers/enable-dhcpv6.sh
+  permissions: "0544"
+  encoding: gzip
+  owner: root
+  content: !!binary |
+    {{CloudInitData "dhcpv6ConfigurationScript"}}
+{{end}}
 
 {{if .KubernetesConfig.RequiresDocker}}
     {{if not .IsCoreOS}}
@@ -17785,6 +17906,13 @@ var _k8sKubernetesparamsT = []byte(`{{if .HasAadProfile}}
       },
       "type": "string"
     },
+    "vnetCidrIPv6": {
+      "defaultValue": "{{GetDefaultVNETCIDRIPv6}}",
+      "metadata": {
+        "description": "Cluster vnet cidr IPv6"
+      },
+      "type": "string"
+    },
     "gcHighThreshold": {
       "defaultValue": 85,
       "metadata": {
@@ -19724,6 +19852,13 @@ var _masterparamsT = []byte(`    "linuxAdminUsername": {
       "type": "string"
     },
   {{end}}
+  "masterSubnetIPv6": {
+      "defaultValue": "{{.MasterProfile.SubnetIPv6}}",
+      "metadata": {
+        "description": "Sets the IPv6 subnet of the master node(s)."
+      },
+      "type": "string"
+    },
   {{if .MasterProfile.HasAvailabilityZones}}
   "availabilityZones": {
     "metadata": {
@@ -23071,9 +23206,11 @@ var _bindata = map[string]func() (*asset, error){
 	"k8s/cloud-init/artifacts/cse_install.sh":                                         k8sCloudInitArtifactsCse_installSh,
 	"k8s/cloud-init/artifacts/cse_main.sh":                                            k8sCloudInitArtifactsCse_mainSh,
 	"k8s/cloud-init/artifacts/default-grub":                                           k8sCloudInitArtifactsDefaultGrub,
+	"k8s/cloud-init/artifacts/dhcpv6.service":                                         k8sCloudInitArtifactsDhcpv6Service,
 	"k8s/cloud-init/artifacts/docker-monitor.service":                                 k8sCloudInitArtifactsDockerMonitorService,
 	"k8s/cloud-init/artifacts/docker-monitor.timer":                                   k8sCloudInitArtifactsDockerMonitorTimer,
 	"k8s/cloud-init/artifacts/docker_clear_mount_propagation_flags.conf":              k8sCloudInitArtifactsDocker_clear_mount_propagation_flagsConf,
+	"k8s/cloud-init/artifacts/enable-dhcpv6.sh":                                       k8sCloudInitArtifactsEnableDhcpv6Sh,
 	"k8s/cloud-init/artifacts/etc-issue":                                              k8sCloudInitArtifactsEtcIssue,
 	"k8s/cloud-init/artifacts/etc-issue.net":                                          k8sCloudInitArtifactsEtcIssueNet,
 	"k8s/cloud-init/artifacts/etcd.service":                                           k8sCloudInitArtifactsEtcdService,
@@ -23280,31 +23417,33 @@ var _bintree = &bintree{nil, map[string]*bintree{
 				"cse_install.sh":         {k8sCloudInitArtifactsCse_installSh, map[string]*bintree{}},
 				"cse_main.sh":            {k8sCloudInitArtifactsCse_mainSh, map[string]*bintree{}},
 				"default-grub":           {k8sCloudInitArtifactsDefaultGrub, map[string]*bintree{}},
+				"dhcpv6.service":         {k8sCloudInitArtifactsDhcpv6Service, map[string]*bintree{}},
 				"docker-monitor.service": {k8sCloudInitArtifactsDockerMonitorService, map[string]*bintree{}},
 				"docker-monitor.timer":   {k8sCloudInitArtifactsDockerMonitorTimer, map[string]*bintree{}},
 				"docker_clear_mount_propagation_flags.conf": {k8sCloudInitArtifactsDocker_clear_mount_propagation_flagsConf, map[string]*bintree{}},
-				"etc-issue":                      {k8sCloudInitArtifactsEtcIssue, map[string]*bintree{}},
-				"etc-issue.net":                  {k8sCloudInitArtifactsEtcIssueNet, map[string]*bintree{}},
-				"etcd.service":                   {k8sCloudInitArtifactsEtcdService, map[string]*bintree{}},
-				"generateproxycerts.sh":          {k8sCloudInitArtifactsGenerateproxycertsSh, map[string]*bintree{}},
-				"health-monitor.sh":              {k8sCloudInitArtifactsHealthMonitorSh, map[string]*bintree{}},
-				"kms.service":                    {k8sCloudInitArtifactsKmsService, map[string]*bintree{}},
-				"kubelet-monitor.service":        {k8sCloudInitArtifactsKubeletMonitorService, map[string]*bintree{}},
-				"kubelet-monitor.timer":          {k8sCloudInitArtifactsKubeletMonitorTimer, map[string]*bintree{}},
-				"kubelet.service":                {k8sCloudInitArtifactsKubeletService, map[string]*bintree{}},
-				"modprobe-CIS.conf":              {k8sCloudInitArtifactsModprobeCisConf, map[string]*bintree{}},
-				"mountetcd.sh":                   {k8sCloudInitArtifactsMountetcdSh, map[string]*bintree{}},
-				"pam-d-common-auth":              {k8sCloudInitArtifactsPamDCommonAuth, map[string]*bintree{}},
-				"pam-d-common-password":          {k8sCloudInitArtifactsPamDCommonPassword, map[string]*bintree{}},
-				"pam-d-su":                       {k8sCloudInitArtifactsPamDSu, map[string]*bintree{}},
-				"profile-d-cis.sh":               {k8sCloudInitArtifactsProfileDCisSh, map[string]*bintree{}},
-				"pwquality-CIS.conf":             {k8sCloudInitArtifactsPwqualityCisConf, map[string]*bintree{}},
-				"rsyslog-d-60-CIS.conf":          {k8sCloudInitArtifactsRsyslogD60CisConf, map[string]*bintree{}},
-				"setup-custom-search-domains.sh": {k8sCloudInitArtifactsSetupCustomSearchDomainsSh, map[string]*bintree{}},
-				"sshd_config":                    {k8sCloudInitArtifactsSshd_config, map[string]*bintree{}},
-				"sshd_config_1604":               {k8sCloudInitArtifactsSshd_config_1604, map[string]*bintree{}},
-				"sys-fs-bpf.mount":               {k8sCloudInitArtifactsSysFsBpfMount, map[string]*bintree{}},
-				"sysctl-d-60-CIS.conf":           {k8sCloudInitArtifactsSysctlD60CisConf, map[string]*bintree{}},
+				"enable-dhcpv6.sh":                          {k8sCloudInitArtifactsEnableDhcpv6Sh, map[string]*bintree{}},
+				"etc-issue":                                 {k8sCloudInitArtifactsEtcIssue, map[string]*bintree{}},
+				"etc-issue.net":                             {k8sCloudInitArtifactsEtcIssueNet, map[string]*bintree{}},
+				"etcd.service":                              {k8sCloudInitArtifactsEtcdService, map[string]*bintree{}},
+				"generateproxycerts.sh":                     {k8sCloudInitArtifactsGenerateproxycertsSh, map[string]*bintree{}},
+				"health-monitor.sh":                         {k8sCloudInitArtifactsHealthMonitorSh, map[string]*bintree{}},
+				"kms.service":                               {k8sCloudInitArtifactsKmsService, map[string]*bintree{}},
+				"kubelet-monitor.service":                   {k8sCloudInitArtifactsKubeletMonitorService, map[string]*bintree{}},
+				"kubelet-monitor.timer":                     {k8sCloudInitArtifactsKubeletMonitorTimer, map[string]*bintree{}},
+				"kubelet.service":                           {k8sCloudInitArtifactsKubeletService, map[string]*bintree{}},
+				"modprobe-CIS.conf":                         {k8sCloudInitArtifactsModprobeCisConf, map[string]*bintree{}},
+				"mountetcd.sh":                              {k8sCloudInitArtifactsMountetcdSh, map[string]*bintree{}},
+				"pam-d-common-auth":                         {k8sCloudInitArtifactsPamDCommonAuth, map[string]*bintree{}},
+				"pam-d-common-password":                     {k8sCloudInitArtifactsPamDCommonPassword, map[string]*bintree{}},
+				"pam-d-su":                                  {k8sCloudInitArtifactsPamDSu, map[string]*bintree{}},
+				"profile-d-cis.sh":                          {k8sCloudInitArtifactsProfileDCisSh, map[string]*bintree{}},
+				"pwquality-CIS.conf":                        {k8sCloudInitArtifactsPwqualityCisConf, map[string]*bintree{}},
+				"rsyslog-d-60-CIS.conf":                     {k8sCloudInitArtifactsRsyslogD60CisConf, map[string]*bintree{}},
+				"setup-custom-search-domains.sh":            {k8sCloudInitArtifactsSetupCustomSearchDomainsSh, map[string]*bintree{}},
+				"sshd_config":                               {k8sCloudInitArtifactsSshd_config, map[string]*bintree{}},
+				"sshd_config_1604":                          {k8sCloudInitArtifactsSshd_config_1604, map[string]*bintree{}},
+				"sys-fs-bpf.mount":                          {k8sCloudInitArtifactsSysFsBpfMount, map[string]*bintree{}},
+				"sysctl-d-60-CIS.conf":                      {k8sCloudInitArtifactsSysctlD60CisConf, map[string]*bintree{}},
 			}},
 			"jumpboxcustomdata.yml":    {k8sCloudInitJumpboxcustomdataYml, map[string]*bintree{}},
 			"masternodecustomdata.yml": {k8sCloudInitMasternodecustomdataYml, map[string]*bintree{}},

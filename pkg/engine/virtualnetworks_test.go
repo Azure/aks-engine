@@ -103,6 +103,67 @@ func TestCreateVirtualNetwork(t *testing.T) {
 	if diff != "" {
 		t.Errorf("Unexpected diff while comparing vnets: %s", diff)
 	}
+
+	// Test master vnet with ipv6 dual stack feature enabled
+	cs = &api.ContainerService{
+		Properties: &api.Properties{
+			OrchestratorProfile: &api.OrchestratorProfile{
+				OrchestratorType: "Kubernetes",
+				KubernetesConfig: &api.KubernetesConfig{
+					NetworkPolicy: "kubenet",
+				},
+			},
+			FeatureFlags: &api.FeatureFlags{
+				EnableIPv6DualStack: true,
+			},
+		},
+	}
+
+	vnet = CreateVirtualNetwork(cs)
+	expectedVnet = VirtualNetworkARM{
+		ARMResource: ARMResource{
+			APIVersion: "[variables('apiVersionNetwork')]",
+			DependsOn: []string{
+				"[concat('Microsoft.Network/networkSecurityGroups/', variables('nsgName'))]",
+				"[concat('Microsoft.Network/routeTables/', variables('routeTableName'))]",
+			},
+		},
+		VirtualNetwork: network.VirtualNetwork{
+			Location: to.StringPtr("[variables('location')]"),
+			Name:     to.StringPtr("[variables('virtualNetworkName')]"),
+			Type:     to.StringPtr("Microsoft.Network/virtualNetworks"),
+			VirtualNetworkPropertiesFormat: &network.VirtualNetworkPropertiesFormat{
+				AddressSpace: &network.AddressSpace{
+					AddressPrefixes: &[]string{
+						"[parameters('vnetCidr')]",
+						"[parameters('vnetCidrIPv6')]",
+					},
+				},
+				Subnets: &[]network.Subnet{
+					{
+						Name: to.StringPtr("[variables('subnetName')]"),
+						SubnetPropertiesFormat: &network.SubnetPropertiesFormat{
+							AddressPrefixes: &[]string{
+								"[parameters('masterSubnet')]",
+								"[parameters('masterSubnetIPv6')]",
+							},
+							NetworkSecurityGroup: &network.SecurityGroup{
+								ID: to.StringPtr("[variables('nsgID')]"),
+							},
+							RouteTable: &network.RouteTable{
+								ID: to.StringPtr("[variables('routeTableID')]"),
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	diff = cmp.Diff(vnet, expectedVnet)
+	if diff != "" {
+		t.Errorf("Unexpected diff while comparing vnets: %s", diff)
+	}
 }
 
 func TestCreateVirtualNetworkVMSS(t *testing.T) {
@@ -218,6 +279,79 @@ func TestCreateVirtualNetworkVMSS(t *testing.T) {
 	if diff != "" {
 		t.Errorf("Unexpected diff while comparing vnets: %s", diff)
 	}
+
+	// Test with ipv6 dual stack feature enabled
+	cs = &api.ContainerService{
+		Properties: &api.Properties{
+			OrchestratorProfile: &api.OrchestratorProfile{
+				OrchestratorType: "Kubernetes",
+				KubernetesConfig: &api.KubernetesConfig{
+					NetworkPolicy: "kubenet",
+				},
+			},
+			FeatureFlags: &api.FeatureFlags{
+				EnableIPv6DualStack: true,
+			},
+		},
+	}
+
+	vnet = createVirtualNetworkVMSS(cs)
+	expectedVnet = VirtualNetworkARM{
+		ARMResource: ARMResource{
+			APIVersion: "[variables('apiVersionNetwork')]",
+			DependsOn: []string{
+				"[concat('Microsoft.Network/networkSecurityGroups/', variables('nsgName'))]",
+				"[concat('Microsoft.Network/routeTables/', variables('routeTableName'))]",
+			},
+		},
+		VirtualNetwork: network.VirtualNetwork{
+			Location: to.StringPtr("[variables('location')]"),
+			Name:     to.StringPtr("[variables('virtualNetworkName')]"),
+			Type:     to.StringPtr("Microsoft.Network/virtualNetworks"),
+			VirtualNetworkPropertiesFormat: &network.VirtualNetworkPropertiesFormat{
+				AddressSpace: &network.AddressSpace{
+					AddressPrefixes: &[]string{
+						"[parameters('vnetCidr')]",
+						"[parameters('vnetCidrIPv6')]",
+					},
+				},
+				Subnets: &[]network.Subnet{
+					{
+						Name: to.StringPtr("subnetmaster"),
+						SubnetPropertiesFormat: &network.SubnetPropertiesFormat{
+							AddressPrefixes: &[]string{
+								"[parameters('masterSubnet')]",
+								"[parameters('masterSubnetIPv6')]",
+							},
+							NetworkSecurityGroup: &network.SecurityGroup{
+								ID: to.StringPtr("[variables('nsgID')]"),
+							},
+							RouteTable: &network.RouteTable{
+								ID: to.StringPtr("[variables('routeTableID')]"),
+							},
+						},
+					},
+					{
+						Name: to.StringPtr("subnetagent"),
+						SubnetPropertiesFormat: &network.SubnetPropertiesFormat{
+							AddressPrefix: to.StringPtr("[parameters('agentSubnet')]"),
+							NetworkSecurityGroup: &network.SecurityGroup{
+								ID: to.StringPtr("[variables('nsgID')]"),
+							},
+							RouteTable: &network.RouteTable{
+								ID: to.StringPtr("[variables('routeTableID')]"),
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	diff = cmp.Diff(vnet, expectedVnet)
+	if diff != "" {
+		t.Errorf("Unexpected diff while comparing vnets: %s", diff)
+	}
 }
 
 func TestCreateHostedMasterVirtualNetwork(t *testing.T) {
@@ -270,6 +404,66 @@ func TestCreateHostedMasterVirtualNetwork(t *testing.T) {
 	}
 
 	diff := cmp.Diff(vnet, expectedVnet)
+
+	if diff != "" {
+		t.Errorf("Unexpected diff while comparing vnets: %s", diff)
+	}
+
+	// test with ipv6 dual stack feature enabled
+	cs = &api.ContainerService{
+		Properties: &api.Properties{
+			OrchestratorProfile: &api.OrchestratorProfile{
+				OrchestratorType: "Kubernetes",
+				KubernetesConfig: &api.KubernetesConfig{
+					NetworkPolicy: "kubenet",
+				},
+			},
+			FeatureFlags: &api.FeatureFlags{
+				EnableIPv6DualStack: true,
+			},
+		},
+	}
+
+	vnet = createHostedMasterVirtualNetwork(cs)
+	expectedVnet = VirtualNetworkARM{
+		ARMResource: ARMResource{
+			APIVersion: "[variables('apiVersionNetwork')]",
+			DependsOn: []string{
+				"[concat('Microsoft.Network/networkSecurityGroups/', variables('nsgName'))]",
+				"[concat('Microsoft.Network/routeTables/', variables('routeTableName'))]",
+			},
+		},
+		VirtualNetwork: network.VirtualNetwork{
+			Location: to.StringPtr("[variables('location')]"),
+			Name:     to.StringPtr("[variables('virtualNetworkName')]"),
+			VirtualNetworkPropertiesFormat: &network.VirtualNetworkPropertiesFormat{
+				AddressSpace: &network.AddressSpace{
+					AddressPrefixes: &[]string{
+						"[parameters('vnetCidr')]",
+						"[parameters('vnetCidrIPv6')]",
+					},
+				},
+				Subnets: &[]network.Subnet{
+					{
+						Name: to.StringPtr("[variables('subnetName')]"),
+						SubnetPropertiesFormat: &network.SubnetPropertiesFormat{
+							AddressPrefixes: &[]string{
+								("[parameters('masterSubnet')]"),
+								("[parameters('masterSubnetIPv6')]"),
+							},
+							NetworkSecurityGroup: &network.SecurityGroup{
+								ID: to.StringPtr("[variables('nsgID')]"),
+							},
+							RouteTable: &network.RouteTable{ID: to.StringPtr("[variables('routeTableID')]")},
+						},
+					},
+				},
+			},
+			Type: to.StringPtr("Microsoft.Network/virtualNetworks"),
+		},
+	}
+
+	diff = cmp.Diff(vnet, expectedVnet)
 
 	if diff != "" {
 		t.Errorf("Unexpected diff while comparing vnets: %s", diff)

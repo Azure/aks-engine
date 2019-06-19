@@ -326,6 +326,9 @@ const (
 	// DefaultKubernetesMasterSubnet specifies the default subnet for masters and agents.
 	// Except when master VMSS is used, this specifies the default subnet for masters.
 	DefaultKubernetesMasterSubnet = "10.240.0.0/16"
+	// DefaultKubernetesMasterSubnetIPv6 specifies the default IPv6 subnet for masters and agents.
+	// Except when master VMSS is used, this specifies the default subnet for masters.
+	DefaultKubernetesMasterSubnetIPv6 = "2001:1234:5678:9abc::/64"
 	// DefaultAgentSubnetTemplate specifies a default agent subnet
 	DefaultAgentSubnetTemplate = "10.%d.0.0/16"
 	// DefaultKubernetesSubnet specifies the default subnet used for all masters, agents and pods
@@ -333,6 +336,8 @@ const (
 	DefaultKubernetesSubnet = "10.240.0.0/12"
 	// DefaultVNETCIDR is the default CIDR block for the VNET
 	DefaultVNETCIDR = "10.0.0.0/8"
+	// DefaultVNETCIDRIPv6 is the default IPv6 CIDR block for the VNET
+	DefaultVNETCIDRIPv6 = "2001:1234:5678:9a00::/56"
 	// DefaultKubernetesMaxPods is the maximum number of pods to run on a node.
 	DefaultKubernetesMaxPods = 110
 	// DefaultKubernetesMaxPodsVNETIntegrated is the maximum number of pods to run on a node when VNET integration is enabled.
@@ -414,6 +419,8 @@ const (
 	DefaultKubernetesAgentSubnetVMSS = "10.248.0.0/13"
 	// DefaultKubernetesClusterSubnet specifies the default subnet for pods.
 	DefaultKubernetesClusterSubnet = "10.244.0.0/16"
+	// DefaultKubernetesClusterSubnetIPv6 specifies the IPv6 default subnet for pods.
+	DefaultKubernetesClusterSubnetIPv6 = "fd00:101::/8"
 	// DefaultKubernetesServiceCIDR specifies the IP subnet that kubernetes will create Service IPs within.
 	DefaultKubernetesServiceCIDR = "10.0.0.0/16"
 	// DefaultKubernetesDNSServiceIP specifies the IP address that kube-dns listens on by default. must by in the default Service CIDR range.
