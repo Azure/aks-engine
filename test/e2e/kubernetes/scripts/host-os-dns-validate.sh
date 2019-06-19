@@ -21,7 +21,7 @@ for i in $(seq 1 $retries); do
     set +x
     success="yes"
   done
-  if [[ "${success}" == "yes" ]]; then
+  if [[ ${success} == "yes" ]]; then
     break
   fi
   if [ $i -eq $retries ]; then
@@ -44,7 +44,7 @@ for i in $(seq 1 $retries); do
     set +x
     success="yes"
   done
-  if [[ "${success}" == "yes" ]]; then
+  if [[ ${success} == "yes" ]]; then
     break
   fi
   if [ $i -eq $retries ]; then

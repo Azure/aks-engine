@@ -8,7 +8,7 @@ set -euo pipefail
 echo "==> Running shell linter <=="
 shellcheck --version
 if [ -f /.dockerenv ]; then
-    echo "Running inside container";
+  echo "Running inside container"
 fi
 
 # All shell scripts, except those that support deprecated orchestrators or are in vendored code.
@@ -32,3 +32,4 @@ SC2206
 "
 
 shellcheck $(printf -- "-e %s " $IGNORED) $files
+shfmt -d -s -i 2 -ci $files

@@ -19,7 +19,7 @@ echo
 echo "==> Running Go linter <=="
 golangci-lint --version
 if [ -f /.dockerenv ]; then
-    echo "Running inside container";
+  echo "Running inside container"
 fi
 
 # exit 1 if golangci-lint output contains error text, to work

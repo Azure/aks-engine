@@ -26,8 +26,8 @@ hash godir 2>/dev/null || go get github.com/Masterminds/godir
 
 generate_cover_data() {
   ginkgo -skipPackage test/e2e/dcos,test/e2e/kubernetes -failFast -cover -r .
-  echo "" > ${coveragetxt}
-  find . -type f -name "*.coverprofile" | while read -r file;  do cat "$file" >> ${coveragetxt} && mv "$file" "${coverdir}"; done
+  echo "" >${coveragetxt}
+  find . -type f -name "*.coverprofile" | while read -r file; do cat "$file" >>${coveragetxt} && mv "$file" "${coverdir}"; done
   echo "mode: $covermode" >"$profile"
   grep -h -v "^mode:" "$coverdir"/*.coverprofile >>"$profile"
 }
@@ -48,11 +48,11 @@ case "${1-}" in
     go tool cover -html "${profile}"
     ;;
   --coveralls)
-		if [ -z "$COVERALLS_REPO_TOKEN" ]; then
-			# shellcheck disable=SC2016
-			echo '$COVERALLS_REPO_TOKEN not set. Skipping pushing coverage report to coveralls.io'
-			exit
-		fi
+    if [ -z "$COVERALLS_REPO_TOKEN" ]; then
+      # shellcheck disable=SC2016
+      echo '$COVERALLS_REPO_TOKEN not set. Skipping pushing coverage report to coveralls.io'
+      exit
+    fi
     push_to_coveralls
     ;;
   --codecov)

@@ -24,7 +24,7 @@ hash goveralls 2>/dev/null || go get github.com/mattn/goveralls
 hash godir 2>/dev/null || go get github.com/Masterminds/godir
 
 generate_cover_data() {
-  for d in $(godir) ; do
+  for d in $(godir); do
     (
       local output="${coverdir}/${d//\//-}.cover"
       go test -coverprofile="${output}" -covermode="$covermode" "$d"
@@ -47,11 +47,11 @@ case "${1-}" in
     go tool cover -html "${profile}"
     ;;
   --coveralls)
-		if [ -z "$COVERALLS_TOKEN" ]; then
-			# shellcheck disable=SC2016
-			echo '$COVERALLS_TOKEN not set. Skipping pushing coverage report to coveralls.io'
-			exit
-		fi
+    if [ -z "$COVERALLS_TOKEN" ]; then
+      # shellcheck disable=SC2016
+      echo '$COVERALLS_TOKEN not set. Skipping pushing coverage report to coveralls.io'
+      exit
+    fi
     push_to_coveralls
     ;;
 esac

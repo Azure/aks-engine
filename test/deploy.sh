@@ -2,11 +2,11 @@
 
 SOURCE="${BASH_SOURCE[0]}"
 while [ -h "$SOURCE" ]; do # resolve $SOURCE until the file is no longer a symlink
-  DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
+  DIR="$(cd -P "$(dirname "$SOURCE")" && pwd)"
   SOURCE="$(readlink "$SOURCE")"
   [[ $SOURCE != /* ]] && SOURCE="$DIR/$SOURCE" # if $SOURCE was a relative symlink, we need to resolve it relative to the path where the symlink file was located
 done
-DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
+DIR="$(cd -P "$(dirname "$SOURCE")" && pwd)"
 
 ###############################################################################
 
@@ -39,28 +39,30 @@ ROOT="${DIR}/.."
 
 # Load any user set environment
 if [[ -f "${ROOT}/test/user.env" ]]; then
-	source "${ROOT}/test/user.env"
+  source "${ROOT}/test/user.env"
 fi
 
-
 # Ensure Cluster Definition
-if [[ -z "${CLUSTER_DEFINITION:-}" ]]; then
-	if [[ -z "${1:-}" ]]; then echo "You must specify a parameterized apimodel.json clusterdefinition" >&2; exit 1; fi
-	CLUSTER_DEFINITION="${1}"
+if [[ -z ${CLUSTER_DEFINITION:-} ]]; then
+  if [[ -z ${1:-} ]]; then
+    echo "You must specify a parameterized apimodel.json clusterdefinition" >&2
+    exit 1
+  fi
+  CLUSTER_DEFINITION="${1}"
 fi
 
 # Set Instance Name for PR or random run
-if [[ -n "${PULL_NUMBER:-}" ]]; then
-	INSTANCE_NAME="${JOB_NAME}-${PULL_NUMBER}-$(printf "%x" $(date '+%s'))"
-	export INSTANCE_NAME
-	# if we're running a pull request, assume we want to cleanup unless the user specified otherwise
-	if [[ -z "${CLEANUP:-}" ]]; then
-		export CLEANUP="y"
-	fi
+if [[ -n ${PULL_NUMBER:-} ]]; then
+  INSTANCE_NAME="${JOB_NAME}-${PULL_NUMBER}-$(printf "%x" $(date '+%s'))"
+  export INSTANCE_NAME
+  # if we're running a pull request, assume we want to cleanup unless the user specified otherwise
+  if [[ -z ${CLEANUP:-} ]]; then
+    export CLEANUP="y"
+  fi
 else
-	INSTANCE_NAME_DEFAULT="${INSTANCE_NAME_PREFIX}-$(printf "%x" $(date '+%s'))"
-	export INSTANCE_NAME_DEFAULT
-	export INSTANCE_NAME="${INSTANCE_NAME:-${INSTANCE_NAME_DEFAULT}}"
+  INSTANCE_NAME_DEFAULT="${INSTANCE_NAME_PREFIX}-$(printf "%x" $(date '+%s'))"
+  export INSTANCE_NAME_DEFAULT
+  export INSTANCE_NAME="${INSTANCE_NAME:-${INSTANCE_NAME_DEFAULT}}"
 fi
 
 # Let the example json.env file set any env vars it may need ahead of time
@@ -70,7 +72,6 @@ ENV_FILE="${CLUSTER_DEFINITION}.env"
 if [ -e "${ENV_FILE}" ]; then
   source "${ENV_FILE}"
 fi
-
 
 # Set extra parameters
 export OUTPUT="${ROOT}/_output/${INSTANCE_NAME}"
@@ -90,8 +91,8 @@ set_azure_account
 trap cleanup EXIT
 deploy_template
 
-if [[ -z "${VALIDATE:-}" ]]; then
-	exit 0
+if [[ -z ${VALIDATE:-} ]]; then
+  exit 0
 fi
 
 export SSH_KEY="${OUTPUT}/id_rsa"

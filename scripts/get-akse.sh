@@ -14,14 +14,14 @@ PROJECT_NAME="aks-engine"
 initArch() {
   ARCH=$(uname -m)
   case $ARCH in
-    armv5*) ARCH="armv5";;
-    armv6*) ARCH="armv6";;
-    armv7*) ARCH="arm";;
-    aarch64) ARCH="arm64";;
-    x86) ARCH="386";;
-    x86_64) ARCH="amd64";;
-    i686) ARCH="386";;
-    i386) ARCH="386";;
+    armv5*) ARCH="armv5" ;;
+    armv6*) ARCH="armv6" ;;
+    armv7*) ARCH="arm" ;;
+    aarch64) ARCH="arm64" ;;
+    x86) ARCH="386" ;;
+    x86_64) ARCH="amd64" ;;
+    i686) ARCH="386" ;;
+    i386) ARCH="386" ;;
   esac
 }
 
@@ -31,7 +31,7 @@ initOS() {
 
   case "$OS" in
     # Minimalist GNU for Windows
-    mingw*) OS='windows';;
+    mingw*) OS='windows' ;;
   esac
 }
 
@@ -56,7 +56,7 @@ verifySupported() {
     exit 1
   fi
 
-  if ! type "curl" > /dev/null && ! type "wget" > /dev/null; then
+  if ! type "curl" >/dev/null && ! type "wget" >/dev/null; then
     echo "Either curl or wget is required"
     exit 1
   fi
@@ -67,10 +67,10 @@ checkDesiredVersion() {
   # Use the GitHub releases webpage for the project to find the desired version for this project.
   local release_url="https://github.com/Azure/aks-engine/releases/${DESIRED_VERSION:-latest}"
   # shellcheck disable=SC2086
-  if type "curl" > /dev/null; then
-    TAG=$(curl -SsL $release_url | awk '/\/tag\//' | grep -v no-underline | grep "<a href=\"/Azure/aks-engine/releases" | head -n 1 | cut -d '"' -f 2 | awk '{n=split($NF,a,"/");print a[n]}' | awk 'a !~ $0{print}; {a=$0}')
-  elif type "wget" > /dev/null; then
-    TAG=$(wget -q -O - $release_url | awk '/\/tag\//' | grep -v no-underline | grep "<a href=\"/Azure/aks-engine/releases" | head -n 1 | cut -d '"' -f 2 | awk '{n=split($NF,a,"/");print a[n]}' | awk 'a !~ $0{print}; {a=$0}')
+  if type "curl" >/dev/null; then
+    TAG=$(curl -SsL $release_url | awk '/\/tag\//' | grep -v no-underline | grep '<a href="/Azure/aks-engine/releases' | head -n 1 | cut -d '"' -f 2 | awk '{n=split($NF,a,"/");print a[n]}' | awk 'a !~ $0{print}; {a=$0}')
+  elif type "wget" >/dev/null; then
+    TAG=$(wget -q -O - $release_url | awk '/\/tag\//' | grep -v no-underline | grep '<a href="/Azure/aks-engine/releases' | head -n 1 | cut -d '"' -f 2 | awk '{n=split($NF,a,"/");print a[n]}' | awk 'a !~ $0{print}; {a=$0}')
   fi
   if [ "x$TAG" == "x" ]; then
     echo "Cannot determine ${DESIRED_VERSION} tag."
@@ -84,7 +84,7 @@ checkAKSEInstalledVersion() {
   if [[ -f "${AKSE_INSTALL_DIR}/${PROJECT_NAME}" ]]; then
     local version
     version=$(aks-engine version | grep 'Version' | cut -d' ' -f2)
-    if [[ "$version" == "$TAG" ]]; then
+    if [[ $version == "$TAG" ]]; then
       echo "AKS-Engine ${version} is already ${DESIRED_VERSION:-latest}"
       return 0
     else
@@ -104,9 +104,9 @@ downloadFile() {
   AKSE_TMP_ROOT="$(mktemp -dt akse-installer-XXXXXX)"
   AKSE_TMP_FILE="$AKSE_TMP_ROOT/$AKSE_DIST"
   echo "Downloading $DOWNLOAD_URL"
-  if type "curl" > /dev/null; then
+  if type "curl" >/dev/null; then
     curl -SsL "$DOWNLOAD_URL" -o "$AKSE_TMP_FILE"
-  elif type "wget" > /dev/null; then
+  elif type "wget" >/dev/null; then
     wget -q -O "$AKSE_TMP_FILE" "$DOWNLOAD_URL"
   fi
 }
@@ -127,7 +127,7 @@ installFile() {
 fail_trap() {
   result=$?
   if [ "$result" != "0" ]; then
-    if [[ -n "$INPUT_ARGUMENTS" ]]; then
+    if [[ -n $INPUT_ARGUMENTS ]]; then
       echo "Failed to install $PROJECT_NAME with the arguments provided: $INPUT_ARGUMENTS"
       help
     else
@@ -152,7 +152,7 @@ testVersion() {
 }
 
 # help provides possible cli installation arguments
-help () {
+help() {
   echo "Accepted cli arguments are:"
   echo -e "\t[--help|-h ] ->> prints this help"
   echo -e "\t[--version|-v <desired_version>] . When not defined it defaults to latest"
@@ -162,7 +162,7 @@ help () {
 
 # cleanup temporary files
 cleanup() {
-  if [[ -d "${AKSE_TMP_ROOT:-}" ]]; then
+  if [[ -d ${AKSE_TMP_ROOT:-} ]]; then
     rm -rf "$AKSE_TMP_ROOT"
   fi
 }
@@ -174,28 +174,29 @@ trap "fail_trap" EXIT
 set -e
 
 # Parsing input arguments (if any)
-export INPUT_ARGUMENTS=( "${@}" )
+export INPUT_ARGUMENTS=("${@}")
 set -u
 while [[ $# -gt 0 ]]; do
   case $1 in
-    '--version'|-v)
-       shift
-       if [[ $# -ne 0 ]]; then
-           export DESIRED_VERSION="${1}"
-       else
-           echo -e "Please provide the desired version. e.g. --version v0.32.3 or -v latest"
-           exit 0
-       fi
-       ;;
+    '--version' | -v)
+      shift
+      if [[ $# -ne 0 ]]; then
+        export DESIRED_VERSION="${1}"
+      else
+        echo -e "Please provide the desired version. e.g. --version v0.32.3 or -v latest"
+        exit 0
+      fi
+      ;;
     '--no-sudo')
-       USE_SUDO="false"
-       ;;
-    '--help'|-h)
-       help
-       exit 0
-       ;;
-    *) exit 1
-       ;;
+      USE_SUDO="false"
+      ;;
+    '--help' | -h)
+      help
+      exit 0
+      ;;
+    *)
+      exit 1
+      ;;
   esac
   shift
 done

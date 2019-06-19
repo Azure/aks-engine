@@ -53,7 +53,7 @@ create_secret_yaml() {
   local key
   key=$(get_param 'KEY')
 
-  cat > ./oms-agentsecret.yaml <<EOFSECRET
+  cat >./oms-agentsecret.yaml <<EOFSECRET
 apiVersion: v1
 kind: Secret
 metadata:
@@ -73,7 +73,7 @@ create_daemonset_yaml() {
   log 'Creating oms-daemonset.yaml file'
   log ''
 
-  cat > oms-daemonset.yaml <<EOFDAEMONSET
+  cat >oms-daemonset.yaml <<EOFDAEMONSET
 apiVersion: extensions/v1beta1
 kind: DaemonSet
 metadata:
@@ -146,32 +146,27 @@ deploy_yaml() {
   log ''
 }
 
-
-log  " Waiting for API Server to start"
+log " Waiting for API Server to start"
 kubernetesStarted=1
 for i in {1..600}; do
-    if [ -e /usr/local/bin/kubectl ]
-    then
-        if /usr/local/bin/kubectl cluster-info
-        then
-            log "kubernetes started"
-            kubernetesStarted=0
-            break
-        fi
-    else
-        if /usr/bin/docker ps | grep apiserver
-        then
-            log "kubernetes started"
-            kubernetesStarted=0
-            break
-        fi
+  if [ -e /usr/local/bin/kubectl ]; then
+    if /usr/local/bin/kubectl cluster-info; then
+      log "kubernetes started"
+      kubernetesStarted=0
+      break
     fi
-    sleep 1
+  else
+    if /usr/bin/docker ps | grep apiserver; then
+      log "kubernetes started"
+      kubernetesStarted=0
+      break
+    fi
+  fi
+  sleep 1
 done
-if [ $kubernetesStarted -ne 0 ]
-then
-    log "kubernetes did not start"
-    exit 1
+if [ $kubernetesStarted -ne 0 ]; then
+  log "kubernetes did not start"
+  exit 1
 fi
 
 log ''

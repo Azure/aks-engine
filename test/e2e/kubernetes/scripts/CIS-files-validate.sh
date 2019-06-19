@@ -10,8 +10,8 @@ CIS_FILES="
 /etc/pam.d/su
 "
 for CIS_FILE in ${CIS_FILES}; do
-    ls -la $CIS_FILE || exit 2
-    [ -s $CIS_FILE ] || exit 1
+  ls -la $CIS_FILE || exit 2
+  [ -s $CIS_FILE ] || exit 1
 done
 
 # specific file mode validations
