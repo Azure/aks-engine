@@ -65,9 +65,11 @@
 // ../../parts/k8s/cloud-init/artifacts/cse_install.sh
 // ../../parts/k8s/cloud-init/artifacts/cse_main.sh
 // ../../parts/k8s/cloud-init/artifacts/default-grub
+// ../../parts/k8s/cloud-init/artifacts/dhcpv6.service
 // ../../parts/k8s/cloud-init/artifacts/docker-monitor.service
 // ../../parts/k8s/cloud-init/artifacts/docker-monitor.timer
 // ../../parts/k8s/cloud-init/artifacts/docker_clear_mount_propagation_flags.conf
+// ../../parts/k8s/cloud-init/artifacts/enable-dhcpv6.sh
 // ../../parts/k8s/cloud-init/artifacts/etc-issue
 // ../../parts/k8s/cloud-init/artifacts/etc-issue.net
 // ../../parts/k8s/cloud-init/artifacts/etcd.service
@@ -9840,7 +9842,9 @@ subjects:
 - kind: Group
   name: system:serviceaccounts:kube-system
   apiGroup: rbac.authorization.k8s.io
-`)
+- kind: Group
+  name: system:nodes
+  apiGroup: rbac.authorization.k8s.io`)
 
 func k8sAddonsKubernetesmasteraddonsPodSecurityPolicyYamlBytes() ([]byte, error) {
 	return _k8sAddonsKubernetesmasteraddonsPodSecurityPolicyYaml, nil
@@ -10590,6 +10594,10 @@ ensureDocker() {
 
 ensureKMS() {
     systemctlEnableAndStart kms || exit $ERR_SYSTEMCTL_START_FAIL
+}
+
+ensureDHCPv6() {
+    systemctlEnableAndStart dhcpv6 || exit $ERR_SYSTEMCTL_START_FAIL
 }
 
 ensureKubelet() {
@@ -11615,6 +11623,15 @@ if [[ -n "${MASTER_NODE}" && "${KMS_PROVIDER_VAULT_NAME}" != "" ]]; then
     ensureKMS
 fi
 
+# configure and enable dhcpv6 for dual stack feature
+if [ "$IS_IPV6_DUALSTACK_FEATURE_ENABLED" = "true" ]; then
+    dhcpv6_systemd_service=/etc/systemd/system/dhcpv6.service
+    dhcpv6_configuration_script=/opt/azure/containers/enable-dhcpv6.sh
+    wait_for_file 3600 1 $dhcpv6_systemd_service || exit $ERR_FILE_WATCH_TIMEOUT
+    wait_for_file 3600 1 $dhcpv6_configuration_script || exit $ERR_FILE_WATCH_TIMEOUT
+    ensureDHCPv6
+fi
+
 ensureKubelet
 ensureJournal
 
@@ -11703,6 +11720,32 @@ func k8sCloudInitArtifactsDefaultGrub() (*asset, error) {
 	return a, nil
 }
 
+var _k8sCloudInitArtifactsDhcpv6Service = []byte(`[Unit]
+Description=enabledhcpv6
+After=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/opt/azure/containers/enable-dhcpv6.sh
+
+[Install]
+WantedBy=multi-user.target`)
+
+func k8sCloudInitArtifactsDhcpv6ServiceBytes() ([]byte, error) {
+	return _k8sCloudInitArtifactsDhcpv6Service, nil
+}
+
+func k8sCloudInitArtifactsDhcpv6Service() (*asset, error) {
+	bytes, err := k8sCloudInitArtifactsDhcpv6ServiceBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "k8s/cloud-init/artifacts/dhcpv6.service", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
 var _k8sCloudInitArtifactsDockerMonitorService = []byte(`[Unit]
 Description=a script that checks docker health and restarts if needed
 After=docker.service
@@ -11763,6 +11806,48 @@ func k8sCloudInitArtifactsDocker_clear_mount_propagation_flagsConf() (*asset, er
 	}
 
 	info := bindataFileInfo{name: "k8s/cloud-init/artifacts/docker_clear_mount_propagation_flags.conf", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
+var _k8sCloudInitArtifactsEnableDhcpv6Sh = []byte(`#!/usr/bin/env bash
+
+set -e
+set -o pipefail
+set -u
+
+DHCLIENT6_CONF_FILE=/etc/dhcp/dhclient6.conf
+CLOUD_INIT_CFG=/etc/network/interfaces.d/50-cloud-init.cfg
+
+read -r -d '' NETWORK_CONFIGURATION << EOC || true
+iface eth0 inet6 auto 
+    up sleep 5 
+    up dhclient -1 -6 -cf /etc/dhcp/dhclient6.conf -lf /var/lib/dhcp/dhclient6.eth0.leases -v eth0 || true
+EOC
+
+add_if_not_exists() {
+    grep -qxF "${1}" "${2}" || echo "${1}" >> "${2}"
+}
+
+echo "Configuring dhcpv6 ..."
+
+touch /etc/dhcp/dhclient6.conf && add_if_not_exists "timeout 10;" ${DHCLIENT6_CONF_FILE} && \
+    add_if_not_exists "${NETWORK_CONFIGURATION}" ${CLOUD_INIT_CFG} && \
+    sudo ifdown eth0 && sudo ifup eth0
+
+echo "Configuration complete"`)
+
+func k8sCloudInitArtifactsEnableDhcpv6ShBytes() ([]byte, error) {
+	return _k8sCloudInitArtifactsEnableDhcpv6Sh, nil
+}
+
+func k8sCloudInitArtifactsEnableDhcpv6Sh() (*asset, error) {
+	bytes, err := k8sCloudInitArtifactsEnableDhcpv6ShBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "k8s/cloud-init/artifacts/enable-dhcpv6.sh", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -12965,6 +13050,22 @@ write_files:
   content: !!binary |
     {{CloudInitData "aptPreferences"}}
 
+{{if IsIPv6DualStackFeatureEnabled}}
+- path: /etc/systemd/system/dhcpv6.service
+  permissions: "0644"
+  encoding: gzip
+  owner: root
+  content: !!binary |
+    {{CloudInitData "dhcpv6SystemdService"}}
+
+- path: /opt/azure/containers/enable-dhcpv6.sh
+  permissions: "0544"
+  encoding: gzip
+  owner: root
+  content: !!binary |
+    {{CloudInitData "dhcpv6ConfigurationScript"}}
+{{end}}
+
 {{if .OrchestratorProfile.KubernetesConfig.RequiresDocker}}
     {{if not .MasterProfile.IsCoreOS}}
 - path: /etc/systemd/system/docker.service.d/clear_mount_propagation_flags.conf
@@ -13170,7 +13271,11 @@ MASTER_CONTAINER_ADDONS_PLACEHOLDER
     sed -i "s|<advertiseAddr>|{{WrapAsVariable "kubernetesAPIServerIP"}}|g" $a
     sed -i "s|<args>|{{GetK8sRuntimeConfigKeyVals .OrchestratorProfile.KubernetesConfig.ControllerManagerConfig}}|g" /etc/kubernetes/manifests/kube-controller-manager.yaml
     sed -i "s|<args>|{{GetK8sRuntimeConfigKeyVals .OrchestratorProfile.KubernetesConfig.SchedulerConfig}}|g" /etc/kubernetes/manifests/kube-scheduler.yaml
+    {{ if IsIPv6DualStackFeatureEnabled }}
+    sed -i "s|<img>|{{WrapAsParameter "kubernetesHyperkubeSpec"}}|g; s|<CIDR>|',first(split(parameters('kubeClusterCidr'),',')),'|g; s|<kubeProxyMode>|{{ .OrchestratorProfile.KubernetesConfig.ProxyMode}}|g" /etc/kubernetes/addons/kube-proxy-daemonset.yaml
+    {{ else }}
     sed -i "s|<img>|{{WrapAsParameter "kubernetesHyperkubeSpec"}}|g; s|<CIDR>|{{WrapAsParameter "kubeClusterCidr"}}|g; s|<kubeProxyMode>|{{ .OrchestratorProfile.KubernetesConfig.ProxyMode}}|g" /etc/kubernetes/addons/kube-proxy-daemonset.yaml
+    {{ end }}
     KUBEDNS=/etc/kubernetes/addons/kube-dns-deployment.yaml
 {{if NeedsKubeDNSWithExecHealthz}}
     sed -i "s|<img>|{{WrapAsParameter "kubernetesKubeDNSSpec"}}|g; s|<imgMasq>|{{WrapAsParameter "kubernetesDNSMasqSpec"}}|g; s|<imgHealthz>|{{WrapAsParameter "kubernetesExecHealthzSpec"}}|g; s|<imgSidecar>|{{WrapAsParameter "kubernetesDNSSidecarSpec"}}|g; s|<domain>|{{WrapAsParameter "kubernetesKubeletClusterDomain"}}|g; s|<clustIP>|{{WrapAsParameter "kubeDNSServiceIP"}}|g" $KUBEDNS
@@ -13457,6 +13562,22 @@ write_files:
   owner: root
   content: !!binary |
     {{CloudInitData "aptPreferences"}}
+
+{{if IsIPv6DualStackFeatureEnabled}}
+- path: /etc/systemd/system/dhcpv6.service
+  permissions: "0644"
+  encoding: gzip
+  owner: root
+  content: !!binary |
+    {{CloudInitData "dhcpv6SystemdService"}}
+
+- path: /opt/azure/containers/enable-dhcpv6.sh
+  permissions: "0544"
+  encoding: gzip
+  owner: root
+  content: !!binary |
+    {{CloudInitData "dhcpv6ConfigurationScript"}}
+{{end}}
 
 {{if .KubernetesConfig.RequiresDocker}}
     {{if not .IsCoreOS}}
@@ -17785,6 +17906,13 @@ var _k8sKubernetesparamsT = []byte(`{{if .HasAadProfile}}
       },
       "type": "string"
     },
+    "vnetCidrIPv6": {
+      "defaultValue": "{{GetDefaultVNETCIDRIPv6}}",
+      "metadata": {
+        "description": "Cluster vnet cidr IPv6"
+      },
+      "type": "string"
+    },
     "gcHighThreshold": {
       "defaultValue": 85,
       "metadata": {
@@ -19724,6 +19852,13 @@ var _masterparamsT = []byte(`    "linuxAdminUsername": {
       "type": "string"
     },
   {{end}}
+  "masterSubnetIPv6": {
+      "defaultValue": "{{.MasterProfile.SubnetIPv6}}",
+      "metadata": {
+        "description": "Sets the IPv6 subnet of the master node(s)."
+      },
+      "type": "string"
+    },
   {{if .MasterProfile.HasAvailabilityZones}}
   "availabilityZones": {
     "metadata": {
@@ -23006,61 +23141,61 @@ func AssetNames() []string {
 
 // _bindata is a table, holding each asset generator, mapped to its name.
 var _bindata = map[string]func() (*asset, error){
-	"agentoutputs.t":                       agentoutputsT,
-	"agentparams.t":                        agentparamsT,
-	"dcos/bstrap/bootstrapcustomdata.yml":  dcosBstrapBootstrapcustomdataYml,
-	"dcos/bstrap/bootstrapparams.t":        dcosBstrapBootstrapparamsT,
-	"dcos/bstrap/bootstrapprovision.sh":    dcosBstrapBootstrapprovisionSh,
-	"dcos/bstrap/bootstrapresources.t":     dcosBstrapBootstrapresourcesT,
-	"dcos/bstrap/bootstrapvars.t":          dcosBstrapBootstrapvarsT,
-	"dcos/bstrap/dcos1.11.0.customdata.t":  dcosBstrapDcos1110CustomdataT,
-	"dcos/bstrap/dcos1.11.2.customdata.t":  dcosBstrapDcos1112CustomdataT,
-	"dcos/bstrap/dcosbase.t":               dcosBstrapDcosbaseT,
-	"dcos/bstrap/dcosmasterresources.t":    dcosBstrapDcosmasterresourcesT,
-	"dcos/bstrap/dcosmastervars.t":         dcosBstrapDcosmastervarsT,
-	"dcos/bstrap/dcosprovision.sh":         dcosBstrapDcosprovisionSh,
-	"dcos/dcosWindowsAgentResourcesVmas.t": dcosDcoswindowsagentresourcesvmasT,
-	"dcos/dcosWindowsAgentResourcesVmss.t": dcosDcoswindowsagentresourcesvmssT,
-	"dcos/dcosWindowsProvision.ps1":        dcosDcoswindowsprovisionPs1,
-	"dcos/dcosagentresourcesvmas.t":        dcosDcosagentresourcesvmasT,
-	"dcos/dcosagentresourcesvmss.t":        dcosDcosagentresourcesvmssT,
-	"dcos/dcosagentvars.t":                 dcosDcosagentvarsT,
-	"dcos/dcosbase.t":                      dcosDcosbaseT,
-	"dcos/dcoscustomdata110.t":             dcosDcoscustomdata110T,
-	"dcos/dcoscustomdata184.t":             dcosDcoscustomdata184T,
-	"dcos/dcoscustomdata187.t":             dcosDcoscustomdata187T,
-	"dcos/dcoscustomdata188.t":             dcosDcoscustomdata188T,
-	"dcos/dcoscustomdata190.t":             dcosDcoscustomdata190T,
-	"dcos/dcoscustomdata198.t":             dcosDcoscustomdata198T,
-	"dcos/dcosmasterresources.t":           dcosDcosmasterresourcesT,
-	"dcos/dcosmastervars.t":                dcosDcosmastervarsT,
-	"dcos/dcosparams.t":                    dcosDcosparamsT,
-	"dcos/dcosprovision.sh":                dcosDcosprovisionSh,
-	"dcos/dcosprovisionsource.sh":          dcosDcosprovisionsourceSh,
-	"iaasoutputs.t":                        iaasoutputsT,
-	"k8s/addons/1.10/kubernetesmasteraddons-kube-dns-deployment.yaml":                 k8sAddons110KubernetesmasteraddonsKubeDnsDeploymentYaml,
-	"k8s/addons/1.15/kubernetesmasteraddons-azure-cloud-provider-deployment.yaml":     k8sAddons115KubernetesmasteraddonsAzureCloudProviderDeploymentYaml,
-	"k8s/addons/1.15/kubernetesmasteraddons-pod-security-policy.yaml":                 k8sAddons115KubernetesmasteraddonsPodSecurityPolicyYaml,
-	"k8s/addons/1.6/kubernetesmasteraddons-kubernetes-dashboard-deployment.yaml":      k8sAddons16KubernetesmasteraddonsKubernetesDashboardDeploymentYaml,
-	"k8s/addons/1.7/kubernetesmasteraddons-kube-dns-deployment.yaml":                  k8sAddons17KubernetesmasteraddonsKubeDnsDeploymentYaml,
-	"k8s/addons/1.7/kubernetesmasteraddons-kubernetes-dashboard-deployment.yaml":      k8sAddons17KubernetesmasteraddonsKubernetesDashboardDeploymentYaml,
-	"k8s/addons/1.8/kubernetesmasteraddons-kube-dns-deployment.yaml":                  k8sAddons18KubernetesmasteraddonsKubeDnsDeploymentYaml,
-	"k8s/addons/1.8/kubernetesmasteraddons-kubernetes-dashboard-deployment.yaml":      k8sAddons18KubernetesmasteraddonsKubernetesDashboardDeploymentYaml,
-	"k8s/addons/1.9/kubernetesmasteraddons-kube-dns-deployment.yaml":                  k8sAddons19KubernetesmasteraddonsKubeDnsDeploymentYaml,
-	"k8s/addons/coredns.yaml":                                                         k8sAddonsCorednsYaml,
-	"k8s/addons/kubernetesmaster-audit-policy.yaml":                                   k8sAddonsKubernetesmasterAuditPolicyYaml,
-	"k8s/addons/kubernetesmasteraddons-aad-default-admin-group-rbac.yaml":             k8sAddonsKubernetesmasteraddonsAadDefaultAdminGroupRbacYaml,
-	"k8s/addons/kubernetesmasteraddons-azure-cloud-provider-deployment.yaml":          k8sAddonsKubernetesmasteraddonsAzureCloudProviderDeploymentYaml,
-	"k8s/addons/kubernetesmasteraddons-cilium-daemonset.yaml":                         k8sAddonsKubernetesmasteraddonsCiliumDaemonsetYaml,
-	"k8s/addons/kubernetesmasteraddons-elb-svc.yaml":                                  k8sAddonsKubernetesmasteraddonsElbSvcYaml,
-	"k8s/addons/kubernetesmasteraddons-flannel-daemonset.yaml":                        k8sAddonsKubernetesmasteraddonsFlannelDaemonsetYaml,
-	"k8s/addons/kubernetesmasteraddons-kube-dns-deployment.yaml":                      k8sAddonsKubernetesmasteraddonsKubeDnsDeploymentYaml,
-	"k8s/addons/kubernetesmasteraddons-kube-proxy-daemonset.yaml":                     k8sAddonsKubernetesmasteraddonsKubeProxyDaemonsetYaml,
-	"k8s/addons/kubernetesmasteraddons-managed-azure-storage-classes-custom.yaml":     k8sAddonsKubernetesmasteraddonsManagedAzureStorageClassesCustomYaml,
-	"k8s/addons/kubernetesmasteraddons-managed-azure-storage-classes.yaml":            k8sAddonsKubernetesmasteraddonsManagedAzureStorageClassesYaml,
-	"k8s/addons/kubernetesmasteraddons-pod-security-policy.yaml":                      k8sAddonsKubernetesmasteraddonsPodSecurityPolicyYaml,
-	"k8s/addons/kubernetesmasteraddons-unmanaged-azure-storage-classes-custom.yaml":   k8sAddonsKubernetesmasteraddonsUnmanagedAzureStorageClassesCustomYaml,
-	"k8s/addons/kubernetesmasteraddons-unmanaged-azure-storage-classes.yaml":          k8sAddonsKubernetesmasteraddonsUnmanagedAzureStorageClassesYaml,
+	"agentoutputs.t":                                                  agentoutputsT,
+	"agentparams.t":                                                   agentparamsT,
+	"dcos/bstrap/bootstrapcustomdata.yml":                             dcosBstrapBootstrapcustomdataYml,
+	"dcos/bstrap/bootstrapparams.t":                                   dcosBstrapBootstrapparamsT,
+	"dcos/bstrap/bootstrapprovision.sh":                               dcosBstrapBootstrapprovisionSh,
+	"dcos/bstrap/bootstrapresources.t":                                dcosBstrapBootstrapresourcesT,
+	"dcos/bstrap/bootstrapvars.t":                                     dcosBstrapBootstrapvarsT,
+	"dcos/bstrap/dcos1.11.0.customdata.t":                             dcosBstrapDcos1110CustomdataT,
+	"dcos/bstrap/dcos1.11.2.customdata.t":                             dcosBstrapDcos1112CustomdataT,
+	"dcos/bstrap/dcosbase.t":                                          dcosBstrapDcosbaseT,
+	"dcos/bstrap/dcosmasterresources.t":                               dcosBstrapDcosmasterresourcesT,
+	"dcos/bstrap/dcosmastervars.t":                                    dcosBstrapDcosmastervarsT,
+	"dcos/bstrap/dcosprovision.sh":                                    dcosBstrapDcosprovisionSh,
+	"dcos/dcosWindowsAgentResourcesVmas.t":                            dcosDcoswindowsagentresourcesvmasT,
+	"dcos/dcosWindowsAgentResourcesVmss.t":                            dcosDcoswindowsagentresourcesvmssT,
+	"dcos/dcosWindowsProvision.ps1":                                   dcosDcoswindowsprovisionPs1,
+	"dcos/dcosagentresourcesvmas.t":                                   dcosDcosagentresourcesvmasT,
+	"dcos/dcosagentresourcesvmss.t":                                   dcosDcosagentresourcesvmssT,
+	"dcos/dcosagentvars.t":                                            dcosDcosagentvarsT,
+	"dcos/dcosbase.t":                                                 dcosDcosbaseT,
+	"dcos/dcoscustomdata110.t":                                        dcosDcoscustomdata110T,
+	"dcos/dcoscustomdata184.t":                                        dcosDcoscustomdata184T,
+	"dcos/dcoscustomdata187.t":                                        dcosDcoscustomdata187T,
+	"dcos/dcoscustomdata188.t":                                        dcosDcoscustomdata188T,
+	"dcos/dcoscustomdata190.t":                                        dcosDcoscustomdata190T,
+	"dcos/dcoscustomdata198.t":                                        dcosDcoscustomdata198T,
+	"dcos/dcosmasterresources.t":                                      dcosDcosmasterresourcesT,
+	"dcos/dcosmastervars.t":                                           dcosDcosmastervarsT,
+	"dcos/dcosparams.t":                                               dcosDcosparamsT,
+	"dcos/dcosprovision.sh":                                           dcosDcosprovisionSh,
+	"dcos/dcosprovisionsource.sh":                                     dcosDcosprovisionsourceSh,
+	"iaasoutputs.t":                                                   iaasoutputsT,
+	"k8s/addons/1.10/kubernetesmasteraddons-kube-dns-deployment.yaml": k8sAddons110KubernetesmasteraddonsKubeDnsDeploymentYaml,
+	"k8s/addons/1.15/kubernetesmasteraddons-azure-cloud-provider-deployment.yaml": k8sAddons115KubernetesmasteraddonsAzureCloudProviderDeploymentYaml,
+	"k8s/addons/1.15/kubernetesmasteraddons-pod-security-policy.yaml":             k8sAddons115KubernetesmasteraddonsPodSecurityPolicyYaml,
+	"k8s/addons/1.6/kubernetesmasteraddons-kubernetes-dashboard-deployment.yaml":  k8sAddons16KubernetesmasteraddonsKubernetesDashboardDeploymentYaml,
+	"k8s/addons/1.7/kubernetesmasteraddons-kube-dns-deployment.yaml":              k8sAddons17KubernetesmasteraddonsKubeDnsDeploymentYaml,
+	"k8s/addons/1.7/kubernetesmasteraddons-kubernetes-dashboard-deployment.yaml":  k8sAddons17KubernetesmasteraddonsKubernetesDashboardDeploymentYaml,
+	"k8s/addons/1.8/kubernetesmasteraddons-kube-dns-deployment.yaml":              k8sAddons18KubernetesmasteraddonsKubeDnsDeploymentYaml,
+	"k8s/addons/1.8/kubernetesmasteraddons-kubernetes-dashboard-deployment.yaml":  k8sAddons18KubernetesmasteraddonsKubernetesDashboardDeploymentYaml,
+	"k8s/addons/1.9/kubernetesmasteraddons-kube-dns-deployment.yaml":              k8sAddons19KubernetesmasteraddonsKubeDnsDeploymentYaml,
+	"k8s/addons/coredns.yaml":                                                       k8sAddonsCorednsYaml,
+	"k8s/addons/kubernetesmaster-audit-policy.yaml":                                 k8sAddonsKubernetesmasterAuditPolicyYaml,
+	"k8s/addons/kubernetesmasteraddons-aad-default-admin-group-rbac.yaml":           k8sAddonsKubernetesmasteraddonsAadDefaultAdminGroupRbacYaml,
+	"k8s/addons/kubernetesmasteraddons-azure-cloud-provider-deployment.yaml":        k8sAddonsKubernetesmasteraddonsAzureCloudProviderDeploymentYaml,
+	"k8s/addons/kubernetesmasteraddons-cilium-daemonset.yaml":                       k8sAddonsKubernetesmasteraddonsCiliumDaemonsetYaml,
+	"k8s/addons/kubernetesmasteraddons-elb-svc.yaml":                                k8sAddonsKubernetesmasteraddonsElbSvcYaml,
+	"k8s/addons/kubernetesmasteraddons-flannel-daemonset.yaml":                      k8sAddonsKubernetesmasteraddonsFlannelDaemonsetYaml,
+	"k8s/addons/kubernetesmasteraddons-kube-dns-deployment.yaml":                    k8sAddonsKubernetesmasteraddonsKubeDnsDeploymentYaml,
+	"k8s/addons/kubernetesmasteraddons-kube-proxy-daemonset.yaml":                   k8sAddonsKubernetesmasteraddonsKubeProxyDaemonsetYaml,
+	"k8s/addons/kubernetesmasteraddons-managed-azure-storage-classes-custom.yaml":   k8sAddonsKubernetesmasteraddonsManagedAzureStorageClassesCustomYaml,
+	"k8s/addons/kubernetesmasteraddons-managed-azure-storage-classes.yaml":          k8sAddonsKubernetesmasteraddonsManagedAzureStorageClassesYaml,
+	"k8s/addons/kubernetesmasteraddons-pod-security-policy.yaml":                    k8sAddonsKubernetesmasteraddonsPodSecurityPolicyYaml,
+	"k8s/addons/kubernetesmasteraddons-unmanaged-azure-storage-classes-custom.yaml": k8sAddonsKubernetesmasteraddonsUnmanagedAzureStorageClassesCustomYaml,
+	"k8s/addons/kubernetesmasteraddons-unmanaged-azure-storage-classes.yaml":        k8sAddonsKubernetesmasteraddonsUnmanagedAzureStorageClassesYaml,
 	"k8s/armparameters.t":                                                             k8sArmparametersT,
 	"k8s/cloud-init/artifacts/apt-preferences":                                        k8sCloudInitArtifactsAptPreferences,
 	"k8s/cloud-init/artifacts/auditd-rules":                                           k8sCloudInitArtifactsAuditdRules,
@@ -23071,9 +23206,11 @@ var _bindata = map[string]func() (*asset, error){
 	"k8s/cloud-init/artifacts/cse_install.sh":                                         k8sCloudInitArtifactsCse_installSh,
 	"k8s/cloud-init/artifacts/cse_main.sh":                                            k8sCloudInitArtifactsCse_mainSh,
 	"k8s/cloud-init/artifacts/default-grub":                                           k8sCloudInitArtifactsDefaultGrub,
+	"k8s/cloud-init/artifacts/dhcpv6.service":                                         k8sCloudInitArtifactsDhcpv6Service,
 	"k8s/cloud-init/artifacts/docker-monitor.service":                                 k8sCloudInitArtifactsDockerMonitorService,
 	"k8s/cloud-init/artifacts/docker-monitor.timer":                                   k8sCloudInitArtifactsDockerMonitorTimer,
 	"k8s/cloud-init/artifacts/docker_clear_mount_propagation_flags.conf":              k8sCloudInitArtifactsDocker_clear_mount_propagation_flagsConf,
+	"k8s/cloud-init/artifacts/enable-dhcpv6.sh":                                       k8sCloudInitArtifactsEnableDhcpv6Sh,
 	"k8s/cloud-init/artifacts/etc-issue":                                              k8sCloudInitArtifactsEtcIssue,
 	"k8s/cloud-init/artifacts/etc-issue.net":                                          k8sCloudInitArtifactsEtcIssueNet,
 	"k8s/cloud-init/artifacts/etcd.service":                                           k8sCloudInitArtifactsEtcdService,
@@ -23253,8 +23390,8 @@ var _bintree = &bintree{nil, map[string]*bintree{
 			"1.9": {nil, map[string]*bintree{
 				"kubernetesmasteraddons-kube-dns-deployment.yaml": {k8sAddons19KubernetesmasteraddonsKubeDnsDeploymentYaml, map[string]*bintree{}},
 			}},
-			"coredns.yaml":                                                       {k8sAddonsCorednsYaml, map[string]*bintree{}},
-			"kubernetesmaster-audit-policy.yaml":                                 {k8sAddonsKubernetesmasterAuditPolicyYaml, map[string]*bintree{}},
+			"coredns.yaml":                       {k8sAddonsCorednsYaml, map[string]*bintree{}},
+			"kubernetesmaster-audit-policy.yaml": {k8sAddonsKubernetesmasterAuditPolicyYaml, map[string]*bintree{}},
 			"kubernetesmasteraddons-aad-default-admin-group-rbac.yaml":           {k8sAddonsKubernetesmasteraddonsAadDefaultAdminGroupRbacYaml, map[string]*bintree{}},
 			"kubernetesmasteraddons-azure-cloud-provider-deployment.yaml":        {k8sAddonsKubernetesmasteraddonsAzureCloudProviderDeploymentYaml, map[string]*bintree{}},
 			"kubernetesmasteraddons-cilium-daemonset.yaml":                       {k8sAddonsKubernetesmasteraddonsCiliumDaemonsetYaml, map[string]*bintree{}},
@@ -23271,18 +23408,20 @@ var _bintree = &bintree{nil, map[string]*bintree{
 		"armparameters.t": {k8sArmparametersT, map[string]*bintree{}},
 		"cloud-init": {nil, map[string]*bintree{
 			"artifacts": {nil, map[string]*bintree{
-				"apt-preferences":                           {k8sCloudInitArtifactsAptPreferences, map[string]*bintree{}},
-				"auditd-rules":                              {k8sCloudInitArtifactsAuditdRules, map[string]*bintree{}},
-				"cis.sh":                                    {k8sCloudInitArtifactsCisSh, map[string]*bintree{}},
-				"cse_config.sh":                             {k8sCloudInitArtifactsCse_configSh, map[string]*bintree{}},
-				"cse_customcloud.sh":                        {k8sCloudInitArtifactsCse_customcloudSh, map[string]*bintree{}},
-				"cse_helpers.sh":                            {k8sCloudInitArtifactsCse_helpersSh, map[string]*bintree{}},
-				"cse_install.sh":                            {k8sCloudInitArtifactsCse_installSh, map[string]*bintree{}},
-				"cse_main.sh":                               {k8sCloudInitArtifactsCse_mainSh, map[string]*bintree{}},
-				"default-grub":                              {k8sCloudInitArtifactsDefaultGrub, map[string]*bintree{}},
-				"docker-monitor.service":                    {k8sCloudInitArtifactsDockerMonitorService, map[string]*bintree{}},
-				"docker-monitor.timer":                      {k8sCloudInitArtifactsDockerMonitorTimer, map[string]*bintree{}},
+				"apt-preferences":        {k8sCloudInitArtifactsAptPreferences, map[string]*bintree{}},
+				"auditd-rules":           {k8sCloudInitArtifactsAuditdRules, map[string]*bintree{}},
+				"cis.sh":                 {k8sCloudInitArtifactsCisSh, map[string]*bintree{}},
+				"cse_config.sh":          {k8sCloudInitArtifactsCse_configSh, map[string]*bintree{}},
+				"cse_customcloud.sh":     {k8sCloudInitArtifactsCse_customcloudSh, map[string]*bintree{}},
+				"cse_helpers.sh":         {k8sCloudInitArtifactsCse_helpersSh, map[string]*bintree{}},
+				"cse_install.sh":         {k8sCloudInitArtifactsCse_installSh, map[string]*bintree{}},
+				"cse_main.sh":            {k8sCloudInitArtifactsCse_mainSh, map[string]*bintree{}},
+				"default-grub":           {k8sCloudInitArtifactsDefaultGrub, map[string]*bintree{}},
+				"dhcpv6.service":         {k8sCloudInitArtifactsDhcpv6Service, map[string]*bintree{}},
+				"docker-monitor.service": {k8sCloudInitArtifactsDockerMonitorService, map[string]*bintree{}},
+				"docker-monitor.timer":   {k8sCloudInitArtifactsDockerMonitorTimer, map[string]*bintree{}},
 				"docker_clear_mount_propagation_flags.conf": {k8sCloudInitArtifactsDocker_clear_mount_propagation_flagsConf, map[string]*bintree{}},
+				"enable-dhcpv6.sh":                          {k8sCloudInitArtifactsEnableDhcpv6Sh, map[string]*bintree{}},
 				"etc-issue":                                 {k8sCloudInitArtifactsEtcIssue, map[string]*bintree{}},
 				"etc-issue.net":                             {k8sCloudInitArtifactsEtcIssueNet, map[string]*bintree{}},
 				"etcd.service":                              {k8sCloudInitArtifactsEtcdService, map[string]*bintree{}},
