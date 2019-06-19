@@ -1980,13 +1980,15 @@ func (cs *ContainerService) GetCloudSpecConfig() AzureEnvironmentSpecConfig {
 	}
 	targetEnv := helpers.GetTargetEnv(cs.Location, customCloudName)
 	spec := AzureCloudSpecEnvMap[targetEnv]
-	if spec.CloudName == AzurePublicCloud {
-		if cs.Properties != nil && cs.Properties.OrchestratorProfile != nil && cs.Properties.OrchestratorProfile.OrchestratorType == Kubernetes {
-			if common.IsKubernetesVersionGe(cs.Properties.OrchestratorProfile.OrchestratorVersion, "1.14.1") {
-				spec.KubernetesSpecConfig.HyperkubeImageBase = "upstream.azurecr.io/k8s/core/"
+	// TODO Implement ACR-specific overrides below for public cloud
+	/*
+		if spec.CloudName == AzurePublicCloud {
+			if cs.Properties != nil && cs.Properties.OrchestratorProfile != nil && cs.Properties.OrchestratorProfile.OrchestratorType == Kubernetes {
+				if common.IsKubernetesVersionGe(cs.Properties.OrchestratorProfile.OrchestratorVersion, "1.14.1") {
+					spec.KubernetesSpecConfig.HyperkubeImageBase = "upstream.azurecr.io/k8s/core/"
+				}
 			}
-		}
-	}
+		}*/
 	return spec
 
 }
