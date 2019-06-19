@@ -21673,7 +21673,18 @@ var _k8sKubernetesparamsT = []byte(`{{if .HasAadProfile}}
       "type": "string"
     }
  {{end}}
-`)
+    ,"appGwSubnet": {
+      "metadata": {
+        "description": "Sets the subnet of the Application Gateway"
+      },
+      "type": "string"
+    }
+    ,"appGwSku": {
+      "metadata": {
+        "description": "Sets the subnet of the Application Gateway"
+      },
+      "type": "string"
+    }`)
 
 func k8sKubernetesparamsTBytes() ([]byte, error) {
 	return _k8sKubernetesparamsT, nil

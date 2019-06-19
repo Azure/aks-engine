@@ -20,3 +20,16 @@ func createUserAssignedIdentities() UserAssignedIdentitiesARM {
 		},
 	}
 }
+
+func createAppGwUserAssignedIdentities() UserAssignedIdentitiesARM {
+	return UserAssignedIdentitiesARM{
+		ARMResource: ARMResource{
+			APIVersion: "[variables('apiVersionManagedIdentity')]",
+		},
+		Identity: msi.Identity{
+			Type:     "Microsoft.ManagedIdentity/userAssignedIdentities",
+			Name:     to.StringPtr("[variables('appGwICIdentityName')]"),
+			Location: to.StringPtr("[variables('location')]"),
+		},
+	}
+}

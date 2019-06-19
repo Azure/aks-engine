@@ -261,5 +261,10 @@ func assignKubernetesParameters(properties *api.Properties, parametersMap params
 				addValue(parametersMap, "aadAdminGroupId", properties.AADProfile.AdminGroupID)
 			}
 		}
+
+		if kubernetesConfig != nil && kubernetesConfig.IsAddonEnabled(AppGwIngressAddonName) {
+			addValue(parametersMap, "appGwSku", kubernetesConfig.GetAddonByName(AppGwIngressAddonName).Config["appgw-sku"])
+			addValue(parametersMap, "appGwSubnet", kubernetesConfig.GetAddonByName(AppGwIngressAddonName).Config["appgw-subnet"])
+		}
 	}
 }

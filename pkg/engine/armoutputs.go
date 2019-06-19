@@ -69,8 +69,23 @@ func GetKubernetesOutputs(cs *api.ContainerService) map[string]interface{} {
 				"value": fmt.Sprintf("[variables('%sSubnetName')]", agentName),
 			}
 		}
-
 	}
+
+	if cs.Properties.OrchestratorProfile.KubernetesConfig.IsAddonEnabled(AppGwIngressAddonName) {
+		outputs["applicationGatewayName"] = map[string]interface{}{
+			"type":  "string",
+			"value": "[variables('appGwName')]",
+		}
+		outputs["appGwIdentityResourceId"] = map[string]interface{}{
+			"type":  "string",
+			"value": "[variables('appGwICIdentityId')]",
+		}
+		outputs["appGwIdentityClientId"] = map[string]interface{}{
+			"type":  "string",
+			"value": "[reference(variables('appGwICIdentityId'), variables('apiVersionManagedIdentity')).clientId]",
+		}
+	}
+
 	return outputs
 }
 

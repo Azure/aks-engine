@@ -149,6 +149,12 @@ type LoadBalancerARM struct {
 	network.LoadBalancer
 }
 
+// ApplicationGatewayARM embeds the ARMResource type in network.ApplicationGateway.
+type ApplicationGatewayARM struct {
+	ARMResource
+	network.ApplicationGateway
+}
+
 // NetworkInterfaceARM embeds the ARMResource type in network.Interface.
 type NetworkInterfaceARM struct {
 	ARMResource

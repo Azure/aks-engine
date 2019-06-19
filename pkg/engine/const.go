@@ -72,6 +72,8 @@ const (
 	AADPodIdentityAddonName = "aad-pod-identity"
 	// ACIConnectorAddonName is the name of the aci-connector addon deployment
 	ACIConnectorAddonName = "aci-connector"
+	// AppGwIngressAddonName appgw addon
+	AppGwIngressAddonName = "appgw-ingress"
 	// DashboardAddonName is the name of the kubernetes-dashboard addon deployment
 	DashboardAddonName = "kubernetes-dashboard"
 	// ClusterAutoscalerAddonName is the name of the autoscaler addon deployment

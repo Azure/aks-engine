@@ -599,3 +599,15 @@
       "type": "string"
     }
  {{end}}
+    ,"appGwSubnet": {
+      "metadata": {
+        "description": "Sets the subnet of the Application Gateway"
+      },
+      "type": "string"
+    }
+    ,"appGwSku": {
+      "metadata": {
+        "description": "Sets the subnet of the Application Gateway"
+      },
+      "type": "string"
+    }
