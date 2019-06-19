@@ -10,12 +10,13 @@ Following resources are deployed:
 4) User Assigned Identity to initialize the aad-pod-identity service and ingress controller.
 5) Set required RBACs.
 
-Supported `Config` options:
+Supported Add-on `Config` options:
+
 | Option | Required | Default | Description |
 |--|--|--|--|
-| appgw-subnet | true | N/A | CIDR of the Application Gateway subnet. This should not overlap with master/agent subnets. |
-| appgw-sku | false | WAF_v2 | SKU of the Application Gateway. (Standard_v2/WAF_v2) |
-| appgw-private-ip | false | null | Private IP assigned to the Application Gateway from subnet. |
+| `appgw-subnet` | true | N/A | CIDR of the Application Gateway subnet. This should not overlap with master/agent subnets. |
+| `appgw-sku` | false | `WAF_v2` | SKU of the Application Gateway. (`Standard_v2`/`WAF_v2`) |
+| `appgw-private-ip` | false | null | Private IP assigned to the Application Gateway from subnet. |
 
 Once, the infrastructure is deployed, please follow the instructions to deploy the [Application Gateway  Ingress controller](https://github.com/Azure/application-gateway-kubernetes-ingress/blob/master/docs/install-new.md#setting-up-application-gateway-ingress-controller-on-aks)
 
