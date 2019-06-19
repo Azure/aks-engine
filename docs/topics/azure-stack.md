@@ -51,6 +51,7 @@ If your Azure Stack instance uses ADFS to authenticate identities, then flag `id
 
 ``` bash
 aks-engine deploy \
+    --azure-env AzureStackCloud \
     --api-model kubernetes.json \
     --location local \
     --resource-group kube-rg \
@@ -58,7 +59,6 @@ aks-engine deploy \
     --client-id $SPN_CLIENT_ID \
     --client-secret $SPN_CLIENT_SECRET \
     --subscription-id $TENANT_SUBSCRIPTION_ID \
-    --azure-env AzureStackCloud \
     --output-directory kube-rg
 ```
 
