@@ -2455,7 +2455,7 @@ func TestDefaultEnablePodSecurityPolicy(t *testing.T) {
 					MasterProfile: &MasterProfile{},
 				},
 			},
-			expected: false,
+			expected: true,
 		},
 		{
 			name: "default",
