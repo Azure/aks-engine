@@ -24,9 +24,9 @@ The goal of this guide is to explain how to provision Kubernetes clusters to Azu
 
 ## Marketplace prerequisites
 
-Because Azure Stack instances do not have infinite storage available, Azure Stack administrators are in charge of managing it by selecting which marketplace items are downloaded from Azure's marketplace. Your Azure Stack administrator can follow this [guide](https://docs.microsoft.com/en-us/azure-stack/operator/azure-stack-download-azure-marketplace-item) for a general explanation about how to download marketplace items from Azure.
+Because Azure Stack instances do not have infinite storage available, Azure Stack administrators are in charge of managing it by selecting which marketplace items are downloaded from Azure's marketplace. The Azure Stack administrator can follow this [guide](https://docs.microsoft.com/en-us/azure-stack/operator/azure-stack-download-azure-marketplace-item) for a general explanation about how to download marketplace items from Azure.
 
-Before you try to deploy your first Kubernetes cluster, make sure these marketplace items were made available to the target subscription by the Azure Stack administrator.
+Before you try to deploy the first Kubernetes cluster, make sure these marketplace items were made available to the target subscription by the Azure Stack administrator.
 
 - `Custom Script for Linux 2.0` virtual machine extension
 - `Ubuntu Server 16.04 LTS` or `AKS Base Image` virtual machines
