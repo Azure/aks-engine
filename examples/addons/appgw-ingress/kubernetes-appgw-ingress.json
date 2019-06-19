@@ -3,13 +3,14 @@
   "properties": {
     "orchestratorProfile": {
       "orchestratorType": "Kubernetes",
-      "orchestratorRelease": "1.12",
       "kubernetesConfig": {
+        "networkPlugin": "azure",
         "addons": [
           {
             "name": "appgw-ingress",
             "enabled": true,
             "config": {
+              "appgw-subnet": "<subnet CIDR>",
               "appgw-sku": "WAF_v2"
             }
           }
@@ -18,13 +19,13 @@
     },
     "masterProfile": {
       "count": 1,
-      "vmSize": "Standard_DS2_v2",
-      "DNSPrefix": ""
+      "dnsPrefix": "",
+      "vmSize": "Standard_DS2_v2"
     },
     "agentPoolProfiles": [
       {
         "name": "agentpool",
-        "count": 2,
+        "count": 3,
         "vmSize": "Standard_DS2_v2",
         "availabilityProfile": "AvailabilitySet"
       }
@@ -40,6 +41,8 @@
       }
     },
     "servicePrincipalProfile": {
+      "clientId": "",
+      "secret": "",
       "objectId": "<>"
     }
   }
