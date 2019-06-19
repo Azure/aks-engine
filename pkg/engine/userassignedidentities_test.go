@@ -32,3 +32,24 @@ func TestCreateUserAssignedIdentities(t *testing.T) {
 		t.Errorf("unexpected diff while comparing structs: %s", diff)
 	}
 }
+
+func TestCreateAppGwUserAssignedIdentities(t *testing.T) {
+	expectedAssignedIdentity := UserAssignedIdentitiesARM{
+		ARMResource: ARMResource{
+			APIVersion: "[variables('apiVersionManagedIdentity')]",
+		},
+		Identity: msi.Identity{
+			Type:     "Microsoft.ManagedIdentity/userAssignedIdentities",
+			Name:     to.StringPtr("[variables('appGwICIdentityName')]"),
+			Location: to.StringPtr("[variables('location')]"),
+		},
+	}
+
+	actual := createAppGwUserAssignedIdentities()
+
+	diff := cmp.Diff(expectedAssignedIdentity, actual)
+
+	if diff != "" {
+		t.Errorf("unexpected diff while comparing structs: %s", diff)
+	}
+}

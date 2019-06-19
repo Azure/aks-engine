@@ -164,6 +164,70 @@ func TestCreateVirtualNetwork(t *testing.T) {
 	if diff != "" {
 		t.Errorf("Unexpected diff while comparing vnets: %s", diff)
 	}
+
+	// Test master vnet with appgw-ingress addon
+	cs = &api.ContainerService{
+		Properties: &api.Properties{
+			OrchestratorProfile: &api.OrchestratorProfile{
+				KubernetesConfig: &api.KubernetesConfig{
+					NetworkPolicy: "azure",
+					Addons: []api.KubernetesAddon{
+						{
+							Name:    AppGwIngressAddonName,
+							Enabled: to.BoolPtr(true),
+							Config: map[string]string{
+								"appgw-subnet": "10.0.0.1/16",
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	vnet = CreateVirtualNetwork(cs)
+	expectedVnet = VirtualNetworkARM{
+		ARMResource: ARMResource{
+			APIVersion: "[variables('apiVersionNetwork')]",
+			DependsOn: []string{
+				"[concat('Microsoft.Network/networkSecurityGroups/', variables('nsgName'))]",
+			},
+		},
+		VirtualNetwork: network.VirtualNetwork{
+			Location: to.StringPtr("[variables('location')]"),
+			Name:     to.StringPtr("[variables('virtualNetworkName')]"),
+			Type:     to.StringPtr("Microsoft.Network/virtualNetworks"),
+			VirtualNetworkPropertiesFormat: &network.VirtualNetworkPropertiesFormat{
+				AddressSpace: &network.AddressSpace{
+					AddressPrefixes: &[]string{
+						"[parameters('vnetCidr')]",
+					},
+				},
+				Subnets: &[]network.Subnet{
+					{
+						Name: to.StringPtr("[variables('subnetName')]"),
+						SubnetPropertiesFormat: &network.SubnetPropertiesFormat{
+							AddressPrefix: to.StringPtr("[parameters('masterSubnet')]"),
+							NetworkSecurityGroup: &network.SecurityGroup{
+								ID: to.StringPtr("[variables('nsgID')]"),
+							},
+						},
+					},
+					{
+						Name: to.StringPtr("[variables('appGwSubnetName')]"),
+						SubnetPropertiesFormat: &network.SubnetPropertiesFormat{
+							AddressPrefix: to.StringPtr("[parameters('appGwSubnet')]"),
+						},
+					},
+				},
+			},
+		},
+	}
+
+	diff = cmp.Diff(vnet, expectedVnet)
+	if diff != "" {
+		t.Errorf("Unexpected diff while comparing vnets: %s", diff)
+	}
 }
 
 func TestCreateVirtualNetworkVMSS(t *testing.T) {
