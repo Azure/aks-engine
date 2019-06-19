@@ -619,6 +619,11 @@ func (a *Properties) validateAddons() error {
 				}
 			case "appgw-ingress":
 				if to.Bool(addon.Enabled) {
+					if (a.ServicePrincipalProfile == nil || len(a.ServicePrincipalProfile.ObjectID) == 0) &&
+						!a.OrchestratorProfile.KubernetesConfig.UseManagedIdentity {
+						return errors.New("appgw-ingress add-ons requires 'objectID' to be specified or UseManagedIdentity to be true")
+					}
+
 					if a.OrchestratorProfile.KubernetesConfig.NetworkPlugin != "azure" {
 						return errors.New("appgw-ingress add-ons can only be used with Network Plugin as 'azure'")
 					}
