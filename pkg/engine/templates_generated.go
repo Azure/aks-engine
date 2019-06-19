@@ -19259,8 +19259,7 @@ Build-PauseContainer {
     # Future work: This needs to build wincat - see https://github.com/Azure/aks-engine/issues/1461
     "FROM $($WindowsBase)" | Out-File -encoding ascii -FilePath Dockerfile
     "CMD cmd /c ping -t localhost" | Out-File -encoding ascii -FilePath Dockerfile -Append
-    docker build -t $containerTag .
-    return $containerTag
+    docker build -t $DestinationTag .
 }
 
 function
@@ -19276,7 +19275,7 @@ New-InfraContainer {
     # Reference for these tags: curl -L https://mcr.microsoft.com/v2/k8s/core/pause/tags/list
     # Then docker run --rm mplatform/manifest-tool inspect mcr.microsoft.com/k8s/core/pause:<tag>
 
-    $windowsBase = switch ($computerInfo.WindowsVersion) {
+    switch ($computerInfo.WindowsVersion) {
         "1803" { docker pull "mcr.microsoft.com/k8s/core/pause" ; docker tag "mcr.microsoft.com/k8s/core/pause" $DestinationTag }
         "1809" { docker pull "mcr.microsoft.com/k8s/core/pause" ; docker tag "mcr.microsoft.com/k8s/core/pause" $DestinationTag }
         "1903" { Build-PauseContainer -WindowsBase "mcr.microsoft.com/windows/nanoserver:1903" -DestinationTag $DestinationTag}
