@@ -7828,7 +7828,7 @@ metadata:
   name: coredns
   namespace: kube-system
   labels:
-      addonmanager.kubernetes.io/mode: EnsureExists
+      addonmanager.kubernetes.io/mode: Reconcile
 data:
   Corefile: |
     .:53 {
