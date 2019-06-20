@@ -1,6 +1,7 @@
 # AKS Engine on Azure Stack - Public Preview
 
 * [Introduction](#introduction)
+* [Marketplace Prerequisites](#marketplace-prerequisites)
 * [Service Principals and Identity Providers](#service-principals-and-identity-providers)
 * [CLI flags](#cli-flags)
 * [Cluster Definition (aka API Model)](#cluster-definition-aka-api-model)
@@ -17,15 +18,28 @@
 
 ## Introduction
 
-Starting from [release](https://github.com/Azure/aks-engine/releases/) v0.36.2, AKS Engine can be used to provision self-managed Kubernetes clusters on Azure Stack. It is now possible to execute AKS Engine's `generate`, `deploy`, `upgrade`, and `scale` commands as if you were targeting Azure's public cloud. You are only required to slightly update your cluster definition to provide some extra information about your Azure Stack instance.
+Starting from [release](https://github.com/Azure/aks-engine/releases/) v0.36.2, AKS Engine can be used to provision self-managed Kubernetes clusters on [Azure Stack](https://azure.microsoft.com/overview/azure-stack/). It is now possible to execute AKS Engine's `generate`, [deploy](../tutorials/deploy.md), [upgrade](upgrade.md), and [scale](scale.md) commands as if you were targeting Azure's public cloud. You are only required to slightly update your cluster definition to provide some extra information about your Azure Stack instance.
 
 The goal of this guide is to explain how to provision Kubernetes clusters to Azure Stack using AKS Engine and to capture the differences between Azure and Azure Stack. Bear in mind as well that not every AKS Engine feature or configuration option is currently supported on Azure Stack. In most cases, these are not available because dependent Azure components are not part of Azure Stack.
+
+## Marketplace prerequisites
+
+Because Azure Stack instances do not have infinite storage available, Azure Stack administrators are in charge of managing it by selecting which marketplace items are downloaded from Azure's marketplace. The Azure Stack administrator can follow this [guide](https://docs.microsoft.com/azure-stack/operator/azure-stack-download-azure-marketplace-item) for a general explanation about how to download marketplace items from Azure.
+
+Before you try to deploy the first Kubernetes cluster, make sure these marketplace items were made available to the target subscription by the Azure Stack administrator.
+
+- `Custom Script for Linux 2.0` virtual machine extension
+- `Ubuntu Server 16.04 LTS` or `AKS Base Image` virtual machines
+
+The `AKS Base Image` is the only viable option if you are deploying to a [disconnected instance](#disconnected-azure-stack-instances).
+
+_Note: AKS Engine on disconnected Azure Stack instances is a private preview feature_
 
 ## Service Principals and Identity Providers
 
 Kubernetes uses a `service principal` identity to talk to Azure Stack APIs to dynamically manage resources such as storage or load balancers. Therefore, you will need to create a service principal before you can provision a Kubernetes cluster using AKS Engine.
 
-This [guide](https://docs.microsoft.com/en-us/azure-stack/operator/azure-stack-create-service-principals) explains how to create and manage service principals on Azure Stack for both Azure Active Directory (AAD) and Active Directory Federation Services (ADFS) identity providers. This other [guide](../../docs/topics/service-principals.md) is a good resource to understand the permissions that the service principal requires to deploy under your subscription.
+This [guide](https://docs.microsoft.com/azure-stack/operator/azure-stack-create-service-principals) explains how to create and manage service principals on Azure Stack for both Azure Active Directory (AAD) and Active Directory Federation Services (ADFS) identity providers. This other [guide](../../docs/topics/service-principals.md) is a good resource to understand the permissions that the service principal requires to deploy under your subscription.
 
 Once you have created the required service principal, make sure to assign it the `contributor` role at the target subscription scope.
 
@@ -37,14 +51,15 @@ If your Azure Stack instance uses ADFS to authenticate identities, then flag `id
 
 ``` bash
 aks-engine deploy \
+    --azure-env AzureStackCloud \
+    --api-model kubernetes.json \
     --location local \
-    --api-model ./kubernetes.json \
-    --resource-group aks-engine-rg \
-    --output-directory aks-engine \
+    --resource-group kube-rg \
+    --identity-system adfs \ # Optional if azure_ad
     --client-id $SPN_CLIENT_ID \
     --client-secret $SPN_CLIENT_SECRET \
     --subscription-id $TENANT_SUBSCRIPTION_ID \
-    --azure-env AzureStackCloud
+    --output-directory kube-rg
 ```
 
 ## Cluster Definition (aka API Model)
@@ -88,7 +103,7 @@ Unless otherwise specified down below, standard [cluster definition](../../docs/
 
 | Name                            | Required | Description|
 | ------------------------------- | -------- | ---------- |
-| vmsize                          | yes      | Specifies a valid [Azure Stack VM size](https://docs.microsoft.com/en-us/azure-stack/user/azure-stack-vm-sizes). |
+| vmsize                          | yes      | Specifies a valid [Azure Stack VM size](https://docs.microsoft.com/azure-stack/user/azure-stack-vm-sizes). |
 | distro                          | yes      | Specifies the masters' Linux distribution. Currently supported values are: `"ubuntu"` and `"aks"`. The latter is a custom image based on ubuntu-16.04 that comes with pre-installed software necessary for Kubernetes deployments. `"aks"` should be selected if you target a disconnected Azure Stack instance. |
 
 ### agentPoolProfiles
@@ -97,7 +112,7 @@ Unless otherwise specified down below, standard [cluster definition](../../docs/
 
 | Name                            | Required | Description|
 | ------------------------------- | -------- | ---------- |
-| vmsize                          | yes      | Describes a valid [Azure Stack VM size](https://docs.microsoft.com/en-us/azure-stack/user/azure-stack-vm-sizes). |
+| vmsize                          | yes      | Describes a valid [Azure Stack VM size](https://docs.microsoft.com/azure-stack/user/azure-stack-vm-sizes). |
 | distro                          | yes      | Specifies the masters' Linux distribution. Currently supported values are: `"ubuntu"` and `"aks"`. The latter is a custom image based on ubuntu-16.04 that comes with pre-installed software necessary for Kubernetes deployments. `"aks"` should be selected if you target a disconnected Azure Stack instance. |
 | availabilityProfile             | yes      | Only `"AvailabilitySet"` is currently supported. |
 | acceleratedNetworkingEnabled    | yes      | Use `Azure Accelerated Networking` feature for Linux agents. This property should be always set to `"false"`. |
@@ -116,7 +131,7 @@ If your Azure Stack instance is air-gapped or if network connectivity in your ge
 
 With these challenges in mind, you can choose to set the `distro` property of your cluster definition to `"aks"`. This change will instruct AKS Engine to deploy VM nodes using a base OS image called `AKS Base Image`. This custom image, generally based on Ubuntu Server, already contains the required software dependencies in its file system. Hence, internet connectivity won’t be required during the provisioning process.
 
-The `AKS Base Image` gallery item has to be available in your Azure Stack's Marketplace before it could be used by AKS Engine. Your Azure Stack administrator can follow this [guide](https://docs.microsoft.com/en-us/azure-stack/operator/azure-stack-download-azure-marketplace-item) for a general explanation about how to download gallery items from Azure.
+The `AKS Base Image` marketplace item has to be available in your Azure Stack's Marketplace before it could be used by AKS Engine. Your Azure Stack administrator can follow this [guide](https://docs.microsoft.com/azure-stack/operator/azure-stack-download-azure-marketplace-item) for a general explanation about how to download marketplace items from Azure.
 
 Each AKS Engine release is validated and tied to a specific version of the AKS Base Image. Therefore, you need to take note of the base image version required by the AKS Engine release that you plan to use, and then download exactly that base image version. New builds of the `AKS Base Image` are frequently released to ensure that your disconnected cluster can be upgraded to the latest supported version of each component.
 
