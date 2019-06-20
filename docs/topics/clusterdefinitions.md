@@ -652,7 +652,7 @@ https://{keyvaultname}.vault.azure.net:443/secrets/{secretName}/{version}
 
 If you want to choose a specific Windows image, but automatically use the latest - set `windowsPublisher`, `windowsOffer`, and `windowsSku`. If you need a specific version, then add `agentWindowsVersion` too.
 
-You can find all available images with `az vm image list`
+You can find all available images with `az vm image list`, and the contents of these images are described in the knowledge base article [Windows Server release on Azure Marketplace update history](https://support.microsoft.com/en-us/help/4497947).
 
 
 ```bash
