@@ -317,7 +317,7 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpgrade, isScale bool) {
 		// so it's critical to enforce default addons configuration first
 
 		// Configure kubelet
-		cs.setKubeletConfig()
+		cs.setKubeletConfig(isUpgrade)
 		// Configure controller-manager
 		cs.setControllerManagerConfig()
 		// Configure cloud-controller-manager
