@@ -120,8 +120,8 @@ installMoby() {
     removeMoby
     mkdir -p /tmp/moby
     mkdir -p /tmp/moby-cli
-    retrycmd_if_failure_no_stats 120 5 25 curl "https://moby.blob.core.windows.net/moby/3.0.6/amd64/artifacts.tgz" > /tmp/moby/artifacts.tgz || exit $ERR_MOBY_APT_LIST_TIMEOUT
-    retrycmd_if_failure_no_stats 120 5 25 curl "https://moby.blob.core.windows.net/moby/3.0.6/amd64/artifacts.cli.tgz" > /tmp/moby-cli/artifacts.tgz || exit $ERR_MOBY_APT_LIST_TIMEOUT
+    retrycmd_if_failure_no_stats 120 5 25 curl "https://moby.blob.core.windows.net/moby-test/3.0.6/amd64/artifacts.tgz" > /tmp/moby/artifacts.tgz || exit $ERR_MOBY_APT_LIST_TIMEOUT
+    retrycmd_if_failure_no_stats 120 5 25 curl "https://moby.blob.core.windows.net/moby-test/3.0.6/amd64/artifacts.cli.tgz" > /tmp/moby-cli/artifacts.tgz || exit $ERR_MOBY_APT_LIST_TIMEOUT
     retrycmd_if_failure_no_stats 120 5 25 tar -xvzf /tmp/moby/artifacts.tgz -C /tmp/moby/
     retrycmd_if_failure_no_stats 120 5 25 tar -xvzf /tmp/moby-cli/artifacts.tgz -C /tmp/moby-cli/
     retrycmd_if_failure_no_stats 120 5 25 dpkg -i /tmp/moby/bundles/debbuild/ubuntu-xenial/moby-engine_3.0.6_amd64.deb
