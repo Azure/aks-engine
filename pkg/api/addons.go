@@ -363,6 +363,17 @@ func (cs *ContainerService) setAddonsConfig(isUpdate bool) {
 			o.KubernetesConfig.Addons = appendAddonIfNotPresent(o.KubernetesConfig.Addons, pspAddonsConfig)
 		}
 	}
+
+	// Specific back-compat business logic for calico addon
+	// Ensure addon is set to Enabled w/ proper containers config no matter what if NetworkPolicy == calico
+	if o.KubernetesConfig.NetworkPolicy == NetworkPolicyCalico && isUpdate {
+		i := getAddonsIndexByName(o.KubernetesConfig.Addons, CalicoAddonName)
+		j := getAddonsIndexByName(defaultAddons, CalicoAddonName)
+		if i > -1 {
+			o.KubernetesConfig.Addons[i].Enabled = to.BoolPtr(true)
+			o.KubernetesConfig.Addons[i] = assignDefaultAddonVals(o.KubernetesConfig.Addons[i], defaultAddons[j], isUpdate)
+		}
+	}
 }
 
 func appendAddonIfNotPresent(addons []KubernetesAddon, addon KubernetesAddon) []KubernetesAddon {
