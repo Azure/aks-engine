@@ -18,7 +18,7 @@
 
 ## Introduction
 
-Starting from [release](https://github.com/Azure/aks-engine/releases/) v0.36.2, AKS Engine can be used to provision self-managed Kubernetes clusters on Azure Stack. It is now possible to execute AKS Engine's `generate`, [deploy](../tutorials/deploy.md), [upgrade](upgrade.md), and [scale](scale.md) commands as if you were targeting Azure's public cloud. You are only required to slightly update your cluster definition to provide some extra information about your Azure Stack instance.
+Starting from [release](https://github.com/Azure/aks-engine/releases/) v0.36.2, AKS Engine can be used to provision self-managed Kubernetes clusters on [Azure Stack](https://azure.microsoft.com/en-us/overview/azure-stack/). It is now possible to execute AKS Engine's `generate`, [deploy](../tutorials/deploy.md), [upgrade](upgrade.md), and [scale](scale.md) commands as if you were targeting Azure's public cloud. You are only required to slightly update your cluster definition to provide some extra information about your Azure Stack instance.
 
 The goal of this guide is to explain how to provision Kubernetes clusters to Azure Stack using AKS Engine and to capture the differences between Azure and Azure Stack. Bear in mind as well that not every AKS Engine feature or configuration option is currently supported on Azure Stack. In most cases, these are not available because dependent Azure components are not part of Azure Stack.
 
@@ -55,7 +55,7 @@ aks-engine deploy \
     --api-model kubernetes.json \
     --location local \
     --resource-group kube-rg \
-    --identity-system adfs # Optional if azure_ad
+    --identity-system adfs \ # Optional if azure_ad
     --client-id $SPN_CLIENT_ID \
     --client-secret $SPN_CLIENT_SECRET \
     --subscription-id $TENANT_SUBSCRIPTION_ID \
