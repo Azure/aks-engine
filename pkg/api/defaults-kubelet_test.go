@@ -5,6 +5,7 @@ package api
 
 import (
 	"strconv"
+	"strings"
 	"testing"
 
 	"github.com/Azure/aks-engine/pkg/api/common"
@@ -761,4 +762,82 @@ func TestKubeletStrongCipherSuites(t *testing.T) {
 				version, k["--tls-cipher-suites"])
 		}
 	}
+}
+
+func TestSupportPodPidsLimitFeatureGate(t *testing.T) {
+	cases := []struct {
+		name                                   string
+		cs                                     *ContainerService
+		expectedPodMaxPids                     string
+		expectedSupportPodPidsLimitFeatureGate bool
+	}{
+		{
+			name: "pre-1.14 with no --pod-max-pids defined",
+			cs: &ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorType:    Kubernetes,
+						OrchestratorVersion: "1.13.6",
+						KubernetesConfig:    &KubernetesConfig{},
+					},
+				},
+			},
+			expectedPodMaxPids:                     "-1",
+			expectedSupportPodPidsLimitFeatureGate: false,
+		},
+		{
+			name: "pre-1.14 with --pod-max-pids defined",
+			cs: &ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorType:    Kubernetes,
+						OrchestratorVersion: "1.13.6",
+						KubernetesConfig: &KubernetesConfig{
+							KubeletConfig: map[string]string{
+								"--pod-max-pids": "100",
+							},
+						},
+					},
+				},
+			},
+			expectedPodMaxPids:                     "100",
+			expectedSupportPodPidsLimitFeatureGate: false,
+		},
+		{
+			name: "default",
+			cs: &ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorType:    Kubernetes,
+						OrchestratorVersion: "1.14.0",
+						KubernetesConfig: &KubernetesConfig{
+							KubeletConfig: map[string]string{
+								"--pod-max-pids": "100",
+							},
+						},
+					},
+				},
+			},
+			expectedPodMaxPids:                     "100",
+			expectedSupportPodPidsLimitFeatureGate: true,
+		},
+	}
+
+	for _, c := range cases {
+		c := c
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+			c.cs.setKubeletConfig()
+			podMaxPids := c.cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig["--pod-max-pids"]
+			if podMaxPids != c.expectedPodMaxPids {
+				t.Fatalf("expected --pod-max-pids be equal to %s, got %s", c.expectedPodMaxPids, podMaxPids)
+			}
+			featureGates := c.cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig["--feature-gates"]
+			hasSupportPodPidsLimitFeatureGate := strings.Contains(featureGates, "SupportPodPidsLimit=true")
+			if hasSupportPodPidsLimitFeatureGate != c.expectedSupportPodPidsLimitFeatureGate {
+				t.Fatalf("expected SupportPodPidsLimit=true presence in --feature gates to be %t, got %t", c.expectedSupportPodPidsLimitFeatureGate, hasSupportPodPidsLimitFeatureGate)
+			}
+		})
+	}
+
 }

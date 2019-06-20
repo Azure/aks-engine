@@ -133,6 +133,12 @@ func (cs *ContainerService) setKubeletConfig() {
 		}
 	}
 
+	minVersionRequireSupportPodPidsLimitFeatureGate := "1.14.0"
+	podMaxPids, _ := strconv.Atoi(o.KubernetesConfig.KubeletConfig["--pod-max-pids"])
+	if podMaxPids > 0 {
+		addDefaultFeatureGates(o.KubernetesConfig.KubeletConfig, o.OrchestratorVersion, minVersionRequireSupportPodPidsLimitFeatureGate, "SupportPodPidsLimit=true")
+	}
+
 	removeKubeletFlags(o.KubernetesConfig.KubeletConfig, o.OrchestratorVersion)
 
 	// Master-specific kubelet config changes go here
