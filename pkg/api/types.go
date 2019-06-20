@@ -1867,7 +1867,9 @@ func (cs *ContainerService) GetAzureProdFQDN() string {
 // SetPlatformFaultDomainCount sets the fault domain count value for all VMASes in a cluster.
 func (cs *ContainerService) SetPlatformFaultDomainCount(count int) {
 	// Assume that all VMASes in the cluster share a value for platformFaultDomainCount
-	cs.Properties.MasterProfile.PlatformFaultDomainCount = &count
+	if cs.Properties.MasterProfile != nil {
+		cs.Properties.MasterProfile.PlatformFaultDomainCount = &count
+	}
 	for _, pool := range cs.Properties.AgentPoolProfiles {
 		pool.PlatformFaultDomainCount = &count
 	}
