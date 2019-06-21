@@ -2100,6 +2100,218 @@ func TestSetAddonsConfig(t *testing.T) {
 			},
 		},
 		{
+			name: "calico addon back-compat",
+			cs: &ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorVersion: "1.12.8",
+						KubernetesConfig: &KubernetesConfig{
+							NetworkPlugin: NetworkPluginAzure,
+							NetworkPolicy: NetworkPolicyCalico,
+							Addons: []KubernetesAddon{
+								{
+									Name:    CalicoAddonName,
+									Enabled: to.BoolPtr(false),
+									Containers: []KubernetesContainerSpec{
+										{
+											Name:  "calico-typha",
+											Image: specConfig.CalicoImageBase + "typha:old", // confirm that upgrade will change this to default image
+										},
+										{
+											Name:  "calico-cni",
+											Image: specConfig.CalicoImageBase + "cni:v3.7.2",
+										},
+										{
+											Name:  "calico-node",
+											Image: specConfig.CalicoImageBase + "node:v3.7.2",
+										},
+										{
+											Name:  "calico-cluster-proportional-autoscaler",
+											Image: specConfig.KubernetesImageBase + "cluster-proportional-autoscaler-amd64:1.1.2-r2",
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			isUpdate: true,
+			expectedAddons: []KubernetesAddon{
+				{
+					Name:    HeapsterAddonName,
+					Enabled: to.BoolPtr(true),
+					Containers: []KubernetesContainerSpec{
+						{
+							Name:           HeapsterAddonName,
+							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.12.8"]["heapster"],
+							CPURequests:    "88m",
+							MemoryRequests: "204Mi",
+							CPULimits:      "88m",
+							MemoryLimits:   "204Mi",
+						},
+						{
+							Name:           "heapster-nanny",
+							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.12.8"]["addonresizer"],
+							CPURequests:    "88m",
+							MemoryRequests: "204Mi",
+							CPULimits:      "88m",
+							MemoryLimits:   "204Mi",
+						},
+					},
+				},
+				{
+					Name:    TillerAddonName,
+					Enabled: to.BoolPtr(true),
+					Containers: []KubernetesContainerSpec{
+						{
+							Name:           TillerAddonName,
+							CPURequests:    "50m",
+							MemoryRequests: "150Mi",
+							CPULimits:      "50m",
+							MemoryLimits:   "150Mi",
+							Image:          specConfig.TillerImageBase + K8sComponentsByVersionMap["1.12.8"][TillerAddonName],
+						},
+					},
+					Config: map[string]string{
+						"max-history": strconv.Itoa(0),
+					},
+				},
+				{
+					Name:    ACIConnectorAddonName,
+					Enabled: to.BoolPtr(false),
+				},
+				{
+					Name:    ClusterAutoscalerAddonName,
+					Enabled: to.BoolPtr(false),
+				},
+				{
+					Name:    BlobfuseFlexVolumeAddonName,
+					Enabled: to.BoolPtr(true),
+					Containers: []KubernetesContainerSpec{
+						{
+							Name:           BlobfuseFlexVolumeAddonName,
+							CPURequests:    "50m",
+							MemoryRequests: "100Mi",
+							CPULimits:      "50m",
+							MemoryLimits:   "100Mi",
+							Image:          "mcr.microsoft.com/k8s/flexvolume/blobfuse-flexvolume:1.0.8",
+						},
+					},
+				},
+				{
+					Name:    SMBFlexVolumeAddonName,
+					Enabled: to.BoolPtr(false),
+				},
+				{
+					Name:    KeyVaultFlexVolumeAddonName,
+					Enabled: to.BoolPtr(true),
+					Containers: []KubernetesContainerSpec{
+						{
+							Name:           KeyVaultFlexVolumeAddonName,
+							CPURequests:    "50m",
+							MemoryRequests: "100Mi",
+							CPULimits:      "50m",
+							MemoryLimits:   "100Mi",
+							Image:          "mcr.microsoft.com/k8s/flexvolume/keyvault-flexvolume:v0.0.7",
+						},
+					},
+				},
+				{
+					Name:    DashboardAddonName,
+					Enabled: to.BoolPtr(true),
+					Containers: []KubernetesContainerSpec{
+						{
+							Name:           DashboardAddonName,
+							CPURequests:    "300m",
+							MemoryRequests: "150Mi",
+							CPULimits:      "300m",
+							MemoryLimits:   "150Mi",
+							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.12.8"][DashboardAddonName],
+						},
+					},
+				},
+				{
+					Name:    ReschedulerAddonName,
+					Enabled: to.BoolPtr(false),
+				},
+				{
+					Name:    MetricsServerAddonName,
+					Enabled: to.BoolPtr(true),
+					Containers: []KubernetesContainerSpec{
+						{
+							Name:  MetricsServerAddonName,
+							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.12.8"][MetricsServerAddonName],
+						},
+					},
+				},
+				{
+					Name:    NVIDIADevicePluginAddonName,
+					Enabled: to.BoolPtr(false),
+				},
+				{
+					Name:    ContainerMonitoringAddonName,
+					Enabled: to.BoolPtr(false),
+				},
+				{
+					Name:    IPMASQAgentAddonName,
+					Enabled: to.BoolPtr(true),
+					Containers: []KubernetesContainerSpec{
+						{
+							Name:           IPMASQAgentAddonName,
+							CPURequests:    "50m",
+							MemoryRequests: "50Mi",
+							CPULimits:      "50m",
+							MemoryLimits:   "250Mi",
+							Image:          specConfig.KubernetesImageBase + "ip-masq-agent-amd64:v2.0.0",
+						},
+					},
+					Config: map[string]string{
+						"non-masquerade-cidr": DefaultVNETCIDR,
+						"non-masq-cni-cidr":   DefaultCNICIDR,
+					},
+				},
+				{
+					Name:    AzureCNINetworkMonitoringAddonName,
+					Enabled: to.BoolPtr(false),
+				},
+				{
+					Name:    AzureNetworkPolicyAddonName,
+					Enabled: to.BoolPtr(false),
+				},
+				{
+					Name:    DNSAutoscalerAddonName,
+					Enabled: to.BoolPtr(false),
+				},
+				{
+					Name:    CalicoAddonName,
+					Enabled: to.BoolPtr(true),
+					Containers: []KubernetesContainerSpec{
+						{
+							Name:  "calico-typha",
+							Image: specConfig.CalicoImageBase + "typha:v3.7.2",
+						},
+						{
+							Name:  "calico-cni",
+							Image: specConfig.CalicoImageBase + "cni:v3.7.2",
+						},
+						{
+							Name:  "calico-node",
+							Image: specConfig.CalicoImageBase + "node:v3.7.2",
+						},
+						{
+							Name:  "calico-cluster-proportional-autoscaler",
+							Image: specConfig.KubernetesImageBase + "cluster-proportional-autoscaler-amd64:1.1.2-r2",
+						},
+					},
+				},
+				{
+					Name:    AADPodIdentityAddonName,
+					Enabled: to.BoolPtr(false),
+				},
+			},
+		},
+		{
 			name: "aad-pod-identity enabled",
 			cs: &ContainerService{
 				Properties: &Properties{
@@ -2933,6 +3145,9 @@ func TestSetAddonsConfig(t *testing.T) {
 					t.Fatalf("expected addon %s to have Enabled value %t, instead got %t", expectedAddon.Name, to.Bool(expectedAddon.Enabled), to.Bool(addon.Enabled))
 				}
 				if expectedAddon.Containers != nil {
+					if len(expectedAddon.Containers) != len(addon.Containers) {
+						t.Fatalf("expected addon %s to have %d containers , got %d", expectedAddon.Name, len(expectedAddon.Containers), len(addon.Containers))
+					}
 					for i, container := range expectedAddon.Containers {
 						if container.Name != addon.Containers[i].Name {
 							t.Fatalf("expected addon %s to have container Name %s at at Containers index %d, got %s", expectedAddon.Name, container.Name, i, addon.Containers[i].Name)
