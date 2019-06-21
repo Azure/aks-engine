@@ -27,7 +27,13 @@
 required = [
   "github.com/go-bindata/go-bindata/go-bindata",
   # Apply workaround from https://github.com/golang/dep/issues/1799
-  "gopkg.in/fsnotify.v1"
+  "gopkg.in/fsnotify.v1",
+  "k8s.io/client-go/plugin/pkg/client/auth/azure",
+  "k8s.io/klog"
+]
+
+noverify = [
+  "k8s.io/client-go"
 ]
 
 [[constraint]]

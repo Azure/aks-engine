@@ -858,6 +858,14 @@
   revision = "23781f4d6632d88e869066eaebb743857aa1ef9b"
   version = "v7.0.0"
 
+[[projects]]
+  digest = "1:43099cc4ed575c40f80277c7ba7168df37d0c663bdc4f541325430bd175cce8a"
+  name = "k8s.io/klog"
+  packages = ["."]
+  pruneopts = "NUT"
+  revision = "d98d8acdac006fb39831f1b25640813fef9c314f"
+  version = "v0.3.3"
+
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
@@ -927,6 +935,7 @@
     "k8s.io/client-go/plugin/pkg/client/auth/azure",
     "k8s.io/client-go/tools/clientcmd",
     "k8s.io/client-go/tools/clientcmd/api",
+    "k8s.io/klog",
   ]
   solver-name = "gps-cdcl"
   solver-version = 1
