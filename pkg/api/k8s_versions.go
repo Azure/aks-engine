@@ -17,7 +17,7 @@ var k8sComponentVersions = map[string]map[string]string{
 		"dockerEngine":                     "1.13.*",
 		"dashboard":                        "kubernetes-dashboard-amd64:v1.10.1",
 		"exechealthz":                      "exechealthz-amd64:1.2",
-		"addon-resizer":                    "addon-resizer:1.8.4",
+		"addon-resizer":                    "addon-resizer:1.8.5",
 		"heapster":                         "heapster-amd64:v1.5.4",
 		"metrics-server":                   "metrics-server-amd64:v0.2.1",
 		"coredns":                          "coredns:1.5.0",
