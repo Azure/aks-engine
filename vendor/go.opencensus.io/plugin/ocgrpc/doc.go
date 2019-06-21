@@ -1,4 +1,4 @@
-// Copyright 2018, OpenCensus Authors
+// Copyright 2017, OpenCensus Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,17 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package internal // import "go.opencensus.io/stats/internal"
-
-const (
-	MaxNameLength = 255
-)
-
-func IsPrintable(str string) bool {
-	for _, r := range str {
-		if !(r >= ' ' && r <= '~') {
-			return false
-		}
-	}
-	return true
-}
+// Package ocgrpc contains OpenCensus stats and trace
+// integrations for gRPC.
+//
+// Use ServerHandler for servers and ClientHandler for clients.
+package ocgrpc // import "go.opencensus.io/plugin/ocgrpc"
