@@ -79,7 +79,7 @@
   version = "v3.5.1"
 
 [[projects]]
-  digest = "1:35d3aa863699701bb3ec707902ee16f741166d032128bd2a6d7d6d27dc846339"
+  digest = "1:fdb4ed936abeecb46a8c27dcac83f75c05c87a46d9ec7711411eb785c213fa02"
   name = "github.com/census-instrumentation/opencensus-proto"
   packages = [
     "gen-go/agent/common/v1",
@@ -90,8 +90,8 @@
     "gen-go/trace/v1",
   ]
   pruneopts = "NUT"
-  revision = "7f2434bc10da710debe5c4315ed6d4df454b4024"
-  version = "v0.1.0"
+  revision = "a105b96453fe85139acc07b68de48f2cbdd71249"
+  version = "v0.2.0"
 
 [[projects]]
   digest = "1:ffe9824d294da03b391f44e1ae8281281b4afc1bdaa9588c9097785e3af10cec"
@@ -182,19 +182,25 @@
   version = "v1.2.0"
 
 [[projects]]
-  digest = "1:479e958ad7ae540d7a3c565d1839cc7c8ab9b627640144443f1e88d11d4023d0"
+  digest = "1:27d8aff388ac8ea2d4057097ef4aad2f98a6a8796477213096160b72b6c87cf2"
   name = "github.com/golang/protobuf"
   packages = [
+    "jsonpb",
     "proto",
+    "protoc-gen-go/descriptor",
+    "protoc-gen-go/generator",
+    "protoc-gen-go/generator/internal/remap",
+    "protoc-gen-go/plugin",
     "ptypes",
     "ptypes/any",
     "ptypes/duration",
+    "ptypes/struct",
     "ptypes/timestamp",
     "ptypes/wrappers",
   ]
   pruneopts = "NUT"
-  revision = "aa810b61a9c79d51363740d207bb46cf8e620ed5"
-  version = "v1.2.0"
+  revision = "b5d812f8a3706043e23a9cd5babf2e5423744d30"
+  version = "v1.3.1"
 
 [[projects]]
   digest = "1:05f95ffdfcf651bdb0f05b40b69e7f5663047f8da75c72d58728acb59b5cc107"
@@ -247,6 +253,18 @@
   ]
   pruneopts = "NUT"
   revision = "3befbb6ad0cc97d4c25d851e9528915809e1a22f"
+
+[[projects]]
+  digest = "1:1f643bd280f09699d6ee583c2be50cac9f90f1eaaf03408a92d893b96de81f5b"
+  name = "github.com/grpc-ecosystem/grpc-gateway"
+  packages = [
+    "internal",
+    "runtime",
+    "utilities",
+  ]
+  pruneopts = "NUT"
+  revision = "cd0c8ef3533e9c04e6520cac37a81fe262fb0b34"
+  version = "v1.9.2"
 
 [[projects]]
   digest = "1:67474f760e9ac3799f740db2c489e6423a4cde45520673ec123ac831ad849cb8"
@@ -674,9 +692,13 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:077c1c599507b3b3e9156d17d36e1e61928ee9b53a5b420f10f28ebd4a0b275c"
+  digest = "1:65029e36eebfe0c87fd57faf9c8143b8e6385d1ac39572537a33052ca0d81445"
   name = "google.golang.org/genproto"
-  packages = ["googleapis/rpc/status"]
+  packages = [
+    "googleapis/api/httpbody",
+    "googleapis/rpc/status",
+    "protobuf/field_mask",
+  ]
   pruneopts = "NUT"
   revision = "db91494dd46c1fdcbbde05e5ff5eb56df8f7d79a"
 
