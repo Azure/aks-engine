@@ -14,16 +14,16 @@ import (
 )
 
 const (
-	subscriptionID                        = "cc6b141e-6afc-4786-9bf6-e3b9a5601460"
-	tenantID                              = "19590a3f-b1af-4e6b-8f63-f917cbf40711"
-	resourceGroup                         = "TestResourceGroup"
-	computeAPIVersion                     = "2017-03-30"
-	networkAPIVersion                     = "2017-10-01"
-	deploymentAPIVersion                  = "2018-05-01"
-	deploymentName                        = "testDeplomentName"
-	deploymentStatus                      = "08586474508192185203"
-	virtualMachineScaleSetName            = "vmscalesetName"
-	virtualMachineAvailabilitySetName     = "vmavailabilitysetName"
+	subscriptionID             = "cc6b141e-6afc-4786-9bf6-e3b9a5601460"
+	tenantID                   = "19590a3f-b1af-4e6b-8f63-f917cbf40711"
+	resourceGroup              = "TestResourceGroup"
+	computeAPIVersion          = "2017-03-30"
+	networkAPIVersion          = "2017-10-01"
+	deploymentAPIVersion       = "2018-05-01"
+	deploymentName             = "testDeplomentName"
+	deploymentStatus           = "08586474508192185203"
+	virtualMachineScaleSetName = "vmscalesetName"
+	// virtualMachineAvailabilitySetName     = "vmavailabilitysetName" // TODO uncomment this when we fix UT
 	virtualMachineName                    = "testVirtualMachineName"
 	virtualNicName                        = "testVirtualNicName"
 	virutalDiskName                       = "testVirtualdickName"
