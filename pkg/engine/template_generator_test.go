@@ -97,7 +97,7 @@ func TestGetTemplateFuncMap(t *testing.T) {
 		"AnyAgentIsLinux",
 		"IsNSeriesSKU",
 		"HasAvailabilityZones",
-		"GetEscapedEnvironmentJSON",
+		"GetBase64EncodedEnvironmentJSON",
 		"IsIdentitySystemADFS",
 		// TODO validate that the remaining func strings in getTemplateFuncMap are thinly wrapped and unit tested
 	}
