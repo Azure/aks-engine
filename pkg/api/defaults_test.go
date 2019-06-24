@@ -657,7 +657,7 @@ func TestKubeletFeatureGatesEnsureFeatureGatesOnAgentsFor1_6_0(t *testing.T) {
 	// so they will inherit the top-level config
 	properties.OrchestratorProfile.KubernetesConfig = getKubernetesConfigWithFeatureGates("TopLevel=true")
 
-	mockCS.setKubeletConfig()
+	mockCS.setKubeletConfig(false)
 
 	agentFeatureGates := properties.AgentPoolProfiles[0].KubernetesConfig.KubeletConfig["--feature-gates"]
 	if agentFeatureGates != "TopLevel=true" {
@@ -681,7 +681,7 @@ func TestKubeletFeatureGatesEnsureMasterAndAgentConfigUsedFor1_6_0(t *testing.T)
 	properties.MasterProfile = &MasterProfile{KubernetesConfig: getKubernetesConfigWithFeatureGates("MasterLevel=true")}
 	properties.AgentPoolProfiles[0].KubernetesConfig = getKubernetesConfigWithFeatureGates("AgentLevel=true")
 
-	mockCS.setKubeletConfig()
+	mockCS.setKubeletConfig(false)
 
 	agentFeatureGates := properties.AgentPoolProfiles[0].KubernetesConfig.KubeletConfig["--feature-gates"]
 	if agentFeatureGates != "AgentLevel=true" {

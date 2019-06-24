@@ -36,7 +36,7 @@
               },
               {
                 "name": "heapster-nanny",
-                "image": "k8s.gcr.io/addon-resizer:1.8.4"
+                "image": "k8s.gcr.io/addon-resizer:1.8.5"
               }
             ]
           },
