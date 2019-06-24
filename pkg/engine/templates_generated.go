@@ -18387,7 +18387,8 @@ try
 
         {{if IsAzureStackCloud}}
         $azureStackConfigFile = [io.path]::Combine($global:KubeDir, "azurestackcloud.json")
-        "{{ GetEscapedEnvironmentJSON }}" | Out-File -encoding ASCII -filepath "$azureStackConfigFile"
+        $envJSON = "{{ GetBase64EncodedEnvironmentJSON }}"
+        [io.file]::WriteAllBytes($azureStackConfigFile, [System.Convert]::FromBase64String($envJSON))
         {{end}}
 
         Write-Log "Write ca root"
