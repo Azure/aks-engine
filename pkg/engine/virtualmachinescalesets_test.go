@@ -416,7 +416,7 @@ func TestCreateAgentVMSS(t *testing.T) {
 					AutoUpgradeMinorVersion: to.BoolPtr(true),
 					Settings:                map[string]interface{}{},
 					ProtectedSettings: map[string]interface{}{
-						"commandToExecute": `[concat('powershell.exe -ExecutionPolicy Unrestricted -command "', '$arguments = ', variables('singleQuote'),'-MasterIP ',variables('kubernetesAPIServerIP'),' -KubeDnsServiceIp ',parameters('kubeDnsServiceIp'),' -MasterFQDNPrefix ',variables('masterFqdnPrefix'),' -Location ',variables('location'),' -AgentKey ',parameters('clientPrivateKey'),' -AADClientId ',variables('servicePrincipalClientId'),' -AADClientSecret ',variables('singleQuote'),variables('singleQuote'),base64(variables('servicePrincipalClientSecret')),variables('singleQuote'),variables('singleQuote'), ' ',variables('singleQuote'), ' ; ', variables('windowsCustomScriptSuffix'), '" > %SYSTEMDRIVE%\AzureData\CustomDataSetupScript.log 2>&1')]`,
+						"commandToExecute": `[concat('powershell.exe -ExecutionPolicy Unrestricted -command "', '$arguments = ', variables('singleQuote'),'-MasterIP ',variables('kubernetesAPIServerIP'),' -KubeDnsServiceIp ',parameters('kubeDnsServiceIp'),' -MasterFQDNPrefix ',variables('masterFqdnPrefix'),' -Location ',variables('location'),' -TargetEnvironment ',parameters('targetEnvironment'),' -AgentKey ',parameters('clientPrivateKey'),' -AADClientId ',variables('servicePrincipalClientId'),' -AADClientSecret ',variables('singleQuote'),variables('singleQuote'),base64(variables('servicePrincipalClientSecret')),variables('singleQuote'),variables('singleQuote'), ' ',variables('singleQuote'), ' ; ', variables('windowsCustomScriptSuffix'), '" > %SYSTEMDRIVE%\AzureData\CustomDataSetupScript.log 2>&1')]`,
 					},
 				},
 			},
@@ -604,7 +604,7 @@ func TestCreateAgentVMSSHostedMasterProfile(t *testing.T) {
 					AutoUpgradeMinorVersion: to.BoolPtr(true),
 					Settings:                map[string]interface{}{},
 					ProtectedSettings: map[string]interface{}{
-						"commandToExecute": `[concat('powershell.exe -ExecutionPolicy Unrestricted -command "', '$arguments = ', variables('singleQuote'),'-MasterIP ',variables('kubernetesAPIServerIP'),' -KubeDnsServiceIp ',parameters('kubeDnsServiceIp'),' -MasterFQDNPrefix ',variables('masterFqdnPrefix'),' -Location ',variables('location'),' -AgentKey ',parameters('clientPrivateKey'),' -AADClientId ',variables('servicePrincipalClientId'),' -AADClientSecret ',variables('singleQuote'),variables('singleQuote'),base64(variables('servicePrincipalClientSecret')),variables('singleQuote'),variables('singleQuote'), ' ',variables('singleQuote'), ' ; ', variables('windowsCustomScriptSuffix'), '" > %SYSTEMDRIVE%\AzureData\CustomDataSetupScript.log 2>&1')]`,
+						"commandToExecute": `[concat('powershell.exe -ExecutionPolicy Unrestricted -command "', '$arguments = ', variables('singleQuote'),'-MasterIP ',variables('kubernetesAPIServerIP'),' -KubeDnsServiceIp ',parameters('kubeDnsServiceIp'),' -MasterFQDNPrefix ',variables('masterFqdnPrefix'),' -Location ',variables('location'),' -TargetEnvironment ',parameters('targetEnvironment'),' -AgentKey ',parameters('clientPrivateKey'),' -AADClientId ',variables('servicePrincipalClientId'),' -AADClientSecret ',variables('singleQuote'),variables('singleQuote'),base64(variables('servicePrincipalClientSecret')),variables('singleQuote'),variables('singleQuote'), ' ',variables('singleQuote'), ' ; ', variables('windowsCustomScriptSuffix'), '" > %SYSTEMDRIVE%\AzureData\CustomDataSetupScript.log 2>&1')]`,
 					},
 				},
 			},

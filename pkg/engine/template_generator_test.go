@@ -7,6 +7,9 @@ import (
 	"encoding/json"
 	"reflect"
 	"testing"
+	"text/template"
+
+	"github.com/pkg/errors"
 
 	"github.com/Azure/aks-engine/pkg/api"
 )
@@ -31,17 +34,10 @@ func TestGenerateTemplateV2(t *testing.T) {
 }
 
 func TestGetTemplateFuncMap(t *testing.T) {
-	tg, err := InitializeTemplateGenerator(Context{})
+	funcmap, err := getFuncMap(getAPIModelString())
 	if err != nil {
-		t.Errorf("unexpected error while instantiating TemplateGenerator: %s", err.Error())
+		t.Fatalf("Error generating function map: %v", err)
 	}
-	apiModelStr := getAPIModelString()
-	cs := &api.ContainerService{}
-	err = json.Unmarshal([]byte(apiModelStr), &cs)
-	if err != nil {
-		t.Errorf("unexpected error while unmarshalling the apiModel JSON: %s", err.Error())
-	}
-	funcmap := tg.getTemplateFuncMap(cs)
 	cases := []string{
 		"IsAzureStackCloud",
 		"IsMultiMasterCluster",
@@ -101,6 +97,8 @@ func TestGetTemplateFuncMap(t *testing.T) {
 		"AnyAgentIsLinux",
 		"IsNSeriesSKU",
 		"HasAvailabilityZones",
+		"GetBase64EncodedEnvironmentJSON",
+		"IsIdentitySystemADFS",
 		// TODO validate that the remaining func strings in getTemplateFuncMap are thinly wrapped and unit tested
 	}
 
@@ -131,6 +129,67 @@ func TestGetTemplateFuncMap(t *testing.T) {
 			}
 		}
 	}
+}
+
+func TestIsIdentitySystemADFS(t *testing.T) {
+	for _, test := range []struct {
+		desc     string
+		apiModel string
+		isADFS   bool
+	}{
+		{
+			desc:     "identitySystem=adfs should return true",
+			apiModel: `{"properties":{"customCloudProfile": {"identitySystem": "adfs"}}}`,
+			isADFS:   true,
+		},
+		{
+			desc:     "identitySystem=azure_ad should return false",
+			apiModel: `{"properties":{"customCloudProfile": {"identitySystem": "azure_ad"}}}`,
+			isADFS:   false,
+		},
+	} {
+		t.Run(test.desc, func(t *testing.T) {
+			funcmap, err := getFuncMap(test.apiModel)
+			if err != nil {
+				t.Fatalf("Error generating function map: %v", err)
+			}
+
+			v := reflect.ValueOf(funcmap["IsIdentitySystemADFS"])
+			ret := v.Call(make([]reflect.Value, 0))
+			if ret[0].Interface() != test.isADFS {
+				t.Fatalf("IsIdentitySystemADFS returned incorrect value")
+			}
+		})
+	}
+}
+
+func TestGetBase64EncodedEnvironmentJSON(t *testing.T) {
+	apiModelString := `{"properties":{"customCloudProfile":{"environment":{"name":"AzureStackCloud","managementPortalURL":"https://portal.local.azurestack.external/","publishSettingsURL":"'single quotes'","serviceManagementEndpoint":"https://management.azurestack.onmicrosoft.com/00000000-0000-0000-0000-0000000000","resourceManagerEndpoint":"https://management.local.azurestack.external/","activeDirectoryEndpoint":"https://login.microsoftonline.com/","galleryEndpoint":"https://galleryartifacts.hosting.local.azurestack.external/galleryartifacts/","keyVaultEndpoint":"","graphEndpoint":"https://graph.windows.net/","serviceBusEndpoint":"","batchManagementEndpoint":"","storageEndpointSuffix":"local.azurestack.external","sqlDatabaseDNSSuffix":"","trafficManagerDNSSuffix":"","keyVaultDNSSuffix":"vault.local.azurestack.external","serviceBusEndpointSuffix":"","serviceManagementVMDNSSuffix":"","resourceManagerVMDNSSuffix":"cloudapp.azurestack.external","containerRegistryDNSSuffix":"","tokenAudience":""}}}}`
+	funcmap, err := getFuncMap(apiModelString)
+	if err != nil {
+		t.Fatalf("Error generating function map: %v", err)
+	}
+	v := reflect.ValueOf(funcmap["GetBase64EncodedEnvironmentJSON"])
+	ret := v.Call(make([]reflect.Value, 0))
+	encodedEnvironmentJSON := ret[0].String()
+	correctlyEncodedString := `eyJuYW1lIjoiQXp1cmVTdGFja0Nsb3VkIiwibWFuYWdlbWVudFBvcnRhbFVSTCI6Imh0dHBzOi8vcG9ydGFsLmxvY2FsLmF6dXJlc3RhY2suZXh0ZXJuYWwvIiwicHVibGlzaFNldHRpbmdzVVJMIjoiJ3NpbmdsZSBxdW90ZXMnIiwic2VydmljZU1hbmFnZW1lbnRFbmRwb2ludCI6Imh0dHBzOi8vbWFuYWdlbWVudC5henVyZXN0YWNrLm9ubWljcm9zb2Z0LmNvbS8wMDAwMDAwMC0wMDAwLTAwMDAtMDAwMC0wMDAwMDAwMDAwIiwicmVzb3VyY2VNYW5hZ2VyRW5kcG9pbnQiOiJodHRwczovL21hbmFnZW1lbnQubG9jYWwuYXp1cmVzdGFjay5leHRlcm5hbC8iLCJhY3RpdmVEaXJlY3RvcnlFbmRwb2ludCI6Imh0dHBzOi8vbG9naW4ubWljcm9zb2Z0b25saW5lLmNvbS8iLCJnYWxsZXJ5RW5kcG9pbnQiOiJodHRwczovL2dhbGxlcnlhcnRpZmFjdHMuaG9zdGluZy5sb2NhbC5henVyZXN0YWNrLmV4dGVybmFsL2dhbGxlcnlhcnRpZmFjdHMvIiwia2V5VmF1bHRFbmRwb2ludCI6IiIsImdyYXBoRW5kcG9pbnQiOiJodHRwczovL2dyYXBoLndpbmRvd3MubmV0LyIsInNlcnZpY2VCdXNFbmRwb2ludCI6IiIsImJhdGNoTWFuYWdlbWVudEVuZHBvaW50IjoiIiwic3RvcmFnZUVuZHBvaW50U3VmZml4IjoibG9jYWwuYXp1cmVzdGFjay5leHRlcm5hbCIsInNxbERhdGFiYXNlRE5TU3VmZml4IjoiIiwidHJhZmZpY01hbmFnZXJETlNTdWZmaXgiOiIiLCJrZXlWYXVsdEROU1N1ZmZpeCI6InZhdWx0LmxvY2FsLmF6dXJlc3RhY2suZXh0ZXJuYWwiLCJzZXJ2aWNlQnVzRW5kcG9pbnRTdWZmaXgiOiIiLCJzZXJ2aWNlTWFuYWdlbWVudFZNRE5TU3VmZml4IjoiIiwicmVzb3VyY2VNYW5hZ2VyVk1ETlNTdWZmaXgiOiJjbG91ZGFwcC5henVyZXN0YWNrLmV4dGVybmFsIiwiY29udGFpbmVyUmVnaXN0cnlETlNTdWZmaXgiOiIiLCJ0b2tlbkF1ZGllbmNlIjoiIn0=`
+
+	if encodedEnvironmentJSON != correctlyEncodedString {
+		t.Fatalf("Function GetEnvironmentJSON() failed to produce correct environment: expected: %s, actual: %s", correctlyEncodedString, encodedEnvironmentJSON)
+	}
+}
+
+func getFuncMap(apiModelStr string) (template.FuncMap, error) {
+	tg, err := InitializeTemplateGenerator(Context{})
+	if err != nil {
+		return nil, errors.Wrap(err, "unexpected error while instantiating TemplateGenerator")
+	}
+	cs := &api.ContainerService{}
+	err = json.Unmarshal([]byte(apiModelStr), &cs)
+	if err != nil {
+		return nil, errors.Wrap(err, "unexpected error while unmarshalling the apiModel JSON")
+	}
+	return tg.getTemplateFuncMap(cs), nil
 }
 
 func getAPIModelString() string {

@@ -627,6 +627,13 @@ func (t *TemplateGenerator) getTemplateFuncMap(cs *api.ContainerService) templat
 		"IsIPv6DualStackFeatureEnabled": func() bool {
 			return cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6DualStack")
 		},
+		"GetBase64EncodedEnvironmentJSON": func() string {
+			customEnvironmentJSON, _ := cs.Properties.GetCustomEnvironmentJSON(false)
+			return base64.StdEncoding.EncodeToString([]byte(customEnvironmentJSON))
+		},
+		"IsIdentitySystemADFS": func() bool {
+			return cs.Properties.IsAzureStackCloud() && cs.Properties.CustomCloudProfile.IdentitySystem == api.ADFSIdentitySystem
+		},
 	}
 }
 
