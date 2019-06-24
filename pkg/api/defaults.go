@@ -168,6 +168,30 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpgrade, isScale bool) {
 				o.KubernetesConfig.ClusterSubnet = DefaultKubernetesSubnet
 			} else {
 				o.KubernetesConfig.ClusterSubnet = DefaultKubernetesClusterSubnet
+				// ipv4 and ipv6 subnet for dual stack
+				if cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6DualStack") {
+					o.KubernetesConfig.ClusterSubnet = strings.Join([]string{DefaultKubernetesClusterSubnet, DefaultKubernetesClusterSubnetIPv6}, ",")
+				}
+			}
+		} else {
+			// ensure 2 subnets exists if ipv6 dual stack feature is enabled
+			if cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6DualStack") && !o.IsAzureCNI() {
+				clusterSubnets := strings.Split(o.KubernetesConfig.ClusterSubnet, ",")
+				if len(clusterSubnets) == 1 {
+					// if error exists, then it'll be caught by validate
+					ip, _, err := net.ParseCIDR(clusterSubnets[0])
+					if err == nil {
+						if ip.To4() != nil {
+							// the first cidr block is ipv4, so append ipv6
+							clusterSubnets = append(clusterSubnets, DefaultKubernetesClusterSubnetIPv6)
+						} else {
+							// first cidr has to be ipv4
+							clusterSubnets = append([]string{DefaultKubernetesClusterSubnet}, clusterSubnets...)
+						}
+						// only set the cluster subnet if no error has been encountered
+						o.KubernetesConfig.ClusterSubnet = strings.Join(clusterSubnets, ",")
+					}
+				}
 			}
 		}
 		if o.KubernetesConfig.GCHighThreshold == 0 {
@@ -268,6 +292,10 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpgrade, isScale bool) {
 			a.OrchestratorProfile.KubernetesConfig.ExcludeMasterFromStandardLB = to.BoolPtr(DefaultExcludeMasterFromStandardLB)
 		}
 
+		if common.IsKubernetesVersionGe(a.OrchestratorProfile.OrchestratorVersion, "1.15.0-beta.1") {
+			a.OrchestratorProfile.KubernetesConfig.EnablePodSecurityPolicy = to.BoolPtr(true)
+		}
+
 		if a.OrchestratorProfile.IsAzureCNI() {
 			if a.HasWindows() {
 				a.OrchestratorProfile.KubernetesConfig.AzureCNIVersion = AzureCniPluginVerWindows
@@ -289,7 +317,7 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpgrade, isScale bool) {
 		// so it's critical to enforce default addons configuration first
 
 		// Configure kubelet
-		cs.setKubeletConfig()
+		cs.setKubeletConfig(isUpgrade)
 		// Configure controller-manager
 		cs.setControllerManagerConfig()
 		// Configure cloud-controller-manager
@@ -392,6 +420,7 @@ func (p *Properties) setMasterProfileDefaults(isUpgrade, isScale bool, cloudName
 				}
 			} else {
 				p.MasterProfile.Subnet = DefaultKubernetesMasterSubnet
+				p.MasterProfile.SubnetIPv6 = DefaultKubernetesMasterSubnetIPv6
 				// FirstConsecutiveStaticIP is not reset if it is upgrade and some value already exists
 				if !isUpgrade || len(p.MasterProfile.FirstConsecutiveStaticIP) == 0 {
 					if p.MasterProfile.IsVirtualMachineScaleSets() {

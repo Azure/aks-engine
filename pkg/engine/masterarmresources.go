@@ -47,7 +47,6 @@ func createKubernetesMasterResourcesVMAS(cs *api.ContainerService) []interface{}
 		masterNic := CreateNetworkInterfaces(cs)
 
 		masterResources = append(masterResources, publicIPAddress, loadBalancer, masterNic)
-
 	} else {
 		masterNic := createPrivateClusterNetworkInterface(cs)
 		masterResources = append(masterResources, masterNic)
@@ -90,6 +89,14 @@ func createKubernetesMasterResourcesVMAS(cs *api.ContainerService) []interface{}
 		keyVaultStorageAccount := createKeyVaultStorageAccount()
 		keyVault := CreateKeyVaultVMAS(cs)
 		masterResources = append(masterResources, keyVaultStorageAccount, keyVault)
+	}
+
+	if cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6DualStack") {
+		clusterIPv4PublicIPAddress := CreateClusterPublicIPAddress()
+		clusterIPv6PublicIPAddress := CreateClusterPublicIPv6Address()
+		clusterLB := CreateClusterLoadBalancerForIPv6()
+
+		masterResources = append(masterResources, clusterIPv4PublicIPAddress, clusterIPv6PublicIPAddress, clusterLB)
 	}
 
 	masterVM := CreateMasterVM(cs)
@@ -163,6 +170,14 @@ func createKubernetesMasterResourcesVMSS(cs *api.ContainerService) []interface{}
 		keyVaultStorageAccount := createKeyVaultStorageAccount()
 		keyVault := CreateKeyVaultVMSS(cs)
 		masterResources = append(masterResources, keyVaultStorageAccount, keyVault)
+	}
+
+	if cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6DualStack") {
+		clusterIPv4PublicIPAddress := CreateClusterPublicIPAddress()
+		clusterIPv6PublicIPAddress := CreateClusterPublicIPv6Address()
+		clusterLB := CreateClusterLoadBalancerForIPv6()
+
+		masterResources = append(masterResources, clusterIPv4PublicIPAddress, clusterIPv6PublicIPAddress, clusterLB)
 	}
 
 	masterVmss := CreateMasterVMSS(cs)

@@ -34,7 +34,7 @@
 // ../../parts/iaasoutputs.t
 // ../../parts/k8s/addons/1.10/kubernetesmasteraddons-kube-dns-deployment.yaml
 // ../../parts/k8s/addons/1.15/kubernetesmasteraddons-azure-cloud-provider-deployment.yaml
-// ../../parts/k8s/addons/1.6/kubernetesmasteraddons-calico-daemonset.yaml
+// ../../parts/k8s/addons/1.15/kubernetesmasteraddons-pod-security-policy.yaml
 // ../../parts/k8s/addons/1.6/kubernetesmasteraddons-kubernetes-dashboard-deployment.yaml
 // ../../parts/k8s/addons/1.7/kubernetesmasteraddons-kube-dns-deployment.yaml
 // ../../parts/k8s/addons/1.7/kubernetesmasteraddons-kubernetes-dashboard-deployment.yaml
@@ -65,9 +65,11 @@
 // ../../parts/k8s/cloud-init/artifacts/cse_install.sh
 // ../../parts/k8s/cloud-init/artifacts/cse_main.sh
 // ../../parts/k8s/cloud-init/artifacts/default-grub
+// ../../parts/k8s/cloud-init/artifacts/dhcpv6.service
 // ../../parts/k8s/cloud-init/artifacts/docker-monitor.service
 // ../../parts/k8s/cloud-init/artifacts/docker-monitor.timer
 // ../../parts/k8s/cloud-init/artifacts/docker_clear_mount_propagation_flags.conf
+// ../../parts/k8s/cloud-init/artifacts/enable-dhcpv6.sh
 // ../../parts/k8s/cloud-init/artifacts/etc-issue
 // ../../parts/k8s/cloud-init/artifacts/etc-issue.net
 // ../../parts/k8s/cloud-init/artifacts/etcd.service
@@ -2370,7 +2372,7 @@ var _dcosDcoswindowsprovisionPs1 = []byte(`<#
         Provisions VM as a DCOS agent.
 
      Invoke by:
-
+       
 #>
 
 [CmdletBinding(DefaultParameterSetName="Standard")]
@@ -2382,7 +2384,7 @@ param(
     [string]
     [ValidateNotNullOrEmpty()]
     $firstMasterIP,
-
+    
     [string]
     [ValidateNotNullOrEmpty()]
     $bootstrapUri,
@@ -2436,7 +2438,7 @@ Expand-ZIPFile($file, $destination)
 }
 
 
-function
+function 
 Remove-Directory($dirname)
 {
 
@@ -2453,25 +2455,25 @@ Remove-Directory($dirname)
 }
 
 
-function
+function 
 Check-Subnet ([string]$cidr, [string]$ip)
 {
     try {
 
         $network, [int]$subnetlen = $cidr.Split('/')
-
+    
         if ($subnetlen -eq 0)
         {
             $subnetlen = 8 # Default in case we get an IP addr, not CIDR
         }
         $a = ([IPAddress] $network)
         [uint32] $unetwork = [uint32]$a.Address
-
+    
         $mask = -bnot ((-bnot [uint32]0) -shl (32 - $subnetlen))
-
+    
         $a = [IPAddress]$ip
         [uint32] $uip = [uint32]$a.Address
-
+    
         return ($unetwork -eq ($mask -band $uip))
     }
     catch {
@@ -2497,7 +2499,7 @@ Get-BootstrapScript($download_uri, $download_dir)
 try
 {
     # Set to false for debugging.  This will output the start script to
-    # c:\AzureData\dcosProvisionScript.log, and then you can RDP
+    # c:\AzureData\dcosProvisionScript.log, and then you can RDP 
     # to the windows machine, and run the script manually to watch
     # the output.
     Write-Log "Get the install script"
@@ -2514,16 +2516,16 @@ try
     $ip = ([IPAddress]($ip -join '.')).Address
 
     $MasterIP = @([IPAddress]$null)
-
-    for ($i = 0; $i -lt $MasterCount; $i++ )
+    
+    for ($i = 0; $i -lt $MasterCount; $i++ ) 
     {
        $new_ip = ([IPAddress]$ip).getAddressBytes()
        [Array]::Reverse($new_ip)
        $new_ip = [IPAddress]($new_ip -join '.')
        $MasterIP += $new_ip
-
+      
        $ip++
-
+     
     }
     $master_str  = $MasterIP.IPAddressToString
 
@@ -2532,7 +2534,7 @@ try
         $master_str += ":2181"
     }
     else {
-        for ($i = 0; $i -lt $master_str.count; $i++)
+        for ($i = 0; $i -lt $master_str.count; $i++) 
         {
             $master_str[$i] += ":2181"
         }
@@ -2545,12 +2547,12 @@ try
 
     if ($isAgent)
     {
-        $run_cmd = $global:BootstrapInstallDir+"\DCOSWindowsAgentSetup.ps1 -MasterIP '$master_json' -AgentPrivateIP "+($private_ip.IPAddress) +" -BootstrapUrl '$bootstrapUri' "
-        if ($isPublic)
+        $run_cmd = $global:BootstrapInstallDir+"\DCOSWindowsAgentSetup.ps1 -MasterIP '$master_json' -AgentPrivateIP "+($private_ip.IPAddress) +" -BootstrapUrl '$bootstrapUri' " 
+        if ($isPublic) 
         {
             $run_cmd += " -isPublic:` + "`" + `$true "
         }
-        if ($customAttrs)
+        if ($customAttrs) 
         {
             $run_cmd += " -customAttrs '$customAttrs'"
         }
@@ -4064,13 +4066,13 @@ runcmd: PREPROVISION_EXTENSION
   - --now
   - lxc-net.service
 - - tar
-  - czf
+  - czf 
   - /etc/docker.tar.gz
   - -C
   - /tmp/xtoph
   - .docker
-- - rm
-  - -rf
+- - rm 
+  - -rf 
   - /tmp/xtoph
 - /opt/azure/containers/provision.sh
 - - cp
@@ -4445,13 +4447,13 @@ runcmd: PREPROVISION_EXTENSION
   - --now
   - lxc-net.service
 - - tar
-  - czf
+  - czf 
   - /etc/docker.tar.gz
   - -C
   - /tmp/xtoph
   - .docker
-- - rm
-  - -rf
+- - rm 
+  - -rf 
   - /tmp/xtoph
 - /opt/azure/containers/provision.sh
 - - cp
@@ -4840,16 +4842,16 @@ runcmd: PREPROVISION_EXTENSION
   - --now
   - unscd.service
 - sed -i "s/^Port 22$/Port 22\nPort 2222/1" /etc/ssh/sshd_config
-- service ssh restart
+- service ssh restart 
 - /opt/azure/containers/setup_ephemeral_disk.sh
 - - tar
-  - czf
+  - czf 
   - /etc/docker.tar.gz
   - -C
   - /tmp/xtoph
   - .docker
-- - rm
-  - -rf
+- - rm 
+  - -rf 
   - /tmp/xtoph
 - /opt/azure/containers/provision.sh
 - - cp
@@ -5213,16 +5215,16 @@ runcmd: PREPROVISION_EXTENSION
   - --now
   - unscd.service
 - sed -i "s/^Port 22$/Port 22\nPort 2222/1" /etc/ssh/sshd_config
-- service ssh restart
+- service ssh restart 
 - /opt/azure/containers/setup_ephemeral_disk.sh
 - - tar
-  - czf
+  - czf 
   - /etc/docker.tar.gz
   - -C
   - /tmp/xtoph
   - .docker
-- - rm
-  - -rf
+- - rm 
+  - -rf 
   - /tmp/xtoph
 - /opt/azure/containers/provision.sh
 - - cp
@@ -6126,21 +6128,21 @@ var _dcosDcosparamsT = []byte(`    "dcosBootstrapURL": {
       "defaultValue": "https://dcosio.azureedge.net/dcos/stable",
       "metadata": {
         "description": "The repository URL"
-      },
+      }, 
       "type": "string"
     },
     "dcosClusterPackageListID": {
       "defaultValue": "77282d8864a5bf36db345b54a0d1de3674a0e937",
       "metadata": {
         "description": "The default cluster package list IDs."
-      },
+      }, 
       "type": "string"
     },
     "dcosProviderPackageID": {
       "defaultValue": "",
       "metadata": {
         "description": "The guid for provider dcos-provider package."
-      },
+      }, 
       "type": "string"
     },
 `)
@@ -6677,280 +6679,151 @@ func k8sAddons115KubernetesmasteraddonsAzureCloudProviderDeploymentYaml() (*asse
 	return a, nil
 }
 
-var _k8sAddons16KubernetesmasteraddonsCalicoDaemonsetYaml = []byte(`# Calico Version v2.4.1
-# https://docs.projectcalico.org/v2.4/releases#v2.4.1
-# This manifest includes the following component versions:
-#   calico/node:v2.4.1
-#   calico/cni:v1.10.0
-apiVersion: v1
-kind: ServiceAccount
+var _k8sAddons115KubernetesmasteraddonsPodSecurityPolicyYaml = []byte(`apiVersion: extensions/v1beta1
+kind: PodSecurityPolicy
 metadata:
-  name: calico-node
-  namespace: kube-system
+  name: privileged
+  annotations:
+    seccomp.security.alpha.kubernetes.io/allowedProfileNames: "*"
   labels:
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: "Reconcile"
+    addonmanager.kubernetes.io/mode: Reconcile
+spec:
+  privileged: true
+  allowPrivilegeEscalation: true
+  allowedCapabilities:
+  - "*"
+  volumes:
+  - "*"
+  hostNetwork: true
+  hostPorts:
+  - min: 0
+    max: 65535
+  hostIPC: true
+  hostPID: true
+  runAsUser:
+    rule: RunAsAny
+  seLinux:
+    rule: RunAsAny
+  supplementalGroups:
+    rule: RunAsAny
+  fsGroup:
+    rule: RunAsAny
 ---
+apiVersion: extensions/v1beta1
+kind: PodSecurityPolicy
+metadata:
+  name: restricted
+  annotations:
+    seccomp.security.alpha.kubernetes.io/allowedProfileNames: docker/default
+    apparmor.security.beta.kubernetes.io/allowedProfileNames: runtime/default
+    seccomp.security.alpha.kubernetes.io/defaultProfileName:  docker/default
+    apparmor.security.beta.kubernetes.io/defaultProfileName:  runtime/default
+  labels:
+    addonmanager.kubernetes.io/mode: Reconcile
+spec:
+  privileged: false
+  allowPrivilegeEscalation: false
+  requiredDropCapabilities:
+    - ALL
+  volumes:
+    - configMap
+    - emptyDir
+    - projected
+    - secret
+    - downwardAPI
+    - persistentVolumeClaim
+  hostNetwork: false
+  hostIPC: false
+  hostPID: false
+  runAsUser:
+    rule: MustRunAsNonRoot
+  seLinux:
+    rule: RunAsAny
+  supplementalGroups:
+    rule: MustRunAs
+    ranges:
+      # Forbid adding the root group.
+      - min: 1
+        max: 65535
+  fsGroup:
+    rule: MustRunAs
+    ranges:
+      # Forbid adding the root group.
+      - min: 1
+        max: 65535
+  readOnlyRootFilesystem: false
+---
+apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
-apiVersion: rbac.authorization.k8s.io/v1alpha1
 metadata:
-  name: calico-node
-  namespace: kube-system
+  name: psp:privileged
   labels:
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: "Reconcile"
+    addonmanager.kubernetes.io/mode: Reconcile
 rules:
-  - apiGroups: [""]
-    resources:
-      - namespaces
-    verbs:
-      - get
-      - list
-      - watch
-  - apiGroups: [""]
-    resources:
-      - pods/status
-    verbs:
-      - update
-  - apiGroups: [""]
-    resources:
-      - pods
-    verbs:
-      - get
-      - list
-      - watch
-  - apiGroups: [""]
-    resources:
-      - nodes
-    verbs:
-      - get
-      - list
-      - update
-      - watch
-  - apiGroups: ["extensions"]
-    resources:
-      - thirdpartyresources
-    verbs:
-      - create
-      - get
-      - list
-      - watch
-  - apiGroups: ["extensions"]
-    resources:
-      - networkpolicies
-    verbs:
-      - get
-      - list
-      - watch
-  - apiGroups: ["projectcalico.org"]
-    resources:
-      - globalbgppeers
-    verbs:
-      - get
-      - list
-  - apiGroups: ["projectcalico.org"]
-    resources:
-      - globalconfigs
-      - globalbgpconfigs
-    verbs:
-      - create
-      - get
-      - list
-      - update
-      - watch
-  - apiGroups: ["projectcalico.org"]
-    resources:
-      - ippools
-    verbs:
-      - create
-      - get
-      - list
-      - update
-      - watch
-  - apiGroups: ["alpha.projectcalico.org"]
-    resources:
-      - systemnetworkpolicies
-    verbs:
-      - get
-      - list
-      - watch
+- apiGroups: ['extensions']
+  resources: ['podsecuritypolicies']
+  verbs:     ['use']
+  resourceNames:
+  - privileged
 ---
-kind: ClusterRoleBinding
-apiVersion: rbac.authorization.k8s.io/v1alpha1
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
 metadata:
-  name: calico-node
+  name: psp:restricted
   labels:
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: "Reconcile"
+    addonmanager.kubernetes.io/mode: Reconcile
+rules:
+- apiGroups: ['extensions']
+  resources: ['podsecuritypolicies']
+  verbs:     ['use']
+  resourceNames:
+  - restricted
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: default:restricted
+  labels:
+    addonmanager.kubernetes.io/mode: Reconcile
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: calico-node
+  name: psp:restricted
 subjects:
-- kind: ServiceAccount
-  name: calico-node
-  namespace: kube-system
+- kind: Group
+  name: system:authenticated
+  apiGroup: rbac.authorization.k8s.io
 ---
-kind: ConfigMap
-apiVersion: v1
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
 metadata:
-  name: calico-config
-  namespace: kube-system
+  name: default:privileged
   labels:
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: "EnsureExists"
-data:
-  cni_network_config: |-
-    {
-        "name": "k8s-pod-network",
-        "cniVersion": "0.1.0",
-        "type": "calico",
-        "log_level": "info",
-        "datastore_type": "kubernetes",
-        "nodename": "__KUBERNETES_NODE_NAME__",
-        "ipam": {
-            "type": "host-local",
-            "subnet": "usePodCidr"
-        },
-        "policy": {
-            "type": "k8s",
-            "k8s_auth_token": "__SERVICEACCOUNT_TOKEN__"
-        },
-        "kubernetes": {
-            "k8s_api_root": "https://__KUBERNETES_SERVICE_HOST__:__KUBERNETES_SERVICE_PORT__",
-            "kubeconfig": "__KUBECONFIG_FILEPATH__"
-        }
-    }
----
-kind: DaemonSet
-apiVersion: extensions/v1beta1
-metadata:
-  name: calico-node
-  namespace: kube-system
-  labels:
-    k8s-app: calico-node
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: "Reconcile"
-spec:
-  selector:
-    matchLabels:
-      k8s-app: calico-node
-  template:
-    metadata:
-      labels:
-        k8s-app: calico-node
-      annotations:
-        scheduler.alpha.kubernetes.io/critical-pod: ''
-        scheduler.alpha.kubernetes.io/tolerations: |
-          [{"key": "dedicated", "value": "master", "effect": "NoSchedule" },
-           {"key":"CriticalAddonsOnly", "operator":"Exists"}]
-    spec:
-      hostNetwork: true
-      serviceAccountName: calico-node
-      containers:
-        - name: calico-node
-          image: quay.io/calico/node:v2.4.1
-          env:
-            - name: DATASTORE_TYPE
-              value: "kubernetes"
-            - name: FELIX_LOGSEVERITYSCREEN
-              value: "info"
-            - name: FELIX_IPTABLESREFRESHINTERVAL
-              value: "60"
-            - name: FELIX_IPV6SUPPORT
-              value: "false"
-            - name: CALICO_NETWORKING_BACKEND
-              value: "none"
-            - name: CLUSTER_TYPE
-              value: "k8s,acse"
-            - name: CALICO_DISABLE_FILE_LOGGING
-              value: "true"
-            - name: WAIT_FOR_DATASTORE
-              value: "true"
-            - name: IP
-              value: ""
-            - name: CALICO_IPV4POOL_CIDR
-              value: "<kubeClusterCidr>"
-            - name: CALICO_IPV4POOL_IPIP
-              value: "off"
-            - name: FELIX_IPINIPENABLED
-              value: "false"
-            - name: FELIX_HEALTHENABLED
-              value: "true"
-            - name: NODENAME
-              valueFrom:
-                fieldRef:
-                  fieldPath: spec.nodeName
-            - name: FELIX_DEFAULTENDPOINTTOHOSTACTION
-              value: "ACCEPT"
-          securityContext:
-            privileged: true
-          resources:
-            requests:
-              cpu: 250m
-          livenessProbe:
-            httpGet:
-              path: /liveness
-              port: 9099
-            periodSeconds: 10
-            initialDelaySeconds: 10
-            failureThreshold: 6
-          readinessProbe:
-            httpGet:
-              path: /readiness
-              port: 9099
-            periodSeconds: 10
-          volumeMounts:
-            - mountPath: /lib/modules
-              name: lib-modules
-              readOnly: true
-            - mountPath: /var/run/calico
-              name: var-run-calico
-              readOnly: false
-        - name: install-cni
-          image: quay.io/calico/cni:v1.10.0
-          command: ["/install-cni.sh"]
-          env:
-            - name: CNI_NETWORK_CONFIG
-              valueFrom:
-                configMapKeyRef:
-                  name: calico-config
-                  key: cni_network_config
-            - name: KUBERNETES_NODE_NAME
-              valueFrom:
-                fieldRef:
-                  fieldPath: spec.nodeName
-          volumeMounts:
-            - mountPath: /host/opt/cni/bin
-              name: cni-bin-dir
-            - mountPath: /host/etc/cni/net.d
-              name: cni-net-dir
-      volumes:
-        - name: lib-modules
-          hostPath:
-            path: /lib/modules
-        - name: var-run-calico
-          hostPath:
-            path: /var/run/calico
-        - name: cni-bin-dir
-          hostPath:
-            path: /opt/cni/bin
-        - name: cni-net-dir
-          hostPath:
-            path: /etc/cni/net.d
+    addonmanager.kubernetes.io/mode: Reconcile
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: psp:privileged
+subjects:
+- kind: Group
+  name: system:authenticated
+  apiGroup: rbac.authorization.k8s.io
+- kind: Group
+  name: system:nodes
+  apiGroup: rbac.authorization.k8s.io
 `)
 
-func k8sAddons16KubernetesmasteraddonsCalicoDaemonsetYamlBytes() ([]byte, error) {
-	return _k8sAddons16KubernetesmasteraddonsCalicoDaemonsetYaml, nil
+func k8sAddons115KubernetesmasteraddonsPodSecurityPolicyYamlBytes() ([]byte, error) {
+	return _k8sAddons115KubernetesmasteraddonsPodSecurityPolicyYaml, nil
 }
 
-func k8sAddons16KubernetesmasteraddonsCalicoDaemonsetYaml() (*asset, error) {
-	bytes, err := k8sAddons16KubernetesmasteraddonsCalicoDaemonsetYamlBytes()
+func k8sAddons115KubernetesmasteraddonsPodSecurityPolicyYaml() (*asset, error) {
+	bytes, err := k8sAddons115KubernetesmasteraddonsPodSecurityPolicyYamlBytes()
 	if err != nil {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "k8s/addons/1.6/kubernetesmasteraddons-calico-daemonset.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	info := bindataFileInfo{name: "k8s/addons/1.15/kubernetesmasteraddons-pod-security-policy.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -7955,7 +7828,7 @@ metadata:
   name: coredns
   namespace: kube-system
   labels:
-      addonmanager.kubernetes.io/mode: EnsureExists
+      addonmanager.kubernetes.io/mode: Reconcile
 data:
   Corefile: |
     .:53 {
@@ -9969,7 +9842,9 @@ subjects:
 - kind: Group
   name: system:serviceaccounts:kube-system
   apiGroup: rbac.authorization.k8s.io
-`)
+- kind: Group
+  name: system:nodes
+  apiGroup: rbac.authorization.k8s.io`)
 
 func k8sAddonsKubernetesmasteraddonsPodSecurityPolicyYamlBytes() ([]byte, error) {
 	return _k8sAddonsKubernetesmasteraddonsPodSecurityPolicyYaml, nil
@@ -10131,9 +10006,7 @@ func k8sArmparametersT() (*asset, error) {
 	return a, nil
 }
 
-var _k8sCloudInitArtifactsAptPreferences = []byte(`Package: walinuxagent
-Pin: version 2.2.32.2
-Pin-Priority: 550`)
+var _k8sCloudInitArtifactsAptPreferences = []byte(``)
 
 func k8sCloudInitArtifactsAptPreferencesBytes() ([]byte, error) {
 	return _k8sCloudInitArtifactsAptPreferences, nil
@@ -10723,6 +10596,10 @@ ensureKMS() {
     systemctlEnableAndStart kms || exit $ERR_SYSTEMCTL_START_FAIL
 }
 
+ensureDHCPv6() {
+    systemctlEnableAndStart dhcpv6 || exit $ERR_SYSTEMCTL_START_FAIL
+}
+
 ensureKubelet() {
     KUBELET_DEFAULT_FILE=/etc/default/kubelet
     wait_for_file 1200 1 $KUBELET_DEFAULT_FILE || exit $ERR_FILE_WATCH_TIMEOUT
@@ -10969,7 +10846,7 @@ configureK8sCustomCloud() {
     # Decrease eth0 MTU to mitigate Azure Stack's NRP issue
     echo "iface eth0 inet dhcp" | sudo tee -a /etc/network/interfaces
     echo "    post-up /sbin/ifconfig eth0 mtu 1350" | sudo tee -a /etc/network/interfaces
-
+    
     ifconfig eth0 mtu 1350
 
     set -x
@@ -11182,9 +11059,10 @@ apt_get_dist_upgrade() {
     export DEBIAN_FRONTEND=noninteractive
     dpkg --configure -a
     apt-get -f -y install
+    apt-mark showhold
     ! (apt-get dist-upgrade -y 2>&1 | tee $apt_dist_upgrade_output | grep -E "^([WE]:.*)|([eE]rr.*)$") && \
     cat $apt_dist_upgrade_output && break || \
-    cat $apt_update_output
+    cat $apt_dist_upgrade_output
     if [ $i -eq $retries ]; then
       return 1
     else sleep 5
@@ -11285,6 +11163,7 @@ installEtcd() {
 installDeps() {
     retrycmd_if_failure_no_stats 120 5 25 curl -fsSL https://packages.microsoft.com/config/ubuntu/${UBUNTU_RELEASE}/packages-microsoft-prod.deb > /tmp/packages-microsoft-prod.deb || exit $ERR_MS_PROD_DEB_DOWNLOAD_TIMEOUT
     retrycmd_if_failure 60 5 10 dpkg -i /tmp/packages-microsoft-prod.deb || exit $ERR_MS_PROD_DEB_PKG_ADD_FAIL
+    aptmarkWALinuxAgent hold
     apt_get_update || exit $ERR_APT_UPDATE_TIMEOUT
     apt_get_dist_upgrade || exit $ERR_APT_DIST_UPGRADE_TIMEOUT
     for apt_package in apt-transport-https auditd blobfuse ca-certificates ceph-common cgroup-lite cifs-utils conntrack cracklib-runtime ebtables ethtool fuse git glusterfs-client htop iftop init-system-helpers iotop iproute2 ipset iptables jq libpam-pwquality libpwquality-tools mount nfs-common pigz socat sysstat util-linux xz-utils zip; do
@@ -11744,6 +11623,15 @@ if [[ -n "${MASTER_NODE}" && "${KMS_PROVIDER_VAULT_NAME}" != "" ]]; then
     ensureKMS
 fi
 
+# configure and enable dhcpv6 for dual stack feature
+if [ "$IS_IPV6_DUALSTACK_FEATURE_ENABLED" = "true" ]; then
+    dhcpv6_systemd_service=/etc/systemd/system/dhcpv6.service
+    dhcpv6_configuration_script=/opt/azure/containers/enable-dhcpv6.sh
+    wait_for_file 3600 1 $dhcpv6_systemd_service || exit $ERR_FILE_WATCH_TIMEOUT
+    wait_for_file 3600 1 $dhcpv6_configuration_script || exit $ERR_FILE_WATCH_TIMEOUT
+    ensureDHCPv6
+fi
+
 ensureKubelet
 ensureJournal
 
@@ -11832,6 +11720,32 @@ func k8sCloudInitArtifactsDefaultGrub() (*asset, error) {
 	return a, nil
 }
 
+var _k8sCloudInitArtifactsDhcpv6Service = []byte(`[Unit]
+Description=enabledhcpv6
+After=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/opt/azure/containers/enable-dhcpv6.sh
+
+[Install]
+WantedBy=multi-user.target`)
+
+func k8sCloudInitArtifactsDhcpv6ServiceBytes() ([]byte, error) {
+	return _k8sCloudInitArtifactsDhcpv6Service, nil
+}
+
+func k8sCloudInitArtifactsDhcpv6Service() (*asset, error) {
+	bytes, err := k8sCloudInitArtifactsDhcpv6ServiceBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "k8s/cloud-init/artifacts/dhcpv6.service", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
 var _k8sCloudInitArtifactsDockerMonitorService = []byte(`[Unit]
 Description=a script that checks docker health and restarts if needed
 After=docker.service
@@ -11892,6 +11806,48 @@ func k8sCloudInitArtifactsDocker_clear_mount_propagation_flagsConf() (*asset, er
 	}
 
 	info := bindataFileInfo{name: "k8s/cloud-init/artifacts/docker_clear_mount_propagation_flags.conf", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
+var _k8sCloudInitArtifactsEnableDhcpv6Sh = []byte(`#!/usr/bin/env bash
+
+set -e
+set -o pipefail
+set -u
+
+DHCLIENT6_CONF_FILE=/etc/dhcp/dhclient6.conf
+CLOUD_INIT_CFG=/etc/network/interfaces.d/50-cloud-init.cfg
+
+read -r -d '' NETWORK_CONFIGURATION << EOC || true
+iface eth0 inet6 auto 
+    up sleep 5 
+    up dhclient -1 -6 -cf /etc/dhcp/dhclient6.conf -lf /var/lib/dhcp/dhclient6.eth0.leases -v eth0 || true
+EOC
+
+add_if_not_exists() {
+    grep -qxF "${1}" "${2}" || echo "${1}" >> "${2}"
+}
+
+echo "Configuring dhcpv6 ..."
+
+touch /etc/dhcp/dhclient6.conf && add_if_not_exists "timeout 10;" ${DHCLIENT6_CONF_FILE} && \
+    add_if_not_exists "${NETWORK_CONFIGURATION}" ${CLOUD_INIT_CFG} && \
+    sudo ifdown eth0 && sudo ifup eth0
+
+echo "Configuration complete"`)
+
+func k8sCloudInitArtifactsEnableDhcpv6ShBytes() ([]byte, error) {
+	return _k8sCloudInitArtifactsEnableDhcpv6Sh, nil
+}
+
+func k8sCloudInitArtifactsEnableDhcpv6Sh() (*asset, error) {
+	bytes, err := k8sCloudInitArtifactsEnableDhcpv6ShBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "k8s/cloud-init/artifacts/enable-dhcpv6.sh", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -12906,7 +12862,7 @@ func k8sCloudInitArtifactsSysFsBpfMount() (*asset, error) {
 var _k8sCloudInitArtifactsSysctlD60CisConf = []byte(`# 3.1.2 Ensure packet redirect sending is disabled
 net.ipv4.conf.all.send_redirects = 0
 net.ipv4.conf.default.send_redirects = 0
-# 3.2.1 Ensure source routed packets are not accepted
+# 3.2.1 Ensure source routed packets are not accepted 
 net.ipv4.conf.all.accept_source_route = 0
 net.ipv4.conf.default.accept_source_route = 0
 # 3.2.2 Ensure ICMP redirects are not accepted
@@ -13093,6 +13049,22 @@ write_files:
   owner: root
   content: !!binary |
     {{CloudInitData "aptPreferences"}}
+
+{{if IsIPv6DualStackFeatureEnabled}}
+- path: /etc/systemd/system/dhcpv6.service
+  permissions: "0644"
+  encoding: gzip
+  owner: root
+  content: !!binary |
+    {{CloudInitData "dhcpv6SystemdService"}}
+
+- path: /opt/azure/containers/enable-dhcpv6.sh
+  permissions: "0544"
+  encoding: gzip
+  owner: root
+  content: !!binary |
+    {{CloudInitData "dhcpv6ConfigurationScript"}}
+{{end}}
 
 {{if .OrchestratorProfile.KubernetesConfig.RequiresDocker}}
     {{if not .MasterProfile.IsCoreOS}}
@@ -13299,7 +13271,11 @@ MASTER_CONTAINER_ADDONS_PLACEHOLDER
     sed -i "s|<advertiseAddr>|{{WrapAsVariable "kubernetesAPIServerIP"}}|g" $a
     sed -i "s|<args>|{{GetK8sRuntimeConfigKeyVals .OrchestratorProfile.KubernetesConfig.ControllerManagerConfig}}|g" /etc/kubernetes/manifests/kube-controller-manager.yaml
     sed -i "s|<args>|{{GetK8sRuntimeConfigKeyVals .OrchestratorProfile.KubernetesConfig.SchedulerConfig}}|g" /etc/kubernetes/manifests/kube-scheduler.yaml
+    {{ if IsIPv6DualStackFeatureEnabled }}
+    sed -i "s|<img>|{{WrapAsParameter "kubernetesHyperkubeSpec"}}|g; s|<CIDR>|',first(split(parameters('kubeClusterCidr'),',')),'|g; s|<kubeProxyMode>|{{ .OrchestratorProfile.KubernetesConfig.ProxyMode}}|g" /etc/kubernetes/addons/kube-proxy-daemonset.yaml
+    {{ else }}
     sed -i "s|<img>|{{WrapAsParameter "kubernetesHyperkubeSpec"}}|g; s|<CIDR>|{{WrapAsParameter "kubeClusterCidr"}}|g; s|<kubeProxyMode>|{{ .OrchestratorProfile.KubernetesConfig.ProxyMode}}|g" /etc/kubernetes/addons/kube-proxy-daemonset.yaml
+    {{ end }}
     KUBEDNS=/etc/kubernetes/addons/kube-dns-deployment.yaml
 {{if NeedsKubeDNSWithExecHealthz}}
     sed -i "s|<img>|{{WrapAsParameter "kubernetesKubeDNSSpec"}}|g; s|<imgMasq>|{{WrapAsParameter "kubernetesDNSMasqSpec"}}|g; s|<imgHealthz>|{{WrapAsParameter "kubernetesExecHealthzSpec"}}|g; s|<imgSidecar>|{{WrapAsParameter "kubernetesDNSSidecarSpec"}}|g; s|<domain>|{{WrapAsParameter "kubernetesKubeletClusterDomain"}}|g; s|<clustIP>|{{WrapAsParameter "kubeDNSServiceIP"}}|g" $KUBEDNS
@@ -13340,9 +13316,6 @@ MASTER_CONTAINER_ADDONS_PLACEHOLDER
 {{if UseCloudControllerManager }}
     sed -i "s|<img>|{{WrapAsParameter "kubernetesCcmImageSpec"}}|g" /etc/kubernetes/manifests/cloud-controller-manager.yaml
     sed -i "s|<config>|{{GetK8sRuntimeConfigKeyVals .OrchestratorProfile.KubernetesConfig.CloudControllerManagerConfig}}|g" /etc/kubernetes/manifests/cloud-controller-manager.yaml
-{{end}}
-{{if not EnablePodSecurityPolicy}}
-    sed -i "s|apparmor_parser|d|g" /etc/systemd/system/kubelet.service
 {{end}}
 {{if EnableEncryptionWithExternalKms}}
     sed -i "s|# Required|Requires=kms.service|g" /etc/systemd/system/kubelet.service
@@ -13590,6 +13563,22 @@ write_files:
   content: !!binary |
     {{CloudInitData "aptPreferences"}}
 
+{{if IsIPv6DualStackFeatureEnabled}}
+- path: /etc/systemd/system/dhcpv6.service
+  permissions: "0644"
+  encoding: gzip
+  owner: root
+  content: !!binary |
+    {{CloudInitData "dhcpv6SystemdService"}}
+
+- path: /opt/azure/containers/enable-dhcpv6.sh
+  permissions: "0544"
+  encoding: gzip
+  owner: root
+  content: !!binary |
+    {{CloudInitData "dhcpv6ConfigurationScript"}}
+{{end}}
+
 {{if .KubernetesConfig.RequiresDocker}}
     {{if not .IsCoreOS}}
 - path: /etc/systemd/system/docker.service.d/clear_mount_propagation_flags.conf
@@ -13636,6 +13625,7 @@ write_files:
 {{if HasCiliumNetworkPlugin }}
 - path: /etc/systemd/system/sys-fs-bpf.mount
   permissions: "0644"
+  encoding: gzip
   owner: root
   content: !!binary |
     {{WrapAsVariable "systemdBPFMount"}}
@@ -13726,9 +13716,6 @@ write_files:
   owner: root
   content: |
     #!/bin/bash
-{{if not EnablePodSecurityPolicy}}
-    sed -i "s|apparmor_parser|d|g" "/etc/systemd/system/kubelet.service"
-{{end}}
 {{if not IsIPMasqAgentEnabled}}
     {{if IsAzureCNI}}
     iptables -t nat -A POSTROUTING -m iprange ! --dst-range 168.63.129.16 -m addrtype ! --dst-type local ! -d {{WrapAsParameter "vnetCidr"}} -j MASQUERADE
@@ -15032,11 +15019,11 @@ spec:
         - name: volplugins
           mountPath: /etc/kubernetes/volumeplugins/
         - name: varlog
-          mountPath: /var/log/
+          mountPath: /var/log/      
       volumes:
       - name: varlog
         hostPath:
-          path: /var/log/
+          path: /var/log/              
       - name: volplugins
         hostPath:
           path: /etc/kubernetes/volumeplugins/
@@ -15779,7 +15766,7 @@ subjects:
   namespace: kube-system
 ---
 
-# Typha Horizontal Autoscaler Role
+# Typha Horizontal Autoscaler Role 
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
@@ -17316,11 +17303,11 @@ spec:
         - name: volplugins
           mountPath: /etc/kubernetes/volumeplugins/
         - name: varlog
-          mountPath: /var/log/
+          mountPath: /var/log/      
       volumes:
       - name: varlog
         hostPath:
-          path: /var/log/
+          path: /var/log/              
       - name: volplugins
         hostPath:
           path: /etc/kubernetes/volumeplugins/
@@ -17917,6 +17904,13 @@ var _k8sKubernetesparamsT = []byte(`{{if .HasAadProfile}}
       "defaultValue": "{{GetDefaultVNETCIDR}}",
       "metadata": {
         "description": "Cluster vnet cidr"
+      },
+      "type": "string"
+    },
+    "vnetCidrIPv6": {
+      "defaultValue": "{{GetDefaultVNETCIDRIPv6}}",
+      "metadata": {
+        "description": "Cluster vnet cidr IPv6"
       },
       "type": "string"
     },
@@ -19071,7 +19065,7 @@ func k8sWindowsconfigfuncPs1() (*asset, error) {
 var _k8sWindowsinstallopensshfuncPs1 = []byte(`function
 Install-OpenSSH {
     Param(
-        [Parameter(Mandatory = $true)][string[]]
+        [Parameter(Mandatory = $true)][string[]] 
         $SSHKeys
     )
 
@@ -19104,13 +19098,15 @@ Install-OpenSSH {
     Write-Host "Setting required permissions..."
     icacls $adminpath\$adminfile /remove "NT AUTHORITY\Authenticated Users"
     icacls $adminpath\$adminfile /inheritance:r
+    icacls $adminpath\$adminfile /grant SYSTEM:` + "`" + `(F` + "`" + `)
+    icacls $adminpath\$adminfile /grant BUILTIN\Administrators:` + "`" + `(F` + "`" + `)
 
     Write-Host "Restarting sshd service..."
     Restart-Service sshd
     # OPTIONAL but recommended:
     Set-Service -Name sshd -StartupType 'Automatic'
 
-    # Confirm the Firewall rule is configured. It should be created automatically by setup.
+    # Confirm the Firewall rule is configured. It should be created automatically by setup. 
     $firewall = Get-NetFirewallRule -Name *ssh*
 
     if (!$firewall) {
@@ -19118,7 +19114,8 @@ Install-OpenSSH {
         exit 1
     }
     Write-Host "OpenSSH installed and configured successfully"
-}`)
+}
+`)
 
 func k8sWindowsinstallopensshfuncPs1Bytes() ([]byte, error) {
 	return _k8sWindowsinstallopensshfuncPs1, nil
@@ -19271,29 +19268,39 @@ users:
 }
 
 function
+Build-PauseContainer {
+    Param(
+        [Parameter(Mandatory = $true)][string]
+        $WindowsBase,
+        $DestinationTag
+    )
+    # Future work: This needs to build wincat - see https://github.com/Azure/aks-engine/issues/1461
+    "FROM $($WindowsBase)" | Out-File -encoding ascii -FilePath Dockerfile
+    "CMD cmd /c ping -t localhost" | Out-File -encoding ascii -FilePath Dockerfile -Append
+    docker build -t $DestinationTag .
+}
+
+function
 New-InfraContainer {
     Param(
         [Parameter(Mandatory = $true)][string]
-        $KubeDir
+        $KubeDir,
+        $DestinationTag = "kubletwin/pause"
     )
     cd $KubeDir
     $computerInfo = Get-ComputerInfo
-    $windowsBase = if ($computerInfo.WindowsVersion -eq "1709") {
-        "microsoft/nanoserver:1709"
-    }
-    elseif ($computerInfo.WindowsVersion -eq "1803") {
-        "microsoft/nanoserver:1803"
-    }
-    elseif ($computerInfo.WindowsVersion -eq "1809") {
-        "mcr.microsoft.com/windows/nanoserver:1809"
-    }
-    else {
-        "mcr.microsoft.com/nanoserver-insider"
-    }
 
-    "FROM $($windowsBase)" | Out-File -encoding ascii -FilePath Dockerfile
-    "CMD cmd /c ping -t localhost" | Out-File -encoding ascii -FilePath Dockerfile -Append
-    docker build -t kubletwin/pause .
+    # Reference for these tags: curl -L https://mcr.microsoft.com/v2/k8s/core/pause/tags/list
+    # Then docker run --rm mplatform/manifest-tool inspect mcr.microsoft.com/k8s/core/pause:<tag>
+
+    $defaultPauseImage = "mcr.microsoft.com/k8s/core/pause:1.1.0"
+
+    switch ($computerInfo.WindowsVersion) {
+        "1803" { docker pull $defaultPauseImage ; docker tag $defaultPauseImage $DestinationTag }
+        "1809" { docker pull $defaultPauseImage ; docker tag $defaultPauseImage $DestinationTag }
+        "1903" { Build-PauseContainer -WindowsBase "mcr.microsoft.com/windows/nanoserver:1903" -DestinationTag $DestinationTag}
+        default { Build-PauseContainer -WindowsBase "mcr.microsoft.com/nanoserver-insider" -DestinationTag $DestinationTag}
+    }
 }
 
 
@@ -19325,11 +19332,6 @@ Get-KubeBinaries {
         [Parameter(Mandatory = $true)][string]
         $KubeBinariesURL
     )
-
-    if ($computerInfo.WindowsVersion -eq "1709") {
-        Write-Log "Server version 1709 does not support using kubernetes binaries in tar file."
-        return
-    }
 
     $tempdir = New-TemporaryDirectory
     $binaryPackage = "$tempdir\k.tar.gz"
@@ -19378,6 +19380,8 @@ New-NSSMService {
     & "$KubeDir\nssm.exe" set Kubelet AppDirectory $KubeDir
     & "$KubeDir\nssm.exe" set Kubelet AppParameters $KubeletStartFile
     & "$KubeDir\nssm.exe" set Kubelet DisplayName Kubelet
+    & "$KubeDir\nssm.exe" set Kubelet AppRestartDelay 5000
+    & "$KubeDir\nssm.exe" set Kubelet DependOnService docker
     & "$KubeDir\nssm.exe" set Kubelet Description Kubelet
     & "$KubeDir\nssm.exe" set Kubelet Start SERVICE_AUTO_START
     & "$KubeDir\nssm.exe" set Kubelet ObjectName LocalSystem
@@ -19876,6 +19880,13 @@ var _masterparamsT = []byte(`    "linuxAdminUsername": {
       "type": "string"
     },
   {{end}}
+  "masterSubnetIPv6": {
+      "defaultValue": "{{.MasterProfile.SubnetIPv6}}",
+      "metadata": {
+        "description": "Sets the IPv6 subnet of the master node(s)."
+      },
+      "type": "string"
+    },
   {{if .MasterProfile.HasAvailabilityZones}}
   "availabilityZones": {
     "metadata": {
@@ -20113,14 +20124,14 @@ Start-Docker()
 {
     Write-Log "Starting $global:DockerServiceName..."
     $startTime = Get-Date
-
+        
     while (-not $dockerReady)
     {
         try
         {
             Start-Service -Name $global:DockerServiceName -ea Stop
 
-            $dockerReady = $true
+            $dockerReady = $true            
         }
         catch
         {
@@ -20132,7 +20143,7 @@ Start-Docker()
             }
 
             $errorStr = $_.Exception.Message
-            Write-Log "Starting Service failed: $errorStr"
+            Write-Log "Starting Service failed: $errorStr" 
             Write-Log "sleeping for 10 seconds..."
             Start-Sleep -sec 10
         }
@@ -20146,7 +20157,7 @@ Stop-Docker()
     Write-Log "Stopping $global:DockerServiceName..."
     try
     {
-        Stop-Service -Name $global:DockerServiceName -ea Stop
+        Stop-Service -Name $global:DockerServiceName -ea Stop   
     }
     catch
     {
@@ -20159,7 +20170,7 @@ Update-DockerServiceRecoveryPolicy()
 {
     $dockerReady = $false
     $startTime = Get-Date
-
+    
     # wait until the service exists
     while (-not $dockerReady)
     {
@@ -20167,7 +20178,7 @@ Update-DockerServiceRecoveryPolicy()
         {
             $dockerReady = $true
         }
-        else
+        else 
         {
             $timeElapsed = $(Get-Date) - $startTime
             if ($($timeElapsed).TotalMinutes -ge 5)
@@ -20179,7 +20190,7 @@ Update-DockerServiceRecoveryPolicy()
             Start-Sleep -sec 5
         }
     }
-
+    
     Write-Log "Updating docker restart policy, to ensure it restarts on error"
     $services = Get-WMIObject win32_service | Where-Object {$_.name -imatch $global:DockerServiceName}
     foreach ($service in $services)
@@ -20253,7 +20264,7 @@ try
 
     Write-Log "Update Docker restart policy"
     Update-DockerServiceRecoveryPolicy
-
+    
     Write-Log "Start Docker"
     Start-Docker
 
@@ -20345,14 +20356,14 @@ function Start-Docker()
 {
     Write-Log "Starting $global:DockerServiceName..."
     $startTime = Get-Date
-
+        
     while (-not $dockerReady)
     {
         try
         {
             Start-Service -Name $global:DockerServiceName -ea Stop
 
-            $dockerReady = $true
+            $dockerReady = $true            
         }
         catch
         {
@@ -20364,7 +20375,7 @@ function Start-Docker()
             }
 
             $errorStr = $_.Exception.Message
-            Write-Log "Starting Service failed: $errorStr"
+            Write-Log "Starting Service failed: $errorStr" 
             Write-Log "sleeping for 10 seconds..."
             Start-Sleep -sec 10
         }
@@ -20376,7 +20387,7 @@ function Stop-Docker()
     Write-Log "Stopping $global:DockerServiceName..."
     try
     {
-        Stop-Service -Name $global:DockerServiceName -ea Stop
+        Stop-Service -Name $global:DockerServiceName -ea Stop   
     }
     catch
     {
@@ -20429,7 +20440,7 @@ function Install-DockerBinaries()
             $currentRetry = $currentRetry + 1;
         }
     } while (!$success);
-
+      
     Write-Log "Expanding zip file at destination: $global:DockerExePath"
     Expand-ZIPFile -File $zipfile -Destination $global:DockerExePath
 
@@ -20441,7 +20452,7 @@ function Update-DockerServiceRecoveryPolicy()
 {
     $dockerReady = $false
     $startTime = Get-Date
-
+    
     # wait until the service exists
     while (-not $dockerReady)
     {
@@ -20449,7 +20460,7 @@ function Update-DockerServiceRecoveryPolicy()
         {
             $dockerReady = $true
         }
-        else
+        else 
         {
             $timeElapsed = $(Get-Date) - $startTime
             if ($($timeElapsed).TotalMinutes -ge 5)
@@ -20461,7 +20472,7 @@ function Update-DockerServiceRecoveryPolicy()
             Start-Sleep -sec 5
         }
     }
-
+    
     Write-Log "Updating docker restart policy, to ensure it restarts on error"
     $services = Get-WMIObject win32_service | Where-Object {$_.name -imatch $global:DockerServiceName}
     foreach ($service in $services)
@@ -20565,7 +20576,7 @@ function Confirm-DockerVersion()
    $dockerClientVersion = Invoke-Expression -Command:$dockerClientVersionCmd
 
    Write-Log "Docker Server version: $dockerServerVersion, Docker Client verison: $dockerClientVersion"
-
+   
    $serverVersionData = $dockerServerVersion.Split(".")
    $isNewServerVersion = $false;
    if(($serverVersionData[0] -ge 1) -and ($serverVersionData[1] -ge 13)){
@@ -20577,7 +20588,7 @@ function Confirm-DockerVersion()
    $isNewClientVersion = $false;
    if(($clientVersionData[0] -ge 1) -and ($clientVersionData[1] -ge 13)){
        $isNewClientVersion = $true;
-       Write-Log "Setting  isNewClientVersion to $isNewClientVersion"
+       Write-Log "Setting  isNewClientVersion to $isNewClientVersion"   
    }
 
    if($isNewServerVersion -and $isNewClientVersion)
@@ -20608,10 +20619,10 @@ try
 
     Write-Log "Update Docker restart policy"
     Update-DockerServiceRecoveryPolicy
-
+    
     Write-Log "Start Docker"
     Start-Docker
-
+    
     Write-Log "Join existing Swarm"
     Join-Swarm
 
@@ -20808,7 +20819,7 @@ installDocker()
 {
   for i in {1..10}; do
     apt-get install -y apt-transport-https ca-certificates curl software-properties-common
-    curl --max-time 60 -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add -
+    curl --max-time 60 -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add - 
     add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
     apt-get update
     apt-get install -y docker-ce=${DOCKER_CE_VERSION}
@@ -21126,7 +21137,7 @@ installDockerUbuntu()
 {
   for i in {1..10}; do
     apt-get install -y apt-transport-https ca-certificates curl software-properties-common
-    curl --max-time 60 -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add -
+    curl --max-time 60 -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add - 
     add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
     apt-get update
     apt-get install -y docker-ce=${DOCKER_CE_VERSION}
@@ -21524,10 +21535,10 @@ var _swarmSwarmagentresourcesvmasT = []byte(`    {
           "computername": "[concat(variables('{{.Name}}VMNamePrefix'), copyIndex(variables('{{.Name}}Offset')))]",
 {{if IsSwarmMode}}
   {{if not .IsRHEL}}
-            {{GetAgentSwarmModeCustomData .}}
+            {{GetAgentSwarmModeCustomData .}} 
   {{end}}
 {{else}}
-            {{GetAgentSwarmCustomData .}}
+            {{GetAgentSwarmCustomData .}} 
 {{end}}
           "linuxConfiguration": {
               "disablePasswordAuthentication": true,
@@ -22503,11 +22514,11 @@ func swarmSwarmparamsT() (*asset, error) {
 }
 
 var _swarmSwarmwinagentresourcesvmasT = []byte(`    {
-      "apiVersion": "[variables('apiVersionDefault')]",
+      "apiVersion": "[variables('apiVersionDefault')]", 
       "copy": {
-        "count": "[sub(variables('{{.Name}}Count'), variables('{{.Name}}Offset'))]",
+        "count": "[sub(variables('{{.Name}}Count'), variables('{{.Name}}Offset'))]", 
         "name": "loop"
-      },
+      }, 
       "dependsOn": [
 {{if not .IsCustomVNET}}
       "[variables('vnetID')]"
@@ -22515,13 +22526,13 @@ var _swarmSwarmwinagentresourcesvmasT = []byte(`    {
 {{if IsPublic .Ports}}
 	  ,"[variables('{{.Name}}LbID')]"
 {{end}}
-      ],
-      "location": "[variables('location')]",
+      ], 
+      "location": "[variables('location')]", 
       "name": "[concat(variables('{{.Name}}VMNamePrefix'), 'nic-', copyIndex(variables('{{.Name}}Offset')))]",
       "properties": {
         "ipConfigurations": [
           {
-            "name": "ipConfigNode",
+            "name": "ipConfigNode", 
             "properties": {
 {{if IsPublic .Ports}}
               "loadBalancerBackendAddressPools": [
@@ -22534,24 +22545,24 @@ var _swarmSwarmwinagentresourcesvmasT = []byte(`    {
                   "id": "[concat(variables('{{.Name}}LbID'), '/inboundNatPools/', 'RDP-', variables('{{.Name}}VMNamePrefix'))]"
                 }
               ],
-{{end}}
-              "privateIPAllocationMethod": "Dynamic",
+{{end}}  
+              "privateIPAllocationMethod": "Dynamic", 
               "subnet": {
                 "id": "[variables('{{.Name}}VnetSubnetID')]"
              }
             }
           }
         ]
-      },
+      }, 
       "type": "Microsoft.Network/networkInterfaces"
     },
 {{if .IsManagedDisks}}
     {
-      "apiVersion": "[variables('apiVersionStorageManagedDisks')]",
-      "location": "[variables('location')]",
-      "name": "[variables('{{.Name}}AvailabilitySet')]",
-      "properties": {
-        "platformFaultDomainCount": 2,
+      "apiVersion": "[variables('apiVersionStorageManagedDisks')]", 
+      "location": "[variables('location')]", 
+      "name": "[variables('{{.Name}}AvailabilitySet')]", 
+      "properties": { 
+        "platformFaultDomainCount": 2, 
         "platformUpdateDomainCount": 3,
         "managed": "true"
       },
@@ -22559,76 +22570,76 @@ var _swarmSwarmwinagentresourcesvmasT = []byte(`    {
     },
 {{else if .IsStorageAccount}}
     {
-      "apiVersion": "[variables('apiVersionStorage')]",
+      "apiVersion": "[variables('apiVersionStorage')]", 
       "copy": {
-        "count": "[variables('{{.Name}}StorageAccountsCount')]",
+        "count": "[variables('{{.Name}}StorageAccountsCount')]", 
         "name": "vmLoopNode"
-      },
+      }, 
       "dependsOn": [
         "[concat('Microsoft.Network/publicIPAddresses/', variables('masterPublicIPAddressName'))]"
-      ],
-      "location": "[variables('location')]",
-      "name": "[concat(variables('storageAccountPrefixes')[mod(add(copyIndex(),variables('{{.Name}}StorageAccountOffset')),variables('storageAccountPrefixesCount'))],variables('storageAccountPrefixes')[div(add(copyIndex(),variables('{{.Name}}StorageAccountOffset')),variables('storageAccountPrefixesCount'))],variables('{{.Name}}AccountName'))]",
+      ], 
+      "location": "[variables('location')]", 
+      "name": "[concat(variables('storageAccountPrefixes')[mod(add(copyIndex(),variables('{{.Name}}StorageAccountOffset')),variables('storageAccountPrefixesCount'))],variables('storageAccountPrefixes')[div(add(copyIndex(),variables('{{.Name}}StorageAccountOffset')),variables('storageAccountPrefixesCount'))],variables('{{.Name}}AccountName'))]", 
       "properties": {
         "accountType": "[variables('vmSizesMap')[variables('{{.Name}}VMSize')].storageAccountType]"
-      },
+      }, 
       "type": "Microsoft.Storage/storageAccounts"
     },
   {{if .HasDisks}}
       {
-        "apiVersion": "[variables('apiVersionStorage')]",
+        "apiVersion": "[variables('apiVersionStorage')]", 
         "copy": {
-          "count": "[variables('{{.Name}}StorageAccountsCount')]",
+          "count": "[variables('{{.Name}}StorageAccountsCount')]", 
           "name": "datadiskLoop"
-        },
+        }, 
         "dependsOn": [
           "[concat('Microsoft.Network/publicIPAddresses/', variables('masterPublicIPAddressName'))]"
-        ],
-        "location": "[variables('location')]",
-        "name": "[concat(variables('storageAccountPrefixes')[mod(add(copyIndex(variables('dataStorageAccountPrefixSeed')),variables('{{.Name}}StorageAccountOffset')),variables('storageAccountPrefixesCount'))],variables('storageAccountPrefixes')[div(add(copyIndex(variables('dataStorageAccountPrefixSeed')),variables('{{.Name}}StorageAccountOffset')),variables('storageAccountPrefixesCount'))],variables('{{.Name}}DataAccountName'))]",
+        ], 
+        "location": "[variables('location')]", 
+        "name": "[concat(variables('storageAccountPrefixes')[mod(add(copyIndex(variables('dataStorageAccountPrefixSeed')),variables('{{.Name}}StorageAccountOffset')),variables('storageAccountPrefixesCount'))],variables('storageAccountPrefixes')[div(add(copyIndex(variables('dataStorageAccountPrefixSeed')),variables('{{.Name}}StorageAccountOffset')),variables('storageAccountPrefixesCount'))],variables('{{.Name}}DataAccountName'))]", 
         "properties": {
           "accountType": "[variables('vmSizesMap')[variables('{{.Name}}VMSize')].storageAccountType]"
-        },
+        }, 
         "type": "Microsoft.Storage/storageAccounts"
-      },
+      }, 
   {{end}}
     {
-      "apiVersion": "[variables('apiVersionDefault')]",
-      "location": "[variables('location')]",
-      "name": "[variables('{{.Name}}AvailabilitySet')]",
-      "properties": {},
+      "apiVersion": "[variables('apiVersionDefault')]", 
+      "location": "[variables('location')]", 
+      "name": "[variables('{{.Name}}AvailabilitySet')]", 
+      "properties": {}, 
       "type": "Microsoft.Compute/availabilitySets"
     },
 {{end}}
 {{if IsPublic .Ports}}
     {
-      "apiVersion": "[variables('apiVersionDefault')]",
-      "location": "[variables('location')]",
-      "name": "[variables('{{.Name}}IPAddressName')]",
+      "apiVersion": "[variables('apiVersionDefault')]", 
+      "location": "[variables('location')]", 
+      "name": "[variables('{{.Name}}IPAddressName')]", 
       "properties": {
         "dnsSettings": {
           "domainNameLabel": "[variables('{{.Name}}EndpointDNSNamePrefix')]"
-        },
+        }, 
         "publicIPAllocationMethod": "Dynamic"
-      },
+      }, 
       "type": "Microsoft.Network/publicIPAddresses"
-    },
+    }, 
     {
-      "apiVersion": "[variables('apiVersionDefault')]",
+      "apiVersion": "[variables('apiVersionDefault')]", 
       "dependsOn": [
         "[concat('Microsoft.Network/publicIPAddresses/', variables('{{.Name}}IPAddressName'))]"
-      ],
-      "location": "[variables('location')]",
-      "name": "[variables('{{.Name}}LbName')]",
+      ], 
+      "location": "[variables('location')]", 
+      "name": "[variables('{{.Name}}LbName')]", 
       "properties": {
         "backendAddressPools": [
           {
             "name": "[variables('{{.Name}}LbBackendPoolName')]"
           }
-        ],
+        ], 
         "frontendIPConfigurations": [
           {
-            "name": "[variables('{{.Name}}LbIPConfigName')]",
+            "name": "[variables('{{.Name}}LbIPConfigName')]", 
             "properties": {
               "publicIPAddress": {
                 "id": "[resourceId('Microsoft.Network/publicIPAddresses',variables('{{.Name}}IPAddressName'))]"
@@ -22649,16 +22660,16 @@ var _swarmSwarmwinagentresourcesvmasT = []byte(`    {
               "backendPort": "[variables('agentWindowsBackendPort')]"
             }
           }
-        ],
+        ], 
         "loadBalancingRules": [
           {{(GetLBRules .Name .Ports)}}
-        ],
+        ], 
         "probes": [
           {{(GetProbes .Ports)}}
         ]
-      },
+      }, 
       "type": "Microsoft.Network/loadBalancers"
-    },
+    }, 
 {{end}}
     {
 {{if .IsManagedDisks}}
@@ -22667,9 +22678,9 @@ var _swarmSwarmwinagentresourcesvmasT = []byte(`    {
     "apiVersion": "[variables('apiVersionDefault')]",
 {{end}}
       "copy": {
-        "count": "[sub(variables('{{.Name}}Count'), variables('{{.Name}}Offset'))]",
+        "count": "[sub(variables('{{.Name}}Count'), variables('{{.Name}}Offset'))]", 
         "name": "vmLoopNode"
-      },
+      }, 
       "dependsOn": [
 {{if .IsStorageAccount}}
         "[concat('Microsoft.Storage/storageAccounts/',variables('storageAccountPrefixes')[mod(add(div(copyIndex(variables('{{.Name}}Offset')),variables('maxVMsPerStorageAccount')),variables('{{.Name}}StorageAccountOffset')),variables('storageAccountPrefixesCount'))],variables('storageAccountPrefixes')[div(add(div(copyIndex(variables('{{.Name}}Offset')),variables('maxVMsPerStorageAccount')),variables('{{.Name}}StorageAccountOffset')),variables('storageAccountPrefixesCount'))],variables('{{.Name}}AccountName'))]",
@@ -22677,35 +22688,35 @@ var _swarmSwarmwinagentresourcesvmasT = []byte(`    {
           "[concat('Microsoft.Storage/storageAccounts/',variables('storageAccountPrefixes')[mod(add(add(div(copyIndex(variables('{{.Name}}Offset')),variables('maxVMsPerStorageAccount')),variables('{{.Name}}StorageAccountOffset')),variables('dataStorageAccountPrefixSeed')),variables('storageAccountPrefixesCount'))],variables('storageAccountPrefixes')[div(add(add(div(copyIndex(variables('{{.Name}}Offset')),variables('maxVMsPerStorageAccount')),variables('{{.Name}}StorageAccountOffset')),variables('dataStorageAccountPrefixSeed')),variables('storageAccountPrefixesCount'))],variables('{{.Name}}DataAccountName'))]",
   {{end}}
 {{end}}
-        "[concat('Microsoft.Network/networkInterfaces/', variables('{{.Name}}VMNamePrefix'), 'nic-', copyIndex(variables('{{.Name}}Offset')))]",
+        "[concat('Microsoft.Network/networkInterfaces/', variables('{{.Name}}VMNamePrefix'), 'nic-', copyIndex(variables('{{.Name}}Offset')))]", 
         "[concat('Microsoft.Compute/availabilitySets/', variables('{{.Name}}AvailabilitySet'))]"
       ],
       "tags":
       {
         "creationSource" : "[concat('acsengine-', variables('{{.Name}}VMNamePrefix'), copyIndex(variables('{{.Name}}Offset')))]"
       },
-      "location": "[variables('location')]",
+      "location": "[variables('location')]",  
       "name": "[concat(variables('{{.Name}}VMNamePrefix'), copyIndex(variables('{{.Name}}Offset')))]",
       "properties": {
         "availabilitySet": {
           "id": "[resourceId('Microsoft.Compute/availabilitySets',variables('{{.Name}}AvailabilitySet'))]"
-        },
+        }, 
         "hardwareProfile": {
           "vmSize": "[variables('{{.Name}}VMSize')]"
-        },
+        }, 
         "networkProfile": {
           "networkInterfaces": [
             {
               "id": "[resourceId('Microsoft.Network/networkInterfaces',concat(variables('{{.Name}}VMNamePrefix'), 'nic-', copyIndex(variables('{{.Name}}Offset'))))]"
             }
           ]
-        },
+        }, 
         "osProfile": {
           "computername": "[concat(substring(variables('nameSuffix'), 0, 5), 'acs', copyIndex(variables('{{.Name}}Offset')), add(900,variables('{{.Name}}Index')))]",
           "adminUsername": "[variables('windowsAdminUsername')]",
           "adminPassword": "[variables('windowsAdminPassword')]",
           {{if IsSwarmMode}}
-            {{GetWinAgentSwarmModeCustomData}}
+            {{GetWinAgentSwarmModeCustomData}}           
           {{else}}
             {{GetWinAgentSwarmCustomData}}
           {{end}}
@@ -22713,7 +22724,7 @@ var _swarmSwarmwinagentresourcesvmasT = []byte(`    {
               ,
               "secrets": "[variables('windowsProfileSecrets')]"
           {{end}}
-        },
+        }, 
         "storageProfile": {
           {{GetDataDisks .}}
           "imageReference": {
@@ -22736,19 +22747,19 @@ var _swarmSwarmwinagentresourcesvmasT = []byte(`    {
 {{end}}
           }
         }
-      },
+      }, 
       "type": "Microsoft.Compute/virtualMachines"
-    },
+    }, 
     {
-      "apiVersion": "[variables('apiVersionDefault')]",
+      "apiVersion": "[variables('apiVersionDefault')]", 
       "copy": {
-        "count": "[sub(variables('{{.Name}}Count'), variables('{{.Name}}Offset'))]",
+        "count": "[sub(variables('{{.Name}}Count'), variables('{{.Name}}Offset'))]", 
         "name": "vmLoopNode"
-      },
+      }, 
       "dependsOn": [
         "[concat('Microsoft.Compute/virtualMachines/', variables('{{.Name}}VMNamePrefix'), copyIndex(variables('{{.Name}}Offset')))]"
-      ],
-      "location": "[variables('location')]",
+      ], 
+      "location": "[variables('location')]", 
       "name": "[concat(variables('{{.Name}}VMNamePrefix'), copyIndex(variables('{{.Name}}Offset')), '/cse')]",
       "properties": {
         "publisher": "Microsoft.Compute",
@@ -22758,7 +22769,7 @@ var _swarmSwarmwinagentresourcesvmasT = []byte(`    {
         "settings": {
           "commandToExecute": "[variables('windowsCustomScript')]"
         }
-      },
+      }, 
       "type": "Microsoft.Compute/virtualMachines/extensions"
     }
 `)
@@ -23192,7 +23203,7 @@ var _bindata = map[string]func() (*asset, error){
 	"iaasoutputs.t":                                                   iaasoutputsT,
 	"k8s/addons/1.10/kubernetesmasteraddons-kube-dns-deployment.yaml": k8sAddons110KubernetesmasteraddonsKubeDnsDeploymentYaml,
 	"k8s/addons/1.15/kubernetesmasteraddons-azure-cloud-provider-deployment.yaml": k8sAddons115KubernetesmasteraddonsAzureCloudProviderDeploymentYaml,
-	"k8s/addons/1.6/kubernetesmasteraddons-calico-daemonset.yaml":                 k8sAddons16KubernetesmasteraddonsCalicoDaemonsetYaml,
+	"k8s/addons/1.15/kubernetesmasteraddons-pod-security-policy.yaml":             k8sAddons115KubernetesmasteraddonsPodSecurityPolicyYaml,
 	"k8s/addons/1.6/kubernetesmasteraddons-kubernetes-dashboard-deployment.yaml":  k8sAddons16KubernetesmasteraddonsKubernetesDashboardDeploymentYaml,
 	"k8s/addons/1.7/kubernetesmasteraddons-kube-dns-deployment.yaml":              k8sAddons17KubernetesmasteraddonsKubeDnsDeploymentYaml,
 	"k8s/addons/1.7/kubernetesmasteraddons-kubernetes-dashboard-deployment.yaml":  k8sAddons17KubernetesmasteraddonsKubernetesDashboardDeploymentYaml,
@@ -23223,9 +23234,11 @@ var _bindata = map[string]func() (*asset, error){
 	"k8s/cloud-init/artifacts/cse_install.sh":                                         k8sCloudInitArtifactsCse_installSh,
 	"k8s/cloud-init/artifacts/cse_main.sh":                                            k8sCloudInitArtifactsCse_mainSh,
 	"k8s/cloud-init/artifacts/default-grub":                                           k8sCloudInitArtifactsDefaultGrub,
+	"k8s/cloud-init/artifacts/dhcpv6.service":                                         k8sCloudInitArtifactsDhcpv6Service,
 	"k8s/cloud-init/artifacts/docker-monitor.service":                                 k8sCloudInitArtifactsDockerMonitorService,
 	"k8s/cloud-init/artifacts/docker-monitor.timer":                                   k8sCloudInitArtifactsDockerMonitorTimer,
 	"k8s/cloud-init/artifacts/docker_clear_mount_propagation_flags.conf":              k8sCloudInitArtifactsDocker_clear_mount_propagation_flagsConf,
+	"k8s/cloud-init/artifacts/enable-dhcpv6.sh":                                       k8sCloudInitArtifactsEnableDhcpv6Sh,
 	"k8s/cloud-init/artifacts/etc-issue":                                              k8sCloudInitArtifactsEtcIssue,
 	"k8s/cloud-init/artifacts/etc-issue.net":                                          k8sCloudInitArtifactsEtcIssueNet,
 	"k8s/cloud-init/artifacts/etcd.service":                                           k8sCloudInitArtifactsEtcdService,
@@ -23389,9 +23402,9 @@ var _bintree = &bintree{nil, map[string]*bintree{
 			}},
 			"1.15": {nil, map[string]*bintree{
 				"kubernetesmasteraddons-azure-cloud-provider-deployment.yaml": {k8sAddons115KubernetesmasteraddonsAzureCloudProviderDeploymentYaml, map[string]*bintree{}},
+				"kubernetesmasteraddons-pod-security-policy.yaml":             {k8sAddons115KubernetesmasteraddonsPodSecurityPolicyYaml, map[string]*bintree{}},
 			}},
 			"1.6": {nil, map[string]*bintree{
-				"kubernetesmasteraddons-calico-daemonset.yaml":                {k8sAddons16KubernetesmasteraddonsCalicoDaemonsetYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-kubernetes-dashboard-deployment.yaml": {k8sAddons16KubernetesmasteraddonsKubernetesDashboardDeploymentYaml, map[string]*bintree{}},
 			}},
 			"1.7": {nil, map[string]*bintree{
@@ -23432,31 +23445,33 @@ var _bintree = &bintree{nil, map[string]*bintree{
 				"cse_install.sh":         {k8sCloudInitArtifactsCse_installSh, map[string]*bintree{}},
 				"cse_main.sh":            {k8sCloudInitArtifactsCse_mainSh, map[string]*bintree{}},
 				"default-grub":           {k8sCloudInitArtifactsDefaultGrub, map[string]*bintree{}},
+				"dhcpv6.service":         {k8sCloudInitArtifactsDhcpv6Service, map[string]*bintree{}},
 				"docker-monitor.service": {k8sCloudInitArtifactsDockerMonitorService, map[string]*bintree{}},
 				"docker-monitor.timer":   {k8sCloudInitArtifactsDockerMonitorTimer, map[string]*bintree{}},
 				"docker_clear_mount_propagation_flags.conf": {k8sCloudInitArtifactsDocker_clear_mount_propagation_flagsConf, map[string]*bintree{}},
-				"etc-issue":                      {k8sCloudInitArtifactsEtcIssue, map[string]*bintree{}},
-				"etc-issue.net":                  {k8sCloudInitArtifactsEtcIssueNet, map[string]*bintree{}},
-				"etcd.service":                   {k8sCloudInitArtifactsEtcdService, map[string]*bintree{}},
-				"generateproxycerts.sh":          {k8sCloudInitArtifactsGenerateproxycertsSh, map[string]*bintree{}},
-				"health-monitor.sh":              {k8sCloudInitArtifactsHealthMonitorSh, map[string]*bintree{}},
-				"kms.service":                    {k8sCloudInitArtifactsKmsService, map[string]*bintree{}},
-				"kubelet-monitor.service":        {k8sCloudInitArtifactsKubeletMonitorService, map[string]*bintree{}},
-				"kubelet-monitor.timer":          {k8sCloudInitArtifactsKubeletMonitorTimer, map[string]*bintree{}},
-				"kubelet.service":                {k8sCloudInitArtifactsKubeletService, map[string]*bintree{}},
-				"modprobe-CIS.conf":              {k8sCloudInitArtifactsModprobeCisConf, map[string]*bintree{}},
-				"mountetcd.sh":                   {k8sCloudInitArtifactsMountetcdSh, map[string]*bintree{}},
-				"pam-d-common-auth":              {k8sCloudInitArtifactsPamDCommonAuth, map[string]*bintree{}},
-				"pam-d-common-password":          {k8sCloudInitArtifactsPamDCommonPassword, map[string]*bintree{}},
-				"pam-d-su":                       {k8sCloudInitArtifactsPamDSu, map[string]*bintree{}},
-				"profile-d-cis.sh":               {k8sCloudInitArtifactsProfileDCisSh, map[string]*bintree{}},
-				"pwquality-CIS.conf":             {k8sCloudInitArtifactsPwqualityCisConf, map[string]*bintree{}},
-				"rsyslog-d-60-CIS.conf":          {k8sCloudInitArtifactsRsyslogD60CisConf, map[string]*bintree{}},
-				"setup-custom-search-domains.sh": {k8sCloudInitArtifactsSetupCustomSearchDomainsSh, map[string]*bintree{}},
-				"sshd_config":                    {k8sCloudInitArtifactsSshd_config, map[string]*bintree{}},
-				"sshd_config_1604":               {k8sCloudInitArtifactsSshd_config_1604, map[string]*bintree{}},
-				"sys-fs-bpf.mount":               {k8sCloudInitArtifactsSysFsBpfMount, map[string]*bintree{}},
-				"sysctl-d-60-CIS.conf":           {k8sCloudInitArtifactsSysctlD60CisConf, map[string]*bintree{}},
+				"enable-dhcpv6.sh":                          {k8sCloudInitArtifactsEnableDhcpv6Sh, map[string]*bintree{}},
+				"etc-issue":                                 {k8sCloudInitArtifactsEtcIssue, map[string]*bintree{}},
+				"etc-issue.net":                             {k8sCloudInitArtifactsEtcIssueNet, map[string]*bintree{}},
+				"etcd.service":                              {k8sCloudInitArtifactsEtcdService, map[string]*bintree{}},
+				"generateproxycerts.sh":                     {k8sCloudInitArtifactsGenerateproxycertsSh, map[string]*bintree{}},
+				"health-monitor.sh":                         {k8sCloudInitArtifactsHealthMonitorSh, map[string]*bintree{}},
+				"kms.service":                               {k8sCloudInitArtifactsKmsService, map[string]*bintree{}},
+				"kubelet-monitor.service":                   {k8sCloudInitArtifactsKubeletMonitorService, map[string]*bintree{}},
+				"kubelet-monitor.timer":                     {k8sCloudInitArtifactsKubeletMonitorTimer, map[string]*bintree{}},
+				"kubelet.service":                           {k8sCloudInitArtifactsKubeletService, map[string]*bintree{}},
+				"modprobe-CIS.conf":                         {k8sCloudInitArtifactsModprobeCisConf, map[string]*bintree{}},
+				"mountetcd.sh":                              {k8sCloudInitArtifactsMountetcdSh, map[string]*bintree{}},
+				"pam-d-common-auth":                         {k8sCloudInitArtifactsPamDCommonAuth, map[string]*bintree{}},
+				"pam-d-common-password":                     {k8sCloudInitArtifactsPamDCommonPassword, map[string]*bintree{}},
+				"pam-d-su":                                  {k8sCloudInitArtifactsPamDSu, map[string]*bintree{}},
+				"profile-d-cis.sh":                          {k8sCloudInitArtifactsProfileDCisSh, map[string]*bintree{}},
+				"pwquality-CIS.conf":                        {k8sCloudInitArtifactsPwqualityCisConf, map[string]*bintree{}},
+				"rsyslog-d-60-CIS.conf":                     {k8sCloudInitArtifactsRsyslogD60CisConf, map[string]*bintree{}},
+				"setup-custom-search-domains.sh":            {k8sCloudInitArtifactsSetupCustomSearchDomainsSh, map[string]*bintree{}},
+				"sshd_config":                               {k8sCloudInitArtifactsSshd_config, map[string]*bintree{}},
+				"sshd_config_1604":                          {k8sCloudInitArtifactsSshd_config_1604, map[string]*bintree{}},
+				"sys-fs-bpf.mount":                          {k8sCloudInitArtifactsSysFsBpfMount, map[string]*bintree{}},
+				"sysctl-d-60-CIS.conf":                      {k8sCloudInitArtifactsSysctlD60CisConf, map[string]*bintree{}},
 			}},
 			"jumpboxcustomdata.yml":    {k8sCloudInitJumpboxcustomdataYml, map[string]*bintree{}},
 			"masternodecustomdata.yml": {k8sCloudInitMasternodecustomdataYml, map[string]*bintree{}},

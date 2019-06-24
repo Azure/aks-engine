@@ -214,7 +214,7 @@ func (a *Properties) ValidateOrchestratorProfile(isUpdate bool) error {
 			}
 
 			if o.KubernetesConfig != nil {
-				err := o.KubernetesConfig.Validate(version, a.HasWindows())
+				err := o.KubernetesConfig.Validate(version, a.HasWindows(), a.FeatureFlags.IsIPv6DualStackEnabled())
 				if err != nil {
 					return err
 				}
@@ -342,6 +342,12 @@ func (a *Properties) validateMasterProfile(isUpdate bool) error {
 		if m.IsVirtualMachineScaleSets() && m.VnetSubnetID != "" && m.FirstConsecutiveStaticIP != "" {
 			return errors.New("when masterProfile's availabilityProfile is VirtualMachineScaleSets and a vnetSubnetID is specified, the firstConsecutiveStaticIP should be empty and will be determined by an offset from the first IP in the vnetCidr")
 		}
+		// validate os type is linux if dual stack feature is enabled
+		if a.FeatureFlags.IsIPv6DualStackEnabled() {
+			if m.Distro == CoreOS {
+				return errors.Errorf("Dual stack feature is currently supported only with Ubuntu, but master is of distro type %s", m.Distro)
+			}
+		}
 	}
 
 	if m.ImageRef != nil {
@@ -399,6 +405,16 @@ func (a *Properties) validateAgentPoolProfiles(isUpdate bool) error {
 
 		if e := validatePoolName(agentPoolProfile.Name); e != nil {
 			return e
+		}
+
+		// validate os type is linux if dual stack feature is enabled
+		if a.FeatureFlags.IsIPv6DualStackEnabled() {
+			if agentPoolProfile.OSType == Windows {
+				return errors.Errorf("Dual stack feature is supported only with Linux, but agent pool '%s' is of os type %s", agentPoolProfile.Name, agentPoolProfile.OSType)
+			}
+			if agentPoolProfile.Distro == CoreOS {
+				return errors.Errorf("Dual stack feature is currently supported only with Ubuntu, but agent pool '%s' is of distro type %s", agentPoolProfile.Name, agentPoolProfile.Distro)
+			}
 		}
 
 		// validate that each AgentPoolProfile Name is unique
@@ -1040,20 +1056,35 @@ func validatePasswordComplexity(name string, password string) (out bool) {
 }
 
 // Validate validates the KubernetesConfig
-func (k *KubernetesConfig) Validate(k8sVersion string, hasWindows bool) error {
+func (k *KubernetesConfig) Validate(k8sVersion string, hasWindows, ipv6DualStackEnabled bool) error {
 	// number of minimum retries allowed for kubelet to post node status
 	const minKubeletRetries = 4
 
+	// ipv6 dual stack feature is currently only supported with kubenet
+	if ipv6DualStackEnabled && k.NetworkPlugin != "kubenet" {
+		return errors.Errorf("OrchestratorProfile.KubernetesConfig.NetworkPlugin '%s' is invalid. IPv6 dual stack supported only with kubenet.", k.NetworkPlugin)
+	}
+
 	if k.ClusterSubnet != "" {
-		_, subnet, err := net.ParseCIDR(k.ClusterSubnet)
-		if err != nil {
+		clusterSubnets := strings.Split(k.ClusterSubnet, ",")
+		if !ipv6DualStackEnabled && len(clusterSubnets) > 1 {
 			return errors.Errorf("OrchestratorProfile.KubernetesConfig.ClusterSubnet '%s' is an invalid subnet", k.ClusterSubnet)
 		}
+		if ipv6DualStackEnabled && len(clusterSubnets) > 2 {
+			return errors.Errorf("OrchestratorProfile.KubernetesConfig.ClusterSubnet '%s' is an invalid subnet. Not more than 2 subnets for ipv6 dual stack.", k.ClusterSubnet)
+		}
 
-		if k.NetworkPlugin == "azure" {
-			ones, bits := subnet.Mask.Size()
-			if bits-ones <= 8 {
-				return errors.Errorf("OrchestratorProfile.KubernetesConfig.ClusterSubnet '%s' must reserve at least 9 bits for nodes", k.ClusterSubnet)
+		for _, clusterSubnet := range clusterSubnets {
+			_, subnet, err := net.ParseCIDR(clusterSubnet)
+			if err != nil {
+				return errors.Errorf("OrchestratorProfile.KubernetesConfig.ClusterSubnet '%s' is an invalid subnet", clusterSubnet)
+			}
+
+			if k.NetworkPlugin == "azure" {
+				ones, bits := subnet.Mask.Size()
+				if bits-ones <= 8 {
+					return errors.Errorf("OrchestratorProfile.KubernetesConfig.ClusterSubnet '%s' must reserve at least 9 bits for nodes", clusterSubnet)
+				}
 			}
 		}
 	}

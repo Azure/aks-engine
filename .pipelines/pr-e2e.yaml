@@ -17,7 +17,7 @@ pr:
 resources:
   containers:
   - container: dev1
-    image: quay.io/deis/go-dev:v1.22.1
+    image: quay.io/deis/go-dev:v1.22.3
 
 jobs:
 - job: unit_tests
@@ -52,11 +52,11 @@ jobs:
   - script: make validate-dependencies
     displayName: Check if imports, Gopkg.toml, and Gopkg.lock are in sync
     workingDirectory: $(modulePath)
-  - script: make generate test-style
-    displayName: Run linting rules
-    workingDirectory: $(modulePath)
   - script: make ensure-generated
     displayName: Check if generated code is up to date
+    workingDirectory: $(modulePath)
+  - script: make generate test-style
+    displayName: Run linting rules
     workingDirectory: $(modulePath)
   - script: make build-cross
     displayName: Build cross-architectural binaries

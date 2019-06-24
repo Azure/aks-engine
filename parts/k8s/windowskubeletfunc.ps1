@@ -134,29 +134,39 @@ users:
 }
 
 function
+Build-PauseContainer {
+    Param(
+        [Parameter(Mandatory = $true)][string]
+        $WindowsBase,
+        $DestinationTag
+    )
+    # Future work: This needs to build wincat - see https://github.com/Azure/aks-engine/issues/1461
+    "FROM $($WindowsBase)" | Out-File -encoding ascii -FilePath Dockerfile
+    "CMD cmd /c ping -t localhost" | Out-File -encoding ascii -FilePath Dockerfile -Append
+    docker build -t $DestinationTag .
+}
+
+function
 New-InfraContainer {
     Param(
         [Parameter(Mandatory = $true)][string]
-        $KubeDir
+        $KubeDir,
+        $DestinationTag = "kubletwin/pause"
     )
     cd $KubeDir
     $computerInfo = Get-ComputerInfo
-    $windowsBase = if ($computerInfo.WindowsVersion -eq "1709") {
-        "microsoft/nanoserver:1709"
-    }
-    elseif ($computerInfo.WindowsVersion -eq "1803") {
-        "microsoft/nanoserver:1803"
-    }
-    elseif ($computerInfo.WindowsVersion -eq "1809") {
-        "mcr.microsoft.com/windows/nanoserver:1809"
-    }
-    else {
-        "mcr.microsoft.com/nanoserver-insider"
-    }
 
-    "FROM $($windowsBase)" | Out-File -encoding ascii -FilePath Dockerfile
-    "CMD cmd /c ping -t localhost" | Out-File -encoding ascii -FilePath Dockerfile -Append
-    docker build -t kubletwin/pause .
+    # Reference for these tags: curl -L https://mcr.microsoft.com/v2/k8s/core/pause/tags/list
+    # Then docker run --rm mplatform/manifest-tool inspect mcr.microsoft.com/k8s/core/pause:<tag>
+
+    $defaultPauseImage = "mcr.microsoft.com/k8s/core/pause:1.1.0"
+
+    switch ($computerInfo.WindowsVersion) {
+        "1803" { docker pull $defaultPauseImage ; docker tag $defaultPauseImage $DestinationTag }
+        "1809" { docker pull $defaultPauseImage ; docker tag $defaultPauseImage $DestinationTag }
+        "1903" { Build-PauseContainer -WindowsBase "mcr.microsoft.com/windows/nanoserver:1903" -DestinationTag $DestinationTag}
+        default { Build-PauseContainer -WindowsBase "mcr.microsoft.com/nanoserver-insider" -DestinationTag $DestinationTag}
+    }
 }
 
 
@@ -188,11 +198,6 @@ Get-KubeBinaries {
         [Parameter(Mandatory = $true)][string]
         $KubeBinariesURL
     )
-
-    if ($computerInfo.WindowsVersion -eq "1709") {
-        Write-Log "Server version 1709 does not support using kubernetes binaries in tar file."
-        return
-    }
 
     $tempdir = New-TemporaryDirectory
     $binaryPackage = "$tempdir\k.tar.gz"
@@ -241,6 +246,8 @@ New-NSSMService {
     & "$KubeDir\nssm.exe" set Kubelet AppDirectory $KubeDir
     & "$KubeDir\nssm.exe" set Kubelet AppParameters $KubeletStartFile
     & "$KubeDir\nssm.exe" set Kubelet DisplayName Kubelet
+    & "$KubeDir\nssm.exe" set Kubelet AppRestartDelay 5000
+    & "$KubeDir\nssm.exe" set Kubelet DependOnService docker
     & "$KubeDir\nssm.exe" set Kubelet Description Kubelet
     & "$KubeDir\nssm.exe" set Kubelet Start SERVICE_AUTO_START
     & "$KubeDir\nssm.exe" set Kubelet ObjectName LocalSystem

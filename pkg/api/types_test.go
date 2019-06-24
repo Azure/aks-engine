@@ -5,7 +5,6 @@ package api
 
 import (
 	"fmt"
-	"log"
 	"reflect"
 	"strings"
 	"testing"
@@ -214,34 +213,40 @@ func TestOSType(t *testing.T) {
 
 func TestAgentPoolProfileIsVHDDistro(t *testing.T) {
 	cases := []struct {
+		name     string
 		ap       AgentPoolProfile
 		expected bool
 	}{
 		{
+			name: "16.04 VHD distro",
 			ap: AgentPoolProfile{
 				Distro: AKSUbuntu1604,
 			},
 			expected: true,
 		},
 		{
+			name: "18.04 VHD distro",
 			ap: AgentPoolProfile{
 				Distro: AKSUbuntu1804,
 			},
 			expected: true,
 		},
 		{
+			name: "coreos distro",
 			ap: AgentPoolProfile{
 				Distro: CoreOS,
 			},
 			expected: false,
 		},
 		{
+			name: "ubuntu distro",
 			ap: AgentPoolProfile{
 				Distro: Ubuntu,
 			},
 			expected: false,
 		},
 		{
+			name: "ubuntu 18.04 non-VHD distro",
 			ap: AgentPoolProfile{
 				Distro: Ubuntu1804,
 			},
@@ -250,42 +255,52 @@ func TestAgentPoolProfileIsVHDDistro(t *testing.T) {
 	}
 
 	for _, c := range cases {
-		if c.expected != c.ap.IsVHDDistro() {
-			t.Fatalf("Got unexpected AgentPoolProfile.IsVHDDistro() result. Expected: %t. Got: %t.", c.expected, c.ap.IsVHDDistro())
-		}
+		c := c
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+			if c.expected != c.ap.IsVHDDistro() {
+				t.Fatalf("Got unexpected AgentPoolProfile.IsVHDDistro() result. Expected: %t. Got: %t.", c.expected, c.ap.IsVHDDistro())
+			}
+		})
 	}
 }
 
 func TestAgentPoolProfileIsUbuntuNonVHD(t *testing.T) {
 	cases := []struct {
+		name     string
 		ap       AgentPoolProfile
 		expected bool
 	}{
 		{
+			name: "ubuntu 16.04 VHD distro",
 			ap: AgentPoolProfile{
 				Distro: AKSUbuntu1604,
 			},
 			expected: false,
 		},
 		{
+			name: "ubuntu 18.04 VHD distro",
 			ap: AgentPoolProfile{
 				Distro: AKSUbuntu1804,
 			},
 			expected: false,
 		},
 		{
+			name: "coreos distro",
 			ap: AgentPoolProfile{
 				Distro: CoreOS,
 			},
 			expected: false,
 		},
 		{
+			name: "ubuntu distro",
 			ap: AgentPoolProfile{
 				Distro: Ubuntu,
 			},
 			expected: true,
 		},
 		{
+			name: "ubuntu 18.04 non-VHD distro",
 			ap: AgentPoolProfile{
 				Distro: Ubuntu1804,
 			},
@@ -294,42 +309,52 @@ func TestAgentPoolProfileIsUbuntuNonVHD(t *testing.T) {
 	}
 
 	for _, c := range cases {
-		if c.expected != c.ap.IsUbuntuNonVHD() {
-			t.Fatalf("Got unexpected AgentPoolProfile.IsUbuntuNonVHD() result. Expected: %t. Got: %t.", c.expected, c.ap.IsUbuntuNonVHD())
-		}
+		c := c
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+			if c.expected != c.ap.IsUbuntuNonVHD() {
+				t.Fatalf("Got unexpected AgentPoolProfile.IsUbuntuNonVHD() result. Expected: %t. Got: %t.", c.expected, c.ap.IsUbuntuNonVHD())
+			}
+		})
 	}
 }
 
 func TestMasterProfileIsVHDDistro(t *testing.T) {
 	cases := []struct {
+		name     string
 		m        MasterProfile
 		expected bool
 	}{
 		{
+			name: "ubuntu 16.04 VHD distro",
 			m: MasterProfile{
 				Distro: AKSUbuntu1604,
 			},
 			expected: true,
 		},
 		{
+			name: "ubuntu 18.04 VHD distro",
 			m: MasterProfile{
 				Distro: AKSUbuntu1804,
 			},
 			expected: true,
 		},
 		{
+			name: "coreos distro",
 			m: MasterProfile{
 				Distro: CoreOS,
 			},
 			expected: false,
 		},
 		{
+			name: "ubuntu 16.04 non-VHD distro",
 			m: MasterProfile{
 				Distro: Ubuntu,
 			},
 			expected: false,
 		},
 		{
+			name: "ubuntu 18.04 non-VHD distro",
 			m: MasterProfile{
 				Distro: Ubuntu1804,
 			},
@@ -338,42 +363,52 @@ func TestMasterProfileIsVHDDistro(t *testing.T) {
 	}
 
 	for _, c := range cases {
-		if c.expected != c.m.IsVHDDistro() {
-			t.Fatalf("Got unexpected MasterProfile.IsVHDDistro() result. Expected: %t. Got: %t.", c.expected, c.m.IsVHDDistro())
-		}
+		c := c
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+			if c.expected != c.m.IsVHDDistro() {
+				t.Fatalf("Got unexpected MasterProfile.IsVHDDistro() result. Expected: %t. Got: %t.", c.expected, c.m.IsVHDDistro())
+			}
+		})
 	}
 }
 
 func TestMasterProfileIsUbuntuNonVHD(t *testing.T) {
 	cases := []struct {
+		name     string
 		m        MasterProfile
 		expected bool
 	}{
 		{
+			name: "ubuntu 16.04 VHD distro",
 			m: MasterProfile{
 				Distro: AKSUbuntu1604,
 			},
 			expected: false,
 		},
 		{
+			name: "ubuntu 18.04 VHD distro",
 			m: MasterProfile{
 				Distro: AKSUbuntu1804,
 			},
 			expected: false,
 		},
 		{
+			name: "coreos distro",
 			m: MasterProfile{
 				Distro: CoreOS,
 			},
 			expected: false,
 		},
 		{
+			name: "ubuntu 16.04 non-VHD distro",
 			m: MasterProfile{
 				Distro: Ubuntu,
 			},
 			expected: true,
 		},
 		{
+			name: "ubuntu 18.04 non-VHD distro",
 			m: MasterProfile{
 				Distro: Ubuntu1804,
 			},
@@ -382,42 +417,52 @@ func TestMasterProfileIsUbuntuNonVHD(t *testing.T) {
 	}
 
 	for _, c := range cases {
-		if c.expected != c.m.IsUbuntuNonVHD() {
-			t.Fatalf("Got unexpected MasterProfile.IsUbuntuNonVHD() result. Expected: %t. Got: %t.", c.expected, c.m.IsUbuntuNonVHD())
-		}
+		c := c
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+			if c.expected != c.m.IsUbuntuNonVHD() {
+				t.Fatalf("Got unexpected MasterProfile.IsUbuntuNonVHD() result. Expected: %t. Got: %t.", c.expected, c.m.IsUbuntuNonVHD())
+			}
+		})
 	}
 }
 
 func TestMasterProfileHasMultipleNodes(t *testing.T) {
 	cases := []struct {
+		name     string
 		m        MasterProfile
 		expected bool
 	}{
 		{
+			name: "1",
 			m: MasterProfile{
 				Count: 1,
 			},
 			expected: false,
 		},
 		{
+			name: "2",
 			m: MasterProfile{
 				Count: 2,
 			},
 			expected: true,
 		},
 		{
+			name: "3",
 			m: MasterProfile{
 				Count: 3,
 			},
 			expected: true,
 		},
 		{
+			name: "0",
 			m: MasterProfile{
 				Count: 0,
 			},
 			expected: false,
 		},
 		{
+			name: "-1",
 			m: MasterProfile{
 				Count: -1,
 			},
@@ -426,49 +471,63 @@ func TestMasterProfileHasMultipleNodes(t *testing.T) {
 	}
 
 	for _, c := range cases {
-		if c.expected != c.m.HasMultipleNodes() {
-			t.Fatalf("Got unexpected MasterProfile.HasMultipleNodes() result. Expected: %t. Got: %t.", c.expected, c.m.HasMultipleNodes())
-		}
+		c := c
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+			if c.expected != c.m.HasMultipleNodes() {
+				t.Fatalf("Got unexpected MasterProfile.HasMultipleNodes() result. Expected: %t. Got: %t.", c.expected, c.m.HasMultipleNodes())
+			}
+		})
 	}
 }
 
 func TestMasterProfileHasCosmosEtcd(t *testing.T) {
 	cases := []struct {
+		name     string
 		m        MasterProfile
 		expected bool
 	}{
 		{
+			name: "enabled",
 			m: MasterProfile{
 				CosmosEtcd: to.BoolPtr(true),
 			},
 			expected: true,
 		},
 		{
+			name: "disabled",
 			m: MasterProfile{
 				CosmosEtcd: to.BoolPtr(false),
 			},
 			expected: false,
 		},
 		{
+			name:     "zero value master profile",
 			m:        MasterProfile{},
 			expected: false,
 		},
 	}
 
 	for _, c := range cases {
-		if c.expected != c.m.HasCosmosEtcd() {
-			t.Fatalf("Got unexpected MasterProfile.HasCosmosEtcd() result. Expected: %t. Got: %t.", c.expected, c.m.HasCosmosEtcd())
-		}
+		c := c
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+			if c.expected != c.m.HasCosmosEtcd() {
+				t.Fatalf("Got unexpected MasterProfile.HasCosmosEtcd() result. Expected: %t. Got: %t.", c.expected, c.m.HasCosmosEtcd())
+			}
+		})
 	}
 }
 
 func TestMasterProfileGetCosmosEndPointURI(t *testing.T) {
 	dnsPrefix := "my-prefix"
 	cases := []struct {
+		name     string
 		m        MasterProfile
 		expected string
 	}{
 		{
+			name: "valid DNS prefix",
 			m: MasterProfile{
 				CosmosEtcd: to.BoolPtr(true),
 				DNSPrefix:  dnsPrefix,
@@ -476,32 +535,40 @@ func TestMasterProfileGetCosmosEndPointURI(t *testing.T) {
 			expected: fmt.Sprintf(etcdEndpointURIFmt, dnsPrefix),
 		},
 		{
+			name: "no DNS prefix",
 			m: MasterProfile{
 				CosmosEtcd: to.BoolPtr(true),
 			},
 			expected: fmt.Sprintf(etcdEndpointURIFmt, ""),
 		},
 		{
+			name: "cosmos etcd disabled",
 			m: MasterProfile{
 				CosmosEtcd: to.BoolPtr(false),
 			},
 			expected: "",
 		},
 		{
+			name:     "zero value master profile",
 			m:        MasterProfile{},
 			expected: "",
 		},
 	}
 
 	for _, c := range cases {
-		if c.expected != c.m.GetCosmosEndPointURI() {
-			t.Fatalf("Got unexpected MasterProfile.GetCosmosEndPointURI() result. Expected: %s. Got: %s.", c.expected, c.m.GetCosmosEndPointURI())
-		}
+		c := c
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+			if c.expected != c.m.GetCosmosEndPointURI() {
+				t.Fatalf("Got unexpected MasterProfile.GetCosmosEndPointURI() result. Expected: %s. Got: %s.", c.expected, c.m.GetCosmosEndPointURI())
+			}
+		})
 	}
 }
 
 func TestHasStorageProfile(t *testing.T) {
 	cases := []struct {
+		name              string
 		p                 Properties
 		expectedHasMD     bool
 		expectedHasSA     bool
@@ -511,6 +578,7 @@ func TestHasStorageProfile(t *testing.T) {
 		expectedHasDisks  bool
 	}{
 		{
+			name: "Storage Account",
 			p: Properties{
 				MasterProfile: &MasterProfile{
 					StorageProfile: StorageAccount,
@@ -532,6 +600,7 @@ func TestHasStorageProfile(t *testing.T) {
 			expectedHasDisks: true,
 		},
 		{
+			name: "Managed Disk",
 			p: Properties{
 				MasterProfile: &MasterProfile{
 					StorageProfile: ManagedDisks,
@@ -551,6 +620,7 @@ func TestHasStorageProfile(t *testing.T) {
 			expectedAgent0MD: false,
 		},
 		{
+			name: "both",
 			p: Properties{
 				MasterProfile: &MasterProfile{
 					StorageProfile: StorageAccount,
@@ -570,6 +640,7 @@ func TestHasStorageProfile(t *testing.T) {
 			expectedAgent0MD: true,
 		},
 		{
+			name: "Managed Disk everywhere",
 			p: Properties{
 				OrchestratorProfile: &OrchestratorProfile{
 					OrchestratorType: Kubernetes,
@@ -593,6 +664,7 @@ func TestHasStorageProfile(t *testing.T) {
 			expectedPrivateJB: false,
 		},
 		{
+			name: "Mixed with jumpbox",
 			p: Properties{
 				OrchestratorProfile: &OrchestratorProfile{
 					OrchestratorType: Kubernetes,
@@ -622,6 +694,7 @@ func TestHasStorageProfile(t *testing.T) {
 		},
 
 		{
+			name: "Mixed with jumpbox alternate",
 			p: Properties{
 				OrchestratorProfile: &OrchestratorProfile{
 					OrchestratorType: Kubernetes,
@@ -652,45 +725,52 @@ func TestHasStorageProfile(t *testing.T) {
 	}
 
 	for _, c := range cases {
-		if c.p.HasManagedDisks() != c.expectedHasMD {
-			t.Fatalf("expected HasManagedDisks() to return %t but instead returned %t", c.expectedHasMD, c.p.HasManagedDisks())
-		}
-		if c.p.HasStorageAccountDisks() != c.expectedHasSA {
-			t.Fatalf("expected HasStorageAccountDisks() to return %t but instead returned %t", c.expectedHasSA, c.p.HasStorageAccountDisks())
-		}
-		if c.p.MasterProfile.IsManagedDisks() != c.expectedMasterMD {
-			t.Fatalf("expected IsManagedDisks() to return %t but instead returned %t", c.expectedMasterMD, c.p.MasterProfile.IsManagedDisks())
-		}
-		if c.p.MasterProfile.IsStorageAccount() == c.expectedMasterMD {
-			t.Fatalf("expected IsStorageAccount() to return %t but instead returned %t", !c.expectedMasterMD, c.p.MasterProfile.IsStorageAccount())
-		}
-		if c.p.AgentPoolProfiles[0].IsManagedDisks() != c.expectedAgent0MD {
-			t.Fatalf("expected IsManagedDisks() to return %t but instead returned %t", c.expectedAgent0MD, c.p.AgentPoolProfiles[0].IsManagedDisks())
-		}
-		if c.p.AgentPoolProfiles[0].IsStorageAccount() == c.expectedAgent0MD {
-			t.Fatalf("expected IsStorageAccount() to return %t but instead returned %t", !c.expectedAgent0MD, c.p.AgentPoolProfiles[0].IsStorageAccount())
-		}
-		if c.p.OrchestratorProfile != nil && c.p.OrchestratorProfile.KubernetesConfig.PrivateJumpboxProvision() != c.expectedPrivateJB {
-			t.Fatalf("expected PrivateJumpboxProvision() to return %t but instead returned %t", c.expectedPrivateJB, c.p.OrchestratorProfile.KubernetesConfig.PrivateJumpboxProvision())
-		}
-		if c.p.AgentPoolProfiles[0].HasDisks() != c.expectedHasDisks {
-			t.Fatalf("expected HasDisks() to return %t but instead returned %t", c.expectedHasDisks, c.p.AgentPoolProfiles[0].HasDisks())
-		}
+		c := c
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+			if c.p.HasManagedDisks() != c.expectedHasMD {
+				t.Fatalf("expected HasManagedDisks() to return %t but instead returned %t", c.expectedHasMD, c.p.HasManagedDisks())
+			}
+			if c.p.HasStorageAccountDisks() != c.expectedHasSA {
+				t.Fatalf("expected HasStorageAccountDisks() to return %t but instead returned %t", c.expectedHasSA, c.p.HasStorageAccountDisks())
+			}
+			if c.p.MasterProfile.IsManagedDisks() != c.expectedMasterMD {
+				t.Fatalf("expected IsManagedDisks() to return %t but instead returned %t", c.expectedMasterMD, c.p.MasterProfile.IsManagedDisks())
+			}
+			if c.p.MasterProfile.IsStorageAccount() == c.expectedMasterMD {
+				t.Fatalf("expected IsStorageAccount() to return %t but instead returned %t", !c.expectedMasterMD, c.p.MasterProfile.IsStorageAccount())
+			}
+			if c.p.AgentPoolProfiles[0].IsManagedDisks() != c.expectedAgent0MD {
+				t.Fatalf("expected IsManagedDisks() to return %t but instead returned %t", c.expectedAgent0MD, c.p.AgentPoolProfiles[0].IsManagedDisks())
+			}
+			if c.p.AgentPoolProfiles[0].IsStorageAccount() == c.expectedAgent0MD {
+				t.Fatalf("expected IsStorageAccount() to return %t but instead returned %t", !c.expectedAgent0MD, c.p.AgentPoolProfiles[0].IsStorageAccount())
+			}
+			if c.p.OrchestratorProfile != nil && c.p.OrchestratorProfile.KubernetesConfig.PrivateJumpboxProvision() != c.expectedPrivateJB {
+				t.Fatalf("expected PrivateJumpboxProvision() to return %t but instead returned %t", c.expectedPrivateJB, c.p.OrchestratorProfile.KubernetesConfig.PrivateJumpboxProvision())
+			}
+			if c.p.AgentPoolProfiles[0].HasDisks() != c.expectedHasDisks {
+				t.Fatalf("expected HasDisks() to return %t but instead returned %t", c.expectedHasDisks, c.p.AgentPoolProfiles[0].HasDisks())
+			}
+		})
 	}
 }
 
 func TestAgentPoolProfileGetKubernetesLabels(t *testing.T) {
 	cases := []struct {
+		name     string
 		ap       AgentPoolProfile
 		rg       string
 		expected string
 	}{
 		{
+			name:     "vanilla pool profile",
 			ap:       AgentPoolProfile{},
 			rg:       "my-resource-group",
 			expected: "node-role.kubernetes.io/agent=,kubernetes.io/role=agent,agentpool=,kubernetes.azure.com/cluster=my-resource-group",
 		},
 		{
+			name: "with managed disk",
 			ap: AgentPoolProfile{
 				StorageProfile: ManagedDisks,
 			},
@@ -698,6 +778,7 @@ func TestAgentPoolProfileGetKubernetesLabels(t *testing.T) {
 			expected: "node-role.kubernetes.io/agent=,kubernetes.io/role=agent,agentpool=,storageprofile=managed,storagetier=,kubernetes.azure.com/cluster=my-resource-group",
 		},
 		{
+			name: "N series",
 			ap: AgentPoolProfile{
 				VMSize: "Standard_NC6",
 			},
@@ -705,6 +786,7 @@ func TestAgentPoolProfileGetKubernetesLabels(t *testing.T) {
 			expected: "node-role.kubernetes.io/agent=,kubernetes.io/role=agent,agentpool=,accelerator=nvidia,kubernetes.azure.com/cluster=my-resource-group",
 		},
 		{
+			name: "with custom labels",
 			ap: AgentPoolProfile{
 				CustomNodeLabels: map[string]string{
 					"mycustomlabel1": "foo",
@@ -715,6 +797,7 @@ func TestAgentPoolProfileGetKubernetesLabels(t *testing.T) {
 			expected: "node-role.kubernetes.io/agent=,kubernetes.io/role=agent,agentpool=,kubernetes.azure.com/cluster=my-resource-group,mycustomlabel1=foo,mycustomlabel2=bar",
 		},
 		{
+			name: "N series and managed disk with custom labels",
 			ap: AgentPoolProfile{
 				StorageProfile: ManagedDisks,
 				VMSize:         "Standard_NC6",
@@ -729,9 +812,13 @@ func TestAgentPoolProfileGetKubernetesLabels(t *testing.T) {
 	}
 
 	for _, c := range cases {
-		if c.expected != c.ap.GetKubernetesLabels(c.rg) {
-			t.Fatalf("Got unexpected AgentPoolProfile.GetKubernetesLabels(%s) result. Expected: %s. Got: %s.", c.rg, c.expected, c.ap.GetKubernetesLabels(c.rg))
-		}
+		c := c
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+			if c.expected != c.ap.GetKubernetesLabels(c.rg) {
+				t.Fatalf("Got unexpected AgentPoolProfile.GetKubernetesLabels(%s) result. Expected: %s. Got: %s.", c.rg, c.expected, c.ap.GetKubernetesLabels(c.rg))
+			}
+		})
 	}
 }
 
@@ -739,17 +826,20 @@ func TestKubernetesConfigGetOrderedKubeletConfigString(t *testing.T) {
 	alphabetizedString := "--address=0.0.0.0 --allow-privileged=true --anonymous-auth=false --authorization-mode=Webhook --cgroups-per-qos=true --client-ca-file=/etc/kubernetes/certs/ca.crt --keep-terminated-pod-volumes=false --kubeconfig=/var/lib/kubelet/kubeconfig --pod-manifest-path=/etc/kubernetes/manifests "
 	alphabetizedStringForPowershell := `"--address=0.0.0.0", "--allow-privileged=true", "--anonymous-auth=false", "--authorization-mode=Webhook", "--cgroups-per-qos=true", "--client-ca-file=/etc/kubernetes/certs/ca.crt", "--keep-terminated-pod-volumes=false", "--kubeconfig=/var/lib/kubelet/kubeconfig", "--pod-manifest-path=/etc/kubernetes/manifests"`
 	cases := []struct {
+		name                  string
 		kc                    KubernetesConfig
 		expected              string
 		expectedForPowershell string
 	}{
 		{
+			name:                  "zero value kubernetesConfig",
 			kc:                    KubernetesConfig{},
 			expected:              "",
 			expectedForPowershell: "",
 		},
 		// Some values
 		{
+			name: "expected values",
 			kc: KubernetesConfig{
 				KubeletConfig: map[string]string{
 					"--address":                     "0.0.0.0",
@@ -768,6 +858,7 @@ func TestKubernetesConfigGetOrderedKubeletConfigString(t *testing.T) {
 		},
 		// Switch the "order" in the map, validate the same return string
 		{
+			name: "expected values re-ordered",
 			kc: KubernetesConfig{
 				KubeletConfig: map[string]string{
 					"--address":                     "0.0.0.0",
@@ -787,21 +878,27 @@ func TestKubernetesConfigGetOrderedKubeletConfigString(t *testing.T) {
 	}
 
 	for _, c := range cases {
-		if c.expected != c.kc.GetOrderedKubeletConfigString() {
-			t.Fatalf("Got unexpected AgentPoolProfile.GetOrderedKubeletConfigString() result. Expected: %s. Got: %s.", c.expected, c.kc.GetOrderedKubeletConfigString())
-		}
-		if c.expectedForPowershell != c.kc.GetOrderedKubeletConfigStringForPowershell() {
-			t.Fatalf("Got unexpected AgentPoolProfile.GetOrderedKubeletConfigStringForPowershell() result. Expected: %s. Got: %s.", c.expectedForPowershell, c.kc.GetOrderedKubeletConfigStringForPowershell())
-		}
+		c := c
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+			if c.expected != c.kc.GetOrderedKubeletConfigString() {
+				t.Fatalf("Got unexpected AgentPoolProfile.GetOrderedKubeletConfigString() result. Expected: %s. Got: %s.", c.expected, c.kc.GetOrderedKubeletConfigString())
+			}
+			if c.expectedForPowershell != c.kc.GetOrderedKubeletConfigStringForPowershell() {
+				t.Fatalf("Got unexpected AgentPoolProfile.GetOrderedKubeletConfigStringForPowershell() result. Expected: %s. Got: %s.", c.expectedForPowershell, c.kc.GetOrderedKubeletConfigStringForPowershell())
+			}
+		})
 	}
 }
 
 func TestTotalNodes(t *testing.T) {
 	cases := []struct {
+		name     string
 		p        Properties
 		expected int
 	}{
 		{
+			name: "2 total nodes between master and pool",
 			p: Properties{
 				MasterProfile: &MasterProfile{
 					Count: 1,
@@ -815,6 +912,7 @@ func TestTotalNodes(t *testing.T) {
 			expected: 2,
 		},
 		{
+			name: "7 total nodes between 2 pools",
 			p: Properties{
 				AgentPoolProfiles: []*AgentPoolProfile{
 					{
@@ -828,6 +926,7 @@ func TestTotalNodes(t *testing.T) {
 			expected: 7,
 		},
 		{
+			name: "11 total nodes between master and pool",
 			p: Properties{
 				MasterProfile: &MasterProfile{
 					Count: 5,
@@ -843,18 +942,24 @@ func TestTotalNodes(t *testing.T) {
 	}
 
 	for _, c := range cases {
-		if c.p.TotalNodes() != c.expected {
-			t.Fatalf("expected TotalNodes() to return %d but instead returned %d", c.expected, c.p.TotalNodes())
-		}
+		c := c
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+			if c.p.TotalNodes() != c.expected {
+				t.Fatalf("expected TotalNodes() to return %d but instead returned %d", c.expected, c.p.TotalNodes())
+			}
+		})
 	}
 }
 
 func TestPropertiesIsHostedMasterProfile(t *testing.T) {
 	cases := []struct {
+		name     string
 		p        Properties
 		expected bool
 	}{
 		{
+			name: "valid master 1 node",
 			p: Properties{
 				MasterProfile: &MasterProfile{
 					Count: 1,
@@ -863,6 +968,7 @@ func TestPropertiesIsHostedMasterProfile(t *testing.T) {
 			expected: false,
 		},
 		{
+			name: "valid master 3 nodes",
 			p: Properties{
 				MasterProfile: &MasterProfile{
 					Count: 3,
@@ -871,6 +977,7 @@ func TestPropertiesIsHostedMasterProfile(t *testing.T) {
 			expected: false,
 		},
 		{
+			name: "valid master 5 nodes",
 			p: Properties{
 				MasterProfile: &MasterProfile{
 					Count: 5,
@@ -879,6 +986,7 @@ func TestPropertiesIsHostedMasterProfile(t *testing.T) {
 			expected: false,
 		},
 		{
+			name: "zero value hosted master",
 			p: Properties{
 				HostedMasterProfile: &HostedMasterProfile{},
 			},
@@ -887,24 +995,31 @@ func TestPropertiesIsHostedMasterProfile(t *testing.T) {
 	}
 
 	for _, c := range cases {
-		if c.p.IsHostedMasterProfile() != c.expected {
-			t.Fatalf("expected IsHostedMasterProfile() to return %t but instead returned %t", c.expected, c.p.IsHostedMasterProfile())
-		}
+		c := c
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+			if c.p.IsHostedMasterProfile() != c.expected {
+				t.Fatalf("expected IsHostedMasterProfile() to return %t but instead returned %t", c.expected, c.p.IsHostedMasterProfile())
+			}
+		})
 	}
 }
 
 func TestMasterAvailabilityProfile(t *testing.T) {
 	cases := []struct {
+		name           string
 		p              Properties
 		expectedISVMSS bool
 	}{
 		{
+			name: "zero value master profile",
 			p: Properties{
 				MasterProfile: &MasterProfile{},
 			},
 			expectedISVMSS: false,
 		},
 		{
+			name: "master profile w/ AS",
 			p: Properties{
 				MasterProfile: &MasterProfile{
 					AvailabilityProfile: AvailabilitySet,
@@ -913,6 +1028,7 @@ func TestMasterAvailabilityProfile(t *testing.T) {
 			expectedISVMSS: false,
 		},
 		{
+			name: "master profile w/ VMSS",
 			p: Properties{
 				MasterProfile: &MasterProfile{
 					AvailabilityProfile: VirtualMachineScaleSets,
@@ -923,9 +1039,13 @@ func TestMasterAvailabilityProfile(t *testing.T) {
 	}
 
 	for _, c := range cases {
-		if c.p.MasterProfile.IsVirtualMachineScaleSets() != c.expectedISVMSS {
-			t.Fatalf("expected MasterProfile.IsVirtualMachineScaleSets() to return %t but instead returned %t", c.expectedISVMSS, c.p.MasterProfile.IsVirtualMachineScaleSets())
-		}
+		c := c
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+			if c.p.MasterProfile.IsVirtualMachineScaleSets() != c.expectedISVMSS {
+				t.Fatalf("expected MasterProfile.IsVirtualMachineScaleSets() to return %t but instead returned %t", c.expectedISVMSS, c.p.MasterProfile.IsVirtualMachineScaleSets())
+			}
+		})
 	}
 }
 func TestAvailabilityProfile(t *testing.T) {
@@ -2722,7 +2842,6 @@ func TestHasAadProfile(t *testing.T) {
 }
 
 func TestCustomHyperkubeImageField(t *testing.T) {
-	log.Println(exampleAPIModel)
 	apiloader := &Apiloader{
 		Translator: nil,
 	}
@@ -2738,7 +2857,6 @@ func TestCustomHyperkubeImageField(t *testing.T) {
 }
 
 func TestPrivateAzureRegistryServerField(t *testing.T) {
-	log.Println(exampleAPIModelWithPrivateAzureRegistry)
 	apiloader := &Apiloader{
 		Translator: nil,
 	}
@@ -2755,7 +2873,6 @@ func TestPrivateAzureRegistryServerField(t *testing.T) {
 
 func TestUserAssignedMSI(t *testing.T) {
 	// Test1: With just System MSI
-	log.Println(exampleSystemMSIModel)
 	apiloader := &Apiloader{
 		Translator: nil,
 	}
@@ -2770,7 +2887,6 @@ func TestUserAssignedMSI(t *testing.T) {
 	}
 
 	// Test2: With user assigned MSI
-	log.Println(exampleUserMSIModel)
 	apiloader = &Apiloader{
 		Translator: nil,
 	}
@@ -4974,6 +5090,30 @@ func TestSetPlatformFaultDomainCount(t *testing.T) {
 		cs.SetPlatformFaultDomainCount(i)
 		if *cs.Properties.MasterProfile.PlatformFaultDomainCount != i {
 			t.Errorf("expected master platformFaultDomainCount to be %d, not %v", i, cs.Properties.MasterProfile.PlatformFaultDomainCount)
+		}
+		for _, pool := range cs.Properties.AgentPoolProfiles {
+			if *pool.PlatformFaultDomainCount != i {
+				t.Errorf("expected agent platformFaultDomainCount to be %d, not %v", i, pool.PlatformFaultDomainCount)
+			}
+		}
+	}
+}
+
+func TestSetPlatformFaultDomainCountNoMasters(t *testing.T) {
+	// check that the default value is nil
+	cs := CreateMockContainerService("testcluster", defaultTestClusterVer, 1, 3, false)
+	cs.Properties.MasterProfile = nil
+	for _, pool := range cs.Properties.AgentPoolProfiles {
+		if pool.PlatformFaultDomainCount != nil {
+			t.Errorf("expected agent platformFaultDomainCount to be nil, not %v", pool.PlatformFaultDomainCount)
+		}
+	}
+
+	// check that pfdc can be set to legal values
+	for i := 1; i <= 3; i++ {
+		cs.SetPlatformFaultDomainCount(i)
+		if cs.Properties.MasterProfile != nil {
+			t.Error("expected MasterProfile to stay nil")
 		}
 		for _, pool := range cs.Properties.AgentPoolProfiles {
 			if *pool.PlatformFaultDomainCount != i {

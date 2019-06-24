@@ -389,6 +389,9 @@ func (t *TemplateGenerator) getTemplateFuncMap(cs *api.ContainerService) templat
 		"GetKubernetesAllowedVMSKUs": func() string {
 			return helpers.GetKubernetesAllowedVMSKUs()
 		},
+		"GetDefaultVNETCIDRIPv6": func() string {
+			return DefaultVNETCIDRIPv6
+		},
 		"getSwarmVersions": func() string {
 			return getSwarmVersions(api.SwarmVersion, api.SwarmDockerComposeVersion)
 		},
@@ -620,6 +623,9 @@ func (t *TemplateGenerator) getTemplateFuncMap(cs *api.ContainerService) templat
 		},
 		"IsCustomVNET": func() bool {
 			return cs.Properties.AreAgentProfilesCustomVNET()
+		},
+		"IsIPv6DualStackFeatureEnabled": func() bool {
+			return cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6DualStack")
 		},
 		"GetEscapedEnvironmentJSON": func() string {
 			customEnvironmentJSON, _ := cs.Properties.GetCustomEnvironmentJSON(false)

@@ -12,7 +12,7 @@ import (
 	"github.com/Azure/aks-engine/pkg/api/common"
 )
 
-func (cs *ContainerService) setKubeletConfig() {
+func (cs *ContainerService) setKubeletConfig(isUpgrade bool) {
 	o := cs.Properties.OrchestratorProfile
 	staticLinuxKubeletConfig := map[string]string{
 		"--address":                     "0.0.0.0",
@@ -130,6 +130,18 @@ func (cs *ContainerService) setKubeletConfig() {
 	if !to.Bool(o.KubernetesConfig.EnableSecureKubelet) {
 		for _, key := range []string{"--anonymous-auth", "--client-ca-file"} {
 			delete(o.KubernetesConfig.KubeletConfig, key)
+		}
+	}
+
+	if isUpgrade && common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.14.0") {
+		hasSupportPodPidsLimitFeatureGate := strings.Contains(o.KubernetesConfig.KubeletConfig["--feature-gates"], "SupportPodPidsLimit=true")
+		podMaxPids, _ := strconv.Atoi(o.KubernetesConfig.KubeletConfig["--pod-max-pids"])
+		if podMaxPids > 0 {
+			// If we don't have an explicit SupportPodPidsLimit=true, disable --pod-max-pids by setting to -1
+			// To prevent older clusters from inheriting SupportPodPidsLimit=true implicitly starting w/ 1.14.0
+			if !hasSupportPodPidsLimitFeatureGate {
+				o.KubernetesConfig.KubeletConfig["--pod-max-pids"] = strconv.Itoa(-1)
+			}
 		}
 	}
 

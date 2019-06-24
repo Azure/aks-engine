@@ -9,10 +9,10 @@ spec:
       restartPolicy: Never
       containers:
       - name: validate-bing
-        image: mcr.microsoft.com/windows/servercore/iis:windowsservercore-ltsc2019
+        image: {{ .ServerCore }}
         command: ['powershell', 'Resolve-DnsName', '-Name', 'www.bing.com', '-DnsOnly', '-Type', 'CNAME']
       - name: validate-google
-        image: mcr.microsoft.com/windows/servercore/iis:windowsservercore-ltsc2019
+        image: {{ .ServerCore }}
         command: ['powershell', 'Resolve-DnsName', '-Name', 'google.com', '-DnsOnly', '-Type', 'A']
       nodeSelector:
         beta.kubernetes.io/os: windows

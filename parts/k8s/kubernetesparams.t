@@ -415,6 +415,13 @@
       },
       "type": "string"
     },
+    "vnetCidrIPv6": {
+      "defaultValue": "{{GetDefaultVNETCIDRIPv6}}",
+      "metadata": {
+        "description": "Cluster vnet cidr IPv6"
+      },
+      "type": "string"
+    },
     "gcHighThreshold": {
       "defaultValue": 85,
       "metadata": {

@@ -115,6 +115,7 @@ type AddonProfile struct {
 type FeatureFlags struct {
 	EnableCSERunInBackground bool `json:"enableCSERunInBackground,omitempty"`
 	BlockOutboundInternet    bool `json:"blockOutboundInternet,omitempty"`
+	EnableIPv6DualStack      bool `json:"enableIPv6DualStack,omitempty"`
 }
 
 // ServicePrincipalProfile contains the client and secret used by the cluster for Azure Resource CRUD
@@ -458,6 +459,7 @@ type MasterProfile struct {
 	AgentVnetSubnetID        string            `json:"agentVnetSubnetID,omitempty"`
 	FirstConsecutiveStaticIP string            `json:"firstConsecutiveStaticIP,omitempty"`
 	Subnet                   string            `json:"subnet"`
+	SubnetIPv6               string            `json:"subnetIPv6"`
 	IPAddressCount           int               `json:"ipAddressCount,omitempty"`
 	StorageProfile           string            `json:"storageProfile,omitempty"`
 	HTTPSourceAddressPrefix  string            `json:"HTTPSourceAddressPrefix,omitempty"`
@@ -1164,7 +1166,13 @@ func (p *Properties) GetNonMasqueradeCIDR() string {
 				nonMasqCidr = DefaultVNETCIDR
 			}
 		} else {
-			nonMasqCidr = p.OrchestratorProfile.KubernetesConfig.ClusterSubnet
+			// kube-proxy still only understands single cidr and is not changed for ipv6 dual stack phase 1
+			// so only pass the ipv4 cidr which is the first one in the list as arg to kube proxy
+			if p.FeatureFlags.IsFeatureEnabled("EnableIPv6DualStack") {
+				nonMasqCidr = strings.Split(p.OrchestratorProfile.KubernetesConfig.ClusterSubnet, ",")[0]
+			} else {
+				nonMasqCidr = p.OrchestratorProfile.KubernetesConfig.ClusterSubnet
+			}
 		}
 	}
 	return nonMasqCidr
@@ -1828,6 +1836,8 @@ func (f *FeatureFlags) IsFeatureEnabled(feature string) bool {
 			return f.EnableCSERunInBackground
 		case "BlockOutboundInternet":
 			return f.BlockOutboundInternet
+		case "EnableIPv6DualStack":
+			return f.EnableIPv6DualStack
 		default:
 			return false
 		}
@@ -1857,7 +1867,9 @@ func (cs *ContainerService) GetAzureProdFQDN() string {
 // SetPlatformFaultDomainCount sets the fault domain count value for all VMASes in a cluster.
 func (cs *ContainerService) SetPlatformFaultDomainCount(count int) {
 	// Assume that all VMASes in the cluster share a value for platformFaultDomainCount
-	cs.Properties.MasterProfile.PlatformFaultDomainCount = &count
+	if cs.Properties.MasterProfile != nil {
+		cs.Properties.MasterProfile.PlatformFaultDomainCount = &count
+	}
 	for _, pool := range cs.Properties.AgentPoolProfiles {
 		pool.PlatformFaultDomainCount = &count
 	}

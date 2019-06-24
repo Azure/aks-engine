@@ -641,18 +641,18 @@ https://{keyvaultname}.vault.azure.net:443/secrets/{secretName}/{version}
 | adminUsername                    | yes      | Username for the Windows adminstrator account created on each Windows node |
 | adminPassword                    | yes      | Password for the Windows adminstrator account created on each Windows node |
 | windowsPublisher                 | no       | Publisher used to find Windows VM to deploy from marketplace. Default: `MicrosoftWindowsServer` |
-| windowsOffer                     | no       | Offer used to find Windows VM to deploy from marketplace. Default: `WindowsServerSemiAnnual` |
+| windowsOffer                     | no       | Offer used to find Windows VM to deploy from marketplace. Default: `WindowsServer` |
 | windowsSku                       | no       | SKU usedto find Windows VM to deploy from marketplace. Default: `Datacenter-Core-1809-with-Containers-smalldisk` |
-| imageVersion                     | no       | Specific image version to deploy from marketplace.  Default: `latest` |
+| imageVersion                     | no       | Specific image version to deploy from marketplace.  Default: `17763.557.20190604`. This default is incremented as new versions are tested to avoid unexpected breaks. |
 | windowsImageSourceURL            | no       | Path to an existing Azure storage blob with a sysprepped VHD. This is used to test pre-release or customized VHD files that you have uploaded to Azure. If provided, the above 4 parameters are ignored. |
-| sshEnabled                       | no       | If set to `true`, OpenSSH will be installed on windows nodes to allow for ssh remoting. **Only for Windows version 1809 or 2019** . The same SSH authorized public key(s) will be added from [linuxProfile.ssh.publicKeys](#linuxProfile) |
+| sshEnabled                       | no       | If set to `true`, OpenSSH will be installed on windows nodes to allow for ssh remoting. **Only for Windows version 1809/2019 or later** . The same SSH authorized public key(s) will be added from [linuxProfile.ssh.publicKeys](#linuxProfile) |
 
 
 #### Choosing a Windows version
 
 If you want to choose a specific Windows image, but automatically use the latest - set `windowsPublisher`, `windowsOffer`, and `windowsSku`. If you need a specific version, then add `agentWindowsVersion` too.
 
-You can find all available images with `az vm image list`
+You can find all available images with `az vm image list`, and the contents of these images are described in the knowledge base article [Windows Server release on Azure Marketplace update history](https://support.microsoft.com/en-us/help/4497947).
 
 
 ```bash
@@ -661,13 +661,15 @@ $ az vm image list --publisher MicrosoftWindowsServer --all -o table
 Offer                    Publisher                      Sku                                             Urn                                                                                                            Version
 -----------------------  -----------------------------  ----------------------------------------------  -------------------------------------------------------------------------------------------------------------  -----------------
 ...
-WindowsServerSemiAnnual  MicrosoftWindowsServer         Datacenter-Core-1709-with-Containers-smalldisk  MicrosoftWindowsServer:WindowsServerSemiAnnual:Datacenter-Core-1709-with-Containers-smalldisk:1709.0.20181017  1709.0.20181017
-WindowsServerSemiAnnual  MicrosoftWindowsServer         Datacenter-Core-1803-with-Containers-smalldisk  MicrosoftWindowsServer:WindowsServerSemiAnnual:Datacenter-Core-1803-with-Containers-smalldisk:1803.0.20181017  1803.0.20181017
-WindowsServerSemiAnnual  MicrosoftWindowsServer         Datacenter-Core-1809-with-Containers-smalldisk  MicrosoftWindowsServer:WindowsServerSemiAnnual:Datacenter-Core-1809-with-Containers-smalldisk:1809.0.20181107  1809.0.20181107
-WindowsServer            MicrosoftWindowsServer         2019-Datacenter-Core-with-Containers-smalldisk  MicrosoftWindowsServer:WindowsServer:2019-Datacenter-Core-with-Containers-smalldisk:2019.0.20181107            2019.0.20181107
+WindowsServer              MicrosoftWindowsServer         2019-Datacenter-with-Containers                 MicrosoftWindowsServer:WindowsServer:2019-Datacenter-with-Containers:2019.0.20190603                           2019.0.20190603
+WindowsServer              MicrosoftWindowsServer         2019-Datacenter-with-Containers-smalldisk       MicrosoftWindowsServer:WindowsServer:2019-Datacenter-with-Containers-smalldisk:2019.0.20190603                 2019.0.20190603
+WindowsServer              MicrosoftWindowsServer         Datacenter-Core-1803-with-Containers-smalldisk  MicrosoftWindowsServer:WindowsServer:Datacenter-Core-1803-with-Containers-smalldisk:1803.0.20190603            1803.0.20190603
+WindowsServer              MicrosoftWindowsServer         Datacenter-Core-1809-with-Containers-smalldisk  MicrosoftWindowsServer:WindowsServer:Datacenter-Core-1809-with-Containers-smalldisk:1809.0.20190603            1809.0.20190603
+WindowsServer              MicrosoftWindowsServer         Datacenter-Core-1903-with-Containers-smalldisk  MicrosoftWindowsServer:WindowsServer:Datacenter-Core-1903-with-Containers-smalldisk:1903.0.20190603            1903.0.20190603
+...
 ```
 
-If you wanted to use the last one in the list above, then set:
+If you want to use a specific image then `windowsPublisher`, `windowsOffer`, `windowsSku`, and `imageVersion` must all be set:
 
 ```json
 "windowsProfile": {
