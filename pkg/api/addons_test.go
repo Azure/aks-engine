@@ -3584,6 +3584,217 @@ func TestSetAddonsConfig(t *testing.T) {
 				},
 			},
 		},
+		{
+			name: "upgrade from 1.11 to 1.12",
+			cs: &ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorVersion: "1.12.7",
+						KubernetesConfig: &KubernetesConfig{
+							NetworkPlugin: NetworkPluginAzure,
+							DNSServiceIP:  "10.10.10.10",
+							Addons: []KubernetesAddon{
+								{
+									Name:    KubeDNSAddonName,
+									Enabled: to.BoolPtr(true),
+									Config: map[string]string{
+										"domain":    DefaultKubernetesClusterDomain,
+										"clusterIP": "10.10.10.10",
+									},
+									Containers: []KubernetesContainerSpec{
+										{
+											Name:           "kube-dns-deployment",
+											Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.11.10"]["kube-dns"],
+											CPURequests:    "100m",
+											MemoryRequests: "70Mi",
+											MemoryLimits:   "170Mi",
+										},
+										{
+											Name:           "dnsmasq-nanny",
+											Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.11.10"]["dnsmasq"],
+											CPURequests:    "150m",
+											MemoryRequests: "20Mi",
+										},
+										{
+											Name:           "k8s-dns-sidecar",
+											Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.11.10"]["k8s-dns-sidecar"],
+											CPURequests:    "150m",
+											MemoryRequests: "20Mi",
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			isUpdate: true,
+			expectedAddons: []KubernetesAddon{
+				{
+					Name:    HeapsterAddonName,
+					Enabled: to.BoolPtr(true),
+					Containers: []KubernetesContainerSpec{
+						{
+							Name:           HeapsterAddonName,
+							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.11.10"]["heapster"],
+							CPURequests:    "88m",
+							MemoryRequests: "204Mi",
+							CPULimits:      "88m",
+							MemoryLimits:   "204Mi",
+						},
+						{
+							Name:           "heapster-nanny",
+							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.11.10"]["addonresizer"],
+							CPURequests:    "88m",
+							MemoryRequests: "204Mi",
+							CPULimits:      "88m",
+							MemoryLimits:   "204Mi",
+						},
+					},
+				},
+				{
+					Name:    TillerAddonName,
+					Enabled: to.BoolPtr(true),
+					Containers: []KubernetesContainerSpec{
+						{
+							Name:           TillerAddonName,
+							CPURequests:    "50m",
+							MemoryRequests: "150Mi",
+							CPULimits:      "50m",
+							MemoryLimits:   "150Mi",
+							Image:          specConfig.TillerImageBase + K8sComponentsByVersionMap["1.11.10"][TillerAddonName],
+						},
+					},
+					Config: map[string]string{
+						"max-history": strconv.Itoa(0),
+					},
+				},
+				{
+					Name:    ACIConnectorAddonName,
+					Enabled: to.BoolPtr(false),
+				},
+				{
+					Name:    ClusterAutoscalerAddonName,
+					Enabled: to.BoolPtr(false),
+				},
+				{
+					Name:    BlobfuseFlexVolumeAddonName,
+					Enabled: to.BoolPtr(true),
+					Containers: []KubernetesContainerSpec{
+						{
+							Name:           BlobfuseFlexVolumeAddonName,
+							CPURequests:    "50m",
+							MemoryRequests: "100Mi",
+							CPULimits:      "50m",
+							MemoryLimits:   "100Mi",
+							Image:          "mcr.microsoft.com/k8s/flexvolume/blobfuse-flexvolume:1.0.8",
+						},
+					},
+				},
+				{
+					Name:    SMBFlexVolumeAddonName,
+					Enabled: to.BoolPtr(false),
+				},
+				{
+					Name:    KeyVaultFlexVolumeAddonName,
+					Enabled: to.BoolPtr(true),
+					Containers: []KubernetesContainerSpec{
+						{
+							Name:           KeyVaultFlexVolumeAddonName,
+							CPURequests:    "50m",
+							MemoryRequests: "100Mi",
+							CPULimits:      "50m",
+							MemoryLimits:   "100Mi",
+							Image:          "mcr.microsoft.com/k8s/flexvolume/keyvault-flexvolume:v0.0.7",
+						},
+					},
+				},
+				{
+					Name:    DashboardAddonName,
+					Enabled: to.BoolPtr(true),
+					Containers: []KubernetesContainerSpec{
+						{
+							Name:           DashboardAddonName,
+							CPURequests:    "300m",
+							MemoryRequests: "150Mi",
+							CPULimits:      "300m",
+							MemoryLimits:   "150Mi",
+							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.11.10"][DashboardAddonName],
+						},
+					},
+				},
+				{
+					Name:    ReschedulerAddonName,
+					Enabled: to.BoolPtr(false),
+				},
+				{
+					Name:    MetricsServerAddonName,
+					Enabled: to.BoolPtr(true),
+					Containers: []KubernetesContainerSpec{
+						{
+							Name:  MetricsServerAddonName,
+							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.11.10"][MetricsServerAddonName],
+						},
+					},
+				},
+				{
+					Name:    NVIDIADevicePluginAddonName,
+					Enabled: to.BoolPtr(false),
+				},
+				{
+					Name:    ContainerMonitoringAddonName,
+					Enabled: to.BoolPtr(false),
+				},
+				{
+					Name:    IPMASQAgentAddonName,
+					Enabled: to.BoolPtr(true),
+					Containers: []KubernetesContainerSpec{
+						{
+							Name:           IPMASQAgentAddonName,
+							CPURequests:    "50m",
+							MemoryRequests: "50Mi",
+							CPULimits:      "50m",
+							MemoryLimits:   "250Mi",
+							Image:          specConfig.KubernetesImageBase + "ip-masq-agent-amd64:v2.0.0",
+						},
+					},
+					Config: map[string]string{
+						"non-masquerade-cidr": DefaultVNETCIDR,
+						"non-masq-cni-cidr":   DefaultCNICIDR,
+					},
+				},
+				{
+					Name:    AzureCNINetworkMonitoringAddonName,
+					Enabled: to.BoolPtr(true),
+					Containers: []KubernetesContainerSpec{
+						{
+							Name:  AzureCNINetworkMonitoringAddonName,
+							Image: specConfig.AzureCNIImageBase + K8sComponentsByVersionMap["1.11.10"][AzureCNINetworkMonitoringAddonName],
+						},
+					},
+				},
+				{
+					Name:    AzureNetworkPolicyAddonName,
+					Enabled: to.BoolPtr(false),
+				},
+				{
+					Name:    DNSAutoscalerAddonName,
+					Enabled: to.BoolPtr(false),
+				},
+				{
+					Name:    CalicoAddonName,
+					Enabled: to.BoolPtr(false),
+				},
+				{
+					Name:    AADPodIdentityAddonName,
+					Enabled: to.BoolPtr(false),
+				},
+				{
+					Name:    KubeDNSAddonName,
+					Enabled: to.BoolPtr(false),
+				},
+			},
+		},
 	}
 
 	for _, test := range tests {
@@ -3796,4 +4007,52 @@ func TestGetKubeDNSClusterDomain(t *testing.T) {
 		})
 	}
 
+}
+
+func TestIsKubeDNSSupported(t *testing.T) {
+	cases := []struct {
+		name     string
+		o        *OrchestratorProfile
+		expected bool
+	}{
+		{
+			name: "1.11",
+			o: &OrchestratorProfile{
+				OrchestratorVersion: "1.11.0",
+			},
+			expected: true,
+		},
+		{
+			name: "1.12",
+			o: &OrchestratorProfile{
+				OrchestratorVersion: "1.12.0",
+			},
+			expected: false,
+		},
+		{
+			name: "1.99",
+			o: &OrchestratorProfile{
+				OrchestratorVersion: "1.99.0",
+			},
+			expected: false,
+		},
+		{
+			name: "1.0",
+			o: &OrchestratorProfile{
+				OrchestratorVersion: "1.0.0",
+			},
+			expected: true,
+		},
+	}
+
+	for _, c := range cases {
+		c := c
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+			result := isKubeDNSSupported(c.o)
+			if result != c.expected {
+				t.Fatalf("expected isKubeDNSSupported(%v) to return %t, got %t", c.o, c.expected, result)
+			}
+		})
+	}
 }

@@ -346,7 +346,7 @@ func (cs *ContainerService) setAddonsConfig(isUpdate bool) {
 
 	defaultKubeDNSAddonsConfig := KubernetesAddon{
 		Name:    KubeDNSAddonName,
-		Enabled: to.BoolPtr(!common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.12.0")),
+		Enabled: to.BoolPtr(isKubeDNSSupported(o)),
 		Config: map[string]string{
 			"domain":    getKubeDNSClusterDomain(o.KubernetesConfig),
 			"clusterIP": o.KubernetesConfig.DNSServiceIP,
@@ -408,6 +408,13 @@ func (cs *ContainerService) setAddonsConfig(isUpdate bool) {
 		o.KubernetesConfig.Addons[i].Enabled = to.BoolPtr(true)
 		// Assume addon configuration was pruned due to an inherited enabled=false, so re-apply default values
 		o.KubernetesConfig.Addons[i] = assignDefaultAddonVals(o.KubernetesConfig.Addons[i], defaultAddons[j], isUpdate)
+	}
+
+	if !isKubeDNSSupported(o) && isUpdate {
+		i := getAddonsIndexByName(o.KubernetesConfig.Addons, KubeDNSAddonName)
+		if i > -1 {
+			o.KubernetesConfig.Addons[i].Enabled = to.BoolPtr(false)
+		}
 	}
 }
 
@@ -525,4 +532,8 @@ func getKubeDNSClusterDomain(k *KubernetesConfig) string {
 		}
 	}
 	return DefaultKubernetesClusterDomain
+}
+
+func isKubeDNSSupported(o *OrchestratorProfile) bool {
+	return !common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.12.0")
 }
