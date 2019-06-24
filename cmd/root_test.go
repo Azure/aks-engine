@@ -4,9 +4,11 @@
 package cmd
 
 import (
+	//"fmt"
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	//"net/http"
 	"os"
 	"strings"
 	"testing"
