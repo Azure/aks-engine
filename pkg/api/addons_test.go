@@ -3029,6 +3029,10 @@ func TestSetAddonsConfig(t *testing.T) {
 					Name:    AADPodIdentityAddonName,
 					Enabled: to.BoolPtr(false),
 				},
+				{
+					Name:    KubeDNSAddonName,
+					Enabled: to.BoolPtr(false),
+				},
 			},
 		},
 		{
@@ -3824,41 +3828,46 @@ func TestSetAddonsConfig(t *testing.T) {
 				KubeDNSAddonName,
 			} {
 				addon := test.cs.Properties.OrchestratorProfile.KubernetesConfig.Addons[getAddonsIndexByName(test.cs.Properties.OrchestratorProfile.KubernetesConfig.Addons, addonName)]
-				expectedAddon := test.expectedAddons[getAddonsIndexByName(test.expectedAddons, addonName)]
-				if to.Bool(addon.Enabled) != to.Bool(expectedAddon.Enabled) {
-					t.Fatalf("expected addon %s to have Enabled value %t, instead got %t", expectedAddon.Name, to.Bool(expectedAddon.Enabled), to.Bool(addon.Enabled))
-				}
-				if expectedAddon.Containers != nil {
-					if len(expectedAddon.Containers) != len(addon.Containers) {
-						t.Fatalf("expected addon %s to have %d containers , got %d", expectedAddon.Name, len(expectedAddon.Containers), len(addon.Containers))
+				i := getAddonsIndexByName(test.expectedAddons, addonName)
+				if i > -1 {
+					expectedAddon := test.expectedAddons[i]
+					if to.Bool(addon.Enabled) != to.Bool(expectedAddon.Enabled) {
+						t.Fatalf("expected addon %s to have Enabled value %t, instead got %t", expectedAddon.Name, to.Bool(expectedAddon.Enabled), to.Bool(addon.Enabled))
 					}
-					for i, container := range expectedAddon.Containers {
-						if container.Name != addon.Containers[i].Name {
-							t.Fatalf("expected addon %s to have container Name %s at at Containers index %d, got %s", expectedAddon.Name, container.Name, i, addon.Containers[i].Name)
+					if expectedAddon.Containers != nil {
+						if len(expectedAddon.Containers) != len(addon.Containers) {
+							t.Fatalf("expected addon %s to have %d containers , got %d", expectedAddon.Name, len(expectedAddon.Containers), len(addon.Containers))
 						}
-						if container.Image != addon.Containers[i].Image {
-							t.Fatalf("expected addon %s to have container Image %s at at Containers index %d, got %s", expectedAddon.Name, container.Image, i, addon.Containers[i].Image)
-						}
-						if container.CPURequests != addon.Containers[i].CPURequests {
-							t.Fatalf("expected addon %s to have container CPURequests %s at at Containers index %d, got %s", expectedAddon.Name, container.CPURequests, i, addon.Containers[i].CPURequests)
-						}
-						if container.MemoryRequests != addon.Containers[i].MemoryRequests {
-							t.Fatalf("expected addon %s to have container MemoryRequests %s at at Containers index %d, got %s", expectedAddon.Name, container.MemoryRequests, i, addon.Containers[i].MemoryRequests)
-						}
-						if container.CPULimits != addon.Containers[i].CPULimits {
-							t.Fatalf("expected addon %s to have container CPULimits %s at at Containers index %d, got %s", expectedAddon.Name, container.CPULimits, i, addon.Containers[i].CPULimits)
-						}
-						if container.MemoryLimits != addon.Containers[i].MemoryLimits {
-							t.Fatalf("expected addon %s to have container MemoryLimits %s at at Containers index %d, got %s", expectedAddon.Name, container.MemoryLimits, i, addon.Containers[i].MemoryLimits)
-						}
-					}
-				}
-				if expectedAddon.Config != nil {
-					for key, val := range expectedAddon.Config {
-						if val != addon.Config[key] {
-							t.Fatalf("expected addon %s to have config %s=%s, got %s=%s", expectedAddon.Name, key, val, key, addon.Config[key])
+						for i, container := range expectedAddon.Containers {
+							if container.Name != addon.Containers[i].Name {
+								t.Fatalf("expected addon %s to have container Name %s at at Containers index %d, got %s", expectedAddon.Name, container.Name, i, addon.Containers[i].Name)
+							}
+							if container.Image != addon.Containers[i].Image {
+								t.Fatalf("expected addon %s to have container Image %s at at Containers index %d, got %s", expectedAddon.Name, container.Image, i, addon.Containers[i].Image)
+							}
+							if container.CPURequests != addon.Containers[i].CPURequests {
+								t.Fatalf("expected addon %s to have container CPURequests %s at at Containers index %d, got %s", expectedAddon.Name, container.CPURequests, i, addon.Containers[i].CPURequests)
+							}
+							if container.MemoryRequests != addon.Containers[i].MemoryRequests {
+								t.Fatalf("expected addon %s to have container MemoryRequests %s at at Containers index %d, got %s", expectedAddon.Name, container.MemoryRequests, i, addon.Containers[i].MemoryRequests)
+							}
+							if container.CPULimits != addon.Containers[i].CPULimits {
+								t.Fatalf("expected addon %s to have container CPULimits %s at at Containers index %d, got %s", expectedAddon.Name, container.CPULimits, i, addon.Containers[i].CPULimits)
+							}
+							if container.MemoryLimits != addon.Containers[i].MemoryLimits {
+								t.Fatalf("expected addon %s to have container MemoryLimits %s at at Containers index %d, got %s", expectedAddon.Name, container.MemoryLimits, i, addon.Containers[i].MemoryLimits)
+							}
 						}
 					}
+					if expectedAddon.Config != nil {
+						for key, val := range expectedAddon.Config {
+							if val != addon.Config[key] {
+								t.Fatalf("expected addon %s to have config %s=%s, got %s=%s", expectedAddon.Name, key, val, key, addon.Config[key])
+							}
+						}
+					}
+				} else {
+					t.Fatalf("expected addon %s in expected list, was missing", addonName)
 				}
 			}
 		})
