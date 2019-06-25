@@ -9,8 +9,7 @@
 		"--security-opt",
 		"seccomp=unconfined"
 	],
-	"workspaceMount": "type=bind,src=.,dst=/go/src/github.com/Azure/aks-engine",
-  "workspaceFolder": "/go/src/github.com/Azure/aks-engine",
+  "postCreateCommand": "mkdir -p /go/src/github.com/Azure && ln -sf /workspaces/aks-engine /go/src/github.com/Azure/aks-engine",
 	"settings": {
 		"go.gopath": "/go"
 	}
