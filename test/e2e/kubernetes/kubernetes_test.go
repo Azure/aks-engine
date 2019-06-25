@@ -143,6 +143,14 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			}
 		})
 
+		It("should have the expected k8s version", func() {
+			nodeList, err := node.GetReady()
+			Expect(err).NotTo(HaveOccurred())
+			for _, node := range nodeList.Nodes {
+				Expect("v" + eng.ExpandedDefinition.Properties.OrchestratorProfile.OrchestratorVersion).To(Equal(node.Status.NodeInfo.KubeletVersion))
+			}
+		})
+
 		It("should display the installed Ubuntu version on the master node", func() {
 			if eng.ExpandedDefinition.Properties.MasterProfile.IsUbuntu() {
 				kubeConfig, err := GetConfig()

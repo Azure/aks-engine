@@ -65,7 +65,7 @@ type Address struct {
 type Info struct {
 	ContainerRuntimeVersion string `json:"containerRuntimeVersion"`
 	KubeProxyVersion        string `json:"kubeProxyVersion"`
-	KubeletProxyVersion     string `json:"kubeletVersion"`
+	KubeletVersion          string `json:"kubeletVersion"`
 	OperatingSystem         string `json:"operatingSystem"`
 	OSImage                 string `json:"osImage"`
 }
