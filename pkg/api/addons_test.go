@@ -1706,12 +1706,6 @@ func TestSetAddonsConfig(t *testing.T) {
 							Name:  AzureNetworkPolicyAddonName,
 							Image: "mcr.microsoft.com/containernetworking/azure-npm:v1.0.23",
 						},
-					},
-				},
-				{
-					Name:    AzureVnetTelemetryAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
 						{
 							Name:  AzureVnetTelemetryAddonName,
 							Image: "mcr.microsoft.com/containernetworking/azure-vnet-telemetry:v1.0.23",
