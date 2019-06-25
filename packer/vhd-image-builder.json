@@ -111,11 +111,6 @@
         },
         {
             "type": "file",
-            "source": "parts/k8s/cloud-init/artifacts/default-grub",
-            "destination": "/home/packer/default-grub"
-        },
-        {
-            "type": "file",
             "source": "parts/k8s/cloud-init/artifacts/pam-d-su",
             "destination": "/home/packer/pam-d-su"
         },

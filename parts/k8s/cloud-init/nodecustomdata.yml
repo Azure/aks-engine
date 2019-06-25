@@ -35,7 +35,7 @@ write_files:
   owner: root
   content: !!binary |
     {{CloudInitData "provisionCIS"}}
-    
+
 {{if IsAzureStackCloud}}
 - path: /opt/azure/containers/provision_configs_custom_cloud.sh
   permissions: "0744"
@@ -156,13 +156,6 @@ write_files:
   owner: root
   content: !!binary |
     {{CloudInitData "pwQuality"}}
-
-- path: /etc/default/grub
-  permissions: "0644"
-  encoding: gzip
-  owner: root
-  content: !!binary |
-    {{CloudInitData "defaultGrub"}}
 
 - path: /etc/pam.d/su
   permissions: "0644"
