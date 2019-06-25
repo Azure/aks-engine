@@ -178,7 +178,6 @@ These are the Kubernetes versions that you can deploy to Azure Stack using AKS E
 - 1.13.7
 - 1.13.5
 - 1.12.8
-- 1.12.7
 - 1.11.10
 - 1.11.9
 
