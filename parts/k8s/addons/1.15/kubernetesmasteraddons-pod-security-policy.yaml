@@ -1,4 +1,4 @@
-apiVersion: policy/v1beta1
+apiVersion: extensions/v1beta1
 kind: PodSecurityPolicy
 metadata:
   name: privileged
@@ -28,7 +28,7 @@ spec:
   fsGroup:
     rule: RunAsAny
 ---
-apiVersion: policy/v1beta1
+apiVersion: extensions/v1beta1
 kind: PodSecurityPolicy
 metadata:
   name: restricted
