@@ -212,7 +212,6 @@ func TestAssignDefaultAddonImages(t *testing.T) {
 		HeapsterAddonName:                  "k8s.gcr.io/heapster-amd64:v1.5.4",
 		CalicoAddonName:                    "calico/typha:v3.7.2",
 		AzureNetworkPolicyAddonName:        "mcr.microsoft.com/containernetworking/azure-npm:v1.0.23",
-		AzureVnetTelemetryAddonName:        "mcr.microsoft.com/containernetworking/azure-vnet-telemetry:v1.0.23",
 		AADPodIdentityAddonName:            "mcr.microsoft.com/k8s/aad-pod-identity/nmi:1.2",
 	}
 
