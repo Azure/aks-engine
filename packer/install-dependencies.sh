@@ -363,9 +363,11 @@ echo "  - busybox" >> ${RELEASE_NOTES_FILEPATH}
 K8S_VERSIONS="
 1.15.0
 1.14.3
+1.14.3-azs
 1.14.1
 1.14.1-azs
 1.13.7
+1.13.7-azs
 1.13.5
 1.13.5-azs
 1.12.9
