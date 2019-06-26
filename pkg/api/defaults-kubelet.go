@@ -29,17 +29,32 @@ func (cs *ContainerService) setKubeletConfig(isUpgrade bool) {
 		"--tls-private-key-file":        "/etc/kubernetes/certs/kubeletserver.key",
 	}
 
+	for key := range staticLinuxKubeletConfig {
+		switch key {
+		case "--anonymous-auth", "--client-ca-file":
+			if !to.Bool(o.KubernetesConfig.EnableSecureKubelet) { // Don't add if EnableSecureKubelet is disabled
+				staticLinuxKubeletConfig[key] = ""
+			}
+		}
+	}
+
 	// Start with copy of Linux config
 	staticWindowsKubeletConfig := make(map[string]string)
 	for key, val := range staticLinuxKubeletConfig {
 		switch key {
 		case "--pod-manifest-path", "--tls-cert-file", "--tls-private-key-file": // Don't add Linux-specific config
 			staticWindowsKubeletConfig[key] = ""
-		case "--anonymous-auth", "--client-ca-file":
+		case "--anonymous-auth":
 			if !to.Bool(o.KubernetesConfig.EnableSecureKubelet) { // Don't add if EnableSecureKubelet is disabled
 				staticWindowsKubeletConfig[key] = ""
 			} else {
 				staticWindowsKubeletConfig[key] = val
+			}
+		case "--client-ca-file":
+			if !to.Bool(o.KubernetesConfig.EnableSecureKubelet) { // Don't add if EnableSecureKubelet is disabled
+				staticWindowsKubeletConfig[key] = ""
+			} else {
+				staticWindowsKubeletConfig[key] = "c:\\k\\ca.crt"
 			}
 		default:
 			staticWindowsKubeletConfig[key] = val
@@ -55,7 +70,6 @@ func (cs *ContainerService) setKubeletConfig(isUpgrade bool) {
 	staticWindowsKubeletConfig["--cgroups-per-qos"] = "false"
 	staticWindowsKubeletConfig["--enforce-node-allocatable"] = "\"\"\"\""
 	staticWindowsKubeletConfig["--system-reserved"] = "memory=2Gi"
-	staticWindowsKubeletConfig["--client-ca-file"] = "c:\\k\\ca.crt"
 	staticWindowsKubeletConfig["--hairpin-mode"] = "promiscuous-bridge"
 	staticWindowsKubeletConfig["--image-pull-progress-deadline"] = "20m"
 	staticWindowsKubeletConfig["--resolv-conf"] = "\"\"\"\""
