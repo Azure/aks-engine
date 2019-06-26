@@ -10727,7 +10727,9 @@ configGPUDrivers() {
     # we will manually install nvidia-docker2
     rmmod nouveau
     echo blacklist nouveau >> /etc/modprobe.d/blacklist.conf
+    wait_for_apt_locks
     retrycmd_if_failure_no_stats 120 5 25 update-initramfs -u || exit $ERR_GPU_DRIVERS_INSTALL_TIMEOUT
+    wait_for_apt_locks
     retrycmd_if_failure 30 5 3600 apt-get -o Dpkg::Options::="--force-confold" install -y nvidia-container-runtime="${NVIDIA_CONTAINER_RUNTIME_VERSION}+docker18.09.2-1" || exit $ERR_GPU_DRIVERS_INSTALL_TIMEOUT
     tmpDir=$GPU_DEST/tmp
     (
