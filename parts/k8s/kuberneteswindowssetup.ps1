@@ -237,7 +237,8 @@ try
                                -KubeClusterCIDR $global:KubeClusterCIDR `
                                -MasterSubnet $global:MasterSubnet `
                                -KubeServiceCIDR $global:KubeServiceCIDR `
-                               -VNetCIDR $global:VNetCIDR
+                               -VNetCIDR $global:VNetCIDR `
+                               -TargetEnvironment $TargetEnvironment
         } elseif ($global:NetworkPlugin -eq "kubenet") {
             Update-WinCNI -CNIPath $global:CNIPath
             Get-HnsPsm1 -HNSModule $global:HNSModule
