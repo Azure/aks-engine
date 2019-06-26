@@ -140,13 +140,6 @@ func (cs *ContainerService) setKubeletConfig(isUpgrade bool) {
 		o.KubernetesConfig.KubeletConfig[key] = val
 	}
 
-	// Remove secure kubelet flags, if configured
-	if !to.Bool(o.KubernetesConfig.EnableSecureKubelet) {
-		for _, key := range []string{"--anonymous-auth", "--client-ca-file"} {
-			delete(o.KubernetesConfig.KubeletConfig, key)
-		}
-	}
-
 	if isUpgrade && common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.14.0") {
 		hasSupportPodPidsLimitFeatureGate := strings.Contains(o.KubernetesConfig.KubeletConfig["--feature-gates"], "SupportPodPidsLimit=true")
 		podMaxPids, _ := strconv.Atoi(o.KubernetesConfig.KubeletConfig["--pod-max-pids"])
