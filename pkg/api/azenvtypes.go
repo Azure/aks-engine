@@ -137,7 +137,7 @@ var (
 		ImageOffer:     "aks",
 		ImageSku:       "aks-ubuntu-1604-201906",
 		ImagePublisher: "microsoft-aks",
-		ImageVersion:   "2019.06.19",
+		ImageVersion:   "2019.06.26335",
 	}
 
 	// DefaultAKS1804OSImageConfig is the AKS image based on Ubuntu 18.04-LTS.
