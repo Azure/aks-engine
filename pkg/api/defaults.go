@@ -549,7 +549,7 @@ func (p *Properties) setAgentProfileDefaults(isUpgrade, isScale bool, cloudName 
 			faultDomainCount := 3
 			profile.PlatformFaultDomainCount = &faultDomainCount
 		}
-		
+
 		// Accelerated Networking is supported on most general purpose and compute-optimized instance sizes with 2 or more vCPUs.
 		// These supported series are: D/DSv2 and F/Fs // All the others are not supported
 		// On instances that support hyperthreading, Accelerated Networking is supported on VM instances with 4 or more vCPUs.
