@@ -32,6 +32,7 @@ test/e2e/kubernetes/translations/
 
 # test outputs
 cmd/_test_output
+test/e2e/kubernetes/kubernetes.test
 
 # packer
 packer/settings.json

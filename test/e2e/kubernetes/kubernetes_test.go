@@ -4,7 +4,9 @@
 package kubernetes
 
 import (
+	"bufio"
 	"fmt"
+	"io"
 	"log"
 	"math/rand"
 	"net"
@@ -446,6 +448,74 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				}
 			} else {
 				Skip("This config is only available on VHD")
+			}
+		})
+
+		It("should be able to kubectl port-forward to a running pod on each node", func() {
+			deploymentNamespace := "default"
+
+			var deploy *deployment.Deployment
+			var err error
+			var pods []pod.Pod
+
+			testPortForward := func() {
+				pods, err = deploy.Pods()
+				Expect(err).NotTo(HaveOccurred())
+				for _, p := range pods {
+					By("Ensuring that the pod is running")
+					var running bool
+					running, err = p.WaitOnReady(retryTimeWhenWaitingForPodReady, cfg.Timeout)
+					Expect(err).NotTo(HaveOccurred())
+					Expect(running).To(Equal(true))
+					By("Running kubectl port-forward")
+					proxyCmd := exec.Command("k", "port-forward", p.Metadata.Name, "8123:80")
+					var proxyStdout io.ReadCloser
+					proxyStdout, err = proxyCmd.StdoutPipe()
+					util.PrintCommand(proxyCmd)
+					err = proxyCmd.Start()
+					Expect(err).NotTo(HaveOccurred())
+					proxyStdoutReader := bufio.NewReader(proxyStdout)
+					var proxyOutStr string
+					proxyOutStr, err = proxyStdoutReader.ReadString('\n')
+					Expect(err).NotTo(HaveOccurred())
+					log.Printf("kubectl port-forward output: %s\n", proxyOutStr)
+					defer func() {
+						proxyCmd.Process.Signal(os.Interrupt)
+						proxyCmd.Wait()
+					}()
+					By("Running curl to access the forwarded port")
+					url := fmt.Sprintf("http://%s:%v", "localhost", 8123)
+					cmd := exec.Command("curl", "--max-time", "60", url)
+					util.PrintCommand(cmd)
+					var out []byte
+					out, err = cmd.CombinedOutput()
+					log.Printf("%s\n", out)
+					Expect(err).NotTo(HaveOccurred())
+				}
+			}
+
+			if eng.AnyAgentIsLinux() {
+				By("Creating a Linux nginx deployment")
+				deploy, err = deployment.CreateLinuxDeployDeleteIfExists("fwdlinux", "library/nginx:latest", "fwdlinuxtest", deploymentNamespace, "")
+				Expect(err).NotTo(HaveOccurred())
+				testPortForward()
+				err = deploy.Delete(util.DefaultDeleteRetries)
+				Expect(err).NotTo(HaveOccurred())
+			}
+			if eng.HasWindowsAgents() {
+				By("Creating a Windows IIS deployment")
+				if common.IsKubernetesVersionGe(eng.ExpandedDefinition.Properties.OrchestratorProfile.OrchestratorVersion, "1.15.0") {
+					windowsImages, err := eng.GetWindowsTestImages()
+					Expect(err).NotTo(HaveOccurred())
+					deploy, err = deployment.CreateWindowsDeployDeleteIfExist("fwdwindows", windowsImages.IIS, "fwdwindowstest", deploymentNamespace, "")
+					Expect(err).NotTo(HaveOccurred())
+					testPortForward()
+					err = deploy.Delete(util.DefaultDeleteRetries)
+					Expect(err).NotTo(HaveOccurred())
+				} else {
+					Skip("kubectl port-forward only works on Windows nodes with Kubernetes 1.15+")
+					// Reference: https://github.com/kubernetes/kubernetes/pull/75479
+				}
 			}
 		})
 
@@ -1383,7 +1453,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				deploymentPrefix := fmt.Sprintf("iis-%s", cfg.Name)
 				deploymentName := fmt.Sprintf("%s-%v", deploymentPrefix, r.Intn(99999))
 				By("Creating a deployment with 1 pod running IIS")
-				iisDeploy, err := deployment.CreateWindowsDeployDeleteIfExist(deploymentPrefix, windowsImages.IIS, deploymentName, "default", 80, -1)
+				iisDeploy, err := deployment.CreateWindowsDeployWithHostportDeleteIfExist(deploymentPrefix, windowsImages.IIS, deploymentName, "default", 80, -1)
 				Expect(err).NotTo(HaveOccurred())
 
 				By("Waiting on pod to be Ready")
@@ -1491,7 +1561,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				deploymentPrefix := fmt.Sprintf("iis-dns-%s", cfg.Name)
 				windowsDeploymentName := fmt.Sprintf("%s-%v", deploymentPrefix, r.Intn(99999))
 				By("Creating a deployment running IIS")
-				windowsIISDeployment, err := deployment.CreateWindowsDeployDeleteIfExist(deploymentPrefix, windowsImages.IIS, windowsDeploymentName, "default", 80, -1)
+				windowsIISDeployment, err := deployment.CreateWindowsDeployWithHostportDeleteIfExist(deploymentPrefix, windowsImages.IIS, windowsDeploymentName, "default", 80, -1)
 				Expect(err).NotTo(HaveOccurred())
 
 				deploymentPrefix = fmt.Sprintf("nginx-dns-%s", cfg.Name)
