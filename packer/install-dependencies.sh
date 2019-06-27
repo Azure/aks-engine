@@ -54,7 +54,7 @@ ETCD_DOWNLOAD_URL="https://acs-mirror.azureedge.net/github-coreos"
 installEtcd
 echo "  - etcd v${ETCD_VERSION}" >> ${RELEASE_NOTES_FILEPATH}
 
-MOBY_VERSION="3.0.5"
+MOBY_VERSION="3.0.6"
 installMoby
 echo "  - moby v${MOBY_VERSION}" >> ${RELEASE_NOTES_FILEPATH}
 installGPUDrivers
