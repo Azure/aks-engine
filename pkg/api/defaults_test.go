@@ -2359,18 +2359,13 @@ func TestSetMasterProfileDefaultsOnAzureStack(t *testing.T) {
 		},
 	)
 
-	_, err = mockCS.SetPropertiesDefaults(false, false)
-	if err != nil {
-		t.Errorf("Failed to test setMasterProfileDefaults with portal url - %s", err)
-	}
-
-	if mockCS.Properties.MasterProfile.PlatformFaultDomainCount != faultDomainCount {
-		t.Fatalf("Master profile did not have the expected default configuration of PlatformFaultDomainCount, got %s, expected %s",
-			mockCS.Properties.MasterProfile.PlatformFaultDomainCount, faultDomainCount)
+	mockCS.SetPropertiesDefaults(false, false)
+	if (*mockCS.Properties.MasterProfile.PlatformFaultDomainCount) != faultDomainCount {
+		t.Fatalf("PlatformFaultDomainCount did not have the expected value, got %d, expected %d",
+			(*mockCS.Properties.MasterProfile.PlatformFaultDomainCount), faultDomainCount)
 	}
 
 	// Check scenario where value is already set.
-	mockCS := getMockBaseContainerService("1.11.6")
 	mockCS.Properties.CustomCloudProfile = &CustomCloudProfile{
 		PortalURL: "https://portal.testlocation.contoso.com",
 	}
@@ -2386,14 +2381,11 @@ func TestSetMasterProfileDefaultsOnAzureStack(t *testing.T) {
 			return resp, nil
 		},
 	)
-	_, err = mockCS.SetPropertiesDefaults(false, false)
-	if err != nil {
-		t.Errorf("Failed to test setMasterProfileDefaults with portal url - %s", err)
-	}
 
-	if mockCS.Properties.MasterProfile.PlatformFaultDomainCount != oldFaultDomainCount {
-		t.Fatalf("Master profile did not have the expected default configuration of PlatformFaultDomainCount, got %s, expected %s",
-			mockCS.Properties.MasterProfile.PlatformFaultDomainCount, oldFaultDomainCount)
+	mockCS.SetPropertiesDefaults(false, false)
+	if (*mockCS.Properties.MasterProfile.PlatformFaultDomainCount) != oldFaultDomainCount {
+		t.Fatalf("PlatformFaultDomainCount did not have the expected value, got %d, expected %d",
+			(*mockCS.Properties.MasterProfile.PlatformFaultDomainCount), oldFaultDomainCount)
 	}
 }
 
@@ -2419,24 +2411,22 @@ func TestSetAgentProfileDefaultsOnAzureStack(t *testing.T) {
 		},
 	)
 
-	_, err = mockCS.SetPropertiesDefaults(false, false)
-	if err != nil {
-		t.Errorf("Failed to test setMasterProfileDefaults with portal url - %s", err)
+	mockCS.SetPropertiesDefaults(false, false)
+	for _, pool := range mockCS.Properties.AgentPoolProfiles {
+		if (*pool.PlatformFaultDomainCount) != faultDomainCount {
+			t.Fatalf("PlatformFaultDomainCount did not have the expected value, got %d, expected %d",
+				(*pool.PlatformFaultDomainCount), faultDomainCount)
+		}
 	}
-
-	if mockCS.Properties.AgentPoolProfiles[0].PlatformFaultDomainCount != faultDomainCount {
-		t.Fatalf("Agent profile did not have the expected default configuration of PlatformFaultDomainCount, got %s, expected %s",
-			mockCS.Properties.MasterProfile.PlatformFaultDomainCount, faultDomainCount)
-	}
-
 	// Check scenario where value is already set.
-	mockCS := getMockBaseContainerService("1.11.6")
 	mockCS.Properties.CustomCloudProfile = &CustomCloudProfile{
 		PortalURL: "https://portal.testlocation.contoso.com",
 	}
 	mockCS.Properties.MasterProfile.AvailabilityProfile = ""
 	mockCS.Properties.MasterProfile.Count = 1
-	mockCS.Properties.AgentPoolProfiles[0].PlatformFaultDomainCount = &oldFaultDomainCount
+	for _, pool := range mockCS.Properties.AgentPoolProfiles {
+		pool.PlatformFaultDomainCount = &oldFaultDomainCount
+	}
 	mockCS.Location = location
 
 	httpmock.DeactivateAndReset()
@@ -2447,14 +2437,13 @@ func TestSetAgentProfileDefaultsOnAzureStack(t *testing.T) {
 			return resp, nil
 		},
 	)
-	_, err = mockCS.SetPropertiesDefaults(false, false)
-	if err != nil {
-		t.Errorf("Failed to test setMasterProfileDefaults with portal url - %s", err)
-	}
 
-	if mockCS.Properties.AgentPoolProfiles[0].PlatformFaultDomainCount != oldFaultDomainCount {
-		t.Fatalf("Agent profile did not have the expected default configuration of PlatformFaultDomainCount, got %s, expected %s",
-			mockCS.Properties.MasterProfile.PlatformFaultDomainCount, oldFaultDomainCount)
+	mockCS.SetPropertiesDefaults(false, false)
+	for _, pool := range mockCS.Properties.AgentPoolProfiles {
+		if (*pool.PlatformFaultDomainCount) != oldFaultDomainCount {
+			t.Fatalf("PlatformFaultDomainCount did not have the expected value, got %d, expected %d",
+				(*pool.PlatformFaultDomainCount), oldFaultDomainCount)
+		}
 	}
 }
 
