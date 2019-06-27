@@ -245,17 +245,20 @@ func TestKubeletConfigEnableSecureKubelet(t *testing.T) {
 	cs.Properties.OrchestratorProfile.KubernetesConfig.EnableSecureKubelet = to.BoolPtr(true)
 	cs.setKubeletConfig(false)
 	k := cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig
-	if k["--anonymous-auth"] != "false" {
-		t.Fatalf("got unexpected '--anonymous-auth' kubelet config value for EnableSecureKubelet=true: %s",
-			k["--anonymous-auth"])
-	}
-	if k["--authorization-mode"] != "Webhook" {
-		t.Fatalf("got unexpected '--authorization-mode' kubelet config value for EnableSecureKubelet=true: %s",
-			k["--authorization-mode"])
-	}
-	if k["--client-ca-file"] != "/etc/kubernetes/certs/ca.crt" {
-		t.Fatalf("got unexpected '--client-ca-file' kubelet config value for EnableSecureKubelet=true: %s",
-			k["--client-ca-file"])
+	ka := cs.Properties.AgentPoolProfiles[0].KubernetesConfig.KubeletConfig
+	for _, kubernetesConfig := range []map[string]string{k, ka} {
+		if kubernetesConfig["--anonymous-auth"] != "false" {
+			t.Fatalf("got unexpected '--anonymous-auth' kubelet config value for EnableSecureKubelet=true: %s",
+				kubernetesConfig["--anonymous-auth"])
+		}
+		if kubernetesConfig["--authorization-mode"] != "Webhook" {
+			t.Fatalf("got unexpected '--authorization-mode' kubelet config value for EnableSecureKubelet=true: %s",
+				kubernetesConfig["--authorization-mode"])
+		}
+		if kubernetesConfig["--client-ca-file"] != "/etc/kubernetes/certs/ca.crt" {
+			t.Fatalf("got unexpected '--client-ca-file' kubelet config value for EnableSecureKubelet=true: %s",
+				kubernetesConfig["--client-ca-file"])
+		}
 	}
 
 	// Test EnableSecureKubelet = false
@@ -263,10 +266,13 @@ func TestKubeletConfigEnableSecureKubelet(t *testing.T) {
 	cs.Properties.OrchestratorProfile.KubernetesConfig.EnableSecureKubelet = to.BoolPtr(false)
 	cs.setKubeletConfig(false)
 	k = cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig
-	for _, key := range []string{"--anonymous-auth", "--client-ca-file"} {
-		if _, ok := k[key]; ok {
-			t.Fatalf("got unexpected '%s' kubelet config value for EnableSecureKubelet=false: %s",
-				key, k[key])
+	ka = cs.Properties.AgentPoolProfiles[0].KubernetesConfig.KubeletConfig
+	for _, kubernetesConfig := range []map[string]string{k, ka} {
+		for _, key := range []string{"--anonymous-auth", "--client-ca-file"} {
+			if _, ok := kubernetesConfig[key]; ok {
+				t.Fatalf("got unexpected '%s' kubelet config value for EnableSecureKubelet=false: %s",
+					key, kubernetesConfig[key])
+			}
 		}
 	}
 
@@ -274,12 +280,16 @@ func TestKubeletConfigEnableSecureKubelet(t *testing.T) {
 	cs = CreateMockContainerService("testcluster", "1.10.13", 3, 1, false)
 	p := GetK8sDefaultProperties(true)
 	cs.Properties = p
+	cs.Properties.OrchestratorProfile.KubernetesConfig.EnableSecureKubelet = to.BoolPtr(false)
 	cs.setKubeletConfig(false)
 	k = cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig
-	for _, key := range []string{"--anonymous-auth", "--client-ca-file"} {
-		if _, ok := k[key]; ok {
-			t.Fatalf("got unexpected '%s' kubelet config value for EnableSecureKubelet=false: %s",
-				key, k[key])
+	ka = cs.Properties.AgentPoolProfiles[0].KubernetesConfig.KubeletConfig
+	for _, kubernetesConfig := range []map[string]string{k, ka} {
+		for _, key := range []string{"--anonymous-auth", "--client-ca-file"} {
+			if _, ok := kubernetesConfig[key]; ok {
+				t.Fatalf("got unexpected '%s' kubelet config value for EnableSecureKubelet=false: %s",
+					key, kubernetesConfig[key])
+			}
 		}
 	}
 
@@ -290,10 +300,13 @@ func TestKubeletConfigEnableSecureKubelet(t *testing.T) {
 	cs.Properties.OrchestratorProfile.KubernetesConfig.EnableSecureKubelet = to.BoolPtr(false)
 	cs.setKubeletConfig(false)
 	k = cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig
-	for _, key := range []string{"--anonymous-auth", "--client-ca-file"} {
-		if _, ok := k[key]; ok {
-			t.Fatalf("got unexpected '%s' kubelet config value for EnableSecureKubelet=false: %s",
-				key, k[key])
+	ka = cs.Properties.AgentPoolProfiles[0].KubernetesConfig.KubeletConfig
+	for _, kubernetesConfig := range []map[string]string{k, ka} {
+		for _, key := range []string{"--anonymous-auth", "--client-ca-file"} {
+			if _, ok := kubernetesConfig[key]; ok {
+				t.Fatalf("got unexpected '%s' kubelet config value for EnableSecureKubelet=false: %s",
+					key, kubernetesConfig[key])
+			}
 		}
 	}
 
@@ -303,16 +316,24 @@ func TestKubeletConfigEnableSecureKubelet(t *testing.T) {
 	cs.Properties = p
 	cs.Properties.OrchestratorProfile.KubernetesConfig.EnableSecureKubelet = to.BoolPtr(true)
 	cs.setKubeletConfig(false)
-	k = cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig
-	if k["--anonymous-auth"] != "false" {
+	kubernetesConfig := cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig
+	kubernetesConfigWindowsAgentPool := cs.Properties.AgentPoolProfiles[0].KubernetesConfig.KubeletConfig
+	if kubernetesConfig["--anonymous-auth"] != "false" {
 		t.Fatalf("got unexpected '--anonymous-auth' kubelet config value for EnableSecureKubelet=true: %s",
-			k["--anonymous-auth"])
+			kubernetesConfig["--anonymous-auth"])
 	}
-	if k["--client-ca-file"] != "/etc/kubernetes/certs/ca.crt" {
+	if kubernetesConfig["--client-ca-file"] != "/etc/kubernetes/certs/ca.crt" {
 		t.Fatalf("got unexpected '--client-ca-file' kubelet config value for EnableSecureKubelet=true: %s",
-			k["--client-ca-file"])
+			kubernetesConfig["--client-ca-file"])
 	}
-
+	if kubernetesConfigWindowsAgentPool["--anonymous-auth"] != "false" {
+		t.Fatalf("got unexpected '--anonymous-auth' kubelet config value for EnableSecureKubelet=true: %s",
+			kubernetesConfig["--anonymous-auth"])
+	}
+	if kubernetesConfigWindowsAgentPool["--client-ca-file"] != "c:\\k\\ca.crt" {
+		t.Fatalf("got unexpected '--client-ca-file' kubelet config value for EnableSecureKubelet=true: %s",
+			kubernetesConfig["--client-ca-file"])
+	}
 }
 
 func TestKubeletMaxPods(t *testing.T) {
