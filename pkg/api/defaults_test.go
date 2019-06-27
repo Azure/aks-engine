@@ -2272,7 +2272,7 @@ func TestSetCustomCloudProfileEnvironmentDefaults(t *testing.T) {
 		},
 	}
 
-	//test setCustomCloudProfileDefaults with protal url
+	//test setCustomCloudProfileDefaults with portal url
 	mockCS := getMockBaseContainerService("1.11.6")
 	mockCS.Properties.CustomCloudProfile = &CustomCloudProfile{
 		PortalURL: "https://portal.testlocation.contoso.com",
@@ -2289,7 +2289,7 @@ func TestSetCustomCloudProfileEnvironmentDefaults(t *testing.T) {
 	mockCS.Location = location
 	_, err = mockCS.SetPropertiesDefaults(false, false)
 	if err != nil {
-		t.Errorf("Failed to test setCustomCloudProfileDefaults with protal url - %s", err)
+		t.Errorf("Failed to test setCustomCloudProfileDefaults with portal url - %s", err)
 	}
 	if diff := cmp.Diff(mockCS.Properties.CustomCloudProfile.Environment, expectedEnv); diff != "" {
 		t.Errorf("Fail to compare, Environment setCustomCloudProfileDefaults %q", diff)
@@ -2334,6 +2334,127 @@ func TestSetCustomCloudProfileEnvironmentDefaults(t *testing.T) {
 	expectedError := fmt.Errorf("portalURL needs to start with https://portal.%s. ", location)
 	if !helpers.EqualError(err, expectedError) {
 		t.Errorf("expected error %s, got %s", expectedError, err)
+	}
+}
+
+func TestSetMasterProfileDefaultsOnAzureStack(t *testing.T) {
+	location := "testlocation"
+	faultDomainCount := 3
+	oldFaultDomainCount := 2
+	//Test setMasterProfileDefaults with portal url
+	mockCS := getMockBaseContainerService("1.11.6")
+	mockCS.Properties.CustomCloudProfile = &CustomCloudProfile{
+		PortalURL: "https://portal.testlocation.contoso.com",
+	}
+	mockCS.Location = location
+	mockCS.Properties.MasterProfile.AvailabilityProfile = ""
+	mockCS.Properties.MasterProfile.Count = 1
+
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+	httpmock.RegisterResponder("GET", fmt.Sprintf("%smetadata/endpoints?api-version=1.0", fmt.Sprintf("https://management.%s.contoso.com/", location)),
+		func(req *http.Request) (*http.Response, error) {
+			resp := httpmock.NewStringResponse(200, `{"galleryEndpoint":"https://galleryartifacts.hosting.testlocation.contoso.com/galleryartifacts/","graphEndpoint":"https://graph.testlocation.contoso.com/","portalEndpoint":"https://portal.testlocation.contoso.com/","authentication":{"loginEndpoint":"https://adfs.testlocation.contoso.com/adfs","audiences":["https://management.adfs.azurestack.testlocation/ce080287-be51-42e5-b99e-9de760fecae7"]}}`)
+			return resp, nil
+		},
+	)
+
+	_, err = mockCS.SetPropertiesDefaults(false, false)
+	if err != nil {
+		t.Errorf("Failed to test setMasterProfileDefaults with portal url - %s", err)
+	}
+
+	if mockCS.Properties.MasterProfile.PlatformFaultDomainCount != faultDomainCount {
+		t.Fatalf("Master profile did not have the expected default configuration of PlatformFaultDomainCount, got %s, expected %s",
+			mockCS.Properties.MasterProfile.PlatformFaultDomainCount, faultDomainCount)
+	}
+
+	// Check scenario where value is already set.
+	mockCS := getMockBaseContainerService("1.11.6")
+	mockCS.Properties.CustomCloudProfile = &CustomCloudProfile{
+		PortalURL: "https://portal.testlocation.contoso.com",
+	}
+	mockCS.Properties.MasterProfile.AvailabilityProfile = ""
+	mockCS.Properties.MasterProfile.Count = 1
+	mockCS.Properties.MasterProfile.PlatformFaultDomainCount = &oldFaultDomainCount
+	mockCS.Location = location
+	httpmock.DeactivateAndReset()
+	httpmock.Activate()
+	httpmock.RegisterResponder("GET", fmt.Sprintf("%smetadata/endpoints?api-version=1.0", fmt.Sprintf("https://management.%s.contoso.com/", location)),
+		func(req *http.Request) (*http.Response, error) {
+			resp := httpmock.NewStringResponse(200, `{"galleryEndpoint":"https://galleryartifacts.hosting.testlocation.contoso.com/galleryartifacts/","graphEndpoint":"https://graph.testlocation.contoso.com/","portalEndpoint":"https://portal.testlocation.contoso.com/","authentication":{"loginEndpoint":"https://adfs.testlocation.contoso.com/","audiences":["https://management.adfs.azurestack.testlocation/ce080287-be51-42e5-b99e-9de760fecae7"]}}`)
+			return resp, nil
+		},
+	)
+	_, err = mockCS.SetPropertiesDefaults(false, false)
+	if err != nil {
+		t.Errorf("Failed to test setMasterProfileDefaults with portal url - %s", err)
+	}
+
+	if mockCS.Properties.MasterProfile.PlatformFaultDomainCount != oldFaultDomainCount {
+		t.Fatalf("Master profile did not have the expected default configuration of PlatformFaultDomainCount, got %s, expected %s",
+			mockCS.Properties.MasterProfile.PlatformFaultDomainCount, oldFaultDomainCount)
+	}
+}
+
+func TestSetAgentProfileDefaultsOnAzureStack(t *testing.T) {
+	location := "testlocation"
+	faultDomainCount := 3
+	oldFaultDomainCount := 2
+	//Test setMasterProfileDefaults with portal url
+	mockCS := getMockBaseContainerService("1.11.6")
+	mockCS.Properties.CustomCloudProfile = &CustomCloudProfile{
+		PortalURL: "https://portal.testlocation.contoso.com",
+	}
+	mockCS.Location = location
+	mockCS.Properties.MasterProfile.AvailabilityProfile = ""
+	mockCS.Properties.MasterProfile.Count = 1
+
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+	httpmock.RegisterResponder("GET", fmt.Sprintf("%smetadata/endpoints?api-version=1.0", fmt.Sprintf("https://management.%s.contoso.com/", location)),
+		func(req *http.Request) (*http.Response, error) {
+			resp := httpmock.NewStringResponse(200, `{"galleryEndpoint":"https://galleryartifacts.hosting.testlocation.contoso.com/galleryartifacts/","graphEndpoint":"https://graph.testlocation.contoso.com/","portalEndpoint":"https://portal.testlocation.contoso.com/","authentication":{"loginEndpoint":"https://adfs.testlocation.contoso.com/adfs","audiences":["https://management.adfs.azurestack.testlocation/ce080287-be51-42e5-b99e-9de760fecae7"]}}`)
+			return resp, nil
+		},
+	)
+
+	_, err = mockCS.SetPropertiesDefaults(false, false)
+	if err != nil {
+		t.Errorf("Failed to test setMasterProfileDefaults with portal url - %s", err)
+	}
+
+	if mockCS.Properties.AgentPoolProfiles[0].PlatformFaultDomainCount != faultDomainCount {
+		t.Fatalf("Agent profile did not have the expected default configuration of PlatformFaultDomainCount, got %s, expected %s",
+			mockCS.Properties.MasterProfile.PlatformFaultDomainCount, faultDomainCount)
+	}
+
+	// Check scenario where value is already set.
+	mockCS := getMockBaseContainerService("1.11.6")
+	mockCS.Properties.CustomCloudProfile = &CustomCloudProfile{
+		PortalURL: "https://portal.testlocation.contoso.com",
+	}
+	mockCS.Properties.MasterProfile.AvailabilityProfile = ""
+	mockCS.Properties.MasterProfile.Count = 1
+	mockCS.Properties.AgentPoolProfiles[0].PlatformFaultDomainCount = &oldFaultDomainCount
+	mockCS.Location = location
+
+	httpmock.DeactivateAndReset()
+	httpmock.Activate()
+	httpmock.RegisterResponder("GET", fmt.Sprintf("%smetadata/endpoints?api-version=1.0", fmt.Sprintf("https://management.%s.contoso.com/", location)),
+		func(req *http.Request) (*http.Response, error) {
+			resp := httpmock.NewStringResponse(200, `{"galleryEndpoint":"https://galleryartifacts.hosting.testlocation.contoso.com/galleryartifacts/","graphEndpoint":"https://graph.testlocation.contoso.com/","portalEndpoint":"https://portal.testlocation.contoso.com/","authentication":{"loginEndpoint":"https://adfs.testlocation.contoso.com/","audiences":["https://management.adfs.azurestack.testlocation/ce080287-be51-42e5-b99e-9de760fecae7"]}}`)
+			return resp, nil
+		},
+	)
+	_, err = mockCS.SetPropertiesDefaults(false, false)
+	if err != nil {
+		t.Errorf("Failed to test setMasterProfileDefaults with portal url - %s", err)
+	}
+
+	if mockCS.Properties.AgentPoolProfiles[0].PlatformFaultDomainCount != oldFaultDomainCount {
+		t.Fatalf("Agent profile did not have the expected default configuration of PlatformFaultDomainCount, got %s, expected %s",
+			mockCS.Properties.MasterProfile.PlatformFaultDomainCount, oldFaultDomainCount)
 	}
 }
 
