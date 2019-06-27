@@ -52,7 +52,7 @@ func (kan *UpgradeAgentNode) DeleteNode(vmName *string, drain bool) error {
 	var kubeAPIServerURL string
 
 	if kan.UpgradeContainerService.Properties.HostedMasterProfile != nil {
-		kubeAPIServerURL = kan.UpgradeContainerService.Properties.HostedMasterProfile.FQDN
+		kubeAPIServerURL = "https://" + kan.UpgradeContainerService.Properties.HostedMasterProfile.FQDN + ":443"
 	} else {
 		kubeAPIServerURL = kan.UpgradeContainerService.Properties.MasterProfile.FQDN
 	}
@@ -122,7 +122,7 @@ func (kan *UpgradeAgentNode) Validate(vmName *string) error {
 	kan.logger.Infof("Validating %s", nodeName)
 	var masterURL string
 	if kan.UpgradeContainerService.Properties.HostedMasterProfile != nil {
-		masterURL = kan.UpgradeContainerService.Properties.HostedMasterProfile.FQDN
+		masterURL = "https://" + kan.UpgradeContainerService.Properties.HostedMasterProfile.FQDN + ":443"
 	} else {
 		masterURL = kan.UpgradeContainerService.Properties.MasterProfile.FQDN
 	}
