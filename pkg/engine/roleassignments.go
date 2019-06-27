@@ -16,6 +16,8 @@ const (
 	IdentityContributorRole IdentityRoleDefinition = "[variables('contributorRoleDefinitionId')]"
 	// IdentityReaderRole means created user assigned identity will have "Reader" role in created resource group
 	IdentityReaderRole IdentityRoleDefinition = "[variables('readerRoleDefinitionId')]"
+	// IdentityManagedIdentityOperatorRole means created user assigned identity or service principal will have operator access on a different managed identity
+	IdentityManagedIdentityOperatorRole IdentityRoleDefinition = "[variables('managedIdentityOperatorRoleDefinitionId')]"
 )
 
 func createMSIRoleAssignment(identityRoleDefinition IdentityRoleDefinition) RoleAssignmentARM {
@@ -39,9 +41,13 @@ func createMSIRoleAssignment(identityRoleDefinition IdentityRoleDefinition) Role
 	}
 }
 
+// createKubernetesSpAppGIdentityOperatorAccessRoleAssignment gives identity operator access on AGIC Identity to the cluster identity
 func createKubernetesSpAppGIdentityOperatorAccessRoleAssignment(prop *api.Properties) RoleAssignmentARM {
 	kubernetesSpObjectID := ""
-	if prop.OrchestratorProfile.KubernetesConfig.UseManagedIdentity {
+	// determine objectId of the cluster identity used by the kubernetes cluster
+	if prop.OrchestratorProfile != nil &&
+		prop.OrchestratorProfile.KubernetesConfig != nil &&
+		prop.OrchestratorProfile.KubernetesConfig.UseManagedIdentity {
 		kubernetesSpObjectID = "[reference(concat('Microsoft.ManagedIdentity/userAssignedIdentities/', variables('userAssignedID'))).principalId]"
 	} else if prop.ServicePrincipalProfile.ObjectID != "" {
 		kubernetesSpObjectID = prop.ServicePrincipalProfile.ObjectID
@@ -59,7 +65,7 @@ func createKubernetesSpAppGIdentityOperatorAccessRoleAssignment(prop *api.Proper
 			Type: to.StringPtr("Microsoft.ManagedIdentity/userAssignedIdentities/providers/roleAssignments"),
 			Name: to.StringPtr("[concat(variables('appGwICIdentityName'), '/Microsoft.Authorization/', guid(resourceGroup().id, 'aksidentityaccess'))]"),
 			RoleAssignmentPropertiesWithScope: &authorization.RoleAssignmentPropertiesWithScope{
-				RoleDefinitionID: to.StringPtr("[variables('managedIdentityOperatorRoleDefinitionId')]"),
+				RoleDefinitionID: to.StringPtr(string(IdentityManagedIdentityOperatorRole)),
 				PrincipalID:      to.StringPtr(kubernetesSpObjectID),
 				PrincipalType:    authorization.ServicePrincipal,
 				Scope:            to.StringPtr("[variables('appGwICIdentityId')]"),
@@ -68,6 +74,7 @@ func createKubernetesSpAppGIdentityOperatorAccessRoleAssignment(prop *api.Proper
 	}
 }
 
+// createAppGwIdentityResourceGroupReadSysRoleAssignment gives read access to Resource Group for Identity used by AGIC
 func createAppGwIdentityResourceGroupReadSysRoleAssignment() RoleAssignmentARM {
 	return RoleAssignmentARM{
 		ARMResource: ARMResource{
@@ -81,7 +88,7 @@ func createAppGwIdentityResourceGroupReadSysRoleAssignment() RoleAssignmentARM {
 			Type: to.StringPtr("Microsoft.Authorization/roleAssignments"),
 			Name: to.StringPtr("[guid(resourceGroup().id, 'identityrgaccess')]"),
 			RoleAssignmentPropertiesWithScope: &authorization.RoleAssignmentPropertiesWithScope{
-				RoleDefinitionID: to.StringPtr("[variables('readerRoleDefinitionId')]"),
+				RoleDefinitionID: to.StringPtr(string(IdentityReaderRole)),
 				PrincipalID:      to.StringPtr("[reference(variables('appGwICIdentityId'), variables('apiVersionManagedIdentity')).principalId]"),
 				Scope:            to.StringPtr("[resourceGroup().id]"),
 			},
@@ -89,6 +96,7 @@ func createAppGwIdentityResourceGroupReadSysRoleAssignment() RoleAssignmentARM {
 	}
 }
 
+// createAppGwIdentityApplicationGatewayWriteSysRoleAssignment gives write access to Application Gateway for Identity used by AGIC
 func createAppGwIdentityApplicationGatewayWriteSysRoleAssignment() RoleAssignmentARM {
 	return RoleAssignmentARM{
 		ARMResource: ARMResource{
@@ -102,7 +110,7 @@ func createAppGwIdentityApplicationGatewayWriteSysRoleAssignment() RoleAssignmen
 			Type: to.StringPtr("Microsoft.Network/applicationgateways/providers/roleAssignments"),
 			Name: to.StringPtr("[concat(variables('appGwName'), '/Microsoft.Authorization/', guid(resourceGroup().id, 'identityappgwaccess'))]"),
 			RoleAssignmentPropertiesWithScope: &authorization.RoleAssignmentPropertiesWithScope{
-				RoleDefinitionID: to.StringPtr("[variables('contributorRoleDefinitionId')]"),
+				RoleDefinitionID: to.StringPtr(string(IdentityContributorRole)),
 				PrincipalID:      to.StringPtr("[reference(variables('appGwICIdentityId'), variables('apiVersionManagedIdentity')).principalId]"),
 				Scope:            to.StringPtr("[variables('appGwId')]"),
 			},

@@ -29,7 +29,7 @@ func createApplicationGateway(prop *api.Properties) ApplicationGatewayARM {
 					Capacity: to.Int32Ptr(2),
 				},
 				GatewayIPConfigurations: &[]network.ApplicationGatewayIPConfiguration{
-					network.ApplicationGatewayIPConfiguration{
+					{
 						Name: to.StringPtr("gatewayIP"),
 						ApplicationGatewayIPConfigurationPropertiesFormat: &network.ApplicationGatewayIPConfigurationPropertiesFormat{
 							Subnet: &network.SubResource{
@@ -39,7 +39,7 @@ func createApplicationGateway(prop *api.Properties) ApplicationGatewayARM {
 					},
 				},
 				FrontendIPConfigurations: &[]network.ApplicationGatewayFrontendIPConfiguration{
-					network.ApplicationGatewayFrontendIPConfiguration{
+					{
 						Name: to.StringPtr("frontendIP"),
 						ApplicationGatewayFrontendIPConfigurationPropertiesFormat: &network.ApplicationGatewayFrontendIPConfigurationPropertiesFormat{
 							PublicIPAddress: &network.SubResource{
@@ -49,7 +49,7 @@ func createApplicationGateway(prop *api.Properties) ApplicationGatewayARM {
 					},
 				},
 				FrontendPorts: &[]network.ApplicationGatewayFrontendPort{
-					network.ApplicationGatewayFrontendPort{
+					{
 						Name: to.StringPtr("httpPort"),
 						ApplicationGatewayFrontendPortPropertiesFormat: &network.ApplicationGatewayFrontendPortPropertiesFormat{
 							Port: to.Int32Ptr(80),
@@ -57,7 +57,7 @@ func createApplicationGateway(prop *api.Properties) ApplicationGatewayARM {
 					},
 				},
 				BackendAddressPools: &[]network.ApplicationGatewayBackendAddressPool{
-					network.ApplicationGatewayBackendAddressPool{
+					{
 						Name: to.StringPtr("pool"),
 						ApplicationGatewayBackendAddressPoolPropertiesFormat: &network.ApplicationGatewayBackendAddressPoolPropertiesFormat{
 							BackendAddresses: &[]network.ApplicationGatewayBackendAddress{},
@@ -65,7 +65,7 @@ func createApplicationGateway(prop *api.Properties) ApplicationGatewayARM {
 					},
 				},
 				HTTPListeners: &[]network.ApplicationGatewayHTTPListener{
-					network.ApplicationGatewayHTTPListener{
+					{
 						Name: to.StringPtr("httpListener"),
 						ApplicationGatewayHTTPListenerPropertiesFormat: &network.ApplicationGatewayHTTPListenerPropertiesFormat{
 							Protocol: network.HTTP,
@@ -79,7 +79,7 @@ func createApplicationGateway(prop *api.Properties) ApplicationGatewayARM {
 					},
 				},
 				BackendHTTPSettingsCollection: &[]network.ApplicationGatewayBackendHTTPSettings{
-					network.ApplicationGatewayBackendHTTPSettings{
+					{
 						Name: to.StringPtr("setting"),
 						ApplicationGatewayBackendHTTPSettingsPropertiesFormat: &network.ApplicationGatewayBackendHTTPSettingsPropertiesFormat{
 							Port:     to.Int32Ptr(80),
