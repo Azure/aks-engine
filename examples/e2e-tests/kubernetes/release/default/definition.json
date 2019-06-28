@@ -47,6 +47,14 @@
                 "memoryLimits": "200Mi"
               }
             ]
+          },
+          {
+            "name": "cluster-autoscaler",
+            "enabled": true
+          },
+          {
+            "name": "aad-pod-identity",
+            "enabled": true
           }
         ]
       }
@@ -62,7 +70,7 @@
     },
     "agentPoolProfiles": [
       {
-        "name": "agentmd",
+        "name": "pool1",
         "count": 3,
         "vmSize": "Standard_D2_v3",
         "OSDiskSizeGB": 200,
@@ -73,19 +81,7 @@
           128,
           128
         ],
-        "availabilityProfile": "AvailabilitySet",
-        "vnetSubnetId": "/subscriptions/SUB_ID/resourceGroups/RG_NAME/providers/Microsoft.Network/virtualNetworks/VNET_NAME/subnets/SUBNET_NAME"
-      },
-      {
-        "name": "agentsa",
-        "count": 3,
-        "vmSize": "Standard_D2_v3",
-        "OSDiskSizeGB": 200,
-        "storageProfile": "StorageAccount",
-        "diskSizesGB": [
-          128
-        ],
-        "availabilityProfile": "AvailabilitySet",
+        "availabilityProfile": "VirtualMachineScaleSets",
         "vnetSubnetId": "/subscriptions/SUB_ID/resourceGroups/RG_NAME/providers/Microsoft.Network/virtualNetworks/VNET_NAME/subnets/SUBNET_NAME"
       }
     ],
