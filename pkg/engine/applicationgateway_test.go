@@ -42,7 +42,7 @@ func TestCreateApplicationGateway(t *testing.T) {
 					Capacity: to.Int32Ptr(2),
 				},
 				GatewayIPConfigurations: &[]network.ApplicationGatewayIPConfiguration{
-					network.ApplicationGatewayIPConfiguration{
+					{
 						Name: to.StringPtr("gatewayIP"),
 						ApplicationGatewayIPConfigurationPropertiesFormat: &network.ApplicationGatewayIPConfigurationPropertiesFormat{
 							Subnet: &network.SubResource{
@@ -52,7 +52,7 @@ func TestCreateApplicationGateway(t *testing.T) {
 					},
 				},
 				FrontendIPConfigurations: &[]network.ApplicationGatewayFrontendIPConfiguration{
-					network.ApplicationGatewayFrontendIPConfiguration{
+					{
 						Name: to.StringPtr("frontendIP"),
 						ApplicationGatewayFrontendIPConfigurationPropertiesFormat: &network.ApplicationGatewayFrontendIPConfigurationPropertiesFormat{
 							PublicIPAddress: &network.SubResource{
@@ -62,7 +62,7 @@ func TestCreateApplicationGateway(t *testing.T) {
 					},
 				},
 				FrontendPorts: &[]network.ApplicationGatewayFrontendPort{
-					network.ApplicationGatewayFrontendPort{
+					{
 						Name: to.StringPtr("httpPort"),
 						ApplicationGatewayFrontendPortPropertiesFormat: &network.ApplicationGatewayFrontendPortPropertiesFormat{
 							Port: to.Int32Ptr(80),
@@ -70,7 +70,7 @@ func TestCreateApplicationGateway(t *testing.T) {
 					},
 				},
 				BackendAddressPools: &[]network.ApplicationGatewayBackendAddressPool{
-					network.ApplicationGatewayBackendAddressPool{
+					{
 						Name: to.StringPtr("pool"),
 						ApplicationGatewayBackendAddressPoolPropertiesFormat: &network.ApplicationGatewayBackendAddressPoolPropertiesFormat{
 							BackendAddresses: &[]network.ApplicationGatewayBackendAddress{},
@@ -78,7 +78,7 @@ func TestCreateApplicationGateway(t *testing.T) {
 					},
 				},
 				HTTPListeners: &[]network.ApplicationGatewayHTTPListener{
-					network.ApplicationGatewayHTTPListener{
+					{
 						Name: to.StringPtr("httpListener"),
 						ApplicationGatewayHTTPListenerPropertiesFormat: &network.ApplicationGatewayHTTPListenerPropertiesFormat{
 							Protocol: network.HTTP,
@@ -92,7 +92,7 @@ func TestCreateApplicationGateway(t *testing.T) {
 					},
 				},
 				BackendHTTPSettingsCollection: &[]network.ApplicationGatewayBackendHTTPSettings{
-					network.ApplicationGatewayBackendHTTPSettings{
+					{
 						Name: to.StringPtr("setting"),
 						ApplicationGatewayBackendHTTPSettingsPropertiesFormat: &network.ApplicationGatewayBackendHTTPSettingsPropertiesFormat{
 							Port:     to.Int32Ptr(80),
@@ -167,7 +167,7 @@ func TestCreateApplicationGatewayWAF(t *testing.T) {
 					Capacity: to.Int32Ptr(2),
 				},
 				GatewayIPConfigurations: &[]network.ApplicationGatewayIPConfiguration{
-					network.ApplicationGatewayIPConfiguration{
+					{
 						Name: to.StringPtr("gatewayIP"),
 						ApplicationGatewayIPConfigurationPropertiesFormat: &network.ApplicationGatewayIPConfigurationPropertiesFormat{
 							Subnet: &network.SubResource{
@@ -177,7 +177,7 @@ func TestCreateApplicationGatewayWAF(t *testing.T) {
 					},
 				},
 				FrontendIPConfigurations: &[]network.ApplicationGatewayFrontendIPConfiguration{
-					network.ApplicationGatewayFrontendIPConfiguration{
+					{
 						Name: to.StringPtr("frontendIP"),
 						ApplicationGatewayFrontendIPConfigurationPropertiesFormat: &network.ApplicationGatewayFrontendIPConfigurationPropertiesFormat{
 							PublicIPAddress: &network.SubResource{
@@ -187,7 +187,7 @@ func TestCreateApplicationGatewayWAF(t *testing.T) {
 					},
 				},
 				FrontendPorts: &[]network.ApplicationGatewayFrontendPort{
-					network.ApplicationGatewayFrontendPort{
+					{
 						Name: to.StringPtr("httpPort"),
 						ApplicationGatewayFrontendPortPropertiesFormat: &network.ApplicationGatewayFrontendPortPropertiesFormat{
 							Port: to.Int32Ptr(80),
@@ -195,7 +195,7 @@ func TestCreateApplicationGatewayWAF(t *testing.T) {
 					},
 				},
 				BackendAddressPools: &[]network.ApplicationGatewayBackendAddressPool{
-					network.ApplicationGatewayBackendAddressPool{
+					{
 						Name: to.StringPtr("pool"),
 						ApplicationGatewayBackendAddressPoolPropertiesFormat: &network.ApplicationGatewayBackendAddressPoolPropertiesFormat{
 							BackendAddresses: &[]network.ApplicationGatewayBackendAddress{},
@@ -203,7 +203,7 @@ func TestCreateApplicationGatewayWAF(t *testing.T) {
 					},
 				},
 				HTTPListeners: &[]network.ApplicationGatewayHTTPListener{
-					network.ApplicationGatewayHTTPListener{
+					{
 						Name: to.StringPtr("httpListener"),
 						ApplicationGatewayHTTPListenerPropertiesFormat: &network.ApplicationGatewayHTTPListenerPropertiesFormat{
 							Protocol: network.HTTP,
@@ -217,7 +217,7 @@ func TestCreateApplicationGatewayWAF(t *testing.T) {
 					},
 				},
 				BackendHTTPSettingsCollection: &[]network.ApplicationGatewayBackendHTTPSettings{
-					network.ApplicationGatewayBackendHTTPSettings{
+					{
 						Name: to.StringPtr("setting"),
 						ApplicationGatewayBackendHTTPSettingsPropertiesFormat: &network.ApplicationGatewayBackendHTTPSettingsPropertiesFormat{
 							Port:     to.Int32Ptr(80),
@@ -296,7 +296,7 @@ func TestCreateApplicationGatewayPrivateIP(t *testing.T) {
 					Capacity: to.Int32Ptr(2),
 				},
 				GatewayIPConfigurations: &[]network.ApplicationGatewayIPConfiguration{
-					network.ApplicationGatewayIPConfiguration{
+					{
 						Name: to.StringPtr("gatewayIP"),
 						ApplicationGatewayIPConfigurationPropertiesFormat: &network.ApplicationGatewayIPConfigurationPropertiesFormat{
 							Subnet: &network.SubResource{
@@ -306,7 +306,7 @@ func TestCreateApplicationGatewayPrivateIP(t *testing.T) {
 					},
 				},
 				FrontendIPConfigurations: &[]network.ApplicationGatewayFrontendIPConfiguration{
-					network.ApplicationGatewayFrontendIPConfiguration{
+					{
 						Name: to.StringPtr("frontendIP"),
 						ApplicationGatewayFrontendIPConfigurationPropertiesFormat: &network.ApplicationGatewayFrontendIPConfigurationPropertiesFormat{
 							PublicIPAddress: &network.SubResource{
@@ -314,7 +314,7 @@ func TestCreateApplicationGatewayPrivateIP(t *testing.T) {
 							},
 						},
 					},
-					network.ApplicationGatewayFrontendIPConfiguration{
+					{
 						Name: to.StringPtr("privateIp"),
 						ApplicationGatewayFrontendIPConfigurationPropertiesFormat: &network.ApplicationGatewayFrontendIPConfigurationPropertiesFormat{
 							PrivateIPAddress: to.StringPtr("10.0.0.1"),
@@ -322,7 +322,7 @@ func TestCreateApplicationGatewayPrivateIP(t *testing.T) {
 					},
 				},
 				FrontendPorts: &[]network.ApplicationGatewayFrontendPort{
-					network.ApplicationGatewayFrontendPort{
+					{
 						Name: to.StringPtr("httpPort"),
 						ApplicationGatewayFrontendPortPropertiesFormat: &network.ApplicationGatewayFrontendPortPropertiesFormat{
 							Port: to.Int32Ptr(80),
@@ -330,7 +330,7 @@ func TestCreateApplicationGatewayPrivateIP(t *testing.T) {
 					},
 				},
 				BackendAddressPools: &[]network.ApplicationGatewayBackendAddressPool{
-					network.ApplicationGatewayBackendAddressPool{
+					{
 						Name: to.StringPtr("pool"),
 						ApplicationGatewayBackendAddressPoolPropertiesFormat: &network.ApplicationGatewayBackendAddressPoolPropertiesFormat{
 							BackendAddresses: &[]network.ApplicationGatewayBackendAddress{},
@@ -338,7 +338,7 @@ func TestCreateApplicationGatewayPrivateIP(t *testing.T) {
 					},
 				},
 				HTTPListeners: &[]network.ApplicationGatewayHTTPListener{
-					network.ApplicationGatewayHTTPListener{
+					{
 						Name: to.StringPtr("httpListener"),
 						ApplicationGatewayHTTPListenerPropertiesFormat: &network.ApplicationGatewayHTTPListenerPropertiesFormat{
 							Protocol: network.HTTP,
@@ -352,7 +352,7 @@ func TestCreateApplicationGatewayPrivateIP(t *testing.T) {
 					},
 				},
 				BackendHTTPSettingsCollection: &[]network.ApplicationGatewayBackendHTTPSettings{
-					network.ApplicationGatewayBackendHTTPSettings{
+					{
 						Name: to.StringPtr("setting"),
 						ApplicationGatewayBackendHTTPSettingsPropertiesFormat: &network.ApplicationGatewayBackendHTTPSettingsPropertiesFormat{
 							Port:     to.Int32Ptr(80),

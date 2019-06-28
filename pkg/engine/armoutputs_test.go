@@ -208,7 +208,7 @@ func TestK8sOutputsWithAppGwIngressAddon(t *testing.T) {
 				OrchestratorType: api.Kubernetes,
 				KubernetesConfig: &api.KubernetesConfig{
 					Addons: []api.KubernetesAddon{
-						api.KubernetesAddon{
+						{
 							Name:    AppGwIngressAddonName,
 							Enabled: to.BoolPtr(true),
 						},
