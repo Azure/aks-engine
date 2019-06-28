@@ -256,7 +256,7 @@ func TestAssignDefaultAddonImages(t *testing.T) {
 			mockCS.setOrchestratorDefaults(c.isUpdate, c.isUpdate)
 			resultAddons := mockCS.Properties.OrchestratorProfile.KubernetesConfig.Addons
 			for _, result := range resultAddons {
-				if result.Containers[0].Image != c.expectedImages[result.Name] {
+				if len(result.Containers) > 0 && result.Containers[0].Image != c.expectedImages[result.Name] {
 					t.Errorf("expected setDefaults to set Image to \"%s\" in addon %s, but got \"%s\"", c.expectedImages[result.Name], result.Name, result.Containers[0].Image)
 				}
 			}
