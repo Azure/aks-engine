@@ -11380,6 +11380,12 @@ configureCNI() {
         systemctl restart sys-fs-bpf.mount
         REBOOTREQUIRED=true
     fi
+
+    if [[ "${TARGET_ENVIRONMENT,,}" == "${AZURE_STACK_ENV}"  ]] && [[ "${NETWORK_PLUGIN}" = "azure" ]]; then
+        # set environment to mas when using Azure CNI on Azure Stack
+        # shellcheck disable=SC2002,SC2005
+        echo $(cat "$CNI_CONFIG_DIR/10-azure.conflist" | jq '.plugins[0].ipam.environment = "mas"') > "$CNI_CONFIG_DIR/10-azure.conflist"
+    fi
 }
 
 configureCNIIPTables() {
@@ -22002,7 +22008,8 @@ try
                                -KubeClusterCIDR $global:KubeClusterCIDR ` + "`" + `
                                -MasterSubnet $global:MasterSubnet ` + "`" + `
                                -KubeServiceCIDR $global:KubeServiceCIDR ` + "`" + `
-                               -VNetCIDR $global:VNetCIDR
+                               -VNetCIDR $global:VNetCIDR ` + "`" + `
+                               -TargetEnvironment $TargetEnvironment
         } elseif ($global:NetworkPlugin -eq "kubenet") {
             Update-WinCNI -CNIPath $global:CNIPath
             Get-HnsPsm1 -HNSModule $global:HNSModule
@@ -22468,7 +22475,9 @@ Set-AzureCNIConfig
         [Parameter(Mandatory=$true)][string]
         $KubeServiceCIDR,
         [Parameter(Mandatory=$true)][string]
-        $VNetCIDR
+        $VNetCIDR,
+        [Parameter(Mandatory=$true)][string]
+        $TargetEnvironment
     )
     # Fill in DNS information for kubernetes.
     $fileName  = [Io.path]::Combine("$AzureCNIConfDir", "10-azure.conflist")
@@ -22479,6 +22488,10 @@ Set-AzureCNIConfig
     $configJson.plugins.AdditionalArgs[0].Value.ExceptionList[1] = $MasterSubnet
     $configJson.plugins.AdditionalArgs[1].Value.DestinationPrefix  = $KubeServiceCIDR
     $configJson.plugins.AdditionalArgs[0].Value.ExceptionList += $VNetCIDR
+
+    if ($TargetEnvironment -ieq "AzureStackCloud") {
+        Add-Member -InputObject $configJson.plugins[0].ipam -MemberType NoteProperty -Name "environment" -Value "mas"
+    }
 
     $configJson | ConvertTo-Json -depth 20 | Out-File -encoding ASCII -filepath $fileName
 }

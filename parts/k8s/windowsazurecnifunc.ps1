@@ -67,7 +67,9 @@ Set-AzureCNIConfig
         [Parameter(Mandatory=$true)][string]
         $KubeServiceCIDR,
         [Parameter(Mandatory=$true)][string]
-        $VNetCIDR
+        $VNetCIDR,
+        [Parameter(Mandatory=$true)][string]
+        $TargetEnvironment
     )
     # Fill in DNS information for kubernetes.
     $fileName  = [Io.path]::Combine("$AzureCNIConfDir", "10-azure.conflist")
@@ -78,6 +80,10 @@ Set-AzureCNIConfig
     $configJson.plugins.AdditionalArgs[0].Value.ExceptionList[1] = $MasterSubnet
     $configJson.plugins.AdditionalArgs[1].Value.DestinationPrefix  = $KubeServiceCIDR
     $configJson.plugins.AdditionalArgs[0].Value.ExceptionList += $VNetCIDR
+
+    if ($TargetEnvironment -ieq "AzureStackCloud") {
+        Add-Member -InputObject $configJson.plugins[0].ipam -MemberType NoteProperty -Name "environment" -Value "mas"
+    }
 
     $configJson | ConvertTo-Json -depth 20 | Out-File -encoding ASCII -filepath $fileName
 }
