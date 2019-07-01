@@ -1,0 +1,16 @@
+{
+	"name": "Go for aks-engine",
+	"image": "quay.io/deis/go-dev:v1.22.3",
+	"extensions": [
+		"ms-vscode.go"
+	],
+	"runArgs": [
+		"--cap-add=SYS_PTRACE",
+		"--security-opt",
+		"seccomp=unconfined"
+	],
+  "postCreateCommand": "mkdir -p /go/src/github.com/Azure && ln -sf /workspaces/aks-engine /go/src/github.com/Azure/aks-engine",
+	"settings": {
+		"go.gopath": "/go"
+	}
+}

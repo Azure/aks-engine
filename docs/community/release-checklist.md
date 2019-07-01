@@ -87,7 +87,7 @@ Save the markdown that it prints so it can be pasted into the GitHub release.
 Make sure your repository has no local changes, then build the aks-engine distribution archives:
 
 ```
-$ make info  # check that the git tree state is clean and the tag is correct
+$ make generate && make info  # check that the git tree state is clean after a build, and that the tag is correct
 $ make clean dist
 ```
 
