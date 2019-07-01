@@ -4336,6 +4336,8 @@ func TestFormatAzureProdFQDN(t *testing.T) {
 		"santest.usgovarizona.cloudapp.usgovcloudapi.net",
 		"santest.usgovtexas.cloudapp.usgovcloudapi.net",
 		"santest.francecentral.cloudapp.azure.com",
+		"santest.uaenorth.cloudapp.azure.com",
+		"santest.uaecentral.cloudapp.azure.com",
 	}
 
 	if !reflect.DeepEqual(actual, expected) {
