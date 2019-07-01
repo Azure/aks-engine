@@ -1606,6 +1606,11 @@ func (k *KubernetesConfig) IsClusterAutoscalerEnabled() bool {
 	return k.IsAddonEnabled(ClusterAutoscalerAddonName)
 }
 
+// IsAppGWIngressEnabled checks if the appgw ingress addon is enabled
+func (k *KubernetesConfig) IsAppGWIngressEnabled() bool {
+	return k.IsAddonEnabled(AppGwIngressAddonName)
+}
+
 // IsIPMasqAgentEnabled checks if the ip-masq-agent addon is enabled
 func (k *KubernetesConfig) IsIPMasqAgentEnabled() bool {
 	return k.IsAddonEnabled(IPMASQAgentAddonName)

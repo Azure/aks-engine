@@ -599,6 +599,7 @@
       "type": "string"
     }
  {{end}}
+ {{if .OrchestratorProfile.KubernetesConfig.IsAppGWIngressEnabled}}
     ,"appGwSubnet": {
       "metadata": {
         "description": "Sets the subnet of the Application Gateway"
@@ -611,3 +612,4 @@
       },
       "type": "string"
     }
+  {{end}}
