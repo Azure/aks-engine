@@ -2337,9 +2337,34 @@ func TestSetCustomCloudProfileEnvironmentDefaults(t *testing.T) {
 	}
 }
 
+func TestSetOrchestratorProfileDefaultsOnAzureStack(t *testing.T) {
+	location := "testlocation"
+	//Test setMasterProfileDefaults with portal url
+	mockCS := getMockBaseContainerService("1.11.6")
+	mockCS.Properties.CustomCloudProfile = &CustomCloudProfile{
+		PortalURL: "https://portal.testlocation.contoso.com",
+	}
+	mockCS.Location = location
+	mockCS.Properties.OrchestratorProfile.OrchestratorType = "Kubernetes"
+
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+	httpmock.RegisterResponder("GET", fmt.Sprintf("%smetadata/endpoints?api-version=1.0", fmt.Sprintf("https://management.%s.contoso.com/", location)),
+		func(req *http.Request) (*http.Response, error) {
+			resp := httpmock.NewStringResponse(200, `{"galleryEndpoint":"https://galleryartifacts.hosting.testlocation.contoso.com/galleryartifacts/","graphEndpoint":"https://graph.testlocation.contoso.com/","portalEndpoint":"https://portal.testlocation.contoso.com/","authentication":{"loginEndpoint":"https://adfs.testlocation.contoso.com/adfs","audiences":["https://management.adfs.azurestack.testlocation/ce080287-be51-42e5-b99e-9de760fecae7"]}}`)
+			return resp, nil
+		},
+	)
+
+	mockCS.SetPropertiesDefaults(false, false)
+	if (*mockCS.Properties.OrchestratorProfile.KubernetesConfig.UseInstanceMetadata) != DefaultAzureStackUseInstanceMetadata {
+		t.Fatalf("DefaultAzureStackUseInstanceMetadata did not have the expected value, got %t, expected %t",
+			(*mockCS.Properties.OrchestratorProfile.KubernetesConfig.UseInstanceMetadata), DefaultAzureStackUseInstanceMetadata)
+	}
+}
+
 func TestSetMasterProfileDefaultsOnAzureStack(t *testing.T) {
 	location := "testlocation"
-	faultDomainCount := 3
 	oldFaultDomainCount := 2
 	//Test setMasterProfileDefaults with portal url
 	mockCS := getMockBaseContainerService("1.11.6")
@@ -2360,9 +2385,9 @@ func TestSetMasterProfileDefaultsOnAzureStack(t *testing.T) {
 	)
 
 	mockCS.SetPropertiesDefaults(false, false)
-	if (*mockCS.Properties.MasterProfile.PlatformFaultDomainCount) != faultDomainCount {
+	if (*mockCS.Properties.MasterProfile.PlatformFaultDomainCount) != DefaultAzureStackFaultDomainCount {
 		t.Fatalf("PlatformFaultDomainCount did not have the expected value, got %d, expected %d",
-			(*mockCS.Properties.MasterProfile.PlatformFaultDomainCount), faultDomainCount)
+			(*mockCS.Properties.MasterProfile.PlatformFaultDomainCount), DefaultAzureStackFaultDomainCount)
 	}
 
 	// Check scenario where value is already set.
@@ -2391,7 +2416,6 @@ func TestSetMasterProfileDefaultsOnAzureStack(t *testing.T) {
 
 func TestSetAgentProfileDefaultsOnAzureStack(t *testing.T) {
 	location := "testlocation"
-	faultDomainCount := 3
 	oldFaultDomainCount := 2
 	//Test setMasterProfileDefaults with portal url
 	mockCS := getMockBaseContainerService("1.11.6")
@@ -2413,9 +2437,14 @@ func TestSetAgentProfileDefaultsOnAzureStack(t *testing.T) {
 
 	mockCS.SetPropertiesDefaults(false, false)
 	for _, pool := range mockCS.Properties.AgentPoolProfiles {
-		if (*pool.PlatformFaultDomainCount) != faultDomainCount {
+		if (*pool.PlatformFaultDomainCount) != DefaultAzureStackFaultDomainCount {
 			t.Fatalf("PlatformFaultDomainCount did not have the expected value, got %d, expected %d",
-				(*pool.PlatformFaultDomainCount), faultDomainCount)
+				(*pool.PlatformFaultDomainCount), DefaultAzureStackFaultDomainCount)
+		}
+
+		if (*pool.AcceleratedNetworkingEnabled) != DefaultAzureStackAcceleratedNetworking {
+			t.Fatalf("AcceleratedNetworkingEnabled did not have the expected value, got %t, expected %t",
+				(*pool.AcceleratedNetworkingEnabled), DefaultAzureStackAcceleratedNetworking)
 		}
 	}
 	// Check scenario where value is already set.

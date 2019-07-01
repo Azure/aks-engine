@@ -627,7 +627,7 @@ func TestK8sVars(t *testing.T) {
 		"subscriptionId":                            "[subscription().subscriptionId]",
 		"tenantId":                                  "[subscription().tenantId]",
 		"truncatedResourceGroup":                    "[take(replace(replace(resourceGroup().name, '(', '-'), ')', '-'), 63)]",
-		"useInstanceMetadata":                       "true",
+		"useInstanceMetadata":                       "false",
 		"useManagedIdentityExtension":               "false",
 		"userAssignedClientID":                      "",
 		"userAssignedID":                            "",

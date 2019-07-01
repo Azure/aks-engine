@@ -242,6 +242,18 @@ const (
 	DefaultEnableVMSSNodePublicIP = false
 )
 
+// AzureStackCloud Specific Defaults
+const (
+	// DefaultUseInstanceMetadata set to false as Azure Stack today doesn't support instance metadata service
+	DefaultAzureStackUseInstanceMetadata = false
+
+	// DefaultAzureStackAcceleratedNetworking set to false as Azure Stack today doesn't support accelerated networking
+	DefaultAzureStackAcceleratedNetworking = false
+
+	// DefaultAzureStackFaultDomainCount set to 3 as Azure Stack today has minimum 4 node deployment.
+	DefaultAzureStackFaultDomainCount = 3
+)
+
 // WindowsProfile defaults
 const (
 	// DefaultWindowsPublisher sets the default WindowsPublisher value in WindowsProfile
