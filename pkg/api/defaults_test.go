@@ -2476,6 +2476,132 @@ func TestSetAgentProfileDefaultsOnAzureStack(t *testing.T) {
 	}
 }
 
+func TestEtcdDiskSizeOnAzureStack(t *testing.T) {
+	location := "testlocation"
+	mockCS := getMockBaseContainerService("1.11.6")
+	mockCS.Location = location
+	mockCS.Properties.MasterProfile.Count = 1
+	mockCS.Properties.OrchestratorProfile.OrchestratorType = Kubernetes
+	mockCS.Properties.CustomCloudProfile = &CustomCloudProfile{
+		PortalURL: "https://portal.testlocation.contoso.com",
+	}
+
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+	httpmock.RegisterResponder("GET", fmt.Sprintf("%smetadata/endpoints?api-version=1.0", fmt.Sprintf("https://management.%s.contoso.com/", location)),
+		func(req *http.Request) (*http.Response, error) {
+			resp := httpmock.NewStringResponse(200, `{"galleryEndpoint":"https://galleryartifacts.hosting.testlocation.contoso.com/galleryartifacts/","graphEndpoint":"https://graph.testlocation.contoso.com/","portalEndpoint":"https://portal.testlocation.contoso.com/","authentication":{"loginEndpoint":"https://adfs.testlocation.contoso.com/adfs","audiences":["https://management.adfs.azurestack.testlocation/ce080287-be51-42e5-b99e-9de760fecae7"]}}`)
+			return resp, nil
+		},
+	)
+
+	mockCS.SetPropertiesDefaults(false, false)
+	if mockCS.Properties.OrchestratorProfile.KubernetesConfig.EtcdDiskSizeGB != DefaultEtcdDiskSize {
+		t.Fatalf("EtcdDiskSizeGB did not have the expected size, got %s, expected %s",
+			mockCS.Properties.OrchestratorProfile.KubernetesConfig.EtcdDiskSizeGB, DefaultEtcdDiskSize)
+	}
+
+	// Case where total node count is 5.
+	mockCS = getMockBaseContainerService("1.11.6")
+	mockCS.Location = location
+	mockCS.Properties.OrchestratorProfile.OrchestratorType = Kubernetes
+	mockCS.Properties.MasterProfile.Count = 5
+	mockCS.Properties.CustomCloudProfile = &CustomCloudProfile{
+		PortalURL: "https://portal.testlocation.contoso.com",
+	}
+
+	httpmock.DeactivateAndReset()
+	httpmock.Activate()
+	httpmock.RegisterResponder("GET", fmt.Sprintf("%smetadata/endpoints?api-version=1.0", fmt.Sprintf("https://management.%s.contoso.com/", location)),
+		func(req *http.Request) (*http.Response, error) {
+			resp := httpmock.NewStringResponse(200, `{"galleryEndpoint":"https://galleryartifacts.hosting.testlocation.contoso.com/galleryartifacts/","graphEndpoint":"https://graph.testlocation.contoso.com/","portalEndpoint":"https://portal.testlocation.contoso.com/","authentication":{"loginEndpoint":"https://adfs.testlocation.contoso.com/","audiences":["https://management.adfs.azurestack.testlocation/ce080287-be51-42e5-b99e-9de760fecae7"]}}`)
+			return resp, nil
+		},
+	)
+
+	mockCS.SetPropertiesDefaults(false, false)
+	if mockCS.Properties.OrchestratorProfile.KubernetesConfig.EtcdDiskSizeGB != DefaultEtcdDiskSizeGT3Nodes {
+		t.Fatalf("EtcdDiskSizeGB did not have the expected size, got %s, expected %s",
+			mockCS.Properties.OrchestratorProfile.KubernetesConfig.EtcdDiskSizeGB, DefaultEtcdDiskSizeGT3Nodes)
+	}
+
+	// Case where total node count is 11.
+	mockCS = getMockBaseContainerService("1.11.6")
+	mockCS.Location = location
+	mockCS.Properties.OrchestratorProfile.OrchestratorType = Kubernetes
+	mockCS.Properties.MasterProfile.Count = 5
+	mockCS.Properties.AgentPoolProfiles[0].Count = 6
+	mockCS.Properties.CustomCloudProfile = &CustomCloudProfile{
+		PortalURL: "https://portal.testlocation.contoso.com",
+	}
+
+	httpmock.DeactivateAndReset()
+	httpmock.Activate()
+	httpmock.RegisterResponder("GET", fmt.Sprintf("%smetadata/endpoints?api-version=1.0", fmt.Sprintf("https://management.%s.contoso.com/", location)),
+		func(req *http.Request) (*http.Response, error) {
+			resp := httpmock.NewStringResponse(200, `{"galleryEndpoint":"https://galleryartifacts.hosting.testlocation.contoso.com/galleryartifacts/","graphEndpoint":"https://graph.testlocation.contoso.com/","portalEndpoint":"https://portal.testlocation.contoso.com/","authentication":{"loginEndpoint":"https://adfs.testlocation.contoso.com/","audiences":["https://management.adfs.azurestack.testlocation/ce080287-be51-42e5-b99e-9de760fecae7"]}}`)
+			return resp, nil
+		},
+	)
+
+	mockCS.SetPropertiesDefaults(false, false)
+	if mockCS.Properties.OrchestratorProfile.KubernetesConfig.EtcdDiskSizeGB != DefaultAzureStackEtcdDiskSizeGT10Nodes {
+		t.Fatalf("EtcdDiskSizeGB did not have the expected size, got %s, expected %s",
+			mockCS.Properties.OrchestratorProfile.KubernetesConfig.EtcdDiskSizeGB, DefaultAzureStackEtcdDiskSizeGT10Nodes)
+	}
+
+	// Case where total node count is 21.
+	mockCS = getMockBaseContainerService("1.11.6")
+	mockCS.Location = location
+	mockCS.Properties.OrchestratorProfile.OrchestratorType = Kubernetes
+	mockCS.Properties.MasterProfile.Count = 5
+	mockCS.Properties.AgentPoolProfiles[0].Count = 16
+	mockCS.Properties.CustomCloudProfile = &CustomCloudProfile{
+		PortalURL: "https://portal.testlocation.contoso.com",
+	}
+
+	httpmock.DeactivateAndReset()
+	httpmock.Activate()
+	httpmock.RegisterResponder("GET", fmt.Sprintf("%smetadata/endpoints?api-version=1.0", fmt.Sprintf("https://management.%s.contoso.com/", location)),
+		func(req *http.Request) (*http.Response, error) {
+			resp := httpmock.NewStringResponse(200, `{"galleryEndpoint":"https://galleryartifacts.hosting.testlocation.contoso.com/galleryartifacts/","graphEndpoint":"https://graph.testlocation.contoso.com/","portalEndpoint":"https://portal.testlocation.contoso.com/","authentication":{"loginEndpoint":"https://adfs.testlocation.contoso.com/","audiences":["https://management.adfs.azurestack.testlocation/ce080287-be51-42e5-b99e-9de760fecae7"]}}`)
+			return resp, nil
+		},
+	)
+
+	mockCS.SetPropertiesDefaults(false, false)
+	if mockCS.Properties.OrchestratorProfile.KubernetesConfig.EtcdDiskSizeGB != DefaultAzureStackEtcdDiskSizeGT10Nodes {
+		t.Fatalf("EtcdDiskSizeGB did not have the expected size, got %s, expected %s",
+			mockCS.Properties.OrchestratorProfile.KubernetesConfig.EtcdDiskSizeGB, DefaultAzureStackEtcdDiskSizeGT10Nodes)
+	}
+
+	// Case where total node count is 55 but EtcdDiskSizeGB size is passed
+	mockCS = getMockBaseContainerService("1.11.6")
+	mockCS.Location = location
+	mockCS.Properties.OrchestratorProfile.OrchestratorType = Kubernetes
+	mockCS.Properties.MasterProfile.Count = 5
+	mockCS.Properties.AgentPoolProfiles[0].Count = 50
+	customEtcdDiskSize := "512"
+	mockCS.Properties.OrchestratorProfile.KubernetesConfig.EtcdDiskSizeGB = customEtcdDiskSize
+	mockCS.Properties.CustomCloudProfile = &CustomCloudProfile{
+		PortalURL: "https://portal.testlocation.contoso.com",
+	}
+
+	httpmock.DeactivateAndReset()
+	httpmock.Activate()
+	httpmock.RegisterResponder("GET", fmt.Sprintf("%smetadata/endpoints?api-version=1.0", fmt.Sprintf("https://management.%s.contoso.com/", location)),
+		func(req *http.Request) (*http.Response, error) {
+			resp := httpmock.NewStringResponse(200, `{"galleryEndpoint":"https://galleryartifacts.hosting.testlocation.contoso.com/galleryartifacts/","graphEndpoint":"https://graph.testlocation.contoso.com/","portalEndpoint":"https://portal.testlocation.contoso.com/","authentication":{"loginEndpoint":"https://adfs.testlocation.contoso.com/","audiences":["https://management.adfs.azurestack.testlocation/ce080287-be51-42e5-b99e-9de760fecae7"]}}`)
+			return resp, nil
+		},
+	)
+
+	mockCS.SetPropertiesDefaults(false, false)
+	if mockCS.Properties.OrchestratorProfile.KubernetesConfig.EtcdDiskSizeGB != customEtcdDiskSize {
+		t.Fatalf("EtcdDiskSizeGB did not have the expected size, got %s, expected %s",
+			mockCS.Properties.OrchestratorProfile.KubernetesConfig.EtcdDiskSizeGB, customEtcdDiskSize)
+	}
+}
 func TestPreserveNodesProperties(t *testing.T) {
 	mockCS := getMockBaseContainerService("1.10.8")
 	mockCS.SetPropertiesDefaults(false, false)
