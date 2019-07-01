@@ -16,9 +16,9 @@ spec:
     spec:
       priorityClassName: system-node-critical
       tolerations:
-      - key: node-role.kubernetes.io/master
+      - key: node.kubernetes.io/role
         operator: Equal
-        value: "true"
+        value: "master"
         effect: NoSchedule
       - operator: "Exists"
         effect: NoExecute

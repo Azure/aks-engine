@@ -22,9 +22,9 @@ spec:
       tolerations:
       - key: CriticalAddonsOnly
         operator: Exists
-      - key: node-role.kubernetes.io/master
+      - key: node.kubernetes.io/role
         operator: Equal
-        value: "true"
+        value: "master"
         effect: NoSchedule
       - operator: "Exists"
         effect: NoExecute

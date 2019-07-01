@@ -12,9 +12,10 @@ spec:
       - sleep
       - "1000000"
   tolerations:
-  - effect: NoSchedule
-    key: node-role.kubernetes.io/master
-    operator: "Exists"
+  - key: node.kubernetes.io/role
+    operator: Equal
+    value: "master"
+    effect: NoSchedule
   - operator: "Exists"
     effect: NoExecute
   - operator: "Exists"

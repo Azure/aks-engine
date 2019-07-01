@@ -357,10 +357,10 @@ spec:
       nodeSelector:
         beta.kubernetes.io/os: linux
       tolerations:
-        - effect: NoSchedule
-          key: node-role.kubernetes.io/master
+        - key: node.kubernetes.io/role
           operator: Equal
-          value: "true"
+          value: "master"
+          effect: NoSchedule
       volumes:
         - name: host-root
           hostPath:

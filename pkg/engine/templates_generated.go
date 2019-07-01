@@ -7016,9 +7016,9 @@ spec:
         - key: node.kubernetes.io/not-ready
           operator: Exists
           effect: NoSchedule
-        - key: node-role.kubernetes.io/master
+        - key: node.kubernetes.io/role
           operator: Equal
-          value: "true"
+          value: "master"
           effect: NoSchedule
         - key: CriticalAddonsOnly
           operator: Exists
@@ -7374,9 +7374,9 @@ spec:
     spec:
       priorityClassName: system-node-critical
       tolerations:
-      - key: node-role.kubernetes.io/master
+      - key: node.kubernetes.io/role
         operator: Equal
-        value: "true"
+        value: "master"
         effect: NoSchedule
       - operator: "Exists"
         effect: NoExecute
@@ -8774,7 +8774,9 @@ spec:
             weight: 5
       serviceAccountName: coredns
       tolerations:
-        - key: node-role.kubernetes.io/master
+        - key: node.kubernetes.io/role
+          operator: Equal
+          value: "master"
           effect: NoSchedule
         - key: CriticalAddonsOnly
           operator: "Exists"
@@ -10031,9 +10033,9 @@ spec:
         - key: node.kubernetes.io/not-ready
           operator: Exists
           effect: NoSchedule
-        - key: node-role.kubernetes.io/master
+        - key: node.kubernetes.io/role
           operator: Equal
-          value: "true"
+          value: "master"
           effect: NoSchedule
         - key: CriticalAddonsOnly
           operator: Exists
@@ -10385,9 +10387,9 @@ spec:
     spec:
       priorityClassName: system-node-critical
       tolerations:
-      - key: node-role.kubernetes.io/master
+      - key: node.kubernetes.io/role
         operator: Equal
-        value: "true"
+        value: "master"
         effect: NoSchedule
       - operator: "Exists"
         effect: NoExecute
@@ -15031,9 +15033,9 @@ spec:
       tolerations:
       - key: CriticalAddonsOnly
         operator: Exists
-      - key: node-role.kubernetes.io/master
+      - key: node.kubernetes.io/role
         operator: Equal
-        value: "true"
+        value: "master"
         effect: NoSchedule
       - operator: "Exists"
         effect: NoExecute
@@ -15119,9 +15121,9 @@ spec:
       tolerations:
       - key: CriticalAddonsOnly
         operator: Exists
-      - key: node-role.kubernetes.io/master
+      - key: node.kubernetes.io/role
         operator: Equal
-        value: "true"
+        value: "master"
         effect: NoSchedule
       - operator: "Exists"
         effect: NoExecute
@@ -16691,10 +16693,10 @@ spec:
       <hostNet>
       serviceAccountName: cluster-autoscaler
       tolerations:
-      - effect: NoSchedule
-        operator: "Equal"
-        value: "true"
-        key: node-role.kubernetes.io/master
+      - key: node.kubernetes.io/role
+        operator: Equal
+        value: "master"
+        effect: NoSchedule
       nodeSelector:
         node.kubernetes.io/role: master
         beta.kubernetes.io/os: linux
@@ -17421,10 +17423,10 @@ spec:
       nodeSelector:
         beta.kubernetes.io/os: linux
       tolerations:
-        - effect: NoSchedule
-          key: node-role.kubernetes.io/master
+        - key: node.kubernetes.io/role
           operator: Equal
-          value: "true"
+          value: "master"
+          effect: NoSchedule
       volumes:
         - name: host-root
           hostPath:
@@ -17530,8 +17532,8 @@ spec:
             initialDelaySeconds: 60
             periodSeconds: 60
       nodeSelector:
-        node.kubernetes.io/role: agent
         beta.kubernetes.io/os: linux
+        node.kubernetes.io/role: agent
       volumes:
         - name: docker-sock
           hostPath:
@@ -18249,9 +18251,9 @@ spec:
       tolerations:
       - key: CriticalAddonsOnly
         operator: Exists
-      - key: node-role.kubernetes.io/master
+      - key: node.kubernetes.io/role
         operator: Equal
-        value: "true"
+        value: "master"
         effect: NoSchedule
       - operator: "Exists"
         effect: NoExecute
@@ -18291,7 +18293,8 @@ spec:
       - name: telemetry
         hostPath:
           path: /opt/cni/bin
-          type: Directory`)
+          type: Directory
+`)
 
 func k8sContaineraddonsAzureCniNetworkmonitorYamlBytes() ([]byte, error) {
 	return _k8sContaineraddonsAzureCniNetworkmonitorYaml, nil
@@ -18384,9 +18387,9 @@ spec:
       tolerations:
       - key: CriticalAddonsOnly
         operator: Exists
-      - key: node-role.kubernetes.io/master
+      - key: node.kubernetes.io/role
         operator: Equal
-        value: "true"
+        value: "master"
         effect: NoSchedule
       - operator: "Exists"
         effect: NoExecute
@@ -18432,7 +18435,8 @@ data:
     {{else}}
     masqLinkLocal: false
     {{end -}}
-    resyncInterval: 60s`)
+    resyncInterval: 60s
+`)
 
 func k8sContaineraddonsIpMasqAgentYamlBytes() ([]byte, error) {
 	return _k8sContaineraddonsIpMasqAgentYaml, nil
@@ -19941,12 +19945,12 @@ spec:
       <hostNet>
       serviceAccountName: cluster-autoscaler
       tolerations:
-      - effect: NoSchedule
-        operator: "Equal"
-        value: "true"
-        key: node-role.kubernetes.io/master
+      - key: node.kubernetes.io/role
+        operator: Equal
+        value: "master"
+        effect: NoSchedule
       nodeSelector:
-        kubernetes.io/role: master
+        node.kubernetes.io/role: master
         beta.kubernetes.io/os: linux
       containers:
       - image: {{ContainerImage "cluster-autoscaler"}}
@@ -21083,10 +21087,10 @@ spec:
       nodeSelector:
         beta.kubernetes.io/os: linux
       tolerations:
-        - effect: NoSchedule
-          key: node-role.kubernetes.io/master
+        - key: node.kubernetes.io/role
           operator: Equal
-          value: "true"
+          value: "master"
+          effect: NoSchedule
       volumes:
         - name: host-root
           hostPath:
@@ -21192,8 +21196,8 @@ spec:
             initialDelaySeconds: 60
             periodSeconds: 60
       nodeSelector:
+        node.kubernetes.io/role: agent
         beta.kubernetes.io/os: linux
-        kubernetes.io/role: agent
       volumes:
         - name: docker-sock
           hostPath:
