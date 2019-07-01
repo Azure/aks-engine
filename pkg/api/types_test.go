@@ -4408,6 +4408,8 @@ func TestFormatProdFQDNByLocation(t *testing.T) {
 		"santest.usgovarizona.cloudapp.usgovcloudapi.net",
 		"santest.usgovtexas.cloudapp.usgovcloudapi.net",
 		"santest.francecentral.cloudapp.azure.com",
+		"santest.uaenorth.cloudapp.azure.com",
+		"santest.uaecentral.cloudapp.azure.com",
 	}
 
 	if !reflect.DeepEqual(actual, expected) {
@@ -4841,6 +4843,8 @@ func TestGetLocations(t *testing.T) {
 		"usgovarizona",
 		"usgovtexas",
 		"francecentral",
+		"uaenorth",
+		"uaecentral",
 	}
 	actual := mockCSDefault.GetLocations()
 	if !reflect.DeepEqual(expected, actual) {
