@@ -62,7 +62,7 @@ func GetAzureLocations() []string {
 		"usgovtexas",
 		"francecentral",
 		"uaenorth",
-		"uaecentral"
+		"uaecentral",
 	}
 }
 
