@@ -767,7 +767,7 @@ func TestAgentPoolProfileGetKubernetesLabels(t *testing.T) {
 			name:     "vanilla pool profile",
 			ap:       AgentPoolProfile{},
 			rg:       "my-resource-group",
-			expected: "node-role.kubernetes.io/agent=,kubernetes.io/role=agent,agentpool=,kubernetes.azure.com/cluster=my-resource-group",
+			expected: "node.kubernetes.io/role=agent,agentpool=,kubernetes.azure.com/cluster=my-resource-group",
 		},
 		{
 			name: "with managed disk",
@@ -775,7 +775,7 @@ func TestAgentPoolProfileGetKubernetesLabels(t *testing.T) {
 				StorageProfile: ManagedDisks,
 			},
 			rg:       "my-resource-group",
-			expected: "node-role.kubernetes.io/agent=,kubernetes.io/role=agent,agentpool=,storageprofile=managed,storagetier=,kubernetes.azure.com/cluster=my-resource-group",
+			expected: "node.kubernetes.io/role=agent,agentpool=,storageprofile=managed,storagetier=,kubernetes.azure.com/cluster=my-resource-group",
 		},
 		{
 			name: "N series",
@@ -783,7 +783,7 @@ func TestAgentPoolProfileGetKubernetesLabels(t *testing.T) {
 				VMSize: "Standard_NC6",
 			},
 			rg:       "my-resource-group",
-			expected: "node-role.kubernetes.io/agent=,kubernetes.io/role=agent,agentpool=,accelerator=nvidia,kubernetes.azure.com/cluster=my-resource-group",
+			expected: "node.kubernetes.io/role=agent,agentpool=,accelerator=nvidia,kubernetes.azure.com/cluster=my-resource-group",
 		},
 		{
 			name: "with custom labels",
@@ -794,7 +794,7 @@ func TestAgentPoolProfileGetKubernetesLabels(t *testing.T) {
 				},
 			},
 			rg:       "my-resource-group",
-			expected: "node-role.kubernetes.io/agent=,kubernetes.io/role=agent,agentpool=,kubernetes.azure.com/cluster=my-resource-group,mycustomlabel1=foo,mycustomlabel2=bar",
+			expected: "node.kubernetes.io/role=agent,agentpool=,kubernetes.azure.com/cluster=my-resource-group,mycustomlabel1=foo,mycustomlabel2=bar",
 		},
 		{
 			name: "N series and managed disk with custom labels",
@@ -807,7 +807,7 @@ func TestAgentPoolProfileGetKubernetesLabels(t *testing.T) {
 				},
 			},
 			rg:       "my-resource-group",
-			expected: "node-role.kubernetes.io/agent=,kubernetes.io/role=agent,agentpool=,storageprofile=managed,storagetier=Standard_LRS,accelerator=nvidia,kubernetes.azure.com/cluster=my-resource-group,mycustomlabel1=foo,mycustomlabel2=bar",
+			expected: "node.kubernetes.io/role=agent,agentpool=,storageprofile=managed,storagetier=Standard_LRS,accelerator=nvidia,kubernetes.azure.com/cluster=my-resource-group,mycustomlabel1=foo,mycustomlabel2=bar",
 		},
 	}
 

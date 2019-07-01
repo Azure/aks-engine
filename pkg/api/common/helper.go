@@ -239,8 +239,7 @@ func IsSgxEnabledSKU(vmSize string) bool {
 // GetMasterKubernetesLabels returns a k8s API-compliant labels string
 func GetMasterKubernetesLabels(rg string) string {
 	var buf bytes.Buffer
-	buf.WriteString("kubernetes.io/role=master")
-	buf.WriteString(",node-role.kubernetes.io/master=")
+	buf.WriteString("node.kubernetes.io/role=master")
 	buf.WriteString(fmt.Sprintf(",kubernetes.azure.com/cluster=%s", rg))
 	return buf.String()
 }

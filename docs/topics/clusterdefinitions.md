@@ -251,7 +251,7 @@ Below is a list of kubelet options that are _not_ currently user-configurable, e
 | "--cgroups-per-qos"                          | "true"                                           |
 | "--kubeconfig"                               | "/var/lib/kubelet/kubeconfig"                    |
 | "--register-node" (master nodes only)        | "true"                                           |
-| "--register-with-taints" (master nodes only) | "node-role.kubernetes.io/master=true:NoSchedule" |
+| "--register-with-taints" (master nodes only) | "node.kubernetes.io/role=master:NoSchedule"      |
 | "--keep-terminated-pod-volumes"              | "false"                                          |
 
 <a name="feat-controller-manager-config"></a>

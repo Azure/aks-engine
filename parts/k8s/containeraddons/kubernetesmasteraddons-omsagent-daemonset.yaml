@@ -466,8 +466,8 @@ spec:
             initialDelaySeconds: 60
             periodSeconds: 60
       nodeSelector:
+        node.kubernetes.io/role: agent
         beta.kubernetes.io/os: linux
-        kubernetes.io/role: agent
       volumes:
         - name: docker-sock
           hostPath:

@@ -1176,7 +1176,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				nodeList, err := node.Get()
 				Expect(err).NotTo(HaveOccurred())
 				for _, node := range nodeList.Nodes {
-					role := node.Metadata.Labels["kubernetes.io/role"]
+					role := node.Metadata.Labels["node.kubernetes.io/role"]
 					if role == "master" {
 						By("Ensuring that we get zones for each master node")
 						zones := node.Metadata.Labels["failure-domain.beta.kubernetes.io/zone"]
@@ -1196,7 +1196,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				nodeList, err := node.Get()
 				Expect(err).NotTo(HaveOccurred())
 				for _, node := range nodeList.Nodes {
-					role := node.Metadata.Labels["kubernetes.io/role"]
+					role := node.Metadata.Labels["node.kubernetes.io/role"]
 					if role == "agent" {
 						By("Ensuring that we get zones for each agent node")
 						zones := node.Metadata.Labels["failure-domain.beta.kubernetes.io/zone"]

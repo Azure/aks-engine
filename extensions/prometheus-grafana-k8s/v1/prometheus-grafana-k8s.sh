@@ -34,7 +34,7 @@ then
 fi
 
 master_nodes() {
-    kubectl get no -L kubernetes.io/role -l kubernetes.io/role=master --no-headers -o jsonpath="{.items[*].metadata.name}" | tr " " "\n" | sort | head -n 1
+    kubectl get no -L node.kubernetes.io/role -l node.kubernetes.io/role=master --no-headers -o jsonpath="{.items[*].metadata.name}" | tr " " "\n" | sort | head -n 1
 }
 
 wait_for_master_nodes() {
@@ -61,7 +61,7 @@ wait_for_master_nodes() {
 }
 
 agent_nodes() {
-    kubectl get no -L kubernetes.io/role -l kubernetes.io/role=agent --no-headers -o jsonpath="{.items[*].metadata.name}" | tr " " "\n" | sort | head -n 1
+    kubectl get no -L node.kubernetes.io/role -l node.kubernetes.io/role=agent --no-headers -o jsonpath="{.items[*].metadata.name}" | tr " " "\n" | sort | head -n 1
 }
 
 wait_for_agent_nodes() {
@@ -105,7 +105,7 @@ should_this_node_run_extension() {
 }
 
 storageclass_param() {
-	if kubectl get no -l kubernetes.io/role=agent -l storageprofile=managed --no-headers -o jsonpath="{.items[0].metadata.name}" >/dev/null 2>&1; then
+	if kubectl get no -l node.kubernetes.io/role=agent -l storageprofile=managed --no-headers -o jsonpath="{.items[0].metadata.name}" >/dev/null 2>&1; then
 		echo '--set server.persistentVolume.storageClass=managed-standard'
 	fi
 }
@@ -311,7 +311,7 @@ if ! wait_for_agent_nodes; then
 fi
 
 echo "$(date) - Dumping out sorted agent nodes"
-kubectl get no -L kubernetes.io/role -l kubernetes.io/role=agent --no-headers -o jsonpath="{.items[*].metadata.name}" | tr " " "\n" | sort
+kubectl get no -L node.kubernetes.io/role -l node.kubernetes.io/role=agent --no-headers -o jsonpath="{.items[*].metadata.name}" | tr " " "\n" | sort
 
 if ! should_this_node_run_extension; then
     echo $(date) " - Not the first master node or the first agent node, no longer continuing extension. Exiting"

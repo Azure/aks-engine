@@ -20,4 +20,4 @@ spec:
   - operator: "Exists"
     effect: NoSchedule
   nodeSelector:
-    kubernetes.io/role: master
+    node.kubernetes.io/role: master

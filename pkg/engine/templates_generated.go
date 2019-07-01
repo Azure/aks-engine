@@ -14450,7 +14450,7 @@ MASTER_CONTAINER_ADDONS_PLACEHOLDER
 {{if IsKubernetesVersionGe "1.6.0"}}
   {{if AnyAgentIsLinux}}
     KUBELET_REGISTER_NODE=--register-node=true
-    KUBELET_REGISTER_WITH_TAINTS=--register-with-taints=node-role.kubernetes.io/master=true:NoSchedule
+    KUBELET_REGISTER_WITH_TAINTS=--register-with-taints=node.kubernetes.io/role=master:NoSchedule
   {{end}}
 {{else}}
     KUBELET_REGISTER_SCHEDULABLE={{WrapAsVariable "registerSchedulable"}}
@@ -16696,7 +16696,7 @@ spec:
         value: "true"
         key: node-role.kubernetes.io/master
       nodeSelector:
-        kubernetes.io/role: master
+        node.kubernetes.io/role: master
         beta.kubernetes.io/os: linux
       containers:
       - image: {{ContainerImage "cluster-autoscaler"}}
@@ -17530,8 +17530,8 @@ spec:
             initialDelaySeconds: 60
             periodSeconds: 60
       nodeSelector:
+        node.kubernetes.io/role: agent
         beta.kubernetes.io/os: linux
-        kubernetes.io/role: agent
       volumes:
         - name: docker-sock
           hostPath:
