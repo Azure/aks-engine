@@ -82,7 +82,7 @@ func newScaleCmd() *cobra.Command {
 	f.IntVarP(&sc.newDesiredAgentCount, "new-node-count", "c", 0, "desired number of nodes")
 	f.StringVar(&sc.agentPoolToScale, "node-pool", "", "node pool to scale")
 	f.StringVar(&sc.masterFQDN, "master-FQDN", "", "FQDN for the master load balancer that maps to the apiserver endpoint")
-	f.StringVar(&sc.masterFQDN, "apiserver", "", "apiserver endpoint, needed to cordon/drain VMs")
+	f.StringVar(&sc.masterFQDN, "apiserver", "", "apiserver endpoint (required to cordon and drain nodes)")
 
 	f.MarkDeprecated("deployment-dir", "--deployment-dir is no longer required for scale or upgrade. Please use --api-model.")
 	f.MarkDeprecated("master-FQDN", "--apiserver is preferred")
@@ -310,7 +310,7 @@ func (sc *scaleCmd) run(cmd *cobra.Command, args []string) error {
 		if currentNodeCount > sc.newDesiredAgentCount {
 			if sc.apiserverURL == "" {
 				cmd.Usage()
-				return errors.New("--apiserver (or the deprecated --master-FQDN) is required to scale down a kubernetes cluster's agent pool")
+				return errors.New("--apiserver is required to scale down a kubernetes cluster's agent pool")
 			}
 
 			if sc.nodes != nil {
@@ -339,7 +339,7 @@ func (sc *scaleCmd) run(cmd *cobra.Command, args []string) error {
 			}
 
 			for _, node := range vmsToDelete {
-				sc.logger.Infof("Node %s will be cordon/drained\n", node)
+				sc.logger.Infof("Node %s will be cordoned and drained\n", node)
 			}
 			if orchestratorInfo.OrchestratorType == api.Kubernetes {
 				err := sc.drainNodes(vmsToDelete)
@@ -397,7 +397,7 @@ func (sc *scaleCmd) run(cmd *cobra.Command, args []string) error {
 						sc.printScaleTargetEqualsExisting(currentNodeCount)
 						return nil
 					} else if int(*vmss.Sku.Capacity) > sc.newDesiredAgentCount {
-						log.Warnf("VMSS scale down is an alpha feature: VMSS VM nodes will not be cordon/drained before scaling down!")
+						log.Warnf("VMSS scale down is an alpha feature: VMSS VM nodes will not be cordoned and drained before scaling down!")
 					}
 				}
 
