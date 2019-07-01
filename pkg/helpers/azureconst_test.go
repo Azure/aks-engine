@@ -57,8 +57,8 @@ func TestGetAzureLocations(t *testing.T) {
 		"usgoviowa":          {},
 		"usgovarizona":       {},
 		"usgovtexas":         {},
-		"uaenorth":	      {},
-		"uaecentral":	      {},
+		"uaenorth":           {},
+		"uaecentral":         {},
 	}
 
 	locations := GetAzureLocations()
