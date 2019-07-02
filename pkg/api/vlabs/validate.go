@@ -303,12 +303,14 @@ func (a *Properties) ValidateOrchestratorProfile(isUpdate bool) error {
 						return errors.New("useInstanceMetadata shouldn't be set to true as feature not yet supported on Azure Stack")
 					}
 
-					etcdDiskSizeGB, err := strconv.Atoi(o.KubernetesConfig.EtcdDiskSizeGB)
-					if err != nil {
-						return errors.Errorf("could not convert EtcdDiskSizeGB to int")
-					}
-					if etcdDiskSizeGB > MaxAzureStackManagedDiskSize {
-						return errors.Errorf("EtcdDiskSizeGB max size supported on Azure Stack is %d", MaxAzureStackManagedDiskSize)
+					if o.KubernetesConfig.EtcdDiskSizeGB != "" {
+						etcdDiskSizeGB, err := strconv.Atoi(o.KubernetesConfig.EtcdDiskSizeGB)
+						if err != nil {
+							return errors.Errorf("could not convert EtcdDiskSizeGB to int")
+						}
+						if etcdDiskSizeGB > MaxAzureStackManagedDiskSize {
+							return errors.Errorf("EtcdDiskSizeGB max size supported on Azure Stack is %d", MaxAzureStackManagedDiskSize)
+						}
 					}
 				}
 			}
