@@ -235,14 +235,14 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpgrade, isScale bool) {
 			case a.TotalNodes() > 20:
 				if a.IsAzureStackCloud() {
 					// Currently on Azure Stack max size of managed disk size is 1023GB.
-					a.OrchestratorProfile.KubernetesConfig.EtcdDiskSizeGB = DefaultAzureStackEtcdDiskSizeGT10Nodes
+					a.OrchestratorProfile.KubernetesConfig.EtcdDiskSizeGB = MaxAzureStackManagedDiskSize
 				} else {
 					a.OrchestratorProfile.KubernetesConfig.EtcdDiskSizeGB = DefaultEtcdDiskSizeGT20Nodes
 				}
 			case a.TotalNodes() > 10:
 				if a.IsAzureStackCloud() {
 					// Currently on Azure Stack max size of managed disk size is 1023GB.
-					a.OrchestratorProfile.KubernetesConfig.EtcdDiskSizeGB = DefaultAzureStackEtcdDiskSizeGT10Nodes
+					a.OrchestratorProfile.KubernetesConfig.EtcdDiskSizeGB = MaxAzureStackManagedDiskSize
 				} else {
 					a.OrchestratorProfile.KubernetesConfig.EtcdDiskSizeGB = DefaultEtcdDiskSizeGT10Nodes
 				}

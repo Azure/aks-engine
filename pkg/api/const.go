@@ -253,8 +253,8 @@ const (
 	// DefaultAzureStackFaultDomainCount set to 3 as Azure Stack today has minimum 4 node deployment.
 	DefaultAzureStackFaultDomainCount = 3
 
-	// DefaultAzureStackEtcdDiskSizeGT10Nodes = size for Kubernetes master etcd disk volumes in GB if > 10 nodes
-	DefaultAzureStackEtcdDiskSizeGT10Nodes = "1023"
+	// MaxAzureStackManagedDiskSize = size for Kubernetes master etcd disk volumes in GB if > 10 nodes as this is max what Azure Stack supports today.
+	MaxAzureStackManagedDiskSize = "1023"
 )
 
 // WindowsProfile defaults

@@ -2545,9 +2545,9 @@ func TestEtcdDiskSizeOnAzureStack(t *testing.T) {
 	)
 
 	mockCS.SetPropertiesDefaults(false, false)
-	if mockCS.Properties.OrchestratorProfile.KubernetesConfig.EtcdDiskSizeGB != DefaultAzureStackEtcdDiskSizeGT10Nodes {
+	if mockCS.Properties.OrchestratorProfile.KubernetesConfig.EtcdDiskSizeGB != MaxAzureStackManagedDiskSize {
 		t.Fatalf("EtcdDiskSizeGB did not have the expected size, got %s, expected %s",
-			mockCS.Properties.OrchestratorProfile.KubernetesConfig.EtcdDiskSizeGB, DefaultAzureStackEtcdDiskSizeGT10Nodes)
+			mockCS.Properties.OrchestratorProfile.KubernetesConfig.EtcdDiskSizeGB, MaxAzureStackManagedDiskSize)
 	}
 
 	// Case where total node count is 21.
@@ -2570,9 +2570,9 @@ func TestEtcdDiskSizeOnAzureStack(t *testing.T) {
 	)
 
 	mockCS.SetPropertiesDefaults(false, false)
-	if mockCS.Properties.OrchestratorProfile.KubernetesConfig.EtcdDiskSizeGB != DefaultAzureStackEtcdDiskSizeGT10Nodes {
+	if mockCS.Properties.OrchestratorProfile.KubernetesConfig.EtcdDiskSizeGB != MaxAzureStackManagedDiskSize {
 		t.Fatalf("EtcdDiskSizeGB did not have the expected size, got %s, expected %s",
-			mockCS.Properties.OrchestratorProfile.KubernetesConfig.EtcdDiskSizeGB, DefaultAzureStackEtcdDiskSizeGT10Nodes)
+			mockCS.Properties.OrchestratorProfile.KubernetesConfig.EtcdDiskSizeGB, MaxAzureStackManagedDiskSize)
 	}
 
 	// Case where total node count is 55 but EtcdDiskSizeGB size is passed
