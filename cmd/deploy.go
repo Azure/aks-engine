@@ -12,7 +12,6 @@ import (
 	"path"
 	"path/filepath"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/leonelquinteros/gotext"
@@ -77,11 +76,15 @@ func newDeployCmd() *cobra.Command {
 			if err := dc.mergeAPIModel(); err != nil {
 				return errors.Wrap(err, "merging API model in deployCmd")
 			}
-			if err := dc.loadAPIModel(cmd, args); err != nil {
+			if err := dc.loadAPIModel(); err != nil {
 				return errors.Wrap(err, "loading API model")
 			}
-			if _, _, err := dc.validateApimodel(); err != nil {
-				return errors.Wrap(err, "validating API model after populating values")
+			if dc.apiVersion == "vlabs" {
+				if err := dc.validateAPIModelAsVLabs(); err != nil {
+					return errors.Wrap(err, "validating API model after populating values")
+				}
+			} else {
+				log.Warnf("API model validation is only available for \"apiVersion\": \"vlabs\", skipping validation...")
 			}
 			return dc.run()
 		},
@@ -171,7 +174,7 @@ func (dc *deployCmd) mergeAPIModel() error {
 	return nil
 }
 
-func (dc *deployCmd) loadAPIModel(cmd *cobra.Command, args []string) error {
+func (dc *deployCmd) loadAPIModel() error {
 	var caCertificateBytes []byte
 	var caKeyBytes []byte
 	var err error
@@ -354,28 +357,9 @@ func autofillApimodel(dc *deployCmd) error {
 	return nil
 }
 
-func (dc *deployCmd) validateApimodel() (*api.ContainerService, string, error) {
-	apiloader := &api.Apiloader{
-		Translator: &i18n.Translator{
-			Locale: dc.locale,
-		},
-	}
-
-	p := dc.containerService.Properties
-	if strings.ToLower(p.OrchestratorProfile.OrchestratorType) == "kubernetes" {
-		if p.ServicePrincipalProfile == nil || (p.ServicePrincipalProfile.ClientID == "" || (p.ServicePrincipalProfile.Secret == "" && p.ServicePrincipalProfile.KeyvaultSecretRef == nil)) {
-			if p.OrchestratorProfile.KubernetesConfig != nil && !p.OrchestratorProfile.KubernetesConfig.UseManagedIdentity {
-				return nil, "", errors.New("when using the kubernetes orchestrator, must either set useManagedIdentity in the kubernetes config or set --client-id and --client-secret or KeyvaultSecretRef of secret (also available in the API model)")
-			}
-		}
-	}
-
-	// This isn't terribly elegant, but it's the easiest way to go for now w/o duplicating a bunch of code
-	rawVersionedAPIModel, err := apiloader.SerializeContainerService(dc.containerService, dc.apiVersion)
-	if err != nil {
-		return nil, "", err
-	}
-	return apiloader.DeserializeContainerService(rawVersionedAPIModel, true, false, nil)
+// validateAPIModelAsVLabs converts the ContainerService object to a vlabs ContainerService object and validates it
+func (dc *deployCmd) validateAPIModelAsVLabs() error {
+	return api.ConvertContainerServiceToVLabs(dc.containerService).Validate(false)
 }
 
 func (dc *deployCmd) run() error {

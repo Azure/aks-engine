@@ -34,6 +34,8 @@ Install-OpenSSH {
     Write-Host "Setting required permissions..."
     icacls $adminpath\$adminfile /remove "NT AUTHORITY\Authenticated Users"
     icacls $adminpath\$adminfile /inheritance:r
+    icacls $adminpath\$adminfile /grant SYSTEM:`(F`)
+    icacls $adminpath\$adminfile /grant BUILTIN\Administrators:`(F`)
 
     Write-Host "Restarting sshd service..."
     Restart-Service sshd

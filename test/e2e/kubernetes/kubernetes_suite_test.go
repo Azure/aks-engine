@@ -4,13 +4,15 @@
 package kubernetes_test
 
 import (
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
-
 	"testing"
+
+	. "github.com/onsi/ginkgo"
+	"github.com/onsi/ginkgo/reporters"
+	. "github.com/onsi/gomega"
 )
 
 func TestKubernetes(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "Kubernetes Suite")
+	junitReporter := reporters.NewJUnitReporter("junit.xml")
+	RunSpecsWithDefaultAndCustomReporters(t, "Kubernetes Suite", []Reporter{junitReporter})
 }

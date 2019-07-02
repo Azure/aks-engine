@@ -44,6 +44,8 @@ func TestGetAzureLocations(t *testing.T) {
 		"southindia":         {},
 		"uksouth":            {},
 		"ukwest":             {},
+		"usdodcentral":       {},
+		"usdodeast":          {},
 		"westcentralus":      {},
 		"westeurope":         {},
 		"westindia":          {},
@@ -55,6 +57,8 @@ func TestGetAzureLocations(t *testing.T) {
 		"usgoviowa":          {},
 		"usgovarizona":       {},
 		"usgovtexas":         {},
+		"uaenorth":           {},
+		"uaecentral":         {},
 	}
 
 	locations := GetAzureLocations()
@@ -99,36 +103,28 @@ func TestGetDCOSMasterAllowedSizes(t *testing.T) {
 		"Standard_B8ms",
 		"Standard_D11",
 		"Standard_D11_v2",
-		"Standard_D11_v2_Promo",
 		"Standard_D12",
 		"Standard_D12_v2",
-		"Standard_D12_v2_Promo",
 		"Standard_D13",
 		"Standard_D13_v2",
-		"Standard_D13_v2_Promo",
 		"Standard_D14",
 		"Standard_D14_v2",
-		"Standard_D14_v2_Promo",
 		"Standard_D15_v2",
 		"Standard_D16_v3",
 		"Standard_D16s_v3",
 		"Standard_D2",
 		"Standard_D2_v2",
-		"Standard_D2_v2_Promo",
 		"Standard_D2_v3",
 		"Standard_D2s_v3",
 		"Standard_D3",
 		"Standard_D32_v3",
 		"Standard_D32s_v3",
 		"Standard_D3_v2",
-		"Standard_D3_v2_Promo",
 		"Standard_D4",
 		"Standard_D4_v2",
-		"Standard_D4_v2_Promo",
 		"Standard_D4_v3",
 		"Standard_D4s_v3",
 		"Standard_D5_v2",
-		"Standard_D5_v2_Promo",
 		"Standard_D64_v3",
 		"Standard_D64s_v3",
 		"Standard_D8_v3",
@@ -138,31 +134,24 @@ func TestGetDCOSMasterAllowedSizes(t *testing.T) {
 		"Standard_DS11",
 		"Standard_DS11-1_v2",
 		"Standard_DS11_v2",
-		"Standard_DS11_v2_Promo",
 		"Standard_DS12",
 		"Standard_DS12-1_v2",
 		"Standard_DS12-2_v2",
 		"Standard_DS12_v2",
-		"Standard_DS12_v2_Promo",
 		"Standard_DS13",
 		"Standard_DS13-2_v2",
 		"Standard_DS13-4_v2",
 		"Standard_DS13_v2",
-		"Standard_DS13_v2_Promo",
 		"Standard_DS14",
 		"Standard_DS14-4_v2",
 		"Standard_DS14-8_v2",
 		"Standard_DS14_v2",
-		"Standard_DS14_v2_Promo",
 		"Standard_DS15_v2",
 		"Standard_DS3",
 		"Standard_DS3_v2",
-		"Standard_DS3_v2_Promo",
 		"Standard_DS4",
 		"Standard_DS4_v2",
-		"Standard_DS4_v2_Promo",
 		"Standard_DS5_v2",
-		"Standard_DS5_v2_Promo",
 		"Standard_E16-4s_v3",
 		"Standard_E16-8s_v3",
 		"Standard_E16_v3",
@@ -292,9 +281,9 @@ func TestGetDCOSMasterAllowedSizes(t *testing.T) {
 }
 
 func TestKubernetesAllowedSizes(t *testing.T) {
-	sizes := GetKubernetesAllowedSizes()
+	sizes := GetKubernetesAllowedVMSKUs()
 	if len(sizes) == 0 {
-		t.Errorf("expected GetKubernetesAllowedSizes to return a non empty string")
+		t.Errorf("expected GetKubernetesAllowedVMSKUs to return a non empty string")
 	}
 
 	expectedSizes := []string{
@@ -327,37 +316,29 @@ func TestKubernetesAllowedSizes(t *testing.T) {
 		"Standard_D1",
 		"Standard_D11",
 		"Standard_D11_v2",
-		"Standard_D11_v2_Promo",
 		"Standard_D12",
 		"Standard_D12_v2",
-		"Standard_D12_v2_Promo",
 		"Standard_D13",
 		"Standard_D13_v2",
-		"Standard_D13_v2_Promo",
 		"Standard_D14",
 		"Standard_D14_v2",
-		"Standard_D14_v2_Promo",
 		"Standard_D15_v2",
 		"Standard_D16_v3",
 		"Standard_D16s_v3",
 		"Standard_D1_v2",
 		"Standard_D2",
 		"Standard_D2_v2",
-		"Standard_D2_v2_Promo",
 		"Standard_D2_v3",
 		"Standard_D2s_v3",
 		"Standard_D3",
 		"Standard_D32_v3",
 		"Standard_D32s_v3",
 		"Standard_D3_v2",
-		"Standard_D3_v2_Promo",
 		"Standard_D4",
 		"Standard_D4_v2",
-		"Standard_D4_v2_Promo",
 		"Standard_D4_v3",
 		"Standard_D4s_v3",
 		"Standard_D5_v2",
-		"Standard_D5_v2_Promo",
 		"Standard_D64_v3",
 		"Standard_D64s_v3",
 		"Standard_D8_v3",
@@ -368,35 +349,27 @@ func TestKubernetesAllowedSizes(t *testing.T) {
 		"Standard_DS11",
 		"Standard_DS11-1_v2",
 		"Standard_DS11_v2",
-		"Standard_DS11_v2_Promo",
 		"Standard_DS12",
 		"Standard_DS12-1_v2",
 		"Standard_DS12-2_v2",
 		"Standard_DS12_v2",
-		"Standard_DS12_v2_Promo",
 		"Standard_DS13",
 		"Standard_DS13-2_v2",
 		"Standard_DS13-4_v2",
 		"Standard_DS13_v2",
-		"Standard_DS13_v2_Promo",
 		"Standard_DS14",
 		"Standard_DS14-4_v2",
 		"Standard_DS14-8_v2",
 		"Standard_DS14_v2",
-		"Standard_DS14_v2_Promo",
 		"Standard_DS15_v2",
 		"Standard_DS1_v2",
 		"Standard_DS2",
 		"Standard_DS2_v2",
-		"Standard_DS2_v2_Promo",
 		"Standard_DS3",
 		"Standard_DS3_v2",
-		"Standard_DS3_v2_Promo",
 		"Standard_DS4",
 		"Standard_DS4_v2",
-		"Standard_DS4_v2_Promo",
 		"Standard_DS5_v2",
-		"Standard_DS5_v2_Promo",
 		"Standard_E16-4s_v3",
 		"Standard_E16-8s_v3",
 		"Standard_E16_v3",
@@ -617,16 +590,10 @@ func TestGetSizeMap(t *testing.T) {
 		"Standard_D11_v2": map[string]string{
 			"storageAccountType": "Standard_LRS",
 		},
-		"Standard_D11_v2_Promo": map[string]string{
-			"storageAccountType": "Standard_LRS",
-		},
 		"Standard_D12": map[string]string{
 			"storageAccountType": "Standard_LRS",
 		},
 		"Standard_D12_v2": map[string]string{
-			"storageAccountType": "Standard_LRS",
-		},
-		"Standard_D12_v2_Promo": map[string]string{
 			"storageAccountType": "Standard_LRS",
 		},
 		"Standard_D13": map[string]string{
@@ -635,16 +602,10 @@ func TestGetSizeMap(t *testing.T) {
 		"Standard_D13_v2": map[string]string{
 			"storageAccountType": "Standard_LRS",
 		},
-		"Standard_D13_v2_Promo": map[string]string{
-			"storageAccountType": "Standard_LRS",
-		},
 		"Standard_D14": map[string]string{
 			"storageAccountType": "Standard_LRS",
 		},
 		"Standard_D14_v2": map[string]string{
-			"storageAccountType": "Standard_LRS",
-		},
-		"Standard_D14_v2_Promo": map[string]string{
 			"storageAccountType": "Standard_LRS",
 		},
 		"Standard_D15_v2": map[string]string{
@@ -665,9 +626,6 @@ func TestGetSizeMap(t *testing.T) {
 		"Standard_D2_v2": map[string]string{
 			"storageAccountType": "Standard_LRS",
 		},
-		"Standard_D2_v2_Promo": map[string]string{
-			"storageAccountType": "Standard_LRS",
-		},
 		"Standard_D2_v3": map[string]string{
 			"storageAccountType": "Standard_LRS",
 		},
@@ -686,16 +644,10 @@ func TestGetSizeMap(t *testing.T) {
 		"Standard_D3_v2": map[string]string{
 			"storageAccountType": "Standard_LRS",
 		},
-		"Standard_D3_v2_Promo": map[string]string{
-			"storageAccountType": "Standard_LRS",
-		},
 		"Standard_D4": map[string]string{
 			"storageAccountType": "Standard_LRS",
 		},
 		"Standard_D4_v2": map[string]string{
-			"storageAccountType": "Standard_LRS",
-		},
-		"Standard_D4_v2_Promo": map[string]string{
 			"storageAccountType": "Standard_LRS",
 		},
 		"Standard_D4_v3": map[string]string{
@@ -705,9 +657,6 @@ func TestGetSizeMap(t *testing.T) {
 			"storageAccountType": "Premium_LRS",
 		},
 		"Standard_D5_v2": map[string]string{
-			"storageAccountType": "Standard_LRS",
-		},
-		"Standard_D5_v2_Promo": map[string]string{
 			"storageAccountType": "Standard_LRS",
 		},
 		"Standard_D64_v3": map[string]string{
@@ -740,9 +689,6 @@ func TestGetSizeMap(t *testing.T) {
 		"Standard_DS11_v2": map[string]string{
 			"storageAccountType": "Premium_LRS",
 		},
-		"Standard_DS11_v2_Promo": map[string]string{
-			"storageAccountType": "Premium_LRS",
-		},
 		"Standard_DS12": map[string]string{
 			"storageAccountType": "Premium_LRS",
 		},
@@ -753,9 +699,6 @@ func TestGetSizeMap(t *testing.T) {
 			"storageAccountType": "Premium_LRS",
 		},
 		"Standard_DS12_v2": map[string]string{
-			"storageAccountType": "Premium_LRS",
-		},
-		"Standard_DS12_v2_Promo": map[string]string{
 			"storageAccountType": "Premium_LRS",
 		},
 		"Standard_DS13": map[string]string{
@@ -770,9 +713,6 @@ func TestGetSizeMap(t *testing.T) {
 		"Standard_DS13_v2": map[string]string{
 			"storageAccountType": "Premium_LRS",
 		},
-		"Standard_DS13_v2_Promo": map[string]string{
-			"storageAccountType": "Premium_LRS",
-		},
 		"Standard_DS14": map[string]string{
 			"storageAccountType": "Premium_LRS",
 		},
@@ -783,9 +723,6 @@ func TestGetSizeMap(t *testing.T) {
 			"storageAccountType": "Premium_LRS",
 		},
 		"Standard_DS14_v2": map[string]string{
-			"storageAccountType": "Premium_LRS",
-		},
-		"Standard_DS14_v2_Promo": map[string]string{
 			"storageAccountType": "Premium_LRS",
 		},
 		"Standard_DS15_v2": map[string]string{
@@ -800,16 +737,10 @@ func TestGetSizeMap(t *testing.T) {
 		"Standard_DS2_v2": map[string]string{
 			"storageAccountType": "Premium_LRS",
 		},
-		"Standard_DS2_v2_Promo": map[string]string{
-			"storageAccountType": "Premium_LRS",
-		},
 		"Standard_DS3": map[string]string{
 			"storageAccountType": "Premium_LRS",
 		},
 		"Standard_DS3_v2": map[string]string{
-			"storageAccountType": "Premium_LRS",
-		},
-		"Standard_DS3_v2_Promo": map[string]string{
 			"storageAccountType": "Premium_LRS",
 		},
 		"Standard_DS4": map[string]string{
@@ -818,13 +749,7 @@ func TestGetSizeMap(t *testing.T) {
 		"Standard_DS4_v2": map[string]string{
 			"storageAccountType": "Premium_LRS",
 		},
-		"Standard_DS4_v2_Promo": map[string]string{
-			"storageAccountType": "Premium_LRS",
-		},
 		"Standard_DS5_v2": map[string]string{
-			"storageAccountType": "Premium_LRS",
-		},
-		"Standard_DS5_v2_Promo": map[string]string{
 			"storageAccountType": "Premium_LRS",
 		},
 		"Standard_E16-4s_v3": map[string]string{

@@ -14,22 +14,27 @@ import (
 func CreateNetworkInterfaces(cs *api.ContainerService) NetworkInterfaceARM {
 
 	var dependencies []string
-	if cs.Properties.MasterProfile.IsCustomVNET() {
+	if cs.Properties.MasterProfile != nil && cs.Properties.MasterProfile.IsCustomVNET() {
 		dependencies = append(dependencies, "[variables('nsgID')]")
 	} else {
 		dependencies = append(dependencies, "[variables('vnetID')]")
 	}
 
-	dependencies = append(dependencies, "[variables('masterLbName')]")
-
-	if cs.Properties.MasterProfile.Count > 1 {
+	if cs.Properties.MasterProfile != nil && cs.Properties.MasterProfile.HasMultipleNodes() {
 		dependencies = append(dependencies, "[variables('masterInternalLbName')]")
 	}
 
-	hasCosmosEtcd := nil != cs.Properties.MasterProfile && to.Bool(cs.Properties.MasterProfile.CosmosEtcd)
-
-	if hasCosmosEtcd {
+	if cs.Properties.MasterProfile != nil && cs.Properties.MasterProfile.HasCosmosEtcd() {
 		dependencies = append(dependencies, "[resourceId('Microsoft.DocumentDB/databaseAccounts/', variables('cosmosAccountName'))]")
+	}
+
+	lbBackendAddressPools := []network.BackendAddressPool{}
+	if !cs.Properties.OrchestratorProfile.IsPrivateCluster() {
+		dependencies = append(dependencies, "[variables('masterLbName')]")
+		publicLbPool := network.BackendAddressPool{
+			ID: to.StringPtr("[concat(variables('masterLbID'), '/backendAddressPools/', variables('masterLbBackendPoolName'))]"),
+		}
+		lbBackendAddressPools = append(lbBackendAddressPools, publicLbPool)
 	}
 
 	armResource := ARMResource{
@@ -41,13 +46,7 @@ func CreateNetworkInterfaces(cs *api.ContainerService) NetworkInterfaceARM {
 		DependsOn: dependencies,
 	}
 
-	lbBackendAddressPools := []network.BackendAddressPool{
-		{
-			ID: to.StringPtr("[concat(variables('masterLbID'), '/backendAddressPools/', variables('masterLbBackendPoolName'))]"),
-		},
-	}
-
-	if cs.Properties.MasterProfile.Count > 1 {
+	if cs.Properties.MasterProfile != nil && cs.Properties.MasterProfile.HasMultipleNodes() {
 		internalLbPool := network.BackendAddressPool{
 			ID: to.StringPtr("[concat(variables('masterInternalLbID'), '/backendAddressPools/', variables('masterLbBackendPoolName'))]"),
 		}
@@ -58,18 +57,22 @@ func CreateNetworkInterfaces(cs *api.ContainerService) NetworkInterfaceARM {
 		Name: to.StringPtr("ipconfig1"),
 		InterfaceIPConfigurationPropertiesFormat: &network.InterfaceIPConfigurationPropertiesFormat{
 			LoadBalancerBackendAddressPools: &lbBackendAddressPools,
-			LoadBalancerInboundNatRules: &[]network.InboundNatRule{
-				{
-					ID: to.StringPtr("[concat(variables('masterLbID'),'/inboundNatRules/SSH-',variables('masterVMNamePrefix'),copyIndex(variables('masterOffset')))]"),
-				},
-			},
-			PrivateIPAddress:          to.StringPtr("[variables('masterPrivateIpAddrs')[copyIndex(variables('masterOffset'))]]"),
-			Primary:                   to.BoolPtr(true),
-			PrivateIPAllocationMethod: network.Static,
+			PrivateIPAddress:                to.StringPtr("[variables('masterPrivateIpAddrs')[copyIndex(variables('masterOffset'))]]"),
+			Primary:                         to.BoolPtr(true),
+			PrivateIPAllocationMethod:       network.Static,
 			Subnet: &network.Subnet{
 				ID: to.StringPtr("[variables('vnetSubnetID')]"),
 			},
 		},
+	}
+
+	if !cs.Properties.OrchestratorProfile.IsPrivateCluster() {
+		publicNatRules := []network.InboundNatRule{
+			{
+				ID: to.StringPtr("[concat(variables('masterLbID'),'/inboundNatRules/SSH-',variables('masterVMNamePrefix'),copyIndex(variables('masterOffset')))]"),
+			},
+		}
+		loadBalancerIPConfig.LoadBalancerInboundNatRules = &publicNatRules
 	}
 
 	isAzureCNI := cs.Properties.OrchestratorProfile.IsAzureCNI()
@@ -88,6 +91,22 @@ func CreateNetworkInterfaces(cs *api.ContainerService) NetworkInterfaceARM {
 		}
 	}
 
+	// add ipv6 nic config for dual stack
+	if cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6DualStack") {
+		ipv6Config := network.InterfaceIPConfiguration{
+			Name: to.StringPtr("ipconfigv6"),
+			InterfaceIPConfigurationPropertiesFormat: &network.InterfaceIPConfigurationPropertiesFormat{
+				PrivateIPAddressVersion: "IPv6",
+				Primary:                 to.BoolPtr(false),
+				Subnet: &network.Subnet{
+					ID: to.StringPtr("[variables('vnetSubnetID')]"),
+				},
+			},
+		}
+
+		ipConfigurations = append(ipConfigurations, ipv6Config)
+	}
+
 	linuxProfile := cs.Properties.LinuxProfile
 	if linuxProfile != nil && linuxProfile.HasCustomNodesDNS() {
 		nicProperties.DNSSettings = &network.InterfaceDNSSettings{
@@ -97,7 +116,7 @@ func CreateNetworkInterfaces(cs *api.ContainerService) NetworkInterfaceARM {
 		}
 	}
 
-	if cs.Properties.MasterProfile.IsCustomVNET() {
+	if cs.Properties.MasterProfile != nil && cs.Properties.MasterProfile.IsCustomVNET() {
 		nicProperties.NetworkSecurityGroup = &network.SecurityGroup{
 			ID: to.StringPtr("[variables('nsgID')]"),
 		}
@@ -124,7 +143,7 @@ func createPrivateClusterNetworkInterface(cs *api.ContainerService) NetworkInter
 		dependencies = append(dependencies, "[variables('vnetID')]")
 	}
 
-	if cs.Properties.MasterProfile.Count > 1 {
+	if cs.Properties.MasterProfile.HasMultipleNodes() {
 		dependencies = append(dependencies, "[variables('masterInternalLbName')]")
 	}
 
@@ -139,7 +158,7 @@ func createPrivateClusterNetworkInterface(cs *api.ContainerService) NetworkInter
 
 	var lbBackendAddressPools []network.BackendAddressPool
 
-	if cs.Properties.MasterProfile.Count > 1 {
+	if cs.Properties.MasterProfile.HasMultipleNodes() {
 		internalLbPool := network.BackendAddressPool{
 			ID: to.StringPtr("[concat(variables('masterInternalLbID'), '/backendAddressPools/', variables('masterLbBackendPoolName'))]"),
 		}
@@ -228,11 +247,7 @@ func createJumpboxNetworkInterface(cs *api.ContainerService) NetworkInterfaceARM
 
 	armResource := ARMResource{
 		APIVersion: "[variables('apiVersionNetwork')]",
-		Copy: map[string]string{
-			"count": "[sub(variables('masterCount'), variables('masterOffset'))]",
-			"name":  "nicLoopNode",
-		},
-		DependsOn: dependencies,
+		DependsOn:  dependencies,
 	}
 
 	nicProperties := network.InterfacePropertiesFormat{
@@ -258,7 +273,7 @@ func createJumpboxNetworkInterface(cs *api.ContainerService) NetworkInterfaceARM
 
 	networkInterface := network.Interface{
 		Location:                  to.StringPtr("[variables('location')]"),
-		Name:                      to.StringPtr("[concat(variables('masterVMNamePrefix'), 'nic-', copyIndex(variables('masterOffset')))]"),
+		Name:                      to.StringPtr("[variables('jumpboxNetworkInterfaceName')]"),
 		InterfacePropertiesFormat: &nicProperties,
 		Type:                      to.StringPtr("Microsoft.Network/networkInterfaces"),
 	}
@@ -345,7 +360,38 @@ func createAgentVMASNetworkInterface(cs *api.ContainerService, profile *api.Agen
 				}
 			}
 		}
+
+		if cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6DualStack") {
+			var backendPools []network.BackendAddressPool
+			if ipConfig.LoadBalancerBackendAddressPools != nil {
+				backendPools = *ipConfig.LoadBalancerBackendAddressPools
+			}
+			backendPools = append(backendPools, network.BackendAddressPool{
+				ID: to.StringPtr("[concat(resourceId('Microsoft.Network/loadBalancers',parameters('masterEndpointDNSNamePrefix')), '/backendAddressPools/', parameters('masterEndpointDNSNamePrefix'), '-ipv4')]"),
+			})
+			ipConfig.LoadBalancerBackendAddressPools = &backendPools
+		}
 		ipConfigurations = append(ipConfigurations, ipConfig)
+	}
+
+	// add ipv6 nic config for dual stack
+	if cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6DualStack") {
+		ipv6Config := network.InterfaceIPConfiguration{
+			Name: to.StringPtr("ipconfigv6"),
+			InterfaceIPConfigurationPropertiesFormat: &network.InterfaceIPConfigurationPropertiesFormat{
+				PrivateIPAddressVersion: "IPv6",
+				Primary:                 to.BoolPtr(false),
+				Subnet: &network.Subnet{
+					ID: to.StringPtr(fmt.Sprintf("[variables('%sVnetSubnetID')]", profile.Name)),
+				},
+				LoadBalancerBackendAddressPools: &[]network.BackendAddressPool{
+					{
+						ID: to.StringPtr("[concat(resourceId('Microsoft.Network/loadBalancers',parameters('masterEndpointDNSNamePrefix')), '/backendAddressPools/', parameters('masterEndpointDNSNamePrefix'), '-ipv6')]"),
+					},
+				},
+			},
+		}
+		ipConfigurations = append(ipConfigurations, ipv6Config)
 	}
 
 	networkInterface.IPConfigurations = &ipConfigurations

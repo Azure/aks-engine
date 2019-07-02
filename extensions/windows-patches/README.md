@@ -1,9 +1,9 @@
 # Windows Patching Extension
 
-This extension will install Windows Server patches, including prerelease hotfixes. It's useful for the following cases:
+This extension will install Windows Security and Preview updates. It's useful for the following cases:
 
-1. Microsoft support has provided a pre-release hotfix for your testing
-2. Installing additional Windows update packages (MSU) that are not yet included in the default Windows Server with Containers VM on the Azure Marketplace.
+1. Microsoft support has provided a pre-release private patch for your testing. This requires [Enabling Loading of Test Signed Drivers](https://docs.microsoft.com/en-us/windows-hardware/drivers/install/the-testsigning-boot-configuration-option), and is not for use on production systems.
+2. Installing additional Windows update packages that are not yet included in the default Windows Server with Containers VM on the Azure Marketplace.
 
 ## Configuration
 
@@ -59,7 +59,9 @@ If you would like to include a cumulative update as part of your deployment that
 
 ### Supplied by Microsoft support
 
-Once you have downloaded a private hotfix from Microsoft support, it needs to be put in an Azure-accessible location. The easiest way to do this is to create an [Azure Blob Storage](https://docs.microsoft.com/en-us/azure/storage/common/storage-create-storage-account#blob-storage-accounts) account. Once uploaded, you can create a private link with a key to access it that will work with this extension.
+Once you have downloaded a private patch from Microsoft support, it needs to be put in an Azure-accessible location. The easiest way to do this is to create an [Azure Blob Storage](https://docs.microsoft.com/en-us/azure/storage/common/storage-create-storage-account#blob-storage-accounts) account. Once uploaded, you can create a private link with a key to access it that will work with this extension.
+
+> This requires [Enabling Loading of Test Signed Drivers](https://docs.microsoft.com/en-us/windows-hardware/drivers/install/the-testsigning-boot-configuration-option), and is not for use on production systems. If you provide a private patch as an `.exe` file, then test signing will be enabled automatically by this extension.
 
 1. If you haven't already, install the [Azure CLI](https://docs.microsoft.com/cli/azure/get-started-with-az-cli2), and run `az login` to log in to Azure
 2. Copy the sample below for either bash (Linux, Mac, or WSL), or PowerShell (Windows), and modify the variables at the top.

@@ -3,7 +3,7 @@
   "properties": {
     "orchestratorProfile": {
       "orchestratorType": "Kubernetes",
-      "orchestratorRelease": "1.7",
+      "orchestratorRelease": "1.12",
       "kubernetesConfig": {
         "useManagedIdentity": true,
         "kubeProxyMode" : "ipvs"
@@ -12,13 +12,13 @@
     "masterProfile": {
       "count": 1,
       "dnsPrefix": "",
-      "vmSize": "Standard_D2_v2"
+      "vmSize": "Standard_D2_v3"
     },
     "agentPoolProfiles": [
       {
         "name": "linuxpool1",
         "count": 2,
-        "vmSize": "Standard_D2_v2",
+        "vmSize": "Standard_D2_v3",
         "availabilityProfile": "AvailabilitySet"
       }
     ]

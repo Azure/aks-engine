@@ -266,9 +266,7 @@
         "[variables('masterStorageAccountName')]",
 {{end}}
         "[variables('masterStorageAccountExhibitorName')]"
-{{if not IsHostedBootstrap}}
        ,"[concat('Microsoft.Compute/virtualMachines/', variables('bootstrapVMName'), '/extensions/bootstrapready')]"
-{{end}}
       ],
       "tags":
       {

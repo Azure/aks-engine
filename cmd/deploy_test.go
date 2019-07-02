@@ -490,7 +490,7 @@ func testAutodeployCredentialHandling(t *testing.T, useManagedIdentity bool, cli
 	// cleanup, since auto-populations creates dirs and saves the SSH private key that it might create
 	defer os.RemoveAll(deployCmd.outputDirectory)
 
-	cs, _, err = deployCmd.validateApimodel()
+	err = deployCmd.validateAPIModelAsVLabs()
 	if err != nil {
 		t.Fatalf("unexpected error validating apimodel after populating defaults: %s", err)
 	}
@@ -575,7 +575,7 @@ func TestDeployCmdRun(t *testing.T) {
 		t.Fatalf("Invalid SubscriptionId in Test: %s", err)
 	}
 
-	err = d.loadAPIModel(r, []string{})
+	err = d.loadAPIModel()
 	if err != nil {
 		t.Fatalf("Failed to call LoadAPIModel: %s", err)
 	}

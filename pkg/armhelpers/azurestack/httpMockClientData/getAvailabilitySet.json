@@ -1,0 +1,18 @@
+{
+  "properties": {
+    "platformUpdateDomainCount": 3,
+    "platformFaultDomainCount": 3,
+    "virtualMachines": [
+      {
+        "id": "/subscriptions/12345678-1234-4fe0-86da-28abc43fc4c7/resourceGroups/MYGROUP/providers/Microsoft.Compute/virtualMachines/K8S-MASTER-26399701-0"
+      }
+    ]
+  },
+  "type": "Microsoft.Compute/availabilitySets",
+  "location": "eastus",
+  "id": "/subscriptions/12345678-1234-4fe0-86da-28abc43fc4c7/resourceGroups/mygroup/providers/Microsoft.Compute/availabilitySets/master-availabilityset-26399701",
+  "name": "master-availabilityset-26399701",
+  "sku": {
+    "name": "Aligned"
+  }
+}

@@ -7,8 +7,15 @@ set -eo pipefail
 
 PROJECT_NAME="aks-engine"
 
-: "${USE_SUDO:="true"}"
-: "${AKSE_INSTALL_DIR:="/usr/local/bin"}"
+if [ -n "$ACC_CLOUD" ]; then
+  # Cloud Shell doesn't have sudo and prefers a different directory.
+  : "${USE_SUDO:="false"}"
+  : "${AKSE_INSTALL_DIR:="/usr/local/bundle/bin"}"
+  mkdir -p $AKSE_INSTALL_DIR
+else
+  : "${USE_SUDO:="true"}"
+  : "${AKSE_INSTALL_DIR:="/usr/local/bin"}"
+fi
 
 # initArch discovers the architecture for this system.
 initArch() {

@@ -31,7 +31,7 @@ func MapValues(m map[string]APIModelValue, setFlagValues []string) {
 	}
 
 	// regex to find array[index].property pattern in the key, like linuxProfile.ssh.publicKeys[0].keyData
-	re := regexp.MustCompile(`(.*?)\[(.*?)\]\.(.*?)$`)
+	re := regexp.MustCompile(`(.*?)\[(.*?)\](?:\.(.*?))?$`)
 
 	for _, setFlagValue := range setFlagValues {
 		kvpMap := parseKeyValuePairs(setFlagValue)
@@ -85,12 +85,26 @@ func MergeValuesWithAPIModel(apiModelPath string, m map[string]APIModelValue) (s
 	for key, flagValue := range m {
 		// working on an array
 		if flagValue.arrayValue {
-			log.Debugln(fmt.Sprintf("--set flag array value detected. Name: %s, Index: %b, PropertyName: %s", flagValue.arrayName, flagValue.arrayIndex, flagValue.arrayProperty))
-			arrayValue := jsonObj.Path(fmt.Sprint("properties.", flagValue.arrayName))
-			if flagValue.stringValue != "" {
-				arrayValue.Index(flagValue.arrayIndex).SetP(flagValue.stringValue, flagValue.arrayProperty)
+			log.Debugln(fmt.Sprintf("--set flag array value detected. Name: %s, Index: %d, PropertyName: %s", flagValue.arrayName, flagValue.arrayIndex, flagValue.arrayProperty))
+			arrayPath := fmt.Sprint("properties.", flagValue.arrayName)
+			arrayValue := jsonObj.Path(arrayPath)
+			if flagValue.arrayProperty != "" {
+				if flagValue.stringValue != "" {
+					arrayValue.Index(flagValue.arrayIndex).SetP(flagValue.stringValue, flagValue.arrayProperty)
+				} else {
+					arrayValue.Index(flagValue.arrayIndex).SetP(flagValue.intValue, flagValue.arrayProperty)
+				}
 			} else {
-				arrayValue.Index(flagValue.arrayIndex).SetP(flagValue.intValue, flagValue.arrayProperty)
+				count, _ := arrayValue.ArrayCount()
+				for i := count; i <= flagValue.arrayIndex; i++ {
+					jsonObj.ArrayAppendP(nil, arrayPath)
+				}
+				arrayValue = jsonObj.Path(arrayPath)
+				if flagValue.stringValue != "" {
+					arrayValue.SetIndex(flagValue.stringValue, flagValue.arrayIndex)
+				} else {
+					arrayValue.SetIndex(flagValue.intValue, flagValue.arrayIndex)
+				}
 			}
 		} else {
 			if flagValue.stringValue != "" {

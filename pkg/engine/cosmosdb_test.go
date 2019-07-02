@@ -33,10 +33,6 @@ func TestCreateCosmosDB(t *testing.T) {
 					"locationName":     "[resourceGroup().location]",
 					"failoverPriority": 0,
 				},
-				{
-					"locationName":     "[resourceGroup().location]",
-					"failoverPriority": 1,
-				},
 			},
 			"name":                             "[variables('cosmosAccountName')]",
 			"primaryClientCertificatePemBytes": "[variables('cosmosDBCertb64')]",

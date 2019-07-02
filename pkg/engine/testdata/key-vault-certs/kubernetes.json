@@ -13,7 +13,7 @@
         "networkPlugin": "azure",
         "containerRuntime": "docker",
         "dockerBridgeSubnet": "172.17.0.1/16",
-        "mobyVersion": "3.0.4",
+        "mobyVersion": "3.0.6",
         "useInstanceMetadata": true,
         "enableRbac": true,
         "enableSecureKubelet": true,
@@ -23,7 +23,7 @@
         },
         "gchighthreshold": 85,
         "gclowthreshold": 80,
-        "etcdVersion": "3.2.25",
+        "etcdVersion": "3.2.26",
         "etcdDiskSizeGB": "512",
         "addons": [
           {
@@ -36,7 +36,7 @@
               },
               {
                 "name": "heapster-nanny",
-                "image": "k8s.gcr.io/addon-resizer:1.8.4"
+                "image": "k8s.gcr.io/addon-resizer:1.8.5"
               }
             ]
           },
@@ -395,7 +395,7 @@
       "oauthEnabled": false,
       "preProvisionExtension": null,
       "extensions": [],
-      "distro": "aks",
+      "distro": "aks-ubuntu-16.04",
       "kubernetesConfig": {
         "kubeletConfig": {
           "--address": "0.0.0.0",
@@ -439,7 +439,7 @@
         "osType": "Linux",
         "availabilityProfile": "VirtualMachineScaleSets",
         "storageProfile": "ManagedDisks",
-        "distro": "aks",
+        "distro": "aks-ubuntu-16.04",
         "kubernetesConfig": {
           "kubeletConfig": {
             "--address": "0.0.0.0",

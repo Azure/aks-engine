@@ -5,24 +5,100 @@ package api
 
 import (
 	"strconv"
+	"strings"
 	"testing"
 
+	"github.com/Azure/aks-engine/pkg/api/common"
 	"github.com/Azure/go-autorest/autorest/to"
 )
 
 func TestKubeletConfigDefaults(t *testing.T) {
-	cs := CreateMockContainerService("testcluster", "1.12.7", 3, 2, false)
-	cs.setKubeletConfig()
-	k := cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig
-	// TODO test all default config values
-	for key, val := range map[string]string{
-		"--azure-container-registry-config": "/etc/kubernetes/azure.json",
-		"--image-pull-progress-deadline":    "30m",
-		"--pod-max-pids":                    "-1",
-	} {
-		if k[key] != val {
+	cs := CreateMockContainerService("testcluster", common.RationalizeReleaseAndVersion(Kubernetes, common.KubernetesDefaultRelease, "", false, false), 3, 2, false)
+	winProfile := &AgentPoolProfile{}
+	winProfile.Count = 1
+	winProfile.Name = "agentpool2"
+	winProfile.VMSize = "Standard_D2_v2"
+	winProfile.OSType = Windows
+	cs.Properties.AgentPoolProfiles = append(cs.Properties.AgentPoolProfiles, winProfile)
+	cs.setKubeletConfig(false)
+	kubeletConfig := cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig
+	expected := map[string]string{
+		"--address":                           "0.0.0.0",
+		"--allow-privileged":                  "true", // validate that we delete this key for >= 1.15 clusters
+		"--anonymous-auth":                    "false",
+		"--authorization-mode":                "Webhook",
+		"--azure-container-registry-config":   "/etc/kubernetes/azure.json",
+		"--cadvisor-port":                     "", // Validate that we delete this key for >= 1.12 clusters
+		"--cgroups-per-qos":                   "true",
+		"--client-ca-file":                    "/etc/kubernetes/certs/ca.crt",
+		"--cloud-provider":                    "azure",
+		"--cloud-config":                      "/etc/kubernetes/azure.json",
+		"--cluster-dns":                       DefaultKubernetesDNSServiceIP,
+		"--cluster-domain":                    "cluster.local",
+		"--enforce-node-allocatable":          "pods",
+		"--event-qps":                         DefaultKubeletEventQPS,
+		"--eviction-hard":                     DefaultKubernetesHardEvictionThreshold,
+		"--image-gc-high-threshold":           strconv.Itoa(DefaultKubernetesGCHighThreshold),
+		"--image-gc-low-threshold":            strconv.Itoa(DefaultKubernetesGCLowThreshold),
+		"--image-pull-progress-deadline":      "30m",
+		"--keep-terminated-pod-volumes":       "false",
+		"--kubeconfig":                        "/var/lib/kubelet/kubeconfig",
+		"--max-pods":                          strconv.Itoa(DefaultKubernetesMaxPods),
+		"--network-plugin":                    NetworkPluginKubenet,
+		"--node-status-update-frequency":      K8sComponentsByVersionMap[cs.Properties.OrchestratorProfile.OrchestratorVersion]["nodestatusfreq"],
+		"--non-masquerade-cidr":               DefaultKubernetesSubnet,
+		"--pod-manifest-path":                 "/etc/kubernetes/manifests",
+		"--pod-infra-container-image":         cs.Properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBase + K8sComponentsByVersionMap[cs.Properties.OrchestratorProfile.OrchestratorVersion]["pause"],
+		"--pod-max-pids":                      strconv.Itoa(DefaultKubeletPodMaxPIDs),
+		"--protect-kernel-defaults":           "true",
+		"--rotate-certificates":               "true",
+		"--streaming-connection-idle-timeout": "5m",
+		"--feature-gates":                     "PodPriority=true,RotateKubeletServerCertificate=true",
+		"--tls-cipher-suites":                 TLSStrongCipherSuitesKubelet,
+		"--tls-cert-file":                     "/etc/kubernetes/certs/kubeletserver.crt",
+		"--tls-private-key-file":              "/etc/kubernetes/certs/kubeletserver.key",
+	}
+	for key, val := range kubeletConfig {
+		if expected[key] != val {
 			t.Fatalf("got unexpected kubelet config value for %s: %s, expected %s",
-				key, k[key], val)
+				key, val, expected[key])
+		}
+	}
+	masterKubeletConfig := cs.Properties.MasterProfile.KubernetesConfig.KubeletConfig
+	for key, val := range masterKubeletConfig {
+		if expected[key] != val {
+			t.Fatalf("got unexpected masterProfile kubelet config value for %s: %s, expected %s",
+				key, val, expected[key])
+		}
+	}
+	linuxProfileKubeletConfig := cs.Properties.AgentPoolProfiles[0].KubernetesConfig.KubeletConfig
+	for key, val := range linuxProfileKubeletConfig {
+		if expected[key] != val {
+			t.Fatalf("got unexpected Linux agent profile kubelet config value for %s: %s, expected %s",
+				key, val, expected[key])
+		}
+	}
+	windowsProfileKubeletConfig := cs.Properties.AgentPoolProfiles[1].KubernetesConfig.KubeletConfig
+	expected["--azure-container-registry-config"] = "c:\\k\\azure.json"
+	expected["--pod-infra-container-image"] = "kubletwin/pause"
+	expected["--kubeconfig"] = "c:\\k\\config"
+	expected["--cloud-config"] = "c:\\k\\azure.json"
+	expected["--cgroups-per-qos"] = "false"
+	expected["--enforce-node-allocatable"] = "\"\"\"\""
+	expected["--system-reserved"] = "memory=2Gi"
+	expected["--client-ca-file"] = "c:\\k\\ca.crt"
+	expected["--hairpin-mode"] = "promiscuous-bridge"
+	expected["--image-pull-progress-deadline"] = "20m"
+	expected["--resolv-conf"] = "\"\"\"\""
+	expected["--eviction-hard"] = "\"\"\"\""
+	delete(expected, "--pod-manifest-path")
+	delete(expected, "--protect-kernel-defaults")
+	delete(expected, "--tls-cert-file")
+	delete(expected, "--tls-private-key-file")
+	for key, val := range windowsProfileKubeletConfig {
+		if expected[key] != val {
+			t.Fatalf("got unexpected Windows agent profile kubelet config value for %s: %s, expected %s",
+				key, val, expected[key])
 		}
 	}
 
@@ -32,8 +108,8 @@ func TestKubeletConfigDefaults(t *testing.T) {
 	cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig = map[string]string{
 		"--azure-container-registry-config": overrideVal,
 	}
-	cs.setKubeletConfig()
-	k = cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig
+	cs.setKubeletConfig(false)
+	k := cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig
 	for key, val := range map[string]string{"--azure-container-registry-config": overrideVal} {
 		if k[key] != val {
 			t.Fatalf("got unexpected kubelet config value for %s: %s, expected %s",
@@ -42,11 +118,46 @@ func TestKubeletConfigDefaults(t *testing.T) {
 	}
 }
 
+func TestKubeletConfigDefaultsRemovals(t *testing.T) {
+	cs := CreateMockContainerService("testcluster", common.RationalizeReleaseAndVersion(Kubernetes, "1.12", "", false, false), 3, 2, false)
+	poolProfile := &AgentPoolProfile{}
+	poolProfile.Count = 1
+	poolProfile.Name = "agentpool2"
+	poolProfile.VMSize = "Standard_D2_v2"
+	poolProfile.OSType = Linux
+	cs.Properties.AgentPoolProfiles = append(cs.Properties.AgentPoolProfiles, poolProfile)
+	cs.setKubeletConfig(false)
+	kubeletConfig := cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig
+	unexpected := []string{
+		"--cadvisor-port",
+	}
+	for _, key := range unexpected {
+		if _, ok := kubeletConfig[key]; ok {
+			t.Fatalf("got unexpected kubelet config value for %s, expected it not to be present",
+				key)
+		}
+	}
+	cs = CreateMockContainerService("testcluster", "1.15.0-beta.1", 3, 2, false)
+	cs.Properties.AgentPoolProfiles = append(cs.Properties.AgentPoolProfiles, poolProfile)
+	cs.setKubeletConfig(false)
+	kubeletConfig = cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig
+	unexpected = []string{
+		"--allow-privileged",
+		"--cadvisor-port",
+	}
+	for _, key := range unexpected {
+		if _, ok := kubeletConfig[key]; ok {
+			t.Fatalf("got unexpected kubelet config value for %s, expected it not to be present",
+				key)
+		}
+	}
+}
+
 func TestKubeletConfigUseCloudControllerManager(t *testing.T) {
 	// Test UseCloudControllerManager = true
 	cs := CreateMockContainerService("testcluster", defaultTestClusterVer, 3, 2, false)
 	cs.Properties.OrchestratorProfile.KubernetesConfig.UseCloudControllerManager = to.BoolPtr(true)
-	cs.setKubeletConfig()
+	cs.setKubeletConfig(false)
 	k := cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig
 	if k["--cloud-provider"] != "external" {
 		t.Fatalf("got unexpected '--cloud-provider' kubelet config value for UseCloudControllerManager=true: %s",
@@ -56,7 +167,7 @@ func TestKubeletConfigUseCloudControllerManager(t *testing.T) {
 	// Test UseCloudControllerManager = false
 	cs = CreateMockContainerService("testcluster", defaultTestClusterVer, 3, 2, false)
 	cs.Properties.OrchestratorProfile.KubernetesConfig.UseCloudControllerManager = to.BoolPtr(false)
-	cs.setKubeletConfig()
+	cs.setKubeletConfig(false)
 	k = cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig
 	if k["--cloud-provider"] != "azure" {
 		t.Fatalf("got unexpected '--cloud-provider' kubelet config value for UseCloudControllerManager=false: %s",
@@ -68,7 +179,7 @@ func TestKubeletConfigUseCloudControllerManager(t *testing.T) {
 func TestKubeletConfigCloudConfig(t *testing.T) {
 	// Test default value and custom value for --cloud-config
 	cs := CreateMockContainerService("testcluster", defaultTestClusterVer, 3, 2, false)
-	cs.setKubeletConfig()
+	cs.setKubeletConfig(false)
 	k := cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig
 	if k["--cloud-config"] != "/etc/kubernetes/azure.json" {
 		t.Fatalf("got unexpected '--cloud-config' kubelet config default value: %s",
@@ -77,7 +188,7 @@ func TestKubeletConfigCloudConfig(t *testing.T) {
 
 	cs = CreateMockContainerService("testcluster", defaultTestClusterVer, 3, 2, false)
 	cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig["--cloud-config"] = "custom.json"
-	cs.setKubeletConfig()
+	cs.setKubeletConfig(false)
 	k = cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig
 	if k["--cloud-config"] != "custom.json" {
 		t.Fatalf("got unexpected '--cloud-config' kubelet config default value: %s",
@@ -85,10 +196,10 @@ func TestKubeletConfigCloudConfig(t *testing.T) {
 	}
 }
 
-func TestKubeletConfigAzureContainerRegistryCofig(t *testing.T) {
+func TestKubeletConfigAzureContainerRegistryConfig(t *testing.T) {
 	// Test default value and custom value for --azure-container-registry-config
 	cs := CreateMockContainerService("testcluster", defaultTestClusterVer, 3, 2, false)
-	cs.setKubeletConfig()
+	cs.setKubeletConfig(false)
 	k := cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig
 	if k["--azure-container-registry-config"] != "/etc/kubernetes/azure.json" {
 		t.Fatalf("got unexpected '--azure-container-registry-config' kubelet config default value: %s",
@@ -97,7 +208,7 @@ func TestKubeletConfigAzureContainerRegistryCofig(t *testing.T) {
 
 	cs = CreateMockContainerService("testcluster", defaultTestClusterVer, 3, 2, false)
 	cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig["--azure-container-registry-config"] = "custom.json"
-	cs.setKubeletConfig()
+	cs.setKubeletConfig(false)
 	k = cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig
 	if k["--azure-container-registry-config"] != "custom.json" {
 		t.Fatalf("got unexpected '--azure-container-registry-config' kubelet config default value: %s",
@@ -109,7 +220,7 @@ func TestKubeletConfigNetworkPlugin(t *testing.T) {
 	// Test NetworkPlugin = "kubenet"
 	cs := CreateMockContainerService("testcluster", defaultTestClusterVer, 3, 2, false)
 	cs.Properties.OrchestratorProfile.KubernetesConfig.NetworkPlugin = NetworkPluginKubenet
-	cs.setKubeletConfig()
+	cs.setKubeletConfig(false)
 	k := cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig
 	if k["--network-plugin"] != NetworkPluginKubenet {
 		t.Fatalf("got unexpected '--network-plugin' kubelet config value for NetworkPlugin=kubenet: %s",
@@ -119,7 +230,7 @@ func TestKubeletConfigNetworkPlugin(t *testing.T) {
 	// Test NetworkPlugin = "azure"
 	cs = CreateMockContainerService("testcluster", defaultTestClusterVer, 3, 2, false)
 	cs.Properties.OrchestratorProfile.KubernetesConfig.NetworkPlugin = NetworkPluginAzure
-	cs.setKubeletConfig()
+	cs.setKubeletConfig(false)
 	k = cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig
 	if k["--network-plugin"] != "cni" {
 		t.Fatalf("got unexpected '--network-plugin' kubelet config value for NetworkPlugin=azure: %s",
@@ -132,30 +243,36 @@ func TestKubeletConfigEnableSecureKubelet(t *testing.T) {
 	// Test EnableSecureKubelet = true
 	cs := CreateMockContainerService("testcluster", defaultTestClusterVer, 3, 2, false)
 	cs.Properties.OrchestratorProfile.KubernetesConfig.EnableSecureKubelet = to.BoolPtr(true)
-	cs.setKubeletConfig()
+	cs.setKubeletConfig(false)
 	k := cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig
-	if k["--anonymous-auth"] != "false" {
-		t.Fatalf("got unexpected '--anonymous-auth' kubelet config value for EnableSecureKubelet=true: %s",
-			k["--anonymous-auth"])
-	}
-	if k["--authorization-mode"] != "Webhook" {
-		t.Fatalf("got unexpected '--authorization-mode' kubelet config value for EnableSecureKubelet=true: %s",
-			k["--authorization-mode"])
-	}
-	if k["--client-ca-file"] != "/etc/kubernetes/certs/ca.crt" {
-		t.Fatalf("got unexpected '--client-ca-file' kubelet config value for EnableSecureKubelet=true: %s",
-			k["--client-ca-file"])
+	ka := cs.Properties.AgentPoolProfiles[0].KubernetesConfig.KubeletConfig
+	for _, kubernetesConfig := range []map[string]string{k, ka} {
+		if kubernetesConfig["--anonymous-auth"] != "false" {
+			t.Fatalf("got unexpected '--anonymous-auth' kubelet config value for EnableSecureKubelet=true: %s",
+				kubernetesConfig["--anonymous-auth"])
+		}
+		if kubernetesConfig["--authorization-mode"] != "Webhook" {
+			t.Fatalf("got unexpected '--authorization-mode' kubelet config value for EnableSecureKubelet=true: %s",
+				kubernetesConfig["--authorization-mode"])
+		}
+		if kubernetesConfig["--client-ca-file"] != "/etc/kubernetes/certs/ca.crt" {
+			t.Fatalf("got unexpected '--client-ca-file' kubelet config value for EnableSecureKubelet=true: %s",
+				kubernetesConfig["--client-ca-file"])
+		}
 	}
 
 	// Test EnableSecureKubelet = false
 	cs = CreateMockContainerService("testcluster", defaultTestClusterVer, 3, 2, false)
 	cs.Properties.OrchestratorProfile.KubernetesConfig.EnableSecureKubelet = to.BoolPtr(false)
-	cs.setKubeletConfig()
+	cs.setKubeletConfig(false)
 	k = cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig
-	for _, key := range []string{"--anonymous-auth", "--client-ca-file"} {
-		if _, ok := k[key]; ok {
-			t.Fatalf("got unexpected '%s' kubelet config value for EnableSecureKubelet=false: %s",
-				key, k[key])
+	ka = cs.Properties.AgentPoolProfiles[0].KubernetesConfig.KubeletConfig
+	for _, kubernetesConfig := range []map[string]string{k, ka} {
+		for _, key := range []string{"--anonymous-auth", "--client-ca-file"} {
+			if _, ok := kubernetesConfig[key]; ok {
+				t.Fatalf("got unexpected '%s' kubelet config value for EnableSecureKubelet=false: %s",
+					key, kubernetesConfig[key])
+			}
 		}
 	}
 
@@ -163,12 +280,16 @@ func TestKubeletConfigEnableSecureKubelet(t *testing.T) {
 	cs = CreateMockContainerService("testcluster", "1.10.13", 3, 1, false)
 	p := GetK8sDefaultProperties(true)
 	cs.Properties = p
-	cs.setKubeletConfig()
+	cs.Properties.OrchestratorProfile.KubernetesConfig.EnableSecureKubelet = to.BoolPtr(false)
+	cs.setKubeletConfig(false)
 	k = cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig
-	for _, key := range []string{"--anonymous-auth", "--client-ca-file"} {
-		if _, ok := k[key]; ok {
-			t.Fatalf("got unexpected '%s' kubelet config value for EnableSecureKubelet=false: %s",
-				key, k[key])
+	ka = cs.Properties.AgentPoolProfiles[0].KubernetesConfig.KubeletConfig
+	for _, kubernetesConfig := range []map[string]string{k, ka} {
+		for _, key := range []string{"--anonymous-auth", "--client-ca-file"} {
+			if _, ok := kubernetesConfig[key]; ok {
+				t.Fatalf("got unexpected '%s' kubelet config value for EnableSecureKubelet=false: %s",
+					key, kubernetesConfig[key])
+			}
 		}
 	}
 
@@ -177,12 +298,15 @@ func TestKubeletConfigEnableSecureKubelet(t *testing.T) {
 	p = GetK8sDefaultProperties(true)
 	cs.Properties = p
 	cs.Properties.OrchestratorProfile.KubernetesConfig.EnableSecureKubelet = to.BoolPtr(false)
-	cs.setKubeletConfig()
+	cs.setKubeletConfig(false)
 	k = cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig
-	for _, key := range []string{"--anonymous-auth", "--client-ca-file"} {
-		if _, ok := k[key]; ok {
-			t.Fatalf("got unexpected '%s' kubelet config value for EnableSecureKubelet=false: %s",
-				key, k[key])
+	ka = cs.Properties.AgentPoolProfiles[0].KubernetesConfig.KubeletConfig
+	for _, kubernetesConfig := range []map[string]string{k, ka} {
+		for _, key := range []string{"--anonymous-auth", "--client-ca-file"} {
+			if _, ok := kubernetesConfig[key]; ok {
+				t.Fatalf("got unexpected '%s' kubelet config value for EnableSecureKubelet=false: %s",
+					key, kubernetesConfig[key])
+			}
 		}
 	}
 
@@ -191,23 +315,31 @@ func TestKubeletConfigEnableSecureKubelet(t *testing.T) {
 	p = GetK8sDefaultProperties(true)
 	cs.Properties = p
 	cs.Properties.OrchestratorProfile.KubernetesConfig.EnableSecureKubelet = to.BoolPtr(true)
-	cs.setKubeletConfig()
-	k = cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig
-	if k["--anonymous-auth"] != "false" {
+	cs.setKubeletConfig(false)
+	kubernetesConfig := cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig
+	kubernetesConfigWindowsAgentPool := cs.Properties.AgentPoolProfiles[0].KubernetesConfig.KubeletConfig
+	if kubernetesConfig["--anonymous-auth"] != "false" {
 		t.Fatalf("got unexpected '--anonymous-auth' kubelet config value for EnableSecureKubelet=true: %s",
-			k["--anonymous-auth"])
+			kubernetesConfig["--anonymous-auth"])
 	}
-	if k["--client-ca-file"] != "/etc/kubernetes/certs/ca.crt" {
+	if kubernetesConfig["--client-ca-file"] != "/etc/kubernetes/certs/ca.crt" {
 		t.Fatalf("got unexpected '--client-ca-file' kubelet config value for EnableSecureKubelet=true: %s",
-			k["--client-ca-file"])
+			kubernetesConfig["--client-ca-file"])
 	}
-
+	if kubernetesConfigWindowsAgentPool["--anonymous-auth"] != "false" {
+		t.Fatalf("got unexpected '--anonymous-auth' kubelet config value for EnableSecureKubelet=true: %s",
+			kubernetesConfig["--anonymous-auth"])
+	}
+	if kubernetesConfigWindowsAgentPool["--client-ca-file"] != "c:\\k\\ca.crt" {
+		t.Fatalf("got unexpected '--client-ca-file' kubelet config value for EnableSecureKubelet=true: %s",
+			kubernetesConfig["--client-ca-file"])
+	}
 }
 
 func TestKubeletMaxPods(t *testing.T) {
 	cs := CreateMockContainerService("testcluster", defaultTestClusterVer, 3, 2, false)
 	cs.Properties.OrchestratorProfile.KubernetesConfig.NetworkPlugin = NetworkPluginAzure
-	cs.setKubeletConfig()
+	cs.setKubeletConfig(false)
 	k := cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig
 	if k["--max-pods"] != strconv.Itoa(DefaultKubernetesMaxPodsVNETIntegrated) {
 		t.Fatalf("got unexpected '--max-pods' kubelet config value for NetworkPolicy=%s: %s",
@@ -216,7 +348,7 @@ func TestKubeletMaxPods(t *testing.T) {
 
 	cs = CreateMockContainerService("testcluster", defaultTestClusterVer, 3, 2, false)
 	cs.Properties.OrchestratorProfile.KubernetesConfig.NetworkPlugin = NetworkPluginKubenet
-	cs.setKubeletConfig()
+	cs.setKubeletConfig(false)
 	k = cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig
 	if k["--max-pods"] != strconv.Itoa(DefaultKubernetesMaxPods) {
 		t.Fatalf("got unexpected '--max-pods' kubelet config value for NetworkPolicy=%s: %s",
@@ -227,7 +359,7 @@ func TestKubeletMaxPods(t *testing.T) {
 	cs = CreateMockContainerService("testcluster", defaultTestClusterVer, 3, 2, false)
 	cs.Properties.OrchestratorProfile.KubernetesConfig.NetworkPlugin = NetworkPluginKubenet
 	cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig["--max-pods"] = "99"
-	cs.setKubeletConfig()
+	cs.setKubeletConfig(false)
 	k = cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig
 	if k["--max-pods"] != "99" {
 		t.Fatalf("got unexpected '--max-pods' kubelet config value for NetworkPolicy=%s: %s",
@@ -237,7 +369,7 @@ func TestKubeletMaxPods(t *testing.T) {
 	cs = CreateMockContainerService("testcluster", defaultTestClusterVer, 3, 2, false)
 	cs.Properties.OrchestratorProfile.KubernetesConfig.NetworkPlugin = NetworkPluginAzure
 	cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig["--max-pods"] = "99"
-	cs.setKubeletConfig()
+	cs.setKubeletConfig(false)
 	k = cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig
 	if k["--max-pods"] != "99" {
 		t.Fatalf("got unexpected '--max-pods' kubelet config value for NetworkPolicy=%s: %s",
@@ -248,7 +380,7 @@ func TestKubeletMaxPods(t *testing.T) {
 func TestKubeletCalico(t *testing.T) {
 	cs := CreateMockContainerService("testcluster", defaultTestClusterVer, 3, 2, false)
 	cs.Properties.OrchestratorProfile.KubernetesConfig.NetworkPolicy = NetworkPolicyCalico
-	cs.setKubeletConfig()
+	cs.setKubeletConfig(false)
 	k := cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig
 	if k["--network-plugin"] != "cni" {
 		t.Fatalf("got unexpected '--network-plugin' kubelet config value for NetworkPolicy=%s: %s",
@@ -264,7 +396,14 @@ func TestKubeletHostedMasterIPMasqAgentDisabled(t *testing.T) {
 		IPMasqAgent: false,
 	}
 	cs.Properties.OrchestratorProfile.KubernetesConfig.ClusterSubnet = subnet
-	cs.setKubeletConfig()
+	cs.Properties.OrchestratorProfile.KubernetesConfig.Addons = []KubernetesAddon{
+		{
+			Name:    IPMASQAgentAddonName,
+			Enabled: to.BoolPtr(true),
+		},
+	}
+
+	cs.setKubeletConfig(false)
 	k := cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig
 	if k["--non-masquerade-cidr"] != subnet {
 		t.Fatalf("got unexpected '--non-masquerade-cidr' kubelet config value %s, the expected value is %s",
@@ -277,7 +416,13 @@ func TestKubeletHostedMasterIPMasqAgentDisabled(t *testing.T) {
 		IPMasqAgent: true,
 	}
 	cs.Properties.OrchestratorProfile.KubernetesConfig.ClusterSubnet = subnet
-	cs.setKubeletConfig()
+	cs.Properties.OrchestratorProfile.KubernetesConfig.Addons = []KubernetesAddon{
+		{
+			Name:    IPMASQAgentAddonName,
+			Enabled: to.BoolPtr(true),
+		},
+	}
+	cs.setKubeletConfig(false)
 	k = cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig
 	if k["--non-masquerade-cidr"] != DefaultNonMasqueradeCIDR {
 		t.Fatalf("got unexpected '--non-masquerade-cidr' kubelet config value %s, the expected value is %s",
@@ -287,7 +432,13 @@ func TestKubeletHostedMasterIPMasqAgentDisabled(t *testing.T) {
 	// no HostedMasterProfile, --non-masquerade-cidr should be 0.0.0.0/0
 	cs = CreateMockContainerService("testcluster", defaultTestClusterVer, 3, 2, false)
 	cs.Properties.OrchestratorProfile.KubernetesConfig.ClusterSubnet = subnet
-	cs.setKubeletConfig()
+	cs.Properties.OrchestratorProfile.KubernetesConfig.Addons = []KubernetesAddon{
+		{
+			Name:    IPMASQAgentAddonName,
+			Enabled: to.BoolPtr(true),
+		},
+	}
+	cs.setKubeletConfig(false)
 	k = cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig
 	if k["--non-masquerade-cidr"] != DefaultNonMasqueradeCIDR {
 		t.Fatalf("got unexpected '--non-masquerade-cidr' kubelet config value %s, the expected value is %s",
@@ -309,7 +460,7 @@ func TestKubeletIPMasqAgentEnabledOrDisabled(t *testing.T) {
 		},
 	}
 	cs.Properties.OrchestratorProfile.KubernetesConfig.ClusterSubnet = subnet
-	cs.setKubeletConfig()
+	cs.setKubeletConfig(false)
 	k := cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig
 	if k["--non-masquerade-cidr"] != subnet {
 		t.Fatalf("got unexpected '--non-masquerade-cidr' kubelet config value %s, the expected value is %s",
@@ -328,7 +479,7 @@ func TestKubeletIPMasqAgentEnabledOrDisabled(t *testing.T) {
 		},
 	}
 	cs.Properties.OrchestratorProfile.KubernetesConfig.ClusterSubnet = subnet
-	cs.setKubeletConfig()
+	cs.setKubeletConfig(false)
 	k = cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig
 	if k["--non-masquerade-cidr"] != DefaultNonMasqueradeCIDR {
 		t.Fatalf("got unexpected '--non-masquerade-cidr' kubelet config value %s, the expected value is %s",
@@ -339,7 +490,7 @@ func TestKubeletIPMasqAgentEnabledOrDisabled(t *testing.T) {
 func TestEnforceNodeAllocatable(t *testing.T) {
 	// Validate default
 	cs := CreateMockContainerService("testcluster", "1.10.13", 3, 2, false)
-	cs.setKubeletConfig()
+	cs.setKubeletConfig(false)
 	k := cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig
 	if k["--enforce-node-allocatable"] != "pods" {
 		t.Fatalf("got unexpected '--enforce-node-allocatable' kubelet config value %s, the expected value is %s",
@@ -353,7 +504,7 @@ func TestEnforceNodeAllocatable(t *testing.T) {
 			"--enforce-node-allocatable": "kube-reserved/system-reserved",
 		},
 	}
-	cs.setKubeletConfig()
+	cs.setKubeletConfig(false)
 	k = cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig
 	if k["--enforce-node-allocatable"] != "kube-reserved/system-reserved" {
 		t.Fatalf("got unexpected '--enforce-node-allocatable' kubelet config value %s, the expected value is %s",
@@ -364,47 +515,76 @@ func TestEnforceNodeAllocatable(t *testing.T) {
 func TestProtectKernelDefaults(t *testing.T) {
 	// Validate default
 	cs := CreateMockContainerService("testcluster", "1.12.7", 3, 2, false)
-	cs.setKubeletConfig()
-	k := cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig
-	if k["--protect-kernel-defaults"] != "" {
+	cs.SetPropertiesDefaults(false, false)
+	km := cs.Properties.MasterProfile.KubernetesConfig.KubeletConfig
+	if km["--protect-kernel-defaults"] != "true" {
 		t.Fatalf("got unexpected '--protect-kernel-defaults' kubelet config value %s, the expected value is %s",
-			k["--protect-kernel-defaults"], "pods")
+			km["--protect-kernel-defaults"], "true")
+	}
+	ka := cs.Properties.AgentPoolProfiles[0].KubernetesConfig.KubeletConfig
+	if ka["--protect-kernel-defaults"] != "true" {
+		t.Fatalf("got unexpected '--protect-kernel-defaults' kubelet config value %s, the expected value is %s",
+			ka["--protect-kernel-defaults"], "true")
 	}
 
-	// Validate that --protect-kernel-defaults is "true" by default for Ubuntu distros
+	// Validate that --protect-kernel-defaults is "true" by default for relevant distros
 	for _, distro := range DistroValues {
 		switch distro {
-		case Ubuntu, Ubuntu1804:
+		case AKSUbuntu1604, AKSUbuntu1804:
 			cs = CreateMockContainerService("testcluster", "1.10.13", 3, 2, false)
 			cs.Properties.MasterProfile.Distro = distro
 			cs.Properties.AgentPoolProfiles[0].Distro = distro
-			cs.setKubeletConfig()
-			k = cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig
-			if k["--protect-kernel-defaults"] != "true" {
+			cs.SetPropertiesDefaults(false, false)
+			km = cs.Properties.MasterProfile.KubernetesConfig.KubeletConfig
+			if km["--protect-kernel-defaults"] != "true" {
 				t.Fatalf("got unexpected '--protect-kernel-defaults' kubelet config value %s, the expected value is %s",
-					k["--protect-kernel-defaults"], "true")
+					km["--protect-kernel-defaults"], "true")
+			}
+			ka = cs.Properties.AgentPoolProfiles[0].KubernetesConfig.KubeletConfig
+			if ka["--protect-kernel-defaults"] != "true" {
+				t.Fatalf("got unexpected '--protect-kernel-defaults' kubelet config value %s, the expected value is %s",
+					ka["--protect-kernel-defaults"], "true")
+			}
+
+		// Validate that --protect-kernel-defaults is not enabled for relevant distros
+		case Ubuntu, Ubuntu1804, ACC1604, CoreOS:
+			cs = CreateMockContainerService("testcluster", "1.10.13", 3, 2, false)
+			cs.Properties.MasterProfile.Distro = distro
+			cs.Properties.AgentPoolProfiles[0].Distro = distro
+			cs.SetPropertiesDefaults(false, false)
+			km = cs.Properties.MasterProfile.KubernetesConfig.KubeletConfig
+			if _, ok := km["--protect-kernel-defaults"]; ok {
+				t.Fatalf("got unexpected '--protect-kernel-defaults' kubelet config value %s",
+					km["--protect-kernel-defaults"])
+			}
+			ka = cs.Properties.AgentPoolProfiles[0].KubernetesConfig.KubeletConfig
+			if _, ok := ka["--protect-kernel-defaults"]; ok {
+				t.Fatalf("got unexpected '--protect-kernel-defaults' kubelet config value %s",
+					ka["--protect-kernel-defaults"])
 			}
 		}
 	}
 
-	// Validate that --protect-kernel-defaults is overridable
+	// Validate that --protect-kernel-defaults is not enabled for Windows
 	cs = CreateMockContainerService("testcluster", "1.10.13", 3, 2, false)
-	cs.Properties.OrchestratorProfile.KubernetesConfig = &KubernetesConfig{
-		KubeletConfig: map[string]string{
-			"--protect-kernel-defaults": "false",
-		},
-	}
-	cs.setKubeletConfig()
-	k = cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig
-	if k["--protect-kernel-defaults"] != "false" {
+	cs.Properties.MasterProfile.Distro = AKSUbuntu1604
+	cs.Properties.AgentPoolProfiles[0].OSType = Windows
+	cs.SetPropertiesDefaults(false, false)
+	km = cs.Properties.MasterProfile.KubernetesConfig.KubeletConfig
+	if km["--protect-kernel-defaults"] != "true" {
 		t.Fatalf("got unexpected '--protect-kernel-defaults' kubelet config value %s, the expected value is %s",
-			k["--protect-kernel-defaults"], "false")
+			km["--protect-kernel-defaults"], "true")
+	}
+	ka = cs.Properties.AgentPoolProfiles[0].KubernetesConfig.KubeletConfig
+	if _, ok := ka["--protect-kernel-defaults"]; ok {
+		t.Fatalf("got unexpected '--protect-kernel-defaults' kubelet config value %s",
+			ka["--protect-kernel-defaults"])
 	}
 
-	// Validate that --protect-kernel-defaults is overridable for Ubuntu distros
+	// Validate that --protect-kernel-defaults is overridable
 	for _, distro := range DistroValues {
 		switch distro {
-		case Ubuntu, Ubuntu1804:
+		case Ubuntu, Ubuntu1804, AKSUbuntu1604, AKSUbuntu1804:
 			cs = CreateMockContainerService("testcluster", "1.10.13", 3, 2, false)
 			cs.Properties.MasterProfile.Distro = "ubuntu"
 			cs.Properties.AgentPoolProfiles[0].Distro = "ubuntu"
@@ -413,11 +593,16 @@ func TestProtectKernelDefaults(t *testing.T) {
 					"--protect-kernel-defaults": "false",
 				},
 			}
-			cs.setKubeletConfig()
-			k = cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig
-			if k["--protect-kernel-defaults"] != "false" {
+			cs.SetPropertiesDefaults(false, false)
+			km = cs.Properties.MasterProfile.KubernetesConfig.KubeletConfig
+			if km["--protect-kernel-defaults"] != "false" {
 				t.Fatalf("got unexpected '--protect-kernel-defaults' kubelet config value %s, the expected value is %s",
-					k["--protect-kernel-defaults"], "false")
+					km["--protect-kernel-defaults"], "false")
+			}
+			ka = cs.Properties.AgentPoolProfiles[0].KubernetesConfig.KubeletConfig
+			if ka["--protect-kernel-defaults"] != "false" {
+				t.Fatalf("got unexpected '--protect-kernel-defaults' kubelet config value %s, the expected value is %s",
+					ka["--protect-kernel-defaults"], "false")
 			}
 		}
 	}
@@ -442,32 +627,32 @@ func TestStaticWindowsConfig(t *testing.T) {
 		"--kubeconfig":                  "/var/lib/kubelet/kubeconfig",
 		"--keep-terminated-pod-volumes": "false",
 	}
-	staticWindowsKubeletConfig := make(map[string]string)
+	expected := make(map[string]string)
 	for key, val := range staticLinuxKubeletConfig {
 		if key != "--pod-manifest-path" {
-			staticWindowsKubeletConfig[key] = val
+			expected[key] = val
 		}
 	}
 
 	// Add Windows-specific overrides
 	// Eventually paths should not be hardcoded here. They should be relative to $global:KubeDir in the PowerShell script
-	staticWindowsKubeletConfig["--azure-container-registry-config"] = "c:\\k\\azure.json"
-	staticWindowsKubeletConfig["--pod-infra-container-image"] = "kubletwin/pause"
-	staticWindowsKubeletConfig["--kubeconfig"] = "c:\\k\\config"
-	staticWindowsKubeletConfig["--cloud-config"] = "c:\\k\\azure.json"
-	staticWindowsKubeletConfig["--cgroups-per-qos"] = "false"
-	staticWindowsKubeletConfig["--enforce-node-allocatable"] = "\"\"\"\""
-	staticWindowsKubeletConfig["--system-reserved"] = "memory=2Gi"
-	staticWindowsKubeletConfig["--client-ca-file"] = "c:\\k\\ca.crt"
-	staticWindowsKubeletConfig["--hairpin-mode"] = "promiscuous-bridge"
-	staticWindowsKubeletConfig["--image-pull-progress-deadline"] = "20m"
-	staticWindowsKubeletConfig["--resolv-conf"] = "\"\"\"\""
-	staticWindowsKubeletConfig["--eviction-hard"] = "\"\"\"\""
+	expected["--azure-container-registry-config"] = "c:\\k\\azure.json"
+	expected["--pod-infra-container-image"] = "kubletwin/pause"
+	expected["--kubeconfig"] = "c:\\k\\config"
+	expected["--cloud-config"] = "c:\\k\\azure.json"
+	expected["--cgroups-per-qos"] = "false"
+	expected["--enforce-node-allocatable"] = "\"\"\"\""
+	expected["--system-reserved"] = "memory=2Gi"
+	expected["--client-ca-file"] = "c:\\k\\ca.crt"
+	expected["--hairpin-mode"] = "promiscuous-bridge"
+	expected["--image-pull-progress-deadline"] = "20m"
+	expected["--resolv-conf"] = "\"\"\"\""
+	expected["--eviction-hard"] = "\"\"\"\""
 
-	cs.setKubeletConfig()
+	cs.setKubeletConfig(false)
 	for _, profile := range cs.Properties.AgentPoolProfiles {
 		if profile.OSType == Windows {
-			for key, val := range staticWindowsKubeletConfig {
+			for key, val := range expected {
 				if val != profile.KubernetesConfig.KubeletConfig[key] {
 					t.Fatalf("got unexpected '%s' kubelet config value, expected %s, got %s",
 						key, val, profile.KubernetesConfig.KubeletConfig[key])
@@ -477,61 +662,48 @@ func TestStaticWindowsConfig(t *testing.T) {
 	}
 }
 
-func TestUbuntu1804Flags(t *testing.T) {
-	// Validate --resolv-conf is missing with 16.04 distro and present with 18.04
-	cs := CreateMockContainerService("testcluster", "1.10.13", 3, 2, false)
-	cs.Properties.MasterProfile.Distro = AKS
-	cs.Properties.AgentPoolProfiles[0].Distro = AKS1804
-	cs.Properties.AgentPoolProfiles[0].OSType = Linux
-	cs.setKubeletConfig()
-	km := cs.Properties.MasterProfile.KubernetesConfig.KubeletConfig
-	if _, ok := km["--resolv-conf"]; ok {
-		t.Fatalf("got unexpected '--resolv-conf' kubelet config value '%s' with Ubuntu 16.04 ",
-			km["--resolv-conf"])
-	}
-	ka := cs.Properties.AgentPoolProfiles[0].KubernetesConfig.KubeletConfig
-	if ka["--resolv-conf"] != "/run/systemd/resolve/resolv.conf" {
-		t.Fatalf("got unexpected '--resolv-conf' kubelet config value %s with Ubuntu 18.04, the expected value is %s",
-			ka["--resolv-conf"], "/run/systemd/resolve/resolv.conf")
+func TestKubeletRotateCertificates(t *testing.T) {
+	cs := CreateMockContainerService("testcluster", defaultTestClusterVer, 3, 2, false)
+	cs.setKubeletConfig(false)
+	k := cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig
+	if k["--rotate-certificates"] != "" {
+		t.Fatalf("got unexpected '--rotate-certificates' kubelet config value for k8s version %s: %s",
+			defaultTestClusterVer, k["--rotate-certificates"])
 	}
 
-	cs = CreateMockContainerService("testcluster", "1.10.13", 3, 2, false)
-	cs.Properties.MasterProfile.Distro = Ubuntu1804
-	cs.Properties.AgentPoolProfiles[0].Distro = Ubuntu
-	cs.Properties.AgentPoolProfiles[0].OSType = Linux
-	cs.setKubeletConfig()
-	km = cs.Properties.MasterProfile.KubernetesConfig.KubeletConfig
-	if km["--resolv-conf"] != "/run/systemd/resolve/resolv.conf" {
-		t.Fatalf("got unexpected '--resolv-conf' kubelet config value %s with Ubuntu 18.04, the expected value is %s",
-			km["--resolv-conf"], "/run/systemd/resolve/resolv.conf")
-	}
-	ka = cs.Properties.AgentPoolProfiles[0].KubernetesConfig.KubeletConfig
-	if _, ok := ka["--resolv-conf"]; ok {
-		t.Fatalf("got unexpected '--resolv-conf' kubelet config value '%s' with Ubuntu 16.04 ",
-			ka["--resolv-conf"])
+	// Test 1.11
+	cs = CreateMockContainerService("testcluster", common.RationalizeReleaseAndVersion(Kubernetes, "1.11", "", false, false), 3, 2, false)
+	cs.setKubeletConfig(false)
+	k = cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig
+	if k["--rotate-certificates"] != "true" {
+		t.Fatalf("got unexpected '--rotate-certificates' kubelet config value for k8s version %s: %s",
+			defaultTestClusterVer, k["--rotate-certificates"])
 	}
 
-	cs = CreateMockContainerService("testcluster", "1.10.13", 3, 2, false)
-	cs.Properties.MasterProfile.Distro = Ubuntu
-	cs.Properties.AgentPoolProfiles[0].Distro = ""
-	cs.Properties.AgentPoolProfiles[0].OSType = Windows
-	cs.setKubeletConfig()
-	km = cs.Properties.MasterProfile.KubernetesConfig.KubeletConfig
-	if _, ok := km["--resolv-conf"]; ok {
-		t.Fatalf("got unexpected '--resolv-conf' kubelet config value '%s' with Ubuntu 16.04 ",
-			km["--resolv-conf"])
+	// Test 1.14
+	cs = CreateMockContainerService("testcluster", common.RationalizeReleaseAndVersion(Kubernetes, "1.14", "", false, false), 3, 2, false)
+	cs.setKubeletConfig(false)
+	k = cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig
+	if k["--rotate-certificates"] != "true" {
+		t.Fatalf("got unexpected '--rotate-certificates' kubelet config value for k8s version %s: %s",
+			defaultTestClusterVer, k["--rotate-certificates"])
 	}
-	ka = cs.Properties.AgentPoolProfiles[0].KubernetesConfig.KubeletConfig
-	if ka["--resolv-conf"] != "\"\"\"\"" {
-		t.Fatalf("got unexpected '--resolv-conf' kubelet config value %s with Windows, the expected value is %s",
-			ka["--resolv-conf"], "\"\"\"\"")
+
+	// Test user-override
+	cs = CreateMockContainerService("testcluster", common.RationalizeReleaseAndVersion(Kubernetes, "1.14", "", false, false), 3, 2, false)
+	k = cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig
+	k["--rotate-certificates"] = "false"
+	cs.setKubeletConfig(false)
+	k = cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig
+	if k["--rotate-certificates"] != "false" {
+		t.Fatalf("got unexpected '--rotate-certificates' kubelet config value despite override value %s: %s",
+			"false", k["--rotate-certificates"])
 	}
 }
-
 func TestKubeletConfigDefaultFeatureGates(t *testing.T) {
 	// test 1.7
 	cs := CreateMockContainerService("testcluster", "1.7.12", 3, 2, false)
-	cs.setKubeletConfig()
+	cs.setKubeletConfig(false)
 	k := cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig
 	if k["--feature-gates"] != "" {
 		t.Fatalf("got unexpected '--feature-gates' kubelet config value for \"--feature-gates\": \"\": %s",
@@ -540,18 +712,27 @@ func TestKubeletConfigDefaultFeatureGates(t *testing.T) {
 
 	// test 1.8
 	cs = CreateMockContainerService("testcluster", "1.8.15", 3, 2, false)
-	cs.setKubeletConfig()
+	cs.setKubeletConfig(false)
 	k = cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig
 	if k["--feature-gates"] != "PodPriority=true" {
 		t.Fatalf("got unexpected '--feature-gates' kubelet config value for \"--feature-gates\": \"\": %s",
 			k["--feature-gates"])
 	}
 
-	// test 1.14
-	cs = CreateMockContainerService("testcluster", "1.14.1", 3, 2, false)
-	cs.setKubeletConfig()
+	// test 1.11
+	cs = CreateMockContainerService("testcluster", common.RationalizeReleaseAndVersion(Kubernetes, "1.11", "", false, false), 3, 2, false)
+	cs.setKubeletConfig(false)
 	k = cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig
-	if k["--feature-gates"] != "PodPriority=true" {
+	if k["--feature-gates"] != "PodPriority=true,RotateKubeletServerCertificate=true" {
+		t.Fatalf("got unexpected '--feature-gates' kubelet config value for \"--feature-gates\": \"\": %s",
+			k["--feature-gates"])
+	}
+
+	// test 1.14
+	cs = CreateMockContainerService("testcluster", common.RationalizeReleaseAndVersion(Kubernetes, "1.14", "", false, false), 3, 2, false)
+	cs.setKubeletConfig(false)
+	k = cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig
+	if k["--feature-gates"] != "PodPriority=true,RotateKubeletServerCertificate=true" {
 		t.Fatalf("got unexpected '--feature-gates' kubelet config value for \"--feature-gates\": \"\": %s",
 			k["--feature-gates"])
 	}
@@ -560,9 +741,293 @@ func TestKubeletConfigDefaultFeatureGates(t *testing.T) {
 	cs = CreateMockContainerService("testcluster", "1.14.1", 3, 2, false)
 	k = cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig
 	k["--feature-gates"] = "DynamicKubeletConfig=true"
-	cs.setKubeletConfig()
-	if k["--feature-gates"] != "DynamicKubeletConfig=true,PodPriority=true" {
+	cs.setKubeletConfig(false)
+	if k["--feature-gates"] != "DynamicKubeletConfig=true,PodPriority=true,RotateKubeletServerCertificate=true" {
 		t.Fatalf("got unexpected '--feature-gates' kubelet config value for \"--feature-gates\": \"\": %s",
 			k["--feature-gates"])
 	}
+}
+
+func TestKubeletStrongCipherSuites(t *testing.T) {
+	// Test allowed versions
+	for _, version := range []string{"1.10.0", "1.11.0", "1.12.0", "1.13.0", "1.14.0"} {
+		cs := CreateMockContainerService("testcluster", version, 3, 2, false)
+		cs.setKubeletConfig(false)
+		k := cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig
+		if k["--tls-cipher-suites"] != TLSStrongCipherSuitesKubelet {
+			t.Fatalf("got unexpected default value for '--tls-cipher-suites' kubelet config for Kubernetes version %s: %s",
+				version, k["--tls-cipher-suites"])
+		}
+	}
+
+	// Validate that 1.9.0 doesn't include --tls-cipher-suites at all
+	cs := CreateMockContainerService("testcluster", "1.9.0", 3, 2, false)
+	cs.setKubeletConfig(false)
+	k := cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig
+	if _, ok := k["--tls-cipher-suites"]; ok {
+		t.Fatalf("got a value for '--tls-cipher-suites' kubelet config, which is not enabled in versions of Kubernetes prior to 1.10: %s",
+			k["--tls-cipher-suites"])
+	}
+
+	allSuites := "TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA,TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256,TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA,TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305,TLS_ECDHE_ECDSA_WITH_RC4_128_SHA,TLS_ECDHE_RSA_WITH_3DES_EDE_CBC_SHA,TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA,TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256,TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA,TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305,TLS_ECDHE_RSA_WITH_RC4_128_SHA,TLS_RSA_WITH_3DES_EDE_CBC_SHA,TLS_RSA_WITH_AES_128_CBC_SHA,TLS_RSA_WITH_AES_128_CBC_SHA256,TLS_RSA_WITH_AES_128_GCM_SHA256,TLS_RSA_WITH_AES_256_CBC_SHA,TLS_RSA_WITH_AES_256_GCM_SHA384,TLS_RSA_WITH_RC4_128_SHA"
+	// Test user-override
+	for _, version := range []string{"1.10.0", "1.11.0", "1.12.0", "1.13.0", "1.14.0"} {
+		cs := CreateMockContainerService("testcluster", version, 3, 2, false)
+		cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig = map[string]string{
+			"--tls-cipher-suites": allSuites,
+		}
+		cs.setKubeletConfig(false)
+		k := cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig
+		if k["--tls-cipher-suites"] != allSuites {
+			t.Fatalf("got unexpected default value for '--tls-cipher-suites' API server config for Kubernetes version %s: %s",
+				version, k["--tls-cipher-suites"])
+		}
+	}
+}
+
+func TestSupportPodPidsLimitFeatureGate(t *testing.T) {
+	cases := []struct {
+		name                                   string
+		cs                                     *ContainerService
+		isUpgrade                              bool
+		expectedPodMaxPids                     string
+		expectedSupportPodPidsLimitFeatureGate bool
+	}{
+		{
+			name: "no --pod-max-pids defined",
+			cs: &ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorType:    Kubernetes,
+						OrchestratorVersion: "1.14.0",
+						KubernetesConfig:    &KubernetesConfig{},
+					},
+				},
+			},
+			expectedPodMaxPids:                     "-1",
+			expectedSupportPodPidsLimitFeatureGate: false,
+		},
+		{
+			name: "--pod-max-pids defined",
+			cs: &ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorType:    Kubernetes,
+						OrchestratorVersion: "1.14.0",
+						KubernetesConfig: &KubernetesConfig{
+							KubeletConfig: map[string]string{
+								"--pod-max-pids": "100",
+							},
+						},
+					},
+				},
+			},
+			expectedPodMaxPids:                     "100",
+			expectedSupportPodPidsLimitFeatureGate: false,
+		},
+		{
+			name: "no --pod-max-pids defined, SupportPodPidsLimit=false",
+			cs: &ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorType:    Kubernetes,
+						OrchestratorVersion: "1.14.0",
+						KubernetesConfig: &KubernetesConfig{
+							KubeletConfig: map[string]string{
+								"--feature-gates": "SupportPodPidsLimit=false",
+							},
+						},
+					},
+				},
+			},
+			expectedPodMaxPids:                     "-1",
+			expectedSupportPodPidsLimitFeatureGate: false,
+		},
+		{
+			name: "no --pod-max-pids defined, SupportPodPidsLimit=true",
+			cs: &ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorType:    Kubernetes,
+						OrchestratorVersion: "1.14.0",
+						KubernetesConfig: &KubernetesConfig{
+							KubeletConfig: map[string]string{
+								"--feature-gates": "SupportPodPidsLimit=true",
+							},
+						},
+					},
+				},
+			},
+			expectedPodMaxPids:                     "-1",
+			expectedSupportPodPidsLimitFeatureGate: true,
+		},
+		{
+			name: "--pod-max-pids defined, SupportPodPidsLimit=false",
+			cs: &ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorType:    Kubernetes,
+						OrchestratorVersion: "1.14.0",
+						KubernetesConfig: &KubernetesConfig{
+							KubeletConfig: map[string]string{
+								"--pod-max-pids":  "100",
+								"--feature-gates": "SupportPodPidsLimit=false",
+							},
+						},
+					},
+				},
+			},
+			expectedPodMaxPids:                     "100",
+			expectedSupportPodPidsLimitFeatureGate: false,
+		},
+		{
+			name: "--pod-max-pids defined, SupportPodPidsLimit=true",
+			cs: &ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorType:    Kubernetes,
+						OrchestratorVersion: "1.14.0",
+						KubernetesConfig: &KubernetesConfig{
+							KubeletConfig: map[string]string{
+								"--pod-max-pids":  "100",
+								"--feature-gates": "SupportPodPidsLimit=true",
+							},
+						},
+					},
+				},
+			},
+			expectedPodMaxPids:                     "100",
+			expectedSupportPodPidsLimitFeatureGate: true,
+		},
+		{
+			name: "no --pod-max-pids defined, upgrade scenario",
+			cs: &ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorType:    Kubernetes,
+						OrchestratorVersion: "1.14.0",
+						KubernetesConfig:    &KubernetesConfig{},
+					},
+				},
+			},
+			isUpgrade:                              true,
+			expectedPodMaxPids:                     "-1",
+			expectedSupportPodPidsLimitFeatureGate: false,
+		},
+		{
+			name: "--pod-max-pids defined, upgrade scenario",
+			cs: &ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorType:    Kubernetes,
+						OrchestratorVersion: "1.14.0",
+						KubernetesConfig: &KubernetesConfig{
+							KubeletConfig: map[string]string{
+								"--pod-max-pids": "100",
+							},
+						},
+					},
+				},
+			},
+			isUpgrade:                              true,
+			expectedPodMaxPids:                     "-1",
+			expectedSupportPodPidsLimitFeatureGate: false,
+		},
+		{
+			name: "no --pod-max-pids defined, SupportPodPidsLimit=false, upgrade scenario",
+			cs: &ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorType:    Kubernetes,
+						OrchestratorVersion: "1.14.0",
+						KubernetesConfig: &KubernetesConfig{
+							KubeletConfig: map[string]string{
+								"--feature-gates": "SupportPodPidsLimit=false",
+							},
+						},
+					},
+				},
+			},
+			isUpgrade:                              true,
+			expectedPodMaxPids:                     "-1",
+			expectedSupportPodPidsLimitFeatureGate: false,
+		},
+		{
+			name: "no --pod-max-pids defined, SupportPodPidsLimit=true, upgrade scenario",
+			cs: &ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorType:    Kubernetes,
+						OrchestratorVersion: "1.14.0",
+						KubernetesConfig: &KubernetesConfig{
+							KubeletConfig: map[string]string{
+								"--feature-gates": "SupportPodPidsLimit=true",
+							},
+						},
+					},
+				},
+			},
+			isUpgrade:                              true,
+			expectedPodMaxPids:                     "-1",
+			expectedSupportPodPidsLimitFeatureGate: true,
+		},
+		{
+			name: "--pod-max-pids defined, SupportPodPidsLimit=false, upgrade scenario",
+			cs: &ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorType:    Kubernetes,
+						OrchestratorVersion: "1.14.0",
+						KubernetesConfig: &KubernetesConfig{
+							KubeletConfig: map[string]string{
+								"--pod-max-pids":  "100",
+								"--feature-gates": "SupportPodPidsLimit=false",
+							},
+						},
+					},
+				},
+			},
+			isUpgrade:                              true,
+			expectedPodMaxPids:                     "-1",
+			expectedSupportPodPidsLimitFeatureGate: false,
+		},
+		{
+			name: "--pod-max-pids defined, SupportPodPidsLimit=true, upgrade scenario",
+			cs: &ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorType:    Kubernetes,
+						OrchestratorVersion: "1.14.0",
+						KubernetesConfig: &KubernetesConfig{
+							KubeletConfig: map[string]string{
+								"--pod-max-pids":  "100",
+								"--feature-gates": "SupportPodPidsLimit=true",
+							},
+						},
+					},
+				},
+			},
+			isUpgrade:                              true,
+			expectedPodMaxPids:                     "100",
+			expectedSupportPodPidsLimitFeatureGate: true,
+		},
+	}
+
+	for _, c := range cases {
+		c := c
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+			c.cs.setKubeletConfig(c.isUpgrade)
+			podMaxPids := c.cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig["--pod-max-pids"]
+			if podMaxPids != c.expectedPodMaxPids {
+				t.Fatalf("expected --pod-max-pids be equal to %s, got %s", c.expectedPodMaxPids, podMaxPids)
+			}
+			featureGates := c.cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig["--feature-gates"]
+			hasSupportPodPidsLimitFeatureGate := strings.Contains(featureGates, "SupportPodPidsLimit=true")
+			if hasSupportPodPidsLimitFeatureGate != c.expectedSupportPodPidsLimitFeatureGate {
+				t.Fatalf("expected SupportPodPidsLimit=true presence in --feature gates to be %t, got %t", c.expectedSupportPodPidsLimitFeatureGate, hasSupportPodPidsLimitFeatureGate)
+			}
+		})
+	}
+
 }

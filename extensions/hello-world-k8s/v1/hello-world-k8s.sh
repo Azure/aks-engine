@@ -1,6 +1,6 @@
-# Script file to install the docker hello-world container
-
 #!/bin/bash
+
+# Script file to install the docker hello-world container
 
 set -e
 
@@ -11,16 +11,14 @@ kubernetesStarted=1
 for i in {1..600}; do
     if [ -e /usr/local/bin/kubectl ]
     then
-        /usr/local/bin/kubectl cluster-info
-        if [ "$?" = "0" ]
+        if /usr/local/bin/kubectl cluster-info
         then
             echo "kubernetes started"
             kubernetesStarted=0
             break
         fi
     else
-        /usr/bin/docker ps | grep apiserver
-        if [ "$?" = "0" ]
+        if /usr/bin/docker ps | grep apiserver
         then
             echo "kubernetes started"
             kubernetesStarted=0

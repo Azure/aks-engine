@@ -5,7 +5,7 @@ package kubernetesupgrade
 
 import (
 	"context"
-	"fmt"
+	"math/rand"
 	"strings"
 	"time"
 
@@ -70,10 +70,11 @@ type UpgradeCluster struct {
 	Translator *i18n.Translator
 	Logger     *logrus.Entry
 	ClusterTopology
-	Client          armhelpers.AKSEngineClient
-	StepTimeout     *time.Duration
-	UpgradeWorkFlow UpgradeWorkFlow
-	Force           bool
+	Client             armhelpers.AKSEngineClient
+	StepTimeout        *time.Duration
+	CordonDrainTimeout *time.Duration
+	UpgradeWorkFlow    UpgradeWorkFlow
+	Force              bool
 }
 
 // MasterVMNamePrefix is the prefix for all master VM names for Kubernetes clusters
@@ -88,8 +89,40 @@ func (uc *UpgradeCluster) UpgradeCluster(az armhelpers.AKSEngineClient, kubeConf
 	uc.UpgradedMasterVMs = &[]compute.VirtualMachine{}
 	uc.AgentPools = make(map[string]*AgentPoolTopology)
 
-	if err := uc.getClusterNodeStatus(az, uc.ResourceGroup, kubeConfig); err != nil {
+	var kubeClient armhelpers.KubernetesClient
+	if az != nil {
+		timeout := time.Duration(60) * time.Minute
+		k, err := az.GetKubernetesClient("", kubeConfig, interval, timeout)
+		if err != nil {
+			uc.Logger.Warnf("Failed to get a Kubernetes client: %v", err)
+		}
+		kubeClient = k
+	}
+
+	if err := uc.getClusterNodeStatus(kubeClient, uc.ResourceGroup); err != nil {
 		return uc.Translator.Errorf("Error while querying ARM for resources: %+v", err)
+	}
+
+	kc := uc.DataModel.Properties.OrchestratorProfile.KubernetesConfig
+	if kc != nil && kc.IsClusterAutoscalerEnabled() {
+		// pause the cluster-autoscaler before running upgrade and resume it afterward
+		uc.Logger.Info("Pausing cluster autoscaler, replica count: 0")
+		count, err := uc.SetClusterAutoscalerReplicaCount(kubeClient, 0)
+		if err != nil {
+			uc.Logger.Errorf("Failed to pause cluster-autoscaler: %v", err)
+			if !uc.Force {
+				return err
+			}
+		} else {
+			if err == nil {
+				defer func() {
+					uc.Logger.Infof("Resuming cluster autoscaler, replica count: %d", count)
+					if _, err = uc.SetClusterAutoscalerReplicaCount(kubeClient, count); err != nil {
+						uc.Logger.Errorf("Failed to resume cluster-autoscaler: %v", err)
+					}
+				}()
+			}
+		}
 	}
 
 	upgradeVersion := uc.DataModel.Properties.OrchestratorProfile.OrchestratorVersion
@@ -103,30 +136,49 @@ func (uc *UpgradeCluster) UpgradeCluster(az armhelpers.AKSEngineClient, kubeConf
 	return nil
 }
 
+// SetClusterAutoscalerReplicaCount changes the replica count of a cluster-autoscaler deployment.
+func (uc *UpgradeCluster) SetClusterAutoscalerReplicaCount(kubeClient armhelpers.KubernetesClient, replicaCount int32) (int32, error) {
+	if kubeClient == nil {
+		return 0, errors.New("no kubernetes client")
+	}
+	var count int32
+	var err error
+	const namespace, name, retries = "kube-system", "cluster-autoscaler", 10
+	for attempt := 0; attempt < retries; attempt++ {
+		deployment, getErr := kubeClient.GetDeployment(namespace, name)
+		err = getErr
+		if getErr == nil {
+			count = *deployment.Spec.Replicas
+			deployment.Spec.Replicas = &replicaCount
+			if _, err = kubeClient.UpdateDeployment(namespace, deployment); err == nil {
+				break
+			}
+		}
+		sleepTime := time.Duration(rand.Intn(5))
+		uc.Logger.Warnf("Failed to update cluster-autoscaler deployment: %v", err)
+		uc.Logger.Infof("Retry updating cluster-autoscaler after %d seconds", sleepTime)
+		time.Sleep(sleepTime * time.Second)
+	}
+	if err != nil {
+		return 0, err
+	}
+	return count, nil
+}
+
 func (uc *UpgradeCluster) getUpgradeWorkflow(kubeConfig string, aksEngineVersion string) UpgradeWorkFlow {
 	if uc.UpgradeWorkFlow != nil {
 		return uc.UpgradeWorkFlow
 	}
 	u := &Upgrader{}
-	u.Init(uc.Translator, uc.Logger, uc.ClusterTopology, uc.Client, kubeConfig, uc.StepTimeout, aksEngineVersion)
+	u.Init(uc.Translator, uc.Logger, uc.ClusterTopology, uc.Client, kubeConfig, uc.StepTimeout, uc.CordonDrainTimeout, aksEngineVersion)
 	return u
 }
 
-func (uc *UpgradeCluster) getClusterNodeStatus(az armhelpers.AKSEngineClient, resourceGroup, kubeConfig string) error {
+func (uc *UpgradeCluster) getClusterNodeStatus(kubeClient armhelpers.KubernetesClient, resourceGroup string) error {
 	goalVersion := uc.DataModel.Properties.OrchestratorProfile.OrchestratorVersion
 
 	ctx, cancel := context.WithTimeout(context.Background(), armhelpers.DefaultARMOperationTimeout)
 	defer cancel()
-
-	var kubeClient armhelpers.KubernetesClient
-	if az != nil {
-		timeout := time.Duration(60) * time.Minute
-		k, err := az.GetKubernetesClient("", kubeConfig, interval, timeout)
-		if err != nil {
-			uc.Logger.Warnf("Failed to get a Kubernetes client: %v", err)
-		}
-		kubeClient = k
-	}
 
 	for vmScaleSetPage, err := uc.Client.ListVirtualMachineScaleSets(ctx, resourceGroup); vmScaleSetPage.NotDone(); err = vmScaleSetPage.NextWithContext(ctx) {
 		if err != nil {
@@ -140,6 +192,13 @@ func (uc *UpgradeCluster) getClusterNodeStatus(az armhelpers.AKSEngineClient, re
 				if err != nil {
 					return err
 				}
+				// set agent pool node count to match VMSS capacity
+				for _, pool := range uc.ClusterTopology.DataModel.Properties.AgentPoolProfiles {
+					if poolName, _, _ := utils.VmssNameParts(*vmScaleSet.Name); poolName == pool.Name {
+						pool.Count = int(*vmScaleSet.Sku.Capacity)
+						break
+					}
+				}
 				scaleSetToUpgrade := AgentPoolScaleSet{
 					Name:     *vmScaleSet.Name,
 					Sku:      *vmScaleSet.Sku,
@@ -152,7 +211,7 @@ func (uc *UpgradeCluster) getClusterNodeStatus(az armhelpers.AKSEngineClient, re
 					uc.Logger.Infof("Set isWindows flag for vmss %s.", *vmScaleSet.Name)
 				}
 				for _, vm := range vmScaleSetVMsPage.Values() {
-					currentVersion := uc.getNodeVersion(kubeClient, strings.ToLower(*vm.Name), vm.Tags)
+					currentVersion := uc.getNodeVersion(kubeClient, strings.ToLower(*vm.VirtualMachineScaleSetVMProperties.OsProfile.ComputerName), vm.Tags, *vm.VirtualMachineScaleSetVMProperties.LatestModelApplied)
 					if uc.Force {
 						if currentVersion == "" {
 							currentVersion = "Unknown"
@@ -185,6 +244,8 @@ func (uc *UpgradeCluster) getClusterNodeStatus(az armhelpers.AKSEngineClient, re
 		}
 	}
 
+	availabilitySetIDs := []string{}
+
 	for vmListPage, err := uc.Client.ListVirtualMachines(ctx, resourceGroup); vmListPage.NotDone(); err = vmListPage.Next() {
 		if err != nil {
 			return err
@@ -197,7 +258,11 @@ func (uc *UpgradeCluster) getClusterNodeStatus(az armhelpers.AKSEngineClient, re
 					*vm.Name, uc.NameSuffix)
 				continue
 			}
-			currentVersion := uc.getNodeVersion(kubeClient, strings.ToLower(*vm.Name), vm.Tags)
+			currentVersion := uc.getNodeVersion(kubeClient, strings.ToLower(*vm.Name), vm.Tags, true)
+
+			if vm.AvailabilitySet != nil {
+				availabilitySetIDs = append(availabilitySetIDs, *vm.AvailabilitySet.ID)
+			}
 
 			if uc.Force {
 				if currentVersion == "" {
@@ -224,6 +289,13 @@ func (uc *UpgradeCluster) getClusterNodeStatus(az armhelpers.AKSEngineClient, re
 		}
 	}
 
+	// set the VMAS platformFaultDomainCount to match the existing value
+	fdCount, err := uc.Client.GetAvailabilitySetFaultDomainCount(ctx, resourceGroup, availabilitySetIDs)
+	if err != nil {
+		return err
+	}
+	uc.DataModel.SetPlatformFaultDomainCount(fdCount)
+
 	return nil
 }
 
@@ -248,37 +320,29 @@ func (uc *UpgradeCluster) upgradable(currentVersion string) error {
 }
 
 // getNodeVersion returns a node's current Kubernetes version via Kubernetes API or VM tag.
-func (uc *UpgradeCluster) getNodeVersion(client armhelpers.KubernetesClient, name string, tags map[string]*string) string {
-	if tags != nil && tags["orchestrator"] != nil {
-		parts := strings.Split(*tags["orchestrator"], ":")
-		if len(parts) == 2 {
-			return parts[1]
+// For VMSS nodes, make sure OsProfile.ComputerName instead of VM name is used as the name here
+// because the former is used as the K8s node name.
+// Also, if the latest VMSS model is applied, then we can get the version info from the tags.
+// Otherwise, we have to get version via K8s API. This is because VMSS does not support tags
+// for individual instances and old/new instances have the same tags.
+func (uc *UpgradeCluster) getNodeVersion(client armhelpers.KubernetesClient, name string, tags map[string]*string, getVersionFromTags bool) string {
+	if getVersionFromTags {
+		if tags != nil && tags["orchestrator"] != nil {
+			parts := strings.Split(*tags["orchestrator"], ":")
+			if len(parts) == 2 {
+				return parts[1]
+			}
 		}
+
+		uc.Logger.Warnf("Expected tag \"orchestrator\" not found for VM: %s. Using Kubernetes API to retrieve Kubernetes version.", name)
 	}
-	uc.Logger.Warnf("Expected tag \"orchestrator\" not found for VM: %s. Using Kubernetes API to retrieve Kubernetes version.", name)
+
 	if client != nil {
 		node, err := client.GetNode(name)
 		if err == nil {
 			return strings.TrimPrefix(node.Status.NodeInfo.KubeletVersion, "v")
 		}
 		uc.Logger.Warnf("Failed to get node %s: %v", name, err)
-		// If it's a VMSS cluster, generate the likely Kubernetes node name and try again.
-		if strings.Contains(name, "vmss_") {
-			parts := strings.Split(name, "_")
-			if len(parts) == 2 {
-				end := 28 // keep the overall node name at 34 chars or less
-				if len(parts[0]) < end {
-					end = len(parts[0])
-				}
-				vmssName := fmt.Sprintf("%s%06s", parts[0][0:end], parts[1])
-				node, err := client.GetNode(vmssName)
-				if err == nil {
-					uc.Logger.Infof("Found VMSS node %s under the name %s", name, vmssName)
-					return strings.TrimPrefix(node.Status.NodeInfo.KubeletVersion, "v")
-				}
-				uc.Logger.Warnf("Failed to get node %s: %v", vmssName, err)
-			}
-		}
 	}
 	return ""
 }

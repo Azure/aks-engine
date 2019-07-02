@@ -22,6 +22,7 @@ import (
 	azStorage "github.com/Azure/azure-sdk-for-go/storage"
 	"github.com/Azure/go-autorest/autorest"
 	log "github.com/sirupsen/logrus"
+	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 )
 
@@ -68,21 +69,24 @@ type MockStorageClient struct {
 
 //MockKubernetesClient mock implementation of KubernetesClient
 type MockKubernetesClient struct {
-	FailListPods             bool
-	FailListNodes            bool
-	FailListServiceAccounts  bool
-	FailGetNode              bool
-	UpdateNodeFunc           func(*v1.Node) (*v1.Node, error)
-	FailUpdateNode           bool
-	FailDeleteNode           bool
-	FailDeleteServiceAccount bool
-	FailSupportEviction      bool
-	FailDeletePod            bool
-	FailEvictPod             bool
-	FailWaitForDelete        bool
-	ShouldSupportEviction    bool
-	PodsList                 *v1.PodList
-	ServiceAccountList       *v1.ServiceAccountList
+	FailListPods              bool
+	FailListNodes             bool
+	FailListServiceAccounts   bool
+	FailGetNode               bool
+	UpdateNodeFunc            func(*v1.Node) (*v1.Node, error)
+	GetNodeFunc               func(name string) (*v1.Node, error)
+	FailUpdateNode            bool
+	FailDeleteNode            bool
+	FailDeleteServiceAccount  bool
+	FailSupportEviction       bool
+	FailDeletePod             bool
+	FailEvictPod              bool
+	FailWaitForDelete         bool
+	ShouldSupportEviction     bool
+	PodsList                  *v1.PodList
+	ServiceAccountList        *v1.ServiceAccountList
+	FailGetDeploymentCount    int
+	FailUpdateDeploymentCount int
 }
 
 // MockVirtualMachineListResultPage contains a page of VirtualMachine values.
@@ -335,6 +339,9 @@ func (mkc *MockKubernetesClient) ListServiceAccounts(namespace string) (*v1.Serv
 
 //GetNode returns details about node with passed in name
 func (mkc *MockKubernetesClient) GetNode(name string) (*v1.Node, error) {
+	if mkc.GetNodeFunc != nil {
+		return mkc.GetNodeFunc(name)
+	}
 	if mkc.FailGetNode {
 		return nil, errors.New("GetNode failed")
 	}
@@ -404,6 +411,29 @@ func (mkc *MockKubernetesClient) WaitForDelete(logger *log.Entry, pods []v1.Pod,
 		return nil, errors.New("WaitForDelete failed")
 	}
 	return []v1.Pod{}, nil
+}
+
+// GetDeployment returns a given deployment in a namespace.
+func (mkc *MockKubernetesClient) GetDeployment(namespace, name string) (*appsv1.Deployment, error) {
+	if mkc.FailGetDeploymentCount > 0 {
+		mkc.FailGetDeploymentCount--
+		return nil, errors.New("GetDeployment failed")
+	}
+	var replicas int32 = 1
+	return &appsv1.Deployment{
+		Spec: appsv1.DeploymentSpec{
+			Replicas: &replicas,
+		},
+	}, nil
+}
+
+// UpdateDeployment updates a deployment to match the given specification.
+func (mkc *MockKubernetesClient) UpdateDeployment(namespace string, deployment *appsv1.Deployment) (*appsv1.Deployment, error) {
+	if mkc.FailUpdateDeploymentCount > 0 {
+		mkc.FailUpdateDeploymentCount--
+		return nil, errors.New("UpdateDeployment failed")
+	}
+	return &appsv1.Deployment{}, nil
 }
 
 //DeleteBlob mock
@@ -528,7 +558,11 @@ func (mc *MockAKSEngineClient) ListVirtualMachines(ctx context.Context, resource
 
 	if mc.FakeListVirtualMachineResult == nil {
 		mc.FakeListVirtualMachineResult = func() []compute.VirtualMachine {
-			return []compute.VirtualMachine{mc.MakeFakeVirtualMachine(DefaultFakeVMName, defaultK8sVersionForFakeVMs)}
+			machine := mc.MakeFakeVirtualMachine(DefaultFakeVMName, defaultK8sVersionForFakeVMs)
+			machine.AvailabilitySet = &compute.SubResource{
+				ID: to.StringPtr("MockAvailabilitySet"),
+			}
+			return []compute.VirtualMachine{machine}
 		}
 	}
 	vms := mc.FakeListVirtualMachineResult()
@@ -622,12 +656,14 @@ func (mc *MockAKSEngineClient) MakeFakeVirtualMachineScaleSetVMWithGivenName(orc
 		tags = nil
 	}
 
+	trueVar := true
 	return compute.VirtualMachineScaleSetVM{
 		Name:       &vm1Name,
 		Tags:       tags,
 		InstanceID: &instanceID,
 		VirtualMachineScaleSetVMProperties: &compute.VirtualMachineScaleSetVMProperties{
-			OsProfile: &compute.OSProfile{ComputerName: &computerName},
+			LatestModelApplied: &trueVar,
+			OsProfile:          &compute.OSProfile{ComputerName: &computerName},
 			StorageProfile: &compute.StorageProfile{
 				OsDisk: &compute.OSDisk{
 					Vhd: &compute.VirtualHardDisk{
@@ -749,6 +785,16 @@ func (mc *MockAKSEngineClient) ListVirtualMachineScaleSetVMs(ctx context.Context
 		},
 		Vmssvlr: compute.VirtualMachineScaleSetVMListResult{Value: &vms},
 	}, nil
+}
+
+// GetAvailabilitySet mock
+func (mc *MockAKSEngineClient) GetAvailabilitySet(ctx context.Context, resourceGroup, availabilitySetName string) (compute.AvailabilitySet, error) {
+	return compute.AvailabilitySet{}, nil
+}
+
+// GetAvailabilitySetFaultDomainCount mock
+func (mc *MockAKSEngineClient) GetAvailabilitySetFaultDomainCount(ctx context.Context, resourceGroup string, vmasIDs []string) (int, error) {
+	return 3, nil
 }
 
 //GetStorageClient mock

@@ -1,0 +1,111 @@
+{
+  // Use IntelliSense to learn about possible attributes.
+  // Hover to view descriptions of existing attributes.
+  // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "deploy",
+      "type": "go",
+      "request": "launch",
+      "mode": "auto",
+      "program": "${workspaceRoot}",
+      "env": {},
+      "args": [
+        "deploy",
+        "--debug",
+        "--api-model=${workspaceRoot}/examples/kubernetes.json",
+        "--dns-prefix=${input:dnsPrefix}",
+        "--auto-suffix",
+        "--location=${input:location}",
+        "--client-id=${env:CLIENT_ID}",
+        "--client-secret=${env:CLIENT_SECRET}",
+        "--set", "linuxProfile.ssh.publicKeys[0].keyData=${env:AKSE_PUB_KEY}"
+      ],
+      "showLog": true
+    },
+    {
+      "name": "generate",
+      "type": "go",
+      "request": "launch",
+      "mode": "auto",
+      "program": "${workspaceRoot}",
+      "env": {},
+      "args": [
+        "generate",
+        "--debug",
+        "--api-model=${workspaceRoot}/examples/kubernetes.json",
+        "--set", "linuxProfile.ssh.publicKeys[0].keyData=${env:AKSE_PUB_KEY}"
+      ],
+      "showLog": true
+    },
+    {
+      "name": "scale",
+      "type": "go",
+      "request": "launch",
+      "mode": "auto",
+      "program": "${workspaceRoot}",
+      "env": {},
+      "args": [
+        "scale",
+        "--debug",
+        "--api-model=${workspaceRoot}/_output/${input:clusterName}/apimodel.json",
+        "--master-FQDN=${input:clusterName}.eastus.cloudapp.azure.com",
+        "--location=${input:location}",
+        "--resource-group=${input:clusterName}",
+        "--new-node-count=${input:newNodeCount}",
+        "--client-id=${env:CLIENT_ID}",
+        "--client-secret=${env:CLIENT_SECRET}"
+        ]
+    },
+    {
+      "name": "upgrade",
+      "type": "go",
+      "request": "launch",
+      "mode": "auto",
+      "program": "${workspaceRoot}",
+      "env": {},
+      "args": [
+        "upgrade",
+        "--debug",
+        "--api-model=${workspaceRoot}/_output/${input:clusterName}/apimodel.json",
+        "--force",
+        "--location=${input:location}",
+        "--resource-group=${input:clusterName}",
+        "--upgrade-version=${input:kubernetesVersion}",
+        "--client-id=${env:CLIENT_ID}",
+        "--client-secret=${env:CLIENT_SECRET}"
+      ]
+    }
+  ],
+  "inputs": [
+    {
+      "id": "clusterName",
+      "type": "promptString",
+      "description": "Name of cluster:"
+    },
+    {
+      "id": "dnsPrefix",
+      "type": "promptString",
+      "description": "DNS prefix:"
+    },
+    {
+      "id": "kubernetesVersion",
+      "type": "promptString",
+      "description": "Kubernetes version:",
+      "default": "1.13.6"
+    },
+    {
+      "id": "location",
+      "type": "promptString",
+      "description": "Azure location:",
+      "default": "eastus"
+    },
+    {
+      "id": "newNodeCount",
+      "type": "promptString",
+      "description": "node count:",
+      "default": "3"
+    }
+  ]
+}

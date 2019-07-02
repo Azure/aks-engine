@@ -25,14 +25,16 @@ const (
 
 // Distro string consts
 const (
-	Ubuntu          Distro = "ubuntu"
-	Ubuntu1804      Distro = "ubuntu-18.04"
-	RHEL            Distro = "rhel"
-	CoreOS          Distro = "coreos"
-	AKS             Distro = "aks"
-	AKSDockerEngine Distro = "aks-docker-engine" // deprecated docker-engine distro
-	AKS1804         Distro = "aks-18.04"
-	ACC1604         Distro = "acc-16.04"
+	Ubuntu            Distro = "ubuntu"
+	Ubuntu1804        Distro = "ubuntu-18.04"
+	RHEL              Distro = "rhel"
+	CoreOS            Distro = "coreos"
+	AKS1604Deprecated Distro = "aks"               // deprecated AKS 16.04 distro. Equivalent to aks-ubuntu-16.04.
+	AKS1804Deprecated Distro = "aks-1804"          // deprecated AKS 18.04 distro. Equivalent to aks-ubuntu-18.04.
+	AKSDockerEngine   Distro = "aks-docker-engine" // deprecated docker-engine distro.
+	AKSUbuntu1604     Distro = "aks-ubuntu-16.04"
+	AKSUbuntu1804     Distro = "aks-ubuntu-18.04"
+	ACC1604           Distro = "acc-16.04"
 )
 
 const (
@@ -150,48 +152,54 @@ const (
 	DefaultUseInstanceMetadata = true
 	// DefaultLoadBalancerSku determines the aks-engine provided default for enabling Azure cloudprovider load balancer SKU
 	DefaultLoadBalancerSku = "Basic"
+	// StandardLoadBalancerSku is the string const for Azure Standard Load Balancer
+	StandardLoadBalancerSku = "Standard"
 	// DefaultExcludeMasterFromStandardLB determines the aks-engine provided default for excluding master nodes from standard load balancer.
 	DefaultExcludeMasterFromStandardLB = true
 	// DefaultSecureKubeletEnabled determines the aks-engine provided default for securing kubelet communications
 	DefaultSecureKubeletEnabled = true
 	// DefaultMetricsServerAddonEnabled determines the aks-engine provided default for enabling kubernetes metrics-server addon
-	DefaultMetricsServerAddonEnabled = false
+	DefaultMetricsServerAddonEnabled = true
 	// DefaultNVIDIADevicePluginAddonEnabled determines the aks-engine provided default for enabling NVIDIA Device Plugin
 	DefaultNVIDIADevicePluginAddonEnabled = false
 	// DefaultContainerMonitoringAddonEnabled determines the aks-engine provided default for enabling kubernetes container monitoring addon
 	DefaultContainerMonitoringAddonEnabled = false
 	// DefaultDNSAutoscalerAddonEnabled determines the aks-engine provided default for dns-autoscaler addon
 	DefaultDNSAutoscalerAddonEnabled = false
-	// IPMasqAgentAddonEnabled enables the ip-masq-agent addon
-	IPMasqAgentAddonEnabled = true
-	// DefaultHeapsterAddonName is the name of the heapster addon
-	DefaultHeapsterAddonName = "heapster"
-	// DefaultTillerAddonName is the name of the tiller addon deployment
-	DefaultTillerAddonName = "tiller"
-	// DefaultAADPodIdentityAddonName is the name of the aad-pod-identity addon deployment
-	DefaultAADPodIdentityAddonName = "aad-pod-identity"
-	// DefaultACIConnectorAddonName is the name of the aci-connector addon deployment
-	DefaultACIConnectorAddonName = "aci-connector"
-	// DefaultClusterAutoscalerAddonName is the name of the cluster autoscaler addon deployment
-	DefaultClusterAutoscalerAddonName = "cluster-autoscaler"
-	// DefaultBlobfuseFlexVolumeAddonName is the name of the blobfuse flexvolume addon
-	DefaultBlobfuseFlexVolumeAddonName = "blobfuse-flexvolume"
-	// DefaultSMBFlexVolumeAddonName is the name of the smb flexvolume addon
-	DefaultSMBFlexVolumeAddonName = "smb-flexvolume"
-	// DefaultKeyVaultFlexVolumeAddonName is the name of the key vault flexvolume addon deployment
-	DefaultKeyVaultFlexVolumeAddonName = "keyvault-flexvolume"
-	// DefaultDashboardAddonName is the name of the kubernetes-dashboard addon deployment
-	DefaultDashboardAddonName = "kubernetes-dashboard"
-	// DefaultReschedulerAddonName is the name of the rescheduler addon deployment
-	DefaultReschedulerAddonName = "rescheduler"
-	// DefaultMetricsServerAddonName is the name of the kubernetes metrics server addon deployment
-	DefaultMetricsServerAddonName = "metrics-server"
+	// DefaultIPMasqAgentAddonEnabled enables the ip-masq-agent addon
+	DefaultIPMasqAgentAddonEnabled = true
+	// HeapsterAddonName is the name of the heapster addon
+	HeapsterAddonName = "heapster"
+	// TillerAddonName is the name of the tiller addon deployment
+	TillerAddonName = "tiller"
+	// AADPodIdentityAddonName is the name of the aad-pod-identity addon deployment
+	AADPodIdentityAddonName = "aad-pod-identity"
+	// ACIConnectorAddonName is the name of the aci-connector addon deployment
+	ACIConnectorAddonName = "aci-connector"
+	// ClusterAutoscalerAddonName is the name of the cluster autoscaler addon deployment
+	ClusterAutoscalerAddonName = "cluster-autoscaler"
+	// BlobfuseFlexVolumeAddonName is the name of the blobfuse flexvolume addon
+	BlobfuseFlexVolumeAddonName = "blobfuse-flexvolume"
+	// SMBFlexVolumeAddonName is the name of the smb flexvolume addon
+	SMBFlexVolumeAddonName = "smb-flexvolume"
+	// KeyVaultFlexVolumeAddonName is the name of the key vault flexvolume addon deployment
+	KeyVaultFlexVolumeAddonName = "keyvault-flexvolume"
+	// DashboardAddonName is the name of the kubernetes-dashboard addon deployment
+	DashboardAddonName = "kubernetes-dashboard"
+	// ReschedulerAddonName is the name of the rescheduler addon deployment
+	ReschedulerAddonName = "rescheduler"
+	// MetricsServerAddonName is the name of the kubernetes metrics server addon deployment
+	MetricsServerAddonName = "metrics-server"
 	// NVIDIADevicePluginAddonName is the name of the NVIDIA device plugin addon deployment
 	NVIDIADevicePluginAddonName = "nvidia-device-plugin"
 	// ContainerMonitoringAddonName is the name of the kubernetes Container Monitoring addon deployment
 	ContainerMonitoringAddonName = "container-monitoring"
+	// CalicoAddonName is the name of calico daemonset addon
+	CalicoAddonName = "calico-daemonset"
 	// IPMASQAgentAddonName is the name of the ip masq agent addon
 	IPMASQAgentAddonName = "ip-masq-agent"
+	// PodSecurityPolicyAddonName is the name of the PodSecurityPolicy addon
+	PodSecurityPolicyAddonName = "pod-security-policy"
 	// DefaultPrivateClusterEnabled determines the aks-engine provided default for enabling kubernetes Private Cluster
 	DefaultPrivateClusterEnabled = false
 	// NetworkPolicyAzure is the string expression for Azure CNI network policy manager
@@ -215,10 +223,14 @@ const (
 	DefaultAcceleratedNetworking = true
 	// DefaultVMSSOverProvisioningEnabled determines the aks-engine provided default for enabling VMSS Overprovisioning
 	DefaultVMSSOverProvisioningEnabled = false
-	// DefaultDNSAutoscalerAddonName is the name of the dns-autoscaler addon
-	DefaultDNSAutoscalerAddonName = "dns-autoscaler"
+	// DefaultAuditDEnabled determines the aks-engine provided default for enabling auditd
+	DefaultAuditDEnabled = false
+	// DNSAutoscalerAddonName is the name of the dns-autoscaler addon
+	DNSAutoscalerAddonName = "dns-autoscaler"
 	// DefaultUseCosmos determines if the cluster will use cosmos as etcd storage
 	DefaultUseCosmos = false
+	// etcdEndpointURIFmt is the name format for a typical etcd account uri
+	etcdEndpointURIFmt = "%sk8s.etcd.cosmosdb.azure.com"
 	// DefaultMaximumLoadBalancerRuleCount determines the default value of maximum allowed loadBalancer rule count according to
 	// https://docs.microsoft.com/en-us/azure/azure-subscription-service-limits#load-balancer.
 	DefaultMaximumLoadBalancerRuleCount = 250
@@ -230,16 +242,28 @@ const (
 	DefaultEnableVMSSNodePublicIP = false
 )
 
+// AzureStackCloud Specific Defaults
+const (
+	// DefaultUseInstanceMetadata set to false as Azure Stack today doesn't support instance metadata service
+	DefaultAzureStackUseInstanceMetadata = false
+
+	// DefaultAzureStackAcceleratedNetworking set to false as Azure Stack today doesn't support accelerated networking
+	DefaultAzureStackAcceleratedNetworking = false
+
+	// DefaultAzureStackFaultDomainCount set to 3 as Azure Stack today has minimum 4 node deployment.
+	DefaultAzureStackFaultDomainCount = 3
+)
+
 // WindowsProfile defaults
 const (
 	// DefaultWindowsPublisher sets the default WindowsPublisher value in WindowsProfile
 	DefaultWindowsPublisher = "MicrosoftWindowsServer"
 	// DefaultWindowsOffer sets the default WindowsOffer value in WindowsProfile
-	DefaultWindowsOffer = "WindowsServerSemiAnnual"
+	DefaultWindowsOffer = "WindowsServer"
 	// DefaultWindowsSku sets the default WindowsSku value in WindowsProfile
 	DefaultWindowsSku = "Datacenter-Core-1809-with-Containers-smalldisk"
 	// DefaultImageVersion sets the default ImageVersion value in WindowsProfile
-	DefaultImageVersion = "1809.0.20190314"
+	DefaultImageVersion = "17763.557.20190604"
 )
 
 const (
@@ -286,11 +310,11 @@ const (
 	// AzureCniPluginVerLinux specifies version of Azure CNI plugin, which has been mirrored from
 	// https://github.com/Azure/azure-container-networking/releases/download/${AZURE_PLUGIN_VER}/azure-vnet-cni-linux-amd64-${AZURE_PLUGIN_VER}.tgz
 	// to https://acs-mirror.azureedge.net/cni
-	AzureCniPluginVerLinux = "v1.0.18"
+	AzureCniPluginVerLinux = "v1.0.22"
 	// AzureCniPluginVerWindows specifies version of Azure CNI plugin, which has been mirrored from
 	// https://github.com/Azure/azure-container-networking/releases/download/${AZURE_PLUGIN_VER}/azure-vnet-cni-windows-amd64-${AZURE_PLUGIN_VER}.zip
 	// to https://acs-mirror.azureedge.net/cni
-	AzureCniPluginVerWindows = "v1.0.18"
+	AzureCniPluginVerWindows = "v1.0.22"
 	// CNIPluginVer specifies the version of CNI implementation
 	// https://github.com/containernetworking/plugins
 	CNIPluginVer = "v0.7.5"
@@ -314,6 +338,9 @@ const (
 	// DefaultKubernetesMasterSubnet specifies the default subnet for masters and agents.
 	// Except when master VMSS is used, this specifies the default subnet for masters.
 	DefaultKubernetesMasterSubnet = "10.240.0.0/16"
+	// DefaultKubernetesMasterSubnetIPv6 specifies the default IPv6 subnet for masters and agents.
+	// Except when master VMSS is used, this specifies the default subnet for masters.
+	DefaultKubernetesMasterSubnetIPv6 = "2001:1234:5678:9abc::/64"
 	// DefaultAgentSubnetTemplate specifies a default agent subnet
 	DefaultAgentSubnetTemplate = "10.%d.0.0/16"
 	// DefaultKubernetesSubnet specifies the default subnet used for all masters, agents and pods
@@ -321,6 +348,8 @@ const (
 	DefaultKubernetesSubnet = "10.240.0.0/12"
 	// DefaultVNETCIDR is the default CIDR block for the VNET
 	DefaultVNETCIDR = "10.0.0.0/8"
+	// DefaultVNETCIDRIPv6 is the default IPv6 CIDR block for the VNET
+	DefaultVNETCIDRIPv6 = "2001:1234:5678:9a00::/56"
 	// DefaultKubernetesMaxPods is the maximum number of pods to run on a node.
 	DefaultKubernetesMaxPods = 110
 	// DefaultKubernetesMaxPodsVNETIntegrated is the maximum number of pods to run on a node when VNET integration is enabled.
@@ -373,7 +402,7 @@ const (
 	//DefaultKubernetesGCLowThreshold specifies the value for the image-gc-low-threshold kubelet flag
 	DefaultKubernetesGCLowThreshold = 80
 	// DefaultEtcdVersion specifies the default etcd version to install
-	DefaultEtcdVersion = "3.2.25"
+	DefaultEtcdVersion = "3.2.26"
 	// DefaultEtcdDiskSize specifies the default size for Kubernetes master etcd disk volumes in GB
 	DefaultEtcdDiskSize = "256"
 	// DefaultEtcdDiskSizeGT3Nodes = size for Kubernetes master etcd disk volumes in GB if > 3 nodes
@@ -402,12 +431,14 @@ const (
 	DefaultKubernetesAgentSubnetVMSS = "10.248.0.0/13"
 	// DefaultKubernetesClusterSubnet specifies the default subnet for pods.
 	DefaultKubernetesClusterSubnet = "10.244.0.0/16"
+	// DefaultKubernetesClusterSubnetIPv6 specifies the IPv6 default subnet for pods.
+	DefaultKubernetesClusterSubnetIPv6 = "fd00:101::/8"
 	// DefaultKubernetesServiceCIDR specifies the IP subnet that kubernetes will create Service IPs within.
 	DefaultKubernetesServiceCIDR = "10.0.0.0/16"
 	// DefaultKubernetesDNSServiceIP specifies the IP address that kube-dns listens on by default. must by in the default Service CIDR range.
 	DefaultKubernetesDNSServiceIP = "10.0.0.10"
 	// DefaultMobyVersion specifies the default Azure build version of Moby to install.
-	DefaultMobyVersion = "3.0.4"
+	DefaultMobyVersion = "3.0.6"
 	// DefaultContainerdVersion specifies the default containerd version to install.
 	DefaultContainerdVersion = "1.1.5"
 	// DefaultDockerBridgeSubnet specifies the default subnet for the docker bridge network for masters and agents.
@@ -471,4 +502,8 @@ const (
 	ClientCertificateAuthMethod = "client_certificate"
 )
 
-const TLSStrongCipherSuites = "TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305,TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305,TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA,TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA,TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA,TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA"
+// TLSStrongCipherSuitesAPIServer is a kube-bench-recommended allowed cipher suites for apiserver
+const TLSStrongCipherSuitesAPIServer = "TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305,TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305,TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA,TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA,TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA,TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA"
+
+// TLSStrongCipherSuitesKubelet is a kube-bench-recommended allowed cipher suites for kubelet
+const TLSStrongCipherSuitesKubelet = "TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305,TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305,TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,TLS_RSA_WITH_AES_256_GCM_SHA384,TLS_RSA_WITH_AES_128_GCM_SHA256"

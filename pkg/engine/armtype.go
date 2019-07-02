@@ -5,6 +5,8 @@ package engine
 
 import (
 	"encoding/json"
+	"regexp"
+	"strings"
 
 	"github.com/Azure/azure-sdk-for-go/services/cosmos-db/mgmt/2015-04-08/documentdb"
 	"github.com/Azure/azure-sdk-for-go/services/keyvault/mgmt/2018-02-14/keyvault"
@@ -63,6 +65,46 @@ type RoleAssignmentARM struct {
 type AvailabilitySetARM struct {
 	ARMResource
 	compute.AvailabilitySet
+}
+
+// MarshalJSON is the custom marshaler for an AvailabilitySetARM.
+// It acts as a decorator by replacing the JSON field "platformFaultDomainCount"
+// with an ARM expression if the value was not set.
+func (a AvailabilitySetARM) MarshalJSON() ([]byte, error) {
+	// alias the type to avoid infinite recursion in marshaling
+	type Alias AvailabilitySetARM
+	bytes, err := json.Marshal((Alias)(a))
+	if err != nil {
+		return nil, err
+	}
+
+	if a.AvailabilitySet.PlatformFaultDomainCount != nil {
+		return bytes, nil
+	}
+
+	// armExpr is evaluated by Azure Resource Manager at deployment time:
+	//   if location is in the three-fault-domain list, return 3
+	//   else if location is "canary" (testing), return 1
+	//   else return 2
+	// NOTE: use fault_domains_expr.py to update this ARM expression.
+	armExpr := `"[
+	if( contains(
+	      split('canadacentral,centralus,eastus,eastus2,northcentralus,northeurope,southcentralus,westeurope,westus', ','),
+	        variables('location') ),
+	  3,
+	if( equals('centraluseuap', variables('location') ),
+	  1,
+	  2
+	))]"`
+	// strip all whitespace
+	armExpr = strings.Join(strings.Fields(armExpr), "")
+
+	// insert ARM expression for platformFaultDomainCount as the first JSON property
+	// NOTE: this relies on this field being omitted in JSON when its value is nil.
+	re := regexp.MustCompile(`"properties" *: *{ *"`)
+	s := re.ReplaceAllLiteralString(string(bytes), `"properties":{"platformFaultDomainCount":`+armExpr+`,"`)
+
+	return []byte(s), nil
 }
 
 // StorageAccountARM embeds the ARMResource type in storage.Account.

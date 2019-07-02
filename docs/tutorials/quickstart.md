@@ -109,11 +109,12 @@ Finally, run `aks-engine deploy` with the appropriate arguments:
 
 ```console
 $ aks-engine deploy --subscription-id 51ac25de-afdg-9201-d923-8d8e8e8e8e8e \
-    --auth-method cli \
     --dns-prefix contoso-apple \
     --resource-group contoso-apple \
     --location westus2 \
     --api-model examples/kubernetes.json \
+    --client-id 47a62f0b-917c-4def-aa85-9b010455e591 \
+    --client-secret 26054d2b-799b-448e-962a-783d0d6f976b \
     --set servicePrincipalProfile.clientId="47a62f0b-917c-4def-aa85-9b010455e591" \
     --set servicePrincipalProfile.secret="26054d2b-799b-448e-962a-783d0d6f976b"
 

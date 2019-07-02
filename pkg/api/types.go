@@ -4,12 +4,14 @@
 package api
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"hash/fnv"
 	"math/rand"
 	"net"
 	neturl "net/url"
+	"sort"
 	"strconv"
 	"strings"
 	"sync"
@@ -113,6 +115,7 @@ type AddonProfile struct {
 type FeatureFlags struct {
 	EnableCSERunInBackground bool `json:"enableCSERunInBackground,omitempty"`
 	BlockOutboundInternet    bool `json:"blockOutboundInternet,omitempty"`
+	EnableIPv6DualStack      bool `json:"enableIPv6DualStack,omitempty"`
 }
 
 // ServicePrincipalProfile contains the client and secret used by the cluster for Azure Resource CRUD
@@ -269,10 +272,10 @@ type KubernetesAddon struct {
 	Data       string                    `json:"data,omitempty"`
 }
 
-// IsEnabled returns if the addon is explicitly enabled, or the user-provided default if non explicitly enabled
-func (a *KubernetesAddon) IsEnabled(ifNil bool) bool {
+// IsEnabled returns true if the addon is enabled
+func (a *KubernetesAddon) IsEnabled() bool {
 	if a.Enabled == nil {
-		return ifNil
+		return false
 	}
 	return *a.Enabled
 }
@@ -379,7 +382,7 @@ type KubernetesConfig struct {
 	CloudControllerManagerConfig     map[string]string `json:"cloudControllerManagerConfig,omitempty"`
 	APIServerConfig                  map[string]string `json:"apiServerConfig,omitempty"`
 	SchedulerConfig                  map[string]string `json:"schedulerConfig,omitempty"`
-	PodSecurityPolicyConfig          map[string]string `json:"podSecurityPolicyConfig,omitempty"`
+	PodSecurityPolicyConfig          map[string]string `json:"podSecurityPolicyConfig,omitempty"` // Deprecated
 	CloudProviderBackoff             *bool             `json:"cloudProviderBackoff,omitempty"`
 	CloudProviderBackoffRetries      int               `json:"cloudProviderBackoffRetries,omitempty"`
 	CloudProviderBackoffJitter       float64           `json:"cloudProviderBackoffJitter,omitempty"`
@@ -434,6 +437,16 @@ type DcosConfig struct {
 	BootstrapProfile         *BootstrapProfile `json:"bootstrapProfile,omitempty"`
 }
 
+// HasPrivateRegistry returns if a private registry is specified
+func (d *DcosConfig) HasPrivateRegistry() bool {
+	return len(d.Registry) > 0
+}
+
+// HasBootstrap returns if a bootstrap profile is specified
+func (d *DcosConfig) HasBootstrap() bool {
+	return d.BootstrapProfile != nil
+}
+
 // MasterProfile represents the definition of the master cluster
 type MasterProfile struct {
 	Count                    int               `json:"count"`
@@ -446,6 +459,7 @@ type MasterProfile struct {
 	AgentVnetSubnetID        string            `json:"agentVnetSubnetID,omitempty"`
 	FirstConsecutiveStaticIP string            `json:"firstConsecutiveStaticIP,omitempty"`
 	Subnet                   string            `json:"subnet"`
+	SubnetIPv6               string            `json:"subnetIPv6"`
 	IPAddressCount           int               `json:"ipAddressCount,omitempty"`
 	StorageProfile           string            `json:"storageProfile,omitempty"`
 	HTTPSourceAddressPrefix  string            `json:"HTTPSourceAddressPrefix,omitempty"`
@@ -457,10 +471,12 @@ type MasterProfile struct {
 	ImageRef                 *ImageReference   `json:"imageReference,omitempty"`
 	CustomFiles              *[]CustomFile     `json:"customFiles,omitempty"`
 	AvailabilityProfile      string            `json:"availabilityProfile"`
+	PlatformFaultDomainCount *int              `json:"platformFaultDomainCount"`
 	AgentSubnet              string            `json:"agentSubnet,omitempty"`
 	AvailabilityZones        []string          `json:"availabilityZones,omitempty"`
 	SinglePlacementGroup     *bool             `json:"singlePlacementGroup,omitempty"`
-
+	AuditDEnabled            *bool             `json:"auditDEnabled,omitempty"`
+	CustomVMTags             map[string]string `json:"customVMTags,omitempty"`
 	// Master LB public endpoint/FQDN with port
 	// The format will be FQDN:2376
 	// Not used during PUT, returned as part of GET
@@ -505,6 +521,7 @@ type AgentPoolProfile struct {
 	Ports                               []int                `json:"ports,omitempty"`
 	ProvisioningState                   ProvisioningState    `json:"provisioningState,omitempty"`
 	AvailabilityProfile                 string               `json:"availabilityProfile"`
+	PlatformFaultDomainCount            *int                 `json:"platformFaultDomainCount"`
 	ScaleSetPriority                    string               `json:"scaleSetPriority,omitempty"`
 	ScaleSetEvictionPolicy              string               `json:"scaleSetEvictionPolicy,omitempty"`
 	StorageProfile                      string               `json:"storageProfile,omitempty"`
@@ -534,6 +551,8 @@ type AgentPoolProfile struct {
 	WindowsNameVersion                  string               `json:"windowsNameVersion,omitempty"`
 	EnableVMSSNodePublicIP              *bool                `json:"enableVMSSNodePublicIP,omitempty"`
 	LoadBalancerBackendAddressPoolIDs   []string             `json:"loadBalancerBackendAddressPoolIDs,omitempty"`
+	AuditDEnabled                       *bool                `json:"auditDEnabled,omitempty"`
+	CustomVMTags                        map[string]string    `json:"customVMTags,omitempty"`
 }
 
 // AgentPoolProfileRole represents an agent role
@@ -874,6 +893,16 @@ func (p *Properties) AnyAgentUsesAvailabilitySets() bool {
 	return false
 }
 
+// AnyAgentIsLinux checks whether any of the agents in the AgentPools are linux
+func (p *Properties) AnyAgentIsLinux() bool {
+	for _, agentProfile := range p.AgentPoolProfiles {
+		if agentProfile.IsLinux() {
+			return true
+		}
+	}
+	return false
+}
+
 // GetMasterVMPrefix returns the prefix of master VMs
 func (p *Properties) GetMasterVMPrefix() string {
 	return p.K8sOrchestratorName() + "-master-" + p.GetClusterID() + "-"
@@ -1037,6 +1066,21 @@ func (p *Properties) HasZonesForAllAgentPools() bool {
 	return false
 }
 
+// IsVHDDistroForAllNodes returns true if all of the agent pools plus masters are running the VHD image
+func (p *Properties) IsVHDDistroForAllNodes() bool {
+	if len(p.AgentPoolProfiles) > 0 {
+		for _, ap := range p.AgentPoolProfiles {
+			if !ap.IsVHDDistro() {
+				return false
+			}
+		}
+	}
+	if p.MasterProfile != nil {
+		return p.MasterProfile.IsVHDDistro()
+	}
+	return true
+}
+
 // IsUbuntuDistroForAllNodes returns true if all of the agent pools plus masters are running the base Ubuntu image
 func (p *Properties) IsUbuntuDistroForAllNodes() bool {
 	if len(p.AgentPoolProfiles) > 0 {
@@ -1122,7 +1166,13 @@ func (p *Properties) GetNonMasqueradeCIDR() string {
 				nonMasqCidr = DefaultVNETCIDR
 			}
 		} else {
-			nonMasqCidr = p.OrchestratorProfile.KubernetesConfig.ClusterSubnet
+			// kube-proxy still only understands single cidr and is not changed for ipv6 dual stack phase 1
+			// so only pass the ipv4 cidr which is the first one in the list as arg to kube proxy
+			if p.FeatureFlags.IsFeatureEnabled("EnableIPv6DualStack") {
+				nonMasqCidr = strings.Split(p.OrchestratorProfile.KubernetesConfig.ClusterSubnet, ",")[0]
+			} else {
+				nonMasqCidr = p.OrchestratorProfile.KubernetesConfig.ClusterSubnet
+			}
 		}
 	}
 	return nonMasqCidr
@@ -1173,7 +1223,7 @@ func (m *MasterProfile) IsCoreOS() bool {
 
 // IsVHDDistro returns true if the distro uses VHD SKUs
 func (m *MasterProfile) IsVHDDistro() bool {
-	return m.Distro == AKS || m.Distro == AKS1804
+	return m.Distro == AKSUbuntu1604 || m.Distro == AKSUbuntu1804
 }
 
 // IsVirtualMachineScaleSets returns true if the master availability profile is VMSS
@@ -1218,7 +1268,7 @@ func (m *MasterProfile) HasAvailabilityZones() bool {
 // IsUbuntu1604 returns true if the master profile distro is based on Ubuntu 16.04
 func (m *MasterProfile) IsUbuntu1604() bool {
 	switch m.Distro {
-	case AKS, Ubuntu, ACC1604:
+	case AKSUbuntu1604, Ubuntu, ACC1604:
 		return true
 	default:
 		return false
@@ -1228,7 +1278,7 @@ func (m *MasterProfile) IsUbuntu1604() bool {
 // IsUbuntu1804 returns true if the master profile distro is based on Ubuntu 18.04
 func (m *MasterProfile) IsUbuntu1804() bool {
 	switch m.Distro {
-	case AKS1804, Ubuntu1804:
+	case AKSUbuntu1804, Ubuntu1804:
 		return true
 	default:
 		return false
@@ -1243,6 +1293,24 @@ func (m *MasterProfile) IsUbuntu() bool {
 // IsUbuntuNonVHD returns true if the distro uses a base Ubuntu image
 func (m *MasterProfile) IsUbuntuNonVHD() bool {
 	return m.IsUbuntu() && !m.IsVHDDistro()
+}
+
+// HasMultipleNodes returns true if there are more than one master nodes
+func (m *MasterProfile) HasMultipleNodes() bool {
+	return m.Count > 1
+}
+
+// HasCosmosEtcd returns true if cosmos etcd configuration is enabled
+func (m *MasterProfile) HasCosmosEtcd() bool {
+	return to.Bool(m.CosmosEtcd)
+}
+
+// GetCosmosEndPointURI returns the URI string for the cosmos etcd endpoint
+func (m *MasterProfile) GetCosmosEndPointURI() string {
+	if m.HasCosmosEtcd() {
+		return fmt.Sprintf(etcdEndpointURIFmt, m.DNSPrefix)
+	}
+	return ""
 }
 
 // IsCustomVNET returns true if the customer brought their own VNET
@@ -1272,7 +1340,7 @@ func (a *AgentPoolProfile) IsCoreOS() bool {
 
 // IsVHDDistro returns true if the distro uses VHD SKUs
 func (a *AgentPoolProfile) IsVHDDistro() bool {
-	return a.Distro == AKS || a.Distro == AKS1804
+	return a.Distro == AKSUbuntu1604 || a.Distro == AKSUbuntu1804
 }
 
 // IsAvailabilitySets returns true if the customer specified disks
@@ -1314,7 +1382,7 @@ func (a *AgentPoolProfile) HasAvailabilityZones() bool {
 func (a *AgentPoolProfile) IsUbuntu1604() bool {
 	if a.OSType != Windows {
 		switch a.Distro {
-		case AKS, Ubuntu, ACC1604:
+		case AKSUbuntu1604, Ubuntu, ACC1604:
 			return true
 		default:
 			return false
@@ -1327,7 +1395,7 @@ func (a *AgentPoolProfile) IsUbuntu1604() bool {
 func (a *AgentPoolProfile) IsUbuntu1804() bool {
 	if a.OSType != Windows {
 		switch a.Distro {
-		case AKS1804, Ubuntu1804:
+		case AKSUbuntu1804, Ubuntu1804:
 			return true
 		default:
 			return false
@@ -1344,6 +1412,31 @@ func (a *AgentPoolProfile) IsUbuntu() bool {
 // IsUbuntuNonVHD returns true if the distro uses a base Ubuntu image
 func (a *AgentPoolProfile) IsUbuntuNonVHD() bool {
 	return a.IsUbuntu() && !a.IsVHDDistro()
+}
+
+// GetKubernetesLabels returns a k8s API-compliant labels string for nodes in this profile
+func (a *AgentPoolProfile) GetKubernetesLabels(rg string) string {
+	var buf bytes.Buffer
+	buf.WriteString("node-role.kubernetes.io/agent=")
+	buf.WriteString(fmt.Sprintf(",kubernetes.io/role=agent,agentpool=%s", a.Name))
+	if a.StorageProfile == ManagedDisks {
+		storagetier, _ := common.GetStorageAccountType(a.VMSize)
+		buf.WriteString(fmt.Sprintf(",storageprofile=managed,storagetier=%s", storagetier))
+	}
+	if common.IsNvidiaEnabledSKU(a.VMSize) {
+		accelerator := "nvidia"
+		buf.WriteString(fmt.Sprintf(",accelerator=%s", accelerator))
+	}
+	buf.WriteString(fmt.Sprintf(",kubernetes.azure.com/cluster=%s", rg))
+	keys := []string{}
+	for key := range a.CustomNodeLabels {
+		keys = append(keys, key)
+	}
+	sort.Strings(keys)
+	for _, key := range keys {
+		buf.WriteString(fmt.Sprintf(",%s=%s", key, a.CustomNodeLabels[key]))
+	}
+	return buf.String()
 }
 
 // HasSecrets returns true if the customer specified secrets to install
@@ -1420,6 +1513,13 @@ func (o *OrchestratorProfile) IsDCOS() bool {
 	return o.OrchestratorType == DCOS
 }
 
+// IsDCOS19 returns true if this is a DCOS 1.9 orchestrator using the latest version
+func (o *OrchestratorProfile) IsDCOS19() bool {
+	return o.OrchestratorType == DCOS &&
+		(o.OrchestratorVersion == common.DCOSVersion1Dot9Dot0 ||
+			o.OrchestratorVersion == common.DCOSVersion1Dot9Dot8)
+}
+
 // IsAzureCNI returns true if Azure CNI network plugin is enabled
 func (o *OrchestratorProfile) IsAzureCNI() bool {
 	if o.KubernetesConfig != nil {
@@ -1489,72 +1589,26 @@ func (k *KubernetesConfig) GetAddonScript(addonName string) string {
 	return kubeAddon.Data
 }
 
-// isAddonEnabled checks whether a k8s addon with name "addonName" is enabled or not based on the Enabled field of KubernetesAddon.
-// If the value of Enabled in nil, the "defaultValue" is returned.
-func (k *KubernetesConfig) isAddonEnabled(addonName string, defaultValue bool) bool {
+// IsAddonEnabled checks whether a k8s addon with name "addonName" is enabled or not based on the Enabled field of KubernetesAddon.
+// If the value of Enabled is nil, the "defaultValue" is returned.
+func (k *KubernetesConfig) IsAddonEnabled(addonName string) bool {
 	kubeAddon := k.GetAddonByName(addonName)
-	return kubeAddon.IsEnabled(defaultValue)
+	return kubeAddon.IsEnabled()
 }
 
-// IsMetricsServerEnabled checks if the metrics server addon is enabled
-func (o *OrchestratorProfile) IsMetricsServerEnabled() bool {
-	return o.KubernetesConfig.isAddonEnabled(DefaultMetricsServerAddonName,
-		common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.9.0"))
-}
-
-// IsAzureCNIMonitoringEnabled checks if the azure cni monitoring addon is enabled
-func (k *KubernetesConfig) IsAzureCNIMonitoringEnabled() bool {
-	return k.isAddonEnabled(AzureCNINetworkMonitoringAddonName, DefaultAzureCNIMonitoringAddonEnabled)
-}
-
-// IsContainerMonitoringEnabled checks if the container monitoring addon is enabled
-func (k *KubernetesConfig) IsContainerMonitoringEnabled() bool {
-	return k.isAddonEnabled(ContainerMonitoringAddonName, DefaultContainerMonitoringAddonEnabled)
-}
-
-// IsTillerEnabled checks if the tiller addon is enabled
-func (k *KubernetesConfig) IsTillerEnabled() bool {
-	return k.isAddonEnabled(DefaultTillerAddonName, DefaultTillerAddonEnabled)
-}
-
-// IsAADPodIdentityEnabled checks if the tiller addon is enabled
+// IsAADPodIdentityEnabled checks if the AAD pod identity addon is enabled
 func (k *KubernetesConfig) IsAADPodIdentityEnabled() bool {
-	return k.isAddonEnabled(DefaultAADPodIdentityAddonName, DefaultAADPodIdentityAddonEnabled)
-}
-
-// IsACIConnectorEnabled checks if the ACI Connector addon is enabled
-func (k *KubernetesConfig) IsACIConnectorEnabled() bool {
-	return k.isAddonEnabled(DefaultACIConnectorAddonName, DefaultACIConnectorAddonEnabled)
+	return k.IsAddonEnabled(AADPodIdentityAddonName)
 }
 
 // IsClusterAutoscalerEnabled checks if the cluster autoscaler addon is enabled
 func (k *KubernetesConfig) IsClusterAutoscalerEnabled() bool {
-	return k.isAddonEnabled(DefaultClusterAutoscalerAddonName, DefaultClusterAutoscalerAddonEnabled)
-}
-
-// IsBlobfuseFlexVolumeEnabled checks if the Blobfuse FlexVolume addon is enabled
-func (k *KubernetesConfig) IsBlobfuseFlexVolumeEnabled() bool {
-	return k.isAddonEnabled(DefaultBlobfuseFlexVolumeAddonName, DefaultBlobfuseFlexVolumeAddonEnabled)
-}
-
-// IsSMBFlexVolumeEnabled checks if the SMB FlexVolume addon is enabled
-func (k *KubernetesConfig) IsSMBFlexVolumeEnabled() bool {
-	return k.isAddonEnabled(DefaultSMBFlexVolumeAddonName, DefaultSMBFlexVolumeAddonEnabled)
-}
-
-// IsKeyVaultFlexVolumeEnabled checks if the Key Vault FlexVolume addon is enabled
-func (k *KubernetesConfig) IsKeyVaultFlexVolumeEnabled() bool {
-	return k.isAddonEnabled(DefaultKeyVaultFlexVolumeAddonName, DefaultKeyVaultFlexVolumeAddonEnabled)
-}
-
-// IsDashboardEnabled checks if the kubernetes-dashboard addon is enabled
-func (k *KubernetesConfig) IsDashboardEnabled() bool {
-	return k.isAddonEnabled(DefaultDashboardAddonName, DefaultDashboardAddonEnabled)
+	return k.IsAddonEnabled(ClusterAutoscalerAddonName)
 }
 
 // IsIPMasqAgentEnabled checks if the ip-masq-agent addon is enabled
 func (k *KubernetesConfig) IsIPMasqAgentEnabled() bool {
-	return k.isAddonEnabled(IPMASQAgentAddonName, (k.NetworkPlugin != NetworkPluginCilium && IPMasqAgentAddonEnabled))
+	return k.IsAddonEnabled(IPMASQAgentAddonName)
 }
 
 // IsRBACEnabled checks if RBAC is enabled
@@ -1591,6 +1645,34 @@ func (k *KubernetesConfig) GetUserAssignedClientID() string {
 	return ""
 }
 
+// GetOrderedKubeletConfigString returns an ordered string of key/val pairs
+func (k *KubernetesConfig) GetOrderedKubeletConfigString() string {
+	keys := []string{}
+	for key := range k.KubeletConfig {
+		keys = append(keys, key)
+	}
+	sort.Strings(keys)
+	var buf bytes.Buffer
+	for _, key := range keys {
+		buf.WriteString(fmt.Sprintf("%s=%s ", key, k.KubeletConfig[key]))
+	}
+	return buf.String()
+}
+
+// GetOrderedKubeletConfigStringForPowershell returns an ordered string of key/val pairs for Powershell script consumption
+func (k *KubernetesConfig) GetOrderedKubeletConfigStringForPowershell() string {
+	keys := []string{}
+	for key := range k.KubeletConfig {
+		keys = append(keys, key)
+	}
+	sort.Strings(keys)
+	var buf bytes.Buffer
+	for _, key := range keys {
+		buf.WriteString(fmt.Sprintf("\"%s=%s\", ", key, k.KubeletConfig[key]))
+	}
+	return strings.TrimSuffix(buf.String(), ", ")
+}
+
 // IsNSeriesSKU returns true if the agent pool contains an N-series (NVIDIA GPU) VM
 func (a *AgentPoolProfile) IsNSeriesSKU() bool {
 	return common.IsNvidiaEnabledSKU(a.VMSize)
@@ -1609,8 +1691,10 @@ func (p *Properties) HasNSeriesSKU() bool {
 // IsNVIDIADevicePluginEnabled checks if the NVIDIA Device Plugin addon is enabled
 // It is enabled by default if agents contain a GPU and Kubernetes version is >= 1.10.0
 func (p *Properties) IsNVIDIADevicePluginEnabled() bool {
-	k := p.OrchestratorProfile.KubernetesConfig
-	return k.isAddonEnabled(NVIDIADevicePluginAddonName, getDefaultNVIDIADevicePluginEnabled(p))
+	if p.OrchestratorProfile == nil || p.OrchestratorProfile.KubernetesConfig == nil {
+		return false
+	}
+	return p.OrchestratorProfile.KubernetesConfig.IsAddonEnabled(NVIDIADevicePluginAddonName)
 }
 
 // IsAzureStackCloud return true if the cloud is AzureStack
@@ -1678,20 +1762,14 @@ func (p *Properties) GetCustomCloudIdentitySystem() string {
 	return AzureADIdentitySystem
 }
 
-func getDefaultNVIDIADevicePluginEnabled(p *Properties) bool {
-	o := p.OrchestratorProfile
-	var addonEnabled bool
-	if p.HasNSeriesSKU() && common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.10.0") {
-		addonEnabled = true
-	} else {
-		addonEnabled = false
-	}
-	return addonEnabled
+// IsNvidiaDevicePluginCapable determines if the cluster definition is compatible with the nvidia-device-plugin daemonset
+func (p *Properties) IsNvidiaDevicePluginCapable() bool {
+	return p.HasNSeriesSKU() && common.IsKubernetesVersionGe(p.OrchestratorProfile.OrchestratorVersion, "1.10.0")
 }
 
 // IsReschedulerEnabled checks if the rescheduler addon is enabled
 func (k *KubernetesConfig) IsReschedulerEnabled() bool {
-	return k.isAddonEnabled(DefaultReschedulerAddonName, DefaultReschedulerAddonEnabled)
+	return k.IsAddonEnabled(ReschedulerAddonName)
 }
 
 // PrivateJumpboxProvision checks if a private cluster has jumpbox auto-provisioning
@@ -1758,6 +1836,8 @@ func (f *FeatureFlags) IsFeatureEnabled(feature string) bool {
 			return f.EnableCSERunInBackground
 		case "BlockOutboundInternet":
 			return f.BlockOutboundInternet
+		case "EnableIPv6DualStack":
+			return f.EnableIPv6DualStack
 		default:
 			return false
 		}
@@ -1782,6 +1862,17 @@ func (cs *ContainerService) IsAKSBillingEnabled() bool {
 // GetAzureProdFQDN returns the formatted FQDN string for a given apimodel.
 func (cs *ContainerService) GetAzureProdFQDN() string {
 	return FormatProdFQDNByLocation(cs.Properties.MasterProfile.DNSPrefix, cs.Location, cs.Properties.GetCustomCloudName())
+}
+
+// SetPlatformFaultDomainCount sets the fault domain count value for all VMASes in a cluster.
+func (cs *ContainerService) SetPlatformFaultDomainCount(count int) {
+	// Assume that all VMASes in the cluster share a value for platformFaultDomainCount
+	if cs.Properties.MasterProfile != nil {
+		cs.Properties.MasterProfile.PlatformFaultDomainCount = &count
+	}
+	for _, pool := range cs.Properties.AgentPoolProfiles {
+		pool.PlatformFaultDomainCount = &count
+	}
 }
 
 // FormatAzureProdFQDNByLocation constructs an Azure prod fqdn

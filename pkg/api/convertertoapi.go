@@ -420,6 +420,7 @@ func convertVLabsProperties(vlabs *vlabs.Properties, api *Properties, isUpdate b
 func convertVLabsFeatureFlags(vlabs *vlabs.FeatureFlags, api *FeatureFlags) {
 	api.EnableCSERunInBackground = vlabs.EnableCSERunInBackground
 	api.BlockOutboundInternet = vlabs.BlockOutboundInternet
+	api.EnableIPv6DualStack = vlabs.EnableIPv6DualStack
 }
 
 func convertV20160930LinuxProfile(obj *v20160930.LinuxProfile, api *LinuxProfile) {
@@ -900,12 +901,14 @@ func convertVLabsMasterProfile(vlabs *vlabs.MasterProfile, api *MasterProfile) {
 	api.DNSPrefix = vlabs.DNSPrefix
 	api.SubjectAltNames = vlabs.SubjectAltNames
 	api.VMSize = vlabs.VMSize
+	api.CustomVMTags = vlabs.CustomVMTags
 	api.OSDiskSizeGB = vlabs.OSDiskSizeGB
 	api.VnetSubnetID = vlabs.VnetSubnetID
 	api.AgentVnetSubnetID = vlabs.AgentVnetSubnetID
 	api.FirstConsecutiveStaticIP = vlabs.FirstConsecutiveStaticIP
 	api.VnetCidr = vlabs.VnetCidr
 	api.Subnet = vlabs.GetSubnet()
+	api.SubnetIPv6 = vlabs.GetSubnetIPv6()
 	api.IPAddressCount = vlabs.IPAddressCount
 	api.FQDN = vlabs.FQDN
 	api.StorageProfile = vlabs.StorageProfile
@@ -945,6 +948,7 @@ func convertVLabsMasterProfile(vlabs *vlabs.MasterProfile, api *MasterProfile) {
 	api.AvailabilityZones = vlabs.AvailabilityZones
 	api.SinglePlacementGroup = vlabs.SinglePlacementGroup
 	api.CosmosEtcd = vlabs.CosmosEtcd
+	api.AuditDEnabled = vlabs.AuditDEnabled
 	convertCustomFilesToAPI(vlabs, api)
 }
 
@@ -1012,6 +1016,7 @@ func convertVLabsAgentPoolProfile(vlabs *vlabs.AgentPoolProfile, api *AgentPoolP
 	api.Name = vlabs.Name
 	api.Count = vlabs.Count
 	api.VMSize = vlabs.VMSize
+	api.CustomVMTags = vlabs.CustomVMTags
 	api.OSDiskSizeGB = vlabs.OSDiskSizeGB
 	api.DNSPrefix = vlabs.DNSPrefix
 	api.OSType = OSType(vlabs.OSType)
@@ -1034,6 +1039,7 @@ func convertVLabsAgentPoolProfile(vlabs *vlabs.AgentPoolProfile, api *AgentPoolP
 	api.SinglePlacementGroup = vlabs.SinglePlacementGroup
 	api.EnableVMSSNodePublicIP = vlabs.EnableVMSSNodePublicIP
 	api.LoadBalancerBackendAddressPoolIDs = vlabs.LoadBalancerBackendAddressPoolIDs
+	api.AuditDEnabled = vlabs.AuditDEnabled
 
 	api.CustomNodeLabels = map[string]string{}
 	for k, v := range vlabs.CustomNodeLabels {
@@ -1291,6 +1297,7 @@ func convertAzureEnvironmentSpecConfig(vlabses *vlabs.AzureEnvironmentSpecConfig
 		ACIConnectorImageBase:            vlabses.KubernetesSpecConfig.ACIConnectorImageBase,
 		NVIDIAImageBase:                  vlabses.KubernetesSpecConfig.NVIDIAImageBase,
 		AzureCNIImageBase:                vlabses.KubernetesSpecConfig.AzureCNIImageBase,
+		CalicoImageBase:                  vlabses.KubernetesSpecConfig.CalicoImageBase,
 		EtcdDownloadURLBase:              vlabses.KubernetesSpecConfig.EtcdDownloadURLBase,
 		KubeBinariesSASURLBase:           vlabses.KubernetesSpecConfig.KubeBinariesSASURLBase,
 		WindowsTelemetryGUID:             vlabses.KubernetesSpecConfig.WindowsTelemetryGUID,

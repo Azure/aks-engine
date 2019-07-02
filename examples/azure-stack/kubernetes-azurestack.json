@@ -1,0 +1,50 @@
+{
+    "apiVersion": "vlabs",
+    "location": "",
+    "properties": {
+        "orchestratorProfile": {
+            "orchestratorType": "Kubernetes",
+            "orchestratorRelease": "1.11",
+            "kubernetesConfig": {
+                "kubernetesImageBase": "mcr.microsoft.com/k8s/azurestack/core/",
+                "useInstanceMetadata": false,
+                "networkPlugin": "flannel"
+            }
+        },
+        "customCloudProfile": {
+            "portalURL": ""
+        },
+        "masterProfile": {
+            "dnsPrefix": "",
+            "distro": "ubuntu",
+            "osDiskSizeGB": 200,
+            "count": 1,
+            "vmSize": "Standard_D2_v2"
+        },
+        "agentPoolProfiles": [
+            {
+                "name": "linuxpool",
+                "osDiskSizeGB": 200,
+                "count": 3,
+                "vmSize": "Standard_D2_v2",
+                "distro": "ubuntu",
+                "availabilityProfile": "AvailabilitySet",
+                "AcceleratedNetworkingEnabled": false
+            }
+        ],
+        "linuxProfile": {
+            "adminUsername": "azureuser",
+            "ssh": {
+                "publicKeys": [
+                    {
+                        "keyData": ""
+                    }
+                ]
+            }
+        },
+        "servicePrincipalProfile": {
+            "clientId": "",
+            "secret": ""
+        }
+    }
+}

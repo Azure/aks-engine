@@ -13,7 +13,7 @@ func createKubernetesMasterResourcesVMAS(cs *api.ContainerService) []interface{}
 
 	p := cs.Properties
 
-	if to.Bool(p.MasterProfile.CosmosEtcd) {
+	if p.MasterProfile.HasCosmosEtcd() {
 		masterResources = append(masterResources, createCosmosDBAccount())
 	}
 
@@ -47,7 +47,6 @@ func createKubernetesMasterResourcesVMAS(cs *api.ContainerService) []interface{}
 		masterNic := CreateNetworkInterfaces(cs)
 
 		masterResources = append(masterResources, publicIPAddress, loadBalancer, masterNic)
-
 	} else {
 		masterNic := createPrivateClusterNetworkInterface(cs)
 		masterResources = append(masterResources, masterNic)
@@ -76,7 +75,7 @@ func createKubernetesMasterResourcesVMAS(cs *api.ContainerService) []interface{}
 
 	}
 
-	if p.MasterProfile.Count > 1 {
+	if p.MasterProfile.HasMultipleNodes() {
 		internalLB := CreateMasterInternalLoadBalancer(cs)
 		masterResources = append(masterResources, internalLB)
 	}
@@ -92,7 +91,15 @@ func createKubernetesMasterResourcesVMAS(cs *api.ContainerService) []interface{}
 		masterResources = append(masterResources, keyVaultStorageAccount, keyVault)
 	}
 
-	masterVM := CreateVirtualMachine(cs)
+	if cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6DualStack") {
+		clusterIPv4PublicIPAddress := CreateClusterPublicIPAddress()
+		clusterIPv6PublicIPAddress := CreateClusterPublicIPv6Address()
+		clusterLB := CreateClusterLoadBalancerForIPv6()
+
+		masterResources = append(masterResources, clusterIPv4PublicIPAddress, clusterIPv6PublicIPAddress, clusterLB)
+	}
+
+	masterVM := CreateMasterVM(cs)
 	masterResources = append(masterResources, masterVM)
 
 	var useManagedIdentity, userAssignedIDEnabled bool
@@ -126,7 +133,7 @@ func createKubernetesMasterResourcesVMAS(cs *api.ContainerService) []interface{}
 func createKubernetesMasterResourcesVMSS(cs *api.ContainerService) []interface{} {
 	var masterResources []interface{}
 
-	if to.Bool(cs.Properties.MasterProfile.CosmosEtcd) {
+	if cs.Properties.MasterProfile.HasCosmosEtcd() {
 		masterResources = append(masterResources, createCosmosDBAccount())
 	}
 
@@ -141,14 +148,16 @@ func createKubernetesMasterResourcesVMSS(cs *api.ContainerService) []interface{}
 		masterResources = append(masterResources, masterVNET)
 	}
 
-	if cs.Properties.MasterProfile.Count > 1 {
+	if cs.Properties.MasterProfile.HasMultipleNodes() {
 		internalLb := CreateMasterInternalLoadBalancer(cs)
 		masterResources = append(masterResources, internalLb)
 	}
 
-	publicIPAddress := CreatePublicIPAddress()
-	loadBalancer := CreateLoadBalancer(cs.Properties, true)
-	masterResources = append(masterResources, publicIPAddress, loadBalancer)
+	if !cs.Properties.OrchestratorProfile.IsPrivateCluster() {
+		publicIPAddress := CreatePublicIPAddress()
+		loadBalancer := CreateLoadBalancer(cs.Properties, true)
+		masterResources = append(masterResources, publicIPAddress, loadBalancer)
+	}
 
 	kubernetesConfig := cs.Properties.OrchestratorProfile.KubernetesConfig
 
@@ -161,6 +170,14 @@ func createKubernetesMasterResourcesVMSS(cs *api.ContainerService) []interface{}
 		keyVaultStorageAccount := createKeyVaultStorageAccount()
 		keyVault := CreateKeyVaultVMSS(cs)
 		masterResources = append(masterResources, keyVaultStorageAccount, keyVault)
+	}
+
+	if cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6DualStack") {
+		clusterIPv4PublicIPAddress := CreateClusterPublicIPAddress()
+		clusterIPv6PublicIPAddress := CreateClusterPublicIPv6Address()
+		clusterLB := CreateClusterLoadBalancerForIPv6()
+
+		masterResources = append(masterResources, clusterIPv4PublicIPAddress, clusterIPv6PublicIPAddress, clusterLB)
 	}
 
 	masterVmss := CreateMasterVMSS(cs)

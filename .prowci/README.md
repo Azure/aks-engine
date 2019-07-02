@@ -6,7 +6,7 @@ Prow in [upstream docs][0].
 
 ## aks-engine setup
 
-Deploy a new Kubernetes cluster (eg. `az aks create -g acse-test-prow-ci -n prow)
+Deploy a new Kubernetes cluster.
 
 Set up an Ingress controller and a mechanism to do TLS. The [Azure docs][1]
 explain how to setup Ingress with TLS on top of a Kubernetes cluster in Azure. (make sure you specify `--set rbac.create=true` when creating the ingress controller)

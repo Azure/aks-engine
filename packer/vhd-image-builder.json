@@ -111,11 +111,6 @@
         },
         {
             "type": "file",
-            "source": "parts/k8s/cloud-init/artifacts/default-grub",
-            "destination": "/home/packer/default-grub"
-        },
-        {
-            "type": "file",
             "source": "parts/k8s/cloud-init/artifacts/pam-d-su",
             "destination": "/home/packer/pam-d-su"
         },
@@ -133,6 +128,11 @@
             "type": "file",
             "source": "parts/k8s/cloud-init/artifacts/profile-d-cis.sh",
             "destination": "/home/packer/profile-d-cis.sh"
+        },
+        {
+            "type": "file",
+            "source": "parts/k8s/cloud-init/artifacts/auditd-rules",
+            "destination": "/home/packer/auditd-rules"
         },
         {
             "type": "shell",

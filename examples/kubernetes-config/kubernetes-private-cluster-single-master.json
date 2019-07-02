@@ -8,7 +8,7 @@
           "enabled": true,
           "jumpboxProfile": {
             "name": "my-jb",
-            "vmSize": "Standard_D2_v2",
+            "vmSize": "Standard_D2_v3",
             "osDiskSizeGB": 30,
             "username": "azureuser",
             "publicKey": ""
@@ -19,13 +19,13 @@
     "masterProfile": {
       "count": 1,
       "dnsPrefix": "",
-      "vmSize": "Standard_D2_v2"
+      "vmSize": "Standard_D2_v3"
     },
     "agentPoolProfiles": [
       {
         "name": "linuxpool1",
         "count": 3,
-        "vmSize": "Standard_D2_v2",
+        "vmSize": "Standard_D2_v3",
         "availabilityProfile": "AvailabilitySet"
       }
     ],

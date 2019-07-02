@@ -37,56 +37,61 @@ func TestUpgradeCommandShouldBeValidated(t *testing.T) {
 	}{
 		{
 			uc: &upgradeCmd{
-				resourceGroupName:   "",
-				apiModelPath:        "./not/used",
-				deploymentDirectory: "",
-				upgradeVersion:      "1.8.9",
-				location:            "centralus",
-				timeoutInMinutes:    60,
+				resourceGroupName:           "",
+				apiModelPath:                "./not/used",
+				deploymentDirectory:         "",
+				upgradeVersion:              "1.8.9",
+				location:                    "centralus",
+				timeoutInMinutes:            60,
+				cordonDrainTimeoutInMinutes: 60,
 			},
 			expectedErr: errors.New("--resource-group must be specified"),
 		},
 		{
 			uc: &upgradeCmd{
-				resourceGroupName:   "test",
-				apiModelPath:        "./not/used",
-				deploymentDirectory: "",
-				upgradeVersion:      "1.8.9",
-				location:            "",
-				timeoutInMinutes:    60,
+				resourceGroupName:           "test",
+				apiModelPath:                "./not/used",
+				deploymentDirectory:         "",
+				upgradeVersion:              "1.8.9",
+				location:                    "",
+				timeoutInMinutes:            60,
+				cordonDrainTimeoutInMinutes: 60,
 			},
 			expectedErr: errors.New("--location must be specified"),
 		},
 		{
 			uc: &upgradeCmd{
-				resourceGroupName:   "test",
-				apiModelPath:        "./not/used",
-				deploymentDirectory: "",
-				upgradeVersion:      "",
-				location:            "southcentralus",
-				timeoutInMinutes:    60,
+				resourceGroupName:           "test",
+				apiModelPath:                "./not/used",
+				deploymentDirectory:         "",
+				upgradeVersion:              "",
+				location:                    "southcentralus",
+				timeoutInMinutes:            60,
+				cordonDrainTimeoutInMinutes: 60,
 			},
 			expectedErr: errors.New("--upgrade-version must be specified"),
 		},
 		{
 			uc: &upgradeCmd{
-				resourceGroupName:   "test",
-				apiModelPath:        "",
-				deploymentDirectory: "",
-				upgradeVersion:      "1.9.0",
-				location:            "southcentralus",
-				timeoutInMinutes:    60,
+				resourceGroupName:           "test",
+				apiModelPath:                "",
+				deploymentDirectory:         "",
+				upgradeVersion:              "1.9.0",
+				location:                    "southcentralus",
+				timeoutInMinutes:            60,
+				cordonDrainTimeoutInMinutes: 60,
 			},
 			expectedErr: errors.New("--api-model must be specified"),
 		},
 		{
 			uc: &upgradeCmd{
-				resourceGroupName:   "test",
-				apiModelPath:        "./somefile",
-				deploymentDirectory: "aDir/anotherDir",
-				upgradeVersion:      "1.9.0",
-				location:            "southcentralus",
-				timeoutInMinutes:    60,
+				resourceGroupName:           "test",
+				apiModelPath:                "./somefile",
+				deploymentDirectory:         "aDir/anotherDir",
+				upgradeVersion:              "1.9.0",
+				location:                    "southcentralus",
+				timeoutInMinutes:            60,
+				cordonDrainTimeoutInMinutes: 60,
 			},
 			expectedErr: errors.New("ambiguous, please specify only one of --api-model and --deployment-dir"),
 		},
@@ -137,11 +142,12 @@ func TestUpgradeShouldFailForSameVersion(t *testing.T) {
 	})
 	g := NewGomegaWithT(t)
 	upgradeCmd := &upgradeCmd{
-		resourceGroupName: "rg",
-		apiModelPath:      "./not/used",
-		upgradeVersion:    "1.10.13",
-		location:          "centralus",
-		timeoutInMinutes:  60,
+		resourceGroupName:           "rg",
+		apiModelPath:                "./not/used",
+		upgradeVersion:              "1.10.13",
+		location:                    "centralus",
+		timeoutInMinutes:            60,
+		cordonDrainTimeoutInMinutes: 60,
 
 		client: &armhelpers.MockAKSEngineClient{},
 	}
@@ -162,11 +168,12 @@ func TestUpgradeShouldFailForInvalidUpgradePath(t *testing.T) {
 	})
 	g := NewGomegaWithT(t)
 	upgradeCmd := &upgradeCmd{
-		resourceGroupName: "rg",
-		apiModelPath:      "./not/used",
-		upgradeVersion:    "1.10.13",
-		location:          "centralus",
-		timeoutInMinutes:  60,
+		resourceGroupName:           "rg",
+		apiModelPath:                "./not/used",
+		upgradeVersion:              "1.10.13",
+		location:                    "centralus",
+		timeoutInMinutes:            60,
+		cordonDrainTimeoutInMinutes: 60,
 
 		client: &armhelpers.MockAKSEngineClient{},
 	}
@@ -186,11 +193,12 @@ func TestUpgradeShouldSuceedForValidUpgradePath(t *testing.T) {
 	})
 	g := NewGomegaWithT(t)
 	upgradeCmd := &upgradeCmd{
-		resourceGroupName: "rg",
-		apiModelPath:      "./not/used",
-		upgradeVersion:    "1.10.13",
-		location:          "centralus",
-		timeoutInMinutes:  60,
+		resourceGroupName:           "rg",
+		apiModelPath:                "./not/used",
+		upgradeVersion:              "1.10.13",
+		location:                    "centralus",
+		timeoutInMinutes:            60,
+		cordonDrainTimeoutInMinutes: 60,
 
 		client: &armhelpers.MockAKSEngineClient{},
 	}
@@ -206,13 +214,14 @@ func TestUpgradeShouldSuceedForValidUpgradePath(t *testing.T) {
 func TestUpgradeFailWithPathWhenAzureDeployJsonIsInvalid(t *testing.T) {
 	g := NewGomegaWithT(t)
 	upgradeCmd := &upgradeCmd{
-		resourceGroupName: "rg",
-		apiModelPath:      "./not/used",
-		upgradeVersion:    "1.13.3",
-		location:          "centralus",
-		timeoutInMinutes:  60,
-		force:             true,
-		client:            &armhelpers.MockAKSEngineClient{},
+		resourceGroupName:           "rg",
+		apiModelPath:                "./not/used",
+		upgradeVersion:              "1.13.3",
+		location:                    "centralus",
+		timeoutInMinutes:            60,
+		cordonDrainTimeoutInMinutes: 60,
+		force:                       true,
+		client:                      &armhelpers.MockAKSEngineClient{},
 	}
 
 	containerServiceMock := api.CreateMockContainerService("testcluster", "1.13.2", 3, 2, false)
@@ -228,11 +237,12 @@ func TestUpgradeForceSameVersionShouldSucceed(t *testing.T) {
 	})
 	g := NewGomegaWithT(t)
 	upgradeCmd := &upgradeCmd{
-		resourceGroupName: "rg",
-		apiModelPath:      "./not/used",
-		upgradeVersion:    "1.10.13",
-		location:          "centralus",
-		timeoutInMinutes:  60,
+		resourceGroupName:           "rg",
+		apiModelPath:                "./not/used",
+		upgradeVersion:              "1.10.13",
+		location:                    "centralus",
+		timeoutInMinutes:            60,
+		cordonDrainTimeoutInMinutes: 60,
 
 		client: &armhelpers.MockAKSEngineClient{},
 	}
@@ -253,11 +263,12 @@ func TestUpgradeForceDowngradeShouldSetVersionOnContainerService(t *testing.T) {
 	})
 	g := NewGomegaWithT(t)
 	upgradeCmd := &upgradeCmd{
-		resourceGroupName: "rg",
-		apiModelPath:      "./not/used",
-		upgradeVersion:    "1.10.12",
-		location:          "centralus",
-		timeoutInMinutes:  60,
+		resourceGroupName:           "rg",
+		apiModelPath:                "./not/used",
+		upgradeVersion:              "1.10.12",
+		location:                    "centralus",
+		timeoutInMinutes:            60,
+		cordonDrainTimeoutInMinutes: 60,
 
 		client: &armhelpers.MockAKSEngineClient{},
 	}

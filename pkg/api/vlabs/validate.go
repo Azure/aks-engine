@@ -33,7 +33,7 @@ var (
 		"3.0.0", "3.0.1", "3.0.2", "3.0.3", "3.0.4", "3.0.5", "3.0.6", "3.0.7", "3.0.8", "3.0.9", "3.0.10", "3.0.11", "3.0.12", "3.0.13", "3.0.14", "3.0.15", "3.0.16", "3.0.17",
 		"3.1.0", "3.1.1", "3.1.2", "3.1.2", "3.1.3", "3.1.4", "3.1.5", "3.1.6", "3.1.7", "3.1.8", "3.1.9", "3.1.10",
 		"3.2.0", "3.2.1", "3.2.2", "3.2.3", "3.2.4", "3.2.5", "3.2.6", "3.2.7", "3.2.8", "3.2.9", "3.2.11", "3.2.12",
-		"3.2.13", "3.2.14", "3.2.15", "3.2.16", "3.2.23", "3.2.24", "3.2.25", "3.3.0", "3.3.1", "3.3.8", "3.3.9", "3.3.10"}
+		"3.2.13", "3.2.14", "3.2.15", "3.2.16", "3.2.23", "3.2.24", "3.2.25", "3.2.26", "3.3.0", "3.3.1", "3.3.8", "3.3.9", "3.3.10"}
 	containerdValidVersions        = [...]string{"1.1.5", "1.1.6", "1.2.4"}
 	networkPluginPlusPolicyAllowed = []k8sNetworkConfig{
 		{
@@ -214,7 +214,7 @@ func (a *Properties) ValidateOrchestratorProfile(isUpdate bool) error {
 			}
 
 			if o.KubernetesConfig != nil {
-				err := o.KubernetesConfig.Validate(version, a.HasWindows())
+				err := o.KubernetesConfig.Validate(version, a.HasWindows(), a.FeatureFlags.IsIPv6DualStackEnabled())
 				if err != nil {
 					return err
 				}
@@ -270,9 +270,12 @@ func (a *Properties) ValidateOrchestratorProfile(isUpdate bool) error {
 						return errors.Errorf("enablePodSecurityPolicy is only supported in aks-engine for Kubernetes version %s or greater; unable to validate for Kubernetes version %s",
 							minVersion.String(), version)
 					}
+					if len(o.KubernetesConfig.PodSecurityPolicyConfig) > 0 {
+						log.Warnf("Raw manifest for PodSecurityPolicy using PodSecurityPolicyConfig is deprecated in favor of the addon pod-security-policy. This will be ignored.")
+					}
 				}
 
-				if o.KubernetesConfig.LoadBalancerSku == "Standard" {
+				if o.KubernetesConfig.LoadBalancerSku == StandardLoadBalancerSku {
 					minVersion, err := semver.Make("1.11.0")
 					if err != nil {
 						return errors.Errorf("could not validate version")
@@ -339,6 +342,12 @@ func (a *Properties) validateMasterProfile(isUpdate bool) error {
 		if m.IsVirtualMachineScaleSets() && m.VnetSubnetID != "" && m.FirstConsecutiveStaticIP != "" {
 			return errors.New("when masterProfile's availabilityProfile is VirtualMachineScaleSets and a vnetSubnetID is specified, the firstConsecutiveStaticIP should be empty and will be determined by an offset from the first IP in the vnetCidr")
 		}
+		// validate os type is linux if dual stack feature is enabled
+		if a.FeatureFlags.IsIPv6DualStackEnabled() {
+			if m.Distro == CoreOS {
+				return errors.Errorf("Dual stack feature is currently supported only with Ubuntu, but master is of distro type %s", m.Distro)
+			}
+		}
 	}
 
 	if m.ImageRef != nil {
@@ -367,10 +376,23 @@ func (a *Properties) validateMasterProfile(isUpdate bool) error {
 
 	distroValues := DistroValues
 	if isUpdate {
-		distroValues = append(distroValues, AKSDockerEngine)
+		distroValues = append(distroValues, AKSDockerEngine, AKS1604Deprecated, AKS1804Deprecated)
 	}
 	if !validateDistro(m.Distro, distroValues) {
-		return errors.Errorf("The %s distro is not supported", m.Distro)
+		switch m.Distro {
+		case AKSDockerEngine, AKS1604Deprecated:
+			return errors.Errorf("The %s distro is deprecated, please use %s instead", m.Distro, AKSUbuntu1604)
+		case AKS1804Deprecated:
+			return errors.Errorf("The %s distro is deprecated, please use %s instead", m.Distro, AKSUbuntu1804)
+		default:
+			return errors.Errorf("The %s distro is not supported", m.Distro)
+		}
+	}
+
+	if to.Bool(m.AuditDEnabled) {
+		if !m.IsUbuntu() {
+			return errors.Errorf("You have enabled auditd for master vms, but you did not specify an Ubuntu-based distro.")
+		}
 	}
 
 	return common.ValidateDNSPrefix(m.DNSPrefix)
@@ -383,6 +405,16 @@ func (a *Properties) validateAgentPoolProfiles(isUpdate bool) error {
 
 		if e := validatePoolName(agentPoolProfile.Name); e != nil {
 			return e
+		}
+
+		// validate os type is linux if dual stack feature is enabled
+		if a.FeatureFlags.IsIPv6DualStackEnabled() {
+			if agentPoolProfile.OSType == Windows {
+				return errors.Errorf("Dual stack feature is supported only with Linux, but agent pool '%s' is of os type %s", agentPoolProfile.Name, agentPoolProfile.OSType)
+			}
+			if agentPoolProfile.Distro == CoreOS {
+				return errors.Errorf("Dual stack feature is currently supported only with Ubuntu, but agent pool '%s' is of distro type %s", agentPoolProfile.Name, agentPoolProfile.Distro)
+			}
 		}
 
 		// validate that each AgentPoolProfile Name is unique
@@ -407,6 +439,12 @@ func (a *Properties) validateAgentPoolProfiles(isUpdate bool) error {
 			}
 		}
 
+		if to.Bool(agentPoolProfile.AuditDEnabled) {
+			if !agentPoolProfile.IsUbuntu() {
+				return errors.Errorf("You have enabled auditd in agent pool %s, but you did not specify an Ubuntu-based distro", agentPoolProfile.Name)
+			}
+		}
+
 		if to.Bool(agentPoolProfile.EnableVMSSNodePublicIP) {
 			if agentPoolProfile.AvailabilityProfile != VirtualMachineScaleSets {
 				return errors.Errorf("You have enabled VMSS node public IP in agent pool %s, but you did not specify VMSS", agentPoolProfile.Name)
@@ -421,7 +459,7 @@ func (a *Properties) validateAgentPoolProfiles(isUpdate bool) error {
 			return agentPoolProfile.ImageRef.validateImageNameAndGroup()
 		}
 
-		if e := agentPoolProfile.validateAvailabilityProfile(a.OrchestratorProfile.OrchestratorType); e != nil {
+		if e := agentPoolProfile.validateAvailabilityProfile(); e != nil {
 			return e
 		}
 
@@ -455,10 +493,17 @@ func (a *Properties) validateAgentPoolProfiles(isUpdate bool) error {
 
 			distroValues := DistroValues
 			if isUpdate {
-				distroValues = append(distroValues, AKSDockerEngine)
+				distroValues = append(distroValues, AKSDockerEngine, AKS1604Deprecated, AKS1804Deprecated)
 			}
 			if !validateDistro(agentPoolProfile.Distro, distroValues) {
-				return errors.Errorf("The %s distro is not supported", agentPoolProfile.Distro)
+				switch agentPoolProfile.Distro {
+				case AKSDockerEngine, AKS1604Deprecated:
+					return errors.Errorf("The %s distro is deprecated, please use %s instead", agentPoolProfile.Distro, AKSUbuntu1604)
+				case AKS1804Deprecated:
+					return errors.Errorf("The %s distro is deprecated, please use %s instead", agentPoolProfile.Distro, AKSUbuntu1804)
+				default:
+					return errors.Errorf("The %s distro is not supported", agentPoolProfile.Distro)
+				}
 			}
 		}
 
@@ -485,7 +530,7 @@ func (a *Properties) validateZones() error {
 						return errors.New("Availability Zones are not supported with an AvailabilitySet. Please either remove availabilityProfile or set availabilityProfile to VirtualMachineScaleSets")
 					}
 				}
-				if a.OrchestratorProfile.KubernetesConfig != nil && a.OrchestratorProfile.KubernetesConfig.LoadBalancerSku != "" && a.OrchestratorProfile.KubernetesConfig.LoadBalancerSku != "Standard" {
+				if a.OrchestratorProfile.KubernetesConfig != nil && a.OrchestratorProfile.KubernetesConfig.LoadBalancerSku != "" && a.OrchestratorProfile.KubernetesConfig.LoadBalancerSku != StandardLoadBalancerSku {
 					return errors.New("Availability Zones requires Standard LoadBalancer. Please set KubernetesConfig \"LoadBalancerSku\" to \"Standard\"")
 				}
 			} else {
@@ -520,7 +565,6 @@ func (a *Properties) validateAddons() error {
 			}
 		}
 		for _, addon := range a.OrchestratorProfile.KubernetesConfig.Addons {
-
 			if addon.Data != "" {
 				if len(addon.Config) > 0 || len(addon.Containers) > 0 {
 					return errors.New("Config and containers should be empty when addon.Data is specified")
@@ -583,6 +627,14 @@ func (a *Properties) validateExtensions() error {
 	for _, agentPool := range a.AgentPoolProfiles {
 		if len(agentPool.Extensions) != 0 && (len(agentPool.AvailabilityProfile) == 0 || agentPool.IsVirtualMachineScaleSets()) {
 			return errors.Errorf("Extensions are currently not supported with VirtualMachineScaleSets. Please specify \"availabilityProfile\": \"%s\"", AvailabilitySet)
+		}
+
+		if agentPool.OSType == Windows && len(agentPool.Extensions) != 0 {
+			for _, e := range agentPool.Extensions {
+				if e.Name == "prometheus-grafana-k8s" {
+					return errors.Errorf("prometheus-grafana-k8s extension is currently not supported for Windows agents")
+				}
+			}
 		}
 	}
 
@@ -745,7 +797,7 @@ func (a *Properties) validateAADProfile() error {
 	return nil
 }
 
-func (a *AgentPoolProfile) validateAvailabilityProfile(orchestratorType string) error {
+func (a *AgentPoolProfile) validateAvailabilityProfile() error {
 	switch a.AvailabilityProfile {
 	case AvailabilitySet:
 	case VirtualMachineScaleSets:
@@ -1004,20 +1056,35 @@ func validatePasswordComplexity(name string, password string) (out bool) {
 }
 
 // Validate validates the KubernetesConfig
-func (k *KubernetesConfig) Validate(k8sVersion string, hasWindows bool) error {
+func (k *KubernetesConfig) Validate(k8sVersion string, hasWindows, ipv6DualStackEnabled bool) error {
 	// number of minimum retries allowed for kubelet to post node status
 	const minKubeletRetries = 4
 
+	// ipv6 dual stack feature is currently only supported with kubenet
+	if ipv6DualStackEnabled && k.NetworkPlugin != "kubenet" {
+		return errors.Errorf("OrchestratorProfile.KubernetesConfig.NetworkPlugin '%s' is invalid. IPv6 dual stack supported only with kubenet.", k.NetworkPlugin)
+	}
+
 	if k.ClusterSubnet != "" {
-		_, subnet, err := net.ParseCIDR(k.ClusterSubnet)
-		if err != nil {
+		clusterSubnets := strings.Split(k.ClusterSubnet, ",")
+		if !ipv6DualStackEnabled && len(clusterSubnets) > 1 {
 			return errors.Errorf("OrchestratorProfile.KubernetesConfig.ClusterSubnet '%s' is an invalid subnet", k.ClusterSubnet)
 		}
+		if ipv6DualStackEnabled && len(clusterSubnets) > 2 {
+			return errors.Errorf("OrchestratorProfile.KubernetesConfig.ClusterSubnet '%s' is an invalid subnet. Not more than 2 subnets for ipv6 dual stack.", k.ClusterSubnet)
+		}
 
-		if k.NetworkPlugin == "azure" {
-			ones, bits := subnet.Mask.Size()
-			if bits-ones <= 8 {
-				return errors.Errorf("OrchestratorProfile.KubernetesConfig.ClusterSubnet '%s' must reserve at least 9 bits for nodes", k.ClusterSubnet)
+		for _, clusterSubnet := range clusterSubnets {
+			_, subnet, err := net.ParseCIDR(clusterSubnet)
+			if err != nil {
+				return errors.Errorf("OrchestratorProfile.KubernetesConfig.ClusterSubnet '%s' is an invalid subnet", clusterSubnet)
+			}
+
+			if k.NetworkPlugin == "azure" {
+				ones, bits := subnet.Mask.Size()
+				if bits-ones <= 8 {
+					return errors.Errorf("OrchestratorProfile.KubernetesConfig.ClusterSubnet '%s' must reserve at least 9 bits for nodes", clusterSubnet)
+				}
 			}
 		}
 	}

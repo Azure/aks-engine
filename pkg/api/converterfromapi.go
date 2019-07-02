@@ -147,6 +147,7 @@ func ConvertOrchestratorVersionProfileToV20170930(api *OrchestratorVersionProfil
 		for i, h := range api.Upgrades {
 			vProfile.Upgrades[i] = &v20170930.OrchestratorProfile{
 				OrchestratorVersion: h.OrchestratorVersion,
+				OrchestratorType:    h.OrchestratorType,
 			}
 		}
 	}
@@ -897,6 +898,7 @@ func convertMasterProfileToV20170701(api *MasterProfile, v20170701Profile *v2017
 func convertMasterProfileToVLabs(api *MasterProfile, vlabsProfile *vlabs.MasterProfile) {
 	vlabsProfile.Count = api.Count
 	vlabsProfile.DNSPrefix = api.DNSPrefix
+	vlabsProfile.CustomVMTags = api.CustomVMTags
 	vlabsProfile.SubjectAltNames = api.SubjectAltNames
 	vlabsProfile.VMSize = api.VMSize
 	vlabsProfile.OSDiskSizeGB = api.OSDiskSizeGB
@@ -905,6 +907,7 @@ func convertMasterProfileToVLabs(api *MasterProfile, vlabsProfile *vlabs.MasterP
 	vlabsProfile.FirstConsecutiveStaticIP = api.FirstConsecutiveStaticIP
 	vlabsProfile.VnetCidr = api.VnetCidr
 	vlabsProfile.SetSubnet(api.Subnet)
+	vlabsProfile.SetSubnetIPv6(api.SubnetIPv6)
 	vlabsProfile.FQDN = api.FQDN
 	vlabsProfile.StorageProfile = api.StorageProfile
 	if api.PreprovisionExtension != nil {
@@ -933,6 +936,7 @@ func convertMasterProfileToVLabs(api *MasterProfile, vlabsProfile *vlabs.MasterP
 	vlabsProfile.AvailabilityZones = api.AvailabilityZones
 	vlabsProfile.SinglePlacementGroup = api.SinglePlacementGroup
 	vlabsProfile.CosmosEtcd = api.CosmosEtcd
+	vlabsProfile.AuditDEnabled = api.AuditDEnabled
 	convertCustomFilesToVlabs(api, vlabsProfile)
 }
 
@@ -996,6 +1000,7 @@ func convertAgentPoolProfileToVLabs(api *AgentPoolProfile, p *vlabs.AgentPoolPro
 	p.Name = api.Name
 	p.Count = api.Count
 	p.VMSize = api.VMSize
+	p.CustomVMTags = api.CustomVMTags
 	p.OSDiskSizeGB = api.OSDiskSizeGB
 	p.DNSPrefix = api.DNSPrefix
 	p.OSType = vlabs.OSType(api.OSType)
@@ -1018,6 +1023,7 @@ func convertAgentPoolProfileToVLabs(api *AgentPoolProfile, p *vlabs.AgentPoolPro
 	p.SinglePlacementGroup = api.SinglePlacementGroup
 	p.EnableVMSSNodePublicIP = api.EnableVMSSNodePublicIP
 	p.LoadBalancerBackendAddressPoolIDs = api.LoadBalancerBackendAddressPoolIDs
+	p.AuditDEnabled = api.AuditDEnabled
 
 	for k, v := range api.CustomNodeLabels {
 		p.CustomNodeLabels[k] = v
@@ -1177,6 +1183,7 @@ func convertAADProfileToVLabs(api *AADProfile, vlabs *vlabs.AADProfile) {
 func convertFeatureFlagsToVLabs(api *FeatureFlags, vlabs *vlabs.FeatureFlags) {
 	vlabs.EnableCSERunInBackground = api.EnableCSERunInBackground
 	vlabs.BlockOutboundInternet = api.BlockOutboundInternet
+	vlabs.EnableIPv6DualStack = api.EnableIPv6DualStack
 }
 
 func convertCloudProfileToVLabs(api *CustomCloudProfile, vlabsccp *vlabs.CustomCloudProfile) {
@@ -1241,6 +1248,7 @@ func convertAzureEnvironmentSpecConfigToVLabs(api *AzureEnvironmentSpecConfig, v
 		ACIConnectorImageBase:            api.KubernetesSpecConfig.ACIConnectorImageBase,
 		NVIDIAImageBase:                  api.KubernetesSpecConfig.NVIDIAImageBase,
 		AzureCNIImageBase:                api.KubernetesSpecConfig.AzureCNIImageBase,
+		CalicoImageBase:                  api.KubernetesSpecConfig.CalicoImageBase,
 		EtcdDownloadURLBase:              api.KubernetesSpecConfig.EtcdDownloadURLBase,
 		KubeBinariesSASURLBase:           api.KubernetesSpecConfig.KubeBinariesSASURLBase,
 		WindowsTelemetryGUID:             api.KubernetesSpecConfig.WindowsTelemetryGUID,

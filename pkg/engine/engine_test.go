@@ -30,6 +30,53 @@ const (
 	TestAKSEngineVersion = "1.0.0"
 )
 
+// LBRuleBaseString is a raw string that represents a template that we will compose an LB rule from
+const LBRuleBaseString string = `	          {
+            "name": "LBRule%d",
+            "properties": {
+              "backendAddressPool": {
+                "id": "[concat(variables('%sLbID'), '/backendAddressPools/', variables('%sLbBackendPoolName'))]"
+              },
+              "backendPort": %d,
+              "enableFloatingIP": false,
+              "frontendIPConfiguration": {
+                "id": "[variables('%sLbIPConfigID')]"
+              },
+              "frontendPort": %d,
+              "idleTimeoutInMinutes": 5,
+              "loadDistribution": "Default",
+              "probe": {
+                "id": "[concat(variables('%sLbID'),'/probes/tcp%dProbe')]"
+              },
+              "protocol": "Tcp"
+            }
+          }`
+
+const TCPProbeBaseString string = `          {
+            "name": "tcp%dProbe",
+            "properties": {
+              "intervalInSeconds": 5,
+              "numberOfProbes": 2,
+              "port": %d,
+              "protocol": "Tcp"
+            }
+          }`
+
+const securityRuleBaseString string = `          {
+            "name": "Allow_%d",
+            "properties": {
+              "access": "Allow",
+              "description": "Allow traffic from the Internet to port %d",
+              "destinationAddressPrefix": "*",
+              "destinationPortRange": "%d",
+              "direction": "Inbound",
+              "priority": %d,
+              "protocol": "*",
+              "sourceAddressPrefix": "Internet",
+              "sourcePortRange": "*"
+            }
+          }`
+
 func TestExpected(t *testing.T) {
 	// Initialize locale for translation
 	locale := gotext.NewLocale(path.Join("..", "..", "translations"), "en_US")
@@ -326,40 +373,6 @@ func addTestCertificateProfile(api *api.CertificateProfile) {
 	api.EtcdPeerPrivateKeys = []string{"etcdPeerPrivateKey0"}
 }
 
-func TestGetStorageAccountType(t *testing.T) {
-	validPremiumVMSize := "Standard_DS2_v2"
-	validStandardVMSize := "Standard_D2_v2"
-	expectedPremiumTier := "Premium_LRS"
-	expectedStandardTier := "Standard_LRS"
-	invalidVMSize := "D2v2"
-
-	// test premium VMSize returns premium managed disk tier
-	premiumTier, err := getStorageAccountType(validPremiumVMSize)
-	if err != nil {
-		t.Fatalf("Invalid sizeName: %s", err)
-	}
-
-	if premiumTier != expectedPremiumTier {
-		t.Fatalf("premium VM did no match premium managed storage tier")
-	}
-
-	// test standard VMSize returns standard managed disk tier
-	standardTier, err := getStorageAccountType(validStandardVMSize)
-	if err != nil {
-		t.Fatalf("Invalid sizeName: %s", err)
-	}
-
-	if standardTier != expectedStandardTier {
-		t.Fatalf("standard VM did no match standard managed storage tier")
-	}
-
-	// test invalid VMSize
-	result, err := getStorageAccountType(invalidVMSize)
-	if err == nil {
-		t.Errorf("getStorageAccountType() = (%s, nil), want error", result)
-	}
-}
-
 type TestARMTemplate struct {
 	Outputs map[string]OutputElement `json:"outputs"`
 	//Parameters *json.RawMessage `json:"parameters"`
@@ -479,65 +492,50 @@ func TestIsNSeriesSKU(t *testing.T) {
 		"Standard_B8ms",
 		"Standard_D11",
 		"Standard_D11_v2",
-		"Standard_D11_v2_Promo",
 		"Standard_D12",
 		"Standard_D12_v2",
-		"Standard_D12_v2_Promo",
 		"Standard_D13",
 		"Standard_D13_v2",
-		"Standard_D13_v2_Promo",
 		"Standard_D14",
 		"Standard_D14_v2",
-		"Standard_D14_v2_Promo",
 		"Standard_D15_v2",
 		"Standard_D16_v3",
 		"Standard_D16s_v3",
 		"Standard_D2",
 		"Standard_D2_v2",
-		"Standard_D2_v2_Promo",
 		"Standard_D2_v3",
 		"Standard_D2s_v3",
 		"Standard_D3",
 		"Standard_D32_v3",
 		"Standard_D32s_v3",
 		"Standard_D3_v2",
-		"Standard_D3_v2_Promo",
 		"Standard_D4",
 		"Standard_D4_v2",
-		"Standard_D4_v2_Promo",
 		"Standard_D4_v3",
 		"Standard_D4s_v3",
 		"Standard_D5_v2",
-		"Standard_D5_v2_Promo",
 		"Standard_D64_v3",
 		"Standard_D64s_v3",
 		"Standard_D8_v3",
 		"Standard_D8s_v3",
 		"Standard_DS11",
 		"Standard_DS11_v2",
-		"Standard_DS11_v2_Promo",
 		"Standard_DS12",
 		"Standard_DS12_v2",
-		"Standard_DS12_v2_Promo",
 		"Standard_DS13",
 		"Standard_DS13-2_v2",
 		"Standard_DS13-4_v2",
 		"Standard_DS13_v2",
-		"Standard_DS13_v2_Promo",
 		"Standard_DS14",
 		"Standard_DS14-4_v2",
 		"Standard_DS14-8_v2",
 		"Standard_DS14_v2",
-		"Standard_DS14_v2_Promo",
 		"Standard_DS15_v2",
 		"Standard_DS3",
 		"Standard_DS3_v2",
-		"Standard_DS3_v2_Promo",
 		"Standard_DS4",
 		"Standard_DS4_v2",
-		"Standard_DS4_v2_Promo",
 		"Standard_DS5_v2",
-		"Standard_DS5_v2_Promo",
 		"Standard_E16_v3",
 		"Standard_E16s_v3",
 		"Standard_E2_v3",
@@ -615,21 +613,6 @@ func TestIsNSeriesSKU(t *testing.T) {
 	}
 }
 
-func TestGenerateIpList(t *testing.T) {
-	count := 3
-	forth := 240
-	ipList := generateIPList(count, fmt.Sprintf("10.0.0.%d", forth))
-	if len(ipList) != 3 {
-		t.Fatalf("IP list size should be %d", count)
-	}
-	for i, ip := range ipList {
-		expected := fmt.Sprintf("10.0.0.%d", forth+i)
-		if ip != expected {
-			t.Fatalf("wrong IP %s. Expected %s", ip, expected)
-		}
-	}
-}
-
 func TestGenerateKubeConfig(t *testing.T) {
 	locale := gotext.NewLocale(path.Join("..", "..", "translations"), "en_US")
 	i18n.Initialize(locale)
@@ -697,28 +680,6 @@ func TestGenerateKubeConfig(t *testing.T) {
 	if err != nil {
 		t.Errorf("Failed to call GenerateKubeConfig with simple Kubernetes config from file: %v", testData)
 	}
-}
-
-func TestGetDataDisks(t *testing.T) {
-	a := &api.AgentPoolProfile{
-		Name: "sampleAgent",
-		DiskSizesGB: []int{
-			128, 128, 128, 128, 128,
-		},
-		StorageProfile: api.ManagedDisks,
-	}
-	str := getDataDisks(a)
-	fmt.Println(str)
-
-	a = &api.AgentPoolProfile{
-		Name: "sampleAgentStorage",
-		DiskSizesGB: []int{
-			128, 128, 128, 128, 128,
-		},
-		StorageProfile: api.StorageAccount,
-	}
-	str = getDataDisks(a)
-	fmt.Println(str)
 }
 
 func TestValidateDistro(t *testing.T) {
@@ -873,5 +834,831 @@ func TestGetKubernetesSubnets(t *testing.T) {
 
 	if actual != expected {
 		t.Errorf("expected to get %s, but got %s instead", expected, actual)
+	}
+}
+
+func TestGetVNETSubnetDependencies(t *testing.T) {
+	baseString := `        "[concat('Microsoft.Network/networkSecurityGroups/', variables('%sNSGName'))]"`
+	cases := []struct {
+		p        *api.Properties
+		expected string
+	}{
+		{
+			p:        &api.Properties{},
+			expected: "",
+		},
+		{
+			p: &api.Properties{
+				AgentPoolProfiles: []*api.AgentPoolProfile{},
+			},
+			expected: "",
+		},
+		{
+			p: &api.Properties{
+				AgentPoolProfiles: []*api.AgentPoolProfile{
+					{
+						Name: "pool1",
+					},
+				},
+			},
+			expected: fmt.Sprintf(baseString, "pool1"),
+		},
+		{
+			p: &api.Properties{
+				AgentPoolProfiles: []*api.AgentPoolProfile{
+					{
+						Name: "pool1",
+					},
+					{
+						Name: "pool2",
+					},
+					{
+						Name: "pool3",
+					},
+				},
+			},
+			expected: fmt.Sprintf(baseString, "pool1") + ",\n" + fmt.Sprintf(baseString, "pool2") + ",\n" + fmt.Sprintf(baseString, "pool3"),
+		},
+	}
+
+	for _, c := range cases {
+		if getVNETSubnetDependencies(c.p) != c.expected {
+			t.Fatalf("expected getVNETSubnetDependencies() to return %s but instead got %s", c.expected, getVNETSubnetDependencies(c.p))
+		}
+	}
+}
+
+func TestGetLBRule(t *testing.T) {
+	cases := []struct {
+		name     string
+		port     int
+		expected string
+	}{
+		{
+			name:     "foo",
+			port:     80,
+			expected: fmt.Sprintf(LBRuleBaseString, 80, "foo", "foo", 80, "foo", 80, "foo", 80),
+		},
+		{
+			name:     "bar",
+			port:     8080,
+			expected: fmt.Sprintf(LBRuleBaseString, 8080, "bar", "bar", 8080, "bar", 8080, "bar", 8080),
+		},
+		{
+			name:     "",
+			port:     0,
+			expected: fmt.Sprintf(LBRuleBaseString, 0, "", "", 0, "", 0, "", 0),
+		},
+	}
+
+	for _, c := range cases {
+		if getLBRule(c.name, c.port) != c.expected {
+			t.Fatalf("expected getLBRule() to return %s but instead got %s", c.expected, getLBRule(c.name, c.port))
+		}
+	}
+}
+
+func TestGetLBRules(t *testing.T) {
+	cases := []struct {
+		name     string
+		ports    []int
+		expected string
+	}{
+		{
+			name:     "foo",
+			ports:    []int{80},
+			expected: fmt.Sprintf(LBRuleBaseString, 80, "foo", "foo", 80, "foo", 80, "foo", 80),
+		},
+		{
+			name:     "bar",
+			ports:    []int{8080},
+			expected: fmt.Sprintf(LBRuleBaseString, 8080, "bar", "bar", 8080, "bar", 8080, "bar", 8080),
+		},
+		{
+			name:     "baz",
+			ports:    []int{80, 8080},
+			expected: fmt.Sprintf(LBRuleBaseString, 80, "baz", "baz", 80, "baz", 80, "baz", 80) + ",\n" + fmt.Sprintf(LBRuleBaseString, 8080, "baz", "baz", 8080, "baz", 8080, "baz", 8080),
+		},
+		{
+			name:     "",
+			ports:    []int{},
+			expected: "",
+		},
+	}
+
+	for _, c := range cases {
+		if getLBRules(c.name, c.ports) != c.expected {
+			t.Fatalf("expected getLBRules() to return %s but instead got %s", c.expected, getLBRules(c.name, c.ports))
+		}
+	}
+}
+
+func TestGetProbe(t *testing.T) {
+	cases := []struct {
+		port     int
+		expected string
+	}{
+		{
+			port:     80,
+			expected: fmt.Sprintf(TCPProbeBaseString, 80, 80),
+		},
+		{
+			port:     0,
+			expected: fmt.Sprintf(TCPProbeBaseString, 0, 0),
+		},
+	}
+
+	for _, c := range cases {
+		if getProbe(c.port) != c.expected {
+			t.Fatalf("expected getProbe() to return %s but instead got %s", c.expected, getProbe(c.port))
+		}
+	}
+}
+
+func TestGetProbes(t *testing.T) {
+	cases := []struct {
+		ports    []int
+		expected string
+	}{
+		{
+			ports:    []int{80, 81},
+			expected: fmt.Sprintf(TCPProbeBaseString, 80, 80) + ",\n" + fmt.Sprintf(TCPProbeBaseString, 81, 81),
+		},
+		{
+			ports:    []int{8080},
+			expected: fmt.Sprintf(TCPProbeBaseString, 8080, 8080),
+		},
+	}
+
+	for _, c := range cases {
+		if getProbes(c.ports) != c.expected {
+			t.Fatalf("expected getProbes() to return %s but instead got %s", c.expected, getProbes(c.ports))
+		}
+	}
+}
+
+func TestGetSecurityRule(t *testing.T) {
+	cases := []struct {
+		port      int
+		portIndex int
+		expected  string
+	}{
+		{
+			port:      80,
+			portIndex: 0,
+			expected:  fmt.Sprintf(securityRuleBaseString, 80, 80, 80, 200),
+		},
+		{
+			port:      0,
+			portIndex: 1,
+			expected:  fmt.Sprintf(securityRuleBaseString, 0, 0, 0, 201),
+		},
+	}
+
+	for _, c := range cases {
+		if getSecurityRule(c.port, c.portIndex) != c.expected {
+			t.Fatalf("expected getSecurityRule() to return %s but instead got %s", c.expected, getSecurityRule(c.port, c.portIndex))
+		}
+	}
+}
+
+func TestGetSecurityRules(t *testing.T) {
+	cases := []struct {
+		ports    []int
+		expected string
+	}{
+		{
+			ports:    []int{80, 81},
+			expected: fmt.Sprintf(securityRuleBaseString, 80, 80, 80, 200) + ",\n" + fmt.Sprintf(securityRuleBaseString, 81, 81, 81, 201),
+		},
+		{
+			ports:    []int{80},
+			expected: fmt.Sprintf(securityRuleBaseString, 80, 80, 80, 200),
+		},
+	}
+
+	for _, c := range cases {
+		if getSecurityRules(c.ports) != c.expected {
+			t.Fatalf("expected getSecurityRules() to return %s but instead got %s", c.expected, getSecurityRules(c.ports))
+		}
+	}
+}
+
+func TestGetVNETAddressPrefixes(t *testing.T) {
+	baseString := `"[variables('masterSubnet')]"`
+	cases := []struct {
+		p        *api.Properties
+		expected string
+	}{
+		{
+			p: &api.Properties{
+				MasterProfile: &api.MasterProfile{},
+			},
+			expected: baseString,
+		},
+		{
+			p: &api.Properties{
+				MasterProfile: &api.MasterProfile{},
+				AgentPoolProfiles: []*api.AgentPoolProfile{
+					{
+						Name:   "foo",
+						Subnet: "10.0.0.0/24",
+					},
+				},
+			},
+			expected: baseString + fmt.Sprintf(",\n            \"[variables('%sSubnet')]\"", "foo"),
+		},
+		{
+			p: &api.Properties{
+				MasterProfile: &api.MasterProfile{},
+				AgentPoolProfiles: []*api.AgentPoolProfile{
+					{
+						Name:   "foo",
+						Subnet: "10.0.0.0/24",
+					},
+					{
+						Name:   "bar",
+						Subnet: "10.0.0.0/24",
+					},
+				},
+			},
+			expected: baseString + fmt.Sprintf(",\n            \"[variables('%sSubnet')]\"", "foo") + fmt.Sprintf(",\n            \"[variables('%sSubnet')]\"", "bar"),
+		},
+	}
+
+	for _, c := range cases {
+		if getVNETAddressPrefixes(c.p) != c.expected {
+			t.Fatalf("expected getVNETAddressPrefixes() to return %s but instead got %s", c.expected, getVNETAddressPrefixes(c.p))
+		}
+	}
+}
+
+func TestGetVNETSubnets(t *testing.T) {
+	masterString := `{
+            "name": "[variables('masterSubnetName')]",
+            "properties": {
+              "addressPrefix": "[variables('masterSubnet')]"
+            }
+          }`
+	agentString := `          {
+            "name": "[variables('%sSubnetName')]",
+            "properties": {
+              "addressPrefix": "[variables('%sSubnet')]"
+            }
+          }`
+	agentStringNSG := `          {
+            "name": "[variables('%sSubnetName')]",
+            "properties": {
+              "addressPrefix": "[variables('%sSubnet')]",
+              "networkSecurityGroup": {
+                "id": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('%sNSGName'))]"
+              }
+            }
+          }`
+	cases := []struct {
+		p        *api.Properties
+		addNSG   bool
+		expected string
+	}{
+		{
+			p: &api.Properties{
+				AgentPoolProfiles: []*api.AgentPoolProfile{},
+			},
+			addNSG:   false,
+			expected: masterString,
+		},
+		{
+			p: &api.Properties{
+				AgentPoolProfiles: []*api.AgentPoolProfile{
+					{
+						Name: "foo",
+					},
+					{
+						Name: "bar",
+					},
+				},
+			},
+			addNSG:   false,
+			expected: masterString + ",\n" + fmt.Sprintf(agentString, "foo", "foo") + ",\n" + fmt.Sprintf(agentString, "bar", "bar"),
+		},
+		{
+			p: &api.Properties{
+				AgentPoolProfiles: []*api.AgentPoolProfile{
+					{
+						Name: "foo",
+					},
+					{
+						Name: "bar",
+					},
+				},
+			},
+			addNSG:   true,
+			expected: masterString + ",\n" + fmt.Sprintf(agentStringNSG, "foo", "foo", "foo") + ",\n" + fmt.Sprintf(agentStringNSG, "bar", "bar", "bar"),
+		},
+	}
+
+	for _, c := range cases {
+		if getVNETSubnets(c.p, c.addNSG) != c.expected {
+			t.Fatalf("expected getVNETSubnets() to return %s but instead got %s", c.expected, getVNETSubnets(c.p, c.addNSG))
+		}
+	}
+}
+
+func TestGetDataDisks(t *testing.T) {
+	baseString := "\"dataDisks\": [\n"
+	dataDisks := `            {
+              "createOption": "Empty",
+              "diskSizeGB": "%d",
+              "lun": %d,
+              "caching": "ReadOnly",
+              "name": "[concat(variables('%sVMNamePrefix'), copyIndex(),'-datadisk%d')]",
+              "vhd": {
+                "uri": "[concat('http://',variables('storageAccountPrefixes')[mod(add(add(div(copyIndex(),variables('maxVMsPerStorageAccount')),variables('%sStorageAccountOffset')),variables('dataStorageAccountPrefixSeed')),variables('storageAccountPrefixesCount'))],variables('storageAccountPrefixes')[div(add(add(div(copyIndex(),variables('maxVMsPerStorageAccount')),variables('%sStorageAccountOffset')),variables('dataStorageAccountPrefixSeed')),variables('storageAccountPrefixesCount'))],variables('%sDataAccountName'),'.blob.core.windows.net/vhds/',variables('%sVMNamePrefix'),copyIndex(), '--datadisk%d.vhd')]"
+              }
+            }`
+	managedDataDisks := `            {
+              "diskSizeGB": "%d",
+              "lun": %d,
+              "caching": "ReadOnly",
+              "createOption": "Empty"
+            }`
+	cases := []struct {
+		p        *api.AgentPoolProfile
+		expected string
+	}{
+		{
+			p:        &api.AgentPoolProfile{},
+			expected: "",
+		},
+		{
+			p: &api.AgentPoolProfile{
+				Name: "foo",
+				DiskSizesGB: []int{
+					128,
+				},
+				StorageProfile: api.ManagedDisks,
+			},
+			expected: baseString + fmt.Sprintf(managedDataDisks, 128, 0) + "\n          ],",
+		},
+		{
+			p: &api.AgentPoolProfile{
+				Name: "bar",
+				DiskSizesGB: []int{
+					128,
+				},
+				StorageProfile: api.StorageAccount,
+			},
+			expected: baseString + fmt.Sprintf(dataDisks, 128, 0, "bar", 0, "bar", "bar", "bar", "bar", 0) + "\n          ],",
+		},
+		{
+			p: &api.AgentPoolProfile{
+				Name: "foo",
+				DiskSizesGB: []int{
+					128,
+					384,
+				},
+				StorageProfile: api.ManagedDisks,
+			},
+			expected: baseString + fmt.Sprintf(managedDataDisks, 128, 0) + ",\n" + fmt.Sprintf(managedDataDisks, 384, 1) + "\n          ],",
+		},
+		{
+			p: &api.AgentPoolProfile{
+				Name: "bar",
+				DiskSizesGB: []int{
+					128,
+					256,
+				},
+				StorageProfile: api.StorageAccount,
+			},
+			expected: baseString + fmt.Sprintf(dataDisks, 128, 0, "bar", 0, "bar", "bar", "bar", "bar", 0) + ",\n" + fmt.Sprintf(dataDisks, 256, 1, "bar", 1, "bar", "bar", "bar", "bar", 1) + "\n          ],",
+		},
+	}
+
+	for _, c := range cases {
+		if getDataDisks(c.p) != c.expected {
+			t.Fatalf("expected getDataDisks() to return %s but instead got %s", c.expected, getDataDisks(c.p))
+		}
+	}
+}
+
+func TestGenerateConsecutiveIPsList(t *testing.T) {
+	cases := []struct {
+		count            int
+		firstThreeOctets string
+		fourthOctet      int
+		expectError      bool
+	}{
+		{
+			count:            3,
+			firstThreeOctets: "10.0.0",
+			fourthOctet:      240,
+		},
+		{
+			count:            45,
+			firstThreeOctets: "192.168.1",
+			fourthOctet:      201,
+		},
+		{
+			count:            45,
+			firstThreeOctets: "192.168.1.5.6.7", // Too many octets
+			fourthOctet:      1,
+			expectError:      true,
+		},
+		{
+			count:            10, // This will result in fourth octet overflow
+			firstThreeOctets: "4.5.6",
+			fourthOctet:      254,
+			expectError:      true,
+		},
+		{
+			count:            1, // This is the broadcast address
+			firstThreeOctets: "192.168.1",
+			fourthOctet:      254,
+			expectError:      true,
+		},
+	}
+
+	for _, c := range cases {
+		firstIPAddress := fmt.Sprintf("%s.%d", c.firstThreeOctets, c.fourthOctet)
+		ret, err := generateConsecutiveIPsList(c.count, fmt.Sprintf("%s.%d", c.firstThreeOctets, c.fourthOctet))
+		if c.expectError {
+			if err == nil {
+				t.Fatalf("expected error from generateConsecutiveIPsList(%d, %s)!", c.count, firstIPAddress)
+			}
+		} else {
+			if len(ret) != c.count {
+				t.Fatalf("expected %d IP addresses from generateConsecutiveIPsList() response, but instead got %d", c.count, len(ret))
+			}
+			for i, ip := range ret {
+				expected := fmt.Sprintf("%s.%d", c.firstThreeOctets, c.fourthOctet+i)
+				if ip != expected {
+					t.Fatalf("expected %s in generateConsecutiveIPsList() response set at index %d, but instead got %s", expected, i, ip)
+				}
+			}
+		}
+	}
+}
+
+func TestValidateProfileOptedForExtension(t *testing.T) {
+	cases := []struct {
+		extensions          []api.Extension
+		name                string
+		expectedEnabled     bool
+		expectedSingleOrAll string
+	}{
+		{
+			extensions: []api.Extension{
+				{
+					Name:        "foo",
+					SingleOrAll: "single",
+				},
+			},
+			name:                "foo",
+			expectedEnabled:     true,
+			expectedSingleOrAll: "single",
+		},
+		{
+			extensions: []api.Extension{
+				{
+					Name:        "foo",
+					SingleOrAll: "All",
+				},
+			},
+			name:                "foo",
+			expectedEnabled:     true,
+			expectedSingleOrAll: "All",
+		},
+		{
+			extensions: []api.Extension{
+				{
+					Name: "foo",
+				},
+			},
+			name:                "foo",
+			expectedEnabled:     true,
+			expectedSingleOrAll: "",
+		},
+		{
+			extensions: []api.Extension{
+				{
+					Name: "foo",
+				},
+			},
+			name:                "bar",
+			expectedEnabled:     false,
+			expectedSingleOrAll: "",
+		},
+	}
+
+	for _, c := range cases {
+		enabled, singleOrAll := validateProfileOptedForExtension(c.name, c.extensions)
+		if enabled != c.expectedEnabled {
+			t.Fatalf("expected validateProfileOptedForExtension(%s, %v) to return %t but instead got %t", c.name, c.extensions, c.expectedEnabled, enabled)
+		}
+		if singleOrAll != c.expectedSingleOrAll {
+			t.Fatalf("expected validateProfileOptedForExtension(%s, %v) to return %s but instead got %s", c.name, c.extensions, c.expectedSingleOrAll, singleOrAll)
+		}
+	}
+}
+
+func TestGetMasterLinkedTemplateText(t *testing.T) {
+	cases := []struct {
+		orchestrator     string
+		extensionProfile *api.ExtensionProfile
+		singleOrAll      string
+		expected         string
+		expectedErr      error
+	}{
+		{
+			orchestrator: api.Kubernetes,
+			extensionProfile: &api.ExtensionProfile{
+				Name:    "winrm",
+				Version: "v1",
+				RootURL: "https://raw.githubusercontent.com/Azure/aks-engine/master/",
+			},
+			singleOrAll: "single",
+			expected: `{
+	"name": "[concat(variables('masterVMNamePrefix'), copyIndex(variables('masterOffset')), 'winrm')]",
+	"type": "Microsoft.Resources/deployments",
+	"apiVersion": "[variables('apiVersionDeployments')]",
+	"dependsOn": [
+		"[concat('Microsoft.Compute/virtualMachines/', variables('masterVMNamePrefix'), copyIndex(variables('masterOffset')), '/extensions/cse', '-master-', copyIndex(variables('masterOffset')))]"
+	],
+	"copy": {
+		"count": 1,
+		"name": "winrmExtensionLoop"
+	},
+	"properties": {
+		"mode": "Incremental",
+		"templateLink": {
+			"uri": "https://raw.githubusercontent.com/Azure/aks-engine/master/extensions/winrm/v1/template.json",
+			"contentVersion": "1.0.0.0"
+		},
+		"parameters": {
+			"artifactsLocation": {
+				"value": "https://raw.githubusercontent.com/Azure/aks-engine/master/"
+			},
+			"apiVersionDeployments": {
+				"value": "[variables('apiVersionDeployments')]"
+			},
+			"targetVMName": {
+				"value": "[concat(variables('masterVMNamePrefix'), copyIndex(variables('masterOffset')))]"
+			},
+			"targetVMType": {
+				"value": "master"
+			},
+			"extensionParameters": {
+				"value": "[parameters('winrmParameters')]"
+			},
+			"vmIndex":{
+				"value": "[copyIndex(variables('masterOffset'))]"
+			}
+		}
+	}
+}`,
+			expectedErr: nil,
+		},
+		{
+			orchestrator: api.Kubernetes,
+			extensionProfile: &api.ExtensionProfile{
+				Name:    "winrm",
+				Version: "v1",
+				RootURL: "https://raw.githubusercontent.com/Azure/aks-engine/master/",
+			},
+			expected: `{
+	"name": "[concat(variables('masterVMNamePrefix'), copyIndex(variables('masterOffset')), 'winrm')]",
+	"type": "Microsoft.Resources/deployments",
+	"apiVersion": "[variables('apiVersionDeployments')]",
+	"dependsOn": [
+		"[concat('Microsoft.Compute/virtualMachines/', variables('masterVMNamePrefix'), copyIndex(variables('masterOffset')), '/extensions/cse', '-master-', copyIndex(variables('masterOffset')))]"
+	],
+	"copy": {
+		"count": "[sub(variables('masterCount'), variables('masterOffset'))]",
+		"name": "winrmExtensionLoop"
+	},
+	"properties": {
+		"mode": "Incremental",
+		"templateLink": {
+			"uri": "https://raw.githubusercontent.com/Azure/aks-engine/master/extensions/winrm/v1/template.json",
+			"contentVersion": "1.0.0.0"
+		},
+		"parameters": {
+			"artifactsLocation": {
+				"value": "https://raw.githubusercontent.com/Azure/aks-engine/master/"
+			},
+			"apiVersionDeployments": {
+				"value": "[variables('apiVersionDeployments')]"
+			},
+			"targetVMName": {
+				"value": "[concat(variables('masterVMNamePrefix'), copyIndex(variables('masterOffset')))]"
+			},
+			"targetVMType": {
+				"value": "master"
+			},
+			"extensionParameters": {
+				"value": "[parameters('winrmParameters')]"
+			},
+			"vmIndex":{
+				"value": "[copyIndex(variables('masterOffset'))]"
+			}
+		}
+	}
+}`,
+			expectedErr: nil,
+		},
+	}
+
+	for _, c := range cases {
+		ret, err := getMasterLinkedTemplateText(c.orchestrator, c.extensionProfile, c.singleOrAll)
+		ret = strings.Join(strings.Fields(ret), " ")
+		expected := strings.Join(strings.Fields(c.expected), " ")
+		if ret != expected {
+			t.Fatalf("expected getMasterLinkedTemplateText(%s, %v, %s) to return %s but instead got %s", c.orchestrator, c.extensionProfile, c.singleOrAll, expected, ret)
+		}
+		if err != c.expectedErr {
+			t.Fatalf("expected getMasterLinkedTemplateText(%s, %v, %s) to return %s but instead got %s", c.orchestrator, c.extensionProfile, c.singleOrAll, c.expectedErr, err)
+		}
+	}
+}
+
+func TestGetAgentPoolLinkedTemplateText(t *testing.T) {
+	cases := []struct {
+		orchestrator     string
+		agentPoolProfile *api.AgentPoolProfile
+		extensionProfile *api.ExtensionProfile
+		singleOrAll      string
+		expected         string
+		expectedErr      error
+	}{
+		{
+			orchestrator: api.Kubernetes,
+			agentPoolProfile: &api.AgentPoolProfile{
+				Name:                "foo",
+				AvailabilityProfile: "AvailabilitySet",
+			},
+			extensionProfile: &api.ExtensionProfile{
+				Name:    "winrm",
+				Version: "v1",
+				RootURL: "https://raw.githubusercontent.com/Azure/aks-engine/master/",
+			},
+			singleOrAll: "single",
+			expected:    `{ "name": "[concat(variables('fooVMNamePrefix'), copyIndex(variables('fooOffset')), 'winrm')]", "type": "Microsoft.Resources/deployments", "apiVersion": "[variables('apiVersionDeployments')]", "dependsOn": [ "[concat('Microsoft.Compute/virtualMachines/', variables('fooVMNamePrefix'), copyIndex(variables('fooOffset')), '/extensions/cse', '-agent-', copyIndex(variables('fooOffset')))]" ], "copy": { "count": 1, "name": "winrmExtensionLoop" }, "properties": { "mode": "Incremental", "templateLink": { "uri": "https://raw.githubusercontent.com/Azure/aks-engine/master/extensions/winrm/v1/template.json", "contentVersion": "1.0.0.0" }, "parameters": { "artifactsLocation": { "value": "https://raw.githubusercontent.com/Azure/aks-engine/master/" }, "apiVersionDeployments": { "value": "[variables('apiVersionDeployments')]" }, "targetVMName": { "value": "[concat(variables('fooVMNamePrefix'), copyIndex(variables('fooOffset')))]" }, "targetVMType": { "value": "agent" }, "extensionParameters": { "value": "[parameters('winrmParameters')]" }, "vmIndex":{ "value": "[copyIndex(variables('fooOffset'))]" } } } }`,
+			expectedErr: nil,
+		},
+		{
+			orchestrator: api.Kubernetes,
+			agentPoolProfile: &api.AgentPoolProfile{
+				Name:                "foo",
+				AvailabilityProfile: "VirtualMachineScaleSets",
+			},
+			extensionProfile: &api.ExtensionProfile{
+				Name:    "winrm",
+				Version: "v1",
+				RootURL: "https://raw.githubusercontent.com/Azure/aks-engine/master/",
+			},
+			singleOrAll: "single",
+			expected:    `{ "name": "[concat(variables('fooVMNamePrefix'), copyIndex(), 'winrm')]", "type": "Microsoft.Resources/deployments", "apiVersion": "[variables('apiVersionDeployments')]", "dependsOn": [ "[concat('Microsoft.Compute/virtualMachines/', variables('fooVMNamePrefix'), copyIndex(), '/extensions/cse', '-agent-', copyIndex())]" ], "copy": { "count": 1, "name": "winrmExtensionLoop" }, "properties": { "mode": "Incremental", "templateLink": { "uri": "https://raw.githubusercontent.com/Azure/aks-engine/master/extensions/winrm/v1/template.json", "contentVersion": "1.0.0.0" }, "parameters": { "artifactsLocation": { "value": "https://raw.githubusercontent.com/Azure/aks-engine/master/" }, "apiVersionDeployments": { "value": "[variables('apiVersionDeployments')]" }, "targetVMName": { "value": "[concat(variables('fooVMNamePrefix'), copyIndex())]" }, "targetVMType": { "value": "agent" }, "extensionParameters": { "value": "[parameters('winrmParameters')]" }, "vmIndex":{ "value": "[copyIndex()]" } } } }`,
+			expectedErr: nil,
+		},
+		{
+			orchestrator: api.Kubernetes,
+			agentPoolProfile: &api.AgentPoolProfile{
+				Name:                "foo",
+				AvailabilityProfile: "VirtualMachineScaleSets",
+			},
+			extensionProfile: &api.ExtensionProfile{
+				Name:    "winrm",
+				Version: "v1",
+				RootURL: "https://raw.githubusercontent.com/Azure/aks-engine/master/",
+			},
+			singleOrAll: "All",
+			expected:    `{ "name": "[concat(variables('fooVMNamePrefix'), copyIndex(), 'winrm')]", "type": "Microsoft.Resources/deployments", "apiVersion": "[variables('apiVersionDeployments')]", "dependsOn": [ "[concat('Microsoft.Compute/virtualMachines/', variables('fooVMNamePrefix'), copyIndex(), '/extensions/cse', '-agent-', copyIndex())]" ], "copy": { "count": "[variables('fooCount'))]", "name": "winrmExtensionLoop" }, "properties": { "mode": "Incremental", "templateLink": { "uri": "https://raw.githubusercontent.com/Azure/aks-engine/master/extensions/winrm/v1/template.json", "contentVersion": "1.0.0.0" }, "parameters": { "artifactsLocation": { "value": "https://raw.githubusercontent.com/Azure/aks-engine/master/" }, "apiVersionDeployments": { "value": "[variables('apiVersionDeployments')]" }, "targetVMName": { "value": "[concat(variables('fooVMNamePrefix'), copyIndex())]" }, "targetVMType": { "value": "agent" }, "extensionParameters": { "value": "[parameters('winrmParameters')]" }, "vmIndex":{ "value": "[copyIndex()]" } } } }`,
+			expectedErr: nil,
+		},
+		{
+			orchestrator: api.Kubernetes,
+			agentPoolProfile: &api.AgentPoolProfile{
+				Name:                "foo",
+				AvailabilityProfile: "AvailabilitySet",
+			},
+			extensionProfile: &api.ExtensionProfile{
+				Name:    "winrm",
+				Version: "v1",
+				RootURL: "https://raw.githubusercontent.com/Azure/aks-engine/master/",
+			},
+			singleOrAll: "All",
+			expected:    `{ "name": "[concat(variables('fooVMNamePrefix'), copyIndex(variables('fooOffset')), 'winrm')]", "type": "Microsoft.Resources/deployments", "apiVersion": "[variables('apiVersionDeployments')]", "dependsOn": [ "[concat('Microsoft.Compute/virtualMachines/', variables('fooVMNamePrefix'), copyIndex(variables('fooOffset')), '/extensions/cse', '-agent-', copyIndex(variables('fooOffset')))]" ], "copy": { "count": "[sub(variables('fooCount'), variables('fooOffset'))]", "name": "winrmExtensionLoop" }, "properties": { "mode": "Incremental", "templateLink": { "uri": "https://raw.githubusercontent.com/Azure/aks-engine/master/extensions/winrm/v1/template.json", "contentVersion": "1.0.0.0" }, "parameters": { "artifactsLocation": { "value": "https://raw.githubusercontent.com/Azure/aks-engine/master/" }, "apiVersionDeployments": { "value": "[variables('apiVersionDeployments')]" }, "targetVMName": { "value": "[concat(variables('fooVMNamePrefix'), copyIndex(variables('fooOffset')))]" }, "targetVMType": { "value": "agent" }, "extensionParameters": { "value": "[parameters('winrmParameters')]" }, "vmIndex":{ "value": "[copyIndex(variables('fooOffset'))]" } } } }`,
+			expectedErr: nil,
+		},
+	}
+
+	for _, c := range cases {
+		ret, err := getAgentPoolLinkedTemplateText(c.agentPoolProfile, c.orchestrator, c.extensionProfile, c.singleOrAll)
+		ret = strings.Join(strings.Fields(ret), " ")
+		expected := strings.Join(strings.Fields(c.expected), " ")
+		if ret != expected {
+			t.Fatalf("expected getAgentPoolLinkedTemplateText(%v, %s, %v, %s) to return %s but instead got %s", c.agentPoolProfile, c.orchestrator, c.extensionProfile, c.singleOrAll, expected, ret)
+		}
+		if err != c.expectedErr {
+			t.Fatalf("expected getAgentPoolLinkedTemplateText(%v, %s, %v, %s) to return %s but instead got %s", c.agentPoolProfile, c.orchestrator, c.extensionProfile, c.singleOrAll, c.expectedErr, err)
+		}
+	}
+}
+
+func TestGetSSHPublicKeysPowerShell(t *testing.T) {
+	cases := []struct {
+		publicKeys []api.PublicKey
+		expected   string
+	}{
+		{
+			publicKeys: []api.PublicKey{
+				{
+					KeyData: "foo   ",
+				},
+			},
+			expected: "\"foo\"",
+		},
+		{
+			publicKeys: []api.PublicKey{
+				{
+					KeyData: "  foo",
+				},
+				{
+					KeyData: " bar   ",
+				},
+			},
+			expected: "\"foo\", \"bar\"",
+		},
+	}
+
+	for _, c := range cases {
+		linuxProfile := &api.LinuxProfile{}
+		linuxProfile.SSH.PublicKeys = c.publicKeys
+		ret := getSSHPublicKeysPowerShell(linuxProfile)
+		if ret != c.expected {
+			t.Fatalf("expected getSSHPublicKeysPowerShell(%v) to return %s but instead got %s", linuxProfile, c.expected, ret)
+		}
+	}
+}
+
+func TestGetWindowsMasterSubnetARMParam(t *testing.T) {
+	cases := []struct {
+		m        *api.MasterProfile
+		expected string
+	}{
+		{
+			m:        &api.MasterProfile{},
+			expected: "',parameters('masterSubnet'),'",
+		},
+		{
+			m:        nil,
+			expected: "',parameters('masterSubnet'),'",
+		},
+		{
+			m: &api.MasterProfile{
+				VnetSubnetID: "/my/subnet",
+			},
+			expected: "',parameters('vnetCidr'),'",
+		},
+	}
+
+	for _, c := range cases {
+		ret := getWindowsMasterSubnetARMParam(c.m)
+		if ret != c.expected {
+			t.Fatalf("expected getWindowsMasterSubnetARMParam(%v) to return %s but instead got %s", c.m, c.expected, ret)
+		}
+	}
+}
+
+func TestWrapAsVariableObject(t *testing.T) {
+	tests := []struct {
+		name     string
+		o        string
+		s        string
+		expected string
+	}{
+		{
+			name:     "just a string",
+			o:        "cloudInitFiles",
+			s:        "foo",
+			expected: "',variables('cloudInitFiles').foo,'",
+		},
+		{
+			name:     "empty string",
+			o:        "cloudInitFiles",
+			s:        "",
+			expected: "',variables('cloudInitFiles').,'",
+		},
+	}
+
+	for _, test := range tests {
+		test := test
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+			ret := wrapAsVariableObject(test.o, test.s)
+			if test.expected != ret {
+				t.Errorf("expected %s, instead got : %s", test.expected, ret)
+			}
+		})
 	}
 }

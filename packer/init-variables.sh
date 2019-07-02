@@ -4,7 +4,7 @@ CDIR=$(dirname "${BASH_SOURCE}")
 
 SETTINGS_JSON="${SETTINGS_JSON:-./packer/settings.json}"
 SP_JSON="${SP_JSON:-./packer/sp.json}"
-SUBSCRIPTION_ID="${SUBSCRIPTION_ID:-`az account show -o json --query="id" | tr -d '"'`}"
+SUBSCRIPTION_ID="${SUBSCRIPTION_ID:-$(az account show -o json --query="id" | tr -d '"')}"
 STORAGE_ACCOUNT_NAME="aksimages$(date +%s)"
 
 echo "Subscription ID: ${SUBSCRIPTION_ID}"
@@ -16,9 +16,9 @@ if [ -a "${SP_JSON}" ]; then
 elif [ -z "${CLIENT_ID}" ]; then
 	echo "Service principal not found! Generating one @ ${SP_JSON}"
 	az ad sp create-for-rbac -n aks-images-packer$(date +%s) -o json > ${SP_JSON}
-	CLIENT_ID=`cat ${SP_JSON} | jq -r .appId`
-	CLIENT_SECRET=`cat ${SP_JSON} | jq -r .password`
-	TENANT_ID=`cat ${SP_JSON} | jq -r .tenant`
+	CLIENT_ID=$(jq -r .appId ${SP_JSON})
+	CLIENT_SECRET=$(jq -r .password ${SP_JSON})
+	TENANT_ID=$(jq -r .tenant ${SP_JSON})
 fi
 
 avail=$(az storage account check-name -n ${STORAGE_ACCOUNT_NAME} -o json | jq -r .nameAvailable)

@@ -12,22 +12,6 @@
       "type": "securestring"
       },
     {{end}}
-{{if IsHostedBootstrap}}
-    "bootstrapSubnet": {
-      "defaultValue": "{{.HostedBootstrapProfile.Subnet}}",
-      "metadata": {
-        "description": "Sets the subnet for the VMs in the cluster."
-      },
-      "type": "string"
-    },
-    "bootstrapEndpoint": {
-      "defaultValue": "{{.HostedBootstrapProfile.FQDN}}",
-      "metadata": {
-        "description": "Sets the static IP of the first bootstrap"
-      },
-      "type": "string"
-    },
-{{else}}
     "bootstrapStaticIP": {
       "metadata": {
         "description": "Sets the static IP of the first bootstrap"
@@ -41,7 +25,6 @@
       },
       "type": "string"
     },
-{{end}}
     "sshRSAPublicKey": {
       "metadata": {
         "description": "SSH public key used for auth to all Linux machines.  Not Required.  If not set, you must provide a password key."

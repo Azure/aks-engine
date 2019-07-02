@@ -19,6 +19,8 @@ const (
 const (
 	// DefaultVNETCIDR is the default CIDR block for the VNET
 	DefaultVNETCIDR = "10.0.0.0/8"
+	// DefaultVNETCIDRIPv6 is the default IPv6 CIDR block for the VNET
+	DefaultVNETCIDRIPv6 = "2001:1234:5678:9a00::/56"
 	// DefaultInternalLbStaticIPOffset specifies the offset of the internal LoadBalancer's IP
 	// address relative to the first consecutive Kubernetes static IP
 	DefaultInternalLbStaticIPOffset = 10
@@ -38,70 +40,68 @@ const (
 	NetworkPluginKubenet = "kubenet"
 	// NetworkPluginFlannel is the string expression for flannel network plugin
 	NetworkPluginFlannel = "flannel"
-	// DefaultKubeHeapsterDeploymentAddonName is the name of the kube-heapster-deployment addon
-	DefaultKubeHeapsterDeploymentAddonName = "kube-heapster-deployment"
-	// DefaultKubeDNSDeploymentAddonName is the name of the kube-dns-deployment addon
-	DefaultKubeDNSDeploymentAddonName = "kube-dns-deployment"
-	// DefaultCoreDNSAddonName is the name of the coredns addon
-	DefaultCoreDNSAddonName = "coredns"
-	// DefaultDNSAutoscalerAddonName is the name of the coredns addon
-	DefaultDNSAutoscalerAddonName = "dns-autoscaler"
-	// DefaultKubeProxyAddonName is the name of the kube-proxy config addon
-	DefaultKubeProxyAddonName = "kube-proxy-daemonset"
-	// DefaultAzureStorageClassesAddonName is the name of the azure storage classes addon
-	DefaultAzureStorageClassesAddonName = "azure-storage-classes"
-	// DefaultAzureNpmDaemonSetAddonName is the name of the azure npm daemon set addon
-	DefaultAzureNpmDaemonSetAddonName = "azure-npm-daemonset"
-	// DefaultCalicoDaemonSetAddonName is the name of calico daemonset addon
-	DefaultCalicoDaemonSetAddonName = "calico-daemonset"
-	// DefaultCiliumDaemonSetAddonName is the name of cilium daemonset addon
-	DefaultCiliumDaemonSetAddonName = "cilium-daemonset"
-	// DefaultFlannelDaemonSetAddonName is the name of flannel plugin daemonset addon
-	DefaultFlannelDaemonSetAddonName = "flannel-daemonset"
-	// DefaultAADAdminGroupRBACAddonName is the name of the default admin group RBAC addon
-	DefaultAADAdminGroupRBACAddonName = "aad-default-admin-group-rbac"
-	// DefaultAzureCloudProviderDeploymentAddonName is the name of the azure cloud provider deployment addon
-	DefaultAzureCloudProviderDeploymentAddonName = "azure-cloud-provider-deployment"
-	// DefaultAzureCNINetworkMonitorAddonName is the name of the azure cni network monitor addon
-	DefaultAzureCNINetworkMonitorAddonName = "azure-cni-networkmonitor"
-	// DefaultAuditPolicyAddonName is the name of the audit policy addon
-	DefaultAuditPolicyAddonName = "audit-policy"
-	// DefaultTillerAddonName is the name of the tiller addon deployment
-	DefaultTillerAddonName = "tiller"
-	// DefaultAADPodIdentityAddonName is the name of the aad-pod-identity addon deployment
-	DefaultAADPodIdentityAddonName = "aad-pod-identity"
-	// DefaultACIConnectorAddonName is the name of the aci-connector addon deployment
-	DefaultACIConnectorAddonName = "aci-connector"
-	// DefaultDashboardAddonName is the name of the kubernetes-dashboard addon deployment
-	DefaultDashboardAddonName = "kubernetes-dashboard"
-	// DefaultClusterAutoscalerAddonName is the name of the autoscaler addon deployment
-	DefaultClusterAutoscalerAddonName = "cluster-autoscaler"
-	// DefaultBlobfuseFlexVolumeAddonName is the name of the blobfuse flexvolume addon
-	DefaultBlobfuseFlexVolumeAddonName = "blobfuse-flexvolume"
-	// DefaultSMBFlexVolumeAddonName is the name of the smb flexvolume addon
-	DefaultSMBFlexVolumeAddonName = "smb-flexvolume"
-	// DefaultKeyVaultFlexVolumeAddonName is the name of the keyvault flexvolume addon deployment
-	DefaultKeyVaultFlexVolumeAddonName = "keyvault-flexvolume"
-	// DefaultELBSVCAddonName is the name of the elb service addon deployment
-	DefaultELBSVCAddonName = "elb-svc"
+	// KubeDNSAddonName is the name of the kube-dns-deployment addon
+	KubeDNSAddonName = "kube-dns-deployment"
+	// CoreDNSAddonName is the name of the coredns addon
+	CoreDNSAddonName = "coredns"
+	// DNSAutoscalerAddonName is the name of the coredns addon
+	DNSAutoscalerAddonName = "dns-autoscaler"
+	// KubeProxyAddonName is the name of the kube-proxy config addon
+	KubeProxyAddonName = "kube-proxy-daemonset"
+	// AzureStorageClassesAddonName is the name of the azure storage classes addon
+	AzureStorageClassesAddonName = "azure-storage-classes"
+	// AzureNetworkPolicyAddonName is the name of the azure npm daemon set addon
+	AzureNetworkPolicyAddonName = "azure-npm-daemonset"
+	// CalicoAddonName is the name of calico daemonset addon
+	CalicoAddonName = "calico-daemonset"
+	// CiliumAddonName is the name of cilium daemonset addon
+	CiliumAddonName = "cilium-daemonset"
+	// FlannelAddonName is the name of flannel plugin daemonset addon
+	FlannelAddonName = "flannel-daemonset"
+	// AADAdminGroupAddonName is the name of the default admin group RBAC addon
+	AADAdminGroupAddonName = "aad-default-admin-group-rbac"
+	// AzureCloudProviderAddonName is the name of the azure cloud provider deployment addon
+	AzureCloudProviderAddonName = "azure-cloud-provider-deployment"
+	// AzureCNINetworkMonitorAddonName is the name of the azure cni network monitor addon
+	AzureCNINetworkMonitorAddonName = "azure-cni-networkmonitor"
+	// AuditPolicyAddonName is the name of the audit policy addon
+	AuditPolicyAddonName = "audit-policy"
+	// TillerAddonName is the name of the tiller addon deployment
+	TillerAddonName = "tiller"
+	// AADPodIdentityAddonName is the name of the aad-pod-identity addon deployment
+	AADPodIdentityAddonName = "aad-pod-identity"
+	// ACIConnectorAddonName is the name of the aci-connector addon deployment
+	ACIConnectorAddonName = "aci-connector"
+	// DashboardAddonName is the name of the kubernetes-dashboard addon deployment
+	DashboardAddonName = "kubernetes-dashboard"
+	// ClusterAutoscalerAddonName is the name of the autoscaler addon deployment
+	ClusterAutoscalerAddonName = "cluster-autoscaler"
+	// BlobfuseFlexVolumeAddonName is the name of the blobfuse flexvolume addon
+	BlobfuseFlexVolumeAddonName = "blobfuse-flexvolume"
+	// SMBFlexVolumeAddonName is the name of the smb flexvolume addon
+	SMBFlexVolumeAddonName = "smb-flexvolume"
+	// KeyVaultFlexVolumeAddonName is the name of the keyvault flexvolume addon deployment
+	KeyVaultFlexVolumeAddonName = "keyvault-flexvolume"
+	// ELBServiceAddonName is the name of the elb service addon deployment
+	ELBServiceAddonName = "elb-svc"
 	// DefaultGeneratorCode specifies the source generator of the cluster template.
 	DefaultGeneratorCode = "aksengine"
-	// DefaultReschedulerAddonName is the name of the rescheduler addon deployment
-	DefaultReschedulerAddonName = "rescheduler"
-	// DefaultHeapsterAddonName is the name of the heapster addon deployment
-	DefaultHeapsterAddonName = "heapster"
-	// DefaultMetricsServerAddonName is the name of the kubernetes Metrics server addon deployment
-	DefaultMetricsServerAddonName = "metrics-server"
+	// ReschedulerAddonName is the name of the rescheduler addon deployment
+	ReschedulerAddonName = "rescheduler"
+	// HeapsterAddonName is the name of the heapster addon deployment
+	HeapsterAddonName = "heapster"
+	// MetricsServerAddonName is the name of the kubernetes Metrics server addon deployment
+	MetricsServerAddonName = "metrics-server"
 	// NVIDIADevicePluginAddonName is the name of the kubernetes NVIDIA Device Plugin daemon set
 	NVIDIADevicePluginAddonName = "nvidia-device-plugin"
 	// ContainerMonitoringAddonName is the name of the kubernetes Container Monitoring addon deployment
 	ContainerMonitoringAddonName = "container-monitoring"
 	// AzureCNINetworkMonitoringAddonName is the name of the Azure CNI networkmonitor addon
 	AzureCNINetworkMonitoringAddonName = "azure-cni-networkmonitor"
-	// AzureNetworkPolicyAddonName is the name of the Azure CNI networkmonitor addon
-	AzureNetworkPolicyAddonName = "azure-npm-daemonset"
 	// IPMASQAgentAddonName is the name of the ip masq agent addon
 	IPMASQAgentAddonName = "ip-masq-agent"
+	// PodSecurityPolicyAddonName is the name of the PodSecurityPolicy addon
+	PodSecurityPolicyAddonName = "pod-security-policy"
 	// DefaultKubernetesKubeletMaxPods is the max pods per kubelet
 	DefaultKubernetesKubeletMaxPods = 110
 	// DefaultMasterEtcdServerPort is the default etcd server port for Kubernetes master nodes
@@ -110,8 +110,6 @@ const (
 	DefaultMasterEtcdClientPort = 2379
 	// etcdAccountNameFmt is the name format for a typical etcd account on Cosmos
 	etcdAccountNameFmt = "%sk8s"
-	// etcdEndpointURIFmt is the name format for a typical etcd account uri
-	etcdEndpointURIFmt = "%sk8s.etcd.cosmosdb.azure.com"
 )
 
 const (
@@ -164,25 +162,15 @@ const (
 	kubernetesMountEtcd                      = "k8s/cloud-init/artifacts/mountetcd.sh"
 	kubernetesMasterGenerateProxyCertsScript = "k8s/cloud-init/artifacts/generateproxycerts.sh"
 	kubernetesCustomSearchDomainsScript      = "k8s/cloud-init/artifacts/setup-custom-search-domains.sh"
-	sshdConfig                               = "k8s/cloud-init/artifacts/sshd_config"
-	sshdConfig1604                           = "k8s/cloud-init/artifacts/sshd_config_1604"
 	kubeletSystemdService                    = "k8s/cloud-init/artifacts/kubelet.service"
 	kmsSystemdService                        = "k8s/cloud-init/artifacts/kms.service"
 	aptPreferences                           = "k8s/cloud-init/artifacts/apt-preferences"
 	dockerClearMountPropagationFlags         = "k8s/cloud-init/artifacts/docker_clear_mount_propagation_flags.conf"
 	systemdBPFMount                          = "k8s/cloud-init/artifacts/sys-fs-bpf.mount"
 	etcdSystemdService                       = "k8s/cloud-init/artifacts/etcd.service"
-	etcIssue                                 = "k8s/cloud-init/artifacts/etc-issue"
-	etcIssueNet                              = "k8s/cloud-init/artifacts/etc-issue.net"
-	cisNetEnforcement                        = "k8s/cloud-init/artifacts/sysctl-d-60-CIS.conf"
-	cisLogEnforcement                        = "k8s/cloud-init/artifacts/rsyslog-d-60-CIS.conf"
-	modprobeConfCIS                          = "k8s/cloud-init/artifacts/modprobe-CIS.conf"
-	pwQuality                                = "k8s/cloud-init/artifacts/pwquality-CIS.conf"
-	defaultGrub                              = "k8s/cloud-init/artifacts/default-grub"
-	pamDotDSU                                = "k8s/cloud-init/artifacts/pam-d-su"
-	profileDCISSh                            = "k8s/cloud-init/artifacts/profile-d-cis.sh"
-	pamDotDCommonAuth                        = "k8s/cloud-init/artifacts/pam-d-common-auth"
-	pamDotDCommonPassword                    = "k8s/cloud-init/artifacts/pam-d-common-password"
+	// scripts and service for enabling ipv6 dual stack
+	dhcpv6SystemdService      = "k8s/cloud-init/artifacts/dhcpv6.service"
+	dhcpv6ConfigurationScript = "k8s/cloud-init/artifacts/enable-dhcpv6.sh"
 )
 
 const (

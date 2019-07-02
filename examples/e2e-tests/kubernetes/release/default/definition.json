@@ -8,45 +8,23 @@
         "addons": [
           {
             "name": "tiller",
-            "enabled": true,
-            "config": {
-              "max-history": "10"
-            },
-            "containers": [
-              {
-                "name": "tiller",
-                "cpuRequests": "1",
-                "memoryRequests": "1Gi",
-                "cpuLimits": "1",
-                "memoryLimits": "1Gi"
-              }
-            ]
+            "enabled": true
           },
           {
             "name": "kubernetes-dashboard",
-            "enabled": true,
-            "containers": [
-              {
-                "name": "kubernetes-dashboard",
-                "cpuRequests": "50m",
-                "memoryRequests": "512Mi",
-                "cpuLimits": "50m",
-                "memoryLimits": "512Mi"
-              }
-            ]
+            "enabled": true
           },
           {
             "name": "rescheduler",
-            "enabled": true,
-            "containers": [
-              {
-                "name": "rescheduler",
-                "cpuRequests": "20m",
-                "memoryRequests": "200Mi",
-                "cpuLimits": "20m",
-                "memoryLimits": "200Mi"
-              }
-            ]
+            "enabled": true
+          },
+          {
+            "name": "cluster-autoscaler",
+            "enabled": true
+          },
+          {
+            "name": "aad-pod-identity",
+            "enabled": true
           }
         ]
       }
@@ -54,7 +32,7 @@
     "masterProfile": {
       "count": 3,
       "dnsPrefix": "",
-      "vmSize": "Standard_D2_v2",
+      "vmSize": "Standard_D2_v3",
       "OSDiskSizeGB": 200,
       "vnetSubnetId": "/subscriptions/SUB_ID/resourceGroups/RG_NAME/providers/Microsoft.Network/virtualNetworks/VNET_NAME/subnets/SUBNET_NAME",
       "firstConsecutiveStaticIP": "10.239.255.239",
@@ -62,9 +40,9 @@
     },
     "agentPoolProfiles": [
       {
-        "name": "agentmd",
+        "name": "pool1",
         "count": 3,
-        "vmSize": "Standard_D2_v2",
+        "vmSize": "Standard_D2_v3",
         "OSDiskSizeGB": 200,
         "storageProfile": "ManagedDisks",
         "diskSizesGB": [
@@ -73,19 +51,7 @@
           128,
           128
         ],
-        "availabilityProfile": "AvailabilitySet",
-        "vnetSubnetId": "/subscriptions/SUB_ID/resourceGroups/RG_NAME/providers/Microsoft.Network/virtualNetworks/VNET_NAME/subnets/SUBNET_NAME"
-      },
-      {
-        "name": "agentsa",
-        "count": 3,
-        "vmSize": "Standard_D2_v2",
-        "OSDiskSizeGB": 200,
-        "storageProfile": "StorageAccount",
-        "diskSizesGB": [
-          128
-        ],
-        "availabilityProfile": "AvailabilitySet",
+        "availabilityProfile": "VirtualMachineScaleSets",
         "vnetSubnetId": "/subscriptions/SUB_ID/resourceGroups/RG_NAME/providers/Microsoft.Network/virtualNetworks/VNET_NAME/subnets/SUBNET_NAME"
       }
     ],

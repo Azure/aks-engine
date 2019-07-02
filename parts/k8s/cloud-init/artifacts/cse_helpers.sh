@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 #ERR_SYSTEMCTL_ENABLE_FAIL=3 # Service could not be enabled by systemctl -- DEPRECATED
 ERR_SYSTEMCTL_START_FAIL=4 # Service could not be started or enabled by systemctl
@@ -51,9 +51,9 @@ ERR_SYSCTL_RELOAD=103 # Error reloading sysctl config
 ERR_CIS_ASSIGN_ROOT_PW=111 # Error assigning root password in CIS enforcement
 ERR_CIS_ASSIGN_FILE_PERMISSION=112 # Error assigning permission to a file in CIS enforcement
 ERR_CIS_COPY_FILE=113 # Error writing a file to disk for CIS enforcement
-ERR_CIS_APPLY_GRUB_CONFIG=114 # Error applying CIS-recommended grub configuration
+ERR_CIS_APPLY_PASSWORD_CONFIG=115 # Error applying CIS-recommended passwd configuration
 
-OS=$(cat /etc/*-release | grep ^ID= | tr -d 'ID="' | awk '{print toupper($0)}')
+OS=$(sort -r /etc/*-release | gawk 'match($0, /^ID(|_LIKE)=(.*)/, a) { print toupper(a[2]); exit }')
 UBUNTU_OS_NAME="UBUNTU"
 RHEL_OS_NAME="RHEL"
 COREOS_OS_NAME="COREOS"
@@ -78,8 +78,7 @@ aptmarkWALinuxAgent() {
 retrycmd_if_failure() {
     retries=$1; wait_sleep=$2; timeout=$3; shift && shift && shift
     for i in $(seq 1 $retries); do
-        timeout $timeout ${@}
-        [ $? -eq 0  ] && break || \
+        timeout $timeout ${@} && break || \
         if [ $i -eq $retries ]; then
             echo Executed \"$@\" $i times;
             return 1
@@ -92,8 +91,7 @@ retrycmd_if_failure() {
 retrycmd_if_failure_no_stats() {
     retries=$1; wait_sleep=$2; timeout=$3; shift && shift && shift
     for i in $(seq 1 $retries); do
-        timeout $timeout ${@}
-        [ $? -eq 0  ] && break || \
+        timeout $timeout ${@} && break || \
         if [ $i -eq $retries ]; then
             return 1
         else
@@ -105,8 +103,7 @@ retrycmd_get_tarball() {
     tar_retries=$1; wait_sleep=$2; tarball=$3; url=$4
     echo "${tar_retries} retries"
     for i in $(seq 1 $tar_retries); do
-        tar -tzf $tarball
-        [ $? -eq 0  ] && break || \
+        tar -tzf $tarball && break || \
         if [ $i -eq $tar_retries ]; then
             return 1
         else
@@ -119,8 +116,7 @@ retrycmd_get_executable() {
     retries=$1; wait_sleep=$2; filepath=$3; url=$4; validation_args=$5
     echo "${retries} retries"
     for i in $(seq 1 $retries); do
-        $filepath $validation_args
-        [ $? -eq 0  ] && break || \
+        $filepath $validation_args && break || \
         if [ $i -eq $retries ]; then
             return 1
         else
@@ -157,8 +153,8 @@ apt_get_update() {
         export DEBIAN_FRONTEND=noninteractive
         dpkg --configure -a
         apt-get -f -y install
-        apt-get update 2>&1 | tee $apt_update_output | grep -E "^([WE]:.*)|([eE]rr.*)$"
-        [ $? -ne 0  ] && cat $apt_update_output && break || \
+        ! (apt-get update 2>&1 | tee $apt_update_output | grep -E "^([WE]:.*)|([eE]rr.*)$") && \
+        cat $apt_update_output && break || \
         cat $apt_update_output
         if [ $i -eq $retries ]; then
             return 1
@@ -174,8 +170,7 @@ apt_get_install() {
         wait_for_apt_locks
         export DEBIAN_FRONTEND=noninteractive
         dpkg --configure -a
-        apt-get install -o Dpkg::Options::="--force-confold" --no-install-recommends -y ${@}
-        [ $? -eq 0  ] && break || \
+        apt-get install -o Dpkg::Options::="--force-confold" --no-install-recommends -y ${@} && break || \
         if [ $i -eq $retries ]; then
             return 1
         else
@@ -194,9 +189,10 @@ apt_get_dist_upgrade() {
     export DEBIAN_FRONTEND=noninteractive
     dpkg --configure -a
     apt-get -f -y install
-    apt-get dist-upgrade -y 2>&1 | tee $apt_dist_upgrade_output | grep -E "^([WE]:.*)|([eE]rr.*)$"
-    [ $? -ne 0  ] && cat $apt_dist_upgrade_output && break || \
-    cat $apt_update_output
+    apt-mark showhold
+    ! (apt-get dist-upgrade -y 2>&1 | tee $apt_dist_upgrade_output | grep -E "^([WE]:.*)|([eE]rr.*)$") && \
+    cat $apt_dist_upgrade_output && break || \
+    cat $apt_dist_upgrade_output
     if [ $i -eq $retries ]; then
       return 1
     else sleep 5
@@ -209,8 +205,19 @@ systemctl_restart() {
     retries=$1; wait_sleep=$2; timeout=$3 svcname=$4
     for i in $(seq 1 $retries); do
         timeout $timeout systemctl daemon-reload
-        timeout $timeout systemctl restart $svcname
-        [ $? -eq 0  ] && break || \
+        timeout $timeout systemctl restart $svcname && break || \
+        if [ $i -eq $retries ]; then
+            return 1
+        else
+            sleep $wait_sleep
+        fi
+    done
+}
+systemctl_stop() {
+    retries=$1; wait_sleep=$2; timeout=$3 svcname=$4
+    for i in $(seq 1 $retries); do
+        timeout $timeout systemctl daemon-reload
+        timeout $timeout systemctl stop $svcname && break || \
         if [ $i -eq $retries ]; then
             return 1
         else
@@ -221,8 +228,7 @@ systemctl_restart() {
 sysctl_reload() {
     retries=$1; wait_sleep=$2; timeout=$3
     for i in $(seq 1 $retries); do
-        timeout $timeout sysctl --system
-        [ $? -eq 0  ] && break || \
+        timeout $timeout sysctl --system && break || \
         if [ $i -eq $retries ]; then
             return 1
         else

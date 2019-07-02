@@ -4,6 +4,7 @@
 package api
 
 import (
+	"github.com/Azure/go-autorest/autorest/azure"
 	"github.com/Azure/go-autorest/autorest/to"
 	"github.com/gofrs/uuid"
 )
@@ -151,5 +152,83 @@ func GetK8sDefaultProperties(hasWindows bool) *Properties {
 		}
 	}
 
+	return p
+}
+
+// GetMockPropertiesWithCustomCloudProfile returns a Properties object w/ mock CustomCloudProfile data
+func GetMockPropertiesWithCustomCloudProfile(name string, hasCustomCloudProfile, hasEnvironment, hasAzureEnvironmentSpecConfig bool) Properties {
+	var (
+		managementPortalURL          = "https://management.local.azurestack.external/"
+		publishSettingsURL           = "https://management.local.azurestack.external/publishsettings/index"
+		serviceManagementEndpoint    = "https://management.azurestackci15.onmicrosoft.com/36f71706-54df-4305-9847-5b038a4cf189"
+		resourceManagerEndpoint      = "https://management.local.azurestack.external/"
+		activeDirectoryEndpoint      = "https://login.windows.net/"
+		galleryEndpoint              = "https://portal.local.azurestack.external=30015/"
+		keyVaultEndpoint             = "https://vault.azurestack.external/"
+		graphEndpoint                = "https://graph.windows.net/"
+		serviceBusEndpoint           = "https://servicebus.azurestack.external/"
+		batchManagementEndpoint      = "https://batch.azurestack.external/"
+		storageEndpointSuffix        = "core.azurestack.external"
+		sqlDatabaseDNSSuffix         = "database.azurestack.external"
+		trafficManagerDNSSuffix      = "trafficmanager.cn"
+		keyVaultDNSSuffix            = "vault.azurestack.external"
+		serviceBusEndpointSuffix     = "servicebus.azurestack.external"
+		serviceManagementVMDNSSuffix = "chinacloudapp.cn"
+		resourceManagerVMDNSSuffix   = "cloudapp.azurestack.external"
+		containerRegistryDNSSuffix   = "azurecr.io"
+		tokenAudience                = "https://management.azurestack.external/"
+	)
+
+	p := Properties{}
+	if hasCustomCloudProfile {
+		p.CustomCloudProfile = &CustomCloudProfile{}
+		if hasEnvironment {
+			p.CustomCloudProfile.Environment = &azure.Environment{
+				Name:                         name,
+				ManagementPortalURL:          managementPortalURL,
+				PublishSettingsURL:           publishSettingsURL,
+				ServiceManagementEndpoint:    serviceManagementEndpoint,
+				ResourceManagerEndpoint:      resourceManagerEndpoint,
+				ActiveDirectoryEndpoint:      activeDirectoryEndpoint,
+				GalleryEndpoint:              galleryEndpoint,
+				KeyVaultEndpoint:             keyVaultEndpoint,
+				GraphEndpoint:                graphEndpoint,
+				ServiceBusEndpoint:           serviceBusEndpoint,
+				BatchManagementEndpoint:      batchManagementEndpoint,
+				StorageEndpointSuffix:        storageEndpointSuffix,
+				SQLDatabaseDNSSuffix:         sqlDatabaseDNSSuffix,
+				TrafficManagerDNSSuffix:      trafficManagerDNSSuffix,
+				KeyVaultDNSSuffix:            keyVaultDNSSuffix,
+				ServiceBusEndpointSuffix:     serviceBusEndpointSuffix,
+				ServiceManagementVMDNSSuffix: serviceManagementVMDNSSuffix,
+				ResourceManagerVMDNSSuffix:   resourceManagerVMDNSSuffix,
+				ContainerRegistryDNSSuffix:   containerRegistryDNSSuffix,
+				TokenAudience:                tokenAudience,
+			}
+		}
+		if hasAzureEnvironmentSpecConfig {
+			//azureStackCloudSpec is the default configurations for azure stack with public Azure.
+			azureStackCloudSpec := AzureEnvironmentSpecConfig{
+				CloudName: AzureStackCloud,
+				//DockerSpecConfig specify the docker engine download repo
+				DockerSpecConfig: DefaultDockerSpecConfig,
+				//KubernetesSpecConfig is the default kubernetes container image url.
+				KubernetesSpecConfig: DefaultKubernetesSpecConfig,
+				DCOSSpecConfig:       DefaultDCOSSpecConfig,
+				EndpointConfig: AzureEndpointConfig{
+					ResourceManagerVMDNSSuffix: "",
+				},
+				OSImageConfig: map[Distro]AzureOSImageConfig{
+					Ubuntu:        Ubuntu1604OSImageConfig,
+					RHEL:          RHELOSImageConfig,
+					CoreOS:        CoreOSImageConfig,
+					AKSUbuntu1604: AKSUbuntu1604OSImageConfig,
+				},
+			}
+			p.CustomCloudProfile.AzureEnvironmentSpecConfig = &azureStackCloudSpec
+		}
+		p.CustomCloudProfile.IdentitySystem = AzureADIdentitySystem
+		p.CustomCloudProfile.AuthenticationMethod = ClientSecretAuthMethod
+	}
 	return p
 }

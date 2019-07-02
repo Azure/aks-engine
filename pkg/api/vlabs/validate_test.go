@@ -60,7 +60,7 @@ func Test_OrchestratorProfile_Validate(t *testing.T) {
 					},
 				},
 			},
-			expectedError: "Invalid etcd version \"1.0.0\", please use one of the following versions: [2.2.5 2.3.0 2.3.1 2.3.2 2.3.3 2.3.4 2.3.5 2.3.6 2.3.7 2.3.8 3.0.0 3.0.1 3.0.2 3.0.3 3.0.4 3.0.5 3.0.6 3.0.7 3.0.8 3.0.9 3.0.10 3.0.11 3.0.12 3.0.13 3.0.14 3.0.15 3.0.16 3.0.17 3.1.0 3.1.1 3.1.2 3.1.2 3.1.3 3.1.4 3.1.5 3.1.6 3.1.7 3.1.8 3.1.9 3.1.10 3.2.0 3.2.1 3.2.2 3.2.3 3.2.4 3.2.5 3.2.6 3.2.7 3.2.8 3.2.9 3.2.11 3.2.12 3.2.13 3.2.14 3.2.15 3.2.16 3.2.23 3.2.24 3.2.25 3.3.0 3.3.1 3.3.8 3.3.9 3.3.10]",
+			expectedError: "Invalid etcd version \"1.0.0\", please use one of the following versions: [2.2.5 2.3.0 2.3.1 2.3.2 2.3.3 2.3.4 2.3.5 2.3.6 2.3.7 2.3.8 3.0.0 3.0.1 3.0.2 3.0.3 3.0.4 3.0.5 3.0.6 3.0.7 3.0.8 3.0.9 3.0.10 3.0.11 3.0.12 3.0.13 3.0.14 3.0.15 3.0.16 3.0.17 3.1.0 3.1.1 3.1.2 3.1.2 3.1.3 3.1.4 3.1.5 3.1.6 3.1.7 3.1.8 3.1.9 3.1.10 3.2.0 3.2.1 3.2.2 3.2.3 3.2.4 3.2.5 3.2.6 3.2.7 3.2.8 3.2.9 3.2.11 3.2.12 3.2.13 3.2.14 3.2.15 3.2.16 3.2.23 3.2.24 3.2.25 3.2.26 3.3.0 3.3.1 3.3.8 3.3.9 3.3.10]",
 		},
 		"should error when KubernetesConfig has invalid containerd version for containerd runtime": {
 			properties: &Properties{
@@ -137,7 +137,7 @@ func Test_OrchestratorProfile_Validate(t *testing.T) {
 			properties: &Properties{
 				OrchestratorProfile: &OrchestratorProfile{
 					OrchestratorType:    "Kubernetes",
-					OrchestratorVersion: "1.9.11",
+					OrchestratorVersion: "1.10.13",
 					KubernetesConfig: &KubernetesConfig{
 						EnableAggregatedAPIs: true,
 						EnableRbac:           &falseVal,
@@ -162,7 +162,7 @@ func Test_OrchestratorProfile_Validate(t *testing.T) {
 			properties: &Properties{
 				OrchestratorProfile: &OrchestratorProfile{
 					OrchestratorType:    "Kubernetes",
-					OrchestratorVersion: "1.9.11",
+					OrchestratorVersion: "1.10.13",
 					KubernetesConfig: &KubernetesConfig{
 						EnableDataEncryptionAtRest: &trueVal,
 						EtcdEncryptionKey:          "fakeEncryptionKey",
@@ -189,7 +189,7 @@ func Test_OrchestratorProfile_Validate(t *testing.T) {
 					OrchestratorType:    "Kubernetes",
 					OrchestratorVersion: "1.6.9",
 					KubernetesConfig: &KubernetesConfig{
-						LoadBalancerSku: "Standard",
+						LoadBalancerSku: StandardLoadBalancerSku,
 					},
 				},
 			},
@@ -199,7 +199,7 @@ func Test_OrchestratorProfile_Validate(t *testing.T) {
 			properties: &Properties{
 				OrchestratorProfile: &OrchestratorProfile{
 					OrchestratorType:    "Kubernetes",
-					OrchestratorVersion: "1.9.11",
+					OrchestratorVersion: "1.10.13",
 					KubernetesConfig: &KubernetesConfig{
 						EnablePodSecurityPolicy: &trueVal,
 					},
@@ -295,7 +295,7 @@ func Test_OrchestratorProfile_Validate(t *testing.T) {
 			properties: &Properties{
 				OrchestratorProfile: &OrchestratorProfile{
 					OrchestratorType:    "Kubernetes",
-					OrchestratorVersion: "v1.9.10",
+					OrchestratorVersion: "v1.10.13",
 				},
 			},
 		},
@@ -340,7 +340,7 @@ func Test_KubernetesConfig_Validate(t *testing.T) {
 	// Tests that should pass across all versions
 	for _, k8sVersion := range common.GetAllSupportedKubernetesVersions(true, false) {
 		c := KubernetesConfig{}
-		if err := c.Validate(k8sVersion, false); err != nil {
+		if err := c.Validate(k8sVersion, false, false); err != nil {
 			t.Errorf("should not error on empty KubernetesConfig: %v, version %s", err, k8sVersion)
 		}
 
@@ -365,21 +365,21 @@ func Test_KubernetesConfig_Validate(t *testing.T) {
 				"--route-reconciliation-period": ValidKubernetesCtrlMgrRouteReconciliationPeriod,
 			},
 		}
-		if err := c.Validate(k8sVersion, false); err != nil {
+		if err := c.Validate(k8sVersion, false, false); err != nil {
 			t.Errorf("should not error on a KubernetesConfig with valid param values: %v", err)
 		}
 
 		c = KubernetesConfig{
 			ClusterSubnet: "10.16.x.0/invalid",
 		}
-		if err := c.Validate(k8sVersion, false); err == nil {
+		if err := c.Validate(k8sVersion, false, false); err == nil {
 			t.Error("should error on invalid ClusterSubnet")
 		}
 
 		c = KubernetesConfig{
 			DockerBridgeSubnet: "10.120.1.0/invalid",
 		}
-		if err := c.Validate(k8sVersion, false); err == nil {
+		if err := c.Validate(k8sVersion, false, false); err == nil {
 			t.Error("should error on invalid DockerBridgeSubnet")
 		}
 
@@ -388,7 +388,7 @@ func Test_KubernetesConfig_Validate(t *testing.T) {
 				"--non-masquerade-cidr": "10.120.1.0/24",
 			},
 		}
-		if err := c.Validate(k8sVersion, false); err != nil {
+		if err := c.Validate(k8sVersion, false, false); err != nil {
 			t.Error("should not error on valid --non-masquerade-cidr")
 		}
 
@@ -405,7 +405,7 @@ func Test_KubernetesConfig_Validate(t *testing.T) {
 		c = KubernetesConfig{
 			MaxPods: KubernetesMinMaxPods - 1,
 		}
-		if err := c.Validate(k8sVersion, false); err == nil {
+		if err := c.Validate(k8sVersion, false, false); err == nil {
 			t.Error("should error on invalid MaxPods")
 		}
 
@@ -414,7 +414,7 @@ func Test_KubernetesConfig_Validate(t *testing.T) {
 				"--node-status-update-frequency": "invalid",
 			},
 		}
-		if err := c.Validate(k8sVersion, false); err == nil {
+		if err := c.Validate(k8sVersion, false, false); err == nil {
 			t.Error("should error on invalid --node-status-update-frequency kubelet config")
 		}
 
@@ -423,7 +423,7 @@ func Test_KubernetesConfig_Validate(t *testing.T) {
 				"--node-monitor-grace-period": "invalid",
 			},
 		}
-		if err := c.Validate(k8sVersion, false); err == nil {
+		if err := c.Validate(k8sVersion, false, false); err == nil {
 			t.Error("should error on invalid --node-monitor-grace-period")
 		}
 
@@ -435,7 +435,7 @@ func Test_KubernetesConfig_Validate(t *testing.T) {
 				"--node-status-update-frequency": "10s",
 			},
 		}
-		if err := c.Validate(k8sVersion, false); err == nil {
+		if err := c.Validate(k8sVersion, false, false); err == nil {
 			t.Error("should error when --node-monitor-grace-period is not sufficiently larger than --node-status-update-frequency kubelet config")
 		}
 
@@ -444,7 +444,7 @@ func Test_KubernetesConfig_Validate(t *testing.T) {
 				"--pod-eviction-timeout": "invalid",
 			},
 		}
-		if err := c.Validate(k8sVersion, false); err == nil {
+		if err := c.Validate(k8sVersion, false, false); err == nil {
 			t.Error("should error on invalid --pod-eviction-timeout")
 		}
 
@@ -453,21 +453,21 @@ func Test_KubernetesConfig_Validate(t *testing.T) {
 				"--route-reconciliation-period": "invalid",
 			},
 		}
-		if err := c.Validate(k8sVersion, false); err == nil {
+		if err := c.Validate(k8sVersion, false, false); err == nil {
 			t.Error("should error on invalid --route-reconciliation-period")
 		}
 
 		c = KubernetesConfig{
 			DNSServiceIP: "192.168.0.10",
 		}
-		if err := c.Validate(k8sVersion, false); err == nil {
+		if err := c.Validate(k8sVersion, false, false); err == nil {
 			t.Error("should error when DNSServiceIP but not ServiceCidr")
 		}
 
 		c = KubernetesConfig{
 			ServiceCidr: "192.168.0.10/24",
 		}
-		if err := c.Validate(k8sVersion, false); err == nil {
+		if err := c.Validate(k8sVersion, false, false); err == nil {
 			t.Error("should error when ServiceCidr but not DNSServiceIP")
 		}
 
@@ -475,7 +475,7 @@ func Test_KubernetesConfig_Validate(t *testing.T) {
 			DNSServiceIP: "invalid",
 			ServiceCidr:  "192.168.0.0/24",
 		}
-		if err := c.Validate(k8sVersion, false); err == nil {
+		if err := c.Validate(k8sVersion, false, false); err == nil {
 			t.Error("should error when DNSServiceIP is invalid")
 		}
 
@@ -483,7 +483,7 @@ func Test_KubernetesConfig_Validate(t *testing.T) {
 			DNSServiceIP: "192.168.1.10",
 			ServiceCidr:  "192.168.0.0/not-a-len",
 		}
-		if err := c.Validate(k8sVersion, false); err == nil {
+		if err := c.Validate(k8sVersion, false, false); err == nil {
 			t.Error("should error when ServiceCidr is invalid")
 		}
 
@@ -491,7 +491,7 @@ func Test_KubernetesConfig_Validate(t *testing.T) {
 			DNSServiceIP: "192.168.1.10",
 			ServiceCidr:  "192.168.0.0/24",
 		}
-		if err := c.Validate(k8sVersion, false); err == nil {
+		if err := c.Validate(k8sVersion, false, false); err == nil {
 			t.Error("should error when DNSServiceIP is outside of ServiceCidr")
 		}
 
@@ -499,7 +499,7 @@ func Test_KubernetesConfig_Validate(t *testing.T) {
 			DNSServiceIP: "172.99.255.255",
 			ServiceCidr:  "172.99.0.1/16",
 		}
-		if err := c.Validate(k8sVersion, false); err == nil {
+		if err := c.Validate(k8sVersion, false, false); err == nil {
 			t.Error("should error when DNSServiceIP is broadcast address of ServiceCidr")
 		}
 
@@ -507,7 +507,7 @@ func Test_KubernetesConfig_Validate(t *testing.T) {
 			DNSServiceIP: "172.99.0.1",
 			ServiceCidr:  "172.99.0.1/16",
 		}
-		if err := c.Validate(k8sVersion, false); err == nil {
+		if err := c.Validate(k8sVersion, false, false); err == nil {
 			t.Error("should error when DNSServiceIP is first IP of ServiceCidr")
 		}
 
@@ -515,7 +515,7 @@ func Test_KubernetesConfig_Validate(t *testing.T) {
 			DNSServiceIP: "172.99.255.10",
 			ServiceCidr:  "172.99.0.1/16",
 		}
-		if err := c.Validate(k8sVersion, false); err != nil {
+		if err := c.Validate(k8sVersion, false, false); err != nil {
 			t.Error("should not error when DNSServiceIP and ServiceCidr are valid")
 		}
 
@@ -524,7 +524,7 @@ func Test_KubernetesConfig_Validate(t *testing.T) {
 			NetworkPlugin: "azure",
 		}
 
-		if err := c.Validate(k8sVersion, false); err == nil {
+		if err := c.Validate(k8sVersion, false, false); err == nil {
 			t.Error("should error when ClusterSubnet has a mask of 24 bits or higher")
 		}
 
@@ -532,7 +532,7 @@ func Test_KubernetesConfig_Validate(t *testing.T) {
 			ProxyMode: KubeProxyMode("invalid"),
 		}
 
-		if err := c.Validate(k8sVersion, false); err == nil {
+		if err := c.Validate(k8sVersion, false, false); err == nil {
 			t.Error("should error when ProxyMode has an invalid string value")
 		}
 
@@ -541,7 +541,7 @@ func Test_KubernetesConfig_Validate(t *testing.T) {
 				ProxyMode: validProxyModeValue,
 			}
 
-			if err := c.Validate(k8sVersion, false); err != nil {
+			if err := c.Validate(k8sVersion, false, false); err != nil {
 				t.Error("should error when ProxyMode has a valid string value")
 			}
 
@@ -549,9 +549,36 @@ func Test_KubernetesConfig_Validate(t *testing.T) {
 				ProxyMode: validProxyModeValue,
 			}
 
-			if err := c.Validate(k8sVersion, false); err != nil {
+			if err := c.Validate(k8sVersion, false, false); err != nil {
 				t.Error("should error when ProxyMode has a valid string value")
 			}
+		}
+
+		c = KubernetesConfig{
+			NetworkPlugin: "kubenet",
+			ClusterSubnet: "10.244.0.0/16,ace:cab:deca::/8",
+		}
+
+		if err := c.Validate(k8sVersion, false, false); err == nil {
+			t.Error("should error when more than 1 cluster subnet provided with ipv6dualstack feature disabled")
+		}
+
+		// validate config when ipv6 dual stack feature is enabled
+		c = KubernetesConfig{
+			NetworkPlugin: "azure",
+		}
+
+		if err := c.Validate(k8sVersion, false, true); err == nil {
+			t.Error("should error when network plugin is not kubenet")
+		}
+
+		c = KubernetesConfig{
+			NetworkPlugin: "kubenet",
+			ClusterSubnet: "10.244.0.0/16,ace:cab:deca::/8,fec0::/7",
+		}
+
+		if err := c.Validate(k8sVersion, false, true); err == nil {
+			t.Error("should error when more than 2 cluster subnets provided")
 		}
 	}
 
@@ -561,7 +588,7 @@ func Test_KubernetesConfig_Validate(t *testing.T) {
 			CloudProviderBackoff:   to.BoolPtr(true),
 			CloudProviderRateLimit: to.BoolPtr(true),
 		}
-		if err := c.Validate(k8sVersion, false); err != nil {
+		if err := c.Validate(k8sVersion, false, false); err != nil {
 			t.Error("should not error when basic backoff and rate limiting are set to true with no options")
 		}
 	}
@@ -571,7 +598,7 @@ func Test_KubernetesConfig_Validate(t *testing.T) {
 		c := KubernetesConfig{
 			UseCloudControllerManager: to.BoolPtr(true),
 		}
-		if err := c.Validate(k8sVersion, false); err != nil {
+		if err := c.Validate(k8sVersion, false, false); err != nil {
 			t.Error("should not error because UseCloudControllerManager is available since v1.8")
 		}
 	}
@@ -651,7 +678,7 @@ func Test_Properties_ValidateDistro(t *testing.T) {
 	}
 
 	// Should error for invalid distros on non-update scenarios
-	bogusDistroValues := []Distro{AKSDockerEngine, "bogon"}
+	bogusDistroValues := []Distro{AKSDockerEngine, AKS1604Deprecated, AKS1804Deprecated, "bogon"}
 	for _, distro := range bogusDistroValues {
 		p.MasterProfile.Distro = distro
 		p.AgentPoolProfiles = []*AgentPoolProfile{
@@ -674,8 +701,8 @@ func Test_Properties_ValidateDistro(t *testing.T) {
 		}
 	}
 
-	// Should not error for aks-docker-engine distro on update scenarios
-	oldDistros := []Distro{AKSDockerEngine}
+	// Should not error for deprecated distro on update scenarios
+	oldDistros := []Distro{AKSDockerEngine, AKS1604Deprecated, AKS1804Deprecated}
 	for _, distro := range oldDistros {
 		p.MasterProfile.Distro = distro
 		p.AgentPoolProfiles = []*AgentPoolProfile{
@@ -863,30 +890,61 @@ func TestProperties_ValidateLinuxProfile(t *testing.T) {
 }
 
 func TestProperties_ValidateInvalidExtensions(t *testing.T) {
-
-	cs := getK8sDefaultContainerService(true)
-	cs.Properties.OrchestratorProfile.OrchestratorVersion = "1.10.7"
-
-	cs.Properties.AgentPoolProfiles = []*AgentPoolProfile{
+	tests := []struct {
+		name              string
+		agentPoolProfiles []*AgentPoolProfile
+		expectedErr       error
+	}{
 		{
-			Name:                "agentpool",
-			VMSize:              "Standard_D2_v2",
-			Count:               1,
-			AvailabilityProfile: VirtualMachineScaleSets,
-			Extensions: []Extension{
+			name: "Extensions for VirtualMachineScaleSets",
+			agentPoolProfiles: []*AgentPoolProfile{
 				{
-					Name:        "extensionName",
-					SingleOrAll: "single",
-					Template:    "fakeTemplate",
+					Name:                "agentpool",
+					VMSize:              "Standard_D2_v2",
+					Count:               1,
+					AvailabilityProfile: VirtualMachineScaleSets,
+					Extensions: []Extension{
+						{
+							Name:        "extensionName",
+							SingleOrAll: "single",
+							Template:    "fakeTemplate",
+						},
+					},
 				},
 			},
+			expectedErr: errors.New("Extensions are currently not supported with VirtualMachineScaleSets. Please specify \"availabilityProfile\": \"AvailabilitySet\""),
+		},
+		{
+			name: "prometheus-grafana-k8s extensions for Winows agents",
+			agentPoolProfiles: []*AgentPoolProfile{
+				{
+					Name:                "agentpool",
+					VMSize:              "Standard_D2_v2",
+					Count:               1,
+					AvailabilityProfile: AvailabilitySet,
+					OSType:              "Windows",
+					Extensions: []Extension{
+						{
+							Name: "prometheus-grafana-k8s",
+						},
+					},
+				},
+			},
+			expectedErr: errors.New("prometheus-grafana-k8s extension is currently not supported for Windows agents"),
 		},
 	}
-	err := cs.Validate(true)
-	expectedMsg := "Extensions are currently not supported with VirtualMachineScaleSets. Please specify \"availabilityProfile\": \"AvailabilitySet\""
 
-	if err.Error() != expectedMsg {
-		t.Errorf("expected error message : %s to be thrown, but got %s", expectedMsg, err.Error())
+	for _, test := range tests {
+		test := test
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+			cs := getK8sDefaultContainerService(true)
+			cs.Properties.AgentPoolProfiles = test.agentPoolProfiles
+			err := cs.Validate(true)
+			if !helpers.EqualError(err, test.expectedErr) {
+				t.Errorf("expected error with message : %s, but got %s", test.expectedErr.Error(), err.Error())
+			}
+		})
 	}
 
 }
@@ -1725,17 +1783,6 @@ func TestMasterProfileValidate(t *testing.T) {
 			expectedErr: "imageName needs to be specified when imageResourceGroup is provided",
 		},
 		{
-			name:                "Master Profile with VMSS and Kubernetes v1.9.6",
-			orchestratorType:    Kubernetes,
-			orchestratorRelease: "1.9",
-			masterProfile: MasterProfile{
-				DNSPrefix:           "dummy",
-				Count:               3,
-				AvailabilityProfile: VirtualMachineScaleSets,
-			},
-			expectedErr: "VirtualMachineScaleSets are only available in Kubernetes version 1.10.0 or greater. Please set \"orchestratorVersion\" to 1.10.0 or above",
-		},
-		{
 			name:                "Master Profile with VMSS and storage account",
 			orchestratorType:    Kubernetes,
 			orchestratorRelease: "1.10",
@@ -1793,32 +1840,6 @@ func TestMasterProfileValidate(t *testing.T) {
 	}
 }
 
-func TestProperties_ValidateAddon(t *testing.T) {
-	cs := getK8sDefaultContainerService(true)
-	cs.Properties.AgentPoolProfiles = []*AgentPoolProfile{
-		{
-			Name:                "agentpool",
-			VMSize:              "Standard_NC6",
-			Count:               1,
-			AvailabilityProfile: AvailabilitySet,
-		},
-	}
-	cs.Properties.OrchestratorProfile.OrchestratorVersion = "1.9.10"
-	cs.Properties.OrchestratorProfile.KubernetesConfig = &KubernetesConfig{
-		Addons: []KubernetesAddon{
-			{
-				Name:    "nvidia-device-plugin",
-				Enabled: &trueVal,
-			},
-		},
-	}
-
-	err := cs.Validate(true)
-	expectedMsg := "NVIDIA Device Plugin add-on can only be used Kubernetes 1.10 or above. Please specify \"orchestratorRelease\": \"1.10\""
-	if err.Error() != expectedMsg {
-		t.Errorf("expected error with message : %s, but got : %s", expectedMsg, err.Error())
-	}
-}
 func TestProperties_ValidateZones(t *testing.T) {
 	tests := []struct {
 		name                        string
@@ -1948,7 +1969,7 @@ func TestProperties_ValidateZones(t *testing.T) {
 		{
 			name:                        "all zones with standard loadbalancer and false excludeMasterFromStandardLB",
 			orchestratorRelease:         "1.12",
-			loadBalancerSku:             "Standard",
+			loadBalancerSku:             StandardLoadBalancerSku,
 			excludeMasterFromStandardLB: false,
 			masterProfile: &MasterProfile{
 				Count:               5,
@@ -2408,6 +2429,33 @@ func TestValidateProperties_OrchestratorSpecificProperties(t *testing.T) {
 			t.Errorf("expected error with message : %s, but got %s", expectedMsg, err.Error())
 		}
 	})
+
+	t.Run("Should not support os type other than linux for ipv6 dual stack feature", func(t *testing.T) {
+		t.Parallel()
+		cs := getK8sDefaultContainerService(true)
+		cs.Properties.FeatureFlags = &FeatureFlags{EnableIPv6DualStack: true}
+		masterProfile := cs.Properties.MasterProfile
+		masterProfile.Distro = CoreOS
+		expectedMsg := fmt.Sprintf("Dual stack feature is currently supported only with Ubuntu, but master is of distro type %s", masterProfile.Distro)
+		if err := cs.Properties.validateMasterProfile(false); err.Error() != expectedMsg {
+			t.Errorf("expected error with message : %s, but got %s", expectedMsg, err.Error())
+		}
+
+		masterProfile.Distro = Ubuntu
+		agentPoolProfiles := cs.Properties.AgentPoolProfiles
+		agentPoolProfiles[0].OSType = Windows
+		expectedMsg = fmt.Sprintf("Dual stack feature is supported only with Linux, but agent pool '%s' is of os type %s", agentPoolProfiles[0].Name, agentPoolProfiles[0].OSType)
+		if err := cs.Properties.validateAgentPoolProfiles(false); err.Error() != expectedMsg {
+			t.Errorf("expected error with message : %s, but got %s", expectedMsg, err.Error())
+		}
+
+		agentPoolProfiles[0].OSType = Linux
+		agentPoolProfiles[0].Distro = CoreOS
+		expectedMsg = fmt.Sprintf("Dual stack feature is currently supported only with Ubuntu, but agent pool '%s' is of distro type %s", agentPoolProfiles[0].Name, agentPoolProfiles[0].Distro)
+		if err := cs.Properties.validateAgentPoolProfiles(false); err.Error() != expectedMsg {
+			t.Errorf("expected error with message : %s, but got %s", expectedMsg, err.Error())
+		}
+	})
 }
 
 func TestValidateProperties_CustomNodeLabels(t *testing.T) {
@@ -2549,19 +2597,6 @@ func TestAgentPoolProfile_ValidateVirtualMachineScaleSet(t *testing.T) {
 		}
 	})
 
-	t.Run("Should fail for VMSS + < 1.10 version", func(t *testing.T) {
-		t.Parallel()
-		cs := getK8sDefaultContainerService(false)
-		cs.Properties.OrchestratorProfile.OrchestratorRelease = "1.9"
-		agentPoolProfiles := cs.Properties.AgentPoolProfiles
-		agentPoolProfiles[0].AvailabilityProfile = VirtualMachineScaleSets
-		minVersion, _ := semver.Make("1.10.0")
-		expectedMsg := fmt.Sprintf("VirtualMachineScaleSets are only available in Kubernetes version %s or greater. Please set \"orchestratorVersion\" to %s or above", minVersion.String(), minVersion.String())
-		if err := cs.Properties.validateAgentPoolProfiles(false); err.Error() != expectedMsg {
-			t.Errorf("expected error with message : %s, but got %s", expectedMsg, err.Error())
-		}
-	})
-
 	t.Run("Should fail for VMSS + StorageAccount", func(t *testing.T) {
 		t.Parallel()
 		cs := getK8sDefaultContainerService(false)
@@ -2601,6 +2636,52 @@ func TestAgentPoolProfile_ValidateVirtualMachineScaleSet(t *testing.T) {
 		expectedMsg := fmt.Sprintf("AgentPoolProfile.LoadBalancerBackendAddressPoolIDs can not contain empty string. Agent pool name: %s", agentPoolProfiles[0].Name)
 		if err := cs.Properties.validateAgentPoolProfiles(false); err.Error() != expectedMsg {
 			t.Errorf("expected error with message : %s, but got %s", expectedMsg, err.Error())
+		}
+	})
+}
+
+func TestAgentPoolProfile_ValidateAuditDEnabled(t *testing.T) {
+	t.Run("Should have proper validation for auditd + distro combinations", func(t *testing.T) {
+		t.Parallel()
+		for _, distro := range DistroValues {
+			cs := getK8sDefaultContainerService(false)
+			agentPoolProfiles := cs.Properties.AgentPoolProfiles
+			agentPoolProfiles[0].Distro = distro
+			agentPoolProfiles[0].AuditDEnabled = to.BoolPtr(true)
+			switch distro {
+			case RHEL, CoreOS:
+				expectedMsg := fmt.Sprintf("You have enabled auditd in agent pool %s, but you did not specify an Ubuntu-based distro", agentPoolProfiles[0].Name)
+				if err := cs.Properties.validateAgentPoolProfiles(false); err.Error() != expectedMsg {
+					t.Errorf("expected error with message : %s, but got %s", expectedMsg, err.Error())
+				}
+			case Ubuntu, Ubuntu1804, AKSUbuntu1604, AKSUbuntu1804, ACC1604:
+				if err := cs.Properties.validateAgentPoolProfiles(false); err != nil {
+					t.Errorf("AuditDEnabled should work with distro %s, got error %s", distro, err.Error())
+				}
+			}
+		}
+	})
+}
+
+func TestMasterProfile_ValidateAuditDEnabled(t *testing.T) {
+	t.Run("Should have proper validation for auditd + distro combinations", func(t *testing.T) {
+		t.Parallel()
+		for _, distro := range DistroValues {
+			cs := getK8sDefaultContainerService(false)
+			masterProfile := cs.Properties.MasterProfile
+			masterProfile.Distro = distro
+			masterProfile.AuditDEnabled = to.BoolPtr(true)
+			switch distro {
+			case RHEL, CoreOS:
+				expectedMsg := fmt.Sprintf("You have enabled auditd for master vms, but you did not specify an Ubuntu-based distro.")
+				if err := cs.Properties.validateMasterProfile(false); err.Error() != expectedMsg {
+					t.Errorf("expected error with message : %s, but got %s", expectedMsg, err.Error())
+				}
+			case Ubuntu, Ubuntu1804, AKSUbuntu1604, AKSUbuntu1804, ACC1604:
+				if err := cs.Properties.validateMasterProfile(false); err != nil {
+					t.Errorf("AuditDEnabled should work with distro %s, got error %s", distro, err.Error())
+				}
+			}
 		}
 	})
 }

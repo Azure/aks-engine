@@ -110,12 +110,12 @@ spec:
           imagePullPolicy: IfNotPresent
           name: heapster
           resources:
-            limits:
-              cpu: 88m
-              memory: 204Mi
             requests:
-              cpu: 88m
-              memory: 204Mi
+              cpu: {{ContainerCPUReqs "heapster"}}
+              memory: {{ContainerMemReqs "heapster"}}
+            limits:
+              cpu: {{ContainerCPULimits "heapster"}}
+              memory: {{ContainerMemLimits "heapster"}}
           livenessProbe:
             httpGet:
               path: /healthz
@@ -130,12 +130,12 @@ spec:
           imagePullPolicy: IfNotPresent
           name: heapster-nanny
           resources:
-            limits:
-              cpu: 88m
-              memory: 204Mi
             requests:
-              cpu: 88m
-              memory: 204Mi
+              cpu: {{ContainerCPUReqs "heapster-nanny"}}
+              memory: {{ContainerMemReqs "heapster-nanny"}}
+            limits:
+              cpu: {{ContainerCPULimits "heapster-nanny"}}
+              memory: {{ContainerMemLimits "heapster-nanny"}}
           env:
             - name: MY_POD_NAME
               valueFrom:

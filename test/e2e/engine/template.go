@@ -14,6 +14,7 @@ import (
 	"github.com/Azure/go-autorest/autorest/to"
 
 	"github.com/Azure/aks-engine/pkg/api"
+	"github.com/Azure/aks-engine/pkg/api/common"
 	"github.com/Azure/aks-engine/pkg/api/vlabs"
 	"github.com/Azure/aks-engine/pkg/helpers"
 	"github.com/Azure/aks-engine/pkg/i18n"
@@ -92,9 +93,11 @@ func Build(cfg *config.Config, masterSubnetID string, agentSubnetIDs []string, i
 	prop := cs.ContainerService.Properties
 
 	if config.ClientID != "" && config.ClientSecret != "" {
-		prop.ServicePrincipalProfile = &vlabs.ServicePrincipalProfile{
-			ClientID: config.ClientID,
-			Secret:   config.ClientSecret,
+		if !prop.IsAzureStackCloud() {
+			prop.ServicePrincipalProfile = &vlabs.ServicePrincipalProfile{
+				ClientID: config.ClientID,
+				Secret:   config.ClientSecret,
+			}
 		}
 	}
 
@@ -159,6 +162,22 @@ func Build(cfg *config.Config, masterSubnetID string, agentSubnetIDs []string, i
 		prop.ServicePrincipalProfile.ObjectID = config.ClientObjectID
 	}
 
+	var version string
+	if prop.OrchestratorProfile.OrchestratorRelease != "" {
+		version = prop.OrchestratorProfile.OrchestratorRelease + ".0"
+	} else if prop.OrchestratorProfile.OrchestratorVersion != "" {
+		version = prop.OrchestratorProfile.OrchestratorVersion
+	}
+	if common.IsKubernetesVersionGe(version, "1.12.0") {
+		if prop.OrchestratorProfile.KubernetesConfig == nil {
+			prop.OrchestratorProfile.KubernetesConfig = &vlabs.KubernetesConfig{}
+		}
+		prop.OrchestratorProfile.KubernetesConfig.ControllerManagerConfig = map[string]string{
+			"--horizontal-pod-autoscaler-downscale-stabilization":   "30s",
+			"--horizontal-pod-autoscaler-cpu-initialization-period": "30s",
+		}
+	}
+
 	return &Engine{
 		Config:            config,
 		ClusterDefinition: cs,
@@ -174,8 +193,8 @@ func (e *Engine) NodeCount() int {
 	return expectedCount
 }
 
-// HasLinuxAgents will return true if there is at least 1 linux agent pool
-func (e *Engine) HasLinuxAgents() bool {
+// AnyAgentIsLinux will return true if there is at least 1 linux agent pool
+func (e *Engine) AnyAgentIsLinux() bool {
 	for _, ap := range e.ExpandedDefinition.Properties.AgentPoolProfiles {
 		if ap.OSType == "" || ap.OSType == "Linux" {
 			return true
@@ -207,15 +226,20 @@ func (e *Engine) GetWindowsTestImages() (*WindowsTestImages, error) {
 	}
 
 	windowsSku := e.ExpandedDefinition.Properties.WindowsProfile.GetWindowsSku()
+	// tip: curl -L https://mcr.microsoft.com/v2/windows/servercore/tags/list
+	//      curl -L https://mcr.microsoft.com/v2/windows/servercore/iis/tags/list
 	switch {
+	case strings.Contains(windowsSku, "1903"):
+		return &WindowsTestImages{IIS: "mcr.microsoft.com/windows/servercore/iis:windowsservercore-1903",
+			ServerCore: "mcr.microsoft.com/windows/servercore:1903"}, nil
 	case strings.Contains(windowsSku, "1809"), strings.Contains(windowsSku, "2019"):
 		return &WindowsTestImages{IIS: "mcr.microsoft.com/windows/servercore/iis:windowsservercore-ltsc2019",
-			ServerCore: "mcr.microsoft.com/windows/servercore/iis:windowsservercore-ltsc2019"}, nil
+			ServerCore: "mcr.microsoft.com/windows/servercore:ltsc2019"}, nil
 	case strings.Contains(windowsSku, "1803"):
-		return &WindowsTestImages{IIS: "microsoft/iis:windowsservercore-1803",
-			ServerCore: "microsoft/iis:windowsservercore-1803"}, nil
+		return &WindowsTestImages{IIS: "mcr.microsoft.com/windows/servercore/iis:windowsservercore-1803",
+			ServerCore: "mcr.microsoft.com/windows/servercore:1803"}, nil
 	case strings.Contains(windowsSku, "1709"):
-		return nil, errors.New("Windows Server version 1709 hasn't been tested in a long time and is deprecated")
+		return nil, errors.New("Windows Server version 1709 is out of support")
 	}
 	return nil, errors.New("Unknown Windows version. GetWindowsSku() = " + windowsSku)
 }

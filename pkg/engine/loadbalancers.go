@@ -11,6 +11,90 @@ import (
 	"github.com/Azure/go-autorest/autorest/to"
 )
 
+// CreateClusterLoadBalancerForIPv6 creates the cluster loadbalancer with IPv4 and IPv6 FE config
+// this loadbalancer is created for the ipv6 dual stack feature and configured with 1 ipv4 FE, 1 ipv6 FE
+// and 2 backend address pools - v4 and v6, 2 rules - v4 and v6. Atleast existence of 1 rule is a
+// requirement now to allow egress. This can be removed later.
+// TODO (aramase)
+func CreateClusterLoadBalancerForIPv6() LoadBalancerARM {
+	loadbalancer := LoadBalancerARM{
+		ARMResource: ARMResource{
+			APIVersion: "[variables('apiVersionNetwork')]",
+			DependsOn: []string{
+				"[concat('Microsoft.Network/publicIPAddresses/', 'fee-ipv4')]",
+				"[concat('Microsoft.Network/publicIPAddresses/', 'fee-ipv6')]",
+			},
+		},
+		LoadBalancer: network.LoadBalancer{
+			Location: to.StringPtr("[variables('location')]"),
+			Name:     to.StringPtr("[parameters('masterEndpointDNSNamePrefix')]"),
+			LoadBalancerPropertiesFormat: &network.LoadBalancerPropertiesFormat{
+				BackendAddressPools: &[]network.BackendAddressPool{
+					{
+						Name: to.StringPtr("[concat(parameters('masterEndpointDNSNamePrefix'), '-ipv4')]"),
+					},
+					{
+						Name: to.StringPtr("[concat(parameters('masterEndpointDNSNamePrefix'), '-ipv6')]"),
+					},
+				},
+				FrontendIPConfigurations: &[]network.FrontendIPConfiguration{
+					{
+						Name: to.StringPtr("LBFE-v4"),
+						FrontendIPConfigurationPropertiesFormat: &network.FrontendIPConfigurationPropertiesFormat{
+							PublicIPAddress: &network.PublicIPAddress{
+								ID: to.StringPtr("[resourceId('Microsoft.Network/publicIpAddresses', 'fee-ipv4')]"),
+							},
+						},
+					},
+					{
+						Name: to.StringPtr("LBFE-v6"),
+						FrontendIPConfigurationPropertiesFormat: &network.FrontendIPConfigurationPropertiesFormat{
+							PublicIPAddress: &network.PublicIPAddress{
+								ID: to.StringPtr("[resourceId('Microsoft.Network/publicIpAddresses', 'fee-ipv6')]"),
+							},
+						},
+					},
+				},
+				LoadBalancingRules: &[]network.LoadBalancingRule{
+					{
+						Name: to.StringPtr("LBRuleIPv6"),
+						LoadBalancingRulePropertiesFormat: &network.LoadBalancingRulePropertiesFormat{
+							FrontendIPConfiguration: &network.SubResource{
+								ID: to.StringPtr("[resourceId('Microsoft.Network/loadBalancers/frontendIpConfigurations', parameters('masterEndpointDNSNamePrefix'), 'LBFE-v6')]"),
+							},
+							BackendAddressPool: &network.SubResource{
+								ID: to.StringPtr("[resourceId('Microsoft.Network/loadBalancers/backendAddressPools', parameters('masterEndpointDNSNamePrefix'), concat(parameters('masterEndpointDNSNamePrefix'), '-ipv6'))]"),
+							},
+							Protocol:     network.TransportProtocolTCP,
+							FrontendPort: to.Int32Ptr(9090),
+							BackendPort:  to.Int32Ptr(9090),
+						},
+					},
+					{
+						Name: to.StringPtr("LBRuleIPv4"),
+						LoadBalancingRulePropertiesFormat: &network.LoadBalancingRulePropertiesFormat{
+							FrontendIPConfiguration: &network.SubResource{
+								ID: to.StringPtr("[resourceId('Microsoft.Network/loadBalancers/frontendIpConfigurations', parameters('masterEndpointDNSNamePrefix'), 'LBFE-v4')]"),
+							},
+							BackendAddressPool: &network.SubResource{
+								ID: to.StringPtr("[resourceId('Microsoft.Network/loadBalancers/backendAddressPools', parameters('masterEndpointDNSNamePrefix'), concat(parameters('masterEndpointDNSNamePrefix'), '-ipv4'))]"),
+							},
+							Protocol:     network.TransportProtocolTCP,
+							FrontendPort: to.Int32Ptr(9090),
+							BackendPort:  to.Int32Ptr(9090),
+						},
+					},
+				},
+			},
+			Sku: &network.LoadBalancerSku{
+				Name: "[variables('loadBalancerSku')]",
+			},
+			Type: to.StringPtr("Microsoft.Network/loadBalancers"),
+		},
+	}
+	return loadbalancer
+}
+
 func CreateLoadBalancer(prop *api.Properties, isVMSS bool) LoadBalancerARM {
 
 	loadBalancer := LoadBalancerARM{
@@ -80,7 +164,7 @@ func CreateLoadBalancer(prop *api.Properties, isVMSS bool) LoadBalancerARM {
 		},
 	}
 
-	if prop.OrchestratorProfile.KubernetesConfig.LoadBalancerSku == "Standard" {
+	if prop.OrchestratorProfile.KubernetesConfig.LoadBalancerSku == api.StandardLoadBalancerSku {
 		udpRule := network.LoadBalancingRule{
 			Name: to.StringPtr("LBRuleUDP"),
 			LoadBalancingRulePropertiesFormat: &network.LoadBalancingRulePropertiesFormat{
@@ -229,7 +313,7 @@ func CreateMasterInternalLoadBalancer(cs *api.ContainerService) LoadBalancerARM 
 		Type: to.StringPtr("Microsoft.Network/loadBalancers"),
 	}
 
-	if cs.Properties.OrchestratorProfile.KubernetesConfig.LoadBalancerSku == "Standard" {
+	if cs.Properties.OrchestratorProfile.KubernetesConfig.LoadBalancerSku == api.StandardLoadBalancerSku {
 		udpRule := network.LoadBalancingRule{
 			Name: to.StringPtr("LBRuleUDP"),
 			LoadBalancingRulePropertiesFormat: &network.LoadBalancingRulePropertiesFormat{
@@ -258,27 +342,4 @@ func CreateMasterInternalLoadBalancer(cs *api.ContainerService) LoadBalancerARM 
 	}
 
 	return loadBalancerARM
-}
-
-func getUDPLoadBalancingRule() network.LoadBalancingRule {
-	return network.LoadBalancingRule{
-		Name: to.StringPtr("LBRuleUDP"),
-		LoadBalancingRulePropertiesFormat: &network.LoadBalancingRulePropertiesFormat{
-			FrontendIPConfiguration: &network.SubResource{
-				ID: to.StringPtr("[variables('masterLbIPConfigID')]"),
-			},
-			BackendAddressPool: &network.SubResource{
-				ID: to.StringPtr("[concat(variables('masterLbID'), '/backendAddressPools/', variables('masterLbBackendPoolName'))]"),
-			},
-			Protocol:             network.TransportProtocolUDP,
-			FrontendPort:         to.Int32Ptr(1123),
-			BackendPort:          to.Int32Ptr(1123),
-			EnableFloatingIP:     to.BoolPtr(false),
-			IdleTimeoutInMinutes: to.Int32Ptr(5),
-			LoadDistribution:     network.Default,
-			Probe: &network.SubResource{
-				ID: to.StringPtr("[concat(variables('masterLbID'),'/probes/tcpHTTPSProbe')]"),
-			},
-		},
-	}
 }

@@ -87,7 +87,7 @@ fi
 log "Setting dashboard port to ${DASHBOARD_PORT}"
 
 log "Checking Kubernetes version. Expected: ${EXPECTED_ORCHESTRATOR_VERSION}"
-if [ ! -z "${EXPECTED_ORCHESTRATOR_VERSION}" ]; then
+if [ -n "${EXPECTED_ORCHESTRATOR_VERSION}" ]; then
   if [[ ${kubernetes_version} != *"Server Version: v${EXPECTED_ORCHESTRATOR_VERSION}"* ]]; then
     log "K8S: unexpected kubernetes version:\n${kubernetes_version}"; exit 1
   fi
@@ -118,10 +118,9 @@ log "Checking $pods"
 count=60
 while (( $count > 0 )); do
   for pod in $pods; do
-    running=$(k get pods --all-namespaces | grep $pod | grep Running | wc -l)
-    if (( $running > 0 )); then
+    if k get pods --all-namespaces | grep $pod | grep -q Running; then
       log "... $pod is Running"
-      pods=$(echo $pods | sed -e "s/ *$pod */ /")
+      pods=${pods/$pod/}
     fi
   done
   if [ -z "$(echo $pods | tr -d '[:space:]')" ]; then
@@ -130,7 +129,7 @@ while (( $count > 0 )); do
   sleep 5; count=$((count-1))
 done
 
-if [ ! -z "$(echo $pods | tr -d '[:space:]')" ]; then
+if [ -n "$(echo $pods | tr -d '[:space:]')" ]; then
   log "K8S: gave up waiting for running pods [$pods]"; exit 1
 fi
 

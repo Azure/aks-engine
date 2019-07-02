@@ -1,6 +1,6 @@
-#/bin/bash
+#!/bin/bash
 
-for f in $(find . -name "*.err"); do
-        len=${#f}
-	mv ${f} ${f::len-4};
-done
+while IFS= read -r -d '' f; do
+  len=${#f}
+  mv ${f} ${f::len-4}
+done < <(find . -name "*.err" -print0)

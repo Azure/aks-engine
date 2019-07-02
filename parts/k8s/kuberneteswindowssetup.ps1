@@ -40,7 +40,11 @@ param(
 
     [parameter(Mandatory=$true)]
     [ValidateNotNullOrEmpty()]
-    $AADClientSecret
+    $AADClientSecret, # base64
+
+    [parameter(Mandatory=$true)]
+    [ValidateNotNullOrEmpty()]
+    $TargetEnvironment
 )
 
 
@@ -65,12 +69,16 @@ $global:DockerVersion = "{{WrapAsParameter "windowsDockerVersion"}}"
 
 ## VM configuration passed by Azure
 $global:WindowsTelemetryGUID = "{{WrapAsParameter "windowsTelemetryGUID"}}"
+{{if IsIdentitySystemADFS}}
+$global:TenantId = "adfs"
+{{else}}
 $global:TenantId = "{{WrapAsVariable "tenantID"}}"
+{{end}}
 $global:SubscriptionId = "{{WrapAsVariable "subscriptionId"}}"
 $global:ResourceGroup = "{{WrapAsVariable "resourceGroup"}}"
 $global:VmType = "{{WrapAsVariable "vmType"}}"
 $global:SubnetName = "{{WrapAsVariable "subnetName"}}"
-$global:MasterSubnet = "{{WrapAsParameter "masterSubnet"}}"
+$global:MasterSubnet = "{{GetWindowsMasterSubnetARMParam}}"
 $global:SecurityGroupName = "{{WrapAsVariable "nsgName"}}"
 $global:VNetName = "{{WrapAsVariable "virtualNetworkName"}}"
 $global:RouteTableName = "{{WrapAsVariable "routeTableName"}}"
@@ -176,7 +184,7 @@ try
         Write-AzureConfig `
             -KubeDir $global:KubeDir `
             -AADClientId $AADClientId `
-            -AADClientSecret $AADClientSecret `
+            -AADClientSecret $([System.Text.Encoding]::ASCII.GetString([System.Convert]::FromBase64String($AADClientSecret))) `
             -TenantId $global:TenantId `
             -SubscriptionId $global:SubscriptionId `
             -ResourceGroup $global:ResourceGroup `
@@ -192,7 +200,14 @@ try
             -UserAssignedClientID $global:UserAssignedClientID `
             -UseInstanceMetadata $global:UseInstanceMetadata `
             -LoadBalancerSku $global:LoadBalancerSku `
-            -ExcludeMasterFromStandardLB $global:ExcludeMasterFromStandardLB
+            -ExcludeMasterFromStandardLB $global:ExcludeMasterFromStandardLB `
+            -TargetEnvironment $TargetEnvironment
+
+        {{if IsAzureStackCloud}}
+        $azureStackConfigFile = [io.path]::Combine($global:KubeDir, "azurestackcloud.json")
+        $envJSON = "{{ GetBase64EncodedEnvironmentJSON }}"
+        [io.file]::WriteAllBytes($azureStackConfigFile, [System.Convert]::FromBase64String($envJSON))
+        {{end}}
 
         Write-Log "Write ca root"
         Write-CACert -CACertificate $global:CACertificate `
@@ -222,7 +237,8 @@ try
                                -KubeClusterCIDR $global:KubeClusterCIDR `
                                -MasterSubnet $global:MasterSubnet `
                                -KubeServiceCIDR $global:KubeServiceCIDR `
-                               -VNetCIDR $global:VNetCIDR
+                               -VNetCIDR $global:VNetCIDR `
+                               -TargetEnvironment $TargetEnvironment
         } elseif ($global:NetworkPlugin -eq "kubenet") {
             Update-WinCNI -CNIPath $global:CNIPath
             Get-HnsPsm1 -HNSModule $global:HNSModule

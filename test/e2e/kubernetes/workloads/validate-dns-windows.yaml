@@ -1,0 +1,18 @@
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: validate-dns-windows
+spec:
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+      - name: validate-bing
+        image: {{ .ServerCore }}
+        command: ['powershell', 'Resolve-DnsName', '-Name', 'www.bing.com', '-DnsOnly', '-Type', 'CNAME']
+      - name: validate-google
+        image: {{ .ServerCore }}
+        command: ['powershell', 'Resolve-DnsName', '-Name', 'google.com', '-DnsOnly', '-Type', 'A']
+      nodeSelector:
+        beta.kubernetes.io/os: windows

@@ -33,13 +33,14 @@ type upgradeCmd struct {
 	authProvider
 
 	// user input
-	resourceGroupName   string
-	apiModelPath        string
-	deploymentDirectory string
-	upgradeVersion      string
-	location            string
-	timeoutInMinutes    int
-	force               bool
+	resourceGroupName           string
+	apiModelPath                string
+	deploymentDirectory         string
+	upgradeVersion              string
+	location                    string
+	timeoutInMinutes            int
+	cordonDrainTimeoutInMinutes int
+	force                       bool
 
 	// derived
 	containerService    *api.ContainerService
@@ -49,6 +50,7 @@ type upgradeCmd struct {
 	nameSuffix          string
 	agentPoolsToUpgrade map[string]bool
 	timeout             *time.Duration
+	cordonDrainTimeout  *time.Duration
 }
 
 func newUpgradeCmd() *cobra.Command {
@@ -70,6 +72,7 @@ func newUpgradeCmd() *cobra.Command {
 	f.StringVar(&uc.deploymentDirectory, "deployment-dir", "", "the location of the output from `generate`")
 	f.StringVarP(&uc.upgradeVersion, "upgrade-version", "k", "", "desired kubernetes version (required)")
 	f.IntVar(&uc.timeoutInMinutes, "vm-timeout", -1, "how long to wait for each vm to be upgraded in minutes")
+	f.IntVar(&uc.cordonDrainTimeoutInMinutes, "cordon-drain-timeout", -1, "how long to wait for each vm to be cordoned in minutes")
 	f.BoolVarP(&uc.force, "force", "f", false, "force upgrading the cluster to desired version. Allows same version upgrades and downgrades.")
 	addAuthFlags(uc.getAuthArgs(), f)
 
@@ -102,6 +105,11 @@ func (uc *upgradeCmd) validate(cmd *cobra.Command) error {
 		uc.timeout = &timeout
 	}
 
+	if uc.cordonDrainTimeoutInMinutes != -1 {
+		cordonDrainTimeout := time.Duration(uc.cordonDrainTimeoutInMinutes) * time.Minute
+		uc.cordonDrainTimeout = &cordonDrainTimeout
+	}
+
 	if uc.upgradeVersion == "" {
 		cmd.Usage()
 		return errors.New("--upgrade-version must be specified")
@@ -120,7 +128,7 @@ func (uc *upgradeCmd) validate(cmd *cobra.Command) error {
 	return nil
 }
 
-func (uc *upgradeCmd) loadCluster(cmd *cobra.Command) error {
+func (uc *upgradeCmd) loadCluster() error {
 	var err error
 
 	ctx, cancel := context.WithTimeout(context.Background(), armhelpers.DefaultARMOperationTimeout)
@@ -229,7 +237,7 @@ func (uc *upgradeCmd) run(cmd *cobra.Command, args []string) error {
 		return errors.Wrap(err, "validating upgrade command")
 	}
 
-	err = uc.loadCluster(cmd)
+	err = uc.loadCluster()
 	if err != nil {
 		return errors.Wrap(err, "loading existing cluster")
 	}
@@ -238,9 +246,10 @@ func (uc *upgradeCmd) run(cmd *cobra.Command, args []string) error {
 		Translator: &i18n.Translator{
 			Locale: uc.locale,
 		},
-		Logger:      log.NewEntry(log.New()),
-		Client:      uc.client,
-		StepTimeout: uc.timeout,
+		Logger:             log.NewEntry(log.New()),
+		Client:             uc.client,
+		StepTimeout:        uc.timeout,
+		CordonDrainTimeout: uc.cordonDrainTimeout,
 	}
 
 	upgradeCluster.ClusterTopology = kubernetesupgrade.ClusterTopology{}

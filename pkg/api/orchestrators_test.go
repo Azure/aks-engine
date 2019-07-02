@@ -97,6 +97,17 @@ func TestGetOrchestratorVersionProfileListV20170930(t *testing.T) {
 	Expect(len(list.Properties.Orchestrators)).To(Equal(len(common.GetAllSupportedKubernetesVersions(false, false))))
 }
 
+func TestGetOrchestratorVersionProfileList(t *testing.T) {
+	RegisterTestingT(t)
+	// kubernetes only
+	list, e := GetOrchestratorVersionProfileList(common.Kubernetes, "", false)
+	Expect(e).To(BeNil())
+	Expect(len(list)).To(Equal(len(common.GetAllSupportedKubernetesVersions(false, false))))
+	for _, v := range list {
+		Expect(common.GetAllSupportedKubernetesVersions(false, false)).Should(ContainElement(v.OrchestratorProfile.OrchestratorVersion))
+	}
+}
+
 func TestKubernetesInfo(t *testing.T) {
 	RegisterTestingT(t)
 
@@ -211,41 +222,49 @@ func TestDockerceInfoInfo(t *testing.T) {
 func TestGetKubernetesAvailableUpgradeVersions(t *testing.T) {
 	RegisterTestingT(t)
 	cases := []struct {
+		name             string
 		version          string
 		versions         []string
 		expectedUpgrades []string
 	}{
 		{
+			name:             "from 1.7.15",
 			version:          "1.7.15",
 			versions:         []string{"1.9.10", "1.9.11", "1.10.3", "1.10.4", "1.11.3", "1.11.4", "1.12.0-alpha.1"},
 			expectedUpgrades: []string{"1.9.10", "1.9.11"},
 		},
 		{
+			name:             "from 1.8.14",
 			version:          "1.8.14",
 			versions:         []string{"1.7.15", "1.8.14", "1.8.15", "1.9.10", "1.9.11", "1.10.3", "1.10.4"},
 			expectedUpgrades: []string{"1.8.15", "1.9.10", "1.9.11"},
 		},
 		{
+			name:             "from 1.8.14 with alternate supported versions",
 			version:          "1.8.14",
 			versions:         []string{"1.9.10", "1.9.11", "1.10.3", "1.10.4", "1.11.3", "1.11.4", "1.12.0-alpha.1"},
 			expectedUpgrades: []string{"1.9.10", "1.9.11"},
 		},
 		{
+			name:             "from 1.9.10",
 			version:          "1.9.10",
 			versions:         []string{"1.9.10", "1.9.11", "1.10.3", "1.10.4", "1.11.3", "1.11.4", "1.12.0-alpha.1"},
 			expectedUpgrades: []string{"1.9.11", "1.10.3", "1.10.4"},
 		},
 		{
+			name:             "from 1.10.4",
 			version:          "1.10.4",
 			versions:         []string{"1.9.10", "1.9.11", "1.10.3", "1.10.4", "1.11.3", "1.11.4", "1.12.0-alpha.1"},
 			expectedUpgrades: []string{"1.11.3", "1.11.4"},
 		},
 		{
+			name:             "from 1.12.1",
 			version:          "1.12.1",
 			versions:         []string{"1.9.10", "1.9.11", "1.10.3", "1.10.4", "1.11.3", "1.11.4", "1.12.1", "1.12.2"},
 			expectedUpgrades: []string{"1.12.2"},
 		},
 		{
+			name:             "no supported upgrades",
 			version:          "1.12.2",
 			versions:         []string{"1.9.10", "1.9.11", "1.10.3", "1.10.4", "1.11.3", "1.11.4", "1.12.1", "1.12.2"},
 			expectedUpgrades: []string{},
@@ -253,8 +272,12 @@ func TestGetKubernetesAvailableUpgradeVersions(t *testing.T) {
 	}
 
 	for _, c := range cases {
-		upgrades, err := getKubernetesAvailableUpgradeVersions(c.version, c.versions)
-		Expect(err).To(BeNil())
-		Expect(upgrades).To(Equal(c.expectedUpgrades))
+		c := c
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+			upgrades, err := getKubernetesAvailableUpgradeVersions(c.version, c.versions)
+			Expect(err).To(BeNil())
+			Expect(upgrades).To(Equal(c.expectedUpgrades))
+		})
 	}
 }

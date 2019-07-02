@@ -4,12 +4,11 @@
 package api
 
 import (
-	"log"
+	"fmt"
 	"reflect"
 	"strings"
 	"testing"
 
-	"github.com/Azure/go-autorest/autorest/azure"
 	"github.com/Azure/go-autorest/autorest/to"
 
 	"github.com/Azure/aks-engine/pkg/api/common"
@@ -214,34 +213,40 @@ func TestOSType(t *testing.T) {
 
 func TestAgentPoolProfileIsVHDDistro(t *testing.T) {
 	cases := []struct {
+		name     string
 		ap       AgentPoolProfile
 		expected bool
 	}{
 		{
+			name: "16.04 VHD distro",
 			ap: AgentPoolProfile{
-				Distro: AKS,
+				Distro: AKSUbuntu1604,
 			},
 			expected: true,
 		},
 		{
+			name: "18.04 VHD distro",
 			ap: AgentPoolProfile{
-				Distro: AKS1804,
+				Distro: AKSUbuntu1804,
 			},
 			expected: true,
 		},
 		{
+			name: "coreos distro",
 			ap: AgentPoolProfile{
 				Distro: CoreOS,
 			},
 			expected: false,
 		},
 		{
+			name: "ubuntu distro",
 			ap: AgentPoolProfile{
 				Distro: Ubuntu,
 			},
 			expected: false,
 		},
 		{
+			name: "ubuntu 18.04 non-VHD distro",
 			ap: AgentPoolProfile{
 				Distro: Ubuntu1804,
 			},
@@ -250,42 +255,52 @@ func TestAgentPoolProfileIsVHDDistro(t *testing.T) {
 	}
 
 	for _, c := range cases {
-		if c.expected != c.ap.IsVHDDistro() {
-			t.Fatalf("Got unexpected AgentPoolProfile.IsVHDDistro() result. Expected: %t. Got: %t.", c.expected, c.ap.IsVHDDistro())
-		}
+		c := c
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+			if c.expected != c.ap.IsVHDDistro() {
+				t.Fatalf("Got unexpected AgentPoolProfile.IsVHDDistro() result. Expected: %t. Got: %t.", c.expected, c.ap.IsVHDDistro())
+			}
+		})
 	}
 }
 
 func TestAgentPoolProfileIsUbuntuNonVHD(t *testing.T) {
 	cases := []struct {
+		name     string
 		ap       AgentPoolProfile
 		expected bool
 	}{
 		{
+			name: "ubuntu 16.04 VHD distro",
 			ap: AgentPoolProfile{
-				Distro: AKS,
+				Distro: AKSUbuntu1604,
 			},
 			expected: false,
 		},
 		{
+			name: "ubuntu 18.04 VHD distro",
 			ap: AgentPoolProfile{
-				Distro: AKS1804,
+				Distro: AKSUbuntu1804,
 			},
 			expected: false,
 		},
 		{
+			name: "coreos distro",
 			ap: AgentPoolProfile{
 				Distro: CoreOS,
 			},
 			expected: false,
 		},
 		{
+			name: "ubuntu distro",
 			ap: AgentPoolProfile{
 				Distro: Ubuntu,
 			},
 			expected: true,
 		},
 		{
+			name: "ubuntu 18.04 non-VHD distro",
 			ap: AgentPoolProfile{
 				Distro: Ubuntu1804,
 			},
@@ -294,42 +309,52 @@ func TestAgentPoolProfileIsUbuntuNonVHD(t *testing.T) {
 	}
 
 	for _, c := range cases {
-		if c.expected != c.ap.IsUbuntuNonVHD() {
-			t.Fatalf("Got unexpected AgentPoolProfile.IsUbuntuNonVHD() result. Expected: %t. Got: %t.", c.expected, c.ap.IsUbuntuNonVHD())
-		}
+		c := c
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+			if c.expected != c.ap.IsUbuntuNonVHD() {
+				t.Fatalf("Got unexpected AgentPoolProfile.IsUbuntuNonVHD() result. Expected: %t. Got: %t.", c.expected, c.ap.IsUbuntuNonVHD())
+			}
+		})
 	}
 }
 
 func TestMasterProfileIsVHDDistro(t *testing.T) {
 	cases := []struct {
+		name     string
 		m        MasterProfile
 		expected bool
 	}{
 		{
+			name: "ubuntu 16.04 VHD distro",
 			m: MasterProfile{
-				Distro: AKS,
+				Distro: AKSUbuntu1604,
 			},
 			expected: true,
 		},
 		{
+			name: "ubuntu 18.04 VHD distro",
 			m: MasterProfile{
-				Distro: AKS1804,
+				Distro: AKSUbuntu1804,
 			},
 			expected: true,
 		},
 		{
+			name: "coreos distro",
 			m: MasterProfile{
 				Distro: CoreOS,
 			},
 			expected: false,
 		},
 		{
+			name: "ubuntu 16.04 non-VHD distro",
 			m: MasterProfile{
 				Distro: Ubuntu,
 			},
 			expected: false,
 		},
 		{
+			name: "ubuntu 18.04 non-VHD distro",
 			m: MasterProfile{
 				Distro: Ubuntu1804,
 			},
@@ -338,42 +363,52 @@ func TestMasterProfileIsVHDDistro(t *testing.T) {
 	}
 
 	for _, c := range cases {
-		if c.expected != c.m.IsVHDDistro() {
-			t.Fatalf("Got unexpected MasterProfile.IsVHDDistro() result. Expected: %t. Got: %t.", c.expected, c.m.IsVHDDistro())
-		}
+		c := c
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+			if c.expected != c.m.IsVHDDistro() {
+				t.Fatalf("Got unexpected MasterProfile.IsVHDDistro() result. Expected: %t. Got: %t.", c.expected, c.m.IsVHDDistro())
+			}
+		})
 	}
 }
 
 func TestMasterProfileIsUbuntuNonVHD(t *testing.T) {
 	cases := []struct {
+		name     string
 		m        MasterProfile
 		expected bool
 	}{
 		{
+			name: "ubuntu 16.04 VHD distro",
 			m: MasterProfile{
-				Distro: AKS,
+				Distro: AKSUbuntu1604,
 			},
 			expected: false,
 		},
 		{
+			name: "ubuntu 18.04 VHD distro",
 			m: MasterProfile{
-				Distro: AKS1804,
+				Distro: AKSUbuntu1804,
 			},
 			expected: false,
 		},
 		{
+			name: "coreos distro",
 			m: MasterProfile{
 				Distro: CoreOS,
 			},
 			expected: false,
 		},
 		{
+			name: "ubuntu 16.04 non-VHD distro",
 			m: MasterProfile{
 				Distro: Ubuntu,
 			},
 			expected: true,
 		},
 		{
+			name: "ubuntu 18.04 non-VHD distro",
 			m: MasterProfile{
 				Distro: Ubuntu1804,
 			},
@@ -382,14 +417,158 @@ func TestMasterProfileIsUbuntuNonVHD(t *testing.T) {
 	}
 
 	for _, c := range cases {
-		if c.expected != c.m.IsUbuntuNonVHD() {
-			t.Fatalf("Got unexpected MasterProfile.IsUbuntuNonVHD() result. Expected: %t. Got: %t.", c.expected, c.m.IsUbuntuNonVHD())
-		}
+		c := c
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+			if c.expected != c.m.IsUbuntuNonVHD() {
+				t.Fatalf("Got unexpected MasterProfile.IsUbuntuNonVHD() result. Expected: %t. Got: %t.", c.expected, c.m.IsUbuntuNonVHD())
+			}
+		})
+	}
+}
+
+func TestMasterProfileHasMultipleNodes(t *testing.T) {
+	cases := []struct {
+		name     string
+		m        MasterProfile
+		expected bool
+	}{
+		{
+			name: "1",
+			m: MasterProfile{
+				Count: 1,
+			},
+			expected: false,
+		},
+		{
+			name: "2",
+			m: MasterProfile{
+				Count: 2,
+			},
+			expected: true,
+		},
+		{
+			name: "3",
+			m: MasterProfile{
+				Count: 3,
+			},
+			expected: true,
+		},
+		{
+			name: "0",
+			m: MasterProfile{
+				Count: 0,
+			},
+			expected: false,
+		},
+		{
+			name: "-1",
+			m: MasterProfile{
+				Count: -1,
+			},
+			expected: false,
+		},
+	}
+
+	for _, c := range cases {
+		c := c
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+			if c.expected != c.m.HasMultipleNodes() {
+				t.Fatalf("Got unexpected MasterProfile.HasMultipleNodes() result. Expected: %t. Got: %t.", c.expected, c.m.HasMultipleNodes())
+			}
+		})
+	}
+}
+
+func TestMasterProfileHasCosmosEtcd(t *testing.T) {
+	cases := []struct {
+		name     string
+		m        MasterProfile
+		expected bool
+	}{
+		{
+			name: "enabled",
+			m: MasterProfile{
+				CosmosEtcd: to.BoolPtr(true),
+			},
+			expected: true,
+		},
+		{
+			name: "disabled",
+			m: MasterProfile{
+				CosmosEtcd: to.BoolPtr(false),
+			},
+			expected: false,
+		},
+		{
+			name:     "zero value master profile",
+			m:        MasterProfile{},
+			expected: false,
+		},
+	}
+
+	for _, c := range cases {
+		c := c
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+			if c.expected != c.m.HasCosmosEtcd() {
+				t.Fatalf("Got unexpected MasterProfile.HasCosmosEtcd() result. Expected: %t. Got: %t.", c.expected, c.m.HasCosmosEtcd())
+			}
+		})
+	}
+}
+
+func TestMasterProfileGetCosmosEndPointURI(t *testing.T) {
+	dnsPrefix := "my-prefix"
+	cases := []struct {
+		name     string
+		m        MasterProfile
+		expected string
+	}{
+		{
+			name: "valid DNS prefix",
+			m: MasterProfile{
+				CosmosEtcd: to.BoolPtr(true),
+				DNSPrefix:  dnsPrefix,
+			},
+			expected: fmt.Sprintf(etcdEndpointURIFmt, dnsPrefix),
+		},
+		{
+			name: "no DNS prefix",
+			m: MasterProfile{
+				CosmosEtcd: to.BoolPtr(true),
+			},
+			expected: fmt.Sprintf(etcdEndpointURIFmt, ""),
+		},
+		{
+			name: "cosmos etcd disabled",
+			m: MasterProfile{
+				CosmosEtcd: to.BoolPtr(false),
+			},
+			expected: "",
+		},
+		{
+			name:     "zero value master profile",
+			m:        MasterProfile{},
+			expected: "",
+		},
+	}
+
+	for _, c := range cases {
+		c := c
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+			if c.expected != c.m.GetCosmosEndPointURI() {
+				t.Fatalf("Got unexpected MasterProfile.GetCosmosEndPointURI() result. Expected: %s. Got: %s.", c.expected, c.m.GetCosmosEndPointURI())
+			}
+		})
 	}
 }
 
 func TestHasStorageProfile(t *testing.T) {
 	cases := []struct {
+		name              string
 		p                 Properties
 		expectedHasMD     bool
 		expectedHasSA     bool
@@ -399,6 +578,7 @@ func TestHasStorageProfile(t *testing.T) {
 		expectedHasDisks  bool
 	}{
 		{
+			name: "Storage Account",
 			p: Properties{
 				MasterProfile: &MasterProfile{
 					StorageProfile: StorageAccount,
@@ -420,6 +600,7 @@ func TestHasStorageProfile(t *testing.T) {
 			expectedHasDisks: true,
 		},
 		{
+			name: "Managed Disk",
 			p: Properties{
 				MasterProfile: &MasterProfile{
 					StorageProfile: ManagedDisks,
@@ -439,6 +620,7 @@ func TestHasStorageProfile(t *testing.T) {
 			expectedAgent0MD: false,
 		},
 		{
+			name: "both",
 			p: Properties{
 				MasterProfile: &MasterProfile{
 					StorageProfile: StorageAccount,
@@ -458,6 +640,7 @@ func TestHasStorageProfile(t *testing.T) {
 			expectedAgent0MD: true,
 		},
 		{
+			name: "Managed Disk everywhere",
 			p: Properties{
 				OrchestratorProfile: &OrchestratorProfile{
 					OrchestratorType: Kubernetes,
@@ -481,6 +664,7 @@ func TestHasStorageProfile(t *testing.T) {
 			expectedPrivateJB: false,
 		},
 		{
+			name: "Mixed with jumpbox",
 			p: Properties{
 				OrchestratorProfile: &OrchestratorProfile{
 					OrchestratorType: Kubernetes,
@@ -510,6 +694,7 @@ func TestHasStorageProfile(t *testing.T) {
 		},
 
 		{
+			name: "Mixed with jumpbox alternate",
 			p: Properties{
 				OrchestratorProfile: &OrchestratorProfile{
 					OrchestratorType: Kubernetes,
@@ -540,39 +725,180 @@ func TestHasStorageProfile(t *testing.T) {
 	}
 
 	for _, c := range cases {
-		if c.p.HasManagedDisks() != c.expectedHasMD {
-			t.Fatalf("expected HasManagedDisks() to return %t but instead returned %t", c.expectedHasMD, c.p.HasManagedDisks())
-		}
-		if c.p.HasStorageAccountDisks() != c.expectedHasSA {
-			t.Fatalf("expected HasStorageAccountDisks() to return %t but instead returned %t", c.expectedHasSA, c.p.HasStorageAccountDisks())
-		}
-		if c.p.MasterProfile.IsManagedDisks() != c.expectedMasterMD {
-			t.Fatalf("expected IsManagedDisks() to return %t but instead returned %t", c.expectedMasterMD, c.p.MasterProfile.IsManagedDisks())
-		}
-		if c.p.MasterProfile.IsStorageAccount() == c.expectedMasterMD {
-			t.Fatalf("expected IsStorageAccount() to return %t but instead returned %t", !c.expectedMasterMD, c.p.MasterProfile.IsStorageAccount())
-		}
-		if c.p.AgentPoolProfiles[0].IsManagedDisks() != c.expectedAgent0MD {
-			t.Fatalf("expected IsManagedDisks() to return %t but instead returned %t", c.expectedAgent0MD, c.p.AgentPoolProfiles[0].IsManagedDisks())
-		}
-		if c.p.AgentPoolProfiles[0].IsStorageAccount() == c.expectedAgent0MD {
-			t.Fatalf("expected IsStorageAccount() to return %t but instead returned %t", !c.expectedAgent0MD, c.p.AgentPoolProfiles[0].IsStorageAccount())
-		}
-		if c.p.OrchestratorProfile != nil && c.p.OrchestratorProfile.KubernetesConfig.PrivateJumpboxProvision() != c.expectedPrivateJB {
-			t.Fatalf("expected PrivateJumpboxProvision() to return %t but instead returned %t", c.expectedPrivateJB, c.p.OrchestratorProfile.KubernetesConfig.PrivateJumpboxProvision())
-		}
-		if c.p.AgentPoolProfiles[0].HasDisks() != c.expectedHasDisks {
-			t.Fatalf("expected HasDisks() to return %t but instead returned %t", c.expectedHasDisks, c.p.AgentPoolProfiles[0].HasDisks())
-		}
+		c := c
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+			if c.p.HasManagedDisks() != c.expectedHasMD {
+				t.Fatalf("expected HasManagedDisks() to return %t but instead returned %t", c.expectedHasMD, c.p.HasManagedDisks())
+			}
+			if c.p.HasStorageAccountDisks() != c.expectedHasSA {
+				t.Fatalf("expected HasStorageAccountDisks() to return %t but instead returned %t", c.expectedHasSA, c.p.HasStorageAccountDisks())
+			}
+			if c.p.MasterProfile.IsManagedDisks() != c.expectedMasterMD {
+				t.Fatalf("expected IsManagedDisks() to return %t but instead returned %t", c.expectedMasterMD, c.p.MasterProfile.IsManagedDisks())
+			}
+			if c.p.MasterProfile.IsStorageAccount() == c.expectedMasterMD {
+				t.Fatalf("expected IsStorageAccount() to return %t but instead returned %t", !c.expectedMasterMD, c.p.MasterProfile.IsStorageAccount())
+			}
+			if c.p.AgentPoolProfiles[0].IsManagedDisks() != c.expectedAgent0MD {
+				t.Fatalf("expected IsManagedDisks() to return %t but instead returned %t", c.expectedAgent0MD, c.p.AgentPoolProfiles[0].IsManagedDisks())
+			}
+			if c.p.AgentPoolProfiles[0].IsStorageAccount() == c.expectedAgent0MD {
+				t.Fatalf("expected IsStorageAccount() to return %t but instead returned %t", !c.expectedAgent0MD, c.p.AgentPoolProfiles[0].IsStorageAccount())
+			}
+			if c.p.OrchestratorProfile != nil && c.p.OrchestratorProfile.KubernetesConfig.PrivateJumpboxProvision() != c.expectedPrivateJB {
+				t.Fatalf("expected PrivateJumpboxProvision() to return %t but instead returned %t", c.expectedPrivateJB, c.p.OrchestratorProfile.KubernetesConfig.PrivateJumpboxProvision())
+			}
+			if c.p.AgentPoolProfiles[0].HasDisks() != c.expectedHasDisks {
+				t.Fatalf("expected HasDisks() to return %t but instead returned %t", c.expectedHasDisks, c.p.AgentPoolProfiles[0].HasDisks())
+			}
+		})
+	}
+}
+
+func TestAgentPoolProfileGetKubernetesLabels(t *testing.T) {
+	cases := []struct {
+		name     string
+		ap       AgentPoolProfile
+		rg       string
+		expected string
+	}{
+		{
+			name:     "vanilla pool profile",
+			ap:       AgentPoolProfile{},
+			rg:       "my-resource-group",
+			expected: "node-role.kubernetes.io/agent=,kubernetes.io/role=agent,agentpool=,kubernetes.azure.com/cluster=my-resource-group",
+		},
+		{
+			name: "with managed disk",
+			ap: AgentPoolProfile{
+				StorageProfile: ManagedDisks,
+			},
+			rg:       "my-resource-group",
+			expected: "node-role.kubernetes.io/agent=,kubernetes.io/role=agent,agentpool=,storageprofile=managed,storagetier=,kubernetes.azure.com/cluster=my-resource-group",
+		},
+		{
+			name: "N series",
+			ap: AgentPoolProfile{
+				VMSize: "Standard_NC6",
+			},
+			rg:       "my-resource-group",
+			expected: "node-role.kubernetes.io/agent=,kubernetes.io/role=agent,agentpool=,accelerator=nvidia,kubernetes.azure.com/cluster=my-resource-group",
+		},
+		{
+			name: "with custom labels",
+			ap: AgentPoolProfile{
+				CustomNodeLabels: map[string]string{
+					"mycustomlabel1": "foo",
+					"mycustomlabel2": "bar",
+				},
+			},
+			rg:       "my-resource-group",
+			expected: "node-role.kubernetes.io/agent=,kubernetes.io/role=agent,agentpool=,kubernetes.azure.com/cluster=my-resource-group,mycustomlabel1=foo,mycustomlabel2=bar",
+		},
+		{
+			name: "N series and managed disk with custom labels",
+			ap: AgentPoolProfile{
+				StorageProfile: ManagedDisks,
+				VMSize:         "Standard_NC6",
+				CustomNodeLabels: map[string]string{
+					"mycustomlabel1": "foo",
+					"mycustomlabel2": "bar",
+				},
+			},
+			rg:       "my-resource-group",
+			expected: "node-role.kubernetes.io/agent=,kubernetes.io/role=agent,agentpool=,storageprofile=managed,storagetier=Standard_LRS,accelerator=nvidia,kubernetes.azure.com/cluster=my-resource-group,mycustomlabel1=foo,mycustomlabel2=bar",
+		},
+	}
+
+	for _, c := range cases {
+		c := c
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+			if c.expected != c.ap.GetKubernetesLabels(c.rg) {
+				t.Fatalf("Got unexpected AgentPoolProfile.GetKubernetesLabels(%s) result. Expected: %s. Got: %s.", c.rg, c.expected, c.ap.GetKubernetesLabels(c.rg))
+			}
+		})
+	}
+}
+
+func TestKubernetesConfigGetOrderedKubeletConfigString(t *testing.T) {
+	alphabetizedString := "--address=0.0.0.0 --allow-privileged=true --anonymous-auth=false --authorization-mode=Webhook --cgroups-per-qos=true --client-ca-file=/etc/kubernetes/certs/ca.crt --keep-terminated-pod-volumes=false --kubeconfig=/var/lib/kubelet/kubeconfig --pod-manifest-path=/etc/kubernetes/manifests "
+	alphabetizedStringForPowershell := `"--address=0.0.0.0", "--allow-privileged=true", "--anonymous-auth=false", "--authorization-mode=Webhook", "--cgroups-per-qos=true", "--client-ca-file=/etc/kubernetes/certs/ca.crt", "--keep-terminated-pod-volumes=false", "--kubeconfig=/var/lib/kubelet/kubeconfig", "--pod-manifest-path=/etc/kubernetes/manifests"`
+	cases := []struct {
+		name                  string
+		kc                    KubernetesConfig
+		expected              string
+		expectedForPowershell string
+	}{
+		{
+			name:                  "zero value kubernetesConfig",
+			kc:                    KubernetesConfig{},
+			expected:              "",
+			expectedForPowershell: "",
+		},
+		// Some values
+		{
+			name: "expected values",
+			kc: KubernetesConfig{
+				KubeletConfig: map[string]string{
+					"--address":                     "0.0.0.0",
+					"--allow-privileged":            "true",
+					"--anonymous-auth":              "false",
+					"--authorization-mode":          "Webhook",
+					"--client-ca-file":              "/etc/kubernetes/certs/ca.crt",
+					"--pod-manifest-path":           "/etc/kubernetes/manifests",
+					"--cgroups-per-qos":             "true",
+					"--kubeconfig":                  "/var/lib/kubelet/kubeconfig",
+					"--keep-terminated-pod-volumes": "false",
+				},
+			},
+			expected:              alphabetizedString,
+			expectedForPowershell: alphabetizedStringForPowershell,
+		},
+		// Switch the "order" in the map, validate the same return string
+		{
+			name: "expected values re-ordered",
+			kc: KubernetesConfig{
+				KubeletConfig: map[string]string{
+					"--address":                     "0.0.0.0",
+					"--allow-privileged":            "true",
+					"--kubeconfig":                  "/var/lib/kubelet/kubeconfig",
+					"--client-ca-file":              "/etc/kubernetes/certs/ca.crt",
+					"--authorization-mode":          "Webhook",
+					"--pod-manifest-path":           "/etc/kubernetes/manifests",
+					"--cgroups-per-qos":             "true",
+					"--keep-terminated-pod-volumes": "false",
+					"--anonymous-auth":              "false",
+				},
+			},
+			expected:              alphabetizedString,
+			expectedForPowershell: alphabetizedStringForPowershell,
+		},
+	}
+
+	for _, c := range cases {
+		c := c
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+			if c.expected != c.kc.GetOrderedKubeletConfigString() {
+				t.Fatalf("Got unexpected AgentPoolProfile.GetOrderedKubeletConfigString() result. Expected: %s. Got: %s.", c.expected, c.kc.GetOrderedKubeletConfigString())
+			}
+			if c.expectedForPowershell != c.kc.GetOrderedKubeletConfigStringForPowershell() {
+				t.Fatalf("Got unexpected AgentPoolProfile.GetOrderedKubeletConfigStringForPowershell() result. Expected: %s. Got: %s.", c.expectedForPowershell, c.kc.GetOrderedKubeletConfigStringForPowershell())
+			}
+		})
 	}
 }
 
 func TestTotalNodes(t *testing.T) {
 	cases := []struct {
+		name     string
 		p        Properties
 		expected int
 	}{
 		{
+			name: "2 total nodes between master and pool",
 			p: Properties{
 				MasterProfile: &MasterProfile{
 					Count: 1,
@@ -586,6 +912,7 @@ func TestTotalNodes(t *testing.T) {
 			expected: 2,
 		},
 		{
+			name: "7 total nodes between 2 pools",
 			p: Properties{
 				AgentPoolProfiles: []*AgentPoolProfile{
 					{
@@ -599,6 +926,7 @@ func TestTotalNodes(t *testing.T) {
 			expected: 7,
 		},
 		{
+			name: "11 total nodes between master and pool",
 			p: Properties{
 				MasterProfile: &MasterProfile{
 					Count: 5,
@@ -614,23 +942,84 @@ func TestTotalNodes(t *testing.T) {
 	}
 
 	for _, c := range cases {
-		if c.p.TotalNodes() != c.expected {
-			t.Fatalf("expected TotalNodes() to return %d but instead returned %d", c.expected, c.p.TotalNodes())
-		}
+		c := c
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+			if c.p.TotalNodes() != c.expected {
+				t.Fatalf("expected TotalNodes() to return %d but instead returned %d", c.expected, c.p.TotalNodes())
+			}
+		})
 	}
 }
+
+func TestPropertiesIsHostedMasterProfile(t *testing.T) {
+	cases := []struct {
+		name     string
+		p        Properties
+		expected bool
+	}{
+		{
+			name: "valid master 1 node",
+			p: Properties{
+				MasterProfile: &MasterProfile{
+					Count: 1,
+				},
+			},
+			expected: false,
+		},
+		{
+			name: "valid master 3 nodes",
+			p: Properties{
+				MasterProfile: &MasterProfile{
+					Count: 3,
+				},
+			},
+			expected: false,
+		},
+		{
+			name: "valid master 5 nodes",
+			p: Properties{
+				MasterProfile: &MasterProfile{
+					Count: 5,
+				},
+			},
+			expected: false,
+		},
+		{
+			name: "zero value hosted master",
+			p: Properties{
+				HostedMasterProfile: &HostedMasterProfile{},
+			},
+			expected: true,
+		},
+	}
+
+	for _, c := range cases {
+		c := c
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+			if c.p.IsHostedMasterProfile() != c.expected {
+				t.Fatalf("expected IsHostedMasterProfile() to return %t but instead returned %t", c.expected, c.p.IsHostedMasterProfile())
+			}
+		})
+	}
+}
+
 func TestMasterAvailabilityProfile(t *testing.T) {
 	cases := []struct {
+		name           string
 		p              Properties
 		expectedISVMSS bool
 	}{
 		{
+			name: "zero value master profile",
 			p: Properties{
 				MasterProfile: &MasterProfile{},
 			},
 			expectedISVMSS: false,
 		},
 		{
+			name: "master profile w/ AS",
 			p: Properties{
 				MasterProfile: &MasterProfile{
 					AvailabilityProfile: AvailabilitySet,
@@ -639,6 +1028,7 @@ func TestMasterAvailabilityProfile(t *testing.T) {
 			expectedISVMSS: false,
 		},
 		{
+			name: "master profile w/ VMSS",
 			p: Properties{
 				MasterProfile: &MasterProfile{
 					AvailabilityProfile: VirtualMachineScaleSets,
@@ -649,9 +1039,13 @@ func TestMasterAvailabilityProfile(t *testing.T) {
 	}
 
 	for _, c := range cases {
-		if c.p.MasterProfile.IsVirtualMachineScaleSets() != c.expectedISVMSS {
-			t.Fatalf("expected MasterProfile.IsVirtualMachineScaleSets() to return %t but instead returned %t", c.expectedISVMSS, c.p.MasterProfile.IsVirtualMachineScaleSets())
-		}
+		c := c
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+			if c.p.MasterProfile.IsVirtualMachineScaleSets() != c.expectedISVMSS {
+				t.Fatalf("expected MasterProfile.IsVirtualMachineScaleSets() to return %t but instead returned %t", c.expectedISVMSS, c.p.MasterProfile.IsVirtualMachineScaleSets())
+			}
+		})
 	}
 }
 func TestAvailabilityProfile(t *testing.T) {
@@ -928,7 +1322,7 @@ func TestMasterIsUbuntu(t *testing.T) {
 			p: Properties{
 				MasterProfile: &MasterProfile{
 					Count:  1,
-					Distro: AKS,
+					Distro: AKSUbuntu1604,
 				},
 			},
 			expected: true,
@@ -964,7 +1358,7 @@ func TestMasterIsUbuntu(t *testing.T) {
 			p: Properties{
 				MasterProfile: &MasterProfile{
 					Count:  1,
-					Distro: AKS1804,
+					Distro: AKSUbuntu1804,
 				},
 			},
 			expected: true,
@@ -1024,7 +1418,7 @@ func TestAgentPoolIsUbuntu(t *testing.T) {
 				AgentPoolProfiles: []*AgentPoolProfile{
 					{
 						Count:  1,
-						Distro: AKS,
+						Distro: AKSUbuntu1604,
 					},
 				},
 			},
@@ -1068,7 +1462,7 @@ func TestAgentPoolIsUbuntu(t *testing.T) {
 				AgentPoolProfiles: []*AgentPoolProfile{
 					{
 						Count:  1,
-						Distro: AKS1804,
+						Distro: AKSUbuntu1804,
 					},
 				},
 			},
@@ -1127,7 +1521,7 @@ func TestAgentPoolIsUbuntu(t *testing.T) {
 	}
 }
 
-func TestHasUbuntuDistroForAllNodes(t *testing.T) {
+func TestIsUbuntuDistroForAllNodes(t *testing.T) {
 	cases := []struct {
 		p        Properties
 		expected bool
@@ -1145,7 +1539,7 @@ func TestHasUbuntuDistroForAllNodes(t *testing.T) {
 					},
 					{
 						Count:  1,
-						Distro: AKS,
+						Distro: AKSUbuntu1604,
 					},
 				},
 			},
@@ -1283,6 +1677,162 @@ func TestHasUbuntuDistroForAllNodes(t *testing.T) {
 	}
 }
 
+func TestIsVHDDistroForAllNodes(t *testing.T) {
+	cases := []struct {
+		p        Properties
+		expected bool
+	}{
+		{
+			p: Properties{
+				MasterProfile: &MasterProfile{
+					Count:  1,
+					Distro: AKSUbuntu1604,
+				},
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						Count:  1,
+						Distro: Ubuntu,
+					},
+					{
+						Count:  1,
+						Distro: AKSUbuntu1604,
+					},
+				},
+			},
+			expected: false,
+		},
+		{
+			p: Properties{
+				MasterProfile: &MasterProfile{
+					Count:  1,
+					Distro: AKSUbuntu1804,
+				},
+			},
+			expected: true,
+		},
+		{
+			p: Properties{
+				MasterProfile: &MasterProfile{
+					Count:  1,
+					Distro: Ubuntu1804,
+				},
+			},
+			expected: false,
+		},
+		{
+			p: Properties{
+				MasterProfile: &MasterProfile{
+					Count:  1,
+					Distro: AKSUbuntu1804,
+				},
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						Count:  1,
+						Distro: AKSUbuntu1804,
+					},
+					{
+						Count:  1,
+						Distro: AKSUbuntu1804,
+					},
+				},
+			},
+			expected: true,
+		},
+		{
+			p: Properties{
+				MasterProfile: &MasterProfile{
+					Count:  1,
+					Distro: Ubuntu1804,
+				},
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						Count:  1,
+						Distro: Ubuntu,
+					},
+					{
+						Count:  1,
+						Distro: Ubuntu1804,
+					},
+				},
+			},
+			expected: false,
+		},
+		{
+			p: Properties{
+				MasterProfile: &MasterProfile{
+					Count:  1,
+					Distro: Ubuntu1804,
+				},
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						Count:  1,
+						Distro: Ubuntu1804,
+					},
+				},
+			},
+			expected: false,
+		},
+		{
+			p: Properties{
+				MasterProfile: &MasterProfile{
+					Count:  1,
+					Distro: AKSUbuntu1604,
+				},
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						Count:  1,
+						OSType: Windows,
+					},
+				},
+			},
+			expected: false,
+		},
+		{
+			p: Properties{
+				MasterProfile: &MasterProfile{
+					Count:  1,
+					Distro: AKSUbuntu1804,
+				},
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						Count:  1,
+						OSType: Windows,
+					},
+				},
+			},
+			expected: false,
+		},
+		{
+			p: Properties{
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						Count:  1,
+						Distro: AKSUbuntu1604,
+					},
+				},
+			},
+			expected: true,
+		},
+		{
+			p: Properties{
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						Count:  1,
+						OSType: Windows,
+					},
+				},
+			},
+			expected: false,
+		},
+	}
+
+	for _, c := range cases {
+		if c.p.IsVHDDistroForAllNodes() != c.expected {
+			t.Fatalf("expected IsVHDDistroForAllNodes() to return %t but instead returned %t", c.expected, c.p.IsVHDDistroForAllNodes())
+		}
+	}
+}
+
 func TestHasUbuntuDistroNodes(t *testing.T) {
 	cases := []struct {
 		p        Properties
@@ -1301,7 +1851,7 @@ func TestHasUbuntuDistroNodes(t *testing.T) {
 					},
 					{
 						Count:  1,
-						Distro: AKS,
+						Distro: AKSUbuntu1604,
 					},
 				},
 			},
@@ -1367,12 +1917,12 @@ func TestHasUbuntuDistroNodes(t *testing.T) {
 			p: Properties{
 				MasterProfile: &MasterProfile{
 					Count:  1,
-					Distro: AKS,
+					Distro: AKSUbuntu1604,
 				},
 				AgentPoolProfiles: []*AgentPoolProfile{
 					{
 						Count:  1,
-						Distro: AKS,
+						Distro: AKSUbuntu1604,
 					},
 				},
 			},
@@ -1457,7 +2007,7 @@ func TestHasUbuntu1604DistroNodes(t *testing.T) {
 					},
 					{
 						Count:  1,
-						Distro: AKS,
+						Distro: AKSUbuntu1604,
 					},
 				},
 			},
@@ -1523,12 +2073,12 @@ func TestHasUbuntu1604DistroNodes(t *testing.T) {
 			p: Properties{
 				MasterProfile: &MasterProfile{
 					Count:  1,
-					Distro: AKS,
+					Distro: AKSUbuntu1604,
 				},
 				AgentPoolProfiles: []*AgentPoolProfile{
 					{
 						Count:  1,
-						Distro: AKS,
+						Distro: AKSUbuntu1604,
 					},
 				},
 			},
@@ -1613,7 +2163,7 @@ func TestHasUbuntu1804DistroNodes(t *testing.T) {
 					},
 					{
 						Count:  1,
-						Distro: AKS,
+						Distro: AKSUbuntu1604,
 					},
 				},
 			},
@@ -1679,12 +2229,12 @@ func TestHasUbuntu1804DistroNodes(t *testing.T) {
 			p: Properties{
 				MasterProfile: &MasterProfile{
 					Count:  1,
-					Distro: AKS,
+					Distro: AKSUbuntu1604,
 				},
 				AgentPoolProfiles: []*AgentPoolProfile{
 					{
 						Count:  1,
-						Distro: AKS,
+						Distro: AKSUbuntu1604,
 					},
 				},
 			},
@@ -1763,12 +2313,12 @@ func TestUbuntuVersion(t *testing.T) {
 			p: Properties{
 				MasterProfile: &MasterProfile{
 					Count:  1,
-					Distro: AKS,
+					Distro: AKSUbuntu1604,
 				},
 				AgentPoolProfiles: []*AgentPoolProfile{
 					{
 						Count:  1,
-						Distro: AKS,
+						Distro: AKSUbuntu1604,
 						OSType: Linux,
 					},
 				},
@@ -1782,7 +2332,7 @@ func TestUbuntuVersion(t *testing.T) {
 			p: Properties{
 				MasterProfile: &MasterProfile{
 					Count:  1,
-					Distro: AKS1804,
+					Distro: AKSUbuntu1804,
 				},
 				AgentPoolProfiles: []*AgentPoolProfile{
 					{
@@ -1955,6 +2505,70 @@ func TestIsPrivateCluster(t *testing.T) {
 	}
 }
 
+func TestOrchestratorProfileNeedsExecHealthz(t *testing.T) {
+	cases := []struct {
+		p        Properties
+		expected bool
+	}{
+		{
+			p: Properties{
+				OrchestratorProfile: &OrchestratorProfile{},
+			},
+			expected: false,
+		},
+		{
+			p: Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					OrchestratorType: Kubernetes,
+				},
+			},
+			expected: false,
+		},
+		{
+			p: Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					OrchestratorType:    Kubernetes,
+					OrchestratorVersion: "1.7.0",
+				},
+			},
+			expected: true,
+		},
+		{
+			p: Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					OrchestratorType:    Kubernetes,
+					OrchestratorVersion: "1.8.99",
+				},
+			},
+			expected: true,
+		},
+		{
+			p: Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					OrchestratorType:    Kubernetes,
+					OrchestratorVersion: "1.9.0",
+				},
+			},
+			expected: false,
+		},
+		{
+			p: Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					OrchestratorType:    Kubernetes,
+					OrchestratorVersion: "1.6.99",
+				},
+			},
+			expected: false,
+		},
+	}
+
+	for _, c := range cases {
+		if c.p.OrchestratorProfile.NeedsExecHealthz() != c.expected {
+			t.Fatalf("expected NeedsExecHealthz() to return %t but instead got %t", c.expected, c.p.OrchestratorProfile.NeedsExecHealthz())
+		}
+	}
+}
+
 func TestIsAzureCNI(t *testing.T) {
 	k := &KubernetesConfig{
 		NetworkPlugin: NetworkPluginAzure,
@@ -2032,6 +2646,60 @@ func TestOrchestrator(t *testing.T) {
 		}
 		if c.expectedIsSwarmMode != c.p.OrchestratorProfile.IsSwarmMode() {
 			t.Fatalf("Expected IsSwarmMode() to be %t with OrchestratorType=%s", c.expectedIsSwarmMode, c.p.OrchestratorProfile.OrchestratorType)
+		}
+	}
+}
+
+func TestIsDCOS19(t *testing.T) {
+	cases := []struct {
+		p                Properties
+		expectedIsDCOS19 bool
+	}{
+		{
+			p: Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					OrchestratorType:    DCOS,
+					OrchestratorVersion: common.DCOSVersion1Dot9Dot8,
+				},
+			},
+			expectedIsDCOS19: true,
+		},
+		{
+			p: Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					OrchestratorType:    DCOS,
+					OrchestratorVersion: "1.9.7",
+				},
+			},
+			expectedIsDCOS19: false,
+		},
+		{
+			p: Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					OrchestratorType: DCOS,
+				},
+			},
+			expectedIsDCOS19: false,
+		},
+		{
+			p: Properties{
+				OrchestratorProfile: &OrchestratorProfile{},
+			},
+			expectedIsDCOS19: false,
+		},
+		{
+			p: Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					OrchestratorType: Kubernetes,
+				},
+			},
+			expectedIsDCOS19: false,
+		},
+	}
+
+	for _, c := range cases {
+		if c.expectedIsDCOS19 != c.p.OrchestratorProfile.IsDCOS19() {
+			t.Fatalf("Expected IsDCOS19() to be %t got %t", c.expectedIsDCOS19, c.p.OrchestratorProfile.IsDCOS19())
 		}
 	}
 }
@@ -2174,7 +2842,6 @@ func TestHasAadProfile(t *testing.T) {
 }
 
 func TestCustomHyperkubeImageField(t *testing.T) {
-	log.Println(exampleAPIModel)
 	apiloader := &Apiloader{
 		Translator: nil,
 	}
@@ -2190,7 +2857,6 @@ func TestCustomHyperkubeImageField(t *testing.T) {
 }
 
 func TestPrivateAzureRegistryServerField(t *testing.T) {
-	log.Println(exampleAPIModelWithPrivateAzureRegistry)
 	apiloader := &Apiloader{
 		Translator: nil,
 	}
@@ -2207,7 +2873,6 @@ func TestPrivateAzureRegistryServerField(t *testing.T) {
 
 func TestUserAssignedMSI(t *testing.T) {
 	// Test1: With just System MSI
-	log.Println(exampleSystemMSIModel)
 	apiloader := &Apiloader{
 		Translator: nil,
 	}
@@ -2222,7 +2887,6 @@ func TestUserAssignedMSI(t *testing.T) {
 	}
 
 	// Test2: With user assigned MSI
-	log.Println(exampleUserMSIModel)
 	apiloader = &Apiloader{
 		Translator: nil,
 	}
@@ -2234,81 +2898,6 @@ func TestUserAssignedMSI(t *testing.T) {
 	actualUserMSI = apiModel.Properties.OrchestratorProfile.KubernetesConfig.UserAssignedID
 	if !systemMSI && actualUserMSI != exampleUserMSI {
 		t.Fatalf("found user msi: %t and usermsi: %s", systemMSI, actualUserMSI)
-	}
-}
-
-func TestKubernetesAddon(t *testing.T) {
-	addon := getMockAddon("addon")
-	if !addon.IsEnabled(true) {
-		t.Fatalf("KubernetesAddon.IsEnabled(true) should always return true when Enabled property is not specified")
-	}
-
-	if addon.IsEnabled(false) {
-		t.Fatalf("KubernetesAddon.IsEnabled(false) should always return false when Enabled property is not specified")
-	}
-	e := true
-	addon.Enabled = &e
-	if !addon.IsEnabled(false) {
-		t.Fatalf("KubernetesAddon.IsEnabled(false) should always return true when Enabled property is set to true")
-	}
-	if !addon.IsEnabled(true) {
-		t.Fatalf("KubernetesAddon.IsEnabled(true) should always return true when Enabled property is set to true")
-	}
-	e = false
-	addon.Enabled = &e
-	if addon.IsEnabled(false) {
-		t.Fatalf("KubernetesAddon.IsEnabled(false) should always return false when Enabled property is set to false")
-	}
-	if addon.IsEnabled(true) {
-		t.Fatalf("KubernetesAddon.IsEnabled(true) should always return false when Enabled property is set to false")
-	}
-}
-
-func TestIsTillerEnabled(t *testing.T) {
-	// Default case
-	c := KubernetesConfig{
-		Addons: []KubernetesAddon{
-			getMockAddon("addon"),
-		},
-	}
-	enabled := c.IsTillerEnabled()
-	enabledDefault := DefaultTillerAddonEnabled
-	if enabled != enabledDefault {
-		t.Fatalf("KubernetesConfig.IsTillerEnabled() should return %t when no tiller addon has been specified, instead returned %t", enabledDefault, enabled)
-	}
-	// Addon present, but enabled not specified
-	c.Addons = append(c.Addons, getMockAddon(DefaultTillerAddonName))
-	enabled = c.IsTillerEnabled()
-	if enabled != enabledDefault {
-		t.Fatalf("KubernetesConfig.IsTillerEnabled() should return default when a custom tiller addon has been specified w/ no enabled value, expected %t, instead returned %t", enabledDefault, enabled)
-	}
-	// Addon present and enabled
-	b := true
-	c = KubernetesConfig{
-		Addons: []KubernetesAddon{
-			{
-				Name:    DefaultTillerAddonName,
-				Enabled: &b,
-			},
-		},
-	}
-	enabled = c.IsTillerEnabled()
-	if !enabled {
-		t.Fatalf("KubernetesConfig.IsTillerEnabled() should return true when a custom tiller addon has been specified as enabled, instead returned %t", enabled)
-	}
-	// Addon present and disabled
-	b = false
-	c = KubernetesConfig{
-		Addons: []KubernetesAddon{
-			{
-				Name:    DefaultTillerAddonName,
-				Enabled: &b,
-			},
-		},
-	}
-	enabled = c.IsTillerEnabled()
-	if enabled {
-		t.Fatalf("KubernetesConfig.IsTillerEnabled() should return false when a custom tiller addon has been specified as disabled, instead returned %t", enabled)
 	}
 }
 
@@ -2325,7 +2914,7 @@ func TestIsAADPodIdentityEnabled(t *testing.T) {
 		t.Fatalf("KubernetesConfig.IsAADPodIdentityEnabled() should return %t when no aad pod identity addon has been specified, instead returned %t", enabledDefault, enabled)
 	}
 	// Addon present, but enabled not specified
-	c.Addons = append(c.Addons, getMockAddon(DefaultAADPodIdentityAddonName))
+	c.Addons = append(c.Addons, getMockAddon(AADPodIdentityAddonName))
 	enabled = c.IsAADPodIdentityEnabled()
 	if enabled != enabledDefault {
 		t.Fatalf("KubernetesConfig.IsAADPodIdentityEnabled() should return default when aad pod identity addon has been specified w/ no enabled value, expected %t, instead returned %t", enabledDefault, enabled)
@@ -2335,7 +2924,7 @@ func TestIsAADPodIdentityEnabled(t *testing.T) {
 	c = KubernetesConfig{
 		Addons: []KubernetesAddon{
 			{
-				Name:    DefaultAADPodIdentityAddonName,
+				Name:    AADPodIdentityAddonName,
 				Enabled: &b,
 			},
 		},
@@ -2349,7 +2938,7 @@ func TestIsAADPodIdentityEnabled(t *testing.T) {
 	c = KubernetesConfig{
 		Addons: []KubernetesAddon{
 			{
-				Name:    DefaultAADPodIdentityAddonName,
+				Name:    AADPodIdentityAddonName,
 				Enabled: &b,
 			},
 		},
@@ -2357,54 +2946,6 @@ func TestIsAADPodIdentityEnabled(t *testing.T) {
 	enabled = c.IsAADPodIdentityEnabled()
 	if enabled {
 		t.Fatalf("KubernetesConfig.IsAADPodIdentityEnabled() should return false when aad pod identity addon has been specified as disabled, instead returned %t", enabled)
-	}
-}
-
-func TestIsACIConnectorEnabled(t *testing.T) {
-	// Default case
-	c := KubernetesConfig{
-		Addons: []KubernetesAddon{
-			getMockAddon("addon"),
-		},
-	}
-	enabled := c.IsACIConnectorEnabled()
-	enabledDefault := DefaultACIConnectorAddonEnabled
-	if enabled != enabledDefault {
-		t.Fatalf("KubernetesConfig.IsACIConnectorEnabled() should return %t when no ACI connector addon has been specified, instead returned %t", enabledDefault, enabled)
-	}
-	// Addon present, but enabled not specified
-	c.Addons = append(c.Addons, getMockAddon(DefaultACIConnectorAddonName))
-	enabled = c.IsACIConnectorEnabled()
-	if enabled != enabledDefault {
-		t.Fatalf("KubernetesConfig.IsACIConnectorEnabled() should return default when ACI connector has been specified w/ no enabled value, expected %t, instead returned %t", enabledDefault, enabled)
-	}
-	// Addon present and enabled
-	b := true
-	c = KubernetesConfig{
-		Addons: []KubernetesAddon{
-			{
-				Name:    DefaultACIConnectorAddonName,
-				Enabled: &b,
-			},
-		},
-	}
-	enabled = c.IsACIConnectorEnabled()
-	if !enabled {
-		t.Fatalf("KubernetesConfig.IsACIConnectorEnabled() should return true when ACI connector addon has been specified as enabled, instead returned %t", enabled)
-	}
-	// Addon present and disabled
-	b = false
-	c = KubernetesConfig{
-		Addons: []KubernetesAddon{
-			{
-				Name:    DefaultACIConnectorAddonName,
-				Enabled: &b,
-			},
-		},
-	}
-	enabled = c.IsACIConnectorEnabled()
-	if enabled {
-		t.Fatalf("KubernetesConfig.IsACIConnectorEnabled() should return false when ACI connector addon has been specified as disabled, instead returned %t", enabled)
 	}
 }
 
@@ -2416,22 +2957,21 @@ func TestIsClusterAutoscalerEnabled(t *testing.T) {
 		},
 	}
 	enabled := c.IsClusterAutoscalerEnabled()
-	enabledDefault := DefaultClusterAutoscalerAddonEnabled
-	if enabled != enabledDefault {
-		t.Fatalf("KubernetesConfig.IsClusterAutoscalerEnabled() should return %t when no cluster autoscaler addon has been specified, instead returned %t", enabledDefault, enabled)
+	if enabled {
+		t.Fatalf("KubernetesConfig.IsClusterAutoscalerEnabled() should return %t when no cluster autoscaler addon has been specified, instead returned %t", false, enabled)
 	}
 	// Addon present, but enabled not specified
-	c.Addons = append(c.Addons, getMockAddon(DefaultClusterAutoscalerAddonName))
+	c.Addons = append(c.Addons, getMockAddon(ClusterAutoscalerAddonName))
 	enabled = c.IsClusterAutoscalerEnabled()
-	if enabled != enabledDefault {
-		t.Fatalf("KubernetesConfig.IsClusterAutoscalerEnabled() should return default when cluster autoscaler has been specified w/ no enabled value, expected %t, instead returned %t", enabledDefault, enabled)
+	if enabled {
+		t.Fatalf("KubernetesConfig.IsClusterAutoscalerEnabled() should return false when cluster autoscaler has been specified w/ no enabled value, instead returned %t", enabled)
 	}
 	// Addon present and enabled
 	b := true
 	c = KubernetesConfig{
 		Addons: []KubernetesAddon{
 			{
-				Name:    DefaultClusterAutoscalerAddonName,
+				Name:    ClusterAutoscalerAddonName,
 				Enabled: &b,
 			},
 		},
@@ -2445,7 +2985,7 @@ func TestIsClusterAutoscalerEnabled(t *testing.T) {
 	c = KubernetesConfig{
 		Addons: []KubernetesAddon{
 			{
-				Name:    DefaultClusterAutoscalerAddonName,
+				Name:    ClusterAutoscalerAddonName,
 				Enabled: &b,
 			},
 		},
@@ -2456,195 +2996,34 @@ func TestIsClusterAutoscalerEnabled(t *testing.T) {
 	}
 }
 
-func TestIsBlobfuseFlexVolumeEnabled(t *testing.T) {
-	// Default case
-	c := KubernetesConfig{
-		Addons: []KubernetesAddon{
-			getMockAddon("addon"),
-		},
-	}
-	enabled := c.IsBlobfuseFlexVolumeEnabled()
-	enabledDefault := DefaultBlobfuseFlexVolumeAddonEnabled
-	if enabled != enabledDefault {
-		t.Fatalf("KubernetesConfig.IsBlobfuseFlexVolumeEnabled() should return %t when no blobfuse flexvolume addon has been specified, instead returned %t", enabledDefault, enabled)
-	}
-	// Addon present, but enabled not specified
-	c.Addons = append(c.Addons, getMockAddon(DefaultBlobfuseFlexVolumeAddonName))
-	enabled = c.IsBlobfuseFlexVolumeEnabled()
-	if enabled != enabledDefault {
-		t.Fatalf("KubernetesConfig.IsBlobfuseFlexVolumeEnabled() should return default when blobfuse flexvolume has been specified w/ no enabled value, expected %t, instead returned %t", enabledDefault, enabled)
-	}
-	// Addon present and enabled
-	b := true
-	c = KubernetesConfig{
-		Addons: []KubernetesAddon{
-			{
-				Name:    DefaultBlobfuseFlexVolumeAddonName,
-				Enabled: &b,
-			},
-		},
-	}
-	enabled = c.IsBlobfuseFlexVolumeEnabled()
-	if !enabled {
-		t.Fatalf("KubernetesConfig.IsBlobfuseFlexVolumeEnabled() should return true when blobfuse flexvolume addon has been specified as enabled, instead returned %t", enabled)
-	}
-	// Addon present and disabled
-	b = false
-	c = KubernetesConfig{
-		Addons: []KubernetesAddon{
-			{
-				Name:    DefaultBlobfuseFlexVolumeAddonName,
-				Enabled: &b,
-			},
-		},
-	}
-	enabled = c.IsBlobfuseFlexVolumeEnabled()
-	if enabled {
-		t.Fatalf("KubernetesConfig.IsBlobfuseFlexVolumeEnabled() should return false when blobfuse flexvolume addon has been specified as disabled, instead returned %t", enabled)
-	}
-}
-
-func TestIsSMBFlexVolumeEnabled(t *testing.T) {
-	// Default case
-	c := KubernetesConfig{
-		Addons: []KubernetesAddon{
-			getMockAddon("addon"),
-		},
-	}
-	enabled := c.IsSMBFlexVolumeEnabled()
-	enabledDefault := DefaultSMBFlexVolumeAddonEnabled
-	if enabled != enabledDefault {
-		t.Fatalf("KubernetesConfig.IsSMBFlexVolumeEnabled() should return %t when no SMB flexvolume addon has been specified, instead returned %t", enabledDefault, enabled)
-	}
-	// Addon present, but enabled not specified
-	c.Addons = append(c.Addons, getMockAddon(DefaultSMBFlexVolumeAddonName))
-	enabled = c.IsSMBFlexVolumeEnabled()
-	if enabled != enabledDefault {
-		t.Fatalf("KubernetesConfig.IsSMBFlexVolumeEnabled() should return default when SMB flexvolume has been specified w/ no enabled value, expected %t, instead returned %t", enabledDefault, enabled)
-	}
-	// Addon present and enabled
-	b := true
-	c = KubernetesConfig{
-		Addons: []KubernetesAddon{
-			{
-				Name:    DefaultSMBFlexVolumeAddonName,
-				Enabled: &b,
-			},
-		},
-	}
-	enabled = c.IsSMBFlexVolumeEnabled()
-	if !enabled {
-		t.Fatalf("KubernetesConfig.IsSMBFlexVolumeEnabled() should return true when SMB flexvolume addon has been specified as enabled, instead returned %t", enabled)
-	}
-	// Addon present and disabled
-	b = false
-	c = KubernetesConfig{
-		Addons: []KubernetesAddon{
-			{
-				Name:    DefaultSMBFlexVolumeAddonName,
-				Enabled: &b,
-			},
-		},
-	}
-	enabled = c.IsSMBFlexVolumeEnabled()
-	if enabled {
-		t.Fatalf("KubernetesConfig.IsSMBFlexVolumeEnabled() should return true when SMB flexvolume addon has been specified as enabled, instead returned %t", enabled)
-	}
-}
-
-func TestIsKeyVaultFlexVolumeEnabled(t *testing.T) {
-	// Default case
-	c := KubernetesConfig{
-		Addons: []KubernetesAddon{
-			getMockAddon("addon"),
-		},
-	}
-	enabled := c.IsKeyVaultFlexVolumeEnabled()
-	enabledDefault := DefaultKeyVaultFlexVolumeAddonEnabled
-	if enabled != enabledDefault {
-		t.Fatalf("KubernetesConfig.IsKeyVaultFlexVolumeEnabled() should return %t when no key vault flexvolume addon has been specified, instead returned %t", enabledDefault, enabled)
-	}
-	// Addon present, but enabled not specified
-	c.Addons = append(c.Addons, getMockAddon(DefaultKeyVaultFlexVolumeAddonName))
-	enabled = c.IsKeyVaultFlexVolumeEnabled()
-	if enabled != enabledDefault {
-		t.Fatalf("KubernetesConfig.IsKeyVaultFlexVolumeEnabled() should return default when no keyvault flexvolume has been specified w/ no enabled value, expected %t, instead returned %t", enabledDefault, enabled)
-	}
-	// Addon present and enabled
-	b := true
-	c = KubernetesConfig{
-		Addons: []KubernetesAddon{
-			{
-				Name:    DefaultKeyVaultFlexVolumeAddonName,
-				Enabled: &b,
-			},
-		},
-	}
-	enabled = c.IsKeyVaultFlexVolumeEnabled()
-	if !enabled {
-		t.Fatalf("KubernetesConfig.IsKeyVaultFlexVolumeEnabled() should return true when keyvault flexvolume addon has been specified as enabled, instead returned %t", enabled)
-	}
-	// Addon present and disabled
-	b = false
-	c = KubernetesConfig{
-		Addons: []KubernetesAddon{
-			{
-				Name:    DefaultKeyVaultFlexVolumeAddonName,
-				Enabled: &b,
-			},
-		},
-	}
-	enabled = c.IsKeyVaultFlexVolumeEnabled()
-	if enabled {
-		t.Fatalf("KubernetesConfig.IsKeyVaultFlexVolumeEnabled() should return false when keyvault flexvolume addon has been specified as disabled, instead returned %t", enabled)
-	}
-}
-
 func TestIsNVIDIADevicePluginEnabled(t *testing.T) {
 	p := Properties{
-		AgentPoolProfiles: []*AgentPoolProfile{
-			{
-				Name:   "agentpool",
-				VMSize: "Standard_N",
-				Count:  1,
-			},
-		},
 		OrchestratorProfile: &OrchestratorProfile{
-			OrchestratorType:    Kubernetes,
-			OrchestratorVersion: "1.9.0",
+			OrchestratorType: Kubernetes,
 			KubernetesConfig: &KubernetesConfig{
-				Addons: []KubernetesAddon{
-					getMockAddon("addon"),
-				},
+				Addons: []KubernetesAddon{},
 			},
 		},
 	}
-
-	if !p.HasNSeriesSKU() {
-		t.Fatalf("HasNSeriesSKU should return true when explicitly using VM Size %s", p.AgentPoolProfiles[0].VMSize)
+	p.OrchestratorProfile.KubernetesConfig.Addons = []KubernetesAddon{
+		{
+			Name:    NVIDIADevicePluginAddonName,
+			Enabled: to.BoolPtr(true),
+		},
 	}
-	if p.IsNVIDIADevicePluginEnabled() {
-		t.Fatalf("KubernetesConfig.IsNVIDIADevicePluginEnabled() should return false with N-series VMs with < k8s 1.10, instead returned %t", p.IsNVIDIADevicePluginEnabled())
-	}
 
-	p.OrchestratorProfile.OrchestratorVersion = "1.10.0"
 	if !p.IsNVIDIADevicePluginEnabled() {
-		t.Fatalf("KubernetesConfig.IsNVIDIADevicePluginEnabled() should return true with N-series VMs with k8s >= 1.10, instead returned %t", p.IsNVIDIADevicePluginEnabled())
+		t.Fatalf("Properties.IsNVIDIADevicePluginEnabled() should return true with addon enabled, instead returned %t", p.IsNVIDIADevicePluginEnabled())
 	}
 
-	p.AgentPoolProfiles[0].VMSize = "Standard_D2_v2"
 	p.OrchestratorProfile.KubernetesConfig.Addons = []KubernetesAddon{
 		{
 			Name:    NVIDIADevicePluginAddonName,
 			Enabled: to.BoolPtr(false),
 		},
 	}
-
-	if p.HasNSeriesSKU() {
-		t.Fatalf("HasNSeriesSKU should return false when explicitly using VM Size %s", p.AgentPoolProfiles[0].VMSize)
-	}
 	if p.IsNVIDIADevicePluginEnabled() {
-		t.Fatalf("KubernetesConfig.IsNVIDIADevicePluginEnabled() should return false when explicitly disabled")
+		t.Fatalf("Properties.IsNVIDIADevicePluginEnabled() should return false when explicitly disabled")
 	}
 }
 
@@ -2672,80 +3051,6 @@ func TestAgentPoolIsNSeriesSKU(t *testing.T) {
 	}
 }
 
-func TestIsContainerMonitoringEnabled(t *testing.T) {
-	v := "1.9.0"
-	o := OrchestratorProfile{
-		OrchestratorType:    "Kubernetes",
-		OrchestratorVersion: v,
-		KubernetesConfig: &KubernetesConfig{Addons: []KubernetesAddon{
-			getMockAddon("addon"),
-		},
-		},
-	}
-	enabled := o.KubernetesConfig.IsContainerMonitoringEnabled()
-	enabledDefault := DefaultContainerMonitoringAddonEnabled
-	if enabled != enabledDefault {
-		t.Fatalf("KubernetesConfig.IsContainerMonitoringEnabled() should return %t for kubernetes version %s when no container-monitoring addon has been specified, instead returned %t", enabledDefault, v, enabled)
-	}
-
-	b := true
-	cm := getMockAddon(ContainerMonitoringAddonName)
-	cm.Enabled = &b
-	o.KubernetesConfig.Addons = append(o.KubernetesConfig.Addons, cm)
-	enabled = o.KubernetesConfig.IsContainerMonitoringEnabled()
-	if !enabled {
-		t.Fatalf("KubernetesConfig.IsContainerMonitoringEnabled() should return %t for kubernetes version %s when the container-monitoring addon has been specified, instead returned %t", true, v, enabled)
-	}
-
-	b = false
-	o = OrchestratorProfile{
-		OrchestratorType:    "Kubernetes",
-		OrchestratorVersion: v,
-		KubernetesConfig: &KubernetesConfig{Addons: []KubernetesAddon{
-			{
-				Name:    ContainerMonitoringAddonName,
-				Enabled: &b,
-			},
-		},
-		},
-	}
-	enabled = o.KubernetesConfig.IsContainerMonitoringEnabled()
-	if enabled {
-		t.Fatalf("KubernetesConfig.IsContainerMonitoringEnabled() should return false when a custom container monitoring addon has been specified as disabled, instead returned %t", enabled)
-	}
-}
-
-func TestIsDashboardEnabled(t *testing.T) {
-	c := KubernetesConfig{
-		Addons: []KubernetesAddon{
-			getMockAddon("addon"),
-		},
-	}
-	enabled := c.IsDashboardEnabled()
-	enabledDefault := DefaultDashboardAddonEnabled
-	if enabled != enabledDefault {
-		t.Fatalf("KubernetesConfig.IsDashboardEnabled() should return %t when no kubernetes-dashboard addon has been specified, instead returned %t", enabledDefault, enabled)
-	}
-	c.Addons = append(c.Addons, getMockAddon(DefaultDashboardAddonName))
-	enabled = c.IsDashboardEnabled()
-	if !enabled {
-		t.Fatalf("KubernetesConfig.IsDashboardEnabled() should return true when a custom kubernetes-dashboard addon has been specified, instead returned %t", enabled)
-	}
-	b := false
-	c = KubernetesConfig{
-		Addons: []KubernetesAddon{
-			{
-				Name:    DefaultDashboardAddonName,
-				Enabled: &b,
-			},
-		},
-	}
-	enabled = c.IsDashboardEnabled()
-	if enabled {
-		t.Fatalf("KubernetesConfig.IsDashboardEnabled() should return false when a custom kubernetes-dashboard addon has been specified as disabled, instead returned %t", enabled)
-	}
-}
-
 func TestIsReschedulerEnabled(t *testing.T) {
 	c := KubernetesConfig{
 		Addons: []KubernetesAddon{
@@ -2757,7 +3062,7 @@ func TestIsReschedulerEnabled(t *testing.T) {
 	if enabled != enabledDefault {
 		t.Fatalf("KubernetesConfig.IsReschedulerEnabled() should return %t when no rescheduler addon has been specified, instead returned %t", enabledDefault, enabled)
 	}
-	c.Addons = append(c.Addons, getMockAddon(DefaultReschedulerAddonName))
+	c.Addons = append(c.Addons, getMockAddon(ReschedulerAddonName))
 	enabled = c.IsReschedulerEnabled()
 	if enabled {
 		t.Fatalf("KubernetesConfig.IsReschedulerEnabled() should return true when a custom rescheduler addon has been specified, instead returned %t", enabled)
@@ -2766,7 +3071,7 @@ func TestIsReschedulerEnabled(t *testing.T) {
 	c = KubernetesConfig{
 		Addons: []KubernetesAddon{
 			{
-				Name:    DefaultReschedulerAddonName,
+				Name:    ReschedulerAddonName,
 				Enabled: &b,
 			},
 		},
@@ -2777,75 +3082,165 @@ func TestIsReschedulerEnabled(t *testing.T) {
 	}
 }
 
-func TestIsMetricsServerEnabled(t *testing.T) {
-	v := "1.8.0"
-	o := OrchestratorProfile{
-		OrchestratorType:    "Kubernetes",
-		OrchestratorVersion: v,
-		KubernetesConfig: &KubernetesConfig{Addons: []KubernetesAddon{
-			getMockAddon("addon"),
-		},
-		},
-	}
-	enabled := o.IsMetricsServerEnabled()
-	enabledDefault := DefaultMetricsServerAddonEnabled
-	if enabled != enabledDefault {
-		t.Fatalf("KubernetesConfig.IsMetricsServerEnabled() should return %t for kubernetes version %s when no metrics-server addon has been specified, instead returned %t", enabledDefault, v, enabled)
-	}
-
-	o.KubernetesConfig.Addons = append(o.KubernetesConfig.Addons, getMockAddon(DefaultMetricsServerAddonName))
-	enabled = o.IsMetricsServerEnabled()
-	enabledDefault = DefaultMetricsServerAddonEnabled
-	if enabled != enabledDefault {
-		t.Fatalf("KubernetesConfig.IsMetricsServerEnabled() should return %t for kubernetes version %s when the metrics-server addon has been specified, instead returned %t", enabledDefault, v, enabled)
-	}
-
-	b := true
-	o = OrchestratorProfile{
-		OrchestratorType:    "Kubernetes",
-		OrchestratorVersion: v,
-		KubernetesConfig: &KubernetesConfig{Addons: []KubernetesAddon{
-			{
-				Name:    DefaultMetricsServerAddonName,
-				Enabled: &b,
-			},
-		},
-		},
-	}
-	enabled = o.IsMetricsServerEnabled()
-	if !enabled {
-		t.Fatalf("KubernetesConfig.IsMetricsServerEnabled() should return true for kubernetes version %s when the metrics-server addon has been specified as enabled, instead returned %t", v, enabled)
-	}
-}
-
 func TestIsIPMasqAgentEnabled(t *testing.T) {
-	c := KubernetesConfig{
-		Addons: []KubernetesAddon{
-			getMockAddon("addon"),
-		},
-	}
-	enabled := c.IsIPMasqAgentEnabled()
-	enabledDefault := IPMasqAgentAddonEnabled
-	if enabled != enabledDefault {
-		t.Fatalf("KubernetesConfig.IsIPMasqAgentEnabled() should return %t when no ip-masq-agent addon has been specified, instead returned %t", enabledDefault, enabled)
-	}
-	c.Addons = append(c.Addons, getMockAddon(IPMASQAgentAddonName))
-	enabled = c.IsIPMasqAgentEnabled()
-	if !enabled {
-		t.Fatalf("KubernetesConfig.IsIPMasqAgentEnabled() should return true when ip-masq-agent adddon has been specified, instead returned %t", enabled)
-	}
-	b := false
-	c = KubernetesConfig{
-		Addons: []KubernetesAddon{
-			{
-				Name:    IPMASQAgentAddonName,
-				Enabled: &b,
+	cases := []struct {
+		p                                            Properties
+		expectedPropertiesIsIPMasqAgentEnabled       bool
+		expectedKubernetesConfigIsIPMasqAgentEnabled bool
+	}{
+		{
+			p: Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					OrchestratorType: Kubernetes,
+					KubernetesConfig: &KubernetesConfig{
+						Addons: []KubernetesAddon{
+							getMockAddon(IPMASQAgentAddonName),
+						},
+					},
+				},
 			},
+			expectedPropertiesIsIPMasqAgentEnabled:       false,
+			expectedKubernetesConfigIsIPMasqAgentEnabled: false,
+		},
+		{
+			p: Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					OrchestratorType: Kubernetes,
+					KubernetesConfig: &KubernetesConfig{
+						Addons: []KubernetesAddon{},
+					},
+				},
+			},
+			expectedPropertiesIsIPMasqAgentEnabled:       false,
+			expectedKubernetesConfigIsIPMasqAgentEnabled: false,
+		},
+		{
+			p: Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					OrchestratorType: Kubernetes,
+					KubernetesConfig: &KubernetesConfig{
+						Addons: []KubernetesAddon{
+							{
+								Name: IPMASQAgentAddonName,
+								Containers: []KubernetesContainerSpec{
+									{
+										Name: IPMASQAgentAddonName,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			expectedPropertiesIsIPMasqAgentEnabled:       false,
+			expectedKubernetesConfigIsIPMasqAgentEnabled: false,
+		},
+		{
+			p: Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					OrchestratorType: Kubernetes,
+					KubernetesConfig: &KubernetesConfig{
+						Addons: []KubernetesAddon{
+							{
+								Name:    IPMASQAgentAddonName,
+								Enabled: to.BoolPtr(false),
+								Containers: []KubernetesContainerSpec{
+									{
+										Name: IPMASQAgentAddonName,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			expectedPropertiesIsIPMasqAgentEnabled:       false,
+			expectedKubernetesConfigIsIPMasqAgentEnabled: false,
+		},
+		{
+			p: Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					OrchestratorType: Kubernetes,
+					KubernetesConfig: &KubernetesConfig{
+						Addons: []KubernetesAddon{
+							{
+								Name:    IPMASQAgentAddonName,
+								Enabled: to.BoolPtr(false),
+								Containers: []KubernetesContainerSpec{
+									{
+										Name: IPMASQAgentAddonName,
+									},
+								},
+							},
+						},
+					},
+				},
+				HostedMasterProfile: &HostedMasterProfile{
+					IPMasqAgent: true,
+				},
+			},
+			expectedPropertiesIsIPMasqAgentEnabled:       true,
+			expectedKubernetesConfigIsIPMasqAgentEnabled: false, // unsure of the validity of this case, but because it's possible we unit test it
+		},
+		{
+			p: Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					OrchestratorType: Kubernetes,
+					KubernetesConfig: &KubernetesConfig{
+						Addons: []KubernetesAddon{
+							{
+								Name:    IPMASQAgentAddonName,
+								Enabled: to.BoolPtr(true),
+								Containers: []KubernetesContainerSpec{
+									{
+										Name: IPMASQAgentAddonName,
+									},
+								},
+							},
+						},
+					},
+				},
+				HostedMasterProfile: &HostedMasterProfile{
+					IPMasqAgent: true,
+				},
+			},
+			expectedPropertiesIsIPMasqAgentEnabled:       true,
+			expectedKubernetesConfigIsIPMasqAgentEnabled: true,
+		},
+		{
+			p: Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					OrchestratorType: Kubernetes,
+					KubernetesConfig: &KubernetesConfig{
+						Addons: []KubernetesAddon{
+							{
+								Name:    IPMASQAgentAddonName,
+								Enabled: to.BoolPtr(true),
+								Containers: []KubernetesContainerSpec{
+									{
+										Name: IPMASQAgentAddonName,
+									},
+								},
+							},
+						},
+					},
+				},
+				HostedMasterProfile: &HostedMasterProfile{
+					IPMasqAgent: false,
+				},
+			},
+			expectedPropertiesIsIPMasqAgentEnabled:       false,
+			expectedKubernetesConfigIsIPMasqAgentEnabled: true, // unsure of the validity of this case, but because it's possible we unit test it
 		},
 	}
-	enabled = c.IsIPMasqAgentEnabled()
-	if enabled {
-		t.Fatalf("KubernetesConfig.IsIPMasqAgentEnabled() should return false when ip-masq-agent addon has been specified as disabled, instead returned %t", enabled)
+
+	for _, c := range cases {
+		if c.p.IsIPMasqAgentEnabled() != c.expectedPropertiesIsIPMasqAgentEnabled {
+			t.Fatalf("expected Properties.IsIPMasqAgentEnabled() to return %t but instead returned %t", c.expectedPropertiesIsIPMasqAgentEnabled, c.p.IsIPMasqAgentEnabled())
+		}
+		if c.p.OrchestratorProfile.KubernetesConfig.IsIPMasqAgentEnabled() != c.expectedKubernetesConfigIsIPMasqAgentEnabled {
+			t.Fatalf("expected KubernetesConfig.IsIPMasqAgentEnabled() to return %t but instead returned %t", c.expectedKubernetesConfigIsIPMasqAgentEnabled, c.p.OrchestratorProfile.KubernetesConfig.IsIPMasqAgentEnabled())
+		}
 	}
 }
 
@@ -3923,6 +4318,8 @@ func TestFormatAzureProdFQDN(t *testing.T) {
 		"santest.southindia.cloudapp.azure.com",
 		"santest.uksouth.cloudapp.azure.com",
 		"santest.ukwest.cloudapp.azure.com",
+		"santest.usdodcentral.cloudapp.usgovcloudapi.net",
+		"santest.usdodeast.cloudapp.usgovcloudapi.net",
 		"santest.westcentralus.cloudapp.azure.com",
 		"santest.westeurope.cloudapp.azure.com",
 		"santest.westindia.cloudapp.azure.com",
@@ -3939,6 +4336,8 @@ func TestFormatAzureProdFQDN(t *testing.T) {
 		"santest.usgovarizona.cloudapp.usgovcloudapi.net",
 		"santest.usgovtexas.cloudapp.usgovcloudapi.net",
 		"santest.francecentral.cloudapp.azure.com",
+		"santest.uaenorth.cloudapp.azure.com",
+		"santest.uaecentral.cloudapp.azure.com",
 	}
 
 	if !reflect.DeepEqual(actual, expected) {
@@ -3991,6 +4390,8 @@ func TestFormatProdFQDNByLocation(t *testing.T) {
 		"santest.southindia.cloudapp.azure.com",
 		"santest.uksouth.cloudapp.azure.com",
 		"santest.ukwest.cloudapp.azure.com",
+		"santest.usdodcentral.cloudapp.usgovcloudapi.net",
+		"santest.usdodeast.cloudapp.usgovcloudapi.net",
 		"santest.westcentralus.cloudapp.azure.com",
 		"santest.westeurope.cloudapp.azure.com",
 		"santest.westindia.cloudapp.azure.com",
@@ -4007,6 +4408,8 @@ func TestFormatProdFQDNByLocation(t *testing.T) {
 		"santest.usgovarizona.cloudapp.usgovcloudapi.net",
 		"santest.usgovtexas.cloudapp.usgovcloudapi.net",
 		"santest.francecentral.cloudapp.azure.com",
+		"santest.uaenorth.cloudapp.azure.com",
+		"santest.uaecentral.cloudapp.azure.com",
 	}
 
 	if !reflect.DeepEqual(actual, expected) {
@@ -4015,7 +4418,7 @@ func TestFormatProdFQDNByLocation(t *testing.T) {
 
 	// Test location for Azure Stack Cloud
 	mockCSDefaultSpec := getMockBaseContainerService("1.11.6")
-	mockCSPDefaultSpec := getMockPropertiesWithCustomCloudProfile("azurestackcloud", true, true, false)
+	mockCSPDefaultSpec := GetMockPropertiesWithCustomCloudProfile("azurestackcloud", true, true, false)
 	mockCSDefaultSpec.Properties.CustomCloudProfile = mockCSPDefaultSpec.CustomCloudProfile
 	mockCSDefaultSpec.Location = "randomlocation"
 	mockCSDefaultSpec.Properties.MasterProfile.DNSPrefix = "azurestackprefix"
@@ -4271,37 +4674,37 @@ func TestIsAzureStackCloud(t *testing.T) {
 	}{
 		{
 			"Empty environment name",
-			getMockPropertiesWithCustomCloudProfile("", true, true, false),
+			GetMockPropertiesWithCustomCloudProfile("", true, true, false),
 			true,
 		},
 		{
 			"Empty environment name with AzureEnvironmentSpecConfig",
-			getMockPropertiesWithCustomCloudProfile("", true, true, true),
+			GetMockPropertiesWithCustomCloudProfile("", true, true, true),
 			true,
 		},
 		{
 			"lower case cloud name",
-			getMockPropertiesWithCustomCloudProfile("azurestackcloud", true, true, true),
+			GetMockPropertiesWithCustomCloudProfile("azurestackcloud", true, true, true),
 			true,
 		},
 		{
 			"cammel case cloud name",
-			getMockPropertiesWithCustomCloudProfile("AzureStackCloud", true, true, true),
+			GetMockPropertiesWithCustomCloudProfile("AzureStackCloud", true, true, true),
 			true,
 		},
 		{
 			"incorrect cloud name",
-			getMockPropertiesWithCustomCloudProfile("NotAzureStackCloud", true, true, true),
+			GetMockPropertiesWithCustomCloudProfile("NotAzureStackCloud", true, true, true),
 			true,
 		},
 		{
 			"empty cloud profile",
-			getMockPropertiesWithCustomCloudProfile("AzureStackCloud", false, false, false),
+			GetMockPropertiesWithCustomCloudProfile("AzureStackCloud", false, false, false),
 			false,
 		},
 		{
 			"empty environment ",
-			getMockPropertiesWithCustomCloudProfile("AzureStackCloud", true, false, true),
+			GetMockPropertiesWithCustomCloudProfile("AzureStackCloud", true, false, true),
 			true,
 		},
 	}
@@ -4321,12 +4724,12 @@ func TestGetCustomCloudName(t *testing.T) {
 	}{
 		{
 			"lower case cloud name",
-			getMockPropertiesWithCustomCloudProfile("azurestackcloud", true, true, true),
+			GetMockPropertiesWithCustomCloudProfile("azurestackcloud", true, true, true),
 			"azurestackcloud",
 		},
 		{
 			"cammel case cloud name",
-			getMockPropertiesWithCustomCloudProfile("AzureStackCloud", true, true, true),
+			GetMockPropertiesWithCustomCloudProfile("AzureStackCloud", true, true, true),
 			"AzureStackCloud",
 		},
 	}
@@ -4348,13 +4751,13 @@ func TestGetCustomEnvironmentJSON(t *testing.T) {
 	}{
 		{
 			"no escape",
-			getMockPropertiesWithCustomCloudProfile("azurestackcloud", true, true, true),
+			GetMockPropertiesWithCustomCloudProfile("azurestackcloud", true, true, true),
 			true,
 			strings.Replace(expectedResult, "\"", "\\\"", -1),
 		},
 		{
 			"escape",
-			getMockPropertiesWithCustomCloudProfile("azurestackcloud", true, true, true),
+			GetMockPropertiesWithCustomCloudProfile("azurestackcloud", true, true, true),
 			false,
 			expectedResult,
 		},
@@ -4374,7 +4777,7 @@ func TestGetLocations(t *testing.T) {
 
 	// Test location for Azure Stack Cloud
 	mockCSDefaultSpec := getMockBaseContainerService("1.11.6")
-	mockCSPDefaultSpec := getMockPropertiesWithCustomCloudProfile("azurestackcloud", true, true, false)
+	mockCSPDefaultSpec := GetMockPropertiesWithCustomCloudProfile("azurestackcloud", true, true, false)
 	mockCSDefaultSpec.Properties.CustomCloudProfile = mockCSPDefaultSpec.CustomCloudProfile
 	mockCSDefaultSpec.Location = "randomlocation"
 
@@ -4388,7 +4791,8 @@ func TestGetLocations(t *testing.T) {
 	mockCSDefault := getMockBaseContainerService("1.11.6")
 	mockCSDefault.Location = "eastus"
 
-	expected := []string{"australiacentral",
+	expected := []string{
+		"australiacentral",
 		"australiacentral2",
 		"australiaeast",
 		"australiasoutheast",
@@ -4421,6 +4825,8 @@ func TestGetLocations(t *testing.T) {
 		"southindia",
 		"uksouth",
 		"ukwest",
+		"usdodcentral",
+		"usdodeast",
 		"westcentralus",
 		"westeurope",
 		"westindia",
@@ -4436,7 +4842,10 @@ func TestGetLocations(t *testing.T) {
 		"usgoviowa",
 		"usgovarizona",
 		"usgovtexas",
-		"francecentral"}
+		"francecentral",
+		"uaenorth",
+		"uaecentral",
+	}
 	actual := mockCSDefault.GetLocations()
 	if !reflect.DeepEqual(expected, actual) {
 		t.Errorf("Test TestGetLocations() : expected to return %s, but got %s . ", expected, actual)
@@ -4494,79 +4903,498 @@ func TestGetMasterFQDN(t *testing.T) {
 	}
 }
 
-func getMockPropertiesWithCustomCloudProfile(name string, hasCustomCloudProfile, hasEnvironment, hasAzureEnvironmentSpecConfig bool) Properties {
-	var (
-		managementPortalURL          = "https://management.local.azurestack.external/"
-		publishSettingsURL           = "https://management.local.azurestack.external/publishsettings/index"
-		serviceManagementEndpoint    = "https://management.azurestackci15.onmicrosoft.com/36f71706-54df-4305-9847-5b038a4cf189"
-		resourceManagerEndpoint      = "https://management.local.azurestack.external/"
-		activeDirectoryEndpoint      = "https://login.windows.net/"
-		galleryEndpoint              = "https://portal.local.azurestack.external=30015/"
-		keyVaultEndpoint             = "https://vault.azurestack.external/"
-		graphEndpoint                = "https://graph.windows.net/"
-		serviceBusEndpoint           = "https://servicebus.azurestack.external/"
-		batchManagementEndpoint      = "https://batch.azurestack.external/"
-		storageEndpointSuffix        = "core.azurestack.external"
-		sqlDatabaseDNSSuffix         = "database.azurestack.external"
-		trafficManagerDNSSuffix      = "trafficmanager.cn"
-		keyVaultDNSSuffix            = "vault.azurestack.external"
-		serviceBusEndpointSuffix     = "servicebus.azurestack.external"
-		serviceManagementVMDNSSuffix = "chinacloudapp.cn"
-		resourceManagerVMDNSSuffix   = "cloudapp.azurestack.external"
-		containerRegistryDNSSuffix   = "azurecr.io"
-		tokenAudience                = "https://management.azurestack.external/"
-	)
-
-	p := Properties{}
-	if hasCustomCloudProfile {
-		p.CustomCloudProfile = &CustomCloudProfile{}
-		if hasEnvironment {
-			p.CustomCloudProfile.Environment = &azure.Environment{
-				Name:                         name,
-				ManagementPortalURL:          managementPortalURL,
-				PublishSettingsURL:           publishSettingsURL,
-				ServiceManagementEndpoint:    serviceManagementEndpoint,
-				ResourceManagerEndpoint:      resourceManagerEndpoint,
-				ActiveDirectoryEndpoint:      activeDirectoryEndpoint,
-				GalleryEndpoint:              galleryEndpoint,
-				KeyVaultEndpoint:             keyVaultEndpoint,
-				GraphEndpoint:                graphEndpoint,
-				ServiceBusEndpoint:           serviceBusEndpoint,
-				BatchManagementEndpoint:      batchManagementEndpoint,
-				StorageEndpointSuffix:        storageEndpointSuffix,
-				SQLDatabaseDNSSuffix:         sqlDatabaseDNSSuffix,
-				TrafficManagerDNSSuffix:      trafficManagerDNSSuffix,
-				KeyVaultDNSSuffix:            keyVaultDNSSuffix,
-				ServiceBusEndpointSuffix:     serviceBusEndpointSuffix,
-				ServiceManagementVMDNSSuffix: serviceManagementVMDNSSuffix,
-				ResourceManagerVMDNSSuffix:   resourceManagerVMDNSSuffix,
-				ContainerRegistryDNSSuffix:   containerRegistryDNSSuffix,
-				TokenAudience:                tokenAudience,
-			}
-		}
-		if hasAzureEnvironmentSpecConfig {
-			//azureStackCloudSpec is the default configurations for azure stack with public Azure.
-			azureStackCloudSpec := AzureEnvironmentSpecConfig{
-				CloudName: AzureStackCloud,
-				//DockerSpecConfig specify the docker engine download repo
-				DockerSpecConfig: DefaultDockerSpecConfig,
-				//KubernetesSpecConfig is the default kubernetes container image url.
-				KubernetesSpecConfig: DefaultKubernetesSpecConfig,
-				DCOSSpecConfig:       DefaultDCOSSpecConfig,
-				EndpointConfig: AzureEndpointConfig{
-					ResourceManagerVMDNSSuffix: "",
+func TestDcosConfigHasPrivateRegistry(t *testing.T) {
+	cases := []struct {
+		p        Properties
+		expected bool
+	}{
+		{
+			p: Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					OrchestratorType: DCOS,
+					DcosConfig: &DcosConfig{
+						Registry: "my-custom-registry",
+					},
 				},
-				OSImageConfig: map[Distro]AzureOSImageConfig{
-					Ubuntu: DefaultUbuntuImageConfig,
-					RHEL:   DefaultRHELOSImageConfig,
-					CoreOS: DefaultCoreOSImageConfig,
-					AKS:    DefaultAKSOSImageConfig,
+			},
+			expected: true,
+		},
+		{
+			p: Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					OrchestratorType: DCOS,
+					DcosConfig: &DcosConfig{
+						Registry: "",
+					},
 				},
-			}
-			p.CustomCloudProfile.AzureEnvironmentSpecConfig = &azureStackCloudSpec
-		}
-		p.CustomCloudProfile.IdentitySystem = AzureADIdentitySystem
-		p.CustomCloudProfile.AuthenticationMethod = ClientSecretAuthMethod
+			},
+			expected: false,
+		},
+		{
+			p: Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					OrchestratorType: DCOS,
+					DcosConfig:       &DcosConfig{},
+				},
+			},
+			expected: false,
+		},
 	}
-	return p
+
+	for _, c := range cases {
+		if c.p.OrchestratorProfile.DcosConfig.HasPrivateRegistry() != c.expected {
+			t.Fatalf("expected HasPrivateRegistry() to return %t but instead got %t", c.expected, c.p.OrchestratorProfile.DcosConfig.HasPrivateRegistry())
+		}
+	}
+}
+
+func TestDcosConfigHasBootstrap(t *testing.T) {
+	cases := []struct {
+		p        Properties
+		expected bool
+	}{
+		{
+			p: Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					OrchestratorType: DCOS,
+					DcosConfig:       &DcosConfig{},
+				},
+			},
+			expected: false,
+		},
+		{
+			p: Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					OrchestratorType: DCOS,
+					DcosConfig: &DcosConfig{
+						BootstrapProfile: &BootstrapProfile{},
+					},
+				},
+			},
+			expected: true,
+		},
+	}
+
+	for _, c := range cases {
+		if c.p.OrchestratorProfile.DcosConfig.HasBootstrap() != c.expected {
+			t.Fatalf("expected HasBootstrap() to return %t but instead got %t", c.expected, c.p.OrchestratorProfile.DcosConfig.HasBootstrap())
+		}
+	}
+}
+
+func TestKubernetesAddonIsEnabled(t *testing.T) {
+	cases := []struct {
+		a        *KubernetesAddon
+		expected bool
+	}{
+		{
+			a:        &KubernetesAddon{},
+			expected: false,
+		},
+		{
+			a: &KubernetesAddon{
+				Enabled: to.BoolPtr(false),
+			},
+			expected: false,
+		},
+		{
+			a: &KubernetesAddon{
+				Enabled: to.BoolPtr(true),
+			},
+			expected: true,
+		},
+	}
+
+	for _, c := range cases {
+		if c.a.IsEnabled() != c.expected {
+			t.Fatalf("expected IsEnabled() to return %t but instead returned %t", c.expected, c.a.IsEnabled())
+		}
+	}
+}
+
+func TestKubernetesConfigIsAddonEnabled(t *testing.T) {
+	cases := []struct {
+		k         *KubernetesConfig
+		addonName string
+		expected  bool
+	}{
+		{
+			k:         &KubernetesConfig{},
+			addonName: "foo",
+			expected:  false,
+		},
+		{
+			k: &KubernetesConfig{
+				Addons: []KubernetesAddon{
+					{
+						Name: "foo",
+					},
+				},
+			},
+			addonName: "foo",
+			expected:  false,
+		},
+		{
+			k: &KubernetesConfig{
+				Addons: []KubernetesAddon{
+					{
+						Name:    "foo",
+						Enabled: to.BoolPtr(false),
+					},
+				},
+			},
+			addonName: "foo",
+			expected:  false,
+		},
+		{
+			k: &KubernetesConfig{
+				Addons: []KubernetesAddon{
+					{
+						Name:    "foo",
+						Enabled: to.BoolPtr(true),
+					},
+				},
+			},
+			addonName: "foo",
+			expected:  true,
+		},
+		{
+			k: &KubernetesConfig{
+				Addons: []KubernetesAddon{
+					{
+						Name:    "bar",
+						Enabled: to.BoolPtr(true),
+					},
+				},
+			},
+			addonName: "foo",
+			expected:  false,
+		},
+	}
+
+	for _, c := range cases {
+		if c.k.IsAddonEnabled(c.addonName) != c.expected {
+			t.Fatalf("expected KubernetesConfig.IsAddonEnabled(%s) to return %t but instead returned %t", c.addonName, c.expected, c.k.IsAddonEnabled(c.addonName))
+		}
+	}
+}
+
+func TestSetPlatformFaultDomainCount(t *testing.T) {
+	// check that the default value is nil
+	cs := CreateMockContainerService("testcluster", defaultTestClusterVer, 1, 3, false)
+	if cs.Properties.MasterProfile.PlatformFaultDomainCount != nil {
+		t.Errorf("expected master platformFaultDomainCount to be nil, not %v", cs.Properties.MasterProfile.PlatformFaultDomainCount)
+	}
+	for _, pool := range cs.Properties.AgentPoolProfiles {
+		if pool.PlatformFaultDomainCount != nil {
+			t.Errorf("expected agent platformFaultDomainCount to be nil, not %v", pool.PlatformFaultDomainCount)
+		}
+	}
+
+	// check that pfdc can be set to legal values
+	for i := 1; i <= 3; i++ {
+		cs.SetPlatformFaultDomainCount(i)
+		if *cs.Properties.MasterProfile.PlatformFaultDomainCount != i {
+			t.Errorf("expected master platformFaultDomainCount to be %d, not %v", i, cs.Properties.MasterProfile.PlatformFaultDomainCount)
+		}
+		for _, pool := range cs.Properties.AgentPoolProfiles {
+			if *pool.PlatformFaultDomainCount != i {
+				t.Errorf("expected agent platformFaultDomainCount to be %d, not %v", i, pool.PlatformFaultDomainCount)
+			}
+		}
+	}
+}
+
+func TestSetPlatformFaultDomainCountNoMasters(t *testing.T) {
+	// check that the default value is nil
+	cs := CreateMockContainerService("testcluster", defaultTestClusterVer, 1, 3, false)
+	cs.Properties.MasterProfile = nil
+	for _, pool := range cs.Properties.AgentPoolProfiles {
+		if pool.PlatformFaultDomainCount != nil {
+			t.Errorf("expected agent platformFaultDomainCount to be nil, not %v", pool.PlatformFaultDomainCount)
+		}
+	}
+
+	// check that pfdc can be set to legal values
+	for i := 1; i <= 3; i++ {
+		cs.SetPlatformFaultDomainCount(i)
+		if cs.Properties.MasterProfile != nil {
+			t.Error("expected MasterProfile to stay nil")
+		}
+		for _, pool := range cs.Properties.AgentPoolProfiles {
+			if *pool.PlatformFaultDomainCount != i {
+				t.Errorf("expected agent platformFaultDomainCount to be %d, not %v", i, pool.PlatformFaultDomainCount)
+			}
+		}
+	}
+}
+
+func TestAnyAgentUsesAvailabilitySets(t *testing.T) {
+	tests := []struct {
+		name     string
+		p        *Properties
+		expected bool
+	}{
+		{
+			name: "one agent pool w/ AvailabilitySet",
+			p: &Properties{
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						Name:                "agentpool1",
+						VMSize:              "Standard_D2_v2",
+						Count:               2,
+						AvailabilityProfile: AvailabilitySet,
+					},
+				},
+			},
+			expected: true,
+		},
+		{
+			name: "two agent pools, one w/ AvailabilitySet",
+			p: &Properties{
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						Name:                "agentpool1",
+						VMSize:              "Standard_D2_v2",
+						Count:               2,
+						AvailabilityProfile: AvailabilitySet,
+					},
+					{
+						Name:   "agentpool1",
+						VMSize: "Standard_D2_v2",
+						Count:  100,
+					},
+				},
+			},
+			expected: true,
+		},
+		{
+			name: "two agent pools",
+			p: &Properties{
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						Name:   "agentpool1",
+						VMSize: "Standard_D2_v2",
+						Count:  2,
+					},
+					{
+						Name:   "agentpool1",
+						VMSize: "Standard_D2_v2",
+						Count:  100,
+					},
+				},
+			},
+			expected: false,
+		},
+		{
+			name: "two agent pools, one w/ VirtualMachineScaleSets",
+			p: &Properties{
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						Name:   "agentpool1",
+						VMSize: "Standard_D2_v2",
+						Count:  2,
+					},
+					{
+						Name:                "agentpool1",
+						VMSize:              "Standard_D2_v2",
+						Count:               100,
+						AvailabilityProfile: VirtualMachineScaleSets,
+					},
+				},
+			},
+			expected: false,
+		},
+	}
+
+	for _, test := range tests {
+		test := test
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+			ret := test.p.AnyAgentUsesAvailabilitySets()
+			if test.expected != ret {
+				t.Errorf("expected %t, instead got : %t", test.expected, ret)
+			}
+		})
+	}
+}
+
+func TestAnyAgentUsesVirtualMachineScaleSets(t *testing.T) {
+	tests := []struct {
+		name     string
+		p        *Properties
+		expected bool
+	}{
+		{
+			name: "one agent pool w/ AvailabilitySet",
+			p: &Properties{
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						Name:                "agentpool1",
+						VMSize:              "Standard_D2_v2",
+						Count:               2,
+						AvailabilityProfile: AvailabilitySet,
+					},
+				},
+			},
+			expected: false,
+		},
+		{
+			name: "two agent pools, one w/ AvailabilitySet",
+			p: &Properties{
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						Name:                "agentpool1",
+						VMSize:              "Standard_D2_v2",
+						Count:               2,
+						AvailabilityProfile: AvailabilitySet,
+					},
+					{
+						Name:   "agentpool1",
+						VMSize: "Standard_D2_v2",
+						Count:  100,
+					},
+				},
+			},
+			expected: false,
+		},
+		{
+			name: "two agent pools",
+			p: &Properties{
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						Name:   "agentpool1",
+						VMSize: "Standard_D2_v2",
+						Count:  2,
+					},
+					{
+						Name:   "agentpool1",
+						VMSize: "Standard_D2_v2",
+						Count:  100,
+					},
+				},
+			},
+			expected: false,
+		},
+		{
+			name: "two agent pools, one w/ VirtualMachineScaleSets",
+			p: &Properties{
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						Name:   "agentpool1",
+						VMSize: "Standard_D2_v2",
+						Count:  2,
+					},
+					{
+						Name:                "agentpool1",
+						VMSize:              "Standard_D2_v2",
+						Count:               100,
+						AvailabilityProfile: VirtualMachineScaleSets,
+					},
+				},
+			},
+			expected: true,
+		},
+	}
+
+	for _, test := range tests {
+		test := test
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+			ret := test.p.AnyAgentUsesVirtualMachineScaleSets()
+			if test.expected != ret {
+				t.Errorf("expected %t, instead got : %t", test.expected, ret)
+			}
+		})
+	}
+}
+
+func TestAnyAgentIsLinux(t *testing.T) {
+	tests := []struct {
+		name     string
+		p        *Properties
+		expected bool
+	}{
+		{
+			name: "one agent pool w/ Linux",
+			p: &Properties{
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						Name:   "agentpool1",
+						VMSize: "Standard_D2_v2",
+						Count:  2,
+						OSType: Linux,
+					},
+				},
+			},
+			expected: true,
+		},
+		{
+			name: "two agent pools, one w/ Linux",
+			p: &Properties{
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						Name:   "agentpool1",
+						VMSize: "Standard_D2_v2",
+						Count:  2,
+						OSType: Windows,
+					},
+					{
+						Name:   "agentpool1",
+						VMSize: "Standard_D2_v2",
+						OSType: Linux,
+					},
+				},
+			},
+			expected: true,
+		},
+		{
+			name: "two agent pools",
+			p: &Properties{
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						Name:   "agentpool1",
+						VMSize: "Standard_D2_v2",
+						Count:  2,
+					},
+					{
+						Name:   "agentpool1",
+						VMSize: "Standard_D2_v2",
+						Count:  100,
+					},
+				},
+			},
+			expected: false,
+		},
+		{
+			name: "two agent pools, one w/ Windows",
+			p: &Properties{
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						Name:   "agentpool1",
+						VMSize: "Standard_D2_v2",
+						Count:  2,
+					},
+					{
+						Name:   "agentpool1",
+						VMSize: "Standard_D2_v2",
+						Count:  100,
+						OSType: Windows,
+					},
+				},
+			},
+			expected: false,
+		},
+	}
+
+	for _, test := range tests {
+		test := test
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+			ret := test.p.AnyAgentIsLinux()
+			if test.expected != ret {
+				t.Errorf("expected %t, instead got : %t", test.expected, ret)
+			}
+		})
+	}
 }

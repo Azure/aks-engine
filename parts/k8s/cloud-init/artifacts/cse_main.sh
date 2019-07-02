@@ -1,7 +1,7 @@
 #!/bin/bash
 ERR_FILE_WATCH_TIMEOUT=6 # Timeout waiting for a file
 set -x
-echo `date`,`hostname`, startcustomscript>>/opt/m
+echo $(date),$(hostname), startcustomscript>>/opt/m
 AZURE_STACK_ENV="azurestackcloud"
 
 script_lib=/opt/azure/containers/provision_source.sh
@@ -29,7 +29,7 @@ cis_script=/opt/azure/containers/provision_cis.sh
 wait_for_file 3600 1 $cis_script || exit $ERR_FILE_WATCH_TIMEOUT
 source $cis_script
 
-if [[ "${TARGET_ENVIRONMENT,,}" == "${AZURE_STACK_ENV}"  ]]; then 
+if [[ "${TARGET_ENVIRONMENT,,}" == "${AZURE_STACK_ENV}"  ]]; then
     config_script_custom_cloud=/opt/azure/containers/provision_configs_custom_cloud.sh
     wait_for_file 3600 1 $config_script_custom_cloud || exit $ERR_FILE_WATCH_TIMEOUT
     source $config_script_custom_cloud
@@ -64,18 +64,13 @@ else
 fi
 
 if [[ $OS == $UBUNTU_OS_NAME ]] && [ "$FULL_INSTALL_REQUIRED" = "true" ]; then
-    cis_sysctl=/etc/sysctl.d/60-CIS.conf
-    wait_for_file 3600 1 $cis_sysctl || exit $ERR_FILE_WATCH_TIMEOUT
-    cis_rsyslog=/etc/rsyslog.d/60-CIS.conf
-    wait_for_file 3600 1 $cis_rsyslog || exit $ERR_FILE_WATCH_TIMEOUT
-    sysctl_reload 20 5 10 || exit $ERR_SYSCTL_RELOAD
-    applyOSConfig
     installDeps
-else 
+else
     echo "Golden image; skipping dependencies installation"
 fi
+ensureAuditD
 
-if [[ ! -z "${MASTER_NODE}" ]] && [[ -z "${COSMOS_URI}" ]]; then
+if [[ -n "${MASTER_NODE}" ]] && [[ -z "${COSMOS_URI}" ]]; then
     installEtcd
 fi
 
@@ -106,17 +101,17 @@ if [[ "${SGX_NODE}" = true ]]; then
 fi
 
 # create etcd user if we are configured for etcd
-if [[ ! -z "${MASTER_NODE}" ]] && [[ -z "${COSMOS_URI}" ]]; then
+if [[ -n "${MASTER_NODE}" ]] && [[ -z "${COSMOS_URI}" ]]; then
   configureEtcdUser
 fi
 
-if [[ ! -z "${MASTER_NODE}" ]]; then 
+if [[ -n "${MASTER_NODE}" ]]; then
   # this step configures all certs
   # both configs etcd/cosmos
-  configureSecrets 
+  configureSecrets
 fi
 # configure etcd if we are configured for etcd
-if [[ ! -z "${MASTER_NODE}" ]] && [[ -z "${COSMOS_URI}" ]]; then
+if [[ -n "${MASTER_NODE}" ]] && [[ -z "${COSMOS_URI}" ]]; then
     configureEtcd
 else
     removeEtcd
@@ -141,13 +136,13 @@ fi
 
 configureK8s
 
-if [[ "${TARGET_ENVIRONMENT,,}" == "${AZURE_STACK_ENV}"  ]]; then 
+if [[ "${TARGET_ENVIRONMENT,,}" == "${AZURE_STACK_ENV}"  ]]; then
     configureK8sCustomCloud
 fi
 
 configureCNI
 
-if [[ ! -z "${MASTER_NODE}" ]]; then
+if [[ -n "${MASTER_NODE}" ]]; then
     configAddons
 fi
 
@@ -155,20 +150,28 @@ if [[ "$CONTAINER_RUNTIME" == "clear-containers" ]] || [[ "$CONTAINER_RUNTIME" =
     ensureContainerd
 fi
 
-if [[ ! -z "${MASTER_NODE}" && "${KMS_PROVIDER_VAULT_NAME}" != "" ]]; then
+if [[ -n "${MASTER_NODE}" && "${KMS_PROVIDER_VAULT_NAME}" != "" ]]; then
     ensureKMS
+fi
+
+# configure and enable dhcpv6 for dual stack feature
+if [ "$IS_IPV6_DUALSTACK_FEATURE_ENABLED" = "true" ]; then
+    dhcpv6_systemd_service=/etc/systemd/system/dhcpv6.service
+    dhcpv6_configuration_script=/opt/azure/containers/enable-dhcpv6.sh
+    wait_for_file 3600 1 $dhcpv6_systemd_service || exit $ERR_FILE_WATCH_TIMEOUT
+    wait_for_file 3600 1 $dhcpv6_configuration_script || exit $ERR_FILE_WATCH_TIMEOUT
+    ensureDHCPv6
 fi
 
 ensureKubelet
 ensureJournal
 
-if [[ ! -z "${MASTER_NODE}" ]]; then
+if [[ -n "${MASTER_NODE}" ]]; then
     writeKubeConfig
     if [[ -z "${COSMOS_URI}" ]]; then
       ensureEtcd
     fi
     ensureK8sControlPlane
-    ensurePodSecurityPolicy
 fi
 
 if $FULL_INSTALL_REQUIRED; then
@@ -181,15 +184,11 @@ fi
 
 echo "Custom script finished successfully"
 
-echo `date`,`hostname`, endcustomscript>>/opt/m
+echo $(date),$(hostname), endcustomscript>>/opt/m
 mkdir -p /opt/azure/containers && touch /opt/azure/containers/provision.complete
 ps auxfww > /opt/azure/provision-ps.log &
 
-if $FULL_INSTALL_REQUIRED; then
-  if [[ $OS == $UBUNTU_OS_NAME ]]; then
-    applyCIS
-  fi
-else
+if ! $FULL_INSTALL_REQUIRED; then
   cleanUpContainerImages
 fi
 

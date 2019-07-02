@@ -45,19 +45,21 @@ fi
 
 # Ensure Cluster Definition
 if [[ -z "${CLUSTER_DEFINITION:-}" ]]; then
-	if [[ -z "${1:-}" ]]; then echo "You must specify a parameterized apimodel.json clusterdefinition"; exit -1; fi
+	if [[ -z "${1:-}" ]]; then echo "You must specify a parameterized apimodel.json clusterdefinition" >&2; exit 1; fi
 	CLUSTER_DEFINITION="${1}"
 fi
 
 # Set Instance Name for PR or random run
-if [[ ! -z "${PULL_NUMBER:-}" ]]; then
-	export INSTANCE_NAME="${JOB_NAME}-${PULL_NUMBER}-$(printf "%x" $(date '+%s'))"
+if [[ -n "${PULL_NUMBER:-}" ]]; then
+	INSTANCE_NAME="${JOB_NAME}-${PULL_NUMBER}-$(printf "%x" $(date '+%s'))"
+	export INSTANCE_NAME
 	# if we're running a pull request, assume we want to cleanup unless the user specified otherwise
 	if [[ -z "${CLEANUP:-}" ]]; then
 		export CLEANUP="y"
 	fi
 else
-	export INSTANCE_NAME_DEFAULT="${INSTANCE_NAME_PREFIX}-$(printf "%x" $(date '+%s'))"
+	INSTANCE_NAME_DEFAULT="${INSTANCE_NAME_PREFIX}-$(printf "%x" $(date '+%s'))"
+	export INSTANCE_NAME_DEFAULT
 	export INSTANCE_NAME="${INSTANCE_NAME:-${INSTANCE_NAME_DEFAULT}}"
 fi
 
@@ -78,7 +80,8 @@ export DEPLOYMENT_NAME="${INSTANCE_NAME}"
 source "${ROOT}/test/common.sh"
 
 # Set custom dir so we don't clobber global 'az' config
-export AZURE_CONFIG_DIR="$(mktemp -d)"
+AZURE_CONFIG_DIR="$(mktemp -d)"
+export AZURE_CONFIG_DIR
 trap 'rm -rf ${AZURE_CONFIG_DIR}' EXIT
 
 make -C "${ROOT}" ci

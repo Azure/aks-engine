@@ -51,7 +51,7 @@ roleRef:
 kind: ConfigMap
 apiVersion: v1
 data:
-  kube.conf: |- 
+  kube.conf: |-
      # Fluentd config file for OMS Docker - cluster components (kubeAPI)
      #Kubernetes pod inventory
      <source>
@@ -207,7 +207,7 @@ data:
       max_retry_wait 9m
      </match>
 
-     <match oms.api.KubePerf**>	
+     <match oms.api.KubePerf**>
       type out_oms
       log_level debug
       num_threads 5
@@ -413,7 +413,7 @@ spec:
     spec:
       serviceAccountName: omsagent
       containers:
-        - name: omsagent 
+        - name: omsagent
           image: {{ContainerImage "omsagent"}}
           imagePullPolicy: IfNotPresent
           resources:
@@ -440,15 +440,15 @@ spec:
             privileged: true
           ports:
             - containerPort: 25225
-              protocol: TCP 
+              protocol: TCP
             - containerPort: 25224
               protocol: UDP
           volumeMounts:
             - mountPath: /var/run/host
               name: docker-sock
-            - mountPath: /var/log 
+            - mountPath: /var/log
               name: host-log
-            - mountPath: /var/lib/docker/containers 
+            - mountPath: /var/lib/docker/containers
               name: containerlog-path
             - mountPath: /etc/kubernetes/host
               name: azure-json-path
@@ -469,7 +469,7 @@ spec:
         beta.kubernetes.io/os: linux
         kubernetes.io/role: agent
       volumes:
-        - name: docker-sock 
+        - name: docker-sock
           hostPath:
             path: /var/run
         - name: container-hostname

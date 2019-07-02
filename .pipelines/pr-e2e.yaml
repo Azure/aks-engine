@@ -17,7 +17,7 @@ pr:
 resources:
   containers:
   - container: dev1
-    image: quay.io/deis/go-dev:v1.21.0
+    image: quay.io/deis/go-dev:v1.22.3
 
 jobs:
 - job: unit_tests
@@ -52,7 +52,10 @@ jobs:
   - script: make validate-dependencies
     displayName: Check if imports, Gopkg.toml, and Gopkg.lock are in sync
     workingDirectory: $(modulePath)
-  - script: make validate-copyright-headers test-style
+  - script: make ensure-generated
+    displayName: Check if generated code is up to date
+    workingDirectory: $(modulePath)
+  - script: make generate test-style
     displayName: Run linting rules
     workingDirectory: $(modulePath)
   - script: make build-cross
@@ -104,6 +107,13 @@ jobs:
 
 - template: e2e-job-template.yaml
   parameters:
+    name: 'k8s_1_15_release_e2e'
+    k8sRelease: '1.15'
+    apimodel: 'examples/e2e-tests/kubernetes/release/default/definition.json'
+    createVNET: true
+
+- template: e2e-job-template.yaml
+  parameters:
     name: 'k8s_windows_1_12_release_e2e'
     k8sRelease: '1.12'
     apimodel: 'examples/e2e-tests/kubernetes/windows/hybrid/definition.json'
@@ -118,4 +128,10 @@ jobs:
   parameters:
     name: 'k8s_windows_1_14_release_e2e'
     k8sRelease: '1.14'
+    apimodel: 'examples/e2e-tests/kubernetes/windows/hybrid/definition.json'
+
+- template: e2e-job-template.yaml
+  parameters:
+    name: 'k8s_windows_1_15_release_e2e'
+    k8sRelease: '1.15'
     apimodel: 'examples/e2e-tests/kubernetes/windows/hybrid/definition.json'

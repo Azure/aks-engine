@@ -15,11 +15,16 @@
 # limitations under the License.
 set -euo pipefail
 
-exit_code=0
-
 echo
-echo "==> Running static validations and linters <=="
-# Run linters that should return errors
-golangci-lint run || exit_code=1
+echo "==> Running Go linter <=="
+golangci-lint --version
+if [ -f /.dockerenv ]; then
+    echo "Running inside container";
+fi
 
-exit $exit_code
+# exit 1 if golangci-lint output contains error text, to work
+# around https://github.com/golangci/golangci-lint/issues/276
+exec 5>&1
+if ! OUTPUT=$(golangci-lint run 2>&1 | tee >(cat - >&5)) || grep 'skipped due to error' <<<$OUTPUT; then
+  exit 1
+fi

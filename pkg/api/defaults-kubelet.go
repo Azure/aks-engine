@@ -12,7 +12,7 @@ import (
 	"github.com/Azure/aks-engine/pkg/api/common"
 )
 
-func (cs *ContainerService) setKubeletConfig() {
+func (cs *ContainerService) setKubeletConfig(isUpgrade bool) {
 	o := cs.Properties.OrchestratorProfile
 	staticLinuxKubeletConfig := map[string]string{
 		"--address":                     "0.0.0.0",
@@ -25,19 +25,36 @@ func (cs *ContainerService) setKubeletConfig() {
 		"--cgroups-per-qos":             "true",
 		"--kubeconfig":                  "/var/lib/kubelet/kubeconfig",
 		"--keep-terminated-pod-volumes": "false",
+		"--tls-cert-file":               "/etc/kubernetes/certs/kubeletserver.crt",
+		"--tls-private-key-file":        "/etc/kubernetes/certs/kubeletserver.key",
+	}
+
+	for key := range staticLinuxKubeletConfig {
+		switch key {
+		case "--anonymous-auth", "--client-ca-file":
+			if !to.Bool(o.KubernetesConfig.EnableSecureKubelet) { // Don't add if EnableSecureKubelet is disabled
+				staticLinuxKubeletConfig[key] = ""
+			}
+		}
 	}
 
 	// Start with copy of Linux config
 	staticWindowsKubeletConfig := make(map[string]string)
 	for key, val := range staticLinuxKubeletConfig {
 		switch key {
-		case "--pod-manifest-path": // Don't add Linux-specific config
-			break
-		case "--anonymous-auth", "--client-ca-file":
+		case "--pod-manifest-path", "--tls-cert-file", "--tls-private-key-file": // Don't add Linux-specific config
+			staticWindowsKubeletConfig[key] = ""
+		case "--anonymous-auth":
 			if !to.Bool(o.KubernetesConfig.EnableSecureKubelet) { // Don't add if EnableSecureKubelet is disabled
-				break
+				staticWindowsKubeletConfig[key] = ""
 			} else {
 				staticWindowsKubeletConfig[key] = val
+			}
+		case "--client-ca-file":
+			if !to.Bool(o.KubernetesConfig.EnableSecureKubelet) { // Don't add if EnableSecureKubelet is disabled
+				staticWindowsKubeletConfig[key] = ""
+			} else {
+				staticWindowsKubeletConfig[key] = "c:\\k\\ca.crt"
 			}
 		default:
 			staticWindowsKubeletConfig[key] = val
@@ -53,7 +70,6 @@ func (cs *ContainerService) setKubeletConfig() {
 	staticWindowsKubeletConfig["--cgroups-per-qos"] = "false"
 	staticWindowsKubeletConfig["--enforce-node-allocatable"] = "\"\"\"\""
 	staticWindowsKubeletConfig["--system-reserved"] = "memory=2Gi"
-	staticWindowsKubeletConfig["--client-ca-file"] = "c:\\k\\ca.crt"
 	staticWindowsKubeletConfig["--hairpin-mode"] = "promiscuous-bridge"
 	staticWindowsKubeletConfig["--image-pull-progress-deadline"] = "20m"
 	staticWindowsKubeletConfig["--resolv-conf"] = "\"\"\"\""
@@ -81,12 +97,6 @@ func (cs *ContainerService) setKubeletConfig() {
 		"--streaming-connection-idle-timeout": "5m",
 	}
 
-	// "--protect-kernel-defaults" is true is currently only valid using base Ubuntu OS image
-	// until the changes are baked into a VHD
-	if cs.Properties.IsUbuntuDistroForAllNodes() {
-		defaultKubeletConfig["--protect-kernel-defaults"] = "true"
-	}
-
 	// Set --non-masquerade-cidr if ip-masq-agent is disabled on AKS
 	if !cs.Properties.IsIPMasqAgentEnabled() {
 		defaultKubeletConfig["--non-masquerade-cidr"] = cs.Properties.OrchestratorProfile.KubernetesConfig.ClusterSubnet
@@ -97,9 +107,20 @@ func (cs *ContainerService) setKubeletConfig() {
 		defaultKubeletConfig["--max-pods"] = strconv.Itoa(DefaultKubernetesMaxPodsVNETIntegrated)
 	}
 
+	minVersionRotateCerts := "1.11.9"
+	if common.IsKubernetesVersionGe(o.OrchestratorVersion, minVersionRotateCerts) {
+		defaultKubeletConfig["--rotate-certificates"] = "true"
+	}
+
+	// Disable Weak TLS Cipher Suites for 1.10 and above
+	if common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.10.0") {
+		defaultKubeletConfig["--tls-cipher-suites"] = TLSStrongCipherSuitesKubelet
+	}
+
 	// If no user-configurable kubelet config values exists, use the defaults
 	setMissingKubeletValues(o.KubernetesConfig, defaultKubeletConfig)
 	addDefaultFeatureGates(o.KubernetesConfig.KubeletConfig, o.OrchestratorVersion, "1.8.0", "PodPriority=true")
+	addDefaultFeatureGates(o.KubernetesConfig.KubeletConfig, o.OrchestratorVersion, minVersionRotateCerts, "RotateKubeletServerCertificate=true")
 
 	// Override default cloud-provider?
 	if to.Bool(o.KubernetesConfig.UseCloudControllerManager) {
@@ -119,10 +140,15 @@ func (cs *ContainerService) setKubeletConfig() {
 		o.KubernetesConfig.KubeletConfig[key] = val
 	}
 
-	// Remove secure kubelet flags, if configured
-	if !to.Bool(o.KubernetesConfig.EnableSecureKubelet) {
-		for _, key := range []string{"--anonymous-auth", "--client-ca-file"} {
-			delete(o.KubernetesConfig.KubeletConfig, key)
+	if isUpgrade && common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.14.0") {
+		hasSupportPodPidsLimitFeatureGate := strings.Contains(o.KubernetesConfig.KubeletConfig["--feature-gates"], "SupportPodPidsLimit=true")
+		podMaxPids, _ := strconv.Atoi(o.KubernetesConfig.KubeletConfig["--pod-max-pids"])
+		if podMaxPids > 0 {
+			// If we don't have an explicit SupportPodPidsLimit=true, disable --pod-max-pids by setting to -1
+			// To prevent older clusters from inheriting SupportPodPidsLimit=true implicitly starting w/ 1.14.0
+			if !hasSupportPodPidsLimitFeatureGate {
+				o.KubernetesConfig.KubeletConfig["--pod-max-pids"] = strconv.Itoa(-1)
+			}
 		}
 	}
 
@@ -136,10 +162,6 @@ func (cs *ContainerService) setKubeletConfig() {
 		}
 		setMissingKubeletValues(cs.Properties.MasterProfile.KubernetesConfig, o.KubernetesConfig.KubeletConfig)
 		addDefaultFeatureGates(cs.Properties.MasterProfile.KubernetesConfig.KubeletConfig, o.OrchestratorVersion, "", "")
-
-		if cs.Properties.MasterProfile.IsUbuntu1804() {
-			cs.Properties.MasterProfile.KubernetesConfig.KubeletConfig["--resolv-conf"] = "/run/systemd/resolve/resolv.conf"
-		}
 
 		removeKubeletFlags(cs.Properties.MasterProfile.KubernetesConfig.KubeletConfig, o.OrchestratorVersion)
 	}
@@ -155,6 +177,10 @@ func (cs *ContainerService) setKubeletConfig() {
 			for key, val := range staticWindowsKubeletConfig {
 				profile.KubernetesConfig.KubeletConfig[key] = val
 			}
+		} else {
+			for key, val := range staticLinuxKubeletConfig {
+				profile.KubernetesConfig.KubeletConfig[key] = val
+			}
 		}
 
 		setMissingKubeletValues(profile.KubernetesConfig, o.KubernetesConfig.KubeletConfig)
@@ -165,10 +191,6 @@ func (cs *ContainerService) setKubeletConfig() {
 				// enabling accelerators for Kubernetes >= 1.6 to <= 1.9
 				addDefaultFeatureGates(profile.KubernetesConfig.KubeletConfig, o.OrchestratorVersion, "1.6.0", "Accelerators=true")
 			}
-		}
-
-		if profile.IsUbuntu1804() {
-			profile.KubernetesConfig.KubeletConfig["--resolv-conf"] = "/run/systemd/resolve/resolv.conf"
 		}
 
 		removeKubeletFlags(profile.KubernetesConfig.KubeletConfig, o.OrchestratorVersion)
@@ -186,6 +208,20 @@ func removeKubeletFlags(k map[string]string, v string) {
 	// Get rid of values not supported in v1.12 and up
 	if common.IsKubernetesVersionGe(v, "1.12.0") {
 		for _, key := range []string{"--cadvisor-port"} {
+			delete(k, key)
+		}
+	}
+
+	// Get rid of values not supported in v1.15 and up
+	if common.IsKubernetesVersionGe(v, "1.15.0-beta.1") {
+		for _, key := range []string{"--allow-privileged"} {
+			delete(k, key)
+		}
+	}
+
+	// Get rid of keys with empty string values
+	for key, val := range k {
+		if val == "" {
 			delete(k, key)
 		}
 	}

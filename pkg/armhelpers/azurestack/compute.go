@@ -6,10 +6,12 @@ package azurestack
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/Azure/aks-engine/pkg/armhelpers"
 	"github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2017-03-30/compute"
 	azcompute "github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2018-10-01/compute"
+	log "github.com/sirupsen/logrus"
 )
 
 // ListVirtualMachines returns (the first page of) the machines in the specified resource group.
@@ -159,4 +161,37 @@ func (az *AzureClient) SetVirtualMachineScaleSetCapacity(ctx context.Context, re
 
 	_, err = future.Result(az.virtualMachineScaleSetsClient)
 	return err
+}
+
+// GetAvailabilitySet retrieves the specified VM availability set.
+func (az *AzureClient) GetAvailabilitySet(ctx context.Context, resourceGroup, availabilitySetName string) (azcompute.AvailabilitySet, error) {
+	azVMAS := azcompute.AvailabilitySet{}
+	vmas, err := az.availabilitySetsClient.Get(ctx, resourceGroup, availabilitySetName)
+	if err != nil {
+		log.Printf("fail to get availability set, %v", err)
+		return azVMAS, err
+	}
+	if err = DeepCopy(&azVMAS, vmas); err != nil {
+		log.Printf("fail to convert availability set, %v", err)
+		return azVMAS, err
+	}
+	return azVMAS, nil
+}
+
+// GetAvailabilitySetFaultDomainCount returns the first existing fault domain count it finds from the IDs provided.
+func (az *AzureClient) GetAvailabilitySetFaultDomainCount(ctx context.Context, resourceGroup string, vmasIDs []string) (int, error) {
+	var count int
+	for _, id := range vmasIDs {
+		// extract the last element of the id for VMAS name
+		ss := strings.Split(id, "/")
+		name := ss[len(ss)-1]
+		vmas, err := az.GetAvailabilitySet(ctx, resourceGroup, name)
+		if err != nil {
+			return 0, err
+		}
+		// Assume that all VMASes in the cluster share a value for platformFaultDomainCount
+		count = int(*vmas.AvailabilitySetProperties.PlatformFaultDomainCount)
+		break
+	}
+	return count, nil
 }

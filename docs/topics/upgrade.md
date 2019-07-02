@@ -20,7 +20,7 @@ In order to ensure that your `aks-engine upgrade` operation runs smoothly, there
 
 2) `aks-engine upgrade` expects a cluster configuration that conforms to the current state of the cluster. In other words, the Azure resources inside the resource group deployed by `aks-engine` should be in the same state as when they were originally created by `aks-engine`. If you perform manual operations on your Azure IaaS resources (other than `aks-engine scale` and `aks-engine upgrade`) DO NOT use `aks-engine upgrade`, as the aks-engine-generated ARM template won't be reconcilable against the state of the Azure resources that reside in the resource group. This includes naming of resources; `aks-engine upgrade` relies on some resources (such as VMs) to be named in accordance with the original `aks-engine` deployment. In summary, the set of Azure resources in the resource group are mutually reconcilable by `aks-engine upgrade` only if they have been exclusively created and managed as the result of a series of successive ARM template deployments originating from `aks-engine`.
 
-3) `aks-engine upgrade` allows upgrading the Kubernetes version to any AKS Engine-supported patch release in the current minor release channel that is greater than the current version on the cluster (e.g., from `1.11.4` to `1.11.5`), or to the next aks-engine-supported minor version (e.g., from `1.11.4` to `1.12.5`). In practice, the next AKS Engine-supported minor version will commonly be a single minor version ahead of the current cluster version. However, if the cluster has not been upgraded in a significant amount of time, the "next" minor version may have actually been deprecated by aks-engine. In such a case, your long-lived cluster will be upgradable to the nearest, supported minor version that `aks-engine` supports at the time of upgrade (e.g., from `1.7.16` to `1.9.11`).
+3) `aks-engine upgrade` allows upgrading the Kubernetes version to any AKS Engine-supported patch release in the current minor release channel that is greater than the current version on the cluster (e.g., from `1.12.7` to `1.12.8`), or to the next aks-engine-supported minor version (e.g., from `1.12.8` to `1.13.5`). [Or, see [`aks-engine upgrade --force`](#force-upgrade) if you want to bypass AKS Engine "supported version requirements"] In practice, the next AKS Engine-supported minor version will commonly be a single minor version ahead of the current cluster version. However, if the cluster has not been upgraded in a significant amount of time, the "next" minor version may have actually been deprecated by aks-engine. In such a case, your long-lived cluster will be upgradable to the nearest, supported minor version that `aks-engine` supports at the time of upgrade (e.g., from `1.7.16` to `1.9.11`).
 
     To get the list of all available Kubernetes versions and upgrades, run the `get-versions` command:
 
@@ -31,12 +31,19 @@ In order to ensure that your `aks-engine upgrade` operation runs smoothly, there
     To get the versions of Kubernetes that your particular cluster version is upgradable to, provide its current Kubernetes version in the `version` arg:
 
     ```bash
-    ./bin/aks-engine get-versions --version 1.11.7
+    ./bin/aks-engine get-versions --version 1.12.8
     ```
 
 4) If using `aks-engine upgrade` in production, it is recommended to stage an upgrade test on an cluster that was built to the same specifications (built with the same cluster configuration + the same version of the `aks-engine` binary) as your production cluster before performing the upgrade, especially if the cluster configuration is "interesting", or in other words differs significantly from defaults. The reason for this is that AKS Engine supports many different cluster configurations and the extent of E2E testing that the AKS Engine team runs cannot practically cover every possible configuration. Therefore, it is recommended that you ensure in a staging environment that your specific cluster configuration is upgradable using `aks-engine upgrade` before attempting this potentially destructive operation on your production cluster.
 
 5) `aks-engine upgrade` is backwards compatible. If you deployed with `aks-engine` version `0.27.x`, you can run upgrade with version `0.29.y`. In fact, it is recommended that you use the latest available `aks-engine` version when running an upgrade operation. This will ensure that you get the latest available software and bug fixes in your upgraded cluster.
+
+6) `aks-engine upgrade` will automatically re-generate your cluster configuration to best pair with the desired new version of Kubernetes, and/or the version of AKS Engine that is used to execute `aks-engine upgrade`. To use an example of both:
+
+- When you upgrade to (for example) Kubernetes 1.14 from 1.13, AKS Engine will automatically change your control plane configuration (e.g., `coredns`, `metrics-server`, `kube-proxy`) so that the cluster component configurations have a close, known-working affinity with 1.14.
+- When you perform an upgrade, even if it is a Kubernetes patch release upgrade such as 1.14.1 to 1.14.2, but you use a newer version of AKS Engine, a newer version of `etcd` (for example) may have been validated and configured as default since the original version of AKS Engine used to build the cluster was released. So, for example, without any explicit user direction, the newly upgraded cluster will now be running etcd v3.2.26 instead of v3.2.25. _This is by design._
+
+In summary, using `aks-engine upgrade` means you will freshen and re-pave the entire stack that underlies Kubernetes to reflect the best-known, recent implementation of Azure IaaS + OS + OS config + Kubernetes config.
 
 ### Under the hood
 
@@ -53,6 +60,7 @@ Agent nodes:
 
 - create new VM and install desired Kubernetes version
 - add the new VM to the cluster
+- evict any pods might be scheduled onto this node by Kubernetes before copying custom node properties
 - copy the custom annotations, labels and taints of old node to new node.
 - cordon the node and drain existing workloads
 - delete the VM
@@ -100,6 +108,7 @@ There are known limitations with VMSS cluster-autoscaler scenarios and upgrade. 
 
 We don't recommend using `aks-engine upgrade` on clusters that have Availability Set (non-VMSS) agent pools `cluster-autoscaler` at this time.
 
+<a name="force-upgrade"></a>
 ## Forcing an upgrade
 
 The upgrade operation takes an optional `--force` argument:

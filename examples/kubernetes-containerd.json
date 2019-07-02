@@ -3,7 +3,7 @@
   "properties": {
     "orchestratorProfile": {
       "orchestratorType": "Kubernetes",
-      "orchestratorRelease": "1.10",
+      "orchestratorRelease": "1.12",
       "kubernetesConfig": {
         "networkPlugin": "flannel",
         "containerRuntime": "containerd",
@@ -22,7 +22,7 @@
     "masterProfile": {
       "count": 1,
       "dnsPrefix": "",
-      "vmSize": "Standard_D2_v2"
+      "vmSize": "Standard_D2_v3"
     },
     "agentPoolProfiles": [
       {

@@ -7,7 +7,7 @@ metadata:
   name: flannel
   namespace: kube-system
   labels:
-    addonmanager.kubernetes.io/mode: EnsureExists
+    addonmanager.kubernetes.io/mode: Reconcile
 ---
 kind: ConfigMap
 apiVersion: v1
@@ -43,7 +43,7 @@ metadata:
   labels:
     tier: node
     app: flannel
-    addonmanager.kubernetes.io/mode: EnsureExists
+    addonmanager.kubernetes.io/mode: Reconcile
 spec:
   template:
     metadata:
@@ -116,7 +116,7 @@ apiVersion: rbac.authorization.k8s.io/v1beta1
 metadata:
   name: flannel
   labels:
-    addonmanager.kubernetes.io/mode: EnsureExists
+    addonmanager.kubernetes.io/mode: Reconcile
 rules:
   - apiGroups:
       - ""
@@ -143,7 +143,7 @@ apiVersion: rbac.authorization.k8s.io/v1beta1
 metadata:
   name: flannel
   labels:
-    addonmanager.kubernetes.io/mode: EnsureExists
+    addonmanager.kubernetes.io/mode: Reconcile
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole

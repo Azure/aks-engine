@@ -22,9 +22,8 @@ import (
 )
 
 const (
-	interval           = time.Second * 1
-	retry              = time.Second * 5
-	cordonDrainTimeout = time.Minute * 20
+	interval = time.Second * 1
+	retry    = time.Second * 5
 )
 
 // Compiler to verify QueueMessageProcessor implements OperationsProcessor
@@ -42,6 +41,7 @@ type UpgradeAgentNode struct {
 	Client                  armhelpers.AKSEngineClient
 	kubeConfig              string
 	timeout                 time.Duration
+	cordonDrainTimeout      time.Duration
 }
 
 // DeleteNode takes state/resources of the master/agent node from ListNodeResources
@@ -52,7 +52,8 @@ func (kan *UpgradeAgentNode) DeleteNode(vmName *string, drain bool) error {
 	var kubeAPIServerURL string
 
 	if kan.UpgradeContainerService.Properties.HostedMasterProfile != nil {
-		kubeAPIServerURL = kan.UpgradeContainerService.Properties.HostedMasterProfile.FQDN
+		apiServerListeningPort := 443
+		kubeAPIServerURL = fmt.Sprintf("https://%s:%d", kan.UpgradeContainerService.Properties.HostedMasterProfile.FQDN, apiServerListeningPort)
 	} else {
 		kubeAPIServerURL = kan.UpgradeContainerService.Properties.MasterProfile.FQDN
 	}
@@ -69,7 +70,7 @@ func (kan *UpgradeAgentNode) DeleteNode(vmName *string, drain bool) error {
 	}
 	// Cordon and drain the node
 	if drain {
-		err = operations.SafelyDrainNodeWithClient(client, kan.logger, nodeName, cordonDrainTimeout)
+		err = operations.SafelyDrainNodeWithClient(client, kan.logger, nodeName, kan.cordonDrainTimeout)
 		if err != nil {
 			kan.logger.Warningf("Error draining agent VM %s. Proceeding with deletion. Error: %v", *vmName, err)
 			// Proceed with deletion anyways
@@ -122,7 +123,8 @@ func (kan *UpgradeAgentNode) Validate(vmName *string) error {
 	kan.logger.Infof("Validating %s", nodeName)
 	var masterURL string
 	if kan.UpgradeContainerService.Properties.HostedMasterProfile != nil {
-		masterURL = kan.UpgradeContainerService.Properties.HostedMasterProfile.FQDN
+		apiServerListeningPort := 443
+		masterURL = fmt.Sprintf("https://%s:%d", kan.UpgradeContainerService.Properties.HostedMasterProfile.FQDN, apiServerListeningPort)
 	} else {
 		masterURL = kan.UpgradeContainerService.Properties.MasterProfile.FQDN
 	}
@@ -138,7 +140,12 @@ func (kan *UpgradeAgentNode) Validate(vmName *string) error {
 		select {
 		case <-timeoutTimer.C:
 			retryTimer.Stop()
-			return &armhelpers.DeploymentValidationError{Err: kan.Translator.Errorf("Node was not ready within %v", kan.timeout)}
+			err := kan.DeleteNode(vmName, false)
+			if err != nil {
+				kan.logger.Errorf("Error deleting agent VM %s: %v", *vmName, err)
+				return &armhelpers.DeploymentValidationError{Err: kan.Translator.Errorf("Node was not ready within %v. Failed to delete node %s, error: %v", kan.timeout, *vmName, err)}
+			}
+			return &armhelpers.DeploymentValidationError{Err: kan.Translator.Errorf("Node was not ready within %v. Succeeded to delete node %s.", kan.timeout, *vmName)}
 		case <-retryTimer.C:
 			agentNode, err := client.GetNode(nodeName)
 			if err != nil {

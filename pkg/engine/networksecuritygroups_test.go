@@ -16,6 +16,13 @@ import (
 func TestCreateNetworkSecurityGroup(t *testing.T) {
 	cs := &api.ContainerService{
 		Properties: &api.Properties{
+			OrchestratorProfile: &api.OrchestratorProfile{
+				KubernetesConfig: &api.KubernetesConfig{
+					PrivateCluster: &api.PrivateCluster{
+						Enabled: to.BoolPtr(true),
+					},
+				},
+			},
 			AgentPoolProfiles: []*api.AgentPoolProfile{
 				{
 					Name:   "fooAgent",
@@ -157,7 +164,7 @@ func TestCreateJumpboxNSG(t *testing.T) {
 		},
 		SecurityGroup: network.SecurityGroup{
 			Location: to.StringPtr("[variables('location')]"),
-			Name:     to.StringPtr("[variables('nsgName')]"),
+			Name:     to.StringPtr("[variables('jumpboxNetworkSecurityGroupName')]"),
 			Type:     to.StringPtr("Microsoft.Network/networkSecurityGroups"),
 			SecurityGroupPropertiesFormat: &network.SecurityGroupPropertiesFormat{
 				SecurityRules: &[]network.SecurityRule{
