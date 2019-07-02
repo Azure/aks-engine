@@ -2941,6 +2941,27 @@ func TestValidateLocation(t *testing.T) {
 			expectedErr: errors.Errorf("EtcdDiskSizeGB max size supported on Azure Stack is %d", MaxAzureStackManagedDiskSize),
 		},
 		{
+			name:          "AzureStack EtcdDiskSizeGB is 1024",
+			location:      "local",
+			propertiesnil: false,
+			cs: &ContainerService{
+				Location: "local",
+				Properties: &Properties{
+					CustomCloudProfile: &CustomCloudProfile{
+						PortalURL: "https://portal.local.cotoso.com",
+					},
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorType:    Kubernetes,
+						OrchestratorVersion: "1.11.10",
+						KubernetesConfig: &KubernetesConfig{
+							EtcdDiskSizeGB: "1024GB",
+						},
+					},
+				},
+			},
+			expectedErr: errors.New("could not convert EtcdDiskSizeGB to int"),
+		},
+		{
 			name:          "AzureStack AcceleratedNetworking is true",
 			location:      "local",
 			propertiesnil: false,
