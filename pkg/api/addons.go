@@ -321,6 +321,16 @@ func (cs *ContainerService) setAddonsConfig(isUpdate bool) {
 		},
 	}
 
+	defaultAppGwAddonsConfig := KubernetesAddon{
+		Name:    AppGwIngressAddonName,
+		Enabled: to.BoolPtr(DefaultAppGwIngressAddonEnabled),
+		Config: map[string]string{
+			"appgw-subnet":     "",
+			"appgw-sku":        "WAF_v2",
+			"appgw-private-ip": "",
+		},
+	}
+
 	defaultAddons := []KubernetesAddon{
 		defaultsHeapsterAddonsConfig,
 		defaultTillerAddonsConfig,
@@ -340,6 +350,7 @@ func (cs *ContainerService) setAddonsConfig(isUpdate bool) {
 		defaultDNSAutoScalerAddonsConfig,
 		defaultsCalicoDaemonSetAddonsConfig,
 		defaultsAADPodIdentityAddonsConfig,
+		defaultAppGwAddonsConfig,
 	}
 	// Add default addons specification, if no user-provided spec exists
 	if o.KubernetesConfig.Addons == nil {

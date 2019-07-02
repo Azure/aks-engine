@@ -30,6 +30,25 @@ func CreatePublicIPAddress() PublicIPAddressARM {
 	}
 }
 
+func createAppGwPublicIPAddress() PublicIPAddressARM {
+	return PublicIPAddressARM{
+		ARMResource: ARMResource{
+			APIVersion: "[variables('apiVersionNetwork')]",
+		},
+		PublicIPAddress: network.PublicIPAddress{
+			Location: to.StringPtr("[variables('location')]"),
+			Name:     to.StringPtr("[variables('appGwPublicIPAddressName')]"),
+			PublicIPAddressPropertiesFormat: &network.PublicIPAddressPropertiesFormat{
+				PublicIPAllocationMethod: network.Static,
+			},
+			Sku: &network.PublicIPAddressSku{
+				Name: "Standard",
+			},
+			Type: to.StringPtr("Microsoft.Network/publicIPAddresses"),
+		},
+	}
+}
+
 func createJumpboxPublicIPAddress() PublicIPAddressARM {
 	return PublicIPAddressARM{
 		ARMResource: ARMResource{

@@ -73,7 +73,15 @@ func GenerateARMResources(cs *api.ContainerService) []interface{} {
 		}
 
 		armResources = append(armResources, masterResources...)
+	}
 
+	if cs.Properties.OrchestratorProfile.KubernetesConfig.IsAddonEnabled(AppGwIngressAddonName) {
+		armResources = append(armResources, createAppGwPublicIPAddress())
+		armResources = append(armResources, createAppGwUserAssignedIdentities())
+		armResources = append(armResources, createApplicationGateway(cs.Properties))
+		armResources = append(armResources, createAppGwIdentityApplicationGatewayWriteSysRoleAssignment())
+		armResources = append(armResources, createKubernetesSpAppGIdentityOperatorAccessRoleAssignment(cs.Properties))
+		armResources = append(armResources, createAppGwIdentityResourceGroupReadSysRoleAssignment())
 	}
 
 	return armResources

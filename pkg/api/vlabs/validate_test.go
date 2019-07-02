@@ -1475,6 +1475,114 @@ func Test_Properties_ValidateAddons(t *testing.T) {
 			"should error using incompatible addon with coreos (blobfuse-flexvolume)",
 		)
 	}
+
+	// appgw-ingress add-on
+
+	// Basic test with UseManagedIdentity
+	p.OrchestratorProfile.KubernetesConfig = &KubernetesConfig{
+		NetworkPlugin:      "azure",
+		UseManagedIdentity: true,
+		Addons: []KubernetesAddon{
+			{
+				Name:    "appgw-ingress",
+				Enabled: to.BoolPtr(true),
+				Config: map[string]string{
+					"appgw-subnet": "10.0.0.0/16",
+				},
+			},
+		},
+	}
+
+	if err := p.validateAddons(); err != nil {
+		t.Error(
+			"should not error for correct config.",
+			err,
+		)
+	}
+
+	// Basic test with ObjectID
+	p.ServicePrincipalProfile = &ServicePrincipalProfile{
+		ObjectID: "random",
+	}
+	p.OrchestratorProfile.KubernetesConfig = &KubernetesConfig{
+		NetworkPlugin: "azure",
+		Addons: []KubernetesAddon{
+			{
+				Name:    "appgw-ingress",
+				Enabled: to.BoolPtr(true),
+				Config: map[string]string{
+					"appgw-subnet": "10.0.0.0/16",
+				},
+			},
+		},
+	}
+
+	if err := p.validateAddons(); err != nil {
+		t.Error(
+			"should not error for correct config.",
+			err,
+		)
+	}
+
+	// Test with missing objectID and UseManagedIdentity false
+	p.ServicePrincipalProfile = &ServicePrincipalProfile{}
+	p.OrchestratorProfile.KubernetesConfig = &KubernetesConfig{
+		NetworkPlugin: "azure",
+		Addons: []KubernetesAddon{
+			{
+				Name:    "appgw-ingress",
+				Enabled: to.BoolPtr(true),
+				Config: map[string]string{
+					"appgw-subnet": "10.0.0.0/16",
+				},
+			},
+		},
+	}
+
+	if err := p.validateAddons(); err == nil {
+		t.Error(
+			"should error as objectID not provided or UseManagedIdentity not true",
+			err,
+		)
+	}
+
+	// Test with wrong Network Plugin
+	p.OrchestratorProfile.KubernetesConfig = &KubernetesConfig{
+		NetworkPlugin: "kubelet",
+		Addons: []KubernetesAddon{
+			{
+				Name:    "appgw-ingress",
+				Enabled: to.BoolPtr(true),
+				Config: map[string]string{
+					"appgw-subnet": "10.0.0.0/16",
+				},
+			},
+		},
+	}
+
+	if err := p.validateAddons(); err == nil {
+		t.Errorf(
+			"should error using when not using 'azure' for Network Plugin",
+		)
+	}
+
+	// Test with missing appgw-subnet
+	p.OrchestratorProfile.KubernetesConfig = &KubernetesConfig{
+		NetworkPlugin: "azure",
+		Addons: []KubernetesAddon{
+			{
+				Name:    "appgw-ingress",
+				Enabled: to.BoolPtr(true),
+				Config:  map[string]string{},
+			},
+		},
+	}
+
+	if err := p.validateAddons(); err == nil {
+		t.Errorf(
+			"should error when missing the subnet for Application Gateway",
+		)
+	}
 }
 
 func TestWindowsVersions(t *testing.T) {
