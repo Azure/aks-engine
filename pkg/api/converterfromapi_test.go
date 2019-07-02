@@ -639,6 +639,13 @@ func getDefaultContainerService() *ContainerService {
 					FQDN:      "blueorange.westus2.com",
 					OSType:    "Linux",
 					Subnet:    "sampleSubnet",
+					ImageRef: &ImageReference{
+						Name:           "testImage",
+						ResourceGroup:  "testRg",
+						SubscriptionID: "testSub",
+						Gallery:        "testGallery",
+						Version:        "0.0.1",
+					},
 				},
 			},
 		},

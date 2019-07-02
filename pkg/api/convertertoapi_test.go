@@ -846,6 +846,21 @@ func TestConvertVLabsContainerService(t *testing.T) {
 					FQDN:      "blueorange.westus2.azureapp.com",
 					OSType:    "Linux",
 				},
+				{
+					Name:      "sampleAgent-public",
+					Count:     2,
+					VMSize:    "sampleVM",
+					DNSPrefix: "blueorange",
+					FQDN:      "blueorange.westus2.com",
+					OSType:    "Linux",
+					ImageRef: &vlabs.ImageReference{
+						Name:           "testImage",
+						ResourceGroup:  "testRg",
+						SubscriptionID: "testSub",
+						Gallery:        "testGallery",
+						Version:        "0.0.1",
+					},
+				},
 			},
 			MasterProfile: &vlabs.MasterProfile{
 				Count: 1,
