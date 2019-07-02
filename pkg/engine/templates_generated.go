@@ -21673,6 +21673,7 @@ var _k8sKubernetesparamsT = []byte(`{{if .HasAadProfile}}
       "type": "string"
     }
  {{end}}
+ {{if .OrchestratorProfile.KubernetesConfig.IsAppGWIngressEnabled}}
     ,"appGwSubnet": {
       "metadata": {
         "description": "Sets the subnet of the Application Gateway"
@@ -21684,7 +21685,8 @@ var _k8sKubernetesparamsT = []byte(`{{if .HasAadProfile}}
         "description": "Sets the subnet of the Application Gateway"
       },
       "type": "string"
-    }`)
+    }
+ {{end}}`)
 
 func k8sKubernetesparamsTBytes() ([]byte, error) {
 	return _k8sKubernetesparamsT, nil
