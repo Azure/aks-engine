@@ -10,6 +10,7 @@
 |Kata Containers Runtime|Alpha|`vlabs`|[kubernetes-kata-containers.json](../../examples/kubernetes-kata-containers.json)|[Description](#feat-kata-containers)|
 |Private Cluster|Alpha|`vlabs`|[kubernetes-private-cluster.json](../../examples/kubernetes-config/kubernetes-private-cluster.json)|[Description](#feat-private-cluster)|
 |Azure Key Vault Encryption|Alpha|`vlabs`|[kubernetes-keyvault-encryption.json](../../examples/kubernetes-config/kubernetes-keyvault-encryption.json)|[Description](#feat-keyvault-encryption)|
+|Shared Image Gallery images|Alpha|`vlabs`|[custom-shared-image.json](../../examples/custom-shared-image.json)|[Description](#feat-shared-image-gallery)|
 
 <a name="feat-kubernetes-msi"></a>
 
@@ -453,4 +454,62 @@ To get `objectId` of the service principal:
 
 ```console
 az ad sp list --spn <YOUR SERVICE PRINCIPAL appId>
+```
+
+<a name="feat-shared-image-gallery"></a>
+
+## Use a Shared Image Gallery image
+
+This is possible by specifying `imageReference` under `masterProfile` or on a given `agentPoolProfile`. It also requires setting the distro to an appropriate value (`ubuntu` or `coreos`). When using `imageReference` with Shared Image Galleries, provide an image name and version, as well as the resource group, subscription, and name of the gallery. Example:
+
+```json
+{
+    "apiVersion": "vlabs",
+    "properties": {
+      "orchestratorProfile": {
+        "orchestratorType": "Kubernetes"
+      },
+      "masterProfile": {
+        "imageReference": {
+          "name": "linuxvm",
+          "resourceGroup": "sig",
+          "subscriptionID": "00000000-0000-0000-0000-000000000000",
+          "gallery": "siggallery",
+          "version": "0.0.1"
+        },
+        "count": 1,
+        "dnsPrefix": "",
+        "vmSize": "Standard_D2_v3"
+      },
+      "agentPoolProfiles": [
+        {
+          "name": "agentpool1",
+          "count": 3,
+          "imageReference": {
+            "name": "linuxvm",
+            "resourceGroup": "sig",
+            "subscriptionID": "00000000-0000-0000-0000-000000000000",
+            "gallery": "siggallery",
+            "version": "0.0.1"
+          },
+          "vmSize": "Standard_D2_v3",
+          "availabilityProfile": "AvailabilitySet"
+        }
+      ],
+      "linuxProfile": {
+        "adminUsername": "azureuser",
+        "ssh": {
+          "publicKeys": [
+            {
+              "keyData": ""
+            }
+          ]
+        }
+      },
+      "servicePrincipalProfile": {
+        "clientId": "",
+        "secret": ""
+      }
+    }
+  }
 ```
