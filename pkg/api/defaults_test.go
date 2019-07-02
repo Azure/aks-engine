@@ -2446,6 +2446,11 @@ func TestSetAgentProfileDefaultsOnAzureStack(t *testing.T) {
 			t.Fatalf("AcceleratedNetworkingEnabled did not have the expected value, got %t, expected %t",
 				(*pool.AcceleratedNetworkingEnabled), DefaultAzureStackAcceleratedNetworking)
 		}
+
+		if (*pool.AcceleratedNetworkingEnabledWindows) != DefaultAzureStackAcceleratedNetworking {
+			t.Fatalf("AcceleratedNetworkingEnabledWindows did not have the expected value, got %t, expected %t",
+				(*pool.AcceleratedNetworkingEnabledWindows), DefaultAzureStackAcceleratedNetworking)
+		}
 	}
 	// Check scenario where value is already set.
 	mockCS.Properties.CustomCloudProfile = &CustomCloudProfile{

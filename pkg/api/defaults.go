@@ -565,7 +565,12 @@ func (p *Properties) setAgentProfileDefaults(isUpgrade, isScale bool, cloudName 
 		}
 
 		if profile.AcceleratedNetworkingEnabledWindows == nil {
-			profile.AcceleratedNetworkingEnabledWindows = to.BoolPtr(DefaultAcceleratedNetworkingWindowsEnabled && !isUpgrade && !isScale && helpers.AcceleratedNetworkingSupported(profile.VMSize))
+			if p.IsAzureStackCloud() {
+				// Here we are using same default variable. We will change once we will start supporting AcceleratedNetworking feature in general.
+				profile.AcceleratedNetworkingEnabledWindows = to.BoolPtr(DefaultAzureStackAcceleratedNetworking)
+			} else {
+				profile.AcceleratedNetworkingEnabledWindows = to.BoolPtr(DefaultAcceleratedNetworkingWindowsEnabled && !isUpgrade && !isScale && helpers.AcceleratedNetworkingSupported(profile.VMSize))
+			}
 		}
 
 		if profile.VMSSOverProvisioningEnabled == nil {
