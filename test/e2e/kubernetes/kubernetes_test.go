@@ -143,6 +143,14 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			}
 		})
 
+		It("should have the expected k8s version", func() {
+			nodeList, err := node.GetReady()
+			Expect(err).NotTo(HaveOccurred())
+			for _, node := range nodeList.Nodes {
+				Expect("v" + eng.ExpandedDefinition.Properties.OrchestratorProfile.OrchestratorVersion).To(Equal(node.Status.NodeInfo.KubeletVersion))
+			}
+		})
+
 		It("should display the installed Ubuntu version on the master node", func() {
 			if eng.ExpandedDefinition.Properties.MasterProfile.IsUbuntu() {
 				kubeConfig, err := GetConfig()
@@ -693,7 +701,9 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 
 			if eng.HasWindowsAgents() {
 				By("Ensuring that we have functional DNS resolution from a windows container")
-				j, err = job.CreateJobFromFileDeleteIfExists(filepath.Join(WorkloadDir, "validate-dns-windows.yaml"), "validate-dns-windows", "default")
+				windowsImages, imgErr := eng.GetWindowsTestImages()
+				Expect(imgErr).NotTo(HaveOccurred())
+				j, err = job.CreateWindowsJobFromTemplateDeleteIfExists(filepath.Join(WorkloadDir, "validate-dns-windows.yaml"), "validate-dns-windows", "default", windowsImages)
 				Expect(err).NotTo(HaveOccurred())
 				ready, err = j.WaitOnReady(retryTimeWhenWaitingForPodReady, cfg.Timeout)
 				delErr = j.Delete(util.DefaultDeleteRetries)
@@ -778,6 +788,69 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				}
 			} else {
 				Skip("kubernetes-dashboard disabled for this cluster, will not test")
+			}
+		})
+	})
+
+	Describe("with a windows agent pool", func() {
+		It("kubelet service should be able to recover when the docker service is stopped", func() {
+			if eng.HasWindowsAgents() {
+				kubeConfig, err := GetConfig()
+				Expect(err).NotTo(HaveOccurred())
+				master := fmt.Sprintf("%s@%s", eng.ExpandedDefinition.Properties.LinuxProfile.AdminUsername, kubeConfig.GetServerName())
+				nodeList, err := node.GetReady()
+				Expect(err).NotTo(HaveOccurred())
+
+				simulateDockerdCrashScript := "simulate-dockerd-crash.cmd"
+				cmd := exec.Command("scp", "-i", masterSSHPrivateKeyFilepath, "-P", masterSSHPort, "-o", "StrictHostKeyChecking=no", filepath.Join(ScriptsDir, simulateDockerdCrashScript), master+":/tmp/"+simulateDockerdCrashScript)
+				util.PrintCommand(cmd)
+				out, err := cmd.CombinedOutput()
+				log.Printf("%s\n", out)
+				Expect(err).NotTo(HaveOccurred())
+
+				var conn *remote.Connection
+				conn, err = remote.NewConnection(kubeConfig.GetServerName(), masterSSHPort, eng.ExpandedDefinition.Properties.WindowsProfile.AdminUsername, masterSSHPrivateKeyFilepath)
+				Expect(err).NotTo(HaveOccurred())
+
+				for _, node := range nodeList.Nodes {
+					if node.IsWindows() {
+						By(fmt.Sprintf("simulating docker and subsequent kubelet service crash on node: %s", node.Metadata.Name))
+						err := conn.CopyToRemote(node.Metadata.Name, "/tmp/"+simulateDockerdCrashScript)
+						Expect(err).NotTo(HaveOccurred())
+						simulateDockerCrashCommand := fmt.Sprintf("\"/tmp/%s\"", simulateDockerdCrashScript)
+						cmd := exec.Command("ssh", "-A", "-i", masterSSHPrivateKeyFilepath, "-p", masterSSHPort, "-o", "ConnectTimeout=10", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-o", "LogLevel=ERROR", master, "ssh", "-o", "ConnectTimeout=10", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-o", "LogLevel=ERROR", node.Metadata.Name, simulateDockerCrashCommand)
+						util.PrintCommand(cmd)
+						out, err := cmd.CombinedOutput()
+						log.Printf("%s\n", out)
+						Expect(err).NotTo(HaveOccurred())
+					}
+				}
+
+				log.Print("Waiting 1 minute to allow nodes to report not ready state after the crash occurred\n")
+				time.Sleep(1 * time.Minute)
+
+				for _, node := range nodeList.Nodes {
+					if node.IsWindows() {
+						By(fmt.Sprintf("restarting kubelet service on node: %s", node.Metadata.Name))
+						restartKubeletCommand := fmt.Sprintf("\"Powershell Start-Service kubelet\"")
+						cmd := exec.Command("ssh", "-A", "-i", masterSSHPrivateKeyFilepath, "-p", masterSSHPort, "-o", "ConnectTimeout=10", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-o", "LogLevel=ERROR", master, "ssh", "-o", "ConnectTimeout=10", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-o", "LogLevel=ERROR", node.Metadata.Name, restartKubeletCommand)
+						util.PrintCommand(cmd)
+						out, err := cmd.CombinedOutput()
+						log.Printf("%s\n", out)
+						Expect(err).NotTo(HaveOccurred())
+					}
+				}
+
+				nodeCount := eng.NodeCount()
+				log.Printf("Checking for %d Ready nodes\n", nodeCount)
+				ready := node.WaitOnReady(nodeCount, 1*time.Minute, cfg.Timeout)
+				cmd2 := exec.Command("k", "get", "nodes", "-o", "wide")
+				out2, _ := cmd2.CombinedOutput()
+				log.Printf("%s\n", out2)
+				if !ready {
+					log.Printf("Error: Not all nodes in a healthy state\n")
+				}
+				Expect(ready).To(Equal(true))
 			}
 		})
 	})
@@ -1528,7 +1601,6 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 					Skip("No windows agent was provisioned for this Cluster Definition")
 				}
 			})*/
-
 		It("should be able to attach azure file", func() {
 			if eng.HasWindowsAgents() {
 				if eng.ExpandedDefinition.Properties.OrchestratorProfile.OrchestratorVersion == "1.11.0" {

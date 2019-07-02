@@ -852,7 +852,7 @@
   version = "kubernetes-1.13.6"
 
 [[projects]]
-  digest = "1:f06b3d010bd069bf48c00fb588db50d72dcff5443b0f9816c38820f81f5a7dc9"
+  digest = "1:25774373f1a1276442f121c48fb43b07e3291cd0031c45b618f14fd54b04490d"
   name = "k8s.io/client-go"
   packages = [
     "discovery",
@@ -894,6 +894,7 @@
     "pkg/apis/clientauthentication/v1alpha1",
     "pkg/apis/clientauthentication/v1beta1",
     "pkg/version",
+    "plugin/pkg/client/auth/azure",
     "plugin/pkg/client/auth/exec",
     "rest",
     "rest/watch",
@@ -997,6 +998,7 @@
     "k8s.io/apimachinery/pkg/fields",
     "k8s.io/apimachinery/pkg/util/wait",
     "k8s.io/client-go/kubernetes",
+    "k8s.io/client-go/plugin/pkg/client/auth/azure",
     "k8s.io/client-go/tools/clientcmd",
     "k8s.io/client-go/tools/clientcmd/api",
   ]

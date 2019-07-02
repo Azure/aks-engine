@@ -757,9 +757,14 @@ func (ku *Upgrader) copyCustomNodeProperties(client armhelpers.KubernetesClient,
 }
 
 func (ku *Upgrader) getKubernetesClient(timeout time.Duration) (armhelpers.KubernetesClient, error) {
+	apiserverURL := ku.DataModel.Properties.GetMasterFQDN()
+	if ku.DataModel.Properties.HostedMasterProfile != nil {
+		apiServerListeningPort := 443
+		apiserverURL = fmt.Sprintf("https://%s:%d", apiserverURL, apiServerListeningPort)
+	}
 
 	return ku.Client.GetKubernetesClient(
-		ku.DataModel.Properties.GetMasterFQDN(),
+		apiserverURL,
 		ku.kubeConfig,
 		interval,
 		timeout)

@@ -4336,6 +4336,8 @@ func TestFormatAzureProdFQDN(t *testing.T) {
 		"santest.usgovarizona.cloudapp.usgovcloudapi.net",
 		"santest.usgovtexas.cloudapp.usgovcloudapi.net",
 		"santest.francecentral.cloudapp.azure.com",
+		"santest.uaenorth.cloudapp.azure.com",
+		"santest.uaecentral.cloudapp.azure.com",
 	}
 
 	if !reflect.DeepEqual(actual, expected) {
@@ -4406,6 +4408,8 @@ func TestFormatProdFQDNByLocation(t *testing.T) {
 		"santest.usgovarizona.cloudapp.usgovcloudapi.net",
 		"santest.usgovtexas.cloudapp.usgovcloudapi.net",
 		"santest.francecentral.cloudapp.azure.com",
+		"santest.uaenorth.cloudapp.azure.com",
+		"santest.uaecentral.cloudapp.azure.com",
 	}
 
 	if !reflect.DeepEqual(actual, expected) {
@@ -4839,6 +4843,8 @@ func TestGetLocations(t *testing.T) {
 		"usgovarizona",
 		"usgovtexas",
 		"francecentral",
+		"uaenorth",
+		"uaecentral",
 	}
 	actual := mockCSDefault.GetLocations()
 	if !reflect.DeepEqual(expected, actual) {
@@ -5090,6 +5096,30 @@ func TestSetPlatformFaultDomainCount(t *testing.T) {
 		cs.SetPlatformFaultDomainCount(i)
 		if *cs.Properties.MasterProfile.PlatformFaultDomainCount != i {
 			t.Errorf("expected master platformFaultDomainCount to be %d, not %v", i, cs.Properties.MasterProfile.PlatformFaultDomainCount)
+		}
+		for _, pool := range cs.Properties.AgentPoolProfiles {
+			if *pool.PlatformFaultDomainCount != i {
+				t.Errorf("expected agent platformFaultDomainCount to be %d, not %v", i, pool.PlatformFaultDomainCount)
+			}
+		}
+	}
+}
+
+func TestSetPlatformFaultDomainCountNoMasters(t *testing.T) {
+	// check that the default value is nil
+	cs := CreateMockContainerService("testcluster", defaultTestClusterVer, 1, 3, false)
+	cs.Properties.MasterProfile = nil
+	for _, pool := range cs.Properties.AgentPoolProfiles {
+		if pool.PlatformFaultDomainCount != nil {
+			t.Errorf("expected agent platformFaultDomainCount to be nil, not %v", pool.PlatformFaultDomainCount)
+		}
+	}
+
+	// check that pfdc can be set to legal values
+	for i := 1; i <= 3; i++ {
+		cs.SetPlatformFaultDomainCount(i)
+		if cs.Properties.MasterProfile != nil {
+			t.Error("expected MasterProfile to stay nil")
 		}
 		for _, pool := range cs.Properties.AgentPoolProfiles {
 			if *pool.PlatformFaultDomainCount != i {

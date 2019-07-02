@@ -56,6 +56,7 @@ type Properties struct {
 type FeatureFlags struct {
 	EnableCSERunInBackground bool `json:"enableCSERunInBackground,omitempty"`
 	BlockOutboundInternet    bool `json:"blockOutboundInternet,omitempty"`
+	EnableIPv6DualStack      bool `json:"enableIPv6DualStack,omitempty"`
 }
 
 // ServicePrincipalProfile contains the client and secret used by the cluster for Azure Resource CRUD
@@ -389,6 +390,8 @@ type MasterProfile struct {
 
 	// subnet is internal
 	subnet string
+	// subnetIPv6 is internal
+	subnetIPv6 string
 
 	// Master LB public endpoint/FQDN with port
 	// The format will be FQDN:2376
@@ -576,9 +579,19 @@ func (m *MasterProfile) GetSubnet() string {
 	return m.subnet
 }
 
+// GetSubnetIPv6 returns the read-only ipv6 subnet for the master
+func (m *MasterProfile) GetSubnetIPv6() string {
+	return m.subnetIPv6
+}
+
 // SetSubnet sets the read-only subnet for the master
 func (m *MasterProfile) SetSubnet(subnet string) {
 	m.subnet = subnet
+}
+
+// SetSubnetIPv6 sets the read-only ipv6 subnet for the master
+func (m *MasterProfile) SetSubnetIPv6(subnetIPv6 string) {
+	m.subnetIPv6 = subnetIPv6
 }
 
 // IsManagedDisks returns true if the master specified managed disks
@@ -803,4 +816,9 @@ func (k *KubernetesConfig) IsRBACEnabled() bool {
 		return to.Bool(k.EnableRbac)
 	}
 	return false
+}
+
+// IsIPv6DualStackEnabled checks if IPv6DualStack feature is enabled
+func (f *FeatureFlags) IsIPv6DualStackEnabled() bool {
+	return f != nil && f.EnableIPv6DualStack
 }

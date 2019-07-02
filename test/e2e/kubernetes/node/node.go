@@ -65,7 +65,7 @@ type Address struct {
 type Info struct {
 	ContainerRuntimeVersion string `json:"containerRuntimeVersion"`
 	KubeProxyVersion        string `json:"kubeProxyVersion"`
-	KubeletProxyVersion     string `json:"kubeletVersion"`
+	KubeletVersion          string `json:"kubeletVersion"`
 	OperatingSystem         string `json:"operatingSystem"`
 	OSImage                 string `json:"osImage"`
 }
@@ -98,6 +98,11 @@ func (n *Node) IsReady() bool {
 // IsLinux checks for a Linux node
 func (n *Node) IsLinux() bool {
 	return n.Status.NodeInfo.OperatingSystem == "linux"
+}
+
+// IsWindows checks for a Windows node
+func (n *Node) IsWindows() bool {
+	return n.Status.NodeInfo.OperatingSystem == "windows"
 }
 
 // IsUbuntu checks for an Ubuntu-backed node

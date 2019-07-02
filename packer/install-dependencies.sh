@@ -54,7 +54,7 @@ ETCD_DOWNLOAD_URL="https://acs-mirror.azureedge.net/github-coreos"
 installEtcd
 echo "  - etcd v${ETCD_VERSION}" >> ${RELEASE_NOTES_FILEPATH}
 
-MOBY_VERSION="3.0.5"
+MOBY_VERSION="3.0.6"
 installMoby
 echo "  - moby v${MOBY_VERSION}" >> ${RELEASE_NOTES_FILEPATH}
 installGPUDrivers
@@ -113,6 +113,7 @@ for EXECHEALTHZ_VERSION in ${EXECHEALTHZ_VERSIONS}; do
 done
 
 ADDON_RESIZER_VERSIONS="
+1.8.5
 1.8.4
 1.8.1
 1.7
@@ -216,7 +217,6 @@ CLUSTER_AUTOSCALER_VERSIONS="
 1.3.3
 1.2.5
 1.2.2
-1.1.2
 "
 for CLUSTER_AUTOSCALER_VERSION in ${CLUSTER_AUTOSCALER_VERSIONS}; do
     CONTAINER_IMAGE="k8s.gcr.io/cluster-autoscaler:v${CLUSTER_AUTOSCALER_VERSION}"
@@ -227,7 +227,6 @@ done
 K8S_DNS_SIDECAR_VERSIONS="
 1.14.10
 1.14.8
-1.14.7
 "
 for K8S_DNS_SIDECAR_VERSION in ${K8S_DNS_SIDECAR_VERSIONS}; do
     CONTAINER_IMAGE="k8s.gcr.io/k8s-dns-sidecar-amd64:${K8S_DNS_SIDECAR_VERSION}"
@@ -351,7 +350,7 @@ FLANNEL_VERSIONS="
 0.8.0
 "
 for FLANNEL_VERSION in ${FLANNEL_VERSIONS}; do
-    CONTAINER_IMAGE="quay.io/coreos/flannel:v${FLANNEL_VERSION}"
+    CONTAINER_IMAGE="quay.io/coreos/flannel:v${FLANNEL_VERSION}-amd64"
     pullContainerImage "docker" ${CONTAINER_IMAGE}
     echo "  - ${CONTAINER_IMAGE}" >> ${RELEASE_NOTES_FILEPATH}
 done
@@ -361,9 +360,13 @@ echo "  - busybox" >> ${RELEASE_NOTES_FILEPATH}
 
 # TODO: fetch supported k8s versions from an aks-engine command instead of hardcoding them here
 K8S_VERSIONS="
+1.15.0
 1.14.3
+1.14.3-azs
 1.14.1
+1.14.1-azs
 1.13.7
+1.13.7-azs
 1.13.5
 1.13.5-azs
 1.12.9
@@ -376,8 +379,6 @@ K8S_VERSIONS="
 1.11.9-azs
 1.10.13
 1.10.12
-1.9.11
-1.9.10
 "
 for KUBERNETES_VERSION in ${K8S_VERSIONS}; do
     if [[ $KUBERNETES_VERSION == *"azs"* ]]; then

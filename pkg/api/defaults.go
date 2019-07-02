@@ -168,6 +168,30 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpgrade, isScale bool) {
 				o.KubernetesConfig.ClusterSubnet = DefaultKubernetesSubnet
 			} else {
 				o.KubernetesConfig.ClusterSubnet = DefaultKubernetesClusterSubnet
+				// ipv4 and ipv6 subnet for dual stack
+				if cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6DualStack") {
+					o.KubernetesConfig.ClusterSubnet = strings.Join([]string{DefaultKubernetesClusterSubnet, DefaultKubernetesClusterSubnetIPv6}, ",")
+				}
+			}
+		} else {
+			// ensure 2 subnets exists if ipv6 dual stack feature is enabled
+			if cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6DualStack") && !o.IsAzureCNI() {
+				clusterSubnets := strings.Split(o.KubernetesConfig.ClusterSubnet, ",")
+				if len(clusterSubnets) == 1 {
+					// if error exists, then it'll be caught by validate
+					ip, _, err := net.ParseCIDR(clusterSubnets[0])
+					if err == nil {
+						if ip.To4() != nil {
+							// the first cidr block is ipv4, so append ipv6
+							clusterSubnets = append(clusterSubnets, DefaultKubernetesClusterSubnetIPv6)
+						} else {
+							// first cidr has to be ipv4
+							clusterSubnets = append([]string{DefaultKubernetesClusterSubnet}, clusterSubnets...)
+						}
+						// only set the cluster subnet if no error has been encountered
+						o.KubernetesConfig.ClusterSubnet = strings.Join(clusterSubnets, ",")
+					}
+				}
 			}
 		}
 		if o.KubernetesConfig.GCHighThreshold == 0 {
@@ -257,7 +281,11 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpgrade, isScale bool) {
 		}
 
 		if a.OrchestratorProfile.KubernetesConfig.UseInstanceMetadata == nil {
-			a.OrchestratorProfile.KubernetesConfig.UseInstanceMetadata = to.BoolPtr(DefaultUseInstanceMetadata)
+			if a.IsAzureStackCloud() {
+				a.OrchestratorProfile.KubernetesConfig.UseInstanceMetadata = to.BoolPtr(DefaultAzureStackUseInstanceMetadata)
+			} else {
+				a.OrchestratorProfile.KubernetesConfig.UseInstanceMetadata = to.BoolPtr(DefaultUseInstanceMetadata)
+			}
 		}
 
 		if !a.HasAvailabilityZones() && a.OrchestratorProfile.KubernetesConfig.LoadBalancerSku == "" {
@@ -293,7 +321,7 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpgrade, isScale bool) {
 		// so it's critical to enforce default addons configuration first
 
 		// Configure kubelet
-		cs.setKubeletConfig()
+		cs.setKubeletConfig(isUpgrade)
 		// Configure controller-manager
 		cs.setControllerManagerConfig()
 		// Configure cloud-controller-manager
@@ -396,6 +424,7 @@ func (p *Properties) setMasterProfileDefaults(isUpgrade, isScale bool, cloudName
 				}
 			} else {
 				p.MasterProfile.Subnet = DefaultKubernetesMasterSubnet
+				p.MasterProfile.SubnetIPv6 = DefaultKubernetesMasterSubnetIPv6
 				// FirstConsecutiveStaticIP is not reset if it is upgrade and some value already exists
 				if !isUpgrade || len(p.MasterProfile.FirstConsecutiveStaticIP) == 0 {
 					if p.MasterProfile.IsVirtualMachineScaleSets() {
@@ -458,6 +487,11 @@ func (p *Properties) setMasterProfileDefaults(isUpgrade, isScale bool, cloudName
 	if nil == p.MasterProfile.CosmosEtcd {
 		p.MasterProfile.CosmosEtcd = to.BoolPtr(DefaultUseCosmos)
 	}
+
+	// Update default fault domain value for Azure Stack
+	if p.IsAzureStackCloud() && p.MasterProfile.PlatformFaultDomainCount == nil {
+		p.MasterProfile.PlatformFaultDomainCount = to.IntPtr(DefaultAzureStackFaultDomainCount)
+	}
 }
 
 // setVMSSDefaultsForMasters
@@ -513,12 +547,21 @@ func (p *Properties) setAgentProfileDefaults(isUpgrade, isScale bool, cloudName 
 			profile.OSType = Linux
 		}
 
+		// Update default fault domain value for Azure Stack
+		if p.IsAzureStackCloud() && profile.PlatformFaultDomainCount == nil {
+			profile.PlatformFaultDomainCount = to.IntPtr(DefaultAzureStackFaultDomainCount)
+		}
+
 		// Accelerated Networking is supported on most general purpose and compute-optimized instance sizes with 2 or more vCPUs.
 		// These supported series are: D/DSv2 and F/Fs // All the others are not supported
 		// On instances that support hyperthreading, Accelerated Networking is supported on VM instances with 4 or more vCPUs.
 		// Supported series are: D/DSv3, E/ESv3, Fsv2, and Ms/Mms.
 		if profile.AcceleratedNetworkingEnabled == nil {
-			profile.AcceleratedNetworkingEnabled = to.BoolPtr(DefaultAcceleratedNetworking && !isUpgrade && !isScale && helpers.AcceleratedNetworkingSupported(profile.VMSize))
+			if p.IsAzureStackCloud() {
+				profile.AcceleratedNetworkingEnabled = to.BoolPtr(DefaultAzureStackAcceleratedNetworking)
+			} else {
+				profile.AcceleratedNetworkingEnabled = to.BoolPtr(DefaultAcceleratedNetworking && !isUpgrade && !isScale && helpers.AcceleratedNetworkingSupported(profile.VMSize))
+			}
 		}
 
 		if profile.AcceleratedNetworkingEnabledWindows == nil {

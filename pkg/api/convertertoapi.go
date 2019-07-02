@@ -420,6 +420,7 @@ func convertVLabsProperties(vlabs *vlabs.Properties, api *Properties, isUpdate b
 func convertVLabsFeatureFlags(vlabs *vlabs.FeatureFlags, api *FeatureFlags) {
 	api.EnableCSERunInBackground = vlabs.EnableCSERunInBackground
 	api.BlockOutboundInternet = vlabs.BlockOutboundInternet
+	api.EnableIPv6DualStack = vlabs.EnableIPv6DualStack
 }
 
 func convertV20160930LinuxProfile(obj *v20160930.LinuxProfile, api *LinuxProfile) {
@@ -907,6 +908,7 @@ func convertVLabsMasterProfile(vlabs *vlabs.MasterProfile, api *MasterProfile) {
 	api.FirstConsecutiveStaticIP = vlabs.FirstConsecutiveStaticIP
 	api.VnetCidr = vlabs.VnetCidr
 	api.Subnet = vlabs.GetSubnet()
+	api.SubnetIPv6 = vlabs.GetSubnetIPv6()
 	api.IPAddressCount = vlabs.IPAddressCount
 	api.FQDN = vlabs.FQDN
 	api.StorageProfile = vlabs.StorageProfile

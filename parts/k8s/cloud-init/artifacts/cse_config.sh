@@ -229,6 +229,12 @@ configureCNI() {
         systemctl restart sys-fs-bpf.mount
         REBOOTREQUIRED=true
     fi
+
+    if [[ "${TARGET_ENVIRONMENT,,}" == "${AZURE_STACK_ENV}"  ]] && [[ "${NETWORK_PLUGIN}" = "azure" ]]; then
+        # set environment to mas when using Azure CNI on Azure Stack
+        # shellcheck disable=SC2002,SC2005
+        echo $(cat "$CNI_CONFIG_DIR/10-azure.conflist" | jq '.plugins[0].ipam.environment = "mas"') > "$CNI_CONFIG_DIR/10-azure.conflist"
+    fi
 }
 
 configureCNIIPTables() {
@@ -308,6 +314,10 @@ ensureDocker() {
 
 ensureKMS() {
     systemctlEnableAndStart kms || exit $ERR_SYSTEMCTL_START_FAIL
+}
+
+ensureDHCPv6() {
+    systemctlEnableAndStart dhcpv6 || exit $ERR_SYSTEMCTL_START_FAIL
 }
 
 ensureKubelet() {
@@ -438,11 +448,13 @@ configGPUDrivers() {
     rmmod nouveau
     echo blacklist nouveau >> /etc/modprobe.d/blacklist.conf
     retrycmd_if_failure_no_stats 120 5 25 update-initramfs -u || exit $ERR_GPU_DRIVERS_INSTALL_TIMEOUT
+    wait_for_apt_locks
     retrycmd_if_failure 30 5 3600 apt-get -o Dpkg::Options::="--force-confold" install -y nvidia-container-runtime="${NVIDIA_CONTAINER_RUNTIME_VERSION}+docker18.09.2-1" || exit $ERR_GPU_DRIVERS_INSTALL_TIMEOUT
     tmpDir=$GPU_DEST/tmp
     (
       set -e -o pipefail
       cd "${tmpDir}"
+      wait_for_apt_locks
       dpkg-deb -R ./nvidia-docker2*.deb "${tmpDir}/pkg" || exit $ERR_GPU_DRIVERS_INSTALL_TIMEOUT
       cp -r ${tmpDir}/pkg/usr/* /usr/ || exit $ERR_GPU_DRIVERS_INSTALL_TIMEOUT
     )

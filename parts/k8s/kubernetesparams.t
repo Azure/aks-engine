@@ -320,7 +320,7 @@
     },
 {{end}}
     "mobyVersion": {
-      "defaultValue": "3.0.5",
+      "defaultValue": "3.0.6",
       "metadata": {
         "description": "The Azure Moby build version"
       },
@@ -329,7 +329,8 @@
          "3.0.2",
          "3.0.3",
          "3.0.4",
-         "3.0.5"
+         "3.0.5",
+         "3.0.6"
        ],
       "type": "string"
     },
@@ -412,6 +413,13 @@
       "defaultValue": "{{GetDefaultVNETCIDR}}",
       "metadata": {
         "description": "Cluster vnet cidr"
+      },
+      "type": "string"
+    },
+    "vnetCidrIPv6": {
+      "defaultValue": "{{GetDefaultVNETCIDRIPv6}}",
+      "metadata": {
+        "description": "Cluster vnet cidr IPv6"
       },
       "type": "string"
     },

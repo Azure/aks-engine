@@ -13,7 +13,7 @@
         "networkPlugin": "azure",
         "containerRuntime": "docker",
         "dockerBridgeSubnet": "172.17.0.1/16",
-        "mobyVersion": "3.0.5",
+        "mobyVersion": "3.0.6",
         "useInstanceMetadata": true,
         "enableRbac": true,
         "enableSecureKubelet": true,
@@ -36,7 +36,7 @@
               },
               {
                 "name": "heapster-nanny",
-                "image": "k8s.gcr.io/addon-resizer:1.8.4"
+                "image": "k8s.gcr.io/addon-resizer:1.8.5"
               }
             ]
           },

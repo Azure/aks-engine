@@ -1,0 +1,76 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  labels:
+    kubernetes.io/cluster-service: "true"
+    component: kube-proxy
+    tier: node
+  name: kube-proxy
+  namespace: kube-system
+spec:
+  template:
+    metadata:
+      labels:
+        component: kube-proxy
+        tier: node
+    spec:
+      priorityClassName: system-node-critical
+      tolerations:
+      - key: node-role.kubernetes.io/master
+        operator: Equal
+        value: "true"
+        effect: NoSchedule
+      - operator: "Exists"
+        effect: NoExecute
+      - operator: "Exists"
+        effect: NoSchedule
+      containers:
+      - command:
+        - /hyperkube
+        - kube-proxy
+        - --kubeconfig=/var/lib/kubelet/kubeconfig
+        - --cluster-cidr=<CIDR>
+        - --feature-gates=ExperimentalCriticalPodAnnotation=true
+        - --proxy-mode=<kubeProxyMode>
+        image: <img>
+        imagePullPolicy: IfNotPresent
+        name: kube-proxy
+        resources:
+          requests:
+            cpu: 100m
+        securityContext:
+          privileged: true
+        volumeMounts:
+        - mountPath: /etc/ssl/certs
+          name: ssl-certs-host
+          readOnly: true
+        - mountPath: /etc/kubernetes
+          name: etc-kubernetes
+          readOnly: true
+        - mountPath: /var/lib/kubelet/kubeconfig
+          name: kubeconfig
+          readOnly: true
+        - mountPath: /run/xtables.lock
+          name: iptableslock
+        - mountPath: /lib/modules/
+          name: kernelmodules
+          readOnly: true
+      hostNetwork: true
+      volumes:
+      - hostPath:
+          path: /usr/share/ca-certificates
+        name: ssl-certs-host
+      - hostPath:
+          path: /var/lib/kubelet/kubeconfig
+        name: kubeconfig
+      - hostPath:
+          path: /etc/kubernetes
+        name: etc-kubernetes
+      - hostPath:
+          path: /run/xtables.lock
+        name: iptableslock
+      - hostPath:
+          path: /lib/modules/
+        name: kernelmodules
+      nodeSelector:
+        beta.kubernetes.io/os: linux
