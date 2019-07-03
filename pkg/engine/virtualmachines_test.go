@@ -631,7 +631,7 @@ func TestCreateVMsWithCustomOS(t *testing.T) {
 				},
 				StorageProfile: &compute.StorageProfile{
 					ImageReference: &compute.ImageReference{
-						ID: to.StringPtr("[concat('/subscriptions/', 'testSub', '/resourceGroups/', parameters('agentpool1osImageResourceGroup'), '/providers/Microsoft.Compute/galleries/', 'testGallery', '/images/', parameters('agentpool1osImageName'), '/versions/', '0.0.1')]"),
+						ID: to.StringPtr("[resourceId(variables('agentpool1osImageResourceGroup'), 'Microsoft.Compute/images', variables('agentpool1osImageName'))]"),
 					},
 					OsDisk: &compute.OSDisk{
 						Caching:      compute.CachingTypes("ReadWrite"),
