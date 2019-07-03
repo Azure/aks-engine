@@ -1057,8 +1057,8 @@ func TestPropertiesMasterCustomOS(t *testing.T) {
 		c := c
 		t.Run(c.name, func(t *testing.T) {
 			t.Parallel()
-			if c.p.MasterProfile.HasImageRef() != c.expectedRef && c.p.MasterProfile.HasImageGallery() != c.expectedGallery {
-				t.Fatalf("expected HasImageRef() to return %t but instead returned %t, has image gallery expected: %t but actual: %t", c.expectedRef, c.p.MasterProfile.HasImageRef(), c.p.MasterProfile.HasImageGallery(), c.expectedGallery)
+			if c.p.MasterProfile.HasImageRef() != c.expectedRef || c.p.MasterProfile.HasImageGallery() != c.expectedGallery {
+				t.Fatalf("expected HasImageRef() to return %t but instead returned %t, HasImageGallery() expected: %t but actual: %t", c.expectedRef, c.p.MasterProfile.HasImageRef(), c.p.MasterProfile.HasImageGallery(), c.expectedGallery)
 			}
 		})
 	}
@@ -1122,8 +1122,8 @@ func TestPropertiesAgentCustomOS(t *testing.T) {
 		c := c
 		t.Run(c.name, func(t *testing.T) {
 			t.Parallel()
-			if c.p.AgentPoolProfiles[0].HasImageRef() != c.expectedRef && c.p.AgentPoolProfiles[0].HasImageGallery() != c.expectedGallery {
-				t.Fatalf("expected HasImageRef() to return %t but instead returned %t, has image gallery expected: %t but actual: %t", c.expectedRef, c.p.AgentPoolProfiles[0].HasImageRef(), c.expectedGallery, c.p.AgentPoolProfiles[0].HasImageGallery())
+			if c.p.AgentPoolProfiles[0].HasImageRef() != c.expectedRef || c.p.AgentPoolProfiles[0].HasImageGallery() != c.expectedGallery {
+				t.Fatalf("expected HasImageRef() to return %t but instead returned %t, HasImageGallery() expected: %t but actual: %t", c.expectedRef, c.p.AgentPoolProfiles[0].HasImageRef(), c.expectedGallery, c.p.AgentPoolProfiles[0].HasImageGallery())
 			}
 		})
 	}
