@@ -1075,7 +1075,7 @@ func TestPropertiesAgentCustomOS(t *testing.T) {
 			name: "valid shared gallery image",
 			p: Properties{
 				AgentPoolProfiles: []*AgentPoolProfile{
-					&AgentPoolProfile{
+					{
 						ImageRef: &ImageReference{
 							Name:           "testImage",
 							ResourceGroup:  "testRg",
@@ -1093,7 +1093,7 @@ func TestPropertiesAgentCustomOS(t *testing.T) {
 			name: "valid resource group image",
 			p: Properties{
 				AgentPoolProfiles: []*AgentPoolProfile{
-					&AgentPoolProfile{
+					{
 						ImageRef: &ImageReference{
 							Name:          "testImage",
 							ResourceGroup: "testRg",
@@ -1108,7 +1108,7 @@ func TestPropertiesAgentCustomOS(t *testing.T) {
 			name: "valid no custom image",
 			p: Properties{
 				AgentPoolProfiles: []*AgentPoolProfile{
-					&AgentPoolProfile{
+					{
 						ImageRef: nil,
 					},
 				},
