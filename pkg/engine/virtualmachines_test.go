@@ -421,11 +421,106 @@ func TestCreateVMsWithCustomOS(t *testing.T) {
 			},
 		},
 	}
-
 	diff := cmp.Diff(actualMasterVM, expectedMasterVM)
 
 	if diff != "" {
 		t.Errorf("unexpected diff while expecting equal master VM structs: %s", diff)
+	}
+
+	// Validate helpers
+	if cs.Properties.MasterProfile.HasImageRef() != true || cs.Properties.MasterProfile.HasImageGallery() != true {
+		t.Error("expected custom OS to have image ref")
+	}
+
+	cs.Properties.MasterProfile.ImageRef = &api.ImageReference{
+		Name:          "testImage",
+		ResourceGroup: "testRg",
+	}
+
+	actualMasterVM = CreateMasterVM(cs)
+	expectedMasterVM = VirtualMachineARM{
+		ARMResource: ARMResource{
+			APIVersion: "[variables('apiVersionCompute')]",
+			Copy: map[string]string{
+				"count": "[sub(variables('masterCount'), variables('masterOffset'))]",
+				"name":  "vmLoopNode",
+			},
+			DependsOn: []string{
+				"[concat('Microsoft.Network/networkInterfaces/', variables('masterVMNamePrefix'), 'nic-', copyIndex(variables('masterOffset')))]",
+				"[concat('Microsoft.Compute/availabilitySets/',variables('masterAvailabilitySet'))]",
+			},
+		},
+		VirtualMachine: compute.VirtualMachine{
+			Location: to.StringPtr("[variables('location')]"),
+			Name:     to.StringPtr("[concat(variables('masterVMNamePrefix'), copyIndex(variables('masterOffset')))]"),
+			Tags: map[string]*string{
+				"creationSource":     to.StringPtr("[concat(parameters('generatorCode'), '-', variables('masterVMNamePrefix'), copyIndex(variables('masterOffset')))]"),
+				"resourceNameSuffix": to.StringPtr("[parameters('nameSuffix')]"),
+				"orchestrator":       to.StringPtr("[variables('orchestratorNameVersionTag')]"),
+				"aksEngineVersion":   to.StringPtr("[parameters('aksEngineVersion')]"),
+				"poolName":           to.StringPtr("master"),
+			},
+			Type: to.StringPtr("Microsoft.Compute/virtualMachines"),
+			VirtualMachineProperties: &compute.VirtualMachineProperties{
+				AvailabilitySet: &compute.SubResource{
+					ID: to.StringPtr("[resourceId('Microsoft.Compute/availabilitySets',variables('masterAvailabilitySet'))]"),
+				},
+				HardwareProfile: &compute.HardwareProfile{
+					VMSize: compute.VirtualMachineSizeTypesStandardD2V2,
+				},
+				StorageProfile: &compute.StorageProfile{
+					ImageReference: &compute.ImageReference{
+						ID: to.StringPtr("[resourceId(parameters('osImageResourceGroup'), 'Microsoft.Compute/images', parameters('osImageName'))]"),
+					},
+					OsDisk: &compute.OSDisk{
+						Caching:      compute.CachingTypesReadWrite,
+						CreateOption: compute.DiskCreateOptionTypesFromImage,
+					},
+					DataDisks: &[]compute.DataDisk{
+						{
+							Lun:          to.Int32Ptr(0),
+							Name:         to.StringPtr("[concat(variables('masterVMNamePrefix'), copyIndex(variables('masterOffset')),'-etcddisk')]"),
+							CreateOption: compute.DiskCreateOptionTypesEmpty,
+							DiskSizeGB:   to.Int32Ptr(256),
+						},
+					},
+				},
+				OsProfile: &compute.OSProfile{
+					ComputerName:  to.StringPtr("[concat(variables('masterVMNamePrefix'), copyIndex(variables('masterOffset')))]"),
+					AdminUsername: to.StringPtr("[parameters('linuxAdminUsername')]"),
+					CustomData:    to.StringPtr(expectedCustomDataStr),
+					LinuxConfiguration: &compute.LinuxConfiguration{
+						DisablePasswordAuthentication: to.BoolPtr(true),
+						SSH: &compute.SSHConfiguration{
+							PublicKeys: &[]compute.SSHPublicKey{
+								{
+									Path:    to.StringPtr("[variables('sshKeyPath')]"),
+									KeyData: to.StringPtr("[parameters('sshRSAPublicKey')]"),
+								},
+							},
+						},
+					},
+				},
+				NetworkProfile: &compute.NetworkProfile{
+					NetworkInterfaces: &[]compute.NetworkInterfaceReference{
+						{
+							ID: to.StringPtr("[resourceId('Microsoft.Network/networkInterfaces',concat(variables('masterVMNamePrefix'),'nic-', copyIndex(variables('masterOffset'))))]"),
+						},
+					},
+				},
+			},
+		},
+	}
+
+	diff = cmp.Diff(actualMasterVM, expectedMasterVM)
+
+	if diff != "" {
+		t.Errorf("unexpected diff while expecting equal master VM structs: %s", diff)
+	}
+
+	// Validate helpers
+	if cs.Properties.MasterProfile.HasImageRef() != true || cs.Properties.MasterProfile.HasImageGallery() != false {
+		t.Error("expected custom OS to have image ref")
 	}
 
 	expectedCustomDataStr = getCustomDataFromJSON(tg.GetKubernetesLinuxNodeCustomDataJSONObject(cs, cs.Properties.AgentPoolProfiles[0]))
@@ -500,10 +595,86 @@ func TestCreateVMsWithCustomOS(t *testing.T) {
 	}
 
 	// Validate helpers
-	if cs.Properties.MasterProfile.HasImageRef() != true || cs.Properties.MasterProfile.HasImageGallery() != true {
+	if cs.Properties.AgentPoolProfiles[0].HasImageRef() != true || cs.Properties.AgentPoolProfiles[0].HasImageGallery() != true {
 		t.Error("expected custom OS to have image ref")
 	}
-	if cs.Properties.AgentPoolProfiles[0].HasImageRef() != true || cs.Properties.AgentPoolProfiles[0].HasImageGallery() != true {
+
+	cs.Properties.AgentPoolProfiles[0].ImageRef = &api.ImageReference{
+		Name:          "testImage",
+		ResourceGroup: "testRg",
+	}
+
+	actualVM = createAgentAvailabilitySetVM(cs, cs.Properties.AgentPoolProfiles[0])
+	expectedVM = VirtualMachineARM{
+		ARMResource: ARMResource{
+			APIVersion: "[variables('apiVersionCompute')]",
+			Copy: map[string]string{
+				"count": "[sub(variables('agentpool1Count'), variables('agentpool1Offset'))]",
+				"name":  "vmLoopNode",
+			},
+			DependsOn: []string{"[concat('Microsoft.Network/networkInterfaces/', variables('agentpool1VMNamePrefix'), 'nic-', copyIndex(variables('agentpool1Offset')))]", "[concat('Microsoft.Compute/availabilitySets/', variables('agentpool1AvailabilitySet'))]"},
+		},
+		VirtualMachine: compute.VirtualMachine{
+			Name:     to.StringPtr("[concat(variables('agentpool1VMNamePrefix'), copyIndex(variables('agentpool1Offset')))]"),
+			Type:     to.StringPtr("Microsoft.Compute/virtualMachines"),
+			Location: to.StringPtr("[variables('location')]"),
+			Tags: map[string]*string{"aksEngineVersion": to.StringPtr("[parameters('aksEngineVersion')]"),
+				"creationSource":     to.StringPtr("[concat(parameters('generatorCode'), '-', variables('agentpool1VMNamePrefix'), copyIndex(variables('agentpool1Offset')))]"),
+				"orchestrator":       to.StringPtr("[variables('orchestratorNameVersionTag')]"),
+				"poolName":           to.StringPtr("agentpool1"),
+				"resourceNameSuffix": to.StringPtr("[parameters('nameSuffix')]"),
+			},
+
+			VirtualMachineProperties: &compute.VirtualMachineProperties{
+				HardwareProfile: &compute.HardwareProfile{
+					VMSize: compute.VirtualMachineSizeTypes("[variables('agentpool1VMSize')]"),
+				},
+				StorageProfile: &compute.StorageProfile{
+					ImageReference: &compute.ImageReference{
+						ID: to.StringPtr("[concat('/subscriptions/', 'testSub', '/resourceGroups/', parameters('agentpool1osImageResourceGroup'), '/providers/Microsoft.Compute/galleries/', 'testGallery', '/images/', parameters('agentpool1osImageName'), '/versions/', '0.0.1')]"),
+					},
+					OsDisk: &compute.OSDisk{
+						Caching:      compute.CachingTypes("ReadWrite"),
+						CreateOption: compute.DiskCreateOptionTypes("FromImage"),
+					},
+				},
+				OsProfile: &compute.OSProfile{
+					ComputerName:  to.StringPtr("[concat(variables('agentpool1VMNamePrefix'), copyIndex(variables('agentpool1Offset')))]"),
+					AdminUsername: to.StringPtr("[parameters('linuxAdminUsername')]"),
+					CustomData:    to.StringPtr(expectedCustomDataStr),
+					LinuxConfiguration: &compute.LinuxConfiguration{
+						DisablePasswordAuthentication: to.BoolPtr(true),
+						SSH: &compute.SSHConfiguration{
+							PublicKeys: &[]compute.SSHPublicKey{
+								{
+									Path:    to.StringPtr("[variables('sshKeyPath')]"),
+									KeyData: to.StringPtr("[parameters('sshRSAPublicKey')]"),
+								},
+							},
+						},
+					},
+				},
+				NetworkProfile: &compute.NetworkProfile{
+					NetworkInterfaces: &[]compute.NetworkInterfaceReference{
+						{
+							ID: to.StringPtr("[resourceId('Microsoft.Network/networkInterfaces',concat(variables('agentpool1VMNamePrefix'), 'nic-', copyIndex(variables('agentpool1Offset'))))]"),
+						},
+					},
+				},
+				AvailabilitySet: &compute.SubResource{
+					ID: to.StringPtr("[resourceId('Microsoft.Compute/availabilitySets',variables('agentpool1AvailabilitySet'))]"),
+				},
+			},
+		},
+	}
+
+	diff = cmp.Diff(actualVM, expectedVM)
+
+	if diff != "" {
+		t.Errorf("unexpected diff while expecting equal agent VM structs: %s", diff)
+	}
+
+	if cs.Properties.AgentPoolProfiles[0].HasImageRef() != true || cs.Properties.AgentPoolProfiles[0].HasImageGallery() != false {
 		t.Error("expected custom OS to have image ref")
 	}
 }
