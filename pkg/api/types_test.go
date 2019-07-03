@@ -1005,6 +1005,130 @@ func TestPropertiesIsHostedMasterProfile(t *testing.T) {
 	}
 }
 
+func TestPropertiesMasterCustomOS(t *testing.T) {
+	cases := []struct {
+		name            string
+		p               Properties
+		expectedRef     bool
+		expectedGallery bool
+	}{
+		{
+			name: "valid shared gallery image",
+			p: Properties{
+				MasterProfile: &MasterProfile{
+					ImageRef: &ImageReference{
+						Name:           "testImage",
+						ResourceGroup:  "testRg",
+						SubscriptionID: "testSub",
+						Gallery:        "testGallery",
+						Version:        "0.0.1",
+					},
+				},
+			},
+			expectedRef:     true,
+			expectedGallery: true,
+		},
+		{
+			name: "valid resource group image",
+			p: Properties{
+				MasterProfile: &MasterProfile{
+					ImageRef: &ImageReference{
+						Name:          "testImage",
+						ResourceGroup: "testRg",
+					},
+				},
+			},
+			expectedRef:     true,
+			expectedGallery: false,
+		},
+		{
+			name: "valid no custom image",
+			p: Properties{
+				MasterProfile: &MasterProfile{
+					ImageRef: nil,
+				},
+			},
+			expectedRef:     false,
+			expectedGallery: false,
+		},
+	}
+
+	for _, c := range cases {
+		c := c
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+			if c.p.MasterProfile.HasImageRef() != c.expectedRef && c.p.MasterProfile.HasImageGallery() != c.expectedGallery {
+				t.Fatalf("expected HasImageRef() to return %t but instead returned %t, has image gallery expected: %t but actual: %t", c.expectedRef, c.p.MasterProfile.HasImageRef(), c.p.MasterProfile.HasImageGallery(), c.expectedGallery)
+			}
+		})
+	}
+}
+
+func TestPropertiesAgentCustomOS(t *testing.T) {
+	cases := []struct {
+		name            string
+		p               Properties
+		expectedRef     bool
+		expectedGallery bool
+	}{
+		{
+			name: "valid shared gallery image",
+			p: Properties{
+				AgentPoolProfiles: []*AgentPoolProfile{
+					&AgentPoolProfile{
+						ImageRef: &ImageReference{
+							Name:           "testImage",
+							ResourceGroup:  "testRg",
+							SubscriptionID: "testSub",
+							Gallery:        "testGallery",
+							Version:        "0.0.1",
+						},
+					},
+				},
+			},
+			expectedRef:     true,
+			expectedGallery: true,
+		},
+		{
+			name: "valid resource group image",
+			p: Properties{
+				AgentPoolProfiles: []*AgentPoolProfile{
+					&AgentPoolProfile{
+						ImageRef: &ImageReference{
+							Name:          "testImage",
+							ResourceGroup: "testRg",
+						},
+					},
+				},
+			},
+			expectedRef:     true,
+			expectedGallery: false,
+		},
+		{
+			name: "valid no custom image",
+			p: Properties{
+				AgentPoolProfiles: []*AgentPoolProfile{
+					&AgentPoolProfile{
+						ImageRef: nil,
+					},
+				},
+			},
+			expectedRef:     false,
+			expectedGallery: false,
+		},
+	}
+
+	for _, c := range cases {
+		c := c
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+			if c.p.AgentPoolProfiles[0].HasImageRef() != c.expectedRef && c.p.AgentPoolProfiles[0].HasImageGallery() != c.expectedGallery {
+				t.Fatalf("expected HasImageRef() to return %t but instead returned %t, has image gallery expected: %t but actual: %t", c.expectedRef, c.p.AgentPoolProfiles[0].HasImageRef(), c.expectedGallery, c.p.AgentPoolProfiles[0].HasImageGallery())
+			}
+		})
+	}
+}
+
 func TestMasterAvailabilityProfile(t *testing.T) {
 	cases := []struct {
 		name           string

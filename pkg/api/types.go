@@ -1201,14 +1201,12 @@ func (p *Properties) GetMasterFQDN() string {
 
 // HasImageRef returns true if the customer brought os image
 func (m *MasterProfile) HasImageRef() bool {
-	imageRef := m.ImageRef
-	return imageRef != nil && len(imageRef.Name) > 0 && len(imageRef.ResourceGroup) > 0
+	return m.ImageRef != nil && len(m.ImageRef.Name) > 0 && len(m.ImageRef.ResourceGroup) > 0
 }
 
 // HasImageGallery returns true if the customer brought os image from Shared Image Gallery
 func (m *MasterProfile) HasImageGallery() bool {
-	imageRef := m.ImageRef
-	return imageRef != nil && len(imageRef.SubscriptionID) > 0 && len(imageRef.Gallery) > 0 && len(imageRef.Version) > 0
+	return m.ImageRef != nil && len(m.ImageRef.SubscriptionID) > 0 && len(m.ImageRef.Gallery) > 0 && len(m.ImageRef.Version) > 0
 }
 
 // IsCustomVNET returns true if the customer brought their own VNET
