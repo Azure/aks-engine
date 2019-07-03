@@ -130,9 +130,5 @@ required = [
   version = "1.0.1"
 
 [[override]]
-  name = "github.com/census-instrumentation/opencensus-proto"
-  version = "v0.2.0"
-
-[[override]]
   name = "github.com/golang/protobuf"
   version = "v1.3.1"
