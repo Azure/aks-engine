@@ -404,8 +404,11 @@ type MasterProfile struct {
 
 // ImageReference represents a reference to an Image resource in Azure.
 type ImageReference struct {
-	Name          string `json:"name,omitempty"`
-	ResourceGroup string `json:"resourceGroup,omitempty"`
+	Name           string `json:"name,omitempty"`
+	ResourceGroup  string `json:"resourceGroup,omitempty"`
+	SubscriptionID string `json:"subscriptionId,omitempty"`
+	Gallery        string `json:"gallery,omitempty"`
+	Version        string `json:"version,omitempty"`
 }
 
 // ExtensionProfile represents an extension definition

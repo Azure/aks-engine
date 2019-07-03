@@ -487,8 +487,11 @@ type MasterProfile struct {
 
 // ImageReference represents a reference to an Image resource in Azure.
 type ImageReference struct {
-	Name          string `json:"name,omitempty"`
-	ResourceGroup string `json:"resourceGroup,omitempty"`
+	Name           string `json:"name,omitempty"`
+	ResourceGroup  string `json:"resourceGroup,omitempty"`
+	SubscriptionID string `json:"subscriptionId,omitempty"`
+	Gallery        string `json:"gallery,omitempty"`
+	Version        string `json:"version,omitempty"`
 }
 
 // ExtensionProfile represents an extension definition
@@ -1196,6 +1199,16 @@ func (p *Properties) GetMasterFQDN() string {
 	return p.MasterProfile.FQDN
 }
 
+// HasImageRef returns true if the customer brought os image
+func (m *MasterProfile) HasImageRef() bool {
+	return m.ImageRef != nil && len(m.ImageRef.Name) > 0 && len(m.ImageRef.ResourceGroup) > 0
+}
+
+// HasImageGallery returns true if the customer brought os image from Shared Image Gallery
+func (m *MasterProfile) HasImageGallery() bool {
+	return m.ImageRef != nil && len(m.ImageRef.SubscriptionID) > 0 && len(m.ImageRef.Gallery) > 0 && len(m.ImageRef.Version) > 0
+}
+
 // IsCustomVNET returns true if the customer brought their own VNET
 func (m *MasterProfile) IsCustomVNET() bool {
 	return len(m.VnetSubnetID) > 0
@@ -1311,6 +1324,18 @@ func (m *MasterProfile) GetCosmosEndPointURI() string {
 		return fmt.Sprintf(etcdEndpointURIFmt, m.DNSPrefix)
 	}
 	return ""
+}
+
+// HasImageRef returns true if the customer brought os image
+func (a *AgentPoolProfile) HasImageRef() bool {
+	imageRef := a.ImageRef
+	return imageRef != nil && len(imageRef.Name) > 0 && len(imageRef.ResourceGroup) > 0
+}
+
+// HasImageGallery returns true if the customer brought os image from Shared Image Gallery
+func (a *AgentPoolProfile) HasImageGallery() bool {
+	imageRef := a.ImageRef
+	return imageRef != nil && len(imageRef.SubscriptionID) > 0 && len(imageRef.Gallery) > 0 && len(imageRef.Version) > 0
 }
 
 // IsCustomVNET returns true if the customer brought their own VNET

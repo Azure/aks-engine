@@ -221,7 +221,6 @@ func CreateMasterVMSS(cs *api.ContainerService) VirtualMachineScaleSetARM {
 
 	storageProfile := compute.VirtualMachineScaleSetStorageProfile{}
 	imageRef := masterProfile.ImageRef
-	useMasterCustomImage := imageRef != nil && len(imageRef.Name) > 0 && len(imageRef.ResourceGroup) > 0
 	etcdSizeGB, _ := strconv.Atoi(k8sConfig.EtcdDiskSizeGB)
 	dataDisk := compute.VirtualMachineScaleSetDataDisk{
 		CreateOption: compute.DiskCreateOptionTypesEmpty,
@@ -232,8 +231,12 @@ func CreateMasterVMSS(cs *api.ContainerService) VirtualMachineScaleSetARM {
 		dataDisk,
 	}
 	imgReference := &compute.ImageReference{}
-	if useMasterCustomImage {
-		imgReference.ID = to.StringPtr("[resourceId(parameters('osImageResourceGroup'), 'Microsoft.Compute/images', parameters('osImageName'))]")
+	if masterProfile.HasImageRef() {
+		if masterProfile.HasImageGallery() {
+			imgReference.ID = to.StringPtr(fmt.Sprintf("[concat('/subscriptions/', '%s',  '/resourceGroups/', parameters('osImageResourceGroup'), '/providers/Microsoft.Compute/galleries/', '%s', '/images/', parameters('osImageName'), '/versions/', '%s')]", imageRef.SubscriptionID, imageRef.Gallery, imageRef.Version))
+		} else {
+			imgReference.ID = to.StringPtr("[resourceId(parameters('osImageResourceGroup'), 'Microsoft.Compute/images', parameters('osImageName'))]")
+		}
 	} else {
 		imgReference.Offer = to.StringPtr("[parameters('osImageOffer')]")
 		imgReference.Publisher = to.StringPtr("[parameters('osImagePublisher')]")
@@ -577,11 +580,17 @@ func CreateAgentVMSS(cs *api.ContainerService, profile *api.AgentPoolProfile) Vi
 		}
 		vmssStorageProfile.DataDisks = getVMSSDataDisks(profile)
 	} else {
-		imageRef := profile.ImageRef
-		useAgentCustomImage := imageRef != nil && len(imageRef.Name) > 0 && len(imageRef.ResourceGroup) > 0
-		if useAgentCustomImage {
-			vmssStorageProfile.ImageReference = &compute.ImageReference{
-				ID: to.StringPtr(fmt.Sprintf("[resourceId(variables('%[1]sosImageResourceGroup'), 'Microsoft.Compute/images', variables('%[1]sosImageName'))]", profile.Name)),
+		if profile.HasImageRef() {
+			imageRef := profile.ImageRef
+			if profile.HasImageGallery() {
+				v := fmt.Sprintf("[concat('/subscriptions/', '%s', '/resourceGroups/', variables('%sosImageResourceGroup'), '/providers/Microsoft.Compute/galleries/', '%s', '/images/', variables('%sosImageName'), '/versions/', '%s')]", imageRef.SubscriptionID, profile.Name, imageRef.Gallery, profile.Name, imageRef.Version)
+				vmssStorageProfile.ImageReference = &compute.ImageReference{
+					ID: to.StringPtr(v),
+				}
+			} else {
+				vmssStorageProfile.ImageReference = &compute.ImageReference{
+					ID: to.StringPtr(fmt.Sprintf("[resourceId(variables('%[1]sosImageResourceGroup'), 'Microsoft.Compute/images', variables('%[1]sosImageName'))]", profile.Name)),
+				}
 			}
 		} else {
 			vmssStorageProfile.ImageReference = &compute.ImageReference{

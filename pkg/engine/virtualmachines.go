@@ -149,7 +149,6 @@ func CreateMasterVM(cs *api.ContainerService) VirtualMachineARM {
 
 	storageProfile := &compute.StorageProfile{}
 	imageRef := cs.Properties.MasterProfile.ImageRef
-	useMasterCustomImage := imageRef != nil && len(imageRef.Name) > 0 && len(imageRef.ResourceGroup) > 0
 	etcdSizeGB, _ := strconv.Atoi(kubernetesConfig.EtcdDiskSizeGB)
 	if !cs.Properties.MasterProfile.HasCosmosEtcd() {
 		dataDisk := compute.DataDisk{
@@ -168,8 +167,12 @@ func CreateMasterVM(cs *api.ContainerService) VirtualMachineARM {
 		}
 	}
 	imgReference := &compute.ImageReference{}
-	if useMasterCustomImage {
-		imgReference.ID = to.StringPtr("[resourceId(parameters('osImageResourceGroup'), 'Microsoft.Compute/images', parameters('osImageName'))]")
+	if cs.Properties.MasterProfile.HasImageRef() {
+		if cs.Properties.MasterProfile.HasImageGallery() {
+			imgReference.ID = to.StringPtr(fmt.Sprintf("[concat('/subscriptions/', '%s', '/resourceGroups/', parameters('osImageResourceGroup'), '/providers/Microsoft.Compute/galleries/', '%s', '/images/', parameters('osImageName'), '/versions/', '%s')]", imageRef.SubscriptionID, imageRef.Gallery, imageRef.Version))
+		} else {
+			imgReference.ID = to.StringPtr("[resourceId(parameters('osImageResourceGroup'), 'Microsoft.Compute/images', parameters('osImageName'))]")
+		}
 	} else {
 		imgReference.Offer = to.StringPtr("[parameters('osImageOffer')]")
 		imgReference.Publisher = to.StringPtr("[parameters('osImagePublisher')]")
@@ -475,10 +478,15 @@ func createAgentAvailabilitySetVM(cs *api.ContainerService, profile *api.AgentPo
 
 	} else {
 		imageRef := profile.ImageRef
-		useAgentCustomImage := imageRef != nil && len(imageRef.Name) > 0 && len(imageRef.ResourceGroup) > 0
-		if useAgentCustomImage {
-			storageProfile.ImageReference = &compute.ImageReference{
-				ID: to.StringPtr(fmt.Sprintf("[resourceId(variables('%[1]sosImageResourceGroup'), 'Microsoft.Compute/images', variables('%[1]sosImageName'))]", profile.Name)),
+		if profile.HasImageRef() {
+			if profile.HasImageGallery() {
+				storageProfile.ImageReference = &compute.ImageReference{
+					ID: to.StringPtr(fmt.Sprintf("[concat('/subscriptions/', '%s', '/resourceGroups/', parameters('%sosImageResourceGroup'), '/providers/Microsoft.Compute/galleries/', '%s', '/images/', parameters('%sosImageName'), '/versions/', '%s')]", imageRef.SubscriptionID, profile.Name, imageRef.Gallery, profile.Name, imageRef.Version)),
+				}
+			} else {
+				storageProfile.ImageReference = &compute.ImageReference{
+					ID: to.StringPtr(fmt.Sprintf("[resourceId(variables('%[1]sosImageResourceGroup'), 'Microsoft.Compute/images', variables('%[1]sosImageName'))]", profile.Name)),
+				}
 			}
 		} else {
 			storageProfile.ImageReference = &compute.ImageReference{
