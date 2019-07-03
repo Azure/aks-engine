@@ -14281,7 +14281,6 @@ MASTER_CONTAINER_ADDONS_PLACEHOLDER
     #!/bin/bash
     source /opt/azure/containers/provision_source.sh
     sudo /bin/sed -i "s/Description=Kubelet/Description=Kubelet\nRequires=rpc-statd.service/g" /etc/systemd/system/kubelet.service
-    echo Wants=rpc-statd.service >> /etc/systemd/system/kubelet.service
     sudo /bin/sed -i "s/usr\/local\/bin\/kubelet/opt\/kubelet/g" /etc/systemd/system/kubelet.service
     sudo /bin/sed -i "s/usr\/bin\/etcd/opt\/bin\/etcd/g" /etc/systemd/system/etcd.service
     sudo /bin/sed -i "s/usr\/local\/bin\/health-monitor.sh/opt\/bin\/health-monitor.sh/g" /etc/systemd/system/kubelet-monitor.service /etc/systemd/system/docker-monitor.service
