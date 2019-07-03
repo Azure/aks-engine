@@ -9,6 +9,7 @@ import (
 	"net"
 	"net/url"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 
@@ -296,6 +297,22 @@ func (a *Properties) ValidateOrchestratorProfile(isUpdate bool) error {
 				if o.KubernetesConfig.MaximumLoadBalancerRuleCount < 0 {
 					return errors.New("maximumLoadBalancerRuleCount shouldn't be less than 0")
 				}
+
+				if a.IsAzureStackCloud() {
+					if to.Bool(o.KubernetesConfig.UseInstanceMetadata) {
+						return errors.New("useInstanceMetadata shouldn't be set to true as feature not yet supported on Azure Stack")
+					}
+
+					if o.KubernetesConfig.EtcdDiskSizeGB != "" {
+						etcdDiskSizeGB, err := strconv.Atoi(o.KubernetesConfig.EtcdDiskSizeGB)
+						if err != nil {
+							return errors.Errorf("could not convert EtcdDiskSizeGB to int")
+						}
+						if etcdDiskSizeGB > MaxAzureStackManagedDiskSize {
+							return errors.Errorf("EtcdDiskSizeGB max size supported on Azure Stack is %d", MaxAzureStackManagedDiskSize)
+						}
+					}
+				}
 			}
 		default:
 			return errors.Errorf("OrchestratorProfile has unknown orchestrator: %s", o.OrchestratorType)
@@ -428,7 +445,9 @@ func (a *Properties) validateAgentPoolProfiles(isUpdate bool) error {
 		}
 
 		if to.Bool(agentPoolProfile.AcceleratedNetworkingEnabled) || to.Bool(agentPoolProfile.AcceleratedNetworkingEnabledWindows) {
-			if e := validatePoolAcceleratedNetworking(agentPoolProfile.VMSize); e != nil {
+			if a.IsAzureStackCloud() {
+				return errors.Errorf("AcceleratedNetworkingEnabled or AcceleratedNetworkingEnabledWindows shouldn't be set to true as feature is not yet supported on Azure Stack")
+			} else if e := validatePoolAcceleratedNetworking(agentPoolProfile.VMSize); e != nil {
 				return e
 			}
 		}

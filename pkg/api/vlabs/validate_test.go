@@ -3006,6 +3006,121 @@ func TestValidateLocation(t *testing.T) {
 			},
 			expectedErr: errors.New("missing ContainerService Location"),
 		},
+		{
+			name:          "AzureStack UseInstanceMetadata is true",
+			location:      "local",
+			propertiesnil: false,
+			cs: &ContainerService{
+				Location: "local",
+				Properties: &Properties{
+					CustomCloudProfile: &CustomCloudProfile{
+						PortalURL: "https://portal.local.cotoso.com",
+					},
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorType:    Kubernetes,
+						OrchestratorVersion: "1.11.10",
+						KubernetesConfig: &KubernetesConfig{
+							UseInstanceMetadata: to.BoolPtr(trueVal),
+						},
+					},
+				},
+			},
+			expectedErr: errors.New("useInstanceMetadata shouldn't be set to true as feature not yet supported on Azure Stack"),
+		},
+		{
+			name:          "AzureStack EtcdDiskSizeGB is 1024",
+			location:      "local",
+			propertiesnil: false,
+			cs: &ContainerService{
+				Location: "local",
+				Properties: &Properties{
+					CustomCloudProfile: &CustomCloudProfile{
+						PortalURL: "https://portal.local.cotoso.com",
+					},
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorType:    Kubernetes,
+						OrchestratorVersion: "1.11.10",
+						KubernetesConfig: &KubernetesConfig{
+							EtcdDiskSizeGB: "1024",
+						},
+					},
+				},
+			},
+			expectedErr: errors.Errorf("EtcdDiskSizeGB max size supported on Azure Stack is %d", MaxAzureStackManagedDiskSize),
+		},
+		{
+			name:          "AzureStack EtcdDiskSizeGB is 1024",
+			location:      "local",
+			propertiesnil: false,
+			cs: &ContainerService{
+				Location: "local",
+				Properties: &Properties{
+					CustomCloudProfile: &CustomCloudProfile{
+						PortalURL: "https://portal.local.cotoso.com",
+					},
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorType:    Kubernetes,
+						OrchestratorVersion: "1.11.10",
+						KubernetesConfig: &KubernetesConfig{
+							EtcdDiskSizeGB: "1024GB",
+						},
+					},
+				},
+			},
+			expectedErr: errors.New("could not convert EtcdDiskSizeGB to int"),
+		},
+		{
+			name:          "AzureStack AcceleratedNetworking is true",
+			location:      "local",
+			propertiesnil: false,
+			cs: &ContainerService{
+				Location: "local",
+				Properties: &Properties{
+					CustomCloudProfile: &CustomCloudProfile{
+						PortalURL: "https://portal.local.cotoso.com",
+					},
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorType:    Kubernetes,
+						OrchestratorVersion: "1.11.10",
+					},
+					AgentPoolProfiles: []*AgentPoolProfile{
+						{
+							Name:                         "testpool",
+							Count:                        1,
+							VMSize:                       "Standard_D2_v2",
+							AcceleratedNetworkingEnabled: to.BoolPtr(trueVal),
+						},
+					},
+				},
+			},
+			expectedErr: errors.New("AcceleratedNetworkingEnabled or AcceleratedNetworkingEnabledWindows shouldn't be set to true as feature is not yet supported on Azure Stack"),
+		},
+		{
+			name:          "AzureStack AcceleratedNetworking is true",
+			location:      "local",
+			propertiesnil: false,
+			cs: &ContainerService{
+				Location: "local",
+				Properties: &Properties{
+					CustomCloudProfile: &CustomCloudProfile{
+						PortalURL: "https://portal.local.cotoso.com",
+					},
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorType:    Kubernetes,
+						OrchestratorVersion: "1.11.10",
+					},
+					AgentPoolProfiles: []*AgentPoolProfile{
+						{
+							Name:                                "testpool",
+							Count:                               1,
+							VMSize:                              "Standard_D2_v2",
+							AcceleratedNetworkingEnabledWindows: to.BoolPtr(trueVal),
+						},
+					},
+				},
+			},
+			expectedErr: errors.New("AcceleratedNetworkingEnabled or AcceleratedNetworkingEnabledWindows shouldn't be set to true as feature is not yet supported on Azure Stack"),
+		},
 	}
 
 	for _, test := range tests {
@@ -3015,7 +3130,17 @@ func TestValidateLocation(t *testing.T) {
 			cs := getK8sDefaultContainerService(true)
 			cs.Location = test.cs.Location
 			if test.cs.Properties != nil {
-				cs.Properties.CustomCloudProfile = test.cs.Properties.CustomCloudProfile
+				if test.cs.Properties.CustomCloudProfile != nil {
+					cs.Properties.CustomCloudProfile = test.cs.Properties.CustomCloudProfile
+				}
+
+				if test.cs.Properties.OrchestratorProfile != nil {
+					cs.Properties.OrchestratorProfile = test.cs.Properties.OrchestratorProfile
+				}
+
+				if test.cs.Properties.AgentPoolProfiles != nil {
+					cs.Properties.AgentPoolProfiles = test.cs.Properties.AgentPoolProfiles
+				}
 			}
 
 			if test.propertiesnil {

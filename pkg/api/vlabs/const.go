@@ -134,6 +134,8 @@ const (
 const (
 	// AzureStackCloud is a const string reference identifier for Azure Stack cloud
 	AzureStackCloud = "AzureStackCloud"
+	// MaxAzureStackManagedDiskSize is max etcd disk size supported on AzureStackCloud
+	MaxAzureStackManagedDiskSize = 1023
 )
 
 const (
