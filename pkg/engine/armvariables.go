@@ -365,7 +365,7 @@ func getK8sMasterVars(cs *api.ContainerService) (map[string]interface{}, error) 
 				if err != nil {
 					panic(err)
 				}
-				masterVars["kubeconfig"] = strings.Replace(kubeConfig,"\n", "", -1)
+				masterVars["kubeconfig"] = kubeConfig
 
 				isJumpboxManagedDisks := kubernetesConfig.PrivateJumpboxProvision() &&
 					kubernetesConfig.PrivateCluster.JumpboxProfile.StorageProfile == api.ManagedDisks
