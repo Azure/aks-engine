@@ -276,7 +276,6 @@ write_files:
   owner: root
   content: |
     #!/bin/bash
-    sudo /bin/sed -i "s/usr\/local\/bin\/health-monitor.sh/opt\/bin\/health-monitor.sh/g" /etc/systemd/system/kubelet-monitor.service /etc/systemd/system/docker-monitor.service
     /usr/bin/mkdir -p /etc/kubernetes/manifests
     {{if .KubernetesConfig.RequiresDocker}}
     usermod -aG docker {{WrapAsParameter "linuxAdminUsername"}}
@@ -315,6 +314,22 @@ coreos:
               --volume-plugin-dir=/etc/kubernetes/volumeplugins \
               $KUBELET_CONFIG $KUBELET_OPTS \
               $KUBELET_REGISTER_NODE $KUBELET_REGISTER_WITH_TAINTS
+    - name: kubelet-monitor.service
+      enable: true
+      drop-ins:
+        - name: "10-coreos.conf"
+          content: |
+            [Service]
+            ExecStart=
+            ExecStart=/opt/bin/health-monitor.sh kubelet
+    - name: docker-monitor.service
+      enable: true
+      drop-ins:
+        - name: "10-coreos.conf"
+          content: |
+            [Service]
+            ExecStart=
+            ExecStart=/opt/bin/health-monitor.sh container-runtime
 {{else}}
 runcmd:
 - set -x
