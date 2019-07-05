@@ -469,7 +469,6 @@ MASTER_CONTAINER_ADDONS_PLACEHOLDER
     systemctl daemon-reload
     systemctl restart etcd-member
     retrycmd_if_failure 5 5 10 curl --retry 5 --retry-delay 10 --retry-max-time 10 --max-time 60 http://127.0.0.1:2379/v2/machines
-    mkdir -p /etc/kubernetes/manifests
 
     {{if .OrchestratorProfile.KubernetesConfig.RequiresDocker}}
     usermod -aG docker {{WrapAsParameter "linuxAdminUsername"}}
@@ -480,6 +479,8 @@ MASTER_CONTAINER_ADDONS_PLACEHOLDER
     {{end}}
 
     touch /opt/azure/containers/runcmd.complete
+
+- path: "/etc/kubernetes/manifests/.keep"
 
 coreos:
   units:
