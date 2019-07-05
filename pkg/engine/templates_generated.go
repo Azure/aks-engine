@@ -14651,9 +14651,6 @@ write_files:
     usermod -aG docker {{WrapAsParameter "linuxAdminUsername"}}
     {{end}}
 
-    systemctl enable rpcbind
-    systemctl start rpcbind
-
     touch /opt/azure/containers/runcmd.complete
 
 coreos:
@@ -14700,6 +14697,8 @@ coreos:
             [Service]
             ExecStart=
             ExecStart=/opt/bin/health-monitor.sh container-runtime
+    - name: rpcbind.service
+      enable: true
 {{else}}
 runcmd:
 - set -x
