@@ -14283,7 +14283,6 @@ MASTER_CONTAINER_ADDONS_PLACEHOLDER
     #!/bin/bash
     source /opt/azure/containers/provision_source.sh
     /opt/azure/containers/mountetcd.sh
-    sudo /bin/chown -R etcd:etcd /var/lib/etcddisk
     retrycmd_if_failure 5 5 10 curl --retry 5 --retry-delay 10 --retry-max-time 10 --max-time 60 https://127.0.0.1:2379/v2/machines
 
     {{if EnableAggregatedAPIs}}
