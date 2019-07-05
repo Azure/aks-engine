@@ -14290,10 +14290,6 @@ MASTER_CONTAINER_ADDONS_PLACEHOLDER
     systemctl restart etcd-member
     retrycmd_if_failure 5 5 10 curl --retry 5 --retry-delay 10 --retry-max-time 10 --max-time 60 http://127.0.0.1:2379/v2/machines
 
-    {{if .OrchestratorProfile.KubernetesConfig.RequiresDocker}}
-    usermod -aG docker {{WrapAsParameter "linuxAdminUsername"}}
-    {{end}}
-
     {{if EnableAggregatedAPIs}}
     sudo bash /etc/kubernetes/generate-proxy-certs.sh
     {{end}}
@@ -14301,6 +14297,11 @@ MASTER_CONTAINER_ADDONS_PLACEHOLDER
     touch /opt/azure/containers/runcmd.complete
 
 - path: "/etc/kubernetes/manifests/.keep"
+
+{{if .OrchestratorProfile.KubernetesConfig.RequiresDocker}}
+groups:
+  - docker: [{{WrapAsParameter "linuxAdminUsername"}}]
+{{end}}
 
 coreos:
   units:
@@ -14647,13 +14648,14 @@ write_files:
   owner: root
   content: |
     #!/bin/bash
-    {{if .KubernetesConfig.RequiresDocker}}
-    usermod -aG docker {{WrapAsParameter "linuxAdminUsername"}}
-    {{end}}
-
     touch /opt/azure/containers/runcmd.complete
 
 - path: "/etc/kubernetes/manifests/.keep"
+
+{{if .KubernetesConfig.RequiresDocker}}
+groups:
+  - docker: [{{WrapAsParameter "linuxAdminUsername"}}]
+{{end}}
 
 coreos:
   units:

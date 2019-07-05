@@ -276,13 +276,14 @@ write_files:
   owner: root
   content: |
     #!/bin/bash
-    {{if .KubernetesConfig.RequiresDocker}}
-    usermod -aG docker {{WrapAsParameter "linuxAdminUsername"}}
-    {{end}}
-
     touch /opt/azure/containers/runcmd.complete
 
 - path: "/etc/kubernetes/manifests/.keep"
+
+{{if .KubernetesConfig.RequiresDocker}}
+groups:
+  - docker: [{{WrapAsParameter "linuxAdminUsername"}}]
+{{end}}
 
 coreos:
   units:
