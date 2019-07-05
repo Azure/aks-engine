@@ -14280,8 +14280,6 @@ MASTER_CONTAINER_ADDONS_PLACEHOLDER
   content: |
     #!/bin/bash
     source /opt/azure/containers/provision_source.sh
-    sudo /bin/sed -i "s/Description=Kubelet/Description=Kubelet\nRequires=rpc-statd.service/g" /etc/systemd/system/kubelet.service
-    sudo /bin/sed -i "s/usr\/local\/bin\/kubelet/opt\/kubelet/g" /etc/systemd/system/kubelet.service
     sudo /bin/sed -i "s/usr\/bin\/etcd/opt\/bin\/etcd/g" /etc/systemd/system/etcd.service
     sudo /bin/sed -i "s/usr\/local\/bin\/health-monitor.sh/opt\/bin\/health-monitor.sh/g" /etc/systemd/system/kubelet-monitor.service /etc/systemd/system/docker-monitor.service
     /bin/echo DAEMON_ARGS=--name "{{WrapAsVerbatim "variables('masterVMNames')[copyIndex(variables('masterOffset'))]"}}" --initial-advertise-peer-urls "{{WrapAsVerbatim "variables('masterEtcdPeerURLs')[copyIndex(variables('masterOffset'))]"}}" --listen-peer-urls "{{WrapAsVerbatim "variables('masterEtcdPeerURLs')[copyIndex(variables('masterOffset'))]"}}" --advertise-client-urls "{{WrapAsVerbatim "variables('masterEtcdClientURLs')[copyIndex(variables('masterOffset'))]"}}" --listen-client-urls "{{WrapAsVerbatim "concat(variables('masterEtcdClientURLs')[copyIndex(variables('masterOffset'))], ',http://127.0.0.1:', variables('masterEtcdClientPort'))"}}" --initial-cluster-token "k8s-etcd-cluster" --initial-cluster "{{WrapAsVerbatim "variables('masterEtcdClusterStates')[div(variables('masterCount'), 2)]"}} --data-dir "/var/lib/etcddisk"" --initial-cluster-state "new" | tee -a /etc/default/etcd
@@ -14314,6 +14312,24 @@ coreos:
 
         [Service]
         ExecStart=/opt/azure/containers/provision-setup.sh
+    - name: kubelet.service
+      enable: true
+      drop-ins:
+        - name: "10-coreos.conf"
+          content: |
+            [Unit]
+            Requires=rpc-statd.service
+            ConditionPathExists=
+            ConditionPathExists=/opt/kubelet
+            [Service]
+            ExecStart=
+            ExecStart=/opt/kubelet \
+              --enable-server \
+              --node-labels="${KUBELET_NODE_LABELS}" \
+              --v=2 \
+              --volume-plugin-dir=/etc/kubernetes/volumeplugins \
+              $KUBELET_CONFIG $KUBELET_OPTS \
+              $KUBELET_REGISTER_NODE $KUBELET_REGISTER_WITH_TAINTS
 {{else}}
 runcmd:
 - set -x
@@ -14615,8 +14631,6 @@ write_files:
   owner: root
   content: |
     #!/bin/bash
-    sudo /bin/sed -i "s/Description=Kubelet/Description=Kubelet\nRequires=rpc-statd.service/g" /etc/systemd/system/kubelet.service
-    sudo /bin/sed -i "s/usr\/local\/bin\/kubelet/opt\/kubelet/g" /etc/systemd/system/kubelet.service
     sudo /bin/sed -i "s/usr\/local\/bin\/health-monitor.sh/opt\/bin\/health-monitor.sh/g" /etc/systemd/system/kubelet-monitor.service /etc/systemd/system/docker-monitor.service
     /usr/bin/mkdir -p /etc/kubernetes/manifests
     {{if .KubernetesConfig.RequiresDocker}}
@@ -14624,9 +14638,7 @@ write_files:
     {{end}}
 
     systemctl enable rpcbind
-    systemctl enable kubelet
     systemctl start rpcbind
-    systemctl start kubelet
 
     touch /opt/azure/containers/runcmd.complete
 
@@ -14640,6 +14652,24 @@ coreos:
 
         [Service]
         ExecStart=/opt/azure/containers/provision-setup.sh
+    - name: kubelet.service
+      enable: true
+      drop-ins:
+        - name: "10-coreos.conf"
+          content: |
+            [Unit]
+            Requires=rpc-statd.service
+            ConditionPathExists=
+            ConditionPathExists=/opt/kubelet
+            [Service]
+            ExecStart=
+            ExecStart=/opt/kubelet \
+              --enable-server \
+              --node-labels="${KUBELET_NODE_LABELS}" \
+              --v=2 \
+              --volume-plugin-dir=/etc/kubernetes/volumeplugins \
+              $KUBELET_CONFIG $KUBELET_OPTS \
+              $KUBELET_REGISTER_NODE $KUBELET_REGISTER_WITH_TAINTS
 {{else}}
 runcmd:
 - set -x
