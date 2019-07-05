@@ -14643,13 +14643,6 @@ write_files:
 {{end}}
 
 {{if .IsCoreOS}}
-- path: /opt/azure/containers/provision-setup.sh
-  permissions: "0755"
-  owner: root
-  content: |
-    #!/bin/bash
-    touch /opt/azure/containers/runcmd.complete
-
 - path: "/etc/kubernetes/manifests/.keep"
 
 {{if .KubernetesConfig.RequiresDocker}}
@@ -14659,14 +14652,6 @@ groups:
 
 coreos:
   units:
-    - name: start-provision-setup.service
-      command: "start"
-      content: |
-        [Unit]
-        Description=Start provision setup service
-
-        [Service]
-        ExecStart=/opt/azure/containers/provision-setup.sh
     - name: kubelet.service
       enable: true
       drop-ins:
