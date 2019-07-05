@@ -14255,12 +14255,14 @@ MASTER_CONTAINER_ADDONS_PLACEHOLDER
     sudo sed -i "1iETCDCTL_CA_FILE={{WrapAsVariable "etcdCaFilepath"}}" /etc/environment
     sudo sed -i "1iETCDCTL_KEY_FILE={{WrapAsVariable "etcdClientKeyFilepath"}}" /etc/environment
     sudo sed -i "1iETCDCTL_CERT_FILE={{WrapAsVariable "etcdClientCertFilepath"}}" /etc/environment
+    sudo sed -i "/^DAEMON_ARGS=/d" /etc/default/etcd
     /bin/echo DAEMON_ARGS=--name $MASTER_VM_NAME --peer-client-cert-auth --peer-trusted-ca-file={{WrapAsVariable "etcdCaFilepath"}} --peer-cert-file=/etc/kubernetes/certs/etcdpeer$MASTER_INDEX.crt --peer-key-file=/etc/kubernetes/certs/etcdpeer$MASTER_INDEX.key --initial-advertise-peer-urls "https://$PRIVATE_IP:$ETCD_SERVER_PORT" --listen-peer-urls "https://$PRIVATE_IP:$ETCD_SERVER_PORT" --client-cert-auth --trusted-ca-file={{WrapAsVariable "etcdCaFilepath"}} --cert-file={{WrapAsVariable "etcdServerCertFilepath"}} --key-file={{WrapAsVariable "etcdServerKeyFilepath"}} --advertise-client-urls "https://$PRIVATE_IP:$ETCD_CLIENT_PORT" --listen-client-urls "https://$PRIVATE_IP:$ETCD_CLIENT_PORT,https://127.0.0.1:$ETCD_CLIENT_PORT" --initial-cluster-token "k8s-etcd-cluster" --initial-cluster $MASTER_URLS --data-dir "/var/lib/etcddisk" --initial-cluster-state "new" | tee -a /etc/default/etcd
   {{else}}
     sudo sed -i "1iETCDCTL_ENDPOINTS=https://127.0.0.1:2379" /etc/environment
     sudo sed -i "1iETCDCTL_CA_FILE={{WrapAsVariable "etcdCaFilepath"}}" /etc/environment
     sudo sed -i "1iETCDCTL_KEY_FILE={{WrapAsVariable "etcdClientKeyFilepath"}}" /etc/environment
     sudo sed -i "1iETCDCTL_CERT_FILE={{WrapAsVariable "etcdClientCertFilepath"}}" /etc/environment
+    sudo sed -i "/^DAEMON_ARGS=/d" /etc/default/etcd
     /bin/echo DAEMON_ARGS=--name "{{WrapAsVerbatim "variables('masterVMNames')[copyIndex(variables('masterOffset'))]"}}" --peer-client-cert-auth --peer-trusted-ca-file={{WrapAsVariable "etcdCaFilepath"}} --peer-cert-file={{WrapAsVerbatim "variables('etcdPeerCertFilepath')[copyIndex(variables('masterOffset'))]"}} --peer-key-file={{WrapAsVerbatim "variables('etcdPeerKeyFilepath')[copyIndex(variables('masterOffset'))]"}} --initial-advertise-peer-urls "{{WrapAsVerbatim "variables('masterEtcdPeerURLs')[copyIndex(variables('masterOffset'))]"}}" --listen-peer-urls "{{WrapAsVerbatim "variables('masterEtcdPeerURLs')[copyIndex(variables('masterOffset'))]"}}" --client-cert-auth --trusted-ca-file={{WrapAsVariable "etcdCaFilepath"}} --cert-file={{WrapAsVariable "etcdServerCertFilepath"}} --key-file={{WrapAsVariable "etcdServerKeyFilepath"}} --advertise-client-urls "{{WrapAsVerbatim "variables('masterEtcdClientURLs')[copyIndex(variables('masterOffset'))]"}}" --listen-client-urls "{{WrapAsVerbatim "concat(variables('masterEtcdClientURLs')[copyIndex(variables('masterOffset'))], ',https://127.0.0.1:', variables('masterEtcdClientPort'))"}}" --initial-cluster-token "k8s-etcd-cluster" --initial-cluster {{WrapAsVerbatim "variables('masterEtcdClusterStates')[div(variables('masterCount'), 2)]"}} --data-dir "/var/lib/etcddisk" --initial-cluster-state "new" | tee -a /etc/default/etcd
   {{end}}
 {{end}}
@@ -14281,6 +14283,7 @@ MASTER_CONTAINER_ADDONS_PLACEHOLDER
     #!/bin/bash
     source /opt/azure/containers/provision_source.sh
     sudo /bin/sed -i "s/usr\/bin\/etcd/opt\/bin\/etcd/g" /etc/systemd/system/etcd.service
+    sudo sed -i "/^DAEMON_ARGS=/d" /etc/default/etcd
     /bin/echo DAEMON_ARGS=--name "{{WrapAsVerbatim "variables('masterVMNames')[copyIndex(variables('masterOffset'))]"}}" --initial-advertise-peer-urls "{{WrapAsVerbatim "variables('masterEtcdPeerURLs')[copyIndex(variables('masterOffset'))]"}}" --listen-peer-urls "{{WrapAsVerbatim "variables('masterEtcdPeerURLs')[copyIndex(variables('masterOffset'))]"}}" --advertise-client-urls "{{WrapAsVerbatim "variables('masterEtcdClientURLs')[copyIndex(variables('masterOffset'))]"}}" --listen-client-urls "{{WrapAsVerbatim "concat(variables('masterEtcdClientURLs')[copyIndex(variables('masterOffset'))], ',http://127.0.0.1:', variables('masterEtcdClientPort'))"}}" --initial-cluster-token "k8s-etcd-cluster" --initial-cluster "{{WrapAsVerbatim "variables('masterEtcdClusterStates')[div(variables('masterCount'), 2)]"}} --data-dir "/var/lib/etcddisk"" --initial-cluster-state "new" | tee -a /etc/default/etcd
     /opt/azure/containers/mountetcd.sh
     sudo /bin/chown -R etcd:etcd /var/lib/etcddisk
