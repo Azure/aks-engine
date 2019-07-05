@@ -14282,7 +14282,6 @@ MASTER_CONTAINER_ADDONS_PLACEHOLDER
   content: |
     #!/bin/bash
     source /opt/azure/containers/provision_source.sh
-    sudo /bin/sed -i "s/usr\/bin\/etcd/opt\/bin\/etcd/g" /etc/systemd/system/etcd.service
     sudo sed -i "/^DAEMON_ARGS=/d" /etc/default/etcd
     /bin/echo DAEMON_ARGS=--name "{{WrapAsVerbatim "variables('masterVMNames')[copyIndex(variables('masterOffset'))]"}}" --initial-advertise-peer-urls "{{WrapAsVerbatim "variables('masterEtcdPeerURLs')[copyIndex(variables('masterOffset'))]"}}" --listen-peer-urls "{{WrapAsVerbatim "variables('masterEtcdPeerURLs')[copyIndex(variables('masterOffset'))]"}}" --advertise-client-urls "{{WrapAsVerbatim "variables('masterEtcdClientURLs')[copyIndex(variables('masterOffset'))]"}}" --listen-client-urls "{{WrapAsVerbatim "concat(variables('masterEtcdClientURLs')[copyIndex(variables('masterOffset'))], ',http://127.0.0.1:', variables('masterEtcdClientPort'))"}}" --initial-cluster-token "k8s-etcd-cluster" --initial-cluster "{{WrapAsVerbatim "variables('masterEtcdClusterStates')[div(variables('masterCount'), 2)]"}} --data-dir "/var/lib/etcddisk"" --initial-cluster-state "new" | tee -a /etc/default/etcd
     /opt/azure/containers/mountetcd.sh
@@ -14350,6 +14349,13 @@ coreos:
             [Service]
             ExecStart=
             ExecStart=/opt/bin/health-monitor.sh container-runtime
+    - name: etcd.service
+      drop-ins:
+        - name: "10-coreos.conf"
+          content: |
+            [Service]
+            ExecStart=
+            ExecStart=/opt/bin/etcd $DAEMON_ARGS
 {{else}}
 runcmd:
 - set -x
