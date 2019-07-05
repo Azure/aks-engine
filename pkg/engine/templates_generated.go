@@ -14282,15 +14282,9 @@ MASTER_CONTAINER_ADDONS_PLACEHOLDER
   content: |
     #!/bin/bash
     source /opt/azure/containers/provision_source.sh
-    sudo sed -i "/^DAEMON_ARGS=/d" /etc/default/etcd
-    /bin/echo DAEMON_ARGS=--name "{{WrapAsVerbatim "variables('masterVMNames')[copyIndex(variables('masterOffset'))]"}}" --initial-advertise-peer-urls "{{WrapAsVerbatim "variables('masterEtcdPeerURLs')[copyIndex(variables('masterOffset'))]"}}" --listen-peer-urls "{{WrapAsVerbatim "variables('masterEtcdPeerURLs')[copyIndex(variables('masterOffset'))]"}}" --advertise-client-urls "{{WrapAsVerbatim "variables('masterEtcdClientURLs')[copyIndex(variables('masterOffset'))]"}}" --listen-client-urls "{{WrapAsVerbatim "concat(variables('masterEtcdClientURLs')[copyIndex(variables('masterOffset'))], ',http://127.0.0.1:', variables('masterEtcdClientPort'))"}}" --initial-cluster-token "k8s-etcd-cluster" --initial-cluster "{{WrapAsVerbatim "variables('masterEtcdClusterStates')[div(variables('masterCount'), 2)]"}} --data-dir "/var/lib/etcddisk"" --initial-cluster-state "new" | tee -a /etc/default/etcd
     /opt/azure/containers/mountetcd.sh
     sudo /bin/chown -R etcd:etcd /var/lib/etcddisk
-    systemctl stop etcd-member
-    sudo /bin/sed -i s/Restart=on-failure/Restart=always/g /lib/systemd/system/etcd-member.service
-    systemctl daemon-reload
-    systemctl restart etcd-member
-    retrycmd_if_failure 5 5 10 curl --retry 5 --retry-delay 10 --retry-max-time 10 --max-time 60 http://127.0.0.1:2379/v2/machines
+    retrycmd_if_failure 5 5 10 curl --retry 5 --retry-delay 10 --retry-max-time 10 --max-time 60 https://127.0.0.1:2379/v2/machines
 
     {{if EnableAggregatedAPIs}}
     sudo bash /etc/kubernetes/generate-proxy-certs.sh
@@ -14322,6 +14316,7 @@ coreos:
           content: |
             [Unit]
             Requires=rpc-statd.service
+            After=etcd.service
             ConditionPathExists=
             ConditionPathExists=/opt/kubelet
             [Service]
@@ -14350,12 +14345,15 @@ coreos:
             ExecStart=
             ExecStart=/opt/bin/health-monitor.sh container-runtime
     - name: etcd.service
+      enable: true
       drop-ins:
         - name: "10-coreos.conf"
           content: |
             [Service]
             ExecStart=
             ExecStart=/opt/bin/etcd $DAEMON_ARGS
+    - name: etcd-member.service
+      mask: true
 {{else}}
 runcmd:
 - set -x
