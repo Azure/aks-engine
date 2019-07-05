@@ -512,6 +512,18 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			}
 		})
 
+		It("Should not have any unready or crashing pods right after deployment", func() {
+			By("Checking ready status of each pod in kube-system")
+			pods, err := pod.GetAll("kube-system")
+			Expect(err).NotTo(HaveOccurred())
+			Expect(len(pods.Pods)).ToNot(BeZero())
+			for _, currentPod := range pods.Pods {
+				log.Printf("Checking %s - ready: %t, restarts: %d", currentPod.Metadata.Name, currentPod.Status.ContainerStatuses[0].Ready, currentPod.Status.ContainerStatuses[0].RestartCount)
+				Expect(currentPod.Status.ContainerStatuses[0].Ready).To(BeTrue())
+				Expect(currentPod.Status.ContainerStatuses[0].RestartCount).To(BeNumerically("<", 5))
+			}
+		})
+
 		It("should have the correct IP address for the apiserver", func() {
 			pods, err := pod.GetAllByPrefix("kube-apiserver", "kube-system")
 			Expect(err).NotTo(HaveOccurred())
@@ -1554,22 +1566,6 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				Expect(err).NotTo(HaveOccurred())
 			} else {
 				Skip("No windows agent was provisioned for this Cluster Definition")
-			}
-		})
-
-		It("Should not have any unready or crashing pods right after deployment", func() {
-			if eng.HasWindowsAgents() {
-				By("Checking ready status of each pod in kube-system")
-				pods, err := pod.GetAll("kube-system")
-				Expect(err).NotTo(HaveOccurred())
-				Expect(len(pods.Pods)).ToNot(BeZero())
-				for _, currentPod := range pods.Pods {
-					log.Printf("Checking %s", currentPod.Metadata.Name)
-					Expect(currentPod.Status.ContainerStatuses[0].Ready).To(BeTrue())
-					Expect(currentPod.Status.ContainerStatuses[0].RestartCount).To(BeNumerically("<", 3))
-				}
-			} else {
-				Skip("kube-system pod crashing test is a Windows-only validation at this time")
 			}
 		})
 
