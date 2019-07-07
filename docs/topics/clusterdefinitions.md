@@ -90,6 +90,7 @@ $ aks-engine get-versions
 | [smb-flexvolume](https://github.com/Azure/kubernetes-volume-drivers/tree/master/flexvolume/smb)                        | false               | as many as linux agent nodes                   | Access SMB server by using CIFS/SMB protocol |
 | [keyvault-flexvolume](../../examples/addons/keyvault-flexvolume/README.md)                        | true               | as many as linux agent nodes                   | Access secrets, keys, and certs in Azure Key Vault from pods |
 | [aad-pod-identity](../../examples/addons/aad-pod-identity/README.md)                        | false               | 1 + 1 on each linux agent nodes | Assign Azure Active Directory Identities to Kubernetes applications |
+| [scheduled-maintenance](https://github.com/awesomenix/drainsafe)                        | false               | 1 + 1 on each linux agent nodes                   | Cordon and drain node during planned/unplanned [azure maintenance](https://docs.microsoft.com/en-us/azure/virtual-machines/windows/scheduled-events) |
 
 To give a bit more info on the `addons` property: We've tried to expose the basic bits of data that allow useful configuration of these cluster features. Here are some example usage patterns that will unpack what `addons` provide:
 
