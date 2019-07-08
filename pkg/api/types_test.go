@@ -4316,6 +4316,8 @@ func TestFormatAzureProdFQDN(t *testing.T) {
 		"santest.southcentralus.cloudapp.azure.com",
 		"santest.southeastasia.cloudapp.azure.com",
 		"santest.southindia.cloudapp.azure.com",
+		"santest.uaecentral.cloudapp.azure.com",
+		"santest.uaenorth.cloudapp.azure.com",
 		"santest.uksouth.cloudapp.azure.com",
 		"santest.ukwest.cloudapp.azure.com",
 		"santest.usdodcentral.cloudapp.usgovcloudapi.net",
@@ -4336,8 +4338,6 @@ func TestFormatAzureProdFQDN(t *testing.T) {
 		"santest.usgovarizona.cloudapp.usgovcloudapi.net",
 		"santest.usgovtexas.cloudapp.usgovcloudapi.net",
 		"santest.francecentral.cloudapp.azure.com",
-		"santest.uaenorth.cloudapp.azure.com",
-		"santest.uaecentral.cloudapp.azure.com",
 	}
 
 	if !reflect.DeepEqual(actual, expected) {
@@ -4388,6 +4388,8 @@ func TestFormatProdFQDNByLocation(t *testing.T) {
 		"santest.southcentralus.cloudapp.azure.com",
 		"santest.southeastasia.cloudapp.azure.com",
 		"santest.southindia.cloudapp.azure.com",
+		"santest.uaecentral.cloudapp.azure.com",
+		"santest.uaenorth.cloudapp.azure.com",
 		"santest.uksouth.cloudapp.azure.com",
 		"santest.ukwest.cloudapp.azure.com",
 		"santest.usdodcentral.cloudapp.usgovcloudapi.net",
@@ -4408,8 +4410,6 @@ func TestFormatProdFQDNByLocation(t *testing.T) {
 		"santest.usgovarizona.cloudapp.usgovcloudapi.net",
 		"santest.usgovtexas.cloudapp.usgovcloudapi.net",
 		"santest.francecentral.cloudapp.azure.com",
-		"santest.uaenorth.cloudapp.azure.com",
-		"santest.uaecentral.cloudapp.azure.com",
 	}
 
 	if !reflect.DeepEqual(actual, expected) {
@@ -4823,6 +4823,8 @@ func TestGetLocations(t *testing.T) {
 		"southcentralus",
 		"southeastasia",
 		"southindia",
+		"uaecentral",
+		"uaenorth",
 		"uksouth",
 		"ukwest",
 		"usdodcentral",
@@ -4843,8 +4845,6 @@ func TestGetLocations(t *testing.T) {
 		"usgovarizona",
 		"usgovtexas",
 		"francecentral",
-		"uaenorth",
-		"uaecentral",
 	}
 	actual := mockCSDefault.GetLocations()
 	if !reflect.DeepEqual(expected, actual) {
