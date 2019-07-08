@@ -213,6 +213,12 @@ func kubernetesAddonSettingsInit(p *api.Properties) []kubernetesComponentFileSpe
 			destinationFile: "pod-security-policy.yaml",
 			isEnabled:       to.Bool(p.OrchestratorProfile.KubernetesConfig.EnablePodSecurityPolicy) || common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.15.0-beta.1"),
 		},
+		{
+			sourceFile:      "kubernetesmasteraddons-scheduled-maintenance-deployment.yaml",
+			base64Data:      k.GetAddonScript(ScheduledMaintenanceAddonName),
+			destinationFile: "scheduled-maintenance-deployment.yaml",
+			isEnabled:       k.IsAddonEnabled(ScheduledMaintenanceAddonName),
+		},
 	}
 
 	unmanagedStorageClassesSourceYaml := "kubernetesmasteraddons-unmanaged-azure-storage-classes.yaml"
