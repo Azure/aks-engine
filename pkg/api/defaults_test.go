@@ -1493,6 +1493,7 @@ func TestWindowsProfileDefaults(t *testing.T) {
 		name                   string // test case name
 		windowsProfile         WindowsProfile
 		expectedWindowsProfile WindowsProfile
+		isAzureStack           bool
 	}{
 		{
 			"defaults",
@@ -1508,6 +1509,7 @@ func TestWindowsProfileDefaults(t *testing.T) {
 				WindowsDockerVersion:  "",
 				SSHEnabled:            false,
 			},
+			false,
 		},
 		{
 			"user overrides",
@@ -1528,12 +1530,32 @@ func TestWindowsProfileDefaults(t *testing.T) {
 				WindowsDockerVersion:  "",
 				SSHEnabled:            false,
 			},
+			false,
+		},
+		{
+			"Azure Stack defaults",
+			WindowsProfile{},
+			WindowsProfile{
+				WindowsPublisher:      DefaultWindowsPublisher,
+				WindowsOffer:          DefaultAzureStackWindowsOffer,
+				WindowsSku:            DefaultAzureStackWindowsSku,
+				ImageVersion:          DefaultAzureStackImageVersion,
+				AdminUsername:         "",
+				AdminPassword:         "",
+				WindowsImageSourceURL: "",
+				WindowsDockerVersion:  "",
+				SSHEnabled:            false,
+			},
+			true,
 		},
 	}
 
 	for _, test := range tests {
 		mockAPI := getMockAPIProperties("1.14.0")
 		mockAPI.WindowsProfile = &test.windowsProfile
+		if test.isAzureStack {
+			mockAPI.CustomCloudProfile = &CustomCloudProfile{}
+		}
 		mockAPI.setWindowsProfileDefaults(false, false)
 		if mockAPI.WindowsProfile.WindowsPublisher != test.expectedWindowsProfile.WindowsPublisher {
 			t.Fatalf("setWindowsProfileDefaults() test case %v did not return right default values %v != %v", test.name, mockAPI.WindowsProfile.WindowsPublisher, test.expectedWindowsProfile.WindowsPublisher)

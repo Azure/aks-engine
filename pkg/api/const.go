@@ -259,6 +259,15 @@ const (
 
 	// MaxAzureStackManagedDiskSize = size for Kubernetes master etcd disk volumes in GB if > 10 nodes as this is max what Azure Stack supports today.
 	MaxAzureStackManagedDiskSize = "1023"
+
+	// DefaultAzureStackWindowsOffer sets the default WindowsOffer value in WindowsProfile for Azure Stack
+	DefaultAzureStackWindowsOffer = "WindowsServer"
+
+	// DefaultAzureStackWindowsSku sets the default WindowsSku value in WindowsProfile for Azure Stack
+	DefaultAzureStackWindowsSku = "2019-Datacenter-Core-with-Containers"
+
+	// DefaultAzureStackImageVersion sets the default ImageVersion value in WindowsProfile for Azure Stack
+	DefaultAzureStackImageVersion = "latest"
 )
 
 // WindowsProfile defaults
