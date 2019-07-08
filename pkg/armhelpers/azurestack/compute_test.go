@@ -18,17 +18,22 @@ func TestListVirtualMachineScaleSets(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to create HttpMockClient - %s", err)
 	}
-	mc.Activate()
-	defer mc.DeactivateAndReset()
+
 	mc.RegisterLogin()
+	mc.RegisterListVirtualMachineScaleSets()
+
+	err = mc.Activate()
+	if err != nil {
+		t.Fatalf("failed to activate HttpMockClient - %s", err)
+	}
+	defer mc.DeactivateAndReset()
+
 	env := mc.GetEnvironment()
 
 	azureClient, err := NewAzureClientWithClientSecret(env, subscriptionID, "clientID", "secret")
 	if err != nil {
 		t.Fatalf("can not get client %s", err)
 	}
-
-	mc.RegisterListVirtualMachineScaleSets()
 
 	list := &VirtualMachineScaleSetListValues{}
 	err = unmarshalFromString(mc.ResponseListVirtualMachineScaleSets, &list)
@@ -54,17 +59,22 @@ func TestListVirtualMachineScaleSetVMs(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to create HttpMockClient - %s", err)
 	}
-	mc.Activate()
-	defer mc.DeactivateAndReset()
+
 	mc.RegisterLogin()
+	mc.RegisterListVirtualMachineScaleSetVMs()
+
+	err = mc.Activate()
+	if err != nil {
+		t.Fatalf("failed to activate HttpMockClient - %s", err)
+	}
+	defer mc.DeactivateAndReset()
+
 	env := mc.GetEnvironment()
 
 	azureClient, err := NewAzureClientWithClientSecret(env, subscriptionID, "clientID", "secret")
 	if err != nil {
 		t.Fatalf("can not get client %s", err)
 	}
-
-	mc.RegisterListVirtualMachineScaleSetVMs()
 
 	list := &VirtualMachineScaleSetVMValues{}
 	err = unmarshalFromString(mc.ResponseListVirtualMachineScaleSetVMs, &list)
@@ -90,16 +100,21 @@ func TestListVirtualMachines(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to create HttpMockClient - %s", err)
 	}
-	mc.Activate()
-	defer mc.DeactivateAndReset()
+
 	mc.RegisterLogin()
+	mc.RegisterListVirtualMachines()
+
+	err = mc.Activate()
+	if err != nil {
+		t.Fatalf("failed to activate HttpMockClient - %s", err)
+	}
+	defer mc.DeactivateAndReset()
+
 	env := mc.GetEnvironment()
 	azureClient, err := NewAzureClientWithClientSecret(env, subscriptionID, "clientID", "secret")
 	if err != nil {
 		t.Fatalf("can not get client %s", err)
 	}
-
-	mc.RegisterListVirtualMachines()
 
 	list := &VirtualMachineVMValues{}
 	err = unmarshalFromString(mc.ResponseListVirtualMachines, &list)
@@ -125,17 +140,21 @@ func TestGetVirtualMachine(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to create HttpMockClient - %s", err)
 	}
-	mc.Activate()
-	defer mc.DeactivateAndReset()
-	mc.RegisterLogin()
-	env := mc.GetEnvironment()
 
+	mc.RegisterLogin()
+	mc.RegisterVirtualMachineEndpoint()
+
+	err = mc.Activate()
+	if err != nil {
+		t.Fatalf("failed to activate HttpMockClient - %s", err)
+	}
+	defer mc.DeactivateAndReset()
+
+	env := mc.GetEnvironment()
 	azureClient, err := NewAzureClientWithClientSecret(env, subscriptionID, "clientID", "secret")
 	if err != nil {
 		t.Fatalf("can not get client %s", err)
 	}
-
-	mc.RegisterGetVirtualMachine()
 
 	vm := compute.VirtualMachine{}
 	err = unmarshalFromString(mc.ResponseGetVirtualMachine, &vm)
@@ -169,16 +188,22 @@ func TestDeleteVirtualMachine(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to create HttpMockClient - %s", err)
 	}
-	mc.Activate()
-	defer mc.DeactivateAndReset()
+
 	mc.RegisterLogin()
+	mc.RegisterVirtualMachineEndpoint()
+	mc.RegisterDeleteOperation()
+
+	err = mc.Activate()
+	if err != nil {
+		t.Fatalf("failed to activate HttpMockClient - %s", err)
+	}
+	defer mc.DeactivateAndReset()
+
 	env := mc.GetEnvironment()
 	azureClient, err := NewAzureClientWithClientSecret(env, subscriptionID, "clientID", "secret")
 	if err != nil {
 		t.Fatalf("can not get client %s", err)
 	}
-
-	mc.RegisterDeleteVirtualMachine()
 
 	err = azureClient.DeleteVirtualMachine(context.Background(), resourceGroup, virtualMachineName)
 	if err != nil {
@@ -191,17 +216,22 @@ func TestGetAvailabilitySet(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to create HttpMockClient - %s", err)
 	}
-	mc.Activate()
-	defer mc.DeactivateAndReset()
+
 	mc.RegisterLogin()
+	mc.RegisterGetAvailabilitySet()
+
+	err = mc.Activate()
+	if err != nil {
+		t.Fatalf("failed to activate HttpMockClient - %s", err)
+	}
+	defer mc.DeactivateAndReset()
+
 	env := mc.GetEnvironment()
 
 	azureClient, err := NewAzureClientWithClientSecret(env, subscriptionID, "clientID", "secret")
 	if err != nil {
 		t.Fatalf("can not get client %s", err)
 	}
-
-	mc.RegisterGetAvailabilitySet()
 
 	vmas, err := azureClient.GetAvailabilitySet(context.Background(), resourceGroup, virtualMachineAvailabilitySetName)
 	if err != nil {
@@ -226,17 +256,22 @@ func TestGetAvailabilitySetFaultDomainCount(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to create HttpMockClient - %s", err)
 	}
-	mc.Activate()
-	defer mc.DeactivateAndReset()
+
 	mc.RegisterLogin()
+	mc.RegisterGetAvailabilitySetFaultDomainCount()
+
+	err = mc.Activate()
+	if err != nil {
+		t.Fatalf("failed to activate HttpMockClient - %s", err)
+	}
+	defer mc.DeactivateAndReset()
+
 	env := mc.GetEnvironment()
 
 	azureClient, err := NewAzureClientWithClientSecret(env, subscriptionID, "clientID", "secret")
 	if err != nil {
 		t.Fatalf("can not get client %s", err)
 	}
-
-	mc.RegisterGetAvailabilitySetFaultDomainCount()
 
 	count, err := azureClient.GetAvailabilitySetFaultDomainCount(context.Background(), resourceGroup, []string{"id1", "id2"})
 	if err != nil {

@@ -15,16 +15,22 @@ func TestDeployTemplate(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to create HttpMockClient - %s", err)
 	}
-	mc.Activate()
-	defer mc.DeactivateAndReset()
+
 	mc.RegisterLogin()
+	mc.RegisterDeployTemplate()
+	mc.RegisterDeployOperationSuccess()
+
+	err = mc.Activate()
+	if err != nil {
+		t.Fatalf("failed to activate HttpMockClient - %s", err)
+	}
+	defer mc.DeactivateAndReset()
+
 	env := mc.GetEnvironment()
 	azureClient, err := NewAzureClientWithClientSecret(env, subscriptionID, "clientID", "secret")
 	if err != nil {
 		t.Fatalf("can not get client %s", err)
 	}
-
-	mc.RegisterDeployTemplate()
 
 	_, err = azureClient.DeployTemplate(context.Background(), resourceGroup, deploymentName, map[string]interface{}{}, map[string]interface{}{})
 	if err != nil {
@@ -37,18 +43,26 @@ func TestDeployTemplateSync(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to create HttpMockClient - %s", err)
 	}
-	mc.Activate()
-	defer mc.DeactivateAndReset()
+
 	mc.RegisterLogin()
+	mc.RegisterDeployTemplate()
+	mc.RegisterDeployOperationFailure()
+
+	err = mc.Activate()
+	if err != nil {
+		t.Fatalf("failed to activate HttpMockClient - %s", err)
+	}
+	defer mc.DeactivateAndReset()
+
 	env := mc.GetEnvironment()
 	azureClient, err := NewAzureClientWithClientSecret(env, subscriptionID, "clientID", "secret")
 	if err != nil {
 		t.Fatalf("can not get client %s", err)
 	}
-	mc.RegisterDeployTemplateSync()
+
 	logger := log.NewEntry(log.New())
 	err = DeployTemplateSync(azureClient, logger, resourceGroup, deploymentName, map[string]interface{}{}, map[string]interface{}{})
 	if err == nil {
-		t.Error("err should be be nil")
+		t.Error("err should not be nil")
 	}
 }
