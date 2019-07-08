@@ -3,14 +3,11 @@
 
 package azurestack
 
-/*
 import (
 	"context"
 	"testing"
-)*/
+)
 
-// TODO fix and re-enable
-/*
 func TestDeleteNetworkInterface(t *testing.T) {
 	mc, err := NewHTTPMockClient()
 	if err != nil {
@@ -37,4 +34,3 @@ func TestDeleteNetworkInterface(t *testing.T) {
 		t.Error(err)
 	}
 }
-*/
