@@ -670,14 +670,27 @@ func (p *Properties) setWindowsProfileDefaults(isUpgrade, isScale bool) {
 		if windowsProfile.WindowsPublisher == "" {
 			windowsProfile.WindowsPublisher = DefaultWindowsPublisher
 		}
-		if windowsProfile.WindowsOffer == "" {
-			windowsProfile.WindowsOffer = DefaultWindowsOffer
-		}
-		if windowsProfile.WindowsSku == "" {
-			windowsProfile.WindowsSku = DefaultWindowsSku
-		}
-		if windowsProfile.ImageVersion == "" {
-			windowsProfile.ImageVersion = DefaultImageVersion
+
+		if p.IsAzureStackCloud() {
+			if windowsProfile.WindowsOffer == "" {
+				windowsProfile.WindowsOffer = DefaultAzureStackWindowsOffer
+			}
+			if windowsProfile.WindowsSku == "" {
+				windowsProfile.WindowsSku = DefaultAzureStackWindowsSku
+			}
+			if windowsProfile.ImageVersion == "" {
+				windowsProfile.ImageVersion = DefaultAzureStackImageVersion
+			}
+		} else {
+			if windowsProfile.WindowsOffer == "" {
+				windowsProfile.WindowsOffer = DefaultWindowsOffer
+			}
+			if windowsProfile.WindowsSku == "" {
+				windowsProfile.WindowsSku = DefaultWindowsSku
+			}
+			if windowsProfile.ImageVersion == "" {
+				windowsProfile.ImageVersion = DefaultImageVersion
+			}
 		}
 	}
 }
