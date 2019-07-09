@@ -9,6 +9,10 @@ metadata:
     addonmanager.kubernetes.io/mode: Reconcile
     tier: node
 spec:
+  selector:
+    matchLabels:
+      k8s-app: azure-ip-masq-agent
+      tier: node
   template:
     metadata:
       labels:

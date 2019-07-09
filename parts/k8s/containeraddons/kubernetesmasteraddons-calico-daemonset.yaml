@@ -349,6 +349,9 @@ spec:
   # production, we recommend running at least 3 replicas to reduce the impact of rolling upgrade.
   replicas: 1
   revisionHistoryLimit: 2
+  selector:
+    matchLabels:
+      k8s-app: calico-typha
   template:
     metadata:
       labels:
@@ -718,7 +721,7 @@ subjects:
   namespace: kube-system
 ---
 
-# Typha Horizontal Autoscaler Role 
+# Typha Horizontal Autoscaler Role
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
@@ -764,4 +767,3 @@ metadata:
   namespace: kube-system
   labels:
     kubernetes.io/cluster-service: "true"
-
