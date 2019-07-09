@@ -12304,6 +12304,7 @@ cleanUpContainerImages() {
 
 cleanUpGPUDrivers() {
     rm -Rf $GPU_DEST
+    rm -f /etc/apt/sources.list.d/nvidia-docker.list
 }
 
 cleanUpContainerd() {
