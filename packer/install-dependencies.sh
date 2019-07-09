@@ -320,7 +320,10 @@ for BLOBFUSE_FLEXVOLUME_VERSION in ${BLOBFUSE_FLEXVOLUME_VERSIONS}; do
     echo "  - ${CONTAINER_IMAGE}" >> ${RELEASE_NOTES_FILEPATH}
 done
 
-IP_MASQ_AGENT_VERSIONS="2.0.0"
+IP_MASQ_AGENT_VERSIONS="
+2.3.0
+2.0.0
+"
 for IP_MASQ_AGENT_VERSION in ${IP_MASQ_AGENT_VERSIONS}; do
     # TODO remove the gcr.io/google-containers image once AKS switches to use k8s.gcr.io
     DEPRECATED_CONTAINER_IMAGE="gcr.io/google-containers/ip-masq-agent-amd64:v${IP_MASQ_AGENT_VERSION}"

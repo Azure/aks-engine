@@ -229,7 +229,7 @@ func (cs *ContainerService) setAddonsConfig(isUpdate bool) {
 				MemoryRequests: "50Mi",
 				CPULimits:      "50m",
 				MemoryLimits:   "250Mi",
-				Image:          specConfig.KubernetesImageBase + "ip-masq-agent-amd64:v2.0.0",
+				Image:          specConfig.KubernetesImageBase + "ip-masq-agent-amd64:v2.3.0",
 			},
 		},
 		Config: map[string]string{
