@@ -154,6 +154,7 @@ done
 KUBE_ADDON_MANAGER_VERSIONS="
 9.0.1
 9.0
+8.9.1
 8.9
 8.8
 8.7
@@ -317,7 +318,10 @@ for BLOBFUSE_FLEXVOLUME_VERSION in ${BLOBFUSE_FLEXVOLUME_VERSIONS}; do
     echo "  - ${CONTAINER_IMAGE}" >> ${RELEASE_NOTES_FILEPATH}
 done
 
-IP_MASQ_AGENT_VERSIONS="2.0.0"
+IP_MASQ_AGENT_VERSIONS="
+2.3.0
+2.0.0
+"
 for IP_MASQ_AGENT_VERSION in ${IP_MASQ_AGENT_VERSIONS}; do
     # TODO remove the gcr.io/google-containers image once AKS switches to use k8s.gcr.io
     DEPRECATED_CONTAINER_IMAGE="gcr.io/google-containers/ip-masq-agent-amd64:v${IP_MASQ_AGENT_VERSION}"
@@ -363,6 +367,7 @@ K8S_VERSIONS="
 1.14.3-azs
 1.14.1
 1.14.1-azs
+1.13.8
 1.13.7
 1.13.7-azs
 1.13.5
