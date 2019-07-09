@@ -363,6 +363,7 @@ echo "  - busybox" >> ${RELEASE_NOTES_FILEPATH}
 # TODO: fetch supported k8s versions from an aks-engine command instead of hardcoding them here
 K8S_VERSIONS="
 1.15.0
+1.14.4
 1.14.3
 1.14.3-azs
 1.14.1
