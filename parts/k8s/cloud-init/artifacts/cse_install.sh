@@ -313,7 +313,11 @@ cleanUpContainerd() {
 }
 
 cleanUpClearContainers() {
+    wait_for_apt_locks
     apt-get purge -y cc-runtime
+    wait_for_apt_locks
+    apt-get autoremove -y
+    rm -f /etc/apt/sources.list.d/cc-runtime.list
 }
 
 overrideNetworkConfig() {
