@@ -521,8 +521,8 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				log.Printf("Checking %s - ready: %t, restarts: %d", currentPod.Metadata.Name, currentPod.Status.ContainerStatuses[0].Ready, currentPod.Status.ContainerStatuses[0].RestartCount)
 				Expect(currentPod.Status.ContainerStatuses[0].Ready).To(BeTrue())
 				tooManyRestarts := 5
-				if strings.Contains(currentPod.Metadata.Name, "cluster-autoscaler") && !eng.HasWindowsAgents() {
-					log.Print("need to investigate cluster-autoscaler restarts on Linux!")
+				if strings.Contains(currentPod.Metadata.Name, "cluster-autoscaler") {
+					log.Print("need to investigate cluster-autoscaler restarts!")
 					tooManyRestarts = 10
 				}
 				Expect(currentPod.Status.ContainerStatuses[0].RestartCount).To(BeNumerically("<", tooManyRestarts))
