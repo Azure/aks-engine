@@ -233,7 +233,7 @@
             "containers": [
               {
                 "name": "ip-masq-agent",
-                "image": "k8s.gcr.io/ip-masq-agent-amd64:v2.0.0",
+                "image": "k8s.gcr.io/ip-masq-agent-amd64:v2.3.0",
                 "cpuRequests": "50m",
                 "memoryRequests": "50Mi",
                 "cpuLimits": "50m",
