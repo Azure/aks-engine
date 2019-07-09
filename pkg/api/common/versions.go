@@ -111,7 +111,7 @@ var AllKubernetesSupportedVersions = map[string]bool{
 	"1.13.2":         false,
 	"1.13.3":         false,
 	"1.13.4":         false,
-	"1.13.5":         false,
+	"1.13.5":         true,  // TODO: disable when Azure Stack supports 1.13.8
 	"1.13.6":         false, // disabled because of https://github.com/kubernetes/kubernetes/issues/78308
 	"1.13.7":         true,
 	"1.13.8":         true,
