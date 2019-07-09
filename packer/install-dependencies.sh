@@ -60,8 +60,6 @@ echo "  - moby v${MOBY_VERSION}" >> ${RELEASE_NOTES_FILEPATH}
 installGPUDrivers
 echo "  - nvidia-docker2 nvidia-container-runtime" >> ${RELEASE_NOTES_FILEPATH}
 
-installClearContainersRuntime
-
 VNET_CNI_VERSIONS="
 1.0.22
 1.0.18
