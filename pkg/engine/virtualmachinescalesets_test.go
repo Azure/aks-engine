@@ -302,8 +302,9 @@ func TestCreateAgentVMSS(t *testing.T) {
 				"resourceNameSuffix": to.StringPtr("[parameters('nameSuffix')]"),
 			},
 			VirtualMachineScaleSetProperties: &compute.VirtualMachineScaleSetProperties{
-				SinglePlacementGroup: to.BoolPtr(true),
-				Overprovision:        to.BoolPtr(false),
+				SinglePlacementGroup:                   to.BoolPtr(true),
+				Overprovision:                          to.BoolPtr(false),
+				DoNotRunExtensionsOnOverprovisionedVMs: to.BoolPtr(true),
 				UpgradePolicy: &compute.UpgradePolicy{
 					Mode: compute.Manual,
 				},
@@ -490,8 +491,9 @@ func TestCreateAgentVMSSHostedMasterProfile(t *testing.T) {
 				"resourceNameSuffix": to.StringPtr("[parameters('nameSuffix')]"),
 			},
 			VirtualMachineScaleSetProperties: &compute.VirtualMachineScaleSetProperties{
-				SinglePlacementGroup: to.BoolPtr(true),
-				Overprovision:        to.BoolPtr(false),
+				SinglePlacementGroup:                   to.BoolPtr(true),
+				Overprovision:                          to.BoolPtr(false),
+				DoNotRunExtensionsOnOverprovisionedVMs: to.BoolPtr(true),
 				UpgradePolicy: &compute.UpgradePolicy{
 					Mode: compute.Manual,
 				},
@@ -768,7 +770,8 @@ func TestCreateCustomOSVMSS(t *testing.T) {
 				"resourceNameSuffix": to.StringPtr("[parameters('nameSuffix')]"),
 			},
 			VirtualMachineScaleSetProperties: &compute.VirtualMachineScaleSetProperties{
-				Overprovision: to.BoolPtr(false),
+				Overprovision:                          to.BoolPtr(false),
+				DoNotRunExtensionsOnOverprovisionedVMs: to.BoolPtr(true),
 				UpgradePolicy: &compute.UpgradePolicy{
 					Mode: compute.Manual,
 				},
