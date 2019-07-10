@@ -217,14 +217,36 @@ func (sc *scaleCmd) run(cmd *cobra.Command, args []string) error {
 
 	ctx, cancel := context.WithTimeout(context.Background(), armhelpers.DefaultARMOperationTimeout)
 	defer cancel()
+	if sc.containerService.Properties.MasterProfile != nil && sc.containerService.Properties.MasterProfile.IsAvailabilitySets() ||
+		sc.agentPool.IsAvailabilitySets() {
+		availabilitySetIDs := []string{}
+		for vmsListPage, err := sc.client.ListVirtualMachines(ctx, sc.resourceGroupName); vmsListPage.NotDone(); err = vmsListPage.Next() {
+			if err != nil {
+				return errors.Wrap(err, "failed to get vms in the resource group")
+			} else if len(vmsListPage.Values()) < 1 {
+				return errors.New("The provided resource group does not contain any vms")
+			}
+			for _, vm := range vmsListPage.Values() {
+				if vm.AvailabilitySet != nil {
+					availabilitySetIDs = append(availabilitySetIDs, *vm.AvailabilitySet.ID)
+				}
+			}
+		}
+		// set the VMAS platformFaultDomainCount to match the existing value
+		fdCount, err := sc.client.GetAvailabilitySetFaultDomainCount(ctx, sc.resourceGroupName, availabilitySetIDs)
+		if err != nil {
+			return err
+		}
+		sc.containerService.SetPlatformFaultDomainCount(fdCount)
+	}
+
 	orchestratorInfo := sc.containerService.Properties.OrchestratorProfile
 	var currentNodeCount, highestUsedIndex, index, winPoolIndex int
 	winPoolIndex = -1
 	indexes := make([]int, 0)
 	indexToVM := make(map[int]string)
-	if sc.agentPool.IsAvailabilitySets() {
-		availabilitySetIDs := []string{}
 
+	if sc.agentPool.IsAvailabilitySets() {
 		for vmsListPage, err := sc.client.ListVirtualMachines(ctx, sc.resourceGroupName); vmsListPage.NotDone(); err = vmsListPage.Next() {
 			if err != nil {
 				return errors.Wrap(err, "failed to get vms in the resource group")
@@ -235,10 +257,6 @@ func (sc *scaleCmd) run(cmd *cobra.Command, args []string) error {
 				vmName := *vm.Name
 				if !sc.vmInAgentPool(vmName, vm.Tags) {
 					continue
-				}
-
-				if vm.AvailabilitySet != nil {
-					availabilitySetIDs = append(availabilitySetIDs, *vm.AvailabilitySet.ID)
 				}
 
 				osPublisher := vm.StorageProfile.ImageReference.Publisher
@@ -265,13 +283,6 @@ func (sc *scaleCmd) run(cmd *cobra.Command, args []string) error {
 			return nil
 		}
 		highestUsedIndex = indexes[len(indexes)-1]
-
-		// set the VMAS platformFaultDomainCount to match the existing value
-		fdCount, err := sc.client.GetAvailabilitySetFaultDomainCount(ctx, sc.resourceGroupName, availabilitySetIDs)
-		if err != nil {
-			return err
-		}
-		sc.containerService.SetPlatformFaultDomainCount(fdCount)
 
 		// Scale down Scenario
 		if currentNodeCount > sc.newDesiredAgentCount {
