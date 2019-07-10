@@ -1241,7 +1241,7 @@ func (m *MasterProfile) IsVHDDistro() bool {
 
 // IsAvailabilitySets returns true if the customer specified disks
 func (m *MasterProfile) IsAvailabilitySets() bool {
-	return m.AvailabilityProfile == AvailabilitySet
+	return !m.IsVirtualMachineScaleSets()
 }
 
 // IsVirtualMachineScaleSets returns true if the master availability profile is VMSS

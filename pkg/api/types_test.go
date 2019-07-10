@@ -1169,6 +1169,9 @@ func TestMasterAvailabilityProfile(t *testing.T) {
 			if c.p.MasterProfile.IsVirtualMachineScaleSets() != c.expectedISVMSS {
 				t.Fatalf("expected MasterProfile.IsVirtualMachineScaleSets() to return %t but instead returned %t", c.expectedISVMSS, c.p.MasterProfile.IsVirtualMachineScaleSets())
 			}
+			if c.p.MasterProfile.IsAvailabilitySets() == c.expectedISVMSS {
+				t.Fatalf("expected MasterProfile.IsAvailabilitySets() to return %t but instead returned %t", !c.expectedISVMSS, c.p.MasterProfile.IsAvailabilitySets())
+			}
 		})
 	}
 }
