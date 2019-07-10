@@ -8,6 +8,9 @@ metadata:
   name: keyvault-flexvolume
   namespace: kube-system
 spec:
+  selector:
+    matchLabels:
+      app: keyvault-flexvolume
   template:
     metadata:
       labels:

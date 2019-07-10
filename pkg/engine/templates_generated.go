@@ -6995,6 +6995,10 @@ metadata:
     app: flannel
     addonmanager.kubernetes.io/mode: Reconcile
 spec:
+  selector:
+    matchLabels:
+      tier: node
+      app: flannel
   template:
     metadata:
       labels:
@@ -7358,6 +7362,10 @@ metadata:
   name: kube-proxy
   namespace: kube-system
 spec:
+  selector:
+    matchLabels:
+      component: kube-proxy
+      tier: node
   template:
     metadata:
       labels:
@@ -15094,6 +15102,10 @@ metadata:
     addonmanager.kubernetes.io/mode: Reconcile
     tier: node
 spec:
+  selector:
+    matchLabels:
+      k8s-app: azure-ip-masq-agent
+      tier: node
   template:
     metadata:
       labels:
@@ -15269,6 +15281,10 @@ metadata:
   name: nmi
   namespace: default
 spec:
+  selector:
+    matchLabels:
+      component: nmi
+      tier: node
   template:
     metadata:
       labels:
@@ -15369,6 +15385,9 @@ metadata:
   name: mic
   namespace: default
 spec:
+  selector:
+    matchLabels:
+      component: mic
   template:
     metadata:
       labels:
@@ -15489,6 +15508,9 @@ metadata:
     addonmanager.kubernetes.io/mode: Reconcile
 spec:
   replicas: 1
+  selector:
+    matchLabels:
+      app: aci-connector
   template:
     metadata:
       labels:
@@ -16083,6 +16105,9 @@ spec:
   # production, we recommend running at least 3 replicas to reduce the impact of rolling upgrade.
   replicas: 1
   revisionHistoryLimit: 2
+  selector:
+    matchLabels:
+      k8s-app: calico-typha
   template:
     metadata:
       labels:
@@ -16390,6 +16415,9 @@ metadata:
     addonmanager.kubernetes.io/mode: "Reconcile"
 spec:
   replicas: 1
+  selector:
+    matchLabels:
+      k8s-app: calico-typha-autoscaler
   template:
     metadata:
       labels:
@@ -16763,6 +16791,9 @@ metadata:
   name: keyvault-flexvolume
   namespace: kube-system
 spec:
+  selector:
+    matchLabels:
+      app: keyvault-flexvolume
   template:
     metadata:
       labels:
@@ -17657,6 +17688,10 @@ metadata:
   name: tiller-deploy
   namespace: kube-system
 spec:
+  selector:
+    matchLabels:
+      app: helm
+      name: tiller
   template:
     metadata:
       labels:
@@ -19323,6 +19358,9 @@ spec:
   # production, we recommend running at least 3 replicas to reduce the impact of rolling upgrade.
   replicas: 1
   revisionHistoryLimit: 2
+  selector:
+    matchLabels:
+      k8s-app: calico-typha
   template:
     metadata:
       labels:
@@ -19692,7 +19730,7 @@ subjects:
   namespace: kube-system
 ---
 
-# Typha Horizontal Autoscaler Role 
+# Typha Horizontal Autoscaler Role
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
@@ -19738,7 +19776,6 @@ metadata:
   namespace: kube-system
   labels:
     kubernetes.io/cluster-service: "true"
-
 `)
 
 func k8sContaineraddonsKubernetesmasteraddonsCalicoDaemonsetYamlBytes() ([]byte, error) {

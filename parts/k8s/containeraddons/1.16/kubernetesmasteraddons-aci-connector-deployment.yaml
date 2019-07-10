@@ -73,6 +73,9 @@ metadata:
     addonmanager.kubernetes.io/mode: Reconcile
 spec:
   replicas: 1
+  selector:
+    matchLabels:
+      app: aci-connector
   template:
     metadata:
       labels:
