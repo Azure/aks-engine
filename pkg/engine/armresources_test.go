@@ -63,9 +63,8 @@ func TestGenerateARMResourcesWithVMSSAgentPool(t *testing.T) {
 			},
 			Type: to.StringPtr("Microsoft.Compute/virtualMachineScaleSets"),
 			VirtualMachineScaleSetProperties: &compute.VirtualMachineScaleSetProperties{
-				SinglePlacementGroup:                   to.BoolPtr(true),
-				Overprovision:                          to.BoolPtr(false),
-				DoNotRunExtensionsOnOverprovisionedVMs: to.BoolPtr(true),
+				SinglePlacementGroup: to.BoolPtr(true),
+				Overprovision:        to.BoolPtr(false),
 				UpgradePolicy: &compute.UpgradePolicy{
 					Mode: compute.UpgradeMode("Manual"),
 				},
