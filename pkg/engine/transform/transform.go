@@ -112,7 +112,7 @@ func (t *Transformer) NormalizeForK8sVMASScalingUp(logger *logrus.Entry, templat
 	rtIndex := -1
 	nsgIndex := -1
 	vnetIndex := -1
-	asIndexes := make([]int, 0)
+	vmasIndexes := make([]int, 0)
 
 	resources := templateMap[resourcesFieldName].([]interface{})
 	for index, resource := range resources {
@@ -152,7 +152,7 @@ func (t *Transformer) NormalizeForK8sVMASScalingUp(logger *logrus.Entry, templat
 		}
 		if ok && resourceType == vmasResourceType {
 			// All availability sets can be removed
-			asIndexes = append(asIndexes, index)
+			vmasIndexes = append(vmasIndexes, index)
 		}
 
 		dependencies, ok := resourceMap[dependsOnFieldName].([]interface{})
@@ -194,8 +194,8 @@ func (t *Transformer) NormalizeForK8sVMASScalingUp(logger *logrus.Entry, templat
 		indexesToRemove = append(indexesToRemove, vnetIndex)
 	}
 
-	if len(asIndexes) != 0 {
-		indexesToRemove = append(indexesToRemove, asIndexes...)
+	if len(vmasIndexes) != 0 {
+		indexesToRemove = append(indexesToRemove, vmasIndexes...)
 	}
 
 	indexesToRemove = append(indexesToRemove, nsgIndex)
