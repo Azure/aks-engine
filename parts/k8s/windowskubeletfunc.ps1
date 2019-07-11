@@ -159,7 +159,7 @@ New-InfraContainer {
     # Reference for these tags: curl -L https://mcr.microsoft.com/v2/k8s/core/pause/tags/list
     # Then docker run --rm mplatform/manifest-tool inspect mcr.microsoft.com/k8s/core/pause:<tag>
 
-    $defaultPauseImage = "mcr.microsoft.com/k8s/core/pause:1.1.0"
+    $defaultPauseImage = "mcr.microsoft.com/k8s/core/pause:1.2.0"
 
     switch ($computerInfo.WindowsVersion) {
         "1803" { docker pull $defaultPauseImage ; docker tag $defaultPauseImage $DestinationTag }

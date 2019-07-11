@@ -134,7 +134,10 @@ ifneq ($(GIT_BASEDIR),)
 	LDFLAGS += -X github.com/Azure/aks-engine/pkg/test.JUnitOutDir=$(GIT_BASEDIR)/test/junit
 endif
 
-test: generate
+ginkgoBuild: generate
+	ginkgo build test/e2e/kubernetes
+
+test: generate ginkgoBuild
 	ginkgo -skipPackage test/e2e/dcos,test/e2e/kubernetes -failFast -r .
 
 .PHONY: test-style
