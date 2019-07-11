@@ -702,8 +702,10 @@ func CreateAgentVMSS(cs *api.ContainerService, profile *api.AgentPoolProfile) Vi
 
 		if cs.Properties.IsHostedMasterProfile() {
 			if profile.IsWindows() {
+				aksBillingExtension.Name = to.StringPtr(fmt.Sprintf("[concat(variables('%sVMNamePrefix'), '-AKSWindowsBilling')]", profile.Name))
 				aksBillingExtension.Type = to.StringPtr("Compute.AKS.Windows.Billing")
 			} else {
+				aksBillingExtension.Name = to.StringPtr(fmt.Sprintf("[concat(variables('%sVMNamePrefix'), '-AKSLinuxBilling')]", profile.Name))
 				aksBillingExtension.Type = to.StringPtr("Compute.AKS.Linux.Billing")
 			}
 		} else {
