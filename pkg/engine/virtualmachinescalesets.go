@@ -413,10 +413,14 @@ func CreateAgentVMSS(cs *api.ContainerService, profile *api.AgentPoolProfile) Vi
 
 	vmssProperties := compute.VirtualMachineScaleSetProperties{
 		SinglePlacementGroup: profile.SinglePlacementGroup,
-		Overprovision:        to.BoolPtr(false),
+		Overprovision:        profile.VMSSOverProvisioningEnabled,
 		UpgradePolicy: &compute.UpgradePolicy{
 			Mode: compute.Manual,
 		},
+	}
+
+	if to.Bool(profile.VMSSOverProvisioningEnabled) {
+		vmssProperties.DoNotRunExtensionsOnOverprovisionedVMs = to.BoolPtr(true)
 	}
 
 	vmssVMProfile := compute.VirtualMachineScaleSetVMProfile{}
