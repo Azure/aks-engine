@@ -1601,21 +1601,13 @@
     },
     {
       "apiVersion": "[variables('apiVersionDefault')]",
-      "location": "[variables('location')]",
-      "name": "[variables('agentppol1AvailabilitySet')]",
-      "properties": {},
-      "type": "Microsoft.Compute/availabilitySets"
-    },
-    {
-      "apiVersion": "[variables('apiVersionDefault')]",
       "copy": {
         "count": "[sub(variables('agentppol1Count'), variables('agentppol1Offset'))]",
         "name": "vmLoopNode"
       },
       "dependsOn": [
         "[concat('Microsoft.Storage/storageAccounts/',variables('storageAccountPrefixes')[mod(add(div(copyIndex(variables('agentppol1Offset')),variables('maxVMsPerStorageAccount')),variables('agentppol1StorageAccountOffset')),variables('storageAccountPrefixesCount'))],variables('storageAccountPrefixes')[div(add(div(copyIndex(variables('agentppol1Offset')),variables('maxVMsPerStorageAccount')),variables('agentppol1StorageAccountOffset')),variables('storageAccountPrefixesCount'))],variables('agentppol1AccountName'))]",
-        "[concat('Microsoft.Network/networkInterfaces/', variables('agentppol1VMNamePrefix'), 'nic-', copyIndex(variables('agentppol1Offset')))]",
-        "[concat('Microsoft.Compute/availabilitySets/', variables('agentppol1AvailabilitySet'))]"
+        "[concat('Microsoft.Network/networkInterfaces/', variables('agentppol1VMNamePrefix'), 'nic-', copyIndex(variables('agentppol1Offset')))]"
       ],
       "location": "[variables('location')]",
       "name": "[concat(variables('agentppol1VMNamePrefix'), copyIndex(variables('agentppol1Offset')))]",
@@ -1740,21 +1732,13 @@
     },
     {
       "apiVersion": "[variables('apiVersionDefault')]",
-      "location": "[variables('location')]",
-      "name": "[variables('agentpool2AvailabilitySet')]",
-      "properties": {},
-      "type": "Microsoft.Compute/availabilitySets"
-    },
-    {
-      "apiVersion": "[variables('apiVersionDefault')]",
       "copy": {
         "count": "[sub(variables('agentpool2Count'), variables('agentpool2Offset'))]",
         "name": "vmLoopNode"
       },
       "dependsOn": [
         "[concat('Microsoft.Storage/storageAccounts/',variables('storageAccountPrefixes')[mod(add(div(copyIndex(variables('agentpool2Offset')),variables('maxVMsPerStorageAccount')),variables('agentpool2StorageAccountOffset')),variables('storageAccountPrefixesCount'))],variables('storageAccountPrefixes')[div(add(div(copyIndex(variables('agentpool2Offset')),variables('maxVMsPerStorageAccount')),variables('agentpool2StorageAccountOffset')),variables('storageAccountPrefixesCount'))],variables('agentpool2AccountName'))]",
-        "[concat('Microsoft.Network/networkInterfaces/', variables('agentpool2VMNamePrefix'), 'nic-', copyIndex(variables('agentpool2Offset')))]",
-        "[concat('Microsoft.Compute/availabilitySets/', variables('agentpool2AvailabilitySet'))]"
+        "[concat('Microsoft.Network/networkInterfaces/', variables('agentpool2VMNamePrefix'), 'nic-', copyIndex(variables('agentpool2Offset')))]"
       ],
       "location": "[variables('location')]",
       "name": "[concat(variables('agentpool2VMNamePrefix'), copyIndex(variables('agentpool2Offset')))]",
@@ -1835,17 +1819,6 @@
         "typeHandlerVersion": "2.0"
       },
       "type": "Microsoft.Compute/virtualMachines/extensions"
-    },
-    {
-      "apiVersion": "[variables('apiVersionStorageManagedDisks')]",
-      "location": "[variables('location')]",
-      "name": "[variables('masterAvailabilitySet')]",
-      "properties": {
-        "managed": "true",
-        "platformFaultDomainCount": 2,
-        "platformUpdateDomainCount": 3
-      },
-      "type": "Microsoft.Compute/availabilitySets"
     },
     {
       "apiVersion": "[variables('apiVersionDefault')]",
@@ -2044,8 +2017,7 @@
         "name": "vmLoopNode"
       },
       "dependsOn": [
-        "[concat('Microsoft.Network/networkInterfaces/', variables('masterVMNamePrefix'), 'nic-', copyIndex(variables('masterOffset')))]",
-        "[concat('Microsoft.Compute/availabilitySets/',variables('masterAvailabilitySet'))]"
+        "[concat('Microsoft.Network/networkInterfaces/', variables('masterVMNamePrefix'), 'nic-', copyIndex(variables('masterOffset')))]"
       ],
       "location": "[variables('location')]",
       "name": "[concat(variables('masterVMNamePrefix'), copyIndex(variables('masterOffset')))]",

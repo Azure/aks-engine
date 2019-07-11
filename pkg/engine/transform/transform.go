@@ -41,6 +41,7 @@ const (
 	vmExtensionType  = "Microsoft.Compute/virtualMachines/extensions"
 	nicResourceType  = "Microsoft.Network/networkInterfaces"
 	vnetResourceType = "Microsoft.Network/virtualNetworks"
+	vmasResourceType = "Microsoft.Compute/availabilitySets"
 
 	// resource ids
 	nsgID  = "nsgID"
@@ -111,6 +112,8 @@ func (t *Transformer) NormalizeForK8sVMASScalingUp(logger *logrus.Entry, templat
 	rtIndex := -1
 	nsgIndex := -1
 	vnetIndex := -1
+	vmasIndexes := make([]int, 0)
+
 	resources := templateMap[resourcesFieldName].([]interface{})
 	for index, resource := range resources {
 		resourceMap, ok := resource.(map[string]interface{})
@@ -147,6 +150,10 @@ func (t *Transformer) NormalizeForK8sVMASScalingUp(logger *logrus.Entry, templat
 			}
 			vnetIndex = index
 		}
+		if ok && resourceType == vmasResourceType {
+			// All availability sets can be removed
+			vmasIndexes = append(vmasIndexes, index)
+		}
 
 		dependencies, ok := resourceMap[dependsOnFieldName].([]interface{})
 		if !ok {
@@ -157,7 +164,8 @@ func (t *Transformer) NormalizeForK8sVMASScalingUp(logger *logrus.Entry, templat
 			dependency := dependencies[dIndex].(string)
 			if strings.Contains(dependency, nsgResourceType) || strings.Contains(dependency, nsgID) ||
 				strings.Contains(dependency, rtResourceType) || strings.Contains(dependency, rtID) ||
-				strings.Contains(dependency, vnetResourceType) || strings.Contains(dependency, vnetID) {
+				strings.Contains(dependency, vnetResourceType) || strings.Contains(dependency, vnetID) ||
+				strings.Contains(dependency, vmasResourceType) {
 				dependencies = append(dependencies[:dIndex], dependencies[dIndex+1:]...)
 			}
 		}
@@ -184,6 +192,10 @@ func (t *Transformer) NormalizeForK8sVMASScalingUp(logger *logrus.Entry, templat
 
 	if vnetIndex != -1 {
 		indexesToRemove = append(indexesToRemove, vnetIndex)
+	}
+
+	if len(vmasIndexes) != 0 {
+		indexesToRemove = append(indexesToRemove, vmasIndexes...)
 	}
 
 	indexesToRemove = append(indexesToRemove, nsgIndex)
