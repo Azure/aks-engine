@@ -7892,7 +7892,7 @@ spec:
         - key: node.kubernetes.io/not-ready
           operator: Exists
           effect: NoSchedule
-        - key: kubernetes.azure.com/master
+        - key: kubernetes.azure.com/role
           operator: Equal
           value: "master"
           effect: NoSchedule
