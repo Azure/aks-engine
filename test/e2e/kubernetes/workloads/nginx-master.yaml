@@ -13,7 +13,7 @@ spec:
       - "1000000"
   tolerations:
   - key: kubernetes.azure.com/role
-    operator: "Equals"
+    operator: "Equal"
     value: "master"
     effect: "NoSchedule"
   - operator: "Exists"
