@@ -631,8 +631,33 @@ func (t *TemplateGenerator) getTemplateFuncMap(cs *api.ContainerService) templat
 			customEnvironmentJSON, _ := cs.Properties.GetCustomEnvironmentJSON(false)
 			return base64.StdEncoding.EncodeToString([]byte(customEnvironmentJSON))
 		},
-		"IsIdentitySystemADFS": func() bool {
-			return cs.Properties.IsAzureStackCloud() && cs.Properties.CustomCloudProfile.IdentitySystem == api.ADFSIdentitySystem
+		"GetIdentitySystem": func() string {
+			if cs.Properties.IsAzureStackCloud() {
+				return cs.Properties.CustomCloudProfile.IdentitySystem
+			}
+
+			return api.AzureADIdentitySystem
+		},
+		"GetServiceManagementEndpoint": func() string {
+			if cs.Properties.IsAzureStackCloud() {
+				return cs.Properties.CustomCloudProfile.Environment.ServiceManagementEndpoint
+			}
+
+			return ""
+		},
+		"GetActiveDirectoryEndpoint": func() string {
+			if cs.Properties.IsAzureStackCloud() {
+				return cs.Properties.CustomCloudProfile.Environment.ActiveDirectoryEndpoint
+			}
+
+			return ""
+		},
+		"GetResourceManagerEndpoint": func() string {
+			if cs.Properties.IsAzureStackCloud() {
+				return cs.Properties.CustomCloudProfile.Environment.ResourceManagerEndpoint
+			}
+
+			return ""
 		},
 	}
 }

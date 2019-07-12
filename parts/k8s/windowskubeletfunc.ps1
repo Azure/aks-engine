@@ -451,6 +451,8 @@ if (`$hnsNetwork)
 # Restart Kubeproxy, which would wait, until the network is created
 Restart-Service Kubeproxy
 
+`$env:AZURE_ENVIRONMENT_FILEPATH="c:\k\azurestackcloud.json"
+
 $KubeletCommandLine
 
 "@

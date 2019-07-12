@@ -8,6 +8,8 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/Azure/go-autorest/autorest/azure"
+
 	"github.com/Azure/go-autorest/autorest/to"
 
 	"github.com/Azure/aks-engine/pkg/api"
@@ -629,6 +631,36 @@ func TestCreateAgentVMSSHostedMasterProfile(t *testing.T) {
 	}
 
 	expected.Tags["resourceNameSuffix"] = to.StringPtr("[variables('winResourceNamePrefix')]")
+
+	diff = cmp.Diff(actual, expected)
+
+	if diff != "" {
+		t.Errorf("unexpected diff while expecting equal structs: %s", diff)
+	}
+
+	// Test AgentVMSS with windows and custom cloud
+	cs.Properties.CustomCloudProfile = &api.CustomCloudProfile{Environment: &azure.Environment{Name: "AzureStackCloud"}}
+
+	actual = CreateAgentVMSS(cs, cs.Properties.AgentPoolProfiles[0])
+
+	expected.VirtualMachineScaleSetProperties.VirtualMachineProfile.OsProfile.CustomData = to.StringPtr(getCustomDataFromJSON(tg.GetKubernetesWindowsNodeCustomDataJSONObject(cs, cs.Properties.AgentPoolProfiles[0])))
+	expected.VirtualMachineProfile.ExtensionProfile = &compute.VirtualMachineScaleSetExtensionProfile{
+		Extensions: &[]compute.VirtualMachineScaleSetExtension{
+			{
+				Name: to.StringPtr("vmssCSE"),
+				VirtualMachineScaleSetExtensionProperties: &compute.VirtualMachineScaleSetExtensionProperties{
+					Publisher:               to.StringPtr("Microsoft.Compute"),
+					Type:                    to.StringPtr("CustomScriptExtension"),
+					TypeHandlerVersion:      to.StringPtr("1.8"),
+					AutoUpgradeMinorVersion: to.BoolPtr(true),
+					Settings:                map[string]interface{}{},
+					ProtectedSettings: map[string]interface{}{
+						"commandToExecute": `[concat('powershell.exe -ExecutionPolicy Unrestricted -command "', '$arguments = ', variables('singleQuote'),'-MasterIP ',variables('kubernetesAPIServerIP'),' -KubeDnsServiceIp ',parameters('kubeDnsServiceIp'),' -MasterFQDNPrefix ',variables('masterFqdnPrefix'),' -Location ',variables('location'),' -TargetEnvironment ',parameters('targetEnvironment'),' -AgentKey ',parameters('clientPrivateKey'),' -AADClientId ',variables('servicePrincipalClientId'),' -AADClientSecret ',variables('singleQuote'),variables('singleQuote'),base64(variables('servicePrincipalClientSecret')),variables('singleQuote'),variables('singleQuote'),' -NetworkAPIVersion ',variables('apiVersionNetwork'), ' ',variables('singleQuote'), ' ; ', variables('windowsCustomScriptSuffix'), '" > %SYSTEMDRIVE%\AzureData\CustomDataSetupScript.log 2>&1')]`,
+					},
+				},
+			},
+		},
+	}
 
 	diff = cmp.Diff(actual, expected)
 
