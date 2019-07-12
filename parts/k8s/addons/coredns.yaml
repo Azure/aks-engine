@@ -129,7 +129,7 @@ spec:
       serviceAccountName: coredns
       tolerations:
         - key: kubernetes.azure.com/role
-          operator: "Equals"
+          operator: "Equal"
           value: "master"
           effect: NoSchedule
         - key: CriticalAddonsOnly
