@@ -1,0 +1,10 @@
+[Unit]
+Description=Label Kubernetes nodes as masters or agents
+After=kubelet.service
+
+[Service]
+Type=oneshot
+ExecStart=/opt/azure/containers/label-nodes.sh
+
+[Install]
+WantedBy=multi-user.target
