@@ -286,7 +286,7 @@ MASTER_CONTAINER_ADDONS_PLACEHOLDER
 {{if IsKubernetesVersionGe "1.6.0"}}
   {{if AnyAgentIsLinux}}
     KUBELET_REGISTER_NODE=--register-node=true
-    KUBELET_REGISTER_WITH_TAINTS=--register-with-taints=node-role.kubernetes.io/master=true:NoSchedule
+    KUBELET_REGISTER_WITH_TAINTS=--register-with-taints=kubernetes.azure.com/role=master:NoSchedule
   {{end}}
 {{else}}
     KUBELET_REGISTER_SCHEDULABLE={{WrapAsVariable "registerSchedulable"}}

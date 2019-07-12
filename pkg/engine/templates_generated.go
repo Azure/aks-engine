@@ -7890,9 +7890,9 @@ spec:
         - key: node.kubernetes.io/not-ready
           operator: Exists
           effect: NoSchedule
-        - key: node-role.kubernetes.io/master
+        - key: kubernetes.azure.com/master
           operator: Equal
-          value: "true"
+          value: "master"
           effect: NoSchedule
         - key: CriticalAddonsOnly
           operator: Exists
@@ -8248,9 +8248,9 @@ spec:
     spec:
       priorityClassName: system-node-critical
       tolerations:
-      - key: node-role.kubernetes.io/master
+      - key: kubernetes.azure.com/role
         operator: Equal
-        value: "true"
+        value: "master"
         effect: NoSchedule
       - operator: "Exists"
         effect: NoExecute
@@ -9647,7 +9647,9 @@ spec:
             weight: 5
       serviceAccountName: coredns
       tolerations:
-        - key: node-role.kubernetes.io/master
+        - key: kubernetes.azure.com/role
+          operator: "Equals"
+          value: "master"
           effect: NoSchedule
         - key: CriticalAddonsOnly
           operator: "Exists"
@@ -10904,9 +10906,9 @@ spec:
         - key: node.kubernetes.io/not-ready
           operator: Exists
           effect: NoSchedule
-        - key: node-role.kubernetes.io/master
+        - key: kubernetes.azure.com/role
           operator: Equal
-          value: "true"
+          value: "master"
           effect: NoSchedule
         - key: CriticalAddonsOnly
           operator: Exists
@@ -11258,9 +11260,9 @@ spec:
     spec:
       priorityClassName: system-node-critical
       tolerations:
-      - key: node-role.kubernetes.io/master
+      - key: kubernetes.azure.com/role
         operator: Equal
-        value: "true"
+        value: "master"
         effect: NoSchedule
       - operator: "Exists"
         effect: NoExecute
@@ -11873,8 +11875,10 @@ spec:
             memory: 20Mi
       terminationGracePeriodSeconds: 10
       tolerations:
-      - effect: NoSchedule
-        key: node-role.kubernetes.io/master
+      - key: kubernetes.azure.com/role
+        operator: Equal
+        value: "master"
+        effect: NoSchedule
 ---
 apiVersion: apps/v1
 kind: DaemonSet
@@ -11919,8 +11923,10 @@ spec:
             memory: 20Mi
       terminationGracePeriodSeconds: 10
       tolerations:
-      - effect: NoSchedule
-        key: node-role.kubernetes.io/master
+      - key: kubernetes.azure.com/role
+        operator: Equal
+        value: "master"
+        effect: NoSchedule
 `)
 
 func k8sAddonsKubernetesmasteraddonsScheduledMaintenanceDeploymentYamlBytes() ([]byte, error) {
@@ -15323,7 +15329,7 @@ MASTER_CONTAINER_ADDONS_PLACEHOLDER
 {{if IsKubernetesVersionGe "1.6.0"}}
   {{if AnyAgentIsLinux}}
     KUBELET_REGISTER_NODE=--register-node=true
-    KUBELET_REGISTER_WITH_TAINTS=--register-with-taints=node-role.kubernetes.io/master=true:NoSchedule
+    KUBELET_REGISTER_WITH_TAINTS=--register-with-taints=kubernetes.azure.com/role=master:NoSchedule
   {{end}}
 {{else}}
     KUBELET_REGISTER_SCHEDULABLE={{WrapAsVariable "registerSchedulable"}}
@@ -15955,9 +15961,9 @@ spec:
       tolerations:
       - key: CriticalAddonsOnly
         operator: Exists
-      - key: node-role.kubernetes.io/master
+      - key: kubernetes.azure.com/role
         operator: Equal
-        value: "true"
+        value: "master"
         effect: NoSchedule
       - operator: "Exists"
         effect: NoExecute
@@ -16043,9 +16049,9 @@ spec:
       tolerations:
       - key: CriticalAddonsOnly
         operator: Exists
-      - key: node-role.kubernetes.io/master
+      - key: kubernetes.azure.com/role
         operator: Equal
-        value: "true"
+        value: "master"
         effect: NoSchedule
       - operator: "Exists"
         effect: NoExecute
@@ -17722,12 +17728,12 @@ spec:
       <hostNet>
       serviceAccountName: cluster-autoscaler
       tolerations:
-      - effect: NoSchedule
+      - key: kubernetes.azure.com/role
         operator: "Equal"
-        value: "true"
-        key: node-role.kubernetes.io/master
+        value: "master"
+        effect: "NoSchedule"
       nodeSelector:
-        kubernetes.io/role: master
+        kubernetes.azure.com/role: master
         beta.kubernetes.io/os: linux
       containers:
       - image: {{ContainerImage "cluster-autoscaler"}}
@@ -18768,10 +18774,10 @@ spec:
       nodeSelector:
         beta.kubernetes.io/os: linux
       tolerations:
-        - effect: NoSchedule
-          key: node-role.kubernetes.io/master
+        - key: kubernetes.azure.com/role
           operator: Equal
-          value: "true"
+          value: "master"
+          effect: NoSchedule
       volumes:
         - name: host-root
           hostPath:
@@ -18878,7 +18884,7 @@ spec:
             periodSeconds: 60
       nodeSelector:
         beta.kubernetes.io/os: linux
-        kubernetes.io/role: agent
+        kubernetes.azure.com/role: agent
       volumes:
         - name: docker-sock
           hostPath:
@@ -19596,9 +19602,9 @@ spec:
       tolerations:
       - key: CriticalAddonsOnly
         operator: Exists
-      - key: node-role.kubernetes.io/master
+      - key: kubernetes.azure.com/role
         operator: Equal
-        value: "true"
+        value: "master"
         effect: NoSchedule
       - operator: "Exists"
         effect: NoExecute
@@ -19638,7 +19644,8 @@ spec:
       - name: telemetry
         hostPath:
           path: /opt/cni/bin
-          type: Directory`)
+          type: Directory
+`)
 
 func k8sContaineraddonsAzureCniNetworkmonitorYamlBytes() ([]byte, error) {
 	return _k8sContaineraddonsAzureCniNetworkmonitorYaml, nil
@@ -19731,9 +19738,9 @@ spec:
       tolerations:
       - key: CriticalAddonsOnly
         operator: Exists
-      - key: node-role.kubernetes.io/master
+      - key: kubernetes.azure.com/role
         operator: Equal
-        value: "true"
+        value: "master"
         effect: NoSchedule
       - operator: "Exists"
         effect: NoExecute
@@ -19779,7 +19786,8 @@ data:
     {{else}}
     masqLinkLocal: false
     {{end -}}
-    resyncInterval: 60s`)
+    resyncInterval: 60s
+`)
 
 func k8sContaineraddonsIpMasqAgentYamlBytes() ([]byte, error) {
 	return _k8sContaineraddonsIpMasqAgentYaml, nil
@@ -21288,12 +21296,12 @@ spec:
       <hostNet>
       serviceAccountName: cluster-autoscaler
       tolerations:
-      - effect: NoSchedule
+      - key: kubernetes.azure.com/role
         operator: "Equal"
-        value: "true"
-        key: node-role.kubernetes.io/master
+        value: "master"
+        effect: "NoSchedule"
       nodeSelector:
-        kubernetes.io/role: master
+        kubernetes.azure.com/role: master
         beta.kubernetes.io/os: linux
       containers:
       - image: {{ContainerImage "cluster-autoscaler"}}
@@ -22430,10 +22438,10 @@ spec:
       nodeSelector:
         beta.kubernetes.io/os: linux
       tolerations:
-        - effect: NoSchedule
-          key: node-role.kubernetes.io/master
+        - key: kubernetes.azure.com/role
           operator: Equal
-          value: "true"
+          value: "master"
+          effect: NoSchedule
       volumes:
         - name: host-root
           hostPath:
@@ -22540,7 +22548,7 @@ spec:
             periodSeconds: 60
       nodeSelector:
         beta.kubernetes.io/os: linux
-        kubernetes.io/role: agent
+        kubernetes.azure.com/role: agent
       volumes:
         - name: docker-sock
           hostPath:
