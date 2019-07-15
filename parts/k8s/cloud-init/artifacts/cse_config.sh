@@ -328,6 +328,10 @@ ensureKubelet() {
     KUBELET_RUNTIME_CONFIG_SCRIPT_FILE=/opt/azure/containers/kubelet.sh
     wait_for_file 1200 1 $KUBELET_RUNTIME_CONFIG_SCRIPT_FILE || exit $ERR_FILE_WATCH_TIMEOUT
     systemctlEnableAndStart kubelet || exit $ERR_KUBELET_START_FAIL
+    # start node labeler for backward compatibility
+    LABEL_NODES_SCRIPT_FILE=/opt/azure/containers/label-nodes.sh
+    wait_for_file 1200 1 $LABEL_NODES_SCRIPT_FILE || exit $ERR_FILE_WATCH_TIMEOUT
+    systemctlEnableAndStart label-nodes || exit $ERR_KUBELET_START_FAIL # TODO: create unique error or don't error?
 }
 
 ensureJournal() {

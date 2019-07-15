@@ -91,7 +91,7 @@ write_files:
     {{CloudInitData "kubeletSystemdService"}}
 
 - path: /opt/azure/containers/label-nodes.sh
-  permissions: "0544"
+  permissions: "0744"
   encoding: gzip
   owner: root
   content: !!binary |
