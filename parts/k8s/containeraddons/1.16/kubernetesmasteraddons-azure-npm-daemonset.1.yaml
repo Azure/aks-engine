@@ -49,7 +49,7 @@ roleRef:
   name: azure-npm
   apiGroup: rbac.authorization.k8s.io
 ---
-apiVersion: apps/v1
+apiVersion: extensions/v1beta1
 kind: DaemonSet
 metadata:
   name: azure-npm
