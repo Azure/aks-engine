@@ -14362,7 +14362,8 @@ Description=Label Kubernetes nodes as masters or agents
 After=kubelet.service
 
 [Service]
-Type=oneshot
+Restart=always
+RestartSec=300
 ExecStart=/opt/azure/containers/label-nodes.sh
 
 [Install]
@@ -14400,12 +14401,12 @@ AGENT_SELECTOR="kubernetes.azure.com/role!=master,kubernetes.io/role!=master"
 
 # Find master nodes and label them
 for node in $(kubectl get nodes -l $MASTER_SELECTOR -o name); do
-  kubectl label --overwrite $node $MASTER_LABELS
+  kubectl label --overwrite $node $MASTER_LABELS || echo "Error labeling master nodes"
 done
 
 # Find agent nodes and label them
 for node in $(kubectl get nodes -l $AGENT_SELECTOR -o name); do
-  kubectl label --overwrite $node $AGENT_LABELS
+  kubectl label --overwrite $node $AGENT_LABELS || echo "Error labeling agent nodes"
 done
 `)
 
@@ -15201,6 +15202,20 @@ write_files:
   owner: root
   content: !!binary |
     {{CloudInitData "kubeletSystemdService"}}
+
+- path: /opt/azure/containers/label-nodes.sh
+  permissions: "0544"
+  encoding: gzip
+  owner: root
+  content: !!binary |
+    {{CloudInitData "labelNodesScript"}}
+
+- path: /etc/systemd/system/label-nodes.service
+  permissions: "0644"
+  encoding: gzip
+  owner: root
+  content: !!binary |
+    {{CloudInitData "labelNodesSystemdService"}}
 
 - path: /etc/systemd/system/kms.service
   permissions: "0644"

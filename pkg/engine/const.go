@@ -159,6 +159,8 @@ const (
 	kubernetesCISScript                = "k8s/cloud-init/artifacts/cis.sh"
 	kubernetesCSECustomCloud           = "k8s/cloud-init/artifacts/cse_customcloud.sh"
 	kubernetesHealthMonitorScript      = "k8s/cloud-init/artifacts/health-monitor.sh"
+	labelNodesScript                   = "k8s/cloud-init/artifacts/label-nodes.sh"
+	labelNodesSystemdService           = "k8s/cloud-init/artifacts/label-nodes.service"
 	// kubernetesKubeletMonitorSystemdTimer     = "k8s/cloud-init/artifacts/kubelet-monitor.timer" // TODO enable
 	kubernetesKubeletMonitorSystemdService   = "k8s/cloud-init/artifacts/kubelet-monitor.service"
 	kubernetesDockerMonitorSystemdTimer      = "k8s/cloud-init/artifacts/docker-monitor.timer"

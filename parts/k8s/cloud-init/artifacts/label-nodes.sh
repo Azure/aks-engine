@@ -14,10 +14,10 @@ AGENT_SELECTOR="kubernetes.azure.com/role!=master,kubernetes.io/role!=master"
 
 # Find master nodes and label them
 for node in $(kubectl get nodes -l $MASTER_SELECTOR -o name); do
-  kubectl label --overwrite $node $MASTER_LABELS
+  kubectl label --overwrite $node $MASTER_LABELS || echo "Error labeling master nodes"
 done
 
 # Find agent nodes and label them
 for node in $(kubectl get nodes -l $AGENT_SELECTOR -o name); do
-  kubectl label --overwrite $node $AGENT_LABELS
+  kubectl label --overwrite $node $AGENT_LABELS || echo "Error labeling agent nodes"
 done

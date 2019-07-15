@@ -3,7 +3,8 @@ Description=Label Kubernetes nodes as masters or agents
 After=kubelet.service
 
 [Service]
-Type=oneshot
+Restart=always
+RestartSec=300
 ExecStart=/opt/azure/containers/label-nodes.sh
 
 [Install]

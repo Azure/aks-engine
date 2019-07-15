@@ -125,6 +125,8 @@ func getK8sMasterVars(cs *api.ContainerService) (map[string]interface{}, error) 
 		"provisionConfigs":                 getBase64EncodedGzippedCustomScript(kubernetesCSEConfig),
 		"provisionCIS":                     getBase64EncodedGzippedCustomScript(kubernetesCISScript),
 		"healthMonitorScript":              getBase64EncodedGzippedCustomScript(kubernetesHealthMonitorScript),
+		"labelNodesScript":                 getBase64EncodedGzippedCustomScript(labelNodesScript),
+		"labelNodesSystemdService":         getBase64EncodedGzippedCustomScript(labelNodesSystemdService),
 		"customSearchDomainsScript":        getBase64EncodedGzippedCustomScript(kubernetesCustomSearchDomainsScript),
 		"generateProxyCertsScript":         getBase64EncodedGzippedCustomScript(kubernetesMasterGenerateProxyCertsScript),
 		"mountEtcdScript":                  getBase64EncodedGzippedCustomScript(kubernetesMountEtcd),
