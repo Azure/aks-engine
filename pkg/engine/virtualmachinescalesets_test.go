@@ -346,7 +346,7 @@ func TestCreateAgentVMSS(t *testing.T) {
 								VirtualMachineScaleSetNetworkConfigurationProperties: &compute.VirtualMachineScaleSetNetworkConfigurationProperties{
 									Primary:                     to.BoolPtr(true),
 									EnableAcceleratedNetworking: to.BoolPtr(true),
-									IPConfigurations:            getIPConfigs(to.StringPtr("/subscriptions/123/resourceGroups/rg/providers/Microsoft.Network/loadBalancers/mySLB/backendAddressPools/mySLBBEPool")),
+									IPConfigurations:            getIPConfigs(to.StringPtr("/subscriptions/123/resourceGroups/rg/providers/Microsoft.Network/loadBalancers/mySLB/backendAddressPools/mySLBBEPool"), false),
 								},
 							},
 						},
@@ -384,8 +384,64 @@ func TestCreateAgentVMSS(t *testing.T) {
 	if diff != "" {
 		t.Errorf("unexpected diff while expecting equal structs: %s", diff)
 	}
+	// Now Test AgentVMSS with SLB and provided LoadBalancerBackendAddressPoolIDs
+	// should still reference the provided LoadBalancerBackendAddressPoolIDs
+	cs.Properties.OrchestratorProfile.KubernetesConfig.LoadBalancerSku = api.StandardLoadBalancerSku
+	actual = CreateAgentVMSS(cs, cs.Properties.AgentPoolProfiles[0])
+
+	expected.VirtualMachineScaleSet.VirtualMachineScaleSetProperties.VirtualMachineProfile.NetworkProfile = &compute.VirtualMachineScaleSetNetworkProfile{
+		NetworkInterfaceConfigurations: &[]compute.VirtualMachineScaleSetNetworkConfiguration{
+			{
+				Name: to.StringPtr("[variables('agentpool1VMNamePrefix')]"),
+				VirtualMachineScaleSetNetworkConfigurationProperties: &compute.VirtualMachineScaleSetNetworkConfigurationProperties{
+					Primary:                     to.BoolPtr(true),
+					EnableAcceleratedNetworking: to.BoolPtr(true),
+					IPConfigurations:            getIPConfigs(to.StringPtr("/subscriptions/123/resourceGroups/rg/providers/Microsoft.Network/loadBalancers/mySLB/backendAddressPools/mySLBBEPool"), true),
+				},
+			},
+		},
+	}
+
+	diff = cmp.Diff(actual, expected)
+
+	if diff != "" {
+		t.Errorf("unexpected diff while expecting equal structs: %s", diff)
+	}
+
+	// Now Test AgentVMSS with SLB and no LoadBalancerBackendAddressPoolIDs is provided
+	// should include agentLbID as DependsOn and agentLbBackendPoolName should be part of the LoadBalancer BackendAddressPools
+	cs.Properties.OrchestratorProfile.KubernetesConfig.LoadBalancerSku = api.StandardLoadBalancerSku
+	cs.Properties.AgentPoolProfiles[0].LoadBalancerBackendAddressPoolIDs = nil
+	actual = CreateAgentVMSS(cs, cs.Properties.AgentPoolProfiles[0])
+
+	expected.DependsOn = []string{
+		"[variables('vnetID')]",
+		"[variables('agentLbID')]",
+	}
+
+	expected.VirtualMachineScaleSet.VirtualMachineScaleSetProperties.VirtualMachineProfile.NetworkProfile = &compute.VirtualMachineScaleSetNetworkProfile{
+		NetworkInterfaceConfigurations: &[]compute.VirtualMachineScaleSetNetworkConfiguration{
+			{
+				Name: to.StringPtr("[variables('agentpool1VMNamePrefix')]"),
+				VirtualMachineScaleSetNetworkConfigurationProperties: &compute.VirtualMachineScaleSetNetworkConfigurationProperties{
+					Primary:                     to.BoolPtr(true),
+					EnableAcceleratedNetworking: to.BoolPtr(true),
+					IPConfigurations:            getIPConfigs(nil, true),
+				},
+			},
+		},
+	}
+
+	diff = cmp.Diff(actual, expected)
+
+	if diff != "" {
+		t.Errorf("unexpected diff while expecting equal structs: %s", diff)
+	}
 
 	// Now Test AgentVMSS with windows
+	// Restore LoadBalancerSku back to default and provide LoadBalancerBackendAddressPoolIDs
+	cs.Properties.OrchestratorProfile.KubernetesConfig.LoadBalancerSku = api.DefaultLoadBalancerSku
+	cs.Properties.AgentPoolProfiles[0].LoadBalancerBackendAddressPoolIDs = []string{"/subscriptions/123/resourceGroups/rg/providers/Microsoft.Network/loadBalancers/mySLB/backendAddressPools/mySLBBEPool"}
 	cs.Properties.AgentPoolProfiles[0].OSType = "Windows"
 	cs.Properties.AgentPoolProfiles[0].AcceleratedNetworkingEnabledWindows = to.BoolPtr(true)
 	cs.Properties.WindowsProfile = &api.WindowsProfile{
@@ -395,6 +451,24 @@ func TestCreateAgentVMSS(t *testing.T) {
 	actual = CreateAgentVMSS(cs, cs.Properties.AgentPoolProfiles[0])
 
 	expectedCustomDataStr = getCustomDataFromJSON(tg.GetKubernetesWindowsNodeCustomDataJSONObject(cs, cs.Properties.AgentPoolProfiles[0]))
+
+	// Restore back to default
+	expected.DependsOn = []string{
+		"[variables('vnetID')]",
+	}
+	// Restore back to default
+	expected.VirtualMachineScaleSet.VirtualMachineScaleSetProperties.VirtualMachineProfile.NetworkProfile = &compute.VirtualMachineScaleSetNetworkProfile{
+		NetworkInterfaceConfigurations: &[]compute.VirtualMachineScaleSetNetworkConfiguration{
+			{
+				Name: to.StringPtr("[variables('agentpool1VMNamePrefix')]"),
+				VirtualMachineScaleSetNetworkConfigurationProperties: &compute.VirtualMachineScaleSetNetworkConfigurationProperties{
+					Primary:                     to.BoolPtr(true),
+					EnableAcceleratedNetworking: to.BoolPtr(true),
+					IPConfigurations:            getIPConfigs(to.StringPtr("/subscriptions/123/resourceGroups/rg/providers/Microsoft.Network/loadBalancers/mySLB/backendAddressPools/mySLBBEPool"), false),
+				},
+			},
+		},
+	}
 
 	expected.VirtualMachineProfile.OsProfile = &compute.VirtualMachineScaleSetOSProfile{
 		AdminUsername:      to.StringPtr("[parameters('windowsAdminUsername')]"),
@@ -534,7 +608,7 @@ func TestCreateAgentVMSSHostedMasterProfile(t *testing.T) {
 								VirtualMachineScaleSetNetworkConfigurationProperties: &compute.VirtualMachineScaleSetNetworkConfigurationProperties{
 									Primary:                     to.BoolPtr(true),
 									EnableAcceleratedNetworking: to.BoolPtr(true),
-									IPConfigurations:            getIPConfigs(to.StringPtr("/subscriptions/123/resourceGroups/rg/providers/Microsoft.Network/loadBalancers/mySLB/backendAddressPools/mySLBBEPool")),
+									IPConfigurations:            getIPConfigs(to.StringPtr("/subscriptions/123/resourceGroups/rg/providers/Microsoft.Network/loadBalancers/mySLB/backendAddressPools/mySLBBEPool"), false),
 								},
 							},
 						},
@@ -669,7 +743,9 @@ func getIPConfigsMaster() *[]compute.VirtualMachineScaleSetIPConfiguration {
 	return &ipConfigs
 }
 
-func getIPConfigs(lbBackendAddresPoolID *string) *[]compute.VirtualMachineScaleSetIPConfiguration {
+// getIPConfigs returns a list of VirtualMachineScaleSetIPConfiguration resources
+// first ipconfig is primary with a list of references to LoadBalancerBackendAddressPools
+func getIPConfigs(lbBackendAddresPoolID *string, isStandardLB bool) *[]compute.VirtualMachineScaleSetIPConfiguration {
 	var ipConfigs []compute.VirtualMachineScaleSetIPConfiguration
 	for i := 1; i <= 31; i++ {
 		ipconfig := compute.VirtualMachineScaleSetIPConfiguration{
@@ -690,9 +766,21 @@ func getIPConfigs(lbBackendAddresPoolID *string) *[]compute.VirtualMachineScaleS
 				},
 			}
 			ipconfig.PublicIPAddressConfiguration = publicIPAddressConfiguration
+			backendAddressPools := []compute.SubResource{}
 			if lbBackendAddresPoolID != nil {
-				ipconfig.LoadBalancerBackendAddressPools = &[]compute.SubResource{{ID: lbBackendAddresPoolID}}
+				lbBackendAddressPools := compute.SubResource{
+					ID: lbBackendAddresPoolID,
+				}
+				backendAddressPools = append(backendAddressPools, lbBackendAddressPools)
+			} else {
+				if isStandardLB {
+					agentLbBackendAddressPools := compute.SubResource{
+						ID: to.StringPtr("[concat(variables('agentLbID'), '/backendAddressPools/', variables('agentLbBackendPoolName'))]"),
+					}
+					backendAddressPools = append(backendAddressPools, agentLbBackendAddressPools)
+				}
 			}
+			ipconfig.LoadBalancerBackendAddressPools = &backendAddressPools
 		}
 		ipConfigs = append(ipConfigs, ipconfig)
 	}
@@ -923,7 +1011,7 @@ func TestCreateCustomOSVMSS(t *testing.T) {
 								VirtualMachineScaleSetNetworkConfigurationProperties: &compute.VirtualMachineScaleSetNetworkConfigurationProperties{
 									Primary:                     to.BoolPtr(true),
 									EnableAcceleratedNetworking: to.BoolPtr(true),
-									IPConfigurations:            getIPConfigs(to.StringPtr("/subscriptions/123/resourceGroups/rg/providers/Microsoft.Network/loadBalancers/mySLB/backendAddressPools/mySLBBEPool")),
+									IPConfigurations:            getIPConfigs(to.StringPtr("/subscriptions/123/resourceGroups/rg/providers/Microsoft.Network/loadBalancers/mySLB/backendAddressPools/mySLBBEPool"), false),
 								},
 							},
 						},

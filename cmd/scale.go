@@ -394,6 +394,12 @@ func (sc *scaleCmd) run(cmd *cobra.Command, args []string) error {
 		templateJSON["variables"].(map[string]interface{})[sc.agentPool.Name+"VMNamePrefix"] = sc.containerService.Properties.GetAgentVMPrefix(sc.agentPool, winPoolIndex)
 	}
 	if orchestratorInfo.OrchestratorType == api.Kubernetes {
+		if orchestratorInfo.KubernetesConfig.LoadBalancerSku == api.StandardLoadBalancerSku {
+			err = transformer.NormalizeForK8sSLBScalingOrUpgrade(sc.logger, templateJSON)
+			if err != nil {
+				return errors.Wrapf(err, "error transforming the template for scaling with SLB %s", sc.apiModelPath)
+			}
+		}
 		err = transformer.NormalizeForK8sVMASScalingUp(sc.logger, templateJSON)
 		if err != nil {
 			return errors.Wrapf(err, "error transforming the template for scaling template %s", sc.apiModelPath)

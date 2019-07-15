@@ -101,6 +101,12 @@ func (ku *Upgrader) upgradeMasterNodes(ctx context.Context) error {
 	transformer := &transform.Transformer{
 		Translator: ku.Translator,
 	}
+	if ku.DataModel.Properties.OrchestratorProfile.KubernetesConfig.LoadBalancerSku == api.StandardLoadBalancerSku {
+		err = transformer.NormalizeForK8sSLBScalingOrUpgrade(ku.logger, templateMap)
+		if err != nil {
+			return ku.Translator.Errorf("error normalizing upgrade template for SLB: %s", err.Error())
+		}
+	}
 	if err = transformer.NormalizeResourcesForK8sMasterUpgrade(ku.logger, templateMap, ku.DataModel.Properties.MasterProfile.IsManagedDisks(), nil); err != nil {
 		ku.logger.Error(err.Error())
 		return err
@@ -230,6 +236,13 @@ func (ku *Upgrader) upgradeAgentPools(ctx context.Context) error {
 		var isMasterManagedDisk bool
 		if ku.DataModel.Properties.MasterProfile != nil {
 			isMasterManagedDisk = ku.DataModel.Properties.MasterProfile.IsManagedDisks()
+		}
+
+		if ku.DataModel.Properties.OrchestratorProfile.KubernetesConfig.LoadBalancerSku == api.StandardLoadBalancerSku {
+			err = transformer.NormalizeForK8sSLBScalingOrUpgrade(ku.logger, templateMap)
+			if err != nil {
+				return ku.Translator.Errorf("error normalizing upgrade template for SLB: %s", err.Error())
+			}
 		}
 		if err = transformer.NormalizeResourcesForK8sAgentUpgrade(ku.logger, templateMap, isMasterManagedDisk, preservePools); err != nil {
 			ku.logger.Errorf(err.Error())
@@ -453,6 +466,14 @@ func (ku *Upgrader) upgradeAgentScaleSets(ctx context.Context) error {
 
 		if err = transformer.NormalizeMasterResourcesForScaling(ku.logger, templateMap); err != nil {
 			return err
+		}
+
+		if ku.DataModel.Properties.OrchestratorProfile.KubernetesConfig.LoadBalancerSku == api.StandardLoadBalancerSku {
+			ku.logger.Infof("upgradeAgentScaleSets SLB...")
+			err = transformer.NormalizeForK8sSLBScalingOrUpgrade(ku.logger, templateMap)
+			if err != nil {
+				return ku.Translator.Errorf("error normalizing upgrade template for SLB: %s", err.Error())
+			}
 		}
 
 		random := rand.New(rand.NewSource(time.Now().UnixNano()))

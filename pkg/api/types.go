@@ -406,6 +406,7 @@ type KubernetesConfig struct {
 	MaximumLoadBalancerRuleCount     int               `json:"maximumLoadBalancerRuleCount,omitempty"`
 	ProxyMode                        KubeProxyMode     `json:"kubeProxyMode,omitempty"`
 	PrivateAzureRegistryServer       string            `json:"privateAzureRegistryServer,omitempty"`
+	OutboundRuleIdleTimeoutInMinutes int32             `json:"outboundRuleIdleTimeoutInMinutes,omitempty"`
 }
 
 // CustomFile has source as the full absolute source path to a file and dest
@@ -1197,6 +1198,16 @@ func (p *Properties) GetMasterFQDN() string {
 	}
 
 	return p.MasterProfile.FQDN
+}
+
+// AnyAgentHasLoadBalancerBackendAddressPoolIDs returns true if any of the agent profiles contains LoadBalancerBackendAddressPoolIDs
+func (p *Properties) AnyAgentHasLoadBalancerBackendAddressPoolIDs() bool {
+	for _, agentPoolProfile := range p.AgentPoolProfiles {
+		if agentPoolProfile.LoadBalancerBackendAddressPoolIDs != nil {
+			return true
+		}
+	}
+	return false
 }
 
 // HasImageRef returns true if the customer brought os image

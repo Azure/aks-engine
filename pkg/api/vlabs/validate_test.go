@@ -310,6 +310,19 @@ func Test_OrchestratorProfile_Validate(t *testing.T) {
 			},
 			expectedError: "maximumLoadBalancerRuleCount shouldn't be less than 0",
 		},
+		"should error when outboundRuleIdleTimeoutInMinutes populated is out of valid range": {
+			properties: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					OrchestratorType: "Kubernetes",
+					KubernetesConfig: &KubernetesConfig{
+						LoadBalancerSku:                  StandardLoadBalancerSku,
+						ExcludeMasterFromStandardLB:      to.BoolPtr(true),
+						OutboundRuleIdleTimeoutInMinutes: 3,
+					},
+				},
+			},
+			expectedError: "outboundRuleIdleTimeoutInMinutes shouldn't be less than 4 or greater than 120",
+		},
 	}
 
 	for testName, test := range tests {

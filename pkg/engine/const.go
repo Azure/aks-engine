@@ -84,8 +84,6 @@ const (
 	SMBFlexVolumeAddonName = "smb-flexvolume"
 	// KeyVaultFlexVolumeAddonName is the name of the keyvault flexvolume addon deployment
 	KeyVaultFlexVolumeAddonName = "keyvault-flexvolume"
-	// ELBServiceAddonName is the name of the elb service addon deployment
-	ELBServiceAddonName = "elb-svc"
 	// ScheduledMaintenanceAddonName is the name of the scheduled maintenance addon deployment
 	ScheduledMaintenanceAddonName = "scheduled-maintenance"
 	// DefaultGeneratorCode specifies the source generator of the cluster template.

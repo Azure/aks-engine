@@ -347,10 +347,6 @@ MASTER_CONTAINER_ADDONS_PLACEHOLDER
     sed -i "s|<cloud>|{{WrapAsParameter "kubernetesClusterAutoscalerAzureCloud"}}|g; s|<useManagedIdentity>|{{WrapAsParameter "kubernetesClusterAutoscalerUseManagedIdentity"}}|g" /etc/kubernetes/addons/cluster-autoscaler-deployment.yaml
 {{end}}
 
-{{if and (not IsPrivateCluster) (eq .OrchestratorProfile.KubernetesConfig.LoadBalancerSku "Standard")}}
-    sed -i "s|<svcName>|{{WrapAsParameter "kuberneteselbsvcname"}}|g" "/etc/kubernetes/addons/elb-svc.yaml"
-{{end}}
-
 {{if EnableDataEncryptionAtRest }}
     sed -i "s|<etcdEncryptionSecret>|\"{{WrapAsParameter "etcdEncryptionKey"}}\"|g" /etc/kubernetes/encryption-config.yaml
 {{end}}

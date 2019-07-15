@@ -9,6 +9,7 @@ import (
 	"github.com/Azure/aks-engine/pkg/api"
 	"github.com/Azure/azure-sdk-for-go/services/network/mgmt/2018-08-01/network"
 	"github.com/Azure/go-autorest/autorest/to"
+	"github.com/blang/semver"
 )
 
 // CreateClusterLoadBalancerForIPv6 creates the cluster loadbalancer with IPv4 and IPv6 FE config
@@ -231,6 +232,93 @@ func CreateLoadBalancer(prop *api.Properties, isVMSS bool) LoadBalancerARM {
 			inboundNATRules = append(inboundNATRules, inboundNATRule)
 		}
 		loadBalancer.InboundNatRules = &inboundNATRules
+	}
+
+	return loadBalancer
+}
+
+func createOutboundRules(prop *api.Properties) *[]network.OutboundRule {
+	currentVersion, _ := semver.Make(prop.OrchestratorProfile.OrchestratorVersion)
+	min13Version, _ := semver.Make("1.13.7")
+	min14Version, _ := semver.Make("1.14.3")
+	min15Version, _ := semver.Make("1.15.0")
+
+	if currentVersion.LT(min13Version) ||
+		(currentVersion.Major == min14Version.Major && currentVersion.Minor == min14Version.Minor && currentVersion.LT(min14Version)) ||
+		(currentVersion.Major == min15Version.Major && currentVersion.Minor == min15Version.Minor && currentVersion.LT(min15Version)) {
+		return &[]network.OutboundRule{
+			{
+				Name: to.StringPtr("LBOutboundRule"),
+				OutboundRulePropertiesFormat: &network.OutboundRulePropertiesFormat{
+					FrontendIPConfigurations: &[]network.SubResource{
+						{
+							ID: to.StringPtr("[variables('agentLbIPConfigID')]"),
+						},
+					},
+					BackendAddressPool: &network.SubResource{
+						ID: to.StringPtr("[concat(variables('agentLbID'), '/backendAddressPools/', variables('agentLbBackendPoolName'))]"),
+					},
+					Protocol:             network.Protocol1All,
+					IdleTimeoutInMinutes: to.Int32Ptr(prop.OrchestratorProfile.KubernetesConfig.OutboundRuleIdleTimeoutInMinutes),
+				},
+			},
+		}
+	}
+	return &[]network.OutboundRule{
+		{
+			Name: to.StringPtr("LBOutboundRule"),
+			OutboundRulePropertiesFormat: &network.OutboundRulePropertiesFormat{
+				FrontendIPConfigurations: &[]network.SubResource{
+					{
+						ID: to.StringPtr("[variables('agentLbIPConfigID')]"),
+					},
+				},
+				BackendAddressPool: &network.SubResource{
+					ID: to.StringPtr("[concat(variables('agentLbID'), '/backendAddressPools/', variables('agentLbBackendPoolName'))]"),
+				},
+				Protocol:             network.Protocol1All,
+				IdleTimeoutInMinutes: to.Int32Ptr(prop.OrchestratorProfile.KubernetesConfig.OutboundRuleIdleTimeoutInMinutes),
+				EnableTCPReset:       to.BoolPtr(true),
+			},
+		},
+	}
+}
+
+func CreateAgentLoadBalancer(prop *api.Properties, isVMSS bool) LoadBalancerARM {
+
+	loadBalancer := LoadBalancerARM{
+		ARMResource: ARMResource{
+			APIVersion: "[variables('apiVersionNetwork')]",
+			DependsOn: []string{
+				"[concat('Microsoft.Network/publicIPAddresses/', variables('agentPublicIPAddressName'))]",
+			},
+		},
+		LoadBalancer: network.LoadBalancer{
+			Location: to.StringPtr("[variables('location')]"),
+			Name:     to.StringPtr("[variables('agentLbName')]"),
+			LoadBalancerPropertiesFormat: &network.LoadBalancerPropertiesFormat{
+				BackendAddressPools: &[]network.BackendAddressPool{
+					{
+						Name: to.StringPtr("[variables('agentLbBackendPoolName')]"),
+					},
+				},
+				FrontendIPConfigurations: &[]network.FrontendIPConfiguration{
+					{
+						Name: to.StringPtr("[variables('agentLbIPConfigName')]"),
+						FrontendIPConfigurationPropertiesFormat: &network.FrontendIPConfigurationPropertiesFormat{
+							PublicIPAddress: &network.PublicIPAddress{
+								ID: to.StringPtr("[resourceId('Microsoft.Network/publicIpAddresses',variables('agentPublicIPAddressName'))]"),
+							},
+						},
+					},
+				},
+				OutboundRules: createOutboundRules(prop),
+			},
+			Sku: &network.LoadBalancerSku{
+				Name: "[variables('loadBalancerSku')]",
+			},
+			Type: to.StringPtr("Microsoft.Network/loadBalancers"),
+		},
 	}
 
 	return loadBalancer
