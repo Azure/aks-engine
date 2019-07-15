@@ -14360,14 +14360,10 @@ func k8sCloudInitArtifactsKubeletService() (*asset, error) {
 var _k8sCloudInitArtifactsLabelNodesService = []byte(`[Unit]
 Description=Label Kubernetes nodes as masters or agents
 After=kubelet.service
-
 [Service]
 Restart=always
-RestartSec=300
-ExecStart=/opt/azure/containers/label-nodes.sh
-
-[Install]
-WantedBy=multi-user.target
+RestartSec=60
+ExecStart=/bin/bash /opt/azure/containers/label-nodes.sh
 `)
 
 func k8sCloudInitArtifactsLabelNodesServiceBytes() ([]byte, error) {
