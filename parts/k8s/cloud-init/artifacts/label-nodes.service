@@ -4,7 +4,7 @@ After=kubelet.service
 
 [Service]
 Restart=always
-RestartSec=300
+RestartSec=30
 ExecStart=/opt/azure/containers/label-nodes.sh
 
 [Install]
