@@ -2400,7 +2400,7 @@ var _dcosDcoswindowsprovisionPs1 = []byte(`<#
         Provisions VM as a DCOS agent.
 
      Invoke by:
-
+       
 #>
 
 [CmdletBinding(DefaultParameterSetName="Standard")]
@@ -2412,7 +2412,7 @@ param(
     [string]
     [ValidateNotNullOrEmpty()]
     $firstMasterIP,
-
+    
     [string]
     [ValidateNotNullOrEmpty()]
     $bootstrapUri,
@@ -2466,7 +2466,7 @@ Expand-ZIPFile($file, $destination)
 }
 
 
-function
+function 
 Remove-Directory($dirname)
 {
 
@@ -2483,25 +2483,25 @@ Remove-Directory($dirname)
 }
 
 
-function
+function 
 Check-Subnet ([string]$cidr, [string]$ip)
 {
     try {
 
         $network, [int]$subnetlen = $cidr.Split('/')
-
+    
         if ($subnetlen -eq 0)
         {
             $subnetlen = 8 # Default in case we get an IP addr, not CIDR
         }
         $a = ([IPAddress] $network)
         [uint32] $unetwork = [uint32]$a.Address
-
+    
         $mask = -bnot ((-bnot [uint32]0) -shl (32 - $subnetlen))
-
+    
         $a = [IPAddress]$ip
         [uint32] $uip = [uint32]$a.Address
-
+    
         return ($unetwork -eq ($mask -band $uip))
     }
     catch {
@@ -2527,7 +2527,7 @@ Get-BootstrapScript($download_uri, $download_dir)
 try
 {
     # Set to false for debugging.  This will output the start script to
-    # c:\AzureData\dcosProvisionScript.log, and then you can RDP
+    # c:\AzureData\dcosProvisionScript.log, and then you can RDP 
     # to the windows machine, and run the script manually to watch
     # the output.
     Write-Log "Get the install script"
@@ -2544,16 +2544,16 @@ try
     $ip = ([IPAddress]($ip -join '.')).Address
 
     $MasterIP = @([IPAddress]$null)
-
-    for ($i = 0; $i -lt $MasterCount; $i++ )
+    
+    for ($i = 0; $i -lt $MasterCount; $i++ ) 
     {
        $new_ip = ([IPAddress]$ip).getAddressBytes()
        [Array]::Reverse($new_ip)
        $new_ip = [IPAddress]($new_ip -join '.')
        $MasterIP += $new_ip
-
+      
        $ip++
-
+     
     }
     $master_str  = $MasterIP.IPAddressToString
 
@@ -2562,7 +2562,7 @@ try
         $master_str += ":2181"
     }
     else {
-        for ($i = 0; $i -lt $master_str.count; $i++)
+        for ($i = 0; $i -lt $master_str.count; $i++) 
         {
             $master_str[$i] += ":2181"
         }
@@ -2575,12 +2575,12 @@ try
 
     if ($isAgent)
     {
-        $run_cmd = $global:BootstrapInstallDir+"\DCOSWindowsAgentSetup.ps1 -MasterIP '$master_json' -AgentPrivateIP "+($private_ip.IPAddress) +" -BootstrapUrl '$bootstrapUri' "
-        if ($isPublic)
+        $run_cmd = $global:BootstrapInstallDir+"\DCOSWindowsAgentSetup.ps1 -MasterIP '$master_json' -AgentPrivateIP "+($private_ip.IPAddress) +" -BootstrapUrl '$bootstrapUri' " 
+        if ($isPublic) 
         {
             $run_cmd += " -isPublic:` + "`" + `$true "
         }
-        if ($customAttrs)
+        if ($customAttrs) 
         {
             $run_cmd += " -customAttrs '$customAttrs'"
         }
@@ -4094,13 +4094,13 @@ runcmd: PREPROVISION_EXTENSION
   - --now
   - lxc-net.service
 - - tar
-  - czf
+  - czf 
   - /etc/docker.tar.gz
   - -C
   - /tmp/xtoph
   - .docker
-- - rm
-  - -rf
+- - rm 
+  - -rf 
   - /tmp/xtoph
 - /opt/azure/containers/provision.sh
 - - cp
@@ -4475,13 +4475,13 @@ runcmd: PREPROVISION_EXTENSION
   - --now
   - lxc-net.service
 - - tar
-  - czf
+  - czf 
   - /etc/docker.tar.gz
   - -C
   - /tmp/xtoph
   - .docker
-- - rm
-  - -rf
+- - rm 
+  - -rf 
   - /tmp/xtoph
 - /opt/azure/containers/provision.sh
 - - cp
@@ -4870,16 +4870,16 @@ runcmd: PREPROVISION_EXTENSION
   - --now
   - unscd.service
 - sed -i "s/^Port 22$/Port 22\nPort 2222/1" /etc/ssh/sshd_config
-- service ssh restart
+- service ssh restart 
 - /opt/azure/containers/setup_ephemeral_disk.sh
 - - tar
-  - czf
+  - czf 
   - /etc/docker.tar.gz
   - -C
   - /tmp/xtoph
   - .docker
-- - rm
-  - -rf
+- - rm 
+  - -rf 
   - /tmp/xtoph
 - /opt/azure/containers/provision.sh
 - - cp
@@ -5243,16 +5243,16 @@ runcmd: PREPROVISION_EXTENSION
   - --now
   - unscd.service
 - sed -i "s/^Port 22$/Port 22\nPort 2222/1" /etc/ssh/sshd_config
-- service ssh restart
+- service ssh restart 
 - /opt/azure/containers/setup_ephemeral_disk.sh
 - - tar
-  - czf
+  - czf 
   - /etc/docker.tar.gz
   - -C
   - /tmp/xtoph
   - .docker
-- - rm
-  - -rf
+- - rm 
+  - -rf 
   - /tmp/xtoph
 - /opt/azure/containers/provision.sh
 - - cp
@@ -6156,21 +6156,21 @@ var _dcosDcosparamsT = []byte(`    "dcosBootstrapURL": {
       "defaultValue": "https://dcosio.azureedge.net/dcos/stable",
       "metadata": {
         "description": "The repository URL"
-      },
+      }, 
       "type": "string"
     },
     "dcosClusterPackageListID": {
       "defaultValue": "77282d8864a5bf36db345b54a0d1de3674a0e937",
       "metadata": {
         "description": "The default cluster package list IDs."
-      },
+      }, 
       "type": "string"
     },
     "dcosProviderPackageID": {
       "defaultValue": "",
       "metadata": {
         "description": "The guid for provider dcos-provider package."
-      },
+      }, 
       "type": "string"
     },
 `)
@@ -12948,7 +12948,7 @@ configureK8sCustomCloud() {
     # Decrease eth0 MTU to mitigate Azure Stack's NRP issue
     echo "iface eth0 inet dhcp" | sudo tee -a /etc/network/interfaces
     echo "    post-up /sbin/ifconfig eth0 mtu 1350" | sudo tee -a /etc/network/interfaces
-
+    
     ifconfig eth0 mtu 1350
 
     set -x
@@ -13928,8 +13928,8 @@ DHCLIENT6_CONF_FILE=/etc/dhcp/dhclient6.conf
 CLOUD_INIT_CFG=/etc/network/interfaces.d/50-cloud-init.cfg
 
 read -r -d '' NETWORK_CONFIGURATION << EOC || true
-iface eth0 inet6 auto
-    up sleep 5
+iface eth0 inet6 auto 
+    up sleep 5 
     up dhclient -1 -6 -cf /etc/dhcp/dhclient6.conf -lf /var/lib/dhcp/dhclient6.eth0.leases -v eth0 || true
 EOC
 
@@ -15035,7 +15035,7 @@ func k8sCloudInitArtifactsSysFsBpfMount() (*asset, error) {
 var _k8sCloudInitArtifactsSysctlD60CisConf = []byte(`# 3.1.2 Ensure packet redirect sending is disabled
 net.ipv4.conf.all.send_redirects = 0
 net.ipv4.conf.default.send_redirects = 0
-# 3.2.1 Ensure source routed packets are not accepted
+# 3.2.1 Ensure source routed packets are not accepted 
 net.ipv4.conf.all.accept_source_route = 0
 net.ipv4.conf.default.accept_source_route = 0
 # 3.2.2 Ensure ICMP redirects are not accepted
@@ -20425,11 +20425,11 @@ spec:
         - name: volplugins
           mountPath: /etc/kubernetes/volumeplugins/
         - name: varlog
-          mountPath: /var/log/
+          mountPath: /var/log/      
       volumes:
       - name: varlog
         hostPath:
-          path: /var/log/
+          path: /var/log/              
       - name: volplugins
         hostPath:
           path: /etc/kubernetes/volumeplugins/
@@ -22711,11 +22711,11 @@ spec:
         - name: volplugins
           mountPath: /etc/kubernetes/volumeplugins/
         - name: varlog
-          mountPath: /var/log/
+          mountPath: /var/log/      
       volumes:
       - name: varlog
         hostPath:
-          path: /var/log/
+          path: /var/log/              
       - name: volplugins
         hostPath:
           path: /etc/kubernetes/volumeplugins/
@@ -24495,7 +24495,7 @@ func k8sWindowsconfigfuncPs1() (*asset, error) {
 var _k8sWindowsinstallopensshfuncPs1 = []byte(`function
 Install-OpenSSH {
     Param(
-        [Parameter(Mandatory = $true)][string[]]
+        [Parameter(Mandatory = $true)][string[]] 
         $SSHKeys
     )
 
@@ -24536,7 +24536,7 @@ Install-OpenSSH {
     # OPTIONAL but recommended:
     Set-Service -Name sshd -StartupType 'Automatic'
 
-    # Confirm the Firewall rule is configured. It should be created automatically by setup.
+    # Confirm the Firewall rule is configured. It should be created automatically by setup. 
     $firewall = Get-NetFirewallRule -Name *ssh*
 
     if (!$firewall) {
@@ -25554,14 +25554,14 @@ Start-Docker()
 {
     Write-Log "Starting $global:DockerServiceName..."
     $startTime = Get-Date
-
+        
     while (-not $dockerReady)
     {
         try
         {
             Start-Service -Name $global:DockerServiceName -ea Stop
 
-            $dockerReady = $true
+            $dockerReady = $true            
         }
         catch
         {
@@ -25573,7 +25573,7 @@ Start-Docker()
             }
 
             $errorStr = $_.Exception.Message
-            Write-Log "Starting Service failed: $errorStr"
+            Write-Log "Starting Service failed: $errorStr" 
             Write-Log "sleeping for 10 seconds..."
             Start-Sleep -sec 10
         }
@@ -25587,7 +25587,7 @@ Stop-Docker()
     Write-Log "Stopping $global:DockerServiceName..."
     try
     {
-        Stop-Service -Name $global:DockerServiceName -ea Stop
+        Stop-Service -Name $global:DockerServiceName -ea Stop   
     }
     catch
     {
@@ -25600,7 +25600,7 @@ Update-DockerServiceRecoveryPolicy()
 {
     $dockerReady = $false
     $startTime = Get-Date
-
+    
     # wait until the service exists
     while (-not $dockerReady)
     {
@@ -25608,7 +25608,7 @@ Update-DockerServiceRecoveryPolicy()
         {
             $dockerReady = $true
         }
-        else
+        else 
         {
             $timeElapsed = $(Get-Date) - $startTime
             if ($($timeElapsed).TotalMinutes -ge 5)
@@ -25620,7 +25620,7 @@ Update-DockerServiceRecoveryPolicy()
             Start-Sleep -sec 5
         }
     }
-
+    
     Write-Log "Updating docker restart policy, to ensure it restarts on error"
     $services = Get-WMIObject win32_service | Where-Object {$_.name -imatch $global:DockerServiceName}
     foreach ($service in $services)
@@ -25694,7 +25694,7 @@ try
 
     Write-Log "Update Docker restart policy"
     Update-DockerServiceRecoveryPolicy
-
+    
     Write-Log "Start Docker"
     Start-Docker
 
@@ -25786,14 +25786,14 @@ function Start-Docker()
 {
     Write-Log "Starting $global:DockerServiceName..."
     $startTime = Get-Date
-
+        
     while (-not $dockerReady)
     {
         try
         {
             Start-Service -Name $global:DockerServiceName -ea Stop
 
-            $dockerReady = $true
+            $dockerReady = $true            
         }
         catch
         {
@@ -25805,7 +25805,7 @@ function Start-Docker()
             }
 
             $errorStr = $_.Exception.Message
-            Write-Log "Starting Service failed: $errorStr"
+            Write-Log "Starting Service failed: $errorStr" 
             Write-Log "sleeping for 10 seconds..."
             Start-Sleep -sec 10
         }
@@ -25817,7 +25817,7 @@ function Stop-Docker()
     Write-Log "Stopping $global:DockerServiceName..."
     try
     {
-        Stop-Service -Name $global:DockerServiceName -ea Stop
+        Stop-Service -Name $global:DockerServiceName -ea Stop   
     }
     catch
     {
@@ -25870,7 +25870,7 @@ function Install-DockerBinaries()
             $currentRetry = $currentRetry + 1;
         }
     } while (!$success);
-
+      
     Write-Log "Expanding zip file at destination: $global:DockerExePath"
     Expand-ZIPFile -File $zipfile -Destination $global:DockerExePath
 
@@ -25882,7 +25882,7 @@ function Update-DockerServiceRecoveryPolicy()
 {
     $dockerReady = $false
     $startTime = Get-Date
-
+    
     # wait until the service exists
     while (-not $dockerReady)
     {
@@ -25890,7 +25890,7 @@ function Update-DockerServiceRecoveryPolicy()
         {
             $dockerReady = $true
         }
-        else
+        else 
         {
             $timeElapsed = $(Get-Date) - $startTime
             if ($($timeElapsed).TotalMinutes -ge 5)
@@ -25902,7 +25902,7 @@ function Update-DockerServiceRecoveryPolicy()
             Start-Sleep -sec 5
         }
     }
-
+    
     Write-Log "Updating docker restart policy, to ensure it restarts on error"
     $services = Get-WMIObject win32_service | Where-Object {$_.name -imatch $global:DockerServiceName}
     foreach ($service in $services)
@@ -26006,7 +26006,7 @@ function Confirm-DockerVersion()
    $dockerClientVersion = Invoke-Expression -Command:$dockerClientVersionCmd
 
    Write-Log "Docker Server version: $dockerServerVersion, Docker Client verison: $dockerClientVersion"
-
+   
    $serverVersionData = $dockerServerVersion.Split(".")
    $isNewServerVersion = $false;
    if(($serverVersionData[0] -ge 1) -and ($serverVersionData[1] -ge 13)){
@@ -26018,7 +26018,7 @@ function Confirm-DockerVersion()
    $isNewClientVersion = $false;
    if(($clientVersionData[0] -ge 1) -and ($clientVersionData[1] -ge 13)){
        $isNewClientVersion = $true;
-       Write-Log "Setting  isNewClientVersion to $isNewClientVersion"
+       Write-Log "Setting  isNewClientVersion to $isNewClientVersion"   
    }
 
    if($isNewServerVersion -and $isNewClientVersion)
@@ -26049,10 +26049,10 @@ try
 
     Write-Log "Update Docker restart policy"
     Update-DockerServiceRecoveryPolicy
-
+    
     Write-Log "Start Docker"
     Start-Docker
-
+    
     Write-Log "Join existing Swarm"
     Join-Swarm
 
@@ -26249,7 +26249,7 @@ installDocker()
 {
   for i in {1..10}; do
     apt-get install -y apt-transport-https ca-certificates curl software-properties-common
-    curl --max-time 60 -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add -
+    curl --max-time 60 -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add - 
     add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
     apt-get update
     apt-get install -y docker-ce=${DOCKER_CE_VERSION}
@@ -26567,7 +26567,7 @@ installDockerUbuntu()
 {
   for i in {1..10}; do
     apt-get install -y apt-transport-https ca-certificates curl software-properties-common
-    curl --max-time 60 -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add -
+    curl --max-time 60 -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add - 
     add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
     apt-get update
     apt-get install -y docker-ce=${DOCKER_CE_VERSION}
@@ -26965,10 +26965,10 @@ var _swarmSwarmagentresourcesvmasT = []byte(`    {
           "computername": "[concat(variables('{{.Name}}VMNamePrefix'), copyIndex(variables('{{.Name}}Offset')))]",
 {{if IsSwarmMode}}
   {{if not .IsRHEL}}
-            {{GetAgentSwarmModeCustomData .}}
+            {{GetAgentSwarmModeCustomData .}} 
   {{end}}
 {{else}}
-            {{GetAgentSwarmCustomData .}}
+            {{GetAgentSwarmCustomData .}} 
 {{end}}
           "linuxConfiguration": {
               "disablePasswordAuthentication": true,
@@ -27944,11 +27944,11 @@ func swarmSwarmparamsT() (*asset, error) {
 }
 
 var _swarmSwarmwinagentresourcesvmasT = []byte(`    {
-      "apiVersion": "[variables('apiVersionDefault')]",
+      "apiVersion": "[variables('apiVersionDefault')]", 
       "copy": {
-        "count": "[sub(variables('{{.Name}}Count'), variables('{{.Name}}Offset'))]",
+        "count": "[sub(variables('{{.Name}}Count'), variables('{{.Name}}Offset'))]", 
         "name": "loop"
-      },
+      }, 
       "dependsOn": [
 {{if not .IsCustomVNET}}
       "[variables('vnetID')]"
@@ -27956,13 +27956,13 @@ var _swarmSwarmwinagentresourcesvmasT = []byte(`    {
 {{if IsPublic .Ports}}
 	  ,"[variables('{{.Name}}LbID')]"
 {{end}}
-      ],
-      "location": "[variables('location')]",
+      ], 
+      "location": "[variables('location')]", 
       "name": "[concat(variables('{{.Name}}VMNamePrefix'), 'nic-', copyIndex(variables('{{.Name}}Offset')))]",
       "properties": {
         "ipConfigurations": [
           {
-            "name": "ipConfigNode",
+            "name": "ipConfigNode", 
             "properties": {
 {{if IsPublic .Ports}}
               "loadBalancerBackendAddressPools": [
@@ -27975,24 +27975,24 @@ var _swarmSwarmwinagentresourcesvmasT = []byte(`    {
                   "id": "[concat(variables('{{.Name}}LbID'), '/inboundNatPools/', 'RDP-', variables('{{.Name}}VMNamePrefix'))]"
                 }
               ],
-{{end}}
-              "privateIPAllocationMethod": "Dynamic",
+{{end}}  
+              "privateIPAllocationMethod": "Dynamic", 
               "subnet": {
                 "id": "[variables('{{.Name}}VnetSubnetID')]"
              }
             }
           }
         ]
-      },
+      }, 
       "type": "Microsoft.Network/networkInterfaces"
     },
 {{if .IsManagedDisks}}
     {
-      "apiVersion": "[variables('apiVersionStorageManagedDisks')]",
-      "location": "[variables('location')]",
-      "name": "[variables('{{.Name}}AvailabilitySet')]",
-      "properties": {
-        "platformFaultDomainCount": 2,
+      "apiVersion": "[variables('apiVersionStorageManagedDisks')]", 
+      "location": "[variables('location')]", 
+      "name": "[variables('{{.Name}}AvailabilitySet')]", 
+      "properties": { 
+        "platformFaultDomainCount": 2, 
         "platformUpdateDomainCount": 3,
         "managed": "true"
       },
@@ -28000,76 +28000,76 @@ var _swarmSwarmwinagentresourcesvmasT = []byte(`    {
     },
 {{else if .IsStorageAccount}}
     {
-      "apiVersion": "[variables('apiVersionStorage')]",
+      "apiVersion": "[variables('apiVersionStorage')]", 
       "copy": {
-        "count": "[variables('{{.Name}}StorageAccountsCount')]",
+        "count": "[variables('{{.Name}}StorageAccountsCount')]", 
         "name": "vmLoopNode"
-      },
+      }, 
       "dependsOn": [
         "[concat('Microsoft.Network/publicIPAddresses/', variables('masterPublicIPAddressName'))]"
-      ],
-      "location": "[variables('location')]",
-      "name": "[concat(variables('storageAccountPrefixes')[mod(add(copyIndex(),variables('{{.Name}}StorageAccountOffset')),variables('storageAccountPrefixesCount'))],variables('storageAccountPrefixes')[div(add(copyIndex(),variables('{{.Name}}StorageAccountOffset')),variables('storageAccountPrefixesCount'))],variables('{{.Name}}AccountName'))]",
+      ], 
+      "location": "[variables('location')]", 
+      "name": "[concat(variables('storageAccountPrefixes')[mod(add(copyIndex(),variables('{{.Name}}StorageAccountOffset')),variables('storageAccountPrefixesCount'))],variables('storageAccountPrefixes')[div(add(copyIndex(),variables('{{.Name}}StorageAccountOffset')),variables('storageAccountPrefixesCount'))],variables('{{.Name}}AccountName'))]", 
       "properties": {
         "accountType": "[variables('vmSizesMap')[variables('{{.Name}}VMSize')].storageAccountType]"
-      },
+      }, 
       "type": "Microsoft.Storage/storageAccounts"
     },
   {{if .HasDisks}}
       {
-        "apiVersion": "[variables('apiVersionStorage')]",
+        "apiVersion": "[variables('apiVersionStorage')]", 
         "copy": {
-          "count": "[variables('{{.Name}}StorageAccountsCount')]",
+          "count": "[variables('{{.Name}}StorageAccountsCount')]", 
           "name": "datadiskLoop"
-        },
+        }, 
         "dependsOn": [
           "[concat('Microsoft.Network/publicIPAddresses/', variables('masterPublicIPAddressName'))]"
-        ],
-        "location": "[variables('location')]",
-        "name": "[concat(variables('storageAccountPrefixes')[mod(add(copyIndex(variables('dataStorageAccountPrefixSeed')),variables('{{.Name}}StorageAccountOffset')),variables('storageAccountPrefixesCount'))],variables('storageAccountPrefixes')[div(add(copyIndex(variables('dataStorageAccountPrefixSeed')),variables('{{.Name}}StorageAccountOffset')),variables('storageAccountPrefixesCount'))],variables('{{.Name}}DataAccountName'))]",
+        ], 
+        "location": "[variables('location')]", 
+        "name": "[concat(variables('storageAccountPrefixes')[mod(add(copyIndex(variables('dataStorageAccountPrefixSeed')),variables('{{.Name}}StorageAccountOffset')),variables('storageAccountPrefixesCount'))],variables('storageAccountPrefixes')[div(add(copyIndex(variables('dataStorageAccountPrefixSeed')),variables('{{.Name}}StorageAccountOffset')),variables('storageAccountPrefixesCount'))],variables('{{.Name}}DataAccountName'))]", 
         "properties": {
           "accountType": "[variables('vmSizesMap')[variables('{{.Name}}VMSize')].storageAccountType]"
-        },
+        }, 
         "type": "Microsoft.Storage/storageAccounts"
-      },
+      }, 
   {{end}}
     {
-      "apiVersion": "[variables('apiVersionDefault')]",
-      "location": "[variables('location')]",
-      "name": "[variables('{{.Name}}AvailabilitySet')]",
-      "properties": {},
+      "apiVersion": "[variables('apiVersionDefault')]", 
+      "location": "[variables('location')]", 
+      "name": "[variables('{{.Name}}AvailabilitySet')]", 
+      "properties": {}, 
       "type": "Microsoft.Compute/availabilitySets"
     },
 {{end}}
 {{if IsPublic .Ports}}
     {
-      "apiVersion": "[variables('apiVersionDefault')]",
-      "location": "[variables('location')]",
-      "name": "[variables('{{.Name}}IPAddressName')]",
+      "apiVersion": "[variables('apiVersionDefault')]", 
+      "location": "[variables('location')]", 
+      "name": "[variables('{{.Name}}IPAddressName')]", 
       "properties": {
         "dnsSettings": {
           "domainNameLabel": "[variables('{{.Name}}EndpointDNSNamePrefix')]"
-        },
+        }, 
         "publicIPAllocationMethod": "Dynamic"
-      },
+      }, 
       "type": "Microsoft.Network/publicIPAddresses"
-    },
+    }, 
     {
-      "apiVersion": "[variables('apiVersionDefault')]",
+      "apiVersion": "[variables('apiVersionDefault')]", 
       "dependsOn": [
         "[concat('Microsoft.Network/publicIPAddresses/', variables('{{.Name}}IPAddressName'))]"
-      ],
-      "location": "[variables('location')]",
-      "name": "[variables('{{.Name}}LbName')]",
+      ], 
+      "location": "[variables('location')]", 
+      "name": "[variables('{{.Name}}LbName')]", 
       "properties": {
         "backendAddressPools": [
           {
             "name": "[variables('{{.Name}}LbBackendPoolName')]"
           }
-        ],
+        ], 
         "frontendIPConfigurations": [
           {
-            "name": "[variables('{{.Name}}LbIPConfigName')]",
+            "name": "[variables('{{.Name}}LbIPConfigName')]", 
             "properties": {
               "publicIPAddress": {
                 "id": "[resourceId('Microsoft.Network/publicIPAddresses',variables('{{.Name}}IPAddressName'))]"
@@ -28090,16 +28090,16 @@ var _swarmSwarmwinagentresourcesvmasT = []byte(`    {
               "backendPort": "[variables('agentWindowsBackendPort')]"
             }
           }
-        ],
+        ], 
         "loadBalancingRules": [
           {{(GetLBRules .Name .Ports)}}
-        ],
+        ], 
         "probes": [
           {{(GetProbes .Ports)}}
         ]
-      },
+      }, 
       "type": "Microsoft.Network/loadBalancers"
-    },
+    }, 
 {{end}}
     {
 {{if .IsManagedDisks}}
@@ -28108,9 +28108,9 @@ var _swarmSwarmwinagentresourcesvmasT = []byte(`    {
     "apiVersion": "[variables('apiVersionDefault')]",
 {{end}}
       "copy": {
-        "count": "[sub(variables('{{.Name}}Count'), variables('{{.Name}}Offset'))]",
+        "count": "[sub(variables('{{.Name}}Count'), variables('{{.Name}}Offset'))]", 
         "name": "vmLoopNode"
-      },
+      }, 
       "dependsOn": [
 {{if .IsStorageAccount}}
         "[concat('Microsoft.Storage/storageAccounts/',variables('storageAccountPrefixes')[mod(add(div(copyIndex(variables('{{.Name}}Offset')),variables('maxVMsPerStorageAccount')),variables('{{.Name}}StorageAccountOffset')),variables('storageAccountPrefixesCount'))],variables('storageAccountPrefixes')[div(add(div(copyIndex(variables('{{.Name}}Offset')),variables('maxVMsPerStorageAccount')),variables('{{.Name}}StorageAccountOffset')),variables('storageAccountPrefixesCount'))],variables('{{.Name}}AccountName'))]",
@@ -28118,35 +28118,35 @@ var _swarmSwarmwinagentresourcesvmasT = []byte(`    {
           "[concat('Microsoft.Storage/storageAccounts/',variables('storageAccountPrefixes')[mod(add(add(div(copyIndex(variables('{{.Name}}Offset')),variables('maxVMsPerStorageAccount')),variables('{{.Name}}StorageAccountOffset')),variables('dataStorageAccountPrefixSeed')),variables('storageAccountPrefixesCount'))],variables('storageAccountPrefixes')[div(add(add(div(copyIndex(variables('{{.Name}}Offset')),variables('maxVMsPerStorageAccount')),variables('{{.Name}}StorageAccountOffset')),variables('dataStorageAccountPrefixSeed')),variables('storageAccountPrefixesCount'))],variables('{{.Name}}DataAccountName'))]",
   {{end}}
 {{end}}
-        "[concat('Microsoft.Network/networkInterfaces/', variables('{{.Name}}VMNamePrefix'), 'nic-', copyIndex(variables('{{.Name}}Offset')))]",
+        "[concat('Microsoft.Network/networkInterfaces/', variables('{{.Name}}VMNamePrefix'), 'nic-', copyIndex(variables('{{.Name}}Offset')))]", 
         "[concat('Microsoft.Compute/availabilitySets/', variables('{{.Name}}AvailabilitySet'))]"
       ],
       "tags":
       {
         "creationSource" : "[concat('acsengine-', variables('{{.Name}}VMNamePrefix'), copyIndex(variables('{{.Name}}Offset')))]"
       },
-      "location": "[variables('location')]",
+      "location": "[variables('location')]",  
       "name": "[concat(variables('{{.Name}}VMNamePrefix'), copyIndex(variables('{{.Name}}Offset')))]",
       "properties": {
         "availabilitySet": {
           "id": "[resourceId('Microsoft.Compute/availabilitySets',variables('{{.Name}}AvailabilitySet'))]"
-        },
+        }, 
         "hardwareProfile": {
           "vmSize": "[variables('{{.Name}}VMSize')]"
-        },
+        }, 
         "networkProfile": {
           "networkInterfaces": [
             {
               "id": "[resourceId('Microsoft.Network/networkInterfaces',concat(variables('{{.Name}}VMNamePrefix'), 'nic-', copyIndex(variables('{{.Name}}Offset'))))]"
             }
           ]
-        },
+        }, 
         "osProfile": {
           "computername": "[concat(substring(variables('nameSuffix'), 0, 5), 'acs', copyIndex(variables('{{.Name}}Offset')), add(900,variables('{{.Name}}Index')))]",
           "adminUsername": "[variables('windowsAdminUsername')]",
           "adminPassword": "[variables('windowsAdminPassword')]",
           {{if IsSwarmMode}}
-            {{GetWinAgentSwarmModeCustomData}}
+            {{GetWinAgentSwarmModeCustomData}}           
           {{else}}
             {{GetWinAgentSwarmCustomData}}
           {{end}}
@@ -28154,7 +28154,7 @@ var _swarmSwarmwinagentresourcesvmasT = []byte(`    {
               ,
               "secrets": "[variables('windowsProfileSecrets')]"
           {{end}}
-        },
+        }, 
         "storageProfile": {
           {{GetDataDisks .}}
           "imageReference": {
@@ -28177,19 +28177,19 @@ var _swarmSwarmwinagentresourcesvmasT = []byte(`    {
 {{end}}
           }
         }
-      },
+      }, 
       "type": "Microsoft.Compute/virtualMachines"
-    },
+    }, 
     {
-      "apiVersion": "[variables('apiVersionDefault')]",
+      "apiVersion": "[variables('apiVersionDefault')]", 
       "copy": {
-        "count": "[sub(variables('{{.Name}}Count'), variables('{{.Name}}Offset'))]",
+        "count": "[sub(variables('{{.Name}}Count'), variables('{{.Name}}Offset'))]", 
         "name": "vmLoopNode"
-      },
+      }, 
       "dependsOn": [
         "[concat('Microsoft.Compute/virtualMachines/', variables('{{.Name}}VMNamePrefix'), copyIndex(variables('{{.Name}}Offset')))]"
-      ],
-      "location": "[variables('location')]",
+      ], 
+      "location": "[variables('location')]", 
       "name": "[concat(variables('{{.Name}}VMNamePrefix'), copyIndex(variables('{{.Name}}Offset')), '/cse')]",
       "properties": {
         "publisher": "Microsoft.Compute",
@@ -28199,7 +28199,7 @@ var _swarmSwarmwinagentresourcesvmasT = []byte(`    {
         "settings": {
           "commandToExecute": "[variables('windowsCustomScript')]"
         }
-      },
+      }, 
       "type": "Microsoft.Compute/virtualMachines/extensions"
     }
 `)
@@ -28662,83 +28662,87 @@ var _bindata = map[string]func() (*asset, error){
 	"k8s/addons/kubernetesmasteraddons-scheduled-maintenance-deployment.yaml":       k8sAddonsKubernetesmasteraddonsScheduledMaintenanceDeploymentYaml,
 	"k8s/addons/kubernetesmasteraddons-unmanaged-azure-storage-classes-custom.yaml": k8sAddonsKubernetesmasteraddonsUnmanagedAzureStorageClassesCustomYaml,
 	"k8s/addons/kubernetesmasteraddons-unmanaged-azure-storage-classes.yaml":        k8sAddonsKubernetesmasteraddonsUnmanagedAzureStorageClassesYaml,
-	"k8s/armparameters.t":                                                                k8sArmparametersT,
-	"k8s/cloud-init/artifacts/apt-preferences":                                           k8sCloudInitArtifactsAptPreferences,
-	"k8s/cloud-init/artifacts/auditd-rules":                                              k8sCloudInitArtifactsAuditdRules,
-	"k8s/cloud-init/artifacts/cis.sh":                                                    k8sCloudInitArtifactsCisSh,
-	"k8s/cloud-init/artifacts/cse_config.sh":                                             k8sCloudInitArtifactsCse_configSh,
-	"k8s/cloud-init/artifacts/cse_customcloud.sh":                                        k8sCloudInitArtifactsCse_customcloudSh,
-	"k8s/cloud-init/artifacts/cse_helpers.sh":                                            k8sCloudInitArtifactsCse_helpersSh,
-	"k8s/cloud-init/artifacts/cse_install.sh":                                            k8sCloudInitArtifactsCse_installSh,
-	"k8s/cloud-init/artifacts/cse_main.sh":                                               k8sCloudInitArtifactsCse_mainSh,
-	"k8s/cloud-init/artifacts/default-grub":                                              k8sCloudInitArtifactsDefaultGrub,
-	"k8s/cloud-init/artifacts/dhcpv6.service":                                            k8sCloudInitArtifactsDhcpv6Service,
-	"k8s/cloud-init/artifacts/docker-monitor.service":                                    k8sCloudInitArtifactsDockerMonitorService,
-	"k8s/cloud-init/artifacts/docker-monitor.timer":                                      k8sCloudInitArtifactsDockerMonitorTimer,
-	"k8s/cloud-init/artifacts/docker_clear_mount_propagation_flags.conf":                 k8sCloudInitArtifactsDocker_clear_mount_propagation_flagsConf,
-	"k8s/cloud-init/artifacts/enable-dhcpv6.sh":                                          k8sCloudInitArtifactsEnableDhcpv6Sh,
-	"k8s/cloud-init/artifacts/etc-issue":                                                 k8sCloudInitArtifactsEtcIssue,
-	"k8s/cloud-init/artifacts/etc-issue.net":                                             k8sCloudInitArtifactsEtcIssueNet,
-	"k8s/cloud-init/artifacts/etcd.service":                                              k8sCloudInitArtifactsEtcdService,
-	"k8s/cloud-init/artifacts/generateproxycerts.sh":                                     k8sCloudInitArtifactsGenerateproxycertsSh,
-	"k8s/cloud-init/artifacts/health-monitor.sh":                                         k8sCloudInitArtifactsHealthMonitorSh,
-	"k8s/cloud-init/artifacts/kms.service":                                               k8sCloudInitArtifactsKmsService,
-	"k8s/cloud-init/artifacts/kubelet-monitor.service":                                   k8sCloudInitArtifactsKubeletMonitorService,
-	"k8s/cloud-init/artifacts/kubelet-monitor.timer":                                     k8sCloudInitArtifactsKubeletMonitorTimer,
-	"k8s/cloud-init/artifacts/kubelet.service":                                           k8sCloudInitArtifactsKubeletService,
-	"k8s/cloud-init/artifacts/label-nodes.service":                                       k8sCloudInitArtifactsLabelNodesService,
-	"k8s/cloud-init/artifacts/label-nodes.sh":                                            k8sCloudInitArtifactsLabelNodesSh,
-	"k8s/cloud-init/artifacts/modprobe-CIS.conf":                                         k8sCloudInitArtifactsModprobeCisConf,
-	"k8s/cloud-init/artifacts/mountetcd.sh":                                              k8sCloudInitArtifactsMountetcdSh,
-	"k8s/cloud-init/artifacts/pam-d-common-auth":                                         k8sCloudInitArtifactsPamDCommonAuth,
-	"k8s/cloud-init/artifacts/pam-d-common-password":                                     k8sCloudInitArtifactsPamDCommonPassword,
-	"k8s/cloud-init/artifacts/pam-d-su":                                                  k8sCloudInitArtifactsPamDSu,
-	"k8s/cloud-init/artifacts/profile-d-cis.sh":                                          k8sCloudInitArtifactsProfileDCisSh,
-	"k8s/cloud-init/artifacts/pwquality-CIS.conf":                                        k8sCloudInitArtifactsPwqualityCisConf,
-	"k8s/cloud-init/artifacts/rsyslog-d-60-CIS.conf":                                     k8sCloudInitArtifactsRsyslogD60CisConf,
-	"k8s/cloud-init/artifacts/setup-custom-search-domains.sh":                            k8sCloudInitArtifactsSetupCustomSearchDomainsSh,
-	"k8s/cloud-init/artifacts/sshd_config":                                               k8sCloudInitArtifactsSshd_config,
-	"k8s/cloud-init/artifacts/sshd_config_1604":                                          k8sCloudInitArtifactsSshd_config_1604,
-	"k8s/cloud-init/artifacts/sys-fs-bpf.mount":                                          k8sCloudInitArtifactsSysFsBpfMount,
-	"k8s/cloud-init/artifacts/sysctl-d-60-CIS.conf":                                      k8sCloudInitArtifactsSysctlD60CisConf,
-	"k8s/cloud-init/jumpboxcustomdata.yml":                                               k8sCloudInitJumpboxcustomdataYml,
-	"k8s/cloud-init/masternodecustomdata.yml":                                            k8sCloudInitMasternodecustomdataYml,
-	"k8s/cloud-init/nodecustomdata.yml":                                                  k8sCloudInitNodecustomdataYml,
-	"k8s/containeraddons/1.16/azure-cni-networkmonitor.yaml":                             k8sContaineraddons116AzureCniNetworkmonitorYaml,
-	"k8s/containeraddons/1.16/ip-masq-agent.yaml":                                        k8sContaineraddons116IpMasqAgentYaml,
-	"k8s/containeraddons/1.16/kubernetesmasteraddons-aad-pod-identity-deployment.yaml":   k8sContaineraddons116KubernetesmasteraddonsAadPodIdentityDeploymentYaml,
-	"k8s/containeraddons/1.16/kubernetesmasteraddons-aci-connector-deployment.yaml":      k8sContaineraddons116KubernetesmasteraddonsAciConnectorDeploymentYaml,
-	"k8s/containeraddons/1.16/kubernetesmasteraddons-azure-npm-daemonset.yaml":           k8sContaineraddons116KubernetesmasteraddonsAzureNpmDaemonsetYaml,
-	"k8s/containeraddons/1.16/kubernetesmasteraddons-blobfuse-flexvolume-installer.yaml": k8sContaineraddons116KubernetesmasteraddonsBlobfuseFlexvolumeInstallerYaml,
-	"k8s/containeraddons/1.16/kubernetesmasteraddons-calico-daemonset.yaml":              k8sContaineraddons116KubernetesmasteraddonsCalicoDaemonsetYaml,
-	"k8s/containeraddons/1.16/kubernetesmasteraddons-cluster-autoscaler-deployment.yaml": k8sContaineraddons116KubernetesmasteraddonsClusterAutoscalerDeploymentYaml,
-	"k8s/containeraddons/1.16/kubernetesmasteraddons-keyvault-flexvolume-installer.yaml": k8sContaineraddons116KubernetesmasteraddonsKeyvaultFlexvolumeInstallerYaml,
-	"k8s/containeraddons/1.16/kubernetesmasteraddons-kube-rescheduler-deployment.yaml":   k8sContaineraddons116KubernetesmasteraddonsKubeReschedulerDeploymentYaml,
-	"k8s/containeraddons/1.16/kubernetesmasteraddons-metrics-server-deployment.yaml":     k8sContaineraddons116KubernetesmasteraddonsMetricsServerDeploymentYaml,
-	"k8s/containeraddons/1.16/kubernetesmasteraddons-omsagent-daemonset.yaml":            k8sContaineraddons116KubernetesmasteraddonsOmsagentDaemonsetYaml,
-	"k8s/containeraddons/1.16/kubernetesmasteraddons-smb-flexvolume-installer.yaml":      k8sContaineraddons116KubernetesmasteraddonsSmbFlexvolumeInstallerYaml,
-	"k8s/containeraddons/1.16/kubernetesmasteraddons-tiller-deployment.yaml":             k8sContaineraddons116KubernetesmasteraddonsTillerDeploymentYaml,
-	"k8s/containeraddons/1.6/kubernetesmasteraddons-heapster-deployment.yaml":            k8sContaineraddons16KubernetesmasteraddonsHeapsterDeploymentYaml,
-	"k8s/containeraddons/1.7/kubernetesmasteraddons-heapster-deployment.yaml":            k8sContaineraddons17KubernetesmasteraddonsHeapsterDeploymentYaml,
-	"k8s/containeraddons/1.8/kubernetesmasteraddons-heapster-deployment.yaml":            k8sContaineraddons18KubernetesmasteraddonsHeapsterDeploymentYaml,
-	"k8s/containeraddons/azure-cni-networkmonitor.yaml":                                  k8sContaineraddonsAzureCniNetworkmonitorYaml,
-	"k8s/containeraddons/dns-autoscaler.yaml":                                            k8sContaineraddonsDnsAutoscalerYaml,
-	"k8s/containeraddons/ip-masq-agent.yaml":                                             k8sContaineraddonsIpMasqAgentYaml,
-	"k8s/containeraddons/kubernetesmasteraddons-aad-pod-identity-deployment.yaml":        k8sContaineraddonsKubernetesmasteraddonsAadPodIdentityDeploymentYaml,
-	"k8s/containeraddons/kubernetesmasteraddons-aci-connector-deployment.yaml":           k8sContaineraddonsKubernetesmasteraddonsAciConnectorDeploymentYaml,
-	"k8s/containeraddons/kubernetesmasteraddons-azure-npm-daemonset.yaml":                k8sContaineraddonsKubernetesmasteraddonsAzureNpmDaemonsetYaml,
-	"k8s/containeraddons/kubernetesmasteraddons-blobfuse-flexvolume-installer.yaml":      k8sContaineraddonsKubernetesmasteraddonsBlobfuseFlexvolumeInstallerYaml,
-	"k8s/containeraddons/kubernetesmasteraddons-calico-daemonset.yaml":                   k8sContaineraddonsKubernetesmasteraddonsCalicoDaemonsetYaml,
-	"k8s/containeraddons/kubernetesmasteraddons-cluster-autoscaler-deployment.yaml":      k8sContaineraddonsKubernetesmasteraddonsClusterAutoscalerDeploymentYaml,
-	"k8s/containeraddons/kubernetesmasteraddons-heapster-deployment.yaml":                k8sContaineraddonsKubernetesmasteraddonsHeapsterDeploymentYaml,
-	"k8s/containeraddons/kubernetesmasteraddons-keyvault-flexvolume-installer.yaml":      k8sContaineraddonsKubernetesmasteraddonsKeyvaultFlexvolumeInstallerYaml,
-	"k8s/containeraddons/kubernetesmasteraddons-kube-rescheduler-deployment.yaml":        k8sContaineraddonsKubernetesmasteraddonsKubeReschedulerDeploymentYaml,
-	"k8s/containeraddons/kubernetesmasteraddons-kubernetes-dashboard-deployment.yaml":    k8sContaineraddonsKubernetesmasteraddonsKubernetesDashboardDeploymentYaml,
-	"k8s/containeraddons/kubernetesmasteraddons-metrics-server-deployment.yaml":          k8sContaineraddonsKubernetesmasteraddonsMetricsServerDeploymentYaml,
-	"k8s/containeraddons/kubernetesmasteraddons-nvidia-device-plugin-daemonset.yaml":     k8sContaineraddonsKubernetesmasteraddonsNvidiaDevicePluginDaemonsetYaml,
-	"k8s/containeraddons/kubernetesmasteraddons-omsagent-daemonset.yaml":                 k8sContaineraddonsKubernetesmasteraddonsOmsagentDaemonsetYaml,
-	"k8s/containeraddons/kubernetesmasteraddons-smb-flexvolume-installer.yaml":           k8sContaineraddonsKubernetesmasteraddonsSmbFlexvolumeInstallerYaml,
-	"k8s/containeraddons/kubernetesmasteraddons-tiller-deployment.yaml":                  k8sContaineraddonsKubernetesmasteraddonsTillerDeploymentYaml,
+	"k8s/armparameters.t":                                                                 k8sArmparametersT,
+	"k8s/cloud-init/artifacts/apt-preferences":                                            k8sCloudInitArtifactsAptPreferences,
+	"k8s/cloud-init/artifacts/auditd-rules":                                               k8sCloudInitArtifactsAuditdRules,
+	"k8s/cloud-init/artifacts/cis.sh":                                                     k8sCloudInitArtifactsCisSh,
+	"k8s/cloud-init/artifacts/cse_config.sh":                                              k8sCloudInitArtifactsCse_configSh,
+	"k8s/cloud-init/artifacts/cse_customcloud.sh":                                         k8sCloudInitArtifactsCse_customcloudSh,
+	"k8s/cloud-init/artifacts/cse_helpers.sh":                                             k8sCloudInitArtifactsCse_helpersSh,
+	"k8s/cloud-init/artifacts/cse_install.sh":                                             k8sCloudInitArtifactsCse_installSh,
+	"k8s/cloud-init/artifacts/cse_main.sh":                                                k8sCloudInitArtifactsCse_mainSh,
+	"k8s/cloud-init/artifacts/default-grub":                                               k8sCloudInitArtifactsDefaultGrub,
+	"k8s/cloud-init/artifacts/dhcpv6.service":                                             k8sCloudInitArtifactsDhcpv6Service,
+	"k8s/cloud-init/artifacts/docker-monitor.service":                                     k8sCloudInitArtifactsDockerMonitorService,
+	"k8s/cloud-init/artifacts/docker-monitor.timer":                                       k8sCloudInitArtifactsDockerMonitorTimer,
+	"k8s/cloud-init/artifacts/docker_clear_mount_propagation_flags.conf":                  k8sCloudInitArtifactsDocker_clear_mount_propagation_flagsConf,
+	"k8s/cloud-init/artifacts/enable-dhcpv6.sh":                                           k8sCloudInitArtifactsEnableDhcpv6Sh,
+	"k8s/cloud-init/artifacts/etc-issue":                                                  k8sCloudInitArtifactsEtcIssue,
+	"k8s/cloud-init/artifacts/etc-issue.net":                                              k8sCloudInitArtifactsEtcIssueNet,
+	"k8s/cloud-init/artifacts/etcd.service":                                               k8sCloudInitArtifactsEtcdService,
+	"k8s/cloud-init/artifacts/generateproxycerts.sh":                                      k8sCloudInitArtifactsGenerateproxycertsSh,
+	"k8s/cloud-init/artifacts/health-monitor.sh":                                          k8sCloudInitArtifactsHealthMonitorSh,
+	"k8s/cloud-init/artifacts/kms.service":                                                k8sCloudInitArtifactsKmsService,
+	"k8s/cloud-init/artifacts/kubelet-monitor.service":                                    k8sCloudInitArtifactsKubeletMonitorService,
+	"k8s/cloud-init/artifacts/kubelet-monitor.timer":                                      k8sCloudInitArtifactsKubeletMonitorTimer,
+	"k8s/cloud-init/artifacts/kubelet.service":                                            k8sCloudInitArtifactsKubeletService,
+	"k8s/cloud-init/artifacts/label-nodes.service":                                        k8sCloudInitArtifactsLabelNodesService,
+	"k8s/cloud-init/artifacts/label-nodes.sh":                                             k8sCloudInitArtifactsLabelNodesSh,
+	"k8s/cloud-init/artifacts/modprobe-CIS.conf":                                          k8sCloudInitArtifactsModprobeCisConf,
+	"k8s/cloud-init/artifacts/mountetcd.sh":                                               k8sCloudInitArtifactsMountetcdSh,
+	"k8s/cloud-init/artifacts/pam-d-common-auth":                                          k8sCloudInitArtifactsPamDCommonAuth,
+	"k8s/cloud-init/artifacts/pam-d-common-password":                                      k8sCloudInitArtifactsPamDCommonPassword,
+	"k8s/cloud-init/artifacts/pam-d-su":                                                   k8sCloudInitArtifactsPamDSu,
+	"k8s/cloud-init/artifacts/profile-d-cis.sh":                                           k8sCloudInitArtifactsProfileDCisSh,
+	"k8s/cloud-init/artifacts/pwquality-CIS.conf":                                         k8sCloudInitArtifactsPwqualityCisConf,
+	"k8s/cloud-init/artifacts/rsyslog-d-60-CIS.conf":                                      k8sCloudInitArtifactsRsyslogD60CisConf,
+	"k8s/cloud-init/artifacts/setup-custom-search-domains.sh":                             k8sCloudInitArtifactsSetupCustomSearchDomainsSh,
+	"k8s/cloud-init/artifacts/sshd_config":                                                k8sCloudInitArtifactsSshd_config,
+	"k8s/cloud-init/artifacts/sshd_config_1604":                                           k8sCloudInitArtifactsSshd_config_1604,
+	"k8s/cloud-init/artifacts/sys-fs-bpf.mount":                                           k8sCloudInitArtifactsSysFsBpfMount,
+	"k8s/cloud-init/artifacts/sysctl-d-60-CIS.conf":                                       k8sCloudInitArtifactsSysctlD60CisConf,
+	"k8s/cloud-init/jumpboxcustomdata.yml":                                                k8sCloudInitJumpboxcustomdataYml,
+	"k8s/cloud-init/masternodecustomdata.yml":                                             k8sCloudInitMasternodecustomdataYml,
+	"k8s/cloud-init/nodecustomdata.yml":                                                   k8sCloudInitNodecustomdataYml,
+	"k8s/containeraddons/1.16/azure-cni-networkmonitor.yaml":                              k8sContaineraddons116AzureCniNetworkmonitorYaml,
+	"k8s/containeraddons/1.16/ip-masq-agent.yaml":                                         k8sContaineraddons116IpMasqAgentYaml,
+	"k8s/containeraddons/1.16/kubernetesmasteraddons-aad-pod-identity-deployment.yaml":    k8sContaineraddons116KubernetesmasteraddonsAadPodIdentityDeploymentYaml,
+	"k8s/containeraddons/1.16/kubernetesmasteraddons-aci-connector-deployment.yaml":       k8sContaineraddons116KubernetesmasteraddonsAciConnectorDeploymentYaml,
+	"k8s/containeraddons/1.16/kubernetesmasteraddons-azure-npm-daemonset.1.yaml":          k8sContaineraddons116KubernetesmasteraddonsAzureNpmDaemonset1Yaml,
+	"k8s/containeraddons/1.16/kubernetesmasteraddons-azure-npm-daemonset.yaml":            k8sContaineraddons116KubernetesmasteraddonsAzureNpmDaemonsetYaml,
+	"k8s/containeraddons/1.16/kubernetesmasteraddons-blobfuse-flexvolume-installer.yaml":  k8sContaineraddons116KubernetesmasteraddonsBlobfuseFlexvolumeInstallerYaml,
+	"k8s/containeraddons/1.16/kubernetesmasteraddons-calico-daemonset.yaml":               k8sContaineraddons116KubernetesmasteraddonsCalicoDaemonsetYaml,
+	"k8s/containeraddons/1.16/kubernetesmasteraddons-cluster-autoscaler-deployment.yaml":  k8sContaineraddons116KubernetesmasteraddonsClusterAutoscalerDeploymentYaml,
+	"k8s/containeraddons/1.16/kubernetesmasteraddons-heapster-deployment.yaml":            k8sContaineraddons116KubernetesmasteraddonsHeapsterDeploymentYaml,
+	"k8s/containeraddons/1.16/kubernetesmasteraddons-keyvault-flexvolume-installer.yaml":  k8sContaineraddons116KubernetesmasteraddonsKeyvaultFlexvolumeInstallerYaml,
+	"k8s/containeraddons/1.16/kubernetesmasteraddons-kube-rescheduler-deployment.1.yaml":  k8sContaineraddons116KubernetesmasteraddonsKubeReschedulerDeployment1Yaml,
+	"k8s/containeraddons/1.16/kubernetesmasteraddons-kube-rescheduler-deployment.yaml":    k8sContaineraddons116KubernetesmasteraddonsKubeReschedulerDeploymentYaml,
+	"k8s/containeraddons/1.16/kubernetesmasteraddons-metrics-server-deployment.yaml":      k8sContaineraddons116KubernetesmasteraddonsMetricsServerDeploymentYaml,
+	"k8s/containeraddons/1.16/kubernetesmasteraddons-nvidia-device-plugin-daemonset.yaml": k8sContaineraddons116KubernetesmasteraddonsNvidiaDevicePluginDaemonsetYaml,
+	"k8s/containeraddons/1.16/kubernetesmasteraddons-omsagent-daemonset.yaml":             k8sContaineraddons116KubernetesmasteraddonsOmsagentDaemonsetYaml,
+	"k8s/containeraddons/1.16/kubernetesmasteraddons-smb-flexvolume-installer.yaml":       k8sContaineraddons116KubernetesmasteraddonsSmbFlexvolumeInstallerYaml,
+	"k8s/containeraddons/1.16/kubernetesmasteraddons-tiller-deployment.yaml":              k8sContaineraddons116KubernetesmasteraddonsTillerDeploymentYaml,
+	"k8s/containeraddons/1.6/kubernetesmasteraddons-heapster-deployment.yaml":             k8sContaineraddons16KubernetesmasteraddonsHeapsterDeploymentYaml,
+	"k8s/containeraddons/1.7/kubernetesmasteraddons-heapster-deployment.yaml":             k8sContaineraddons17KubernetesmasteraddonsHeapsterDeploymentYaml,
+	"k8s/containeraddons/1.8/kubernetesmasteraddons-heapster-deployment.yaml":             k8sContaineraddons18KubernetesmasteraddonsHeapsterDeploymentYaml,
+	"k8s/containeraddons/azure-cni-networkmonitor.yaml":                                   k8sContaineraddonsAzureCniNetworkmonitorYaml,
+	"k8s/containeraddons/dns-autoscaler.yaml":                                             k8sContaineraddonsDnsAutoscalerYaml,
+	"k8s/containeraddons/ip-masq-agent.yaml":                                              k8sContaineraddonsIpMasqAgentYaml,
+	"k8s/containeraddons/kubernetesmasteraddons-aad-pod-identity-deployment.yaml":         k8sContaineraddonsKubernetesmasteraddonsAadPodIdentityDeploymentYaml,
+	"k8s/containeraddons/kubernetesmasteraddons-aci-connector-deployment.yaml":            k8sContaineraddonsKubernetesmasteraddonsAciConnectorDeploymentYaml,
+	"k8s/containeraddons/kubernetesmasteraddons-azure-npm-daemonset.yaml":                 k8sContaineraddonsKubernetesmasteraddonsAzureNpmDaemonsetYaml,
+	"k8s/containeraddons/kubernetesmasteraddons-blobfuse-flexvolume-installer.yaml":       k8sContaineraddonsKubernetesmasteraddonsBlobfuseFlexvolumeInstallerYaml,
+	"k8s/containeraddons/kubernetesmasteraddons-calico-daemonset.yaml":                    k8sContaineraddonsKubernetesmasteraddonsCalicoDaemonsetYaml,
+	"k8s/containeraddons/kubernetesmasteraddons-cluster-autoscaler-deployment.yaml":       k8sContaineraddonsKubernetesmasteraddonsClusterAutoscalerDeploymentYaml,
+	"k8s/containeraddons/kubernetesmasteraddons-heapster-deployment.yaml":                 k8sContaineraddonsKubernetesmasteraddonsHeapsterDeploymentYaml,
+	"k8s/containeraddons/kubernetesmasteraddons-keyvault-flexvolume-installer.yaml":       k8sContaineraddonsKubernetesmasteraddonsKeyvaultFlexvolumeInstallerYaml,
+	"k8s/containeraddons/kubernetesmasteraddons-kube-rescheduler-deployment.yaml":         k8sContaineraddonsKubernetesmasteraddonsKubeReschedulerDeploymentYaml,
+	"k8s/containeraddons/kubernetesmasteraddons-kubernetes-dashboard-deployment.yaml":     k8sContaineraddonsKubernetesmasteraddonsKubernetesDashboardDeploymentYaml,
+	"k8s/containeraddons/kubernetesmasteraddons-metrics-server-deployment.yaml":           k8sContaineraddonsKubernetesmasteraddonsMetricsServerDeploymentYaml,
+	"k8s/containeraddons/kubernetesmasteraddons-nvidia-device-plugin-daemonset.yaml":      k8sContaineraddonsKubernetesmasteraddonsNvidiaDevicePluginDaemonsetYaml,
+	"k8s/containeraddons/kubernetesmasteraddons-omsagent-daemonset.yaml":                  k8sContaineraddonsKubernetesmasteraddonsOmsagentDaemonsetYaml,
+	"k8s/containeraddons/kubernetesmasteraddons-smb-flexvolume-installer.yaml":            k8sContaineraddonsKubernetesmasteraddonsSmbFlexvolumeInstallerYaml,
+	"k8s/containeraddons/kubernetesmasteraddons-tiller-deployment.yaml":                   k8sContaineraddonsKubernetesmasteraddonsTillerDeploymentYaml,
 	"k8s/kubeconfig.json":                                                k8sKubeconfigJson,
 	"k8s/kubernetesparams.t":                                             k8sKubernetesparamsT,
 	"k8s/kuberneteswindowsfunctions.ps1":                                 k8sKuberneteswindowsfunctionsPs1,
