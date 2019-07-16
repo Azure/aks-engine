@@ -42,11 +42,9 @@ param(
     [ValidateNotNullOrEmpty()]
     $AADClientSecret, # base64
 
-    {{if IsAzureStackCloud}}{{if IsAzureCNI}}
     [parameter(Mandatory=$true)]
     [ValidateNotNullOrEmpty()]
     $NetworkAPIVersion,
-    {{end}}{{end}}
 
     [parameter(Mandatory=$true)]
     [ValidateNotNullOrEmpty()]
@@ -246,19 +244,17 @@ try
                                -VNetCIDR $global:VNetCIDR `
                                -TargetEnvironment $TargetEnvironment
 
-            {{if IsAzureStackCloud}}{{if IsAzureCNI}}
-            GenerateAzureStackCNIConfig `
-                -TenantId $global:TenantId `
-                -SubscriptionId $global:SubscriptionId `
-                -ResourceGroup $global:ResourceGroup `
-                -AADClientId $AADClientId `
-                -AADClientSecret $([System.Text.Encoding]::ASCII.GetString([System.Convert]::FromBase64String($AADClientSecret))) `
-                -NetworkAPIVersion $NetworkAPIVersion `
-                -ServiceManagementEndpoint "{{ GetServiceManagementEndpoint }}" `
-                -ActiveDirectoryEndpoint "{{ GetActiveDirectoryEndpoint }}" `
-                -ResourceManagerEndpoint "{{ GetResourceManagerEndpoint }}" `
-                -IdentitySystem "{{ GetIdentitySystem }}"
-            {{end}}{{end}}
+            if ($TargetEnvironment -ieq "AzureStackCloud") {
+                GenerateAzureStackCNIConfig `
+                    -TenantId $global:TenantId `
+                    -SubscriptionId $global:SubscriptionId `
+                    -ResourceGroup $global:ResourceGroup `
+                    -AADClientId $AADClientId `
+                    -AADClientSecret $([System.Text.Encoding]::ASCII.GetString([System.Convert]::FromBase64String($AADClientSecret))) `
+                    -NetworkAPIVersion $NetworkAPIVersion `
+                    -AzureEnvironmentFilePath $([io.path]::Combine($global:KubeDir, "azurestackcloud.json")) `
+                    -IdentitySystem "{{ GetIdentitySystem }}"
+            }
 
         } elseif ($global:NetworkPlugin -eq "kubenet") {
             Update-WinCNI -CNIPath $global:CNIPath

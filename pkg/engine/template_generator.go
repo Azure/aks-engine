@@ -638,27 +638,6 @@ func (t *TemplateGenerator) getTemplateFuncMap(cs *api.ContainerService) templat
 
 			return api.AzureADIdentitySystem
 		},
-		"GetServiceManagementEndpoint": func() string {
-			if cs.Properties.IsAzureStackCloud() {
-				return cs.Properties.CustomCloudProfile.Environment.ServiceManagementEndpoint
-			}
-
-			return ""
-		},
-		"GetActiveDirectoryEndpoint": func() string {
-			if cs.Properties.IsAzureStackCloud() {
-				return cs.Properties.CustomCloudProfile.Environment.ActiveDirectoryEndpoint
-			}
-
-			return ""
-		},
-		"GetResourceManagerEndpoint": func() string {
-			if cs.Properties.IsAzureStackCloud() {
-				return cs.Properties.CustomCloudProfile.Environment.ResourceManagerEndpoint
-			}
-
-			return ""
-		},
 	}
 }
 

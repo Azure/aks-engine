@@ -98,9 +98,6 @@ func TestGetTemplateFuncMap(t *testing.T) {
 		"HasAvailabilityZones",
 		"GetBase64EncodedEnvironmentJSON",
 		"GetIdentitySystem",
-		"GetServiceManagementEndpoint",
-		"GetActiveDirectoryEndpoint",
-		"GetResourceManagerEndpoint",
 		// TODO validate that the remaining func strings in getTemplateFuncMap are thinly wrapped and unit tested
 	}
 
@@ -183,67 +180,6 @@ func TestGetBase64EncodedEnvironmentJSON(t *testing.T) {
 
 	if encodedEnvironmentJSON != correctlyEncodedString {
 		t.Fatalf("Function GetEnvironmentJSON() failed to produce correct environment: expected: %s, actual: %s", correctlyEncodedString, encodedEnvironmentJSON)
-	}
-}
-
-func TestGetAzureStackEndpoints(t *testing.T) {
-	masAPIModel := `{"properties":{"customCloudProfile":{"environment":{"serviceManagementEndpoint":"https://management.azurestack.onmicrosoft.com/00000000-0000-0000-0000-0000000000","resourceManagerEndpoint":"https://management.local.azurestack.external/","activeDirectoryEndpoint":"https://login.microsoftonline.com/"}}}}`
-
-	for _, test := range []struct {
-		desc           string
-		apiModelString string
-		method         string
-		correctResult  string
-	}{
-		{
-			desc:           `GetServiceManagementEndpoint should return "" when not azure stack`,
-			apiModelString: getAPIModelString(),
-			method:         "GetServiceManagementEndpoint",
-			correctResult:  "",
-		},
-		{
-			desc:           `GetServiceManagementEndpoint should return the service management endpoint`,
-			apiModelString: masAPIModel,
-			method:         "GetServiceManagementEndpoint",
-			correctResult:  "https://management.azurestack.onmicrosoft.com/00000000-0000-0000-0000-0000000000",
-		},
-		{
-			desc:           `GetResourceManagerEndpoint should return "" when not azure stack`,
-			apiModelString: getAPIModelString(),
-			method:         "GetResourceManagerEndpoint",
-			correctResult:  "",
-		},
-		{
-			desc:           `GetResourceManagerEndpoint should return the resource manager endpoint`,
-			apiModelString: masAPIModel,
-			method:         "GetResourceManagerEndpoint",
-			correctResult:  "https://management.local.azurestack.external/",
-		},
-		{
-			desc:           `GetActiveDirectoryEndpoint should return "" when not azure stack`,
-			apiModelString: getAPIModelString(),
-			method:         "GetActiveDirectoryEndpoint",
-			correctResult:  "",
-		},
-		{
-			desc:           `GetActiveDirectoryEndpoint should return the active directory endpoint`,
-			apiModelString: masAPIModel,
-			method:         "GetActiveDirectoryEndpoint",
-			correctResult:  "https://login.microsoftonline.com/",
-		},
-	} {
-		t.Run(test.desc, func(t *testing.T) {
-			funcmap, err := getFuncMap(test.apiModelString)
-			if err != nil {
-				t.Fatalf("Error generating function map: %v", err)
-			}
-
-			v := reflect.ValueOf(funcmap[test.method])
-			ret := v.Call(make([]reflect.Value, 0))
-			if ret[0].Interface() != test.correctResult {
-				t.Fatalf("%s returned incorrect value, expected: %s, actual: %s", test.method, test.correctResult, ret[0])
-			}
-		})
 	}
 }
 

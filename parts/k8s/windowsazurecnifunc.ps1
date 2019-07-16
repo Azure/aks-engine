@@ -118,14 +118,13 @@ function GenerateAzureStackCNIConfig
         [Parameter(Mandatory=$true)][ValidateNotNullOrEmpty()][string] $AADClientSecret,
         [Parameter(Mandatory=$true)][ValidateNotNullOrEmpty()][string] $ResourceGroup,
         [Parameter(Mandatory=$true)][ValidateNotNullOrEmpty()][string] $NetworkAPIVersion,
-        [Parameter(Mandatory=$true)][ValidateNotNullOrEmpty()][string] $ServiceManagementEndpoint,
-        [Parameter(Mandatory=$true)][ValidateNotNullOrEmpty()][string] $ActiveDirectoryEndpoint,
-        [Parameter(Mandatory=$true)][ValidateNotNullOrEmpty()][string] $ResourceManagerEndpoint,
+        [Parameter(Mandatory=$true)][ValidateNotNullOrEmpty()][string] $AzureEnvironmentFilePath,
         [Parameter(Mandatory=$true)][ValidateNotNullOrEmpty()][string] $IdentitySystem
     )
 
     $networkInterfacesFile = "C:\k\network-interfaces.json"
     $azureCNIConfigFile = "C:\k\interfaces.json"
+    $azureEnvironment = Get-Content $AzureEnvironmentFilePath | ConvertFrom-Json
 
     Write-Log "------------------------------------------------------------------------"
     Write-Log "Parameters"
@@ -136,9 +135,9 @@ function GenerateAzureStackCNIConfig
     Write-Log "AADClientSecret:           ..."
     Write-Log "ResourceGroup:             $ResourceGroup"
     Write-Log "NetworkAPIVersion:         $NetworkAPIVersion"
-    Write-Log "ServiceManagementEndpoint: $ServiceManagementEndpoint"
-    Write-Log "ActiveDirectoryEndpoint:   $ActiveDirectoryEndpoint"
-    Write-Log "ResourceManagerEndpoint:   $ResourceManagerEndpoint"
+    Write-Log "ServiceManagementEndpoint: $($azureEnvironment.serviceManagementEndpoint)"
+    Write-Log "ActiveDirectoryEndpoint:   $($azureEnvironment.activeDirectoryEndpoint)"
+    Write-Log "ResourceManagerEndpoint:   $($azureEnvironment.resourceManagerEndpoint)"
     Write-Log "------------------------------------------------------------------------"
     Write-Log "Variables"
     Write-Log "------------------------------------------------------------------------"
@@ -150,17 +149,17 @@ function GenerateAzureStackCNIConfig
 
     $tokenURL = ""
     if($IdentitySystem -ieq "adfs") {
-        $tokenURL = "$($ActiveDirectoryEndpoint)adfs/oauth2/token"
+        $tokenURL = "$($azureEnvironment.activeDirectoryEndpoint)adfs/oauth2/token"
     } else {
-        $tokenURL = "$($ActiveDirectoryEndpoint)$TenantId/oauth2/token"
+        $tokenURL = "$($azureEnvironment.activeDirectoryEndpoint)$TenantId/oauth2/token"
     }
 
     Add-Type -AssemblyName System.Web
     $encodedSecret = [System.Web.HttpUtility]::UrlEncode($AADClientSecret)
 
-    $body = "grant_type=client_credentials&client_id=$AADClientId&client_secret=$encodedSecret&resource=$ServiceManagementEndpoint"
+    $body = "grant_type=client_credentials&client_id=$AADClientId&client_secret=$encodedSecret&resource=$($azureEnvironment.serviceManagementEndpoint)"
     $args = @{Uri=$tokenURL; Method="Post"; Body=$body; ContentType='application/x-www-form-urlencoded'}
-    $tokenResponse = Retry-Command -Command "Invoke-RestMethod" -Args $args -Retries 5 -RetryDelaySeconds 1
+    $tokenResponse = Retry-Command -Command "Invoke-RestMethod" -Args $args -Retries 5 -RetryDelaySeconds 10
 
     if(!$tokenResponse) {
         throw 'Error generating token for Azure Resource Manager'
@@ -170,10 +169,10 @@ function GenerateAzureStackCNIConfig
 
     Write-Log "Fetching network interface configuration for node"
 
-    $interfacesUri = "$($ResourceManagerEndpoint)subscriptions/$SubscriptionId/resourceGroups/$ResourceGroup/providers/Microsoft.Network/networkInterfaces?api-version=$NetworkAPIVersion"
+    $interfacesUri = "$($azureEnvironment.resourceManagerEndpoint)subscriptions/$SubscriptionId/resourceGroups/$ResourceGroup/providers/Microsoft.Network/networkInterfaces?api-version=$NetworkAPIVersion"
     $headers = @{Authorization="Bearer $token"}
     $args = @{Uri=$interfacesUri; Method="Get"; ContentType="application/json"; Headers=$headers; OutFile=$networkInterfacesFile}
-    Retry-Command -Command "Invoke-RestMethod" -Args $args -Retries 5 -RetryDelaySeconds 1
+    Retry-Command -Command "Invoke-RestMethod" -Args $args -Retries 5 -RetryDelaySeconds 10
 
     if(!$(Test-Path $networkInterfacesFile)) {
         throw 'Error fetching network interface configuration for node'
@@ -198,7 +197,7 @@ function GenerateAzureStackCNIConfig
                             -Token $token `
                             -SubnetId $_.properties.ipConfigurations[0].properties.subnet.id `
                             -NetworkAPIVersion $NetworkAPIVersion `
-                            -ResourceManagerEndpoint $ResourceManagerEndpoint
+                            -ResourceManagerEndpoint $($azureEnvironment.resourceManagerEndpoint)
                 IPAddresses = $_.properties.ipConfigurations | ForEach-Object { @{
                     Address = $_.properties.privateIPAddress
                     IsPrimary = $_.properties.primary

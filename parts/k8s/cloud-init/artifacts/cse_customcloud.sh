@@ -83,14 +83,17 @@ configureK8sCustomCloud() {
 configureAzureStackInterfaces() {
     set +x
 
-    network_interfaces_file="/etc/kubernetes/network_interfaces.json"
-    azure_cni_config_file="/etc/kubernetes/interfaces.json"
+    NETWORK_INTERFACES_FILE="/etc/kubernetes/network_interfaces.json"
+    AZURE_CNI_CONFIG_FILE="/etc/kubernetes/interfaces.json"
+    AZURESTACK_ENVIRONMENT_JSON_PATH="/etc/kubernetes/azurestackcloud.json"
+    SERVICE_MANAGEMENT_ENDPOINT=$(jq -r '.serviceManagementEndpoint' ${AZURESTACK_ENVIRONMENT_JSON_PATH})
+    ACTIVE_DIRECTORY_ENDPOINT=$(jq -r '.activeDirectoryEndpoint' ${AZURESTACK_ENVIRONMENT_JSON_PATH})
+    RESOURCE_MANAGER_ENDPOINT=$(jq -r '.resourceManagerEndpoint' ${AZURESTACK_ENVIRONMENT_JSON_PATH})
 
-    token_url=""
     if [[ "${IDENTITY_SYSTEM,,}" == "adfs"  ]]; then
-        token_url="${ACTIVE_DIRECTORY_ENDPOINT}adfs/oauth2/token"
+        TOKEN_URL="${ACTIVE_DIRECTORY_ENDPOINT}adfs/oauth2/token"
     else
-        token_url="${ACTIVE_DIRECTORY_ENDPOINT}${TENANT_ID}/oauth2/token"
+        TOKEN_URL="${ACTIVE_DIRECTORY_ENDPOINT}${TENANT_ID}/oauth2/token"
     fi
 
     echo "Generating token for Azure Resource Manager"
@@ -103,20 +106,20 @@ configureAzureStackInterfaces() {
     echo "ACTIVE_DIRECTORY_ENDPOINT:       $ACTIVE_DIRECTORY_ENDPOINT"
     echo "TENANT_ID:                       $TENANT_ID"
     echo "IDENTITY_SYSTEM:                 $IDENTITY_SYSTEM"
-    echo "TOKEN_URL:                       $token_url"
+    echo "TOKEN_URL:                       $TOKEN_URL"
     echo "------------------------------------------------------------------------"
 
-    token=$(curl -s --retry 5 --retry-delay 10 --max-time 60 -f -X POST \
+    TOKEN=$(curl -s --retry 5 --retry-delay 10 --max-time 60 -f -X POST \
         -H "Content-Type: application/x-www-form-urlencoded" \
         -d "grant_type=client_credentials" \
         -d "client_id=$SERVICE_PRINCIPAL_CLIENT_ID" \
         --data-urlencode "client_secret=$SERVICE_PRINCIPAL_CLIENT_SECRET" \
         --data-urlencode "resource=$SERVICE_MANAGEMENT_ENDPOINT" \
-        ${token_url} | jq '.access_token' | xargs)
+        ${TOKEN_URL} | jq '.access_token' | xargs)
 
-    if [[ -z "$token" ]]; then
+    if [[ -z "$TOKEN" ]]; then
         echo "Error generating token for Azure Resource Manager"
-        exit $ERR_AZURE_STACK_GET_ARM_TOKEN
+        exit ${ERR_AZURE_STACK_GET_ARM_TOKEN}
     fi
 
     echo "Fetching network interface configuration for node"
@@ -130,44 +133,44 @@ configureAzureStackInterfaces() {
     echo "------------------------------------------------------------------------"
 
     curl -s --retry 5 --retry-delay 10 --max-time 60 -f -X GET \
-        -H "Authorization: Bearer $token" \
+        -H "Authorization: Bearer $TOKEN" \
         -H "Content-Type: application/json" \
-        "${RESOURCE_MANAGER_ENDPOINT}subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RESOURCE_GROUP/providers/Microsoft.Network/networkInterfaces?api-version=$NETWORK_API_VERSION" > ${network_interfaces_file}
+        "${RESOURCE_MANAGER_ENDPOINT}subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RESOURCE_GROUP/providers/Microsoft.Network/networkInterfaces?api-version=$NETWORK_API_VERSION" > ${NETWORK_INTERFACES_FILE}
 
-    if [[ ! -s ${network_interfaces_file} ]]; then
+    if [[ ! -s ${NETWORK_INTERFACES_FILE} ]]; then
         echo "Error fetching network interface configuration for node"
-        exit $ERR_AZURE_STACK_GET_NETWORK_CONFIGURATION
+        exit ${ERR_AZURE_STACK_GET_NETWORK_CONFIGURATION}
     fi
 
     echo "Generating Azure CNI interface file"
 
     mapfile -t local_interfaces < <(cat /sys/class/net/*/address | tr -d : | sed 's/.*/\U&/g')
 
-    sdn_interfaces=$(jq ".value | map(select(.properties.macAddress | inside(\"${local_interfaces[*]}\"))) | map(select((.properties.ipConfigurations | length) > 0))" ${network_interfaces_file})
+    SDN_INTERFACES=$(jq ".value | map(select(.properties.macAddress | inside(\"${local_interfaces[*]}\"))) | map(select((.properties.ipConfigurations | length) > 0))" ${NETWORK_INTERFACES_FILE})
 
-    azure_cni_config=$(echo $sdn_interfaces | jq "{Interfaces: [.[] | {MacAddress: .properties.macAddress, IsPrimary: .properties.primary, IPSubnets: [{Prefix: .properties.ipConfigurations[0].properties.subnet.id, IPAddresses: .properties.ipConfigurations | [.[] | {Address: .properties.privateIPAddress, IsPrimary: .properties.primary}]}]}]}")
+    AZURE_CNI_CONFIG=$(echo ${SDN_INTERFACES} | jq "{Interfaces: [.[] | {MacAddress: .properties.macAddress, IsPrimary: .properties.primary, IPSubnets: [{Prefix: .properties.ipConfigurations[0].properties.subnet.id, IPAddresses: .properties.ipConfigurations | [.[] | {Address: .properties.privateIPAddress, IsPrimary: .properties.primary}]}]}]}")
 
-    mapfile -t subnet_ids < <(echo $sdn_interfaces | jq '[.[].properties.ipConfigurations[0].properties.subnet.id] | unique | .[]' -r)
+    mapfile -t SUBNET_IDS < <(echo ${SDN_INTERFACES} | jq '[.[].properties.ipConfigurations[0].properties.subnet.id] | unique | .[]' -r)
 
-    for subnet_id in "${subnet_ids[@]}"; do
-        subnet_prefix=$(curl -s --retry 5 --retry-delay 10 --max-time 60 -f -X GET \
-            -H "Authorization: Bearer $token" \
+    for SUBNET_ID in "${SUBNET_IDS[@]}"; do
+        SUBNET_PREFIX=$(curl -s --retry 5 --retry-delay 10 --max-time 60 -f -X GET \
+            -H "Authorization: Bearer $TOKEN" \
             -H "Content-Type: application/json" \
-            "${RESOURCE_MANAGER_ENDPOINT}${subnet_id:1}?api-version=$NETWORK_API_VERSION" | \
+            "${RESOURCE_MANAGER_ENDPOINT}${SUBNET_ID:1}?api-version=$NETWORK_API_VERSION" | \
             jq '.properties.addressPrefix' -r)
 
-        if [[ -z "$subnet_prefix" ]]; then
+        if [[ -z "$SUBNET_PREFIX" ]]; then
             echo "Error fetching the subnet address prefix for a subnet ID"
-            exit $ERR_AZURE_STACK_GET_SUBNET_PREFIX
+            exit ${ERR_AZURE_STACK_GET_SUBNET_PREFIX}
         fi
 
         # shellcheck disable=SC2001
-        azure_cni_config=$(echo ${azure_cni_config} | sed "s|$subnet_id|$subnet_prefix|g")
+        AZURE_CNI_CONFIG=$(echo ${AZURE_CNI_CONFIG} | sed "s|$SUBNET_ID|$SUBNET_PREFIX|g")
     done
 
-    echo ${azure_cni_config} > ${azure_cni_config_file}
+    echo ${AZURE_CNI_CONFIG} > ${AZURE_CNI_CONFIG_FILE}
 
-    chmod 0444 ${azure_cni_config_file}
+    chmod 0444 ${AZURE_CNI_CONFIG_FILE}
 
     set -x
 }

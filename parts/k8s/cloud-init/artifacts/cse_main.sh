@@ -136,9 +136,9 @@ fi
 
 configureK8s
 
-if [[ "${TARGET_ENVIRONMENT,,}" == "${AZURE_STACK_ENV}"  ]]; then
+if [[ "${TARGET_ENVIRONMENT,,}" == "${AZURE_STACK_ENV,,}"  ]]; then
     configureK8sCustomCloud
-    if [[ "${NETWORK_PLUGIN}" = "azure" ]]; then
+    if [[ "${NETWORK_PLUGIN,,}" = "azure" ]]; then
         configureAzureStackInterfaces
     fi
 fi
