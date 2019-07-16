@@ -12691,6 +12691,15 @@ ensureDHCPv6() {
     systemctlEnableAndStart dhcpv6 || exit $ERR_SYSTEMCTL_START_FAIL
 }
 
+ensureLabelNodes() {
+    # start node labeler for backward compatibility
+    LABEL_NODES_SCRIPT_FILE=/opt/azure/containers/label-nodes.sh
+    wait_for_file 1200 1 $LABEL_NODES_SCRIPT_FILE || exit $ERR_FILE_WATCH_TIMEOUT
+    LABEL_NODES_SYSTEMD_FILE=/etc/systemd/system/label-nodes.service
+    wait_for_file 1200 1 $LABEL_NODES_SYSTEMD_FILE || exit $ERR_FILE_WATCH_TIMEOUT
+    systemctlEnableAndStart label-nodes || exit $ERR_SYSTEMCTL_START_FAIL
+}
+
 ensureKubelet() {
     KUBELET_DEFAULT_FILE=/etc/default/kubelet
     wait_for_file 1200 1 $KUBELET_DEFAULT_FILE || exit $ERR_FILE_WATCH_TIMEOUT
@@ -12699,10 +12708,6 @@ ensureKubelet() {
     KUBELET_RUNTIME_CONFIG_SCRIPT_FILE=/opt/azure/containers/kubelet.sh
     wait_for_file 1200 1 $KUBELET_RUNTIME_CONFIG_SCRIPT_FILE || exit $ERR_FILE_WATCH_TIMEOUT
     systemctlEnableAndStart kubelet || exit $ERR_KUBELET_START_FAIL
-    # start node labeler for backward compatibility
-    LABEL_NODES_SCRIPT_FILE=/opt/azure/containers/label-nodes.sh
-    wait_for_file 1200 1 $LABEL_NODES_SCRIPT_FILE || exit $ERR_FILE_WATCH_TIMEOUT
-    systemctlEnableAndStart label-nodes || exit $ERR_KUBELET_START_FAIL # TODO: create unique error or don't error?
 }
 
 ensureJournal() {
@@ -13738,6 +13743,7 @@ ensureKubelet
 ensureJournal
 
 if [[ -n "${MASTER_NODE}" ]]; then
+    ensureLabelNodes
     writeKubeConfig
     if [[ -z "${COSMOS_URI}" ]]; then
       ensureEtcd
