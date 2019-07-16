@@ -163,6 +163,18 @@ func (cs *ContainerService) setKubeletConfig(isUpgrade bool) {
 		setMissingKubeletValues(cs.Properties.MasterProfile.KubernetesConfig, o.KubernetesConfig.KubeletConfig)
 		addDefaultFeatureGates(cs.Properties.MasterProfile.KubernetesConfig.KubeletConfig, o.OrchestratorVersion, "", "")
 
+		if isUpgrade && common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.14.0") {
+			hasSupportPodPidsLimitFeatureGate := strings.Contains(o.KubernetesConfig.KubeletConfig["--feature-gates"], "SupportPodPidsLimit=true")
+			podMaxPids, _ := strconv.Atoi(cs.Properties.MasterProfile.KubernetesConfig.KubeletConfig["--pod-max-pids"])
+			if podMaxPids > 0 {
+				// If we don't have an explicit SupportPodPidsLimit=true, disable --pod-max-pids by setting to -1
+				// To prevent older clusters from inheriting SupportPodPidsLimit=true implicitly starting w/ 1.14.0
+				if !hasSupportPodPidsLimitFeatureGate {
+					cs.Properties.MasterProfile.KubernetesConfig.KubeletConfig["--pod-max-pids"] = strconv.Itoa(-1)
+				}
+			}
+		}
+
 		removeKubeletFlags(cs.Properties.MasterProfile.KubernetesConfig.KubeletConfig, o.OrchestratorVersion)
 	}
 
@@ -190,6 +202,18 @@ func (cs *ContainerService) setKubeletConfig(isUpgrade bool) {
 			if !cs.Properties.IsNVIDIADevicePluginEnabled() && !common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.11.0") {
 				// enabling accelerators for Kubernetes >= 1.6 to <= 1.9
 				addDefaultFeatureGates(profile.KubernetesConfig.KubeletConfig, o.OrchestratorVersion, "1.6.0", "Accelerators=true")
+			}
+		}
+
+		if isUpgrade && common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.14.0") {
+			hasSupportPodPidsLimitFeatureGate := strings.Contains(o.KubernetesConfig.KubeletConfig["--feature-gates"], "SupportPodPidsLimit=true")
+			podMaxPids, _ := strconv.Atoi(profile.KubernetesConfig.KubeletConfig["--pod-max-pids"])
+			if podMaxPids > 0 {
+				// If we don't have an explicit SupportPodPidsLimit=true, disable --pod-max-pids by setting to -1
+				// To prevent older clusters from inheriting SupportPodPidsLimit=true implicitly starting w/ 1.14.0
+				if !hasSupportPodPidsLimitFeatureGate {
+					profile.KubernetesConfig.KubeletConfig["--pod-max-pids"] = strconv.Itoa(-1)
+				}
 			}
 		}
 
