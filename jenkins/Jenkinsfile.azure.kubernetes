@@ -13,7 +13,7 @@ node(env.NODE? env.NODE : 'slave') {
           checkout scm
         }
 
-        img = docker.image("quay.io/deis/go-dev:${GO_DEV_TAG}")
+        img = docker.image("deis/go-dev:${GO_DEV_TAG}")
         img.inside("-u root -v /var/run/docker.sock:/var/run/docker.sock") {
           env.CLIENT_ID = "${CLIENT_ID}"
           env.CLIENT_SECRET = "${CLIENT_SECRET}"
