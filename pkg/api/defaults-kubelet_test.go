@@ -1030,6 +1030,26 @@ func TestSupportPodPidsLimitFeatureGate(t *testing.T) {
 			expectedPodMaxPids:                     "100",
 			expectedSupportPodPidsLimitFeatureGate: true,
 		},
+		{
+			name: "--pod-max-pids defined as 100a, SupportPodPidsLimit=true, upgrade scenario",
+			cs: &ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorType:    Kubernetes,
+						OrchestratorVersion: "1.14.0",
+						KubernetesConfig: &KubernetesConfig{
+							KubeletConfig: map[string]string{
+								"--pod-max-pids":  "100a",
+								"--feature-gates": "SupportPodPidsLimit=true",
+							},
+						},
+					},
+				},
+			},
+			isUpgrade:                              true,
+			expectedPodMaxPids:                     "-1",
+			expectedSupportPodPidsLimitFeatureGate: true,
+		},
 	}
 
 	for _, c := range cases {
@@ -1411,6 +1431,31 @@ func TestSupportPodPidsLimitFeatureGateInMasterProfile(t *testing.T) {
 			expectedPodMaxPids:                     "-1",
 			expectedSupportPodPidsLimitFeatureGate: true,
 		},
+		{
+			name: "--pod-max-pids defined as 100a, SupportPodPidsLimit=true, upgrade scenario",
+			cs: &ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorType:    Kubernetes,
+						OrchestratorVersion: "1.14.0",
+						KubernetesConfig: &KubernetesConfig{
+							KubeletConfig: map[string]string{},
+						},
+					},
+					MasterProfile: &MasterProfile{
+						KubernetesConfig: &KubernetesConfig{
+							KubeletConfig: map[string]string{
+								"--pod-max-pids":  "100a",
+								"--feature-gates": "SupportPodPidsLimit=true",
+							},
+						},
+					},
+				},
+			},
+			isUpgrade:                              true,
+			expectedPodMaxPids:                     "-1",
+			expectedSupportPodPidsLimitFeatureGate: true,
+		},
 	}
 
 	for _, c := range cases {
@@ -1452,7 +1497,7 @@ func TestSupportPodPidsLimitFeatureGateInAgentPool(t *testing.T) {
 						},
 					},
 					AgentPoolProfiles: []*AgentPoolProfile{
-						&AgentPoolProfile{
+						{
 							KubernetesConfig: &KubernetesConfig{
 								KubeletConfig: map[string]string{},
 							},
@@ -1475,7 +1520,7 @@ func TestSupportPodPidsLimitFeatureGateInAgentPool(t *testing.T) {
 						},
 					},
 					AgentPoolProfiles: []*AgentPoolProfile{
-						&AgentPoolProfile{
+						{
 							KubernetesConfig: &KubernetesConfig{
 								KubeletConfig: map[string]string{
 									"--pod-max-pids": "100",
@@ -1500,7 +1545,7 @@ func TestSupportPodPidsLimitFeatureGateInAgentPool(t *testing.T) {
 						},
 					},
 					AgentPoolProfiles: []*AgentPoolProfile{
-						&AgentPoolProfile{
+						{
 							KubernetesConfig: &KubernetesConfig{
 								KubeletConfig: map[string]string{
 									"--feature-gates": "SupportPodPidsLimit=false",
@@ -1525,7 +1570,7 @@ func TestSupportPodPidsLimitFeatureGateInAgentPool(t *testing.T) {
 						},
 					},
 					AgentPoolProfiles: []*AgentPoolProfile{
-						&AgentPoolProfile{
+						{
 							KubernetesConfig: &KubernetesConfig{
 								KubeletConfig: map[string]string{
 									"--feature-gates": "SupportPodPidsLimit=true",
@@ -1550,7 +1595,7 @@ func TestSupportPodPidsLimitFeatureGateInAgentPool(t *testing.T) {
 						},
 					},
 					AgentPoolProfiles: []*AgentPoolProfile{
-						&AgentPoolProfile{
+						{
 							KubernetesConfig: &KubernetesConfig{
 								KubeletConfig: map[string]string{
 									"--pod-max-pids":  "100",
@@ -1576,7 +1621,7 @@ func TestSupportPodPidsLimitFeatureGateInAgentPool(t *testing.T) {
 						},
 					},
 					AgentPoolProfiles: []*AgentPoolProfile{
-						&AgentPoolProfile{
+						{
 							KubernetesConfig: &KubernetesConfig{
 								KubeletConfig: map[string]string{
 									"--pod-max-pids":  "100",
@@ -1602,7 +1647,7 @@ func TestSupportPodPidsLimitFeatureGateInAgentPool(t *testing.T) {
 						},
 					},
 					AgentPoolProfiles: []*AgentPoolProfile{
-						&AgentPoolProfile{
+						{
 							KubernetesConfig: &KubernetesConfig{
 								KubeletConfig: map[string]string{},
 							},
@@ -1626,7 +1671,7 @@ func TestSupportPodPidsLimitFeatureGateInAgentPool(t *testing.T) {
 						},
 					},
 					AgentPoolProfiles: []*AgentPoolProfile{
-						&AgentPoolProfile{
+						{
 							KubernetesConfig: &KubernetesConfig{
 								KubeletConfig: map[string]string{
 									"--feature-gates": "SupportPodPidsLimit=false",
@@ -1652,7 +1697,7 @@ func TestSupportPodPidsLimitFeatureGateInAgentPool(t *testing.T) {
 						},
 					},
 					AgentPoolProfiles: []*AgentPoolProfile{
-						&AgentPoolProfile{
+						{
 							KubernetesConfig: &KubernetesConfig{
 								KubeletConfig: map[string]string{
 									"--feature-gates": "SupportPodPidsLimit=true",
@@ -1678,7 +1723,7 @@ func TestSupportPodPidsLimitFeatureGateInAgentPool(t *testing.T) {
 						},
 					},
 					AgentPoolProfiles: []*AgentPoolProfile{
-						&AgentPoolProfile{
+						{
 							KubernetesConfig: &KubernetesConfig{
 								KubeletConfig: map[string]string{
 									"--pod-max-pids": "100",
@@ -1704,7 +1749,7 @@ func TestSupportPodPidsLimitFeatureGateInAgentPool(t *testing.T) {
 						},
 					},
 					AgentPoolProfiles: []*AgentPoolProfile{
-						&AgentPoolProfile{
+						{
 							KubernetesConfig: &KubernetesConfig{
 								KubeletConfig: map[string]string{
 									"--pod-max-pids": "-100",
@@ -1730,7 +1775,7 @@ func TestSupportPodPidsLimitFeatureGateInAgentPool(t *testing.T) {
 						},
 					},
 					AgentPoolProfiles: []*AgentPoolProfile{
-						&AgentPoolProfile{
+						{
 							KubernetesConfig: &KubernetesConfig{
 								KubeletConfig: map[string]string{
 									"--pod-max-pids":  "100",
@@ -1757,7 +1802,7 @@ func TestSupportPodPidsLimitFeatureGateInAgentPool(t *testing.T) {
 						},
 					},
 					AgentPoolProfiles: []*AgentPoolProfile{
-						&AgentPoolProfile{
+						{
 							KubernetesConfig: &KubernetesConfig{
 								KubeletConfig: map[string]string{
 									"--pod-max-pids":  "100",
@@ -1784,7 +1829,7 @@ func TestSupportPodPidsLimitFeatureGateInAgentPool(t *testing.T) {
 						},
 					},
 					AgentPoolProfiles: []*AgentPoolProfile{
-						&AgentPoolProfile{
+						{
 							KubernetesConfig: &KubernetesConfig{
 								KubeletConfig: map[string]string{
 									"--feature-gates": "SupportPodPidsLimit=true",
@@ -1810,10 +1855,37 @@ func TestSupportPodPidsLimitFeatureGateInAgentPool(t *testing.T) {
 						},
 					},
 					AgentPoolProfiles: []*AgentPoolProfile{
-						&AgentPoolProfile{
+						{
 							KubernetesConfig: &KubernetesConfig{
 								KubeletConfig: map[string]string{
 									"--pod-max-pids":  "-1",
+									"--feature-gates": "SupportPodPidsLimit=true",
+								},
+							},
+						},
+					},
+				},
+			},
+			isUpgrade:                              true,
+			expectedPodMaxPids:                     "-1",
+			expectedSupportPodPidsLimitFeatureGate: true,
+		},
+		{
+			name: "--pod-max-pids defined as 100a, SupportPodPidsLimit=true, upgrade scenario",
+			cs: &ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorType:    Kubernetes,
+						OrchestratorVersion: "1.14.0",
+						KubernetesConfig: &KubernetesConfig{
+							KubeletConfig: map[string]string{},
+						},
+					},
+					AgentPoolProfiles: []*AgentPoolProfile{
+						{
+							KubernetesConfig: &KubernetesConfig{
+								KubeletConfig: map[string]string{
+									"--pod-max-pids":  "100a",
 									"--feature-gates": "SupportPodPidsLimit=true",
 								},
 							},
