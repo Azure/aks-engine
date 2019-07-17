@@ -146,12 +146,12 @@ func TestGetMasterKubernetesLabels(t *testing.T) {
 		{
 			"valid rg string",
 			"my-resource-group",
-			"kubernetes.io/role=master,node-role.kubernetes.io/master=,kubernetes.azure.com/cluster=my-resource-group",
+			"kubernetes.azure.com/role=master,kubernetes.io/role=master,node-role.kubernetes.io/master=,kubernetes.azure.com/cluster=my-resource-group",
 		},
 		{
 			"empty string",
 			"",
-			"kubernetes.io/role=master,node-role.kubernetes.io/master=,kubernetes.azure.com/cluster=",
+			"kubernetes.azure.com/role=master,kubernetes.io/role=master,node-role.kubernetes.io/master=,kubernetes.azure.com/cluster=",
 		},
 	}
 

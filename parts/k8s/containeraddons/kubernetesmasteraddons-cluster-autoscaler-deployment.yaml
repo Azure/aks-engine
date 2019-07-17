@@ -146,12 +146,12 @@ spec:
       <hostNet>
       serviceAccountName: cluster-autoscaler
       tolerations:
-      - effect: NoSchedule
-        operator: "Equal"
-        value: "true"
-        key: node-role.kubernetes.io/master
+      - key: kubernetes.azure.com/role
+        operator: Equal
+        value: "master"
+        effect: NoSchedule
       nodeSelector:
-        kubernetes.io/role: master
+        kubernetes.azure.com/role: master
         beta.kubernetes.io/os: linux
       containers:
       - image: {{ContainerImage "cluster-autoscaler"}}

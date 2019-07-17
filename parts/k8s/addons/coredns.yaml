@@ -128,7 +128,9 @@ spec:
             weight: 5
       serviceAccountName: coredns
       tolerations:
-        - key: node-role.kubernetes.io/master
+        - key: kubernetes.azure.com/role
+          operator: Equal
+          value: "master"
           effect: NoSchedule
         - key: CriticalAddonsOnly
           operator: "Exists"

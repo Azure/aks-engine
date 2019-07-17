@@ -263,8 +263,10 @@ spec:
             memory: 20Mi
       terminationGracePeriodSeconds: 10
       tolerations:
-      - effect: NoSchedule
-        key: node-role.kubernetes.io/master
+      - key: kubernetes.azure.com/role
+        operator: Equal
+        value: "master"
+        effect: NoSchedule
 ---
 apiVersion: apps/v1
 kind: DaemonSet
@@ -309,5 +311,7 @@ spec:
             memory: 20Mi
       terminationGracePeriodSeconds: 10
       tolerations:
-      - effect: NoSchedule
-        key: node-role.kubernetes.io/master
+      - key: kubernetes.azure.com/role
+        operator: Equal
+        value: "master"
+        effect: NoSchedule
