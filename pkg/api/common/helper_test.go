@@ -137,7 +137,7 @@ func TestIsSGXEnabledSKU(t *testing.T) {
 	}
 }
 
-func TestGetMasterKubernetesLabels(t *testing.T) {
+func TestGetMasterKubernetesLabelsDeprecated(t *testing.T) {
 	cases := []struct {
 		name     string
 		rg       string
@@ -152,6 +152,36 @@ func TestGetMasterKubernetesLabels(t *testing.T) {
 			"empty string",
 			"",
 			"kubernetes.io/role=master,node-role.kubernetes.io/master=,kubernetes.azure.com/cluster=",
+		},
+	}
+
+	for _, c := range cases {
+		c := c
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+			ret := GetMasterKubernetesLabelsDeprecated(c.rg)
+			if ret != c.expected {
+				t.Fatalf("expected GetMasterKubernetesLabelsDeprecated(%s) to return %s, but instead got %s", c.rg, c.expected, ret)
+			}
+		})
+	}
+}
+
+func TestGetMasterKubernetesLabels(t *testing.T) {
+	cases := []struct {
+		name     string
+		rg       string
+		expected string
+	}{
+		{
+			"valid rg string",
+			"my-resource-group",
+			"kubernetes.azure.com/role=master,kubernetes.azure.com/cluster=my-resource-group",
+		},
+		{
+			"empty string",
+			"",
+			"kubernetes.azure.com/role=master,kubernetes.azure.com/cluster=",
 		},
 	}
 

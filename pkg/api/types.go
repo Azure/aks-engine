@@ -1440,10 +1440,14 @@ func (a *AgentPoolProfile) IsUbuntuNonVHD() bool {
 }
 
 // GetKubernetesLabels returns a k8s API-compliant labels string for nodes in this profile
-func (a *AgentPoolProfile) GetKubernetesLabels(rg string) string {
+func (a *AgentPoolProfile) GetKubernetesLabels(rg string, deprecated bool) string {
 	var buf bytes.Buffer
-	buf.WriteString("node-role.kubernetes.io/agent=")
-	buf.WriteString(fmt.Sprintf(",kubernetes.io/role=agent,agentpool=%s", a.Name))
+	buf.WriteString("kubernetes.azure.com/role=agent")
+	if deprecated {
+		buf.WriteString(",node-role.kubernetes.io/agent=")
+		buf.WriteString(",kubernetes.io/role=agent")
+	}
+	buf.WriteString(fmt.Sprintf(",agentpool=%s", a.Name))
 	if a.StorageProfile == ManagedDisks {
 		storagetier, _ := common.GetStorageAccountType(a.VMSize)
 		buf.WriteString(fmt.Sprintf(",storageprofile=managed,storagetier=%s", storagetier))

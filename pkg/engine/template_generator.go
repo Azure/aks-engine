@@ -272,8 +272,14 @@ func (t *TemplateGenerator) getTemplateFuncMap(cs *api.ContainerService) templat
 		"GetMasterKubernetesLabels": func(rg string) string {
 			return common.GetMasterKubernetesLabels(rg)
 		},
+		"GetMasterKubernetesLabelsDeprecated": func(rg string) string {
+			return common.GetMasterKubernetesLabelsDeprecated(rg)
+		},
 		"GetAgentKubernetesLabels": func(profile *api.AgentPoolProfile, rg string) string {
-			return profile.GetKubernetesLabels(rg)
+			return profile.GetKubernetesLabels(rg, false)
+		},
+		"GetAgentKubernetesLabelsDeprecated": func(profile *api.AgentPoolProfile, rg string) string {
+			return profile.GetKubernetesLabels(rg, true)
 		},
 		"GetKubeletConfigKeyVals": func(kc *api.KubernetesConfig) string {
 			if kc == nil {

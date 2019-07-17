@@ -279,7 +279,11 @@ MASTER_CONTAINER_ADDONS_PLACEHOLDER
 {{end}}
     KUBELET_CONFIG={{GetKubeletConfigKeyVals .MasterProfile.KubernetesConfig}}
     KUBELET_IMAGE={{WrapAsParameter "kubernetesHyperkubeSpec"}}
+{{if IsKubernetesVersionGe "1.16.0-alpha.1"}}
     KUBELET_NODE_LABELS={{GetMasterKubernetesLabels "',variables('labelResourceGroup'),'"}}
+{{else}}
+    KUBELET_NODE_LABELS={{GetMasterKubernetesLabelsDeprecated "',variables('labelResourceGroup'),'"}}
+{{end}}
 {{if IsAzureStackCloud }}
     AZURE_ENVIRONMENT_FILEPATH=/etc/kubernetes/azurestackcloud.json
 {{end}}

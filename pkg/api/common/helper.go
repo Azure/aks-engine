@@ -236,11 +236,22 @@ func IsSgxEnabledSKU(vmSize string) bool {
 	return false
 }
 
-// GetMasterKubernetesLabels returns a k8s API-compliant labels string
-func GetMasterKubernetesLabels(rg string) string {
+// GetMasterKubernetesLabelsDeprecated returns a deprecated k8s API-compliant
+// labels string.
+// The `kubernetes.io/role` and `node-role.kubernetes.io` labels are disallowed
+// by the kubelet `--node-labels` argument in Kubernetes 1.16 and later.
+func GetMasterKubernetesLabelsDeprecated(rg string) string {
 	var buf bytes.Buffer
 	buf.WriteString("kubernetes.io/role=master")
 	buf.WriteString(",node-role.kubernetes.io/master=")
+	buf.WriteString(fmt.Sprintf(",kubernetes.azure.com/cluster=%s", rg))
+	return buf.String()
+}
+
+// GetMasterKubernetesLabels returns a k8s API-compliant labels string.
+func GetMasterKubernetesLabels(rg string) string {
+	var buf bytes.Buffer
+	buf.WriteString("kubernetes.azure.com/role=master")
 	buf.WriteString(fmt.Sprintf(",kubernetes.azure.com/cluster=%s", rg))
 	return buf.String()
 }

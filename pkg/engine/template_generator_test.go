@@ -47,6 +47,7 @@ func TestGetTemplateFuncMap(t *testing.T) {
 		"IsKubernetesVersionGe",
 		"IsKubernetesVersionLt",
 		"GetMasterKubernetesLabels",
+		"GetMasterKubernetesLabelsDeprecated",
 		"GetAgentKubernetesLabels",
 		"GetKubeletConfigKeyVals",
 		"GetKubeletConfigKeyValsPsh",
