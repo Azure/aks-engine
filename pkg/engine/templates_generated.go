@@ -13456,22 +13456,16 @@ installContainerRuntime() {
 }
 
 installMoby() {
-    CURRENT_VERSION=$(dockerd --version | grep "Docker version" | cut -d "," -f 1 | cut -d " " -f 3)
-    if [[ "$CURRENT_VERSION" == "${MOBY_VERSION}" ]]; then
-        echo "dockerd $MOBY_VERSION is already installed, skipping Moby download"
-    else
-        removeMoby
-        retrycmd_if_failure_no_stats 120 5 25 curl https://packages.microsoft.com/config/ubuntu/${UBUNTU_RELEASE}/prod.list > /tmp/microsoft-prod.list || exit $ERR_MOBY_APT_LIST_TIMEOUT
-        retrycmd_if_failure 10 5 10 cp /tmp/microsoft-prod.list /etc/apt/sources.list.d/ || exit $ERR_MOBY_APT_LIST_TIMEOUT
-        retrycmd_if_failure_no_stats 120 5 25 curl https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > /tmp/microsoft.gpg || exit $ERR_MS_GPG_KEY_DOWNLOAD_TIMEOUT
-        retrycmd_if_failure 10 5 10 cp /tmp/microsoft.gpg /etc/apt/trusted.gpg.d/ || exit $ERR_MS_GPG_KEY_DOWNLOAD_TIMEOUT
-        apt_get_update || exit $ERR_APT_UPDATE_TIMEOUT
-        MOBY_CLI=${MOBY_VERSION}
-        if [[ "${MOBY_CLI}" == "3.0.4" ]]; then
-            MOBY_CLI="3.0.3"
-        fi
-        apt_get_install 20 30 120 moby-engine=${MOBY_VERSION} moby-cli=${MOBY_CLI} --allow-downgrades || exit $ERR_MOBY_INSTALL_TIMEOUT
-    fi
+    removeMoby
+    mkdir -p /tmp/moby
+    mkdir -p /tmp/moby-cli
+    retrycmd_if_failure_no_stats 120 5 25 curl "https://moby.blob.core.windows.net/moby-test/3.0.7/amd64/artifacts.tgz" > /tmp/moby/artifacts.tgz || exit $ERR_MOBY_APT_LIST_TIMEOUT
+    retrycmd_if_failure_no_stats 120 5 25 curl "https://moby.blob.core.windows.net/moby-test/3.0.7/amd64/artifacts.cli.tgz" > /tmp/moby-cli/artifacts.tgz || exit $ERR_MOBY_APT_LIST_TIMEOUT
+    retrycmd_if_failure_no_stats 120 5 25 tar -xvzf /tmp/moby/artifacts.tgz -C /tmp/moby/
+    retrycmd_if_failure_no_stats 120 5 25 tar -xvzf /tmp/moby-cli/artifacts.tgz -C /tmp/moby-cli/
+    retrycmd_if_failure_no_stats 120 5 25 dpkg -i /tmp/moby/bundles/debbuild/ubuntu-xenial/moby-engine_3.0.7_amd64.deb
+    retrycmd_if_failure_no_stats 120 5 25 dpkg -i /tmp/moby-cli/bundles/debbuild/ubuntu-xenial/moby-cli_3.0.7_amd64.deb
+    retrycmd_if_failure_no_stats 120 5 25 apt-get install -f
 }
 
 installKataContainersRuntime() {
