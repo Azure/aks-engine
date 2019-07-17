@@ -303,7 +303,7 @@ cleanUpContainerImages() {
         docker rmi $(docker images --format '{{.Repository}}:{{.Tag}}' | grep 'nginx') &
     fi
 
-    # TZL Financials: https://github.com/Azure/aks-engine/issues/1625
+    # TODO: remove once ACR is available on Azure Stack
     docker rmi registry:2 &
 }
 

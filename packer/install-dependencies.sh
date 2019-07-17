@@ -395,7 +395,7 @@ for KUBERNETES_VERSION in ${K8S_VERSIONS}; do
     echo "  - ${HYPERKUBE_URL}" >> ${RELEASE_NOTES_FILEPATH}
 done
 
-# TZL Financials: https://github.com/Azure/aks-engine/issues/1625
+# TODO: remove once ACR is available on Azure Stack
 pullContainerImage "docker" "registry:2"
 
 df -h
