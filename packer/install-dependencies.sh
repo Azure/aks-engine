@@ -141,6 +141,7 @@ for METRICS_SERVER_VERSION in ${METRICS_SERVER_VERSIONS}; do
 done
 
 KUBE_DNS_VERSIONS="
+1.15.4
 1.15.0
 1.14.13
 1.14.5
@@ -394,6 +395,9 @@ for KUBERNETES_VERSION in ${K8S_VERSIONS}; do
     extractHyperkube "docker"
     echo "  - ${HYPERKUBE_URL}" >> ${RELEASE_NOTES_FILEPATH}
 done
+
+# TODO: remove once ACR is available on Azure Stack
+pullContainerImage "docker" "registry:2"
 
 df -h
 
