@@ -1482,7 +1482,8 @@ func TestSetAddonsConfig(t *testing.T) {
 					Config: map[string]string{
 						"omsAgentVersion":       "1.10.0.1",
 						"dockerProviderVersion": "6.0.0-0",
-						"schema-versions": "v1",			            
+						"schema-versions": "v1",
+						"clusterName": cs.Properties.MasterProfile.DNSPrefix,			            
 					},
 					Containers: []KubernetesContainerSpec{
 						{
