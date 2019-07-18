@@ -3,12 +3,12 @@
 
 ## Motivation
 
-There are inconsistencies in where and how you can specify images in the aks-engine cluster definitions.
-This leads to unnecessary complexity in the aks-engine codebase and potential confusion for aks-engine users.
+There are inconsistencies in where and how you can specify images in the AKS Engine cluster definitions.
+This leads to unnecessary complexity in the aks-engine codebase and potential confusion for AKS Engine users.
 
 Additionally, it is not possible to specify different images for different pools running Windows which breaks some upgrade/test scenarios.
 
-Images for virtual machines in Azure are specified the same way regardless of guest OS. This proposal aims to unify how aks-engine cluster defintions specify images for Linux and Windows.
+Images for virtual machines in Azure are specified the same way regardless of guest OS. This proposal aims to unify how AKS Engine cluster defintions specify images for Linux and Windows.
 
 ## Current behavior
 
@@ -70,7 +70,8 @@ Images are specified as port of agentPoolProfile.
 ```json
 "Distro": "[ubuntu | rhel | coreos | AKSUbuntu1604 | AKSUbuntu1804 | AKSWindows1809 | AKSWindows1903 | AKSWindows2019]"
 ```
-* Image URL - path to a chd in azure blob storage
+
+* Image URL - path to a vhd in azure blob storage
 
 ```json
 "image" : {
@@ -83,21 +84,23 @@ Images are specified as port of agentPoolProfile.
   * If subscription, gallery, and version are also specified image will be pulled from a gallery
 
 ```json
-"imageReference": {
-    "name": "" ,
-    "resourceGroup": "",
+"image": {
+    "reference": {
+        "name": "" ,
+        "resourceGroup": "",
 
-    (optional)
-    "subscription": "",
-    "gallery": "",
-    "version": ""
+        (optional)
+        "subscription": "",
+        "gallery": "",
+        "version": ""
+    }
 }
 ```
 
 * Marketplace Image - Specifies an Azure marketplace image
 
 ```json
-"imageReference": {
+"image": {
     "marketplace": {
         "publisher": "",
         "offer": "",
@@ -106,3 +109,12 @@ Images are specified as port of agentPoolProfile.
     }
 }
 ```
+
+### Maintaining backwards compatability
+
+In order to maintain backwards compatability previously supported settings for specifying images for agent pools.
+
+For Linux agent pools if any of the imageReference.* properties are specified on AgentPoolPorfile they will get mapped to their coresponding image.reference.* properties.
+
+For Windows agent pools if all of windowsPublisher, windowsOffer, and windowsSku are specified on the WindowsProfile then these settings will be used for all windows agent pools (including imageVersion if specified).
+If WindowsImageSourceURL is specified then this image will be used for all Windows agent pools.
