@@ -66,44 +66,6 @@ type Transformer struct {
 	Translator Translator
 }
 
-// NormalizeForVMSSScaling takes a template and removes elements that are unwanted in a VMSS scale up/down case
-func (t *Transformer) NormalizeForVMSSScaling(logger *logrus.Entry, templateMap map[string]interface{}) error {
-	if err := t.NormalizeMasterResourcesForScaling(logger, templateMap); err != nil {
-		return err
-	}
-
-	resources := templateMap[resourcesFieldName].([]interface{})
-	for _, resource := range resources {
-		resourceMap, ok := resource.(map[string]interface{})
-		if !ok {
-			logger.Warnf("Template improperly formatted")
-			continue
-		}
-
-		resourceType, ok := resourceMap[typeFieldName].(string)
-		if !ok || resourceType != vmssResourceType {
-			continue
-		}
-
-		resourceProperties, ok := resourceMap[propertiesFieldName].(map[string]interface{})
-		if !ok {
-			logger.Warnf("Template improperly formatted")
-			continue
-		}
-
-		virtualMachineProfile, ok := resourceProperties[virtualMachineProfileFieldName].(map[string]interface{})
-		if !ok {
-			logger.Warnf("Template improperly formatted")
-			continue
-		}
-
-		if !t.removeCustomData(logger, virtualMachineProfile) || !t.removeImageReference(logger, virtualMachineProfile) {
-			continue
-		}
-	}
-	return nil
-}
-
 // NormalizeForK8sVMASScalingUp takes a template and removes elements that are unwanted in a K8s VMAS scale up/down case
 func (t *Transformer) NormalizeForK8sVMASScalingUp(logger *logrus.Entry, templateMap map[string]interface{}) error {
 	if err := t.NormalizeMasterResourcesForScaling(logger, templateMap); err != nil {
