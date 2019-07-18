@@ -13512,6 +13512,9 @@ cleanUpContainerImages() {
         docker rmi $(docker images --format '{{.Repository}}:{{.Tag}}' | grep 'kube-svc-redirect') &
         docker rmi $(docker images --format '{{.Repository}}:{{.Tag}}' | grep 'nginx') &
     fi
+
+    # TODO: remove once ACR is available on Azure Stack
+    docker rmi registry:2 &
 }
 
 cleanUpGPUDrivers() {
