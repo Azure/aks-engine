@@ -451,11 +451,6 @@ func (ku *Upgrader) upgradeAgentScaleSets(ctx context.Context) error {
 			Translator: ku.Translator,
 		}
 
-		if err = transformer.NormalizeForVMSSScaling(ku.logger, templateMap); err != nil {
-			ku.logger.Errorf("unable to update template, error: %v.", err)
-			return err
-		}
-
 		random := rand.New(rand.NewSource(time.Now().UnixNano()))
 		deploymentSuffix := random.Int31()
 		deploymentName := fmt.Sprintf("agentscaleset-%s-%d", time.Now().Format("06-01-02T15.04.05"), deploymentSuffix)
