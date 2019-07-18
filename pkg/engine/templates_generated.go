@@ -87,6 +87,8 @@
 // ../../parts/k8s/cloud-init/artifacts/kubelet-monitor.service
 // ../../parts/k8s/cloud-init/artifacts/kubelet-monitor.timer
 // ../../parts/k8s/cloud-init/artifacts/kubelet.service
+// ../../parts/k8s/cloud-init/artifacts/label-nodes.service
+// ../../parts/k8s/cloud-init/artifacts/label-nodes.sh
 // ../../parts/k8s/cloud-init/artifacts/modprobe-CIS.conf
 // ../../parts/k8s/cloud-init/artifacts/mountetcd.sh
 // ../../parts/k8s/cloud-init/artifacts/pam-d-common-auth
@@ -12693,6 +12695,14 @@ ensureKubelet() {
     systemctlEnableAndStart kubelet || exit $ERR_KUBELET_START_FAIL
 }
 
+ensureLabelNodes() {
+    LABEL_NODES_SCRIPT_FILE=/opt/azure/containers/label-nodes.sh
+    wait_for_file 1200 1 $LABEL_NODES_SCRIPT_FILE || exit $ERR_FILE_WATCH_TIMEOUT
+    LABEL_NODES_SYSTEMD_FILE=/etc/systemd/system/label-nodes.service
+    wait_for_file 1200 1 $LABEL_NODES_SYSTEMD_FILE || exit $ERR_FILE_WATCH_TIMEOUT
+    systemctlEnableAndStart label-nodes || exit $ERR_SYSTEMCTL_START_FAIL
+}
+
 ensureJournal() {
     {
         echo "Storage=persistent"
@@ -13729,6 +13739,7 @@ ensureKubelet
 ensureJournal
 
 if [[ -n "${MASTER_NODE}" ]]; then
+    ensureLabelNodes
     writeKubeConfig
     if [[ -z "${COSMOS_URI}" ]]; then
       ensureEtcd
@@ -14348,6 +14359,70 @@ func k8sCloudInitArtifactsKubeletService() (*asset, error) {
 	}
 
 	info := bindataFileInfo{name: "k8s/cloud-init/artifacts/kubelet.service", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
+var _k8sCloudInitArtifactsLabelNodesService = []byte(`[Unit]
+Description=Label Kubernetes nodes as masters or agents
+After=kubelet.service
+[Service]
+Restart=always
+RestartSec=60
+ExecStart=/bin/bash /opt/azure/containers/label-nodes.sh
+`)
+
+func k8sCloudInitArtifactsLabelNodesServiceBytes() ([]byte, error) {
+	return _k8sCloudInitArtifactsLabelNodesService, nil
+}
+
+func k8sCloudInitArtifactsLabelNodesService() (*asset, error) {
+	bytes, err := k8sCloudInitArtifactsLabelNodesServiceBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "k8s/cloud-init/artifacts/label-nodes.service", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
+var _k8sCloudInitArtifactsLabelNodesSh = []byte(`#!/usr/bin/env bash
+
+# Scans master and agent nodes and applies missing labels.
+# Kubernetes 1.16+ rejects the kubernetes.io/role and node-role.kubernetes.io
+# labels in the "--node-labels" argument, but they need to be present for
+# backward compatibility with Azure clusters.
+
+set -euo pipefail
+
+MASTER_LABELS="kubernetes.azure.com/role=master kubernetes.io/role=master node-role.kubernetes.io/master="
+AGENT_LABELS="kubernetes.azure.com/role=agent kubernetes.io/role=agent node-role.kubernetes.io/agent="
+MASTER_SELECTOR="kubernetes.azure.com/role!=agent,kubernetes.io/role!=agent"
+AGENT_SELECTOR="kubernetes.azure.com/role!=master,kubernetes.io/role!=master"
+
+# Find master nodes and label them
+for node in $(kubectl get nodes -l $MASTER_SELECTOR -o name); do
+  kubectl label --overwrite $node $MASTER_LABELS || echo "Error labeling master nodes"
+done
+
+# Find agent nodes and label them
+for node in $(kubectl get nodes -l $AGENT_SELECTOR -o name); do
+  kubectl label --overwrite $node $AGENT_LABELS || echo "Error labeling agent nodes"
+done
+`)
+
+func k8sCloudInitArtifactsLabelNodesShBytes() ([]byte, error) {
+	return _k8sCloudInitArtifactsLabelNodesSh, nil
+}
+
+func k8sCloudInitArtifactsLabelNodesSh() (*asset, error) {
+	bytes, err := k8sCloudInitArtifactsLabelNodesShBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "k8s/cloud-init/artifacts/label-nodes.sh", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -15129,6 +15204,20 @@ write_files:
   owner: root
   content: !!binary |
     {{CloudInitData "kubeletSystemdService"}}
+
+- path: /opt/azure/containers/label-nodes.sh
+  permissions: "0744"
+  encoding: gzip
+  owner: root
+  content: !!binary |
+    {{CloudInitData "labelNodesScript"}}
+
+- path: /etc/systemd/system/label-nodes.service
+  permissions: "0644"
+  encoding: gzip
+  owner: root
+  content: !!binary |
+    {{CloudInitData "labelNodesSystemdService"}}
 
 - path: /etc/systemd/system/kms.service
   permissions: "0644"
@@ -28601,6 +28690,8 @@ var _bindata = map[string]func() (*asset, error){
 	"k8s/cloud-init/artifacts/kubelet-monitor.service":                                    k8sCloudInitArtifactsKubeletMonitorService,
 	"k8s/cloud-init/artifacts/kubelet-monitor.timer":                                      k8sCloudInitArtifactsKubeletMonitorTimer,
 	"k8s/cloud-init/artifacts/kubelet.service":                                            k8sCloudInitArtifactsKubeletService,
+	"k8s/cloud-init/artifacts/label-nodes.service":                                        k8sCloudInitArtifactsLabelNodesService,
+	"k8s/cloud-init/artifacts/label-nodes.sh":                                             k8sCloudInitArtifactsLabelNodesSh,
 	"k8s/cloud-init/artifacts/modprobe-CIS.conf":                                          k8sCloudInitArtifactsModprobeCisConf,
 	"k8s/cloud-init/artifacts/mountetcd.sh":                                               k8sCloudInitArtifactsMountetcdSh,
 	"k8s/cloud-init/artifacts/pam-d-common-auth":                                          k8sCloudInitArtifactsPamDCommonAuth,
@@ -28840,6 +28931,8 @@ var _bintree = &bintree{nil, map[string]*bintree{
 				"kubelet-monitor.service":                   {k8sCloudInitArtifactsKubeletMonitorService, map[string]*bintree{}},
 				"kubelet-monitor.timer":                     {k8sCloudInitArtifactsKubeletMonitorTimer, map[string]*bintree{}},
 				"kubelet.service":                           {k8sCloudInitArtifactsKubeletService, map[string]*bintree{}},
+				"label-nodes.service":                       {k8sCloudInitArtifactsLabelNodesService, map[string]*bintree{}},
+				"label-nodes.sh":                            {k8sCloudInitArtifactsLabelNodesSh, map[string]*bintree{}},
 				"modprobe-CIS.conf":                         {k8sCloudInitArtifactsModprobeCisConf, map[string]*bintree{}},
 				"mountetcd.sh":                              {k8sCloudInitArtifactsMountetcdSh, map[string]*bintree{}},
 				"pam-d-common-auth":                         {k8sCloudInitArtifactsPamDCommonAuth, map[string]*bintree{}},

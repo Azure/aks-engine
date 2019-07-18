@@ -167,6 +167,7 @@ ensureKubelet
 ensureJournal
 
 if [[ -n "${MASTER_NODE}" ]]; then
+    ensureLabelNodes
     writeKubeConfig
     if [[ -z "${COSMOS_URI}" ]]; then
       ensureEtcd

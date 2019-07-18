@@ -90,6 +90,20 @@ write_files:
   content: !!binary |
     {{CloudInitData "kubeletSystemdService"}}
 
+- path: /opt/azure/containers/label-nodes.sh
+  permissions: "0744"
+  encoding: gzip
+  owner: root
+  content: !!binary |
+    {{CloudInitData "labelNodesScript"}}
+
+- path: /etc/systemd/system/label-nodes.service
+  permissions: "0644"
+  encoding: gzip
+  owner: root
+  content: !!binary |
+    {{CloudInitData "labelNodesSystemdService"}}
+
 - path: /etc/systemd/system/kms.service
   permissions: "0644"
   encoding: gzip
