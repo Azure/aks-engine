@@ -23,7 +23,7 @@ var k8sComponentVersions = map[string]map[string]string{
 		"coredns":                          "coredns:1.5.0",
 		"kube-dns":                         "k8s-dns-kube-dns-amd64:1.15.4",
 		"addon-manager":                    "kube-addon-manager-amd64:v9.0.1",
-		"dnsmasq":                          "k8s-dns-dnsmasq-nanny-amd64:1.15.0",
+		"dnsmasq":                          "k8s-dns-dnsmasq-nanny-amd64:1.15.4",
 		"pause":                            "pause-amd64:3.1",
 		"tiller":                           "tiller:v2.11.0",
 		"rescheduler":                      "rescheduler:v0.4.0",
