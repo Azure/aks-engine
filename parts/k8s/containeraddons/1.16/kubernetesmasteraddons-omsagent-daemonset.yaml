@@ -31,7 +31,7 @@ rules:
 - apiGroups: [""]
   resources: ["pods", "events", "nodes", "namespaces", "services"]
   verbs: ["list", "get", "watch"]
-- nonResnonResourceURLs: ["/metrics"]
+- nonResourceURLs: ["/metrics"]
   verbs: ["get"]
 ---
 kind: ClusterRoleBinding
@@ -196,7 +196,7 @@ data:
       max_retry_wait 9m
      </match>
 
-     <match oms.api.ContainerNodeInventory**>
+     <match oms.containerinsights.ContainerNodeInventory**>
       type out_oms_api
       log_level debug
       buffer_chunk_limit 20m
