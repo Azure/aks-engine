@@ -447,6 +447,14 @@ func (ku *Upgrader) upgradeAgentScaleSets(ctx context.Context) error {
 			return err
 		}
 
+		transformer := &transform.Transformer{
+			Translator: ku.Translator,
+		}
+
+		if err = transformer.NormalizeMasterResourcesForScaling(ku.logger, templateMap); err != nil {
+			return err
+		}
+
 		random := rand.New(rand.NewSource(time.Now().UnixNano()))
 		deploymentSuffix := random.Int31()
 		deploymentName := fmt.Sprintf("agentscaleset-%s-%d", time.Now().Format("06-01-02T15.04.05"), deploymentSuffix)
