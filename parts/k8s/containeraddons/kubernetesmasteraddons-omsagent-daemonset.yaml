@@ -321,7 +321,7 @@ spec:
                 fieldRef:
                   fieldPath: status.hostIP
             - name: ACS_RESOURCE_NAME
-              value: "aks-engine-cluster"            
+              value: {{ContainerConfig "clusterName"}}            
             - name: CONTROLLER_TYPE
               value: "DaemonSet"
             - name: ISTEST
@@ -437,7 +437,7 @@ spec:
                 fieldRef:
                   fieldPath: status.hostIP
             - name: ACS_RESOURCE_NAME
-              value: "aks-engine-cluster"            
+              value: {{ContainerConfig "clusterName"}}            
             - name: CONTROLLER_TYPE
               value: "ReplicaSet"
             - name: ISTEST
