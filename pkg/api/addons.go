@@ -13,9 +13,9 @@ import (
 
 func (cs *ContainerService) setAddonsConfig(isUpdate bool) {
 	o := cs.Properties.OrchestratorProfile
-	clusterDnsPrefix := "aks-engine-cluster"
+	clusterDNSPrefix := "aks-engine-cluster"
 	if cs != nil && cs.Properties != nil && cs.Properties.MasterProfile != nil && cs.Properties.MasterProfile.DNSPrefix != "" {
-		clusterDnsPrefix = cs.Properties.MasterProfile.DNSPrefix
+		clusterDNSPrefix = cs.Properties.MasterProfile.DNSPrefix
 	}
 	cloudSpecConfig := cs.GetCloudSpecConfig()
 	k8sComponents := K8sComponentsByVersionMap[o.OrchestratorVersion]
@@ -211,7 +211,7 @@ func (cs *ContainerService) setAddonsConfig(isUpdate bool) {
 			"omsAgentVersion":       "1.10.0.1",
 			"dockerProviderVersion": "6.0.0-0",
 			"schema-versions":       "v1",
-			"clusterName":           clusterDnsPrefix,
+			"clusterName":           clusterDNSPrefix,
 		},
 		Containers: []KubernetesContainerSpec{
 			{
