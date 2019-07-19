@@ -294,7 +294,7 @@ func (t *Transformer) NormalizeResourcesForK8sMasterUpgrade(logger *logrus.Entry
 			continue
 		}
 
-		if !(resourceType == vmResourceType || resourceType == vmExtensionType || resourceType == nicResourceType) {
+		if !(resourceType == vmResourceType || resourceType == vmExtensionType || resourceType == nicResourceType || resourceType == vnetResourceType || resourceType == nsgResourceType) {
 			continue
 		}
 
@@ -381,6 +381,19 @@ func (t *Transformer) NormalizeResourcesForK8sMasterUpgrade(logger *logrus.Entry
 
 			if removeExtension {
 				logger.Infoln(fmt.Sprintf("Removing extension: %s from template", resourceName))
+				if len(filteredResources) > 0 {
+					filteredResources = filteredResources[:len(filteredResources)-1]
+				}
+			} 
+		} else if resourceType == vnetResourceType {
+			if !ok {
+				logger.Warnf(fmt.Sprintf("Issue removing nsg dependency from vnet: %s", resourceName))
+			}
+			logger.Infoln(fmt.Sprintf("Removing all dependencies on vnet: %s", resourceName))
+			resourceMap[dependsOnFieldName] = []string{}
+		} else if resourceType == nsgResourceType {
+			logger.Infoln(fmt.Sprintf("Removing nsg resource: %s from template", resourceName))
+			{
 				if len(filteredResources) > 0 {
 					filteredResources = filteredResources[:len(filteredResources)-1]
 				}
