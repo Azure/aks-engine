@@ -15,29 +15,27 @@ import (
 
 const (
 	//Field names
-	customDataFieldName            = "customData"
-	dependsOnFieldName             = "dependsOn"
-	hardwareProfileFieldName       = "hardwareProfile"
-	imageReferenceFieldName        = "imageReference"
-	nameFieldName                  = "name"
-	osProfileFieldName             = "osProfile"
-	propertiesFieldName            = "properties"
-	resourcesFieldName             = "resources"
-	storageProfileFieldName        = "storageProfile"
-	typeFieldName                  = "type"
-	virtualMachineProfileFieldName = "virtualMachineProfile"
-	vmSizeFieldName                = "vmSize"
-	dataDisksFieldName             = "dataDisks"
-	createOptionFieldName          = "createOption"
-	tagsFieldName                  = "tags"
-	managedDiskFieldName           = "managedDisk"
-	windowsConfigurationFieldName  = "windowsConfiguration"
+	customDataFieldName           = "customData"
+	dependsOnFieldName            = "dependsOn"
+	hardwareProfileFieldName      = "hardwareProfile"
+	imageReferenceFieldName       = "imageReference"
+	nameFieldName                 = "name"
+	osProfileFieldName            = "osProfile"
+	propertiesFieldName           = "properties"
+	resourcesFieldName            = "resources"
+	storageProfileFieldName       = "storageProfile"
+	typeFieldName                 = "type"
+	vmSizeFieldName               = "vmSize"
+	dataDisksFieldName            = "dataDisks"
+	createOptionFieldName         = "createOption"
+	tagsFieldName                 = "tags"
+	managedDiskFieldName          = "managedDisk"
+	windowsConfigurationFieldName = "windowsConfiguration"
 
 	// ARM resource Types
 	nsgResourceType  = "Microsoft.Network/networkSecurityGroups"
 	rtResourceType   = "Microsoft.Network/routeTables"
 	vmResourceType   = "Microsoft.Compute/virtualMachines"
-	vmssResourceType = "Microsoft.Compute/virtualMachineScaleSets"
 	vmExtensionType  = "Microsoft.Compute/virtualMachines/extensions"
 	nicResourceType  = "Microsoft.Network/networkInterfaces"
 	vnetResourceType = "Microsoft.Network/virtualNetworks"
@@ -64,44 +62,6 @@ type Translator interface {
 // Transformer represents the object that transforms template
 type Transformer struct {
 	Translator Translator
-}
-
-// NormalizeForVMSSScaling takes a template and removes elements that are unwanted in a VMSS scale up/down case
-func (t *Transformer) NormalizeForVMSSScaling(logger *logrus.Entry, templateMap map[string]interface{}) error {
-	if err := t.NormalizeMasterResourcesForScaling(logger, templateMap); err != nil {
-		return err
-	}
-
-	resources := templateMap[resourcesFieldName].([]interface{})
-	for _, resource := range resources {
-		resourceMap, ok := resource.(map[string]interface{})
-		if !ok {
-			logger.Warnf("Template improperly formatted")
-			continue
-		}
-
-		resourceType, ok := resourceMap[typeFieldName].(string)
-		if !ok || resourceType != vmssResourceType {
-			continue
-		}
-
-		resourceProperties, ok := resourceMap[propertiesFieldName].(map[string]interface{})
-		if !ok {
-			logger.Warnf("Template improperly formatted")
-			continue
-		}
-
-		virtualMachineProfile, ok := resourceProperties[virtualMachineProfileFieldName].(map[string]interface{})
-		if !ok {
-			logger.Warnf("Template improperly formatted")
-			continue
-		}
-
-		if !t.removeCustomData(logger, virtualMachineProfile) || !t.removeImageReference(logger, virtualMachineProfile) {
-			continue
-		}
-	}
-	return nil
 }
 
 // NormalizeForK8sVMASScalingUp takes a template and removes elements that are unwanted in a K8s VMAS scale up/down case
