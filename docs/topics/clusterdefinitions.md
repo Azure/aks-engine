@@ -72,7 +72,7 @@ $ aks-engine get-versions
 | azureCNIURLWindows              | no       | Deploy a private build of Azure CNI on Windows nodes. This should be a full path to the .tar.gz |
 | maximumLoadBalancerRuleCount    | no       | Maximum allowed LoadBalancer Rule Count is the limit enforced by Azure Load balancer. Default is 250 |
 | kubeProxyMode    | no       | kube-proxy --proxy-mode value, either "iptables" or "ipvs". Default is "iptables". See https://kubernetes.io/blog/2018/07/09/ipvs-based-in-cluster-load-balancing-deep-dive/ for further reference. |
-
+| outboundRuleIdleTimeoutInMinutes| no       |  Specifies a value for IdleTimeoutInMinutes to control the outbound flow idle timeout of the agent standard loadbalancer. This value is set greater than the default Linux idle timeout (15.4 min): https://pracucci.com/linux-tcp-rto-min-max-and-tcp-retries2.html |
 
 #### addons
 

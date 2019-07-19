@@ -71,6 +71,7 @@ func (t *Transformer) NormalizeForK8sSLBScalingOrUpgrade(logger *logrus.Entry, t
 	logger.Infoln("Running NormalizeForK8sSLBScalingOrUpgrade...")
 	lbIndex := -1
 	resources := templateMap[resourcesFieldName].([]interface{})
+
 	for index, resource := range resources {
 		resourceMap, ok := resource.(map[string]interface{})
 		if !ok {
@@ -81,8 +82,27 @@ func (t *Transformer) NormalizeForK8sSLBScalingOrUpgrade(logger *logrus.Entry, t
 		resourceType, ok := resourceMap[typeFieldName].(string)
 		resourceName := resourceMap[nameFieldName].(string)
 
+		// remove agentLB if found
 		if ok && resourceType == lbResourceType && strings.Contains(resourceName, "variables('agentLbName')") {
 			lbIndex = index
+		}
+		// remove agentLB from dependsOn if found
+		dependencies, ok := resourceMap[dependsOnFieldName].([]interface{})
+		if !ok {
+			continue
+		}
+
+		for dIndex := len(dependencies) - 1; dIndex >= 0; dIndex-- {
+			dependency := dependencies[dIndex].(string)
+			if strings.Contains(dependency, lbResourceType) || strings.Contains(dependency, agentLbID) {
+				dependencies = append(dependencies[:dIndex], dependencies[dIndex+1:]...)
+			}
+		}
+
+		if len(dependencies) > 0 {
+			resourceMap[dependsOnFieldName] = dependencies
+		} else {
+			delete(resourceMap, dependsOnFieldName)
 		}
 	}
 	indexesToRemove := []int{}
@@ -154,8 +174,7 @@ func (t *Transformer) NormalizeForK8sVMASScalingUp(logger *logrus.Entry, templat
 			if strings.Contains(dependency, nsgResourceType) || strings.Contains(dependency, nsgID) ||
 				strings.Contains(dependency, rtResourceType) || strings.Contains(dependency, rtID) ||
 				strings.Contains(dependency, vnetResourceType) || strings.Contains(dependency, vnetID) ||
-				strings.Contains(dependency, vmasResourceType) || strings.Contains(dependency, lbResourceType) ||
-				strings.Contains(dependency, agentLbID) {
+				strings.Contains(dependency, vmasResourceType) {
 				dependencies = append(dependencies[:dIndex], dependencies[dIndex+1:]...)
 			}
 		}
@@ -317,24 +336,6 @@ func (t *Transformer) NormalizeResourcesForK8sMasterUpgrade(logger *logrus.Entry
 		if !ok {
 			logger.Warnf("Template improperly formatted for field name: %s", resourcesFieldName)
 			continue
-		}
-
-		dependencies, ok := resourceMap[dependsOnFieldName].([]interface{})
-		if !ok {
-			continue
-		}
-
-		for dIndex := len(dependencies) - 1; dIndex >= 0; dIndex-- {
-			dependency := dependencies[dIndex].(string)
-			if strings.Contains(dependency, lbResourceType) || strings.Contains(dependency, agentLbID) {
-				dependencies = append(dependencies[:dIndex], dependencies[dIndex+1:]...)
-			}
-		}
-
-		if len(dependencies) > 0 {
-			resourceMap[dependsOnFieldName] = dependencies
-		} else {
-			delete(resourceMap, dependsOnFieldName)
 		}
 
 		resourceType, ok := resourceMap[typeFieldName].(string)
