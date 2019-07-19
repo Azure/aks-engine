@@ -15,23 +15,6 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-func TestNormalizeForVMSSScaling(t *testing.T) {
-	RegisterTestingT(t)
-	logger := logrus.New().WithField("testName", "TestNormalizeForVMSSScaling")
-	fileContents, e := ioutil.ReadFile("./transformtestfiles/dcos_template.json")
-	Expect(e).To(BeNil())
-	expectedFileContents, e := ioutil.ReadFile("./transformtestfiles/dcos_scale_template.json")
-	Expect(e).To(BeNil())
-	templateJSON := string(fileContents)
-	var template interface{}
-	json.Unmarshal([]byte(templateJSON), &template)
-	templateMap := template.(map[string]interface{})
-	transformer := Transformer{}
-	e = transformer.NormalizeForVMSSScaling(logger, templateMap)
-	Expect(e).To(BeNil())
-	ValidateTemplate(templateMap, expectedFileContents, "TestNormalizeForVMSSScaling")
-}
-
 func TestNormalizeForK8sVMASScalingUp(t *testing.T) {
 	RegisterTestingT(t)
 	logger := logrus.New().WithField("testName", "TestNormalizeForK8sVMASScalingUp")

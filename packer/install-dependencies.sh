@@ -168,6 +168,7 @@ for KUBE_ADDON_MANAGER_VERSION in ${KUBE_ADDON_MANAGER_VERSIONS}; do
 done
 
 KUBE_DNS_MASQ_VERSIONS="
+1.15.4
 1.15.0
 1.14.10
 1.14.8
@@ -363,6 +364,7 @@ echo "  - busybox" >> ${RELEASE_NOTES_FILEPATH}
 
 # TODO: fetch supported k8s versions from an aks-engine command instead of hardcoding them here
 K8S_VERSIONS="
+1.15.1
 1.15.0
 1.14.4
 1.14.4-azs
