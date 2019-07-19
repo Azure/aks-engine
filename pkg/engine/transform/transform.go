@@ -138,11 +138,9 @@ func (t *Transformer) NormalizeForK8sVMASScalingUp(logger *logrus.Entry, templat
 	}
 
 	indexesToRemove := []int{}
-	if nsgIndex == -1 {
-		err := t.Translator.Errorf("Found no resources with type %s in the template. There should have been 1", nsgResourceType)
-		logger.Errorf(err.Error())
-		return err
-	}
+	if nsgIndex > 0 {
+		indexesToRemove = append(indexesToRemove, nsgIndex)
+	} 
 
 	if rtIndex == -1 {
 		logger.Infof("Found no resources with type %s in the template.", rtResourceType)
@@ -158,7 +156,6 @@ func (t *Transformer) NormalizeForK8sVMASScalingUp(logger *logrus.Entry, templat
 		indexesToRemove = append(indexesToRemove, vmasIndexes...)
 	}
 
-	indexesToRemove = append(indexesToRemove, nsgIndex)
 	templateMap[resourcesFieldName] = removeIndexesFromArray(resources, indexesToRemove)
 
 	return nil
@@ -384,13 +381,28 @@ func (t *Transformer) NormalizeResourcesForK8sMasterUpgrade(logger *logrus.Entry
 				if len(filteredResources) > 0 {
 					filteredResources = filteredResources[:len(filteredResources)-1]
 				}
-			} 
-		} else if resourceType == vnetResourceType {
-			if !ok {
-				logger.Warnf(fmt.Sprintf("Issue removing nsg dependency from vnet: %s", resourceName))
 			}
-			logger.Infoln(fmt.Sprintf("Removing all dependencies on vnet: %s", resourceName))
-			resourceMap[dependsOnFieldName] = []string{}
+		} else if resourceType == vnetResourceType {
+			filteredDependencies := []string{}
+			dependencies, ok := resourceMap[dependsOnFieldName].([]interface{})
+			if !ok {
+				continue
+			}
+
+			for dIndex := len(dependencies) - 1; dIndex >= 0; dIndex-- {
+				dependency := dependencies[dIndex].(string)
+				if !strings.Contains(dependency, nsgResourceType) {
+					filteredDependencies = append(filteredDependencies, dependency)
+				} else {
+					logger.Info(fmt.Sprintf("Removing nsg dependency from resource:%s", resourceName))
+				}
+			}
+
+			if len(filteredDependencies) > 0 {
+				resourceMap[dependsOnFieldName] = filteredDependencies
+			} else {
+				resourceMap[dependsOnFieldName] = []string{}
+			}
 		} else if resourceType == nsgResourceType {
 			logger.Infoln(fmt.Sprintf("Removing nsg resource: %s from template", resourceName))
 			{
