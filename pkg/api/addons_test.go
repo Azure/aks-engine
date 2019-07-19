@@ -1483,7 +1483,7 @@ func TestSetAddonsConfig(t *testing.T) {
 						"omsAgentVersion":       "1.10.0.1",
 						"dockerProviderVersion": "6.0.0-0",
 						"schema-versions":       "v1",
-						"clusterName":           "aks-engine-cluster-test",
+						"clusterName":           "aks-engine-cluster",
 					},
 					Containers: []KubernetesContainerSpec{
 						{
