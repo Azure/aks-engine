@@ -12936,6 +12936,101 @@ configureK8sCustomCloud() {
 
     set -x
 }
+
+configureAzureStackInterfaces() {
+    set +x
+
+    NETWORK_INTERFACES_FILE="/etc/kubernetes/network_interfaces.json"
+    AZURE_CNI_CONFIG_FILE="/etc/kubernetes/interfaces.json"
+    AZURESTACK_ENVIRONMENT_JSON_PATH="/etc/kubernetes/azurestackcloud.json"
+    SERVICE_MANAGEMENT_ENDPOINT=$(jq -r '.serviceManagementEndpoint' ${AZURESTACK_ENVIRONMENT_JSON_PATH})
+    ACTIVE_DIRECTORY_ENDPOINT=$(jq -r '.activeDirectoryEndpoint' ${AZURESTACK_ENVIRONMENT_JSON_PATH})
+    RESOURCE_MANAGER_ENDPOINT=$(jq -r '.resourceManagerEndpoint' ${AZURESTACK_ENVIRONMENT_JSON_PATH})
+
+    if [[ "${IDENTITY_SYSTEM,,}" == "adfs"  ]]; then
+        TOKEN_URL="${ACTIVE_DIRECTORY_ENDPOINT}adfs/oauth2/token"
+    else
+        TOKEN_URL="${ACTIVE_DIRECTORY_ENDPOINT}${TENANT_ID}/oauth2/token"
+    fi
+
+    echo "Generating token for Azure Resource Manager"
+    echo "------------------------------------------------------------------------"
+    echo "Parameters"
+    echo "------------------------------------------------------------------------"
+    echo "SERVICE_PRINCIPAL_CLIENT_ID:     ..."
+    echo "SERVICE_PRINCIPAL_CLIENT_SECRET: ..."
+    echo "SERVICE_MANAGEMENT_ENDPOINT:     $SERVICE_MANAGEMENT_ENDPOINT"
+    echo "ACTIVE_DIRECTORY_ENDPOINT:       $ACTIVE_DIRECTORY_ENDPOINT"
+    echo "TENANT_ID:                       $TENANT_ID"
+    echo "IDENTITY_SYSTEM:                 $IDENTITY_SYSTEM"
+    echo "TOKEN_URL:                       $TOKEN_URL"
+    echo "------------------------------------------------------------------------"
+
+    TOKEN=$(curl -s --retry 5 --retry-delay 10 --max-time 60 -f -X POST \
+        -H "Content-Type: application/x-www-form-urlencoded" \
+        -d "grant_type=client_credentials" \
+        -d "client_id=$SERVICE_PRINCIPAL_CLIENT_ID" \
+        --data-urlencode "client_secret=$SERVICE_PRINCIPAL_CLIENT_SECRET" \
+        --data-urlencode "resource=$SERVICE_MANAGEMENT_ENDPOINT" \
+        ${TOKEN_URL} | jq '.access_token' | xargs)
+
+    if [[ -z "$TOKEN" ]]; then
+        echo "Error generating token for Azure Resource Manager"
+        exit ${ERR_AZURE_STACK_GET_ARM_TOKEN}
+    fi
+
+    echo "Fetching network interface configuration for node"
+    echo "------------------------------------------------------------------------"
+    echo "Parameters"
+    echo "------------------------------------------------------------------------"
+    echo "RESOURCE_MANAGER_ENDPOINT: $RESOURCE_MANAGER_ENDPOINT"
+    echo "SUBSCRIPTION_ID:           $SUBSCRIPTION_ID"
+    echo "RESOURCE_GROUP:            $RESOURCE_GROUP"
+    echo "NETWORK_API_VERSION:       $NETWORK_API_VERSION"
+    echo "------------------------------------------------------------------------"
+
+    curl -s --retry 5 --retry-delay 10 --max-time 60 -f -X GET \
+        -H "Authorization: Bearer $TOKEN" \
+        -H "Content-Type: application/json" \
+        "${RESOURCE_MANAGER_ENDPOINT}subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RESOURCE_GROUP/providers/Microsoft.Network/networkInterfaces?api-version=$NETWORK_API_VERSION" > ${NETWORK_INTERFACES_FILE}
+
+    if [[ ! -s ${NETWORK_INTERFACES_FILE} ]]; then
+        echo "Error fetching network interface configuration for node"
+        exit ${ERR_AZURE_STACK_GET_NETWORK_CONFIGURATION}
+    fi
+
+    echo "Generating Azure CNI interface file"
+
+    mapfile -t local_interfaces < <(cat /sys/class/net/*/address | tr -d : | sed 's/.*/\U&/g')
+
+    SDN_INTERFACES=$(jq ".value | map(select(.properties.macAddress | inside(\"${local_interfaces[*]}\"))) | map(select((.properties.ipConfigurations | length) > 0))" ${NETWORK_INTERFACES_FILE})
+
+    AZURE_CNI_CONFIG=$(echo ${SDN_INTERFACES} | jq "{Interfaces: [.[] | {MacAddress: .properties.macAddress, IsPrimary: .properties.primary, IPSubnets: [{Prefix: .properties.ipConfigurations[0].properties.subnet.id, IPAddresses: .properties.ipConfigurations | [.[] | {Address: .properties.privateIPAddress, IsPrimary: .properties.primary}]}]}]}")
+
+    mapfile -t SUBNET_IDS < <(echo ${SDN_INTERFACES} | jq '[.[].properties.ipConfigurations[0].properties.subnet.id] | unique | .[]' -r)
+
+    for SUBNET_ID in "${SUBNET_IDS[@]}"; do
+        SUBNET_PREFIX=$(curl -s --retry 5 --retry-delay 10 --max-time 60 -f -X GET \
+            -H "Authorization: Bearer $TOKEN" \
+            -H "Content-Type: application/json" \
+            "${RESOURCE_MANAGER_ENDPOINT}${SUBNET_ID:1}?api-version=$NETWORK_API_VERSION" | \
+            jq '.properties.addressPrefix' -r)
+
+        if [[ -z "$SUBNET_PREFIX" ]]; then
+            echo "Error fetching the subnet address prefix for a subnet ID"
+            exit ${ERR_AZURE_STACK_GET_SUBNET_PREFIX}
+        fi
+
+        # shellcheck disable=SC2001
+        AZURE_CNI_CONFIG=$(echo ${AZURE_CNI_CONFIG} | sed "s|$SUBNET_ID|$SUBNET_PREFIX|g")
+    done
+
+    echo ${AZURE_CNI_CONFIG} > ${AZURE_CNI_CONFIG_FILE}
+
+    chmod 0444 ${AZURE_CNI_CONFIG_FILE}
+
+    set -x
+}
 `)
 
 func k8sCloudInitArtifactsCse_customcloudShBytes() ([]byte, error) {
@@ -13007,6 +13102,11 @@ ERR_CIS_ASSIGN_ROOT_PW=111 # Error assigning root password in CIS enforcement
 ERR_CIS_ASSIGN_FILE_PERMISSION=112 # Error assigning permission to a file in CIS enforcement
 ERR_CIS_COPY_FILE=113 # Error writing a file to disk for CIS enforcement
 ERR_CIS_APPLY_PASSWORD_CONFIG=115 # Error applying CIS-recommended passwd configuration
+
+# Azure Stack specific errors
+ERR_AZURE_STACK_GET_ARM_TOKEN=120 # Error generating a token to use with Azure Resource Manager
+ERR_AZURE_STACK_GET_NETWORK_CONFIGURATION=121 # Error fetching the network configuration for the node
+ERR_AZURE_STACK_GET_SUBNET_PREFIX=122 # Error fetching the subnet address prefix for a subnet ID
 
 OS=$(sort -r /etc/*-release | gawk 'match($0, /^(ID_LIKE=(coreos)|ID=(.*))$/, a) { print toupper(a[2] a[3]); exit }')
 UBUNTU_OS_NAME="UBUNTU"
@@ -13698,8 +13798,11 @@ fi
 
 configureK8s
 
-if [[ "${TARGET_ENVIRONMENT,,}" == "${AZURE_STACK_ENV}"  ]]; then
+if [[ "${TARGET_ENVIRONMENT,,}" == "${AZURE_STACK_ENV,,}"  ]]; then
     configureK8sCustomCloud
+    if [[ "${NETWORK_PLUGIN,,}" = "azure" ]]; then
+        configureAzureStackInterfaces
+    fi
 fi
 
 configureCNI
@@ -23496,7 +23599,30 @@ function Initialize-DataDirectories {
             New-Item -ItemType Directory -Path $_
         }
     }
-}`)
+}
+
+function Retry-Command
+{
+    Param(
+        [Parameter(Mandatory=$true)][ValidateNotNullOrEmpty()][string]
+        $Command,
+        [Parameter(Mandatory=$true)][ValidateNotNullOrEmpty()][hashtable]
+        $Args,
+        [Parameter(Mandatory=$true)][ValidateNotNullOrEmpty()][int]
+        $Retries,
+        [Parameter(Mandatory=$true)][ValidateNotNullOrEmpty()][int]
+        $RetryDelaySeconds
+    )
+
+    for ($i = 0; $i -lt $Retries; $i++) {
+        try {
+            return & $Command @Args
+        } catch {
+            Start-Sleep $RetryDelaySeconds
+        }
+    }
+}
+`)
 
 func k8sKuberneteswindowsfunctionsPs1Bytes() ([]byte, error) {
 	return _k8sKuberneteswindowsfunctionsPs1, nil
@@ -23559,6 +23685,10 @@ param(
 
     [parameter(Mandatory=$true)]
     [ValidateNotNullOrEmpty()]
+    $NetworkAPIVersion,
+
+    [parameter(Mandatory=$true)]
+    [ValidateNotNullOrEmpty()]
     $TargetEnvironment
 )
 
@@ -23584,7 +23714,7 @@ $global:DockerVersion = "{{WrapAsParameter "windowsDockerVersion"}}"
 
 ## VM configuration passed by Azure
 $global:WindowsTelemetryGUID = "{{WrapAsParameter "windowsTelemetryGUID"}}"
-{{if IsIdentitySystemADFS}}
+{{if eq GetIdentitySystem "adfs"}}
 $global:TenantId = "adfs"
 {{else}}
 $global:TenantId = "{{WrapAsVariable "tenantID"}}"
@@ -23754,6 +23884,19 @@ try
                                -KubeServiceCIDR $global:KubeServiceCIDR ` + "`" + `
                                -VNetCIDR $global:VNetCIDR ` + "`" + `
                                -TargetEnvironment $TargetEnvironment
+
+            if ($TargetEnvironment -ieq "AzureStackCloud") {
+                GenerateAzureStackCNIConfig ` + "`" + `
+                    -TenantId $global:TenantId ` + "`" + `
+                    -SubscriptionId $global:SubscriptionId ` + "`" + `
+                    -ResourceGroup $global:ResourceGroup ` + "`" + `
+                    -AADClientId $AADClientId ` + "`" + `
+                    -AADClientSecret $([System.Text.Encoding]::ASCII.GetString([System.Convert]::FromBase64String($AADClientSecret))) ` + "`" + `
+                    -NetworkAPIVersion $NetworkAPIVersion ` + "`" + `
+                    -AzureEnvironmentFilePath $([io.path]::Combine($global:KubeDir, "azurestackcloud.json")) ` + "`" + `
+                    -IdentitySystem "{{ GetIdentitySystem }}"
+            }
+
         } elseif ($global:NetworkPlugin -eq "kubenet") {
             Update-WinCNI -CNIPath $global:CNIPath
             Get-HnsPsm1 -HNSModule $global:HNSModule
@@ -24239,6 +24382,130 @@ Set-AzureCNIConfig
 
     $configJson | ConvertTo-Json -depth 20 | Out-File -encoding ASCII -filepath $fileName
 }
+
+function GetSubnetPrefix
+{
+    Param(
+        [Parameter(Mandatory=$true)][ValidateNotNullOrEmpty()][string] $Token,
+        [Parameter(Mandatory=$true)][ValidateNotNullOrEmpty()][string] $SubnetId,
+        [Parameter(Mandatory=$true)][ValidateNotNullOrEmpty()][string] $ResourceManagerEndpoint,
+        [Parameter(Mandatory=$true)][ValidateNotNullOrEmpty()][string] $NetworkAPIVersion
+    )
+
+    $uri = "$($ResourceManagerEndpoint)$($SubnetId)?api-version=$NetworkAPIVersion"
+    $headers = @{Authorization="Bearer $Token"}
+
+    $response = Retry-Command -Command "Invoke-RestMethod" -Args @{Uri=$uri; Method="Get"; ContentType="application/json"; Headers=$headers} -Retries 5 -RetryDelaySeconds 10
+
+    if(!$response) {
+        throw 'Error getting subnet prefix'
+    }
+
+    $response.properties.addressPrefix
+}
+
+function GenerateAzureStackCNIConfig
+{
+    Param(
+        [Parameter(Mandatory=$true)][ValidateNotNullOrEmpty()][string] $TenantId,
+        [Parameter(Mandatory=$true)][ValidateNotNullOrEmpty()][string] $SubscriptionId,
+        [Parameter(Mandatory=$true)][ValidateNotNullOrEmpty()][string] $AADClientId,
+        [Parameter(Mandatory=$true)][ValidateNotNullOrEmpty()][string] $AADClientSecret,
+        [Parameter(Mandatory=$true)][ValidateNotNullOrEmpty()][string] $ResourceGroup,
+        [Parameter(Mandatory=$true)][ValidateNotNullOrEmpty()][string] $NetworkAPIVersion,
+        [Parameter(Mandatory=$true)][ValidateNotNullOrEmpty()][string] $AzureEnvironmentFilePath,
+        [Parameter(Mandatory=$true)][ValidateNotNullOrEmpty()][string] $IdentitySystem
+    )
+
+    $networkInterfacesFile = "C:\k\network-interfaces.json"
+    $azureCNIConfigFile = "C:\k\interfaces.json"
+    $azureEnvironment = Get-Content $AzureEnvironmentFilePath | ConvertFrom-Json
+
+    Write-Log "------------------------------------------------------------------------"
+    Write-Log "Parameters"
+    Write-Log "------------------------------------------------------------------------"
+    Write-Log "TenantId:                  $TenantId"
+    Write-Log "SubscriptionId:            $SubscriptionId"
+    Write-Log "AADClientId:               ..."
+    Write-Log "AADClientSecret:           ..."
+    Write-Log "ResourceGroup:             $ResourceGroup"
+    Write-Log "NetworkAPIVersion:         $NetworkAPIVersion"
+    Write-Log "ServiceManagementEndpoint: $($azureEnvironment.serviceManagementEndpoint)"
+    Write-Log "ActiveDirectoryEndpoint:   $($azureEnvironment.activeDirectoryEndpoint)"
+    Write-Log "ResourceManagerEndpoint:   $($azureEnvironment.resourceManagerEndpoint)"
+    Write-Log "------------------------------------------------------------------------"
+    Write-Log "Variables"
+    Write-Log "------------------------------------------------------------------------"
+    Write-Log "azureCNIConfigFile: $azureCNIConfigFile"
+    Write-Log "networkInterfacesFile: $networkInterfacesFile"
+    Write-Log "------------------------------------------------------------------------"
+
+    Write-Log "Generating token for Azure Resource Manager"
+
+    $tokenURL = ""
+    if($IdentitySystem -ieq "adfs") {
+        $tokenURL = "$($azureEnvironment.activeDirectoryEndpoint)adfs/oauth2/token"
+    } else {
+        $tokenURL = "$($azureEnvironment.activeDirectoryEndpoint)$TenantId/oauth2/token"
+    }
+
+    Add-Type -AssemblyName System.Web
+    $encodedSecret = [System.Web.HttpUtility]::UrlEncode($AADClientSecret)
+
+    $body = "grant_type=client_credentials&client_id=$AADClientId&client_secret=$encodedSecret&resource=$($azureEnvironment.serviceManagementEndpoint)"
+    $args = @{Uri=$tokenURL; Method="Post"; Body=$body; ContentType='application/x-www-form-urlencoded'}
+    $tokenResponse = Retry-Command -Command "Invoke-RestMethod" -Args $args -Retries 5 -RetryDelaySeconds 10
+
+    if(!$tokenResponse) {
+        throw 'Error generating token for Azure Resource Manager'
+    }
+
+    $token = $tokenResponse | Select-Object -ExpandProperty access_token
+
+    Write-Log "Fetching network interface configuration for node"
+
+    $interfacesUri = "$($azureEnvironment.resourceManagerEndpoint)subscriptions/$SubscriptionId/resourceGroups/$ResourceGroup/providers/Microsoft.Network/networkInterfaces?api-version=$NetworkAPIVersion"
+    $headers = @{Authorization="Bearer $token"}
+    $args = @{Uri=$interfacesUri; Method="Get"; ContentType="application/json"; Headers=$headers; OutFile=$networkInterfacesFile}
+    Retry-Command -Command "Invoke-RestMethod" -Args $args -Retries 5 -RetryDelaySeconds 10
+
+    if(!$(Test-Path $networkInterfacesFile)) {
+        throw 'Error fetching network interface configuration for node'
+    }
+
+    Write-Log "Generating Azure CNI interface file"
+
+    $localNics = Get-NetAdapter | Select-Object -ExpandProperty MacAddress | ForEach-Object {$_ -replace "-",""}
+
+    $sdnNics = Get-Content $networkInterfacesFile ` + "`" + `
+        | ConvertFrom-Json ` + "`" + `
+        | Select-Object -ExpandProperty value ` + "`" + `
+        | Where-Object { $localNics.Contains($_.properties.macAddress) } ` + "`" + `
+        | Where-Object { $_.properties.ipConfigurations.Count -gt 0}
+
+    $interfaces = @{
+        Interfaces = @( $sdnNics | ForEach-Object { @{
+            MacAddress = $_.properties.macAddress
+            IsPrimary = $_.properties.primary
+            IPSubnets = @(@{
+                Prefix = GetSubnetPrefix ` + "`" + `
+                            -Token $token ` + "`" + `
+                            -SubnetId $_.properties.ipConfigurations[0].properties.subnet.id ` + "`" + `
+                            -NetworkAPIVersion $NetworkAPIVersion ` + "`" + `
+                            -ResourceManagerEndpoint $($azureEnvironment.resourceManagerEndpoint)
+                IPAddresses = $_.properties.ipConfigurations | ForEach-Object { @{
+                    Address = $_.properties.privateIPAddress
+                    IsPrimary = $_.properties.primary
+                }}
+            })
+        }})
+    }
+
+    ConvertTo-Json $interfaces -Depth 6 | Out-File -FilePath $azureCNIConfigFile -Encoding ascii
+
+    Set-ItemProperty -Path $azureCNIConfigFile -Name IsReadOnly -Value $true
+}
+
 `)
 
 func k8sWindowsazurecnifuncPs1Bytes() ([]byte, error) {
@@ -24925,6 +25192,8 @@ if (` + "`" + `$hnsNetwork)
 
 # Restart Kubeproxy, which would wait, until the network is created
 Restart-Service Kubeproxy
+
+` + "`" + `$env:AZURE_ENVIRONMENT_FILEPATH="c:\k\azurestackcloud.json"
 
 $KubeletCommandLine
 

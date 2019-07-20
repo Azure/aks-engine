@@ -87,3 +87,127 @@ Set-AzureCNIConfig
 
     $configJson | ConvertTo-Json -depth 20 | Out-File -encoding ASCII -filepath $fileName
 }
+
+function GetSubnetPrefix
+{
+    Param(
+        [Parameter(Mandatory=$true)][ValidateNotNullOrEmpty()][string] $Token,
+        [Parameter(Mandatory=$true)][ValidateNotNullOrEmpty()][string] $SubnetId,
+        [Parameter(Mandatory=$true)][ValidateNotNullOrEmpty()][string] $ResourceManagerEndpoint,
+        [Parameter(Mandatory=$true)][ValidateNotNullOrEmpty()][string] $NetworkAPIVersion
+    )
+
+    $uri = "$($ResourceManagerEndpoint)$($SubnetId)?api-version=$NetworkAPIVersion"
+    $headers = @{Authorization="Bearer $Token"}
+
+    $response = Retry-Command -Command "Invoke-RestMethod" -Args @{Uri=$uri; Method="Get"; ContentType="application/json"; Headers=$headers} -Retries 5 -RetryDelaySeconds 10
+
+    if(!$response) {
+        throw 'Error getting subnet prefix'
+    }
+
+    $response.properties.addressPrefix
+}
+
+function GenerateAzureStackCNIConfig
+{
+    Param(
+        [Parameter(Mandatory=$true)][ValidateNotNullOrEmpty()][string] $TenantId,
+        [Parameter(Mandatory=$true)][ValidateNotNullOrEmpty()][string] $SubscriptionId,
+        [Parameter(Mandatory=$true)][ValidateNotNullOrEmpty()][string] $AADClientId,
+        [Parameter(Mandatory=$true)][ValidateNotNullOrEmpty()][string] $AADClientSecret,
+        [Parameter(Mandatory=$true)][ValidateNotNullOrEmpty()][string] $ResourceGroup,
+        [Parameter(Mandatory=$true)][ValidateNotNullOrEmpty()][string] $NetworkAPIVersion,
+        [Parameter(Mandatory=$true)][ValidateNotNullOrEmpty()][string] $AzureEnvironmentFilePath,
+        [Parameter(Mandatory=$true)][ValidateNotNullOrEmpty()][string] $IdentitySystem
+    )
+
+    $networkInterfacesFile = "C:\k\network-interfaces.json"
+    $azureCNIConfigFile = "C:\k\interfaces.json"
+    $azureEnvironment = Get-Content $AzureEnvironmentFilePath | ConvertFrom-Json
+
+    Write-Log "------------------------------------------------------------------------"
+    Write-Log "Parameters"
+    Write-Log "------------------------------------------------------------------------"
+    Write-Log "TenantId:                  $TenantId"
+    Write-Log "SubscriptionId:            $SubscriptionId"
+    Write-Log "AADClientId:               ..."
+    Write-Log "AADClientSecret:           ..."
+    Write-Log "ResourceGroup:             $ResourceGroup"
+    Write-Log "NetworkAPIVersion:         $NetworkAPIVersion"
+    Write-Log "ServiceManagementEndpoint: $($azureEnvironment.serviceManagementEndpoint)"
+    Write-Log "ActiveDirectoryEndpoint:   $($azureEnvironment.activeDirectoryEndpoint)"
+    Write-Log "ResourceManagerEndpoint:   $($azureEnvironment.resourceManagerEndpoint)"
+    Write-Log "------------------------------------------------------------------------"
+    Write-Log "Variables"
+    Write-Log "------------------------------------------------------------------------"
+    Write-Log "azureCNIConfigFile: $azureCNIConfigFile"
+    Write-Log "networkInterfacesFile: $networkInterfacesFile"
+    Write-Log "------------------------------------------------------------------------"
+
+    Write-Log "Generating token for Azure Resource Manager"
+
+    $tokenURL = ""
+    if($IdentitySystem -ieq "adfs") {
+        $tokenURL = "$($azureEnvironment.activeDirectoryEndpoint)adfs/oauth2/token"
+    } else {
+        $tokenURL = "$($azureEnvironment.activeDirectoryEndpoint)$TenantId/oauth2/token"
+    }
+
+    Add-Type -AssemblyName System.Web
+    $encodedSecret = [System.Web.HttpUtility]::UrlEncode($AADClientSecret)
+
+    $body = "grant_type=client_credentials&client_id=$AADClientId&client_secret=$encodedSecret&resource=$($azureEnvironment.serviceManagementEndpoint)"
+    $args = @{Uri=$tokenURL; Method="Post"; Body=$body; ContentType='application/x-www-form-urlencoded'}
+    $tokenResponse = Retry-Command -Command "Invoke-RestMethod" -Args $args -Retries 5 -RetryDelaySeconds 10
+
+    if(!$tokenResponse) {
+        throw 'Error generating token for Azure Resource Manager'
+    }
+
+    $token = $tokenResponse | Select-Object -ExpandProperty access_token
+
+    Write-Log "Fetching network interface configuration for node"
+
+    $interfacesUri = "$($azureEnvironment.resourceManagerEndpoint)subscriptions/$SubscriptionId/resourceGroups/$ResourceGroup/providers/Microsoft.Network/networkInterfaces?api-version=$NetworkAPIVersion"
+    $headers = @{Authorization="Bearer $token"}
+    $args = @{Uri=$interfacesUri; Method="Get"; ContentType="application/json"; Headers=$headers; OutFile=$networkInterfacesFile}
+    Retry-Command -Command "Invoke-RestMethod" -Args $args -Retries 5 -RetryDelaySeconds 10
+
+    if(!$(Test-Path $networkInterfacesFile)) {
+        throw 'Error fetching network interface configuration for node'
+    }
+
+    Write-Log "Generating Azure CNI interface file"
+
+    $localNics = Get-NetAdapter | Select-Object -ExpandProperty MacAddress | ForEach-Object {$_ -replace "-",""}
+
+    $sdnNics = Get-Content $networkInterfacesFile `
+        | ConvertFrom-Json `
+        | Select-Object -ExpandProperty value `
+        | Where-Object { $localNics.Contains($_.properties.macAddress) } `
+        | Where-Object { $_.properties.ipConfigurations.Count -gt 0}
+
+    $interfaces = @{
+        Interfaces = @( $sdnNics | ForEach-Object { @{
+            MacAddress = $_.properties.macAddress
+            IsPrimary = $_.properties.primary
+            IPSubnets = @(@{
+                Prefix = GetSubnetPrefix `
+                            -Token $token `
+                            -SubnetId $_.properties.ipConfigurations[0].properties.subnet.id `
+                            -NetworkAPIVersion $NetworkAPIVersion `
+                            -ResourceManagerEndpoint $($azureEnvironment.resourceManagerEndpoint)
+                IPAddresses = $_.properties.ipConfigurations | ForEach-Object { @{
+                    Address = $_.properties.privateIPAddress
+                    IsPrimary = $_.properties.primary
+                }}
+            })
+        }})
+    }
+
+    ConvertTo-Json $interfaces -Depth 6 | Out-File -FilePath $azureCNIConfigFile -Encoding ascii
+
+    Set-ItemProperty -Path $azureCNIConfigFile -Name IsReadOnly -Value $true
+}
+
