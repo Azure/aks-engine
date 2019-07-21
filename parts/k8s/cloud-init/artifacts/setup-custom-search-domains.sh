@@ -17,7 +17,7 @@ function updatevariables() {
 }
 
 function createrealmjoinscript() {
-  cat /opt/azure/containers/setup-custom-search-domains.sh | grep 'realm join' > /opt/azure/containers/realmjoin.sh
+  grep 'realm join' /opt/azure/containers/setup-custom-search-domains.sh > /opt/azure/containers/realmjoin.sh
   chmod +x /opt/azure/containers/realmjoin.sh
   bash -x /opt/azure/containers/realmjoin.sh
 }
