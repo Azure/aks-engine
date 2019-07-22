@@ -808,7 +808,7 @@ func TestSupportPodPidsLimitFeatureGate(t *testing.T) {
 			expectedSupportPodPidsLimitFeatureGate: false,
 		},
 		{
-			name: "--pod-max-pids defined",
+			name: "--pod-max-pids defined, no SupportPodPidsLimit defined",
 			cs: &ContainerService{
 				Properties: &Properties{
 					OrchestratorProfile: &OrchestratorProfile{
@@ -972,6 +972,25 @@ func TestSupportPodPidsLimitFeatureGate(t *testing.T) {
 			expectedSupportPodPidsLimitFeatureGate: true,
 		},
 		{
+			name: "--pod-max-pids defined, no SupportPodPidsLimit defined, upgrade scenario",
+			cs: &ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorType:    Kubernetes,
+						OrchestratorVersion: "1.14.0",
+						KubernetesConfig: &KubernetesConfig{
+							KubeletConfig: map[string]string{
+								"--pod-max-pids": "-100",
+							},
+						},
+					},
+				},
+			},
+			isUpgrade:                              true,
+			expectedPodMaxPids:                     "-1",
+			expectedSupportPodPidsLimitFeatureGate: false,
+		},
+		{
 			name: "--pod-max-pids defined, SupportPodPidsLimit=false, upgrade scenario",
 			cs: &ContainerService{
 				Properties: &Properties{
@@ -1011,6 +1030,26 @@ func TestSupportPodPidsLimitFeatureGate(t *testing.T) {
 			expectedPodMaxPids:                     "100",
 			expectedSupportPodPidsLimitFeatureGate: true,
 		},
+		{
+			name: "--pod-max-pids defined as 100a, SupportPodPidsLimit=true, upgrade scenario",
+			cs: &ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorType:    Kubernetes,
+						OrchestratorVersion: "1.14.0",
+						KubernetesConfig: &KubernetesConfig{
+							KubeletConfig: map[string]string{
+								"--pod-max-pids":  "100a",
+								"--feature-gates": "SupportPodPidsLimit=true",
+							},
+						},
+					},
+				},
+			},
+			isUpgrade:                              true,
+			expectedPodMaxPids:                     "-1",
+			expectedSupportPodPidsLimitFeatureGate: true,
+		},
 	}
 
 	for _, c := range cases {
@@ -1023,6 +1062,853 @@ func TestSupportPodPidsLimitFeatureGate(t *testing.T) {
 				t.Fatalf("expected --pod-max-pids be equal to %s, got %s", c.expectedPodMaxPids, podMaxPids)
 			}
 			featureGates := c.cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig["--feature-gates"]
+			hasSupportPodPidsLimitFeatureGate := strings.Contains(featureGates, "SupportPodPidsLimit=true")
+			if hasSupportPodPidsLimitFeatureGate != c.expectedSupportPodPidsLimitFeatureGate {
+				t.Fatalf("expected SupportPodPidsLimit=true presence in --feature gates to be %t, got %t", c.expectedSupportPodPidsLimitFeatureGate, hasSupportPodPidsLimitFeatureGate)
+			}
+		})
+	}
+
+}
+
+func TestSupportPodPidsLimitFeatureGateInMasterProfile(t *testing.T) {
+	cases := []struct {
+		name                                   string
+		cs                                     *ContainerService
+		isUpgrade                              bool
+		expectedPodMaxPids                     string
+		expectedSupportPodPidsLimitFeatureGate bool
+	}{
+		{
+			name: "no --pod-max-pids defined",
+			cs: &ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorType:    Kubernetes,
+						OrchestratorVersion: "1.14.0",
+						KubernetesConfig: &KubernetesConfig{
+							KubeletConfig: map[string]string{},
+						},
+					},
+					MasterProfile: &MasterProfile{
+						KubernetesConfig: &KubernetesConfig{},
+					},
+				},
+			},
+			expectedPodMaxPids:                     "-1",
+			expectedSupportPodPidsLimitFeatureGate: false,
+		},
+		{
+			name: "--pod-max-pids defined, no SupportPodPidsLimit defined",
+			cs: &ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorType:    Kubernetes,
+						OrchestratorVersion: "1.14.0",
+						KubernetesConfig: &KubernetesConfig{
+							KubeletConfig: map[string]string{},
+						},
+					},
+					MasterProfile: &MasterProfile{
+						KubernetesConfig: &KubernetesConfig{
+							KubeletConfig: map[string]string{
+								"--pod-max-pids": "100",
+							},
+						},
+					},
+				},
+			},
+			expectedPodMaxPids:                     "100",
+			expectedSupportPodPidsLimitFeatureGate: false,
+		},
+		{
+			name: "no --pod-max-pids defined, SupportPodPidsLimit=false",
+			cs: &ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorType:    Kubernetes,
+						OrchestratorVersion: "1.14.0",
+						KubernetesConfig: &KubernetesConfig{
+							KubeletConfig: map[string]string{},
+						},
+					},
+					MasterProfile: &MasterProfile{
+						KubernetesConfig: &KubernetesConfig{
+							KubeletConfig: map[string]string{
+								"--feature-gates": "SupportPodPidsLimit=false",
+							},
+						},
+					},
+				},
+			},
+			expectedPodMaxPids:                     "-1",
+			expectedSupportPodPidsLimitFeatureGate: false,
+		},
+		{
+			name: "no --pod-max-pids defined, SupportPodPidsLimit=true",
+			cs: &ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorType:    Kubernetes,
+						OrchestratorVersion: "1.14.0",
+						KubernetesConfig: &KubernetesConfig{
+							KubeletConfig: map[string]string{},
+						},
+					},
+					MasterProfile: &MasterProfile{
+						KubernetesConfig: &KubernetesConfig{
+							KubeletConfig: map[string]string{
+								"--feature-gates": "SupportPodPidsLimit=true",
+							},
+						},
+					},
+				},
+			},
+			expectedPodMaxPids:                     "-1",
+			expectedSupportPodPidsLimitFeatureGate: true,
+		},
+		{
+			name: "--pod-max-pids defined, SupportPodPidsLimit=false",
+			cs: &ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorType:    Kubernetes,
+						OrchestratorVersion: "1.14.0",
+						KubernetesConfig: &KubernetesConfig{
+							KubeletConfig: map[string]string{},
+						},
+					},
+					MasterProfile: &MasterProfile{
+						KubernetesConfig: &KubernetesConfig{
+							KubeletConfig: map[string]string{
+								"--pod-max-pids":  "100",
+								"--feature-gates": "SupportPodPidsLimit=false",
+							},
+						},
+					},
+				},
+			},
+			expectedPodMaxPids:                     "100",
+			expectedSupportPodPidsLimitFeatureGate: false,
+		},
+		{
+			name: "--pod-max-pids defined, SupportPodPidsLimit=true",
+			cs: &ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorType:    Kubernetes,
+						OrchestratorVersion: "1.14.0",
+						KubernetesConfig: &KubernetesConfig{
+							KubeletConfig: map[string]string{},
+						},
+					},
+					MasterProfile: &MasterProfile{
+						KubernetesConfig: &KubernetesConfig{
+							KubeletConfig: map[string]string{
+								"--pod-max-pids":  "100",
+								"--feature-gates": "SupportPodPidsLimit=true",
+							},
+						},
+					},
+				},
+			},
+			expectedPodMaxPids:                     "100",
+			expectedSupportPodPidsLimitFeatureGate: true,
+		},
+		{
+			name: "no --pod-max-pids defined, upgrade scenario",
+			cs: &ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorType:    Kubernetes,
+						OrchestratorVersion: "1.14.0",
+						KubernetesConfig: &KubernetesConfig{
+							KubeletConfig: map[string]string{},
+						},
+					},
+					MasterProfile: &MasterProfile{
+						KubernetesConfig: &KubernetesConfig{},
+					},
+				},
+			},
+			isUpgrade:                              true,
+			expectedPodMaxPids:                     "-1",
+			expectedSupportPodPidsLimitFeatureGate: false,
+		},
+		{
+			name: "no --pod-max-pids defined, SupportPodPidsLimit=false, upgrade scenario",
+			cs: &ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorType:    Kubernetes,
+						OrchestratorVersion: "1.14.0",
+						KubernetesConfig: &KubernetesConfig{
+							KubeletConfig: map[string]string{},
+						},
+					},
+					MasterProfile: &MasterProfile{
+						KubernetesConfig: &KubernetesConfig{
+							KubeletConfig: map[string]string{
+								"--feature-gates": "SupportPodPidsLimit=false",
+							},
+						},
+					},
+				},
+			},
+			isUpgrade:                              true,
+			expectedPodMaxPids:                     "-1",
+			expectedSupportPodPidsLimitFeatureGate: false,
+		},
+		{
+			name: "no --pod-max-pids defined, SupportPodPidsLimit=true, upgrade scenario",
+			cs: &ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorType:    Kubernetes,
+						OrchestratorVersion: "1.14.0",
+						KubernetesConfig: &KubernetesConfig{
+							KubeletConfig: map[string]string{},
+						},
+					},
+					MasterProfile: &MasterProfile{
+						KubernetesConfig: &KubernetesConfig{
+							KubeletConfig: map[string]string{
+								"--feature-gates": "SupportPodPidsLimit=true",
+							},
+						},
+					},
+				},
+			},
+			isUpgrade:                              true,
+			expectedPodMaxPids:                     "-1",
+			expectedSupportPodPidsLimitFeatureGate: true,
+		},
+		{
+			name: "--pod-max-pids defined as 100, no SupportPodPidsLimit defined, upgrade scenario",
+			cs: &ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorType:    Kubernetes,
+						OrchestratorVersion: "1.14.0",
+						KubernetesConfig: &KubernetesConfig{
+							KubeletConfig: map[string]string{},
+						},
+					},
+					MasterProfile: &MasterProfile{
+						KubernetesConfig: &KubernetesConfig{
+							KubeletConfig: map[string]string{
+								"--pod-max-pids": "100",
+							},
+						},
+					},
+				},
+			},
+			isUpgrade:                              true,
+			expectedPodMaxPids:                     "-1",
+			expectedSupportPodPidsLimitFeatureGate: false,
+		},
+		{
+			name: "--pod-max-pids defined as -100, no SupportPodPidsLimit defined, upgrade scenario",
+			cs: &ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorType:    Kubernetes,
+						OrchestratorVersion: "1.14.0",
+						KubernetesConfig: &KubernetesConfig{
+							KubeletConfig: map[string]string{},
+						},
+					},
+					MasterProfile: &MasterProfile{
+						KubernetesConfig: &KubernetesConfig{
+							KubeletConfig: map[string]string{
+								"--pod-max-pids": "-100",
+							},
+						},
+					},
+				},
+			},
+			isUpgrade:                              true,
+			expectedPodMaxPids:                     "-1",
+			expectedSupportPodPidsLimitFeatureGate: false,
+		},
+		{
+			name: "--pod-max-pids defined, SupportPodPidsLimit=false, upgrade scenario",
+			cs: &ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorType:    Kubernetes,
+						OrchestratorVersion: "1.14.0",
+						KubernetesConfig: &KubernetesConfig{
+							KubeletConfig: map[string]string{},
+						},
+					},
+					MasterProfile: &MasterProfile{
+						KubernetesConfig: &KubernetesConfig{
+							KubeletConfig: map[string]string{
+								"--pod-max-pids":  "100",
+								"--feature-gates": "SupportPodPidsLimit=false",
+							},
+						},
+					},
+				},
+			},
+			isUpgrade:                              true,
+			expectedPodMaxPids:                     "-1",
+			expectedSupportPodPidsLimitFeatureGate: false,
+		},
+		{
+			name: "--pod-max-pids defined as 100, SupportPodPidsLimit=true, upgrade scenario",
+			cs: &ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorType:    Kubernetes,
+						OrchestratorVersion: "1.14.0",
+						KubernetesConfig: &KubernetesConfig{
+							KubeletConfig: map[string]string{},
+						},
+					},
+					MasterProfile: &MasterProfile{
+						KubernetesConfig: &KubernetesConfig{
+							KubeletConfig: map[string]string{
+								"--pod-max-pids":  "100",
+								"--feature-gates": "SupportPodPidsLimit=true",
+							},
+						},
+					},
+				},
+			},
+			isUpgrade:                              true,
+			expectedPodMaxPids:                     "100",
+			expectedSupportPodPidsLimitFeatureGate: true,
+		},
+		{
+			name: "--pod-max-pids defined as 0, SupportPodPidsLimit=true, upgrade scenario",
+			cs: &ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorType:    Kubernetes,
+						OrchestratorVersion: "1.14.0",
+						KubernetesConfig: &KubernetesConfig{
+							KubeletConfig: map[string]string{},
+						},
+					},
+					MasterProfile: &MasterProfile{
+						KubernetesConfig: &KubernetesConfig{
+							KubeletConfig: map[string]string{
+								"--pod-max-pids":  "0",
+								"--feature-gates": "SupportPodPidsLimit=true",
+							},
+						},
+					},
+				},
+			},
+			isUpgrade:                              true,
+			expectedPodMaxPids:                     "-1",
+			expectedSupportPodPidsLimitFeatureGate: true,
+		},
+		{
+			name: "--pod-max-pids defined as -1, SupportPodPidsLimit=true, upgrade scenario",
+			cs: &ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorType:    Kubernetes,
+						OrchestratorVersion: "1.14.0",
+						KubernetesConfig: &KubernetesConfig{
+							KubeletConfig: map[string]string{},
+						},
+					},
+					MasterProfile: &MasterProfile{
+						KubernetesConfig: &KubernetesConfig{
+							KubeletConfig: map[string]string{
+								"--pod-max-pids":  "-1",
+								"--feature-gates": "SupportPodPidsLimit=true",
+							},
+						},
+					},
+				},
+			},
+			isUpgrade:                              true,
+			expectedPodMaxPids:                     "-1",
+			expectedSupportPodPidsLimitFeatureGate: true,
+		},
+		{
+			name: "--pod-max-pids defined as 100a, SupportPodPidsLimit=true, upgrade scenario",
+			cs: &ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorType:    Kubernetes,
+						OrchestratorVersion: "1.14.0",
+						KubernetesConfig: &KubernetesConfig{
+							KubeletConfig: map[string]string{},
+						},
+					},
+					MasterProfile: &MasterProfile{
+						KubernetesConfig: &KubernetesConfig{
+							KubeletConfig: map[string]string{
+								"--pod-max-pids":  "100a",
+								"--feature-gates": "SupportPodPidsLimit=true",
+							},
+						},
+					},
+				},
+			},
+			isUpgrade:                              true,
+			expectedPodMaxPids:                     "-1",
+			expectedSupportPodPidsLimitFeatureGate: true,
+		},
+	}
+
+	for _, c := range cases {
+		c := c
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+			c.cs.setKubeletConfig(c.isUpgrade)
+			podMaxPids := c.cs.Properties.MasterProfile.KubernetesConfig.KubeletConfig["--pod-max-pids"]
+			if podMaxPids != c.expectedPodMaxPids {
+				t.Fatalf("expected --pod-max-pids be equal to %s, got %s", c.expectedPodMaxPids, podMaxPids)
+			}
+			featureGates := c.cs.Properties.MasterProfile.KubernetesConfig.KubeletConfig["--feature-gates"]
+			hasSupportPodPidsLimitFeatureGate := strings.Contains(featureGates, "SupportPodPidsLimit=true")
+			if hasSupportPodPidsLimitFeatureGate != c.expectedSupportPodPidsLimitFeatureGate {
+				t.Fatalf("expected SupportPodPidsLimit=true presence in --feature gates to be %t, got %t", c.expectedSupportPodPidsLimitFeatureGate, hasSupportPodPidsLimitFeatureGate)
+			}
+		})
+	}
+
+}
+
+func TestSupportPodPidsLimitFeatureGateInAgentPool(t *testing.T) {
+	cases := []struct {
+		name                                   string
+		cs                                     *ContainerService
+		isUpgrade                              bool
+		expectedPodMaxPids                     string
+		expectedSupportPodPidsLimitFeatureGate bool
+	}{
+		{
+			name: "no --pod-max-pids defined",
+			cs: &ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorType:    Kubernetes,
+						OrchestratorVersion: "1.14.0",
+						KubernetesConfig: &KubernetesConfig{
+							KubeletConfig: map[string]string{},
+						},
+					},
+					AgentPoolProfiles: []*AgentPoolProfile{
+						{
+							KubernetesConfig: &KubernetesConfig{
+								KubeletConfig: map[string]string{},
+							},
+						},
+					},
+				},
+			},
+			expectedPodMaxPids:                     "-1",
+			expectedSupportPodPidsLimitFeatureGate: false,
+		},
+		{
+			name: "--pod-max-pids defined, no SupportPodPidsLimit defined",
+			cs: &ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorType:    Kubernetes,
+						OrchestratorVersion: "1.14.0",
+						KubernetesConfig: &KubernetesConfig{
+							KubeletConfig: map[string]string{},
+						},
+					},
+					AgentPoolProfiles: []*AgentPoolProfile{
+						{
+							KubernetesConfig: &KubernetesConfig{
+								KubeletConfig: map[string]string{
+									"--pod-max-pids": "100",
+								},
+							},
+						},
+					},
+				},
+			},
+			expectedPodMaxPids:                     "100",
+			expectedSupportPodPidsLimitFeatureGate: false,
+		},
+		{
+			name: "no --pod-max-pids defined, SupportPodPidsLimit=false",
+			cs: &ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorType:    Kubernetes,
+						OrchestratorVersion: "1.14.0",
+						KubernetesConfig: &KubernetesConfig{
+							KubeletConfig: map[string]string{},
+						},
+					},
+					AgentPoolProfiles: []*AgentPoolProfile{
+						{
+							KubernetesConfig: &KubernetesConfig{
+								KubeletConfig: map[string]string{
+									"--feature-gates": "SupportPodPidsLimit=false",
+								},
+							},
+						},
+					},
+				},
+			},
+			expectedPodMaxPids:                     "-1",
+			expectedSupportPodPidsLimitFeatureGate: false,
+		},
+		{
+			name: "no --pod-max-pids defined, SupportPodPidsLimit=true",
+			cs: &ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorType:    Kubernetes,
+						OrchestratorVersion: "1.14.0",
+						KubernetesConfig: &KubernetesConfig{
+							KubeletConfig: map[string]string{},
+						},
+					},
+					AgentPoolProfiles: []*AgentPoolProfile{
+						{
+							KubernetesConfig: &KubernetesConfig{
+								KubeletConfig: map[string]string{
+									"--feature-gates": "SupportPodPidsLimit=true",
+								},
+							},
+						},
+					},
+				},
+			},
+			expectedPodMaxPids:                     "-1",
+			expectedSupportPodPidsLimitFeatureGate: true,
+		},
+		{
+			name: "--pod-max-pids defined, SupportPodPidsLimit=false",
+			cs: &ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorType:    Kubernetes,
+						OrchestratorVersion: "1.14.0",
+						KubernetesConfig: &KubernetesConfig{
+							KubeletConfig: map[string]string{},
+						},
+					},
+					AgentPoolProfiles: []*AgentPoolProfile{
+						{
+							KubernetesConfig: &KubernetesConfig{
+								KubeletConfig: map[string]string{
+									"--pod-max-pids":  "100",
+									"--feature-gates": "SupportPodPidsLimit=false",
+								},
+							},
+						},
+					},
+				},
+			},
+			expectedPodMaxPids:                     "100",
+			expectedSupportPodPidsLimitFeatureGate: false,
+		},
+		{
+			name: "--pod-max-pids defined, SupportPodPidsLimit=true",
+			cs: &ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorType:    Kubernetes,
+						OrchestratorVersion: "1.14.0",
+						KubernetesConfig: &KubernetesConfig{
+							KubeletConfig: map[string]string{},
+						},
+					},
+					AgentPoolProfiles: []*AgentPoolProfile{
+						{
+							KubernetesConfig: &KubernetesConfig{
+								KubeletConfig: map[string]string{
+									"--pod-max-pids":  "100",
+									"--feature-gates": "SupportPodPidsLimit=true",
+								},
+							},
+						},
+					},
+				},
+			},
+			expectedPodMaxPids:                     "100",
+			expectedSupportPodPidsLimitFeatureGate: true,
+		},
+		{
+			name: "no --pod-max-pids defined, upgrade scenario",
+			cs: &ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorType:    Kubernetes,
+						OrchestratorVersion: "1.14.0",
+						KubernetesConfig: &KubernetesConfig{
+							KubeletConfig: map[string]string{},
+						},
+					},
+					AgentPoolProfiles: []*AgentPoolProfile{
+						{
+							KubernetesConfig: &KubernetesConfig{
+								KubeletConfig: map[string]string{},
+							},
+						},
+					},
+				},
+			},
+			isUpgrade:                              true,
+			expectedPodMaxPids:                     "-1",
+			expectedSupportPodPidsLimitFeatureGate: false,
+		},
+		{
+			name: "no --pod-max-pids defined, SupportPodPidsLimit=false, upgrade scenario",
+			cs: &ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorType:    Kubernetes,
+						OrchestratorVersion: "1.14.0",
+						KubernetesConfig: &KubernetesConfig{
+							KubeletConfig: map[string]string{},
+						},
+					},
+					AgentPoolProfiles: []*AgentPoolProfile{
+						{
+							KubernetesConfig: &KubernetesConfig{
+								KubeletConfig: map[string]string{
+									"--feature-gates": "SupportPodPidsLimit=false",
+								},
+							},
+						},
+					},
+				},
+			},
+			isUpgrade:                              true,
+			expectedPodMaxPids:                     "-1",
+			expectedSupportPodPidsLimitFeatureGate: false,
+		},
+		{
+			name: "no --pod-max-pids defined, SupportPodPidsLimit=true, upgrade scenario",
+			cs: &ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorType:    Kubernetes,
+						OrchestratorVersion: "1.14.0",
+						KubernetesConfig: &KubernetesConfig{
+							KubeletConfig: map[string]string{},
+						},
+					},
+					AgentPoolProfiles: []*AgentPoolProfile{
+						{
+							KubernetesConfig: &KubernetesConfig{
+								KubeletConfig: map[string]string{
+									"--feature-gates": "SupportPodPidsLimit=true",
+								},
+							},
+						},
+					},
+				},
+			},
+			isUpgrade:                              true,
+			expectedPodMaxPids:                     "-1",
+			expectedSupportPodPidsLimitFeatureGate: true,
+		},
+		{
+			name: "--pod-max-pids defined as 100, no SupportPodPidsLimit defined, upgrade scenario",
+			cs: &ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorType:    Kubernetes,
+						OrchestratorVersion: "1.14.0",
+						KubernetesConfig: &KubernetesConfig{
+							KubeletConfig: map[string]string{},
+						},
+					},
+					AgentPoolProfiles: []*AgentPoolProfile{
+						{
+							KubernetesConfig: &KubernetesConfig{
+								KubeletConfig: map[string]string{
+									"--pod-max-pids": "100",
+								},
+							},
+						},
+					},
+				},
+			},
+			isUpgrade:                              true,
+			expectedPodMaxPids:                     "-1",
+			expectedSupportPodPidsLimitFeatureGate: false,
+		},
+		{
+			name: "--pod-max-pids defined as -100, no SupportPodPidsLimit defined, upgrade scenario",
+			cs: &ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorType:    Kubernetes,
+						OrchestratorVersion: "1.14.0",
+						KubernetesConfig: &KubernetesConfig{
+							KubeletConfig: map[string]string{},
+						},
+					},
+					AgentPoolProfiles: []*AgentPoolProfile{
+						{
+							KubernetesConfig: &KubernetesConfig{
+								KubeletConfig: map[string]string{
+									"--pod-max-pids": "-100",
+								},
+							},
+						},
+					},
+				},
+			},
+			isUpgrade:                              true,
+			expectedPodMaxPids:                     "-1",
+			expectedSupportPodPidsLimitFeatureGate: false,
+		},
+		{
+			name: "--pod-max-pids defined, SupportPodPidsLimit=false, upgrade scenario",
+			cs: &ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorType:    Kubernetes,
+						OrchestratorVersion: "1.14.0",
+						KubernetesConfig: &KubernetesConfig{
+							KubeletConfig: map[string]string{},
+						},
+					},
+					AgentPoolProfiles: []*AgentPoolProfile{
+						{
+							KubernetesConfig: &KubernetesConfig{
+								KubeletConfig: map[string]string{
+									"--pod-max-pids":  "100",
+									"--feature-gates": "SupportPodPidsLimit=false",
+								},
+							},
+						},
+					},
+				},
+			},
+			isUpgrade:                              true,
+			expectedPodMaxPids:                     "-1",
+			expectedSupportPodPidsLimitFeatureGate: false,
+		},
+		{
+			name: "--pod-max-pids defined as 100, SupportPodPidsLimit=true, upgrade scenario",
+			cs: &ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorType:    Kubernetes,
+						OrchestratorVersion: "1.14.0",
+						KubernetesConfig: &KubernetesConfig{
+							KubeletConfig: map[string]string{},
+						},
+					},
+					AgentPoolProfiles: []*AgentPoolProfile{
+						{
+							KubernetesConfig: &KubernetesConfig{
+								KubeletConfig: map[string]string{
+									"--pod-max-pids":  "100",
+									"--feature-gates": "SupportPodPidsLimit=true",
+								},
+							},
+						},
+					},
+				},
+			},
+			isUpgrade:                              true,
+			expectedPodMaxPids:                     "100",
+			expectedSupportPodPidsLimitFeatureGate: true,
+		},
+		{
+			name: "--pod-max-pids defined as 0, SupportPodPidsLimit=true, upgrade scenario",
+			cs: &ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorType:    Kubernetes,
+						OrchestratorVersion: "1.14.0",
+						KubernetesConfig: &KubernetesConfig{
+							KubeletConfig: map[string]string{},
+						},
+					},
+					AgentPoolProfiles: []*AgentPoolProfile{
+						{
+							KubernetesConfig: &KubernetesConfig{
+								KubeletConfig: map[string]string{
+									"--feature-gates": "SupportPodPidsLimit=true",
+								},
+							},
+						},
+					},
+				},
+			},
+			isUpgrade:                              true,
+			expectedPodMaxPids:                     "-1",
+			expectedSupportPodPidsLimitFeatureGate: true,
+		},
+		{
+			name: "--pod-max-pids defined as -1, SupportPodPidsLimit=true, upgrade scenario",
+			cs: &ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorType:    Kubernetes,
+						OrchestratorVersion: "1.14.0",
+						KubernetesConfig: &KubernetesConfig{
+							KubeletConfig: map[string]string{},
+						},
+					},
+					AgentPoolProfiles: []*AgentPoolProfile{
+						{
+							KubernetesConfig: &KubernetesConfig{
+								KubeletConfig: map[string]string{
+									"--pod-max-pids":  "-1",
+									"--feature-gates": "SupportPodPidsLimit=true",
+								},
+							},
+						},
+					},
+				},
+			},
+			isUpgrade:                              true,
+			expectedPodMaxPids:                     "-1",
+			expectedSupportPodPidsLimitFeatureGate: true,
+		},
+		{
+			name: "--pod-max-pids defined as 100a, SupportPodPidsLimit=true, upgrade scenario",
+			cs: &ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorType:    Kubernetes,
+						OrchestratorVersion: "1.14.0",
+						KubernetesConfig: &KubernetesConfig{
+							KubeletConfig: map[string]string{},
+						},
+					},
+					AgentPoolProfiles: []*AgentPoolProfile{
+						{
+							KubernetesConfig: &KubernetesConfig{
+								KubeletConfig: map[string]string{
+									"--pod-max-pids":  "100a",
+									"--feature-gates": "SupportPodPidsLimit=true",
+								},
+							},
+						},
+					},
+				},
+			},
+			isUpgrade:                              true,
+			expectedPodMaxPids:                     "-1",
+			expectedSupportPodPidsLimitFeatureGate: true,
+		},
+	}
+
+	for _, c := range cases {
+		c := c
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+			c.cs.setKubeletConfig(c.isUpgrade)
+			podMaxPids := c.cs.Properties.AgentPoolProfiles[0].KubernetesConfig.KubeletConfig["--pod-max-pids"]
+			if podMaxPids != c.expectedPodMaxPids {
+				t.Fatalf("expected --pod-max-pids be equal to %s, got %s", c.expectedPodMaxPids, podMaxPids)
+			}
+			featureGates := c.cs.Properties.AgentPoolProfiles[0].KubernetesConfig.KubeletConfig["--feature-gates"]
 			hasSupportPodPidsLimitFeatureGate := strings.Contains(featureGates, "SupportPodPidsLimit=true")
 			if hasSupportPodPidsLimitFeatureGate != c.expectedSupportPodPidsLimitFeatureGate {
 				t.Fatalf("expected SupportPodPidsLimit=true presence in --feature gates to be %t, got %t", c.expectedSupportPodPidsLimitFeatureGate, hasSupportPodPidsLimitFeatureGate)
