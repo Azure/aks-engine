@@ -12617,13 +12617,6 @@ setKubeletOpts () {
     sed -i "s#^KUBELET_OPTS=.*#KUBELET_OPTS=${1}#" $KUBELET_DEFAULT_FILE
 }
 
-ensureCCProxy() {
-    sed 's#@libexecdir@#/usr/libexec#' $CC_SERVICE_IN_TMP > /etc/systemd/system/cc-proxy.service
-    sed 's#@localstatedir@#/var#' $CC_SOCKET_IN_TMP > /etc/systemd/system/cc-proxy.socket
-	echo "Enabling and starting Clear Containers proxy service..."
-	systemctlEnableAndStart cc-proxy || exit $ERR_SYSTEMCTL_START_FAIL
-}
-
 setupContainerd() {
     echo "Configuring cri-containerd..."
     mkdir -p "/etc/containerd"
