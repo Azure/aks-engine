@@ -13,6 +13,10 @@ import (
 
 func (cs *ContainerService) setAddonsConfig(isUpdate bool) {
 	o := cs.Properties.OrchestratorProfile
+	clusterDNSPrefix := "aks-engine-cluster"
+	if cs != nil && cs.Properties != nil && cs.Properties.MasterProfile != nil && cs.Properties.MasterProfile.DNSPrefix != "" {
+		clusterDNSPrefix = cs.Properties.MasterProfile.DNSPrefix
+	}
 	cloudSpecConfig := cs.GetCloudSpecConfig()
 	k8sComponents := K8sComponentsByVersionMap[o.OrchestratorVersion]
 	specConfig := cloudSpecConfig.KubernetesSpecConfig
@@ -205,16 +209,18 @@ func (cs *ContainerService) setAddonsConfig(isUpdate bool) {
 		Enabled: to.BoolPtr(DefaultContainerMonitoringAddonEnabled && !cs.Properties.IsAzureStackCloud()),
 		Config: map[string]string{
 			"omsAgentVersion":       "1.10.0.1",
-			"dockerProviderVersion": "4.0.0-0",
+			"dockerProviderVersion": "6.0.0-0",
+			"schema-versions":       "v1",
+			"clusterName":           clusterDNSPrefix,
 		},
 		Containers: []KubernetesContainerSpec{
 			{
 				Name:           "omsagent",
-				CPURequests:    "50m",
+				CPURequests:    "75m",
 				MemoryRequests: "225Mi",
 				CPULimits:      "150m",
-				MemoryLimits:   "500Mi",
-				Image:          "microsoft/oms:ciprod04232019",
+				MemoryLimits:   "600Mi",
+				Image:          "mcr.microsoft.com/azuremonitor/containerinsights/ciprod:ciprod07092019",
 			},
 		},
 	}

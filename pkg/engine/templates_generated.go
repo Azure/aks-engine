@@ -18550,7 +18550,9 @@ metadata:
 rules:
 - apiGroups: [""]
   resources: ["pods", "events", "nodes", "namespaces", "services"]
-  verbs: ["list"]
+  verbs: ["list", "get", "watch"]
+- nonResourceURLs: ["/metrics"]
+  verbs: ["get"]
 ---
 kind: ClusterRoleBinding
 apiVersion: rbac.authorization.k8s.io/v1beta1
@@ -18714,7 +18716,7 @@ data:
       max_retry_wait 9m
      </match>
 
-     <match oms.api.ContainerNodeInventory**>
+     <match oms.containerinsights.ContainerNodeInventory**>
       type out_oms_api
       log_level debug
       buffer_chunk_limit 20m
@@ -18815,6 +18817,7 @@ spec:
       annotations:
         agentVersion: {{ContainerConfig "omsAgentVersion"}}
         dockerProviderVersion: {{ContainerConfig "dockerProviderVersion"}}
+        schema-versions:  {{ContainerConfig "schema-versions"}}
       labels:
         component: oms-agent
         tier: node
@@ -18838,9 +18841,7 @@ spec:
                 fieldRef:
                   fieldPath: status.hostIP
             - name: ACS_RESOURCE_NAME
-              value: "aks-engine-cluster"
-            - name: DISABLE_KUBE_SYSTEM_LOG_COLLECTION
-              value: "true"
+              value: {{ContainerConfig "clusterName"}}            
             - name: CONTROLLER_TYPE
               value: "DaemonSet"
             - name: ISTEST
@@ -18850,7 +18851,7 @@ spec:
               command:
                 - /bin/bash
                 - -c
-                - (ps -ef | grep omsagent | grep -v "grep") && (ps -ef | grep td-agent-bit | grep -v "grep")
+                - /opt/livenessprobe.sh
             initialDelaySeconds: 60
             periodSeconds: 60
           ports:
@@ -18874,6 +18875,8 @@ spec:
             - mountPath: /etc/omsagent-secret
               name: omsagent-secret
               readOnly: true
+            - mountPath: /etc/config/settings
+              name: settings-vol-config  
       nodeSelector:
         beta.kubernetes.io/os: linux
       tolerations:
@@ -18903,6 +18906,10 @@ spec:
         - name: omsagent-secret
           secret:
             secretName: omsagent-secret
+        - name: settings-vol-config
+          configMap:
+            name: container-azm-ms-agentconfig
+            optional: true    
   updateStrategy:
     type: RollingUpdate
 ---
@@ -18930,6 +18937,7 @@ spec:
       annotations:
         agentVersion: {{ContainerConfig "omsAgentVersion"}}
         dockerProviderVersion: {{ContainerConfig "dockerProviderVersion"}}
+        schema-versions:  {{ContainerConfig "schema-versions"}}
     spec:
       serviceAccountName: omsagent
       containers:
@@ -18949,9 +18957,7 @@ spec:
                 fieldRef:
                   fieldPath: status.hostIP
             - name: ACS_RESOURCE_NAME
-              value: "aks-engine-cluster"
-            - name: DISABLE_KUBE_SYSTEM_LOG_COLLECTION
-              value: "true"
+              value: {{ContainerConfig "clusterName"}}            
             - name: CONTROLLER_TYPE
               value: "ReplicaSet"
             - name: ISTEST
@@ -18977,12 +18983,14 @@ spec:
               readOnly: true
             - mountPath : /etc/config
               name: omsagent-rs-config
+            - mountPath: /etc/config/settings
+              name: settings-vol-config              
           livenessProbe:
             exec:
               command:
                 - /bin/bash
                 - -c
-                - ps -ef | grep omsagent | grep -v \"grep\"
+                - /opt/livenessprobe.sh
             initialDelaySeconds: 60
             periodSeconds: 60
       nodeSelector:
@@ -19010,6 +19018,10 @@ spec:
         - name: omsagent-rs-config
           configMap:
             name: omsagent-rs-config
+        - name: settings-vol-config
+          configMap:
+            name: container-azm-ms-agentconfig
+            optional: true    
 `)
 
 func k8sContaineraddons116KubernetesmasteraddonsOmsagentDaemonsetYamlBytes() ([]byte, error) {
@@ -22215,7 +22227,9 @@ metadata:
 rules:
 - apiGroups: [""]
   resources: ["pods", "events", "nodes", "namespaces", "services"]
-  verbs: ["list"]
+  verbs: ["list", "get", "watch"]
+- nonResourceURLs: ["/metrics"]
+  verbs: ["get"]
 ---
 kind: ClusterRoleBinding
 apiVersion: rbac.authorization.k8s.io/v1beta1
@@ -22379,7 +22393,7 @@ data:
       max_retry_wait 9m
      </match>
 
-     <match oms.api.ContainerNodeInventory**>
+     <match oms.containerinsights.ContainerNodeInventory**>
       type out_oms_api
       log_level debug
       buffer_chunk_limit 20m
@@ -22480,6 +22494,7 @@ spec:
       annotations:
         agentVersion: {{ContainerConfig "omsAgentVersion"}}
         dockerProviderVersion: {{ContainerConfig "dockerProviderVersion"}}
+        schema-versions:  {{ContainerConfig "schema-versions"}}
       labels:
         component: oms-agent
         tier: node
@@ -22503,9 +22518,7 @@ spec:
                 fieldRef:
                   fieldPath: status.hostIP
             - name: ACS_RESOURCE_NAME
-              value: "aks-engine-cluster"
-            - name: DISABLE_KUBE_SYSTEM_LOG_COLLECTION
-              value: "true"
+              value: {{ContainerConfig "clusterName"}}            
             - name: CONTROLLER_TYPE
               value: "DaemonSet"
             - name: ISTEST
@@ -22515,7 +22528,7 @@ spec:
               command:
                 - /bin/bash
                 - -c
-                - (ps -ef | grep omsagent | grep -v "grep") && (ps -ef | grep td-agent-bit | grep -v "grep")
+                - /opt/livenessprobe.sh
             initialDelaySeconds: 60
             periodSeconds: 60
           ports:
@@ -22539,6 +22552,8 @@ spec:
             - mountPath: /etc/omsagent-secret
               name: omsagent-secret
               readOnly: true
+            - mountPath: /etc/config/settings
+              name: settings-vol-config  
       nodeSelector:
         beta.kubernetes.io/os: linux
       tolerations:
@@ -22568,6 +22583,10 @@ spec:
         - name: omsagent-secret
           secret:
             secretName: omsagent-secret
+        - name: settings-vol-config
+          configMap:
+            name: container-azm-ms-agentconfig
+            optional: true    
   updateStrategy:
     type: RollingUpdate
 ---
@@ -22595,6 +22614,7 @@ spec:
       annotations:
         agentVersion: {{ContainerConfig "omsAgentVersion"}}
         dockerProviderVersion: {{ContainerConfig "dockerProviderVersion"}}
+        schema-versions:  {{ContainerConfig "schema-versions"}}
     spec:
       serviceAccountName: omsagent
       containers:
@@ -22614,9 +22634,7 @@ spec:
                 fieldRef:
                   fieldPath: status.hostIP
             - name: ACS_RESOURCE_NAME
-              value: "aks-engine-cluster"
-            - name: DISABLE_KUBE_SYSTEM_LOG_COLLECTION
-              value: "true"
+              value: {{ContainerConfig "clusterName"}}            
             - name: CONTROLLER_TYPE
               value: "ReplicaSet"
             - name: ISTEST
@@ -22642,12 +22660,14 @@ spec:
               readOnly: true
             - mountPath : /etc/config
               name: omsagent-rs-config
+            - mountPath: /etc/config/settings
+              name: settings-vol-config              
           livenessProbe:
             exec:
               command:
                 - /bin/bash
                 - -c
-                - ps -ef | grep omsagent | grep -v \"grep\"
+                - /opt/livenessprobe.sh
             initialDelaySeconds: 60
             periodSeconds: 60
       nodeSelector:
@@ -22675,6 +22695,10 @@ spec:
         - name: omsagent-rs-config
           configMap:
             name: omsagent-rs-config
+        - name: settings-vol-config
+          configMap:
+            name: container-azm-ms-agentconfig
+            optional: true    
 `)
 
 func k8sContaineraddonsKubernetesmasteraddonsOmsagentDaemonsetYamlBytes() ([]byte, error) {
