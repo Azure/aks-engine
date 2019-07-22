@@ -12635,9 +12635,7 @@ setupContainerd() {
         echo "sandbox_image = \"$POD_INFRA_CONTAINER_SPEC\""
         echo "[plugins.cri.containerd.untrusted_workload_runtime]"
         echo "runtime_type = 'io.containerd.runtime.v1.linux'"
-        if [[ "$CONTAINER_RUNTIME" == "clear-containers" ]]; then
-            echo "runtime_engine = '/usr/bin/cc-runtime'"
-        elif [[ "$CONTAINER_RUNTIME" == "kata-containers" ]]; then
+        if [[ "$CONTAINER_RUNTIME" == "kata-containers" ]]; then
             echo "runtime_engine = '/usr/bin/kata-runtime'"
         else
             echo "runtime_engine = '/usr/local/sbin/runc'"
@@ -13416,14 +13414,6 @@ installContainerRuntime() {
     if [[ "$CONTAINER_RUNTIME" == "docker" ]]; then
         installMoby
     fi
-    if [[ "$CONTAINER_RUNTIME" == "clear-containers" ]]; then
-	    # Ensure we can nest virtualization
-        if grep -q vmx /proc/cpuinfo; then
-            installClearContainersRuntime
-        fi
-    else
-        cleanUpClearContainers
-    fi
 }
 
 installMoby() {
@@ -13460,27 +13450,6 @@ installKataContainersRuntime() {
     echo "Installing Kata Containers runtime..."
     apt_get_update || exit $ERR_APT_UPDATE_TIMEOUT
     apt_get_install 120 5 25 kata-runtime || exit $ERR_KATA_INSTALL_TIMEOUT
-}
-
-installClearContainersRuntime() {
-    if cc-runtime --version; then
-        echo "cc-runtime is already installed, skipping download"
-    else
-        echo "Adding Clear Containers repository key..."
-        CC_RELEASE_KEY_TMP=/tmp/clear-containers-release.key
-        CC_URL=https://download.opensuse.org/repositories/home:clearcontainers:clear-containers-3/xUbuntu_16.04/Release.key
-        retrycmd_if_failure_no_stats 120 5 25 curl -fsSL $CC_URL > $CC_RELEASE_KEY_TMP || exit $ERR_APT_INSTALL_TIMEOUT
-        wait_for_apt_locks
-        retrycmd_if_failure 120 5 25 apt-key add $CC_RELEASE_KEY_TMP || exit $ERR_APT_INSTALL_TIMEOUT
-        echo "Adding Clear Containers repository..."
-        echo 'deb http://download.opensuse.org/repositories/home:/clearcontainers:/clear-containers-3/xUbuntu_16.04/ /' > /etc/apt/sources.list.d/cc-runtime.list
-        echo "Installing Clear Containers runtime..."
-        apt_get_update || exit $ERR_APT_UPDATE_TIMEOUT
-        apt_get_install 120 5 25 cc-runtime
-        local repo_uri="https://raw.githubusercontent.com/clearcontainers/proxy/3.0.23"
-        retrycmd_if_failure_no_stats 120 5 25 curl -fsSL "${repo_uri}/cc-proxy.service.in" > $CC_SERVICE_IN_TMP
-        retrycmd_if_failure_no_stats 120 5 25 curl -fsSL "${repo_uri}/cc-proxy.socket.in" > $CC_SOCKET_IN_TMP
-    fi
 }
 
 installNetworkPlugin() {
@@ -13626,14 +13595,6 @@ cleanUpContainerd() {
     rm -Rf $CONTAINERD_DOWNLOADS_DIR
 }
 
-cleanUpClearContainers() {
-    wait_for_apt_locks
-    apt-get purge -y cc-runtime
-    wait_for_apt_locks
-    apt-get autoremove -y
-    rm -f /etc/apt/sources.list.d/cc-runtime.list
-}
-
 overrideNetworkConfig() {
     CONFIG_FILEPATH="/etc/cloud/cloud.cfg.d/80_azure_net_config.cfg"
     touch ${CONFIG_FILEPATH}
@@ -13740,7 +13701,7 @@ if [[ $OS != $COREOS_OS_NAME ]]; then
     installContainerRuntime
 fi
 installNetworkPlugin
-if [[ "$CONTAINER_RUNTIME" == "clear-containers" ]] || [[ "$CONTAINER_RUNTIME" == "kata-containers" ]] || [[ "$CONTAINER_RUNTIME" == "containerd" ]]; then
+if [[ "$CONTAINER_RUNTIME" == "kata-containers" ]] || [[ "$CONTAINER_RUNTIME" == "containerd" ]]; then
     installContainerd
 else
     cleanUpContainerd
@@ -13786,10 +13747,6 @@ fi
 
 if [[ "$CONTAINER_RUNTIME" == "docker" ]]; then
     ensureDocker
-elif [[ "$CONTAINER_RUNTIME" == "clear-containers" ]]; then
-	if grep -q vmx /proc/cpuinfo; then
-        ensureCCProxy
-	fi
 elif [[ "$CONTAINER_RUNTIME" == "kata-containers" ]]; then
     if grep -q vmx /proc/cpuinfo; then
         installKataContainersRuntime
@@ -13811,7 +13768,7 @@ if [[ -n "${MASTER_NODE}" ]]; then
     configAddons
 fi
 
-if [[ "$CONTAINER_RUNTIME" == "clear-containers" ]] || [[ "$CONTAINER_RUNTIME" == "kata-containers" ]] || [[ "$CONTAINER_RUNTIME" == "containerd" ]]; then
+if [[ "$CONTAINER_RUNTIME" == "kata-containers" ]] || [[ "$CONTAINER_RUNTIME" == "containerd" ]]; then
     ensureContainerd
 fi
 
@@ -23290,11 +23247,10 @@ var _k8sKubernetesparamsT = []byte(`{{if .HasAadProfile}}
     "containerRuntime": {
       "defaultValue": "{{.OrchestratorProfile.KubernetesConfig.ContainerRuntime}}",
       "metadata": {
-        "description": "The container runtime to use (docker|clear-containers|kata-containers|containerd)"
+        "description": "The container runtime to use (docker|kata-containers|containerd)"
       },
       "allowedValues": [
         "docker",
-        "clear-containers",
         "kata-containers",
         "containerd"
       ],
@@ -23526,7 +23482,8 @@ var _k8sKubernetesparamsT = []byte(`{{if .HasAadProfile}}
       },
       "type": "string"
     }
- {{end}}`)
+ {{end}}
+`)
 
 func k8sKubernetesparamsTBytes() ([]byte, error) {
 	return _k8sKubernetesparamsT, nil

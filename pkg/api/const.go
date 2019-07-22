@@ -106,10 +106,9 @@ const (
 
 // Supported container runtimes
 const (
-	Docker          = "docker"
-	ClearContainers = "clear-containers"
-	KataContainers  = "kata-containers"
-	Containerd      = "containerd"
+	Docker         = "docker"
+	KataContainers = "kata-containers"
+	Containerd     = "containerd"
 )
 
 // storage profiles

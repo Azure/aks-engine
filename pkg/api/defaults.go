@@ -153,7 +153,7 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpgrade, isScale bool) {
 				}
 				o.KubernetesConfig.MobyVersion = DefaultMobyVersion
 			}
-		case Containerd, ClearContainers, KataContainers:
+		case Containerd, KataContainers:
 			if o.KubernetesConfig.ContainerdVersion == "" || isUpdate {
 				if isUpdate && o.KubernetesConfig.ContainerdVersion != DefaultContainerdVersion {
 					log.Warnf("containerd will be upgraded to version %s\n", DefaultContainerdVersion)

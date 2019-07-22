@@ -6,7 +6,7 @@
 |Calico Network Policy|Alpha|`vlabs`|[kubernetes-calico.json](../../examples/networkpolicy/kubernetes-calico-azure.json)|[Description](#feat-calico)|
 |Cilium Network Policy|Alpha|`vlabs`|[kubernetes-cilium.json](../../examples/networkpolicy/kubernetes-cilium.json)|[Description](#feat-cilium)|
 |Custom VNET|Beta|`vlabs`|[kubernetesvnet-azure-cni.json](../../examples/vnet/kubernetesvnet-azure-cni.json)|[Description](#feat-custom-vnet)|
-|Clear Containers Runtime|Alpha|`vlabs`|[kubernetes-clear-containers.json](../../examples/kubernetes-clear-containers.json)|[Description](#feat-clear-containers)|
+
 |Kata Containers Runtime|Alpha|`vlabs`|[kubernetes-kata-containers.json](../../examples/kubernetes-kata-containers.json)|[Description](#feat-kata-containers)|
 |Private Cluster|Alpha|`vlabs`|[kubernetes-private-cluster.json](../../examples/kubernetes-config/kubernetes-private-cluster.json)|[Description](#feat-private-cluster)|
 |Azure Key Vault Encryption|Alpha|`vlabs`|[kubernetes-keyvault-encryption.json](../../examples/kubernetes-config/kubernetes-keyvault-encryption.json)|[Description](#feat-keyvault-encryption)|
@@ -324,37 +324,6 @@ E.g.:
       ...
     }
 ]
-```
-
-<a name="feat-clear-containers"></a>
-
-## Clear Containers
-
-You can designate kubernetes agents to use Intel's Clear Containers as the
-container runtime by setting:
-
-```json
-      "kubernetesConfig": {
-        "containerRuntime": "clear-containers"
-      }
-```
-
-You will need to make sure your agents are using a `vmSize` that [supports
-nested virtualization](https://azure.microsoft.com/en-us/blog/nested-virtualization-in-azure/).
-These are the `Dv3` or `Ev3` series nodes.
-
-This should look like:
-
-```json
-"agentPoolProfiles": [
-      {
-        "name": "agentpool1",
-        "count": 3,
-        "vmSize": "Standard_D4s_v3",
-        "availabilityProfile": "AvailabilitySet",
-        "diskSizesGB": [1023]
-      }
-    ],
 ```
 
 <a name="feat-kata-containers"></a>

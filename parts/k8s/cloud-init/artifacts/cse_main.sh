@@ -78,7 +78,7 @@ if [[ $OS != $COREOS_OS_NAME ]]; then
     installContainerRuntime
 fi
 installNetworkPlugin
-if [[ "$CONTAINER_RUNTIME" == "clear-containers" ]] || [[ "$CONTAINER_RUNTIME" == "kata-containers" ]] || [[ "$CONTAINER_RUNTIME" == "containerd" ]]; then
+if [[ "$CONTAINER_RUNTIME" == "kata-containers" ]] || [[ "$CONTAINER_RUNTIME" == "containerd" ]]; then
     installContainerd
 else
     cleanUpContainerd
@@ -124,10 +124,6 @@ fi
 
 if [[ "$CONTAINER_RUNTIME" == "docker" ]]; then
     ensureDocker
-elif [[ "$CONTAINER_RUNTIME" == "clear-containers" ]]; then
-	if grep -q vmx /proc/cpuinfo; then
-        ensureCCProxy
-	fi
 elif [[ "$CONTAINER_RUNTIME" == "kata-containers" ]]; then
     if grep -q vmx /proc/cpuinfo; then
         installKataContainersRuntime
@@ -149,7 +145,7 @@ if [[ -n "${MASTER_NODE}" ]]; then
     configAddons
 fi
 
-if [[ "$CONTAINER_RUNTIME" == "clear-containers" ]] || [[ "$CONTAINER_RUNTIME" == "kata-containers" ]] || [[ "$CONTAINER_RUNTIME" == "containerd" ]]; then
+if [[ "$CONTAINER_RUNTIME" == "kata-containers" ]] || [[ "$CONTAINER_RUNTIME" == "containerd" ]]; then
     ensureContainerd
 fi
 
