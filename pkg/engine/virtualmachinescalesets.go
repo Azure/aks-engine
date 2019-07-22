@@ -491,7 +491,7 @@ func CreateAgentVMSS(cs *api.ContainerService, profile *api.AgentPoolProfile) Vi
 			ipConfigProps.LoadBalancerBackendAddressPools = &backendAddressPools
 			if cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6DualStack") {
 				defaultIPv4BackendPool := compute.SubResource{
-					to.StringPtr("[concat(resourceId('Microsoft.Network/loadBalancers',parameters('masterEndpointDNSNamePrefix')), '/backendAddressPools/', parameters('masterEndpointDNSNamePrefix'))]"),
+					ID: to.StringPtr("[concat(resourceId('Microsoft.Network/loadBalancers',parameters('masterEndpointDNSNamePrefix')), '/backendAddressPools/', parameters('masterEndpointDNSNamePrefix'))]"),
 				}
 				backendPools := make([]compute.SubResource, 0)
 				if ipconfig.LoadBalancerBackendAddressPools != nil {

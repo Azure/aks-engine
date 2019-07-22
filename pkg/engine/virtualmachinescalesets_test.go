@@ -807,7 +807,7 @@ func getIPConfigs(lbBackendAddresPoolID *string, isStandardLB, ipv6DualStackEnab
 			ipconfig.LoadBalancerBackendAddressPools = &backendAddressPools
 			if ipv6DualStackEnabled {
 				defaultIPv4BackendPool := compute.SubResource{
-					to.StringPtr("[concat(resourceId('Microsoft.Network/loadBalancers',parameters('masterEndpointDNSNamePrefix')), '/backendAddressPools/', parameters('masterEndpointDNSNamePrefix'))]"),
+					ID: to.StringPtr("[concat(resourceId('Microsoft.Network/loadBalancers',parameters('masterEndpointDNSNamePrefix')), '/backendAddressPools/', parameters('masterEndpointDNSNamePrefix'))]"),
 				}
 				if ipconfig.LoadBalancerBackendAddressPools != nil {
 					backendPools := *ipconfig.LoadBalancerBackendAddressPools
