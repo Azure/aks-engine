@@ -459,23 +459,11 @@ func createAgentAvailabilitySetVM(cs *api.ContainerService, profile *api.AgentPo
 	storageProfile := compute.StorageProfile{}
 
 	if profile.IsWindows() {
-		if cs.Properties.WindowsProfile.HasCustomImage() {
-			storageProfile.ImageReference = &compute.ImageReference{
-				ID: to.StringPtr(fmt.Sprintf("[resourceId('Microsoft.Compute/images','%sCustomWindowsImage')]", profile.Name)),
-			}
-		} else {
-			storageProfile.ImageReference = &compute.ImageReference{
-				Offer:     to.StringPtr("[parameters('agentWindowsOffer')]"),
-				Publisher: to.StringPtr("[parameters('agentWindowsPublisher')]"),
-				Sku:       to.StringPtr("[parameters('agentWindowsSku')]"),
-				Version:   to.StringPtr("[parameters('agentWindowsVersion')]"),
-			}
-		}
+		storageProfile.ImageReference = createImageReferenceFragment(profile.Name, cs.Properties.WindowsProfile)
 
 		if profile.HasDisks() {
 			storageProfile.DataDisks = getArmDataDisks(profile)
 		}
-
 	} else {
 		imageRef := profile.ImageRef
 		if profile.HasImageRef() {
