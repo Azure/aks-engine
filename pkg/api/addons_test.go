@@ -3322,7 +3322,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "50Mi",
 							CPULimits:      "50m",
 							MemoryLimits:   "250Mi",
-							Image:          specConfig.KubernetesImageBase + "ip-masq-agent-amd64:v2.0.0",
+							Image:          specConfig.KubernetesImageBase + "ip-masq-agent-amd64:v2.3.0",
 						},
 					},
 					Config: map[string]string{
@@ -3522,7 +3522,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "50Mi",
 							CPULimits:      "50m",
 							MemoryLimits:   "250Mi",
-							Image:          specConfig.KubernetesImageBase + "ip-masq-agent-amd64:v2.0.0",
+							Image:          specConfig.KubernetesImageBase + "ip-masq-agent-amd64:v2.3.0",
 						},
 					},
 					Config: map[string]string{
@@ -3759,7 +3759,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "50Mi",
 							CPULimits:      "50m",
 							MemoryLimits:   "250Mi",
-							Image:          specConfig.KubernetesImageBase + "ip-masq-agent-amd64:v2.0.0",
+							Image:          specConfig.KubernetesImageBase + "ip-masq-agent-amd64:v2.3.0",
 						},
 					},
 					Config: map[string]string{
@@ -3900,14 +3900,14 @@ func TestGetKubeDNSAddonContainersSpec(t *testing.T) {
 			expected: []KubernetesContainerSpec{
 				{
 					Name:           "kube-dns-deployment",
-					Image:          "k8s.gcr.io/k8s-dns-kube-dns-amd64:1.15.0",
+					Image:          "k8s.gcr.io/k8s-dns-kube-dns-amd64:1.15.4",
 					CPURequests:    "100m",
 					MemoryRequests: "70Mi",
 					MemoryLimits:   "170Mi",
 				},
 				{
 					Name:           "dnsmasq-nanny",
-					Image:          "k8s.gcr.io/k8s-dns-dnsmasq-nanny-amd64:1.15.0",
+					Image:          "k8s.gcr.io/k8s-dns-dnsmasq-nanny-amd64:1.15.4",
 					CPURequests:    "150m",
 					MemoryRequests: "20Mi",
 				},
