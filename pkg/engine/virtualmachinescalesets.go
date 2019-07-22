@@ -465,6 +465,7 @@ func CreateAgentVMSS(cs *api.ContainerService, profile *api.AgentPoolProfile) Vi
 				ID: to.StringPtr(fmt.Sprintf("[variables('%sVnetSubnetID')]", profile.Name)),
 			},
 		}
+
 		if i == 1 {
 			ipConfigProps.Primary = to.BoolPtr(true)
 
@@ -488,6 +489,18 @@ func CreateAgentVMSS(cs *api.ContainerService, profile *api.AgentPoolProfile) Vi
 			}
 
 			ipConfigProps.LoadBalancerBackendAddressPools = &backendAddressPools
+			if cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6DualStack") {
+				defaultIPv4BackendPool := compute.SubResource{
+					to.StringPtr("[concat(resourceId('Microsoft.Network/loadBalancers',parameters('masterEndpointDNSNamePrefix')), '/backendAddressPools/', parameters('masterEndpointDNSNamePrefix'))]"),
+				}
+				backendPools := make([]compute.SubResource, 0)
+				if ipconfig.LoadBalancerBackendAddressPools != nil {
+					backendPools = *ipconfig.LoadBalancerBackendAddressPools
+				}
+				backendPools = append(backendPools, defaultIPv4BackendPool)
+				ipconfig.LoadBalancerBackendAddressPools = &backendPools
+			}
+
 			// Set VMSS node public IP if requested
 			if to.Bool(profile.EnableVMSSNodePublicIP) {
 				publicIPAddressConfiguration := &compute.VirtualMachineScaleSetPublicIPAddressConfiguration{
@@ -501,6 +514,28 @@ func CreateAgentVMSS(cs *api.ContainerService, profile *api.AgentPoolProfile) Vi
 		}
 		ipconfig.VirtualMachineScaleSetIPConfigurationProperties = &ipConfigProps
 		ipConfigurations = append(ipConfigurations, ipconfig)
+
+		if cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6DualStack") {
+			ipconfigv6 := compute.VirtualMachineScaleSetIPConfiguration{
+				Name: to.StringPtr(fmt.Sprintf("ipconfig%dv6", i)),
+				VirtualMachineScaleSetIPConfigurationProperties: &compute.VirtualMachineScaleSetIPConfigurationProperties{
+					Subnet: &compute.APIEntityReference{
+						ID: to.StringPtr(fmt.Sprintf("[variables('%sVnetSubnetID')]", profile.Name)),
+					},
+					Primary:                 to.BoolPtr(false),
+					PrivateIPAddressVersion: "IPv6",
+				},
+			}
+			if i == 1 {
+				backendPools := make([]compute.SubResource, 0)
+				defaultIPv6BackendPool := compute.SubResource{
+					ID: to.StringPtr("[concat(resourceId('Microsoft.Network/loadBalancers',parameters('masterEndpointDNSNamePrefix')), '/backendAddressPools/', parameters('masterEndpointDNSNamePrefix'), '-ipv6')]"),
+				}
+				backendPools = append(backendPools, defaultIPv6BackendPool)
+				ipconfigv6.LoadBalancerBackendAddressPools = &backendPools
+			}
+			ipConfigurations = append(ipConfigurations, ipconfigv6)
+		}
 	}
 
 	vmssNICConfig.IPConfigurations = &ipConfigurations

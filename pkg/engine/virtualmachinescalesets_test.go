@@ -522,6 +522,30 @@ func TestCreateAgentVMSS(t *testing.T) {
 	if diff != "" {
 		t.Errorf("unexpected diff while expecting equal structs: %s", diff)
 	}
+
+	// Test with ipv6 dual stack enabled
+	cs.Properties.FeatureFlags = &api.FeatureFlags{EnableIPv6DualStack: true}
+	cs.Properties.AgentPoolProfiles[0].OSType = "Linux"
+	actual = CreateAgentVMSS(cs, cs.Properties.AgentPoolProfiles[0])
+
+	expected.VirtualMachineProfile.NetworkProfile = &compute.VirtualMachineScaleSetNetworkProfile{
+		NetworkInterfaceConfigurations: &[]compute.VirtualMachineScaleSetNetworkConfiguration{
+			{
+				Name: to.StringPtr("[variables('agentpool1VMNamePrefix')]"),
+				VirtualMachineScaleSetNetworkConfigurationProperties: &compute.VirtualMachineScaleSetNetworkConfigurationProperties{
+					Primary:                     to.BoolPtr(true),
+					EnableAcceleratedNetworking: to.BoolPtr(true),
+					IPConfigurations:            getIPConfigs(to.StringPtr("/subscriptions/123/resourceGroups/rg/providers/Microsoft.Network/loadBalancers/mySLB/backendAddressPools/mySLBBEPool"), true),
+				},
+			},
+		},
+	}
+
+	diff = cmp.Diff(actual.VirtualMachineProfile.NetworkProfile, expected.VirtualMachineProfile.NetworkProfile)
+
+	if diff != "" {
+		t.Errorf("unexpected diff while expecting equal structs: %s", diff)
+	}
 }
 
 func TestCreateAgentVMSSHostedMasterProfile(t *testing.T) {
@@ -745,7 +769,7 @@ func getIPConfigsMaster() *[]compute.VirtualMachineScaleSetIPConfiguration {
 
 // getIPConfigs returns a list of VirtualMachineScaleSetIPConfiguration resources
 // first ipconfig is primary with a list of references to LoadBalancerBackendAddressPools
-func getIPConfigs(lbBackendAddresPoolID *string, isStandardLB bool) *[]compute.VirtualMachineScaleSetIPConfiguration {
+func getIPConfigs(lbBackendAddresPoolID *string, isStandardLB, ipv6DualStackEnabled bool) *[]compute.VirtualMachineScaleSetIPConfiguration {
 	var ipConfigs []compute.VirtualMachineScaleSetIPConfiguration
 	for i := 1; i <= 31; i++ {
 		ipconfig := compute.VirtualMachineScaleSetIPConfiguration{
@@ -781,8 +805,42 @@ func getIPConfigs(lbBackendAddresPoolID *string, isStandardLB bool) *[]compute.V
 				}
 			}
 			ipconfig.LoadBalancerBackendAddressPools = &backendAddressPools
+			if ipv6DualStackEnabled {
+				defaultIPv4BackendPool := compute.SubResource{
+					to.StringPtr("[concat(resourceId('Microsoft.Network/loadBalancers',parameters('masterEndpointDNSNamePrefix')), '/backendAddressPools/', parameters('masterEndpointDNSNamePrefix'))]"),
+				}
+				if ipconfig.LoadBalancerBackendAddressPools != nil {
+					backendPools := *ipconfig.LoadBalancerBackendAddressPools
+					backendPools = append(backendPools, defaultIPv4BackendPool)
+					ipconfig.LoadBalancerBackendAddressPools = &backendPools
+				} else {
+					ipconfig.LoadBalancerBackendAddressPools = &[]compute.SubResource{defaultIPv4BackendPool}
+				}
+			}
 		}
 		ipConfigs = append(ipConfigs, ipconfig)
+
+		if ipv6DualStackEnabled {
+			ipconfigv6 := compute.VirtualMachineScaleSetIPConfiguration{
+				Name: to.StringPtr(fmt.Sprintf("ipconfig%dv6", i)),
+				VirtualMachineScaleSetIPConfigurationProperties: &compute.VirtualMachineScaleSetIPConfigurationProperties{
+					Subnet: &compute.APIEntityReference{
+						ID: to.StringPtr(fmt.Sprintf("[variables('agentpool1VnetSubnetID')]")),
+					},
+					Primary:                 to.BoolPtr(false),
+					PrivateIPAddressVersion: "IPv6",
+				},
+			}
+			if i == 1 {
+				backendPools := make([]compute.SubResource, 0)
+				defaultIPv6BackendPool := compute.SubResource{
+					ID: to.StringPtr("[concat(resourceId('Microsoft.Network/loadBalancers',parameters('masterEndpointDNSNamePrefix')), '/backendAddressPools/', parameters('masterEndpointDNSNamePrefix'), '-ipv6')]"),
+				}
+				backendPools = append(backendPools, defaultIPv6BackendPool)
+				ipconfigv6.LoadBalancerBackendAddressPools = &backendPools
+			}
+			ipConfigs = append(ipConfigs, ipconfigv6)
+		}
 	}
 	return &ipConfigs
 }

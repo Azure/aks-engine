@@ -580,7 +580,7 @@ func TestCreateClusterLoadBalancerForIPv6(t *testing.T) {
 			LoadBalancerPropertiesFormat: &network.LoadBalancerPropertiesFormat{
 				BackendAddressPools: &[]network.BackendAddressPool{
 					{
-						Name: to.StringPtr("[concat(parameters('masterEndpointDNSNamePrefix'), '-ipv4')]"),
+						Name: to.StringPtr("[concat(parameters('masterEndpointDNSNamePrefix'))]"),
 					},
 					{
 						Name: to.StringPtr("[concat(parameters('masterEndpointDNSNamePrefix'), '-ipv6')]"),
@@ -626,7 +626,7 @@ func TestCreateClusterLoadBalancerForIPv6(t *testing.T) {
 								ID: to.StringPtr("[resourceId('Microsoft.Network/loadBalancers/frontendIpConfigurations', parameters('masterEndpointDNSNamePrefix'), 'LBFE-v4')]"),
 							},
 							BackendAddressPool: &network.SubResource{
-								ID: to.StringPtr("[resourceId('Microsoft.Network/loadBalancers/backendAddressPools', parameters('masterEndpointDNSNamePrefix'), concat(parameters('masterEndpointDNSNamePrefix'), '-ipv4'))]"),
+								ID: to.StringPtr("[resourceId('Microsoft.Network/loadBalancers/backendAddressPools', parameters('masterEndpointDNSNamePrefix'), concat(parameters('masterEndpointDNSNamePrefix')))]"),
 							},
 							Protocol:     network.TransportProtocolTCP,
 							FrontendPort: to.Int32Ptr(9090),

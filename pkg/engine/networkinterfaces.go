@@ -380,7 +380,7 @@ func createAgentVMASNetworkInterface(cs *api.ContainerService, profile *api.Agen
 				backendPools = *ipConfig.LoadBalancerBackendAddressPools
 			}
 			backendPools = append(backendPools, network.BackendAddressPool{
-				ID: to.StringPtr("[concat(resourceId('Microsoft.Network/loadBalancers',parameters('masterEndpointDNSNamePrefix')), '/backendAddressPools/', parameters('masterEndpointDNSNamePrefix'), '-ipv4')]"),
+				ID: to.StringPtr("[concat(resourceId('Microsoft.Network/loadBalancers',parameters('masterEndpointDNSNamePrefix')), '/backendAddressPools/', parameters('masterEndpointDNSNamePrefix'))]"),
 			})
 			ipConfig.LoadBalancerBackendAddressPools = &backendPools
 		}

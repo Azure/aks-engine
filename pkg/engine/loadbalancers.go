@@ -32,7 +32,8 @@ func CreateClusterLoadBalancerForIPv6() LoadBalancerARM {
 			LoadBalancerPropertiesFormat: &network.LoadBalancerPropertiesFormat{
 				BackendAddressPools: &[]network.BackendAddressPool{
 					{
-						Name: to.StringPtr("[concat(parameters('masterEndpointDNSNamePrefix'), '-ipv4')]"),
+						// cluster name used as backend addr pool name for ipv4 to ensure backward compat
+						Name: to.StringPtr("[concat(parameters('masterEndpointDNSNamePrefix'))]"),
 					},
 					{
 						Name: to.StringPtr("[concat(parameters('masterEndpointDNSNamePrefix'), '-ipv6')]"),
@@ -78,7 +79,7 @@ func CreateClusterLoadBalancerForIPv6() LoadBalancerARM {
 								ID: to.StringPtr("[resourceId('Microsoft.Network/loadBalancers/frontendIpConfigurations', parameters('masterEndpointDNSNamePrefix'), 'LBFE-v4')]"),
 							},
 							BackendAddressPool: &network.SubResource{
-								ID: to.StringPtr("[resourceId('Microsoft.Network/loadBalancers/backendAddressPools', parameters('masterEndpointDNSNamePrefix'), concat(parameters('masterEndpointDNSNamePrefix'), '-ipv4'))]"),
+								ID: to.StringPtr("[resourceId('Microsoft.Network/loadBalancers/backendAddressPools', parameters('masterEndpointDNSNamePrefix'), concat(parameters('masterEndpointDNSNamePrefix')))]"),
 							},
 							Protocol:     network.TransportProtocolTCP,
 							FrontendPort: to.Int32Ptr(9090),
