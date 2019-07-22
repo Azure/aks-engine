@@ -167,7 +167,9 @@ ensureKubelet
 ensureJournal
 
 if [[ -n "${MASTER_NODE}" ]]; then
-    ensureLabelNodes
+    if dpkg --compare-versions ${KUBERNETES_VERSION} ge 1.16; then
+      ensureLabelNodes
+    fi
     writeKubeConfig
     if [[ -z "${COSMOS_URI}" ]]; then
       ensureEtcd
