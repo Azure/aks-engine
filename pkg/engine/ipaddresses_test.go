@@ -32,8 +32,8 @@ func TestCreatePublicIPAddress(t *testing.T) {
 			Type: to.StringPtr("Microsoft.Network/publicIPAddresses"),
 		},
 	}
-
-	actual := CreatePublicIPAddress(true)
+	isForMaster := true
+	actual := CreatePublicIPAddress(isForMaster)
 
 	diff := cmp.Diff(actual, expected)
 
@@ -58,7 +58,8 @@ func TestCreatePublicIPAddress(t *testing.T) {
 			Type: to.StringPtr("Microsoft.Network/publicIPAddresses"),
 		},
 	}
-	actual = CreatePublicIPAddress(false)
+	isForMaster = false
+	actual = CreatePublicIPAddress(isForMaster)
 
 	diff = cmp.Diff(actual, expected)
 
