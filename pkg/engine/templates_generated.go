@@ -13153,8 +13153,8 @@ sysctl_reload() {
         fi
     done
 }
-version_lte() {
-  test "$(printf '%s\n' "$@" | sort -V | head -n 1)" == "$1"
+version_gte() {
+  test "$(printf '%s\n' "$@" | sort -rV | head -n 1)" == "$1"
 }
 `)
 
@@ -13694,7 +13694,7 @@ ensureKubelet
 ensureJournal
 
 if [[ -n "${MASTER_NODE}" ]]; then
-    if version_lte 1.16 ${KUBERNETES_VERSION}; then
+    if version_gte ${KUBERNETES_VERSION} 1.16; then
       ensureLabelNodes
     fi
     writeKubeConfig
