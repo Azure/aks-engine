@@ -332,6 +332,7 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 		expectedManagedStorageClass   bool
 		expectedUnmanagedStorageClass bool
 		expectedScheduledMaintenance  bool
+		expectedKubeDNS               bool
 	}{
 		// Legacy default scenario
 		{
