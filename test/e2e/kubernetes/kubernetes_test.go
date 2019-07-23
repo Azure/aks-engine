@@ -74,7 +74,11 @@ var _ = BeforeSuite(func() {
 	Expect(err).NotTo(HaveOccurred())
 	csInput, err := engine.ParseInput(engCfg.ClusterDefinitionTemplate)
 	Expect(err).NotTo(HaveOccurred())
-	csGenerated, err := engine.ParseOutput(engCfg.GeneratedDefinitionPath + "/apimodel.json")
+	var isUpdate bool
+	if cfg.Name != "" {
+		isUpdate = true
+	}
+	csGenerated, err := engine.ParseOutput(engCfg, isUpdate)
 	Expect(err).NotTo(HaveOccurred())
 	eng = engine.Engine{
 		Config:             engCfg,
