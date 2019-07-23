@@ -261,8 +261,7 @@ func (cli *CLIProvisioner) generateAndDeploy() error {
 	if err != nil {
 		return errors.Wrap(err, "unable to parse config")
 	}
-	isUpdate := false
-	csGenerated, err := engine.ParseOutput(engCfg, isUpdate)
+	csGenerated, err := engine.ParseOutput(engCfg.GeneratedDefinitionPath + "/apimodel.json")
 	if err != nil {
 		return errors.Wrap(err, "unable to parse output")
 	}

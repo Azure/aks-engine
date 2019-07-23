@@ -290,8 +290,7 @@ func ParseInput(path string) (*api.VlabsARMContainerService, error) {
 }
 
 // ParseOutput takes the generated api model and will parse that into a api.ContainerService
-func ParseOutput(engCfg *Config, isUpdate bool) (*api.ContainerService, error) {
-	path := engCfg.GeneratedDefinitionPath + "/apimodel.json"
+func ParseOutput(path string) (*api.ContainerService, error) {
 	locale, err := i18n.LoadTranslations()
 	if err != nil {
 		return nil, errors.Errorf(fmt.Sprintf("error loading translation files: %s", err.Error()))
@@ -301,7 +300,7 @@ func ParseOutput(engCfg *Config, isUpdate bool) (*api.ContainerService, error) {
 			Locale: locale,
 		},
 	}
-	containerService, _, err := apiloader.LoadContainerServiceFromFile(path, true, isUpdate, nil)
+	containerService, _, err := apiloader.LoadContainerServiceFromFile(path, true, false, nil)
 	if err != nil {
 		return nil, err
 	}
