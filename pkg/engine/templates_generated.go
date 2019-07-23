@@ -13153,6 +13153,9 @@ sysctl_reload() {
         fi
     done
 }
+version_lte() {
+  test "$(printf '%s\n' "$@" | sort -V | head -n 1)" == "$1"
+}
 `)
 
 func k8sCloudInitArtifactsCse_helpersShBytes() ([]byte, error) {
@@ -13691,7 +13694,7 @@ ensureKubelet
 ensureJournal
 
 if [[ -n "${MASTER_NODE}" ]]; then
-    if dpkg --compare-versions ${KUBERNETES_VERSION} ge 1.16; then
+    if version_lte 1.16 ${KUBERNETES_VERSION}; then
       ensureLabelNodes
     fi
     writeKubeConfig

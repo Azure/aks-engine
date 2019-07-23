@@ -167,7 +167,7 @@ ensureKubelet
 ensureJournal
 
 if [[ -n "${MASTER_NODE}" ]]; then
-    if dpkg --compare-versions ${KUBERNETES_VERSION} ge 1.16; then
+    if version_lte 1.16 ${KUBERNETES_VERSION}; then
       ensureLabelNodes
     fi
     writeKubeConfig

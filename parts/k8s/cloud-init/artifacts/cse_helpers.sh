@@ -236,3 +236,6 @@ sysctl_reload() {
         fi
     done
 }
+version_lte() {
+  test "$(printf '%s\n' "$@" | sort -V | head -n 1)" == "$1"
+}
