@@ -5,10 +5,8 @@ package kubernetes
 
 import (
 	"bufio"
-	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"log"
 	"math/rand"
 	"net"
@@ -23,7 +21,6 @@ import (
 
 	"github.com/Azure/aks-engine/pkg/api"
 	"github.com/Azure/aks-engine/pkg/api/common"
-	"github.com/Azure/aks-engine/pkg/api/vlabs"
 	"github.com/Azure/aks-engine/test/e2e/config"
 	"github.com/Azure/aks-engine/test/e2e/engine"
 	"github.com/Azure/aks-engine/test/e2e/kubernetes/deployment"
@@ -77,20 +74,9 @@ var _ = BeforeSuite(func() {
 	Expect(err).NotTo(HaveOccurred())
 	csInput, err := engine.ParseInput(engCfg.ClusterDefinitionTemplate)
 	Expect(err).NotTo(HaveOccurred())
-	var csGenerated *api.ContainerService
-	if cfg.Name != "" {
-		contents, err := ioutil.ReadFile(engCfg.GeneratedDefinitionPath + "/apimodel.json")
-		Expect(err).NotTo(HaveOccurred())
-		cs := &vlabs.ContainerService{}
-		err = json.Unmarshal(contents, &cs)
-		Expect(err).NotTo(HaveOccurred())
-		cs.Properties.OrchestratorProfile.OrchestratorVersion = ""
-		csGenerated, err = api.ConvertVLabsContainerService(cs, false)
-		Expect(err).NotTo(HaveOccurred())
-	} else {
-		csGenerated, err := engine.ParseOutput(engCfg.GeneratedDefinitionPath + "/apimodel.json")
-		Expect(err).NotTo(HaveOccurred())
-	}
+	validate := false
+	csGenerated, err := engine.ParseOutput(engCfg.GeneratedDefinitionPath+"/apimodel.json", validate)
+	Expect(err).NotTo(HaveOccurred())
 	eng = engine.Engine{
 		Config:             engCfg,
 		ClusterDefinition:  csInput,
