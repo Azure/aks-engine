@@ -550,25 +550,20 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			Expect(err).NotTo(HaveOccurred())
 			Expect(len(nodeList.Nodes)).To(Equal(eng.NodeCount()))
 			for _, node := range nodeList.Nodes {
+				role := "agent"
+				if strings.HasPrefix(node.Metadata.Name, "k8s-master") {
+					role = "master"
+				}
 				labels := node.Metadata.Labels
-				Expect(labels).To(SatisfyAny(
-					HaveKeyWithValue("kubernetes.azure.com/role", "master"),
-					HaveKeyWithValue("kubernetes.azure.com/role", "agent"),
-				))
 				expect := Expect(labels).To
+				expect(HaveKeyWithValue("kubernetes.azure.com/role", role))
 				// See https://github.com/Azure/aks-engine/issues/1660
 				if node.IsWindows() && common.IsKubernetesVersionGe(
 					eng.ExpandedDefinition.Properties.OrchestratorProfile.OrchestratorVersion, "1.16.0-alpha.1") {
 					expect = Expect(labels).NotTo
 				}
-				expect(SatisfyAny(
-					HaveKeyWithValue("kubernetes.io/role", "master"),
-					HaveKeyWithValue("kubernetes.io/role", "agent"),
-				))
-				expect(SatisfyAny(
-					HaveKey("node-role.kubernetes.io/master"),
-					HaveKey("node-role.kubernetes.io/agent"),
-				))
+				expect(HaveKeyWithValue("kubernetes.io/role", role))
+				expect(HaveKey(fmt.Sprintf("node-role.kubernetes.io/%s", role)))
 			}
 		})
 
