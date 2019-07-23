@@ -545,6 +545,27 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			Expect(len(nodeList)).To(Equal(nodes))
 		})
 
+		It("should have node labels specific to masters or agents", func() {
+			nodeList, err := node.Get()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(len(nodeList.Nodes)).To(Equal(eng.NodeCount()))
+			for _, node := range nodeList.Nodes {
+				labels := node.Metadata.Labels
+				Expect(labels).To(SatisfyAny(
+					HaveKeyWithValue("kubernetes.azure.com/role", "master"),
+					HaveKeyWithValue("kubernetes.azure.com/role", "agent"),
+				))
+				Expect(labels).To(SatisfyAny(
+					HaveKeyWithValue("kubernetes.io/role", "master"),
+					HaveKeyWithValue("kubernetes.io/role", "agent"),
+				))
+				Expect(labels).To(SatisfyAny(
+					HaveKey("node-role.kubernetes.io/master"),
+					HaveKey("node-role.kubernetes.io/agent"),
+				))
+			}
+		})
+
 		It("should print cluster resources", func() {
 			cmd := exec.Command("k", "get", "deployments,pods,svc,daemonsets,configmaps,endpoints,jobs,clusterroles,clusterrolebindings,roles,rolebindings,storageclasses", "--all-namespaces", "-o", "wide")
 			out, err := cmd.CombinedOutput()
