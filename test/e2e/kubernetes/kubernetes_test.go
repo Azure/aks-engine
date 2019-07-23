@@ -556,7 +556,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 					HaveKeyWithValue("kubernetes.azure.com/role", "agent"),
 				))
 				// See https://github.com/Azure/aks-engine/issues/1660
-				if eng.AnyAgentIsLinux() || !common.IsKubernetesVersionGe(
+				if node.IsLinux() || !common.IsKubernetesVersionGe(
 					eng.ExpandedDefinition.Properties.OrchestratorProfile.OrchestratorVersion, "1.16.0-alpha.1") {
 					Expect(labels).To(SatisfyAny(
 						HaveKeyWithValue("kubernetes.io/role", "master"),
