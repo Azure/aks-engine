@@ -69,8 +69,8 @@ jobs:
 
 - template: e2e-job-template.yaml
   parameters:
-    name: 'default_linux_e2e'
-    apimodel: 'examples/kubernetes.json'
+    name: 'k8s_non_vhd_deployment'
+    apimodel: 'examples/kubernetes-ubuntu-distro.json'
 
 - template: e2e-job-template.yaml
   parameters:
