@@ -1292,6 +1292,17 @@ func TestMasterProfileDefaults(t *testing.T) {
 		t.Fatalf("OrchestratorProfile.KubernetesConfig.ClusterSubnet did not have the expected configuration, got %s, expected %s",
 			properties.OrchestratorProfile.KubernetesConfig.ClusterSubnet, expectedClusterSubnet)
 	}
+
+	// this validates default configurations for OutboundRuleIdleTimeoutInMinutes.
+	mockCS = getMockBaseContainerService("1.14.4")
+	properties = mockCS.Properties
+	properties.OrchestratorProfile.OrchestratorType = Kubernetes
+	properties.OrchestratorProfile.KubernetesConfig.LoadBalancerSku = StandardLoadBalancerSku
+	mockCS.SetPropertiesDefaults(false, false)
+	if properties.OrchestratorProfile.KubernetesConfig.OutboundRuleIdleTimeoutInMinutes != DefaultOutboundRuleIdleTimeoutInMinutes {
+		t.Fatalf("OrchestratorProfile.KubernetesConfig.OutboundRuleIdleTimeoutInMinutes did not have the expected configuration, got %d, expected %d",
+			properties.OrchestratorProfile.KubernetesConfig.OutboundRuleIdleTimeoutInMinutes, DefaultOutboundRuleIdleTimeoutInMinutes)
+	}
 }
 
 func TestAgentPoolProfile(t *testing.T) {

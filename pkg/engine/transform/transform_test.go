@@ -97,6 +97,40 @@ func TestNormalizeResourcesForK8sAgentUpgrade(t *testing.T) {
 	ValidateTemplate(templateMap, expectedFileContents, "TestNormalizeResourcesForK8sAgentUpgrade")
 }
 
+func TestNormalizeForK8sSLBScalingOrUpgrade(t *testing.T) {
+	RegisterTestingT(t)
+	logger := logrus.New().WithField("testName", "NormalizeForK8sSLBScalingOrUpgrade")
+	fileContents, e := ioutil.ReadFile("./transformtestfiles/k8s_slb_template.json")
+	Expect(e).To(BeNil())
+	expectedFileContents, e := ioutil.ReadFile("./transformtestfiles/k8s_slb_scale_template.json")
+	Expect(e).To(BeNil())
+	templateJSON := string(fileContents)
+	var template interface{}
+	json.Unmarshal([]byte(templateJSON), &template)
+	templateMap := template.(map[string]interface{})
+	transformer := Transformer{}
+	e = transformer.NormalizeForK8sSLBScalingOrUpgrade(logger, templateMap)
+	Expect(e).To(BeNil())
+	ValidateTemplate(templateMap, expectedFileContents, "TestNormalizeForK8sSLBScalingOrUpgrade")
+}
+
+func TestNormalizeForK8sSLBScalingOrUpgradeVMSS(t *testing.T) {
+	RegisterTestingT(t)
+	logger := logrus.New().WithField("testName", "NormalizeForK8sSLBScalingOrUpgrade")
+	fileContents, e := ioutil.ReadFile("./transformtestfiles/k8s_slb_vmss_template.json")
+	Expect(e).To(BeNil())
+	expectedFileContents, e := ioutil.ReadFile("./transformtestfiles/k8s_slb_vmss_scale_template.json")
+	Expect(e).To(BeNil())
+	templateJSON := string(fileContents)
+	var template interface{}
+	json.Unmarshal([]byte(templateJSON), &template)
+	templateMap := template.(map[string]interface{})
+	transformer := Transformer{}
+	e = transformer.NormalizeForK8sSLBScalingOrUpgrade(logger, templateMap)
+	Expect(e).To(BeNil())
+	ValidateTemplate(templateMap, expectedFileContents, "TestNormalizeForK8sSLBScalingOrUpgradeVMSS")
+}
+
 func ValidateTemplate(templateMap map[string]interface{}, expectedFileContents []byte, testFileName string) {
 	output, e := helpers.JSONMarshal(templateMap, false)
 	Expect(e).To(BeNil())

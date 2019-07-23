@@ -243,6 +243,9 @@ const (
 	DefaultPreserveNodesProperties = true
 	// DefaultEnableVMSSNodePublicIP determines the aks-engine provided default for enable VMSS node public IP
 	DefaultEnableVMSSNodePublicIP = false
+	// DefaultOutboundRuleIdleTimeoutInMinutes determines the aks-engine provided default for IdleTimeoutInMinutes of the OutboundRule of the agent loadbalancer
+	// This value is set greater than the default Linux idle timeout (15.4 min): https://pracucci.com/linux-tcp-rto-min-max-and-tcp-retries2.html
+	DefaultOutboundRuleIdleTimeoutInMinutes = 30
 )
 
 // AzureStackCloud Specific Defaults

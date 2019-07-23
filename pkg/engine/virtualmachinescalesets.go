@@ -352,6 +352,12 @@ func CreateAgentVMSS(cs *api.ContainerService, profile *api.AgentPoolProfile) Vi
 		dependencies = append(dependencies, "[variables('vnetID')]")
 	}
 
+	if !cs.Properties.OrchestratorProfile.IsPrivateCluster() &&
+		profile.LoadBalancerBackendAddressPoolIDs == nil &&
+		cs.Properties.OrchestratorProfile.KubernetesConfig.LoadBalancerSku == api.StandardLoadBalancerSku {
+		dependencies = append(dependencies, "[variables('agentLbID')]")
+	}
+
 	orchProfile := cs.Properties.OrchestratorProfile
 	k8sConfig := orchProfile.KubernetesConfig
 	linuxProfile := cs.Properties.LinuxProfile
@@ -453,27 +459,35 @@ func CreateAgentVMSS(cs *api.ContainerService, profile *api.AgentPoolProfile) Vi
 	for i := 1; i <= profile.IPAddressCount; i++ {
 		ipconfig := compute.VirtualMachineScaleSetIPConfiguration{
 			Name: to.StringPtr(fmt.Sprintf("ipconfig%d", i)),
-			VirtualMachineScaleSetIPConfigurationProperties: &compute.VirtualMachineScaleSetIPConfigurationProperties{
-				Subnet: &compute.APIEntityReference{
-					ID: to.StringPtr(fmt.Sprintf("[variables('%sVnetSubnetID')]", profile.Name)),
-				},
+		}
+		ipConfigProps := compute.VirtualMachineScaleSetIPConfigurationProperties{
+			Subnet: &compute.APIEntityReference{
+				ID: to.StringPtr(fmt.Sprintf("[variables('%sVnetSubnetID')]", profile.Name)),
 			},
 		}
 		if i == 1 {
-			ipconfig.Primary = to.BoolPtr(true)
+			ipConfigProps.Primary = to.BoolPtr(true)
 
+			backendAddressPools := []compute.SubResource{}
 			if profile.LoadBalancerBackendAddressPoolIDs != nil {
-				backendPools := make([]compute.SubResource, 0)
 				for _, lbBackendPoolID := range profile.LoadBalancerBackendAddressPoolIDs {
-					backendPools = append(backendPools,
+					backendAddressPools = append(backendAddressPools,
 						compute.SubResource{
 							ID: to.StringPtr(lbBackendPoolID),
 						},
 					)
 				}
-				ipconfig.LoadBalancerBackendAddressPools = &backendPools
+			} else {
+				if !cs.Properties.OrchestratorProfile.IsPrivateCluster() &&
+					cs.Properties.OrchestratorProfile.KubernetesConfig.LoadBalancerSku == api.StandardLoadBalancerSku {
+					agentLbBackendAddressPools := compute.SubResource{
+						ID: to.StringPtr("[concat(variables('agentLbID'), '/backendAddressPools/', variables('agentLbBackendPoolName'))]"),
+					}
+					backendAddressPools = append(backendAddressPools, agentLbBackendAddressPools)
+				}
 			}
 
+			ipConfigProps.LoadBalancerBackendAddressPools = &backendAddressPools
 			// Set VMSS node public IP if requested
 			if to.Bool(profile.EnableVMSSNodePublicIP) {
 				publicIPAddressConfiguration := &compute.VirtualMachineScaleSetPublicIPAddressConfiguration{
@@ -482,9 +496,10 @@ func CreateAgentVMSS(cs *api.ContainerService, profile *api.AgentPoolProfile) Vi
 						IdleTimeoutInMinutes: to.Int32Ptr(30),
 					},
 				}
-				ipconfig.PublicIPAddressConfiguration = publicIPAddressConfiguration
+				ipConfigProps.PublicIPAddressConfiguration = publicIPAddressConfiguration
 			}
 		}
+		ipconfig.VirtualMachineScaleSetIPConfigurationProperties = &ipConfigProps
 		ipConfigurations = append(ipConfigurations, ipconfig)
 	}
 

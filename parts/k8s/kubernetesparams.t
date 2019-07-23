@@ -436,13 +436,6 @@
       },
       "type": "int"
     },
-    "kuberneteselbsvcname": {
-      "defaultValue": "",
-      "metadata": {
-        "description": "elb service for standard lb"
-      },
-      "type": "string"
-    },
 {{ if not UseManagedIdentity }}
     "servicePrincipalClientId": {
       "metadata": {

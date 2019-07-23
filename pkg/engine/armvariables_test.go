@@ -672,6 +672,26 @@ func TestK8sVars(t *testing.T) {
 	if diff != "" {
 		t.Errorf("unexpected diff while expecting equal structs: %s", diff)
 	}
+
+	// Test with SLB, should generate agentLb resource variables
+	cs.Properties.OrchestratorProfile.KubernetesConfig.LoadBalancerSku = api.StandardLoadBalancerSku
+
+	varMap, err = GetKubernetesVariables(cs)
+	if err != nil {
+		t.Fatal(err)
+	}
+	expectedMap["agentPublicIPAddressName"] = "[concat(parameters('orchestratorName'), '-agent-ip-outbound')]"
+	expectedMap["agentLbID"] = "[resourceId('Microsoft.Network/loadBalancers',variables('agentLbName'))]"
+	expectedMap["agentLbIPConfigID"] = "[concat(variables('agentLbID'),'/frontendIPConfigurations/', variables('agentLbIPConfigName'))]"
+	expectedMap["agentLbIPConfigName"] = "[concat(parameters('orchestratorName'), '-agent-outbound')]"
+	expectedMap["agentLbName"] = "[parameters('masterEndpointDNSNamePrefix')]"
+	expectedMap["agentLbBackendPoolName"] = "[parameters('masterEndpointDNSNamePrefix')]"
+	expectedMap["loadBalancerSku"] = api.StandardLoadBalancerSku
+	diff = cmp.Diff(varMap, expectedMap)
+
+	if diff != "" {
+		t.Errorf("unexpected diff while expecting equal structs: %s", diff)
+	}
 }
 
 func TestK8sVarsMastersOnly(t *testing.T) {

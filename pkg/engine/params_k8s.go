@@ -4,11 +4,8 @@
 package engine
 
 import (
-	"fmt"
-	"math/rand"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/Azure/go-autorest/autorest/to"
 
@@ -84,11 +81,6 @@ func assignKubernetesParameters(properties *api.Properties, parametersMap params
 				}
 			} else {
 				addValue(parametersMap, "kubernetesClusterAutoscalerEnabled", false)
-			}
-			if kubernetesConfig.LoadBalancerSku == "Standard" && !to.Bool(kubernetesConfig.PrivateCluster.Enabled) {
-				random := rand.New(rand.NewSource(time.Now().UnixNano()))
-				elbsvcName := random.Int()
-				addValue(parametersMap, "kuberneteselbsvcname", fmt.Sprintf("%d", elbsvcName))
 			}
 			if common.IsKubernetesVersionGe(k8sVersion, "1.12.0") {
 				addValue(parametersMap, "kubernetesCoreDNSSpec", kubernetesImageBase+k8sComponents["coredns"])

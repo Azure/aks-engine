@@ -324,6 +324,10 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpgrade, isScale bool) {
 		if a.OrchestratorProfile.KubernetesConfig.ProxyMode == "" {
 			a.OrchestratorProfile.KubernetesConfig.ProxyMode = DefaultKubeProxyMode
 		}
+		if a.OrchestratorProfile.KubernetesConfig.LoadBalancerSku == StandardLoadBalancerSku &&
+			a.OrchestratorProfile.KubernetesConfig.OutboundRuleIdleTimeoutInMinutes == 0 {
+			a.OrchestratorProfile.KubernetesConfig.OutboundRuleIdleTimeoutInMinutes = DefaultOutboundRuleIdleTimeoutInMinutes
+		}
 
 		// First, Configure addons
 		cs.setAddonsConfig(isUpdate)

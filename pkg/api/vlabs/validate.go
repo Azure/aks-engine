@@ -297,6 +297,10 @@ func (a *Properties) ValidateOrchestratorProfile(isUpdate bool) error {
 				if o.KubernetesConfig.MaximumLoadBalancerRuleCount < 0 {
 					return errors.New("maximumLoadBalancerRuleCount shouldn't be less than 0")
 				}
+				// https://docs.microsoft.com/en-us/azure/load-balancer/load-balancer-outbound-rules-overview
+				if o.KubernetesConfig.LoadBalancerSku == StandardLoadBalancerSku && o.KubernetesConfig.OutboundRuleIdleTimeoutInMinutes != 0 && (o.KubernetesConfig.OutboundRuleIdleTimeoutInMinutes < 4 || o.KubernetesConfig.OutboundRuleIdleTimeoutInMinutes > 120) {
+					return errors.New("outboundRuleIdleTimeoutInMinutes shouldn't be less than 4 or greater than 120")
+				}
 
 				if a.IsAzureStackCloud() {
 					if to.Bool(o.KubernetesConfig.UseInstanceMetadata) {

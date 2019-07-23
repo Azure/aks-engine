@@ -202,12 +202,6 @@ func kubernetesAddonSettingsInit(p *api.Properties) []kubernetesComponentFileSpe
 			isEnabled:       common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.8.0"),
 		},
 		{
-			sourceFile:      "kubernetesmasteraddons-elb-svc.yaml",
-			base64Data:      k.GetAddonScript(ELBServiceAddonName),
-			destinationFile: "elb-svc.yaml",
-			isEnabled:       k.LoadBalancerSku == api.StandardLoadBalancerSku && !p.OrchestratorProfile.IsPrivateCluster(),
-		},
-		{
 			sourceFile:      "kubernetesmasteraddons-pod-security-policy.yaml",
 			base64Data:      k.GetAddonScript(PodSecurityPolicyAddonName),
 			destinationFile: "pod-security-policy.yaml",

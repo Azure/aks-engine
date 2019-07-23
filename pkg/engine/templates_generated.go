@@ -15440,10 +15440,6 @@ MASTER_CONTAINER_ADDONS_PLACEHOLDER
     sed -i "s|<cloud>|{{WrapAsParameter "kubernetesClusterAutoscalerAzureCloud"}}|g; s|<useManagedIdentity>|{{WrapAsParameter "kubernetesClusterAutoscalerUseManagedIdentity"}}|g" /etc/kubernetes/addons/cluster-autoscaler-deployment.yaml
 {{end}}
 
-{{if and (not IsPrivateCluster) (eq .OrchestratorProfile.KubernetesConfig.LoadBalancerSku "Standard")}}
-    sed -i "s|<svcName>|{{WrapAsParameter "kuberneteselbsvcname"}}|g" "/etc/kubernetes/addons/elb-svc.yaml"
-{{end}}
-
 {{if EnableDataEncryptionAtRest }}
     sed -i "s|<etcdEncryptionSecret>|\"{{WrapAsParameter "etcdEncryptionKey"}}\"|g" /etc/kubernetes/encryption-config.yaml
 {{end}}
@@ -23323,13 +23319,6 @@ var _k8sKubernetesparamsT = []byte(`{{if .HasAadProfile}}
         "description": "Low Threshold for Image Garbage collection on each node."
       },
       "type": "int"
-    },
-    "kuberneteselbsvcname": {
-      "defaultValue": "",
-      "metadata": {
-        "description": "elb service for standard lb"
-      },
-      "type": "string"
     },
 {{ if not UseManagedIdentity }}
     "servicePrincipalClientId": {
