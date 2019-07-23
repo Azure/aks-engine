@@ -555,16 +555,17 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 					HaveKeyWithValue("kubernetes.azure.com/role", "master"),
 					HaveKeyWithValue("kubernetes.azure.com/role", "agent"),
 				))
+				expect := Expect(labels).To
 				// See https://github.com/Azure/aks-engine/issues/1660
 				if node.IsWindows() && common.IsKubernetesVersionGe(
 					eng.ExpandedDefinition.Properties.OrchestratorProfile.OrchestratorVersion, "1.16.0-alpha.1") {
-					Skip("Kubernetes 1.16 on Windows needs node labels applied")
+					expect = Expect(labels).NotTo
 				}
-				Expect(labels).To(SatisfyAny(
+				expect(SatisfyAny(
 					HaveKeyWithValue("kubernetes.io/role", "master"),
 					HaveKeyWithValue("kubernetes.io/role", "agent"),
 				))
-				Expect(labels).To(SatisfyAny(
+				expect(SatisfyAny(
 					HaveKey("node-role.kubernetes.io/master"),
 					HaveKey("node-role.kubernetes.io/agent"),
 				))
