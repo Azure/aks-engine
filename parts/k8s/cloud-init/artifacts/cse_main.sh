@@ -166,6 +166,9 @@ ensureKubelet
 ensureJournal
 
 if [[ -n "${MASTER_NODE}" ]]; then
+    if version_gte ${KUBERNETES_VERSION} 1.16; then
+      ensureLabelNodes
+    fi
     writeKubeConfig
     if [[ -z "${COSMOS_URI}" ]]; then
       ensureEtcd
