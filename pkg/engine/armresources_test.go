@@ -104,7 +104,7 @@ func TestGenerateARMResourcesWithVMSSAgentPool(t *testing.T) {
 								VirtualMachineScaleSetNetworkConfigurationProperties: &compute.VirtualMachineScaleSetNetworkConfigurationProperties{
 									Primary:                     to.BoolPtr(true),
 									EnableAcceleratedNetworking: to.BoolPtr(true),
-									IPConfigurations:            getIPConfigs(to.StringPtr("/subscriptions/123/resourceGroups/rg/providers/Microsoft.Network/loadBalancers/mySLB/backendAddressPools/mySLBBEPool"), false),
+									IPConfigurations:            getIPConfigs(to.StringPtr("/subscriptions/123/resourceGroups/rg/providers/Microsoft.Network/loadBalancers/mySLB/backendAddressPools/mySLBBEPool"), false, false),
 								},
 							},
 						},
@@ -1342,7 +1342,7 @@ func TestGenerateARMResourcesWithVMSSAgentPoolAndSLB(t *testing.T) {
 								VirtualMachineScaleSetNetworkConfigurationProperties: &compute.VirtualMachineScaleSetNetworkConfigurationProperties{
 									Primary:                     to.BoolPtr(true),
 									EnableAcceleratedNetworking: to.BoolPtr(true),
-									IPConfigurations:            getIPConfigs(to.StringPtr("/subscriptions/123/resourceGroups/rg/providers/Microsoft.Network/loadBalancers/mySLB/backendAddressPools/mySLBBEPool"), true),
+									IPConfigurations:            getIPConfigs(to.StringPtr("/subscriptions/123/resourceGroups/rg/providers/Microsoft.Network/loadBalancers/mySLB/backendAddressPools/mySLBBEPool"), true, false),
 								},
 							},
 						},
@@ -1833,7 +1833,7 @@ func TestGenerateARMResourcesWithVMSSAgentPoolAndSLB(t *testing.T) {
 								VirtualMachineScaleSetNetworkConfigurationProperties: &compute.VirtualMachineScaleSetNetworkConfigurationProperties{
 									Primary:                     to.BoolPtr(true),
 									EnableAcceleratedNetworking: to.BoolPtr(true),
-									IPConfigurations:            getIPConfigs(nil, true),
+									IPConfigurations:            getIPConfigs(nil, true, false),
 								},
 							},
 						},

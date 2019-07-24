@@ -494,11 +494,11 @@ func CreateAgentVMSS(cs *api.ContainerService, profile *api.AgentPoolProfile) Vi
 					ID: to.StringPtr("[concat(resourceId('Microsoft.Network/loadBalancers',parameters('masterEndpointDNSNamePrefix')), '/backendAddressPools/', parameters('masterEndpointDNSNamePrefix'))]"),
 				}
 				backendPools := make([]compute.SubResource, 0)
-				if ipconfig.LoadBalancerBackendAddressPools != nil {
-					backendPools = *ipconfig.LoadBalancerBackendAddressPools
+				if ipConfigProps.LoadBalancerBackendAddressPools != nil {
+					backendPools = *ipConfigProps.LoadBalancerBackendAddressPools
 				}
 				backendPools = append(backendPools, defaultIPv4BackendPool)
-				ipconfig.LoadBalancerBackendAddressPools = &backendPools
+				ipConfigProps.LoadBalancerBackendAddressPools = &backendPools
 			}
 
 			// Set VMSS node public IP if requested
