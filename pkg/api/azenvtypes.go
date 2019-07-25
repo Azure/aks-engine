@@ -170,13 +170,15 @@ var (
 		},
 
 		OSImageConfig: map[Distro]AzureOSImageConfig{
-			Ubuntu:        Ubuntu1604OSImageConfig,
-			Ubuntu1804:    Ubuntu1804OSImageConfig,
-			RHEL:          RHELOSImageConfig,
-			CoreOS:        CoreOSImageConfig,
-			AKSUbuntu1604: AKSUbuntu1604OSImageConfig,
-			AKSUbuntu1804: AKSUbuntu1804OSImageConfig,
-			ACC1604:       ACC1604OSImageConfig,
+			Ubuntu:            Ubuntu1604OSImageConfig,
+			Ubuntu1804:        Ubuntu1804OSImageConfig,
+			RHEL:              RHELOSImageConfig,
+			CoreOS:            CoreOSImageConfig,
+			AKSUbuntu1604:     AKSUbuntu1604OSImageConfig,
+			AKS1604Deprecated: AKSUbuntu1604OSImageConfig, // for back-compat
+			AKSUbuntu1804:     AKSUbuntu1804OSImageConfig,
+			AKS1804Deprecated: AKSUbuntu1804OSImageConfig, // for back-compat
+			ACC1604:           ACC1604OSImageConfig,
 		},
 	}
 
@@ -190,12 +192,14 @@ var (
 			ResourceManagerVMDNSSuffix: "cloudapp.microsoftazure.de",
 		},
 		OSImageConfig: map[Distro]AzureOSImageConfig{
-			Ubuntu:        Ubuntu1604OSImageConfig,
-			Ubuntu1804:    Ubuntu1804OSImageConfig,
-			RHEL:          RHELOSImageConfig,
-			CoreOS:        CoreOSImageConfig,
-			AKSUbuntu1604: Ubuntu1604OSImageConfig,
-			AKSUbuntu1804: Ubuntu1604OSImageConfig, // workaround for https://github.com/Azure/aks-engine/issues/761
+			Ubuntu:            Ubuntu1604OSImageConfig,
+			Ubuntu1804:        Ubuntu1804OSImageConfig,
+			RHEL:              RHELOSImageConfig,
+			CoreOS:            CoreOSImageConfig,
+			AKSUbuntu1604:     Ubuntu1604OSImageConfig,
+			AKS1604Deprecated: Ubuntu1604OSImageConfig, // for back-compat
+			AKSUbuntu1804:     Ubuntu1604OSImageConfig, // workaround for https://github.com/Azure/aks-engine/issues/761
+			AKS1804Deprecated: Ubuntu1604OSImageConfig, // for back-compat
 		},
 	}
 
@@ -209,12 +213,14 @@ var (
 			ResourceManagerVMDNSSuffix: "cloudapp.usgovcloudapi.net",
 		},
 		OSImageConfig: map[Distro]AzureOSImageConfig{
-			Ubuntu:        Ubuntu1604OSImageConfig,
-			Ubuntu1804:    Ubuntu1804OSImageConfig,
-			RHEL:          RHELOSImageConfig,
-			CoreOS:        CoreOSImageConfig,
-			AKSUbuntu1604: Ubuntu1604OSImageConfig,
-			AKSUbuntu1804: Ubuntu1604OSImageConfig, // workaround for https://github.com/Azure/aks-engine/issues/761
+			Ubuntu:            Ubuntu1604OSImageConfig,
+			Ubuntu1804:        Ubuntu1804OSImageConfig,
+			RHEL:              RHELOSImageConfig,
+			CoreOS:            CoreOSImageConfig,
+			AKSUbuntu1604:     Ubuntu1604OSImageConfig,
+			AKS1604Deprecated: Ubuntu1604OSImageConfig, // for back-compat
+			AKSUbuntu1804:     Ubuntu1604OSImageConfig, // workaround for https://github.com/Azure/aks-engine/issues/761
+			AKS1804Deprecated: Ubuntu1604OSImageConfig, // for back-compat
 		},
 	}
 
@@ -253,12 +259,14 @@ var (
 			ResourceManagerVMDNSSuffix: "cloudapp.chinacloudapi.cn",
 		},
 		OSImageConfig: map[Distro]AzureOSImageConfig{
-			Ubuntu:        Ubuntu1604OSImageConfig,
-			Ubuntu1804:    Ubuntu1804OSImageConfig,
-			RHEL:          RHELOSImageConfig,
-			CoreOS:        CoreOSImageConfig,
-			AKSUbuntu1604: AKSUbuntu1604OSImageConfig,
-			AKSUbuntu1804: AKSUbuntu1804OSImageConfig,
+			Ubuntu:            Ubuntu1604OSImageConfig,
+			Ubuntu1804:        Ubuntu1804OSImageConfig,
+			RHEL:              RHELOSImageConfig,
+			CoreOS:            CoreOSImageConfig,
+			AKSUbuntu1604:     AKSUbuntu1604OSImageConfig,
+			AKS1604Deprecated: AKSUbuntu1604OSImageConfig, // for back-compat
+			AKSUbuntu1804:     AKSUbuntu1804OSImageConfig,
+			AKS1804Deprecated: AKSUbuntu1804OSImageConfig, // for back-compat
 		},
 	}
 
