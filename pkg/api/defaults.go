@@ -148,15 +148,23 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpgrade, isScale bool) {
 		switch o.KubernetesConfig.ContainerRuntime {
 		case Docker:
 			if o.KubernetesConfig.MobyVersion == "" || isUpdate {
-				if isUpdate && o.KubernetesConfig.MobyVersion != DefaultMobyVersion {
-					log.Warnf("Moby will be upgraded to version %s\n", DefaultMobyVersion)
+				if o.KubernetesConfig.MobyVersion != DefaultMobyVersion {
+					if isUpgrade {
+						log.Warnf("Moby will be upgraded to version %s\n", DefaultMobyVersion)
+					} else if isScale {
+						log.Warnf("Any new nodes will have Moby version %s\n", DefaultMobyVersion)
+					}
 				}
 				o.KubernetesConfig.MobyVersion = DefaultMobyVersion
 			}
 		case Containerd, KataContainers:
 			if o.KubernetesConfig.ContainerdVersion == "" || isUpdate {
-				if isUpdate && o.KubernetesConfig.ContainerdVersion != DefaultContainerdVersion {
-					log.Warnf("containerd will be upgraded to version %s\n", DefaultContainerdVersion)
+				if o.KubernetesConfig.ContainerdVersion != DefaultContainerdVersion {
+					if isUpgrade {
+						log.Warnf("containerd will be upgraded to version %s\n", DefaultContainerdVersion)
+					} else if isScale {
+						log.Warnf("Any new nodes will have containerd version %s\n", DefaultContainerdVersion)
+					}
 				}
 				o.KubernetesConfig.ContainerdVersion = DefaultContainerdVersion
 			}
