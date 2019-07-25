@@ -152,7 +152,7 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpgrade, isScale bool) {
 					if isUpgrade {
 						log.Warnf("Moby will be upgraded to version %s\n", DefaultMobyVersion)
 					} else if isScale {
-						log.Warnf("Any new scaled up nodes will have Moby version %s\n", DefaultMobyVersion)
+						log.Warnf("Any new nodes will have Moby version %s\n", DefaultMobyVersion)
 					}
 				}
 				o.KubernetesConfig.MobyVersion = DefaultMobyVersion
@@ -163,7 +163,7 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpgrade, isScale bool) {
 					if isUpgrade {
 						log.Warnf("containerd will be upgraded to version %s\n", DefaultContainerdVersion)
 					} else if isScale {
-						log.Warnf("Any new scaled up nodes will have containerd version %s\n", DefaultContainerdVersion)
+						log.Warnf("Any new nodes will have containerd version %s\n", DefaultContainerdVersion)
 					}
 				}
 				o.KubernetesConfig.ContainerdVersion = DefaultContainerdVersion
