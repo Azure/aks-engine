@@ -1042,7 +1042,7 @@ func TestCreateAgentVMASNICWithIPv6DualStackFeature(t *testing.T) {
 						ID: to.StringPtr("[concat(resourceId('Microsoft.Network/loadBalancers', variables('routerLBName')), '/backendAddressPools/backend')]"),
 					},
 					{
-						ID: to.StringPtr("[concat(resourceId('Microsoft.Network/loadBalancers',parameters('masterEndpointDNSNamePrefix')), '/backendAddressPools/', parameters('masterEndpointDNSNamePrefix'), '-ipv4')]"),
+						ID: to.StringPtr("[concat(resourceId('Microsoft.Network/loadBalancers',parameters('masterEndpointDNSNamePrefix')), '/backendAddressPools/', parameters('masterEndpointDNSNamePrefix'))]"),
 					},
 				},
 				PrivateIPAllocationMethod: network.Dynamic,
