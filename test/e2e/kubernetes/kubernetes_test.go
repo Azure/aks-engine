@@ -555,7 +555,6 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 					role = "master"
 				}
 				labels := node.Metadata.Labels
-				Expect(labels).To(HaveKeyWithValue("kubernetes.azure.com/role", role))
 				// See https://github.com/Azure/aks-engine/issues/1660
 				if node.IsWindows() && common.IsKubernetesVersionGe(
 					eng.ExpandedDefinition.Properties.OrchestratorProfile.OrchestratorVersion, "1.16.0-alpha.1") {
