@@ -68,7 +68,7 @@ type Transformer struct {
 
 // NormalizeForK8sSLBScalingOrUpgrade takes a template and removes elements that are unwanted in a K8s Standard LB cluster scale up/down case
 func (t *Transformer) NormalizeForK8sSLBScalingOrUpgrade(logger *logrus.Entry, templateMap map[string]interface{}) error {
-	logger.Infoln("Running NormalizeForK8sSLBScalingOrUpgrade...")
+	logger.Debugf("Running NormalizeForK8sSLBScalingOrUpgrade...")
 	lbIndex := -1
 	resources := templateMap[resourcesFieldName].([]interface{})
 
