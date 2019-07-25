@@ -255,7 +255,11 @@ func (cs *ContainerService) setAddonsConfig(isUpdate bool) {
 		Containers: []KubernetesContainerSpec{
 			{
 				Name:  AzureNetworkPolicyAddonName,
-				Image: "mcr.microsoft.com/containernetworking/azure-npm:v1.0.18",
+				Image: "mcr.microsoft.com/containernetworking/azure-npm:v1.0.24",
+			},
+			{
+				Name:  AzureVnetTelemetryAddonName,
+				Image: "mcr.microsoft.com/containernetworking/azure-vnet-telemetry:v1.0.24",
 			},
 		},
 	}

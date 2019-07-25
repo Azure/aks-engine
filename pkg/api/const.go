@@ -317,11 +317,11 @@ const (
 	// AzureCniPluginVerLinux specifies version of Azure CNI plugin, which has been mirrored from
 	// https://github.com/Azure/azure-container-networking/releases/download/${AZURE_PLUGIN_VER}/azure-vnet-cni-linux-amd64-${AZURE_PLUGIN_VER}.tgz
 	// to https://acs-mirror.azureedge.net/cni
-	AzureCniPluginVerLinux = "v1.0.22"
+	AzureCniPluginVerLinux = "v1.0.24"
 	// AzureCniPluginVerWindows specifies version of Azure CNI plugin, which has been mirrored from
 	// https://github.com/Azure/azure-container-networking/releases/download/${AZURE_PLUGIN_VER}/azure-vnet-cni-windows-amd64-${AZURE_PLUGIN_VER}.zip
 	// to https://acs-mirror.azureedge.net/cni
-	AzureCniPluginVerWindows = "v1.0.22"
+	AzureCniPluginVerWindows = "v1.0.24"
 	// CNIPluginVer specifies the version of CNI implementation
 	// https://github.com/containernetworking/plugins
 	CNIPluginVer = "v0.7.5"
@@ -420,8 +420,10 @@ const (
 	DefaultEtcdDiskSizeGT20Nodes = "2048"
 	// AzureCNINetworkMonitoringAddonName is the name of the Azure CNI networkmonitor addon
 	AzureCNINetworkMonitoringAddonName = "azure-cni-networkmonitor"
-	// AzureNetworkPolicyAddonName is the name of the Azure CNI networkmonitor addon
+	// AzureNetworkPolicyAddonName is the name of the Azure network policy manager addon
 	AzureNetworkPolicyAddonName = "azure-npm-daemonset"
+	// AzureVnetTelemetryAddonName is the name of the Azure vnet telemetry addon
+	AzureVnetTelemetryAddonName = "azure-vnet-telemetry-daemonset"
 	// DefaultMasterEtcdClientPort is the default etcd client port for Kubernetes master nodes
 	DefaultMasterEtcdClientPort = 2379
 	// DefaultKubeletEventQPS is 0, see --event-qps at https://kubernetes.io/docs/reference/generated/kubelet/

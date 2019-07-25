@@ -18462,7 +18462,7 @@ metadata:
   name: azure-npm
   namespace: kube-system
   labels:
-    addonmanager.kubernetes.io/mode: Reconcile
+    addonmanager.kubernetes.io/mode: EnsureExists
 ---
 apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: ClusterRole
@@ -18470,7 +18470,7 @@ metadata:
   name: azure-npm
   namespace: kube-system
   labels:
-    addonmanager.kubernetes.io/mode: Reconcile
+    addonmanager.kubernetes.io/mode: EnsureExists
 rules:
   - apiGroups:
     - ""
@@ -18497,7 +18497,7 @@ metadata:
   name: azure-npm-binding
   namespace: kube-system
   labels:
-    addonmanager.kubernetes.io/mode: Reconcile
+    addonmanager.kubernetes.io/mode: EnsureExists
 subjects:
   - kind: ServiceAccount
     name: azure-npm
@@ -18514,7 +18514,7 @@ metadata:
   namespace: kube-system
   labels:
     app: azure-npm
-    addonmanager.kubernetes.io/mode: Reconcile
+    addonmanager.kubernetes.io/mode: EnsureExists
 spec:
   selector:
     matchLabels:
@@ -18548,6 +18548,17 @@ spec:
             mountPath: /run/xtables.lock
           - name: log
             mountPath: /var/log
+          - name: socket-dir
+            mountPath: /var/run
+          - name: tmp
+            mountPath: /tmp
+        - name: azure-vnet-telemetry
+          image: {{ContainerImage "azure-vnet-telemetry-daemonset"}}
+          volumeMounts:
+          - name: socket-dir
+            mountPath: /var/run
+          - name: tmp
+            mountPath: /tmp
       hostNetwork: true
       volumes:
       - name: log
@@ -18558,6 +18569,12 @@ spec:
         hostPath:
           path: /run/xtables.lock
           type: File
+      - name: tmp
+        hostPath:
+          path: /tmp
+          type: Directory
+      - name: socket-dir
+        emptyDir: {}
       serviceAccountName: azure-npm
 `)
 
