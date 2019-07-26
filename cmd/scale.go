@@ -324,10 +324,11 @@ func (sc *scaleCmd) run(cmd *cobra.Command, args []string) error {
 				if currentNodeCount != numNodesFromK8sAPI {
 					sc.logger.Warnf("There are %d VMs named \"*%s*\" in the resource group %s, but there are %d nodes named \"*%s*\" in the Kubernetes cluster\n", currentNodeCount, sc.agentPoolToScale, sc.resourceGroupName, numNodesFromK8sAPI, sc.agentPoolToScale)
 				} else {
-					if len(sc.nodes) > 1 {
-						sc.logger.Infof("%d nodes will be deleted\n", currentNodeCount-sc.newDesiredAgentCount)
+					nodesToDelete := currentNodeCount - sc.newDesiredAgentCount
+					if nodesToDelete > 1 {
+						sc.logger.Infof("%d nodes will be deleted\n", nodesToDelete)
 					} else {
-						sc.logger.Infof("%d node will be deleted\n", currentNodeCount-sc.newDesiredAgentCount)
+						sc.logger.Infof("%d node will be deleted\n", nodesToDelete)
 					}
 				}
 			}
