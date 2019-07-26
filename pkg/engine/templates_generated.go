@@ -15111,7 +15111,7 @@ write_files:
   content: !!binary |
     {{CloudInitData "provisionConfigs"}}
 
-{{if not .IsVHDDistro}}
+{{if not .MasterProfile.IsVHDDistro}}
 - path: /opt/azure/containers/provision_cis.sh
   permissions: "0744"
   encoding: gzip
@@ -15168,7 +15168,7 @@ write_files:
   content: !!binary |
     {{CloudInitData "kubeletSystemdService"}}
 
-{{if not .IsVHDDistro}}
+{{if not .MasterProfile.IsVHDDistro}}
 - path: /opt/azure/containers/label-nodes.sh
   permissions: "0744"
   encoding: gzip
