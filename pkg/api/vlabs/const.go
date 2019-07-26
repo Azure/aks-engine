@@ -80,10 +80,9 @@ const (
 
 // Supported container runtimes
 const (
-	Docker          = "docker"
-	ClearContainers = "clear-containers"
-	KataContainers  = "kata-containers"
-	Containerd      = "containerd"
+	Docker         = "docker"
+	KataContainers = "kata-containers"
+	Containerd     = "containerd"
 )
 
 var (
@@ -95,7 +94,7 @@ var (
 	NetworkPolicyValues = [...]string{"", "calico", NetworkPolicyCilium, "azure", "none"}
 
 	// ContainerRuntimeValues holds the valid values for container runtimes
-	ContainerRuntimeValues = [...]string{"", Docker, ClearContainers, KataContainers, Containerd}
+	ContainerRuntimeValues = [...]string{"", Docker, KataContainers, Containerd}
 
 	// DistroValues holds the valid values for OS distros
 	DistroValues = []Distro{"", Ubuntu, Ubuntu1804, RHEL, CoreOS, AKSUbuntu1604, AKSUbuntu1804, ACC1604}

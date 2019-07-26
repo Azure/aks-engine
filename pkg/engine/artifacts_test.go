@@ -315,7 +315,6 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 		expectedAADAdminGroup         bool
 		expectedAzureCloudProvider    bool
 		expectedAuditPolicy           bool
-		expectedELBService            bool
 		expectedPodSecurityPolicy     bool
 		expectedManagedStorageClass   bool
 		expectedUnmanagedStorageClass bool
@@ -345,7 +344,6 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 			expectedAADAdminGroup:         false,
 			expectedAzureCloudProvider:    true,
 			expectedAuditPolicy:           false,
-			expectedELBService:            false,
 			expectedPodSecurityPolicy:     false,
 			expectedManagedStorageClass:   true,
 			expectedUnmanagedStorageClass: false,
@@ -370,7 +368,6 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 			expectedAADAdminGroup:         false,
 			expectedAzureCloudProvider:    true,
 			expectedAuditPolicy:           true,
-			expectedELBService:            false,
 			expectedPodSecurityPolicy:     false,
 			expectedManagedStorageClass:   true,
 			expectedUnmanagedStorageClass: false,
@@ -395,7 +392,6 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 			expectedAADAdminGroup:         false,
 			expectedAzureCloudProvider:    true,
 			expectedAuditPolicy:           true,
-			expectedELBService:            false,
 			expectedPodSecurityPolicy:     false,
 			expectedManagedStorageClass:   true,
 			expectedUnmanagedStorageClass: false,
@@ -420,7 +416,6 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 			expectedAADAdminGroup:         false,
 			expectedAzureCloudProvider:    true,
 			expectedAuditPolicy:           true,
-			expectedELBService:            false,
 			expectedPodSecurityPolicy:     false,
 			expectedManagedStorageClass:   true,
 			expectedUnmanagedStorageClass: false,
@@ -448,7 +443,6 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 			expectedAADAdminGroup:         true,
 			expectedAzureCloudProvider:    true,
 			expectedAuditPolicy:           true,
-			expectedELBService:            false,
 			expectedPodSecurityPolicy:     false,
 			expectedManagedStorageClass:   true,
 			expectedUnmanagedStorageClass: false,
@@ -474,7 +468,6 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 			expectedAADAdminGroup:         false,
 			expectedAzureCloudProvider:    true,
 			expectedAuditPolicy:           true,
-			expectedELBService:            true,
 			expectedPodSecurityPolicy:     false,
 			expectedManagedStorageClass:   true,
 			expectedUnmanagedStorageClass: false,
@@ -506,7 +499,6 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 			expectedAADAdminGroup:         false,
 			expectedAzureCloudProvider:    true,
 			expectedAuditPolicy:           true,
-			expectedELBService:            true,
 			expectedPodSecurityPolicy:     false,
 			expectedManagedStorageClass:   true,
 			expectedUnmanagedStorageClass: false,
@@ -531,7 +523,6 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 			expectedAADAdminGroup:         false,
 			expectedAzureCloudProvider:    true,
 			expectedAuditPolicy:           true,
-			expectedELBService:            false,
 			expectedPodSecurityPolicy:     true,
 			expectedManagedStorageClass:   true,
 			expectedUnmanagedStorageClass: false,
@@ -561,7 +552,6 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 			expectedAADAdminGroup:         false,
 			expectedAzureCloudProvider:    true,
 			expectedAuditPolicy:           false,
-			expectedELBService:            false,
 			expectedPodSecurityPolicy:     false,
 			expectedManagedStorageClass:   false,
 			expectedUnmanagedStorageClass: true,
@@ -592,7 +582,6 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 			expectedAADAdminGroup:         false,
 			expectedAzureCloudProvider:    true,
 			expectedAuditPolicy:           true,
-			expectedELBService:            false,
 			expectedPodSecurityPolicy:     false,
 			expectedManagedStorageClass:   true,
 			expectedUnmanagedStorageClass: false,
@@ -623,7 +612,6 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 			expectedAADAdminGroup:         false,
 			expectedAzureCloudProvider:    true,
 			expectedAuditPolicy:           true,
-			expectedELBService:            false,
 			expectedPodSecurityPolicy:     false,
 			expectedManagedStorageClass:   false,
 			expectedUnmanagedStorageClass: true,
@@ -648,7 +636,6 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 			expectedAADAdminGroup:         false,
 			expectedAzureCloudProvider:    true,
 			expectedAuditPolicy:           true,
-			expectedELBService:            false,
 			expectedPodSecurityPolicy:     true,
 			expectedManagedStorageClass:   true,
 			expectedUnmanagedStorageClass: false,
@@ -691,10 +678,6 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 			case "audit-policy.yaml":
 				if c.expectedAuditPolicy != componentFileSpec.isEnabled {
 					t.Fatalf("Expected %s to be %t", AuditPolicyAddonName, c.expectedAuditPolicy)
-				}
-			case "elb-svc.yaml":
-				if c.expectedELBService != componentFileSpec.isEnabled {
-					t.Fatalf("Expected %s to be %t", ELBServiceAddonName, c.expectedELBService)
 				}
 			case "pod-security-policy.yaml":
 				if c.expectedPodSecurityPolicy != componentFileSpec.isEnabled {

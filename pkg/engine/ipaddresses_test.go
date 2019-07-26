@@ -32,10 +32,36 @@ func TestCreatePublicIPAddress(t *testing.T) {
 			Type: to.StringPtr("Microsoft.Network/publicIPAddresses"),
 		},
 	}
-
-	actual := CreatePublicIPAddress()
+	isForMaster := true
+	actual := CreatePublicIPAddress(isForMaster)
 
 	diff := cmp.Diff(actual, expected)
+
+	if diff != "" {
+		t.Errorf("unexpected diff while expecting equal structs: %s", diff)
+	}
+	// Testing CreatePublicIPAddress when it's not for master
+
+	expected = PublicIPAddressARM{
+		ARMResource: ARMResource{
+			APIVersion: "[variables('apiVersionNetwork')]",
+		},
+		PublicIPAddress: network.PublicIPAddress{
+			Location: to.StringPtr("[variables('location')]"),
+			Name:     to.StringPtr("[variables('agentPublicIPAddressName')]"),
+			PublicIPAddressPropertiesFormat: &network.PublicIPAddressPropertiesFormat{
+				PublicIPAllocationMethod: network.Static,
+			},
+			Sku: &network.PublicIPAddressSku{
+				Name: "[variables('loadBalancerSku')]",
+			},
+			Type: to.StringPtr("Microsoft.Network/publicIPAddresses"),
+		},
+	}
+	isForMaster = false
+	actual = CreatePublicIPAddress(isForMaster)
+
+	diff = cmp.Diff(actual, expected)
 
 	if diff != "" {
 		t.Errorf("unexpected diff while expecting equal structs: %s", diff)

@@ -34,6 +34,15 @@ func GenerateARMResources(cs *api.ContainerService) []interface{} {
 		armResources = append(armResources, userAssignedID, msiRoleAssignment)
 	}
 
+	if !cs.Properties.OrchestratorProfile.IsPrivateCluster() &&
+		!cs.Properties.AnyAgentHasLoadBalancerBackendAddressPoolIDs() &&
+		cs.Properties.OrchestratorProfile.KubernetesConfig.LoadBalancerSku == api.StandardLoadBalancerSku {
+		isForMaster := false
+		publicIPAddress := CreatePublicIPAddress(isForMaster)
+		loadBalancer := CreateAgentLoadBalancer(cs.Properties, true)
+		armResources = append(armResources, publicIPAddress, loadBalancer)
+	}
+
 	profiles := cs.Properties.AgentPoolProfiles
 
 	for _, profile := range profiles {

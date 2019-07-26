@@ -304,6 +304,11 @@ func createAgentVMASNetworkInterface(cs *api.ContainerService, profile *api.Agen
 	} else {
 		dependencies = append(dependencies, "[variables('vnetID')]")
 	}
+	if !cs.Properties.OrchestratorProfile.IsPrivateCluster() &&
+		profile.LoadBalancerBackendAddressPoolIDs == nil &&
+		cs.Properties.OrchestratorProfile.KubernetesConfig.LoadBalancerSku == api.StandardLoadBalancerSku {
+		dependencies = append(dependencies, "[variables('agentLbID')]")
+	}
 
 	armResource.DependsOn = dependencies
 
@@ -335,8 +340,8 @@ func createAgentVMASNetworkInterface(cs *api.ContainerService, profile *api.Agen
 		}
 		if i == 1 {
 			ipConfig.Primary = to.BoolPtr(true)
+			backendPools := make([]network.BackendAddressPool, 0)
 			if profile.LoadBalancerBackendAddressPoolIDs != nil {
-				backendPools := make([]network.BackendAddressPool, 0)
 				for _, lbBackendPoolID := range profile.LoadBalancerBackendAddressPoolIDs {
 					backendPools = append(backendPools,
 						network.BackendAddressPool{
@@ -344,8 +349,16 @@ func createAgentVMASNetworkInterface(cs *api.ContainerService, profile *api.Agen
 						},
 					)
 				}
-				ipConfig.LoadBalancerBackendAddressPools = &backendPools
+			} else {
+				if !cs.Properties.OrchestratorProfile.IsPrivateCluster() &&
+					cs.Properties.OrchestratorProfile.KubernetesConfig.LoadBalancerSku == api.StandardLoadBalancerSku {
+					agentLbBackendAddressPools := network.BackendAddressPool{
+						ID: to.StringPtr("[concat(variables('agentLbID'), '/backendAddressPools/', variables('agentLbBackendPoolName'))]"),
+					}
+					backendPools = append(backendPools, agentLbBackendAddressPools)
+				}
 			}
+			ipConfig.LoadBalancerBackendAddressPools = &backendPools
 		}
 		ipConfig.PrivateIPAllocationMethod = network.Dynamic
 		ipConfig.Subnet = &network.Subnet{
@@ -367,7 +380,7 @@ func createAgentVMASNetworkInterface(cs *api.ContainerService, profile *api.Agen
 				backendPools = *ipConfig.LoadBalancerBackendAddressPools
 			}
 			backendPools = append(backendPools, network.BackendAddressPool{
-				ID: to.StringPtr("[concat(resourceId('Microsoft.Network/loadBalancers',parameters('masterEndpointDNSNamePrefix')), '/backendAddressPools/', parameters('masterEndpointDNSNamePrefix'), '-ipv4')]"),
+				ID: to.StringPtr("[concat(resourceId('Microsoft.Network/loadBalancers',parameters('masterEndpointDNSNamePrefix')), '/backendAddressPools/', parameters('masterEndpointDNSNamePrefix'))]"),
 			})
 			ipConfig.LoadBalancerBackendAddressPools = &backendPools
 		}

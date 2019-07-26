@@ -9,9 +9,8 @@ import (
 	"testing"
 	"text/template"
 
-	"github.com/pkg/errors"
-
 	"github.com/Azure/aks-engine/pkg/api"
+	"github.com/pkg/errors"
 )
 
 func TestGenerateTemplateV2(t *testing.T) {
@@ -47,7 +46,9 @@ func TestGetTemplateFuncMap(t *testing.T) {
 		"IsKubernetesVersionGe",
 		"IsKubernetesVersionLt",
 		"GetMasterKubernetesLabels",
+		"GetMasterKubernetesLabelsDeprecated",
 		"GetAgentKubernetesLabels",
+		"GetAgentKubernetesLabelsDeprecated",
 		"GetKubeletConfigKeyVals",
 		"GetKubeletConfigKeyValsPsh",
 		"GetK8sRuntimeConfigKeyVals",
@@ -98,7 +99,7 @@ func TestGetTemplateFuncMap(t *testing.T) {
 		"IsNSeriesSKU",
 		"HasAvailabilityZones",
 		"GetBase64EncodedEnvironmentJSON",
-		"IsIdentitySystemADFS",
+		"GetIdentitySystem",
 		// TODO validate that the remaining func strings in getTemplateFuncMap are thinly wrapped and unit tested
 	}
 
@@ -131,21 +132,26 @@ func TestGetTemplateFuncMap(t *testing.T) {
 	}
 }
 
-func TestIsIdentitySystemADFS(t *testing.T) {
+func TestGetIdentitySystem(t *testing.T) {
 	for _, test := range []struct {
-		desc     string
-		apiModel string
-		isADFS   bool
+		desc           string
+		apiModel       string
+		expectedResult string
 	}{
 		{
-			desc:     "identitySystem=adfs should return true",
-			apiModel: `{"properties":{"customCloudProfile": {"identitySystem": "adfs"}}}`,
-			isADFS:   true,
+			desc:           "should return adfs when identitySystem is set to adfs",
+			apiModel:       `{"properties":{"customCloudProfile": {"identitySystem": "adfs"}}}`,
+			expectedResult: "adfs",
 		},
 		{
-			desc:     "identitySystem=azure_ad should return false",
-			apiModel: `{"properties":{"customCloudProfile": {"identitySystem": "azure_ad"}}}`,
-			isADFS:   false,
+			desc:           "should return azure_ad when identitySystem is set to azure_ad",
+			apiModel:       `{"properties":{"customCloudProfile": {"identitySystem": "azure_ad"}}}`,
+			expectedResult: "azure_ad",
+		},
+		{
+			desc:           "should return azure_ad when not azure stack",
+			apiModel:       getAPIModelString(),
+			expectedResult: "azure_ad",
 		},
 	} {
 		t.Run(test.desc, func(t *testing.T) {
@@ -154,9 +160,9 @@ func TestIsIdentitySystemADFS(t *testing.T) {
 				t.Fatalf("Error generating function map: %v", err)
 			}
 
-			v := reflect.ValueOf(funcmap["IsIdentitySystemADFS"])
+			v := reflect.ValueOf(funcmap["GetIdentitySystem"])
 			ret := v.Call(make([]reflect.Value, 0))
-			if ret[0].Interface() != test.isADFS {
+			if ret[0].Interface() != test.expectedResult {
 				t.Fatalf("IsIdentitySystemADFS returned incorrect value")
 			}
 		})

@@ -605,6 +605,93 @@ func TestCreateJumpboxNIC(t *testing.T) {
 		t.Errorf("unexpected diff while comparing: %s", diff)
 	}
 }
+func TestCreateAgentVMASNICWithSLB(t *testing.T) {
+	cs := &api.ContainerService{
+		Properties: &api.Properties{
+			ServicePrincipalProfile: &api.ServicePrincipalProfile{
+				ClientID: "barClientID",
+				Secret:   "bazSecret",
+			},
+			MasterProfile: &api.MasterProfile{
+				Count:               1,
+				DNSPrefix:           "myprefix1",
+				VMSize:              "Standard_DS2_v2",
+				AvailabilityProfile: api.VirtualMachineScaleSets,
+			},
+			OrchestratorProfile: &api.OrchestratorProfile{
+				OrchestratorType:    api.Kubernetes,
+				OrchestratorVersion: "1.10.2",
+				KubernetesConfig: &api.KubernetesConfig{
+					NetworkPlugin:   "azure",
+					LoadBalancerSku: "Standard",
+				},
+			},
+			LinuxProfile: &api.LinuxProfile{},
+			AgentPoolProfiles: []*api.AgentPoolProfile{
+				{
+					Name:                "agentpool",
+					VMSize:              "Standard_D2_v2",
+					Count:               1,
+					AvailabilityProfile: api.AvailabilitySet,
+				},
+			},
+		},
+	}
+
+	profile := &api.AgentPoolProfile{
+		Name:           "fooAgent",
+		OSType:         "Linux",
+		IPAddressCount: 1,
+	}
+
+	// Test AgentVMAS NIC with Standard LB, should add dependsOn for agentLbID and adds agentLbBackendPoolName as backendaddress pool
+
+	actual := createAgentVMASNetworkInterface(cs, profile)
+
+	expected := NetworkInterfaceARM{
+		ARMResource: ARMResource{
+			APIVersion: "[variables('apiVersionNetwork')]",
+			Copy: map[string]string{
+				"count": "[sub(variables('fooAgentCount'), variables('fooAgentOffset'))]",
+				"name":  "loop",
+			},
+			DependsOn: []string{
+				"[variables('vnetID')]",
+				"[variables('agentLbID')]",
+			},
+		},
+		Interface: network.Interface{
+			Type:     to.StringPtr("Microsoft.Network/networkInterfaces"),
+			Name:     to.StringPtr("[concat(variables('fooAgentVMNamePrefix'), 'nic-', copyIndex(variables('fooAgentOffset')))]"),
+			Location: to.StringPtr("[variables('location')]"),
+			InterfacePropertiesFormat: &network.InterfacePropertiesFormat{
+				IPConfigurations: &[]network.InterfaceIPConfiguration{
+					{
+						Name: to.StringPtr("ipconfig1"),
+						InterfaceIPConfigurationPropertiesFormat: &network.InterfaceIPConfigurationPropertiesFormat{
+							LoadBalancerBackendAddressPools: &[]network.BackendAddressPool{
+								{
+									ID: to.StringPtr("[concat(variables('agentLbID'), '/backendAddressPools/', variables('agentLbBackendPoolName'))]"),
+								},
+							},
+							Primary:                   to.BoolPtr(true),
+							PrivateIPAllocationMethod: network.Dynamic,
+							Subnet: &network.Subnet{
+								ID: to.StringPtr(fmt.Sprintf("[variables('%sVnetSubnetID')]", profile.Name)),
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	diff := cmp.Diff(actual, expected)
+
+	if diff != "" {
+		t.Errorf("unexpected diff while comparing: %s", diff)
+	}
+}
 
 func TestCreateAgentVMASNIC(t *testing.T) {
 	cs := &api.ContainerService{
@@ -677,7 +764,6 @@ func TestCreateAgentVMASNIC(t *testing.T) {
 	}
 
 	// Test AgentVMAS NIC with Custom Vnet
-
 	profile.VnetSubnetID = "fooSubnet"
 
 	actual = createAgentVMASNetworkInterface(cs, profile)
@@ -956,7 +1042,7 @@ func TestCreateAgentVMASNICWithIPv6DualStackFeature(t *testing.T) {
 						ID: to.StringPtr("[concat(resourceId('Microsoft.Network/loadBalancers', variables('routerLBName')), '/backendAddressPools/backend')]"),
 					},
 					{
-						ID: to.StringPtr("[concat(resourceId('Microsoft.Network/loadBalancers',parameters('masterEndpointDNSNamePrefix')), '/backendAddressPools/', parameters('masterEndpointDNSNamePrefix'), '-ipv4')]"),
+						ID: to.StringPtr("[concat(resourceId('Microsoft.Network/loadBalancers',parameters('masterEndpointDNSNamePrefix')), '/backendAddressPools/', parameters('masterEndpointDNSNamePrefix'))]"),
 					},
 				},
 				PrivateIPAllocationMethod: network.Dynamic,

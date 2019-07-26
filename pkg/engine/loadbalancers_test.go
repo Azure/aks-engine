@@ -113,7 +113,7 @@ func TestCreateLoadBalancer(t *testing.T) {
 	diff := cmp.Diff(actual, expected)
 
 	if diff != "" {
-		t.Errorf("unexpected error while comparing availability sets: %s", diff)
+		t.Errorf("unexpected error while comparing load balancers: %s", diff)
 	}
 
 }
@@ -237,7 +237,7 @@ func TestCreateLoadBalancerStandard(t *testing.T) {
 	diff := cmp.Diff(actual, expected)
 
 	if diff != "" {
-		t.Errorf("unexpected error while comparing availability sets: %s", diff)
+		t.Errorf("unexpected error while comparing load balancers: %s", diff)
 	}
 
 }
@@ -342,7 +342,7 @@ func TestCreateLoadBalancerVMSS(t *testing.T) {
 	diff := cmp.Diff(actual, expected)
 
 	if diff != "" {
-		t.Errorf("unexpected error while comparing availability sets: %s", diff)
+		t.Errorf("unexpected error while comparing load balancers: %s", diff)
 	}
 
 }
@@ -433,7 +433,7 @@ func TestCreateMasterInternalLoadBalancer(t *testing.T) {
 	diff := cmp.Diff(actual, expected)
 
 	if diff != "" {
-		t.Errorf("unexpected error while comparing availability sets: %s", diff)
+		t.Errorf("unexpected error while comparing load balancers: %s", diff)
 	}
 
 	// Test with Standard LB
@@ -494,7 +494,7 @@ func TestCreateMasterInternalLoadBalancer(t *testing.T) {
 	diff = cmp.Diff(actual, expected)
 
 	if diff != "" {
-		t.Errorf("unexpected error while comparing availability sets: %s", diff)
+		t.Errorf("unexpected error while comparing load balancers: %s", diff)
 	}
 
 	// Test with custom Vnet
@@ -520,7 +520,7 @@ func TestCreateMasterInternalLoadBalancer(t *testing.T) {
 	diff = cmp.Diff(actual, expected)
 
 	if diff != "" {
-		t.Errorf("unexpected error while comparing availability sets: %s", diff)
+		t.Errorf("unexpected error while comparing load balancers: %s", diff)
 	}
 
 	// Test with VMSS
@@ -556,7 +556,7 @@ func TestCreateMasterInternalLoadBalancer(t *testing.T) {
 	diff = cmp.Diff(actual, expected)
 
 	if diff != "" {
-		t.Errorf("unexpected error while comparing availability sets: %s", diff)
+		t.Errorf("unexpected error while comparing load balancers: %s", diff)
 	}
 }
 
@@ -580,7 +580,7 @@ func TestCreateClusterLoadBalancerForIPv6(t *testing.T) {
 			LoadBalancerPropertiesFormat: &network.LoadBalancerPropertiesFormat{
 				BackendAddressPools: &[]network.BackendAddressPool{
 					{
-						Name: to.StringPtr("[concat(parameters('masterEndpointDNSNamePrefix'), '-ipv4')]"),
+						Name: to.StringPtr("[parameters('masterEndpointDNSNamePrefix')]"),
 					},
 					{
 						Name: to.StringPtr("[concat(parameters('masterEndpointDNSNamePrefix'), '-ipv6')]"),
@@ -626,7 +626,7 @@ func TestCreateClusterLoadBalancerForIPv6(t *testing.T) {
 								ID: to.StringPtr("[resourceId('Microsoft.Network/loadBalancers/frontendIpConfigurations', parameters('masterEndpointDNSNamePrefix'), 'LBFE-v4')]"),
 							},
 							BackendAddressPool: &network.SubResource{
-								ID: to.StringPtr("[resourceId('Microsoft.Network/loadBalancers/backendAddressPools', parameters('masterEndpointDNSNamePrefix'), concat(parameters('masterEndpointDNSNamePrefix'), '-ipv4'))]"),
+								ID: to.StringPtr("[resourceId('Microsoft.Network/loadBalancers/backendAddressPools', parameters('masterEndpointDNSNamePrefix'), parameters('masterEndpointDNSNamePrefix'))]"),
 							},
 							Protocol:     network.TransportProtocolTCP,
 							FrontendPort: to.Int32Ptr(9090),
@@ -645,6 +645,82 @@ func TestCreateClusterLoadBalancerForIPv6(t *testing.T) {
 	diff := cmp.Diff(actual, expected)
 
 	if diff != "" {
-		t.Errorf("unexpected error while comparing availability sets: %s", diff)
+		t.Errorf("unexpected error while comparing load balancers: %s", diff)
 	}
+}
+
+func TestCreateAgentLoadBalancer(t *testing.T) {
+	cs := &api.ContainerService{
+		Properties: &api.Properties{
+			MasterProfile: &api.MasterProfile{
+				Count: 1,
+			},
+			OrchestratorProfile: &api.OrchestratorProfile{
+				OrchestratorVersion: "1.14.4",
+				KubernetesConfig: &api.KubernetesConfig{
+					LoadBalancerSku: "Standard",
+				},
+			},
+		},
+	}
+	actual := CreateAgentLoadBalancer(cs.Properties, false)
+
+	expected := LoadBalancerARM{
+		ARMResource: ARMResource{
+			APIVersion: "[variables('apiVersionNetwork')]",
+			DependsOn: []string{
+				"[concat('Microsoft.Network/publicIPAddresses/', variables('agentPublicIPAddressName'))]",
+			},
+		},
+		LoadBalancer: network.LoadBalancer{
+			Location: to.StringPtr("[variables('location')]"),
+			Name:     to.StringPtr("[variables('agentLbName')]"),
+			LoadBalancerPropertiesFormat: &network.LoadBalancerPropertiesFormat{
+				BackendAddressPools: &[]network.BackendAddressPool{
+					{
+						Name: to.StringPtr("[variables('agentLbBackendPoolName')]"),
+					},
+				},
+				FrontendIPConfigurations: &[]network.FrontendIPConfiguration{
+					{
+						Name: to.StringPtr("[variables('agentLbIPConfigName')]"),
+						FrontendIPConfigurationPropertiesFormat: &network.FrontendIPConfigurationPropertiesFormat{
+							PublicIPAddress: &network.PublicIPAddress{
+								ID: to.StringPtr("[resourceId('Microsoft.Network/publicIpAddresses',variables('agentPublicIPAddressName'))]"),
+							},
+						},
+					},
+				},
+				OutboundRules: &[]network.OutboundRule{
+					{
+						Name: to.StringPtr("LBOutboundRule"),
+						OutboundRulePropertiesFormat: &network.OutboundRulePropertiesFormat{
+							FrontendIPConfigurations: &[]network.SubResource{
+								{
+									ID: to.StringPtr("[variables('agentLbIPConfigID')]"),
+								},
+							},
+							BackendAddressPool: &network.SubResource{
+								ID: to.StringPtr("[concat(variables('agentLbID'), '/backendAddressPools/', variables('agentLbBackendPoolName'))]"),
+							},
+							Protocol:             network.Protocol1All,
+							IdleTimeoutInMinutes: to.Int32Ptr(cs.Properties.OrchestratorProfile.KubernetesConfig.OutboundRuleIdleTimeoutInMinutes),
+							EnableTCPReset:       to.BoolPtr(true),
+						},
+					},
+				},
+			},
+			Sku: &network.LoadBalancerSku{
+				Name: "[variables('loadBalancerSku')]",
+			},
+			Type: to.StringPtr("Microsoft.Network/loadBalancers"),
+		},
+	}
+
+	diff := cmp.Diff(actual, expected)
+
+	if diff != "" {
+		t.Errorf("unexpected error while comparing load balancers: %s", diff)
+	}
+
 }

@@ -352,7 +352,7 @@ func TestCreateAgentVMASCustomScriptExtension(t *testing.T) {
 		t.Errorf("unexpected diff while expecting equal structs: %s", diff)
 	}
 
-	// Test with Azure Stack
+	// Test with Azure Stack on Linux
 	cs.Properties.FeatureFlags.BlockOutboundInternet = false
 	cs.Properties.CustomCloudProfile = &api.CustomCloudProfile{}
 	profile = &api.AgentPoolProfile{
@@ -374,6 +374,7 @@ func TestCreateAgentVMASCustomScriptExtension(t *testing.T) {
 	// Test with EnableRunInBackground and China Location
 	cs.Properties.FeatureFlags.BlockOutboundInternet = false
 	cs.Properties.CustomCloudProfile = nil
+	cs.Properties.OrchestratorProfile = nil
 	cs.Properties.FeatureFlags.EnableCSERunInBackground = true
 	cs.Location = "chinanorth"
 	profile = &api.AgentPoolProfile{
@@ -405,7 +406,7 @@ func TestCreateAgentVMASCustomScriptExtension(t *testing.T) {
 	expectedCSE.VirtualMachineExtensionProperties.Type = to.StringPtr("CustomScriptExtension")
 	expectedCSE.TypeHandlerVersion = to.StringPtr("1.8")
 	expectedCSE.ProtectedSettings = &map[string]interface{}{
-		"commandToExecute": "[concat('powershell.exe -ExecutionPolicy Unrestricted -command \"', '$arguments = ', variables('singleQuote'),'-MasterIP ',variables('kubernetesAPIServerIP'),' -KubeDnsServiceIp ',parameters('kubeDnsServiceIp'),' -MasterFQDNPrefix ',variables('masterFqdnPrefix'),' -Location ',variables('location'),' -TargetEnvironment ',parameters('targetEnvironment'),' -AgentKey ',parameters('clientPrivateKey'),' -AADClientId ',variables('servicePrincipalClientId'),' -AADClientSecret ',variables('singleQuote'),variables('singleQuote'),base64(variables('servicePrincipalClientSecret')),variables('singleQuote'),variables('singleQuote'), ' ',variables('singleQuote'), ' ; ', variables('windowsCustomScriptSuffix'), '\" > %SYSTEMDRIVE%\\AzureData\\CustomDataSetupScript.log 2>&1')]",
+		"commandToExecute": "[concat('powershell.exe -ExecutionPolicy Unrestricted -command \"', '$arguments = ', variables('singleQuote'),'-MasterIP ',variables('kubernetesAPIServerIP'),' -KubeDnsServiceIp ',parameters('kubeDnsServiceIp'),' -MasterFQDNPrefix ',variables('masterFqdnPrefix'),' -Location ',variables('location'),' -TargetEnvironment ',parameters('targetEnvironment'),' -AgentKey ',parameters('clientPrivateKey'),' -AADClientId ',variables('servicePrincipalClientId'),' -AADClientSecret ',variables('singleQuote'),variables('singleQuote'),base64(variables('servicePrincipalClientSecret')),variables('singleQuote'),variables('singleQuote'),' -NetworkAPIVersion ',variables('apiVersionNetwork'),' ',variables('singleQuote'), ' ; ', variables('windowsCustomScriptSuffix'), '\" > %SYSTEMDRIVE%\\AzureData\\CustomDataSetupScript.log 2>&1')]",
 	}
 
 	diff = cmp.Diff(cse, expectedCSE)

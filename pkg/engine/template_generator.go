@@ -270,10 +270,16 @@ func (t *TemplateGenerator) getTemplateFuncMap(cs *api.ContainerService) templat
 			return cs.Properties.OrchestratorProfile.IsKubernetes() && !common.IsKubernetesVersionGe(cs.Properties.OrchestratorProfile.OrchestratorVersion, version)
 		},
 		"GetMasterKubernetesLabels": func(rg string) string {
-			return common.GetMasterKubernetesLabels(rg)
+			return common.GetMasterKubernetesLabels(rg, false)
+		},
+		"GetMasterKubernetesLabelsDeprecated": func(rg string) string {
+			return common.GetMasterKubernetesLabels(rg, true)
 		},
 		"GetAgentKubernetesLabels": func(profile *api.AgentPoolProfile, rg string) string {
-			return profile.GetKubernetesLabels(rg)
+			return profile.GetKubernetesLabels(rg, false)
+		},
+		"GetAgentKubernetesLabelsDeprecated": func(profile *api.AgentPoolProfile, rg string) string {
+			return profile.GetKubernetesLabels(rg, true)
 		},
 		"GetKubeletConfigKeyVals": func(kc *api.KubernetesConfig) string {
 			if kc == nil {
@@ -631,8 +637,12 @@ func (t *TemplateGenerator) getTemplateFuncMap(cs *api.ContainerService) templat
 			customEnvironmentJSON, _ := cs.Properties.GetCustomEnvironmentJSON(false)
 			return base64.StdEncoding.EncodeToString([]byte(customEnvironmentJSON))
 		},
-		"IsIdentitySystemADFS": func() bool {
-			return cs.Properties.IsAzureStackCloud() && cs.Properties.CustomCloudProfile.IdentitySystem == api.ADFSIdentitySystem
+		"GetIdentitySystem": func() string {
+			if cs.Properties.IsAzureStackCloud() {
+				return cs.Properties.CustomCloudProfile.IdentitySystem
+			}
+
+			return api.AzureADIdentitySystem
 		},
 	}
 }

@@ -545,6 +545,26 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			Expect(len(nodeList)).To(Equal(nodes))
 		})
 
+		It("should have node labels specific to masters or agents", func() {
+			nodeList, err := node.Get()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(len(nodeList.Nodes)).To(Equal(eng.NodeCount()))
+			for _, node := range nodeList.Nodes {
+				role := "agent"
+				if strings.HasPrefix(node.Metadata.Name, "k8s-master") {
+					role = "master"
+				}
+				labels := node.Metadata.Labels
+				// See https://github.com/Azure/aks-engine/issues/1660
+				if node.IsWindows() && common.IsKubernetesVersionGe(
+					eng.ExpandedDefinition.Properties.OrchestratorProfile.OrchestratorVersion, "1.16.0-alpha.1") {
+					Skip("Kubernetes 1.16 on Windows needs node labels applied")
+				}
+				Expect(labels).To(HaveKeyWithValue("kubernetes.io/role", role))
+				Expect(labels).To(HaveKey(fmt.Sprintf("node-role.kubernetes.io/%s", role)))
+			}
+		})
+
 		It("should print cluster resources", func() {
 			cmd := exec.Command("k", "get", "deployments,pods,svc,daemonsets,configmaps,endpoints,jobs,clusterroles,clusterrolebindings,roles,rolebindings,storageclasses", "--all-namespaces", "-o", "wide")
 			out, err := cmd.CombinedOutput()

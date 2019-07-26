@@ -8,18 +8,30 @@ import (
 	"github.com/Azure/go-autorest/autorest/to"
 )
 
-func CreatePublicIPAddress() PublicIPAddressARM {
+// CreatePublicIPAddress returns public ipv4 address resource for masters or agents
+// When it's for master, this public ip address is created and added to the loadbalancer's frontendIPConfigurations
+// and it's created with the fqdn as name.
+// When it's for agent, this public ip address is created and added to the loadbalancer's frontendIPConfigurations.
+func CreatePublicIPAddress(isForMaster bool) PublicIPAddressARM {
+	var dnsSettings *network.PublicIPAddressDNSSettings
+	name := "agentPublicIPAddressName"
+
+	if isForMaster {
+		name = "masterPublicIPAddressName"
+		dnsSettings = &network.PublicIPAddressDNSSettings{
+			DomainNameLabel: to.StringPtr("[variables('masterFqdnPrefix')]"),
+		}
+	}
+
 	return PublicIPAddressARM{
 		ARMResource: ARMResource{
 			APIVersion: "[variables('apiVersionNetwork')]",
 		},
 		PublicIPAddress: network.PublicIPAddress{
 			Location: to.StringPtr("[variables('location')]"),
-			Name:     to.StringPtr("[variables('masterPublicIPAddressName')]"),
+			Name:     to.StringPtr("[variables('" + name + "')]"),
 			PublicIPAddressPropertiesFormat: &network.PublicIPAddressPropertiesFormat{
-				DNSSettings: &network.PublicIPAddressDNSSettings{
-					DomainNameLabel: to.StringPtr("[variables('masterFqdnPrefix')]"),
-				},
+				DNSSettings:              dnsSettings,
 				PublicIPAllocationMethod: network.Static,
 			},
 			Sku: &network.PublicIPAddressSku{

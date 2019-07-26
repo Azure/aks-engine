@@ -52,6 +52,8 @@ const (
 	AzureStorageClassesAddonName = "azure-storage-classes"
 	// AzureNetworkPolicyAddonName is the name of the azure npm daemon set addon
 	AzureNetworkPolicyAddonName = "azure-npm-daemonset"
+	// AzureVnetTelemetryAddonName is the name of the Azure vnet telemetry addon
+	AzureVnetTelemetryAddonName = "azure-vnet-telemetry-daemonset"
 	// CalicoAddonName is the name of calico daemonset addon
 	CalicoAddonName = "calico-daemonset"
 	// CiliumAddonName is the name of cilium daemonset addon
@@ -84,8 +86,6 @@ const (
 	SMBFlexVolumeAddonName = "smb-flexvolume"
 	// KeyVaultFlexVolumeAddonName is the name of the keyvault flexvolume addon deployment
 	KeyVaultFlexVolumeAddonName = "keyvault-flexvolume"
-	// ELBServiceAddonName is the name of the elb service addon deployment
-	ELBServiceAddonName = "elb-svc"
 	// ScheduledMaintenanceAddonName is the name of the scheduled maintenance addon deployment
 	ScheduledMaintenanceAddonName = "scheduled-maintenance"
 	// DefaultGeneratorCode specifies the source generator of the cluster template.
@@ -163,6 +163,8 @@ const (
 	kubernetesKubeletMonitorSystemdService   = "k8s/cloud-init/artifacts/kubelet-monitor.service"
 	kubernetesDockerMonitorSystemdTimer      = "k8s/cloud-init/artifacts/docker-monitor.timer"
 	kubernetesDockerMonitorSystemdService    = "k8s/cloud-init/artifacts/docker-monitor.service"
+	labelNodesScript                         = "k8s/cloud-init/artifacts/label-nodes.sh"
+	labelNodesSystemdService                 = "k8s/cloud-init/artifacts/label-nodes.service"
 	kubernetesMountEtcd                      = "k8s/cloud-init/artifacts/mountetcd.sh"
 	kubernetesMasterGenerateProxyCertsScript = "k8s/cloud-init/artifacts/generateproxycerts.sh"
 	kubernetesCustomSearchDomainsScript      = "k8s/cloud-init/artifacts/setup-custom-search-domains.sh"

@@ -61,8 +61,8 @@ installGPUDrivers
 echo "  - nvidia-docker2 nvidia-container-runtime" >> ${RELEASE_NOTES_FILEPATH}
 
 VNET_CNI_VERSIONS="
+1.0.24
 1.0.22
-1.0.18
 "
 for VNET_CNI_VERSION in $VNET_CNI_VERSIONS; do
     VNET_CNI_PLUGINS_URL="https://acs-mirror.azureedge.net/cni/azure-vnet-cni-linux-amd64-v${VNET_CNI_VERSION}.tgz"
@@ -202,12 +202,16 @@ for TILLER_VERSION in ${TILLER_VERSIONS}; do
 done
 
 CLUSTER_AUTOSCALER_VERSIONS="
+1.15.1
 1.15.0
+1.14.4
 1.14.2
 1.14.0
+1.13.6
 1.13.4
 1.13.2
 1.13.1
+1.12.7
 1.12.5
 1.12.3
 1.12.2
@@ -365,6 +369,7 @@ echo "  - busybox" >> ${RELEASE_NOTES_FILEPATH}
 # TODO: fetch supported k8s versions from an aks-engine command instead of hardcoding them here
 K8S_VERSIONS="
 1.15.1
+1.15.1-azs
 1.15.0
 1.14.4
 1.14.4-azs

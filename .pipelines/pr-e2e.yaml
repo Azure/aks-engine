@@ -17,7 +17,7 @@ pr:
 resources:
   containers:
   - container: dev1
-    image: quay.io/deis/go-dev:v1.22.3
+    image: quay.io/deis/go-dev:v1.22.4
 
 jobs:
 - job: unit_tests
@@ -69,8 +69,8 @@ jobs:
 
 - template: e2e-job-template.yaml
   parameters:
-    name: 'default_linux_e2e'
-    apimodel: 'examples/kubernetes.json'
+    name: 'k8s_non_vhd_deployment'
+    apimodel: 'examples/kubernetes-ubuntu-distro.json'
 
 - template: e2e-job-template.yaml
   parameters:
@@ -114,6 +114,13 @@ jobs:
 
 - template: e2e-job-template.yaml
   parameters:
+    name: 'k8s_1_16_release_e2e'
+    k8sRelease: '1.16'
+    apimodel: 'examples/e2e-tests/kubernetes/release/default/definition.json'
+    createVNET: true
+
+- template: e2e-job-template.yaml
+  parameters:
     name: 'k8s_windows_1_12_release_e2e'
     k8sRelease: '1.12'
     apimodel: 'examples/e2e-tests/kubernetes/windows/hybrid/definition.json'
@@ -134,4 +141,10 @@ jobs:
   parameters:
     name: 'k8s_windows_1_15_release_e2e'
     k8sRelease: '1.15'
+    apimodel: 'examples/e2e-tests/kubernetes/windows/hybrid/definition.json'
+
+- template: e2e-job-template.yaml
+  parameters:
+    name: 'k8s_windows_1_16_release_e2e'
+    k8sRelease: '1.16'
     apimodel: 'examples/e2e-tests/kubernetes/windows/hybrid/definition.json'

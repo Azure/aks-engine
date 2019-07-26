@@ -40,11 +40,13 @@ const (
 	nicResourceType  = "Microsoft.Network/networkInterfaces"
 	vnetResourceType = "Microsoft.Network/virtualNetworks"
 	vmasResourceType = "Microsoft.Compute/availabilitySets"
+	lbResourceType   = "Microsoft.Network/loadBalancers"
 
 	// resource ids
-	nsgID  = "nsgID"
-	rtID   = "routeTableID"
-	vnetID = "vnetID"
+	nsgID     = "nsgID"
+	rtID      = "routeTableID"
+	vnetID    = "vnetID"
+	agentLbID = "agentLbID"
 )
 
 // Translator defines all required interfaces for i18n.Translator.
@@ -62,6 +64,53 @@ type Translator interface {
 // Transformer represents the object that transforms template
 type Transformer struct {
 	Translator Translator
+}
+
+// NormalizeForK8sSLBScalingOrUpgrade takes a template and removes elements that are unwanted in a K8s Standard LB cluster scale up/down case
+func (t *Transformer) NormalizeForK8sSLBScalingOrUpgrade(logger *logrus.Entry, templateMap map[string]interface{}) error {
+	logger.Infoln("Running NormalizeForK8sSLBScalingOrUpgrade...")
+	lbIndex := -1
+	resources := templateMap[resourcesFieldName].([]interface{})
+
+	for index, resource := range resources {
+		resourceMap, ok := resource.(map[string]interface{})
+		if !ok {
+			logger.Warnf("Template improperly formatted for resource")
+			continue
+		}
+
+		resourceType, ok := resourceMap[typeFieldName].(string)
+		resourceName := resourceMap[nameFieldName].(string)
+
+		// remove agentLB if found
+		if ok && resourceType == lbResourceType && strings.Contains(resourceName, "variables('agentLbName')") {
+			lbIndex = index
+		}
+		// remove agentLB from dependsOn if found
+		dependencies, ok := resourceMap[dependsOnFieldName].([]interface{})
+		if !ok {
+			continue
+		}
+
+		for dIndex := len(dependencies) - 1; dIndex >= 0; dIndex-- {
+			dependency := dependencies[dIndex].(string)
+			if strings.Contains(dependency, lbResourceType) || strings.Contains(dependency, agentLbID) {
+				dependencies = append(dependencies[:dIndex], dependencies[dIndex+1:]...)
+			}
+		}
+
+		if len(dependencies) > 0 {
+			resourceMap[dependsOnFieldName] = dependencies
+		} else {
+			delete(resourceMap, dependsOnFieldName)
+		}
+	}
+	indexesToRemove := []int{}
+	if lbIndex != -1 {
+		indexesToRemove = append(indexesToRemove, lbIndex)
+	}
+	templateMap[resourcesFieldName] = removeIndexesFromArray(resources, indexesToRemove)
+	return nil
 }
 
 // NormalizeForK8sVMASScalingUp takes a template and removes elements that are unwanted in a K8s VMAS scale up/down case

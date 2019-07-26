@@ -406,6 +406,7 @@ type KubernetesConfig struct {
 	MaximumLoadBalancerRuleCount     int               `json:"maximumLoadBalancerRuleCount,omitempty"`
 	ProxyMode                        KubeProxyMode     `json:"kubeProxyMode,omitempty"`
 	PrivateAzureRegistryServer       string            `json:"privateAzureRegistryServer,omitempty"`
+	OutboundRuleIdleTimeoutInMinutes int32             `json:"outboundRuleIdleTimeoutInMinutes,omitempty"`
 }
 
 // CustomFile has source as the full absolute source path to a file and dest
@@ -1199,6 +1200,16 @@ func (p *Properties) GetMasterFQDN() string {
 	return p.MasterProfile.FQDN
 }
 
+// AnyAgentHasLoadBalancerBackendAddressPoolIDs returns true if any of the agent profiles contains LoadBalancerBackendAddressPoolIDs
+func (p *Properties) AnyAgentHasLoadBalancerBackendAddressPoolIDs() bool {
+	for _, agentPoolProfile := range p.AgentPoolProfiles {
+		if agentPoolProfile.LoadBalancerBackendAddressPoolIDs != nil {
+			return true
+		}
+	}
+	return false
+}
+
 // HasImageRef returns true if the customer brought os image
 func (m *MasterProfile) HasImageRef() bool {
 	return m.ImageRef != nil && len(m.ImageRef.Name) > 0 && len(m.ImageRef.ResourceGroup) > 0
@@ -1440,10 +1451,14 @@ func (a *AgentPoolProfile) IsUbuntuNonVHD() bool {
 }
 
 // GetKubernetesLabels returns a k8s API-compliant labels string for nodes in this profile
-func (a *AgentPoolProfile) GetKubernetesLabels(rg string) string {
+func (a *AgentPoolProfile) GetKubernetesLabels(rg string, deprecated bool) string {
 	var buf bytes.Buffer
-	buf.WriteString("node-role.kubernetes.io/agent=")
-	buf.WriteString(fmt.Sprintf(",kubernetes.io/role=agent,agentpool=%s", a.Name))
+	buf.WriteString("kubernetes.azure.com/role=agent")
+	if deprecated {
+		buf.WriteString(",node-role.kubernetes.io/agent=")
+		buf.WriteString(",kubernetes.io/role=agent")
+	}
+	buf.WriteString(fmt.Sprintf(",agentpool=%s", a.Name))
 	if a.StorageProfile == ManagedDisks {
 		storagetier, _ := common.GetStorageAccountType(a.VMSize)
 		buf.WriteString(fmt.Sprintf(",storageprofile=managed,storagetier=%s", storagetier))

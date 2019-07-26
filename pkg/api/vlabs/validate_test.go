@@ -74,18 +74,6 @@ func Test_OrchestratorProfile_Validate(t *testing.T) {
 			},
 			expectedError: "Invalid containerd version \"1.0.0\", please use one of the following versions: [1.1.5 1.1.6 1.2.4]",
 		},
-		"should error when KubernetesConfig has invalid containerd version for clear-containers runtime": {
-			properties: &Properties{
-				OrchestratorProfile: &OrchestratorProfile{
-					OrchestratorType: "Kubernetes",
-					KubernetesConfig: &KubernetesConfig{
-						ContainerRuntime:  ClearContainers,
-						ContainerdVersion: "1.0.0",
-					},
-				},
-			},
-			expectedError: "Invalid containerd version \"1.0.0\", please use one of the following versions: [1.1.5 1.1.6 1.2.4]",
-		},
 		"should error when KubernetesConfig has invalid containerd version for kata-containers runtime": {
 			properties: &Properties{
 				OrchestratorProfile: &OrchestratorProfile{
@@ -108,7 +96,7 @@ func Test_OrchestratorProfile_Validate(t *testing.T) {
 					},
 				},
 			},
-			expectedError: fmt.Sprintf("containerdVersion is only valid in a non-docker context, use %s, %s, or %s containerRuntime values instead if you wish to provide a containerdVersion", Containerd, ClearContainers, KataContainers),
+			expectedError: fmt.Sprintf("containerdVersion is only valid in a non-docker context, use %s or %s containerRuntime values instead if you wish to provide a containerdVersion", Containerd, KataContainers),
 		},
 		"should error when KubernetesConfig has containerdVersion value for default (empty string) container runtime": {
 			properties: &Properties{
@@ -119,7 +107,7 @@ func Test_OrchestratorProfile_Validate(t *testing.T) {
 					},
 				},
 			},
-			expectedError: fmt.Sprintf("containerdVersion is only valid in a non-docker context, use %s, %s, or %s containerRuntime values instead if you wish to provide a containerdVersion", Containerd, ClearContainers, KataContainers),
+			expectedError: fmt.Sprintf("containerdVersion is only valid in a non-docker context, use %s or %s containerRuntime values instead if you wish to provide a containerdVersion", Containerd, KataContainers),
 		},
 		"should error when KubernetesConfig has enableAggregatedAPIs enabled with an invalid version": {
 			properties: &Properties{
@@ -309,6 +297,19 @@ func Test_OrchestratorProfile_Validate(t *testing.T) {
 				},
 			},
 			expectedError: "maximumLoadBalancerRuleCount shouldn't be less than 0",
+		},
+		"should error when outboundRuleIdleTimeoutInMinutes populated is out of valid range": {
+			properties: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					OrchestratorType: "Kubernetes",
+					KubernetesConfig: &KubernetesConfig{
+						LoadBalancerSku:                  StandardLoadBalancerSku,
+						ExcludeMasterFromStandardLB:      to.BoolPtr(true),
+						OutboundRuleIdleTimeoutInMinutes: 3,
+					},
+				},
+			},
+			expectedError: "outboundRuleIdleTimeoutInMinutes shouldn't be less than 4 or greater than 120",
 		},
 	}
 
@@ -1269,18 +1270,6 @@ func Test_Properties_ValidateContainerRuntime(t *testing.T) {
 	if err := p.validateContainerRuntime(); err == nil {
 		t.Errorf(
 			"should error on invalid containerRuntime",
-		)
-	}
-
-	p.OrchestratorProfile.KubernetesConfig.ContainerRuntime = ClearContainers
-	p.AgentPoolProfiles = []*AgentPoolProfile{
-		{
-			OSType: Windows,
-		},
-	}
-	if err := p.validateContainerRuntime(); err == nil {
-		t.Errorf(
-			"should error on clear-containers for windows clusters",
 		)
 	}
 
