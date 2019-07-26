@@ -162,8 +162,6 @@ const (
 	kubernetesKubeletMonitorSystemdService   = "k8s/cloud-init/artifacts/kubelet-monitor.service"
 	kubernetesDockerMonitorSystemdTimer      = "k8s/cloud-init/artifacts/docker-monitor.timer"
 	kubernetesDockerMonitorSystemdService    = "k8s/cloud-init/artifacts/docker-monitor.service"
-	labelNodesScript                         = "k8s/cloud-init/artifacts/label-nodes.sh"
-	labelNodesSystemdService                 = "k8s/cloud-init/artifacts/label-nodes.service"
 	kubernetesMountEtcd                      = "k8s/cloud-init/artifacts/mountetcd.sh"
 	kubernetesMasterGenerateProxyCertsScript = "k8s/cloud-init/artifacts/generateproxycerts.sh"
 	kubernetesCustomSearchDomainsScript      = "k8s/cloud-init/artifacts/setup-custom-search-domains.sh"
