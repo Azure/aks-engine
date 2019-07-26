@@ -15158,22 +15158,6 @@ write_files:
   content: !!binary |
     {{CloudInitData "kubeletSystemdService"}}
 
-{{if IsKubernetesVersionGe "1.16.0-alpha.1"}}
-- path: /opt/azure/containers/label-nodes.sh
-  permissions: "0744"
-  encoding: gzip
-  owner: root
-  content: !!binary |
-    {{CloudInitData "labelNodesScript"}}
-
-- path: /etc/systemd/system/label-nodes.service
-  permissions: "0644"
-  encoding: gzip
-  owner: root
-  content: !!binary |
-    {{CloudInitData "labelNodesSystemdService"}}
-{{end}}
-
 {{if IsIPv6DualStackFeatureEnabled}}
 - path: /etc/systemd/system/dhcpv6.service
   permissions: "0644"
