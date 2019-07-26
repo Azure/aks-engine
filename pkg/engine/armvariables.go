@@ -118,7 +118,7 @@ func getK8sMasterVars(cs *api.ContainerService) (map[string]interface{}, error) 
 		"vnetResourceGroupNameResourceSegmentIndex": 4,
 	}
 
-	masterVars["cloudInitFiles"] = map[string]interface{}{
+	cloudInitFiles := map[string]interface{}{
 		"provisionScript":                  getBase64EncodedGzippedCustomScript(kubernetesCSEMainScript),
 		"provisionSource":                  getBase64EncodedGzippedCustomScript(kubernetesCSEHelpersScript),
 		"provisionInstalls":                getBase64EncodedGzippedCustomScript(kubernetesCSEInstall),
@@ -136,6 +136,16 @@ func getK8sMasterVars(cs *api.ContainerService) (map[string]interface{}, error) 
 		"dhcpv6SystemdService":             getBase64EncodedGzippedCustomScript(dhcpv6SystemdService),
 		"dhcpv6ConfigurationScript":        getBase64EncodedGzippedCustomScript(dhcpv6ConfigurationScript),
 	}
+
+	if !cs.Properties.IsVHDDistroForAllNodes() {
+		cloudInitFiles["provisionCIS"] = getBase64EncodedGzippedCustomScript(kubernetesCISScript)
+		cloudInitFiles["kmsSystemdService"] = getBase64EncodedGzippedCustomScript(kmsSystemdService)
+		cloudInitFiles["labelNodesScript"] = getBase64EncodedGzippedCustomScript(labelNodesScript)
+		cloudInitFiles["labelNodesSystemdService"] = getBase64EncodedGzippedCustomScript(labelNodesSystemdService)
+		cloudInitFiles["aptPreferences"] = getBase64EncodedGzippedCustomScript(aptPreferences)
+	}
+
+	masterVars["cloudInitFiles"] = cloudInitFiles
 
 	blockOutboundInternet := cs.Properties.FeatureFlags.IsFeatureEnabled("BlockOutboundInternet")
 	var cosmosEndPointURI string
