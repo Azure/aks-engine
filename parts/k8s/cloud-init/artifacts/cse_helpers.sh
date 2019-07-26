@@ -50,6 +50,7 @@ ERR_APT_DIST_UPGRADE_TIMEOUT=101 # Timeout waiting for apt-get dist-upgrade to c
 ERR_SYSCTL_RELOAD=103 # Error reloading sysctl config
 ERR_CIS_ASSIGN_ROOT_PW=111 # Error assigning root password in CIS enforcement
 ERR_CIS_ASSIGN_FILE_PERMISSION=112 # Error assigning permission to a file in CIS enforcement
+ERR_PACKER_COPY_FILE=113 # Error writing a file to disk during VHD CI
 ERR_CIS_APPLY_PASSWORD_CONFIG=115 # Error applying CIS-recommended passwd configuration
 
 # Azure Stack specific errors
