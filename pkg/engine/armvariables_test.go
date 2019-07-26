@@ -197,14 +197,19 @@ func TestK8sVars(t *testing.T) {
 		"provisionSource":                  getBase64EncodedGzippedCustomScript(kubernetesCSEHelpersScript),
 		"provisionInstalls":                getBase64EncodedGzippedCustomScript(kubernetesCSEInstall),
 		"provisionConfigs":                 getBase64EncodedGzippedCustomScript(kubernetesCSEConfig),
+		"provisionCIS":                     getBase64EncodedGzippedCustomScript(kubernetesCISScript),
 		"healthMonitorScript":              getBase64EncodedGzippedCustomScript(kubernetesHealthMonitorScript),
 		"customSearchDomainsScript":        getBase64EncodedGzippedCustomScript(kubernetesCustomSearchDomainsScript),
 		"generateProxyCertsScript":         getBase64EncodedGzippedCustomScript(kubernetesMasterGenerateProxyCertsScript),
 		"mountEtcdScript":                  getBase64EncodedGzippedCustomScript(kubernetesMountEtcd),
 		"kubeletSystemdService":            getBase64EncodedGzippedCustomScript(kubeletSystemdService),
+		"kmsSystemdService":                getBase64EncodedGzippedCustomScript(kmsSystemdService),
 		"kubeletMonitorSystemdService":     getBase64EncodedGzippedCustomScript(kubernetesKubeletMonitorSystemdService),
 		"dockerMonitorSystemdTimer":        getBase64EncodedGzippedCustomScript(kubernetesDockerMonitorSystemdTimer),
 		"dockerMonitorSystemdService":      getBase64EncodedGzippedCustomScript(kubernetesDockerMonitorSystemdService),
+		"labelNodesScript":                 getBase64EncodedGzippedCustomScript(labelNodesScript),
+		"labelNodesSystemdService":         getBase64EncodedGzippedCustomScript(labelNodesSystemdService),
+		"aptPreferences":                   getBase64EncodedGzippedCustomScript(aptPreferences),
 		"dockerClearMountPropagationFlags": getBase64EncodedGzippedCustomScript(dockerClearMountPropagationFlags),
 		"etcdSystemdService":               getBase64EncodedGzippedCustomScript(etcdSystemdService),
 		"dhcpv6ConfigurationScript":        getBase64EncodedGzippedCustomScript(dhcpv6ConfigurationScript),
@@ -222,25 +227,6 @@ func TestK8sVars(t *testing.T) {
 	varMap, err = GetKubernetesVariables(cs)
 	if err != nil {
 		t.Fatal(err)
-	}
-
-	expectedMap["cloudInitFiles"] = map[string]interface{}{
-		"provisionScript":                  getBase64EncodedGzippedCustomScript(kubernetesCSEMainScript),
-		"provisionSource":                  getBase64EncodedGzippedCustomScript(kubernetesCSEHelpersScript),
-		"provisionInstalls":                getBase64EncodedGzippedCustomScript(kubernetesCSEInstall),
-		"provisionConfigs":                 getBase64EncodedGzippedCustomScript(kubernetesCSEConfig),
-		"healthMonitorScript":              getBase64EncodedGzippedCustomScript(kubernetesHealthMonitorScript),
-		"customSearchDomainsScript":        getBase64EncodedGzippedCustomScript(kubernetesCustomSearchDomainsScript),
-		"generateProxyCertsScript":         getBase64EncodedGzippedCustomScript(kubernetesMasterGenerateProxyCertsScript),
-		"mountEtcdScript":                  getBase64EncodedGzippedCustomScript(kubernetesMountEtcd),
-		"kubeletSystemdService":            getBase64EncodedGzippedCustomScript(kubeletSystemdService),
-		"kubeletMonitorSystemdService":     getBase64EncodedGzippedCustomScript(kubernetesKubeletMonitorSystemdService),
-		"dockerMonitorSystemdTimer":        getBase64EncodedGzippedCustomScript(kubernetesDockerMonitorSystemdTimer),
-		"dockerMonitorSystemdService":      getBase64EncodedGzippedCustomScript(kubernetesDockerMonitorSystemdService),
-		"dockerClearMountPropagationFlags": getBase64EncodedGzippedCustomScript(dockerClearMountPropagationFlags),
-		"etcdSystemdService":               getBase64EncodedGzippedCustomScript(etcdSystemdService),
-		"dhcpv6ConfigurationScript":        getBase64EncodedGzippedCustomScript(dhcpv6ConfigurationScript),
-		"dhcpv6SystemdService":             getBase64EncodedGzippedCustomScript(dhcpv6SystemdService),
 	}
 
 	diff = cmp.Diff(varMap, expectedMap)
