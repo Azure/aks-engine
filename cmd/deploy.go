@@ -372,7 +372,9 @@ func autofillApimodel(dc *deployCmd) error {
 			if err != nil {
 				return err
 			}
-			_, err = dc.client.AddContainerInsightsSolution(ctx, workspaceResourceGroup, workspaceName, workspaceLocation)
+			log.Infoln("log analytics workspace id: %s", wsId)
+			log.Infoln("log analytics workspace key: %s", wsKey)
+			_, err = dc.client.AddContainerInsightsSolution(ctx, workspaceResourceGroup, workspaceName, wsLocation)
 			if err != nil {
 				return err
 			}
@@ -380,23 +382,27 @@ func autofillApimodel(dc *deployCmd) error {
 			workspaceResourceId := addon.Config["logAnalyticsWorkspaceId"]
 			if workspaceResourceId != "" {
 				resourceParts := strings.Split(workspaceResourceId, "/")
-				workspaceSubscription := resourceParts[2]
-				if !strings.EqualFold(workspaceSubscription, dc.client.SubscriptionId) {
-					return errors.Errorf("log analytics workspace subscription should be same as cluster resource subscription")
-				}
+				//workspaceSubscription := resourceParts[2]
+				workspaceResourceGroup := resourceParts[4]
+				workspaceName := resourceParts[8]
+				// if !strings.EqualFold(workspaceSubscription, dc.client.SubscriptionID) {
+				// 	return errors.Errorf("log analytics workspace subscription should be same as cluster resource subscription")
+				// }
 				wsId, wsKey, wsLocation, err := dc.client.GetLogAnalyticsWorkspaceInfo(ctx, workspaceResourceGroup, workspaceName)
 				if err != nil {
 					return err
 				}
-				_, err = dc.client.AddContainerInsightsSolution(ctx, workspaceResourceGroup, workspaceName, workspaceLocation)
+				log.Infoln("log analytics workspace id: %s", wsId)
+				log.Infoln("log analytics workspace key: %s", wsKey)
+				_, err = dc.client.AddContainerInsightsSolution(ctx, workspaceResourceGroup, workspaceName, wsLocation)
 				if err != nil {
 					return err
 				}
 			} else {
 				workspaceGuid := addon.Config["workspaceGuid"]
 				workspaceKey := addon.Config["workspaceKey"]
-				log.Info("workspaceGuid:", workspaceGuid)
-				log.Info("workspaceKey:", workspaceKey)
+				log.Infoln("workspaceGuid:", workspaceGuid)
+				log.Infoln("workspaceKey:", workspaceKey)
 			}
 		}
 

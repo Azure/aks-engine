@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
-package armhelpers
+package azurestack
 
 import (
 	"context"
@@ -174,5 +174,5 @@ func (az *AzureClient) AddContainerInsightsSolution(ctx context.Context, workspa
 		return false, err
 	}
 
-  return strings.EqualFold(*solution.Name, solutionName), nil
+	return strings.EqualFold(*solution.Name, solutionName), nil
 }

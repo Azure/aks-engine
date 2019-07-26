@@ -69,7 +69,7 @@ type AzureClient struct {
 	virtualMachineExtensionsClient  compute.VirtualMachineExtensionsClient
 	disksClient                     compute.DisksClient
 	availabilitySetsClient          compute.AvailabilitySetsClient
-	workspacesClient                operationalinsights.workspacesClient
+	workspacesClient                operationalinsights.WorkspacesClient
 
 	applicationsClient      graphrbac.ApplicationsClient
 	servicePrincipalsClient graphrbac.ServicePrincipalsClient
@@ -352,7 +352,7 @@ func getClient(env azure.Environment, subscriptionID, tenantID string, armAuthor
 		virtualMachineExtensionsClient:  compute.NewVirtualMachineExtensionsClientWithBaseURI(env.ResourceManagerEndpoint, subscriptionID),
 		disksClient:                     compute.NewDisksClientWithBaseURI(env.ResourceManagerEndpoint, subscriptionID),
 		availabilitySetsClient:          compute.NewAvailabilitySetsClientWithBaseURI(env.ResourceManagerEndpoint, subscriptionID),
-		workspacesClient:                operationalinsights.NewWorkspacesClientWithBaseURI((env.ResourceManagerEndpoint, clientData.SubscriptionID),
+		workspacesClient:                operationalinsights.NewWorkspacesClientWithBaseURI(env.ResourceManagerEndpoint, subscriptionID),
 
 		applicationsClient:      graphrbac.NewApplicationsClientWithBaseURI(env.GraphEndpoint, tenantID),
 		servicePrincipalsClient: graphrbac.NewServicePrincipalsClientWithBaseURI(env.GraphEndpoint, tenantID),
