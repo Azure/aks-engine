@@ -12,6 +12,7 @@ import (
 	"path"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/leonelquinteros/gotext"
@@ -354,6 +355,53 @@ func autofillApimodel(dc *deployCmd) error {
 			}
 		}
 	}
+
+	if k8sConfig != nil && k8sConfig.Addons != nil && k8sConfig.IsContainerMonitoringAddonEnabled() {
+		log.Info("container monitoring addon enabled")
+		addon := k8sConfig.GetAddonByName("container-monitoring")
+		log.Info(addon.Enabled)
+		if addon.Config == nil {
+			workspaceResourceId, err := dc.client.EnsureDefaultLogAnalyticsWorkspace(ctx, dc.resourceGroup, dc.location)
+			if err != nil {
+				return err
+			}
+			resourceParts := strings.Split(workspaceResourceId, "/")
+			workspaceResourceGroup := resourceParts[4]
+			workspaceName := resourceParts[8]
+			wsId, wsKey, wsLocation, err := dc.client.GetLogAnalyticsWorkspaceInfo(ctx, workspaceResourceGroup, workspaceName)
+			if err != nil {
+				return err
+			}
+			_, err = dc.client.AddContainerInsightsSolution(ctx, workspaceResourceGroup, workspaceName, workspaceLocation)
+			if err != nil {
+				return err
+			}
+		} else {
+			workspaceResourceId := addon.Config["logAnalyticsWorkspaceId"]
+			if workspaceResourceId != "" {
+				resourceParts := strings.Split(workspaceResourceId, "/")
+				workspaceSubscription := resourceParts[2]
+				if !strings.EqualFold(workspaceSubscription, dc.client.SubscriptionId) {
+					return errors.Errorf("log analytics workspace subscription should be same as cluster resource subscription")
+				}
+				wsId, wsKey, wsLocation, err := dc.client.GetLogAnalyticsWorkspaceInfo(ctx, workspaceResourceGroup, workspaceName)
+				if err != nil {
+					return err
+				}
+				_, err = dc.client.AddContainerInsightsSolution(ctx, workspaceResourceGroup, workspaceName, workspaceLocation)
+				if err != nil {
+					return err
+				}
+			} else {
+				workspaceGuid := addon.Config["workspaceGuid"]
+				workspaceKey := addon.Config["workspaceKey"]
+				log.Info("workspaceGuid:", workspaceGuid)
+				log.Info("workspaceKey:", workspaceKey)
+			}
+		}
+
+	}
+
 	return nil
 }
 
