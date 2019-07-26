@@ -156,7 +156,6 @@ const (
 	kubernetesCSEHelpersScript         = "k8s/cloud-init/artifacts/cse_helpers.sh"
 	kubernetesCSEInstall               = "k8s/cloud-init/artifacts/cse_install.sh"
 	kubernetesCSEConfig                = "k8s/cloud-init/artifacts/cse_config.sh"
-	kubernetesCISScript                = "k8s/cloud-init/artifacts/cis.sh"
 	kubernetesCSECustomCloud           = "k8s/cloud-init/artifacts/cse_customcloud.sh"
 	kubernetesHealthMonitorScript      = "k8s/cloud-init/artifacts/health-monitor.sh"
 	// kubernetesKubeletMonitorSystemdTimer     = "k8s/cloud-init/artifacts/kubelet-monitor.timer" // TODO enable
@@ -169,8 +168,6 @@ const (
 	kubernetesMasterGenerateProxyCertsScript = "k8s/cloud-init/artifacts/generateproxycerts.sh"
 	kubernetesCustomSearchDomainsScript      = "k8s/cloud-init/artifacts/setup-custom-search-domains.sh"
 	kubeletSystemdService                    = "k8s/cloud-init/artifacts/kubelet.service"
-	kmsSystemdService                        = "k8s/cloud-init/artifacts/kms.service"
-	aptPreferences                           = "k8s/cloud-init/artifacts/apt-preferences"
 	dockerClearMountPropagationFlags         = "k8s/cloud-init/artifacts/docker_clear_mount_propagation_flags.conf"
 	systemdBPFMount                          = "k8s/cloud-init/artifacts/sys-fs-bpf.mount"
 	etcdSystemdService                       = "k8s/cloud-init/artifacts/etcd.service"
