@@ -368,10 +368,11 @@ func autofillApimodel(dc *deployCmd) error {
 			}
 			log.Infoln("successfully created default log analytics workspace:", workspaceResourceId)
 			resourceParts := strings.Split(workspaceResourceId, "/")
+			workspaceSubscriptionId := resourceParts[2]
 			workspaceResourceGroup := resourceParts[4]
 			workspaceName := resourceParts[8]
 			log.Infoln("getting default log analytics workspace details")
-			wsId, wsKey, wsLocation, err := dc.client.GetLogAnalyticsWorkspaceInfo(ctx, workspaceResourceGroup, workspaceName)
+			wsId, wsKey, wsLocation, err := dc.client.GetLogAnalyticsWorkspaceInfo(ctx, workspaceSubscriptionId, workspaceResourceGroup, workspaceName)
 			if err != nil {
 				return err
 			}
@@ -399,14 +400,15 @@ func autofillApimodel(dc *deployCmd) error {
 			if workspaceResourceId != "" {
 				log.Infoln("using provided default log analytics workspace: ", workspaceResourceId)
 				resourceParts := strings.Split(workspaceResourceId, "/")
-				//workspaceSubscription := resourceParts[2]
+				if len(resourceParts) != 9 {
+					return fmt.Errorf("%s is not a valid resourceID", workspaceResourceId)
+				}
+				workspaceSubscriptionId := resourceParts[2]
 				workspaceResourceGroup := resourceParts[4]
 				workspaceName := resourceParts[8]
-				// if !strings.EqualFold(workspaceSubscription, dc.client.SubscriptionID) {
-				// 	return errors.Errorf("log analytics workspace subscription should be same as cluster resource subscription")
-				// }
+
 				log.Infoln("getting default log analytics workspace details")
-				wsId, wsKey, wsLocation, err := dc.client.GetLogAnalyticsWorkspaceInfo(ctx, workspaceResourceGroup, workspaceName)
+				wsId, wsKey, wsLocation, err := dc.client.GetLogAnalyticsWorkspaceInfo(ctx, workspaceSubscriptionId, workspaceResourceGroup, workspaceName)
 				if err != nil {
 					return err
 				}

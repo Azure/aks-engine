@@ -139,7 +139,11 @@ func (az *AzureClient) EnsureDefaultLogAnalyticsWorkspace(ctx context.Context, r
 }
 
 // GetLogAnalyticsWorkspaceInfo gets the details about the workspace
-func (az *AzureClient) GetLogAnalyticsWorkspaceInfo(ctx context.Context, workspaceResourceGroup, workspaceName string) (workspaceId string, workspaceKey string, workspaceLocation string, err error) {
+func (az *AzureClient) GetLogAnalyticsWorkspaceInfo(ctx context.Context, workspaceSubscriptionId, workspaceResourceGroup, workspaceName string) (workspaceId string, workspaceKey string, workspaceLocation string, err error) {
+	if !strings.EqualFold(workspaceSubscriptionId, az.subscriptionID) {
+		return "", "", "", fmt.Errorf("subscription of the Log analytics should be same as cluster resources")
+	}
+
 	resp, err := az.workspacesClient.Get(ctx, workspaceResourceGroup, workspaceName)
 	if err != nil {
 		return "", "", "", err
