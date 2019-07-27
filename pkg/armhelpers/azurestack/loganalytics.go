@@ -99,6 +99,21 @@ func (az *AzureClient) EnsureDefaultLogAnalyticsWorkspace(ctx context.Context, r
 		}
 	}
 
+	wsList, err := az.workspacesClient.ListByResourceGroup(ctx, defaultWorkspaceResourceGroup)
+	if err != nil {
+		if wsList.Response.StatusCode != 404 {
+			return "", err
+		}
+	}
+
+	if wsList.Value != nil {
+		for _, ws := range *wsList.Value {
+			if strings.EqualFold(defaultWorkspaceName, *ws.Name) {
+				return *ws.ID, nil
+			}
+		}
+	}
+
 	WorkspaceParameters := oi.Workspace{
 		Location: &defaultWorkspaceRegion,
 		WorkspaceProperties: &oi.WorkspaceProperties{
