@@ -137,7 +137,7 @@ var (
 		ImageOffer:     "aks",
 		ImageSku:       "aks-ubuntu-1604-201907",
 		ImagePublisher: "microsoft-aks",
-		ImageVersion:   "2019.07.10",
+		ImageVersion:   "2019.07.25",
 	}
 
 	// AKSUbuntu1804OSImageConfig is the AKS image based on Ubuntu 18.04-LTS.
@@ -145,7 +145,7 @@ var (
 		ImageOffer:     "aks",
 		ImageSku:       "aks-ubuntu-1804-201907",
 		ImagePublisher: "microsoft-aks",
-		ImageVersion:   "2019.07.10",
+		ImageVersion:   "2019.07.25",
 	}
 
 	// ACC1604OSImageConfig is the ACC image based on Ubuntu 16.04.
