@@ -74,7 +74,9 @@ var _ = BeforeSuite(func() {
 	Expect(err).NotTo(HaveOccurred())
 	csInput, err := engine.ParseInput(engCfg.ClusterDefinitionTemplate)
 	Expect(err).NotTo(HaveOccurred())
-	csGenerated, err := engine.ParseOutput(engCfg.GeneratedDefinitionPath + "/apimodel.json")
+	isUpdate := cfg.Name != ""
+	validate := false
+	csGenerated, err := engine.ParseOutput(engCfg.GeneratedDefinitionPath+"/apimodel.json", validate, isUpdate)
 	Expect(err).NotTo(HaveOccurred())
 	eng = engine.Engine{
 		Config:             engCfg,
@@ -480,7 +482,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 					Expect(err).NotTo(HaveOccurred())
 					log.Printf("kubectl port-forward output: %s\n", proxyOutStr)
 					defer func() {
-						proxyCmd.Process.Signal(os.Interrupt)
+						proxyCmd.Process.Signal(os.Kill)
 						proxyCmd.Wait()
 					}()
 					By("Running curl to access the forwarded port")
