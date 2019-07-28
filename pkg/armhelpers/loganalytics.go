@@ -13,7 +13,7 @@ import (
 	"github.com/Azure/go-autorest/autorest/to"
 )
 
-// EnsureDefaultLogAnalyticsWorkspace ensures the default log analytics exists corresponding to specified location
+// EnsureDefaultLogAnalyticsWorkspace ensures the default log analytics exists corresponding to specified location in selected subscription
 func (az *AzureClient) EnsureDefaultLogAnalyticsWorkspace(ctx context.Context, resourceGroup, location string) (workspaceResourceId string, err error) {
 	AzureCloudLocationToOmsRegionCodeMap := map[string]string{
 		"australiasoutheast": "ASE",
