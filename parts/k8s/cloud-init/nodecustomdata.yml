@@ -60,6 +60,7 @@ write_files:
     {{CloudInitData "healthMonitorScript"}}
 {{end}}
 
+{{if not .IsVHDDistro}}
 - path: /etc/systemd/system/kubelet-monitor.service
   permissions: "0644"
   encoding: gzip
@@ -88,7 +89,6 @@ write_files:
   content: !!binary |
     {{CloudInitData "kubeletSystemdService"}}
 
-{{if not .IsVHDDistro}}
 - path: /etc/systemd/system/kms.service
   permissions: "0644"
   encoding: gzip
@@ -122,12 +122,14 @@ write_files:
 
 {{if .KubernetesConfig.RequiresDocker}}
     {{if not .IsCoreOS}}
+        {{if not .IsVHDDistro}}
 - path: /etc/systemd/system/docker.service.d/clear_mount_propagation_flags.conf
   permissions: "0644"
   encoding: gzip
   owner: "root"
   content: !!binary |
     {{CloudInitData "dockerClearMountPropagationFlags"}}
+        {{end}}
     {{end}}
 
 - path: /etc/systemd/system/docker.service.d/exec_start.conf

@@ -15142,6 +15142,7 @@ write_files:
     {{CloudInitData "healthMonitorScript"}}
 {{end}}
 
+{{if not .MasterProfile.IsVHDDistro}}
 - path: /etc/systemd/system/kubelet-monitor.service
   permissions: "0644"
   encoding: gzip
@@ -15170,7 +15171,6 @@ write_files:
   content: !!binary |
     {{CloudInitData "kubeletSystemdService"}}
 
-{{if not .MasterProfile.IsVHDDistro}}
 - path: /opt/azure/containers/label-nodes.sh
   permissions: "0744"
   encoding: gzip
@@ -15218,12 +15218,14 @@ write_files:
 
 {{if .OrchestratorProfile.KubernetesConfig.RequiresDocker}}
     {{if not .MasterProfile.IsCoreOS}}
+        {{if not .MasterProfile.IsVHDDistro}}
 - path: /etc/systemd/system/docker.service.d/clear_mount_propagation_flags.conf
   permissions: "0644"
   encoding: gzip
   owner: root
   content: !!binary |
     {{CloudInitData "dockerClearMountPropagationFlags"}}
+         {{end}}
     {{end}}
 
 - path: /etc/systemd/system/docker.service.d/exec_start.conf
@@ -15701,7 +15703,7 @@ write_files:
     {{WrapAsVariable "provisionConfigsCustomCloud"}}
 {{end}}
 
-{{if not .MasterProfile.IsVHDDistro}}
+{{if not .IsVHDDistro}}
     {{if .IsCoreOS}}
 - path: /opt/bin/health-monitor.sh
     {{else}}
@@ -15714,6 +15716,7 @@ write_files:
     {{CloudInitData "healthMonitorScript"}}
 {{end}}
 
+{{if not .IsVHDDistro}}
 - path: /etc/systemd/system/kubelet-monitor.service
   permissions: "0644"
   encoding: gzip
@@ -15742,7 +15745,6 @@ write_files:
   content: !!binary |
     {{CloudInitData "kubeletSystemdService"}}
 
-{{if not .IsVHDDistro}}
 - path: /etc/systemd/system/kms.service
   permissions: "0644"
   encoding: gzip
@@ -15776,12 +15778,14 @@ write_files:
 
 {{if .KubernetesConfig.RequiresDocker}}
     {{if not .IsCoreOS}}
+        {{if not .IsVHDDistro}}
 - path: /etc/systemd/system/docker.service.d/clear_mount_propagation_flags.conf
   permissions: "0644"
   encoding: gzip
   owner: "root"
   content: !!binary |
     {{CloudInitData "dockerClearMountPropagationFlags"}}
+        {{end}}
     {{end}}
 
 - path: /etc/systemd/system/docker.service.d/exec_start.conf

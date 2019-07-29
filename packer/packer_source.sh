@@ -33,6 +33,16 @@ copyPackerFiles() {
   KMS_SERVICE_DEST=/etc/systemd/system/kms.service
   HEALTH_MONITOR_SRC=/home/packer/health-monitor
   HEALTH_MONITOR_DEST=/usr/local/bin/health-monitor.sh
+  KUBELET_MONITOR_SERVICE_SRC=/home/packer/kubelet-monitor.service
+  KUBELET_MONITOR_SERVICE_DEST=/etc/systemd/system/kubelet-monitor.service
+  DOCKER_MONITOR_SERVICE_SRC=/home/packer/docker-monitor.service
+  DOCKER_MONITOR_SERVICE_DEST=/etc/systemd/system/docker-monitor.service
+  DOCKER_MONITOR_TIMER_SRC=/home/packer/docker-monitor.timer
+  DOCKER_MONITOR_TIMER_DEST=/etc/systemd/system/docker-monitor.timer
+  KUBELET_SERVICE_SRC=/home/packer/kubelet.service
+  KUBELET_SERVICE_DEST=/etc/systemd/system/kubelet.service
+  DOCKER_CLEAR_MOUNT_PROPAGATION_FLAGS_SRC=/home/packer/docker_clear_mount_propagation_flags.conf
+  DOCKER_CLEAR_MOUNT_PROPAGATION_FLAGS_DEST=/etc/systemd/system/docker.service.d/clear_mount_propagation_flags.conf
   if [[ ${UBUNTU_RELEASE} == "16.04" ]]; then
     SSHD_CONFIG_SRC=/home/packer/sshd_config_1604
   fi
@@ -52,6 +62,11 @@ copyPackerFiles() {
   cpAndMode $APT_PREFERENCES_SRC $APT_PREFERENCES_DEST 644
   cpAndMode $KMS_SERVICE_SRC $KMS_SERVICE_DEST 644
   cpAndMode $HEALTH_MONITOR_SRC $HEALTH_MONITOR_DEST 544
+  cpAndMode $KUBELET_MONITOR_SERVICE_SRC $KUBELET_MONITOR_SERVICE_DEST 644
+  cpAndMode $DOCKER_MONITOR_SERVICE_SRC $DOCKER_MONITOR_SERVICE_DEST 644
+  cpAndMode $DOCKER_MONITOR_TIMER_SRC $DOCKER_MONITOR_TIMER_DEST 644
+  cpAndMode $KUBELET_SERVICE_SRC $KUBELET_SERVICE_DEST 644
+  cpAndMode $DOCKER_CLEAR_MOUNT_PROPAGATION_FLAGS_SRC $DOCKER_CLEAR_MOUNT_PROPAGATION_FLAGS_DEST 644
 }
 
 cpAndMode() {
