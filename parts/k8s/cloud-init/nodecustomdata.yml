@@ -6,123 +6,123 @@ write_files:
   encoding: gzip
   owner: root
   content: !!binary |
-    {{CloudInitData "provisionSource"}}
+    {{ CloudInitData "provisionSource" }}
 
 - path: /opt/azure/containers/provision.sh
   permissions: "0744"
   encoding: gzip
   owner: root
   content: !!binary |
-    {{CloudInitData "provisionScript"}}
+    {{ CloudInitData "provisionScript" }}
 
 - path: /opt/azure/containers/provision_installs.sh
   permissions: "0744"
   encoding: gzip
   owner: root
   content: !!binary |
-    {{CloudInitData "provisionInstalls"}}
+    {{ CloudInitData "provisionInstalls" }}
 
 - path: /opt/azure/containers/provision_configs.sh
   permissions: "0744"
   encoding: gzip
   owner: root
   content: !!binary |
-    {{CloudInitData "provisionConfigs"}}
+    {{ CloudInitData "provisionConfigs" }}
 
 - path: /opt/azure/containers/provision_cis.sh
   permissions: "0744"
   encoding: gzip
   owner: root
   content: !!binary |
-    {{CloudInitData "provisionCIS"}}
+    {{ CloudInitData "provisionCIS" }}
 
-{{if IsAzureStackCloud}}
+{{- if IsAzureStackCloud }}
 - path: /opt/azure/containers/provision_configs_custom_cloud.sh
   permissions: "0744"
   encoding: gzip
   owner: root
   content: !!binary |
-    {{WrapAsVariable "provisionConfigsCustomCloud"}}
-{{end}}
+    {{ WrapAsVariable "provisionConfigsCustomCloud" }}
+{{- end }}
 
-{{if .IsCoreOS}}
+{{- if .IsCoreOS }}
 - path: /opt/bin/health-monitor.sh
-{{else}}
+{{- else }}
 - path: /usr/local/bin/health-monitor.sh
-{{end}}
+{{- end }}
   permissions: "0544"
   encoding: gzip
   owner: root
   content: !!binary |
-    {{CloudInitData "healthMonitorScript"}}
+    {{ CloudInitData "healthMonitorScript" }}
 
 - path: /etc/systemd/system/kubelet-monitor.service
   permissions: "0644"
   encoding: gzip
   owner: root
   content: !!binary |
-    {{CloudInitData "kubeletMonitorSystemdService"}}
+    {{ CloudInitData "kubeletMonitorSystemdService" }}
 
 - path: /etc/systemd/system/docker-monitor.timer
   permissions: "0644"
   encoding: gzip
   owner: root
   content: !!binary |
-    {{CloudInitData "dockerMonitorSystemdTimer"}}
+    {{ CloudInitData "dockerMonitorSystemdTimer" }}
 
 - path: /etc/systemd/system/docker-monitor.service
   permissions: "0644"
   encoding: gzip
   owner: root
   content: !!binary |
-    {{CloudInitData "dockerMonitorSystemdService"}}
+    {{ CloudInitData "dockerMonitorSystemdService" }}
 
 - path: /etc/systemd/system/kubelet.service
   permissions: "0644"
   encoding: gzip
   owner: root
   content: !!binary |
-    {{CloudInitData "kubeletSystemdService"}}
+    {{ CloudInitData "kubeletSystemdService" }}
 
 - path: /etc/systemd/system/kms.service
   permissions: "0644"
   encoding: gzip
   owner: root
   content: !!binary |
-    {{CloudInitData "kmsSystemdService"}}
+    {{ CloudInitData "kmsSystemdService" }}
 
 - path: /etc/apt/preferences
   permissions: "0644"
   encoding: gzip
   owner: root
   content: !!binary |
-    {{CloudInitData "aptPreferences"}}
+    {{ CloudInitData "aptPreferences" }}
 
-{{if IsIPv6DualStackFeatureEnabled}}
+{{- if IsIPv6DualStackFeatureEnabled }}
 - path: /etc/systemd/system/dhcpv6.service
   permissions: "0644"
   encoding: gzip
   owner: root
   content: !!binary |
-    {{CloudInitData "dhcpv6SystemdService"}}
+    {{ CloudInitData "dhcpv6SystemdService" }}
 
 - path: /opt/azure/containers/enable-dhcpv6.sh
   permissions: "0544"
   encoding: gzip
   owner: root
   content: !!binary |
-    {{CloudInitData "dhcpv6ConfigurationScript"}}
-{{end}}
+    {{ CloudInitData "dhcpv6ConfigurationScript" }}
+{{- end }}
 
-{{if .KubernetesConfig.RequiresDocker}}
-    {{if not .IsCoreOS}}
+{{- if .KubernetesConfig.RequiresDocker }}
+    {{- if not .IsCoreOS }}
 - path: /etc/systemd/system/docker.service.d/clear_mount_propagation_flags.conf
   permissions: "0644"
   encoding: gzip
   owner: "root"
   content: !!binary |
-    {{CloudInitData "dockerClearMountPropagationFlags"}}
-    {{end}}
+    {{ CloudInitData "dockerClearMountPropagationFlags" }}
+    {{- end }}
 
 - path: /etc/systemd/system/docker.service.d/exec_start.conf
   permissions: "0644"
@@ -130,11 +130,11 @@ write_files:
   content: |
     [Service]
     ExecStart=
-    {{if .IsCoreOS}}
-    ExecStart=/usr/bin/env PATH=${TORCX_BINDIR}:${PATH} ${TORCX_BINDIR}/dockerd --host=fd:// --containerd=/var/run/docker/libcontainerd/docker-containerd.sock --storage-driver=overlay2 --bip={{WrapAsParameter "dockerBridgeCidr"}} $DOCKER_SELINUX $DOCKER_OPTS $DOCKER_CGROUPS $DOCKER_OPT_BIP $DOCKER_OPT_MTU $DOCKER_OPT_IPMASQ
-    {{else}}
-    ExecStart=/usr/bin/dockerd -H fd:// --storage-driver=overlay2 --bip={{WrapAsParameter "dockerBridgeCidr"}}
-    {{end}}
+    {{- if .IsCoreOS }}
+    ExecStart=/usr/bin/env PATH=${TORCX_BINDIR}:${PATH} ${TORCX_BINDIR}/dockerd --host=fd:// --containerd=/var/run/docker/libcontainerd/docker-containerd.sock --storage-driver=overlay2 --bip={{ WrapAsParameter "dockerBridgeCidr" }} $DOCKER_SELINUX $DOCKER_OPTS $DOCKER_CGROUPS $DOCKER_OPT_BIP $DOCKER_OPT_MTU $DOCKER_OPT_IPMASQ
+    {{- else }}
+    ExecStart=/usr/bin/dockerd -H fd:// --storage-driver=overlay2 --bip={{ WrapAsParameter "dockerBridgeCidr" }}
+    {{- end }}
 
 - path: /etc/docker/daemon.json
   permissions: "0644"
@@ -146,27 +146,27 @@ write_files:
       "log-opts":  {
          "max-size": "50m",
          "max-file": "5"
-      }{{if IsNSeriesSKU .}}
+      }{{- if IsNSeriesSKU . }}
       ,"default-runtime": "nvidia",
       "runtimes": {
          "nvidia": {
              "path": "/usr/bin/nvidia-container-runtime",
              "runtimeArgs": []
         }
-      }{{end}}
+      }{{- end }}
     }
-{{end}}
+{{- end }}
 
-{{if HasCiliumNetworkPlugin }}
+{{- if HasCiliumNetworkPlugin }}
 - path: /etc/systemd/system/sys-fs-bpf.mount
   permissions: "0644"
   encoding: gzip
   owner: root
   content: !!binary |
-    {{WrapAsVariable "systemdBPFMount"}}
-{{end}}
+    {{ WrapAsVariable "systemdBPFMount" }}
+{{- end }}
 
-{{if IsNSeriesSKU .}}
+{{- if IsNSeriesSKU . }}
 - path: /etc/systemd/system/nvidia-modprobe.service
   permissions: "0644"
   owner: root
@@ -181,30 +181,30 @@ write_files:
     ExecStartPost=/bin/sh -c "sleep 10 && systemctl restart kubelet"
     [Install]
     WantedBy=multi-user.target
-{{end}}
+{{- end }}
 
 - path: /etc/kubernetes/certs/ca.crt
   permissions: "0644"
   encoding: base64
   owner: root
   content: |
-    {{WrapAsParameter "caCertificate"}}
+    {{ WrapAsParameter "caCertificate" }}
 
 - path: /etc/kubernetes/certs/client.crt
   permissions: "0644"
   encoding: base64
   owner: root
   content: |
-    {{WrapAsParameter "clientCertificate"}}
+    {{ WrapAsParameter "clientCertificate" }}
 
-{{if HasLinuxProfile}}{{if HasCustomSearchDomain}}
+{{- if HasLinuxProfile }}{{- if HasCustomSearchDomain }}
 - path: /opt/azure/containers/setup-custom-search-domains.sh
   permissions: "0744"
   encoding: gzip
   owner: root
   content: !!binary |
-    {{CloudInitData "customSearchDomainsScript"}}
-{{end}}{{end}}
+    {{ CloudInitData "customSearchDomainsScript" }}
+{{- end }}{{- end }}
 
 - path: /var/lib/kubelet/kubeconfig
   permissions: "0644"
@@ -216,7 +216,7 @@ write_files:
     - name: localcluster
       cluster:
         certificate-authority: /etc/kubernetes/certs/ca.crt
-        server: https://{{WrapAsVariable "kubernetesAPIServerIP"}}:443
+        server: https://{{ WrapAsVariable "kubernetesAPIServerIP" }}:443
     users:
     - name: client
       user:
@@ -233,54 +233,54 @@ write_files:
   permissions: "0644"
   owner: root
   content: |
-{{if IsKubernetesVersionLt "1.8.0"}}
+{{- if IsKubernetesVersionLt "1.8.0" }}
     KUBELET_OPTS=--require-kubeconfig
-{{else}}
+{{- else }}
     KUBELET_OPTS=
-{{end}}
-    KUBELET_CONFIG={{GetKubeletConfigKeyVals .KubernetesConfig }}
-    KUBELET_IMAGE={{WrapAsParameter "kubernetesHyperkubeSpec"}}
+{{- end }}
+    KUBELET_CONFIG={{ GetKubeletConfigKeyVals .KubernetesConfig }}
+    KUBELET_IMAGE={{ WrapAsParameter "kubernetesHyperkubeSpec" }}
     KUBELET_REGISTER_SCHEDULABLE=true
-{{if IsKubernetesVersionGe "1.16.0-alpha.1"}}
-    KUBELET_NODE_LABELS={{GetAgentKubernetesLabels . "',variables('labelResourceGroup'),'"}}
-{{else}}
-    KUBELET_NODE_LABELS={{GetAgentKubernetesLabelsDeprecated . "',variables('labelResourceGroup'),'"}}
-{{end}}
-{{if IsAzureStackCloud }}
+{{- if IsKubernetesVersionGe "1.16.0-alpha.1" }}
+    KUBELET_NODE_LABELS={{ GetAgentKubernetesLabels . "',variables('labelResourceGroup'),'" }}
+{{- else }}
+    KUBELET_NODE_LABELS={{ GetAgentKubernetesLabelsDeprecated . "',variables('labelResourceGroup'),'" }}
+{{- end }}
+{{- if IsAzureStackCloud }}
     AZURE_ENVIRONMENT_FILEPATH=/etc/kubernetes/azurestackcloud.json
-{{end}}
+{{- end }}
 
 - path: /opt/azure/containers/kubelet.sh
   permissions: "0755"
   owner: root
   content: |
     #!/bin/bash
-{{if not IsIPMasqAgentEnabled}}
-    {{if IsAzureCNI}}
-    iptables -t nat -A POSTROUTING -m iprange ! --dst-range 168.63.129.16 -m addrtype ! --dst-type local ! -d {{WrapAsParameter "vnetCidr"}} -j MASQUERADE
-    {{end}}
-{{end}}
-{{if HasLinuxProfile}}{{if HasCustomSearchDomain}}
-    sed -i "s|<searchDomainName>|{{WrapAsParameter "searchDomainName"}}|g" "/opt/azure/containers/setup-custom-search-domains.sh"
-    sed -i "s|<searchDomainRealmUser>|{{WrapAsParameter "searchDomainRealmUser"}}|g" "/opt/azure/containers/setup-custom-search-domains.sh"
-    sed -i "s|<searchDomainRealmPassword>|{{WrapAsParameter "searchDomainRealmPassword"}}|g" "/opt/azure/containers/setup-custom-search-domains.sh"
-{{end}}{{end}}
+{{- if not IsIPMasqAgentEnabled }}
+    {{- if IsAzureCNI }}
+    iptables -t nat -A POSTROUTING -m iprange ! --dst-range 168.63.129.16 -m addrtype ! --dst-type local ! -d {{ WrapAsParameter "vnetCidr" }} -j MASQUERADE
+    {{- end }}
+{{- end }}
+{{- if HasLinuxProfile }}{{- if HasCustomSearchDomain }}
+    sed -i "s|<searchDomainName>|{{ WrapAsParameter "searchDomainName" }}|g" "/opt/azure/containers/setup-custom-search-domains.sh"
+    sed -i "s|<searchDomainRealmUser>|{{ WrapAsParameter "searchDomainRealmUser" }}|g" "/opt/azure/containers/setup-custom-search-domains.sh"
+    sed -i "s|<searchDomainRealmPassword>|{{ WrapAsParameter "searchDomainRealmPassword" }}|g" "/opt/azure/containers/setup-custom-search-domains.sh"
+{{- end }}{{- end }}
 
-{{if IsAzureStackCloud}}
+{{- if IsAzureStackCloud }}
 - path: "/etc/kubernetes/azurestackcloud.json"
   permissions: "0600"
   owner: "root"
   content: |
-    {{WrapAsVariable "environmentJSON"}}
-{{end}}
+    {{ WrapAsVariable "environmentJSON" }}
+{{- end }}
 
-{{if .IsCoreOS}}
+{{- if .IsCoreOS }}
 - path: "/etc/kubernetes/manifests/.keep"
 
-{{if .KubernetesConfig.RequiresDocker}}
+{{- if .KubernetesConfig.RequiresDocker }}
 groups:
-  - docker: [{{WrapAsParameter "linuxAdminUsername"}}]
-{{end}}
+  - docker: [{{ WrapAsParameter "linuxAdminUsername" }}]
+{{- end }}
 
 coreos:
   units:
@@ -320,9 +320,9 @@ coreos:
             ExecStart=/opt/bin/health-monitor.sh container-runtime
     - name: rpcbind.service
       enable: true
-{{else}}
+{{- else }}
 runcmd:
 - set -x
 - . /opt/azure/containers/provision_source.sh
-- aptmarkWALinuxAgent hold{{GetKubernetesAgentPreprovisionYaml .}}
-{{end}}
+- aptmarkWALinuxAgent hold{{ GetKubernetesAgentPreprovisionYaml . }}
+{{- end }}

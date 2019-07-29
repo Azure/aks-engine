@@ -1,10 +1,10 @@
 #cloud-config
 
-{{if not .MasterProfile.IsCoreOS}}
+{{- if not .MasterProfile.IsCoreOS }}
 packages:
  - jq
  - traceroute
-{{end}}
+{{- end }}
 
 write_files:
 - path: /opt/azure/containers/provision_source.sh
@@ -12,137 +12,137 @@ write_files:
   encoding: gzip
   owner: root
   content: !!binary |
-    {{CloudInitData "provisionSource"}}
+    {{ CloudInitData "provisionSource" }}
 
 - path: /opt/azure/containers/provision.sh
   permissions: "0744"
   encoding: gzip
   owner: root
   content: !!binary |
-    {{CloudInitData "provisionScript"}}
+    {{ CloudInitData "provisionScript" }}
 
 - path: /opt/azure/containers/provision_installs.sh
   permissions: "0744"
   encoding: gzip
   owner: root
   content: !!binary |
-    {{CloudInitData "provisionInstalls"}}
+    {{ CloudInitData "provisionInstalls" }}
 
 - path: /opt/azure/containers/provision_configs.sh
   permissions: "0744"
   encoding: gzip
   owner: root
   content: !!binary |
-    {{CloudInitData "provisionConfigs"}}
+    {{ CloudInitData "provisionConfigs" }}
 
 - path: /opt/azure/containers/provision_cis.sh
   permissions: "0744"
   encoding: gzip
   owner: root
   content: !!binary |
-    {{CloudInitData "provisionCIS"}}
+    {{ CloudInitData "provisionCIS" }}
 
-{{if IsAzureStackCloud}}
+{{- if IsAzureStackCloud }}
 - path: /opt/azure/containers/provision_configs_custom_cloud.sh
   permissions: "0744"
   encoding: gzip
   owner: root
   content: !!binary |
-    {{WrapAsVariable "provisionConfigsCustomCloud"}}
-{{end}}
+    {{ WrapAsVariable "provisionConfigsCustomCloud" }}
+{{- end }}
 
-{{if .MasterProfile.IsCoreOS}}
+{{- if .MasterProfile.IsCoreOS }}
 - path: /opt/bin/health-monitor.sh
-{{else}}
+{{- else }}
 - path: /usr/local/bin/health-monitor.sh
-{{end}}
+{{- end }}
   permissions: "0544"
   encoding: gzip
   owner: root
   content: !!binary |
-    {{CloudInitData "healthMonitorScript"}}
+    {{ CloudInitData "healthMonitorScript" }}
 
 - path: /etc/systemd/system/kubelet-monitor.service
   permissions: "0644"
   encoding: gzip
   owner: root
   content: !!binary |
-    {{CloudInitData "kubeletMonitorSystemdService"}}
+    {{ CloudInitData "kubeletMonitorSystemdService" }}
 
 - path: /etc/systemd/system/docker-monitor.timer
   permissions: "0644"
   encoding: gzip
   owner: root
   content: !!binary |
-    {{CloudInitData "dockerMonitorSystemdTimer"}}
+    {{ CloudInitData "dockerMonitorSystemdTimer" }}
 
 - path: /etc/systemd/system/docker-monitor.service
   permissions: "0644"
   encoding: gzip
   owner: root
   content: !!binary |
-    {{CloudInitData "dockerMonitorSystemdService"}}
+    {{ CloudInitData "dockerMonitorSystemdService" }}
 
 - path: /etc/systemd/system/kubelet.service
   permissions: "0644"
   encoding: gzip
   owner: root
   content: !!binary |
-    {{CloudInitData "kubeletSystemdService"}}
+    {{ CloudInitData "kubeletSystemdService" }}
 
 - path: /opt/azure/containers/label-nodes.sh
   permissions: "0744"
   encoding: gzip
   owner: root
   content: !!binary |
-    {{CloudInitData "labelNodesScript"}}
+    {{ CloudInitData "labelNodesScript" }}
 
 - path: /etc/systemd/system/label-nodes.service
   permissions: "0644"
   encoding: gzip
   owner: root
   content: !!binary |
-    {{CloudInitData "labelNodesSystemdService"}}
+    {{ CloudInitData "labelNodesSystemdService" }}
 
 - path: /etc/systemd/system/kms.service
   permissions: "0644"
   encoding: gzip
   owner: root
   content: !!binary |
-    {{CloudInitData "kmsSystemdService"}}
+    {{ CloudInitData "kmsSystemdService" }}
 
 - path: /etc/apt/preferences
   permissions: "0644"
   encoding: gzip
   owner: root
   content: !!binary |
-    {{CloudInitData "aptPreferences"}}
+    {{ CloudInitData "aptPreferences" }}
 
-{{if IsIPv6DualStackFeatureEnabled}}
+{{- if IsIPv6DualStackFeatureEnabled }}
 - path: /etc/systemd/system/dhcpv6.service
   permissions: "0644"
   encoding: gzip
   owner: root
   content: !!binary |
-    {{CloudInitData "dhcpv6SystemdService"}}
+    {{ CloudInitData "dhcpv6SystemdService" }}
 
 - path: /opt/azure/containers/enable-dhcpv6.sh
   permissions: "0544"
   encoding: gzip
   owner: root
   content: !!binary |
-    {{CloudInitData "dhcpv6ConfigurationScript"}}
-{{end}}
+    {{ CloudInitData "dhcpv6ConfigurationScript" }}
+{{- end }}
 
-{{if .OrchestratorProfile.KubernetesConfig.RequiresDocker}}
-    {{if not .MasterProfile.IsCoreOS}}
+{{- if .OrchestratorProfile.KubernetesConfig.RequiresDocker }}
+    {{- if not .MasterProfile.IsCoreOS }}
 - path: /etc/systemd/system/docker.service.d/clear_mount_propagation_flags.conf
   permissions: "0644"
   encoding: gzip
   owner: root
   content: !!binary |
-    {{CloudInitData "dockerClearMountPropagationFlags"}}
-    {{end}}
+    {{ CloudInitData "dockerClearMountPropagationFlags" }}
+    {{- end }}
 
 - path: /etc/systemd/system/docker.service.d/exec_start.conf
   permissions: "0644"
@@ -150,11 +150,11 @@ write_files:
   content: |
     [Service]
     ExecStart=
-    {{if .MasterProfile.IsCoreOS}}
-    ExecStart=/usr/bin/env PATH=${TORCX_BINDIR}:${PATH} ${TORCX_BINDIR}/dockerd --host=fd:// --containerd=/var/run/docker/libcontainerd/docker-containerd.sock --storage-driver=overlay2 --bip={{WrapAsParameter "dockerBridgeCidr"}} $DOCKER_SELINUX $DOCKER_OPTS $DOCKER_CGROUPS $DOCKER_OPT_BIP $DOCKER_OPT_MTU $DOCKER_OPT_IPMASQ
-    {{else}}
-    ExecStart=/usr/bin/dockerd -H fd:// --storage-driver=overlay2 --bip={{WrapAsParameter "dockerBridgeCidr"}}
-    {{end}}
+    {{- if .MasterProfile.IsCoreOS }}
+    ExecStart=/usr/bin/env PATH=${TORCX_BINDIR}:${PATH} ${TORCX_BINDIR}/dockerd --host=fd:// --containerd=/var/run/docker/libcontainerd/docker-containerd.sock --storage-driver=overlay2 --bip={{ WrapAsParameter "dockerBridgeCidr" }} $DOCKER_SELINUX $DOCKER_OPTS $DOCKER_CGROUPS $DOCKER_OPT_BIP $DOCKER_OPT_MTU $DOCKER_OPT_IPMASQ
+    {{- else }}
+    ExecStart=/usr/bin/dockerd -H fd:// --storage-driver=overlay2 --bip={{ WrapAsParameter "dockerBridgeCidr" }}
+    {{- end }}
 
 - path: /etc/docker/daemon.json
   permissions: "0644"
@@ -168,48 +168,48 @@ write_files:
          "max-file": "5"
       }
     }
-{{end}}
+{{- end }}
 
-{{if eq .OrchestratorProfile.KubernetesConfig.NetworkPlugin "cilium"}}
+{{- if eq .OrchestratorProfile.KubernetesConfig.NetworkPlugin "cilium" }}
 - path: /etc/systemd/system/sys-fs-bpf.mount
   permissions: "0644"
   encoding: gzip
   owner: root
   content: !!binary |
-    {{WrapAsVariable "systemdBPFMount"}}
-{{end}}
+    {{ WrapAsVariable "systemdBPFMount" }}
+{{- end }}
 
 - path: /etc/kubernetes/certs/ca.crt
   permissions: "0644"
   encoding: base64
   owner: root
   content: |
-    {{WrapAsParameter "caCertificate"}}
+    {{ WrapAsParameter "caCertificate" }}
 
 - path: /etc/kubernetes/certs/client.crt
   permissions: "0644"
   encoding: "base64"
   owner: "root"
   content: |
-    {{WrapAsParameter "clientCertificate"}}
+    {{ WrapAsParameter "clientCertificate" }}
 
-{{if EnableAggregatedAPIs}}
+{{- if EnableAggregatedAPIs }}
 - path: /etc/kubernetes/generate-proxy-certs.sh
   permissions: "0744"
   encoding: gzip
   owner: root
   content: !!binary |
-    {{CloudInitData "generateProxyCertsScript"}}
-{{end}}
+    {{ CloudInitData "generateProxyCertsScript" }}
+{{- end }}
 
-{{if HasLinuxProfile}}{{if HasCustomSearchDomain}}
+{{- if HasLinuxProfile }}{{- if HasCustomSearchDomain }}
 - path: /opt/azure/containers/setup-custom-search-domains.sh
   permissions: "0744"
   encoding: gzip
   owner: root
   content: !!binary |
-    {{CloudInitData "customSearchDomainsScript"}}
-{{end}}{{end}}
+    {{ CloudInitData "customSearchDomainsScript" }}
+{{- end }}{{- end }}
 
 - path: /var/lib/kubelet/kubeconfig
   permissions: "0644"
@@ -221,11 +221,11 @@ write_files:
     - name: localcluster
       cluster:
         certificate-authority: /etc/kubernetes/certs/ca.crt
-      {{if IsMasterVirtualMachineScaleSets}}
+      {{- if IsMasterVirtualMachineScaleSets }}
         server: <SERVERIP>
-      {{else}}
-        server: {{WrapAsVerbatim "concat('https://', variables('masterPrivateIpAddrs')[copyIndex(variables('masterOffset'))], ':443')"}}
-      {{end}}
+      {{- else }}
+        server: {{ WrapAsVerbatim "concat('https://', variables('masterPrivateIpAddrs')[copyIndex(variables('masterOffset'))], ':443')" }}
+      {{- end }}
     users:
     - name: client
       user:
@@ -238,7 +238,7 @@ write_files:
       name: localclustercontext
     current-context: localclustercontext
 
-{{if EnableDataEncryptionAtRest}}
+{{- if EnableDataEncryptionAtRest }}
 - path: /etc/kubernetes/encryption-config.yaml
   permissions: "0600"
   owner: root
@@ -254,9 +254,9 @@ write_files:
                 - name: key1
                   secret: <etcdEncryptionSecret>
           - identity: {}
-{{end}}
+{{- end }}
 
-{{if EnableEncryptionWithExternalKms}}
+{{- if EnableEncryptionWithExternalKms }}
 - path: /etc/kubernetes/encryption-config.yaml
   permissions: "0444"
   owner: root
@@ -272,7 +272,7 @@ write_files:
             endpoint: unix:///opt/azurekms.socket
             cachesize: 0
         - identity: {}
-{{end}}
+{{- end }}
 
 MASTER_MANIFESTS_CONFIG_PLACEHOLDER
 
@@ -286,29 +286,29 @@ MASTER_CONTAINER_ADDONS_PLACEHOLDER
   permissions: "0644"
   owner: root
   content: |
-{{if IsKubernetesVersionLt "1.8.0"}}
+{{- if IsKubernetesVersionLt "1.8.0" }}
     KUBELET_OPTS=--require-kubeconfig
-{{else}}
+{{- else }}
     KUBELET_OPTS=
-{{end}}
-    KUBELET_CONFIG={{GetKubeletConfigKeyVals .MasterProfile.KubernetesConfig}}
-    KUBELET_IMAGE={{WrapAsParameter "kubernetesHyperkubeSpec"}}
-{{if IsKubernetesVersionGe "1.16.0-alpha.1"}}
-    KUBELET_NODE_LABELS={{GetMasterKubernetesLabels "',variables('labelResourceGroup'),'"}}
-{{else}}
-    KUBELET_NODE_LABELS={{GetMasterKubernetesLabelsDeprecated "',variables('labelResourceGroup'),'"}}
-{{end}}
-{{if IsAzureStackCloud }}
+{{- end }}
+    KUBELET_CONFIG={{ GetKubeletConfigKeyVals .MasterProfile.KubernetesConfig }}
+    KUBELET_IMAGE={{ WrapAsParameter "kubernetesHyperkubeSpec" }}
+{{- if IsKubernetesVersionGe "1.16.0-alpha.1" }}
+    KUBELET_NODE_LABELS={{ GetMasterKubernetesLabels "',variables('labelResourceGroup'),'" }}
+{{- else }}
+    KUBELET_NODE_LABELS={{ GetMasterKubernetesLabelsDeprecated "',variables('labelResourceGroup'),'" }}
+{{- end }}
+{{- if IsAzureStackCloud }}
     AZURE_ENVIRONMENT_FILEPATH=/etc/kubernetes/azurestackcloud.json
-{{end}}
-{{if IsKubernetesVersionGe "1.6.0"}}
-  {{if AnyAgentIsLinux}}
+{{- end }}
+{{- if IsKubernetesVersionGe "1.6.0" }}
+  {{- if AnyAgentIsLinux }}
     KUBELET_REGISTER_NODE=--register-node=true
     KUBELET_REGISTER_WITH_TAINTS=--register-with-taints=node-role.kubernetes.io/master=true:NoSchedule
-  {{end}}
-{{else}}
-    KUBELET_REGISTER_SCHEDULABLE={{WrapAsVariable "registerSchedulable"}}
-{{end}}
+  {{- end }}
+{{- else }}
+    KUBELET_REGISTER_SCHEDULABLE={{ WrapAsVariable "registerSchedulable" }}
+{{- end }}
 
 - path: /opt/azure/containers/kubelet.sh
   permissions: "0755"
@@ -316,95 +316,95 @@ MASTER_CONTAINER_ADDONS_PLACEHOLDER
   content: |
     #!/bin/bash
     set -e
-  {{if IsMasterVirtualMachineScaleSets}}
-    {{if .MasterProfile.IsCoreOS}}
+  {{- if IsMasterVirtualMachineScaleSets }}
+    {{- if .MasterProfile.IsCoreOS }}
     PRIVATE_IP=$(hostname -I | cut -d" " -f1)
-    {{else}}
+    {{- else }}
     PRIVATE_IP=$(hostname -i | cut -d" " -f1)
-    {{end}}
+    {{- end }}
     sed -i "s|<SERVERIP>|https://$PRIVATE_IP:443|g" "/var/lib/kubelet/kubeconfig"
-  {{end}}
-{{if gt .MasterProfile.Count 1}}
+  {{- end }}
+{{- if gt .MasterProfile.Count 1 }}
     # Redirect ILB (4443) traffic to port 443 (ELB) in the prerouting chain
     iptables -t nat -A PREROUTING -p tcp --dport 4443 -j REDIRECT --to-port 443
-{{end}}
+{{- end }}
 
-    sed -i "s|<img>|{{WrapAsParameter "kubernetesAddonManagerSpec"}}|g" /etc/kubernetes/manifests/kube-addon-manager.yaml
+    sed -i "s|<img>|{{ WrapAsParameter "kubernetesAddonManagerSpec" }}|g" /etc/kubernetes/manifests/kube-addon-manager.yaml
     for a in "/etc/kubernetes/manifests/kube-apiserver.yaml /etc/kubernetes/manifests/kube-controller-manager.yaml /etc/kubernetes/manifests/kube-scheduler.yaml"; do
-      sed -i "s|<img>|{{WrapAsParameter "kubernetesHyperkubeSpec"}}|g" $a
+      sed -i "s|<img>|{{ WrapAsParameter "kubernetesHyperkubeSpec" }}|g" $a
     done
     a=/etc/kubernetes/manifests/kube-apiserver.yaml
-    sed -i "s|<args>|{{GetK8sRuntimeConfigKeyVals .OrchestratorProfile.KubernetesConfig.APIServerConfig}}|g" $a
+    sed -i "s|<args>|{{ GetK8sRuntimeConfigKeyVals .OrchestratorProfile.KubernetesConfig.APIServerConfig }}|g" $a
 {{ if HasCosmosEtcd  }}
     sed -i "s|<etcdEndPointUri>|{{ GetCosmosEndPointUri }}|g" $a
 {{ else }}
     sed -i "s|<etcdEndPointUri>|127.0.0.1|g" $a
 {{ end }}
-    sed -i "s|<advertiseAddr>|{{WrapAsVariable "kubernetesAPIServerIP"}}|g" $a
-    sed -i "s|<args>|{{GetK8sRuntimeConfigKeyVals .OrchestratorProfile.KubernetesConfig.ControllerManagerConfig}}|g" /etc/kubernetes/manifests/kube-controller-manager.yaml
-    sed -i "s|<args>|{{GetK8sRuntimeConfigKeyVals .OrchestratorProfile.KubernetesConfig.SchedulerConfig}}|g" /etc/kubernetes/manifests/kube-scheduler.yaml
+    sed -i "s|<advertiseAddr>|{{ WrapAsVariable "kubernetesAPIServerIP" }}|g" $a
+    sed -i "s|<args>|{{ GetK8sRuntimeConfigKeyVals .OrchestratorProfile.KubernetesConfig.ControllerManagerConfig }}|g" /etc/kubernetes/manifests/kube-controller-manager.yaml
+    sed -i "s|<args>|{{ GetK8sRuntimeConfigKeyVals .OrchestratorProfile.KubernetesConfig.SchedulerConfig }}|g" /etc/kubernetes/manifests/kube-scheduler.yaml
     {{ if IsIPv6DualStackFeatureEnabled }}
-    sed -i "s|<img>|{{WrapAsParameter "kubernetesHyperkubeSpec"}}|g; s|<CIDR>|',first(split(parameters('kubeClusterCidr'),',')),'|g; s|<kubeProxyMode>|{{ .OrchestratorProfile.KubernetesConfig.ProxyMode}}|g" /etc/kubernetes/addons/kube-proxy-daemonset.yaml
+    sed -i "s|<img>|{{ WrapAsParameter "kubernetesHyperkubeSpec" }}|g; s|<CIDR>|',first(split(parameters('kubeClusterCidr'),',')),'|g; s|<kubeProxyMode>|{{ .OrchestratorProfile.KubernetesConfig.ProxyMode }}|g" /etc/kubernetes/addons/kube-proxy-daemonset.yaml
     {{ else }}
-    sed -i "s|<img>|{{WrapAsParameter "kubernetesHyperkubeSpec"}}|g; s|<CIDR>|{{WrapAsParameter "kubeClusterCidr"}}|g; s|<kubeProxyMode>|{{ .OrchestratorProfile.KubernetesConfig.ProxyMode}}|g" /etc/kubernetes/addons/kube-proxy-daemonset.yaml
+    sed -i "s|<img>|{{ WrapAsParameter "kubernetesHyperkubeSpec" }}|g; s|<CIDR>|{{ WrapAsParameter "kubeClusterCidr" }}|g; s|<kubeProxyMode>|{{ .OrchestratorProfile.KubernetesConfig.ProxyMode }}|g" /etc/kubernetes/addons/kube-proxy-daemonset.yaml
     {{ end }}
     KUBEDNS=/etc/kubernetes/addons/kube-dns-deployment.yaml
-{{if NeedsKubeDNSWithExecHealthz}}
-    sed -i "s|<img>|{{WrapAsParameter "kubernetesKubeDNSSpec"}}|g; s|<imgMasq>|{{WrapAsParameter "kubernetesDNSMasqSpec"}}|g; s|<imgHealthz>|{{WrapAsParameter "kubernetesExecHealthzSpec"}}|g; s|<imgSidecar>|{{WrapAsParameter "kubernetesDNSSidecarSpec"}}|g; s|<domain>|{{WrapAsParameter "kubernetesKubeletClusterDomain"}}|g; s|<clustIP>|{{WrapAsParameter "kubeDNSServiceIP"}}|g" $KUBEDNS
-{{else if IsKubernetesVersionGe "1.12.0"}}
-    sed -i "s|<img>|{{WrapAsParameter "kubernetesCoreDNSSpec"}}|g; s|<domain>|{{WrapAsParameter "kubernetesKubeletClusterDomain"}}|g; s|<clustIP>|{{WrapAsParameter "kubeDNSServiceIP"}}|g" /etc/kubernetes/addons/coredns.yaml
-{{else}}
-    sed -i "s|<img>|{{WrapAsParameter "kubernetesKubeDNSSpec"}}|g; s|<imgMasq>|{{WrapAsParameter "kubernetesDNSMasqSpec"}}|g; s|<imgSidecar>|{{WrapAsParameter "kubernetesDNSSidecarSpec"}}|g; s|<domain>|{{WrapAsParameter "kubernetesKubeletClusterDomain"}}|g; s|<clustIP>|{{WrapAsParameter "kubeDNSServiceIP"}}|g" $KUBEDNS
-{{end}}
+{{- if NeedsKubeDNSWithExecHealthz }}
+    sed -i "s|<img>|{{ WrapAsParameter "kubernetesKubeDNSSpec" }}|g; s|<imgMasq>|{{ WrapAsParameter "kubernetesDNSMasqSpec" }}|g; s|<imgHealthz>|{{ WrapAsParameter "kubernetesExecHealthzSpec" }}|g; s|<imgSidecar>|{{ WrapAsParameter "kubernetesDNSSidecarSpec" }}|g; s|<domain>|{{ WrapAsParameter "kubernetesKubeletClusterDomain" }}|g; s|<clustIP>|{{ WrapAsParameter "kubeDNSServiceIP" }}|g" $KUBEDNS
+{{- else if IsKubernetesVersionGe "1.12.0" }}
+    sed -i "s|<img>|{{ WrapAsParameter "kubernetesCoreDNSSpec" }}|g; s|<domain>|{{ WrapAsParameter "kubernetesKubeletClusterDomain" }}|g; s|<clustIP>|{{ WrapAsParameter "kubeDNSServiceIP" }}|g" /etc/kubernetes/addons/coredns.yaml
+{{- else }}
+    sed -i "s|<img>|{{ WrapAsParameter "kubernetesKubeDNSSpec" }}|g; s|<imgMasq>|{{ WrapAsParameter "kubernetesDNSMasqSpec" }}|g; s|<imgSidecar>|{{ WrapAsParameter "kubernetesDNSSidecarSpec" }}|g; s|<domain>|{{ WrapAsParameter "kubernetesKubeletClusterDomain" }}|g; s|<clustIP>|{{ WrapAsParameter "kubeDNSServiceIP" }}|g" $KUBEDNS
+{{- end }}
 
-{{if AdminGroupID }}
-    sed -i "s|<gID>|{{WrapAsParameter "aadAdminGroupId"}}|g" "/etc/kubernetes/addons/aad-default-admin-group-rbac.yaml"
-{{end}}
+{{- if AdminGroupID }}
+    sed -i "s|<gID>|{{ WrapAsParameter "aadAdminGroupId" }}|g" "/etc/kubernetes/addons/aad-default-admin-group-rbac.yaml"
+{{- end }}
 
-{{if .OrchestratorProfile.KubernetesConfig.IsClusterAutoscalerEnabled}}
-    sed -i "s|<cloud>|{{WrapAsParameter "kubernetesClusterAutoscalerAzureCloud"}}|g; s|<useManagedIdentity>|{{WrapAsParameter "kubernetesClusterAutoscalerUseManagedIdentity"}}|g" /etc/kubernetes/addons/cluster-autoscaler-deployment.yaml
-{{end}}
+{{- if .OrchestratorProfile.KubernetesConfig.IsClusterAutoscalerEnabled }}
+    sed -i "s|<cloud>|{{ WrapAsParameter "kubernetesClusterAutoscalerAzureCloud" }}|g; s|<useManagedIdentity>|{{ WrapAsParameter "kubernetesClusterAutoscalerUseManagedIdentity" }}|g" /etc/kubernetes/addons/cluster-autoscaler-deployment.yaml
+{{- end }}
 
-{{if EnableDataEncryptionAtRest }}
-    sed -i "s|<etcdEncryptionSecret>|\"{{WrapAsParameter "etcdEncryptionKey"}}\"|g" /etc/kubernetes/encryption-config.yaml
-{{end}}
+{{- if EnableDataEncryptionAtRest }}
+    sed -i "s|<etcdEncryptionSecret>|\"{{ WrapAsParameter "etcdEncryptionKey" }}\"|g" /etc/kubernetes/encryption-config.yaml
+{{- end }}
 
-{{if eq .OrchestratorProfile.KubernetesConfig.NetworkPolicy "calico"}}
-    sed -i "s|<kubeClusterCidr>|{{WrapAsParameter "kubeClusterCidr"}}|g" /etc/kubernetes/addons/calico-daemonset.yaml
-    {{if eq .OrchestratorProfile.KubernetesConfig.NetworkPlugin "azure"}}
+{{- if eq .OrchestratorProfile.KubernetesConfig.NetworkPolicy "calico" }}
+    sed -i "s|<kubeClusterCidr>|{{ WrapAsParameter "kubeClusterCidr" }}|g" /etc/kubernetes/addons/calico-daemonset.yaml
+    {{- if eq .OrchestratorProfile.KubernetesConfig.NetworkPlugin "azure" }}
     sed -i "/initContainers/,/cni-net-dir/d" /etc/kubernetes/addons/calico-daemonset.yaml
-    {{else}}
+    {{- else }}
     sed -i "s|<calicoIPAMConfig>|{\"type\": \"host-local\", \"subnet\": \"usePodCidr\"}|g" /etc/kubernetes/addons/calico-daemonset.yaml
     sed -i "s|azv|cali|g" /etc/kubernetes/addons/calico-daemonset.yaml
-    {{end}}
-{{end}}
-{{if eq .OrchestratorProfile.KubernetesConfig.NetworkPlugin "flannel"}}
-    sed -i "s|<kubeClusterCidr>|{{WrapAsParameter "kubeClusterCidr"}}|g" /etc/kubernetes/addons/flannel-daemonset.yaml
-{{end}}
-{{if UseCloudControllerManager }}
-    sed -i "s|<img>|{{WrapAsParameter "kubernetesCcmImageSpec"}}|g" /etc/kubernetes/manifests/cloud-controller-manager.yaml
-    sed -i "s|<config>|{{GetK8sRuntimeConfigKeyVals .OrchestratorProfile.KubernetesConfig.CloudControllerManagerConfig}}|g" /etc/kubernetes/manifests/cloud-controller-manager.yaml
-{{end}}
-{{if EnableEncryptionWithExternalKms}}
+    {{- end }}
+{{- end }}
+{{- if eq .OrchestratorProfile.KubernetesConfig.NetworkPlugin "flannel" }}
+    sed -i "s|<kubeClusterCidr>|{{ WrapAsParameter "kubeClusterCidr" }}|g" /etc/kubernetes/addons/flannel-daemonset.yaml
+{{- end }}
+{{- if UseCloudControllerManager }}
+    sed -i "s|<img>|{{ WrapAsParameter "kubernetesCcmImageSpec" }}|g" /etc/kubernetes/manifests/cloud-controller-manager.yaml
+    sed -i "s|<config>|{{ GetK8sRuntimeConfigKeyVals .OrchestratorProfile.KubernetesConfig.CloudControllerManagerConfig }}|g" /etc/kubernetes/manifests/cloud-controller-manager.yaml
+{{- end }}
+{{- if EnableEncryptionWithExternalKms }}
     sed -i "s|# Required|Requires=kms.service|g" /etc/systemd/system/kubelet.service
-{{end}}
-{{if HasLinuxProfile}}{{if HasCustomSearchDomain}}
-    sed -i "s|<searchDomainName>|{{WrapAsParameter "searchDomainName"}}|g; s|<searchDomainRealmUser>|{{WrapAsParameter "searchDomainRealmUser"}}|g; s|<searchDomainRealmPassword>|{{WrapAsParameter "searchDomainRealmPassword"}}|g" /opt/azure/containers/setup-custom-search-domains.sh
-{{end}}{{end}}
+{{- end }}
+{{- if HasLinuxProfile }}{{- if HasCustomSearchDomain }}
+    sed -i "s|<searchDomainName>|{{ WrapAsParameter "searchDomainName" }}|g; s|<searchDomainRealmUser>|{{ WrapAsParameter "searchDomainRealmUser" }}|g; s|<searchDomainRealmPassword>|{{ WrapAsParameter "searchDomainRealmPassword" }}|g" /opt/azure/containers/setup-custom-search-domains.sh
+{{- end }}{{- end }}
 
 - path: /opt/azure/containers/mountetcd.sh
   permissions: "0744"
   encoding: gzip
   owner: root
   content: !!binary |
-    {{CloudInitData "mountEtcdScript"}}
+    {{ CloudInitData "mountEtcdScript" }}
 {{ if not HasCosmosEtcd  }}
 - path: /etc/systemd/system/etcd.service
   permissions: "0644"
   encoding: gzip
   owner: root
   content: !!binary |
-    {{CloudInitData "etcdSystemdService"}}
+    {{ CloudInitData "etcdSystemdService" }}
 
 - path: /opt/azure/containers/setup-etcd.sh
   permissions: "0744"
@@ -412,21 +412,21 @@ MASTER_CONTAINER_ADDONS_PLACEHOLDER
   content: |
     #!/bin/bash
     set -x
-  {{if IsMasterVirtualMachineScaleSets}}
+  {{- if IsMasterVirtualMachineScaleSets }}
     MASTER_VM_NAME=$(hostname)
     MASTER_VM_NAME_BASE=$(hostname | sed "s/.$//")
-    MASTER_FIRSTADDR={{WrapAsParameter "firstConsecutiveStaticIP"}}
+    MASTER_FIRSTADDR={{ WrapAsParameter "firstConsecutiveStaticIP" }}
     MASTER_INDEX=$(hostname | tail -c 2)
-    {{if .MasterProfile.IsCoreOS}}
+    {{- if .MasterProfile.IsCoreOS }}
     PRIVATE_IP=$(hostname -I | cut -d" " -f1)
-    {{else}}
+    {{- else }}
     PRIVATE_IP=$(hostname -i | cut -d" " -f1)
-    {{end}}
-    MASTER_COUNT={{WrapAsVariable "masterCount"}}
-    IPADDRESS_COUNT={{WrapAsVariable "masterIpAddressCount"}}
+    {{- end }}
+    MASTER_COUNT={{ WrapAsVariable "masterCount" }}
+    IPADDRESS_COUNT={{ WrapAsVariable "masterIpAddressCount" }}
     echo $IPADDRESS_COUNT
-    ETCD_SERVER_PORT={{WrapAsVariable "masterEtcdServerPort"}}
-    ETCD_CLIENT_PORT={{WrapAsVariable "masterEtcdClientPort"}}
+    ETCD_SERVER_PORT={{ WrapAsVariable "masterEtcdServerPort" }}
+    ETCD_CLIENT_PORT={{ WrapAsVariable "masterEtcdClientPort" }}
     MASTER_URLS=""
     index=0
     IFS=. read -r a b c d <<< "$MASTER_FIRSTADDR"
@@ -446,30 +446,30 @@ MASTER_CONTAINER_ADDONS_PLACEHOLDER
     MASTER_URLS=$(echo $MASTER_URLS | sed "s/.$//")
     echo $MASTER_URLS
     sudo sed -i "1iETCDCTL_ENDPOINTS=https://127.0.0.1:$ETCD_CLIENT_PORT" /etc/environment
-    sudo sed -i "1iETCDCTL_CA_FILE={{WrapAsVariable "etcdCaFilepath"}}" /etc/environment
-    sudo sed -i "1iETCDCTL_KEY_FILE={{WrapAsVariable "etcdClientKeyFilepath"}}" /etc/environment
-    sudo sed -i "1iETCDCTL_CERT_FILE={{WrapAsVariable "etcdClientCertFilepath"}}" /etc/environment
+    sudo sed -i "1iETCDCTL_CA_FILE={{ WrapAsVariable "etcdCaFilepath" }}" /etc/environment
+    sudo sed -i "1iETCDCTL_KEY_FILE={{ WrapAsVariable "etcdClientKeyFilepath" }}" /etc/environment
+    sudo sed -i "1iETCDCTL_CERT_FILE={{ WrapAsVariable "etcdClientCertFilepath" }}" /etc/environment
     sudo sed -i "/^DAEMON_ARGS=/d" /etc/default/etcd
-    /bin/echo DAEMON_ARGS=--name $MASTER_VM_NAME --peer-client-cert-auth --peer-trusted-ca-file={{WrapAsVariable "etcdCaFilepath"}} --peer-cert-file=/etc/kubernetes/certs/etcdpeer$MASTER_INDEX.crt --peer-key-file=/etc/kubernetes/certs/etcdpeer$MASTER_INDEX.key --initial-advertise-peer-urls "https://$PRIVATE_IP:$ETCD_SERVER_PORT" --listen-peer-urls "https://$PRIVATE_IP:$ETCD_SERVER_PORT" --client-cert-auth --trusted-ca-file={{WrapAsVariable "etcdCaFilepath"}} --cert-file={{WrapAsVariable "etcdServerCertFilepath"}} --key-file={{WrapAsVariable "etcdServerKeyFilepath"}} --advertise-client-urls "https://$PRIVATE_IP:$ETCD_CLIENT_PORT" --listen-client-urls "https://$PRIVATE_IP:$ETCD_CLIENT_PORT,https://127.0.0.1:$ETCD_CLIENT_PORT" --initial-cluster-token "k8s-etcd-cluster" --initial-cluster $MASTER_URLS --data-dir "/var/lib/etcddisk" --initial-cluster-state "new" | tee -a /etc/default/etcd
-  {{else}}
+    /bin/echo DAEMON_ARGS=--name $MASTER_VM_NAME --peer-client-cert-auth --peer-trusted-ca-file={{ WrapAsVariable "etcdCaFilepath" }} --peer-cert-file=/etc/kubernetes/certs/etcdpeer$MASTER_INDEX.crt --peer-key-file=/etc/kubernetes/certs/etcdpeer$MASTER_INDEX.key --initial-advertise-peer-urls "https://$PRIVATE_IP:$ETCD_SERVER_PORT" --listen-peer-urls "https://$PRIVATE_IP:$ETCD_SERVER_PORT" --client-cert-auth --trusted-ca-file={{ WrapAsVariable "etcdCaFilepath" }} --cert-file={{ WrapAsVariable "etcdServerCertFilepath" }} --key-file={{ WrapAsVariable "etcdServerKeyFilepath" }} --advertise-client-urls "https://$PRIVATE_IP:$ETCD_CLIENT_PORT" --listen-client-urls "https://$PRIVATE_IP:$ETCD_CLIENT_PORT,https://127.0.0.1:$ETCD_CLIENT_PORT" --initial-cluster-token "k8s-etcd-cluster" --initial-cluster $MASTER_URLS --data-dir "/var/lib/etcddisk" --initial-cluster-state "new" | tee -a /etc/default/etcd
+  {{- else }}
     sudo sed -i "1iETCDCTL_ENDPOINTS=https://127.0.0.1:2379" /etc/environment
-    sudo sed -i "1iETCDCTL_CA_FILE={{WrapAsVariable "etcdCaFilepath"}}" /etc/environment
-    sudo sed -i "1iETCDCTL_KEY_FILE={{WrapAsVariable "etcdClientKeyFilepath"}}" /etc/environment
-    sudo sed -i "1iETCDCTL_CERT_FILE={{WrapAsVariable "etcdClientCertFilepath"}}" /etc/environment
+    sudo sed -i "1iETCDCTL_CA_FILE={{ WrapAsVariable "etcdCaFilepath" }}" /etc/environment
+    sudo sed -i "1iETCDCTL_KEY_FILE={{ WrapAsVariable "etcdClientKeyFilepath" }}" /etc/environment
+    sudo sed -i "1iETCDCTL_CERT_FILE={{ WrapAsVariable "etcdClientCertFilepath" }}" /etc/environment
     sudo sed -i "/^DAEMON_ARGS=/d" /etc/default/etcd
-    /bin/echo DAEMON_ARGS=--name "{{WrapAsVerbatim "variables('masterVMNames')[copyIndex(variables('masterOffset'))]"}}" --peer-client-cert-auth --peer-trusted-ca-file={{WrapAsVariable "etcdCaFilepath"}} --peer-cert-file={{WrapAsVerbatim "variables('etcdPeerCertFilepath')[copyIndex(variables('masterOffset'))]"}} --peer-key-file={{WrapAsVerbatim "variables('etcdPeerKeyFilepath')[copyIndex(variables('masterOffset'))]"}} --initial-advertise-peer-urls "{{WrapAsVerbatim "variables('masterEtcdPeerURLs')[copyIndex(variables('masterOffset'))]"}}" --listen-peer-urls "{{WrapAsVerbatim "variables('masterEtcdPeerURLs')[copyIndex(variables('masterOffset'))]"}}" --client-cert-auth --trusted-ca-file={{WrapAsVariable "etcdCaFilepath"}} --cert-file={{WrapAsVariable "etcdServerCertFilepath"}} --key-file={{WrapAsVariable "etcdServerKeyFilepath"}} --advertise-client-urls "{{WrapAsVerbatim "variables('masterEtcdClientURLs')[copyIndex(variables('masterOffset'))]"}}" --listen-client-urls "{{WrapAsVerbatim "concat(variables('masterEtcdClientURLs')[copyIndex(variables('masterOffset'))], ',https://127.0.0.1:', variables('masterEtcdClientPort'))"}}" --initial-cluster-token "k8s-etcd-cluster" --initial-cluster {{WrapAsVerbatim "variables('masterEtcdClusterStates')[div(variables('masterCount'), 2)]"}} --data-dir "/var/lib/etcddisk" --initial-cluster-state "new" | tee -a /etc/default/etcd
-  {{end}}
-{{end}}
+    /bin/echo DAEMON_ARGS=--name "{{ WrapAsVerbatim "variables('masterVMNames')[copyIndex(variables('masterOffset'))]" }}" --peer-client-cert-auth --peer-trusted-ca-file={{ WrapAsVariable "etcdCaFilepath" }} --peer-cert-file={{ WrapAsVerbatim "variables('etcdPeerCertFilepath')[copyIndex(variables('masterOffset'))]" }} --peer-key-file={{ WrapAsVerbatim "variables('etcdPeerKeyFilepath')[copyIndex(variables('masterOffset'))]" }} --initial-advertise-peer-urls "{{ WrapAsVerbatim "variables('masterEtcdPeerURLs')[copyIndex(variables('masterOffset'))]" }}" --listen-peer-urls "{{ WrapAsVerbatim "variables('masterEtcdPeerURLs')[copyIndex(variables('masterOffset'))]" }}" --client-cert-auth --trusted-ca-file={{ WrapAsVariable "etcdCaFilepath" }} --cert-file={{ WrapAsVariable "etcdServerCertFilepath" }} --key-file={{ WrapAsVariable "etcdServerKeyFilepath" }} --advertise-client-urls "{{ WrapAsVerbatim "variables('masterEtcdClientURLs')[copyIndex(variables('masterOffset'))]" }}" --listen-client-urls "{{ WrapAsVerbatim "concat(variables('masterEtcdClientURLs')[copyIndex(variables('masterOffset'))], ',https://127.0.0.1:', variables('masterEtcdClientPort'))" }}" --initial-cluster-token "k8s-etcd-cluster" --initial-cluster {{ WrapAsVerbatim "variables('masterEtcdClusterStates')[div(variables('masterCount'), 2)]" }} --data-dir "/var/lib/etcddisk" --initial-cluster-state "new" | tee -a /etc/default/etcd
+  {{- end }}
+{{- end }}
 
-{{if IsAzureStackCloud}}
+{{- if IsAzureStackCloud }}
 - path: "/etc/kubernetes/azurestackcloud.json"
   permissions: "0600"
   owner: "root"
   content: |
-    {{WrapAsVariable "environmentJSON"}}
-{{end}}
+    {{ WrapAsVariable "environmentJSON" }}
+{{- end }}
 
-{{if .MasterProfile.IsCoreOS}}
+{{- if .MasterProfile.IsCoreOS }}
 - path: /opt/azure/containers/provision-setup.sh
   permissions: "0755"
   owner: root
@@ -479,18 +479,18 @@ MASTER_CONTAINER_ADDONS_PLACEHOLDER
     /opt/azure/containers/mountetcd.sh
     retrycmd_if_failure 5 5 10 curl --retry 5 --retry-delay 10 --retry-max-time 10 --max-time 60 https://127.0.0.1:2379/v2/machines
 
-    {{if EnableAggregatedAPIs}}
+    {{- if EnableAggregatedAPIs }}
     sudo bash /etc/kubernetes/generate-proxy-certs.sh
-    {{end}}
+    {{- end }}
 
     touch /opt/azure/containers/runcmd.complete
 
 - path: "/etc/kubernetes/manifests/.keep"
 
-{{if .OrchestratorProfile.KubernetesConfig.RequiresDocker}}
+{{- if .OrchestratorProfile.KubernetesConfig.RequiresDocker }}
 groups:
-  - docker: [{{WrapAsParameter "linuxAdminUsername"}}]
-{{end}}
+  - docker: [{{ WrapAsParameter "linuxAdminUsername" }}]
+{{- end }}
 
 coreos:
   units:
@@ -547,9 +547,9 @@ coreos:
             ExecStart=/opt/bin/etcd $DAEMON_ARGS
     - name: etcd-member.service
       mask: true
-{{else}}
+{{- else }}
 runcmd:
 - set -x
 - . /opt/azure/containers/provision_source.sh
-- aptmarkWALinuxAgent hold{{GetKubernetesMasterPreprovisionYaml}}
-{{end}}
+- aptmarkWALinuxAgent hold{{ GetKubernetesMasterPreprovisionYaml }}
+{{- end }}
