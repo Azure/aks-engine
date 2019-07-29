@@ -15140,9 +15140,7 @@ write_files:
   owner: root
   content: !!binary |
     {{CloudInitData "healthMonitorScript"}}
-{{end}}
 
-{{if not .MasterProfile.IsVHDDistro}}
 - path: /etc/systemd/system/kubelet-monitor.service
   permissions: "0644"
   encoding: gzip
@@ -15714,9 +15712,7 @@ write_files:
   owner: root
   content: !!binary |
     {{CloudInitData "healthMonitorScript"}}
-{{end}}
 
-{{if not .IsVHDDistro}}
 - path: /etc/systemd/system/kubelet-monitor.service
   permissions: "0644"
   encoding: gzip
