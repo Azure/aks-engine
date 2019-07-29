@@ -116,7 +116,7 @@ func (az *AzureClient) EnsureDefaultLogAnalyticsWorkspace(ctx context.Context, r
 		}
 		break
 	default:
-		return "", fmt.Errorf("container monitoring addon not supported in this cloud: ", az.environment.Name)
+		return "", fmt.Errorf("container monitoring addon not supported in this cloud: %s", az.environment.Name)
 	}
 
 	if region, found := AzureCloudRegionToOmsRegionMap[location]; found {
