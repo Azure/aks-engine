@@ -21,6 +21,7 @@ if [[ $OS == $UBUNTU_OS_NAME ]]; then
     conntrack
     ebtables
     ethtool
+    ipvsadm
     fuse
     git
     glusterfs-client

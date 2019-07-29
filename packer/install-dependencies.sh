@@ -27,6 +27,7 @@ cat << EOF >> ${RELEASE_NOTES_FILEPATH}
   - cracklib-runtime
   - ebtables
   - ethtool
+  - ipvsadm
   - fuse
   - git
   - glusterfs-client
