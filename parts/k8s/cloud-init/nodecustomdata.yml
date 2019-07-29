@@ -47,7 +47,7 @@ write_files:
     {{WrapAsVariable "provisionConfigsCustomCloud"}}
 {{end}}
 
-{{if not .MasterProfile.IsVHDDistro}}
+{{if not .IsVHDDistro}}
     {{if .IsCoreOS}}
 - path: /opt/bin/health-monitor.sh
     {{else}}
