@@ -14,6 +14,7 @@ import (
 )
 
 func TestCreateNetworkSecurityGroup(t *testing.T) {
+	// Test create normal nsg
 	cs := &api.ContainerService{
 		Properties: &api.Properties{
 			OrchestratorProfile: &api.OrchestratorProfile{
@@ -32,8 +33,6 @@ func TestCreateNetworkSecurityGroup(t *testing.T) {
 			FeatureFlags: &api.FeatureFlags{},
 		},
 	}
-
-	// Test create normal nsg
 
 	actual := CreateNetworkSecurityGroup(cs)
 
@@ -87,7 +86,6 @@ func TestCreateNetworkSecurityGroup(t *testing.T) {
 	}
 
 	// Test Create NSG with windows and Block Outbound internet
-
 	cs.Properties.AgentPoolProfiles = []*api.AgentPoolProfile{
 		{
 			Name:   "fooAgent",
@@ -155,6 +153,110 @@ func TestCreateNetworkSecurityGroup(t *testing.T) {
 	if diff != "" {
 		t.Errorf("unexpected diff while comparing nsgs : %s", diff)
 	}
+
+	// Test create custom nsg
+	cs = &api.ContainerService{
+		Properties: &api.Properties{
+			OrchestratorProfile: &api.OrchestratorProfile{
+				KubernetesConfig: &api.KubernetesConfig{
+					PrivateCluster: &api.PrivateCluster{
+						Enabled: to.BoolPtr(true),
+					},
+				},
+			},
+			MasterProfile: &api.MasterProfile{
+				NetworkSecurityRules: []network.SecurityRule{
+					{
+						Name: to.StringPtr("allow-ssh"),
+						SecurityRulePropertiesFormat: &network.SecurityRulePropertiesFormat{
+							Access:                   network.SecurityRuleAccessAllow,
+							Description:              to.StringPtr("Allow SSH"),
+							DestinationAddressPrefix: to.StringPtr("*"),
+							DestinationPortRange:     to.StringPtr("22"),
+							Direction:                network.SecurityRuleDirectionInbound,
+							Priority:                 to.Int32Ptr(109),
+							Protocol:                 network.SecurityRuleProtocolTCP,
+							SourceAddressPrefix:      to.StringPtr("*"),
+							SourcePortRange:          to.StringPtr("*"),
+						},
+					},
+					{
+						Name: to.StringPtr("allow-tls"),
+						SecurityRulePropertiesFormat: &network.SecurityRulePropertiesFormat{
+							Access:                   network.SecurityRuleAccessAllow,
+							Description:              to.StringPtr("Allow TLS"),
+							DestinationAddressPrefix: to.StringPtr("*"),
+							DestinationPortRange:     to.StringPtr("443"),
+							Direction:                network.SecurityRuleDirectionInbound,
+							Priority:                 to.Int32Ptr(110),
+							Protocol:                 network.SecurityRuleProtocolTCP,
+							SourceAddressPrefix:      to.StringPtr("*"),
+							SourcePortRange:          to.StringPtr("*"),
+						},
+					},
+				},
+			},
+			AgentPoolProfiles: []*api.AgentPoolProfile{
+				{
+					Name:   "fooAgent",
+					OSType: "Linux",
+				},
+			},
+			FeatureFlags: &api.FeatureFlags{},
+		},
+	}
+
+	actual = CreateNetworkSecurityGroup(cs)
+
+	expected = NetworkSecurityGroupARM{
+		ARMResource: ARMResource{
+			APIVersion: "[variables('apiVersionNetwork')]",
+		},
+		SecurityGroup: network.SecurityGroup{
+			Location: to.StringPtr("[variables('location')]"),
+			Name:     to.StringPtr("[variables('nsgName')]"),
+			Type:     to.StringPtr("Microsoft.Network/networkSecurityGroups"),
+			SecurityGroupPropertiesFormat: &network.SecurityGroupPropertiesFormat{
+				SecurityRules: &[]network.SecurityRule{
+					{
+						Name: to.StringPtr("allow-ssh"),
+						SecurityRulePropertiesFormat: &network.SecurityRulePropertiesFormat{
+							Access:                   network.SecurityRuleAccessAllow,
+							Description:              to.StringPtr("Allow SSH"),
+							DestinationAddressPrefix: to.StringPtr("*"),
+							DestinationPortRange:     to.StringPtr("22"),
+							Direction:                network.SecurityRuleDirectionInbound,
+							Priority:                 to.Int32Ptr(109),
+							Protocol:                 network.SecurityRuleProtocolTCP,
+							SourceAddressPrefix:      to.StringPtr("*"),
+							SourcePortRange:          to.StringPtr("*"),
+						},
+					},
+					{
+						Name: to.StringPtr("allow-tls"),
+						SecurityRulePropertiesFormat: &network.SecurityRulePropertiesFormat{
+							Access:                   network.SecurityRuleAccessAllow,
+							Description:              to.StringPtr("Allow TLS"),
+							DestinationAddressPrefix: to.StringPtr("*"),
+							DestinationPortRange:     to.StringPtr("443"),
+							Direction:                network.SecurityRuleDirectionInbound,
+							Priority:                 to.Int32Ptr(110),
+							Protocol:                 network.SecurityRuleProtocolTCP,
+							SourceAddressPrefix:      to.StringPtr("*"),
+							SourcePortRange:          to.StringPtr("*"),
+						},
+					},
+				},
+			},
+		},
+	}
+
+	diff = cmp.Diff(actual, expected)
+
+	if diff != "" {
+		t.Errorf("unexpected diff while comparing nsgs : %s", diff)
+	}
+
 }
 
 func TestCreateJumpboxNSG(t *testing.T) {

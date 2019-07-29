@@ -25,6 +25,7 @@ import (
 	v20170701 "github.com/Azure/aks-engine/pkg/api/v20170701"
 	"github.com/Azure/aks-engine/pkg/api/vlabs"
 	"github.com/Azure/aks-engine/pkg/helpers"
+	"github.com/Azure/azure-sdk-for-go/services/network/mgmt/2018-08-01/network"
 	"github.com/Azure/go-autorest/autorest/azure"
 	"github.com/Azure/go-autorest/autorest/to"
 	"github.com/blang/semver"
@@ -505,12 +506,16 @@ type MasterProfile struct {
 	SinglePlacementGroup     *bool             `json:"singlePlacementGroup,omitempty"`
 	AuditDEnabled            *bool             `json:"auditDEnabled,omitempty"`
 	CustomVMTags             map[string]string `json:"customVMTags,omitempty"`
+
 	// Master LB public endpoint/FQDN with port
 	// The format will be FQDN:2376
 	// Not used during PUT, returned as part of GET
 	FQDN string `json:"fqdn,omitempty"`
+
 	// True: uses cosmos etcd endpoint instead of installing etcd on masters
 	CosmosEtcd *bool `json:"cosmosEtcd,omitempty"`
+
+	NetworkSecurityRules []network.SecurityRule `json:"networkSecurityRules,omitempty"`
 }
 
 // ImageReference represents a reference to an Image resource in Azure.

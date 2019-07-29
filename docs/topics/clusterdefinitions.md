@@ -564,6 +564,42 @@ A cluster can have 0 to 12 agent pool profiles. Agent Pool Profiles are used for
 | LoadBalancerBackendAddressPoolIDs                              | no                                                                   | Enables automatic placement of the agent pool nodes into existing load balancer's backend address pools. Each element value of this string array is the corresponding load balancer backend address pool's Azure Resource Manager(ARM) resource ID. By default this property is not included in the api model, which is equivalent to an empty string array.                                                                                                                                                                                                                                                                                                                                                                              |
 | auditDEnabled                                                  | no                                                                   | Enable auditd enforcement at the OS layer for each node VM. This configuration is only valid on an agent pool with an Ubuntu-backed distro, i.e., the default "aks-ubuntu-16.04" distro, or the "aks-ubuntu-18.04", "ubuntu", "ubuntu-18.04", or "acc-16.04" distro values. Defaults to `false`                                                                                                                                                                                                                                                                                                                                                                                                                                           |
 | customVMTags                                                   | no                                                                   | Specifies a list of custom tags to be added to the agent VMs or Scale Sets. Each tag is a key/value pair (ie: `"myTagKey": "myTagValue"`).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| networkSecurityRules         | no                                        | Set of network secuirity rules for the master NSG which will replace the default ones. |
+
+ #### networkSecurityRules
+
+ networkSecurityRules specifies a set of NSG rules to apply.
+
+ ```json
+ "networkSecurityRules": [
+   {
+     "name": "allow-ssh",
+     "properties": {
+       "description": "Allow SSH from internet",
+       "protocol": "Tcp",
+       "sourcePortRange": "*",
+       "destinationPortRange": "22",
+       "sourceAddressPrefix": "*",
+       "destinationAddressPrefix": "*",
+       "Priority": 100,
+       "direction": "Inbound"
+     }
+   },
+   {
+     "name": "allow-https",
+     "properties": {
+       "description": "Allow HTTPS from internet",
+       "protocol": "Tcp",
+       "sourcePortRange": "*",
+       "destinationPortRange": "443",
+       "sourceAddressPrefix": "*",
+       "destinationAddressPrefix": "*",
+       "Priority": 101,
+       "direction": "Inbound"
+     }
+   }
+ ]
+ ```
 
 ### linuxProfile
 

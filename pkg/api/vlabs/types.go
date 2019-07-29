@@ -10,6 +10,7 @@ import (
 	"github.com/Azure/go-autorest/autorest/azure"
 
 	"github.com/Azure/aks-engine/pkg/api/common"
+	"github.com/Azure/azure-sdk-for-go/services/network/mgmt/2018-08-01/network"
 	"github.com/Azure/go-autorest/autorest/to"
 	"github.com/pkg/errors"
 )
@@ -416,6 +417,8 @@ type MasterProfile struct {
 
 	// True: uses cosmos etcd endpoint instead of installing etcd on masters
 	CosmosEtcd *bool `json:"cosmosEtcd,omitempty"`
+
+	NetworkSecurityRules []network.SecurityRule `json:"networkSecurityRules,omitempty"`
 }
 
 // ImageReference represents a reference to an Image resource in Azure.

@@ -10,11 +10,19 @@ import (
 )
 
 func CreateNetworkSecurityGroup(cs *api.ContainerService) NetworkSecurityGroupARM {
+	var securityRules []network.SecurityRule
+	var sshRule, kubeTLSRule network.SecurityRule
+
 	armResource := ARMResource{
 		APIVersion: "[variables('apiVersionNetwork')]",
 	}
 
-	sshRule := network.SecurityRule{
+	if cs.Properties.MasterProfile != nil && len(cs.Properties.MasterProfile.NetworkSecurityRules) > 0 {
+		securityRules = cs.Properties.MasterProfile.NetworkSecurityRules
+		goto NSG
+	}
+
+	sshRule = network.SecurityRule{
 		Name: to.StringPtr("allow_ssh"),
 		SecurityRulePropertiesFormat: &network.SecurityRulePropertiesFormat{
 			Access:                   network.SecurityRuleAccessAllow,
@@ -29,7 +37,7 @@ func CreateNetworkSecurityGroup(cs *api.ContainerService) NetworkSecurityGroupAR
 		},
 	}
 
-	kubeTLSRule := network.SecurityRule{
+	kubeTLSRule = network.SecurityRule{
 		Name: to.StringPtr("allow_kube_tls"),
 		SecurityRulePropertiesFormat: &network.SecurityRulePropertiesFormat{
 			Access:                   network.SecurityRuleAccessAllow,
@@ -49,7 +57,7 @@ func CreateNetworkSecurityGroup(cs *api.ContainerService) NetworkSecurityGroupAR
 		kubeTLSRule.SourceAddressPrefix = &source
 	}
 
-	securityRules := []network.SecurityRule{
+	securityRules = []network.SecurityRule{
 		sshRule,
 		kubeTLSRule,
 	}
@@ -142,6 +150,7 @@ func CreateNetworkSecurityGroup(cs *api.ContainerService) NetworkSecurityGroupAR
 		securityRules = append(securityRules, allowVnetOutbound)
 	}
 
+NSG:
 	nsg := network.SecurityGroup{
 		Location: to.StringPtr("[variables('location')]"),
 		Name:     to.StringPtr("[variables('nsgName')]"),
