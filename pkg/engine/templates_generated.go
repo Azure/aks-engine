@@ -15129,16 +15129,18 @@ write_files:
     {{WrapAsVariable "provisionConfigsCustomCloud"}}
 {{end}}
 
-{{if .MasterProfile.IsCoreOS}}
+{{if not .MasterProfile.IsVHDDistro}}
+    {{if .MasterProfile.IsCoreOS}}
 - path: /opt/bin/health-monitor.sh
-{{else}}
+    {{else}}
 - path: /usr/local/bin/health-monitor.sh
-{{end}}
+    {{end}}
   permissions: "0544"
   encoding: gzip
   owner: root
   content: !!binary |
     {{CloudInitData "healthMonitorScript"}}
+{{end}}
 
 - path: /etc/systemd/system/kubelet-monitor.service
   permissions: "0644"
@@ -15699,16 +15701,18 @@ write_files:
     {{WrapAsVariable "provisionConfigsCustomCloud"}}
 {{end}}
 
-{{if .IsCoreOS}}
+{{if not .MasterProfile.IsVHDDistro}}
+    {{if .IsCoreOS}}
 - path: /opt/bin/health-monitor.sh
-{{else}}
+    {{else}}
 - path: /usr/local/bin/health-monitor.sh
-{{end}}
+    {{end}}
   permissions: "0544"
   encoding: gzip
   owner: root
   content: !!binary |
     {{CloudInitData "healthMonitorScript"}}
+{{end}}
 
 - path: /etc/systemd/system/kubelet-monitor.service
   permissions: "0644"

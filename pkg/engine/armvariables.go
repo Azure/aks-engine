@@ -123,7 +123,6 @@ func getK8sMasterVars(cs *api.ContainerService) (map[string]interface{}, error) 
 		"provisionSource":                  getBase64EncodedGzippedCustomScript(kubernetesCSEHelpersScript),
 		"provisionInstalls":                getBase64EncodedGzippedCustomScript(kubernetesCSEInstall),
 		"provisionConfigs":                 getBase64EncodedGzippedCustomScript(kubernetesCSEConfig),
-		"healthMonitorScript":              getBase64EncodedGzippedCustomScript(kubernetesHealthMonitorScript),
 		"customSearchDomainsScript":        getBase64EncodedGzippedCustomScript(kubernetesCustomSearchDomainsScript),
 		"generateProxyCertsScript":         getBase64EncodedGzippedCustomScript(kubernetesMasterGenerateProxyCertsScript),
 		"mountEtcdScript":                  getBase64EncodedGzippedCustomScript(kubernetesMountEtcd),
@@ -143,6 +142,7 @@ func getK8sMasterVars(cs *api.ContainerService) (map[string]interface{}, error) 
 		cloudInitFiles["labelNodesScript"] = getBase64EncodedGzippedCustomScript(labelNodesScript)
 		cloudInitFiles["labelNodesSystemdService"] = getBase64EncodedGzippedCustomScript(labelNodesSystemdService)
 		cloudInitFiles["aptPreferences"] = getBase64EncodedGzippedCustomScript(aptPreferences)
+		cloudInitFiles["healthMonitorScript"] = getBase64EncodedGzippedCustomScript(kubernetesHealthMonitorScript)
 	}
 
 	masterVars["cloudInitFiles"] = cloudInitFiles

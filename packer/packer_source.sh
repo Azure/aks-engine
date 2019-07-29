@@ -31,6 +31,8 @@ copyPackerFiles() {
   APT_PREFERENCES_DEST=/etc/apt/preferences
   KMS_SERVICE_SRC=/home/packer/kms.service
   KMS_SERVICE_DEST=/etc/systemd/system/kms.service
+  HEALTH_MONITOR_SRC=/home/packer/health-monitor
+  HEALTH_MONITOR_DEST=/usr/local/bin/health-monitor.sh
   if [[ ${UBUNTU_RELEASE} == "16.04" ]]; then
     SSHD_CONFIG_SRC=/home/packer/sshd_config_1604
   fi
@@ -49,6 +51,7 @@ copyPackerFiles() {
   cpAndMode $CIS_SRC $CIS_DEST 744
   cpAndMode $APT_PREFERENCES_SRC $APT_PREFERENCES_DEST 644
   cpAndMode $KMS_SERVICE_SRC $KMS_SERVICE_DEST 644
+  cpAndMode $HEALTH_MONITOR_SRC $HEALTH_MONITOR_DEST 544
 }
 
 cpAndMode() {
