@@ -404,7 +404,7 @@ for KUBERNETES_VERSION in ${K8S_VERSIONS}; do
 done
 
 # TODO: remove once ACR is available on Azure Stack
-pullContainerImage "docker" "registry:2"
+pullContainerImage "docker" "registry:2.7.1"
 
 df -h
 
