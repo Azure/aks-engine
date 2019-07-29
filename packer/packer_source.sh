@@ -31,7 +31,7 @@ copyPackerFiles() {
   APT_PREFERENCES_DEST=/etc/apt/preferences
   KMS_SERVICE_SRC=/home/packer/kms.service
   KMS_SERVICE_DEST=/etc/systemd/system/kms.service
-  HEALTH_MONITOR_SRC=/home/packer/health-monitor
+  HEALTH_MONITOR_SRC=/home/packer/health-monitor.sh
   HEALTH_MONITOR_DEST=/usr/local/bin/health-monitor.sh
   KUBELET_MONITOR_SERVICE_SRC=/home/packer/kubelet-monitor.service
   KUBELET_MONITOR_SERVICE_DEST=/etc/systemd/system/kubelet-monitor.service
