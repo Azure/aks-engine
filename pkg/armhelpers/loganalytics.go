@@ -75,8 +75,49 @@ func (az *AzureClient) EnsureDefaultLogAnalyticsWorkspace(ctx context.Context, r
 		"westus2":            "westus2",
 	}
 
+	AzureChinaLocationToOmsRegionCodeMap := map[string]string{
+		"chinaeast":   "EAST2",
+		"chinaeast2":  "EAST2",
+		"chinanorth":  "EAST2",
+		"chinanorth2": "EAST2",
+	}
+
+	AzureChinaRegionToOmsRegionMap := map[string]string{
+		"chinaeast":   "chinaeast2",
+		"chinaeast2":  "chinaeast2",
+		"chinanorth":  "chinaeast2",
+		"chinanorth2": "chinaeast2",
+	}
+
 	defaultWorkspaceRegion := "eastus"
 	defaultWorkspaceRegionCode := "EUS"
+
+	switch az.environment.Name {
+	case "AzurePublicCloud":
+		if region, found := AzureCloudRegionToOmsRegionMap[location]; found {
+			defaultWorkspaceRegion = region
+		}
+
+		if regionCode, found := AzureCloudLocationToOmsRegionCodeMap[defaultWorkspaceRegion]; found {
+			defaultWorkspaceRegionCode = regionCode
+		}
+		break
+	case "AzureChinaCloud":
+		if region, found := AzureChinaRegionToOmsRegionMap[location]; found {
+			defaultWorkspaceRegion = region
+		} else {
+			defaultWorkspaceRegion = "chinaeast2"
+		}
+
+		if regionCode, found := AzureChinaLocationToOmsRegionCodeMap[defaultWorkspaceRegion]; found {
+			defaultWorkspaceRegionCode = regionCode
+		} else {
+			defaultWorkspaceRegionCode = "EAST2"
+		}
+		break
+	default:
+		return "", fmt.Errorf("container monitoring addon not supported in this cloud: ", az.environment.Name)
+	}
 
 	if region, found := AzureCloudRegionToOmsRegionMap[location]; found {
 		defaultWorkspaceRegion = region
