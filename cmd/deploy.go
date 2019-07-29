@@ -394,7 +394,7 @@ func autofillApimodel(dc *deployCmd) error {
 			log.Infoln("log analytics workspace key: ", wsKey)
 
 			log.Infoln("adding container insights solution to log analytics workspace: ", workspaceResourceId)
-			_, err = dc.client.AddContainerInsightsSolution(ctx, workspaceResourceGroup, workspaceName, wsLocation)
+			_, err = dc.client.AddContainerInsightsSolution(ctx, workspaceSubscriptionId, workspaceResourceGroup, workspaceName, wsLocation)
 			if err != nil {
 				return err
 			}

@@ -141,7 +141,8 @@ func (az *AzureClient) EnsureDefaultLogAnalyticsWorkspace(ctx context.Context, r
 // GetLogAnalyticsWorkspaceInfo gets the details about the workspace
 func (az *AzureClient) GetLogAnalyticsWorkspaceInfo(ctx context.Context, workspaceSubscriptionId, workspaceResourceGroup, workspaceName string) (workspaceId string, workspaceKey string, workspaceLocation string, err error) {
 	if !strings.EqualFold(workspaceSubscriptionId, az.subscriptionID) {
-		return "", "", "", fmt.Errorf("subscription of the Log analytics should be same as cluster resources")
+		az.workspacesClient = oi.NewWorkspacesClientWithBaseURI(az.environment.ResourceManagerEndpoint, workspaceSubscriptionId)
+		az.workspacesClient.Authorizer = az.authorizationClient.Authorizer
 	}
 
 	resp, err := az.workspacesClient.Get(ctx, workspaceResourceGroup, workspaceName)
@@ -159,12 +160,12 @@ func (az *AzureClient) GetLogAnalyticsWorkspaceInfo(ctx context.Context, workspa
 }
 
 // AddContainerInsightsSolution adds container insights solution for the specified log analytics workspace
-func (az *AzureClient) AddContainerInsightsSolution(ctx context.Context, workspaceResourceGroup, workspaceName, workspaceLocation string) (result bool, err error) {
-	solutionClient := om.NewSolutionsClient(az.subscriptionID, "Microsoft.OperationalInsights", "workspaces", workspaceName)
+func (az *AzureClient) AddContainerInsightsSolution(ctx context.Context, workspaceSubscriptionId, workspaceResourceGroup, workspaceName, workspaceLocation string) (result bool, err error) {
+	solutionClient := om.NewSolutionsClient(workspaceSubscriptionId, "Microsoft.OperationalInsights", "workspaces", workspaceName)
 	solutionClient.Authorizer = az.workspacesClient.Authorizer
 
 	solutionName := "ContainerInsights(" + workspaceName + ")"
-	workspaceResourceId := fmt.Sprintf("/subscriptions/%s/resourceGroups/%s/providers/Microsoft.OperationalInsights/workspaces/%s", az.subscriptionID, workspaceResourceGroup, workspaceName)
+	workspaceResourceId := fmt.Sprintf("/subscriptions/%s/resourceGroups/%s/providers/Microsoft.OperationalInsights/workspaces/%s", workspaceSubscriptionId, workspaceResourceGroup, workspaceName)
 	status, err := solutionClient.CreateOrUpdate(ctx, workspaceResourceGroup, solutionName, om.Solution{
 		Name:     to.StringPtr(solutionName),
 		Type:     to.StringPtr("Microsoft.OperationsManagement/solutions"),

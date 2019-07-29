@@ -191,7 +191,7 @@ type AKSEngineClient interface {
 	GetLogAnalyticsWorkspaceInfo(ctx context.Context, workspaceSubscriptionId, workspaceResourceGroup, workspaceName string) (workspaceId string, workspaceKey, workspaceLocation string, err error)
 
 	// AddContainerInsightsSolution adds container insights solution for the specified log analytics workspace
-	AddContainerInsightsSolution(ctx context.Context, workspaceResourceGroup, workspaceName, workspaceLocation string) (result bool, err error)
+	AddContainerInsightsSolution(ctx context.Context, workspaceSubscriptionId, workspaceResourceGroup, workspaceName, workspaceLocation string) (result bool, err error)
 }
 
 // AKSStorageClient interface models the azure storage client
