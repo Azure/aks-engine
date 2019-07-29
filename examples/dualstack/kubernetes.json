@@ -8,7 +8,7 @@
                 "enableIPv6DualStack": true
             },
             "kubernetesConfig": {
-                "clusterSubnet": "10.244.0.0/16,fd00:101::/82",
+                "clusterSubnet": "10.244.0.0/16,fd00:101::/8",
                 "networkPlugin": "kubenet",
                 "apiServerConfig": {
                     "--feature-gates": "IPv6DualStack=true"
