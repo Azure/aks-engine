@@ -184,7 +184,7 @@ type AKSEngineClient interface {
 
 	// Log Analytics
 
-	// EnsureDefaultLogAnalyticsWorkspace ensures the default log analytics exists corresponding to specified location
+	// EnsureDefaultLogAnalyticsWorkspace ensures the default log analytics exists corresponding to specified location in current subscription
 	EnsureDefaultLogAnalyticsWorkspace(ctx context.Context, resourceGroup, location string) (workspaceResourceId string, err error)
 
 	// GetLogAnalyticsWorkspaceInfo gets the details about the workspace

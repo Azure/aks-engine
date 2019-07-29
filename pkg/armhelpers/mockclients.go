@@ -55,6 +55,9 @@ type MockAKSEngineClient struct {
 	FailListProviders                       bool
 	ShouldSupportVMIdentity                 bool
 	FailDeleteRoleAssignment                bool
+	FailEnsureDefaultLogAnalyticsWorkspace  bool
+	FailAddContainerInsightsSolution        bool
+	FailGetLogAnalyticsWorkspaceInfo        bool
 	MockKubernetesClient                    *MockKubernetesClient
 	FakeListVirtualMachineScaleSetsResult   func() []compute.VirtualMachineScaleSet
 	FakeListVirtualMachineResult            func() []compute.VirtualMachine
@@ -988,4 +991,31 @@ func (mc *MockAKSEngineClient) ListRoleAssignmentsForPrincipal(ctx context.Conte
 			Value: &roleAssignments,
 		},
 	}, nil
+}
+
+//EnsureDefaultLogAnalyticsWorkspace mock
+func (mc *MockAKSEngineClient) EnsureDefaultLogAnalyticsWorkspace(ctx context.Context, resourceGroup, location string) (workspaceResourceId string, err error) {
+	if mc.FailEnsureDefaultLogAnalyticsWorkspace {
+		return "", errors.New("EnsureDefaultLogAnalyticsWorkspace failed")
+	}
+
+	return "", nil
+}
+
+//AddContainerInsightsSolution mock
+func (mc *MockAKSEngineClient) AddContainerInsightsSolution(ctx context.Context, workspaceSubscriptionId, workspaceResourceGroup, workspaceName, workspaceLocation string) (result bool, err error) {
+	if mc.FailAddContainerInsightsSolution {
+		return false, errors.New("AddContainerInsightsSolution failed")
+	}
+
+	return true, nil
+}
+
+//GetLogAnalyticsWorkspaceInfo mock
+func (mc *MockAKSEngineClient) GetLogAnalyticsWorkspaceInfo(ctx context.Context, workspaceSubscriptionId, workspaceResourceGroup, workspaceName string) (workspaceId string, workspaceKey, workspaceLocation string, err error) {
+	if mc.FailGetLogAnalyticsWorkspaceInfo {
+		return "", "", "", errors.New("GetLogAnalyticsWorkspaceInfo failed")
+	}
+
+	return "wsid", "wskey", "location", nil
 }
