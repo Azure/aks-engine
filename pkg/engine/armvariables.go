@@ -119,21 +119,16 @@ func getK8sMasterVars(cs *api.ContainerService) (map[string]interface{}, error) 
 	}
 
 	cloudInitFiles := map[string]interface{}{
-		"provisionScript":                  getBase64EncodedGzippedCustomScript(kubernetesCSEMainScript),
-		"provisionSource":                  getBase64EncodedGzippedCustomScript(kubernetesCSEHelpersScript),
-		"provisionInstalls":                getBase64EncodedGzippedCustomScript(kubernetesCSEInstall),
-		"provisionConfigs":                 getBase64EncodedGzippedCustomScript(kubernetesCSEConfig),
-		"customSearchDomainsScript":        getBase64EncodedGzippedCustomScript(kubernetesCustomSearchDomainsScript),
-		"generateProxyCertsScript":         getBase64EncodedGzippedCustomScript(kubernetesMasterGenerateProxyCertsScript),
-		"mountEtcdScript":                  getBase64EncodedGzippedCustomScript(kubernetesMountEtcd),
-		"kubeletSystemdService":            getBase64EncodedGzippedCustomScript(kubeletSystemdService),
-		"kubeletMonitorSystemdService":     getBase64EncodedGzippedCustomScript(kubernetesKubeletMonitorSystemdService),
-		"dockerMonitorSystemdTimer":        getBase64EncodedGzippedCustomScript(kubernetesDockerMonitorSystemdTimer),
-		"dockerMonitorSystemdService":      getBase64EncodedGzippedCustomScript(kubernetesDockerMonitorSystemdService),
-		"dockerClearMountPropagationFlags": getBase64EncodedGzippedCustomScript(dockerClearMountPropagationFlags),
-		"etcdSystemdService":               getBase64EncodedGzippedCustomScript(etcdSystemdService),
-		"dhcpv6SystemdService":             getBase64EncodedGzippedCustomScript(dhcpv6SystemdService),
-		"dhcpv6ConfigurationScript":        getBase64EncodedGzippedCustomScript(dhcpv6ConfigurationScript),
+		"provisionScript":           getBase64EncodedGzippedCustomScript(kubernetesCSEMainScript),
+		"provisionSource":           getBase64EncodedGzippedCustomScript(kubernetesCSEHelpersScript),
+		"provisionInstalls":         getBase64EncodedGzippedCustomScript(kubernetesCSEInstall),
+		"provisionConfigs":          getBase64EncodedGzippedCustomScript(kubernetesCSEConfig),
+		"customSearchDomainsScript": getBase64EncodedGzippedCustomScript(kubernetesCustomSearchDomainsScript),
+		"generateProxyCertsScript":  getBase64EncodedGzippedCustomScript(kubernetesMasterGenerateProxyCertsScript),
+		"mountEtcdScript":           getBase64EncodedGzippedCustomScript(kubernetesMountEtcd),
+		"etcdSystemdService":        getBase64EncodedGzippedCustomScript(etcdSystemdService),
+		"dhcpv6SystemdService":      getBase64EncodedGzippedCustomScript(dhcpv6SystemdService),
+		"dhcpv6ConfigurationScript": getBase64EncodedGzippedCustomScript(dhcpv6ConfigurationScript),
 	}
 
 	if !cs.Properties.IsVHDDistroForAllNodes() {
@@ -143,6 +138,11 @@ func getK8sMasterVars(cs *api.ContainerService) (map[string]interface{}, error) 
 		cloudInitFiles["labelNodesSystemdService"] = getBase64EncodedGzippedCustomScript(labelNodesSystemdService)
 		cloudInitFiles["aptPreferences"] = getBase64EncodedGzippedCustomScript(aptPreferences)
 		cloudInitFiles["healthMonitorScript"] = getBase64EncodedGzippedCustomScript(kubernetesHealthMonitorScript)
+		cloudInitFiles["kubeletMonitorSystemdService"] = getBase64EncodedGzippedCustomScript(kubernetesKubeletMonitorSystemdService)
+		cloudInitFiles["dockerMonitorSystemdService"] = getBase64EncodedGzippedCustomScript(kubernetesDockerMonitorSystemdService)
+		cloudInitFiles["dockerMonitorSystemdTimer"] = getBase64EncodedGzippedCustomScript(kubernetesDockerMonitorSystemdTimer)
+		cloudInitFiles["kubeletSystemdService"] = getBase64EncodedGzippedCustomScript(kubeletSystemdService)
+		cloudInitFiles["dockerClearMountPropagationFlags"] = getBase64EncodedGzippedCustomScript(dockerClearMountPropagationFlags)
 	}
 
 	masterVars["cloudInitFiles"] = cloudInitFiles

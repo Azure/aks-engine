@@ -165,6 +165,31 @@
             "destination": "/home/packer/health-monitor.sh"
         },
         {
+            "type": "file",
+            "source": "parts/k8s/cloud-init/artifacts/kubelet-monitor.service",
+            "destination": "/home/packer/kubelet-monitor.service"
+        },
+        {
+            "type": "file",
+            "source": "parts/k8s/cloud-init/artifacts/docker-monitor.service",
+            "destination": "/home/packer/docker-monitor.service"
+        },
+        {
+            "type": "file",
+            "source": "parts/k8s/cloud-init/artifacts/docker-monitor.timer",
+            "destination": "/home/packer/docker-monitor.timer"
+        },
+        {
+            "type": "file",
+            "source": "parts/k8s/cloud-init/artifacts/kubelet.service",
+            "destination": "/home/packer/kubelet.service"
+        },
+        {
+            "type": "file",
+            "source": "parts/k8s/cloud-init/artifacts/docker_clear_mount_propagation_flags.conf",
+            "destination": "/home/packer/docker_clear_mount_propagation_flags.conf"
+        },
+        {
             "type": "shell",
             "inline": [
                 "sudo FEATURE_FLAGS={{user `feature_flags`}} BUILD_NUMBER={{user `build_number`}} BUILD_ID={{user `build_id`}} COMMIT={{user `commit`}} /bin/bash -ux /home/packer/install-dependencies.sh",
