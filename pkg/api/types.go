@@ -1833,7 +1833,7 @@ func (p *Properties) SetCloudProviderRateLimitDefaults() {
 		var rateLimitQPS float64
 		for _, profile := range p.AgentPoolProfiles {
 			if profile.AvailabilityProfile == VirtualMachineScaleSets {
-				rateLimitQPS += (3.0 * float64(profile.Count))
+				rateLimitQPS += (4.0 * float64(profile.Count))
 			}
 		}
 		if rateLimitQPS > DefaultKubernetesCloudProviderRateLimitQPS {
