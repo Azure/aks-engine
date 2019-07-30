@@ -57,7 +57,7 @@ func CreateMasterVMSS(cs *api.ContainerService) VirtualMachineScaleSetARM {
 		DependsOn:  dependencies,
 	}
 
-	vmScaleSetTags :=  map[string]*string{
+	vmScaleSetTags := map[string]*string{
 		"creationSource":     to.StringPtr("[concat(parameters('generatorCode'), '-', variables('masterVMNamePrefix'), 'vmss')]"),
 		"resourceNameSuffix": to.StringPtr("[parameters('nameSuffix')]"),
 		"orchestrator":       to.StringPtr("[variables('orchestratorNameVersionTag')]"),
@@ -68,7 +68,7 @@ func CreateMasterVMSS(cs *api.ContainerService) VirtualMachineScaleSetARM {
 	if k8sConfig != nil && k8sConfig.IsContainerMonitoringAddonEnabled() {
 		addon := k8sConfig.GetAddonByName(ContainerMonitoringAddonName)
 		clusterDNSPrefix := "aks-engine-cluster"
-		if  cs.Properties.MasterProfile != nil && cs.Properties.MasterProfile.DNSPrefix != "" {
+		if cs.Properties.MasterProfile != nil && cs.Properties.MasterProfile.DNSPrefix != "" {
 			clusterDNSPrefix = cs.Properties.MasterProfile.DNSPrefix
 		}
 		vmScaleSetTags["logAnalyticsWorkspaceResourceId"] = to.StringPtr(addon.Config["logAnalyticsWorkspaceId"])
@@ -78,8 +78,8 @@ func CreateMasterVMSS(cs *api.ContainerService) VirtualMachineScaleSetARM {
 	virtualMachine := compute.VirtualMachineScaleSet{
 		Location: to.StringPtr("[variables('location')]"),
 		Name:     to.StringPtr("[concat(variables('masterVMNamePrefix'), 'vmss')]"),
-		Tags: vmScaleSetTags,
-		Type: to.StringPtr("Microsoft.Compute/virtualMachineScaleSets"),
+		Tags:     vmScaleSetTags,
+		Type:     to.StringPtr("Microsoft.Compute/virtualMachineScaleSets"),
 	}
 
 	addCustomTagsToVMScaleSets(cs.Properties.MasterProfile.CustomVMTags, &virtualMachine)

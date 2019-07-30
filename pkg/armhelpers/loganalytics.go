@@ -101,7 +101,7 @@ func (az *AzureClient) EnsureDefaultLogAnalyticsWorkspace(ctx context.Context, r
 		if regionCode, found := AzureCloudLocationToOmsRegionCodeMap[defaultWorkspaceRegion]; found {
 			defaultWorkspaceRegionCode = regionCode
 		}
-		break
+
 	case "AzureChinaCloud":
 		if region, found := AzureChinaRegionToOmsRegionMap[location]; found {
 			defaultWorkspaceRegion = region
@@ -114,7 +114,7 @@ func (az *AzureClient) EnsureDefaultLogAnalyticsWorkspace(ctx context.Context, r
 		} else {
 			defaultWorkspaceRegionCode = "EAST2"
 		}
-		break
+
 	default:
 		return "", fmt.Errorf("container monitoring addon not supported in this cloud: %s", az.environment.Name)
 	}

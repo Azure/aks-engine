@@ -389,7 +389,7 @@ func autofillApimodel(dc *deployCmd) error {
 			if err != nil {
 				return err
 			}
-			log.Infoln("successully retrieved log analytics workspace details")
+			log.Infoln("successfully retrieved log analytics workspace details")
 			log.Infoln("log analytics workspace id: ", wsID)
 			log.Infoln("log analytics workspace key: ", wsKey)
 
