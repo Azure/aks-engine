@@ -6,6 +6,8 @@ AKS Engine enables you to create dual stack (IPv4 *and* IPv6) Kubernetes cluster
 
 - Dual stack support is available for Kubernetes version 1.16.0-alpha.1 and later
 
+In order to create IPv6 enabled Azure virtual networks you must first configure your subscription [as follows](https://docs.microsoft.com/en-us/azure/virtual-network/virtual-network-ipv4-ipv6-dual-stack-cli#prerequisites).
+
 This example shows you how to configure a dual stack cluster:
 
 1. **kubernetes.json** - deploying and using [Kubernetes](kubernetes.json).
