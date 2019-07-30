@@ -1,18 +1,19 @@
-# AKS Engine - DualStack clusters
+# AKS Engine - Dual Stack clusters
 
 ## Overview
 
-AKS-Engine enables you to create dualstack (ipv4 and ipv6) kubernetes cluster on Microsoft Azure.
-- Dualstack support is available from kubernetes version 1.16.0-alpha.1
+AKS Engine enables you to create dual stack (IPv4 *and* IPv6) Kubernetes clusters on Microsoft Azure.
 
+- Dual stack support is available for Kubernetes version 1.16.0-alpha.1 and later
 
-This example shows you how to configure a dualstack cluster:
+This example shows you how to configure a dual stack cluster:
 
 1. **kubernetes.json** - deploying and using [Kubernetes](kubernetes.json).
 
 Things to try out after the cluster is deployed -
 
-- Nodes are on 1.16.0-alpha.1
+- Nodes are Kubernetes version 1.16.0-alpha.1 or later
+
 ```bash
 $ kubectl get nodes
 NAME                        STATUS   ROLES    AGE    VERSION
@@ -22,6 +23,7 @@ k8s-master-20403072-0       Ready    master   2m7s   v1.16.0-alpha.1
 ```
 
 - Nodes have 2 internal IPs, one from each ip family
+
 ```bash
 $ kubectl get nodes k8s-linuxpool1-20403072-0 -o go-template --template='{{range .status.addresses}}{{printf "%s: %s \n" .type .address}}{{end}}'
 Hostname: k8s-pool1-12324934-0
@@ -30,6 +32,7 @@ InternalIP: 2001:1234:5678:9abc::6
 ```
 
 - Nodes have 2 PodCIDRs, one from each ip family
+
 ```bash
 $ kubectl get nodes k8s-linuxpool1-20403072-0 -o go-template --template='{{range .spec.podCIDRs}}{{printf "%s\n" .}}{{end}}'
 10.244.2.0/24
@@ -37,13 +40,15 @@ fd00:200::/24
 ```
 
 - Pods have 2 PodIPs, one from each ip family
+
 ```bash
 kubectl get pods nginx-pod -o go-template --template='{{range .status.podIPs}}{{printf "%s \n" .ip}}{{end}}'
 10.244.2.6
 fd00:200::6
 ```
 
-- Able to reach other pods in cluster using ipv6 ip
+- Able to reach other pods in cluster using IPv6
+
 ```bash
 # inside the nginx-pod
 # ifconfig eth0
@@ -63,6 +68,7 @@ PING fd00:100::8(fd00:100::8) 56 data bytes
 ```
 
 ## Limitations
-- Dualstack clusters are supported only with kubenet.
-- Dualstack clusters are supported only with Linux.
+
+- Dual stack clusters are supported only with kubenet.
+- Dual stack clusters are supported only with Linux.
 - Egress pod internet routing will be available after this pending PR (https://github.com/kubernetes-incubator/ip-masq-agent/pull/45) will be merged.
