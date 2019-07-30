@@ -29,12 +29,14 @@ write_files:
   content: !!binary |
     {{CloudInitData "provisionConfigs"}}
 
+{{if not .IsVHDDistro}}
 - path: /opt/azure/containers/provision_cis.sh
   permissions: "0744"
   encoding: gzip
   owner: root
   content: !!binary |
     {{CloudInitData "provisionCIS"}}
+{{end}}
 
 {{if IsAzureStackCloud}}
 - path: /opt/azure/containers/provision_configs_custom_cloud.sh
@@ -45,11 +47,12 @@ write_files:
     {{WrapAsVariable "provisionConfigsCustomCloud"}}
 {{end}}
 
-{{if .IsCoreOS}}
+{{if not .IsVHDDistro}}
+    {{if .IsCoreOS}}
 - path: /opt/bin/health-monitor.sh
-{{else}}
+    {{else}}
 - path: /usr/local/bin/health-monitor.sh
-{{end}}
+    {{end}}
   permissions: "0544"
   encoding: gzip
   owner: root
@@ -97,6 +100,7 @@ write_files:
   owner: root
   content: !!binary |
     {{CloudInitData "aptPreferences"}}
+{{end}}
 
 {{if IsIPv6DualStackFeatureEnabled}}
 - path: /etc/systemd/system/dhcpv6.service
@@ -116,12 +120,14 @@ write_files:
 
 {{if .KubernetesConfig.RequiresDocker}}
     {{if not .IsCoreOS}}
+        {{if not .IsVHDDistro}}
 - path: /etc/systemd/system/docker.service.d/clear_mount_propagation_flags.conf
   permissions: "0644"
   encoding: gzip
   owner: "root"
   content: !!binary |
     {{CloudInitData "dockerClearMountPropagationFlags"}}
+        {{end}}
     {{end}}
 
 - path: /etc/systemd/system/docker.service.d/exec_start.conf
