@@ -361,59 +361,59 @@ func autofillApimodel(dc *deployCmd) error {
 		log.Infoln("container monitoring addon enabled")
 		addon := k8sConfig.GetAddonByName("container-monitoring")
 		if addon.Config == nil || len(addon.Config) == 0 || addon.Config["logAnalyticsWorkspaceResourceId"] != "" {
-			workspaceResourceId := strings.TrimSpace(addon.Config["logAnalyticsWorkspaceResourceId"])
-			if workspaceResourceId != "" {
-				log.Infoln("using provided log analytics workspace resource id:", workspaceResourceId)
-				if !strings.HasPrefix(workspaceResourceId, "/") {
-					workspaceResourceId = "/" + workspaceResourceId
+			workspaceResourceID := strings.TrimSpace(addon.Config["logAnalyticsWorkspaceResourceId"])
+			if workspaceResourceID != "" {
+				log.Infoln("using provided log analytics workspace resource id:", workspaceResourceID)
+				if !strings.HasPrefix(workspaceResourceID, "/") {
+					workspaceResourceID = "/" + workspaceResourceID
 				}
-				workspaceResourceId = strings.TrimSuffix(workspaceResourceId, "/")
+				workspaceResourceID = strings.TrimSuffix(workspaceResourceID, "/")
 			} else {
 				log.Infoln("creating default log analytics workspace")
-				workspaceResourceId, err = dc.client.EnsureDefaultLogAnalyticsWorkspace(ctx, dc.resourceGroup, dc.location)
+				workspaceResourceID, err = dc.client.EnsureDefaultLogAnalyticsWorkspace(ctx, dc.resourceGroup, dc.location)
 				if err != nil {
 					return err
 				}
-				log.Infoln("successfully created default log analytics workspace:", workspaceResourceId)
+				log.Infoln("successfully created default log analytics workspace:", workspaceResourceID)
 			}
 
-			resourceParts := strings.Split(workspaceResourceId, "/")
+			resourceParts := strings.Split(workspaceResourceID, "/")
 			if len(resourceParts) != 9 {
-				return fmt.Errorf("%s is not a valid resourceID", workspaceResourceId)
+				return fmt.Errorf("%s is not a valid resourceID", workspaceResourceID)
 			}
-			workspaceSubscriptionId := resourceParts[2]
+			workspaceSubscriptionID := resourceParts[2]
 			workspaceResourceGroup := resourceParts[4]
 			workspaceName := resourceParts[8]
 			log.Infoln("Retrieving log analytics workspace Guid, Key and location details")
-			wsId, wsKey, wsLocation, err := dc.client.GetLogAnalyticsWorkspaceInfo(ctx, workspaceSubscriptionId, workspaceResourceGroup, workspaceName)
+			wsID, wsKey, wsLocation, err := dc.client.GetLogAnalyticsWorkspaceInfo(ctx, workspaceSubscriptionID, workspaceResourceGroup, workspaceName)
 			if err != nil {
 				return err
 			}
 			log.Infoln("successully retrieved log analytics workspace details")
-			log.Infoln("log analytics workspace id: ", wsId)
+			log.Infoln("log analytics workspace id: ", wsID)
 			log.Infoln("log analytics workspace key: ", wsKey)
 
-			log.Infoln("adding container insights solution to log analytics workspace: ", workspaceResourceId)
-			_, err = dc.client.AddContainerInsightsSolution(ctx, workspaceSubscriptionId, workspaceResourceGroup, workspaceName, wsLocation)
+			log.Infoln("adding container insights solution to log analytics workspace: ", workspaceResourceID)
+			_, err = dc.client.AddContainerInsightsSolution(ctx, workspaceSubscriptionID, workspaceResourceGroup, workspaceName, wsLocation)
 			if err != nil {
 				return err
 			}
-			log.Infoln("successfully added container insights solution to log analytics workspace: ", workspaceResourceId)
+			log.Infoln("successfully added container insights solution to log analytics workspace: ", workspaceResourceID)
 
 			log.Infoln("Adding log analytics workspaceGuid and workspaceKey, workspaceResourceId to the container monitoring addon")
 			for _, addon := range dc.containerService.Properties.OrchestratorProfile.KubernetesConfig.Addons {
 				if addon.Name == "container-monitoring" {
-					addon.Config["workspaceGuid"] = base64.StdEncoding.EncodeToString([]byte(wsId))
+					addon.Config["workspaceGuid"] = base64.StdEncoding.EncodeToString([]byte(wsID))
 					addon.Config["workspaceKey"] = base64.StdEncoding.EncodeToString([]byte(wsKey))
-					addon.Config["logAnalyticsWorkspaceId"] = workspaceResourceId
+					addon.Config["logAnalyticsWorkspaceId"] = workspaceResourceID
 				}
 			}
 
 		} else {
 			log.Infoln("using provided workspaceGuid and workspaceKey")
-			workspaceGuid := addon.Config["workspaceGuid"]
+			workspaceGUID := addon.Config["workspaceGuid"]
 			workspaceKey := addon.Config["workspaceKey"]
-			log.Infoln("workspaceGuid:", workspaceGuid)
+			log.Infoln("workspaceGuid:", workspaceGUID)
 			log.Infoln("workspaceKey:", workspaceKey)
 		}
 	}

@@ -994,7 +994,7 @@ func (mc *MockAKSEngineClient) ListRoleAssignmentsForPrincipal(ctx context.Conte
 }
 
 //EnsureDefaultLogAnalyticsWorkspace mock
-func (mc *MockAKSEngineClient) EnsureDefaultLogAnalyticsWorkspace(ctx context.Context, resourceGroup, location string) (workspaceResourceId string, err error) {
+func (mc *MockAKSEngineClient) EnsureDefaultLogAnalyticsWorkspace(ctx context.Context, resourceGroup, location string) (workspaceResourceID string, err error) {
 	if mc.FailEnsureDefaultLogAnalyticsWorkspace {
 		return "", errors.New("EnsureDefaultLogAnalyticsWorkspace failed")
 	}
@@ -1003,7 +1003,7 @@ func (mc *MockAKSEngineClient) EnsureDefaultLogAnalyticsWorkspace(ctx context.Co
 }
 
 //AddContainerInsightsSolution mock
-func (mc *MockAKSEngineClient) AddContainerInsightsSolution(ctx context.Context, workspaceSubscriptionId, workspaceResourceGroup, workspaceName, workspaceLocation string) (result bool, err error) {
+func (mc *MockAKSEngineClient) AddContainerInsightsSolution(ctx context.Context, workspaceSubscriptionID, workspaceResourceGroup, workspaceName, workspaceLocation string) (result bool, err error) {
 	if mc.FailAddContainerInsightsSolution {
 		return false, errors.New("AddContainerInsightsSolution failed")
 	}
@@ -1012,7 +1012,7 @@ func (mc *MockAKSEngineClient) AddContainerInsightsSolution(ctx context.Context,
 }
 
 //GetLogAnalyticsWorkspaceInfo mock
-func (mc *MockAKSEngineClient) GetLogAnalyticsWorkspaceInfo(ctx context.Context, workspaceSubscriptionId, workspaceResourceGroup, workspaceName string) (workspaceId string, workspaceKey, workspaceLocation string, err error) {
+func (mc *MockAKSEngineClient) GetLogAnalyticsWorkspaceInfo(ctx context.Context, workspaceSubscriptionID, workspaceResourceGroup, workspaceName string) (workspaceID string, workspaceKey, workspaceLocation string, err error) {
 	if mc.FailGetLogAnalyticsWorkspaceInfo {
 		return "", "", "", errors.New("GetLogAnalyticsWorkspaceInfo failed")
 	}

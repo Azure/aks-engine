@@ -185,13 +185,13 @@ type AKSEngineClient interface {
 	// Log Analytics
 
 	// EnsureDefaultLogAnalyticsWorkspace ensures the default log analytics exists corresponding to specified location in current subscription
-	EnsureDefaultLogAnalyticsWorkspace(ctx context.Context, resourceGroup, location string) (workspaceResourceId string, err error)
+	EnsureDefaultLogAnalyticsWorkspace(ctx context.Context, resourceGroup, location string) (workspaceResourceID string, err error)
 
 	// GetLogAnalyticsWorkspaceInfo gets the details about the workspace
-	GetLogAnalyticsWorkspaceInfo(ctx context.Context, workspaceSubscriptionId, workspaceResourceGroup, workspaceName string) (workspaceId string, workspaceKey, workspaceLocation string, err error)
+	GetLogAnalyticsWorkspaceInfo(ctx context.Context, workspaceSubscriptionID, workspaceResourceGroup, workspaceName string) (workspaceID string, workspaceKey, workspaceLocation string, err error)
 
 	// AddContainerInsightsSolution adds container insights solution for the specified log analytics workspace
-	AddContainerInsightsSolution(ctx context.Context, workspaceSubscriptionId, workspaceResourceGroup, workspaceName, workspaceLocation string) (result bool, err error)
+	AddContainerInsightsSolution(ctx context.Context, workspaceSubscriptionID, workspaceResourceGroup, workspaceName, workspaceLocation string) (result bool, err error)
 }
 
 // AKSStorageClient interface models the azure storage client

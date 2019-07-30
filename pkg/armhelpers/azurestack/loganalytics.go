@@ -14,7 +14,7 @@ import (
 )
 
 // EnsureDefaultLogAnalyticsWorkspace ensures the default log analytics exists corresponding to specified location
-func (az *AzureClient) EnsureDefaultLogAnalyticsWorkspace(ctx context.Context, resourceGroup, location string) (workspaceResourceId string, err error) {
+func (az *AzureClient) EnsureDefaultLogAnalyticsWorkspace(ctx context.Context, resourceGroup, location string) (workspaceResourceID string, err error) {
 	AzureCloudLocationToOmsRegionCodeMap := map[string]string{
 		"australiasoutheast": "ASE",
 		"australiaeast":      "EAU",
@@ -139,9 +139,9 @@ func (az *AzureClient) EnsureDefaultLogAnalyticsWorkspace(ctx context.Context, r
 }
 
 // GetLogAnalyticsWorkspaceInfo gets the details about the workspace
-func (az *AzureClient) GetLogAnalyticsWorkspaceInfo(ctx context.Context, workspaceSubscriptionId, workspaceResourceGroup, workspaceName string) (workspaceId string, workspaceKey string, workspaceLocation string, err error) {
-	if !strings.EqualFold(workspaceSubscriptionId, az.subscriptionID) {
-		az.workspacesClient = oi.NewWorkspacesClientWithBaseURI(az.environment.ResourceManagerEndpoint, workspaceSubscriptionId)
+func (az *AzureClient) GetLogAnalyticsWorkspaceInfo(ctx context.Context, workspaceSubscriptionID, workspaceResourceGroup, workspaceName string) (workspaceId string, workspaceKey string, workspaceLocation string, err error) {
+	if !strings.EqualFold(workspaceSubscriptionID, az.subscriptionID) {
+		az.workspacesClient = oi.NewWorkspacesClientWithBaseURI(az.environment.ResourceManagerEndpoint, workspaceSubscriptionID)
 		az.workspacesClient.Authorizer = az.authorizationClient.Authorizer
 	}
 
@@ -160,12 +160,12 @@ func (az *AzureClient) GetLogAnalyticsWorkspaceInfo(ctx context.Context, workspa
 }
 
 // AddContainerInsightsSolution adds container insights solution for the specified log analytics workspace
-func (az *AzureClient) AddContainerInsightsSolution(ctx context.Context, workspaceSubscriptionId, workspaceResourceGroup, workspaceName, workspaceLocation string) (result bool, err error) {
-	solutionClient := om.NewSolutionsClient(workspaceSubscriptionId, "Microsoft.OperationalInsights", "workspaces", workspaceName)
+func (az *AzureClient) AddContainerInsightsSolution(ctx context.Context, workspaceSubscriptionID, workspaceResourceGroup, workspaceName, workspaceLocation string) (result bool, err error) {
+	solutionClient := om.NewSolutionsClient(workspaceSubscriptionID, "Microsoft.OperationalInsights", "workspaces", workspaceName)
 	solutionClient.Authorizer = az.workspacesClient.Authorizer
 
 	solutionName := "ContainerInsights(" + workspaceName + ")"
-	workspaceResourceId := fmt.Sprintf("/subscriptions/%s/resourceGroups/%s/providers/Microsoft.OperationalInsights/workspaces/%s", workspaceSubscriptionId, workspaceResourceGroup, workspaceName)
+	workspaceResourceID := fmt.Sprintf("/subscriptions/%s/resourceGroups/%s/providers/Microsoft.OperationalInsights/workspaces/%s", workspaceSubscriptionID, workspaceResourceGroup, workspaceName)
 	status, err := solutionClient.CreateOrUpdate(ctx, workspaceResourceGroup, solutionName, om.Solution{
 		Name:     to.StringPtr(solutionName),
 		Type:     to.StringPtr("Microsoft.OperationsManagement/solutions"),
@@ -177,7 +177,7 @@ func (az *AzureClient) AddContainerInsightsSolution(ctx context.Context, workspa
 			Product:       to.StringPtr("OMSGallery/ContainerInsights"),
 		},
 		Properties: &om.SolutionProperties{
-			WorkspaceResourceID: to.StringPtr(workspaceResourceId),
+			WorkspaceResourceID: to.StringPtr(workspaceResourceID),
 		},
 	})
 	if err != nil {
