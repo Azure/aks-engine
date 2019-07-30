@@ -1,5 +1,4 @@
 Starting build on  Mon Jul 29 21:40:13 UTC 2019
-     + sudo mv /var/log /var/log.vhd
 Using kernel:
 Linux version 4.15.0-1052-azure (buildd@lgw01-amd64-001) (gcc version 5.4.0 20160609 (Ubuntu 5.4.0-6ubuntu1~16.04.10)) #57-Ubuntu SMP Tue Jul 23 19:07:16 UTC 2019
 Components downloaded in this VHD build (some of the below components might get deleted during cluster provisioning if they are not needed):
@@ -42,46 +41,23 @@ Components downloaded in this VHD build (some of the below components might get 
   - containerd version 1.1.5
   - img
 Docker images pre-pulled:
-     + sudo mkdir /var/log
-     + applyCIS
   - k8s.gcr.io/kubernetes-dashboard-amd64:v1.10.1
   - k8s.gcr.io/exechealthz-amd64:1.2
-     + setPWExpiration
   - k8s.gcr.io/addon-resizer:1.8.5
-     + sed -i 's|PASS_MAX_DAYS||g' /etc/login.defs
-     + grep PASS_MAX_DAYS /etc/login.defs
   - k8s.gcr.io/addon-resizer:1.8.4
   - k8s.gcr.io/addon-resizer:1.8.1
-     + sed -i 's|PASS_MIN_DAYS||g' /etc/login.defs
   - k8s.gcr.io/addon-resizer:1.7
   - k8s.gcr.io/heapster-amd64:v1.5.4
   - k8s.gcr.io/heapster-amd64:v1.5.3
   - k8s.gcr.io/heapster-amd64:v1.5.1
-     + grep PASS_MIN_DAYS /etc/login.defs
   - k8s.gcr.io/metrics-server-amd64:v0.2.1
-     + sed -i 's|INACTIVE=||g' /etc/default/useradd
-     + grep INACTIVE= /etc/default/useradd
-     + echo 'PASS_MAX_DAYS 90'
-     + grep 'PASS_MAX_DAYS 90' /etc/login.defs
-     + echo 'PASS_MIN_DAYS 7'
-     + grep 'PASS_MIN_DAYS 7' /etc/login.defs
   - k8s.gcr.io/k8s-dns-kube-dns-amd64:1.15.4
-     + echo INACTIVE=30
-     + grep INACTIVE=30 /etc/default/useradd
-     + assignRootPW
   - k8s.gcr.io/k8s-dns-kube-dns-amd64:1.15.0
   - k8s.gcr.io/k8s-dns-kube-dns-amd64:1.14.13
-     + grep '^root:[!*]:' /etc/shadow
-     ++ openssl rand -base64 5
-     + SALT=pExMW9k=
   - k8s.gcr.io/k8s-dns-kube-dns-amd64:1.14.5
   - k8s.gcr.io/kube-addon-manager-amd64:v9.0.1
   - k8s.gcr.io/kube-addon-manager-amd64:v9.0
-     ++ openssl rand -base64 37
   - k8s.gcr.io/kube-addon-manager-amd64:v8.9.1
-     + SECRET=oT/2C33LPyTNkk6GEBqvGThjKy2k1J7luDG8WvIhnXmwulkZ8w==
-     + CMD='import crypt, getpass, pwd; print crypt.crypt('\''oT/2C33LPyTNkk6GEBqvGThjKy2k1J7luDG8WvIhnXmwulkZ8w=='\'', '\''$6$pExMW9k=$'\'')'
-     ++ python -c 'import crypt, getpass, pwd; print crypt.crypt('\''oT/2C33LPyTNkk6GEBqvGThjKy2k1J7luDG8WvIhnXmwulkZ8w=='\'', '\''$6$pExMW9k=$'\'')'
   - k8s.gcr.io/kube-addon-manager-amd64:v8.9
   - k8s.gcr.io/kube-addon-manager-amd64:v8.8
   - k8s.gcr.io/kube-addon-manager-amd64:v8.7

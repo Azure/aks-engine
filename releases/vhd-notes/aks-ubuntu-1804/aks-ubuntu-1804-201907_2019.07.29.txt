@@ -1,15 +1,7 @@
 Starting build on  Mon Jul 29 21:27:37 UTC 2019
-++ date
 Using kernel:
-+ echo 'Install completed successfully on ' Mon Jul 29 21:53:16 UTC 2019
-+ echo 'VSTS Build NUMBER: 20190729.13'
 Linux version 4.18.0-1024-azure (buildd@lcy01-amd64-006) (gcc version 7.4.0 (Ubuntu 7.4.0-1ubuntu1~18.04.1)) #25~18.04.1-Ubuntu SMP Fri Jun 28 23:27:46 UTC 2019
 Components downloaded in this VHD build (some of the below components might get deleted during cluster provisioning if they are not needed):
-+ echo 'VSTS Build ID: 23850936'
-+ echo 'Commit: 7bed719399ffc729d4e3b01bcbfbcb761efe97e1'
-+ echo 'Feature flags: '
-+ set +x
-+ sudo mv /var/log /var/log.vhd
   - apt-transport-https
   - auditd
   - blobfuse
@@ -17,47 +9,29 @@ Components downloaded in this VHD build (some of the below components might get 
   - ceph-common
   - cgroup-lite
   - cifs-utils
-+ sudo mkdir /var/log
-+ applyCIS
-+ setPWExpiration
   - conntrack
   - cracklib-runtime
-+ sed -i 's|PASS_MAX_DAYS||g' /etc/login.defs
   - ebtables
   - ethtool
-+ grep PASS_MAX_DAYS /etc/login.defs
-+ sed -i 's|PASS_MIN_DAYS||g' /etc/login.defs
   - fuse
-+ grep PASS_MIN_DAYS /etc/login.defs
   - git
-+ sed -i 's|INACTIVE=||g' /etc/default/useradd
   - glusterfs-client
-+ grep INACTIVE= /etc/default/useradd
   - init-system-helpers
   - iproute2
   - ipset
   - iptables
   - jq
-+ echo 'PASS_MAX_DAYS 90'
   - libpam-pwquality
-+ grep 'PASS_MAX_DAYS 90' /etc/login.defs
-+ echo 'PASS_MIN_DAYS 7'
   - libpwquality-tools
-+ grep 'PASS_MIN_DAYS 7' /etc/login.defs
   - mount
   - nfs-common
   - pigz socat
   - util-linux
-+ echo INACTIVE=30
   - xz-utils
-+ grep INACTIVE=30 /etc/default/useradd
   - zip
   - etcd v3.2.26
-+ assignRootPW
   - moby v3.0.6
-+ grep '^root:[!*]:' /etc/shadow
   - nvidia-docker2 nvidia-container-runtime
-++ openssl rand -base64 5
   - Azure CNI version 1.0.24
   - Azure CNI version 1.0.22
   - CNI plugin version 0.7.5
@@ -69,25 +43,20 @@ Components downloaded in this VHD build (some of the below components might get 
 Docker images pre-pulled:
   - k8s.gcr.io/kubernetes-dashboard-amd64:v1.10.1
   - k8s.gcr.io/exechealthz-amd64:1.2
-+ SALT=OH5W4Rk=
   - k8s.gcr.io/addon-resizer:1.8.5
   - k8s.gcr.io/addon-resizer:1.8.4
   - k8s.gcr.io/addon-resizer:1.8.1
-++ openssl rand -base64 37
   - k8s.gcr.io/addon-resizer:1.7
   - k8s.gcr.io/heapster-amd64:v1.5.4
   - k8s.gcr.io/heapster-amd64:v1.5.3
   - k8s.gcr.io/heapster-amd64:v1.5.1
-+ SECRET=J+WioJpZs2bTBsp+RIWru6W+KblfDaU5BenQc5jQInZwmf6omQ==
   - k8s.gcr.io/metrics-server-amd64:v0.2.1
   - k8s.gcr.io/k8s-dns-kube-dns-amd64:1.15.4
-+ CMD='import crypt, getpass, pwd; print crypt.crypt('\''J+WioJpZs2bTBsp+RIWru6W+KblfDaU5BenQc5jQInZwmf6omQ=='\'', '\''$6$OH5W4Rk=$'\'')'
   - k8s.gcr.io/k8s-dns-kube-dns-amd64:1.15.0
   - k8s.gcr.io/k8s-dns-kube-dns-amd64:1.14.13
   - k8s.gcr.io/k8s-dns-kube-dns-amd64:1.14.5
   - k8s.gcr.io/kube-addon-manager-amd64:v9.0.1
   - k8s.gcr.io/kube-addon-manager-amd64:v9.0
-++ python -c 'import crypt, getpass, pwd; print crypt.crypt('\''J+WioJpZs2bTBsp+RIWru6W+KblfDaU5BenQc5jQInZwmf6omQ=='\'', '\''$6$OH5W4Rk=$'\'')'
   - k8s.gcr.io/kube-addon-manager-amd64:v8.9.1
   - k8s.gcr.io/kube-addon-manager-amd64:v8.9
   - k8s.gcr.io/kube-addon-manager-amd64:v8.8
@@ -100,11 +69,8 @@ Docker images pre-pulled:
   - k8s.gcr.io/k8s-dns-dnsmasq-nanny-amd64:1.14.5
   - k8s.gcr.io/pause-amd64:3.1
   - mcr.microsoft.com/k8s/azurestack/core/pause-amd64:3.1
-+ HASH='$6$OH5W4Rk=$OZxRUBUJ8ytxEREKueE04pFVDZmrvggPKb/9YZdkL1/ILU5R5lvStR6X333YXY7WaEELFpmv3bzNCbLGGMIUT/'
   - gcr.io/kubernetes-helm/tiller:v2.11.0
   - gcr.io/kubernetes-helm/tiller:v2.8.1
-+ echo 'root:$6$OH5W4Rk=$OZxRUBUJ8ytxEREKueE04pFVDZmrvggPKb/9YZdkL1/ILU5R5lvStR6X333YXY7WaEELFpmv3bzNCbLGGMIUT/'
-+ /usr/sbin/chpasswd -e
   - k8s.gcr.io/cluster-autoscaler:v1.15.1
   - k8s.gcr.io/cluster-autoscaler:v1.15.0
   - k8s.gcr.io/cluster-autoscaler:v1.14.4
@@ -161,18 +127,13 @@ Docker images pre-pulled:
   - k8s.gcr.io/hyperkube-amd64:v1.14.4
   - mcr.microsoft.com/k8s/azurestack/core/hyperkube-amd64:v1.14.4-azs
   - k8s.gcr.io/cloud-controller-manager-amd64:v1.14.3
-+ assignFilePermissions
-+ FILES='
   - k8s.gcr.io/hyperkube-amd64:v1.14.3
   - mcr.microsoft.com/k8s/azurestack/core/hyperkube-amd64:v1.14.3-azs
   - k8s.gcr.io/cloud-controller-manager-amd64:v1.13.8
   - k8s.gcr.io/hyperkube-amd64:v1.13.8
   - mcr.microsoft.com/k8s/azurestack/core/hyperkube-amd64:v1.13.8-azs
-    auth.log
   - k8s.gcr.io/cloud-controller-manager-amd64:v1.13.7
   - k8s.gcr.io/hyperkube-amd64:v1.13.7
-    alternatives.log
-    cloud-init.log
   - mcr.microsoft.com/k8s/azurestack/core/hyperkube-amd64:v1.13.7-azs
   - k8s.gcr.io/cloud-controller-manager-amd64:v1.12.8
   - k8s.gcr.io/hyperkube-amd64:v1.12.8
@@ -183,31 +144,16 @@ Docker images pre-pulled:
   - k8s.gcr.io/cloud-controller-manager-amd64:v1.11.10
   - k8s.gcr.io/hyperkube-amd64:v1.11.10
   - mcr.microsoft.com/k8s/azurestack/core/hyperkube-amd64:v1.11.10-azs
-    cloud-init-output.log
-    daemon.log
   - k8s.gcr.io/cloud-controller-manager-amd64:v1.11.9
   - k8s.gcr.io/hyperkube-amd64:v1.11.9
-    dpkg.log
   - mcr.microsoft.com/k8s/azurestack/core/hyperkube-amd64:v1.11.9-azs
   - k8s.gcr.io/cloud-controller-manager-amd64:v1.10.13
-    kern.log
   - k8s.gcr.io/hyperkube-amd64:v1.10.13
-    lastlog
   - k8s.gcr.io/cloud-controller-manager-amd64:v1.10.12
   - k8s.gcr.io/hyperkube-amd64:v1.10.12
-    waagent.log
-    syslog
 WARNING: 75% of /dev/sda1 is used
-    unattended-upgrades/unattended-upgrades.log
 Install completed successfully on  Mon Jul 29 21:53:16 UTC 2019
-    unattended-upgrades/unattended-upgrades-dpkg.log
 VSTS Build NUMBER: 20190729.13
 VSTS Build ID: 23850936
-    azure-vnet-ipam.log
-    azure-vnet-telemetry.log
-    azure-cnimonitor.log
-    azure-vnet.log
-    kv-driver.log
 Commit: 7bed719399ffc729d4e3b01bcbfbcb761efe97e1
-    blobfuse-driver.log
 Feature flags:
