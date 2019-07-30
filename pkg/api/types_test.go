@@ -3474,13 +3474,16 @@ func TestGetAzureCNIURLFuncs(t *testing.T) {
 func TestCloudProviderDefaults(t *testing.T) {
 	// Test cloudprovider defaults when no user-provided values
 	v := "1.8.0"
-	o := OrchestratorProfile{
-		OrchestratorType:    "Kubernetes",
-		OrchestratorVersion: v,
-		KubernetesConfig:    &KubernetesConfig{},
+	p := Properties{
+		OrchestratorProfile: &OrchestratorProfile{
+			OrchestratorType:    "Kubernetes",
+			OrchestratorVersion: v,
+			KubernetesConfig:    &KubernetesConfig{},
+		},
 	}
+	o := p.OrchestratorProfile
 	o.KubernetesConfig.SetCloudProviderBackoffDefaults()
-	o.KubernetesConfig.SetCloudProviderRateLimitDefaults()
+	p.SetCloudProviderRateLimitDefaults()
 
 	intCases := []struct {
 		defaultVal  int
@@ -3539,20 +3542,23 @@ func TestCloudProviderDefaults(t *testing.T) {
 
 	// Test cloudprovider defaults when user provides configuration
 	v = "1.8.0"
-	o = OrchestratorProfile{
-		OrchestratorType:    "Kubernetes",
-		OrchestratorVersion: v,
-		KubernetesConfig: &KubernetesConfig{
-			CloudProviderBackoffDuration: customCloudProviderBackoffDuration,
-			CloudProviderBackoffExponent: customCloudProviderBackoffExponent,
-			CloudProviderBackoffJitter:   customCloudProviderBackoffJitter,
-			CloudProviderBackoffRetries:  customCloudProviderBackoffRetries,
-			CloudProviderRateLimitBucket: customCloudProviderRateLimitBucket,
-			CloudProviderRateLimitQPS:    customCloudProviderRateLimitQPS,
+	p = Properties{
+		OrchestratorProfile: &OrchestratorProfile{
+			OrchestratorType:    "Kubernetes",
+			OrchestratorVersion: v,
+			KubernetesConfig: &KubernetesConfig{
+				CloudProviderBackoffDuration: customCloudProviderBackoffDuration,
+				CloudProviderBackoffExponent: customCloudProviderBackoffExponent,
+				CloudProviderBackoffJitter:   customCloudProviderBackoffJitter,
+				CloudProviderBackoffRetries:  customCloudProviderBackoffRetries,
+				CloudProviderRateLimitBucket: customCloudProviderRateLimitBucket,
+				CloudProviderRateLimitQPS:    customCloudProviderRateLimitQPS,
+			},
 		},
 	}
+	o = p.OrchestratorProfile
 	o.KubernetesConfig.SetCloudProviderBackoffDefaults()
-	o.KubernetesConfig.SetCloudProviderRateLimitDefaults()
+	p.SetCloudProviderRateLimitDefaults()
 
 	intCasesCustom := []struct {
 		customVal   int
@@ -3604,17 +3610,20 @@ func TestCloudProviderDefaults(t *testing.T) {
 
 	// Test cloudprovider defaults when user provides *some* config values
 	v = "1.8.0"
-	o = OrchestratorProfile{
-		OrchestratorType:    "Kubernetes",
-		OrchestratorVersion: v,
-		KubernetesConfig: &KubernetesConfig{
-			CloudProviderBackoffDuration: customCloudProviderBackoffDuration,
-			CloudProviderRateLimitBucket: customCloudProviderRateLimitBucket,
-			CloudProviderRateLimitQPS:    customCloudProviderRateLimitQPS,
+	p = Properties{
+		OrchestratorProfile: &OrchestratorProfile{
+			OrchestratorType:    "Kubernetes",
+			OrchestratorVersion: v,
+			KubernetesConfig: &KubernetesConfig{
+				CloudProviderBackoffDuration: customCloudProviderBackoffDuration,
+				CloudProviderRateLimitBucket: customCloudProviderRateLimitBucket,
+				CloudProviderRateLimitQPS:    customCloudProviderRateLimitQPS,
+			},
 		},
 	}
+	o = p.OrchestratorProfile
 	o.KubernetesConfig.SetCloudProviderBackoffDefaults()
-	o.KubernetesConfig.SetCloudProviderRateLimitDefaults()
+	p.SetCloudProviderRateLimitDefaults()
 
 	intCasesMixed := []struct {
 		expectedVal int

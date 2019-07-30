@@ -1827,6 +1827,26 @@ func (p *Properties) IsNvidiaDevicePluginCapable() bool {
 	return p.HasNSeriesSKU() && common.IsKubernetesVersionGe(p.OrchestratorProfile.OrchestratorVersion, "1.10.0")
 }
 
+// SetCloudProviderRateLimitDefaults sets default cloudprovider rate limiter config
+func (p *Properties) SetCloudProviderRateLimitDefaults() {
+	if p.OrchestratorProfile.KubernetesConfig.CloudProviderRateLimitQPS == 0 {
+		var rateLimitQPS float64
+		for _, profile := range p.AgentPoolProfiles {
+			if profile.AvailabilityProfile == VirtualMachineScaleSets {
+				rateLimitQPS += (3.0 * float64(profile.Count))
+			}
+		}
+		if rateLimitQPS > DefaultKubernetesCloudProviderRateLimitQPS {
+			p.OrchestratorProfile.KubernetesConfig.CloudProviderRateLimitQPS = rateLimitQPS
+		} else {
+			p.OrchestratorProfile.KubernetesConfig.CloudProviderRateLimitQPS = DefaultKubernetesCloudProviderRateLimitQPS
+		}
+	}
+	if p.OrchestratorProfile.KubernetesConfig.CloudProviderRateLimitBucket == 0 {
+		p.OrchestratorProfile.KubernetesConfig.CloudProviderRateLimitBucket = DefaultKubernetesCloudProviderRateLimitBucket
+	}
+}
+
 // IsReschedulerEnabled checks if the rescheduler addon is enabled
 func (k *KubernetesConfig) IsReschedulerEnabled() bool {
 	return k.IsAddonEnabled(ReschedulerAddonName)
@@ -1859,16 +1879,6 @@ func (k *KubernetesConfig) SetCloudProviderBackoffDefaults() {
 	}
 	if k.CloudProviderBackoffRetries == 0 {
 		k.CloudProviderBackoffRetries = DefaultKubernetesCloudProviderBackoffRetries
-	}
-}
-
-// SetCloudProviderRateLimitDefaults sets default cloudprovider rate limiter config
-func (k *KubernetesConfig) SetCloudProviderRateLimitDefaults() {
-	if k.CloudProviderRateLimitQPS == 0 {
-		k.CloudProviderRateLimitQPS = DefaultKubernetesCloudProviderRateLimitQPS
-	}
-	if k.CloudProviderRateLimitBucket == 0 {
-		k.CloudProviderRateLimitBucket = DefaultKubernetesCloudProviderRateLimitBucket
 	}
 }
 
