@@ -139,7 +139,7 @@ func (az *AzureClient) EnsureDefaultLogAnalyticsWorkspace(ctx context.Context, r
 }
 
 // GetLogAnalyticsWorkspaceInfo gets the details about the workspace
-func (az *AzureClient) GetLogAnalyticsWorkspaceInfo(ctx context.Context, workspaceSubscriptionID, workspaceResourceGroup, workspaceName string) (workspaceId string, workspaceKey string, workspaceLocation string, err error) {
+func (az *AzureClient) GetLogAnalyticsWorkspaceInfo(ctx context.Context, workspaceSubscriptionID, workspaceResourceGroup, workspaceName string) (workspaceID string, workspaceKey string, workspaceLocation string, err error) {
 	if !strings.EqualFold(workspaceSubscriptionID, az.subscriptionID) {
 		az.workspacesClient = oi.NewWorkspacesClientWithBaseURI(az.environment.ResourceManagerEndpoint, workspaceSubscriptionID)
 		az.workspacesClient.Authorizer = az.authorizationClient.Authorizer
