@@ -16,6 +16,8 @@ spec:
     metadata:
       labels:
         k8s-app: rescheduler
+      annotations:
+        scheduler.alpha.kubernetes.io/critical-pod: ''
     spec:
       nodeSelector:
         beta.kubernetes.io/os: linux

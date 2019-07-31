@@ -50,6 +50,7 @@ spec:
       annotations:
         prometheus.io/port: "9090"
         prometheus.io/scrape: "true"
+        scheduler.alpha.kubernetes.io/critical-pod: ""
         scheduler.alpha.kubernetes.io/tolerations: '[{"key":"dedicated","operator":"Equal","value":"master","effect":"NoSchedule"}]'
       labels:
         k8s-app: cilium
