@@ -875,7 +875,7 @@ func (mc *MockAKSEngineClient) ListManagedDisksByResourceGroup(ctx context.Conte
 }
 
 //GetKubernetesClient mock
-func (mc *MockAKSEngineClient) GetKubernetesClient(masterURL, kubeConfig string, interval, timeout time.Duration) (KubernetesClient, error) {
+func (mc *MockAKSEngineClient) GetKubernetesClient(apiserverURL, kubeConfig string, interval, timeout time.Duration) (KubernetesClient, error) {
 	if mc.FailGetKubernetesClient {
 		return nil, errors.New("GetKubernetesClient failed")
 	}
