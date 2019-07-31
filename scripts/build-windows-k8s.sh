@@ -303,7 +303,7 @@ build_kube_binaries_for_upstream_e2e() {
 
 download_nssm() {
 	NSSM_VERSION=2.24
-	NSSM_URL=https://nssm.cc/release/nssm-${NSSM_VERSION}.zip
+	NSSM_URL=https://k8stestinfrabinaries.blob.core.windows.net/nssm-mirror/nssm-${NSSM_VERSION}.zip
 	echo "downloading nssm ..."
 	curl ${NSSM_URL} -o /tmp/nssm-${NSSM_VERSION}.zip
 	unzip -q -d /tmp /tmp/nssm-${NSSM_VERSION}.zip
