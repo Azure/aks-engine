@@ -353,6 +353,26 @@ func (t *Transformer) NormalizeResourcesForK8sMasterUpgrade(logger *logrus.Entry
 
 		if resourceType == nicResourceType {
 			if strings.Contains(resourceName, "variables('masterVMNamePrefix')") {
+				filteredDependencies := []string{}
+				dependencies, ok := resourceMap[dependsOnFieldName].([]interface{})
+				if !ok {
+					continue
+				}
+
+				for dIndex := len(dependencies) - 1; dIndex >= 0; dIndex-- {
+					dependency := dependencies[dIndex].(string)
+					if !(strings.Contains(dependency, nsgResourceType) || strings.Contains(dependency, nsgID)) {
+						filteredDependencies = append(filteredDependencies, dependency)
+					} else {
+						logger.Info(fmt.Sprintf("Removing nsg dependency from resource:%s", resourceName))
+					}
+				}
+
+				if len(filteredDependencies) > 0 {
+					resourceMap[dependsOnFieldName] = filteredDependencies
+				} else {
+					resourceMap[dependsOnFieldName] = []string{}
+				}
 				continue
 			} else {
 				// Remove agent NICs if upgrade master nodes
