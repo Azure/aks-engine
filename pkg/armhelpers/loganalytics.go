@@ -192,7 +192,7 @@ func (az *AzureClient) GetLogAnalyticsWorkspaceInfo(ctx context.Context, workspa
 		return "", "", "", err
 	}
 
-	workspaceID := *resp.WorkspaceProperties.CustomerID
+	workspaceID = *resp.WorkspaceProperties.CustomerID
 	workspaceLocation = *resp.Location
 	result, err := az.workspacesClient.GetSharedKeys(ctx, workspaceResourceGroup, workspaceName)
 	if err != nil {
