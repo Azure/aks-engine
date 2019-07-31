@@ -537,6 +537,10 @@ func (a *Properties) validateAgentPoolProfiles(isUpdate bool) error {
 		if e := agentPoolProfile.validateLoadBalancerBackendAddressPoolIDs(); e != nil {
 			return e
 		}
+
+		if agentPoolProfile.IsEphemeral() {
+			log.Warnf("Ephemeral disks are enabled for Agent Pool %s. This feature in AKS-Engine is experimental, and data could be lost in some cases.", agentPoolProfile.Name)
+		}
 	}
 
 	return nil
@@ -874,6 +878,18 @@ func (a *AgentPoolProfile) validateStorageProfile(orchestratorType string) error
 		case SwarmMode:
 		default:
 			return errors.Errorf("HA volumes are currently unsupported for Orchestrator %s", orchestratorType)
+		}
+	}
+
+	if a.StorageProfile == Ephemeral {
+		switch orchestratorType {
+		case Kubernetes:
+			break
+		case DCOS:
+		case Swarm:
+		case SwarmMode:
+		default:
+			return errors.Errorf("Ephemeral volumes are currently unsupported for Orchestrator %s", orchestratorType)
 		}
 	}
 

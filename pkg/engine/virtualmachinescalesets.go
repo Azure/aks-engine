@@ -666,6 +666,13 @@ func CreateAgentVMSS(cs *api.ContainerService, profile *api.AgentPoolProfile) Vi
 		osDisk.DiskSizeGB = to.Int32Ptr(int32(profile.OSDiskSizeGB))
 	}
 
+	if profile.IsEphemeral() {
+		osDisk.Caching = compute.CachingTypesReadOnly
+		osDisk.DiffDiskSettings = &compute.DiffDiskSettings{
+			Option: compute.Local,
+		}
+	}
+
 	vmssStorageProfile.OsDisk = &osDisk
 
 	vmssVMProfile.StorageProfile = &vmssStorageProfile
