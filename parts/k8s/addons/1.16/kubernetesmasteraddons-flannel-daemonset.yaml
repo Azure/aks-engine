@@ -54,6 +54,8 @@ spec:
       labels:
         tier: node
         app: flannel
+      annotations:
+        scheduler.alpha.kubernetes.io/critical-pod: ''
     spec:
       hostNetwork: true
       nodeSelector:

@@ -7063,6 +7063,7 @@ spec:
       annotations:
         prometheus.io/port: "9090"
         prometheus.io/scrape: "true"
+        scheduler.alpha.kubernetes.io/critical-pod: ""
         scheduler.alpha.kubernetes.io/tolerations: '[{"key":"dedicated","operator":"Equal","value":"master","effect":"NoSchedule"}]'
       labels:
         k8s-app: cilium
@@ -7938,6 +7939,8 @@ spec:
       labels:
         tier: node
         app: flannel
+      annotations:
+        scheduler.alpha.kubernetes.io/critical-pod: ''
     spec:
       hostNetwork: true
       nodeSelector:
@@ -8320,6 +8323,7 @@ spec:
         - kube-proxy
         - --kubeconfig=/var/lib/kubelet/kubeconfig
         - --cluster-cidr=<CIDR>
+        - --feature-gates=ExperimentalCriticalPodAnnotation=true
         - --proxy-mode=<kubeProxyMode>
         image: <img>
         imagePullPolicy: IfNotPresent
@@ -12182,44 +12186,7 @@ func k8sCloudInitArtifactsAuditdRules() (*asset, error) {
 
 var _k8sCloudInitArtifactsCisSh = []byte(`#!/bin/bash
 
-copyPackerFiles() {
-  SYSCTL_CONFIG_SRC=/home/packer/sysctl-d-60-CIS.conf
-  SYSCTL_CONFIG_DEST=/etc/sysctl.d/60-CIS.conf
-  RSYSLOG_CONFIG_SRC=/home/packer/rsyslog-d-60-CIS.conf
-  RSYSLOG_CONFIG_DEST=/etc/rsyslog.d/60-CIS.conf
-  ETC_ISSUE_CONFIG_SRC=/home/packer/etc-issue
-  ETC_ISSUE_CONFIG_DEST=/etc/issue
-  ETC_ISSUE_NET_CONFIG_SRC=/home/packer/etc-issue.net
-  ETC_ISSUE_NET_CONFIG_DEST=/etc/issue.net
-  SSHD_CONFIG_SRC=/home/packer/sshd_config
-  SSHD_CONFIG_DEST=/etc/ssh/sshd_config
-  MODPROBE_CIS_SRC=/home/packer/modprobe-CIS.conf
-  MODPROBE_CIS_DEST=/etc/modprobe.d/CIS.conf
-  PWQUALITY_CONF_SRC=/home/packer/pwquality-CIS.conf
-  PWQUALITY_CONF_DEST=/etc/security/pwquality.conf
-  PAM_D_SU_SRC=/home/packer/pam-d-su
-  PAM_D_SU_DEST=/etc/pam.d/su
-  PROFILE_D_CIS_SH_SRC=/home/packer/profile-d-cis.sh
-  PROFILE_D_CIS_SH_DEST=/etc/profile.d/CIS.sh
-  AUDITD_RULES_SRC=/home/packer/auditd-rules
-  AUDITD_RULES_DEST=/etc/audit/rules.d/CIS.rules
-  if [[ ${UBUNTU_RELEASE} == "16.04" ]]; then
-    SSHD_CONFIG_SRC=/home/packer/sshd_config_1604
-  fi
-  DIR=$(dirname "$SYSCTL_CONFIG_DEST") && mkdir -p ${DIR} && cp $SYSCTL_CONFIG_SRC $SYSCTL_CONFIG_DEST || exit $ERR_CIS_COPY_FILE
-  DIR=$(dirname "$RSYSLOG_CONFIG_DEST") && mkdir -p ${DIR} && cp $RSYSLOG_CONFIG_SRC $RSYSLOG_CONFIG_DEST || exit $ERR_CIS_COPY_FILE
-  DIR=$(dirname "$ETC_ISSUE_CONFIG_DEST") && mkdir -p ${DIR} && cp $ETC_ISSUE_CONFIG_SRC $ETC_ISSUE_CONFIG_DEST || exit $ERR_CIS_COPY_FILE
-  DIR=$(dirname "$ETC_ISSUE_NET_CONFIG_DEST") && mkdir -p ${DIR} && cp $ETC_ISSUE_NET_CONFIG_SRC $ETC_ISSUE_NET_CONFIG_DEST || exit $ERR_CIS_COPY_FILE
-  DIR=$(dirname "$SSHD_CONFIG_DEST") && mkdir -p ${DIR} && cp $SSHD_CONFIG_SRC $SSHD_CONFIG_DEST || exit $ERR_CIS_COPY_FILE
-  DIR=$(dirname "$MODPROBE_CIS_DEST") && mkdir -p ${DIR} && cp $MODPROBE_CIS_SRC $MODPROBE_CIS_DEST || exit $ERR_CIS_COPY_FILE
-  DIR=$(dirname "$PWQUALITY_CONF_DEST") && mkdir -p ${DIR} && cp $PWQUALITY_CONF_SRC $PWQUALITY_CONF_DEST || exit $ERR_CIS_COPY_FILE
-  DIR=$(dirname "$PAM_D_SU_DEST") && mkdir -p ${DIR} && cp $PAM_D_SU_SRC $PAM_D_SU_DEST || exit $ERR_CIS_COPY_FILE
-  DIR=$(dirname "$PROFILE_D_CIS_SH_DEST") && mkdir -p ${DIR} && cp $PROFILE_D_CIS_SH_SRC $PROFILE_D_CIS_SH_DEST || exit $ERR_CIS_COPY_FILE
-  DIR=$(dirname "$AUDITD_RULES_DEST") && mkdir -p ${DIR} && cp $AUDITD_RULES_SRC $AUDITD_RULES_DEST || exit $ERR_CIS_COPY_FILE
-}
-
 assignRootPW() {
-
   if grep '^root:[!*]:' /etc/shadow; then
     SALT=$(openssl rand -base64 5)
     SECRET=$(openssl rand -base64 37)
@@ -12264,18 +12231,10 @@ assignFilePermissions() {
     chmod 600 /etc/passwd- || exit $ERR_CIS_ASSIGN_FILE_PERMISSION
     chmod 600 /etc/shadow- || exit $ERR_CIS_ASSIGN_FILE_PERMISSION
     chmod 600 /etc/group- || exit $ERR_CIS_ASSIGN_FILE_PERMISSION
-    chmod 644 /etc/sysctl.d/60-CIS.conf || exit $ERR_CIS_ASSIGN_FILE_PERMISSION
-    chmod 644 /etc/rsyslog.d/60-CIS.conf || exit $ERR_CIS_ASSIGN_FILE_PERMISSION
-    chmod 644 /etc/modprobe.d/CIS.conf || exit $ERR_CIS_ASSIGN_FILE_PERMISSION
-    chmod 644 /etc/ssh/sshd_config || exit $ERR_CIS_ASSIGN_FILE_PERMISSION
-    chmod 600 /etc/security/pwquality.conf || exit $ERR_CIS_ASSIGN_FILE_PERMISSION
     chmod 644 /etc/default/grub || exit $ERR_CIS_ASSIGN_FILE_PERMISSION
-    chmod 644 /etc/pam.d/su || exit $ERR_CIS_ASSIGN_FILE_PERMISSION
-    chmod 755 /etc/profile.d/CIS.sh || exit $ERR_CIS_ASSIGN_FILE_PERMISSION
     for filepath in /etc/crontab /etc/cron.hourly /etc/cron.daily /etc/cron.weekly /etc/cron.monthly /etc/cron.d; do
       chmod 0600 $filepath || exit $ERR_CIS_ASSIGN_FILE_PERMISSION
     done
-    chmod 640 /etc/audit/rules.d/CIS.rules || exit $ERR_CIS_ASSIGN_FILE_PERMISSION
 }
 
 setPWExpiration() {
@@ -13053,7 +13012,7 @@ ERR_APT_DIST_UPGRADE_TIMEOUT=101 # Timeout waiting for apt-get dist-upgrade to c
 ERR_SYSCTL_RELOAD=103 # Error reloading sysctl config
 ERR_CIS_ASSIGN_ROOT_PW=111 # Error assigning root password in CIS enforcement
 ERR_CIS_ASSIGN_FILE_PERMISSION=112 # Error assigning permission to a file in CIS enforcement
-ERR_CIS_COPY_FILE=113 # Error writing a file to disk for CIS enforcement
+ERR_PACKER_COPY_FILE=113 # Error writing a file to disk during VHD CI
 ERR_CIS_APPLY_PASSWORD_CONFIG=115 # Error applying CIS-recommended passwd configuration
 
 # Azure Stack specific errors
@@ -15156,12 +15115,14 @@ write_files:
   content: !!binary |
     {{CloudInitData "provisionConfigs"}}
 
+{{if not .MasterProfile.IsVHDDistro}}
 - path: /opt/azure/containers/provision_cis.sh
   permissions: "0744"
   encoding: gzip
   owner: root
   content: !!binary |
     {{CloudInitData "provisionCIS"}}
+{{end}}
 
 {{if IsAzureStackCloud}}
 - path: /opt/azure/containers/provision_configs_custom_cloud.sh
@@ -15172,11 +15133,12 @@ write_files:
     {{WrapAsVariable "provisionConfigsCustomCloud"}}
 {{end}}
 
-{{if .MasterProfile.IsCoreOS}}
+{{if not .MasterProfile.IsVHDDistro}}
+    {{if .MasterProfile.IsCoreOS}}
 - path: /opt/bin/health-monitor.sh
-{{else}}
+    {{else}}
 - path: /usr/local/bin/health-monitor.sh
-{{end}}
+    {{end}}
   permissions: "0544"
   encoding: gzip
   owner: root
@@ -15238,6 +15200,7 @@ write_files:
   owner: root
   content: !!binary |
     {{CloudInitData "aptPreferences"}}
+{{end}}
 
 {{if IsIPv6DualStackFeatureEnabled}}
 - path: /etc/systemd/system/dhcpv6.service
@@ -15257,12 +15220,14 @@ write_files:
 
 {{if .OrchestratorProfile.KubernetesConfig.RequiresDocker}}
     {{if not .MasterProfile.IsCoreOS}}
+        {{if not .MasterProfile.IsVHDDistro}}
 - path: /etc/systemd/system/docker.service.d/clear_mount_propagation_flags.conf
   permissions: "0644"
   encoding: gzip
   owner: root
   content: !!binary |
     {{CloudInitData "dockerClearMountPropagationFlags"}}
+         {{end}}
     {{end}}
 
 - path: /etc/systemd/system/docker.service.d/exec_start.conf
@@ -15722,12 +15687,14 @@ write_files:
   content: !!binary |
     {{CloudInitData "provisionConfigs"}}
 
+{{if not .IsVHDDistro}}
 - path: /opt/azure/containers/provision_cis.sh
   permissions: "0744"
   encoding: gzip
   owner: root
   content: !!binary |
     {{CloudInitData "provisionCIS"}}
+{{end}}
 
 {{if IsAzureStackCloud}}
 - path: /opt/azure/containers/provision_configs_custom_cloud.sh
@@ -15738,11 +15705,12 @@ write_files:
     {{WrapAsVariable "provisionConfigsCustomCloud"}}
 {{end}}
 
-{{if .IsCoreOS}}
+{{if not .IsVHDDistro}}
+    {{if .IsCoreOS}}
 - path: /opt/bin/health-monitor.sh
-{{else}}
+    {{else}}
 - path: /usr/local/bin/health-monitor.sh
-{{end}}
+    {{end}}
   permissions: "0544"
   encoding: gzip
   owner: root
@@ -15790,6 +15758,7 @@ write_files:
   owner: root
   content: !!binary |
     {{CloudInitData "aptPreferences"}}
+{{end}}
 
 {{if IsIPv6DualStackFeatureEnabled}}
 - path: /etc/systemd/system/dhcpv6.service
@@ -15809,12 +15778,14 @@ write_files:
 
 {{if .KubernetesConfig.RequiresDocker}}
     {{if not .IsCoreOS}}
+        {{if not .IsVHDDistro}}
 - path: /etc/systemd/system/docker.service.d/clear_mount_propagation_flags.conf
   permissions: "0644"
   encoding: gzip
   owner: "root"
   content: !!binary |
     {{CloudInitData "dockerClearMountPropagationFlags"}}
+        {{end}}
     {{end}}
 
 - path: /etc/systemd/system/docker.service.d/exec_start.conf
@@ -16052,6 +16023,8 @@ spec:
     metadata:
       labels:
         k8s-app: azure-cnms
+      annotations:
+        scheduler.alpha.kubernetes.io/critical-pod: ''
     spec:
       priorityClassName: system-node-critical
       tolerations:
@@ -16667,6 +16640,8 @@ spec:
     metadata:
       labels:
         k8s-app: azure-npm
+      annotations:
+        scheduler.alpha.kubernetes.io/critical-pod: ''
     spec:
       priorityClassName: system-node-critical
       tolerations:
@@ -17140,6 +17115,7 @@ spec:
         # This, along with the CriticalAddonsOnly toleration below, marks the pod as a critical
         # add-on, ensuring it gets priority scheduling and that its resources are reserved
         # if it ever gets evicted.
+        scheduler.alpha.kubernetes.io/critical-pod: ''
         cluster-autoscaler.kubernetes.io/safe-to-evict: 'true'
     spec:
       nodeSelector:
@@ -17225,6 +17201,12 @@ spec:
     metadata:
       labels:
         k8s-app: calico-node
+      annotations:
+        # This, along with the CriticalAddonsOnly toleration below,
+        # marks the pod as a critical add-on, ensuring it gets
+        # priority scheduling and that its resources are reserved
+        # if it ever gets evicted.
+        scheduler.alpha.kubernetes.io/critical-pod: ''
     spec:
       nodeSelector:
         beta.kubernetes.io/os: linux
@@ -17439,6 +17421,8 @@ spec:
     metadata:
       labels:
         k8s-app: calico-typha-autoscaler
+      annotations:
+        scheduler.alpha.kubernetes.io/critical-pod: ''
     spec:
       priorityClassName: system-cluster-critical
       securityContext:
@@ -17902,6 +17886,8 @@ spec:
     metadata:
       labels:
         k8s-app: heapster
+      annotations:
+        scheduler.alpha.kubernetes.io/critical-pod: ''
     spec:
       priorityClassName: system-node-critical
       containers:
@@ -18065,6 +18051,8 @@ spec:
     metadata:
       labels:
         k8s-app: rescheduler
+      annotations:
+        scheduler.alpha.kubernetes.io/critical-pod: ''
     spec:
       nodeSelector:
         beta.kubernetes.io/os: linux
@@ -18428,6 +18416,8 @@ spec:
     type: RollingUpdate
   template:
     metadata:
+      annotations:
+        scheduler.alpha.kubernetes.io/critical-pod: ""
       labels:
         k8s-app: nvidia-device-plugin
     spec:
