@@ -151,6 +151,7 @@ Docker images pre-pulled:
   - k8s.gcr.io/hyperkube-amd64:v1.10.13
   - k8s.gcr.io/cloud-controller-manager-amd64:v1.10.12
   - k8s.gcr.io/hyperkube-amd64:v1.10.12
+  - registry:2.7.1
 WARNING: 75% of /dev/sda1 is used
 Install completed successfully on  Tue Jul 30 22:50:32 UTC 2019
 VSTS Build NUMBER: 20190730.2
