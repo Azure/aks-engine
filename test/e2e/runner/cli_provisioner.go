@@ -169,7 +169,9 @@ func (cli *CLIProvisioner) provision() error {
 			}
 			subnets = append(subnets, masterSubnetName)
 			for i, pool := range cs.ContainerService.Properties.AgentPoolProfiles {
-				subnetName := fmt.Sprintf("%sCustomSubnet", pool.Name)
+				r := rand.New(rand.NewSource(time.Now().UnixNano()))
+				suffix := r.Intn(99999)
+				subnetName := fmt.Sprintf("%s-CustomSubnet-%v", pool.Name, suffix)
 				err = cli.Account.CreateSubnet(vnetName, subnetName, fmt.Sprintf("10.239.%d.0/24", i+1))
 				if err != nil {
 					return errors.Errorf("Error trying to create subnet:%s", err.Error())
