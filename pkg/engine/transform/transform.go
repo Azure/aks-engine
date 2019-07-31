@@ -171,8 +171,7 @@ func (t *Transformer) NormalizeForK8sVMASScalingUp(logger *logrus.Entry, templat
 
 		for dIndex := len(dependencies) - 1; dIndex >= 0; dIndex-- {
 			dependency := dependencies[dIndex].(string)
-			if strings.Contains(dependency, nsgResourceType) || strings.Contains(dependency, nsgID) ||
-				strings.Contains(dependency, rtResourceType) || strings.Contains(dependency, rtID) ||
+			if strings.Contains(dependency, rtResourceType) || strings.Contains(dependency, rtID) ||
 				strings.Contains(dependency, vnetResourceType) || strings.Contains(dependency, vnetID) ||
 				strings.Contains(dependency, vmasResourceType) {
 				dependencies = append(dependencies[:dIndex], dependencies[dIndex+1:]...)
@@ -341,7 +340,7 @@ func (t *Transformer) NormalizeResourcesForK8sMasterUpgrade(logger *logrus.Entry
 			continue
 		}
 
-		if !(resourceType == vmResourceType || resourceType == vmExtensionType || resourceType == nicResourceType || resourceType == vnetResourceType || resourceType == nsgResourceType) {
+		if !(resourceType == vmResourceType || resourceType == vmExtensionType || resourceType == nicResourceType || resourceType == vnetResourceType || resourceType == nsgResourceType || resourceType == lbResourceType) {
 			continue
 		}
 
@@ -349,6 +348,32 @@ func (t *Transformer) NormalizeResourcesForK8sMasterUpgrade(logger *logrus.Entry
 		if !ok {
 			logger.Warnf("Template improperly formatted for field name: %s", nameFieldName)
 			continue
+		}
+
+		if resourceType == lbResourceType {
+			if strings.Contains(resourceName, "variables('masterInternalLbName')") {
+				filteredDependencies := []string{}
+				dependencies, ok := resourceMap[dependsOnFieldName].([]interface{})
+				if !ok {
+					continue
+				}
+
+				for dIndex := len(dependencies) - 1; dIndex >= 0; dIndex-- {
+					dependency := dependencies[dIndex].(string)
+					if !(strings.Contains(dependency, nsgResourceType) || strings.Contains(dependency, nsgID)) {
+						filteredDependencies = append(filteredDependencies, dependency)
+					} else {
+						logger.Info(fmt.Sprintf("Removing nsg dependency from resource:%s", resourceName))
+					}
+				}
+
+				if len(filteredDependencies) > 0 {
+					resourceMap[dependsOnFieldName] = filteredDependencies
+				} else {
+					resourceMap[dependsOnFieldName] = []string{}
+				}
+				continue
+			}
 		}
 
 		if resourceType == nicResourceType {
