@@ -18,7 +18,7 @@
         "storageProfile": "Ephemeral"
       },
       {
-        "name": "agentwin",
+        "name": "agentwfast",
         "count": 2,
         "vmSize": "Standard_D2s_v3",
         "availabilityProfile": "VirtualMachineScaleSets",

@@ -537,6 +537,10 @@ func (a *Properties) validateAgentPoolProfiles(isUpdate bool) error {
 		if e := agentPoolProfile.validateLoadBalancerBackendAddressPoolIDs(); e != nil {
 			return e
 		}
+
+		if agentPoolProfile.IsEphemeral() {
+			log.Warnf("Ephemeral disks are enabled for Agent Pool %s. This feature in AKS-Engine is experimental, and data could be lost in some cases.", agentPoolProfile.Name)
+		}
 	}
 
 	return nil
