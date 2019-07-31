@@ -1829,21 +1829,33 @@ func (p *Properties) IsNvidiaDevicePluginCapable() bool {
 
 // SetCloudProviderRateLimitDefaults sets default cloudprovider rate limiter config
 func (p *Properties) SetCloudProviderRateLimitDefaults() {
-	if p.OrchestratorProfile.KubernetesConfig.CloudProviderRateLimitQPS == 0 {
-		var rateLimitQPS float64
-		for _, profile := range p.AgentPoolProfiles {
-			if profile.AvailabilityProfile == VirtualMachineScaleSets {
-				rateLimitQPS += (4.0 * float64(profile.Count))
+	if p.OrchestratorProfile.KubernetesConfig.CloudProviderRateLimitBucket == 0 {
+		if p.HasVMSSAgentPool() {
+			var maxVMSSNodesSupported int
+			if p.HostedMasterProfile != nil {
+				maxVMSSNodesSupported = 100
+			} else {
+				maxVMSSNodesSupported = 250
 			}
+			var rateLimitBucket int
+			for _, profile := range p.AgentPoolProfiles {
+				if profile.AvailabilityProfile == VirtualMachineScaleSets {
+					rateLimitBucket += maxVMSSNodesSupported
+				}
+
+			}
+			p.OrchestratorProfile.KubernetesConfig.CloudProviderRateLimitBucket = rateLimitBucket
+		} else {
+			p.OrchestratorProfile.KubernetesConfig.CloudProviderRateLimitBucket = DefaultKubernetesCloudProviderRateLimitBucket
 		}
-		if rateLimitQPS > DefaultKubernetesCloudProviderRateLimitQPS {
-			p.OrchestratorProfile.KubernetesConfig.CloudProviderRateLimitQPS = rateLimitQPS
+	}
+	if p.OrchestratorProfile.KubernetesConfig.CloudProviderRateLimitQPS == 0 {
+		const minQPSToBucketFactor float64 = 0.1
+		if (DefaultKubernetesCloudProviderRateLimitQPS / float64(p.OrchestratorProfile.KubernetesConfig.CloudProviderRateLimitBucket)) < minQPSToBucketFactor {
+			p.OrchestratorProfile.KubernetesConfig.CloudProviderRateLimitQPS = float64(p.OrchestratorProfile.KubernetesConfig.CloudProviderRateLimitBucket) * minQPSToBucketFactor
 		} else {
 			p.OrchestratorProfile.KubernetesConfig.CloudProviderRateLimitQPS = DefaultKubernetesCloudProviderRateLimitQPS
 		}
-	}
-	if p.OrchestratorProfile.KubernetesConfig.CloudProviderRateLimitBucket == 0 {
-		p.OrchestratorProfile.KubernetesConfig.CloudProviderRateLimitBucket = DefaultKubernetesCloudProviderRateLimitBucket
 	}
 }
 
