@@ -372,22 +372,22 @@ func autofillApimodel(dc *deployCmd) error {
 				log.Infoln("creating default log analytics workspace")
 				workspaceResourceID, err = dc.client.EnsureDefaultLogAnalyticsWorkspace(ctx, dc.resourceGroup, dc.location)
 				if err != nil {
-					return err
+					return errors.Wrap(err, "apimodel: Failed to create default log analytics workspace for container monitoring addon")
 				}
 				log.Infoln("successfully created default log analytics workspace:", workspaceResourceID)
 			}
 
 			resourceParts := strings.Split(workspaceResourceID, "/")
 			if len(resourceParts) != 9 {
-				return fmt.Errorf("%s is not a valid resourceID", workspaceResourceID)
+				return errors.Errorf("%s is not a valid azure resource id", workspaceResourceID)
 			}
 			workspaceSubscriptionID := resourceParts[2]
 			workspaceResourceGroup := resourceParts[4]
 			workspaceName := resourceParts[8]
-			log.Infoln("Retrieving log analytics workspace Guid, Key and location details")
+			log.Infoln("Retrieving log analytics workspace Guid, Key and location details for the workspace resource:", workspaceResourceID)
 			wsID, wsKey, wsLocation, err := dc.client.GetLogAnalyticsWorkspaceInfo(ctx, workspaceSubscriptionID, workspaceResourceGroup, workspaceName)
 			if err != nil {
-				return err
+				return errors.Wrap(err, "apimodel: Failed to get the workspace Guid, Key and location details ")
 			}
 			log.Infoln("successfully retrieved log analytics workspace details")
 			log.Infoln("log analytics workspace id: ", wsID)
@@ -396,7 +396,7 @@ func autofillApimodel(dc *deployCmd) error {
 			log.Infoln("adding container insights solution to log analytics workspace: ", workspaceResourceID)
 			_, err = dc.client.AddContainerInsightsSolution(ctx, workspaceSubscriptionID, workspaceResourceGroup, workspaceName, wsLocation)
 			if err != nil {
-				return err
+				return errors.Wrap(err, "apimodel: Failed to get add container insights solution")
 			}
 			log.Infoln("successfully added container insights solution to log analytics workspace: ", workspaceResourceID)
 
