@@ -42,6 +42,7 @@ type Config struct {
 	TenantID              string `envconfig:"TENANT_ID"`
 	ImageName             string `envconfig:"IMAGE_NAME"`
 	ImageResourceGroup    string `envconfig:"IMAGE_RESOURCE_GROUP"`
+	DebugCrashingPods     bool   `envconfig:"DEBUG_CRASHING_PODS" default:"false"`
 
 	ClusterDefinitionPath     string // The original template we want to use to build the cluster from.
 	ClusterDefinitionTemplate string // This is the template after we splice in the environment variables
