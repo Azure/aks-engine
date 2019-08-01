@@ -328,9 +328,9 @@ func autofillApimodel(dc *deployCmd) error {
 			appURL := fmt.Sprintf("https://%s/", appName)
 			var replyURLs *[]string
 			var requiredResourceAccess *[]graphrbac.RequiredResourceAccess
-			applicationResp, servicePrincipalObjectID, secret, err := dc.client.CreateApp(ctx, appName, appURL, replyURLs, requiredResourceAccess)
-			if err != nil {
-				return errors.Wrap(err, "apimodel invalid: ServicePrincipalProfile was empty, and we failed to create valid credentials")
+			applicationResp, servicePrincipalObjectID, secret, createErr := dc.client.CreateApp(ctx, appName, appURL, replyURLs, requiredResourceAccess)
+			if createErr != nil {
+				return errors.Wrap(createErr, "apimodel invalid: ServicePrincipalProfile was empty, and we failed to create valid credentials")
 			}
 			applicationID := to.String(applicationResp.AppID)
 			log.Warnf("created application with applicationID (%s) and servicePrincipalObjectID (%s).", applicationID, servicePrincipalObjectID)
