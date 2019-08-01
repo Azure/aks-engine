@@ -247,7 +247,6 @@ func (dc *deployCmd) loadAPIModel() error {
 }
 
 func autofillApimodel(dc *deployCmd) error {
-	var err error
 
 	if dc.containerService.Properties.LinuxProfile != nil {
 		if dc.containerService.Properties.LinuxProfile.AdminUsername == "" {
@@ -280,7 +279,7 @@ func autofillApimodel(dc *deployCmd) error {
 		}
 	}
 
-	if _, err = os.Stat(dc.outputDirectory); !dc.forceOverwrite && err == nil {
+	if _, err := os.Stat(dc.outputDirectory); !dc.forceOverwrite && err == nil {
 		return errors.Errorf("Output directory already exists and forceOverwrite flag is not set: %s", dc.outputDirectory)
 	}
 
@@ -300,7 +299,7 @@ func autofillApimodel(dc *deployCmd) error {
 			Locale: dc.locale,
 		}
 		var publicKey string
-		_, publicKey, err = helpers.CreateSaveSSH(dc.containerService.Properties.LinuxProfile.AdminUsername, dc.outputDirectory, translator)
+		_, publicKey, err := helpers.CreateSaveSSH(dc.containerService.Properties.LinuxProfile.AdminUsername, dc.outputDirectory, translator)
 		if err != nil {
 			return errors.Wrap(err, "Failed to generate SSH Key")
 		}
@@ -310,7 +309,7 @@ func autofillApimodel(dc *deployCmd) error {
 
 	ctx, cancel := context.WithTimeout(context.Background(), armhelpers.DefaultARMOperationTimeout)
 	defer cancel()
-	_, err = dc.client.EnsureResourceGroup(ctx, dc.resourceGroup, dc.location, nil)
+	_, err := dc.client.EnsureResourceGroup(ctx, dc.resourceGroup, dc.location, nil)
 	if err != nil {
 		return err
 	}
