@@ -14403,6 +14403,7 @@ configureK8s() {
     "userAssignedIdentityID": "${USER_ASSIGNED_IDENTITY_ID}",
     "useInstanceMetadata": ${USE_INSTANCE_METADATA},
     "loadBalancerSku": "${LOAD_BALANCER_SKU}",
+    "disableOutboundSNAT": ${LOAD_BALANCER_DISABLE_OUTBOUND_SNAT},
     "excludeMasterFromStandardLB": ${EXCLUDE_MASTER_FROM_STANDARD_LB},
     "providerVaultName": "${KMS_PROVIDER_VAULT_NAME}",
     "maximumLoadBalancerRuleCount": ${MAXIMUM_LOADBALANCER_RULE_COUNT},

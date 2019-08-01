@@ -1218,6 +1218,7 @@ func convertFeatureFlagsToVLabs(api *FeatureFlags, vlabs *vlabs.FeatureFlags) {
 	vlabs.BlockOutboundInternet = api.BlockOutboundInternet
 	vlabs.EnableIPv6DualStack = api.EnableIPv6DualStack
 	vlabs.EnableTelemetry = api.EnableTelemetry
+	vlabs.DisableOutboundSNAT = api.DisableOutboundSNAT
 }
 
 func convertCloudProfileToVLabs(api *CustomCloudProfile, vlabsccp *vlabs.CustomCloudProfile) {

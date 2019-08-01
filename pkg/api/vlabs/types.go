@@ -58,6 +58,7 @@ type FeatureFlags struct {
 	BlockOutboundInternet    bool `json:"blockOutboundInternet,omitempty"`
 	EnableIPv6DualStack      bool `json:"enableIPv6DualStack,omitempty"`
 	EnableTelemetry          bool `json:"enableTelemetry,omitempty"`
+	DisableOutboundSNAT      bool `json:"disableOutboundSnat,omitempty"`
 }
 
 // ServicePrincipalProfile contains the client and secret used by the cluster for Azure Resource CRUD
