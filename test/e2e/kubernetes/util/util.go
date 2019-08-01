@@ -56,3 +56,13 @@ func AddToSSHKeyChain(keyfile string) error {
 	}
 	return nil
 }
+
+// CombineCommandErrorAndOutput is a helper func which creates a new error
+// out of the return of cmd.CombinedOutput() error and output
+func CombineCommandErrorAndOutput(err error, output []byte) error {
+	if err == nil {
+		return nil
+	}
+
+	return fmt.Errorf("Shell error: %s\nOutput:\n%s", err, output)
+}

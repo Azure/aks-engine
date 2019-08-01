@@ -128,8 +128,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			cmd := exec.Command("scp", "-i", masterSSHPrivateKeyFilepath, "-P", masterSSHPort, "-o", "StrictHostKeyChecking=no", filepath.Join(ScriptsDir, hostOSDNSValidateScript), master+":/tmp/"+hostOSDNSValidateScript)
 			util.PrintCommand(cmd)
 			out, err := cmd.CombinedOutput()
-			log.Printf("%s\n", out)
-			Expect(err).NotTo(HaveOccurred())
+			Expect(util.CombineCommandErrorAndOutput(err, out)).NotTo(HaveOccurred())
 			var conn *remote.Connection
 			conn, err = remote.NewConnection(kubeConfig.GetServerName(), masterSSHPort, eng.ExpandedDefinition.Properties.LinuxProfile.AdminUsername, masterSSHPrivateKeyFilepath)
 			Expect(err).NotTo(HaveOccurred())
@@ -141,8 +140,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 					cmd = exec.Command("ssh", "-A", "-i", masterSSHPrivateKeyFilepath, "-p", masterSSHPort, "-o", "ConnectTimeout=10", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-o", "LogLevel=ERROR", master, "ssh", "-o", "ConnectTimeout=10", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-o", "LogLevel=ERROR", node.Metadata.Name, netConfigValidationCommand)
 					util.PrintCommand(cmd)
 					out, err = cmd.CombinedOutput()
-					log.Printf("%s\n", out)
-					Expect(err).NotTo(HaveOccurred())
+					Expect(util.CombineCommandErrorAndOutput(err, out)).NotTo(HaveOccurred())
 				}
 			}
 		})
@@ -165,15 +163,13 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				cmd := exec.Command("ssh", "-i", masterSSHPrivateKeyFilepath, "-p", masterSSHPort, "-o", "ConnectTimeout=10", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-o", "LogLevel=ERROR", master, lsbReleaseCmd)
 				util.PrintCommand(cmd)
 				out, err := cmd.CombinedOutput()
-				log.Printf("%s\n", out)
-				Expect(err).NotTo(HaveOccurred())
+				Expect(util.CombineCommandErrorAndOutput(err, out)).NotTo(HaveOccurred())
 
 				kernelVerCmd := fmt.Sprintf("cat /proc/version")
 				cmd = exec.Command("ssh", "-i", masterSSHPrivateKeyFilepath, "-p", masterSSHPort, "-o", "ConnectTimeout=10", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-o", "LogLevel=ERROR", master, kernelVerCmd)
 				util.PrintCommand(cmd)
 				out, err = cmd.CombinedOutput()
-				log.Printf("%s\n", out)
-				Expect(err).NotTo(HaveOccurred())
+				Expect(util.CombineCommandErrorAndOutput(err, out)).NotTo(HaveOccurred())
 			} else {
 				Skip("This is not an ubuntu master")
 			}
@@ -191,8 +187,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 					cmd := exec.Command("ssh", "-A", "-i", masterSSHPrivateKeyFilepath, "-p", masterSSHPort, "-o", "ConnectTimeout=10", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-o", "LogLevel=ERROR", master, "ssh", "-o", "ConnectTimeout=10", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-o", "LogLevel=ERROR", node.Metadata.Name, dockerVersionCmd)
 					util.PrintCommand(cmd)
 					out, err := cmd.CombinedOutput()
-					log.Printf("%s\n", out)
-					Expect(err).NotTo(HaveOccurred())
+					Expect(util.CombineCommandErrorAndOutput(err, out)).NotTo(HaveOccurred())
 				}
 			} else {
 				Skip("Skip docker validations on non-docker-backed clusters")
@@ -213,8 +208,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 						cmd := exec.Command("ssh", "-A", "-i", masterSSHPrivateKeyFilepath, "-p", masterSSHPort, "-o", "ConnectTimeout=10", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-o", "LogLevel=ERROR", master, "ssh", "-o", "ConnectTimeout=10", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-o", "LogLevel=ERROR", node.Metadata.Name, rootPasswdCmd)
 						util.PrintCommand(cmd)
 						out, err := cmd.CombinedOutput()
-						log.Printf("%s\n", out)
-						Expect(err).To(HaveOccurred())
+						Expect(util.CombineCommandErrorAndOutput(err, out)).To(HaveOccurred())
 					}
 				}
 			} else {
@@ -233,8 +227,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				cmd := exec.Command("scp", "-i", masterSSHPrivateKeyFilepath, "-P", masterSSHPort, "-o", "StrictHostKeyChecking=no", filepath.Join(ScriptsDir, netConfigValidateScript), master+":/tmp/"+netConfigValidateScript)
 				util.PrintCommand(cmd)
 				out, err := cmd.CombinedOutput()
-				log.Printf("%s\n", out)
-				Expect(err).NotTo(HaveOccurred())
+				Expect(util.CombineCommandErrorAndOutput(err, out)).NotTo(HaveOccurred())
 				var conn *remote.Connection
 				conn, err = remote.NewConnection(kubeConfig.GetServerName(), masterSSHPort, eng.ExpandedDefinition.Properties.LinuxProfile.AdminUsername, masterSSHPrivateKeyFilepath)
 				Expect(err).NotTo(HaveOccurred())
@@ -245,8 +238,8 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 						netConfigValidationCommand := fmt.Sprintf("\"/tmp/%s\"", netConfigValidateScript)
 						cmd = exec.Command("ssh", "-A", "-i", masterSSHPrivateKeyFilepath, "-p", masterSSHPort, "-o", "ConnectTimeout=10", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-o", "LogLevel=ERROR", master, "ssh", "-o", "ConnectTimeout=10", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-o", "LogLevel=ERROR", node.Metadata.Name, netConfigValidationCommand)
 						util.PrintCommand(cmd)
-						_, err = cmd.CombinedOutput()
-						Expect(err).NotTo(HaveOccurred())
+						out, err = cmd.CombinedOutput()
+						Expect(util.CombineCommandErrorAndOutput(err, out)).NotTo(HaveOccurred())
 					}
 				}
 			} else {
@@ -265,8 +258,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				cmd := exec.Command("scp", "-i", masterSSHPrivateKeyFilepath, "-P", masterSSHPort, "-o", "StrictHostKeyChecking=no", filepath.Join(ScriptsDir, CISFilesValidateScript), master+":/tmp/"+CISFilesValidateScript)
 				util.PrintCommand(cmd)
 				out, err := cmd.CombinedOutput()
-				log.Printf("%s\n", out)
-				Expect(err).NotTo(HaveOccurred())
+				Expect(util.CombineCommandErrorAndOutput(err, out)).NotTo(HaveOccurred())
 				var conn *remote.Connection
 				conn, err = remote.NewConnection(kubeConfig.GetServerName(), masterSSHPort, eng.ExpandedDefinition.Properties.LinuxProfile.AdminUsername, masterSSHPrivateKeyFilepath)
 				Expect(err).NotTo(HaveOccurred())
@@ -276,8 +268,8 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 					CISValidationCommand := fmt.Sprintf("\"/tmp/%s\"", CISFilesValidateScript)
 					cmd = exec.Command("ssh", "-A", "-i", masterSSHPrivateKeyFilepath, "-p", masterSSHPort, "-o", "ConnectTimeout=10", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-o", "LogLevel=ERROR", master, "ssh", "-o", "ConnectTimeout=10", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-o", "LogLevel=ERROR", node.Metadata.Name, CISValidationCommand)
 					util.PrintCommand(cmd)
-					_, err = cmd.CombinedOutput()
-					Expect(err).NotTo(HaveOccurred())
+					out, err = cmd.CombinedOutput()
+					Expect(util.CombineCommandErrorAndOutput(err, out)).NotTo(HaveOccurred())
 				}
 			} else {
 				Skip("This config is only available on VHD")
@@ -295,8 +287,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				cmd := exec.Command("scp", "-i", masterSSHPrivateKeyFilepath, "-P", masterSSHPort, "-o", "StrictHostKeyChecking=no", filepath.Join(ScriptsDir, modprobeConfigValidateScript), master+":/tmp/"+modprobeConfigValidateScript)
 				util.PrintCommand(cmd)
 				out, err := cmd.CombinedOutput()
-				log.Printf("%s\n", out)
-				Expect(err).NotTo(HaveOccurred())
+				Expect(util.CombineCommandErrorAndOutput(err, out)).NotTo(HaveOccurred())
 				var conn *remote.Connection
 				conn, err = remote.NewConnection(kubeConfig.GetServerName(), masterSSHPort, eng.ExpandedDefinition.Properties.LinuxProfile.AdminUsername, masterSSHPrivateKeyFilepath)
 				Expect(err).NotTo(HaveOccurred())
@@ -307,8 +298,8 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 						netConfigValidationCommand := fmt.Sprintf("\"/tmp/%s\"", modprobeConfigValidateScript)
 						cmd = exec.Command("ssh", "-A", "-i", masterSSHPrivateKeyFilepath, "-p", masterSSHPort, "-o", "ConnectTimeout=10", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-o", "LogLevel=ERROR", master, "ssh", "-o", "ConnectTimeout=10", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-o", "LogLevel=ERROR", node.Metadata.Name, netConfigValidationCommand)
 						util.PrintCommand(cmd)
-						_, err = cmd.CombinedOutput()
-						Expect(err).NotTo(HaveOccurred())
+						out, err = cmd.CombinedOutput()
+						Expect(util.CombineCommandErrorAndOutput(err, out)).NotTo(HaveOccurred())
 					}
 				}
 			} else {
@@ -326,8 +317,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			cmd := exec.Command("scp", "-i", masterSSHPrivateKeyFilepath, "-P", masterSSHPort, "-o", "StrictHostKeyChecking=no", filepath.Join(ScriptsDir, installedPackagesValidateScript), master+":/tmp/"+installedPackagesValidateScript)
 			util.PrintCommand(cmd)
 			out, err := cmd.CombinedOutput()
-			log.Printf("%s\n", out)
-			Expect(err).NotTo(HaveOccurred())
+			Expect(util.CombineCommandErrorAndOutput(err, out)).NotTo(HaveOccurred())
 			var conn *remote.Connection
 			conn, err = remote.NewConnection(kubeConfig.GetServerName(), masterSSHPort, eng.ExpandedDefinition.Properties.LinuxProfile.AdminUsername, masterSSHPrivateKeyFilepath)
 			Expect(err).NotTo(HaveOccurred())
@@ -338,8 +328,8 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 					netConfigValidationCommand := fmt.Sprintf("\"/tmp/%s\"", installedPackagesValidateScript)
 					cmd = exec.Command("ssh", "-A", "-i", masterSSHPrivateKeyFilepath, "-p", masterSSHPort, "-o", "ConnectTimeout=10", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-o", "LogLevel=ERROR", master, "ssh", "-o", "ConnectTimeout=10", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-o", "LogLevel=ERROR", node.Metadata.Name, netConfigValidationCommand)
 					util.PrintCommand(cmd)
-					_, err = cmd.CombinedOutput()
-					Expect(err).NotTo(HaveOccurred())
+					out, err = cmd.CombinedOutput()
+					Expect(util.CombineCommandErrorAndOutput(err, out)).NotTo(HaveOccurred())
 				}
 			}
 		})
@@ -367,8 +357,8 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 						sshdConfigValidationCommand := fmt.Sprintf("\"/tmp/%s\"", sshdConfigValidateScript)
 						cmd = exec.Command("ssh", "-A", "-i", masterSSHPrivateKeyFilepath, "-p", masterSSHPort, "-o", "ConnectTimeout=10", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-o", "LogLevel=ERROR", master, "ssh", "-o", "ConnectTimeout=10", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-o", "LogLevel=ERROR", node.Metadata.Name, sshdConfigValidationCommand)
 						util.PrintCommand(cmd)
-						_, err = cmd.CombinedOutput()
-						Expect(err).NotTo(HaveOccurred())
+						out, err = cmd.CombinedOutput()
+						Expect(util.CombineCommandErrorAndOutput(err, out)).NotTo(HaveOccurred())
 					}
 				}
 			} else {
@@ -387,8 +377,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				cmd := exec.Command("scp", "-i", masterSSHPrivateKeyFilepath, "-P", masterSSHPort, "-o", "StrictHostKeyChecking=no", filepath.Join(ScriptsDir, pwQualityValidateScript), master+":/tmp/"+pwQualityValidateScript)
 				util.PrintCommand(cmd)
 				out, err := cmd.CombinedOutput()
-				log.Printf("%s\n", out)
-				Expect(err).NotTo(HaveOccurred())
+				Expect(util.CombineCommandErrorAndOutput(err, out)).NotTo(HaveOccurred())
 				var conn *remote.Connection
 				conn, err = remote.NewConnection(kubeConfig.GetServerName(), masterSSHPort, eng.ExpandedDefinition.Properties.LinuxProfile.AdminUsername, masterSSHPrivateKeyFilepath)
 				Expect(err).NotTo(HaveOccurred())
@@ -399,8 +388,8 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 						pwQualityValidationCommand := fmt.Sprintf("\"/tmp/%s\"", pwQualityValidateScript)
 						cmd = exec.Command("ssh", "-A", "-i", masterSSHPrivateKeyFilepath, "-p", masterSSHPort, "-o", "ConnectTimeout=10", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-o", "LogLevel=ERROR", master, "ssh", "-o", "ConnectTimeout=10", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-o", "LogLevel=ERROR", node.Metadata.Name, pwQualityValidationCommand)
 						util.PrintCommand(cmd)
-						_, err = cmd.CombinedOutput()
-						Expect(err).NotTo(HaveOccurred())
+						out, err = cmd.CombinedOutput()
+						Expect(util.CombineCommandErrorAndOutput(err, out)).NotTo(HaveOccurred())
 					}
 				}
 			} else {
@@ -430,8 +419,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				cmd := exec.Command("scp", "-i", masterSSHPrivateKeyFilepath, "-P", masterSSHPort, "-o", "StrictHostKeyChecking=no", filepath.Join(ScriptsDir, auditdValidateScript), master+":/tmp/"+auditdValidateScript)
 				util.PrintCommand(cmd)
 				out, err := cmd.CombinedOutput()
-				log.Printf("%s\n", out)
-				Expect(err).NotTo(HaveOccurred())
+				Expect(util.CombineCommandErrorAndOutput(err, out)).NotTo(HaveOccurred())
 				var conn *remote.Connection
 				conn, err = remote.NewConnection(kubeConfig.GetServerName(), masterSSHPort, eng.ExpandedDefinition.Properties.LinuxProfile.AdminUsername, masterSSHPrivateKeyFilepath)
 				Expect(err).NotTo(HaveOccurred())
@@ -445,8 +433,8 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 					auditdValidationCommand := fmt.Sprintf("\"ENABLED=%t /tmp/%s\"", enabled, auditdValidateScript)
 					cmd = exec.Command("ssh", "-A", "-i", masterSSHPrivateKeyFilepath, "-p", masterSSHPort, "-o", "ConnectTimeout=10", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-o", "LogLevel=ERROR", master, "ssh", "-o", "ConnectTimeout=10", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-o", "LogLevel=ERROR", node.Metadata.Name, auditdValidationCommand)
 					util.PrintCommand(cmd)
-					_, err = cmd.CombinedOutput()
-					Expect(err).NotTo(HaveOccurred())
+					out, err = cmd.CombinedOutput()
+					Expect(util.CombineCommandErrorAndOutput(err, out)).NotTo(HaveOccurred())
 				}
 			} else {
 				Skip("This config is only available on VHD")
@@ -491,8 +479,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 					util.PrintCommand(cmd)
 					var out []byte
 					out, err = cmd.CombinedOutput()
-					log.Printf("%s\n", out)
-					Expect(err).NotTo(HaveOccurred())
+					Expect(util.CombineCommandErrorAndOutput(err, out)).NotTo(HaveOccurred())
 				}
 			}
 
