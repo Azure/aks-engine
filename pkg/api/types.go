@@ -1830,13 +1830,8 @@ func (p *Properties) IsNvidiaDevicePluginCapable() bool {
 // SetCloudProviderRateLimitDefaults sets default cloudprovider rate limiter config
 func (p *Properties) SetCloudProviderRateLimitDefaults() {
 	if p.OrchestratorProfile.KubernetesConfig.CloudProviderRateLimitBucket == 0 {
-		if p.HasVMSSAgentPool() {
-			var maxVMSSNodesSupported int
-			if p.HostedMasterProfile != nil {
-				maxVMSSNodesSupported = 100
-			} else {
-				maxVMSSNodesSupported = 250
-			}
+		if p.HasVMSSAgentPool() && !p.IsHostedMasterProfile() {
+			maxVMSSNodesSupported := 250
 			var rateLimitBucket int
 			for _, profile := range p.AgentPoolProfiles {
 				if profile.AvailabilityProfile == VirtualMachineScaleSets {
