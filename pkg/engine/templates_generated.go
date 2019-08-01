@@ -28744,6 +28744,18 @@ var _windowsparamsT = []byte(` {{if IsKubernetes}}
         "description": "Password for the Windows Swarm Agent Virtual Machines."
       }
     },
+    "agentWindowsImageName": {
+      "type": "string",
+      "metadata": {
+        "description": "Image name when specifying a Windows image reference."
+      }
+    },
+    "agentWindowsImageResourceGroup": {
+      "type": "string",
+      "metadata": {
+        "description": "Resource group when specifying a Windows image reference."
+      }
+    },
     "agentWindowsVersion": {
       "defaultValue": "latest",
       "metadata": {

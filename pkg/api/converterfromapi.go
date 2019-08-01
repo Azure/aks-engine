@@ -600,12 +600,12 @@ func convertWindowsProfileToVLabs(api *WindowsProfile, vlabsProfile *vlabs.Windo
 	vlabsProfile.AdminUsername = api.AdminUsername
 	vlabsProfile.AdminPassword = api.AdminPassword
 	if (api.ImageRef != nil) {
-		vlabs.ImageRef = &ImageReference{}
-		vlabs.ImageRef.Gallery = api.ImageRef.Gallery
-		vlabs.ImageRef.Name = api.ImageRef.Name
-		vlabs.ImageRef.ResourceGroup = api.ImageRef.ResourceGroup
-		vlabs.ImageRef.SubscriptionID = api.ImageRef.SubscriptionID
-		vlabs.ImageRef.Version = api.ImageRef.Version
+		vlabsProfile.ImageRef = &vlabs.ImageReference{}
+		vlabsProfile.ImageRef.Gallery = api.ImageRef.Gallery
+		vlabsProfile.ImageRef.Name = api.ImageRef.Name
+		vlabsProfile.ImageRef.ResourceGroup = api.ImageRef.ResourceGroup
+		vlabsProfile.ImageRef.SubscriptionID = api.ImageRef.SubscriptionID
+		vlabsProfile.ImageRef.Version = api.ImageRef.Version
 	}
 	vlabsProfile.ImageVersion = api.ImageVersion
 	vlabsProfile.WindowsImageSourceURL = api.WindowsImageSourceURL
