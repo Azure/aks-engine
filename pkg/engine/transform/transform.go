@@ -204,7 +204,6 @@ func (t *Transformer) NormalizeForK8sVMASScalingUp(logger *logrus.Entry, templat
 		indexesToRemove = append(indexesToRemove, vmasIndexes...)
 	}
 
-	indexesToRemove = append(indexesToRemove, nsgIndex)
 	templateMap[resourcesFieldName] = removeIndexesFromArray(resources, indexesToRemove)
 
 	return nil
