@@ -3654,6 +3654,64 @@ func TestCloudProviderDefaults(t *testing.T) {
 		computedVal float64
 	}{
 		{
+			expectedVal: customCloudProviderRateLimitQPS,
+			computedVal: o.KubernetesConfig.CloudProviderRateLimitQPS,
+		},
+	}
+
+	for _, c := range floatCasesMixed {
+		if c.computedVal != c.expectedVal {
+			t.Fatalf("KubernetesConfig empty cloudprovider configs should reflect default values after SetCloudProviderBackoffDefaults(), expected %f, got %f", c.expectedVal, c.computedVal)
+		}
+	}
+
+	// Test cloudprovider defaults for VMSS scenario
+	v = "1.14.0"
+	p = Properties{
+		OrchestratorProfile: &OrchestratorProfile{
+			OrchestratorType:    "Kubernetes",
+			OrchestratorVersion: v,
+			KubernetesConfig:    &KubernetesConfig{},
+		},
+		AgentPoolProfiles: []*AgentPoolProfile{
+			&AgentPoolProfile{
+				AvailabilityProfile: VirtualMachineScaleSets,
+			},
+		},
+	}
+	o = p.OrchestratorProfile
+	o.KubernetesConfig.SetCloudProviderBackoffDefaults()
+	p.SetCloudProviderRateLimitDefaults()
+
+	intCasesMixed = []struct {
+		expectedVal int
+		computedVal int
+	}{
+		{
+			expectedVal: DefaultKubernetesCloudProviderBackoffRetries,
+			computedVal: o.KubernetesConfig.CloudProviderBackoffRetries,
+		},
+		{
+			expectedVal: DefaultKubernetesCloudProviderBackoffDuration,
+			computedVal: o.KubernetesConfig.CloudProviderBackoffDuration,
+		},
+		{
+			expectedVal: common.MaxAgentCount,
+			computedVal: o.KubernetesConfig.CloudProviderRateLimitBucket,
+		},
+	}
+
+	for _, c := range intCasesMixed {
+		if c.computedVal != c.expectedVal {
+			t.Fatalf("KubernetesConfig empty cloudprovider configs should reflect default values after SetCloudProviderBackoffDefaults(), expected %d, got %d", c.expectedVal, c.computedVal)
+		}
+	}
+
+	floatCasesMixed = []struct {
+		expectedVal float64
+		computedVal float64
+	}{
+		{
 			expectedVal: DefaultKubernetesCloudProviderBackoffJitter,
 			computedVal: o.KubernetesConfig.CloudProviderBackoffJitter,
 		},
@@ -3662,7 +3720,148 @@ func TestCloudProviderDefaults(t *testing.T) {
 			computedVal: o.KubernetesConfig.CloudProviderBackoffExponent,
 		},
 		{
-			expectedVal: customCloudProviderRateLimitQPS,
+			expectedVal: float64(common.MaxAgentCount) * common.MinCloudProviderQPSToBucketFactor,
+			computedVal: o.KubernetesConfig.CloudProviderRateLimitQPS,
+		},
+	}
+
+	for _, c := range floatCasesMixed {
+		if c.computedVal != c.expectedVal {
+			t.Fatalf("KubernetesConfig empty cloudprovider configs should reflect default values after SetCloudProviderBackoffDefaults(), expected %f, got %f", c.expectedVal, c.computedVal)
+		}
+	}
+
+	// Test cloudprovider defaults for VMSS scenario with 3 pools
+	v = "1.14.0"
+	p = Properties{
+		OrchestratorProfile: &OrchestratorProfile{
+			OrchestratorType:    "Kubernetes",
+			OrchestratorVersion: v,
+			KubernetesConfig:    &KubernetesConfig{},
+		},
+		AgentPoolProfiles: []*AgentPoolProfile{
+			&AgentPoolProfile{
+				AvailabilityProfile: VirtualMachineScaleSets,
+			},
+			&AgentPoolProfile{
+				AvailabilityProfile: VirtualMachineScaleSets,
+			},
+			&AgentPoolProfile{
+				AvailabilityProfile: VirtualMachineScaleSets,
+			},
+		},
+	}
+	o = p.OrchestratorProfile
+	o.KubernetesConfig.SetCloudProviderBackoffDefaults()
+	p.SetCloudProviderRateLimitDefaults()
+
+	intCasesMixed = []struct {
+		expectedVal int
+		computedVal int
+	}{
+		{
+			expectedVal: DefaultKubernetesCloudProviderBackoffRetries,
+			computedVal: o.KubernetesConfig.CloudProviderBackoffRetries,
+		},
+		{
+			expectedVal: DefaultKubernetesCloudProviderBackoffDuration,
+			computedVal: o.KubernetesConfig.CloudProviderBackoffDuration,
+		},
+		{
+			expectedVal: common.MaxAgentCount * 3,
+			computedVal: o.KubernetesConfig.CloudProviderRateLimitBucket,
+		},
+	}
+
+	for _, c := range intCasesMixed {
+		if c.computedVal != c.expectedVal {
+			t.Fatalf("KubernetesConfig empty cloudprovider configs should reflect default values after SetCloudProviderBackoffDefaults(), expected %d, got %d", c.expectedVal, c.computedVal)
+		}
+	}
+
+	floatCasesMixed = []struct {
+		expectedVal float64
+		computedVal float64
+	}{
+		{
+			expectedVal: DefaultKubernetesCloudProviderBackoffJitter,
+			computedVal: o.KubernetesConfig.CloudProviderBackoffJitter,
+		},
+		{
+			expectedVal: DefaultKubernetesCloudProviderBackoffExponent,
+			computedVal: o.KubernetesConfig.CloudProviderBackoffExponent,
+		},
+		{
+			expectedVal: float64(common.MaxAgentCount*3) * common.MinCloudProviderQPSToBucketFactor,
+			computedVal: o.KubernetesConfig.CloudProviderRateLimitQPS,
+		},
+	}
+
+	for _, c := range floatCasesMixed {
+		if c.computedVal != c.expectedVal {
+			t.Fatalf("KubernetesConfig empty cloudprovider configs should reflect default values after SetCloudProviderBackoffDefaults(), expected %f, got %f", c.expectedVal, c.computedVal)
+		}
+	}
+
+	// Test cloudprovider defaults for VMSS scenario + AKS
+	v = "1.14.0"
+	p = Properties{
+		OrchestratorProfile: &OrchestratorProfile{
+			OrchestratorType:    "Kubernetes",
+			OrchestratorVersion: v,
+			KubernetesConfig:    &KubernetesConfig{},
+		},
+		AgentPoolProfiles: []*AgentPoolProfile{
+			&AgentPoolProfile{
+				AvailabilityProfile: VirtualMachineScaleSets,
+			},
+		},
+		HostedMasterProfile: &HostedMasterProfile{
+			FQDN: "my-cluster",
+		},
+	}
+	o = p.OrchestratorProfile
+	o.KubernetesConfig.SetCloudProviderBackoffDefaults()
+	p.SetCloudProviderRateLimitDefaults()
+
+	intCasesMixed = []struct {
+		expectedVal int
+		computedVal int
+	}{
+		{
+			expectedVal: DefaultKubernetesCloudProviderBackoffRetries,
+			computedVal: o.KubernetesConfig.CloudProviderBackoffRetries,
+		},
+		{
+			expectedVal: DefaultKubernetesCloudProviderBackoffDuration,
+			computedVal: o.KubernetesConfig.CloudProviderBackoffDuration,
+		},
+		{
+			expectedVal: DefaultKubernetesCloudProviderRateLimitBucket,
+			computedVal: o.KubernetesConfig.CloudProviderRateLimitBucket,
+		},
+	}
+
+	for _, c := range intCasesMixed {
+		if c.computedVal != c.expectedVal {
+			t.Fatalf("KubernetesConfig empty cloudprovider configs should reflect default values after SetCloudProviderBackoffDefaults(), expected %d, got %d", c.expectedVal, c.computedVal)
+		}
+	}
+
+	floatCasesMixed = []struct {
+		expectedVal float64
+		computedVal float64
+	}{
+		{
+			expectedVal: DefaultKubernetesCloudProviderBackoffJitter,
+			computedVal: o.KubernetesConfig.CloudProviderBackoffJitter,
+		},
+		{
+			expectedVal: DefaultKubernetesCloudProviderBackoffExponent,
+			computedVal: o.KubernetesConfig.CloudProviderBackoffExponent,
+		},
+		{
+			expectedVal: DefaultKubernetesCloudProviderRateLimitQPS,
 			computedVal: o.KubernetesConfig.CloudProviderRateLimitQPS,
 		},
 	}

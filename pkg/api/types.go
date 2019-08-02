@@ -1831,11 +1831,10 @@ func (p *Properties) IsNvidiaDevicePluginCapable() bool {
 func (p *Properties) SetCloudProviderRateLimitDefaults() {
 	if p.OrchestratorProfile.KubernetesConfig.CloudProviderRateLimitBucket == 0 {
 		if p.HasVMSSAgentPool() && !p.IsHostedMasterProfile() {
-			maxVMSSInstancesPerPool := 100
 			var rateLimitBucket int
 			for _, profile := range p.AgentPoolProfiles {
 				if profile.AvailabilityProfile == VirtualMachineScaleSets {
-					rateLimitBucket += maxVMSSInstancesPerPool
+					rateLimitBucket += common.MaxAgentCount
 				}
 
 			}
@@ -1845,9 +1844,8 @@ func (p *Properties) SetCloudProviderRateLimitDefaults() {
 		}
 	}
 	if p.OrchestratorProfile.KubernetesConfig.CloudProviderRateLimitQPS == 0 {
-		const minQPSToBucketFactor float64 = 0.1
-		if (DefaultKubernetesCloudProviderRateLimitQPS / float64(p.OrchestratorProfile.KubernetesConfig.CloudProviderRateLimitBucket)) < minQPSToBucketFactor {
-			p.OrchestratorProfile.KubernetesConfig.CloudProviderRateLimitQPS = float64(p.OrchestratorProfile.KubernetesConfig.CloudProviderRateLimitBucket) * minQPSToBucketFactor
+		if (DefaultKubernetesCloudProviderRateLimitQPS / float64(p.OrchestratorProfile.KubernetesConfig.CloudProviderRateLimitBucket)) < common.MinCloudProviderQPSToBucketFactor {
+			p.OrchestratorProfile.KubernetesConfig.CloudProviderRateLimitQPS = float64(p.OrchestratorProfile.KubernetesConfig.CloudProviderRateLimitBucket) * common.MinCloudProviderQPSToBucketFactor
 		} else {
 			p.OrchestratorProfile.KubernetesConfig.CloudProviderRateLimitQPS = DefaultKubernetesCloudProviderRateLimitQPS
 		}
