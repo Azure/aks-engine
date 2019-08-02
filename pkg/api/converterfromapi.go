@@ -599,7 +599,7 @@ func convertWindowsProfileToV20170701(api *WindowsProfile, v20170701Profile *v20
 func convertWindowsProfileToVLabs(api *WindowsProfile, vlabsProfile *vlabs.WindowsProfile) {
 	vlabsProfile.AdminUsername = api.AdminUsername
 	vlabsProfile.AdminPassword = api.AdminPassword
-	if (api.ImageRef != nil) {
+	if api.ImageRef != nil {
 		vlabsProfile.ImageRef = &vlabs.ImageReference{}
 		vlabsProfile.ImageRef.Gallery = api.ImageRef.Gallery
 		vlabsProfile.ImageRef.Name = api.ImageRef.Name

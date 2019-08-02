@@ -3064,54 +3064,54 @@ func TestWindowsProfile(t *testing.T) {
 
 func TestWindowsProfileCustomOS(t *testing.T) {
 	cases := []struct {
-		name string
-		w WindowsProfile
-		expectedRef bool
+		name            string
+		w               WindowsProfile
+		expectedRef     bool
 		expectedGallery bool
-		expectedURL bool
+		expectedURL     bool
 	}{
 		{
 			name: "valid shared gallery image",
 			w: WindowsProfile{
 				ImageRef: &ImageReference{
-					Name: "test",
-					ResourceGroup: "testRG",
+					Name:           "test",
+					ResourceGroup:  "testRG",
 					SubscriptionID: "testSub",
-					Gallery: "testGallery",
-					Version: "0.1.0",
+					Gallery:        "testGallery",
+					Version:        "0.1.0",
 				},
 			},
-			expectedRef: true,
+			expectedRef:     true,
 			expectedGallery: true,
-			expectedURL: false,
+			expectedURL:     false,
 		},
 		{
 			name: "valid non-shared image",
 			w: WindowsProfile{
 				ImageRef: &ImageReference{
-					Name: "test",
+					Name:          "test",
 					ResourceGroup: "testRG",
 				},
 			},
-			expectedRef: true,
+			expectedRef:     true,
 			expectedGallery: false,
-			expectedURL: false,
+			expectedURL:     false,
 		},
 		{
 			name: "valid image URL",
 			w: WindowsProfile{
 				WindowsImageSourceURL: "https://some/image.vhd",
 			},
-			expectedRef: false,
+			expectedRef:     false,
 			expectedGallery: false,
-			expectedURL: true,
+			expectedURL:     true,
 		},
 		{
-			name: "valid no custom image",
-			w: WindowsProfile{},
-			expectedRef: false,
+			name:            "valid no custom image",
+			w:               WindowsProfile{},
+			expectedRef:     false,
 			expectedGallery: false,
-			expectedURL: false,
+			expectedURL:     false,
 		},
 	}
 
@@ -3119,7 +3119,7 @@ func TestWindowsProfileCustomOS(t *testing.T) {
 		c := c
 		t.Run(c.name, func(t *testing.T) {
 			t.Parallel()
-			
+
 			if c.w.HasCustomImage() != c.expectedURL {
 				t.Errorf("expected HasCustomImage() to return %t but instead returned %t", c.expectedURL, c.w.HasCustomImage())
 			}
