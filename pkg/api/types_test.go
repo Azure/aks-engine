@@ -3674,7 +3674,7 @@ func TestCloudProviderDefaults(t *testing.T) {
 			KubernetesConfig:    &KubernetesConfig{},
 		},
 		AgentPoolProfiles: []*AgentPoolProfile{
-			&AgentPoolProfile{
+			{
 				AvailabilityProfile: VirtualMachineScaleSets,
 			},
 		},
@@ -3740,13 +3740,13 @@ func TestCloudProviderDefaults(t *testing.T) {
 			KubernetesConfig:    &KubernetesConfig{},
 		},
 		AgentPoolProfiles: []*AgentPoolProfile{
-			&AgentPoolProfile{
+			{
 				AvailabilityProfile: VirtualMachineScaleSets,
 			},
-			&AgentPoolProfile{
+			{
 				AvailabilityProfile: VirtualMachineScaleSets,
 			},
-			&AgentPoolProfile{
+			{
 				AvailabilityProfile: VirtualMachineScaleSets,
 			},
 		},
@@ -3812,7 +3812,7 @@ func TestCloudProviderDefaults(t *testing.T) {
 			KubernetesConfig:    &KubernetesConfig{},
 		},
 		AgentPoolProfiles: []*AgentPoolProfile{
-			&AgentPoolProfile{
+			{
 				AvailabilityProfile: VirtualMachineScaleSets,
 			},
 		},
