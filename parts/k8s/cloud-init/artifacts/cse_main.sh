@@ -208,3 +208,4 @@ else
       aptmarkWALinuxAgent unhold &
   fi
 fi
+#CLOUD_INIT_WAS_HERE

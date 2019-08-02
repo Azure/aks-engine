@@ -292,7 +292,16 @@ ensureDocker() {
         wait_for_file 1200 1 $DOCKER_MOUNT_FLAGS_SYSTEMD_FILE || exit $ERR_FILE_WATCH_TIMEOUT
     fi
     DOCKER_JSON_FILE=/etc/docker/daemon.json
-    wait_for_file 1200 1 $DOCKER_JSON_FILE || exit $ERR_FILE_WATCH_TIMEOUT
+    for i in $(seq 1 1200); do
+        if [ -s $DOCKER_JSON_FILE ]; then
+            cat $DOCKER_JSON_FILE | jq empty && break
+        fi
+        if [ $i -eq 1200 ]; then
+            return 1
+        else
+            sleep 1
+        fi
+    done
     systemctlEnableAndStart docker
     # Delay start of docker-monitor for 30 mins after booting
     DOCKER_MONITOR_SYSTEMD_TIMER_FILE=/etc/systemd/system/docker-monitor.timer
@@ -342,7 +351,6 @@ ensureK8sControlPlane() {
     if $REBOOTREQUIRED || [ "$NO_OUTBOUND" = "true" ]; then
         return
     fi
-    wait_for_file 3600 1 $KUBECTL || exit $ERR_FILE_WATCH_TIMEOUT
     retrycmd_if_failure 120 5 25 $KUBECTL 2>/dev/null cluster-info || exit $ERR_K8S_RUNNING_TIMEOUT
 }
 
@@ -473,3 +481,4 @@ ensureGPUDrivers() {
     configGPUDrivers
     systemctlEnableAndStart nvidia-modprobe || exit $ERR_GPU_DRIVERS_START_FAIL
 }
+#CLOUD_INIT_WAS_HERE

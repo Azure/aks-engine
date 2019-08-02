@@ -12568,7 +12568,16 @@ ensureDocker() {
         wait_for_file 1200 1 $DOCKER_MOUNT_FLAGS_SYSTEMD_FILE || exit $ERR_FILE_WATCH_TIMEOUT
     fi
     DOCKER_JSON_FILE=/etc/docker/daemon.json
-    wait_for_file 1200 1 $DOCKER_JSON_FILE || exit $ERR_FILE_WATCH_TIMEOUT
+    for i in $(seq 1 1200); do
+        if [ -s $DOCKER_JSON_FILE ]; then
+            cat $DOCKER_JSON_FILE | jq empty && break
+        fi
+        if [ $i -eq 1200 ]; then
+            return 1
+        else
+            sleep 1
+        fi
+    done
     systemctlEnableAndStart docker
     # Delay start of docker-monitor for 30 mins after booting
     DOCKER_MONITOR_SYSTEMD_TIMER_FILE=/etc/systemd/system/docker-monitor.timer
@@ -12618,7 +12627,6 @@ ensureK8sControlPlane() {
     if $REBOOTREQUIRED || [ "$NO_OUTBOUND" = "true" ]; then
         return
     fi
-    wait_for_file 3600 1 $KUBECTL || exit $ERR_FILE_WATCH_TIMEOUT
     retrycmd_if_failure 120 5 25 $KUBECTL 2>/dev/null cluster-info || exit $ERR_K8S_RUNNING_TIMEOUT
 }
 
@@ -12749,6 +12757,7 @@ ensureGPUDrivers() {
     configGPUDrivers
     systemctlEnableAndStart nvidia-modprobe || exit $ERR_GPU_DRIVERS_START_FAIL
 }
+#CLOUD_INIT_WAS_HERE
 `)
 
 func k8sCloudInitArtifactsCse_configShBytes() ([]byte, error) {
@@ -12842,7 +12851,7 @@ configureK8sCustomCloud() {
     # Decrease eth0 MTU to mitigate Azure Stack's NRP issue
     echo "iface eth0 inet dhcp" | sudo tee -a /etc/network/interfaces
     echo "    post-up /sbin/ifconfig eth0 mtu 1350" | sudo tee -a /etc/network/interfaces
-    
+
     ifconfig eth0 mtu 1350
 
     set -x
@@ -12942,6 +12951,7 @@ configureAzureStackInterfaces() {
 
     set -x
 }
+#CLOUD_INIT_WAS_HERE
 `)
 
 func k8sCloudInitArtifactsCse_customcloudShBytes() ([]byte, error) {
@@ -13095,9 +13105,7 @@ retrycmd_get_executable() {
 wait_for_file() {
     retries=$1; wait_sleep=$2; filepath=$3
     for i in $(seq 1 $retries); do
-        if [ -f $filepath ]; then
-            break
-        fi
+        grep -Fq CLOUD_INIT_WAS_HERE $filepath && break
         if [ $i -eq $retries ]; then
             return 1
         else
@@ -13205,6 +13213,7 @@ sysctl_reload() {
 version_gte() {
   test "$(printf '%s\n' "$@" | sort -rV | head -n 1)" == "$1"
 }
+#CLOUD_INIT_WAS_HERE
 `)
 
 func k8sCloudInitArtifactsCse_helpersShBytes() ([]byte, error) {
@@ -13520,6 +13529,7 @@ datasource:
         apply_network_config: false
 EOF
 }
+#CLOUD_INIT_WAS_HERE
 `)
 
 func k8sCloudInitArtifactsCse_installShBytes() ([]byte, error) {
@@ -13747,6 +13757,7 @@ else
       aptmarkWALinuxAgent unhold &
   fi
 fi
+#CLOUD_INIT_WAS_HERE
 `)
 
 func k8sCloudInitArtifactsCse_mainShBytes() ([]byte, error) {
@@ -13827,7 +13838,9 @@ After=docker.service
 Restart=always
 RestartSec=10
 RemainAfterExit=yes
-ExecStart=/usr/local/bin/health-monitor.sh container-runtime`)
+ExecStart=/usr/local/bin/health-monitor.sh container-runtime
+#CLOUD_INIT_WAS_HERE
+`)
 
 func k8sCloudInitArtifactsDockerMonitorServiceBytes() ([]byte, error) {
 	return _k8sCloudInitArtifactsDockerMonitorService, nil
@@ -13849,7 +13862,9 @@ Description=a timer that delays docker-monitor from starting too soon after boot
 [Timer]
 OnBootSec=30min
 [Install]
-WantedBy=multi-user.target`)
+WantedBy=multi-user.target
+#CLOUD_INIT_WAS_HERE
+`)
 
 func k8sCloudInitArtifactsDockerMonitorTimerBytes() ([]byte, error) {
 	return _k8sCloudInitArtifactsDockerMonitorTimer, nil
@@ -13867,7 +13882,9 @@ func k8sCloudInitArtifactsDockerMonitorTimer() (*asset, error) {
 }
 
 var _k8sCloudInitArtifactsDocker_clear_mount_propagation_flagsConf = []byte(`[Service]
-MountFlags=shared`)
+MountFlags=shared
+#CLOUD_INIT_WAS_HERE
+`)
 
 func k8sCloudInitArtifactsDocker_clear_mount_propagation_flagsConfBytes() ([]byte, error) {
 	return _k8sCloudInitArtifactsDocker_clear_mount_propagation_flagsConf, nil
@@ -13894,8 +13911,8 @@ DHCLIENT6_CONF_FILE=/etc/dhcp/dhclient6.conf
 CLOUD_INIT_CFG=/etc/network/interfaces.d/50-cloud-init.cfg
 
 read -r -d '' NETWORK_CONFIGURATION << EOC || true
-iface eth0 inet6 auto 
-    up sleep 5 
+iface eth0 inet6 auto
+    up sleep 5
     up dhclient -1 -6 -cf /etc/dhcp/dhclient6.conf -lf /var/lib/dhcp/dhclient6.eth0.leases -v eth0 || true
 EOC
 
@@ -13909,7 +13926,9 @@ touch /etc/dhcp/dhclient6.conf && add_if_not_exists "timeout 10;" ${DHCLIENT6_CO
     add_if_not_exists "${NETWORK_CONFIGURATION}" ${CLOUD_INIT_CFG} && \
     sudo ifdown eth0 && sudo ifup eth0
 
-echo "Configuration complete"`)
+echo "Configuration complete"
+#CLOUD_INIT_WAS_HERE
+`)
 
 func k8sCloudInitArtifactsEnableDhcpv6ShBytes() ([]byte, error) {
 	return _k8sCloudInitArtifactsEnableDhcpv6Sh, nil
@@ -14092,6 +14111,7 @@ rm -f "${PROXY_CERT_LOCK_FILE}"
 echo "$(date) cert gen and save/check etcd completed"
 
 write_certs_to_disk_with_retry
+#CLOUD_INIT_WAS_HERE
 `)
 
 func k8sCloudInitArtifactsGenerateproxycertsShBytes() ([]byte, error) {
@@ -14340,6 +14360,7 @@ After=kubelet.service
 Restart=always
 RestartSec=60
 ExecStart=/bin/bash /opt/azure/containers/label-nodes.sh
+#CLOUD_INIT_WAS_HERE
 `)
 
 func k8sCloudInitArtifactsLabelNodesServiceBytes() ([]byte, error) {
@@ -14374,6 +14395,7 @@ AGENT_LABELS="kubernetes.azure.com/role=agent kubernetes.io/role=agent node-role
 
 kubectl label nodes --overwrite -l $MASTER_SELECTOR $MASTER_LABELS
 kubectl label nodes --overwrite -l $AGENT_SELECTOR $AGENT_LABELS
+#CLOUD_INIT_WAS_HERE
 `)
 
 func k8sCloudInitArtifactsLabelNodesShBytes() ([]byte, error) {
@@ -14450,6 +14472,7 @@ then
 fi
 mount $MOUNTPOINT
 /bin/chown -R etcd:etcd /var/lib/etcddisk
+#CLOUD_INIT_WAS_HERE
 `)
 
 func k8sCloudInitArtifactsMountetcdShBytes() ([]byte, error) {
@@ -15241,6 +15264,7 @@ write_files:
     ExecStart=/usr/bin/dockerd -H fd:// --storage-driver=overlay2 --bip={{WrapAsParameter "dockerBridgeCidr"}}
     {{end}}
     ExecStartPost=/sbin/iptables -P FORWARD ACCEPT
+    #EOF
 
 - path: /etc/docker/daemon.json
   permissions: "0644"
@@ -15323,6 +15347,7 @@ write_files:
         user: client
       name: localclustercontext
     current-context: localclustercontext
+    #CLOUD_INIT_WAS_HERE
 
 {{if EnableDataEncryptionAtRest}}
 - path: /etc/kubernetes/encryption-config.yaml
@@ -15395,6 +15420,7 @@ MASTER_CONTAINER_ADDONS_PLACEHOLDER
 {{else}}
     KUBELET_REGISTER_SCHEDULABLE={{WrapAsVariable "registerSchedulable"}}
 {{end}}
+    #CLOUD_INIT_WAS_HERE
 
 - path: /opt/azure/containers/kubelet.sh
   permissions: "0755"
@@ -15477,6 +15503,7 @@ MASTER_CONTAINER_ADDONS_PLACEHOLDER
 {{if HasLinuxProfile}}{{if HasCustomSearchDomain}}
     sed -i "s|<searchDomainName>|{{WrapAsParameter "searchDomainName"}}|g; s|<searchDomainRealmUser>|{{WrapAsParameter "searchDomainRealmUser"}}|g; s|<searchDomainRealmPassword>|{{WrapAsParameter "searchDomainRealmPassword"}}|g" /opt/azure/containers/setup-custom-search-domains.sh
 {{end}}{{end}}
+    #CLOUD_INIT_WAS_HERE
 
 - path: /opt/azure/containers/mountetcd.sh
   permissions: "0744"
@@ -15546,6 +15573,7 @@ MASTER_CONTAINER_ADDONS_PLACEHOLDER
     /bin/echo DAEMON_ARGS=--name "{{WrapAsVerbatim "variables('masterVMNames')[copyIndex(variables('masterOffset'))]"}}" --peer-client-cert-auth --peer-trusted-ca-file={{WrapAsVariable "etcdCaFilepath"}} --peer-cert-file={{WrapAsVerbatim "variables('etcdPeerCertFilepath')[copyIndex(variables('masterOffset'))]"}} --peer-key-file={{WrapAsVerbatim "variables('etcdPeerKeyFilepath')[copyIndex(variables('masterOffset'))]"}} --initial-advertise-peer-urls "{{WrapAsVerbatim "variables('masterEtcdPeerURLs')[copyIndex(variables('masterOffset'))]"}}" --listen-peer-urls "{{WrapAsVerbatim "variables('masterEtcdPeerURLs')[copyIndex(variables('masterOffset'))]"}}" --client-cert-auth --trusted-ca-file={{WrapAsVariable "etcdCaFilepath"}} --cert-file={{WrapAsVariable "etcdServerCertFilepath"}} --key-file={{WrapAsVariable "etcdServerKeyFilepath"}} --advertise-client-urls "{{WrapAsVerbatim "variables('masterEtcdClientURLs')[copyIndex(variables('masterOffset'))]"}}" --listen-client-urls "{{WrapAsVerbatim "concat(variables('masterEtcdClientURLs')[copyIndex(variables('masterOffset'))], ',https://127.0.0.1:', variables('masterEtcdClientPort'))"}}" --initial-cluster-token "k8s-etcd-cluster" --initial-cluster {{WrapAsVerbatim "variables('masterEtcdClusterStates')[div(variables('masterCount'), 2)]"}} --data-dir "/var/lib/etcddisk" --initial-cluster-state "new" | tee -a /etc/default/etcd
   {{end}}
 {{end}}
+    #CLOUD_INIT_WAS_HERE
 
 {{if IsAzureStackCloud}}
 - path: "/etc/kubernetes/azurestackcloud.json"
@@ -15800,6 +15828,7 @@ write_files:
     ExecStart=/usr/bin/dockerd -H fd:// --storage-driver=overlay2 --bip={{WrapAsParameter "dockerBridgeCidr"}}
     {{end}}
     ExecStartPost=/sbin/iptables -P FORWARD ACCEPT
+    #EOF
 
 - path: /etc/docker/daemon.json
   permissions: "0644"
@@ -15893,6 +15922,7 @@ write_files:
         user: client
       name: localclustercontext
     current-context: localclustercontext
+    #CLOUD_INIT_WAS_HERE
 
 - path: /etc/default/kubelet
   permissions: "0644"
@@ -15914,6 +15944,7 @@ write_files:
 {{if IsAzureStackCloud }}
     AZURE_ENVIRONMENT_FILEPATH=/etc/kubernetes/azurestackcloud.json
 {{end}}
+    #CLOUD_INIT_WAS_HERE
 
 - path: /opt/azure/containers/kubelet.sh
   permissions: "0755"
@@ -15930,6 +15961,7 @@ write_files:
     sed -i "s|<searchDomainRealmUser>|{{WrapAsParameter "searchDomainRealmUser"}}|g" "/opt/azure/containers/setup-custom-search-domains.sh"
     sed -i "s|<searchDomainRealmPassword>|{{WrapAsParameter "searchDomainRealmPassword"}}|g" "/opt/azure/containers/setup-custom-search-domains.sh"
 {{end}}{{end}}
+    #CLOUD_INIT_WAS_HERE
 
 {{if IsAzureStackCloud}}
 - path: "/etc/kubernetes/azurestackcloud.json"
@@ -16557,6 +16589,7 @@ spec:
       - name: credentials
         secret:
           secretName: aci-connector-secret
+#CLOUD_INIT_WAS_HERE
 `)
 
 func k8sContaineraddons116KubernetesmasteraddonsAciConnectorDeploymentYamlBytes() ([]byte, error) {
@@ -17767,6 +17800,7 @@ spec:
           type: ""
         name: ssl-certs
       <vols>
+#CLOUD_INIT_WAS_HERE
 `)
 
 func k8sContaineraddons116KubernetesmasteraddonsClusterAutoscalerDeploymentYamlBytes() ([]byte, error) {
@@ -20240,7 +20274,9 @@ spec:
       volumes:
       - name: credentials
         secret:
-          secretName: aci-connector-secret`)
+          secretName: aci-connector-secret
+#CLOUD_INIT_WAS_HERE
+`)
 
 func k8sContaineraddonsKubernetesmasteraddonsAciConnectorDeploymentYamlBytes() ([]byte, error) {
 	return _k8sContaineraddonsKubernetesmasteraddonsAciConnectorDeploymentYaml, nil
@@ -21479,6 +21515,7 @@ spec:
           type: ""
         name: ssl-certs
       <vols>
+#CLOUD_INIT_WAS_HERE
 `)
 
 func k8sContaineraddonsKubernetesmasteraddonsClusterAutoscalerDeploymentYamlBytes() ([]byte, error) {

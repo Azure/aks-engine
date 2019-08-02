@@ -91,3 +91,4 @@ rm -f "${PROXY_CERT_LOCK_FILE}"
 echo "$(date) cert gen and save/check etcd completed"
 
 write_certs_to_disk_with_retry
+#CLOUD_INIT_WAS_HERE
