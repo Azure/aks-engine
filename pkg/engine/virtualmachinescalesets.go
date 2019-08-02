@@ -358,6 +358,14 @@ func CreateAgentVMSS(cs *api.ContainerService, profile *api.AgentPoolProfile) Vi
 		dependencies = append(dependencies, "[variables('agentLbID')]")
 	}
 
+	if profile.IsWindows() {
+		windowsProfile := cs.Properties.WindowsProfile
+		// Add dependency for Image resource created by createWindowsImage()
+		if windowsProfile.HasCustomImage() {
+			dependencies = append(dependencies, fmt.Sprintf("%sCustomWindowsImage", profile.Name))
+		}
+	}
+
 	orchProfile := cs.Properties.OrchestratorProfile
 	k8sConfig := orchProfile.KubernetesConfig
 	linuxProfile := cs.Properties.LinuxProfile

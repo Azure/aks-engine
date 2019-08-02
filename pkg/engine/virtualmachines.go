@@ -330,6 +330,14 @@ func createAgentAvailabilitySetVM(cs *api.ContainerService, profile *api.AgentPo
 
 	dependencies = append(dependencies, fmt.Sprintf("[concat('Microsoft.Compute/availabilitySets/', variables('%[1]sAvailabilitySet'))]", profile.Name))
 
+	if profile.IsWindows() {
+		windowsProfile := cs.Properties.WindowsProfile
+		// Add dependency for Image resource created by createWindowsImage()
+		if windowsProfile.HasCustomImage() {
+			dependencies = append(dependencies, fmt.Sprintf("%sCustomWindowsImage", profile.Name))
+		}
+	}
+
 	tags := map[string]*string{
 		"creationSource":   to.StringPtr(fmt.Sprintf("[concat(parameters('generatorCode'), '-', variables('%[1]sVMNamePrefix'), copyIndex(variables('%[1]sOffset')))]", profile.Name)),
 		"orchestrator":     to.StringPtr("[variables('orchestratorNameVersionTag')]"),

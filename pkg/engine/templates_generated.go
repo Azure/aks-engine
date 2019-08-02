@@ -28745,12 +28745,14 @@ var _windowsparamsT = []byte(` {{if IsKubernetes}}
       }
     },
     "agentWindowsImageName": {
+      "defaultValue": "",
       "type": "string",
       "metadata": {
         "description": "Image name when specifying a Windows image reference."
       }
     },
     "agentWindowsImageResourceGroup": {
+      "defaultValue": "",
       "type": "string",
       "metadata": {
         "description": "Resource group when specifying a Windows image reference."

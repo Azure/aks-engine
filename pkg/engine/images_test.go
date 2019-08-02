@@ -92,7 +92,7 @@ func TestCreateImageReferenceFragment(t *testing.T) {
 		t.Run(c.name, func(t *testing.T) {
 			t.Parallel()
 
-			actual := createImageReferenceFramgment(c.profileName, &c.w)
+			actual := createImageReferenceFragment(c.profileName, &c.w)
 			expected := &c.expected
 
 			diff := cmp.Diff(actual, expected)
@@ -118,6 +118,7 @@ func TestCreateWindowsImage(t *testing.T) {
 		Image: compute.Image{
 			Type: to.StringPtr("Microsoft.Compute/images"),
 			Name: to.StringPtr("foobarCustomWindowsImage"),
+			Location: to.StringPtr("[variables('location')]"),
 			ImageProperties: &compute.ImageProperties{
 				StorageProfile: &compute.ImageStorageProfile{
 					OsDisk: &compute.ImageOSDisk{

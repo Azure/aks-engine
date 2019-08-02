@@ -49,6 +49,7 @@ func createWindowsImage(profile *api.AgentPoolProfile) ImageARM {
 		Image: compute.Image{
 			Type: to.StringPtr("Microsoft.Compute/images"),
 			Name: to.StringPtr(fmt.Sprintf("%sCustomWindowsImage", profile.Name)),
+			Location: to.StringPtr("[variables('location')]"),
 			ImageProperties: &compute.ImageProperties{
 				StorageProfile: &compute.ImageStorageProfile{
 					OsDisk: &compute.ImageOSDisk{
