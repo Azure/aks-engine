@@ -143,16 +143,6 @@
         },
         {
             "type": "file",
-            "source": "parts/k8s/cloud-init/artifacts/label-nodes.sh",
-            "destination": "/home/packer/label-nodes.sh"
-        },
-        {
-            "type": "file",
-            "source": "parts/k8s/cloud-init/artifacts/label-nodes.service",
-            "destination": "/home/packer/label-nodes.service"
-        },
-        {
-            "type": "file",
             "source": "parts/k8s/cloud-init/artifacts/apt-preferences",
             "destination": "/home/packer/apt-preferences"
         },

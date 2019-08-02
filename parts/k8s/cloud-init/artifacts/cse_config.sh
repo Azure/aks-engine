@@ -322,14 +322,6 @@ ensureKubelet() {
     systemctlEnableAndStart kubelet || exit $ERR_KUBELET_START_FAIL
 }
 
-ensureLabelNodes() {
-    LABEL_NODES_SCRIPT_FILE=/opt/azure/containers/label-nodes.sh
-    wait_for_file 1200 1 $LABEL_NODES_SCRIPT_FILE || exit $ERR_FILE_WATCH_TIMEOUT
-    LABEL_NODES_SYSTEMD_FILE=/etc/systemd/system/label-nodes.service
-    wait_for_file 1200 1 $LABEL_NODES_SYSTEMD_FILE || exit $ERR_FILE_WATCH_TIMEOUT
-    systemctlEnableAndStart label-nodes || exit $ERR_SYSTEMCTL_START_FAIL
-}
-
 ensureJournal() {
     {
         echo "Storage=persistent"

@@ -240,7 +240,4 @@ sysctl_reload() {
         fi
     done
 }
-version_gte() {
-  test "$(printf '%s\n' "$@" | sort -rV | head -n 1)" == "$1"
-}
 #HELPERSEOF
