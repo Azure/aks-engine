@@ -12257,6 +12257,7 @@ applyCIS() {
   assignRootPW
   assignFilePermissions
 }
+#CLOUD_INIT_WAS_HERE
 `)
 
 func k8sCloudInitArtifactsCisShBytes() ([]byte, error) {

@@ -71,3 +71,4 @@ applyCIS() {
   assignRootPW
   assignFilePermissions
 }
+#CLOUD_INIT_WAS_HERE
