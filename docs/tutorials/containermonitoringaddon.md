@@ -38,6 +38,7 @@ Refer [Sample Kubernetes definition file with monitoringa addon using default lo
 
 If you prefer to use existing log analytics workspace, then you can set  the fully qualified azure resource id of the existing log analytics workspace as in below config.
 With following definition, container monitoring addon will be onboarded fully without need of any additional steps such as adding container insights solution and tags etc.
+Azure Log analytics workspace can be in any Azure subscription which you have Log Analytics Contributor role permission.
 
       {
             "name": "container-monitoring",
@@ -47,7 +48,7 @@ With following definition, container monitoring addon will be onboarded fully wi
              }
      }
 
-Refer [Sample Kubernetes definition file with monitoringa addon using existing log analytics workspace](../../examples/addons/container-monitoring/kubernetes-container-monitoring_existing_log_analytucs_workspace.json)
+Refer [Sample Kubernetes definition file with monitoringa addon using existing log analytics workspace](../../examples/addons/container-monitoring/kubernetes-container-monitoring_existing_log_analytics_workspace.json)
 
                  OR
 

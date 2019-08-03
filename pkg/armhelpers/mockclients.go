@@ -999,7 +999,7 @@ func (mc *MockAKSEngineClient) EnsureDefaultLogAnalyticsWorkspace(ctx context.Co
 		return "", errors.New("EnsureDefaultLogAnalyticsWorkspace failed")
 	}
 
-	return "", nil
+	return "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/test-workspace-rg/providers/Microsoft.OperationalInsights/workspaces/test-workspace", nil
 }
 
 //AddContainerInsightsSolution mock
@@ -1017,5 +1017,5 @@ func (mc *MockAKSEngineClient) GetLogAnalyticsWorkspaceInfo(ctx context.Context,
 		return "", "", "", errors.New("GetLogAnalyticsWorkspaceInfo failed")
 	}
 
-	return "wsid", "wskey", "location", nil
+	return "00000000-0000-0000-0000-000000000000", "4D+vyd5/jScBmsAwZOF/0GOBQ5kuFQc9JVaW+HlnJ58cyePJcwTpks+rVmvgcXGmmyujLDNEVPiT8pB274a9Yg==", "westus", nil
 }

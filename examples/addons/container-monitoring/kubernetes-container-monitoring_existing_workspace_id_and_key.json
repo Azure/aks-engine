@@ -9,8 +9,8 @@
             "name": "container-monitoring",
             "enabled": true,
             "config": {
-              "workspaceGuid": "",
-              "workspaceKey": ""
+              "workspaceGuid": "<Azure Log Analytics Workspace Guid in Base-64 encoded>",
+              "workspaceKey": "<Azure Log Analytics Workspace Key in Base-64 encoded>"
             }
           }
         ]

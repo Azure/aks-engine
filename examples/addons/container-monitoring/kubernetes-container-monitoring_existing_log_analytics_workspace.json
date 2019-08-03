@@ -9,8 +9,7 @@
             "name": "container-monitoring",
             "enabled": true,
             "config": {
-              "workspaceGuid": "",
-              "workspaceKey": ""
+              "logAnalyticsWorkspaceResourceId": "/subscriptions/<WorkspaceSubscriptionId>/resourceGroups/<WorkspaceResourceGroup>/providers/Microsoft.OperationalInsights/workspaces/<workspaceName>"
             }
           }
         ]

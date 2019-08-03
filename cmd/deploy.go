@@ -368,12 +368,12 @@ func autofillApimodel(dc *deployCmd) error {
 				}
 				workspaceResourceID = strings.TrimSuffix(workspaceResourceID, "/")
 			} else {
-				log.Infoln("creating default log analytics workspace")
+				log.Infoln("creating default log analytics workspace if not exists already")
 				workspaceResourceID, err = dc.client.EnsureDefaultLogAnalyticsWorkspace(ctx, dc.resourceGroup, dc.location)
 				if err != nil {
 					return errors.Wrap(err, "apimodel: Failed to create default log analytics workspace for container monitoring addon")
 				}
-				log.Infoln("successfully created default log analytics workspace:", workspaceResourceID)
+				log.Infoln("successfully created or fetched default log analytics workspace:", workspaceResourceID)
 			}
 
 			resourceParts := strings.Split(workspaceResourceID, "/")
@@ -390,7 +390,6 @@ func autofillApimodel(dc *deployCmd) error {
 			}
 			log.Infoln("successfully retrieved log analytics workspace details")
 			log.Infoln("log analytics workspace id: ", wsID)
-			log.Infoln("log analytics workspace key: ", wsKey)
 
 			log.Infoln("adding container insights solution to log analytics workspace: ", workspaceResourceID)
 			_, err = dc.client.AddContainerInsightsSolution(ctx, workspaceSubscriptionID, workspaceResourceGroup, workspaceName, wsLocation)
