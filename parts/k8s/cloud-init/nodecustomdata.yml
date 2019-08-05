@@ -236,7 +236,7 @@ write_files:
         user: client
       name: localclustercontext
     current-context: localclustercontext
-    #CLOUD_INIT_WAS_HERE
+    #EOF
 
 - path: /etc/default/kubelet
   permissions: "0644"
@@ -258,7 +258,7 @@ write_files:
 {{if IsAzureStackCloud }}
     AZURE_ENVIRONMENT_FILEPATH=/etc/kubernetes/azurestackcloud.json
 {{end}}
-    #CLOUD_INIT_WAS_HERE
+    #EOF
 
 - path: /opt/azure/containers/kubelet.sh
   permissions: "0755"
@@ -275,7 +275,7 @@ write_files:
     sed -i "s|<searchDomainRealmUser>|{{WrapAsParameter "searchDomainRealmUser"}}|g" "/opt/azure/containers/setup-custom-search-domains.sh"
     sed -i "s|<searchDomainRealmPassword>|{{WrapAsParameter "searchDomainRealmPassword"}}|g" "/opt/azure/containers/setup-custom-search-domains.sh"
 {{end}}{{end}}
-    #CLOUD_INIT_WAS_HERE
+    #EOF
 
 {{if IsAzureStackCloud}}
 - path: "/etc/kubernetes/azurestackcloud.json"

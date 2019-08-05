@@ -294,7 +294,7 @@ ensureDocker() {
     DOCKER_JSON_FILE=/etc/docker/daemon.json
     for i in $(seq 1 1200); do
         if [ -s $DOCKER_JSON_FILE ]; then
-            jq < $DOCKER_JSON_FILE && break
+            cat $DOCKER_JSON_FILE | jq empty && break
         fi
         if [ $i -eq 1200 ]; then
             return 1
@@ -481,4 +481,4 @@ ensureGPUDrivers() {
     configGPUDrivers
     systemctlEnableAndStart nvidia-modprobe || exit $ERR_GPU_DRIVERS_START_FAIL
 }
-#CLOUD_INIT_WAS_HERE
+#EOF

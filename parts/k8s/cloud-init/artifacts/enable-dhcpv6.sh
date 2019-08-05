@@ -24,4 +24,4 @@ touch /etc/dhcp/dhclient6.conf && add_if_not_exists "timeout 10;" ${DHCLIENT6_CO
     sudo ifdown eth0 && sudo ifup eth0
 
 echo "Configuration complete"
-#CLOUD_INIT_WAS_HERE
+#EOF

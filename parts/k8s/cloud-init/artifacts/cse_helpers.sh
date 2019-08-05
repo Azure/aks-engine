@@ -134,7 +134,7 @@ retrycmd_get_executable() {
 wait_for_file() {
     retries=$1; wait_sleep=$2; filepath=$3
     for i in $(seq 1 $retries); do
-        grep -Fq CLOUD_INIT_WAS_HERE $filepath && break
+        grep -Fq '#EOF' $filepath && break
         if [ $i -eq $retries ]; then
             return 1
         else
@@ -242,4 +242,4 @@ sysctl_reload() {
 version_gte() {
   test "$(printf '%s\n' "$@" | sort -rV | head -n 1)" == "$1"
 }
-#CLOUD_INIT_WAS_HERE
+#EOF

@@ -23,4 +23,4 @@ then
 fi
 mount $MOUNTPOINT
 /bin/chown -R etcd:etcd /var/lib/etcddisk
-#CLOUD_INIT_WAS_HERE
+#EOF

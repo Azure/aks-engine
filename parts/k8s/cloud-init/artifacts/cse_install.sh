@@ -296,4 +296,4 @@ datasource:
         apply_network_config: false
 EOF
 }
-#CLOUD_INIT_WAS_HERE
+#EOF

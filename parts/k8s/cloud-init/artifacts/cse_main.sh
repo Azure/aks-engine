@@ -123,7 +123,7 @@ if [ -f $CUSTOM_SEARCH_DOMAIN_SCRIPT ]; then
 fi
 
 if [[ "$CONTAINER_RUNTIME" == "docker" ]]; then
-    ensureDocker
+    ensureDocker || exit $ERR_DOCKER_START_FAIL
 elif [[ "$CONTAINER_RUNTIME" == "kata-containers" ]]; then
     if grep -q vmx /proc/cpuinfo; then
         installKataContainersRuntime
@@ -208,4 +208,4 @@ else
       aptmarkWALinuxAgent unhold &
   fi
 fi
-#CLOUD_INIT_WAS_HERE
+#EOF

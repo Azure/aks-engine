@@ -174,4 +174,4 @@ configureAzureStackInterfaces() {
 
     set -x
 }
-#CLOUD_INIT_WAS_HERE
+#EOF
