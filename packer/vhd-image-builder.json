@@ -46,11 +46,6 @@
         },
         {
             "type": "file",
-            "source": "packer/cleanup-vhd.sh",
-            "destination": "/home/packer/cleanup-vhd.sh"
-        },
-        {
-            "type": "file",
             "source": "packer/packer_source.sh",
             "destination": "/home/packer/packer_source.sh"
         },
@@ -193,10 +188,11 @@
             "type": "shell",
             "inline": [
                 "sudo FEATURE_FLAGS={{user `feature_flags`}} BUILD_NUMBER={{user `build_number`}} BUILD_ID={{user `build_id`}} COMMIT={{user `commit`}} /bin/bash -ux /home/packer/install-dependencies.sh",
-                "sudo /bin/bash -eux /home/packer/cleanup-vhd.sh",
-                "sudo rm -rf /home/packer",
-                "cloud-init clean --logs",
-                "waagent -force -deprovision"
+                "sudo rm -f /root/.ssh/authorized_keys",
+                "sudo rm -f /etc/machine-id",
+                "sudo touch /etc/machine-id",
+                "sudo cloud-init clean --logs",
+                "sudo -u packer /usr/sbin/waagent -force -deprovision+user && export HISTSIZE=0 && sync"
             ]
         }
     ]
