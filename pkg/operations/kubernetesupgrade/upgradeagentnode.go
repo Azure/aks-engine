@@ -121,15 +121,15 @@ func (kan *UpgradeAgentNode) Validate(vmName *string) error {
 	nodeName := strings.ToLower(*vmName)
 
 	kan.logger.Infof("Validating %s", nodeName)
-	var masterURL string
+	var apiserverURL string
 	if kan.UpgradeContainerService.Properties.HostedMasterProfile != nil {
 		apiServerListeningPort := 443
-		masterURL = fmt.Sprintf("https://%s:%d", kan.UpgradeContainerService.Properties.HostedMasterProfile.FQDN, apiServerListeningPort)
+		apiserverURL = fmt.Sprintf("https://%s:%d", kan.UpgradeContainerService.Properties.HostedMasterProfile.FQDN, apiServerListeningPort)
 	} else {
-		masterURL = kan.UpgradeContainerService.Properties.MasterProfile.FQDN
+		apiserverURL = kan.UpgradeContainerService.Properties.MasterProfile.FQDN
 	}
 
-	client, err := kan.Client.GetKubernetesClient(masterURL, kan.kubeConfig, interval, kan.timeout)
+	client, err := kan.Client.GetKubernetesClient(apiserverURL, kan.kubeConfig, interval, kan.timeout)
 	if err != nil {
 		return &armhelpers.DeploymentValidationError{Err: err}
 	}

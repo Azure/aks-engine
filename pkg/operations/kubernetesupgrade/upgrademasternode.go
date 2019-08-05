@@ -85,9 +85,9 @@ func (kmn *UpgradeMasterNode) Validate(vmName *string) error {
 		return nil
 	}
 
-	masterURL := kmn.UpgradeContainerService.Properties.MasterProfile.FQDN
+	apiserverURL := kmn.UpgradeContainerService.Properties.MasterProfile.FQDN
 
-	client, err := kmn.Client.GetKubernetesClient(masterURL, kmn.kubeConfig, interval, kmn.timeout)
+	client, err := kmn.Client.GetKubernetesClient(apiserverURL, kmn.kubeConfig, interval, kmn.timeout)
 	if err != nil {
 		return err
 	}

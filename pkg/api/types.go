@@ -811,6 +811,16 @@ func (p *Properties) HasStorageAccountDisks() bool {
 	return false
 }
 
+// HasStorageAccountDisks returns true if the cluster contains agent pools with Ephemeral Disks
+func (p *Properties) HasEphemeralDisks() bool {
+	for _, agentPoolProfile := range p.AgentPoolProfiles {
+		if agentPoolProfile.StorageProfile == Ephemeral {
+			return true
+		}
+	}
+	return false
+}
+
 // TotalNodes returns the total number of nodes in the cluster configuration
 func (p *Properties) TotalNodes() int {
 	var totalNodes int
@@ -1402,6 +1412,11 @@ func (a *AgentPoolProfile) IsManagedDisks() bool {
 // IsStorageAccount returns true if the customer specified storage account
 func (a *AgentPoolProfile) IsStorageAccount() bool {
 	return a.StorageProfile == StorageAccount
+}
+
+// IsStorageAccount returns true if the customer specified ephemeral disks
+func (a *AgentPoolProfile) IsEphemeral() bool {
+	return a.StorageProfile == Ephemeral
 }
 
 // HasDisks returns true if the customer specified disks

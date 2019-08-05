@@ -1,6 +1,7 @@
 #!/bin/bash
 source /home/packer/provision_installs.sh
 source /home/packer/provision_source.sh
+source /home/packer/packer_source.sh
 source /home/packer/cis.sh
 
 RELEASE_NOTES_FILEPATH=/var/log/azure/golden-image-install.complete
@@ -404,7 +405,9 @@ for KUBERNETES_VERSION in ${K8S_VERSIONS}; do
 done
 
 # TODO: remove once ACR is available on Azure Stack
-pullContainerImage "docker" "registry:2"
+CONTAINER_IMAGE="registry:2.7.1"
+pullContainerImage "docker" ${CONTAINER_IMAGE}
+echo "  - ${CONTAINER_IMAGE}" >> ${RELEASE_NOTES_FILEPATH}
 
 df -h
 

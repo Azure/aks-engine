@@ -40,7 +40,7 @@ Add (or copy) an entry in the `agentPoolProfiles` array.
 Use the `aks-engine scale` command
 
     aks-engine scale   --location westeurope --subscription-id "xxx" --resource-group "<my-resource-group" \
-    --api-model ./somedir/apimodel.json --node-pool <nodepool name> --new-node-count <desired number of nodes> --master-FQDN <fqdn of the master lb>
+    --api-model ./somedir/apimodel.json --node-pool <nodepool name> --new-node-count <desired number of nodes> --apiserver <apiserver endpoint FQDN or IP address>
 
 **Remember to also update your original api-model.json file (used for 1st deployment) or else you would end up with the original number of VM's after using the `generate` command described above**
 

@@ -79,6 +79,10 @@ required = [
   version = "1.0.3"
 
 [[constraint]]
+  name = "github.com/x-cray/logrus-prefixed-formatter"
+  version = "0.5.2"
+
+[[constraint]]
   name = "github.com/spf13/pflag"
   version = "1.0.0"
 

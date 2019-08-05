@@ -173,7 +173,7 @@ type AKSEngineClient interface {
 	DeleteManagedDisk(ctx context.Context, resourceGroupName string, diskName string) error
 	ListManagedDisksByResourceGroup(ctx context.Context, resourceGroupName string) (result DiskListPage, err error)
 
-	GetKubernetesClient(masterURL, kubeConfig string, interval, timeout time.Duration) (KubernetesClient, error)
+	GetKubernetesClient(apiserverURL, kubeConfig string, interval, timeout time.Duration) (KubernetesClient, error)
 
 	ListProviders(ctx context.Context) (ProviderListResultPage, error)
 

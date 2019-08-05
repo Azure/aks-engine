@@ -605,19 +605,23 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 		})
 
 		It("Should not have any unready or crashing pods right after deployment", func() {
-			By("Checking ready status of each pod in kube-system")
-			pods, err := pod.GetAll("kube-system")
-			Expect(err).NotTo(HaveOccurred())
-			Expect(len(pods.Pods)).ToNot(BeZero())
-			for _, currentPod := range pods.Pods {
-				log.Printf("Checking %s - ready: %t, restarts: %d", currentPod.Metadata.Name, currentPod.Status.ContainerStatuses[0].Ready, currentPod.Status.ContainerStatuses[0].RestartCount)
-				Expect(currentPod.Status.ContainerStatuses[0].Ready).To(BeTrue())
-				tooManyRestarts := 5
-				if strings.Contains(currentPod.Metadata.Name, "cluster-autoscaler") {
-					log.Print("need to investigate cluster-autoscaler restarts!")
-					tooManyRestarts = 10
+			if eng.Config.DebugCrashingPods {
+				By("Checking ready status of each pod in kube-system")
+				pods, err := pod.GetAll("kube-system")
+				Expect(err).NotTo(HaveOccurred())
+				Expect(len(pods.Pods)).ToNot(BeZero())
+				for _, currentPod := range pods.Pods {
+					log.Printf("Checking %s - ready: %t, restarts: %d", currentPod.Metadata.Name, currentPod.Status.ContainerStatuses[0].Ready, currentPod.Status.ContainerStatuses[0].RestartCount)
+					Expect(currentPod.Status.ContainerStatuses[0].Ready).To(BeTrue())
+					tooManyRestarts := 5
+					if strings.Contains(currentPod.Metadata.Name, "cluster-autoscaler") {
+						log.Print("need to investigate cluster-autoscaler restarts!")
+						tooManyRestarts = 10
+					}
+					Expect(currentPod.Status.ContainerStatuses[0].RestartCount).To(BeNumerically("<", tooManyRestarts))
 				}
-				Expect(currentPod.Status.ContainerStatuses[0].RestartCount).To(BeNumerically("<", tooManyRestarts))
+			} else {
+				Skip("Skipping this DEBUG test")
 			}
 		})
 

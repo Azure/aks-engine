@@ -128,7 +128,11 @@ func TestAgentPoolProfile(t *testing.T) {
 	}
 
 	if !ap.IsStorageAccount() {
-		t.Fatalf("unexpectedly detected AgentPoolProfile.StorageProfile != ManagedDisks after unmarshal")
+		t.Fatalf("unexpectedly detected AgentPoolProfile.StorageProfile != StorageAccount after unmarshal")
+	}
+
+	if ap.IsEphemeral() {
+		t.Fatalf("unexpectedly detected AgentPoolProfile.StorageProfile == Ephemeral after unmarshal")
 	}
 
 	// With osType Windows
@@ -149,6 +153,30 @@ func TestAgentPoolProfile(t *testing.T) {
 
 	if !ap.IsManagedDisks() {
 		t.Fatalf("unexpectedly detected AgentPoolProfile.StorageProfile != ManagedDisks after unmarshal")
+	}
+
+	// With osType Windows and Ephemeral disks
+	AgentPoolProfileText = `{ "name": "linuxpool1", "osType" : "Windows", "count": 1, "vmSize": "Standard_D2_v2",
+"availabilityProfile": "AvailabilitySet", "storageProfile" : "Ephemeral", "vnetSubnetID" : "12345" }`
+	ap = &AgentPoolProfile{}
+	if e := json.Unmarshal([]byte(AgentPoolProfileText), ap); e != nil {
+		t.Fatalf("unexpectedly detected unmarshal failure for AgentPoolProfile, %+v", e)
+	}
+
+	if ap.Count != 1 {
+		t.Fatalf("unexpectedly detected AgentPoolProfile.Count != 1 after unmarshal")
+	}
+
+	if !ap.IsWindows() {
+		t.Fatalf("unexpectedly detected AgentPoolProfile.OSType != Windows after unmarshal")
+	}
+
+	if ap.IsManagedDisks() {
+		t.Fatalf("unexpectedly detected AgentPoolProfile.StorageProfile == ManagedDisks after unmarshal")
+	}
+
+	if !ap.IsEphemeral() {
+		t.Fatalf("unexpectedly detected AgentPoolProfile.StorageProfile != Ephemeral after unmarshal")
 	}
 
 	// With osType Linux and RHEL distro
@@ -175,6 +203,10 @@ func TestAgentPoolProfile(t *testing.T) {
 		t.Fatalf("unexpectedly detected AgentPoolProfile.StorageProfile != ManagedDisks after unmarshal")
 	}
 
+	if ap.IsEphemeral() {
+		t.Fatalf("unexpectedly detected AgentPoolProfile.StorageProfile == Ephemeral after unmarshal")
+	}
+
 	// With osType Linux and coreos distro
 	AgentPoolProfileText = `{ "name": "linuxpool1", "osType" : "Linux", "distro" : "coreos", "count": 1, "vmSize": "Standard_D2_v2",
 "availabilityProfile": "VirtualMachineScaleSets", "storageProfile" : "ManagedDisks", "diskSizesGB" : [750, 250, 600, 1000] }`
@@ -197,6 +229,10 @@ func TestAgentPoolProfile(t *testing.T) {
 
 	if !ap.IsManagedDisks() {
 		t.Fatalf("unexpectedly detected AgentPoolProfile.StorageProfile != ManagedDisks after unmarshal")
+	}
+
+	if ap.IsEphemeral() {
+		t.Fatalf("unexpectedly detected AgentPoolProfile.StorageProfile == Ephemeral after unmarshal")
 	}
 
 	if !ap.HasDisks() {
