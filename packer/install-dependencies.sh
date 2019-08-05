@@ -436,5 +436,3 @@ sudo mv /var/log /var/log.vhd
 sudo mkdir /var/log
 
 applyCIS
-cloud-init clean --logs
-waagent -force -deprovision
