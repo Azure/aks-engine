@@ -18,7 +18,10 @@ The agent is automatically deployed and registered with the specified or defaut 
 
 ## Onboarding
 
-Container Monitoring can be onboarded either through the monitoring add-on or the HELM chart. Monitoring add-on can be configured in the following ways
+Container Monitoring can be onboarded either through the monitoring add-on or the HELM chart.
+Following are supported options to enable container-monitoring add-on during the cluster creation or post custer creation.
+
+> Note: option 1) and 2) are supported only through `aks-engine deploy` command.
 
 ### 1. Using Default Log Analytics Workspace
 
@@ -38,7 +41,7 @@ Refer [Sample Kubernetes definition file with monitoringa addon using default lo
 
 If you prefer to use existing log analytics workspace, then you can set  the fully qualified azure resource id of the existing log analytics workspace as in below config.
 With following definition, container monitoring addon will be onboarded fully without need of any additional steps such as adding container insights solution and tags etc.
-Azure Log analytics workspace can be in any Azure subscription which you have Log Analytics Contributor role permission.
+Azure Log analytics workspace can be in any Azure subscription which you have Log Analytics Contributor role permission on the specified Azure Log Analytics workspace.
 
       {
             "name": "container-monitoring",
@@ -54,7 +57,7 @@ Refer [Sample Kubernetes definition file with monitoringa addon using existing l
 
 ### 3. Using Worksapce GUID or Key
 
-you can also configure log analytics workspace with workspace GUID and Key, but with this option, you require to add the container insights solution and attach required tags.
+you can also configure with workspace GUID and Key of the existing Log analytics workspace, but with this is legacy option and requires additional configuration steps
 
          {
             "name": "container-monitoring",
@@ -69,6 +72,14 @@ Refer [Sample Kubernetes definition file with monitoringa addon using workspace 
 
 ### 4. Using Azure Monitor for containers HELM chart
 
-If you prefer the HELM chart, refer [Azure Monitor – Containers HELM chart](https://github.com/helm/charts/tree/master/incubator/azuremonitor-containers) for onboarding instructions
+If you prefer HELM chart, refer [Azure Monitor – Containers HELM chart](https://github.com/helm/charts/tree/master/incubator/azuremonitor-containers) for onboarding instructions
 
 For more details and instructions to [onboard the container monitoring addon for the AKS Engine cluster(s)](../../examples/addons/container-monitoring/README.md)
+
+## UX
+
+After successful onboarding, navigating to [Azure Monitor for containers](https://aka.ms/azmon-containers) to view and monitor, and analyze health of your onboarded AKS-Engine cluster, pods and containers etc.
+
+## Contact
+
+If you have any questions or feedback regarding the container monitoring addon, please reach us out through [this](mailto:askcoin@microsoft.com) email.
