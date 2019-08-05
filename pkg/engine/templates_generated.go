@@ -12562,7 +12562,6 @@ ensureContainerd() {
 ensureDocker() {
     DOCKER_SERVICE_EXEC_START_FILE=/etc/systemd/system/docker.service.d/exec_start.conf
     wait_for_file 1200 1 $DOCKER_SERVICE_EXEC_START_FILE || exit $ERR_FILE_WATCH_TIMEOUT
-    echo "ExecStartPost=/sbin/iptables -P FORWARD ACCEPT" >> $DOCKER_SERVICE_EXEC_START_FILE
     usermod -aG docker ${ADMINUSER}
     DOCKER_MOUNT_FLAGS_SYSTEMD_FILE=/etc/systemd/system/docker.service.d/clear_mount_propagation_flags.conf
     if [[ $OS != $COREOS_OS_NAME ]]; then
@@ -15241,6 +15240,7 @@ write_files:
     {{else}}
     ExecStart=/usr/bin/dockerd -H fd:// --storage-driver=overlay2 --bip={{WrapAsParameter "dockerBridgeCidr"}}
     {{end}}
+    ExecStartPost=/sbin/iptables -P FORWARD ACCEPT
 
 - path: /etc/docker/daemon.json
   permissions: "0644"
@@ -15799,6 +15799,7 @@ write_files:
     {{else}}
     ExecStart=/usr/bin/dockerd -H fd:// --storage-driver=overlay2 --bip={{WrapAsParameter "dockerBridgeCidr"}}
     {{end}}
+    ExecStartPost=/sbin/iptables -P FORWARD ACCEPT
 
 - path: /etc/docker/daemon.json
   permissions: "0644"
