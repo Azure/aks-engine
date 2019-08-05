@@ -294,7 +294,7 @@ ensureDocker() {
     DOCKER_JSON_FILE=/etc/docker/daemon.json
     for i in $(seq 1 1200); do
         if [ -s $DOCKER_JSON_FILE ]; then
-            jq < $DOCKER_JSON_FILE && break
+            jq '.' < $DOCKER_JSON_FILE && break
         fi
         if [ $i -eq 1200 ]; then
             return 1

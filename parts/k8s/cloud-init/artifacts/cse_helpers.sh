@@ -141,6 +141,7 @@ wait_for_file() {
             sleep $wait_sleep
         fi
     done
+    sed -i "/#EOF/d" $filepath
 }
 wait_for_apt_locks() {
     while fuser /var/lib/dpkg/lock /var/lib/apt/lists/lock /var/cache/apt/archives/lock >/dev/null 2>&1; do
