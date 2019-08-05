@@ -98,7 +98,7 @@ const ExampleAPIModelWithContainerMonitoringAddonWithExistingWorkspaceConfig = `
 	}
   }
   `
-const ExampleAPIModelWithContainerMonitoringAddonWithWorkspaceGuidAndKeyConfig = `{
+const ExampleAPIModelWithContainerMonitoringAddonWithWorkspaceGUIDAndKeyConfig = `{
 	"apiVersion": "vlabs",
 	"properties": {
 		  "orchestratorProfile": { "orchestratorType": "Kubernetes", "kubernetesConfig": { "addons":[{"name": "container-monitoring","enabled": true, "config":{"workspaceGuid": "MDAwMDAwMDAtMDAwMC0wMDAwLTAwMDAtMDAwMDAwMDAwMDAw", "workspaceKey": "NEQrdnlkNS9qU2NCbXNBd1pPRi8wR09CUTVrdUZRYzlKVmFXK0hsbko1OGN5ZVBKY3dUcGtzK3JWbXZnY1hHbW15dWpMRE5FVlBpVDhwQjI3NGE5WWc9PQ=="} }]}},
@@ -708,9 +708,9 @@ func TestAPIModelWithContainerMonitoringAddonWithNoConfigInCmd(t *testing.T) {
 		t.Fatalf("expected addon name: %s but got: %s", expectedAddonName, addon.Name)
 	}
 
-	expectedWorkspaceGuidInBase64 := "MDAwMDAwMDAtMDAwMC0wMDAwLTAwMDAtMDAwMDAwMDAwMDAw"
-	if addon.Config["workspaceGuid"] != expectedWorkspaceGuidInBase64 {
-		t.Fatalf("expected workspaceGuid : %s but got : %s", expectedWorkspaceGuidInBase64, addon.Config["workspaceGuid"])
+	expectedWorkspaceGUIDInBase64 := "MDAwMDAwMDAtMDAwMC0wMDAwLTAwMDAtMDAwMDAwMDAwMDAw"
+	if addon.Config["workspaceGuid"] != expectedWorkspaceGUIDInBase64 {
+		t.Fatalf("expected workspaceGuid : %s but got : %s", expectedWorkspaceGUIDInBase64, addon.Config["workspaceGuid"])
 	}
 
 	expectedWorkspaceKeyInBase64 := "NEQrdnlkNS9qU2NCbXNBd1pPRi8wR09CUTVrdUZRYzlKVmFXK0hsbko1OGN5ZVBKY3dUcGtzK3JWbXZnY1hHbW15dWpMRE5FVlBpVDhwQjI3NGE5WWc9PQ=="
@@ -801,9 +801,9 @@ func TestAPIModelWithContainerMonitoringAddonWithConfigInCmd(t *testing.T) {
 		t.Fatalf("expected addon name: %s but got: %s", expectedAddonName, addon.Name)
 	}
 
-	expectedWorkspaceGuidInBase64 := "MDAwMDAwMDAtMDAwMC0wMDAwLTAwMDAtMDAwMDAwMDAwMDAw"
-	if addon.Config["workspaceGuid"] != expectedWorkspaceGuidInBase64 {
-		t.Fatalf("expected workspaceGuid : %s but got : %s", expectedWorkspaceGuidInBase64, addon.Config["workspaceGuid"])
+	expectedWorkspaceGUIDInBase64 := "MDAwMDAwMDAtMDAwMC0wMDAwLTAwMDAtMDAwMDAwMDAwMDAw"
+	if addon.Config["workspaceGuid"] != expectedWorkspaceGUIDInBase64 {
+		t.Fatalf("expected workspaceGuid : %s but got : %s", expectedWorkspaceGUIDInBase64, addon.Config["workspaceGuid"])
 	}
 
 	expectedWorkspaceKeyInBase64 := "NEQrdnlkNS9qU2NCbXNBd1pPRi8wR09CUTVrdUZRYzlKVmFXK0hsbko1OGN5ZVBKY3dUcGtzK3JWbXZnY1hHbW15dWpMRE5FVlBpVDhwQjI3NGE5WWc9PQ=="
@@ -850,7 +850,7 @@ func TestAPIModelWithContainerMonitoringAddonWithWorkspaceGuidAndKeyConfigInCmd(
 		Translator: nil,
 	}
 
-	apimodel := ExampleAPIModelWithContainerMonitoringAddonWithWorkspaceGuidAndKeyConfig
+	apimodel := ExampleAPIModelWithContainerMonitoringAddonWithWorkspaceGUIDAndKeyConfig
 
 	cs, ver, err := apiloader.DeserializeContainerService([]byte(apimodel), false, false, nil)
 	if err != nil {
@@ -892,9 +892,9 @@ func TestAPIModelWithContainerMonitoringAddonWithWorkspaceGuidAndKeyConfigInCmd(
 		t.Fatalf("unexpected addon found : %s", addon.Name)
 	}
 
-	expectedWorkspaceGuidInBase64 := "MDAwMDAwMDAtMDAwMC0wMDAwLTAwMDAtMDAwMDAwMDAwMDAw"
-	if addon.Config["workspaceGuid"] != expectedWorkspaceGuidInBase64 {
-		t.Fatalf("expected workspaceGuid : %s but got : %s", expectedWorkspaceGuidInBase64, addon.Config["workspaceGuid"])
+	expectedWorkspaceGUIDInBase64 := "MDAwMDAwMDAtMDAwMC0wMDAwLTAwMDAtMDAwMDAwMDAwMDAw"
+	if addon.Config["workspaceGuid"] != expectedWorkspaceGUIDInBase64 {
+		t.Fatalf("expected workspaceGuid : %s but got : %s", expectedWorkspaceGUIDInBase64, addon.Config["workspaceGuid"])
 	}
 
 	expectedWorkspaceKeyInBase64 := "NEQrdnlkNS9qU2NCbXNBd1pPRi8wR09CUTVrdUZRYzlKVmFXK0hsbko1OGN5ZVBKY3dUcGtzK3JWbXZnY1hHbW15dWpMRE5FVlBpVDhwQjI3NGE5WWc9PQ=="
