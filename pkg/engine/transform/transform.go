@@ -171,7 +171,8 @@ func (t *Transformer) NormalizeForK8sVMASScalingUp(logger *logrus.Entry, templat
 
 		for dIndex := len(dependencies) - 1; dIndex >= 0; dIndex-- {
 			dependency := dependencies[dIndex].(string)
-			if strings.Contains(dependency, rtResourceType) || strings.Contains(dependency, rtID) ||
+			if strings.Contains(dependency, nsgResourceType) || strings.Contains(dependency, nsgID) ||
+				strings.Contains(dependency, rtResourceType) || strings.Contains(dependency, rtID) ||
 				strings.Contains(dependency, vnetResourceType) || strings.Contains(dependency, vnetID) ||
 				strings.Contains(dependency, vmasResourceType) {
 				dependencies = append(dependencies[:dIndex], dependencies[dIndex+1:]...)
@@ -186,9 +187,6 @@ func (t *Transformer) NormalizeForK8sVMASScalingUp(logger *logrus.Entry, templat
 	}
 
 	indexesToRemove := []int{}
-	if nsgIndex > 0 {
-		indexesToRemove = append(indexesToRemove, nsgIndex)
-	}
 
 	if rtIndex == -1 {
 		logger.Infof("Found no resources with type %s in the template.", rtResourceType)
@@ -202,6 +200,9 @@ func (t *Transformer) NormalizeForK8sVMASScalingUp(logger *logrus.Entry, templat
 
 	if len(vmasIndexes) != 0 {
 		indexesToRemove = append(indexesToRemove, vmasIndexes...)
+	}
+	if nsgIndex > 0 {
+		indexesToRemove = append(indexesToRemove, nsgIndex)
 	}
 
 	templateMap[resourcesFieldName] = removeIndexesFromArray(resources, indexesToRemove)
