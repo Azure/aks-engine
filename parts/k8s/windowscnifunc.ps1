@@ -13,11 +13,11 @@ function Update-WinCNI
 {
     Param(
         [string]
-        $WinCniUrl = "https://github.com/Microsoft/SDN/raw/master/Kubernetes/windows/cni/wincni.exe",
+        $WinCniUrl = "https://github.com/Microsoft/SDN/raw/master/Kubernetes/flannel/l2bridge/cni/win-bridge.exe",
         [Parameter(Mandatory=$true)][string]
         $CNIPath
     )
-    $wincni = "wincni.exe"
+    $wincni = "win-bridge.exe"
     $wincniFile = [Io.path]::Combine($CNIPath, $wincni)
     DownloadFileOverHttp -Url $WinCniUrl -DestinationPath $wincniFile
 }
