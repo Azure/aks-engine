@@ -53,6 +53,22 @@ spec:
     plural: azureidentities
   scope: Namespaced
 ---
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  name: azurepodidentityexceptions.aadpodidentity.k8s.io
+  labels:
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: Reconcile
+spec:
+  group: aadpodidentity.k8s.io
+  version: v1
+  names:
+    kind: AzurePodIdentityException
+    singular: azurepodidentityexception
+    plural: azurepodidentityexceptions
+  scope: Namespaced
+---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
@@ -61,8 +77,20 @@ metadata:
     kubernetes.io/cluster-service: "true"
     addonmanager.kubernetes.io/mode: Reconcile
 rules:
-- apiGroups: ["*"]
-  resources: ["*"]
+- apiGroups: ["apiextensions.k8s.io"]
+  resources: ["customresourcedefinitions"]
+  verbs: ["get", "list"]
+- apiGroups: [""]
+  resources: ["pods"]
+  verbs: ["get", "list"]
+- apiGroups: [""]
+  resources: ["secrets"]
+  verbs: ["get"]
+- apiGroups: ["aadpodidentity.k8s.io"]
+  resources: ["azureidentitybindings", "azureidentities", "azurepodidentityexceptions"]
+  verbs: ["get", "list"]
+- apiGroups: ["aadpodidentity.k8s.io"]
+  resources: ["azureassignedidentities"]
   verbs: ["get", "list"]
 ---
 apiVersion: rbac.authorization.k8s.io/v1beta1
@@ -70,9 +98,9 @@ kind: ClusterRoleBinding
 metadata:
   name: aad-pod-id-nmi-binding
   labels:
+    k8s-app: aad-pod-id-nmi-binding
     kubernetes.io/cluster-service: "true"
     addonmanager.kubernetes.io/mode: Reconcile
-    k8s-app: aad-pod-id-nmi-binding
 subjects:
 - kind: ServiceAccount
   name: aad-pod-id-nmi-service-account
@@ -87,13 +115,15 @@ kind: DaemonSet
 metadata:
   labels:
     kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
     component: nmi
     tier: node
     k8s-app: aad-pod-id
+    addonmanager.kubernetes.io/mode: Reconcile
   name: nmi
   namespace: default
 spec:
+  updateStrategy:
+    type: RollingUpdate
   template:
     metadata:
       labels:
@@ -102,6 +132,11 @@ spec:
     spec:
       serviceAccountName: aad-pod-id-nmi-service-account
       hostNetwork: true
+      volumes:
+      - hostPath:
+          path: /run/xtables.lock
+          type: FileOrCreate
+        name: iptableslock
       containers:
       - name: nmi
         image: {{ContainerImage "nmi"}}
@@ -130,6 +165,15 @@ spec:
           capabilities:
             add:
             - NET_ADMIN
+        volumeMounts:
+        - mountPath: /run/xtables.lock
+          name: iptableslock
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 8080
+          initialDelaySeconds: 10
+          periodSeconds: 5
       nodeSelector:
         beta.kubernetes.io/os: linux
 ---
@@ -154,11 +198,14 @@ rules:
   resources: ["customresourcedefinitions"]
   verbs: ["*"]
 - apiGroups: [""]
-  resources: ["pods"]
+  resources: ["pods", "nodes"]
   verbs: [ "list", "watch" ]
 - apiGroups: [""]
   resources: ["events"]
   verbs: ["create", "patch"]
+- apiGroups: [""]
+  resources: ["endpoints"]
+  verbs: ["create", "get","update"]
 - apiGroups: ["aadpodidentity.k8s.io"]
   resources: ["azureidentitybindings", "azureidentities"]
   verbs: ["get", "list", "watch", "post"]
@@ -171,9 +218,9 @@ kind: ClusterRoleBinding
 metadata:
   name: aad-pod-id-mic-binding
   labels:
+    k8s-app: aad-pod-id-mic-binding
     kubernetes.io/cluster-service: "true"
     addonmanager.kubernetes.io/mode: Reconcile
-    k8s-app: aad-pod-id-mic-binding
 subjects:
 - kind: ServiceAccount
   name: aad-pod-id-mic-service-account
@@ -194,10 +241,12 @@ metadata:
   name: mic
   namespace: default
 spec:
+  replicas: 2
   template:
     metadata:
       labels:
         component: mic
+        app: mic
     spec:
       serviceAccountName: aad-pod-id-mic-service-account
       containers:
@@ -212,13 +261,21 @@ spec:
             cpu: {{ContainerCPULimits "mic"}}
             memory: {{ContainerMemLimits "mic"}}
         args:
-          - --cloudconfig=/etc/kubernetes/azure.json
-          - --logtostderr
+          - "--cloudconfig=/etc/kubernetes/azure.json"
+          - "--logtostderr"
         volumeMounts:
-          - name: k8s-azure-file
-            mountPath: /etc/kubernetes/azure.json
-            readOnly: true
+        - name: k8s-azure-file
+          mountPath: /etc/kubernetes/azure.json
+          readOnly: true
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 8080
+          initialDelaySeconds: 10
+          periodSeconds: 5
       volumes:
       - name: k8s-azure-file
         hostPath:
           path: /etc/kubernetes/azure.json
+      nodeSelector:
+        beta.kubernetes.io/os: linux
