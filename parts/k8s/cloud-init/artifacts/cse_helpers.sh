@@ -156,7 +156,7 @@ apt_get_update() {
     for i in $(seq 1 $retries); do
         wait_for_apt_locks
         export DEBIAN_FRONTEND=noninteractive
-        dpkg --configure -a
+        dpkg --configure -a --force-confdef
         apt-get -f -y install
         ! (apt-get update 2>&1 | tee $apt_update_output | grep -E "^([WE]:.*)|([eE]rr.*)$") && \
         cat $apt_update_output && break || \
@@ -174,7 +174,7 @@ apt_get_install() {
     for i in $(seq 1 $retries); do
         wait_for_apt_locks
         export DEBIAN_FRONTEND=noninteractive
-        dpkg --configure -a
+        dpkg --configure -a --force-confdef
         apt-get install -o Dpkg::Options::="--force-confold" --no-install-recommends -y ${@} && break || \
         if [ $i -eq $retries ]; then
             return 1
@@ -192,7 +192,7 @@ apt_get_dist_upgrade() {
   for i in $(seq 1 $retries); do
     wait_for_apt_locks
     export DEBIAN_FRONTEND=noninteractive
-    dpkg --configure -a
+    dpkg --configure -a --force-confdef
     apt-get -f -y install
     apt-mark showhold
     ! (apt-get dist-upgrade -y 2>&1 | tee $apt_dist_upgrade_output | grep -E "^([WE]:.*)|([eE]rr.*)$") && \
