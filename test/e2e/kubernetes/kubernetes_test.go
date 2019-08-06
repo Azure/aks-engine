@@ -464,35 +464,44 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				pods, err = deploy.Pods()
 				Expect(err).NotTo(HaveOccurred())
 				for _, p := range pods {
-					By("Ensuring that the pod is running")
-					var running bool
-					running, err = p.WaitOnReady(retryTimeWhenWaitingForPodReady, cfg.Timeout)
-					Expect(err).NotTo(HaveOccurred())
-					Expect(running).To(Equal(true))
-					By("Running kubectl port-forward")
-					proxyCmd := exec.Command("k", "port-forward", p.Metadata.Name, "8123:80")
-					var proxyStdout io.ReadCloser
-					proxyStdout, err = proxyCmd.StdoutPipe()
-					util.PrintCommand(proxyCmd)
-					err = proxyCmd.Start()
-					Expect(err).NotTo(HaveOccurred())
-					proxyStdoutReader := bufio.NewReader(proxyStdout)
-					var proxyOutStr string
-					proxyOutStr, err = proxyStdoutReader.ReadString('\n')
-					Expect(err).NotTo(HaveOccurred())
-					log.Printf("kubectl port-forward output: %s\n", proxyOutStr)
-					defer func() {
-						proxyCmd.Process.Signal(os.Kill)
-						proxyCmd.Wait()
+					func() {
+						By("Ensuring that the pod is running")
+						var running bool
+						running, err = p.WaitOnReady(retryTimeWhenWaitingForPodReady, cfg.Timeout)
+						Expect(err).NotTo(HaveOccurred())
+						Expect(running).To(Equal(true))
+						By("Running kubectl port-forward")
+						proxyCmd := exec.Command("k", "port-forward", p.Metadata.Name, "8123:80")
+						var proxyStdout, proxyStderr io.ReadCloser
+						proxyStdout, err = proxyCmd.StdoutPipe()
+						Expect(err).NotTo(HaveOccurred())
+						proxyStderr, err = proxyCmd.StderrPipe()
+						Expect(err).NotTo(HaveOccurred())
+						util.PrintCommand(proxyCmd)
+						err = proxyCmd.Start()
+						Expect(err).NotTo(HaveOccurred())
+						proxyStdoutReader := bufio.NewReader(proxyStdout)
+						proxyStderrReader := bufio.NewReader(proxyStderr)
+						proxyOutStr, outErr := proxyStdoutReader.ReadString('\n')
+						log.Printf("kubectl port-forward stdout: %s\n", proxyOutStr)
+						if outErr != nil {
+							proxyErrStr, _ := proxyStderrReader.ReadString('\n') // returns EOF error, ignore it
+							log.Printf("kubectl port-forward stderr: %s\n", proxyErrStr)
+						}
+						Expect(outErr).NotTo(HaveOccurred())
+						defer func() {
+							proxyCmd.Process.Signal(os.Kill)
+							proxyCmd.Wait()
+						}()
+						By("Running curl to access the forwarded port")
+						url := fmt.Sprintf("http://%s:%v", "localhost", 8123)
+						cmd := exec.Command("curl", "--max-time", "60", url)
+						util.PrintCommand(cmd)
+						var out []byte
+						out, err = cmd.CombinedOutput()
+						log.Printf("%s\n", out)
+						Expect(err).NotTo(HaveOccurred())
 					}()
-					By("Running curl to access the forwarded port")
-					url := fmt.Sprintf("http://%s:%v", "localhost", 8123)
-					cmd := exec.Command("curl", "--max-time", "60", url)
-					util.PrintCommand(cmd)
-					var out []byte
-					out, err = cmd.CombinedOutput()
-					log.Printf("%s\n", out)
-					Expect(err).NotTo(HaveOccurred())
 				}
 			}
 
