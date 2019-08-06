@@ -141,6 +141,7 @@ write_files:
     {{else}}
     ExecStart=/usr/bin/dockerd -H fd:// --storage-driver=overlay2 --bip={{WrapAsParameter "dockerBridgeCidr"}}
     {{end}}
+    ExecStartPost=/sbin/iptables -P FORWARD ACCEPT
 
 - path: /etc/docker/daemon.json
   permissions: "0644"
