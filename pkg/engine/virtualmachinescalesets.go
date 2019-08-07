@@ -71,7 +71,7 @@ func CreateMasterVMSS(cs *api.ContainerService) VirtualMachineScaleSetARM {
 		if cs.Properties.MasterProfile != nil && cs.Properties.MasterProfile.DNSPrefix != "" {
 			clusterDNSPrefix = cs.Properties.MasterProfile.DNSPrefix
 		}
-		vmScaleSetTags["logAnalyticsWorkspaceResourceId"] = to.StringPtr(addon.Config["logAnalyticsWorkspaceId"])
+		vmScaleSetTags["logAnalyticsWorkspaceResourceId"] = to.StringPtr(addon.Config["logAnalyticsWorkspaceResourceId"])
 		vmScaleSetTags["clusterName"] = to.StringPtr(clusterDNSPrefix)
 	}
 

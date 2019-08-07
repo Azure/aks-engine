@@ -496,7 +496,7 @@ func (dc *deployCmd) configureContainerMonitoringAddon(ctx context.Context, k8sC
 			if addon.Name == "container-monitoring" {
 				addon.Config["workspaceGuid"] = base64.StdEncoding.EncodeToString([]byte(wsID))
 				addon.Config["workspaceKey"] = base64.StdEncoding.EncodeToString([]byte(wsKey))
-				addon.Config["logAnalyticsWorkspaceId"] = workspaceResourceID
+				addon.Config["logAnalyticsWorkspaceResourceId"] = workspaceResourceID
 			}
 		}
 

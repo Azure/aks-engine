@@ -58,7 +58,7 @@ func CreateMasterVM(cs *api.ContainerService) VirtualMachineARM {
 		if cs.Properties.MasterProfile != nil && cs.Properties.MasterProfile.DNSPrefix != "" {
 			clusterDNSPrefix = cs.Properties.MasterProfile.DNSPrefix
 		}
-		vmTags["logAnalyticsWorkspaceResourceId"] = to.StringPtr(addon.Config["logAnalyticsWorkspaceId"])
+		vmTags["logAnalyticsWorkspaceResourceId"] = to.StringPtr(addon.Config["logAnalyticsWorkspaceResourceId"])
 		vmTags["clusterName"] = to.StringPtr(clusterDNSPrefix)
 	}
 

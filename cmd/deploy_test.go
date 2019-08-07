@@ -719,7 +719,7 @@ func TestAPIModelWithContainerMonitoringAddonWithNoConfigInCmd(t *testing.T) {
 		t.Fatalf("expected workspaceKey : %s but got : %s", expectedWorkspaceKeyInBase64, addon.Config["workspaceKey"])
 	}
 
-	workspaceResourceID := addon.Config["logAnalyticsWorkspaceId"]
+	workspaceResourceID := addon.Config["logAnalyticsWorkspaceResourceId"]
 	resourceParts := strings.Split(workspaceResourceID, "/")
 
 	if len(resourceParts) != 9 {
@@ -812,7 +812,7 @@ func TestAPIModelWithContainerMonitoringAddonWithConfigInCmd(t *testing.T) {
 		t.Fatalf("expected workspaceKey : %s but got : %s", expectedWorkspaceKeyInBase64, addon.Config["workspaceKey"])
 	}
 
-	workspaceResourceID := addon.Config["logAnalyticsWorkspaceId"]
+	workspaceResourceID := addon.Config["logAnalyticsWorkspaceResourceId"]
 	resourceParts := strings.Split(workspaceResourceID, "/")
 
 	if len(resourceParts) != 9 {
