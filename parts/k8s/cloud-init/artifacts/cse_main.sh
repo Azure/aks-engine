@@ -7,7 +7,7 @@ AZURE_STACK_ENV="azurestackcloud"
 script_lib=/opt/azure/containers/provision_source.sh
 for i in $(seq 1 3600); do
     if [ -s $script_lib ]; then
-        grep -Fq '#HELPERSEOF' $filepath && break
+        grep -Fq '#HELPERSEOF' $script_lib && break
     fi
     if [ $i -eq 3600 ]; then
         exit $ERR_FILE_WATCH_TIMEOUT
