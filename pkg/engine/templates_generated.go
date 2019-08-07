@@ -15458,7 +15458,7 @@ MASTER_CONTAINER_ADDONS_PLACEHOLDER
 {{if eq .OrchestratorProfile.KubernetesConfig.NetworkPolicy "calico"}}
     sed -i "s|<kubeClusterCidr>|{{WrapAsParameter "kubeClusterCidr"}}|g" /etc/kubernetes/addons/calico-daemonset.yaml
     {{if eq .OrchestratorProfile.KubernetesConfig.NetworkPlugin "azure"}}
-    sed -i "/initContainers/,/cni-net-dir/d" /etc/kubernetes/addons/calico-daemonset.yaml
+    sed -i "/Start of install-cni initContainer/,/End of install-cni initContainer/d" /etc/kubernetes/addons/calico-daemonset.yaml
     {{else}}
     sed -i "s|<calicoIPAMConfig>|{\"type\": \"host-local\", \"subnet\": \"usePodCidr\"}|g" /etc/kubernetes/addons/calico-daemonset.yaml
     sed -i "s|azv|cali|g" /etc/kubernetes/addons/calico-daemonset.yaml
@@ -20472,7 +20472,7 @@ data:
   cni_network_config: |-
     {
       "name": "k8s-pod-network",
-      "cniVersion": "0.3.0",
+      "cniVersion": "0.3.1",
       "plugins": [
         {
           "type": "calico",
@@ -20646,7 +20646,7 @@ spec:
 # Include a clusterrole for the calico-node DaemonSet,
 # and bind it to the calico-node serviceaccount.
 kind: ClusterRole
-apiVersion: rbac.authorization.k8s.io/v1beta1
+apiVersion: rbac.authorization.k8s.io/v1
 metadata:
   name: calico-node
   labels:
@@ -20747,12 +20747,11 @@ rules:
   - create
   - update
 ---
-apiVersion: rbac.authorization.k8s.io/v1beta1
+apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
   name: calico-node
   labels:
-    kubernetes.io/cluster-service: "true"
     addonmanager.kubernetes.io/mode: "Reconcile"
 roleRef:
   apiGroup: rbac.authorization.k8s.io
@@ -20762,7 +20761,6 @@ subjects:
 - kind: ServiceAccount
   name: calico-node
   namespace: kube-system
-
 ---
 # Source: calico/templates/calico-typha.yaml
 # This manifest creates a Service, which will be backed by Calico's Typha daemon.
@@ -20788,7 +20786,7 @@ spec:
 
 # This manifest creates a Deployment of Typha to back the above service.
 
-apiVersion: apps/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: calico-typha
@@ -20829,6 +20827,7 @@ spec:
       # Since Calico can't network a pod until Typha is up, we need to run Typha itself
       # as a host-networked pod.
       serviceAccountName: calico-node
+      priorityClassName: system-cluster-critical
       containers:
       - image: {{ContainerImage "calico-typha"}}
         name: calico-typha
@@ -20883,7 +20882,7 @@ spec:
 # as the CNI plugins and network config on
 # each master and worker node in a Kubernetes cluster.
 kind: DaemonSet
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 metadata:
   name: calico-node
   namespace: kube-system
@@ -20925,7 +20924,9 @@ spec:
       # Minimize downtime during a rolling upgrade or deletion; tell Kubernetes to do a "force
       # deletion": https://kubernetes.io/docs/concepts/workloads/pods/pod/#termination-of-pods.
       terminationGracePeriodSeconds: 0
+      priorityClassName: system-node-critical
       initContainers:
+      # Start of install-cni initContainer
       # This container installs the CNI binaries
       # and CNI network config file on each node.
       - name: install-cni
@@ -20954,6 +20955,14 @@ spec:
           name: cni-bin-dir
         - mountPath: /host/etc/cni/net.d
           name: cni-net-dir
+      # End of install-cni initContainer
+      # Adds a Flex Volume Driver that creates a per-pod Unix Domain Socket to allow Dikastes
+      # to communicate with Felix over the Policy Sync API.
+      - name: flexvol-driver
+        image: {{ContainerImage "calico-pod2daemon"}}
+        volumeMounts:
+        - name: flexvol-driver-host
+          mountPath: /host/driver
       containers:
       # Runs calico-node container on each Kubernetes node.  This
       # container programs network policy and routes on each
@@ -21042,6 +21051,8 @@ spec:
         - mountPath: /var/lib/calico
           name: var-lib-calico
           readOnly: false
+        - name: policysync
+          mountPath: /var/run/nodeagent
       volumes:
       # Used by calico-node.
       - name: lib-modules
@@ -21064,6 +21075,16 @@ spec:
       - name: cni-net-dir
         hostPath:
           path: /etc/cni/net.d
+      # Used to create per-pod Unix Domain Sockets
+      - name: policysync
+        hostPath:
+          type: DirectoryOrCreate
+          path: /var/run/nodeagent
+      # Used to install Flex Volume Driver
+      - name: flexvol-driver-host
+        hostPath:
+          type: DirectoryOrCreate
+          path: /etc/kubernetes/volumeplugins/nodeagent~uds
 ---
 
 apiVersion: v1
@@ -21082,7 +21103,6 @@ metadata:
   name: calico-typha-horizontal-autoscaler
   namespace: kube-system
   labels:
-    kubernetes.io/cluster-service: "true"
     addonmanager.kubernetes.io/mode: "EnsureExists"
 data:
   ladder: |-
@@ -21111,7 +21131,6 @@ metadata:
   namespace: kube-system
   labels:
     k8s-app: calico-typha-autoscaler
-    kubernetes.io/cluster-service: "true"
     addonmanager.kubernetes.io/mode: "Reconcile"
 spec:
   replicas: 1
@@ -21150,7 +21169,6 @@ kind: ClusterRole
 metadata:
   name: typha-cpha
   labels:
-    kubernetes.io/cluster-service: "true"
     addonmanager.kubernetes.io/mode: "Reconcile"
 rules:
 - apiGroups: [""]
@@ -21165,7 +21183,6 @@ kind: ClusterRoleBinding
 metadata:
   name: typha-cpha
   labels:
-    kubernetes.io/cluster-service: "true"
     addonmanager.kubernetes.io/mode: "Reconcile"
 roleRef:
   apiGroup: rbac.authorization.k8s.io
@@ -21184,7 +21201,6 @@ metadata:
   name: typha-cpha
   namespace: kube-system
   labels:
-    kubernetes.io/cluster-service: "true"
     addonmanager.kubernetes.io/mode: "Reconcile"
 rules:
 - apiGroups: [""]
@@ -21203,7 +21219,6 @@ metadata:
   name: typha-cpha
   namespace: kube-system
   labels:
-    kubernetes.io/cluster-service: "true"
     addonmanager.kubernetes.io/mode: "Reconcile"
 roleRef:
   apiGroup: rbac.authorization.k8s.io
@@ -21222,7 +21237,7 @@ metadata:
   name: typha-cpha
   namespace: kube-system
   labels:
-    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: "Reconcile"
 `)
 
 func k8sContaineraddonsKubernetesmasteraddonsCalicoDaemonsetYamlBytes() ([]byte, error) {

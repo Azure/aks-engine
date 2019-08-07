@@ -2083,15 +2083,19 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:  "calico-typha",
-							Image: specConfig.CalicoImageBase + "typha:v3.7.2",
+							Image: specConfig.CalicoImageBase + "typha:v3.8.0",
 						},
 						{
 							Name:  "calico-cni",
-							Image: specConfig.CalicoImageBase + "cni:v3.7.2",
+							Image: specConfig.CalicoImageBase + "cni:v3.8.0",
 						},
 						{
 							Name:  "calico-node",
-							Image: specConfig.CalicoImageBase + "node:v3.7.2",
+							Image: specConfig.CalicoImageBase + "node:v3.8.0",
+						},
+						{
+							Name:  "calico-pod2daemon",
+							Image: specConfig.CalicoImageBase + "pod2daemon-flexvol:v3.8.0",
 						},
 						{
 							Name:  "calico-cluster-proportional-autoscaler",
@@ -2125,11 +2129,15 @@ func TestSetAddonsConfig(t *testing.T) {
 										},
 										{
 											Name:  "calico-cni",
-											Image: specConfig.CalicoImageBase + "cni:v3.7.2",
+											Image: specConfig.CalicoImageBase + "cni:v3.8.0",
 										},
 										{
 											Name:  "calico-node",
-											Image: specConfig.CalicoImageBase + "node:v3.7.2",
+											Image: specConfig.CalicoImageBase + "node:v3.8.0",
+										},
+										{
+											Name:  "calico-pod2daemon",
+											Image: specConfig.CalicoImageBase + "pod2daemon-flexvol:v3.8.0",
 										},
 										{
 											Name:  "calico-cluster-proportional-autoscaler",
@@ -2295,15 +2303,19 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:  "calico-typha",
-							Image: specConfig.CalicoImageBase + "typha:v3.7.2",
+							Image: specConfig.CalicoImageBase + "typha:v3.8.0",
 						},
 						{
 							Name:  "calico-cni",
-							Image: specConfig.CalicoImageBase + "cni:v3.7.2",
+							Image: specConfig.CalicoImageBase + "cni:v3.8.0",
 						},
 						{
 							Name:  "calico-node",
-							Image: specConfig.CalicoImageBase + "node:v3.7.2",
+							Image: specConfig.CalicoImageBase + "node:v3.8.0",
+						},
+						{
+							Name:  "calico-pod2daemon",
+							Image: specConfig.CalicoImageBase + "pod2daemon-flexvol:v3.8.0",
 						},
 						{
 							Name:  "calico-cluster-proportional-autoscaler",
