@@ -124,7 +124,7 @@ if [ -f $CUSTOM_SEARCH_DOMAIN_SCRIPT ]; then
 fi
 
 if [[ "$CONTAINER_RUNTIME" == "docker" ]]; then
-    ensureDocker || exit $ERR_DOCKER_START_FAIL
+    ensureDocker
 elif [[ "$CONTAINER_RUNTIME" == "kata-containers" ]]; then
     if grep -q vmx /proc/cpuinfo; then
         installKataContainersRuntime
