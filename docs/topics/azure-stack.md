@@ -173,11 +173,12 @@ If you need to expose more than 5 services, then the recommendation is to route 
 
 These are the Kubernetes versions that you can deploy to Azure Stack using AKS Engine:
 
+- 1.15.2
 - 1.15.1
+- 1.14.5
 - 1.14.4
-- 1.14.3
+- 1.13.9
 - 1.13.8
-- 1.13.7
 - 1.12.8
 - 1.12.7
 - 1.11.10
