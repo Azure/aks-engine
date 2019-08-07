@@ -12574,12 +12574,12 @@ ensureDocker() {
             jq '.' < $DOCKER_JSON_FILE && break
         fi
         if [ $i -eq 1200 ]; then
-            return 1
+            exit $ERR_FILE_WATCH_TIMEOUT
         else
             sleep 1
         fi
     done
-    systemctlEnableAndStart docker
+    systemctlEnableAndStart docker || exit $ERR_DOCKER_START_FAIL
     # Delay start of docker-monitor for 30 mins after booting
     DOCKER_MONITOR_SYSTEMD_TIMER_FILE=/etc/systemd/system/docker-monitor.timer
     wait_for_file 1200 1 $DOCKER_MONITOR_SYSTEMD_TIMER_FILE || exit $ERR_FILE_WATCH_TIMEOUT
@@ -13675,7 +13675,7 @@ if [ -f $CUSTOM_SEARCH_DOMAIN_SCRIPT ]; then
 fi
 
 if [[ "$CONTAINER_RUNTIME" == "docker" ]]; then
-    ensureDocker || exit $ERR_DOCKER_START_FAIL
+    ensureDocker
 elif [[ "$CONTAINER_RUNTIME" == "kata-containers" ]]; then
     if grep -q vmx /proc/cpuinfo; then
         installKataContainersRuntime
