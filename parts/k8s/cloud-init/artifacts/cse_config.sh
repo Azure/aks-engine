@@ -297,12 +297,12 @@ ensureDocker() {
             jq '.' < $DOCKER_JSON_FILE && break
         fi
         if [ $i -eq 1200 ]; then
-            return 1
+            exit $ERR_FILE_WATCH_TIMEOUT
         else
             sleep 1
         fi
     done
-    systemctlEnableAndStart docker
+    systemctlEnableAndStart docker || return 1
     # Delay start of docker-monitor for 30 mins after booting
     DOCKER_MONITOR_SYSTEMD_TIMER_FILE=/etc/systemd/system/docker-monitor.timer
     wait_for_file 1200 1 $DOCKER_MONITOR_SYSTEMD_TIMER_FILE || exit $ERR_FILE_WATCH_TIMEOUT
