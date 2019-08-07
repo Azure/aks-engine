@@ -80,6 +80,13 @@ For more details and instructions to [onboard the container monitoring addon for
 
 After successful onboarding, navigating to [Azure Monitor for containers](https://aka.ms/azmon-containers) to view and monitor, and analyze health of your onboarded AKS-Engine cluster, pods and containers etc.
 
+## Required Roles and Permissions
+
+- User requires the reader role permission on the Azure Log Analytics workspace and AKS-Engine cluster resource group to view and monitor, and analyze health of your onboarded AKS-Engine cluster, pods and containers etc.
+- For onboarding monitoring addon
+     -  If the existing Azure Log Analytics workspace used, then requires Log Analytics Contributor role on existing Azure Log Analytics
+     -  For the new Azure Log Analytics workspace, user requires the contributor role on the Subscription or the Resource group where the AKS-Engine cluster resources will be deployed
+
 ## Contact
 
 If you have any questions or feedback regarding the container monitoring addon, please reach us out through [this](mailto:askcoin@microsoft.com) email.
