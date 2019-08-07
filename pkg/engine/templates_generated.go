@@ -13215,7 +13215,7 @@ sysctl_reload() {
 version_gte() {
   test "$(printf '%s\n' "$@" | sort -rV | head -n 1)" == "$1"
 }
-#EOF
+#HELPERSEOF
 `)
 
 func k8sCloudInitArtifactsCse_helpersShBytes() ([]byte, error) {
@@ -13557,8 +13557,8 @@ AZURE_STACK_ENV="azurestackcloud"
 
 script_lib=/opt/azure/containers/provision_source.sh
 for i in $(seq 1 3600); do
-    if [ -f $script_lib ]; then
-        break
+    if [ -s $script_lib ]; then
+        grep -Fq '#HELPERSEOF' $script_lib && break
     fi
     if [ $i -eq 3600 ]; then
         exit $ERR_FILE_WATCH_TIMEOUT
@@ -13566,6 +13566,7 @@ for i in $(seq 1 3600); do
         sleep 1
     fi
 done
+sed -i "/#HELPERSEOF/d" $script_lib
 source $script_lib
 
 install_script=/opt/azure/containers/provision_installs.sh
