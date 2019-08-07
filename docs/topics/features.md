@@ -11,6 +11,8 @@
 |Private Cluster|Alpha|`vlabs`|[kubernetes-private-cluster.json](../../examples/kubernetes-config/kubernetes-private-cluster.json)|[Description](#feat-private-cluster)|
 |Azure Key Vault Encryption|Alpha|`vlabs`|[kubernetes-keyvault-encryption.json](../../examples/kubernetes-config/kubernetes-keyvault-encryption.json)|[Description](#feat-keyvault-encryption)|
 |Shared Image Gallery images|Alpha|`vlabs`|[custom-shared-image.json](../../examples/custom-shared-image.json)|[Description](#feat-shared-image-gallery)|
+|Ephemeral OS Disks|Experimental|`vlabs`|[ephmeral-disk.json](../../examples/disks-ephemeral/ephemeral-disks.json)|[Description](#ephemeral-os-disks)|
+
 
 <a name="feat-kubernetes-msi"></a>
 
@@ -482,3 +484,27 @@ This is possible by specifying `imageReference` under `masterProfile` or on a gi
     }
   }
 ```
+
+## Ephemeral OS Disks
+
+> This feature is considered experimental, and you may lose data. We're still evaluating what risks exist and how to mitigate them.
+
+[Ephemeral OS Disks] is a new feature in Azure that allows the OS disk to use local SSD storage, with no writes to Azure storage. If a VM is stopped or deprovisioned, it's local storage is lost. If the same VM is restarted, it starts from the original OS disk and reapplies the custom script extension from AKS-Engine to join the cluster. 
+
+Benefits - VMs deploy faster, and have better local storage performance. The OS disk will perform at the _Max cached storage throughput_ for the VM size. For example with a `Standard_D2s_v3` size VM using a 50 GiB OS disk - it can achieve 4000 IOPs with ephemeral disks enabled, or 240 IOPs using a `Premium P6` [Premium SSD](https://docs.microsoft.com/en-us/azure/virtual-machines/linux/disks-types#premium-ssd) at 50GiB. Apps will get faster container and `emptydir` performance. Container pull times are also improved.
+
+Requirements:
+
+- Be sure you are using a VM size that supports cache for the local disk
+- The OS disk size must be set to <= the VM's _cache size in GiB_
+
+These are fully explained in the [Ephemeral OS Disks] docs.
+
+
+We are investigating possible risks & mitigations for when VMs are deprovisioned or moved for Azure maintenance:
+
+- Logs for containers on those nodes are lost.
+- Containers cannot be restarted on the same node, as their container directory and any emptydir volumes will be missing.
+
+
+[Ephemeral OS Disks]: https://docs.microsoft.com/en-us/azure/virtual-machines/windows/ephemeral-os-disks

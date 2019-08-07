@@ -20,7 +20,7 @@ sleep 180
   --api-model ${APIMODEL} \
   --location ${LOCATION} \
   --resource-group ${RESOURCE_GROUP} \
-  --master-FQDN "${INSTANCE_NAME}.${LOCATION}.cloudapp.azure.com" \
+  --apiserver "${INSTANCE_NAME}.${LOCATION}.cloudapp.azure.com" \
   --node-pool "agentpool1" \
   --new-node-count ${NEW_AGENT_NODE_COUNT} \
   --auth-method client_secret \

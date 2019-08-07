@@ -130,7 +130,7 @@ type AgentPoolProfile struct {
 	VMSize              string `json:"vmSize" validate:"required"`
 	OSDiskSizeGB        int    `json:"osDiskSizeGB,omitempty" validate:"min=0,max=1023"`
 	AvailabilityProfile string `json:"availabilityProfile"`
-	StorageProfile      string `json:"storageProfile" validate:"eq=StorageAccount|eq=ManagedDisks|len=0"`
+	StorageProfile      string `json:"storageProfile" validate:"eq=StorageAccount|eq=ManagedDisks|eq=Ephemeral|len=0"`
 	VnetSubnetID        string `json:"vnetSubnetID,omitempty"`
 
 	// OSType is the operating system type for agents
@@ -228,4 +228,9 @@ func (a *AgentPoolProfile) IsManagedDisks() bool {
 // IsStorageAccount returns true if the customer specified storage account
 func (a *AgentPoolProfile) IsStorageAccount() bool {
 	return a.StorageProfile == StorageAccount
+}
+
+// IsEphemeral returns true if the customer specified ephemeral disks
+func (a *AgentPoolProfile) IsEphemeral() bool {
+	return a.StorageProfile == Ephemeral
 }

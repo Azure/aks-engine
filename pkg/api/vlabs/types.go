@@ -443,7 +443,7 @@ type AgentPoolProfile struct {
 	AvailabilityProfile                 string               `json:"availabilityProfile"`
 	ScaleSetPriority                    string               `json:"scaleSetPriority,omitempty" validate:"eq=Regular|eq=Low|len=0"`
 	ScaleSetEvictionPolicy              string               `json:"scaleSetEvictionPolicy,omitempty" validate:"eq=Delete|eq=Deallocate|len=0"`
-	StorageProfile                      string               `json:"storageProfile" validate:"eq=StorageAccount|eq=ManagedDisks|len=0"`
+	StorageProfile                      string               `json:"storageProfile" validate:"eq=StorageAccount|eq=ManagedDisks|eq=Ephemeral|len=0"`
 	DiskSizesGB                         []int                `json:"diskSizesGB,omitempty" validate:"max=4,dive,min=1,max=1023"`
 	VnetSubnetID                        string               `json:"vnetSubnetID,omitempty"`
 	IPAddressCount                      int                  `json:"ipAddressCount,omitempty" validate:"min=0,max=256"`
@@ -722,6 +722,11 @@ func (a *AgentPoolProfile) IsNSeriesSKU() bool {
 // IsManagedDisks returns true if the customer specified managed disks
 func (a *AgentPoolProfile) IsManagedDisks() bool {
 	return a.StorageProfile == ManagedDisks
+}
+
+// IsEphemeral returns true if the customer specified ephemeral disks
+func (a *AgentPoolProfile) IsEphemeral() bool {
+	return a.StorageProfile == Ephemeral
 }
 
 // IsStorageAccount returns true if the customer specified storage account

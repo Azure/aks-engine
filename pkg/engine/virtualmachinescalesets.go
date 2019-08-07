@@ -286,7 +286,7 @@ func CreateMasterVMSS(cs *api.ContainerService) VirtualMachineScaleSetARM {
 		if cs.GetCloudSpecConfig().CloudName == api.AzureChinaCloud {
 			registry = `gcr.azk8s.cn 80`
 		} else {
-			registry = `k8s.gcr.io 443 && retrycmd_if_failure 50 1 3 ` + ncBinary + ` -vz gcr.io 443 && retrycmd_if_failure 50 1 3 ` + ncBinary + ` -vz docker.io 443`
+			registry = `aksrepos.azurecr.io 443`
 		}
 		outBoundCmd = `ERR_OUTBOUND_CONN_FAIL=50; retrycmd_if_failure 50 1 3 ` + ncBinary + ` -vz ` + registry + ` || exit $ERR_OUTBOUND_CONN_FAIL;`
 	}
@@ -666,6 +666,13 @@ func CreateAgentVMSS(cs *api.ContainerService, profile *api.AgentPoolProfile) Vi
 		osDisk.DiskSizeGB = to.Int32Ptr(int32(profile.OSDiskSizeGB))
 	}
 
+	if profile.IsEphemeral() {
+		osDisk.Caching = compute.CachingTypesReadOnly
+		osDisk.DiffDiskSettings = &compute.DiffDiskSettings{
+			Option: compute.Local,
+		}
+	}
+
 	vmssStorageProfile.OsDisk = &osDisk
 
 	vmssVMProfile.StorageProfile = &vmssStorageProfile
@@ -684,7 +691,7 @@ func CreateAgentVMSS(cs *api.ContainerService, profile *api.AgentPoolProfile) Vi
 		if cs.GetCloudSpecConfig().CloudName == api.AzureChinaCloud {
 			registry = `gcr.azk8s.cn 80`
 		} else {
-			registry = `k8s.gcr.io 443 && retrycmd_if_failure 50 1 3 ` + ncBinary + ` -vz gcr.io 443 && retrycmd_if_failure 50 1 3 ` + ncBinary + ` -vz docker.io 443`
+			registry = `aksrepos.azurecr.io 443`
 		}
 		outBoundCmd = `ERR_OUTBOUND_CONN_FAIL=50; retrycmd_if_failure 50 1 3 ` + ncBinary + ` -vz ` + registry + ` || exit $ERR_OUTBOUND_CONN_FAIL;`
 	}
