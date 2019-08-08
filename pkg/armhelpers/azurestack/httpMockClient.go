@@ -481,7 +481,7 @@ func (mc HTTPMockClient) RegisterEnsureDefaultLogAnalyticsWorkspace() {
 		if r.URL.Query().Get("api-version") != mc.ResourceGroupAPIVersion {
 			w.WriteHeader(http.StatusNotFound)
 		} else {
-			_, _ = fmt.Fprint(w, `{"status": "Succeeded"}`)
+			w.WriteHeader(http.StatusNoContent)
 		}
 	})
 
