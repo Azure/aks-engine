@@ -27,6 +27,8 @@ const (
 	virtualMachineScaleSetName                 = "vmscalesetName"
 	virtualMachineAvailabilitySetName          = "vmavailabilitysetName"
 	virtualMachineName                         = "testVirtualMachineName"
+	logAnalyticsDefaultResourceGroup           = "DefaultResourceGroup-EUS"
+	logAnalyticsDefaultWorkspaceName           = "DefaultWorkspace-cc6b141e-6afc-4786-9bf6-e3b9a5601460-EUS"
 	logAnalyticsWorkspaceName                  = "testLogAnalyticsWorkspace"
 	logAnalyticsSolutionName                   = "ContainerInsights(testLogAnalyticsWorkspace)"
 	virtualNicName                             = "testVirtualNicName"
@@ -62,6 +64,8 @@ type HTTPMockClient struct {
 	DeploymentStatus                           string
 	VirtualMachineScaleSetName                 string
 	VirtualMachineName                         string
+	LogAnalyticsDefaultResourceGroup           string
+	LogAnalyticsDefaultWorkspaceName           string
 	LogAnalyticsWorkspaceName                  string
 	LogAnalyticsSolutionName                   string
 	VirtualNicName                             string
@@ -104,25 +108,27 @@ type VirtualMachineVMValues struct {
 func NewHTTPMockClient() (HTTPMockClient, error) {
 
 	client := HTTPMockClient{
-		SubscriptionID:             subscriptionID,
-		TenantID:                   tenantID,
-		ResourceGroup:              resourceGroup,
-		ResourceGroupAPIVersion:    resourceGroupAPIVersion,
-		ComputeAPIVersion:          computeAPIVersion,
-		LogAnalyticsAPIVersion:     logAnalyticsAPIVersion,
-		NetworkAPIVersion:          networkAPIVersion,
-		DeploymentAPIVersion:       deploymentAPIVersion,
-		DeploymentName:             deploymentName,
-		DeploymentStatus:           deploymentStatus,
-		VirtualMachineScaleSetName: virtualMachineScaleSetName,
-		VirtualMachineName:         virtualMachineName,
-		LogAnalyticsWorkspaceName:  logAnalyticsWorkspaceName,
-		LogAnalyticsSolutionName:   logAnalyticsSolutionName,
-		VirtualNicName:             virtualNicName,
-		VirutalDiskName:            virutalDiskName,
-		Location:                   location,
-		OperationID:                operationID,
-		mux:                        http.NewServeMux(),
+		SubscriptionID:                   subscriptionID,
+		TenantID:                         tenantID,
+		ResourceGroup:                    resourceGroup,
+		ResourceGroupAPIVersion:          resourceGroupAPIVersion,
+		ComputeAPIVersion:                computeAPIVersion,
+		LogAnalyticsAPIVersion:           logAnalyticsAPIVersion,
+		NetworkAPIVersion:                networkAPIVersion,
+		DeploymentAPIVersion:             deploymentAPIVersion,
+		DeploymentName:                   deploymentName,
+		DeploymentStatus:                 deploymentStatus,
+		VirtualMachineScaleSetName:       virtualMachineScaleSetName,
+		VirtualMachineName:               virtualMachineName,
+		LogAnalyticsWorkspaceName:        logAnalyticsWorkspaceName,
+		LogAnalyticsDefaultResourceGroup: logAnalyticsDefaultResourceGroup,
+		LogAnalyticsDefaultWorkspaceName: logAnalyticsDefaultWorkspaceName,
+		LogAnalyticsSolutionName:         logAnalyticsSolutionName,
+		VirtualNicName:                   virtualNicName,
+		VirutalDiskName:                  virutalDiskName,
+		Location:                         location,
+		OperationID:                      operationID,
+		mux:                              http.NewServeMux(),
 	}
 	var err error
 	client.TokenResponse, err = readFromFile(filePathTokenResponse)
@@ -476,7 +482,7 @@ func (mc HTTPMockClient) RegisterGetLogAnalyticsWorkspaceInfo() {
 
 // RegisterEnsureDefaultLogAnalyticsWorkspace registers the mock response for EnsureDefaultLogAnalyticsWorkspace.
 func (mc HTTPMockClient) RegisterEnsureDefaultLogAnalyticsWorkspace() {
-	pattern := fmt.Sprintf("/subscriptions/%s/resourcegroups/%s", mc.SubscriptionID, mc.ResourceGroup)
+	pattern := fmt.Sprintf("/subscriptions/%s/resourcegroups/%s", mc.SubscriptionID, mc.LogAnalyticsDefaultResourceGroup)
 	mc.mux.HandleFunc(pattern, func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Query().Get("api-version") != mc.ResourceGroupAPIVersion {
 			w.WriteHeader(http.StatusNotFound)
@@ -485,7 +491,7 @@ func (mc HTTPMockClient) RegisterEnsureDefaultLogAnalyticsWorkspace() {
 		}
 	})
 
-	pattern = fmt.Sprintf("/subscriptions/%s/resourcegroups/%s/providers/Microsoft.OperationalInsights/workspaces", mc.SubscriptionID, mc.ResourceGroup)
+	pattern = fmt.Sprintf("/subscriptions/%s/resourcegroups/%s/providers/Microsoft.OperationalInsights/workspaces", mc.SubscriptionID, mc.LogAnalyticsDefaultResourceGroup)
 	mc.mux.HandleFunc(pattern, func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Query().Get("api-version") != mc.LogAnalyticsAPIVersion {
 			w.WriteHeader(http.StatusNotFound)
@@ -494,7 +500,7 @@ func (mc HTTPMockClient) RegisterEnsureDefaultLogAnalyticsWorkspace() {
 		}
 	})
 
-	pattern = fmt.Sprintf("/subscriptions/%s/resourcegroups/%s/providers/Microsoft.OperationalInsights/workspaces/%s", mc.SubscriptionID, mc.ResourceGroup, mc.LogAnalyticsWorkspaceName)
+	pattern = fmt.Sprintf("/subscriptions/%s/resourcegroups/%s/providers/Microsoft.OperationalInsights/workspaces/%s", mc.SubscriptionID, mc.LogAnalyticsDefaultResourceGroup, mc.LogAnalyticsDefaultWorkspaceName)
 	mc.mux.HandleFunc(pattern, func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Query().Get("api-version") != mc.LogAnalyticsAPIVersion {
 			w.WriteHeader(http.StatusNotFound)

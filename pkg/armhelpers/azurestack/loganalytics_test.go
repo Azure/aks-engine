@@ -58,29 +58,3 @@ func TestEnsureDefaultLogAnalyticsWorkspace(t *testing.T) {
 		t.Error(err)
 	}
 }
-
-func TestAddContainerInsightsSolution(t *testing.T) {
-	mc, err := NewHTTPMockClient()
-	if err != nil {
-		t.Fatalf("failed to create HttpMockClient - %s", err)
-	}
-
-	mc.RegisterLogin()
-	mc.RegisterAddContainerInsightsSolution()
-
-	err = mc.Activate()
-	if err != nil {
-		t.Fatalf("failed to activate HttpMockClient - %s", err)
-	}
-	defer mc.DeactivateAndReset()
-
-	env := mc.GetEnvironment()
-	azureClient, err := NewAzureClientWithClientSecret(env, subscriptionID, "clientID", "secret")
-	if err != nil {
-		t.Fatalf("can not get client %s", err)
-	}
-	_, err = azureClient.AddContainerInsightsSolution(context.Background(), subscriptionID, resourceGroup, logAnalyticsWorkspaceName, "eastus")
-	if err != nil {
-		t.Error(err)
-	}
-}
