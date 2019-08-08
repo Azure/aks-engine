@@ -480,10 +480,14 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 							log.Printf("kubectl port-forward output: %s\n", out)
 						}()
 						By("Running curl to access the forwarded port")
+						vercmd := exec.Command("curl", "--version")
+						util.PrintCommand(vercmd)
+						var out []byte
+						out, _ = vercmd.CombinedOutput()
+						log.Printf("%s\n", out)
 						url := fmt.Sprintf("http://%s:%v", "localhost", 8123)
 						cmd := exec.Command("curl", "--max-time", "60", "--retry", "3", "--retry-connrefused", "--retry-delay", "20", url)
 						util.PrintCommand(cmd)
-						var out []byte
 						out, err = cmd.CombinedOutput()
 						log.Printf("curl output: %s\n", out)
 						Expect(err).NotTo(HaveOccurred())
