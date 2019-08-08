@@ -4,9 +4,7 @@
 package kubernetes
 
 import (
-	"bufio"
 	"fmt"
-	"io"
 	"log"
 	"math/rand"
 	"net"
@@ -472,34 +470,22 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 						Expect(running).To(Equal(true))
 						By("Running kubectl port-forward")
 						proxyCmd := exec.Command("k", "port-forward", p.Metadata.Name, "8123:80")
-						var proxyStdout, proxyStderr io.ReadCloser
-						proxyStdout, err = proxyCmd.StdoutPipe()
-						Expect(err).NotTo(HaveOccurred())
-						proxyStderr, err = proxyCmd.StderrPipe()
-						Expect(err).NotTo(HaveOccurred())
 						util.PrintCommand(proxyCmd)
 						err = proxyCmd.Start()
 						Expect(err).NotTo(HaveOccurred())
-						proxyStdoutReader := bufio.NewReader(proxyStdout)
-						proxyStderrReader := bufio.NewReader(proxyStderr)
-						proxyOutStr, outErr := proxyStdoutReader.ReadString('\n')
-						log.Printf("kubectl port-forward stdout: %s\n", proxyOutStr)
-						if outErr != nil {
-							proxyErrStr, _ := proxyStderrReader.ReadString('\n') // returns EOF error, ignore it
-							log.Printf("kubectl port-forward stderr: %s\n", proxyErrStr)
-						}
-						Expect(outErr).NotTo(HaveOccurred())
 						defer func() {
 							proxyCmd.Process.Signal(os.Kill)
 							proxyCmd.Wait()
+							out, _ := proxyCmd.CombinedOutput()
+							log.Printf("kubectl port-forward output: %s\n", out)
 						}()
 						By("Running curl to access the forwarded port")
 						url := fmt.Sprintf("http://%s:%v", "localhost", 8123)
-						cmd := exec.Command("curl", "--max-time", "60", url)
+						cmd := exec.Command("curl", "--max-time", "60", "--retry", "3", "--retry-connrefused", "--retry-delay", "20", url)
 						util.PrintCommand(cmd)
 						var out []byte
 						out, err = cmd.CombinedOutput()
-						log.Printf("%s\n", out)
+						log.Printf("curl output: %s\n", out)
 						Expect(err).NotTo(HaveOccurred())
 					}()
 				}
