@@ -188,13 +188,11 @@
             "type": "shell",
             "inline": [
                 "sudo FEATURE_FLAGS={{user `feature_flags`}} BUILD_NUMBER={{user `build_number`}} BUILD_ID={{user `build_id`}} COMMIT={{user `commit`}} /bin/bash -ux /home/packer/install-dependencies.sh",
-                "sudo rm -f /root/.ssh/authorized_keys || exit 101",
-                "sudo rm -f /etc/machine-id || exit 102",
-                "sudo touch /etc/machine-id || exit 103",
-                "sudo mv /var/log /var/log.vhd || exit 104",
-                "sudo mkdir /var/log || exit 105",
-                "sudo cloud-init clean --logs || exit 106",
-                "sudo -u packer /usr/sbin/waagent -force -deprovision+user && export HISTSIZE=0 && sync || exit 107"
+                "sudo rm -f /root/.ssh/authorized_keys || exit 125",
+                "sudo rm -f /etc/machine-id || exit 125",
+                "sudo touch /etc/machine-id || exit 125",
+                "sudo cloud-init clean --logs || exit 125",
+                "sudo -u packer /usr/sbin/waagent -force -deprovision+user && export HISTSIZE=0 && sync || exit 125"
             ]
         }
     ]
