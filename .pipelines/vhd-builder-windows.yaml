@@ -6,7 +6,7 @@ jobs:
   strategy:
     maxParallel: 0
   pool:
-    vmImage: Hosted Ubuntu 1604
+    name: Hosted Ubuntu 1604
   steps:
   - script: |
       docker run --rm \
