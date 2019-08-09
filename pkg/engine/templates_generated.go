@@ -59,6 +59,7 @@
 // ../../parts/k8s/addons/kubernetesmasteraddons-kube-proxy-daemonset.yaml
 // ../../parts/k8s/addons/kubernetesmasteraddons-managed-azure-storage-classes-custom.yaml
 // ../../parts/k8s/addons/kubernetesmasteraddons-managed-azure-storage-classes.yaml
+// ../../parts/k8s/addons/kubernetesmasteraddons-node-labeler.yaml
 // ../../parts/k8s/addons/kubernetesmasteraddons-pod-security-policy.yaml
 // ../../parts/k8s/addons/kubernetesmasteraddons-scheduled-maintenance-deployment.yaml
 // ../../parts/k8s/addons/kubernetesmasteraddons-unmanaged-azure-storage-classes-custom.yaml
@@ -11467,6 +11468,77 @@ func k8sAddonsKubernetesmasteraddonsManagedAzureStorageClassesYaml() (*asset, er
 	}
 
 	info := bindataFileInfo{name: "k8s/addons/kubernetesmasteraddons-managed-azure-storage-classes.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
+var _k8sAddonsKubernetesmasteraddonsNodeLabelerYaml = []byte(`---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: node-labeler
+  namespace: kube-system
+  labels:
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: Reconcile
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: system:node-labeler
+  labels:
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: Reconcile
+rules:
+- apiGroups: [""]
+  resources: ["nodes"]
+  verbs: ["get", "watch", "list", "patch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: system:node-labeler
+  labels:
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: Reconcile
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: system:node-labeler
+subjects:
+  - kind: ServiceAccount
+    name: node-labeler
+    namespace: kube-system
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: node-labeler
+  namespace: kube-system
+  labels:
+    addonmanager.kubernetes.io/mode: Reconcile
+spec:
+  containers:
+  - name: node-labeler
+    image: quay.io/mboersma/node-labeler:latest
+    imagePullPolicy: Always
+  serviceAccountName: node-labeler
+  tolerations:
+  - effect: NoSchedule
+    key: node-role.kubernetes.io/master
+`)
+
+func k8sAddonsKubernetesmasteraddonsNodeLabelerYamlBytes() ([]byte, error) {
+	return _k8sAddonsKubernetesmasteraddonsNodeLabelerYaml, nil
+}
+
+func k8sAddonsKubernetesmasteraddonsNodeLabelerYaml() (*asset, error) {
+	bytes, err := k8sAddonsKubernetesmasteraddonsNodeLabelerYamlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "k8s/addons/kubernetesmasteraddons-node-labeler.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -28924,6 +28996,7 @@ var _bindata = map[string]func() (*asset, error){
 	"k8s/addons/kubernetesmasteraddons-kube-proxy-daemonset.yaml":                   k8sAddonsKubernetesmasteraddonsKubeProxyDaemonsetYaml,
 	"k8s/addons/kubernetesmasteraddons-managed-azure-storage-classes-custom.yaml":   k8sAddonsKubernetesmasteraddonsManagedAzureStorageClassesCustomYaml,
 	"k8s/addons/kubernetesmasteraddons-managed-azure-storage-classes.yaml":          k8sAddonsKubernetesmasteraddonsManagedAzureStorageClassesYaml,
+	"k8s/addons/kubernetesmasteraddons-node-labeler.yaml":                           k8sAddonsKubernetesmasteraddonsNodeLabelerYaml,
 	"k8s/addons/kubernetesmasteraddons-pod-security-policy.yaml":                    k8sAddonsKubernetesmasteraddonsPodSecurityPolicyYaml,
 	"k8s/addons/kubernetesmasteraddons-scheduled-maintenance-deployment.yaml":       k8sAddonsKubernetesmasteraddonsScheduledMaintenanceDeploymentYaml,
 	"k8s/addons/kubernetesmasteraddons-unmanaged-azure-storage-classes-custom.yaml": k8sAddonsKubernetesmasteraddonsUnmanagedAzureStorageClassesCustomYaml,
@@ -29159,6 +29232,7 @@ var _bintree = &bintree{nil, map[string]*bintree{
 			"kubernetesmasteraddons-kube-proxy-daemonset.yaml":                   {k8sAddonsKubernetesmasteraddonsKubeProxyDaemonsetYaml, map[string]*bintree{}},
 			"kubernetesmasteraddons-managed-azure-storage-classes-custom.yaml":   {k8sAddonsKubernetesmasteraddonsManagedAzureStorageClassesCustomYaml, map[string]*bintree{}},
 			"kubernetesmasteraddons-managed-azure-storage-classes.yaml":          {k8sAddonsKubernetesmasteraddonsManagedAzureStorageClassesYaml, map[string]*bintree{}},
+			"kubernetesmasteraddons-node-labeler.yaml":                           {k8sAddonsKubernetesmasteraddonsNodeLabelerYaml, map[string]*bintree{}},
 			"kubernetesmasteraddons-pod-security-policy.yaml":                    {k8sAddonsKubernetesmasteraddonsPodSecurityPolicyYaml, map[string]*bintree{}},
 			"kubernetesmasteraddons-scheduled-maintenance-deployment.yaml":       {k8sAddonsKubernetesmasteraddonsScheduledMaintenanceDeploymentYaml, map[string]*bintree{}},
 			"kubernetesmasteraddons-unmanaged-azure-storage-classes-custom.yaml": {k8sAddonsKubernetesmasteraddonsUnmanagedAzureStorageClassesCustomYaml, map[string]*bintree{}},
