@@ -1,0 +1,24 @@
+trigger: none
+
+jobs:
+- job: build_vhd_windows
+  timeoutInMinutes: 120
+  strategy:
+    maxParallel: 0
+  pool:
+    vmImage: Hosted Ubuntu 1604
+  steps:
+  - script: |
+      docker run --rm \
+      -v ${PWD}:/go/src/github.com/Azure/aks-engine \
+      -w /go/src/github.com/Azure/aks-engine \
+      -e CLIENT_ID=${CLIENT_ID} \
+      -e CLIENT_SECRET="$(CLIENT_SECRET)" \
+      -e TENANT_ID=${TENANT_ID} \
+      -e AZURE_RESOURCE_GROUP_NAME=${AZURE_RESOURCE_GROUP_NAME} \
+      -e AZURE_LOCATION=${AZURE_LOCATION} \
+      -e GIT_VERSION=$(Build.SourceVersion) \
+      -e BUILD_ID=$(Build.BuildId) \
+      -e BUILD_NUMBER=$(Build.BuildNumber) \
+      ${DEIS_GO_DEV_IMAGE} make run-packer-windows
+    displayName: Building windows VHD
