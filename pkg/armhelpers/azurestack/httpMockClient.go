@@ -487,7 +487,7 @@ func (mc HTTPMockClient) RegisterGetLogAnalyticsWorkspaceInfo() {
 }
 
 // RegisterEnsureDefaultLogAnalyticsWorkspace registers the mock response for EnsureDefaultLogAnalyticsWorkspace.
-func (mc HTTPMockClient) RegisterEnsureDefaultLogAnalyticsWorkspace_Use_existing() {
+func (mc HTTPMockClient) RegisterEnsureDefaultLogAnalyticsWorkspaceUseExisting() {
 	pattern := fmt.Sprintf("/subscriptions/%s/resourcegroups/%s", mc.SubscriptionID, mc.LogAnalyticsDefaultResourceGroupEUS)
 	mc.mux.HandleFunc(pattern, func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Query().Get("api-version") != mc.ResourceGroupAPIVersion {
@@ -517,7 +517,7 @@ func (mc HTTPMockClient) RegisterEnsureDefaultLogAnalyticsWorkspace_Use_existing
 }
 
 // RegisterEnsureDefaultLogAnalyticsWorkspace registers the mock response for EnsureDefaultLogAnalyticsWorkspace.
-func (mc HTTPMockClient) RegisterEnsureDefaultLogAnalyticsWorkspace_Create_new() {
+func (mc HTTPMockClient) RegisterEnsureDefaultLogAnalyticsWorkspaceCreateNew() {
 	pattern := fmt.Sprintf("/subscriptions/%s/resourcegroups/%s", mc.SubscriptionID, mc.LogAnalyticsDefaultResourceGroupWEU)
 	mc.mux.HandleFunc(pattern, func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Query().Get("api-version") != mc.ResourceGroupAPIVersion {

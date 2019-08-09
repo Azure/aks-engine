@@ -33,14 +33,14 @@ func TestGetLogAnalyticsWorkspaceInfo(t *testing.T) {
 	}
 }
 
-func TestEnsureDefaultLogAnalyticsWorkspace_Use_existing(t *testing.T) {
+func TestEnsureDefaultLogAnalyticsWorkspaceUseExisting(t *testing.T) {
 	mc, err := NewHTTPMockClient()
 	if err != nil {
 		t.Fatalf("failed to create HttpMockClient - %s", err)
 	}
 
 	mc.RegisterLogin()
-	mc.RegisterEnsureDefaultLogAnalyticsWorkspace_Use_existing()
+	mc.RegisterEnsureDefaultLogAnalyticsWorkspaceUseExisting()
 
 	err = mc.Activate()
 	if err != nil {
@@ -59,14 +59,14 @@ func TestEnsureDefaultLogAnalyticsWorkspace_Use_existing(t *testing.T) {
 	}
 }
 
-func TestEnsureDefaultLogAnalyticsWorkspace_Create_new(t *testing.T) {
+func TestEnsureDefaultLogAnalyticsWorkspaceCreateNew(t *testing.T) {
 	mc, err := NewHTTPMockClient()
 	if err != nil {
 		t.Fatalf("failed to create HttpMockClient - %s", err)
 	}
 
 	mc.RegisterLogin()
-	mc.RegisterEnsureDefaultLogAnalyticsWorkspace_Create_new()
+	mc.RegisterEnsureDefaultLogAnalyticsWorkspaceCreateNew()
 
 	err = mc.Activate()
 	if err != nil {
