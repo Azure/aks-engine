@@ -27,8 +27,10 @@ const (
 	virtualMachineScaleSetName                 = "vmscalesetName"
 	virtualMachineAvailabilitySetName          = "vmavailabilitysetName"
 	virtualMachineName                         = "testVirtualMachineName"
-	logAnalyticsDefaultResourceGroup           = "DefaultResourceGroup-EUS"
-	logAnalyticsDefaultWorkspaceName           = "DefaultWorkspace-cc6b141e-6afc-4786-9bf6-e3b9a5601460-EUS"
+	logAnalyticsDefaultResourceGroupEUS        = "DefaultResourceGroup-EUS"
+	logAnalyticsDefaultWorkspaceNameEUS        = "DefaultWorkspace-cc6b141e-6afc-4786-9bf6-e3b9a5601460-EUS"
+	logAnalyticsDefaultResourceGroupWEU        = "DefaultResourceGroup-WEU"
+	logAnalyticsDefaultWorkspaceNameWEU        = "DefaultWorkspace-cc6b141e-6afc-4786-9bf6-e3b9a5601460-WEU"
 	logAnalyticsWorkspaceName                  = "testLogAnalyticsWorkspace"
 	logAnalyticsSolutionName                   = "ContainerInsights(testLogAnalyticsWorkspace)"
 	virtualNicName                             = "testVirtualNicName"
@@ -64,8 +66,10 @@ type HTTPMockClient struct {
 	DeploymentStatus                           string
 	VirtualMachineScaleSetName                 string
 	VirtualMachineName                         string
-	LogAnalyticsDefaultResourceGroup           string
-	LogAnalyticsDefaultWorkspaceName           string
+	LogAnalyticsDefaultResourceGroupEUS        string
+	LogAnalyticsDefaultWorkspaceNameEUS        string
+	LogAnalyticsDefaultResourceGroupWEU        string
+	LogAnalyticsDefaultWorkspaceNameWEU        string
 	LogAnalyticsWorkspaceName                  string
 	LogAnalyticsSolutionName                   string
 	VirtualNicName                             string
@@ -108,27 +112,29 @@ type VirtualMachineVMValues struct {
 func NewHTTPMockClient() (HTTPMockClient, error) {
 
 	client := HTTPMockClient{
-		SubscriptionID:                   subscriptionID,
-		TenantID:                         tenantID,
-		ResourceGroup:                    resourceGroup,
-		ResourceGroupAPIVersion:          resourceGroupAPIVersion,
-		ComputeAPIVersion:                computeAPIVersion,
-		LogAnalyticsAPIVersion:           logAnalyticsAPIVersion,
-		NetworkAPIVersion:                networkAPIVersion,
-		DeploymentAPIVersion:             deploymentAPIVersion,
-		DeploymentName:                   deploymentName,
-		DeploymentStatus:                 deploymentStatus,
-		VirtualMachineScaleSetName:       virtualMachineScaleSetName,
-		VirtualMachineName:               virtualMachineName,
-		LogAnalyticsWorkspaceName:        logAnalyticsWorkspaceName,
-		LogAnalyticsDefaultResourceGroup: logAnalyticsDefaultResourceGroup,
-		LogAnalyticsDefaultWorkspaceName: logAnalyticsDefaultWorkspaceName,
-		LogAnalyticsSolutionName:         logAnalyticsSolutionName,
-		VirtualNicName:                   virtualNicName,
-		VirutalDiskName:                  virutalDiskName,
-		Location:                         location,
-		OperationID:                      operationID,
-		mux:                              http.NewServeMux(),
+		SubscriptionID:                      subscriptionID,
+		TenantID:                            tenantID,
+		ResourceGroup:                       resourceGroup,
+		ResourceGroupAPIVersion:             resourceGroupAPIVersion,
+		ComputeAPIVersion:                   computeAPIVersion,
+		LogAnalyticsAPIVersion:              logAnalyticsAPIVersion,
+		NetworkAPIVersion:                   networkAPIVersion,
+		DeploymentAPIVersion:                deploymentAPIVersion,
+		DeploymentName:                      deploymentName,
+		DeploymentStatus:                    deploymentStatus,
+		VirtualMachineScaleSetName:          virtualMachineScaleSetName,
+		VirtualMachineName:                  virtualMachineName,
+		LogAnalyticsWorkspaceName:           logAnalyticsWorkspaceName,
+		LogAnalyticsDefaultResourceGroupEUS: logAnalyticsDefaultResourceGroupEUS,
+		LogAnalyticsDefaultWorkspaceNameEUS: logAnalyticsDefaultWorkspaceNameEUS,
+		LogAnalyticsDefaultResourceGroupWEU: logAnalyticsDefaultResourceGroupWEU,
+		LogAnalyticsDefaultWorkspaceNameWEU: logAnalyticsDefaultWorkspaceNameWEU,
+		LogAnalyticsSolutionName:            logAnalyticsSolutionName,
+		VirtualNicName:                      virtualNicName,
+		VirutalDiskName:                     virutalDiskName,
+		Location:                            location,
+		OperationID:                         operationID,
+		mux:                                 http.NewServeMux(),
 	}
 	var err error
 	client.TokenResponse, err = readFromFile(filePathTokenResponse)
@@ -481,8 +487,8 @@ func (mc HTTPMockClient) RegisterGetLogAnalyticsWorkspaceInfo() {
 }
 
 // RegisterEnsureDefaultLogAnalyticsWorkspace registers the mock response for EnsureDefaultLogAnalyticsWorkspace.
-func (mc HTTPMockClient) RegisterEnsureDefaultLogAnalyticsWorkspace() {
-	pattern := fmt.Sprintf("/subscriptions/%s/resourcegroups/%s", mc.SubscriptionID, mc.LogAnalyticsDefaultResourceGroup)
+func (mc HTTPMockClient) RegisterEnsureDefaultLogAnalyticsWorkspace_Use_existing() {
+	pattern := fmt.Sprintf("/subscriptions/%s/resourcegroups/%s", mc.SubscriptionID, mc.LogAnalyticsDefaultResourceGroupEUS)
 	mc.mux.HandleFunc(pattern, func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Query().Get("api-version") != mc.ResourceGroupAPIVersion {
 			w.WriteHeader(http.StatusNotFound)
@@ -491,7 +497,7 @@ func (mc HTTPMockClient) RegisterEnsureDefaultLogAnalyticsWorkspace() {
 		}
 	})
 
-	pattern = fmt.Sprintf("/subscriptions/%s/resourcegroups/%s/providers/Microsoft.OperationalInsights/workspaces", mc.SubscriptionID, mc.LogAnalyticsDefaultResourceGroup)
+	pattern = fmt.Sprintf("/subscriptions/%s/resourcegroups/%s/providers/Microsoft.OperationalInsights/workspaces", mc.SubscriptionID, mc.LogAnalyticsDefaultResourceGroupEUS)
 	mc.mux.HandleFunc(pattern, func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Query().Get("api-version") != mc.LogAnalyticsAPIVersion {
 			w.WriteHeader(http.StatusNotFound)
@@ -500,7 +506,37 @@ func (mc HTTPMockClient) RegisterEnsureDefaultLogAnalyticsWorkspace() {
 		}
 	})
 
-	pattern = fmt.Sprintf("/subscriptions/%s/resourcegroups/%s/providers/Microsoft.OperationalInsights/workspaces/%s", mc.SubscriptionID, mc.LogAnalyticsDefaultResourceGroup, mc.LogAnalyticsDefaultWorkspaceName)
+	pattern = fmt.Sprintf("/subscriptions/%s/resourcegroups/%s/providers/Microsoft.OperationalInsights/workspaces/%s", mc.SubscriptionID, mc.LogAnalyticsDefaultResourceGroupEUS, mc.LogAnalyticsDefaultWorkspaceNameEUS)
+	mc.mux.HandleFunc(pattern, func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Query().Get("api-version") != mc.LogAnalyticsAPIVersion {
+			w.WriteHeader(http.StatusNotFound)
+		} else {
+			_, _ = fmt.Fprint(w, mc.ResponseCreateOrUpdateWorkspace)
+		}
+	})
+}
+
+// RegisterEnsureDefaultLogAnalyticsWorkspace registers the mock response for EnsureDefaultLogAnalyticsWorkspace.
+func (mc HTTPMockClient) RegisterEnsureDefaultLogAnalyticsWorkspace_Create_new() {
+	pattern := fmt.Sprintf("/subscriptions/%s/resourcegroups/%s", mc.SubscriptionID, mc.LogAnalyticsDefaultResourceGroupWEU)
+	mc.mux.HandleFunc(pattern, func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Query().Get("api-version") != mc.ResourceGroupAPIVersion {
+			w.WriteHeader(http.StatusNotFound)
+		} else {
+			w.WriteHeader(http.StatusNoContent)
+		}
+	})
+
+	pattern = fmt.Sprintf("/subscriptions/%s/resourcegroups/%s/providers/Microsoft.OperationalInsights/workspaces", mc.SubscriptionID, mc.LogAnalyticsDefaultResourceGroupWEU)
+	mc.mux.HandleFunc(pattern, func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Query().Get("api-version") != mc.LogAnalyticsAPIVersion {
+			w.WriteHeader(http.StatusNotFound)
+		} else {
+			_, _ = fmt.Fprint(w, mc.ResponseListWorkspacesByResourceGroup)
+		}
+	})
+
+	pattern = fmt.Sprintf("/subscriptions/%s/resourcegroups/%s/providers/Microsoft.OperationalInsights/workspaces/%s", mc.SubscriptionID, mc.LogAnalyticsDefaultResourceGroupWEU, mc.LogAnalyticsDefaultWorkspaceNameWEU)
 	mc.mux.HandleFunc(pattern, func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Query().Get("api-version") != mc.LogAnalyticsAPIVersion {
 			w.WriteHeader(http.StatusNotFound)

@@ -33,14 +33,14 @@ func TestGetLogAnalyticsWorkspaceInfo(t *testing.T) {
 	}
 }
 
-func TestEnsureDefaultLogAnalyticsWorkspace(t *testing.T) {
+func TestEnsureDefaultLogAnalyticsWorkspace_Use_existing(t *testing.T) {
 	mc, err := NewHTTPMockClient()
 	if err != nil {
 		t.Fatalf("failed to create HttpMockClient - %s", err)
 	}
 
 	mc.RegisterLogin()
-	mc.RegisterEnsureDefaultLogAnalyticsWorkspace()
+	mc.RegisterEnsureDefaultLogAnalyticsWorkspace_Use_existing()
 
 	err = mc.Activate()
 	if err != nil {
@@ -54,6 +54,32 @@ func TestEnsureDefaultLogAnalyticsWorkspace(t *testing.T) {
 		t.Fatalf("can not get client %s", err)
 	}
 	_, err = azureClient.EnsureDefaultLogAnalyticsWorkspace(context.Background(), resourceGroup, location)
+	if err != nil {
+		t.Error(err)
+	}
+}
+
+func TestEnsureDefaultLogAnalyticsWorkspace_Create_new(t *testing.T) {
+	mc, err := NewHTTPMockClient()
+	if err != nil {
+		t.Fatalf("failed to create HttpMockClient - %s", err)
+	}
+
+	mc.RegisterLogin()
+	mc.RegisterEnsureDefaultLogAnalyticsWorkspace_Create_new()
+
+	err = mc.Activate()
+	if err != nil {
+		t.Fatalf("failed to activate HttpMockClient - %s", err)
+	}
+	defer mc.DeactivateAndReset()
+
+	env := mc.GetEnvironment()
+	azureClient, err := NewAzureClientWithClientSecret(env, subscriptionID, "clientID", "secret")
+	if err != nil {
+		t.Fatalf("can not get client %s", err)
+	}
+	_, err = azureClient.EnsureDefaultLogAnalyticsWorkspace(context.Background(), resourceGroup, "westeurope")
 	if err != nil {
 		t.Error(err)
 	}

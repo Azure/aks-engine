@@ -18,9 +18,9 @@
     },
     "softDelete": false
   },
-  "id": "/subscriptions/12345678-1234-4fe0-86da-28abc43fc4c7/resourcegroups/mygroup/providers/microsoft.operationalinsights/workspaces/myworkspace",
-  "name": "myworkspace",
+  "id": "/subscriptions/12345678-1234-4fe0-86da-28abc43fc4c7/resourcegroups/DefaultResourceGroup-WEU/providers/microsoft.operationalinsights/workspaces/DefaultWorkspace-cc6b141e-6afc-4786-9bf6-e3b9a5601460-WEU",
+  "name": "DefaultWorkspace-cc6b141e-6afc-4786-9bf6-e3b9a5601460-WEU",
   "type": "Microsoft.OperationalInsights/workspaces",
-  "location": "eastus"
+  "location": "westeurope"
 }
 
