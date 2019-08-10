@@ -345,6 +345,18 @@ func (cs *ContainerService) setAddonsConfig(isUpdate bool) {
 		},
 	}
 
+	defaultNodeLabelerAddonsConfig := KubernetesAddon{
+		Name:    NodeLabelerAddonName,
+		Enabled: to.BoolPtr(true),
+		// Enabled: to.BoolPtr(DefaultNodeLabelerAddonEnabled && common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.16.0-alpha.1")),
+		Containers: []KubernetesContainerSpec{
+			{
+				Name:  NodeLabelerAddonName,
+				Image: "quay.io/mboersma/node-labeler:latest",
+			},
+		},
+	}
+
 	defaultAddons := []KubernetesAddon{
 		defaultsHeapsterAddonsConfig,
 		defaultTillerAddonsConfig,
@@ -365,6 +377,7 @@ func (cs *ContainerService) setAddonsConfig(isUpdate bool) {
 		defaultsCalicoDaemonSetAddonsConfig,
 		defaultsAADPodIdentityAddonsConfig,
 		defaultAppGwAddonsConfig,
+		defaultNodeLabelerAddonsConfig,
 	}
 	// Add default addons specification, if no user-provided spec exists
 	if o.KubernetesConfig.Addons == nil {

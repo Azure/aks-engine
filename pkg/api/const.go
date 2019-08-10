@@ -165,6 +165,8 @@ const (
 	DefaultSecureKubeletEnabled = true
 	// DefaultMetricsServerAddonEnabled determines the aks-engine provided default for enabling kubernetes metrics-server addon
 	DefaultMetricsServerAddonEnabled = true
+	// DefaultNodeLabelerAddonEnabled determines the aks-engine provided default for enabling node labeler addon
+	DefaultNodeLabelerAddonEnabled = true
 	// DefaultNVIDIADevicePluginAddonEnabled determines the aks-engine provided default for enabling NVIDIA Device Plugin
 	DefaultNVIDIADevicePluginAddonEnabled = false
 	// DefaultContainerMonitoringAddonEnabled determines the aks-engine provided default for enabling kubernetes container monitoring addon
@@ -197,6 +199,8 @@ const (
 	ReschedulerAddonName = "rescheduler"
 	// MetricsServerAddonName is the name of the kubernetes metrics server addon deployment
 	MetricsServerAddonName = "metrics-server"
+	// NodeLabelerAddonName is the name of the node labeler addon deployment
+	NodeLabelerAddonName = "node-labeler"
 	// NVIDIADevicePluginAddonName is the name of the NVIDIA device plugin addon deployment
 	NVIDIADevicePluginAddonName = "nvidia-device-plugin"
 	// ContainerMonitoringAddonName is the name of the kubernetes Container Monitoring addon deployment

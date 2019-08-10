@@ -213,6 +213,12 @@ func kubernetesAddonSettingsInit(p *api.Properties) []kubernetesComponentFileSpe
 			destinationFile: "scheduled-maintenance-deployment.yaml",
 			isEnabled:       k.IsAddonEnabled(ScheduledMaintenanceAddonName),
 		},
+		{
+			sourceFile:      "kubernetesmasteraddons-node-labeler.yaml",
+			base64Data:      k.GetAddonScript(NodeLabelerAddonName),
+			destinationFile: "node-labeler.yaml",
+			isEnabled:       k.IsAddonEnabled(NodeLabelerAddonName),
+		},
 	}
 
 	unmanagedStorageClassesSourceYaml := "kubernetesmasteraddons-unmanaged-azure-storage-classes.yaml"

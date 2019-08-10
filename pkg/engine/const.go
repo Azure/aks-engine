@@ -88,6 +88,8 @@ const (
 	KeyVaultFlexVolumeAddonName = "keyvault-flexvolume"
 	// ScheduledMaintenanceAddonName is the name of the scheduled maintenance addon deployment
 	ScheduledMaintenanceAddonName = "scheduled-maintenance"
+	// NodeLabelerAddonName is the name of the node labeler addon deployment
+	NodeLabelerAddonName = "node-labeler"
 	// DefaultGeneratorCode specifies the source generator of the cluster template.
 	DefaultGeneratorCode = "aksengine"
 	// ReschedulerAddonName is the name of the rescheduler addon deployment
