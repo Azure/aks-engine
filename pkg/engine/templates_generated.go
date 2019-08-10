@@ -11533,9 +11533,16 @@ spec:
         image: quay.io/mboersma/node-labeler:latest
         imagePullPolicy: Always
       serviceAccountName: node-labeler
+      priorityClassName: system-node-critical
       tolerations:
-      - effect: NoSchedule
-        key: node-role.kubernetes.io/master
+      - key: node-role.kubernetes.io/master
+        operator: Equal
+        value: "true"
+        effect: NoSchedule
+      - operator: "Exists"
+        effect: NoExecute
+      - operator: "Exists"
+        effect: NoSchedule
 `)
 
 func k8sAddonsKubernetesmasteraddonsNodeLabelerYamlBytes() ([]byte, error) {
