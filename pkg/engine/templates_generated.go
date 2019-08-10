@@ -11510,22 +11510,32 @@ subjects:
     name: node-labeler
     namespace: kube-system
 ---
-apiVersion: v1
-kind: Pod
+apiVersion: apps/v1
+kind: Deployment
 metadata:
-  name: node-labeler
-  namespace: kube-system
   labels:
+    control-plane: controller-manager
     addonmanager.kubernetes.io/mode: Reconcile
+  name: azure-node-labeler
+  namespace: kube-system
 spec:
-  containers:
-  - name: node-labeler
-    image: quay.io/mboersma/node-labeler:latest
-    imagePullPolicy: Always
-  serviceAccountName: node-labeler
-  tolerations:
-  - effect: NoSchedule
-    key: node-role.kubernetes.io/master
+  replicas: 1
+  selector:
+    matchLabels:
+      control-plane: controller-manager
+  template:
+    metadata:
+      labels:
+        control-plane: controller-manager
+    spec:
+      containers:
+      - name: node-labeler
+        image: quay.io/mboersma/node-labeler:latest
+        imagePullPolicy: Always
+      serviceAccountName: node-labeler
+      tolerations:
+      - effect: NoSchedule
+        key: node-role.kubernetes.io/master
 `)
 
 func k8sAddonsKubernetesmasteraddonsNodeLabelerYamlBytes() ([]byte, error) {
