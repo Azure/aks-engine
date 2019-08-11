@@ -114,3 +114,6 @@ func GetAllSupportedSwarmVersions() []string {
 func GetAllSupportedDockerCEVersions() []string {
 	return []string{DockerCEVersion}
 }
+
+// MinCloudProviderQPSToBucketFactor defines the minimum ratio between QPS and Bucket size for cloudprovider rate limiting
+const MinCloudProviderQPSToBucketFactor float64 = 0.1

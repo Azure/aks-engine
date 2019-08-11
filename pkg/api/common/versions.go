@@ -113,8 +113,9 @@ var AllKubernetesSupportedVersions = map[string]bool{
 	"1.13.4":         false,
 	"1.13.5":         false,
 	"1.13.6":         false, // disabled because of https://github.com/kubernetes/kubernetes/issues/78308
-	"1.13.7":         true,
+	"1.13.7":         false,
 	"1.13.8":         true,
+	"1.13.9":         true,
 	"1.14.0-alpha.1": false,
 	"1.14.0-alpha.2": false,
 	"1.14.0-beta.1":  false,
@@ -123,18 +124,21 @@ var AllKubernetesSupportedVersions = map[string]bool{
 	"1.14.0":         false,
 	"1.14.1":         false,
 	"1.14.2":         false, // disabled because of https://github.com/kubernetes/kubernetes/issues/78308
-	"1.14.3":         true,
+	"1.14.3":         false,
 	"1.14.4":         true,
+	"1.14.5":         true,
 	"1.15.0-alpha.1": false,
 	"1.15.0-alpha.2": false,
 	"1.15.0-alpha.3": false,
 	"1.15.0-beta.1":  false,
 	"1.15.0-beta.2":  false,
 	"1.15.0-rc.1":    false,
-	"1.15.0":         true,
+	"1.15.0":         false,
 	"1.15.1":         true,
+	"1.15.2":         true,
 	"1.16.0-alpha.1": true,
 	"1.16.0-alpha.2": true,
+	"1.16.0-alpha.3": true,
 }
 
 // GetDefaultKubernetesVersion returns the default Kubernetes version, that is the latest patch of the default release

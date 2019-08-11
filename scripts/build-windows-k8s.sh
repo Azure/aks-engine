@@ -315,9 +315,10 @@ download_nssm() {
 download_wincni() {
 	mkdir -p "${DIST_DIR}"/cni/config
 	WINSDN_URL=https://github.com/Microsoft/SDN/raw/master/Kubernetes/windows/
-	WINCNI_EXE=cni/wincni.exe
+	WINBRIDGE_URL=https://github.com/Microsoft/SDN/raw/master/Kubernetes/flannel/l2bridge/
+	WINBRIDGE_EXE=cni/win-bridge.exe
 	HNS_PSM1=hns.psm1
-	curl -L ${WINSDN_URL}${WINCNI_EXE} -o "${DIST_DIR}"/${WINCNI_EXE}
+	curl -L ${WINBRIDGE_URL}${WINBRIDGE_EXE} -o "${DIST_DIR}"/${WINBRIDGE_EXE}
 	curl -L ${WINSDN_URL}${HNS_PSM1} -o "${DIST_DIR}"/${HNS_PSM1}
 }
 

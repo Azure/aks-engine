@@ -12562,7 +12562,6 @@ ensureContainerd() {
 ensureDocker() {
     DOCKER_SERVICE_EXEC_START_FILE=/etc/systemd/system/docker.service.d/exec_start.conf
     wait_for_file 1200 1 $DOCKER_SERVICE_EXEC_START_FILE || exit $ERR_FILE_WATCH_TIMEOUT
-    echo "ExecStartPost=/sbin/iptables -P FORWARD ACCEPT" >> $DOCKER_SERVICE_EXEC_START_FILE
     usermod -aG docker ${ADMINUSER}
     DOCKER_MOUNT_FLAGS_SYSTEMD_FILE=/etc/systemd/system/docker.service.d/clear_mount_propagation_flags.conf
     if [[ $OS != $COREOS_OS_NAME ]]; then
@@ -13118,7 +13117,7 @@ apt_get_update() {
     for i in $(seq 1 $retries); do
         wait_for_apt_locks
         export DEBIAN_FRONTEND=noninteractive
-        dpkg --configure -a
+        dpkg --configure -a --force-confdef
         apt-get -f -y install
         ! (apt-get update 2>&1 | tee $apt_update_output | grep -E "^([WE]:.*)|([eE]rr.*)$") && \
         cat $apt_update_output && break || \
@@ -13136,7 +13135,7 @@ apt_get_install() {
     for i in $(seq 1 $retries); do
         wait_for_apt_locks
         export DEBIAN_FRONTEND=noninteractive
-        dpkg --configure -a
+        dpkg --configure -a --force-confdef
         apt-get install -o Dpkg::Options::="--force-confold" --no-install-recommends -y ${@} && break || \
         if [ $i -eq $retries ]; then
             return 1
@@ -13154,7 +13153,7 @@ apt_get_dist_upgrade() {
   for i in $(seq 1 $retries); do
     wait_for_apt_locks
     export DEBIAN_FRONTEND=noninteractive
-    dpkg --configure -a
+    dpkg --configure -a --force-confdef
     apt-get -f -y install
     apt-mark showhold
     ! (apt-get dist-upgrade -y 2>&1 | tee $apt_dist_upgrade_output | grep -E "^([WE]:.*)|([eE]rr.*)$") && \
@@ -15241,6 +15240,7 @@ write_files:
     {{else}}
     ExecStart=/usr/bin/dockerd -H fd:// --storage-driver=overlay2 --bip={{WrapAsParameter "dockerBridgeCidr"}}
     {{end}}
+    ExecStartPost=/sbin/iptables -P FORWARD ACCEPT
 
 - path: /etc/docker/daemon.json
   permissions: "0644"
@@ -15458,7 +15458,7 @@ MASTER_CONTAINER_ADDONS_PLACEHOLDER
 {{if eq .OrchestratorProfile.KubernetesConfig.NetworkPolicy "calico"}}
     sed -i "s|<kubeClusterCidr>|{{WrapAsParameter "kubeClusterCidr"}}|g" /etc/kubernetes/addons/calico-daemonset.yaml
     {{if eq .OrchestratorProfile.KubernetesConfig.NetworkPlugin "azure"}}
-    sed -i "/initContainers/,/cni-net-dir/d" /etc/kubernetes/addons/calico-daemonset.yaml
+    sed -i "/Start of install-cni initContainer/,/End of install-cni initContainer/d" /etc/kubernetes/addons/calico-daemonset.yaml
     {{else}}
     sed -i "s|<calicoIPAMConfig>|{\"type\": \"host-local\", \"subnet\": \"usePodCidr\"}|g" /etc/kubernetes/addons/calico-daemonset.yaml
     sed -i "s|azv|cali|g" /etc/kubernetes/addons/calico-daemonset.yaml
@@ -15799,6 +15799,7 @@ write_files:
     {{else}}
     ExecStart=/usr/bin/dockerd -H fd:// --storage-driver=overlay2 --bip={{WrapAsParameter "dockerBridgeCidr"}}
     {{end}}
+    ExecStartPost=/sbin/iptables -P FORWARD ACCEPT
 
 - path: /etc/docker/daemon.json
   permissions: "0644"
@@ -20471,7 +20472,7 @@ data:
   cni_network_config: |-
     {
       "name": "k8s-pod-network",
-      "cniVersion": "0.3.0",
+      "cniVersion": "0.3.1",
       "plugins": [
         {
           "type": "calico",
@@ -20645,7 +20646,7 @@ spec:
 # Include a clusterrole for the calico-node DaemonSet,
 # and bind it to the calico-node serviceaccount.
 kind: ClusterRole
-apiVersion: rbac.authorization.k8s.io/v1beta1
+apiVersion: rbac.authorization.k8s.io/v1
 metadata:
   name: calico-node
   labels:
@@ -20746,12 +20747,11 @@ rules:
   - create
   - update
 ---
-apiVersion: rbac.authorization.k8s.io/v1beta1
+apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
   name: calico-node
   labels:
-    kubernetes.io/cluster-service: "true"
     addonmanager.kubernetes.io/mode: "Reconcile"
 roleRef:
   apiGroup: rbac.authorization.k8s.io
@@ -20761,7 +20761,6 @@ subjects:
 - kind: ServiceAccount
   name: calico-node
   namespace: kube-system
-
 ---
 # Source: calico/templates/calico-typha.yaml
 # This manifest creates a Service, which will be backed by Calico's Typha daemon.
@@ -20787,7 +20786,7 @@ spec:
 
 # This manifest creates a Deployment of Typha to back the above service.
 
-apiVersion: apps/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: calico-typha
@@ -20828,6 +20827,7 @@ spec:
       # Since Calico can't network a pod until Typha is up, we need to run Typha itself
       # as a host-networked pod.
       serviceAccountName: calico-node
+      priorityClassName: system-cluster-critical
       containers:
       - image: {{ContainerImage "calico-typha"}}
         name: calico-typha
@@ -20882,7 +20882,7 @@ spec:
 # as the CNI plugins and network config on
 # each master and worker node in a Kubernetes cluster.
 kind: DaemonSet
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 metadata:
   name: calico-node
   namespace: kube-system
@@ -20924,7 +20924,9 @@ spec:
       # Minimize downtime during a rolling upgrade or deletion; tell Kubernetes to do a "force
       # deletion": https://kubernetes.io/docs/concepts/workloads/pods/pod/#termination-of-pods.
       terminationGracePeriodSeconds: 0
+      priorityClassName: system-node-critical
       initContainers:
+      # Start of install-cni initContainer
       # This container installs the CNI binaries
       # and CNI network config file on each node.
       - name: install-cni
@@ -20953,6 +20955,14 @@ spec:
           name: cni-bin-dir
         - mountPath: /host/etc/cni/net.d
           name: cni-net-dir
+      # End of install-cni initContainer
+      # Adds a Flex Volume Driver that creates a per-pod Unix Domain Socket to allow Dikastes
+      # to communicate with Felix over the Policy Sync API.
+      - name: flexvol-driver
+        image: {{ContainerImage "calico-pod2daemon"}}
+        volumeMounts:
+        - name: flexvol-driver-host
+          mountPath: /host/driver
       containers:
       # Runs calico-node container on each Kubernetes node.  This
       # container programs network policy and routes on each
@@ -21041,6 +21051,8 @@ spec:
         - mountPath: /var/lib/calico
           name: var-lib-calico
           readOnly: false
+        - name: policysync
+          mountPath: /var/run/nodeagent
       volumes:
       # Used by calico-node.
       - name: lib-modules
@@ -21063,6 +21075,16 @@ spec:
       - name: cni-net-dir
         hostPath:
           path: /etc/cni/net.d
+      # Used to create per-pod Unix Domain Sockets
+      - name: policysync
+        hostPath:
+          type: DirectoryOrCreate
+          path: /var/run/nodeagent
+      # Used to install Flex Volume Driver
+      - name: flexvol-driver-host
+        hostPath:
+          type: DirectoryOrCreate
+          path: /etc/kubernetes/volumeplugins/nodeagent~uds
 ---
 
 apiVersion: v1
@@ -21081,7 +21103,6 @@ metadata:
   name: calico-typha-horizontal-autoscaler
   namespace: kube-system
   labels:
-    kubernetes.io/cluster-service: "true"
     addonmanager.kubernetes.io/mode: "EnsureExists"
 data:
   ladder: |-
@@ -21110,7 +21131,6 @@ metadata:
   namespace: kube-system
   labels:
     k8s-app: calico-typha-autoscaler
-    kubernetes.io/cluster-service: "true"
     addonmanager.kubernetes.io/mode: "Reconcile"
 spec:
   replicas: 1
@@ -21149,7 +21169,6 @@ kind: ClusterRole
 metadata:
   name: typha-cpha
   labels:
-    kubernetes.io/cluster-service: "true"
     addonmanager.kubernetes.io/mode: "Reconcile"
 rules:
 - apiGroups: [""]
@@ -21164,7 +21183,6 @@ kind: ClusterRoleBinding
 metadata:
   name: typha-cpha
   labels:
-    kubernetes.io/cluster-service: "true"
     addonmanager.kubernetes.io/mode: "Reconcile"
 roleRef:
   apiGroup: rbac.authorization.k8s.io
@@ -21183,7 +21201,6 @@ metadata:
   name: typha-cpha
   namespace: kube-system
   labels:
-    kubernetes.io/cluster-service: "true"
     addonmanager.kubernetes.io/mode: "Reconcile"
 rules:
 - apiGroups: [""]
@@ -21202,7 +21219,6 @@ metadata:
   name: typha-cpha
   namespace: kube-system
   labels:
-    kubernetes.io/cluster-service: "true"
     addonmanager.kubernetes.io/mode: "Reconcile"
 roleRef:
   apiGroup: rbac.authorization.k8s.io
@@ -21221,7 +21237,7 @@ metadata:
   name: typha-cpha
   namespace: kube-system
   labels:
-    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: "Reconcile"
 `)
 
 func k8sContaineraddonsKubernetesmasteraddonsCalicoDaemonsetYamlBytes() ([]byte, error) {
@@ -24537,11 +24553,11 @@ function Update-WinCNI
 {
     Param(
         [string]
-        $WinCniUrl = "https://github.com/Microsoft/SDN/raw/master/Kubernetes/windows/cni/wincni.exe",
+        $WinCniUrl = "https://github.com/Microsoft/SDN/raw/master/Kubernetes/flannel/l2bridge/cni/win-bridge.exe",
         [Parameter(Mandatory=$true)][string]
         $CNIPath
     )
-    $wincni = "wincni.exe"
+    $wincni = "win-bridge.exe"
     $wincniFile = [Io.path]::Combine($CNIPath, $wincni)
     DownloadFileOverHttp -Url $WinCniUrl -DestinationPath $wincniFile
 }
@@ -25229,21 +25245,13 @@ Update-CNIConfig(` + "`" + `$podCIDR, ` + "`" + `$masterSubnetGW)
 "{
     ""cniVersion"": ""0.2.0"",
     ""name"": ""<NetworkMode>"",
-    ""type"": ""wincni.exe"",
+    ""type"": ""win-bridge"",
     ""master"": ""Ethernet"",
-    ""capabilities"": { ""portMappings"": true },
-    ""ipam"": {
-        ""environment"": ""azure"",
-        ""subnet"":""<PODCIDR>"",
-        ""routes"": [{
-        ""GW"":""<PODGW>""
-        }]
-    },
     ""dns"" : {
-    ""Nameservers"" : [ ""<NameServers>"" ],
-    ""Search"" : [ ""<Cluster DNS Suffix or Search Path>"" ]
+        ""Nameservers"" : [ ""<NameServers>"" ],
+        ""Search"" : [ ""<Cluster DNS Suffix or Search Path>"" ]
     },
-    ""AdditionalArgs"" : [
+    ""policies"": [
     {
         ""Name"" : ""EndpointPolicy"", ""Value"" : { ""Type"" : ""OutBoundNAT"", ""ExceptionList"": [ ""<ClusterCIDR>"", ""<MgmtSubnet>"" ] }
     },
@@ -25255,14 +25263,12 @@ Update-CNIConfig(` + "`" + `$podCIDR, ` + "`" + `$masterSubnetGW)
 
     ` + "`" + `$configJson = ConvertFrom-Json ` + "`" + `$jsonSampleConfig
     ` + "`" + `$configJson.name = ` + "`" + `$global:NetworkMode.ToLower()
-    ` + "`" + `$configJson.ipam.subnet=` + "`" + `$podCIDR
-    ` + "`" + `$configJson.ipam.routes[0].GW = ` + "`" + `$masterSubnetGW
     ` + "`" + `$configJson.dns.Nameservers[0] = ` + "`" + `$global:KubeDnsServiceIp
     ` + "`" + `$configJson.dns.Search[0] = ` + "`" + `$global:KubeDnsSearchPath
 
-    ` + "`" + `$configJson.AdditionalArgs[0].Value.ExceptionList[0] = ` + "`" + `$global:KubeClusterCIDR
-    ` + "`" + `$configJson.AdditionalArgs[0].Value.ExceptionList[1] = ` + "`" + `$global:MasterSubnet
-    ` + "`" + `$configJson.AdditionalArgs[1].Value.DestinationPrefix  = ` + "`" + `$global:KubeServiceCIDR
+    ` + "`" + `$configJson.policies[0].Value.ExceptionList[0] = ` + "`" + `$global:KubeClusterCIDR
+    ` + "`" + `$configJson.policies[0].Value.ExceptionList[1] = ` + "`" + `$global:MasterSubnet
+    ` + "`" + `$configJson.policies[1].Value.DestinationPrefix  = ` + "`" + `$global:KubeServiceCIDR
 
     if (Test-Path ` + "`" + `$global:CNIConfig)
     {

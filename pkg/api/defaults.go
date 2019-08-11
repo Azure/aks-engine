@@ -228,7 +228,7 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpgrade, isScale bool) {
 			o.KubernetesConfig.CloudProviderRateLimit = to.BoolPtr(DefaultKubernetesCloudProviderRateLimit)
 		}
 		// Enforce sane cloudprovider rate limit defaults.
-		o.KubernetesConfig.SetCloudProviderRateLimitDefaults()
+		a.SetCloudProviderRateLimitDefaults()
 
 		if o.KubernetesConfig.PrivateCluster == nil {
 			o.KubernetesConfig.PrivateCluster = &PrivateCluster{}

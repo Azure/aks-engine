@@ -161,6 +161,7 @@ write_files:
     {{else}}
     ExecStart=/usr/bin/dockerd -H fd:// --storage-driver=overlay2 --bip={{WrapAsParameter "dockerBridgeCidr"}}
     {{end}}
+    ExecStartPost=/sbin/iptables -P FORWARD ACCEPT
 
 - path: /etc/docker/daemon.json
   permissions: "0644"
@@ -378,7 +379,7 @@ MASTER_CONTAINER_ADDONS_PLACEHOLDER
 {{if eq .OrchestratorProfile.KubernetesConfig.NetworkPolicy "calico"}}
     sed -i "s|<kubeClusterCidr>|{{WrapAsParameter "kubeClusterCidr"}}|g" /etc/kubernetes/addons/calico-daemonset.yaml
     {{if eq .OrchestratorProfile.KubernetesConfig.NetworkPlugin "azure"}}
-    sed -i "/initContainers/,/cni-net-dir/d" /etc/kubernetes/addons/calico-daemonset.yaml
+    sed -i "/Start of install-cni initContainer/,/End of install-cni initContainer/d" /etc/kubernetes/addons/calico-daemonset.yaml
     {{else}}
     sed -i "s|<calicoIPAMConfig>|{\"type\": \"host-local\", \"subnet\": \"usePodCidr\"}|g" /etc/kubernetes/addons/calico-daemonset.yaml
     sed -i "s|azv|cali|g" /etc/kubernetes/addons/calico-daemonset.yaml
