@@ -148,6 +148,10 @@ ensure-generated:
 	@echo "==> Checking generated files <=="
 	@scripts/ensure-generated.sh
 
+.PHONY: ensure-vhd
+ensure-vhd:
+	@scripts/ensure-vhd-images.sh
+
 .PHONY: test-e2e
 test-e2e:
 	@test/e2e.sh

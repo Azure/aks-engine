@@ -58,6 +58,9 @@ jobs:
   - script: make generate test-style
     displayName: Run linting rules
     workingDirectory: $(modulePath)
+  - script: make ensure-vhd
+    displayName: Check if published VHD matches the expected count
+    workingDirectory: $(modulePath)
   - script: make build-cross
     displayName: Build cross-architectural binaries
     workingDirectory: $(modulePath)
