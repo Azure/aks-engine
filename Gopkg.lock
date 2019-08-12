@@ -55,14 +55,6 @@
   version = "v1.1.1"
 
 [[projects]]
-  digest = "1:d6613cccd218e927314d7f6a7a6e8169473b07db7e07810341cacd3bdca920ba"
-  name = "github.com/alexcesaro/statsd"
-  packages = ["."]
-  pruneopts = "NUT"
-  revision = "7fea3f0d2fab1ad973e641e51dba45443a311a90"
-  version = "v2.0.0"
-
-[[projects]]
   digest = "1:aba270497eb2d49f5cba6f4162d524b9a1195a24cbce8be20bf56a0051f47deb"
   name = "github.com/blang/semver"
   packages = ["."]
@@ -861,7 +853,6 @@
     "github.com/Azure/go-autorest/autorest/date",
     "github.com/Azure/go-autorest/autorest/to",
     "github.com/Jeffail/gabs",
-    "github.com/alexcesaro/statsd",
     "github.com/blang/semver",
     "github.com/davecgh/go-spew/spew",
     "github.com/fatih/structs",
