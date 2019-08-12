@@ -104,6 +104,7 @@ if [[ "${UPGRADE_CLUSTER}" = "true" ]]; then
       -e IS_JENKINS=${IS_JENKINS} \
       -e SKIP_LOGS_COLLECTION=true \
       -e GINKGO_SKIP="${GINKGO_SKIP}|${GINKGO_SKIP_AFTER_SCALE_DOWN}" \
+      -e SKIP_TEST=${SKIP_TEST_AFTER_SCALE_DOWN} \
       ${DEV_IMAGE} make test-kubernetes || exit 1
       fi
 
@@ -179,6 +180,7 @@ if [[ "${UPGRADE_CLUSTER}" = "true" ]]; then
       -e IS_JENKINS=${IS_JENKINS} \
       -e SKIP_LOGS_COLLECTION=${SKIP_LOGS_COLLECTION} \
       -e GINKGO_SKIP="${GINKGO_SKIP}|${GINKGO_SKIP_AFTER_SCALE_UP}" \
+      -e SKIP_TEST=${SKIP_TEST_AFTER_SCALE_UP} \
       ${DEV_IMAGE} make test-kubernetes || exit 1
       fi
   done
@@ -233,6 +235,7 @@ else
     -e IS_JENKINS=${IS_JENKINS} \
     -e SKIP_LOGS_COLLECTION=true \
     -e GINKGO_SKIP="${GINKGO_SKIP}|${GINKGO_SKIP_AFTER_SCALE_DOWN}" \
+    -e SKIP_TEST=${SKIP_TEST_AFTER_SCALE_DOWN} \
     ${DEV_IMAGE} make test-kubernetes || exit 1
 
     for nodepool in $(cat ./apimodel-input.json | jq -r '.properties.agentPoolProfiles[].name'); do
@@ -271,6 +274,7 @@ else
     -e IS_JENKINS=${IS_JENKINS} \
     -e SKIP_LOGS_COLLECTION=${SKIP_LOGS_COLLECTION} \
     -e GINKGO_SKIP="${GINKGO_SKIP}|${GINKGO_SKIP_AFTER_SCALE_UP}" \
+    -e SKIP_TEST=${SKIP_TEST_AFTER_SCALE_DOWN} \
     ${DEV_IMAGE} make test-kubernetes || exit 1
   fi
 fi
