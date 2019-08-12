@@ -127,7 +127,7 @@ if [ "${UPGRADE_CLUSTER}" = "true" ]; then
       --location $REGION \
       --resource-group $RESOURCE_GROUP \
       --upgrade-version $ver_target \
-      --vm-timeout ${E2E_TEST_TIMEOUT} \
+      --vm-timeout 20 \
       --auth-method client_secret \
       --client-id ${CLIENT_ID} \
       --client-secret ${CLIENT_SECRET} || exit 1
