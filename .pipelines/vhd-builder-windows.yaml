@@ -17,6 +17,7 @@ jobs:
       -e TENANT_ID=${TENANT_ID} \
       -e AZURE_RESOURCE_GROUP_NAME=${AZURE_RESOURCE_GROUP_NAME} \
       -e AZURE_LOCATION=${AZURE_LOCATION} \
+      -e AZURE_VM_SIZE=${AZURE_VM_SIZE} \
       -e GIT_VERSION=$(Build.SourceVersion) \
       -e BUILD_ID=$(Build.BuildId) \
       -e BUILD_NUMBER=$(Build.BuildNumber) \
