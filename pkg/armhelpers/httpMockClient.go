@@ -25,7 +25,6 @@ const (
 	deploymentName                             = "testDeplomentName"
 	deploymentStatus                           = "08586474508192185203"
 	virtualMachineScaleSetName                 = "vmscalesetName"
-	virtualMachineAvailabilitySetName          = "vmavailabilitysetName"
 	virtualMachineName                         = "testVirtualMachineName"
 	logAnalyticsDefaultResourceGroupEUS        = "DefaultResourceGroup-EUS"
 	logAnalyticsDefaultWorkspaceNameEUS        = "DefaultWorkspace-cc6b141e-6afc-4786-9bf6-e3b9a5601460-EUS"
