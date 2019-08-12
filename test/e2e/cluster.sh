@@ -13,6 +13,13 @@ END
 echo "Running E2E tests against a cluster built with the following API model:"
 echo ${API_MODEL_INPUT} | jq
 
+CLEANUP_AFTER_DEPLOYMENT=${CLEANUP_ON_EXIT}
+if [ "${UPGRADE_CLUSTER}" = "true" ]; then
+  CLEANUP_AFTER_DEPLOYMENT="false";
+elif [ "${SCALE_CLUSTER}" = "true" ]; then
+  CLEANUP_AFTER_DEPLOYMENT="false";
+fi
+
 set -x
 docker run --rm \
 -v $(pwd):/go/src/github.com/Azure/aks-engine \
@@ -26,7 +33,7 @@ docker run --rm \
 -e ORCHESTRATOR=kubernetes \
 -e CREATE_VNET=${CREATE_VNET} \
 -e TIMEOUT=${E2E_TEST_TIMEOUT} \
--e CLEANUP_ON_EXIT=${CLEANUP_ON_EXIT} \
+-e CLEANUP_ON_EXIT=${CLEANUP_AFTER_DEPLOYMENT} \
 -e SKIP_LOGS_COLLECTION=${SKIP_LOGS_COLLECTION} \
 -e REGIONS=${REGIONS} \
 -e IS_JENKINS=${IS_JENKINS} \
@@ -49,7 +56,7 @@ if [ $(( RANDOM % 4 )) -eq 3 ]; then
     done
 fi
 
-if [[ "${UPGRADE_CLUSTER}" = "true" ]]; then
+if [ "${UPGRADE_CLUSTER}" = "true" ]; then
   for ver_target in $UPGRADE_VERSIONS; do
       printf "\n\n\n"
       echo Upgrading cluster to version $ver_target in resource group $RESOURCE_GROUP ...
@@ -67,7 +74,7 @@ if [[ "${UPGRADE_CLUSTER}" = "true" ]]; then
       -w /go/src/github.com/Azure/aks-engine \
       ${DEV_IMAGE} make build-binary > /dev/null 2>&1 || exit 1
 
-      if [[ "${SCALE_CLUSTER}" = "true" ]]; then
+      if [ "${SCALE_CLUSTER}" = "true" ]; then
         for nodepool in $(cat ./apimodel-input.json | jq -r '.properties.agentPoolProfiles[].name'); do
         docker run --rm \
         -v $(pwd):/go/src/github.com/Azure/aks-engine \
@@ -143,7 +150,7 @@ if [[ "${UPGRADE_CLUSTER}" = "true" ]]; then
       -e GINKGO_SKIP="${GINKGO_SKIP}|${GINKGO_SKIP_AFTER_SCALE_DOWN}" \
       ${DEV_IMAGE} make test-kubernetes || exit 1
 
-      if [[ "${SCALE_CLUSTER}" = "true" ]]; then
+      if [ "${SCALE_CLUSTER}" = "true" ]; then
         for nodepool in $(cat ./apimodel-input.json | jq -r '.properties.agentPoolProfiles[].name'); do
         docker run --rm \
         -v $(pwd):/go/src/github.com/Azure/aks-engine \
@@ -185,7 +192,7 @@ if [[ "${UPGRADE_CLUSTER}" = "true" ]]; then
       fi
   done
 else
-  if [[ "${SCALE_CLUSTER}" = "true" ]]; then
+  if [ "${SCALE_CLUSTER}" = "true" ]; then
     set -x
     git remote add $UPGRADE_FORK https://github.com/$UPGRADE_FORK/aks-engine.git || echo nothing to do here
     git fetch $UPGRADE_FORK
