@@ -39,11 +39,11 @@ subjects:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
+  name: azure-node-labeler
+  namespace: kube-system
   labels:
     control-plane: controller-manager
     addonmanager.kubernetes.io/mode: Reconcile
-  name: azure-node-labeler
-  namespace: kube-system
 spec:
   replicas: 1
   selector:
@@ -53,14 +53,18 @@ spec:
     metadata:
       labels:
         control-plane: controller-manager
+      annotations:
+        scheduler.alpha.kubernetes.io/critical-pod: ''
     spec:
       containers:
       - name: node-labeler
-        image: quay.io/mboersma/node-labeler:latest
+        image: quay.io/mboersma/node-labeler:new
         imagePullPolicy: Always
       serviceAccountName: node-labeler
       priorityClassName: system-node-critical
       tolerations:
+      - key: CriticalAddonsOnly
+        operator: Exists
       - key: node-role.kubernetes.io/master
         operator: Equal
         value: "true"
@@ -69,3 +73,5 @@ spec:
         effect: NoExecute
       - operator: "Exists"
         effect: NoSchedule
+      nodeSelector:
+        beta.kubernetes.io/os: linux
