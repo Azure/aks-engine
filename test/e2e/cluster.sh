@@ -11,7 +11,7 @@ ${API_MODEL_INPUT}
 END
 
 echo "Running E2E tests against a cluster built with the following API model:"
-cat ./apimodel-input.json | jq
+echo ${API_MODEL_INPUT} | jq
 
 set -x
 docker run --rm \
