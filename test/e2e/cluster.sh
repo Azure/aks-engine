@@ -2,7 +2,7 @@
 
 # Assumes we're running from the git root of aks-engine
 docker run --rm \
--v ${PWD}:/go/src/github.com/Azure/aks-engine \
+-v $(pwd):/go/src/github.com/Azure/aks-engine \
 -w /go/src/github.com/Azure/aks-engine \
 ${DEV_IMAGE} make build-binary > /dev/null 2>&1 || exit 1
 
@@ -15,7 +15,7 @@ cat ./apimodel-input.json | jq
 
 set -x
 docker run --rm \
--v ${PWD}:/go/src/github.com/Azure/aks-engine \
+-v $(pwd):/go/src/github.com/Azure/aks-engine \
 -w /go/src/github.com/Azure/aks-engine \
 -e CLUSTER_DEFINITION=./apimodel-input.json \
 -e CLIENT_ID=${CLIENT_ID} \
@@ -63,14 +63,14 @@ if [[ "${UPGRADE_CLUSTER}" = "true" ]]; then
       set -x
 
       docker run --rm \
-      -v ${PWD}:/go/src/github.com/Azure/aks-engine \
+      -v $(pwd):/go/src/github.com/Azure/aks-engine \
       -w /go/src/github.com/Azure/aks-engine \
       ${DEV_IMAGE} make build-binary > /dev/null 2>&1 || exit 1
 
       if [[ "${SCALE_CLUSTER}" = "true" ]]; then
         for nodepool in $(cat ./apimodel-input.json | jq -r '.properties.agentPoolProfiles[].name'); do
         docker run --rm \
-        -v ${PWD}:/go/src/github.com/Azure/aks-engine \
+        -v $(pwd):/go/src/github.com/Azure/aks-engine \
         -w /go/src/github.com/Azure/aks-engine \
         -e RESOURCE_GROUP=$RESOURCE_GROUP \
         -e REGION=$REGION \
@@ -89,7 +89,7 @@ if [[ "${UPGRADE_CLUSTER}" = "true" ]]; then
         done
 
         docker run --rm \
-      -v ${PWD}:/go/src/github.com/Azure/aks-engine \
+      -v $(pwd):/go/src/github.com/Azure/aks-engine \
       -w /go/src/github.com/Azure/aks-engine \
       -e CLIENT_ID=${CLIENT_ID} \
       -e CLIENT_SECRET=${CLIENT_SECRET} \
@@ -109,7 +109,7 @@ if [[ "${UPGRADE_CLUSTER}" = "true" ]]; then
       fi
 
       docker run --rm \
-      -v ${PWD}:/go/src/github.com/Azure/aks-engine \
+      -v $(pwd):/go/src/github.com/Azure/aks-engine \
       -w /go/src/github.com/Azure/aks-engine \
       -e RESOURCE_GROUP=$RESOURCE_GROUP \
       -e REGION=$REGION \
@@ -126,7 +126,7 @@ if [[ "${UPGRADE_CLUSTER}" = "true" ]]; then
       --client-secret ${CLIENT_SECRET} || exit 1
 
       docker run --rm \
-      -v ${PWD}:/go/src/github.com/Azure/aks-engine \
+      -v $(pwd):/go/src/github.com/Azure/aks-engine \
       -w /go/src/github.com/Azure/aks-engine \
       -e CLIENT_ID=${CLIENT_ID} \
       -e CLIENT_SECRET=${CLIENT_SECRET} \
@@ -146,7 +146,7 @@ if [[ "${UPGRADE_CLUSTER}" = "true" ]]; then
       if [[ "${SCALE_CLUSTER}" = "true" ]]; then
         for nodepool in $(cat ./apimodel-input.json | jq -r '.properties.agentPoolProfiles[].name'); do
         docker run --rm \
-        -v ${PWD}:/go/src/github.com/Azure/aks-engine \
+        -v $(pwd):/go/src/github.com/Azure/aks-engine \
         -w /go/src/github.com/Azure/aks-engine \
         -e RESOURCE_GROUP=$RESOURCE_GROUP \
         -e REGION=$REGION \
@@ -165,7 +165,7 @@ if [[ "${UPGRADE_CLUSTER}" = "true" ]]; then
         done
 
         docker run --rm \
-      -v ${PWD}:/go/src/github.com/Azure/aks-engine \
+      -v $(pwd):/go/src/github.com/Azure/aks-engine \
       -w /go/src/github.com/Azure/aks-engine \
       -e CLIENT_ID=${CLIENT_ID} \
       -e CLIENT_SECRET=${CLIENT_SECRET} \
@@ -195,13 +195,13 @@ else
     set -x
 
     docker run --rm \
-    -v ${PWD}:/go/src/github.com/Azure/aks-engine \
+    -v $(pwd):/go/src/github.com/Azure/aks-engine \
     -w /go/src/github.com/Azure/aks-engine \
     ${DEV_IMAGE} make build-binary > /dev/null 2>&1 || exit 1
 
     for nodepool in $(cat ./apimodel-input.json | jq -r '.properties.agentPoolProfiles[].name'); do
     docker run --rm \
-    -v ${PWD}:/go/src/github.com/Azure/aks-engine \
+    -v $(pwd):/go/src/github.com/Azure/aks-engine \
     -w /go/src/github.com/Azure/aks-engine \
     -e RESOURCE_GROUP=$RESOURCE_GROUP \
     -e REGION=$REGION \
@@ -220,7 +220,7 @@ else
     done
 
     docker run --rm \
-    -v ${PWD}:/go/src/github.com/Azure/aks-engine \
+    -v $(pwd):/go/src/github.com/Azure/aks-engine \
     -w /go/src/github.com/Azure/aks-engine \
     -e CLIENT_ID=${CLIENT_ID} \
     -e CLIENT_SECRET=${CLIENT_SECRET} \
@@ -240,7 +240,7 @@ else
 
     for nodepool in $(cat ./apimodel-input.json | jq -r '.properties.agentPoolProfiles[].name'); do
     docker run --rm \
-    -v ${PWD}:/go/src/github.com/Azure/aks-engine \
+    -v $(pwd):/go/src/github.com/Azure/aks-engine \
     -w /go/src/github.com/Azure/aks-engine \
     -e RESOURCE_GROUP=$RESOURCE_GROUP \
     -e REGION=$REGION \
@@ -259,7 +259,7 @@ else
     done
 
     docker run --rm \
-    -v ${PWD}:/go/src/github.com/Azure/aks-engine \
+    -v $(pwd):/go/src/github.com/Azure/aks-engine \
     -w /go/src/github.com/Azure/aks-engine \
     -e CLIENT_ID=${CLIENT_ID} \
     -e CLIENT_SECRET=${CLIENT_SECRET} \
