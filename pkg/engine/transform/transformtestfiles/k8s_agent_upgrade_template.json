@@ -251,39 +251,55 @@
         "Standard_D1",
         "Standard_D11",
         "Standard_D11_v2",
+        "Standard_D11_v2_Promo",
         "Standard_D12",
         "Standard_D12_v2",
+        "Standard_D12_v2_Promo",
         "Standard_D13",
         "Standard_D13_v2",
+        "Standard_D13_v2_Promo",
         "Standard_D14",
         "Standard_D14_v2",
+        "Standard_D14_v2_Promo",
         "Standard_D15_v2",
         "Standard_D1_v2",
         "Standard_D2",
         "Standard_D2_v2",
+        "Standard_D2_v2_Promo",
         "Standard_D3",
         "Standard_D3_v2",
+        "Standard_D3_v2_Promo",
         "Standard_D4",
         "Standard_D4_v2",
+        "Standard_D4_v2_Promo",
         "Standard_D5_v2",
+        "Standard_D5_v2_Promo",
         "Standard_DS1",
         "Standard_DS11",
         "Standard_DS11_v2",
+        "Standard_DS11_v2_Promo",
         "Standard_DS12",
         "Standard_DS12_v2",
+        "Standard_DS12_v2_Promo",
         "Standard_DS13",
         "Standard_DS13_v2",
+        "Standard_DS13_v2_Promo",
         "Standard_DS14",
         "Standard_DS14_v2",
+        "Standard_DS14_v2_Promo",
         "Standard_DS15_v2",
         "Standard_DS1_v2",
         "Standard_DS2",
         "Standard_DS2_v2",
+        "Standard_DS2_v2_Promo",
         "Standard_DS3",
         "Standard_DS3_v2",
+        "Standard_DS3_v2_Promo",
         "Standard_DS4",
         "Standard_DS4_v2",
+        "Standard_DS4_v2_Promo",
         "Standard_DS5_v2",
+        "Standard_DS5_v2_Promo",
         "Standard_F1",
         "Standard_F16",
         "Standard_F16s",
@@ -331,7 +347,7 @@
       },
       "type": "string"
     },
-    "agentppol1Count": {
+    "agentpool1Count": {
       "allowedValues": [
         1,
         2,
@@ -440,7 +456,7 @@
       },
       "type": "int"
     },
-    "agentppol1Offset": {
+    "agentpool1Offset": {
       "allowedValues": [
         0,
         1,
@@ -549,14 +565,14 @@
       },
       "type": "int"
     },
-    "agentppol1Subnet": {
+    "agentpool1Subnet": {
       "defaultValue": "10.240.0.0/16",
       "metadata": {
-        "description": "Sets the subnet of agent pool 'agentppol1'."
+        "description": "Sets the subnet of agent pool 'agentpool1'."
       },
       "type": "string"
     },
-    "agentppol1VMSize": {
+    "agentpool1VMSize": {
       "allowedValues": [
         "Standard_A0",
         "Standard_A1",
@@ -580,39 +596,55 @@
         "Standard_D1",
         "Standard_D11",
         "Standard_D11_v2",
+        "Standard_D11_v2_Promo",
         "Standard_D12",
         "Standard_D12_v2",
+        "Standard_D12_v2_Promo",
         "Standard_D13",
         "Standard_D13_v2",
+        "Standard_D13_v2_Promo",
         "Standard_D14",
         "Standard_D14_v2",
+        "Standard_D14_v2_Promo",
         "Standard_D15_v2",
         "Standard_D1_v2",
         "Standard_D2",
         "Standard_D2_v2",
+        "Standard_D2_v2_Promo",
         "Standard_D3",
         "Standard_D3_v2",
+        "Standard_D3_v2_Promo",
         "Standard_D4",
         "Standard_D4_v2",
+        "Standard_D4_v2_Promo",
         "Standard_D5_v2",
+        "Standard_D5_v2_Promo",
         "Standard_DS1",
         "Standard_DS11",
         "Standard_DS11_v2",
+        "Standard_DS11_v2_Promo",
         "Standard_DS12",
         "Standard_DS12_v2",
+        "Standard_DS12_v2_Promo",
         "Standard_DS13",
         "Standard_DS13_v2",
+        "Standard_DS13_v2_Promo",
         "Standard_DS14",
         "Standard_DS14_v2",
+        "Standard_DS14_v2_Promo",
         "Standard_DS15_v2",
         "Standard_DS1_v2",
         "Standard_DS2",
         "Standard_DS2_v2",
+        "Standard_DS2_v2_Promo",
         "Standard_DS3",
         "Standard_DS3_v2",
+        "Standard_DS3_v2_Promo",
         "Standard_DS4",
         "Standard_DS4_v2",
+        "Standard_DS4_v2_Promo",
         "Standard_DS5_v2",
+        "Standard_DS5_v2_Promo",
         "Standard_F1",
         "Standard_F16",
         "Standard_F16s",
@@ -930,36 +962,52 @@
         "Standard_A9",
         "Standard_D11",
         "Standard_D11_v2",
+        "Standard_D11_v2_Promo",
         "Standard_D12",
         "Standard_D12_v2",
+        "Standard_D12_v2_Promo",
         "Standard_D13",
         "Standard_D13_v2",
+        "Standard_D13_v2_Promo",
         "Standard_D14",
         "Standard_D14_v2",
+        "Standard_D14_v2_Promo",
         "Standard_D15_v2",
         "Standard_D2",
         "Standard_D2_v2",
+        "Standard_D2_v2_Promo",
         "Standard_D3",
         "Standard_D3_v2",
+        "Standard_D3_v2_Promo",
         "Standard_D4",
         "Standard_D4_v2",
+        "Standard_D4_v2_Promo",
         "Standard_D5_v2",
+        "Standard_D5_v2_Promo",
         "Standard_DS11",
         "Standard_DS11_v2",
+        "Standard_DS11_v2_Promo",
         "Standard_DS12",
         "Standard_DS12_v2",
+        "Standard_DS12_v2_Promo",
         "Standard_DS13",
         "Standard_DS13_v2",
+        "Standard_DS13_v2_Promo",
         "Standard_DS14",
         "Standard_DS14_v2",
+        "Standard_DS14_v2_Promo",
         "Standard_DS15_v2",
         "Standard_DS2",
         "Standard_DS2_v2",
+        "Standard_DS2_v2_Promo",
         "Standard_DS3",
         "Standard_DS3_v2",
+        "Standard_DS3_v2_Promo",
         "Standard_DS4",
         "Standard_DS4_v2",
+        "Standard_DS4_v2_Promo",
         "Standard_DS5_v2",
+        "Standard_DS5_v2_Promo",
         "Standard_F16",
         "Standard_F16s",
         "Standard_F2",
@@ -1072,17 +1120,17 @@
     "agentpool2VMNamePrefix": "[concat(parameters('orchestratorName'), '-agentpool2-', parameters('nameSuffix'), '-')]",
     "agentpool2VMSize": "[parameters('agentpool2VMSize')]",
     "agentpool2VnetSubnetID": "[variables('vnetSubnetID')]",
-    "agentppol1AccountName": "[concat(variables('storageAccountBaseName'), 'agnt0')]",
-    "agentppol1AvailabilitySet": "[concat('agentppol1-availabilitySet-', parameters('nameSuffix'))]",
-    "agentppol1Count": "[parameters('agentppol1Count')]",
-    "agentppol1Index": 0,
-    "agentppol1Offset": "[parameters('agentppol1Offset')]",
-    "agentppol1StorageAccountOffset": "[mul(variables('maxStorageAccountsPerAgent'),variables('agentppol1Index'))]",
-    "agentppol1StorageAccountsCount": "[add(div(variables('agentppol1Count'), variables('maxVMsPerStorageAccount')), mod(add(mod(variables('agentppol1Count'), variables('maxVMsPerStorageAccount')),2), add(mod(variables('agentppol1Count'), variables('maxVMsPerStorageAccount')),1)))]",
-    "agentppol1SubnetName": "[variables('subnetName')]",
-    "agentppol1VMNamePrefix": "[concat(parameters('orchestratorName'), '-agentppol1-', parameters('nameSuffix'), '-')]",
-    "agentppol1VMSize": "[parameters('agentppol1VMSize')]",
-    "agentppol1VnetSubnetID": "[variables('vnetSubnetID')]",
+    "agentpool1AccountName": "[concat(variables('storageAccountBaseName'), 'agnt0')]",
+    "agentpool1AvailabilitySet": "[concat('agentpool1-availabilitySet-', parameters('nameSuffix'))]",
+    "agentpool1Count": "[parameters('agentpool1Count')]",
+    "agentpool1Index": 0,
+    "agentpool1Offset": "[parameters('agentpool1Offset')]",
+    "agentpool1StorageAccountOffset": "[mul(variables('maxStorageAccountsPerAgent'),variables('agentpool1Index'))]",
+    "agentpool1StorageAccountsCount": "[add(div(variables('agentpool1Count'), variables('maxVMsPerStorageAccount')), mod(add(mod(variables('agentpool1Count'), variables('maxVMsPerStorageAccount')),2), add(mod(variables('agentpool1Count'), variables('maxVMsPerStorageAccount')),1)))]",
+    "agentpool1SubnetName": "[variables('subnetName')]",
+    "agentpool1VMNamePrefix": "[concat(parameters('orchestratorName'), '-agentpool1-', parameters('nameSuffix'), '-')]",
+    "agentpool1VMSize": "[parameters('agentpool1VMSize')]",
+    "agentpool1VnetSubnetID": "[variables('vnetSubnetID')]",
     "allocateNodeCidrs": true,
     "apiServerCertificate": "[parameters('apiServerCertificate')]",
     "apiServerPrivateKey": "[parameters('apiServerPrivateKey')]",
@@ -1197,7 +1245,7 @@
     "osImagePublisher": "Canonical",
     "osImageSKU": "16.04-LTS",
     "osImageVersion": "16.04.201708151",
-    "primaryAvailabilitySetName": "[concat('agentppol1-availabilitySet-',parameters('nameSuffix'))]",
+    "primaryAvailabilitySetName": "[concat('agentpool1-availabilitySet-',parameters('nameSuffix'))]",
     "provisionScript": "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",
     "readerRoleDefinitionId": "[concat('/subscriptions/', subscription().subscriptionId, '/providers/Microsoft.Authorization/roleDefinitions/', 'acdd72a7-3385-48ef-bd42-f606fba81ae7')]",
     "registerWithTaints": "node-role.kubernetes.io/master=true:NoSchedule",
@@ -1332,10 +1380,16 @@
       "Standard_D11_v2": {
         "storageAccountType": "Standard_LRS"
       },
+      "Standard_D11_v2_Promo": {
+        "storageAccountType": "Standard_LRS"
+      },
       "Standard_D12": {
         "storageAccountType": "Standard_LRS"
       },
       "Standard_D12_v2": {
+        "storageAccountType": "Standard_LRS"
+      },
+      "Standard_D12_v2_Promo": {
         "storageAccountType": "Standard_LRS"
       },
       "Standard_D13": {
@@ -1344,10 +1398,16 @@
       "Standard_D13_v2": {
         "storageAccountType": "Standard_LRS"
       },
+      "Standard_D13_v2_Promo": {
+        "storageAccountType": "Standard_LRS"
+      },
       "Standard_D14": {
         "storageAccountType": "Standard_LRS"
       },
       "Standard_D14_v2": {
+        "storageAccountType": "Standard_LRS"
+      },
+      "Standard_D14_v2_Promo": {
         "storageAccountType": "Standard_LRS"
       },
       "Standard_D15_v2": {
@@ -1362,10 +1422,16 @@
       "Standard_D2_v2": {
         "storageAccountType": "Standard_LRS"
       },
+      "Standard_D2_v2_Promo": {
+        "storageAccountType": "Standard_LRS"
+      },
       "Standard_D3": {
         "storageAccountType": "Standard_LRS"
       },
       "Standard_D3_v2": {
+        "storageAccountType": "Standard_LRS"
+      },
+      "Standard_D3_v2_Promo": {
         "storageAccountType": "Standard_LRS"
       },
       "Standard_D4": {
@@ -1374,7 +1440,13 @@
       "Standard_D4_v2": {
         "storageAccountType": "Standard_LRS"
       },
+      "Standard_D4_v2_Promo": {
+        "storageAccountType": "Standard_LRS"
+      },
       "Standard_D5_v2": {
+        "storageAccountType": "Standard_LRS"
+      },
+      "Standard_D5_v2_Promo": {
         "storageAccountType": "Standard_LRS"
       },
       "Standard_DS1": {
@@ -1386,10 +1458,16 @@
       "Standard_DS11_v2": {
         "storageAccountType": "Premium_LRS"
       },
+      "Standard_DS11_v2_Promo": {
+        "storageAccountType": "Premium_LRS"
+      },
       "Standard_DS12": {
         "storageAccountType": "Premium_LRS"
       },
       "Standard_DS12_v2": {
+        "storageAccountType": "Premium_LRS"
+      },
+      "Standard_DS12_v2_Promo": {
         "storageAccountType": "Premium_LRS"
       },
       "Standard_DS13": {
@@ -1398,10 +1476,16 @@
       "Standard_DS13_v2": {
         "storageAccountType": "Premium_LRS"
       },
+      "Standard_DS13_v2_Promo": {
+        "storageAccountType": "Premium_LRS"
+      },
       "Standard_DS14": {
         "storageAccountType": "Premium_LRS"
       },
       "Standard_DS14_v2": {
+        "storageAccountType": "Premium_LRS"
+      },
+      "Standard_DS14_v2_Promo": {
         "storageAccountType": "Premium_LRS"
       },
       "Standard_DS15_v2": {
@@ -1416,10 +1500,16 @@
       "Standard_DS2_v2": {
         "storageAccountType": "Premium_LRS"
       },
+      "Standard_DS2_v2_Promo": {
+        "storageAccountType": "Premium_LRS"
+      },
       "Standard_DS3": {
         "storageAccountType": "Premium_LRS"
       },
       "Standard_DS3_v2": {
+        "storageAccountType": "Premium_LRS"
+      },
+      "Standard_DS3_v2_Promo": {
         "storageAccountType": "Premium_LRS"
       },
       "Standard_DS4": {
@@ -1428,7 +1518,13 @@
       "Standard_DS4_v2": {
         "storageAccountType": "Premium_LRS"
       },
+      "Standard_DS4_v2_Promo": {
+        "storageAccountType": "Premium_LRS"
+      },
       "Standard_DS5_v2": {
+        "storageAccountType": "Premium_LRS"
+      },
+      "Standard_DS5_v2_Promo": {
         "storageAccountType": "Premium_LRS"
       },
       "Standard_F1": {
@@ -1561,14 +1657,14 @@
     {
       "apiVersion": "[variables('apiVersionDefault')]",
       "copy": {
-        "count": "[sub(variables('agentppol1Count'), variables('agentppol1Offset'))]",
+        "count": "[sub(variables('agentpool1Count'), variables('agentpool1Offset'))]",
         "name": "loop"
       },
       "dependsOn": [
         "[variables('vnetID')]"
       ],
       "location": "[variables('location')]",
-      "name": "[concat(variables('agentppol1VMNamePrefix'), 'nic-', copyIndex(variables('agentppol1Offset')))]",
+      "name": "[concat(variables('agentpool1VMNamePrefix'), 'nic-', copyIndex(variables('agentpool1Offset')))]",
       "properties": {
         "enableIPForwarding": true,
         "ipConfigurations": [
@@ -1578,7 +1674,7 @@
               "primary": true,
               "privateIPAllocationMethod": "Dynamic",
               "subnet": {
-                "id": "[variables('agentppol1VnetSubnetID')]"
+                "id": "[variables('agentpool1VnetSubnetID')]"
               }
             }
           }
@@ -1589,16 +1685,16 @@
     {
       "apiVersion": "[variables('apiVersionStorage')]",
       "copy": {
-        "count": "[variables('agentppol1StorageAccountsCount')]",
+        "count": "[variables('agentpool1StorageAccountsCount')]",
         "name": "loop"
       },
       "dependsOn": [
         "[concat('Microsoft.Network/publicIPAddresses/', variables('masterPublicIPAddressName'))]"
       ],
       "location": "[variables('location')]",
-      "name": "[concat(variables('storageAccountPrefixes')[mod(add(copyIndex(),variables('agentppol1StorageAccountOffset')),variables('storageAccountPrefixesCount'))],variables('storageAccountPrefixes')[div(add(copyIndex(),variables('agentppol1StorageAccountOffset')),variables('storageAccountPrefixesCount'))],variables('agentppol1AccountName'))]",
+      "name": "[concat(variables('storageAccountPrefixes')[mod(add(copyIndex(),variables('agentpool1StorageAccountOffset')),variables('storageAccountPrefixesCount'))],variables('storageAccountPrefixes')[div(add(copyIndex(),variables('agentpool1StorageAccountOffset')),variables('storageAccountPrefixesCount'))],variables('agentpool1AccountName'))]",
       "properties": {
-        "accountType": "[variables('vmSizesMap')[variables('agentppol1VMSize')].storageAccountType]"
+        "accountType": "[variables('vmSizesMap')[variables('agentpool1VMSize')].storageAccountType]"
       },
       "type": "Microsoft.Storage/storageAccounts"
     },
@@ -1910,13 +2006,13 @@
       "type": "int",
       "value": "[variables('agentpool2StorageAccountOffset')]"
     },
-    "agentppol1StorageAccountCount": {
+    "agentpool1StorageAccountCount": {
       "type": "int",
-      "value": "[variables('agentppol1StorageAccountsCount')]"
+      "value": "[variables('agentpool1StorageAccountsCount')]"
     },
-    "agentppol1StorageAccountOffset": {
+    "agentpool1StorageAccountOffset": {
       "type": "int",
-      "value": "[variables('agentppol1StorageAccountOffset')]"
+      "value": "[variables('agentpool1StorageAccountOffset')]"
     },
     "masterFQDN": {
       "type": "string",
