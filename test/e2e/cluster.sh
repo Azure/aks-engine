@@ -7,7 +7,7 @@ docker run --rm \
 ${DEV_IMAGE} make build-binary > /dev/null 2>&1 || exit 1
 
 cat > ./apimodel-input.json <<END
-echo ${API_MODEL_INPUT}
+${API_MODEL_INPUT}
 END
 
 echo "Running E2E tests against a cluster built with the following API model:"
