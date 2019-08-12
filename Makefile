@@ -81,7 +81,6 @@ generate-azure-constants:
 .PHONY: build
 build: validate-dependencies generate
 	$(GO) build $(GOFLAGS) -ldflags '$(LDFLAGS)' -o $(BINDIR)/$(PROJECT)$(EXTENSION) $(REPO_PATH)
-	$(GO) build $(GOFLAGS) -o $(BINDIR)/aks-engine-test$(EXTENSION) $(REPO_PATH)/test/aks-engine-test
 
 build-binary: generate
 	go build $(GOFLAGS) -v -ldflags "$(LDFLAGS)" -o $(BINARY_DEST_DIR)/aks-engine .
@@ -138,7 +137,7 @@ ginkgoBuild: generate
 	ginkgo build test/e2e/kubernetes
 
 test: generate ginkgoBuild
-	ginkgo -skipPackage test/e2e/dcos,test/e2e/kubernetes -failFast -r .
+	ginkgo -skipPackage test/e2e/kubernetes -failFast -r .
 
 .PHONY: test-style
 test-style: validate-go validate-shell validate-copyright-headers
