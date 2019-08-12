@@ -7,11 +7,11 @@ docker run --rm \
 ${DEV_IMAGE} make build-binary > /dev/null 2>&1 || exit 1
 
 cat > ./apimodel-input.json <<END
-${API_MODEL_INPUT}
+echo ${API_MODEL_INPUT}
 END
 
 echo "Running E2E tests against a cluster built with the following API model:"
-echo ${API_MODEL_INPUT} | jq
+echo ${API_MODEL_INPUT}
 
 CLEANUP_AFTER_DEPLOYMENT=${CLEANUP_ON_EXIT}
 if [ "${UPGRADE_CLUSTER}" = "true" ]; then
@@ -75,7 +75,7 @@ if [ "${UPGRADE_CLUSTER}" = "true" ]; then
       ${DEV_IMAGE} make build-binary > /dev/null 2>&1 || exit 1
 
       if [ "${SCALE_CLUSTER}" = "true" ]; then
-        for nodepool in $(cat ./apimodel-input.json | jq -r '.properties.agentPoolProfiles[].name'); do
+        for nodepool in $(echo ${API_MODEL_INPUT} | jq -r '.properties.agentPoolProfiles[].name'); do
         docker run --rm \
         -v $(pwd):/go/src/github.com/Azure/aks-engine \
         -w /go/src/github.com/Azure/aks-engine \
@@ -151,7 +151,7 @@ if [ "${UPGRADE_CLUSTER}" = "true" ]; then
       ${DEV_IMAGE} make test-kubernetes || exit 1
 
       if [ "${SCALE_CLUSTER}" = "true" ]; then
-        for nodepool in $(cat ./apimodel-input.json | jq -r '.properties.agentPoolProfiles[].name'); do
+        for nodepool in $(echo ${API_MODEL_INPUT} | jq -r '.properties.agentPoolProfiles[].name'); do
         docker run --rm \
         -v $(pwd):/go/src/github.com/Azure/aks-engine \
         -w /go/src/github.com/Azure/aks-engine \
@@ -206,7 +206,7 @@ else
     -w /go/src/github.com/Azure/aks-engine \
     ${DEV_IMAGE} make build-binary > /dev/null 2>&1 || exit 1
 
-    for nodepool in $(cat ./apimodel-input.json | jq -r '.properties.agentPoolProfiles[].name'); do
+    for nodepool in $(echo ${API_MODEL_INPUT} | jq -r '.properties.agentPoolProfiles[].name'); do
     docker run --rm \
     -v $(pwd):/go/src/github.com/Azure/aks-engine \
     -w /go/src/github.com/Azure/aks-engine \
@@ -245,7 +245,7 @@ else
     -e SKIP_TEST=${SKIP_TEST_AFTER_SCALE_DOWN} \
     ${DEV_IMAGE} make test-kubernetes || exit 1
 
-    for nodepool in $(cat ./apimodel-input.json | jq -r '.properties.agentPoolProfiles[].name'); do
+    for nodepool in $(echo ${API_MODEL_INPUT} | jq -r '.properties.agentPoolProfiles[].name'); do
     docker run --rm \
     -v $(pwd):/go/src/github.com/Azure/aks-engine \
     -w /go/src/github.com/Azure/aks-engine \
