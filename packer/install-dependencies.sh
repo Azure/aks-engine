@@ -365,6 +365,15 @@ for FLANNEL_VERSION in ${FLANNEL_VERSIONS}; do
     echo "  - ${CONTAINER_IMAGE}" >> ${RELEASE_NOTES_FILEPATH}
 done
 
+NODE_LABELER_VERSIONS="latest"
+for NODE_LABELER_VERSION in ${NODE_LABELER_VERSIONS}; do
+    # TOOD: publish from mcr.microsoft.com
+    CONTAINER_IMAGE="quay.io/mboersma/node-labeler:v${NODE_LABELER_VERSION}"
+    pullContainerImage "docker" ${CONTAINER_IMAGE}
+    echo "  - ${CONTAINER_IMAGE}" >> ${RELEASE_NOTES_FILEPATH}
+done
+
+
 pullContainerImage "docker" "busybox"
 echo "  - busybox" >> ${RELEASE_NOTES_FILEPATH}
 
