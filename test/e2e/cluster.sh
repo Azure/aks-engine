@@ -103,7 +103,7 @@ if [[ "${UPGRADE_CLUSTER}" = "true" ]]; then
       -e REGIONS=$REGION \
       -e IS_JENKINS=${IS_JENKINS} \
       -e SKIP_LOGS_COLLECTION=true \
-      -e GINKGO_SKIP="${GINKGO_SKIP}|${GINKGO_SKIP_AFTER_SCALE_IN}" \
+      -e GINKGO_SKIP="${GINKGO_SKIP}|${GINKGO_SKIP_AFTER_SCALE_DOWN}" \
       ${DEV_IMAGE} make test-kubernetes || exit 1
       fi
 
@@ -139,7 +139,7 @@ if [[ "${UPGRADE_CLUSTER}" = "true" ]]; then
       -e REGIONS=$REGION \
       -e IS_JENKINS=${IS_JENKINS} \
       -e SKIP_LOGS_COLLECTION=true \
-      -e GINKGO_SKIP="${GINKGO_SKIP}|${GINKGO_SKIP_AFTER_SCALE_IN}" \
+      -e GINKGO_SKIP="${GINKGO_SKIP}|${GINKGO_SKIP_AFTER_SCALE_DOWN}" \
       ${DEV_IMAGE} make test-kubernetes || exit 1
 
       if [[ "${SCALE_CLUSTER}" = "true" ]]; then
@@ -178,7 +178,7 @@ if [[ "${UPGRADE_CLUSTER}" = "true" ]]; then
       -e REGIONS=$REGION \
       -e IS_JENKINS=${IS_JENKINS} \
       -e SKIP_LOGS_COLLECTION=${SKIP_LOGS_COLLECTION} \
-      -e GINKGO_SKIP="${GINKGO_SKIP}|${GINKGO_SKIP_AFTER_SCALE_OUT}" \
+      -e GINKGO_SKIP="${GINKGO_SKIP}|${GINKGO_SKIP_AFTER_SCALE_UP}" \
       ${DEV_IMAGE} make test-kubernetes || exit 1
       fi
   done
@@ -232,7 +232,7 @@ else
     -e REGIONS=$REGION \
     -e IS_JENKINS=${IS_JENKINS} \
     -e SKIP_LOGS_COLLECTION=true \
-    -e GINKGO_SKIP="${GINKGO_SKIP}|${GINKGO_SKIP_AFTER_SCALE_IN}" \
+    -e GINKGO_SKIP="${GINKGO_SKIP}|${GINKGO_SKIP_AFTER_SCALE_DOWN}" \
     ${DEV_IMAGE} make test-kubernetes || exit 1
 
     for nodepool in $(cat ./apimodel-input.json | jq -r '.properties.agentPoolProfiles[].name'); do
@@ -270,7 +270,7 @@ else
     -e REGIONS=$REGION \
     -e IS_JENKINS=${IS_JENKINS} \
     -e SKIP_LOGS_COLLECTION=${SKIP_LOGS_COLLECTION} \
-    -e GINKGO_SKIP="${GINKGO_SKIP}|${GINKGO_SKIP_AFTER_SCALE_OUT}" \
+    -e GINKGO_SKIP="${GINKGO_SKIP}|${GINKGO_SKIP_AFTER_SCALE_UP}" \
     ${DEV_IMAGE} make test-kubernetes || exit 1
   fi
 fi
