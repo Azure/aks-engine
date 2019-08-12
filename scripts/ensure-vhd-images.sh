@@ -9,6 +9,7 @@ exit_code=0
 
 echo "==> Using az CLI to validate published VHD images <=="
 
+az login --service-principal --username "${CLIENT_ID}" --password "${CLIENT_SECRET}" --tenant "${TENANT_ID}" &>/dev/null
 IMAGES=$(az vm image list -p AKS -f aks --all -l eastus | jq '. | length')
 
 if [ "$IMAGES" != "$PUBLISHED_IMAGES" ]; then
