@@ -11,7 +11,7 @@ ${API_MODEL_INPUT}
 END
 
 echo "Running E2E tests against a cluster built with the following API model:"
-echo ${API_MODEL_INPUT} | jq
+echo ${API_MODEL_INPUT}
 
 CLEANUP_AFTER_DEPLOYMENT=${CLEANUP_ON_EXIT}
 if [ "${UPGRADE_CLUSTER}" = "true" ]; then
