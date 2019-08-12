@@ -4,8 +4,12 @@
 package cmd
 
 import (
+	"os"
 	"testing"
 
+	"github.com/Azure/aks-engine/pkg/api"
+	"github.com/gofrs/uuid"
+	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
 
@@ -15,7 +19,7 @@ func TestNewGenerateCmd(t *testing.T) {
 		t.Fatalf("generate command should have use %s equal %s, short %s equal %s and long %s equal to %s", command.Use, generateName, command.Short, generateShortDescription, command.Long, generateLongDescription)
 	}
 
-	expectedFlags := []string{"api-model", "output-directory", "ca-certificate-path", "ca-private-key-path", "set", "no-pretty-print", "parameters-only"}
+	expectedFlags := []string{"api-model", "output-directory", "ca-certificate-path", "ca-private-key-path", "set", "no-pretty-print", "parameters-only", "client-id", "client-secret"}
 	for _, f := range expectedFlags {
 		if command.Flags().Lookup(f) == nil {
 			t.Fatalf("generate command should have flag %s", f)
@@ -121,5 +125,129 @@ func TestGenerateCmdMLoadAPIModel(t *testing.T) {
 	err := g.loadAPIModel()
 	if err != nil {
 		t.Fatalf("unexpected error loading api model: %s", err.Error())
+	}
+}
+
+func TestAPIModelWithoutServicePrincipalProfileAndClientIdAndSecretInGenerateCmd(t *testing.T) {
+	apiloader := &api.Apiloader{
+		Translator: nil,
+	}
+
+	apimodel := getAPIModelWithoutServicePrincipalProfile(false)
+
+	cs, ver, err := apiloader.DeserializeContainerService([]byte(apimodel), false, false, nil)
+	if err != nil {
+		t.Fatalf("unexpected error deserializing the example apimodel: %s", err)
+	}
+	cs.Properties.LinuxProfile.SSH.PublicKeys[0].KeyData = "ssh test"
+
+	clientID, _ := uuid.FromString("e810b868-afab-412d-98cc-ce7db5cc840b")
+	clientSecret := "Test Client secret"
+	generateCmd := &generateCmd{
+		apimodelPath:     "./this/is/unused.json",
+		outputDirectory:  "_test_output",
+		ClientID:         clientID,
+		ClientSecret:     clientSecret,
+		containerService: cs,
+		apiVersion:       ver,
+	}
+	err = generateCmd.autofillApimodel()
+	if err != nil {
+		t.Fatalf("unexpected error autofilling the example apimodel: %s", err)
+	}
+
+	defer os.RemoveAll(generateCmd.outputDirectory)
+
+	if generateCmd.containerService.Properties.ServicePrincipalProfile == nil || generateCmd.containerService.Properties.ServicePrincipalProfile.ClientID == "" || generateCmd.containerService.Properties.ServicePrincipalProfile.Secret == "" {
+		t.Fatalf("expected service principal profile to be populated from deployment command arguments")
+	}
+
+	if generateCmd.containerService.Properties.ServicePrincipalProfile.ClientID != clientID.String() {
+		t.Fatalf("expected service principal profile client id to be %s but got %s", clientID.String(), generateCmd.containerService.Properties.ServicePrincipalProfile.ClientID)
+	}
+
+	if generateCmd.containerService.Properties.ServicePrincipalProfile.Secret != clientSecret {
+		t.Fatalf("expected service principal profile client secret to be %s but got %s", clientSecret, generateCmd.containerService.Properties.ServicePrincipalProfile.Secret)
+	}
+
+	err = generateCmd.validateAPIModelAsVLabs()
+	if err != nil {
+		t.Fatalf("unexpected error validateAPIModelAsVLabs the example apimodel: %s", err)
+	}
+}
+
+func TestAPIModelWithoutServicePrincipalProfileAndWithoutClientIdAndSecretInGenerateCmd(t *testing.T) {
+	apiloader := &api.Apiloader{
+		Translator: nil,
+	}
+
+	apimodel := getAPIModelWithoutServicePrincipalProfile(false)
+
+	cs, ver, err := apiloader.DeserializeContainerService([]byte(apimodel), false, false, nil)
+	if err != nil {
+		t.Fatalf("unexpected error deserializing the example apimodel: %s", err)
+	}
+	cs.Properties.LinuxProfile.SSH.PublicKeys[0].KeyData = "ssh test"
+	generateCmd := &generateCmd{
+		apimodelPath:     "./this/is/unused.json",
+		outputDirectory:  "_test_output",
+		containerService: cs,
+		apiVersion:       ver,
+	}
+	err = generateCmd.autofillApimodel()
+	if err != nil {
+		t.Fatalf("unexpected error autofilling the example apimodel: %s", err)
+	}
+
+	defer os.RemoveAll(generateCmd.outputDirectory)
+
+	if generateCmd.containerService.Properties.ServicePrincipalProfile != nil {
+		t.Fatalf("expected service principal profile to be nil for unmanaged identity, where client id and secret are not supplied in api model and deployment command")
+	}
+
+	err = generateCmd.validateAPIModelAsVLabs()
+	expectedErr := errors.New("ServicePrincipalProfile must be specified with Orchestrator Kubernetes")
+
+	if err.Error() != expectedErr.Error() {
+		t.Fatalf("expected validate generate command to return error %s, but instead got %s", expectedErr.Error(), err.Error())
+	}
+}
+
+func TestAPIModelWithManagedIdentityWithoutServicePrincipalProfileAndClientIdAndSecretInGenerateCmd(t *testing.T) {
+	apiloader := &api.Apiloader{
+		Translator: nil,
+	}
+
+	apimodel := getAPIModelWithoutServicePrincipalProfile(true)
+
+	cs, ver, err := apiloader.DeserializeContainerService([]byte(apimodel), false, false, nil)
+	if err != nil {
+		t.Fatalf("unexpected error deserializing the example apimodel: %s", err)
+	}
+	cs.Properties.LinuxProfile.SSH.PublicKeys[0].KeyData = "ssh test"
+	clientID, _ := uuid.FromString("e810b868-afab-412d-98cc-ce7db5cc840b")
+	clientSecret := "Test Client secret"
+	generateCmd := &generateCmd{
+		apimodelPath:     "./this/is/unused.json",
+		outputDirectory:  "_test_output",
+		ClientID:         clientID,
+		ClientSecret:     clientSecret,
+		containerService: cs,
+		apiVersion:       ver,
+	}
+	err = generateCmd.autofillApimodel()
+	if err != nil {
+		t.Fatalf("unexpected error autofilling the example apimodel: %s", err)
+	}
+
+	defer os.RemoveAll(generateCmd.outputDirectory)
+
+	if generateCmd.containerService.Properties.ServicePrincipalProfile != nil {
+		t.Fatalf("expected service principal profile to be nil for managed identity")
+	}
+
+	err = generateCmd.validateAPIModelAsVLabs()
+	if err != nil {
+		t.Fatalf("unexpected error validateAPIModelAsVLabs the example apimodel: %s", err)
 	}
 }
