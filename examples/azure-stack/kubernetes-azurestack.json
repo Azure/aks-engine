@@ -18,7 +18,7 @@
             "dnsPrefix": "",
             "distro": "ubuntu",
             "osDiskSizeGB": 200,
-            "count": 1,
+            "count": 3,
             "vmSize": "Standard_D2_v2"
         },
         "agentPoolProfiles": [
