@@ -17,7 +17,7 @@ def get_all_sizes():
             # NOTE: "az vm list-sizes" fails in francesouth, australiacentral, australiacentral2, and southafricawest.
             sizes = json.loads(subprocess.check_output(['az', 'vm', 'list-sizes', '-l', location['name'], '-o', 'json']).decode('utf-8'))
             for size in sizes:
-                if not size['name'] in size_map and not size['name'].split('_')[0] == 'Basic' and not size['name'][-6:] == '_Promo':
+                if not size['name'] in size_map and not size['name'].split('_')[0] == 'Basic':
                     size_map[size['name']] = size
         except subprocess.CalledProcessError:
             continue
