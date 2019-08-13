@@ -59,8 +59,8 @@ docker run --rm \
 ${DEV_IMAGE} make test-kubernetes || exit 1
 set -x
 
-export RESOURCE_GROUP=`ls -dt1 _output/* | head -n 1 | cut -d/ -f2`
-export REGION=`ls -dt1 _output/* | head -n 1 | cut -d/ -f2 | cut -d- -f2`
+RESOURCE_GROUP=$(ls -dt1 _output/* | head -n 1 | cut -d/ -f2)
+REGION=$(ls -dt1 _output/* | head -n 1 | cut -d/ -f2 | cut -d- -f2)
 
 if [ $(( RANDOM % 4 )) -eq 3 ]; then
     echo Removing bookkeeping tags from VMs in resource group $RESOURCE_GROUP ...
@@ -78,11 +78,11 @@ if [ "${UPGRADE_CLUSTER}" = "true" ]; then
       echo Upgrading cluster to version $ver_target in resource group $RESOURCE_GROUP ...
 
       set -x
-      git remote add $UPGRADE_FORK https://github.com/$UPGRADE_FORK/aks-engine.git || echo nothing to do here
+      git remote add $UPGRADE_FORK https://github.com/$UPGRADE_FORK/aks-engine.git
       git fetch $UPGRADE_FORK
-      git branch -D $UPGRADE_FORK/$UPGRADE_BRANCH || echo nothing to do here
+      git branch -D $UPGRADE_FORK/$UPGRADE_BRANCH
       git checkout -b $UPGRADE_FORK/$UPGRADE_BRANCH --track $UPGRADE_FORK/$UPGRADE_BRANCH
-      git pull || echo nothing to do here
+      git pull
       set -x
 
       docker run --rm \
