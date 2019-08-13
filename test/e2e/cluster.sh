@@ -1,5 +1,6 @@
 #!/bin/bash
 
+set -x
 # Assumes we're running from the git root of aks-engine
 docker run --rm \
 -v $(pwd):/go/src/github.com/Azure/aks-engine \
@@ -36,7 +37,6 @@ else
   SKIP_AFTER_SCALE_UP="${GINKGO_SKIP_AFTER_SCALE_UP}"
 fi
 
-set -x
 docker run --rm \
 -v $(pwd):/go/src/github.com/Azure/aks-engine \
 -w /go/src/github.com/Azure/aks-engine \
@@ -57,7 +57,6 @@ docker run --rm \
 -e GINKGO_FOCUS="${GINKGO_FOCUS}" \
 -e GINKGO_SKIP="${GINKGO_SKIP}" \
 ${DEV_IMAGE} make test-kubernetes || exit 1
-set -x
 
 RESOURCE_GROUP=$(ls -dt1 _output/* | head -n 1 | cut -d/ -f2)
 REGION=$(ls -dt1 _output/* | head -n 1 | cut -d/ -f2 | cut -d- -f2)
@@ -72,18 +71,18 @@ if [ $(( RANDOM % 4 )) -eq 3 ]; then
     done
 fi
 
+if [ "${UPGRADE_CLUSTER}" = "true" ] || [ "${SCALE_CLUSTER}" = "true" ]; then
+  git remote add $UPGRADE_FORK https://github.com/$UPGRADE_FORK/aks-engine.git
+  git fetch $UPGRADE_FORK
+  git branch -D $UPGRADE_FORK/$UPGRADE_BRANCH
+  git checkout -b $UPGRADE_FORK/$UPGRADE_BRANCH --track $UPGRADE_FORK/$UPGRADE_BRANCH
+  git pull
+fi
+
 if [ "${UPGRADE_CLUSTER}" = "true" ]; then
   for ver_target in $UPGRADE_VERSIONS; do
       printf "\n\n\n"
       echo Upgrading cluster to version $ver_target in resource group $RESOURCE_GROUP ...
-
-      set -x
-      git remote add $UPGRADE_FORK https://github.com/$UPGRADE_FORK/aks-engine.git
-      git fetch $UPGRADE_FORK
-      git branch -D $UPGRADE_FORK/$UPGRADE_BRANCH
-      git checkout -b $UPGRADE_FORK/$UPGRADE_BRANCH --track $UPGRADE_FORK/$UPGRADE_BRANCH
-      git pull
-      set -x
 
       docker run --rm \
       -v $(pwd):/go/src/github.com/Azure/aks-engine \
@@ -210,14 +209,6 @@ if [ "${UPGRADE_CLUSTER}" = "true" ]; then
   done
 else
   if [ "${SCALE_CLUSTER}" = "true" ]; then
-    set -x
-    git remote add $UPGRADE_FORK https://github.com/$UPGRADE_FORK/aks-engine.git || echo nothing to do here
-    git fetch $UPGRADE_FORK
-    git branch -D $UPGRADE_FORK/$UPGRADE_BRANCH || echo nothing to do here
-    git checkout -b $UPGRADE_FORK/$UPGRADE_BRANCH --track $UPGRADE_FORK/$UPGRADE_BRANCH
-    git pull || echo nothing to do here
-    set -x
-
     docker run --rm \
     -v $(pwd):/go/src/github.com/Azure/aks-engine \
     -w /go/src/github.com/Azure/aks-engine \
