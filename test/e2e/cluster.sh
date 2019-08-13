@@ -20,12 +20,15 @@ elif [ "${SCALE_CLUSTER}" = "true" ]; then
   CLEANUP_AFTER_DEPLOYMENT="false";
 fi
 
-if [ ! -z "${GINKGO_SKIP}" ]; then
-  if [ ! -z "${GINKGO_SKIP_AFTER_SCALE_DOWN}" ]; then
+if [ -n "${GINKGO_SKIP}" ]; then
+  if [ -n "${GINKGO_SKIP_AFTER_SCALE_DOWN}" ]; then
     SKIP_AFTER_SCALE_DOWN="${GINKGO_SKIP}|${GINKGO_SKIP_AFTER_SCALE_DOWN}"
-    SKIP_AFTER_SCALE_UP="${GINKGO_SKIP}|${GINKGO_SKIP_AFTER_SCALE_UP}"
   else
     SKIP_AFTER_SCALE_DOWN="${GINKGO_SKIP}"
+  fi
+  if [ -n "${GINKGO_SKIP_AFTER_SCALE_UP}" ]; then
+    SKIP_AFTER_SCALE_UP="${GINKGO_SKIP}|${GINKGO_SKIP_AFTER_SCALE_UP}"
+  else
     SKIP_AFTER_SCALE_UP="${GINKGO_SKIP}"
   fi
 else
@@ -200,7 +203,7 @@ if [ "${UPGRADE_CLUSTER}" = "true" ]; then
       -e REGIONS=$REGION \
       -e IS_JENKINS=${IS_JENKINS} \
       -e SKIP_LOGS_COLLECTION=${SKIP_LOGS_COLLECTION} \
-      -e GINKGO_SKIP="${SKIP_AFTER_SCALE_DOWN}" \
+      -e GINKGO_SKIP="${SKIP_AFTER_SCALE_UP}" \
       -e SKIP_TEST=${SKIP_TESTS_AFTER_SCALE_UP} \
       ${DEV_IMAGE} make test-kubernetes || exit 1
       fi
