@@ -75,15 +75,15 @@ func TestCreateImageReferenceFragment(t *testing.T) {
 			},
 		},
 		{
-			name: "Default",
+			name:        "Default",
 			profileName: "qux",
-			w: api.WindowsProfile{},
+			w:           api.WindowsProfile{},
 			expected: compute.ImageReference{
 				Offer:     to.StringPtr("[parameters('agentWindowsOffer')]"),
 				Publisher: to.StringPtr("[parameters('agentWindowsPublisher')]"),
 				Sku:       to.StringPtr("[parameters('agentWindowsSku')]"),
 				Version:   to.StringPtr("[parameters('agentWindowsVersion')]"),
-			},	
+			},
 		},
 	}
 
@@ -116,8 +116,8 @@ func TestCreateWindowsImage(t *testing.T) {
 			APIVersion: "[variables('apiVersionCompute')]",
 		},
 		Image: compute.Image{
-			Type: to.StringPtr("Microsoft.Compute/images"),
-			Name: to.StringPtr("foobarCustomWindowsImage"),
+			Type:     to.StringPtr("Microsoft.Compute/images"),
+			Name:     to.StringPtr("foobarCustomWindowsImage"),
 			Location: to.StringPtr("[variables('location')]"),
 			ImageProperties: &compute.ImageProperties{
 				StorageProfile: &compute.ImageStorageProfile{
