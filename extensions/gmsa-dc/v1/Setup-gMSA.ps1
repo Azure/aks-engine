@@ -30,8 +30,7 @@ if (Get-AdGroupMember -Identity "Enterprise Admins" | Select-String -Pattern "gm
     mkdir -Path C:\ProgramData\docker\credentialspecs
 
     # Get GenerateCredSpecResource PowerShell Module
-    #Invoke-WebRequest -UseBasicParsing https://raw.githubusercontent.com/kubernetes-sigs/windows-gmsa/master/scripts/GenerateCredentialSpecResource.ps1 -OutFile GenerateCredentialSpecResource.ps1
-    Invoke-WebRequest -UseBasicParsing https://raw.githubusercontent.com/JeremyWx/aks-engine/master/extensions/gmsa-dc/v1/GenerateCredentialSpecResource.ps1 -OutFile GenerateCredentialSpecResource.ps1
+    Invoke-WebRequest -UseBasicParsing https://raw.githubusercontent.com/kubernetes-sigs/windows-gmsa/master/scripts/GenerateCredentialSpecResource.ps1 -OutFile GenerateCredentialSpecResource.ps1
 
     # Import AD Module and Setup gMSA
     New-ADServiceAccount -Name gmsa-e2e -DNSHostName gmsa-e2e.k8sgmsa.lan -PrincipalsAllowedToRetrieveManagedPassword "Domain Controllers" -ServicePrincipalnames http/gmsa-e2e.k8sgmsa.lan
