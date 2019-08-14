@@ -24,5 +24,6 @@ jobs:
       ${DEIS_GO_DEV_IMAGE} make run-packer-windows
     displayName: Building windows VHD
   - task: PublishPipelineArtifact@0
+    inputs:
       artifactName: 'vhd-release-notes'
       targetPath: 'release-notes.txt'
