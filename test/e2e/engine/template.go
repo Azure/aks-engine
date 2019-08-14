@@ -32,6 +32,7 @@ type Config struct {
 	AgentDNSPrefix        string `envconfig:"DNS_PREFIX"`
 	PublicSSHKey          string `envconfig:"PUBLIC_SSH_KEY"`
 	WindowsAdminPasssword string `envconfig:"WINDOWS_ADMIN_PASSWORD"`
+	WindowsNodeVhdURL     string `envconfig:"WINDOWS_NODE_VHD_URL" default:""`
 	OrchestratorRelease   string `envconfig:"ORCHESTRATOR_RELEASE"`
 	OrchestratorVersion   string `envconfig:"ORCHESTRATOR_VERSION"`
 	OutputDirectory       string `envconfig:"OUTPUT_DIR" default:"_output"`
@@ -123,6 +124,10 @@ func Build(cfg *config.Config, masterSubnetID string, agentSubnetIDs []string, i
 
 	if config.WindowsAdminPasssword != "" {
 		prop.WindowsProfile.AdminPassword = config.WindowsAdminPasssword
+	}
+
+	if config.WindowsNodeVhdURL != "" {
+		prop.WindowsProfile.WindowsImageSourceURL = config.WindowsNodeVhdURL
 	}
 
 	// If the parsed api model input has no expressed version opinion, we check if ENV does have an opinion
