@@ -519,7 +519,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 						Expect(success).To(Equal(true))
 						By("Running curl to access the forwarded port")
 						url := fmt.Sprintf("http://%s:%v", "localhost", 8123)
-						cmd := exec.Command("curl", "--max-time", "60", url)
+						cmd := exec.Command("curl", "--max-time", "60", "--retry", "10", "--retry-delay", "10", "--retry-max-time", "120", url)
 						util.PrintCommand(cmd)
 						var out []byte
 						out, err = cmd.CombinedOutput()
