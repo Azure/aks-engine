@@ -11571,6 +11571,7 @@ kind: Namespace
 metadata:
   labels:
     control-plane: controller-manager
+    addonmanager.kubernetes.io/mode: Reconcile
   name: drainsafe-system
 ---
 apiVersion: rbac.authorization.k8s.io/v1
@@ -11578,6 +11579,8 @@ kind: Role
 metadata:
   name: drainsafe-leader-election-role
   namespace: drainsafe-system
+  labels:
+    addonmanager.kubernetes.io/mode: Reconcile
 rules:
 - apiGroups:
   - ""
@@ -11605,6 +11608,8 @@ kind: ClusterRole
 metadata:
   creationTimestamp: null
   name: drainsafe-manager-role
+  labels:
+    addonmanager.kubernetes.io/mode: Reconcile
 rules:
 - apiGroups:
   - apiextensions.k8s.io
@@ -11707,6 +11712,8 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   name: drainsafe-proxy-role
+  labels:
+    addonmanager.kubernetes.io/mode: Reconcile
 rules:
 - apiGroups:
   - authentication.k8s.io
@@ -11721,6 +11728,8 @@ kind: RoleBinding
 metadata:
   name: drainsafe-leader-election-rolebinding
   namespace: drainsafe-system
+  labels:
+    addonmanager.kubernetes.io/mode: Reconcile
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
@@ -11734,6 +11743,8 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
   name: drainsafe-manager-rolebinding
+  labels:
+    addonmanager.kubernetes.io/mode: Reconcile
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
@@ -11747,6 +11758,8 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
   name: drainsafe-proxy-rolebinding
+  labels:
+    addonmanager.kubernetes.io/mode: Reconcile
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
@@ -11765,6 +11778,7 @@ metadata:
     prometheus.io/scrape: "true"
   labels:
     control-plane: controller-manager
+    addonmanager.kubernetes.io/mode: Reconcile
   name: drainsafe-controller-manager-metrics-service
   namespace: drainsafe-system
 spec:
@@ -11780,6 +11794,7 @@ kind: Deployment
 metadata:
   labels:
     control-plane: controller-manager
+    addonmanager.kubernetes.io/mode: Reconcile
   name: drainsafe-controller-manager
   namespace: drainsafe-system
 spec:
@@ -11839,6 +11854,7 @@ kind: DaemonSet
 metadata:
   labels:
     control-plane: controller-manager
+    addonmanager.kubernetes.io/mode: Reconcile
   name: drainsafe-controller-scheduledevent-manager
   namespace: drainsafe-system
 spec:
