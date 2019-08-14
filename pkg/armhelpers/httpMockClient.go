@@ -32,6 +32,8 @@ const (
 	logAnalyticsDefaultWorkspaceNameEUS        = "DefaultWorkspace-cc6b141e-6afc-4786-9bf6-e3b9a5601460-EUS"
 	logAnalyticsDefaultResourceGroupWEU        = "DefaultResourceGroup-WEU"
 	logAnalyticsDefaultWorkspaceNameWEU        = "DefaultWorkspace-cc6b141e-6afc-4786-9bf6-e3b9a5601460-WEU"
+	logAnalyticsDefaultResourceGroupMC         = "DefaultResourceGroup-EAST2"
+	logAnalyticsDefaultWorkspaceNameMC         = "DefaultWorkspace-cc6b141e-6afc-4786-9bf6-e3b9a5601460-EAST2"
 	logAnalyticsWorkspaceName                  = "testLogAnalyticsWorkspace"
 	logAnalyticsSolutionName                   = "ContainerInsights(testLogAnalyticsWorkspace)"
 	virtualNicName                             = "testVirtualNicName"
@@ -50,7 +52,8 @@ const (
 	filePathGetLogAnalyticsWorkspaceSharedKeys = "httpMockClientData/getLogAnalyticsWorkspaceSharedKeys.json"
 	filePathListWorkspacesByResourceGroup      = "httpMockClientData/getListWorkspacesByResourceGroup.json"
 	filePathCreateOrUpdateWorkspace            = "httpMockClientData/createOrUpdateWorkspace.json"
-	filePathCreateOrUpdateSolution             = "httpMockClientData/createOrUpdateSolution.json"
+	filePathListWorkspacesByResourceGroupInMC  = "httpMockClientData/getListWorkspacesByResourceGroup.json"
+	filePathCreateOrUpdateWorkspaceInMC        = "httpMockClientData/createOrUpdateWorkspace.json"
 )
 
 //HTTPMockClient is an wrapper of httpmock
@@ -72,6 +75,8 @@ type HTTPMockClient struct {
 	LogAnalyticsDefaultWorkspaceNameEUS        string
 	LogAnalyticsDefaultResourceGroupWEU        string
 	LogAnalyticsDefaultWorkspaceNameWEU        string
+	LogAnalyticsDefaultResourceGroupMC         string
+	LogAnalyticsDefaultWorkspaceNameMC         string
 	LogAnalyticsWorkspaceName                  string
 	LogAnalyticsSolutionName                   string
 	VirtualNicName                             string
@@ -90,7 +95,8 @@ type HTTPMockClient struct {
 	ResponseGetLogAnalyticsWorkspaceSharedKeys string
 	ResponseListWorkspacesByResourceGroup      string
 	ResponseCreateOrUpdateWorkspace            string
-	ResponseCreateOrUpdateSolution             string
+	ResponseListWorkspacesByResourceGroupInMC  string
+	ResponseCreateOrUpdateWorkspaceInMC        string
 	mux                                        *http.ServeMux
 	server                                     *testserver.TestServer
 }
@@ -132,6 +138,8 @@ func NewHTTPMockClient() (HTTPMockClient, error) {
 		LogAnalyticsDefaultWorkspaceNameEUS: logAnalyticsDefaultWorkspaceNameEUS,
 		LogAnalyticsDefaultResourceGroupWEU: logAnalyticsDefaultResourceGroupWEU,
 		LogAnalyticsDefaultWorkspaceNameWEU: logAnalyticsDefaultWorkspaceNameWEU,
+		LogAnalyticsDefaultResourceGroupMC:  logAnalyticsDefaultResourceGroupMC,
+		LogAnalyticsDefaultWorkspaceNameMC:  logAnalyticsDefaultWorkspaceNameMC,
 		LogAnalyticsSolutionName:            logAnalyticsSolutionName,
 		VirtualNicName:                      virtualNicName,
 		VirutalDiskName:                     virutalDiskName,
@@ -188,7 +196,12 @@ func NewHTTPMockClient() (HTTPMockClient, error) {
 	if err != nil {
 		return client, err
 	}
-	client.ResponseCreateOrUpdateSolution, err = readFromFile(filePathCreateOrUpdateSolution)
+
+	client.ResponseListWorkspacesByResourceGroupInMC, err = readFromFile(filePathListWorkspacesByResourceGroupInMC)
+	if err != nil {
+		return client, err
+	}
+	client.ResponseCreateOrUpdateWorkspaceInMC, err = readFromFile(filePathCreateOrUpdateWorkspaceInMC)
 	if err != nil {
 		return client, err
 	}
@@ -550,16 +563,35 @@ func (mc HTTPMockClient) RegisterEnsureDefaultLogAnalyticsWorkspaceCreateNew() {
 
 }
 
-// RegisterAddContainerInsightsSolution registers the mock response for AddContainerInsightsSolutionsure.
-func (mc HTTPMockClient) RegisterAddContainerInsightsSolution() {
-	pattern := fmt.Sprintf("/subscriptions/%s/resourcegroups/%s/providers/Microsoft.OperationsManagement/solutions/%s", mc.SubscriptionID, mc.ResourceGroup, mc.LogAnalyticsSolutionName)
+// RegisterEnsureDefaultLogAnalyticsWorkspace registers the mock response for EnsureDefaultLogAnalyticsWorkspace.
+func (mc HTTPMockClient) RegisterEnsureDefaultLogAnalyticsWorkspaceCreateNewInMC() {
+	pattern := fmt.Sprintf("/subscriptions/%s/resourcegroups/%s", mc.SubscriptionID, mc.LogAnalyticsDefaultResourceGroupMC)
+	mc.mux.HandleFunc(pattern, func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Query().Get("api-version") != mc.ResourceGroupAPIVersion {
+			w.WriteHeader(http.StatusNotFound)
+		} else {
+			w.WriteHeader(http.StatusNoContent)
+		}
+	})
+
+	pattern = fmt.Sprintf("/subscriptions/%s/resourcegroups/%s/providers/Microsoft.OperationalInsights/workspaces", mc.SubscriptionID, mc.LogAnalyticsDefaultResourceGroupMC)
 	mc.mux.HandleFunc(pattern, func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Query().Get("api-version") != mc.LogAnalyticsAPIVersion {
 			w.WriteHeader(http.StatusNotFound)
 		} else {
-			_, _ = fmt.Fprint(w, mc.ResponseCreateOrUpdateSolution)
+			_, _ = fmt.Fprint(w, mc.ResponseListWorkspacesByResourceGroupInMC)
 		}
 	})
+
+	pattern = fmt.Sprintf("/subscriptions/%s/resourcegroups/%s/providers/Microsoft.OperationalInsights/workspaces/%s", mc.SubscriptionID, mc.LogAnalyticsDefaultResourceGroupMC, mc.LogAnalyticsDefaultWorkspaceNameMC)
+	mc.mux.HandleFunc(pattern, func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Query().Get("api-version") != mc.LogAnalyticsAPIVersion {
+			w.WriteHeader(http.StatusNotFound)
+		} else {
+			_, _ = fmt.Fprint(w, mc.ResponseCreateOrUpdateWorkspaceInMC)
+		}
+	})
+
 }
 
 func readFromFile(filePath string) (string, error) {

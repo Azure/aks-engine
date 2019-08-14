@@ -84,3 +84,30 @@ func TestEnsureDefaultLogAnalyticsWorkspaceCreateNew(t *testing.T) {
 		t.Error(err)
 	}
 }
+
+func TestEnsureDefaultLogAnalyticsWorkspaceCreateNewInMC(t *testing.T) {
+	mc, err := NewHTTPMockClient()
+	if err != nil {
+		t.Fatalf("failed to create HttpMockClient - %s", err)
+	}
+
+	mc.RegisterLogin()
+	mc.RegisterEnsureDefaultLogAnalyticsWorkspaceCreateNewInMC()
+
+	err = mc.Activate()
+	if err != nil {
+		t.Fatalf("failed to activate HttpMockClient - %s", err)
+	}
+	defer mc.DeactivateAndReset()
+
+	env := mc.GetEnvironment()
+	env.Name = "AzureChinaCloud"
+	azureClient, err := NewAzureClientWithClientSecret(env, subscriptionID, "clientID", "secret")
+	if err != nil {
+		t.Fatalf("can not get client %s", err)
+	}
+	_, err = azureClient.EnsureDefaultLogAnalyticsWorkspace(context.Background(), resourceGroup, "chinaeast2")
+	if err != nil {
+		t.Error(err)
+	}
+}

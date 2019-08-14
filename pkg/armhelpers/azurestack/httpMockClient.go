@@ -49,7 +49,6 @@ const (
 	filePathGetLogAnalyticsWorkspaceSharedKeys = "httpMockClientData/getLogAnalyticsWorkspaceSharedKeys.json"
 	filePathListWorkspacesByResourceGroup      = "httpMockClientData/getListWorkspacesByResourceGroup.json"
 	filePathCreateOrUpdateWorkspace            = "httpMockClientData/createOrUpdateWorkspace.json"
-	filePathCreateOrUpdateSolution             = "httpMockClientData/createOrUpdateSolution.json"
 )
 
 //HTTPMockClient is an wrapper of httpmock
@@ -88,7 +87,6 @@ type HTTPMockClient struct {
 	ResponseGetLogAnalyticsWorkspaceSharedKeys string
 	ResponseListWorkspacesByResourceGroup      string
 	ResponseCreateOrUpdateWorkspace            string
-	ResponseCreateOrUpdateSolution             string
 	mux                                        *http.ServeMux
 	server                                     *testserver.TestServer
 }
@@ -182,10 +180,6 @@ func NewHTTPMockClient() (HTTPMockClient, error) {
 		return client, err
 	}
 	client.ResponseCreateOrUpdateWorkspace, err = readFromFile(filePathCreateOrUpdateWorkspace)
-	if err != nil {
-		return client, err
-	}
-	client.ResponseCreateOrUpdateSolution, err = readFromFile(filePathCreateOrUpdateSolution)
 	if err != nil {
 		return client, err
 	}
@@ -545,18 +539,6 @@ func (mc HTTPMockClient) RegisterEnsureDefaultLogAnalyticsWorkspaceCreateNew() {
 		}
 	})
 
-}
-
-// RegisterAddContainerInsightsSolution registers the mock response for AddContainerInsightsSolutionsure.
-func (mc HTTPMockClient) RegisterAddContainerInsightsSolution() {
-	pattern := fmt.Sprintf("/subscriptions/%s/resourcegroups/%s/providers/Microsoft.OperationsManagement/solutions/%s", mc.SubscriptionID, mc.ResourceGroup, mc.LogAnalyticsSolutionName)
-	mc.mux.HandleFunc(pattern, func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Query().Get("api-version") != mc.LogAnalyticsAPIVersion {
-			w.WriteHeader(http.StatusNotFound)
-		} else {
-			_, _ = fmt.Fprint(w, mc.ResponseCreateOrUpdateSolution)
-		}
-	})
 }
 
 func readFromFile(filePath string) (string, error) {
