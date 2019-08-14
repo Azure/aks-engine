@@ -74,7 +74,7 @@ configureK8sCustomCloud() {
     # Decrease eth0 MTU to mitigate Azure Stack's NRP issue
     echo "iface eth0 inet dhcp" | sudo tee -a /etc/network/interfaces
     echo "    post-up /sbin/ifconfig eth0 mtu 1350" | sudo tee -a /etc/network/interfaces
-    
+
     ifconfig eth0 mtu 1350
 
     set -x
@@ -174,3 +174,4 @@ configureAzureStackInterfaces() {
 
     set -x
 }
+#EOF
