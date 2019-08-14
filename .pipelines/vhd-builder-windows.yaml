@@ -23,3 +23,6 @@ jobs:
       -e BUILD_NUMBER=$(Build.BuildNumber) \
       ${DEIS_GO_DEV_IMAGE} make run-packer-windows
     displayName: Building windows VHD
+  - task: PublishPipelineArtifact@0
+      artifactName: 'vhd-release-notes'
+      targetPath: 'release-notes.txt'

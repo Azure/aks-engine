@@ -60,6 +60,18 @@
             "type": "windows-restart"
         },
         {
+            "elevated_user": "packer",
+            "elevated_password": "{{.WinRMPassword}}",
+            "type": "powershell",
+            "script": "packer/write-release-notes-windows.ps1"
+        },
+        {
+            "type": "file",
+            "direction": "download",
+            "source": "c:\\release-notes.txt",
+            "destination": "release-notes.txt"
+        },
+        {
             "type": "powershell",
             "inline": [
                 "& $env:SystemRoot\\System32\\Sysprep\\Sysprep.exe /oobe /generalize /mode:vm /quiet /quit",
