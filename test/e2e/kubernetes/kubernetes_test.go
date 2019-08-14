@@ -483,7 +483,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 								time.Sleep(10 * time.Second)
 							}
 							proxyCmd = exec.Command("k", "port-forward", p.Metadata.Name, "8123:80")
-							proxyCmd.SysProcAttr = &syscall.SysProcAttr{ Setpgid: true }
+							proxyCmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
 							proxyStdout, err = proxyCmd.StdoutPipe()
 							Expect(err).NotTo(HaveOccurred())
 							proxyStderr, err = proxyCmd.StderrPipe()
@@ -532,7 +532,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			if eng.AnyAgentIsLinux() {
 				By("Creating a Linux nginx deployment")
 				deploymentPrefix := "portforwardlinux"
-				deploymentName := fmt.Sprintf("%s-%v",deploymentPrefix, r.Intn(9999))
+				deploymentName := fmt.Sprintf("%s-%v", deploymentPrefix, r.Intn(9999))
 				deploy, err = deployment.CreateLinuxDeployDeleteIfExists(deploymentPrefix, "library/nginx:latest", deploymentName, deploymentNamespace, "")
 				Expect(err).NotTo(HaveOccurred())
 				testPortForward()
@@ -545,7 +545,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 					windowsImages, err := eng.GetWindowsTestImages()
 					Expect(err).NotTo(HaveOccurred())
 					deploymentPrefix := "portforwardwindows"
-					deploymentName := fmt.Sprintf("%s-%v",deploymentPrefix, r.Intn(9999))
+					deploymentName := fmt.Sprintf("%s-%v", deploymentPrefix, r.Intn(9999))
 					deploy, err = deployment.CreateWindowsDeployDeleteIfExist(deploymentPrefix, windowsImages.IIS, deploymentName, deploymentNamespace, "")
 					Expect(err).NotTo(HaveOccurred())
 					testPortForward()
