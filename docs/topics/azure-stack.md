@@ -190,9 +190,8 @@ _Note: AKS Engine on disconnected Azure Stack instances is a private preview fea
 
 | AKS Engine                 | AKS Base Image     | Kubernetes versions | Notes |  
 |----------------------------|--------------------|---------------------|-------|
-| from v0.36.2 to v0.36.5    | [AKS Base Ubuntu 16.04-LTS Image Distro, May 2019](https://github.com/Azure/aks-engine/blob/v0.36.2/releases/vhd-notes/aks-ubuntu-1604/aks-ubuntu-1604-201904_2019.05.16.txt) | 1.12.7 - 1.11.10 - 1.11.9 | Only network plugin `"kubenet"` is supported.<br>Latest releases using legacy distro value `"aks"`.  |
-| from v0.37.0 to v0.38.0    | Unavailable |  |  |
-| from v0.38.1 to v0.38.4    | [AKS Base Ubuntu 16.04-LTS Image Distro, July 2019](https://github.com/Azure/aks-engine/blob/v0.38.1/releases/vhd-notes/aks-ubuntu-1604/aks-ubuntu-1604-201907_2019.07.10.txt) | 1.14.3 - 1.14.1 - 1.13.7 - 1.13.5 - 1.12.8 - 1.12.7 - 1.11.10 - 1.11.9 | New distro name `"aks-ubuntu-16.04"` |
+| from v0.38.1 to v0.38.4    | [AKS Base Ubuntu 16.04-LTS Image Distro, July 2019](https://github.com/Azure/aks-engine/blob/v0.38.1/releases/vhd-notes/aks-ubuntu-1604/aks-ubuntu-1604-201907_2019.07.10.txt) | 1.14.3 - 1.14.1 - 1.13.7 - 1.13.5 - 1.12.8 - 1.12.7 - 1.11.10 - 1.11.9 |  |
+| v0.39.0                    | [AKS Base Ubuntu 16.04-LTS Image Distro, July 2019](https://github.com/Azure/aks-engine/blob/v0.39.0/releases/vhd-notes/aks-ubuntu-1604/aks-ubuntu-1604-201907_2019.07.30.txt) | 1.15.1 - 1.14.4 - 1.14.3 - 1.13.8 - 1.13.7 - 1.12.8 - 1.12.7 - 1.11.10 - 1.11.9 |  |
 
 ### Network Policies
 
