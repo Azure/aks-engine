@@ -15,12 +15,12 @@ function Log($Message) {
 
 Log "System Info"
 $systemInfo = Get-ItemProperty -Path 'HKLM:SOFTWARE\Microsoft\Windows NT\CurrentVersion'
-Log ("`t{0,-10} : {1}" -f "OS Name", $systemInfo.ProductName)
-LOG ("`t{0,-10} : {1}" -f "OS Version", "$($systemInfo.CurrentBuildNumber).$($systemInfo.UBR)")
-
+Log ("`t{0,-14} : {1}" -f "OS Name", $systemInfo.ProductName)
+LOG ("`t{0,-14} : {1}" -f "OS Version", "$($systemInfo.CurrentBuildNumber).$($systemInfo.UBR)")
+LOG ("`t{0,-14} : {1}" -f "OS InstallType", $systemInfo.InstallationType)
 Log ""
 Log "Installed Features"
-if ($systemInfo.InstallationType -eq 'Server') {
+if ($systemInfo.InstallationType -ne 'client') {
     Log (Get-WindowsFeature | Where-Object Installed)
 }
 else {
