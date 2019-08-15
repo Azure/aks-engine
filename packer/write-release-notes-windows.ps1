@@ -9,7 +9,7 @@
 $ErrorActionPreference = "Stop"
 
 function Log($Message) {
-#    Write-Output $Message
+    # Write-Output $Message
     $Message | Tee-Object -FilePath "c:\release-notes.txt" -Append
 }
 
@@ -43,7 +43,7 @@ foreach ($qfe in $qfes) {
 }
 Log ""
 
-Log "Installed Updaptes"
+Log "Installed Updates"
 $updateSession = New-Object -ComObject Microsoft.Update.Session
 $updateSearcher = $UpdateSession.CreateUpdateSearcher()
 $updates = $updateSearcher.Search("IsInstalled=1").Updates
@@ -89,6 +89,5 @@ if (Test-Path 'C:\Program Files\Docker\') {
 
         Log ("`t`t{0}:{1}" -f $name, $tag)
         Log ("`t`t`t{0,-15}: {1}" -f "Id", $imageInfo.Id)
-        Log ("`t`t`t{0,-15}: {1}" -f "RepoDigest", $imageInfo.RepoDigests)
     }
 }
