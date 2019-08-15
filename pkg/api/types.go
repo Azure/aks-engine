@@ -1733,6 +1733,11 @@ func (k *KubernetesConfig) GetOrderedKubeletConfigStringForPowershell() string {
 	return strings.TrimSuffix(buf.String(), ", ")
 }
 
+// HasContainerd returns whether or not we need the containerd runtime
+func (k *KubernetesConfig) HasContainerd() bool {
+	return k.ContainerRuntime == KataContainers || k.ContainerRuntime == Containerd
+}
+
 // IsNSeriesSKU returns true if the agent pool contains an N-series (NVIDIA GPU) VM
 func (a *AgentPoolProfile) IsNSeriesSKU() bool {
 	return common.IsNvidiaEnabledSKU(a.VMSize)

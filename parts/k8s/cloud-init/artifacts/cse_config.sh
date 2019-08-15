@@ -248,12 +248,6 @@ configureCNIIPTables() {
     fi
 }
 
-setKubeletOpts () {
-    KUBELET_DEFAULT_FILE=/etc/default/kubelet
-    wait_for_file 1200 1 $KUBELET_DEFAULT_FILE || exit $ERR_FILE_WATCH_TIMEOUT
-    sed -i "s#^KUBELET_OPTS=.*#KUBELET_OPTS=${1}#" $KUBELET_DEFAULT_FILE
-}
-
 setupContainerd() {
     echo "Configuring cri-containerd..."
     mkdir -p "/etc/containerd"
@@ -274,7 +268,6 @@ setupContainerd() {
         echo "runtime_type = 'io.containerd.runtime.v1.linux'"
         echo "runtime_engine = '/usr/local/sbin/runc'"
     } > "$CRI_CONTAINERD_CONFIG"
-    setKubeletOpts " --container-runtime=remote --runtime-request-timeout=15m --container-runtime-endpoint=unix:///run/containerd/containerd.sock"
 }
 
 ensureContainerd() {
