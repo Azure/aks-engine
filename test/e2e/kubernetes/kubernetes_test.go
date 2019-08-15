@@ -15,6 +15,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
+	"syscall"
 	"time"
 
 	"github.com/Azure/go-autorest/autorest/to"
@@ -463,42 +464,76 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			testPortForward := func() {
 				pods, err = deploy.Pods()
 				Expect(err).NotTo(HaveOccurred())
+				Expect(len(pods)).To(Equal(1))
 				for _, p := range pods {
-					By("Ensuring that the pod is running")
-					var running bool
-					running, err = p.WaitOnReady(retryTimeWhenWaitingForPodReady, cfg.Timeout)
-					Expect(err).NotTo(HaveOccurred())
-					Expect(running).To(Equal(true))
-					By("Running kubectl port-forward")
-					proxyCmd := exec.Command("k", "port-forward", p.Metadata.Name, "8123:80")
-					var proxyStdout io.ReadCloser
-					proxyStdout, err = proxyCmd.StdoutPipe()
-					util.PrintCommand(proxyCmd)
-					err = proxyCmd.Start()
-					Expect(err).NotTo(HaveOccurred())
-					proxyStdoutReader := bufio.NewReader(proxyStdout)
-					var proxyOutStr string
-					proxyOutStr, err = proxyStdoutReader.ReadString('\n')
-					Expect(err).NotTo(HaveOccurred())
-					log.Printf("kubectl port-forward output: %s\n", proxyOutStr)
-					defer func() {
-						proxyCmd.Process.Signal(os.Kill)
-						proxyCmd.Wait()
+					func() {
+						By("Ensuring that the pod is running")
+						var running bool
+						running, err = p.WaitOnReady(retryTimeWhenWaitingForPodReady, cfg.Timeout)
+						Expect(err).NotTo(HaveOccurred())
+						Expect(running).To(Equal(true))
+						By("Running kubectl port-forward")
+						var proxyCmd *exec.Cmd
+						var proxyStdout, proxyStderr io.ReadCloser
+						var proxyStdoutReader, proxyStderrReader *bufio.Reader
+						success := false
+						for i := 0; i < 5; i++ {
+							if i > 1 {
+								log.Printf("Waiting for retry...\n")
+								time.Sleep(10 * time.Second)
+							}
+							proxyCmd = exec.Command("k", "port-forward", p.Metadata.Name, "8123:80")
+							proxyCmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
+							proxyStdout, err = proxyCmd.StdoutPipe()
+							Expect(err).NotTo(HaveOccurred())
+							proxyStderr, err = proxyCmd.StderrPipe()
+							Expect(err).NotTo(HaveOccurred())
+							util.PrintCommand(proxyCmd)
+							err = proxyCmd.Start()
+							if err != nil {
+								log.Printf("kubectl port-forward start error: %v\n", err)
+								continue
+							}
+							proxyStdoutReader = bufio.NewReader(proxyStdout)
+							proxyStderrReader = bufio.NewReader(proxyStderr)
+							proxyOutStr, outErr := proxyStdoutReader.ReadString('\n')
+							log.Printf("kubectl port-forward stdout: %s\n", proxyOutStr)
+							if outErr != nil {
+								proxyErrStr, _ := proxyStderrReader.ReadString('\n') // returns EOF error, ignore it
+								log.Printf("kubectl port-forward stderr: %s\n", proxyErrStr)
+								continue
+							}
+							defer func() {
+								syscall.Kill(-proxyCmd.Process.Pid, syscall.SIGKILL)
+								_, waiterr := proxyCmd.Process.Wait()
+								if waiterr != nil {
+									log.Printf("kubectl port-forward - no wait error\n")
+								} else {
+									log.Printf("kubectl port-forward - wait returned err: %v\n", waiterr)
+								}
+							}()
+							log.Printf("kubectl port-forward running as pid: %d\n", proxyCmd.Process.Pid)
+							success = true
+							break
+						}
+						Expect(success).To(Equal(true))
+						By("Running curl to access the forwarded port")
+						url := fmt.Sprintf("http://%s:%v", "localhost", 8123)
+						cmd := exec.Command("curl", "--max-time", "60", "--retry", "10", "--retry-delay", "10", "--retry-max-time", "120", url)
+						util.PrintCommand(cmd)
+						var out []byte
+						out, err = cmd.CombinedOutput()
+						log.Printf("%s\n", out)
+						Expect(err).NotTo(HaveOccurred())
 					}()
-					By("Running curl to access the forwarded port")
-					url := fmt.Sprintf("http://%s:%v", "localhost", 8123)
-					cmd := exec.Command("curl", "--max-time", "60", url)
-					util.PrintCommand(cmd)
-					var out []byte
-					out, err = cmd.CombinedOutput()
-					log.Printf("%s\n", out)
-					Expect(err).NotTo(HaveOccurred())
 				}
 			}
-
+			r := rand.New(rand.NewSource(time.Now().UnixNano()))
 			if eng.AnyAgentIsLinux() {
 				By("Creating a Linux nginx deployment")
-				deploy, err = deployment.CreateLinuxDeployDeleteIfExists("fwdlinux", "library/nginx:latest", "fwdlinuxtest", deploymentNamespace, "")
+				deploymentPrefix := "portforwardlinux"
+				deploymentName := fmt.Sprintf("%s-%v", deploymentPrefix, r.Intn(9999))
+				deploy, err = deployment.CreateLinuxDeployDeleteIfExists(deploymentPrefix, "library/nginx:latest", deploymentName, deploymentNamespace, "")
 				Expect(err).NotTo(HaveOccurred())
 				testPortForward()
 				err = deploy.Delete(util.DefaultDeleteRetries)
@@ -509,7 +544,9 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				if common.IsKubernetesVersionGe(eng.ExpandedDefinition.Properties.OrchestratorProfile.OrchestratorVersion, "1.15.0") {
 					windowsImages, err := eng.GetWindowsTestImages()
 					Expect(err).NotTo(HaveOccurred())
-					deploy, err = deployment.CreateWindowsDeployDeleteIfExist("fwdwindows", windowsImages.IIS, "fwdwindowstest", deploymentNamespace, "")
+					deploymentPrefix := "portforwardwindows"
+					deploymentName := fmt.Sprintf("%s-%v", deploymentPrefix, r.Intn(9999))
+					deploy, err = deployment.CreateWindowsDeployDeleteIfExist(deploymentPrefix, windowsImages.IIS, deploymentName, deploymentNamespace, "")
 					Expect(err).NotTo(HaveOccurred())
 					testPortForward()
 					err = deploy.Delete(util.DefaultDeleteRetries)
