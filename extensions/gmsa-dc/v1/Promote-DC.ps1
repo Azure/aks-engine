@@ -30,7 +30,7 @@ $admpassword = ( "K8s" + -join ((48..57) + (97..122) | Get-Random -Count 64 | Fo
 $admpassword_secure = ( $admpassword | ConvertTo-SecureString -AsPlainText -Force)
 New-LocalUser -Name gmsa-admin -Password $admpassword_secure
 Add-LocalGroupMember -Group "Administrators" -Member gmsa-admin
-Start-Sleep -Seconds 5
+
 
 # Make Setup-gMSA run on next boot
 $Logon = "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon"
