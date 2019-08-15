@@ -40,6 +40,7 @@ const (
 	nicResourceType  = "Microsoft.Network/networkInterfaces"
 	vnetResourceType = "Microsoft.Network/virtualNetworks"
 	vmasResourceType = "Microsoft.Compute/availabilitySets"
+	vmssResourceType = "Microsoft.Compute/VirutalMachineScaleSets"
 	lbResourceType   = "Microsoft.Network/loadBalancers"
 
 	// resource ids
@@ -340,7 +341,7 @@ func (t *Transformer) NormalizeResourcesForK8sMasterUpgrade(logger *logrus.Entry
 			continue
 		}
 
-		if !(resourceType == vmResourceType || resourceType == vmExtensionType || resourceType == nicResourceType || resourceType == vnetResourceType || resourceType == nsgResourceType || resourceType == lbResourceType) {
+		if !(resourceType == vmResourceType || resourceType == vmExtensionType || resourceType == nicResourceType || resourceType == vnetResourceType || resourceType == nsgResourceType || resourceType == lbResourceType || resourceType == vmssResourceType) {
 			continue
 		}
 
@@ -348,6 +349,32 @@ func (t *Transformer) NormalizeResourcesForK8sMasterUpgrade(logger *logrus.Entry
 		if !ok {
 			logger.Warnf("Template improperly formatted for field name: %s", nameFieldName)
 			continue
+		}
+
+		if resourceType == vmssResourceType {
+			if strings.Contains(resourceName, "variables('agent1VMNamePrefix')") {
+				filteredDependencies := []string{}
+				dependencies, ok := resourceMap[dependsOnFieldName].([]interface{})
+				if !ok {
+					continue
+				}
+
+				for dIndex := len(dependencies) - 1; dIndex >= 0; dIndex-- {
+					dependency := dependencies[dIndex].(string)
+					if !(strings.Contains(dependency, nsgResourceType) || strings.Contains(dependency, nsgID)) {
+						filteredDependencies = append(filteredDependencies, dependency)
+					} else {
+						logger.Info(fmt.Sprintf("Removing nsg dependency from resource:%s", resourceName))
+					}
+				}
+
+				if len(filteredDependencies) > 0 {
+					resourceMap[dependsOnFieldName] = filteredDependencies
+				} else {
+					resourceMap[dependsOnFieldName] = []string{}
+				}
+				continue
+			}
 		}
 
 		if resourceType == lbResourceType {
