@@ -1,12 +1,18 @@
-﻿##################################################################################
-# This script will automate the creation of a Group Managed Service Account,
-# install the account locally, produce the JSON file with gMSA info, and convert
-# it to the Yaml file needed.
-#
-# This is only for automated e2e testing.  DO NOT use this for production.
-# Jeremy Wood (JeremyWx)
-# Version: 1.0.0.0
-##################################################################################
+﻿<#
+ .SYNOPSIS
+ This script will automate the creation of a Group Managed Service Account,
+ install the account locally, produce the JSON file with gMSA info, and convert
+ it to the Yaml file needed.
+
+ .NOTES
+ This is only for automated e2e testing.  DO NOT use this for production.
+ Jeremy Wood (JeremyWx)
+ Version: 1.0.0.0
+#>
+
+Set-StrictMode -Version Latest
+$ErrorActionPreference = 'Stop'
+$PSDefaultParameterValues['*:ErrorAction'] = 'Stop'
 
 # Change to working directory
 Set-Location -Path C:\gmsa
