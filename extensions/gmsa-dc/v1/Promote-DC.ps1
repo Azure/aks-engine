@@ -1,16 +1,22 @@
-###################################################################################
-# This script will automate the creation of a Forest, Domain, and Domain Controller
-#
-# This is only for automated e2e testing.  DO NOT use this for production.
-# Jeremy Wood (JeremyWx)
-# Version: 1.0.0.0
-###################################################################################
+<#
+ .SYNOPSIS
+ This script will automate the creation of a Forest, Domain, and Domain Controller
+
+ .NOTES
+ This is only for automated e2e testing.  DO NOT use this for production.
+ Jeremy Wood (JeremyWx)
+ Version: 1.0.0.0
+#>
+
+Set-StrictMode -Version Latest
+$ErrorActionPreference = 'Stop'
+$PSDefaultParameterValues['*:ErrorAction'] = 'Stop'
 
 # Create a working directory and change to it
 mkdir C:\gmsa
 Set-Location -Path C:\gmsa
 
-# Uncomment line below for troubleshooting
+# Logging for troubleshooting
 Start-Transcript -Path "C:\gmsa\Promote.txt"
 
 # Download gMSA Setup Script
