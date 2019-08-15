@@ -73,21 +73,7 @@ Log ""
 if (Test-Path 'C:\Program Files\Docker\') {
     Log "Docker Info"
     $dockerVersion = (docker --version) | Out-String
-    Log ("`tVersion: {0}" -f $dockerVersion)
-    Log "`tImages:"
-    $dockerImages = ((docker images) | Out-String).Split("`n") | Select-Object -Skip 1
-    foreach ($dockerImage in $dockerImages) {
-        if ($dockerImage -eq "") {
-            continue
-        }
-
-        $parts = $dockerImage.Split(" ", [StringSplitOptions]::RemoveEmptyEntries) | Select-Object -First 3
-        $name = $parts[0]
-        $tag = $parts[1]
-        $id = $parts[2]
-        $imageInfo = (docker image inspect $id) | Out-String | ConvertFrom-Json
-
-        Log ("`t`t{0}:{1}" -f $name, $tag)
-        Log ("`t`t`t{0,-15}: {1}" -f "Id", $imageInfo.Id)
-    }
+    Log ("Version: {0}" -f $dockerVersion)
+    Log "Images:"
+    LOG (docker images --format='{{json .}}' | ConvertFrom-Json | Format-Table Repository, Tag, ID)
 }
