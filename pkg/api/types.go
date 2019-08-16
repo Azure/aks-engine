@@ -1733,8 +1733,9 @@ func (k *KubernetesConfig) GetOrderedKubeletConfigStringForPowershell() string {
 	return strings.TrimSuffix(buf.String(), ", ")
 }
 
-// HasContainerd returns whether or not we need the containerd runtime
-func (k *KubernetesConfig) HasContainerd() bool {
+// NeedsContainerd returns whether or not we need the containerd runtime configuration
+// E.g., kata configuration requires containerd config
+func (k *KubernetesConfig) NeedsContainerd() bool {
 	return k.ContainerRuntime == KataContainers || k.ContainerRuntime == Containerd
 }
 

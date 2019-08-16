@@ -242,7 +242,7 @@ write_files:
   permissions: "0644"
   owner: root
   content: |
-{{if HasContainerd}}
+{{if NeedsContainerd}}
     KUBELET_OPTS=--container-runtime=remote --runtime-request-timeout=15m --container-runtime-endpoint=unix:///run/containerd/containerd.sock
 {{else}}
     KUBELET_OPTS=

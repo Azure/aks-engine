@@ -5837,7 +5837,7 @@ func TestHasContainerd(t *testing.T) {
 		test := test
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
-			ret := test.k.HasContainerd()
+			ret := test.k.NeedsContainerd()
 			if test.expected != ret {
 				t.Errorf("expected %t, instead got : %t", test.expected, ret)
 			}
