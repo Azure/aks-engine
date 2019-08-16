@@ -242,8 +242,8 @@ write_files:
   permissions: "0644"
   owner: root
   content: |
-{{if IsKubernetesVersionLt "1.8.0"}}
-    KUBELET_OPTS=--require-kubeconfig
+{{if NeedsContainerd}}
+    KUBELET_OPTS=--container-runtime=remote --runtime-request-timeout=15m --container-runtime-endpoint=unix:///run/containerd/containerd.sock
 {{else}}
     KUBELET_OPTS=
 {{end}}

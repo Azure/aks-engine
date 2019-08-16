@@ -5809,3 +5809,58 @@ func TestAnyAgentIsLinux(t *testing.T) {
 		})
 	}
 }
+
+func TestHasContainerd(t *testing.T) {
+	tests := []struct {
+		name     string
+		k        *KubernetesConfig
+		expected bool
+	}{
+		{
+			name: "docker",
+			k: &KubernetesConfig{
+				ContainerRuntime: Docker,
+			},
+			expected: false,
+		},
+		{
+			name: "empty string",
+			k: &KubernetesConfig{
+				ContainerRuntime: "",
+			},
+			expected: false,
+		},
+		{
+			name: "unexpected string",
+			k: &KubernetesConfig{
+				ContainerRuntime: "foo",
+			},
+			expected: false,
+		},
+		{
+			name: "containerd",
+			k: &KubernetesConfig{
+				ContainerRuntime: Containerd,
+			},
+			expected: true,
+		},
+		{
+			name: "kata",
+			k: &KubernetesConfig{
+				ContainerRuntime: KataContainers,
+			},
+			expected: true,
+		},
+	}
+
+	for _, test := range tests {
+		test := test
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+			ret := test.k.NeedsContainerd()
+			if test.expected != ret {
+				t.Errorf("expected %t, instead got : %t", test.expected, ret)
+			}
+		})
+	}
+}
