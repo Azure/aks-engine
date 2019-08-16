@@ -23283,7 +23283,9 @@ var _k8sKubernetesparamsT = []byte(`{{if .HasAadProfile}}
         "cloudProviderBackoffExponent": "0",
         "cloudProviderRateLimit": false,
         "cloudProviderRateLimitQPS": "0",
-        "cloudProviderRateLimitBucket": 0
+        "cloudProviderRateLimitQPSWrite": "0",
+        "cloudProviderRateLimitBucket": 0,
+        "cloudProviderRateLimitBucketWrite": 0
       }
     },
 {{if IsKubernetesVersionGe "1.12.0"}}

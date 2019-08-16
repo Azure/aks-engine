@@ -685,7 +685,9 @@ func convertVLabsKubernetesConfig(vlabs *vlabs.KubernetesConfig, api *Kubernetes
 	api.CloudProviderBackoffRetries = vlabs.CloudProviderBackoffRetries
 	api.CloudProviderRateLimit = vlabs.CloudProviderRateLimit
 	api.CloudProviderRateLimitBucket = vlabs.CloudProviderRateLimitBucket
+	api.CloudProviderRateLimitBucketWrite = vlabs.CloudProviderRateLimitBucketWrite
 	api.CloudProviderRateLimitQPS = vlabs.CloudProviderRateLimitQPS
+	api.CloudProviderRateLimitQPSWrite = vlabs.CloudProviderRateLimitQPSWrite
 	api.UseManagedIdentity = vlabs.UseManagedIdentity
 	api.UserAssignedID = vlabs.UserAssignedID
 	api.UserAssignedClientID = vlabs.UserAssignedClientID
