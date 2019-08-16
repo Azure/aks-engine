@@ -40,7 +40,7 @@ const (
 	nicResourceType  = "Microsoft.Network/networkInterfaces"
 	vnetResourceType = "Microsoft.Network/virtualNetworks"
 	vmasResourceType = "Microsoft.Compute/availabilitySets"
-	vmssResourceType = "Microsoft.Compute/VirutalMachineScaleSets"
+	vmssResourceType = "Microsoft.Compute/virtualMachineScaleSets"
 	lbResourceType   = "Microsoft.Network/loadBalancers"
 
 	// resource ids
