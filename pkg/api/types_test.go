@@ -3501,6 +3501,10 @@ func TestCloudProviderDefaults(t *testing.T) {
 			defaultVal:  DefaultKubernetesCloudProviderRateLimitBucket,
 			computedVal: o.KubernetesConfig.CloudProviderRateLimitBucket,
 		},
+		{
+			defaultVal:  DefaultKubernetesCloudProviderRateLimitBucketWrite,
+			computedVal: o.KubernetesConfig.CloudProviderRateLimitBucketWrite,
+		},
 	}
 
 	for _, c := range intCases {
@@ -3525,6 +3529,10 @@ func TestCloudProviderDefaults(t *testing.T) {
 			defaultVal:  DefaultKubernetesCloudProviderRateLimitQPS,
 			computedVal: o.KubernetesConfig.CloudProviderRateLimitQPS,
 		},
+		{
+			defaultVal:  DefaultKubernetesCloudProviderRateLimitQPSWrite,
+			computedVal: o.KubernetesConfig.CloudProviderRateLimitQPSWrite,
+		},
 	}
 
 	for _, c := range floatCases {
@@ -3539,6 +3547,8 @@ func TestCloudProviderDefaults(t *testing.T) {
 	customCloudProviderBackoffRetries := 9
 	customCloudProviderRateLimitBucket := 37
 	customCloudProviderRateLimitQPS := 9.9
+	customCloudProviderRateLimitQPSWrite := 100.1
+	customCloudProviderRateLimitBucketWrite := 42
 
 	// Test cloudprovider defaults when user provides configuration
 	v = "1.8.0"
@@ -3547,12 +3557,14 @@ func TestCloudProviderDefaults(t *testing.T) {
 			OrchestratorType:    "Kubernetes",
 			OrchestratorVersion: v,
 			KubernetesConfig: &KubernetesConfig{
-				CloudProviderBackoffDuration: customCloudProviderBackoffDuration,
-				CloudProviderBackoffExponent: customCloudProviderBackoffExponent,
-				CloudProviderBackoffJitter:   customCloudProviderBackoffJitter,
-				CloudProviderBackoffRetries:  customCloudProviderBackoffRetries,
-				CloudProviderRateLimitBucket: customCloudProviderRateLimitBucket,
-				CloudProviderRateLimitQPS:    customCloudProviderRateLimitQPS,
+				CloudProviderBackoffDuration:      customCloudProviderBackoffDuration,
+				CloudProviderBackoffExponent:      customCloudProviderBackoffExponent,
+				CloudProviderBackoffJitter:        customCloudProviderBackoffJitter,
+				CloudProviderBackoffRetries:       customCloudProviderBackoffRetries,
+				CloudProviderRateLimitBucket:      customCloudProviderRateLimitBucket,
+				CloudProviderRateLimitQPS:         customCloudProviderRateLimitQPS,
+				CloudProviderRateLimitQPSWrite:    customCloudProviderRateLimitQPSWrite,
+				CloudProviderRateLimitBucketWrite: customCloudProviderRateLimitBucketWrite,
 			},
 		},
 	}
@@ -3575,6 +3587,10 @@ func TestCloudProviderDefaults(t *testing.T) {
 		{
 			customVal:   customCloudProviderRateLimitBucket,
 			computedVal: o.KubernetesConfig.CloudProviderRateLimitBucket,
+		},
+		{
+			customVal:   customCloudProviderRateLimitBucketWrite,
+			computedVal: o.KubernetesConfig.CloudProviderRateLimitBucketWrite,
 		},
 	}
 
@@ -3599,6 +3615,10 @@ func TestCloudProviderDefaults(t *testing.T) {
 		{
 			customVal:   customCloudProviderRateLimitQPS,
 			computedVal: o.KubernetesConfig.CloudProviderRateLimitQPS,
+		},
+		{
+			customVal:   customCloudProviderRateLimitQPSWrite,
+			computedVal: o.KubernetesConfig.CloudProviderRateLimitQPSWrite,
 		},
 	}
 
