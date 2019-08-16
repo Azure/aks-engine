@@ -67,7 +67,7 @@ ETCDCTL_API=3 etcdctl ${ETCDCTL_PARAMS} lock ${PROXY_CERTS_LOCK_NAME}  > "${PROX
 echo "$(date) lock acquired"
 
 pid=$!
-if read lockthis < "${PROXY_CERT_LOCK_FILE}"; then
+if read -r lockthis < "${PROXY_CERT_LOCK_FILE}"; then
   if [[ "" == "$(ETCDCTL_API=3 etcdctl ${ETCDCTL_PARAMS} get $ETCD_REQUESTHEADER_CLIENT_CA --print-value-only)" ]]; then
     ETCDCTL_API=3 etcdctl ${ETCDCTL_PARAMS} put $ETCD_REQUESTHEADER_CLIENT_CA " $(cat ${PROXY_CRT})" >/dev/null 2>&1;
 	else
