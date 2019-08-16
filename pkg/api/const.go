@@ -281,9 +281,9 @@ const (
 	// DefaultWindowsOffer sets the default WindowsOffer value in WindowsProfile
 	DefaultWindowsOffer = "WindowsServer"
 	// DefaultWindowsSku sets the default WindowsSku value in WindowsProfile
-	DefaultWindowsSku = "Datacenter-Core-1809-with-Containers-smalldisk"
+	DefaultWindowsSku = "2019-Datacenter-Core-with-Containers-smalldisk"
 	// DefaultImageVersion sets the default ImageVersion value in WindowsProfile
-	DefaultImageVersion = "17763.557.20190604"
+	DefaultImageVersion = "17763.615.1907121548"
 )
 
 const (
