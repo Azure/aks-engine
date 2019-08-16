@@ -1706,11 +1706,11 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:  AzureNetworkPolicyAddonName,
-							Image: "mcr.microsoft.com/containernetworking/azure-npm:v1.0.24",
+							Image: "mcr.microsoft.com/containernetworking/azure-npm:v1.0.25",
 						},
 						{
 							Name:  AzureVnetTelemetryAddonName,
-							Image: "mcr.microsoft.com/containernetworking/azure-vnet-telemetry:v1.0.24",
+							Image: "mcr.microsoft.com/containernetworking/azure-vnet-telemetry:v1.0.25",
 						},
 					},
 				},
@@ -2083,15 +2083,19 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:  "calico-typha",
-							Image: specConfig.CalicoImageBase + "typha:v3.7.2",
+							Image: specConfig.CalicoImageBase + "typha:v3.8.0",
 						},
 						{
 							Name:  "calico-cni",
-							Image: specConfig.CalicoImageBase + "cni:v3.7.2",
+							Image: specConfig.CalicoImageBase + "cni:v3.8.0",
 						},
 						{
 							Name:  "calico-node",
-							Image: specConfig.CalicoImageBase + "node:v3.7.2",
+							Image: specConfig.CalicoImageBase + "node:v3.8.0",
+						},
+						{
+							Name:  "calico-pod2daemon",
+							Image: specConfig.CalicoImageBase + "pod2daemon-flexvol:v3.8.0",
 						},
 						{
 							Name:  "calico-cluster-proportional-autoscaler",
@@ -2125,11 +2129,15 @@ func TestSetAddonsConfig(t *testing.T) {
 										},
 										{
 											Name:  "calico-cni",
-											Image: specConfig.CalicoImageBase + "cni:v3.7.2",
+											Image: specConfig.CalicoImageBase + "cni:v3.8.0",
 										},
 										{
 											Name:  "calico-node",
-											Image: specConfig.CalicoImageBase + "node:v3.7.2",
+											Image: specConfig.CalicoImageBase + "node:v3.8.0",
+										},
+										{
+											Name:  "calico-pod2daemon",
+											Image: specConfig.CalicoImageBase + "pod2daemon-flexvol:v3.8.0",
 										},
 										{
 											Name:  "calico-cluster-proportional-autoscaler",
@@ -2295,15 +2303,19 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:  "calico-typha",
-							Image: specConfig.CalicoImageBase + "typha:v3.7.2",
+							Image: specConfig.CalicoImageBase + "typha:v3.8.0",
 						},
 						{
 							Name:  "calico-cni",
-							Image: specConfig.CalicoImageBase + "cni:v3.7.2",
+							Image: specConfig.CalicoImageBase + "cni:v3.8.0",
 						},
 						{
 							Name:  "calico-node",
-							Image: specConfig.CalicoImageBase + "node:v3.7.2",
+							Image: specConfig.CalicoImageBase + "node:v3.8.0",
+						},
+						{
+							Name:  "calico-pod2daemon",
+							Image: specConfig.CalicoImageBase + "pod2daemon-flexvol:v3.8.0",
 						},
 						{
 							Name:  "calico-cluster-proportional-autoscaler",

@@ -50,7 +50,7 @@ if [[ ${UBUNTU_RELEASE} == "18.04" ]]; then
   overrideNetworkConfig
 fi
 
-ETCD_VERSION="3.2.26"
+ETCD_VERSION="3.3.13"
 ETCD_DOWNLOAD_URL="https://acs-mirror.azureedge.net/github-coreos"
 installEtcd
 echo "  - etcd v${ETCD_VERSION}" >> ${RELEASE_NOTES_FILEPATH}
@@ -62,8 +62,8 @@ installGPUDrivers
 echo "  - nvidia-docker2 nvidia-container-runtime" >> ${RELEASE_NOTES_FILEPATH}
 
 VNET_CNI_VERSIONS="
+1.0.25
 1.0.24
-1.0.22
 "
 for VNET_CNI_VERSION in $VNET_CNI_VERSIONS; do
     VNET_CNI_PLUGINS_URL="https://acs-mirror.azureedge.net/cni/azure-vnet-cni-linux-amd64-v${VNET_CNI_VERSION}.tgz"
@@ -154,6 +154,7 @@ for KUBE_DNS_VERSION in ${KUBE_DNS_VERSIONS}; do
 done
 
 KUBE_ADDON_MANAGER_VERSIONS="
+9.0.2
 9.0.1
 9.0
 8.9.1
@@ -369,17 +370,18 @@ echo "  - busybox" >> ${RELEASE_NOTES_FILEPATH}
 
 # TODO: fetch supported k8s versions from an aks-engine command instead of hardcoding them here
 K8S_VERSIONS="
+1.15.2
+1.15.2-azs
 1.15.1
 1.15.1-azs
-1.15.0
+1.14.5
+1.14.5-azs
 1.14.4
 1.14.4-azs
-1.14.3
-1.14.3-azs
+1.13.9
+1.13.9-azs
 1.13.8
 1.13.8-azs
-1.13.7
-1.13.7-azs
 1.12.8
 1.12.8-azs
 1.12.7

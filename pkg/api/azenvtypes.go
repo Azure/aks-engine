@@ -135,17 +135,17 @@ var (
 	// AKSUbuntu1604OSImageConfig is the AKS image based on Ubuntu 16.04-LTS.
 	AKSUbuntu1604OSImageConfig = AzureOSImageConfig{
 		ImageOffer:     "aks",
-		ImageSku:       "aks-ubuntu-1604-201907",
+		ImageSku:       "aks-ubuntu-1604-201908",
 		ImagePublisher: "microsoft-aks",
-		ImageVersion:   "2019.07.30",
+		ImageVersion:   "2019.08.12",
 	}
 
 	// AKSUbuntu1804OSImageConfig is the AKS image based on Ubuntu 18.04-LTS.
 	AKSUbuntu1804OSImageConfig = AzureOSImageConfig{
 		ImageOffer:     "aks",
-		ImageSku:       "aks-ubuntu-1804-201907",
+		ImageSku:       "aks-ubuntu-1804-201908",
 		ImagePublisher: "microsoft-aks",
-		ImageVersion:   "2019.07.30",
+		ImageVersion:   "2019.08.12",
 	}
 
 	// ACC1604OSImageConfig is the ACC image based on Ubuntu 16.04.
@@ -217,10 +217,10 @@ var (
 			Ubuntu1804:        Ubuntu1804OSImageConfig,
 			RHEL:              RHELOSImageConfig,
 			CoreOS:            CoreOSImageConfig,
-			AKSUbuntu1604:     Ubuntu1604OSImageConfig,
-			AKS1604Deprecated: Ubuntu1604OSImageConfig, // for back-compat
-			AKSUbuntu1804:     Ubuntu1604OSImageConfig, // workaround for https://github.com/Azure/aks-engine/issues/761
-			AKS1804Deprecated: Ubuntu1604OSImageConfig, // for back-compat
+			AKSUbuntu1604:     AKSUbuntu1604OSImageConfig,
+			AKS1604Deprecated: AKSUbuntu1604OSImageConfig, // for back-compat
+			AKSUbuntu1804:     AKSUbuntu1804OSImageConfig,
+			AKS1804Deprecated: AKSUbuntu1804OSImageConfig, // for back-compat
 		},
 	}
 

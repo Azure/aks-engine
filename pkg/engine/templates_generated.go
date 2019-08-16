@@ -11571,6 +11571,7 @@ kind: Namespace
 metadata:
   labels:
     control-plane: controller-manager
+    addonmanager.kubernetes.io/mode: Reconcile
   name: drainsafe-system
 ---
 apiVersion: rbac.authorization.k8s.io/v1
@@ -11578,6 +11579,8 @@ kind: Role
 metadata:
   name: drainsafe-leader-election-role
   namespace: drainsafe-system
+  labels:
+    addonmanager.kubernetes.io/mode: Reconcile
 rules:
 - apiGroups:
   - ""
@@ -11605,6 +11608,8 @@ kind: ClusterRole
 metadata:
   creationTimestamp: null
   name: drainsafe-manager-role
+  labels:
+    addonmanager.kubernetes.io/mode: Reconcile
 rules:
 - apiGroups:
   - apiextensions.k8s.io
@@ -11707,6 +11712,8 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   name: drainsafe-proxy-role
+  labels:
+    addonmanager.kubernetes.io/mode: Reconcile
 rules:
 - apiGroups:
   - authentication.k8s.io
@@ -11721,6 +11728,8 @@ kind: RoleBinding
 metadata:
   name: drainsafe-leader-election-rolebinding
   namespace: drainsafe-system
+  labels:
+    addonmanager.kubernetes.io/mode: Reconcile
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
@@ -11734,6 +11743,8 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
   name: drainsafe-manager-rolebinding
+  labels:
+    addonmanager.kubernetes.io/mode: Reconcile
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
@@ -11747,6 +11758,8 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
   name: drainsafe-proxy-rolebinding
+  labels:
+    addonmanager.kubernetes.io/mode: Reconcile
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
@@ -11765,6 +11778,7 @@ metadata:
     prometheus.io/scrape: "true"
   labels:
     control-plane: controller-manager
+    addonmanager.kubernetes.io/mode: Reconcile
   name: drainsafe-controller-manager-metrics-service
   namespace: drainsafe-system
 spec:
@@ -11780,6 +11794,7 @@ kind: Deployment
 metadata:
   labels:
     control-plane: controller-manager
+    addonmanager.kubernetes.io/mode: Reconcile
   name: drainsafe-controller-manager
   namespace: drainsafe-system
 spec:
@@ -11839,6 +11854,7 @@ kind: DaemonSet
 metadata:
   labels:
     control-plane: controller-manager
+    addonmanager.kubernetes.io/mode: Reconcile
   name: drainsafe-controller-scheduledevent-manager
   namespace: drainsafe-system
 spec:
@@ -12257,6 +12273,7 @@ applyCIS() {
   assignRootPW
   assignFilePermissions
 }
+#EOF
 `)
 
 func k8sCloudInitArtifactsCisShBytes() ([]byte, error) {
@@ -12562,15 +12579,23 @@ ensureContainerd() {
 ensureDocker() {
     DOCKER_SERVICE_EXEC_START_FILE=/etc/systemd/system/docker.service.d/exec_start.conf
     wait_for_file 1200 1 $DOCKER_SERVICE_EXEC_START_FILE || exit $ERR_FILE_WATCH_TIMEOUT
-    echo "ExecStartPost=/sbin/iptables -P FORWARD ACCEPT" >> $DOCKER_SERVICE_EXEC_START_FILE
     usermod -aG docker ${ADMINUSER}
     DOCKER_MOUNT_FLAGS_SYSTEMD_FILE=/etc/systemd/system/docker.service.d/clear_mount_propagation_flags.conf
     if [[ $OS != $COREOS_OS_NAME ]]; then
         wait_for_file 1200 1 $DOCKER_MOUNT_FLAGS_SYSTEMD_FILE || exit $ERR_FILE_WATCH_TIMEOUT
     fi
     DOCKER_JSON_FILE=/etc/docker/daemon.json
-    wait_for_file 1200 1 $DOCKER_JSON_FILE || exit $ERR_FILE_WATCH_TIMEOUT
-    systemctlEnableAndStart docker
+    for i in $(seq 1 1200); do
+        if [ -s $DOCKER_JSON_FILE ]; then
+            jq '.' < $DOCKER_JSON_FILE && break
+        fi
+        if [ $i -eq 1200 ]; then
+            exit $ERR_FILE_WATCH_TIMEOUT
+        else
+            sleep 1
+        fi
+    done
+    systemctlEnableAndStart docker || exit $ERR_DOCKER_START_FAIL
     # Delay start of docker-monitor for 30 mins after booting
     DOCKER_MONITOR_SYSTEMD_TIMER_FILE=/etc/systemd/system/docker-monitor.timer
     wait_for_file 1200 1 $DOCKER_MONITOR_SYSTEMD_TIMER_FILE || exit $ERR_FILE_WATCH_TIMEOUT
@@ -12619,7 +12644,6 @@ ensureK8sControlPlane() {
     if $REBOOTREQUIRED || [ "$NO_OUTBOUND" = "true" ]; then
         return
     fi
-    wait_for_file 3600 1 $KUBECTL || exit $ERR_FILE_WATCH_TIMEOUT
     retrycmd_if_failure 120 5 25 $KUBECTL 2>/dev/null cluster-info || exit $ERR_K8S_RUNNING_TIMEOUT
 }
 
@@ -12750,6 +12774,7 @@ ensureGPUDrivers() {
     configGPUDrivers
     systemctlEnableAndStart nvidia-modprobe || exit $ERR_GPU_DRIVERS_START_FAIL
 }
+#EOF
 `)
 
 func k8sCloudInitArtifactsCse_configShBytes() ([]byte, error) {
@@ -12843,7 +12868,7 @@ configureK8sCustomCloud() {
     # Decrease eth0 MTU to mitigate Azure Stack's NRP issue
     echo "iface eth0 inet dhcp" | sudo tee -a /etc/network/interfaces
     echo "    post-up /sbin/ifconfig eth0 mtu 1350" | sudo tee -a /etc/network/interfaces
-    
+
     ifconfig eth0 mtu 1350
 
     set -x
@@ -12943,6 +12968,7 @@ configureAzureStackInterfaces() {
 
     set -x
 }
+#EOF
 `)
 
 func k8sCloudInitArtifactsCse_customcloudShBytes() ([]byte, error) {
@@ -13096,15 +13122,14 @@ retrycmd_get_executable() {
 wait_for_file() {
     retries=$1; wait_sleep=$2; filepath=$3
     for i in $(seq 1 $retries); do
-        if [ -f $filepath ]; then
-            break
-        fi
+        grep -Fq '#EOF' $filepath && break
         if [ $i -eq $retries ]; then
             return 1
         else
             sleep $wait_sleep
         fi
     done
+    sed -i "/#EOF/d" $filepath
 }
 wait_for_apt_locks() {
     while fuser /var/lib/dpkg/lock /var/lib/apt/lists/lock /var/cache/apt/archives/lock >/dev/null 2>&1; do
@@ -13118,7 +13143,7 @@ apt_get_update() {
     for i in $(seq 1 $retries); do
         wait_for_apt_locks
         export DEBIAN_FRONTEND=noninteractive
-        dpkg --configure -a
+        dpkg --configure -a --force-confdef
         apt-get -f -y install
         ! (apt-get update 2>&1 | tee $apt_update_output | grep -E "^([WE]:.*)|([eE]rr.*)$") && \
         cat $apt_update_output && break || \
@@ -13136,7 +13161,7 @@ apt_get_install() {
     for i in $(seq 1 $retries); do
         wait_for_apt_locks
         export DEBIAN_FRONTEND=noninteractive
-        dpkg --configure -a
+        dpkg --configure -a --force-confdef
         apt-get install -o Dpkg::Options::="--force-confold" --no-install-recommends -y ${@} && break || \
         if [ $i -eq $retries ]; then
             return 1
@@ -13154,7 +13179,7 @@ apt_get_dist_upgrade() {
   for i in $(seq 1 $retries); do
     wait_for_apt_locks
     export DEBIAN_FRONTEND=noninteractive
-    dpkg --configure -a
+    dpkg --configure -a --force-confdef
     apt-get -f -y install
     apt-mark showhold
     ! (apt-get dist-upgrade -y 2>&1 | tee $apt_dist_upgrade_output | grep -E "^([WE]:.*)|([eE]rr.*)$") && \
@@ -13206,6 +13231,7 @@ sysctl_reload() {
 version_gte() {
   test "$(printf '%s\n' "$@" | sort -rV | head -n 1)" == "$1"
 }
+#HELPERSEOF
 `)
 
 func k8sCloudInitArtifactsCse_helpersShBytes() ([]byte, error) {
@@ -13521,6 +13547,7 @@ datasource:
         apply_network_config: false
 EOF
 }
+#EOF
 `)
 
 func k8sCloudInitArtifactsCse_installShBytes() ([]byte, error) {
@@ -13546,8 +13573,8 @@ AZURE_STACK_ENV="azurestackcloud"
 
 script_lib=/opt/azure/containers/provision_source.sh
 for i in $(seq 1 3600); do
-    if [ -f $script_lib ]; then
-        break
+    if [ -s $script_lib ]; then
+        grep -Fq '#HELPERSEOF' $script_lib && break
     fi
     if [ $i -eq 3600 ]; then
         exit $ERR_FILE_WATCH_TIMEOUT
@@ -13555,6 +13582,7 @@ for i in $(seq 1 3600); do
         sleep 1
     fi
 done
+sed -i "/#HELPERSEOF/d" $script_lib
 source $script_lib
 
 install_script=/opt/azure/containers/provision_installs.sh
@@ -13748,6 +13776,7 @@ else
       aptmarkWALinuxAgent unhold &
   fi
 fi
+#EOF
 `)
 
 func k8sCloudInitArtifactsCse_mainShBytes() ([]byte, error) {
@@ -13828,7 +13857,9 @@ After=docker.service
 Restart=always
 RestartSec=10
 RemainAfterExit=yes
-ExecStart=/usr/local/bin/health-monitor.sh container-runtime`)
+ExecStart=/usr/local/bin/health-monitor.sh container-runtime
+#EOF
+`)
 
 func k8sCloudInitArtifactsDockerMonitorServiceBytes() ([]byte, error) {
 	return _k8sCloudInitArtifactsDockerMonitorService, nil
@@ -13850,7 +13881,9 @@ Description=a timer that delays docker-monitor from starting too soon after boot
 [Timer]
 OnBootSec=30min
 [Install]
-WantedBy=multi-user.target`)
+WantedBy=multi-user.target
+#EOF
+`)
 
 func k8sCloudInitArtifactsDockerMonitorTimerBytes() ([]byte, error) {
 	return _k8sCloudInitArtifactsDockerMonitorTimer, nil
@@ -13868,7 +13901,9 @@ func k8sCloudInitArtifactsDockerMonitorTimer() (*asset, error) {
 }
 
 var _k8sCloudInitArtifactsDocker_clear_mount_propagation_flagsConf = []byte(`[Service]
-MountFlags=shared`)
+MountFlags=shared
+#EOF
+`)
 
 func k8sCloudInitArtifactsDocker_clear_mount_propagation_flagsConfBytes() ([]byte, error) {
 	return _k8sCloudInitArtifactsDocker_clear_mount_propagation_flagsConf, nil
@@ -13895,8 +13930,8 @@ DHCLIENT6_CONF_FILE=/etc/dhcp/dhclient6.conf
 CLOUD_INIT_CFG=/etc/network/interfaces.d/50-cloud-init.cfg
 
 read -r -d '' NETWORK_CONFIGURATION << EOC || true
-iface eth0 inet6 auto 
-    up sleep 5 
+iface eth0 inet6 auto
+    up sleep 5
     up dhclient -1 -6 -cf /etc/dhcp/dhclient6.conf -lf /var/lib/dhcp/dhclient6.eth0.leases -v eth0 || true
 EOC
 
@@ -13910,7 +13945,9 @@ touch /etc/dhcp/dhclient6.conf && add_if_not_exists "timeout 10;" ${DHCLIENT6_CO
     add_if_not_exists "${NETWORK_CONFIGURATION}" ${CLOUD_INIT_CFG} && \
     sudo ifdown eth0 && sudo ifup eth0
 
-echo "Configuration complete"`)
+echo "Configuration complete"
+#EOF
+`)
 
 func k8sCloudInitArtifactsEnableDhcpv6ShBytes() ([]byte, error) {
 	return _k8sCloudInitArtifactsEnableDhcpv6Sh, nil
@@ -14093,6 +14130,7 @@ rm -f "${PROXY_CERT_LOCK_FILE}"
 echo "$(date) cert gen and save/check etcd completed"
 
 write_certs_to_disk_with_retry
+#EOF
 `)
 
 func k8sCloudInitArtifactsGenerateproxycertsShBytes() ([]byte, error) {
@@ -14306,7 +14344,7 @@ ExecStartPre=/bin/mount --make-shared /var/lib/kubelet
 #  https://github.com/kubernetes/kubernetes/issues/41916#issuecomment-312428731
 ExecStartPre=/sbin/sysctl -w net.ipv4.tcp_retries2=8
 ExecStartPre=-/sbin/ebtables -t nat --list
-ExecStartPre=-/sbin/iptables -t nat --list
+ExecStartPre=-/sbin/iptables -t nat --numeric --list
 ExecStart=/usr/local/bin/kubelet \
         --enable-server \
         --node-labels="${KUBELET_NODE_LABELS}" \
@@ -14341,6 +14379,7 @@ After=kubelet.service
 Restart=always
 RestartSec=60
 ExecStart=/bin/bash /opt/azure/containers/label-nodes.sh
+#EOF
 `)
 
 func k8sCloudInitArtifactsLabelNodesServiceBytes() ([]byte, error) {
@@ -14375,6 +14414,7 @@ AGENT_LABELS="kubernetes.azure.com/role=agent kubernetes.io/role=agent node-role
 
 kubectl label nodes --overwrite -l $MASTER_SELECTOR $MASTER_LABELS
 kubectl label nodes --overwrite -l $AGENT_SELECTOR $AGENT_LABELS
+#EOF
 `)
 
 func k8sCloudInitArtifactsLabelNodesShBytes() ([]byte, error) {
@@ -14451,6 +14491,7 @@ then
 fi
 mount $MOUNTPOINT
 /bin/chown -R etcd:etcd /var/lib/etcddisk
+#EOF
 `)
 
 func k8sCloudInitArtifactsMountetcdShBytes() ([]byte, error) {
@@ -15241,6 +15282,8 @@ write_files:
     {{else}}
     ExecStart=/usr/bin/dockerd -H fd:// --storage-driver=overlay2 --bip={{WrapAsParameter "dockerBridgeCidr"}}
     {{end}}
+    ExecStartPost=/sbin/iptables -P FORWARD ACCEPT
+    #EOF
 
 - path: /etc/docker/daemon.json
   permissions: "0644"
@@ -15323,6 +15366,7 @@ write_files:
         user: client
       name: localclustercontext
     current-context: localclustercontext
+    #EOF
 
 {{if EnableDataEncryptionAtRest}}
 - path: /etc/kubernetes/encryption-config.yaml
@@ -15395,6 +15439,7 @@ MASTER_CONTAINER_ADDONS_PLACEHOLDER
 {{else}}
     KUBELET_REGISTER_SCHEDULABLE={{WrapAsVariable "registerSchedulable"}}
 {{end}}
+    #EOF
 
 - path: /opt/azure/containers/kubelet.sh
   permissions: "0755"
@@ -15458,7 +15503,7 @@ MASTER_CONTAINER_ADDONS_PLACEHOLDER
 {{if eq .OrchestratorProfile.KubernetesConfig.NetworkPolicy "calico"}}
     sed -i "s|<kubeClusterCidr>|{{WrapAsParameter "kubeClusterCidr"}}|g" /etc/kubernetes/addons/calico-daemonset.yaml
     {{if eq .OrchestratorProfile.KubernetesConfig.NetworkPlugin "azure"}}
-    sed -i "/initContainers/,/cni-net-dir/d" /etc/kubernetes/addons/calico-daemonset.yaml
+    sed -i "/Start of install-cni initContainer/,/End of install-cni initContainer/d" /etc/kubernetes/addons/calico-daemonset.yaml
     {{else}}
     sed -i "s|<calicoIPAMConfig>|{\"type\": \"host-local\", \"subnet\": \"usePodCidr\"}|g" /etc/kubernetes/addons/calico-daemonset.yaml
     sed -i "s|azv|cali|g" /etc/kubernetes/addons/calico-daemonset.yaml
@@ -15477,6 +15522,7 @@ MASTER_CONTAINER_ADDONS_PLACEHOLDER
 {{if HasLinuxProfile}}{{if HasCustomSearchDomain}}
     sed -i "s|<searchDomainName>|{{WrapAsParameter "searchDomainName"}}|g; s|<searchDomainRealmUser>|{{WrapAsParameter "searchDomainRealmUser"}}|g; s|<searchDomainRealmPassword>|{{WrapAsParameter "searchDomainRealmPassword"}}|g" /opt/azure/containers/setup-custom-search-domains.sh
 {{end}}{{end}}
+    #EOF
 
 - path: /opt/azure/containers/mountetcd.sh
   permissions: "0744"
@@ -15546,6 +15592,7 @@ MASTER_CONTAINER_ADDONS_PLACEHOLDER
     /bin/echo DAEMON_ARGS=--name "{{WrapAsVerbatim "variables('masterVMNames')[copyIndex(variables('masterOffset'))]"}}" --peer-client-cert-auth --peer-trusted-ca-file={{WrapAsVariable "etcdCaFilepath"}} --peer-cert-file={{WrapAsVerbatim "variables('etcdPeerCertFilepath')[copyIndex(variables('masterOffset'))]"}} --peer-key-file={{WrapAsVerbatim "variables('etcdPeerKeyFilepath')[copyIndex(variables('masterOffset'))]"}} --initial-advertise-peer-urls "{{WrapAsVerbatim "variables('masterEtcdPeerURLs')[copyIndex(variables('masterOffset'))]"}}" --listen-peer-urls "{{WrapAsVerbatim "variables('masterEtcdPeerURLs')[copyIndex(variables('masterOffset'))]"}}" --client-cert-auth --trusted-ca-file={{WrapAsVariable "etcdCaFilepath"}} --cert-file={{WrapAsVariable "etcdServerCertFilepath"}} --key-file={{WrapAsVariable "etcdServerKeyFilepath"}} --advertise-client-urls "{{WrapAsVerbatim "variables('masterEtcdClientURLs')[copyIndex(variables('masterOffset'))]"}}" --listen-client-urls "{{WrapAsVerbatim "concat(variables('masterEtcdClientURLs')[copyIndex(variables('masterOffset'))], ',https://127.0.0.1:', variables('masterEtcdClientPort'))"}}" --initial-cluster-token "k8s-etcd-cluster" --initial-cluster {{WrapAsVerbatim "variables('masterEtcdClusterStates')[div(variables('masterCount'), 2)]"}} --data-dir "/var/lib/etcddisk" --initial-cluster-state "new" | tee -a /etc/default/etcd
   {{end}}
 {{end}}
+    #EOF
 
 {{if IsAzureStackCloud}}
 - path: "/etc/kubernetes/azurestackcloud.json"
@@ -15799,6 +15846,8 @@ write_files:
     {{else}}
     ExecStart=/usr/bin/dockerd -H fd:// --storage-driver=overlay2 --bip={{WrapAsParameter "dockerBridgeCidr"}}
     {{end}}
+    ExecStartPost=/sbin/iptables -P FORWARD ACCEPT
+    #EOF
 
 - path: /etc/docker/daemon.json
   permissions: "0644"
@@ -15892,6 +15941,7 @@ write_files:
         user: client
       name: localclustercontext
     current-context: localclustercontext
+    #EOF
 
 - path: /etc/default/kubelet
   permissions: "0644"
@@ -15913,6 +15963,7 @@ write_files:
 {{if IsAzureStackCloud }}
     AZURE_ENVIRONMENT_FILEPATH=/etc/kubernetes/azurestackcloud.json
 {{end}}
+    #EOF
 
 - path: /opt/azure/containers/kubelet.sh
   permissions: "0755"
@@ -15929,6 +15980,7 @@ write_files:
     sed -i "s|<searchDomainRealmUser>|{{WrapAsParameter "searchDomainRealmUser"}}|g" "/opt/azure/containers/setup-custom-search-domains.sh"
     sed -i "s|<searchDomainRealmPassword>|{{WrapAsParameter "searchDomainRealmPassword"}}|g" "/opt/azure/containers/setup-custom-search-domains.sh"
 {{end}}{{end}}
+    #EOF
 
 {{if IsAzureStackCloud}}
 - path: "/etc/kubernetes/azurestackcloud.json"
@@ -16556,6 +16608,7 @@ spec:
       - name: credentials
         secret:
           secretName: aci-connector-secret
+#EOF
 `)
 
 func k8sContaineraddons116KubernetesmasteraddonsAciConnectorDeploymentYamlBytes() ([]byte, error) {
@@ -17766,6 +17819,7 @@ spec:
           type: ""
         name: ssl-certs
       <vols>
+#EOF
 `)
 
 func k8sContaineraddons116KubernetesmasteraddonsClusterAutoscalerDeploymentYamlBytes() ([]byte, error) {
@@ -20239,7 +20293,9 @@ spec:
       volumes:
       - name: credentials
         secret:
-          secretName: aci-connector-secret`)
+          secretName: aci-connector-secret
+#EOF
+`)
 
 func k8sContaineraddonsKubernetesmasteraddonsAciConnectorDeploymentYamlBytes() ([]byte, error) {
 	return _k8sContaineraddonsKubernetesmasteraddonsAciConnectorDeploymentYaml, nil
@@ -20471,7 +20527,7 @@ data:
   cni_network_config: |-
     {
       "name": "k8s-pod-network",
-      "cniVersion": "0.3.0",
+      "cniVersion": "0.3.1",
       "plugins": [
         {
           "type": "calico",
@@ -20645,7 +20701,7 @@ spec:
 # Include a clusterrole for the calico-node DaemonSet,
 # and bind it to the calico-node serviceaccount.
 kind: ClusterRole
-apiVersion: rbac.authorization.k8s.io/v1beta1
+apiVersion: rbac.authorization.k8s.io/v1
 metadata:
   name: calico-node
   labels:
@@ -20746,12 +20802,11 @@ rules:
   - create
   - update
 ---
-apiVersion: rbac.authorization.k8s.io/v1beta1
+apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
   name: calico-node
   labels:
-    kubernetes.io/cluster-service: "true"
     addonmanager.kubernetes.io/mode: "Reconcile"
 roleRef:
   apiGroup: rbac.authorization.k8s.io
@@ -20761,7 +20816,6 @@ subjects:
 - kind: ServiceAccount
   name: calico-node
   namespace: kube-system
-
 ---
 # Source: calico/templates/calico-typha.yaml
 # This manifest creates a Service, which will be backed by Calico's Typha daemon.
@@ -20787,7 +20841,7 @@ spec:
 
 # This manifest creates a Deployment of Typha to back the above service.
 
-apiVersion: apps/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: calico-typha
@@ -20828,6 +20882,7 @@ spec:
       # Since Calico can't network a pod until Typha is up, we need to run Typha itself
       # as a host-networked pod.
       serviceAccountName: calico-node
+      priorityClassName: system-cluster-critical
       containers:
       - image: {{ContainerImage "calico-typha"}}
         name: calico-typha
@@ -20882,7 +20937,7 @@ spec:
 # as the CNI plugins and network config on
 # each master and worker node in a Kubernetes cluster.
 kind: DaemonSet
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 metadata:
   name: calico-node
   namespace: kube-system
@@ -20924,7 +20979,9 @@ spec:
       # Minimize downtime during a rolling upgrade or deletion; tell Kubernetes to do a "force
       # deletion": https://kubernetes.io/docs/concepts/workloads/pods/pod/#termination-of-pods.
       terminationGracePeriodSeconds: 0
+      priorityClassName: system-node-critical
       initContainers:
+      # Start of install-cni initContainer
       # This container installs the CNI binaries
       # and CNI network config file on each node.
       - name: install-cni
@@ -20953,6 +21010,14 @@ spec:
           name: cni-bin-dir
         - mountPath: /host/etc/cni/net.d
           name: cni-net-dir
+      # End of install-cni initContainer
+      # Adds a Flex Volume Driver that creates a per-pod Unix Domain Socket to allow Dikastes
+      # to communicate with Felix over the Policy Sync API.
+      - name: flexvol-driver
+        image: {{ContainerImage "calico-pod2daemon"}}
+        volumeMounts:
+        - name: flexvol-driver-host
+          mountPath: /host/driver
       containers:
       # Runs calico-node container on each Kubernetes node.  This
       # container programs network policy and routes on each
@@ -21041,6 +21106,8 @@ spec:
         - mountPath: /var/lib/calico
           name: var-lib-calico
           readOnly: false
+        - name: policysync
+          mountPath: /var/run/nodeagent
       volumes:
       # Used by calico-node.
       - name: lib-modules
@@ -21063,6 +21130,16 @@ spec:
       - name: cni-net-dir
         hostPath:
           path: /etc/cni/net.d
+      # Used to create per-pod Unix Domain Sockets
+      - name: policysync
+        hostPath:
+          type: DirectoryOrCreate
+          path: /var/run/nodeagent
+      # Used to install Flex Volume Driver
+      - name: flexvol-driver-host
+        hostPath:
+          type: DirectoryOrCreate
+          path: /etc/kubernetes/volumeplugins/nodeagent~uds
 ---
 
 apiVersion: v1
@@ -21081,7 +21158,6 @@ metadata:
   name: calico-typha-horizontal-autoscaler
   namespace: kube-system
   labels:
-    kubernetes.io/cluster-service: "true"
     addonmanager.kubernetes.io/mode: "EnsureExists"
 data:
   ladder: |-
@@ -21110,7 +21186,6 @@ metadata:
   namespace: kube-system
   labels:
     k8s-app: calico-typha-autoscaler
-    kubernetes.io/cluster-service: "true"
     addonmanager.kubernetes.io/mode: "Reconcile"
 spec:
   replicas: 1
@@ -21149,7 +21224,6 @@ kind: ClusterRole
 metadata:
   name: typha-cpha
   labels:
-    kubernetes.io/cluster-service: "true"
     addonmanager.kubernetes.io/mode: "Reconcile"
 rules:
 - apiGroups: [""]
@@ -21164,7 +21238,6 @@ kind: ClusterRoleBinding
 metadata:
   name: typha-cpha
   labels:
-    kubernetes.io/cluster-service: "true"
     addonmanager.kubernetes.io/mode: "Reconcile"
 roleRef:
   apiGroup: rbac.authorization.k8s.io
@@ -21183,7 +21256,6 @@ metadata:
   name: typha-cpha
   namespace: kube-system
   labels:
-    kubernetes.io/cluster-service: "true"
     addonmanager.kubernetes.io/mode: "Reconcile"
 rules:
 - apiGroups: [""]
@@ -21202,7 +21274,6 @@ metadata:
   name: typha-cpha
   namespace: kube-system
   labels:
-    kubernetes.io/cluster-service: "true"
     addonmanager.kubernetes.io/mode: "Reconcile"
 roleRef:
   apiGroup: rbac.authorization.k8s.io
@@ -21221,7 +21292,7 @@ metadata:
   name: typha-cpha
   namespace: kube-system
   labels:
-    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: "Reconcile"
 `)
 
 func k8sContaineraddonsKubernetesmasteraddonsCalicoDaemonsetYamlBytes() ([]byte, error) {
@@ -21463,6 +21534,7 @@ spec:
           type: ""
         name: ssl-certs
       <vols>
+#EOF
 `)
 
 func k8sContaineraddonsKubernetesmasteraddonsClusterAutoscalerDeploymentYamlBytes() ([]byte, error) {
@@ -24537,11 +24609,11 @@ function Update-WinCNI
 {
     Param(
         [string]
-        $WinCniUrl = "https://github.com/Microsoft/SDN/raw/master/Kubernetes/windows/cni/wincni.exe",
+        $WinCniUrl = "https://github.com/Microsoft/SDN/raw/master/Kubernetes/flannel/l2bridge/cni/win-bridge.exe",
         [Parameter(Mandatory=$true)][string]
         $CNIPath
     )
-    $wincni = "wincni.exe"
+    $wincni = "win-bridge.exe"
     $wincniFile = [Io.path]::Combine($CNIPath, $wincni)
     DownloadFileOverHttp -Url $WinCniUrl -DestinationPath $wincniFile
 }
@@ -25229,21 +25301,13 @@ Update-CNIConfig(` + "`" + `$podCIDR, ` + "`" + `$masterSubnetGW)
 "{
     ""cniVersion"": ""0.2.0"",
     ""name"": ""<NetworkMode>"",
-    ""type"": ""wincni.exe"",
+    ""type"": ""win-bridge"",
     ""master"": ""Ethernet"",
-    ""capabilities"": { ""portMappings"": true },
-    ""ipam"": {
-        ""environment"": ""azure"",
-        ""subnet"":""<PODCIDR>"",
-        ""routes"": [{
-        ""GW"":""<PODGW>""
-        }]
-    },
     ""dns"" : {
-    ""Nameservers"" : [ ""<NameServers>"" ],
-    ""Search"" : [ ""<Cluster DNS Suffix or Search Path>"" ]
+        ""Nameservers"" : [ ""<NameServers>"" ],
+        ""Search"" : [ ""<Cluster DNS Suffix or Search Path>"" ]
     },
-    ""AdditionalArgs"" : [
+    ""policies"": [
     {
         ""Name"" : ""EndpointPolicy"", ""Value"" : { ""Type"" : ""OutBoundNAT"", ""ExceptionList"": [ ""<ClusterCIDR>"", ""<MgmtSubnet>"" ] }
     },
@@ -25255,14 +25319,12 @@ Update-CNIConfig(` + "`" + `$podCIDR, ` + "`" + `$masterSubnetGW)
 
     ` + "`" + `$configJson = ConvertFrom-Json ` + "`" + `$jsonSampleConfig
     ` + "`" + `$configJson.name = ` + "`" + `$global:NetworkMode.ToLower()
-    ` + "`" + `$configJson.ipam.subnet=` + "`" + `$podCIDR
-    ` + "`" + `$configJson.ipam.routes[0].GW = ` + "`" + `$masterSubnetGW
     ` + "`" + `$configJson.dns.Nameservers[0] = ` + "`" + `$global:KubeDnsServiceIp
     ` + "`" + `$configJson.dns.Search[0] = ` + "`" + `$global:KubeDnsSearchPath
 
-    ` + "`" + `$configJson.AdditionalArgs[0].Value.ExceptionList[0] = ` + "`" + `$global:KubeClusterCIDR
-    ` + "`" + `$configJson.AdditionalArgs[0].Value.ExceptionList[1] = ` + "`" + `$global:MasterSubnet
-    ` + "`" + `$configJson.AdditionalArgs[1].Value.DestinationPrefix  = ` + "`" + `$global:KubeServiceCIDR
+    ` + "`" + `$configJson.policies[0].Value.ExceptionList[0] = ` + "`" + `$global:KubeClusterCIDR
+    ` + "`" + `$configJson.policies[0].Value.ExceptionList[1] = ` + "`" + `$global:MasterSubnet
+    ` + "`" + `$configJson.policies[1].Value.DestinationPrefix  = ` + "`" + `$global:KubeServiceCIDR
 
     if (Test-Path ` + "`" + `$global:CNIConfig)
     {

@@ -210,8 +210,8 @@ func TestAssignDefaultAddonImages(t *testing.T) {
 		AzureCNINetworkMonitoringAddonName: "mcr.microsoft.com/containernetworking/networkmonitor:v0.0.6",
 		DNSAutoscalerAddonName:             "k8s.gcr.io/cluster-proportional-autoscaler-amd64:1.1.1",
 		HeapsterAddonName:                  "k8s.gcr.io/heapster-amd64:v1.5.4",
-		CalicoAddonName:                    "calico/typha:v3.7.2",
-		AzureNetworkPolicyAddonName:        "mcr.microsoft.com/containernetworking/azure-npm:v1.0.24",
+		CalicoAddonName:                    "calico/typha:v3.8.0",
+		AzureNetworkPolicyAddonName:        "mcr.microsoft.com/containernetworking/azure-npm:v1.0.25",
 		AADPodIdentityAddonName:            "mcr.microsoft.com/k8s/aad-pod-identity/nmi:1.2",
 	}
 
@@ -1026,7 +1026,7 @@ func TestEtcdVersion(t *testing.T) {
 	}
 
 	// These versions are all greater than default
-	for _, etcdVersion := range []string{"3.3.0", "99.99"} {
+	for _, etcdVersion := range []string{"3.4.0", "99.99"} {
 		// Upgrade scenario should always keep the user-configured etcd version if it is greater than default
 		mockCS := getMockBaseContainerService("1.10.13")
 		properties := mockCS.Properties
@@ -1035,7 +1035,7 @@ func TestEtcdVersion(t *testing.T) {
 		mockCS.setOrchestratorDefaults(true, false)
 		if properties.OrchestratorProfile.KubernetesConfig.EtcdVersion != etcdVersion {
 			t.Fatalf("EtcdVersion did not have the expected value, got %s, expected %s",
-				properties.OrchestratorProfile.KubernetesConfig.EtcdVersion, DefaultEtcdVersion)
+				properties.OrchestratorProfile.KubernetesConfig.EtcdVersion, etcdVersion)
 		}
 
 		// Create scenario should always accept the provided value
@@ -1361,8 +1361,8 @@ func TestDistroDefaults(t *testing.T) {
 			},
 			"",
 			"",
-			Ubuntu,
-			Ubuntu,
+			AKSUbuntu1604,
+			AKSUbuntu1604,
 			false,
 			false,
 			AzureUSGovernmentCloud,

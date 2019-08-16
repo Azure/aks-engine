@@ -396,8 +396,8 @@ func (p *Properties) setMasterProfileDefaults(isUpgrade, isScale bool, cloudName
 		}
 	}
 
-	// The AKS Distro is not available in US Governmnent Cloud and German Cloud.
-	if cloudName == AzureUSGovernmentCloud || cloudName == AzureGermanCloud {
+	// The AKS Distro is not available in Azure German Cloud.
+	if cloudName == AzureGermanCloud {
 		p.MasterProfile.Distro = Ubuntu
 	}
 
@@ -624,8 +624,8 @@ func (p *Properties) setAgentProfileDefaults(isUpgrade, isScale bool, cloudName 
 					profile.Distro = AKSUbuntu1804
 				}
 			}
-			// The AKS Distro is not available in US Governmnent Cloud and German Cloud.
-			if cloudName == AzureUSGovernmentCloud || cloudName == AzureGermanCloud {
+			// The AKS Distro is not available in Azure German Cloud.
+			if cloudName == AzureGermanCloud {
 				profile.Distro = Ubuntu
 			}
 		}

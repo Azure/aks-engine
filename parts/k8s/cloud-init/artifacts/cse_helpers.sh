@@ -134,15 +134,14 @@ retrycmd_get_executable() {
 wait_for_file() {
     retries=$1; wait_sleep=$2; filepath=$3
     for i in $(seq 1 $retries); do
-        if [ -f $filepath ]; then
-            break
-        fi
+        grep -Fq '#EOF' $filepath && break
         if [ $i -eq $retries ]; then
             return 1
         else
             sleep $wait_sleep
         fi
     done
+    sed -i "/#EOF/d" $filepath
 }
 wait_for_apt_locks() {
     while fuser /var/lib/dpkg/lock /var/lib/apt/lists/lock /var/cache/apt/archives/lock >/dev/null 2>&1; do
@@ -156,7 +155,7 @@ apt_get_update() {
     for i in $(seq 1 $retries); do
         wait_for_apt_locks
         export DEBIAN_FRONTEND=noninteractive
-        dpkg --configure -a
+        dpkg --configure -a --force-confdef
         apt-get -f -y install
         ! (apt-get update 2>&1 | tee $apt_update_output | grep -E "^([WE]:.*)|([eE]rr.*)$") && \
         cat $apt_update_output && break || \
@@ -174,7 +173,7 @@ apt_get_install() {
     for i in $(seq 1 $retries); do
         wait_for_apt_locks
         export DEBIAN_FRONTEND=noninteractive
-        dpkg --configure -a
+        dpkg --configure -a --force-confdef
         apt-get install -o Dpkg::Options::="--force-confold" --no-install-recommends -y ${@} && break || \
         if [ $i -eq $retries ]; then
             return 1
@@ -192,7 +191,7 @@ apt_get_dist_upgrade() {
   for i in $(seq 1 $retries); do
     wait_for_apt_locks
     export DEBIAN_FRONTEND=noninteractive
-    dpkg --configure -a
+    dpkg --configure -a --force-confdef
     apt-get -f -y install
     apt-mark showhold
     ! (apt-get dist-upgrade -y 2>&1 | tee $apt_dist_upgrade_output | grep -E "^([WE]:.*)|([eE]rr.*)$") && \
@@ -244,3 +243,4 @@ sysctl_reload() {
 version_gte() {
   test "$(printf '%s\n' "$@" | sort -rV | head -n 1)" == "$1"
 }
+#HELPERSEOF

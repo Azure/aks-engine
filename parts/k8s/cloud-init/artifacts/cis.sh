@@ -71,3 +71,4 @@ applyCIS() {
   assignRootPW
   assignFilePermissions
 }
+#EOF
