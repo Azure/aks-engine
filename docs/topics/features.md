@@ -6,7 +6,6 @@
 |Calico Network Policy|Alpha|`vlabs`|[kubernetes-calico.json](../../examples/networkpolicy/kubernetes-calico-azure.json)|[Description](#feat-calico)|
 |Cilium Network Policy|Alpha|`vlabs`|[kubernetes-cilium.json](../../examples/networkpolicy/kubernetes-cilium.json)|[Description](#feat-cilium)|
 |Custom VNET|Beta|`vlabs`|[kubernetesvnet-azure-cni.json](../../examples/vnet/kubernetesvnet-azure-cni.json)|[Description](#feat-custom-vnet)|
-
 |Kata Containers Runtime|Alpha|`vlabs`|[kubernetes-kata-containers.json](../../examples/kubernetes-kata-containers.json)|[Description](#feat-kata-containers)|
 |Private Cluster|Alpha|`vlabs`|[kubernetes-private-cluster.json](../../examples/kubernetes-config/kubernetes-private-cluster.json)|[Description](#feat-private-cluster)|
 |Azure Key Vault Encryption|Alpha|`vlabs`|[kubernetes-keyvault-encryption.json](../../examples/kubernetes-config/kubernetes-keyvault-encryption.json)|[Description](#feat-keyvault-encryption)|
@@ -489,7 +488,7 @@ This is possible by specifying `imageReference` under `masterProfile` or on a gi
 
 > This feature is considered experimental, and you may lose data. We're still evaluating what risks exist and how to mitigate them.
 
-[Ephemeral OS Disks] is a new feature in Azure that allows the OS disk to use local SSD storage, with no writes to Azure storage. If a VM is stopped or deprovisioned, it's local storage is lost. If the same VM is restarted, it starts from the original OS disk and reapplies the custom script extension from AKS-Engine to join the cluster. 
+[Ephemeral OS Disks] is a new feature in Azure that allows the OS disk to use local SSD storage, with no writes to Azure storage. If a VM is stopped or deprovisioned, it's local storage is lost. If the same VM is restarted, it starts from the original OS disk and reapplies the custom script extension from AKS-Engine to join the cluster.
 
 Benefits - VMs deploy faster, and have better local storage performance. The OS disk will perform at the _Max cached storage throughput_ for the VM size. For example with a `Standard_D2s_v3` size VM using a 50 GiB OS disk - it can achieve 4000 IOPs with ephemeral disks enabled, or 240 IOPs using a `Premium P6` [Premium SSD](https://docs.microsoft.com/en-us/azure/virtual-machines/linux/disks-types#premium-ssd) at 50GiB. Apps will get faster container and `emptydir` performance. Container pull times are also improved.
 
