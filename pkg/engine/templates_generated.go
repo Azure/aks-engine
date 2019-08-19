@@ -8291,6 +8291,7 @@ var _k8sAddons116KubernetesmasteraddonsKubeProxyDaemonsetYaml = []byte(`apiVersi
 kind: DaemonSet
 metadata:
   labels:
+    addonmanager.kubernetes.io/mode: Reconcile
     kubernetes.io/cluster-service: "true"
     component: kube-proxy
     tier: node
@@ -11202,6 +11203,7 @@ var _k8sAddonsKubernetesmasteraddonsKubeProxyDaemonsetYaml = []byte(`apiVersion:
 kind: DaemonSet
 metadata:
   labels:
+    addonmanager.kubernetes.io/mode: Reconcile
     kubernetes.io/cluster-service: "true"
     component: kube-proxy
     tier: node
