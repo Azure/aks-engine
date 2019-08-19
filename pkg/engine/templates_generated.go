@@ -8307,6 +8307,8 @@ spec:
       labels:
         component: kube-proxy
         tier: node
+      annotations:
+        scheduler.alpha.kubernetes.io/critical-pod: ''
     spec:
       priorityClassName: system-node-critical
       tolerations:
@@ -8318,6 +8320,8 @@ spec:
         effect: NoExecute
       - operator: "Exists"
         effect: NoSchedule
+      - key: CriticalAddonsOnly
+        operator: Exists
       containers:
       - command:
         - /hyperkube
@@ -11215,6 +11219,8 @@ spec:
       labels:
         component: kube-proxy
         tier: node
+      annotations:
+        scheduler.alpha.kubernetes.io/critical-pod: ''
     spec:
       priorityClassName: system-node-critical
       tolerations:
@@ -11226,6 +11232,8 @@ spec:
         effect: NoExecute
       - operator: "Exists"
         effect: NoSchedule
+      - key: CriticalAddonsOnly
+        operator: Exists
       containers:
       - command:
         - /hyperkube
