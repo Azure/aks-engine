@@ -1834,15 +1834,8 @@ func (p *Properties) IsNvidiaDevicePluginCapable() bool {
 // SetCloudProviderRateLimitDefaults sets default cloudprovider rate limiter config
 func (p *Properties) SetCloudProviderRateLimitDefaults() {
 	if p.OrchestratorProfile.KubernetesConfig.CloudProviderRateLimitBucket == 0 {
-		if p.HasVMSSAgentPool() && !p.IsHostedMasterProfile() {
-			var rateLimitBucket int
-			for _, profile := range p.AgentPoolProfiles {
-				if profile.AvailabilityProfile == VirtualMachineScaleSets {
-					rateLimitBucket += common.MaxAgentCount
-				}
-
-			}
-			p.OrchestratorProfile.KubernetesConfig.CloudProviderRateLimitBucket = rateLimitBucket
+		if !p.IsHostedMasterProfile() {
+			p.OrchestratorProfile.KubernetesConfig.CloudProviderRateLimitBucket = len(p.AgentPoolProfiles) * common.MaxAgentCount
 		} else {
 			p.OrchestratorProfile.KubernetesConfig.CloudProviderRateLimitBucket = DefaultKubernetesCloudProviderRateLimitBucket
 		}
@@ -1855,15 +1848,8 @@ func (p *Properties) SetCloudProviderRateLimitDefaults() {
 		}
 	}
 	if p.OrchestratorProfile.KubernetesConfig.CloudProviderRateLimitBucketWrite == 0 {
-		if p.HasVMSSAgentPool() && !p.IsHostedMasterProfile() {
-			var rateLimitBucket int
-			for _, profile := range p.AgentPoolProfiles {
-				if profile.AvailabilityProfile == VirtualMachineScaleSets {
-					rateLimitBucket += common.MaxAgentCount
-				}
-
-			}
-			p.OrchestratorProfile.KubernetesConfig.CloudProviderRateLimitBucketWrite = rateLimitBucket
+		if !p.IsHostedMasterProfile() {
+			p.OrchestratorProfile.KubernetesConfig.CloudProviderRateLimitBucketWrite = len(p.AgentPoolProfiles) * common.MaxAgentCount
 		} else {
 			p.OrchestratorProfile.KubernetesConfig.CloudProviderRateLimitBucketWrite = DefaultKubernetesCloudProviderRateLimitBucketWrite
 		}
