@@ -8295,6 +8295,7 @@ metadata:
     kubernetes.io/cluster-service: "true"
     component: kube-proxy
     tier: node
+    k8s-app: kube-proxy
   name: kube-proxy
   namespace: kube-system
 spec:
@@ -8312,6 +8313,7 @@ spec:
       labels:
         component: kube-proxy
         tier: node
+        k8s-app: kube-proxy
       annotations:
         scheduler.alpha.kubernetes.io/critical-pod: ''
     spec:
@@ -11216,6 +11218,7 @@ metadata:
     kubernetes.io/cluster-service: "true"
     component: kube-proxy
     tier: node
+    k8s-app: kube-proxy
   name: kube-proxy
   namespace: kube-system
 spec:
@@ -11231,6 +11234,7 @@ spec:
       labels:
         component: kube-proxy
         tier: node
+        k8s-app: kube-proxy
       annotations:
         scheduler.alpha.kubernetes.io/critical-pod: ''
     spec:
