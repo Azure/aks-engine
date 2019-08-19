@@ -8298,10 +8298,15 @@ metadata:
   name: kube-proxy
   namespace: kube-system
 spec:
+  updateStrategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 50%
   selector:
     matchLabels:
       component: kube-proxy
       tier: node
+      k8s-app: kube-proxy
   template:
     metadata:
       labels:
@@ -11214,6 +11219,13 @@ metadata:
   name: kube-proxy
   namespace: kube-system
 spec:
+  selector:
+    matchLabels:
+      k8s-app: kube-proxy
+  updateStrategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 50%
   template:
     metadata:
       labels:
