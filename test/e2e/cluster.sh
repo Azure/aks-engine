@@ -130,6 +130,7 @@ if [ "${SCALE_CLUSTER}" = "true" ]; then
     -e IS_JENKINS=${IS_JENKINS} \
     -e SKIP_LOGS_COLLECTION=true \
     -e GINKGO_SKIP="${SKIP_AFTER_SCALE_DOWN}" \
+    -e GINKGO_FOCUS="${GINKGO_FOCUS}" \
     -e SKIP_TEST=${SKIP_TESTS_AFTER_SCALE_DOWN} \
     ${DEV_IMAGE} make test-kubernetes || exit 1
 fi
@@ -169,6 +170,7 @@ if [ "${UPGRADE_CLUSTER}" = "true" ]; then
       -e IS_JENKINS=${IS_JENKINS} \
       -e SKIP_LOGS_COLLECTION=true \
       -e GINKGO_SKIP="${SKIP_AFTER_UPGRADE}" \
+      -e GINKGO_FOCUS="${GINKGO_FOCUS}" \
       -e SKIP_TEST=${SKIP_TESTS_AFTER_UPGRADE} \
       ${DEV_IMAGE} make test-kubernetes || exit 1
   done
@@ -211,6 +213,7 @@ if [ "${SCALE_CLUSTER}" = "true" ]; then
     -e IS_JENKINS=${IS_JENKINS} \
     -e SKIP_LOGS_COLLECTION=${SKIP_LOGS_COLLECTION} \
     -e GINKGO_SKIP="${SKIP_AFTER_SCALE_UP}" \
+    -e GINKGO_FOCUS="${GINKGO_FOCUS}" \
     -e SKIP_TEST=${SKIP_TESTS_AFTER_SCALE_DOWN} \
     ${DEV_IMAGE} make test-kubernetes || exit 1
 fi
