@@ -113,22 +113,19 @@ Proofread the release notes and satisfy yourself that everything is in order. Cl
 
 Finally, let's make the new aks-engine release easy to install.
 
-#### The `gofish` package manager
-
-Create a pull request to add the new release to [gofish][] through the [fish-food repository][gofish-food]. You will need to calculate the sha256 checksum for each of the .tar.gz archives:
-
-```
-$ for tarball in darwin-amd64 linux-amd64 windows-amd64; do shasum -a 256 _dist/aks-engine-$TAG-$tarball.tar.gz; done
-857f5780aa1d4fc2b3f6eb40b22fb2a076de3ae5fd927141dd1984d0924656d4  _dist/aks-engine-v0.32.3-darwin-amd64.tar.gz
-19de96befe656c432fbde71c582fb3f9de8ab9abc681f1607852c4fc4a0bcb99  _dist/aks-engine-v0.32.3-linux-amd64.tar.gz
-830f7baf8b2d04e97f313c079170b6e4715f7cd410310479581a6627a6e95f41  _dist/aks-engine-v0.32.3-windows-amd64.tar.gz
-```
-
-Paste each checksum in the appropriate section and update the release version. The PR will look very similar to [this recent update][gofish-pr].
-
 #### The `brew` package manager
 
-Create a pull request to add the new release to [brew][] through our [homebrew tap repository][brew-tap]. Use the macOS sha256 checksum from the `gofish` PR in the previous step. The PR will look very similar to [this recent update][brew-pr].
+Create a pull request to add the new release to [brew][] through our [homebrew tap repository][brew-tap]. Update the macOS sha256 checksum with this command:
+
+```
+$ shasum -a 256  _dist/aks-engine-$TAG-darwin-amd64.tar.gz
+```
+
+The PR will look very similar to [this one][brew-pr].
+
+#### The `gofish` package manager
+
+The [gofish][] package manager has automation in place to create an update when AKS Engine creates a release. Check the [fish-food repository][gofish-food] to see that a pull request was created.
 
 #### The `choco` package manager
 
@@ -142,7 +139,7 @@ Note that it can take a while for the NuGet machinery to submit the current rele
 
 [aks-engine]: https://github.com/Azure/aks-engine/releases
 [brew]: https://brew.sh/
-[brew-pr]: https://github.com/Azure/homebrew-aks-engine/pull/5
+[brew-pr]: https://github.com/Azure/homebrew-aks-engine/pull/34
 [brew-tap]: https://github.com/Azure/homebrew-aks-engine/
 [choco]: https://chocolatey.org/
 [choco-status]: https://chocolatey.org/packages/aks-engine/
