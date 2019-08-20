@@ -1834,8 +1834,7 @@ func (p *Properties) IsNvidiaDevicePluginCapable() bool {
 // SetCloudProviderRateLimitDefaults sets default cloudprovider rate limiter config
 func (p *Properties) SetCloudProviderRateLimitDefaults() {
 	if p.OrchestratorProfile.KubernetesConfig.CloudProviderRateLimitBucket == 0 {
-		var agentPoolProfilesCount int
-		agentPoolProfilesCount = len(p.AgentPoolProfiles)
+		var agentPoolProfilesCount = len(p.AgentPoolProfiles)
 		if agentPoolProfilesCount == 0 {
 			p.OrchestratorProfile.KubernetesConfig.CloudProviderRateLimitBucket = DefaultKubernetesCloudProviderRateLimitBucket
 		} else {
@@ -1850,8 +1849,7 @@ func (p *Properties) SetCloudProviderRateLimitDefaults() {
 		}
 	}
 	if p.OrchestratorProfile.KubernetesConfig.CloudProviderRateLimitBucketWrite == 0 {
-		var agentPoolProfilesCount int
-		agentPoolProfilesCount = len(p.AgentPoolProfiles)
+		var agentPoolProfilesCount = len(p.AgentPoolProfiles)
 		if agentPoolProfilesCount == 0 {
 			p.OrchestratorProfile.KubernetesConfig.CloudProviderRateLimitBucketWrite = DefaultKubernetesCloudProviderRateLimitBucketWrite
 		} else {
