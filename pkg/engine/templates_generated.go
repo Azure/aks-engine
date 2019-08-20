@@ -8291,21 +8291,31 @@ var _k8sAddons116KubernetesmasteraddonsKubeProxyDaemonsetYaml = []byte(`apiVersi
 kind: DaemonSet
 metadata:
   labels:
+    addonmanager.kubernetes.io/mode: Reconcile
     kubernetes.io/cluster-service: "true"
     component: kube-proxy
     tier: node
+    k8s-app: kube-proxy
   name: kube-proxy
   namespace: kube-system
 spec:
+  updateStrategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 50%
   selector:
     matchLabels:
       component: kube-proxy
       tier: node
+      k8s-app: kube-proxy
   template:
     metadata:
       labels:
         component: kube-proxy
         tier: node
+        k8s-app: kube-proxy
+      annotations:
+        scheduler.alpha.kubernetes.io/critical-pod: ''
     spec:
       priorityClassName: system-node-critical
       tolerations:
@@ -8317,6 +8327,8 @@ spec:
         effect: NoExecute
       - operator: "Exists"
         effect: NoSchedule
+      - key: CriticalAddonsOnly
+        operator: Exists
       containers:
       - command:
         - /hyperkube
@@ -11202,17 +11214,29 @@ var _k8sAddonsKubernetesmasteraddonsKubeProxyDaemonsetYaml = []byte(`apiVersion:
 kind: DaemonSet
 metadata:
   labels:
+    addonmanager.kubernetes.io/mode: Reconcile
     kubernetes.io/cluster-service: "true"
     component: kube-proxy
     tier: node
+    k8s-app: kube-proxy
   name: kube-proxy
   namespace: kube-system
 spec:
+  selector:
+    matchLabels:
+      k8s-app: kube-proxy
+  updateStrategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 50%
   template:
     metadata:
       labels:
         component: kube-proxy
         tier: node
+        k8s-app: kube-proxy
+      annotations:
+        scheduler.alpha.kubernetes.io/critical-pod: ''
     spec:
       priorityClassName: system-node-critical
       tolerations:
@@ -11224,6 +11248,8 @@ spec:
         effect: NoExecute
       - operator: "Exists"
         effect: NoSchedule
+      - key: CriticalAddonsOnly
+        operator: Exists
       containers:
       - command:
         - /hyperkube
