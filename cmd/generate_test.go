@@ -251,3 +251,190 @@ func TestAPIModelWithManagedIdentityWithoutServicePrincipalProfileAndClientIdAnd
 		t.Fatalf("unexpected error validateAPIModelAsVLabs the example apimodel: %s", err)
 	}
 }
+
+func TestExampleAPIModels(t *testing.T) {
+	defaultSet := []string{"masterProfile.dnsPrefix=my-cluster,linuxProfile.ssh.publicKeys[0].keyData=\"ssh-rsa AAAAB3NO8b9== azureuser@cluster.local\",servicePrincipalProfile.clientId=\"123a4321-c6eb-4b61-9d6f-7db123e14a7a\",servicePrincipalProfile.secret=\"=#msRock5!t=\""}
+	tests := []struct {
+		name         string
+		apiModelPath string
+		setArgs      []string
+	}{
+		{
+			name:         "default cluster configuration",
+			apiModelPath: "../examples/kubernetes.json",
+			setArgs:      defaultSet,
+		},
+		{
+			name:         "AAD pod identity",
+			apiModelPath: "../examples/addons/aad-pod-identity/kubernetes-aad-pod-identity.json",
+			setArgs:      defaultSet,
+		},
+		{
+			name:         "ACI connector",
+			apiModelPath: "../examples/addons/aci-connector/kubernetes-aci-connector.json",
+			setArgs:      defaultSet,
+		},
+		{
+			name:         "App gateway ingress",
+			apiModelPath: "../examples/addons/appgw-ingress/kubernetes-appgw-ingress.json",
+			setArgs:      defaultSet,
+		},
+		{
+			name:         "cluster-autoscaler",
+			apiModelPath: "../examples/addons/cluster-autoscaler/kubernetes-cluster-autoscaler.json",
+			setArgs:      defaultSet,
+		},
+		{
+			name:         "container-monitoring",
+			apiModelPath: "../examples/addons/container-monitoring/kubernetes-container-monitoring.json",
+			setArgs:      defaultSet,
+		},
+		{
+			name:         "custom PSP",
+			apiModelPath: "../examples/addons/custom-manifests/kubernetes-custom-psp.json",
+			setArgs:      defaultSet,
+		},
+		{
+			name:         "keyvault flexvol",
+			apiModelPath: "../examples/addons/keyvault-flexvolume/kubernetes-keyvault-flexvolume.json",
+			setArgs:      defaultSet,
+		},
+		{
+			name:         "nvidia",
+			apiModelPath: "../examples/addons/nvidia-device-plugin/nvidia-device-plugin.json",
+			setArgs:      defaultSet,
+		},
+		{
+			name:         "coreos",
+			apiModelPath: "../examples/coreos/kubernetes-coreos.json",
+			setArgs:      defaultSet,
+		},
+		{
+			name:         "coreos hybrid",
+			apiModelPath: "../examples/coreos/kubernetes-coreos-hybrid.json",
+			setArgs:      defaultSet,
+		},
+		{
+			name:         "cosmos etcd",
+			apiModelPath: "../examples/cosmos-etcd/kubernetes-3-masters-cosmos.json",
+			setArgs:      defaultSet,
+		},
+		{
+			name:         "custom files pod node selector",
+			apiModelPath: "../examples/customfiles/kubernetes-customfiles-podnodeselector.json",
+			setArgs:      []string{"aadProfile.clientAppID=e810b868-afab-412d-98cc-ce7db5cc840b,aadProfile.serverAppID=f810b868-afab-412d-98cc-ce7db5cc840b,masterProfile.dnsPrefix=my-cluster,linuxProfile.ssh.publicKeys[0].keyData=\"ssh-rsa AAAAB3NO8b9== azureuser@cluster.local\",servicePrincipalProfile.clientId=\"123a4321-c6eb-4b61-9d6f-7db123e14a7a\",servicePrincipalProfile.secret=\"=#msRock5!t=\""},
+		},
+		{
+			name:         "ephemeral disks Standard_D2s_v3",
+			apiModelPath: "../examples/disks-ephemeral/ephemeral-disks.json",
+			setArgs:      defaultSet,
+		},
+		{
+			name:         "ephemeral disks Standard_D2_v2",
+			apiModelPath: "../examples/disks-ephemeral/kubernetes-vmas.json",
+			setArgs:      defaultSet,
+		},
+		{
+			name:         "ephemeral disks Standard_D2_v2",
+			apiModelPath: "../examples/disks-ephemeral/kubernetes-vmas.json",
+			setArgs:      defaultSet,
+		},
+		{
+			name:         "managed disk pre-attached",
+			apiModelPath: "../examples/disks-managed/kubernetes-preAttachedDisks-vmas.json",
+			setArgs:      defaultSet,
+		},
+		{
+			name:         "managed disk",
+			apiModelPath: "../examples/disks-managed/kubernetes-vmas.json",
+			setArgs:      defaultSet,
+		},
+		{
+			name:         "storage account on master",
+			apiModelPath: "../examples/disks-storageaccount/kubernetes-master-sa.json",
+			setArgs:      defaultSet,
+		},
+		{
+			name:         "storage account",
+			apiModelPath: "../examples/disks-storageaccount/kubernetes.json",
+			setArgs:      defaultSet,
+		},
+		{
+			name:         "dualstack ipv6",
+			apiModelPath: "../examples/dualstack/kubernetes.json",
+			setArgs:      defaultSet,
+		},
+		{
+			name:         "extensions",
+			apiModelPath: "../examples/extensions/kubernetes.json",
+			setArgs:      defaultSet,
+		},
+		{
+			name:         "extensions oms",
+			apiModelPath: "../examples/extensions/kubernetes.oms.json",
+			setArgs:      defaultSet,
+		},
+		{
+			name:         "extensions preprovision",
+			apiModelPath: "../examples/extensions/kubernetes.preprovision.json",
+			setArgs:      defaultSet,
+		},
+		{
+			name:         "extensions prometheus grafana",
+			apiModelPath: "../examples/extensions/prometheus-grafana-k8s.json",
+			setArgs:      defaultSet,
+		},
+		{
+			name:         "feature gates",
+			apiModelPath: "../examples/feature-gates/kubernetes-featuresgates.json",
+			setArgs:      defaultSet,
+		},
+		{
+			name:         "ipvs",
+			apiModelPath: "../examples/ipvs/kubernetes-msi.json",
+			setArgs:      defaultSet,
+		},
+		{
+			name:         "keyvault params",
+			apiModelPath: "../examples/keyvault-params/kubernetes.json",
+			setArgs:      []string{"aadProfile.clientAppID=e810b868-afab-412d-98cc-ce7db5cc840b,aadProfile.serverAppID=f810b868-afab-412d-98cc-ce7db5cc840b,masterProfile.dnsPrefix=my-cluster,linuxProfile.ssh.publicKeys[0].keyData=\"ssh-rsa AAAAB3NO8b9== azureuser@cluster.local\",servicePrincipalProfile.clientId=\"123a4321-c6eb-4b61-9d6f-7db123e14a7a\""},
+		},
+		{
+			name:         "keyvault certs",
+			apiModelPath: "../examples/keyvaultcerts/kubernetes.json",
+			setArgs:      []string{"linuxProfile.secrets[0].sourceVault.id=my-id,masterProfile.dnsPrefix=my-cluster,linuxProfile.ssh.publicKeys[0].keyData=\"ssh-rsa AAAAB3NO8b9== azureuser@cluster.local\",servicePrincipalProfile.clientId=\"123a4321-c6eb-4b61-9d6f-7db123e14a7a\",servicePrincipalProfile.secret=\"=#msRock5!t=\""},
+		},
+		{
+			name:         "cilium network policy",
+			apiModelPath: "../examples/networkpolicy/kubernetes-cilium.json",
+			setArgs:      defaultSet,
+		},
+	}
+
+	for _, test := range tests {
+		test := test
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+			g := &generateCmd{
+				apimodelPath:    test.apiModelPath,
+				outputDirectory: "_test_output",
+			}
+			g.set = test.setArgs
+			r := &cobra.Command{}
+
+			g.validate(r, []string{})
+			g.mergeAPIModel()
+			err := g.loadAPIModel()
+			if err != nil {
+				t.Fatalf("unexpected error loading api model: %s", err.Error())
+			}
+
+			defer os.RemoveAll(g.outputDirectory)
+
+			err = g.validateAPIModelAsVLabs()
+			if err != nil {
+				t.Fatalf("unexpected error validateAPIModelAsVLabs the example apimodel: %s", err)
+			}
+		})
+	}
+}
