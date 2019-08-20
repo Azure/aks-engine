@@ -17,6 +17,7 @@ echo "Components downloaded in this VHD build (some of the below components migh
 
 installDeps
 cat << EOF >> ${RELEASE_NOTES_FILEPATH}
+  - apache2-utils
   - apt-transport-https
   - auditd
   - blobfuse
