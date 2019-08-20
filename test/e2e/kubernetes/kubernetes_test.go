@@ -385,11 +385,18 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				nodeList, err := node.GetReady()
 				Expect(err).NotTo(HaveOccurred())
 				pwQualityValidateScript := "pwquality-validate.sh"
-				cmd := exec.Command("scp", "-i", masterSSHPrivateKeyFilepath, "-P", masterSSHPort, "-o", "StrictHostKeyChecking=no", filepath.Join(ScriptsDir, pwQualityValidateScript), master+":/tmp/"+pwQualityValidateScript)
-				util.PrintCommand(cmd)
-				out, err := cmd.CombinedOutput()
-				log.Printf("%s\n", out)
-				Expect(err).NotTo(HaveOccurred())
+				var scpError error
+				var scpOut []byte
+				for i := 0; i < 3; i++ {
+					cmd := exec.Command("scp", "-i", masterSSHPrivateKeyFilepath, "-P", masterSSHPort, "-o", "StrictHostKeyChecking=no", filepath.Join(ScriptsDir, pwQualityValidateScript), master+":/tmp/"+pwQualityValidateScript)
+					util.PrintCommand(cmd)
+					scpOut, scpError = cmd.CombinedOutput()
+					log.Printf("%s\n", scpOut)
+					if scpError == nil {
+						break
+					}
+				}
+				Expect(scpError).NotTo(HaveOccurred())
 				var conn *remote.Connection
 				conn, err = remote.NewConnection(kubeConfig.GetServerName(), masterSSHPort, eng.ExpandedDefinition.Properties.LinuxProfile.AdminUsername, masterSSHPrivateKeyFilepath)
 				Expect(err).NotTo(HaveOccurred())
@@ -398,10 +405,16 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 						err := conn.CopyToRemote(node.Metadata.Name, "/tmp/"+pwQualityValidateScript)
 						Expect(err).NotTo(HaveOccurred())
 						pwQualityValidationCommand := fmt.Sprintf("\"/tmp/%s\"", pwQualityValidateScript)
-						cmd = exec.Command("ssh", "-A", "-i", masterSSHPrivateKeyFilepath, "-p", masterSSHPort, "-o", "ConnectTimeout=10", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-o", "LogLevel=ERROR", master, "ssh", "-o", "ConnectTimeout=10", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-o", "LogLevel=ERROR", node.Metadata.Name, pwQualityValidationCommand)
-						util.PrintCommand(cmd)
-						_, err = cmd.CombinedOutput()
-						Expect(err).NotTo(HaveOccurred())
+						var sshError error
+						for i := 0; i < 3; i++ {
+							cmd := exec.Command("ssh", "-A", "-i", masterSSHPrivateKeyFilepath, "-p", masterSSHPort, "-o", "ConnectTimeout=10", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-o", "LogLevel=ERROR", master, "ssh", "-o", "ConnectTimeout=10", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-o", "LogLevel=ERROR", node.Metadata.Name, pwQualityValidationCommand)
+							util.PrintCommand(cmd)
+							_, sshError = cmd.CombinedOutput()
+							if scpError == nil {
+								break
+							}
+						}
+						Expect(sshError).NotTo(HaveOccurred())
 					}
 				}
 			} else {
