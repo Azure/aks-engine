@@ -6,6 +6,9 @@ trigger: none
 # - generate SAS link from azure CLI
 # - POST a new SKU to azure marketplace
 
+variables:
+  DEIS_GO_DEV_IMAGE:  'quay.io/deis/go-dev:v1.23.2' 
+
 phases:
 - phase: build_vhd
   queue:
