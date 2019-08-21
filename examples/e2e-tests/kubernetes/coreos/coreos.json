@@ -50,19 +50,11 @@
           },
           {
             "name": "keyvault-flexvolume",
-            "enabled": false,
-            "cpuRequests": "20m",
-            "memoryRequests": "200Mi",
-            "cpuLimits": "20m",
-            "memoryLimits": "200Mi"
+            "enabled": false
           },
           {
             "name": "blobfuse-flexvolume",
-            "enabled": false,
-            "cpuRequests": "20m",
-            "memoryRequests": "200Mi",
-            "cpuLimits": "20m",
-            "memoryLimits": "200Mi"
+            "enabled": false
           }
         ]
       }

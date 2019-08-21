@@ -405,8 +405,403 @@ func TestExampleAPIModels(t *testing.T) {
 			setArgs:      []string{"linuxProfile.secrets[0].sourceVault.id=my-id,masterProfile.dnsPrefix=my-cluster,linuxProfile.ssh.publicKeys[0].keyData=\"ssh-rsa AAAAB3NO8b9== azureuser@cluster.local\",servicePrincipalProfile.clientId=\"123a4321-c6eb-4b61-9d6f-7db123e14a7a\",servicePrincipalProfile.secret=\"=#msRock5!t=\""},
 		},
 		{
+			name:         "accelerated networking",
+			apiModelPath: "../examples/kubernetes-config/kubernetes-accelerated-network.json",
+			setArgs:      defaultSet,
+		},
+		{
+			name:         "useCloudControllerManager",
+			apiModelPath: "../examples/kubernetes-config/kubernetes-cloud-controller-manager.json",
+			setArgs:      defaultSet,
+		},
+		{
+			name:         "clusterSubnet",
+			apiModelPath: "../examples/kubernetes-config/kubernetes-clustersubnet.json",
+			setArgs:      defaultSet,
+		},
+		{
+			name:         "enableDataEncryptionAtRest",
+			apiModelPath: "../examples/kubernetes-config/kubernetes-data-encryption-at-rest.json",
+			setArgs:      defaultSet,
+		},
+		{
+			name:         "dockerBridgeSubnet",
+			apiModelPath: "../examples/kubernetes-config/kubernetes-dockerbridgesubnet.json",
+			setArgs:      defaultSet,
+		},
+		{
+			name:         "etcdDiskSizeGB",
+			apiModelPath: "../examples/kubernetes-config/kubernetes-etcd-storage-size.json",
+			setArgs:      defaultSet,
+		},
+		{
+			name:         "gc thresholds",
+			apiModelPath: "../examples/kubernetes-config/kubernetes-gc.json",
+			setArgs:      defaultSet,
+		},
+		{
+			name:         "enableEncryptionWithExternalKms",
+			apiModelPath: "../examples/kubernetes-config/kubernetes-keyvault-encryption.json",
+			setArgs:      []string{"masterProfile.dnsPrefix=my-cluster,linuxProfile.ssh.publicKeys[0].keyData=\"ssh-rsa AAAAB3NO8b9== azureuser@cluster.local\",servicePrincipalProfile.clientId=\"123a4321-c6eb-4b61-9d6f-7db123e14a7a\",servicePrincipalProfile.objectId=\"223a4321-c6eb-4b61-9d6f-7db123e14a7a\",servicePrincipalProfile.secret=\"=#msRock5!t=\""},
+		},
+		{
+			name:         "max pods",
+			apiModelPath: "../examples/kubernetes-config/kubernetes-maxpods.json",
+			setArgs:      defaultSet,
+		},
+		{
+			name:         "dashboard disabled",
+			apiModelPath: "../examples/kubernetes-config/kubernetes-no-dashboard.json",
+			setArgs:      defaultSet,
+		},
+		{
+			name:         "private cluster single master",
+			apiModelPath: "../examples/kubernetes-config/kubernetes-private-cluster-single-master.json",
+			setArgs:      []string{"orchestratorProfile.kubernetesConfig.privateCluster.jumpboxProfile.publicKey=\"ssh-rsa AAAAB3NO8b9== azureuser@cluster.local\",masterProfile.dnsPrefix=my-cluster,linuxProfile.ssh.publicKeys[0].keyData=\"ssh-rsa AAAAB3NO8b9== azureuser@cluster.local\",servicePrincipalProfile.clientId=\"123a4321-c6eb-4b61-9d6f-7db123e14a7a\",servicePrincipalProfile.secret=\"=#msRock5!t=\""},
+		},
+		{
+			name:         "private cluster",
+			apiModelPath: "../examples/kubernetes-config/kubernetes-private-cluster.json",
+			setArgs:      []string{"orchestratorProfile.kubernetesConfig.privateCluster.jumpboxProfile.publicKey=\"ssh-rsa AAAAB3NO8b9== azureuser@cluster.local\",masterProfile.dnsPrefix=my-cluster,linuxProfile.ssh.publicKeys[0].keyData=\"ssh-rsa AAAAB3NO8b9== azureuser@cluster.local\",servicePrincipalProfile.clientId=\"123a4321-c6eb-4b61-9d6f-7db123e14a7a\",servicePrincipalProfile.secret=\"=#msRock5!t=\""},
+		},
+		{
+			name:         "rescheduler addon",
+			apiModelPath: "../examples/kubernetes-config/kubernetes-rescheduler.json",
+			setArgs:      defaultSet,
+		},
+		{
+			name:         "standard LB",
+			apiModelPath: "../examples/kubernetes-config/kubernetes-standardlb.json",
+			setArgs:      defaultSet,
+		},
+		{
+			name:         "gpu",
+			apiModelPath: "../examples/kubernetes-gpu/kubernetes.json",
+			setArgs:      defaultSet,
+		},
+		{
+			name:         "labels",
+			apiModelPath: "../examples/kubernetes-labels/kubernetes.json",
+			setArgs:      defaultSet,
+		},
+		{
+			name:         "msi user-assigned vmas",
+			apiModelPath: "../examples/kubernetes-msi-userassigned/kube-vma.json",
+			setArgs:      defaultSet,
+		},
+		{
+			name:         "msi user-assigned vmss",
+			apiModelPath: "../examples/kubernetes-msi-userassigned/kube-vmss.json",
+			setArgs:      defaultSet,
+		},
+		{
+			name:         "1.10 example",
+			apiModelPath: "../examples/kubernetes-releases/kubernetes1.10.json",
+			setArgs:      defaultSet,
+		},
+		{
+			name:         "1.11 example",
+			apiModelPath: "../examples/kubernetes-releases/kubernetes1.11.json",
+			setArgs:      defaultSet,
+		},
+		{
+			name:         "1.12 example",
+			apiModelPath: "../examples/kubernetes-releases/kubernetes1.12.json",
+			setArgs:      defaultSet,
+		},
+		{
+			name:         "1.13 example",
+			apiModelPath: "../examples/kubernetes-releases/kubernetes1.13.json",
+			setArgs:      defaultSet,
+		},
+		{
+			name:         "1.14 example",
+			apiModelPath: "../examples/kubernetes-releases/kubernetes1.14.json",
+			setArgs:      defaultSet,
+		},
+		{
+			name:         "1.15 example",
+			apiModelPath: "../examples/kubernetes-releases/kubernetes1.15.json",
+			setArgs:      defaultSet,
+		},
+		{
+			name:         "vmss",
+			apiModelPath: "../examples/kubernetes-vmss/kubernetes.json",
+			setArgs:      defaultSet,
+		},
+		{
+			name:         "vmss low priority",
+			apiModelPath: "../examples/kubernetes-vmss-low-priority/kubernetes.json",
+			setArgs:      defaultSet,
+		},
+		{
+			name:         "vmss master",
+			apiModelPath: "../examples/kubernetes-vmss-master/kubernetes.json",
+			setArgs:      defaultSet,
+		},
+		{
+			name:         "vmss master custom vnet",
+			apiModelPath: "../examples/kubernetes-vmss-master/customvnet.json",
+			setArgs:      defaultSet,
+		},
+		{
+			name:         "vmss master windows",
+			apiModelPath: "../examples/kubernetes-vmss-master/windows.json",
+			setArgs:      defaultSet,
+		},
+		{
+			name:         "large cluster",
+			apiModelPath: "../examples/largeclusters/kubernetes.json",
+			setArgs:      defaultSet,
+		},
+		{
+			name:         "msi",
+			apiModelPath: "../examples/managed-identity/kubernetes-msi.json",
+			setArgs:      defaultSet,
+		},
+		{
+			name:         "multiple masters - 3",
+			apiModelPath: "../examples/multiple-masters/kubernetes-3-masters.json",
+			setArgs:      defaultSet,
+		},
+		{
+			name:         "multiple masters - 5",
+			apiModelPath: "../examples/multiple-masters/kubernetes-5-masters.json",
+			setArgs:      defaultSet,
+		},
+		{
+			name:         "multiple node pools",
+			apiModelPath: "../examples/multiple-nodepools/multipool.json",
+			setArgs:      defaultSet,
+		},
+		{
+			name:         "Azure CNI",
+			apiModelPath: "../examples/networkplugin/kubernetes-azure.json",
+			setArgs:      defaultSet,
+		},
+		{
+			name:         "Azure CNI with calico",
+			apiModelPath: "../examples/networkpolicy/kubernetes-calico-azure.json",
+			setArgs:      defaultSet,
+		},
+		{
+			name:         "kubenet with calico",
+			apiModelPath: "../examples/networkpolicy/kubernetes-calico-kubenet.json",
+			setArgs:      defaultSet,
+		},
+		{
 			name:         "cilium network policy",
 			apiModelPath: "../examples/networkpolicy/kubernetes-cilium.json",
+			setArgs:      defaultSet,
+		},
+		{
+			name:         "istio",
+			apiModelPath: "../examples/service-mesh/istio.json",
+			setArgs:      defaultSet,
+		},
+		{
+			name:         "ubuntu 16.04",
+			apiModelPath: "../examples/ubuntu-1604/kubernetes.json",
+			setArgs:      defaultSet,
+		},
+		{
+			name:         "ubuntu 18.04",
+			apiModelPath: "../examples/ubuntu-1804/kubernetes.json",
+			setArgs:      defaultSet,
+		},
+		{
+			name:         "kubenet custom vnet",
+			apiModelPath: "../examples/vnet/kubernetesvnet.json",
+			setArgs:      defaultSet,
+		},
+		{
+			name:         "Azure CNI custom vnet",
+			apiModelPath: "../examples/vnet/kubernetesvnet-azure-cni.json",
+			setArgs:      defaultSet,
+		},
+		{
+			name:         "master vmss custom vnet",
+			apiModelPath: "../examples/vnet/kubernetes-master-vmss.json",
+			setArgs:      defaultSet,
+		},
+		{
+			name:         "custom node DNS custom vnet",
+			apiModelPath: "../examples/vnet/kubernetesvnet-customnodesdns.json",
+			setArgs:      defaultSet,
+		},
+		{
+			name:         "custom search domain custom vnet",
+			apiModelPath: "../examples/vnet/kubernetesvnet-customsearchdomain.json",
+			setArgs:      defaultSet,
+		},
+		{
+			name:         "windows custom image",
+			apiModelPath: "../examples/windows/kubernetes-custom-image.json",
+			setArgs:      defaultSet,
+		},
+		{
+			name:         "windows Standard_D2",
+			apiModelPath: "../examples/windows/kubernetes-D2.json",
+			setArgs:      defaultSet,
+		},
+		{
+			name:         "windows hybrid",
+			apiModelPath: "../examples/windows/kubernetes-hybrid.json",
+			setArgs:      defaultSet,
+		},
+		{
+			name:         "windows hyperv",
+			apiModelPath: "../examples/windows/kubernetes-hyperv.json",
+			setArgs:      defaultSet,
+		},
+		{
+			name:         "windows managed disk",
+			apiModelPath: "../examples/windows/kubernetes-manageddisks.json",
+			setArgs:      defaultSet,
+		},
+		{
+			name:         "windows master uses storage account",
+			apiModelPath: "../examples/windows/kubernetes-master-sa.json",
+			setArgs:      defaultSet,
+		},
+		{
+			name:         "windows master uses storage account",
+			apiModelPath: "../examples/windows/kubernetes-master-sa.json",
+			setArgs:      defaultSet,
+		},
+		{
+			name:         "windows storage account",
+			apiModelPath: "../examples/windows/kubernetes-sadisks.json",
+			setArgs:      defaultSet,
+		},
+		{
+			name:         "windows winrm extension",
+			apiModelPath: "../examples/windows/kubernetes-wincni.json",
+			setArgs:      defaultSet,
+		},
+		{
+			name:         "windows 1903",
+			apiModelPath: "../examples/windows/kubernetes-windows-1903.json",
+			setArgs:      defaultSet,
+		},
+		{
+			name:         "windows automatic updates",
+			apiModelPath: "../examples/windows/kubernetes-windows-automatic-update.json",
+			setArgs:      defaultSet,
+		},
+		{
+			name:         "windows windowsDockerVersion",
+			apiModelPath: "../examples/windows/kubernetes-windows-docker-version.json",
+			setArgs:      defaultSet,
+		},
+		{
+			name:         "windows version",
+			apiModelPath: "../examples/windows/kubernetes-windows-version.json",
+			setArgs:      defaultSet,
+		},
+		{
+			name:         "windows recommended kubernetes config",
+			apiModelPath: "../examples/windows/kubernetes.json",
+			setArgs:      defaultSet,
+		},
+		{
+			name:         "custom image",
+			apiModelPath: "../examples/custom-image.json",
+			setArgs:      defaultSet,
+		},
+		{
+			name:         "custom shared image",
+			apiModelPath: "../examples/custom-shared-image.json",
+			setArgs:      defaultSet,
+		},
+		{
+			name:         "containerd",
+			apiModelPath: "../examples/kubernetes-containerd.json",
+			setArgs:      defaultSet,
+		},
+		{
+			name:         "Standard_D2",
+			apiModelPath: "../examples/kubernetes-D2.json",
+			setArgs:      defaultSet,
+		},
+		{
+			name:         "kata-containers",
+			apiModelPath: "../examples/kubernetes-kata-containers.json",
+			setArgs:      defaultSet,
+		},
+		{
+			name:         "ubuntu distro",
+			apiModelPath: "../examples/kubernetes-ubuntu-distro.json",
+			setArgs:      defaultSet,
+		},
+		{
+			name:         "e2e coreos",
+			apiModelPath: "../examples/e2e-tests/kubernetes/coreos/coreos.json",
+			setArgs:      defaultSet,
+		},
+		{
+			name:         "e2e gpu",
+			apiModelPath: "../examples/e2e-tests/kubernetes/gpu-enabled/definition.json",
+			setArgs:      defaultSet,
+		},
+		{
+			name:         "e2e addons disabled",
+			apiModelPath: "../examples/e2e-tests/kubernetes/kubernetes-config/addons-disabled.json",
+			setArgs:      defaultSet,
+		},
+		{
+			name:         "e2e addons enabled",
+			apiModelPath: "../examples/e2e-tests/kubernetes/kubernetes-config/addons-enabled.json",
+			setArgs:      defaultSet,
+		},
+		{
+			name:         "e2e kubenet",
+			apiModelPath: "../examples/e2e-tests/kubernetes/kubernetes-config/network-plugin-kubenet.json",
+			setArgs:      defaultSet,
+		},
+		{
+			name:         "e2e rbac disabled",
+			apiModelPath: "../examples/e2e-tests/kubernetes/kubernetes-config/rbac-disabled.json",
+			setArgs:      defaultSet,
+		},
+		{
+			name:         "e2e 50 nodes",
+			apiModelPath: "../examples/e2e-tests/kubernetes/node-count/50-nodes/definition.json",
+			setArgs:      defaultSet,
+		},
+		{
+			name:         "e2e full configuration",
+			apiModelPath: "../examples/e2e-tests/kubernetes/release/default/definition.json",
+			setArgs:      defaultSet,
+		},
+		{
+			name:         "e2e windows",
+			apiModelPath: "../examples/e2e-tests/kubernetes/windows/definition.json",
+			setArgs:      defaultSet,
+		},
+		{
+			name:         "e2e hybrid",
+			apiModelPath: "../examples/e2e-tests/kubernetes/windows/hybrid/definition.json",
+			setArgs:      defaultSet,
+		},
+		{
+			name:         "e2e zones",
+			apiModelPath: "../examples/e2e-tests/kubernetes/zones/definition.json",
+			setArgs:      defaultSet,
+		},
+		{
+			name:         "e2e user-assigned identity vmas",
+			apiModelPath: "../examples/e2e-tests/userassignedidentity/vmas/kubernetes-vmas.json",
+			setArgs:      defaultSet,
+		},
+		{
+			name:         "e2e user-assigned identity vmas multi-master",
+			apiModelPath: "../examples/e2e-tests/userassignedidentity/vmas/kubernetes-vmas-multimaster.json",
+			setArgs:      defaultSet,
+		},
+		{
+			name:         "e2e user-assigned identity vmss",
+			apiModelPath: "../examples/e2e-tests/userassignedidentity/vmss/kubernetes-vmss.json",
 			setArgs:      defaultSet,
 		},
 	}
