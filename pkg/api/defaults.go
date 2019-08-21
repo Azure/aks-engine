@@ -99,7 +99,7 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpgrade, isScale bool) {
 		// we translate deprecated NetworkPolicy usage to the NetworkConfig equivalent
 		// and set a default network policy enforcement configuration
 		switch o.KubernetesConfig.NetworkPolicy {
-		case NetworkPluginAzure:
+		case NetworkPolicyAzure:
 			if o.KubernetesConfig.NetworkPlugin == "" {
 				o.KubernetesConfig.NetworkPlugin = NetworkPluginAzure
 				o.KubernetesConfig.NetworkPolicy = DefaultNetworkPolicy
