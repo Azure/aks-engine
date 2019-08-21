@@ -15052,6 +15052,8 @@ net.ipv6.conf.default.accept_redirects = 0
 vm.overcommit_memory = 1
 kernel.panic = 10
 kernel.panic_on_oops = 1
+# https://github.com/Azure/AKS/issues/772
+fs.inotify.max_user_watches = 1048576
 `)
 
 func k8sCloudInitArtifactsSysctlD60CisConfBytes() ([]byte, error) {
