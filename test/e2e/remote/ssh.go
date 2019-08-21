@@ -185,7 +185,7 @@ func (c *Connection) CopyToRemote(hostname, path string) error {
 		cmd = exec.Command("ssh", "-A", "-i", c.PrivateKeyPath, "-o", "ConnectTimeout=30", "-o", "StrictHostKeyChecking=no", connectString, "-p", c.Port, remoteCommand)
 		util.PrintCommand(cmd)
 		sshOut, sshError = cmd.CombinedOutput()
-		if err != nil {
+		if sshError != nil {
 			log.Printf("Error output:%s\n", sshOut)
 			continue
 		} else {

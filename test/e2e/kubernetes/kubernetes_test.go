@@ -43,7 +43,6 @@ import (
 
 const (
 	WorkloadDir                            = "workloads"
-	ScriptsDir                             = "scripts"
 	PolicyDir                              = "workloads/policies"
 	retryCommandsTimeout                   = 5 * time.Minute
 	kubeSystemPodsReadinessChecks          = 6
@@ -157,6 +156,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				Expect(err).NotTo(HaveOccurred())
 				var conn *remote.Connection
 				conn, err = remote.NewConnection(kubeConfig.GetServerName(), masterSSHPort, eng.ExpandedDefinition.Properties.LinuxProfile.AdminUsername, masterSSHPrivateKeyFilepath)
+				Expect(err).NotTo(HaveOccurred())
 				master := fmt.Sprintf("%s@%s", eng.ExpandedDefinition.Properties.LinuxProfile.AdminUsername, kubeConfig.GetServerName())
 				lsbReleaseCmd := fmt.Sprintf("lsb_release -a && uname -r")
 				err = conn.ExecuteFromMaster(master, lsbReleaseCmd, true)
@@ -175,6 +175,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				Expect(err).NotTo(HaveOccurred())
 				var conn *remote.Connection
 				conn, err = remote.NewConnection(kubeConfig.GetServerName(), masterSSHPort, eng.ExpandedDefinition.Properties.LinuxProfile.AdminUsername, masterSSHPrivateKeyFilepath)
+				Expect(err).NotTo(HaveOccurred())
 				nodeList, err := node.GetReady()
 				Expect(err).NotTo(HaveOccurred())
 				dockerVersionCmd := fmt.Sprintf("\"docker version\"")
@@ -193,6 +194,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				Expect(err).NotTo(HaveOccurred())
 				var conn *remote.Connection
 				conn, err = remote.NewConnection(kubeConfig.GetServerName(), masterSSHPort, eng.ExpandedDefinition.Properties.LinuxProfile.AdminUsername, masterSSHPrivateKeyFilepath)
+				Expect(err).NotTo(HaveOccurred())
 				nodeList, err := node.GetReady()
 				Expect(err).NotTo(HaveOccurred())
 				rootPasswdCmd := fmt.Sprintf("\"sudo grep '^root:[!*]:' /etc/shadow\" && exit 1 || exit 0")
@@ -909,7 +911,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				for _, node := range nodeList.Nodes {
 					if node.IsWindows() {
 						By(fmt.Sprintf("simulating docker and subsequent kubelet service crash on node: %s", node.Metadata.Name))
-						err := conn.CopyToRemote(node.Metadata.Name, "/tmp/"+simulateDockerdCrashScript)
+						err = conn.CopyToRemote(node.Metadata.Name, "/tmp/"+simulateDockerdCrashScript)
 						Expect(err).NotTo(HaveOccurred())
 						simulateDockerCrashCommand := fmt.Sprintf("\"/tmp/%s\"", simulateDockerdCrashScript)
 						err = conn.ExecuteFromMaster(node.Metadata.Name, simulateDockerCrashCommand, true)
