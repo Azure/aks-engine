@@ -18329,6 +18329,7 @@ rules:
   resources:
   - pods
   - nodes
+  - nodes/stats
   - namespaces
   verbs:
   - get
@@ -22041,6 +22042,7 @@ rules:
   resources:
   - pods
   - nodes
+  - nodes/stats
   - namespaces
   verbs:
   - get
