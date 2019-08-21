@@ -1840,17 +1840,11 @@ func (p *Properties) IsNvidiaDevicePluginCapable() bool {
 // SetCloudProviderRateLimitDefaults sets default cloudprovider rate limiter config
 func (p *Properties) SetCloudProviderRateLimitDefaults() {
 	if p.OrchestratorProfile.KubernetesConfig.CloudProviderRateLimitBucket == 0 {
-		if p.HasVMSSAgentPool() && !p.IsHostedMasterProfile() {
-			var rateLimitBucket int
-			for _, profile := range p.AgentPoolProfiles {
-				if profile.AvailabilityProfile == VirtualMachineScaleSets {
-					rateLimitBucket += common.MaxAgentCount
-				}
-
-			}
-			p.OrchestratorProfile.KubernetesConfig.CloudProviderRateLimitBucket = rateLimitBucket
-		} else {
+		var agentPoolProfilesCount = len(p.AgentPoolProfiles)
+		if agentPoolProfilesCount == 0 {
 			p.OrchestratorProfile.KubernetesConfig.CloudProviderRateLimitBucket = DefaultKubernetesCloudProviderRateLimitBucket
+		} else {
+			p.OrchestratorProfile.KubernetesConfig.CloudProviderRateLimitBucket = agentPoolProfilesCount * common.MaxAgentCount
 		}
 	}
 	if p.OrchestratorProfile.KubernetesConfig.CloudProviderRateLimitQPS == 0 {
@@ -1861,17 +1855,11 @@ func (p *Properties) SetCloudProviderRateLimitDefaults() {
 		}
 	}
 	if p.OrchestratorProfile.KubernetesConfig.CloudProviderRateLimitBucketWrite == 0 {
-		if p.HasVMSSAgentPool() && !p.IsHostedMasterProfile() {
-			var rateLimitBucket int
-			for _, profile := range p.AgentPoolProfiles {
-				if profile.AvailabilityProfile == VirtualMachineScaleSets {
-					rateLimitBucket += common.MaxAgentCount
-				}
-
-			}
-			p.OrchestratorProfile.KubernetesConfig.CloudProviderRateLimitBucketWrite = rateLimitBucket
-		} else {
+		var agentPoolProfilesCount = len(p.AgentPoolProfiles)
+		if agentPoolProfilesCount == 0 {
 			p.OrchestratorProfile.KubernetesConfig.CloudProviderRateLimitBucketWrite = DefaultKubernetesCloudProviderRateLimitBucketWrite
+		} else {
+			p.OrchestratorProfile.KubernetesConfig.CloudProviderRateLimitBucketWrite = agentPoolProfilesCount * common.MaxAgentCount
 		}
 	}
 	if p.OrchestratorProfile.KubernetesConfig.CloudProviderRateLimitQPSWrite == 0 {
