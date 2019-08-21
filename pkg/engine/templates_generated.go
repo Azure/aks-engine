@@ -7063,7 +7063,6 @@ spec:
       annotations:
         prometheus.io/port: "9090"
         prometheus.io/scrape: "true"
-        scheduler.alpha.kubernetes.io/critical-pod: ""
         scheduler.alpha.kubernetes.io/tolerations: '[{"key":"dedicated","operator":"Equal","value":"master","effect":"NoSchedule"}]'
       labels:
         k8s-app: cilium
@@ -7866,7 +7865,8 @@ metadata:
   name: cilium
   namespace: kube-system
   labels:
-    addonmanager.kubernetes.io/mode: "Reconcile"`)
+    addonmanager.kubernetes.io/mode: "Reconcile"
+`)
 
 func k8sAddons116KubernetesmasteraddonsCiliumDaemonsetYamlBytes() ([]byte, error) {
 	return _k8sAddons116KubernetesmasteraddonsCiliumDaemonsetYaml, nil
@@ -7939,8 +7939,6 @@ spec:
       labels:
         tier: node
         app: flannel
-      annotations:
-        scheduler.alpha.kubernetes.io/critical-pod: ''
     spec:
       hostNetwork: true
       nodeSelector:
@@ -8139,8 +8137,6 @@ spec:
     metadata:
       labels:
         k8s-app: kube-dns
-      annotations:
-        scheduler.alpha.kubernetes.io/critical-pod: ''
     spec:
       priorityClassName: system-node-critical
       tolerations:
@@ -8335,7 +8331,6 @@ spec:
         - kube-proxy
         - --kubeconfig=/var/lib/kubelet/kubeconfig
         - --cluster-cidr=<CIDR>
-        - --feature-gates=ExperimentalCriticalPodAnnotation=true
         - --proxy-mode=<kubeProxyMode>
         image: <img>
         imagePullPolicy: IfNotPresent
@@ -16094,8 +16089,6 @@ spec:
     metadata:
       labels:
         k8s-app: azure-cnms
-      annotations:
-        scheduler.alpha.kubernetes.io/critical-pod: ''
     spec:
       priorityClassName: system-node-critical
       tolerations:
@@ -16712,8 +16705,6 @@ spec:
     metadata:
       labels:
         k8s-app: azure-npm
-      annotations:
-        scheduler.alpha.kubernetes.io/critical-pod: ''
     spec:
       priorityClassName: system-node-critical
       tolerations:
@@ -17184,12 +17175,9 @@ spec:
       labels:
         k8s-app: calico-typha
       annotations:
-        # This, along with the CriticalAddonsOnly toleration below, marks the pod as a critical
-        # add-on, ensuring it gets priority scheduling and that its resources are reserved
-        # if it ever gets evicted.
-        scheduler.alpha.kubernetes.io/critical-pod: ''
         cluster-autoscaler.kubernetes.io/safe-to-evict: 'true'
     spec:
+      priorityClassName: system-cluster-critical
       nodeSelector:
         beta.kubernetes.io/os: linux
       hostNetwork: true
@@ -17273,13 +17261,8 @@ spec:
     metadata:
       labels:
         k8s-app: calico-node
-      annotations:
-        # This, along with the CriticalAddonsOnly toleration below,
-        # marks the pod as a critical add-on, ensuring it gets
-        # priority scheduling and that its resources are reserved
-        # if it ever gets evicted.
-        scheduler.alpha.kubernetes.io/critical-pod: ''
     spec:
+      priorityClassName: system-cluster-critical
       nodeSelector:
         beta.kubernetes.io/os: linux
       hostNetwork: true
@@ -17493,8 +17476,6 @@ spec:
     metadata:
       labels:
         k8s-app: calico-typha-autoscaler
-      annotations:
-        scheduler.alpha.kubernetes.io/critical-pod: ''
     spec:
       priorityClassName: system-cluster-critical
       securityContext:
@@ -17959,8 +17940,6 @@ spec:
     metadata:
       labels:
         k8s-app: heapster
-      annotations:
-        scheduler.alpha.kubernetes.io/critical-pod: ''
     spec:
       priorityClassName: system-node-critical
       containers:
@@ -18124,9 +18103,8 @@ spec:
     metadata:
       labels:
         k8s-app: rescheduler
-      annotations:
-        scheduler.alpha.kubernetes.io/critical-pod: ''
     spec:
+      priorityClassName: system-node-critical
       nodeSelector:
         beta.kubernetes.io/os: linux
       containers:
@@ -18490,8 +18468,6 @@ spec:
     type: RollingUpdate
   template:
     metadata:
-      annotations:
-        scheduler.alpha.kubernetes.io/critical-pod: ""
       labels:
         k8s-app: nvidia-device-plugin
     spec:
