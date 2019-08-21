@@ -53,6 +53,7 @@ const (
 	windowsCommandTimeout                  = 1 * time.Minute
 	validateNetworkPolicyTimeout           = 3 * time.Minute
 	validateDNSTimeout                     = 2 * time.Minute
+	sshRetries                             = 3
 )
 
 var (
@@ -100,7 +101,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 	Describe("regardless of agent pool type", func() {
 		It("should set up ssh key forwarding to the master node", func() {
 			success := false
-			for i := 0; i < 3; i++ {
+			for i := 0; i < sshRetries; i++ {
 				err := util.AddToSSHKeyChain(masterSSHPrivateKeyFilepath)
 				if err == nil {
 					success = true
@@ -121,28 +122,22 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			nodeList, err := node.GetReady()
 			Expect(err).NotTo(HaveOccurred())
 			hostOSDNSValidateScript := "host-os-dns-validate.sh"
+			var conn *remote.Connection
+			conn, err = remote.NewConnection(kubeConfig.GetServerName(), masterSSHPort, eng.ExpandedDefinition.Properties.LinuxProfile.AdminUsername, masterSSHPrivateKeyFilepath)
+			Expect(err).NotTo(HaveOccurred())
+			err = conn.CopyToMaster(master, hostOSDNSValidateScript)
+			Expect(err).NotTo(HaveOccurred())
 			envString := "NODE_HOSTNAMES='"
 			for _, node := range nodeList.Nodes {
 				envString += fmt.Sprintf("%s ", node.Metadata.Name)
 			}
 			envString += "'"
-			cmd := exec.Command("scp", "-i", masterSSHPrivateKeyFilepath, "-P", masterSSHPort, "-o", "StrictHostKeyChecking=no", filepath.Join(ScriptsDir, hostOSDNSValidateScript), master+":/tmp/"+hostOSDNSValidateScript)
-			util.PrintCommand(cmd)
-			out, err := cmd.CombinedOutput()
-			log.Printf("%s\n", out)
-			Expect(err).NotTo(HaveOccurred())
-			var conn *remote.Connection
-			conn, err = remote.NewConnection(kubeConfig.GetServerName(), masterSSHPort, eng.ExpandedDefinition.Properties.LinuxProfile.AdminUsername, masterSSHPrivateKeyFilepath)
-			Expect(err).NotTo(HaveOccurred())
 			for _, node := range nodeList.Nodes {
 				if node.IsLinux() {
 					err := conn.CopyToRemote(node.Metadata.Name, "/tmp/"+hostOSDNSValidateScript)
 					Expect(err).NotTo(HaveOccurred())
-					netConfigValidationCommand := fmt.Sprintf("\"%s /tmp/%s\"", envString, hostOSDNSValidateScript)
-					cmd = exec.Command("ssh", "-A", "-i", masterSSHPrivateKeyFilepath, "-p", masterSSHPort, "-o", "ConnectTimeout=10", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-o", "LogLevel=ERROR", master, "ssh", "-o", "ConnectTimeout=10", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-o", "LogLevel=ERROR", node.Metadata.Name, netConfigValidationCommand)
-					util.PrintCommand(cmd)
-					out, err = cmd.CombinedOutput()
-					log.Printf("%s\n", out)
+					hostOSDNSValidationCommand := fmt.Sprintf("\"%s /tmp/%s\"", envString, hostOSDNSValidateScript)
+					err = conn.ExecuteFromMaster(node.Metadata.Name, hostOSDNSValidationCommand, false)
 					Expect(err).NotTo(HaveOccurred())
 				}
 			}
@@ -160,20 +155,14 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			if eng.ExpandedDefinition.Properties.MasterProfile.IsUbuntu() {
 				kubeConfig, err := GetConfig()
 				Expect(err).NotTo(HaveOccurred())
+				var conn *remote.Connection
+				conn, err = remote.NewConnection(kubeConfig.GetServerName(), masterSSHPort, eng.ExpandedDefinition.Properties.LinuxProfile.AdminUsername, masterSSHPrivateKeyFilepath)
 				master := fmt.Sprintf("%s@%s", eng.ExpandedDefinition.Properties.LinuxProfile.AdminUsername, kubeConfig.GetServerName())
-
 				lsbReleaseCmd := fmt.Sprintf("lsb_release -a && uname -r")
-				cmd := exec.Command("ssh", "-i", masterSSHPrivateKeyFilepath, "-p", masterSSHPort, "-o", "ConnectTimeout=10", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-o", "LogLevel=ERROR", master, lsbReleaseCmd)
-				util.PrintCommand(cmd)
-				out, err := cmd.CombinedOutput()
-				log.Printf("%s\n", out)
+				err = conn.ExecuteFromMaster(master, lsbReleaseCmd, true)
 				Expect(err).NotTo(HaveOccurred())
-
 				kernelVerCmd := fmt.Sprintf("cat /proc/version")
-				cmd = exec.Command("ssh", "-i", masterSSHPrivateKeyFilepath, "-p", masterSSHPort, "-o", "ConnectTimeout=10", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-o", "LogLevel=ERROR", master, kernelVerCmd)
-				util.PrintCommand(cmd)
-				out, err = cmd.CombinedOutput()
-				log.Printf("%s\n", out)
+				err = conn.ExecuteFromMaster(master, kernelVerCmd, true)
 				Expect(err).NotTo(HaveOccurred())
 			} else {
 				Skip("This is not an ubuntu master")
@@ -184,15 +173,13 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			if eng.ExpandedDefinition.Properties.OrchestratorProfile.KubernetesConfig.RequiresDocker() {
 				kubeConfig, err := GetConfig()
 				Expect(err).NotTo(HaveOccurred())
-				master := fmt.Sprintf("%s@%s", eng.ExpandedDefinition.Properties.LinuxProfile.AdminUsername, kubeConfig.GetServerName())
+				var conn *remote.Connection
+				conn, err = remote.NewConnection(kubeConfig.GetServerName(), masterSSHPort, eng.ExpandedDefinition.Properties.LinuxProfile.AdminUsername, masterSSHPrivateKeyFilepath)
 				nodeList, err := node.GetReady()
 				Expect(err).NotTo(HaveOccurred())
 				dockerVersionCmd := fmt.Sprintf("\"docker version\"")
 				for _, node := range nodeList.Nodes {
-					cmd := exec.Command("ssh", "-A", "-i", masterSSHPrivateKeyFilepath, "-p", masterSSHPort, "-o", "ConnectTimeout=10", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-o", "LogLevel=ERROR", master, "ssh", "-o", "ConnectTimeout=10", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-o", "LogLevel=ERROR", node.Metadata.Name, dockerVersionCmd)
-					util.PrintCommand(cmd)
-					out, err := cmd.CombinedOutput()
-					log.Printf("%s\n", out)
+					err = conn.ExecuteFromMaster(node.Metadata.Name, dockerVersionCmd, true)
 					Expect(err).NotTo(HaveOccurred())
 				}
 			} else {
@@ -202,20 +189,17 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 
 		It("should validate that every linux node has a root password", func() {
 			if eng.ExpandedDefinition.Properties.IsVHDDistroForAllNodes() {
-
 				kubeConfig, err := GetConfig()
 				Expect(err).NotTo(HaveOccurred())
-				master := fmt.Sprintf("%s@%s", eng.ExpandedDefinition.Properties.LinuxProfile.AdminUsername, kubeConfig.GetServerName())
+				var conn *remote.Connection
+				conn, err = remote.NewConnection(kubeConfig.GetServerName(), masterSSHPort, eng.ExpandedDefinition.Properties.LinuxProfile.AdminUsername, masterSSHPrivateKeyFilepath)
 				nodeList, err := node.GetReady()
 				Expect(err).NotTo(HaveOccurred())
-				rootPasswdCmd := fmt.Sprintf("\"sudo grep '^root:[!*]:' /etc/shadow\"")
+				rootPasswdCmd := fmt.Sprintf("\"sudo grep '^root:[!*]:' /etc/shadow\" && exit 1 || exit 0")
 				for _, node := range nodeList.Nodes {
 					if node.IsUbuntu() {
-						cmd := exec.Command("ssh", "-A", "-i", masterSSHPrivateKeyFilepath, "-p", masterSSHPort, "-o", "ConnectTimeout=10", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-o", "LogLevel=ERROR", master, "ssh", "-o", "ConnectTimeout=10", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-o", "LogLevel=ERROR", node.Metadata.Name, rootPasswdCmd)
-						util.PrintCommand(cmd)
-						out, err := cmd.CombinedOutput()
-						log.Printf("%s\n", out)
-						Expect(err).To(HaveOccurred())
+						err = conn.ExecuteFromMaster(node.Metadata.Name, rootPasswdCmd, true)
+						Expect(err).NotTo(HaveOccurred())
 					}
 				}
 			} else {
@@ -231,22 +215,17 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				nodeList, err := node.GetReady()
 				Expect(err).NotTo(HaveOccurred())
 				netConfigValidateScript := "net-config-validate.sh"
-				cmd := exec.Command("scp", "-i", masterSSHPrivateKeyFilepath, "-P", masterSSHPort, "-o", "StrictHostKeyChecking=no", filepath.Join(ScriptsDir, netConfigValidateScript), master+":/tmp/"+netConfigValidateScript)
-				util.PrintCommand(cmd)
-				out, err := cmd.CombinedOutput()
-				log.Printf("%s\n", out)
-				Expect(err).NotTo(HaveOccurred())
 				var conn *remote.Connection
 				conn, err = remote.NewConnection(kubeConfig.GetServerName(), masterSSHPort, eng.ExpandedDefinition.Properties.LinuxProfile.AdminUsername, masterSSHPrivateKeyFilepath)
+				Expect(err).NotTo(HaveOccurred())
+				err = conn.CopyToMaster(master, netConfigValidateScript)
 				Expect(err).NotTo(HaveOccurred())
 				for _, node := range nodeList.Nodes {
 					if node.IsUbuntu() {
 						err := conn.CopyToRemote(node.Metadata.Name, "/tmp/"+netConfigValidateScript)
 						Expect(err).NotTo(HaveOccurred())
 						netConfigValidationCommand := fmt.Sprintf("\"/tmp/%s\"", netConfigValidateScript)
-						cmd = exec.Command("ssh", "-A", "-i", masterSSHPrivateKeyFilepath, "-p", masterSSHPort, "-o", "ConnectTimeout=10", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-o", "LogLevel=ERROR", master, "ssh", "-o", "ConnectTimeout=10", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-o", "LogLevel=ERROR", node.Metadata.Name, netConfigValidationCommand)
-						util.PrintCommand(cmd)
-						_, err = cmd.CombinedOutput()
+						err = conn.ExecuteFromMaster(node.Metadata.Name, netConfigValidationCommand, false)
 						Expect(err).NotTo(HaveOccurred())
 					}
 				}
@@ -263,21 +242,16 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				nodeList, err := node.GetReady()
 				Expect(err).NotTo(HaveOccurred())
 				CISFilesValidateScript := "CIS-files-validate.sh"
-				cmd := exec.Command("scp", "-i", masterSSHPrivateKeyFilepath, "-P", masterSSHPort, "-o", "StrictHostKeyChecking=no", filepath.Join(ScriptsDir, CISFilesValidateScript), master+":/tmp/"+CISFilesValidateScript)
-				util.PrintCommand(cmd)
-				out, err := cmd.CombinedOutput()
-				log.Printf("%s\n", out)
-				Expect(err).NotTo(HaveOccurred())
 				var conn *remote.Connection
 				conn, err = remote.NewConnection(kubeConfig.GetServerName(), masterSSHPort, eng.ExpandedDefinition.Properties.LinuxProfile.AdminUsername, masterSSHPrivateKeyFilepath)
+				Expect(err).NotTo(HaveOccurred())
+				err = conn.CopyToMaster(master, CISFilesValidateScript)
 				Expect(err).NotTo(HaveOccurred())
 				for _, node := range nodeList.Nodes {
 					err := conn.CopyToRemote(node.Metadata.Name, "/tmp/"+CISFilesValidateScript)
 					Expect(err).NotTo(HaveOccurred())
 					CISValidationCommand := fmt.Sprintf("\"/tmp/%s\"", CISFilesValidateScript)
-					cmd = exec.Command("ssh", "-A", "-i", masterSSHPrivateKeyFilepath, "-p", masterSSHPort, "-o", "ConnectTimeout=10", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-o", "LogLevel=ERROR", master, "ssh", "-o", "ConnectTimeout=10", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-o", "LogLevel=ERROR", node.Metadata.Name, CISValidationCommand)
-					util.PrintCommand(cmd)
-					_, err = cmd.CombinedOutput()
+					err = conn.ExecuteFromMaster(node.Metadata.Name, CISValidationCommand, false)
 					Expect(err).NotTo(HaveOccurred())
 				}
 			} else {
@@ -293,22 +267,17 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				nodeList, err := node.GetReady()
 				Expect(err).NotTo(HaveOccurred())
 				modprobeConfigValidateScript := "modprobe-config-validate.sh"
-				cmd := exec.Command("scp", "-i", masterSSHPrivateKeyFilepath, "-P", masterSSHPort, "-o", "StrictHostKeyChecking=no", filepath.Join(ScriptsDir, modprobeConfigValidateScript), master+":/tmp/"+modprobeConfigValidateScript)
-				util.PrintCommand(cmd)
-				out, err := cmd.CombinedOutput()
-				log.Printf("%s\n", out)
-				Expect(err).NotTo(HaveOccurred())
 				var conn *remote.Connection
 				conn, err = remote.NewConnection(kubeConfig.GetServerName(), masterSSHPort, eng.ExpandedDefinition.Properties.LinuxProfile.AdminUsername, masterSSHPrivateKeyFilepath)
+				Expect(err).NotTo(HaveOccurred())
+				err = conn.CopyToMaster(master, modprobeConfigValidateScript)
 				Expect(err).NotTo(HaveOccurred())
 				for _, node := range nodeList.Nodes {
 					if node.IsUbuntu() {
 						err := conn.CopyToRemote(node.Metadata.Name, "/tmp/"+modprobeConfigValidateScript)
 						Expect(err).NotTo(HaveOccurred())
 						netConfigValidationCommand := fmt.Sprintf("\"/tmp/%s\"", modprobeConfigValidateScript)
-						cmd = exec.Command("ssh", "-A", "-i", masterSSHPrivateKeyFilepath, "-p", masterSSHPort, "-o", "ConnectTimeout=10", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-o", "LogLevel=ERROR", master, "ssh", "-o", "ConnectTimeout=10", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-o", "LogLevel=ERROR", node.Metadata.Name, netConfigValidationCommand)
-						util.PrintCommand(cmd)
-						_, err = cmd.CombinedOutput()
+						err = conn.ExecuteFromMaster(node.Metadata.Name, netConfigValidationCommand, false)
 						Expect(err).NotTo(HaveOccurred())
 					}
 				}
@@ -324,22 +293,17 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			nodeList, err := node.GetReady()
 			Expect(err).NotTo(HaveOccurred())
 			installedPackagesValidateScript := "ubuntu-installed-packages-validate.sh"
-			cmd := exec.Command("scp", "-i", masterSSHPrivateKeyFilepath, "-P", masterSSHPort, "-o", "StrictHostKeyChecking=no", filepath.Join(ScriptsDir, installedPackagesValidateScript), master+":/tmp/"+installedPackagesValidateScript)
-			util.PrintCommand(cmd)
-			out, err := cmd.CombinedOutput()
-			log.Printf("%s\n", out)
-			Expect(err).NotTo(HaveOccurred())
 			var conn *remote.Connection
 			conn, err = remote.NewConnection(kubeConfig.GetServerName(), masterSSHPort, eng.ExpandedDefinition.Properties.LinuxProfile.AdminUsername, masterSSHPrivateKeyFilepath)
+			Expect(err).NotTo(HaveOccurred())
+			err = conn.CopyToMaster(master, installedPackagesValidateScript)
 			Expect(err).NotTo(HaveOccurred())
 			for _, node := range nodeList.Nodes {
 				if node.IsUbuntu() {
 					err := conn.CopyToRemote(node.Metadata.Name, "/tmp/"+installedPackagesValidateScript)
 					Expect(err).NotTo(HaveOccurred())
-					netConfigValidationCommand := fmt.Sprintf("\"/tmp/%s\"", installedPackagesValidateScript)
-					cmd = exec.Command("ssh", "-A", "-i", masterSSHPrivateKeyFilepath, "-p", masterSSHPort, "-o", "ConnectTimeout=10", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-o", "LogLevel=ERROR", master, "ssh", "-o", "ConnectTimeout=10", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-o", "LogLevel=ERROR", node.Metadata.Name, netConfigValidationCommand)
-					util.PrintCommand(cmd)
-					_, err = cmd.CombinedOutput()
+					installedPackagesValidationCommand := fmt.Sprintf("\"/tmp/%s\"", installedPackagesValidateScript)
+					err = conn.ExecuteFromMaster(node.Metadata.Name, installedPackagesValidationCommand, false)
 					Expect(err).NotTo(HaveOccurred())
 				}
 			}
@@ -353,22 +317,17 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				nodeList, err := node.GetReady()
 				Expect(err).NotTo(HaveOccurred())
 				sshdConfigValidateScript := "sshd-config-validate.sh"
-				cmd := exec.Command("scp", "-i", masterSSHPrivateKeyFilepath, "-P", masterSSHPort, "-o", "StrictHostKeyChecking=no", filepath.Join(ScriptsDir, sshdConfigValidateScript), master+":/tmp/"+sshdConfigValidateScript)
-				util.PrintCommand(cmd)
-				out, err := cmd.CombinedOutput()
-				log.Printf("%s\n", out)
-				Expect(err).NotTo(HaveOccurred())
 				var conn *remote.Connection
 				conn, err = remote.NewConnection(kubeConfig.GetServerName(), masterSSHPort, eng.ExpandedDefinition.Properties.LinuxProfile.AdminUsername, masterSSHPrivateKeyFilepath)
+				Expect(err).NotTo(HaveOccurred())
+				err = conn.CopyToMaster(master, sshdConfigValidateScript)
 				Expect(err).NotTo(HaveOccurred())
 				for _, node := range nodeList.Nodes {
 					if node.IsUbuntu() {
 						err := conn.CopyToRemote(node.Metadata.Name, "/tmp/"+sshdConfigValidateScript)
 						Expect(err).NotTo(HaveOccurred())
 						sshdConfigValidationCommand := fmt.Sprintf("\"/tmp/%s\"", sshdConfigValidateScript)
-						cmd = exec.Command("ssh", "-A", "-i", masterSSHPrivateKeyFilepath, "-p", masterSSHPort, "-o", "ConnectTimeout=10", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-o", "LogLevel=ERROR", master, "ssh", "-o", "ConnectTimeout=10", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-o", "LogLevel=ERROR", node.Metadata.Name, sshdConfigValidationCommand)
-						util.PrintCommand(cmd)
-						_, err = cmd.CombinedOutput()
+						err = conn.ExecuteFromMaster(node.Metadata.Name, sshdConfigValidationCommand, false)
 						Expect(err).NotTo(HaveOccurred())
 					}
 				}
@@ -385,36 +344,18 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				nodeList, err := node.GetReady()
 				Expect(err).NotTo(HaveOccurred())
 				pwQualityValidateScript := "pwquality-validate.sh"
-				var scpError error
-				var scpOut []byte
-				for i := 0; i < 3; i++ {
-					cmd := exec.Command("scp", "-i", masterSSHPrivateKeyFilepath, "-P", masterSSHPort, "-o", "StrictHostKeyChecking=no", filepath.Join(ScriptsDir, pwQualityValidateScript), master+":/tmp/"+pwQualityValidateScript)
-					util.PrintCommand(cmd)
-					scpOut, scpError = cmd.CombinedOutput()
-					log.Printf("%s\n", scpOut)
-					if scpError == nil {
-						break
-					}
-				}
-				Expect(scpError).NotTo(HaveOccurred())
 				var conn *remote.Connection
 				conn, err = remote.NewConnection(kubeConfig.GetServerName(), masterSSHPort, eng.ExpandedDefinition.Properties.LinuxProfile.AdminUsername, masterSSHPrivateKeyFilepath)
+				Expect(err).NotTo(HaveOccurred())
+				err = conn.CopyToMaster(master, pwQualityValidateScript)
 				Expect(err).NotTo(HaveOccurred())
 				for _, node := range nodeList.Nodes {
 					if node.IsUbuntu() {
 						err := conn.CopyToRemote(node.Metadata.Name, "/tmp/"+pwQualityValidateScript)
 						Expect(err).NotTo(HaveOccurred())
 						pwQualityValidationCommand := fmt.Sprintf("\"/tmp/%s\"", pwQualityValidateScript)
-						var sshError error
-						for i := 0; i < 3; i++ {
-							cmd := exec.Command("ssh", "-A", "-i", masterSSHPrivateKeyFilepath, "-p", masterSSHPort, "-o", "ConnectTimeout=10", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-o", "LogLevel=ERROR", master, "ssh", "-o", "ConnectTimeout=10", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-o", "LogLevel=ERROR", node.Metadata.Name, pwQualityValidationCommand)
-							util.PrintCommand(cmd)
-							_, sshError = cmd.CombinedOutput()
-							if scpError == nil {
-								break
-							}
-						}
-						Expect(sshError).NotTo(HaveOccurred())
+						err = conn.ExecuteFromMaster(node.Metadata.Name, pwQualityValidationCommand, false)
+						Expect(err).NotTo(HaveOccurred())
 					}
 				}
 			} else {
@@ -441,13 +382,10 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				nodeList, err := node.GetReady()
 				Expect(err).NotTo(HaveOccurred())
 				auditdValidateScript := "auditd-validate.sh"
-				cmd := exec.Command("scp", "-i", masterSSHPrivateKeyFilepath, "-P", masterSSHPort, "-o", "StrictHostKeyChecking=no", filepath.Join(ScriptsDir, auditdValidateScript), master+":/tmp/"+auditdValidateScript)
-				util.PrintCommand(cmd)
-				out, err := cmd.CombinedOutput()
-				log.Printf("%s\n", out)
-				Expect(err).NotTo(HaveOccurred())
 				var conn *remote.Connection
 				conn, err = remote.NewConnection(kubeConfig.GetServerName(), masterSSHPort, eng.ExpandedDefinition.Properties.LinuxProfile.AdminUsername, masterSSHPrivateKeyFilepath)
+				Expect(err).NotTo(HaveOccurred())
+				err = conn.CopyToMaster(master, auditdValidateScript)
 				Expect(err).NotTo(HaveOccurred())
 				for _, node := range nodeList.Nodes {
 					var enabled bool
@@ -457,9 +395,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 					err := conn.CopyToRemote(node.Metadata.Name, "/tmp/"+auditdValidateScript)
 					Expect(err).NotTo(HaveOccurred())
 					auditdValidationCommand := fmt.Sprintf("\"ENABLED=%t /tmp/%s\"", enabled, auditdValidateScript)
-					cmd = exec.Command("ssh", "-A", "-i", masterSSHPrivateKeyFilepath, "-p", masterSSHPort, "-o", "ConnectTimeout=10", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-o", "LogLevel=ERROR", master, "ssh", "-o", "ConnectTimeout=10", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-o", "LogLevel=ERROR", node.Metadata.Name, auditdValidationCommand)
-					util.PrintCommand(cmd)
-					_, err = cmd.CombinedOutput()
+					err = conn.ExecuteFromMaster(node.Metadata.Name, auditdValidationCommand, false)
 					Expect(err).NotTo(HaveOccurred())
 				}
 			} else {
@@ -965,26 +901,18 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				Expect(err).NotTo(HaveOccurred())
 
 				simulateDockerdCrashScript := "simulate-dockerd-crash.cmd"
-				cmd := exec.Command("scp", "-i", masterSSHPrivateKeyFilepath, "-P", masterSSHPort, "-o", "StrictHostKeyChecking=no", filepath.Join(ScriptsDir, simulateDockerdCrashScript), master+":/tmp/"+simulateDockerdCrashScript)
-				util.PrintCommand(cmd)
-				out, err := cmd.CombinedOutput()
-				log.Printf("%s\n", out)
-				Expect(err).NotTo(HaveOccurred())
-
 				var conn *remote.Connection
-				conn, err = remote.NewConnection(kubeConfig.GetServerName(), masterSSHPort, eng.ExpandedDefinition.Properties.WindowsProfile.AdminUsername, masterSSHPrivateKeyFilepath)
+				conn, err = remote.NewConnection(kubeConfig.GetServerName(), masterSSHPort, eng.ExpandedDefinition.Properties.LinuxProfile.AdminUsername, masterSSHPrivateKeyFilepath)
 				Expect(err).NotTo(HaveOccurred())
-
+				err = conn.CopyToMaster(master, simulateDockerdCrashScript)
+				Expect(err).NotTo(HaveOccurred())
 				for _, node := range nodeList.Nodes {
 					if node.IsWindows() {
 						By(fmt.Sprintf("simulating docker and subsequent kubelet service crash on node: %s", node.Metadata.Name))
 						err := conn.CopyToRemote(node.Metadata.Name, "/tmp/"+simulateDockerdCrashScript)
 						Expect(err).NotTo(HaveOccurred())
 						simulateDockerCrashCommand := fmt.Sprintf("\"/tmp/%s\"", simulateDockerdCrashScript)
-						cmd := exec.Command("ssh", "-A", "-i", masterSSHPrivateKeyFilepath, "-p", masterSSHPort, "-o", "ConnectTimeout=10", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-o", "LogLevel=ERROR", master, "ssh", "-o", "ConnectTimeout=10", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-o", "LogLevel=ERROR", node.Metadata.Name, simulateDockerCrashCommand)
-						util.PrintCommand(cmd)
-						out, err := cmd.CombinedOutput()
-						log.Printf("%s\n", out)
+						err = conn.ExecuteFromMaster(node.Metadata.Name, simulateDockerCrashCommand, true)
 						Expect(err).NotTo(HaveOccurred())
 					}
 				}
@@ -996,10 +924,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 					if node.IsWindows() {
 						By(fmt.Sprintf("restarting kubelet service on node: %s", node.Metadata.Name))
 						restartKubeletCommand := fmt.Sprintf("\"Powershell Start-Service kubelet\"")
-						cmd := exec.Command("ssh", "-A", "-i", masterSSHPrivateKeyFilepath, "-p", masterSSHPort, "-o", "ConnectTimeout=10", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-o", "LogLevel=ERROR", master, "ssh", "-o", "ConnectTimeout=10", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-o", "LogLevel=ERROR", node.Metadata.Name, restartKubeletCommand)
-						util.PrintCommand(cmd)
-						out, err := cmd.CombinedOutput()
-						log.Printf("%s\n", out)
+						err = conn.ExecuteFromMaster(node.Metadata.Name, restartKubeletCommand, true)
 						Expect(err).NotTo(HaveOccurred())
 					}
 				}
@@ -1827,23 +1752,17 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			nodeList, err := node.GetReady()
 			Expect(err).NotTo(HaveOccurred())
 			timeSyncValidateScript := "time-sync-validate.sh"
-			cmd := exec.Command("scp", "-i", masterSSHPrivateKeyFilepath, "-P", masterSSHPort, "-o", "StrictHostKeyChecking=no", filepath.Join(ScriptsDir, timeSyncValidateScript), master+":/tmp/"+timeSyncValidateScript)
-			util.PrintCommand(cmd)
-			out, err := cmd.CombinedOutput()
-			log.Printf("%s\n", out)
-			Expect(err).NotTo(HaveOccurred())
 			var conn *remote.Connection
 			conn, err = remote.NewConnection(kubeConfig.GetServerName(), masterSSHPort, eng.ExpandedDefinition.Properties.LinuxProfile.AdminUsername, masterSSHPrivateKeyFilepath)
+			Expect(err).NotTo(HaveOccurred())
+			err = conn.CopyToMaster(master, timeSyncValidateScript)
 			Expect(err).NotTo(HaveOccurred())
 			for _, node := range nodeList.Nodes {
 				if node.IsUbuntu() {
 					err := conn.CopyToRemote(node.Metadata.Name, "/tmp/"+timeSyncValidateScript)
 					Expect(err).NotTo(HaveOccurred())
-					netConfigValidationCommand := fmt.Sprintf("\"/tmp/%s\"", timeSyncValidateScript)
-					cmd = exec.Command("ssh", "-A", "-i", masterSSHPrivateKeyFilepath, "-p", masterSSHPort, "-o", "ConnectTimeout=10", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-o", "LogLevel=ERROR", master, "ssh", "-o", "ConnectTimeout=10", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-o", "LogLevel=ERROR", node.Metadata.Name, netConfigValidationCommand)
-					util.PrintCommand(cmd)
-					out, err = cmd.CombinedOutput()
-					log.Printf("%s\n", out)
+					timeSyncValidationCommand := fmt.Sprintf("\"/tmp/%s\"", timeSyncValidateScript)
+					err = conn.ExecuteFromMaster(node.Metadata.Name, timeSyncValidationCommand, false)
 					Expect(err).NotTo(HaveOccurred())
 				}
 			}

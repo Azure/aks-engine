@@ -20,6 +20,11 @@ import (
 	"golang.org/x/crypto/ssh/agent"
 )
 
+const (
+	sshRetries = 3
+	scriptsDir = "scripts"
+)
+
 // Connection is
 type Connection struct {
 	Host           string
@@ -120,6 +125,30 @@ func (c *Connection) Read(path string) ([]byte, error) {
 	return out, nil
 }
 
+// CopyToMaster uses this ssh connection to send files to the master node via scp
+func (c *Connection) CopyToMaster(hostname, filename string) error {
+	var scpError error
+	var scpOut []byte
+	for i := 0; i < sshRetries; i++ {
+		cmd := exec.Command("ssh-add", c.PrivateKeyPath)
+		out, err := cmd.CombinedOutput()
+		if err != nil {
+			log.Printf("Error output:%s\n", out)
+			continue
+		}
+		cmd = exec.Command("scp", "-i", c.PrivateKeyPath, "-P", c.Port, "-o", "StrictHostKeyChecking=no", filepath.Join(scriptsDir, filename), hostname+":/tmp/"+filename)
+		util.PrintCommand(cmd)
+		scpOut, scpError = cmd.CombinedOutput()
+		if scpError != nil {
+			log.Printf("Error output:%s\n", scpOut)
+			continue
+		} else {
+			break
+		}
+	}
+	return scpError
+}
+
 // CopyFromRemote uses this ssh connection to get remote files via scp
 func (c *Connection) CopyFromRemote(hostname, path string) error {
 	cmd := exec.Command("ssh-add", c.PrivateKeyPath)
@@ -142,22 +171,55 @@ func (c *Connection) CopyFromRemote(hostname, path string) error {
 
 // CopyToRemote uses this ssh connection to send files via scp
 func (c *Connection) CopyToRemote(hostname, path string) error {
-	cmd := exec.Command("ssh-add", c.PrivateKeyPath)
-	out, err := cmd.CombinedOutput()
-	if err != nil {
-		log.Printf("Error output:%s\n", out)
-		return err
+	var sshError error
+	var sshOut []byte
+	for i := 0; i < sshRetries; i++ {
+		cmd := exec.Command("ssh-add", c.PrivateKeyPath)
+		out, err := cmd.CombinedOutput()
+		if err != nil {
+			log.Printf("Error output:%s\n", out)
+			continue
+		}
+		remoteCommand := fmt.Sprintf("scp -o StrictHostKeyChecking=no %s %s:%s", path, hostname, path)
+		connectString := fmt.Sprintf("%s@%s", c.User, c.Host)
+		cmd = exec.Command("ssh", "-A", "-i", c.PrivateKeyPath, "-o", "ConnectTimeout=30", "-o", "StrictHostKeyChecking=no", connectString, "-p", c.Port, remoteCommand)
+		util.PrintCommand(cmd)
+		sshOut, sshError = cmd.CombinedOutput()
+		if err != nil {
+			log.Printf("Error output:%s\n", sshOut)
+			continue
+		} else {
+			break
+		}
 	}
-	remoteCommand := fmt.Sprintf("scp -o StrictHostKeyChecking=no %s %s:%s", path, hostname, path)
-	connectString := fmt.Sprintf("%s@%s", c.User, c.Host)
-	cmd = exec.Command("ssh", "-A", "-i", c.PrivateKeyPath, "-o", "ConnectTimeout=30", "-o", "StrictHostKeyChecking=no", connectString, "-p", c.Port, remoteCommand)
-	util.PrintCommand(cmd)
-	out, err = cmd.CombinedOutput()
-	if err != nil {
-		log.Printf("Error output:%s\n", out)
-		return err
+	return sshError
+}
+
+// ExecuteFromMaster uses this ssh connection to run a remote command from the primary master node
+func (c *Connection) ExecuteFromMaster(node, command string, printStdout bool) error {
+	var sshError error
+	var sshOut []byte
+	for i := 0; i < sshRetries; i++ {
+		cmd := exec.Command("ssh-add", c.PrivateKeyPath)
+		out, err := cmd.CombinedOutput()
+		if err != nil {
+			log.Printf("Error output:%s\n", out)
+			continue
+		}
+		cmd = exec.Command("ssh", "-A", "-i", c.PrivateKeyPath, "-p", c.Port, "-o", "ConnectTimeout=10", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-o", "LogLevel=ERROR", fmt.Sprintf("%s@%s", c.User, c.Host), "ssh", "-o", "ConnectTimeout=10", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-o", "LogLevel=ERROR", node, command)
+		util.PrintCommand(cmd)
+		sshOut, sshError = cmd.CombinedOutput()
+		if sshError != nil {
+			log.Printf("Error output:%s\n", sshOut)
+			continue
+		} else {
+			if printStdout {
+				log.Printf("%s\n", sshOut)
+			}
+			break
+		}
 	}
-	return nil
+	return sshError
 }
 
 // ExecuteWithRetries will keep retrying a command until it does not return an error or the duration is exceeded
