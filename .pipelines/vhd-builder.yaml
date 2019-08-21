@@ -6,6 +6,9 @@ trigger: none
 # - generate SAS link from azure CLI
 # - POST a new SKU to azure marketplace
 
+variables:
+  CONTAINER_IMAGE:  'quay.io/deis/go-dev:v1.23.1' 
+
 phases:
 - phase: build_vhd
   queue:
@@ -27,13 +30,13 @@ phases:
       -e BUILD_ID=$(Build.BuildId) \
       -e BUILD_NUMBER=$(Build.BuildNumber) \
       -e UBUNTU_SKU=${UBUNTU_SKU} \
-      ${DEIS_GO_DEV_IMAGE} make run-packer
+      ${CONTAINER_IMAGE} make run-packer
     displayName: Building VHD
   - script: |
       docker run --rm \
       -v ${PWD}:/go/src/github.com/Azure/aks-engine \
       -w /go/src/github.com/Azure/aks-engine \
-      ${DEIS_GO_DEV_IMAGE} make vhd-notes
+      ${CONTAINER_IMAGE} make vhd-notes
     displayName: Generate VHD release notes
   - task: PublishPipelineArtifact@0
     inputs:
@@ -53,7 +56,7 @@ phases:
       -e CLASSIC_SAS_TOKEN="$(SAS_TOKEN)" \
       -e OS_DISK_SAS=${OS_DISK_SAS} \
       -e VHD_NAME=${VHD_NAME} \
-      ${DEIS_GO_DEV_IMAGE} make az-copy
+      ${CONTAINER_IMAGE} make az-copy
     displayName: Copying resource to Classic Storage Account
     condition: eq(variables.DRY_RUN, 'False')
   - script: |
@@ -66,7 +69,7 @@ phases:
       -e TENANT_ID=${TENANT_ID} \
       -e SA_NAME=${SA_NAME} \
       -e AZURE_RESOURCE_GROUP_NAME=${AZURE_RESOURCE_GROUP_NAME} \
-      ${DEIS_GO_DEV_IMAGE} make delete-sa
+      ${CONTAINER_IMAGE} make delete-sa
     displayName: Clean-up Storage Account
   - script: |
       docker run --rm \
@@ -78,5 +81,5 @@ phases:
       -e CLASSIC_SA_CONNECTION_STRING="$(CLASSIC_SA_CONNECTION_STRING)" \
       -e START_DATE=${START_DATE} \
       -e EXPIRY_DATE=${EXPIRY_DATE} \
-      ${DEIS_GO_DEV_IMAGE} make generate-sas
+      ${CONTAINER_IMAGE} make generate-sas
     displayName: Getting Shared Access Signature URI
