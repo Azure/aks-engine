@@ -61,6 +61,8 @@ var (
 	masterSSHPort                   string
 	masterSSHPrivateKeyFilepath     string
 	longRunningApacheDeploymentName string
+	sshConn                         *remote.Connection
+	kubeConfig                      *Config
 )
 
 var _ = BeforeSuite(func() {
@@ -94,37 +96,32 @@ var _ = BeforeSuite(func() {
 	}
 	masterSSHPrivateKeyFilepath = cfg.GetSSHKeyPath()
 	longRunningApacheDeploymentName = "php-apache-long-running"
+	kubeConfig, err = GetConfig()
+	Expect(err).NotTo(HaveOccurred())
+	sshConn, err = remote.NewConnection(kubeConfig.GetServerName(), masterSSHPort, eng.ExpandedDefinition.Properties.LinuxProfile.AdminUsername, masterSSHPrivateKeyFilepath)
+	Expect(err).NotTo(HaveOccurred())
+	success := false
+	for i := 0; i < sshRetries; i++ {
+		err := util.AddToSSHKeyChain(masterSSHPrivateKeyFilepath)
+		if err == nil {
+			success = true
+			break
+		}
+		if i > 1 {
+			log.Printf("Error while setting up ssh key forwarding:%s\n", err)
+		}
+		time.Sleep(10 * time.Second)
+	}
+	Expect(success).To(BeTrue())
 })
 
 var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", func() {
 	Describe("regardless of agent pool type", func() {
-		It("should set up ssh key forwarding to the master node", func() {
-			success := false
-			for i := 0; i < sshRetries; i++ {
-				err := util.AddToSSHKeyChain(masterSSHPrivateKeyFilepath)
-				if err == nil {
-					success = true
-					break
-				}
-				if i > 1 {
-					log.Printf("Error while setting up ssh key forwarding:%s\n", err)
-				}
-				time.Sleep(10 * time.Second)
-			}
-			Expect(success).To(BeTrue())
-		})
-
 		It("should validate host OS DNS", func() {
-			kubeConfig, err := GetConfig()
-			Expect(err).NotTo(HaveOccurred())
-			master := fmt.Sprintf("%s@%s", eng.ExpandedDefinition.Properties.LinuxProfile.AdminUsername, kubeConfig.GetServerName())
 			nodeList, err := node.GetReady()
 			Expect(err).NotTo(HaveOccurred())
 			hostOSDNSValidateScript := "host-os-dns-validate.sh"
-			var conn *remote.Connection
-			conn, err = remote.NewConnection(kubeConfig.GetServerName(), masterSSHPort, eng.ExpandedDefinition.Properties.LinuxProfile.AdminUsername, masterSSHPrivateKeyFilepath)
-			Expect(err).NotTo(HaveOccurred())
-			err = conn.CopyToMaster(master, hostOSDNSValidateScript)
+			err = sshConn.CopyTo(hostOSDNSValidateScript)
 			Expect(err).NotTo(HaveOccurred())
 			envString := "NODE_HOSTNAMES='"
 			for _, node := range nodeList.Nodes {
@@ -133,10 +130,10 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			envString += "'"
 			for _, node := range nodeList.Nodes {
 				if node.IsLinux() {
-					err := conn.CopyToRemote(node.Metadata.Name, "/tmp/"+hostOSDNSValidateScript)
+					err := sshConn.CopyToRemote(node.Metadata.Name, "/tmp/"+hostOSDNSValidateScript)
 					Expect(err).NotTo(HaveOccurred())
 					hostOSDNSValidationCommand := fmt.Sprintf("\"%s /tmp/%s\"", envString, hostOSDNSValidateScript)
-					err = conn.ExecuteFromMaster(node.Metadata.Name, hostOSDNSValidationCommand, false)
+					err = sshConn.ExecuteRemote(node.Metadata.Name, hostOSDNSValidationCommand, false)
 					Expect(err).NotTo(HaveOccurred())
 				}
 			}
@@ -152,17 +149,11 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 
 		It("should display the installed Ubuntu version on the master node", func() {
 			if eng.ExpandedDefinition.Properties.MasterProfile.IsUbuntu() {
-				kubeConfig, err := GetConfig()
-				Expect(err).NotTo(HaveOccurred())
-				var conn *remote.Connection
-				conn, err = remote.NewConnection(kubeConfig.GetServerName(), masterSSHPort, eng.ExpandedDefinition.Properties.LinuxProfile.AdminUsername, masterSSHPrivateKeyFilepath)
-				Expect(err).NotTo(HaveOccurred())
-				master := fmt.Sprintf("%s@%s", eng.ExpandedDefinition.Properties.LinuxProfile.AdminUsername, kubeConfig.GetServerName())
 				lsbReleaseCmd := fmt.Sprintf("lsb_release -a && uname -r")
-				err = conn.ExecuteFromMaster(master, lsbReleaseCmd, true)
+				err := sshConn.Execute(lsbReleaseCmd, true)
 				Expect(err).NotTo(HaveOccurred())
 				kernelVerCmd := fmt.Sprintf("cat /proc/version")
-				err = conn.ExecuteFromMaster(master, kernelVerCmd, true)
+				err = sshConn.Execute(kernelVerCmd, true)
 				Expect(err).NotTo(HaveOccurred())
 			} else {
 				Skip("This is not an ubuntu master")
@@ -171,16 +162,11 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 
 		It("should display the installed docker runtime on all nodes", func() {
 			if eng.ExpandedDefinition.Properties.OrchestratorProfile.KubernetesConfig.RequiresDocker() {
-				kubeConfig, err := GetConfig()
-				Expect(err).NotTo(HaveOccurred())
-				var conn *remote.Connection
-				conn, err = remote.NewConnection(kubeConfig.GetServerName(), masterSSHPort, eng.ExpandedDefinition.Properties.LinuxProfile.AdminUsername, masterSSHPrivateKeyFilepath)
-				Expect(err).NotTo(HaveOccurred())
 				nodeList, err := node.GetReady()
 				Expect(err).NotTo(HaveOccurred())
 				dockerVersionCmd := fmt.Sprintf("\"docker version\"")
 				for _, node := range nodeList.Nodes {
-					err = conn.ExecuteFromMaster(node.Metadata.Name, dockerVersionCmd, true)
+					err = sshConn.ExecuteRemote(node.Metadata.Name, dockerVersionCmd, true)
 					Expect(err).NotTo(HaveOccurred())
 				}
 			} else {
@@ -190,17 +176,12 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 
 		It("should validate that every linux node has a root password", func() {
 			if eng.ExpandedDefinition.Properties.IsVHDDistroForAllNodes() {
-				kubeConfig, err := GetConfig()
-				Expect(err).NotTo(HaveOccurred())
-				var conn *remote.Connection
-				conn, err = remote.NewConnection(kubeConfig.GetServerName(), masterSSHPort, eng.ExpandedDefinition.Properties.LinuxProfile.AdminUsername, masterSSHPrivateKeyFilepath)
-				Expect(err).NotTo(HaveOccurred())
 				nodeList, err := node.GetReady()
 				Expect(err).NotTo(HaveOccurred())
 				rootPasswdCmd := fmt.Sprintf("\"sudo grep '^root:[!*]:' /etc/shadow\" && exit 1 || exit 0")
 				for _, node := range nodeList.Nodes {
 					if node.IsUbuntu() {
-						err = conn.ExecuteFromMaster(node.Metadata.Name, rootPasswdCmd, true)
+						err = sshConn.ExecuteRemote(node.Metadata.Name, rootPasswdCmd, true)
 						Expect(err).NotTo(HaveOccurred())
 					}
 				}
@@ -211,23 +192,17 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 
 		It("should validate Ubuntu host OS network configuration on all nodes", func() {
 			if eng.ExpandedDefinition.Properties.IsVHDDistroForAllNodes() {
-				kubeConfig, err := GetConfig()
-				Expect(err).NotTo(HaveOccurred())
-				master := fmt.Sprintf("%s@%s", eng.ExpandedDefinition.Properties.LinuxProfile.AdminUsername, kubeConfig.GetServerName())
 				nodeList, err := node.GetReady()
 				Expect(err).NotTo(HaveOccurred())
 				netConfigValidateScript := "net-config-validate.sh"
-				var conn *remote.Connection
-				conn, err = remote.NewConnection(kubeConfig.GetServerName(), masterSSHPort, eng.ExpandedDefinition.Properties.LinuxProfile.AdminUsername, masterSSHPrivateKeyFilepath)
-				Expect(err).NotTo(HaveOccurred())
-				err = conn.CopyToMaster(master, netConfigValidateScript)
+				err = sshConn.CopyTo(netConfigValidateScript)
 				Expect(err).NotTo(HaveOccurred())
 				for _, node := range nodeList.Nodes {
 					if node.IsUbuntu() {
-						err := conn.CopyToRemote(node.Metadata.Name, "/tmp/"+netConfigValidateScript)
+						err := sshConn.CopyToRemote(node.Metadata.Name, "/tmp/"+netConfigValidateScript)
 						Expect(err).NotTo(HaveOccurred())
 						netConfigValidationCommand := fmt.Sprintf("\"/tmp/%s\"", netConfigValidateScript)
-						err = conn.ExecuteFromMaster(node.Metadata.Name, netConfigValidationCommand, false)
+						err = sshConn.ExecuteRemote(node.Metadata.Name, netConfigValidationCommand, false)
 						Expect(err).NotTo(HaveOccurred())
 					}
 				}
@@ -238,22 +213,16 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 
 		It("should validate all CIS VHD-paved files", func() {
 			if eng.ExpandedDefinition.Properties.IsVHDDistroForAllNodes() {
-				kubeConfig, err := GetConfig()
-				Expect(err).NotTo(HaveOccurred())
-				master := fmt.Sprintf("%s@%s", eng.ExpandedDefinition.Properties.LinuxProfile.AdminUsername, kubeConfig.GetServerName())
 				nodeList, err := node.GetReady()
 				Expect(err).NotTo(HaveOccurred())
 				CISFilesValidateScript := "CIS-files-validate.sh"
-				var conn *remote.Connection
-				conn, err = remote.NewConnection(kubeConfig.GetServerName(), masterSSHPort, eng.ExpandedDefinition.Properties.LinuxProfile.AdminUsername, masterSSHPrivateKeyFilepath)
-				Expect(err).NotTo(HaveOccurred())
-				err = conn.CopyToMaster(master, CISFilesValidateScript)
+				err = sshConn.CopyTo(CISFilesValidateScript)
 				Expect(err).NotTo(HaveOccurred())
 				for _, node := range nodeList.Nodes {
-					err := conn.CopyToRemote(node.Metadata.Name, "/tmp/"+CISFilesValidateScript)
+					err := sshConn.CopyToRemote(node.Metadata.Name, "/tmp/"+CISFilesValidateScript)
 					Expect(err).NotTo(HaveOccurred())
 					CISValidationCommand := fmt.Sprintf("\"/tmp/%s\"", CISFilesValidateScript)
-					err = conn.ExecuteFromMaster(node.Metadata.Name, CISValidationCommand, false)
+					err = sshConn.ExecuteRemote(node.Metadata.Name, CISValidationCommand, false)
 					Expect(err).NotTo(HaveOccurred())
 				}
 			} else {
@@ -263,23 +232,17 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 
 		It("should validate kernel module configuration", func() {
 			if eng.ExpandedDefinition.Properties.IsVHDDistroForAllNodes() {
-				kubeConfig, err := GetConfig()
-				Expect(err).NotTo(HaveOccurred())
-				master := fmt.Sprintf("%s@%s", eng.ExpandedDefinition.Properties.LinuxProfile.AdminUsername, kubeConfig.GetServerName())
 				nodeList, err := node.GetReady()
 				Expect(err).NotTo(HaveOccurred())
 				modprobeConfigValidateScript := "modprobe-config-validate.sh"
-				var conn *remote.Connection
-				conn, err = remote.NewConnection(kubeConfig.GetServerName(), masterSSHPort, eng.ExpandedDefinition.Properties.LinuxProfile.AdminUsername, masterSSHPrivateKeyFilepath)
-				Expect(err).NotTo(HaveOccurred())
-				err = conn.CopyToMaster(master, modprobeConfigValidateScript)
+				err = sshConn.CopyTo(modprobeConfigValidateScript)
 				Expect(err).NotTo(HaveOccurred())
 				for _, node := range nodeList.Nodes {
 					if node.IsUbuntu() {
-						err := conn.CopyToRemote(node.Metadata.Name, "/tmp/"+modprobeConfigValidateScript)
+						err := sshConn.CopyToRemote(node.Metadata.Name, "/tmp/"+modprobeConfigValidateScript)
 						Expect(err).NotTo(HaveOccurred())
 						netConfigValidationCommand := fmt.Sprintf("\"/tmp/%s\"", modprobeConfigValidateScript)
-						err = conn.ExecuteFromMaster(node.Metadata.Name, netConfigValidationCommand, false)
+						err = sshConn.ExecuteRemote(node.Metadata.Name, netConfigValidationCommand, false)
 						Expect(err).NotTo(HaveOccurred())
 					}
 				}
@@ -289,23 +252,17 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 		})
 
 		It("should validate installed software packages", func() {
-			kubeConfig, err := GetConfig()
-			Expect(err).NotTo(HaveOccurred())
-			master := fmt.Sprintf("%s@%s", eng.ExpandedDefinition.Properties.LinuxProfile.AdminUsername, kubeConfig.GetServerName())
 			nodeList, err := node.GetReady()
 			Expect(err).NotTo(HaveOccurred())
 			installedPackagesValidateScript := "ubuntu-installed-packages-validate.sh"
-			var conn *remote.Connection
-			conn, err = remote.NewConnection(kubeConfig.GetServerName(), masterSSHPort, eng.ExpandedDefinition.Properties.LinuxProfile.AdminUsername, masterSSHPrivateKeyFilepath)
-			Expect(err).NotTo(HaveOccurred())
-			err = conn.CopyToMaster(master, installedPackagesValidateScript)
+			err = sshConn.CopyTo(installedPackagesValidateScript)
 			Expect(err).NotTo(HaveOccurred())
 			for _, node := range nodeList.Nodes {
 				if node.IsUbuntu() {
-					err := conn.CopyToRemote(node.Metadata.Name, "/tmp/"+installedPackagesValidateScript)
+					err := sshConn.CopyToRemote(node.Metadata.Name, "/tmp/"+installedPackagesValidateScript)
 					Expect(err).NotTo(HaveOccurred())
 					installedPackagesValidationCommand := fmt.Sprintf("\"/tmp/%s\"", installedPackagesValidateScript)
-					err = conn.ExecuteFromMaster(node.Metadata.Name, installedPackagesValidationCommand, false)
+					err = sshConn.ExecuteRemote(node.Metadata.Name, installedPackagesValidationCommand, false)
 					Expect(err).NotTo(HaveOccurred())
 				}
 			}
@@ -313,23 +270,17 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 
 		It("should validate that every linux node has the right sshd config", func() {
 			if eng.ExpandedDefinition.Properties.IsVHDDistroForAllNodes() {
-				kubeConfig, err := GetConfig()
-				Expect(err).NotTo(HaveOccurred())
-				master := fmt.Sprintf("%s@%s", eng.ExpandedDefinition.Properties.LinuxProfile.AdminUsername, kubeConfig.GetServerName())
 				nodeList, err := node.GetReady()
 				Expect(err).NotTo(HaveOccurred())
 				sshdConfigValidateScript := "sshd-config-validate.sh"
-				var conn *remote.Connection
-				conn, err = remote.NewConnection(kubeConfig.GetServerName(), masterSSHPort, eng.ExpandedDefinition.Properties.LinuxProfile.AdminUsername, masterSSHPrivateKeyFilepath)
-				Expect(err).NotTo(HaveOccurred())
-				err = conn.CopyToMaster(master, sshdConfigValidateScript)
+				err = sshConn.CopyTo(sshdConfigValidateScript)
 				Expect(err).NotTo(HaveOccurred())
 				for _, node := range nodeList.Nodes {
 					if node.IsUbuntu() {
-						err := conn.CopyToRemote(node.Metadata.Name, "/tmp/"+sshdConfigValidateScript)
+						err := sshConn.CopyToRemote(node.Metadata.Name, "/tmp/"+sshdConfigValidateScript)
 						Expect(err).NotTo(HaveOccurred())
 						sshdConfigValidationCommand := fmt.Sprintf("\"/tmp/%s\"", sshdConfigValidateScript)
-						err = conn.ExecuteFromMaster(node.Metadata.Name, sshdConfigValidationCommand, false)
+						err = sshConn.ExecuteRemote(node.Metadata.Name, sshdConfigValidationCommand, false)
 						Expect(err).NotTo(HaveOccurred())
 					}
 				}
@@ -340,23 +291,17 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 
 		It("should validate password enforcement configuration", func() {
 			if eng.ExpandedDefinition.Properties.IsVHDDistroForAllNodes() {
-				kubeConfig, err := GetConfig()
-				Expect(err).NotTo(HaveOccurred())
-				master := fmt.Sprintf("%s@%s", eng.ExpandedDefinition.Properties.LinuxProfile.AdminUsername, kubeConfig.GetServerName())
 				nodeList, err := node.GetReady()
 				Expect(err).NotTo(HaveOccurred())
 				pwQualityValidateScript := "pwquality-validate.sh"
-				var conn *remote.Connection
-				conn, err = remote.NewConnection(kubeConfig.GetServerName(), masterSSHPort, eng.ExpandedDefinition.Properties.LinuxProfile.AdminUsername, masterSSHPrivateKeyFilepath)
-				Expect(err).NotTo(HaveOccurred())
-				err = conn.CopyToMaster(master, pwQualityValidateScript)
+				err = sshConn.CopyTo(pwQualityValidateScript)
 				Expect(err).NotTo(HaveOccurred())
 				for _, node := range nodeList.Nodes {
 					if node.IsUbuntu() {
-						err := conn.CopyToRemote(node.Metadata.Name, "/tmp/"+pwQualityValidateScript)
+						err := sshConn.CopyToRemote(node.Metadata.Name, "/tmp/"+pwQualityValidateScript)
 						Expect(err).NotTo(HaveOccurred())
 						pwQualityValidationCommand := fmt.Sprintf("\"/tmp/%s\"", pwQualityValidateScript)
-						err = conn.ExecuteFromMaster(node.Metadata.Name, pwQualityValidationCommand, false)
+						err = sshConn.ExecuteRemote(node.Metadata.Name, pwQualityValidationCommand, false)
 						Expect(err).NotTo(HaveOccurred())
 					}
 				}
@@ -378,26 +323,20 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 						auditDNodePrefixes = append(auditDNodePrefixes, profile.Name)
 					}
 				}
-				kubeConfig, err := GetConfig()
-				Expect(err).NotTo(HaveOccurred())
-				master := fmt.Sprintf("%s@%s", eng.ExpandedDefinition.Properties.LinuxProfile.AdminUsername, kubeConfig.GetServerName())
 				nodeList, err := node.GetReady()
 				Expect(err).NotTo(HaveOccurred())
 				auditdValidateScript := "auditd-validate.sh"
-				var conn *remote.Connection
-				conn, err = remote.NewConnection(kubeConfig.GetServerName(), masterSSHPort, eng.ExpandedDefinition.Properties.LinuxProfile.AdminUsername, masterSSHPrivateKeyFilepath)
-				Expect(err).NotTo(HaveOccurred())
-				err = conn.CopyToMaster(master, auditdValidateScript)
+				err = sshConn.CopyTo(auditdValidateScript)
 				Expect(err).NotTo(HaveOccurred())
 				for _, node := range nodeList.Nodes {
 					var enabled bool
 					if node.HasSubstring(auditDNodePrefixes) {
 						enabled = true
 					}
-					err := conn.CopyToRemote(node.Metadata.Name, "/tmp/"+auditdValidateScript)
+					err := sshConn.CopyToRemote(node.Metadata.Name, "/tmp/"+auditdValidateScript)
 					Expect(err).NotTo(HaveOccurred())
 					auditdValidationCommand := fmt.Sprintf("\"ENABLED=%t /tmp/%s\"", enabled, auditdValidateScript)
-					err = conn.ExecuteFromMaster(node.Metadata.Name, auditdValidationCommand, false)
+					err = sshConn.ExecuteRemote(node.Metadata.Name, auditdValidationCommand, false)
 					Expect(err).NotTo(HaveOccurred())
 				}
 			} else {
@@ -896,25 +835,18 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 	Describe("with a windows agent pool", func() {
 		It("kubelet service should be able to recover when the docker service is stopped", func() {
 			if eng.HasWindowsAgents() {
-				kubeConfig, err := GetConfig()
-				Expect(err).NotTo(HaveOccurred())
-				master := fmt.Sprintf("%s@%s", eng.ExpandedDefinition.Properties.LinuxProfile.AdminUsername, kubeConfig.GetServerName())
 				nodeList, err := node.GetReady()
 				Expect(err).NotTo(HaveOccurred())
-
 				simulateDockerdCrashScript := "simulate-dockerd-crash.cmd"
-				var conn *remote.Connection
-				conn, err = remote.NewConnection(kubeConfig.GetServerName(), masterSSHPort, eng.ExpandedDefinition.Properties.LinuxProfile.AdminUsername, masterSSHPrivateKeyFilepath)
-				Expect(err).NotTo(HaveOccurred())
-				err = conn.CopyToMaster(master, simulateDockerdCrashScript)
+				err = sshConn.CopyTo(simulateDockerdCrashScript)
 				Expect(err).NotTo(HaveOccurred())
 				for _, node := range nodeList.Nodes {
 					if node.IsWindows() {
 						By(fmt.Sprintf("simulating docker and subsequent kubelet service crash on node: %s", node.Metadata.Name))
-						err = conn.CopyToRemote(node.Metadata.Name, "/tmp/"+simulateDockerdCrashScript)
+						err = sshConn.CopyToRemote(node.Metadata.Name, "/tmp/"+simulateDockerdCrashScript)
 						Expect(err).NotTo(HaveOccurred())
 						simulateDockerCrashCommand := fmt.Sprintf("\"/tmp/%s\"", simulateDockerdCrashScript)
-						err = conn.ExecuteFromMaster(node.Metadata.Name, simulateDockerCrashCommand, true)
+						err = sshConn.ExecuteRemote(node.Metadata.Name, simulateDockerCrashCommand, true)
 						Expect(err).NotTo(HaveOccurred())
 					}
 				}
@@ -926,7 +858,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 					if node.IsWindows() {
 						By(fmt.Sprintf("restarting kubelet service on node: %s", node.Metadata.Name))
 						restartKubeletCommand := fmt.Sprintf("\"Powershell Start-Service kubelet\"")
-						err = conn.ExecuteFromMaster(node.Metadata.Name, restartKubeletCommand, true)
+						err = sshConn.ExecuteRemote(node.Metadata.Name, restartKubeletCommand, true)
 						Expect(err).NotTo(HaveOccurred())
 					}
 				}
@@ -1748,23 +1680,17 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 		})
 
 		It("should have healthy time synchronization", func() {
-			kubeConfig, err := GetConfig()
-			Expect(err).NotTo(HaveOccurred())
-			master := fmt.Sprintf("%s@%s", eng.ExpandedDefinition.Properties.LinuxProfile.AdminUsername, kubeConfig.GetServerName())
 			nodeList, err := node.GetReady()
 			Expect(err).NotTo(HaveOccurred())
 			timeSyncValidateScript := "time-sync-validate.sh"
-			var conn *remote.Connection
-			conn, err = remote.NewConnection(kubeConfig.GetServerName(), masterSSHPort, eng.ExpandedDefinition.Properties.LinuxProfile.AdminUsername, masterSSHPrivateKeyFilepath)
-			Expect(err).NotTo(HaveOccurred())
-			err = conn.CopyToMaster(master, timeSyncValidateScript)
+			err = sshConn.CopyTo(timeSyncValidateScript)
 			Expect(err).NotTo(HaveOccurred())
 			for _, node := range nodeList.Nodes {
 				if node.IsUbuntu() {
-					err := conn.CopyToRemote(node.Metadata.Name, "/tmp/"+timeSyncValidateScript)
+					err := sshConn.CopyToRemote(node.Metadata.Name, "/tmp/"+timeSyncValidateScript)
 					Expect(err).NotTo(HaveOccurred())
 					timeSyncValidationCommand := fmt.Sprintf("\"/tmp/%s\"", timeSyncValidateScript)
-					err = conn.ExecuteFromMaster(node.Metadata.Name, timeSyncValidationCommand, false)
+					err = sshConn.ExecuteRemote(node.Metadata.Name, timeSyncValidationCommand, false)
 					Expect(err).NotTo(HaveOccurred())
 				}
 			}
