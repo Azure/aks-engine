@@ -1496,6 +1496,118 @@ func TestHasAvailabilityZones(t *testing.T) {
 	}
 }
 
+func TestHasLowPriorityScaleset(t *testing.T) {
+	cases := []struct {
+		p        Properties
+		expected bool
+	}{
+		{
+			p: Properties{
+				MasterProfile: &MasterProfile{
+					Count: 1,
+				},
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						AvailabilityProfile: VirtualMachineScaleSets,
+						ScaleSetPriority:    ScaleSetPriorityLow,
+					},
+				},
+			},
+			expected: true,
+		},
+		{
+			p: Properties{
+				MasterProfile: &MasterProfile{
+					Count: 1,
+				},
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						AvailabilityProfile: VirtualMachineScaleSets,
+						ScaleSetPriority:    ScaleSetPriorityLow,
+					},
+					{
+						AvailabilityProfile: VirtualMachineScaleSets,
+					},
+				},
+			},
+			expected: true,
+		},
+		{
+			p: Properties{
+				MasterProfile: &MasterProfile{
+					Count: 1,
+				},
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						AvailabilityProfile: VirtualMachineScaleSets,
+						ScaleSetPriority:    ScaleSetPriorityLow,
+					},
+					{
+						AvailabilityProfile: AvailabilitySet,
+					},
+				},
+			},
+			expected: true,
+		},
+		{
+			p: Properties{
+				MasterProfile: &MasterProfile{
+					Count: 1,
+				},
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						AvailabilityProfile: VirtualMachineScaleSets,
+					},
+				},
+			},
+			expected: false,
+		},
+		{
+			p: Properties{
+				MasterProfile: &MasterProfile{
+					Count: 1,
+				},
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						AvailabilityProfile: VirtualMachineScaleSets,
+					},
+					{
+						AvailabilityProfile: AvailabilitySet,
+					},
+				},
+			},
+			expected: false,
+		},
+		{
+			p: Properties{
+				MasterProfile: &MasterProfile{
+					Count: 1,
+				},
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						AvailabilityProfile: AvailabilitySet,
+					},
+				},
+			},
+			expected: false,
+		},
+		{
+			p: Properties{
+				MasterProfile: &MasterProfile{
+					Count: 1,
+				},
+			},
+			expected: false,
+		},
+	}
+
+	for _, c := range cases {
+		if c.p.HasLowPriorityScaleset() != c.expected {
+			t.Fatalf("expected HasLowPriorityScaleset() to return %t but instead returned %t", c.expected, c.p.HasLowPriorityScaleset())
+		}
+	}
+}
+
 func TestMasterIsUbuntu(t *testing.T) {
 	cases := []struct {
 		p        Properties

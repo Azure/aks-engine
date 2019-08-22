@@ -449,9 +449,14 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 		})
 
 		It("should report all nodes in a Ready state", func() {
-			nodeCount := eng.NodeCount()
-			log.Printf("Checking for %d Ready nodes\n", nodeCount)
-			ready := node.WaitOnReady(nodeCount, 10*time.Second, cfg.Timeout)
+			var expectedReadyNodes int
+			if eng.ExpandedDefinition.Properties.HasLowPriorityScaleset() {
+				expectedReadyNodes = eng.NodeCount()
+				log.Printf("Checking for %d Ready nodes\n", expectedReadyNodes)
+			} else {
+				expectedReadyNodes = -1
+			}
+			ready := node.WaitOnReady(expectedReadyNodes, 10*time.Second, cfg.Timeout)
 			cmd := exec.Command("k", "get", "nodes", "-o", "wide")
 			out, _ := cmd.CombinedOutput()
 			log.Printf("%s\n", out)
@@ -863,9 +868,14 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 					}
 				}
 
-				nodeCount := eng.NodeCount()
-				log.Printf("Checking for %d Ready nodes\n", nodeCount)
-				ready := node.WaitOnReady(nodeCount, 1*time.Minute, cfg.Timeout)
+				var expectedReadyNodes int
+				if eng.ExpandedDefinition.Properties.HasLowPriorityScaleset() {
+					expectedReadyNodes = eng.NodeCount()
+					log.Printf("Checking for %d Ready nodes\n", expectedReadyNodes)
+				} else {
+					expectedReadyNodes = -1
+				}
+				ready := node.WaitOnReady(expectedReadyNodes, 1*time.Minute, cfg.Timeout)
 				cmd2 := exec.Command("k", "get", "nodes", "-o", "wide")
 				out2, _ := cmd2.CombinedOutput()
 				log.Printf("%s\n", out2)

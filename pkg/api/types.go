@@ -1173,6 +1173,16 @@ func (p *Properties) HasAvailabilityZones() bool {
 	return hasZones
 }
 
+// HasLowPriorityScaleset returns true if any one node pool has a low-priority scaleset configuration
+func (p *Properties) HasLowPriorityScaleset() bool {
+	for _, agentPoolProfile := range p.AgentPoolProfiles {
+		if agentPoolProfile.IsLowPriorityScaleSet() {
+			return true
+		}
+	}
+	return false
+}
+
 // GetNonMasqueradeCIDR returns the non-masquerade CIDR for the ip-masq-agent.
 func (p *Properties) GetNonMasqueradeCIDR() string {
 	var nonMasqCidr string
