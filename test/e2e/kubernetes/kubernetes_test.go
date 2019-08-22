@@ -352,8 +352,8 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			var pods []pod.Pod
 
 			testPortForward := func(deploymentName string) {
-				running, podWaidErr := pod.WaitOnReady(deploymentName, deploymentNamespace, 3, retryTimeWhenWaitingForPodReady, cfg.Timeout)
-				Expect(podWaidErr).NotTo(HaveOccurred())
+				running, podWaitErr := pod.WaitOnReady(deploymentName, deploymentNamespace, 3, retryTimeWhenWaitingForPodReady, cfg.Timeout)
+				Expect(podWaitErr).NotTo(HaveOccurred())
 				Expect(running).To(Equal(true))
 				pods, err = deploy.Pods()
 				Expect(err).NotTo(HaveOccurred())
