@@ -3,9 +3,9 @@ def clusterConfigurations = ["default-config"]
 def tasks = [:]
 
 environment {
-    TENANT_ID = credentials("AKS_ENGINE_TENANT_ID")
-    CLIENT_ID = credentials("AKS_ENGINE_3014546b_CLIENT_ID")
-    CLIENT_SECRET = credentials("AKS_ENGINE_3014546b_CLIENT_SECRET")
+    TENANT_ID = credentials("TENANT_ID")
+    CLIENT_ID = credentials("CLIENT_ID")
+    CLIENT_SECRET = credentials("CLIENT_SECRET")
 }
 
 stage("Before") {
