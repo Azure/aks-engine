@@ -8,7 +8,7 @@ set +x
 # also validate external DNS lookups
 # configurable retries
 success="no"
-retries=${RETRIES}
+retries=${LOOKUP_RETRIES}
 HOSTS="${NODE_HOSTNAMES} www.bing.com google.com"
 for i in $(seq 1 $retries); do
   for host in $HOSTS; do

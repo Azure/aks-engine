@@ -128,7 +128,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				envString += fmt.Sprintf("%s ", node.Metadata.Name)
 			}
 			lookupRetries := 3
-			envString += fmt.Sprintf("RETRIES=%d'", lookupRetries)
+			envString += fmt.Sprintf("LOOKUP_RETRIES=%d'", lookupRetries)
 			for _, node := range nodeList.Nodes {
 				if node.IsLinux() {
 					err := sshConn.CopyToRemote(node.Metadata.Name, "/tmp/"+hostOSDNSValidateScript)
