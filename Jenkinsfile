@@ -15,6 +15,7 @@ for(int i=0; i< k8sVersions.size(); i++) {
         tasks["${version}/${clusterConfig}"] = {
             stage("cluster create") {
                 node {
+                    checkout scm
                     withEnv(["ORCHESTRATOR_RELEASE=${version}"]) {
                         sh "pwd"
                         sh "ls -laR ${env.WORKSPACE}"
