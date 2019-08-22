@@ -17,8 +17,7 @@ for(int i=0; i< k8sVersions.size(); i++) {
                 node {
                     checkout scm
                     withEnv(["ORCHESTRATOR_RELEASE=${version}"]) {
-                        sh "pwd"
-                        sh "ls -laR ${env.WORKSPACE}"
+                        sh "./test/e2e/cluster.sh"
                     }
                 }
             }
