@@ -16,7 +16,7 @@ for(int i=0; i< k8sVersions.size(); i++) {
             stage("cluster create") {
                 node {
                     withEnv(["ORCHESTRATOR_RELEASE=${version}"]) {
-                        sh "./test/e2e/cluster.sh"
+                        sh "ls -laR"
                     }
                 }
             }
