@@ -17,7 +17,7 @@ for(int i=0; i< k8sVersions.size(); i++) {
                 node {
                     checkout scm
                     withEnv(["ORCHESTRATOR_RELEASE=${version}"]) {
-                        withCredentials([string(credentialsId: 'TENANT_ID_FOO', variable: 'TENANT_ID'), string(credentialsId: 'CLIENT_ID', variable: 'CLIENT_ID'), string(credentialsId: 'CLIENT_SECRET', variable: 'CLIENT_SECRET')]) {
+                        withCredentials([string(credentialsId: 'AKS_ENGINE_TENANT_ID', variable: 'TENANT_ID'), string(credentialsId: 'CLIENT_ID', variable: 'CLIENT_ID'), string(credentialsId: 'CLIENT_SECRET', variable: 'CLIENT_SECRET')]) {
                             sh "./test/e2e/cluster.sh"
                         }
                     }
