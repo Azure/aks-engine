@@ -27,3 +27,9 @@ generate-sas: az-login
 
 make vhd-notes:
 	awk '/START_OF_NOTES/{y=1;next}y' packer-output > release-notes-raw.txt && awk '/END_OF_NOTES/ {exit} {print}' release-notes-raw.txt | sed -r "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[mGK]//g" | sed -e s/azure-arm://g | egrep -v '^==>\s{2}\+' > release-notes.txt && cat release-notes.txt
+
+tag-packer-rg: az-login
+	az group update --name ${PACKER_RG_NAME} --tags "now=$(date +%s)' || echo "RG not found"
+
+tag-sa: az-login
+	az resource tag -n ${SA_NAME} -g ${AZURE_RESOURCE_GROUP_NAME} --tags "now=$(date +%s)' || echo "SA not found"

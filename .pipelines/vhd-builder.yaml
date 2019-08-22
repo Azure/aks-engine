@@ -60,6 +60,7 @@ phases:
     displayName: Copying resource to Classic Storage Account
     condition: eq(variables.DRY_RUN, 'False')
   - script: |
+      PACKER_RG_NAME="$(cat packer-output | grep "ResourceGroupName:" | cut -d " " -f 2)" && \
       SA_NAME="$(cat packer-output | grep "storage name:" | cut -d " " -f 3)" && \
       docker run --rm \
       -v ${PWD}:/go/src/github.com/Azure/aks-engine \
@@ -69,8 +70,9 @@ phases:
       -e TENANT_ID=${TENANT_ID} \
       -e SA_NAME=${SA_NAME} \
       -e AZURE_RESOURCE_GROUP_NAME=${AZURE_RESOURCE_GROUP_NAME} \
-      ${CONTAINER_IMAGE} make delete-sa
-    displayName: Clean-up Storage Account
+      ${CONTAINER_IMAGE} /bin/bash -c "tag-packer-rg && tag-sa && make delete-sa"
+    displayName: Clean-up
+    condition: always()
   - script: |
       docker run --rm \
       -v ${PWD}:/go/src/github.com/Azure/aks-engine \
