@@ -16,8 +16,10 @@ for(int i=0; i< k8sVersions.size(); i++) {
             stage("cluster create") {
                 node {
                     checkout scm
-                    withEnv(["ORCHESTRATOR_RELEASE=${version}","TENANT_ID=${credentials('TENANT_ID')}","CLIENT_ID=${credentials('CLIENT_ID')}","CLIENT_SECRET=${credentials('CLIENT_SECRET')}"]) {
-                        sh "./test/e2e/cluster.sh"
+                    withEnv(["ORCHESTRATOR_RELEASE=${version}"]) {
+                        withCredentials([string(credentialsId: 'TENANT_ID', variable: 'TENANT_ID'), string(credentialsId: 'CLIENT_ID', variable: 'CLIENT_ID'), string(credentialsId: 'CLIENT_SECRET', variable: 'CLIENT_SECRET')]) {
+                            sh "./test/e2e/cluster.sh"
+                        }
                     }
                 }
             }
