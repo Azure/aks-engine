@@ -123,11 +123,12 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			hostOSDNSValidateScript := "host-os-dns-validate.sh"
 			err = sshConn.CopyTo(hostOSDNSValidateScript)
 			Expect(err).NotTo(HaveOccurred())
-			envString := "NODE_HOSTNAMES='"
+			envString := fmt.Sprintf("NODE_HOSTNAMES='")
 			for _, node := range nodeList.Nodes {
 				envString += fmt.Sprintf("%s ", node.Metadata.Name)
 			}
-			envString += "'"
+			lookupRetries := 3
+			envString += fmt.Sprintf("RETRIES=%d'", lookupRetries)
 			for _, node := range nodeList.Nodes {
 				if node.IsLinux() {
 					err := sshConn.CopyToRemote(node.Metadata.Name, "/tmp/"+hostOSDNSValidateScript)

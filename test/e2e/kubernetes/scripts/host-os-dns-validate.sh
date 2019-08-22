@@ -6,9 +6,9 @@ cat /etc/resolv.conf || exit 1
 set +x
 # validate that all node vms can resolve DNS to all other node vms, including themselves
 # also validate external DNS lookups
-# retry failures for up to 10 mins
+# configurable retries
 success="no"
-retries=1
+retries=${RETRIES}
 HOSTS="${NODE_HOSTNAMES} www.bing.com google.com"
 for i in $(seq 1 $retries); do
   for host in $HOSTS; do
