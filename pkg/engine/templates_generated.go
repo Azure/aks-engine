@@ -18034,6 +18034,8 @@ metadata:
   name: keyvault-flexvolume
   namespace: kube-system
 spec:
+  updateStrategy:
+    type: RollingUpdate
   selector:
     matchLabels:
       app: keyvault-flexvolume
@@ -21747,6 +21749,8 @@ metadata:
   name: keyvault-flexvolume
   namespace: kube-system
 spec:
+  updateStrategy:
+    type: RollingUpdate
   template:
     metadata:
       labels:
