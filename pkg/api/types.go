@@ -1235,7 +1235,7 @@ func (p *Properties) AnyAgentHasLoadBalancerBackendAddressPoolIDs() bool {
 	return false
 }
 
-// IsValid returns true if ImageRefernce contains at least Name and ResoruceGroup
+// IsValid returns true if ImageRefernce contains at least Name and ResourceGroup
 func (i *ImageReference) IsValid() bool {
 	return len(i.Name) > 0 && len(i.ResourceGroup) > 0
 }
