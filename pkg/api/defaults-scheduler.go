@@ -18,16 +18,16 @@ var defaultSchedulerConfig = map[string]string{
 func (cs *ContainerService) setSchedulerConfig() {
 	o := cs.Properties.OrchestratorProfile
 
-	// If no user-configurable scheduler config values exists, use the defaults
+	// If no user-configurable scheduler config values exists, make an empty map, and fill in with defaults
 	if o.KubernetesConfig.SchedulerConfig == nil {
-		o.KubernetesConfig.SchedulerConfig = defaultSchedulerConfig
-	} else {
-		for key, val := range defaultSchedulerConfig {
-			// If we don't have a user-configurable scheduler config for each option
-			if _, ok := o.KubernetesConfig.SchedulerConfig[key]; !ok {
-				// then assign the default value
-				o.KubernetesConfig.SchedulerConfig[key] = val
-			}
+		o.KubernetesConfig.SchedulerConfig = make(map[string]string)
+	}
+
+	for key, val := range defaultSchedulerConfig {
+		// If we don't have a user-configurable scheduler config for each option
+		if _, ok := o.KubernetesConfig.SchedulerConfig[key]; !ok {
+			// then assign the default value
+			o.KubernetesConfig.SchedulerConfig[key] = val
 		}
 	}
 

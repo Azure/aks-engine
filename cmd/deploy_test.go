@@ -85,9 +85,9 @@ func getAPIModel(baseAPIModel string, useManagedIdentity bool, clientID, clientS
 		clientSecret)
 }
 
-func getAPIModelWithoutServicePrincipalProfile(baseAPIModel string, useManagedIdentity bool) string {
+func getAPIModelWithoutServicePrincipalProfile(useManagedIdentity bool) string {
 	return fmt.Sprintf(
-		baseAPIModel,
+		ExampleAPIModelWithoutServicePrincipalProfile,
 		strconv.FormatBool(useManagedIdentity))
 }
 
@@ -268,7 +268,7 @@ func TestAPIModelWithoutServicePrincipalProfileAndClientIdAndSecretInCmd(t *test
 		Translator: nil,
 	}
 
-	apimodel := getAPIModelWithoutServicePrincipalProfile(ExampleAPIModelWithoutServicePrincipalProfile, false)
+	apimodel := getAPIModelWithoutServicePrincipalProfile(false)
 	TestClientIDInCmd, err := uuid.FromString("DEC923E3-1EF1-4745-9516-37906D56DEC4")
 	if err != nil {
 		t.Fatalf("Invalid ClientID in Test: %s", err)
@@ -373,7 +373,7 @@ func TestAPIModelWithoutServicePrincipalProfileAndWithoutClientIdAndSecretInCmd(
 		Translator: nil,
 	}
 
-	apimodel := getAPIModelWithoutServicePrincipalProfile(ExampleAPIModelWithoutServicePrincipalProfile, false)
+	apimodel := getAPIModelWithoutServicePrincipalProfile(false)
 
 	cs, ver, err := apiloader.DeserializeContainerService([]byte(apimodel), false, false, nil)
 	if err != nil {

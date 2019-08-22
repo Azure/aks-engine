@@ -685,7 +685,9 @@ func convertVLabsKubernetesConfig(vlabs *vlabs.KubernetesConfig, api *Kubernetes
 	api.CloudProviderBackoffRetries = vlabs.CloudProviderBackoffRetries
 	api.CloudProviderRateLimit = vlabs.CloudProviderRateLimit
 	api.CloudProviderRateLimitBucket = vlabs.CloudProviderRateLimitBucket
+	api.CloudProviderRateLimitBucketWrite = vlabs.CloudProviderRateLimitBucketWrite
 	api.CloudProviderRateLimitQPS = vlabs.CloudProviderRateLimitQPS
+	api.CloudProviderRateLimitQPSWrite = vlabs.CloudProviderRateLimitQPSWrite
 	api.UseManagedIdentity = vlabs.UseManagedIdentity
 	api.UserAssignedID = vlabs.UserAssignedID
 	api.UserAssignedClientID = vlabs.UserAssignedClientID
@@ -745,7 +747,7 @@ func setVlabsKubernetesDefaults(vp *vlabs.Properties, api *OrchestratorProfile) 
 			api.KubernetesConfig.NetworkPolicy = vp.OrchestratorProfile.KubernetesConfig.NetworkPolicy
 		}
 	}
-	if api.KubernetesConfig.NetworkPlugin == "" {
+	if api.KubernetesConfig.NetworkPlugin == "" && api.KubernetesConfig.NetworkPolicy == "" {
 		if vp.HasWindows() {
 			api.KubernetesConfig.NetworkPlugin = vlabs.DefaultNetworkPluginWindows
 		} else {

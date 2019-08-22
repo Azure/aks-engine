@@ -281,9 +281,9 @@ const (
 	// DefaultWindowsOffer sets the default WindowsOffer value in WindowsProfile
 	DefaultWindowsOffer = "WindowsServer"
 	// DefaultWindowsSku sets the default WindowsSku value in WindowsProfile
-	DefaultWindowsSku = "Datacenter-Core-1809-with-Containers-smalldisk"
+	DefaultWindowsSku = "2019-Datacenter-Core-with-Containers-smalldisk"
 	// DefaultImageVersion sets the default ImageVersion value in WindowsProfile
-	DefaultImageVersion = "17763.557.20190604"
+	DefaultImageVersion = "17763.615.1907121548"
 )
 
 const (
@@ -314,8 +314,12 @@ const (
 	DefaultKubernetesCloudProviderBackoffExponent = 1.5
 	// DefaultKubernetesCloudProviderRateLimitQPS is 3, takes effect if DefaultKubernetesCloudProviderRateLimit is true
 	DefaultKubernetesCloudProviderRateLimitQPS = 3.0
+	// DefaultKubernetesCloudProviderRateLimitQPSWrite is 1, takes effect if DefaultKubernetesCloudProviderRateLimit is true
+	DefaultKubernetesCloudProviderRateLimitQPSWrite = 1.0
 	// DefaultKubernetesCloudProviderRateLimitBucket is 10, takes effect if DefaultKubernetesCloudProviderRateLimit is true
 	DefaultKubernetesCloudProviderRateLimitBucket = 10
+	// DefaultKubernetesCloudProviderRateLimitBucketWrite is 10, takes effect if DefaultKubernetesCloudProviderRateLimit is true
+	DefaultKubernetesCloudProviderRateLimitBucketWrite = DefaultKubernetesCloudProviderRateLimitBucket
 )
 
 const (

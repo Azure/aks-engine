@@ -1,6 +1,9 @@
 build-packer:
 	@packer build -var-file=packer/settings.json packer/vhd-image-builder.json
 
+build-packer-windows:
+	@packer build -var-file=packer/settings.json packer/windows-vhd-builder.json
+
 init-packer:
 	@./packer/init-variables.sh
 
@@ -10,8 +13,11 @@ az-login:
 run-packer: az-login
 	@packer version && set -o pipefail && ($(MAKE) init-packer | tee packer-output) && ($(MAKE) build-packer | tee -a packer-output)
 
+run-packer-windows: az-login
+	@packer version && set -o pipefail && ($(MAKE) init-packer | tee packer-output) && ($(MAKE) build-packer-windows | tee -a packer-output)
+
 az-copy: az-login
-	azcopy --source "${OS_DISK_SAS}" --destination "${CLASSIC_BLOB}/${VHD_NAME}" --dest-sas "${CLASSIC_SAS_TOKEN}"
+	azcopy-preview copy "${OS_DISK_SAS}" "${CLASSIC_BLOB}${CLASSIC_SAS_TOKEN}"
 
 delete-sa: az-login
 	az storage account delete -n ${SA_NAME} -g ${AZURE_RESOURCE_GROUP_NAME} --yes

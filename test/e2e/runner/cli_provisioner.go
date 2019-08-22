@@ -377,7 +377,7 @@ func (cli *CLIProvisioner) FetchProvisioningMetrics(path string, cfg *config.Con
 	}
 	for _, master := range cli.Masters {
 		for _, fp := range masterFiles {
-			err = conn.CopyFromRemote(master.Name, fp)
+			err = conn.CopyFrom(master.Name, fp)
 			if err != nil {
 				log.Printf("Error reading file from path (%s):%s", path, err)
 			}
@@ -386,7 +386,7 @@ func (cli *CLIProvisioner) FetchProvisioningMetrics(path string, cfg *config.Con
 
 	for _, agent := range cli.Agents {
 		for _, fp := range agentFiles {
-			err = conn.CopyFromRemote(agent.Name, fp)
+			err = conn.CopyFrom(agent.Name, fp)
 			if err != nil {
 				log.Printf("Error reading file from path (%s):%s", path, err)
 			}

@@ -3501,6 +3501,10 @@ func TestCloudProviderDefaults(t *testing.T) {
 			defaultVal:  DefaultKubernetesCloudProviderRateLimitBucket,
 			computedVal: o.KubernetesConfig.CloudProviderRateLimitBucket,
 		},
+		{
+			defaultVal:  DefaultKubernetesCloudProviderRateLimitBucketWrite,
+			computedVal: o.KubernetesConfig.CloudProviderRateLimitBucketWrite,
+		},
 	}
 
 	for _, c := range intCases {
@@ -3525,6 +3529,10 @@ func TestCloudProviderDefaults(t *testing.T) {
 			defaultVal:  DefaultKubernetesCloudProviderRateLimitQPS,
 			computedVal: o.KubernetesConfig.CloudProviderRateLimitQPS,
 		},
+		{
+			defaultVal:  DefaultKubernetesCloudProviderRateLimitQPSWrite,
+			computedVal: o.KubernetesConfig.CloudProviderRateLimitQPSWrite,
+		},
 	}
 
 	for _, c := range floatCases {
@@ -3539,6 +3547,8 @@ func TestCloudProviderDefaults(t *testing.T) {
 	customCloudProviderBackoffRetries := 9
 	customCloudProviderRateLimitBucket := 37
 	customCloudProviderRateLimitQPS := 9.9
+	customCloudProviderRateLimitQPSWrite := 100.1
+	customCloudProviderRateLimitBucketWrite := 42
 
 	// Test cloudprovider defaults when user provides configuration
 	v = "1.8.0"
@@ -3547,12 +3557,14 @@ func TestCloudProviderDefaults(t *testing.T) {
 			OrchestratorType:    "Kubernetes",
 			OrchestratorVersion: v,
 			KubernetesConfig: &KubernetesConfig{
-				CloudProviderBackoffDuration: customCloudProviderBackoffDuration,
-				CloudProviderBackoffExponent: customCloudProviderBackoffExponent,
-				CloudProviderBackoffJitter:   customCloudProviderBackoffJitter,
-				CloudProviderBackoffRetries:  customCloudProviderBackoffRetries,
-				CloudProviderRateLimitBucket: customCloudProviderRateLimitBucket,
-				CloudProviderRateLimitQPS:    customCloudProviderRateLimitQPS,
+				CloudProviderBackoffDuration:      customCloudProviderBackoffDuration,
+				CloudProviderBackoffExponent:      customCloudProviderBackoffExponent,
+				CloudProviderBackoffJitter:        customCloudProviderBackoffJitter,
+				CloudProviderBackoffRetries:       customCloudProviderBackoffRetries,
+				CloudProviderRateLimitBucket:      customCloudProviderRateLimitBucket,
+				CloudProviderRateLimitQPS:         customCloudProviderRateLimitQPS,
+				CloudProviderRateLimitQPSWrite:    customCloudProviderRateLimitQPSWrite,
+				CloudProviderRateLimitBucketWrite: customCloudProviderRateLimitBucketWrite,
 			},
 		},
 	}
@@ -3575,6 +3587,10 @@ func TestCloudProviderDefaults(t *testing.T) {
 		{
 			customVal:   customCloudProviderRateLimitBucket,
 			computedVal: o.KubernetesConfig.CloudProviderRateLimitBucket,
+		},
+		{
+			customVal:   customCloudProviderRateLimitBucketWrite,
+			computedVal: o.KubernetesConfig.CloudProviderRateLimitBucketWrite,
 		},
 	}
 
@@ -3599,6 +3615,10 @@ func TestCloudProviderDefaults(t *testing.T) {
 		{
 			customVal:   customCloudProviderRateLimitQPS,
 			computedVal: o.KubernetesConfig.CloudProviderRateLimitQPS,
+		},
+		{
+			customVal:   customCloudProviderRateLimitQPSWrite,
+			computedVal: o.KubernetesConfig.CloudProviderRateLimitQPSWrite,
 		},
 	}
 
@@ -3837,7 +3857,7 @@ func TestCloudProviderDefaults(t *testing.T) {
 			computedVal: o.KubernetesConfig.CloudProviderBackoffDuration,
 		},
 		{
-			expectedVal: DefaultKubernetesCloudProviderRateLimitBucket,
+			expectedVal: common.MaxAgentCount,
 			computedVal: o.KubernetesConfig.CloudProviderRateLimitBucket,
 		},
 	}
@@ -3861,7 +3881,7 @@ func TestCloudProviderDefaults(t *testing.T) {
 			computedVal: o.KubernetesConfig.CloudProviderBackoffExponent,
 		},
 		{
-			expectedVal: DefaultKubernetesCloudProviderRateLimitQPS,
+			expectedVal: float64(common.MaxAgentCount) * common.MinCloudProviderQPSToBucketFactor,
 			computedVal: o.KubernetesConfig.CloudProviderRateLimitQPS,
 		},
 	}
@@ -3871,6 +3891,142 @@ func TestCloudProviderDefaults(t *testing.T) {
 			t.Fatalf("KubernetesConfig empty cloudprovider configs should reflect default values after SetCloudProviderBackoffDefaults(), expected %f, got %f", c.expectedVal, c.computedVal)
 		}
 	}
+
+	// Test cloudprovider defaults for VMAS scenario
+	v = "1.14.0"
+	p = Properties{
+		OrchestratorProfile: &OrchestratorProfile{
+			OrchestratorType:    "Kubernetes",
+			OrchestratorVersion: v,
+			KubernetesConfig:    &KubernetesConfig{},
+		},
+		AgentPoolProfiles: []*AgentPoolProfile{
+			{
+				AvailabilityProfile: AvailabilitySet,
+			},
+		},
+	}
+	o = p.OrchestratorProfile
+	o.KubernetesConfig.SetCloudProviderBackoffDefaults()
+	p.SetCloudProviderRateLimitDefaults()
+
+	intCasesMixed = []struct {
+		expectedVal int
+		computedVal int
+	}{
+		{
+			expectedVal: DefaultKubernetesCloudProviderBackoffRetries,
+			computedVal: o.KubernetesConfig.CloudProviderBackoffRetries,
+		},
+		{
+			expectedVal: DefaultKubernetesCloudProviderBackoffDuration,
+			computedVal: o.KubernetesConfig.CloudProviderBackoffDuration,
+		},
+		{
+			expectedVal: common.MaxAgentCount,
+			computedVal: o.KubernetesConfig.CloudProviderRateLimitBucket,
+		},
+	}
+
+	for _, c := range intCasesMixed {
+		if c.computedVal != c.expectedVal {
+			t.Fatalf("KubernetesConfig empty cloudprovider configs should reflect default values after SetCloudProviderBackoffDefaults(), expected %d, got %d", c.expectedVal, c.computedVal)
+		}
+	}
+
+	floatCasesMixed = []struct {
+		expectedVal float64
+		computedVal float64
+	}{
+		{
+			expectedVal: DefaultKubernetesCloudProviderBackoffJitter,
+			computedVal: o.KubernetesConfig.CloudProviderBackoffJitter,
+		},
+		{
+			expectedVal: DefaultKubernetesCloudProviderBackoffExponent,
+			computedVal: o.KubernetesConfig.CloudProviderBackoffExponent,
+		},
+		{
+			expectedVal: float64(common.MaxAgentCount) * common.MinCloudProviderQPSToBucketFactor,
+			computedVal: o.KubernetesConfig.CloudProviderRateLimitQPS,
+		},
+	}
+
+	for _, c := range floatCasesMixed {
+		if c.computedVal != c.expectedVal {
+			t.Fatalf("KubernetesConfig empty cloudprovider configs should reflect default values after SetCloudProviderBackoffDefaults(), expected %f, got %f", c.expectedVal, c.computedVal)
+		}
+	}
+
+	// Test cloudprovider defaults for VMAS + VMSS scenario
+	v = "1.14.0"
+	p = Properties{
+		OrchestratorProfile: &OrchestratorProfile{
+			OrchestratorType:    "Kubernetes",
+			OrchestratorVersion: v,
+			KubernetesConfig:    &KubernetesConfig{},
+		},
+		AgentPoolProfiles: []*AgentPoolProfile{
+			{
+				AvailabilityProfile: AvailabilitySet,
+			},
+			{
+				AvailabilityProfile: VirtualMachineScaleSets,
+			},
+		},
+	}
+	o = p.OrchestratorProfile
+	o.KubernetesConfig.SetCloudProviderBackoffDefaults()
+	p.SetCloudProviderRateLimitDefaults()
+
+	intCasesMixed = []struct {
+		expectedVal int
+		computedVal int
+	}{
+		{
+			expectedVal: DefaultKubernetesCloudProviderBackoffRetries,
+			computedVal: o.KubernetesConfig.CloudProviderBackoffRetries,
+		},
+		{
+			expectedVal: DefaultKubernetesCloudProviderBackoffDuration,
+			computedVal: o.KubernetesConfig.CloudProviderBackoffDuration,
+		},
+		{
+			expectedVal: 2 * common.MaxAgentCount,
+			computedVal: o.KubernetesConfig.CloudProviderRateLimitBucket,
+		},
+	}
+
+	for _, c := range intCasesMixed {
+		if c.computedVal != c.expectedVal {
+			t.Fatalf("KubernetesConfig empty cloudprovider configs should reflect default values after SetCloudProviderBackoffDefaults(), expected %d, got %d", c.expectedVal, c.computedVal)
+		}
+	}
+
+	floatCasesMixed = []struct {
+		expectedVal float64
+		computedVal float64
+	}{
+		{
+			expectedVal: DefaultKubernetesCloudProviderBackoffJitter,
+			computedVal: o.KubernetesConfig.CloudProviderBackoffJitter,
+		},
+		{
+			expectedVal: DefaultKubernetesCloudProviderBackoffExponent,
+			computedVal: o.KubernetesConfig.CloudProviderBackoffExponent,
+		},
+		{
+			expectedVal: float64(common.MaxAgentCount*2) * common.MinCloudProviderQPSToBucketFactor,
+			computedVal: o.KubernetesConfig.CloudProviderRateLimitQPS,
+		},
+	}
+
+	for _, c := range floatCasesMixed {
+		if c.computedVal != c.expectedVal {
+			t.Fatalf("KubernetesConfig empty cloudprovider configs should reflect default values after SetCloudProviderBackoffDefaults(), expected %f, got %f", c.expectedVal, c.computedVal)
+		}
+	}
+
 }
 
 func getMockAddon(name string) KubernetesAddon {
@@ -5783,6 +5939,61 @@ func TestAnyAgentIsLinux(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 			ret := test.p.AnyAgentIsLinux()
+			if test.expected != ret {
+				t.Errorf("expected %t, instead got : %t", test.expected, ret)
+			}
+		})
+	}
+}
+
+func TestHasContainerd(t *testing.T) {
+	tests := []struct {
+		name     string
+		k        *KubernetesConfig
+		expected bool
+	}{
+		{
+			name: "docker",
+			k: &KubernetesConfig{
+				ContainerRuntime: Docker,
+			},
+			expected: false,
+		},
+		{
+			name: "empty string",
+			k: &KubernetesConfig{
+				ContainerRuntime: "",
+			},
+			expected: false,
+		},
+		{
+			name: "unexpected string",
+			k: &KubernetesConfig{
+				ContainerRuntime: "foo",
+			},
+			expected: false,
+		},
+		{
+			name: "containerd",
+			k: &KubernetesConfig{
+				ContainerRuntime: Containerd,
+			},
+			expected: true,
+		},
+		{
+			name: "kata",
+			k: &KubernetesConfig{
+				ContainerRuntime: KataContainers,
+			},
+			expected: true,
+		},
+	}
+
+	for _, test := range tests {
+		test := test
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+			ret := test.k.NeedsContainerd()
 			if test.expected != ret {
 				t.Errorf("expected %t, instead got : %t", test.expected, ret)
 			}

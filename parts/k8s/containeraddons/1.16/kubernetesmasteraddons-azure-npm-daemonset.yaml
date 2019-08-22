@@ -65,8 +65,6 @@ spec:
     metadata:
       labels:
         k8s-app: azure-npm
-      annotations:
-        scheduler.alpha.kubernetes.io/critical-pod: ''
     spec:
       priorityClassName: system-node-critical
       tolerations:

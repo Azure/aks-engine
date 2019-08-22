@@ -100,6 +100,7 @@ func TestGetTemplateFuncMap(t *testing.T) {
 		"HasAvailabilityZones",
 		"GetBase64EncodedEnvironmentJSON",
 		"GetIdentitySystem",
+		"NeedsContainerd",
 		// TODO validate that the remaining func strings in getTemplateFuncMap are thinly wrapped and unit tested
 	}
 
@@ -127,6 +128,12 @@ func TestGetTemplateFuncMap(t *testing.T) {
 			ret := v.Call(rargs)
 			if ret[0].Interface() != "" {
 				t.Fatalf("Got unexpected GetKubernetesMasterPreprovisionYaml response")
+			}
+		case "NeedsContainerd":
+			rargs := make([]reflect.Value, 0)
+			ret := v.Call(rargs)
+			if ret[0].Interface() != false {
+				t.Fatalf("Got unexpected NeedsContainerd response")
 			}
 		}
 	}

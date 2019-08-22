@@ -35,6 +35,7 @@ func GenerateARMResources(cs *api.ContainerService) []interface{} {
 	}
 
 	if !cs.Properties.OrchestratorProfile.IsPrivateCluster() &&
+		!isHostedMaster &&
 		!cs.Properties.AnyAgentHasLoadBalancerBackendAddressPoolIDs() &&
 		cs.Properties.OrchestratorProfile.KubernetesConfig.LoadBalancerSku == api.StandardLoadBalancerSku {
 		isForMaster := false

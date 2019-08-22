@@ -1,0 +1,83 @@
+{
+    "variables": {
+        "client_id": "{{env `AZURE_CLIENT_ID`}}",
+        "client_secret": "{{env `AZURE_CLIENT_SECRET`}}",
+        "tenant_id": "{{env `AZURE_TENANT_ID`}}",
+        "subscription_id": "{{env `AZURE_SUBSCRIPTION_ID`}}",
+        "location": "{{env `AZURE_LOCATION`}}",
+        "vm_size": "{{env `AZURE_VM_SIZE`}}"
+    },
+    "builders": [
+        {
+            "type": "azure-arm",
+            "client_id": "{{user `client_id`}}",
+            "client_secret": "{{user `client_secret`}}",
+            "tenant_id": "{{user `tenant_id`}}",
+            "subscription_id": "{{user `subscription_id`}}",
+            "location": "{{user `location`}}",
+            "vm_size": "{{user `vm_size`}}",
+            "os_type": "Windows",
+            "image_publisher": "MicrosoftWindowsServer",
+            "image_offer": "WindowsServer",
+            "image_sku": "2019-Datacenter-Core-smalldisk",
+            "image_version": "17763.615.1907121548",
+            "resource_group_name": "{{user `resource_group_name`}}",
+            "capture_container_name": "aksengine-vhds-windows-ws2019",
+            "capture_name_prefix": "aksengine-{{timestamp}}",
+            "storage_account": "{{user `storage_account_name`}}",
+            "communicator": "winrm",
+            "winrm_use_ssl": true,
+            "winrm_insecure": true,
+            "winrm_timeout": "10m",
+            "winrm_username": "packer"
+        }
+    ],
+    "provisioners": [
+        {
+            "elevated_user": "packer",
+            "elevated_password": "{{.WinRMPassword}}",
+            "environment_vars": "ProvisioningPhase=1",
+            "type": "powershell",
+            "script": "packer/configure-windows-vhd.ps1"
+        },
+        {
+            "restart_timeout": "10m",
+            "type": "windows-restart"
+        },
+        {
+            "restart_timeout": "10m",
+            "type": "windows-restart"
+        },
+        {
+            "elevated_user": "packer",
+            "elevated_password": "{{.WinRMPassword}}",
+            "environment_vars": "ProvisioningPhase=2",
+            "type": "powershell",
+            "script": "packer/configure-windows-vhd.ps1"
+        },
+        {
+            "restart_timeout": "10m",
+            "type": "windows-restart"
+        },
+        {
+            "elevated_user": "packer",
+            "elevated_password": "{{.WinRMPassword}}",
+            "type": "powershell",
+            "script": "packer/write-release-notes-windows.ps1"
+        },
+        {
+            "type": "file",
+            "direction": "download",
+            "source": "c:\\release-notes.txt",
+            "destination": "release-notes.txt"
+        },
+        {
+            "type": "powershell",
+            "inline": [
+                "& $env:SystemRoot\\System32\\Sysprep\\Sysprep.exe /oobe /generalize /mode:vm /quiet /quit",
+                "while($true) { $imageState = Get-ItemProperty HKLM:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Setup\\State | Select ImageState; if($imageState.ImageState -ne 'IMAGE_STATE_GENERALIZE_RESEAL_TO_OOBE') { Write-Output $imageState.ImageState; Start-Sleep -s 10  } else { break } }",
+                "Remove-Item -Path WSMan:\\Localhost\\listener\\listener* -Recurse"
+            ]
+        }
+    ]
+}

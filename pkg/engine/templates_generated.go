@@ -7063,7 +7063,6 @@ spec:
       annotations:
         prometheus.io/port: "9090"
         prometheus.io/scrape: "true"
-        scheduler.alpha.kubernetes.io/critical-pod: ""
         scheduler.alpha.kubernetes.io/tolerations: '[{"key":"dedicated","operator":"Equal","value":"master","effect":"NoSchedule"}]'
       labels:
         k8s-app: cilium
@@ -7866,7 +7865,8 @@ metadata:
   name: cilium
   namespace: kube-system
   labels:
-    addonmanager.kubernetes.io/mode: "Reconcile"`)
+    addonmanager.kubernetes.io/mode: "Reconcile"
+`)
 
 func k8sAddons116KubernetesmasteraddonsCiliumDaemonsetYamlBytes() ([]byte, error) {
 	return _k8sAddons116KubernetesmasteraddonsCiliumDaemonsetYaml, nil
@@ -7939,8 +7939,6 @@ spec:
       labels:
         tier: node
         app: flannel
-      annotations:
-        scheduler.alpha.kubernetes.io/critical-pod: ''
     spec:
       hostNetwork: true
       nodeSelector:
@@ -8139,8 +8137,6 @@ spec:
     metadata:
       labels:
         k8s-app: kube-dns
-      annotations:
-        scheduler.alpha.kubernetes.io/critical-pod: ''
     spec:
       priorityClassName: system-node-critical
       tolerations:
@@ -8291,21 +8287,31 @@ var _k8sAddons116KubernetesmasteraddonsKubeProxyDaemonsetYaml = []byte(`apiVersi
 kind: DaemonSet
 metadata:
   labels:
+    addonmanager.kubernetes.io/mode: Reconcile
     kubernetes.io/cluster-service: "true"
     component: kube-proxy
     tier: node
+    k8s-app: kube-proxy
   name: kube-proxy
   namespace: kube-system
 spec:
+  updateStrategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 50%
   selector:
     matchLabels:
       component: kube-proxy
       tier: node
+      k8s-app: kube-proxy
   template:
     metadata:
       labels:
         component: kube-proxy
         tier: node
+        k8s-app: kube-proxy
+      annotations:
+        scheduler.alpha.kubernetes.io/critical-pod: ''
     spec:
       priorityClassName: system-node-critical
       tolerations:
@@ -8317,13 +8323,14 @@ spec:
         effect: NoExecute
       - operator: "Exists"
         effect: NoSchedule
+      - key: CriticalAddonsOnly
+        operator: Exists
       containers:
       - command:
         - /hyperkube
         - kube-proxy
         - --kubeconfig=/var/lib/kubelet/kubeconfig
         - --cluster-cidr=<CIDR>
-        - --feature-gates=ExperimentalCriticalPodAnnotation=true
         - --proxy-mode=<kubeProxyMode>
         image: <img>
         imagePullPolicy: IfNotPresent
@@ -11202,17 +11209,29 @@ var _k8sAddonsKubernetesmasteraddonsKubeProxyDaemonsetYaml = []byte(`apiVersion:
 kind: DaemonSet
 metadata:
   labels:
+    addonmanager.kubernetes.io/mode: Reconcile
     kubernetes.io/cluster-service: "true"
     component: kube-proxy
     tier: node
+    k8s-app: kube-proxy
   name: kube-proxy
   namespace: kube-system
 spec:
+  selector:
+    matchLabels:
+      k8s-app: kube-proxy
+  updateStrategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 50%
   template:
     metadata:
       labels:
         component: kube-proxy
         tier: node
+        k8s-app: kube-proxy
+      annotations:
+        scheduler.alpha.kubernetes.io/critical-pod: ''
     spec:
       priorityClassName: system-node-critical
       tolerations:
@@ -11224,6 +11243,8 @@ spec:
         effect: NoExecute
       - operator: "Exists"
         effect: NoSchedule
+      - key: CriticalAddonsOnly
+        operator: Exists
       containers:
       - command:
         - /hyperkube
@@ -12541,12 +12562,6 @@ configureCNIIPTables() {
     fi
 }
 
-setKubeletOpts () {
-    KUBELET_DEFAULT_FILE=/etc/default/kubelet
-    wait_for_file 1200 1 $KUBELET_DEFAULT_FILE || exit $ERR_FILE_WATCH_TIMEOUT
-    sed -i "s#^KUBELET_OPTS=.*#KUBELET_OPTS=${1}#" $KUBELET_DEFAULT_FILE
-}
-
 setupContainerd() {
     echo "Configuring cri-containerd..."
     mkdir -p "/etc/containerd"
@@ -12567,7 +12582,6 @@ setupContainerd() {
         echo "runtime_type = 'io.containerd.runtime.v1.linux'"
         echo "runtime_engine = '/usr/local/sbin/runc'"
     } > "$CRI_CONTAINERD_CONFIG"
-    setKubeletOpts " --container-runtime=remote --runtime-request-timeout=15m --container-runtime-endpoint=unix:///run/containerd/containerd.sock"
 }
 
 ensureContainerd() {
@@ -14106,7 +14120,7 @@ ETCDCTL_API=3 etcdctl ${ETCDCTL_PARAMS} lock ${PROXY_CERTS_LOCK_NAME}  > "${PROX
 echo "$(date) lock acquired"
 
 pid=$!
-if read lockthis < "${PROXY_CERT_LOCK_FILE}"; then
+if read -r lockthis < "${PROXY_CERT_LOCK_FILE}"; then
   if [[ "" == "$(ETCDCTL_API=3 etcdctl ${ETCDCTL_PARAMS} get $ETCD_REQUESTHEADER_CLIENT_CA --print-value-only)" ]]; then
     ETCDCTL_API=3 etcdctl ${ETCDCTL_PARAMS} put $ETCD_REQUESTHEADER_CLIENT_CA " $(cat ${PROXY_CRT})" >/dev/null 2>&1;
 	else
@@ -15416,8 +15430,8 @@ MASTER_CONTAINER_ADDONS_PLACEHOLDER
   permissions: "0644"
   owner: root
   content: |
-{{if IsKubernetesVersionLt "1.8.0"}}
-    KUBELET_OPTS=--require-kubeconfig
+{{if NeedsContainerd}}
+    KUBELET_OPTS=--container-runtime=remote --runtime-request-timeout=15m --container-runtime-endpoint=unix:///run/containerd/containerd.sock
 {{else}}
     KUBELET_OPTS=
 {{end}}
@@ -15947,8 +15961,8 @@ write_files:
   permissions: "0644"
   owner: root
   content: |
-{{if IsKubernetesVersionLt "1.8.0"}}
-    KUBELET_OPTS=--require-kubeconfig
+{{if NeedsContainerd}}
+    KUBELET_OPTS=--container-runtime=remote --runtime-request-timeout=15m --container-runtime-endpoint=unix:///run/containerd/containerd.sock
 {{else}}
     KUBELET_OPTS=
 {{end}}
@@ -16075,8 +16089,6 @@ spec:
     metadata:
       labels:
         k8s-app: azure-cnms
-      annotations:
-        scheduler.alpha.kubernetes.io/critical-pod: ''
     spec:
       priorityClassName: system-node-critical
       tolerations:
@@ -16693,8 +16705,6 @@ spec:
     metadata:
       labels:
         k8s-app: azure-npm
-      annotations:
-        scheduler.alpha.kubernetes.io/critical-pod: ''
     spec:
       priorityClassName: system-node-critical
       tolerations:
@@ -17165,12 +17175,9 @@ spec:
       labels:
         k8s-app: calico-typha
       annotations:
-        # This, along with the CriticalAddonsOnly toleration below, marks the pod as a critical
-        # add-on, ensuring it gets priority scheduling and that its resources are reserved
-        # if it ever gets evicted.
-        scheduler.alpha.kubernetes.io/critical-pod: ''
         cluster-autoscaler.kubernetes.io/safe-to-evict: 'true'
     spec:
+      priorityClassName: system-cluster-critical
       nodeSelector:
         beta.kubernetes.io/os: linux
       hostNetwork: true
@@ -17254,13 +17261,8 @@ spec:
     metadata:
       labels:
         k8s-app: calico-node
-      annotations:
-        # This, along with the CriticalAddonsOnly toleration below,
-        # marks the pod as a critical add-on, ensuring it gets
-        # priority scheduling and that its resources are reserved
-        # if it ever gets evicted.
-        scheduler.alpha.kubernetes.io/critical-pod: ''
     spec:
+      priorityClassName: system-cluster-critical
       nodeSelector:
         beta.kubernetes.io/os: linux
       hostNetwork: true
@@ -17474,8 +17476,6 @@ spec:
     metadata:
       labels:
         k8s-app: calico-typha-autoscaler
-      annotations:
-        scheduler.alpha.kubernetes.io/critical-pod: ''
     spec:
       priorityClassName: system-cluster-critical
       securityContext:
@@ -17940,8 +17940,6 @@ spec:
     metadata:
       labels:
         k8s-app: heapster
-      annotations:
-        scheduler.alpha.kubernetes.io/critical-pod: ''
     spec:
       priorityClassName: system-node-critical
       containers:
@@ -18105,9 +18103,8 @@ spec:
     metadata:
       labels:
         k8s-app: rescheduler
-      annotations:
-        scheduler.alpha.kubernetes.io/critical-pod: ''
     spec:
+      priorityClassName: system-node-critical
       nodeSelector:
         beta.kubernetes.io/os: linux
       containers:
@@ -18310,6 +18307,7 @@ rules:
   resources:
   - pods
   - nodes
+  - nodes/stats
   - namespaces
   verbs:
   - get
@@ -18470,8 +18468,6 @@ spec:
     type: RollingUpdate
   template:
     metadata:
-      annotations:
-        scheduler.alpha.kubernetes.io/critical-pod: ""
       labels:
         k8s-app: nvidia-device-plugin
     spec:
@@ -22022,6 +22018,7 @@ rules:
   resources:
   - pods
   - nodes
+  - nodes/stats
   - namespaces
   verbs:
   - get
@@ -23283,7 +23280,9 @@ var _k8sKubernetesparamsT = []byte(`{{if .HasAadProfile}}
         "cloudProviderBackoffExponent": "0",
         "cloudProviderRateLimit": false,
         "cloudProviderRateLimitQPS": "0",
-        "cloudProviderRateLimitBucket": 0
+        "cloudProviderRateLimitQPSWrite": "0",
+        "cloudProviderRateLimitBucket": 0,
+        "cloudProviderRateLimitBucketWrite": 0
       }
     },
 {{if IsKubernetesVersionGe "1.12.0"}}
