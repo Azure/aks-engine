@@ -14,9 +14,10 @@ for(int i=0; i< k8sVersions.size(); i++) {
         def clusterConfig = clusterConfigurations[j]
         tasks["${version}/${clusterConfig}"] = {
             stage("cluster create") {
-                    "export ORCHESTRATOR_RELEASE=${version}"
+                withEnv(["ORCHESTRATOR_RELEASE=${version}"]) {
                     sh "./test/e2e/cluster.sh"
                 }
+            }
         }
     }
 }
