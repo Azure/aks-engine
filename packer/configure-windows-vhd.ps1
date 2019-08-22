@@ -123,6 +123,21 @@ function Install-WindowsPatches
 
 }
 
+function Set-WinRmServiceAutoStart
+{
+    Write-Log "Setting WinRM service start to auto"
+    sc.exe config winrm start=auto
+}
+
+function Set-WinRmServiceDelayedStart
+{
+    # Hyper-V messes with networking components on startup after the feature is enabled
+    # causing issues with communication over winrm and setting winrm to delayed start
+    # gives Hyper-V enough time to finish configuration before having packer continue.
+    Write-Log "Setting WinRM service start to delayed-auto"
+    sc.exe config winrm start=delayed-auto
+}
+
 function Update-WindowsFeatures
 {
     $featuresToEnable = @(
@@ -142,6 +157,7 @@ switch ($env:ProvisioningPhase)
     "1"
     {
         Write-Log "Performing actions for provisioning phase 1"
+        Set-WinRmServiceDelayedStart
         Disable-WindowsUpdates
         Install-WindowsPatches
         Install-OpenSSH
@@ -150,6 +166,7 @@ switch ($env:ProvisioningPhase)
     "2"
     {
         Write-Log "Performing actions for provisioning phase 2"
+        Set-WinRmServiceAutoStart
         Install-Docker
         Get-ContainerImages
     }
