@@ -450,7 +450,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 
 		It("should report all nodes in a Ready state", func() {
 			var expectedReadyNodes int
-			if eng.ExpandedDefinition.Properties.HasLowPriorityScaleset() {
+			if !eng.ExpandedDefinition.Properties.HasLowPriorityScaleset() {
 				expectedReadyNodes = eng.NodeCount()
 				log.Printf("Checking for %d Ready nodes\n", expectedReadyNodes)
 			} else {
@@ -869,7 +869,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				}
 
 				var expectedReadyNodes int
-				if eng.ExpandedDefinition.Properties.HasLowPriorityScaleset() {
+				if !eng.ExpandedDefinition.Properties.HasLowPriorityScaleset() {
 					expectedReadyNodes = eng.NodeCount()
 					log.Printf("Checking for %d Ready nodes\n", expectedReadyNodes)
 				} else {
