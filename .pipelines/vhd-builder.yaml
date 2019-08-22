@@ -36,7 +36,7 @@ phases:
       docker run --rm \
       -v ${PWD}:/go/src/github.com/Azure/aks-engine \
       -w /go/src/github.com/Azure/aks-engine \
-      ${CONTAINER_IMAGE} make vhd-notes
+      ${CONTAINER_IMAGE} make-vhd-notes
     displayName: Generate VHD release notes
   - task: PublishPipelineArtifact@0
     inputs:
