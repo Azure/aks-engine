@@ -5093,6 +5093,12 @@ func TestIsFeatureEnabled(t *testing.T) {
 			expected: false,
 		},
 		{
+			name:     "telemetry",
+			feature:  "EnableTelemetry",
+			flags:    &FeatureFlags{},
+			expected: false,
+		},
+		{
 			name:    "Enabled feature",
 			feature: "CSERunInBackground",
 			flags: &FeatureFlags{

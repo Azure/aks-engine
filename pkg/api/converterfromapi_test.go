@@ -459,6 +459,7 @@ func getDefaultContainerService() *ContainerService {
 			FeatureFlags: &FeatureFlags{
 				EnableCSERunInBackground: true,
 				BlockOutboundInternet:    false,
+				EnableTelemetry:          false,
 			},
 			AADProfile: &AADProfile{
 				ClientAppID:     "SampleClientAppID",
@@ -674,5 +675,28 @@ func TestConvertOrchestratorVersionProfileToVLabs(t *testing.T) {
 
 	if vlabsOvp == nil {
 		t.Errorf("expected the converted orchestratorVersionProfileToVLabs struct to be non-nil")
+	}
+}
+
+func TestTelemetryEnabledToVLabs(t *testing.T) {
+	cs := getDefaultContainerService()
+	cs.Properties.FeatureFlags.EnableTelemetry = true
+	vlabsCS := ConvertContainerServiceToVLabs(cs)
+	if vlabsCS == nil {
+		t.Errorf("expected the converted containerService struct to be non-nil")
+	}
+	if !vlabsCS.Properties.FeatureFlags.EnableTelemetry {
+		t.Errorf("expected the EnableTelemetry feature flag to be true")
+	}
+}
+
+func TestTelemetryDefaultToVLabs(t *testing.T) {
+	cs := getDefaultContainerService()
+	vlabsCS := ConvertContainerServiceToVLabs(cs)
+	if vlabsCS == nil {
+		t.Errorf("expected the converted containerService struct to be non-nil")
+	}
+	if vlabsCS.Properties.FeatureFlags.EnableTelemetry {
+		t.Errorf("expected the EnableTelemetry feature flag to be false")
 	}
 }

@@ -14,6 +14,9 @@
         "customCloudProfile": {
             "portalURL": ""
         },
+        "featureFlags": {
+            "enableTelemetry": true
+        },
         "masterProfile": {
             "dnsPrefix": "",
             "distro": "ubuntu",
