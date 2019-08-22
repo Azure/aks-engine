@@ -14,8 +14,8 @@ for(int i=0; i< k8sVersions.size(); i++) {
         def clusterConfig = clusterConfigurations[j]
         tasks["${version}/${clusterConfig}"] = {
             stage("cluster create") {
-                withEnv(["ORCHESTRATOR_RELEASE=${version}"]) {
-                    steps {
+                node {
+                    withEnv(["ORCHESTRATOR_RELEASE=${version}"]) {
                         echo "$ORCHESTRATOR_RELEASE"
                     }
                 }
