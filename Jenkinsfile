@@ -15,7 +15,7 @@ for(int i=0; i< k8sVersions.size(); i++) {
         tasks["${version}/${clusterConfig}"] = {
             stage("cluster create") {
                 withEnv(["ORCHESTRATOR_RELEASE=${version}"]) {
-                    sh "./test/e2e/cluster.sh"
+                    echo "$ORCHESTRATOR_RELEASE"
                 }
             }
         }
