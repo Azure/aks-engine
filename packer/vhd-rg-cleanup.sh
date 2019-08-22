@@ -66,7 +66,7 @@ for resourceGroup in $( az group list --query "[?contains(name, 'packer-Resource
     fi
 done
 
-# cleanup storage accounts
+# cleanup storage accounts. We only want to delete storage accounts created by Packer, NOT the classic storage account that is used by the Marketplace to publish the VHDs as images.
 if [ -z "$STORAGE_RG" ]; then
     echo "must provide a STORAGE_RG env var"
     exit 1;
