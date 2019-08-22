@@ -16,7 +16,8 @@ for(int i=0; i< k8sVersions.size(); i++) {
             stage("cluster create") {
                 node {
                     withEnv(["ORCHESTRATOR_RELEASE=${version}"]) {
-                        sh "ls -laR"
+                        sh "pwd"
+                        sh "ls -laR ${env.WORKSPACE}"
                     }
                 }
             }
