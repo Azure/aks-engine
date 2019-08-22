@@ -30,7 +30,9 @@
             "image_sku": "{{user `ubuntu_sku`}}-LTS",
             "image_version": "latest",
             "azure_tags": {
-                "dept": "Azure Container Service"
+                "os": "Linux",
+                "now": "$(date +%s)",
+                "createdBy": "aks-engine-vhd-pipeline"
             },
             "location": "{{user `location`}}",
             "vm_size": "{{user `vm_size`}}"
