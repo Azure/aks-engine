@@ -13,14 +13,12 @@ for(int i=0; i< k8sVersions.size(); i++) {
     for(int j=0; j< clusterConfigurations.size(); j++) {
         def clusterConfig = clusterConfigurations[j]
         tasks["${version}/${clusterConfig}"] = {
-            stages {
-                stage("cluster create") {
+            stage("cluster create") {
                     steps {
                         println "export ORCHESTRATOR_RELEASE=${version}"
                         println "./test/e2e/cluster.sh"
                     }
                 }
-            }
         }
     }
 }
