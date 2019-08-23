@@ -23,7 +23,10 @@
       "adminPassword": "replacepassword1234$",
       "imageReference": {
         "name": "image_name",
-        "resourceGroup": "image-resource-group"
+        "resourceGroup": "image-resource-group",
+        "subscriptionID": "00000000-0000-0000-0000-000000000000",
+        "gallery": "gallery-name",
+        "version": "0.1.0"
       }
     },
     "linuxProfile": {

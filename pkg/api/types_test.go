@@ -3062,6 +3062,77 @@ func TestWindowsProfile(t *testing.T) {
 	}
 }
 
+func TestWindowsProfileCustomOS(t *testing.T) {
+	cases := []struct {
+		name            string
+		w               WindowsProfile
+		expectedRef     bool
+		expectedGallery bool
+		expectedURL     bool
+	}{
+		{
+			name: "valid shared gallery image",
+			w: WindowsProfile{
+				ImageRef: &ImageReference{
+					Name:           "test",
+					ResourceGroup:  "testRG",
+					SubscriptionID: "testSub",
+					Gallery:        "testGallery",
+					Version:        "0.1.0",
+				},
+			},
+			expectedRef:     true,
+			expectedGallery: true,
+			expectedURL:     false,
+		},
+		{
+			name: "valid non-shared image",
+			w: WindowsProfile{
+				ImageRef: &ImageReference{
+					Name:          "test",
+					ResourceGroup: "testRG",
+				},
+			},
+			expectedRef:     true,
+			expectedGallery: false,
+			expectedURL:     false,
+		},
+		{
+			name: "valid image URL",
+			w: WindowsProfile{
+				WindowsImageSourceURL: "https://some/image.vhd",
+			},
+			expectedRef:     false,
+			expectedGallery: false,
+			expectedURL:     true,
+		},
+		{
+			name:            "valid no custom image",
+			w:               WindowsProfile{},
+			expectedRef:     false,
+			expectedGallery: false,
+			expectedURL:     false,
+		},
+	}
+
+	for _, c := range cases {
+		c := c
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+
+			if c.w.HasCustomImage() != c.expectedURL {
+				t.Errorf("expected HasCustomImage() to return %t but instead returned %t", c.expectedURL, c.w.HasCustomImage())
+			}
+			if c.w.HasImageRef() != c.expectedRef {
+				t.Errorf("expected HasImageRef() to return %t but instead returned %t", c.expectedRef, c.w.HasImageRef())
+			}
+			if c.w.HasImageGallery() != c.expectedGallery {
+				t.Errorf("expected HasImageGallery() to return %t but instead returned %t", c.expectedGallery, c.w.HasImageGallery())
+			}
+		})
+	}
+}
+
 func TestLinuxProfile(t *testing.T) {
 	l := LinuxProfile{}
 

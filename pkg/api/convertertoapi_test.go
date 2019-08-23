@@ -20,6 +20,7 @@ import (
 	v20170701 "github.com/Azure/aks-engine/pkg/api/v20170701"
 	"github.com/Azure/aks-engine/pkg/api/vlabs"
 	"github.com/Azure/go-autorest/autorest/azure"
+	"github.com/google/go-cmp/cmp"
 )
 
 func TestAddDCOSPublicAgentPool(t *testing.T) {
@@ -1014,4 +1015,84 @@ func TestConvertVLabsContainerService(t *testing.T) {
 		t.Errorf("unexpected error while executing ConvertV20170131ContainerService: %s", err.Error())
 	}
 
+}
+
+func TestConvertVLabsWindowsProfile(t *testing.T) {
+	falseVar := false
+
+	cases := []struct {
+		name     string
+		w        vlabs.WindowsProfile
+		expected WindowsProfile
+	}{
+		{
+			name: "empty profile",
+			w:    vlabs.WindowsProfile{},
+			expected: WindowsProfile{
+				Secrets: []KeyVaultSecrets{},
+			},
+		},
+		{
+			name: "misc fields",
+			w: vlabs.WindowsProfile{
+				AdminUsername:          "user",
+				AdminPassword:          "password",
+				EnableAutomaticUpdates: &falseVar,
+				ImageVersion:           "17763.615.1907121548",
+				SSHEnabled:             false,
+				WindowsPublisher:       "MicrosoftWindowsServer",
+				WindowsOffer:           "WindowsServer",
+				WindowsSku:             "2019-Datacenter-Core-smalldisk",
+				WindowsDockerVersion:   "18.09",
+			},
+			expected: WindowsProfile{
+				AdminUsername:          "user",
+				AdminPassword:          "password",
+				EnableAutomaticUpdates: &falseVar,
+				ImageVersion:           "17763.615.1907121548",
+				SSHEnabled:             false,
+				WindowsPublisher:       "MicrosoftWindowsServer",
+				WindowsOffer:           "WindowsServer",
+				WindowsSku:             "2019-Datacenter-Core-smalldisk",
+				WindowsDockerVersion:   "18.09",
+				Secrets:                []KeyVaultSecrets{},
+			},
+		},
+		{
+			name: "image reference",
+			w: vlabs.WindowsProfile{
+				ImageRef: &vlabs.ImageReference{
+					Gallery:        "gallery",
+					Name:           "name",
+					ResourceGroup:  "rg",
+					SubscriptionID: "dc6bd10c-110c-4134-88c5-4d5a039129c4",
+					Version:        "1.25.6",
+				},
+			},
+			expected: WindowsProfile{
+				ImageRef: &ImageReference{
+					Gallery:        "gallery",
+					Name:           "name",
+					ResourceGroup:  "rg",
+					SubscriptionID: "dc6bd10c-110c-4134-88c5-4d5a039129c4",
+					Version:        "1.25.6",
+				},
+				Secrets: []KeyVaultSecrets{},
+			},
+		},
+	}
+
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+
+			actual := WindowsProfile{}
+			convertVLabsWindowsProfile(&c.w, &actual)
+
+			diff := cmp.Diff(actual, c.expected)
+			if diff != "" {
+				t.Errorf("unexpected diff testing convertVLabsWindowsProfile: %s", diff)
+			}
+		})
+	}
 }

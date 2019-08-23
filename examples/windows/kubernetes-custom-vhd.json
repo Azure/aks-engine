@@ -21,10 +21,7 @@
     "windowsProfile": {
       "adminUsername": "azureuser",
       "adminPassword": "replacepassword1234$",
-      "imageReference": {
-        "name": "image_name",
-        "resourceGroup": "image-resource-group"
-      }
+      "WindowsImageSourceUrl": "https://custom/link/to/windows/image.vhd"
     },
     "linuxProfile": {
       "adminUsername": "azureuser",
