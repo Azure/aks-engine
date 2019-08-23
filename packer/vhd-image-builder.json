@@ -31,7 +31,7 @@
             "image_version": "latest",
             "azure_tags": {
                 "os": "Linux",
-                "now": "$(date +%s)",
+                "now": "{{user `create_time`}}",
                 "createdBy": "aks-engine-vhd-pipeline"
             },
             "location": "{{user `location`}}",
