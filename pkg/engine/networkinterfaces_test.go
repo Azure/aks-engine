@@ -623,7 +623,7 @@ func TestCreateAgentVMASNICWithSLB(t *testing.T) {
 				OrchestratorVersion: "1.10.2",
 				KubernetesConfig: &api.KubernetesConfig{
 					NetworkPlugin:   "azure",
-					LoadBalancerSku: "Standard",
+					LoadBalancerSku: StandardLoadBalancerSku,
 				},
 			},
 			LinuxProfile: &api.LinuxProfile{},

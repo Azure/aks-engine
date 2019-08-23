@@ -326,7 +326,7 @@ func TestCreateKubernetesMasterResourcesPVC(t *testing.T) {
 		},
 		PublicIPAddress: network.PublicIPAddress{
 			Sku: &network.PublicIPAddressSku{
-				Name: network.PublicIPAddressSkuName("Basic"),
+				Name: network.PublicIPAddressSkuName(BasicLoadBalancerSku),
 			},
 			PublicIPAddressPropertiesFormat: &network.PublicIPAddressPropertiesFormat{
 				PublicIPAllocationMethod: network.IPAllocationMethod("Dynamic"),

@@ -553,7 +553,7 @@ func getDefaultContainerService() *ContainerService {
 					CustomWindowsPackageURL:         "https://deisartifacts.windows.net",
 					WindowsNodeBinariesURL:          "https://deisartifacts.windows.net",
 					UseInstanceMetadata:             to.BoolPtr(true),
-					LoadBalancerSku:                 "Basic",
+					LoadBalancerSku:                 BasicLoadBalancerSku,
 					ExcludeMasterFromStandardLB:     to.BoolPtr(false),
 					EnableRbac:                      to.BoolPtr(true),
 					EnableSecureKubelet:             to.BoolPtr(true),
