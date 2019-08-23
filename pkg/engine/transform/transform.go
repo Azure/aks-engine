@@ -351,77 +351,20 @@ func (t *Transformer) NormalizeResourcesForK8sMasterUpgrade(logger *logrus.Entry
 			continue
 		}
 
-		if resourceType == vmssResourceType {
-			filteredDependencies := []string{}
-			dependencies, ok := resourceMap[dependsOnFieldName].([]interface{})
-			if !ok {
-				continue
-			}
-
-			for dIndex := len(dependencies) - 1; dIndex >= 0; dIndex-- {
-				dependency := dependencies[dIndex].(string)
-				if !(strings.Contains(dependency, nsgResourceType) || strings.Contains(dependency, nsgID)) {
-					filteredDependencies = append(filteredDependencies, dependency)
-				} else {
-					logger.Info(fmt.Sprintf("Removing nsg dependency from resource:%s", resourceName))
-				}
-			}
-
-			if len(filteredDependencies) > 0 {
-				resourceMap[dependsOnFieldName] = filteredDependencies
-			} else {
-				resourceMap[dependsOnFieldName] = []string{}
-			}
+		if resourceType == vmssResourceType || resourceType == vnetResourceType {
+			RemoveNsgDependency(logger, resourceName, resourceMap)
 			continue
 		}
 
 		if resourceType == lbResourceType {
 			if strings.Contains(resourceName, "variables('masterInternalLbName')") {
-				filteredDependencies := []string{}
-				dependencies, ok := resourceMap[dependsOnFieldName].([]interface{})
-				if !ok {
-					continue
-				}
-
-				for dIndex := len(dependencies) - 1; dIndex >= 0; dIndex-- {
-					dependency := dependencies[dIndex].(string)
-					if !(strings.Contains(dependency, nsgResourceType) || strings.Contains(dependency, nsgID)) {
-						filteredDependencies = append(filteredDependencies, dependency)
-					} else {
-						logger.Info(fmt.Sprintf("Removing nsg dependency from resource:%s", resourceName))
-					}
-				}
-
-				if len(filteredDependencies) > 0 {
-					resourceMap[dependsOnFieldName] = filteredDependencies
-				} else {
-					resourceMap[dependsOnFieldName] = []string{}
-				}
+				RemoveNsgDependency(logger, resourceName, resourceMap)
 				continue
 			}
 		}
 
 		if resourceType == nicResourceType {
-			filteredDependencies := []string{}
-			dependencies, ok := resourceMap[dependsOnFieldName].([]interface{})
-			if !ok {
-				continue
-			}
-
-			for dIndex := len(dependencies) - 1; dIndex >= 0; dIndex-- {
-				dependency := dependencies[dIndex].(string)
-				if !(strings.Contains(dependency, nsgResourceType) || strings.Contains(dependency, nsgID)) {
-					filteredDependencies = append(filteredDependencies, dependency)
-				} else {
-					logger.Info(fmt.Sprintf("Removing nsg dependency from resource:%s", resourceName))
-				}
-			}
-
-			if len(filteredDependencies) > 0 {
-				resourceMap[dependsOnFieldName] = filteredDependencies
-			} else {
-				resourceMap[dependsOnFieldName] = []string{}
-			}
+			RemoveNsgDependency(logger, resourceName, resourceMap)
 			if strings.Contains(resourceName, "variables('masterVMNamePrefix')") {
 				continue
 			} else {
@@ -502,27 +445,6 @@ func (t *Transformer) NormalizeResourcesForK8sMasterUpgrade(logger *logrus.Entry
 					filteredResources = filteredResources[:len(filteredResources)-1]
 				}
 			}
-		} else if resourceType == vnetResourceType {
-			filteredDependencies := []string{}
-			dependencies, ok := resourceMap[dependsOnFieldName].([]interface{})
-			if !ok {
-				continue
-			}
-
-			for dIndex := len(dependencies) - 1; dIndex >= 0; dIndex-- {
-				dependency := dependencies[dIndex].(string)
-				if !strings.Contains(dependency, nsgResourceType) {
-					filteredDependencies = append(filteredDependencies, dependency)
-				} else {
-					logger.Info(fmt.Sprintf("Removing nsg dependency from resource:%s", resourceName))
-				}
-			}
-
-			if len(filteredDependencies) > 0 {
-				resourceMap[dependsOnFieldName] = filteredDependencies
-			} else {
-				resourceMap[dependsOnFieldName] = []string{}
-			}
 		} else if resourceType == nsgResourceType {
 			logger.Infoln(fmt.Sprintf("Removing nsg resource: %s from template", resourceName))
 			{
@@ -538,6 +460,36 @@ func (t *Transformer) NormalizeResourcesForK8sMasterUpgrade(logger *logrus.Entry
 	logger.Infoln(fmt.Sprintf("Resource count after running NormalizeResourcesForK8sMasterUpgrade: %d",
 		len(templateMap[resourcesFieldName].([]interface{}))))
 	return nil
+}
+
+//RemoveNsgDependency Removes the nsg dependency from the
+func RemoveNsgDependency(logger *logrus.Entry, resourceName string, resourceMap map[string]interface{}) {
+
+	if resourceName != "" && resourceMap != nil {
+		filteredDependencies := []string{}
+		dependencies, ok := resourceMap[dependsOnFieldName].([]interface{})
+		if !ok {
+			logger.Warnf("Could not find dependencies for resourceName: %s", resourceName)
+			return
+		}
+
+		for dIndex := len(dependencies) - 1; dIndex >= 0; dIndex-- {
+			dependency := dependencies[dIndex].(string)
+			if !(strings.Contains(dependency, nsgResourceType) || strings.Contains(dependency, nsgID)) {
+				filteredDependencies = append(filteredDependencies, dependency)
+			} else {
+				logger.Info(fmt.Sprintf("Removing nsg dependency from resource:%s", resourceName))
+			}
+		}
+
+		if len(filteredDependencies) > 0 {
+			resourceMap[dependsOnFieldName] = filteredDependencies
+		} else {
+			resourceMap[dependsOnFieldName] = []string{}
+		}
+
+		return
+	}
 }
 
 // NormalizeResourcesForK8sAgentUpgrade takes a template and removes elements that are unwanted in any scale up/down case
