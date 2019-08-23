@@ -351,7 +351,10 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			var err error
 			var pods []pod.Pod
 
-			testPortForward := func() {
+			testPortForward := func(deploymentName string) {
+				running, podWaitErr := pod.WaitOnReady(deploymentName, deploymentNamespace, 3, retryTimeWhenWaitingForPodReady, cfg.Timeout)
+				Expect(podWaitErr).NotTo(HaveOccurred())
+				Expect(running).To(Equal(true))
 				pods, err = deploy.Pods()
 				Expect(err).NotTo(HaveOccurred())
 				Expect(len(pods)).To(Equal(1))
@@ -425,7 +428,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				deploymentName := fmt.Sprintf("%s-%v", deploymentPrefix, r.Intn(9999))
 				deploy, err = deployment.CreateLinuxDeployDeleteIfExists(deploymentPrefix, "library/nginx:latest", deploymentName, deploymentNamespace, "")
 				Expect(err).NotTo(HaveOccurred())
-				testPortForward()
+				testPortForward(deploymentName)
 				err = deploy.Delete(util.DefaultDeleteRetries)
 				Expect(err).NotTo(HaveOccurred())
 			}
@@ -438,7 +441,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 					deploymentName := fmt.Sprintf("%s-%v", deploymentPrefix, r.Intn(9999))
 					deploy, err = deployment.CreateWindowsDeployDeleteIfExist(deploymentPrefix, windowsImages.IIS, deploymentName, deploymentNamespace, "")
 					Expect(err).NotTo(HaveOccurred())
-					testPortForward()
+					testPortForward(deploymentName)
 					err = deploy.Delete(util.DefaultDeleteRetries)
 					Expect(err).NotTo(HaveOccurred())
 				} else {
