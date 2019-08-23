@@ -52,7 +52,6 @@ const (
 	windowsCommandTimeout                  = 1 * time.Minute
 	validateNetworkPolicyTimeout           = 3 * time.Minute
 	validateDNSTimeout                     = 2 * time.Minute
-	sshRetries                             = 3
 )
 
 var (
@@ -101,7 +100,7 @@ var _ = BeforeSuite(func() {
 	sshConn, err = remote.NewConnection(kubeConfig.GetServerName(), masterSSHPort, eng.ExpandedDefinition.Properties.LinuxProfile.AdminUsername, masterSSHPrivateKeyFilepath)
 	Expect(err).NotTo(HaveOccurred())
 	success := false
-	for i := 0; i < sshRetries; i++ {
+	for i := 0; i < 3; i++ {
 		err := util.AddToSSHKeyChain(masterSSHPrivateKeyFilepath)
 		if err == nil {
 			success = true
