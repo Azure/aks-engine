@@ -60,7 +60,7 @@ cat <<EOF > packer/settings.json
   "resource_group_name": "${AZURE_RESOURCE_GROUP_NAME}",
   "location": "${AZURE_LOCATION}",
   "storage_account_name": "${STORAGE_ACCOUNT_NAME}",
-  "vm_size": "${AZURE_VM_SIZE}"
+  "vm_size": "${AZURE_VM_SIZE}",
   "create_time": "${CREATE_TIME}"
 }
 EOF
