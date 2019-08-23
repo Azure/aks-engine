@@ -658,11 +658,14 @@ https://{keyvaultname}.vault.azure.net:443/secrets/{secretName}/{version}
 
 #### Windows Images
 
-You can configure the image used for all Windows nodes one of the following ways:
+You can configure the image used for all Windows nodes one of the following ways (listed in order of precedence based on what is specified in the api model):
+
 
 ##### Custom VHD
 
 To use an image uploaded to an Azure storage account (or any other accessible location) specify `windowsImageSourceURL`.
+
+**Note:** URLs containing SAS tokens are not allowed by Azure!
 
 ```json
 "windowsProfile": {
@@ -672,30 +675,15 @@ To use an image uploaded to an Azure storage account (or any other accessible lo
      },
 ```
 
-##### Azure Image
-
-To use a pre-existing Azure Image specify `imageReference.name` and `imageRefernce.ResourceGroup`.
-
-```json
-"windowsProfile": {
-            "adminUsername": "...",
-            "adminPassword": "...",
-            "imageRefernce": {
-              "name": "custom-image",
-              "resourceGroup": "windows-images"
-            }
-     },
-```
-
 ##### Shared Image Gallery
 
-To use an Image from a Shared Image Gallery specify `imageReference.name`, `imageReference.ResourceGroup`, `imageReference.subscriptionId`, `imageReference.galllery`, and `imageReference.version`.
+To use an Image from a Shared Image Gallery specify `imageReference.name`, `imageReference.resourceGroup`, `imageReference.subscriptionId`, `imageReference.galllery`, and `imageReference.version`.
 
 ```json
 "windowsProfile": {
             "adminUsername": "...",
             "adminPassword": "...",
-            "imageRefernce": {
+            "imageReference": {
               "name": "custom-image",
               "resourceGroup": "windows-images",
               "subscriptionId": "00000000-0000-0000-0000-000000000000",
@@ -705,9 +693,24 @@ To use an Image from a Shared Image Gallery specify `imageReference.name`, `imag
      },
 ```
 
+##### Azure Image
+
+To use a pre-existing Azure Image specify `imageReference.name` and `imageReference.resourceGroup`.
+
+```json
+"windowsProfile": {
+            "adminUsername": "...",
+            "adminPassword": "...",
+            "imageReference": {
+              "name": "custom-image",
+              "resourceGroup": "windows-images"
+            }
+     },
+```
+
 ##### Marketplace image (Default)
 
-By default AKS engine will use a recently known good Windows image from the Azure marketplace (See table above for specific values).
+By default AKS engine will use a recently known good Windows image from the Azure marketplace (See [windowsProfile](#windowsProfile) table for specific values).
 
 ```json
 "windowsProfile": {
