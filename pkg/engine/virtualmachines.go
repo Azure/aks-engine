@@ -467,7 +467,7 @@ func createAgentAvailabilitySetVM(cs *api.ContainerService, profile *api.AgentPo
 	storageProfile := compute.StorageProfile{}
 
 	if profile.IsWindows() {
-		storageProfile.ImageReference = createImageReferenceFragment(profile.Name, cs.Properties.WindowsProfile)
+		storageProfile.ImageReference = createWindowsImageReference(profile.Name, cs.Properties.WindowsProfile)
 
 		if profile.HasDisks() {
 			storageProfile.DataDisks = getArmDataDisks(profile)

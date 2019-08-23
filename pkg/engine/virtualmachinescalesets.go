@@ -634,7 +634,7 @@ func CreateAgentVMSS(cs *api.ContainerService, profile *api.AgentPoolProfile) Vi
 	vmssStorageProfile := compute.VirtualMachineScaleSetStorageProfile{}
 
 	if profile.IsWindows() {
-		vmssStorageProfile.ImageReference = createImageReferenceFragment(profile.Name, cs.Properties.WindowsProfile)
+		vmssStorageProfile.ImageReference = createWindowsImageReference(profile.Name, cs.Properties.WindowsProfile)
 		vmssStorageProfile.DataDisks = getVMSSDataDisks(profile)
 	} else {
 		if profile.HasImageRef() {

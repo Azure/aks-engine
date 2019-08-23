@@ -12,7 +12,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 )
 
-func TestCreateImageReferenceFragment(t *testing.T) {
+func TestCreateWindowsImageReference(t *testing.T) {
 	cases := []struct {
 		name        string
 		profileName string
@@ -92,7 +92,7 @@ func TestCreateImageReferenceFragment(t *testing.T) {
 		t.Run(c.name, func(t *testing.T) {
 			t.Parallel()
 
-			actual := createImageReferenceFragment(c.profileName, &c.w)
+			actual := createWindowsImageReference(c.profileName, &c.w)
 			expected := &c.expected
 
 			diff := cmp.Diff(actual, expected)

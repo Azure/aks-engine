@@ -11,7 +11,7 @@ import (
 	"github.com/Azure/go-autorest/autorest/to"
 )
 
-func createImageReferenceFragment(agentPoolProfileName string, windowsProfile *api.WindowsProfile) *compute.ImageReference {
+func createWindowsImageReference(agentPoolProfileName string, windowsProfile *api.WindowsProfile) *compute.ImageReference {
 	var computeImageRef compute.ImageReference
 
 	if windowsProfile.HasCustomImage() {
