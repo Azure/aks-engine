@@ -422,7 +422,6 @@ func convertVLabsFeatureFlags(vlabs *vlabs.FeatureFlags, api *FeatureFlags) {
 	api.BlockOutboundInternet = vlabs.BlockOutboundInternet
 	api.EnableIPv6DualStack = vlabs.EnableIPv6DualStack
 	api.EnableTelemetry = vlabs.EnableTelemetry
-	api.DisableOutboundSNAT = vlabs.DisableOutboundSNAT
 }
 
 func convertV20160930LinuxProfile(obj *v20160930.LinuxProfile, api *LinuxProfile) {
@@ -730,6 +729,7 @@ func convertVLabsKubernetesConfig(vlabs *vlabs.KubernetesConfig, api *Kubernetes
 	api.ProxyMode = KubeProxyMode(vlabs.ProxyMode)
 	api.PrivateAzureRegistryServer = vlabs.PrivateAzureRegistryServer
 	api.OutboundRuleIdleTimeoutInMinutes = vlabs.OutboundRuleIdleTimeoutInMinutes
+	api.CloudProviderDisableOutboundSNAT = vlabs.CloudProviderDisableOutboundSNAT
 	convertAddonsToAPI(vlabs, api)
 	convertKubeletConfigToAPI(vlabs, api)
 	convertControllerManagerConfigToAPI(vlabs, api)

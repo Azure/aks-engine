@@ -90,6 +90,7 @@ func assignKubernetesParameters(properties *api.Properties, parametersMap params
 				CloudProviderRateLimitQPSWrite:    strconv.FormatFloat(kubernetesConfig.CloudProviderRateLimitQPSWrite, 'f', -1, 64),
 				CloudProviderRateLimitBucket:      kubernetesConfig.CloudProviderRateLimitBucket,
 				CloudProviderRateLimitBucketWrite: kubernetesConfig.CloudProviderRateLimitBucketWrite,
+				CloudProviderDisableOutboundSNAT: kubernetesConfig.CloudProviderDisableOutboundSNAT
 			})
 			addValue(parametersMap, "kubeClusterCidr", kubernetesConfig.ClusterSubnet)
 			addValue(parametersMap, "kubernetesKubeletClusterDomain", kubernetesConfig.KubeletConfig["--cluster-domain"])

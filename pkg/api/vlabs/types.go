@@ -58,7 +58,6 @@ type FeatureFlags struct {
 	BlockOutboundInternet    bool `json:"blockOutboundInternet,omitempty"`
 	EnableIPv6DualStack      bool `json:"enableIPv6DualStack,omitempty"`
 	EnableTelemetry          bool `json:"enableTelemetry,omitempty"`
-	DisableOutboundSNAT      bool `json:"disableOutboundSnat,omitempty"`
 }
 
 // ServicePrincipalProfile contains the client and secret used by the cluster for Azure Resource CRUD
@@ -335,6 +334,7 @@ type KubernetesConfig struct {
 	CloudProviderRateLimitQPSWrite    float64           `json:"cloudProviderRateLimitQPSWrite,omitempty"`
 	CloudProviderRateLimitBucket      int               `json:"cloudProviderRateLimitBucket,omitempty"`
 	CloudProviderRateLimitBucketWrite int               `json:"cloudProviderRateLimitBucketWrite,omitempty"`
+	CloudProviderDisableOutboundSNAT  bool              `json:"cloudProviderDisableOutboundSNAT,omitempty"`
 	LoadBalancerSku                   string            `json:"loadBalancerSku,omitempty"`
 	ExcludeMasterFromStandardLB       *bool             `json:"excludeMasterFromStandardLB,omitempty"`
 	AzureCNIVersion                   string            `json:"azureCNIVersion,omitempty"`

@@ -127,7 +127,6 @@ type FeatureFlags struct {
 	BlockOutboundInternet    bool `json:"blockOutboundInternet,omitempty"`
 	EnableIPv6DualStack      bool `json:"enableIPv6DualStack,omitempty"`
 	EnableTelemetry          bool `json:"enableTelemetry,omitempty"`
-	DisableOutboundSNAT      bool `json:"disableOutboundSnat,omitempty"`
 }
 
 // ServicePrincipalProfile contains the client and secret used by the cluster for Azure Resource CRUD
@@ -350,6 +349,7 @@ type CloudProviderConfig struct {
 	CloudProviderRateLimitQPSWrite    string `json:"cloudProviderRateLimitQPSWrite,omitempty"`
 	CloudProviderRateLimitBucket      int    `json:"cloudProviderRateLimitBucket,omitempty"`
 	CloudProviderRateLimitBucketWrite int    `json:"cloudProviderRateLimitBucketWrite,omitempty"`
+	CloudProviderDisableOutboundSNAT  bool   `json:"cloudProviderDisableOutboundSnat,omitempty"`
 }
 
 // KubernetesConfigDeprecated are properties that are no longer operable and will be ignored
@@ -429,6 +429,7 @@ type KubernetesConfig struct {
 	CloudProviderRateLimitQPSWrite    float64           `json:"cloudProviderRateLimitQPSWrite,omitempty"`
 	CloudProviderRateLimitBucket      int               `json:"cloudProviderRateLimitBucket,omitempty"`
 	CloudProviderRateLimitBucketWrite int               `json:"cloudProviderRateLimitBucketWrite,omitempty"`
+	CloudProviderDisableOutboundSNAT  bool              `json:"cloudProviderDisableOutboundSNAT,omitempty"`
 	NonMasqueradeCidr                 string            `json:"nonMasqueradeCidr,omitempty"`
 	NodeStatusUpdateFrequency         string            `json:"nodeStatusUpdateFrequency,omitempty"`
 	HardEvictionThreshold             string            `json:"hardEvictionThreshold,omitempty"`
@@ -2062,8 +2063,6 @@ func (f *FeatureFlags) IsFeatureEnabled(feature string) bool {
 			return f.EnableIPv6DualStack
 		case "EnableTelemetry":
 			return f.EnableTelemetry
-		case "DisableOutboundSNAT":
-			return f.DisableOutboundSNAT
 		default:
 			return false
 		}

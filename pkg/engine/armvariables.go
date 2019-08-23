@@ -120,10 +120,10 @@ func getK8sMasterVars(cs *api.ContainerService) (map[string]interface{}, error) 
 		"' CLOUDPROVIDER_RATELIMIT_QPS_WRITE=',parameters('cloudproviderConfig').cloudProviderRatelimitQPSWrite," +
 		"' CLOUDPROVIDER_RATELIMIT_BUCKET=',parameters('cloudproviderConfig').cloudProviderRatelimitBucket," +
 		"' CLOUDPROVIDER_RATELIMIT_BUCKET_WRITE=',parameters('cloudproviderConfig').cloudProviderRatelimitBucketWrite," +
+		"' LOAD_BALANCER_DISABLE_OUTBOUND_SNAT=',parameters('cloudproviderConfig').loadBalancerDisableOutboundSnat," +
 		"' USE_MANAGED_IDENTITY_EXTENSION=',variables('useManagedIdentityExtension')," +
 		"' USE_INSTANCE_METADATA=',variables('useInstanceMetadata')," +
 		"' LOAD_BALANCER_SKU=',variables('loadBalancerSku')," +
-		"' LOAD_BALANCER_DISABLE_OUTBOUND_SNAT=',variables('loadBalancerDisableOutboundSnat')," +
 		"' EXCLUDE_MASTER_FROM_STANDARD_LB=',variables('excludeMasterFromStandardLB')," +
 		"' MAXIMUM_LOADBALANCER_RULE_COUNT=',variables('maximumLoadBalancerRuleCount')," +
 		"' CONTAINER_RUNTIME=',parameters('containerRuntime')," +

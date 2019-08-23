@@ -764,6 +764,7 @@ func convertKubernetesConfigToVLabs(apiCfg *KubernetesConfig, vlabsCfg *vlabs.Ku
 	vlabsCfg.ProxyMode = vlabs.KubeProxyMode(apiCfg.ProxyMode)
 	vlabsCfg.PrivateAzureRegistryServer = apiCfg.PrivateAzureRegistryServer
 	vlabsCfg.OutboundRuleIdleTimeoutInMinutes = apiCfg.OutboundRuleIdleTimeoutInMinutes
+	vlabsCfg.CloudProviderDisableOutboundSNAT = apiCfg.CloudProviderDisableOutboundSNAT
 	convertAddonsToVlabs(apiCfg, vlabsCfg)
 	convertKubeletConfigToVlabs(apiCfg, vlabsCfg)
 	convertControllerManagerConfigToVlabs(apiCfg, vlabsCfg)
@@ -1218,7 +1219,6 @@ func convertFeatureFlagsToVLabs(api *FeatureFlags, vlabs *vlabs.FeatureFlags) {
 	vlabs.BlockOutboundInternet = api.BlockOutboundInternet
 	vlabs.EnableIPv6DualStack = api.EnableIPv6DualStack
 	vlabs.EnableTelemetry = api.EnableTelemetry
-	vlabs.DisableOutboundSNAT = api.DisableOutboundSNAT
 }
 
 func convertCloudProfileToVLabs(api *CustomCloudProfile, vlabsccp *vlabs.CustomCloudProfile) {

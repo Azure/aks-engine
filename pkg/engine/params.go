@@ -80,10 +80,6 @@ func getParameters(cs *api.ContainerService, generatorCode string, aksEngineVers
 		if properties.MasterProfile.HasAvailabilityZones() {
 			addValue(parametersMap, "availabilityZones", properties.MasterProfile.AvailabilityZones)
 		}
-
-		if properties.OrchestratorProfile.KubernetesConfig.LoadBalancerSku == api.StandardLoadBalancerSku {
-			addValue(parametersMap, "loadBalancerDisableOutboundSnat", properties.FeatureFlags.DisableOutboundSNAT)
-		}
 	}
 	if properties.HostedMasterProfile != nil {
 		addValue(parametersMap, "masterSubnet", properties.HostedMasterProfile.Subnet)
