@@ -341,19 +341,19 @@ func (cs *ContainerService) setAddonsConfig(isUpdate bool) {
 		Containers: []KubernetesContainerSpec{
 			{
 				Name:           "azure-policy",
-				Image:          "",
-				CPURequests:    "100m",
-				MemoryRequests: "300Mi",
+				Image:          "aksenginehub.azurecr.io/azure-policy-kubernetes:bugbash",
+				CPURequests:    "30m",
+				MemoryRequests: "50Mi",
 				CPULimits:      "100m",
-				MemoryLimits:   "300Mi",
+				MemoryLimits:   "200Mi",
 			},
 			{
 				Name:           "gatekeeper",
-				Image:          "",
+				Image:          "quay.io/open-policy-agent/gatekeeper:v3.0.4-beta.0",
 				CPURequests:    "100m",
-				MemoryRequests: "300Mi",
+				MemoryRequests: "256Mi",
 				CPULimits:      "100m",
-				MemoryLimits:   "300Mi",
+				MemoryLimits:   "512Mi",
 			},
 		},
 	}
@@ -388,6 +388,7 @@ func (cs *ContainerService) setAddonsConfig(isUpdate bool) {
 		defaultsCalicoDaemonSetAddonsConfig,
 		defaultsAADPodIdentityAddonsConfig,
 		defaultAppGwAddonsConfig,
+		defaultsAzurePolicyAddonsConfig,
 	}
 	// Add default addons specification, if no user-provided spec exists
 	if o.KubernetesConfig.Addons == nil {

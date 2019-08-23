@@ -305,6 +305,11 @@ func TestExampleAPIModels(t *testing.T) {
 			setArgs:      defaultSet,
 		},
 		{
+			name:         "azure-policy",
+			apiModelPath: "../examples/addons/azure-policy/azure-policy.json",
+			setArgs:      defaultSet,
+		},
+		{
 			name:         "coreos",
 			apiModelPath: "../examples/coreos/kubernetes-coreos.json",
 			setArgs:      defaultSet,

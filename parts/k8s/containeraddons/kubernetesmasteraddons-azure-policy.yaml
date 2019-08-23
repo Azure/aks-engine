@@ -1,4 +1,87 @@
 apiVersion: v1
+kind: Secret
+metadata:
+  name: azure-policy
+  namespace: default
+type: Opaque
+data:
+  telemetry-key: TURObFpqbGpOVFV0TnpVelppMDBOVEF3TFdGa05HTXROVEExWVRJelltRTROelpt
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: azure-policy
+    aadpodidbinding: policy-identity
+  name: azure-policy
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: azure-policy
+  template:
+    metadata:
+      labels:
+        app: azure-policy
+      name: azure-policy
+    spec:
+      serviceAccountName: azure-policy
+      containers:
+      - name: azure-policy
+        image: {{ContainerImage "azure-policy"}}
+        resources:
+          requests:
+            cpu: {{ContainerCPUReqs "azure-policy"}}
+            memory: {{ContainerMemReqs "azure-policy"}}
+          limits:
+            cpu: {{ContainerCPULimits "azure-policy"}}
+            memory: {{ContainerMemLimits "azure-policy"}}
+        imagePullPolicy: Always
+        env:
+        - name: K8S_POLICY_PREFIX
+          value: azurepolicy
+        - name: RESOURCE_ID
+          value: <enter-resource-id>
+        - name: DATAPLANE_ENDPOINT
+          value: https://gov-int-policy-dp-hack.trafficmanager.net
+        - name: ACS_CREDENTIAL_LOCATION
+          value: /etc/acs/azure.json
+        - name: REFRESH_INTERVAL
+          value: 5m   # Valid time units are "ns", "us" (or "µs"), "ms", "s", "m", "h"
+        - name: AUDIT_INTERVAL
+          value: 5m   # Valid time units are "ns", "us" (or "µs"), "ms", "s", "m", "h"
+        - name: TELEMETRY_HEARTBEAT_INTERVAL
+          value: 5m   # Valid time units are "ns", "us" (or "µs"), "ms", "s", "m", "h"
+        - name: CA_CERT_PATH
+          value: /etc/azure-policy/ca-cert.pem
+        - name: CLIENT_CERT_PATH
+          value: /etc/azure-policy/client-cert.pem
+        - name: CLIENT_KEY_PATH
+          value: /etc/azure-policy/client-key.pem
+        - name: APP_INSIGHTS_KEY
+          valueFrom:
+            secretKeyRef:
+              name: azure-policy
+              key: telemetry-key
+        - name: CURRENT_IMAGE
+          value: {{ContainerImage "azure-policy"}}
+        volumeMounts:
+        - name: acs-credential
+          mountPath: "/etc/acs/azure.json"
+        - name: cert
+          mountPath: /etc/azure-policy
+      volumes:
+      - hostPath:
+          path: /etc/kubernetes/azure.json
+          type: File
+        name: acs-credential
+      - name: cert
+        secret:
+          defaultMode: 420
+          secretName: azure-policy
+---
+apiVersion: v1
 kind: Namespace
 metadata:
   labels:
@@ -336,20 +419,20 @@ spec:
               fieldPath: metadata.name
         - name: SECRET_NAME
           value: gatekeeper-webhook-server-secret
-        image: quay.io/open-policy-agent/gatekeeper:v3.0.4-beta.0
+        image: {{ContainerImage "gatekeeper"}}
+        resources:
+          requests:
+            cpu: {{ContainerCPUReqs "gatekeeper"}}
+            memory: {{ContainerMemReqs "gatekeeper"}}
+          limits:
+            cpu: {{ContainerCPULimits "gatekeeper"}}
+            memory: {{ContainerMemLimits "gatekeeper"}}
         imagePullPolicy: Always
         name: manager
         ports:
         - containerPort: 443
           name: webhook-server
           protocol: TCP
-        resources:
-          limits:
-            cpu: 100m
-            memory: 512Mi
-          requests:
-            cpu: 100m
-            memory: 256Mi
         volumeMounts:
         - mountPath: /certs
           name: cert
