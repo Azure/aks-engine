@@ -123,7 +123,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			hostOSDNSValidateScript := "host-os-dns-validate.sh"
 			err = sshConn.CopyTo(hostOSDNSValidateScript)
 			Expect(err).NotTo(HaveOccurred())
-			envString := fmt.Sprintf("NODE_HOSTNAMES='")
+			envString := "NODE_HOSTNAMES='"
 			for _, node := range nodeList.Nodes {
 				envString += fmt.Sprintf("%s ", node.Metadata.Name)
 			}
