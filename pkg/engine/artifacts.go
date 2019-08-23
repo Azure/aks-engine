@@ -140,6 +140,12 @@ func kubernetesContainerAddonSettingsInit(p *api.Properties) map[string]kubernet
 			destinationFile: "azure-npm-daemonset.yaml",
 			isEnabled:       k.IsAddonEnabled(AzureNetworkPolicyAddonName),
 		},
+		AzurePolicyAddonName: {
+			sourceFile:      "kubernetesmasteraddons-azure-policy.yaml",
+			base64Data:      k.GetAddonScript(AzurePolicyAddonName),
+			destinationFile: "azure-policy.yaml",
+			isEnabled:       k.IsAddonEnabled(AzurePolicyAddonName),
+		},
 	}
 }
 

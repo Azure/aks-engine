@@ -335,6 +335,29 @@ func (cs *ContainerService) setAddonsConfig(isUpdate bool) {
 		},
 	}
 
+	defaultsAzurePolicyAddonsConfig := KubernetesAddon{
+		Name:    AzurePolicyAddonName,
+		Enabled: to.BoolPtr(DefaultAzurePolicyAddonEnabled && !cs.Properties.IsAzureStackCloud()),
+		Containers: []KubernetesContainerSpec{
+			{
+				Name:           "azure-policy",
+				Image:          "",
+				CPURequests:    "100m",
+				MemoryRequests: "300Mi",
+				CPULimits:      "100m",
+				MemoryLimits:   "300Mi",
+			},
+			{
+				Name:           "gatekeeper",
+				Image:          "",
+				CPURequests:    "100m",
+				MemoryRequests: "300Mi",
+				CPULimits:      "100m",
+				MemoryLimits:   "300Mi",
+			},
+		},
+	}
+
 	defaultAppGwAddonsConfig := KubernetesAddon{
 		Name:    AppGwIngressAddonName,
 		Enabled: to.BoolPtr(DefaultAppGwIngressAddonEnabled),

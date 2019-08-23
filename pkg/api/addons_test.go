@@ -267,6 +267,10 @@ func TestSetAddonsConfig(t *testing.T) {
 					Enabled: to.BoolPtr(false),
 				},
 				{
+					Name:    AzurePolicyAddonName,
+					Enabled: to.BoolPtr(false),
+				},
+				{
 					Name:    BlobfuseFlexVolumeAddonName,
 					Enabled: to.BoolPtr(true),
 					Containers: []KubernetesContainerSpec{
@@ -2681,6 +2685,10 @@ func TestSetAddonsConfig(t *testing.T) {
 					Name:    AADPodIdentityAddonName,
 					Enabled: to.BoolPtr(false),
 				},
+				{
+					Name:    AzurePolicyAddonName,
+					Enabled: to.BoolPtr(false),
+				},
 			},
 		},
 		{
@@ -2838,6 +2846,10 @@ func TestSetAddonsConfig(t *testing.T) {
 					Name:    AADPodIdentityAddonName,
 					Enabled: to.BoolPtr(false),
 				},
+				{
+					Name:    AzurePolicyAddonName,
+					Enabled: to.BoolPtr(false),
+				},
 			},
 		},
 		{
@@ -2985,6 +2997,10 @@ func TestSetAddonsConfig(t *testing.T) {
 					Name:    AADPodIdentityAddonName,
 					Enabled: to.BoolPtr(false),
 				},
+				{
+					Name:    AzurePolicyAddonName,
+					Enabled: to.BoolPtr(false),
+				},
 			},
 		},
 		{
@@ -3128,6 +3144,10 @@ func TestSetAddonsConfig(t *testing.T) {
 					Name:    AADPodIdentityAddonName,
 					Enabled: to.BoolPtr(false),
 				},
+				{
+					Name:    AzurePolicyAddonName,
+					Enabled: to.BoolPtr(false),
+				},
 			},
 		},
 	}
@@ -3156,6 +3176,7 @@ func TestSetAddonsConfig(t *testing.T) {
 				DNSAutoscalerAddonName,
 				CalicoAddonName,
 				AADPodIdentityAddonName,
+				AzurePolicyAddonName,
 			} {
 				addon := test.cs.Properties.OrchestratorProfile.KubernetesConfig.Addons[getAddonsIndexByName(test.cs.Properties.OrchestratorProfile.KubernetesConfig.Addons, addonName)]
 				expectedAddon := test.expectedAddons[getAddonsIndexByName(test.expectedAddons, addonName)]
