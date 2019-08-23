@@ -491,7 +491,6 @@ func getK8sMasterVars(cs *api.ContainerService) (map[string]interface{}, error) 
 		masterVars["masterFirstAddrPrefix"] = "[concat(variables('masterFirstAddrOctets')[0],'.',variables('masterFirstAddrOctets')[1],'.',variables('masterFirstAddrOctets')[2],'.')]"
 		masterVars["masterEtcdServerPort"] = DefaultMasterEtcdServerPort
 		masterVars["masterEtcdClientPort"] = DefaultMasterEtcdClientPort
-		masterVars["loadBalancerDisableOutboundSnat"] = "[parameters('loadBalancerDisableOutboundSnat')]"
 
 		if isMasterVMSS {
 			masterVars["masterVMNamePrefix"] = "[concat(parameters('orchestratorName'), '-master-', parameters('nameSuffix'), '-')]"
