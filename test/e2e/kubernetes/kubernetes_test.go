@@ -13,7 +13,6 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"regexp"
 	"strings"
 	"syscall"
 	"time"
@@ -773,36 +772,23 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 		})
 
 		It("should be able to access the dashboard from each node", func() {
-			if hasDashboard, dashboardAddon := eng.HasAddon("kubernetes-dashboard"); hasDashboard {
+			if hasDashboard, _ := eng.HasAddon("kubernetes-dashboard"); hasDashboard {
 				By("Ensuring that the kubernetes-dashboard service is Running")
 				s, err := service.Get("kubernetes-dashboard", "kube-system")
 				Expect(err).NotTo(HaveOccurred())
-
-				if !eng.HasWindowsAgents() {
-					By("Gathering connection information to determine whether or not to connect via HTTP or HTTPS")
-					dashboardPort := 443
-					version, err := node.Version()
-					Expect(err).NotTo(HaveOccurred())
-					re := regexp.MustCompile("1.(5|6|7|8).")
-					if re.FindString(version) != "" {
-						dashboardPort = 80
+				By("Ensuring that we can connect via HTTPS to the dashboard on any one node")
+				dashboardPort := 443
+				port := s.GetNodePort(dashboardPort)
+				nodeList, err := node.GetReady()
+				Expect(err).NotTo(HaveOccurred())
+				var success bool
+				for _, node := range nodeList.Nodes {
+					if success {
+						break
 					}
-					port := s.GetNodePort(dashboardPort)
-
-					kubeConfig, err := GetConfig()
-					Expect(err).NotTo(HaveOccurred())
-					master := fmt.Sprintf("%s@%s", eng.ExpandedDefinition.Properties.LinuxProfile.AdminUsername, kubeConfig.GetServerName())
-
-					if dashboardPort == 80 {
-						By("Ensuring that we can connect via HTTP to the dashboard on any one node")
-					} else {
-						By("Ensuring that we can connect via HTTPS to the dashboard on any one node")
-					}
-					nodeList, err := node.GetReady()
-					Expect(err).NotTo(HaveOccurred())
-					for _, node := range nodeList.Nodes {
-						success := false
-						for i := 0; i < 60; i++ {
+					if node.IsLinux() {
+						// Allow 3 retries for each node
+						for i := 0; i < 3; i++ {
 							address := node.Status.GetAddressByType("InternalIP")
 							if address == nil {
 								log.Printf("One of our nodes does not have an InternalIP value!: %s\n", node.Metadata.Name)
@@ -810,31 +796,16 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 							Expect(address).NotTo(BeNil())
 							dashboardURL := fmt.Sprintf("http://%s:%v", address.Address, port)
 							curlCMD := fmt.Sprintf("curl --max-time 60 %s", dashboardURL)
-							cmd := exec.Command("ssh", "-i", masterSSHPrivateKeyFilepath, "-p", masterSSHPort, "-o", "ConnectTimeout=10", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-o", "LogLevel=ERROR", master, curlCMD)
-							util.PrintCommand(cmd)
-							var out []byte
-							out, err = cmd.CombinedOutput()
+							err := sshConn.Execute(curlCMD, false)
 							if err == nil {
 								success = true
 								break
 							}
-							if i > 58 {
-								log.Printf("Error while connecting to Windows dashboard:%s\n", err)
-								log.Println(string(out))
-							}
-							time.Sleep(10 * time.Second)
+							time.Sleep(1 * time.Second)
 						}
-						Expect(success).To(BeTrue())
-					}
-					By("Ensuring that the correct resources have been applied")
-					// Assuming one dashboard pod
-					pods, err := pod.GetAllByPrefix("kubernetes-dashboard", "kube-system")
-					Expect(err).NotTo(HaveOccurred())
-					for i, c := range dashboardAddon.Containers {
-						err := pods[0].Spec.Containers[i].ValidateResources(c)
-						Expect(err).NotTo(HaveOccurred())
 					}
 				}
+				Expect(success).To(BeTrue())
 			} else {
 				Skip("kubernetes-dashboard disabled for this cluster, will not test")
 			}
