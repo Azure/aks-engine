@@ -24,10 +24,10 @@ fi
 avail=$(az storage account check-name -n ${STORAGE_ACCOUNT_NAME} -o json | jq -r .nameAvailable)
 if $avail ; then
 	echo "creating new storage account ${STORAGE_ACCOUNT_NAME}"
-	az storage account create -n $STORAGE_ACCOUNT_NAME -g $AZURE_RESOURCE_GROUP_NAME --sku "Standard_RAGRS"
+	az storage account create -n $STORAGE_ACCOUNT_NAME -g $AZURE_RESOURCE_GROUP_NAME --sku "Standard_RAGRS" --tags "now=$(date +%s)"
 	echo "creating new container system"
 	key=$(az storage account keys list -n $STORAGE_ACCOUNT_NAME -g $AZURE_RESOURCE_GROUP_NAME | jq -r '.[0].value')
-	az storage container create --name system --account-key=$key --account-name=$STORAGE_ACCOUNT_NAME --tags "now=$(date +%s)"
+	az storage container create --name system --account-key=$key --account-name=$STORAGE_ACCOUNT_NAME
 else
 	echo "storage account ${STORAGE_ACCOUNT_NAME} already exists."
 fi
