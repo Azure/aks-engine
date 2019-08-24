@@ -115,8 +115,8 @@ var _ = BeforeSuite(func() {
 
 var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", func() {
 	Describe("regardless of agent pool type", func() {
-		if !eng.ExpandedDefinition.Properties.HasLowPriorityScaleset() {
-			It("should validate host OS DNS", func() {
+		It("should validate host OS DNS", func() {
+			if !eng.ExpandedDefinition.Properties.HasLowPriorityScaleset() {
 				nodeList, err := node.GetReady()
 				Expect(err).NotTo(HaveOccurred())
 				hostOSDNSValidateScript := "host-os-dns-validate.sh"
@@ -137,10 +137,10 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 						Expect(err).NotTo(HaveOccurred())
 					}
 				}
-			})
-		} else {
-			Skip("Skip per-node tests in low-priority VMSS cluster configuration scenario")
-		}
+			} else {
+				Skip("Skip per-node tests in low-priority VMSS cluster configuration scenario")
+			}
+		})
 
 		It("should have the expected k8s version", func() {
 			nodeList, err := node.GetReady()
