@@ -116,39 +116,35 @@ var _ = BeforeSuite(func() {
 var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", func() {
 	Describe("regardless of agent pool type", func() {
 		It("should validate host OS DNS", func() {
+			var nodeList *node.List
+			var err error
 			if !eng.ExpandedDefinition.Properties.HasLowPriorityScaleset() {
-				var nodeList *node.List
-				var err error
-				if !eng.ExpandedDefinition.Properties.HasLowPriorityScaleset() {
-					nodeList, err = node.GetReady()
-				} else {
-					var nodes []node.Node
-					nodes, err = node.GetByPrefix("k8s-master")
-					nodeList = &node.List{
-						Nodes: nodes,
-					}
-				}
-				Expect(err).NotTo(HaveOccurred())
-				hostOSDNSValidateScript := "host-os-dns-validate.sh"
-				err = sshConn.CopyTo(hostOSDNSValidateScript)
-				Expect(err).NotTo(HaveOccurred())
-				envString := "NODE_HOSTNAMES='"
-				for _, node := range nodeList.Nodes {
-					envString += fmt.Sprintf("%s ", node.Metadata.Name)
-				}
-				lookupRetries := 3
-				envString += fmt.Sprintf("LOOKUP_RETRIES=%d'", lookupRetries)
-				for _, node := range nodeList.Nodes {
-					if node.IsLinux() {
-						err := sshConn.CopyToRemote(node.Metadata.Name, "/tmp/"+hostOSDNSValidateScript)
-						Expect(err).NotTo(HaveOccurred())
-						hostOSDNSValidationCommand := fmt.Sprintf("\"%s /tmp/%s\"", envString, hostOSDNSValidateScript)
-						err = sshConn.ExecuteRemote(node.Metadata.Name, hostOSDNSValidationCommand, false)
-						Expect(err).NotTo(HaveOccurred())
-					}
-				}
+				nodeList, err = node.GetReady()
 			} else {
-				Skip("Skip per-node tests in low-priority VMSS cluster configuration scenario")
+				var nodes []node.Node
+				nodes, err = node.GetByPrefix("k8s-master")
+				nodeList = &node.List{
+					Nodes: nodes,
+				}
+			}
+			Expect(err).NotTo(HaveOccurred())
+			hostOSDNSValidateScript := "host-os-dns-validate.sh"
+			err = sshConn.CopyTo(hostOSDNSValidateScript)
+			Expect(err).NotTo(HaveOccurred())
+			envString := "NODE_HOSTNAMES='"
+			for _, node := range nodeList.Nodes {
+				envString += fmt.Sprintf("%s ", node.Metadata.Name)
+			}
+			lookupRetries := 3
+			envString += fmt.Sprintf("LOOKUP_RETRIES=%d'", lookupRetries)
+			for _, node := range nodeList.Nodes {
+				if node.IsLinux() {
+					err := sshConn.CopyToRemote(node.Metadata.Name, "/tmp/"+hostOSDNSValidateScript)
+					Expect(err).NotTo(HaveOccurred())
+					hostOSDNSValidationCommand := fmt.Sprintf("\"%s /tmp/%s\"", envString, hostOSDNSValidateScript)
+					err = sshConn.ExecuteRemote(node.Metadata.Name, hostOSDNSValidationCommand, false)
+					Expect(err).NotTo(HaveOccurred())
+				}
 			}
 		})
 
