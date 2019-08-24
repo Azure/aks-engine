@@ -747,7 +747,7 @@ func setVlabsKubernetesDefaults(vp *vlabs.Properties, api *OrchestratorProfile) 
 			api.KubernetesConfig.NetworkPolicy = vp.OrchestratorProfile.KubernetesConfig.NetworkPolicy
 		}
 	}
-	if api.KubernetesConfig.NetworkPlugin == "" && api.KubernetesConfig.NetworkPolicy == "" {
+	if api.KubernetesConfig.NetworkPlugin == "" && (api.KubernetesConfig.NetworkPolicy == "" || api.KubernetesConfig.NetworkPolicy == NetworkPolicyCalico) {
 		if vp.HasWindows() {
 			api.KubernetesConfig.NetworkPlugin = vlabs.DefaultNetworkPluginWindows
 		} else {
