@@ -17125,6 +17125,8 @@ spec:
       - name: metrics-server
         image: {{ContainerImage "metrics-server"}}
         imagePullPolicy: IfNotPresent
+        securityContext:
+          runAsNonRoot: true
         command:
         - /metrics-server
         - --source=kubernetes.summary_api:''
@@ -19052,6 +19054,8 @@ spec:
       containers:
         - image: {{ContainerImage "heapster"}}
           imagePullPolicy: IfNotPresent
+          securityContext:
+            runAsNonRoot: true
           name: heapster
           resources:
             requests:
@@ -19072,6 +19076,8 @@ spec:
             - --source=kubernetes.summary_api:''
         - image: {{ContainerImage "heapster-nanny"}}
           imagePullPolicy: IfNotPresent
+          securityContext:
+            runAsNonRoot: true
           name: heapster-nanny
           resources:
             requests:
@@ -19350,6 +19356,8 @@ spec:
         - --heapster-host=http://heapster.kube-system:80
         image: {{ContainerImage "kubernetes-dashboard"}}
         imagePullPolicy: IfNotPresent
+        securityContext:
+          runAsNonRoot: true
         livenessProbe:
           httpGet:
             path: "/"
