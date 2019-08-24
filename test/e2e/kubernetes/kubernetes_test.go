@@ -771,7 +771,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			Expect(successes).To(Equal(cfg.StabilityIterations))
 		})
 
-		It("should be able to access the dashboard from each node", func() {
+		It("should be able to access the dashboard", func() {
 			if hasDashboard, _ := eng.HasAddon("kubernetes-dashboard"); hasDashboard {
 				By("Ensuring that the kubernetes-dashboard service is Running")
 				s, err := service.Get("kubernetes-dashboard", "kube-system")
