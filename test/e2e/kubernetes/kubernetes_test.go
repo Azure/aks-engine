@@ -117,7 +117,17 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 	Describe("regardless of agent pool type", func() {
 		It("should validate host OS DNS", func() {
 			if !eng.ExpandedDefinition.Properties.HasLowPriorityScaleset() {
-				nodeList, err := node.GetReady()
+				var nodeList *node.List
+				var err error
+				if !eng.ExpandedDefinition.Properties.HasLowPriorityScaleset() {
+					nodeList, err = node.GetReady()
+				} else {
+					var nodes []node.Node
+					nodes, err = node.GetByPrefix("k8s-master")
+					nodeList = &node.List{
+						Nodes: nodes,
+					}
+				}
 				Expect(err).NotTo(HaveOccurred())
 				hostOSDNSValidateScript := "host-os-dns-validate.sh"
 				err = sshConn.CopyTo(hostOSDNSValidateScript)
