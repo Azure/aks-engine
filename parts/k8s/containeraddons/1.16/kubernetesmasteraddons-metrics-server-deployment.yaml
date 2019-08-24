@@ -125,6 +125,8 @@ spec:
       - name: metrics-server
         image: {{ContainerImage "metrics-server"}}
         imagePullPolicy: IfNotPresent
+        securityContext:
+          runAsNonRoot: true
         command:
         - /metrics-server
         - --kubelet-insecure-tls

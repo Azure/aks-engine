@@ -100,6 +100,8 @@ spec:
         - --heapster-host=http://heapster.kube-system:80
         image: {{ContainerImage "kubernetes-dashboard"}}
         imagePullPolicy: IfNotPresent
+        securityContext:
+          runAsNonRoot: true
         livenessProbe:
           httpGet:
             path: "/"

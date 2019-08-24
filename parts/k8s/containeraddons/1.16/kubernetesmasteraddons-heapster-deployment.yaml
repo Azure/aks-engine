@@ -106,6 +106,8 @@ spec:
       containers:
         - image: {{ContainerImage "heapster"}}
           imagePullPolicy: IfNotPresent
+          securityContext:
+            runAsNonRoot: true
           name: heapster
           resources:
             requests:
@@ -126,6 +128,8 @@ spec:
             - --source=kubernetes.summary_api:''
         - image: {{ContainerImage "heapster-nanny"}}
           imagePullPolicy: IfNotPresent
+          securityContext:
+            runAsNonRoot: true
           name: heapster-nanny
           resources:
             requests:
