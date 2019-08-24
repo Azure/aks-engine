@@ -9543,6 +9543,7 @@ metadata:
       addonmanager.kubernetes.io/mode: Reconcile
 data:
   Corefile: |
+    import conf.d/Corefile*
     .:53 {
         errors
         health
@@ -9637,6 +9638,9 @@ spec:
         - name: config-volume
           mountPath: /etc/coredns
           readOnly: true
+        - mountPath: /etc/coredns/conf.d
+          name: config-custom
+          readOnly: true
         ports:
         - containerPort: 53
           name: dns
@@ -9677,6 +9681,14 @@ spec:
             items:
             - key: Corefile
               path: Corefile
+        - name: config-custom
+          configMap:
+            name: coredns-custom
+            items:
+            - key: Corefile
+              path: Corefile
+            optional: true
+
 ---
 apiVersion: v1
 kind: Service
@@ -28730,6 +28742,20 @@ var _windowsparamsT = []byte(` {{if IsKubernetes}}
       "type": "securestring",
       "metadata": {
         "description": "Password for the Windows Swarm Agent Virtual Machines."
+      }
+    },
+    "agentWindowsImageName": {
+      "defaultValue": "",
+      "type": "string",
+      "metadata": {
+        "description": "Image name when specifying a Windows image reference."
+      }
+    },
+    "agentWindowsImageResourceGroup": {
+      "defaultValue": "",
+      "type": "string",
+      "metadata": {
+        "description": "Resource group when specifying a Windows image reference."
       }
     },
     "agentWindowsVersion": {

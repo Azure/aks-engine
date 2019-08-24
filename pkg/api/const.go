@@ -155,10 +155,12 @@ const (
 	DefaultRBACEnabled = true
 	// DefaultUseInstanceMetadata determines the aks-engine provided default for enabling Azure cloudprovider instance metadata service
 	DefaultUseInstanceMetadata = true
-	// DefaultLoadBalancerSku determines the aks-engine provided default for enabling Azure cloudprovider load balancer SKU
-	DefaultLoadBalancerSku = "Basic"
+	// BasicLoadBalancerSku is the string const for Azure Basic Load Balancer
+	BasicLoadBalancerSku = "Basic"
 	// StandardLoadBalancerSku is the string const for Azure Standard Load Balancer
 	StandardLoadBalancerSku = "Standard"
+	// DefaultLoadBalancerSku determines the aks-engine provided default for enabling Azure cloudprovider load balancer SKU
+	DefaultLoadBalancerSku = BasicLoadBalancerSku
 	// DefaultExcludeMasterFromStandardLB determines the aks-engine provided default for excluding master nodes from standard load balancer.
 	DefaultExcludeMasterFromStandardLB = true
 	// DefaultSecureKubeletEnabled determines the aks-engine provided default for securing kubelet communications

@@ -1496,6 +1496,118 @@ func TestHasAvailabilityZones(t *testing.T) {
 	}
 }
 
+func TestHasLowPriorityScaleset(t *testing.T) {
+	cases := []struct {
+		p        Properties
+		expected bool
+	}{
+		{
+			p: Properties{
+				MasterProfile: &MasterProfile{
+					Count: 1,
+				},
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						AvailabilityProfile: VirtualMachineScaleSets,
+						ScaleSetPriority:    ScaleSetPriorityLow,
+					},
+				},
+			},
+			expected: true,
+		},
+		{
+			p: Properties{
+				MasterProfile: &MasterProfile{
+					Count: 1,
+				},
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						AvailabilityProfile: VirtualMachineScaleSets,
+						ScaleSetPriority:    ScaleSetPriorityLow,
+					},
+					{
+						AvailabilityProfile: VirtualMachineScaleSets,
+					},
+				},
+			},
+			expected: true,
+		},
+		{
+			p: Properties{
+				MasterProfile: &MasterProfile{
+					Count: 1,
+				},
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						AvailabilityProfile: VirtualMachineScaleSets,
+						ScaleSetPriority:    ScaleSetPriorityLow,
+					},
+					{
+						AvailabilityProfile: AvailabilitySet,
+					},
+				},
+			},
+			expected: true,
+		},
+		{
+			p: Properties{
+				MasterProfile: &MasterProfile{
+					Count: 1,
+				},
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						AvailabilityProfile: VirtualMachineScaleSets,
+					},
+				},
+			},
+			expected: false,
+		},
+		{
+			p: Properties{
+				MasterProfile: &MasterProfile{
+					Count: 1,
+				},
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						AvailabilityProfile: VirtualMachineScaleSets,
+					},
+					{
+						AvailabilityProfile: AvailabilitySet,
+					},
+				},
+			},
+			expected: false,
+		},
+		{
+			p: Properties{
+				MasterProfile: &MasterProfile{
+					Count: 1,
+				},
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						AvailabilityProfile: AvailabilitySet,
+					},
+				},
+			},
+			expected: false,
+		},
+		{
+			p: Properties{
+				MasterProfile: &MasterProfile{
+					Count: 1,
+				},
+			},
+			expected: false,
+		},
+	}
+
+	for _, c := range cases {
+		if c.p.HasLowPriorityScaleset() != c.expected {
+			t.Fatalf("expected HasLowPriorityScaleset() to return %t but instead returned %t", c.expected, c.p.HasLowPriorityScaleset())
+		}
+	}
+}
+
 func TestMasterIsUbuntu(t *testing.T) {
 	cases := []struct {
 		p        Properties
@@ -2947,6 +3059,77 @@ func TestWindowsProfile(t *testing.T) {
 	se := w.SSHEnabled
 	if !se {
 		t.Fatalf("Expected SSHEnabled to return true, got %v", se)
+	}
+}
+
+func TestWindowsProfileCustomOS(t *testing.T) {
+	cases := []struct {
+		name            string
+		w               WindowsProfile
+		expectedRef     bool
+		expectedGallery bool
+		expectedURL     bool
+	}{
+		{
+			name: "valid shared gallery image",
+			w: WindowsProfile{
+				ImageRef: &ImageReference{
+					Name:           "test",
+					ResourceGroup:  "testRG",
+					SubscriptionID: "testSub",
+					Gallery:        "testGallery",
+					Version:        "0.1.0",
+				},
+			},
+			expectedRef:     true,
+			expectedGallery: true,
+			expectedURL:     false,
+		},
+		{
+			name: "valid non-shared image",
+			w: WindowsProfile{
+				ImageRef: &ImageReference{
+					Name:          "test",
+					ResourceGroup: "testRG",
+				},
+			},
+			expectedRef:     true,
+			expectedGallery: false,
+			expectedURL:     false,
+		},
+		{
+			name: "valid image URL",
+			w: WindowsProfile{
+				WindowsImageSourceURL: "https://some/image.vhd",
+			},
+			expectedRef:     false,
+			expectedGallery: false,
+			expectedURL:     true,
+		},
+		{
+			name:            "valid no custom image",
+			w:               WindowsProfile{},
+			expectedRef:     false,
+			expectedGallery: false,
+			expectedURL:     false,
+		},
+	}
+
+	for _, c := range cases {
+		c := c
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+
+			if c.w.HasCustomImage() != c.expectedURL {
+				t.Errorf("expected HasCustomImage() to return %t but instead returned %t", c.expectedURL, c.w.HasCustomImage())
+			}
+			if c.w.HasImageRef() != c.expectedRef {
+				t.Errorf("expected HasImageRef() to return %t but instead returned %t", c.expectedRef, c.w.HasImageRef())
+			}
+			if c.w.HasImageGallery() != c.expectedGallery {
+				t.Errorf("expected HasImageGallery() to return %t but instead returned %t", c.expectedGallery, c.w.HasImageGallery())
+			}
+		})
 	}
 }
 

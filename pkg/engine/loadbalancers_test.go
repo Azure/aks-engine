@@ -22,7 +22,7 @@ func TestCreateLoadBalancer(t *testing.T) {
 			},
 			OrchestratorProfile: &api.OrchestratorProfile{
 				KubernetesConfig: &api.KubernetesConfig{
-					LoadBalancerSku: "Basic",
+					LoadBalancerSku: BasicLoadBalancerSku,
 				},
 			},
 		},
@@ -250,7 +250,7 @@ func TestCreateLoadBalancerVMSS(t *testing.T) {
 			},
 			OrchestratorProfile: &api.OrchestratorProfile{
 				KubernetesConfig: &api.KubernetesConfig{
-					LoadBalancerSku: "Basic",
+					LoadBalancerSku: BasicLoadBalancerSku,
 				},
 			},
 		},
@@ -354,7 +354,7 @@ func TestCreateMasterInternalLoadBalancer(t *testing.T) {
 			MasterProfile: &api.MasterProfile{},
 			OrchestratorProfile: &api.OrchestratorProfile{
 				KubernetesConfig: &api.KubernetesConfig{
-					LoadBalancerSku: "Basic",
+					LoadBalancerSku: BasicLoadBalancerSku,
 				},
 			},
 		},
@@ -658,7 +658,7 @@ func TestCreateAgentLoadBalancer(t *testing.T) {
 			OrchestratorProfile: &api.OrchestratorProfile{
 				OrchestratorVersion: "1.14.4",
 				KubernetesConfig: &api.KubernetesConfig{
-					LoadBalancerSku: "Standard",
+					LoadBalancerSku: StandardLoadBalancerSku,
 				},
 			},
 		},

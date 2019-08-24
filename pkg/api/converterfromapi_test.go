@@ -11,6 +11,7 @@ import (
 
 	"github.com/Azure/aks-engine/pkg/api/vlabs"
 	"github.com/Azure/go-autorest/autorest/azure"
+	"github.com/google/go-cmp/cmp"
 )
 
 const ValidSSHPublicKey = "ssh-rsa AAAAB3NzaC1yc2EAAAABJQAAAQEApD8+lRvLtUcyfO8N2Cwq0zY9DG1Un9d+tcmU3HgnAzBr6UR/dDT5M07NV7DN1lmu/0dt6Ay/ItjF9xK//nwVJL3ezEX32yhLKkCKFMB1LcANNzlhT++SB5tlRBx65CTL8z9FORe4UCWVJNafxu3as/BshQSrSaYt3hjSeYuzTpwd4+4xQutzbTXEUBDUr01zEfjjzfUu0HDrg1IFae62hnLm3ajG6b432IIdUhFUmgjZDljUt5bI3OEz5IWPsNOOlVTuo6fqU8lJHClAtAlZEZkyv0VotidC7ZSCfV153rRsEk9IWscwL2PQIQnCw7YyEYEffDeLjBwkH6MIdJ6OgQ== rsa-key-20170510"
@@ -553,7 +554,7 @@ func getDefaultContainerService() *ContainerService {
 					CustomWindowsPackageURL:         "https://deisartifacts.windows.net",
 					WindowsNodeBinariesURL:          "https://deisartifacts.windows.net",
 					UseInstanceMetadata:             to.BoolPtr(true),
-					LoadBalancerSku:                 "Basic",
+					LoadBalancerSku:                 BasicLoadBalancerSku,
 					ExcludeMasterFromStandardLB:     to.BoolPtr(false),
 					EnableRbac:                      to.BoolPtr(true),
 					EnableSecureKubelet:             to.BoolPtr(true),
@@ -674,5 +675,86 @@ func TestConvertOrchestratorVersionProfileToVLabs(t *testing.T) {
 
 	if vlabsOvp == nil {
 		t.Errorf("expected the converted orchestratorVersionProfileToVLabs struct to be non-nil")
+	}
+}
+
+func TestConvertWindowsProfileToVlabs(t *testing.T) {
+	falseVar := false
+
+	cases := []struct {
+		name     string
+		w        WindowsProfile
+		expected vlabs.WindowsProfile
+	}{
+		{
+			name: "empty profile",
+			w:    WindowsProfile{},
+			expected: vlabs.WindowsProfile{
+				Secrets: []vlabs.KeyVaultSecrets{},
+			},
+		},
+		{
+			name: "misc fields",
+			w: WindowsProfile{
+				AdminUsername:          "user",
+				AdminPassword:          "password",
+				EnableAutomaticUpdates: &falseVar,
+				ImageVersion:           "17763.615.1907121548",
+				SSHEnabled:             false,
+				WindowsPublisher:       "MicrosoftWindowsServer",
+				WindowsOffer:           "WindowsServer",
+				WindowsSku:             "2019-Datacenter-Core-smalldisk",
+				WindowsDockerVersion:   "18.09",
+			},
+			expected: vlabs.WindowsProfile{
+				AdminUsername:          "user",
+				AdminPassword:          "password",
+				EnableAutomaticUpdates: &falseVar,
+				ImageVersion:           "17763.615.1907121548",
+				SSHEnabled:             false,
+				WindowsPublisher:       "MicrosoftWindowsServer",
+				WindowsOffer:           "WindowsServer",
+				WindowsSku:             "2019-Datacenter-Core-smalldisk",
+				WindowsDockerVersion:   "18.09",
+				Secrets:                []vlabs.KeyVaultSecrets{},
+			},
+		},
+		{
+			name: "image reference",
+			w: WindowsProfile{
+				ImageRef: &ImageReference{
+					Gallery:        "gallery",
+					Name:           "name",
+					ResourceGroup:  "rg",
+					SubscriptionID: "dc6bd10c-110c-4134-88c5-4d5a039129c4",
+					Version:        "1.25.6",
+				},
+			},
+			expected: vlabs.WindowsProfile{
+				ImageRef: &vlabs.ImageReference{
+					Gallery:        "gallery",
+					Name:           "name",
+					ResourceGroup:  "rg",
+					SubscriptionID: "dc6bd10c-110c-4134-88c5-4d5a039129c4",
+					Version:        "1.25.6",
+				},
+				Secrets: []vlabs.KeyVaultSecrets{},
+			},
+		},
+	}
+
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+
+			actual := vlabs.WindowsProfile{}
+			convertWindowsProfileToVLabs(&c.w, &actual)
+
+			diff := cmp.Diff(actual, c.expected)
+
+			if diff != "" {
+				t.Errorf("unexpected diff testing convertWindowsProfileToVLabs: %s", diff)
+			}
+		})
 	}
 }

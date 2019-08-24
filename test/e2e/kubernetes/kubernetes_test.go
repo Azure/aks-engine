@@ -127,7 +127,8 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			for _, node := range nodeList.Nodes {
 				envString += fmt.Sprintf("%s ", node.Metadata.Name)
 			}
-			envString += "'"
+			lookupRetries := 3
+			envString += fmt.Sprintf("LOOKUP_RETRIES=%d'", lookupRetries)
 			for _, node := range nodeList.Nodes {
 				if node.IsLinux() {
 					err := sshConn.CopyToRemote(node.Metadata.Name, "/tmp/"+hostOSDNSValidateScript)
@@ -351,7 +352,10 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			var err error
 			var pods []pod.Pod
 
-			testPortForward := func() {
+			testPortForward := func(deploymentName string) {
+				running, podWaitErr := pod.WaitOnReady(deploymentName, deploymentNamespace, 3, retryTimeWhenWaitingForPodReady, cfg.Timeout)
+				Expect(podWaitErr).NotTo(HaveOccurred())
+				Expect(running).To(Equal(true))
 				pods, err = deploy.Pods()
 				Expect(err).NotTo(HaveOccurred())
 				Expect(len(pods)).To(Equal(1))
@@ -425,7 +429,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				deploymentName := fmt.Sprintf("%s-%v", deploymentPrefix, r.Intn(9999))
 				deploy, err = deployment.CreateLinuxDeployDeleteIfExists(deploymentPrefix, "library/nginx:latest", deploymentName, deploymentNamespace, "")
 				Expect(err).NotTo(HaveOccurred())
-				testPortForward()
+				testPortForward(deploymentName)
 				err = deploy.Delete(util.DefaultDeleteRetries)
 				Expect(err).NotTo(HaveOccurred())
 			}
@@ -438,7 +442,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 					deploymentName := fmt.Sprintf("%s-%v", deploymentPrefix, r.Intn(9999))
 					deploy, err = deployment.CreateWindowsDeployDeleteIfExist(deploymentPrefix, windowsImages.IIS, deploymentName, deploymentNamespace, "")
 					Expect(err).NotTo(HaveOccurred())
-					testPortForward()
+					testPortForward(deploymentName)
 					err = deploy.Delete(util.DefaultDeleteRetries)
 					Expect(err).NotTo(HaveOccurred())
 				} else {
@@ -449,9 +453,14 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 		})
 
 		It("should report all nodes in a Ready state", func() {
-			nodeCount := eng.NodeCount()
-			log.Printf("Checking for %d Ready nodes\n", nodeCount)
-			ready := node.WaitOnReady(nodeCount, 10*time.Second, cfg.Timeout)
+			var expectedReadyNodes int
+			if !eng.ExpandedDefinition.Properties.HasLowPriorityScaleset() {
+				expectedReadyNodes = eng.NodeCount()
+				log.Printf("Checking for %d Ready nodes\n", expectedReadyNodes)
+			} else {
+				expectedReadyNodes = -1
+			}
+			ready := node.WaitOnReady(expectedReadyNodes, 10*time.Second, cfg.Timeout)
 			cmd := exec.Command("k", "get", "nodes", "-o", "wide")
 			out, _ := cmd.CombinedOutput()
 			log.Printf("%s\n", out)
@@ -863,9 +872,14 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 					}
 				}
 
-				nodeCount := eng.NodeCount()
-				log.Printf("Checking for %d Ready nodes\n", nodeCount)
-				ready := node.WaitOnReady(nodeCount, 1*time.Minute, cfg.Timeout)
+				var expectedReadyNodes int
+				if !eng.ExpandedDefinition.Properties.HasLowPriorityScaleset() {
+					expectedReadyNodes = eng.NodeCount()
+					log.Printf("Checking for %d Ready nodes\n", expectedReadyNodes)
+				} else {
+					expectedReadyNodes = -1
+				}
+				ready := node.WaitOnReady(expectedReadyNodes, 1*time.Minute, cfg.Timeout)
 				cmd2 := exec.Command("k", "get", "nodes", "-o", "wide")
 				out2, _ := cmd2.CombinedOutput()
 				log.Printf("%s\n", out2)
