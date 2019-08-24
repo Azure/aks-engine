@@ -207,20 +207,6 @@ func TestConvertVLabsKubernetesConfigProfile(t *testing.T) {
 	}
 }
 
-func makeKubernetesProperties() *Properties {
-	ap := &Properties{}
-	ap.OrchestratorProfile = &OrchestratorProfile{}
-	ap.OrchestratorProfile.OrchestratorType = "Kubernetes"
-	return ap
-}
-
-func makeKubernetesPropertiesVlabs() *vlabs.Properties {
-	vp := &vlabs.Properties{}
-	vp.OrchestratorProfile = &vlabs.OrchestratorProfile{}
-	vp.OrchestratorProfile.OrchestratorType = "Kubernetes"
-	return vp
-}
-
 func TestConvertCustomFilesToAPI(t *testing.T) {
 	expectedAPICustomFiles := []CustomFile{
 		{
