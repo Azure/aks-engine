@@ -137,11 +137,24 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			}
 			lookupRetries := 3
 			envString += fmt.Sprintf("LOOKUP_RETRIES=%d'", lookupRetries)
+			hostOSDNSValidationCommand := fmt.Sprintf("\"%s /tmp/%s\"", envString, hostOSDNSValidateScript)
+			var success bool
+			// Retry for up to 5 minutes host vm DNS validation
+			for i := 0; i < 30; i++ {
+				err := sshConn.Execute(hostOSDNSValidationCommand, true)
+				if err == nil {
+					success = true
+					break
+				} else {
+					time.Sleep(10 * time.Second)
+				}
+			}
+			Expect(success).To(BeTrue())
 			for _, node := range nodeList.Nodes {
 				if node.IsLinux() {
 					err := sshConn.CopyToRemote(node.Metadata.Name, "/tmp/"+hostOSDNSValidateScript)
 					Expect(err).NotTo(HaveOccurred())
-					hostOSDNSValidationCommand := fmt.Sprintf("\"%s /tmp/%s\"", envString, hostOSDNSValidateScript)
+
 					err = sshConn.ExecuteRemote(node.Metadata.Name, hostOSDNSValidationCommand, false)
 					Expect(err).NotTo(HaveOccurred())
 				}
