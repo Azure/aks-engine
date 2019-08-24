@@ -182,36 +182,6 @@ func TestKubernetesOrchestratorVersionFailWhenInvalid(t *testing.T) {
 
 }
 
-func TestKubernetesVlabsDefaults(t *testing.T) {
-	vp := makeKubernetesPropertiesVlabs()
-	ap := makeKubernetesProperties()
-	setVlabsKubernetesDefaults(vp, ap.OrchestratorProfile)
-	if ap.OrchestratorProfile.KubernetesConfig == nil {
-		t.Fatalf("KubernetesConfig cannot be nil after vlabs default conversion")
-	}
-	if ap.OrchestratorProfile.KubernetesConfig.NetworkPlugin != vlabs.DefaultNetworkPlugin {
-		t.Fatalf("vlabs defaults not applied, expected NetworkPlugin: %s, instead got: %s", vlabs.DefaultNetworkPlugin, ap.OrchestratorProfile.KubernetesConfig.NetworkPlugin)
-	}
-	if ap.OrchestratorProfile.KubernetesConfig.NetworkPolicy != vlabs.DefaultNetworkPolicy {
-		t.Fatalf("vlabs defaults not applied, expected NetworkPolicy: %s, instead got: %s", vlabs.DefaultNetworkPolicy, ap.OrchestratorProfile.KubernetesConfig.NetworkPolicy)
-	}
-
-	vp = makeKubernetesPropertiesVlabs()
-	vp.WindowsProfile = &vlabs.WindowsProfile{}
-	vp.AgentPoolProfiles = append(vp.AgentPoolProfiles, &vlabs.AgentPoolProfile{OSType: "Windows"})
-	ap = makeKubernetesProperties()
-	setVlabsKubernetesDefaults(vp, ap.OrchestratorProfile)
-	if ap.OrchestratorProfile.KubernetesConfig == nil {
-		t.Fatalf("KubernetesConfig cannot be nil after vlabs default conversion")
-	}
-	if ap.OrchestratorProfile.KubernetesConfig.NetworkPlugin != vlabs.DefaultNetworkPluginWindows {
-		t.Fatalf("vlabs defaults not applied, expected NetworkPlugin: %s, instead got: %s", vlabs.DefaultNetworkPluginWindows, ap.OrchestratorProfile.KubernetesConfig.NetworkPlugin)
-	}
-	if ap.OrchestratorProfile.KubernetesConfig.NetworkPolicy != vlabs.DefaultNetworkPolicy {
-		t.Fatalf("vlabs defaults not applied, expected NetworkPolicy: %s, instead got: %s", vlabs.DefaultNetworkPolicy, ap.OrchestratorProfile.KubernetesConfig.NetworkPolicy)
-	}
-}
-
 func TestConvertVLabsKubernetesConfigProfile(t *testing.T) {
 	tests := map[string]struct {
 		props  *vlabs.KubernetesConfig
@@ -235,20 +205,6 @@ func TestConvertVLabsKubernetesConfigProfile(t *testing.T) {
 			t.Errorf(spew.Sprintf("Expected:\n%+v\nGot:\n%+v", test.expect, actual))
 		}
 	}
-}
-
-func makeKubernetesProperties() *Properties {
-	ap := &Properties{}
-	ap.OrchestratorProfile = &OrchestratorProfile{}
-	ap.OrchestratorProfile.OrchestratorType = "Kubernetes"
-	return ap
-}
-
-func makeKubernetesPropertiesVlabs() *vlabs.Properties {
-	vp := &vlabs.Properties{}
-	vp.OrchestratorProfile = &vlabs.OrchestratorProfile{}
-	vp.OrchestratorProfile.OrchestratorType = "Kubernetes"
-	return vp
 }
 
 func TestConvertCustomFilesToAPI(t *testing.T) {
@@ -1092,6 +1048,137 @@ func TestConvertVLabsWindowsProfile(t *testing.T) {
 			diff := cmp.Diff(actual, c.expected)
 			if diff != "" {
 				t.Errorf("unexpected diff testing convertVLabsWindowsProfile: %s", diff)
+			}
+		})
+	}
+}
+
+func TestSetVlabsKubernetesDefaults(t *testing.T) {
+	tests := []struct {
+		name                  string
+		p                     *vlabs.Properties
+		expectedNetworkPlugin string
+		expectedNetworkPolicy string
+	}{
+		{
+			name: "default",
+			p: &vlabs.Properties{
+				OrchestratorProfile: &vlabs.OrchestratorProfile{
+					KubernetesConfig: &vlabs.KubernetesConfig{
+						NetworkPlugin: "",
+						NetworkPolicy: "",
+					},
+				},
+			},
+			expectedNetworkPlugin: vlabs.DefaultNetworkPlugin,
+			expectedNetworkPolicy: "",
+		},
+		{
+			name: "default windows",
+			p: &vlabs.Properties{
+				OrchestratorProfile: &vlabs.OrchestratorProfile{
+					KubernetesConfig: &vlabs.KubernetesConfig{
+						NetworkPlugin: "",
+						NetworkPolicy: "",
+					},
+				},
+				AgentPoolProfiles: []*vlabs.AgentPoolProfile{
+					{
+						OSType: "Windows",
+					},
+				},
+			},
+			expectedNetworkPlugin: vlabs.DefaultNetworkPluginWindows,
+			expectedNetworkPolicy: "",
+		},
+		{
+			name: "azure networkPlugin",
+			p: &vlabs.Properties{
+				OrchestratorProfile: &vlabs.OrchestratorProfile{
+					KubernetesConfig: &vlabs.KubernetesConfig{
+						NetworkPlugin: "azure",
+						NetworkPolicy: "",
+					},
+				},
+			},
+			expectedNetworkPlugin: vlabs.DefaultNetworkPlugin,
+			expectedNetworkPolicy: "",
+		},
+		{
+			name: "azure networkPolicy back-compat",
+			p: &vlabs.Properties{
+				OrchestratorProfile: &vlabs.OrchestratorProfile{
+					KubernetesConfig: &vlabs.KubernetesConfig{
+						NetworkPlugin: "",
+						NetworkPolicy: "azure",
+					},
+				},
+			},
+			expectedNetworkPlugin: "azure",
+			expectedNetworkPolicy: "",
+		},
+		{
+			name: "none networkPolicy back-compat",
+			p: &vlabs.Properties{
+				OrchestratorProfile: &vlabs.OrchestratorProfile{
+					KubernetesConfig: &vlabs.KubernetesConfig{
+						NetworkPlugin: "",
+						NetworkPolicy: "none",
+					},
+				},
+			},
+			expectedNetworkPlugin: "kubenet",
+			expectedNetworkPolicy: "",
+		},
+		{
+			name: "test literal string conversion",
+			p: &vlabs.Properties{
+				OrchestratorProfile: &vlabs.OrchestratorProfile{
+					KubernetesConfig: &vlabs.KubernetesConfig{
+						NetworkPlugin: "foo",
+						NetworkPolicy: "bar",
+					},
+				},
+			},
+			expectedNetworkPlugin: "foo",
+			expectedNetworkPolicy: "bar",
+		},
+		{
+			name: "calico networkPlicy",
+			p: &vlabs.Properties{
+				OrchestratorProfile: &vlabs.OrchestratorProfile{
+					KubernetesConfig: &vlabs.KubernetesConfig{
+						NetworkPlugin: "",
+						NetworkPolicy: "calico",
+					},
+				},
+			},
+			expectedNetworkPlugin: "azure",
+			expectedNetworkPolicy: "calico",
+		},
+		{
+			name: "cilium networkPlicy",
+			p: &vlabs.Properties{
+				OrchestratorProfile: &vlabs.OrchestratorProfile{
+					KubernetesConfig: &vlabs.KubernetesConfig{
+						NetworkPlugin: "",
+						NetworkPolicy: "cilium",
+					},
+				},
+			},
+			expectedNetworkPlugin: "",
+			expectedNetworkPolicy: "cilium",
+		},
+	}
+
+	for _, test := range tests {
+		test := test
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+			converted := &OrchestratorProfile{}
+			setVlabsKubernetesDefaults(test.p, converted)
+			if converted.KubernetesConfig.NetworkPlugin != test.expectedNetworkPlugin {
+				t.Errorf("expected NetworkPlugin : %s, but got %s", test.expectedNetworkPlugin, converted.KubernetesConfig.NetworkPlugin)
 			}
 		})
 	}
