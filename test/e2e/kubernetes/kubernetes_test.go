@@ -116,25 +116,29 @@ var _ = BeforeSuite(func() {
 var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", func() {
 	Describe("regardless of agent pool type", func() {
 		It("should validate host OS DNS", func() {
-			nodeList, err := node.GetReady()
-			Expect(err).NotTo(HaveOccurred())
-			hostOSDNSValidateScript := "host-os-dns-validate.sh"
-			err = sshConn.CopyTo(hostOSDNSValidateScript)
-			Expect(err).NotTo(HaveOccurred())
-			envString := "NODE_HOSTNAMES='"
-			for _, node := range nodeList.Nodes {
-				envString += fmt.Sprintf("%s ", node.Metadata.Name)
-			}
-			lookupRetries := 3
-			envString += fmt.Sprintf("LOOKUP_RETRIES=%d'", lookupRetries)
-			for _, node := range nodeList.Nodes {
-				if node.IsLinux() {
-					err := sshConn.CopyToRemote(node.Metadata.Name, "/tmp/"+hostOSDNSValidateScript)
-					Expect(err).NotTo(HaveOccurred())
-					hostOSDNSValidationCommand := fmt.Sprintf("\"%s /tmp/%s\"", envString, hostOSDNSValidateScript)
-					err = sshConn.ExecuteRemote(node.Metadata.Name, hostOSDNSValidationCommand, false)
-					Expect(err).NotTo(HaveOccurred())
+			if !eng.ExpandedDefinition.Properties.HasLowPriorityScaleset() {
+				nodeList, err := node.GetReady()
+				Expect(err).NotTo(HaveOccurred())
+				hostOSDNSValidateScript := "host-os-dns-validate.sh"
+				err = sshConn.CopyTo(hostOSDNSValidateScript)
+				Expect(err).NotTo(HaveOccurred())
+				envString := "NODE_HOSTNAMES='"
+				for _, node := range nodeList.Nodes {
+					envString += fmt.Sprintf("%s ", node.Metadata.Name)
 				}
+				lookupRetries := 3
+				envString += fmt.Sprintf("LOOKUP_RETRIES=%d'", lookupRetries)
+				for _, node := range nodeList.Nodes {
+					if node.IsLinux() {
+						err := sshConn.CopyToRemote(node.Metadata.Name, "/tmp/"+hostOSDNSValidateScript)
+						Expect(err).NotTo(HaveOccurred())
+						hostOSDNSValidationCommand := fmt.Sprintf("\"%s /tmp/%s\"", envString, hostOSDNSValidateScript)
+						err = sshConn.ExecuteRemote(node.Metadata.Name, hostOSDNSValidationCommand, false)
+						Expect(err).NotTo(HaveOccurred())
+					}
+				}
+			} else {
+				Skip("Skip per-node tests in low-priority VMSS cluster configuration scenario")
 			}
 		})
 
@@ -160,190 +164,226 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 		})
 
 		It("should display the installed docker runtime on all nodes", func() {
-			if eng.ExpandedDefinition.Properties.OrchestratorProfile.KubernetesConfig.RequiresDocker() {
-				nodeList, err := node.GetReady()
-				Expect(err).NotTo(HaveOccurred())
-				dockerVersionCmd := fmt.Sprintf("\"docker version\"")
-				for _, node := range nodeList.Nodes {
-					err = sshConn.ExecuteRemote(node.Metadata.Name, dockerVersionCmd, true)
+			if !eng.ExpandedDefinition.Properties.HasLowPriorityScaleset() {
+				if eng.ExpandedDefinition.Properties.OrchestratorProfile.KubernetesConfig.RequiresDocker() {
+					nodeList, err := node.GetReady()
 					Expect(err).NotTo(HaveOccurred())
+					dockerVersionCmd := fmt.Sprintf("\"docker version\"")
+					for _, node := range nodeList.Nodes {
+						err = sshConn.ExecuteRemote(node.Metadata.Name, dockerVersionCmd, true)
+						Expect(err).NotTo(HaveOccurred())
+					}
+				} else {
+					Skip("Skip docker validations on non-docker-backed clusters")
 				}
 			} else {
-				Skip("Skip docker validations on non-docker-backed clusters")
+				Skip("Skip per-node tests in low-priority VMSS cluster configuration scenario")
 			}
 		})
 
 		It("should validate that every linux node has a root password", func() {
-			if eng.ExpandedDefinition.Properties.IsVHDDistroForAllNodes() {
-				nodeList, err := node.GetReady()
-				Expect(err).NotTo(HaveOccurred())
-				rootPasswdCmd := fmt.Sprintf("\"sudo grep '^root:[!*]:' /etc/shadow\" && exit 1 || exit 0")
-				for _, node := range nodeList.Nodes {
-					if node.IsUbuntu() {
-						err = sshConn.ExecuteRemote(node.Metadata.Name, rootPasswdCmd, true)
-						Expect(err).NotTo(HaveOccurred())
+			if !eng.ExpandedDefinition.Properties.HasLowPriorityScaleset() {
+				if eng.ExpandedDefinition.Properties.IsVHDDistroForAllNodes() {
+					nodeList, err := node.GetReady()
+					Expect(err).NotTo(HaveOccurred())
+					rootPasswdCmd := fmt.Sprintf("\"sudo grep '^root:[!*]:' /etc/shadow\" && exit 1 || exit 0")
+					for _, node := range nodeList.Nodes {
+						if node.IsUbuntu() {
+							err = sshConn.ExecuteRemote(node.Metadata.Name, rootPasswdCmd, true)
+							Expect(err).NotTo(HaveOccurred())
+						}
 					}
+				} else {
+					Skip("This config is only available on VHD")
 				}
 			} else {
-				Skip("This config is only available on VHD")
+				Skip("Skip per-node tests in low-priority VMSS cluster configuration scenario")
 			}
 		})
 
 		It("should validate Ubuntu host OS network configuration on all nodes", func() {
-			if eng.ExpandedDefinition.Properties.IsVHDDistroForAllNodes() {
-				nodeList, err := node.GetReady()
-				Expect(err).NotTo(HaveOccurred())
-				netConfigValidateScript := "net-config-validate.sh"
-				err = sshConn.CopyTo(netConfigValidateScript)
-				Expect(err).NotTo(HaveOccurred())
-				for _, node := range nodeList.Nodes {
-					if node.IsUbuntu() {
-						err := sshConn.CopyToRemote(node.Metadata.Name, "/tmp/"+netConfigValidateScript)
-						Expect(err).NotTo(HaveOccurred())
-						netConfigValidationCommand := fmt.Sprintf("\"/tmp/%s\"", netConfigValidateScript)
-						err = sshConn.ExecuteRemote(node.Metadata.Name, netConfigValidationCommand, false)
-						Expect(err).NotTo(HaveOccurred())
+			if !eng.ExpandedDefinition.Properties.HasLowPriorityScaleset() {
+				if eng.ExpandedDefinition.Properties.IsVHDDistroForAllNodes() {
+					nodeList, err := node.GetReady()
+					Expect(err).NotTo(HaveOccurred())
+					netConfigValidateScript := "net-config-validate.sh"
+					err = sshConn.CopyTo(netConfigValidateScript)
+					Expect(err).NotTo(HaveOccurred())
+					for _, node := range nodeList.Nodes {
+						if node.IsUbuntu() {
+							err := sshConn.CopyToRemote(node.Metadata.Name, "/tmp/"+netConfigValidateScript)
+							Expect(err).NotTo(HaveOccurred())
+							netConfigValidationCommand := fmt.Sprintf("\"/tmp/%s\"", netConfigValidateScript)
+							err = sshConn.ExecuteRemote(node.Metadata.Name, netConfigValidationCommand, false)
+							Expect(err).NotTo(HaveOccurred())
+						}
 					}
+				} else {
+					Skip("This config is only available on VHD")
 				}
 			} else {
-				Skip("This config is only available on VHD")
+				Skip("Skip per-node tests in low-priority VMSS cluster configuration scenario")
 			}
 		})
 
 		It("should validate all CIS VHD-paved files", func() {
-			if eng.ExpandedDefinition.Properties.IsVHDDistroForAllNodes() {
-				nodeList, err := node.GetReady()
-				Expect(err).NotTo(HaveOccurred())
-				CISFilesValidateScript := "CIS-files-validate.sh"
-				err = sshConn.CopyTo(CISFilesValidateScript)
-				Expect(err).NotTo(HaveOccurred())
-				for _, node := range nodeList.Nodes {
-					err := sshConn.CopyToRemote(node.Metadata.Name, "/tmp/"+CISFilesValidateScript)
+			if !eng.ExpandedDefinition.Properties.HasLowPriorityScaleset() {
+				if eng.ExpandedDefinition.Properties.IsVHDDistroForAllNodes() {
+					nodeList, err := node.GetReady()
 					Expect(err).NotTo(HaveOccurred())
-					CISValidationCommand := fmt.Sprintf("\"/tmp/%s\"", CISFilesValidateScript)
-					err = sshConn.ExecuteRemote(node.Metadata.Name, CISValidationCommand, false)
+					CISFilesValidateScript := "CIS-files-validate.sh"
+					err = sshConn.CopyTo(CISFilesValidateScript)
 					Expect(err).NotTo(HaveOccurred())
+					for _, node := range nodeList.Nodes {
+						err := sshConn.CopyToRemote(node.Metadata.Name, "/tmp/"+CISFilesValidateScript)
+						Expect(err).NotTo(HaveOccurred())
+						CISValidationCommand := fmt.Sprintf("\"/tmp/%s\"", CISFilesValidateScript)
+						err = sshConn.ExecuteRemote(node.Metadata.Name, CISValidationCommand, false)
+						Expect(err).NotTo(HaveOccurred())
+					}
+				} else {
+					Skip("This config is only available on VHD")
 				}
 			} else {
-				Skip("This config is only available on VHD")
+				Skip("Skip per-node tests in low-priority VMSS cluster configuration scenario")
 			}
 		})
 
 		It("should validate kernel module configuration", func() {
-			if eng.ExpandedDefinition.Properties.IsVHDDistroForAllNodes() {
-				nodeList, err := node.GetReady()
-				Expect(err).NotTo(HaveOccurred())
-				modprobeConfigValidateScript := "modprobe-config-validate.sh"
-				err = sshConn.CopyTo(modprobeConfigValidateScript)
-				Expect(err).NotTo(HaveOccurred())
-				for _, node := range nodeList.Nodes {
-					if node.IsUbuntu() {
-						err := sshConn.CopyToRemote(node.Metadata.Name, "/tmp/"+modprobeConfigValidateScript)
-						Expect(err).NotTo(HaveOccurred())
-						netConfigValidationCommand := fmt.Sprintf("\"/tmp/%s\"", modprobeConfigValidateScript)
-						err = sshConn.ExecuteRemote(node.Metadata.Name, netConfigValidationCommand, false)
-						Expect(err).NotTo(HaveOccurred())
+			if !eng.ExpandedDefinition.Properties.HasLowPriorityScaleset() {
+				if eng.ExpandedDefinition.Properties.IsVHDDistroForAllNodes() {
+					nodeList, err := node.GetReady()
+					Expect(err).NotTo(HaveOccurred())
+					modprobeConfigValidateScript := "modprobe-config-validate.sh"
+					err = sshConn.CopyTo(modprobeConfigValidateScript)
+					Expect(err).NotTo(HaveOccurred())
+					for _, node := range nodeList.Nodes {
+						if node.IsUbuntu() {
+							err := sshConn.CopyToRemote(node.Metadata.Name, "/tmp/"+modprobeConfigValidateScript)
+							Expect(err).NotTo(HaveOccurred())
+							netConfigValidationCommand := fmt.Sprintf("\"/tmp/%s\"", modprobeConfigValidateScript)
+							err = sshConn.ExecuteRemote(node.Metadata.Name, netConfigValidationCommand, false)
+							Expect(err).NotTo(HaveOccurred())
+						}
 					}
+				} else {
+					Skip("This config is only available on VHD")
 				}
 			} else {
-				Skip("This config is only available on VHD")
+				Skip("Skip per-node tests in low-priority VMSS cluster configuration scenario")
 			}
 		})
 
 		It("should validate installed software packages", func() {
-			nodeList, err := node.GetReady()
-			Expect(err).NotTo(HaveOccurred())
-			installedPackagesValidateScript := "ubuntu-installed-packages-validate.sh"
-			err = sshConn.CopyTo(installedPackagesValidateScript)
-			Expect(err).NotTo(HaveOccurred())
-			for _, node := range nodeList.Nodes {
-				if node.IsUbuntu() {
-					err := sshConn.CopyToRemote(node.Metadata.Name, "/tmp/"+installedPackagesValidateScript)
-					Expect(err).NotTo(HaveOccurred())
-					installedPackagesValidationCommand := fmt.Sprintf("\"/tmp/%s\"", installedPackagesValidateScript)
-					err = sshConn.ExecuteRemote(node.Metadata.Name, installedPackagesValidationCommand, false)
-					Expect(err).NotTo(HaveOccurred())
+			if !eng.ExpandedDefinition.Properties.HasLowPriorityScaleset() {
+				nodeList, err := node.GetReady()
+				Expect(err).NotTo(HaveOccurred())
+				installedPackagesValidateScript := "ubuntu-installed-packages-validate.sh"
+				err = sshConn.CopyTo(installedPackagesValidateScript)
+				Expect(err).NotTo(HaveOccurred())
+				for _, node := range nodeList.Nodes {
+					if node.IsUbuntu() {
+						err := sshConn.CopyToRemote(node.Metadata.Name, "/tmp/"+installedPackagesValidateScript)
+						Expect(err).NotTo(HaveOccurred())
+						installedPackagesValidationCommand := fmt.Sprintf("\"/tmp/%s\"", installedPackagesValidateScript)
+						err = sshConn.ExecuteRemote(node.Metadata.Name, installedPackagesValidationCommand, false)
+						Expect(err).NotTo(HaveOccurred())
+					}
 				}
+			} else {
+				Skip("Skip per-node tests in low-priority VMSS cluster configuration scenario")
 			}
 		})
 
 		It("should validate that every linux node has the right sshd config", func() {
-			if eng.ExpandedDefinition.Properties.IsVHDDistroForAllNodes() {
-				nodeList, err := node.GetReady()
-				Expect(err).NotTo(HaveOccurred())
-				sshdConfigValidateScript := "sshd-config-validate.sh"
-				err = sshConn.CopyTo(sshdConfigValidateScript)
-				Expect(err).NotTo(HaveOccurred())
-				for _, node := range nodeList.Nodes {
-					if node.IsUbuntu() {
-						err := sshConn.CopyToRemote(node.Metadata.Name, "/tmp/"+sshdConfigValidateScript)
-						Expect(err).NotTo(HaveOccurred())
-						sshdConfigValidationCommand := fmt.Sprintf("\"/tmp/%s\"", sshdConfigValidateScript)
-						err = sshConn.ExecuteRemote(node.Metadata.Name, sshdConfigValidationCommand, false)
-						Expect(err).NotTo(HaveOccurred())
+			if !eng.ExpandedDefinition.Properties.HasLowPriorityScaleset() {
+				if eng.ExpandedDefinition.Properties.IsVHDDistroForAllNodes() {
+					nodeList, err := node.GetReady()
+					Expect(err).NotTo(HaveOccurred())
+					sshdConfigValidateScript := "sshd-config-validate.sh"
+					err = sshConn.CopyTo(sshdConfigValidateScript)
+					Expect(err).NotTo(HaveOccurred())
+					for _, node := range nodeList.Nodes {
+						if node.IsUbuntu() {
+							err := sshConn.CopyToRemote(node.Metadata.Name, "/tmp/"+sshdConfigValidateScript)
+							Expect(err).NotTo(HaveOccurred())
+							sshdConfigValidationCommand := fmt.Sprintf("\"/tmp/%s\"", sshdConfigValidateScript)
+							err = sshConn.ExecuteRemote(node.Metadata.Name, sshdConfigValidationCommand, false)
+							Expect(err).NotTo(HaveOccurred())
+						}
 					}
+				} else {
+					Skip("This config is only available on VHD")
 				}
 			} else {
-				Skip("This config is only available on VHD")
+				Skip("Skip per-node tests in low-priority VMSS cluster configuration scenario")
 			}
 		})
 
 		It("should validate password enforcement configuration", func() {
-			if eng.ExpandedDefinition.Properties.IsVHDDistroForAllNodes() {
-				nodeList, err := node.GetReady()
-				Expect(err).NotTo(HaveOccurred())
-				pwQualityValidateScript := "pwquality-validate.sh"
-				err = sshConn.CopyTo(pwQualityValidateScript)
-				Expect(err).NotTo(HaveOccurred())
-				for _, node := range nodeList.Nodes {
-					if node.IsUbuntu() {
-						err := sshConn.CopyToRemote(node.Metadata.Name, "/tmp/"+pwQualityValidateScript)
-						Expect(err).NotTo(HaveOccurred())
-						pwQualityValidationCommand := fmt.Sprintf("\"/tmp/%s\"", pwQualityValidateScript)
-						err = sshConn.ExecuteRemote(node.Metadata.Name, pwQualityValidationCommand, false)
-						Expect(err).NotTo(HaveOccurred())
+			if !eng.ExpandedDefinition.Properties.HasLowPriorityScaleset() {
+				if eng.ExpandedDefinition.Properties.IsVHDDistroForAllNodes() {
+					nodeList, err := node.GetReady()
+					Expect(err).NotTo(HaveOccurred())
+					pwQualityValidateScript := "pwquality-validate.sh"
+					err = sshConn.CopyTo(pwQualityValidateScript)
+					Expect(err).NotTo(HaveOccurred())
+					for _, node := range nodeList.Nodes {
+						if node.IsUbuntu() {
+							err := sshConn.CopyToRemote(node.Metadata.Name, "/tmp/"+pwQualityValidateScript)
+							Expect(err).NotTo(HaveOccurred())
+							pwQualityValidationCommand := fmt.Sprintf("\"/tmp/%s\"", pwQualityValidateScript)
+							err = sshConn.ExecuteRemote(node.Metadata.Name, pwQualityValidationCommand, false)
+							Expect(err).NotTo(HaveOccurred())
+						}
 					}
+				} else {
+					Skip("This config is only available on VHD")
 				}
 			} else {
-				Skip("This config is only available on VHD")
+				Skip("Skip per-node tests in low-priority VMSS cluster configuration scenario")
 			}
 		})
 
 		It("should validate auditd configuration", func() {
-			if eng.ExpandedDefinition.Properties.IsVHDDistroForAllNodes() {
-				var auditDNodePrefixes []string
-				if eng.ExpandedDefinition.Properties.MasterProfile != nil {
-					if to.Bool(eng.ExpandedDefinition.Properties.MasterProfile.AuditDEnabled) {
-						auditDNodePrefixes = append(auditDNodePrefixes, "k8s-master")
+			if !eng.ExpandedDefinition.Properties.HasLowPriorityScaleset() {
+				if eng.ExpandedDefinition.Properties.IsVHDDistroForAllNodes() {
+					var auditDNodePrefixes []string
+					if eng.ExpandedDefinition.Properties.MasterProfile != nil {
+						if to.Bool(eng.ExpandedDefinition.Properties.MasterProfile.AuditDEnabled) {
+							auditDNodePrefixes = append(auditDNodePrefixes, "k8s-master")
+						}
 					}
-				}
-				for _, profile := range eng.ExpandedDefinition.Properties.AgentPoolProfiles {
-					if to.Bool(profile.AuditDEnabled) {
-						auditDNodePrefixes = append(auditDNodePrefixes, profile.Name)
+					for _, profile := range eng.ExpandedDefinition.Properties.AgentPoolProfiles {
+						if to.Bool(profile.AuditDEnabled) {
+							auditDNodePrefixes = append(auditDNodePrefixes, profile.Name)
+						}
 					}
-				}
-				nodeList, err := node.GetReady()
-				Expect(err).NotTo(HaveOccurred())
-				auditdValidateScript := "auditd-validate.sh"
-				err = sshConn.CopyTo(auditdValidateScript)
-				Expect(err).NotTo(HaveOccurred())
-				for _, node := range nodeList.Nodes {
-					var enabled bool
-					if node.HasSubstring(auditDNodePrefixes) {
-						enabled = true
-					}
-					err := sshConn.CopyToRemote(node.Metadata.Name, "/tmp/"+auditdValidateScript)
+					nodeList, err := node.GetReady()
 					Expect(err).NotTo(HaveOccurred())
-					auditdValidationCommand := fmt.Sprintf("\"ENABLED=%t /tmp/%s\"", enabled, auditdValidateScript)
-					err = sshConn.ExecuteRemote(node.Metadata.Name, auditdValidationCommand, false)
+					auditdValidateScript := "auditd-validate.sh"
+					err = sshConn.CopyTo(auditdValidateScript)
 					Expect(err).NotTo(HaveOccurred())
+					for _, node := range nodeList.Nodes {
+						var enabled bool
+						if node.HasSubstring(auditDNodePrefixes) {
+							enabled = true
+						}
+						err := sshConn.CopyToRemote(node.Metadata.Name, "/tmp/"+auditdValidateScript)
+						Expect(err).NotTo(HaveOccurred())
+						auditdValidationCommand := fmt.Sprintf("\"ENABLED=%t /tmp/%s\"", enabled, auditdValidateScript)
+						err = sshConn.ExecuteRemote(node.Metadata.Name, auditdValidationCommand, false)
+						Expect(err).NotTo(HaveOccurred())
+					}
+				} else {
+					Skip("This config is only available on VHD")
 				}
 			} else {
-				Skip("This config is only available on VHD")
+				Skip("Skip per-node tests in low-priority VMSS cluster configuration scenario")
 			}
 		})
 
-		It("should be able to kubectl port-forward to a running pod on each node", func() {
+		It("should be able to kubectl port-forward to a running pod", func() {
 			deploymentNamespace := "default"
 
 			var deploy *deployment.Deployment
@@ -469,26 +509,36 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 		})
 
 		It("should have node labels and annotations", func() {
-			totalNodeCount := eng.NodeCount()
-			masterNodes, err := node.GetByPrefix("k8s-master")
-			Expect(err).NotTo(HaveOccurred())
-			nodes := totalNodeCount - len(masterNodes)
-			nodeList, err := node.GetByLabel("foo")
-			Expect(err).NotTo(HaveOccurred())
-			Expect(len(nodeList)).To(Equal(nodes))
-			nodeList, err = node.GetByAnnotations("foo", "bar")
-			Expect(err).NotTo(HaveOccurred())
-			Expect(len(nodeList)).To(Equal(nodes))
+			if !eng.ExpandedDefinition.Properties.HasLowPriorityScaleset() {
+				totalNodeCount := eng.NodeCount()
+				masterNodes, err := node.GetByPrefix("k8s-master")
+				Expect(err).NotTo(HaveOccurred())
+				nodes := totalNodeCount - len(masterNodes)
+				nodeList, err := node.GetByLabel("foo")
+				Expect(err).NotTo(HaveOccurred())
+				Expect(len(nodeList)).To(Equal(nodes))
+				nodeList, err = node.GetByAnnotations("foo", "bar")
+				Expect(err).NotTo(HaveOccurred())
+				Expect(len(nodeList)).To(Equal(nodes))
+			} else {
+				Skip("Skip per-node tests in low-priority VMSS cluster configuration scenario")
+			}
 		})
 
 		It("should have node labels specific to masters or agents", func() {
 			nodeList, err := node.Get()
 			Expect(err).NotTo(HaveOccurred())
-			Expect(len(nodeList.Nodes)).To(Equal(eng.NodeCount()))
+			if !eng.ExpandedDefinition.Properties.HasLowPriorityScaleset() {
+				Expect(len(nodeList.Nodes)).To(Equal(eng.NodeCount()))
+			}
 			for _, node := range nodeList.Nodes {
-				role := "agent"
-				if strings.HasPrefix(node.Metadata.Name, "k8s-master") {
-					role = "master"
+				role := "master"
+				if !strings.HasPrefix(node.Metadata.Name, "k8s-master") {
+					if eng.ExpandedDefinition.Properties.HasLowPriorityScaleset() {
+						continue
+					} else {
+						role = "agent"
+					}
 				}
 				labels := node.Metadata.Labels
 				// See https://github.com/Azure/aks-engine/issues/1660
@@ -813,50 +863,54 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 
 	Describe("with a windows agent pool", func() {
 		It("kubelet service should be able to recover when the docker service is stopped", func() {
-			if eng.HasWindowsAgents() {
-				nodeList, err := node.GetReady()
-				Expect(err).NotTo(HaveOccurred())
-				simulateDockerdCrashScript := "simulate-dockerd-crash.cmd"
-				err = sshConn.CopyTo(simulateDockerdCrashScript)
-				Expect(err).NotTo(HaveOccurred())
-				for _, node := range nodeList.Nodes {
-					if node.IsWindows() {
-						By(fmt.Sprintf("simulating docker and subsequent kubelet service crash on node: %s", node.Metadata.Name))
-						err = sshConn.CopyToRemote(node.Metadata.Name, "/tmp/"+simulateDockerdCrashScript)
-						Expect(err).NotTo(HaveOccurred())
-						simulateDockerCrashCommand := fmt.Sprintf("\"/tmp/%s\"", simulateDockerdCrashScript)
-						err = sshConn.ExecuteRemote(node.Metadata.Name, simulateDockerCrashCommand, true)
-						Expect(err).NotTo(HaveOccurred())
+			if !eng.ExpandedDefinition.Properties.HasLowPriorityScaleset() {
+				if eng.HasWindowsAgents() {
+					nodeList, err := node.GetReady()
+					Expect(err).NotTo(HaveOccurred())
+					simulateDockerdCrashScript := "simulate-dockerd-crash.cmd"
+					err = sshConn.CopyTo(simulateDockerdCrashScript)
+					Expect(err).NotTo(HaveOccurred())
+					for _, node := range nodeList.Nodes {
+						if node.IsWindows() {
+							By(fmt.Sprintf("simulating docker and subsequent kubelet service crash on node: %s", node.Metadata.Name))
+							err = sshConn.CopyToRemote(node.Metadata.Name, "/tmp/"+simulateDockerdCrashScript)
+							Expect(err).NotTo(HaveOccurred())
+							simulateDockerCrashCommand := fmt.Sprintf("\"/tmp/%s\"", simulateDockerdCrashScript)
+							err = sshConn.ExecuteRemote(node.Metadata.Name, simulateDockerCrashCommand, true)
+							Expect(err).NotTo(HaveOccurred())
+						}
 					}
-				}
 
-				log.Print("Waiting 1 minute to allow nodes to report not ready state after the crash occurred\n")
-				time.Sleep(1 * time.Minute)
+					log.Print("Waiting 1 minute to allow nodes to report not ready state after the crash occurred\n")
+					time.Sleep(1 * time.Minute)
 
-				for _, node := range nodeList.Nodes {
-					if node.IsWindows() {
-						By(fmt.Sprintf("restarting kubelet service on node: %s", node.Metadata.Name))
-						restartKubeletCommand := fmt.Sprintf("\"Powershell Start-Service kubelet\"")
-						err = sshConn.ExecuteRemote(node.Metadata.Name, restartKubeletCommand, true)
-						Expect(err).NotTo(HaveOccurred())
+					for _, node := range nodeList.Nodes {
+						if node.IsWindows() {
+							By(fmt.Sprintf("restarting kubelet service on node: %s", node.Metadata.Name))
+							restartKubeletCommand := fmt.Sprintf("\"Powershell Start-Service kubelet\"")
+							err = sshConn.ExecuteRemote(node.Metadata.Name, restartKubeletCommand, true)
+							Expect(err).NotTo(HaveOccurred())
+						}
 					}
-				}
 
-				var expectedReadyNodes int
-				if !eng.ExpandedDefinition.Properties.HasLowPriorityScaleset() {
-					expectedReadyNodes = eng.NodeCount()
-					log.Printf("Checking for %d Ready nodes\n", expectedReadyNodes)
+					var expectedReadyNodes int
+					if !eng.ExpandedDefinition.Properties.HasLowPriorityScaleset() {
+						expectedReadyNodes = eng.NodeCount()
+						log.Printf("Checking for %d Ready nodes\n", expectedReadyNodes)
+					} else {
+						expectedReadyNodes = -1
+					}
+					ready := node.WaitOnReady(expectedReadyNodes, 1*time.Minute, cfg.Timeout)
+					cmd2 := exec.Command("k", "get", "nodes", "-o", "wide")
+					out2, _ := cmd2.CombinedOutput()
+					log.Printf("%s\n", out2)
+					if !ready {
+						log.Printf("Error: Not all nodes in a healthy state\n")
+					}
+					Expect(ready).To(Equal(true))
 				} else {
-					expectedReadyNodes = -1
+					Skip("Skip per-node tests in low-priority VMSS cluster configuration scenario")
 				}
-				ready := node.WaitOnReady(expectedReadyNodes, 1*time.Minute, cfg.Timeout)
-				cmd2 := exec.Command("k", "get", "nodes", "-o", "wide")
-				out2, _ := cmd2.CombinedOutput()
-				log.Printf("%s\n", out2)
-				if !ready {
-					log.Printf("Error: Not all nodes in a healthy state\n")
-				}
-				Expect(ready).To(Equal(true))
 			}
 		})
 	})
@@ -1129,66 +1183,70 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 		})
 
 		It("should create pv with zone labels and node affinity", func() {
-			if eng.ExpandedDefinition.Properties.HasZonesForAllAgentPools() {
-				By("Creating a persistent volume claim")
-				pvcName := "azure-managed-disk" // should be the same as in pvc-standard.yaml
-				pvc, err := persistentvolumeclaims.CreatePersistentVolumeClaimsFromFile(filepath.Join(WorkloadDir, "pvc-standard.yaml"), pvcName, "default")
-				Expect(err).NotTo(HaveOccurred())
-				ready, err := pvc.WaitOnReady("default", 5*time.Second, cfg.Timeout)
-				Expect(err).NotTo(HaveOccurred())
-				Expect(ready).To(Equal(true))
+			if !eng.ExpandedDefinition.Properties.HasLowPriorityScaleset() {
+				if eng.ExpandedDefinition.Properties.HasZonesForAllAgentPools() {
+					By("Creating a persistent volume claim")
+					pvcName := "azure-managed-disk" // should be the same as in pvc-standard.yaml
+					pvc, err := persistentvolumeclaims.CreatePersistentVolumeClaimsFromFile(filepath.Join(WorkloadDir, "pvc-standard.yaml"), pvcName, "default")
+					Expect(err).NotTo(HaveOccurred())
+					ready, err := pvc.WaitOnReady("default", 5*time.Second, cfg.Timeout)
+					Expect(err).NotTo(HaveOccurred())
+					Expect(ready).To(Equal(true))
 
-				pvList, err := persistentvolume.Get()
-				Expect(err).NotTo(HaveOccurred())
-				pvZone := ""
-				for _, pv := range pvList.PersistentVolumes {
-					By("Ensuring that we get zones for the pv")
-					// zone is chosen by round-robin across all zones
-					pvZone = pv.Metadata.Labels["failure-domain.beta.kubernetes.io/zone"]
-					fmt.Printf("pvZone: %s\n", pvZone)
-					contains := strings.Contains(pvZone, "-")
-					Expect(contains).To(Equal(true))
-					// VolumeScheduling feature gate is set to true by default starting v1.10+
-					for _, expression := range pv.Spec.NodeAffinity.Required.NodeSelectorTerms[0].MatchExpressions {
-						if expression.Key == "failure-domain.beta.kubernetes.io/zone" {
-							By("Ensuring that we get nodeAffinity for each pv")
-							value := expression.Values[0]
-							fmt.Printf("NodeAffinity value: %s\n", value)
-							contains := strings.Contains(value, "-")
-							Expect(contains).To(Equal(true))
+					pvList, err := persistentvolume.Get()
+					Expect(err).NotTo(HaveOccurred())
+					pvZone := ""
+					for _, pv := range pvList.PersistentVolumes {
+						By("Ensuring that we get zones for the pv")
+						// zone is chosen by round-robin across all zones
+						pvZone = pv.Metadata.Labels["failure-domain.beta.kubernetes.io/zone"]
+						fmt.Printf("pvZone: %s\n", pvZone)
+						contains := strings.Contains(pvZone, "-")
+						Expect(contains).To(Equal(true))
+						// VolumeScheduling feature gate is set to true by default starting v1.10+
+						for _, expression := range pv.Spec.NodeAffinity.Required.NodeSelectorTerms[0].MatchExpressions {
+							if expression.Key == "failure-domain.beta.kubernetes.io/zone" {
+								By("Ensuring that we get nodeAffinity for each pv")
+								value := expression.Values[0]
+								fmt.Printf("NodeAffinity value: %s\n", value)
+								contains := strings.Contains(value, "-")
+								Expect(contains).To(Equal(true))
+							}
 						}
 					}
+
+					By("Launching a pod using the volume claim")
+					podName := "zone-pv-pod" // should be the same as in pod-pvc.yaml
+					testPod, err := pod.CreatePodFromFile(filepath.Join(WorkloadDir, "pod-pvc.yaml"), podName, "default", 1*time.Second, cfg.Timeout)
+					Expect(err).NotTo(HaveOccurred())
+					ready, err = testPod.WaitOnReady(retryTimeWhenWaitingForPodReady, cfg.Timeout)
+					Expect(err).NotTo(HaveOccurred())
+					Expect(ready).To(Equal(true))
+
+					By("Checking that the pod can access volume")
+					valid, err := testPod.ValidatePVC("/mnt/azure", 10, 10*time.Second)
+					Expect(valid).To(BeTrue())
+					Expect(err).NotTo(HaveOccurred())
+
+					By("Ensuring that attached volume pv has the same zone as the zone of the node")
+					nodeName := testPod.Spec.NodeName
+					nodeList, err := node.GetByPrefix(nodeName)
+					Expect(err).NotTo(HaveOccurred())
+					nodeZone := nodeList[0].Metadata.Labels["failure-domain.beta.kubernetes.io/zone"]
+					fmt.Printf("pvZone: %s\n", pvZone)
+					fmt.Printf("nodeZone: %s\n", nodeZone)
+					Expect(nodeZone == pvZone).To(Equal(true))
+
+					By("Cleaning up after ourselves")
+					err = testPod.Delete(util.DefaultDeleteRetries)
+					Expect(err).NotTo(HaveOccurred())
+					err = pvc.Delete(util.DefaultDeleteRetries)
+					Expect(err).NotTo(HaveOccurred())
+				} else {
+					Skip("Availability zones was not configured for this Cluster Definition")
 				}
-
-				By("Launching a pod using the volume claim")
-				podName := "zone-pv-pod" // should be the same as in pod-pvc.yaml
-				testPod, err := pod.CreatePodFromFile(filepath.Join(WorkloadDir, "pod-pvc.yaml"), podName, "default", 1*time.Second, cfg.Timeout)
-				Expect(err).NotTo(HaveOccurred())
-				ready, err = testPod.WaitOnReady(retryTimeWhenWaitingForPodReady, cfg.Timeout)
-				Expect(err).NotTo(HaveOccurred())
-				Expect(ready).To(Equal(true))
-
-				By("Checking that the pod can access volume")
-				valid, err := testPod.ValidatePVC("/mnt/azure", 10, 10*time.Second)
-				Expect(valid).To(BeTrue())
-				Expect(err).NotTo(HaveOccurred())
-
-				By("Ensuring that attached volume pv has the same zone as the zone of the node")
-				nodeName := testPod.Spec.NodeName
-				nodeList, err := node.GetByPrefix(nodeName)
-				Expect(err).NotTo(HaveOccurred())
-				nodeZone := nodeList[0].Metadata.Labels["failure-domain.beta.kubernetes.io/zone"]
-				fmt.Printf("pvZone: %s\n", pvZone)
-				fmt.Printf("nodeZone: %s\n", nodeZone)
-				Expect(nodeZone == pvZone).To(Equal(true))
-
-				By("Cleaning up after ourselves")
-				err = testPod.Delete(util.DefaultDeleteRetries)
-				Expect(err).NotTo(HaveOccurred())
-				err = pvc.Delete(util.DefaultDeleteRetries)
-				Expect(err).NotTo(HaveOccurred())
 			} else {
-				Skip("Availability zones was not configured for this Cluster Definition")
+				Skip("Skip per-node tests in low-priority VMSS cluster configuration scenario")
 			}
 		})
 	})
@@ -1664,19 +1722,23 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 		})
 
 		It("should have healthy time synchronization", func() {
-			nodeList, err := node.GetReady()
-			Expect(err).NotTo(HaveOccurred())
-			timeSyncValidateScript := "time-sync-validate.sh"
-			err = sshConn.CopyTo(timeSyncValidateScript)
-			Expect(err).NotTo(HaveOccurred())
-			for _, node := range nodeList.Nodes {
-				if node.IsUbuntu() {
-					err := sshConn.CopyToRemote(node.Metadata.Name, "/tmp/"+timeSyncValidateScript)
-					Expect(err).NotTo(HaveOccurred())
-					timeSyncValidationCommand := fmt.Sprintf("\"/tmp/%s\"", timeSyncValidateScript)
-					err = sshConn.ExecuteRemote(node.Metadata.Name, timeSyncValidationCommand, false)
-					Expect(err).NotTo(HaveOccurred())
+			if !eng.ExpandedDefinition.Properties.HasLowPriorityScaleset() {
+				nodeList, err := node.GetReady()
+				Expect(err).NotTo(HaveOccurred())
+				timeSyncValidateScript := "time-sync-validate.sh"
+				err = sshConn.CopyTo(timeSyncValidateScript)
+				Expect(err).NotTo(HaveOccurred())
+				for _, node := range nodeList.Nodes {
+					if node.IsUbuntu() {
+						err := sshConn.CopyToRemote(node.Metadata.Name, "/tmp/"+timeSyncValidateScript)
+						Expect(err).NotTo(HaveOccurred())
+						timeSyncValidationCommand := fmt.Sprintf("\"/tmp/%s\"", timeSyncValidateScript)
+						err = sshConn.ExecuteRemote(node.Metadata.Name, timeSyncValidationCommand, false)
+						Expect(err).NotTo(HaveOccurred())
+					}
 				}
+			} else {
+				Skip("Skip per-node tests in low-priority VMSS cluster configuration scenario")
 			}
 		})
 
