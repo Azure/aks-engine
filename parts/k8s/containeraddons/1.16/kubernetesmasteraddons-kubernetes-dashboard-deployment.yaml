@@ -101,7 +101,7 @@ spec:
         image: {{ContainerImage "kubernetes-dashboard"}}
         imagePullPolicy: IfNotPresent
         securityContext:
-          runAsNonRoot: true
+          runAsNonRoot: false
         livenessProbe:
           httpGet:
             path: "/"

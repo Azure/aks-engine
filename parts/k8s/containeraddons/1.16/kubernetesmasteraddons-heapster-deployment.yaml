@@ -107,7 +107,7 @@ spec:
         - image: {{ContainerImage "heapster"}}
           imagePullPolicy: IfNotPresent
           securityContext:
-            runAsNonRoot: true
+            runAsNonRoot: false
           name: heapster
           resources:
             requests:
@@ -129,7 +129,7 @@ spec:
         - image: {{ContainerImage "heapster-nanny"}}
           imagePullPolicy: IfNotPresent
           securityContext:
-            runAsNonRoot: true
+            runAsNonRoot: false
           name: heapster-nanny
           resources:
             requests:
