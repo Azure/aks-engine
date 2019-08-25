@@ -103,13 +103,13 @@ var _ = BeforeSuite(func() {
 	Expect(err).NotTo(HaveOccurred())
 	success := false
 	for i := 0; i < 3; i++ {
-		err := util.AddToSSHKeyChain(masterSSHPrivateKeyFilepath)
-		if err == nil {
+		sshAddErr := util.AddToSSHKeyChain(masterSSHPrivateKeyFilepath)
+		if sshAddErr == nil {
 			success = true
 			break
 		}
 		if i > 1 {
-			log.Printf("Error while setting up ssh key forwarding:%s\n", err)
+			log.Printf("Error while setting up ssh key forwarding:%s\n", sshAddErr)
 		}
 		time.Sleep(10 * time.Second)
 	}
