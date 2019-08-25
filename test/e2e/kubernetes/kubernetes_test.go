@@ -13,6 +13,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"syscall"
 	"time"
@@ -51,6 +52,7 @@ const (
 	windowsCommandTimeout                  = 1 * time.Minute
 	validateNetworkPolicyTimeout           = 3 * time.Minute
 	validateDNSTimeout                     = 2 * time.Minute
+	firstMasterRegexStr                    = "^k8s-master-"
 )
 
 var (
@@ -61,6 +63,7 @@ var (
 	longRunningApacheDeploymentName string
 	sshConn                         *remote.Connection
 	kubeConfig                      *Config
+	firstMasterRegexp               *regexp.Regexp
 )
 
 var _ = BeforeSuite(func() {
@@ -84,7 +87,7 @@ var _ = BeforeSuite(func() {
 		ClusterDefinition:  csInput,
 		ExpandedDefinition: csGenerated,
 	}
-	masterNodes, err := node.GetByPrefix("k8s-master")
+	masterNodes, err := node.GetByRegex("^k8s-master-")
 	Expect(err).NotTo(HaveOccurred())
 	masterName := masterNodes[0].Metadata.Name
 	if strings.Contains(masterName, "vmss") {
@@ -111,6 +114,8 @@ var _ = BeforeSuite(func() {
 		time.Sleep(10 * time.Second)
 	}
 	Expect(success).To(BeTrue())
+	firstMasterRegexp, err = regexp.Compile(firstMasterRegexStr)
+	Expect(err).NotTo(HaveOccurred())
 })
 
 var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", func() {
@@ -122,7 +127,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				nodeList, err = node.GetReady()
 			} else {
 				var nodes []node.Node
-				nodes, err = node.GetByPrefix("k8s-master")
+				nodes, err = node.GetByRegex(firstMasterRegexStr)
 				nodeList = &node.List{
 					Nodes: nodes,
 				}
@@ -152,10 +157,9 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			Expect(success).To(BeTrue())
 			hostOSDNSValidationCommand = fmt.Sprintf("\"%s /tmp/%s\"", envString, hostOSDNSValidateScript)
 			for _, node := range nodeList.Nodes {
-				if node.IsLinux() {
+				if node.IsLinux() && !firstMasterRegexp.MatchString(node.Metadata.Name) {
 					err := sshConn.CopyToRemote(node.Metadata.Name, "/tmp/"+hostOSDNSValidateScript)
 					Expect(err).NotTo(HaveOccurred())
-
 					err = sshConn.ExecuteRemote(node.Metadata.Name, hostOSDNSValidationCommand, false)
 					Expect(err).NotTo(HaveOccurred())
 				}
@@ -229,11 +233,13 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 					netConfigValidateScript := "net-config-validate.sh"
 					err = sshConn.CopyTo(netConfigValidateScript)
 					Expect(err).NotTo(HaveOccurred())
+					netConfigValidationCommand := fmt.Sprintf("\"/tmp/%s\"", netConfigValidateScript)
+					err = sshConn.Execute(netConfigValidationCommand, false)
+					Expect(err).NotTo(HaveOccurred())
 					for _, node := range nodeList.Nodes {
-						if node.IsUbuntu() {
+						if node.IsUbuntu() && !firstMasterRegexp.MatchString(node.Metadata.Name) {
 							err := sshConn.CopyToRemote(node.Metadata.Name, "/tmp/"+netConfigValidateScript)
 							Expect(err).NotTo(HaveOccurred())
-							netConfigValidationCommand := fmt.Sprintf("\"/tmp/%s\"", netConfigValidateScript)
 							err = sshConn.ExecuteRemote(node.Metadata.Name, netConfigValidationCommand, false)
 							Expect(err).NotTo(HaveOccurred())
 						}
@@ -254,12 +260,16 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 					CISFilesValidateScript := "CIS-files-validate.sh"
 					err = sshConn.CopyTo(CISFilesValidateScript)
 					Expect(err).NotTo(HaveOccurred())
+					CISValidationCommand := fmt.Sprintf("\"/tmp/%s\"", CISFilesValidateScript)
+					err = sshConn.Execute(CISValidationCommand, false)
+					Expect(err).NotTo(HaveOccurred())
 					for _, node := range nodeList.Nodes {
-						err := sshConn.CopyToRemote(node.Metadata.Name, "/tmp/"+CISFilesValidateScript)
-						Expect(err).NotTo(HaveOccurred())
-						CISValidationCommand := fmt.Sprintf("\"/tmp/%s\"", CISFilesValidateScript)
-						err = sshConn.ExecuteRemote(node.Metadata.Name, CISValidationCommand, false)
-						Expect(err).NotTo(HaveOccurred())
+						if !firstMasterRegexp.MatchString(node.Metadata.Name) {
+							err := sshConn.CopyToRemote(node.Metadata.Name, "/tmp/"+CISFilesValidateScript)
+							Expect(err).NotTo(HaveOccurred())
+							err = sshConn.ExecuteRemote(node.Metadata.Name, CISValidationCommand, false)
+							Expect(err).NotTo(HaveOccurred())
+						}
 					}
 				} else {
 					Skip("This config is only available on VHD")
@@ -277,11 +287,13 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 					modprobeConfigValidateScript := "modprobe-config-validate.sh"
 					err = sshConn.CopyTo(modprobeConfigValidateScript)
 					Expect(err).NotTo(HaveOccurred())
+					netConfigValidationCommand := fmt.Sprintf("\"/tmp/%s\"", modprobeConfigValidateScript)
+					err = sshConn.Execute(netConfigValidationCommand, false)
+					Expect(err).NotTo(HaveOccurred())
 					for _, node := range nodeList.Nodes {
-						if node.IsUbuntu() {
+						if node.IsUbuntu() && !firstMasterRegexp.MatchString(node.Metadata.Name) {
 							err := sshConn.CopyToRemote(node.Metadata.Name, "/tmp/"+modprobeConfigValidateScript)
 							Expect(err).NotTo(HaveOccurred())
-							netConfigValidationCommand := fmt.Sprintf("\"/tmp/%s\"", modprobeConfigValidateScript)
 							err = sshConn.ExecuteRemote(node.Metadata.Name, netConfigValidationCommand, false)
 							Expect(err).NotTo(HaveOccurred())
 						}
@@ -301,11 +313,13 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				installedPackagesValidateScript := "ubuntu-installed-packages-validate.sh"
 				err = sshConn.CopyTo(installedPackagesValidateScript)
 				Expect(err).NotTo(HaveOccurred())
+				installedPackagesValidationCommand := fmt.Sprintf("\"/tmp/%s\"", installedPackagesValidateScript)
+				err = sshConn.Execute(installedPackagesValidationCommand, false)
+				Expect(err).NotTo(HaveOccurred())
 				for _, node := range nodeList.Nodes {
-					if node.IsUbuntu() {
+					if node.IsUbuntu() && !firstMasterRegexp.MatchString(node.Metadata.Name) {
 						err := sshConn.CopyToRemote(node.Metadata.Name, "/tmp/"+installedPackagesValidateScript)
 						Expect(err).NotTo(HaveOccurred())
-						installedPackagesValidationCommand := fmt.Sprintf("\"/tmp/%s\"", installedPackagesValidateScript)
 						err = sshConn.ExecuteRemote(node.Metadata.Name, installedPackagesValidationCommand, false)
 						Expect(err).NotTo(HaveOccurred())
 					}
@@ -323,11 +337,13 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 					sshdConfigValidateScript := "sshd-config-validate.sh"
 					err = sshConn.CopyTo(sshdConfigValidateScript)
 					Expect(err).NotTo(HaveOccurred())
+					sshdConfigValidationCommand := fmt.Sprintf("\"/tmp/%s\"", sshdConfigValidateScript)
+					err = sshConn.Execute(sshdConfigValidationCommand, false)
+					Expect(err).NotTo(HaveOccurred())
 					for _, node := range nodeList.Nodes {
-						if node.IsUbuntu() {
+						if node.IsUbuntu() && !firstMasterRegexp.MatchString(node.Metadata.Name) {
 							err := sshConn.CopyToRemote(node.Metadata.Name, "/tmp/"+sshdConfigValidateScript)
 							Expect(err).NotTo(HaveOccurred())
-							sshdConfigValidationCommand := fmt.Sprintf("\"/tmp/%s\"", sshdConfigValidateScript)
 							err = sshConn.ExecuteRemote(node.Metadata.Name, sshdConfigValidationCommand, false)
 							Expect(err).NotTo(HaveOccurred())
 						}
@@ -348,11 +364,13 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 					pwQualityValidateScript := "pwquality-validate.sh"
 					err = sshConn.CopyTo(pwQualityValidateScript)
 					Expect(err).NotTo(HaveOccurred())
+					pwQualityValidationCommand := fmt.Sprintf("\"/tmp/%s\"", pwQualityValidateScript)
+					err = sshConn.Execute(pwQualityValidationCommand, false)
+					Expect(err).NotTo(HaveOccurred())
 					for _, node := range nodeList.Nodes {
-						if node.IsUbuntu() {
+						if node.IsUbuntu() && !firstMasterRegexp.MatchString(node.Metadata.Name) {
 							err := sshConn.CopyToRemote(node.Metadata.Name, "/tmp/"+pwQualityValidateScript)
 							Expect(err).NotTo(HaveOccurred())
-							pwQualityValidationCommand := fmt.Sprintf("\"/tmp/%s\"", pwQualityValidateScript)
 							err = sshConn.ExecuteRemote(node.Metadata.Name, pwQualityValidationCommand, false)
 							Expect(err).NotTo(HaveOccurred())
 						}
@@ -371,7 +389,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 					var auditDNodePrefixes []string
 					if eng.ExpandedDefinition.Properties.MasterProfile != nil {
 						if to.Bool(eng.ExpandedDefinition.Properties.MasterProfile.AuditDEnabled) {
-							auditDNodePrefixes = append(auditDNodePrefixes, "k8s-master")
+							auditDNodePrefixes = append(auditDNodePrefixes, "k8s-master-")
 						}
 					}
 					for _, profile := range eng.ExpandedDefinition.Properties.AgentPoolProfiles {
@@ -531,7 +549,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 		It("should have node labels and annotations", func() {
 			if !eng.ExpandedDefinition.Properties.HasLowPriorityScaleset() {
 				totalNodeCount := eng.NodeCount()
-				masterNodes, err := node.GetByPrefix("k8s-master")
+				masterNodes, err := node.GetByRegex(firstMasterRegexStr)
 				Expect(err).NotTo(HaveOccurred())
 				nodes := totalNodeCount - len(masterNodes)
 				nodeList, err := node.GetByLabel("foo")
@@ -553,7 +571,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			}
 			for _, node := range nodeList.Nodes {
 				role := "master"
-				if !strings.HasPrefix(node.Metadata.Name, "k8s-master") {
+				if !strings.HasPrefix(node.Metadata.Name, "k8s-master-") {
 					if eng.ExpandedDefinition.Properties.HasLowPriorityScaleset() {
 						continue
 					} else {
@@ -929,8 +947,10 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 					}
 					Expect(ready).To(Equal(true))
 				} else {
-					Skip("Skip per-node tests in low-priority VMSS cluster configuration scenario")
+					Skip("Docker service recovery test is Windows only")
 				}
+			} else {
+				Skip("Skip per-node tests in low-priority VMSS cluster configuration scenario")
 			}
 		})
 	})
@@ -1250,7 +1270,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 
 					By("Ensuring that attached volume pv has the same zone as the zone of the node")
 					nodeName := testPod.Spec.NodeName
-					nodeList, err := node.GetByPrefix(nodeName)
+					nodeList, err := node.GetByRegex(nodeName)
 					Expect(err).NotTo(HaveOccurred())
 					nodeZone := nodeList[0].Metadata.Labels["failure-domain.beta.kubernetes.io/zone"]
 					fmt.Printf("pvZone: %s\n", pvZone)
@@ -1748,11 +1768,13 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				timeSyncValidateScript := "time-sync-validate.sh"
 				err = sshConn.CopyTo(timeSyncValidateScript)
 				Expect(err).NotTo(HaveOccurred())
+				timeSyncValidationCommand := fmt.Sprintf("\"/tmp/%s\"", timeSyncValidateScript)
+				err = sshConn.Execute(timeSyncValidationCommand, false)
+				Expect(err).NotTo(HaveOccurred())
 				for _, node := range nodeList.Nodes {
-					if node.IsUbuntu() {
+					if node.IsUbuntu() && !firstMasterRegexp.MatchString(node.Metadata.Name) {
 						err := sshConn.CopyToRemote(node.Metadata.Name, "/tmp/"+timeSyncValidateScript)
 						Expect(err).NotTo(HaveOccurred())
-						timeSyncValidationCommand := fmt.Sprintf("\"/tmp/%s\"", timeSyncValidateScript)
 						err = sshConn.ExecuteRemote(node.Metadata.Name, timeSyncValidationCommand, false)
 						Expect(err).NotTo(HaveOccurred())
 					}
