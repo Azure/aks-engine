@@ -975,7 +975,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				By("Ensuring we can create a curl pod to connect to the service")
 				deploymentPrefix = fmt.Sprintf("ilb-test-curl-deployment")
 				curlDeploymentName := fmt.Sprintf("%s-%v", deploymentPrefix, r.Intn(99999))
-				curlDeploy, err := deployment.CreateLinuxDeployDeleteIfExists(deploymentPrefix, "library/nginx:latest", curlDeploymentName, "default", "")
+				curlDeploy, err := deployment.CreateLinuxDeployDeleteIfExists(deploymentPrefix, "library/nginx:latest", curlDeploymentName, "default", "--replicas=2")
 				Expect(err).NotTo(HaveOccurred())
 				running, err := pod.WaitOnReady(curlDeploymentName, "default", 3, retryTimeWhenWaitingForPodReady, cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())
@@ -983,15 +983,16 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				curlPods, err := curlDeploy.Pods()
 				Expect(err).NotTo(HaveOccurred())
 				By("Ensuring we can connect to the ILB service from another pod")
-				for i, curlPod := range curlPods {
-					if i < 1 {
-						var pass bool
-						pass, err = curlPod.ValidateCurlConnection(svc.Status.LoadBalancer.Ingress[0]["ip"], 5*time.Second, cfg.Timeout)
-						Expect(err).NotTo(HaveOccurred())
-						Expect(pass).To(BeTrue())
+				var success bool
+				for _, curlPod := range curlPods {
+					pass, curlErr := curlPod.ValidateCurlConnection(svc.Status.LoadBalancer.Ingress[0]["ip"], 5*time.Second, 3*time.Minute)
+					if curlErr == nil && pass {
+						success = true
+						break
 					}
-				}
 
+				}
+				Expect(success).To(BeTrue())
 				By("Ensuring we can create an ELB service attachment")
 				sELB, err := service.CreateServiceFromFileDeleteIfExist(filepath.Join(WorkloadDir, "ingress-nginx-elb.yaml"), serviceName+"-elb", "default")
 				Expect(err).NotTo(HaveOccurred())
@@ -1002,15 +1003,16 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				valid := sELB.Validate("(Welcome to nginx)", 5, 30*time.Second, cfg.Timeout)
 				Expect(valid).To(BeTrue())
 				By("Ensuring we can connect to the ELB service from another pod")
-				for i, curlPod := range curlPods {
-					if i < 1 {
-						var pass bool
-						pass, err = curlPod.ValidateCurlConnection(svc.Status.LoadBalancer.Ingress[0]["ip"], 5*time.Second, cfg.Timeout)
-						Expect(err).NotTo(HaveOccurred())
-						Expect(pass).To(BeTrue())
+				success = false
+				for _, curlPod := range curlPods {
+					pass, curlErr := curlPod.ValidateCurlConnection(svc.Status.LoadBalancer.Ingress[0]["ip"], 5*time.Second, 3*time.Minute)
+					if curlErr == nil && pass {
+						success = true
+						break
 					}
-				}
 
+				}
+				Expect(success).To(BeTrue())
 				err = sILB.Delete(util.DefaultDeleteRetries)
 				Expect(err).NotTo(HaveOccurred())
 				err = sELB.Delete(util.DefaultDeleteRetries)
