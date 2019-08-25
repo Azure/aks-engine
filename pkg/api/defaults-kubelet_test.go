@@ -118,12 +118,11 @@ func TestKubeletConfigDefaults(t *testing.T) {
 		}
 	}
 
-	cs = CreateMockContainerService("testcluster", "1.15.0-beta.1", 3, 2, false)
-	cs.setKubeletConfig()
+	cs = CreateMockContainerService("testcluster", "1.16.0-beta.1", 3, 2, false)
+	cs.setKubeletConfig(false)
 	kubeletConfig = cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig
 	expectedKeys := []string{
 		"--authentication-token-webhook",
-		"--read-only-port",
 	}
 	for _, key := range expectedKeys {
 		if _, ok := kubeletConfig[key]; !ok {
