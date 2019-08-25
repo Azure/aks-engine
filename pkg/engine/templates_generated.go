@@ -19225,6 +19225,8 @@ spec:
       containers:
       - image: {{ContainerImage "rescheduler"}}
         imagePullPolicy: IfNotPresent
+        securityContext:
+	        runAsNonRoot: false
         name: rescheduler
         resources:
           requests:
