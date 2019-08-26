@@ -541,6 +541,15 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			out, _ := cmd.CombinedOutput()
 			log.Printf("%s\n", out)
 			if !ready {
+				nodeList, err := node.GetReady()
+				Expect(err).NotTo(HaveOccurred())
+				for _, node := range nodeList.Nodes {
+					if !node.IsReady() {
+						cmd := exec.Command("k", "describe", "node", node.Metadata.Name)
+						out, _ := cmd.CombinedOutput()
+						log.Printf("\n%s\n", out)
+					}
+				}
 				log.Printf("Error: Not all nodes in a healthy state\n")
 			}
 			Expect(ready).To(Equal(true))
