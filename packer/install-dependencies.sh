@@ -361,11 +361,6 @@ IP_MASQ_AGENT_VERSIONS="
 2.0.0
 "
 for IP_MASQ_AGENT_VERSION in ${IP_MASQ_AGENT_VERSIONS}; do
-  # TODO remove the gcr.io/google-containers image once AKS switches to use k8s.gcr.io
-  DEPRECATED_CONTAINER_IMAGE="gcr.io/google-containers/ip-masq-agent-amd64:v${IP_MASQ_AGENT_VERSION}"
-  pullContainerImage "docker" ${DEPRECATED_CONTAINER_IMAGE}
-  echo "  - ${DEPRECATED_CONTAINER_IMAGE}" >> ${RELEASE_NOTES_FILEPATH}
-
   for IMAGE_BASE in k8s.gcr.io aksrepos.azurecr.io/mirror; do
     CONTAINER_IMAGE="${IMAGE_BASE}/ip-masq-agent-amd64:v${IP_MASQ_AGENT_VERSION}"
     pullContainerImage "docker" ${CONTAINER_IMAGE}
