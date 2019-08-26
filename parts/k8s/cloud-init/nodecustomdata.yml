@@ -142,6 +142,7 @@ write_files:
     ExecStart=/usr/bin/dockerd -H fd:// --storage-driver=overlay2 --bip={{WrapAsParameter "dockerBridgeCidr"}}
     {{end}}
     ExecStartPost=/sbin/iptables -P FORWARD ACCEPT
+    #EOF
 
 - path: /etc/docker/daemon.json
   permissions: "0644"
@@ -235,13 +236,14 @@ write_files:
         user: client
       name: localclustercontext
     current-context: localclustercontext
+    #EOF
 
 - path: /etc/default/kubelet
   permissions: "0644"
   owner: root
   content: |
-{{if IsKubernetesVersionLt "1.8.0"}}
-    KUBELET_OPTS=--require-kubeconfig
+{{if NeedsContainerd}}
+    KUBELET_OPTS=--container-runtime=remote --runtime-request-timeout=15m --container-runtime-endpoint=unix:///run/containerd/containerd.sock
 {{else}}
     KUBELET_OPTS=
 {{end}}
@@ -256,6 +258,7 @@ write_files:
 {{if IsAzureStackCloud }}
     AZURE_ENVIRONMENT_FILEPATH=/etc/kubernetes/azurestackcloud.json
 {{end}}
+    #EOF
 
 - path: /opt/azure/containers/kubelet.sh
   permissions: "0755"
@@ -272,6 +275,7 @@ write_files:
     sed -i "s|<searchDomainRealmUser>|{{WrapAsParameter "searchDomainRealmUser"}}|g" "/opt/azure/containers/setup-custom-search-domains.sh"
     sed -i "s|<searchDomainRealmPassword>|{{WrapAsParameter "searchDomainRealmPassword"}}|g" "/opt/azure/containers/setup-custom-search-domains.sh"
 {{end}}{{end}}
+    #EOF
 
 {{if IsAzureStackCloud}}
 - path: "/etc/kubernetes/azurestackcloud.json"

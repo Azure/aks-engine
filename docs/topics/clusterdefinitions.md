@@ -55,7 +55,7 @@ $ aks-engine get-versions
 | enableRbac                      | no       | Enable [Kubernetes RBAC](https://kubernetes.io/docs/admin/authorization/rbac/) (boolean - default == true)                                                                                                                                                                                                                                                                                                    |
 | etcdDiskSizeGB                  | no       | Size in GB to assign to etcd data volume. Defaults (if no user value provided) are: 256 GB for clusters up to 3 nodes; 512 GB for clusters with between 4 and 10 nodes; 1024 GB for clusters with between 11 and 20 nodes; and 2048 GB for clusters with more than 20 nodes                                                                                                                                   |
 | etcdEncryptionKey               | no       | Enryption key to be used if enableDataEncryptionAtRest is enabled. Defaults to a random, generated, key                                                                                                                                                                                                                                                                                                       |
-| etcdVersion              | no (for development only)      | Enables an explicit etcd version, e.g. `3.2.23`. Default is `3.2.26`. This `kubernetesConfig` property is for development only, and recommended only for ephemeral clusters. However, you may use `aks-engine upgrade` on a cluster with an api model that includes a user-modified `etcdVersion` value. If `aks-engine upgrade` determines that the user-modified version is greater than the current AKS Engine default, `aks-engine upgrade` will *not* replace the newer version with an older version. However, if `aks-engine upgrade` determines that the user-modified version is older than the current AKS Engine default, it will build the newly upgraded master node VMs with the newer, AKS Engine default version of etcd.                          |
+| etcdVersion              | no (for development only)      | Enables an explicit etcd version, e.g. `3.2.23`. Default is `3.3.13`. This `kubernetesConfig` property is for development only, and recommended only for ephemeral clusters. However, you may use `aks-engine upgrade` on a cluster with an api model that includes a user-modified `etcdVersion` value. If `aks-engine upgrade` determines that the user-modified version is greater than the current AKS Engine default, `aks-engine upgrade` will *not* replace the newer version with an older version. However, if `aks-engine upgrade` determines that the user-modified version is older than the current AKS Engine default, it will build the newly upgraded master node VMs with the newer, AKS Engine default version of etcd.                          |
 | gcHighThreshold                 | no       | Sets the --image-gc-high-threshold value on the kublet configuration. Default is 85. [See kubelet Garbage Collection](https://kubernetes.io/docs/concepts/cluster-administration/kubelet-garbage-collection/)                                                                                                                                                                                                 |
 | gcLowThreshold                  | no       | Sets the --image-gc-low-threshold value on the kublet configuration. Default is 80. [See kubelet Garbage Collection](https://kubernetes.io/docs/concepts/cluster-administration/kubelet-garbage-collection/)                                                                                                                                                                                                  |
 | kubeletConfig                   | no       | Configure various runtime configuration for kubelet. See `kubeletConfig` [below](#feat-kubelet-config)                                                                                                                                                                                                                                                                                                        |
@@ -511,12 +511,12 @@ Custom YAML specifications can be configured for kube-scheduler, kube-controller
 | vnetSubnetId                 | only required when using custom VNET                                        | Specifies the Id of an alternate VNET subnet. The subnet id must specify a valid VNET ID owned by the same subscription. ([bring your own VNET examples](../../examples/vnet)). When MasterProfile is set to `VirtualMachineScaleSets`, this value should be the subnetId of the master subnet. When MasterProfile is set to `AvailabilitySet`, this value should be the subnetId shared by both master and agent nodes.                                                                                                                                                                                                                                               |
 | extensions                   | no                                        | This is an array of extensions. This indicates that the extension be run on a single master. The name in the extensions array must exactly match the extension name in the extensionProfiles                                                                                                                                                                                                                               |
 | vnetCidr                     | no                                        | Specifies the VNET cidr when using a custom VNET ([bring your own VNET examples](../../examples/vnet)). This VNET cidr should include both the master and the agent subnets.                                                                                                                                                                                                                                                                                                                        |
-| imageReference.name          | no                                        | The name of the Linux OS image. Needs to be used in conjunction with resourceGroup, below                                                                                                                                                                                                                                                                                                                                  |
+| imageReference.name          | no                                        | The name of the Linux OS image. Needs to be used in conjunction with resourceGroup, below. (For information on settings this for Windows nodes see [WindowsProfile](#windowsProfile)                                                                                                                                                                                                                                                                                                                            |
 | imageReference.resourceGroup | no                                        | Resource group that contains the Linux OS image. Needs to be used in conjunction with name, above                                                                                                                                                                                                                                                                                                                          |
 | imageReference.subscriptionId | no                                        | ID of subscription containing the Linux OS image. Applies only to Shared Image Galleries. All of name, resourceGroup, subscription, gallery, image name, and version must be specified for this scenario.                                                                                                                                                                                                                                                                                                                        |
 | imageReference.gallery | no                                        | Name of Shared Image Gallery containing the Linux OS image. Applies only to Shared Image Galleries. All of name, resourceGroup, subscription, gallery, image name, and version must be specified for this scenario.                                                                                                                                                                                                                                                                                                                        |
 | imageReference.version | no                                        | Version containing the Linux OS image. Applies only to Shared Image Galleries. All of name, resourceGroup, subscription, gallery, image name, and version must be specified for this scenario.                                                                                                                                                                                                                                                                                                                        |
-| distro                       | no                                        | Specifies the masters' Linux distribution. Currently supported values are: `ubuntu`, `ubuntu-18.04`, `aks-ubuntu-16.04` (previously `aks`), `aks-ubuntu-18.04`, and `coreos` (CoreOS support is currently experimental - [Example of CoreOS Master with CoreOS Agents](../../examples/coreos/kubernetes-coreos.json)). For Azure Public Cloud and Azure China Cloud, defaults to `aks-ubuntu-16.04`. For other Sovereign Clouds, the default is `ubuntu-16.04` (There is a [known issue](https://github.com/Azure/aks-engine/issues/761) with `ubuntu-18.04` + Azure CNI). `aks-ubuntu-16.04` is a custom image based on `ubuntu-16.04` that comes with pre-installed software necessary for Kubernetes deployments (Azure Public Cloud and Azure China Cloud only for now). |
+| distro                       | no                                        | Specifies the masters' Linux distribution. Currently supported values are: `ubuntu`, `ubuntu-18.04`, `aks-ubuntu-16.04` (previously `aks`), `aks-ubuntu-18.04`, and `coreos` (CoreOS support is currently experimental - [Example of CoreOS Master with CoreOS Agents](../../examples/coreos/kubernetes-coreos.json)). For Azure Public Cloud, Azure US Government Cloud and Azure China Cloud, defaults to `aks-ubuntu-16.04`. For other Sovereign Clouds, the default is `ubuntu-16.04` (There is a [known issue](https://github.com/Azure/aks-engine/issues/761) with `ubuntu-18.04` + Azure CNI). `aks-ubuntu-16.04` is a custom image based on `ubuntu-16.04` that comes with pre-installed software necessary for Kubernetes deployments. |
 | customFiles                  | no                                        | The custom files to be provisioned to the master nodes. Defined as an array of json objects with each defined as `"source":"absolute-local-path", "dest":"absolute-path-on-masternodes"`.[See examples](../../examples/customfiles)                                                                                                                                                                                           |
 | availabilityProfile          | no                                                                   | Supported values are `AvailabilitySet` (default) and `VirtualMachineScaleSets` (still under development: upgrade not supported; requires Kubernetes clusters version 1.10+ and agent pool availabilityProfile must also be `VirtualMachineScaleSets`). When MasterProfile is using `VirtualMachineScaleSets`, to SSH into a master node, you need to use `ssh -p 50001` instead of port 22.                                                                                                                                                                                                                                                                                                                                                                                             |
 | agentVnetSubnetId                 | only required when using custom VNET and when MasterProfile is using `VirtualMachineScaleSets`                                         | Specifies the Id of an alternate VNET subnet for all the agent pool nodes. The subnet id must specify a valid VNET ID owned by the same subscription. ([bring your own VNET examples](../../examples/vnet)). When MasterProfile is using `VirtualMachineScaleSets`, this value should be the subnetId of the subnet for all agent pool nodes.                                                                                                                                                                                                                                                |
@@ -548,7 +548,7 @@ A cluster can have 0 to 12 agent pool profiles. Agent Pool Profiles are used for
 | imageReference.name          | no                                                                   | The name of a a Linux OS image. Needs to be used in conjunction with resourceGroup, below                                                                                                                                                                                                                                                                                                                                                                                                                                        |
 | imageReference.resourceGroup | no                                                                   | Resource group that contains the Linux OS image. Needs to be used in conjunction with name, above                                                                                                                                                                                                                                                                                                                                                                                                                                |
 | osType                       | no                                                                   | Specifies the agent pool's Operating System. Supported values are `Windows` and `Linux`. Defaults to `Linux`                                                                                                                                                                                                                                                                                                                                                                                                                     |
-| distro                       | no                                        | Specifies the masters' Linux distribution. Currently supported values are: `ubuntu`, `ubuntu-18.04`, `aks-ubuntu-16.04` (previously `aks`), `aks-ubuntu-18.04`, and `coreos` (CoreOS support is currently experimental - [Example of CoreOS Master with CoreOS Agents](../../examples/coreos/kubernetes-coreos.json)). For Azure Public Cloud and Azure China Cloud, defaults to `aks-ubuntu-16.04`. For Sovereign Clouds, the default is `ubuntu-16.04` (There is a [known issue](https://github.com/Azure/aks-engine/issues/761) with `ubuntu-18.04` + Azure CNI). `aks-ubuntu-16.04` is a custom image based on `ubuntu-16.04` that comes with pre-installed software necessary for Kubernetes deployments (Azure Public Cloud only for now). |
+| distro                       | no                                        | Specifies the masters' Linux distribution. Currently supported values are: `ubuntu`, `ubuntu-18.04`, `aks-ubuntu-16.04` (previously `aks`), `aks-ubuntu-18.04`, and `coreos` (CoreOS support is currently experimental - [Example of CoreOS Master with CoreOS Agents](../../examples/coreos/kubernetes-coreos.json)). For Azure Public Cloud, Azure US Government Cloud and Azure China Cloud, defaults to `aks-ubuntu-16.04`. For Sovereign Clouds, the default is `ubuntu-16.04` (There is a [known issue](https://github.com/Azure/aks-engine/issues/761) with `ubuntu-18.04` + Azure CNI). `aks-ubuntu-16.04` is a custom image based on `ubuntu-16.04` that comes with pre-installed software necessary for Kubernetes deployments. |
 | acceleratedNetworkingEnabled | no                                                                   | Use [Azure Accelerated Networking](https://azure.microsoft.com/en-us/blog/maximize-your-vm-s-performance-with-accelerated-networking-now-generally-available-for-both-windows-and-linux/) feature for Linux agents (You must select a VM SKU that supports Accelerated Networking). Defaults to `true` if the VM SKU selected supports Accelerated Networking                                                                                                                                                                                                                                                      |
 | acceleratedNetworkingEnabledWindows | no                                                                   | Use [Azure Accelerated Networking](https://azure.microsoft.com/en-us/blog/maximize-your-vm-s-performance-with-accelerated-networking-now-generally-available-for-both-windows-and-linux/) feature for Windows agents (You must select a VM SKU that supports Accelerated Networking). Defaults to `false`                                                                                                                                                                                                                                                      |
 | vmssOverProvisioningEnabled | no                                                                   | Use [Overprovisioning](https://docs.microsoft.com/en-us/azure/virtual-machine-scale-sets/virtual-machine-scale-sets-design-overview#overprovisioning) with VMSS. This configuration is only valid on an agent pool with an `"availabilityProfile"` value of `"VirtualMachineScaleSets"`. Defaults to `false`                                                                                                                                                                                                                                                      |
@@ -646,32 +646,82 @@ https://{keyvaultname}.vault.azure.net:443/secrets/{secretName}/{version}
 | adminPassword                    | yes      | Password for the Windows adminstrator account created on each Windows node |
 | windowsPublisher                 | no       | Publisher used to find Windows VM to deploy from marketplace. Default: `MicrosoftWindowsServer` |
 | windowsOffer                     | no       | Offer used to find Windows VM to deploy from marketplace. Default: `WindowsServer` |
-| windowsSku                       | no       | SKU usedto find Windows VM to deploy from marketplace. Default: `Datacenter-Core-1809-with-Containers-smalldisk` |
-| imageVersion                     | no       | Specific image version to deploy from marketplace.  Default: `17763.557.20190604`. This default is incremented as new versions are tested to avoid unexpected breaks. |
+| windowsSku                       | no       | SKU usedto find Windows VM to deploy from marketplace. Default: `2019-Datacenter-Core-with-Containers-smalldisk` |
+| imageVersion                     | no       | Specific image version to deploy from marketplace.  Default: `17763.615.1907121548`. This default is incremented as new versions are tested to avoid unexpected breaks. |
 | windowsImageSourceURL            | no       | Path to an existing Azure storage blob with a sysprepped VHD. This is used to test pre-release or customized VHD files that you have uploaded to Azure. If provided, the above 4 parameters are ignored. |
+| imageReference.name              | no       | Name of an Image. |
+| imageReference.resourceGroup     | no       | Resource group that contains the Image. |
+| imageReference.subscriptionId    | no       | ID of subscription containing a Shared Image Gallery. |
+| imageReference.gallery           | no       | Name of a Shared Image Gallery. |
+| imageReference.version           | no       | Version of an Image from a Shared Image Gallery. |
 | sshEnabled                       | no       | If set to `true`, OpenSSH will be installed on windows nodes to allow for ssh remoting. **Only for Windows version 1809/2019 or later** . The same SSH authorized public key(s) will be added from [linuxProfile.ssh.publicKeys](#linuxProfile) |
 
+#### Windows Images
 
-#### Choosing a Windows version
-
-If you want to choose a specific Windows image, but automatically use the latest - set `windowsPublisher`, `windowsOffer`, and `windowsSku`. If you need a specific version, then add `agentWindowsVersion` too.
-
-You can find all available images with `az vm image list`, and the contents of these images are described in the knowledge base article [Windows Server release on Azure Marketplace update history](https://support.microsoft.com/en-us/help/4497947).
+You can configure the image used for all Windows nodes one of the following ways (listed in order of precedence based on what is specified in the api model):
 
 
-```bash
-$ az vm image list --publisher MicrosoftWindowsServer --all -o table
+##### Custom VHD
 
-Offer                    Publisher                      Sku                                             Urn                                                                                                            Version
------------------------  -----------------------------  ----------------------------------------------  -------------------------------------------------------------------------------------------------------------  -----------------
-...
-WindowsServer              MicrosoftWindowsServer         2019-Datacenter-with-Containers                 MicrosoftWindowsServer:WindowsServer:2019-Datacenter-with-Containers:2019.0.20190603                           2019.0.20190603
-WindowsServer              MicrosoftWindowsServer         2019-Datacenter-with-Containers-smalldisk       MicrosoftWindowsServer:WindowsServer:2019-Datacenter-with-Containers-smalldisk:2019.0.20190603                 2019.0.20190603
-WindowsServer              MicrosoftWindowsServer         Datacenter-Core-1803-with-Containers-smalldisk  MicrosoftWindowsServer:WindowsServer:Datacenter-Core-1803-with-Containers-smalldisk:1803.0.20190603            1803.0.20190603
-WindowsServer              MicrosoftWindowsServer         Datacenter-Core-1809-with-Containers-smalldisk  MicrosoftWindowsServer:WindowsServer:Datacenter-Core-1809-with-Containers-smalldisk:1809.0.20190603            1809.0.20190603
-WindowsServer              MicrosoftWindowsServer         Datacenter-Core-1903-with-Containers-smalldisk  MicrosoftWindowsServer:WindowsServer:Datacenter-Core-1903-with-Containers-smalldisk:1903.0.20190603            1903.0.20190603
-...
+To use an image uploaded to an Azure storage account (or any other accessible location) specify `windowsImageSourceURL`.
+
+**Note:** URLs containing SAS tokens are not allowed by Azure!
+
+```json
+"windowsProfile": {
+            "adminUsername": "...",
+            "adminPassword": "...",
+            "windowsImageSourceURL": "https://images.blob.core.windows.net/vhds/custom_windows_image.vhd",
+     },
 ```
+
+##### Shared Image Gallery
+
+To use an Image from a Shared Image Gallery specify `imageReference.name`, `imageReference.resourceGroup`, `imageReference.subscriptionId`, `imageReference.galllery`, and `imageReference.version`.
+
+```json
+"windowsProfile": {
+            "adminUsername": "...",
+            "adminPassword": "...",
+            "imageReference": {
+              "name": "custom-image",
+              "resourceGroup": "windows-images",
+              "subscriptionId": "00000000-0000-0000-0000-000000000000",
+              "gallery": "image-gallery",
+              "version": "0.1.0"
+            }
+     },
+```
+
+##### Azure Image
+
+To use a pre-existing Azure Image specify `imageReference.name` and `imageReference.resourceGroup`.
+
+```json
+"windowsProfile": {
+            "adminUsername": "...",
+            "adminPassword": "...",
+            "imageReference": {
+              "name": "custom-image",
+              "resourceGroup": "windows-images"
+            }
+     },
+```
+
+##### Marketplace image (Default)
+
+By default AKS engine will use a recently known good Windows image from the Azure marketplace (See [windowsProfile](#windowsProfile) table for specific values).
+
+```json
+"windowsProfile": {
+            "adminUsername": "...",
+            "adminPassword": "..."
+     },
+```
+
+If you want to choose a specific Windows image, but automatically use the latest - set `windowsPublisher`, `windowsOffer`, and `windowsSku`. If you need a specific version, then add `imageVersion` too.
+
+You can find all available images with `az vm image list --all --publisher MicrosoftWindowsServer --offer WindowsServer --output table`, and the contents of these images are described in the knowledge base article [Windows Server release on Azure Marketplace update history](https://support.microsoft.com/en-us/help/4497947).
 
 If you want to use a specific image then `windowsPublisher`, `windowsOffer`, `windowsSku`, and `imageVersion` must all be set:
 

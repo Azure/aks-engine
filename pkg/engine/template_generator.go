@@ -644,6 +644,9 @@ func (t *TemplateGenerator) getTemplateFuncMap(cs *api.ContainerService) templat
 
 			return api.AzureADIdentitySystem
 		},
+		"NeedsContainerd": func() bool {
+			return cs.Properties.OrchestratorProfile.KubernetesConfig.NeedsContainerd()
+		},
 	}
 }
 

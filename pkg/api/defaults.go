@@ -99,7 +99,7 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpgrade, isScale bool) {
 		// we translate deprecated NetworkPolicy usage to the NetworkConfig equivalent
 		// and set a default network policy enforcement configuration
 		switch o.KubernetesConfig.NetworkPolicy {
-		case NetworkPluginAzure:
+		case NetworkPolicyAzure:
 			if o.KubernetesConfig.NetworkPlugin == "" {
 				o.KubernetesConfig.NetworkPlugin = NetworkPluginAzure
 				o.KubernetesConfig.NetworkPolicy = DefaultNetworkPolicy
@@ -306,6 +306,12 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpgrade, isScale bool) {
 			}
 		}
 
+		if strings.ToLower(a.OrchestratorProfile.KubernetesConfig.LoadBalancerSku) == strings.ToLower(BasicLoadBalancerSku) {
+			a.OrchestratorProfile.KubernetesConfig.LoadBalancerSku = BasicLoadBalancerSku
+		} else if strings.ToLower(a.OrchestratorProfile.KubernetesConfig.LoadBalancerSku) == strings.ToLower(StandardLoadBalancerSku) {
+			a.OrchestratorProfile.KubernetesConfig.LoadBalancerSku = StandardLoadBalancerSku
+		}
+
 		if !a.HasAvailabilityZones() && a.OrchestratorProfile.KubernetesConfig.LoadBalancerSku == "" {
 			a.OrchestratorProfile.KubernetesConfig.LoadBalancerSku = DefaultLoadBalancerSku
 		}
@@ -396,8 +402,8 @@ func (p *Properties) setMasterProfileDefaults(isUpgrade, isScale bool, cloudName
 		}
 	}
 
-	// The AKS Distro is not available in US Governmnent Cloud and German Cloud.
-	if cloudName == AzureUSGovernmentCloud || cloudName == AzureGermanCloud {
+	// The AKS Distro is not available in Azure German Cloud.
+	if cloudName == AzureGermanCloud {
 		p.MasterProfile.Distro = Ubuntu
 	}
 
@@ -624,8 +630,8 @@ func (p *Properties) setAgentProfileDefaults(isUpgrade, isScale bool, cloudName 
 					profile.Distro = AKSUbuntu1804
 				}
 			}
-			// The AKS Distro is not available in US Governmnent Cloud and German Cloud.
-			if cloudName == AzureUSGovernmentCloud || cloudName == AzureGermanCloud {
+			// The AKS Distro is not available in Azure German Cloud.
+			if cloudName == AzureGermanCloud {
 				profile.Distro = Ubuntu
 			}
 		}

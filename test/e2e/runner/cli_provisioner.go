@@ -297,7 +297,14 @@ func (cli *CLIProvisioner) waitForNodes() error {
 	if cli.Config.IsKubernetes() {
 		if !cli.IsPrivate() {
 			log.Println("Waiting on nodes to go into ready state...")
-			ready := node.WaitOnReady(cli.Engine.NodeCount(), 10*time.Second, cli.Config.Timeout)
+			var expectedReadyNodes int
+			if !cli.Engine.ExpandedDefinition.Properties.HasLowPriorityScaleset() {
+				expectedReadyNodes = cli.Engine.NodeCount()
+				log.Printf("Checking for %d Ready nodes\n", expectedReadyNodes)
+			} else {
+				expectedReadyNodes = -1
+			}
+			ready := node.WaitOnReady(expectedReadyNodes, 10*time.Second, cli.Config.Timeout)
 			cmd := exec.Command("k", "get", "nodes", "-o", "wide")
 			out, _ := cmd.CombinedOutput()
 			log.Printf("%s\n", out)
@@ -377,7 +384,7 @@ func (cli *CLIProvisioner) FetchProvisioningMetrics(path string, cfg *config.Con
 	}
 	for _, master := range cli.Masters {
 		for _, fp := range masterFiles {
-			err = conn.CopyFromRemote(master.Name, fp)
+			err = conn.CopyFrom(master.Name, fp)
 			if err != nil {
 				log.Printf("Error reading file from path (%s):%s", path, err)
 			}
@@ -386,7 +393,7 @@ func (cli *CLIProvisioner) FetchProvisioningMetrics(path string, cfg *config.Con
 
 	for _, agent := range cli.Agents {
 		for _, fp := range agentFiles {
-			err = conn.CopyFromRemote(agent.Name, fp)
+			err = conn.CopyFrom(agent.Name, fp)
 			if err != nil {
 				log.Printf("Error reading file from path (%s):%s", path, err)
 			}

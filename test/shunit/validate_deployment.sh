@@ -8,7 +8,7 @@ function shunittest_validate_deployment {
   if [[ "${ORCHESTRATOR}" == "kubernetes" ]]; then
     export KUBECONFIG="${OUTPUT}/kubeconfig/kubeconfig.${LOCATION}.json"
     nodes=$(${HOME}/test/step.sh get_node_count)
-    IFS=':' read -a narr <<< "${nodes}"
+    IFS=':' read -r -a narr <<< "${nodes}"
     export EXPECTED_NODE_COUNT=${narr[0]}
     export EXPECTED_LINUX_AGENTS=${narr[1]}
     export EXPECTED_WINDOWS_AGENTS=${narr[1]}

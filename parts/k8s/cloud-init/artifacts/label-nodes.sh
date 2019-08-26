@@ -15,3 +15,4 @@ AGENT_LABELS="kubernetes.azure.com/role=agent kubernetes.io/role=agent node-role
 
 kubectl label nodes --overwrite -l $MASTER_SELECTOR $MASTER_LABELS
 kubectl label nodes --overwrite -l $AGENT_SELECTOR $AGENT_LABELS
+#EOF

@@ -123,8 +123,21 @@ func (n *Node) HasSubstring(substrings []string) bool {
 	return false
 }
 
-// AreAllReady returns a bool depending on cluster state
-func AreAllReady(nodeCount int) bool {
+// AreAllReady returns if all nodes are ready
+func AreAllReady() bool {
+	list, _ := Get()
+	if list != nil {
+		for _, node := range list.Nodes {
+			if !node.IsReady() {
+				return false
+			}
+		}
+	}
+	return true
+}
+
+// AreNNodesReady returns a bool depending on cluster state
+func AreNNodesReady(nodeCount int) bool {
 	list, _ := Get()
 	var ready int
 	if list != nil && len(list.Nodes) == nodeCount {
@@ -154,8 +167,14 @@ func WaitOnReady(nodeCount int, sleep, duration time.Duration) bool {
 			case <-ctx.Done():
 				errCh <- errors.Errorf("Timeout exceeded (%s) while waiting for Nodes to become ready", duration.String())
 			default:
-				if AreAllReady(nodeCount) {
-					readyCh <- true
+				if nodeCount == -1 {
+					if AreAllReady() {
+						readyCh <- true
+					}
+				} else {
+					if AreNNodesReady(nodeCount) {
+						readyCh <- true
+					}
 				}
 				time.Sleep(sleep)
 			}
@@ -240,8 +259,8 @@ func (ns *Status) GetAddressByType(t string) *Address {
 	return nil
 }
 
-// GetByPrefix will return a []Node of all nodes that have a name that match the prefix
-func GetByPrefix(prefix string) ([]Node, error) {
+// GetByRegex will return a []Node of all nodes that have a name that match the regular expression
+func GetByRegex(regex string) ([]Node, error) {
 	list, err := Get()
 	if err != nil {
 		return nil, err
@@ -249,7 +268,7 @@ func GetByPrefix(prefix string) ([]Node, error) {
 
 	nodes := make([]Node, 0)
 	for _, n := range list.Nodes {
-		exp, err := regexp.Compile(prefix)
+		exp, err := regexp.Compile(regex)
 		if err != nil {
 			return nil, err
 		}

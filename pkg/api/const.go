@@ -153,10 +153,12 @@ const (
 	DefaultRBACEnabled = true
 	// DefaultUseInstanceMetadata determines the aks-engine provided default for enabling Azure cloudprovider instance metadata service
 	DefaultUseInstanceMetadata = true
-	// DefaultLoadBalancerSku determines the aks-engine provided default for enabling Azure cloudprovider load balancer SKU
-	DefaultLoadBalancerSku = "Basic"
+	// BasicLoadBalancerSku is the string const for Azure Basic Load Balancer
+	BasicLoadBalancerSku = "Basic"
 	// StandardLoadBalancerSku is the string const for Azure Standard Load Balancer
 	StandardLoadBalancerSku = "Standard"
+	// DefaultLoadBalancerSku determines the aks-engine provided default for enabling Azure cloudprovider load balancer SKU
+	DefaultLoadBalancerSku = BasicLoadBalancerSku
 	// DefaultExcludeMasterFromStandardLB determines the aks-engine provided default for excluding master nodes from standard load balancer.
 	DefaultExcludeMasterFromStandardLB = true
 	// DefaultSecureKubeletEnabled determines the aks-engine provided default for securing kubelet communications
@@ -281,9 +283,9 @@ const (
 	// DefaultWindowsOffer sets the default WindowsOffer value in WindowsProfile
 	DefaultWindowsOffer = "WindowsServer"
 	// DefaultWindowsSku sets the default WindowsSku value in WindowsProfile
-	DefaultWindowsSku = "Datacenter-Core-1809-with-Containers-smalldisk"
+	DefaultWindowsSku = "2019-Datacenter-Core-with-Containers-smalldisk"
 	// DefaultImageVersion sets the default ImageVersion value in WindowsProfile
-	DefaultImageVersion = "17763.557.20190604"
+	DefaultImageVersion = "17763.615.1907121548"
 )
 
 const (
@@ -314,8 +316,12 @@ const (
 	DefaultKubernetesCloudProviderBackoffExponent = 1.5
 	// DefaultKubernetesCloudProviderRateLimitQPS is 3, takes effect if DefaultKubernetesCloudProviderRateLimit is true
 	DefaultKubernetesCloudProviderRateLimitQPS = 3.0
+	// DefaultKubernetesCloudProviderRateLimitQPSWrite is 1, takes effect if DefaultKubernetesCloudProviderRateLimit is true
+	DefaultKubernetesCloudProviderRateLimitQPSWrite = 1.0
 	// DefaultKubernetesCloudProviderRateLimitBucket is 10, takes effect if DefaultKubernetesCloudProviderRateLimit is true
 	DefaultKubernetesCloudProviderRateLimitBucket = 10
+	// DefaultKubernetesCloudProviderRateLimitBucketWrite is 10, takes effect if DefaultKubernetesCloudProviderRateLimit is true
+	DefaultKubernetesCloudProviderRateLimitBucketWrite = DefaultKubernetesCloudProviderRateLimitBucket
 )
 
 const (
@@ -330,11 +336,11 @@ const (
 	// AzureCniPluginVerLinux specifies version of Azure CNI plugin, which has been mirrored from
 	// https://github.com/Azure/azure-container-networking/releases/download/${AZURE_PLUGIN_VER}/azure-vnet-cni-linux-amd64-${AZURE_PLUGIN_VER}.tgz
 	// to https://acs-mirror.azureedge.net/cni
-	AzureCniPluginVerLinux = "v1.0.24"
+	AzureCniPluginVerLinux = "v1.0.25"
 	// AzureCniPluginVerWindows specifies version of Azure CNI plugin, which has been mirrored from
 	// https://github.com/Azure/azure-container-networking/releases/download/${AZURE_PLUGIN_VER}/azure-vnet-cni-windows-amd64-${AZURE_PLUGIN_VER}.zip
 	// to https://acs-mirror.azureedge.net/cni
-	AzureCniPluginVerWindows = "v1.0.24"
+	AzureCniPluginVerWindows = "v1.0.25"
 	// CNIPluginVer specifies the version of CNI implementation
 	// https://github.com/containernetworking/plugins
 	CNIPluginVer = "v0.7.5"
@@ -422,7 +428,7 @@ const (
 	//DefaultKubernetesGCLowThreshold specifies the value for the image-gc-low-threshold kubelet flag
 	DefaultKubernetesGCLowThreshold = 80
 	// DefaultEtcdVersion specifies the default etcd version to install
-	DefaultEtcdVersion = "3.2.26"
+	DefaultEtcdVersion = "3.3.13"
 	// DefaultEtcdDiskSize specifies the default size for Kubernetes master etcd disk volumes in GB
 	DefaultEtcdDiskSize = "256"
 	// DefaultEtcdDiskSizeGT3Nodes = size for Kubernetes master etcd disk volumes in GB if > 3 nodes

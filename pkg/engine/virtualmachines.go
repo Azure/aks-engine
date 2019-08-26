@@ -342,6 +342,14 @@ func createAgentAvailabilitySetVM(cs *api.ContainerService, profile *api.AgentPo
 
 	dependencies = append(dependencies, fmt.Sprintf("[concat('Microsoft.Compute/availabilitySets/', variables('%[1]sAvailabilitySet'))]", profile.Name))
 
+	if profile.IsWindows() {
+		windowsProfile := cs.Properties.WindowsProfile
+		// Add dependency for Image resource created by createWindowsImage()
+		if windowsProfile.HasCustomImage() {
+			dependencies = append(dependencies, fmt.Sprintf("%sCustomWindowsImage", profile.Name))
+		}
+	}
+
 	tags := map[string]*string{
 		"creationSource":   to.StringPtr(fmt.Sprintf("[concat(parameters('generatorCode'), '-', variables('%[1]sVMNamePrefix'), copyIndex(variables('%[1]sOffset')))]", profile.Name)),
 		"orchestrator":     to.StringPtr("[variables('orchestratorNameVersionTag')]"),
@@ -471,23 +479,11 @@ func createAgentAvailabilitySetVM(cs *api.ContainerService, profile *api.AgentPo
 	storageProfile := compute.StorageProfile{}
 
 	if profile.IsWindows() {
-		if cs.Properties.WindowsProfile.HasCustomImage() {
-			storageProfile.ImageReference = &compute.ImageReference{
-				ID: to.StringPtr(fmt.Sprintf("[resourceId('Microsoft.Compute/images','%sCustomWindowsImage')]", profile.Name)),
-			}
-		} else {
-			storageProfile.ImageReference = &compute.ImageReference{
-				Offer:     to.StringPtr("[parameters('agentWindowsOffer')]"),
-				Publisher: to.StringPtr("[parameters('agentWindowsPublisher')]"),
-				Sku:       to.StringPtr("[parameters('agentWindowsSku')]"),
-				Version:   to.StringPtr("[parameters('agentWindowsVersion')]"),
-			}
-		}
+		storageProfile.ImageReference = createWindowsImageReference(profile.Name, cs.Properties.WindowsProfile)
 
 		if profile.HasDisks() {
 			storageProfile.DataDisks = getArmDataDisks(profile)
 		}
-
 	} else {
 		imageRef := profile.ImageRef
 		if profile.HasImageRef() {

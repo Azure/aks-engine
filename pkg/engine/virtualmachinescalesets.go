@@ -312,7 +312,7 @@ func CreateMasterVMSS(cs *api.ContainerService) VirtualMachineScaleSetARM {
 			AutoUpgradeMinorVersion: to.BoolPtr(true),
 			Settings:                map[string]interface{}{},
 			ProtectedSettings: map[string]interface{}{
-				"commandToExecute": fmt.Sprintf("[concat('retrycmd_if_failure() { r=$1; w=$2; t=$3; shift && shift && shift; for i in $(seq 1 $r); do timeout $t ${@}; [ $? -eq 0  ] && break || if [ $i -eq $r ]; then return 1; else sleep $w; fi; done }; "+outBoundCmd+" for i in $(seq 1 1200); do if [ -f /opt/azure/containers/provision.sh ]; then break; fi; if [ $i -eq 1200 ]; then exit 100; else sleep 1; fi; done; ', variables('provisionScriptParametersCommon'),%s,variables('provisionScriptParametersMaster'), ' /usr/bin/nohup /bin/bash -c \"/bin/bash /opt/azure/containers/provision.sh >> /var/log/azure/cluster-provision.log 2>&1\"')]", generateUserAssignedIdentityClientIDParameter(userAssignedIDEnabled)),
+				"commandToExecute": fmt.Sprintf("[concat('retrycmd_if_failure() { r=$1; w=$2; t=$3; shift && shift && shift; for i in $(seq 1 $r); do timeout $t ${@}; [ $? -eq 0  ] && break || if [ $i -eq $r ]; then return 1; else sleep $w; fi; done }; "+outBoundCmd+" for i in $(seq 1 1200); do grep -Fq \"EOF\" /opt/azure/containers/provision.sh && break; if [ $i -eq 1200 ]; then exit 100; else sleep 1; fi; done; ', variables('provisionScriptParametersCommon'),%s,variables('provisionScriptParametersMaster'), ' /usr/bin/nohup /bin/bash -c \"/bin/bash /opt/azure/containers/provision.sh >> /var/log/azure/cluster-provision.log 2>&1\"')]", generateUserAssignedIdentityClientIDParameter(userAssignedIDEnabled)),
 			},
 		},
 	}
@@ -368,6 +368,14 @@ func CreateAgentVMSS(cs *api.ContainerService, profile *api.AgentPoolProfile) Vi
 		profile.LoadBalancerBackendAddressPoolIDs == nil &&
 		cs.Properties.OrchestratorProfile.KubernetesConfig.LoadBalancerSku == api.StandardLoadBalancerSku {
 		dependencies = append(dependencies, "[variables('agentLbID')]")
+	}
+
+	if profile.IsWindows() {
+		windowsProfile := cs.Properties.WindowsProfile
+		// Add dependency for Image resource created by createWindowsImage()
+		if windowsProfile.HasCustomImage() {
+			dependencies = append(dependencies, fmt.Sprintf("%sCustomWindowsImage", profile.Name))
+		}
 	}
 
 	orchProfile := cs.Properties.OrchestratorProfile
@@ -638,12 +646,7 @@ func CreateAgentVMSS(cs *api.ContainerService, profile *api.AgentPoolProfile) Vi
 	vmssStorageProfile := compute.VirtualMachineScaleSetStorageProfile{}
 
 	if profile.IsWindows() {
-		vmssStorageProfile.ImageReference = &compute.ImageReference{
-			Offer:     to.StringPtr("[parameters('agentWindowsOffer')]"),
-			Publisher: to.StringPtr("[parameters('agentWindowsPublisher')]"),
-			Sku:       to.StringPtr("[parameters('agentWindowsSku')]"),
-			Version:   to.StringPtr("[parameters('agentWindowsVersion')]"),
-		}
+		vmssStorageProfile.ImageReference = createWindowsImageReference(profile.Name, cs.Properties.WindowsProfile)
 		vmssStorageProfile.DataDisks = getVMSSDataDisks(profile)
 	} else {
 		if profile.HasImageRef() {
@@ -739,7 +742,7 @@ func CreateAgentVMSS(cs *api.ContainerService, profile *api.AgentPoolProfile) Vi
 		sgxEnabled := strconv.FormatBool(common.IsSgxEnabledSKU(profile.VMSize))
 		auditDEnabled := strconv.FormatBool(to.Bool(profile.AuditDEnabled))
 
-		commandExec := fmt.Sprintf("[concat('retrycmd_if_failure() { r=$1; w=$2; t=$3; shift && shift && shift; for i in $(seq 1 $r); do timeout $t ${@}; [ $? -eq 0  ] && break || if [ $i -eq $r ]; then return 1; else sleep $w; fi; done }; %s for i in $(seq 1 1200); do if [ -f /opt/azure/containers/provision.sh ]; then break; fi; if [ $i -eq 1200 ]; then exit 100; else sleep 1; fi; done; ', variables('provisionScriptParametersCommon'),%s,' GPU_NODE=%s SGX_NODE=%s AUDITD_ENABLED=%s /usr/bin/nohup /bin/bash -c \"/bin/bash /opt/azure/containers/provision.sh >> /var/log/azure/cluster-provision.log 2>&1%s\"')]", outBoundCmd, generateUserAssignedIdentityClientIDParameter(userAssignedIDEnabled), nVidiaEnabled, sgxEnabled, auditDEnabled, runInBackground)
+		commandExec := fmt.Sprintf("[concat('retrycmd_if_failure() { r=$1; w=$2; t=$3; shift && shift && shift; for i in $(seq 1 $r); do timeout $t ${@}; [ $? -eq 0  ] && break || if [ $i -eq $r ]; then return 1; else sleep $w; fi; done }; %s for i in $(seq 1 1200); do grep -Fq \"EOF\" /opt/azure/containers/provision.sh && break; if [ $i -eq 1200 ]; then exit 100; else sleep 1; fi; done; ', variables('provisionScriptParametersCommon'),%s,' GPU_NODE=%s SGX_NODE=%s AUDITD_ENABLED=%s /usr/bin/nohup /bin/bash -c \"/bin/bash /opt/azure/containers/provision.sh >> /var/log/azure/cluster-provision.log 2>&1%s\"')]", outBoundCmd, generateUserAssignedIdentityClientIDParameter(userAssignedIDEnabled), nVidiaEnabled, sgxEnabled, auditDEnabled, runInBackground)
 		vmssCSE = compute.VirtualMachineScaleSetExtension{
 			Name: to.StringPtr("vmssCSE"),
 			VirtualMachineScaleSetExtensionProperties: &compute.VirtualMachineScaleSetExtensionProperties{

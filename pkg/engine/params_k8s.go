@@ -90,14 +90,16 @@ func assignKubernetesParameters(properties *api.Properties, parametersMap params
 			}
 			addValue(parametersMap, "kubernetesPodInfraContainerSpec", kubernetesImageBase+k8sComponents["pause"])
 			addValue(parametersMap, "cloudproviderConfig", api.CloudProviderConfig{
-				CloudProviderBackoff:         kubernetesConfig.CloudProviderBackoff,
-				CloudProviderBackoffRetries:  kubernetesConfig.CloudProviderBackoffRetries,
-				CloudProviderBackoffJitter:   strconv.FormatFloat(kubernetesConfig.CloudProviderBackoffJitter, 'f', -1, 64),
-				CloudProviderBackoffDuration: kubernetesConfig.CloudProviderBackoffDuration,
-				CloudProviderBackoffExponent: strconv.FormatFloat(kubernetesConfig.CloudProviderBackoffExponent, 'f', -1, 64),
-				CloudProviderRateLimit:       kubernetesConfig.CloudProviderRateLimit,
-				CloudProviderRateLimitQPS:    strconv.FormatFloat(kubernetesConfig.CloudProviderRateLimitQPS, 'f', -1, 64),
-				CloudProviderRateLimitBucket: kubernetesConfig.CloudProviderRateLimitBucket,
+				CloudProviderBackoff:              kubernetesConfig.CloudProviderBackoff,
+				CloudProviderBackoffRetries:       kubernetesConfig.CloudProviderBackoffRetries,
+				CloudProviderBackoffJitter:        strconv.FormatFloat(kubernetesConfig.CloudProviderBackoffJitter, 'f', -1, 64),
+				CloudProviderBackoffDuration:      kubernetesConfig.CloudProviderBackoffDuration,
+				CloudProviderBackoffExponent:      strconv.FormatFloat(kubernetesConfig.CloudProviderBackoffExponent, 'f', -1, 64),
+				CloudProviderRateLimit:            kubernetesConfig.CloudProviderRateLimit,
+				CloudProviderRateLimitQPS:         strconv.FormatFloat(kubernetesConfig.CloudProviderRateLimitQPS, 'f', -1, 64),
+				CloudProviderRateLimitQPSWrite:    strconv.FormatFloat(kubernetesConfig.CloudProviderRateLimitQPSWrite, 'f', -1, 64),
+				CloudProviderRateLimitBucket:      kubernetesConfig.CloudProviderRateLimitBucket,
+				CloudProviderRateLimitBucketWrite: kubernetesConfig.CloudProviderRateLimitBucketWrite,
 			})
 			addValue(parametersMap, "kubeClusterCidr", kubernetesConfig.ClusterSubnet)
 			addValue(parametersMap, "kubernetesKubeletClusterDomain", kubernetesConfig.KubeletConfig["--cluster-domain"])
