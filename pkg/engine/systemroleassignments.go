@@ -15,6 +15,9 @@ func createVMASRoleAssignment() SystemRoleAssignmentARM {
 	systemRoleAssignment := SystemRoleAssignmentARM{
 		ARMResource: ARMResource{
 			APIVersion: "[variables('apiVersionAuthorizationSystem')]",
+			DependsOn: []string{
+				"[concat('Microsoft.Compute/virtualMachines/', variables('masterVMNamePrefix'), copyIndex(variables('masterOffset')))]",
+			},
 			Copy: map[string]string{
 				"count": "[variables('masterCount')]",
 				"name":  "vmLoopNode",
@@ -22,11 +25,11 @@ func createVMASRoleAssignment() SystemRoleAssignmentARM {
 		},
 	}
 
-	systemRoleAssignment.Name = to.StringPtr("[guid(concat('Microsoft.Compute/virtualMachines/', variables('masterVMNamePrefix'), copyIndex(), 'vmidentity'))]")
+	systemRoleAssignment.Name = to.StringPtr("[guid(concat('Microsoft.Compute/virtualMachines/', variables('masterVMNamePrefix'), copyIndex(variables('masterOffset')), 'vmidentity'))]")
 	systemRoleAssignment.Type = to.StringPtr("Microsoft.Authorization/roleAssignments")
 	systemRoleAssignment.RoleAssignmentPropertiesWithScope = &authorization.RoleAssignmentPropertiesWithScope{
 		RoleDefinitionID: to.StringPtr("[variables('contributorRoleDefinitionId')]"),
-		PrincipalID:      to.StringPtr("[reference(concat('Microsoft.Compute/virtualMachines/', variables('masterVMNamePrefix'), copyIndex()), '2017-03-30', 'Full').identity.principalId]"),
+		PrincipalID:      to.StringPtr("[reference(concat('Microsoft.Compute/virtualMachines/', variables('masterVMNamePrefix'), copyIndex(variables('masterOffset'))), '2017-03-30', 'Full').identity.principalId]"),
 	}
 	return systemRoleAssignment
 }
