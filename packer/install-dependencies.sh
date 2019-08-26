@@ -370,13 +370,11 @@ done
 
 NGINX_VERSIONS="1.13.12-alpine"
 for NGINX_VERSION in ${NGINX_VERSIONS}; do
-    CONTAINER_IMAGE="nginx:${NGINX_VERSION}"
+  for IMAGE_BASE in "" "aksrepos.azurecr.io/mirror/"; do
+    CONTAINER_IMAGE="${IMAGE_BASE}nginx:${NGINX_VERSION}"
     pullContainerImage "docker" ${CONTAINER_IMAGE}
     echo "  - ${CONTAINER_IMAGE}" >> ${RELEASE_NOTES_FILEPATH}
-
-    CONTAINER_IMAGE="aksrepos.azurecr.io/mirror/nginx:${NGINX_VERSION}"
-    pullContainerImage "docker" ${CONTAINER_IMAGE}
-    echo "  - ${CONTAINER_IMAGE}" >> ${RELEASE_NOTES_FILEPATH}
+  done
 done
 
 KMS_PLUGIN_VERSIONS="0.0.9"
@@ -398,10 +396,11 @@ for FLANNEL_VERSION in ${FLANNEL_VERSIONS}; do
   done
 done
 
-pullContainerImage "docker" "busybox"
-echo "  - busybox" >> ${RELEASE_NOTES_FILEPATH}
-pullContainerImage "docker" "aksrepos.azurecr.io/mirror/busybox"
-echo "  - aksrepos.azurecr.io/mirror/busybox" >> ${RELEASE_NOTES_FILEPATH}
+for IMAGE_BASE in "" "aksrepos.azurecr.io/mirror/"; do
+  CONTAINER_IMAGE="${IMAGE_BASE}busybox"
+  pullContainerImage "docker" ${CONTAINER_IMAGE}
+  echo "  - ${CONTAINER_IMAGE}" >> ${RELEASE_NOTES_FILEPATH}
+done
 
 # TODO: fetch supported k8s versions from an aks-engine command instead of hardcoding them here
 K8S_VERSIONS="
