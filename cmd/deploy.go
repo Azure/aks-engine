@@ -446,7 +446,7 @@ func (dc *deployCmd) run() error {
 
 // configure api model addon config with container monitoring addon
 func (dc *deployCmd) configureContainerMonitoringAddon(ctx context.Context, k8sConfig *api.KubernetesConfig) error {
-	log.Infoln("configuring container monitoringa addon info")
+	log.Infoln("configuring container monitoring addon info")
 	if k8sConfig == nil {
 		return errors.New("KubernetesConfig either null or invalid")
 	}

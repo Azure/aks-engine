@@ -48,9 +48,9 @@ This is sample API definition with Container-monitoring addon.
 }
 
 ```
-> Note: If the AKS-Engine version is v0.38.5 or higher, the clusterName will be the dnsPrefix of the cluster. If the AKS Engine version is v0.29.1 or ACS-Engine Kubernetes cluster, then default clusterName is my_acs_cluster_name in the container monitoring addon. In  AKS Engine version is less than v0.38.5, the default cluster name is aks-engine-cluster.
+> Note: If the AKS Engine version is v0.38.5 or higher, the clusterName will be the dnsPrefix of the cluster. If the AKS Engine version is v0.29.1 or ACS Engine Kubernetes cluster, then default clusterName is my_acs_cluster_name in the container monitoring addon. In  AKS Engine version is less than v0.38.5, the default cluster name is aks-engine-cluster.
 
-Example command to create AKS-Engine cluster with monitoring addon
+Example command to create AKS Engine cluster with monitoring addon
 `aks-engine deploy --subscription-id <subscriptionId> --client-id <clientId> --client-secret <clientSecret> --dns-prefix <dnsPrefix> --location <location> --api-model  <kubernetes.json>`
 
 You can validate that the addon is running as expected with the following commands:
@@ -66,19 +66,19 @@ kubectl get pods -n kube-system
 
 Once the container monitoring addon added successfully, navigate to [azmon-containers](https://aka.ms/azmon-containers) to view the health, metrics and logs of your Kubernetes cluster(s).
 
-### Azure Monitor for containers view to view health of all AKS and AKS-Engine clusters in selected global azure subscriptions
+### Azure Monitor for containers view to view health of all AKS and AKS Engine clusters in selected global azure subscriptions
 ![Image of Azure Monitor for containers](../../../docs/static/img/azure_monitor_aks_engine.png)
 
-### Cluster view of AKS-Engine cluster
+### Cluster view of AKS Engine cluster
 ![Image of Azure Monitor for containers](../../../docs/static/img/azure_monitor_aks_engine1.png)
 
-### Nodes view of AKS-Engine cluster
+### Nodes view of AKS Engine cluster
 ![Image of Azure Monitor for containers](../../../docs/static/img/azure_monitor_aks_engine2.png)
 
-### Controllers view of AKS-Engine cluster
+### Controllers view of AKS Engine cluster
 ![Image of Azure Monitor for containers](../../../docs/static/img/azure_monitor_aks_engine3.png)
 
-### Containers view of AKS-Engine cluster
+### Containers view of AKS Engine cluster
 ![Image of Azure Monitor for containers](../../../docs/static/img/azure_monitor_aks_engine4.png)
 
 ## Supported Matrix
@@ -93,9 +93,9 @@ After you enable monitoring of your AKS Engine cluster, you can stop monitoring 
 
 - If you have onboarded using the Container Monitoring addon, then you can remove monitoring addon with below steps
 
-      1. ssh to aks-engine cluster master node and copy omsagent-daemonset.yaml file under /etc/kubernetes/addons to the dev machine
+      1. ssh to AKS Engine cluster master node and copy omsagent-daemonset.yaml file under /etc/kubernetes/addons to the dev machine
       2. delete the container monitoring addon manifest file omsagent-daemonset.yaml  under /etc/kubernetes/addons
-      3. delete all the resources related to container monitoring addon with `kubectl delete -f omsagent-daemonset.yaml` command against your aks-engine cluster
+      3. delete all the resources related to container monitoring addon with `kubectl delete -f omsagent-daemonset.yaml` command against your AKS Engine cluster
 
 ## Upgrade Container Monitoring Addon
 

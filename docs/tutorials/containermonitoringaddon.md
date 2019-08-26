@@ -7,18 +7,18 @@ Container Monitoring addon gives you performance monitoring ability by collectin
 - Review the resource utilization of workloads running on the host that are unrelated to the standard processes that support the pod.
 - Understand the behavior of the cluster under average and heaviest loads. This knowledge can help you identify capacity needs and determine the maximum load that the cluster can sustain.
 - Logs (stdout/stderr) of the Containers to troubleshoot the issues in containers
-- Scrapping metrics from Prometheus. Refer [configuring prometheus scrapping settings](https://docs.microsoft.com/en-us/azure/azure-monitor/insights/container-insights-agent-config#overview-of-configurable-prometheus-scraping-settings)
+- Scraping metrics from Prometheus. Refer [configuring prometheus scraping settings](https://docs.microsoft.com/en-us/azure/azure-monitor/insights/container-insights-agent-config#overview-of-configurable-prometheus-scraping-settings)
 
-Refer (Azure Monitor for containers)[https://docs.microsoft.com/en-us/azure/azure-monitor/insights/container-insights-overview] for more details.
+Refer to (Azure Monitor for containers)[https://docs.microsoft.com/en-us/azure/azure-monitor/insights/container-insights-overview] for more details.
 
 ## Components
 
 Your ability to monitor performance relies on a containerized Log Analytics agent for Linux, which collects performance and event data from all nodes, pods and containers in the cluster.
-The agent is automatically deployed and registered with the specified or defaut Log Analytics workspace after you enable container monitoring addon.
+The agent is automatically deployed and registered with the specified or default Log Analytics workspace after you enable container monitoring addon.
 
 ## Onboarding
 
-Container Monitoring can be onboarded either through the monitoring add-on or the HELM chart.
+Container Monitoring can be onboarded either through the monitoring add-on or the Helm chart.
 Following are supported options to enable container-monitoring add-on during the cluster creation or post custer creation.
 
 > Note: option 1) and 2) are supported only through `aks-engine deploy` command.
@@ -70,22 +70,22 @@ you can also configure with workspace GUID and Key of the existing Log analytics
 
 Refer [Sample Kubernetes definition file with monitoringa addon using workspace GUID and key of the existing log analytics workspace](../../examples/addons/container-monitoring/kubernetes-container-monitoring_existing_workspace_id_and_key.json)
 
-### 4. Using Azure Monitor for containers HELM chart
+### 4. Using Azure Monitor for containers Helm chart
 
-If you prefer HELM chart, refer [Azure Monitor – Containers HELM chart](https://github.com/helm/charts/tree/master/incubator/azuremonitor-containers) for onboarding instructions
+If you prefer Helm chart, refer [Azure Monitor – Containers Helm chart](https://github.com/Helm/charts/tree/master/incubator/azuremonitor-containers) for onboarding instructions
 
 For more details and instructions to [onboard the container monitoring addon for the AKS Engine cluster(s)](../../examples/addons/container-monitoring/README.md)
 
 ## UX
 
-After successful onboarding, navigating to [Azure Monitor for containers](https://aka.ms/azmon-containers) to view and monitor, and analyze health of your onboarded AKS-Engine cluster, pods and containers etc.
+After successful onboarding, navigating to [Azure Monitor for containers](https://aka.ms/azmon-containers) to view and monitor, and analyze health of your onboarded AKS Engine cluster, pods and containers etc.
 
 ## Required Roles and Permissions
 
-- User requires the reader role permission on the Azure Log Analytics workspace and AKS-Engine cluster resource group to view and monitor, and analyze health of your onboarded AKS-Engine cluster, pods and containers etc.
+- User requires the reader role permission on the Azure Log Analytics workspace and AKS Engine cluster resource group to view and monitor, and analyze health of your onboarded AKS Engine cluster, pods and containers etc.
 - For onboarding monitoring addon
      -  If the existing Azure Log Analytics workspace used, then requires Log Analytics Contributor role on existing Azure Log Analytics
-     -  For the new Azure Log Analytics workspace, user requires the contributor role on the Subscription or the Resource group where the AKS-Engine cluster resources will be deployed
+     -  For the new Azure Log Analytics workspace, user requires the contributor role on the Subscription or the Resource group where the AKS Engine cluster resources will be deployed
 
 ## Contact
 
