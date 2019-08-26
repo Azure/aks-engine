@@ -188,9 +188,6 @@ ci: bootstrap test-style build test lint
 coverage:
 	@scripts/ginkgo.coverage.sh --codecov
 
-devenv:
-	./scripts/devenv.sh
-
 include versioning.mk
 include test.mk
 include packer.mk
