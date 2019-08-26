@@ -52,7 +52,7 @@ for resourceGroup in $( az group list --query "[?contains(name, 'packer-Resource
     for deployment in $(az group deployment list -g $resourceGroup | jq '.[] | .name' | tr -d '\"' || ""); do
         echo "Will delete deployment ${deployment} from resource group ${resourceGroup}..."
         if [[ "${DRY_RUN}" = false ]]; then
-            az group deployment delete -n $deployment -g $resourceGroup || echo "unable to delete deployment ${deployment}, will continue..."
+            az group deployment delete -y -n $deployment -g $resourceGroup || echo "unable to delete deployment ${deployment}, will continue..."
         else
             echo "skipping because DRY_RUN is set to true"
         fi
@@ -76,7 +76,7 @@ echo "Looking for storage accounts in ${STORAGE_RG} created over ${EXPIRATION_IN
 for storage_account in $(az storage account list -g $STORAGE_RG | jq --arg dl $deadline '.[] | select(.tags.now < $dl).name' | tr -d '\"' || ""); do
     echo "Will delete storage account ${storage_account} from resource group ${STORAGE_RG}..."
     if [[ "${DRY_RUN}" = false ]]; then
-        az storage account delete -n $storage_account -g $STORAGE_RG || echo "unable to delete storage account ${storage_account}, will continue..."
+        az storage account delete -y -n $storage_account -g $STORAGE_RG || echo "unable to delete storage account ${storage_account}, will continue..."
     else
             echo "skipping because DRY_RUN is set to true"
     fi
