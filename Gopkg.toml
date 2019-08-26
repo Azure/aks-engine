@@ -32,11 +32,11 @@ required = [
 
 [[constraint]]
   name = "github.com/Azure/azure-sdk-for-go"
-  version = "v27.3.0"
+  version = "v32.5.0"
 
-[[constraint]]
+[[override]]
   name = "github.com/Azure/go-autorest"
-  version = "11.9.0"
+  version = "13.0.0"
 
 [[constraint]]
   name = "github.com/Jeffail/gabs"

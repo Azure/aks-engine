@@ -95,7 +95,7 @@ func (az *AzureClient) CreateApp(ctx context.Context, appName, appURL string, re
 
 	servicePrincipalReq := graphrbac.ServicePrincipalCreateParameters{
 		AppID:          applicationResp.AppID,
-		AccountEnabled: to.StringPtr("true"),
+		AccountEnabled: to.BoolPtr(true),
 	}
 	servicePrincipalResp, err := az.servicePrincipalsClient.Create(ctx, servicePrincipalReq)
 	if err != nil {

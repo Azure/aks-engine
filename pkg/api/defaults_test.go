@@ -200,7 +200,7 @@ func TestAssignDefaultAddonImages(t *testing.T) {
 		ClusterAutoscalerAddonName:         "k8s.gcr.io/cluster-autoscaler:v1.2.5",
 		BlobfuseFlexVolumeAddonName:        "mcr.microsoft.com/k8s/flexvolume/blobfuse-flexvolume:1.0.8",
 		SMBFlexVolumeAddonName:             "mcr.microsoft.com/k8s/flexvolume/smb-flexvolume:1.0.2",
-		KeyVaultFlexVolumeAddonName:        "mcr.microsoft.com/k8s/flexvolume/keyvault-flexvolume:v0.0.7",
+		KeyVaultFlexVolumeAddonName:        "mcr.microsoft.com/k8s/flexvolume/keyvault-flexvolume:v0.0.12",
 		DashboardAddonName:                 "k8s.gcr.io/kubernetes-dashboard-amd64:v1.10.1",
 		ReschedulerAddonName:               "k8s.gcr.io/rescheduler:v0.3.1",
 		MetricsServerAddonName:             "k8s.gcr.io/metrics-server-amd64:v0.2.1",
@@ -2777,6 +2777,103 @@ func TestDefaultEnablePodSecurityPolicy(t *testing.T) {
 			c.cs.setOrchestratorDefaults(false, false)
 			if to.Bool(c.cs.Properties.OrchestratorProfile.KubernetesConfig.EnablePodSecurityPolicy) != c.expected {
 				t.Errorf("expected  %t, but got %t", c.expected, to.Bool(c.cs.Properties.OrchestratorProfile.KubernetesConfig.EnablePodSecurityPolicy))
+			}
+		})
+	}
+}
+
+func TestDefaultLoadBalancerSKU(t *testing.T) {
+	cases := []struct {
+		name     string
+		cs       ContainerService
+		expected string
+	}{
+		{
+			name: "default",
+			cs: ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorType:    Kubernetes,
+						OrchestratorVersion: "1.14.0",
+					},
+					MasterProfile: &MasterProfile{},
+				},
+			},
+			expected: BasicLoadBalancerSku,
+		},
+		{
+			name: "basic",
+			cs: ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorType:    Kubernetes,
+						OrchestratorVersion: "1.14.0",
+						KubernetesConfig: &KubernetesConfig{
+							LoadBalancerSku: "basic",
+						},
+					},
+					MasterProfile: &MasterProfile{},
+				},
+			},
+			expected: BasicLoadBalancerSku,
+		},
+		{
+			name: "default",
+			cs: ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorType:    Kubernetes,
+						OrchestratorVersion: "1.14.0",
+						KubernetesConfig: &KubernetesConfig{
+							LoadBalancerSku: BasicLoadBalancerSku,
+						},
+					},
+					MasterProfile: &MasterProfile{},
+				},
+			},
+			expected: BasicLoadBalancerSku,
+		},
+		{
+			name: "default",
+			cs: ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorType:    Kubernetes,
+						OrchestratorVersion: "1.14.0",
+						KubernetesConfig: &KubernetesConfig{
+							LoadBalancerSku: "standard",
+						},
+					},
+					MasterProfile: &MasterProfile{},
+				},
+			},
+			expected: StandardLoadBalancerSku,
+		},
+		{
+			name: "default",
+			cs: ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorType:    Kubernetes,
+						OrchestratorVersion: "1.14.0",
+						KubernetesConfig: &KubernetesConfig{
+							LoadBalancerSku: StandardLoadBalancerSku,
+						},
+					},
+					MasterProfile: &MasterProfile{},
+				},
+			},
+			expected: StandardLoadBalancerSku,
+		},
+	}
+
+	for _, c := range cases {
+		c := c
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+			c.cs.setOrchestratorDefaults(false, false)
+			if c.cs.Properties.OrchestratorProfile.KubernetesConfig.LoadBalancerSku != c.expected {
+				t.Errorf("expected %s, but got %s", c.expected, c.cs.Properties.OrchestratorProfile.KubernetesConfig.LoadBalancerSku)
 			}
 		})
 	}

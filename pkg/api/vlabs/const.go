@@ -164,5 +164,8 @@ const (
 	ClientCertificateAuthMethod = "client_certificate"
 )
 
+// BasicLoadBalancerSku is the string const for Azure Basic Load Balancer
+const BasicLoadBalancerSku = "Basic"
+
 // StandardLoadBalancerSku is the string const for Azure Standard Load Balancer
 const StandardLoadBalancerSku = "Standard"

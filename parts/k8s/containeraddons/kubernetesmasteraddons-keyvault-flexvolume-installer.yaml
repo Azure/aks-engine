@@ -8,6 +8,8 @@ metadata:
   name: keyvault-flexvolume
   namespace: kube-system
 spec:
+  updateStrategy:
+    type: RollingUpdate
   template:
     metadata:
       labels:

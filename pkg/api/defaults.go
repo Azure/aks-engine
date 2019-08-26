@@ -99,7 +99,7 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpgrade, isScale bool) {
 		// we translate deprecated NetworkPolicy usage to the NetworkConfig equivalent
 		// and set a default network policy enforcement configuration
 		switch o.KubernetesConfig.NetworkPolicy {
-		case NetworkPluginAzure:
+		case NetworkPolicyAzure:
 			if o.KubernetesConfig.NetworkPlugin == "" {
 				o.KubernetesConfig.NetworkPlugin = NetworkPluginAzure
 				o.KubernetesConfig.NetworkPolicy = DefaultNetworkPolicy
@@ -304,6 +304,12 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpgrade, isScale bool) {
 			} else {
 				a.OrchestratorProfile.KubernetesConfig.UseInstanceMetadata = to.BoolPtr(DefaultUseInstanceMetadata)
 			}
+		}
+
+		if strings.ToLower(a.OrchestratorProfile.KubernetesConfig.LoadBalancerSku) == strings.ToLower(BasicLoadBalancerSku) {
+			a.OrchestratorProfile.KubernetesConfig.LoadBalancerSku = BasicLoadBalancerSku
+		} else if strings.ToLower(a.OrchestratorProfile.KubernetesConfig.LoadBalancerSku) == strings.ToLower(StandardLoadBalancerSku) {
+			a.OrchestratorProfile.KubernetesConfig.LoadBalancerSku = StandardLoadBalancerSku
 		}
 
 		if !a.HasAvailabilityZones() && a.OrchestratorProfile.KubernetesConfig.LoadBalancerSku == "" {

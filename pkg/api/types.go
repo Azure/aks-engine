@@ -201,6 +201,7 @@ type CustomNodesDNS struct {
 type WindowsProfile struct {
 	AdminUsername          string            `json:"adminUsername"`
 	AdminPassword          string            `json:"adminPassword" conform:"redact"`
+	ImageRef               *ImageReference   `json:"imageReference,omitempty"`
 	ImageVersion           string            `json:"imageVersion"`
 	WindowsImageSourceURL  string            `json:"windowsImageSourceURL"`
 	WindowsPublisher       string            `json:"windowsPublisher"`
@@ -1173,6 +1174,16 @@ func (p *Properties) HasAvailabilityZones() bool {
 	return hasZones
 }
 
+// HasLowPriorityScaleset returns true if any one node pool has a low-priority scaleset configuration
+func (p *Properties) HasLowPriorityScaleset() bool {
+	for _, agentPoolProfile := range p.AgentPoolProfiles {
+		if agentPoolProfile.IsLowPriorityScaleSet() {
+			return true
+		}
+	}
+	return false
+}
+
 // GetNonMasqueradeCIDR returns the non-masquerade CIDR for the ip-masq-agent.
 func (p *Properties) GetNonMasqueradeCIDR() string {
 	var nonMasqCidr string
@@ -1224,14 +1235,24 @@ func (p *Properties) AnyAgentHasLoadBalancerBackendAddressPoolIDs() bool {
 	return false
 }
 
+// IsValid returns true if ImageRefernce contains at least Name and ResourceGroup
+func (i *ImageReference) IsValid() bool {
+	return len(i.Name) > 0 && len(i.ResourceGroup) > 0
+}
+
+// IsGalleryImage returns true if ImageRefernce contains Gallry, Name, ResourceGroup, SubscriptionID, and Version
+func (i *ImageReference) IsGalleryImage() bool {
+	return len(i.Gallery) > 0 && len(i.Name) > 0 && len(i.ResourceGroup) > 0 && len(i.SubscriptionID) > 0 && len(i.Version) > 0
+}
+
 // HasImageRef returns true if the customer brought os image
 func (m *MasterProfile) HasImageRef() bool {
-	return m.ImageRef != nil && len(m.ImageRef.Name) > 0 && len(m.ImageRef.ResourceGroup) > 0
+	return m.ImageRef != nil && m.ImageRef.IsValid()
 }
 
 // HasImageGallery returns true if the customer brought os image from Shared Image Gallery
 func (m *MasterProfile) HasImageGallery() bool {
-	return m.ImageRef != nil && len(m.ImageRef.SubscriptionID) > 0 && len(m.ImageRef.Gallery) > 0 && len(m.ImageRef.Version) > 0
+	return m.ImageRef != nil && m.ImageRef.IsGalleryImage()
 }
 
 // IsCustomVNET returns true if the customer brought their own VNET
@@ -1354,13 +1375,13 @@ func (m *MasterProfile) GetCosmosEndPointURI() string {
 // HasImageRef returns true if the customer brought os image
 func (a *AgentPoolProfile) HasImageRef() bool {
 	imageRef := a.ImageRef
-	return imageRef != nil && len(imageRef.Name) > 0 && len(imageRef.ResourceGroup) > 0
+	return imageRef != nil && imageRef.IsValid()
 }
 
 // HasImageGallery returns true if the customer brought os image from Shared Image Gallery
 func (a *AgentPoolProfile) HasImageGallery() bool {
 	imageRef := a.ImageRef
-	return imageRef != nil && len(imageRef.SubscriptionID) > 0 && len(imageRef.Gallery) > 0 && len(imageRef.Version) > 0
+	return imageRef != nil && imageRef.IsGalleryImage()
 }
 
 // IsCustomVNET returns true if the customer brought their own VNET
@@ -1506,6 +1527,16 @@ func (w *WindowsProfile) HasSecrets() bool {
 // HasCustomImage returns true if there is a custom windows os image url specified
 func (w *WindowsProfile) HasCustomImage() bool {
 	return len(w.WindowsImageSourceURL) > 0
+}
+
+// HasImageRef returns true if the customer brought os image
+func (w *WindowsProfile) HasImageRef() bool {
+	return w.ImageRef != nil && w.ImageRef.IsValid()
+}
+
+// HasImageGallery returns true if the customer brought os image from Shared Image Gallery
+func (w *WindowsProfile) HasImageGallery() bool {
+	return w.ImageRef != nil && w.ImageRef.IsGalleryImage()
 }
 
 // GetWindowsDockerVersion gets the docker version specified or returns default value
@@ -1840,17 +1871,11 @@ func (p *Properties) IsNvidiaDevicePluginCapable() bool {
 // SetCloudProviderRateLimitDefaults sets default cloudprovider rate limiter config
 func (p *Properties) SetCloudProviderRateLimitDefaults() {
 	if p.OrchestratorProfile.KubernetesConfig.CloudProviderRateLimitBucket == 0 {
-		if p.HasVMSSAgentPool() && !p.IsHostedMasterProfile() {
-			var rateLimitBucket int
-			for _, profile := range p.AgentPoolProfiles {
-				if profile.AvailabilityProfile == VirtualMachineScaleSets {
-					rateLimitBucket += common.MaxAgentCount
-				}
-
-			}
-			p.OrchestratorProfile.KubernetesConfig.CloudProviderRateLimitBucket = rateLimitBucket
-		} else {
+		var agentPoolProfilesCount = len(p.AgentPoolProfiles)
+		if agentPoolProfilesCount == 0 {
 			p.OrchestratorProfile.KubernetesConfig.CloudProviderRateLimitBucket = DefaultKubernetesCloudProviderRateLimitBucket
+		} else {
+			p.OrchestratorProfile.KubernetesConfig.CloudProviderRateLimitBucket = agentPoolProfilesCount * common.MaxAgentCount
 		}
 	}
 	if p.OrchestratorProfile.KubernetesConfig.CloudProviderRateLimitQPS == 0 {
@@ -1861,17 +1886,11 @@ func (p *Properties) SetCloudProviderRateLimitDefaults() {
 		}
 	}
 	if p.OrchestratorProfile.KubernetesConfig.CloudProviderRateLimitBucketWrite == 0 {
-		if p.HasVMSSAgentPool() && !p.IsHostedMasterProfile() {
-			var rateLimitBucket int
-			for _, profile := range p.AgentPoolProfiles {
-				if profile.AvailabilityProfile == VirtualMachineScaleSets {
-					rateLimitBucket += common.MaxAgentCount
-				}
-
-			}
-			p.OrchestratorProfile.KubernetesConfig.CloudProviderRateLimitBucketWrite = rateLimitBucket
-		} else {
+		var agentPoolProfilesCount = len(p.AgentPoolProfiles)
+		if agentPoolProfilesCount == 0 {
 			p.OrchestratorProfile.KubernetesConfig.CloudProviderRateLimitBucketWrite = DefaultKubernetesCloudProviderRateLimitBucketWrite
+		} else {
+			p.OrchestratorProfile.KubernetesConfig.CloudProviderRateLimitBucketWrite = agentPoolProfilesCount * common.MaxAgentCount
 		}
 	}
 	if p.OrchestratorProfile.KubernetesConfig.CloudProviderRateLimitQPSWrite == 0 {
