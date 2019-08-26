@@ -2,7 +2,7 @@
 
 
 [[projects]]
-  digest = "1:d4bbfa66903e904a461451478acdf79b07347392ab126a02f2abdb617b02be04"
+  digest = "1:cdc96dab530491d9359868cdae49542bbd997d9e02517b826e6e5312db9233da"
   name = "github.com/Azure/azure-sdk-for-go"
   packages = [
     "services/apimanagement/mgmt/2017-03-01/apimanagement",
