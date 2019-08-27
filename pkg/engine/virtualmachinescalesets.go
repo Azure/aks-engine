@@ -813,7 +813,7 @@ func addCustomTagsToVMScaleSets(tags map[string]string, vm *compute.VirtualMachi
 	for key, value := range tags {
 		_, found := vm.Tags[key]
 		if !found {
-			vm.Tags[key] = &value
+			vm.Tags[key] = to.StringPtr(value)
 		}
 	}
 }
