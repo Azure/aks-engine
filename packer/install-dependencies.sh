@@ -2,7 +2,6 @@
 source /home/packer/provision_installs.sh
 source /home/packer/provision_source.sh
 source /home/packer/packer_source.sh
-source /home/packer/cis.sh
 
 RELEASE_NOTES_FILEPATH=/var/log/azure/golden-image-install.complete
 
@@ -432,9 +431,3 @@ echo "START_OF_NOTES"
 cat ${RELEASE_NOTES_FILEPATH}
 echo "END_OF_NOTES"
 set -x
-
-# Move logs from VHD creation out of /var/log
-sudo mv /var/log /var/log.vhd
-sudo mkdir /var/log
-
-applyCIS
