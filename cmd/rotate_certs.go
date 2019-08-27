@@ -91,6 +91,28 @@ func (rcc *rotateCertsCmd) run(cmd *cobra.Command, args []string) error {
 
 	var err error
 
+	// load the cluster configuration.
+	if _, err = os.Stat(rcc.apiModelPath); os.IsNotExist(err) {
+		return errors.Errorf("specified api model does not exist (%s)", rcc.apiModelPath)
+	}
+
+	rcc.locale, err = i18n.LoadTranslations()
+	if err != nil {
+		return errors.Wrap(err, "loading translation files")
+	}
+
+	log.Debugf("Loading container service")
+
+	apiloader := &api.Apiloader{
+		Translator: &i18n.Translator{
+			Locale: rcc.locale,
+		},
+	}
+	rcc.containerService, rcc.apiVersion, err = apiloader.LoadContainerServiceFromFile(rcc.apiModelPath, true, true, nil)
+	if err != nil {
+		return errors.Wrap(err, "parsing the api model")
+	}
+
 	if rcc.containerService.Properties.IsAzureStackCloud() {
 		writeCustomCloudProfile(rcc.containerService)
 		err = rcc.containerService.Properties.SetAzureStackCloudSpec()
@@ -112,28 +134,6 @@ func (rcc *rotateCertsCmd) run(cmd *cobra.Command, args []string) error {
 	_, err = rcc.client.EnsureResourceGroup(ctx, rcc.resourceGroupName, rcc.location, nil)
 	if err != nil {
 		return errors.Wrap(err, "ensuring resource group")
-	}
-
-	// load the cluster configuration.
-	if _, err = os.Stat(rcc.apiModelPath); os.IsNotExist(err) {
-		return errors.Errorf("specified api model does not exist (%s)", rcc.apiModelPath)
-	}
-
-	rcc.locale, err = i18n.LoadTranslations()
-	if err != nil {
-		return errors.Wrap(err, "loading translation files")
-	}
-
-	log.Debugf("Loading container service")
-
-	apiloader := &api.Apiloader{
-		Translator: &i18n.Translator{
-			Locale: rcc.locale,
-		},
-	}
-	rcc.containerService, rcc.apiVersion, err = apiloader.LoadContainerServiceFromFile(rcc.apiModelPath, true, true, nil)
-	if err != nil {
-		return errors.Wrap(err, "parsing the api model")
 	}
 
 	if rcc.outputDirectory == "" {
