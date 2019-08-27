@@ -278,11 +278,6 @@ cleanUpContainerImages() {
     docker rmi registry:2 &
 }
 
-cleanUpPackages() {
-    # TODO: remove once ACR is available on Azure Stack
-    apt-get purge -y apache2-utils
-}
-
 cleanUpGPUDrivers() {
     rm -Rf $GPU_DEST
     rm -f /etc/apt/sources.list.d/nvidia-docker.list
