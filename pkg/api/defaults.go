@@ -306,6 +306,12 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpgrade, isScale bool) {
 			}
 		}
 
+		if strings.ToLower(a.OrchestratorProfile.KubernetesConfig.LoadBalancerSku) == strings.ToLower(BasicLoadBalancerSku) {
+			a.OrchestratorProfile.KubernetesConfig.LoadBalancerSku = BasicLoadBalancerSku
+		} else if strings.ToLower(a.OrchestratorProfile.KubernetesConfig.LoadBalancerSku) == strings.ToLower(StandardLoadBalancerSku) {
+			a.OrchestratorProfile.KubernetesConfig.LoadBalancerSku = StandardLoadBalancerSku
+		}
+
 		if !a.HasAvailabilityZones() && a.OrchestratorProfile.KubernetesConfig.LoadBalancerSku == "" {
 			a.OrchestratorProfile.KubernetesConfig.LoadBalancerSku = DefaultLoadBalancerSku
 		}

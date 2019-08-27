@@ -16,8 +16,7 @@ import (
 
 // APIModelValue represents a value in the APIModel JSON file
 type APIModelValue struct {
-	stringValue   string
-	intValue      int64
+	value         interface{}
 	arrayValue    bool
 	arrayIndex    int
 	arrayProperty string
@@ -37,11 +36,13 @@ func MapValues(m map[string]APIModelValue, setFlagValues []string) {
 		kvpMap := parseKeyValuePairs(setFlagValue)
 		for key, keyValue := range kvpMap {
 			flagValue := APIModelValue{}
-			// try to parse the value as integer or fallback to string
+			// try to parse the value as integer, bool or fallback to string
 			if keyValueAsInteger, err := strconv.ParseInt(keyValue, 10, 64); err == nil {
-				flagValue.intValue = keyValueAsInteger
+				flagValue.value = keyValueAsInteger
+			} else if keyValueAsBool, err := strconv.ParseBool(keyValue); err == nil {
+				flagValue.value = keyValueAsBool
 			} else {
-				flagValue.stringValue = keyValue
+				flagValue.value = keyValue
 			}
 
 			// check if the key is an array property
@@ -89,29 +90,17 @@ func MergeValuesWithAPIModel(apiModelPath string, m map[string]APIModelValue) (s
 			arrayPath := fmt.Sprint("properties.", flagValue.arrayName)
 			arrayValue := jsonObj.Path(arrayPath)
 			if flagValue.arrayProperty != "" {
-				if flagValue.stringValue != "" {
-					arrayValue.Index(flagValue.arrayIndex).SetP(flagValue.stringValue, flagValue.arrayProperty)
-				} else {
-					arrayValue.Index(flagValue.arrayIndex).SetP(flagValue.intValue, flagValue.arrayProperty)
-				}
+				arrayValue.Index(flagValue.arrayIndex).SetP(flagValue.value, flagValue.arrayProperty)
 			} else {
 				count, _ := arrayValue.ArrayCount()
 				for i := count; i <= flagValue.arrayIndex; i++ {
 					jsonObj.ArrayAppendP(nil, arrayPath)
 				}
 				arrayValue = jsonObj.Path(arrayPath)
-				if flagValue.stringValue != "" {
-					arrayValue.SetIndex(flagValue.stringValue, flagValue.arrayIndex)
-				} else {
-					arrayValue.SetIndex(flagValue.intValue, flagValue.arrayIndex)
-				}
+				arrayValue.SetIndex(flagValue.value, flagValue.arrayIndex)
 			}
 		} else {
-			if flagValue.stringValue != "" {
-				jsonObj.SetP(flagValue.stringValue, fmt.Sprint("properties.", key))
-			} else {
-				jsonObj.SetP(flagValue.intValue, fmt.Sprint("properties.", key))
-			}
+			jsonObj.SetP(flagValue.value, fmt.Sprint("properties.", key))
 		}
 	}
 

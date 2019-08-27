@@ -297,7 +297,14 @@ func (cli *CLIProvisioner) waitForNodes() error {
 	if cli.Config.IsKubernetes() {
 		if !cli.IsPrivate() {
 			log.Println("Waiting on nodes to go into ready state...")
-			ready := node.WaitOnReady(cli.Engine.NodeCount(), 10*time.Second, cli.Config.Timeout)
+			var expectedReadyNodes int
+			if !cli.Engine.ExpandedDefinition.Properties.HasLowPriorityScaleset() {
+				expectedReadyNodes = cli.Engine.NodeCount()
+				log.Printf("Checking for %d Ready nodes\n", expectedReadyNodes)
+			} else {
+				expectedReadyNodes = -1
+			}
+			ready := node.WaitOnReady(expectedReadyNodes, 10*time.Second, cli.Config.Timeout)
 			cmd := exec.Command("k", "get", "nodes", "-o", "wide")
 			out, _ := cmd.CombinedOutput()
 			log.Printf("%s\n", out)

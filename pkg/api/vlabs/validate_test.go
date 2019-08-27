@@ -2044,7 +2044,7 @@ func TestProperties_ValidateZones(t *testing.T) {
 		{
 			name:                "all zones and basic loadbalancer",
 			orchestratorRelease: "1.12",
-			loadBalancerSku:     "Basic",
+			loadBalancerSku:     BasicLoadBalancerSku,
 			masterProfile: &MasterProfile{
 				Count:               5,
 				DNSPrefix:           "foo",
@@ -2108,6 +2108,112 @@ func TestProperties_ValidateZones(t *testing.T) {
 				}
 			} else {
 				t.Errorf("error should have occurred")
+			}
+		})
+	}
+}
+
+func TestProperties_ValidateLoadBalancer(t *testing.T) {
+	tests := []struct {
+		name                string
+		orchestratorRelease string
+		loadBalancerSku     string
+		masterProfile       *MasterProfile
+		agentProfiles       []*AgentPoolProfile
+		expectedErr         bool
+		expectedErrStr      string
+	}{
+		{
+			name:                "lowercase basic LB",
+			orchestratorRelease: "1.12",
+			loadBalancerSku:     "basic",
+			masterProfile: &MasterProfile{
+				Count:               3,
+				DNSPrefix:           "foo",
+				VMSize:              "Standard_DS2_v2",
+				AvailabilityProfile: VirtualMachineScaleSets,
+			},
+		},
+		{
+			name:                "Basic LB",
+			orchestratorRelease: "1.12",
+			loadBalancerSku:     BasicLoadBalancerSku,
+			masterProfile: &MasterProfile{
+				Count:               3,
+				DNSPrefix:           "foo",
+				VMSize:              "Standard_DS2_v2",
+				AvailabilityProfile: VirtualMachineScaleSets,
+			},
+		},
+		{
+			name:                "lowercase standard LB",
+			orchestratorRelease: "1.12",
+			loadBalancerSku:     "standard",
+			masterProfile: &MasterProfile{
+				Count:               3,
+				DNSPrefix:           "foo",
+				VMSize:              "Standard_DS2_v2",
+				AvailabilityProfile: VirtualMachineScaleSets,
+			},
+		},
+		{
+			name:                "Standard LB",
+			orchestratorRelease: "1.12",
+			loadBalancerSku:     StandardLoadBalancerSku,
+			masterProfile: &MasterProfile{
+				Count:               3,
+				DNSPrefix:           "foo",
+				VMSize:              "Standard_DS2_v2",
+				AvailabilityProfile: VirtualMachineScaleSets,
+			},
+		},
+		{
+			name:                "empty string LB value",
+			orchestratorRelease: "1.12",
+			loadBalancerSku:     "",
+			masterProfile: &MasterProfile{
+				Count:               3,
+				DNSPrefix:           "foo",
+				VMSize:              "Standard_DS2_v2",
+				AvailabilityProfile: VirtualMachineScaleSets,
+			},
+		},
+		{
+			name:                "invalid LB string value",
+			orchestratorRelease: "1.12",
+			loadBalancerSku:     "foo",
+			masterProfile: &MasterProfile{
+				Count:               3,
+				DNSPrefix:           "foo",
+				VMSize:              "Standard_DS2_v2",
+				AvailabilityProfile: VirtualMachineScaleSets,
+			},
+			expectedErr:    true,
+			expectedErrStr: fmt.Sprintf("Invalid value for loadBalancerSku, only %s and %s are supported", StandardLoadBalancerSku, BasicLoadBalancerSku),
+		},
+	}
+
+	for _, test := range tests {
+		test := test
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+			cs := getK8sDefaultContainerService(true)
+			cs.Properties.MasterProfile = test.masterProfile
+			cs.Properties.AgentPoolProfiles = test.agentProfiles
+			cs.Properties.OrchestratorProfile.OrchestratorRelease = test.orchestratorRelease
+			cs.Properties.OrchestratorProfile.KubernetesConfig = &KubernetesConfig{
+				LoadBalancerSku: test.loadBalancerSku,
+			}
+
+			err := cs.Validate(false)
+			if test.expectedErr {
+				if err == nil {
+					t.Errorf("error should have occurred")
+				} else {
+					if err.Error() != test.expectedErrStr {
+						t.Errorf("expected error with message : %s, but got : %s", test.expectedErrStr, err.Error())
+					}
+				}
 			}
 		})
 	}
