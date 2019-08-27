@@ -1,4 +1,24 @@
+# Required pipeline variables:
+# - AZURE_LOCATION - Azure region to create resources in
+# - AZURE_RESOURCE_GROUP_NAME - Resource group to create resources in
+# - BUILD_POOL - Azure DevOps build pool to use
+# - CLIENT_ID - Service principal ID
+# - CLIENT_SECRET - Service principal secret
+# - COPY_VHD - Set to 'True' if VHD should be copied to classic storage account in preperation for publishing
+# - DEIS_GO_DEV_IMAGE - Dev container image ID
+# - PACKER_VM_SIZE - VM Size to be used during packer build operation
+# - STORAGE_ACCT_BLOB_URL - Url to blob storage container used to copy image to in preperation for publishing
+# - STORAGE_ACCT_SAS_TOKEN - SAS token with permission to write to CLASSIC_BLOB container
+# - SUBSCRIPTION_ID - Subscription ID used by the pipeline
+# - TENANT_ID - Tenant Id used for service principal login
+
 trigger: none
+
+pr:
+  paths:
+    include:
+    - .pipelines/*
+    - packer/*
 
 jobs:
 - job: build_vhd_windows
@@ -6,7 +26,7 @@ jobs:
   strategy:
     maxParallel: 0
   pool:
-    name: Hosted Ubuntu 1604
+    name: $(BUILD_POOL)
   steps:
   - script: |
       docker run --rm \
@@ -17,7 +37,7 @@ jobs:
       -e TENANT_ID=${TENANT_ID} \
       -e AZURE_RESOURCE_GROUP_NAME=${AZURE_RESOURCE_GROUP_NAME} \
       -e AZURE_LOCATION=${AZURE_LOCATION} \
-      -e AZURE_VM_SIZE=${AZURE_VM_SIZE} \
+      -e AZURE_VM_SIZE=${PACKER_VM_SIZE} \
       -e GIT_VERSION=$(Build.SourceVersion) \
       -e BUILD_ID=$(Build.BuildId) \
       -e BUILD_NUMBER=$(Build.BuildNumber) \
@@ -27,3 +47,33 @@ jobs:
     inputs:
       artifactName: 'vhd-release-notes'
       targetPath: 'release-notes.txt'
+  - script: |
+      OS_DISK_SAS="$(cat packer-output | grep "OSDiskUriReadOnlySas:" | cut -d " " -f 2)" && \
+      VHD_NAME="$(echo $OS_DISK_SAS | cut -d "/" -f 8 | cut -d "?" -f 1)" && \
+      printf "COPY ME ----> ${CLASSIC_BLOB}/${VHD_NAME}?" | tee -a vhd-sas && \
+      docker run --rm \
+      -v ${PWD}:/go/src/github.com/Azure/aks-engine \
+      -w /go/src/github.com/Azure/aks-engine \
+      -e CLIENT_ID=${CLIENT_ID} \
+      -e CLIENT_SECRET="$(CLIENT_SECRET)" \
+      -e TENANT_ID=${TENANT_ID} \
+      -e CLASSIC_BLOB=${STORAGE_ACCT_BLOB_URL} \
+      -e CLASSIC_SAS_TOKEN="$(STORAGE_ACCT_SAS_TOKEN)" \
+      -e OS_DISK_SAS=${OS_DISK_SAS} \
+      -e VHD_NAME=${VHD_NAME} \
+      ${DEIS_GO_DEV_IMAGE} make az-copy
+    displayName: Copying resource to Classic Storage Account
+    condition: eq(variables.COPY_VHD, 'True')
+  - script: |
+      SA_NAME="$(cat packer-output | grep "storage name:" | cut -d " " -f 3)" && \
+      docker run --rm \
+      -v ${PWD}:/go/src/github.com/Azure/aks-engine \
+      -w /go/src/github.com/Azure/aks-engine \
+      -e CLIENT_ID=${CLIENT_ID} \
+      -e CLIENT_SECRET="$(CLIENT_SECRET)" \
+      -e TENANT_ID=${TENANT_ID} \
+      -e SA_NAME=${SA_NAME} \
+      -e AZURE_RESOURCE_GROUP_NAME=${AZURE_RESOURCE_GROUP_NAME} \
+      ${DEIS_GO_DEV_IMAGE} make delete-sa
+    displayName: Clean-up Storage Account
+    condition: always()
