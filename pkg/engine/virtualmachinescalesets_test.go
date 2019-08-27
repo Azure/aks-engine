@@ -857,7 +857,9 @@ func TestCreateVmScaleSetsWithCustomTags(t *testing.T) {
 	}
 
 	testTagsToAdd := map[string]string{
-		"myTestKey": "myTestValue",
+		"myTestKey1": "myTestValue1",
+		"myTestKey2": "myTestValue2",
+		"poolName":   "myName",
 	}
 
 	addCustomTagsToVMScaleSets(testTagsToAdd, &testVirtualMachineScaleSet)
@@ -866,7 +868,8 @@ func TestCreateVmScaleSetsWithCustomTags(t *testing.T) {
 		"orchestrator":     to.StringPtr("k8s"),
 		"aksEngineVersion": to.StringPtr("1.15"),
 		"poolName":         to.StringPtr("TestPool"),
-		"myTestKey":        to.StringPtr("myTestValue"),
+		"myTestKey1":       to.StringPtr("myTestValue1"),
+		"myTestKey2":       to.StringPtr("myTestValue2"),
 	}
 
 	diff := cmp.Diff(testVirtualMachineScaleSet.Tags, expectedTags)
