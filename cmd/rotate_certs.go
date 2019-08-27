@@ -91,6 +91,14 @@ func (rcc *rotateCertsCmd) run(cmd *cobra.Command, args []string) error {
 
 	var err error
 
+	if rcc.containerService.Properties.IsAzureStackCloud() {
+		writeCustomCloudProfile(rcc.containerService)
+		err = rcc.containerService.Properties.SetAzureStackCloudSpec()
+		if err != nil {
+			return errors.Wrap(err, "error parsing the api model")
+		}
+	}
+
 	if err = rcc.getAuthArgs().validateAuthArgs(); err != nil {
 		return errors.Wrap(err, "failed to get validate auth args")
 	}
