@@ -6,6 +6,7 @@ package cmd
 import (
 	"bytes"
 	"context"
+	"encoding/pem"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -94,21 +95,6 @@ func (rcc *rotateCertsCmd) run(cmd *cobra.Command, args []string) error {
 
 	var err error
 
-	if err = rcc.getAuthArgs().validateAuthArgs(); err != nil {
-		return errors.Wrap(err, "failed to get validate auth args")
-	}
-
-	if rcc.client, err = rcc.authProvider.getClient(); err != nil {
-		return errors.Wrap(err, "failed to get client")
-	}
-
-	ctx, cancel := context.WithTimeout(context.Background(), armhelpers.DefaultARMOperationTimeout)
-	defer cancel()
-	_, err = rcc.client.EnsureResourceGroup(ctx, rcc.resourceGroupName, rcc.location, nil)
-	if err != nil {
-		return errors.Wrap(err, "ensuring resource group")
-	}
-
 	// load the cluster configuration.
 	if _, err = os.Stat(rcc.apiModelPath); os.IsNotExist(err) {
 		return errors.Errorf("specified api model does not exist (%s)", rcc.apiModelPath)
@@ -131,6 +117,29 @@ func (rcc *rotateCertsCmd) run(cmd *cobra.Command, args []string) error {
 		return errors.Wrap(err, "parsing the api model")
 	}
 
+	if rcc.containerService.Properties.IsAzureStackCloud() {
+		writeCustomCloudProfile(rcc.containerService)
+		err = rcc.containerService.Properties.SetAzureStackCloudSpec(api.AzureStackCloudSpecParams{IsUpgrade: false, IsScale: false})
+		if err != nil {
+			return errors.Wrap(err, "error parsing the api model")
+		}
+	}
+
+	if err = rcc.getAuthArgs().validateAuthArgs(); err != nil {
+		return errors.Wrap(err, "failed to get validate auth args")
+	}
+
+	if rcc.client, err = rcc.authProvider.getClient(); err != nil {
+		return errors.Wrap(err, "failed to get client")
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), armhelpers.DefaultARMOperationTimeout)
+	defer cancel()
+	_, err = rcc.client.EnsureResourceGroup(ctx, rcc.resourceGroupName, rcc.location, nil)
+	if err != nil {
+		return errors.Wrap(err, "ensuring resource group")
+	}
+
 	if rcc.outputDirectory == "" {
 		if rcc.containerService.Properties.MasterProfile != nil {
 			rcc.outputDirectory = path.Join("_output", rcc.containerService.Properties.MasterProfile.DNSPrefix)
@@ -148,8 +157,22 @@ func (rcc *rotateCertsCmd) run(cmd *cobra.Command, args []string) error {
 
 	log.Infoln("Generating new certificates")
 
-	// reset the certificateProfile and use the exisiting certificate generation code to generate new certificates.
-	rcc.containerService.Properties.CertificateProfile = &api.CertificateProfile{}
+	// reset the certificateProfile and use the existing certificate generation code to generate new certificates.
+	ca := ""
+	caKey := ""
+
+	if err = validatePem(rcc.containerService.Properties.CertificateProfile.CaCertificate); err == nil {
+		ca = rcc.containerService.Properties.CertificateProfile.CaCertificate
+	}
+
+	if err = validatePem(rcc.containerService.Properties.CertificateProfile.CaPrivateKey); err == nil {
+		caKey = rcc.containerService.Properties.CertificateProfile.CaPrivateKey
+	}
+
+	rcc.containerService.Properties.CertificateProfile = &api.CertificateProfile{
+		CaCertificate: ca,
+		CaPrivateKey:  caKey,
+	}
 	certsGenerated, _, err := rcc.containerService.SetDefaultCerts(api.DefaultCertParams{
 		PkiKeySize: helpers.DefaultPkiKeySize,
 	})
@@ -161,6 +184,13 @@ func (rcc *rotateCertsCmd) run(cmd *cobra.Command, args []string) error {
 		return errors.Errorf("specified ssh filepath does not exist (%s)", rcc.sshFilepath)
 	}
 	rcc.setSSHConfig()
+
+	log.Infoln("Rotating etcd certificates")
+
+	err = rcc.rotateEtcd()
+	if err != nil {
+		return errors.Wrap(err, "rotating etcd cluster")
+	}
 
 	log.Infoln("Rotating apiserver certificate")
 
@@ -176,13 +206,6 @@ func (rcc *rotateCertsCmd) run(cmd *cobra.Command, args []string) error {
 		return errors.Wrap(err, "rotating kubelet")
 	}
 
-	log.Infoln("Rotating etcd certificates")
-
-	err = rcc.rotateEtcd(ctx)
-	if err != nil {
-		return errors.Wrap(err, "rotating etcd cluster")
-	}
-
 	log.Infoln("Updating kubeconfig")
 	err = rcc.updateKubeconfig()
 	if err != nil {
@@ -195,8 +218,8 @@ func (rcc *rotateCertsCmd) run(cmd *cobra.Command, args []string) error {
 		return errors.Wrap(err, "deleting service accounts")
 	}
 
-	log.Debugf("Deleting all pods")
-	err = rcc.deleteAllPods()
+	log.Debugf("Deleting system pods")
+	err = rcc.deleteKubeSystemPods()
 	if err != nil {
 		return errors.Wrap(err, "deleting all the pods")
 	}
@@ -284,20 +307,24 @@ func (rcc *rotateCertsCmd) rebootAllNodes(ctx context.Context) error {
 	return nil
 }
 
-func (rcc *rotateCertsCmd) deleteAllPods() error {
+func (rcc *rotateCertsCmd) deleteKubeSystemPods() error {
 	kubeClient, err := rcc.getKubeClient()
 	if err != nil {
 		return errors.Wrap(err, "failed to get Kubernetes Client")
 	}
-	pods, err := kubeClient.ListAllPods()
+	pods, err := kubeClient.ListAllSystemPods()
 	if err != nil {
 		return errors.Wrap(err, "failed to get pods")
 	}
+	requiredPods := []string{"kube-apiserver", "kube-controller-manager", "kube-scheduler", "metrics-server", "kubernetes-dashboard"}
 	for _, pod := range pods.Items {
-		log.Debugf("Deleting pod %s", pod.Name)
-		err = kubeClient.DeletePod(&pod)
-		if err != nil {
-			return errors.Wrap(err, "failed to delete pod "+pod.Name)
+		labels := pod.GetLabels()
+		if containsLabels(requiredPods, labels) {
+			log.Infof("Deleting pod ; %s", pod.Name)
+			err = kubeClient.DeletePod(&pod)
+			if err != nil {
+				return errors.Wrap(err, "failed to delete pod "+pod.Name)
+			}
 		}
 	}
 	return nil
@@ -359,7 +386,7 @@ func (rcc *rotateCertsCmd) getKubeClient() (armhelpers.KubernetesClient, error) 
 }
 
 // Rotate etcd CA and certificates in all of the master nodes.
-func (rcc *rotateCertsCmd) rotateEtcd(ctx context.Context) error {
+func (rcc *rotateCertsCmd) rotateEtcd() error {
 	caPrivateKeyCmd := "sudo bash -c \"cat > /etc/kubernetes/certs/ca.key << EOL \n" + rcc.containerService.Properties.CertificateProfile.CaPrivateKey + "EOL\""
 	caCertificateCmd := "sudo bash -c \"cat > /etc/kubernetes/certs/ca.crt << EOL \n" + rcc.containerService.Properties.CertificateProfile.CaCertificate + "EOL\""
 	etcdServerPrivateKeyCmd := "sudo bash -c \"cat > /etc/kubernetes/certs/etcdserver.key << EOL \n" + rcc.containerService.Properties.CertificateProfile.EtcdServerPrivateKey + "EOL\""
@@ -387,12 +414,6 @@ func (rcc *rotateCertsCmd) rotateEtcd(ctx context.Context) error {
 				return errors.Wrap(err, "failed replacing certificate file")
 			}
 		}
-	}
-
-	log.Infoln("Rebooting all nodes... This might take a few minutes")
-	err := rcc.rebootAllNodes(ctx)
-	if err != nil {
-		return errors.Wrap(err, "rebooting the nodes")
 	}
 
 	for _, host := range rcc.masterNodes {
@@ -449,6 +470,15 @@ func (rcc *rotateCertsCmd) rotateKubelet() error {
 				log.Printf("Command %s output: %s\n", cmd, out)
 				return errors.Wrap(err, "failed replacing certificate file")
 			}
+		}
+	}
+
+	for _, host := range rcc.masterNodes {
+		log.Debugf("Restarting kubelet on node %s", host.Name)
+		out, err := rcc.sshCommandExecuter("sudo systemctl restart kubelet", rcc.masterFQDN, host.Name, "22", rcc.sshConfig)
+		if err != nil {
+			log.Printf("Command `sudo systemctl restart kubelet` output: %s\n", out)
+			return errors.Wrap(err, "failed to restart kubelet")
 		}
 	}
 	return nil
@@ -512,4 +542,31 @@ func executeCmd(command, masterFQDN, hostname string, port string, config *ssh.C
 	}
 
 	return fmt.Sprintf("%s -> %s", hostname, stdoutBuf.String()), nil
+}
+
+func containsLabels(requiredlabels []string, podLabels map[string]string) bool {
+	for _, value := range podLabels {
+		if stringInSlice(value, requiredlabels) {
+			return true
+		}
+	}
+	return false
+}
+
+func stringInSlice(str string, list []string) bool {
+	for _, b := range list {
+		if b == str {
+			return true
+		}
+	}
+	return false
+}
+
+func validatePem(data string) error {
+	block, _ := pem.Decode([]byte(data))
+	if block == nil {
+		return errors.New("failed to parse PEM certificate")
+	}
+
+	return nil
 }

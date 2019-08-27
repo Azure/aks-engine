@@ -29,6 +29,7 @@ func TestCreateCertificateWithOrganisation(t *testing.T) {
 		extraFQDNs:    nil,
 		extraIPs:      nil,
 		organization:  nil,
+		dnsNames:      nil,
 		keySize:       DefaultPkiKeySize,
 	}
 	caCertificate, caPrivateKey, err = createCertificate(certParam)
@@ -56,6 +57,7 @@ func TestCreateCertificateWithOrganisation(t *testing.T) {
 		isServer:      false,
 		extraFQDNs:    nil,
 		extraIPs:      nil,
+		dnsNames:      nil,
 		organization:  organization,
 		keySize:       DefaultPkiKeySize,
 	}
@@ -89,6 +91,7 @@ func TestCreateCertificateWithoutOrganisation(t *testing.T) {
 		extraFQDNs:    nil,
 		extraIPs:      nil,
 		organization:  nil,
+		dnsNames:      nil,
 		keySize:       DefaultPkiKeySize,
 	}
 	caCertificate, caPrivateKey, err = createCertificate(certParam)
@@ -114,6 +117,7 @@ func TestCreateCertificateWithoutOrganisation(t *testing.T) {
 		extraFQDNs:    nil,
 		extraIPs:      nil,
 		organization:  nil,
+		dnsNames:      nil,
 		keySize:       DefaultPkiKeySize,
 	}
 	testCertificate, _, err = createCertificate(certParam)
@@ -140,6 +144,7 @@ func TestSubjectAltNameInCert(t *testing.T) {
 		extraFQDNs:    nil,
 		extraIPs:      nil,
 		organization:  nil,
+		dnsNames:      nil,
 		keySize:       DefaultPkiKeySize,
 	}
 	// Prepare CA and add it to certificate store.
@@ -303,5 +308,67 @@ func TestCreatePkiKeyCertPair(t *testing.T) {
 	_, err := CreatePkiKeyCertPair(params)
 	if err != nil {
 		t.Errorf("unexpected error thrown while executing CreatePkiKeyCertPair : %s", err.Error())
+	}
+}
+
+func TestCreateCertificateWithDNSName(t *testing.T) {
+	var err error
+	var caPair *PkiKeyCertPair
+
+	var (
+		caCertificate   *x509.Certificate
+		caPrivateKey    *rsa.PrivateKey
+		testCertificate *x509.Certificate
+	)
+	certParam := certParams{
+		commonName:    "ca",
+		caCertificate: nil,
+		caPrivateKey:  nil,
+		isEtcd:        false,
+		isServer:      false,
+		extraFQDNs:    nil,
+		extraIPs:      nil,
+		organization:  nil,
+		dnsNames:      nil,
+		keySize:       DefaultPkiKeySize,
+	}
+	caCertificate, caPrivateKey, err = createCertificate(certParam)
+	if err != nil {
+		t.Fatalf("failed to generate certificate: %s", err)
+	}
+	caPair = &PkiKeyCertPair{CertificatePem: string(certificateToPem(caCertificate.Raw)), PrivateKeyPem: string(privateKeyToPem(caPrivateKey))}
+
+	caCertificate, err = pemToCertificate(caPair.CertificatePem)
+	if err != nil {
+		t.Fatalf("failed to generate certificate: %s", err)
+	}
+	caPrivateKey, err = pemToKey(caPair.PrivateKeyPem)
+	if err != nil {
+		t.Fatalf("failed to generate certificate: %s", err)
+	}
+
+	dnsNames := make([]string, 1)
+	dnsNames[0] = "fakedns.net"
+	certParam = certParams{
+		commonName:    "client",
+		caCertificate: caCertificate,
+		caPrivateKey:  caPrivateKey,
+		isEtcd:        false,
+		isServer:      false,
+		extraFQDNs:    nil,
+		extraIPs:      nil,
+		dnsNames:      dnsNames,
+		organization:  nil,
+		keySize:       DefaultPkiKeySize,
+	}
+	testCertificate, _, err = createCertificate(certParam)
+	if err != nil {
+		t.Fatalf("failed to generate certificate: %s", err)
+	}
+
+	certificationDNSNames := testCertificate.DNSNames
+
+	if certificationDNSNames[0] != dnsNames[0] || len(certificationDNSNames) != len(dnsNames) {
+		t.Fatalf("certificate DNS names did not match")
 	}
 }

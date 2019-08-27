@@ -121,6 +121,7 @@ func CreatePki(pkiParams PkiParams) (*PkiKeyCertPair, *PkiKeyCertPair, *PkiKeyCe
 			extraIPs:      pkiParams.ExtraIPs,
 			organization:  nil,
 			keySize:       pkiParams.PkiKeySize,
+			dnsNames:      nil,
 		}
 		apiServerCertificate, apiServerPrivateKey, err = createCertificate(certPram)
 		return err
@@ -139,6 +140,7 @@ func CreatePki(pkiParams PkiParams) (*PkiKeyCertPair, *PkiKeyCertPair, *PkiKeyCe
 			extraIPs:      nil,
 			organization:  organization,
 			keySize:       pkiParams.PkiKeySize,
+			dnsNames:      nil,
 		}
 		clientCertificate, clientPrivateKey, err = createCertificate(certPram)
 		return err
@@ -158,6 +160,7 @@ func CreatePki(pkiParams PkiParams) (*PkiKeyCertPair, *PkiKeyCertPair, *PkiKeyCe
 			extraIPs:      nil,
 			organization:  organization,
 			keySize:       pkiParams.PkiKeySize,
+			dnsNames:      nil,
 		}
 
 		kubeConfigCertificate, kubeConfigPrivateKey, err = createCertificate(certPram)
@@ -175,6 +178,7 @@ func CreatePki(pkiParams PkiParams) (*PkiKeyCertPair, *PkiKeyCertPair, *PkiKeyCe
 			extraIPs:      pkiParams.ExtraIPs,
 			organization:  nil,
 			keySize:       pkiParams.PkiKeySize,
+			dnsNames:      []string{"kubernetes.default"},
 		}
 		etcdServerCertificate, etcdServerPrivateKey, err = createCertificate(certPram)
 		return err
@@ -191,6 +195,7 @@ func CreatePki(pkiParams PkiParams) (*PkiKeyCertPair, *PkiKeyCertPair, *PkiKeyCe
 			extraIPs:      pkiParams.ExtraIPs,
 			organization:  nil,
 			keySize:       pkiParams.PkiKeySize,
+			dnsNames:      []string{"kubernetes.default"},
 		}
 		etcdClientCertificate, etcdClientPrivateKey, err = createCertificate(certPram)
 		return err
@@ -210,6 +215,7 @@ func CreatePki(pkiParams PkiParams) (*PkiKeyCertPair, *PkiKeyCertPair, *PkiKeyCe
 				extraIPs:      pkiParams.ExtraIPs,
 				organization:  nil,
 				keySize:       pkiParams.PkiKeySize,
+				dnsNames:      []string{"kubernetes.default"},
 			}
 			etcdPeerCertificate, etcdPeerPrivateKey, err := createCertificate(certPram)
 			etcdPeerCertPairs[i] = &PkiKeyCertPair{CertificatePem: string(certificateToPem(etcdPeerCertificate.Raw)), PrivateKeyPem: string(privateKeyToPem(etcdPeerPrivateKey))}
@@ -240,6 +246,7 @@ type certParams struct {
 	extraIPs      []net.IP
 	organization  []string
 	keySize       int
+	dnsNames      []string
 }
 
 func createCertificate(options certParams) (*x509.Certificate, *rsa.PrivateKey, error) {
@@ -249,10 +256,17 @@ func createCertificate(options certParams) (*x509.Certificate, *rsa.PrivateKey, 
 
 	now := time.Now()
 
+	signatureAlgorithm := x509.SHA512WithRSA
+
+	if options.keySize < 4096 {
+		signatureAlgorithm = x509.SHA256WithRSA
+	}
+
 	template := x509.Certificate{
-		Subject:   pkix.Name{CommonName: options.commonName},
-		NotBefore: now,
-		NotAfter:  now.Add(ValidityDuration),
+		Subject:            pkix.Name{CommonName: options.commonName},
+		NotBefore:          now,
+		NotAfter:           now.Add(ValidityDuration),
+		SignatureAlgorithm: signatureAlgorithm,
 
 		KeyUsage:              x509.KeyUsageKeyEncipherment | x509.KeyUsageDigitalSignature,
 		BasicConstraintsValid: true,
@@ -260,6 +274,10 @@ func createCertificate(options certParams) (*x509.Certificate, *rsa.PrivateKey, 
 
 	if options.organization != nil {
 		template.Subject.Organization = options.organization
+	}
+
+	if options.dnsNames != nil {
+		template.DNSNames = options.dnsNames
 	}
 
 	if isCA {

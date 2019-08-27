@@ -192,6 +192,24 @@ else
   exit 0
 fi
 
+docker run --rm \
+    -v $(pwd):${WORK_DIR} \
+    -w ${WORK_DIR} \
+    -e RESOURCE_GROUP=$RESOURCE_GROUP \
+    -e REGION=$REGION \
+    ${DEV_IMAGE} \
+    ./bin/aks-engine rotate-certs \
+    --subscription-id ${AZURE_SUBSCRIPTION_ID} \
+    --api-model _output/$RESOURCE_GROUP/apimodel.json \
+    --apiserver "$RESOURCE_GROUP.$REGION.cloudapp.azure.com" \
+    --location $REGION \
+    --resource-group $RESOURCE_GROUP \
+    --auth-method client_secret \
+    --client-id ${AZURE_CLIENT_ID} \
+    --ssh _output/$RESOURCE_GROUP-ssh \
+    --output-directory _output/$RESOURCE_GROUP \
+    --client-secret ${AZURE_CLIENT_SECRET} || exit 1
+
 if [ -n "$ADD_NODE_POOL_INPUT" ]; then
   docker run --rm \
     -v $(pwd):${WORK_DIR} \

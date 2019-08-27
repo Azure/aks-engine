@@ -303,6 +303,17 @@ func (mkc *MockKubernetesClient) ListAllPods() (*v1.PodList, error) {
 	return &v1.PodList{}, nil
 }
 
+// ListAllSystemPods returns all Pods running in system namespace
+func (mkc *MockKubernetesClient) ListAllSystemPods() (*v1.PodList, error) {
+	if mkc.FailListPods {
+		return nil, errors.New("ListAllSystemPods failed")
+	}
+	if mkc.PodsList != nil {
+		return mkc.PodsList, nil
+	}
+	return &v1.PodList{}, nil
+}
+
 // ListNodes returns a list of Nodes registered in the api server
 func (mkc *MockKubernetesClient) ListNodes() (*v1.NodeList, error) {
 	if mkc.FailListNodes {

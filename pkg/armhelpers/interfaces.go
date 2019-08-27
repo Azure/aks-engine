@@ -237,6 +237,8 @@ type KubernetesClient interface {
 	ListPods(node *v1.Node) (*v1.PodList, error)
 	// ListPods returns all Pods running
 	ListAllPods() (*v1.PodList, error)
+	// ListAllSystemPods returns all Pods running in the system namespace
+	ListAllSystemPods() (*v1.PodList, error)
 	// ListNodes returns a list of Nodes registered in the api server.
 	ListNodes() (*v1.NodeList, error)
 	// ListServiceAccounts returns a list of Service Accounts in a namespace

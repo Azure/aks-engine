@@ -92,6 +92,50 @@ func TestRotateCertsCmdRun(t *testing.T) {
 	}
 }
 
+func TestRotateCertsCmdAzureStackRun(t *testing.T) {
+	t.Parallel()
+
+	tmpSSHFile, del := makeTmpFile(t, "_test_ssh")
+	defer del()
+
+	tmpOutputDir, del := makeTmpDir(t)
+	defer del()
+
+	rcc := &rotateCertsCmd{
+		client: &armhelpers.MockAKSEngineClient{},
+		authProvider: &mockAuthProvider{
+			authArgs:      &authArgs{},
+			getClientMock: &armhelpers.MockAKSEngineClient{},
+		},
+		apiModelPath:       "../pkg/engine/testdata/key-vault-certs/kubernetes-azurestack.json",
+		outputDirectory:    tmpOutputDir,
+		location:           "local",
+		sshFilepath:        tmpSSHFile,
+		sshCommandExecuter: mockExecuteCmd,
+		masterFQDN:         "valid",
+	}
+
+	r := &cobra.Command{}
+	f := r.Flags()
+	addAuthFlags(rcc.getAuthArgs(), f)
+	fakeRawSubscriptionID := "6dc93fae-9a76-421f-bbe5-cc6460ea81cb"
+	fakeSubscriptionID, err := uuid.Parse(fakeRawSubscriptionID)
+	fakeClientID := "b829b379-ca1f-4f1d-91a2-0d26b244680d"
+	fakeClientSecret := "0se43bie-3zs5-303e-aav5-dcf231vb82ds"
+	if err != nil {
+		t.Fatalf("Invalid SubscriptionId in Test: %s", err)
+	}
+
+	rcc.getAuthArgs().SubscriptionID = fakeSubscriptionID
+	rcc.getAuthArgs().rawSubscriptionID = fakeRawSubscriptionID
+	rcc.getAuthArgs().rawClientID = fakeClientID
+	rcc.getAuthArgs().ClientSecret = fakeClientSecret
+	err = rcc.run(r, []string{})
+	if err != nil {
+		t.Fatalf("Failed to run rotate-certs command: %s", err)
+	}
+}
+
 func TestGetClusterNodes(t *testing.T) {
 	t.Parallel()
 
@@ -101,7 +145,7 @@ func TestGetClusterNodes(t *testing.T) {
 	rcc := rotateCertsCmd{
 		authProvider:     &authArgs{},
 		client:           mockClient,
-		containerService: api.CreateMockContainerService("testcluster", "1.10.13", 3, 2, false),
+		containerService: api.CreateMockContainerService("testcluster", "1.15.10", 3, 2, false),
 	}
 	err := rcc.getClusterNodes()
 	g.Expect(err).To(HaveOccurred())
@@ -114,7 +158,7 @@ func TestGetClusterNodes(t *testing.T) {
 	g.Expect(len(rcc.agentNodes)).To(Equal(1))
 }
 
-func TestDeleteAllPods(t *testing.T) {
+func TestDeleteKubeSystemPods(t *testing.T) {
 	t.Parallel()
 
 	g := NewGomegaWithT(t)
@@ -123,9 +167,9 @@ func TestDeleteAllPods(t *testing.T) {
 	rcc := rotateCertsCmd{
 		authProvider:     &authArgs{},
 		client:           mockClient,
-		containerService: api.CreateMockContainerService("testcluster", "1.10.13", 3, 2, false),
+		containerService: api.CreateMockContainerService("testcluster", "1.15.10", 3, 2, false),
 	}
-	err := rcc.deleteAllPods()
+	err := rcc.deleteKubeSystemPods()
 	g.Expect(err).To(HaveOccurred())
 	g.Expect(err.Error()).To(ContainSubstring("failed to get pods"))
 
@@ -137,22 +181,37 @@ func TestDeleteAllPods(t *testing.T) {
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      common.KubeDNSAddonName,
 					Namespace: "kube-system",
+					Labels: map[string]string{
+						"component": "kube-apiserver",
+					},
 				},
 			},
 			{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "test-pod",
 					Namespace: "kube-system",
+					Labels: map[string]string{
+						"component": "kube-controller-manager",
+					},
+				},
+			},
+			{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "test-pod",
+					Namespace: "default",
+					Labels: map[string]string{
+						"component": "test-component",
+					},
 				},
 			},
 		},
 	}
-	err = rcc.deleteAllPods()
+	err = rcc.deleteKubeSystemPods()
 	g.Expect(err).To(HaveOccurred())
 	g.Expect(err.Error()).To(ContainSubstring("failed to delete pod"))
 
 	mockClient.MockKubernetesClient.FailDeletePod = false
-	err = rcc.deleteAllPods()
+	err = rcc.deleteKubeSystemPods()
 	g.Expect(err).NotTo(HaveOccurred())
 }
 
@@ -179,7 +238,7 @@ func TestRebootAllNodes(t *testing.T) {
 	rcc := rotateCertsCmd{
 		authProvider:      &authArgs{},
 		client:            mockClient,
-		containerService:  api.CreateMockContainerService("testcluster", "1.10.13", 3, 2, false),
+		containerService:  api.CreateMockContainerService("testcluster", "1.15.10", 3, 2, false),
 		resourceGroupName: "test-rg",
 	}
 	err := rcc.rebootAllNodes(ctx)
@@ -237,7 +296,7 @@ func TestDeleteServiceAccounts(t *testing.T) {
 	rcc := rotateCertsCmd{
 		authProvider:     &authArgs{},
 		client:           mockClient,
-		containerService: api.CreateMockContainerService("testcluster", "1.10.13", 3, 2, false),
+		containerService: api.CreateMockContainerService("testcluster", "1.15.10", 3, 2, false),
 	}
 	err := rcc.deleteServiceAccounts()
 	g.Expect(err).To(HaveOccurred())
@@ -283,7 +342,7 @@ func TestUpdateKubeconfig(t *testing.T) {
 	t.Parallel()
 
 	g := NewGomegaWithT(t)
-	cs := api.CreateMockContainerService("testcluster", "1.10.13", 3, 2, false)
+	cs := api.CreateMockContainerService("testcluster", "1.15.10", 3, 2, false)
 	_, err := cs.SetPropertiesDefaults(api.PropertiesDefaultsParams{
 		IsScale:    false,
 		IsUpgrade:  false,
@@ -321,9 +380,8 @@ func TestUpdateKubeconfig(t *testing.T) {
 func TestRotateCerts(t *testing.T) {
 	t.Parallel()
 
-	ctx := context.Background()
 	g := NewGomegaWithT(t)
-	cs := api.CreateMockContainerService("testcluster", "1.10.13", 3, 2, false)
+	cs := api.CreateMockContainerService("testcluster", "1.15.10", 3, 2, false)
 	_, err := cs.SetPropertiesDefaults(api.PropertiesDefaultsParams{
 		IsScale:    false,
 		IsUpgrade:  false,
@@ -374,7 +432,7 @@ func TestRotateCerts(t *testing.T) {
 		},
 	}
 
-	err = rcc.rotateEtcd(ctx)
+	err = rcc.rotateEtcd()
 	g.Expect(err).NotTo(HaveOccurred())
 
 	err = rcc.rotateApiserver()
@@ -384,7 +442,7 @@ func TestRotateCerts(t *testing.T) {
 	g.Expect(err).NotTo(HaveOccurred())
 
 	rcc.masterFQDN = "invalid"
-	err = rcc.rotateEtcd(ctx)
+	err = rcc.rotateEtcd()
 	g.Expect(err).To(HaveOccurred())
 
 	err = rcc.rotateApiserver()
@@ -413,4 +471,23 @@ func makeTmpDir(t *testing.T) (string, func()) {
 	return tmpDir, func() {
 		defer os.RemoveAll(tmpDir)
 	}
+}
+
+func TestContains(t *testing.T) {
+	t.Parallel()
+
+	g := NewGomegaWithT(t)
+	testLabels := map[string]string{
+		"test1": "label",
+		"test2": "label2",
+	}
+	array := []string{"label1", "label2"}
+	result := containsLabels(array, testLabels)
+	g.Expect(result).Should(BeTrue())
+
+	testLabels2 := map[string]string{
+		"test1": "label",
+	}
+	result = containsLabels(array, testLabels2)
+	g.Expect(result).ShouldNot(BeTrue())
 }

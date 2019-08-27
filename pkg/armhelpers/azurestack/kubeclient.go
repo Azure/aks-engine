@@ -56,6 +56,11 @@ func (c *KubernetesClientSetClient) ListAllPods() (*v1.PodList, error) {
 	return c.clientset.CoreV1().Pods(metav1.NamespaceAll).List(metav1.ListOptions{})
 }
 
+// ListAllSystemPods returns all Pods running in system namespace.
+func (c *KubernetesClientSetClient) ListAllSystemPods() (*v1.PodList, error) {
+	return c.clientset.CoreV1().Pods(metav1.NamespaceSystem).List(metav1.ListOptions{})
+}
+
 // ListNodes returns a list of Nodes registered in the api server.
 func (c *KubernetesClientSetClient) ListNodes() (*v1.NodeList, error) {
 	return c.clientset.CoreV1().Nodes().List(metav1.ListOptions{})
