@@ -23,10 +23,27 @@ stage ("discover tests") {
 			def jobCfg = readJSON(file: cfgFile.path)
 			k8sVersions.each { version ->
 				def jobName = cfgFile.path[cfgFile.path.indexOf("test_cluster_configs/") + 21..-6] // remove leader and trailing .json
-				tasks["${version}/${jobName}"] = {
+				jobName = "v${version}/${jobName}"
+				if(params.JOB_FOCUS_REGEX.trim() && !(jobName ==~ ~/${params.JOB_FOCUS_REGEX}/)){
+					// the job is focused, so only run jobs matching the regex
+					echo("This run is limited to jobs matching ${params.JOB_FOCUS_REGEX}; not running ${jobName}")
+					return // this is a continue and will not exit the entire iteration
+				}
+
+				def isAllowedVersion = jobCfg.options?.allowedOrchestratorVersions == null ? true : version in jobCfg.options.allowedOrchestratorVersions
+				if(!isAllowedVersion) {
+					// the job config has limited this job to not run for this verion of the orchestrator
+					echo("${jobName} is limited to ${jobCfg.options?.allowedOrchestratorVersions}; not running ${version}")
+					return // this is a continue and will not exit the entire iteration
+				}
+
+				tasks[jobName] = {
 					node {
-						stage("v${version}/${jobName}") {
-							checkout scm
+						stage(jobName) {
+							retry(5){
+								sh("sudo rm -rf ./bin ./_output ./_logs")
+								checkout scm
+							}
 
 							def jobSpecificEnv = (jobCfg.env == null) ? defaultEnv.clone() : defaultEnv + jobCfg.env
 							// set environment variables needed for the test script
@@ -50,9 +67,17 @@ stage ("discover tests") {
 									]
 
 								withCredentials(creds) {
-									sh "./test/e2e/cluster.sh"
+									echo "Running tests for: ${jobName}"
+									try {
+										sh "./test/e2e/cluster.sh"
+									} finally {
+										sh "./test/e2e/jenkins_reown.sh"
+									}
 								}
 							}
+
+							archiveArtifacts(artifacts: '_output/**/*', allowEmptyArchive: true)
+							archiveArtifacts(artifacts: '_logs/**/*', allowEmptyArchive: true)
 						}
 					}
 				}

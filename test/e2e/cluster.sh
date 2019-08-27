@@ -1,18 +1,22 @@
 #!/bin/bash
 
 set -x
+
+tmpDir=$(mktemp -d "$(pwd).XXXXXXXXXXXX")
+gopath="/go"
+workDir="${gopath}/src/github.com/Azure/aks-engine"
 # Assumes we're running from the git root of aks-engine
 docker run --rm \
--v $(pwd):/go/src/github.com/Azure/aks-engine \
--w /go/src/github.com/Azure/aks-engine \
-${DEV_IMAGE} make build-binary > /dev/null 2>&1 || exit 1
+-v $(pwd):${workDir} \
+-w ${workDir} \
+"${DEV_IMAGE}" make build-binary || exit 1
 
-cat > ./apimodel-input.json <<END
+cat > "${tmpDir}/apimodel-input.json" <<END
 ${API_MODEL_INPUT}
 END
 
 echo "Running E2E tests against a cluster built with the following API model:"
-echo ${API_MODEL_INPUT}
+echo "${API_MODEL_INPUT}"
 
 CLEANUP_AFTER_DEPLOYMENT=${CLEANUP_ON_EXIT}
 if [ "${UPGRADE_CLUSTER}" = "true" ]; then
@@ -48,32 +52,33 @@ else
 fi
 
 docker run --rm \
--v $(pwd):/go/src/github.com/Azure/aks-engine \
--w /go/src/github.com/Azure/aks-engine \
--e CLUSTER_DEFINITION=./apimodel-input.json \
--e CLIENT_ID=${CLIENT_ID} \
--e CLIENT_SECRET=${CLIENT_SECRET} \
--e CLIENT_OBJECTID=${CLIENT_OBJECTID} \
--e TENANT_ID=${TENANT_ID} \
--e SUBSCRIPTION_ID=$SUBSCRIPTION_ID \
+-v $(pwd):${workDir} \
+-v "${tmpDir}":"${workDir}/tmp" \
+-w ${workDir} \
+-e CLUSTER_DEFINITION=./tmp/apimodel-input.json \
+-e CLIENT_ID="${CLIENT_ID}" \
+-e CLIENT_SECRET="${CLIENT_SECRET}" \
+-e CLIENT_OBJECTID="${CLIENT_OBJECTID}" \
+-e TENANT_ID="${TENANT_ID}" \
+-e SUBSCRIPTION_ID="$SUBSCRIPTION_ID" \
 -e ORCHESTRATOR=kubernetes \
--e ORCHESTRATOR_RELEASE=${ORCHESTRATOR_RELEASE} \
--e CREATE_VNET=${CREATE_VNET} \
--e TIMEOUT=${E2E_TEST_TIMEOUT} \
+-e ORCHESTRATOR_RELEASE="${ORCHESTRATOR_RELEASE}" \
+-e CREATE_VNET="${CREATE_VNET}" \
+-e TIMEOUT="${E2E_TEST_TIMEOUT}" \
 -e CLEANUP_ON_EXIT=${CLEANUP_AFTER_DEPLOYMENT} \
--e SKIP_LOGS_COLLECTION=${SKIP_LOGS_COLLECTION} \
--e REGIONS=${REGIONS} \
--e WINDOWS_NODE_IMAGE_GALLERY=${WINDOWS_NODE_IMAGE_GALLERY} \
--e WINDOWS_NODE_IMAGE_NAME=${WINDOWS_NODE_IMAGE_NAME} \
--e WINDOWS_NODE_IMAGE_RESOURCE_GROUP=${WINDOWS_NODE_IMAGE_RESOURCE_GROUP} \
--e WINDOWS_NODE_IMAGE_SUBSCRIPTION_ID=${WINDOWS_NODE_IMAGE_SUBSCRIPTION_ID} \
--e WINDOWS_NODE_IMAGE_VERSION=${WINDOWS_NODE_IMAGE_VERSION} \
--e WINDOWS_NODE_VHD_URL=${WINDOWS_NODE_VHD_URL} \
--e IS_JENKINS=${IS_JENKINS} \
--e SKIP_TEST=${SKIP_TESTS} \
+-e SKIP_LOGS_COLLECTION="${SKIP_LOGS_COLLECTION}" \
+-e REGIONS="${REGIONS}" \
+-e WINDOWS_NODE_IMAGE_GALLERY="${WINDOWS_NODE_IMAGE_GALLERY}" \
+-e WINDOWS_NODE_IMAGE_NAME="${WINDOWS_NODE_IMAGE_NAME}" \
+-e WINDOWS_NODE_IMAGE_RESOURCE_GROUP="${WINDOWS_NODE_IMAGE_RESOURCE_GROUP}" \
+-e WINDOWS_NODE_IMAGE_SUBSCRIPTION_ID="${WINDOWS_NODE_IMAGE_SUBSCRIPTION_ID}" \
+-e WINDOWS_NODE_IMAGE_VERSION="${WINDOWS_NODE_IMAGE_VERSION}" \
+-e WINDOWS_NODE_VHD_URL="${WINDOWS_NODE_VHD_URL}" \
+-e IS_JENKINS="${IS_JENKINS}" \
+-e SKIP_TEST="${SKIP_TESTS}" \
 -e GINKGO_FOCUS="${GINKGO_FOCUS}" \
 -e GINKGO_SKIP="${GINKGO_SKIP}" \
-${DEV_IMAGE} make test-kubernetes || exit 1
+"${DEV_IMAGE}" make test-kubernetes || exit 1
 
 if [ "${UPGRADE_CLUSTER}" = "true" ] || [ "${SCALE_CLUSTER}" = "true" ]; then
   RESOURCE_GROUP=$(ls -dt1 _output/* | head -n 1 | cut -d/ -f2)
@@ -93,18 +98,19 @@ if [ "${UPGRADE_CLUSTER}" = "true" ] || [ "${SCALE_CLUSTER}" = "true" ]; then
   git checkout -b $UPGRADE_FORK/$UPGRADE_BRANCH --track $UPGRADE_FORK/$UPGRADE_BRANCH
   git pull
   docker run --rm \
-    -v $(pwd):/go/src/github.com/Azure/aks-engine \
-    -w /go/src/github.com/Azure/aks-engine \
-    ${DEV_IMAGE} make build-binary > /dev/null 2>&1 || exit 1
+    -v $(pwd):${workDir} \
+    -w ${workDir} \
+    "${DEV_IMAGE}" make build-binary > /dev/null 2>&1 || exit 1
 else
   exit 0
 fi
 
 if [ "${SCALE_CLUSTER}" = "true" ]; then
-  for nodepool in $(echo ${API_MODEL_INPUT} | jq -r '.properties.agentPoolProfiles[].name'); do
+  for nodepool in $(echo "${API_MODEL_INPUT}" | jq -r '.properties.agentPoolProfiles[].name'); do
     docker run --rm \
-      -v $(pwd):/go/src/github.com/Azure/aks-engine \
-      -w /go/src/github.com/Azure/aks-engine \
+      -v $(pwd):${workDir} \
+      -v "${tmpDir}": "${workDir}/tmp" \
+      -w ${workDir} \
       -e RESOURCE_GROUP=$RESOURCE_GROUP \
       -e REGION=$REGION \
       ${DEV_IMAGE} \
@@ -122,8 +128,8 @@ if [ "${SCALE_CLUSTER}" = "true" ]; then
   done
 
   docker run --rm \
-    -v $(pwd):/go/src/github.com/Azure/aks-engine \
-    -w /go/src/github.com/Azure/aks-engine \
+    -v $(pwd):${workDir} \
+    -w ${workDir} \
     -e CLIENT_ID=${CLIENT_ID} \
     -e CLIENT_SECRET=${CLIENT_SECRET} \
     -e CLIENT_OBJECTID=${CLIENT_OBJECTID} \
@@ -145,8 +151,8 @@ fi
 if [ "${UPGRADE_CLUSTER}" = "true" ]; then
   for ver_target in $UPGRADE_VERSIONS; do
     docker run --rm \
-      -v $(pwd):/go/src/github.com/Azure/aks-engine \
-      -w /go/src/github.com/Azure/aks-engine \
+      -v $(pwd):${workDir} \
+      -w ${workDir} \
       -e RESOURCE_GROUP=$RESOURCE_GROUP \
       -e REGION=$REGION \
       ${DEV_IMAGE} \
@@ -162,8 +168,8 @@ if [ "${UPGRADE_CLUSTER}" = "true" ]; then
       --client-secret ${CLIENT_SECRET} || exit 1
 
     docker run --rm \
-      -v $(pwd):/go/src/github.com/Azure/aks-engine \
-      -w /go/src/github.com/Azure/aks-engine \
+      -v $(pwd):${workDir} \
+      -w ${workDir} \
       -e CLIENT_ID=${CLIENT_ID} \
       -e CLIENT_SECRET=${CLIENT_SECRET} \
       -e CLIENT_OBJECTID=${CLIENT_OBJECTID} \
@@ -186,8 +192,8 @@ fi
 if [ "${SCALE_CLUSTER}" = "true" ]; then
   for nodepool in $(echo ${API_MODEL_INPUT} | jq -r '.properties.agentPoolProfiles[].name'); do
     docker run --rm \
-    -v $(pwd):/go/src/github.com/Azure/aks-engine \
-    -w /go/src/github.com/Azure/aks-engine \
+    -v $(pwd):${workDir} \
+    -w ${workDir} \
     -e RESOURCE_GROUP=$RESOURCE_GROUP \
     -e REGION=$REGION \
     ${DEV_IMAGE} \
@@ -205,8 +211,8 @@ if [ "${SCALE_CLUSTER}" = "true" ]; then
   done
 
   docker run --rm \
-    -v $(pwd):/go/src/github.com/Azure/aks-engine \
-    -w /go/src/github.com/Azure/aks-engine \
+    -v $(pwd):${workDir} \
+    -w ${workDir} \
     -e CLIENT_ID=${CLIENT_ID} \
     -e CLIENT_SECRET=${CLIENT_SECRET} \
     -e CLIENT_OBJECTID=${CLIENT_OBJECTID} \
