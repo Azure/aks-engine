@@ -13054,6 +13054,7 @@ ERR_APT_DAILY_TIMEOUT=98 # Timeout waiting for apt daily updates
 ERR_APT_UPDATE_TIMEOUT=99 # Timeout waiting for apt-get update to complete
 ERR_CSE_PROVISION_SCRIPT_NOT_READY_TIMEOUT=100 # Timeout waiting for cloud-init to place this (!) script on the vm
 ERR_APT_DIST_UPGRADE_TIMEOUT=101 # Timeout waiting for apt-get dist-upgrade to complete
+ERR_APT_PURGE_FAIL=102 # Error purging distro packages
 ERR_SYSCTL_RELOAD=103 # Error reloading sysctl config
 ERR_CIS_ASSIGN_ROOT_PW=111 # Error assigning root password in CIS enforcement
 ERR_CIS_ASSIGN_FILE_PERMISSION=112 # Error assigning permission to a file in CIS enforcement
@@ -13190,6 +13191,22 @@ apt_get_install() {
         fi
     done
     echo Executed apt-get install --no-install-recommends -y \"$@\" $i times;
+    wait_for_apt_locks
+}
+apt_get_purge() {
+    retries=$1; wait_sleep=$2; timeout=$3; shift && shift && shift
+    for i in $(seq 1 $retries); do
+        wait_for_apt_locks
+        export DEBIAN_FRONTEND=noninteractive
+        dpkg --configure -a --force-confdef
+        apt-get purge -o Dpkg::Options::="--force-confold" -y ${@} && break || \
+        if [ $i -eq $retries ]; then
+            return 1
+        else
+            sleep $wait_sleep
+        fi
+    done
+    echo Executed apt-get purge -y \"$@\" $i times;
     wait_for_apt_locks
 }
 apt_get_dist_upgrade() {
@@ -13548,11 +13565,6 @@ cleanUpContainerImages() {
     docker rmi registry:2 &
 }
 
-cleanUpPackages() {
-    # TODO: remove once ACR is available on Azure Stack
-    apt-get purge -y apache2-utils
-}
-
 cleanUpGPUDrivers() {
     rm -Rf $GPU_DEST
     rm -f /etc/apt/sources.list.d/nvidia-docker.list
@@ -13788,7 +13800,10 @@ if ! $FULL_INSTALL_REQUIRED; then
   cleanUpContainerImages
 fi
 
-cleanUpPackages
+# TODO: remove once ACR is available on Azure Stack
+if [ "$IS_HOSTED_MASTER" = "true" ]; then
+    apt_get_purge 20 30 120 apache2-utils || exit $ERR_APT_PURGE_FAIL
+fi
 
 if $REBOOTREQUIRED; then
   echo 'reboot required, rebooting node in 1 minute'
