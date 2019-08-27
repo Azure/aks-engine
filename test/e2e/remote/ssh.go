@@ -18,7 +18,7 @@ import (
 )
 
 const (
-	sshRetries = 3
+	sshRetries = 20
 	scriptsDir = "scripts"
 )
 

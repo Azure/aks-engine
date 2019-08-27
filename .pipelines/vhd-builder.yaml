@@ -71,6 +71,7 @@ phases:
       -e AZURE_RESOURCE_GROUP_NAME=${AZURE_RESOURCE_GROUP_NAME} \
       ${CONTAINER_IMAGE} make delete-sa
     displayName: Clean-up Storage Account
+    condition: always()
   - script: |
       docker run --rm \
       -v ${PWD}:/go/src/github.com/Azure/aks-engine \
