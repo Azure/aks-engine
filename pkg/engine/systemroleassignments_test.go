@@ -20,17 +20,20 @@ func TestCreateVmasRoleAssignment(t *testing.T) {
 	expected := SystemRoleAssignmentARM{
 		ARMResource: ARMResource{
 			APIVersion: "[variables('apiVersionAuthorizationSystem')]",
+			DependsOn: []string{
+				"[concat('Microsoft.Compute/virtualMachines/', variables('masterVMNamePrefix'), copyIndex(variables('masterOffset')))]",
+			},
 			Copy: map[string]string{
 				"count": "[variables('masterCount')]",
 				"name":  "vmLoopNode",
 			},
 		},
 		RoleAssignment: authorization.RoleAssignment{
-			Name: to.StringPtr("[guid(concat('Microsoft.Compute/virtualMachines/', variables('masterVMNamePrefix'), copyIndex(), 'vmidentity'))]"),
+			Name: to.StringPtr("[guid(concat('Microsoft.Compute/virtualMachines/', variables('masterVMNamePrefix'), copyIndex(variables('masterOffset')), 'vmidentity'))]"),
 			Type: to.StringPtr("Microsoft.Authorization/roleAssignments"),
 			RoleAssignmentPropertiesWithScope: &authorization.RoleAssignmentPropertiesWithScope{
 				RoleDefinitionID: to.StringPtr("[variables('contributorRoleDefinitionId')]"),
-				PrincipalID:      to.StringPtr("[reference(concat('Microsoft.Compute/virtualMachines/', variables('masterVMNamePrefix'), copyIndex()), '2017-03-30', 'Full').identity.principalId]"),
+				PrincipalID:      to.StringPtr("[reference(concat('Microsoft.Compute/virtualMachines/', variables('masterVMNamePrefix'), copyIndex(variables('masterOffset'))), '2017-03-30', 'Full').identity.principalId]"),
 			},
 		},
 	}

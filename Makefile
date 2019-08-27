@@ -3,7 +3,7 @@ DIST_DIRS         = find * -type d -exec
 
 .NOTPARALLEL:
 
-.PHONY: bootstrap build test test_fmt validate-copyright-headers fmt lint ci devenv
+.PHONY: bootstrap build test test_fmt validate-copyright-headers fmt lint ci
 
 ifdef DEBUG
 GOFLAGS   := -gcflags="-N -l"
@@ -187,9 +187,6 @@ ci: bootstrap test-style build test lint
 .PHONY: coverage
 coverage:
 	@scripts/ginkgo.coverage.sh --codecov
-
-devenv:
-	./scripts/devenv.sh
 
 include versioning.mk
 include test.mk
