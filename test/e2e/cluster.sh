@@ -62,7 +62,7 @@ docker run --rm \
 -e TIMEOUT=${E2E_TEST_TIMEOUT} \
 -e CLEANUP_ON_EXIT=${CLEANUP_AFTER_DEPLOYMENT} \
 -e SKIP_LOGS_COLLECTION=${SKIP_LOGS_COLLECTION} \
--e REGIONS=${REGIONS} \
+-e REGIONS=${DEPLOY_REGIONS} \
 -e WINDOWS_NODE_IMAGE_GALLERY=${WINDOWS_NODE_IMAGE_GALLERY} \
 -e WINDOWS_NODE_IMAGE_NAME=${WINDOWS_NODE_IMAGE_NAME} \
 -e WINDOWS_NODE_IMAGE_RESOURCE_GROUP=${WINDOWS_NODE_IMAGE_RESOURCE_GROUP} \
@@ -76,7 +76,9 @@ docker run --rm \
 ${DEV_IMAGE} make test-kubernetes || exit 1
 
 if [ "${UPGRADE_CLUSTER}" = "true" ] || [ "${SCALE_CLUSTER}" = "true" ]; then
+  # shellcheck disable=SC2012
   RESOURCE_GROUP=$(ls -dt1 _output/* | head -n 1 | cut -d/ -f2)
+  # shellcheck disable=SC2012
   REGION=$(ls -dt1 _output/* | head -n 1 | cut -d/ -f2 | cut -d- -f2)
   if [ $(( RANDOM % 4 )) -eq 3 ]; then
     echo Removing bookkeeping tags from VMs in resource group $RESOURCE_GROUP ...
