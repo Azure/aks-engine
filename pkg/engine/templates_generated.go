@@ -8283,7 +8283,28 @@ func k8sAddons116KubernetesmasteraddonsKubeDnsDeploymentYaml() (*asset, error) {
 	return a, nil
 }
 
-var _k8sAddons116KubernetesmasteraddonsKubeProxyDaemonsetYaml = []byte(`apiVersion: apps/v1
+var _k8sAddons116KubernetesmasteraddonsKubeProxyDaemonsetYaml = []byte(`---
+apiVersion: v1
+kind: ConfigMap
+data:
+  config.yaml: |
+    apiVersion: kubeproxy.config.k8s.io/v1alpha1
+    kind: KubeProxyConfiguration
+    clientConnection:
+      kubeconfig: /var/lib/kubelet/kubeconfig
+    clusterCIDR: "<CIDR>"
+    mode: "<kubeProxyMode>"
+metadata:
+  name: kube-proxy-config
+  namespace: kube-system
+  labels:
+    addonmanager.kubernetes.io/mode: Reconcile
+    kubernetes.io/cluster-service: "true"
+    component: kube-proxy
+    tier: node
+    k8s-app: kube-proxy
+---
+apiVersion: apps/v1
 kind: DaemonSet
 metadata:
   labels:
@@ -8329,9 +8350,7 @@ spec:
       - command:
         - /hyperkube
         - kube-proxy
-        - --kubeconfig=/var/lib/kubelet/kubeconfig
-        - --cluster-cidr=<CIDR>
-        - --proxy-mode=<kubeProxyMode>
+        - --config=/var/lib/kube-proxy/config.yaml
         image: <img>
         imagePullPolicy: IfNotPresent
         name: kube-proxy
@@ -8355,6 +8374,10 @@ spec:
         - mountPath: /lib/modules/
           name: kernelmodules
           readOnly: true
+        - mountPath: /var/lib/kube-proxy/config.yaml
+          subPath: config.yaml
+          name: kube-proxy-config-volume
+          readOnly: true
       hostNetwork: true
       volumes:
       - hostPath:
@@ -8372,6 +8395,9 @@ spec:
       - hostPath:
           path: /lib/modules/
         name: kernelmodules
+      - configMap:
+          name: kube-proxy-config
+        name: kube-proxy-config-volume
       nodeSelector:
         beta.kubernetes.io/os: linux
 `)
