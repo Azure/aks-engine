@@ -197,6 +197,8 @@ if ! $FULL_INSTALL_REQUIRED; then
   cleanUpContainerImages
 fi
 
+cleanUpPackages
+
 if $REBOOTREQUIRED; then
   echo 'reboot required, rebooting node in 1 minute'
   /bin/bash -c "shutdown -r 1 &"
