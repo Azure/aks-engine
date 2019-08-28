@@ -43,10 +43,39 @@ jobs:
       -e BUILD_NUMBER=$(Build.BuildNumber) \
       ${DEIS_GO_DEV_IMAGE} make run-packer-windows
     displayName: Building windows VHD
-  - task: PublishPipelineArtifact@0
+  - task: PublishPipelineArtifact@1
     inputs:
-      artifactName: 'vhd-release-notes'
-      targetPath: 'release-notes.txt'
+      artifact: 'vhd-release-notes'
+      path: 'release-notes.txt'
+  - script: |
+      docker run --rm \
+      -v ${PWD}:/go/src/github.com/Azure/aks-engine \
+      -w /go/src/github.com/Azure/aks-engine \
+      ${DEIS_GO_DEV_IMAGE} make bootstrap
+    displayName: build aks-engine-test - bootstrap
+  - script: |
+      docker run --rm \
+      -v ${PWD}:/go/src/github.com/Azure/aks-engine \
+      -w /go/src/github.com/Azure/aks-engine \
+      ${DEIS_GO_DEV_IMAGE} make all
+    displayName: build aks-engine-test - make all
+  - script: |
+      OS_DISK_URI="$(cat packer-output | grep "OSDiskUri:" | cut -d " " -f 2)" && \
+      IMAGE_NAME="$(echo $OS_DISK_URI | cut -d "/" -f 3 | cut -d "." -f 1)" && \
+      docker run --rm \
+      -v ${PWD}:/go/src/github.com/Azure/aks-engine \
+      -w /go/src/github.com/Azure/aks-engine \
+      -e CLEANUP_ON_EXIT="true" \
+      -e CLIENT_ID=${CLIENT_ID} \
+      -e CLIENT_SECRET="$(CLIENT_SECRET)" \
+      -e CLUSTER_DEFINITION="examples/e2e-tests/kubernetes/windows/hybrid/definition.json" \
+      -e LOCATION=${AZURE_LOCATION} \
+      -e ORCHESTRATOR_RELEASE="1.15" \
+      -e SUBSCRIPTION_ID=${SUBSCRIPTION_ID} \
+      -e TENANT_ID=${TENANT_ID} \
+      -e WINDOWS_NODE_VHD_URL=${OS_DISK_URI} \
+      ${DEIS_GO_DEV_IMAGE} make test-kubernetes
+    displayName: run e2e tests
   - script: |
       OS_DISK_SAS="$(cat packer-output | grep "OSDiskUriReadOnlySas:" | cut -d " " -f 2)" && \
       VHD_NAME="$(echo $OS_DISK_SAS | cut -d "/" -f 8 | cut -d "?" -f 1)" && \
@@ -75,5 +104,9 @@ jobs:
       -e SA_NAME=${SA_NAME} \
       -e AZURE_RESOURCE_GROUP_NAME=${AZURE_RESOURCE_GROUP_NAME} \
       ${DEIS_GO_DEV_IMAGE} make delete-sa
-    displayName: Clean-up Storage Account
+    displayName: cleanup - deleate storage account
+    condition: always()
+  - script: |
+      sudo chown -R $USER:$USER .
+    displayName: clueanup - chown all files in work directory 
     condition: always()
