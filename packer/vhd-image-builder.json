@@ -197,7 +197,7 @@
                 "sudo FEATURE_FLAGS={{user `feature_flags`}} BUILD_NUMBER={{user `build_number`}} BUILD_ID={{user `build_id`}} COMMIT={{user `commit`}} /bin/bash -ux /home/packer/install-dependencies.sh",
                 "sudo /bin/bash -eux /home/packer/cis.sh",
                 "sudo /bin/bash -eux /home/packer/cleanup-vhd.sh",
-                "sudo -u packer /usr/sbin/waagent -force -deprovision+user && export HISTSIZE=0 && sync || exit 125"
+                "sudo /usr/sbin/waagent -force -deprovision+user && export HISTSIZE=0 && sync || exit 125"
             ]
         }
     ]
