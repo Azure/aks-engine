@@ -123,14 +123,6 @@ data:
       log_level debug
      </source>
 
-     #Kubernetes health
-     <source>
-      type kubehealth
-      tag oms.api.KubeHealth.ReplicaSet
-      run_interval 60s
-      log_level debug
-     </source>
-
      #cadvisor perf- Windows nodes
      <source>
       type wincadvisorperf
@@ -138,11 +130,6 @@ data:
       run_interval 60s
       log_level debug
      </source>
-
-     #health model aggregation filter
-     <filter oms.api.KubeHealth**>
-      type filter_health_model_builder
-     </filter>
 
      <filter mdm.kubepodinventory** mdm.kubenodeinventory**>
       type filter_inventory2mdm
@@ -321,18 +308,6 @@ data:
       retry_limit 10
       retry_wait 30s
      </match>
-
-     <match oms.api.KubeHealth.AgentCollectionTime**>
-      type out_oms_api
-      log_level debug
-      buffer_chunk_limit 10m
-      buffer_type file
-      buffer_path %STATE_DIR_WS%/out_oms_api_kubehealth*.buffer
-      buffer_queue_limit 10
-      flush_interval 20s
-      retry_limit 10
-      retry_wait 30s
-     </match
 metadata:
   name: omsagent-rs-config
   namespace: kube-system
