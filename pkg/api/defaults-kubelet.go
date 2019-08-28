@@ -94,7 +94,7 @@ func (cs *ContainerService) setKubeletConfig(isUpgrade bool) {
 		"--pod-max-pids":                      strconv.Itoa(DefaultKubeletPodMaxPIDs),
 		"--image-pull-progress-deadline":      "30m",
 		"--enforce-node-allocatable":          "pods",
-		"--streaming-connection-idle-timeout": "5m",
+		"--streaming-connection-idle-timeout": "4h",
 	}
 
 	// Set --non-masquerade-cidr if ip-masq-agent is disabled on AKS
