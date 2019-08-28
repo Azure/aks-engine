@@ -95,6 +95,14 @@
   version = "v1.1.0"
 
 [[projects]]
+  digest = "1:4304cca260ab815326ca42d9c28fb843342748267034c51963e13f5e54e727d1"
+  name = "github.com/evanphx/json-patch"
+  packages = ["."]
+  pruneopts = "NUT"
+  revision = "026c730a0dcc5d11f93f1cf1cc65b01247ea7b6f"
+  version = "v4.5.0"
+
+[[projects]]
   digest = "1:aa3ed0a71c4e66e4ae6486bf97a3f4cab28edc78df2e50c5ad01dc7d91604b88"
   name = "github.com/fatih/structs"
   packages = ["."]
@@ -223,6 +231,17 @@
   ]
   pruneopts = "NUT"
   revision = "3befbb6ad0cc97d4c25d851e9528915809e1a22f"
+
+[[projects]]
+  digest = "1:ed860d2b2c1d066d36a89c982eefc7d019badd534f60e87ab65d3d94f0797ef0"
+  name = "github.com/hashicorp/golang-lru"
+  packages = [
+    ".",
+    "simplelru",
+  ]
+  pruneopts = "NUT"
+  revision = "7f827b33c0f158ec5dfbba01bb0b14a4541fd81d"
+  version = "v0.5.3"
 
 [[projects]]
   digest = "1:41933d387bfa3eaa6a82647914ed7044f7b8355764c24fb920892bc8c03ef0c3"
@@ -707,13 +726,14 @@
   version = "kubernetes-1.13.6"
 
 [[projects]]
-  digest = "1:8bf6767a6cfe5bbc5957fae9333e41c41cba356eab8a9db3f44fb59a6b8a011c"
+  digest = "1:6527c7aedbb0b3c3243265ce7f52d185ab1855e94f0e402ca5189c3577623f0a"
   name = "k8s.io/apimachinery"
   packages = [
     "pkg/api/equality",
     "pkg/api/errors",
     "pkg/api/meta",
     "pkg/api/resource",
+    "pkg/apis/meta/internalversion",
     "pkg/apis/meta/v1",
     "pkg/apis/meta/v1/unstructured",
     "pkg/apis/meta/v1beta1",
@@ -731,7 +751,9 @@
     "pkg/runtime/serializer/versioning",
     "pkg/selection",
     "pkg/types",
+    "pkg/util/cache",
     "pkg/util/clock",
+    "pkg/util/diff",
     "pkg/util/errors",
     "pkg/util/framer",
     "pkg/util/intstr",
@@ -753,7 +775,7 @@
   version = "kubernetes-1.13.6"
 
 [[projects]]
-  digest = "1:25774373f1a1276442f121c48fb43b07e3291cd0031c45b618f14fd54b04490d"
+  digest = "1:84d20d8d131f7f1e201c2635c4d3857b9d175d53b9d94aa89fc9bc74b4980dc0"
   name = "k8s.io/client-go"
   packages = [
     "discovery",
@@ -800,18 +822,23 @@
     "rest",
     "rest/watch",
     "tools/auth",
+    "tools/cache",
     "tools/clientcmd",
     "tools/clientcmd/api",
     "tools/clientcmd/api/latest",
     "tools/clientcmd/api/v1",
     "tools/metrics",
+    "tools/pager",
     "tools/reference",
     "transport",
+    "util/buffer",
     "util/cert",
     "util/connrotation",
     "util/flowcontrol",
     "util/homedir",
     "util/integer",
+    "util/retry",
+    "util/workqueue",
   ]
   pruneopts = "NUT"
   revision = "e64494209f554a6723674bd494d69445fb76a1d4"
@@ -864,6 +891,7 @@
     "github.com/alexcesaro/statsd",
     "github.com/blang/semver",
     "github.com/davecgh/go-spew/spew",
+    "github.com/evanphx/json-patch",
     "github.com/fatih/structs",
     "github.com/ghodss/yaml",
     "github.com/go-bindata/go-bindata/go-bindata",
@@ -898,11 +926,17 @@
     "k8s.io/apimachinery/pkg/api/errors",
     "k8s.io/apimachinery/pkg/apis/meta/v1",
     "k8s.io/apimachinery/pkg/fields",
+    "k8s.io/apimachinery/pkg/types",
+    "k8s.io/apimachinery/pkg/util/runtime",
     "k8s.io/apimachinery/pkg/util/wait",
     "k8s.io/client-go/kubernetes",
     "k8s.io/client-go/plugin/pkg/client/auth/azure",
+    "k8s.io/client-go/rest",
+    "k8s.io/client-go/tools/cache",
     "k8s.io/client-go/tools/clientcmd",
     "k8s.io/client-go/tools/clientcmd/api",
+    "k8s.io/client-go/util/workqueue",
+    "k8s.io/klog",
   ]
   solver-name = "gps-cdcl"
   solver-version = 1
