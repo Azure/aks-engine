@@ -37,6 +37,12 @@ rules:
 - apiGroups: ["azmon.container.insights"]
   resources: ["healthstates"]
   verbs: ["get", "create", "patch"]
+- apiGroups: ["extensions"]
+  resources: ["deployments"]
+  verbs: ["list"]
+- apiGroups: ["azmon.container.insights"]
+  resources: ["healthstates"]
+  verbs: ["get", "create", "patch"]
 - nonResourceURLs: ["/metrics"]
   verbs: ["get"]
 ---
@@ -55,6 +61,14 @@ roleRef:
   kind: ClusterRole
   name: omsagent-reader
   apiGroup: rbac.authorization.k8s.io
+---
+kind: ConfigMap	kind: ConfigMap
+apiVersion: v1	apiVersion: v1
+data:
+  CLUSTER_RESOURCE_ID: "{{ .Values.global.OmsAgent.aksResourceID }}"
+metadata:
+  name: container-azm-ms-aks-k8scluster
+  namespace: kube-system
 ---
 kind: ConfigMap
 apiVersion: v1
@@ -83,6 +97,14 @@ data:
       run_interval 60s
       log_level debug
      </source>
+
+     #Kubernetes health
+     <source>
+      type kubehealth
+      tag oms.api.KubeHealth.ReplicaSet
+      run_interval 60s
+      log_level debug
+     </source
 
      #Kubernetes events
      <source>
@@ -138,6 +160,11 @@ data:
       run_interval 60s
       log_level debug
      </source>
+
+     #health model aggregation filter
+     <filter oms.api.KubeHealth**>
+      type filter_health_model_builder
+     </filter>
 
      <filter mdm.kubepodinventory** mdm.kubenodeinventory**>
       type filter_inventory2mdm
@@ -316,6 +343,18 @@ data:
       retry_limit 10
       retry_wait 30s
      </match>
+
+     <match oms.api.KubeHealth.AgentCollectionTime**>
+      type out_oms_api
+      log_level debug
+      buffer_chunk_limit 10m
+      buffer_type file
+      buffer_path %STATE_DIR_WS%/out_oms_api_kubehealth*.buffer
+      buffer_queue_limit 10
+      flush_interval 20s
+      retry_limit 10
+      retry_wait 30s
+     </match
 metadata:
   name: omsagent-rs-config
   namespace: kube-system
