@@ -31,6 +31,12 @@ rules:
 - apiGroups: [""]
   resources: ["pods", "events", "nodes", "namespaces", "services"]
   verbs: ["list", "get", "watch"]
+- apiGroups: ["extensions"]
+  resources: ["deployments"]
+  verbs: ["list"]
+- apiGroups: ["azmon.container.insights"]
+  resources: ["healthstates"]
+  verbs: ["get", "create", "patch"]
 - nonResourceURLs: ["/metrics"]
   verbs: ["get"]
 ---
@@ -55,10 +61,25 @@ apiVersion: v1
 data:
   kube.conf: |-
      # Fluentd config file for OMS Docker - cluster components (kubeAPI)
+     #fluent forward plugin
+     <source>
+      type forward
+      port 25227
+      bind 0.0.0.0
+     </source>
+
      #Kubernetes pod inventory
      <source>
       type kubepodinventory
       tag oms.containerinsights.KubePodInventory
+      run_interval 60s
+      log_level debug
+     </source>
+
+     #Kubernetes health
+     <source>
+      type kubehealth
+      tag oms.api.KubeHealth.ReplicaSet
       run_interval 60s
       log_level debug
      </source>
@@ -70,6 +91,11 @@ data:
       run_interval 60s
       log_level debug
       </source>
+
+     #health model aggregation filter
+     <filter oms.api.KubeHealth**>
+      type filter_health_model_builder
+     </filter>
 
      #Kubernetes logs
      <source>
@@ -270,6 +296,18 @@ data:
       max_retry_wait 9m
       retry_mdm_post_wait_minutes 60
      </match>
+
+     <match oms.api.KubeHealth.AgentCollectionTime**>
+      type out_oms_api
+      log_level debug
+      buffer_chunk_limit 10m
+      buffer_type file
+      buffer_path %STATE_DIR_WS%/out_oms_api_kubehealth*.buffer
+      buffer_queue_limit 10
+      flush_interval 20s
+      retry_limit 10
+      retry_wait 30s
+     </match>
 metadata:
   name: omsagent-rs-config
   namespace: kube-system
@@ -449,6 +487,9 @@ spec:
               protocol: TCP
             - containerPort: 25224
               protocol: UDP
+            - containerPort: 25227
+              protocol: TCP
+              name: in-rs-tcp
           volumeMounts:
             - mountPath: /var/run/host
               name: docker-sock
@@ -501,4 +542,30 @@ spec:
         - name: settings-vol-config
           configMap:
             name: container-azm-ms-agentconfig
-            optional: true    
+            optional: true
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: healthmodel-replicaset-service
+  namespace: kube-system
+spec:
+  selector:
+    rsName: "omsagent-rs"
+  ports:
+  - protocol: TCP
+    port: 25227
+    targetPort: in-rs-tcp
+---
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  name: healthstates.azmon.container.insights
+  namespace: kube-system
+spec:
+  group: azmon.container.insights
+  version: v1
+  scope: Namespaced
+  names:
+    plural: healthstates
+    kind: HealthState 

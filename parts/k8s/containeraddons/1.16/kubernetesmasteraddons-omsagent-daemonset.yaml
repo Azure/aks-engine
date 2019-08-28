@@ -82,7 +82,7 @@ data:
       tag oms.api.KubeHealth.ReplicaSet
       run_interval 60s
       log_level debug
-     </source
+     </source>
 
      #Kubernetes events
      <source>
