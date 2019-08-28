@@ -3,7 +3,7 @@ DIST_DIRS         = find * -type d -exec
 
 .NOTPARALLEL:
 
-.PHONY: bootstrap build test test_fmt validate-copyright-headers fmt lint ci devenv
+.PHONY: bootstrap build test test_fmt validate-copyright-headers fmt lint ci
 
 ifdef DEBUG
 GOFLAGS   := -gcflags="-N -l"
@@ -25,7 +25,7 @@ GITTAG := $(VERSION_SHORT)
 endif
 
 REPO_PATH := github.com/Azure/$(PROJECT)
-DEV_ENV_IMAGE := quay.io/deis/go-dev:v1.22.3
+DEV_ENV_IMAGE := quay.io/deis/go-dev:v1.23.2
 DEV_ENV_WORK_DIR := /go/src/$(REPO_PATH)
 DEV_ENV_OPTS := --rm -v $(CURDIR):$(DEV_ENV_WORK_DIR) -w $(DEV_ENV_WORK_DIR) $(DEV_ENV_VARS)
 DEV_ENV_CMD := docker run $(DEV_ENV_OPTS) $(DEV_ENV_IMAGE)
@@ -134,7 +134,10 @@ ifneq ($(GIT_BASEDIR),)
 	LDFLAGS += -X github.com/Azure/aks-engine/pkg/test.JUnitOutDir=$(GIT_BASEDIR)/test/junit
 endif
 
-test: generate
+ginkgoBuild: generate
+	ginkgo build test/e2e/kubernetes
+
+test: generate ginkgoBuild
 	ginkgo -skipPackage test/e2e/dcos,test/e2e/kubernetes -failFast -r .
 
 .PHONY: test-style
@@ -152,7 +155,7 @@ test-e2e:
 HAS_DEP := $(shell $(CHECK) dep)
 HAS_GOX := $(shell $(CHECK) gox)
 HAS_GIT := $(shell $(CHECK) git)
-HAS_GOLANGCI := $(shell $(CHECK) golangci-lint)
+HAS_GOLANGCI ?= $(shell $(CHECK) golangci-lint)
 HAS_GINKGO := $(shell $(CHECK) ginkgo)
 
 .PHONY: bootstrap
@@ -184,9 +187,6 @@ ci: bootstrap test-style build test lint
 .PHONY: coverage
 coverage:
 	@scripts/ginkgo.coverage.sh --codecov
-
-devenv:
-	./scripts/devenv.sh
 
 include versioning.mk
 include test.mk

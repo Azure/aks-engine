@@ -4,7 +4,9 @@
 package kubernetes
 
 import (
+	"bufio"
 	"fmt"
+	"io"
 	"log"
 	"math/rand"
 	"net"
@@ -13,6 +15,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
+	"syscall"
 	"time"
 
 	"github.com/Azure/go-autorest/autorest/to"
@@ -40,7 +43,6 @@ import (
 
 const (
 	WorkloadDir                            = "workloads"
-	ScriptsDir                             = "scripts"
 	PolicyDir                              = "workloads/policies"
 	retryCommandsTimeout                   = 5 * time.Minute
 	kubeSystemPodsReadinessChecks          = 6
@@ -50,6 +52,7 @@ const (
 	windowsCommandTimeout                  = 1 * time.Minute
 	validateNetworkPolicyTimeout           = 3 * time.Minute
 	validateDNSTimeout                     = 2 * time.Minute
+	firstMasterRegexStr                    = "^k8s-master-"
 )
 
 var (
@@ -58,6 +61,9 @@ var (
 	masterSSHPort                   string
 	masterSSHPrivateKeyFilepath     string
 	longRunningApacheDeploymentName string
+	sshConn                         *remote.Connection
+	kubeConfig                      *Config
+	firstMasterRegexp               *regexp.Regexp
 )
 
 var _ = BeforeSuite(func() {
@@ -72,14 +78,16 @@ var _ = BeforeSuite(func() {
 	Expect(err).NotTo(HaveOccurred())
 	csInput, err := engine.ParseInput(engCfg.ClusterDefinitionTemplate)
 	Expect(err).NotTo(HaveOccurred())
-	csGenerated, err := engine.ParseOutput(engCfg.GeneratedDefinitionPath + "/apimodel.json")
+	isUpdate := cfg.Name != ""
+	validate := false
+	csGenerated, err := engine.ParseOutput(engCfg.GeneratedDefinitionPath+"/apimodel.json", validate, isUpdate)
 	Expect(err).NotTo(HaveOccurred())
 	eng = engine.Engine{
 		Config:             engCfg,
 		ClusterDefinition:  csInput,
 		ExpandedDefinition: csGenerated,
 	}
-	masterNodes, err := node.GetByPrefix("k8s-master")
+	masterNodes, err := node.GetByRegex("^k8s-master-")
 	Expect(err).NotTo(HaveOccurred())
 	masterName := masterNodes[0].Metadata.Name
 	if strings.Contains(masterName, "vmss") {
@@ -89,55 +97,70 @@ var _ = BeforeSuite(func() {
 	}
 	masterSSHPrivateKeyFilepath = cfg.GetSSHKeyPath()
 	longRunningApacheDeploymentName = "php-apache-long-running"
+	kubeConfig, err = GetConfig()
+	Expect(err).NotTo(HaveOccurred())
+	sshConn, err = remote.NewConnection(kubeConfig.GetServerName(), masterSSHPort, eng.ExpandedDefinition.Properties.LinuxProfile.AdminUsername, masterSSHPrivateKeyFilepath)
+	Expect(err).NotTo(HaveOccurred())
+	success := false
+	for i := 0; i < 3; i++ {
+		sshAddErr := util.AddToSSHKeyChain(masterSSHPrivateKeyFilepath)
+		if sshAddErr == nil {
+			success = true
+			break
+		}
+		if i > 1 {
+			log.Printf("Error while setting up ssh key forwarding:%s\n", sshAddErr)
+		}
+		time.Sleep(10 * time.Second)
+	}
+	Expect(success).To(BeTrue())
+	firstMasterRegexp, err = regexp.Compile(firstMasterRegexStr)
+	Expect(err).NotTo(HaveOccurred())
 })
 
 var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", func() {
 	Describe("regardless of agent pool type", func() {
-		It("should set up ssh key forwarding to the master node", func() {
-			success := false
-			for i := 0; i < 3; i++ {
-				err := util.AddToSSHKeyChain(masterSSHPrivateKeyFilepath)
-				if err == nil {
-					success = true
-					break
-				}
-				if i > 1 {
-					log.Printf("Error while setting up ssh key forwarding:%s\n", err)
-				}
-				time.Sleep(10 * time.Second)
-			}
-			Expect(success).To(BeTrue())
-		})
-
 		It("should validate host OS DNS", func() {
-			kubeConfig, err := GetConfig()
-			Expect(err).NotTo(HaveOccurred())
-			master := fmt.Sprintf("%s@%s", eng.ExpandedDefinition.Properties.LinuxProfile.AdminUsername, kubeConfig.GetServerName())
-			nodeList, err := node.GetReady()
+			var nodeList *node.List
+			var err error
+			if !eng.ExpandedDefinition.Properties.HasLowPriorityScaleset() {
+				nodeList, err = node.GetReady()
+			} else {
+				var nodes []node.Node
+				nodes, err = node.GetByRegex(firstMasterRegexStr)
+				nodeList = &node.List{
+					Nodes: nodes,
+				}
+			}
 			Expect(err).NotTo(HaveOccurred())
 			hostOSDNSValidateScript := "host-os-dns-validate.sh"
+			err = sshConn.CopyTo(hostOSDNSValidateScript)
+			Expect(err).NotTo(HaveOccurred())
 			envString := "NODE_HOSTNAMES='"
 			for _, node := range nodeList.Nodes {
 				envString += fmt.Sprintf("%s ", node.Metadata.Name)
 			}
-			envString += "'"
-			cmd := exec.Command("scp", "-i", masterSSHPrivateKeyFilepath, "-P", masterSSHPort, "-o", "StrictHostKeyChecking=no", filepath.Join(ScriptsDir, hostOSDNSValidateScript), master+":/tmp/"+hostOSDNSValidateScript)
-			util.PrintCommand(cmd)
-			out, err := cmd.CombinedOutput()
-			log.Printf("%s\n", out)
-			Expect(err).NotTo(HaveOccurred())
-			var conn *remote.Connection
-			conn, err = remote.NewConnection(kubeConfig.GetServerName(), masterSSHPort, eng.ExpandedDefinition.Properties.LinuxProfile.AdminUsername, masterSSHPrivateKeyFilepath)
-			Expect(err).NotTo(HaveOccurred())
+			lookupRetries := 3
+			envString += fmt.Sprintf("' LOOKUP_RETRIES=%d", lookupRetries)
+			hostOSDNSValidationCommand := fmt.Sprintf("%s /tmp/%s", envString, hostOSDNSValidateScript)
+			var success bool
+			// Retry for up to 5 minutes host vm DNS validation
+			for i := 0; i < 30; i++ {
+				err := sshConn.Execute(hostOSDNSValidationCommand, true)
+				if err == nil {
+					success = true
+					break
+				} else {
+					time.Sleep(10 * time.Second)
+				}
+			}
+			Expect(success).To(BeTrue())
+			hostOSDNSValidationCommand = fmt.Sprintf("\"%s /tmp/%s\"", envString, hostOSDNSValidateScript)
 			for _, node := range nodeList.Nodes {
-				if node.IsLinux() {
-					err := conn.CopyToRemote(node.Metadata.Name, "/tmp/"+hostOSDNSValidateScript)
+				if node.IsLinux() && !firstMasterRegexp.MatchString(node.Metadata.Name) {
+					err := sshConn.CopyToRemote(node.Metadata.Name, "/tmp/"+hostOSDNSValidateScript)
 					Expect(err).NotTo(HaveOccurred())
-					netConfigValidationCommand := fmt.Sprintf("\"%s /tmp/%s\"", envString, hostOSDNSValidateScript)
-					cmd = exec.Command("ssh", "-A", "-i", masterSSHPrivateKeyFilepath, "-p", masterSSHPort, "-o", "ConnectTimeout=10", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-o", "LogLevel=ERROR", master, "ssh", "-o", "ConnectTimeout=10", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-o", "LogLevel=ERROR", node.Metadata.Name, netConfigValidationCommand)
-					util.PrintCommand(cmd)
-					out, err = cmd.CombinedOutput()
-					log.Printf("%s\n", out)
+					err = sshConn.ExecuteRemote(node.Metadata.Name, hostOSDNSValidationCommand, false)
 					Expect(err).NotTo(HaveOccurred())
 				}
 			}
@@ -153,22 +176,11 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 
 		It("should display the installed Ubuntu version on the master node", func() {
 			if eng.ExpandedDefinition.Properties.MasterProfile.IsUbuntu() {
-				kubeConfig, err := GetConfig()
-				Expect(err).NotTo(HaveOccurred())
-				master := fmt.Sprintf("%s@%s", eng.ExpandedDefinition.Properties.LinuxProfile.AdminUsername, kubeConfig.GetServerName())
-
 				lsbReleaseCmd := fmt.Sprintf("lsb_release -a && uname -r")
-				cmd := exec.Command("ssh", "-i", masterSSHPrivateKeyFilepath, "-p", masterSSHPort, "-o", "ConnectTimeout=10", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-o", "LogLevel=ERROR", master, lsbReleaseCmd)
-				util.PrintCommand(cmd)
-				out, err := cmd.CombinedOutput()
-				log.Printf("%s\n", out)
+				err := sshConn.Execute(lsbReleaseCmd, true)
 				Expect(err).NotTo(HaveOccurred())
-
 				kernelVerCmd := fmt.Sprintf("cat /proc/version")
-				cmd = exec.Command("ssh", "-i", masterSSHPrivateKeyFilepath, "-p", masterSSHPort, "-o", "ConnectTimeout=10", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-o", "LogLevel=ERROR", master, kernelVerCmd)
-				util.PrintCommand(cmd)
-				out, err = cmd.CombinedOutput()
-				log.Printf("%s\n", out)
+				err = sshConn.Execute(kernelVerCmd, true)
 				Expect(err).NotTo(HaveOccurred())
 			} else {
 				Skip("This is not an ubuntu master")
@@ -176,303 +188,414 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 		})
 
 		It("should display the installed docker runtime on all nodes", func() {
-			if eng.ExpandedDefinition.Properties.OrchestratorProfile.KubernetesConfig.RequiresDocker() {
-				kubeConfig, err := GetConfig()
-				Expect(err).NotTo(HaveOccurred())
-				master := fmt.Sprintf("%s@%s", eng.ExpandedDefinition.Properties.LinuxProfile.AdminUsername, kubeConfig.GetServerName())
-				nodeList, err := node.GetReady()
-				Expect(err).NotTo(HaveOccurred())
-				dockerVersionCmd := fmt.Sprintf("\"docker version\"")
-				for _, node := range nodeList.Nodes {
-					cmd := exec.Command("ssh", "-A", "-i", masterSSHPrivateKeyFilepath, "-p", masterSSHPort, "-o", "ConnectTimeout=10", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-o", "LogLevel=ERROR", master, "ssh", "-o", "ConnectTimeout=10", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-o", "LogLevel=ERROR", node.Metadata.Name, dockerVersionCmd)
-					util.PrintCommand(cmd)
-					out, err := cmd.CombinedOutput()
-					log.Printf("%s\n", out)
+			if !eng.ExpandedDefinition.Properties.HasLowPriorityScaleset() {
+				if eng.ExpandedDefinition.Properties.OrchestratorProfile.KubernetesConfig.RequiresDocker() {
+					nodeList, err := node.GetReady()
 					Expect(err).NotTo(HaveOccurred())
+					dockerVersionCmd := fmt.Sprintf("\"docker version\"")
+					for _, node := range nodeList.Nodes {
+						err = sshConn.ExecuteRemote(node.Metadata.Name, dockerVersionCmd, true)
+						Expect(err).NotTo(HaveOccurred())
+					}
+				} else {
+					Skip("Skip docker validations on non-docker-backed clusters")
 				}
 			} else {
-				Skip("Skip docker validations on non-docker-backed clusters")
+				Skip("Skip per-node tests in low-priority VMSS cluster configuration scenario")
 			}
 		})
 
 		It("should validate that every linux node has a root password", func() {
-			if eng.ExpandedDefinition.Properties.IsVHDDistroForAllNodes() {
-
-				kubeConfig, err := GetConfig()
-				Expect(err).NotTo(HaveOccurred())
-				master := fmt.Sprintf("%s@%s", eng.ExpandedDefinition.Properties.LinuxProfile.AdminUsername, kubeConfig.GetServerName())
-				nodeList, err := node.GetReady()
-				Expect(err).NotTo(HaveOccurred())
-				rootPasswdCmd := fmt.Sprintf("\"sudo grep '^root:[!*]:' /etc/shadow\"")
-				for _, node := range nodeList.Nodes {
-					if node.IsUbuntu() {
-						cmd := exec.Command("ssh", "-A", "-i", masterSSHPrivateKeyFilepath, "-p", masterSSHPort, "-o", "ConnectTimeout=10", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-o", "LogLevel=ERROR", master, "ssh", "-o", "ConnectTimeout=10", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-o", "LogLevel=ERROR", node.Metadata.Name, rootPasswdCmd)
-						util.PrintCommand(cmd)
-						out, err := cmd.CombinedOutput()
-						log.Printf("%s\n", out)
-						Expect(err).To(HaveOccurred())
+			if !eng.ExpandedDefinition.Properties.HasLowPriorityScaleset() {
+				if eng.ExpandedDefinition.Properties.IsVHDDistroForAllNodes() {
+					nodeList, err := node.GetReady()
+					Expect(err).NotTo(HaveOccurred())
+					rootPasswdCmd := fmt.Sprintf("\"sudo grep '^root:[!*]:' /etc/shadow\" && exit 1 || exit 0")
+					for _, node := range nodeList.Nodes {
+						if node.IsUbuntu() {
+							err = sshConn.ExecuteRemote(node.Metadata.Name, rootPasswdCmd, true)
+							Expect(err).NotTo(HaveOccurred())
+						}
 					}
+				} else {
+					Skip("This config is only available on VHD")
 				}
 			} else {
-				Skip("This config is only available on VHD")
+				Skip("Skip per-node tests in low-priority VMSS cluster configuration scenario")
 			}
 		})
 
 		It("should validate Ubuntu host OS network configuration on all nodes", func() {
-			if eng.ExpandedDefinition.Properties.IsVHDDistroForAllNodes() {
-				kubeConfig, err := GetConfig()
-				Expect(err).NotTo(HaveOccurred())
-				master := fmt.Sprintf("%s@%s", eng.ExpandedDefinition.Properties.LinuxProfile.AdminUsername, kubeConfig.GetServerName())
-				nodeList, err := node.GetReady()
-				Expect(err).NotTo(HaveOccurred())
-				netConfigValidateScript := "net-config-validate.sh"
-				cmd := exec.Command("scp", "-i", masterSSHPrivateKeyFilepath, "-P", masterSSHPort, "-o", "StrictHostKeyChecking=no", filepath.Join(ScriptsDir, netConfigValidateScript), master+":/tmp/"+netConfigValidateScript)
-				util.PrintCommand(cmd)
-				out, err := cmd.CombinedOutput()
-				log.Printf("%s\n", out)
-				Expect(err).NotTo(HaveOccurred())
-				var conn *remote.Connection
-				conn, err = remote.NewConnection(kubeConfig.GetServerName(), masterSSHPort, eng.ExpandedDefinition.Properties.LinuxProfile.AdminUsername, masterSSHPrivateKeyFilepath)
-				Expect(err).NotTo(HaveOccurred())
-				for _, node := range nodeList.Nodes {
-					if node.IsUbuntu() {
-						err := conn.CopyToRemote(node.Metadata.Name, "/tmp/"+netConfigValidateScript)
-						Expect(err).NotTo(HaveOccurred())
-						netConfigValidationCommand := fmt.Sprintf("\"/tmp/%s\"", netConfigValidateScript)
-						cmd = exec.Command("ssh", "-A", "-i", masterSSHPrivateKeyFilepath, "-p", masterSSHPort, "-o", "ConnectTimeout=10", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-o", "LogLevel=ERROR", master, "ssh", "-o", "ConnectTimeout=10", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-o", "LogLevel=ERROR", node.Metadata.Name, netConfigValidationCommand)
-						util.PrintCommand(cmd)
-						_, err = cmd.CombinedOutput()
-						Expect(err).NotTo(HaveOccurred())
+			if !eng.ExpandedDefinition.Properties.HasLowPriorityScaleset() {
+				if eng.ExpandedDefinition.Properties.IsVHDDistroForAllNodes() {
+					nodeList, err := node.GetReady()
+					Expect(err).NotTo(HaveOccurred())
+					netConfigValidateScript := "net-config-validate.sh"
+					err = sshConn.CopyTo(netConfigValidateScript)
+					Expect(err).NotTo(HaveOccurred())
+					netConfigValidationCommand := fmt.Sprintf("\"/tmp/%s\"", netConfigValidateScript)
+					err = sshConn.Execute(netConfigValidationCommand, false)
+					Expect(err).NotTo(HaveOccurred())
+					for _, node := range nodeList.Nodes {
+						if node.IsUbuntu() && !firstMasterRegexp.MatchString(node.Metadata.Name) {
+							err := sshConn.CopyToRemote(node.Metadata.Name, "/tmp/"+netConfigValidateScript)
+							Expect(err).NotTo(HaveOccurred())
+							err = sshConn.ExecuteRemote(node.Metadata.Name, netConfigValidationCommand, false)
+							Expect(err).NotTo(HaveOccurred())
+						}
 					}
+				} else {
+					Skip("This config is only available on VHD")
 				}
 			} else {
-				Skip("This config is only available on VHD")
+				Skip("Skip per-node tests in low-priority VMSS cluster configuration scenario")
 			}
 		})
 
 		It("should validate all CIS VHD-paved files", func() {
-			if eng.ExpandedDefinition.Properties.IsVHDDistroForAllNodes() {
-				kubeConfig, err := GetConfig()
-				Expect(err).NotTo(HaveOccurred())
-				master := fmt.Sprintf("%s@%s", eng.ExpandedDefinition.Properties.LinuxProfile.AdminUsername, kubeConfig.GetServerName())
-				nodeList, err := node.GetReady()
-				Expect(err).NotTo(HaveOccurred())
-				CISFilesValidateScript := "CIS-files-validate.sh"
-				cmd := exec.Command("scp", "-i", masterSSHPrivateKeyFilepath, "-P", masterSSHPort, "-o", "StrictHostKeyChecking=no", filepath.Join(ScriptsDir, CISFilesValidateScript), master+":/tmp/"+CISFilesValidateScript)
-				util.PrintCommand(cmd)
-				out, err := cmd.CombinedOutput()
-				log.Printf("%s\n", out)
-				Expect(err).NotTo(HaveOccurred())
-				var conn *remote.Connection
-				conn, err = remote.NewConnection(kubeConfig.GetServerName(), masterSSHPort, eng.ExpandedDefinition.Properties.LinuxProfile.AdminUsername, masterSSHPrivateKeyFilepath)
-				Expect(err).NotTo(HaveOccurred())
-				for _, node := range nodeList.Nodes {
-					err := conn.CopyToRemote(node.Metadata.Name, "/tmp/"+CISFilesValidateScript)
+			if !eng.ExpandedDefinition.Properties.HasLowPriorityScaleset() {
+				if eng.ExpandedDefinition.Properties.IsVHDDistroForAllNodes() {
+					nodeList, err := node.GetReady()
+					Expect(err).NotTo(HaveOccurred())
+					CISFilesValidateScript := "CIS-files-validate.sh"
+					err = sshConn.CopyTo(CISFilesValidateScript)
 					Expect(err).NotTo(HaveOccurred())
 					CISValidationCommand := fmt.Sprintf("\"/tmp/%s\"", CISFilesValidateScript)
-					cmd = exec.Command("ssh", "-A", "-i", masterSSHPrivateKeyFilepath, "-p", masterSSHPort, "-o", "ConnectTimeout=10", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-o", "LogLevel=ERROR", master, "ssh", "-o", "ConnectTimeout=10", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-o", "LogLevel=ERROR", node.Metadata.Name, CISValidationCommand)
-					util.PrintCommand(cmd)
-					_, err = cmd.CombinedOutput()
+					err = sshConn.Execute(CISValidationCommand, false)
 					Expect(err).NotTo(HaveOccurred())
+					for _, node := range nodeList.Nodes {
+						if !firstMasterRegexp.MatchString(node.Metadata.Name) {
+							err := sshConn.CopyToRemote(node.Metadata.Name, "/tmp/"+CISFilesValidateScript)
+							Expect(err).NotTo(HaveOccurred())
+							err = sshConn.ExecuteRemote(node.Metadata.Name, CISValidationCommand, false)
+							Expect(err).NotTo(HaveOccurred())
+						}
+					}
+				} else {
+					Skip("This config is only available on VHD")
 				}
 			} else {
-				Skip("This config is only available on VHD")
+				Skip("Skip per-node tests in low-priority VMSS cluster configuration scenario")
 			}
 		})
 
 		It("should validate kernel module configuration", func() {
-			if eng.ExpandedDefinition.Properties.IsVHDDistroForAllNodes() {
-				kubeConfig, err := GetConfig()
-				Expect(err).NotTo(HaveOccurred())
-				master := fmt.Sprintf("%s@%s", eng.ExpandedDefinition.Properties.LinuxProfile.AdminUsername, kubeConfig.GetServerName())
-				nodeList, err := node.GetReady()
-				Expect(err).NotTo(HaveOccurred())
-				modprobeConfigValidateScript := "modprobe-config-validate.sh"
-				cmd := exec.Command("scp", "-i", masterSSHPrivateKeyFilepath, "-P", masterSSHPort, "-o", "StrictHostKeyChecking=no", filepath.Join(ScriptsDir, modprobeConfigValidateScript), master+":/tmp/"+modprobeConfigValidateScript)
-				util.PrintCommand(cmd)
-				out, err := cmd.CombinedOutput()
-				log.Printf("%s\n", out)
-				Expect(err).NotTo(HaveOccurred())
-				var conn *remote.Connection
-				conn, err = remote.NewConnection(kubeConfig.GetServerName(), masterSSHPort, eng.ExpandedDefinition.Properties.LinuxProfile.AdminUsername, masterSSHPrivateKeyFilepath)
-				Expect(err).NotTo(HaveOccurred())
-				for _, node := range nodeList.Nodes {
-					if node.IsUbuntu() {
-						err := conn.CopyToRemote(node.Metadata.Name, "/tmp/"+modprobeConfigValidateScript)
-						Expect(err).NotTo(HaveOccurred())
-						netConfigValidationCommand := fmt.Sprintf("\"/tmp/%s\"", modprobeConfigValidateScript)
-						cmd = exec.Command("ssh", "-A", "-i", masterSSHPrivateKeyFilepath, "-p", masterSSHPort, "-o", "ConnectTimeout=10", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-o", "LogLevel=ERROR", master, "ssh", "-o", "ConnectTimeout=10", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-o", "LogLevel=ERROR", node.Metadata.Name, netConfigValidationCommand)
-						util.PrintCommand(cmd)
-						_, err = cmd.CombinedOutput()
-						Expect(err).NotTo(HaveOccurred())
+			if !eng.ExpandedDefinition.Properties.HasLowPriorityScaleset() {
+				if eng.ExpandedDefinition.Properties.IsVHDDistroForAllNodes() {
+					nodeList, err := node.GetReady()
+					Expect(err).NotTo(HaveOccurred())
+					modprobeConfigValidateScript := "modprobe-config-validate.sh"
+					err = sshConn.CopyTo(modprobeConfigValidateScript)
+					Expect(err).NotTo(HaveOccurred())
+					netConfigValidationCommand := fmt.Sprintf("\"/tmp/%s\"", modprobeConfigValidateScript)
+					err = sshConn.Execute(netConfigValidationCommand, false)
+					Expect(err).NotTo(HaveOccurred())
+					for _, node := range nodeList.Nodes {
+						if node.IsUbuntu() && !firstMasterRegexp.MatchString(node.Metadata.Name) {
+							err := sshConn.CopyToRemote(node.Metadata.Name, "/tmp/"+modprobeConfigValidateScript)
+							Expect(err).NotTo(HaveOccurred())
+							err = sshConn.ExecuteRemote(node.Metadata.Name, netConfigValidationCommand, false)
+							Expect(err).NotTo(HaveOccurred())
+						}
 					}
+				} else {
+					Skip("This config is only available on VHD")
 				}
 			} else {
-				Skip("This config is only available on VHD")
+				Skip("Skip per-node tests in low-priority VMSS cluster configuration scenario")
 			}
 		})
 
 		It("should validate installed software packages", func() {
-			kubeConfig, err := GetConfig()
-			Expect(err).NotTo(HaveOccurred())
-			master := fmt.Sprintf("%s@%s", eng.ExpandedDefinition.Properties.LinuxProfile.AdminUsername, kubeConfig.GetServerName())
-			nodeList, err := node.GetReady()
-			Expect(err).NotTo(HaveOccurred())
-			installedPackagesValidateScript := "ubuntu-installed-packages-validate.sh"
-			cmd := exec.Command("scp", "-i", masterSSHPrivateKeyFilepath, "-P", masterSSHPort, "-o", "StrictHostKeyChecking=no", filepath.Join(ScriptsDir, installedPackagesValidateScript), master+":/tmp/"+installedPackagesValidateScript)
-			util.PrintCommand(cmd)
-			out, err := cmd.CombinedOutput()
-			log.Printf("%s\n", out)
-			Expect(err).NotTo(HaveOccurred())
-			var conn *remote.Connection
-			conn, err = remote.NewConnection(kubeConfig.GetServerName(), masterSSHPort, eng.ExpandedDefinition.Properties.LinuxProfile.AdminUsername, masterSSHPrivateKeyFilepath)
-			Expect(err).NotTo(HaveOccurred())
-			for _, node := range nodeList.Nodes {
-				if node.IsUbuntu() {
-					err := conn.CopyToRemote(node.Metadata.Name, "/tmp/"+installedPackagesValidateScript)
-					Expect(err).NotTo(HaveOccurred())
-					netConfigValidationCommand := fmt.Sprintf("\"/tmp/%s\"", installedPackagesValidateScript)
-					cmd = exec.Command("ssh", "-A", "-i", masterSSHPrivateKeyFilepath, "-p", masterSSHPort, "-o", "ConnectTimeout=10", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-o", "LogLevel=ERROR", master, "ssh", "-o", "ConnectTimeout=10", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-o", "LogLevel=ERROR", node.Metadata.Name, netConfigValidationCommand)
-					util.PrintCommand(cmd)
-					_, err = cmd.CombinedOutput()
-					Expect(err).NotTo(HaveOccurred())
+			if !eng.ExpandedDefinition.Properties.HasLowPriorityScaleset() {
+				nodeList, err := node.GetReady()
+				Expect(err).NotTo(HaveOccurred())
+				installedPackagesValidateScript := "ubuntu-installed-packages-validate.sh"
+				err = sshConn.CopyTo(installedPackagesValidateScript)
+				Expect(err).NotTo(HaveOccurred())
+				installedPackagesValidationCommand := fmt.Sprintf("\"/tmp/%s\"", installedPackagesValidateScript)
+				err = sshConn.Execute(installedPackagesValidationCommand, false)
+				Expect(err).NotTo(HaveOccurred())
+				for _, node := range nodeList.Nodes {
+					if node.IsUbuntu() && !firstMasterRegexp.MatchString(node.Metadata.Name) {
+						err := sshConn.CopyToRemote(node.Metadata.Name, "/tmp/"+installedPackagesValidateScript)
+						Expect(err).NotTo(HaveOccurred())
+						err = sshConn.ExecuteRemote(node.Metadata.Name, installedPackagesValidationCommand, false)
+						Expect(err).NotTo(HaveOccurred())
+					}
 				}
+			} else {
+				Skip("Skip per-node tests in low-priority VMSS cluster configuration scenario")
 			}
 		})
 
 		It("should validate that every linux node has the right sshd config", func() {
-			if eng.ExpandedDefinition.Properties.IsVHDDistroForAllNodes() {
-				kubeConfig, err := GetConfig()
-				Expect(err).NotTo(HaveOccurred())
-				master := fmt.Sprintf("%s@%s", eng.ExpandedDefinition.Properties.LinuxProfile.AdminUsername, kubeConfig.GetServerName())
-				nodeList, err := node.GetReady()
-				Expect(err).NotTo(HaveOccurred())
-				sshdConfigValidateScript := "sshd-config-validate.sh"
-				cmd := exec.Command("scp", "-i", masterSSHPrivateKeyFilepath, "-P", masterSSHPort, "-o", "StrictHostKeyChecking=no", filepath.Join(ScriptsDir, sshdConfigValidateScript), master+":/tmp/"+sshdConfigValidateScript)
-				util.PrintCommand(cmd)
-				out, err := cmd.CombinedOutput()
-				log.Printf("%s\n", out)
-				Expect(err).NotTo(HaveOccurred())
-				var conn *remote.Connection
-				conn, err = remote.NewConnection(kubeConfig.GetServerName(), masterSSHPort, eng.ExpandedDefinition.Properties.LinuxProfile.AdminUsername, masterSSHPrivateKeyFilepath)
-				Expect(err).NotTo(HaveOccurred())
-				for _, node := range nodeList.Nodes {
-					if node.IsUbuntu() {
-						err := conn.CopyToRemote(node.Metadata.Name, "/tmp/"+sshdConfigValidateScript)
-						Expect(err).NotTo(HaveOccurred())
-						sshdConfigValidationCommand := fmt.Sprintf("\"/tmp/%s\"", sshdConfigValidateScript)
-						cmd = exec.Command("ssh", "-A", "-i", masterSSHPrivateKeyFilepath, "-p", masterSSHPort, "-o", "ConnectTimeout=10", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-o", "LogLevel=ERROR", master, "ssh", "-o", "ConnectTimeout=10", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-o", "LogLevel=ERROR", node.Metadata.Name, sshdConfigValidationCommand)
-						util.PrintCommand(cmd)
-						_, err = cmd.CombinedOutput()
-						Expect(err).NotTo(HaveOccurred())
+			if !eng.ExpandedDefinition.Properties.HasLowPriorityScaleset() {
+				if eng.ExpandedDefinition.Properties.IsVHDDistroForAllNodes() {
+					nodeList, err := node.GetReady()
+					Expect(err).NotTo(HaveOccurred())
+					sshdConfigValidateScript := "sshd-config-validate.sh"
+					err = sshConn.CopyTo(sshdConfigValidateScript)
+					Expect(err).NotTo(HaveOccurred())
+					sshdConfigValidationCommand := fmt.Sprintf("\"/tmp/%s\"", sshdConfigValidateScript)
+					err = sshConn.Execute(sshdConfigValidationCommand, false)
+					Expect(err).NotTo(HaveOccurred())
+					for _, node := range nodeList.Nodes {
+						if node.IsUbuntu() && !firstMasterRegexp.MatchString(node.Metadata.Name) {
+							err := sshConn.CopyToRemote(node.Metadata.Name, "/tmp/"+sshdConfigValidateScript)
+							Expect(err).NotTo(HaveOccurred())
+							err = sshConn.ExecuteRemote(node.Metadata.Name, sshdConfigValidationCommand, false)
+							Expect(err).NotTo(HaveOccurred())
+						}
 					}
+				} else {
+					Skip("This config is only available on VHD")
 				}
 			} else {
-				Skip("This config is only available on VHD")
+				Skip("Skip per-node tests in low-priority VMSS cluster configuration scenario")
 			}
 		})
 
 		It("should validate password enforcement configuration", func() {
-			if eng.ExpandedDefinition.Properties.IsVHDDistroForAllNodes() {
-				kubeConfig, err := GetConfig()
-				Expect(err).NotTo(HaveOccurred())
-				master := fmt.Sprintf("%s@%s", eng.ExpandedDefinition.Properties.LinuxProfile.AdminUsername, kubeConfig.GetServerName())
-				nodeList, err := node.GetReady()
-				Expect(err).NotTo(HaveOccurred())
-				pwQualityValidateScript := "pwquality-validate.sh"
-				cmd := exec.Command("scp", "-i", masterSSHPrivateKeyFilepath, "-P", masterSSHPort, "-o", "StrictHostKeyChecking=no", filepath.Join(ScriptsDir, pwQualityValidateScript), master+":/tmp/"+pwQualityValidateScript)
-				util.PrintCommand(cmd)
-				out, err := cmd.CombinedOutput()
-				log.Printf("%s\n", out)
-				Expect(err).NotTo(HaveOccurred())
-				var conn *remote.Connection
-				conn, err = remote.NewConnection(kubeConfig.GetServerName(), masterSSHPort, eng.ExpandedDefinition.Properties.LinuxProfile.AdminUsername, masterSSHPrivateKeyFilepath)
-				Expect(err).NotTo(HaveOccurred())
-				for _, node := range nodeList.Nodes {
-					if node.IsUbuntu() {
-						err := conn.CopyToRemote(node.Metadata.Name, "/tmp/"+pwQualityValidateScript)
-						Expect(err).NotTo(HaveOccurred())
-						pwQualityValidationCommand := fmt.Sprintf("\"/tmp/%s\"", pwQualityValidateScript)
-						cmd = exec.Command("ssh", "-A", "-i", masterSSHPrivateKeyFilepath, "-p", masterSSHPort, "-o", "ConnectTimeout=10", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-o", "LogLevel=ERROR", master, "ssh", "-o", "ConnectTimeout=10", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-o", "LogLevel=ERROR", node.Metadata.Name, pwQualityValidationCommand)
-						util.PrintCommand(cmd)
-						_, err = cmd.CombinedOutput()
-						Expect(err).NotTo(HaveOccurred())
+			if !eng.ExpandedDefinition.Properties.HasLowPriorityScaleset() {
+				if eng.ExpandedDefinition.Properties.IsVHDDistroForAllNodes() {
+					nodeList, err := node.GetReady()
+					Expect(err).NotTo(HaveOccurred())
+					pwQualityValidateScript := "pwquality-validate.sh"
+					err = sshConn.CopyTo(pwQualityValidateScript)
+					Expect(err).NotTo(HaveOccurred())
+					pwQualityValidationCommand := fmt.Sprintf("\"/tmp/%s\"", pwQualityValidateScript)
+					err = sshConn.Execute(pwQualityValidationCommand, false)
+					Expect(err).NotTo(HaveOccurred())
+					for _, node := range nodeList.Nodes {
+						if node.IsUbuntu() && !firstMasterRegexp.MatchString(node.Metadata.Name) {
+							err := sshConn.CopyToRemote(node.Metadata.Name, "/tmp/"+pwQualityValidateScript)
+							Expect(err).NotTo(HaveOccurred())
+							err = sshConn.ExecuteRemote(node.Metadata.Name, pwQualityValidationCommand, false)
+							Expect(err).NotTo(HaveOccurred())
+						}
 					}
+				} else {
+					Skip("This config is only available on VHD")
 				}
 			} else {
-				Skip("This config is only available on VHD")
+				Skip("Skip per-node tests in low-priority VMSS cluster configuration scenario")
 			}
 		})
 
 		It("should validate auditd configuration", func() {
-			if eng.ExpandedDefinition.Properties.IsVHDDistroForAllNodes() {
-				var auditDNodePrefixes []string
-				if eng.ExpandedDefinition.Properties.MasterProfile != nil {
-					if to.Bool(eng.ExpandedDefinition.Properties.MasterProfile.AuditDEnabled) {
-						auditDNodePrefixes = append(auditDNodePrefixes, "k8s-master")
+			if !eng.ExpandedDefinition.Properties.HasLowPriorityScaleset() {
+				if eng.ExpandedDefinition.Properties.IsVHDDistroForAllNodes() {
+					var auditDNodePrefixes []string
+					if eng.ExpandedDefinition.Properties.MasterProfile != nil {
+						if to.Bool(eng.ExpandedDefinition.Properties.MasterProfile.AuditDEnabled) {
+							auditDNodePrefixes = append(auditDNodePrefixes, "k8s-master-")
+						}
 					}
-				}
-				for _, profile := range eng.ExpandedDefinition.Properties.AgentPoolProfiles {
-					if to.Bool(profile.AuditDEnabled) {
-						auditDNodePrefixes = append(auditDNodePrefixes, profile.Name)
+					for _, profile := range eng.ExpandedDefinition.Properties.AgentPoolProfiles {
+						if to.Bool(profile.AuditDEnabled) {
+							auditDNodePrefixes = append(auditDNodePrefixes, profile.Name)
+						}
 					}
-				}
-				kubeConfig, err := GetConfig()
-				Expect(err).NotTo(HaveOccurred())
-				master := fmt.Sprintf("%s@%s", eng.ExpandedDefinition.Properties.LinuxProfile.AdminUsername, kubeConfig.GetServerName())
-				nodeList, err := node.GetReady()
-				Expect(err).NotTo(HaveOccurred())
-				auditdValidateScript := "auditd-validate.sh"
-				cmd := exec.Command("scp", "-i", masterSSHPrivateKeyFilepath, "-P", masterSSHPort, "-o", "StrictHostKeyChecking=no", filepath.Join(ScriptsDir, auditdValidateScript), master+":/tmp/"+auditdValidateScript)
-				util.PrintCommand(cmd)
-				out, err := cmd.CombinedOutput()
-				log.Printf("%s\n", out)
-				Expect(err).NotTo(HaveOccurred())
-				var conn *remote.Connection
-				conn, err = remote.NewConnection(kubeConfig.GetServerName(), masterSSHPort, eng.ExpandedDefinition.Properties.LinuxProfile.AdminUsername, masterSSHPrivateKeyFilepath)
-				Expect(err).NotTo(HaveOccurred())
-				for _, node := range nodeList.Nodes {
-					var enabled bool
-					if node.HasSubstring(auditDNodePrefixes) {
-						enabled = true
-					}
-					err := conn.CopyToRemote(node.Metadata.Name, "/tmp/"+auditdValidateScript)
+					nodeList, err := node.GetReady()
 					Expect(err).NotTo(HaveOccurred())
-					auditdValidationCommand := fmt.Sprintf("\"ENABLED=%t /tmp/%s\"", enabled, auditdValidateScript)
-					cmd = exec.Command("ssh", "-A", "-i", masterSSHPrivateKeyFilepath, "-p", masterSSHPort, "-o", "ConnectTimeout=10", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-o", "LogLevel=ERROR", master, "ssh", "-o", "ConnectTimeout=10", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-o", "LogLevel=ERROR", node.Metadata.Name, auditdValidationCommand)
-					util.PrintCommand(cmd)
-					_, err = cmd.CombinedOutput()
+					auditdValidateScript := "auditd-validate.sh"
+					err = sshConn.CopyTo(auditdValidateScript)
 					Expect(err).NotTo(HaveOccurred())
+					for _, node := range nodeList.Nodes {
+						var enabled bool
+						if node.HasSubstring(auditDNodePrefixes) {
+							enabled = true
+						}
+						err := sshConn.CopyToRemote(node.Metadata.Name, "/tmp/"+auditdValidateScript)
+						Expect(err).NotTo(HaveOccurred())
+						auditdValidationCommand := fmt.Sprintf("\"ENABLED=%t /tmp/%s\"", enabled, auditdValidateScript)
+						err = sshConn.ExecuteRemote(node.Metadata.Name, auditdValidationCommand, false)
+						Expect(err).NotTo(HaveOccurred())
+					}
+				} else {
+					Skip("This config is only available on VHD")
 				}
 			} else {
-				Skip("This config is only available on VHD")
+				Skip("Skip per-node tests in low-priority VMSS cluster configuration scenario")
+			}
+		})
+
+		It("should be able to kubectl port-forward to a running pod", func() {
+			deploymentNamespace := "default"
+
+			var deploy *deployment.Deployment
+			var err error
+			var pods []pod.Pod
+
+			testPortForward := func(deploymentName string) {
+				running, podWaitErr := pod.WaitOnReady(deploymentName, deploymentNamespace, 3, retryTimeWhenWaitingForPodReady, cfg.Timeout)
+				Expect(podWaitErr).NotTo(HaveOccurred())
+				Expect(running).To(Equal(true))
+				pods, err = deploy.Pods()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(len(pods)).To(Equal(1))
+				for _, p := range pods {
+					func() {
+						By("Ensuring that the pod is running")
+						var running bool
+						running, err = p.WaitOnReady(retryTimeWhenWaitingForPodReady, cfg.Timeout)
+						Expect(err).NotTo(HaveOccurred())
+						Expect(running).To(Equal(true))
+						By("Running kubectl port-forward")
+						var proxyCmd *exec.Cmd
+						var proxyStdout, proxyStderr io.ReadCloser
+						var proxyStdoutReader, proxyStderrReader *bufio.Reader
+						success := false
+						for i := 0; i < 5; i++ {
+							if i > 1 {
+								log.Printf("Waiting for retry...\n")
+								time.Sleep(10 * time.Second)
+							}
+							proxyCmd = exec.Command("k", "port-forward", p.Metadata.Name, "8123:80")
+							proxyCmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
+							proxyStdout, err = proxyCmd.StdoutPipe()
+							Expect(err).NotTo(HaveOccurred())
+							proxyStderr, err = proxyCmd.StderrPipe()
+							Expect(err).NotTo(HaveOccurred())
+							util.PrintCommand(proxyCmd)
+							err = proxyCmd.Start()
+							if err != nil {
+								log.Printf("kubectl port-forward start error: %v\n", err)
+								continue
+							}
+							proxyStdoutReader = bufio.NewReader(proxyStdout)
+							proxyStderrReader = bufio.NewReader(proxyStderr)
+							proxyOutStr, outErr := proxyStdoutReader.ReadString('\n')
+							log.Printf("kubectl port-forward stdout: %s\n", proxyOutStr)
+							if outErr != nil {
+								proxyErrStr, _ := proxyStderrReader.ReadString('\n') // returns EOF error, ignore it
+								log.Printf("kubectl port-forward stderr: %s\n", proxyErrStr)
+								continue
+							}
+							defer func() {
+								syscall.Kill(-proxyCmd.Process.Pid, syscall.SIGKILL)
+								_, waiterr := proxyCmd.Process.Wait()
+								if waiterr != nil {
+									log.Printf("kubectl port-forward - no wait error\n")
+								} else {
+									log.Printf("kubectl port-forward - wait returned err: %v\n", waiterr)
+								}
+							}()
+							log.Printf("kubectl port-forward running as pid: %d\n", proxyCmd.Process.Pid)
+							success = true
+							break
+						}
+						Expect(success).To(Equal(true))
+						By("Running curl to access the forwarded port")
+						url := fmt.Sprintf("http://%s:%v", "localhost", 8123)
+						cmd := exec.Command("curl", "--max-time", "60", "--retry", "10", "--retry-delay", "10", "--retry-max-time", "120", url)
+						util.PrintCommand(cmd)
+						var out []byte
+						out, err = cmd.CombinedOutput()
+						log.Printf("%s\n", out)
+						Expect(err).NotTo(HaveOccurred())
+					}()
+				}
+			}
+			r := rand.New(rand.NewSource(time.Now().UnixNano()))
+			if eng.AnyAgentIsLinux() {
+				By("Creating a Linux nginx deployment")
+				deploymentPrefix := "portforwardlinux"
+				deploymentName := fmt.Sprintf("%s-%v", deploymentPrefix, r.Intn(9999))
+				deploy, err = deployment.CreateLinuxDeployDeleteIfExists(deploymentPrefix, "library/nginx:latest", deploymentName, deploymentNamespace, "")
+				Expect(err).NotTo(HaveOccurred())
+				testPortForward(deploymentName)
+				err = deploy.Delete(util.DefaultDeleteRetries)
+				Expect(err).NotTo(HaveOccurred())
+			}
+			if eng.HasWindowsAgents() {
+				By("Creating a Windows IIS deployment")
+				if common.IsKubernetesVersionGe(eng.ExpandedDefinition.Properties.OrchestratorProfile.OrchestratorVersion, "1.15.0") {
+					windowsImages, err := eng.GetWindowsTestImages()
+					Expect(err).NotTo(HaveOccurred())
+					deploymentPrefix := "portforwardwindows"
+					deploymentName := fmt.Sprintf("%s-%v", deploymentPrefix, r.Intn(9999))
+					deploy, err = deployment.CreateWindowsDeployDeleteIfExist(deploymentPrefix, windowsImages.IIS, deploymentName, deploymentNamespace, "")
+					Expect(err).NotTo(HaveOccurred())
+					testPortForward(deploymentName)
+					err = deploy.Delete(util.DefaultDeleteRetries)
+					Expect(err).NotTo(HaveOccurred())
+				} else {
+					Skip("kubectl port-forward only works on Windows nodes with Kubernetes 1.15+")
+					// Reference: https://github.com/kubernetes/kubernetes/pull/75479
+				}
 			}
 		})
 
 		It("should report all nodes in a Ready state", func() {
-			nodeCount := eng.NodeCount()
-			log.Printf("Checking for %d Ready nodes\n", nodeCount)
-			ready := node.WaitOnReady(nodeCount, 10*time.Second, cfg.Timeout)
+			var expectedReadyNodes int
+			if !eng.ExpandedDefinition.Properties.HasLowPriorityScaleset() {
+				expectedReadyNodes = eng.NodeCount()
+				log.Printf("Checking for %d Ready nodes\n", expectedReadyNodes)
+			} else {
+				expectedReadyNodes = -1
+			}
+			ready := node.WaitOnReady(expectedReadyNodes, 10*time.Second, cfg.Timeout)
 			cmd := exec.Command("k", "get", "nodes", "-o", "wide")
 			out, _ := cmd.CombinedOutput()
 			log.Printf("%s\n", out)
 			if !ready {
+				nodeList, err := node.GetReady()
+				Expect(err).NotTo(HaveOccurred())
+				for _, node := range nodeList.Nodes {
+					if !node.IsReady() {
+						cmd := exec.Command("k", "describe", "node", node.Metadata.Name)
+						out, _ := cmd.CombinedOutput()
+						log.Printf("\n%s\n", out)
+					}
+				}
 				log.Printf("Error: Not all nodes in a healthy state\n")
 			}
 			Expect(ready).To(Equal(true))
 		})
 
 		It("should have node labels and annotations", func() {
-			totalNodeCount := eng.NodeCount()
-			masterNodes, err := node.GetByPrefix("k8s-master")
+			if !eng.ExpandedDefinition.Properties.HasLowPriorityScaleset() {
+				totalNodeCount := eng.NodeCount()
+				masterNodes, err := node.GetByRegex(firstMasterRegexStr)
+				Expect(err).NotTo(HaveOccurred())
+				nodes := totalNodeCount - len(masterNodes)
+				nodeList, err := node.GetByLabel("foo")
+				Expect(err).NotTo(HaveOccurred())
+				Expect(len(nodeList)).To(Equal(nodes))
+				nodeList, err = node.GetByAnnotations("foo", "bar")
+				Expect(err).NotTo(HaveOccurred())
+				Expect(len(nodeList)).To(Equal(nodes))
+			} else {
+				Skip("Skip per-node tests in low-priority VMSS cluster configuration scenario")
+			}
+		})
+
+		It("should have node labels specific to masters or agents", func() {
+			nodeList, err := node.Get()
 			Expect(err).NotTo(HaveOccurred())
-			nodes := totalNodeCount - len(masterNodes)
-			nodeList, err := node.GetByLabel("foo")
-			Expect(err).NotTo(HaveOccurred())
-			Expect(len(nodeList)).To(Equal(nodes))
-			nodeList, err = node.GetByAnnotations("foo", "bar")
-			Expect(err).NotTo(HaveOccurred())
-			Expect(len(nodeList)).To(Equal(nodes))
+			if !eng.ExpandedDefinition.Properties.HasLowPriorityScaleset() {
+				Expect(len(nodeList.Nodes)).To(Equal(eng.NodeCount()))
+			}
+			for _, node := range nodeList.Nodes {
+				role := "master"
+				if !strings.HasPrefix(node.Metadata.Name, "k8s-master-") {
+					if eng.ExpandedDefinition.Properties.HasLowPriorityScaleset() {
+						continue
+					} else {
+						role = "agent"
+					}
+				}
+				labels := node.Metadata.Labels
+				// See https://github.com/Azure/aks-engine/issues/1660
+				if node.IsWindows() && common.IsKubernetesVersionGe(
+					eng.ExpandedDefinition.Properties.OrchestratorProfile.OrchestratorVersion, "1.16.0-alpha.1") {
+					Skip("Kubernetes 1.16 on Windows needs node labels applied")
+				}
+				Expect(labels).To(HaveKeyWithValue("kubernetes.io/role", role))
+				Expect(labels).To(HaveKey(fmt.Sprintf("node-role.kubernetes.io/%s", role)))
+			}
 		})
 
 		It("should print cluster resources", func() {
@@ -509,6 +632,27 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				running, err := pod.WaitOnReady(componentName, "kube-system", kubeSystemPodsReadinessChecks, retryTimeWhenWaitingForPodReady, cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(running).To(Equal(true))
+			}
+		})
+
+		It("Should not have any unready or crashing pods right after deployment", func() {
+			if eng.Config.DebugCrashingPods {
+				By("Checking ready status of each pod in kube-system")
+				pods, err := pod.GetAll("kube-system")
+				Expect(err).NotTo(HaveOccurred())
+				Expect(len(pods.Pods)).ToNot(BeZero())
+				for _, currentPod := range pods.Pods {
+					log.Printf("Checking %s - ready: %t, restarts: %d", currentPod.Metadata.Name, currentPod.Status.ContainerStatuses[0].Ready, currentPod.Status.ContainerStatuses[0].RestartCount)
+					Expect(currentPod.Status.ContainerStatuses[0].Ready).To(BeTrue())
+					tooManyRestarts := 5
+					if strings.Contains(currentPod.Metadata.Name, "cluster-autoscaler") {
+						log.Print("need to investigate cluster-autoscaler restarts!")
+						tooManyRestarts = 10
+					}
+					Expect(currentPod.Status.ContainerStatuses[0].RestartCount).To(BeNumerically("<", tooManyRestarts))
+				}
+			} else {
+				Skip("Skipping this DEBUG test")
 			}
 		})
 
@@ -723,37 +867,24 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			Expect(successes).To(Equal(cfg.StabilityIterations))
 		})
 
-		It("should be able to access the dashboard from each node", func() {
-			if hasDashboard, dashboardAddon := eng.HasAddon("kubernetes-dashboard"); hasDashboard {
+		It("should be able to access the dashboard", func() {
+			if hasDashboard, _ := eng.HasAddon("kubernetes-dashboard"); hasDashboard {
 				By("Ensuring that the kubernetes-dashboard service is Running")
 				s, err := service.Get("kubernetes-dashboard", "kube-system")
 				Expect(err).NotTo(HaveOccurred())
-
-				if !eng.HasWindowsAgents() {
-					By("Gathering connection information to determine whether or not to connect via HTTP or HTTPS")
-					dashboardPort := 443
-					version, err := node.Version()
-					Expect(err).NotTo(HaveOccurred())
-					re := regexp.MustCompile("1.(5|6|7|8).")
-					if re.FindString(version) != "" {
-						dashboardPort = 80
+				By("Ensuring that we can connect via HTTPS to the dashboard on any one node")
+				dashboardPort := 443
+				port := s.GetNodePort(dashboardPort)
+				nodeList, err := node.GetReady()
+				Expect(err).NotTo(HaveOccurred())
+				var success bool
+				for _, node := range nodeList.Nodes {
+					if success {
+						break
 					}
-					port := s.GetNodePort(dashboardPort)
-
-					kubeConfig, err := GetConfig()
-					Expect(err).NotTo(HaveOccurred())
-					master := fmt.Sprintf("%s@%s", eng.ExpandedDefinition.Properties.LinuxProfile.AdminUsername, kubeConfig.GetServerName())
-
-					if dashboardPort == 80 {
-						By("Ensuring that we can connect via HTTP to the dashboard on any one node")
-					} else {
-						By("Ensuring that we can connect via HTTPS to the dashboard on any one node")
-					}
-					nodeList, err := node.GetReady()
-					Expect(err).NotTo(HaveOccurred())
-					for _, node := range nodeList.Nodes {
-						success := false
-						for i := 0; i < 60; i++ {
+					if node.IsLinux() {
+						// Allow 3 retries for each node
+						for i := 0; i < 3; i++ {
 							address := node.Status.GetAddressByType("InternalIP")
 							if address == nil {
 								log.Printf("One of our nodes does not have an InternalIP value!: %s\n", node.Metadata.Name)
@@ -761,31 +892,16 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 							Expect(address).NotTo(BeNil())
 							dashboardURL := fmt.Sprintf("http://%s:%v", address.Address, port)
 							curlCMD := fmt.Sprintf("curl --max-time 60 %s", dashboardURL)
-							cmd := exec.Command("ssh", "-i", masterSSHPrivateKeyFilepath, "-p", masterSSHPort, "-o", "ConnectTimeout=10", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-o", "LogLevel=ERROR", master, curlCMD)
-							util.PrintCommand(cmd)
-							var out []byte
-							out, err = cmd.CombinedOutput()
+							err := sshConn.Execute(curlCMD, false)
 							if err == nil {
 								success = true
 								break
 							}
-							if i > 58 {
-								log.Printf("Error while connecting to Windows dashboard:%s\n", err)
-								log.Println(string(out))
-							}
-							time.Sleep(10 * time.Second)
+							time.Sleep(1 * time.Second)
 						}
-						Expect(success).To(BeTrue())
-					}
-					By("Ensuring that the correct resources have been applied")
-					// Assuming one dashboard pod
-					pods, err := pod.GetAllByPrefix("kubernetes-dashboard", "kube-system")
-					Expect(err).NotTo(HaveOccurred())
-					for i, c := range dashboardAddon.Containers {
-						err := pods[0].Spec.Containers[i].ValidateResources(c)
-						Expect(err).NotTo(HaveOccurred())
 					}
 				}
+				Expect(success).To(BeTrue())
 			} else {
 				Skip("kubernetes-dashboard disabled for this cluster, will not test")
 			}
@@ -794,63 +910,56 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 
 	Describe("with a windows agent pool", func() {
 		It("kubelet service should be able to recover when the docker service is stopped", func() {
-			if eng.HasWindowsAgents() {
-				kubeConfig, err := GetConfig()
-				Expect(err).NotTo(HaveOccurred())
-				master := fmt.Sprintf("%s@%s", eng.ExpandedDefinition.Properties.LinuxProfile.AdminUsername, kubeConfig.GetServerName())
-				nodeList, err := node.GetReady()
-				Expect(err).NotTo(HaveOccurred())
-
-				simulateDockerdCrashScript := "simulate-dockerd-crash.cmd"
-				cmd := exec.Command("scp", "-i", masterSSHPrivateKeyFilepath, "-P", masterSSHPort, "-o", "StrictHostKeyChecking=no", filepath.Join(ScriptsDir, simulateDockerdCrashScript), master+":/tmp/"+simulateDockerdCrashScript)
-				util.PrintCommand(cmd)
-				out, err := cmd.CombinedOutput()
-				log.Printf("%s\n", out)
-				Expect(err).NotTo(HaveOccurred())
-
-				var conn *remote.Connection
-				conn, err = remote.NewConnection(kubeConfig.GetServerName(), masterSSHPort, eng.ExpandedDefinition.Properties.WindowsProfile.AdminUsername, masterSSHPrivateKeyFilepath)
-				Expect(err).NotTo(HaveOccurred())
-
-				for _, node := range nodeList.Nodes {
-					if node.IsWindows() {
-						By(fmt.Sprintf("simulating docker and subsequent kubelet service crash on node: %s", node.Metadata.Name))
-						err := conn.CopyToRemote(node.Metadata.Name, "/tmp/"+simulateDockerdCrashScript)
-						Expect(err).NotTo(HaveOccurred())
-						simulateDockerCrashCommand := fmt.Sprintf("\"/tmp/%s\"", simulateDockerdCrashScript)
-						cmd := exec.Command("ssh", "-A", "-i", masterSSHPrivateKeyFilepath, "-p", masterSSHPort, "-o", "ConnectTimeout=10", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-o", "LogLevel=ERROR", master, "ssh", "-o", "ConnectTimeout=10", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-o", "LogLevel=ERROR", node.Metadata.Name, simulateDockerCrashCommand)
-						util.PrintCommand(cmd)
-						out, err := cmd.CombinedOutput()
-						log.Printf("%s\n", out)
-						Expect(err).NotTo(HaveOccurred())
+			if !eng.ExpandedDefinition.Properties.HasLowPriorityScaleset() {
+				if eng.HasWindowsAgents() {
+					nodeList, err := node.GetReady()
+					Expect(err).NotTo(HaveOccurred())
+					simulateDockerdCrashScript := "simulate-dockerd-crash.cmd"
+					err = sshConn.CopyTo(simulateDockerdCrashScript)
+					Expect(err).NotTo(HaveOccurred())
+					for _, node := range nodeList.Nodes {
+						if node.IsWindows() {
+							By(fmt.Sprintf("simulating docker and subsequent kubelet service crash on node: %s", node.Metadata.Name))
+							err = sshConn.CopyToRemote(node.Metadata.Name, "/tmp/"+simulateDockerdCrashScript)
+							Expect(err).NotTo(HaveOccurred())
+							simulateDockerCrashCommand := fmt.Sprintf("\"/tmp/%s\"", simulateDockerdCrashScript)
+							err = sshConn.ExecuteRemote(node.Metadata.Name, simulateDockerCrashCommand, true)
+							Expect(err).NotTo(HaveOccurred())
+						}
 					}
-				}
 
-				log.Print("Waiting 1 minute to allow nodes to report not ready state after the crash occurred\n")
-				time.Sleep(1 * time.Minute)
+					log.Print("Waiting 1 minute to allow nodes to report not ready state after the crash occurred\n")
+					time.Sleep(1 * time.Minute)
 
-				for _, node := range nodeList.Nodes {
-					if node.IsWindows() {
-						By(fmt.Sprintf("restarting kubelet service on node: %s", node.Metadata.Name))
-						restartKubeletCommand := fmt.Sprintf("\"Powershell Start-Service kubelet\"")
-						cmd := exec.Command("ssh", "-A", "-i", masterSSHPrivateKeyFilepath, "-p", masterSSHPort, "-o", "ConnectTimeout=10", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-o", "LogLevel=ERROR", master, "ssh", "-o", "ConnectTimeout=10", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-o", "LogLevel=ERROR", node.Metadata.Name, restartKubeletCommand)
-						util.PrintCommand(cmd)
-						out, err := cmd.CombinedOutput()
-						log.Printf("%s\n", out)
-						Expect(err).NotTo(HaveOccurred())
+					for _, node := range nodeList.Nodes {
+						if node.IsWindows() {
+							By(fmt.Sprintf("restarting kubelet service on node: %s", node.Metadata.Name))
+							restartKubeletCommand := fmt.Sprintf("\"Powershell Start-Service kubelet\"")
+							err = sshConn.ExecuteRemote(node.Metadata.Name, restartKubeletCommand, true)
+							Expect(err).NotTo(HaveOccurred())
+						}
 					}
-				}
 
-				nodeCount := eng.NodeCount()
-				log.Printf("Checking for %d Ready nodes\n", nodeCount)
-				ready := node.WaitOnReady(nodeCount, 1*time.Minute, cfg.Timeout)
-				cmd2 := exec.Command("k", "get", "nodes", "-o", "wide")
-				out2, _ := cmd2.CombinedOutput()
-				log.Printf("%s\n", out2)
-				if !ready {
-					log.Printf("Error: Not all nodes in a healthy state\n")
+					var expectedReadyNodes int
+					if !eng.ExpandedDefinition.Properties.HasLowPriorityScaleset() {
+						expectedReadyNodes = eng.NodeCount()
+						log.Printf("Checking for %d Ready nodes\n", expectedReadyNodes)
+					} else {
+						expectedReadyNodes = -1
+					}
+					ready := node.WaitOnReady(expectedReadyNodes, 1*time.Minute, cfg.Timeout)
+					cmd2 := exec.Command("k", "get", "nodes", "-o", "wide")
+					out2, _ := cmd2.CombinedOutput()
+					log.Printf("%s\n", out2)
+					if !ready {
+						log.Printf("Error: Not all nodes in a healthy state\n")
+					}
+					Expect(ready).To(Equal(true))
+				} else {
+					Skip("Docker service recovery test is Windows only")
 				}
-				Expect(ready).To(Equal(true))
+			} else {
+				Skip("Skip per-node tests in low-priority VMSS cluster configuration scenario")
 			}
 		})
 	})
@@ -875,7 +984,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				By("Ensuring we can create a curl pod to connect to the service")
 				deploymentPrefix = fmt.Sprintf("ilb-test-curl-deployment")
 				curlDeploymentName := fmt.Sprintf("%s-%v", deploymentPrefix, r.Intn(99999))
-				curlDeploy, err := deployment.CreateLinuxDeployDeleteIfExists(deploymentPrefix, "library/nginx:latest", curlDeploymentName, "default", "")
+				curlDeploy, err := deployment.CreateLinuxDeployDeleteIfExists(deploymentPrefix, "library/nginx:latest", curlDeploymentName, "default", "--replicas=2")
 				Expect(err).NotTo(HaveOccurred())
 				running, err := pod.WaitOnReady(curlDeploymentName, "default", 3, retryTimeWhenWaitingForPodReady, cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())
@@ -883,15 +992,16 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				curlPods, err := curlDeploy.Pods()
 				Expect(err).NotTo(HaveOccurred())
 				By("Ensuring we can connect to the ILB service from another pod")
-				for i, curlPod := range curlPods {
-					if i < 1 {
-						var pass bool
-						pass, err = curlPod.ValidateCurlConnection(svc.Status.LoadBalancer.Ingress[0]["ip"], 5*time.Second, cfg.Timeout)
-						Expect(err).NotTo(HaveOccurred())
-						Expect(pass).To(BeTrue())
+				var success bool
+				for _, curlPod := range curlPods {
+					pass, curlErr := curlPod.ValidateCurlConnection(svc.Status.LoadBalancer.Ingress[0]["ip"], 5*time.Second, 3*time.Minute)
+					if curlErr == nil && pass {
+						success = true
+						break
 					}
-				}
 
+				}
+				Expect(success).To(BeTrue())
 				By("Ensuring we can create an ELB service attachment")
 				sELB, err := service.CreateServiceFromFileDeleteIfExist(filepath.Join(WorkloadDir, "ingress-nginx-elb.yaml"), serviceName+"-elb", "default")
 				Expect(err).NotTo(HaveOccurred())
@@ -902,15 +1012,16 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				valid := sELB.Validate("(Welcome to nginx)", 5, 30*time.Second, cfg.Timeout)
 				Expect(valid).To(BeTrue())
 				By("Ensuring we can connect to the ELB service from another pod")
-				for i, curlPod := range curlPods {
-					if i < 1 {
-						var pass bool
-						pass, err = curlPod.ValidateCurlConnection(svc.Status.LoadBalancer.Ingress[0]["ip"], 5*time.Second, cfg.Timeout)
-						Expect(err).NotTo(HaveOccurred())
-						Expect(pass).To(BeTrue())
+				success = false
+				for _, curlPod := range curlPods {
+					pass, curlErr := curlPod.ValidateCurlConnection(svc.Status.LoadBalancer.Ingress[0]["ip"], 5*time.Second, 3*time.Minute)
+					if curlErr == nil && pass {
+						success = true
+						break
 					}
-				}
 
+				}
+				Expect(success).To(BeTrue())
 				err = sILB.Delete(util.DefaultDeleteRetries)
 				Expect(err).NotTo(HaveOccurred())
 				err = sELB.Delete(util.DefaultDeleteRetries)
@@ -1123,66 +1234,70 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 		})
 
 		It("should create pv with zone labels and node affinity", func() {
-			if eng.ExpandedDefinition.Properties.HasZonesForAllAgentPools() {
-				By("Creating a persistent volume claim")
-				pvcName := "azure-managed-disk" // should be the same as in pvc-standard.yaml
-				pvc, err := persistentvolumeclaims.CreatePersistentVolumeClaimsFromFile(filepath.Join(WorkloadDir, "pvc-standard.yaml"), pvcName, "default")
-				Expect(err).NotTo(HaveOccurred())
-				ready, err := pvc.WaitOnReady("default", 5*time.Second, cfg.Timeout)
-				Expect(err).NotTo(HaveOccurred())
-				Expect(ready).To(Equal(true))
+			if !eng.ExpandedDefinition.Properties.HasLowPriorityScaleset() {
+				if eng.ExpandedDefinition.Properties.HasZonesForAllAgentPools() {
+					By("Creating a persistent volume claim")
+					pvcName := "azure-managed-disk" // should be the same as in pvc-standard.yaml
+					pvc, err := persistentvolumeclaims.CreatePersistentVolumeClaimsFromFile(filepath.Join(WorkloadDir, "pvc-standard.yaml"), pvcName, "default")
+					Expect(err).NotTo(HaveOccurred())
+					ready, err := pvc.WaitOnReady("default", 5*time.Second, cfg.Timeout)
+					Expect(err).NotTo(HaveOccurred())
+					Expect(ready).To(Equal(true))
 
-				pvList, err := persistentvolume.Get()
-				Expect(err).NotTo(HaveOccurred())
-				pvZone := ""
-				for _, pv := range pvList.PersistentVolumes {
-					By("Ensuring that we get zones for the pv")
-					// zone is chosen by round-robin across all zones
-					pvZone = pv.Metadata.Labels["failure-domain.beta.kubernetes.io/zone"]
-					fmt.Printf("pvZone: %s\n", pvZone)
-					contains := strings.Contains(pvZone, "-")
-					Expect(contains).To(Equal(true))
-					// VolumeScheduling feature gate is set to true by default starting v1.10+
-					for _, expression := range pv.Spec.NodeAffinity.Required.NodeSelectorTerms[0].MatchExpressions {
-						if expression.Key == "failure-domain.beta.kubernetes.io/zone" {
-							By("Ensuring that we get nodeAffinity for each pv")
-							value := expression.Values[0]
-							fmt.Printf("NodeAffinity value: %s\n", value)
-							contains := strings.Contains(value, "-")
-							Expect(contains).To(Equal(true))
+					pvList, err := persistentvolume.Get()
+					Expect(err).NotTo(HaveOccurred())
+					pvZone := ""
+					for _, pv := range pvList.PersistentVolumes {
+						By("Ensuring that we get zones for the pv")
+						// zone is chosen by round-robin across all zones
+						pvZone = pv.Metadata.Labels["failure-domain.beta.kubernetes.io/zone"]
+						fmt.Printf("pvZone: %s\n", pvZone)
+						contains := strings.Contains(pvZone, "-")
+						Expect(contains).To(Equal(true))
+						// VolumeScheduling feature gate is set to true by default starting v1.10+
+						for _, expression := range pv.Spec.NodeAffinity.Required.NodeSelectorTerms[0].MatchExpressions {
+							if expression.Key == "failure-domain.beta.kubernetes.io/zone" {
+								By("Ensuring that we get nodeAffinity for each pv")
+								value := expression.Values[0]
+								fmt.Printf("NodeAffinity value: %s\n", value)
+								contains := strings.Contains(value, "-")
+								Expect(contains).To(Equal(true))
+							}
 						}
 					}
+
+					By("Launching a pod using the volume claim")
+					podName := "zone-pv-pod" // should be the same as in pod-pvc.yaml
+					testPod, err := pod.CreatePodFromFile(filepath.Join(WorkloadDir, "pod-pvc.yaml"), podName, "default", 1*time.Second, cfg.Timeout)
+					Expect(err).NotTo(HaveOccurred())
+					ready, err = testPod.WaitOnReady(retryTimeWhenWaitingForPodReady, cfg.Timeout)
+					Expect(err).NotTo(HaveOccurred())
+					Expect(ready).To(Equal(true))
+
+					By("Checking that the pod can access volume")
+					valid, err := testPod.ValidatePVC("/mnt/azure", 10, 10*time.Second)
+					Expect(valid).To(BeTrue())
+					Expect(err).NotTo(HaveOccurred())
+
+					By("Ensuring that attached volume pv has the same zone as the zone of the node")
+					nodeName := testPod.Spec.NodeName
+					nodeList, err := node.GetByRegex(nodeName)
+					Expect(err).NotTo(HaveOccurred())
+					nodeZone := nodeList[0].Metadata.Labels["failure-domain.beta.kubernetes.io/zone"]
+					fmt.Printf("pvZone: %s\n", pvZone)
+					fmt.Printf("nodeZone: %s\n", nodeZone)
+					Expect(nodeZone == pvZone).To(Equal(true))
+
+					By("Cleaning up after ourselves")
+					err = testPod.Delete(util.DefaultDeleteRetries)
+					Expect(err).NotTo(HaveOccurred())
+					err = pvc.Delete(util.DefaultDeleteRetries)
+					Expect(err).NotTo(HaveOccurred())
+				} else {
+					Skip("Availability zones was not configured for this Cluster Definition")
 				}
-
-				By("Launching a pod using the volume claim")
-				podName := "zone-pv-pod" // should be the same as in pod-pvc.yaml
-				testPod, err := pod.CreatePodFromFile(filepath.Join(WorkloadDir, "pod-pvc.yaml"), podName, "default", 1*time.Second, cfg.Timeout)
-				Expect(err).NotTo(HaveOccurred())
-				ready, err = testPod.WaitOnReady(retryTimeWhenWaitingForPodReady, cfg.Timeout)
-				Expect(err).NotTo(HaveOccurred())
-				Expect(ready).To(Equal(true))
-
-				By("Checking that the pod can access volume")
-				valid, err := testPod.ValidatePVC("/mnt/azure", 10, 10*time.Second)
-				Expect(valid).To(BeTrue())
-				Expect(err).NotTo(HaveOccurred())
-
-				By("Ensuring that attached volume pv has the same zone as the zone of the node")
-				nodeName := testPod.Spec.NodeName
-				nodeList, err := node.GetByPrefix(nodeName)
-				Expect(err).NotTo(HaveOccurred())
-				nodeZone := nodeList[0].Metadata.Labels["failure-domain.beta.kubernetes.io/zone"]
-				fmt.Printf("pvZone: %s\n", pvZone)
-				fmt.Printf("nodeZone: %s\n", nodeZone)
-				Expect(nodeZone == pvZone).To(Equal(true))
-
-				By("Cleaning up after ourselves")
-				err = testPod.Delete(util.DefaultDeleteRetries)
-				Expect(err).NotTo(HaveOccurred())
-				err = pvc.Delete(util.DefaultDeleteRetries)
-				Expect(err).NotTo(HaveOccurred())
 			} else {
-				Skip("Availability zones was not configured for this Cluster Definition")
+				Skip("Skip per-node tests in low-priority VMSS cluster configuration scenario")
 			}
 		})
 	})
@@ -1383,7 +1498,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				deploymentPrefix := fmt.Sprintf("iis-%s", cfg.Name)
 				deploymentName := fmt.Sprintf("%s-%v", deploymentPrefix, r.Intn(99999))
 				By("Creating a deployment with 1 pod running IIS")
-				iisDeploy, err := deployment.CreateWindowsDeployDeleteIfExist(deploymentPrefix, windowsImages.IIS, deploymentName, "default", 80, -1)
+				iisDeploy, err := deployment.CreateWindowsDeployWithHostportDeleteIfExist(deploymentPrefix, windowsImages.IIS, deploymentName, "default", 80, -1)
 				Expect(err).NotTo(HaveOccurred())
 
 				By("Waiting on pod to be Ready")
@@ -1491,7 +1606,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				deploymentPrefix := fmt.Sprintf("iis-dns-%s", cfg.Name)
 				windowsDeploymentName := fmt.Sprintf("%s-%v", deploymentPrefix, r.Intn(99999))
 				By("Creating a deployment running IIS")
-				windowsIISDeployment, err := deployment.CreateWindowsDeployDeleteIfExist(deploymentPrefix, windowsImages.IIS, windowsDeploymentName, "default", 80, -1)
+				windowsIISDeployment, err := deployment.CreateWindowsDeployWithHostportDeleteIfExist(deploymentPrefix, windowsImages.IIS, windowsDeploymentName, "default", 80, -1)
 				Expect(err).NotTo(HaveOccurred())
 
 				deploymentPrefix = fmt.Sprintf("nginx-dns-%s", cfg.Name)
@@ -1554,22 +1669,6 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				Expect(err).NotTo(HaveOccurred())
 			} else {
 				Skip("No windows agent was provisioned for this Cluster Definition")
-			}
-		})
-
-		It("Should not have any unready or crashing pods right after deployment", func() {
-			if eng.HasWindowsAgents() {
-				By("Checking ready status of each pod in kube-system")
-				pods, err := pod.GetAll("kube-system")
-				Expect(err).NotTo(HaveOccurred())
-				Expect(len(pods.Pods)).ToNot(BeZero())
-				for _, currentPod := range pods.Pods {
-					log.Printf("Checking %s", currentPod.Metadata.Name)
-					Expect(currentPod.Status.ContainerStatuses[0].Ready).To(BeTrue())
-					Expect(currentPod.Status.ContainerStatuses[0].RestartCount).To(BeNumerically("<", 3))
-				}
-			} else {
-				Skip("kube-system pod crashing test is a Windows-only validation at this time")
 			}
 		})
 
@@ -1674,31 +1773,25 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 		})
 
 		It("should have healthy time synchronization", func() {
-			kubeConfig, err := GetConfig()
-			Expect(err).NotTo(HaveOccurred())
-			master := fmt.Sprintf("%s@%s", eng.ExpandedDefinition.Properties.LinuxProfile.AdminUsername, kubeConfig.GetServerName())
-			nodeList, err := node.GetReady()
-			Expect(err).NotTo(HaveOccurred())
-			timeSyncValidateScript := "time-sync-validate.sh"
-			cmd := exec.Command("scp", "-i", masterSSHPrivateKeyFilepath, "-P", masterSSHPort, "-o", "StrictHostKeyChecking=no", filepath.Join(ScriptsDir, timeSyncValidateScript), master+":/tmp/"+timeSyncValidateScript)
-			util.PrintCommand(cmd)
-			out, err := cmd.CombinedOutput()
-			log.Printf("%s\n", out)
-			Expect(err).NotTo(HaveOccurred())
-			var conn *remote.Connection
-			conn, err = remote.NewConnection(kubeConfig.GetServerName(), masterSSHPort, eng.ExpandedDefinition.Properties.LinuxProfile.AdminUsername, masterSSHPrivateKeyFilepath)
-			Expect(err).NotTo(HaveOccurred())
-			for _, node := range nodeList.Nodes {
-				if node.IsUbuntu() {
-					err := conn.CopyToRemote(node.Metadata.Name, "/tmp/"+timeSyncValidateScript)
-					Expect(err).NotTo(HaveOccurred())
-					netConfigValidationCommand := fmt.Sprintf("\"/tmp/%s\"", timeSyncValidateScript)
-					cmd = exec.Command("ssh", "-A", "-i", masterSSHPrivateKeyFilepath, "-p", masterSSHPort, "-o", "ConnectTimeout=10", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-o", "LogLevel=ERROR", master, "ssh", "-o", "ConnectTimeout=10", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-o", "LogLevel=ERROR", node.Metadata.Name, netConfigValidationCommand)
-					util.PrintCommand(cmd)
-					out, err = cmd.CombinedOutput()
-					log.Printf("%s\n", out)
-					Expect(err).NotTo(HaveOccurred())
+			if !eng.ExpandedDefinition.Properties.HasLowPriorityScaleset() {
+				nodeList, err := node.GetReady()
+				Expect(err).NotTo(HaveOccurred())
+				timeSyncValidateScript := "time-sync-validate.sh"
+				err = sshConn.CopyTo(timeSyncValidateScript)
+				Expect(err).NotTo(HaveOccurred())
+				timeSyncValidationCommand := fmt.Sprintf("\"/tmp/%s\"", timeSyncValidateScript)
+				err = sshConn.Execute(timeSyncValidationCommand, false)
+				Expect(err).NotTo(HaveOccurred())
+				for _, node := range nodeList.Nodes {
+					if node.IsUbuntu() && !firstMasterRegexp.MatchString(node.Metadata.Name) {
+						err := sshConn.CopyToRemote(node.Metadata.Name, "/tmp/"+timeSyncValidateScript)
+						Expect(err).NotTo(HaveOccurred())
+						err = sshConn.ExecuteRemote(node.Metadata.Name, timeSyncValidationCommand, false)
+						Expect(err).NotTo(HaveOccurred())
+					}
 				}
+			} else {
+				Skip("Skip per-node tests in low-priority VMSS cluster configuration scenario")
 			}
 		})
 

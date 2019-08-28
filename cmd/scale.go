@@ -26,6 +26,8 @@ import (
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
+	prefixed "github.com/x-cray/logrus-prefixed-formatter"
+	v1 "k8s.io/api/core/v1"
 )
 
 type scaleCmd struct {
@@ -49,6 +51,9 @@ type scaleCmd struct {
 	nameSuffix       string
 	agentPoolIndex   int
 	logger           *log.Entry
+	apiserverURL     string
+	kubeconfig       string
+	nodes            []v1.Node
 }
 
 const (
@@ -76,9 +81,11 @@ func newScaleCmd() *cobra.Command {
 	f.StringVar(&sc.deploymentDirectory, "deployment-dir", "", "the location of the output from `generate`")
 	f.IntVarP(&sc.newDesiredAgentCount, "new-node-count", "c", 0, "desired number of nodes")
 	f.StringVar(&sc.agentPoolToScale, "node-pool", "", "node pool to scale")
-	f.StringVar(&sc.masterFQDN, "master-FQDN", "", "FQDN for the master load balancer, Needed to scale down Kubernetes agent pools")
+	f.StringVar(&sc.masterFQDN, "master-FQDN", "", "FQDN for the master load balancer that maps to the apiserver endpoint")
+	f.StringVar(&sc.masterFQDN, "apiserver", "", "apiserver endpoint (required to cordon and drain nodes)")
 
-	f.MarkDeprecated("deployment-dir", "deployment-dir is no longer required for scale or upgrade. Please use --api-model.")
+	f.MarkDeprecated("deployment-dir", "--deployment-dir is no longer required for scale or upgrade. Please use --api-model.")
+	f.MarkDeprecated("master-FQDN", "--apiserver is preferred")
 
 	addAuthFlags(&sc.authArgs, f)
 
@@ -86,7 +93,7 @@ func newScaleCmd() *cobra.Command {
 }
 
 func (sc *scaleCmd) validate(cmd *cobra.Command) error {
-	log.Infoln("validating...")
+	log.Debugln("validating scale command line arguments...")
 	var err error
 
 	sc.locale, err = i18n.LoadTranslations()
@@ -125,7 +132,9 @@ func (sc *scaleCmd) validate(cmd *cobra.Command) error {
 }
 
 func (sc *scaleCmd) load() error {
-	sc.logger = log.New().WithField("source", "scaling command line")
+	logger := log.New()
+	logger.Formatter = new(prefixed.TextFormatter)
+	sc.logger = log.NewEntry(log.New())
 	var err error
 
 	ctx, cancel := context.WithTimeout(context.Background(), armhelpers.DefaultARMOperationTimeout)
@@ -203,7 +212,22 @@ func (sc *scaleCmd) load() error {
 
 	//allows to identify VMs in the resource group that belong to this cluster.
 	sc.nameSuffix = sc.containerService.Properties.GetClusterID()
-	log.Infof("Name suffix: %s", sc.nameSuffix)
+	log.Debugf("Cluster ID used in all agent pools: %s", sc.nameSuffix)
+
+	if sc.masterFQDN != "" {
+		if strings.HasPrefix(sc.masterFQDN, "https://") {
+			sc.apiserverURL = sc.masterFQDN
+		} else if strings.HasPrefix(sc.masterFQDN, "http://") {
+			return errors.New("apiserver URL cannot be insecure http://")
+		} else {
+			sc.apiserverURL = fmt.Sprintf("https://%s", sc.masterFQDN)
+		}
+	}
+
+	sc.kubeconfig, err = engine.GenerateKubeConfig(sc.containerService.Properties, sc.location)
+	if err != nil {
+		return errors.New("Unable to derive kubeconfig from api model")
+	}
 	return nil
 }
 
@@ -222,14 +246,23 @@ func (sc *scaleCmd) run(cmd *cobra.Command, args []string) error {
 	winPoolIndex = -1
 	indexes := make([]int, 0)
 	indexToVM := make(map[int]string)
+
+	// Get nodes list from the k8s API before scaling for the desired pool
+	if sc.apiserverURL != "" && orchestratorInfo.OrchestratorType == api.Kubernetes {
+		nodes, err := operations.GetNodes(sc.client, sc.logger, sc.apiserverURL, sc.kubeconfig, time.Duration(5)*time.Minute, sc.agentPoolToScale, -1)
+		if err == nil && nodes != nil {
+			sc.nodes = nodes
+		}
+	}
+
 	if sc.agentPool.IsAvailabilitySets() {
 		availabilitySetIDs := []string{}
 
 		for vmsListPage, err := sc.client.ListVirtualMachines(ctx, sc.resourceGroupName); vmsListPage.NotDone(); err = vmsListPage.Next() {
 			if err != nil {
-				return errors.Wrap(err, "failed to get vms in the resource group")
+				return errors.Wrap(err, "failed to get VMs in the resource group")
 			} else if len(vmsListPage.Values()) < 1 {
-				return errors.New("The provided resource group does not contain any vms")
+				return errors.New("The provided resource group does not contain any VMs")
 			}
 			for _, vm := range vmsListPage.Values() {
 				vmName := *vm.Name
@@ -261,7 +294,7 @@ func (sc *scaleCmd) run(cmd *cobra.Command, args []string) error {
 		currentNodeCount = len(indexes)
 
 		if currentNodeCount == sc.newDesiredAgentCount {
-			log.Info("Cluster is currently at the desired agent count.")
+			sc.printScaleTargetEqualsExisting(currentNodeCount)
 			return nil
 		}
 		highestUsedIndex = indexes[len(indexes)-1]
@@ -273,11 +306,31 @@ func (sc *scaleCmd) run(cmd *cobra.Command, args []string) error {
 		}
 		sc.containerService.SetPlatformFaultDomainCount(fdCount)
 
-		// Scale down Scenario
+		// VMAS Scale down Scenario
 		if currentNodeCount > sc.newDesiredAgentCount {
-			if sc.masterFQDN == "" {
+			if sc.apiserverURL == "" {
 				cmd.Usage()
-				return errors.New("master-FQDN is required to scale down a kubernetes cluster's agent pool")
+				return errors.New("--apiserver is required to scale down a kubernetes cluster's agent pool")
+			}
+
+			if sc.nodes != nil {
+				if len(sc.nodes) == 1 {
+					sc.logger.Infof("There is %d node in pool %s before scaling down to %d:\n", len(sc.nodes), sc.agentPoolToScale, sc.newDesiredAgentCount)
+				} else {
+					sc.logger.Infof("There are %d nodes in pool %s before scaling down to %d:\n", len(sc.nodes), sc.agentPoolToScale, sc.newDesiredAgentCount)
+				}
+				operations.PrintNodes(sc.nodes)
+				numNodesFromK8sAPI := len(sc.nodes)
+				if currentNodeCount != numNodesFromK8sAPI {
+					sc.logger.Warnf("There are %d VMs named \"*%s*\" in the resource group %s, but there are %d nodes named \"*%s*\" in the Kubernetes cluster\n", currentNodeCount, sc.agentPoolToScale, sc.resourceGroupName, numNodesFromK8sAPI, sc.agentPoolToScale)
+				} else {
+					nodesToDelete := currentNodeCount - sc.newDesiredAgentCount
+					if nodesToDelete > 1 {
+						sc.logger.Infof("%d nodes will be deleted\n", nodesToDelete)
+					} else {
+						sc.logger.Infof("%d node will be deleted\n", nodesToDelete)
+					}
+				}
 			}
 
 			vmsToDelete := make([]string, 0)
@@ -286,17 +339,19 @@ func (sc *scaleCmd) run(cmd *cobra.Command, args []string) error {
 				vmsToDelete = append(vmsToDelete, indexToVM[index])
 			}
 
+			for _, node := range vmsToDelete {
+				sc.logger.Infof("Node %s will be cordoned and drained\n", node)
+			}
 			if orchestratorInfo.OrchestratorType == api.Kubernetes {
-				kubeConfig, err := engine.GenerateKubeConfig(sc.containerService.Properties, sc.location)
-				if err != nil {
-					return errors.Wrap(err, "failed to generate kube config")
-				}
-				err = sc.drainNodes(kubeConfig, vmsToDelete)
+				err := sc.drainNodes(vmsToDelete)
 				if err != nil {
 					return errors.Wrap(err, "Got error while draining the nodes to be deleted")
 				}
 			}
 
+			for _, node := range vmsToDelete {
+				sc.logger.Infof("Node %s's VM will be deleted\n", node)
+			}
 			errList := operations.ScaleDownVMs(sc.client, sc.logger, sc.SubscriptionID.String(), sc.resourceGroupName, vmsToDelete...)
 			if errList != nil {
 				var err error
@@ -313,6 +368,16 @@ func (sc *scaleCmd) run(cmd *cobra.Command, args []string) error {
 				}
 				return err
 			}
+			if sc.nodes != nil {
+				nodes, err := operations.GetNodes(sc.client, sc.logger, sc.apiserverURL, sc.kubeconfig, time.Duration(5)*time.Minute, sc.agentPoolToScale, sc.newDesiredAgentCount)
+				if err == nil && nodes != nil {
+					sc.nodes = nodes
+					sc.logger.Infof("Nodes in pool %s after scaling:\n", sc.agentPoolToScale)
+					operations.PrintNodes(sc.nodes)
+				} else {
+					sc.logger.Warningf("Unable to get nodes in pool %s after scaling:\n", sc.agentPoolToScale)
+				}
+			}
 
 			return sc.saveAPIModel()
 		}
@@ -325,6 +390,16 @@ func (sc *scaleCmd) run(cmd *cobra.Command, args []string) error {
 				vmName := *vmss.Name
 				if !sc.vmInAgentPool(vmName, vmss.Tags) {
 					continue
+				}
+
+				if vmss.Sku != nil {
+					currentNodeCount = int(*vmss.Sku.Capacity)
+					if int(*vmss.Sku.Capacity) == sc.newDesiredAgentCount {
+						sc.printScaleTargetEqualsExisting(currentNodeCount)
+						return nil
+					} else if int(*vmss.Sku.Capacity) > sc.newDesiredAgentCount {
+						log.Warnf("VMSS scale down is an alpha feature: VMSS VM nodes will not be cordoned and drained before scaling down!")
+					}
 				}
 
 				osPublisher := vmss.VirtualMachineProfile.StorageProfile.ImageReference.Publisher
@@ -394,6 +469,12 @@ func (sc *scaleCmd) run(cmd *cobra.Command, args []string) error {
 		templateJSON["variables"].(map[string]interface{})[sc.agentPool.Name+"VMNamePrefix"] = sc.containerService.Properties.GetAgentVMPrefix(sc.agentPool, winPoolIndex)
 	}
 	if orchestratorInfo.OrchestratorType == api.Kubernetes {
+		if orchestratorInfo.KubernetesConfig.LoadBalancerSku == api.StandardLoadBalancerSku {
+			err = transformer.NormalizeForK8sSLBScalingOrUpgrade(sc.logger, templateJSON)
+			if err != nil {
+				return errors.Wrapf(err, "error transforming the template for scaling with SLB %s", sc.apiModelPath)
+			}
+		}
 		err = transformer.NormalizeForK8sVMASScalingUp(sc.logger, templateJSON)
 		if err != nil {
 			return errors.Wrapf(err, "error transforming the template for scaling template %s", sc.apiModelPath)
@@ -406,6 +487,10 @@ func (sc *scaleCmd) run(cmd *cobra.Command, args []string) error {
 	random := rand.New(rand.NewSource(time.Now().UnixNano()))
 	deploymentSuffix := random.Int31()
 
+	if sc.nodes != nil {
+		sc.logger.Infof("Nodes in pool %s before scaling:\n", sc.agentPoolToScale)
+		operations.PrintNodes(sc.nodes)
+	}
 	_, err = sc.client.DeployTemplate(
 		ctx,
 		sc.resourceGroupName,
@@ -414,6 +499,16 @@ func (sc *scaleCmd) run(cmd *cobra.Command, args []string) error {
 		parametersJSON)
 	if err != nil {
 		return err
+	}
+	if sc.nodes != nil {
+		nodes, err := operations.GetNodes(sc.client, sc.logger, sc.apiserverURL, sc.kubeconfig, time.Duration(5)*time.Minute, sc.agentPoolToScale, sc.newDesiredAgentCount)
+		if err == nil && nodes != nil {
+			sc.nodes = nodes
+			sc.logger.Infof("Nodes in pool %s cluster after scaling:\n", sc.agentPoolToScale)
+			operations.PrintNodes(sc.nodes)
+		} else {
+			sc.logger.Warningf("Unable to get nodes in pool %s after scaling:\n", sc.agentPoolToScale)
+		}
 	}
 
 	return sc.saveAPIModel()
@@ -474,18 +569,14 @@ func addValue(m paramsMap, k string, v interface{}) {
 	}
 }
 
-func (sc *scaleCmd) drainNodes(kubeConfig string, vmsToDelete []string) error {
-	masterURL := sc.masterFQDN
-	if !strings.HasPrefix(masterURL, "https://") {
-		masterURL = fmt.Sprintf("https://%s", masterURL)
-	}
+func (sc *scaleCmd) drainNodes(vmsToDelete []string) error {
 	numVmsToDrain := len(vmsToDelete)
 	errChan := make(chan *operations.VMScalingErrorDetails, numVmsToDrain)
 	defer close(errChan)
 	for _, vmName := range vmsToDelete {
 		go func(vmName string) {
 			err := operations.SafelyDrainNode(sc.client, sc.logger,
-				masterURL, kubeConfig, vmName, time.Duration(60)*time.Minute)
+				sc.apiserverURL, sc.kubeconfig, vmName, time.Duration(60)*time.Minute)
 			if err != nil {
 				log.Errorf("Failed to drain node %s, got error %v", vmName, err)
 				errChan <- &operations.VMScalingErrorDetails{Error: err, Name: vmName}
@@ -503,4 +594,21 @@ func (sc *scaleCmd) drainNodes(kubeConfig string, vmsToDelete []string) error {
 	}
 
 	return nil
+}
+
+func (sc *scaleCmd) printScaleTargetEqualsExisting(currentNodeCount int) {
+	var printNodes bool
+	trailingChar := "."
+	if sc.nodes != nil {
+		printNodes = true
+		trailingChar = ":"
+	}
+	log.Infof("Node pool %s is already at the desired count %d%s", sc.agentPoolToScale, sc.newDesiredAgentCount, trailingChar)
+	if printNodes {
+		operations.PrintNodes(sc.nodes)
+	}
+	numNodesFromK8sAPI := len(sc.nodes)
+	if currentNodeCount != numNodesFromK8sAPI {
+		sc.logger.Warnf("There are %d nodes named \"*%s*\" in the Kubernetes cluster, but there are %d VMs named \"*%s*\" in the resource group %s\n", numNodesFromK8sAPI, sc.agentPoolToScale, currentNodeCount, sc.agentPoolToScale, sc.resourceGroupName)
+	}
 }

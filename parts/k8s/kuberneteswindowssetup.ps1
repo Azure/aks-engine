@@ -44,6 +44,10 @@ param(
 
     [parameter(Mandatory=$true)]
     [ValidateNotNullOrEmpty()]
+    $NetworkAPIVersion,
+
+    [parameter(Mandatory=$true)]
+    [ValidateNotNullOrEmpty()]
     $TargetEnvironment
 )
 
@@ -69,7 +73,7 @@ $global:DockerVersion = "{{WrapAsParameter "windowsDockerVersion"}}"
 
 ## VM configuration passed by Azure
 $global:WindowsTelemetryGUID = "{{WrapAsParameter "windowsTelemetryGUID"}}"
-{{if IsIdentitySystemADFS}}
+{{if eq GetIdentitySystem "adfs"}}
 $global:TenantId = "adfs"
 {{else}}
 $global:TenantId = "{{WrapAsVariable "tenantID"}}"
@@ -88,7 +92,11 @@ $global:PrimaryScaleSetName = "{{WrapAsVariable "primaryScaleSetName"}}"
 $global:KubeClusterCIDR = "{{WrapAsParameter "kubeClusterCidr"}}"
 $global:KubeServiceCIDR = "{{WrapAsParameter "kubeServiceCidr"}}"
 $global:VNetCIDR = "{{WrapAsParameter "vnetCidr"}}"
+{{if IsKubernetesVersionGe "1.16.0-alpha.1"}}
 $global:KubeletNodeLabels = "{{GetAgentKubernetesLabels . "',variables('labelResourceGroup'),'"}}"
+{{else}}
+$global:KubeletNodeLabels = "{{GetAgentKubernetesLabelsDeprecated . "',variables('labelResourceGroup'),'"}}"
+{{end}}
 $global:KubeletConfigArgs = @( {{GetKubeletConfigKeyValsPsh .KubernetesConfig }} )
 
 $global:UseManagedIdentityExtension = "{{WrapAsVariable "useManagedIdentityExtension"}}"
@@ -239,6 +247,19 @@ try
                                -KubeServiceCIDR $global:KubeServiceCIDR `
                                -VNetCIDR $global:VNetCIDR `
                                -TargetEnvironment $TargetEnvironment
+
+            if ($TargetEnvironment -ieq "AzureStackCloud") {
+                GenerateAzureStackCNIConfig `
+                    -TenantId $global:TenantId `
+                    -SubscriptionId $global:SubscriptionId `
+                    -ResourceGroup $global:ResourceGroup `
+                    -AADClientId $AADClientId `
+                    -AADClientSecret $([System.Text.Encoding]::ASCII.GetString([System.Convert]::FromBase64String($AADClientSecret))) `
+                    -NetworkAPIVersion $NetworkAPIVersion `
+                    -AzureEnvironmentFilePath $([io.path]::Combine($global:KubeDir, "azurestackcloud.json")) `
+                    -IdentitySystem "{{ GetIdentitySystem }}"
+            }
+
         } elseif ($global:NetworkPlugin -eq "kubenet") {
             Update-WinCNI -CNIPath $global:CNIPath
             Get-HnsPsm1 -HNSModule $global:HNSModule

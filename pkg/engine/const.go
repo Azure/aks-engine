@@ -52,6 +52,8 @@ const (
 	AzureStorageClassesAddonName = "azure-storage-classes"
 	// AzureNetworkPolicyAddonName is the name of the azure npm daemon set addon
 	AzureNetworkPolicyAddonName = "azure-npm-daemonset"
+	// AzureVnetTelemetryAddonName is the name of the Azure vnet telemetry addon
+	AzureVnetTelemetryAddonName = "azure-vnet-telemetry-daemonset"
 	// CalicoAddonName is the name of calico daemonset addon
 	CalicoAddonName = "calico-daemonset"
 	// CiliumAddonName is the name of cilium daemonset addon
@@ -72,6 +74,8 @@ const (
 	AADPodIdentityAddonName = "aad-pod-identity"
 	// ACIConnectorAddonName is the name of the aci-connector addon deployment
 	ACIConnectorAddonName = "aci-connector"
+	// AppGwIngressAddonName appgw addon
+	AppGwIngressAddonName = "appgw-ingress"
 	// DashboardAddonName is the name of the kubernetes-dashboard addon deployment
 	DashboardAddonName = "kubernetes-dashboard"
 	// ClusterAutoscalerAddonName is the name of the autoscaler addon deployment
@@ -82,8 +86,8 @@ const (
 	SMBFlexVolumeAddonName = "smb-flexvolume"
 	// KeyVaultFlexVolumeAddonName is the name of the keyvault flexvolume addon deployment
 	KeyVaultFlexVolumeAddonName = "keyvault-flexvolume"
-	// ELBServiceAddonName is the name of the elb service addon deployment
-	ELBServiceAddonName = "elb-svc"
+	// ScheduledMaintenanceAddonName is the name of the scheduled maintenance addon deployment
+	ScheduledMaintenanceAddonName = "scheduled-maintenance"
 	// DefaultGeneratorCode specifies the source generator of the cluster template.
 	DefaultGeneratorCode = "aksengine"
 	// ReschedulerAddonName is the name of the rescheduler addon deployment
@@ -110,6 +114,10 @@ const (
 	DefaultMasterEtcdClientPort = 2379
 	// etcdAccountNameFmt is the name format for a typical etcd account on Cosmos
 	etcdAccountNameFmt = "%sk8s"
+	// BasicLoadBalancerSku is the string const for Azure Basic Load Balancer
+	BasicLoadBalancerSku = "Basic"
+	// StandardLoadBalancerSku is the string const for Azure Standard Load Balancer
+	StandardLoadBalancerSku = "Standard"
 )
 
 const (
@@ -159,6 +167,8 @@ const (
 	kubernetesKubeletMonitorSystemdService   = "k8s/cloud-init/artifacts/kubelet-monitor.service"
 	kubernetesDockerMonitorSystemdTimer      = "k8s/cloud-init/artifacts/docker-monitor.timer"
 	kubernetesDockerMonitorSystemdService    = "k8s/cloud-init/artifacts/docker-monitor.service"
+	labelNodesScript                         = "k8s/cloud-init/artifacts/label-nodes.sh"
+	labelNodesSystemdService                 = "k8s/cloud-init/artifacts/label-nodes.service"
 	kubernetesMountEtcd                      = "k8s/cloud-init/artifacts/mountetcd.sh"
 	kubernetesMasterGenerateProxyCertsScript = "k8s/cloud-init/artifacts/generateproxycerts.sh"
 	kubernetesCustomSearchDomainsScript      = "k8s/cloud-init/artifacts/setup-custom-search-domains.sh"

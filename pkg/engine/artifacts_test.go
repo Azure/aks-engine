@@ -315,10 +315,10 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 		expectedAADAdminGroup         bool
 		expectedAzureCloudProvider    bool
 		expectedAuditPolicy           bool
-		expectedELBService            bool
 		expectedPodSecurityPolicy     bool
 		expectedManagedStorageClass   bool
 		expectedUnmanagedStorageClass bool
+		expectedScheduledMaintenance  bool
 	}{
 		// Legacy default scenario
 		{
@@ -344,10 +344,10 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 			expectedAADAdminGroup:         false,
 			expectedAzureCloudProvider:    true,
 			expectedAuditPolicy:           false,
-			expectedELBService:            false,
 			expectedPodSecurityPolicy:     false,
 			expectedManagedStorageClass:   true,
 			expectedUnmanagedStorageClass: false,
+			expectedScheduledMaintenance:  false,
 		},
 		// 1.14 default scenario
 		{
@@ -368,10 +368,10 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 			expectedAADAdminGroup:         false,
 			expectedAzureCloudProvider:    true,
 			expectedAuditPolicy:           true,
-			expectedELBService:            false,
 			expectedPodSecurityPolicy:     false,
 			expectedManagedStorageClass:   true,
 			expectedUnmanagedStorageClass: false,
+			expectedScheduledMaintenance:  false,
 		},
 		// Cilium scenario
 		{
@@ -392,10 +392,10 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 			expectedAADAdminGroup:         false,
 			expectedAzureCloudProvider:    true,
 			expectedAuditPolicy:           true,
-			expectedELBService:            false,
 			expectedPodSecurityPolicy:     false,
 			expectedManagedStorageClass:   true,
 			expectedUnmanagedStorageClass: false,
+			expectedScheduledMaintenance:  false,
 		},
 		// Flannel scenario
 		{
@@ -416,10 +416,10 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 			expectedAADAdminGroup:         false,
 			expectedAzureCloudProvider:    true,
 			expectedAuditPolicy:           true,
-			expectedELBService:            false,
 			expectedPodSecurityPolicy:     false,
 			expectedManagedStorageClass:   true,
 			expectedUnmanagedStorageClass: false,
+			expectedScheduledMaintenance:  false,
 		},
 		// AAD Admin Group scenario
 		{
@@ -443,10 +443,10 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 			expectedAADAdminGroup:         true,
 			expectedAzureCloudProvider:    true,
 			expectedAuditPolicy:           true,
-			expectedELBService:            false,
 			expectedPodSecurityPolicy:     false,
 			expectedManagedStorageClass:   true,
 			expectedUnmanagedStorageClass: false,
+			expectedScheduledMaintenance:  false,
 		},
 		// ELB service scenario
 		{
@@ -468,10 +468,41 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 			expectedAADAdminGroup:         false,
 			expectedAzureCloudProvider:    true,
 			expectedAuditPolicy:           true,
-			expectedELBService:            true,
 			expectedPodSecurityPolicy:     false,
 			expectedManagedStorageClass:   true,
 			expectedUnmanagedStorageClass: false,
+			expectedScheduledMaintenance:  false,
+		},
+		// Scheduled Maintenance Scenario
+		{
+			p: &api.Properties{
+				OrchestratorProfile: &api.OrchestratorProfile{
+					OrchestratorType:    Kubernetes,
+					OrchestratorVersion: "1.14.1",
+					KubernetesConfig: &api.KubernetesConfig{
+						NetworkPlugin:   NetworkPluginAzure,
+						LoadBalancerSku: api.StandardLoadBalancerSku,
+						Addons: []api.KubernetesAddon{
+							{
+								Name:    ScheduledMaintenanceAddonName,
+								Enabled: to.BoolPtr(true),
+							},
+						},
+					},
+				},
+			},
+			expectedKubeDNS:               false,
+			expectedCoreDNS:               true,
+			expectedKubeProxy:             true,
+			expectedCilium:                false,
+			expectedFlannel:               false,
+			expectedAADAdminGroup:         false,
+			expectedAzureCloudProvider:    true,
+			expectedAuditPolicy:           true,
+			expectedPodSecurityPolicy:     false,
+			expectedManagedStorageClass:   true,
+			expectedUnmanagedStorageClass: false,
+			expectedScheduledMaintenance:  true,
 		},
 		// PodSecurityPolicy scenario
 		{
@@ -492,10 +523,10 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 			expectedAADAdminGroup:         false,
 			expectedAzureCloudProvider:    true,
 			expectedAuditPolicy:           true,
-			expectedELBService:            false,
 			expectedPodSecurityPolicy:     true,
 			expectedManagedStorageClass:   true,
 			expectedUnmanagedStorageClass: false,
+			expectedScheduledMaintenance:  false,
 		},
 		// non-Managed Disk scenario
 		{
@@ -521,10 +552,10 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 			expectedAADAdminGroup:         false,
 			expectedAzureCloudProvider:    true,
 			expectedAuditPolicy:           false,
-			expectedELBService:            false,
 			expectedPodSecurityPolicy:     false,
 			expectedManagedStorageClass:   false,
 			expectedUnmanagedStorageClass: true,
+			expectedScheduledMaintenance:  false,
 		},
 		// Azure Stack Managed Disk scenario
 		{
@@ -551,10 +582,10 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 			expectedAADAdminGroup:         false,
 			expectedAzureCloudProvider:    true,
 			expectedAuditPolicy:           true,
-			expectedELBService:            false,
 			expectedPodSecurityPolicy:     false,
 			expectedManagedStorageClass:   true,
 			expectedUnmanagedStorageClass: false,
+			expectedScheduledMaintenance:  false,
 		},
 		// Azure Stack non-Managed Disk scenario
 		{
@@ -581,10 +612,10 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 			expectedAADAdminGroup:         false,
 			expectedAzureCloudProvider:    true,
 			expectedAuditPolicy:           true,
-			expectedELBService:            false,
 			expectedPodSecurityPolicy:     false,
 			expectedManagedStorageClass:   false,
 			expectedUnmanagedStorageClass: true,
+			expectedScheduledMaintenance:  false,
 		},
 		// 1.15.0-beta.1 scenario
 		{
@@ -605,10 +636,10 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 			expectedAADAdminGroup:         false,
 			expectedAzureCloudProvider:    true,
 			expectedAuditPolicy:           true,
-			expectedELBService:            false,
 			expectedPodSecurityPolicy:     true,
 			expectedManagedStorageClass:   true,
 			expectedUnmanagedStorageClass: false,
+			expectedScheduledMaintenance:  false,
 		},
 	}
 
@@ -648,10 +679,6 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 				if c.expectedAuditPolicy != componentFileSpec.isEnabled {
 					t.Fatalf("Expected %s to be %t", AuditPolicyAddonName, c.expectedAuditPolicy)
 				}
-			case "elb-svc.yaml":
-				if c.expectedELBService != componentFileSpec.isEnabled {
-					t.Fatalf("Expected %s to be %t", ELBServiceAddonName, c.expectedELBService)
-				}
 			case "pod-security-policy.yaml":
 				if c.expectedPodSecurityPolicy != componentFileSpec.isEnabled {
 					t.Fatalf("Expected %s to be %t", "PodSecurityPolicy", c.expectedPodSecurityPolicy)
@@ -683,6 +710,10 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 							t.Fatalf("Got an unexpected Azure Stack-specific Managed disk spec in a non-Azure Stack cluster configuration")
 						}
 					}
+				}
+			case "scheduled-maintenance-deployment.yaml":
+				if c.expectedScheduledMaintenance != componentFileSpec.isEnabled {
+					t.Fatalf("Expected %s to be %t", ScheduledMaintenanceAddonName, c.expectedScheduledMaintenance)
 				}
 			}
 		}

@@ -15,37 +15,39 @@ import (
 
 const (
 	//Field names
-	customDataFieldName            = "customData"
-	dependsOnFieldName             = "dependsOn"
-	hardwareProfileFieldName       = "hardwareProfile"
-	imageReferenceFieldName        = "imageReference"
-	nameFieldName                  = "name"
-	osProfileFieldName             = "osProfile"
-	propertiesFieldName            = "properties"
-	resourcesFieldName             = "resources"
-	storageProfileFieldName        = "storageProfile"
-	typeFieldName                  = "type"
-	virtualMachineProfileFieldName = "virtualMachineProfile"
-	vmSizeFieldName                = "vmSize"
-	dataDisksFieldName             = "dataDisks"
-	createOptionFieldName          = "createOption"
-	tagsFieldName                  = "tags"
-	managedDiskFieldName           = "managedDisk"
-	windowsConfigurationFieldName  = "windowsConfiguration"
+	customDataFieldName           = "customData"
+	dependsOnFieldName            = "dependsOn"
+	hardwareProfileFieldName      = "hardwareProfile"
+	imageReferenceFieldName       = "imageReference"
+	nameFieldName                 = "name"
+	osProfileFieldName            = "osProfile"
+	propertiesFieldName           = "properties"
+	resourcesFieldName            = "resources"
+	storageProfileFieldName       = "storageProfile"
+	typeFieldName                 = "type"
+	vmSizeFieldName               = "vmSize"
+	dataDisksFieldName            = "dataDisks"
+	createOptionFieldName         = "createOption"
+	tagsFieldName                 = "tags"
+	managedDiskFieldName          = "managedDisk"
+	windowsConfigurationFieldName = "windowsConfiguration"
 
 	// ARM resource Types
 	nsgResourceType  = "Microsoft.Network/networkSecurityGroups"
 	rtResourceType   = "Microsoft.Network/routeTables"
 	vmResourceType   = "Microsoft.Compute/virtualMachines"
-	vmssResourceType = "Microsoft.Compute/virtualMachineScaleSets"
 	vmExtensionType  = "Microsoft.Compute/virtualMachines/extensions"
 	nicResourceType  = "Microsoft.Network/networkInterfaces"
 	vnetResourceType = "Microsoft.Network/virtualNetworks"
+	vmasResourceType = "Microsoft.Compute/availabilitySets"
+	vmssResourceType = "Microsoft.Compute/virtualMachineScaleSets"
+	lbResourceType   = "Microsoft.Network/loadBalancers"
 
 	// resource ids
-	nsgID  = "nsgID"
-	rtID   = "routeTableID"
-	vnetID = "vnetID"
+	nsgID     = "nsgID"
+	rtID      = "routeTableID"
+	vnetID    = "vnetID"
+	agentLbID = "agentLbID"
 )
 
 // Translator defines all required interfaces for i18n.Translator.
@@ -65,41 +67,50 @@ type Transformer struct {
 	Translator Translator
 }
 
-// NormalizeForVMSSScaling takes a template and removes elements that are unwanted in a VMSS scale up/down case
-func (t *Transformer) NormalizeForVMSSScaling(logger *logrus.Entry, templateMap map[string]interface{}) error {
-	if err := t.NormalizeMasterResourcesForScaling(logger, templateMap); err != nil {
-		return err
-	}
-
+// NormalizeForK8sSLBScalingOrUpgrade takes a template and removes elements that are unwanted in a K8s Standard LB cluster scale up/down case
+func (t *Transformer) NormalizeForK8sSLBScalingOrUpgrade(logger *logrus.Entry, templateMap map[string]interface{}) error {
+	logger.Debugf("Running NormalizeForK8sSLBScalingOrUpgrade...")
+	lbIndex := -1
 	resources := templateMap[resourcesFieldName].([]interface{})
-	for _, resource := range resources {
+
+	for index, resource := range resources {
 		resourceMap, ok := resource.(map[string]interface{})
 		if !ok {
-			logger.Warnf("Template improperly formatted")
+			logger.Warnf("Template improperly formatted for resource")
 			continue
 		}
 
 		resourceType, ok := resourceMap[typeFieldName].(string)
-		if !ok || resourceType != vmssResourceType {
-			continue
-		}
+		resourceName := resourceMap[nameFieldName].(string)
 
-		resourceProperties, ok := resourceMap[propertiesFieldName].(map[string]interface{})
+		// remove agentLB if found
+		if ok && resourceType == lbResourceType && strings.Contains(resourceName, "variables('agentLbName')") {
+			lbIndex = index
+		}
+		// remove agentLB from dependsOn if found
+		dependencies, ok := resourceMap[dependsOnFieldName].([]interface{})
 		if !ok {
-			logger.Warnf("Template improperly formatted")
 			continue
 		}
 
-		virtualMachineProfile, ok := resourceProperties[virtualMachineProfileFieldName].(map[string]interface{})
-		if !ok {
-			logger.Warnf("Template improperly formatted")
-			continue
+		for dIndex := len(dependencies) - 1; dIndex >= 0; dIndex-- {
+			dependency := dependencies[dIndex].(string)
+			if strings.Contains(dependency, lbResourceType) || strings.Contains(dependency, agentLbID) {
+				dependencies = append(dependencies[:dIndex], dependencies[dIndex+1:]...)
+			}
 		}
 
-		if !t.removeCustomData(logger, virtualMachineProfile) || !t.removeImageReference(logger, virtualMachineProfile) {
-			continue
+		if len(dependencies) > 0 {
+			resourceMap[dependsOnFieldName] = dependencies
+		} else {
+			delete(resourceMap, dependsOnFieldName)
 		}
 	}
+	indexesToRemove := []int{}
+	if lbIndex != -1 {
+		indexesToRemove = append(indexesToRemove, lbIndex)
+	}
+	templateMap[resourcesFieldName] = removeIndexesFromArray(resources, indexesToRemove)
 	return nil
 }
 
@@ -111,6 +122,8 @@ func (t *Transformer) NormalizeForK8sVMASScalingUp(logger *logrus.Entry, templat
 	rtIndex := -1
 	nsgIndex := -1
 	vnetIndex := -1
+	vmasIndexes := make([]int, 0)
+
 	resources := templateMap[resourcesFieldName].([]interface{})
 	for index, resource := range resources {
 		resourceMap, ok := resource.(map[string]interface{})
@@ -147,6 +160,10 @@ func (t *Transformer) NormalizeForK8sVMASScalingUp(logger *logrus.Entry, templat
 			}
 			vnetIndex = index
 		}
+		if ok && resourceType == vmasResourceType {
+			// All availability sets can be removed
+			vmasIndexes = append(vmasIndexes, index)
+		}
 
 		dependencies, ok := resourceMap[dependsOnFieldName].([]interface{})
 		if !ok {
@@ -157,7 +174,8 @@ func (t *Transformer) NormalizeForK8sVMASScalingUp(logger *logrus.Entry, templat
 			dependency := dependencies[dIndex].(string)
 			if strings.Contains(dependency, nsgResourceType) || strings.Contains(dependency, nsgID) ||
 				strings.Contains(dependency, rtResourceType) || strings.Contains(dependency, rtID) ||
-				strings.Contains(dependency, vnetResourceType) || strings.Contains(dependency, vnetID) {
+				strings.Contains(dependency, vnetResourceType) || strings.Contains(dependency, vnetID) ||
+				strings.Contains(dependency, vmasResourceType) {
 				dependencies = append(dependencies[:dIndex], dependencies[dIndex+1:]...)
 			}
 		}
@@ -170,14 +188,9 @@ func (t *Transformer) NormalizeForK8sVMASScalingUp(logger *logrus.Entry, templat
 	}
 
 	indexesToRemove := []int{}
-	if nsgIndex == -1 {
-		err := t.Translator.Errorf("Found no resources with type %s in the template. There should have been 1", nsgResourceType)
-		logger.Errorf(err.Error())
-		return err
-	}
 
 	if rtIndex == -1 {
-		logger.Infof("Found no resources with type %s in the template.", rtResourceType)
+		logger.Debugf("Found no resources with type %s in the template.", rtResourceType)
 	} else {
 		indexesToRemove = append(indexesToRemove, rtIndex)
 	}
@@ -186,7 +199,13 @@ func (t *Transformer) NormalizeForK8sVMASScalingUp(logger *logrus.Entry, templat
 		indexesToRemove = append(indexesToRemove, vnetIndex)
 	}
 
-	indexesToRemove = append(indexesToRemove, nsgIndex)
+	if len(vmasIndexes) != 0 {
+		indexesToRemove = append(indexesToRemove, vmasIndexes...)
+	}
+	if nsgIndex > 0 {
+		indexesToRemove = append(indexesToRemove, nsgIndex)
+	}
+
 	templateMap[resourcesFieldName] = removeIndexesFromArray(resources, indexesToRemove)
 
 	return nil
@@ -322,7 +341,7 @@ func (t *Transformer) NormalizeResourcesForK8sMasterUpgrade(logger *logrus.Entry
 			continue
 		}
 
-		if !(resourceType == vmResourceType || resourceType == vmExtensionType || resourceType == nicResourceType) {
+		if !(resourceType == vmResourceType || resourceType == vmExtensionType || resourceType == nicResourceType || resourceType == vnetResourceType || resourceType == nsgResourceType || resourceType == lbResourceType || resourceType == vmssResourceType) {
 			continue
 		}
 
@@ -332,7 +351,20 @@ func (t *Transformer) NormalizeResourcesForK8sMasterUpgrade(logger *logrus.Entry
 			continue
 		}
 
+		if resourceType == vmssResourceType || resourceType == vnetResourceType {
+			RemoveNsgDependency(logger, resourceName, resourceMap)
+			continue
+		}
+
+		if resourceType == lbResourceType {
+			if strings.Contains(resourceName, "variables('masterInternalLbName')") {
+				RemoveNsgDependency(logger, resourceName, resourceMap)
+				continue
+			}
+		}
+
 		if resourceType == nicResourceType {
+			RemoveNsgDependency(logger, resourceName, resourceMap)
 			if strings.Contains(resourceName, "variables('masterVMNamePrefix')") {
 				continue
 			} else {
@@ -413,6 +445,13 @@ func (t *Transformer) NormalizeResourcesForK8sMasterUpgrade(logger *logrus.Entry
 					filteredResources = filteredResources[:len(filteredResources)-1]
 				}
 			}
+		} else if resourceType == nsgResourceType {
+			logger.Infoln(fmt.Sprintf("Removing nsg resource: %s from template", resourceName))
+			{
+				if len(filteredResources) > 0 {
+					filteredResources = filteredResources[:len(filteredResources)-1]
+				}
+			}
 		}
 	}
 
@@ -421,6 +460,36 @@ func (t *Transformer) NormalizeResourcesForK8sMasterUpgrade(logger *logrus.Entry
 	logger.Infoln(fmt.Sprintf("Resource count after running NormalizeResourcesForK8sMasterUpgrade: %d",
 		len(templateMap[resourcesFieldName].([]interface{}))))
 	return nil
+}
+
+//RemoveNsgDependency Removes the nsg dependency from the
+func RemoveNsgDependency(logger *logrus.Entry, resourceName string, resourceMap map[string]interface{}) {
+
+	if resourceName != "" && resourceMap != nil {
+		filteredDependencies := []string{}
+		dependencies, ok := resourceMap[dependsOnFieldName].([]interface{})
+		if !ok {
+			logger.Warnf("Could not find dependencies for resourceName: %s", resourceName)
+			return
+		}
+
+		for dIndex := len(dependencies) - 1; dIndex >= 0; dIndex-- {
+			dependency := dependencies[dIndex].(string)
+			if !(strings.Contains(dependency, nsgResourceType) || strings.Contains(dependency, nsgID)) {
+				filteredDependencies = append(filteredDependencies, dependency)
+			} else {
+				logger.Info(fmt.Sprintf("Removing nsg dependency from resource:%s", resourceName))
+			}
+		}
+
+		if len(filteredDependencies) > 0 {
+			resourceMap[dependsOnFieldName] = filteredDependencies
+		} else {
+			resourceMap[dependsOnFieldName] = []string{}
+		}
+
+		return
+	}
 }
 
 // NormalizeResourcesForK8sAgentUpgrade takes a template and removes elements that are unwanted in any scale up/down case

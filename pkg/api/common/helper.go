@@ -46,7 +46,7 @@ func HandleValidationErrors(e validator.ValidationErrors) error {
 			case strings.Contains(ns, ".Ports"):
 				return errors.Errorf("AgentPoolProfile Ports must be in the range[%d, %d]", MinPort, MaxPort)
 			case strings.HasSuffix(ns, ".StorageProfile"):
-				return errors.Errorf("Unknown storageProfile '%s'. Specify either %s or %s", err.Value().(string), StorageAccount, ManagedDisks)
+				return errors.Errorf("Unknown storageProfile '%s'. Specify %s, %s, or %s", err.Value().(string), StorageAccount, ManagedDisks, Ephemeral)
 			case strings.Contains(ns, ".DiskSizesGB"):
 				return errors.Errorf("A maximum of %d disks may be specified, The range of valid disk size values are [%d, %d]", MaxDisks, MinDiskSizeGB, MaxDiskSizeGB)
 			case strings.HasSuffix(ns, ".IPAddressCount"):
@@ -236,11 +236,16 @@ func IsSgxEnabledSKU(vmSize string) bool {
 	return false
 }
 
-// GetMasterKubernetesLabels returns a k8s API-compliant labels string
-func GetMasterKubernetesLabels(rg string) string {
+// GetMasterKubernetesLabels returns a k8s API-compliant labels string.
+// The `kubernetes.io/role` and `node-role.kubernetes.io` labels are disallowed
+// by the kubelet `--node-labels` argument in Kubernetes 1.16 and later.
+func GetMasterKubernetesLabels(rg string, deprecated bool) string {
 	var buf bytes.Buffer
-	buf.WriteString("kubernetes.io/role=master")
-	buf.WriteString(",node-role.kubernetes.io/master=")
+	buf.WriteString("kubernetes.azure.com/role=master")
+	if deprecated {
+		buf.WriteString(",kubernetes.io/role=master")
+		buf.WriteString(",node-role.kubernetes.io/master=")
+	}
 	buf.WriteString(fmt.Sprintf(",kubernetes.azure.com/cluster=%s", rg))
 	return buf.String()
 }

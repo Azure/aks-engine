@@ -142,8 +142,33 @@ func RunLinuxDeployDeleteIfExists(pattern, image, name, namespace, command strin
 	return RunLinuxDeploy(image, name, namespace, command, replicas)
 }
 
-// CreateWindowsDeploy will create a deployment for a given image with a name in a namespace
-func CreateWindowsDeploy(image, name, namespace string, port int, hostport int) (*Deployment, error) {
+// CreateWindowsDeploy will create a deployment for a given image with a name in a namespace and create a service mapping a hostPort
+func CreateWindowsDeploy(pattern, image, name, namespace, miscOpts string) (*Deployment, error) {
+	overrides := `{ "spec":{"template":{"spec": {"nodeSelector":{"beta.kubernetes.io/os":"windows"}}}}}`
+	var args []string
+	args = append(args, "run", name)
+	args = append(args, "-n", namespace)
+	args = append(args, "--image", image, "--image-pull-policy=IfNotPresent")
+	args = append(args, "--overrides", overrides)
+	if miscOpts != "" {
+		args = append(args, miscOpts)
+	}
+	cmd := exec.Command("k", args[:]...)
+	out, err := util.RunAndLogCommand(cmd, commandTimeout)
+	if err != nil {
+		log.Printf("Error trying to deploy %s [%s] in namespace %s:%s\n", name, image, namespace, string(out))
+		return nil, err
+	}
+	d, err := Get(name, namespace)
+	if err != nil {
+		log.Printf("Error while trying to fetch Deployment %s in namespace %s:%s\n", name, namespace, err)
+		return nil, err
+	}
+	return d, nil
+}
+
+// CreateWindowsDeployWithHostport will create a deployment for a given image with a name in a namespace and create a service mapping a hostPort
+func CreateWindowsDeployWithHostport(image, name, namespace string, port int, hostport int) (*Deployment, error) {
 	overrides := `{ "spec":{"template":{"spec": {"nodeSelector":{"beta.kubernetes.io/os":"windows"}}}}}`
 	cmd := exec.Command("k", "run", name, "-n", namespace, "--image", image, "--image-pull-policy=IfNotPresent", "--port", strconv.Itoa(port), "--hostport", strconv.Itoa(hostport), "--overrides", overrides)
 	out, err := util.RunAndLogCommand(cmd, commandTimeout)
@@ -159,19 +184,19 @@ func CreateWindowsDeploy(image, name, namespace string, port int, hostport int) 
 	return d, nil
 }
 
-// CreateWindowsDeployIfNotExist first checks if a deployment already exists, and return it if so
+// CreateWindowsDeployWithHostportIfNotExist first checks if a deployment already exists, and return it if so
 // If not, we call CreateWindowsDeploy
-func CreateWindowsDeployIfNotExist(image, name, namespace string, port int, hostport int) (*Deployment, error) {
+func CreateWindowsDeployWithHostportIfNotExist(image, name, namespace string, port int, hostport int) (*Deployment, error) {
 	deployment, err := Get(name, namespace)
 	if err != nil {
-		return CreateWindowsDeploy(image, name, namespace, port, hostport)
+		return CreateWindowsDeployWithHostport(image, name, namespace, port, hostport)
 	}
 	return deployment, nil
 }
 
-// CreateWindowsDeployDeleteIfExist first checks if a deployment already exists according to a naming pattern
+// CreateWindowsDeployWithHostportDeleteIfExist first checks if a deployment already exists according to a naming pattern
 // If a pre-existing deployment is found matching that pattern, it is deleted
-func CreateWindowsDeployDeleteIfExist(pattern, image, name, namespace string, port int, hostport int) (*Deployment, error) {
+func CreateWindowsDeployWithHostportDeleteIfExist(pattern, image, name, namespace string, port int, hostport int) (*Deployment, error) {
 	deployments, err := GetAllByPrefix(pattern, namespace)
 	if err != nil {
 		return nil, err
@@ -179,7 +204,20 @@ func CreateWindowsDeployDeleteIfExist(pattern, image, name, namespace string, po
 	for _, d := range deployments {
 		d.Delete(util.DefaultDeleteRetries)
 	}
-	return CreateWindowsDeploy(image, name, namespace, port, hostport)
+	return CreateWindowsDeployWithHostport(image, name, namespace, port, hostport)
+}
+
+// CreateWindowsDeployDeleteIfExist first checks if a deployment already exists according to a naming pattern
+// If a pre-existing deployment is found matching that pattern, it is deleted
+func CreateWindowsDeployDeleteIfExist(pattern, image, name, namespace, miscOpts string) (*Deployment, error) {
+	deployments, err := GetAllByPrefix(pattern, namespace)
+	if err != nil {
+		return nil, err
+	}
+	for _, d := range deployments {
+		d.Delete(util.DefaultDeleteRetries)
+	}
+	return CreateWindowsDeploy(pattern, image, name, namespace, miscOpts)
 }
 
 // Get returns a deployment from a name and namespace

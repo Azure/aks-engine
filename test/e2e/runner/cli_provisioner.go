@@ -170,7 +170,7 @@ func (cli *CLIProvisioner) provision() error {
 			subnets = append(subnets, masterSubnetName)
 			for i, pool := range cs.ContainerService.Properties.AgentPoolProfiles {
 				subnetName := fmt.Sprintf("%sCustomSubnet", pool.Name)
-				err = cli.Account.CreateSubnet(vnetName, subnetName, fmt.Sprintf("10.239.%d.0/24", i+1))
+				err = cli.Account.CreateSubnet(vnetName, subnetName, fmt.Sprintf("10.239.%d.0/22", i*4))
 				if err != nil {
 					return errors.Errorf("Error trying to create subnet:%s", err.Error())
 				}
@@ -261,7 +261,9 @@ func (cli *CLIProvisioner) generateAndDeploy() error {
 	if err != nil {
 		return errors.Wrap(err, "unable to parse config")
 	}
-	csGenerated, err := engine.ParseOutput(engCfg.GeneratedDefinitionPath + "/apimodel.json")
+	validate := true
+	isUpdate := false
+	csGenerated, err := engine.ParseOutput(engCfg.GeneratedDefinitionPath+"/apimodel.json", validate, isUpdate)
 	if err != nil {
 		return errors.Wrap(err, "unable to parse output")
 	}
@@ -295,7 +297,14 @@ func (cli *CLIProvisioner) waitForNodes() error {
 	if cli.Config.IsKubernetes() {
 		if !cli.IsPrivate() {
 			log.Println("Waiting on nodes to go into ready state...")
-			ready := node.WaitOnReady(cli.Engine.NodeCount(), 10*time.Second, cli.Config.Timeout)
+			var expectedReadyNodes int
+			if !cli.Engine.ExpandedDefinition.Properties.HasLowPriorityScaleset() {
+				expectedReadyNodes = cli.Engine.NodeCount()
+				log.Printf("Checking for %d Ready nodes\n", expectedReadyNodes)
+			} else {
+				expectedReadyNodes = -1
+			}
+			ready := node.WaitOnReady(expectedReadyNodes, 10*time.Second, cli.Config.Timeout)
 			cmd := exec.Command("k", "get", "nodes", "-o", "wide")
 			out, _ := cmd.CombinedOutput()
 			log.Printf("%s\n", out)
@@ -315,25 +324,27 @@ func (cli *CLIProvisioner) waitForNodes() error {
 			if err != nil {
 				return errors.Wrap(err, "Unable to get the list of nodes")
 			}
-			for _, n := range nodeList.Nodes {
-				exp, err := regexp.Compile("k8s-master")
-				if err != nil {
-					return err
-				}
-				if !exp.MatchString(n.Metadata.Name) {
-					cmd := exec.Command("k", "label", "node", n.Metadata.Name, "foo=bar")
-					util.PrintCommand(cmd)
-					out, err := cmd.CombinedOutput()
-					log.Printf("%s\n", out)
+			if !cli.Engine.ExpandedDefinition.Properties.HasLowPriorityScaleset() {
+				for _, n := range nodeList.Nodes {
+					exp, err := regexp.Compile("k8s-master")
 					if err != nil {
-						return errors.Wrapf(err, "Unable to assign label to node %s", n.Metadata.Name)
+						return err
 					}
-					cmd = exec.Command("k", "annotate", "node", n.Metadata.Name, "foo=bar")
-					util.PrintCommand(cmd)
-					out, err = cmd.CombinedOutput()
-					log.Printf("%s\n", out)
-					if err != nil {
-						return errors.Wrapf(err, "Unable to add node annotation to node %s", n.Metadata.Name)
+					if !exp.MatchString(n.Metadata.Name) {
+						cmd := exec.Command("k", "label", "node", n.Metadata.Name, "foo=bar")
+						util.PrintCommand(cmd)
+						out, err := cmd.CombinedOutput()
+						log.Printf("%s\n", out)
+						if err != nil {
+							return errors.Wrapf(err, "Unable to assign label to node %s", n.Metadata.Name)
+						}
+						cmd = exec.Command("k", "annotate", "node", n.Metadata.Name, "foo=bar")
+						util.PrintCommand(cmd)
+						out, err = cmd.CombinedOutput()
+						log.Printf("%s\n", out)
+						if err != nil {
+							return errors.Wrapf(err, "Unable to add node annotation to node %s", n.Metadata.Name)
+						}
 					}
 				}
 			}
@@ -375,7 +386,7 @@ func (cli *CLIProvisioner) FetchProvisioningMetrics(path string, cfg *config.Con
 	}
 	for _, master := range cli.Masters {
 		for _, fp := range masterFiles {
-			err = conn.CopyFromRemote(master.Name, fp)
+			err = conn.CopyFrom(master.Name, fp)
 			if err != nil {
 				log.Printf("Error reading file from path (%s):%s", path, err)
 			}
@@ -384,7 +395,7 @@ func (cli *CLIProvisioner) FetchProvisioningMetrics(path string, cfg *config.Con
 
 	for _, agent := range cli.Agents {
 		for _, fp := range agentFiles {
-			err = conn.CopyFromRemote(agent.Name, fp)
+			err = conn.CopyFrom(agent.Name, fp)
 			if err != nil {
 				log.Printf("Error reading file from path (%s):%s", path, err)
 			}

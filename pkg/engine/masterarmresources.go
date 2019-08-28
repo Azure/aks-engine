@@ -42,7 +42,8 @@ func createKubernetesMasterResourcesVMAS(cs *api.ContainerService) []interface{}
 	kubernetesConfig := cs.Properties.OrchestratorProfile.KubernetesConfig
 
 	if !cs.Properties.OrchestratorProfile.IsPrivateCluster() {
-		publicIPAddress := CreatePublicIPAddress()
+		isForMaster := true
+		publicIPAddress := CreatePublicIPAddress(isForMaster)
 		loadBalancer := CreateLoadBalancer(cs.Properties, false)
 		masterNic := CreateNetworkInterfaces(cs)
 
@@ -72,7 +73,6 @@ func createKubernetesMasterResourcesVMAS(cs *api.ContainerService) []interface{}
 			jumpboxPublicIP := createJumpboxPublicIPAddress()
 			masterResources = append(masterResources, jumpboxNSG, jumpboxNIC, jumpboxPublicIP)
 		}
-
 	}
 
 	if p.MasterProfile.HasMultipleNodes() {
@@ -154,7 +154,8 @@ func createKubernetesMasterResourcesVMSS(cs *api.ContainerService) []interface{}
 	}
 
 	if !cs.Properties.OrchestratorProfile.IsPrivateCluster() {
-		publicIPAddress := CreatePublicIPAddress()
+		isForMaster := true
+		publicIPAddress := CreatePublicIPAddress(isForMaster)
 		loadBalancer := CreateLoadBalancer(cs.Properties, true)
 		masterResources = append(masterResources, publicIPAddress, loadBalancer)
 	}

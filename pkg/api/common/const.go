@@ -55,11 +55,13 @@ const (
 	StorageAccount = "StorageAccount"
 	// ManagedDisks means that the nodes use managed disks for their os and attached volumes
 	ManagedDisks = "ManagedDisks"
+	// Ephemeral means that the node's os disk is ephemeral. This is not compatible with attached volumes.
+	Ephemeral = "Ephemeral"
 )
 
 const (
 	// KubernetesDefaultRelease is the default Kubernetes release
-	KubernetesDefaultRelease string = "1.12"
+	KubernetesDefaultRelease string = "1.13"
 	// KubernetesDefaultReleaseWindows is the default Kubernetes release
 	KubernetesDefaultReleaseWindows string = "1.14"
 )
@@ -112,3 +114,6 @@ func GetAllSupportedSwarmVersions() []string {
 func GetAllSupportedDockerCEVersions() []string {
 	return []string{DockerCEVersion}
 }
+
+// MinCloudProviderQPSToBucketFactor defines the minimum ratio between QPS and Bucket size for cloudprovider rate limiting
+const MinCloudProviderQPSToBucketFactor float64 = 0.1

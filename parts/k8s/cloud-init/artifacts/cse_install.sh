@@ -106,14 +106,6 @@ installContainerRuntime() {
     if [[ "$CONTAINER_RUNTIME" == "docker" ]]; then
         installMoby
     fi
-    if [[ "$CONTAINER_RUNTIME" == "clear-containers" ]]; then
-	    # Ensure we can nest virtualization
-        if grep -q vmx /proc/cpuinfo; then
-            installClearContainersRuntime
-        fi
-    else
-        cleanUpClearContainers
-    fi
 }
 
 installMoby() {
@@ -150,27 +142,6 @@ installKataContainersRuntime() {
     echo "Installing Kata Containers runtime..."
     apt_get_update || exit $ERR_APT_UPDATE_TIMEOUT
     apt_get_install 120 5 25 kata-runtime || exit $ERR_KATA_INSTALL_TIMEOUT
-}
-
-installClearContainersRuntime() {
-    if cc-runtime --version; then
-        echo "cc-runtime is already installed, skipping download"
-    else
-        echo "Adding Clear Containers repository key..."
-        CC_RELEASE_KEY_TMP=/tmp/clear-containers-release.key
-        CC_URL=https://download.opensuse.org/repositories/home:clearcontainers:clear-containers-3/xUbuntu_16.04/Release.key
-        retrycmd_if_failure_no_stats 120 5 25 curl -fsSL $CC_URL > $CC_RELEASE_KEY_TMP || exit $ERR_APT_INSTALL_TIMEOUT
-        wait_for_apt_locks
-        retrycmd_if_failure 120 5 25 apt-key add $CC_RELEASE_KEY_TMP || exit $ERR_APT_INSTALL_TIMEOUT
-        echo "Adding Clear Containers repository..."
-        echo 'deb http://download.opensuse.org/repositories/home:/clearcontainers:/clear-containers-3/xUbuntu_16.04/ /' > /etc/apt/sources.list.d/cc-runtime.list
-        echo "Installing Clear Containers runtime..."
-        apt_get_update || exit $ERR_APT_UPDATE_TIMEOUT
-        apt_get_install 120 5 25 cc-runtime
-        local repo_uri="https://raw.githubusercontent.com/clearcontainers/proxy/3.0.23"
-        retrycmd_if_failure_no_stats 120 5 25 curl -fsSL "${repo_uri}/cc-proxy.service.in" > $CC_SERVICE_IN_TMP
-        retrycmd_if_failure_no_stats 120 5 25 curl -fsSL "${repo_uri}/cc-proxy.socket.in" > $CC_SOCKET_IN_TMP
-    fi
 }
 
 installNetworkPlugin() {
@@ -302,18 +273,18 @@ cleanUpContainerImages() {
         docker rmi $(docker images --format '{{.Repository}}:{{.Tag}}' | grep 'kube-svc-redirect') &
         docker rmi $(docker images --format '{{.Repository}}:{{.Tag}}' | grep 'nginx') &
     fi
+
+    # TODO: remove once ACR is available on Azure Stack
+    docker rmi registry:2 &
 }
 
 cleanUpGPUDrivers() {
     rm -Rf $GPU_DEST
+    rm -f /etc/apt/sources.list.d/nvidia-docker.list
 }
 
 cleanUpContainerd() {
     rm -Rf $CONTAINERD_DOWNLOADS_DIR
-}
-
-cleanUpClearContainers() {
-    apt-get purge -y cc-runtime
 }
 
 overrideNetworkConfig() {
@@ -325,3 +296,4 @@ datasource:
         apply_network_config: false
 EOF
 }
+#EOF

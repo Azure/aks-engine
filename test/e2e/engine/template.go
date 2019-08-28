@@ -25,23 +25,30 @@ import (
 
 // Config represents the configuration values of a template stored as env vars
 type Config struct {
-	ClientID              string `envconfig:"CLIENT_ID"`
-	ClientSecret          string `envconfig:"CLIENT_SECRET"`
-	ClientObjectID        string `envconfig:"CLIENT_OBJECTID"`
-	MasterDNSPrefix       string `envconfig:"DNS_PREFIX"`
-	AgentDNSPrefix        string `envconfig:"DNS_PREFIX"`
-	PublicSSHKey          string `envconfig:"PUBLIC_SSH_KEY"`
-	WindowsAdminPasssword string `envconfig:"WINDOWS_ADMIN_PASSWORD"`
-	OrchestratorRelease   string `envconfig:"ORCHESTRATOR_RELEASE"`
-	OrchestratorVersion   string `envconfig:"ORCHESTRATOR_VERSION"`
-	OutputDirectory       string `envconfig:"OUTPUT_DIR" default:"_output"`
-	CreateVNET            bool   `envconfig:"CREATE_VNET" default:"false"`
-	EnableKMSEncryption   bool   `envconfig:"ENABLE_KMS_ENCRYPTION" default:"false"`
-	Distro                string `envconfig:"DISTRO"`
-	SubscriptionID        string `envconfig:"SUBSCRIPTION_ID"`
-	TenantID              string `envconfig:"TENANT_ID"`
-	ImageName             string `envconfig:"IMAGE_NAME"`
-	ImageResourceGroup    string `envconfig:"IMAGE_RESOURCE_GROUP"`
+	ClientID                       string `envconfig:"CLIENT_ID"`
+	ClientSecret                   string `envconfig:"CLIENT_SECRET"`
+	ClientObjectID                 string `envconfig:"CLIENT_OBJECTID"`
+	MasterDNSPrefix                string `envconfig:"DNS_PREFIX"`
+	AgentDNSPrefix                 string `envconfig:"DNS_PREFIX"`
+	PublicSSHKey                   string `envconfig:"PUBLIC_SSH_KEY"`
+	WindowsAdminPasssword          string `envconfig:"WINDOWS_ADMIN_PASSWORD"`
+	WindowsNodeImageGallery        string `envconfig:"WINDOWS_NODE_IMAGE_GALLERY" default:""`
+	WindowsNodeImageName           string `envconfig:"WINDOWS_NODE_IMAGE_NAME" default:""`
+	WindowsNodeImageResourceGroup  string `envconfig:"WINDOWS_NODE_IMAGE_RESOURCE_GROUP" default:""`
+	WindowsNodeImageSubscriptionID string `envconfig:"WINDOWS_NODE_IMAGE_SUBSCRIPTION_ID" default:""`
+	WindowsNodeImageVersion        string `envconfig:"WINDOWS_NODE_IMAGE_VERSION" deault:""`
+	WindowsNodeVhdURL              string `envconfig:"WINDOWS_NODE_VHD_URL" default:""`
+	OrchestratorRelease            string `envconfig:"ORCHESTRATOR_RELEASE"`
+	OrchestratorVersion            string `envconfig:"ORCHESTRATOR_VERSION"`
+	OutputDirectory                string `envconfig:"OUTPUT_DIR" default:"_output"`
+	CreateVNET                     bool   `envconfig:"CREATE_VNET" default:"false"`
+	EnableKMSEncryption            bool   `envconfig:"ENABLE_KMS_ENCRYPTION" default:"false"`
+	Distro                         string `envconfig:"DISTRO"`
+	SubscriptionID                 string `envconfig:"SUBSCRIPTION_ID"`
+	TenantID                       string `envconfig:"TENANT_ID"`
+	ImageName                      string `envconfig:"IMAGE_NAME"`
+	ImageResourceGroup             string `envconfig:"IMAGE_RESOURCE_GROUP"`
+	DebugCrashingPods              bool   `envconfig:"DEBUG_CRASHING_PODS" default:"false"`
 
 	ClusterDefinitionPath     string // The original template we want to use to build the cluster from.
 	ClusterDefinitionTemplate string // This is the template after we splice in the environment variables
@@ -122,6 +129,23 @@ func Build(cfg *config.Config, masterSubnetID string, agentSubnetIDs []string, i
 
 	if config.WindowsAdminPasssword != "" {
 		prop.WindowsProfile.AdminPassword = config.WindowsAdminPasssword
+	}
+
+	if config.WindowsNodeVhdURL != "" {
+		prop.WindowsProfile.WindowsImageSourceURL = config.WindowsNodeVhdURL
+		log.Printf("Windows nodes will use image at %s for test pass", config.WindowsNodeVhdURL)
+	} else if config.WindowsNodeImageName != "" && config.WindowsNodeImageResourceGroup != "" {
+		prop.WindowsProfile.ImageRef = &vlabs.ImageReference{
+			Name:          config.WindowsNodeImageName,
+			ResourceGroup: config.WindowsNodeImageResourceGroup,
+		}
+
+		if config.WindowsNodeImageGallery != "" && config.WindowsNodeImageSubscriptionID != "" && config.WindowsNodeImageVersion != "" {
+			prop.WindowsProfile.ImageRef.Gallery = config.WindowsNodeImageGallery
+			prop.WindowsProfile.ImageRef.SubscriptionID = config.WindowsNodeImageSubscriptionID
+			prop.WindowsProfile.ImageRef.Version = config.WindowsNodeImageVersion
+		}
+		log.Printf("Windows nodes will use image reference name:%s, rg:%s, sub:%s, gallery:%s, version:%s for test pass", config.WindowsNodeImageName, config.WindowsNodeImageResourceGroup, config.WindowsNodeImageSubscriptionID, config.WindowsNodeImageGallery, config.WindowsNodeImageVersion)
 	}
 
 	// If the parsed api model input has no expressed version opinion, we check if ENV does have an opinion
@@ -290,7 +314,7 @@ func ParseInput(path string) (*api.VlabsARMContainerService, error) {
 }
 
 // ParseOutput takes the generated api model and will parse that into a api.ContainerService
-func ParseOutput(path string) (*api.ContainerService, error) {
+func ParseOutput(path string, validate, isUpdate bool) (*api.ContainerService, error) {
 	locale, err := i18n.LoadTranslations()
 	if err != nil {
 		return nil, errors.Errorf(fmt.Sprintf("error loading translation files: %s", err.Error()))
@@ -300,7 +324,7 @@ func ParseOutput(path string) (*api.ContainerService, error) {
 			Locale: locale,
 		},
 	}
-	containerService, _, err := apiloader.LoadContainerServiceFromFile(path, true, false, nil)
+	containerService, _, err := apiloader.LoadContainerServiceFromFile(path, validate, isUpdate, nil)
 	if err != nil {
 		return nil, err
 	}

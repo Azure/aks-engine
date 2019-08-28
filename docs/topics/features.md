@@ -6,10 +6,12 @@
 |Calico Network Policy|Alpha|`vlabs`|[kubernetes-calico.json](../../examples/networkpolicy/kubernetes-calico-azure.json)|[Description](#feat-calico)|
 |Cilium Network Policy|Alpha|`vlabs`|[kubernetes-cilium.json](../../examples/networkpolicy/kubernetes-cilium.json)|[Description](#feat-cilium)|
 |Custom VNET|Beta|`vlabs`|[kubernetesvnet-azure-cni.json](../../examples/vnet/kubernetesvnet-azure-cni.json)|[Description](#feat-custom-vnet)|
-|Clear Containers Runtime|Alpha|`vlabs`|[kubernetes-clear-containers.json](../../examples/kubernetes-clear-containers.json)|[Description](#feat-clear-containers)|
 |Kata Containers Runtime|Alpha|`vlabs`|[kubernetes-kata-containers.json](../../examples/kubernetes-kata-containers.json)|[Description](#feat-kata-containers)|
 |Private Cluster|Alpha|`vlabs`|[kubernetes-private-cluster.json](../../examples/kubernetes-config/kubernetes-private-cluster.json)|[Description](#feat-private-cluster)|
 |Azure Key Vault Encryption|Alpha|`vlabs`|[kubernetes-keyvault-encryption.json](../../examples/kubernetes-config/kubernetes-keyvault-encryption.json)|[Description](#feat-keyvault-encryption)|
+|Shared Image Gallery images|Alpha|`vlabs`|[custom-shared-image.json](../../examples/custom-shared-image.json)|[Description](#feat-shared-image-gallery)|
+|Ephemeral OS Disks|Experimental|`vlabs`|[ephmeral-disk.json](../../examples/disks-ephemeral/ephemeral-disks.json)|[Description](#ephemeral-os-disks)|
+
 
 <a name="feat-kubernetes-msi"></a>
 
@@ -325,37 +327,6 @@ E.g.:
 ]
 ```
 
-<a name="feat-clear-containers"></a>
-
-## Clear Containers
-
-You can designate kubernetes agents to use Intel's Clear Containers as the
-container runtime by setting:
-
-```json
-      "kubernetesConfig": {
-        "containerRuntime": "clear-containers"
-      }
-```
-
-You will need to make sure your agents are using a `vmSize` that [supports
-nested virtualization](https://azure.microsoft.com/en-us/blog/nested-virtualization-in-azure/).
-These are the `Dv3` or `Ev3` series nodes.
-
-This should look like:
-
-```json
-"agentPoolProfiles": [
-      {
-        "name": "agentpool1",
-        "count": 3,
-        "vmSize": "Standard_D4s_v3",
-        "availabilityProfile": "AvailabilitySet",
-        "diskSizesGB": [1023]
-      }
-    ],
-```
-
 <a name="feat-kata-containers"></a>
 
 ## Kata Containers
@@ -454,3 +425,85 @@ To get `objectId` of the service principal:
 ```console
 az ad sp list --spn <YOUR SERVICE PRINCIPAL appId>
 ```
+
+<a name="feat-shared-image-gallery"></a>
+
+## Use a Shared Image Gallery image
+
+This is possible by specifying `imageReference` under `masterProfile` or on a given `agentPoolProfile`. It also requires setting the distro to an appropriate value (`ubuntu` or `coreos`). When using `imageReference` with Shared Image Galleries, provide an image name and version, as well as the resource group, subscription, and name of the gallery. Example:
+
+```json
+{
+    "apiVersion": "vlabs",
+    "properties": {
+      "orchestratorProfile": {
+        "orchestratorType": "Kubernetes"
+      },
+      "masterProfile": {
+        "imageReference": {
+          "name": "linuxvm",
+          "resourceGroup": "sig",
+          "subscriptionID": "00000000-0000-0000-0000-000000000000",
+          "gallery": "siggallery",
+          "version": "0.0.1"
+        },
+        "count": 1,
+        "dnsPrefix": "",
+        "vmSize": "Standard_D2_v3"
+      },
+      "agentPoolProfiles": [
+        {
+          "name": "agentpool1",
+          "count": 3,
+          "imageReference": {
+            "name": "linuxvm",
+            "resourceGroup": "sig",
+            "subscriptionID": "00000000-0000-0000-0000-000000000000",
+            "gallery": "siggallery",
+            "version": "0.0.1"
+          },
+          "vmSize": "Standard_D2_v3",
+          "availabilityProfile": "AvailabilitySet"
+        }
+      ],
+      "linuxProfile": {
+        "adminUsername": "azureuser",
+        "ssh": {
+          "publicKeys": [
+            {
+              "keyData": ""
+            }
+          ]
+        }
+      },
+      "servicePrincipalProfile": {
+        "clientId": "",
+        "secret": ""
+      }
+    }
+  }
+```
+
+## Ephemeral OS Disks
+
+> This feature is considered experimental, and you may lose data. We're still evaluating what risks exist and how to mitigate them.
+
+[Ephemeral OS Disks] is a new feature in Azure that allows the OS disk to use local SSD storage, with no writes to Azure storage. If a VM is stopped or deprovisioned, it's local storage is lost. If the same VM is restarted, it starts from the original OS disk and reapplies the custom script extension from AKS-Engine to join the cluster.
+
+Benefits - VMs deploy faster, and have better local storage performance. The OS disk will perform at the _Max cached storage throughput_ for the VM size. For example with a `Standard_D2s_v3` size VM using a 50 GiB OS disk - it can achieve 4000 IOPs with ephemeral disks enabled, or 240 IOPs using a `Premium P6` [Premium SSD](https://docs.microsoft.com/en-us/azure/virtual-machines/linux/disks-types#premium-ssd) at 50GiB. Apps will get faster container and `emptydir` performance. Container pull times are also improved.
+
+Requirements:
+
+- Be sure you are using a VM size that supports cache for the local disk
+- The OS disk size must be set to <= the VM's _cache size in GiB_
+
+These are fully explained in the [Ephemeral OS Disks] docs.
+
+
+We are investigating possible risks & mitigations for when VMs are deprovisioned or moved for Azure maintenance:
+
+- Logs for containers on those nodes are lost.
+- Containers cannot be restarted on the same node, as their container directory and any emptydir volumes will be missing.
+
+
+[Ephemeral OS Disks]: https://docs.microsoft.com/en-us/azure/virtual-machines/windows/ephemeral-os-disks

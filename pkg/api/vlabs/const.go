@@ -76,14 +76,15 @@ const (
 	StorageAccount = "StorageAccount"
 	// ManagedDisks means that the nodes use managed disks for their os and attached volumes
 	ManagedDisks = "ManagedDisks"
+	// Ephemeral means that the node's os disk is ephemeral. This is not compatible with attached volumes.
+	Ephemeral = "Ephemeral"
 )
 
 // Supported container runtimes
 const (
-	Docker          = "docker"
-	ClearContainers = "clear-containers"
-	KataContainers  = "kata-containers"
-	Containerd      = "containerd"
+	Docker         = "docker"
+	KataContainers = "kata-containers"
+	Containerd     = "containerd"
 )
 
 var (
@@ -95,7 +96,7 @@ var (
 	NetworkPolicyValues = [...]string{"", "calico", NetworkPolicyCilium, "azure", "none"}
 
 	// ContainerRuntimeValues holds the valid values for container runtimes
-	ContainerRuntimeValues = [...]string{"", Docker, ClearContainers, KataContainers, Containerd}
+	ContainerRuntimeValues = [...]string{"", Docker, KataContainers, Containerd}
 
 	// DistroValues holds the valid values for OS distros
 	DistroValues = []Distro{"", Ubuntu, Ubuntu1804, RHEL, CoreOS, AKSUbuntu1604, AKSUbuntu1804, ACC1604}
@@ -134,6 +135,8 @@ const (
 const (
 	// AzureStackCloud is a const string reference identifier for Azure Stack cloud
 	AzureStackCloud = "AzureStackCloud"
+	// MaxAzureStackManagedDiskSize is max etcd disk size supported on AzureStackCloud
+	MaxAzureStackManagedDiskSize = 1023
 )
 
 const (
@@ -160,6 +163,9 @@ const (
 	// ClientCertificateAuthMethod indicates to use client certificate for authentication
 	ClientCertificateAuthMethod = "client_certificate"
 )
+
+// BasicLoadBalancerSku is the string const for Azure Basic Load Balancer
+const BasicLoadBalancerSku = "Basic"
 
 // StandardLoadBalancerSku is the string const for Azure Standard Load Balancer
 const StandardLoadBalancerSku = "Standard"

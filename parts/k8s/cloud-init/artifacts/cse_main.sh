@@ -6,8 +6,8 @@ AZURE_STACK_ENV="azurestackcloud"
 
 script_lib=/opt/azure/containers/provision_source.sh
 for i in $(seq 1 3600); do
-    if [ -f $script_lib ]; then
-        break
+    if [ -s $script_lib ]; then
+        grep -Fq '#HELPERSEOF' $script_lib && break
     fi
     if [ $i -eq 3600 ]; then
         exit $ERR_FILE_WATCH_TIMEOUT
@@ -15,6 +15,7 @@ for i in $(seq 1 3600); do
         sleep 1
     fi
 done
+sed -i "/#HELPERSEOF/d" $script_lib
 source $script_lib
 
 install_script=/opt/azure/containers/provision_installs.sh
@@ -78,7 +79,7 @@ if [[ $OS != $COREOS_OS_NAME ]]; then
     installContainerRuntime
 fi
 installNetworkPlugin
-if [[ "$CONTAINER_RUNTIME" == "clear-containers" ]] || [[ "$CONTAINER_RUNTIME" == "kata-containers" ]] || [[ "$CONTAINER_RUNTIME" == "containerd" ]]; then
+if [[ "$CONTAINER_RUNTIME" == "kata-containers" ]] || [[ "$CONTAINER_RUNTIME" == "containerd" ]]; then
     installContainerd
 else
     cleanUpContainerd
@@ -124,10 +125,6 @@ fi
 
 if [[ "$CONTAINER_RUNTIME" == "docker" ]]; then
     ensureDocker
-elif [[ "$CONTAINER_RUNTIME" == "clear-containers" ]]; then
-	if grep -q vmx /proc/cpuinfo; then
-        ensureCCProxy
-	fi
 elif [[ "$CONTAINER_RUNTIME" == "kata-containers" ]]; then
     if grep -q vmx /proc/cpuinfo; then
         installKataContainersRuntime
@@ -136,8 +133,11 @@ fi
 
 configureK8s
 
-if [[ "${TARGET_ENVIRONMENT,,}" == "${AZURE_STACK_ENV}"  ]]; then
+if [[ "${TARGET_ENVIRONMENT,,}" == "${AZURE_STACK_ENV,,}"  ]]; then
     configureK8sCustomCloud
+    if [[ "${NETWORK_PLUGIN,,}" = "azure" ]]; then
+        configureAzureStackInterfaces
+    fi
 fi
 
 configureCNI
@@ -146,7 +146,7 @@ if [[ -n "${MASTER_NODE}" ]]; then
     configAddons
 fi
 
-if [[ "$CONTAINER_RUNTIME" == "clear-containers" ]] || [[ "$CONTAINER_RUNTIME" == "kata-containers" ]] || [[ "$CONTAINER_RUNTIME" == "containerd" ]]; then
+if [[ "$CONTAINER_RUNTIME" == "kata-containers" ]] || [[ "$CONTAINER_RUNTIME" == "containerd" ]]; then
     ensureContainerd
 fi
 
@@ -161,12 +161,17 @@ if [ "$IS_IPV6_DUALSTACK_FEATURE_ENABLED" = "true" ]; then
     wait_for_file 3600 1 $dhcpv6_systemd_service || exit $ERR_FILE_WATCH_TIMEOUT
     wait_for_file 3600 1 $dhcpv6_configuration_script || exit $ERR_FILE_WATCH_TIMEOUT
     ensureDHCPv6
+
+    retrycmd_if_failure 120 5 25 modprobe ip6_tables || exit $ERR_MODPROBE_FAIL
 fi
 
 ensureKubelet
 ensureJournal
 
 if [[ -n "${MASTER_NODE}" ]]; then
+    if version_gte ${KUBERNETES_VERSION} 1.16; then
+      ensureLabelNodes
+    fi
     writeKubeConfig
     if [[ -z "${COSMOS_URI}" ]]; then
       ensureEtcd
@@ -204,3 +209,4 @@ else
       aptmarkWALinuxAgent unhold &
   fi
 fi
+#EOF

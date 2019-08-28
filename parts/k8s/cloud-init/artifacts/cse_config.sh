@@ -248,19 +248,6 @@ configureCNIIPTables() {
     fi
 }
 
-setKubeletOpts () {
-    KUBELET_DEFAULT_FILE=/etc/default/kubelet
-    wait_for_file 1200 1 $KUBELET_DEFAULT_FILE || exit $ERR_FILE_WATCH_TIMEOUT
-    sed -i "s#^KUBELET_OPTS=.*#KUBELET_OPTS=${1}#" $KUBELET_DEFAULT_FILE
-}
-
-ensureCCProxy() {
-    sed 's#@libexecdir@#/usr/libexec#' $CC_SERVICE_IN_TMP > /etc/systemd/system/cc-proxy.service
-    sed 's#@localstatedir@#/var#' $CC_SOCKET_IN_TMP > /etc/systemd/system/cc-proxy.socket
-	echo "Enabling and starting Clear Containers proxy service..."
-	systemctlEnableAndStart cc-proxy || exit $ERR_SYSTEMCTL_START_FAIL
-}
-
 setupContainerd() {
     echo "Configuring cri-containerd..."
     mkdir -p "/etc/containerd"
@@ -272,9 +259,7 @@ setupContainerd() {
         echo "sandbox_image = \"$POD_INFRA_CONTAINER_SPEC\""
         echo "[plugins.cri.containerd.untrusted_workload_runtime]"
         echo "runtime_type = 'io.containerd.runtime.v1.linux'"
-        if [[ "$CONTAINER_RUNTIME" == "clear-containers" ]]; then
-            echo "runtime_engine = '/usr/bin/cc-runtime'"
-        elif [[ "$CONTAINER_RUNTIME" == "kata-containers" ]]; then
+        if [[ "$CONTAINER_RUNTIME" == "kata-containers" ]]; then
             echo "runtime_engine = '/usr/bin/kata-runtime'"
         else
             echo "runtime_engine = '/usr/local/sbin/runc'"
@@ -283,7 +268,6 @@ setupContainerd() {
         echo "runtime_type = 'io.containerd.runtime.v1.linux'"
         echo "runtime_engine = '/usr/local/sbin/runc'"
     } > "$CRI_CONTAINERD_CONFIG"
-    setKubeletOpts " --container-runtime=remote --runtime-request-timeout=15m --container-runtime-endpoint=unix:///run/containerd/containerd.sock"
 }
 
 ensureContainerd() {
@@ -295,15 +279,23 @@ ensureContainerd() {
 ensureDocker() {
     DOCKER_SERVICE_EXEC_START_FILE=/etc/systemd/system/docker.service.d/exec_start.conf
     wait_for_file 1200 1 $DOCKER_SERVICE_EXEC_START_FILE || exit $ERR_FILE_WATCH_TIMEOUT
-    echo "ExecStartPost=/sbin/iptables -P FORWARD ACCEPT" >> $DOCKER_SERVICE_EXEC_START_FILE
     usermod -aG docker ${ADMINUSER}
     DOCKER_MOUNT_FLAGS_SYSTEMD_FILE=/etc/systemd/system/docker.service.d/clear_mount_propagation_flags.conf
     if [[ $OS != $COREOS_OS_NAME ]]; then
         wait_for_file 1200 1 $DOCKER_MOUNT_FLAGS_SYSTEMD_FILE || exit $ERR_FILE_WATCH_TIMEOUT
     fi
     DOCKER_JSON_FILE=/etc/docker/daemon.json
-    wait_for_file 1200 1 $DOCKER_JSON_FILE || exit $ERR_FILE_WATCH_TIMEOUT
-    systemctlEnableAndStart docker
+    for i in $(seq 1 1200); do
+        if [ -s $DOCKER_JSON_FILE ]; then
+            jq '.' < $DOCKER_JSON_FILE && break
+        fi
+        if [ $i -eq 1200 ]; then
+            exit $ERR_FILE_WATCH_TIMEOUT
+        else
+            sleep 1
+        fi
+    done
+    systemctlEnableAndStart docker || exit $ERR_DOCKER_START_FAIL
     # Delay start of docker-monitor for 30 mins after booting
     DOCKER_MONITOR_SYSTEMD_TIMER_FILE=/etc/systemd/system/docker-monitor.timer
     wait_for_file 1200 1 $DOCKER_MONITOR_SYSTEMD_TIMER_FILE || exit $ERR_FILE_WATCH_TIMEOUT
@@ -330,6 +322,14 @@ ensureKubelet() {
     systemctlEnableAndStart kubelet || exit $ERR_KUBELET_START_FAIL
 }
 
+ensureLabelNodes() {
+    LABEL_NODES_SCRIPT_FILE=/opt/azure/containers/label-nodes.sh
+    wait_for_file 1200 1 $LABEL_NODES_SCRIPT_FILE || exit $ERR_FILE_WATCH_TIMEOUT
+    LABEL_NODES_SYSTEMD_FILE=/etc/systemd/system/label-nodes.service
+    wait_for_file 1200 1 $LABEL_NODES_SYSTEMD_FILE || exit $ERR_FILE_WATCH_TIMEOUT
+    systemctlEnableAndStart label-nodes || exit $ERR_SYSTEMCTL_START_FAIL
+}
+
 ensureJournal() {
     {
         echo "Storage=persistent"
@@ -344,7 +344,6 @@ ensureK8sControlPlane() {
     if $REBOOTREQUIRED || [ "$NO_OUTBOUND" = "true" ]; then
         return
     fi
-    wait_for_file 3600 1 $KUBECTL || exit $ERR_FILE_WATCH_TIMEOUT
     retrycmd_if_failure 120 5 25 $KUBECTL 2>/dev/null cluster-info || exit $ERR_K8S_RUNNING_TIMEOUT
 }
 
@@ -475,3 +474,4 @@ ensureGPUDrivers() {
     configGPUDrivers
     systemctlEnableAndStart nvidia-modprobe || exit $ERR_GPU_DRIVERS_START_FAIL
 }
+#EOF

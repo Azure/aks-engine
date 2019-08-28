@@ -2,17 +2,29 @@ apiVersion: extensions/v1beta1
 kind: DaemonSet
 metadata:
   labels:
+    addonmanager.kubernetes.io/mode: Reconcile
     kubernetes.io/cluster-service: "true"
     component: kube-proxy
     tier: node
+    k8s-app: kube-proxy
   name: kube-proxy
   namespace: kube-system
 spec:
+  selector:
+    matchLabels:
+      k8s-app: kube-proxy
+  updateStrategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 50%
   template:
     metadata:
       labels:
         component: kube-proxy
         tier: node
+        k8s-app: kube-proxy
+      annotations:
+        scheduler.alpha.kubernetes.io/critical-pod: ''
     spec:
       priorityClassName: system-node-critical
       tolerations:
@@ -24,6 +36,8 @@ spec:
         effect: NoExecute
       - operator: "Exists"
         effect: NoSchedule
+      - key: CriticalAddonsOnly
+        operator: Exists
       containers:
       - command:
         - /hyperkube

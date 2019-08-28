@@ -142,11 +142,13 @@ func (cs *ContainerService) setKubeletConfig(isUpgrade bool) {
 
 	if isUpgrade && common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.14.0") {
 		hasSupportPodPidsLimitFeatureGate := strings.Contains(o.KubernetesConfig.KubeletConfig["--feature-gates"], "SupportPodPidsLimit=true")
-		podMaxPids, _ := strconv.Atoi(o.KubernetesConfig.KubeletConfig["--pod-max-pids"])
-		if podMaxPids > 0 {
+		podMaxPids, err := strconv.Atoi(o.KubernetesConfig.KubeletConfig["--pod-max-pids"])
+		if err != nil {
+			o.KubernetesConfig.KubeletConfig["--pod-max-pids"] = strconv.Itoa(-1)
+		} else {
 			// If we don't have an explicit SupportPodPidsLimit=true, disable --pod-max-pids by setting to -1
 			// To prevent older clusters from inheriting SupportPodPidsLimit=true implicitly starting w/ 1.14.0
-			if !hasSupportPodPidsLimitFeatureGate {
+			if !hasSupportPodPidsLimitFeatureGate || podMaxPids <= 0 {
 				o.KubernetesConfig.KubeletConfig["--pod-max-pids"] = strconv.Itoa(-1)
 			}
 		}
@@ -162,6 +164,20 @@ func (cs *ContainerService) setKubeletConfig(isUpgrade bool) {
 		}
 		setMissingKubeletValues(cs.Properties.MasterProfile.KubernetesConfig, o.KubernetesConfig.KubeletConfig)
 		addDefaultFeatureGates(cs.Properties.MasterProfile.KubernetesConfig.KubeletConfig, o.OrchestratorVersion, "", "")
+
+		if isUpgrade && common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.14.0") {
+			hasSupportPodPidsLimitFeatureGate := strings.Contains(cs.Properties.MasterProfile.KubernetesConfig.KubeletConfig["--feature-gates"], "SupportPodPidsLimit=true")
+			podMaxPids, err := strconv.Atoi(cs.Properties.MasterProfile.KubernetesConfig.KubeletConfig["--pod-max-pids"])
+			if err != nil {
+				cs.Properties.MasterProfile.KubernetesConfig.KubeletConfig["--pod-max-pids"] = strconv.Itoa(-1)
+			} else {
+				// If we don't have an explicit SupportPodPidsLimit=true, disable --pod-max-pids by setting to -1
+				// To prevent older clusters from inheriting SupportPodPidsLimit=true implicitly starting w/ 1.14.0
+				if !hasSupportPodPidsLimitFeatureGate || podMaxPids <= 0 {
+					cs.Properties.MasterProfile.KubernetesConfig.KubeletConfig["--pod-max-pids"] = strconv.Itoa(-1)
+				}
+			}
+		}
 
 		removeKubeletFlags(cs.Properties.MasterProfile.KubernetesConfig.KubeletConfig, o.OrchestratorVersion)
 	}
@@ -190,6 +206,20 @@ func (cs *ContainerService) setKubeletConfig(isUpgrade bool) {
 			if !cs.Properties.IsNVIDIADevicePluginEnabled() && !common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.11.0") {
 				// enabling accelerators for Kubernetes >= 1.6 to <= 1.9
 				addDefaultFeatureGates(profile.KubernetesConfig.KubeletConfig, o.OrchestratorVersion, "1.6.0", "Accelerators=true")
+			}
+		}
+
+		if isUpgrade && common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.14.0") {
+			hasSupportPodPidsLimitFeatureGate := strings.Contains(profile.KubernetesConfig.KubeletConfig["--feature-gates"], "SupportPodPidsLimit=true")
+			podMaxPids, err := strconv.Atoi(profile.KubernetesConfig.KubeletConfig["--pod-max-pids"])
+			if err != nil {
+				profile.KubernetesConfig.KubeletConfig["--pod-max-pids"] = strconv.Itoa(-1)
+			} else {
+				// If we don't have an explicit SupportPodPidsLimit=true, disable --pod-max-pids by setting to -1
+				// To prevent older clusters from inheriting SupportPodPidsLimit=true implicitly starting w/ 1.14.0
+				if !hasSupportPodPidsLimitFeatureGate || podMaxPids <= 0 {
+					profile.KubernetesConfig.KubeletConfig["--pod-max-pids"] = strconv.Itoa(-1)
+				}
 			}
 		}
 

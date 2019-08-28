@@ -573,6 +573,7 @@ func TestHasStorageProfile(t *testing.T) {
 		expectedHasMD     bool
 		expectedHasSA     bool
 		expectedMasterMD  bool
+		expectedAgent0E   bool
 		expectedAgent0MD  bool
 		expectedPrivateJB bool
 		expectedHasDisks  bool
@@ -597,6 +598,7 @@ func TestHasStorageProfile(t *testing.T) {
 			expectedHasSA:    true,
 			expectedMasterMD: false,
 			expectedAgent0MD: false,
+			expectedAgent0E:  false,
 			expectedHasDisks: true,
 		},
 		{
@@ -618,6 +620,7 @@ func TestHasStorageProfile(t *testing.T) {
 			expectedHasSA:    true,
 			expectedMasterMD: true,
 			expectedAgent0MD: false,
+			expectedAgent0E:  false,
 		},
 		{
 			name: "both",
@@ -638,6 +641,7 @@ func TestHasStorageProfile(t *testing.T) {
 			expectedHasSA:    true,
 			expectedMasterMD: false,
 			expectedAgent0MD: true,
+			expectedAgent0E:  false,
 		},
 		{
 			name: "Managed Disk everywhere",
@@ -661,6 +665,29 @@ func TestHasStorageProfile(t *testing.T) {
 			expectedHasSA:     false,
 			expectedMasterMD:  true,
 			expectedAgent0MD:  true,
+			expectedAgent0E:   false,
+			expectedPrivateJB: false,
+		},
+		{
+			name: "Managed disk master with ephemeral agent",
+			p: Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					OrchestratorType: Kubernetes,
+				},
+				MasterProfile: &MasterProfile{
+					StorageProfile: ManagedDisks,
+				},
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						StorageProfile: Ephemeral,
+					},
+				},
+			},
+			expectedHasMD:     true,
+			expectedHasSA:     false,
+			expectedMasterMD:  true,
+			expectedAgent0MD:  false,
+			expectedAgent0E:   true,
 			expectedPrivateJB: false,
 		},
 		{
@@ -690,6 +717,7 @@ func TestHasStorageProfile(t *testing.T) {
 			expectedHasSA:     true,
 			expectedMasterMD:  false,
 			expectedAgent0MD:  false,
+			expectedAgent0E:   false,
 			expectedPrivateJB: true,
 		},
 
@@ -720,6 +748,7 @@ func TestHasStorageProfile(t *testing.T) {
 			expectedHasSA:     true,
 			expectedMasterMD:  true,
 			expectedAgent0MD:  true,
+			expectedAgent0E:   false,
 			expectedPrivateJB: true,
 		},
 	}
@@ -743,8 +772,12 @@ func TestHasStorageProfile(t *testing.T) {
 			if c.p.AgentPoolProfiles[0].IsManagedDisks() != c.expectedAgent0MD {
 				t.Fatalf("expected IsManagedDisks() to return %t but instead returned %t", c.expectedAgent0MD, c.p.AgentPoolProfiles[0].IsManagedDisks())
 			}
-			if c.p.AgentPoolProfiles[0].IsStorageAccount() == c.expectedAgent0MD {
-				t.Fatalf("expected IsStorageAccount() to return %t but instead returned %t", !c.expectedAgent0MD, c.p.AgentPoolProfiles[0].IsStorageAccount())
+			expectedAgentStorageAccount := !(c.expectedAgent0MD || c.expectedAgent0E)
+			if c.p.AgentPoolProfiles[0].IsStorageAccount() != expectedAgentStorageAccount {
+				t.Fatalf("expected IsStorageAccount() to return %t but instead returned %t", expectedAgentStorageAccount, c.p.AgentPoolProfiles[0].IsStorageAccount())
+			}
+			if c.p.AgentPoolProfiles[0].IsEphemeral() != c.expectedAgent0E {
+				t.Fatalf("expected IsEphemeral() to return %t but instead returned %t", c.expectedAgent0E, c.p.AgentPoolProfiles[0].IsEphemeral())
 			}
 			if c.p.OrchestratorProfile != nil && c.p.OrchestratorProfile.KubernetesConfig.PrivateJumpboxProvision() != c.expectedPrivateJB {
 				t.Fatalf("expected PrivateJumpboxProvision() to return %t but instead returned %t", c.expectedPrivateJB, c.p.OrchestratorProfile.KubernetesConfig.PrivateJumpboxProvision())
@@ -758,32 +791,43 @@ func TestHasStorageProfile(t *testing.T) {
 
 func TestAgentPoolProfileGetKubernetesLabels(t *testing.T) {
 	cases := []struct {
-		name     string
-		ap       AgentPoolProfile
-		rg       string
-		expected string
+		name       string
+		ap         AgentPoolProfile
+		rg         string
+		deprecated bool
+		expected   string
 	}{
 		{
-			name:     "vanilla pool profile",
-			ap:       AgentPoolProfile{},
-			rg:       "my-resource-group",
-			expected: "node-role.kubernetes.io/agent=,kubernetes.io/role=agent,agentpool=,kubernetes.azure.com/cluster=my-resource-group",
+			name:       "vanilla pool profile",
+			ap:         AgentPoolProfile{},
+			rg:         "my-resource-group",
+			deprecated: true,
+			expected:   "kubernetes.azure.com/role=agent,node-role.kubernetes.io/agent=,kubernetes.io/role=agent,agentpool=,kubernetes.azure.com/cluster=my-resource-group",
+		},
+		{
+			name:       "vanilla pool profile, no deprecated labels",
+			ap:         AgentPoolProfile{},
+			rg:         "my-resource-group",
+			deprecated: false,
+			expected:   "kubernetes.azure.com/role=agent,agentpool=,kubernetes.azure.com/cluster=my-resource-group",
 		},
 		{
 			name: "with managed disk",
 			ap: AgentPoolProfile{
 				StorageProfile: ManagedDisks,
 			},
-			rg:       "my-resource-group",
-			expected: "node-role.kubernetes.io/agent=,kubernetes.io/role=agent,agentpool=,storageprofile=managed,storagetier=,kubernetes.azure.com/cluster=my-resource-group",
+			rg:         "my-resource-group",
+			deprecated: true,
+			expected:   "kubernetes.azure.com/role=agent,node-role.kubernetes.io/agent=,kubernetes.io/role=agent,agentpool=,storageprofile=managed,storagetier=,kubernetes.azure.com/cluster=my-resource-group",
 		},
 		{
 			name: "N series",
 			ap: AgentPoolProfile{
 				VMSize: "Standard_NC6",
 			},
-			rg:       "my-resource-group",
-			expected: "node-role.kubernetes.io/agent=,kubernetes.io/role=agent,agentpool=,accelerator=nvidia,kubernetes.azure.com/cluster=my-resource-group",
+			rg:         "my-resource-group",
+			deprecated: true,
+			expected:   "kubernetes.azure.com/role=agent,node-role.kubernetes.io/agent=,kubernetes.io/role=agent,agentpool=,accelerator=nvidia,kubernetes.azure.com/cluster=my-resource-group",
 		},
 		{
 			name: "with custom labels",
@@ -793,8 +837,21 @@ func TestAgentPoolProfileGetKubernetesLabels(t *testing.T) {
 					"mycustomlabel2": "bar",
 				},
 			},
-			rg:       "my-resource-group",
-			expected: "node-role.kubernetes.io/agent=,kubernetes.io/role=agent,agentpool=,kubernetes.azure.com/cluster=my-resource-group,mycustomlabel1=foo,mycustomlabel2=bar",
+			rg:         "my-resource-group",
+			deprecated: true,
+			expected:   "kubernetes.azure.com/role=agent,node-role.kubernetes.io/agent=,kubernetes.io/role=agent,agentpool=,kubernetes.azure.com/cluster=my-resource-group,mycustomlabel1=foo,mycustomlabel2=bar",
+		},
+		{
+			name: "with custom labels, no deprecated labels",
+			ap: AgentPoolProfile{
+				CustomNodeLabels: map[string]string{
+					"mycustomlabel1": "foo",
+					"mycustomlabel2": "bar",
+				},
+			},
+			rg:         "my-resource-group",
+			deprecated: false,
+			expected:   "kubernetes.azure.com/role=agent,agentpool=,kubernetes.azure.com/cluster=my-resource-group,mycustomlabel1=foo,mycustomlabel2=bar",
 		},
 		{
 			name: "N series and managed disk with custom labels",
@@ -806,8 +863,9 @@ func TestAgentPoolProfileGetKubernetesLabels(t *testing.T) {
 					"mycustomlabel2": "bar",
 				},
 			},
-			rg:       "my-resource-group",
-			expected: "node-role.kubernetes.io/agent=,kubernetes.io/role=agent,agentpool=,storageprofile=managed,storagetier=Standard_LRS,accelerator=nvidia,kubernetes.azure.com/cluster=my-resource-group,mycustomlabel1=foo,mycustomlabel2=bar",
+			rg:         "my-resource-group",
+			deprecated: true,
+			expected:   "kubernetes.azure.com/role=agent,node-role.kubernetes.io/agent=,kubernetes.io/role=agent,agentpool=,storageprofile=managed,storagetier=Standard_LRS,accelerator=nvidia,kubernetes.azure.com/cluster=my-resource-group,mycustomlabel1=foo,mycustomlabel2=bar",
 		},
 	}
 
@@ -815,8 +873,9 @@ func TestAgentPoolProfileGetKubernetesLabels(t *testing.T) {
 		c := c
 		t.Run(c.name, func(t *testing.T) {
 			t.Parallel()
-			if c.expected != c.ap.GetKubernetesLabels(c.rg) {
-				t.Fatalf("Got unexpected AgentPoolProfile.GetKubernetesLabels(%s) result. Expected: %s. Got: %s.", c.rg, c.expected, c.ap.GetKubernetesLabels(c.rg))
+			if c.expected != c.ap.GetKubernetesLabels(c.rg, c.deprecated) {
+				t.Fatalf("Got unexpected AgentPoolProfile.GetKubernetesLabels(%s, %t) result. Expected: %s. Got: %s.",
+					c.rg, c.deprecated, c.expected, c.ap.GetKubernetesLabels(c.rg, c.deprecated))
 			}
 		})
 	}
@@ -1000,6 +1059,130 @@ func TestPropertiesIsHostedMasterProfile(t *testing.T) {
 			t.Parallel()
 			if c.p.IsHostedMasterProfile() != c.expected {
 				t.Fatalf("expected IsHostedMasterProfile() to return %t but instead returned %t", c.expected, c.p.IsHostedMasterProfile())
+			}
+		})
+	}
+}
+
+func TestPropertiesMasterCustomOS(t *testing.T) {
+	cases := []struct {
+		name            string
+		p               Properties
+		expectedRef     bool
+		expectedGallery bool
+	}{
+		{
+			name: "valid shared gallery image",
+			p: Properties{
+				MasterProfile: &MasterProfile{
+					ImageRef: &ImageReference{
+						Name:           "testImage",
+						ResourceGroup:  "testRg",
+						SubscriptionID: "testSub",
+						Gallery:        "testGallery",
+						Version:        "0.0.1",
+					},
+				},
+			},
+			expectedRef:     true,
+			expectedGallery: true,
+		},
+		{
+			name: "valid resource group image",
+			p: Properties{
+				MasterProfile: &MasterProfile{
+					ImageRef: &ImageReference{
+						Name:          "testImage",
+						ResourceGroup: "testRg",
+					},
+				},
+			},
+			expectedRef:     true,
+			expectedGallery: false,
+		},
+		{
+			name: "valid no custom image",
+			p: Properties{
+				MasterProfile: &MasterProfile{
+					ImageRef: nil,
+				},
+			},
+			expectedRef:     false,
+			expectedGallery: false,
+		},
+	}
+
+	for _, c := range cases {
+		c := c
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+			if c.p.MasterProfile.HasImageRef() != c.expectedRef || c.p.MasterProfile.HasImageGallery() != c.expectedGallery {
+				t.Fatalf("expected HasImageRef() to return %t but instead returned %t, HasImageGallery() expected: %t but actual: %t", c.expectedRef, c.p.MasterProfile.HasImageRef(), c.p.MasterProfile.HasImageGallery(), c.expectedGallery)
+			}
+		})
+	}
+}
+
+func TestPropertiesAgentCustomOS(t *testing.T) {
+	cases := []struct {
+		name            string
+		p               Properties
+		expectedRef     bool
+		expectedGallery bool
+	}{
+		{
+			name: "valid shared gallery image",
+			p: Properties{
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						ImageRef: &ImageReference{
+							Name:           "testImage",
+							ResourceGroup:  "testRg",
+							SubscriptionID: "testSub",
+							Gallery:        "testGallery",
+							Version:        "0.0.1",
+						},
+					},
+				},
+			},
+			expectedRef:     true,
+			expectedGallery: true,
+		},
+		{
+			name: "valid resource group image",
+			p: Properties{
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						ImageRef: &ImageReference{
+							Name:          "testImage",
+							ResourceGroup: "testRg",
+						},
+					},
+				},
+			},
+			expectedRef:     true,
+			expectedGallery: false,
+		},
+		{
+			name: "valid no custom image",
+			p: Properties{
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						ImageRef: nil,
+					},
+				},
+			},
+			expectedRef:     false,
+			expectedGallery: false,
+		},
+	}
+
+	for _, c := range cases {
+		c := c
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+			if c.p.AgentPoolProfiles[0].HasImageRef() != c.expectedRef || c.p.AgentPoolProfiles[0].HasImageGallery() != c.expectedGallery {
+				t.Fatalf("expected HasImageRef() to return %t but instead returned %t, HasImageGallery() expected: %t but actual: %t", c.expectedRef, c.p.AgentPoolProfiles[0].HasImageRef(), c.expectedGallery, c.p.AgentPoolProfiles[0].HasImageGallery())
 			}
 		})
 	}
@@ -1309,6 +1492,118 @@ func TestHasAvailabilityZones(t *testing.T) {
 		}
 		if c.p.HasZonesForAllAgentPools() != c.expectedAllZones {
 			t.Fatalf("expected HasZonesForAllAgentPools() to return %t but instead returned %t", c.expectedAllZones, c.p.HasZonesForAllAgentPools())
+		}
+	}
+}
+
+func TestHasLowPriorityScaleset(t *testing.T) {
+	cases := []struct {
+		p        Properties
+		expected bool
+	}{
+		{
+			p: Properties{
+				MasterProfile: &MasterProfile{
+					Count: 1,
+				},
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						AvailabilityProfile: VirtualMachineScaleSets,
+						ScaleSetPriority:    ScaleSetPriorityLow,
+					},
+				},
+			},
+			expected: true,
+		},
+		{
+			p: Properties{
+				MasterProfile: &MasterProfile{
+					Count: 1,
+				},
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						AvailabilityProfile: VirtualMachineScaleSets,
+						ScaleSetPriority:    ScaleSetPriorityLow,
+					},
+					{
+						AvailabilityProfile: VirtualMachineScaleSets,
+					},
+				},
+			},
+			expected: true,
+		},
+		{
+			p: Properties{
+				MasterProfile: &MasterProfile{
+					Count: 1,
+				},
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						AvailabilityProfile: VirtualMachineScaleSets,
+						ScaleSetPriority:    ScaleSetPriorityLow,
+					},
+					{
+						AvailabilityProfile: AvailabilitySet,
+					},
+				},
+			},
+			expected: true,
+		},
+		{
+			p: Properties{
+				MasterProfile: &MasterProfile{
+					Count: 1,
+				},
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						AvailabilityProfile: VirtualMachineScaleSets,
+					},
+				},
+			},
+			expected: false,
+		},
+		{
+			p: Properties{
+				MasterProfile: &MasterProfile{
+					Count: 1,
+				},
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						AvailabilityProfile: VirtualMachineScaleSets,
+					},
+					{
+						AvailabilityProfile: AvailabilitySet,
+					},
+				},
+			},
+			expected: false,
+		},
+		{
+			p: Properties{
+				MasterProfile: &MasterProfile{
+					Count: 1,
+				},
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						AvailabilityProfile: AvailabilitySet,
+					},
+				},
+			},
+			expected: false,
+		},
+		{
+			p: Properties{
+				MasterProfile: &MasterProfile{
+					Count: 1,
+				},
+			},
+			expected: false,
+		},
+	}
+
+	for _, c := range cases {
+		if c.p.HasLowPriorityScaleset() != c.expected {
+			t.Fatalf("expected HasLowPriorityScaleset() to return %t but instead returned %t", c.expected, c.p.HasLowPriorityScaleset())
 		}
 	}
 }
@@ -2767,6 +3062,77 @@ func TestWindowsProfile(t *testing.T) {
 	}
 }
 
+func TestWindowsProfileCustomOS(t *testing.T) {
+	cases := []struct {
+		name            string
+		w               WindowsProfile
+		expectedRef     bool
+		expectedGallery bool
+		expectedURL     bool
+	}{
+		{
+			name: "valid shared gallery image",
+			w: WindowsProfile{
+				ImageRef: &ImageReference{
+					Name:           "test",
+					ResourceGroup:  "testRG",
+					SubscriptionID: "testSub",
+					Gallery:        "testGallery",
+					Version:        "0.1.0",
+				},
+			},
+			expectedRef:     true,
+			expectedGallery: true,
+			expectedURL:     false,
+		},
+		{
+			name: "valid non-shared image",
+			w: WindowsProfile{
+				ImageRef: &ImageReference{
+					Name:          "test",
+					ResourceGroup: "testRG",
+				},
+			},
+			expectedRef:     true,
+			expectedGallery: false,
+			expectedURL:     false,
+		},
+		{
+			name: "valid image URL",
+			w: WindowsProfile{
+				WindowsImageSourceURL: "https://some/image.vhd",
+			},
+			expectedRef:     false,
+			expectedGallery: false,
+			expectedURL:     true,
+		},
+		{
+			name:            "valid no custom image",
+			w:               WindowsProfile{},
+			expectedRef:     false,
+			expectedGallery: false,
+			expectedURL:     false,
+		},
+	}
+
+	for _, c := range cases {
+		c := c
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+
+			if c.w.HasCustomImage() != c.expectedURL {
+				t.Errorf("expected HasCustomImage() to return %t but instead returned %t", c.expectedURL, c.w.HasCustomImage())
+			}
+			if c.w.HasImageRef() != c.expectedRef {
+				t.Errorf("expected HasImageRef() to return %t but instead returned %t", c.expectedRef, c.w.HasImageRef())
+			}
+			if c.w.HasImageGallery() != c.expectedGallery {
+				t.Errorf("expected HasImageGallery() to return %t but instead returned %t", c.expectedGallery, c.w.HasImageGallery())
+			}
+		})
+	}
+}
+
 func TestLinuxProfile(t *testing.T) {
 	l := LinuxProfile{}
 
@@ -3291,13 +3657,16 @@ func TestGetAzureCNIURLFuncs(t *testing.T) {
 func TestCloudProviderDefaults(t *testing.T) {
 	// Test cloudprovider defaults when no user-provided values
 	v := "1.8.0"
-	o := OrchestratorProfile{
-		OrchestratorType:    "Kubernetes",
-		OrchestratorVersion: v,
-		KubernetesConfig:    &KubernetesConfig{},
+	p := Properties{
+		OrchestratorProfile: &OrchestratorProfile{
+			OrchestratorType:    "Kubernetes",
+			OrchestratorVersion: v,
+			KubernetesConfig:    &KubernetesConfig{},
+		},
 	}
+	o := p.OrchestratorProfile
 	o.KubernetesConfig.SetCloudProviderBackoffDefaults()
-	o.KubernetesConfig.SetCloudProviderRateLimitDefaults()
+	p.SetCloudProviderRateLimitDefaults()
 
 	intCases := []struct {
 		defaultVal  int
@@ -3314,6 +3683,10 @@ func TestCloudProviderDefaults(t *testing.T) {
 		{
 			defaultVal:  DefaultKubernetesCloudProviderRateLimitBucket,
 			computedVal: o.KubernetesConfig.CloudProviderRateLimitBucket,
+		},
+		{
+			defaultVal:  DefaultKubernetesCloudProviderRateLimitBucketWrite,
+			computedVal: o.KubernetesConfig.CloudProviderRateLimitBucketWrite,
 		},
 	}
 
@@ -3339,6 +3712,10 @@ func TestCloudProviderDefaults(t *testing.T) {
 			defaultVal:  DefaultKubernetesCloudProviderRateLimitQPS,
 			computedVal: o.KubernetesConfig.CloudProviderRateLimitQPS,
 		},
+		{
+			defaultVal:  DefaultKubernetesCloudProviderRateLimitQPSWrite,
+			computedVal: o.KubernetesConfig.CloudProviderRateLimitQPSWrite,
+		},
 	}
 
 	for _, c := range floatCases {
@@ -3353,23 +3730,30 @@ func TestCloudProviderDefaults(t *testing.T) {
 	customCloudProviderBackoffRetries := 9
 	customCloudProviderRateLimitBucket := 37
 	customCloudProviderRateLimitQPS := 9.9
+	customCloudProviderRateLimitQPSWrite := 100.1
+	customCloudProviderRateLimitBucketWrite := 42
 
 	// Test cloudprovider defaults when user provides configuration
 	v = "1.8.0"
-	o = OrchestratorProfile{
-		OrchestratorType:    "Kubernetes",
-		OrchestratorVersion: v,
-		KubernetesConfig: &KubernetesConfig{
-			CloudProviderBackoffDuration: customCloudProviderBackoffDuration,
-			CloudProviderBackoffExponent: customCloudProviderBackoffExponent,
-			CloudProviderBackoffJitter:   customCloudProviderBackoffJitter,
-			CloudProviderBackoffRetries:  customCloudProviderBackoffRetries,
-			CloudProviderRateLimitBucket: customCloudProviderRateLimitBucket,
-			CloudProviderRateLimitQPS:    customCloudProviderRateLimitQPS,
+	p = Properties{
+		OrchestratorProfile: &OrchestratorProfile{
+			OrchestratorType:    "Kubernetes",
+			OrchestratorVersion: v,
+			KubernetesConfig: &KubernetesConfig{
+				CloudProviderBackoffDuration:      customCloudProviderBackoffDuration,
+				CloudProviderBackoffExponent:      customCloudProviderBackoffExponent,
+				CloudProviderBackoffJitter:        customCloudProviderBackoffJitter,
+				CloudProviderBackoffRetries:       customCloudProviderBackoffRetries,
+				CloudProviderRateLimitBucket:      customCloudProviderRateLimitBucket,
+				CloudProviderRateLimitQPS:         customCloudProviderRateLimitQPS,
+				CloudProviderRateLimitQPSWrite:    customCloudProviderRateLimitQPSWrite,
+				CloudProviderRateLimitBucketWrite: customCloudProviderRateLimitBucketWrite,
+			},
 		},
 	}
+	o = p.OrchestratorProfile
 	o.KubernetesConfig.SetCloudProviderBackoffDefaults()
-	o.KubernetesConfig.SetCloudProviderRateLimitDefaults()
+	p.SetCloudProviderRateLimitDefaults()
 
 	intCasesCustom := []struct {
 		customVal   int
@@ -3386,6 +3770,10 @@ func TestCloudProviderDefaults(t *testing.T) {
 		{
 			customVal:   customCloudProviderRateLimitBucket,
 			computedVal: o.KubernetesConfig.CloudProviderRateLimitBucket,
+		},
+		{
+			customVal:   customCloudProviderRateLimitBucketWrite,
+			computedVal: o.KubernetesConfig.CloudProviderRateLimitBucketWrite,
 		},
 	}
 
@@ -3411,6 +3799,10 @@ func TestCloudProviderDefaults(t *testing.T) {
 			customVal:   customCloudProviderRateLimitQPS,
 			computedVal: o.KubernetesConfig.CloudProviderRateLimitQPS,
 		},
+		{
+			customVal:   customCloudProviderRateLimitQPSWrite,
+			computedVal: o.KubernetesConfig.CloudProviderRateLimitQPSWrite,
+		},
 	}
 
 	for _, c := range floatCasesCustom {
@@ -3421,17 +3813,20 @@ func TestCloudProviderDefaults(t *testing.T) {
 
 	// Test cloudprovider defaults when user provides *some* config values
 	v = "1.8.0"
-	o = OrchestratorProfile{
-		OrchestratorType:    "Kubernetes",
-		OrchestratorVersion: v,
-		KubernetesConfig: &KubernetesConfig{
-			CloudProviderBackoffDuration: customCloudProviderBackoffDuration,
-			CloudProviderRateLimitBucket: customCloudProviderRateLimitBucket,
-			CloudProviderRateLimitQPS:    customCloudProviderRateLimitQPS,
+	p = Properties{
+		OrchestratorProfile: &OrchestratorProfile{
+			OrchestratorType:    "Kubernetes",
+			OrchestratorVersion: v,
+			KubernetesConfig: &KubernetesConfig{
+				CloudProviderBackoffDuration: customCloudProviderBackoffDuration,
+				CloudProviderRateLimitBucket: customCloudProviderRateLimitBucket,
+				CloudProviderRateLimitQPS:    customCloudProviderRateLimitQPS,
+			},
 		},
 	}
+	o = p.OrchestratorProfile
 	o.KubernetesConfig.SetCloudProviderBackoffDefaults()
-	o.KubernetesConfig.SetCloudProviderRateLimitDefaults()
+	p.SetCloudProviderRateLimitDefaults()
 
 	intCasesMixed := []struct {
 		expectedVal int
@@ -3462,14 +3857,6 @@ func TestCloudProviderDefaults(t *testing.T) {
 		computedVal float64
 	}{
 		{
-			expectedVal: DefaultKubernetesCloudProviderBackoffJitter,
-			computedVal: o.KubernetesConfig.CloudProviderBackoffJitter,
-		},
-		{
-			expectedVal: DefaultKubernetesCloudProviderBackoffExponent,
-			computedVal: o.KubernetesConfig.CloudProviderBackoffExponent,
-		},
-		{
 			expectedVal: customCloudProviderRateLimitQPS,
 			computedVal: o.KubernetesConfig.CloudProviderRateLimitQPS,
 		},
@@ -3480,6 +3867,349 @@ func TestCloudProviderDefaults(t *testing.T) {
 			t.Fatalf("KubernetesConfig empty cloudprovider configs should reflect default values after SetCloudProviderBackoffDefaults(), expected %f, got %f", c.expectedVal, c.computedVal)
 		}
 	}
+
+	// Test cloudprovider defaults for VMSS scenario
+	v = "1.14.0"
+	p = Properties{
+		OrchestratorProfile: &OrchestratorProfile{
+			OrchestratorType:    "Kubernetes",
+			OrchestratorVersion: v,
+			KubernetesConfig:    &KubernetesConfig{},
+		},
+		AgentPoolProfiles: []*AgentPoolProfile{
+			{
+				AvailabilityProfile: VirtualMachineScaleSets,
+			},
+		},
+	}
+	o = p.OrchestratorProfile
+	o.KubernetesConfig.SetCloudProviderBackoffDefaults()
+	p.SetCloudProviderRateLimitDefaults()
+
+	intCasesMixed = []struct {
+		expectedVal int
+		computedVal int
+	}{
+		{
+			expectedVal: DefaultKubernetesCloudProviderBackoffRetries,
+			computedVal: o.KubernetesConfig.CloudProviderBackoffRetries,
+		},
+		{
+			expectedVal: DefaultKubernetesCloudProviderBackoffDuration,
+			computedVal: o.KubernetesConfig.CloudProviderBackoffDuration,
+		},
+		{
+			expectedVal: common.MaxAgentCount,
+			computedVal: o.KubernetesConfig.CloudProviderRateLimitBucket,
+		},
+	}
+
+	for _, c := range intCasesMixed {
+		if c.computedVal != c.expectedVal {
+			t.Fatalf("KubernetesConfig empty cloudprovider configs should reflect default values after SetCloudProviderBackoffDefaults(), expected %d, got %d", c.expectedVal, c.computedVal)
+		}
+	}
+
+	floatCasesMixed = []struct {
+		expectedVal float64
+		computedVal float64
+	}{
+		{
+			expectedVal: DefaultKubernetesCloudProviderBackoffJitter,
+			computedVal: o.KubernetesConfig.CloudProviderBackoffJitter,
+		},
+		{
+			expectedVal: DefaultKubernetesCloudProviderBackoffExponent,
+			computedVal: o.KubernetesConfig.CloudProviderBackoffExponent,
+		},
+		{
+			expectedVal: float64(common.MaxAgentCount) * common.MinCloudProviderQPSToBucketFactor,
+			computedVal: o.KubernetesConfig.CloudProviderRateLimitQPS,
+		},
+	}
+
+	for _, c := range floatCasesMixed {
+		if c.computedVal != c.expectedVal {
+			t.Fatalf("KubernetesConfig empty cloudprovider configs should reflect default values after SetCloudProviderBackoffDefaults(), expected %f, got %f", c.expectedVal, c.computedVal)
+		}
+	}
+
+	// Test cloudprovider defaults for VMSS scenario with 3 pools
+	v = "1.14.0"
+	p = Properties{
+		OrchestratorProfile: &OrchestratorProfile{
+			OrchestratorType:    "Kubernetes",
+			OrchestratorVersion: v,
+			KubernetesConfig:    &KubernetesConfig{},
+		},
+		AgentPoolProfiles: []*AgentPoolProfile{
+			{
+				AvailabilityProfile: VirtualMachineScaleSets,
+			},
+			{
+				AvailabilityProfile: VirtualMachineScaleSets,
+			},
+			{
+				AvailabilityProfile: VirtualMachineScaleSets,
+			},
+		},
+	}
+	o = p.OrchestratorProfile
+	o.KubernetesConfig.SetCloudProviderBackoffDefaults()
+	p.SetCloudProviderRateLimitDefaults()
+
+	intCasesMixed = []struct {
+		expectedVal int
+		computedVal int
+	}{
+		{
+			expectedVal: DefaultKubernetesCloudProviderBackoffRetries,
+			computedVal: o.KubernetesConfig.CloudProviderBackoffRetries,
+		},
+		{
+			expectedVal: DefaultKubernetesCloudProviderBackoffDuration,
+			computedVal: o.KubernetesConfig.CloudProviderBackoffDuration,
+		},
+		{
+			expectedVal: common.MaxAgentCount * 3,
+			computedVal: o.KubernetesConfig.CloudProviderRateLimitBucket,
+		},
+	}
+
+	for _, c := range intCasesMixed {
+		if c.computedVal != c.expectedVal {
+			t.Fatalf("KubernetesConfig empty cloudprovider configs should reflect default values after SetCloudProviderBackoffDefaults(), expected %d, got %d", c.expectedVal, c.computedVal)
+		}
+	}
+
+	floatCasesMixed = []struct {
+		expectedVal float64
+		computedVal float64
+	}{
+		{
+			expectedVal: DefaultKubernetesCloudProviderBackoffJitter,
+			computedVal: o.KubernetesConfig.CloudProviderBackoffJitter,
+		},
+		{
+			expectedVal: DefaultKubernetesCloudProviderBackoffExponent,
+			computedVal: o.KubernetesConfig.CloudProviderBackoffExponent,
+		},
+		{
+			expectedVal: float64(common.MaxAgentCount*3) * common.MinCloudProviderQPSToBucketFactor,
+			computedVal: o.KubernetesConfig.CloudProviderRateLimitQPS,
+		},
+	}
+
+	for _, c := range floatCasesMixed {
+		if c.computedVal != c.expectedVal {
+			t.Fatalf("KubernetesConfig empty cloudprovider configs should reflect default values after SetCloudProviderBackoffDefaults(), expected %f, got %f", c.expectedVal, c.computedVal)
+		}
+	}
+
+	// Test cloudprovider defaults for VMSS scenario + AKS
+	v = "1.14.0"
+	p = Properties{
+		OrchestratorProfile: &OrchestratorProfile{
+			OrchestratorType:    "Kubernetes",
+			OrchestratorVersion: v,
+			KubernetesConfig:    &KubernetesConfig{},
+		},
+		AgentPoolProfiles: []*AgentPoolProfile{
+			{
+				AvailabilityProfile: VirtualMachineScaleSets,
+			},
+		},
+		HostedMasterProfile: &HostedMasterProfile{
+			FQDN: "my-cluster",
+		},
+	}
+	o = p.OrchestratorProfile
+	o.KubernetesConfig.SetCloudProviderBackoffDefaults()
+	p.SetCloudProviderRateLimitDefaults()
+
+	intCasesMixed = []struct {
+		expectedVal int
+		computedVal int
+	}{
+		{
+			expectedVal: DefaultKubernetesCloudProviderBackoffRetries,
+			computedVal: o.KubernetesConfig.CloudProviderBackoffRetries,
+		},
+		{
+			expectedVal: DefaultKubernetesCloudProviderBackoffDuration,
+			computedVal: o.KubernetesConfig.CloudProviderBackoffDuration,
+		},
+		{
+			expectedVal: common.MaxAgentCount,
+			computedVal: o.KubernetesConfig.CloudProviderRateLimitBucket,
+		},
+	}
+
+	for _, c := range intCasesMixed {
+		if c.computedVal != c.expectedVal {
+			t.Fatalf("KubernetesConfig empty cloudprovider configs should reflect default values after SetCloudProviderBackoffDefaults(), expected %d, got %d", c.expectedVal, c.computedVal)
+		}
+	}
+
+	floatCasesMixed = []struct {
+		expectedVal float64
+		computedVal float64
+	}{
+		{
+			expectedVal: DefaultKubernetesCloudProviderBackoffJitter,
+			computedVal: o.KubernetesConfig.CloudProviderBackoffJitter,
+		},
+		{
+			expectedVal: DefaultKubernetesCloudProviderBackoffExponent,
+			computedVal: o.KubernetesConfig.CloudProviderBackoffExponent,
+		},
+		{
+			expectedVal: float64(common.MaxAgentCount) * common.MinCloudProviderQPSToBucketFactor,
+			computedVal: o.KubernetesConfig.CloudProviderRateLimitQPS,
+		},
+	}
+
+	for _, c := range floatCasesMixed {
+		if c.computedVal != c.expectedVal {
+			t.Fatalf("KubernetesConfig empty cloudprovider configs should reflect default values after SetCloudProviderBackoffDefaults(), expected %f, got %f", c.expectedVal, c.computedVal)
+		}
+	}
+
+	// Test cloudprovider defaults for VMAS scenario
+	v = "1.14.0"
+	p = Properties{
+		OrchestratorProfile: &OrchestratorProfile{
+			OrchestratorType:    "Kubernetes",
+			OrchestratorVersion: v,
+			KubernetesConfig:    &KubernetesConfig{},
+		},
+		AgentPoolProfiles: []*AgentPoolProfile{
+			{
+				AvailabilityProfile: AvailabilitySet,
+			},
+		},
+	}
+	o = p.OrchestratorProfile
+	o.KubernetesConfig.SetCloudProviderBackoffDefaults()
+	p.SetCloudProviderRateLimitDefaults()
+
+	intCasesMixed = []struct {
+		expectedVal int
+		computedVal int
+	}{
+		{
+			expectedVal: DefaultKubernetesCloudProviderBackoffRetries,
+			computedVal: o.KubernetesConfig.CloudProviderBackoffRetries,
+		},
+		{
+			expectedVal: DefaultKubernetesCloudProviderBackoffDuration,
+			computedVal: o.KubernetesConfig.CloudProviderBackoffDuration,
+		},
+		{
+			expectedVal: common.MaxAgentCount,
+			computedVal: o.KubernetesConfig.CloudProviderRateLimitBucket,
+		},
+	}
+
+	for _, c := range intCasesMixed {
+		if c.computedVal != c.expectedVal {
+			t.Fatalf("KubernetesConfig empty cloudprovider configs should reflect default values after SetCloudProviderBackoffDefaults(), expected %d, got %d", c.expectedVal, c.computedVal)
+		}
+	}
+
+	floatCasesMixed = []struct {
+		expectedVal float64
+		computedVal float64
+	}{
+		{
+			expectedVal: DefaultKubernetesCloudProviderBackoffJitter,
+			computedVal: o.KubernetesConfig.CloudProviderBackoffJitter,
+		},
+		{
+			expectedVal: DefaultKubernetesCloudProviderBackoffExponent,
+			computedVal: o.KubernetesConfig.CloudProviderBackoffExponent,
+		},
+		{
+			expectedVal: float64(common.MaxAgentCount) * common.MinCloudProviderQPSToBucketFactor,
+			computedVal: o.KubernetesConfig.CloudProviderRateLimitQPS,
+		},
+	}
+
+	for _, c := range floatCasesMixed {
+		if c.computedVal != c.expectedVal {
+			t.Fatalf("KubernetesConfig empty cloudprovider configs should reflect default values after SetCloudProviderBackoffDefaults(), expected %f, got %f", c.expectedVal, c.computedVal)
+		}
+	}
+
+	// Test cloudprovider defaults for VMAS + VMSS scenario
+	v = "1.14.0"
+	p = Properties{
+		OrchestratorProfile: &OrchestratorProfile{
+			OrchestratorType:    "Kubernetes",
+			OrchestratorVersion: v,
+			KubernetesConfig:    &KubernetesConfig{},
+		},
+		AgentPoolProfiles: []*AgentPoolProfile{
+			{
+				AvailabilityProfile: AvailabilitySet,
+			},
+			{
+				AvailabilityProfile: VirtualMachineScaleSets,
+			},
+		},
+	}
+	o = p.OrchestratorProfile
+	o.KubernetesConfig.SetCloudProviderBackoffDefaults()
+	p.SetCloudProviderRateLimitDefaults()
+
+	intCasesMixed = []struct {
+		expectedVal int
+		computedVal int
+	}{
+		{
+			expectedVal: DefaultKubernetesCloudProviderBackoffRetries,
+			computedVal: o.KubernetesConfig.CloudProviderBackoffRetries,
+		},
+		{
+			expectedVal: DefaultKubernetesCloudProviderBackoffDuration,
+			computedVal: o.KubernetesConfig.CloudProviderBackoffDuration,
+		},
+		{
+			expectedVal: 2 * common.MaxAgentCount,
+			computedVal: o.KubernetesConfig.CloudProviderRateLimitBucket,
+		},
+	}
+
+	for _, c := range intCasesMixed {
+		if c.computedVal != c.expectedVal {
+			t.Fatalf("KubernetesConfig empty cloudprovider configs should reflect default values after SetCloudProviderBackoffDefaults(), expected %d, got %d", c.expectedVal, c.computedVal)
+		}
+	}
+
+	floatCasesMixed = []struct {
+		expectedVal float64
+		computedVal float64
+	}{
+		{
+			expectedVal: DefaultKubernetesCloudProviderBackoffJitter,
+			computedVal: o.KubernetesConfig.CloudProviderBackoffJitter,
+		},
+		{
+			expectedVal: DefaultKubernetesCloudProviderBackoffExponent,
+			computedVal: o.KubernetesConfig.CloudProviderBackoffExponent,
+		},
+		{
+			expectedVal: float64(common.MaxAgentCount*2) * common.MinCloudProviderQPSToBucketFactor,
+			computedVal: o.KubernetesConfig.CloudProviderRateLimitQPS,
+		},
+	}
+
+	for _, c := range floatCasesMixed {
+		if c.computedVal != c.expectedVal {
+			t.Fatalf("KubernetesConfig empty cloudprovider configs should reflect default values after SetCloudProviderBackoffDefaults(), expected %f, got %f", c.expectedVal, c.computedVal)
+		}
+	}
+
 }
 
 func getMockAddon(name string) KubernetesAddon {
@@ -4316,6 +5046,8 @@ func TestFormatAzureProdFQDN(t *testing.T) {
 		"santest.southcentralus.cloudapp.azure.com",
 		"santest.southeastasia.cloudapp.azure.com",
 		"santest.southindia.cloudapp.azure.com",
+		"santest.uaecentral.cloudapp.azure.com",
+		"santest.uaenorth.cloudapp.azure.com",
 		"santest.uksouth.cloudapp.azure.com",
 		"santest.ukwest.cloudapp.azure.com",
 		"santest.usdodcentral.cloudapp.usgovcloudapi.net",
@@ -4336,8 +5068,6 @@ func TestFormatAzureProdFQDN(t *testing.T) {
 		"santest.usgovarizona.cloudapp.usgovcloudapi.net",
 		"santest.usgovtexas.cloudapp.usgovcloudapi.net",
 		"santest.francecentral.cloudapp.azure.com",
-		"santest.uaenorth.cloudapp.azure.com",
-		"santest.uaecentral.cloudapp.azure.com",
 	}
 
 	if !reflect.DeepEqual(actual, expected) {
@@ -4388,6 +5118,8 @@ func TestFormatProdFQDNByLocation(t *testing.T) {
 		"santest.southcentralus.cloudapp.azure.com",
 		"santest.southeastasia.cloudapp.azure.com",
 		"santest.southindia.cloudapp.azure.com",
+		"santest.uaecentral.cloudapp.azure.com",
+		"santest.uaenorth.cloudapp.azure.com",
 		"santest.uksouth.cloudapp.azure.com",
 		"santest.ukwest.cloudapp.azure.com",
 		"santest.usdodcentral.cloudapp.usgovcloudapi.net",
@@ -4408,8 +5140,6 @@ func TestFormatProdFQDNByLocation(t *testing.T) {
 		"santest.usgovarizona.cloudapp.usgovcloudapi.net",
 		"santest.usgovtexas.cloudapp.usgovcloudapi.net",
 		"santest.francecentral.cloudapp.azure.com",
-		"santest.uaenorth.cloudapp.azure.com",
-		"santest.uaecentral.cloudapp.azure.com",
 	}
 
 	if !reflect.DeepEqual(actual, expected) {
@@ -4742,7 +5472,7 @@ func TestGetCustomCloudName(t *testing.T) {
 }
 
 func TestGetCustomEnvironmentJSON(t *testing.T) {
-	expectedResult := `{"name":"azurestackcloud","managementPortalURL":"https://management.local.azurestack.external/","publishSettingsURL":"https://management.local.azurestack.external/publishsettings/index","serviceManagementEndpoint":"https://management.azurestackci15.onmicrosoft.com/36f71706-54df-4305-9847-5b038a4cf189","resourceManagerEndpoint":"https://management.local.azurestack.external/","activeDirectoryEndpoint":"https://login.windows.net/","galleryEndpoint":"https://portal.local.azurestack.external=30015/","keyVaultEndpoint":"https://vault.azurestack.external/","graphEndpoint":"https://graph.windows.net/","serviceBusEndpoint":"https://servicebus.azurestack.external/","batchManagementEndpoint":"https://batch.azurestack.external/","storageEndpointSuffix":"core.azurestack.external","sqlDatabaseDNSSuffix":"database.azurestack.external","trafficManagerDNSSuffix":"trafficmanager.cn","keyVaultDNSSuffix":"vault.azurestack.external","serviceBusEndpointSuffix":"servicebus.azurestack.external","serviceManagementVMDNSSuffix":"chinacloudapp.cn","resourceManagerVMDNSSuffix":"cloudapp.azurestack.external","containerRegistryDNSSuffix":"azurecr.io","tokenAudience":"https://management.azurestack.external/"}`
+	expectedResult := `{"name":"azurestackcloud","managementPortalURL":"https://management.local.azurestack.external/","publishSettingsURL":"https://management.local.azurestack.external/publishsettings/index","serviceManagementEndpoint":"https://management.azurestackci15.onmicrosoft.com/36f71706-54df-4305-9847-5b038a4cf189","resourceManagerEndpoint":"https://management.local.azurestack.external/","activeDirectoryEndpoint":"https://login.windows.net/","galleryEndpoint":"https://portal.local.azurestack.external=30015/","keyVaultEndpoint":"https://vault.azurestack.external/","graphEndpoint":"https://graph.windows.net/","serviceBusEndpoint":"https://servicebus.azurestack.external/","batchManagementEndpoint":"https://batch.azurestack.external/","storageEndpointSuffix":"core.azurestack.external","sqlDatabaseDNSSuffix":"database.azurestack.external","trafficManagerDNSSuffix":"trafficmanager.cn","keyVaultDNSSuffix":"vault.azurestack.external","serviceBusEndpointSuffix":"servicebus.azurestack.external","serviceManagementVMDNSSuffix":"chinacloudapp.cn","resourceManagerVMDNSSuffix":"cloudapp.azurestack.external","containerRegistryDNSSuffix":"azurecr.io","cosmosDBDNSSuffix":"","tokenAudience":"https://management.azurestack.external/","resourceIdentifiers":{"graph":"","keyVault":"","datalake":"","batch":"","operationalInsights":"","storage":""}}`
 	testcases := []struct {
 		name       string
 		properties Properties
@@ -4823,6 +5553,8 @@ func TestGetLocations(t *testing.T) {
 		"southcentralus",
 		"southeastasia",
 		"southindia",
+		"uaecentral",
+		"uaenorth",
 		"uksouth",
 		"ukwest",
 		"usdodcentral",
@@ -4843,8 +5575,6 @@ func TestGetLocations(t *testing.T) {
 		"usgovarizona",
 		"usgovtexas",
 		"francecentral",
-		"uaenorth",
-		"uaecentral",
 	}
 	actual := mockCSDefault.GetLocations()
 	if !reflect.DeepEqual(expected, actual) {
@@ -5392,6 +6122,61 @@ func TestAnyAgentIsLinux(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 			ret := test.p.AnyAgentIsLinux()
+			if test.expected != ret {
+				t.Errorf("expected %t, instead got : %t", test.expected, ret)
+			}
+		})
+	}
+}
+
+func TestHasContainerd(t *testing.T) {
+	tests := []struct {
+		name     string
+		k        *KubernetesConfig
+		expected bool
+	}{
+		{
+			name: "docker",
+			k: &KubernetesConfig{
+				ContainerRuntime: Docker,
+			},
+			expected: false,
+		},
+		{
+			name: "empty string",
+			k: &KubernetesConfig{
+				ContainerRuntime: "",
+			},
+			expected: false,
+		},
+		{
+			name: "unexpected string",
+			k: &KubernetesConfig{
+				ContainerRuntime: "foo",
+			},
+			expected: false,
+		},
+		{
+			name: "containerd",
+			k: &KubernetesConfig{
+				ContainerRuntime: Containerd,
+			},
+			expected: true,
+		},
+		{
+			name: "kata",
+			k: &KubernetesConfig{
+				ContainerRuntime: KataContainers,
+			},
+			expected: true,
+		},
+	}
+
+	for _, test := range tests {
+		test := test
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+			ret := test.k.NeedsContainerd()
 			if test.expected != ret {
 				t.Errorf("expected %t, instead got : %t", test.expected, ret)
 			}

@@ -94,6 +94,10 @@ metadata:
   name: nmi
   namespace: default
 spec:
+  selector:
+    matchLabels:
+      component: nmi
+      tier: node
   template:
     metadata:
       labels:
@@ -194,6 +198,9 @@ metadata:
   name: mic
   namespace: default
 spec:
+  selector:
+    matchLabels:
+      component: mic
   template:
     metadata:
       labels:

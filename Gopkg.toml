@@ -32,11 +32,11 @@ required = [
 
 [[constraint]]
   name = "github.com/Azure/azure-sdk-for-go"
-  version = "24.0.0"
+  version = "v32.5.0"
 
-[[constraint]]
+[[override]]
   name = "github.com/Azure/go-autorest"
-  version = "11.2.8"
+  version = "13.0.0"
 
 [[constraint]]
   name = "github.com/Jeffail/gabs"
@@ -77,6 +77,10 @@ required = [
 [[constraint]]
   name = "github.com/sirupsen/logrus"
   version = "1.0.3"
+
+[[constraint]]
+  name = "github.com/x-cray/logrus-prefixed-formatter"
+  version = "0.5.2"
 
 [[constraint]]
   name = "github.com/spf13/pflag"
@@ -128,3 +132,11 @@ required = [
 [[constraint]]
   name = "gopkg.in/jarcoal/httpmock.v1"
   version = "1.0.1"
+
+[[override]]
+  name = "github.com/census-instrumentation/opencensus-proto"
+  version = "v0.2.0"
+
+[[override]]
+  name = "github.com/golang/protobuf"
+  version = "v1.3.1"

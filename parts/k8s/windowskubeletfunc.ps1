@@ -159,7 +159,7 @@ New-InfraContainer {
     # Reference for these tags: curl -L https://mcr.microsoft.com/v2/k8s/core/pause/tags/list
     # Then docker run --rm mplatform/manifest-tool inspect mcr.microsoft.com/k8s/core/pause:<tag>
 
-    $defaultPauseImage = "mcr.microsoft.com/k8s/core/pause:1.1.0"
+    $defaultPauseImage = "mcr.microsoft.com/k8s/core/pause:1.2.0"
 
     switch ($computerInfo.WindowsVersion) {
         "1803" { docker pull $defaultPauseImage ; docker tag $defaultPauseImage $DestinationTag }
@@ -451,6 +451,8 @@ if (`$hnsNetwork)
 # Restart Kubeproxy, which would wait, until the network is created
 Restart-Service Kubeproxy
 
+`$env:AZURE_ENVIRONMENT_FILEPATH="c:\k\azurestackcloud.json"
+
 $KubeletCommandLine
 
 "@
@@ -486,21 +488,13 @@ Update-CNIConfig(`$podCIDR, `$masterSubnetGW)
 "{
     ""cniVersion"": ""0.2.0"",
     ""name"": ""<NetworkMode>"",
-    ""type"": ""wincni.exe"",
+    ""type"": ""win-bridge"",
     ""master"": ""Ethernet"",
-    ""capabilities"": { ""portMappings"": true },
-    ""ipam"": {
-        ""environment"": ""azure"",
-        ""subnet"":""<PODCIDR>"",
-        ""routes"": [{
-        ""GW"":""<PODGW>""
-        }]
-    },
     ""dns"" : {
-    ""Nameservers"" : [ ""<NameServers>"" ],
-    ""Search"" : [ ""<Cluster DNS Suffix or Search Path>"" ]
+        ""Nameservers"" : [ ""<NameServers>"" ],
+        ""Search"" : [ ""<Cluster DNS Suffix or Search Path>"" ]
     },
-    ""AdditionalArgs"" : [
+    ""policies"": [
     {
         ""Name"" : ""EndpointPolicy"", ""Value"" : { ""Type"" : ""OutBoundNAT"", ""ExceptionList"": [ ""<ClusterCIDR>"", ""<MgmtSubnet>"" ] }
     },
@@ -512,14 +506,12 @@ Update-CNIConfig(`$podCIDR, `$masterSubnetGW)
 
     `$configJson = ConvertFrom-Json `$jsonSampleConfig
     `$configJson.name = `$global:NetworkMode.ToLower()
-    `$configJson.ipam.subnet=`$podCIDR
-    `$configJson.ipam.routes[0].GW = `$masterSubnetGW
     `$configJson.dns.Nameservers[0] = `$global:KubeDnsServiceIp
     `$configJson.dns.Search[0] = `$global:KubeDnsSearchPath
 
-    `$configJson.AdditionalArgs[0].Value.ExceptionList[0] = `$global:KubeClusterCIDR
-    `$configJson.AdditionalArgs[0].Value.ExceptionList[1] = `$global:MasterSubnet
-    `$configJson.AdditionalArgs[1].Value.DestinationPrefix  = `$global:KubeServiceCIDR
+    `$configJson.policies[0].Value.ExceptionList[0] = `$global:KubeClusterCIDR
+    `$configJson.policies[0].Value.ExceptionList[1] = `$global:MasterSubnet
+    `$configJson.policies[1].Value.DestinationPrefix  = `$global:KubeServiceCIDR
 
     if (Test-Path `$global:CNIConfig)
     {

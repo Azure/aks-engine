@@ -599,6 +599,14 @@ func convertWindowsProfileToV20170701(api *WindowsProfile, v20170701Profile *v20
 func convertWindowsProfileToVLabs(api *WindowsProfile, vlabsProfile *vlabs.WindowsProfile) {
 	vlabsProfile.AdminUsername = api.AdminUsername
 	vlabsProfile.AdminPassword = api.AdminPassword
+	if api.ImageRef != nil {
+		vlabsProfile.ImageRef = &vlabs.ImageReference{}
+		vlabsProfile.ImageRef.Gallery = api.ImageRef.Gallery
+		vlabsProfile.ImageRef.Name = api.ImageRef.Name
+		vlabsProfile.ImageRef.ResourceGroup = api.ImageRef.ResourceGroup
+		vlabsProfile.ImageRef.SubscriptionID = api.ImageRef.SubscriptionID
+		vlabsProfile.ImageRef.Version = api.ImageRef.Version
+	}
 	vlabsProfile.ImageVersion = api.ImageVersion
 	vlabsProfile.WindowsImageSourceURL = api.WindowsImageSourceURL
 	vlabsProfile.WindowsPublisher = api.WindowsPublisher
@@ -720,7 +728,9 @@ func convertKubernetesConfigToVLabs(apiCfg *KubernetesConfig, vlabsCfg *vlabs.Ku
 	vlabsCfg.CloudProviderBackoffRetries = apiCfg.CloudProviderBackoffRetries
 	vlabsCfg.CloudProviderRateLimit = apiCfg.CloudProviderRateLimit
 	vlabsCfg.CloudProviderRateLimitBucket = apiCfg.CloudProviderRateLimitBucket
+	vlabsCfg.CloudProviderRateLimitBucketWrite = apiCfg.CloudProviderRateLimitBucketWrite
 	vlabsCfg.CloudProviderRateLimitQPS = apiCfg.CloudProviderRateLimitQPS
+	vlabsCfg.CloudProviderRateLimitQPSWrite = apiCfg.CloudProviderRateLimitQPSWrite
 	vlabsCfg.UseManagedIdentity = apiCfg.UseManagedIdentity
 	vlabsCfg.UserAssignedID = apiCfg.UserAssignedID
 	vlabsCfg.UserAssignedClientID = apiCfg.UserAssignedClientID
@@ -750,6 +760,7 @@ func convertKubernetesConfigToVLabs(apiCfg *KubernetesConfig, vlabsCfg *vlabs.Ku
 	vlabsCfg.MaximumLoadBalancerRuleCount = apiCfg.MaximumLoadBalancerRuleCount
 	vlabsCfg.ProxyMode = vlabs.KubeProxyMode(apiCfg.ProxyMode)
 	vlabsCfg.PrivateAzureRegistryServer = apiCfg.PrivateAzureRegistryServer
+	vlabsCfg.OutboundRuleIdleTimeoutInMinutes = apiCfg.OutboundRuleIdleTimeoutInMinutes
 	convertAddonsToVlabs(apiCfg, vlabsCfg)
 	convertKubeletConfigToVlabs(apiCfg, vlabsCfg)
 	convertControllerManagerConfigToVlabs(apiCfg, vlabsCfg)
@@ -930,6 +941,9 @@ func convertMasterProfileToVLabs(api *MasterProfile, vlabsProfile *vlabs.MasterP
 		vlabsProfile.ImageRef = &vlabs.ImageReference{}
 		vlabsProfile.ImageRef.Name = api.ImageRef.Name
 		vlabsProfile.ImageRef.ResourceGroup = api.ImageRef.ResourceGroup
+		vlabsProfile.ImageRef.SubscriptionID = api.ImageRef.SubscriptionID
+		vlabsProfile.ImageRef.Gallery = api.ImageRef.Gallery
+		vlabsProfile.ImageRef.Version = api.ImageRef.Version
 	}
 	vlabsProfile.AvailabilityProfile = api.AvailabilityProfile
 	vlabsProfile.AgentSubnet = api.AgentSubnet
@@ -1050,6 +1064,9 @@ func convertAgentPoolProfileToVLabs(api *AgentPoolProfile, p *vlabs.AgentPoolPro
 		p.ImageRef = &vlabs.ImageReference{}
 		p.ImageRef.Name = api.ImageRef.Name
 		p.ImageRef.ResourceGroup = api.ImageRef.ResourceGroup
+		p.ImageRef.SubscriptionID = api.ImageRef.SubscriptionID
+		p.ImageRef.Gallery = api.ImageRef.Gallery
+		p.ImageRef.Version = api.ImageRef.Version
 	}
 	p.Role = vlabs.AgentPoolProfileRole(api.Role)
 }

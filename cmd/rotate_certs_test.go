@@ -33,7 +33,7 @@ func TestNewRotateCertsCmd(t *testing.T) {
 		t.Fatalf("rotate-certs command should have use %s equal %s, short %s equal %s and long %s equal to %s", output.Use, rotateCertsName, output.Short, rotateCertsShortDescription, output.Long, rotateCertsLongDescription)
 	}
 
-	expectedFlags := []string{"location", "resource-group", "master-FQDN", "api-model", "ssh"}
+	expectedFlags := []string{"location", "resource-group", "apiserver", "api-model", "ssh"}
 	for _, f := range expectedFlags {
 		if output.Flags().Lookup(f) == nil {
 			t.Fatalf("rotate-certs command should have flag %s", f)

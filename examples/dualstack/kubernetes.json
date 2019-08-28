@@ -1,0 +1,52 @@
+{
+    "apiVersion": "vlabs",
+    "properties": {
+        "featureFlags": {
+            "enableIPv6DualStack": true
+        },
+        "orchestratorProfile": {
+            "orchestratorType": "Kubernetes",
+            "orchestratorVersion": "1.16.0-alpha.1",
+            "kubernetesConfig": {
+                "clusterSubnet": "10.244.0.0/16,fd00:101::/8",
+                "networkPlugin": "kubenet",
+                "apiServerConfig": {
+                    "--feature-gates": "IPv6DualStack=true"
+                },
+                "kubeletConfig": {
+                    "--feature-gates": "IPv6DualStack=true"
+                },
+                "controllerManagerConfig": {
+                    "--feature-gates": "IPv6DualStack=true"
+                }
+            }
+        },
+        "masterProfile": {
+            "count": 1,
+            "dnsPrefix": "",
+            "vmSize": "Standard_D2_v2"
+        },
+        "agentPoolProfiles": [
+            {
+                "name": "linuxpool1",
+                "count": 2,
+                "vmSize": "Standard_D2_v2",
+                "availabilityProfile": "AvailabilitySet"
+            }
+        ],
+        "linuxProfile": {
+            "adminUsername": "azureuser",
+            "ssh": {
+                "publicKeys": [
+                    {
+                        "keyData": ""
+                    }
+                ]
+            }
+        },
+        "servicePrincipalProfile": {
+            "clientId": "",
+            "secret": ""
+        }
+    }
+}

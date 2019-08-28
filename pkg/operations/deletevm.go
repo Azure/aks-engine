@@ -23,19 +23,19 @@ const (
 func CleanDeleteVirtualMachine(az armhelpers.AKSEngineClient, logger *log.Entry, subscriptionID, resourceGroup, name string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), armhelpers.DefaultARMOperationTimeout)
 	defer cancel()
-	logger.Infof("fetching VM: %s/%s", resourceGroup, name)
+	logger.Debugf("fetching VM %s in resource group %s", name, resourceGroup)
 	vm, err := az.GetVirtualMachine(ctx, resourceGroup, name)
 	if err != nil {
-		logger.Errorf("failed to get VM: %s/%s: %s", resourceGroup, name, err.Error())
+		logger.Errorf("failed to get VM %s in resource group %s: %s", name, resourceGroup, err.Error())
 		return err
 	}
 
 	vhd := vm.VirtualMachineProperties.StorageProfile.OsDisk.Vhd
 	managedDisk := vm.VirtualMachineProperties.StorageProfile.OsDisk.ManagedDisk
 	if vhd == nil && managedDisk == nil {
-		logger.Errorf("failed to get a valid os disk URI for VM: %s/%s", resourceGroup, name)
+		logger.Errorf("failed to get a valid OS disk URI for VM %s in resource group %s", name, resourceGroup)
 
-		return errors.New("os disk does not have a VHD URI")
+		return errors.New("OS disk does not have a VHD URI")
 	}
 
 	osDiskName := vm.VirtualMachineProperties.StorageProfile.OsDisk.Name
@@ -43,23 +43,21 @@ func CleanDeleteVirtualMachine(az armhelpers.AKSEngineClient, logger *log.Entry,
 	var nicName string
 	nicID := (*vm.VirtualMachineProperties.NetworkProfile.NetworkInterfaces)[0].ID
 	if nicID == nil {
-		logger.Warnf("NIC ID is not set for VM (%s/%s)", resourceGroup, name)
+		logger.Warnf("NIC ID is not set for VM %s in resource group %s)", name, resourceGroup)
 	} else {
 		nicName, err = utils.ResourceName(*nicID)
 		if err != nil {
 			return err
 		}
-		logger.Infof("found nic name for VM (%s/%s): %s", resourceGroup, name, nicName)
+		logger.Debugf("found NIC name \"%s\" for VM %s in resource group %s", nicName, name, resourceGroup)
 	}
-	logger.Infof("deleting VM: %s/%s", resourceGroup, name)
-	logger.Infof("waiting for vm deletion: %s/%s", resourceGroup, name)
+	logger.Infof("deleting VM %s in resource group %s ...", name, resourceGroup)
 	if err = az.DeleteVirtualMachine(ctx, resourceGroup, name); err != nil {
 		return err
 	}
 
 	if len(nicName) > 0 {
-		logger.Infof("deleting nic: %s/%s", resourceGroup, nicName)
-		logger.Infof("waiting for nic deletion: %s/%s", resourceGroup, nicName)
+		logger.Infof("deleting NIC %s in resource group %s ...", nicName, resourceGroup)
 		if err = az.DeleteNetworkInterface(ctx, resourceGroup, nicName); err != nil {
 			return err
 		}
@@ -72,7 +70,7 @@ func CleanDeleteVirtualMachine(az armhelpers.AKSEngineClient, logger *log.Entry,
 			return err
 		}
 
-		logger.Infof("found os disk storage reference: %s %s %s", accountName, vhdContainer, vhdBlob)
+		logger.Debugf("found OS disk storage reference: %s:%s/%s", accountName, vhdContainer, vhdBlob)
 
 		var as armhelpers.AKSStorageClient
 		as, err = az.GetStorageClient(ctx, resourceGroup, accountName)
@@ -80,15 +78,15 @@ func CleanDeleteVirtualMachine(az armhelpers.AKSEngineClient, logger *log.Entry,
 			return err
 		}
 
-		logger.Infof("deleting blob: %s/%s", vhdContainer, vhdBlob)
+		logger.Infof("deleting blob %s/%s ...", vhdContainer, vhdBlob)
 		if err = as.DeleteBlob(vhdContainer, vhdBlob, &azStorage.DeleteBlobOptions{}); err != nil {
 			return err
 		}
 	} else if managedDisk != nil {
 		if osDiskName == nil {
-			logger.Warnf("osDisk is not set for VM %s/%s", resourceGroup, name)
+			logger.Warnf("managed disk Name is not set for VM %s in resource group %s", name, resourceGroup)
 		} else {
-			logger.Infof("deleting managed disk: %s/%s", resourceGroup, *osDiskName)
+			logger.Infof("deleting managed disk %s in resource group %s ...", *osDiskName, resourceGroup)
 			if err = az.DeleteManagedDisk(ctx, resourceGroup, *osDiskName); err != nil {
 				return err
 			}
@@ -100,7 +98,7 @@ func CleanDeleteVirtualMachine(az armhelpers.AKSEngineClient, logger *log.Entry,
 		// The role assignments should only be relevant if managed identities are used,
 		// but always cleaning them up is easier than adding rule based logic here and there.
 		scope := fmt.Sprintf(AADRoleResourceGroupScopeTemplate, subscriptionID, resourceGroup)
-		logger.Infof("fetching roleAssignments: %s with principal %s", scope, *vm.Identity.PrincipalID)
+		logger.Debugf("fetching role assignments: %s with principal %s", scope, *vm.Identity.PrincipalID)
 		for vmRoleAssignmentsPage, err := az.ListRoleAssignmentsForPrincipal(ctx, scope, *vm.Identity.PrincipalID); vmRoleAssignmentsPage.NotDone(); err = vmRoleAssignmentsPage.Next() {
 			if err != nil {
 				logger.Errorf("failed to list role assignments: %s/%s: %s", scope, *vm.Identity.PrincipalID, err)
@@ -108,7 +106,7 @@ func CleanDeleteVirtualMachine(az armhelpers.AKSEngineClient, logger *log.Entry,
 			}
 
 			for _, roleAssignment := range vmRoleAssignmentsPage.Values() {
-				logger.Infof("deleting role assignment: %s", *roleAssignment.ID)
+				logger.Infof("deleting role assignment %s ...", *roleAssignment.ID)
 				_, deleteRoleAssignmentErr := az.DeleteRoleAssignmentByID(ctx, *roleAssignment.ID)
 				if deleteRoleAssignmentErr != nil {
 					logger.Errorf("failed to delete role assignment: %s: %s", *roleAssignment.ID, deleteRoleAssignmentErr.Error())

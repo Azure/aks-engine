@@ -295,7 +295,9 @@
         "cloudProviderBackoffExponent": "0",
         "cloudProviderRateLimit": false,
         "cloudProviderRateLimitQPS": "0",
-        "cloudProviderRateLimitBucket": 0
+        "cloudProviderRateLimitQPSWrite": "0",
+        "cloudProviderRateLimitBucket": 0,
+        "cloudProviderRateLimitBucketWrite": 0
       }
     },
 {{if IsKubernetesVersionGe "1.12.0"}}
@@ -376,11 +378,10 @@
     "containerRuntime": {
       "defaultValue": "{{.OrchestratorProfile.KubernetesConfig.ContainerRuntime}}",
       "metadata": {
-        "description": "The container runtime to use (docker|clear-containers|kata-containers|containerd)"
+        "description": "The container runtime to use (docker|kata-containers|containerd)"
       },
       "allowedValues": [
         "docker",
-        "clear-containers",
         "kata-containers",
         "containerd"
       ],
@@ -436,13 +437,6 @@
         "description": "Low Threshold for Image Garbage collection on each node."
       },
       "type": "int"
-    },
-    "kuberneteselbsvcname": {
-      "defaultValue": "",
-      "metadata": {
-        "description": "elb service for standard lb"
-      },
-      "type": "string"
     },
 {{ if not UseManagedIdentity }}
     "servicePrincipalClientId": {
@@ -595,6 +589,20 @@
       "defaultValue": "",
       "metadata": {
         "description": "Azure CNI networkmonitor Image URL"
+      },
+      "type": "string"
+    }
+ {{end}}
+ {{if .OrchestratorProfile.KubernetesConfig.IsAppGWIngressEnabled}}
+    ,"appGwSubnet": {
+      "metadata": {
+        "description": "Sets the subnet of the Application Gateway"
+      },
+      "type": "string"
+    }
+    ,"appGwSku": {
+      "metadata": {
+        "description": "Sets the subnet of the Application Gateway"
       },
       "type": "string"
     }

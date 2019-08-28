@@ -54,6 +54,10 @@ metadata:
   name: tiller-deploy
   namespace: kube-system
 spec:
+  selector:
+    matchLabels:
+      app: helm
+      name: tiller
   template:
     metadata:
       labels:

@@ -99,7 +99,7 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpgrade, isScale bool) {
 		// we translate deprecated NetworkPolicy usage to the NetworkConfig equivalent
 		// and set a default network policy enforcement configuration
 		switch o.KubernetesConfig.NetworkPolicy {
-		case NetworkPluginAzure:
+		case NetworkPolicyAzure:
 			if o.KubernetesConfig.NetworkPlugin == "" {
 				o.KubernetesConfig.NetworkPlugin = NetworkPluginAzure
 				o.KubernetesConfig.NetworkPolicy = DefaultNetworkPolicy
@@ -148,15 +148,23 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpgrade, isScale bool) {
 		switch o.KubernetesConfig.ContainerRuntime {
 		case Docker:
 			if o.KubernetesConfig.MobyVersion == "" || isUpdate {
-				if isUpdate && o.KubernetesConfig.MobyVersion != DefaultMobyVersion {
-					log.Warnf("Moby will be upgraded to version %s\n", DefaultMobyVersion)
+				if o.KubernetesConfig.MobyVersion != DefaultMobyVersion {
+					if isUpgrade {
+						log.Warnf("Moby will be upgraded to version %s\n", DefaultMobyVersion)
+					} else if isScale {
+						log.Warnf("Any new nodes will have Moby version %s\n", DefaultMobyVersion)
+					}
 				}
 				o.KubernetesConfig.MobyVersion = DefaultMobyVersion
 			}
-		case Containerd, ClearContainers, KataContainers:
+		case Containerd, KataContainers:
 			if o.KubernetesConfig.ContainerdVersion == "" || isUpdate {
-				if isUpdate && o.KubernetesConfig.ContainerdVersion != DefaultContainerdVersion {
-					log.Warnf("containerd will be upgraded to version %s\n", DefaultContainerdVersion)
+				if o.KubernetesConfig.ContainerdVersion != DefaultContainerdVersion {
+					if isUpgrade {
+						log.Warnf("containerd will be upgraded to version %s\n", DefaultContainerdVersion)
+					} else if isScale {
+						log.Warnf("Any new nodes will have containerd version %s\n", DefaultContainerdVersion)
+					}
 				}
 				o.KubernetesConfig.ContainerdVersion = DefaultContainerdVersion
 			}
@@ -220,7 +228,7 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpgrade, isScale bool) {
 			o.KubernetesConfig.CloudProviderRateLimit = to.BoolPtr(DefaultKubernetesCloudProviderRateLimit)
 		}
 		// Enforce sane cloudprovider rate limit defaults.
-		o.KubernetesConfig.SetCloudProviderRateLimitDefaults()
+		a.SetCloudProviderRateLimitDefaults()
 
 		if o.KubernetesConfig.PrivateCluster == nil {
 			o.KubernetesConfig.PrivateCluster = &PrivateCluster{}
@@ -233,9 +241,19 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpgrade, isScale bool) {
 		if "" == a.OrchestratorProfile.KubernetesConfig.EtcdDiskSizeGB {
 			switch {
 			case a.TotalNodes() > 20:
-				a.OrchestratorProfile.KubernetesConfig.EtcdDiskSizeGB = DefaultEtcdDiskSizeGT20Nodes
+				if a.IsAzureStackCloud() {
+					// Currently on Azure Stack max size of managed disk size is 1023GB.
+					a.OrchestratorProfile.KubernetesConfig.EtcdDiskSizeGB = MaxAzureStackManagedDiskSize
+				} else {
+					a.OrchestratorProfile.KubernetesConfig.EtcdDiskSizeGB = DefaultEtcdDiskSizeGT20Nodes
+				}
 			case a.TotalNodes() > 10:
-				a.OrchestratorProfile.KubernetesConfig.EtcdDiskSizeGB = DefaultEtcdDiskSizeGT10Nodes
+				if a.IsAzureStackCloud() {
+					// Currently on Azure Stack max size of managed disk size is 1023GB.
+					a.OrchestratorProfile.KubernetesConfig.EtcdDiskSizeGB = MaxAzureStackManagedDiskSize
+				} else {
+					a.OrchestratorProfile.KubernetesConfig.EtcdDiskSizeGB = DefaultEtcdDiskSizeGT10Nodes
+				}
 			case a.TotalNodes() > 3:
 				a.OrchestratorProfile.KubernetesConfig.EtcdDiskSizeGB = DefaultEtcdDiskSizeGT3Nodes
 			default:
@@ -288,6 +306,12 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpgrade, isScale bool) {
 			}
 		}
 
+		if strings.ToLower(a.OrchestratorProfile.KubernetesConfig.LoadBalancerSku) == strings.ToLower(BasicLoadBalancerSku) {
+			a.OrchestratorProfile.KubernetesConfig.LoadBalancerSku = BasicLoadBalancerSku
+		} else if strings.ToLower(a.OrchestratorProfile.KubernetesConfig.LoadBalancerSku) == strings.ToLower(StandardLoadBalancerSku) {
+			a.OrchestratorProfile.KubernetesConfig.LoadBalancerSku = StandardLoadBalancerSku
+		}
+
 		if !a.HasAvailabilityZones() && a.OrchestratorProfile.KubernetesConfig.LoadBalancerSku == "" {
 			a.OrchestratorProfile.KubernetesConfig.LoadBalancerSku = DefaultLoadBalancerSku
 		}
@@ -313,6 +337,10 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpgrade, isScale bool) {
 		}
 		if a.OrchestratorProfile.KubernetesConfig.ProxyMode == "" {
 			a.OrchestratorProfile.KubernetesConfig.ProxyMode = DefaultKubeProxyMode
+		}
+		if a.OrchestratorProfile.KubernetesConfig.LoadBalancerSku == StandardLoadBalancerSku &&
+			a.OrchestratorProfile.KubernetesConfig.OutboundRuleIdleTimeoutInMinutes == 0 {
+			a.OrchestratorProfile.KubernetesConfig.OutboundRuleIdleTimeoutInMinutes = DefaultOutboundRuleIdleTimeoutInMinutes
 		}
 
 		// First, Configure addons
@@ -374,8 +402,8 @@ func (p *Properties) setMasterProfileDefaults(isUpgrade, isScale bool, cloudName
 		}
 	}
 
-	// The AKS Distro is not available in US Governmnent Cloud and German Cloud.
-	if cloudName == AzureUSGovernmentCloud || cloudName == AzureGermanCloud {
+	// The AKS Distro is not available in Azure German Cloud.
+	if cloudName == AzureGermanCloud {
 		p.MasterProfile.Distro = Ubuntu
 	}
 
@@ -565,7 +593,12 @@ func (p *Properties) setAgentProfileDefaults(isUpgrade, isScale bool, cloudName 
 		}
 
 		if profile.AcceleratedNetworkingEnabledWindows == nil {
-			profile.AcceleratedNetworkingEnabledWindows = to.BoolPtr(DefaultAcceleratedNetworkingWindowsEnabled && !isUpgrade && !isScale && helpers.AcceleratedNetworkingSupported(profile.VMSize))
+			if p.IsAzureStackCloud() {
+				// Here we are using same default variable. We will change once we will start supporting AcceleratedNetworking feature in general.
+				profile.AcceleratedNetworkingEnabledWindows = to.BoolPtr(DefaultAzureStackAcceleratedNetworking)
+			} else {
+				profile.AcceleratedNetworkingEnabledWindows = to.BoolPtr(DefaultAcceleratedNetworkingWindowsEnabled && !isUpgrade && !isScale && helpers.AcceleratedNetworkingSupported(profile.VMSize))
+			}
 		}
 
 		if profile.VMSSOverProvisioningEnabled == nil {
@@ -597,8 +630,8 @@ func (p *Properties) setAgentProfileDefaults(isUpgrade, isScale bool, cloudName 
 					profile.Distro = AKSUbuntu1804
 				}
 			}
-			// The AKS Distro is not available in US Governmnent Cloud and German Cloud.
-			if cloudName == AzureUSGovernmentCloud || cloudName == AzureGermanCloud {
+			// The AKS Distro is not available in Azure German Cloud.
+			if cloudName == AzureGermanCloud {
 				profile.Distro = Ubuntu
 			}
 		}
@@ -655,14 +688,27 @@ func (p *Properties) setWindowsProfileDefaults(isUpgrade, isScale bool) {
 		if windowsProfile.WindowsPublisher == "" {
 			windowsProfile.WindowsPublisher = DefaultWindowsPublisher
 		}
-		if windowsProfile.WindowsOffer == "" {
-			windowsProfile.WindowsOffer = DefaultWindowsOffer
-		}
-		if windowsProfile.WindowsSku == "" {
-			windowsProfile.WindowsSku = DefaultWindowsSku
-		}
-		if windowsProfile.ImageVersion == "" {
-			windowsProfile.ImageVersion = DefaultImageVersion
+
+		if p.IsAzureStackCloud() {
+			if windowsProfile.WindowsOffer == "" {
+				windowsProfile.WindowsOffer = DefaultAzureStackWindowsOffer
+			}
+			if windowsProfile.WindowsSku == "" {
+				windowsProfile.WindowsSku = DefaultAzureStackWindowsSku
+			}
+			if windowsProfile.ImageVersion == "" {
+				windowsProfile.ImageVersion = DefaultAzureStackImageVersion
+			}
+		} else {
+			if windowsProfile.WindowsOffer == "" {
+				windowsProfile.WindowsOffer = DefaultWindowsOffer
+			}
+			if windowsProfile.WindowsSku == "" {
+				windowsProfile.WindowsSku = DefaultWindowsSku
+			}
+			if windowsProfile.ImageVersion == "" {
+				windowsProfile.ImageVersion = DefaultImageVersion
+			}
 		}
 	}
 }

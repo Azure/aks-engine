@@ -303,7 +303,7 @@ build_kube_binaries_for_upstream_e2e() {
 
 download_nssm() {
 	NSSM_VERSION=2.24
-	NSSM_URL=https://nssm.cc/release/nssm-${NSSM_VERSION}.zip
+	NSSM_URL=https://k8stestinfrabinaries.blob.core.windows.net/nssm-mirror/nssm-${NSSM_VERSION}.zip
 	echo "downloading nssm ..."
 	curl ${NSSM_URL} -o /tmp/nssm-${NSSM_VERSION}.zip
 	unzip -q -d /tmp /tmp/nssm-${NSSM_VERSION}.zip
@@ -315,9 +315,10 @@ download_nssm() {
 download_wincni() {
 	mkdir -p "${DIST_DIR}"/cni/config
 	WINSDN_URL=https://github.com/Microsoft/SDN/raw/master/Kubernetes/windows/
-	WINCNI_EXE=cni/wincni.exe
+	WINBRIDGE_URL=https://github.com/Microsoft/SDN/raw/master/Kubernetes/flannel/l2bridge/
+	WINBRIDGE_EXE=cni/win-bridge.exe
 	HNS_PSM1=hns.psm1
-	curl -L ${WINSDN_URL}${WINCNI_EXE} -o "${DIST_DIR}"/${WINCNI_EXE}
+	curl -L ${WINBRIDGE_URL}${WINBRIDGE_EXE} -o "${DIST_DIR}"/${WINBRIDGE_EXE}
 	curl -L ${WINSDN_URL}${HNS_PSM1} -o "${DIST_DIR}"/${HNS_PSM1}
 }
 

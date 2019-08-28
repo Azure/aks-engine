@@ -1,0 +1,189 @@
+Starting build on  Thu Jul 25 18:06:57 UTC 2019
+==>  ++ awk '0+$5 >= 90 {print}'
+Using kernel:
+Linux version 4.15.0-1050-azure (buildd@lgw01-amd64-030) (gcc version 5.4.0 20160609 (Ubuntu 5.4.0-6ubuntu1~16.04.10)) #55-Ubuntu SMP Sat Jun 29 00:27:54 UTC 2019
+Components downloaded in this VHD build (some of the below components might get deleted during cluster provisioning if they are not needed):
+==>  + '[' -s ']'
+==>  ++ date
+==>  + echo 'Install completed successfully on ' Thu Jul 25 18:33:23 UTC 2019
+  - apt-transport-https
+==>  + echo 'VSTS Build NUMBER: 20190725.1'
+  - auditd
+  - blobfuse
+  - ca-certificates
+  - ceph-common
+==>  + echo 'VSTS Build ID: 23766633'
+  - cgroup-lite
+==>  + echo 'Commit: 36a613a4d934d2f94b1d5be4262f0a4a45231dc4'
+  - cifs-utils
+==>  + echo 'Feature flags: '
+==>  + set +x
+  - conntrack
+==>  + sudo mv /var/log /var/log.vhd
+  - cracklib-runtime
+==>  + sudo mkdir /var/log
+  - ebtables
+  - ethtool
+  - fuse
+  - git
+  - glusterfs-client
+  - init-system-helpers
+  - iproute2
+  - ipset
+==>  + applyCIS
+  - iptables
+  - jq
+==>  + setPWExpiration
+==>  + sed -i 's|PASS_MAX_DAYS||g' /etc/login.defs
+  - libpam-pwquality
+  - libpwquality-tools
+  - mount
+  - nfs-common
+  - pigz socat
+  - util-linux
+  - xz-utils
+  - zip
+  - etcd v3.2.26
+  - moby v3.0.6
+  - nvidia-docker2 nvidia-container-runtime
+  - Azure CNI version 1.0.22
+  - Azure CNI version 1.0.18
+  - CNI plugin version 0.7.5
+  - CNI plugin version 0.7.1
+  - containerd version 1.2.4
+  - containerd version 1.1.6
+  - containerd version 1.1.5
+  - img
+Docker images pre-pulled:
+  - k8s.gcr.io/kubernetes-dashboard-amd64:v1.10.1
+  - k8s.gcr.io/exechealthz-amd64:1.2
+  - k8s.gcr.io/addon-resizer:1.8.5
+==>  + grep PASS_MAX_DAYS /etc/login.defs
+  - k8s.gcr.io/addon-resizer:1.8.4
+==>  + sed -i 's|PASS_MIN_DAYS||g' /etc/login.defs
+  - k8s.gcr.io/addon-resizer:1.8.1
+  - k8s.gcr.io/addon-resizer:1.7
+==>  + grep PASS_MIN_DAYS /etc/login.defs
+  - k8s.gcr.io/heapster-amd64:v1.5.4
+  - k8s.gcr.io/heapster-amd64:v1.5.3
+  - k8s.gcr.io/heapster-amd64:v1.5.1
+  - k8s.gcr.io/metrics-server-amd64:v0.2.1
+==>  + sed -i 's|INACTIVE=||g' /etc/default/useradd
+  - k8s.gcr.io/k8s-dns-kube-dns-amd64:1.15.0
+==>  + grep INACTIVE= /etc/default/useradd
+==>  + echo 'PASS_MAX_DAYS 90'
+==>  + grep 'PASS_MAX_DAYS 90' /etc/login.defs
+  - k8s.gcr.io/k8s-dns-kube-dns-amd64:1.14.13
+  - k8s.gcr.io/k8s-dns-kube-dns-amd64:1.14.5
+==>  + echo 'PASS_MIN_DAYS 7'
+  - k8s.gcr.io/kube-addon-manager-amd64:v9.0.1
+==>  + grep 'PASS_MIN_DAYS 7' /etc/login.defs
+==>  + echo INACTIVE=30
+==>  + grep INACTIVE=30 /etc/default/useradd
+==>  + assignRootPW
+  - k8s.gcr.io/kube-addon-manager-amd64:v9.0
+==>  + grep '^root:[!*]:' /etc/shadow
+==>  ++ openssl rand -base64 5
+  - k8s.gcr.io/kube-addon-manager-amd64:v8.9.1
+==>  + SALT=aoNwRs4=
+==>  ++ openssl rand -base64 37
+==>  + SECRET=M3JTleM1xSLnmgI3YG1zfWltW9+XjPapcG3AItVuYJQLNTSTzg==
+  - k8s.gcr.io/kube-addon-manager-amd64:v8.9
+  - k8s.gcr.io/kube-addon-manager-amd64:v8.8
+==>  + CMD='import crypt, getpass, pwd; print crypt.crypt('\''M3JTleM1xSLnmgI3YG1zfWltW9+XjPapcG3AItVuYJQLNTSTzg=='\'', '\''$6$aoNwRs4=$'\'')'
+==>  ++ python -c 'import crypt, getpass, pwd; print crypt.crypt('\''M3JTleM1xSLnmgI3YG1zfWltW9+XjPapcG3AItVuYJQLNTSTzg=='\'', '\''$6$aoNwRs4=$'\'')'
+  - k8s.gcr.io/kube-addon-manager-amd64:v8.7
+  - k8s.gcr.io/kube-addon-manager-amd64:v8.6
+  - k8s.gcr.io/k8s-dns-dnsmasq-nanny-amd64:1.15.0
+  - k8s.gcr.io/k8s-dns-dnsmasq-nanny-amd64:1.14.10
+  - k8s.gcr.io/k8s-dns-dnsmasq-nanny-amd64:1.14.8
+  - k8s.gcr.io/k8s-dns-dnsmasq-nanny-amd64:1.14.5
+  - k8s.gcr.io/pause-amd64:3.1
+  - mcr.microsoft.com/k8s/azurestack/core/pause-amd64:3.1
+  - gcr.io/kubernetes-helm/tiller:v2.11.0
+  - gcr.io/kubernetes-helm/tiller:v2.8.1
+  - k8s.gcr.io/cluster-autoscaler:v1.15.0
+  - k8s.gcr.io/cluster-autoscaler:v1.14.2
+  - k8s.gcr.io/cluster-autoscaler:v1.14.0
+  - k8s.gcr.io/cluster-autoscaler:v1.13.4
+  - k8s.gcr.io/cluster-autoscaler:v1.13.2
+  - k8s.gcr.io/cluster-autoscaler:v1.13.1
+  - k8s.gcr.io/cluster-autoscaler:v1.12.5
+  - k8s.gcr.io/cluster-autoscaler:v1.12.3
+  - k8s.gcr.io/cluster-autoscaler:v1.12.2
+  - k8s.gcr.io/cluster-autoscaler:v1.3.9
+  - k8s.gcr.io/cluster-autoscaler:v1.3.8
+  - k8s.gcr.io/cluster-autoscaler:v1.3.7
+  - k8s.gcr.io/cluster-autoscaler:v1.3.4
+  - k8s.gcr.io/cluster-autoscaler:v1.3.3
+  - k8s.gcr.io/cluster-autoscaler:v1.2.5
+  - k8s.gcr.io/cluster-autoscaler:v1.2.2
+  - k8s.gcr.io/k8s-dns-sidecar-amd64:1.14.10
+  - k8s.gcr.io/k8s-dns-sidecar-amd64:1.14.8
+  - k8s.gcr.io/coredns:1.5.0
+  - k8s.gcr.io/coredns:1.3.1
+  - k8s.gcr.io/coredns:1.2.6
+  - k8s.gcr.io/coredns:1.2.2
+  - k8s.gcr.io/rescheduler:v0.4.0
+  - k8s.gcr.io/rescheduler:v0.3.1
+  - microsoft/virtual-kubelet:latest
+  - mcr.microsoft.com/containernetworking/networkmonitor:v0.0.6
+  - mcr.microsoft.com/containernetworking/networkmonitor:v0.0.5
+  - mcr.microsoft.com/containernetworking/azure-npm:v1.0.18
+  - nvidia/k8s-device-plugin:1.11
+  - nvidia/k8s-device-plugin:1.10
+  - docker.io/deis/hcp-tunnel-front:v1.9.2-v4.0.4
+  - docker.io/deis/kube-svc-redirect:v1.0.2
+  - mcr.microsoft.com/k8s/flexvolume/keyvault-flexvolume:v0.0.7
+  - mcr.microsoft.com/k8s/flexvolume/blobfuse-flexvolume:1.0.8
+  - gcr.io/google-containers/ip-masq-agent-amd64:v2.3.0
+  - k8s.gcr.io/ip-masq-agent-amd64:v2.3.0
+  - gcr.io/google-containers/ip-masq-agent-amd64:v2.0.0
+  - k8s.gcr.io/ip-masq-agent-amd64:v2.0.0
+  - nginx:1.13.12-alpine
+  - mcr.microsoft.com/k8s/kms/keyvault:v0.0.9
+  - quay.io/coreos/flannel:v0.10.0-amd64
+  - quay.io/coreos/flannel:v0.8.0-amd64
+  - busybox
+  - k8s.gcr.io/cloud-controller-manager-amd64:v1.15.1
+  - k8s.gcr.io/hyperkube-amd64:v1.15.1
+  - k8s.gcr.io/cloud-controller-manager-amd64:v1.15.0
+  - k8s.gcr.io/hyperkube-amd64:v1.15.0
+  - k8s.gcr.io/cloud-controller-manager-amd64:v1.14.4
+  - k8s.gcr.io/hyperkube-amd64:v1.14.4
+  - k8s.gcr.io/cloud-controller-manager-amd64:v1.14.3
+  - k8s.gcr.io/hyperkube-amd64:v1.14.3
+  - mcr.microsoft.com/k8s/azurestack/core/hyperkube-amd64:v1.14.3-azs
+  - k8s.gcr.io/cloud-controller-manager-amd64:v1.14.1
+  - k8s.gcr.io/hyperkube-amd64:v1.14.1
+  - mcr.microsoft.com/k8s/azurestack/core/hyperkube-amd64:v1.14.1-azs
+  - k8s.gcr.io/cloud-controller-manager-amd64:v1.13.8
+  - k8s.gcr.io/hyperkube-amd64:v1.13.8
+  - k8s.gcr.io/cloud-controller-manager-amd64:v1.13.7
+  - k8s.gcr.io/hyperkube-amd64:v1.13.7
+  - mcr.microsoft.com/k8s/azurestack/core/hyperkube-amd64:v1.13.7-azs
+  - k8s.gcr.io/cloud-controller-manager-amd64:v1.13.5
+  - k8s.gcr.io/hyperkube-amd64:v1.13.5
+  - mcr.microsoft.com/k8s/azurestack/core/hyperkube-amd64:v1.13.5-azs
+  - k8s.gcr.io/cloud-controller-manager-amd64:v1.12.8
+  - k8s.gcr.io/hyperkube-amd64:v1.12.8
+  - mcr.microsoft.com/k8s/azurestack/core/hyperkube-amd64:v1.12.8-azs
+  - k8s.gcr.io/cloud-controller-manager-amd64:v1.12.7
+  - k8s.gcr.io/hyperkube-amd64:v1.12.7
+  - mcr.microsoft.com/k8s/azurestack/core/hyperkube-amd64:v1.12.7-azs
+  - k8s.gcr.io/cloud-controller-manager-amd64:v1.11.10
+  - k8s.gcr.io/hyperkube-amd64:v1.11.10
+  - mcr.microsoft.com/k8s/azurestack/core/hyperkube-amd64:v1.11.10-azs
+  - k8s.gcr.io/cloud-controller-manager-amd64:v1.11.9
+  - k8s.gcr.io/hyperkube-amd64:v1.11.9
+  - mcr.microsoft.com/k8s/azurestack/core/hyperkube-amd64:v1.11.9-azs
+  - k8s.gcr.io/cloud-controller-manager-amd64:v1.10.13
+  - k8s.gcr.io/hyperkube-amd64:v1.10.13
+  - k8s.gcr.io/cloud-controller-manager-amd64:v1.10.12
+  - k8s.gcr.io/hyperkube-amd64:v1.10.12
+WARNING: 75% of /dev/sda1 is used
+Install completed successfully on  Thu Jul 25 18:33:23 UTC 2019
+VSTS Build NUMBER: 20190725.1
+VSTS Build ID: 23766633
+Commit: 36a613a4d934d2f94b1d5be4262f0a4a45231dc4
+Feature flags:

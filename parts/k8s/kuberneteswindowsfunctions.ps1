@@ -55,3 +55,25 @@ function Initialize-DataDirectories {
         }
     }
 }
+
+function Retry-Command
+{
+    Param(
+        [Parameter(Mandatory=$true)][ValidateNotNullOrEmpty()][string]
+        $Command,
+        [Parameter(Mandatory=$true)][ValidateNotNullOrEmpty()][hashtable]
+        $Args,
+        [Parameter(Mandatory=$true)][ValidateNotNullOrEmpty()][int]
+        $Retries,
+        [Parameter(Mandatory=$true)][ValidateNotNullOrEmpty()][int]
+        $RetryDelaySeconds
+    )
+
+    for ($i = 0; $i -lt $Retries; $i++) {
+        try {
+            return & $Command @Args
+        } catch {
+            Start-Sleep $RetryDelaySeconds
+        }
+    }
+}

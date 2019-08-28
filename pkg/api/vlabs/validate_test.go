@@ -60,7 +60,7 @@ func Test_OrchestratorProfile_Validate(t *testing.T) {
 					},
 				},
 			},
-			expectedError: "Invalid etcd version \"1.0.0\", please use one of the following versions: [2.2.5 2.3.0 2.3.1 2.3.2 2.3.3 2.3.4 2.3.5 2.3.6 2.3.7 2.3.8 3.0.0 3.0.1 3.0.2 3.0.3 3.0.4 3.0.5 3.0.6 3.0.7 3.0.8 3.0.9 3.0.10 3.0.11 3.0.12 3.0.13 3.0.14 3.0.15 3.0.16 3.0.17 3.1.0 3.1.1 3.1.2 3.1.2 3.1.3 3.1.4 3.1.5 3.1.6 3.1.7 3.1.8 3.1.9 3.1.10 3.2.0 3.2.1 3.2.2 3.2.3 3.2.4 3.2.5 3.2.6 3.2.7 3.2.8 3.2.9 3.2.11 3.2.12 3.2.13 3.2.14 3.2.15 3.2.16 3.2.23 3.2.24 3.2.25 3.2.26 3.3.0 3.3.1 3.3.8 3.3.9 3.3.10]",
+			expectedError: "Invalid etcd version \"1.0.0\", please use one of the following versions: [2.2.5 2.3.0 2.3.1 2.3.2 2.3.3 2.3.4 2.3.5 2.3.6 2.3.7 2.3.8 3.0.0 3.0.1 3.0.2 3.0.3 3.0.4 3.0.5 3.0.6 3.0.7 3.0.8 3.0.9 3.0.10 3.0.11 3.0.12 3.0.13 3.0.14 3.0.15 3.0.16 3.0.17 3.1.0 3.1.1 3.1.2 3.1.2 3.1.3 3.1.4 3.1.5 3.1.6 3.1.7 3.1.8 3.1.9 3.1.10 3.2.0 3.2.1 3.2.2 3.2.3 3.2.4 3.2.5 3.2.6 3.2.7 3.2.8 3.2.9 3.2.11 3.2.12 3.2.13 3.2.14 3.2.15 3.2.16 3.2.23 3.2.24 3.2.25 3.2.26 3.3.0 3.3.1 3.3.8 3.3.9 3.3.10 3.3.13]",
 		},
 		"should error when KubernetesConfig has invalid containerd version for containerd runtime": {
 			properties: &Properties{
@@ -68,18 +68,6 @@ func Test_OrchestratorProfile_Validate(t *testing.T) {
 					OrchestratorType: "Kubernetes",
 					KubernetesConfig: &KubernetesConfig{
 						ContainerRuntime:  Containerd,
-						ContainerdVersion: "1.0.0",
-					},
-				},
-			},
-			expectedError: "Invalid containerd version \"1.0.0\", please use one of the following versions: [1.1.5 1.1.6 1.2.4]",
-		},
-		"should error when KubernetesConfig has invalid containerd version for clear-containers runtime": {
-			properties: &Properties{
-				OrchestratorProfile: &OrchestratorProfile{
-					OrchestratorType: "Kubernetes",
-					KubernetesConfig: &KubernetesConfig{
-						ContainerRuntime:  ClearContainers,
 						ContainerdVersion: "1.0.0",
 					},
 				},
@@ -108,7 +96,7 @@ func Test_OrchestratorProfile_Validate(t *testing.T) {
 					},
 				},
 			},
-			expectedError: fmt.Sprintf("containerdVersion is only valid in a non-docker context, use %s, %s, or %s containerRuntime values instead if you wish to provide a containerdVersion", Containerd, ClearContainers, KataContainers),
+			expectedError: fmt.Sprintf("containerdVersion is only valid in a non-docker context, use %s or %s containerRuntime values instead if you wish to provide a containerdVersion", Containerd, KataContainers),
 		},
 		"should error when KubernetesConfig has containerdVersion value for default (empty string) container runtime": {
 			properties: &Properties{
@@ -119,7 +107,7 @@ func Test_OrchestratorProfile_Validate(t *testing.T) {
 					},
 				},
 			},
-			expectedError: fmt.Sprintf("containerdVersion is only valid in a non-docker context, use %s, %s, or %s containerRuntime values instead if you wish to provide a containerdVersion", Containerd, ClearContainers, KataContainers),
+			expectedError: fmt.Sprintf("containerdVersion is only valid in a non-docker context, use %s or %s containerRuntime values instead if you wish to provide a containerdVersion", Containerd, KataContainers),
 		},
 		"should error when KubernetesConfig has enableAggregatedAPIs enabled with an invalid version": {
 			properties: &Properties{
@@ -309,6 +297,19 @@ func Test_OrchestratorProfile_Validate(t *testing.T) {
 				},
 			},
 			expectedError: "maximumLoadBalancerRuleCount shouldn't be less than 0",
+		},
+		"should error when outboundRuleIdleTimeoutInMinutes populated is out of valid range": {
+			properties: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					OrchestratorType: "Kubernetes",
+					KubernetesConfig: &KubernetesConfig{
+						LoadBalancerSku:                  StandardLoadBalancerSku,
+						ExcludeMasterFromStandardLB:      to.BoolPtr(true),
+						OutboundRuleIdleTimeoutInMinutes: 3,
+					},
+				},
+			},
+			expectedError: "outboundRuleIdleTimeoutInMinutes shouldn't be less than 4 or greater than 120",
 		},
 	}
 
@@ -1272,18 +1273,6 @@ func Test_Properties_ValidateContainerRuntime(t *testing.T) {
 		)
 	}
 
-	p.OrchestratorProfile.KubernetesConfig.ContainerRuntime = ClearContainers
-	p.AgentPoolProfiles = []*AgentPoolProfile{
-		{
-			OSType: Windows,
-		},
-	}
-	if err := p.validateContainerRuntime(); err == nil {
-		t.Errorf(
-			"should error on clear-containers for windows clusters",
-		)
-	}
-
 	p.OrchestratorProfile.KubernetesConfig.ContainerRuntime = KataContainers
 	p.AgentPoolProfiles = []*AgentPoolProfile{
 		{
@@ -1473,6 +1462,114 @@ func Test_Properties_ValidateAddons(t *testing.T) {
 	if err := p.validateAddons(); err == nil {
 		t.Errorf(
 			"should error using incompatible addon with coreos (blobfuse-flexvolume)",
+		)
+	}
+
+	// appgw-ingress add-on
+
+	// Basic test with UseManagedIdentity
+	p.OrchestratorProfile.KubernetesConfig = &KubernetesConfig{
+		NetworkPlugin:      "azure",
+		UseManagedIdentity: true,
+		Addons: []KubernetesAddon{
+			{
+				Name:    "appgw-ingress",
+				Enabled: to.BoolPtr(true),
+				Config: map[string]string{
+					"appgw-subnet": "10.0.0.0/16",
+				},
+			},
+		},
+	}
+
+	if err := p.validateAddons(); err != nil {
+		t.Error(
+			"should not error for correct config.",
+			err,
+		)
+	}
+
+	// Basic test with ObjectID
+	p.ServicePrincipalProfile = &ServicePrincipalProfile{
+		ObjectID: "random",
+	}
+	p.OrchestratorProfile.KubernetesConfig = &KubernetesConfig{
+		NetworkPlugin: "azure",
+		Addons: []KubernetesAddon{
+			{
+				Name:    "appgw-ingress",
+				Enabled: to.BoolPtr(true),
+				Config: map[string]string{
+					"appgw-subnet": "10.0.0.0/16",
+				},
+			},
+		},
+	}
+
+	if err := p.validateAddons(); err != nil {
+		t.Error(
+			"should not error for correct config.",
+			err,
+		)
+	}
+
+	// Test with missing objectID and UseManagedIdentity false
+	p.ServicePrincipalProfile = &ServicePrincipalProfile{}
+	p.OrchestratorProfile.KubernetesConfig = &KubernetesConfig{
+		NetworkPlugin: "azure",
+		Addons: []KubernetesAddon{
+			{
+				Name:    "appgw-ingress",
+				Enabled: to.BoolPtr(true),
+				Config: map[string]string{
+					"appgw-subnet": "10.0.0.0/16",
+				},
+			},
+		},
+	}
+
+	if err := p.validateAddons(); err == nil {
+		t.Error(
+			"should error as objectID not provided or UseManagedIdentity not true",
+			err,
+		)
+	}
+
+	// Test with wrong Network Plugin
+	p.OrchestratorProfile.KubernetesConfig = &KubernetesConfig{
+		NetworkPlugin: "kubelet",
+		Addons: []KubernetesAddon{
+			{
+				Name:    "appgw-ingress",
+				Enabled: to.BoolPtr(true),
+				Config: map[string]string{
+					"appgw-subnet": "10.0.0.0/16",
+				},
+			},
+		},
+	}
+
+	if err := p.validateAddons(); err == nil {
+		t.Errorf(
+			"should error using when not using 'azure' for Network Plugin",
+		)
+	}
+
+	// Test with missing appgw-subnet
+	p.OrchestratorProfile.KubernetesConfig = &KubernetesConfig{
+		NetworkPlugin: "azure",
+		Addons: []KubernetesAddon{
+			{
+				Name:    "appgw-ingress",
+				Enabled: to.BoolPtr(true),
+				Config:  map[string]string{},
+			},
+		},
+	}
+
+	if err := p.validateAddons(); err == nil {
+		t.Errorf(
+			"should error when missing the subnet for Application Gateway",
 		)
 	}
 }
@@ -1947,7 +2044,7 @@ func TestProperties_ValidateZones(t *testing.T) {
 		{
 			name:                "all zones and basic loadbalancer",
 			orchestratorRelease: "1.12",
-			loadBalancerSku:     "Basic",
+			loadBalancerSku:     BasicLoadBalancerSku,
 			masterProfile: &MasterProfile{
 				Count:               5,
 				DNSPrefix:           "foo",
@@ -2011,6 +2108,112 @@ func TestProperties_ValidateZones(t *testing.T) {
 				}
 			} else {
 				t.Errorf("error should have occurred")
+			}
+		})
+	}
+}
+
+func TestProperties_ValidateLoadBalancer(t *testing.T) {
+	tests := []struct {
+		name                string
+		orchestratorRelease string
+		loadBalancerSku     string
+		masterProfile       *MasterProfile
+		agentProfiles       []*AgentPoolProfile
+		expectedErr         bool
+		expectedErrStr      string
+	}{
+		{
+			name:                "lowercase basic LB",
+			orchestratorRelease: "1.12",
+			loadBalancerSku:     "basic",
+			masterProfile: &MasterProfile{
+				Count:               3,
+				DNSPrefix:           "foo",
+				VMSize:              "Standard_DS2_v2",
+				AvailabilityProfile: VirtualMachineScaleSets,
+			},
+		},
+		{
+			name:                "Basic LB",
+			orchestratorRelease: "1.12",
+			loadBalancerSku:     BasicLoadBalancerSku,
+			masterProfile: &MasterProfile{
+				Count:               3,
+				DNSPrefix:           "foo",
+				VMSize:              "Standard_DS2_v2",
+				AvailabilityProfile: VirtualMachineScaleSets,
+			},
+		},
+		{
+			name:                "lowercase standard LB",
+			orchestratorRelease: "1.12",
+			loadBalancerSku:     "standard",
+			masterProfile: &MasterProfile{
+				Count:               3,
+				DNSPrefix:           "foo",
+				VMSize:              "Standard_DS2_v2",
+				AvailabilityProfile: VirtualMachineScaleSets,
+			},
+		},
+		{
+			name:                "Standard LB",
+			orchestratorRelease: "1.12",
+			loadBalancerSku:     StandardLoadBalancerSku,
+			masterProfile: &MasterProfile{
+				Count:               3,
+				DNSPrefix:           "foo",
+				VMSize:              "Standard_DS2_v2",
+				AvailabilityProfile: VirtualMachineScaleSets,
+			},
+		},
+		{
+			name:                "empty string LB value",
+			orchestratorRelease: "1.12",
+			loadBalancerSku:     "",
+			masterProfile: &MasterProfile{
+				Count:               3,
+				DNSPrefix:           "foo",
+				VMSize:              "Standard_DS2_v2",
+				AvailabilityProfile: VirtualMachineScaleSets,
+			},
+		},
+		{
+			name:                "invalid LB string value",
+			orchestratorRelease: "1.12",
+			loadBalancerSku:     "foo",
+			masterProfile: &MasterProfile{
+				Count:               3,
+				DNSPrefix:           "foo",
+				VMSize:              "Standard_DS2_v2",
+				AvailabilityProfile: VirtualMachineScaleSets,
+			},
+			expectedErr:    true,
+			expectedErrStr: fmt.Sprintf("Invalid value for loadBalancerSku, only %s and %s are supported", StandardLoadBalancerSku, BasicLoadBalancerSku),
+		},
+	}
+
+	for _, test := range tests {
+		test := test
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+			cs := getK8sDefaultContainerService(true)
+			cs.Properties.MasterProfile = test.masterProfile
+			cs.Properties.AgentPoolProfiles = test.agentProfiles
+			cs.Properties.OrchestratorProfile.OrchestratorRelease = test.orchestratorRelease
+			cs.Properties.OrchestratorProfile.KubernetesConfig = &KubernetesConfig{
+				LoadBalancerSku: test.loadBalancerSku,
+			}
+
+			err := cs.Validate(false)
+			if test.expectedErr {
+				if err == nil {
+					t.Errorf("error should have occurred")
+				} else {
+					if err.Error() != test.expectedErrStr {
+						t.Errorf("expected error with message : %s, but got : %s", test.expectedErrStr, err.Error())
+					}
+				}
 			}
 		})
 	}
@@ -2898,6 +3101,121 @@ func TestValidateLocation(t *testing.T) {
 			},
 			expectedErr: errors.New("missing ContainerService Location"),
 		},
+		{
+			name:          "AzureStack UseInstanceMetadata is true",
+			location:      "local",
+			propertiesnil: false,
+			cs: &ContainerService{
+				Location: "local",
+				Properties: &Properties{
+					CustomCloudProfile: &CustomCloudProfile{
+						PortalURL: "https://portal.local.cotoso.com",
+					},
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorType:    Kubernetes,
+						OrchestratorVersion: "1.11.10",
+						KubernetesConfig: &KubernetesConfig{
+							UseInstanceMetadata: to.BoolPtr(trueVal),
+						},
+					},
+				},
+			},
+			expectedErr: errors.New("useInstanceMetadata shouldn't be set to true as feature not yet supported on Azure Stack"),
+		},
+		{
+			name:          "AzureStack EtcdDiskSizeGB is 1024",
+			location:      "local",
+			propertiesnil: false,
+			cs: &ContainerService{
+				Location: "local",
+				Properties: &Properties{
+					CustomCloudProfile: &CustomCloudProfile{
+						PortalURL: "https://portal.local.cotoso.com",
+					},
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorType:    Kubernetes,
+						OrchestratorVersion: "1.11.10",
+						KubernetesConfig: &KubernetesConfig{
+							EtcdDiskSizeGB: "1024",
+						},
+					},
+				},
+			},
+			expectedErr: errors.Errorf("EtcdDiskSizeGB max size supported on Azure Stack is %d", MaxAzureStackManagedDiskSize),
+		},
+		{
+			name:          "AzureStack EtcdDiskSizeGB is 1024",
+			location:      "local",
+			propertiesnil: false,
+			cs: &ContainerService{
+				Location: "local",
+				Properties: &Properties{
+					CustomCloudProfile: &CustomCloudProfile{
+						PortalURL: "https://portal.local.cotoso.com",
+					},
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorType:    Kubernetes,
+						OrchestratorVersion: "1.11.10",
+						KubernetesConfig: &KubernetesConfig{
+							EtcdDiskSizeGB: "1024GB",
+						},
+					},
+				},
+			},
+			expectedErr: errors.New("could not convert EtcdDiskSizeGB to int"),
+		},
+		{
+			name:          "AzureStack AcceleratedNetworking is true",
+			location:      "local",
+			propertiesnil: false,
+			cs: &ContainerService{
+				Location: "local",
+				Properties: &Properties{
+					CustomCloudProfile: &CustomCloudProfile{
+						PortalURL: "https://portal.local.cotoso.com",
+					},
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorType:    Kubernetes,
+						OrchestratorVersion: "1.11.10",
+					},
+					AgentPoolProfiles: []*AgentPoolProfile{
+						{
+							Name:                         "testpool",
+							Count:                        1,
+							VMSize:                       "Standard_D2_v2",
+							AcceleratedNetworkingEnabled: to.BoolPtr(trueVal),
+						},
+					},
+				},
+			},
+			expectedErr: errors.New("AcceleratedNetworkingEnabled or AcceleratedNetworkingEnabledWindows shouldn't be set to true as feature is not yet supported on Azure Stack"),
+		},
+		{
+			name:          "AzureStack AcceleratedNetworking is true",
+			location:      "local",
+			propertiesnil: false,
+			cs: &ContainerService{
+				Location: "local",
+				Properties: &Properties{
+					CustomCloudProfile: &CustomCloudProfile{
+						PortalURL: "https://portal.local.cotoso.com",
+					},
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorType:    Kubernetes,
+						OrchestratorVersion: "1.11.10",
+					},
+					AgentPoolProfiles: []*AgentPoolProfile{
+						{
+							Name:                                "testpool",
+							Count:                               1,
+							VMSize:                              "Standard_D2_v2",
+							AcceleratedNetworkingEnabledWindows: to.BoolPtr(trueVal),
+						},
+					},
+				},
+			},
+			expectedErr: errors.New("AcceleratedNetworkingEnabled or AcceleratedNetworkingEnabledWindows shouldn't be set to true as feature is not yet supported on Azure Stack"),
+		},
 	}
 
 	for _, test := range tests {
@@ -2907,7 +3225,17 @@ func TestValidateLocation(t *testing.T) {
 			cs := getK8sDefaultContainerService(true)
 			cs.Location = test.cs.Location
 			if test.cs.Properties != nil {
-				cs.Properties.CustomCloudProfile = test.cs.Properties.CustomCloudProfile
+				if test.cs.Properties.CustomCloudProfile != nil {
+					cs.Properties.CustomCloudProfile = test.cs.Properties.CustomCloudProfile
+				}
+
+				if test.cs.Properties.OrchestratorProfile != nil {
+					cs.Properties.OrchestratorProfile = test.cs.Properties.OrchestratorProfile
+				}
+
+				if test.cs.Properties.AgentPoolProfiles != nil {
+					cs.Properties.AgentPoolProfiles = test.cs.Properties.AgentPoolProfiles
+				}
 			}
 
 			if test.propertiesnil {

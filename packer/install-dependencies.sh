@@ -1,6 +1,7 @@
 #!/bin/bash
 source /home/packer/provision_installs.sh
 source /home/packer/provision_source.sh
+source /home/packer/packer_source.sh
 source /home/packer/cis.sh
 
 RELEASE_NOTES_FILEPATH=/var/log/azure/golden-image-install.complete
@@ -49,7 +50,7 @@ if [[ ${UBUNTU_RELEASE} == "18.04" ]]; then
   overrideNetworkConfig
 fi
 
-ETCD_VERSION="3.2.26"
+ETCD_VERSION="3.3.13"
 ETCD_DOWNLOAD_URL="https://acs-mirror.azureedge.net/github-coreos"
 installEtcd
 echo "  - etcd v${ETCD_VERSION}" >> ${RELEASE_NOTES_FILEPATH}
@@ -60,11 +61,9 @@ echo "  - moby v${MOBY_VERSION}" >> ${RELEASE_NOTES_FILEPATH}
 installGPUDrivers
 echo "  - nvidia-docker2 nvidia-container-runtime" >> ${RELEASE_NOTES_FILEPATH}
 
-installClearContainersRuntime
-
 VNET_CNI_VERSIONS="
-1.0.22
-1.0.18
+1.0.25
+1.0.24
 "
 for VNET_CNI_VERSION in $VNET_CNI_VERSIONS; do
     VNET_CNI_PLUGINS_URL="https://acs-mirror.azureedge.net/cni/azure-vnet-cni-linux-amd64-v${VNET_CNI_VERSION}.tgz"
@@ -143,6 +142,7 @@ for METRICS_SERVER_VERSION in ${METRICS_SERVER_VERSIONS}; do
 done
 
 KUBE_DNS_VERSIONS="
+1.15.4
 1.15.0
 1.14.13
 1.14.5
@@ -154,8 +154,10 @@ for KUBE_DNS_VERSION in ${KUBE_DNS_VERSIONS}; do
 done
 
 KUBE_ADDON_MANAGER_VERSIONS="
+9.0.2
 9.0.1
 9.0
+8.9.1
 8.9
 8.8
 8.7
@@ -168,6 +170,7 @@ for KUBE_ADDON_MANAGER_VERSION in ${KUBE_ADDON_MANAGER_VERSIONS}; do
 done
 
 KUBE_DNS_MASQ_VERSIONS="
+1.15.4
 1.15.0
 1.14.10
 1.14.8
@@ -201,12 +204,16 @@ for TILLER_VERSION in ${TILLER_VERSIONS}; do
 done
 
 CLUSTER_AUTOSCALER_VERSIONS="
+1.15.1
 1.15.0
+1.14.4
 1.14.2
 1.14.0
+1.13.6
 1.13.4
 1.13.2
 1.13.1
+1.12.7
 1.12.5
 1.12.3
 1.12.2
@@ -305,7 +312,7 @@ for KUBE_SVC_REDIRECT_VERSION in ${KUBE_SVC_REDIRECT_VERSIONS}; do
     echo "  - ${CONTAINER_IMAGE}" >> ${RELEASE_NOTES_FILEPATH}
 done
 
-KV_FLEXVOLUME_VERSIONS="0.0.7"
+KV_FLEXVOLUME_VERSIONS="0.0.12"
 for KV_FLEXVOLUME_VERSION in ${KV_FLEXVOLUME_VERSIONS}; do
     CONTAINER_IMAGE="mcr.microsoft.com/k8s/flexvolume/keyvault-flexvolume:v${KV_FLEXVOLUME_VERSION}"
     pullContainerImage "docker" ${CONTAINER_IMAGE}
@@ -319,7 +326,10 @@ for BLOBFUSE_FLEXVOLUME_VERSION in ${BLOBFUSE_FLEXVOLUME_VERSIONS}; do
     echo "  - ${CONTAINER_IMAGE}" >> ${RELEASE_NOTES_FILEPATH}
 done
 
-IP_MASQ_AGENT_VERSIONS="2.0.0"
+IP_MASQ_AGENT_VERSIONS="
+2.3.0
+2.0.0
+"
 for IP_MASQ_AGENT_VERSION in ${IP_MASQ_AGENT_VERSIONS}; do
     # TODO remove the gcr.io/google-containers image once AKS switches to use k8s.gcr.io
     DEPRECATED_CONTAINER_IMAGE="gcr.io/google-containers/ip-masq-agent-amd64:v${IP_MASQ_AGENT_VERSION}"
@@ -360,19 +370,22 @@ echo "  - busybox" >> ${RELEASE_NOTES_FILEPATH}
 
 # TODO: fetch supported k8s versions from an aks-engine command instead of hardcoding them here
 K8S_VERSIONS="
-1.15.0
-1.14.3
-1.14.3-azs
-1.14.1
-1.14.1-azs
-1.13.7
-1.13.7-azs
-1.13.5
-1.13.5-azs
-1.12.9
-1.12.9-azs
+1.15.3
+1.15.3-azs
+1.15.2
+1.15.2-azs
+1.14.6
+1.14.6-azs
+1.14.5
+1.14.5-azs
+1.13.10
+1.13.10-azs
+1.13.9
+1.13.9-azs
 1.12.8
 1.12.8-azs
+1.12.7
+1.12.7-azs
 1.11.10
 1.11.10-azs
 1.11.9
@@ -392,6 +405,11 @@ for KUBERNETES_VERSION in ${K8S_VERSIONS}; do
     extractHyperkube "docker"
     echo "  - ${HYPERKUBE_URL}" >> ${RELEASE_NOTES_FILEPATH}
 done
+
+# TODO: remove once ACR is available on Azure Stack
+CONTAINER_IMAGE="registry:2.7.1"
+pullContainerImage "docker" ${CONTAINER_IMAGE}
+echo "  - ${CONTAINER_IMAGE}" >> ${RELEASE_NOTES_FILEPATH}
 
 df -h
 

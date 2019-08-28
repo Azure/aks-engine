@@ -530,6 +530,14 @@ func convertV20170701WindowsProfile(v20170701 *v20170701.WindowsProfile, api *Wi
 func convertVLabsWindowsProfile(vlabs *vlabs.WindowsProfile, api *WindowsProfile) {
 	api.AdminUsername = vlabs.AdminUsername
 	api.AdminPassword = vlabs.AdminPassword
+	if vlabs.ImageRef != nil {
+		api.ImageRef = &ImageReference{}
+		api.ImageRef.Gallery = vlabs.ImageRef.Gallery
+		api.ImageRef.Name = vlabs.ImageRef.Name
+		api.ImageRef.ResourceGroup = vlabs.ImageRef.ResourceGroup
+		api.ImageRef.SubscriptionID = vlabs.ImageRef.SubscriptionID
+		api.ImageRef.Version = vlabs.ImageRef.Version
+	}
 	api.ImageVersion = vlabs.ImageVersion
 	api.WindowsImageSourceURL = vlabs.WindowsImageSourceURL
 	api.WindowsPublisher = vlabs.WindowsPublisher
@@ -608,8 +616,10 @@ func convertVLabsOrchestratorProfile(vp *vlabs.Properties, api *OrchestratorProf
 		setVlabsKubernetesDefaults(vp, api)
 
 		// TODO (hack): this validation should be done as part of the main validation, but deploy does it only after loading the container.
-		if err := vp.ValidateOrchestratorProfile(isUpdate); err != nil {
-			return err
+		if !isUpdate {
+			if err := vp.ValidateOrchestratorProfile(isUpdate); err != nil {
+				return err
+			}
 		}
 
 		api.OrchestratorVersion = common.RationalizeReleaseAndVersion(
@@ -683,7 +693,9 @@ func convertVLabsKubernetesConfig(vlabs *vlabs.KubernetesConfig, api *Kubernetes
 	api.CloudProviderBackoffRetries = vlabs.CloudProviderBackoffRetries
 	api.CloudProviderRateLimit = vlabs.CloudProviderRateLimit
 	api.CloudProviderRateLimitBucket = vlabs.CloudProviderRateLimitBucket
+	api.CloudProviderRateLimitBucketWrite = vlabs.CloudProviderRateLimitBucketWrite
 	api.CloudProviderRateLimitQPS = vlabs.CloudProviderRateLimitQPS
+	api.CloudProviderRateLimitQPSWrite = vlabs.CloudProviderRateLimitQPSWrite
 	api.UseManagedIdentity = vlabs.UseManagedIdentity
 	api.UserAssignedID = vlabs.UserAssignedID
 	api.UserAssignedClientID = vlabs.UserAssignedClientID
@@ -713,6 +725,7 @@ func convertVLabsKubernetesConfig(vlabs *vlabs.KubernetesConfig, api *Kubernetes
 	api.MaximumLoadBalancerRuleCount = vlabs.MaximumLoadBalancerRuleCount
 	api.ProxyMode = KubeProxyMode(vlabs.ProxyMode)
 	api.PrivateAzureRegistryServer = vlabs.PrivateAzureRegistryServer
+	api.OutboundRuleIdleTimeoutInMinutes = vlabs.OutboundRuleIdleTimeoutInMinutes
 	convertAddonsToAPI(vlabs, api)
 	convertKubeletConfigToAPI(vlabs, api)
 	convertControllerManagerConfigToAPI(vlabs, api)
@@ -742,7 +755,7 @@ func setVlabsKubernetesDefaults(vp *vlabs.Properties, api *OrchestratorProfile) 
 			api.KubernetesConfig.NetworkPolicy = vp.OrchestratorProfile.KubernetesConfig.NetworkPolicy
 		}
 	}
-	if api.KubernetesConfig.NetworkPlugin == "" {
+	if api.KubernetesConfig.NetworkPlugin == "" && (api.KubernetesConfig.NetworkPolicy == "" || api.KubernetesConfig.NetworkPolicy == NetworkPolicyCalico) {
 		if vp.HasWindows() {
 			api.KubernetesConfig.NetworkPlugin = vlabs.DefaultNetworkPluginWindows
 		} else {
@@ -941,6 +954,9 @@ func convertVLabsMasterProfile(vlabs *vlabs.MasterProfile, api *MasterProfile) {
 		api.ImageRef = &ImageReference{}
 		api.ImageRef.Name = vlabs.ImageRef.Name
 		api.ImageRef.ResourceGroup = vlabs.ImageRef.ResourceGroup
+		api.ImageRef.SubscriptionID = vlabs.ImageRef.SubscriptionID
+		api.ImageRef.Gallery = vlabs.ImageRef.Gallery
+		api.ImageRef.Version = vlabs.ImageRef.Version
 	}
 
 	api.AvailabilityProfile = vlabs.AvailabilityProfile
@@ -1067,6 +1083,9 @@ func convertVLabsAgentPoolProfile(vlabs *vlabs.AgentPoolProfile, api *AgentPoolP
 		api.ImageRef = &ImageReference{}
 		api.ImageRef.Name = vlabs.ImageRef.Name
 		api.ImageRef.ResourceGroup = vlabs.ImageRef.ResourceGroup
+		api.ImageRef.SubscriptionID = vlabs.ImageRef.SubscriptionID
+		api.ImageRef.Gallery = vlabs.ImageRef.Gallery
+		api.ImageRef.Version = vlabs.ImageRef.Version
 	}
 	api.Role = AgentPoolProfileRole(vlabs.Role)
 }

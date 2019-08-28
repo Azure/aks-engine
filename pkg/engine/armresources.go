@@ -34,9 +34,27 @@ func GenerateARMResources(cs *api.ContainerService) []interface{} {
 		armResources = append(armResources, userAssignedID, msiRoleAssignment)
 	}
 
+	if !cs.Properties.OrchestratorProfile.IsPrivateCluster() &&
+		!isHostedMaster &&
+		!cs.Properties.AnyAgentHasLoadBalancerBackendAddressPoolIDs() &&
+		cs.Properties.OrchestratorProfile.KubernetesConfig.LoadBalancerSku == api.StandardLoadBalancerSku {
+		isForMaster := false
+		publicIPAddress := CreatePublicIPAddress(isForMaster)
+		loadBalancer := CreateAgentLoadBalancer(cs.Properties, true)
+		armResources = append(armResources, publicIPAddress, loadBalancer)
+	}
+
 	profiles := cs.Properties.AgentPoolProfiles
 
 	for _, profile := range profiles {
+
+		if profile.IsWindows() {
+			if cs.Properties.WindowsProfile.HasCustomImage() {
+				// Create Image resource from VHD if requestesd
+				armResources = append(armResources, createWindowsImage(profile))
+			}
+		}
+
 		if profile.IsVirtualMachineScaleSets() {
 			if useManagedIdentity && !userAssignedIDEnabled {
 				armResources = append(armResources, createAgentVMSSSysRoleAssignment(profile))
@@ -73,7 +91,15 @@ func GenerateARMResources(cs *api.ContainerService) []interface{} {
 		}
 
 		armResources = append(armResources, masterResources...)
+	}
 
+	if cs.Properties.OrchestratorProfile.KubernetesConfig.IsAddonEnabled(AppGwIngressAddonName) {
+		armResources = append(armResources, createAppGwPublicIPAddress())
+		armResources = append(armResources, createAppGwUserAssignedIdentities())
+		armResources = append(armResources, createApplicationGateway(cs.Properties))
+		armResources = append(armResources, createAppGwIdentityApplicationGatewayWriteSysRoleAssignment())
+		armResources = append(armResources, createKubernetesSpAppGIdentityOperatorAccessRoleAssignment(cs.Properties))
+		armResources = append(armResources, createAppGwIdentityResourceGroupReadSysRoleAssignment())
 	}
 
 	return armResources
@@ -81,12 +107,6 @@ func GenerateARMResources(cs *api.ContainerService) []interface{} {
 
 func createKubernetesAgentVMASResources(cs *api.ContainerService, profile *api.AgentPoolProfile) []interface{} {
 	var agentVMASResources []interface{}
-
-	if profile.IsWindows() {
-		if cs.Properties.WindowsProfile.HasCustomImage() {
-			agentVMASResources = append(agentVMASResources, createWindowsImage(profile))
-		}
-	}
 
 	agentVMASNIC := createAgentVMASNetworkInterface(cs, profile)
 	agentVMASResources = append(agentVMASResources, agentVMASNIC)

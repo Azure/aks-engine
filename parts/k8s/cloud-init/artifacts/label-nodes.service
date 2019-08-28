@@ -1,0 +1,8 @@
+[Unit]
+Description=Label Kubernetes nodes as masters or agents
+After=kubelet.service
+[Service]
+Restart=always
+RestartSec=60
+ExecStart=/bin/bash /opt/azure/containers/label-nodes.sh
+#EOF

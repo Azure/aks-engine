@@ -144,6 +144,12 @@ func TestIsKubernetesVersionGe(t *testing.T) {
 			actualVersion:  "1.10.0-alpha.1",
 			expectedResult: false,
 		},
+		{
+			name:           "is 1.15.1 >= 1.16.0-alpha.1?",
+			version:        "1.16.0-alpha.1",
+			actualVersion:  "1.15.1",
+			expectedResult: false,
+		},
 	}
 	for _, c := range cases {
 		c := c

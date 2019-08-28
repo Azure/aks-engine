@@ -21,7 +21,7 @@
             "subscription_id": "{{user `subscription_id`}}",
             "resource_group_name": "{{user `resource_group_name`}}",
             "capture_container_name": "aksengine-vhds",
-            "capture_name_prefix": "aksengine-{{timestamp}}",
+            "capture_name_prefix": "aksengine-{{user `create_time`}}",
             "storage_account": "{{user `storage_account_name`}}",
             "os_type": "Linux",
             "os_disk_size_gb": 30,
@@ -30,7 +30,9 @@
             "image_sku": "{{user `ubuntu_sku`}}-LTS",
             "image_version": "latest",
             "azure_tags": {
-                "dept": "Azure Container Service"
+                "os": "Linux",
+                "now": "{{user `create_time`}}",
+                "createdBy": "aks-engine-vhd-pipeline"
             },
             "location": "{{user `location`}}",
             "vm_size": "{{user `vm_size`}}"
@@ -48,6 +50,11 @@
             "type": "file",
             "source": "packer/cleanup-vhd.sh",
             "destination": "/home/packer/cleanup-vhd.sh"
+        },
+        {
+            "type": "file",
+            "source": "packer/packer_source.sh",
+            "destination": "/home/packer/packer_source.sh"
         },
         {
             "type": "file",
@@ -133,6 +140,56 @@
             "type": "file",
             "source": "parts/k8s/cloud-init/artifacts/auditd-rules",
             "destination": "/home/packer/auditd-rules"
+        },
+        {
+            "type": "file",
+            "source": "parts/k8s/cloud-init/artifacts/label-nodes.sh",
+            "destination": "/home/packer/label-nodes.sh"
+        },
+        {
+            "type": "file",
+            "source": "parts/k8s/cloud-init/artifacts/label-nodes.service",
+            "destination": "/home/packer/label-nodes.service"
+        },
+        {
+            "type": "file",
+            "source": "parts/k8s/cloud-init/artifacts/apt-preferences",
+            "destination": "/home/packer/apt-preferences"
+        },
+        {
+            "type": "file",
+            "source": "parts/k8s/cloud-init/artifacts/kms.service",
+            "destination": "/home/packer/kms.service"
+        },
+        {
+            "type": "file",
+            "source": "parts/k8s/cloud-init/artifacts/health-monitor.sh",
+            "destination": "/home/packer/health-monitor.sh"
+        },
+        {
+            "type": "file",
+            "source": "parts/k8s/cloud-init/artifacts/kubelet-monitor.service",
+            "destination": "/home/packer/kubelet-monitor.service"
+        },
+        {
+            "type": "file",
+            "source": "parts/k8s/cloud-init/artifacts/docker-monitor.service",
+            "destination": "/home/packer/docker-monitor.service"
+        },
+        {
+            "type": "file",
+            "source": "parts/k8s/cloud-init/artifacts/docker-monitor.timer",
+            "destination": "/home/packer/docker-monitor.timer"
+        },
+        {
+            "type": "file",
+            "source": "parts/k8s/cloud-init/artifacts/kubelet.service",
+            "destination": "/home/packer/kubelet.service"
+        },
+        {
+            "type": "file",
+            "source": "parts/k8s/cloud-init/artifacts/docker_clear_mount_propagation_flags.conf",
+            "destination": "/home/packer/docker_clear_mount_propagation_flags.conf"
         },
         {
             "type": "shell",

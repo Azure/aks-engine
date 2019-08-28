@@ -13,6 +13,10 @@ import (
 
 func (cs *ContainerService) setAddonsConfig(isUpdate bool) {
 	o := cs.Properties.OrchestratorProfile
+	clusterDNSPrefix := "aks-engine-cluster"
+	if cs != nil && cs.Properties != nil && cs.Properties.MasterProfile != nil && cs.Properties.MasterProfile.DNSPrefix != "" {
+		clusterDNSPrefix = cs.Properties.MasterProfile.DNSPrefix
+	}
 	cloudSpecConfig := cs.GetCloudSpecConfig()
 	k8sComponents := K8sComponentsByVersionMap[o.OrchestratorVersion]
 	specConfig := cloudSpecConfig.KubernetesSpecConfig
@@ -138,7 +142,7 @@ func (cs *ContainerService) setAddonsConfig(isUpdate bool) {
 				MemoryRequests: "100Mi",
 				CPULimits:      "50m",
 				MemoryLimits:   "100Mi",
-				Image:          "mcr.microsoft.com/k8s/flexvolume/keyvault-flexvolume:v0.0.7",
+				Image:          "mcr.microsoft.com/k8s/flexvolume/keyvault-flexvolume:v0.0.12",
 			},
 		},
 	}
@@ -205,16 +209,18 @@ func (cs *ContainerService) setAddonsConfig(isUpdate bool) {
 		Enabled: to.BoolPtr(DefaultContainerMonitoringAddonEnabled && !cs.Properties.IsAzureStackCloud()),
 		Config: map[string]string{
 			"omsAgentVersion":       "1.10.0.1",
-			"dockerProviderVersion": "4.0.0-0",
+			"dockerProviderVersion": "6.0.0-0",
+			"schema-versions":       "v1",
+			"clusterName":           clusterDNSPrefix,
 		},
 		Containers: []KubernetesContainerSpec{
 			{
 				Name:           "omsagent",
-				CPURequests:    "50m",
+				CPURequests:    "75m",
 				MemoryRequests: "225Mi",
 				CPULimits:      "150m",
-				MemoryLimits:   "500Mi",
-				Image:          "microsoft/oms:ciprod04232019",
+				MemoryLimits:   "600Mi",
+				Image:          "mcr.microsoft.com/azuremonitor/containerinsights/ciprod:ciprod07092019",
 			},
 		},
 	}
@@ -229,7 +235,7 @@ func (cs *ContainerService) setAddonsConfig(isUpdate bool) {
 				MemoryRequests: "50Mi",
 				CPULimits:      "50m",
 				MemoryLimits:   "250Mi",
-				Image:          specConfig.KubernetesImageBase + "ip-masq-agent-amd64:v2.0.0",
+				Image:          specConfig.KubernetesImageBase + "ip-masq-agent-amd64:v2.3.0",
 			},
 		},
 		Config: map[string]string{
@@ -255,7 +261,11 @@ func (cs *ContainerService) setAddonsConfig(isUpdate bool) {
 		Containers: []KubernetesContainerSpec{
 			{
 				Name:  AzureNetworkPolicyAddonName,
-				Image: "mcr.microsoft.com/containernetworking/azure-npm:v1.0.18",
+				Image: "mcr.microsoft.com/containernetworking/azure-npm:v1.0.25",
+			},
+			{
+				Name:  AzureVnetTelemetryAddonName,
+				Image: "mcr.microsoft.com/containernetworking/azure-vnet-telemetry:v1.0.25",
 			},
 		},
 	}
@@ -281,15 +291,19 @@ func (cs *ContainerService) setAddonsConfig(isUpdate bool) {
 		Containers: []KubernetesContainerSpec{
 			{
 				Name:  "calico-typha",
-				Image: specConfig.CalicoImageBase + "typha:v3.7.2",
+				Image: specConfig.CalicoImageBase + "typha:v3.8.0",
 			},
 			{
 				Name:  "calico-cni",
-				Image: specConfig.CalicoImageBase + "cni:v3.7.2",
+				Image: specConfig.CalicoImageBase + "cni:v3.8.0",
 			},
 			{
 				Name:  "calico-node",
-				Image: specConfig.CalicoImageBase + "node:v3.7.2",
+				Image: specConfig.CalicoImageBase + "node:v3.8.0",
+			},
+			{
+				Name:  "calico-pod2daemon",
+				Image: specConfig.CalicoImageBase + "pod2daemon-flexvol:v3.8.0",
 			},
 			{
 				Name:  "calico-cluster-proportional-autoscaler",
@@ -321,6 +335,16 @@ func (cs *ContainerService) setAddonsConfig(isUpdate bool) {
 		},
 	}
 
+	defaultAppGwAddonsConfig := KubernetesAddon{
+		Name:    AppGwIngressAddonName,
+		Enabled: to.BoolPtr(DefaultAppGwIngressAddonEnabled),
+		Config: map[string]string{
+			"appgw-subnet":     "",
+			"appgw-sku":        "WAF_v2",
+			"appgw-private-ip": "",
+		},
+	}
+
 	defaultAddons := []KubernetesAddon{
 		defaultsHeapsterAddonsConfig,
 		defaultTillerAddonsConfig,
@@ -340,6 +364,7 @@ func (cs *ContainerService) setAddonsConfig(isUpdate bool) {
 		defaultDNSAutoScalerAddonsConfig,
 		defaultsCalicoDaemonSetAddonsConfig,
 		defaultsAADPodIdentityAddonsConfig,
+		defaultAppGwAddonsConfig,
 	}
 	// Add default addons specification, if no user-provided spec exists
 	if o.KubernetesConfig.Addons == nil {

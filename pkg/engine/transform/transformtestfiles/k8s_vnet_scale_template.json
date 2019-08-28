@@ -244,39 +244,55 @@
         "Standard_D1",
         "Standard_D11",
         "Standard_D11_v2",
+        "Standard_D11_v2_Promo",
         "Standard_D12",
         "Standard_D12_v2",
+        "Standard_D12_v2_Promo",
         "Standard_D13",
         "Standard_D13_v2",
+        "Standard_D13_v2_Promo",
         "Standard_D14",
         "Standard_D14_v2",
+        "Standard_D14_v2_Promo",
         "Standard_D15_v2",
         "Standard_D1_v2",
         "Standard_D2",
         "Standard_D2_v2",
+        "Standard_D2_v2_Promo",
         "Standard_D3",
         "Standard_D3_v2",
+        "Standard_D3_v2_Promo",
         "Standard_D4",
         "Standard_D4_v2",
+        "Standard_D4_v2_Promo",
         "Standard_D5_v2",
+        "Standard_D5_v2_Promo",
         "Standard_DS1",
         "Standard_DS11",
         "Standard_DS11_v2",
+        "Standard_DS11_v2_Promo",
         "Standard_DS12",
         "Standard_DS12_v2",
+        "Standard_DS12_v2_Promo",
         "Standard_DS13",
         "Standard_DS13_v2",
+        "Standard_DS13_v2_Promo",
         "Standard_DS14",
         "Standard_DS14_v2",
+        "Standard_DS14_v2_Promo",
         "Standard_DS15_v2",
         "Standard_DS1_v2",
         "Standard_DS2",
         "Standard_DS2_v2",
+        "Standard_DS2_v2_Promo",
         "Standard_DS3",
         "Standard_DS3_v2",
+        "Standard_DS3_v2_Promo",
         "Standard_DS4",
         "Standard_DS4_v2",
+        "Standard_DS4_v2_Promo",
         "Standard_DS5_v2",
+        "Standard_DS5_v2_Promo",
         "Standard_F1",
         "Standard_F16",
         "Standard_F16s",
@@ -572,39 +588,55 @@
         "Standard_D1",
         "Standard_D11",
         "Standard_D11_v2",
+        "Standard_D11_v2_Promo",
         "Standard_D12",
         "Standard_D12_v2",
+        "Standard_D12_v2_Promo",
         "Standard_D13",
         "Standard_D13_v2",
+        "Standard_D13_v2_Promo",
         "Standard_D14",
         "Standard_D14_v2",
+        "Standard_D14_v2_Promo",
         "Standard_D15_v2",
         "Standard_D1_v2",
         "Standard_D2",
         "Standard_D2_v2",
+        "Standard_D2_v2_Promo",
         "Standard_D3",
         "Standard_D3_v2",
+        "Standard_D3_v2_Promo",
         "Standard_D4",
         "Standard_D4_v2",
+        "Standard_D4_v2_Promo",
         "Standard_D5_v2",
+        "Standard_D5_v2_Promo",
         "Standard_DS1",
         "Standard_DS11",
         "Standard_DS11_v2",
+        "Standard_DS11_v2_Promo",
         "Standard_DS12",
         "Standard_DS12_v2",
+        "Standard_DS12_v2_Promo",
         "Standard_DS13",
         "Standard_DS13_v2",
+        "Standard_DS13_v2_Promo",
         "Standard_DS14",
         "Standard_DS14_v2",
+        "Standard_DS14_v2_Promo",
         "Standard_DS15_v2",
         "Standard_DS1_v2",
         "Standard_DS2",
         "Standard_DS2_v2",
+        "Standard_DS2_v2_Promo",
         "Standard_DS3",
         "Standard_DS3_v2",
+        "Standard_DS3_v2_Promo",
         "Standard_DS4",
         "Standard_DS4_v2",
+        "Standard_DS4_v2_Promo",
         "Standard_DS5_v2",
+        "Standard_DS5_v2_Promo",
         "Standard_F1",
         "Standard_F16",
         "Standard_F16s",
@@ -921,36 +953,52 @@
         "Standard_A9",
         "Standard_D11",
         "Standard_D11_v2",
+        "Standard_D11_v2_Promo",
         "Standard_D12",
         "Standard_D12_v2",
+        "Standard_D12_v2_Promo",
         "Standard_D13",
         "Standard_D13_v2",
+        "Standard_D13_v2_Promo",
         "Standard_D14",
         "Standard_D14_v2",
+        "Standard_D14_v2_Promo",
         "Standard_D15_v2",
         "Standard_D2",
         "Standard_D2_v2",
+        "Standard_D2_v2_Promo",
         "Standard_D3",
         "Standard_D3_v2",
+        "Standard_D3_v2_Promo",
         "Standard_D4",
         "Standard_D4_v2",
+        "Standard_D4_v2_Promo",
         "Standard_D5_v2",
+        "Standard_D5_v2_Promo",
         "Standard_DS11",
         "Standard_DS11_v2",
+        "Standard_DS11_v2_Promo",
         "Standard_DS12",
         "Standard_DS12_v2",
+        "Standard_DS12_v2_Promo",
         "Standard_DS13",
         "Standard_DS13_v2",
+        "Standard_DS13_v2_Promo",
         "Standard_DS14",
         "Standard_DS14_v2",
+        "Standard_DS14_v2_Promo",
         "Standard_DS15_v2",
         "Standard_DS2",
         "Standard_DS2_v2",
+        "Standard_DS2_v2_Promo",
         "Standard_DS3",
         "Standard_DS3_v2",
+        "Standard_DS3_v2_Promo",
         "Standard_DS4",
         "Standard_DS4_v2",
+        "Standard_DS4_v2_Promo",
         "Standard_DS5_v2",
+        "Standard_DS5_v2_Promo",
         "Standard_F16",
         "Standard_F16s",
         "Standard_F2",
@@ -1326,10 +1374,16 @@
       "Standard_D11_v2": {
         "storageAccountType": "Standard_LRS"
       },
+      "Standard_D11_v2_Promo": {
+        "storageAccountType": "Standard_LRS"
+      },
       "Standard_D12": {
         "storageAccountType": "Standard_LRS"
       },
       "Standard_D12_v2": {
+        "storageAccountType": "Standard_LRS"
+      },
+      "Standard_D12_v2_Promo": {
         "storageAccountType": "Standard_LRS"
       },
       "Standard_D13": {
@@ -1338,10 +1392,16 @@
       "Standard_D13_v2": {
         "storageAccountType": "Standard_LRS"
       },
+      "Standard_D13_v2_Promo": {
+        "storageAccountType": "Standard_LRS"
+      },
       "Standard_D14": {
         "storageAccountType": "Standard_LRS"
       },
       "Standard_D14_v2": {
+        "storageAccountType": "Standard_LRS"
+      },
+      "Standard_D14_v2_Promo": {
         "storageAccountType": "Standard_LRS"
       },
       "Standard_D15_v2": {
@@ -1356,10 +1416,16 @@
       "Standard_D2_v2": {
         "storageAccountType": "Standard_LRS"
       },
+      "Standard_D2_v2_Promo": {
+        "storageAccountType": "Standard_LRS"
+      },
       "Standard_D3": {
         "storageAccountType": "Standard_LRS"
       },
       "Standard_D3_v2": {
+        "storageAccountType": "Standard_LRS"
+      },
+      "Standard_D3_v2_Promo": {
         "storageAccountType": "Standard_LRS"
       },
       "Standard_D4": {
@@ -1368,7 +1434,13 @@
       "Standard_D4_v2": {
         "storageAccountType": "Standard_LRS"
       },
+      "Standard_D4_v2_Promo": {
+        "storageAccountType": "Standard_LRS"
+      },
       "Standard_D5_v2": {
+        "storageAccountType": "Standard_LRS"
+      },
+      "Standard_D5_v2_Promo": {
         "storageAccountType": "Standard_LRS"
       },
       "Standard_DS1": {
@@ -1380,10 +1452,16 @@
       "Standard_DS11_v2": {
         "storageAccountType": "Premium_LRS"
       },
+      "Standard_DS11_v2_Promo": {
+        "storageAccountType": "Premium_LRS"
+      },
       "Standard_DS12": {
         "storageAccountType": "Premium_LRS"
       },
       "Standard_DS12_v2": {
+        "storageAccountType": "Premium_LRS"
+      },
+      "Standard_DS12_v2_Promo": {
         "storageAccountType": "Premium_LRS"
       },
       "Standard_DS13": {
@@ -1392,10 +1470,16 @@
       "Standard_DS13_v2": {
         "storageAccountType": "Premium_LRS"
       },
+      "Standard_DS13_v2_Promo": {
+        "storageAccountType": "Premium_LRS"
+      },
       "Standard_DS14": {
         "storageAccountType": "Premium_LRS"
       },
       "Standard_DS14_v2": {
+        "storageAccountType": "Premium_LRS"
+      },
+      "Standard_DS14_v2_Promo": {
         "storageAccountType": "Premium_LRS"
       },
       "Standard_DS15_v2": {
@@ -1410,10 +1494,16 @@
       "Standard_DS2_v2": {
         "storageAccountType": "Premium_LRS"
       },
+      "Standard_DS2_v2_Promo": {
+        "storageAccountType": "Premium_LRS"
+      },
       "Standard_DS3": {
         "storageAccountType": "Premium_LRS"
       },
       "Standard_DS3_v2": {
+        "storageAccountType": "Premium_LRS"
+      },
+      "Standard_DS3_v2_Promo": {
         "storageAccountType": "Premium_LRS"
       },
       "Standard_DS4": {
@@ -1422,7 +1512,13 @@
       "Standard_DS4_v2": {
         "storageAccountType": "Premium_LRS"
       },
+      "Standard_DS4_v2_Promo": {
+        "storageAccountType": "Premium_LRS"
+      },
       "Standard_DS5_v2": {
+        "storageAccountType": "Premium_LRS"
+      },
+      "Standard_DS5_v2_Promo": {
         "storageAccountType": "Premium_LRS"
       },
       "Standard_F1": {
@@ -1597,21 +1693,13 @@
     },
     {
       "apiVersion": "[variables('apiVersionDefault')]",
-      "location": "[variables('location')]",
-      "name": "[variables('agentpriAvailabilitySet')]",
-      "properties": {},
-      "type": "Microsoft.Compute/availabilitySets"
-    },
-    {
-      "apiVersion": "[variables('apiVersionDefault')]",
       "copy": {
         "count": "[sub(variables('agentpriCount'), variables('agentpriOffset'))]",
         "name": "vmLoopNode"
       },
       "dependsOn": [
         "[concat('Microsoft.Storage/storageAccounts/',variables('storageAccountPrefixes')[mod(add(div(copyIndex(variables('agentpriOffset')),variables('maxVMsPerStorageAccount')),variables('agentpriStorageAccountOffset')),variables('storageAccountPrefixesCount'))],variables('storageAccountPrefixes')[div(add(div(copyIndex(variables('agentpriOffset')),variables('maxVMsPerStorageAccount')),variables('agentpriStorageAccountOffset')),variables('storageAccountPrefixesCount'))],variables('agentpriAccountName'))]",
-        "[concat('Microsoft.Network/networkInterfaces/', variables('agentpriVMNamePrefix'), 'nic-', copyIndex(variables('agentpriOffset')))]",
-        "[concat('Microsoft.Compute/availabilitySets/', variables('agentpriAvailabilitySet'))]"
+        "[concat('Microsoft.Network/networkInterfaces/', variables('agentpriVMNamePrefix'), 'nic-', copyIndex(variables('agentpriOffset')))]"
       ],
       "location": "[variables('location')]",
       "name": "[concat(variables('agentpriVMNamePrefix'), copyIndex(variables('agentpriOffset')))]",
@@ -1739,21 +1827,13 @@
     },
     {
       "apiVersion": "[variables('apiVersionDefault')]",
-      "location": "[variables('location')]",
-      "name": "[variables('agentpri2AvailabilitySet')]",
-      "properties": {},
-      "type": "Microsoft.Compute/availabilitySets"
-    },
-    {
-      "apiVersion": "[variables('apiVersionDefault')]",
       "copy": {
         "count": "[sub(variables('agentpri2Count'), variables('agentpri2Offset'))]",
         "name": "vmLoopNode"
       },
       "dependsOn": [
         "[concat('Microsoft.Storage/storageAccounts/',variables('storageAccountPrefixes')[mod(add(div(copyIndex(variables('agentpri2Offset')),variables('maxVMsPerStorageAccount')),variables('agentpri2StorageAccountOffset')),variables('storageAccountPrefixesCount'))],variables('storageAccountPrefixes')[div(add(div(copyIndex(variables('agentpri2Offset')),variables('maxVMsPerStorageAccount')),variables('agentpri2StorageAccountOffset')),variables('storageAccountPrefixesCount'))],variables('agentpri2AccountName'))]",
-        "[concat('Microsoft.Network/networkInterfaces/', variables('agentpri2VMNamePrefix'), 'nic-', copyIndex(variables('agentpri2Offset')))]",
-        "[concat('Microsoft.Compute/availabilitySets/', variables('agentpri2AvailabilitySet'))]"
+        "[concat('Microsoft.Network/networkInterfaces/', variables('agentpri2VMNamePrefix'), 'nic-', copyIndex(variables('agentpri2Offset')))]"
       ],
       "location": "[variables('location')]",
       "name": "[concat(variables('agentpri2VMNamePrefix'), copyIndex(variables('agentpri2Offset')))]",
@@ -1834,17 +1914,6 @@
         "typeHandlerVersion": "2.0"
       },
       "type": "Microsoft.Compute/virtualMachines/extensions"
-    },
-    {
-      "apiVersion": "[variables('apiVersionStorageManagedDisks')]",
-      "location": "[variables('location')]",
-      "name": "[variables('masterAvailabilitySet')]",
-      "properties": {
-        "managed": "true",
-        "platformFaultDomainCount": 2,
-        "platformUpdateDomainCount": 3
-      },
-      "type": "Microsoft.Compute/availabilitySets"
     },
     {
       "apiVersion": "[variables('apiVersionDefault')]",
@@ -1988,8 +2057,7 @@
         "name": "vmLoopNode"
       },
       "dependsOn": [
-        "[concat('Microsoft.Network/networkInterfaces/', variables('masterVMNamePrefix'), 'nic-', copyIndex(variables('masterOffset')))]",
-        "[concat('Microsoft.Compute/availabilitySets/',variables('masterAvailabilitySet'))]"
+        "[concat('Microsoft.Network/networkInterfaces/', variables('masterVMNamePrefix'), 'nic-', copyIndex(variables('masterOffset')))]"
       ],
       "location": "[variables('location')]",
       "name": "[concat(variables('masterVMNamePrefix'), copyIndex(variables('masterOffset')))]",

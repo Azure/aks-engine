@@ -13,12 +13,11 @@ import (
 
 	"github.com/Azure/aks-engine/pkg/api"
 	"github.com/Azure/aks-engine/pkg/armhelpers"
+	"github.com/Azure/aks-engine/pkg/armhelpers/azurestack/testserver"
 	"github.com/Azure/go-autorest/autorest/azure"
 	"github.com/gofrs/uuid"
-	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
-	ini "gopkg.in/ini.v1"
-	"gopkg.in/jarcoal/httpmock.v1"
+	"gopkg.in/ini.v1"
 )
 
 //mockAuthProvider implements AuthProvider and allows in particular to stub out getClient()
@@ -174,9 +173,10 @@ func TestGetCloudSubFromAzConfig(t *testing.T) {
 }
 
 func TestWriteCustomCloudProfile(t *testing.T) {
-	err := prepareCustomCloudProfile()
-	if err != nil {
-		t.Fatalf("%v", err)
+	cs := prepareCustomCloudProfile()
+
+	if err := writeCustomCloudProfile(cs); err != nil {
+		t.Fatalf("failed to write custom cloud profile: %v", err)
 	}
 
 	environmentFilePath := os.Getenv("AZURE_ENVIRONMENT_FILEPATH")
@@ -184,7 +184,7 @@ func TestWriteCustomCloudProfile(t *testing.T) {
 		t.Fatal("failed to write custom cloud profile: err - AZURE_ENVIRONMENT_FILEPATH is empty")
 	}
 
-	if _, err = os.Stat(environmentFilePath); os.IsNotExist(err) {
+	if _, err := os.Stat(environmentFilePath); os.IsNotExist(err) {
 		// path/to/whatever does not exist
 		t.Fatalf("failed to write custom cloud profile: file %s does not exist", environmentFilePath)
 	}
@@ -194,18 +194,14 @@ func TestWriteCustomCloudProfile(t *testing.T) {
 		t.Fatalf("failed to write custom cloud profile: can not read file %s ", environmentFilePath)
 	}
 	azurestackenvironmentStr := string(azurestackenvironment)
-	expectedResult := `{"name":"azurestackcloud","managementPortalURL":"https://management.local.azurestack.external/","publishSettingsURL":"https://management.local.azurestack.external/publishsettings/index","serviceManagementEndpoint":"https://management.azurestackci15.onmicrosoft.com/36f71706-54df-4305-9847-5b038a4cf189","resourceManagerEndpoint":"https://management.local.azurestack.external/","activeDirectoryEndpoint":"https://login.windows.net/","galleryEndpoint":"https://portal.local.azurestack.external=30015/","keyVaultEndpoint":"https://vault.azurestack.external/","graphEndpoint":"https://graph.windows.net/","serviceBusEndpoint":"https://servicebus.azurestack.external/","batchManagementEndpoint":"https://batch.azurestack.external/","storageEndpointSuffix":"core.azurestack.external","sqlDatabaseDNSSuffix":"database.azurestack.external","trafficManagerDNSSuffix":"trafficmanager.cn","keyVaultDNSSuffix":"vault.azurestack.external","serviceBusEndpointSuffix":"servicebus.azurestack.external","serviceManagementVMDNSSuffix":"chinacloudapp.cn","resourceManagerVMDNSSuffix":"cloudapp.azurestack.external","containerRegistryDNSSuffix":"azurecr.io","tokenAudience":"https://management.azurestack.external/"}`
+	expectedResult := `{"name":"azurestackcloud","managementPortalURL":"https://management.local.azurestack.external/","publishSettingsURL":"https://management.local.azurestack.external/publishsettings/index","serviceManagementEndpoint":"https://management.azurestackci15.onmicrosoft.com/36f71706-54df-4305-9847-5b038a4cf189","resourceManagerEndpoint":"https://management.local.azurestack.external/","activeDirectoryEndpoint":"https://login.windows.net/","galleryEndpoint":"https://portal.local.azurestack.external=30015/","keyVaultEndpoint":"https://vault.azurestack.external/","graphEndpoint":"https://graph.windows.net/","serviceBusEndpoint":"https://servicebus.azurestack.external/","batchManagementEndpoint":"https://batch.azurestack.external/","storageEndpointSuffix":"core.azurestack.external","sqlDatabaseDNSSuffix":"database.azurestack.external","trafficManagerDNSSuffix":"trafficmanager.cn","keyVaultDNSSuffix":"vault.azurestack.external","serviceBusEndpointSuffix":"servicebus.azurestack.external","serviceManagementVMDNSSuffix":"chinacloudapp.cn","resourceManagerVMDNSSuffix":"cloudapp.azurestack.external","containerRegistryDNSSuffix":"azurecr.io","cosmosDBDNSSuffix":"","tokenAudience":"https://management.azurestack.external/","resourceIdentifiers":{"graph":"","keyVault":"","datalake":"","batch":"","operationalInsights":"","storage":""}}`
 	if azurestackenvironmentStr != expectedResult {
 		t.Fatalf("failed to write custom cloud profile: expected %s , got %s ", expectedResult, azurestackenvironmentStr)
 	}
 }
 
 func TestGetAzureStackClientWithClientSecret(t *testing.T) {
-	err := prepareCustomCloudProfile()
-	if err != nil {
-		t.Fatalf("%v", err)
-	}
-
+	cs := prepareCustomCloudProfile()
 	subscriptionID, _ := uuid.FromString("cc6b141e-6afc-4786-9bf6-e3b9a5601460")
 
 	for _, test := range []struct {
@@ -244,10 +240,22 @@ func TestGetAzureStackClientWithClientSecret(t *testing.T) {
 		},
 	} {
 		t.Run(test.desc, func(t *testing.T) {
-			httpmock.Activate()
-			defer httpmock.DeactivateAndReset()
+			mux := getMuxForIdentitySystem(&test.authArgs)
 
-			registerRespondersForIdentitySystem(&test.authArgs)
+			server, err := testserver.CreateAndStart(0, mux)
+			if err != nil {
+				t.Fatal(err)
+			}
+			defer server.Stop()
+
+			mockURI := fmt.Sprintf("http://localhost:%d/", server.Port)
+
+			cs.Properties.CustomCloudProfile.Environment.ResourceManagerEndpoint = mockURI
+			cs.Properties.CustomCloudProfile.Environment.ActiveDirectoryEndpoint = mockURI
+
+			if err = writeCustomCloudProfile(cs); err != nil {
+				t.Fatalf("failed to write custom cloud profile: %v", err)
+			}
 
 			client, err := test.authArgs.getAzureStackClient()
 			if isValidIdentitySystem(test.authArgs.IdentitySystem) {
@@ -267,8 +275,9 @@ func isValidIdentitySystem(s string) bool {
 	return s == "azure_ad" || s == "adfs"
 }
 
-func registerRespondersForIdentitySystem(authArgs *authArgs) {
+func getMuxForIdentitySystem(authArgs *authArgs) *http.ServeMux {
 	const (
+		apiVersion    = "api-version"
 		token         = "19590a3f-b1af-4e6b-8f63-f917cbf40711"
 		tokenResponse = `
 			{
@@ -284,17 +293,17 @@ func registerRespondersForIdentitySystem(authArgs *authArgs) {
 			{
 				"value": [
 					{
-						"id": "1", 
-						"namespace": "Microsoft.Compute", 
+						"id": "1",
+						"namespace": "Microsoft.Compute",
 						"registrationState": "Registered"
 					},
 					{
-						"id": "2", 
-						"namespace": "Microsoft.Storage", 
+						"id": "2",
+						"namespace": "Microsoft.Storage",
 						"registrationState": "Registered"},
 					{
-						"id": "3", 
-						"namespace": "Microsoft.Network", 
+						"id": "3",
+						"namespace": "Microsoft.Network",
 						"registrationState": "Registered"
 					}
 				],
@@ -302,46 +311,53 @@ func registerRespondersForIdentitySystem(authArgs *authArgs) {
 			}`
 	)
 
+	mux := http.NewServeMux()
+
 	switch authArgs.IdentitySystem {
 	case "azure_ad":
-		httpmock.RegisterResponder(
-			"GET",
-			fmt.Sprintf("https://management.local.azurestack.external/subscriptions/%s?api-version=2016-06-01", authArgs.SubscriptionID),
-			func(req *http.Request) (*http.Response, error) {
-				resp := httpmock.NewStringResponse(401, `{"error":{"code":"AuthenticationFailed","message":"Authentication failed. The 'Authorization' header is missing."}}`)
-				resp.Header.Add("Www-Authenticate", fmt.Sprintf(`Bearer authorization_uri="https://login.windows.net/%s", error="invalid_token", error_description="The authentication failed because of missing 'Authorization' header."`, token))
-				return resp, nil
-			})
-
-		httpmock.RegisterResponder("POST", fmt.Sprintf("https://login.windows.net/%s/oauth2/token?api-version=1.0", token),
-			func(req *http.Request) (*http.Response, error) {
-				resp := httpmock.NewStringResponse(200, tokenResponse)
-				return resp, nil
-			},
-		)
-
-		httpmock.RegisterResponder("GET", fmt.Sprintf("https://management.local.azurestack.external/subscriptions/%s/providers?%%24top=100&api-version=2018-05-01", authArgs.SubscriptionID),
-			func(req *http.Request) (*http.Response, error) {
-				resp := httpmock.NewStringResponse(200, providerResponse)
-				return resp, nil
-			})
+		mux.HandleFunc(fmt.Sprintf("/subscriptions/%s", authArgs.SubscriptionID), func(w http.ResponseWriter, r *http.Request) {
+			if r.URL.Query().Get(apiVersion) != "2016-06-01" {
+				w.WriteHeader(http.StatusNotFound)
+			} else {
+				w.Header().Add("Www-Authenticate", fmt.Sprintf(`Bearer authorization_uri="https://login.windows.net/%s", error="invalid_token", error_description="The authentication failed because of missing 'Authorization' header."`, token))
+				w.WriteHeader(http.StatusUnauthorized)
+				_, _ = fmt.Fprintf(w, `{"error":{"code":"AuthenticationFailed","message":"Authentication failed. The 'Authorization' header is missing."}}`)
+			}
+		})
+		mux.HandleFunc(fmt.Sprintf("/subscriptions/%s/providers", authArgs.SubscriptionID), func(w http.ResponseWriter, r *http.Request) {
+			if r.URL.Query().Get(apiVersion) != "2018-05-01" || r.URL.Query().Get("$top") != "100" {
+				w.WriteHeader(http.StatusNotFound)
+			} else {
+				_, _ = fmt.Fprint(w, providerResponse)
+			}
+		})
+		mux.HandleFunc(fmt.Sprintf("/%s/oauth2/token", token), func(w http.ResponseWriter, r *http.Request) {
+			if r.URL.Query().Get(apiVersion) != "1.0" {
+				w.WriteHeader(http.StatusNotFound)
+			} else {
+				_, _ = fmt.Fprint(w, tokenResponse)
+			}
+		})
 	case "adfs":
-		httpmock.RegisterResponder("POST", fmt.Sprintf("https://login.windows.net/adfs/oauth2/token?api-version=1.0"),
-			func(req *http.Request) (*http.Response, error) {
-				resp := httpmock.NewStringResponse(200, tokenResponse)
-				return resp, nil
-			},
-		)
-
-		httpmock.RegisterResponder("GET", fmt.Sprintf("https://management.local.azurestack.external/subscriptions/%s/providers?%%24top=100&api-version=2018-05-01", authArgs.SubscriptionID),
-			func(req *http.Request) (*http.Response, error) {
-				resp := httpmock.NewStringResponse(200, providerResponse)
-				return resp, nil
-			})
+		mux.HandleFunc("/adfs/oauth2/token", func(w http.ResponseWriter, r *http.Request) {
+			if r.URL.Query().Get(apiVersion) != "1.0" {
+				w.WriteHeader(http.StatusNotFound)
+			} else {
+				_, _ = fmt.Fprint(w, tokenResponse)
+			}
+		})
+		mux.HandleFunc(fmt.Sprintf("/subscriptions/%s/providers", authArgs.SubscriptionID), func(w http.ResponseWriter, r *http.Request) {
+			if r.URL.Query().Get(apiVersion) != "2018-05-01" || r.URL.Query().Get("$top") != "100" {
+				w.WriteHeader(http.StatusNotFound)
+			} else {
+				_, _ = fmt.Fprint(w, providerResponse)
+			}
+		})
 	}
+	return mux
 }
 
-func prepareCustomCloudProfile() error {
+func prepareCustomCloudProfile() *api.ContainerService {
 	const (
 		name                         = "azurestackcloud"
 		managementPortalURL          = "https://management.local.azurestack.external/"
@@ -417,9 +433,5 @@ func prepareCustomCloudProfile() error {
 
 	cs.SetPropertiesDefaults(false, false)
 
-	if err := writeCustomCloudProfile(cs); err != nil {
-		return errors.Wrap(err, "failed to write custom cloud profile")
-	}
-
-	return nil
+	return cs
 }

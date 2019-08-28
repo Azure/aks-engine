@@ -4,11 +4,8 @@
 package engine
 
 import (
-	"fmt"
-	"math/rand"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/Azure/go-autorest/autorest/to"
 
@@ -85,11 +82,6 @@ func assignKubernetesParameters(properties *api.Properties, parametersMap params
 			} else {
 				addValue(parametersMap, "kubernetesClusterAutoscalerEnabled", false)
 			}
-			if kubernetesConfig.LoadBalancerSku == "Standard" && !to.Bool(kubernetesConfig.PrivateCluster.Enabled) {
-				random := rand.New(rand.NewSource(time.Now().UnixNano()))
-				elbsvcName := random.Int()
-				addValue(parametersMap, "kuberneteselbsvcname", fmt.Sprintf("%d", elbsvcName))
-			}
 			if common.IsKubernetesVersionGe(k8sVersion, "1.12.0") {
 				addValue(parametersMap, "kubernetesCoreDNSSpec", kubernetesImageBase+k8sComponents["coredns"])
 			} else {
@@ -98,14 +90,16 @@ func assignKubernetesParameters(properties *api.Properties, parametersMap params
 			}
 			addValue(parametersMap, "kubernetesPodInfraContainerSpec", kubernetesImageBase+k8sComponents["pause"])
 			addValue(parametersMap, "cloudproviderConfig", api.CloudProviderConfig{
-				CloudProviderBackoff:         kubernetesConfig.CloudProviderBackoff,
-				CloudProviderBackoffRetries:  kubernetesConfig.CloudProviderBackoffRetries,
-				CloudProviderBackoffJitter:   strconv.FormatFloat(kubernetesConfig.CloudProviderBackoffJitter, 'f', -1, 64),
-				CloudProviderBackoffDuration: kubernetesConfig.CloudProviderBackoffDuration,
-				CloudProviderBackoffExponent: strconv.FormatFloat(kubernetesConfig.CloudProviderBackoffExponent, 'f', -1, 64),
-				CloudProviderRateLimit:       kubernetesConfig.CloudProviderRateLimit,
-				CloudProviderRateLimitQPS:    strconv.FormatFloat(kubernetesConfig.CloudProviderRateLimitQPS, 'f', -1, 64),
-				CloudProviderRateLimitBucket: kubernetesConfig.CloudProviderRateLimitBucket,
+				CloudProviderBackoff:              kubernetesConfig.CloudProviderBackoff,
+				CloudProviderBackoffRetries:       kubernetesConfig.CloudProviderBackoffRetries,
+				CloudProviderBackoffJitter:        strconv.FormatFloat(kubernetesConfig.CloudProviderBackoffJitter, 'f', -1, 64),
+				CloudProviderBackoffDuration:      kubernetesConfig.CloudProviderBackoffDuration,
+				CloudProviderBackoffExponent:      strconv.FormatFloat(kubernetesConfig.CloudProviderBackoffExponent, 'f', -1, 64),
+				CloudProviderRateLimit:            kubernetesConfig.CloudProviderRateLimit,
+				CloudProviderRateLimitQPS:         strconv.FormatFloat(kubernetesConfig.CloudProviderRateLimitQPS, 'f', -1, 64),
+				CloudProviderRateLimitQPSWrite:    strconv.FormatFloat(kubernetesConfig.CloudProviderRateLimitQPSWrite, 'f', -1, 64),
+				CloudProviderRateLimitBucket:      kubernetesConfig.CloudProviderRateLimitBucket,
+				CloudProviderRateLimitBucketWrite: kubernetesConfig.CloudProviderRateLimitBucketWrite,
 			})
 			addValue(parametersMap, "kubeClusterCidr", kubernetesConfig.ClusterSubnet)
 			addValue(parametersMap, "kubernetesKubeletClusterDomain", kubernetesConfig.KubeletConfig["--cluster-domain"])
@@ -260,6 +254,11 @@ func assignKubernetesParameters(properties *api.Properties, parametersMap params
 			if properties.AADProfile.AdminGroupID != "" {
 				addValue(parametersMap, "aadAdminGroupId", properties.AADProfile.AdminGroupID)
 			}
+		}
+
+		if kubernetesConfig != nil && kubernetesConfig.IsAddonEnabled(AppGwIngressAddonName) {
+			addValue(parametersMap, "appGwSku", kubernetesConfig.GetAddonByName(AppGwIngressAddonName).Config["appgw-sku"])
+			addValue(parametersMap, "appGwSubnet", kubernetesConfig.GetAddonByName(AppGwIngressAddonName).Config["appgw-subnet"])
 		}
 	}
 }

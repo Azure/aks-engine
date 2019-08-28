@@ -22,7 +22,7 @@ func (az *AzureClient) DeployTemplate(ctx context.Context, resourceGroupName, de
 		},
 	}
 
-	log.Infof("Starting ARM Deployment (%s). This will take some time...", deploymentName)
+	log.Infof("Starting ARM Deployment %s in resource group %s. This will take some time...", deploymentName, resourceGroupName)
 	future, err := az.deploymentsClient.CreateOrUpdate(ctx, resourceGroupName, deploymentName, deployment)
 	if err != nil {
 		return de, err

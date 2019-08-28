@@ -33,7 +33,7 @@ The following is an example:
             "config": {
               "min-nodes": "1",
               "max-nodes": "5",
-              "scan-interval": "10s",
+              "scan-interval": "10s"
             }
           }
         ]
