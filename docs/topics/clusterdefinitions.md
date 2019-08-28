@@ -511,7 +511,7 @@ Custom YAML specifications can be configured for kube-scheduler, kube-controller
 | vnetSubnetId                 | only required when using custom VNET                                        | Specifies the Id of an alternate VNET subnet. The subnet id must specify a valid VNET ID owned by the same subscription. ([bring your own VNET examples](../../examples/vnet)). When MasterProfile is set to `VirtualMachineScaleSets`, this value should be the subnetId of the master subnet. When MasterProfile is set to `AvailabilitySet`, this value should be the subnetId shared by both master and agent nodes.                                                                                                                                                                                                                                               |
 | extensions                   | no                                        | This is an array of extensions. This indicates that the extension be run on a single master. The name in the extensions array must exactly match the extension name in the extensionProfiles                                                                                                                                                                                                                               |
 | vnetCidr                     | no                                        | Specifies the VNET cidr when using a custom VNET ([bring your own VNET examples](../../examples/vnet)). This VNET cidr should include both the master and the agent subnets.                                                                                                                                                                                                                                                                                                                        |
-| imageReference.name          | no                                        | The name of the Linux OS image. Needs to be used in conjunction with resourceGroup, below                                                                                                                                                                                                                                                                                                                                  |
+| imageReference.name          | no                                        | The name of the Linux OS image. Needs to be used in conjunction with resourceGroup, below. (For information on settings this for Windows nodes see [WindowsProfile](#windowsProfile)                                                                                                                                                                                                                                                                                                                            |
 | imageReference.resourceGroup | no                                        | Resource group that contains the Linux OS image. Needs to be used in conjunction with name, above                                                                                                                                                                                                                                                                                                                          |
 | imageReference.subscriptionId | no                                        | ID of subscription containing the Linux OS image. Applies only to Shared Image Galleries. All of name, resourceGroup, subscription, gallery, image name, and version must be specified for this scenario.                                                                                                                                                                                                                                                                                                                        |
 | imageReference.gallery | no                                        | Name of Shared Image Gallery containing the Linux OS image. Applies only to Shared Image Galleries. All of name, resourceGroup, subscription, gallery, image name, and version must be specified for this scenario.                                                                                                                                                                                                                                                                                                                        |
@@ -649,12 +649,77 @@ https://{keyvaultname}.vault.azure.net:443/secrets/{secretName}/{version}
 | windowsSku                       | no       | SKU usedto find Windows VM to deploy from marketplace. Default: `2019-Datacenter-Core-with-Containers-smalldisk` |
 | imageVersion                     | no       | Specific image version to deploy from marketplace.  Default: `17763.615.1907121548`. This default is incremented as new versions are tested to avoid unexpected breaks. |
 | windowsImageSourceURL            | no       | Path to an existing Azure storage blob with a sysprepped VHD. This is used to test pre-release or customized VHD files that you have uploaded to Azure. If provided, the above 4 parameters are ignored. |
+| imageReference.name              | no       | Name of an Image. |
+| imageReference.resourceGroup     | no       | Resource group that contains the Image. |
+| imageReference.subscriptionId    | no       | ID of subscription containing a Shared Image Gallery. |
+| imageReference.gallery           | no       | Name of a Shared Image Gallery. |
+| imageReference.version           | no       | Version of an Image from a Shared Image Gallery. |
 | sshEnabled                       | no       | If set to `true`, OpenSSH will be installed on windows nodes to allow for ssh remoting. **Only for Windows version 1809/2019 or later** . The same SSH authorized public key(s) will be added from [linuxProfile.ssh.publicKeys](#linuxProfile) |
 
+#### Windows Images
 
-#### Choosing a Windows version
+You can configure the image used for all Windows nodes one of the following ways (listed in order of precedence based on what is specified in the api model):
 
-If you want to choose a specific Windows image, but automatically use the latest - set `windowsPublisher`, `windowsOffer`, and `windowsSku`. If you need a specific version, then add `agentWindowsVersion` too.
+
+##### Custom VHD
+
+To use an image uploaded to an Azure storage account (or any other accessible location) specify `windowsImageSourceURL`.
+
+**Note:** URLs containing SAS tokens are not allowed by Azure!
+
+```json
+"windowsProfile": {
+            "adminUsername": "...",
+            "adminPassword": "...",
+            "windowsImageSourceURL": "https://images.blob.core.windows.net/vhds/custom_windows_image.vhd",
+     },
+```
+
+##### Shared Image Gallery
+
+To use an Image from a Shared Image Gallery specify `imageReference.name`, `imageReference.resourceGroup`, `imageReference.subscriptionId`, `imageReference.galllery`, and `imageReference.version`.
+
+```json
+"windowsProfile": {
+            "adminUsername": "...",
+            "adminPassword": "...",
+            "imageReference": {
+              "name": "custom-image",
+              "resourceGroup": "windows-images",
+              "subscriptionId": "00000000-0000-0000-0000-000000000000",
+              "gallery": "image-gallery",
+              "version": "0.1.0"
+            }
+     },
+```
+
+##### Azure Image
+
+To use a pre-existing Azure Image specify `imageReference.name` and `imageReference.resourceGroup`.
+
+```json
+"windowsProfile": {
+            "adminUsername": "...",
+            "adminPassword": "...",
+            "imageReference": {
+              "name": "custom-image",
+              "resourceGroup": "windows-images"
+            }
+     },
+```
+
+##### Marketplace image (Default)
+
+By default AKS engine will use a recently known good Windows image from the Azure marketplace (See [windowsProfile](#windowsProfile) table for specific values).
+
+```json
+"windowsProfile": {
+            "adminUsername": "...",
+            "adminPassword": "..."
+     },
+```
+
+If you want to choose a specific Windows image, but automatically use the latest - set `windowsPublisher`, `windowsOffer`, and `windowsSku`. If you need a specific version, then add `imageVersion` too.
 
 You can find all available images with `az vm image list --all --publisher MicrosoftWindowsServer --offer WindowsServer --output table`, and the contents of these images are described in the knowledge base article [Windows Server release on Azure Marketplace update history](https://support.microsoft.com/en-us/help/4497947).
 

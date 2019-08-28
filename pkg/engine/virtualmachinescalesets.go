@@ -358,6 +358,14 @@ func CreateAgentVMSS(cs *api.ContainerService, profile *api.AgentPoolProfile) Vi
 		dependencies = append(dependencies, "[variables('agentLbID')]")
 	}
 
+	if profile.IsWindows() {
+		windowsProfile := cs.Properties.WindowsProfile
+		// Add dependency for Image resource created by createWindowsImage()
+		if windowsProfile.HasCustomImage() {
+			dependencies = append(dependencies, fmt.Sprintf("%sCustomWindowsImage", profile.Name))
+		}
+	}
+
 	orchProfile := cs.Properties.OrchestratorProfile
 	k8sConfig := orchProfile.KubernetesConfig
 	linuxProfile := cs.Properties.LinuxProfile
@@ -626,12 +634,7 @@ func CreateAgentVMSS(cs *api.ContainerService, profile *api.AgentPoolProfile) Vi
 	vmssStorageProfile := compute.VirtualMachineScaleSetStorageProfile{}
 
 	if profile.IsWindows() {
-		vmssStorageProfile.ImageReference = &compute.ImageReference{
-			Offer:     to.StringPtr("[parameters('agentWindowsOffer')]"),
-			Publisher: to.StringPtr("[parameters('agentWindowsPublisher')]"),
-			Sku:       to.StringPtr("[parameters('agentWindowsSku')]"),
-			Version:   to.StringPtr("[parameters('agentWindowsVersion')]"),
-		}
+		vmssStorageProfile.ImageReference = createWindowsImageReference(profile.Name, cs.Properties.WindowsProfile)
 		vmssStorageProfile.DataDisks = getVMSSDataDisks(profile)
 	} else {
 		if profile.HasImageRef() {
@@ -810,7 +813,7 @@ func addCustomTagsToVMScaleSets(tags map[string]string, vm *compute.VirtualMachi
 	for key, value := range tags {
 		_, found := vm.Tags[key]
 		if !found {
-			vm.Tags[key] = &value
+			vm.Tags[key] = to.StringPtr(value)
 		}
 	}
 }

@@ -126,7 +126,7 @@ func AcceleratedNetworkingSupported(sku string) bool {
 		"Standard_DS13_v2", "Standard_DS14-8_v2", "Standard_F8s", "Standard_M64-16ms", "Standard_D16_v3",
 		"Standard_D16s_v3", "Standard_D32-16s_v3", "Standard_D64-16s_v3", "Standard_E16_v3",
 		"Standard_E16s_v3", "Standard_E32-16s_v3", "Standard_D4_v2_ABC", "Standard_D13_v2_ABC",
-		"Standard_F8_ABC", "Standard_F16s_v2", "Standard_D5_v2", "Standard_D14_v2", "Standard_DS5_v2", "Standard_DS14_v2", "Standard_F16", "Standard_F16s", "Standard_M64-32ms",
+		"Standard_F8", "Standard_F8_ABC", "Standard_F16s_v2", "Standard_D5_v2", "Standard_D14_v2", "Standard_DS5_v2", "Standard_DS14_v2", "Standard_F16", "Standard_F16s", "Standard_M64-32ms",
 		"Standard_M128-32ms", "Standard_D32_v3", "Standard_D32s_v3", "Standard_D64-32s_v3",
 		"Standard_E32_v3", "Standard_E32s_v3", "Standard_E32-8s_v3", "Standard_E32-16_v3",
 		"Standard_D5_v2_ABC", "Standard_D14_v2_ABC", "Standard_F16_ABC", "Standard_F32s_v2",

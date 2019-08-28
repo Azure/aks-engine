@@ -259,8 +259,8 @@ func (ns *Status) GetAddressByType(t string) *Address {
 	return nil
 }
 
-// GetByPrefix will return a []Node of all nodes that have a name that match the prefix
-func GetByPrefix(prefix string) ([]Node, error) {
+// GetByRegex will return a []Node of all nodes that have a name that match the regular expression
+func GetByRegex(regex string) ([]Node, error) {
 	list, err := Get()
 	if err != nil {
 		return nil, err
@@ -268,7 +268,7 @@ func GetByPrefix(prefix string) ([]Node, error) {
 
 	nodes := make([]Node, 0)
 	for _, n := range list.Nodes {
-		exp, err := regexp.Compile(prefix)
+		exp, err := regexp.Compile(regex)
 		if err != nil {
 			return nil, err
 		}
