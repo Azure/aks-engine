@@ -37,12 +37,6 @@ rules:
 - apiGroups: ["azmon.container.insights"]
   resources: ["healthstates"]
   verbs: ["get", "create", "patch"]
-- apiGroups: ["extensions"]
-  resources: ["deployments"]
-  verbs: ["list"]
-- apiGroups: ["azmon.container.insights"]
-  resources: ["healthstates"]
-  verbs: ["get", "create", "patch"]
 - nonResourceURLs: ["/metrics"]
   verbs: ["get"]
 ---
@@ -61,22 +55,6 @@ roleRef:
   kind: ClusterRole
   name: omsagent-reader
   apiGroup: rbac.authorization.k8s.io
----
-kind: ConfigMap	kind: ConfigMap
-apiVersion: v1	apiVersion: v1
-data:
-  CLUSTER_RESOURCE_ID: "{{ .Values.global.OmsAgent.aksResourceID }}"
-metadata:
-  name: container-azm-ms-aks-k8scluster
-  namespace: kube-system
----
-kind: ConfigMap
-apiVersion: v1
-data:
-  CLUSTER_RESOURCE_ID: "{{ .Values.global.OmsAgent.aksResourceID }}"
-metadata:
-  name: container-azm-ms-aks-k8scluster
-  namespace: kube-system
 ---
 kind: ConfigMap
 apiVersion: v1
