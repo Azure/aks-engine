@@ -12332,6 +12332,9 @@ applyCIS() {
   assignRootPW
   assignFilePermissions
 }
+
+applyCIS
+
 #EOF
 `)
 
@@ -13094,6 +13097,8 @@ ERR_CIS_ASSIGN_FILE_PERMISSION=112 # Error assigning permission to a file in CIS
 ERR_PACKER_COPY_FILE=113 # Error writing a file to disk during VHD CI
 ERR_CIS_APPLY_PASSWORD_CONFIG=115 # Error applying CIS-recommended passwd configuration
 
+ERR_VHD_BUILD_ERROR=125 # Reserved for VHD CI exit conditions
+
 # Azure Stack specific errors
 ERR_AZURE_STACK_GET_ARM_TOKEN=120 # Error generating a token to use with Azure Resource Manager
 ERR_AZURE_STACK_GET_NETWORK_CONFIGURATION=121 # Error fetching the network configuration for the node
@@ -13661,10 +13666,6 @@ source $install_script
 config_script=/opt/azure/containers/provision_configs.sh
 wait_for_file 3600 1 $config_script || exit $ERR_FILE_WATCH_TIMEOUT
 source $config_script
-
-cis_script=/opt/azure/containers/provision_cis.sh
-wait_for_file 3600 1 $cis_script || exit $ERR_FILE_WATCH_TIMEOUT
-source $cis_script
 
 if [[ "${TARGET_ENVIRONMENT,,}" == "${AZURE_STACK_ENV}"  ]]; then
     config_script_custom_cloud=/opt/azure/containers/provision_configs_custom_cloud.sh
