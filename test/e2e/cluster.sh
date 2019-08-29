@@ -2,21 +2,25 @@
 
 set -x
 
-tmpDir=$(mktemp -d "$(pwd).XXXXXXXXXXXX")
-gopath="/go"
-workDir="${gopath}/src/github.com/Azure/aks-engine"
-# Assumes we're running from the git root of aks-engine
-docker run --rm \
--v $(pwd):${workDir} \
--w ${workDir} \
-"${DEV_IMAGE}" make build-binary || exit 1
+TMP_DIR=$(mktemp -d "$(pwd)/XXXXXXXXXXXX")
+TMP_BASENAME=$(basename ${TMP_DIR})
+GOPATH="/go"
+WORK_DIR="${GOPATH}/src/github.com/Azure/aks-engine"
 
-cat > "${tmpDir}/apimodel-input.json" <<END
+# Assumes we're running from the git root of aks-engine
+if [ "${BUILD_AKS_ENGINE}" = "true" ]; then
+  docker run --rm \
+  -v $(pwd):${WORK_DIR} \
+  -w ${WORK_DIR} \
+  "${DEV_IMAGE}" make build-binary || exit 1
+fi
+
+cat > ${TMP_DIR}/apimodel-input.json <<END
 ${API_MODEL_INPUT}
 END
 
 echo "Running E2E tests against a cluster built with the following API model:"
-echo "${API_MODEL_INPUT}"
+cat ${TMP_DIR}/apimodel-input.json
 
 CLEANUP_AFTER_DEPLOYMENT=${CLEANUP_ON_EXIT}
 if [ "${UPGRADE_CLUSTER}" = "true" ]; then
@@ -52,10 +56,9 @@ else
 fi
 
 docker run --rm \
--v $(pwd):${workDir} \
--v "${tmpDir}":"${workDir}/tmp" \
--w ${workDir} \
--e CLUSTER_DEFINITION=./tmp/apimodel-input.json \
+-v $(pwd):${WORK_DIR} \
+-w ${WORK_DIR} \
+-e CLUSTER_DEFINITION=${TMP_BASENAME}/apimodel-input.json \
 -e CLIENT_ID="${CLIENT_ID}" \
 -e CLIENT_SECRET="${CLIENT_SECRET}" \
 -e CLIENT_OBJECTID="${CLIENT_OBJECTID}" \
@@ -67,7 +70,7 @@ docker run --rm \
 -e TIMEOUT="${E2E_TEST_TIMEOUT}" \
 -e CLEANUP_ON_EXIT=${CLEANUP_AFTER_DEPLOYMENT} \
 -e SKIP_LOGS_COLLECTION="${SKIP_LOGS_COLLECTION}" \
--e REGIONS="${REGIONS}" \
+-e REGIONS="${REGION_OPTIONS}" \
 -e WINDOWS_NODE_IMAGE_GALLERY="${WINDOWS_NODE_IMAGE_GALLERY}" \
 -e WINDOWS_NODE_IMAGE_NAME="${WINDOWS_NODE_IMAGE_NAME}" \
 -e WINDOWS_NODE_IMAGE_RESOURCE_GROUP="${WINDOWS_NODE_IMAGE_RESOURCE_GROUP}" \
@@ -81,7 +84,9 @@ docker run --rm \
 "${DEV_IMAGE}" make test-kubernetes || exit 1
 
 if [ "${UPGRADE_CLUSTER}" = "true" ] || [ "${SCALE_CLUSTER}" = "true" ]; then
+  # shellcheck disable=SC2012
   RESOURCE_GROUP=$(ls -dt1 _output/* | head -n 1 | cut -d/ -f2)
+  # shellcheck disable=SC2012
   REGION=$(ls -dt1 _output/* | head -n 1 | cut -d/ -f2 | cut -d- -f2)
   if [ $(( RANDOM % 4 )) -eq 3 ]; then
     echo Removing bookkeeping tags from VMs in resource group $RESOURCE_GROUP ...
@@ -98,8 +103,8 @@ if [ "${UPGRADE_CLUSTER}" = "true" ] || [ "${SCALE_CLUSTER}" = "true" ]; then
   git checkout -b $UPGRADE_FORK/$UPGRADE_BRANCH --track $UPGRADE_FORK/$UPGRADE_BRANCH
   git pull
   docker run --rm \
-    -v $(pwd):${workDir} \
-    -w ${workDir} \
+    -v $(pwd):${WORK_DIR} \
+    -w ${WORK_DIR} \
     "${DEV_IMAGE}" make build-binary > /dev/null 2>&1 || exit 1
 else
   exit 0
@@ -108,9 +113,8 @@ fi
 if [ "${SCALE_CLUSTER}" = "true" ]; then
   for nodepool in $(echo "${API_MODEL_INPUT}" | jq -r '.properties.agentPoolProfiles[].name'); do
     docker run --rm \
-      -v $(pwd):${workDir} \
-      -v "${tmpDir}": "${workDir}/tmp" \
-      -w ${workDir} \
+      -v $(pwd):${WORK_DIR} \
+      -w ${WORK_DIR} \
       -e RESOURCE_GROUP=$RESOURCE_GROUP \
       -e REGION=$REGION \
       ${DEV_IMAGE} \
@@ -128,8 +132,8 @@ if [ "${SCALE_CLUSTER}" = "true" ]; then
   done
 
   docker run --rm \
-    -v $(pwd):${workDir} \
-    -w ${workDir} \
+    -v $(pwd):${WORK_DIR} \
+    -w ${WORK_DIR} \
     -e CLIENT_ID=${CLIENT_ID} \
     -e CLIENT_SECRET=${CLIENT_SECRET} \
     -e CLIENT_OBJECTID=${CLIENT_OBJECTID} \
@@ -151,8 +155,8 @@ fi
 if [ "${UPGRADE_CLUSTER}" = "true" ]; then
   for ver_target in $UPGRADE_VERSIONS; do
     docker run --rm \
-      -v $(pwd):${workDir} \
-      -w ${workDir} \
+      -v $(pwd):${WORK_DIR} \
+      -w ${WORK_DIR} \
       -e RESOURCE_GROUP=$RESOURCE_GROUP \
       -e REGION=$REGION \
       ${DEV_IMAGE} \
@@ -168,8 +172,8 @@ if [ "${UPGRADE_CLUSTER}" = "true" ]; then
       --client-secret ${CLIENT_SECRET} || exit 1
 
     docker run --rm \
-      -v $(pwd):${workDir} \
-      -w ${workDir} \
+      -v $(pwd):${WORK_DIR} \
+      -w ${WORK_DIR} \
       -e CLIENT_ID=${CLIENT_ID} \
       -e CLIENT_SECRET=${CLIENT_SECRET} \
       -e CLIENT_OBJECTID=${CLIENT_OBJECTID} \
@@ -192,8 +196,8 @@ fi
 if [ "${SCALE_CLUSTER}" = "true" ]; then
   for nodepool in $(echo ${API_MODEL_INPUT} | jq -r '.properties.agentPoolProfiles[].name'); do
     docker run --rm \
-    -v $(pwd):${workDir} \
-    -w ${workDir} \
+    -v $(pwd):${WORK_DIR} \
+    -w ${WORK_DIR} \
     -e RESOURCE_GROUP=$RESOURCE_GROUP \
     -e REGION=$REGION \
     ${DEV_IMAGE} \
@@ -211,8 +215,8 @@ if [ "${SCALE_CLUSTER}" = "true" ]; then
   done
 
   docker run --rm \
-    -v $(pwd):${workDir} \
-    -w ${workDir} \
+    -v $(pwd):${WORK_DIR} \
+    -w ${WORK_DIR} \
     -e CLIENT_ID=${CLIENT_ID} \
     -e CLIENT_SECRET=${CLIENT_SECRET} \
     -e CLIENT_OBJECTID=${CLIENT_OBJECTID} \
