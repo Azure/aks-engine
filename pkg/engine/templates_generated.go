@@ -13087,6 +13087,7 @@ ERR_APT_DAILY_TIMEOUT=98 # Timeout waiting for apt daily updates
 ERR_APT_UPDATE_TIMEOUT=99 # Timeout waiting for apt-get update to complete
 ERR_CSE_PROVISION_SCRIPT_NOT_READY_TIMEOUT=100 # Timeout waiting for cloud-init to place this (!) script on the vm
 ERR_APT_DIST_UPGRADE_TIMEOUT=101 # Timeout waiting for apt-get dist-upgrade to complete
+ERR_APT_PURGE_FAIL=102 # Error purging distro packages
 ERR_SYSCTL_RELOAD=103 # Error reloading sysctl config
 ERR_CIS_ASSIGN_ROOT_PW=111 # Error assigning root password in CIS enforcement
 ERR_CIS_ASSIGN_FILE_PERMISSION=112 # Error assigning permission to a file in CIS enforcement
@@ -13225,6 +13226,22 @@ apt_get_install() {
     echo Executed apt-get install --no-install-recommends -y \"$@\" $i times;
     wait_for_apt_locks
 }
+apt_get_purge() {
+    retries=$1; wait_sleep=$2; timeout=$3; shift && shift && shift
+    for i in $(seq 1 $retries); do
+        wait_for_apt_locks
+        export DEBIAN_FRONTEND=noninteractive
+        dpkg --configure -a --force-confdef
+        apt-get purge -o Dpkg::Options::="--force-confold" -y ${@} && break || \
+        if [ $i -eq $retries ]; then
+            return 1
+        else
+            sleep $wait_sleep
+        fi
+    done
+    echo Executed apt-get purge -y \"$@\" $i times;
+    wait_for_apt_locks
+}
 apt_get_dist_upgrade() {
   retries=10
   apt_dist_upgrade_output=/tmp/apt-get-dist-upgrade.out
@@ -13344,7 +13361,7 @@ installDeps() {
     aptmarkWALinuxAgent hold
     apt_get_update || exit $ERR_APT_UPDATE_TIMEOUT
     apt_get_dist_upgrade || exit $ERR_APT_DIST_UPGRADE_TIMEOUT
-    for apt_package in apt-transport-https auditd blobfuse ca-certificates ceph-common cgroup-lite cifs-utils conntrack cracklib-runtime ebtables ethtool fuse git glusterfs-client htop iftop init-system-helpers iotop iproute2 ipset iptables jq libpam-pwquality libpwquality-tools mount nfs-common pigz socat sysstat util-linux xz-utils zip; do
+    for apt_package in apache2-utils apt-transport-https auditd blobfuse ca-certificates ceph-common cgroup-lite cifs-utils conntrack cracklib-runtime ebtables ethtool fuse git glusterfs-client htop iftop init-system-helpers iotop iproute2 ipset iptables jq libpam-pwquality libpwquality-tools mount nfs-common pigz socat sysstat util-linux xz-utils zip; do
       if ! apt_get_install 30 1 600 $apt_package; then
         journalctl --no-pager -u $apt_package
         exit $ERR_APT_INSTALL_TIMEOUT
@@ -13814,6 +13831,11 @@ ps auxfww > /opt/azure/provision-ps.log &
 
 if ! $FULL_INSTALL_REQUIRED; then
   cleanUpContainerImages
+fi
+
+if [[ "${TARGET_ENVIRONMENT,,}" != "${AZURE_STACK_ENV}"  ]]; then
+    # TODO: remove once ACR is available on Azure Stack
+    apt_get_purge 20 30 120 apache2-utils || exit $ERR_APT_PURGE_FAIL
 fi
 
 if $REBOOTREQUIRED; then

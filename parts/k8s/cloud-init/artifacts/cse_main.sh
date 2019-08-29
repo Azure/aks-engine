@@ -197,6 +197,11 @@ if ! $FULL_INSTALL_REQUIRED; then
   cleanUpContainerImages
 fi
 
+if [[ "${TARGET_ENVIRONMENT,,}" != "${AZURE_STACK_ENV}"  ]]; then
+    # TODO: remove once ACR is available on Azure Stack
+    apt_get_purge 20 30 120 apache2-utils || exit $ERR_APT_PURGE_FAIL
+fi
+
 if $REBOOTREQUIRED; then
   echo 'reboot required, rebooting node in 1 minute'
   /bin/bash -c "shutdown -r 1 &"
