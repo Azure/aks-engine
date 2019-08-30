@@ -345,7 +345,7 @@ func Get(podName, namespace string, retries int) (*Pod, error) {
 		} else {
 			jsonErr := json.Unmarshal(out, &p)
 			if jsonErr != nil {
-				log.Printf("Error unmarshalling pods json:%s\n", err)
+				log.Printf("Error unmarshalling pods json:%s\n", jsonErr)
 				return nil, jsonErr
 			}
 			break
