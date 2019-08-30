@@ -18639,12 +18639,6 @@ rules:
 - apiGroups: [""]
   resources: ["pods", "events", "nodes", "namespaces", "services"]
   verbs: ["list", "get", "watch"]
-- apiGroups: ["extensions"]
-  resources: ["deployments"]
-  verbs: ["list"]
-- apiGroups: ["azmon.container.insights"]
-  resources: ["healthstates"]
-  verbs: ["get", "create", "patch"]
 - nonResourceURLs: ["/metrics"]
   verbs: ["get"]
 ---
@@ -18669,25 +18663,10 @@ apiVersion: v1
 data:
   kube.conf: |-
      # Fluentd config file for OMS Docker - cluster components (kubeAPI)
-     #fluent forward plugin
-     <source>
-      type forward
-      port 25227
-      bind 0.0.0.0
-     </source>
-
      #Kubernetes pod inventory
      <source>
       type kubepodinventory
       tag oms.containerinsights.KubePodInventory
-      run_interval 60s
-      log_level debug
-     </source>
-
-     #Kubernetes health
-     <source>
-      type kubehealth
-      tag oms.api.KubeHealth.ReplicaSet
       run_interval 60s
       log_level debug
      </source>
@@ -18739,11 +18718,6 @@ data:
       log_level debug
      </source>
 
-     #health model aggregation filter
-     <filter oms.api.KubeHealth**>
-      type filter_health_model_builder
-     </filter>
-
      <filter mdm.kubepodinventory** mdm.kubenodeinventory**>
       type filter_inventory2mdm
       custom_metrics_azure_regions eastus,southcentralus,westcentralus,westus2,southeastasia,northeurope,westEurope
@@ -18771,18 +18745,6 @@ data:
       retry_limit 10
       retry_wait 30s
       max_retry_wait 9m
-     </match>
-
-     <match oms.api.KubeHealth.AgentCollectionTime**>
-      type out_oms_api
-      log_level debug
-      buffer_chunk_limit 10m
-      buffer_type file
-      buffer_path %STATE_DIR_WS%/out_oms_api_kubehealth*.buffer
-      buffer_queue_limit 10
-      flush_interval 20s
-      retry_limit 10
-      retry_wait 30s
      </match>
 
      <match oms.containerinsights.KubeEvents**>
@@ -19095,9 +19057,6 @@ spec:
               protocol: TCP
             - containerPort: 25224
               protocol: UDP
-            - containerPort: 25227
-              protocol: TCP
-              name: in-rs-tcp
           volumeMounts:
             - mountPath: /var/run/host
               name: docker-sock
@@ -19150,33 +19109,7 @@ spec:
         - name: settings-vol-config
           configMap:
             name: container-azm-ms-agentconfig
-            optional: true
----
-kind: Service
-apiVersion: v1
-metadata:
-  name: healthmodel-replicaset-service
-  namespace: kube-system
-spec:
-  selector:
-    rsName: "omsagent-rs"
-  ports:
-  - protocol: TCP
-    port: 25227
-    targetPort: in-rs-tcp
----
-apiVersion: apiextensions.k8s.io/v1beta1
-kind: CustomResourceDefinition
-metadata:
-  name: healthstates.azmon.container.insights
-  namespace: kube-system
-spec:
-  group: azmon.container.insights
-  version: v1
-  scope: Namespaced
-  names:
-    plural: healthstates
-    kind: HealthState
+            optional: true    
 `)
 
 func k8sContaineraddons116KubernetesmasteraddonsOmsagentDaemonsetYamlBytes() ([]byte, error) {
