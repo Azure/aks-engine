@@ -243,7 +243,7 @@ func TestSetAddonsConfig(t *testing.T) {
 				},
 				{
 					Name:    TillerAddonName,
-					Enabled: to.BoolPtr(true),
+					Enabled: to.BoolPtr(DefaultTillerAddonEnabled),
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:           TillerAddonName,
@@ -424,7 +424,7 @@ func TestSetAddonsConfig(t *testing.T) {
 				},
 				{
 					Name:    TillerAddonName,
-					Enabled: to.BoolPtr(true),
+					Enabled: to.BoolPtr(DefaultTillerAddonEnabled),
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:           TillerAddonName,
@@ -621,7 +621,7 @@ func TestSetAddonsConfig(t *testing.T) {
 				},
 				{
 					Name:    TillerAddonName,
-					Enabled: to.BoolPtr(true),
+					Enabled: to.BoolPtr(DefaultTillerAddonEnabled),
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:           TillerAddonName,
@@ -817,7 +817,7 @@ func TestSetAddonsConfig(t *testing.T) {
 				},
 				{
 					Name:    TillerAddonName,
-					Enabled: to.BoolPtr(true),
+					Enabled: to.BoolPtr(DefaultTillerAddonEnabled),
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:           TillerAddonName,
@@ -1008,7 +1008,7 @@ func TestSetAddonsConfig(t *testing.T) {
 				},
 				{
 					Name:    TillerAddonName,
-					Enabled: to.BoolPtr(true),
+					Enabled: to.BoolPtr(DefaultTillerAddonEnabled),
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:           TillerAddonName,
@@ -1198,7 +1198,7 @@ func TestSetAddonsConfig(t *testing.T) {
 				},
 				{
 					Name:    TillerAddonName,
-					Enabled: to.BoolPtr(true),
+					Enabled: to.BoolPtr(DefaultTillerAddonEnabled),
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:           TillerAddonName,
@@ -1389,7 +1389,7 @@ func TestSetAddonsConfig(t *testing.T) {
 				},
 				{
 					Name:    TillerAddonName,
-					Enabled: to.BoolPtr(true),
+					Enabled: to.BoolPtr(DefaultTillerAddonEnabled),
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:           TillerAddonName,
@@ -1581,7 +1581,7 @@ func TestSetAddonsConfig(t *testing.T) {
 				},
 				{
 					Name:    TillerAddonName,
-					Enabled: to.BoolPtr(true),
+					Enabled: to.BoolPtr(DefaultTillerAddonEnabled),
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:           TillerAddonName,
@@ -1772,7 +1772,7 @@ func TestSetAddonsConfig(t *testing.T) {
 				},
 				{
 					Name:    TillerAddonName,
-					Enabled: to.BoolPtr(true),
+					Enabled: to.BoolPtr(DefaultTillerAddonEnabled),
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:           TillerAddonName,
@@ -1956,7 +1956,7 @@ func TestSetAddonsConfig(t *testing.T) {
 				},
 				{
 					Name:    TillerAddonName,
-					Enabled: to.BoolPtr(true),
+					Enabled: to.BoolPtr(DefaultTillerAddonEnabled),
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:           TillerAddonName,
@@ -2176,7 +2176,7 @@ func TestSetAddonsConfig(t *testing.T) {
 				},
 				{
 					Name:    TillerAddonName,
-					Enabled: to.BoolPtr(true),
+					Enabled: to.BoolPtr(DefaultTillerAddonEnabled),
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:           TillerAddonName,
@@ -2373,7 +2373,7 @@ func TestSetAddonsConfig(t *testing.T) {
 				},
 				{
 					Name:    TillerAddonName,
-					Enabled: to.BoolPtr(true),
+					Enabled: to.BoolPtr(DefaultTillerAddonEnabled),
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:           TillerAddonName,
@@ -2566,7 +2566,7 @@ func TestSetAddonsConfig(t *testing.T) {
 				},
 				{
 					Name:    TillerAddonName,
-					Enabled: to.BoolPtr(true),
+					Enabled: to.BoolPtr(DefaultTillerAddonEnabled),
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:           TillerAddonName,
@@ -2703,7 +2703,7 @@ func TestSetAddonsConfig(t *testing.T) {
 				},
 				{
 					Name:    TillerAddonName,
-					Enabled: to.BoolPtr(true),
+					Enabled: to.BoolPtr(DefaultTillerAddonEnabled),
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:           TillerAddonName,
@@ -2870,7 +2870,7 @@ func TestSetAddonsConfig(t *testing.T) {
 				},
 				{
 					Name:    TillerAddonName,
-					Enabled: to.BoolPtr(true),
+					Enabled: to.BoolPtr(DefaultTillerAddonEnabled),
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:           TillerAddonName,
@@ -3013,7 +3013,7 @@ func TestSetAddonsConfig(t *testing.T) {
 				},
 				{
 					Name:    TillerAddonName,
-					Enabled: to.BoolPtr(true),
+					Enabled: to.BoolPtr(DefaultTillerAddonEnabled),
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:           TillerAddonName,
