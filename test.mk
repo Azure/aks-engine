@@ -24,6 +24,9 @@ test-functional: test-kubernetes
 test-kubernetes-with-container:
 	${TEST_CMD} -e ORCHESTRATOR=kubernetes ${DEV_ENV_IMAGE} test/e2e/runner
 
+build-binary-e2e-runner:
+	$(GO) build $(GOFLAGS) -ldflags '$(LDFLAGS)' -o $(BINDIR)/$(PROJECT)-e2e-runner$(EXTENSION) $(REPO_PATH)
+
 test-kubernetes:
 	@ORCHESTRATOR=kubernetes bash -c 'pgrep ssh-agent || eval `ssh-agent` && go run ./test/e2e/runner.go'
 

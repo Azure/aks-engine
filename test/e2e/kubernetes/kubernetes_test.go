@@ -700,7 +700,9 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 						pods, err := pod.GetAllByPrefix(addonPod, addonNamespace)
 						Expect(err).NotTo(HaveOccurred())
 						for i, c := range addon.Containers {
-							err := pods[0].Spec.Containers[i].ValidateResources(c)
+							pod := pods[0]
+							container := pod.Spec.Containers[i]
+							err := container.ValidateResources(c)
 							Expect(err).NotTo(HaveOccurred())
 						}
 					}
