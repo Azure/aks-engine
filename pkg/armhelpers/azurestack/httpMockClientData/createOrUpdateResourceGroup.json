@@ -1,0 +1,9 @@
+
+{
+  "id": "/subscriptions/cc6b141e-6afc-4786-9bf6-e3b9a5601460/resourceGroups/DefaultResourceGroup-EUS",
+  "name": "DefaultResourceGroup-EUS",
+  "location": "eastus",
+  "properties": {
+    "provisioningState": "Succeeded"
+  }
+}

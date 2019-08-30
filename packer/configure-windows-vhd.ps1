@@ -135,6 +135,12 @@ function Set-WinRmServiceDelayedStart
     sc.exe config winrm start=delayed-auto
 }
 
+function Update-DefenderSignatures
+{
+    Write-Log "Updating windows defender signatures."
+    Update-MpSignature
+}
+
 function Update-WindowsFeatures
 {
     $featuresToEnable = @(
@@ -157,6 +163,7 @@ switch ($env:ProvisioningPhase)
         Set-WinRmServiceDelayedStart
         Disable-WindowsUpdates
         Install-WindowsPatches
+        Update-DefenderSignatures
         Install-OpenSSH
         Update-WindowsFeatures
     }

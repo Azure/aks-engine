@@ -5,6 +5,7 @@ package cmd
 
 import (
 	"context"
+	"encoding/base64"
 	"fmt"
 	"io/ioutil"
 	"math/rand"
@@ -12,6 +13,7 @@ import (
 	"path"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/leonelquinteros/gotext"
@@ -245,7 +247,6 @@ func (dc *deployCmd) loadAPIModel() error {
 }
 
 func autofillApimodel(dc *deployCmd) error {
-	var err error
 
 	if dc.containerService.Properties.LinuxProfile != nil {
 		if dc.containerService.Properties.LinuxProfile.AdminUsername == "" {
@@ -278,7 +279,7 @@ func autofillApimodel(dc *deployCmd) error {
 		}
 	}
 
-	if _, err = os.Stat(dc.outputDirectory); !dc.forceOverwrite && err == nil {
+	if _, err := os.Stat(dc.outputDirectory); !dc.forceOverwrite && err == nil {
 		return errors.Errorf("Output directory already exists and forceOverwrite flag is not set: %s", dc.outputDirectory)
 	}
 
@@ -298,7 +299,7 @@ func autofillApimodel(dc *deployCmd) error {
 			Locale: dc.locale,
 		}
 		var publicKey string
-		_, publicKey, err = helpers.CreateSaveSSH(dc.containerService.Properties.LinuxProfile.AdminUsername, dc.outputDirectory, translator)
+		_, publicKey, err := helpers.CreateSaveSSH(dc.containerService.Properties.LinuxProfile.AdminUsername, dc.outputDirectory, translator)
 		if err != nil {
 			return errors.Wrap(err, "Failed to generate SSH Key")
 		}
@@ -308,7 +309,7 @@ func autofillApimodel(dc *deployCmd) error {
 
 	ctx, cancel := context.WithTimeout(context.Background(), armhelpers.DefaultARMOperationTimeout)
 	defer cancel()
-	_, err = dc.client.EnsureResourceGroup(ctx, dc.resourceGroup, dc.location, nil)
+	_, err := dc.client.EnsureResourceGroup(ctx, dc.resourceGroup, dc.location, nil)
 	if err != nil {
 		return err
 	}
@@ -327,9 +328,9 @@ func autofillApimodel(dc *deployCmd) error {
 			appURL := fmt.Sprintf("https://%s/", appName)
 			var replyURLs *[]string
 			var requiredResourceAccess *[]graphrbac.RequiredResourceAccess
-			applicationResp, servicePrincipalObjectID, secret, err := dc.client.CreateApp(ctx, appName, appURL, replyURLs, requiredResourceAccess)
-			if err != nil {
-				return errors.Wrap(err, "apimodel invalid: ServicePrincipalProfile was empty, and we failed to create valid credentials")
+			applicationResp, servicePrincipalObjectID, secret, createErr := dc.client.CreateApp(ctx, appName, appURL, replyURLs, requiredResourceAccess)
+			if createErr != nil {
+				return errors.Wrap(createErr, "apimodel invalid: ServicePrincipalProfile was empty, and we failed to create valid credentials")
 			}
 			applicationID := to.String(applicationResp.AppID)
 			log.Warnf("created application with applicationID (%s) and servicePrincipalObjectID (%s).", applicationID, servicePrincipalObjectID)
@@ -354,6 +355,15 @@ func autofillApimodel(dc *deployCmd) error {
 			}
 		}
 	}
+
+	if k8sConfig != nil && k8sConfig.Addons != nil && k8sConfig.IsContainerMonitoringAddonEnabled() {
+		log.Infoln("container monitoring addon enabled")
+		err := dc.configureContainerMonitoringAddon(ctx, k8sConfig)
+		if err != nil {
+			return errors.Wrap(err, "Failed to configure container monitoring addon")
+		}
+	}
+
 	return nil
 }
 
@@ -431,5 +441,71 @@ func (dc *deployCmd) run() error {
 		return err
 	}
 
+	return nil
+}
+
+// configure api model addon config with container monitoring addon
+func (dc *deployCmd) configureContainerMonitoringAddon(ctx context.Context, k8sConfig *api.KubernetesConfig) error {
+	log.Infoln("configuring container monitoring addon info")
+	if k8sConfig == nil {
+		return errors.New("KubernetesConfig either null or invalid")
+	}
+	var workspaceResourceID string
+	var err error
+	addon := k8sConfig.GetAddonByName("container-monitoring")
+	if addon.Config == nil || len(addon.Config) == 0 || addon.Config["logAnalyticsWorkspaceResourceId"] != "" {
+		workspaceResourceID = strings.TrimSpace(addon.Config["logAnalyticsWorkspaceResourceId"])
+		if workspaceResourceID != "" {
+			log.Infoln("using provided log analytics workspace resource id:", workspaceResourceID)
+			if !strings.HasPrefix(workspaceResourceID, "/") {
+				workspaceResourceID = "/" + workspaceResourceID
+			}
+			workspaceResourceID = strings.TrimSuffix(workspaceResourceID, "/")
+		} else {
+			log.Infoln("creating default log analytics workspace if not exists already")
+			workspaceResourceID, err = dc.client.EnsureDefaultLogAnalyticsWorkspace(ctx, dc.resourceGroup, dc.location)
+			if err != nil {
+				return errors.Wrap(err, "apimodel: Failed to create default log analytics workspace for container monitoring addon")
+			}
+			log.Infoln("successfully created or fetched default log analytics workspace:", workspaceResourceID)
+		}
+		resourceParts := strings.Split(workspaceResourceID, "/")
+		if len(resourceParts) != 9 {
+			return errors.Errorf("%s is not a valid azure resource id", workspaceResourceID)
+		}
+		workspaceSubscriptionID := resourceParts[2]
+		workspaceResourceGroup := resourceParts[4]
+		workspaceName := resourceParts[8]
+		log.Infoln("Retrieving log analytics workspace Guid, Key and location details for the workspace resource:", workspaceResourceID)
+		wsID, wsKey, wsLocation, err := dc.client.GetLogAnalyticsWorkspaceInfo(ctx, workspaceSubscriptionID, workspaceResourceGroup, workspaceName)
+		if err != nil {
+			return errors.Wrap(err, "apimodel: Failed to get the workspace Guid, Key and location details ")
+		}
+		log.Infoln("successfully retrieved log analytics workspace details")
+		log.Infoln("log analytics workspace id: ", wsID)
+
+		log.Infoln("adding container insights solution to log analytics workspace: ", workspaceResourceID)
+		_, err = dc.client.AddContainerInsightsSolution(ctx, workspaceSubscriptionID, workspaceResourceGroup, workspaceName, wsLocation)
+		if err != nil {
+			return errors.Wrap(err, "apimodel: Failed to get add container insights solution")
+		}
+		log.Infoln("successfully added container insights solution to log analytics workspace: ", workspaceResourceID)
+
+		log.Infoln("Adding log analytics workspaceGuid and workspaceKey, workspaceResourceId to the container monitoring addon")
+		for _, addon := range dc.containerService.Properties.OrchestratorProfile.KubernetesConfig.Addons {
+			if addon.Name == "container-monitoring" {
+				addon.Config["workspaceGuid"] = base64.StdEncoding.EncodeToString([]byte(wsID))
+				addon.Config["workspaceKey"] = base64.StdEncoding.EncodeToString([]byte(wsKey))
+				addon.Config["logAnalyticsWorkspaceResourceId"] = workspaceResourceID
+			}
+		}
+
+	} else {
+		log.Infoln("using provided workspaceGuid and workspaceKey in the container addon config")
+		workspaceGUID := addon.Config["workspaceGuid"]
+		workspaceKey := addon.Config["workspaceKey"]
+		log.Infoln("workspaceGuid:", workspaceGUID)
+		log.Infoln("workspaceKey:", workspaceKey)
+	}
 	return nil
 }

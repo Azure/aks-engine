@@ -24,9 +24,10 @@ import (
 )
 
 const (
-	testDir        string = "testdirectory"
-	commandTimeout        = 1 * time.Minute
-	deleteTimeout         = 5 * time.Minute
+	testDir          string = "testdirectory"
+	commandTimeout          = 1 * time.Minute
+	deleteTimeout           = 5 * time.Minute
+	podLookupRetries        = 5
 )
 
 // List is a container that holds all pods returned from doing a kubectl get pods
@@ -178,7 +179,7 @@ func CreatePodFromFile(filename, name, namespace string, sleep, duration time.Du
 
 // CreatePodFromFileIfNotExist will create a Pod from file with a name
 func CreatePodFromFileIfNotExist(filename, name, namespace string, sleep, duration time.Duration) (*Pod, error) {
-	p, err := Get("dns-liveness", "default")
+	p, err := Get("dns-liveness", "default", 3)
 	if err != nil {
 		return CreatePodFromFile(filename, name, namespace, sleep, duration)
 	}
@@ -306,7 +307,7 @@ func GetWithRetry(podPrefix, namespace string, sleep, duration time.Duration) (*
 			case <-ctx.Done():
 				errCh <- errors.Errorf("Timeout exceeded (%s) while waiting for Pod (%s) in namespace (%s)", duration.String(), podPrefix, namespace)
 			default:
-				p, err := Get(podPrefix, namespace)
+				p, err := Get(podPrefix, namespace, podLookupRetries)
 				if err != nil {
 					log.Printf("Error getting pod %s in namespace %s: %s\n", podPrefix, namespace, err)
 				} else if p != nil {
@@ -330,21 +331,27 @@ func GetWithRetry(podPrefix, namespace string, sleep, duration time.Duration) (*
 }
 
 // Get will return a pod with a given name and namespace
-func Get(podName, namespace string) (*Pod, error) {
+func Get(podName, namespace string, retries int) (*Pod, error) {
 	cmd := exec.Command("k", "get", "pods", podName, "-n", namespace, "-o", "json")
-	out, err := cmd.CombinedOutput()
-	if err != nil {
-		log.Printf("Error getting pod:\n")
-		util.PrintCommand(cmd)
-		return nil, err
-	}
 	p := Pod{}
-	err = json.Unmarshal(out, &p)
-	if err != nil {
-		log.Printf("Error unmarshalling pods json:%s\n", err)
-		return nil, err
+	var out []byte
+	var err error
+	for i := 0; i < retries; i++ {
+		out, err = cmd.CombinedOutput()
+		if err != nil {
+			util.PrintCommand(cmd)
+			log.Printf("Error getting pod: %s\n", err)
+			continue
+		} else {
+			jsonErr := json.Unmarshal(out, &p)
+			if jsonErr != nil {
+				log.Printf("Error unmarshalling pods json:%s\n", jsonErr)
+				return nil, jsonErr
+			}
+			break
+		}
 	}
-	return &p, nil
+	return &p, err
 }
 
 // GetTerminated will return a pod with a given name and namespace, including terminated pods

@@ -53,6 +53,7 @@ const (
 	validateNetworkPolicyTimeout           = 3 * time.Minute
 	validateDNSTimeout                     = 2 * time.Minute
 	firstMasterRegexStr                    = "^k8s-master-"
+	podLookupRetries                       = 5
 )
 
 var (
@@ -699,7 +700,9 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 						pods, err := pod.GetAllByPrefix(addonPod, addonNamespace)
 						Expect(err).NotTo(HaveOccurred())
 						for i, c := range addon.Containers {
-							err := pods[0].Spec.Containers[i].ValidateResources(c)
+							pod := pods[0]
+							container := pod.Spec.Containers[i]
+							err := container.ValidateResources(c)
 							Expect(err).NotTo(HaveOccurred())
 						}
 					}
@@ -1138,7 +1141,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			By("Creating a pod with master nodeSelector")
 			p, err := pod.CreatePodFromFile(filepath.Join(WorkloadDir, "nginx-master.yaml"), "nginx-master", "default", 1*time.Second, cfg.Timeout)
 			if err != nil {
-				p, err = pod.Get("nginx-master", "default")
+				p, err = pod.Get("nginx-master", "default", podLookupRetries)
 				Expect(err).NotTo(HaveOccurred())
 			}
 			running, err := p.WaitOnReady(retryTimeWhenWaitingForPodReady, cfg.Timeout)
@@ -1757,7 +1760,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 
 	Describe("after the cluster has been up for awhile", func() {
 		It("dns-liveness pod should not have any restarts", func() {
-			pod, err := pod.Get("dns-liveness", "default")
+			pod, err := pod.Get("dns-liveness", "default", podLookupRetries)
 			Expect(err).NotTo(HaveOccurred())
 			running, err := pod.WaitOnReady(retryTimeWhenWaitingForPodReady, 3*time.Minute)
 			Expect(err).NotTo(HaveOccurred())

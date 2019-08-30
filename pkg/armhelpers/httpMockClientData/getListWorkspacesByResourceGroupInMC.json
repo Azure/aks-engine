@@ -1,0 +1,52 @@
+{
+  "value": [
+    {
+      "properties": {
+        "source": "Azure",
+        "customerId": "b22014e7-f251-469e-b64f-b66b15dc6784",
+        "provisioningState": "Succeeded",
+        "sku": {
+          "name": "pergb2018"
+        },
+        "retentionInDays": 30,
+        "features": {
+          "legacy": 0,
+          "searchVersion": 1
+        },
+        "workspaceCapping": {
+          "dailyQuotaGb": -1,
+          "quotaNextResetTime": "Fri, 09 Aug 2019 00:00:00 GMT",
+          "dataIngestionStatus": "RespectQuota"
+        }
+      },
+      "id": "/subscriptions/cc6b141e-6afc-4786-9bf6-e3b9a5601460/resourcegroups/DefaultResourceGroup-EAST2/providers/microsoft.operationalinsights/workspaces/DefaultWorkspace-cc6b141e-6afc-4786-9bf6-e3b9a5601460-EAST2",
+      "name": "DefaultWorkspace-cc6b141e-6afc-4786-9bf6-e3b9a5601460-EAST2",
+      "type": "Microsoft.OperationalInsights/workspaces",
+      "location": "eastus"
+    },
+    {
+      "properties": {
+        "source": "Azure",
+        "customerId": "a5702770-ed1f-49a1-86c2-d4a91b319efa",
+        "provisioningState": "Succeeded",
+        "sku": {
+          "name": "pergb2018"
+        },
+        "retentionInDays": 30,
+        "features": {
+          "legacy": 0,
+          "searchVersion": 1
+        },
+        "workspaceCapping": {
+          "dailyQuotaGb": -1,
+          "quotaNextResetTime": "Fri, 09 Aug 2019 16:00:00 GMT",
+          "dataIngestionStatus": "RespectQuota"
+        }
+      },
+      "id": "/subscriptions/cc6b141e-6afc-4786-9bf6-e3b9a5601460/resourcegroups/defaultresourcegroup-EAST2/providers/microsoft.operationalinsights/workspaces/gangams-onboarding-tm-ws",
+      "name": "gangams-onboarding-tm-ws",
+      "type": "Microsoft.OperationalInsights/workspaces",
+      "location": "eastus"
+    }
+  ]
+}
