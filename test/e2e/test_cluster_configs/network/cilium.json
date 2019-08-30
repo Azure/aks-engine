@@ -1,0 +1,55 @@
+{
+	"env": {},
+	"apiModel": {
+		"apiVersion": "vlabs",
+		"properties": {
+			"orchestratorProfile": {
+				"orchestratorType": "Kubernetes",
+				"orchestratorRelease": "1.12",
+				"kubernetesConfig": {
+					"networkPlugin": "cilium",
+					"networkPolicy": "cilium",
+					"apiServerConfig": {
+						"--enable-admission-plugins": "NamespaceLifecycle,LimitRanger,ServiceAccount,DefaultStorageClass,DefaultTolerationSeconds,MutatingAdmissionWebhook,ValidatingAdmissionWebhook,ResourceQuota,AlwaysPullImages"
+					},
+					"addons": [
+						{
+							"name": "tiller",
+							"enabled": true
+						},
+						{
+							"name": "ip-masq-agent",
+							"enabled": false
+						}
+					]
+				}
+			},
+			"masterProfile": {
+				"count": 1,
+				"dnsPrefix": "",
+				"vmSize": "Standard_D2_v2"
+			},
+			"agentPoolProfiles": [
+				{
+					"name": "agent1",
+					"count": 2,
+					"vmSize": "Standard_D2_v2"
+				}
+			],
+			"linuxProfile": {
+				"adminUsername": "azureuser",
+				"ssh": {
+					"publicKeys": [
+						{
+							"keyData": ""
+						}
+					]
+				}
+			},
+			"servicePrincipalProfile": {
+				"clientId": "",
+				"secret": ""
+			}
+		}
+	}
+}
