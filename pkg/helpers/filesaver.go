@@ -24,9 +24,12 @@ func (f *FileSaver) SaveFileString(dir string, file string, data string) error {
 
 // SaveFile saves binary data to file
 func (f *FileSaver) SaveFile(dir string, file string, data []byte) error {
-	if _, err := os.Stat(dir); os.IsNotExist(err) {
-		if e := os.MkdirAll(dir, 0700); e != nil {
-			return f.Translator.Errorf("error creating directory '%s': %s", dir, e.Error())
+	// don't blindly create directory
+	if dir != "" {
+		if _, err := os.Stat(dir); os.IsNotExist(err) {
+			if e := os.MkdirAll(dir, 0700); e != nil {
+				return f.Translator.Errorf("error creating directory '%s': %s", dir, e.Error())
+			}
 		}
 	}
 
