@@ -270,7 +270,7 @@ download_kubectl() {
 }
 
 get_kube_binaries() {
-	if [ ! -z "${build_azs}" ]; then		
+	if [ -n "${build_azs}" ]; then
 		echo "building kubelet/kubeproxy from Azure Stack repo..."
 		fetch_azs_k8s
 		create_version_branch
@@ -399,7 +399,7 @@ while getopts ":v:p:u:z:a:" opt; do
   esac
 done
 
-if [ ! -z "${build_azs}" ]; then
+if [ -n "${build_azs}" ]; then
 	KUBEPATH="${GOPATH}"/azurestack/src/k8s.io/kubernetes
 else
 	KUBEPATH="${GOPATH}"/src/k8s.io/kubernetes	
@@ -422,7 +422,7 @@ if [ -z "${k8s_e2e_upstream_version}" ]; then
 	KUBERNETES_TAG_BRANCH=v${version}
 	AKS_VERSION=${version}-${acs_patch_version}
 	
-	if [ ! -z "${build_azs}" ]; then
+	if [ -n "${build_azs}" ]; then
 		AKS_BRANCH_NAME=azs-v${AKS_VERSION}
 		TOP_DIR=${AKS_ENGINE_HOME}/_dist/k8s-windows-azs-v${AKS_VERSION}
 		KUBERNETES_WIN_ZIP_FILENAME=azs-v"${AKS_VERSION}"int.zip
