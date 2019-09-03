@@ -377,7 +377,7 @@ func (ku *Upgrader) upgradeAgentPools(ctx context.Context) error {
 
 		if toBeUpgradedCount == 0 {
 			ku.logger.Infof("No nodes to upgrade")
-			return nil
+			continue
 		}
 
 		// Upgrade nodes in agent pool
