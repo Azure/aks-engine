@@ -13,12 +13,7 @@
 # - TENANT_ID - Tenant Id used for service principal login
 
 trigger: none
-
-pr:
-  paths:
-    include:
-    - .pipelines/*
-    - packer/*
+pr: none
 
 jobs:
 - job: build_vhd_windows
