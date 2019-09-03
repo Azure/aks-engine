@@ -17670,7 +17670,8 @@ func k8sContaineraddons116KubernetesmasteraddonsCalicoDaemonsetYaml() (*asset, e
 	return a, nil
 }
 
-var _k8sContaineraddons116KubernetesmasteraddonsClusterAutoscalerDeploymentYaml = []byte(`apiVersion: v1
+var _k8sContaineraddons116KubernetesmasteraddonsClusterAutoscalerDeploymentYaml = []byte(`---
+apiVersion: v1
 kind: ServiceAccount
 metadata:
   labels:
@@ -17681,7 +17682,7 @@ metadata:
   name: cluster-autoscaler
   namespace: kube-system
 ---
-apiVersion: rbac.authorization.k8s.io/v1beta1
+apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   name: cluster-autoscaler
@@ -17692,7 +17693,7 @@ metadata:
     addonmanager.kubernetes.io/mode: Reconcile
 rules:
 - apiGroups: [""]
-  resources: ["events","endpoints"]
+  resources: ["events", "endpoints"]
   verbs: ["create", "patch"]
 - apiGroups: [""]
   resources: ["pods/eviction"]
@@ -17703,19 +17704,24 @@ rules:
 - apiGroups: [""]
   resources: ["endpoints"]
   resourceNames: ["cluster-autoscaler"]
-  verbs: ["get","update"]
+  verbs: ["get", "update"]
 - apiGroups: [""]
   resources: ["nodes"]
-  verbs: ["watch","list","get","update"]
+  verbs: ["watch", "list", "get", "update"]
 - apiGroups: [""]
-  resources: ["pods","services","replicationcontrollers","persistentvolumeclaims","persistentvolumes"]
-  verbs: ["watch","list","get"]
+  resources:
+  - "pods"
+  - "services"
+  - "replicationcontrollers"
+  - "persistentvolumeclaims"
+  - "persistentvolumes"
+  verbs: ["watch", "list", "get"]
 - apiGroups: ["extensions"]
-  resources: ["replicasets","daemonsets"]
-  verbs: ["watch","list","get"]
+  resources: ["replicasets", "daemonsets"]
+  verbs: ["watch", "list", "get"]
 - apiGroups: ["policy"]
   resources: ["poddisruptionbudgets"]
-  verbs: ["watch","list"]
+  verbs: ["watch", "list"]
 - apiGroups: ["apps"]
   resources: ["statefulsets","replicasets","daemonsets"]
   verbs: ["watch","list","get"]
@@ -17725,8 +17731,11 @@ rules:
 - apiGroups: ["storage.k8s.io"]
   resources: ["storageclasses"]
   verbs: ["get", "list", "watch"]
+- apiGroups: ["batch"]
+  resources: ["jobs", "cronjobs"]
+  verbs: ["watch", "list", "get"]
 ---
-apiVersion: rbac.authorization.k8s.io/v1beta1
+apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
   name: cluster-autoscaler
@@ -17739,13 +17748,15 @@ metadata:
 rules:
 - apiGroups: [""]
   resources: ["configmaps"]
-  verbs: ["create"]
+  verbs: ["create", "list", "watch"]
 - apiGroups: [""]
   resources: ["configmaps"]
-  resourceNames: ["cluster-autoscaler-status"]
-  verbs: ["delete","get","update"]
+  resourceNames:
+  - "cluster-autoscaler-status"
+  - "cluster-autoscaler-priority-expander"
+  verbs: ["delete", "get", "update", "watch"]
 ---
-apiVersion: rbac.authorization.k8s.io/v1beta1
+apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
   name: cluster-autoscaler
@@ -17763,7 +17774,7 @@ subjects:
     name: cluster-autoscaler
     namespace: kube-system
 ---
-apiVersion: rbac.authorization.k8s.io/v1beta1
+apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
   name: cluster-autoscaler
@@ -21383,7 +21394,8 @@ func k8sContaineraddonsKubernetesmasteraddonsCalicoDaemonsetYaml() (*asset, erro
 	return a, nil
 }
 
-var _k8sContaineraddonsKubernetesmasteraddonsClusterAutoscalerDeploymentYaml = []byte(`apiVersion: v1
+var _k8sContaineraddonsKubernetesmasteraddonsClusterAutoscalerDeploymentYaml = []byte(`---
+apiVersion: v1
 kind: ServiceAccount
 metadata:
   labels:
@@ -21394,7 +21406,7 @@ metadata:
   name: cluster-autoscaler
   namespace: kube-system
 ---
-apiVersion: rbac.authorization.k8s.io/v1beta1
+apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   name: cluster-autoscaler
@@ -21405,7 +21417,7 @@ metadata:
     addonmanager.kubernetes.io/mode: Reconcile
 rules:
 - apiGroups: [""]
-  resources: ["events","endpoints"]
+  resources: ["events", "endpoints"]
   verbs: ["create", "patch"]
 - apiGroups: [""]
   resources: ["pods/eviction"]
@@ -21416,19 +21428,24 @@ rules:
 - apiGroups: [""]
   resources: ["endpoints"]
   resourceNames: ["cluster-autoscaler"]
-  verbs: ["get","update"]
+  verbs: ["get", "update"]
 - apiGroups: [""]
   resources: ["nodes"]
-  verbs: ["watch","list","get","update"]
+  verbs: ["watch", "list", "get", "update"]
 - apiGroups: [""]
-  resources: ["pods","services","replicationcontrollers","persistentvolumeclaims","persistentvolumes"]
-  verbs: ["watch","list","get"]
+  resources:
+  - "pods"
+  - "services"
+  - "replicationcontrollers"
+  - "persistentvolumeclaims"
+  - "persistentvolumes"
+  verbs: ["watch", "list", "get"]
 - apiGroups: ["extensions"]
-  resources: ["replicasets","daemonsets"]
-  verbs: ["watch","list","get"]
+  resources: ["replicasets", "daemonsets"]
+  verbs: ["watch", "list", "get"]
 - apiGroups: ["policy"]
   resources: ["poddisruptionbudgets"]
-  verbs: ["watch","list"]
+  verbs: ["watch", "list"]
 - apiGroups: ["apps"]
   resources: ["statefulsets","replicasets","daemonsets"]
   verbs: ["watch","list","get"]
@@ -21438,8 +21455,11 @@ rules:
 - apiGroups: ["storage.k8s.io"]
   resources: ["storageclasses"]
   verbs: ["get", "list", "watch"]
+- apiGroups: ["batch"]
+  resources: ["jobs", "cronjobs"]
+  verbs: ["watch", "list", "get"]
 ---
-apiVersion: rbac.authorization.k8s.io/v1beta1
+apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
   name: cluster-autoscaler
@@ -21452,13 +21472,15 @@ metadata:
 rules:
 - apiGroups: [""]
   resources: ["configmaps"]
-  verbs: ["create"]
+  verbs: ["create", "list", "watch"]
 - apiGroups: [""]
   resources: ["configmaps"]
-  resourceNames: ["cluster-autoscaler-status"]
-  verbs: ["delete","get","update"]
+  resourceNames:
+  - "cluster-autoscaler-status"
+  - "cluster-autoscaler-priority-expander"
+  verbs: ["delete", "get", "update", "watch"]
 ---
-apiVersion: rbac.authorization.k8s.io/v1beta1
+apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
   name: cluster-autoscaler
@@ -21476,7 +21498,7 @@ subjects:
     name: cluster-autoscaler
     namespace: kube-system
 ---
-apiVersion: rbac.authorization.k8s.io/v1beta1
+apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
   name: cluster-autoscaler
