@@ -46,12 +46,6 @@ jobs:
       docker run --rm \
       -v ${PWD}:/go/src/github.com/Azure/aks-engine \
       -w /go/src/github.com/Azure/aks-engine \
-      ${DEIS_GO_DEV_IMAGE} make bootstrap
-    displayName: build aks-engine-test - bootstrap
-  - script: |
-      docker run --rm \
-      -v ${PWD}:/go/src/github.com/Azure/aks-engine \
-      -w /go/src/github.com/Azure/aks-engine \
       ${DEIS_GO_DEV_IMAGE} make all
     displayName: build aks-engine-test - make all
   - script: |
