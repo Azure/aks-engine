@@ -103,5 +103,5 @@ jobs:
     condition: always()
   - script: |
       sudo chown -R $USER:$USER .
-    displayName: clueanup - chown all files in work directory 
+    displayName: cleanup - chown all files in work directory 
     condition: always()
