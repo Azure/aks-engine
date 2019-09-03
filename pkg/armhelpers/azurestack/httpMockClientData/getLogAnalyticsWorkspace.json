@@ -1,0 +1,26 @@
+{
+  "properties": {
+    "source": "Azure",
+    "customerId": "1abbf53c-d62c-4ec0-b433-b7cc39accb61",
+    "provisioningState": "Succeeded",
+    "sku": {
+      "name": "pergb2018"
+    },
+    "retentionInDays": 30,
+    "features": {
+      "legacy": 0,
+      "searchVersion": 1
+    },
+    "workspaceCapping": {
+      "dailyQuotaGb": -1,
+      "quotaNextResetTime": "Fri, 09 Aug 2019 03:00:00 GMT",
+      "dataIngestionStatus": "RespectQuota"
+    },
+    "softDelete": false
+  },
+  "id": "/subscriptions/12345678-1234-4fe0-86da-28abc43fc4c7/resourcegroups/mygroup/providers/microsoft.operationalinsights/workspaces/myworkspace",
+  "name": "myworkspace",
+  "type": "Microsoft.OperationalInsights/workspaces",
+  "location": "eastus"
+}
+

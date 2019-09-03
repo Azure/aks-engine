@@ -671,6 +671,17 @@ func TestCreateAgentVMSSHostedMasterProfile(t *testing.T) {
 		t.Errorf("unexpected diff while expecting equal structs: %s", diff)
 	}
 
+	// Now validate that hosted master Standard LB doesn't effect anything
+	cs.Properties.OrchestratorProfile.KubernetesConfig.LoadBalancerSku = api.StandardLoadBalancerSku
+
+	actual = CreateAgentVMSS(cs, cs.Properties.AgentPoolProfiles[0])
+
+	diff = cmp.Diff(actual, expected)
+
+	if diff != "" {
+		t.Errorf("unexpected diff while expecting equal structs: %s", diff)
+	}
+
 	// Now Test AgentVMSS with windows
 	cs.Properties.AgentPoolProfiles[0].OSType = "Windows"
 	cs.Properties.AgentPoolProfiles[0].AcceleratedNetworkingEnabledWindows = to.BoolPtr(true)
@@ -857,7 +868,9 @@ func TestCreateVmScaleSetsWithCustomTags(t *testing.T) {
 	}
 
 	testTagsToAdd := map[string]string{
-		"myTestKey": "myTestValue",
+		"myTestKey1": "myTestValue1",
+		"myTestKey2": "myTestValue2",
+		"poolName":   "myName",
 	}
 
 	addCustomTagsToVMScaleSets(testTagsToAdd, &testVirtualMachineScaleSet)
@@ -866,7 +879,8 @@ func TestCreateVmScaleSetsWithCustomTags(t *testing.T) {
 		"orchestrator":     to.StringPtr("k8s"),
 		"aksEngineVersion": to.StringPtr("1.15"),
 		"poolName":         to.StringPtr("TestPool"),
-		"myTestKey":        to.StringPtr("myTestValue"),
+		"myTestKey1":       to.StringPtr("myTestValue1"),
+		"myTestKey2":       to.StringPtr("myTestValue2"),
 	}
 
 	diff := cmp.Diff(testVirtualMachineScaleSet.Tags, expectedTags)

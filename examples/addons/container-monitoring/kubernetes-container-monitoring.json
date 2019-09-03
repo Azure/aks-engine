@@ -7,11 +7,7 @@
         "addons": [
           {
             "name": "container-monitoring",
-            "enabled": true,
-            "config": {
-              "workspaceGuid": "",
-              "workspaceKey": ""
-            }
+            "enabled": true
           }
         ]
       }
