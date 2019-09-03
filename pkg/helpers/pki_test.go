@@ -236,7 +236,7 @@ func TestCreatePkiKeyCertPair(t *testing.T) {
 	}
 }
 
-func TestSetSetPkiKeySize(t *testing.T) {
+func TestSetPkiKeySize(t *testing.T) {
 	if GetPkiKeySize() != DefaultPkiKeySize {
 		t.Errorf("the default size is not correct.")
 	}
