@@ -1,7 +1,5 @@
 {
-	"env": {
-		"REGION_OPTIONS": "westus2,southcentralus"
-	},
+	"env": {},
 	"apiModel": {
 		"apiVersion": "vlabs",
 		"properties": {
@@ -10,7 +8,7 @@
 				"kubernetesConfig": {
 					"addons": [
 						{
-							"name": "nvidia-device-plugin",
+							"name": "container-monitoring",
 							"enabled": true
 						}
 					]
@@ -19,18 +17,14 @@
 			"masterProfile": {
 				"count": 1,
 				"dnsPrefix": "",
-				"vmSize": "Standard_D2_v2"
+				"vmSize": "Standard_DS2_v2"
 			},
 			"agentPoolProfiles": [
 				{
-					"name": "agent1",
-					"count": 1,
-					"vmSize": "Standard_NC6"
-				},
-				{
-					"name": "agent2",
+					"name": "agentpool",
 					"count": 3,
-					"vmSize": "Standard_D2_v2"
+					"vmSize": "Standard_DS2_v2",
+					"availabilityProfile": "VirtualMachineScaleSets"
 				}
 			],
 			"linuxProfile": {

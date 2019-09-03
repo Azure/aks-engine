@@ -1,6 +1,6 @@
 {
 	"env": {
-		"createVNet": true
+		"CREATE_VNET": true
 	},
 	"apiModel": {
 		"apiVersion": "vlabs",

@@ -1,13 +1,13 @@
 import groovy.json.*
 
 def defaultEnv = [
-	fork: "${params.FORK}",
-	branch: "${params.BRANCH}",
-	regions: "${params.REGIONS}",
-	cleanupOnExit: true,
-	upgradeCluster: false,
-	createVNet: false,
-	scaleCluster: false,
+	FORK: "${params.FORK}",
+	BRANCH: "${params.BRANCH}",
+	REGION_OPTIONS: "${params.REGIONS}",
+	CLEANUP_ON_EXIT: true,
+	UPGRADE_CLUSTER: false,
+	CREATE_VNET: false,
+	SCALE_CLUSTER: false,
 	]
 
 def k8sVersions = ["1.12", "1.13", "1.14", "1.15", "1.16"]
@@ -81,14 +81,7 @@ stage ("discover tests") {
 								def envVars = [
 										"ORCHESTRATOR_RELEASE=${version}",
 										"API_MODEL_INPUT=${JsonOutput.toJson(jobCfg.apiModel)}",
-										"FORK=${jobSpecificEnv.fork}",
-										"BRANCH=${jobSpecificEnv.branch}",
-										"REGION_OPTIONS=${jobSpecificEnv.regions}",
-										"CLEANUP_ON_EXIT=${jobSpecificEnv.cleanupOnExit}",
-										"UPGRADE_CLUSTER=${jobSpecificEnv.upgradeCluster}",
-										"CREATE_VNET=${jobSpecificEnv.createVNet}",
-										"SCALE_CLUSTER=${jobSpecificEnv.scaleCluster}",
-									]
+									] + jobSpecificEnv
 								withEnv(envVars) {
 									// define any sensitive data needed for the test script
 									def creds = [
