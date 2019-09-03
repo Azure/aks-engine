@@ -235,3 +235,15 @@ func TestCreatePkiKeyCertPair(t *testing.T) {
 		t.Errorf("unexpected error thrown while executing CreatePkiKeyCertPair : %s", err.Error())
 	}
 }
+
+func TestSetSetPkiKeySize(t *testing.T) {
+	if GetPkiKeySize() != DefaultPkiKeySize {
+		t.Errorf("the default size is not correct.")
+	}
+
+	// set to the default size so it will have no impact on other testing.
+	SetPkiKeySize(DefaultPkiKeySize)
+	if GetPkiKeySize() != DefaultPkiKeySize {
+		t.Errorf("the value set is not correct.")
+	}
+}

@@ -26,14 +26,26 @@ const (
 	ValidityDuration = time.Hour * 24 * 365 * 30
 )
 
+const (
+	// DefaultPkiKeySize is the default size in bytes of the PKI key
+	DefaultPkiKeySize = 4096
+)
+
 var (
-	// PkiKeySize is the size in bytes of the PKI key
-	pkiKeySize = 4096
+	overridePkiKeySize = 0
 )
 
 // SetPkiKeySize will set the pki key size when generate the cert.
 func SetPkiKeySize(size int) {
-	pkiKeySize = size
+	overridePkiKeySize = size
+}
+
+// GetPkiKeySize returns the pki key size when generate the cert.
+func GetPkiKeySize() int {
+	if overridePkiKeySize == 0 {
+		return DefaultPkiKeySize
+	}
+	return overridePkiKeySize
 }
 
 // PkiKeyCertPair represents an PKI public and private cert pair
@@ -194,7 +206,7 @@ func createCertificate(commonName string, caCertificate *x509.Certificate, caPri
 		return nil, nil, err
 	}
 
-	privateKey, _ := rsa.GenerateKey(rand.Reader, pkiKeySize)
+	privateKey, _ := rsa.GenerateKey(rand.Reader, GetPkiKeySize())
 
 	var privateKeyToUse *rsa.PrivateKey
 	var certificateToUse *x509.Certificate
