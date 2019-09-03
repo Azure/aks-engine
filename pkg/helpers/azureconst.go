@@ -30,6 +30,8 @@ func GetAzureLocations() []string {
 		"eastus2euap",
 		"francecentral",
 		"francesouth",
+		"germanynorth",
+		"germanywestcentral",
 		"japaneast",
 		"japanwest",
 		"koreacentral",
