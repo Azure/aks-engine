@@ -5,6 +5,7 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/Azure/aks-engine/pkg/helpers"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -431,7 +432,11 @@ func prepareCustomCloudProfile() *api.ContainerService {
 		},
 	}
 
-	cs.SetPropertiesDefaults(false, false)
+	cs.SetPropertiesDefaults(api.PropertiesDefaultsOptions{
+		IsScale:    false,
+		IsUpgrade:  false,
+		PkiKeySize: helpers.DefaultPkiKeySize,
+	})
 
 	return cs
 }

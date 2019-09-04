@@ -37,7 +37,11 @@ func TestAssignParameters(t *testing.T) {
 		}
 
 		containerService.Location = "eastus"
-		containerService.SetPropertiesDefaults(false, false)
+		containerService.SetPropertiesDefaults(PropertiesDefaultsOptions{
+			IsScale:    false,
+			IsUpgrade:  false,
+			PkiKeySize: helpers.DefaultPkiKeySize,
+		})
 		parametersMap := getParameters(containerService, DefaultGeneratorCode, "testversion")
 		for k, v := range parametersMap {
 			switch val := v.(paramsMap)["value"].(type) {

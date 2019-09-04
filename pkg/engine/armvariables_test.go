@@ -52,7 +52,11 @@ func TestK8sVars(t *testing.T) {
 		},
 	}
 
-	cs.SetPropertiesDefaults(false, false)
+	cs.SetPropertiesDefaults(PropertiesDefaultsOptions{
+		IsScale:    false,
+		IsUpgrade:  false,
+		PkiKeySize: helpers.DefaultPkiKeySize,
+	})
 
 	varMap, err := GetKubernetesVariables(cs)
 	if err != nil {
@@ -480,7 +484,11 @@ func TestK8sVars(t *testing.T) {
 		},
 	}
 
-	cs.SetPropertiesDefaults(false, false)
+	cs.SetPropertiesDefaults(PropertiesDefaultsOptions{
+		IsScale:    false,
+		IsUpgrade:  false,
+		PkiKeySize: helpers.DefaultPkiKeySize,
+	})
 
 	varMap, err = GetKubernetesVariables(cs)
 	if err != nil {
@@ -680,7 +688,11 @@ func TestK8sVarsMastersOnly(t *testing.T) {
 		},
 	}
 
-	cs.SetPropertiesDefaults(false, false)
+	cs.SetPropertiesDefaults(PropertiesDefaultsOptions{
+		IsScale:    false,
+		IsUpgrade:  false,
+		PkiKeySize: helpers.DefaultPkiKeySize,
+	})
 
 	varMap, err := GetKubernetesVariables(cs)
 	if err != nil {

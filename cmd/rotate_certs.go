@@ -7,6 +7,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"github.com/Azure/aks-engine/pkg/helpers"
 	"io/ioutil"
 	"os"
 	"path"
@@ -147,7 +148,9 @@ func (rcc *rotateCertsCmd) run(cmd *cobra.Command, args []string) error {
 
 	// reset the certificateProfile and use the exisiting certificate generation code to generate new certificates.
 	rcc.containerService.Properties.CertificateProfile = &api.CertificateProfile{}
-	certsGenerated, _, err := rcc.containerService.SetDefaultCerts()
+	certsGenerated, _, err := rcc.containerService.SetDefaultCerts(api.DefaultCertOptions{
+		PkiKeySize: helpers.DefaultPkiKeySize,
+	})
 	if !certsGenerated || err != nil {
 		return errors.Wrap(err, "generating new certificates")
 	}

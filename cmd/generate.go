@@ -5,6 +5,7 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/Azure/aks-engine/pkg/helpers"
 	"io/ioutil"
 	"os"
 	"path"
@@ -220,7 +221,11 @@ func (gc *generateCmd) run() error {
 		return errors.Wrap(err, "initializing template generator")
 	}
 
-	certsGenerated, err := gc.containerService.SetPropertiesDefaults(false, false)
+	certsGenerated, err := gc.containerService.SetPropertiesDefaults(api.PropertiesDefaultsOptions{
+		IsScale:    false,
+		IsUpgrade:  false,
+		PkiKeySize: helpers.DefaultPkiKeySize,
+	})
 	if err != nil {
 		return errors.Wrapf(err, "in SetPropertiesDefaults template %s", gc.apimodelPath)
 	}

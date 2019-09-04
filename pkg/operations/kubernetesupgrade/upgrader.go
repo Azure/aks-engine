@@ -7,6 +7,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/Azure/aks-engine/pkg/helpers"
 	"math/rand"
 	"strings"
 	"time"
@@ -622,7 +623,11 @@ func (ku *Upgrader) generateUpgradeTemplate(upgradeContainerService *api.Contain
 		return nil, nil, ku.Translator.Errorf("failed to initialize template generator: %s", err.Error())
 	}
 
-	_, err = upgradeContainerService.SetPropertiesDefaults(true, false)
+	_, err = upgradeContainerService.SetPropertiesDefaults(api.PropertiesDefaultsOptions{
+		IsScale:    false,
+		IsUpgrade:  true,
+		PkiKeySize: helpers.DefaultPkiKeySize,
+	})
 	if err != nil {
 		return nil, nil, ku.Translator.Errorf("error in SetPropertiesDefaults: %s", err.Error())
 
