@@ -1196,13 +1196,25 @@ func (p *Properties) GetNonMasqueradeCIDR() string {
 				nonMasqCidr = DefaultVNETCIDR
 			}
 		} else {
-			// kube-proxy still only understands single cidr and is not changed for ipv6 dual stack phase 1
-			// so only pass the ipv4 cidr which is the first one in the list as arg to kube proxy
 			if p.FeatureFlags.IsFeatureEnabled("EnableIPv6DualStack") {
 				nonMasqCidr = strings.Split(p.OrchestratorProfile.KubernetesConfig.ClusterSubnet, ",")[0]
-			} else {
-				nonMasqCidr = p.OrchestratorProfile.KubernetesConfig.ClusterSubnet
+				_, ipnet, _ := net.ParseCIDR(nonMasqCidr)
+				return ipnet.String()
 			}
+			nonMasqCidr = p.OrchestratorProfile.KubernetesConfig.ClusterSubnet
+		}
+	}
+	return nonMasqCidr
+}
+
+// GetSecondaryNonMasqueradeCIDR returns second cidr in case of dualstack clusters
+func (p *Properties) GetSecondaryNonMasqueradeCIDR() string {
+	var nonMasqCidr string
+	if !p.IsHostedMasterProfile() {
+		if p.FeatureFlags.IsFeatureEnabled("EnableIPv6DualStack") {
+			nonMasqCidr = strings.Split(p.OrchestratorProfile.KubernetesConfig.ClusterSubnet, ",")[1]
+			_, ipnet, _ := net.ParseCIDR(nonMasqCidr)
+			return ipnet.String()
 		}
 	}
 	return nonMasqCidr
