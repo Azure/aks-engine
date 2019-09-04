@@ -13922,7 +13922,9 @@ Type=oneshot
 ExecStart=/opt/azure/containers/enable-dhcpv6.sh
 
 [Install]
-WantedBy=multi-user.target`)
+WantedBy=multi-user.target
+#EOF
+`)
 
 func k8sCloudInitArtifactsDhcpv6ServiceBytes() ([]byte, error) {
 	return _k8sCloudInitArtifactsDhcpv6Service, nil
