@@ -17,7 +17,7 @@ def testConfigs = []
 stage ("build binary") {
 	node {
 		retry(5){
-			sh("sudo rm -rf ./bin ./_output ./_logs")
+			sh("sudo rm -rf ./*")
 			checkout scm
 		}
 
@@ -39,7 +39,7 @@ stage ("build binary") {
 stage ("discover tests") {
 	node {
 		retry(5){
-			sh("sudo rm -rf ./bin ./_output ./_logs")
+			sh("sudo rm -rf ./*")
 			checkout scm
 		}
 
