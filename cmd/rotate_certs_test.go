@@ -5,12 +5,12 @@ package cmd
 
 import (
 	"context"
-	"github.com/Azure/aks-engine/pkg/helpers"
 	"os"
 	"testing"
 
 	"github.com/Azure/aks-engine/pkg/api"
 	"github.com/Azure/aks-engine/pkg/armhelpers"
+	"github.com/Azure/aks-engine/pkg/helpers"
 	"github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2018-10-01/compute"
 	"github.com/gofrs/uuid"
 	. "github.com/onsi/gomega"

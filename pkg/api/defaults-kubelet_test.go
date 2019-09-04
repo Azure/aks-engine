@@ -4,12 +4,12 @@
 package api
 
 import (
-	"github.com/Azure/aks-engine/pkg/helpers"
 	"strconv"
 	"strings"
 	"testing"
 
 	"github.com/Azure/aks-engine/pkg/api/common"
+	"github.com/Azure/aks-engine/pkg/helpers"
 	"github.com/Azure/go-autorest/autorest/to"
 )
 
