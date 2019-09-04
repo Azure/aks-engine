@@ -79,10 +79,10 @@ stage ("discover tests") {
 								def jobSpecificEnv = (jobCfg.env == null) ? defaultEnv.clone() : defaultEnv + jobCfg.env
 								// set environment variables needed for the test script
 								def envVars = [
-										"ORCHESTRATOR_RELEASE=${version}",
-										"API_MODEL_INPUT=${JsonOutput.toJson(jobCfg.apiModel)}",
+										ORCHESTRATOR_RELEASE: "${version}",
+										API_MODEL_INPUT: "${JsonOutput.toJson(jobCfg.apiModel)}",
 									] + jobSpecificEnv
-								withEnv(envVars) {
+								withEnv(envVars.collect{ k, v -> "${k}=${v}" }) {
 									// define any sensitive data needed for the test script
 									def creds = [
 											string(credentialsId: 'AKS_ENGINE_TENANT_ID', variable: 'TENANT_ID'),
