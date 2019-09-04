@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/Azure/aks-engine/pkg/api"
+	"github.com/Azure/aks-engine/pkg/helpers"
 	"github.com/Azure/aks-engine/pkg/i18n"
 	"github.com/leonelquinteros/gotext"
 )
@@ -39,7 +40,7 @@ func TestAssignKubernetesParameters(t *testing.T) {
 		parametersMap := paramsMap{}
 		containerService.Location = "eastus"
 		cloudSpecConfig := containerService.GetCloudSpecConfig()
-		containerService.SetPropertiesDefaults(PropertiesDefaultsOptions{
+		containerService.SetPropertiesDefaults(api.PropertiesDefaultsOptions{
 			IsScale:    false,
 			IsUpgrade:  false,
 			PkiKeySize: helpers.DefaultPkiKeySize,

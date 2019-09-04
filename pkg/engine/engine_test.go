@@ -20,6 +20,7 @@ import (
 	v20160330 "github.com/Azure/aks-engine/pkg/api/v20160330"
 	"github.com/Azure/aks-engine/pkg/api/vlabs"
 	"github.com/Azure/aks-engine/pkg/engine/transform"
+	"github.com/Azure/aks-engine/pkg/helpers"
 	"github.com/Azure/aks-engine/pkg/i18n"
 	"github.com/leonelquinteros/gotext"
 	"github.com/pkg/errors"
@@ -117,7 +118,7 @@ func TestExpected(t *testing.T) {
 				continue
 			}
 
-			certsGenerated, err := containerService.SetPropertiesDefaults(PropertiesDefaultsOptions{
+			certsGenerated, err := containerService.SetPropertiesDefaults(api.PropertiesDefaultsOptions{
 				IsScale:    false,
 				IsUpgrade:  false,
 				PkiKeySize: helpers.DefaultPkiKeySize,
@@ -147,7 +148,7 @@ func TestExpected(t *testing.T) {
 
 			for i := 0; i < 3; i++ {
 				if i > 0 {
-					certsGenerated, err = containerService.SetPropertiesDefaults(PropertiesDefaultsOptions{
+					certsGenerated, err = containerService.SetPropertiesDefaults(api.PropertiesDefaultsOptions{
 						IsScale:    false,
 						IsUpgrade:  false,
 						PkiKeySize: helpers.DefaultPkiKeySize,
@@ -231,7 +232,7 @@ func TestExpected(t *testing.T) {
 				continue
 			}
 
-			certsGenerated, err := containerService.SetPropertiesDefaults(PropertiesDefaultsOptions{
+			certsGenerated, err := containerService.SetPropertiesDefaults(api.PropertiesDefaultsOptions{
 				IsScale:    false,
 				IsUpgrade:  false,
 				PkiKeySize: helpers.DefaultPkiKeySize,
@@ -261,7 +262,7 @@ func TestExpected(t *testing.T) {
 
 			for i := 0; i < 3; i++ {
 				if i > 0 {
-					certsGenerated, err = containerService.SetPropertiesDefaults(PropertiesDefaultsOptions{
+					certsGenerated, err = containerService.SetPropertiesDefaults(api.PropertiesDefaultsOptions{
 						IsScale:    false,
 						IsUpgrade:  false,
 						PkiKeySize: helpers.DefaultPkiKeySize,
@@ -427,7 +428,7 @@ func TestTemplateOutputPresence(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to load container service from file: %v", err)
 	}
-	containerService.SetPropertiesDefaults(PropertiesDefaultsOptions{
+	containerService.SetPropertiesDefaults(api.PropertiesDefaultsOptions{
 		IsScale:    false,
 		IsUpgrade:  false,
 		PkiKeySize: helpers.DefaultPkiKeySize,

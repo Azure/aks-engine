@@ -12,6 +12,7 @@ import (
 
 	"github.com/Azure/aks-engine/pkg/api"
 	"github.com/Azure/aks-engine/pkg/api/common"
+	"github.com/Azure/aks-engine/pkg/helpers"
 	"github.com/Azure/go-autorest/autorest/azure"
 	"github.com/Azure/go-autorest/autorest/to"
 )
@@ -52,7 +53,7 @@ func TestK8sVars(t *testing.T) {
 		},
 	}
 
-	cs.SetPropertiesDefaults(PropertiesDefaultsOptions{
+	cs.SetPropertiesDefaults(api.PropertiesDefaultsOptions{
 		IsScale:    false,
 		IsUpgrade:  false,
 		PkiKeySize: helpers.DefaultPkiKeySize,
@@ -484,7 +485,7 @@ func TestK8sVars(t *testing.T) {
 		},
 	}
 
-	cs.SetPropertiesDefaults(PropertiesDefaultsOptions{
+	cs.SetPropertiesDefaults(api.PropertiesDefaultsOptions{
 		IsScale:    false,
 		IsUpgrade:  false,
 		PkiKeySize: helpers.DefaultPkiKeySize,
@@ -688,7 +689,7 @@ func TestK8sVarsMastersOnly(t *testing.T) {
 		},
 	}
 
-	cs.SetPropertiesDefaults(PropertiesDefaultsOptions{
+	cs.SetPropertiesDefaults(api.PropertiesDefaultsOptions{
 		IsScale:    false,
 		IsUpgrade:  false,
 		PkiKeySize: helpers.DefaultPkiKeySize,

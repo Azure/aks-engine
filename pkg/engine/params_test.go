@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/Azure/aks-engine/pkg/api"
+	"github.com/Azure/aks-engine/pkg/helpers"
 	"github.com/Azure/aks-engine/pkg/i18n"
 	"github.com/leonelquinteros/gotext"
 )
@@ -37,7 +38,7 @@ func TestAssignParameters(t *testing.T) {
 		}
 
 		containerService.Location = "eastus"
-		containerService.SetPropertiesDefaults(PropertiesDefaultsOptions{
+		containerService.SetPropertiesDefaults(api.PropertiesDefaultsOptions{
 			IsScale:    false,
 			IsUpgrade:  false,
 			PkiKeySize: helpers.DefaultPkiKeySize,
