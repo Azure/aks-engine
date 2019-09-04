@@ -823,7 +823,7 @@ func (cs *ContainerService) SetDefaultCerts(options DefaultCertOptions) (bool, [
 		var err error
 		pkiKeyCertPairOptions := helpers.PkiKeyCertPairOptions{
 			CommonName: "ca",
-			KeySize:    options.PkiKeySize,
+			PkiKeySize: options.PkiKeySize,
 		}
 
 		caPair, err = helpers.CreatePkiKeyCertPair(pkiKeyCertPairOptions)
