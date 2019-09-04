@@ -5,7 +5,6 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/Azure/aks-engine/pkg/helpers"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -15,6 +14,7 @@ import (
 	"github.com/Azure/aks-engine/pkg/api"
 	"github.com/Azure/aks-engine/pkg/armhelpers"
 	"github.com/Azure/aks-engine/pkg/armhelpers/azurestack/testserver"
+	"github.com/Azure/aks-engine/pkg/helpers"
 	"github.com/Azure/go-autorest/autorest/azure"
 	"github.com/gofrs/uuid"
 	"github.com/spf13/cobra"
