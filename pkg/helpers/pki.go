@@ -44,7 +44,7 @@ type PkiOptions struct {
 // PkiKeyCertPairOptions is the options when we create the pki key cert pair.
 type PkiKeyCertPairOptions struct {
 	CommonName string
-	KeySize    int
+	PkiKeySize int
 }
 
 // PkiKeyCertPair represents an PKI public and private cert pair
@@ -64,7 +64,7 @@ func CreatePkiKeyCertPair(options PkiKeyCertPairOptions) (*PkiKeyCertPair, error
 		extraFQDNs:    nil,
 		extraIPs:      nil,
 		organization:  nil,
-		keySize:       options.KeySize,
+		keySize:       options.PkiKeySize,
 	}
 	caCertificate, caPrivateKey, err := createCertificate(certOpt)
 	if err != nil {
