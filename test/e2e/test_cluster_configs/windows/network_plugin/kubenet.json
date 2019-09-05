@@ -1,19 +1,13 @@
 {
-	"env": {
-		"REGION_OPTIONS": "westus2,southcentralus"
-	},
+	"env": {},
 	"apiModel": {
 		"apiVersion": "vlabs",
 		"properties": {
 			"orchestratorProfile": {
 				"orchestratorType": "Kubernetes",
+				"orchestratorRelease": "1.14",
 				"kubernetesConfig": {
-					"addons": [
-						{
-							"name": "nvidia-device-plugin",
-							"enabled": true
-						}
-					]
+					"networkPlugin": "kubenet"
 				}
 			},
 			"masterProfile": {
@@ -23,16 +17,18 @@
 			},
 			"agentPoolProfiles": [
 				{
-					"name": "agent1",
-					"count": 1,
-					"vmSize": "Standard_NC6"
-				},
-				{
-					"name": "agent2",
+					"name": "agentwin",
 					"count": 3,
-					"vmSize": "Standard_D2_v2"
+					"vmSize": "Standard_D2_v2",
+					"osType": "Windows"
 				}
 			],
+			"windowsProfile": {
+				"adminUsername": "azureuser",
+				"adminPassword": "replacepassword1234$",
+				"enableAutomaticUpdates": false,
+				"sshEnabled": true
+			},
 			"linuxProfile": {
 				"adminUsername": "azureuser",
 				"ssh": {

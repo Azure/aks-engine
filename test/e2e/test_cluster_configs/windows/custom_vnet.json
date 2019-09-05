@@ -15,6 +15,10 @@
 							"enabled": true
 						},
 						{
+							"name": "cluster-autoscaler",
+							"enabled": true
+						},
+						{
 							"name": "tiller",
 							"enabled": true
 						},
@@ -30,9 +34,9 @@
 				}
 			},
 			"masterProfile": {
-				"count": 1,
+				"count": 3,
 				"dnsPrefix": "",
-				"vmSize": "Standard_D2_v3",
+				"vmSize": "Standard_D2_v2",
 				"OSDiskSizeGB": 200,
 				"vnetSubnetId": "/subscriptions/SUB_ID/resourceGroups/RG_NAME/providers/Microsoft.Network/virtualNetworks/VNET_NAME/subnets/SUBNET_NAME",
 				"firstConsecutiveStaticIP": "10.239.255.239",
@@ -42,7 +46,8 @@
 				{
 					"name": "agent1",
 					"count": 3,
-					"vmSize": "Standard_D2_v3",
+					"vmSize": "Standard_D2_v2",
+					"osType": "Windows",
 					"OSDiskSizeGB": 200,
 					"storageProfile": "ManagedDisks",
 					"diskSizesGB": [
@@ -51,7 +56,7 @@
 						128,
 						128
 					],
-					"availabilityProfile": "AvailabilitySet",
+					"availabilityProfile": "VirtualMachineScaleSets",
 					"vnetSubnetId": "/subscriptions/SUB_ID/resourceGroups/RG_NAME/providers/Microsoft.Network/virtualNetworks/VNET_NAME/subnets/SUBNET_NAME"
 				}
 			],
@@ -64,6 +69,12 @@
 						}
 					]
 				}
+			},
+			"windowsProfile": {
+				"adminUsername": "azureuser",
+				"adminPassword": "replacepassword1234$",
+				"enableAutomaticUpdates": false,
+				"sshEnabled": true
 			},
 			"servicePrincipalProfile": {
 				"clientId": "",

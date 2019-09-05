@@ -15,6 +15,10 @@
 							"enabled": true
 						},
 						{
+							"name": "cluster-autoscaler",
+							"enabled": true
+						},
+						{
 							"name": "tiller",
 							"enabled": true
 						},
@@ -26,33 +30,40 @@
 							"name": "rescheduler",
 							"enabled": true
 						}
-					]
+					],
+					"loadBalancerSku": "Standard",
+					"excludeMasterFromStandardLB": true
 				}
 			},
 			"masterProfile": {
-				"count": 1,
+				"count": 3,
 				"dnsPrefix": "",
 				"vmSize": "Standard_D2_v3",
 				"OSDiskSizeGB": 200,
 				"vnetSubnetId": "/subscriptions/SUB_ID/resourceGroups/RG_NAME/providers/Microsoft.Network/virtualNetworks/VNET_NAME/subnets/SUBNET_NAME",
 				"firstConsecutiveStaticIP": "10.239.255.239",
-				"vnetCidr": "10.239.0.0/16"
+				"vnetCidr": "10.239.0.0/16",
+				"availabilityZones": [
+					"1"
+				]
 			},
 			"agentPoolProfiles": [
 				{
-					"name": "agent1",
-					"count": 3,
+					"name": "pool1",
+					"count": 4,
 					"vmSize": "Standard_D2_v3",
 					"OSDiskSizeGB": 200,
 					"storageProfile": "ManagedDisks",
 					"diskSizesGB": [
-						128,
-						128,
-						128,
 						128
 					],
-					"availabilityProfile": "AvailabilitySet",
-					"vnetSubnetId": "/subscriptions/SUB_ID/resourceGroups/RG_NAME/providers/Microsoft.Network/virtualNetworks/VNET_NAME/subnets/SUBNET_NAME"
+					"availabilityProfile": "VirtualMachineScaleSets",
+					"vnetSubnetId": "/subscriptions/SUB_ID/resourceGroups/RG_NAME/providers/Microsoft.Network/virtualNetworks/VNET_NAME/subnets/SUBNET_NAME",
+					"availabilityZones": [
+						"1",
+						"2"
+					],
+					"scaleSetPriority": "Low"
 				}
 			],
 			"linuxProfile": {

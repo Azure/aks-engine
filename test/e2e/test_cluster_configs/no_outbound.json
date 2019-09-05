@@ -1,20 +1,10 @@
 {
-	"env": {
-		"REGION_OPTIONS": "westus2,southcentralus"
-	},
+	"env": {},
 	"apiModel": {
 		"apiVersion": "vlabs",
 		"properties": {
 			"orchestratorProfile": {
-				"orchestratorType": "Kubernetes",
-				"kubernetesConfig": {
-					"addons": [
-						{
-							"name": "nvidia-device-plugin",
-							"enabled": true
-						}
-					]
-				}
+				"orchestratorType": "Kubernetes"
 			},
 			"masterProfile": {
 				"count": 1,
@@ -23,12 +13,7 @@
 			},
 			"agentPoolProfiles": [
 				{
-					"name": "agent1",
-					"count": 1,
-					"vmSize": "Standard_NC6"
-				},
-				{
-					"name": "agent2",
+					"name": "agentpool1",
 					"count": 3,
 					"vmSize": "Standard_D2_v2"
 				}
@@ -42,6 +27,9 @@
 						}
 					]
 				}
+			},
+			"featureFlags": {
+				"BlockOutboundInternet": true
 			},
 			"servicePrincipalProfile": {
 				"clientId": "",

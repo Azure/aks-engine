@@ -1,6 +1,7 @@
 {
-	"env": {
-		"REGION_OPTIONS": "westus2,southcentralus"
+	"env": {},
+	"options": {
+		"allowedOrchestratorVersions": ["1.14"]
 	},
 	"apiModel": {
 		"apiVersion": "vlabs",
@@ -8,29 +9,21 @@
 			"orchestratorProfile": {
 				"orchestratorType": "Kubernetes",
 				"kubernetesConfig": {
-					"addons": [
-						{
-							"name": "nvidia-device-plugin",
-							"enabled": true
-						}
-					]
+					"networkPolicy": "calico",
+					"networkPlugin": "azure"
 				}
 			},
 			"masterProfile": {
 				"count": 1,
 				"dnsPrefix": "",
-				"vmSize": "Standard_D2_v2"
+				"vmSize": "Standard_DS2_v2"
 			},
 			"agentPoolProfiles": [
 				{
-					"name": "agent1",
-					"count": 1,
-					"vmSize": "Standard_NC6"
-				},
-				{
-					"name": "agent2",
+					"name": "agentpool1",
 					"count": 3,
-					"vmSize": "Standard_D2_v2"
+					"vmSize": "Standard_DS2_v2",
+					"availabilityProfile": "AvailabilitySet"
 				}
 			],
 			"linuxProfile": {
