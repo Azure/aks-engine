@@ -1136,7 +1136,6 @@ func TestTelemetryEnabled(t *testing.T) {
 		t.Error("unexpected false output while checking for EnableTelemetry")
 	}
 }
-
 func TestConvertVLabsWindowsProfile(t *testing.T) {
 	falseVar := false
 

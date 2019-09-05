@@ -1,0 +1,45 @@
+{
+	"env": {},
+	"options": {
+		"allowedOrchestratorVersions": ["1.14"]
+	},
+	"apiModel": {
+		"apiVersion": "vlabs",
+		"properties": {
+			"orchestratorProfile": {
+				"orchestratorType": "Kubernetes",
+				"kubernetesConfig": {
+					"networkPolicy": "calico",
+					"networkPlugin": "azure"
+				}
+			},
+			"masterProfile": {
+				"count": 1,
+				"dnsPrefix": "",
+				"vmSize": "Standard_DS2_v2"
+			},
+			"agentPoolProfiles": [
+				{
+					"name": "agentpool1",
+					"count": 3,
+					"vmSize": "Standard_DS2_v2",
+					"availabilityProfile": "AvailabilitySet"
+				}
+			],
+			"linuxProfile": {
+				"adminUsername": "azureuser",
+				"ssh": {
+					"publicKeys": [
+						{
+							"keyData": ""
+						}
+					]
+				}
+			},
+			"servicePrincipalProfile": {
+				"clientId": "",
+				"secret": ""
+			}
+		}
+	}
+}

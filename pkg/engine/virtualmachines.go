@@ -44,17 +44,29 @@ func CreateMasterVM(cs *api.ContainerService) VirtualMachineARM {
 		DependsOn: dependencies,
 	}
 
+	vmTags := map[string]*string{
+		"creationSource":     to.StringPtr("[concat(parameters('generatorCode'), '-', variables('masterVMNamePrefix'), copyIndex(variables('masterOffset')))]"),
+		"resourceNameSuffix": to.StringPtr("[parameters('nameSuffix')]"),
+		"orchestrator":       to.StringPtr("[variables('orchestratorNameVersionTag')]"),
+		"aksEngineVersion":   to.StringPtr("[parameters('aksEngineVersion')]"),
+		"poolName":           to.StringPtr("master"),
+	}
+
+	if kubernetesConfig != nil && kubernetesConfig.IsContainerMonitoringAddonEnabled() {
+		addon := kubernetesConfig.GetAddonByName(ContainerMonitoringAddonName)
+		clusterDNSPrefix := "aks-engine-cluster"
+		if cs.Properties.MasterProfile != nil && cs.Properties.MasterProfile.DNSPrefix != "" {
+			clusterDNSPrefix = cs.Properties.MasterProfile.DNSPrefix
+		}
+		vmTags["logAnalyticsWorkspaceResourceId"] = to.StringPtr(addon.Config["logAnalyticsWorkspaceResourceId"])
+		vmTags["clusterName"] = to.StringPtr(clusterDNSPrefix)
+	}
+
 	virtualMachine := compute.VirtualMachine{
 		Location: to.StringPtr("[variables('location')]"),
 		Name:     to.StringPtr("[concat(variables('masterVMNamePrefix'), copyIndex(variables('masterOffset')))]"),
-		Tags: map[string]*string{
-			"creationSource":     to.StringPtr("[concat(parameters('generatorCode'), '-', variables('masterVMNamePrefix'), copyIndex(variables('masterOffset')))]"),
-			"resourceNameSuffix": to.StringPtr("[parameters('nameSuffix')]"),
-			"orchestrator":       to.StringPtr("[variables('orchestratorNameVersionTag')]"),
-			"aksEngineVersion":   to.StringPtr("[parameters('aksEngineVersion')]"),
-			"poolName":           to.StringPtr("master"),
-		},
-		Type: to.StringPtr("Microsoft.Compute/virtualMachines"),
+		Tags:     vmTags,
+		Type:     to.StringPtr("Microsoft.Compute/virtualMachines"),
 	}
 
 	addCustomTagsToVM(cs.Properties.MasterProfile.CustomVMTags, &virtualMachine)
@@ -585,7 +597,7 @@ func addCustomTagsToVM(tags map[string]string, vm *compute.VirtualMachine) {
 	for key, value := range tags {
 		_, found := vm.Tags[key]
 		if !found {
-			vm.Tags[key] = &value
+			vm.Tags[key] = to.StringPtr(value)
 		}
 	}
 }

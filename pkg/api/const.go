@@ -128,7 +128,7 @@ const (
 	// DefaultHeapsterAddonEnabled determines the aks-engine provided default for enabling heapster addon
 	DefaultHeapsterAddonEnabled = true
 	// DefaultTillerAddonEnabled determines the aks-engine provided default for enabling tiller addon
-	DefaultTillerAddonEnabled = true
+	DefaultTillerAddonEnabled = false
 	// DefaultAADPodIdentityAddonEnabled determines the aks-engine provided default for enabling aad-pod-identity addon
 	DefaultAADPodIdentityAddonEnabled = false
 	// DefaultACIConnectorAddonEnabled determines the aks-engine provided default for enabling aci connector addon
@@ -336,11 +336,11 @@ const (
 	// AzureCniPluginVerLinux specifies version of Azure CNI plugin, which has been mirrored from
 	// https://github.com/Azure/azure-container-networking/releases/download/${AZURE_PLUGIN_VER}/azure-vnet-cni-linux-amd64-${AZURE_PLUGIN_VER}.tgz
 	// to https://acs-mirror.azureedge.net/cni
-	AzureCniPluginVerLinux = "v1.0.25"
+	AzureCniPluginVerLinux = "v1.0.27"
 	// AzureCniPluginVerWindows specifies version of Azure CNI plugin, which has been mirrored from
 	// https://github.com/Azure/azure-container-networking/releases/download/${AZURE_PLUGIN_VER}/azure-vnet-cni-windows-amd64-${AZURE_PLUGIN_VER}.zip
 	// to https://acs-mirror.azureedge.net/cni
-	AzureCniPluginVerWindows = "v1.0.25"
+	AzureCniPluginVerWindows = "v1.0.27"
 	// CNIPluginVer specifies the version of CNI implementation
 	// https://github.com/containernetworking/plugins
 	CNIPluginVer = "v0.7.5"

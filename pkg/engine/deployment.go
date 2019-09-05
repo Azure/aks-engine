@@ -7,11 +7,12 @@ import (
 	"github.com/Azure/azure-sdk-for-go/services/resources/mgmt/2018-05-01/resources"
 	"github.com/Azure/go-autorest/autorest/to"
 )
+
 const (
 	azurestackGenerateGUID = "pid-1bda96ec-adf4-4eea-bb9a-8462de5475c0"
 )
 
-//TODO create seperate function to allow users to pass in deployment name for azure
+//TODO create separate function to allow users to pass in deployment name for azure
 func createAzurestackTelemetry() DeploymentARM {
 	properties := resources.DeploymentPropertiesExtended{
 		Mode: "Incremental",

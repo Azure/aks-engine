@@ -285,6 +285,7 @@ func createJumpboxNetworkInterface(cs *api.ContainerService) NetworkInterfaceARM
 }
 
 func createAgentVMASNetworkInterface(cs *api.ContainerService, profile *api.AgentPoolProfile) NetworkInterfaceARM {
+	isHostedMaster := cs.Properties.IsHostedMasterProfile()
 	isWindows := profile.IsWindows()
 	isCustomVNet := profile.IsCustomVNET()
 	isAzureCNI := cs.Properties.OrchestratorProfile.IsAzureCNI()
@@ -306,7 +307,8 @@ func createAgentVMASNetworkInterface(cs *api.ContainerService, profile *api.Agen
 	}
 	if !cs.Properties.OrchestratorProfile.IsPrivateCluster() &&
 		profile.LoadBalancerBackendAddressPoolIDs == nil &&
-		cs.Properties.OrchestratorProfile.KubernetesConfig.LoadBalancerSku == api.StandardLoadBalancerSku {
+		cs.Properties.OrchestratorProfile.KubernetesConfig.LoadBalancerSku == api.StandardLoadBalancerSku &&
+		!isHostedMaster {
 		dependencies = append(dependencies, "[variables('agentLbID')]")
 	}
 
@@ -351,7 +353,8 @@ func createAgentVMASNetworkInterface(cs *api.ContainerService, profile *api.Agen
 				}
 			} else {
 				if !cs.Properties.OrchestratorProfile.IsPrivateCluster() &&
-					cs.Properties.OrchestratorProfile.KubernetesConfig.LoadBalancerSku == api.StandardLoadBalancerSku {
+					cs.Properties.OrchestratorProfile.KubernetesConfig.LoadBalancerSku == api.StandardLoadBalancerSku &&
+					!isHostedMaster {
 					agentLbBackendAddressPools := network.BackendAddressPool{
 						ID: to.StringPtr("[concat(variables('agentLbID'), '/backendAddressPools/', variables('agentLbBackendPoolName'))]"),
 					}

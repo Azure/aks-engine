@@ -1,0 +1,251 @@
+[
+    {
+        "id": "/subscriptions/3fab58ee-83c5-4147-858d-2c2a722e0e66/resourceGroups/k111004/providers/Microsoft.Compute/virtualMachineScaleSets/k8s-linuxpool-36855619-vmss/virtualMachines/0",
+        "instanceId": "0",
+        "location": "eastus",
+        "name": "k8s-linuxpool-36855619-vmss_0",
+        "properties": {
+            "latestModelApplied": true,
+            "vmId": "a67b283f-ca73-4e92-addc-72e1ea98980f",
+            "hardwareProfile": {},
+            "storageProfile": {
+                "imageReference": {
+                    "publisher": "Canonical",
+                    "offer": "UbuntuServer",
+                    "sku": "16.04-LTS",
+                    "version": "16.04.201902120"
+                },
+                "osDisk": {
+                    "osType": "Linux",
+                    "name": "k8s-linuxpool-368556k8s-linuxpool-3685561OS__1_8dd2cefa2b4344f3a856899d1e166378",
+                    "caching": "ReadWrite",
+                    "createOption": "FromImage",
+                    "diskSizeGB": 200,
+                    "managedDisk": {
+                        "storageAccountType": "Standard_LRS",
+                        "id": "/subscriptions/3fab58ee-83c5-4147-858d-2c2a722e0e66/resourceGroups/k111004/providers/Microsoft.Compute/disks/k8s-linuxpool-368556k8s-linuxpool-3685561OS__1_8dd2cefa2b4344f3a856899d1e166378"
+                    }
+                },
+                "dataDisks": []
+            },
+            "osProfile": {
+                "computerName": "k8s-linuxpool-36855619-vmss000000",
+                "adminUsername": "azureuser",
+                "linuxConfiguration": {
+                    "disablePasswordAuthentication": true,
+                    "ssh": {
+                        "publicKeys": [
+                            {
+                                "path": "/home/azureuser/.ssh/authorized_keys",
+                                "keyData": "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQC57Mr5GJ9Vpu9Y5Kuheu/lCrwZvtq+Xirw+9qIu4tsbKHW96lWfN9xptxN3CaGlP4PX/2c43EBlFLb/zl6B6SEZHrfFcy4+Azb2C3x3qdbvIwm3bNUxcCxj+5DbxGn8w5fYNUZ0jAFtmUdFIo1PPjcIsLq5WGx+1PQAecw7grfGGAb2qiljFcc0mIYUSAsGusmYFM0rLHJqeSjxA8CgkJYxPqxF7AhCBshTGNB+0F2H+Xymld6ee5YGEQt9K90pCxoJwsUt0uLAOWqp1hSydx3gnLH65nxE349vlW8QU3rR27FoJHB64q3jGb8yJ8LCHmfekXiXxk05xz/Gy57B/pW/86YTH2hXG2ZD8JxrySgsVx8ypeZz1sTIUhBOZDhxySnLb+zeE2R/+29bcy5gGDTohmCyh3+wDikG69ZJTqu5I43IzyLJTYW9KLaYuMJpqVoMCpGHAPtSlm1ezS/39ogyN/yj+fyl3YEyfOfP2I6xV5R2z6PqpQAJt71mee8HUePJA9RE6W4Luvez7QnBGg+iY4zrU8ITmU+0bsYgah+9w8xP3TDDmJCUsuzfXmHgPQ2aMBkKDBH/0xMl9Pl8Kac6q/5ltLGkUyp02iHIhCx/WMiLtGNOxjBks5JLploZII/3JLVDXEzkxGUOA1B+o+u9osgzrZxk0kyavlxH1n36Q== honcao@Hongbins-MBP.guest.corp.microsoft.com"
+                            }
+                        ]
+                    }
+                },
+                "secrets": []
+            },
+            "networkProfile": {
+                "networkInterfaces": [
+                    {
+                        "id": "/subscriptions/3fab58ee-83c5-4147-858d-2c2a722e0e66/resourceGroups/k111004/providers/Microsoft.Compute/virtualMachineScaleSets/k8s-linuxpool-36855619-vmss/virtualMachines/0/networkInterfaces/k8s-linuxpool-36855619-vmss"
+                    }
+                ]
+            },
+            "provisioningState": "Succeeded"
+        },
+        "resources": [
+            {
+                "id": "/subscriptions/3fab58ee-83c5-4147-858d-2c2a722e0e66/resourceGroups/k111004/providers/Microsoft.Compute/virtualMachines/k8s-linuxpool-36855619-vmss_0/extensions/vmssCSE",
+                "location": "eastus",
+                "name": "vmssCSE",
+                "properties": {
+                    "publisher": "Microsoft.Azure.Extensions",
+                    "type": "CustomScript",
+                    "typeHandlerVersion": "2.0",
+                    "autoUpgradeMinorVersion": true,
+                    "settings": {},
+                    "provisioningState": "Succeeded"
+                },
+                "type": "Microsoft.Compute/virtualMachines/extensions"
+            }
+        ],
+        "sku": {
+            "name": "Standard_D2_v2",
+            "tier": "Standard"
+        },
+        "tags": {
+            "aksEngineVersion": "canary",
+            "creationSource": "aksengine-k8s-linuxpool-36855619-vmss",
+            "orchestrator": "Kubernetes:1.11.8",
+            "poolName": "linuxpool",
+            "resourceNameSuffix": "36855619"
+        },
+        "type": "Microsoft.Compute/virtualMachineScaleSets/virtualMachines"
+    },
+    {
+        "id": "/subscriptions/3fab58ee-83c5-4147-858d-2c2a722e0e66/resourceGroups/k111004/providers/Microsoft.Compute/virtualMachineScaleSets/k8s-linuxpool-36855619-vmss/virtualMachines/1",
+        "instanceId": "1",
+        "location": "eastus",
+        "name": "k8s-linuxpool-36855619-vmss_1",
+        "properties": {
+            "latestModelApplied": true,
+            "vmId": "fe97ad51-6991-4789-946f-ae36c0ec1b4d",
+            "hardwareProfile": {},
+            "storageProfile": {
+                "imageReference": {
+                    "publisher": "Canonical",
+                    "offer": "UbuntuServer",
+                    "sku": "16.04-LTS",
+                    "version": "16.04.201902120"
+                },
+                "osDisk": {
+                    "osType": "Linux",
+                    "name": "k8s-linuxpool-368556k8s-linuxpool-3685561OS__1_3abdfc0174ca4e94bc4d36f0b3b80983",
+                    "caching": "ReadWrite",
+                    "createOption": "FromImage",
+                    "diskSizeGB": 200,
+                    "managedDisk": {
+                        "storageAccountType": "Standard_LRS",
+                        "id": "/subscriptions/3fab58ee-83c5-4147-858d-2c2a722e0e66/resourceGroups/k111004/providers/Microsoft.Compute/disks/k8s-linuxpool-368556k8s-linuxpool-3685561OS__1_3abdfc0174ca4e94bc4d36f0b3b80983"
+                    }
+                },
+                "dataDisks": []
+            },
+            "osProfile": {
+                "computerName": "k8s-linuxpool-36855619-vmss000001",
+                "adminUsername": "azureuser",
+                "linuxConfiguration": {
+                    "disablePasswordAuthentication": true,
+                    "ssh": {
+                        "publicKeys": [
+                            {
+                                "path": "/home/azureuser/.ssh/authorized_keys",
+                                "keyData": "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQC57Mr5GJ9Vpu9Y5Kuheu/lCrwZvtq+Xirw+9qIu4tsbKHW96lWfN9xptxN3CaGlP4PX/2c43EBlFLb/zl6B6SEZHrfFcy4+Azb2C3x3qdbvIwm3bNUxcCxj+5DbxGn8w5fYNUZ0jAFtmUdFIo1PPjcIsLq5WGx+1PQAecw7grfGGAb2qiljFcc0mIYUSAsGusmYFM0rLHJqeSjxA8CgkJYxPqxF7AhCBshTGNB+0F2H+Xymld6ee5YGEQt9K90pCxoJwsUt0uLAOWqp1hSydx3gnLH65nxE349vlW8QU3rR27FoJHB64q3jGb8yJ8LCHmfekXiXxk05xz/Gy57B/pW/86YTH2hXG2ZD8JxrySgsVx8ypeZz1sTIUhBOZDhxySnLb+zeE2R/+29bcy5gGDTohmCyh3+wDikG69ZJTqu5I43IzyLJTYW9KLaYuMJpqVoMCpGHAPtSlm1ezS/39ogyN/yj+fyl3YEyfOfP2I6xV5R2z6PqpQAJt71mee8HUePJA9RE6W4Luvez7QnBGg+iY4zrU8ITmU+0bsYgah+9w8xP3TDDmJCUsuzfXmHgPQ2aMBkKDBH/0xMl9Pl8Kac6q/5ltLGkUyp02iHIhCx/WMiLtGNOxjBks5JLploZII/3JLVDXEzkxGUOA1B+o+u9osgzrZxk0kyavlxH1n36Q== honcao@Hongbins-MBP.guest.corp.microsoft.com"
+                            }
+                        ]
+                    }
+                },
+                "secrets": []
+            },
+            "networkProfile": {
+                "networkInterfaces": [
+                    {
+                        "id": "/subscriptions/3fab58ee-83c5-4147-858d-2c2a722e0e66/resourceGroups/k111004/providers/Microsoft.Compute/virtualMachineScaleSets/k8s-linuxpool-36855619-vmss/virtualMachines/1/networkInterfaces/k8s-linuxpool-36855619-vmss"
+                    }
+                ]
+            },
+            "provisioningState": "Succeeded"
+        },
+        "resources": [
+            {
+                "id": "/subscriptions/3fab58ee-83c5-4147-858d-2c2a722e0e66/resourceGroups/k111004/providers/Microsoft.Compute/virtualMachines/k8s-linuxpool-36855619-vmss_1/extensions/vmssCSE",
+                "location": "eastus",
+                "name": "vmssCSE",
+                "properties": {
+                    "publisher": "Microsoft.Azure.Extensions",
+                    "type": "CustomScript",
+                    "typeHandlerVersion": "2.0",
+                    "autoUpgradeMinorVersion": true,
+                    "settings": {},
+                    "provisioningState": "Succeeded"
+                },
+                "type": "Microsoft.Compute/virtualMachines/extensions"
+            }
+        ],
+        "sku": {
+            "name": "Standard_D2_v2",
+            "tier": "Standard"
+        },
+        "tags": {
+            "aksEngineVersion": "canary",
+            "creationSource": "aksengine-k8s-linuxpool-36855619-vmss",
+            "orchestrator": "Kubernetes:1.11.8",
+            "poolName": "linuxpool",
+            "resourceNameSuffix": "36855619"
+        },
+        "type": "Microsoft.Compute/virtualMachineScaleSets/virtualMachines"
+    },
+    {
+        "id": "/subscriptions/3fab58ee-83c5-4147-858d-2c2a722e0e66/resourceGroups/k111004/providers/Microsoft.Compute/virtualMachineScaleSets/k8s-linuxpool-36855619-vmss/virtualMachines/2",
+        "instanceId": "2",
+        "location": "eastus",
+        "name": "k8s-linuxpool-36855619-vmss_2",
+        "properties": {
+            "latestModelApplied": true,
+            "vmId": "84187506-a21a-4135-88b0-ffa044f39974",
+            "hardwareProfile": {},
+            "storageProfile": {
+                "imageReference": {
+                    "publisher": "Canonical",
+                    "offer": "UbuntuServer",
+                    "sku": "16.04-LTS",
+                    "version": "16.04.201902120"
+                },
+                "osDisk": {
+                    "osType": "Linux",
+                    "name": "k8s-linuxpool-368556k8s-linuxpool-3685561OS__1_7fe493d1cbab4c1387b04bd50ca6bcd2",
+                    "caching": "ReadWrite",
+                    "createOption": "FromImage",
+                    "diskSizeGB": 200,
+                    "managedDisk": {
+                        "storageAccountType": "Standard_LRS",
+                        "id": "/subscriptions/3fab58ee-83c5-4147-858d-2c2a722e0e66/resourceGroups/k111004/providers/Microsoft.Compute/disks/k8s-linuxpool-368556k8s-linuxpool-3685561OS__1_7fe493d1cbab4c1387b04bd50ca6bcd2"
+                    }
+                },
+                "dataDisks": []
+            },
+            "osProfile": {
+                "computerName": "k8s-linuxpool-36855619-vmss000002",
+                "adminUsername": "azureuser",
+                "linuxConfiguration": {
+                    "disablePasswordAuthentication": true,
+                    "ssh": {
+                        "publicKeys": [
+                            {
+                                "path": "/home/azureuser/.ssh/authorized_keys",
+                                "keyData": "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQC57Mr5GJ9Vpu9Y5Kuheu/lCrwZvtq+Xirw+9qIu4tsbKHW96lWfN9xptxN3CaGlP4PX/2c43EBlFLb/zl6B6SEZHrfFcy4+Azb2C3x3qdbvIwm3bNUxcCxj+5DbxGn8w5fYNUZ0jAFtmUdFIo1PPjcIsLq5WGx+1PQAecw7grfGGAb2qiljFcc0mIYUSAsGusmYFM0rLHJqeSjxA8CgkJYxPqxF7AhCBshTGNB+0F2H+Xymld6ee5YGEQt9K90pCxoJwsUt0uLAOWqp1hSydx3gnLH65nxE349vlW8QU3rR27FoJHB64q3jGb8yJ8LCHmfekXiXxk05xz/Gy57B/pW/86YTH2hXG2ZD8JxrySgsVx8ypeZz1sTIUhBOZDhxySnLb+zeE2R/+29bcy5gGDTohmCyh3+wDikG69ZJTqu5I43IzyLJTYW9KLaYuMJpqVoMCpGHAPtSlm1ezS/39ogyN/yj+fyl3YEyfOfP2I6xV5R2z6PqpQAJt71mee8HUePJA9RE6W4Luvez7QnBGg+iY4zrU8ITmU+0bsYgah+9w8xP3TDDmJCUsuzfXmHgPQ2aMBkKDBH/0xMl9Pl8Kac6q/5ltLGkUyp02iHIhCx/WMiLtGNOxjBks5JLploZII/3JLVDXEzkxGUOA1B+o+u9osgzrZxk0kyavlxH1n36Q== honcao@Hongbins-MBP.guest.corp.microsoft.com"
+                            }
+                        ]
+                    }
+                },
+                "secrets": []
+            },
+            "networkProfile": {
+                "networkInterfaces": [
+                    {
+                        "id": "/subscriptions/3fab58ee-83c5-4147-858d-2c2a722e0e66/resourceGroups/k111004/providers/Microsoft.Compute/virtualMachineScaleSets/k8s-linuxpool-36855619-vmss/virtualMachines/2/networkInterfaces/k8s-linuxpool-36855619-vmss"
+                    }
+                ]
+            },
+            "provisioningState": "Succeeded"
+        },
+        "resources": [
+            {
+                "id": "/subscriptions/3fab58ee-83c5-4147-858d-2c2a722e0e66/resourceGroups/k111004/providers/Microsoft.Compute/virtualMachines/k8s-linuxpool-36855619-vmss_2/extensions/vmssCSE",
+                "location": "eastus",
+                "name": "vmssCSE",
+                "properties": {
+                    "publisher": "Microsoft.Azure.Extensions",
+                    "type": "CustomScript",
+                    "typeHandlerVersion": "2.0",
+                    "autoUpgradeMinorVersion": true,
+                    "settings": {},
+                    "provisioningState": "Succeeded"
+                },
+                "type": "Microsoft.Compute/virtualMachines/extensions"
+            }
+        ],
+        "sku": {
+            "name": "Standard_D2_v2",
+            "tier": "Standard"
+        },
+        "tags": {
+            "aksEngineVersion": "canary",
+            "creationSource": "aksengine-k8s-linuxpool-36855619-vmss",
+            "orchestrator": "Kubernetes:1.11.8",
+            "poolName": "linuxpool",
+            "resourceNameSuffix": "36855619"
+        },
+        "type": "Microsoft.Compute/virtualMachineScaleSets/virtualMachines"
+    }
+]

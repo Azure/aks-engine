@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"path"
 	"strconv"
+	"strings"
 	"testing"
 
 	"os"
@@ -64,6 +65,43 @@ const ExampleAPIModelWithoutServicePrincipalProfile = `{
 	"apiVersion": "vlabs",
 	"properties": {
 		  "orchestratorProfile": { "orchestratorType": "Kubernetes", "kubernetesConfig": { "useManagedIdentity": %s, "etcdVersion" : "2.3.8" } },
+	  "masterProfile": { "count": 1, "dnsPrefix": "mytestcluster", "vmSize": "Standard_D2_v2" },
+	  "agentPoolProfiles": [ { "name": "linuxpool1", "count": 2, "vmSize": "Standard_D2_v2", "availabilityProfile": "AvailabilitySet" } ],
+	  "windowsProfile": { "adminUsername": "azureuser", "adminPassword": "replacepassword1234$" },
+	  "linuxProfile": { "adminUsername": "azureuser", "ssh": { "publicKeys": [ { "keyData": "" } ] }
+	  }
+	}
+  }
+  `
+const ExampleAPIModelWithContainerMonitoringAddonWithNoConfig = `{
+	"apiVersion": "vlabs",
+	"properties": {
+		  "orchestratorProfile": { "orchestratorType": "Kubernetes", "kubernetesConfig": { "addons":[{"name": "container-monitoring","enabled": true }]}},
+	  "masterProfile": { "count": 1, "dnsPrefix": "mytestcluster", "vmSize": "Standard_D2_v2" },
+	  "agentPoolProfiles": [ { "name": "linuxpool1", "count": 2, "vmSize": "Standard_D2_v2", "availabilityProfile": "AvailabilitySet" } ],
+	  "windowsProfile": { "adminUsername": "azureuser", "adminPassword": "replacepassword1234$" },
+	  "linuxProfile": { "adminUsername": "azureuser", "ssh": { "publicKeys": [ { "keyData": "" } ] }
+	  }
+	}
+  }
+  `
+
+const ExampleAPIModelWithContainerMonitoringAddonWithExistingWorkspaceConfig = `{
+	"apiVersion": "vlabs",
+	"properties": {
+		  "orchestratorProfile": { "orchestratorType": "Kubernetes", "kubernetesConfig": { "addons":[{"name": "container-monitoring","enabled": true, "config":{"logAnalyticsWorkspaceResourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/test-workspace-rg/providers/Microsoft.OperationalInsights/workspaces/test-workspace"} }]}},
+	  "masterProfile": { "count": 1, "dnsPrefix": "mytestcluster", "vmSize": "Standard_D2_v2" },
+	  "agentPoolProfiles": [ { "name": "linuxpool1", "count": 2, "vmSize": "Standard_D2_v2", "availabilityProfile": "AvailabilitySet" } ],
+	  "windowsProfile": { "adminUsername": "azureuser", "adminPassword": "replacepassword1234$" },
+	  "linuxProfile": { "adminUsername": "azureuser", "ssh": { "publicKeys": [ { "keyData": "" } ] }
+	  }
+	}
+  }
+  `
+const ExampleAPIModelWithContainerMonitoringAddonWithWorkspaceGUIDAndKeyConfig = `{
+	"apiVersion": "vlabs",
+	"properties": {
+		  "orchestratorProfile": { "orchestratorType": "Kubernetes", "kubernetesConfig": { "addons":[{"name": "container-monitoring","enabled": true, "config":{"workspaceGuid": "MDAwMDAwMDAtMDAwMC0wMDAwLTAwMDAtMDAwMDAwMDAwMDAw", "workspaceKey": "NEQrdnlkNS9qU2NCbXNBd1pPRi8wR09CUTVrdUZRYzlKVmFXK0hsbko1OGN5ZVBKY3dUcGtzK3JWbXZnY1hHbW15dWpMRE5FVlBpVDhwQjI3NGE5WWc9PQ=="} }]}},
 	  "masterProfile": { "count": 1, "dnsPrefix": "mytestcluster", "vmSize": "Standard_D2_v2" },
 	  "agentPoolProfiles": [ { "name": "linuxpool1", "count": 2, "vmSize": "Standard_D2_v2", "availabilityProfile": "AvailabilitySet" } ],
 	  "windowsProfile": { "adminUsername": "azureuser", "adminPassword": "replacepassword1234$" },
@@ -620,5 +658,248 @@ func TestOutputDirectoryWithDNSPrefix(t *testing.T) {
 
 	if d.outputDirectory != path.Join("_output", d.dnsPrefix) {
 		t.Fatalf("Calculated output directory should be %s, actual value %s", path.Join("_output", d.dnsPrefix), d.outputDirectory)
+	}
+}
+
+func TestAPIModelWithContainerMonitoringAddonWithNoConfigInCmd(t *testing.T) {
+	apiloader := &api.Apiloader{
+		Translator: nil,
+	}
+
+	apimodel := ExampleAPIModelWithContainerMonitoringAddonWithNoConfig
+
+	cs, ver, err := apiloader.DeserializeContainerService([]byte(apimodel), false, false, nil)
+	if err != nil {
+		t.Fatalf("unexpected error deserializing the example apimodel: %s", err)
+	}
+	deployCmd := &deployCmd{
+		apimodelPath:     "./this/is/unused.json",
+		outputDirectory:  "_test_output",
+		forceOverwrite:   true,
+		location:         "westus",
+		containerService: cs,
+		apiVersion:       ver,
+
+		client: &armhelpers.MockAKSEngineClient{},
+		authProvider: &mockAuthProvider{
+			authArgs: &authArgs{},
+		},
+	}
+	err = autofillApimodel(deployCmd)
+	if err != nil {
+		t.Fatalf("unexpected error autofilling the example apimodel: %s", err)
+	}
+
+	defer os.RemoveAll(deployCmd.outputDirectory)
+
+	k8sConfig := deployCmd.containerService.Properties.OrchestratorProfile.KubernetesConfig
+
+	if k8sConfig == nil {
+		t.Fatalf("expected valid kubernetes config")
+	}
+
+	if len(k8sConfig.Addons) != 1 {
+		t.Fatalf("expected one addon")
+	}
+
+	addon := k8sConfig.Addons[0]
+	expectedAddonName := "container-monitoring"
+	if addon.Name != expectedAddonName {
+		t.Fatalf("expected addon name: %s but got: %s", expectedAddonName, addon.Name)
+	}
+
+	expectedWorkspaceGUIDInBase64 := "MDAwMDAwMDAtMDAwMC0wMDAwLTAwMDAtMDAwMDAwMDAwMDAw"
+	if addon.Config["workspaceGuid"] != expectedWorkspaceGUIDInBase64 {
+		t.Fatalf("expected workspaceGuid : %s but got : %s", expectedWorkspaceGUIDInBase64, addon.Config["workspaceGuid"])
+	}
+
+	expectedWorkspaceKeyInBase64 := "NEQrdnlkNS9qU2NCbXNBd1pPRi8wR09CUTVrdUZRYzlKVmFXK0hsbko1OGN5ZVBKY3dUcGtzK3JWbXZnY1hHbW15dWpMRE5FVlBpVDhwQjI3NGE5WWc9PQ=="
+	if addon.Config["workspaceKey"] != expectedWorkspaceKeyInBase64 {
+		t.Fatalf("unexpected workspaceKey : %s", addon.Config["workspaceKey"])
+		t.Fatalf("expected workspaceKey : %s but got : %s", expectedWorkspaceKeyInBase64, addon.Config["workspaceKey"])
+	}
+
+	workspaceResourceID := addon.Config["logAnalyticsWorkspaceResourceId"]
+	resourceParts := strings.Split(workspaceResourceID, "/")
+
+	if len(resourceParts) != 9 {
+		t.Fatalf("invalid workspaceResourceID : %s", workspaceResourceID)
+	}
+
+	workspaceSubscriptionID := resourceParts[2]
+	workspaceResourceGroup := resourceParts[4]
+	workspaceProvider := resourceParts[6]
+	workspaceName := resourceParts[8]
+
+	expectedworkspaceSubscriptionID := "00000000-0000-0000-0000-000000000000"
+	if workspaceSubscriptionID != expectedworkspaceSubscriptionID {
+		t.Fatalf("expected workspaceSubscriptionID: %s, but found : %s", expectedworkspaceSubscriptionID, workspaceSubscriptionID)
+	}
+
+	expectedworkspaceProvider := "Microsoft.OperationalInsights"
+	if workspaceProvider != expectedworkspaceProvider {
+		t.Fatalf("expected log analytics workspace provider name: %s, but got: %s", expectedworkspaceProvider, workspaceProvider)
+	}
+
+	expectedworkspaceResourceGroup := "test-workspace-rg"
+	if workspaceResourceGroup != "test-workspace-rg" {
+		t.Fatalf("expected workspaceResourceGroup : %s, but found : %s", expectedworkspaceResourceGroup, workspaceResourceGroup)
+	}
+
+	expectedworkspaceName := "test-workspace"
+	if workspaceName != expectedworkspaceName {
+		t.Fatalf("expected workspaceName : %s, but found : %s", expectedworkspaceName, workspaceName)
+	}
+
+}
+
+func TestAPIModelWithContainerMonitoringAddonWithConfigInCmd(t *testing.T) {
+	apiloader := &api.Apiloader{
+		Translator: nil,
+	}
+
+	apimodel := ExampleAPIModelWithContainerMonitoringAddonWithExistingWorkspaceConfig
+
+	cs, ver, err := apiloader.DeserializeContainerService([]byte(apimodel), false, false, nil)
+	if err != nil {
+		t.Fatalf("unexpected error deserializing the example apimodel: %s", err)
+	}
+	deployCmd := &deployCmd{
+		apimodelPath:     "./this/is/unused.json",
+		outputDirectory:  "_test_output",
+		forceOverwrite:   true,
+		location:         "westus",
+		containerService: cs,
+		apiVersion:       ver,
+
+		client: &armhelpers.MockAKSEngineClient{},
+		authProvider: &mockAuthProvider{
+			authArgs: &authArgs{},
+		},
+	}
+	err = autofillApimodel(deployCmd)
+	if err != nil {
+		t.Fatalf("unexpected error autofilling the example apimodel: %s", err)
+	}
+
+	defer os.RemoveAll(deployCmd.outputDirectory)
+
+	k8sConfig := deployCmd.containerService.Properties.OrchestratorProfile.KubernetesConfig
+
+	if k8sConfig == nil {
+		t.Fatalf("expected valid kubernetes config")
+	}
+
+	if len(k8sConfig.Addons) != 1 {
+		t.Fatalf("expected one addon")
+	}
+
+	addon := k8sConfig.Addons[0]
+
+	expectedAddonName := "container-monitoring"
+	if addon.Name != expectedAddonName {
+		t.Fatalf("expected addon name: %s but got: %s", expectedAddonName, addon.Name)
+	}
+
+	expectedWorkspaceGUIDInBase64 := "MDAwMDAwMDAtMDAwMC0wMDAwLTAwMDAtMDAwMDAwMDAwMDAw"
+	if addon.Config["workspaceGuid"] != expectedWorkspaceGUIDInBase64 {
+		t.Fatalf("expected workspaceGuid : %s but got : %s", expectedWorkspaceGUIDInBase64, addon.Config["workspaceGuid"])
+	}
+
+	expectedWorkspaceKeyInBase64 := "NEQrdnlkNS9qU2NCbXNBd1pPRi8wR09CUTVrdUZRYzlKVmFXK0hsbko1OGN5ZVBKY3dUcGtzK3JWbXZnY1hHbW15dWpMRE5FVlBpVDhwQjI3NGE5WWc9PQ=="
+	if addon.Config["workspaceKey"] != expectedWorkspaceKeyInBase64 {
+		t.Fatalf("unexpected workspaceKey : %s", addon.Config["workspaceKey"])
+		t.Fatalf("expected workspaceKey : %s but got : %s", expectedWorkspaceKeyInBase64, addon.Config["workspaceKey"])
+	}
+
+	workspaceResourceID := addon.Config["logAnalyticsWorkspaceResourceId"]
+	resourceParts := strings.Split(workspaceResourceID, "/")
+
+	if len(resourceParts) != 9 {
+		t.Fatalf("invalid workspaceResourceID : %s", workspaceResourceID)
+	}
+
+	workspaceSubscriptionID := resourceParts[2]
+	workspaceResourceGroup := resourceParts[4]
+	workspaceProvider := resourceParts[6]
+	workspaceName := resourceParts[8]
+
+	expectedworkspaceSubscriptionID := "00000000-0000-0000-0000-000000000000"
+	if workspaceSubscriptionID != expectedworkspaceSubscriptionID {
+		t.Fatalf("expected workspaceSubscriptionID: %s, but found : %s", expectedworkspaceSubscriptionID, workspaceSubscriptionID)
+	}
+
+	expectedworkspaceProvider := "Microsoft.OperationalInsights"
+	if workspaceProvider != expectedworkspaceProvider {
+		t.Fatalf("expected log analytics workspace provider name: %s, but got: %s", expectedworkspaceProvider, workspaceProvider)
+	}
+
+	expectedworkspaceResourceGroup := "test-workspace-rg"
+	if workspaceResourceGroup != "test-workspace-rg" {
+		t.Fatalf("expected workspaceResourceGroup : %s, but found : %s", expectedworkspaceResourceGroup, workspaceResourceGroup)
+	}
+
+	expectedworkspaceName := "test-workspace"
+	if workspaceName != expectedworkspaceName {
+		t.Fatalf("expected workspaceName : %s, but found : %s", expectedworkspaceName, workspaceName)
+	}
+}
+
+func TestAPIModelWithContainerMonitoringAddonWithWorkspaceGuidAndKeyConfigInCmd(t *testing.T) {
+	apiloader := &api.Apiloader{
+		Translator: nil,
+	}
+
+	apimodel := ExampleAPIModelWithContainerMonitoringAddonWithWorkspaceGUIDAndKeyConfig
+
+	cs, ver, err := apiloader.DeserializeContainerService([]byte(apimodel), false, false, nil)
+	if err != nil {
+		t.Fatalf("unexpected error deserializing the example apimodel: %s", err)
+	}
+	deployCmd := &deployCmd{
+		apimodelPath:     "./this/is/unused.json",
+		outputDirectory:  "_test_output",
+		forceOverwrite:   true,
+		location:         "westus",
+		containerService: cs,
+		apiVersion:       ver,
+
+		client: &armhelpers.MockAKSEngineClient{},
+		authProvider: &mockAuthProvider{
+			authArgs: &authArgs{},
+		},
+	}
+	err = autofillApimodel(deployCmd)
+	if err != nil {
+		t.Fatalf("unexpected error autofilling the example apimodel: %s", err)
+	}
+
+	defer os.RemoveAll(deployCmd.outputDirectory)
+
+	k8sConfig := deployCmd.containerService.Properties.OrchestratorProfile.KubernetesConfig
+
+	if k8sConfig == nil {
+		t.Fatalf("expected valid kubernetes config")
+	}
+
+	if len(k8sConfig.Addons) != 1 {
+		t.Fatalf("expected one addon")
+	}
+
+	addon := k8sConfig.Addons[0]
+
+	if addon.Name != "container-monitoring" {
+		t.Fatalf("unexpected addon found : %s", addon.Name)
+	}
+
+	expectedWorkspaceGUIDInBase64 := "MDAwMDAwMDAtMDAwMC0wMDAwLTAwMDAtMDAwMDAwMDAwMDAw"
+	if addon.Config["workspaceGuid"] != expectedWorkspaceGUIDInBase64 {
+		t.Fatalf("expected workspaceGuid : %s but got : %s", expectedWorkspaceGUIDInBase64, addon.Config["workspaceGuid"])
+	}
+
+	expectedWorkspaceKeyInBase64 := "NEQrdnlkNS9qU2NCbXNBd1pPRi8wR09CUTVrdUZRYzlKVmFXK0hsbko1OGN5ZVBKY3dUcGtzK3JWbXZnY1hHbW15dWpMRE5FVlBpVDhwQjI3NGE5WWc9PQ=="
+	if addon.Config["workspaceKey"] != expectedWorkspaceKeyInBase64 {
+		t.Fatalf("unexpected workspaceKey : %s", addon.Config["workspaceKey"])
+		t.Fatalf("expected workspaceKey : %s but got : %s", expectedWorkspaceKeyInBase64, addon.Config["workspaceKey"])
 	}
 }

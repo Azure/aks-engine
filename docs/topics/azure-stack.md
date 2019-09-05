@@ -33,7 +33,7 @@ Before you try to deploy the first Kubernetes cluster, make sure these marketpla
 
 The `AKS Base Image` is the only viable option if you are deploying to a [disconnected instance](#disconnected-azure-stack-instances).
 
-_Note: AKS Engine on disconnected Azure Stack instances is a private preview feature_
+_Note: AKS Engine on disconnected Azure Stack instances is a preview feature_
 
 ## Service Principals and Identity Providers
 
@@ -186,12 +186,14 @@ These are the Kubernetes versions that you can deploy to Azure Stack using AKS E
 
 If the Azure Stack instance is air-gapped, then the syndicated [AKS Base Image](#disconnected-azure-stack-instances) will determine the Kubernetes version that you can deploy or the target upgrade version. The table below lists the pre-pulled versions on each AKS Base Image version.
 
-_Note: AKS Engine on disconnected Azure Stack instances is a private preview feature_
+_Note: AKS Engine on disconnected Azure Stack instances is a preview feature_
 
 | AKS Engine                 | AKS Base Image     | Kubernetes versions | Notes |  
 |----------------------------|--------------------|---------------------|-------|
-| from v0.38.1 to v0.38.4    | [AKS Base Ubuntu 16.04-LTS Image Distro, July 2019](https://github.com/Azure/aks-engine/blob/v0.38.1/releases/vhd-notes/aks-ubuntu-1604/aks-ubuntu-1604-201907_2019.07.10.txt) | 1.14.3 - 1.14.1 - 1.13.7 - 1.13.5 - 1.12.8 - 1.12.7 - 1.11.10 - 1.11.9 |  |
-| v0.39.0                    | [AKS Base Ubuntu 16.04-LTS Image Distro, July 2019](https://github.com/Azure/aks-engine/blob/v0.39.0/releases/vhd-notes/aks-ubuntu-1604/aks-ubuntu-1604-201907_2019.07.30.txt) | 1.15.1 - 1.14.4 - 1.14.3 - 1.13.8 - 1.13.7 - 1.12.8 - 1.12.7 - 1.11.10 - 1.11.9 |  |
+| from v0.38.1 to v0.38.4    | [AKS Base Ubuntu 16.04-LTS Image Distro, July 2019 (2019.07.10)](https://github.com/Azure/aks-engine/blob/v0.38.1/releases/vhd-notes/aks-ubuntu-1604/aks-ubuntu-1604-201907_2019.07.10.txt) | 1.14.3 - 1.14.1 - 1.13.7 - 1.13.5 - 1.12.8 - 1.12.7 - 1.11.10 - 1.11.9 |  |
+| v0.39.0                    | [AKS Base Ubuntu 16.04-LTS Image Distro, July 2019 (2019.07.30)](https://github.com/Azure/aks-engine/blob/v0.39.0/releases/vhd-notes/aks-ubuntu-1604/aks-ubuntu-1604-201907_2019.07.30.txt) | 1.15.1 - 1.14.4 - 1.14.3 - 1.13.8 - 1.13.7 - 1.12.8 - 1.12.7 - 1.11.10 - 1.11.9 |  |
+| v0.39.1   | [AKS Base Ubuntu 16.04-LTS Image Distro, August 2019 (2019.08.09)](https://github.com/Azure/aks-engine/blob/v0.39.1/releases/vhd-notes/aks-ubuntu-1604/aks-ubuntu-1604-201908_2019.08.09.txt) | 1.15.2 - 1.15.1 - 1.14.5 - 1.14.4 - 1.13.9 - 1.13.8 - 1.12.8 - 1.12.7 - 1.11.10 - 1.11.9 |  |
+| v0.40.0                    | [AKS Base Ubuntu 16.04-LTS Image Distro, August 2019 (2019.08.21)](https://github.com/Azure/aks-engine/blob/v0.40.0/releases/vhd-notes/aks-ubuntu-1604/aks-ubuntu-1604-201908_2019.08.21.txt) | 1.15.3 - 1.15.2 - 1.14.6 - 1.14.5 - 1.13.10 - 1.13.9 - 1.12.8 - 1.12.7 - 1.11.10 - 1.11.9 |  |
 
 ### Network Policies
 

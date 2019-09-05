@@ -1,0 +1,20 @@
+{
+  "plan": {
+    "name": "ContainerInsights(testLogAnalyticsWorkspace)",
+    "publisher": "Microsoft",
+    "promotionCode": "",
+    "product": "OMSGallery/ContainerInsights"
+  },
+  "properties": {
+    "workspaceResourceId": "/subscriptions/cc6b141e-6afc-4786-9bf6-e3b9a5601460/resourcegroups/TestResourceGroup/providers/Microsoft.OperationalInsights/workspaces/testLogAnalyticsWorkspace",
+    "provisioningState": "Succeeded",
+    "creationTime": "Mon, 01 Jan 0001 00:00:00 GMT",
+    "lastModifiedTime": "Mon, 01 Jan 0001 00:00:00 GMT",
+    "containedResources": [],
+    "workbookTemplates": []
+  },
+  "id": "/subscriptions/cc6b141e-6afc-4786-9bf6-e3b9a5601460/resourcegroups/TestResourceGroup/providers/Microsoft.OperationsManagement/solutions/ContainerInsights(testLogAnalyticsWorkspace)",
+  "name": "ContainerInsights(testLogAnalyticsWorkspace)",
+  "type": "Microsoft.OperationsManagement/solutions",
+  "location": "East US"
+}

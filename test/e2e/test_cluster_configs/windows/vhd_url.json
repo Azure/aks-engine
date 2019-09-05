@@ -1,0 +1,52 @@
+{
+	"env": {
+		"REGION_OPTIONS": "westus",
+		"WINDOWS_NODE_VHD_URL": "https://aksenginee2etestimages.blob.core.windows.net/vhds/WS2019-1908.vhd"
+	},
+	"apiModel": {
+		"apiVersion": "vlabs",
+		"properties": {
+			"orchestratorProfile": {
+				"orchestratorType": "Kubernetes",
+			},
+			"masterProfile": {
+				"count": 1,
+				"dnsPrefix": "",
+				"vmSize": "Standard_D2_v2"
+			},
+			"agentPoolProfiles": [
+				{
+					"name": "linuxpool1",
+					"count": 3,
+					"vmSize": "Standard_D2_v2"
+				},
+				{
+					"name": "agentwin",
+					"count": 3,
+					"vmSize": "Standard_D2_v2",
+					"osType": "Windows"
+				}
+			],
+			"windowsProfile": {
+				"adminUsername": "azureuser",
+				"adminPassword": "replacepassword1234$",
+				"enableAutomaticUpdates": false,
+				"sshEnabled": true
+			},
+			"linuxProfile": {
+				"adminUsername": "azureuser",
+				"ssh": {
+					"publicKeys": [
+						{
+							"keyData": ""
+						}
+					]
+				}
+			},
+			"servicePrincipalProfile": {
+				"clientId": "",
+				"secret": ""
+			}
+		}
+	}
+}

@@ -14,8 +14,7 @@ import (
 func GenerateARMResources(cs *api.ContainerService) []interface{} {
 	var armResources []interface{}
 
-	var deploymentTelemetryEnabled bool
-	deploymentTelemetryEnabled = cs.Properties.FeatureFlags.IsFeatureEnabled("EnableTelemetry")
+	deploymentTelemetryEnabled := cs.Properties.FeatureFlags.IsFeatureEnabled("EnableTelemetry")
 	isAzureStack := cs.Properties.IsAzureStackCloud()
 
 	if deploymentTelemetryEnabled {

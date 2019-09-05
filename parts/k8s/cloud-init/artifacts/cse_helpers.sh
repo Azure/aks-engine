@@ -47,11 +47,14 @@ ERR_APT_DAILY_TIMEOUT=98 # Timeout waiting for apt daily updates
 ERR_APT_UPDATE_TIMEOUT=99 # Timeout waiting for apt-get update to complete
 ERR_CSE_PROVISION_SCRIPT_NOT_READY_TIMEOUT=100 # Timeout waiting for cloud-init to place this (!) script on the vm
 ERR_APT_DIST_UPGRADE_TIMEOUT=101 # Timeout waiting for apt-get dist-upgrade to complete
+ERR_APT_PURGE_FAIL=102 # Error purging distro packages
 ERR_SYSCTL_RELOAD=103 # Error reloading sysctl config
 ERR_CIS_ASSIGN_ROOT_PW=111 # Error assigning root password in CIS enforcement
 ERR_CIS_ASSIGN_FILE_PERMISSION=112 # Error assigning permission to a file in CIS enforcement
 ERR_PACKER_COPY_FILE=113 # Error writing a file to disk during VHD CI
 ERR_CIS_APPLY_PASSWORD_CONFIG=115 # Error applying CIS-recommended passwd configuration
+
+ERR_VHD_BUILD_ERROR=125 # Reserved for VHD CI exit conditions
 
 # Azure Stack specific errors
 ERR_AZURE_STACK_GET_ARM_TOKEN=120 # Error generating a token to use with Azure Resource Manager
@@ -183,6 +186,22 @@ apt_get_install() {
         fi
     done
     echo Executed apt-get install --no-install-recommends -y \"$@\" $i times;
+    wait_for_apt_locks
+}
+apt_get_purge() {
+    retries=$1; wait_sleep=$2; timeout=$3; shift && shift && shift
+    for i in $(seq 1 $retries); do
+        wait_for_apt_locks
+        export DEBIAN_FRONTEND=noninteractive
+        dpkg --configure -a --force-confdef
+        apt-get purge -o Dpkg::Options::="--force-confold" -y ${@} && break || \
+        if [ $i -eq $retries ]; then
+            return 1
+        else
+            sleep $wait_sleep
+        fi
+    done
+    echo Executed apt-get purge -y \"$@\" $i times;
     wait_for_apt_locks
 }
 apt_get_dist_upgrade() {

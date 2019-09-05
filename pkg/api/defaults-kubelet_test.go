@@ -52,7 +52,7 @@ func TestKubeletConfigDefaults(t *testing.T) {
 		"--pod-max-pids":                      strconv.Itoa(DefaultKubeletPodMaxPIDs),
 		"--protect-kernel-defaults":           "true",
 		"--rotate-certificates":               "true",
-		"--streaming-connection-idle-timeout": "5m",
+		"--streaming-connection-idle-timeout": "4h",
 		"--feature-gates":                     "PodPriority=true,RotateKubeletServerCertificate=true",
 		"--tls-cipher-suites":                 TLSStrongCipherSuitesKubelet,
 		"--tls-cert-file":                     "/etc/kubernetes/certs/kubeletserver.crt",
