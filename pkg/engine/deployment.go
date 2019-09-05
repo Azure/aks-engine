@@ -7,6 +7,7 @@ import (
 	"github.com/Azure/azure-sdk-for-go/services/resources/mgmt/2018-05-01/resources"
 	"github.com/Azure/go-autorest/autorest/to"
 )
+
 const (
 	azurestackGenerateGUID = "pid-1bda96ec-adf4-4eea-bb9a-8462de5475c0"
 )
