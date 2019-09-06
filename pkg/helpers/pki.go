@@ -31,8 +31,8 @@ const (
 	DefaultPkiKeySize = 4096
 )
 
-// PkiOptions is used when we create Pki
-type PkiOptions struct {
+// PkiParams is used when we create Pki
+type PkiParams struct {
 	ExtraFQDNs    []string
 	ExtraIPs      []net.IP
 	ClusterDomain string
@@ -41,8 +41,8 @@ type PkiOptions struct {
 	PkiKeySize    int
 }
 
-// PkiKeyCertPairOptions is the options when we create the pki key cert pair.
-type PkiKeyCertPairOptions struct {
+// PkiKeyCertPairParams is the params when we create the pki key cert pair.
+type PkiKeyCertPairParams struct {
 	CommonName string
 	PkiKeySize int
 }
@@ -54,9 +54,9 @@ type PkiKeyCertPair struct {
 }
 
 // CreatePkiKeyCertPair generates a pair of PKI certificate and private key
-func CreatePkiKeyCertPair(options PkiKeyCertPairOptions) (*PkiKeyCertPair, error) {
-	certOpt := certOptions{
-		commonName:    options.CommonName,
+func CreatePkiKeyCertPair(params PkiKeyCertPairParams) (*PkiKeyCertPair, error) {
+	certPram := certParams{
+		commonName:    params.CommonName,
 		caCertificate: nil,
 		caPrivateKey:  nil,
 		isEtcd:        false,
@@ -64,9 +64,9 @@ func CreatePkiKeyCertPair(options PkiKeyCertPairOptions) (*PkiKeyCertPair, error
 		extraFQDNs:    nil,
 		extraIPs:      nil,
 		organization:  nil,
-		keySize:       options.PkiKeySize,
+		keySize:       params.PkiKeySize,
 	}
-	caCertificate, caPrivateKey, err := createCertificate(certOpt)
+	caCertificate, caPrivateKey, err := createCertificate(certPram)
 	if err != nil {
 		return nil, err
 	}
@@ -75,18 +75,18 @@ func CreatePkiKeyCertPair(options PkiKeyCertPairOptions) (*PkiKeyCertPair, error
 }
 
 // CreatePki creates PKI certificates
-func CreatePki(pkiOptions PkiOptions) (*PkiKeyCertPair, *PkiKeyCertPair, *PkiKeyCertPair, *PkiKeyCertPair, *PkiKeyCertPair, []*PkiKeyCertPair, error) {
+func CreatePki(pkiParams PkiParams) (*PkiKeyCertPair, *PkiKeyCertPair, *PkiKeyCertPair, *PkiKeyCertPair, *PkiKeyCertPair, []*PkiKeyCertPair, error) {
 	start := time.Now()
 	defer func(s time.Time) {
 		log.Debugf("pki: PKI asset creation took %s", time.Since(s))
 	}(start)
-	pkiOptions.ExtraFQDNs = append(pkiOptions.ExtraFQDNs, fmt.Sprintf("kubernetes"))
-	pkiOptions.ExtraFQDNs = append(pkiOptions.ExtraFQDNs, fmt.Sprintf("kubernetes.default"))
-	pkiOptions.ExtraFQDNs = append(pkiOptions.ExtraFQDNs, fmt.Sprintf("kubernetes.default.svc"))
-	pkiOptions.ExtraFQDNs = append(pkiOptions.ExtraFQDNs, fmt.Sprintf("kubernetes.default.svc.%s", pkiOptions.ClusterDomain))
-	pkiOptions.ExtraFQDNs = append(pkiOptions.ExtraFQDNs, fmt.Sprintf("kubernetes.kube-system"))
-	pkiOptions.ExtraFQDNs = append(pkiOptions.ExtraFQDNs, fmt.Sprintf("kubernetes.kube-system.svc"))
-	pkiOptions.ExtraFQDNs = append(pkiOptions.ExtraFQDNs, fmt.Sprintf("kubernetes.kube-system.svc.%s", pkiOptions.ClusterDomain))
+	pkiParams.ExtraFQDNs = append(pkiParams.ExtraFQDNs, fmt.Sprintf("kubernetes"))
+	pkiParams.ExtraFQDNs = append(pkiParams.ExtraFQDNs, fmt.Sprintf("kubernetes.default"))
+	pkiParams.ExtraFQDNs = append(pkiParams.ExtraFQDNs, fmt.Sprintf("kubernetes.default.svc"))
+	pkiParams.ExtraFQDNs = append(pkiParams.ExtraFQDNs, fmt.Sprintf("kubernetes.default.svc.%s", pkiParams.ClusterDomain))
+	pkiParams.ExtraFQDNs = append(pkiParams.ExtraFQDNs, fmt.Sprintf("kubernetes.kube-system"))
+	pkiParams.ExtraFQDNs = append(pkiParams.ExtraFQDNs, fmt.Sprintf("kubernetes.kube-system.svc"))
+	pkiParams.ExtraFQDNs = append(pkiParams.ExtraFQDNs, fmt.Sprintf("kubernetes.kube-system.svc.%s", pkiParams.ClusterDomain))
 
 	var (
 		caCertificate         *x509.Certificate
@@ -106,35 +106,35 @@ func CreatePki(pkiOptions PkiOptions) (*PkiKeyCertPair, *PkiKeyCertPair, *PkiKey
 	var group errgroup.Group
 
 	var err error
-	caCertificate, err = pemToCertificate(pkiOptions.CaPair.CertificatePem)
+	caCertificate, err = pemToCertificate(pkiParams.CaPair.CertificatePem)
 	if err != nil {
 		return nil, nil, nil, nil, nil, nil, err
 	}
-	caPrivateKey, err = pemToKey(pkiOptions.CaPair.PrivateKeyPem)
+	caPrivateKey, err = pemToKey(pkiParams.CaPair.PrivateKeyPem)
 	if err != nil {
 		return nil, nil, nil, nil, nil, nil, err
 	}
 
 	group.Go(func() (err error) {
-		certOpt := certOptions{
+		certPram := certParams{
 			commonName:    "apiserver",
 			caCertificate: caCertificate,
 			caPrivateKey:  caPrivateKey,
 			isEtcd:        false,
 			isServer:      true,
-			extraFQDNs:    pkiOptions.ExtraFQDNs,
-			extraIPs:      pkiOptions.ExtraIPs,
+			extraFQDNs:    pkiParams.ExtraFQDNs,
+			extraIPs:      pkiParams.ExtraIPs,
 			organization:  nil,
-			keySize:       pkiOptions.PkiKeySize,
+			keySize:       pkiParams.PkiKeySize,
 		}
-		apiServerCertificate, apiServerPrivateKey, err = createCertificate(certOpt)
+		apiServerCertificate, apiServerPrivateKey, err = createCertificate(certPram)
 		return err
 	})
 
 	group.Go(func() (err error) {
 		organization := make([]string, 1)
 		organization[0] = "system:masters"
-		certOpt := certOptions{
+		certPram := certParams{
 			commonName:    "client",
 			caCertificate: caCertificate,
 			caPrivateKey:  caPrivateKey,
@@ -143,9 +143,9 @@ func CreatePki(pkiOptions PkiOptions) (*PkiKeyCertPair, *PkiKeyCertPair, *PkiKey
 			extraFQDNs:    nil,
 			extraIPs:      nil,
 			organization:  organization,
-			keySize:       pkiOptions.PkiKeySize,
+			keySize:       pkiParams.PkiKeySize,
 		}
-		clientCertificate, clientPrivateKey, err = createCertificate(certOpt)
+		clientCertificate, clientPrivateKey, err = createCertificate(certPram)
 		return err
 	})
 
@@ -153,7 +153,7 @@ func CreatePki(pkiOptions PkiOptions) (*PkiKeyCertPair, *PkiKeyCertPair, *PkiKey
 		organization := make([]string, 1)
 		organization[0] = "system:masters"
 
-		certOpt := certOptions{
+		certPram := certParams{
 			commonName:    "client",
 			caCertificate: caCertificate,
 			caPrivateKey:  caPrivateKey,
@@ -162,61 +162,61 @@ func CreatePki(pkiOptions PkiOptions) (*PkiKeyCertPair, *PkiKeyCertPair, *PkiKey
 			extraFQDNs:    nil,
 			extraIPs:      nil,
 			organization:  organization,
-			keySize:       pkiOptions.PkiKeySize,
+			keySize:       pkiParams.PkiKeySize,
 		}
 
-		kubeConfigCertificate, kubeConfigPrivateKey, err = createCertificate(certOpt)
+		kubeConfigCertificate, kubeConfigPrivateKey, err = createCertificate(certPram)
 		return err
 	})
 
 	group.Go(func() (err error) {
-		certOpt := certOptions{
+		certPram := certParams{
 			commonName:    "etcdserver",
 			caCertificate: caCertificate,
 			caPrivateKey:  caPrivateKey,
 			isEtcd:        true,
 			isServer:      true,
 			extraFQDNs:    nil,
-			extraIPs:      pkiOptions.ExtraIPs,
+			extraIPs:      pkiParams.ExtraIPs,
 			organization:  nil,
-			keySize:       pkiOptions.PkiKeySize,
+			keySize:       pkiParams.PkiKeySize,
 		}
-		etcdServerCertificate, etcdServerPrivateKey, err = createCertificate(certOpt)
+		etcdServerCertificate, etcdServerPrivateKey, err = createCertificate(certPram)
 		return err
 	})
 
 	group.Go(func() (err error) {
-		certOpt := certOptions{
+		certPram := certParams{
 			commonName:    "etcdclient",
 			caCertificate: caCertificate,
 			caPrivateKey:  caPrivateKey,
 			isEtcd:        true,
 			isServer:      false,
 			extraFQDNs:    nil,
-			extraIPs:      pkiOptions.ExtraIPs,
+			extraIPs:      pkiParams.ExtraIPs,
 			organization:  nil,
-			keySize:       pkiOptions.PkiKeySize,
+			keySize:       pkiParams.PkiKeySize,
 		}
-		etcdClientCertificate, etcdClientPrivateKey, err = createCertificate(certOpt)
+		etcdClientCertificate, etcdClientPrivateKey, err = createCertificate(certPram)
 		return err
 	})
 
-	etcdPeerCertPairs = make([]*PkiKeyCertPair, pkiOptions.MasterCount)
-	for i := 0; i < pkiOptions.MasterCount; i++ {
+	etcdPeerCertPairs = make([]*PkiKeyCertPair, pkiParams.MasterCount)
+	for i := 0; i < pkiParams.MasterCount; i++ {
 		i := i
 		group.Go(func() (err error) {
-			certOpt := certOptions{
+			certPram := certParams{
 				commonName:    "etcdpeer",
 				caCertificate: caCertificate,
 				caPrivateKey:  caPrivateKey,
 				isEtcd:        true,
 				isServer:      false,
 				extraFQDNs:    nil,
-				extraIPs:      pkiOptions.ExtraIPs,
+				extraIPs:      pkiParams.ExtraIPs,
 				organization:  nil,
-				keySize:       pkiOptions.PkiKeySize,
+				keySize:       pkiParams.PkiKeySize,
 			}
-			etcdPeerCertificate, etcdPeerPrivateKey, err := createCertificate(certOpt)
+			etcdPeerCertificate, etcdPeerPrivateKey, err := createCertificate(certPram)
 			etcdPeerCertPairs[i] = &PkiKeyCertPair{CertificatePem: string(certificateToPem(etcdPeerCertificate.Raw)), PrivateKeyPem: string(privateKeyToPem(etcdPeerPrivateKey))}
 			return err
 		})
@@ -235,7 +235,7 @@ func CreatePki(pkiOptions PkiOptions) (*PkiKeyCertPair, *PkiKeyCertPair, *PkiKey
 		nil
 }
 
-type certOptions struct {
+type certParams struct {
 	commonName    string
 	caCertificate *x509.Certificate
 	caPrivateKey  *rsa.PrivateKey
@@ -247,7 +247,7 @@ type certOptions struct {
 	keySize       int
 }
 
-func createCertificate(options certOptions) (*x509.Certificate, *rsa.PrivateKey, error) {
+func createCertificate(options certParams) (*x509.Certificate, *rsa.PrivateKey, error) {
 	var err error
 
 	isCA := (options.caCertificate == nil)

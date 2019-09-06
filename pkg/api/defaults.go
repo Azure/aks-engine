@@ -26,7 +26,7 @@ import (
 // DistroValues is a list of currently supported distros
 var DistroValues = []Distro{"", Ubuntu, Ubuntu1804, RHEL, CoreOS, AKSUbuntu1604, AKSUbuntu1804, ACC1604}
 
-// PropertiesDefaultsParams is the options when we set the properties defaults for ContainerService.
+// PropertiesDefaultsParams is the parameters when we set the properties defaults for ContainerService.
 type PropertiesDefaultsParams struct {
 	IsUpgrade  bool
 	IsScale    bool
@@ -34,7 +34,7 @@ type PropertiesDefaultsParams struct {
 }
 
 // SetPropertiesDefaults for the container Properties, returns true if certs are generated
-func (cs *ContainerService) SetPropertiesDefaults(options PropertiesDefaultsParams) (bool, error) {
+func (cs *ContainerService) SetPropertiesDefaults(params PropertiesDefaultsParams) (bool, error) {
 	properties := cs.Properties
 
 	// Set custom cloud profile defaults if this cluster configuration has custom cloud profile
@@ -45,20 +45,20 @@ func (cs *ContainerService) SetPropertiesDefaults(options PropertiesDefaultsPara
 		}
 	}
 
-	cs.setOrchestratorDefaults(options.IsUpgrade, options.IsScale)
+	cs.setOrchestratorDefaults(params.IsUpgrade, params.IsScale)
 
 	cloudName := cs.GetCloudSpecConfig().CloudName
 
 	// Set master profile defaults if this cluster configuration includes master node(s)
 	if cs.Properties.MasterProfile != nil {
-		properties.setMasterProfileDefaults(options.IsUpgrade, options.IsScale, cloudName)
+		properties.setMasterProfileDefaults(params.IsUpgrade, params.IsScale, cloudName)
 	}
 	// Set VMSS Defaults for Masters
 	if cs.Properties.MasterProfile != nil && cs.Properties.MasterProfile.IsVirtualMachineScaleSets() {
 		properties.setVMSSDefaultsForMasters()
 	}
 
-	properties.setAgentProfileDefaults(options.IsUpgrade, options.IsScale, cloudName)
+	properties.setAgentProfileDefaults(params.IsUpgrade, params.IsScale, cloudName)
 
 	properties.setStorageDefaults()
 	properties.setExtensionDefaults()
@@ -73,11 +73,11 @@ func (cs *ContainerService) SetPropertiesDefaults(options PropertiesDefaultsPara
 	}
 
 	if cs.Properties.WindowsProfile != nil {
-		properties.setWindowsProfileDefaults(options.IsUpgrade, options.IsScale)
+		properties.setWindowsProfileDefaults(params.IsUpgrade, params.IsScale)
 	}
 
-	certsGenerated, _, e := cs.SetDefaultCerts(DefaultCertOptions{
-		PkiKeySize: options.PkiKeySize,
+	certsGenerated, _, e := cs.SetDefaultCerts(DefaultCertParams{
+		PkiKeySize: params.PkiKeySize,
 	})
 	if e != nil {
 		return false, e
@@ -756,13 +756,13 @@ func (p *Properties) setHostedMasterProfileDefaults() {
 	p.HostedMasterProfile.Subnet = DefaultKubernetesMasterSubnet
 }
 
-// DefautCertOptions is the options when we set the default certs.
-type DefaultCertOptions struct {
+// DefaultCertParams is the params when we set the default certs.
+type DefaultCertParams struct {
 	PkiKeySize int
 }
 
 // SetDefaultCerts generates and sets defaults for the container certificateProfile, returns true if certs are generated
-func (cs *ContainerService) SetDefaultCerts(options DefaultCertOptions) (bool, []net.IP, error) {
+func (cs *ContainerService) SetDefaultCerts(params DefaultCertParams) (bool, []net.IP, error) {
 	p := cs.Properties
 	if p.MasterProfile == nil || p.OrchestratorProfile.OrchestratorType != Kubernetes {
 		return false, nil, nil
@@ -821,12 +821,12 @@ func (cs *ContainerService) SetDefaultCerts(options DefaultCertOptions) (bool, [
 		caPair = &helpers.PkiKeyCertPair{CertificatePem: p.CertificateProfile.CaCertificate, PrivateKeyPem: p.CertificateProfile.CaPrivateKey}
 	} else {
 		var err error
-		pkiKeyCertPairOptions := helpers.PkiKeyCertPairOptions{
+		pkiKeyCertPairParams := helpers.PkiKeyCertPairParams{
 			CommonName: "ca",
-			PkiKeySize: options.PkiKeySize,
+			PkiKeySize: params.PkiKeySize,
 		}
 
-		caPair, err = helpers.CreatePkiKeyCertPair(pkiKeyCertPairOptions)
+		caPair, err = helpers.CreatePkiKeyCertPair(pkiKeyCertPairParams)
 		if err != nil {
 			return false, ips, err
 		}
@@ -841,15 +841,15 @@ func (cs *ContainerService) SetDefaultCerts(options DefaultCertOptions) (bool, [
 	}
 	ips = append(ips, cidrFirstIP)
 
-	pkiOptions := helpers.PkiOptions{}
-	pkiOptions.CaPair = caPair
-	pkiOptions.ClusterDomain = DefaultKubernetesClusterDomain
-	pkiOptions.ExtraFQDNs = masterExtraFQDNs
-	pkiOptions.ExtraIPs = ips
-	pkiOptions.MasterCount = p.MasterProfile.Count
-	pkiOptions.PkiKeySize = options.PkiKeySize
+	pkiParams := helpers.PkiParams{}
+	pkiParams.CaPair = caPair
+	pkiParams.ClusterDomain = DefaultKubernetesClusterDomain
+	pkiParams.ExtraFQDNs = masterExtraFQDNs
+	pkiParams.ExtraIPs = ips
+	pkiParams.MasterCount = p.MasterProfile.Count
+	pkiParams.PkiKeySize = params.PkiKeySize
 	apiServerPair, clientPair, kubeConfigPair, etcdServerPair, etcdClientPair, etcdPeerPairs, err :=
-		helpers.CreatePki(pkiOptions)
+		helpers.CreatePki(pkiParams)
 	if err != nil {
 		return false, ips, err
 	}

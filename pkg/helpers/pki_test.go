@@ -296,11 +296,11 @@ func TestSubjectAltNameInCert(t *testing.T) {
 
 func TestCreatePkiKeyCertPair(t *testing.T) {
 	subject := "foosubject"
-	option := PkiKeyCertPairOptions{
+	params := PkiKeyCertPairParams{
 		CommonName: subject,
 		PkiKeySize: DefaultPkiKeySize,
 	}
-	_, err := CreatePkiKeyCertPair(option)
+	_, err := CreatePkiKeyCertPair(params)
 	if err != nil {
 		t.Errorf("unexpected error thrown while executing CreatePkiKeyCertPair : %s", err.Error())
 	}
