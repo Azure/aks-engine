@@ -96,6 +96,10 @@ build-cross:
 build-windows-k8s:
 	./scripts/build-windows-k8s.sh -v $(K8S_VERSION) -p $(PATCH_VERSION)
 
+.PHONY: build-azs-windows-k8s
+build-azs-windows-k8s:
+	./scripts/build-windows-k8s.sh -v $(K8S_VERSION) -p $(PATCH_VERSION) -a $(BUILD_AZURE_STACK)
+
 .PHONY: dist
 dist: build-cross compress-binaries
 	( \
