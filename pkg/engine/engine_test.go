@@ -20,6 +20,7 @@ import (
 	v20160330 "github.com/Azure/aks-engine/pkg/api/v20160330"
 	"github.com/Azure/aks-engine/pkg/api/vlabs"
 	"github.com/Azure/aks-engine/pkg/engine/transform"
+	"github.com/Azure/aks-engine/pkg/helpers"
 	"github.com/Azure/aks-engine/pkg/i18n"
 	"github.com/leonelquinteros/gotext"
 	"github.com/pkg/errors"
@@ -117,7 +118,11 @@ func TestExpected(t *testing.T) {
 				continue
 			}
 
-			certsGenerated, err := containerService.SetPropertiesDefaults(false, false)
+			certsGenerated, err := containerService.SetPropertiesDefaults(api.PropertiesDefaultsParams{
+				IsScale:    false,
+				IsUpgrade:  false,
+				PkiKeySize: helpers.DefaultPkiKeySize,
+			})
 			if certsGenerated {
 				t.Errorf("cert generation unexpected for %s", containerService.Properties.OrchestratorProfile.OrchestratorType)
 			}
@@ -143,7 +148,11 @@ func TestExpected(t *testing.T) {
 
 			for i := 0; i < 3; i++ {
 				if i > 0 {
-					certsGenerated, err = containerService.SetPropertiesDefaults(false, false)
+					certsGenerated, err = containerService.SetPropertiesDefaults(api.PropertiesDefaultsParams{
+						IsScale:    false,
+						IsUpgrade:  false,
+						PkiKeySize: helpers.DefaultPkiKeySize,
+					})
 					if certsGenerated {
 						t.Errorf("cert generation unexpected for %s", containerService.Properties.OrchestratorProfile.OrchestratorType)
 					}
@@ -223,7 +232,11 @@ func TestExpected(t *testing.T) {
 				continue
 			}
 
-			certsGenerated, err := containerService.SetPropertiesDefaults(false, false)
+			certsGenerated, err := containerService.SetPropertiesDefaults(api.PropertiesDefaultsParams{
+				IsScale:    false,
+				IsUpgrade:  false,
+				PkiKeySize: helpers.DefaultPkiKeySize,
+			})
 			if certsGenerated {
 				t.Errorf("cert generation unexpected for %s", containerService.Properties.OrchestratorProfile.OrchestratorType)
 			}
@@ -249,7 +262,11 @@ func TestExpected(t *testing.T) {
 
 			for i := 0; i < 3; i++ {
 				if i > 0 {
-					certsGenerated, err = containerService.SetPropertiesDefaults(false, false)
+					certsGenerated, err = containerService.SetPropertiesDefaults(api.PropertiesDefaultsParams{
+						IsScale:    false,
+						IsUpgrade:  false,
+						PkiKeySize: helpers.DefaultPkiKeySize,
+					})
 					if certsGenerated {
 						t.Errorf("cert generation unexpected for %s", containerService.Properties.OrchestratorProfile.OrchestratorType)
 					}
@@ -411,7 +428,11 @@ func TestTemplateOutputPresence(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to load container service from file: %v", err)
 	}
-	containerService.SetPropertiesDefaults(false, false)
+	containerService.SetPropertiesDefaults(api.PropertiesDefaultsParams{
+		IsScale:    false,
+		IsUpgrade:  false,
+		PkiKeySize: helpers.DefaultPkiKeySize,
+	})
 	armTemplate, _, err := templateGenerator.GenerateTemplateV2(containerService, DefaultGeneratorCode, TestAKSEngineVersion)
 	if err != nil {
 		t.Fatalf("Failed to generate arm template: %v", err)
