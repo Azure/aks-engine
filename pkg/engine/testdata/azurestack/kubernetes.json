@@ -74,7 +74,7 @@
         },
         "windowsProfile": { 
             "adminUsername": "azureuser",
-            "adminPassword": "myadminpassword",
+            "adminPassword": "myAdminPassword~1",
             "sshEnabled": true
         },
         "servicePrincipalProfile": {
