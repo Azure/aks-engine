@@ -25337,7 +25337,7 @@ spec:
     - name: cloud-controller-manager
       image: <img>
       imagePullPolicy: IfNotPresent
-      command: ["cloud-controller-manager"]
+      command: ["/hyperkube", "cloud-controller-manager"]
       args: [<config>]
       volumeMounts:
         - name: etc-kubernetes
