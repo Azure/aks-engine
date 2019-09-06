@@ -432,7 +432,7 @@ func prepareCustomCloudProfile() *api.ContainerService {
 		},
 	}
 
-	cs.SetPropertiesDefaults(api.PropertiesDefaultsOptions{
+	cs.SetPropertiesDefaults(api.PropertiesDefaultsParams{
 		IsScale:    false,
 		IsUpgrade:  false,
 		PkiKeySize: helpers.DefaultPkiKeySize,

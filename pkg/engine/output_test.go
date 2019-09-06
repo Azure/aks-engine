@@ -102,7 +102,7 @@ func TestWriteTLSArtifacts(t *testing.T) {
 			TokenAudience:                "tokenAudience",
 		},
 	}
-	csCustom.SetPropertiesDefaults(api.PropertiesDefaultsOptions{
+	csCustom.SetPropertiesDefaults(api.PropertiesDefaultsParams{
 		IsScale:    false,
 		IsUpgrade:  false,
 		PkiKeySize: helpers.DefaultPkiKeySize,

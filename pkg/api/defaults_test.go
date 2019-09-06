@@ -472,7 +472,7 @@ func TestAcceleratedNetworking(t *testing.T) {
 	mockCS.Properties.AgentPoolProfiles[0].AcceleratedNetworkingEnabled = nil
 	mockCS.Properties.AgentPoolProfiles[0].AcceleratedNetworkingEnabledWindows = nil
 
-	mockCS.SetPropertiesDefaults(PropertiesDefaultsOptions{
+	mockCS.SetPropertiesDefaults(PropertiesDefaultsParams{
 		IsScale:    false,
 		IsUpgrade:  true,
 		PkiKeySize: helpers.DefaultPkiKeySize,
@@ -492,7 +492,7 @@ func TestAcceleratedNetworking(t *testing.T) {
 	mockCS.Properties.AgentPoolProfiles[0].AcceleratedNetworkingEnabled = nil
 	mockCS.Properties.AgentPoolProfiles[0].AcceleratedNetworkingEnabledWindows = nil
 
-	mockCS.SetPropertiesDefaults(PropertiesDefaultsOptions{
+	mockCS.SetPropertiesDefaults(PropertiesDefaultsParams{
 		IsScale:    true,
 		IsUpgrade:  false,
 		PkiKeySize: helpers.DefaultPkiKeySize,
@@ -514,7 +514,7 @@ func TestAcceleratedNetworking(t *testing.T) {
 	mockCS.Properties.AgentPoolProfiles[0].AcceleratedNetworkingEnabledWindows = nil
 	mockCS.Properties.AgentPoolProfiles[0].VMSize = "Standard_D2_v2"
 
-	mockCS.SetPropertiesDefaults(PropertiesDefaultsOptions{
+	mockCS.SetPropertiesDefaults(PropertiesDefaultsParams{
 		IsScale:    false,
 		IsUpgrade:  false,
 		PkiKeySize: helpers.DefaultPkiKeySize,
@@ -538,7 +538,7 @@ func TestAcceleratedNetworking(t *testing.T) {
 	mockCS.Properties.AgentPoolProfiles[0].AcceleratedNetworkingEnabledWindows = nil
 	mockCS.Properties.AgentPoolProfiles[0].VMSize = "Standard_D666_v2"
 
-	mockCS.SetPropertiesDefaults(PropertiesDefaultsOptions{
+	mockCS.SetPropertiesDefaults(PropertiesDefaultsParams{
 		IsScale:    false,
 		IsUpgrade:  false,
 		PkiKeySize: helpers.DefaultPkiKeySize,
@@ -559,7 +559,7 @@ func TestVMSSOverProvisioning(t *testing.T) {
 	mockCS.Properties.OrchestratorProfile.OrchestratorType = Kubernetes
 	mockCS.Properties.AgentPoolProfiles[0].AvailabilityProfile = VirtualMachineScaleSets
 	mockCS.Properties.AgentPoolProfiles[0].VMSSOverProvisioningEnabled = nil
-	mockCS.SetPropertiesDefaults(PropertiesDefaultsOptions{
+	mockCS.SetPropertiesDefaults(PropertiesDefaultsParams{
 		IsScale:    false,
 		IsUpgrade:  true,
 		PkiKeySize: 4096,
@@ -574,7 +574,7 @@ func TestVMSSOverProvisioning(t *testing.T) {
 	mockCS.Properties.OrchestratorProfile.OrchestratorType = Kubernetes
 	mockCS.Properties.AgentPoolProfiles[0].AvailabilityProfile = VirtualMachineScaleSets
 	mockCS.Properties.AgentPoolProfiles[0].VMSSOverProvisioningEnabled = nil
-	mockCS.SetPropertiesDefaults(PropertiesDefaultsOptions{
+	mockCS.SetPropertiesDefaults(PropertiesDefaultsParams{
 		IsScale:    true,
 		IsUpgrade:  false,
 		PkiKeySize: helpers.DefaultPkiKeySize,
@@ -589,7 +589,7 @@ func TestVMSSOverProvisioning(t *testing.T) {
 	mockCS.Properties.OrchestratorProfile.OrchestratorType = Kubernetes
 	mockCS.Properties.AgentPoolProfiles[0].AvailabilityProfile = VirtualMachineScaleSets
 	mockCS.Properties.AgentPoolProfiles[0].VMSSOverProvisioningEnabled = nil
-	mockCS.SetPropertiesDefaults(PropertiesDefaultsOptions{
+	mockCS.SetPropertiesDefaults(PropertiesDefaultsParams{
 		IsScale:    false,
 		IsUpgrade:  false,
 		PkiKeySize: helpers.DefaultPkiKeySize,
@@ -605,7 +605,7 @@ func TestVMSSOverProvisioning(t *testing.T) {
 	mockCS.Properties.OrchestratorProfile.OrchestratorType = Kubernetes
 	mockCS.Properties.AgentPoolProfiles[0].AvailabilityProfile = VirtualMachineScaleSets
 	mockCS.Properties.AgentPoolProfiles[0].VMSSOverProvisioningEnabled = to.BoolPtr(true)
-	mockCS.SetPropertiesDefaults(PropertiesDefaultsOptions{
+	mockCS.SetPropertiesDefaults(PropertiesDefaultsParams{
 		IsScale:    false,
 		IsUpgrade:  false,
 		PkiKeySize: helpers.DefaultPkiKeySize,
@@ -620,7 +620,7 @@ func TestVMSSOverProvisioning(t *testing.T) {
 	mockCS.Properties.OrchestratorProfile.OrchestratorType = Kubernetes
 	mockCS.Properties.AgentPoolProfiles[0].AvailabilityProfile = VirtualMachineScaleSets
 	mockCS.Properties.AgentPoolProfiles[0].VMSSOverProvisioningEnabled = to.BoolPtr(false)
-	mockCS.SetPropertiesDefaults(PropertiesDefaultsOptions{
+	mockCS.SetPropertiesDefaults(PropertiesDefaultsParams{
 		IsScale:    false,
 		IsUpgrade:  false,
 		PkiKeySize: helpers.DefaultPkiKeySize,
@@ -1108,7 +1108,7 @@ func TestStorageProfile(t *testing.T) {
 		Enabled:        to.BoolPtr(true),
 		JumpboxProfile: &PrivateJumpboxProfile{},
 	}
-	mockCS.SetPropertiesDefaults(PropertiesDefaultsOptions{
+	mockCS.SetPropertiesDefaults(PropertiesDefaultsParams{
 		IsScale:    false,
 		IsUpgrade:  false,
 		PkiKeySize: helpers.DefaultPkiKeySize,
@@ -1141,7 +1141,7 @@ func TestStorageProfile(t *testing.T) {
 	mockCS = getMockBaseContainerService("1.10.2")
 	properties = mockCS.Properties
 	properties.OrchestratorProfile.OrchestratorType = Kubernetes
-	mockCS.SetPropertiesDefaults(PropertiesDefaultsOptions{
+	mockCS.SetPropertiesDefaults(PropertiesDefaultsParams{
 		IsScale:    false,
 		IsUpgrade:  false,
 		PkiKeySize: helpers.DefaultPkiKeySize,
@@ -1164,7 +1164,7 @@ func TestMasterProfileDefaults(t *testing.T) {
 	properties.MasterProfile.AvailabilityProfile = ""
 	properties.MasterProfile.Count = 3
 	mockCS.Properties = properties
-	mockCS.SetPropertiesDefaults(PropertiesDefaultsOptions{
+	mockCS.SetPropertiesDefaults(PropertiesDefaultsParams{
 		IsScale:    false,
 		IsUpgrade:  false,
 		PkiKeySize: helpers.DefaultPkiKeySize,
@@ -1197,7 +1197,7 @@ func TestMasterProfileDefaults(t *testing.T) {
 	properties.OrchestratorProfile.KubernetesConfig.NetworkPlugin = NetworkPluginAzure
 	properties.OrchestratorProfile.KubernetesConfig.ClusterSubnet = ""
 	properties.MasterProfile.AvailabilityProfile = VirtualMachineScaleSets
-	mockCS.SetPropertiesDefaults(PropertiesDefaultsOptions{
+	mockCS.SetPropertiesDefaults(PropertiesDefaultsParams{
 		IsScale:    false,
 		IsUpgrade:  true,
 		PkiKeySize: helpers.DefaultPkiKeySize,
@@ -1230,7 +1230,7 @@ func TestMasterProfileDefaults(t *testing.T) {
 	properties.OrchestratorProfile.KubernetesConfig.ClusterSubnet = ""
 	properties.OrchestratorProfile.KubernetesConfig.NetworkPlugin = NetworkPluginKubenet
 	properties.MasterProfile.AvailabilityProfile = VirtualMachineScaleSets
-	mockCS.SetPropertiesDefaults(PropertiesDefaultsOptions{
+	mockCS.SetPropertiesDefaults(PropertiesDefaultsParams{
 		IsScale:    true,
 		IsUpgrade:  false,
 		PkiKeySize: helpers.DefaultPkiKeySize,
@@ -1252,7 +1252,7 @@ func TestMasterProfileDefaults(t *testing.T) {
 			properties.MasterProfile.AgentSubnet, DefaultKubernetesAgentSubnetVMSS)
 	}
 	properties.MasterProfile.AvailabilityProfile = AvailabilitySet
-	mockCS.SetPropertiesDefaults(PropertiesDefaultsOptions{
+	mockCS.SetPropertiesDefaults(PropertiesDefaultsParams{
 		IsScale:    true,
 		IsUpgrade:  false,
 		PkiKeySize: helpers.DefaultPkiKeySize,
@@ -1272,7 +1272,7 @@ func TestMasterProfileDefaults(t *testing.T) {
 	properties.OrchestratorProfile.KubernetesConfig.ClusterSubnet = ""
 	properties.OrchestratorProfile.KubernetesConfig.NetworkPlugin = NetworkPluginAzure
 	properties.MasterProfile.AvailabilityProfile = AvailabilitySet
-	mockCS.SetPropertiesDefaults(PropertiesDefaultsOptions{
+	mockCS.SetPropertiesDefaults(PropertiesDefaultsParams{
 		IsScale:    true,
 		IsUpgrade:  false,
 		PkiKeySize: helpers.DefaultPkiKeySize,
@@ -1292,7 +1292,7 @@ func TestMasterProfileDefaults(t *testing.T) {
 	properties.OrchestratorProfile.KubernetesConfig.ClusterSubnet = ""
 	properties.OrchestratorProfile.KubernetesConfig.NetworkPlugin = NetworkPluginAzure
 	properties.MasterProfile.AvailabilityProfile = VirtualMachineScaleSets
-	mockCS.SetPropertiesDefaults(PropertiesDefaultsOptions{
+	mockCS.SetPropertiesDefaults(PropertiesDefaultsParams{
 		IsScale:    true,
 		IsUpgrade:  false,
 		PkiKeySize: helpers.DefaultPkiKeySize,
@@ -1307,7 +1307,7 @@ func TestMasterProfileDefaults(t *testing.T) {
 	properties = mockCS.Properties
 	properties.OrchestratorProfile.OrchestratorType = Kubernetes
 	properties.OrchestratorProfile.KubernetesConfig.LoadBalancerSku = StandardLoadBalancerSku
-	mockCS.SetPropertiesDefaults(PropertiesDefaultsOptions{
+	mockCS.SetPropertiesDefaults(PropertiesDefaultsParams{
 		IsScale:    false,
 		IsUpgrade:  false,
 		PkiKeySize: helpers.DefaultPkiKeySize,
@@ -1322,7 +1322,7 @@ func TestMasterProfileDefaults(t *testing.T) {
 	mockCS = getMockBaseContainerService("1.11.6")
 	properties = mockCS.Properties
 	properties.OrchestratorProfile.OrchestratorType = Kubernetes
-	mockCS.SetPropertiesDefaults(PropertiesDefaultsOptions{
+	mockCS.SetPropertiesDefaults(PropertiesDefaultsParams{
 		IsScale:    false,
 		IsUpgrade:  false,
 		PkiKeySize: helpers.DefaultPkiKeySize,
@@ -1337,7 +1337,7 @@ func TestMasterProfileDefaults(t *testing.T) {
 	properties = mockCS.Properties
 	properties.OrchestratorProfile.OrchestratorType = Kubernetes
 	properties.FeatureFlags = &FeatureFlags{EnableIPv6DualStack: true}
-	mockCS.SetPropertiesDefaults(PropertiesDefaultsOptions{
+	mockCS.SetPropertiesDefaults(PropertiesDefaultsParams{
 		IsScale:    false,
 		IsUpgrade:  false,
 		PkiKeySize: helpers.DefaultPkiKeySize,
@@ -1354,7 +1354,7 @@ func TestMasterProfileDefaults(t *testing.T) {
 	properties.OrchestratorProfile.OrchestratorType = Kubernetes
 	properties.OrchestratorProfile.KubernetesConfig.ClusterSubnet = "10.244.0.0/16"
 	properties.FeatureFlags = &FeatureFlags{EnableIPv6DualStack: true}
-	mockCS.SetPropertiesDefaults(PropertiesDefaultsOptions{
+	mockCS.SetPropertiesDefaults(PropertiesDefaultsParams{
 		IsScale:    false,
 		IsUpgrade:  false,
 		PkiKeySize: helpers.DefaultPkiKeySize,
@@ -1371,7 +1371,7 @@ func TestMasterProfileDefaults(t *testing.T) {
 	properties.OrchestratorProfile.OrchestratorType = Kubernetes
 	properties.OrchestratorProfile.KubernetesConfig.ClusterSubnet = "ace:cab:deca::/8"
 	properties.FeatureFlags = &FeatureFlags{EnableIPv6DualStack: true}
-	mockCS.SetPropertiesDefaults(PropertiesDefaultsOptions{
+	mockCS.SetPropertiesDefaults(PropertiesDefaultsParams{
 		IsScale:    false,
 		IsUpgrade:  false,
 		PkiKeySize: helpers.DefaultPkiKeySize,
@@ -1387,7 +1387,7 @@ func TestMasterProfileDefaults(t *testing.T) {
 	properties = mockCS.Properties
 	properties.OrchestratorProfile.OrchestratorType = Kubernetes
 	properties.OrchestratorProfile.KubernetesConfig.LoadBalancerSku = StandardLoadBalancerSku
-	mockCS.SetPropertiesDefaults(PropertiesDefaultsOptions{
+	mockCS.SetPropertiesDefaults(PropertiesDefaultsParams{
 		IsScale:    false,
 		IsUpgrade:  false,
 		PkiKeySize: helpers.DefaultPkiKeySize,
@@ -1403,7 +1403,7 @@ func TestAgentPoolProfile(t *testing.T) {
 	properties := mockCS.Properties
 	properties.OrchestratorProfile.OrchestratorType = Kubernetes
 	properties.MasterProfile.Count = 1
-	mockCS.SetPropertiesDefaults(PropertiesDefaultsOptions{
+	mockCS.SetPropertiesDefaults(PropertiesDefaultsParams{
 		IsScale:    false,
 		IsUpgrade:  false,
 		PkiKeySize: helpers.DefaultPkiKeySize,
@@ -1417,7 +1417,7 @@ func TestAgentPoolProfile(t *testing.T) {
 			properties.AgentPoolProfiles[0].ScaleSetEvictionPolicy, "")
 	}
 	properties.AgentPoolProfiles[0].ScaleSetPriority = ScaleSetPriorityLow
-	mockCS.SetPropertiesDefaults(PropertiesDefaultsOptions{
+	mockCS.SetPropertiesDefaults(PropertiesDefaultsParams{
 		IsScale:    false,
 		IsUpgrade:  false,
 		PkiKeySize: helpers.DefaultPkiKeySize,
@@ -1734,7 +1734,7 @@ func TestSetVMSSDefaultsAndZones(t *testing.T) {
 	properties := mockCS.Properties
 	properties.OrchestratorProfile.OrchestratorType = Kubernetes
 	properties.MasterProfile.AvailabilityProfile = VirtualMachineScaleSets
-	mockCS.SetPropertiesDefaults(PropertiesDefaultsOptions{
+	mockCS.SetPropertiesDefaults(PropertiesDefaultsParams{
 		IsScale:    false,
 		IsUpgrade:  false,
 		PkiKeySize: helpers.DefaultPkiKeySize,
@@ -1753,7 +1753,7 @@ func TestSetVMSSDefaultsAndZones(t *testing.T) {
 	properties.OrchestratorProfile.OrchestratorType = Kubernetes
 	properties.MasterProfile.AvailabilityProfile = VirtualMachineScaleSets
 	properties.MasterProfile.AvailabilityZones = []string{"1", "2"}
-	mockCS.SetPropertiesDefaults(PropertiesDefaultsOptions{
+	mockCS.SetPropertiesDefaults(PropertiesDefaultsParams{
 		IsScale:    false,
 		IsUpgrade:  false,
 		PkiKeySize: helpers.DefaultPkiKeySize,
@@ -1781,7 +1781,7 @@ func TestSetVMSSDefaultsAndZones(t *testing.T) {
 	properties = mockCS.Properties
 	properties.OrchestratorProfile.OrchestratorType = Kubernetes
 	properties.AgentPoolProfiles[0].Count = 4
-	mockCS.SetPropertiesDefaults(PropertiesDefaultsOptions{
+	mockCS.SetPropertiesDefaults(PropertiesDefaultsParams{
 		IsScale:    false,
 		IsUpgrade:  false,
 		PkiKeySize: helpers.DefaultPkiKeySize,
@@ -1800,7 +1800,7 @@ func TestSetVMSSDefaultsAndZones(t *testing.T) {
 	properties.OrchestratorProfile.OrchestratorType = Kubernetes
 	properties.AgentPoolProfiles[0].Count = 4
 	properties.AgentPoolProfiles[0].AvailabilityZones = []string{"1", "2"}
-	mockCS.SetPropertiesDefaults(PropertiesDefaultsOptions{
+	mockCS.SetPropertiesDefaults(PropertiesDefaultsParams{
 		IsScale:    false,
 		IsUpgrade:  false,
 		PkiKeySize: helpers.DefaultPkiKeySize,
@@ -1829,7 +1829,7 @@ func TestSetVMSSDefaultsAndZones(t *testing.T) {
 	}
 
 	properties.AgentPoolProfiles[0].Count = 110
-	mockCS.SetPropertiesDefaults(PropertiesDefaultsOptions{
+	mockCS.SetPropertiesDefaults(PropertiesDefaultsParams{
 		IsScale:    false,
 		IsUpgrade:  false,
 		PkiKeySize: helpers.DefaultPkiKeySize,
@@ -2120,7 +2120,7 @@ func TestSetCustomCloudProfileDefaults(t *testing.T) {
 	vmDNSSuffix := "contoso.net"
 	mockCSP.CustomCloudProfile.Environment.ResourceManagerVMDNSSuffix = vmDNSSuffix
 	mockCS.Properties.CustomCloudProfile = mockCSP.CustomCloudProfile
-	mockCS.SetPropertiesDefaults(PropertiesDefaultsOptions{
+	mockCS.SetPropertiesDefaults(PropertiesDefaultsParams{
 		IsScale:    false,
 		IsUpgrade:  false,
 		PkiKeySize: helpers.DefaultPkiKeySize,
@@ -2134,7 +2134,7 @@ func TestSetCustomCloudProfileDefaults(t *testing.T) {
 	mockCSDefaultSpec := getMockBaseContainerService("1.11.6")
 	mockCSPDefaultSpec := GetMockPropertiesWithCustomCloudProfile("azurestackcloud", true, true, false)
 	mockCSDefaultSpec.Properties.CustomCloudProfile = mockCSPDefaultSpec.CustomCloudProfile
-	mockCSDefaultSpec.SetPropertiesDefaults(PropertiesDefaultsOptions{
+	mockCSDefaultSpec.SetPropertiesDefaults(PropertiesDefaultsParams{
 		IsScale:    false,
 		IsUpgrade:  false,
 		PkiKeySize: helpers.DefaultPkiKeySize,
@@ -2161,7 +2161,7 @@ func TestSetCustomCloudProfileDefaults(t *testing.T) {
 		mockCSPAzureChinaSpec.CustomCloudProfile.DependenciesLocation = DependenciesLocation(key)
 		mockCSAzureChinaSpec.Properties.CustomCloudProfile = mockCSPAzureChinaSpec.CustomCloudProfile
 
-		mockCSAzureChinaSpec.SetPropertiesDefaults(PropertiesDefaultsOptions{
+		mockCSAzureChinaSpec.SetPropertiesDefaults(PropertiesDefaultsParams{
 			IsScale:    false,
 			IsUpgrade:  false,
 			PkiKeySize: helpers.DefaultPkiKeySize,
@@ -2242,7 +2242,7 @@ func TestSetCustomCloudProfileDefaults(t *testing.T) {
 	}
 	mockCSPCustom.CustomCloudProfile.AzureEnvironmentSpecConfig = &customCloudSpec
 	mockCSCustom.Properties.CustomCloudProfile = mockCSPCustom.CustomCloudProfile
-	mockCSCustom.SetPropertiesDefaults(PropertiesDefaultsOptions{
+	mockCSCustom.SetPropertiesDefaults(PropertiesDefaultsParams{
 		IsScale:    false,
 		IsUpgrade:  false,
 		PkiKeySize: helpers.DefaultPkiKeySize,
@@ -2296,7 +2296,7 @@ func TestSetCustomCloudProfileDefaults(t *testing.T) {
 	}
 	mockCSPCustomP.CustomCloudProfile.AzureEnvironmentSpecConfig = &customCloudSpecP
 	mockCSCustomP.Properties.CustomCloudProfile = mockCSPCustomP.CustomCloudProfile
-	mockCSCustomP.SetPropertiesDefaults(PropertiesDefaultsOptions{
+	mockCSCustomP.SetPropertiesDefaults(PropertiesDefaultsParams{
 		IsScale:    false,
 		IsUpgrade:  false,
 		PkiKeySize: helpers.DefaultPkiKeySize,
@@ -2321,7 +2321,7 @@ func TestSetCustomCloudProfileDefaults(t *testing.T) {
 	mockCSPAuth.CustomCloudProfile.IdentitySystem = ""
 	mockCSPAuth.CustomCloudProfile.AuthenticationMethod = ""
 	mockCSAuth.Properties.CustomCloudProfile = mockCSPAuth.CustomCloudProfile
-	mockCSAuth.SetPropertiesDefaults(PropertiesDefaultsOptions{
+	mockCSAuth.SetPropertiesDefaults(PropertiesDefaultsParams{
 		IsScale:    false,
 		IsUpgrade:  false,
 		PkiKeySize: helpers.DefaultPkiKeySize,
@@ -2340,7 +2340,7 @@ func TestSetCustomCloudProfileDefaults(t *testing.T) {
 	mockCSPI.CustomCloudProfile.IdentitySystem = ADFSIdentitySystem
 	mockCSPI.CustomCloudProfile.AuthenticationMethod = ClientCertificateAuthMethod
 	mockCSI.Properties.CustomCloudProfile = mockCSPI.CustomCloudProfile
-	mockCSI.SetPropertiesDefaults(PropertiesDefaultsOptions{
+	mockCSI.SetPropertiesDefaults(PropertiesDefaultsParams{
 		IsScale:    false,
 		IsUpgrade:  false,
 		PkiKeySize: helpers.DefaultPkiKeySize,
@@ -2360,7 +2360,7 @@ func TestCustomCloudLocation(t *testing.T) {
 	mockCS := getMockBaseContainerService("1.11.6")
 	mockCSP := GetMockPropertiesWithCustomCloudProfile("AzureStackCloud", true, true, true)
 	mockCS.Properties = &mockCSP
-	mockCS.SetPropertiesDefaults(PropertiesDefaultsOptions{
+	mockCS.SetPropertiesDefaults(PropertiesDefaultsParams{
 		IsScale:    false,
 		IsUpgrade:  false,
 		PkiKeySize: helpers.DefaultPkiKeySize,
@@ -2459,7 +2459,7 @@ func TestSetCustomCloudProfileEnvironmentDefaults(t *testing.T) {
 		},
 	)
 	mockCS.Location = location
-	_, err = mockCS.SetPropertiesDefaults(PropertiesDefaultsOptions{
+	_, err = mockCS.SetPropertiesDefaults(PropertiesDefaultsParams{
 		IsScale:    false,
 		IsUpgrade:  false,
 		PkiKeySize: helpers.DefaultPkiKeySize,
@@ -2532,7 +2532,7 @@ func TestSetOrchestratorProfileDefaultsOnAzureStack(t *testing.T) {
 		},
 	)
 
-	mockCS.SetPropertiesDefaults(PropertiesDefaultsOptions{
+	mockCS.SetPropertiesDefaults(PropertiesDefaultsParams{
 		IsScale:    false,
 		IsUpgrade:  false,
 		PkiKeySize: helpers.DefaultPkiKeySize,
@@ -2564,7 +2564,7 @@ func TestSetMasterProfileDefaultsOnAzureStack(t *testing.T) {
 		},
 	)
 
-	mockCS.SetPropertiesDefaults(PropertiesDefaultsOptions{
+	mockCS.SetPropertiesDefaults(PropertiesDefaultsParams{
 		IsScale:    false,
 		IsUpgrade:  false,
 		PkiKeySize: helpers.DefaultPkiKeySize,
@@ -2591,7 +2591,7 @@ func TestSetMasterProfileDefaultsOnAzureStack(t *testing.T) {
 		},
 	)
 
-	mockCS.SetPropertiesDefaults(PropertiesDefaultsOptions{
+	mockCS.SetPropertiesDefaults(PropertiesDefaultsParams{
 		IsScale:    false,
 		IsUpgrade:  false,
 		PkiKeySize: helpers.DefaultPkiKeySize,
@@ -2623,7 +2623,7 @@ func TestSetAgentProfileDefaultsOnAzureStack(t *testing.T) {
 		},
 	)
 
-	mockCS.SetPropertiesDefaults(PropertiesDefaultsOptions{
+	mockCS.SetPropertiesDefaults(PropertiesDefaultsParams{
 		IsScale:    false,
 		IsUpgrade:  false,
 		PkiKeySize: helpers.DefaultPkiKeySize,
@@ -2664,7 +2664,7 @@ func TestSetAgentProfileDefaultsOnAzureStack(t *testing.T) {
 		},
 	)
 
-	mockCS.SetPropertiesDefaults(PropertiesDefaultsOptions{
+	mockCS.SetPropertiesDefaults(PropertiesDefaultsParams{
 		IsScale:    false,
 		IsUpgrade:  false,
 		PkiKeySize: helpers.DefaultPkiKeySize,
@@ -2696,7 +2696,7 @@ func TestEtcdDiskSizeOnAzureStack(t *testing.T) {
 		},
 	)
 
-	mockCS.SetPropertiesDefaults(PropertiesDefaultsOptions{
+	mockCS.SetPropertiesDefaults(PropertiesDefaultsParams{
 		IsScale:    false,
 		IsUpgrade:  false,
 		PkiKeySize: helpers.DefaultPkiKeySize,
@@ -2724,7 +2724,7 @@ func TestEtcdDiskSizeOnAzureStack(t *testing.T) {
 		},
 	)
 
-	mockCS.SetPropertiesDefaults(PropertiesDefaultsOptions{
+	mockCS.SetPropertiesDefaults(PropertiesDefaultsParams{
 		IsScale:    false,
 		IsUpgrade:  false,
 		PkiKeySize: helpers.DefaultPkiKeySize,
@@ -2753,7 +2753,7 @@ func TestEtcdDiskSizeOnAzureStack(t *testing.T) {
 		},
 	)
 
-	mockCS.SetPropertiesDefaults(PropertiesDefaultsOptions{
+	mockCS.SetPropertiesDefaults(PropertiesDefaultsParams{
 		IsScale:    false,
 		IsUpgrade:  false,
 		PkiKeySize: helpers.DefaultPkiKeySize,
@@ -2782,7 +2782,7 @@ func TestEtcdDiskSizeOnAzureStack(t *testing.T) {
 		},
 	)
 
-	mockCS.SetPropertiesDefaults(PropertiesDefaultsOptions{
+	mockCS.SetPropertiesDefaults(PropertiesDefaultsParams{
 		IsScale:    false,
 		IsUpgrade:  false,
 		PkiKeySize: helpers.DefaultPkiKeySize,
@@ -2813,7 +2813,7 @@ func TestEtcdDiskSizeOnAzureStack(t *testing.T) {
 		},
 	)
 
-	mockCS.SetPropertiesDefaults(PropertiesDefaultsOptions{
+	mockCS.SetPropertiesDefaults(PropertiesDefaultsParams{
 		IsScale:    false,
 		IsUpgrade:  false,
 		PkiKeySize: helpers.DefaultPkiKeySize,
@@ -2825,7 +2825,7 @@ func TestEtcdDiskSizeOnAzureStack(t *testing.T) {
 }
 func TestPreserveNodesProperties(t *testing.T) {
 	mockCS := getMockBaseContainerService("1.10.8")
-	mockCS.SetPropertiesDefaults(PropertiesDefaultsOptions{
+	mockCS.SetPropertiesDefaults(PropertiesDefaultsParams{
 		IsScale:    false,
 		IsUpgrade:  false,
 		PkiKeySize: helpers.DefaultPkiKeySize,
@@ -2841,7 +2841,7 @@ func TestUbuntu1804Flags(t *testing.T) {
 	cs.Properties.MasterProfile.Distro = AKSUbuntu1604
 	cs.Properties.AgentPoolProfiles[0].Distro = AKSUbuntu1804
 	cs.Properties.AgentPoolProfiles[0].OSType = Linux
-	cs.SetPropertiesDefaults(PropertiesDefaultsOptions{
+	cs.SetPropertiesDefaults(PropertiesDefaultsParams{
 		IsScale:    false,
 		IsUpgrade:  false,
 		PkiKeySize: helpers.DefaultPkiKeySize,
@@ -2861,7 +2861,7 @@ func TestUbuntu1804Flags(t *testing.T) {
 	cs.Properties.MasterProfile.Distro = Ubuntu1804
 	cs.Properties.AgentPoolProfiles[0].Distro = Ubuntu
 	cs.Properties.AgentPoolProfiles[0].OSType = Linux
-	cs.SetPropertiesDefaults(PropertiesDefaultsOptions{
+	cs.SetPropertiesDefaults(PropertiesDefaultsParams{
 		IsScale:    false,
 		IsUpgrade:  false,
 		PkiKeySize: helpers.DefaultPkiKeySize,
@@ -2881,7 +2881,7 @@ func TestUbuntu1804Flags(t *testing.T) {
 	cs.Properties.MasterProfile.Distro = Ubuntu
 	cs.Properties.AgentPoolProfiles[0].Distro = ""
 	cs.Properties.AgentPoolProfiles[0].OSType = Windows
-	cs.SetPropertiesDefaults(PropertiesDefaultsOptions{
+	cs.SetPropertiesDefaults(PropertiesDefaultsParams{
 		IsScale:    false,
 		IsUpgrade:  false,
 		PkiKeySize: helpers.DefaultPkiKeySize,

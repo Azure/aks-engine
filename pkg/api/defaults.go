@@ -26,15 +26,15 @@ import (
 // DistroValues is a list of currently supported distros
 var DistroValues = []Distro{"", Ubuntu, Ubuntu1804, RHEL, CoreOS, AKSUbuntu1604, AKSUbuntu1804, ACC1604}
 
-// PropertiesDefaultsOptions is the options when we set the properties defaults for ContainerService.
-type PropertiesDefaultsOptions struct {
+// PropertiesDefaultsParams is the options when we set the properties defaults for ContainerService.
+type PropertiesDefaultsParams struct {
 	IsUpgrade  bool
 	IsScale    bool
 	PkiKeySize int
 }
 
 // SetPropertiesDefaults for the container Properties, returns true if certs are generated
-func (cs *ContainerService) SetPropertiesDefaults(options PropertiesDefaultsOptions) (bool, error) {
+func (cs *ContainerService) SetPropertiesDefaults(options PropertiesDefaultsParams) (bool, error) {
 	properties := cs.Properties
 
 	// Set custom cloud profile defaults if this cluster configuration has custom cloud profile

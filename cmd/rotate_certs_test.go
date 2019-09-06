@@ -248,7 +248,7 @@ func TestDeleteServiceAccounts(t *testing.T) {
 func TestWriteArtifacts(t *testing.T) {
 	g := NewGomegaWithT(t)
 	cs := api.CreateMockContainerService("testcluster", "1.10.13", 3, 2, false)
-	cs.SetPropertiesDefaults(api.PropertiesDefaultsOptions{
+	cs.SetPropertiesDefaults(api.PropertiesDefaultsParams{
 		IsScale:    false,
 		IsUpgrade:  false,
 		PkiKeySize: helpers.DefaultPkiKeySize,
@@ -267,7 +267,7 @@ func TestWriteArtifacts(t *testing.T) {
 func TestUpdateKubeconfig(t *testing.T) {
 	g := NewGomegaWithT(t)
 	cs := api.CreateMockContainerService("testcluster", "1.10.13", 3, 2, false)
-	cs.SetPropertiesDefaults(api.PropertiesDefaultsOptions{
+	cs.SetPropertiesDefaults(api.PropertiesDefaultsParams{
 		IsScale:    false,
 		IsUpgrade:  false,
 		PkiKeySize: helpers.DefaultPkiKeySize,
@@ -303,7 +303,7 @@ func TestRotateCerts(t *testing.T) {
 	ctx := context.Background()
 	g := NewGomegaWithT(t)
 	cs := api.CreateMockContainerService("testcluster", "1.10.13", 3, 2, false)
-	cs.SetPropertiesDefaults(api.PropertiesDefaultsOptions{
+	cs.SetPropertiesDefaults(api.PropertiesDefaultsParams{
 		IsScale:    false,
 		IsUpgrade:  false,
 		PkiKeySize: helpers.DefaultPkiKeySize,

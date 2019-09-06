@@ -623,7 +623,7 @@ func (ku *Upgrader) generateUpgradeTemplate(upgradeContainerService *api.Contain
 		return nil, nil, ku.Translator.Errorf("failed to initialize template generator: %s", err.Error())
 	}
 
-	_, err = upgradeContainerService.SetPropertiesDefaults(api.PropertiesDefaultsOptions{
+	_, err = upgradeContainerService.SetPropertiesDefaults(api.PropertiesDefaultsParams{
 		IsScale:    false,
 		IsUpgrade:  true,
 		PkiKeySize: helpers.DefaultPkiKeySize,

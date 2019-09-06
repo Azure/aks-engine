@@ -38,7 +38,7 @@ func TestAssignParameters(t *testing.T) {
 		}
 
 		containerService.Location = "eastus"
-		containerService.SetPropertiesDefaults(api.PropertiesDefaultsOptions{
+		containerService.SetPropertiesDefaults(api.PropertiesDefaultsParams{
 			IsScale:    false,
 			IsUpgrade:  false,
 			PkiKeySize: helpers.DefaultPkiKeySize,

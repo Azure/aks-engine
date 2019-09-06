@@ -384,7 +384,7 @@ func (dc *deployCmd) run() error {
 		return errors.Wrap(err, "initializing template generator")
 	}
 
-	certsgenerated, err := dc.containerService.SetPropertiesDefaults(api.PropertiesDefaultsOptions{
+	certsgenerated, err := dc.containerService.SetPropertiesDefaults(api.PropertiesDefaultsParams{
 		IsScale:    false,
 		IsUpgrade:  false,
 		PkiKeySize: helpers.DefaultPkiKeySize,

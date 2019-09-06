@@ -118,7 +118,7 @@ func TestExpected(t *testing.T) {
 				continue
 			}
 
-			certsGenerated, err := containerService.SetPropertiesDefaults(api.PropertiesDefaultsOptions{
+			certsGenerated, err := containerService.SetPropertiesDefaults(api.PropertiesDefaultsParams{
 				IsScale:    false,
 				IsUpgrade:  false,
 				PkiKeySize: helpers.DefaultPkiKeySize,
@@ -148,7 +148,7 @@ func TestExpected(t *testing.T) {
 
 			for i := 0; i < 3; i++ {
 				if i > 0 {
-					certsGenerated, err = containerService.SetPropertiesDefaults(api.PropertiesDefaultsOptions{
+					certsGenerated, err = containerService.SetPropertiesDefaults(api.PropertiesDefaultsParams{
 						IsScale:    false,
 						IsUpgrade:  false,
 						PkiKeySize: helpers.DefaultPkiKeySize,
@@ -232,7 +232,7 @@ func TestExpected(t *testing.T) {
 				continue
 			}
 
-			certsGenerated, err := containerService.SetPropertiesDefaults(api.PropertiesDefaultsOptions{
+			certsGenerated, err := containerService.SetPropertiesDefaults(api.PropertiesDefaultsParams{
 				IsScale:    false,
 				IsUpgrade:  false,
 				PkiKeySize: helpers.DefaultPkiKeySize,
@@ -262,7 +262,7 @@ func TestExpected(t *testing.T) {
 
 			for i := 0; i < 3; i++ {
 				if i > 0 {
-					certsGenerated, err = containerService.SetPropertiesDefaults(api.PropertiesDefaultsOptions{
+					certsGenerated, err = containerService.SetPropertiesDefaults(api.PropertiesDefaultsParams{
 						IsScale:    false,
 						IsUpgrade:  false,
 						PkiKeySize: helpers.DefaultPkiKeySize,
@@ -428,7 +428,7 @@ func TestTemplateOutputPresence(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to load container service from file: %v", err)
 	}
-	containerService.SetPropertiesDefaults(api.PropertiesDefaultsOptions{
+	containerService.SetPropertiesDefaults(api.PropertiesDefaultsParams{
 		IsScale:    false,
 		IsUpgrade:  false,
 		PkiKeySize: helpers.DefaultPkiKeySize,

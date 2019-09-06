@@ -433,7 +433,7 @@ func (sc *scaleCmd) run(cmd *cobra.Command, args []string) error {
 	sc.agentPool.Count = countForTemplate
 	sc.containerService.Properties.AgentPoolProfiles = []*api.AgentPoolProfile{sc.agentPool}
 
-	_, err = sc.containerService.SetPropertiesDefaults(api.PropertiesDefaultsOptions{
+	_, err = sc.containerService.SetPropertiesDefaults(api.PropertiesDefaultsParams{
 		IsScale:    true,
 		IsUpgrade:  false,
 		PkiKeySize: helpers.DefaultPkiKeySize,

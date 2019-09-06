@@ -221,7 +221,7 @@ func (gc *generateCmd) run() error {
 		return errors.Wrap(err, "initializing template generator")
 	}
 
-	certsGenerated, err := gc.containerService.SetPropertiesDefaults(api.PropertiesDefaultsOptions{
+	certsGenerated, err := gc.containerService.SetPropertiesDefaults(api.PropertiesDefaultsParams{
 		IsScale:    false,
 		IsUpgrade:  false,
 		PkiKeySize: helpers.DefaultPkiKeySize,
