@@ -148,7 +148,7 @@ func (rcc *rotateCertsCmd) run(cmd *cobra.Command, args []string) error {
 
 	// reset the certificateProfile and use the exisiting certificate generation code to generate new certificates.
 	rcc.containerService.Properties.CertificateProfile = &api.CertificateProfile{}
-	certsGenerated, _, err := rcc.containerService.SetDefaultCerts(api.DefaultCertOptions{
+	certsGenerated, _, err := rcc.containerService.SetDefaultCerts(api.DefaultCertParams{
 		PkiKeySize: helpers.DefaultPkiKeySize,
 	})
 	if !certsGenerated || err != nil {
