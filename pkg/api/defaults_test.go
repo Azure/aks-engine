@@ -1977,7 +1977,7 @@ func TestSetCertDefaults(t *testing.T) {
 
 	cs.setOrchestratorDefaults(false, false)
 	cs.Properties.setMasterProfileDefaults(false, false, AzurePublicCloud)
-	result, ips, err := cs.SetDefaultCerts(DefaultCertOptions{
+	result, ips, err := cs.SetDefaultCerts(DefaultCertParams{
 		PkiKeySize: helpers.DefaultPkiKeySize,
 	})
 
@@ -2045,7 +2045,7 @@ func TestSetCertDefaultsVMSS(t *testing.T) {
 
 	cs.setOrchestratorDefaults(false, false)
 	cs.Properties.setMasterProfileDefaults(false, false, AzurePublicCloud)
-	result, ips, err := cs.SetDefaultCerts(DefaultCertOptions{
+	result, ips, err := cs.SetDefaultCerts(DefaultCertParams{
 		PkiKeySize: helpers.DefaultPkiKeySize,
 	})
 
