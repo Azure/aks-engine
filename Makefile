@@ -155,7 +155,6 @@ ensure-generated:
 test-e2e:
 	@test/e2e.sh
 
-HAS_DEP := $(shell $(CHECK) dep)
 HAS_GOX := $(shell $(CHECK) gox)
 HAS_GIT := $(shell $(CHECK) git)
 HAS_GOLANGCI ?= $(shell $(CHECK) golangci-lint)
@@ -163,13 +162,10 @@ HAS_GINKGO := $(shell $(CHECK) ginkgo)
 
 .PHONY: bootstrap
 bootstrap:
-ifndef HAS_DEP
-	go get -u github.com/golang/dep/cmd/dep
-endif
 ifndef HAS_GOX
 	go get -u github.com/mitchellh/gox
 endif
-	go install ./vendor/github.com/go-bindata/go-bindata/...
+	go get github.com/go-bindata/go-bindata/...@v3.1.2
 ifndef HAS_GIT
 	$(error You must install Git)
 endif

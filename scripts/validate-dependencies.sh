@@ -5,14 +5,17 @@
 
 exit_code=0
 
-echo "==> Running dep check <=="
+echo "==> Running go mod check <=="
 
-dep check || exit_code=1
+go mod tidy
 
-if [ $exit_code -ne 0 ]; then
-  echo "The dependency state is out of sync. Please run dep ensure."
+git diff --exit-code --quiet go.mod go.sum
+error_code=$?
+
+if [ $error_code -ne 0 ]; then
+  echo "The dependency state is out of sync. Please commit changes to go.mod, go.sum."
 else
-  echo "dep check passed."
+  echo "go mod ok."
 fi
 
-exit $exit_code
+exit $error_code
