@@ -2,6 +2,7 @@
 
 import json
 import subprocess
+from collections import OrderedDict
 
 
 MIN_CORES_DCOS = 2
@@ -75,7 +76,27 @@ def get_storage_account_type(size_name):
     return "Standard_LRS"
 
 
-def get_file_contents(dcos_master_map, kubernetes_size_map, locations):
+def get_accelerated_skus():
+    """
+    Returns a dict of SKU name to AcceleratedNetworkingEnabled value.
+    """
+    pinned = [
+        ("AZAP_Performance_ComputeV17C", True),
+        ("SQLGL", True),
+        ("SQLGLCore", True),
+    ]
+    query = r"[? starts_with(name, `Standard`) && !ends_with(name, `Promo`)].{name: name, caps: capabilities[? name==`AcceleratedNetworkingEnabled`]}[].{sku: name, acceleratedNetworking: caps[0].value}[? acceleratedNetworking != null]"
+    results = json.loads(
+        subprocess.check_output(
+            ["az", "vm", "list-skus", "-o", "json", "--query", query]
+        ).decode("utf-8")
+    )
+    return OrderedDict(
+        pinned + [(i["sku"], (i["acceleratedNetworking"] == "True")) for i in results]
+    )
+
+
+def get_file_contents(dcos_master_map, kubernetes_size_map, locations, skus):
     text = r"""// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
@@ -155,10 +176,18 @@ func GetSizeMap() string {
     text += '    "' + size['name'] + '": {\n'
     storage_account_type = get_storage_account_type(size['name'])
     text += '      "storageAccountType": "' + storage_account_type + '"\n    }\n'
-
     text += r"""   }
 `
-}"""
+}
+
+// AcceleratedNetworkingSkus are those Azure VM SKUs that support accelerated networking.
+var AcceleratedNetworkingSkus []string = []string{
+"""
+    for name, accelerated in skus.items():
+        if accelerated:
+            text += '\t"{}",\n'.format(name)
+    text += "}"
+
     return text
 
 
@@ -168,7 +197,8 @@ def main():
     dcos_master_map = get_dcos_master_map(all_sizes)
     kubernetes_size_map = all_sizes
     locations = get_locations()
-    text = get_file_contents(dcos_master_map, kubernetes_size_map, locations)
+    accelerated_networking_skus = get_accelerated_skus()
+    text = get_file_contents(dcos_master_map, kubernetes_size_map, locations, accelerated_networking_skus)
 
     with open(outfile_name, 'w') as outfile:
         outfile.write(text)
