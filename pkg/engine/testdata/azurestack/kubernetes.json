@@ -51,6 +51,15 @@
                 "distro": "ubuntu",
                 "availabilityProfile": "AvailabilitySet",
                 "AcceleratedNetworkingEnabled": false
+            },
+            {
+                "name": "windowspool",
+                "osDiskSizeGB": 128,
+                "count": 3,
+                "vmSize": "Standard_D2_v2",
+                "osType": "Windows",
+                "availabilityProfile": "AvailabilitySet",
+                "AcceleratedNetworkingEnabled": false
             }
         ],
         "linuxProfile": {
@@ -62,6 +71,11 @@
                     }
                 ]
             }
+        },
+        "windowsProfile": { 
+            "adminUsername": "azureuser",
+            "adminPassword": "myAdminPassword~1",
+            "sshEnabled": true
         },
         "servicePrincipalProfile": {
             "clientId": "ServicePrincipalClientID",

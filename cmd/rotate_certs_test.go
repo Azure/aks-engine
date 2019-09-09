@@ -10,6 +10,7 @@ import (
 
 	"github.com/Azure/aks-engine/pkg/api"
 	"github.com/Azure/aks-engine/pkg/armhelpers"
+	"github.com/Azure/aks-engine/pkg/helpers"
 	"github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2018-10-01/compute"
 	"github.com/gofrs/uuid"
 	. "github.com/onsi/gomega"
@@ -247,7 +248,11 @@ func TestDeleteServiceAccounts(t *testing.T) {
 func TestWriteArtifacts(t *testing.T) {
 	g := NewGomegaWithT(t)
 	cs := api.CreateMockContainerService("testcluster", "1.10.13", 3, 2, false)
-	cs.SetPropertiesDefaults(false, false)
+	cs.SetPropertiesDefaults(api.PropertiesDefaultsParams{
+		IsScale:    false,
+		IsUpgrade:  false,
+		PkiKeySize: helpers.DefaultPkiKeySize,
+	})
 	rcc := rotateCertsCmd{
 		authProvider:     &authArgs{},
 		containerService: cs,
@@ -262,7 +267,11 @@ func TestWriteArtifacts(t *testing.T) {
 func TestUpdateKubeconfig(t *testing.T) {
 	g := NewGomegaWithT(t)
 	cs := api.CreateMockContainerService("testcluster", "1.10.13", 3, 2, false)
-	cs.SetPropertiesDefaults(false, false)
+	cs.SetPropertiesDefaults(api.PropertiesDefaultsParams{
+		IsScale:    false,
+		IsUpgrade:  false,
+		PkiKeySize: helpers.DefaultPkiKeySize,
+	})
 	rcc := rotateCertsCmd{
 		authProvider:       &authArgs{},
 		containerService:   cs,
@@ -294,7 +303,11 @@ func TestRotateCerts(t *testing.T) {
 	ctx := context.Background()
 	g := NewGomegaWithT(t)
 	cs := api.CreateMockContainerService("testcluster", "1.10.13", 3, 2, false)
-	cs.SetPropertiesDefaults(false, false)
+	cs.SetPropertiesDefaults(api.PropertiesDefaultsParams{
+		IsScale:    false,
+		IsUpgrade:  false,
+		PkiKeySize: helpers.DefaultPkiKeySize,
+	})
 	mockClient := &armhelpers.MockAKSEngineClient{MockKubernetesClient: &armhelpers.MockKubernetesClient{}}
 	rcc := rotateCertsCmd{
 		authProvider:       &authArgs{},

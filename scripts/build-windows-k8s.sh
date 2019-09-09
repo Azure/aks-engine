@@ -12,6 +12,13 @@ fetch_k8s() {
 	git fetch upstream
 }
 
+fetch_azs_k8s() {
+	mkdir -p "$KUBEPATH"
+	git clone https://github.com/msazurestackworkloads/kubernetes "$KUBEPATH" || true
+	cd "$KUBEPATH"
+	git fetch --all
+}
+
 set_git_config() {
 	git config user.name "AKS CI"
 	git config user.email "containers@microsoft.com"
@@ -240,19 +247,19 @@ create_dist_dir() {
 build_kubelet() {
 	echo "building kubelet.exe..."
 	"$KUBEPATH"/build/run.sh make WHAT=cmd/kubelet KUBE_BUILD_PLATFORMS=windows/amd64
-	cp "${GOPATH}"/src/k8s.io/kubernetes/_output/dockerized/bin/windows/amd64/kubelet.exe "${DIST_DIR}"
+	cp "$KUBEPATH"/_output/dockerized/bin/windows/amd64/kubelet.exe "${DIST_DIR}"
 }
 
 build_kubeproxy() {
 	echo "building kube-proxy.exe..."
 	"$KUBEPATH"/build/run.sh make WHAT=cmd/kube-proxy KUBE_BUILD_PLATFORMS=windows/amd64
-	cp "${GOPATH}"/src/k8s.io/kubernetes/_output/dockerized/bin/windows/amd64/kube-proxy.exe "${DIST_DIR}"
+	cp "$KUBEPATH"/_output/dockerized/bin/windows/amd64/kube-proxy.exe "${DIST_DIR}"
 }
 
 build_kubectl() {
 	echo "building kubectl.exe..."
     "$KUBEPATH"/build/run.sh make WHAT=cmd/kubectl KUBE_BUILD_PLATFORMS=windows/amd64
-    cp "${GOPATH}"/src/k8s.io/kubernetes/_output/dockerized/bin/windows/amd64/kubectl.exe "${DIST_DIR}"
+    cp "$KUBEPATH"/_output/dockerized/bin/windows/amd64/kubectl.exe "${DIST_DIR}"
 }
 
 download_kubectl() {
@@ -263,34 +270,42 @@ download_kubectl() {
 }
 
 get_kube_binaries() {
-	if version_lt "${KUBERNETES_RELEASE}" "1.9"; then
-		echo "building kubelet/kubeproxy from azure repo..."
-		fetch_k8s
-		set_git_config
+	if [ -n "${build_azs}" ]; then
+		echo "building kubelet/kubeproxy from Azure Stack repo..."
+		fetch_azs_k8s
 		create_version_branch
-		apply_acs_cherry_picks
-
-		# Due to what appears to be a bug in the Kubernetes Windows build system, one
-		# has to first build a linux binary to generate _output/bin/deepcopy-gen.
-		# Building to Windows w/o doing this will generate an empty deepcopy-gen.
-		build/run.sh make WHAT=cmd/kubelet KUBE_BUILD_PLATFORMS=linux/amd64
-
-		build_kubelet
-		build_kubeproxy
-
-		echo "downloading kubectl..."
-		download_kubectl
+		build_kube_binaries_for_upstream_e2e
 	else
-		echo "downloading kubelet/kubeproxy/kubectl from upstream..."
-		WIN_TAR=kubernetes-node-windows-amd64.tar.gz
-		SUB_DIR=kubernetes/node/bin
-		curl -L https://storage.googleapis.com/kubernetes-release/release/v"${version}"/${WIN_TAR} -o "${TOP_DIR}"/${WIN_TAR}
-		tar -xzvf "${TOP_DIR}"/${WIN_TAR} -C "${TOP_DIR}"
-		cp "${TOP_DIR}"/${SUB_DIR}/kubelet.exe "${DIST_DIR}"
-		cp "${TOP_DIR}"/${SUB_DIR}/kube-proxy.exe "${DIST_DIR}"
-		cp "${TOP_DIR}"/${SUB_DIR}/kubectl.exe "${DIST_DIR}"
-		chmod 775 "${DIST_DIR}"/kubectl.exe
+		if version_lt "${KUBERNETES_RELEASE}" "1.9"; then
+			echo "building kubelet/kubeproxy from azure repo..."
+			fetch_k8s
+			set_git_config
+			create_version_branch
+			apply_acs_cherry_picks
+
+			# Due to what appears to be a bug in the Kubernetes Windows build system, one
+			# has to first build a linux binary to generate _output/bin/deepcopy-gen.
+			# Building to Windows w/o doing this will generate an empty deepcopy-gen.
+			build/run.sh make WHAT=cmd/kubelet KUBE_BUILD_PLATFORMS=linux/amd64
+
+			build_kubelet
+			build_kubeproxy
+
+			echo "downloading kubectl..."
+			download_kubectl
+		else
+			echo "downloading kubelet/kubeproxy/kubectl from upstream..."
+			WIN_TAR=kubernetes-node-windows-amd64.tar.gz
+			SUB_DIR=kubernetes/node/bin
+			curl -L https://storage.googleapis.com/kubernetes-release/release/v"${version}"/${WIN_TAR} -o "${TOP_DIR}"/${WIN_TAR}
+			tar -xzvf "${TOP_DIR}"/${WIN_TAR} -C "${TOP_DIR}"
+			cp "${TOP_DIR}"/${SUB_DIR}/kubelet.exe "${DIST_DIR}"
+			cp "${TOP_DIR}"/${SUB_DIR}/kube-proxy.exe "${DIST_DIR}"
+			cp "${TOP_DIR}"/${SUB_DIR}/kubectl.exe "${DIST_DIR}"
+			chmod 775 "${DIST_DIR}"/kubectl.exe
+		fi
 	fi
+
 }
 
 build_kube_binaries_for_upstream_e2e() {
@@ -323,14 +338,14 @@ download_wincni() {
 }
 
 create_zip() {
-	ZIP_NAME="${k8s_e2e_upstream_version:-"v${AKS_VERSION}int.zip"}"
+	ZIP_NAME="${k8s_e2e_upstream_version:-${KUBERNETES_WIN_ZIP_FILENAME}}"
 	cd "${DIST_DIR}"/..
 	zip -r ../"${ZIP_NAME}" k/*
 	cd -
 }
 
 upload_zip_to_blob_storage() {
-	az storage blob upload -f "${TOP_DIR}"/../v"${AKS_VERSION}"int.zip -c "${AZURE_STORAGE_CONTAINER_NAME}" -n v"${AKS_VERSION}"int.zip
+	az storage blob upload -f "${TOP_DIR}"/../${KUBERNETES_WIN_ZIP_FILENAME} -c "${AZURE_STORAGE_CONTAINER_NAME}" -n ${KUBERNETES_WIN_ZIP_FILENAME}
 }
 
 push_acs_branch() {
@@ -344,7 +359,7 @@ push_acs_branch() {
 }
 
 cleanup_output() {
-	rm "${TOP_DIR}"/../v"${AKS_VERSION}"int.zip
+	rm "${TOP_DIR}"/../${KUBERNETES_WIN_ZIP_FILENAME}
 	rm -r "${TOP_DIR}"
 }
 
@@ -356,10 +371,11 @@ usage() {
 	echo " -v <version>: version"
 	echo " -p <patched version>: acs_patch_version"
 	echo " -u <version build for kubernetes upstream e2e tests>: k8s_e2e_upstream_version"
+	echo " -a <build Azure Stack specific windows file>: build_azs"
 	echo " -z <zip path>: zip_path"
 }
 
-while getopts ":v:p:u:z:" opt; do
+while getopts ":v:p:u:z:a:" opt; do
   case ${opt} in
     v)
       version=${OPTARG}
@@ -373,6 +389,9 @@ while getopts ":v:p:u:z:" opt; do
 	z)
 	  zip_path=${OPTARG}
 	  ;;
+	a)
+	  build_azs=${OPTARG}
+	  ;;
     *)
 			usage
 			exit
@@ -380,26 +399,39 @@ while getopts ":v:p:u:z:" opt; do
   esac
 done
 
-KUBEPATH="${GOPATH}"/src/k8s.io/kubernetes
+if [ -n "${build_azs}" ]; then
+	KUBEPATH="${GOPATH}"/azurestack/src/k8s.io/kubernetes
+else
+	KUBEPATH="${GOPATH}"/src/k8s.io/kubernetes	
+fi
 
 if [ -z "${k8s_e2e_upstream_version}" ]; then
 
 	if [ -z "${version}" ] || [ -z "${acs_patch_version}" ]; then
 		usage
-			exit 1
+		exit 1
 	fi
 
 	if [ -z "${AZURE_STORAGE_CONNECTION_STRING}" ] || [ -z "${AZURE_STORAGE_CONTAINER_NAME}" ]; then
 		# shellcheck disable=SC2016
 		echo '$AZURE_STORAGE_CONNECTION_STRING and $AZURE_STORAGE_CONTAINER_NAME need to be set for upload to Azure Blob Storage.'
-			exit 1
+		exit 1
 	fi
 
 	KUBERNETES_RELEASE=$(echo "$version" | cut -d'.' -f1,2)
 	KUBERNETES_TAG_BRANCH=v${version}
 	AKS_VERSION=${version}-${acs_patch_version}
-	AKS_BRANCH_NAME=acs-v${AKS_VERSION}
-	TOP_DIR=${AKS_ENGINE_HOME}/_dist/k8s-windows-v${AKS_VERSION}
+	
+	if [ -n "${build_azs}" ]; then
+		AKS_BRANCH_NAME=azs-v${AKS_VERSION}
+		TOP_DIR=${AKS_ENGINE_HOME}/_dist/k8s-windows-azs-v${AKS_VERSION}
+		KUBERNETES_WIN_ZIP_FILENAME=azs-v"${AKS_VERSION}"int.zip
+	else
+		AKS_BRANCH_NAME=acs-v${AKS_VERSION}
+		TOP_DIR=${AKS_ENGINE_HOME}/_dist/k8s-windows-v${AKS_VERSION}
+		KUBERNETES_WIN_ZIP_FILENAME=v"${AKS_VERSION}"int.zip
+	fi
+	
 	DIST_DIR="${TOP_DIR}"/k
 
 	create_dist_dir
@@ -419,3 +451,4 @@ else
 	download_wincni
 	create_zip
 fi
+
