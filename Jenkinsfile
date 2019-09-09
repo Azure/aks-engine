@@ -49,9 +49,15 @@ stage ("discover tests") {
 			k8sVersions.each { version ->
 				def jobName = cfgFile.path[cfgFile.path.indexOf("test_cluster_configs/") + 21..-6] // remove leader and trailing .json
 				jobName = "v${version}/${jobName}"
-				if(params.JOB_FOCUS_REGEX.trim() && !(jobName ==~ ~/${params.JOB_FOCUS_REGEX}/)){
+				if(params.INCLUDE_JOB_REGEX.trim() && !(jobName ==~ ~/${params.INCLUDE_JOB_REGEX}/)){
 					// the job is focused, so only run jobs matching the regex
-					echo("This run is limited to jobs matching ${params.JOB_FOCUS_REGEX}; not running ${jobName}")
+					echo("This run is limited to jobs matching ${params.INCLUDE_JOB_REGEX}; not running ${jobName}")
+					return // this is a continue and will not exit the entire iteration
+				}
+
+				if(params.EXCLUDE_JOB_REGEX.trim() && (jobName ==~ ~/${params.EXCLUDE_JOB_REGEX}/)){
+					// the job is focused, so only run jobs matching the regex
+					echo("This run excludes jobs matching ${params.EXCLUDE_JOB_REGEX}; not running ${jobName}")
 					return // this is a continue and will not exit the entire iteration
 				}
 
