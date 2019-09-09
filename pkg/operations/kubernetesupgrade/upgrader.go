@@ -18,7 +18,6 @@ import (
 	"github.com/Azure/aks-engine/pkg/armhelpers/utils"
 	"github.com/Azure/aks-engine/pkg/engine"
 	"github.com/Azure/aks-engine/pkg/engine/transform"
-	"github.com/Azure/aks-engine/pkg/helpers"
 	"github.com/Azure/aks-engine/pkg/i18n"
 	"github.com/Azure/aks-engine/pkg/operations"
 	"github.com/sirupsen/logrus"
@@ -623,11 +622,7 @@ func (ku *Upgrader) generateUpgradeTemplate(upgradeContainerService *api.Contain
 		return nil, nil, ku.Translator.Errorf("failed to initialize template generator: %s", err.Error())
 	}
 
-	_, err = upgradeContainerService.SetPropertiesDefaults(api.PropertiesDefaultsParams{
-		IsScale:    false,
-		IsUpgrade:  true,
-		PkiKeySize: helpers.DefaultPkiKeySize,
-	})
+	_, err = upgradeContainerService.SetPropertiesDefaults(true, false)
 	if err != nil {
 		return nil, nil, ku.Translator.Errorf("error in SetPropertiesDefaults: %s", err.Error())
 

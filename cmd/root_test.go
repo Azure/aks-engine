@@ -14,7 +14,6 @@ import (
 	"github.com/Azure/aks-engine/pkg/api"
 	"github.com/Azure/aks-engine/pkg/armhelpers"
 	"github.com/Azure/aks-engine/pkg/armhelpers/azurestack/testserver"
-	"github.com/Azure/aks-engine/pkg/helpers"
 	"github.com/Azure/go-autorest/autorest/azure"
 	"github.com/gofrs/uuid"
 	"github.com/spf13/cobra"
@@ -432,11 +431,7 @@ func prepareCustomCloudProfile() *api.ContainerService {
 		},
 	}
 
-	cs.SetPropertiesDefaults(api.PropertiesDefaultsParams{
-		IsScale:    false,
-		IsUpgrade:  false,
-		PkiKeySize: helpers.DefaultPkiKeySize,
-	})
+	cs.SetPropertiesDefaults(false, false)
 
 	return cs
 }

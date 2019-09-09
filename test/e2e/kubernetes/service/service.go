@@ -18,7 +18,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-const commandTimeout = 3 * time.Minute
+const commandTimeout = 1 * time.Minute
 
 // List holds a list of services returned from kubectl get svc
 type List struct {
@@ -129,8 +129,7 @@ func (s *Service) Delete(retries int) error {
 		cmd := exec.Command("k", "delete", "svc", "-n", s.Metadata.Namespace, s.Metadata.Name)
 		kubectlOutput, kubectlError = util.RunAndLogCommand(cmd, commandTimeout)
 		if kubectlError != nil {
-			log.Printf("Error while trying to delete service %s in namespace %s:%s\n", s.Metadata.Namespace, s.Metadata.Name, kubectlError)
-			log.Printf("%s\n", string(kubectlOutput))
+			log.Printf("Error while trying to delete service %s in namespace %s:%s\n", s.Metadata.Namespace, s.Metadata.Name, string(kubectlOutput))
 			continue
 		}
 		break

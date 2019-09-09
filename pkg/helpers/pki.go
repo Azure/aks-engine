@@ -24,28 +24,9 @@ import (
 const (
 	// ValidityDuration specifies the duration an TLS certificate is valid
 	ValidityDuration = time.Hour * 24 * 365 * 30
+	// PkiKeySize is the size in bytes of the PKI key
+	PkiKeySize = 4096
 )
-
-const (
-	// DefaultPkiKeySize is the default size in bytes of the PKI key
-	DefaultPkiKeySize = 4096
-)
-
-// PkiParams is used when we create Pki
-type PkiParams struct {
-	ExtraFQDNs    []string
-	ExtraIPs      []net.IP
-	ClusterDomain string
-	CaPair        *PkiKeyCertPair
-	MasterCount   int
-	PkiKeySize    int
-}
-
-// PkiKeyCertPairParams is the params when we create the pki key cert pair.
-type PkiKeyCertPairParams struct {
-	CommonName string
-	PkiKeySize int
-}
 
 // PkiKeyCertPair represents an PKI public and private cert pair
 type PkiKeyCertPair struct {
@@ -54,19 +35,8 @@ type PkiKeyCertPair struct {
 }
 
 // CreatePkiKeyCertPair generates a pair of PKI certificate and private key
-func CreatePkiKeyCertPair(params PkiKeyCertPairParams) (*PkiKeyCertPair, error) {
-	certPram := certParams{
-		commonName:    params.CommonName,
-		caCertificate: nil,
-		caPrivateKey:  nil,
-		isEtcd:        false,
-		isServer:      false,
-		extraFQDNs:    nil,
-		extraIPs:      nil,
-		organization:  nil,
-		keySize:       params.PkiKeySize,
-	}
-	caCertificate, caPrivateKey, err := createCertificate(certPram)
+func CreatePkiKeyCertPair(commonName string) (*PkiKeyCertPair, error) {
+	caCertificate, caPrivateKey, err := createCertificate(commonName, nil, nil, false, false, nil, nil, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -75,18 +45,18 @@ func CreatePkiKeyCertPair(params PkiKeyCertPairParams) (*PkiKeyCertPair, error) 
 }
 
 // CreatePki creates PKI certificates
-func CreatePki(pkiParams PkiParams) (*PkiKeyCertPair, *PkiKeyCertPair, *PkiKeyCertPair, *PkiKeyCertPair, *PkiKeyCertPair, []*PkiKeyCertPair, error) {
+func CreatePki(extraFQDNs []string, extraIPs []net.IP, clusterDomain string, caPair *PkiKeyCertPair, masterCount int) (*PkiKeyCertPair, *PkiKeyCertPair, *PkiKeyCertPair, *PkiKeyCertPair, *PkiKeyCertPair, []*PkiKeyCertPair, error) {
 	start := time.Now()
 	defer func(s time.Time) {
 		log.Debugf("pki: PKI asset creation took %s", time.Since(s))
 	}(start)
-	pkiParams.ExtraFQDNs = append(pkiParams.ExtraFQDNs, fmt.Sprintf("kubernetes"))
-	pkiParams.ExtraFQDNs = append(pkiParams.ExtraFQDNs, fmt.Sprintf("kubernetes.default"))
-	pkiParams.ExtraFQDNs = append(pkiParams.ExtraFQDNs, fmt.Sprintf("kubernetes.default.svc"))
-	pkiParams.ExtraFQDNs = append(pkiParams.ExtraFQDNs, fmt.Sprintf("kubernetes.default.svc.%s", pkiParams.ClusterDomain))
-	pkiParams.ExtraFQDNs = append(pkiParams.ExtraFQDNs, fmt.Sprintf("kubernetes.kube-system"))
-	pkiParams.ExtraFQDNs = append(pkiParams.ExtraFQDNs, fmt.Sprintf("kubernetes.kube-system.svc"))
-	pkiParams.ExtraFQDNs = append(pkiParams.ExtraFQDNs, fmt.Sprintf("kubernetes.kube-system.svc.%s", pkiParams.ClusterDomain))
+	extraFQDNs = append(extraFQDNs, fmt.Sprintf("kubernetes"))
+	extraFQDNs = append(extraFQDNs, fmt.Sprintf("kubernetes.default"))
+	extraFQDNs = append(extraFQDNs, fmt.Sprintf("kubernetes.default.svc"))
+	extraFQDNs = append(extraFQDNs, fmt.Sprintf("kubernetes.default.svc.%s", clusterDomain))
+	extraFQDNs = append(extraFQDNs, fmt.Sprintf("kubernetes.kube-system"))
+	extraFQDNs = append(extraFQDNs, fmt.Sprintf("kubernetes.kube-system.svc"))
+	extraFQDNs = append(extraFQDNs, fmt.Sprintf("kubernetes.kube-system.svc.%s", clusterDomain))
 
 	var (
 		caCertificate         *x509.Certificate
@@ -106,117 +76,49 @@ func CreatePki(pkiParams PkiParams) (*PkiKeyCertPair, *PkiKeyCertPair, *PkiKeyCe
 	var group errgroup.Group
 
 	var err error
-	caCertificate, err = pemToCertificate(pkiParams.CaPair.CertificatePem)
+	caCertificate, err = pemToCertificate(caPair.CertificatePem)
 	if err != nil {
 		return nil, nil, nil, nil, nil, nil, err
 	}
-	caPrivateKey, err = pemToKey(pkiParams.CaPair.PrivateKeyPem)
+	caPrivateKey, err = pemToKey(caPair.PrivateKeyPem)
 	if err != nil {
 		return nil, nil, nil, nil, nil, nil, err
 	}
 
 	group.Go(func() (err error) {
-		certPram := certParams{
-			commonName:    "apiserver",
-			caCertificate: caCertificate,
-			caPrivateKey:  caPrivateKey,
-			isEtcd:        false,
-			isServer:      true,
-			extraFQDNs:    pkiParams.ExtraFQDNs,
-			extraIPs:      pkiParams.ExtraIPs,
-			organization:  nil,
-			keySize:       pkiParams.PkiKeySize,
-		}
-		apiServerCertificate, apiServerPrivateKey, err = createCertificate(certPram)
+		apiServerCertificate, apiServerPrivateKey, err = createCertificate("apiserver", caCertificate, caPrivateKey, false, true, extraFQDNs, extraIPs, nil)
 		return err
 	})
 
 	group.Go(func() (err error) {
 		organization := make([]string, 1)
 		organization[0] = "system:masters"
-		certPram := certParams{
-			commonName:    "client",
-			caCertificate: caCertificate,
-			caPrivateKey:  caPrivateKey,
-			isEtcd:        false,
-			isServer:      false,
-			extraFQDNs:    nil,
-			extraIPs:      nil,
-			organization:  organization,
-			keySize:       pkiParams.PkiKeySize,
-		}
-		clientCertificate, clientPrivateKey, err = createCertificate(certPram)
+		clientCertificate, clientPrivateKey, err = createCertificate("client", caCertificate, caPrivateKey, false, false, nil, nil, organization)
 		return err
 	})
 
 	group.Go(func() (err error) {
 		organization := make([]string, 1)
 		organization[0] = "system:masters"
-
-		certPram := certParams{
-			commonName:    "client",
-			caCertificate: caCertificate,
-			caPrivateKey:  caPrivateKey,
-			isEtcd:        false,
-			isServer:      false,
-			extraFQDNs:    nil,
-			extraIPs:      nil,
-			organization:  organization,
-			keySize:       pkiParams.PkiKeySize,
-		}
-
-		kubeConfigCertificate, kubeConfigPrivateKey, err = createCertificate(certPram)
+		kubeConfigCertificate, kubeConfigPrivateKey, err = createCertificate("client", caCertificate, caPrivateKey, false, false, nil, nil, organization)
 		return err
 	})
 
 	group.Go(func() (err error) {
-		certPram := certParams{
-			commonName:    "etcdserver",
-			caCertificate: caCertificate,
-			caPrivateKey:  caPrivateKey,
-			isEtcd:        true,
-			isServer:      true,
-			extraFQDNs:    nil,
-			extraIPs:      pkiParams.ExtraIPs,
-			organization:  nil,
-			keySize:       pkiParams.PkiKeySize,
-		}
-		etcdServerCertificate, etcdServerPrivateKey, err = createCertificate(certPram)
+		etcdServerCertificate, etcdServerPrivateKey, err = createCertificate("etcdserver", caCertificate, caPrivateKey, true, true, nil, extraIPs, nil)
 		return err
 	})
 
 	group.Go(func() (err error) {
-		certPram := certParams{
-			commonName:    "etcdclient",
-			caCertificate: caCertificate,
-			caPrivateKey:  caPrivateKey,
-			isEtcd:        true,
-			isServer:      false,
-			extraFQDNs:    nil,
-			extraIPs:      pkiParams.ExtraIPs,
-			organization:  nil,
-			keySize:       pkiParams.PkiKeySize,
-		}
-		etcdClientCertificate, etcdClientPrivateKey, err = createCertificate(certPram)
+		etcdClientCertificate, etcdClientPrivateKey, err = createCertificate("etcdclient", caCertificate, caPrivateKey, true, false, nil, extraIPs, nil)
 		return err
 	})
 
-	etcdPeerCertPairs = make([]*PkiKeyCertPair, pkiParams.MasterCount)
-	for i := 0; i < pkiParams.MasterCount; i++ {
+	etcdPeerCertPairs = make([]*PkiKeyCertPair, masterCount)
+	for i := 0; i < masterCount; i++ {
 		i := i
 		group.Go(func() (err error) {
-			certPram := certParams{
-				commonName:    "etcdpeer",
-				caCertificate: caCertificate,
-				caPrivateKey:  caPrivateKey,
-				isEtcd:        true,
-				isServer:      false,
-				extraFQDNs:    nil,
-				extraIPs:      pkiParams.ExtraIPs,
-				organization:  nil,
-				keySize:       pkiParams.PkiKeySize,
-			}
-			etcdPeerCertificate, etcdPeerPrivateKey, err := createCertificate(certPram)
+			etcdPeerCertificate, etcdPeerPrivateKey, err := createCertificate("etcdpeer", caCertificate, caPrivateKey, true, false, nil, extraIPs, nil)
 			etcdPeerCertPairs[i] = &PkiKeyCertPair{CertificatePem: string(certificateToPem(etcdPeerCertificate.Raw)), PrivateKeyPem: string(privateKeyToPem(etcdPeerPrivateKey))}
 			return err
 		})
@@ -235,27 +137,15 @@ func CreatePki(pkiParams PkiParams) (*PkiKeyCertPair, *PkiKeyCertPair, *PkiKeyCe
 		nil
 }
 
-type certParams struct {
-	commonName    string
-	caCertificate *x509.Certificate
-	caPrivateKey  *rsa.PrivateKey
-	isEtcd        bool
-	isServer      bool
-	extraFQDNs    []string
-	extraIPs      []net.IP
-	organization  []string
-	keySize       int
-}
-
-func createCertificate(options certParams) (*x509.Certificate, *rsa.PrivateKey, error) {
+func createCertificate(commonName string, caCertificate *x509.Certificate, caPrivateKey *rsa.PrivateKey, isEtcd bool, isServer bool, extraFQDNs []string, extraIPs []net.IP, organization []string) (*x509.Certificate, *rsa.PrivateKey, error) {
 	var err error
 
-	isCA := (options.caCertificate == nil)
+	isCA := (caCertificate == nil)
 
 	now := time.Now()
 
 	template := x509.Certificate{
-		Subject:   pkix.Name{CommonName: options.commonName},
+		Subject:   pkix.Name{CommonName: commonName},
 		NotBefore: now,
 		NotAfter:  now.Add(ValidityDuration),
 
@@ -263,28 +153,28 @@ func createCertificate(options certParams) (*x509.Certificate, *rsa.PrivateKey, 
 		BasicConstraintsValid: true,
 	}
 
-	if options.organization != nil {
-		template.Subject.Organization = options.organization
+	if organization != nil {
+		template.Subject.Organization = organization
 	}
 
 	if isCA {
 		template.KeyUsage |= x509.KeyUsageCertSign
 		template.IsCA = isCA
-	} else if options.isEtcd {
-		if options.commonName == "etcdServer" {
-			template.IPAddresses = options.extraIPs
+	} else if isEtcd {
+		if commonName == "etcdServer" {
+			template.IPAddresses = extraIPs
 			template.ExtKeyUsage = append(template.ExtKeyUsage, x509.ExtKeyUsageServerAuth)
-		} else if options.commonName == "etcdClient" {
-			template.IPAddresses = options.extraIPs
+		} else if commonName == "etcdClient" {
+			template.IPAddresses = extraIPs
 			template.ExtKeyUsage = append(template.ExtKeyUsage, x509.ExtKeyUsageClientAuth)
 		} else {
-			template.IPAddresses = options.extraIPs
+			template.IPAddresses = extraIPs
 			template.ExtKeyUsage = append(template.ExtKeyUsage, x509.ExtKeyUsageServerAuth)
 			template.ExtKeyUsage = append(template.ExtKeyUsage, x509.ExtKeyUsageClientAuth)
 		}
-	} else if options.isServer {
-		template.DNSNames = options.extraFQDNs
-		template.IPAddresses = options.extraIPs
+	} else if isServer {
+		template.DNSNames = extraFQDNs
+		template.IPAddresses = extraIPs
 		template.ExtKeyUsage = append(template.ExtKeyUsage, x509.ExtKeyUsageServerAuth)
 	} else {
 		template.ExtKeyUsage = append(template.ExtKeyUsage, x509.ExtKeyUsageClientAuth)
@@ -296,13 +186,13 @@ func createCertificate(options certParams) (*x509.Certificate, *rsa.PrivateKey, 
 		return nil, nil, err
 	}
 
-	privateKey, _ := rsa.GenerateKey(rand.Reader, options.keySize)
+	privateKey, _ := rsa.GenerateKey(rand.Reader, PkiKeySize)
 
 	var privateKeyToUse *rsa.PrivateKey
 	var certificateToUse *x509.Certificate
 	if !isCA {
-		privateKeyToUse = options.caPrivateKey
-		certificateToUse = options.caCertificate
+		privateKeyToUse = caPrivateKey
+		certificateToUse = caCertificate
 	} else {
 		privateKeyToUse = privateKey
 		certificateToUse = &template
