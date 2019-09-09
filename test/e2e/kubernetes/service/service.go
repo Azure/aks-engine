@@ -192,7 +192,7 @@ func WaitOnDeleted(servicePrefix, namespace string, sleep, duration time.Duratio
 			default:
 				s, err := GetAllByPrefix(servicePrefix, namespace)
 				if err != nil {
-					errCh <- errors.Errorf("Got error while getting Services with prefix \"%s\" in namespace \"%s\"", servicePrefix, namespace)
+					continue
 				}
 				if len(s) == 0 {
 					succeededCh <- true

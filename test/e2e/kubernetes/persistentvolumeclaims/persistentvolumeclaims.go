@@ -210,7 +210,7 @@ func WaitOnDeleted(pvcPrefix, namespace string, sleep, duration time.Duration) (
 			default:
 				p, err := GetAllByPrefix(pvcPrefix, namespace)
 				if err != nil {
-					errCh <- errors.Errorf("Got error while getting Jobs with prefix \"%s\" in namespace \"%s\"", pvcPrefix, namespace)
+					continue
 				}
 				if len(p) == 0 {
 					succeededCh <- true

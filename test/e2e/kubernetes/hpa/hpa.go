@@ -141,7 +141,7 @@ func WaitOnDeleted(hpaPrefix, namespace string, sleep, duration time.Duration) (
 			default:
 				p, err := GetAllByPrefix(hpaPrefix, namespace)
 				if err != nil {
-					errCh <- errors.Errorf("Got error while getting Pods with prefix \"%s\" in namespace \"%s\"", hpaPrefix, namespace)
+					continue
 				}
 				if len(p) == 0 {
 					succeededCh <- true

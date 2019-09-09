@@ -309,7 +309,7 @@ func GetWithRetry(podPrefix, namespace string, sleep, duration time.Duration) (*
 			default:
 				p, err := Get(podPrefix, namespace, podLookupRetries)
 				if err != nil {
-					log.Printf("Error getting pod %s in namespace %s: %s\n", podPrefix, namespace, err)
+					continue
 				} else if p != nil {
 					podCh <- p
 				}
@@ -484,8 +484,7 @@ func WaitOnReady(podPrefix, namespace string, successesNeeded int, sleep, durati
 			default:
 				ready, err := AreAllPodsRunning(podPrefix, namespace)
 				if err != nil {
-					errCh <- err
-					return
+					continue
 				}
 				if ready {
 					successCount++
@@ -541,8 +540,7 @@ func WaitOnSucceeded(podPrefix, namespace string, sleep, duration time.Duration)
 			default:
 				succeeded, failed, err := AreAllPodsSucceeded(podPrefix, namespace)
 				if err != nil {
-					errCh <- err
-					return
+					continue
 				}
 				if failed {
 					errCh <- errors.New("At least one pod in a Failed state")
