@@ -13645,6 +13645,9 @@ set -x
 echo $(date),$(hostname), startcustomscript>>/opt/m
 AZURE_STACK_ENV="azurestackcloud"
 
+
+exit 1
+
 script_lib=/opt/azure/containers/provision_source.sh
 for i in $(seq 1 3600); do
     if [ -s $script_lib ]; then
