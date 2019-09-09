@@ -402,8 +402,7 @@ func (d *Deployment) WaitForReplicas(min, max int, sleep, duration time.Duration
 				var err error
 				pods, err = pod.GetAllByPrefix(d.Metadata.Name, d.Metadata.Namespace)
 				if err != nil {
-					errCh <- err
-					return
+					continue
 				}
 				if min == -1 {
 					if len(pods) <= max {
