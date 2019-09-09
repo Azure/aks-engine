@@ -79,8 +79,16 @@ generate-azure-constants:
 	python pkg/helpers/generate_azure_constants.py
 
 .PHONY: build
-build: validate-dependencies generate
+build: generate tidy vendor
 	$(GO) build $(GOFLAGS) -ldflags '$(LDFLAGS)' -o $(BINDIR)/$(PROJECT)$(EXTENSION) $(REPO_PATH)
+
+.PHONY: tidy
+tidy:
+	$(GO) mod tidy
+
+.PHONY: vendor
+vendor:
+	$(GO) mod vendor
 
 build-binary: generate
 	go build $(GOFLAGS) -v -ldflags "$(LDFLAGS)" -o $(BINARY_DEST_DIR)/aks-engine .
@@ -155,7 +163,6 @@ ensure-generated:
 test-e2e:
 	@test/e2e.sh
 
-HAS_DEP := $(shell $(CHECK) dep)
 HAS_GOX := $(shell $(CHECK) gox)
 HAS_GIT := $(shell $(CHECK) git)
 HAS_GOLANGCI ?= $(shell $(CHECK) golangci-lint)
@@ -163,13 +170,10 @@ HAS_GINKGO := $(shell $(CHECK) ginkgo)
 
 .PHONY: bootstrap
 bootstrap:
-ifndef HAS_DEP
-	go get -u github.com/golang/dep/cmd/dep
-endif
 ifndef HAS_GOX
 	go get -u github.com/mitchellh/gox
 endif
-	go install ./vendor/github.com/go-bindata/go-bindata/...
+	go get github.com/go-bindata/go-bindata/...@v3.1.2
 ifndef HAS_GIT
 	$(error You must install Git)
 endif
