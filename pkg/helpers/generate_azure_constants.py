@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 
 import json
+import re
 import subprocess
-from collections import OrderedDict
 
 
 MIN_CORES_DCOS = 2
@@ -76,24 +76,43 @@ def get_storage_account_type(size_name):
     return "Standard_LRS"
 
 
+def sku_sort_key(sku):
+    """Split a SKU string into a list of strings and integers, for sorting."""
+    return [int(e) if e.isdigit() else e for e in re.findall(r'\d+|\D+', sku)]
+
+
 def get_accelerated_skus():
-    """
-    Returns a dict of SKU name to AcceleratedNetworkingEnabled value.
-    """
-    pinned = [
-        ("AZAP_Performance_ComputeV17C", True),
-        ("SQLGL", True),
-        ("SQLGLCore", True),
+    """Return a list of SKUs that support accelerated networking."""
+    # Start with some grandfathered SKUs for backwards compatibility.
+    skus = [
+        "AZAP_Performance_ComputeV17C",
+        "SQLGL",
+        "SQLGLCore",
     ]
-    query = r"[? starts_with(name, `Standard`) && !ends_with(name, `Promo`)].{name: name, caps: capabilities[? name==`AcceleratedNetworkingEnabled`]}[].{sku: name, acceleratedNetworking: caps[0].value}[? acceleratedNetworking != null]"
+
+    query = r"[? starts_with(name, `Standard`) && !ends_with(name, `Promo`)]"
     results = json.loads(
         subprocess.check_output(
             ["az", "vm", "list-skus", "-o", "json", "--query", query]
         ).decode("utf-8")
     )
-    return OrderedDict(
-        pinned + [(i["sku"], (i["acceleratedNetworking"] == "True")) for i in results]
-    )
+    for r in results:
+        sku = r["name"]
+        capabilities = r.get('capabilities') or []
+
+        for cap in capabilities:
+            name, value = cap["name"], cap["value"]
+            # Add SKUs with the `AcceleratedNetworkingEnabled` capability equal to "True".
+            if name == "AcceleratedNetworkingEnabled" and value in ("True", True):
+                skus.append(sku)
+            # add D/DSv2 and F/Fs with vCPUs >= 2
+            elif re.match(r'Standard_(DS?.*v2|F)', sku) is not None and name == "vCPUs" and int(value) >= 2:
+                skus.append(sku)
+            # add D/Dsv3, E/Esv3, Fsv2, Lsv2, Ms/Mms and Ms/Mmsv2 with vCPUs >= 4
+            elif re.match(r'Standard_([D|E]\d+s?.*v3|[F|L]\d+s.*v2|M\d+s?.*(v2)?)', sku) is not None and name == "vCPUs" and int(value) >= 4:
+                skus.append(sku)
+
+    return set(skus)
 
 
 def get_file_contents(dcos_master_map, kubernetes_size_map, locations, skus):
@@ -181,11 +200,16 @@ func GetSizeMap() string {
 }
 
 // AcceleratedNetworkingSkus are those Azure VM SKUs that support accelerated networking.
+//
+// From https://docs.microsoft.com/en-us/azure/virtual-network/create-vm-accelerated-networking-cli:
+// Accelerated Networking is supported on most general purpose and compute-optimized instance sizes
+// with 2 or more vCPUs. These supported series are: D/DSv2 and F/Fs.
+// On instances that support hyperthreading, Accelerated Networking is supported on VM instances
+// with 4 or more vCPUs. Supported series are: D/Dsv3, E/Esv3, Fsv2, Lsv2, Ms/Mms and Ms/Mmsv2.
 var AcceleratedNetworkingSkus []string = []string{
 """
-    for name, accelerated in skus.items():
-        if accelerated:
-            text += '\t"{}",\n'.format(name)
+    for name in sorted(skus):
+        text += '\t"{}",\n'.format(name)
     text += "}"
 
     return text
