@@ -514,15 +514,17 @@ func CreateAgentVMSS(cs *api.ContainerService, profile *api.AgentPoolProfile) Vi
 
 			ipConfigProps.LoadBalancerBackendAddressPools = &backendAddressPools
 			if cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6DualStack") {
-				defaultIPv4BackendPool := compute.SubResource{
-					ID: to.StringPtr("[concat(resourceId('Microsoft.Network/loadBalancers',parameters('masterEndpointDNSNamePrefix')), '/backendAddressPools/', parameters('masterEndpointDNSNamePrefix'))]"),
+				if cs.Properties.OrchestratorProfile.KubernetesConfig.LoadBalancerSku != StandardLoadBalancerSku {
+					defaultIPv4BackendPool := compute.SubResource{
+						ID: to.StringPtr("[concat(resourceId('Microsoft.Network/loadBalancers',parameters('masterEndpointDNSNamePrefix')), '/backendAddressPools/', parameters('masterEndpointDNSNamePrefix'))]"),
+					}
+					backendPools := make([]compute.SubResource, 0)
+					if ipConfigProps.LoadBalancerBackendAddressPools != nil {
+						backendPools = *ipConfigProps.LoadBalancerBackendAddressPools
+					}
+					backendPools = append(backendPools, defaultIPv4BackendPool)
+					ipConfigProps.LoadBalancerBackendAddressPools = &backendPools
 				}
-				backendPools := make([]compute.SubResource, 0)
-				if ipConfigProps.LoadBalancerBackendAddressPools != nil {
-					backendPools = *ipConfigProps.LoadBalancerBackendAddressPools
-				}
-				backendPools = append(backendPools, defaultIPv4BackendPool)
-				ipConfigProps.LoadBalancerBackendAddressPools = &backendPools
 			}
 
 			// Set VMSS node public IP if requested
@@ -549,14 +551,6 @@ func CreateAgentVMSS(cs *api.ContainerService, profile *api.AgentPoolProfile) Vi
 					Primary:                 to.BoolPtr(false),
 					PrivateIPAddressVersion: "IPv6",
 				},
-			}
-			if i == 1 {
-				backendPools := make([]compute.SubResource, 0)
-				defaultIPv6BackendPool := compute.SubResource{
-					ID: to.StringPtr("[concat(resourceId('Microsoft.Network/loadBalancers',parameters('masterEndpointDNSNamePrefix')), '/backendAddressPools/', parameters('masterEndpointDNSNamePrefix'), '-ipv6')]"),
-				}
-				backendPools = append(backendPools, defaultIPv6BackendPool)
-				ipconfigv6.LoadBalancerBackendAddressPools = &backendPools
 			}
 			ipConfigurations = append(ipConfigurations, ipconfigv6)
 		}

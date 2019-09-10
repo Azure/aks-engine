@@ -378,14 +378,16 @@ func createAgentVMASNetworkInterface(cs *api.ContainerService, profile *api.Agen
 		}
 
 		if cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6DualStack") {
-			var backendPools []network.BackendAddressPool
-			if ipConfig.LoadBalancerBackendAddressPools != nil {
-				backendPools = *ipConfig.LoadBalancerBackendAddressPools
+			if cs.Properties.OrchestratorProfile.KubernetesConfig.LoadBalancerSku != api.StandardLoadBalancerSku {
+				var backendPools []network.BackendAddressPool
+				if ipConfig.LoadBalancerBackendAddressPools != nil {
+					backendPools = *ipConfig.LoadBalancerBackendAddressPools
+				}
+				backendPools = append(backendPools, network.BackendAddressPool{
+					ID: to.StringPtr("[concat(resourceId('Microsoft.Network/loadBalancers',parameters('masterEndpointDNSNamePrefix')), '/backendAddressPools/', parameters('masterEndpointDNSNamePrefix'))]"),
+				})
+				ipConfig.LoadBalancerBackendAddressPools = &backendPools
 			}
-			backendPools = append(backendPools, network.BackendAddressPool{
-				ID: to.StringPtr("[concat(resourceId('Microsoft.Network/loadBalancers',parameters('masterEndpointDNSNamePrefix')), '/backendAddressPools/', parameters('masterEndpointDNSNamePrefix'))]"),
-			})
-			ipConfig.LoadBalancerBackendAddressPools = &backendPools
 		}
 		ipConfigurations = append(ipConfigurations, ipConfig)
 	}
@@ -399,11 +401,6 @@ func createAgentVMASNetworkInterface(cs *api.ContainerService, profile *api.Agen
 				Primary:                 to.BoolPtr(false),
 				Subnet: &network.Subnet{
 					ID: to.StringPtr(fmt.Sprintf("[variables('%sVnetSubnetID')]", profile.Name)),
-				},
-				LoadBalancerBackendAddressPools: &[]network.BackendAddressPool{
-					{
-						ID: to.StringPtr("[concat(resourceId('Microsoft.Network/loadBalancers',parameters('masterEndpointDNSNamePrefix')), '/backendAddressPools/', parameters('masterEndpointDNSNamePrefix'), '-ipv6')]"),
-					},
 				},
 			},
 		}

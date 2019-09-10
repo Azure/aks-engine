@@ -105,27 +105,3 @@ func CreateClusterPublicIPAddress() PublicIPAddressARM {
 		},
 	}
 }
-
-// CreateClusterPublicIPv6Address returns public ipv6 address resource for cluster
-// ipv6 fe is required to make egress work for ipv6 dual stack. This place holder can
-// be removed in the future once changes are incorporated in the platform.
-// TODO (aramase)
-func CreateClusterPublicIPv6Address() PublicIPAddressARM {
-	return PublicIPAddressARM{
-		ARMResource: ARMResource{
-			APIVersion: "[variables('apiVersionNetwork')]",
-		},
-		PublicIPAddress: network.PublicIPAddress{
-			Location: to.StringPtr("[variables('location')]"),
-			Name:     to.StringPtr("fee-ipv6"),
-			PublicIPAddressPropertiesFormat: &network.PublicIPAddressPropertiesFormat{
-				PublicIPAllocationMethod: network.Dynamic,
-				PublicIPAddressVersion:   "IPv6",
-			},
-			Sku: &network.PublicIPAddressSku{
-				Name: "[variables('loadBalancerSku')]",
-			},
-			Type: to.StringPtr("Microsoft.Network/publicIPAddresses"),
-		},
-	}
-}
