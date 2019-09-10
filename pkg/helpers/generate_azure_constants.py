@@ -93,7 +93,7 @@ def get_accelerated_skus():
     query = r"[? starts_with(name, `Standard`) && !ends_with(name, `Promo`)]"
     results = json.loads(
         subprocess.check_output(
-            ["az", "vm", "list-skus", "-o", "json", "--query", query]
+            ["az", "vm", "list-skus", "--all", "-o", "json", "--query", query]
         ).decode("utf-8")
     )
     for r in results:
