@@ -103,14 +103,18 @@ def get_accelerated_skus():
         for cap in capabilities:
             name, value = cap["name"], cap["value"]
             # Add SKUs with the `AcceleratedNetworkingEnabled` capability equal to "True".
-            if name == "AcceleratedNetworkingEnabled" and value in ("True", True):
-                skus.append(sku)
-            # add D/DSv2 and F/Fs with vCPUs >= 2
-            elif re.match(r'Standard_(DS?.*v2|F)', sku) is not None and name == "vCPUs" and int(value) >= 2:
-                skus.append(sku)
-            # add D/Dsv3, E/Esv3, Fsv2, Lsv2, Ms/Mms and Ms/Mmsv2 with vCPUs >= 4
-            elif re.match(r'Standard_([D|E]\d+s?.*v3|[F|L]\d+s.*v2|M\d+s?.*(v2)?)', sku) is not None and name == "vCPUs" and int(value) >= 4:
-                skus.append(sku)
+            if name == "AcceleratedNetworkingEnabled":
+                if value in ("True", True):
+                    skus.append(sku)
+                break
+            # If there's no explicit capability, infer from the rules in the documentation.
+            elif name == "vCPUs":
+                # add D/DSv2 and F/Fs with vCPUs >= 2
+                if re.match(r'Standard_(DS\d+?.*v2|F)', sku) is not None and int(value) >= 2:
+                    skus.append(sku)
+                # add D/Dsv3, E/Esv3, Fsv2, Lsv2, Ms/Mms and Ms/Mmsv2 with vCPUs >= 4
+                elif re.match(r'Standard_([D|E]\d+s?.*v3|[F|L]\d+s.*v2|M\d+s?.*(v2)?)', sku) is not None and int(value) >= 4:
+                    skus.append(sku)
 
     return set(skus)
 
