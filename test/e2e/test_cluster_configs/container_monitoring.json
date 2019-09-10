@@ -9,7 +9,9 @@
 					"addons": [
 						{
 							"name": "container-monitoring",
-							"enabled": true
+							"enabled": true,
+							"workspaceGuid": "9257fb9c-24d2-433a-a57a-fed7ff3eb584",
+							"workspaceKey": "${LOG_ANALYTICS_WORKSPACE_KEY}"
 						}
 					]
 				}

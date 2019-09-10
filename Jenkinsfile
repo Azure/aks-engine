@@ -93,7 +93,8 @@ stage ("discover tests") {
 									def creds = [
 											string(credentialsId: 'AKS_ENGINE_TENANT_ID', variable: 'TENANT_ID'),
 											string(credentialsId: 'AKS_ENGINE_3014546b_CLIENT_ID', variable: 'CLIENT_ID'),
-											string(credentialsId: 'AKS_ENGINE_3014546b_CLIENT_SECRET', variable: 'CLIENT_SECRET')
+											string(credentialsId: 'AKS_ENGINE_3014546b_CLIENT_SECRET', variable: 'CLIENT_SECRET'),
+											string(credentialsId: 'LOG_ANALYTICS_WORKSPACE_KEY', variable: 'LOG_ANALYTICS_WORKSPACE_KEY')
 										]
 
 									withCredentials(creds) {
