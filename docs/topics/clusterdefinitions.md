@@ -647,7 +647,7 @@ https://{keyvaultname}.vault.azure.net:443/secrets/{secretName}/{version}
 | windowsPublisher                 | no       | Publisher used to find Windows VM to deploy from marketplace. Default: `MicrosoftWindowsServer` |
 | windowsOffer                     | no       | Offer used to find Windows VM to deploy from marketplace. Default: `WindowsServer` |
 | windowsSku                       | no       | SKU usedto find Windows VM to deploy from marketplace. Default: `2019-Datacenter-Core-with-Containers-smalldisk` |
-| imageVersion                     | no       | Specific image version to deploy from marketplace.  Default: `17763.615.1907121548`. This default is incremented as new versions are tested to avoid unexpected breaks. |
+| imageVersion                     | no       | Specific image version to deploy from marketplace.  Default: `17763.678.1908092216`. This default is incremented as new versions are tested to avoid unexpected breaks. |
 | windowsImageSourceURL            | no       | Path to an existing Azure storage blob with a sysprepped VHD. This is used to test pre-release or customized VHD files that you have uploaded to Azure. If provided, the above 4 parameters are ignored. |
 | imageReference.name              | no       | Name of an Image. |
 | imageReference.resourceGroup     | no       | Resource group that contains the Image. |
