@@ -46,7 +46,7 @@ const (
 	PolicyDir                              = "workloads/policies"
 	retryCommandsTimeout                   = 5 * time.Minute
 	kubeSystemPodsReadinessChecks          = 6
-	retryTimeWhenWaitingForPodReady        = 10 * time.Second
+	retryTimeWhenWaitingForPodReady        = 1 * time.Second
 	timeoutWhenWaitingForPodOutboundAccess = 1 * time.Minute
 	stabilityCommandTimeout                = 5 * time.Second
 	windowsCommandTimeout                  = 1 * time.Minute
@@ -837,7 +837,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			By("Ensuring that we have functional DNS resolution from a linux container")
 			j, err := job.CreateJobFromFileDeleteIfExists(filepath.Join(WorkloadDir, "validate-dns-linux.yaml"), "validate-dns-linux", "default")
 			Expect(err).NotTo(HaveOccurred())
-			ready, err := j.WaitOnReady(retryTimeWhenWaitingForPodReady, validateDNSTimeout)
+			ready, err := j.WaitOnSucceeded(retryTimeWhenWaitingForPodReady, validateDNSTimeout)
 			delErr := j.Delete(util.DefaultDeleteRetries)
 			if delErr != nil {
 				fmt.Printf("could not delete job %s\n", j.Metadata.Name)
@@ -852,7 +852,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				Expect(imgErr).NotTo(HaveOccurred())
 				j, err = job.CreateWindowsJobFromTemplateDeleteIfExists(filepath.Join(WorkloadDir, "validate-dns-windows.yaml"), "validate-dns-windows", "default", windowsImages)
 				Expect(err).NotTo(HaveOccurred())
-				ready, err = j.WaitOnReady(retryTimeWhenWaitingForPodReady, cfg.Timeout)
+				ready, err = j.WaitOnSucceeded(retryTimeWhenWaitingForPodReady, cfg.Timeout)
 				delErr = j.Delete(util.DefaultDeleteRetries)
 				if delErr != nil {
 					fmt.Printf("could not delete job %s\n", j.Metadata.Name)
@@ -1171,7 +1171,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				if common.IsKubernetesVersionGe(version, "1.10.0") {
 					j, err := job.CreateJobFromFile(filepath.Join(WorkloadDir, "cuda-vector-add.yaml"), "cuda-vector-add", "default")
 					Expect(err).NotTo(HaveOccurred())
-					ready, err := j.WaitOnReady(30*time.Second, cfg.Timeout)
+					ready, err := j.WaitOnSucceeded(30*time.Second, cfg.Timeout)
 					delErr := j.Delete(util.DefaultDeleteRetries)
 					if delErr != nil {
 						fmt.Printf("could not delete job %s\n", j.Metadata.Name)
@@ -1182,7 +1182,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				} else {
 					j, err := job.CreateJobFromFile(filepath.Join(WorkloadDir, "nvidia-smi.yaml"), "nvidia-smi", "default")
 					Expect(err).NotTo(HaveOccurred())
-					ready, err := j.WaitOnReady(30*time.Second, cfg.Timeout)
+					ready, err := j.WaitOnSucceeded(30*time.Second, cfg.Timeout)
 					delErr := j.Delete(util.DefaultDeleteRetries)
 					if delErr != nil {
 						fmt.Printf("could not delete job %s\n", j.Metadata.Name)

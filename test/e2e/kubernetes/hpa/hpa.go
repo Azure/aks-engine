@@ -90,6 +90,21 @@ func GetAll(namespace string) (*List, error) {
 	return &hl, nil
 }
 
+// GetAllByPrefixResult is a return struct for AreAllPodsRunningAsync
+type GetAllByPrefixResult struct {
+	hpas []HPA
+	err  error
+}
+
+// GetAllByPrefixAsync wraps GetAllByPrefix with a struct reponse for goroutine + channel usage
+func GetAllByPrefixAsync(prefix, namespace string) GetAllByPrefixResult {
+	hpas, err := GetAllByPrefix(prefix, namespace)
+	return GetAllByPrefixResult{
+		hpas: hpas,
+		err:  err,
+	}
+}
+
 // GetAllByPrefix will return all pods in a given namespace that match a prefix
 func GetAllByPrefix(prefix, namespace string) ([]HPA, error) {
 	hl, err := GetAll(namespace)
@@ -128,34 +143,32 @@ func (h *HPA) Delete(retries int) error {
 }
 
 // WaitOnDeleted returns when an hpa resource is successfully deleted
-func WaitOnDeleted(hpaPrefix, namespace string, sleep, duration time.Duration) (bool, error) {
-	succeededCh := make(chan bool, 1)
-	errCh := make(chan error)
-	ctx, cancel := context.WithTimeout(context.Background(), duration)
+func WaitOnDeleted(hpaPrefix, namespace string, sleep, timeout time.Duration) (bool, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
+	ch := make(chan GetAllByPrefixResult)
+	var mostRecentWaitOnDeletedError error
+	var hpas []HPA
 	go func() {
 		for {
 			select {
 			case <-ctx.Done():
-				errCh <- errors.Errorf("Timeout exceeded (%s) while waiting for Pods (%s) to be deleted in namespace (%s)", duration.String(), hpaPrefix, namespace)
-			default:
-				p, err := GetAllByPrefix(hpaPrefix, namespace)
-				if err != nil {
-					continue
-				}
-				if len(p) == 0 {
-					succeededCh <- true
-				}
+				return
+			case ch <- GetAllByPrefixAsync(hpaPrefix, namespace):
 				time.Sleep(sleep)
 			}
 		}
 	}()
 	for {
 		select {
-		case err := <-errCh:
-			return false, err
-		case deleted := <-succeededCh:
-			return deleted, nil
+		case result := <-ch:
+			mostRecentWaitOnDeletedError = result.err
+			hpas = result.hpas
+			if len(hpas) == 0 {
+				return true, nil
+			}
+		case <-ctx.Done():
+			return false, errors.Errorf("WaitOnDeleted timed out: %s\n", mostRecentWaitOnDeletedError)
 		}
 	}
 }

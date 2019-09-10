@@ -153,14 +153,24 @@ func (s *Service) WaitForIngress(wait, sleep time.Duration) (*Service, error) {
 	svcCh := make(chan *Service)
 	errCh := make(chan error)
 	ctx, cancel := context.WithTimeout(context.Background(), wait)
+	var err error
+	var svc *Service
 	defer cancel()
 	go func() {
 		for {
 			select {
 			case <-ctx.Done():
-				errCh <- errors.New("Timeout exceeded while waiting for External IP to be provisioned")
+				log.Printf("Timeout exceeded while waiting for External IP to be provisioned")
+				if err != nil {
+					errCh <- err
+				} else {
+					errCh <- errors.Errorf("Ingress not ready in time")
+				}
 			default:
-				svc, _ := Get(s.Metadata.Name, s.Metadata.Namespace)
+				svc, err = Get(s.Metadata.Name, s.Metadata.Namespace)
+				if err != nil {
+					continue
+				}
 				if svc != nil && svc.Status.LoadBalancer.Ingress != nil {
 					svcCh <- svc
 				}
@@ -183,18 +193,25 @@ func WaitOnDeleted(servicePrefix, namespace string, sleep, duration time.Duratio
 	succeededCh := make(chan bool, 1)
 	errCh := make(chan error)
 	ctx, cancel := context.WithTimeout(context.Background(), duration)
+	var err error
+	var svcs []Service
 	defer cancel()
 	go func() {
 		for {
 			select {
 			case <-ctx.Done():
-				errCh <- errors.Errorf("Timeout exceeded (%s) while waiting for Services (%s) to be deleted in namespace (%s)", duration.String(), servicePrefix, namespace)
+				log.Printf("Timeout exceeded (%s) while waiting for Services (%s) to be deleted in namespace (%s)", duration.String(), servicePrefix, namespace)
+				if err != nil {
+					errCh <- err
+				} else {
+					errCh <- errors.Errorf("%d services not deleted", len(svcs))
+				}
 			default:
-				s, err := GetAllByPrefix(servicePrefix, namespace)
+				svcs, err = GetAllByPrefix(servicePrefix, namespace)
 				if err != nil {
 					continue
 				}
-				if len(s) == 0 {
+				if len(svcs) == 0 {
 					succeededCh <- true
 				}
 				time.Sleep(sleep)

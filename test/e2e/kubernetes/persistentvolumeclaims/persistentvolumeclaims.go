@@ -201,18 +201,25 @@ func WaitOnDeleted(pvcPrefix, namespace string, sleep, duration time.Duration) (
 	succeededCh := make(chan bool, 1)
 	errCh := make(chan error)
 	ctx, cancel := context.WithTimeout(context.Background(), duration)
+	var err error
+	var pvcs []PersistentVolumeClaim
 	defer cancel()
 	go func() {
 		for {
 			select {
 			case <-ctx.Done():
-				errCh <- errors.Errorf("Timeout exceeded (%s) while waiting for Jobs (%s) to be deleted in namespace (%s)", duration.String(), pvcPrefix, namespace)
+				log.Printf("Timeout exceeded (%s) while waiting for PVCs (%s) to be deleted in namespace (%s)", duration.String(), pvcPrefix, namespace)
+				if err != nil {
+					errCh <- err
+				} else {
+					errCh <- errors.Errorf("%d pvcs not deleted", len(pvcs))
+				}
 			default:
-				p, err := GetAllByPrefix(pvcPrefix, namespace)
+				pvcs, err = GetAllByPrefix(pvcPrefix, namespace)
 				if err != nil {
 					continue
 				}
-				if len(p) == 0 {
+				if len(pvcs) == 0 {
 					succeededCh <- true
 				}
 				time.Sleep(sleep)

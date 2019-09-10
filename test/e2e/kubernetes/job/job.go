@@ -170,8 +170,8 @@ func Get(jobName, namespace string) (*Job, error) {
 	return &j, nil
 }
 
-// AreAllJobsCompleted will return true if all jobs with a common prefix in a given namespace are in a Completed State
-func AreAllJobsCompleted(jobPrefix, namespace string) (bool, error) {
+// AreAllJobsSucceeded will return true if all jobs with a common prefix in a given namespace are in a Completed State
+func AreAllJobsSucceeded(jobPrefix, namespace string) (bool, error) {
 	jl, err := GetAll(namespace)
 	if err != nil {
 		return false, err
@@ -206,19 +206,29 @@ func AreAllJobsCompleted(jobPrefix, namespace string) (bool, error) {
 	return true, nil
 }
 
-// WaitOnReady is used when you dont have a handle on a job but want to wait until its in a Succeeded state.
-func WaitOnReady(jobPrefix, namespace string, sleep, duration time.Duration) (bool, error) {
+// WaitOnSucceeded returns true if all jobs matching a prefix substring are in a succeeded state within a period of time
+func WaitOnSucceeded(jobPrefix, namespace string, sleep, duration time.Duration) (bool, error) {
 	readyCh := make(chan bool, 1)
 	errCh := make(chan error)
 	ctx, cancel := context.WithTimeout(context.Background(), duration)
+	var err error
+	var ready bool
 	defer cancel()
 	go func() {
 		for {
 			select {
 			case <-ctx.Done():
-				errCh <- errors.Errorf("Timeout exceeded (%s) while waiting for Jobs (%s) to complete in namespace (%s)", duration.String(), jobPrefix, namespace)
+				log.Printf("Timeout exceeded (%s) while waiting for Jobs (%s) to complete in namespace (%s)", duration.String(), jobPrefix, namespace)
+				if err != nil {
+					errCh <- err
+				} else {
+					errCh <- errors.Errorf("All jobs not in a Succeeded state")
+				}
 			default:
-				ready, _ := AreAllJobsCompleted(jobPrefix, namespace)
+				ready, err = AreAllJobsSucceeded(jobPrefix, namespace)
+				if err != nil {
+					continue
+				}
 				if ready {
 					readyCh <- true
 				} else {
@@ -244,9 +254,9 @@ func WaitOnReady(jobPrefix, namespace string, sleep, duration time.Duration) (bo
 	}
 }
 
-// WaitOnReady will call the static method WaitOnReady passing in p.Metadata.Name and p.Metadata.Namespace
-func (j *Job) WaitOnReady(sleep, duration time.Duration) (bool, error) {
-	return WaitOnReady(j.Metadata.Name, j.Metadata.Namespace, sleep, duration)
+// WaitOnSucceeded will call the static method WaitOnSucceeded passing in p.Metadata.Name and p.Metadata.Namespace
+func (j *Job) WaitOnSucceeded(sleep, duration time.Duration) (bool, error) {
+	return WaitOnSucceeded(j.Metadata.Name, j.Metadata.Namespace, sleep, duration)
 }
 
 // Delete will delete a Job in a given namespace
@@ -267,23 +277,30 @@ func (j *Job) Delete(retries int) error {
 	return kubectlError
 }
 
-// WaitOnDeleted returns when a job is successfully deleted
+// WaitOnDeleted returns when all jobs matching a prefix substring are successfully deleted
 func WaitOnDeleted(jobPrefix, namespace string, sleep, duration time.Duration) (bool, error) {
 	succeededCh := make(chan bool, 1)
 	errCh := make(chan error)
 	ctx, cancel := context.WithTimeout(context.Background(), duration)
+	var err error
+	var jobs []Job
 	defer cancel()
 	go func() {
 		for {
 			select {
 			case <-ctx.Done():
-				errCh <- errors.Errorf("Timeout exceeded (%s) while waiting for Jobs (%s) to be deleted in namespace (%s)", duration.String(), jobPrefix, namespace)
+				log.Printf("Timeout exceeded (%s) while waiting for Jobs (%s) to be deleted in namespace (%s)", duration.String(), jobPrefix, namespace)
+				if err != nil {
+					errCh <- err
+				} else {
+					errCh <- errors.Errorf("%d jobs not deleted", len(jobs))
+				}
 			default:
-				p, err := GetAllByPrefix(jobPrefix, namespace)
+				jobs, err = GetAllByPrefix(jobPrefix, namespace)
 				if err != nil {
 					continue
 				}
-				if len(p) == 0 {
+				if len(jobs) == 0 {
 					succeededCh <- true
 				}
 				time.Sleep(sleep)

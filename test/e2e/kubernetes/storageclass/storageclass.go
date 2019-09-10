@@ -70,19 +70,28 @@ func (sc *StorageClass) WaitOnReady(sleep, duration time.Duration) (bool, error)
 	readyCh := make(chan bool, 1)
 	errCh := make(chan error)
 	ctx, cancel := context.WithTimeout(context.Background(), duration)
+	var err error
+	var storageClass *StorageClass
 	defer cancel()
 	go func() {
 		for {
 			select {
 			case <-ctx.Done():
-				errCh <- errors.Errorf("Timeout exceeded (%s) while waiting for StorageClass (%s) to become ready", duration.String(), sc.Metadata.Name)
-			default:
-				query, _ := Get(sc.Metadata.Name)
-				if query != nil {
-					readyCh <- true
+				log.Printf("Timeout exceeded (%s) while waiting for StorageClass (%s) to become ready", duration.String(), sc.Metadata.Name)
+				if err != nil {
+					errCh <- err
 				} else {
-					time.Sleep(sleep)
+					errCh <- errors.Errorf("StorageClass not ready in time")
 				}
+			default:
+				storageClass, err = Get(sc.Metadata.Name)
+				if err != nil {
+					continue
+				}
+				if storageClass != nil {
+					readyCh <- true
+				}
+				time.Sleep(sleep)
 			}
 		}
 	}()

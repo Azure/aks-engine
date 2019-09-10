@@ -387,46 +387,42 @@ func (d *Deployment) Pods() ([]pod.Pod, error) {
 }
 
 // WaitForReplicas waits for a pod replica count between min and max
-func (d *Deployment) WaitForReplicas(min, max int, sleep, duration time.Duration) ([]pod.Pod, error) {
-	readyCh := make(chan bool, 1)
-	errCh := make(chan error)
-	ctx, cancel := context.WithTimeout(context.Background(), duration)
-	var pods []pod.Pod
+func (d *Deployment) WaitForReplicas(min, max int, sleep, timeout time.Duration) ([]pod.Pod, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
+	ch := make(chan pod.GetAllByPrefixResult)
+	var mostRecentWaitForReplicasError error
+	var pods []pod.Pod
 	go func() {
 		for {
 			select {
 			case <-ctx.Done():
-				errCh <- errors.Errorf("Timeout exceeded (%s) while waiting for minimum %d and maximum %d Pod replicas from Deployment %s", duration.String(), min, max, d.Metadata.Name)
-			default:
-				var err error
-				pods, err = pod.GetAllByPrefix(d.Metadata.Name, d.Metadata.Namespace)
-				if err != nil {
-					continue
-				}
-				if min == -1 {
-					if len(pods) <= max {
-						readyCh <- true
-					}
-				} else if max == -1 {
-					if len(pods) >= min {
-						readyCh <- true
-					}
-				} else {
-					if len(pods) >= min && len(pods) <= max {
-						readyCh <- true
-					}
-				}
+				return
+			case ch <- pod.GetAllByPrefixAsync(d.Metadata.Name, d.Metadata.Namespace):
 				time.Sleep(sleep)
 			}
 		}
 	}()
 	for {
 		select {
-		case err := <-errCh:
-			return pods, err
-		case <-readyCh:
-			return pods, nil
+		case result := <-ch:
+			mostRecentWaitForReplicasError = result.Err
+			pods = result.Pods
+			if min == -1 {
+				if len(pods) <= max {
+					return pods, nil
+				}
+			} else if max == -1 {
+				if len(pods) >= min {
+					return pods, nil
+				}
+			} else {
+				if len(pods) >= min && len(pods) <= max {
+					return pods, nil
+				}
+			}
+		case <-ctx.Done():
+			return pods, errors.Errorf("WaitForReplicas timed out: %s\n", mostRecentWaitForReplicasError)
 		}
 	}
 }

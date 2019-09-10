@@ -300,18 +300,25 @@ func GetWithRetry(podPrefix, namespace string, sleep, duration time.Duration) (*
 	podCh := make(chan *Pod, 1)
 	errCh := make(chan error)
 	ctx, cancel := context.WithTimeout(context.Background(), duration)
+	var err error
+	var pod *Pod
 	defer cancel()
 	go func() {
 		for {
 			select {
 			case <-ctx.Done():
-				errCh <- errors.Errorf("Timeout exceeded (%s) while waiting for Pod (%s) in namespace (%s)", duration.String(), podPrefix, namespace)
+				log.Printf("Timeout exceeded (%s) while waiting for Pod (%s) in namespace (%s)", duration.String(), podPrefix, namespace)
+				if err != nil {
+					errCh <- err
+				} else {
+					errCh <- errors.Errorf("Unable to get pod")
+				}
 			default:
-				p, err := Get(podPrefix, namespace, podLookupRetries)
+				pod, err = Get(podPrefix, namespace, podLookupRetries)
 				if err != nil {
 					continue
-				} else if p != nil {
-					podCh <- p
+				} else if pod != nil {
+					podCh <- pod
 				}
 				fmt.Print(".")
 				time.Sleep(sleep)
@@ -371,6 +378,21 @@ func GetTerminated(podName, namespace string) (*Pod, error) {
 	return &p, nil
 }
 
+// GetAllByPrefixResult is the result type for GetAllByPrefixAsync
+type GetAllByPrefixResult struct {
+	Pods []Pod
+	Err  error
+}
+
+// GetAllByPrefixAsync wraps GetAllByPrefix with a struct reponse for goroutine + channel usage
+func GetAllByPrefixAsync(prefix, namespace string) GetAllByPrefixResult {
+	pods, err := GetAllByPrefix(prefix, namespace)
+	return GetAllByPrefixResult{
+		Pods: pods,
+		Err:  err,
+	}
+}
+
 // GetAllByPrefix will return all pods in a given namespace that match a prefix
 func GetAllByPrefix(prefix, namespace string) ([]Pod, error) {
 	pl, err := GetAll(namespace)
@@ -389,6 +411,21 @@ func GetAllByPrefix(prefix, namespace string) ([]Pod, error) {
 		}
 	}
 	return pods, nil
+}
+
+// AreAllPodsRunningResult is a return struct for AreAllPodsRunningAsync
+type AreAllPodsRunningResult struct {
+	ready bool
+	err   error
+}
+
+// AreAllPodsRunningAsync wraps AreAllPodsRunning with a struct reponse for goroutine + channel usage
+func AreAllPodsRunningAsync(podPrefix, namespace string) AreAllPodsRunningResult {
+	ready, err := AreAllPodsRunning(podPrefix, namespace)
+	return AreAllPodsRunningResult{
+		ready: ready,
+		err:   err,
+	}
 }
 
 // AreAllPodsRunning will return true if all pods in a given namespace are in a Running State
@@ -424,7 +461,7 @@ func AreAllPodsRunning(podPrefix, namespace string) (bool, error) {
 		}
 	}
 
-	return true, nil
+	return true, err
 }
 
 // AreAllPodsSucceeded returns true, false if all pods in a given namespace are in a Running State
@@ -467,78 +504,85 @@ func AreAllPodsSucceeded(podPrefix, namespace string) (bool, bool, error) {
 	return true, false, nil
 }
 
-// WaitOnReady is used when you dont have a handle on a pod but want to wait until its in a Ready state.
+// WaitOnReady returns true if all pods matching a prefix substring are in a succeeded state within a period of time
 // successesNeeded is used to make sure we return the correct value even if the pod is in a CrashLoop
-func WaitOnReady(podPrefix, namespace string, successesNeeded int, sleep, duration time.Duration) (bool, error) {
+func WaitOnReady(podPrefix, namespace string, successesNeeded int, sleep, timeout time.Duration) (bool, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+	ch := make(chan AreAllPodsRunningResult)
+	var mostRecentWaitOnReadyErr error
 	successCount := 0
 	failureCount := 0
-	readyCh := make(chan bool, 1)
-	errCh := make(chan error)
-	ctx, cancel := context.WithTimeout(context.Background(), duration)
-	defer cancel()
+	printPodLogs := func() {
+		pods, _ := GetAllByPrefix(podPrefix, namespace)
+		if len(pods) != 0 {
+			for _, p := range pods {
+				e := p.Logs()
+				if e != nil {
+					log.Printf("Unable to print pod logs for pod %s: %s", p.Metadata.Name, e)
+				}
+				e = p.Describe()
+				if e != nil {
+					log.Printf("Unable to describe pod %s: %s", p.Metadata.Name, e)
+				}
+			}
+		}
+	}
 	go func() {
 		for {
 			select {
 			case <-ctx.Done():
-				errCh <- errors.Errorf("Timeout exceeded (%s) while waiting for Pods (%s) to become ready in namespace (%s), got %d of %d required successful pods ready results", duration.String(), podPrefix, namespace, successCount, successesNeeded)
-			default:
-				ready, err := AreAllPodsRunning(podPrefix, namespace)
-				if err != nil {
-					continue
-				}
-				if ready {
-					successCount++
-					if successCount >= successesNeeded {
-						readyCh <- true
-					}
-				} else {
-					if successCount > 1 {
-						failureCount++
-						if failureCount >= successesNeeded {
-							errCh <- errors.Errorf("Pods from deployment (%s) in namespace (%s) have been checked out as all Ready %d times, but NotReady %d times. This behavior may mean it is in a crashloop", podPrefix, namespace, successCount, failureCount)
-						}
-					}
-					time.Sleep(sleep)
-				}
+				return
+			case ch <- AreAllPodsRunningAsync(podPrefix, namespace):
+				time.Sleep(sleep)
 			}
 		}
 	}()
 	for {
 		select {
-		case err := <-errCh:
-			pods, _ := GetAllByPrefix(podPrefix, namespace)
-			if len(pods) != 0 {
-				for _, p := range pods {
-					e := p.Logs()
-					if e != nil {
-						log.Printf("Unable to print pod logs for pod %s: %s", p.Metadata.Name, e)
-					}
-					e = p.Describe()
-					if e != nil {
-						log.Printf("Unable to describe pod %s: %s", p.Metadata.Name, e)
+		case result := <-ch:
+			mostRecentWaitOnReadyErr = result.err
+			if result.ready {
+				successCount++
+				if successCount >= successesNeeded {
+					return true, nil
+				}
+			} else {
+				if successCount > 1 {
+					failureCount++
+					if failureCount >= successesNeeded {
+						printPodLogs()
+						return false, errors.Errorf("Pods from deployment (%s) in namespace (%s) have been checked out as all Ready %d times, but NotReady %d times. This behavior may mean it is in a crashloop", podPrefix, namespace, successCount, failureCount)
 					}
 				}
 			}
-			return false, err
-		case ready := <-readyCh:
-			return ready, nil
+		case <-ctx.Done():
+			printPodLogs()
+			return false, errors.Errorf("WaitOnReady timed out: %s\n", mostRecentWaitOnReadyErr)
 		}
 	}
 }
 
-// WaitOnSucceeded is used when you dont have a handle on a pod but want to wait until its in a Succeeded state.
+// WaitOnSucceeded will return true if all pods with a common prefix in a given namespace are in a Succeeded State
 func WaitOnSucceeded(podPrefix, namespace string, sleep, duration time.Duration) (bool, error) {
 	succeededCh := make(chan bool, 1)
 	errCh := make(chan error)
 	ctx, cancel := context.WithTimeout(context.Background(), duration)
+	var err error
+	var succeeded, failed bool
 	defer cancel()
 	go func() {
 		for {
 			select {
 			case <-ctx.Done():
-				errCh <- errors.Errorf("Timeout exceeded (%s) while waiting for Pods (%s) to succeed in namespace (%s)", duration.String(), podPrefix, namespace)
+				log.Printf("Timeout exceeded (%s) while waiting for Pods (%s) to succeed in namespace (%s)", duration.String(), podPrefix, namespace)
+				if err != nil {
+					errCh <- err
+				} else {
+					errCh <- errors.Errorf("Not all pods succeeded")
+				}
 			default:
-				succeeded, failed, err := AreAllPodsSucceeded(podPrefix, namespace)
+				succeeded, failed, err = AreAllPodsSucceeded(podPrefix, namespace)
 				if err != nil {
 					continue
 				}
