@@ -10,8 +10,9 @@
 						{
 							"name": "container-monitoring",
 							"enabled": true,
-							"workspaceGuid": "9257fb9c-24d2-433a-a57a-fed7ff3eb584",
-							"workspaceKey": "${LOG_ANALYTICS_WORKSPACE_KEY}"
+							"config": {
+								"workspaceGuid": "OTI1N2ZiOWMtMjRkMi00MzNhLWE1N2EtZmVkN2ZmM2ViNTg0Cg=="
+							}
 						}
 					]
 				}

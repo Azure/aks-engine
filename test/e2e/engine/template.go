@@ -13,14 +13,15 @@ import (
 
 	"github.com/Azure/go-autorest/autorest/to"
 
+	"github.com/kelseyhightower/envconfig"
+	"github.com/pkg/errors"
+
 	"github.com/Azure/aks-engine/pkg/api"
 	"github.com/Azure/aks-engine/pkg/api/common"
 	"github.com/Azure/aks-engine/pkg/api/vlabs"
 	"github.com/Azure/aks-engine/pkg/helpers"
 	"github.com/Azure/aks-engine/pkg/i18n"
 	"github.com/Azure/aks-engine/test/e2e/config"
-	"github.com/kelseyhightower/envconfig"
-	"github.com/pkg/errors"
 )
 
 // Config represents the configuration values of a template stored as env vars
@@ -28,6 +29,7 @@ type Config struct {
 	ClientID                       string `envconfig:"CLIENT_ID"`
 	ClientSecret                   string `envconfig:"CLIENT_SECRET"`
 	ClientObjectID                 string `envconfig:"CLIENT_OBJECTID"`
+	LogAnalyticsWorkspaceKey       string `envconfig:"LOG_ANALYTICS_WORKSPACE_KEY"`
 	MasterDNSPrefix                string `envconfig:"DNS_PREFIX"`
 	AgentDNSPrefix                 string `envconfig:"DNS_PREFIX"`
 	PublicSSHKey                   string `envconfig:"PUBLIC_SSH_KEY"`
@@ -199,6 +201,18 @@ func Build(cfg *config.Config, masterSubnetID string, agentSubnetIDs []string, i
 		prop.OrchestratorProfile.KubernetesConfig.ControllerManagerConfig = map[string]string{
 			"--horizontal-pod-autoscaler-downscale-stabilization":   "30s",
 			"--horizontal-pod-autoscaler-cpu-initialization-period": "30s",
+		}
+	}
+
+	if config.LogAnalyticsWorkspaceKey != "" && len(prop.OrchestratorProfile.KubernetesConfig.Addons) > 0 {
+		for _, addOn := range prop.OrchestratorProfile.KubernetesConfig.Addons {
+			if addOn.Name == "container-monitoring" {
+				if addOn.Config == nil {
+					addOn.Config = make(map[string]string)
+				}
+				addOn.Config["workspaceKey"] = config.LogAnalyticsWorkspaceKey
+				break
+			}
 		}
 	}
 
