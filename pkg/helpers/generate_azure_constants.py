@@ -88,7 +88,25 @@ def get_accelerated_skus():
         "AZAP_Performance_ComputeV17C",
         "SQLGL",
         "SQLGLCore",
-    ]
+        "Standard_D12_v2_ABC",
+        "Standard_D13_v2_ABC",
+        "Standard_D14_v2_ABC",
+        "Standard_D15_v2_ABC",
+        "Standard_D32-16s_v3",
+        "Standard_D32-8s_v3",
+        "Standard_D3_v2_ABC",
+        "Standard_D40_v3",
+        "Standard_D40s_v3",
+        "Standard_D4_v2_ABC",
+        "Standard_D5_v2_ABC",
+        "Standard_D64-16s_v3",
+        "Standard_D64-32s_v3",
+        "Standard_E32-16_v3",
+        "Standard_F16_ABC",
+        "Standard_F4_ABC",
+        "Standard_F8_ABC",
+        "Standard_L96s_v2",
+     ]
 
     query = r"[? starts_with(name, `Standard`) && !ends_with(name, `Promo`)]"
     results = json.loads(
