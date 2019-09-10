@@ -76,11 +76,6 @@ def get_storage_account_type(size_name):
     return "Standard_LRS"
 
 
-def sku_sort_key(sku):
-    """Split a SKU string into a list of strings and integers, for sorting."""
-    return [int(e) if e.isdigit() else e for e in re.findall(r'\d+|\D+', sku)]
-
-
 def get_accelerated_skus():
     """Return a list of SKUs that support accelerated networking."""
     # Start with some grandfathered SKUs for backwards compatibility.
@@ -124,14 +119,20 @@ def get_accelerated_skus():
             if name == "AcceleratedNetworkingEnabled":
                 if value in ("True", True):
                     skus.append(sku)
+                else:
+                    # The capability overrides, so remove the SKU if it was added by other rules.
+                    try:
+                        skus.remove(sku)
+                    except ValueError:
+                        pass
                 break
             # If there's no explicit capability, infer from the rules in the documentation.
             elif name == "vCPUs":
                 # add D/DSv2 and F/Fs with vCPUs >= 2
-                if re.match(r'Standard_(DS\d+?.*v2|F)', sku) is not None and int(value) >= 2:
+                if re.match(r'Standard_(DS?\d+?.*v2|F\d+s?.*!(v\d))', sku) and int(value) >= 2:
                     skus.append(sku)
                 # add D/Dsv3, E/Esv3, Fsv2, Lsv2, Ms/Mms and Ms/Mmsv2 with vCPUs >= 4
-                elif re.match(r'Standard_([D|E]\d+s?.*v3|[F|L]\d+s.*v2|M\d+s?.*(v2)?)', sku) is not None and int(value) >= 4:
+                elif re.match(r'Standard_([D|E]\d+s?.*v3|[F|L]\d+s.*v2|M[\d-]+(ms|s).*(v2)?)', sku) and int(value) >= 4:
                     skus.append(sku)
 
     return set(skus)

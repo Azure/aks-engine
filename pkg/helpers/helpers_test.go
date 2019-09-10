@@ -227,11 +227,43 @@ func TestAcceleratedNetworkingSupported(t *testing.T) {
 			expectedResult: true,
 		},
 		{
+			input:          "Standard_M32ls",
+			expectedResult: false,
+		},
+		{
+			input:          "Standard_M32ms",
+			expectedResult: true,
+		},
+		{
+			input:          "Standard_M64m",
+			expectedResult: false,
+		},
+		{
+			input:          "Standard_M64ms",
+			expectedResult: true,
+		},
+		{
+			input:          "Standard_F2s",
+			expectedResult: true,
+		},
+		{
 			input:          "Standard_F2s_v2",
 			expectedResult: false,
 		},
 		{
-			input:          "Standard_F4s_v2",
+			input:          "Standard_M416ms_v2",
+			expectedResult: true,
+		},
+		{
+			input:          "AZAP_Performance_ComputeV17C",
+			expectedResult: true,
+		},
+		{
+			input:          "SQLGL",
+			expectedResult: true,
+		},
+		{
+			input:          "SQLGLCore",
 			expectedResult: true,
 		},
 		{
