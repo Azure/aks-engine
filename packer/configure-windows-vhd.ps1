@@ -37,7 +37,6 @@ function Disable-WindowsUpdates
     Set-ItemProperty -Path $AutoUpdatePath -Name NoAutoUpdate -Value 1 | Out-Null
 }
 
-
 function Get-ContainerImages
 {
     $imagesToPull = @(
@@ -45,10 +44,41 @@ function Get-ContainerImages
         "mcr.microsoft.com/windows/nanoserver:1809",
         "mcr.microsoft.com/k8s/core/pause:1.2.0")
 
-
-    foreach ($image in $imagesToPull)
-    {
+    foreach ($image in $imagesToPull) {
         docker pull $image
+    }
+}
+
+function Get-FilesToCacheOnVHD
+{
+    Write-Log "Caching misc files on VHD"
+
+    $map = @{
+        "c:\akse-cache\" = @(
+            "https://github.com/Microsoft/SDN/raw/master/Kubernetes/flannel/l2bridge/cni/win-bridge.exe",
+            "https://github.com/Microsoft/SDN/raw/master/Kubernetes/windows/hns.psm1"
+        );
+        "c:\akse-cache\win-k8s\" = @(
+            "https://acs-mirror.azureedge.net/wink8s/v1.15.2-1int.zip",
+            "https://acs-mirror.azureedge.net/wink8s/v1.15.3-1int.zip"
+        );
+        "c:\akse-cache\win-vnet-cni\" = @(
+            "https://acs-mirror.azureedge.net/cni/azure-vnet-cni-windows-amd64-v1.0.27.zip"
+        )
+    }
+
+    foreach ($dir in $map.Keys)
+    {
+        New-Item -ItemType Directory $dir -Force | Out-Null
+
+        foreach ($URL in $map[$dir])
+        {
+            $fileName = [IO.Path]::GetFileName($URL)
+            $dest = [IO.Path]::Combine($dir, $fileName)
+
+            Write-Log "Downloading $URL to $dest"
+            Invoke-WebRequest -UseBasicParsing -Uri $URL -OutFile $dest
+        }
     }
 }
 
@@ -63,13 +93,11 @@ function Install-Docker
     $package | Install-Package -Force | Out-Null
     Start-Service docker
 }
-
 function Install-OpenSSH
 {
     Write-Log "Installing OpenSSH Server"
     Add-WindowsCapability -Online -Name OpenSSH.Server~~~~0.0.1.0
 }
-
 function Install-WindowsPatches
 {
     # Windows Server 2019 update history can be found at https://support.microsoft.com/en-us/help/4464619
@@ -77,55 +105,52 @@ function Install-WindowsPatches
 
     $patchUrls = @()
 
-        foreach ($patchUrl in $patchUrls)
-        {
-            $pathOnly = $patchUrl.Split("?")[0]
-            $fileName = Split-Path $pathOnly -Leaf
-            $fileExtension = [IO.Path]::GetExtension($fileName)
-            $fullPath = [IO.Path]::Combine($env:TEMP, $fileName)
+    foreach ($patchUrl in $patchUrls)
+    {
+        $pathOnly = $patchUrl.Split("?")[0]
+        $fileName = Split-Path $pathOnly -Leaf
+        $fileExtension = [IO.Path]::GetExtension($fileName)
+        $fullPath = [IO.Path]::Combine($env:TEMP, $fileName)
 
-            switch ($fileExtension)
+        switch ($fileExtension)
+        {
+            ".msu"
             {
-                ".msu"
+                Write-Log "Downloading windows patch from $pathOnly to $fullPath"
+                Invoke-WebRequest -UseBasicParsing $patchUrl -OutFile $fullPath
+                Write-Log "Starting install of $fileName"
+                $proc = Start-Process -Passthru -FilePath wusa.exe -ArgumentList "$fullPath /quiet /norestart"
+                Wait-Process -InputObject $proc
+                switch ($proc.ExitCode)
                 {
-                    Write-Log "Downloading windows patch from $pathOnly to $fullPath"
-                    Invoke-WebRequest -UseBasicParsing $patchUrl -OutFile $fullPath
-                    Write-Log "Starting install of $fileName"
-                    $proc = Start-Process -Passthru -FilePath wusa.exe -ArgumentList "$fullPath /quiet /norestart"
-                    Wait-Process -InputObject $proc
-                    switch ($proc.ExitCode)
+                    0
                     {
-                        0
-                        {
-                            Write-Log "Finished install of $fileName"
-                        }
-                        3010
-                        {
-                            WRite-Log "Finished install of $fileName. Reboot required"
-                        }
-                        default
-                        {
-                            Write-Log "Error during install of $fileName. ExitCode: $($proc.ExitCode)"
-                            exit 1
-                        }
+                        Write-Log "Finished install of $fileName"
+                    }
+                    3010
+                    {
+                        WRite-Log "Finished install of $fileName. Reboot required"
+                    }
+                    default
+                    {
+                        Write-Log "Error during install of $fileName. ExitCode: $($proc.ExitCode)"
+                        exit 1
                     }
                 }
-                default
-                {
-                    Write-Log "Installing patches with extension $fileExtension is not currently supported."
-                    exit 1
-                }
+            }
+            default
+            {
+                Write-Log "Installing patches with extension $fileExtension is not currently supported."
+                exit 1
             }
         }
-
+    }
 }
-
 function Set-WinRmServiceAutoStart
 {
     Write-Log "Setting WinRM service start to auto"
     sc.exe config winrm start=auto
 }
-
 function Set-WinRmServiceDelayedStart
 {
     # Hyper-V messes with networking components on startup after the feature is enabled
@@ -134,13 +159,11 @@ function Set-WinRmServiceDelayedStart
     Write-Log "Setting WinRM service start to delayed-auto"
     sc.exe config winrm start=delayed-auto
 }
-
 function Update-DefenderSignatures
 {
     Write-Log "Updating windows defender signatures."
     Update-MpSignature
 }
-
 function Update-WindowsFeatures
 {
     $featuresToEnable = @(
@@ -173,6 +196,7 @@ switch ($env:ProvisioningPhase)
         Set-WinRmServiceAutoStart
         Install-Docker
         Get-ContainerImages
+        Get-FilesToCacheOnVHD
     }
     default
     {
