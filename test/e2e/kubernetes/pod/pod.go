@@ -27,7 +27,6 @@ const (
 	testDir                    string = "testdirectory"
 	commandTimeout                    = 1 * time.Minute
 	deleteTimeout                     = 5 * time.Minute
-	podLookupRetries                  = 5
 	validatePodNotExistRetries        = 3
 )
 
@@ -771,7 +770,6 @@ func (l *List) CheckOutboundConnection(sleep, timeout time.Duration, osType api.
 					err:   err,
 				}
 			}
-			return
 		}()
 	}
 
@@ -817,7 +815,6 @@ func (l *List) ValidateCurlConnection(uri string, sleep, timeout time.Duration) 
 				ready: ready,
 				err:   err,
 			}
-			return
 		}()
 	}
 
@@ -862,7 +859,7 @@ func (p *Pod) CheckLinuxOutboundConnection(sleep, timeout time.Duration) (bool, 
 	}()
 	for {
 		select {
-		case mostRecentCheckLinuxOutboundConnectionError := <-ch:
+		case mostRecentCheckLinuxOutboundConnectionError = <-ch:
 			if mostRecentCheckLinuxOutboundConnectionError == nil {
 				return true, nil
 			}
@@ -890,7 +887,7 @@ func (p *Pod) ValidateCurlConnection(uri string, sleep, timeout time.Duration) (
 	}()
 	for {
 		select {
-		case mostRecentValidateCurlConnectionError := <-ch:
+		case mostRecentValidateCurlConnectionError = <-ch:
 			if mostRecentValidateCurlConnectionError == nil {
 				return true, nil
 			}
@@ -1030,7 +1027,7 @@ func (p *Pod) ValidateAzureFile(mountPath string, sleep, timeout time.Duration) 
 	}()
 	for {
 		select {
-		case mostRecentValidateAzureFileError := <-ch:
+		case mostRecentValidateAzureFileError = <-ch:
 			if mostRecentValidateAzureFileError == nil {
 				return true, nil
 			}
@@ -1058,7 +1055,7 @@ func (p *Pod) ValidatePVC(mountPath string, sleep, timeout time.Duration) (bool,
 	}()
 	for {
 		select {
-		case mostRecentValidatePVCError := <-ch:
+		case mostRecentValidatePVCError = <-ch:
 			if mostRecentValidatePVCError == nil {
 				return true, nil
 			}

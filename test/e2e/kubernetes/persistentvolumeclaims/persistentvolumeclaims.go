@@ -218,9 +218,8 @@ func (pvc *PersistentVolumeClaim) WaitOnReady(namespace string, sleep, timeout t
 			if mostRecentWaitOnReadyError == nil {
 				if pvc != nil && pvc.Status.Phase == "Bound" {
 					return true, nil
-				} else {
-					Describe(pvc.Metadata.Name, namespace)
 				}
+				Describe(pvc.Metadata.Name, namespace)
 			}
 		case <-ctx.Done():
 			return false, errors.Errorf("WaitOnReady timed out: %s\n", mostRecentWaitOnReadyError)
