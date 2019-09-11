@@ -195,6 +195,12 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 					Expect(err).NotTo(HaveOccurred())
 					dockerVersionCmd := fmt.Sprintf("\"docker version\"")
 					for _, node := range nodeList.Nodes {
+						if node.IsWindows() {
+							if eng.ExpandedDefinition.Properties.WindowsProfile != nil && !eng.ExpandedDefinition.Properties.WindowsProfile.SSHEnabled {
+								log.Printf("Can't ssh into Windows node %s because there is no SSH listener", node.Metadata.Name)
+								continue
+							}
+						}
 						err = sshConn.ExecuteRemote(node.Metadata.Name, dockerVersionCmd, true)
 						Expect(err).NotTo(HaveOccurred())
 					}
@@ -915,49 +921,53 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 		It("kubelet service should be able to recover when the docker service is stopped", func() {
 			if !eng.ExpandedDefinition.Properties.HasLowPriorityScaleset() {
 				if eng.HasWindowsAgents() {
-					nodeList, err := node.GetReady()
-					Expect(err).NotTo(HaveOccurred())
-					simulateDockerdCrashScript := "simulate-dockerd-crash.cmd"
-					err = sshConn.CopyTo(simulateDockerdCrashScript)
-					Expect(err).NotTo(HaveOccurred())
-					for _, node := range nodeList.Nodes {
-						if node.IsWindows() {
-							By(fmt.Sprintf("simulating docker and subsequent kubelet service crash on node: %s", node.Metadata.Name))
-							err = sshConn.CopyToRemote(node.Metadata.Name, "/tmp/"+simulateDockerdCrashScript)
-							Expect(err).NotTo(HaveOccurred())
-							simulateDockerCrashCommand := fmt.Sprintf("\"/tmp/%s\"", simulateDockerdCrashScript)
-							err = sshConn.ExecuteRemote(node.Metadata.Name, simulateDockerCrashCommand, true)
-							Expect(err).NotTo(HaveOccurred())
+					if eng.ExpandedDefinition.Properties.WindowsProfile != nil && eng.ExpandedDefinition.Properties.WindowsProfile.SSHEnabled {
+						nodeList, err := node.GetReady()
+						Expect(err).NotTo(HaveOccurred())
+						simulateDockerdCrashScript := "simulate-dockerd-crash.cmd"
+						err = sshConn.CopyTo(simulateDockerdCrashScript)
+						Expect(err).NotTo(HaveOccurred())
+						for _, node := range nodeList.Nodes {
+							if node.IsWindows() {
+								By(fmt.Sprintf("simulating docker and subsequent kubelet service crash on node: %s", node.Metadata.Name))
+								err = sshConn.CopyToRemote(node.Metadata.Name, "/tmp/"+simulateDockerdCrashScript)
+								Expect(err).NotTo(HaveOccurred())
+								simulateDockerCrashCommand := fmt.Sprintf("\"/tmp/%s\"", simulateDockerdCrashScript)
+								err = sshConn.ExecuteRemote(node.Metadata.Name, simulateDockerCrashCommand, true)
+								Expect(err).NotTo(HaveOccurred())
+							}
 						}
-					}
 
-					log.Print("Waiting 1 minute to allow nodes to report not ready state after the crash occurred\n")
-					time.Sleep(1 * time.Minute)
+						log.Print("Waiting 1 minute to allow nodes to report not ready state after the crash occurred\n")
+						time.Sleep(1 * time.Minute)
 
-					for _, node := range nodeList.Nodes {
-						if node.IsWindows() {
-							By(fmt.Sprintf("restarting kubelet service on node: %s", node.Metadata.Name))
-							restartKubeletCommand := fmt.Sprintf("\"Powershell Start-Service kubelet\"")
-							err = sshConn.ExecuteRemote(node.Metadata.Name, restartKubeletCommand, true)
-							Expect(err).NotTo(HaveOccurred())
+						for _, node := range nodeList.Nodes {
+							if node.IsWindows() {
+								By(fmt.Sprintf("restarting kubelet service on node: %s", node.Metadata.Name))
+								restartKubeletCommand := fmt.Sprintf("\"Powershell Start-Service kubelet\"")
+								err = sshConn.ExecuteRemote(node.Metadata.Name, restartKubeletCommand, true)
+								Expect(err).NotTo(HaveOccurred())
+							}
 						}
-					}
 
-					var expectedReadyNodes int
-					if !eng.ExpandedDefinition.Properties.HasLowPriorityScaleset() {
-						expectedReadyNodes = eng.NodeCount()
-						log.Printf("Checking for %d Ready nodes\n", expectedReadyNodes)
+						var expectedReadyNodes int
+						if !eng.ExpandedDefinition.Properties.HasLowPriorityScaleset() {
+							expectedReadyNodes = eng.NodeCount()
+							log.Printf("Checking for %d Ready nodes\n", expectedReadyNodes)
+						} else {
+							expectedReadyNodes = -1
+						}
+						ready := node.WaitOnReady(expectedReadyNodes, 1*time.Minute, cfg.Timeout)
+						cmd2 := exec.Command("k", "get", "nodes", "-o", "wide")
+						out2, _ := cmd2.CombinedOutput()
+						log.Printf("%s\n", out2)
+						if !ready {
+							log.Printf("Error: Not all nodes in a healthy state\n")
+						}
+						Expect(ready).To(Equal(true))
 					} else {
-						expectedReadyNodes = -1
+						Skip("Windows SSH tests only work if WindowsProfile.SSHEnabled is true")
 					}
-					ready := node.WaitOnReady(expectedReadyNodes, 1*time.Minute, cfg.Timeout)
-					cmd2 := exec.Command("k", "get", "nodes", "-o", "wide")
-					out2, _ := cmd2.CombinedOutput()
-					log.Printf("%s\n", out2)
-					if !ready {
-						log.Printf("Error: Not all nodes in a healthy state\n")
-					}
-					Expect(ready).To(Equal(true))
 				} else {
 					Skip("Docker service recovery test is Windows only")
 				}
@@ -997,7 +1007,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				By("Ensuring we can connect to the ILB service from another pod")
 				var success bool
 				for _, curlPod := range curlPods {
-					pass, curlErr := curlPod.ValidateCurlConnection(svc.Status.LoadBalancer.Ingress[0]["ip"], 5*time.Second, 3*time.Minute)
+					pass, curlErr := curlPod.ValidateCurlConnection(svc.Status.LoadBalancer.Ingress[0]["ip"], 30*time.Second, 3*time.Minute)
 					if curlErr == nil && pass {
 						success = true
 						break
@@ -1017,7 +1027,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				By("Ensuring we can connect to the ELB service from another pod")
 				success = false
 				for _, curlPod := range curlPods {
-					pass, curlErr := curlPod.ValidateCurlConnection(svc.Status.LoadBalancer.Ingress[0]["ip"], 5*time.Second, 3*time.Minute)
+					pass, curlErr := curlPod.ValidateCurlConnection(svc.Status.LoadBalancer.Ingress[0]["ip"], 30*time.Second, 3*time.Minute)
 					if curlErr == nil && pass {
 						success = true
 						break
@@ -1396,14 +1406,14 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				By("Ensuring we have connectivity from network-policy pods to frontend-prod pods")
 				pl = pod.List{Pods: nwpolicyPods}
 				for _, frontendProdPod := range frontendProdPods {
-					pass, err = pl.ValidateCurlConnection(frontendProdPod.Status.PodIP, 5*time.Second, cfg.Timeout)
+					pass, err = pl.ValidateCurlConnection(frontendProdPod.Status.PodIP, 30*time.Second, cfg.Timeout)
 					Expect(err).NotTo(HaveOccurred())
 					Expect(pass).To(BeTrue())
 				}
 
 				By("Ensuring we have connectivity from network-policy pods to backend pods")
 				for _, backendPod := range backendPods {
-					pass, err = pl.ValidateCurlConnection(backendPod.Status.PodIP, 5*time.Second, cfg.Timeout)
+					pass, err = pl.ValidateCurlConnection(backendPod.Status.PodIP, 30*time.Second, cfg.Timeout)
 					Expect(err).NotTo(HaveOccurred())
 					Expect(pass).To(BeTrue())
 				}
@@ -1415,7 +1425,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 
 				By("Ensuring we no longer have ingress access from the network-policy pods to backend pods")
 				for _, backendPod := range backendPods {
-					pass, err = pl.ValidateCurlConnection(backendPod.Status.PodIP, 5*time.Second, validateNetworkPolicyTimeout)
+					pass, err = pl.ValidateCurlConnection(backendPod.Status.PodIP, 30*time.Second, validateNetworkPolicyTimeout)
 					Expect(err).Should(HaveOccurred())
 					Expect(pass).To(BeFalse())
 				}
@@ -1432,7 +1442,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 					By("Ensuring we have ingress access from pods with matching labels")
 					pl = pod.List{Pods: backendPods}
 					for _, backendDstPod := range backendPods {
-						pass, err = pl.ValidateCurlConnection(backendDstPod.Status.PodIP, 5*time.Second, cfg.Timeout)
+						pass, err = pl.ValidateCurlConnection(backendDstPod.Status.PodIP, 30*time.Second, cfg.Timeout)
 						Expect(err).NotTo(HaveOccurred())
 						Expect(pass).To(BeTrue())
 					}
@@ -1440,7 +1450,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 					By("Ensuring we don't have ingress access from pods without matching labels")
 					pl = pod.List{Pods: nwpolicyPods}
 					for _, backendPod := range backendPods {
-						pass, err = pl.ValidateCurlConnection(backendPod.Status.PodIP, 5*time.Second, validateNetworkPolicyTimeout)
+						pass, err = pl.ValidateCurlConnection(backendPod.Status.PodIP, 30*time.Second, validateNetworkPolicyTimeout)
 						Expect(err).Should(HaveOccurred())
 						Expect(pass).To(BeFalse())
 					}
@@ -1456,7 +1466,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 					By("Ensuring we don't have ingress access from role:frontend pods in production namespace")
 					pl = pod.List{Pods: frontendProdPods}
 					for _, backendPod := range backendPods {
-						pass, err = pl.ValidateCurlConnection(backendPod.Status.PodIP, 5*time.Second, validateNetworkPolicyTimeout)
+						pass, err = pl.ValidateCurlConnection(backendPod.Status.PodIP, 30*time.Second, validateNetworkPolicyTimeout)
 						Expect(err).Should(HaveOccurred())
 						Expect(pass).To(BeFalse())
 					}
@@ -1464,7 +1474,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 					By("Ensuring we have ingress access from role:frontend pods in development namespace")
 					pl = pod.List{Pods: frontendDevPods}
 					for _, backendPod := range backendPods {
-						pass, err = pl.ValidateCurlConnection(backendPod.Status.PodIP, 5*time.Second, cfg.Timeout)
+						pass, err = pl.ValidateCurlConnection(backendPod.Status.PodIP, 30*time.Second, cfg.Timeout)
 						Expect(err).NotTo(HaveOccurred())
 						Expect(pass).To(BeTrue())
 					}
