@@ -1751,7 +1751,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 					Expect(ready).To(Equal(true))
 
 					By("Checking that the pod can access volume")
-					valid, err := iisPod.ValidateAzureFile("mnt\\azure", 10, 10*time.Second)
+					valid, err := iisPod.ValidateAzureFile("mnt\\azure", 10*time.Second, 3*time.Minute)
 					Expect(valid).To(BeTrue())
 					Expect(err).NotTo(HaveOccurred())
 
