@@ -133,7 +133,7 @@ func GetAll(namespace string) (*List, error) {
 	return &jl, nil
 }
 
-// GetAllByPrefixResult is a return struct for AreAllPodsRunningAsync
+// GetAllByPrefixResult is a return struct for GetAllByPrefixAsync
 type GetAllByPrefixResult struct {
 	jobs []Job
 	err  error
