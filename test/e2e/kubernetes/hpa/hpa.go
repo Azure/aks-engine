@@ -90,7 +90,7 @@ func GetAll(namespace string) (*List, error) {
 	return &hl, nil
 }
 
-// GetAllByPrefixResult is a return struct for AreAllPodsRunningAsync
+// GetAllByPrefixResult is a return struct for GetAllByPrefixAsync
 type GetAllByPrefixResult struct {
 	hpas []HPA
 	err  error
