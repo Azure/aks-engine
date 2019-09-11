@@ -162,7 +162,7 @@ func ReplaceContainerImageFromFile(filename, containerImage string) (string, err
 }
 
 // CreatePodFromFile will create a Pod from file with a name
-func CreatePodFromFile(filename, name, namespace string, sleep, duration time.Duration) (*Pod, error) {
+func CreatePodFromFile(filename, name, namespace string, sleep, timeout time.Duration) (*Pod, error) {
 	cmd := exec.Command("k", "apply", "-f", filename)
 	util.PrintCommand(cmd)
 	out, err := cmd.CombinedOutput()
@@ -170,7 +170,7 @@ func CreatePodFromFile(filename, name, namespace string, sleep, duration time.Du
 		log.Printf("Error trying to create Pod %s:%s\n", name, string(out))
 		return nil, err
 	}
-	p, err := GetWithRetry(name, namespace, sleep, duration)
+	p, err := GetWithRetry(name, namespace, sleep, timeout)
 	if err != nil {
 		log.Printf("Error while trying to fetch Pod %s:%s\n", name, err)
 		return nil, err
@@ -189,13 +189,13 @@ func CreatePodFromFileIfNotExist(filename, name, namespace string, sleep, timeou
 
 // RunLinuxPod will create a pod that runs a bash command
 // --overrides := `"spec": {"nodeSelector":{"beta.kubernetes.io/os":"windows"}}}`
-func RunLinuxPod(image, name, namespace, command string, printOutput bool, sleep, duration, timeout time.Duration) (*Pod, error) {
+func RunLinuxPod(image, name, namespace, command string, printOutput bool, sleep, commandTimeout, podGetTimeout time.Duration) (*Pod, error) {
 	overrides := `{ "spec": {"nodeSelector":{"beta.kubernetes.io/os":"linux"}}}`
 	cmd := exec.Command("k", "run", name, "-n", namespace, "--image", image, "--image-pull-policy=IfNotPresent", "--restart=Never", "--overrides", overrides, "--command", "--", "/bin/sh", "-c", command)
 	var out []byte
 	var err error
 	if printOutput {
-		out, err = util.RunAndLogCommand(cmd, timeout)
+		out, err = util.RunAndLogCommand(cmd, commandTimeout)
 	} else {
 		out, err = cmd.CombinedOutput()
 	}
@@ -203,7 +203,7 @@ func RunLinuxPod(image, name, namespace, command string, printOutput bool, sleep
 		log.Printf("Error trying to deploy %s [%s] in namespace %s:%s\n", name, image, namespace, string(out))
 		return nil, err
 	}
-	p, err := GetWithRetry(name, namespace, sleep, duration)
+	p, err := GetWithRetry(name, namespace, sleep, podGetTimeout)
 	if err != nil {
 		log.Printf("Error while trying to fetch Pod %s in namespace %s:%s\n", name, namespace, err)
 		return nil, err
