@@ -80,6 +80,21 @@ func CreatePVCFromFileDeleteIfExist(filename, name, namespace string) (*Persiste
 	return CreatePersistentVolumeClaimsFromFile(filename, name, namespace)
 }
 
+// GetResult is a return struct for GetAsync
+type GetResult struct {
+	pvc *PersistentVolumeClaim
+	err error
+}
+
+// GetAsync wraps Get with a struct response for goroutine + channel usage
+func GetAsync(pvcName, namespace string) GetResult {
+	pvc, err := Get(pvcName, namespace)
+	return GetResult{
+		pvc: pvc,
+		err: err,
+	}
+}
+
 // Get will return a PersistentVolumeClaim with a given name and namespace
 func Get(pvcName, namespace string) (*PersistentVolumeClaim, error) {
 	cmd := exec.Command("k", "get", "pvc", pvcName, "-n", namespace, "-o", "json")
@@ -112,6 +127,21 @@ func GetAll(namespace string) (*List, error) {
 		return nil, err
 	}
 	return &pvcl, nil
+}
+
+// GetAllByPrefixResult is a return struct for GetAllByPrefixAsync
+type GetAllByPrefixResult struct {
+	pvcs []PersistentVolumeClaim
+	err  error
+}
+
+// GetAllByPrefixAsync wraps Get with a struct response for goroutine + channel usage
+func GetAllByPrefixAsync(prefix, namespace string) GetAllByPrefixResult {
+	pvcs, err := GetAllByPrefix(prefix, namespace)
+	return GetAllByPrefixResult{
+		pvcs: pvcs,
+		err:  err,
+	}
 }
 
 // GetAllByPrefix will return all jobs in a given namespace that match a prefix
@@ -165,73 +195,68 @@ func (pvc *PersistentVolumeClaim) Delete(retries int) error {
 }
 
 // WaitOnReady will block until PersistentVolumeClaim is available
-func (pvc *PersistentVolumeClaim) WaitOnReady(namespace string, sleep, duration time.Duration) (bool, error) {
-	readyCh := make(chan bool, 1)
-	errCh := make(chan error)
-	ctx, cancel := context.WithTimeout(context.Background(), duration)
+func (pvc *PersistentVolumeClaim) WaitOnReady(namespace string, sleep, timeout time.Duration) (bool, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
+	var mostRecentWaitOnReadyError error
+	ch := make(chan GetResult)
 	go func() {
 		for {
 			select {
 			case <-ctx.Done():
-				errCh <- errors.Errorf("Timeout exceeded (%s) while waiting for PersistentVolumeClaim (%s) to become ready", duration.String(), pvc.Metadata.Name)
-			default:
-				query, _ := Get(pvc.Metadata.Name, namespace)
-				if query != nil && query.Status.Phase == "Bound" {
-					readyCh <- true
-				} else {
-					Describe(pvc.Metadata.Name, namespace)
-					time.Sleep(sleep)
-				}
-			}
-		}
-	}()
-	for {
-		select {
-		case err := <-errCh:
-			return false, err
-		case ready := <-readyCh:
-			return ready, nil
-		}
-	}
-}
-
-// WaitOnDeleted returns when a pvc is successfully deleted
-func WaitOnDeleted(pvcPrefix, namespace string, sleep, duration time.Duration) (bool, error) {
-	succeededCh := make(chan bool, 1)
-	errCh := make(chan error)
-	ctx, cancel := context.WithTimeout(context.Background(), duration)
-	var err error
-	var pvcs []PersistentVolumeClaim
-	defer cancel()
-	go func() {
-		for {
-			select {
-			case <-ctx.Done():
-				log.Printf("Timeout exceeded (%s) while waiting for PVCs (%s) to be deleted in namespace (%s)", duration.String(), pvcPrefix, namespace)
-				if err != nil {
-					errCh <- err
-				} else {
-					errCh <- errors.Errorf("%d pvcs not deleted", len(pvcs))
-				}
-			default:
-				pvcs, err = GetAllByPrefix(pvcPrefix, namespace)
-				if err != nil {
-					continue
-				}
-				if len(pvcs) == 0 {
-					succeededCh <- true
-				}
+				return
+			case ch <- GetAsync(pvc.Metadata.Name, namespace):
 				time.Sleep(sleep)
 			}
 		}
 	}()
 	for {
 		select {
-		case err := <-errCh:
-			return false, err
-		case deleted := <-succeededCh:
-			return deleted, nil
+		case result := <-ch:
+			mostRecentWaitOnReadyError = result.err
+			pvc := result.pvc
+			if mostRecentWaitOnReadyError == nil {
+				if pvc != nil && pvc.Status.Phase == "Bound" {
+					return true, nil
+				} else {
+					Describe(pvc.Metadata.Name, namespace)
+				}
+			}
+		case <-ctx.Done():
+			return false, errors.Errorf("WaitOnReady timed out: %s\n", mostRecentWaitOnReadyError)
+		}
+	}
+}
+
+// WaitOnDeleted returns when a pvc is successfully deleted
+func WaitOnDeleted(pvcPrefix, namespace string, sleep, timeout time.Duration) (bool, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+	ch := make(chan GetAllByPrefixResult)
+	var mostRecentWaitOnDeletedError error
+	var pvcs []PersistentVolumeClaim
+	go func() {
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case ch <- GetAllByPrefixAsync(pvcPrefix, namespace):
+				time.Sleep(sleep)
+			}
+		}
+	}()
+	for {
+		select {
+		case result := <-ch:
+			mostRecentWaitOnDeletedError = result.err
+			pvcs = result.pvcs
+			if mostRecentWaitOnDeletedError == nil {
+				if len(pvcs) == 0 {
+					return true, nil
+				}
+			}
+		case <-ctx.Done():
+			return false, errors.Errorf("WaitOnDeleted timed out: %s\n", mostRecentWaitOnDeletedError)
 		}
 	}
 }

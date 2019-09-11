@@ -65,6 +65,21 @@ type LoadBalancer struct {
 	Ingress []map[string]string `json:"ingress"`
 }
 
+// GetResult is a return struct for GetAsync
+type GetResult struct {
+	svc *Service
+	err error
+}
+
+// GetAsync wraps Get with a struct response for goroutine + channel usage
+func GetAsync(name, namespace string) GetResult {
+	svc, err := Get(name, namespace)
+	return GetResult{
+		svc: svc,
+		err: err,
+	}
+}
+
 // Get returns the service definition specified in a given namespace
 func Get(name, namespace string) (*Service, error) {
 	cmd := exec.Command("k", "get", "svc", "-o", "json", "-n", namespace, name)
@@ -99,6 +114,21 @@ func GetAll(namespace string) (*List, error) {
 		return nil, err
 	}
 	return &sl, nil
+}
+
+// GetAllByPrefixResult is a return struct for GetAllByPrefixAsync
+type GetAllByPrefixResult struct {
+	svcs []Service
+	err  error
+}
+
+// GetAllByPrefixAsync wraps Get with a struct response for goroutine + channel usage
+func GetAllByPrefixAsync(prefix, namespace string) GetAllByPrefixResult {
+	svcs, err := GetAllByPrefix(prefix, namespace)
+	return GetAllByPrefixResult{
+		svcs: svcs,
+		err:  err,
+	}
 }
 
 // GetAllByPrefix will return all services in a given namespace that match a prefix
@@ -149,81 +179,66 @@ func (s *Service) GetNodePort(port int) int {
 }
 
 // WaitForIngress waits for an Ingress to be provisioned
-func (s *Service) WaitForIngress(wait, sleep time.Duration) (*Service, error) {
-	svcCh := make(chan *Service)
-	errCh := make(chan error)
-	ctx, cancel := context.WithTimeout(context.Background(), wait)
-	var err error
-	var svc *Service
+func (s *Service) WaitForIngress(timeout, sleep time.Duration) (*Service, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
+	var mostRecentWaitForIngressError error
+	ch := make(chan GetResult)
 	go func() {
 		for {
 			select {
 			case <-ctx.Done():
-				log.Printf("Timeout exceeded while waiting for External IP to be provisioned")
-				if err != nil {
-					errCh <- err
-				} else {
-					errCh <- errors.Errorf("Ingress not ready in time")
-				}
-			default:
-				svc, err = Get(s.Metadata.Name, s.Metadata.Namespace)
-				if err != nil {
-					continue
-				}
-				if svc != nil && svc.Status.LoadBalancer.Ingress != nil {
-					svcCh <- svc
-				}
+				return
+			case ch <- GetAsync(s.Metadata.Name, s.Metadata.Namespace):
 				time.Sleep(sleep)
 			}
 		}
 	}()
 	for {
 		select {
-		case err := <-errCh:
-			return nil, err
-		case svc := <-svcCh:
-			return svc, nil
+		case result := <-ch:
+			mostRecentWaitForIngressError = result.err
+			svc := result.svc
+			if mostRecentWaitForIngressError == nil {
+				if svc != nil && svc.Status.LoadBalancer.Ingress != nil {
+					return svc, nil
+				}
+			}
+		case <-ctx.Done():
+			return nil, errors.Errorf("WaitForIngress timed out: %s\n", mostRecentWaitForIngressError)
 		}
 	}
 }
 
 // WaitOnDeleted returns when a service resource is successfully deleted
-func WaitOnDeleted(servicePrefix, namespace string, sleep, duration time.Duration) (bool, error) {
-	succeededCh := make(chan bool, 1)
-	errCh := make(chan error)
-	ctx, cancel := context.WithTimeout(context.Background(), duration)
-	var err error
-	var svcs []Service
+func WaitOnDeleted(servicePrefix, namespace string, sleep, timeout time.Duration) (bool, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
+	ch := make(chan GetAllByPrefixResult)
+	var mostRecentWaitOnDeletedError error
+	var svcs []Service
 	go func() {
 		for {
 			select {
 			case <-ctx.Done():
-				log.Printf("Timeout exceeded (%s) while waiting for Services (%s) to be deleted in namespace (%s)", duration.String(), servicePrefix, namespace)
-				if err != nil {
-					errCh <- err
-				} else {
-					errCh <- errors.Errorf("%d services not deleted", len(svcs))
-				}
-			default:
-				svcs, err = GetAllByPrefix(servicePrefix, namespace)
-				if err != nil {
-					continue
-				}
-				if len(svcs) == 0 {
-					succeededCh <- true
-				}
+				return
+			case ch <- GetAllByPrefixAsync(servicePrefix, namespace):
 				time.Sleep(sleep)
 			}
 		}
 	}()
 	for {
 		select {
-		case err := <-errCh:
-			return false, err
-		case deleted := <-succeededCh:
-			return deleted, nil
+		case result := <-ch:
+			mostRecentWaitOnDeletedError = result.err
+			svcs = result.svcs
+			if mostRecentWaitOnDeletedError == nil {
+				if len(svcs) == 0 {
+					return true, nil
+				}
+			}
+		case <-ctx.Done():
+			return false, errors.Errorf("WaitOnDeleted timed out: %s\n", mostRecentWaitOnDeletedError)
 		}
 	}
 }

@@ -48,6 +48,21 @@ func CreateStorageClassFromFile(filename, name string) (*StorageClass, error) {
 	return sc, nil
 }
 
+// GetResult is a return struct for GetAsync
+type GetResult struct {
+	storageClass *StorageClass
+	err          error
+}
+
+// GetAsync wraps Get with a struct response for goroutine + channel usage
+func GetAsync(scName string) GetResult {
+	storageClass, err := Get(scName)
+	return GetResult{
+		storageClass: storageClass,
+		err:          err,
+	}
+}
+
 // Get will return a StorageClass with a given name and namespace
 func Get(scName string) (*StorageClass, error) {
 	cmd := exec.Command("k", "get", "storageclass", scName, "-o", "json")
@@ -66,41 +81,33 @@ func Get(scName string) (*StorageClass, error) {
 }
 
 // WaitOnReady will block until StorageClass is available
-func (sc *StorageClass) WaitOnReady(sleep, duration time.Duration) (bool, error) {
-	readyCh := make(chan bool, 1)
-	errCh := make(chan error)
-	ctx, cancel := context.WithTimeout(context.Background(), duration)
-	var err error
-	var storageClass *StorageClass
+func (sc *StorageClass) WaitOnReady(sleep, timeout time.Duration) (bool, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
+	var mostRecentWaitOnReadyError error
+	ch := make(chan GetResult)
 	go func() {
 		for {
 			select {
 			case <-ctx.Done():
-				log.Printf("Timeout exceeded (%s) while waiting for StorageClass (%s) to become ready", duration.String(), sc.Metadata.Name)
-				if err != nil {
-					errCh <- err
-				} else {
-					errCh <- errors.Errorf("StorageClass not ready in time")
-				}
-			default:
-				storageClass, err = Get(sc.Metadata.Name)
-				if err != nil {
-					continue
-				}
-				if storageClass != nil {
-					readyCh <- true
-				}
+				return
+			case ch <- GetAsync(sc.Metadata.Name):
 				time.Sleep(sleep)
 			}
 		}
 	}()
 	for {
 		select {
-		case err := <-errCh:
-			return false, err
-		case ready := <-readyCh:
-			return ready, nil
+		case result := <-ch:
+			mostRecentWaitOnReadyError = result.err
+			storageClass := result.storageClass
+			if mostRecentWaitOnReadyError == nil {
+				if storageClass != nil {
+					return true, nil
+				}
+			}
+		case <-ctx.Done():
+			return false, errors.Errorf("WaitOnReady timed out: %s\n", mostRecentWaitOnReadyError)
 		}
 	}
 }
