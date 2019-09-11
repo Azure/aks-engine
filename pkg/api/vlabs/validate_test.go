@@ -3249,3 +3249,43 @@ func TestValidateLocation(t *testing.T) {
 		})
 	}
 }
+
+func TestValidateFeatureFlags(t *testing.T) {
+	tests := map[string]struct {
+		properties    *Properties
+		expectedError string
+	}{
+		"should error when enableTelemetry flag is enabled on non Azure Stack environments": {
+			properties: &Properties{
+				CustomCloudProfile: nil,
+				FeatureFlags: &FeatureFlags{
+					EnableTelemetry: true,
+				},
+			},
+			expectedError: "EnableTelemetry flag is only available for Azure Stack",
+		},
+	}
+
+	for testName, test := range tests {
+		test := test
+		t.Run(testName, func(t *testing.T) {
+			t.Parallel()
+			err := test.properties.validateFeatureFlags()
+
+			if test.expectedError == "" && err == nil {
+				return
+			}
+			if test.expectedError == "" && err != nil {
+				t.Errorf("%s expected no error but received: %s", testName, err.Error())
+				return
+			}
+			if test.expectedError != "" && err == nil {
+				t.Errorf("%s expected error: %s, but received no error", testName, test.expectedError)
+				return
+			}
+			if !strings.Contains(err.Error(), test.expectedError) {
+				t.Errorf("%s expected error: %s but received: %s", testName, test.expectedError, err.Error())
+			}
+		})
+	}
+}
