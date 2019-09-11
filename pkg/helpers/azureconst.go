@@ -38,6 +38,8 @@ func GetAzureLocations() []string {
 		"koreasouth",
 		"northcentralus",
 		"northeurope",
+		"norwayeast",
+		"norwaywest",
 		"southafricanorth",
 		"southafricawest",
 		"southcentralus",
