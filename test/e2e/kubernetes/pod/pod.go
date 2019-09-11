@@ -384,7 +384,7 @@ type GetAllByPrefixResult struct {
 	Err  error
 }
 
-// GetAllByPrefixAsync wraps GetAllByPrefix with a struct reponse for goroutine + channel usage
+// GetAllByPrefixAsync wraps GetAllByPrefix with a struct response for goroutine + channel usage
 func GetAllByPrefixAsync(prefix, namespace string) GetAllByPrefixResult {
 	pods, err := GetAllByPrefix(prefix, namespace)
 	return GetAllByPrefixResult{
@@ -419,7 +419,7 @@ type AreAllPodsRunningResult struct {
 	err   error
 }
 
-// AreAllPodsRunningAsync wraps AreAllPodsRunning with a struct reponse for goroutine + channel usage
+// AreAllPodsRunningAsync wraps AreAllPodsRunning with a struct response for goroutine + channel usage
 func AreAllPodsRunningAsync(podPrefix, namespace string) AreAllPodsRunningResult {
 	ready, err := AreAllPodsRunning(podPrefix, namespace)
 	return AreAllPodsRunningResult{
@@ -437,10 +437,10 @@ func AreAllPodsRunning(podPrefix, namespace string) (bool, error) {
 
 	var status []bool
 	for _, pod := range pl.Pods {
-		matched, err := regexp.MatchString(podPrefix, pod.Metadata.Name)
-		if err != nil {
+		matched, regexErr := regexp.MatchString(podPrefix, pod.Metadata.Name)
+		if regexErr != nil {
 			log.Printf("Error trying to match pod name:%s\n", err)
-			return false, err
+			return false, regexErr
 		}
 		if matched {
 			if pod.Status.Phase != "Running" {

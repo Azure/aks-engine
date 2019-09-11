@@ -408,17 +408,19 @@ func (d *Deployment) WaitForReplicas(min, max int, sleep, timeout time.Duration)
 		case result := <-ch:
 			mostRecentWaitForReplicasError = result.Err
 			pods = result.Pods
-			if min == -1 {
-				if len(pods) <= max {
-					return pods, nil
-				}
-			} else if max == -1 {
-				if len(pods) >= min {
-					return pods, nil
-				}
-			} else {
-				if len(pods) >= min && len(pods) <= max {
-					return pods, nil
+			if mostRecentWaitForReplicasError == nil {
+				if min == -1 {
+					if len(pods) <= max {
+						return pods, nil
+					}
+				} else if max == -1 {
+					if len(pods) >= min {
+						return pods, nil
+					}
+				} else {
+					if len(pods) >= min && len(pods) <= max {
+						return pods, nil
+					}
 				}
 			}
 		case <-ctx.Done():

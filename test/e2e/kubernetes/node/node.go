@@ -13,7 +13,6 @@ import (
 	"time"
 
 	"github.com/Azure/aks-engine/test/e2e/kubernetes/util"
-	"github.com/pkg/errors"
 )
 
 const (
@@ -138,6 +137,9 @@ func AreAllReady() bool {
 
 // AreNNodesReady returns a bool depending on cluster state
 func AreNNodesReady(nodeCount int) bool {
+	if nodeCount == -1 {
+		return AreAllReady()
+	}
 	list, _ := Get()
 	var ready int
 	if list != nil && len(list.Nodes) == nodeCount {
@@ -156,36 +158,28 @@ func AreNNodesReady(nodeCount int) bool {
 }
 
 // WaitOnReady will block until all nodes are in ready state
-func WaitOnReady(nodeCount int, sleep, duration time.Duration) bool {
-	readyCh := make(chan bool, 1)
-	errCh := make(chan error)
-	ctx, cancel := context.WithTimeout(context.Background(), duration)
+func WaitOnReady(nodeCount int, sleep, timeout time.Duration) bool {
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
+	ch := make(chan bool)
 	go func() {
 		for {
 			select {
 			case <-ctx.Done():
-				errCh <- errors.Errorf("Timeout exceeded (%s) while waiting for Nodes to become ready", duration.String())
-			default:
-				if nodeCount == -1 {
-					if AreAllReady() {
-						readyCh <- true
-					}
-				} else {
-					if AreNNodesReady(nodeCount) {
-						readyCh <- true
-					}
-				}
+				return
+			case ch <- AreNNodesReady(nodeCount):
 				time.Sleep(sleep)
 			}
 		}
 	}()
 	for {
 		select {
-		case <-errCh:
+		case ready := <-ch:
+			if ready {
+				return ready
+			}
+		case <-ctx.Done():
 			return false
-		case ready := <-readyCh:
-			return ready
 		}
 	}
 }

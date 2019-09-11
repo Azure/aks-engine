@@ -133,6 +133,21 @@ func GetAll(namespace string) (*List, error) {
 	return &jl, nil
 }
 
+// GetAllByPrefixResult is a return struct for AreAllPodsRunningAsync
+type GetAllByPrefixResult struct {
+	jobs []Job
+	err  error
+}
+
+// GetAllByPrefixAsync wraps GetAllByPrefix with a struct response for goroutine + channel usage
+func GetAllByPrefixAsync(prefix, namespace string) GetAllByPrefixResult {
+	jobs, err := GetAllByPrefix(prefix, namespace)
+	return GetAllByPrefixResult{
+		jobs: jobs,
+		err:  err,
+	}
+}
+
 // GetAllByPrefix will return all jobs in a given namespace that match a prefix
 func GetAllByPrefix(prefix, namespace string) ([]Job, error) {
 	jl, err := GetAll(namespace)
@@ -168,6 +183,21 @@ func Get(jobName, namespace string) (*Job, error) {
 		return nil, err
 	}
 	return &j, nil
+}
+
+// AreAllJobsSucceededResult is a return struct for AreAllJobsSucceededAsync
+type AreAllJobsSucceededResult struct {
+	succeeded bool
+	err       error
+}
+
+// AreAllJobsSucceededAsync wraps AreAllJobsSucceeded with a struct response for goroutine + channel usage
+func AreAllJobsSucceededAsync(jobPrefix, namespace string) AreAllJobsSucceededResult {
+	succeeded, err := AreAllJobsSucceeded(jobPrefix, namespace)
+	return AreAllJobsSucceededResult{
+		succeeded: succeeded,
+		err:       err,
+	}
 }
 
 // AreAllJobsSucceeded will return true if all jobs with a common prefix in a given namespace are in a Completed State
@@ -207,56 +237,41 @@ func AreAllJobsSucceeded(jobPrefix, namespace string) (bool, error) {
 }
 
 // WaitOnSucceeded returns true if all jobs matching a prefix substring are in a succeeded state within a period of time
-func WaitOnSucceeded(jobPrefix, namespace string, sleep, duration time.Duration) (bool, error) {
-	readyCh := make(chan bool, 1)
-	errCh := make(chan error)
-	ctx, cancel := context.WithTimeout(context.Background(), duration)
-	var err error
-	var ready bool
+func WaitOnSucceeded(jobPrefix, namespace string, sleep, timeout time.Duration) (bool, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
+	ch := make(chan AreAllJobsSucceededResult)
+	var mostRecentAreAllJobsSucceededError error
+	var succeeded bool
 	go func() {
 		for {
 			select {
 			case <-ctx.Done():
-				log.Printf("Timeout exceeded (%s) while waiting for Jobs (%s) to complete in namespace (%s)", duration.String(), jobPrefix, namespace)
-				if err != nil {
-					errCh <- err
-				} else {
-					errCh <- errors.Errorf("All jobs not in a Succeeded state")
-				}
-			default:
-				ready, err = AreAllJobsSucceeded(jobPrefix, namespace)
-				if err != nil {
-					continue
-				}
-				if ready {
-					readyCh <- true
-				} else {
-					time.Sleep(sleep)
-				}
+				return
+			case ch <- AreAllJobsSucceededAsync(jobPrefix, namespace):
+				time.Sleep(sleep)
 			}
 		}
 	}()
 	for {
 		select {
-		case err := <-errCh:
-			pods, getPodsErr := pod.GetAllByPrefix(jobPrefix, namespace)
-			if getPodsErr != nil {
-				log.Printf("Error trying to get job pods: %s\n", getPodsErr)
+		case result := <-ch:
+			mostRecentAreAllJobsSucceededError = result.err
+			succeeded = result.succeeded
+			if mostRecentAreAllJobsSucceededError == nil {
+				if succeeded {
+					return true, nil
+				}
 			}
-			for _, p := range pods {
-				p.Logs()
-			}
-			return false, err
-		case ready := <-readyCh:
-			return ready, nil
+		case <-ctx.Done():
+			return false, errors.Errorf("WaitOnSucceeded timed out: %s\n", mostRecentAreAllJobsSucceededError)
 		}
 	}
 }
 
 // WaitOnSucceeded will call the static method WaitOnSucceeded passing in p.Metadata.Name and p.Metadata.Namespace
-func (j *Job) WaitOnSucceeded(sleep, duration time.Duration) (bool, error) {
-	return WaitOnSucceeded(j.Metadata.Name, j.Metadata.Namespace, sleep, duration)
+func (j *Job) WaitOnSucceeded(sleep, timeout time.Duration) (bool, error) {
+	return WaitOnSucceeded(j.Metadata.Name, j.Metadata.Namespace, sleep, timeout)
 }
 
 // Delete will delete a Job in a given namespace
@@ -278,41 +293,34 @@ func (j *Job) Delete(retries int) error {
 }
 
 // WaitOnDeleted returns when all jobs matching a prefix substring are successfully deleted
-func WaitOnDeleted(jobPrefix, namespace string, sleep, duration time.Duration) (bool, error) {
-	succeededCh := make(chan bool, 1)
-	errCh := make(chan error)
-	ctx, cancel := context.WithTimeout(context.Background(), duration)
-	var err error
-	var jobs []Job
+func WaitOnDeleted(jobPrefix, namespace string, sleep, timeout time.Duration) (bool, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
+	ch := make(chan GetAllByPrefixResult)
+	var mostRecentWaitOnDeletedError error
+	var jobs []Job
 	go func() {
 		for {
 			select {
 			case <-ctx.Done():
-				log.Printf("Timeout exceeded (%s) while waiting for Jobs (%s) to be deleted in namespace (%s)", duration.String(), jobPrefix, namespace)
-				if err != nil {
-					errCh <- err
-				} else {
-					errCh <- errors.Errorf("%d jobs not deleted", len(jobs))
-				}
-			default:
-				jobs, err = GetAllByPrefix(jobPrefix, namespace)
-				if err != nil {
-					continue
-				}
-				if len(jobs) == 0 {
-					succeededCh <- true
-				}
+				return
+			case ch <- GetAllByPrefixAsync(jobPrefix, namespace):
 				time.Sleep(sleep)
 			}
 		}
 	}()
 	for {
 		select {
-		case err := <-errCh:
-			return false, err
-		case deleted := <-succeededCh:
-			return deleted, nil
+		case result := <-ch:
+			mostRecentWaitOnDeletedError = result.err
+			jobs = result.jobs
+			if mostRecentWaitOnDeletedError == nil {
+				if len(jobs) == 0 {
+					return true, nil
+				}
+			}
+		case <-ctx.Done():
+			return false, errors.Errorf("WaitOnDeleted timed out: %s\n", mostRecentWaitOnDeletedError)
 		}
 	}
 }

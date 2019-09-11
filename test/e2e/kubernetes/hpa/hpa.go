@@ -96,7 +96,7 @@ type GetAllByPrefixResult struct {
 	err  error
 }
 
-// GetAllByPrefixAsync wraps GetAllByPrefix with a struct reponse for goroutine + channel usage
+// GetAllByPrefixAsync wraps GetAllByPrefix with a struct response for goroutine + channel usage
 func GetAllByPrefixAsync(prefix, namespace string) GetAllByPrefixResult {
 	hpas, err := GetAllByPrefix(prefix, namespace)
 	return GetAllByPrefixResult{
@@ -164,8 +164,10 @@ func WaitOnDeleted(hpaPrefix, namespace string, sleep, timeout time.Duration) (b
 		case result := <-ch:
 			mostRecentWaitOnDeletedError = result.err
 			hpas = result.hpas
-			if len(hpas) == 0 {
-				return true, nil
+			if mostRecentWaitOnDeletedError == nil {
+				if len(hpas) == 0 {
+					return true, nil
+				}
 			}
 		case <-ctx.Done():
 			return false, errors.Errorf("WaitOnDeleted timed out: %s\n", mostRecentWaitOnDeletedError)
