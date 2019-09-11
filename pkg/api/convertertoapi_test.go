@@ -855,6 +855,7 @@ func TestConvertVLabsContainerService(t *testing.T) {
 			FeatureFlags: &vlabs.FeatureFlags{
 				EnableCSERunInBackground: true,
 				BlockOutboundInternet:    false,
+				EnableTelemetry:          false,
 			},
 			AADProfile: &vlabs.AADProfile{
 				ClientAppID:  "SampleClientAppID",
@@ -906,11 +907,11 @@ func TestConvertVLabsContainerService(t *testing.T) {
 
 	apiCs, err := ConvertVLabsContainerService(vlabsCS, false)
 	if apiCs == nil {
-		t.Error("unexpected nil output while executing ConvertV20170131ContainerService")
+		t.Error("unexpected nil output while executing ConvertVLabsContainerService")
 	}
 
 	if err != nil {
-		t.Errorf("unexpected error while executing ConvertV20170131ContainerService: %s", err.Error())
+		t.Errorf("unexpected error while executing ConvertVLabsContainerService: %s", err.Error())
 	}
 
 	//Test Vlabs with Kubernetes Orchestrator
@@ -964,15 +965,177 @@ func TestConvertVLabsContainerService(t *testing.T) {
 
 	apiCs, err = ConvertVLabsContainerService(vlabsCS, false)
 	if apiCs == nil {
-		t.Error("unexpected nil output while executing ConvertV20170131ContainerService")
+		t.Error("unexpected nil output while executing ConvertVLabsContainerService")
 	}
 
 	if err != nil {
-		t.Errorf("unexpected error while executing ConvertV20170131ContainerService: %s", err.Error())
+		t.Errorf("unexpected error while executing ConvertVLabsContainerService: %s", err.Error())
 	}
 
 }
 
+func TestTelemetryEnabled(t *testing.T) {
+	vlabsCS := &vlabs.ContainerService{
+		Location: "westus2",
+		Plan: &vlabs.ResourcePurchasePlan{
+			Name:          "fooPlan",
+			PromotionCode: "fooPromoCode",
+			Product:       "fooProduct",
+			Publisher:     "fooPublisher",
+		},
+
+		Tags: map[string]string{
+			"foo": "bar",
+		},
+		Properties: &vlabs.Properties{
+			ProvisioningState: vlabs.Succeeded,
+			OrchestratorProfile: &vlabs.OrchestratorProfile{
+				OrchestratorType: DCOS,
+				DcosConfig: &vlabs.DcosConfig{
+					DcosBootstrapURL:         "SampleDcosBootstrapURL",
+					DcosWindowsBootstrapURL:  "SampleWindowsDcosBootstrapURL",
+					Registry:                 "SampleRegistry",
+					RegistryPass:             "SampleRegistryPass",
+					RegistryUser:             "SampleRegistryUser",
+					DcosClusterPackageListID: "SampleDcosClusterPackageListID",
+					DcosProviderPackageID:    "SampleDcosProviderPackageID",
+					BootstrapProfile: &vlabs.BootstrapProfile{
+						VMSize:       "Standard_Ds1_v1",
+						OSDiskSizeGB: 256,
+						OAuthEnabled: true,
+						StaticIP:     "172.0.0.1",
+						Subnet:       "255.255.255.0",
+					},
+				},
+			},
+			WindowsProfile: &vlabs.WindowsProfile{
+				AdminUsername: "sampleAdminUsername",
+				AdminPassword: "sampleAdminPassword",
+			},
+			AgentPoolProfiles: []*vlabs.AgentPoolProfile{
+				{
+					Name:      "sampleagent",
+					Count:     2,
+					VMSize:    "Standard_DS1_v1",
+					DNSPrefix: "blueorange",
+					FQDN:      "blueorange.westus2.azureapp.com",
+					OSType:    "Linux",
+				},
+				{
+					Name:      "sampleAgent-public",
+					Count:     2,
+					VMSize:    "sampleVM",
+					DNSPrefix: "blueorange",
+					FQDN:      "blueorange.westus2.com",
+					OSType:    "Linux",
+					ImageRef: &vlabs.ImageReference{
+						Name:           "testImage",
+						ResourceGroup:  "testRg",
+						SubscriptionID: "testSub",
+						Gallery:        "testGallery",
+						Version:        "0.0.1",
+					},
+				},
+			},
+			MasterProfile: &vlabs.MasterProfile{
+				Count: 1,
+				PreProvisionExtension: &vlabs.Extension{
+					Name:        "fooExtension",
+					SingleOrAll: "All",
+					Template:    "{{foobar}}",
+				},
+				ImageRef: &vlabs.ImageReference{
+					Name:          "FooImageRef",
+					ResourceGroup: "FooImageRefResourceGroup",
+				},
+				Extensions: []vlabs.Extension{
+					{
+						Name:        "sampleExtension",
+						SingleOrAll: "single",
+						Template:    "{{foobar}}",
+					},
+				},
+			},
+			CertificateProfile: &vlabs.CertificateProfile{
+				CaCertificate:         "SampleCACert",
+				CaPrivateKey:          "SampleCAPrivateKey",
+				APIServerCertificate:  "SampleAPIServerCert",
+				APIServerPrivateKey:   "SampleAPIServerPrivateKey",
+				ClientCertificate:     "SampleClientCert",
+				ClientPrivateKey:      "SampleClientPrivateKey",
+				KubeConfigCertificate: "SampleKubeConfigCert",
+				KubeConfigPrivateKey:  "SampleKubeConfigPrivateKey",
+				EtcdClientCertificate: "SampleEtcdClientCert",
+				EtcdClientPrivateKey:  "SampleEtcdClientPrivateKey",
+				EtcdServerCertificate: "SampleEtcdServerCert",
+				EtcdServerPrivateKey:  "SampleEtcdServerPrivateKey",
+			},
+			FeatureFlags: &vlabs.FeatureFlags{
+				EnableCSERunInBackground: true,
+				BlockOutboundInternet:    false,
+				EnableTelemetry:          true,
+			},
+			AADProfile: &vlabs.AADProfile{
+				ClientAppID:  "SampleClientAppID",
+				ServerAppID:  "ServerAppID",
+				TenantID:     "SampleTenantID",
+				AdminGroupID: "SampleAdminGroupID",
+			},
+			ExtensionProfiles: []*vlabs.ExtensionProfile{
+				{
+					Name:                "fooExtension",
+					Version:             "fooVersion",
+					ExtensionParameters: "fooExtensionParameters",
+					ExtensionParametersKeyVaultRef: &vlabs.KeyvaultSecretRef{
+						VaultID:       "fooVaultID",
+						SecretName:    "fooSecretName",
+						SecretVersion: "fooSecretVersion",
+					},
+					RootURL:  "fooRootURL",
+					Script:   "fooSsript",
+					URLQuery: "fooURL",
+				},
+			},
+			LinuxProfile: &vlabs.LinuxProfile{
+				AdminUsername: "azureuser",
+				Secrets: []vlabs.KeyVaultSecrets{
+					{
+						SourceVault: &vlabs.KeyVaultID{
+							ID: "sampleKeyVaultID",
+						},
+						VaultCertificates: []vlabs.KeyVaultCertificate{
+							{
+								CertificateURL:   "FooCertURL",
+								CertificateStore: "BarCertStore",
+							},
+						},
+					},
+				},
+				CustomNodesDNS: &vlabs.CustomNodesDNS{
+					DNSServer: "SampleDNSServer",
+				},
+				CustomSearchDomain: &vlabs.CustomSearchDomain{
+					Name:          "FooCustomSearchDomain",
+					RealmUser:     "sampleRealmUser",
+					RealmPassword: "sampleRealmPassword",
+				},
+			},
+		},
+	}
+
+	apiCs, err := ConvertVLabsContainerService(vlabsCS, false)
+	if apiCs == nil {
+		t.Error("unexpected nil output while executing ConvertVLabsContainerService")
+	}
+
+	if err != nil {
+		t.Errorf("unexpected error while executing ConvertVLabsContainerService: %s", err.Error())
+	}
+
+	if !vlabsCS.Properties.FeatureFlags.EnableTelemetry {
+		t.Error("unexpected false output while checking for EnableTelemetry")
+	}
+}
 func TestConvertVLabsWindowsProfile(t *testing.T) {
 	falseVar := false
 
