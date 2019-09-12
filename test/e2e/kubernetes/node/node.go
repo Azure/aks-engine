@@ -17,7 +17,8 @@ import (
 
 const (
 	//ServerVersion is used to parse out the version of the API running
-	ServerVersion = `(Server Version:\s)+(.*)`
+	ServerVersion  = `(Server Version:\s)+(.*)`
+	commandTimeout = 1 * time.Minute
 )
 
 // Node represents the kubernetes Node Resource
@@ -122,6 +123,30 @@ func (n *Node) HasSubstring(substrings []string) bool {
 	return false
 }
 
+// DescribeNodes describes all nodes
+func DescribeNodes() {
+	list, err := Get()
+	if err != nil {
+		log.Printf("Unable to get nodes: %s", err)
+	}
+	if list != nil {
+		for _, node := range list.Nodes {
+			err := node.Describe()
+			if err != nil {
+				log.Printf("Unable to describe node %s: %s", node.Metadata.Name, err)
+			}
+		}
+	}
+}
+
+// Describe will describe a node resource
+func (n *Node) Describe() error {
+	cmd := exec.Command("k", "describe", "node", n.Metadata.Name)
+	out, err := util.RunAndLogCommand(cmd, commandTimeout)
+	log.Printf("\n%s\n", string(out))
+	return err
+}
+
 // AreAllReady returns if all nodes are ready
 func AreAllReady() bool {
 	list, _ := Get()
@@ -179,6 +204,7 @@ func WaitOnReady(nodeCount int, sleep, timeout time.Duration) bool {
 				return ready
 			}
 		case <-ctx.Done():
+			DescribeNodes()
 			return false
 		}
 	}

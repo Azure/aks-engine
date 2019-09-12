@@ -383,6 +383,24 @@ func GetTerminated(podName, namespace string) (*Pod, error) {
 	return &p, nil
 }
 
+// PrintPodsLogs prints logs for all pods whose name matches a substring
+func PrintPodsLogs(podPrefix, namespace string) {
+	pods, err := GetAllByPrefix(podPrefix, namespace)
+	if err != nil {
+		log.Printf("Unable to print logs for pods matching prefix %s in namespace %s: %s", podPrefix, namespace, err)
+	}
+	for _, p := range pods {
+		err := p.Logs()
+		if err != nil {
+			log.Printf("Unable to print pod logs for pod %s: %s", p.Metadata.Name, err)
+		}
+		err = p.Describe()
+		if err != nil {
+			log.Printf("Unable to describe pod %s: %s", p.Metadata.Name, err)
+		}
+	}
+}
+
 // GetAllByPrefixResult is the result type for GetAllByPrefixAsync
 type GetAllByPrefixResult struct {
 	Pods []Pod
@@ -535,21 +553,6 @@ func WaitOnReady(podPrefix, namespace string, successesNeeded int, sleep, timeou
 	var mostRecentWaitOnReadyErr error
 	successCount := 0
 	failureCount := 0
-	printPodLogs := func() {
-		pods, _ := GetAllByPrefix(podPrefix, namespace)
-		if len(pods) != 0 {
-			for _, p := range pods {
-				e := p.Logs()
-				if e != nil {
-					log.Printf("Unable to print pod logs for pod %s: %s", p.Metadata.Name, e)
-				}
-				e = p.Describe()
-				if e != nil {
-					log.Printf("Unable to describe pod %s: %s", p.Metadata.Name, e)
-				}
-			}
-		}
-	}
 	go func() {
 		for {
 			select {
@@ -573,13 +576,13 @@ func WaitOnReady(podPrefix, namespace string, successesNeeded int, sleep, timeou
 				if successCount > 1 {
 					failureCount++
 					if failureCount >= successesNeeded {
-						printPodLogs()
+						PrintPodsLogs(podPrefix, namespace)
 						return false, errors.Errorf("Pods from deployment (%s) in namespace (%s) have been checked out as all Ready %d times, but NotReady %d times. This behavior may mean it is in a crashloop", podPrefix, namespace, successCount, failureCount)
 					}
 				}
 			}
 		case <-ctx.Done():
-			printPodLogs()
+			PrintPodsLogs(podPrefix, namespace)
 			return false, errors.Errorf("WaitOnReady timed out: %s\n", mostRecentWaitOnReadyErr)
 		}
 	}
@@ -609,6 +612,7 @@ func WaitOnSucceeded(podPrefix, namespace string, sleep, timeout time.Duration) 
 			mostRecentWaitOnSucceededError = result.err
 			if mostRecentWaitOnSucceededError == nil {
 				if anyPodsFailed {
+					PrintPodsLogs(podPrefix, namespace)
 					return false, errors.Errorf("At least one pod in a Failed state\n")
 				}
 				if allPodsSucceeded {
@@ -616,6 +620,7 @@ func WaitOnSucceeded(podPrefix, namespace string, sleep, timeout time.Duration) 
 				}
 			}
 		case <-ctx.Done():
+			PrintPodsLogs(podPrefix, namespace)
 			return false, errors.Errorf("WaitOnSucceeded timed out: %s\n", mostRecentWaitOnSucceededError)
 		}
 	}
@@ -786,6 +791,14 @@ func (l *List) CheckOutboundConnection(sleep, timeout time.Duration, osType api.
 					readyCount++
 				}
 			} else {
+				err := pod.Logs()
+				if err != nil {
+					log.Printf("Unable to print pod logs\n: %s", err)
+				}
+				err = pod.Describe()
+				if err != nil {
+					log.Printf("Unable to describe pod\n: %s", err)
+				}
 				return false, errors.Errorf("CheckOutboundConnection returned error for pod %#v: %s\n", pod, err)
 			}
 			if readyCount == len(l.Pods) {
@@ -831,6 +844,14 @@ func (l *List) ValidateCurlConnection(uri string, sleep, timeout time.Duration) 
 					readyCount++
 				}
 			} else {
+				err := pod.Logs()
+				if err != nil {
+					log.Printf("Unable to print pod logs\n: %s", err)
+				}
+				err = pod.Describe()
+				if err != nil {
+					log.Printf("Unable to describe pod\n: %s", err)
+				}
 				return false, errors.Errorf("ValidateCurlConnection returned error for pod %#v: %s\n", pod, err)
 			}
 			if readyCount == len(l.Pods) {
@@ -863,6 +884,14 @@ func (p *Pod) CheckLinuxOutboundConnection(sleep, timeout time.Duration) (bool, 
 				return true, nil
 			}
 		case <-ctx.Done():
+			err := p.Logs()
+			if err != nil {
+				log.Printf("Unable to print pod logs\n: %s", err)
+			}
+			err = p.Describe()
+			if err != nil {
+				log.Printf("Unable to describe pod\n: %s", err)
+			}
 			return false, errors.Errorf("CheckLinuxOutboundConnection timed out: %s\n", mostRecentCheckLinuxOutboundConnectionError)
 		}
 	}
@@ -891,6 +920,14 @@ func (p *Pod) ValidateCurlConnection(uri string, sleep, timeout time.Duration) (
 				return true, nil
 			}
 		case <-ctx.Done():
+			err := p.Logs()
+			if err != nil {
+				log.Printf("Unable to print pod logs\n: %s", err)
+			}
+			err = p.Describe()
+			if err != nil {
+				log.Printf("Unable to describe pod\n: %s", err)
+			}
 			return false, errors.Errorf("ValidateCurlConnection timed out: %s\n", mostRecentValidateCurlConnectionError)
 		}
 	}
@@ -920,6 +957,14 @@ func (p *Pod) ValidateOmsAgentLogs(execCmdString string, sleep, timeout time.Dur
 				return true, nil
 			}
 		case <-ctx.Done():
+			err := p.Logs()
+			if err != nil {
+				log.Printf("Unable to print pod logs\n: %s", err)
+			}
+			err = p.Describe()
+			if err != nil {
+				log.Printf("Unable to describe pod\n: %s", err)
+			}
 			return false, errors.Errorf("ValidateOmsAgentLogs timed out: %s\n", mostRecentValidateOmsAgentLogsError)
 		}
 	}
@@ -956,6 +1001,14 @@ func (p *Pod) CheckWindowsOutboundConnection(sleep, timeout time.Duration) (bool
 				}
 			}
 		case <-ctx.Done():
+			err := p.Logs()
+			if err != nil {
+				log.Printf("Unable to print pod logs\n: %s", err)
+			}
+			err = p.Describe()
+			if err != nil {
+				log.Printf("Unable to describe pod\n: %s", err)
+			}
 			return false, errors.Errorf("CheckWindowsOutboundConnection timed out: %s\n", mostRecentCheckWindowsOutboundConnectionError)
 		}
 	}
@@ -1031,6 +1084,14 @@ func (p *Pod) ValidateAzureFile(mountPath string, sleep, timeout time.Duration) 
 				return true, nil
 			}
 		case <-ctx.Done():
+			err := p.Logs()
+			if err != nil {
+				log.Printf("Unable to print pod logs\n: %s", err)
+			}
+			err = p.Describe()
+			if err != nil {
+				log.Printf("Unable to describe pod\n: %s", err)
+			}
 			return false, errors.Errorf("ValidateAzureFile timed out: %s\n", mostRecentValidateAzureFileError)
 		}
 	}
@@ -1059,6 +1120,14 @@ func (p *Pod) ValidatePVC(mountPath string, sleep, timeout time.Duration) (bool,
 				return true, nil
 			}
 		case <-ctx.Done():
+			err := p.Logs()
+			if err != nil {
+				log.Printf("Unable to print pod logs\n: %s", err)
+			}
+			err = p.Describe()
+			if err != nil {
+				log.Printf("Unable to describe pod\n: %s", err)
+			}
 			return false, errors.Errorf("ValidatePVC timed out: %s\n", mostRecentValidatePVCError)
 		}
 	}

@@ -20,6 +20,8 @@ import (
 	"github.com/pkg/errors"
 )
 
+const commandTimeout = 1 * time.Minute
+
 // List is a container that holds all jobs returned from doing a kubectl get jobs
 type List struct {
 	Jobs []Job `json:"items"`
@@ -264,6 +266,7 @@ func WaitOnSucceeded(jobPrefix, namespace string, sleep, timeout time.Duration) 
 				}
 			}
 		case <-ctx.Done():
+			DescribeJobs(jobPrefix, namespace)
 			return false, errors.Errorf("WaitOnSucceeded timed out: %s\n", mostRecentAreAllJobsSucceededError)
 		}
 	}
@@ -290,6 +293,28 @@ func (j *Job) Delete(retries int) error {
 	}
 
 	return kubectlError
+}
+
+// DescribeJobs describes all jobs whose name matches a substring
+func DescribeJobs(jobPrefix, namespace string) {
+	jobs, err := GetAllByPrefix(jobPrefix, namespace)
+	if err != nil {
+		log.Printf("Unable to get jobs matching prefix %s in namespace %s: %s", jobPrefix, namespace, err)
+	}
+	for _, j := range jobs {
+		err := j.Describe()
+		if err != nil {
+			log.Printf("Unable to describe job %s: %s", j.Metadata.Name, err)
+		}
+	}
+}
+
+// Describe will describe a Job resource
+func (j *Job) Describe() error {
+	cmd := exec.Command("k", "describe", "jobs/", j.Metadata.Name, "-n", j.Metadata.Namespace)
+	out, err := util.RunAndLogCommand(cmd, commandTimeout)
+	log.Printf("\n%s\n", string(out))
+	return err
 }
 
 // WaitOnDeleted returns when all jobs matching a prefix substring are successfully deleted
@@ -320,6 +345,9 @@ func WaitOnDeleted(jobPrefix, namespace string, sleep, timeout time.Duration) (b
 				}
 			}
 		case <-ctx.Done():
+			for _, j := range jobs {
+				j.Describe()
+			}
 			return false, errors.Errorf("WaitOnDeleted timed out: %s\n", mostRecentWaitOnDeletedError)
 		}
 	}

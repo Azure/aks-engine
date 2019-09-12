@@ -1051,25 +1051,22 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 		It("should be able to get nodes metrics", func() {
 			if eng.ExpandedDefinition.Properties.OrchestratorProfile.KubernetesConfig.IsRBACEnabled() {
 				success := false
+				var err error
+				var out []byte
+				// TODO make a 1st class go func retry implementation of this
 				for i := 0; i < 10; i++ {
 					cmd := exec.Command("k", "top", "nodes")
 					util.PrintCommand(cmd)
-					out, err := cmd.CombinedOutput()
+					out, err = cmd.CombinedOutput()
 					if err == nil {
 						success = true
 						break
 					}
-					if i > 28 {
-						log.Printf("Error while running kubectl top nodes:%s\n", err)
-						pods, _ := pod.GetAllByPrefix("metrics-server", "kube-system")
-						if len(pods) != 0 {
-							for _, p := range pods {
-								p.Logs()
-							}
-						}
-						log.Println(string(out))
-					}
 					time.Sleep(1 * time.Minute)
+				}
+				if err != nil {
+					pod.PrintPodsLogs("metrics-server", "kube-system")
+					log.Println(string(out))
 				}
 				Expect(success).To(BeTrue())
 			}
