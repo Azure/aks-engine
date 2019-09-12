@@ -14,6 +14,8 @@ import (
 	"github.com/pkg/errors"
 )
 
+const commandTimeout = 1 * time.Minute
+
 // StorageClass is used to parse data from kubectl get storageclass
 type StorageClass struct {
 	Metadata   Metadata   `json:"metadata"`
@@ -80,6 +82,14 @@ func Get(scName string) (*StorageClass, error) {
 	return &sc, nil
 }
 
+// Describe will describe a storageclass resource
+func (sc *StorageClass) Describe() error {
+	cmd := exec.Command("k", "describe", "storageclass", sc.Metadata.Name)
+	out, err := util.RunAndLogCommand(cmd, commandTimeout)
+	log.Printf("\n%s\n", string(out))
+	return err
+}
+
 // WaitOnReady will block until StorageClass is available
 func (sc *StorageClass) WaitOnReady(sleep, timeout time.Duration) (bool, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
@@ -107,6 +117,10 @@ func (sc *StorageClass) WaitOnReady(sleep, timeout time.Duration) (bool, error) 
 				}
 			}
 		case <-ctx.Done():
+			err := sc.Describe()
+			if err != nil {
+				log.Printf("Unable to describe storageclass\n: %s", err)
+			}
 			return false, errors.Errorf("WaitOnReady timed out: %s\n", mostRecentWaitOnReadyError)
 		}
 	}

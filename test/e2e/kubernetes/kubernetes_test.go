@@ -547,18 +547,6 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			cmd := exec.Command("k", "get", "nodes", "-o", "wide")
 			out, _ := cmd.CombinedOutput()
 			log.Printf("%s\n", out)
-			if !ready {
-				nodeList, err := node.GetReady()
-				Expect(err).NotTo(HaveOccurred())
-				for _, node := range nodeList.Nodes {
-					if !node.IsReady() {
-						cmd := exec.Command("k", "describe", "node", node.Metadata.Name)
-						out, _ := cmd.CombinedOutput()
-						log.Printf("\n%s\n", out)
-					}
-				}
-				log.Printf("Error: Not all nodes in a healthy state\n")
-			}
 			Expect(ready).To(Equal(true))
 		})
 
@@ -1011,6 +999,11 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 					if curlErr == nil && pass {
 						success = true
 						break
+					} else {
+						err := svc.Describe()
+						if err != nil {
+							log.Printf("Unable to describe service\n: %s", err)
+						}
 					}
 
 				}
@@ -1031,6 +1024,11 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 					if curlErr == nil && pass {
 						success = true
 						break
+					} else {
+						err := svc.Describe()
+						if err != nil {
+							log.Printf("Unable to describe service\n: %s", err)
+						}
 					}
 
 				}
@@ -1412,6 +1410,12 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				pl = pod.List{Pods: nwpolicyPods}
 				for _, frontendProdPod := range frontendProdPods {
 					pass, err = pl.ValidateCurlConnection(frontendProdPod.Status.PodIP, 30*time.Second, cfg.Timeout)
+					if err != nil {
+						err := frontendProdPod.Describe()
+						if err != nil {
+							log.Printf("Unable to describe pod %s\n: %s", frontendProdPod.Metadata.Name, err)
+						}
+					}
 					Expect(err).NotTo(HaveOccurred())
 					Expect(pass).To(BeTrue())
 				}
@@ -1419,6 +1423,12 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				By("Ensuring we have connectivity from network-policy pods to backend pods")
 				for _, backendPod := range backendPods {
 					pass, err = pl.ValidateCurlConnection(backendPod.Status.PodIP, 30*time.Second, cfg.Timeout)
+					if err != nil {
+						err := backendPod.Describe()
+						if err != nil {
+							log.Printf("Unable to describe pod %s\n: %s", backendPod.Metadata.Name, err)
+						}
+					}
 					Expect(err).NotTo(HaveOccurred())
 					Expect(pass).To(BeTrue())
 				}
@@ -1431,6 +1441,12 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				By("Ensuring we no longer have ingress access from the network-policy pods to backend pods")
 				for _, backendPod := range backendPods {
 					pass, err = pl.ValidateCurlConnection(backendPod.Status.PodIP, 30*time.Second, validateNetworkPolicyTimeout)
+					if err != nil {
+						err := backendPod.Describe()
+						if err != nil {
+							log.Printf("Unable to describe pod %s\n: %s", backendPod.Metadata.Name, err)
+						}
+					}
 					Expect(err).Should(HaveOccurred())
 					Expect(pass).To(BeFalse())
 				}
@@ -1448,6 +1464,12 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 					pl = pod.List{Pods: backendPods}
 					for _, backendDstPod := range backendPods {
 						pass, err = pl.ValidateCurlConnection(backendDstPod.Status.PodIP, 30*time.Second, cfg.Timeout)
+						if err != nil {
+							err := backendDstPod.Describe()
+							if err != nil {
+								log.Printf("Unable to describe pod %s\n: %s", backendDstPod.Metadata.Name, err)
+							}
+						}
 						Expect(err).NotTo(HaveOccurred())
 						Expect(pass).To(BeTrue())
 					}
@@ -1456,6 +1478,12 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 					pl = pod.List{Pods: nwpolicyPods}
 					for _, backendPod := range backendPods {
 						pass, err = pl.ValidateCurlConnection(backendPod.Status.PodIP, 30*time.Second, validateNetworkPolicyTimeout)
+						if err != nil {
+							err := backendPod.Describe()
+							if err != nil {
+								log.Printf("Unable to describe pod %s\n: %s", backendPod.Metadata.Name, err)
+							}
+						}
 						Expect(err).Should(HaveOccurred())
 						Expect(pass).To(BeFalse())
 					}
@@ -1472,6 +1500,12 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 					pl = pod.List{Pods: frontendProdPods}
 					for _, backendPod := range backendPods {
 						pass, err = pl.ValidateCurlConnection(backendPod.Status.PodIP, 30*time.Second, validateNetworkPolicyTimeout)
+						if err != nil {
+							err := backendPod.Describe()
+							if err != nil {
+								log.Printf("Unable to describe pod %s\n: %s", backendPod.Metadata.Name, err)
+							}
+						}
 						Expect(err).Should(HaveOccurred())
 						Expect(pass).To(BeFalse())
 					}
@@ -1480,6 +1514,12 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 					pl = pod.List{Pods: frontendDevPods}
 					for _, backendPod := range backendPods {
 						pass, err = pl.ValidateCurlConnection(backendPod.Status.PodIP, 30*time.Second, cfg.Timeout)
+						if err != nil {
+							err := backendPod.Describe()
+							if err != nil {
+								log.Printf("Unable to describe pod %s\n: %s", backendPod.Metadata.Name, err)
+							}
+						}
 						Expect(err).NotTo(HaveOccurred())
 						Expect(pass).To(BeTrue())
 					}

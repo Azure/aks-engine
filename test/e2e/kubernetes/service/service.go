@@ -168,6 +168,28 @@ func (s *Service) Delete(retries int) error {
 	return kubectlError
 }
 
+// DescribeServices describes all service resources whose name matches a substring
+func DescribeServices(svcPrefix, namespace string) {
+	svcs, err := GetAllByPrefix(svcPrefix, namespace)
+	if err != nil {
+		log.Printf("Unable to get services matching prefix %s in namespace %s: %s", svcPrefix, namespace, err)
+	}
+	for _, svc := range svcs {
+		err := svc.Describe()
+		if err != nil {
+			log.Printf("Unable to describe service %s: %s", svc.Metadata.Name, err)
+		}
+	}
+}
+
+// Describe will describe a service resource
+func (s *Service) Describe() error {
+	cmd := exec.Command("k", "describe", "svc", s.Metadata.Name, "-n", s.Metadata.Namespace)
+	out, err := util.RunAndLogCommand(cmd, commandTimeout)
+	log.Printf("\n%s\n", string(out))
+	return err
+}
+
 // GetNodePort will return the node port for a given pod
 func (s *Service) GetNodePort(port int) int {
 	for _, p := range s.Spec.Ports {
@@ -205,6 +227,10 @@ func (s *Service) WaitForIngress(timeout, sleep time.Duration) (*Service, error)
 				}
 			}
 		case <-ctx.Done():
+			err := s.Describe()
+			if err != nil {
+				log.Printf("Unable to describe service\n: %s", err)
+			}
 			return nil, errors.Errorf("WaitForIngress timed out: %s\n", mostRecentWaitForIngressError)
 		}
 	}
@@ -238,6 +264,7 @@ func WaitOnDeleted(servicePrefix, namespace string, sleep, timeout time.Duration
 				}
 			}
 		case <-ctx.Done():
+			DescribeServices(servicePrefix, namespace)
 			return false, errors.Errorf("WaitOnDeleted timed out: %s\n", mostRecentWaitOnDeletedError)
 		}
 	}

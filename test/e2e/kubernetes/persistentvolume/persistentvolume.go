@@ -13,6 +13,8 @@ import (
 	"github.com/Azure/aks-engine/test/e2e/kubernetes/util"
 )
 
+const commandTimeout = 1 * time.Minute
+
 // PersistentVolume is used to parse data from kubectl get pv
 type PersistentVolume struct {
 	Metadata Metadata `json:"metadata"`
@@ -66,6 +68,30 @@ type List struct {
 	PersistentVolumes []PersistentVolume `json:"items"`
 }
 
+// DescribePVs describes all persistent volume resources
+func DescribePVs() {
+	list, err := Get()
+	if err != nil {
+		log.Printf("Unable to get pvs: %s", err)
+	}
+	if list != nil {
+		for _, pv := range list.PersistentVolumes {
+			err := pv.Describe()
+			if err != nil {
+				log.Printf("Unable to describe pv %s: %s", pv.Metadata.Name, err)
+			}
+		}
+	}
+}
+
+// Describe will describe a pv resource
+func (pv *PersistentVolume) Describe() error {
+	cmd := exec.Command("k", "describe", "pv", pv.Metadata.Name)
+	out, err := util.RunAndLogCommand(cmd, commandTimeout)
+	log.Printf("\n%s\n", string(out))
+	return err
+}
+
 // Get returns the current pvs for a given kubeconfig
 func Get() (*List, error) {
 	cmd := exec.Command("k", "get", "pv", "-o", "json")
@@ -105,6 +131,7 @@ func WaitOnReady(pvCount int, sleep, timeout time.Duration) bool {
 				return ready
 			}
 		case <-ctx.Done():
+			DescribePVs()
 			return false
 		}
 	}

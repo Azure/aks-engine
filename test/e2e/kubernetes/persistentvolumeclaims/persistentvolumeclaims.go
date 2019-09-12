@@ -6,7 +6,6 @@ package persistentvolumeclaims
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"log"
 	"os/exec"
 	"regexp"
@@ -144,7 +143,7 @@ func GetAllByPrefixAsync(prefix, namespace string) GetAllByPrefixResult {
 	}
 }
 
-// GetAllByPrefix will return all jobs in a given namespace that match a prefix
+// GetAllByPrefix will return all pvcs in a given namespace that match a prefix
 func GetAllByPrefix(prefix, namespace string) ([]PersistentVolumeClaim, error) {
 	pvcl, err := GetAll(namespace)
 	if err != nil {
@@ -164,17 +163,26 @@ func GetAllByPrefix(prefix, namespace string) ([]PersistentVolumeClaim, error) {
 	return pvcs, nil
 }
 
-// Describe gets the description for the given pvc and namespace.
-func Describe(pvcName, namespace string) error {
-	cmd := exec.Command("k", "describe", "pvc", pvcName, "-n", namespace)
-	util.PrintCommand(cmd)
-	out, err := cmd.CombinedOutput()
+// DescribePVCs describes all pvcs whose name matches a substring
+func DescribePVCs(pvcPrefix, namespace string) {
+	pvcs, err := GetAllByPrefix(pvcPrefix, namespace)
 	if err != nil {
-		return err
+		log.Printf("Unable to get pvcs matching prefix %s in namespace %s: %s", pvcPrefix, namespace, err)
 	}
+	for _, pvc := range pvcs {
+		err := pvc.Describe()
+		if err != nil {
+			log.Printf("Unable to describe pvc %s: %s", pvc.Metadata.Name, err)
+		}
+	}
+}
 
-	fmt.Printf("\n%s\n", string(out))
-	return nil
+// Describe will describe a pv resource
+func (pvc *PersistentVolumeClaim) Describe() error {
+	cmd := exec.Command("k", "describe", "pvc", pvc.Metadata.Name, "-n", pvc.Metadata.Namespace)
+	out, err := util.RunAndLogCommand(cmd, commandTimeout)
+	log.Printf("\n%s\n", string(out))
+	return err
 }
 
 // Delete will delete a PersistentVolumeClaim in a given namespace
@@ -219,9 +227,16 @@ func (pvc *PersistentVolumeClaim) WaitOnReady(namespace string, sleep, timeout t
 				if pvc != nil && pvc.Status.Phase == "Bound" {
 					return true, nil
 				}
-				Describe(pvc.Metadata.Name, namespace)
+				err := pvc.Describe()
+				if err != nil {
+					log.Printf("Unable to describe pvc %s\n: %s", pvc.Metadata.Name, err)
+				}
 			}
 		case <-ctx.Done():
+			err := pvc.Describe()
+			if err != nil {
+				log.Printf("Unable to describe pvc %s\n: %s", pvc.Metadata.Name, err)
+			}
 			return false, errors.Errorf("WaitOnReady timed out: %s\n", mostRecentWaitOnReadyError)
 		}
 	}
@@ -255,6 +270,7 @@ func WaitOnDeleted(pvcPrefix, namespace string, sleep, timeout time.Duration) (b
 				}
 			}
 		case <-ctx.Done():
+			DescribePVCs(pvcPrefix, namespace)
 			return false, errors.Errorf("WaitOnDeleted timed out: %s\n", mostRecentWaitOnDeletedError)
 		}
 	}
