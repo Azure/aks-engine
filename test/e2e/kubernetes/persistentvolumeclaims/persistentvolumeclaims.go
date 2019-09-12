@@ -222,14 +222,14 @@ func (pvc *PersistentVolumeClaim) WaitOnReady(namespace string, sleep, timeout t
 		select {
 		case result := <-ch:
 			mostRecentWaitOnReadyError = result.err
-			pvc := result.pvc
+			p := result.pvc
 			if mostRecentWaitOnReadyError == nil {
-				if pvc != nil && pvc.Status.Phase == "Bound" {
+				if p != nil && p.Status.Phase == "Bound" {
 					return true, nil
 				}
-				err := pvc.Describe()
+				err := p.Describe()
 				if err != nil {
-					log.Printf("Unable to describe pvc %s\n: %s", pvc.Metadata.Name, err)
+					log.Printf("Unable to describe pvc %s\n: %s", p.Metadata.Name, err)
 				}
 			}
 		case <-ctx.Done():
