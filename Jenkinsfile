@@ -1,15 +1,9 @@
 import groovy.json.*
 
 defaultEnv = [
-	FORK: "${params.FORK}",
-	BRANCH: "${params.BRANCH}",
-	REGION_OPTIONS: "${params.REGIONS}",
-	UPGRADE_CLUSTER: params.UPGRADE_CLUSTER,
-	SCALE_CLUSTER: params.SCALE_CLUSTER,
-	NODE_COUNT: params.NODE_COUNT,
 	CLEANUP_ON_EXIT: true,
 	CREATE_VNET: false,
-	]
+	] + params
 
 def k8sVersions = ["1.12", "1.13", "1.14", "1.15", "1.16"]
 def tasks = [:]
@@ -34,7 +28,7 @@ def tasksForUpgradeJob(jobCfg, aksEngineVersions, jobName, version) {
 	}
 
 	def upgradeVersion = latestVersion.upgrades.last().orchestratorVersion
-	jobCfg["UPGRADE_VERSIONS"] = upgradeVersion
+	jobCfg.env["UPGRADE_VERSIONS"] = upgradeVersion
 
 	jobName = "${jobName}/upgrade/${upgradeVersion}"
 	t[jobName] = runJobWithEnvironment(jobCfg, jobName, version)
@@ -62,7 +56,7 @@ def runJobWithEnvironment(jobCfg, jobName, version) {
 						unstash(name: 'aks-engine-bin')
 					}
 
-					def jobSpecificEnv = (jobCfg.env == null) ? defaultEnv.clone() : defaultEnv + jobCfg.env
+					def jobSpecificEnv = defaultEnv + jobCfg.env
 					// set environment variables needed for the test script
 					def envVars = [
 							ORCHESTRATOR_RELEASE: "${version}",
@@ -135,6 +129,10 @@ stage ("discover tests") {
 		testConfigs = findFiles(glob: '**/test/e2e/test_cluster_configs/**/*.json')
 		testConfigs.each { cfgFile ->
 			def jobCfg = readJSON(file: cfgFile.path)
+			if(!jobCfg.env) {
+				jobCfg.env = [:] // ensure env exists
+			}
+
 			k8sVersions.each { version ->
 				def jobName = cfgFile.path[cfgFile.path.indexOf("test_cluster_configs/") + 21..-6] // remove leader and trailing .json
 				jobName = "v${version}/${jobName}"
