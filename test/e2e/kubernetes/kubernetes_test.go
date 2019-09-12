@@ -1105,6 +1105,8 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				// Apply autoscale characteristics to deployment
 				err = phpApacheDeploy.CreateDeploymentHPADeleteIfExist(5, 1, 10)
 				Expect(err).NotTo(HaveOccurred())
+				h, err := hpa.Get(longRunningApacheDeploymentName, "default", 10)
+				Expect(err).NotTo(HaveOccurred())
 
 				By("Sending load to the php-apache service by creating a 3 replica deployment")
 				// Launch a simple busybox pod that wget's continuously to the apache serviceto simulate load
@@ -1127,6 +1129,10 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 
 				By("Ensuring we have more than 1 apache-php pods due to hpa enforcement")
 				_, err = phpApacheDeploy.WaitForReplicas(2, -1, 5*time.Second, cfg.Timeout)
+				if err != nil {
+					e := h.Describe()
+					Expect(e).NotTo(HaveOccurred())
+				}
 				Expect(err).NotTo(HaveOccurred())
 
 				By("Stopping load")
@@ -1135,8 +1141,10 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 
 				By("Ensuring we only have 1 apache-php pod after stopping load")
 				_, err = phpApacheDeploy.WaitForReplicas(-1, 1, 5*time.Second, 20*time.Minute)
-				Expect(err).NotTo(HaveOccurred())
-				h, err := hpa.Get(longRunningApacheDeploymentName, "default")
+				if err != nil {
+					e := h.Describe()
+					Expect(e).NotTo(HaveOccurred())
+				}
 				Expect(err).NotTo(HaveOccurred())
 
 				By("Deleting HPA configuration")

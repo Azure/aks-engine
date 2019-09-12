@@ -345,24 +345,23 @@ func GetAsync(podName, namespace string) GetResult {
 
 // Get will return a pod with a given name and namespace
 func Get(podName, namespace string, retries int) (*Pod, error) {
-	cmd := exec.Command("k", "get", "pods", podName, "-n", namespace, "-o", "json")
 	p := Pod{}
 	var out []byte
 	var err error
 	for i := 0; i < retries; i++ {
+		cmd := exec.Command("k", "get", "pods", podName, "-n", namespace, "-o", "json")
 		out, err = cmd.CombinedOutput()
 		if err != nil {
 			util.PrintCommand(cmd)
 			log.Printf("Error getting pod: %s\n", err)
-			continue
 		} else {
 			jsonErr := json.Unmarshal(out, &p)
 			if jsonErr != nil {
 				log.Printf("Error unmarshalling pods json:%s\n", jsonErr)
-				return nil, jsonErr
+				err = jsonErr
 			}
-			break
 		}
+		time.Sleep(3 * time.Second)
 	}
 	return &p, err
 }

@@ -275,6 +275,14 @@ func GetAllByPrefix(prefix, namespace string) ([]Deployment, error) {
 	return deployments, nil
 }
 
+// Describe will describe a deployment resource
+func (d *Deployment) Describe() error {
+	cmd := exec.Command("k", "describe", "deployment", d.Metadata.Name, "-n", d.Metadata.Namespace)
+	out, err := util.RunAndLogCommand(cmd, commandTimeout)
+	log.Printf("\n%s\n", string(out))
+	return err
+}
+
 // Delete will delete a deployment in a given namespace
 func (d *Deployment) Delete(retries int) error {
 	var kubectlOutput []byte
@@ -367,7 +375,7 @@ func (d *Deployment) CreateDeploymentHPA(cpuPercent, min, max int) error {
 
 // CreateDeploymentHPADeleteIfExist applies autoscale characteristics to deployment, deleting any pre-existing HPA resource first
 func (d *Deployment) CreateDeploymentHPADeleteIfExist(cpuPercent, min, max int) error {
-	h, err := hpa.Get(d.Metadata.Name, d.Metadata.Namespace)
+	h, err := hpa.Get(d.Metadata.Name, d.Metadata.Namespace, 5)
 	if err == nil {
 		err := h.Delete(util.DefaultDeleteRetries)
 		if err != nil {
@@ -424,6 +432,10 @@ func (d *Deployment) WaitForReplicas(min, max int, sleep, timeout time.Duration)
 				}
 			}
 		case <-ctx.Done():
+			err := d.Describe()
+			if err != nil {
+				log.Printf("Unable to describe deployment %s: %s", d.Metadata.Name, err)
+			}
 			return pods, errors.Errorf("WaitForReplicas timed out: %s\n", mostRecentWaitForReplicasError)
 		}
 	}

@@ -54,22 +54,27 @@ type LoadBalancer struct {
 	DesiredReplicas                 int `json:"desiredReplicas"`
 }
 
-// Get returns the HPA definition specified in a given namespace
-func Get(name, namespace string) (*HPA, error) {
-	cmd := exec.Command("k", "get", "hpa", "-o", "json", "-n", namespace, name)
-	util.PrintCommand(cmd)
-	out, err := cmd.CombinedOutput()
-	if err != nil {
-		log.Printf("Error trying to run 'kubectl get hpa':%s\n", string(out))
-		return nil, err
-	}
+// Get will return a pod with a given name and namespace
+func Get(name, namespace string, retries int) (*HPA, error) {
 	h := HPA{}
-	err = json.Unmarshal(out, &h)
-	if err != nil {
-		log.Printf("Error unmarshalling service json:%s\n", err)
-		return nil, err
+	var out []byte
+	var err error
+	for i := 0; i < retries; i++ {
+		cmd := exec.Command("k", "get", "hpa", "-o", "json", "-n", namespace, name)
+		out, err = cmd.CombinedOutput()
+		if err != nil {
+			util.PrintCommand(cmd)
+			log.Printf("Error getting hpa: %s\n", err)
+		} else {
+			jsonErr := json.Unmarshal(out, &h)
+			if jsonErr != nil {
+				log.Printf("Error unmarshalling hpa json:%s\n", jsonErr)
+				err = jsonErr
+			}
+		}
+		time.Sleep(3 * time.Second)
 	}
-	return &h, nil
+	return &h, err
 }
 
 // GetAll will return all HPA resources in a given namespace
@@ -125,6 +130,14 @@ func GetAllByPrefix(prefix, namespace string) ([]HPA, error) {
 	return hpas, nil
 }
 
+// Describe will describe a HPA resource
+func (h *HPA) Describe() error {
+	cmd := exec.Command("k", "describe", "hpa", h.Metadata.Name, "-n", h.Metadata.Namespace)
+	out, err := util.RunAndLogCommand(cmd, commandTimeout)
+	log.Printf("\n%s\n", string(out))
+	return err
+}
+
 // Delete will delete a HPA in a given namespace
 func (h *HPA) Delete(retries int) error {
 	var kubectlOutput []byte
@@ -170,6 +183,12 @@ func WaitOnDeleted(hpaPrefix, namespace string, sleep, timeout time.Duration) (b
 				}
 			}
 		case <-ctx.Done():
+			for _, hpa := range hpas {
+				err := hpa.Describe()
+				if err != nil {
+					log.Printf("Unable to describe hpa %s: %s", hpa.Metadata.Name, err)
+				}
+			}
 			return false, errors.Errorf("WaitOnDeleted timed out: %s\n", mostRecentWaitOnDeletedError)
 		}
 	}
