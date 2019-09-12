@@ -98,6 +98,10 @@ func Build(cfg *config.Config, masterSubnetID string, agentSubnetIDs []string, i
 		return nil, err
 	}
 	prop := cs.ContainerService.Properties
+	var hasWindows bool
+	if prop.HasWindows() {
+		hasWindows = true
+	}
 
 	if config.ClientID != "" && config.ClientSecret != "" {
 		if !prop.IsAzureStackCloud() {
@@ -159,7 +163,7 @@ func Build(cfg *config.Config, masterSubnetID string, agentSubnetIDs []string, i
 			prop.OrchestratorProfile.OrchestratorVersion = config.OrchestratorVersion
 			// If ENV similarly has no version opinion, we will rely upon the aks-engine default
 		} else {
-			log.Println("No orchestrator version specified, will use the default.")
+			prop.OrchestratorProfile.OrchestratorVersion = common.GetDefaultKubernetesVersion(hasWindows)
 		}
 	}
 
@@ -231,12 +235,7 @@ func (e *Engine) AnyAgentIsLinux() bool {
 
 // HasWindowsAgents will return true is there is at least 1 windows agent pool
 func (e *Engine) HasWindowsAgents() bool {
-	for _, ap := range e.ExpandedDefinition.Properties.AgentPoolProfiles {
-		if ap.OSType == "Windows" {
-			return true
-		}
-	}
-	return false
+	return e.ExpandedDefinition.Properties.HasWindows()
 }
 
 // WindowsTestImages holds the Windows container image names used in this test pass
