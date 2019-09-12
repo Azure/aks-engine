@@ -77,3 +77,19 @@ if (Test-Path 'C:\Program Files\Docker\') {
     Log "Images:"
     LOG (docker images --format='{{json .}}' | ConvertFrom-Json | Format-Table Repository, Tag, ID)
 }
+Log ""
+
+Log "Cached Files:"
+$displayObjects = @()
+foreach ($file in [IO.Directory]::GetFiles('c:\akse-cache', '*', [IO.SearchOption]::AllDirectories))
+{
+    $attributes = Get-Item $file
+    $hash = Get-FileHash $file -Algorithm SHA256
+    $displayObjects += New-Object psobject -property @{
+        File = $file;
+        SizeBytes = $attributes.Length;
+        Sha256 = $hash.Hash
+    }
+}
+
+Log ($displayObjects | Format-Table -Property File, Sha256, SizeBytes)
