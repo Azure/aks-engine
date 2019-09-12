@@ -39,6 +39,8 @@ func TestGetAzureLocations(t *testing.T) {
 		"koreasouth":         {},
 		"northcentralus":     {},
 		"northeurope":        {},
+		"norwayeast":         {},
+		"norwaywest":         {},
 		"southcentralus":     {},
 		"southafricanorth":   {},
 		"southafricawest":    {},
