@@ -201,10 +201,8 @@ func Build(cfg *config.Config, masterSubnetID string, agentSubnetIDs []string, i
 			prop.OrchestratorProfile.KubernetesConfig = &vlabs.KubernetesConfig{}
 		}
 		prop.OrchestratorProfile.KubernetesConfig.ControllerManagerConfig = map[string]string{
-			"--horizontal-pod-autoscaler-downscale-delay":           "30s",
 			"--horizontal-pod-autoscaler-downscale-stabilization":   "30s",
 			"--horizontal-pod-autoscaler-cpu-initialization-period": "30s",
-			"--horizontal-pod-autoscaler-upscale-delay":             "30s",
 		}
 	}
 
