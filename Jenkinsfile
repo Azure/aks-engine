@@ -6,6 +6,7 @@ defaultEnv = [
 	REGION_OPTIONS: "${params.REGIONS}",
 	UPGRADE_CLUSTER: params.UPGRADE_CLUSTER,
 	SCALE_CLUSTER: params.SCALE_CLUSTER,
+	NODE_COUNT: params.NODE_COUNT,
 	CLEANUP_ON_EXIT: true,
 	CREATE_VNET: false,
 	]
@@ -17,7 +18,7 @@ def testConfigs = []
 def tasksForUpgradeJob(jobCfg, aksEngineVersions, jobName, version) {
 	def jobsByName = [:]
 	def t = [:]
-	def versions = aksEngineVersions.orchestrators.findAll { 
+	def versions = aksEngineVersions.orchestrators.findAll {
 		it.orchestratorVersion.startsWith(version)
 	}
 
@@ -56,7 +57,7 @@ def runJobWithEnvironment(jobCfg, jobName, version) {
 						cleanWs()
 						checkout scm
 					}
-		
+
 					dir('./bin') {
 						unstash(name: 'aks-engine-bin')
 					}
