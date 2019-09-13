@@ -21133,6 +21133,8 @@ spec:
           value: azurepolicy
         - name: RESOURCE_ID
           value: <resourceId>
+        - name: RESOURCE_TYPE
+          value: AKS Engine
         - name: DATAPLANE_ENDPOINT
           value: https://gov-prod-policy-data.trafficmanager.net
         - name: ACS_CREDENTIAL_LOCATION
