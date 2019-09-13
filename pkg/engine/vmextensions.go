@@ -62,7 +62,10 @@ func CreateCustomScriptExtension(cs *api.ContainerService) VirtualMachineExtensi
 	} else {
 		userAssignedIDEnabled = false
 	}
-	isVHD := strconv.FormatBool(cs.Properties.MasterProfile.IsVHDDistro())
+	isVHD := "false"
+	if cs.Properties.MasterProfile != nil {
+		isVHD = strconv.FormatBool(cs.Properties.MasterProfile.IsVHDDistro())
+	}
 
 	// TODO The AzureStack constraint has to be relaxed, it should only apply to *disconnected* instances
 	if !cs.Properties.FeatureFlags.IsFeatureEnabled("BlockOutboundInternet") && !cs.Properties.IsAzureStackCloud() {
