@@ -20551,6 +20551,8 @@ metadata:
   labels:
     control-plane: controller-manager
     controller-tools.k8s.io: "1.0"
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: Reconcile
   name: gatekeeper-system
 ---
 apiVersion: apiextensions.k8s.io/v1beta1
@@ -20559,6 +20561,8 @@ metadata:
   creationTimestamp: null
   labels:
     controller-tools.k8s.io: "1.0"
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: Reconcile
   name: configs.config.gatekeeper.sh
 spec:
   group: config.gatekeeper.sh
@@ -20666,6 +20670,9 @@ kind: ClusterRole
 metadata:
   creationTimestamp: null
   name: gatekeeper-manager-role
+  labels:
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: Reconcile
 rules:
 - apiGroups:
   - '*'
@@ -20816,6 +20823,9 @@ kind: ClusterRoleBinding
 metadata:
   creationTimestamp: null
   name: gatekeeper-manager-rolebinding
+  labels:
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: Reconcile
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
@@ -20830,6 +20840,9 @@ kind: Secret
 metadata:
   name: gatekeeper-webhook-server-secret
   namespace: gatekeeper-system
+  labels:
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: Reconcile
 ---
 apiVersion: v1
 kind: Service
@@ -20837,6 +20850,8 @@ metadata:
   labels:
     control-plane: controller-manager
     controller-tools.k8s.io: "1.0"
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: Reconcile
   name: gatekeeper-controller-manager-service
   namespace: gatekeeper-system
 spec:
@@ -20852,6 +20867,8 @@ metadata:
   labels:
     control-plane: controller-manager
     controller-tools.k8s.io: "1.0"
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: Reconcile
   name: gatekeeper-controller-manager
   namespace: gatekeeper-system
 spec:
@@ -20914,6 +20931,8 @@ metadata:
   creationTimestamp: null
   labels:
     controller-tools.k8s.io: "1.0"
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: Reconcile
   name: constrainttemplates.templates.gatekeeper.sh
 spec:
   group: templates.gatekeeper.sh
@@ -21008,6 +21027,9 @@ kind: Config
 metadata:
   name: config
   namespace: "gatekeeper-system"
+  labels:
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: Reconcile
 spec:
   sync:
     syncOnly:
@@ -21023,11 +21045,17 @@ kind: ServiceAccount
 metadata:
   name: azure-policy
   namespace: default
+  labels:
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: Reconcile
 ---
 kind: ClusterRole
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
   name: policy-agent
+  labels:
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: Reconcile
 rules:
 - apiGroups: [""]
   resources: ["configmaps"]
@@ -21043,6 +21071,9 @@ kind: ClusterRoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
   name: policy-agent
+  labels:
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: Reconcile
 subjects:
 - kind: ServiceAccount
   name: azure-policy
@@ -21057,6 +21088,9 @@ kind: Secret
 metadata:
   name: azure-policy
   namespace: default
+  labels:
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: Reconcile
 type: Opaque
 data:
   telemetry-key: TURObFpqbGpOVFV0TnpVelppMDBOVEF3TFdGa05HTXROVEExWVRJelltRTROelpt
@@ -21067,6 +21101,8 @@ metadata:
   labels:
     app: azure-policy
     aadpodidbinding: policy-identity
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: Reconcile
   name: azure-policy
   namespace: default
 spec:
