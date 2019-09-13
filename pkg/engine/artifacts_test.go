@@ -33,6 +33,7 @@ func TestKubernetesContainerAddonSettingsInit(t *testing.T) {
 		expectedDNSAutoscaler          bool
 		expectedCalico                 bool
 		expectedAzureNetworkPolicy     bool
+		expectedAzurePolicy            bool
 	}{
 		// addons disabled scenario
 		{
@@ -115,6 +116,10 @@ func TestKubernetesContainerAddonSettingsInit(t *testing.T) {
 								Name:    AzureNetworkPolicyAddonName,
 								Enabled: to.BoolPtr(false),
 							},
+							{
+								Name:    AzurePolicyAddonName,
+								Enabled: to.BoolPtr(false),
+							},
 						},
 					},
 				},
@@ -137,6 +142,7 @@ func TestKubernetesContainerAddonSettingsInit(t *testing.T) {
 			expectedDNSAutoscaler:          false,
 			expectedCalico:                 false,
 			expectedAzureNetworkPolicy:     false,
+			expectedAzurePolicy:            false,
 		},
 		// addons enabled scenario
 		{
@@ -219,6 +225,10 @@ func TestKubernetesContainerAddonSettingsInit(t *testing.T) {
 								Name:    AzureNetworkPolicyAddonName,
 								Enabled: to.BoolPtr(true),
 							},
+							{
+								Name:    AzurePolicyAddonName,
+								Enabled: to.BoolPtr(true),
+							},
 						},
 					},
 				},
@@ -241,6 +251,7 @@ func TestKubernetesContainerAddonSettingsInit(t *testing.T) {
 			expectedDNSAutoscaler:          true,
 			expectedCalico:                 true,
 			expectedAzureNetworkPolicy:     true,
+			expectedAzurePolicy:            true,
 		},
 	}
 
@@ -299,6 +310,9 @@ func TestKubernetesContainerAddonSettingsInit(t *testing.T) {
 		}
 		if c.expectedAzureNetworkPolicy != componentFileSpec[AzureNetworkPolicyAddonName].isEnabled {
 			t.Fatalf("Expected componentFileSpec[%s] to be %t", AzureNetworkPolicyAddonName, c.expectedAzureNetworkPolicy)
+		}
+		if c.expectedAzurePolicy != componentFileSpec[AzurePolicyAddonName].isEnabled {
+			t.Fatalf("Expected componentFileSpec[%s] to be %t", AzurePolicyAddonName, c.expectedAzurePolicy)
 		}
 	}
 }

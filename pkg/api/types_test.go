@@ -3509,6 +3509,54 @@ func TestIsNVIDIADevicePluginEnabled(t *testing.T) {
 	}
 }
 
+func TestIsAzurePolicyEnabled(t *testing.T) {
+	// Default case
+	c := KubernetesConfig{
+		Addons: []KubernetesAddon{
+			getMockAddon("addon"),
+		},
+	}
+	enabled := c.IsAzurePolicyEnabled()
+	enabledDefault := DefaultAzurePolicyAddonEnabled
+	if enabled != enabledDefault {
+		t.Fatalf("KubernetesConfig.IsAzurePolicyEnabled() should return %t when no azure policy addon has been specified, instead returned %t", enabledDefault, enabled)
+	}
+	// Addon present, but enabled not specified
+	c.Addons = append(c.Addons, getMockAddon(AzurePolicyAddonName))
+	enabled = c.IsAzurePolicyEnabled()
+	if enabled != enabledDefault {
+		t.Fatalf("KubernetesConfig.IsAzurePolicyEnabled() should return default when azure policy addon addon has been specified w/ no enabled value, expected %t, instead returned %t", enabledDefault, enabled)
+	}
+	// Addon present and enabled
+	b := true
+	c = KubernetesConfig{
+		Addons: []KubernetesAddon{
+			{
+				Name:    AzurePolicyAddonName,
+				Enabled: &b,
+			},
+		},
+	}
+	enabled = c.IsAzurePolicyEnabled()
+	if !enabled {
+		t.Fatalf("KubernetesConfig.IsAzurePolicyEnabled() should return true when azure policy addon has been specified as enabled, instead returned %t", enabled)
+	}
+	// Addon present and disabled
+	b = false
+	c = KubernetesConfig{
+		Addons: []KubernetesAddon{
+			{
+				Name:    AzurePolicyAddonName,
+				Enabled: &b,
+			},
+		},
+	}
+	enabled = c.IsAzurePolicyEnabled()
+	if enabled {
+		t.Fatalf("KubernetesConfig.IsAzurePolicyEnabled() should return false when azure policy addon has been specified as disabled, instead returned %t", enabled)
+	}
+}
+
 func TestAgentPoolIsNSeriesSKU(t *testing.T) {
 	cases := common.GetNSeriesVMCasesForTesting()
 

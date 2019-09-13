@@ -341,7 +341,7 @@ func (cs *ContainerService) setAddonsConfig(isUpdate bool) {
 		Containers: []KubernetesContainerSpec{
 			{
 				Name:           "azure-policy",
-				Image:          "aksenginehub.azurecr.io/azure-policy-kubernetes:bugbash",
+				Image:          "emmcmill/azure-policy-kubernetes:bugbash",
 				CPURequests:    "30m",
 				MemoryRequests: "50Mi",
 				CPULimits:      "100m",

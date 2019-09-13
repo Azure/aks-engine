@@ -365,6 +365,10 @@ func TestSetAddonsConfig(t *testing.T) {
 					Name:    AADPodIdentityAddonName,
 					Enabled: to.BoolPtr(false),
 				},
+				{
+					Name:    AzurePolicyAddonName,
+					Enabled: to.BoolPtr(DefaultAzurePolicyAddonEnabled),
+				},
 			},
 		},
 		{
@@ -432,10 +436,6 @@ func TestSetAddonsConfig(t *testing.T) {
 				},
 				{
 					Name:    ClusterAutoscalerAddonName,
-					Enabled: to.BoolPtr(false),
-				},
-				{
-					Name:    AzurePolicyAddonName,
 					Enabled: to.BoolPtr(false),
 				},
 				{
@@ -549,6 +549,10 @@ func TestSetAddonsConfig(t *testing.T) {
 				{
 					Name:    AADPodIdentityAddonName,
 					Enabled: to.BoolPtr(false),
+				},
+				{
+					Name:    AzurePolicyAddonName,
+					Enabled: to.BoolPtr(DefaultAzurePolicyAddonEnabled),
 				},
 			},
 		},
@@ -734,6 +738,10 @@ func TestSetAddonsConfig(t *testing.T) {
 					Name:    AADPodIdentityAddonName,
 					Enabled: to.BoolPtr(false),
 				},
+				{
+					Name:    AzurePolicyAddonName,
+					Enabled: to.BoolPtr(DefaultAzurePolicyAddonEnabled),
+				},
 			},
 		},
 		{
@@ -917,6 +925,10 @@ func TestSetAddonsConfig(t *testing.T) {
 					Name:    AADPodIdentityAddonName,
 					Enabled: to.BoolPtr(false),
 				},
+				{
+					Name:    AzurePolicyAddonName,
+					Enabled: to.BoolPtr(DefaultAzurePolicyAddonEnabled),
+				},
 			},
 		},
 		{
@@ -1094,6 +1106,10 @@ func TestSetAddonsConfig(t *testing.T) {
 				{
 					Name:    AADPodIdentityAddonName,
 					Enabled: to.BoolPtr(false),
+				},
+				{
+					Name:    AzurePolicyAddonName,
+					Enabled: to.BoolPtr(DefaultAzurePolicyAddonEnabled),
 				},
 			},
 		},
@@ -1273,6 +1289,10 @@ func TestSetAddonsConfig(t *testing.T) {
 					Name:    AADPodIdentityAddonName,
 					Enabled: to.BoolPtr(false),
 				},
+				{
+					Name:    AzurePolicyAddonName,
+					Enabled: to.BoolPtr(DefaultAzurePolicyAddonEnabled),
+				},
 			},
 		},
 		{
@@ -1449,6 +1469,10 @@ func TestSetAddonsConfig(t *testing.T) {
 				{
 					Name:    AADPodIdentityAddonName,
 					Enabled: to.BoolPtr(false),
+				},
+				{
+					Name:    AzurePolicyAddonName,
+					Enabled: to.BoolPtr(DefaultAzurePolicyAddonEnabled),
 				},
 			},
 		},
@@ -1634,6 +1658,10 @@ func TestSetAddonsConfig(t *testing.T) {
 					Name:    AADPodIdentityAddonName,
 					Enabled: to.BoolPtr(false),
 				},
+				{
+					Name:    AzurePolicyAddonName,
+					Enabled: to.BoolPtr(DefaultAzurePolicyAddonEnabled),
+				},
 			},
 		},
 		{
@@ -1806,6 +1834,10 @@ func TestSetAddonsConfig(t *testing.T) {
 				{
 					Name:    AADPodIdentityAddonName,
 					Enabled: to.BoolPtr(false),
+				},
+				{
+					Name:    AzurePolicyAddonName,
+					Enabled: to.BoolPtr(DefaultAzurePolicyAddonEnabled),
 				},
 			},
 		},
@@ -1982,6 +2014,10 @@ func TestSetAddonsConfig(t *testing.T) {
 				{
 					Name:    AADPodIdentityAddonName,
 					Enabled: to.BoolPtr(false),
+				},
+				{
+					Name:    AzurePolicyAddonName,
+					Enabled: to.BoolPtr(DefaultAzurePolicyAddonEnabled),
 				},
 			},
 		},
@@ -2161,6 +2197,10 @@ func TestSetAddonsConfig(t *testing.T) {
 				{
 					Name:    AADPodIdentityAddonName,
 					Enabled: to.BoolPtr(false),
+				},
+				{
+					Name:    AzurePolicyAddonName,
+					Enabled: to.BoolPtr(DefaultAzurePolicyAddonEnabled),
 				},
 			},
 		},
@@ -2369,6 +2409,10 @@ func TestSetAddonsConfig(t *testing.T) {
 					Name:    AADPodIdentityAddonName,
 					Enabled: to.BoolPtr(false),
 				},
+				{
+					Name:    AzurePolicyAddonName,
+					Enabled: to.BoolPtr(DefaultAzurePolicyAddonEnabled),
+				},
 			},
 		},
 		{
@@ -2555,6 +2599,10 @@ func TestSetAddonsConfig(t *testing.T) {
 						},
 					},
 				},
+				{
+					Name:    AzurePolicyAddonName,
+					Enabled: to.BoolPtr(DefaultAzurePolicyAddonEnabled),
+				},
 			},
 		},
 		{
@@ -2601,20 +2649,7 @@ func TestSetAddonsConfig(t *testing.T) {
 				},
 				{
 					Name:    TillerAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           TillerAddonName,
-							CPURequests:    "50m",
-							MemoryRequests: "150Mi",
-							CPULimits:      "50m",
-							MemoryLimits:   "150Mi",
-							Image:          specConfig.TillerImageBase + K8sComponentsByVersionMap["1.12.8"][TillerAddonName],
-						},
-					},
-					Config: map[string]string{
-						"max-history": strconv.Itoa(0),
-					},
+					Enabled: to.BoolPtr(DefaultTillerAddonEnabled),
 				},
 				{
 					Name:    ACIConnectorAddonName,
@@ -2652,7 +2687,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "100Mi",
 							CPULimits:      "50m",
 							MemoryLimits:   "100Mi",
-							Image:          "mcr.microsoft.com/k8s/flexvolume/keyvault-flexvolume:v0.0.12",
+							Image:          "mcr.microsoft.com/k8s/flexvolume/keyvault-flexvolume:v0.0.13",
 						},
 					},
 				},
@@ -2734,23 +2769,27 @@ func TestSetAddonsConfig(t *testing.T) {
 				},
 				{
 					Name:    AADPodIdentityAddonName,
+					Enabled: to.BoolPtr(false),
+				},
+				{
+					Name:    AzurePolicyAddonName,
 					Enabled: to.BoolPtr(true),
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:           "azure-policy",
-							Image:          "aksenginehub.azurecr.io/azure-policy-kubernetes:bugbash",
-							CPURequests:    "100m",
-							MemoryRequests: "300Mi",
+							Image:          "emmcmill/azure-policy-kubernetes:bugbash",
+							CPURequests:    "30m",
+							MemoryRequests: "50Mi",
 							CPULimits:      "100m",
-							MemoryLimits:   "300Mi",
+							MemoryLimits:   "200Mi",
 						},
 						{
 							Name:           "gatekeeper",
 							Image:          "quay.io/open-policy-agent/gatekeeper:v3.0.4-beta.0",
 							CPURequests:    "100m",
-							MemoryRequests: "300Mi",
+							MemoryRequests: "256Mi",
 							CPULimits:      "100m",
-							MemoryLimits:   "300Mi",
+							MemoryLimits:   "512Mi",
 						},
 					},
 				},
@@ -2898,7 +2937,7 @@ func TestSetAddonsConfig(t *testing.T) {
 				},
 				{
 					Name:    AzurePolicyAddonName,
-					Enabled: to.BoolPtr(false),
+					Enabled: to.BoolPtr(DefaultAzurePolicyAddonEnabled),
 				},
 			},
 		},
@@ -3046,7 +3085,7 @@ func TestSetAddonsConfig(t *testing.T) {
 				},
 				{
 					Name:    AzurePolicyAddonName,
-					Enabled: to.BoolPtr(false),
+					Enabled: to.BoolPtr(DefaultAzurePolicyAddonEnabled),
 				},
 			},
 		},
@@ -3184,7 +3223,7 @@ func TestSetAddonsConfig(t *testing.T) {
 				},
 				{
 					Name:    AzurePolicyAddonName,
-					Enabled: to.BoolPtr(false),
+					Enabled: to.BoolPtr(DefaultAzurePolicyAddonEnabled),
 				},
 			},
 		},
@@ -3318,7 +3357,7 @@ func TestSetAddonsConfig(t *testing.T) {
 				},
 				{
 					Name:    AzurePolicyAddonName,
-					Enabled: to.BoolPtr(false),
+					Enabled: to.BoolPtr(DefaultAzurePolicyAddonEnabled),
 				},
 			},
 		},
