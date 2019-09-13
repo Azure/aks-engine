@@ -1197,11 +1197,12 @@ func (p *Properties) GetNonMasqueradeCIDR() string {
 			}
 		} else {
 			if p.FeatureFlags.IsFeatureEnabled("EnableIPv6DualStack") {
-				nonMasqCidr = strings.Split(p.OrchestratorProfile.KubernetesConfig.ClusterSubnet, ",")[0]
-				_, ipnet, _ := net.ParseCIDR(nonMasqCidr)
-				return ipnet.String()
+				cidr := strings.Split(p.OrchestratorProfile.KubernetesConfig.ClusterSubnet, ",")[0]
+				_, ipnet, _ := net.ParseCIDR(cidr)
+				nonMasqCidr = ipnet.String()
+			} else {
+				nonMasqCidr = p.OrchestratorProfile.KubernetesConfig.ClusterSubnet
 			}
-			nonMasqCidr = p.OrchestratorProfile.KubernetesConfig.ClusterSubnet
 		}
 	}
 	return nonMasqCidr
@@ -1212,9 +1213,9 @@ func (p *Properties) GetSecondaryNonMasqueradeCIDR() string {
 	var nonMasqCidr string
 	if !p.IsHostedMasterProfile() {
 		if p.FeatureFlags.IsFeatureEnabled("EnableIPv6DualStack") {
-			nonMasqCidr = strings.Split(p.OrchestratorProfile.KubernetesConfig.ClusterSubnet, ",")[1]
-			_, ipnet, _ := net.ParseCIDR(nonMasqCidr)
-			return ipnet.String()
+			cidr := strings.Split(p.OrchestratorProfile.KubernetesConfig.ClusterSubnet, ",")[1]
+			_, ipnet, _ := net.ParseCIDR(cidr)
+			nonMasqCidr = ipnet.String()
 		}
 	}
 	return nonMasqCidr
