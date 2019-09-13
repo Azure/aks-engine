@@ -1855,7 +1855,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 
 		It("should be able to cleanup the long running php-apache stuff", func() {
 			if cfg.SoakClusterName == "" {
-				phpApacheDeploy, err := deployment.Get(longRunningApacheDeploymentName, "default")
+				phpApacheDeploy, err := deployment.GetWithRetry(longRunningApacheDeploymentName, "default", 3*time.Second, 1*time.Minute)
 				if err != nil {
 					fmt.Println(err)
 				}
