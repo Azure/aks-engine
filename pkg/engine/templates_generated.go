@@ -23736,23 +23736,36 @@ function DownloadFileOverHttp
         [Parameter(Mandatory=$true)][string]
         $DestinationPath
     )
-    $secureProtocols = @()
-    $insecureProtocols = @([System.Net.SecurityProtocolType]::SystemDefault, [System.Net.SecurityProtocolType]::Ssl3)
 
-    foreach ($protocol in [System.Enum]::GetValues([System.Net.SecurityProtocolType]))
+    # First check to see if a file with the same name is already cached on the VHD
+    $fileName = [IO.Path]::GetFileName($Url)
+    $search = [IO.Directory]::GetFiles($global:CacheDir, $fileName, [IO.SearchOption]::AllDirectories)
+
+    if ($search.Count -ne 0)
     {
-        if ($insecureProtocols -notcontains $protocol)
-        {
-            $secureProtocols += $protocol
-        }
+        Write-Log "Using chaced version of $fileName - Copying file from $($search[0]) to $DestinationPath"
+        Move-Item -Path $search[0] -Destination $DestinationPath -Force
     }
-    [System.Net.ServicePointManager]::SecurityProtocol = $secureProtocols
-
-    $oldProgressPreference = $ProgressPreference
-    $ProgressPreference = 'SilentlyContinue'
-    Invoke-WebRequest $Url -UseBasicParsing -OutFile $DestinationPath -Verbose
-    $ProgressPreference = $oldProgressPreference
-    Write-Log "Downloaded file to $DestinationPath"
+    else 
+    {
+        $secureProtocols = @()
+        $insecureProtocols = @([System.Net.SecurityProtocolType]::SystemDefault, [System.Net.SecurityProtocolType]::Ssl3)
+    
+        foreach ($protocol in [System.Enum]::GetValues([System.Net.SecurityProtocolType]))
+        {
+            if ($insecureProtocols -notcontains $protocol)
+            {
+                $secureProtocols += $protocol
+            }
+        }
+        [System.Net.ServicePointManager]::SecurityProtocol = $secureProtocols
+    
+        $oldProgressPreference = $ProgressPreference
+        $ProgressPreference = 'SilentlyContinue'
+        Invoke-WebRequest $Url -UseBasicParsing -OutFile $DestinationPath -Verbose
+        $ProgressPreference = $oldProgressPreference
+        Write-Log "Downloaded file to $DestinationPath"
+    }
 }
 
 # https://stackoverflow.com/a/34559554/697126
@@ -23923,6 +23936,7 @@ $global:ExcludeMasterFromStandardLB = "{{WrapAsVariable "excludeMasterFromStanda
 
 
 # Windows defaults, not changed by aks-engine
+$global:CacheDir = "c:\akse-cache"
 $global:KubeDir = "c:\k"
 $global:HNSModule = [Io.path]::Combine("$global:KubeDir", "hns.psm1")
 
@@ -23975,6 +23989,13 @@ try
     if ($true) {
         Write-Log "Provisioning $global:DockerServiceName... with IP $MasterIP"
 
+        # Install OpenSSH if SSH enabled
+        $sshEnabled = [System.Convert]::ToBoolean("{{ WindowsSSHEnabled }}")
+
+        if ( $sshEnabled ) {
+            Install-OpenSSH -SSHKeys $SSHKeys
+        }
+
         Write-Log "Apply telemetry data setting"
         Set-TelemetrySetting -WindowsTelemetryGUID $global:WindowsTelemetryGUID
 
@@ -24001,7 +24022,6 @@ try
             Write-Log "Overwriting kube node binaries from $global:WindowsKubeBinariesURL"
             Get-KubeBinaries -KubeBinariesURL $global:WindowsKubeBinariesURL
         }
-
 
         Write-Log "Write Azure cloud provider config"
         Write-AzureConfig ` + "`" + `
@@ -24044,7 +24064,6 @@ try
                          -AgentKey $AgentKey ` + "`" + `
                          -AgentCertificate $global:AgentCertificate
 
-
         Write-Log "Create the Pause Container kubletwin/pause"
         New-InfraContainer -KubeDir $global:KubeDir
 
@@ -24052,6 +24071,7 @@ try
 
         # Configure network policy.
         if ($global:NetworkPlugin -eq "azure") {
+            Write-Log "Installing Azure VNet plugins"
             Install-VnetPlugins -AzureCNIConfDir $global:AzureCNIConfDir ` + "`" + `
                                 -AzureCNIBinDir $global:AzureCNIBinDir ` + "`" + `
                                 -VNetCNIPluginsURL $global:VNetCNIPluginsURL
@@ -24076,6 +24096,7 @@ try
             }
 
         } elseif ($global:NetworkPlugin -eq "kubenet") {
+            Write-Log "Fetching additional files needed for kubenet"
             Update-WinCNI -CNIPath $global:CNIPath
             Get-HnsPsm1 -HNSModule $global:HNSModule
         }
@@ -24100,13 +24121,6 @@ try
             -HNSModule $global:HNSModule ` + "`" + `
             -KubeletNodeLabels $global:KubeletNodeLabels
 
-        # Install OpenSSH if SSH enabled
-        $sshEnabled = [System.Convert]::ToBoolean("{{ WindowsSSHEnabled }}")
-
-        if ( $sshEnabled ) {
-            Install-OpenSSH -SSHKeys $SSHKeys
-        }
-
         Write-Log "Disable Internet Explorer compat mode and set homepage"
         Set-Explorer
 
@@ -24118,6 +24132,9 @@ try
 
         Write-Log "Update service failure actions"
         Update-ServiceFailureActions
+
+        Write-Log "Removing aks-engine bits cache directory"
+        Remove-Item $CacheDir -Recurse -Force
 
         Write-Log "Setup Complete, reboot computer"
         Restart-Computer
