@@ -75,10 +75,7 @@ function Install-WindowsPatches
     # Windows Server 2019 update history can be found at https://support.microsoft.com/en-us/help/4464619
     # then you can get download links by searching for specific KBs at http://www.catalog.update.microsoft.com/home.aspx
 
-    $patchUrls = @(
-        # 7C SSU and LCU
-        'http://download.windowsupdate.com/c/msdownload/update/software/secu/2019/07/windows10.0-kb4512937-x64_2a065a9ecfee76e3e457f3c596550e821358971c.msu',
-        'http://download.windowsupdate.com/d/msdownload/update/software/updt/2019/07/windows10.0-kb4505658-x64_cb660f3191eba56217694635b48d50d36883c3f2.msu')
+    $patchUrls = @()
 
         foreach ($patchUrl in $patchUrls)
         {
@@ -138,6 +135,12 @@ function Set-WinRmServiceDelayedStart
     sc.exe config winrm start=delayed-auto
 }
 
+function Update-DefenderSignatures
+{
+    Write-Log "Updating windows defender signatures."
+    Update-MpSignature
+}
+
 function Update-WindowsFeatures
 {
     $featuresToEnable = @(
@@ -160,6 +163,7 @@ switch ($env:ProvisioningPhase)
         Set-WinRmServiceDelayedStart
         Disable-WindowsUpdates
         Install-WindowsPatches
+        Update-DefenderSignatures
         Install-OpenSSH
         Update-WindowsFeatures
     }

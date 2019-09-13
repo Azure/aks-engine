@@ -2,7 +2,6 @@
 source /home/packer/provision_installs.sh
 source /home/packer/provision_source.sh
 source /home/packer/packer_source.sh
-source /home/packer/cis.sh
 
 RELEASE_NOTES_FILEPATH=/var/log/azure/golden-image-install.complete
 
@@ -17,6 +16,7 @@ echo "Components downloaded in this VHD build (some of the below components migh
 
 installDeps
 cat << EOF >> ${RELEASE_NOTES_FILEPATH}
+  - apache2-utils
   - apt-transport-https
   - auditd
   - blobfuse
@@ -50,7 +50,7 @@ if [[ ${UBUNTU_RELEASE} == "18.04" ]]; then
   overrideNetworkConfig
 fi
 
-ETCD_VERSION="3.3.13"
+ETCD_VERSION="3.3.15"
 ETCD_DOWNLOAD_URL="https://acs-mirror.azureedge.net/github-coreos"
 installEtcd
 echo "  - etcd v${ETCD_VERSION}" >> ${RELEASE_NOTES_FILEPATH}
@@ -62,8 +62,8 @@ installGPUDrivers
 echo "  - nvidia-docker2 nvidia-container-runtime" >> ${RELEASE_NOTES_FILEPATH}
 
 VNET_CNI_VERSIONS="
+1.0.27
 1.0.25
-1.0.24
 "
 for VNET_CNI_VERSION in $VNET_CNI_VERSIONS; do
     VNET_CNI_PLUGINS_URL="https://acs-mirror.azureedge.net/cni/azure-vnet-cni-linux-amd64-v${VNET_CNI_VERSION}.tgz"
@@ -204,6 +204,7 @@ for TILLER_VERSION in ${TILLER_VERSIONS}; do
 done
 
 CLUSTER_AUTOSCALER_VERSIONS="
+1.16.0
 1.15.1
 1.15.0
 1.14.4
@@ -242,6 +243,7 @@ for K8S_DNS_SIDECAR_VERSION in ${K8S_DNS_SIDECAR_VERSIONS}; do
 done
 
 CORE_DNS_VERSIONS="
+1.6.2
 1.5.0
 1.3.1
 1.2.6
@@ -312,7 +314,7 @@ for KUBE_SVC_REDIRECT_VERSION in ${KUBE_SVC_REDIRECT_VERSIONS}; do
     echo "  - ${CONTAINER_IMAGE}" >> ${RELEASE_NOTES_FILEPATH}
 done
 
-KV_FLEXVOLUME_VERSIONS="0.0.12"
+KV_FLEXVOLUME_VERSIONS="0.0.13"
 for KV_FLEXVOLUME_VERSION in ${KV_FLEXVOLUME_VERSIONS}; do
     CONTAINER_IMAGE="mcr.microsoft.com/k8s/flexvolume/keyvault-flexvolume:v${KV_FLEXVOLUME_VERSION}"
     pullContainerImage "docker" ${CONTAINER_IMAGE}
@@ -432,9 +434,3 @@ echo "START_OF_NOTES"
 cat ${RELEASE_NOTES_FILEPATH}
 echo "END_OF_NOTES"
 set -x
-
-# Move logs from VHD creation out of /var/log
-sudo mv /var/log /var/log.vhd
-sudo mkdir /var/log
-
-applyCIS

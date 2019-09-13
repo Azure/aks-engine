@@ -3362,6 +3362,122 @@ func TestIsClusterAutoscalerEnabled(t *testing.T) {
 	}
 }
 
+func TestIsContainerMonitoringEnabled(t *testing.T) {
+	// Default case
+	c := KubernetesConfig{
+		Addons: []KubernetesAddon{
+			getMockAddon("addon"),
+		},
+	}
+	enabled := c.IsContainerMonitoringAddonEnabled()
+	if enabled {
+		t.Fatalf("KubernetesConfig.IsContainerMonitoringAddonEnabled() should return %t when no container monitoring addon has been specified, instead returned %t", false, enabled)
+	}
+	// Addon present, but enabled not specified
+	c.Addons = append(c.Addons, getMockAddon(ContainerMonitoringAddonName))
+	enabled = c.IsContainerMonitoringAddonEnabled()
+	if enabled {
+		t.Fatalf("KubernetesConfig.IsContainerMonitoringAddonEnabled() should return false when container monitoring addon has been specified w/ no enabled value, instead returned %t", enabled)
+	}
+	// Addon present and enabled with config
+	b := true
+	c = KubernetesConfig{
+		Addons: []KubernetesAddon{
+			{
+				Name:    ContainerMonitoringAddonName,
+				Enabled: &b,
+			},
+		},
+	}
+	enabled = c.IsContainerMonitoringAddonEnabled()
+	if !enabled {
+		t.Fatalf("KubernetesConfig.IsContainerMonitoringAddonEnabled() should return true when container monitoring addon has been specified as enabled, instead returned %t", enabled)
+	}
+	// Addon present and disabled
+	b = false
+	c = KubernetesConfig{
+		Addons: []KubernetesAddon{
+			{
+				Name:    ContainerMonitoringAddonName,
+				Enabled: &b,
+			},
+		},
+	}
+	enabled = c.IsContainerMonitoringAddonEnabled()
+	if enabled {
+		t.Fatalf("KubernetesConfig.IsContainerMonitoringAddonEnabled() should return false when container monitoring addon has been specified as disabled, instead returned %t", enabled)
+	}
+
+	// Addon present and enabled with logAnalyticsWorkspaceResourceId in config
+	b = true
+	c = KubernetesConfig{
+		Addons: []KubernetesAddon{
+			{
+				Name:    ContainerMonitoringAddonName,
+				Enabled: &b,
+				Config: map[string]string{
+					"logAnalyticsWorkspaceResourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/test-workspace-rg/providers/Microsoft.OperationalInsights/workspaces/test-workspace",
+				},
+			},
+		},
+	}
+	enabled = c.IsContainerMonitoringAddonEnabled()
+	if !enabled {
+		t.Fatalf("KubernetesConfig.IsContainerMonitoringAddonEnabled() should return true when container monitoring addon has been specified as enabled, instead returned %t", enabled)
+	}
+
+	addon := c.GetAddonByName(ContainerMonitoringAddonName)
+	if addon.Config == nil || len(addon.Config) == 0 {
+		t.Fatalf("KubernetesConfig.IsContainerMonitoringAddonEnabled() should have addon config instead returned null or empty")
+	}
+
+	if addon.Config["logAnalyticsWorkspaceResourceId"] == "" {
+		t.Fatalf("KubernetesConfig.IsContainerMonitoringAddonEnabled() should have addon config with logAnalyticsWorkspaceResourceId, instead returned null or empty")
+	}
+
+	workspaceResourceID := addon.Config["logAnalyticsWorkspaceResourceId"]
+	if workspaceResourceID == "" {
+		t.Fatalf("KubernetesConfig.IsContainerMonitoringAddonEnabled() should have addon config with non empty azure logAnalyticsWorkspaceResourceId")
+	}
+
+	resourceParts := strings.Split(workspaceResourceID, "/")
+	if len(resourceParts) != 9 {
+		t.Fatalf("KubernetesConfig.IsContainerMonitoringAddonEnabled() should have addon config with valid Azure logAnalyticsWorkspaceResourceId, instead returned %s", workspaceResourceID)
+	}
+
+	// Addon present and enabled with legacy config
+	b = true
+	c = KubernetesConfig{
+		Addons: []KubernetesAddon{
+			{
+				Name:    ContainerMonitoringAddonName,
+				Enabled: &b,
+				Config: map[string]string{
+					"workspaceGuid": "MDAwMDAwMDAtMDAwMC0wMDAwLTAwMDAtMDAwMDAwMDAwMDAw",
+					"workspaceKey":  "NEQrdnlkNS9qU2NCbXNBd1pPRi8wR09CUTVrdUZRYzlKVmFXK0hsbko1OGN5ZVBKY3dUcGtzK3JWbXZnY1hHbW15dWpMRE5FVlBpVDhwQjI3NGE5WWc9PQ==",
+				},
+			},
+		},
+	}
+	enabled = c.IsContainerMonitoringAddonEnabled()
+	if !enabled {
+		t.Fatalf("KubernetesConfig.IsContainerMonitoringAddonEnabled() should return true when container monitoring addon has been specified as enabled, instead returned %t", enabled)
+	}
+
+	addon = c.GetAddonByName(ContainerMonitoringAddonName)
+	if addon.Config == nil || len(addon.Config) == 0 {
+		t.Fatalf("KubernetesConfig.IsContainerMonitoringAddonEnabled() should have addon config instead returned null or empty")
+	}
+
+	if addon.Config["workspaceGuid"] == "" {
+		t.Fatalf("KubernetesConfig.IsContainerMonitoringAddonEnabled() should have addon config with non empty workspaceGuid")
+	}
+
+	if addon.Config["workspaceKey"] == "" {
+		t.Fatalf("KubernetesConfig.IsContainerMonitoringAddonEnabled() should have addon config with non empty workspaceKey")
+	}
+}
+
 func TestIsNVIDIADevicePluginEnabled(t *testing.T) {
 	p := Properties{
 		OrchestratorProfile: &OrchestratorProfile{
@@ -5035,17 +5151,23 @@ func TestFormatAzureProdFQDN(t *testing.T) {
 		"santest.eastus2euap.cloudapp.azure.com",
 		"santest.francecentral.cloudapp.azure.com",
 		"santest.francesouth.cloudapp.azure.com",
+		"santest.germanynorth.cloudapp.azure.com",
+		"santest.germanywestcentral.cloudapp.azure.com",
 		"santest.japaneast.cloudapp.azure.com",
 		"santest.japanwest.cloudapp.azure.com",
 		"santest.koreacentral.cloudapp.azure.com",
 		"santest.koreasouth.cloudapp.azure.com",
 		"santest.northcentralus.cloudapp.azure.com",
 		"santest.northeurope.cloudapp.azure.com",
+		"santest.norwayeast.cloudapp.azure.com",
+		"santest.norwaywest.cloudapp.azure.com",
 		"santest.southafricanorth.cloudapp.azure.com",
 		"santest.southafricawest.cloudapp.azure.com",
 		"santest.southcentralus.cloudapp.azure.com",
 		"santest.southeastasia.cloudapp.azure.com",
 		"santest.southindia.cloudapp.azure.com",
+		"santest.switzerlandnorth.cloudapp.azure.com",
+		"santest.switzerlandwest.cloudapp.azure.com",
 		"santest.uaecentral.cloudapp.azure.com",
 		"santest.uaenorth.cloudapp.azure.com",
 		"santest.uksouth.cloudapp.azure.com",
@@ -5107,17 +5229,23 @@ func TestFormatProdFQDNByLocation(t *testing.T) {
 		"santest.eastus2euap.cloudapp.azure.com",
 		"santest.francecentral.cloudapp.azure.com",
 		"santest.francesouth.cloudapp.azure.com",
+		"santest.germanynorth.cloudapp.azure.com",
+		"santest.germanywestcentral.cloudapp.azure.com",
 		"santest.japaneast.cloudapp.azure.com",
 		"santest.japanwest.cloudapp.azure.com",
 		"santest.koreacentral.cloudapp.azure.com",
 		"santest.koreasouth.cloudapp.azure.com",
 		"santest.northcentralus.cloudapp.azure.com",
 		"santest.northeurope.cloudapp.azure.com",
+		"santest.norwayeast.cloudapp.azure.com",
+		"santest.norwaywest.cloudapp.azure.com",
 		"santest.southafricanorth.cloudapp.azure.com",
 		"santest.southafricawest.cloudapp.azure.com",
 		"santest.southcentralus.cloudapp.azure.com",
 		"santest.southeastasia.cloudapp.azure.com",
 		"santest.southindia.cloudapp.azure.com",
+		"santest.switzerlandnorth.cloudapp.azure.com",
+		"santest.switzerlandwest.cloudapp.azure.com",
 		"santest.uaecentral.cloudapp.azure.com",
 		"santest.uaenorth.cloudapp.azure.com",
 		"santest.uksouth.cloudapp.azure.com",
@@ -5152,7 +5280,11 @@ func TestFormatProdFQDNByLocation(t *testing.T) {
 	mockCSDefaultSpec.Properties.CustomCloudProfile = mockCSPDefaultSpec.CustomCloudProfile
 	mockCSDefaultSpec.Location = "randomlocation"
 	mockCSDefaultSpec.Properties.MasterProfile.DNSPrefix = "azurestackprefix"
-	mockCSDefaultSpec.SetPropertiesDefaults(false, false)
+	mockCSDefaultSpec.SetPropertiesDefaults(PropertiesDefaultsParams{
+		IsScale:    false,
+		IsUpgrade:  false,
+		PkiKeySize: helpers.DefaultPkiKeySize,
+	})
 	var actualResult []string
 	for _, location := range mockCSDefaultSpec.GetLocations() {
 		actualResult = append(actualResult, FormatProdFQDNByLocation("azurestackprefix", location, mockCSDefaultSpec.Properties.GetCustomCloudName()))
@@ -5272,6 +5404,12 @@ func TestIsFeatureEnabled(t *testing.T) {
 		{
 			name:     "empty flags",
 			feature:  "BlockOutboundInternet",
+			flags:    &FeatureFlags{},
+			expected: false,
+		},
+		{
+			name:     "telemetry",
+			feature:  "EnableTelemetry",
 			flags:    &FeatureFlags{},
 			expected: false,
 		},
@@ -5542,17 +5680,23 @@ func TestGetLocations(t *testing.T) {
 		"eastus2euap",
 		"francecentral",
 		"francesouth",
+		"germanynorth",
+		"germanywestcentral",
 		"japaneast",
 		"japanwest",
 		"koreacentral",
 		"koreasouth",
 		"northcentralus",
 		"northeurope",
+		"norwayeast",
+		"norwaywest",
 		"southafricanorth",
 		"southafricawest",
 		"southcentralus",
 		"southeastasia",
 		"southindia",
+		"switzerlandnorth",
+		"switzerlandwest",
 		"uaecentral",
 		"uaenorth",
 		"uksouth",

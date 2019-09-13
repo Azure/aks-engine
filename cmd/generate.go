@@ -12,6 +12,7 @@ import (
 	"github.com/Azure/aks-engine/pkg/api"
 	"github.com/Azure/aks-engine/pkg/engine"
 	"github.com/Azure/aks-engine/pkg/engine/transform"
+	"github.com/Azure/aks-engine/pkg/helpers"
 	"github.com/Azure/aks-engine/pkg/i18n"
 	"github.com/gofrs/uuid"
 	"github.com/leonelquinteros/gotext"
@@ -220,7 +221,11 @@ func (gc *generateCmd) run() error {
 		return errors.Wrap(err, "initializing template generator")
 	}
 
-	certsGenerated, err := gc.containerService.SetPropertiesDefaults(false, false)
+	certsGenerated, err := gc.containerService.SetPropertiesDefaults(api.PropertiesDefaultsParams{
+		IsScale:    false,
+		IsUpgrade:  false,
+		PkiKeySize: helpers.DefaultPkiKeySize,
+	})
 	if err != nil {
 		return errors.Wrapf(err, "in SetPropertiesDefaults template %s", gc.apimodelPath)
 	}

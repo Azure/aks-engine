@@ -57,17 +57,29 @@ func CreateMasterVMSS(cs *api.ContainerService) VirtualMachineScaleSetARM {
 		DependsOn:  dependencies,
 	}
 
+	vmScaleSetTags := map[string]*string{
+		"creationSource":     to.StringPtr("[concat(parameters('generatorCode'), '-', variables('masterVMNamePrefix'), 'vmss')]"),
+		"resourceNameSuffix": to.StringPtr("[parameters('nameSuffix')]"),
+		"orchestrator":       to.StringPtr("[variables('orchestratorNameVersionTag')]"),
+		"aksEngineVersion":   to.StringPtr("[parameters('aksEngineVersion')]"),
+		"poolName":           to.StringPtr("master"),
+	}
+
+	if k8sConfig != nil && k8sConfig.IsContainerMonitoringAddonEnabled() {
+		addon := k8sConfig.GetAddonByName(ContainerMonitoringAddonName)
+		clusterDNSPrefix := "aks-engine-cluster"
+		if cs.Properties.MasterProfile != nil && cs.Properties.MasterProfile.DNSPrefix != "" {
+			clusterDNSPrefix = cs.Properties.MasterProfile.DNSPrefix
+		}
+		vmScaleSetTags["logAnalyticsWorkspaceResourceId"] = to.StringPtr(addon.Config["logAnalyticsWorkspaceResourceId"])
+		vmScaleSetTags["clusterName"] = to.StringPtr(clusterDNSPrefix)
+	}
+
 	virtualMachine := compute.VirtualMachineScaleSet{
 		Location: to.StringPtr("[variables('location')]"),
 		Name:     to.StringPtr("[concat(variables('masterVMNamePrefix'), 'vmss')]"),
-		Tags: map[string]*string{
-			"creationSource":     to.StringPtr("[concat(parameters('generatorCode'), '-', variables('masterVMNamePrefix'), 'vmss')]"),
-			"resourceNameSuffix": to.StringPtr("[parameters('nameSuffix')]"),
-			"orchestrator":       to.StringPtr("[variables('orchestratorNameVersionTag')]"),
-			"aksEngineVersion":   to.StringPtr("[parameters('aksEngineVersion')]"),
-			"poolName":           to.StringPtr("master"),
-		},
-		Type: to.StringPtr("Microsoft.Compute/virtualMachineScaleSets"),
+		Tags:     vmScaleSetTags,
+		Type:     to.StringPtr("Microsoft.Compute/virtualMachineScaleSets"),
 	}
 
 	addCustomTagsToVMScaleSets(cs.Properties.MasterProfile.CustomVMTags, &virtualMachine)
@@ -300,7 +312,7 @@ func CreateMasterVMSS(cs *api.ContainerService) VirtualMachineScaleSetARM {
 			AutoUpgradeMinorVersion: to.BoolPtr(true),
 			Settings:                map[string]interface{}{},
 			ProtectedSettings: map[string]interface{}{
-				"commandToExecute": fmt.Sprintf("[concat('retrycmd_if_failure() { r=$1; w=$2; t=$3; shift && shift && shift; for i in $(seq 1 $r); do timeout $t ${@}; [ $? -eq 0  ] && break || if [ $i -eq $r ]; then return 1; else sleep $w; fi; done }; "+outBoundCmd+" for i in $(seq 1 1200); do grep -Fq \"EOF\" /opt/azure/containers/provision.sh && break; if [ $i -eq 1200 ]; then exit 100; else sleep 1; fi; done; ', variables('provisionScriptParametersCommon'),%s,variables('provisionScriptParametersMaster'), ' /usr/bin/nohup /bin/bash -c \"/bin/bash /opt/azure/containers/provision.sh >> /var/log/azure/cluster-provision.log 2>&1\"')]", generateUserAssignedIdentityClientIDParameter(userAssignedIDEnabled)),
+				"commandToExecute": fmt.Sprintf("[concat('echo $(date),$(hostname); retrycmd_if_failure() { r=$1; w=$2; t=$3; shift && shift && shift; for i in $(seq 1 $r); do timeout $t ${@}; [ $? -eq 0  ] && break || if [ $i -eq $r ]; then return 1; else sleep $w; fi; done }; "+outBoundCmd+" for i in $(seq 1 1200); do grep -Fq \"EOF\" /opt/azure/containers/provision.sh && break; if [ $i -eq 1200 ]; then exit 100; else sleep 1; fi; done; ', variables('provisionScriptParametersCommon'),%s,variables('provisionScriptParametersMaster'), ' /usr/bin/nohup /bin/bash -c \"/bin/bash /opt/azure/containers/provision.sh >> /var/log/azure/cluster-provision.log 2>&1\"')]", generateUserAssignedIdentityClientIDParameter(userAssignedIDEnabled)),
 			},
 		},
 	}
@@ -341,6 +353,7 @@ func CreateMasterVMSS(cs *api.ContainerService) VirtualMachineScaleSetARM {
 }
 
 func CreateAgentVMSS(cs *api.ContainerService, profile *api.AgentPoolProfile) VirtualMachineScaleSetARM {
+	isHostedMaster := cs.Properties.IsHostedMasterProfile()
 	armResource := ARMResource{
 		APIVersion: "[variables('apiVersionCompute')]",
 	}
@@ -354,7 +367,8 @@ func CreateAgentVMSS(cs *api.ContainerService, profile *api.AgentPoolProfile) Vi
 
 	if !cs.Properties.OrchestratorProfile.IsPrivateCluster() &&
 		profile.LoadBalancerBackendAddressPoolIDs == nil &&
-		cs.Properties.OrchestratorProfile.KubernetesConfig.LoadBalancerSku == api.StandardLoadBalancerSku {
+		cs.Properties.OrchestratorProfile.KubernetesConfig.LoadBalancerSku == api.StandardLoadBalancerSku &&
+		!isHostedMaster {
 		dependencies = append(dependencies, "[variables('agentLbID')]")
 	}
 
@@ -488,7 +502,8 @@ func CreateAgentVMSS(cs *api.ContainerService, profile *api.AgentPoolProfile) Vi
 				}
 			} else {
 				if !cs.Properties.OrchestratorProfile.IsPrivateCluster() &&
-					cs.Properties.OrchestratorProfile.KubernetesConfig.LoadBalancerSku == api.StandardLoadBalancerSku {
+					cs.Properties.OrchestratorProfile.KubernetesConfig.LoadBalancerSku == api.StandardLoadBalancerSku &&
+					!isHostedMaster {
 					agentLbBackendAddressPools := compute.SubResource{
 						ID: to.StringPtr("[concat(variables('agentLbID'), '/backendAddressPools/', variables('agentLbBackendPoolName'))]"),
 					}
@@ -711,7 +726,7 @@ func CreateAgentVMSS(cs *api.ContainerService, profile *api.AgentPoolProfile) Vi
 				AutoUpgradeMinorVersion: to.BoolPtr(true),
 				Settings:                map[string]interface{}{},
 				ProtectedSettings: map[string]interface{}{
-					"commandToExecute": "[concat('powershell.exe -ExecutionPolicy Unrestricted -command \"', '$arguments = ', variables('singleQuote'),'-MasterIP ',variables('kubernetesAPIServerIP'),' -KubeDnsServiceIp ',parameters('kubeDnsServiceIp'),' -MasterFQDNPrefix ',variables('masterFqdnPrefix'),' -Location ',variables('location'),' -TargetEnvironment ',parameters('targetEnvironment'),' -AgentKey ',parameters('clientPrivateKey'),' -AADClientId ',variables('servicePrincipalClientId'),' -AADClientSecret ',variables('singleQuote'),variables('singleQuote'),base64(variables('servicePrincipalClientSecret')),variables('singleQuote'),variables('singleQuote'),' -NetworkAPIVersion ',variables('apiVersionNetwork'),' ',variables('singleQuote'), ' ; ', variables('windowsCustomScriptSuffix'), '\" > %SYSTEMDRIVE%\\AzureData\\CustomDataSetupScript.log 2>&1')]",
+					"commandToExecute": "[concat('echo %DATE%,%TIME%,%COMPUTERNAME% && powershell.exe -ExecutionPolicy Unrestricted -command \"', '$arguments = ', variables('singleQuote'),'-MasterIP ',variables('kubernetesAPIServerIP'),' -KubeDnsServiceIp ',parameters('kubeDnsServiceIp'),' -MasterFQDNPrefix ',variables('masterFqdnPrefix'),' -Location ',variables('location'),' -TargetEnvironment ',parameters('targetEnvironment'),' -AgentKey ',parameters('clientPrivateKey'),' -AADClientId ',variables('servicePrincipalClientId'),' -AADClientSecret ',variables('singleQuote'),variables('singleQuote'),base64(variables('servicePrincipalClientSecret')),variables('singleQuote'),variables('singleQuote'),' -NetworkAPIVersion ',variables('apiVersionNetwork'),' ',variables('singleQuote'), ' ; ', variables('windowsCustomScriptSuffix'), '\" > %SYSTEMDRIVE%\\AzureData\\CustomDataSetupScript.log 2>&1')]",
 				},
 			},
 		}
@@ -730,7 +745,7 @@ func CreateAgentVMSS(cs *api.ContainerService, profile *api.AgentPoolProfile) Vi
 		sgxEnabled := strconv.FormatBool(common.IsSgxEnabledSKU(profile.VMSize))
 		auditDEnabled := strconv.FormatBool(to.Bool(profile.AuditDEnabled))
 
-		commandExec := fmt.Sprintf("[concat('retrycmd_if_failure() { r=$1; w=$2; t=$3; shift && shift && shift; for i in $(seq 1 $r); do timeout $t ${@}; [ $? -eq 0  ] && break || if [ $i -eq $r ]; then return 1; else sleep $w; fi; done }; %s for i in $(seq 1 1200); do grep -Fq \"EOF\" /opt/azure/containers/provision.sh && break; if [ $i -eq 1200 ]; then exit 100; else sleep 1; fi; done; ', variables('provisionScriptParametersCommon'),%s,' GPU_NODE=%s SGX_NODE=%s AUDITD_ENABLED=%s /usr/bin/nohup /bin/bash -c \"/bin/bash /opt/azure/containers/provision.sh >> /var/log/azure/cluster-provision.log 2>&1%s\"')]", outBoundCmd, generateUserAssignedIdentityClientIDParameter(userAssignedIDEnabled), nVidiaEnabled, sgxEnabled, auditDEnabled, runInBackground)
+		commandExec := fmt.Sprintf("[concat('echo $(date),$(hostname); retrycmd_if_failure() { r=$1; w=$2; t=$3; shift && shift && shift; for i in $(seq 1 $r); do timeout $t ${@}; [ $? -eq 0  ] && break || if [ $i -eq $r ]; then return 1; else sleep $w; fi; done }; %s for i in $(seq 1 1200); do grep -Fq \"EOF\" /opt/azure/containers/provision.sh && break; if [ $i -eq 1200 ]; then exit 100; else sleep 1; fi; done; ', variables('provisionScriptParametersCommon'),%s,' GPU_NODE=%s SGX_NODE=%s AUDITD_ENABLED=%s /usr/bin/nohup /bin/bash -c \"/bin/bash /opt/azure/containers/provision.sh >> /var/log/azure/cluster-provision.log 2>&1%s\"')]", outBoundCmd, generateUserAssignedIdentityClientIDParameter(userAssignedIDEnabled), nVidiaEnabled, sgxEnabled, auditDEnabled, runInBackground)
 		vmssCSE = compute.VirtualMachineScaleSetExtension{
 			Name: to.StringPtr("vmssCSE"),
 			VirtualMachineScaleSetExtensionProperties: &compute.VirtualMachineScaleSetExtensionProperties{
@@ -813,7 +828,7 @@ func addCustomTagsToVMScaleSets(tags map[string]string, vm *compute.VirtualMachi
 	for key, value := range tags {
 		_, found := vm.Tags[key]
 		if !found {
-			vm.Tags[key] = &value
+			vm.Tags[key] = to.StringPtr(value)
 		}
 	}
 }

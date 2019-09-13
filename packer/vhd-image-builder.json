@@ -21,7 +21,7 @@
             "subscription_id": "{{user `subscription_id`}}",
             "resource_group_name": "{{user `resource_group_name`}}",
             "capture_container_name": "aksengine-vhds",
-            "capture_name_prefix": "aksengine-{{timestamp}}",
+            "capture_name_prefix": "aksengine-{{user `create_time`}}",
             "storage_account": "{{user `storage_account_name`}}",
             "os_type": "Linux",
             "os_disk_size_gb": 30,
@@ -30,7 +30,9 @@
             "image_sku": "{{user `ubuntu_sku`}}-LTS",
             "image_version": "latest",
             "azure_tags": {
-                "dept": "Azure Container Service"
+                "os": "Linux",
+                "now": "{{user `create_time`}}",
+                "createdBy": "aks-engine-vhd-pipeline"
             },
             "location": "{{user `location`}}",
             "vm_size": "{{user `vm_size`}}"
@@ -193,8 +195,9 @@
             "type": "shell",
             "inline": [
                 "sudo FEATURE_FLAGS={{user `feature_flags`}} BUILD_NUMBER={{user `build_number`}} BUILD_ID={{user `build_id`}} COMMIT={{user `commit`}} /bin/bash -ux /home/packer/install-dependencies.sh",
+                "sudo /bin/bash -eux /home/packer/cis.sh",
                 "sudo /bin/bash -eux /home/packer/cleanup-vhd.sh",
-                "sudo rm -rf /home/packer"
+                "sudo /usr/sbin/waagent -force -deprovision+user && export HISTSIZE=0 && sync || exit 125"
             ]
         }
     ]

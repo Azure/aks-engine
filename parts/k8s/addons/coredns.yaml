@@ -76,6 +76,20 @@ data:
         loadbalance
     }
 ---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: coredns-custom
+  namespace: kube-system
+  labels:
+      addonmanager.kubernetes.io/mode: EnsureExists
+data:
+  Corefile: |
+    # Add custom CoreDNS configuration here.
+    #
+    # See https://github.com/coredns/coredns/tree/master/plugin/azure for information
+    # about the Azure DNS plugin.
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:

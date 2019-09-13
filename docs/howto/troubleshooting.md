@@ -31,7 +31,7 @@ From a vm node that did not provision successfully:
 
 How to determine the above?
 
-1. Look at the deployment error message. The error should include which VM extension failed the deployment. For example, `cse-master-0` means that the CSE extension of VM master 0 failed.
+1. Look at the deployment error message. The error should include which VM extension failed the deployment. For example, `cse-master-0` means that the CSE extension of VM master 0 failed. It should also include the date that the extension started running at and the name of the VM it was running on.  
 
 2. From a master node: `kubectl get nodes`
 

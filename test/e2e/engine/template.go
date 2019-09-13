@@ -13,14 +13,15 @@ import (
 
 	"github.com/Azure/go-autorest/autorest/to"
 
+	"github.com/kelseyhightower/envconfig"
+	"github.com/pkg/errors"
+
 	"github.com/Azure/aks-engine/pkg/api"
 	"github.com/Azure/aks-engine/pkg/api/common"
 	"github.com/Azure/aks-engine/pkg/api/vlabs"
 	"github.com/Azure/aks-engine/pkg/helpers"
 	"github.com/Azure/aks-engine/pkg/i18n"
 	"github.com/Azure/aks-engine/test/e2e/config"
-	"github.com/kelseyhightower/envconfig"
-	"github.com/pkg/errors"
 )
 
 // Config represents the configuration values of a template stored as env vars
@@ -28,6 +29,7 @@ type Config struct {
 	ClientID                       string `envconfig:"CLIENT_ID"`
 	ClientSecret                   string `envconfig:"CLIENT_SECRET"`
 	ClientObjectID                 string `envconfig:"CLIENT_OBJECTID"`
+	LogAnalyticsWorkspaceKey       string `envconfig:"LOG_ANALYTICS_WORKSPACE_KEY"`
 	MasterDNSPrefix                string `envconfig:"DNS_PREFIX"`
 	AgentDNSPrefix                 string `envconfig:"DNS_PREFIX"`
 	PublicSSHKey                   string `envconfig:"PUBLIC_SSH_KEY"`
@@ -98,6 +100,10 @@ func Build(cfg *config.Config, masterSubnetID string, agentSubnetIDs []string, i
 		return nil, err
 	}
 	prop := cs.ContainerService.Properties
+	var hasWindows bool
+	if prop.HasWindows() {
+		hasWindows = true
+	}
 
 	if config.ClientID != "" && config.ClientSecret != "" {
 		if !prop.IsAzureStackCloud() {
@@ -159,7 +165,7 @@ func Build(cfg *config.Config, masterSubnetID string, agentSubnetIDs []string, i
 			prop.OrchestratorProfile.OrchestratorVersion = config.OrchestratorVersion
 			// If ENV similarly has no version opinion, we will rely upon the aks-engine default
 		} else {
-			log.Println("No orchestrator version specified, will use the default.")
+			prop.OrchestratorProfile.OrchestratorVersion = common.GetDefaultKubernetesVersion(hasWindows)
 		}
 	}
 
@@ -202,6 +208,18 @@ func Build(cfg *config.Config, masterSubnetID string, agentSubnetIDs []string, i
 		}
 	}
 
+	if config.LogAnalyticsWorkspaceKey != "" && len(prop.OrchestratorProfile.KubernetesConfig.Addons) > 0 {
+		for _, addOn := range prop.OrchestratorProfile.KubernetesConfig.Addons {
+			if addOn.Name == "container-monitoring" {
+				if addOn.Config == nil {
+					addOn.Config = make(map[string]string)
+				}
+				addOn.Config["workspaceKey"] = config.LogAnalyticsWorkspaceKey
+				break
+			}
+		}
+	}
+
 	return &Engine{
 		Config:            config,
 		ClusterDefinition: cs,
@@ -229,12 +247,7 @@ func (e *Engine) AnyAgentIsLinux() bool {
 
 // HasWindowsAgents will return true is there is at least 1 windows agent pool
 func (e *Engine) HasWindowsAgents() bool {
-	for _, ap := range e.ExpandedDefinition.Properties.AgentPoolProfiles {
-		if ap.OSType == "Windows" {
-			return true
-		}
-	}
-	return false
+	return e.ExpandedDefinition.Properties.HasWindows()
 }
 
 // WindowsTestImages holds the Windows container image names used in this test pass

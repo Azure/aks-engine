@@ -142,7 +142,7 @@ func (cs *ContainerService) setAddonsConfig(isUpdate bool) {
 				MemoryRequests: "100Mi",
 				CPULimits:      "50m",
 				MemoryLimits:   "100Mi",
-				Image:          "mcr.microsoft.com/k8s/flexvolume/keyvault-flexvolume:v0.0.12",
+				Image:          "mcr.microsoft.com/k8s/flexvolume/keyvault-flexvolume:v0.0.13",
 			},
 		},
 	}
@@ -261,11 +261,11 @@ func (cs *ContainerService) setAddonsConfig(isUpdate bool) {
 		Containers: []KubernetesContainerSpec{
 			{
 				Name:  AzureNetworkPolicyAddonName,
-				Image: "mcr.microsoft.com/containernetworking/azure-npm:v1.0.25",
+				Image: "mcr.microsoft.com/containernetworking/azure-npm:v1.0.27",
 			},
 			{
 				Name:  AzureVnetTelemetryAddonName,
-				Image: "mcr.microsoft.com/containernetworking/azure-vnet-telemetry:v1.0.25",
+				Image: "mcr.microsoft.com/containernetworking/azure-vnet-telemetry:v1.0.27",
 			},
 		},
 	}

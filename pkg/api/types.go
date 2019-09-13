@@ -116,6 +116,7 @@ type FeatureFlags struct {
 	EnableCSERunInBackground bool `json:"enableCSERunInBackground,omitempty"`
 	BlockOutboundInternet    bool `json:"blockOutboundInternet,omitempty"`
 	EnableIPv6DualStack      bool `json:"enableIPv6DualStack,omitempty"`
+	EnableTelemetry          bool `json:"enableTelemetry,omitempty"`
 }
 
 // ServicePrincipalProfile contains the client and secret used by the cluster for Azure Resource CRUD
@@ -1691,6 +1692,11 @@ func (k *KubernetesConfig) IsAADPodIdentityEnabled() bool {
 	return k.IsAddonEnabled(AADPodIdentityAddonName)
 }
 
+// IsContainerMonitoringAddonEnabled checks if the container monitoring addon is enabled
+func (k *KubernetesConfig) IsContainerMonitoringAddonEnabled() bool {
+	return k.IsAddonEnabled(ContainerMonitoringAddonName)
+}
+
 // IsClusterAutoscalerEnabled checks if the cluster autoscaler addon is enabled
 func (k *KubernetesConfig) IsClusterAutoscalerEnabled() bool {
 	return k.IsAddonEnabled(ClusterAutoscalerAddonName)
@@ -1963,6 +1969,8 @@ func (f *FeatureFlags) IsFeatureEnabled(feature string) bool {
 			return f.BlockOutboundInternet
 		case "EnableIPv6DualStack":
 			return f.EnableIPv6DualStack
+		case "EnableTelemetry":
+			return f.EnableTelemetry
 		default:
 			return false
 		}

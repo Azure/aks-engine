@@ -421,6 +421,7 @@ func convertVLabsFeatureFlags(vlabs *vlabs.FeatureFlags, api *FeatureFlags) {
 	api.EnableCSERunInBackground = vlabs.EnableCSERunInBackground
 	api.BlockOutboundInternet = vlabs.BlockOutboundInternet
 	api.EnableIPv6DualStack = vlabs.EnableIPv6DualStack
+	api.EnableTelemetry = vlabs.EnableTelemetry
 }
 
 func convertV20160930LinuxProfile(obj *v20160930.LinuxProfile, api *LinuxProfile) {
@@ -755,7 +756,7 @@ func setVlabsKubernetesDefaults(vp *vlabs.Properties, api *OrchestratorProfile) 
 			api.KubernetesConfig.NetworkPolicy = vp.OrchestratorProfile.KubernetesConfig.NetworkPolicy
 		}
 	}
-	if api.KubernetesConfig.NetworkPlugin == "" && api.KubernetesConfig.NetworkPolicy == "" {
+	if api.KubernetesConfig.NetworkPlugin == "" && (api.KubernetesConfig.NetworkPolicy == "" || api.KubernetesConfig.NetworkPolicy == NetworkPolicyCalico) {
 		if vp.HasWindows() {
 			api.KubernetesConfig.NetworkPlugin = vlabs.DefaultNetworkPluginWindows
 		} else {
