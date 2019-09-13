@@ -20,7 +20,11 @@ import (
 	"github.com/pkg/errors"
 )
 
-const commandTimeout = 1 * time.Minute
+const (
+	commandTimeout                    = 1 * time.Minute
+	validateDeploymentNotExistRetries = 3
+	deploymentGetAfterCreateTimeout   = 1 * time.Minute
+)
 
 // List holds a list of deployments returned from kubectl get deploy
 type List struct {
@@ -81,7 +85,7 @@ func CreateLinuxDeploy(image, name, namespace, miscOpts string) (*Deployment, er
 		log.Printf("Error trying to deploy %s [%s] in namespace %s:%s\n", name, image, namespace, string(out))
 		return nil, err
 	}
-	d, err := Get(name, namespace)
+	d, err := GetWithRetry(name, namespace, 3*time.Second, deploymentGetAfterCreateTimeout)
 	if err != nil {
 		log.Printf("Error while trying to fetch Deployment %s in namespace %s:%s\n", name, namespace, err)
 		return nil, err
@@ -92,7 +96,7 @@ func CreateLinuxDeploy(image, name, namespace, miscOpts string) (*Deployment, er
 // CreateLinuxDeployIfNotExist first checks if a deployment already exists, and return it if so
 // If not, we call CreateLinuxDeploy
 func CreateLinuxDeployIfNotExist(image, name, namespace, miscOpts string) (*Deployment, error) {
-	deployment, err := Get(name, namespace)
+	deployment, err := Get(name, namespace, validateDeploymentNotExistRetries)
 	if err != nil {
 		return CreateLinuxDeploy(image, name, namespace, miscOpts)
 	}
@@ -121,7 +125,7 @@ func RunLinuxDeploy(image, name, namespace, command string, replicas int) (*Depl
 		log.Printf("Error trying to deploy %s [%s] in namespace %s:%s\n", name, image, namespace, string(out))
 		return nil, err
 	}
-	d, err := Get(name, namespace)
+	d, err := GetWithRetry(name, namespace, 3*time.Second, deploymentGetAfterCreateTimeout)
 	if err != nil {
 		log.Printf("Error while trying to fetch Deployment %s in namespace %s:%s\n", name, namespace, err)
 		return nil, err
@@ -159,7 +163,7 @@ func CreateWindowsDeploy(pattern, image, name, namespace, miscOpts string) (*Dep
 		log.Printf("Error trying to deploy %s [%s] in namespace %s:%s\n", name, image, namespace, string(out))
 		return nil, err
 	}
-	d, err := Get(name, namespace)
+	d, err := GetWithRetry(name, namespace, 3*time.Second, deploymentGetAfterCreateTimeout)
 	if err != nil {
 		log.Printf("Error while trying to fetch Deployment %s in namespace %s:%s\n", name, namespace, err)
 		return nil, err
@@ -176,7 +180,7 @@ func CreateWindowsDeployWithHostport(image, name, namespace string, port int, ho
 		log.Printf("Error trying to deploy %s [%s] in namespace %s:%s\n", name, image, namespace, string(out))
 		return nil, err
 	}
-	d, err := Get(name, namespace)
+	d, err := GetWithRetry(name, namespace, 3*time.Second, deploymentGetAfterCreateTimeout)
 	if err != nil {
 		log.Printf("Error while trying to fetch Deployment %s in namespace %s:%s\n", name, namespace, err)
 		return nil, err
@@ -187,7 +191,7 @@ func CreateWindowsDeployWithHostport(image, name, namespace string, port int, ho
 // CreateWindowsDeployWithHostportIfNotExist first checks if a deployment already exists, and return it if so
 // If not, we call CreateWindowsDeploy
 func CreateWindowsDeployWithHostportIfNotExist(image, name, namespace string, port int, hostport int) (*Deployment, error) {
-	deployment, err := Get(name, namespace)
+	deployment, err := Get(name, namespace, validateDeploymentNotExistRetries)
 	if err != nil {
 		return CreateWindowsDeployWithHostport(image, name, namespace, port, hostport)
 	}
@@ -221,20 +225,26 @@ func CreateWindowsDeployDeleteIfExist(pattern, image, name, namespace, miscOpts 
 }
 
 // Get returns a deployment from a name and namespace
-func Get(name, namespace string) (*Deployment, error) {
-	cmd := exec.Command("k", "get", "deploy", "-o", "json", "-n", namespace, name)
-	out, err := util.RunAndLogCommand(cmd, commandTimeout)
-	if err != nil {
-		log.Printf("Error while trying to fetch deployment %s in namespace %s:%s\n", name, namespace, string(out))
-		return nil, err
-	}
+func Get(name, namespace string, retries int) (*Deployment, error) {
 	d := Deployment{}
-	err = json.Unmarshal(out, &d)
-	if err != nil {
-		log.Printf("Error while trying to unmarshal deployment json:%s\n%s\n", err, string(out))
-		return nil, err
+	var out []byte
+	var err error
+	for i := 0; i < retries; i++ {
+		cmd := exec.Command("k", "get", "deploy", name, "-n", namespace, "-o", "json")
+		out, err = cmd.CombinedOutput()
+		if err != nil {
+			util.PrintCommand(cmd)
+			log.Printf("Error getting deployment: %s\n", err)
+		} else {
+			jsonErr := json.Unmarshal(out, &d)
+			if jsonErr != nil {
+				log.Printf("Error unmarshalling deployment json:%s\n", jsonErr)
+				err = jsonErr
+			}
+		}
+		time.Sleep(3 * time.Second)
 	}
-	return &d, nil
+	return &d, err
 }
 
 // GetAll will return all deployments in a given namespace
@@ -392,6 +402,54 @@ func (d *Deployment) CreateDeploymentHPADeleteIfExist(cpuPercent, min, max int) 
 // Pods will return all pods related to a deployment
 func (d *Deployment) Pods() ([]pod.Pod, error) {
 	return pod.GetAllByPrefix(d.Metadata.Name, d.Metadata.Namespace)
+}
+
+// GetWithRetry gets a deployment, allowing for retries
+func GetWithRetry(name, namespace string, sleep, timeout time.Duration) (*Deployment, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+	ch := make(chan GetResult)
+	var mostRecentGetWithRetryError error
+	var deployment *Deployment
+	go func() {
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case ch <- GetAsync(name, namespace):
+				time.Sleep(sleep)
+			}
+		}
+	}()
+	for {
+		select {
+		case result := <-ch:
+			mostRecentGetWithRetryError = result.err
+			deployment = result.deployment
+			if mostRecentGetWithRetryError == nil {
+				if deployment != nil {
+					return deployment, nil
+				}
+			}
+		case <-ctx.Done():
+			return nil, errors.Errorf("GetWithRetry timed out: %s\n", mostRecentGetWithRetryError)
+		}
+	}
+}
+
+// GetResult is a return struct for GetAsync
+type GetResult struct {
+	deployment *Deployment
+	err        error
+}
+
+// GetAsync wraps Get with a struct response for goroutine + channel usage
+func GetAsync(name, namespace string) GetResult {
+	deployment, err := Get(name, namespace, 1)
+	return GetResult{
+		deployment: deployment,
+		err:        err,
+	}
 }
 
 // WaitForReplicas waits for a pod replica count between min and max
