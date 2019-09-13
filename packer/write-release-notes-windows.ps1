@@ -92,4 +92,4 @@ foreach ($file in [IO.Directory]::GetFiles('c:\akse-cache', '*', [IO.SearchOptio
     }
 }
 
-Log ($displayObjects | Format-Table -Property File, Sha256, SizeBytes)
+Log ($displayObjects | Format-Table -Property File, Sha256, SizeBytes | Out-String -Width 4096)
