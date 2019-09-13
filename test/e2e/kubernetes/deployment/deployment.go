@@ -275,6 +275,14 @@ func GetAllByPrefix(prefix, namespace string) ([]Deployment, error) {
 	return deployments, nil
 }
 
+// Describe will describe a deployment resource
+func (d *Deployment) Describe() error {
+	cmd := exec.Command("k", "describe", "deployment", d.Metadata.Name, "-n", d.Metadata.Namespace)
+	out, err := util.RunAndLogCommand(cmd, commandTimeout)
+	log.Printf("\n%s\n", string(out))
+	return err
+}
+
 // Delete will delete a deployment in a given namespace
 func (d *Deployment) Delete(retries int) error {
 	var kubectlOutput []byte
@@ -367,7 +375,7 @@ func (d *Deployment) CreateDeploymentHPA(cpuPercent, min, max int) error {
 
 // CreateDeploymentHPADeleteIfExist applies autoscale characteristics to deployment, deleting any pre-existing HPA resource first
 func (d *Deployment) CreateDeploymentHPADeleteIfExist(cpuPercent, min, max int) error {
-	h, err := hpa.Get(d.Metadata.Name, d.Metadata.Namespace)
+	h, err := hpa.Get(d.Metadata.Name, d.Metadata.Namespace, 5)
 	if err == nil {
 		err := h.Delete(util.DefaultDeleteRetries)
 		if err != nil {
@@ -387,47 +395,48 @@ func (d *Deployment) Pods() ([]pod.Pod, error) {
 }
 
 // WaitForReplicas waits for a pod replica count between min and max
-func (d *Deployment) WaitForReplicas(min, max int, sleep, duration time.Duration) ([]pod.Pod, error) {
-	readyCh := make(chan bool, 1)
-	errCh := make(chan error)
-	ctx, cancel := context.WithTimeout(context.Background(), duration)
-	var pods []pod.Pod
+func (d *Deployment) WaitForReplicas(min, max int, sleep, timeout time.Duration) ([]pod.Pod, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
+	ch := make(chan pod.GetAllByPrefixResult)
+	var mostRecentWaitForReplicasError error
+	var pods []pod.Pod
 	go func() {
 		for {
 			select {
 			case <-ctx.Done():
-				errCh <- errors.Errorf("Timeout exceeded (%s) while waiting for minimum %d and maximum %d Pod replicas from Deployment %s", duration.String(), min, max, d.Metadata.Name)
-			default:
-				var err error
-				pods, err = pod.GetAllByPrefix(d.Metadata.Name, d.Metadata.Namespace)
-				if err != nil {
-					errCh <- err
-					return
-				}
-				if min == -1 {
-					if len(pods) <= max {
-						readyCh <- true
-					}
-				} else if max == -1 {
-					if len(pods) >= min {
-						readyCh <- true
-					}
-				} else {
-					if len(pods) >= min && len(pods) <= max {
-						readyCh <- true
-					}
-				}
+				return
+			case ch <- pod.GetAllByPrefixAsync(d.Metadata.Name, d.Metadata.Namespace):
 				time.Sleep(sleep)
 			}
 		}
 	}()
 	for {
 		select {
-		case err := <-errCh:
-			return pods, err
-		case <-readyCh:
-			return pods, nil
+		case result := <-ch:
+			mostRecentWaitForReplicasError = result.Err
+			pods = result.Pods
+			if mostRecentWaitForReplicasError == nil {
+				if min == -1 {
+					if len(pods) <= max {
+						return pods, nil
+					}
+				} else if max == -1 {
+					if len(pods) >= min {
+						return pods, nil
+					}
+				} else {
+					if len(pods) >= min && len(pods) <= max {
+						return pods, nil
+					}
+				}
+			}
+		case <-ctx.Done():
+			err := d.Describe()
+			if err != nil {
+				log.Printf("Unable to describe deployment %s: %s", d.Metadata.Name, err)
+			}
+			return pods, errors.Errorf("WaitForReplicas timed out: %s\n", mostRecentWaitForReplicasError)
 		}
 	}
 }
