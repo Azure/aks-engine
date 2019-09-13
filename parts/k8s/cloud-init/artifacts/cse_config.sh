@@ -431,6 +431,11 @@ configACIConnectorAddon() {
     sed -i "s|<key>|$ACI_CONNECTOR_KEY|g" $ACI_CONNECTOR_ADDON_FILE
 }
 
+configAzurePolicyAddon() {
+    AZURE_POLICY_ADDON_FILE=/etc/kubernetes/addons/azure-policy-deployment.yaml
+    sed -i "s|<resourceId>|/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RESOURCE_GROUP|g" $AZURE_POLICY_ADDON_FILE
+}
+
 configAddons() {
     if [[ "${CLUSTER_AUTOSCALER_ADDON}" = True ]]; then
         configClusterAutoscalerAddon
@@ -438,6 +443,10 @@ configAddons() {
 
     if [[ "${ACI_CONNECTOR_ADDON}" = True ]]; then
         configACIConnectorAddon
+    fi
+
+    if [[ "${AZURE_POLICY_ADDON}" = True ]]; then
+        configAzurePolicyAddon
     fi
 }
 

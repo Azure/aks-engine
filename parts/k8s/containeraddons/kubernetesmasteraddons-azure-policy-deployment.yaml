@@ -1,87 +1,4 @@
 apiVersion: v1
-kind: Secret
-metadata:
-  name: azure-policy
-  namespace: default
-type: Opaque
-data:
-  telemetry-key: TURObFpqbGpOVFV0TnpVelppMDBOVEF3TFdGa05HTXROVEExWVRJelltRTROelpt
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  labels:
-    app: azure-policy
-    aadpodidbinding: policy-identity
-  name: azure-policy
-  namespace: default
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: azure-policy
-  template:
-    metadata:
-      labels:
-        app: azure-policy
-      name: azure-policy
-    spec:
-      serviceAccountName: azure-policy
-      containers:
-      - name: azure-policy
-        image: {{ContainerImage "azure-policy"}}
-        resources:
-          requests:
-            cpu: {{ContainerCPUReqs "azure-policy"}}
-            memory: {{ContainerMemReqs "azure-policy"}}
-          limits:
-            cpu: {{ContainerCPULimits "azure-policy"}}
-            memory: {{ContainerMemLimits "azure-policy"}}
-        imagePullPolicy: Always
-        env:
-        - name: K8S_POLICY_PREFIX
-          value: azurepolicy
-        - name: RESOURCE_ID
-          value: <enter-resource-id>
-        - name: DATAPLANE_ENDPOINT
-          value: https://gov-int-policy-dp-hack.trafficmanager.net
-        - name: ACS_CREDENTIAL_LOCATION
-          value: /etc/acs/azure.json
-        - name: REFRESH_INTERVAL
-          value: 5m   # Valid time units are "ns", "us" (or "µs"), "ms", "s", "m", "h"
-        - name: AUDIT_INTERVAL
-          value: 5m   # Valid time units are "ns", "us" (or "µs"), "ms", "s", "m", "h"
-        - name: TELEMETRY_HEARTBEAT_INTERVAL
-          value: 5m   # Valid time units are "ns", "us" (or "µs"), "ms", "s", "m", "h"
-        - name: CA_CERT_PATH
-          value: /etc/azure-policy/ca-cert.pem
-        - name: CLIENT_CERT_PATH
-          value: /etc/azure-policy/client-cert.pem
-        - name: CLIENT_KEY_PATH
-          value: /etc/azure-policy/client-key.pem
-        - name: APP_INSIGHTS_KEY
-          valueFrom:
-            secretKeyRef:
-              name: azure-policy
-              key: telemetry-key
-        - name: CURRENT_IMAGE
-          value: {{ContainerImage "azure-policy"}}
-        volumeMounts:
-        - name: acs-credential
-          mountPath: "/etc/acs/azure.json"
-        - name: cert
-          mountPath: /etc/azure-policy
-      volumes:
-      - hostPath:
-          path: /etc/kubernetes/azure.json
-          type: File
-        name: acs-credential
-      - name: cert
-        secret:
-          defaultMode: 420
-          secretName: azure-policy
----
-apiVersion: v1
 kind: Namespace
 metadata:
   labels:
@@ -538,3 +455,135 @@ status:
     plural: ""
   conditions: []
   storedVersions: []
+---
+apiVersion: config.gatekeeper.sh/v1alpha1
+kind: Config
+metadata:
+  name: config
+  namespace: "gatekeeper-system"
+spec:
+  sync:
+    syncOnly:
+      - group: ""
+        version: "v1"
+        kind: "Namespace"
+      - group: ""
+        version: "v1"
+        kind: "Pod"
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: azure-policy
+  namespace: default
+---
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: policy-agent
+rules:
+- apiGroups: [""]
+  resources: ["configmaps"]
+  verbs: ["create", "delete", "update", "list", "get"]
+- apiGroups: ["constraints.gatekeeper.sh"]
+  resources: ["*"]
+  verbs: ["create", "delete", "update", "list", "get"]
+- apiGroups: ["templates.gatekeeper.sh"]
+  resources: ["constrainttemplates"]
+  verbs: ["create", "delete", "update", "list", "get"]
+---
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: policy-agent
+subjects:
+- kind: ServiceAccount
+  name: azure-policy
+  namespace: default
+roleRef:
+  kind: ClusterRole
+  name: policy-agent
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: azure-policy
+  namespace: default
+type: Opaque
+data:
+  telemetry-key: TURObFpqbGpOVFV0TnpVelppMDBOVEF3TFdGa05HTXROVEExWVRJelltRTROelpt
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: azure-policy
+    aadpodidbinding: policy-identity
+  name: azure-policy
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: azure-policy
+  template:
+    metadata:
+      labels:
+        app: azure-policy
+      name: azure-policy
+    spec:
+      serviceAccountName: azure-policy
+      containers:
+      - name: azure-policy
+        image: {{ContainerImage "azure-policy"}}
+        resources:
+          requests:
+            cpu: {{ContainerCPUReqs "azure-policy"}}
+            memory: {{ContainerMemReqs "azure-policy"}}
+          limits:
+            cpu: {{ContainerCPULimits "azure-policy"}}
+            memory: {{ContainerMemLimits "azure-policy"}}
+        imagePullPolicy: Always
+        env:
+        - name: K8S_POLICY_PREFIX
+          value: azurepolicy
+        - name: RESOURCE_ID
+          value: <resourceId>
+        - name: DATAPLANE_ENDPOINT
+          value: https://gov-prod-policy-data.trafficmanager.net
+        - name: ACS_CREDENTIAL_LOCATION
+          value: /etc/acs/azure.json
+        - name: REFRESH_INTERVAL
+          value: 5m   # Valid time units are "ns", "us" (or "µs"), "ms", "s", "m", "h"
+        - name: AUDIT_INTERVAL
+          value: 5m   # Valid time units are "ns", "us" (or "µs"), "ms", "s", "m", "h"
+        - name: TELEMETRY_HEARTBEAT_INTERVAL
+          value: 5m   # Valid time units are "ns", "us" (or "µs"), "ms", "s", "m", "h"
+        - name: CA_CERT_PATH
+          value: /etc/azure-policy/ca-cert.pem
+        - name: CLIENT_CERT_PATH
+          value: /etc/azure-policy/client-cert.pem
+        - name: CLIENT_KEY_PATH
+          value: /etc/azure-policy/client-key.pem
+        - name: APP_INSIGHTS_KEY
+          valueFrom:
+            secretKeyRef:
+              name: azure-policy
+              key: telemetry-key
+        - name: CURRENT_IMAGE
+          value: {{ContainerImage "azure-policy"}}
+        volumeMounts:
+        - name: acs-credential
+          mountPath: "/etc/acs/azure.json"
+        - name: cert
+          mountPath: /etc/azure-policy
+      volumes:
+      - hostPath:
+          path: /etc/kubernetes/azure.json
+          type: File
+        name: acs-credential
+      - name: cert
+        secret:
+          defaultMode: 420
+          secretName: azure-policy

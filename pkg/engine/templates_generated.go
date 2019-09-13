@@ -131,7 +131,7 @@
 // ../../parts/k8s/containeraddons/kubernetesmasteraddons-aad-pod-identity-deployment.yaml
 // ../../parts/k8s/containeraddons/kubernetesmasteraddons-aci-connector-deployment.yaml
 // ../../parts/k8s/containeraddons/kubernetesmasteraddons-azure-npm-daemonset.yaml
-// ../../parts/k8s/containeraddons/kubernetesmasteraddons-azure-policy.yaml
+// ../../parts/k8s/containeraddons/kubernetesmasteraddons-azure-policy-deployment.yaml
 // ../../parts/k8s/containeraddons/kubernetesmasteraddons-blobfuse-flexvolume-installer.yaml
 // ../../parts/k8s/containeraddons/kubernetesmasteraddons-calico-daemonset.yaml
 // ../../parts/k8s/containeraddons/kubernetesmasteraddons-cluster-autoscaler-deployment.yaml
@@ -12758,6 +12758,11 @@ configACIConnectorAddon() {
     sed -i "s|<key>|$ACI_CONNECTOR_KEY|g" $ACI_CONNECTOR_ADDON_FILE
 }
 
+configAzurePolicyAddon() {
+    AZURE_POLICY_ADDON_FILE=/etc/kubernetes/addons/azure-policy-deployment.yaml
+    sed -i "s|<resourceId>|/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RESOURCE_GROUP|g" $AZURE_POLICY_ADDON_FILE
+}
+
 configAddons() {
     if [[ "${CLUSTER_AUTOSCALER_ADDON}" = True ]]; then
         configClusterAutoscalerAddon
@@ -12765,6 +12770,10 @@ configAddons() {
 
     if [[ "${ACI_CONNECTOR_ADDON}" = True ]]; then
         configACIConnectorAddon
+    fi
+
+    if [[ "${AZURE_POLICY_ADDON}" = True ]]; then
+        configAzurePolicyAddon
     fi
 }
 
@@ -20460,90 +20469,7 @@ func k8sContaineraddonsKubernetesmasteraddonsAzureNpmDaemonsetYaml() (*asset, er
 	return a, nil
 }
 
-var _k8sContaineraddonsKubernetesmasteraddonsAzurePolicyYaml = []byte(`apiVersion: v1
-kind: Secret
-metadata:
-  name: azure-policy
-  namespace: default
-type: Opaque
-data:
-  telemetry-key: TURObFpqbGpOVFV0TnpVelppMDBOVEF3TFdGa05HTXROVEExWVRJelltRTROelpt
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  labels:
-    app: azure-policy
-    aadpodidbinding: policy-identity
-  name: azure-policy
-  namespace: default
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: azure-policy
-  template:
-    metadata:
-      labels:
-        app: azure-policy
-      name: azure-policy
-    spec:
-      serviceAccountName: azure-policy
-      containers:
-      - name: azure-policy
-        image: {{ContainerImage "azure-policy"}}
-        resources:
-          requests:
-            cpu: {{ContainerCPUReqs "azure-policy"}}
-            memory: {{ContainerMemReqs "azure-policy"}}
-          limits:
-            cpu: {{ContainerCPULimits "azure-policy"}}
-            memory: {{ContainerMemLimits "azure-policy"}}
-        imagePullPolicy: Always
-        env:
-        - name: K8S_POLICY_PREFIX
-          value: azurepolicy
-        - name: RESOURCE_ID
-          value: <enter-resource-id>
-        - name: DATAPLANE_ENDPOINT
-          value: https://gov-int-policy-dp-hack.trafficmanager.net
-        - name: ACS_CREDENTIAL_LOCATION
-          value: /etc/acs/azure.json
-        - name: REFRESH_INTERVAL
-          value: 5m   # Valid time units are "ns", "us" (or "µs"), "ms", "s", "m", "h"
-        - name: AUDIT_INTERVAL
-          value: 5m   # Valid time units are "ns", "us" (or "µs"), "ms", "s", "m", "h"
-        - name: TELEMETRY_HEARTBEAT_INTERVAL
-          value: 5m   # Valid time units are "ns", "us" (or "µs"), "ms", "s", "m", "h"
-        - name: CA_CERT_PATH
-          value: /etc/azure-policy/ca-cert.pem
-        - name: CLIENT_CERT_PATH
-          value: /etc/azure-policy/client-cert.pem
-        - name: CLIENT_KEY_PATH
-          value: /etc/azure-policy/client-key.pem
-        - name: APP_INSIGHTS_KEY
-          valueFrom:
-            secretKeyRef:
-              name: azure-policy
-              key: telemetry-key
-        - name: CURRENT_IMAGE
-          value: {{ContainerImage "azure-policy"}}
-        volumeMounts:
-        - name: acs-credential
-          mountPath: "/etc/acs/azure.json"
-        - name: cert
-          mountPath: /etc/azure-policy
-      volumes:
-      - hostPath:
-          path: /etc/kubernetes/azure.json
-          type: File
-        name: acs-credential
-      - name: cert
-        secret:
-          defaultMode: 420
-          secretName: azure-policy
----
-apiVersion: v1
+var _k8sContaineraddonsKubernetesmasteraddonsAzurePolicyDeploymentYaml = []byte(`apiVersion: v1
 kind: Namespace
 metadata:
   labels:
@@ -21000,19 +20926,151 @@ status:
     plural: ""
   conditions: []
   storedVersions: []
+---
+apiVersion: config.gatekeeper.sh/v1alpha1
+kind: Config
+metadata:
+  name: config
+  namespace: "gatekeeper-system"
+spec:
+  sync:
+    syncOnly:
+      - group: ""
+        version: "v1"
+        kind: "Namespace"
+      - group: ""
+        version: "v1"
+        kind: "Pod"
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: azure-policy
+  namespace: default
+---
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: policy-agent
+rules:
+- apiGroups: [""]
+  resources: ["configmaps"]
+  verbs: ["create", "delete", "update", "list", "get"]
+- apiGroups: ["constraints.gatekeeper.sh"]
+  resources: ["*"]
+  verbs: ["create", "delete", "update", "list", "get"]
+- apiGroups: ["templates.gatekeeper.sh"]
+  resources: ["constrainttemplates"]
+  verbs: ["create", "delete", "update", "list", "get"]
+---
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: policy-agent
+subjects:
+- kind: ServiceAccount
+  name: azure-policy
+  namespace: default
+roleRef:
+  kind: ClusterRole
+  name: policy-agent
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: azure-policy
+  namespace: default
+type: Opaque
+data:
+  telemetry-key: TURObFpqbGpOVFV0TnpVelppMDBOVEF3TFdGa05HTXROVEExWVRJelltRTROelpt
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: azure-policy
+    aadpodidbinding: policy-identity
+  name: azure-policy
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: azure-policy
+  template:
+    metadata:
+      labels:
+        app: azure-policy
+      name: azure-policy
+    spec:
+      serviceAccountName: azure-policy
+      containers:
+      - name: azure-policy
+        image: {{ContainerImage "azure-policy"}}
+        resources:
+          requests:
+            cpu: {{ContainerCPUReqs "azure-policy"}}
+            memory: {{ContainerMemReqs "azure-policy"}}
+          limits:
+            cpu: {{ContainerCPULimits "azure-policy"}}
+            memory: {{ContainerMemLimits "azure-policy"}}
+        imagePullPolicy: Always
+        env:
+        - name: K8S_POLICY_PREFIX
+          value: azurepolicy
+        - name: RESOURCE_ID
+          value: <resourceId>
+        - name: DATAPLANE_ENDPOINT
+          value: https://gov-prod-policy-data.trafficmanager.net
+        - name: ACS_CREDENTIAL_LOCATION
+          value: /etc/acs/azure.json
+        - name: REFRESH_INTERVAL
+          value: 5m   # Valid time units are "ns", "us" (or "µs"), "ms", "s", "m", "h"
+        - name: AUDIT_INTERVAL
+          value: 5m   # Valid time units are "ns", "us" (or "µs"), "ms", "s", "m", "h"
+        - name: TELEMETRY_HEARTBEAT_INTERVAL
+          value: 5m   # Valid time units are "ns", "us" (or "µs"), "ms", "s", "m", "h"
+        - name: CA_CERT_PATH
+          value: /etc/azure-policy/ca-cert.pem
+        - name: CLIENT_CERT_PATH
+          value: /etc/azure-policy/client-cert.pem
+        - name: CLIENT_KEY_PATH
+          value: /etc/azure-policy/client-key.pem
+        - name: APP_INSIGHTS_KEY
+          valueFrom:
+            secretKeyRef:
+              name: azure-policy
+              key: telemetry-key
+        - name: CURRENT_IMAGE
+          value: {{ContainerImage "azure-policy"}}
+        volumeMounts:
+        - name: acs-credential
+          mountPath: "/etc/acs/azure.json"
+        - name: cert
+          mountPath: /etc/azure-policy
+      volumes:
+      - hostPath:
+          path: /etc/kubernetes/azure.json
+          type: File
+        name: acs-credential
+      - name: cert
+        secret:
+          defaultMode: 420
+          secretName: azure-policy
 `)
 
-func k8sContaineraddonsKubernetesmasteraddonsAzurePolicyYamlBytes() ([]byte, error) {
-	return _k8sContaineraddonsKubernetesmasteraddonsAzurePolicyYaml, nil
+func k8sContaineraddonsKubernetesmasteraddonsAzurePolicyDeploymentYamlBytes() ([]byte, error) {
+	return _k8sContaineraddonsKubernetesmasteraddonsAzurePolicyDeploymentYaml, nil
 }
 
-func k8sContaineraddonsKubernetesmasteraddonsAzurePolicyYaml() (*asset, error) {
-	bytes, err := k8sContaineraddonsKubernetesmasteraddonsAzurePolicyYamlBytes()
+func k8sContaineraddonsKubernetesmasteraddonsAzurePolicyDeploymentYaml() (*asset, error) {
+	bytes, err := k8sContaineraddonsKubernetesmasteraddonsAzurePolicyDeploymentYamlBytes()
 	if err != nil {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "k8s/containeraddons/kubernetesmasteraddons-azure-policy.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	info := bindataFileInfo{name: "k8s/containeraddons/kubernetesmasteraddons-azure-policy-deployment.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -29558,7 +29616,7 @@ var _bindata = map[string]func() (*asset, error){
 	"k8s/containeraddons/kubernetesmasteraddons-aad-pod-identity-deployment.yaml":          k8sContaineraddonsKubernetesmasteraddonsAadPodIdentityDeploymentYaml,
 	"k8s/containeraddons/kubernetesmasteraddons-aci-connector-deployment.yaml":             k8sContaineraddonsKubernetesmasteraddonsAciConnectorDeploymentYaml,
 	"k8s/containeraddons/kubernetesmasteraddons-azure-npm-daemonset.yaml":                  k8sContaineraddonsKubernetesmasteraddonsAzureNpmDaemonsetYaml,
-	"k8s/containeraddons/kubernetesmasteraddons-azure-policy.yaml":                         k8sContaineraddonsKubernetesmasteraddonsAzurePolicyYaml,
+	"k8s/containeraddons/kubernetesmasteraddons-azure-policy-deployment.yaml":              k8sContaineraddonsKubernetesmasteraddonsAzurePolicyDeploymentYaml,
 	"k8s/containeraddons/kubernetesmasteraddons-blobfuse-flexvolume-installer.yaml":        k8sContaineraddonsKubernetesmasteraddonsBlobfuseFlexvolumeInstallerYaml,
 	"k8s/containeraddons/kubernetesmasteraddons-calico-daemonset.yaml":                     k8sContaineraddonsKubernetesmasteraddonsCalicoDaemonsetYaml,
 	"k8s/containeraddons/kubernetesmasteraddons-cluster-autoscaler-deployment.yaml":        k8sContaineraddonsKubernetesmasteraddonsClusterAutoscalerDeploymentYaml,
@@ -29810,7 +29868,7 @@ var _bintree = &bintree{nil, map[string]*bintree{
 			"kubernetesmasteraddons-aad-pod-identity-deployment.yaml":     {k8sContaineraddonsKubernetesmasteraddonsAadPodIdentityDeploymentYaml, map[string]*bintree{}},
 			"kubernetesmasteraddons-aci-connector-deployment.yaml":        {k8sContaineraddonsKubernetesmasteraddonsAciConnectorDeploymentYaml, map[string]*bintree{}},
 			"kubernetesmasteraddons-azure-npm-daemonset.yaml":             {k8sContaineraddonsKubernetesmasteraddonsAzureNpmDaemonsetYaml, map[string]*bintree{}},
-			"kubernetesmasteraddons-azure-policy.yaml":                    {k8sContaineraddonsKubernetesmasteraddonsAzurePolicyYaml, map[string]*bintree{}},
+			"kubernetesmasteraddons-azure-policy-deployment.yaml":         {k8sContaineraddonsKubernetesmasteraddonsAzurePolicyDeploymentYaml, map[string]*bintree{}},
 			"kubernetesmasteraddons-blobfuse-flexvolume-installer.yaml":   {k8sContaineraddonsKubernetesmasteraddonsBlobfuseFlexvolumeInstallerYaml, map[string]*bintree{}},
 			"kubernetesmasteraddons-calico-daemonset.yaml":                {k8sContaineraddonsKubernetesmasteraddonsCalicoDaemonsetYaml, map[string]*bintree{}},
 			"kubernetesmasteraddons-cluster-autoscaler-deployment.yaml":   {k8sContaineraddonsKubernetesmasteraddonsClusterAutoscalerDeploymentYaml, map[string]*bintree{}},
