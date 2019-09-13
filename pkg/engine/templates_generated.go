@@ -13708,7 +13708,7 @@ fi
 
 
 VHD_LOGS_FILEPATH=/opt/azure/vhd-install.complete
-if [[ "${IS_VHD}" = true ]] then
+if [[ "${IS_VHD}" = true ]]; then
     # TODO (09/13): uncomment when new VHD is published
     # if [ -f $VHD_LOGS_FILEPATH ]; then
     #     echo "Using VHD distro but file $VHD_LOGS_FILEPATH not found"
