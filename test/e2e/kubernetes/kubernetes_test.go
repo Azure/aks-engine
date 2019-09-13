@@ -940,7 +940,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 
 						var expectedReadyNodes int
 						if !eng.ExpandedDefinition.Properties.HasLowPriorityScaleset() {
-							expectedReadyNodes = eng.NodeCount()
+							expectedReadyNodes = len(nodeList.Nodes)
 							log.Printf("Checking for %d Ready nodes\n", expectedReadyNodes)
 						} else {
 							expectedReadyNodes = -1
