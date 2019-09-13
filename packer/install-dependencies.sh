@@ -3,7 +3,7 @@ source /home/packer/provision_installs.sh
 source /home/packer/provision_source.sh
 source /home/packer/packer_source.sh
 
-RELEASE_NOTES_FILEPATH=/var/log/azure/golden-image-install.complete
+RELEASE_NOTES_FILEPATH=/opt/azure/vhd-install.complete
 
 echo "Starting build on " $(date) > ${RELEASE_NOTES_FILEPATH}
 echo "Using kernel:" >> ${RELEASE_NOTES_FILEPATH}
