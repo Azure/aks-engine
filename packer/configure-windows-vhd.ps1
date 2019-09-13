@@ -59,6 +59,12 @@ function Get-FilesToCacheOnVHD
             "https://github.com/Microsoft/SDN/raw/master/Kubernetes/windows/hns.psm1"
         );
         "c:\akse-cache\win-k8s\" = @(
+            "https://acs-mirror.azureedge.net/wink8s/azs-v1.14.5-1int.zip",
+            "https://acs-mirror.azureedge.net/wink8s/azs-v1.14.6-1int.zip",
+            "https://acs-mirror.azureedge.net/wink8s/azs-v1.15.2-1int.zip",
+            "https://acs-mirror.azureedge.net/wink8s/azs-v1.15.3-1int.zip"
+            "https://acs-mirror.azureedge.net/wink8s/v1.14.5-1int.zip",
+            "https://acs-mirror.azureedge.net/wink8s/v1.14.6-1int.zip",
             "https://acs-mirror.azureedge.net/wink8s/v1.15.2-1int.zip",
             "https://acs-mirror.azureedge.net/wink8s/v1.15.3-1int.zip"
         );
