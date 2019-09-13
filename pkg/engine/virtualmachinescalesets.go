@@ -31,7 +31,7 @@ func CreateMasterVMSS(cs *api.ContainerService) VirtualMachineScaleSetARM {
 	}
 	isAzureCNI := orchProfile.IsAzureCNI()
 	masterCount := masterProfile.Count
-	isVHD := strconv.FormatBool(profile.IsVHDDistro())
+	isVHD := strconv.FormatBool(masterProfile.IsVHDDistro())
 
 	var dependencies []string
 
