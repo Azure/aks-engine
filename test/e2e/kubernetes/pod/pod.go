@@ -255,11 +255,14 @@ func RunCommandMultipleTimes(podRunnerCmd podRunnerCmd, image, name, command str
 		if err != nil {
 			return successfulAttempts, err
 		}
-		succeeded, _ := p.WaitOnSucceeded(sleep, duration)
+		succeeded, err := p.WaitOnSucceeded(sleep, duration)
+		if err != nil {
+			log.Printf("pod did not succeed in time %s\n", err)
+		}
 		cmd := exec.Command("k", "logs", podName, "-n", "default")
 		out, err := cmd.CombinedOutput()
 		if err != nil {
-			log.Printf("Unable to get logs from pod %s\n", podName)
+			log.Printf("Unable to get logs from pod %s: %s\n", podName, err)
 		} else {
 			log.Printf("%s\n", string(out))
 		}
@@ -520,10 +523,10 @@ func AreAllPodsSucceeded(podPrefix, namespace string) (bool, bool, error) {
 			return false, false, err
 		}
 		if matched {
-			if pod.Status.Phase == "Failed" {
+			if pod.IsFailed() {
 				return false, true, nil
 			}
-			if pod.Status.Phase != "Succeeded" {
+			if pod.IsSucceeded() {
 				status = append(status, false)
 			} else {
 				status = append(status, true)
@@ -542,6 +545,21 @@ func AreAllPodsSucceeded(podPrefix, namespace string) (bool, bool, error) {
 	}
 
 	return true, false, nil
+}
+
+// GetPodResult is a return struct for GetPodAsync
+type GetPodResult struct {
+	pod *Pod
+	err error
+}
+
+// GetPodAsync wraps GetWithRetry with a struct response for goroutine + channel usage
+func GetPodAsync(name, namespace string, timeout time.Duration) GetPodResult {
+	p, err := GetWithRetry(name, namespace, 3*time.Second, timeout)
+	return GetPodResult{
+		pod: p,
+		err: err,
+	}
 }
 
 // WaitOnReady returns true if all pods matching a prefix substring are in a succeeded state within a period of time
@@ -588,18 +606,19 @@ func WaitOnReady(podPrefix, namespace string, successesNeeded int, sleep, timeou
 	}
 }
 
-// WaitOnSucceeded will return true if all pods with a common prefix in a given namespace are in a Succeeded State
-func WaitOnSucceeded(podPrefix, namespace string, sleep, timeout time.Duration) (bool, error) {
+// WaitOnSucceeded will return true if a pod is in a Succeeded State
+func WaitOnSucceeded(name, namespace string, sleep, timeout time.Duration) (bool, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
-	ch := make(chan AreAllPodsSucceededResult)
-	var mostRecentWaitOnSucceededError error
+	ch := make(chan GetPodResult)
+	var mostRecentWaitOnSucceededPodError error
+	var pod *Pod
 	go func() {
 		for {
 			select {
 			case <-ctx.Done():
 				return
-			case ch <- AreAllPodsSucceededAsync(podPrefix, namespace):
+			case ch <- GetPodAsync(name, namespace, timeout):
 				time.Sleep(sleep)
 			}
 		}
@@ -607,21 +626,23 @@ func WaitOnSucceeded(podPrefix, namespace string, sleep, timeout time.Duration) 
 	for {
 		select {
 		case result := <-ch:
-			allPodsSucceeded := result.allPodsSucceeded
-			anyPodsFailed := result.anyPodsFailed
-			mostRecentWaitOnSucceededError = result.err
-			if mostRecentWaitOnSucceededError == nil {
-				if anyPodsFailed {
-					PrintPodsLogs(podPrefix, namespace)
-					return false, errors.Errorf("At least one pod in a Failed state\n")
-				}
-				if allPodsSucceeded {
-					return true, nil
-				}
+			pod = result.pod
+			mostRecentWaitOnSucceededPodError = result.err
+			if mostRecentWaitOnSucceededPodError == nil {
+				return pod.IsSucceeded(), nil
 			}
 		case <-ctx.Done():
-			PrintPodsLogs(podPrefix, namespace)
-			return false, errors.Errorf("WaitOnSucceeded timed out: %s\n", mostRecentWaitOnSucceededError)
+			if pod != nil {
+				err := pod.Logs()
+				if err != nil {
+					log.Printf("Unable to print pod logs for pod %s: %s", pod.Metadata.Name, err)
+				}
+				err = pod.Describe()
+				if err != nil {
+					log.Printf("Unable to describe pod %s: %s", pod.Metadata.Name, err)
+				}
+			}
+			return false, errors.Errorf("WaitOnSucceeded timed out: %s\n", mostRecentWaitOnSucceededPodError)
 		}
 	}
 }
@@ -742,6 +763,16 @@ func (p *Pod) Delete(retries int) error {
 	}
 
 	return kubectlError
+}
+
+// IsSucceeded returns if a pod is in a Succeeded state
+func (p *Pod) IsSucceeded() bool {
+	return p.Status.Phase == "Succeeded"
+}
+
+// IsFailed returns if a pod is in a Failed state
+func (p *Pod) IsFailed() bool {
+	return p.Status.Phase == "Failed"
 }
 
 // CheckOutboundConnection checks outbound connection for a list of pods.
