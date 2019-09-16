@@ -3,6 +3,8 @@ import groovy.json.*
 defaultEnv = [
 	CLEANUP_ON_EXIT: true,
 	CREATE_VNET: false,
+	UPGRADE_BRANCH: "master",
+	BACK_COMPAT_VERSIONS: 0,
 	] + params
 
 def k8sVersions = ["1.12", "1.13", "1.14", "1.15", "1.16"]
@@ -31,18 +33,27 @@ def tasksForUpgradeJob(jobCfg, aksEngineVersions, jobName, version) {
 	jobCfg.env["UPGRADE_VERSIONS"] = upgradeVersion
 
 	jobName = "${jobName}/upgrade/${upgradeVersion}"
-	t[jobName] = runJobWithEnvironment(jobCfg, jobName, version)
+	if(params.BACK_COMPAT_VERSIONS && params.BACK_COMPAT_VERSIONS.toInteger() > 0) {
+		def backCompatVersions = getPreviousVersions(params.UPGRADE_FORK)
+		backCompatVersions.each { releaseBranch ->
+			backCompatJobName = "${jobName}/back/${releaseBranch}"
+			def backCompatEnv = jobCfg.env + [UPGRADE_BRANCH: releaseBranch]
+			t[backCompatJobName] = runJobWithEnvironment(backCompatEnv, jobCfg.apiModel, backCompatJobName, version)
+		}
+	} else {
+		t[jobName] = runJobWithEnvironment(jobCfg.env, jobCfg.apiModel, jobName, version)
+	}
 	return t
 }
 
 def taskForCreateJob(jobCfg, jobName, version) {
 	def t = [:]
-	t[jobName] = runJobWithEnvironment(jobCfg, jobName, version)
+	t[jobName] = runJobWithEnvironment(jobCfg.env, jobCfg.apiModel, jobName, version)
 	return t
 }
 
-def runJobWithEnvironment(jobCfg, jobName, version) {
-	def jobSpecificEnv = defaultEnv + jobCfg.env
+def runJobWithEnvironment(environmentVars, apiModel, jobName, version) {
+	def jobSpecificEnv = defaultEnv + environmentVars
 	return {
 		node {
 			ws("${env.JOB_NAME}-${jobName}") {
@@ -60,7 +71,7 @@ def runJobWithEnvironment(jobCfg, jobName, version) {
 					// set environment variables needed for the test script
 					def envVars = [
 							ORCHESTRATOR_RELEASE: "${version}",
-							API_MODEL_INPUT: "${JsonOutput.toJson(jobCfg.apiModel)}",
+							API_MODEL_INPUT: "${JsonOutput.toJson(apiModel)}",
 						] + jobSpecificEnv
 					withEnv(envVars.collect{ k, v -> "${k}=${v}" }) {
 						// define any sensitive data needed for the test script
@@ -88,6 +99,17 @@ def runJobWithEnvironment(jobCfg, jobName, version) {
 				}
 			}
 		}
+	}
+}
+
+def getPreviousVersions(fork) {
+	// set environment variables needed for the test script
+	def envVars = [
+			UPGRADE_FORK: fork,
+		]
+	withEnv(envVars.collect{ k, v -> "${k}=${v}" }) {
+		output = sh(script: "./test/e2e/releases.sh", returnStdout: true)
+		return output.split( '\n' )
 	}
 }
 

@@ -98,7 +98,12 @@ if [ "${UPGRADE_CLUSTER}" = "true" ] || [ "${SCALE_CLUSTER}" = "true" ]; then
       done
     done
   fi
-  git remote add $UPGRADE_FORK https://github.com/$UPGRADE_FORK/aks-engine.git
+
+  # shellcheck disable=SC2034
+  if ! output=$(git remote show "$UPGRADE_FORK") ; then
+    git remote add $UPGRADE_FORK https://github.com/$UPGRADE_FORK/aks-engine.git
+  fi
+
   git fetch $UPGRADE_FORK
   git branch -D $UPGRADE_FORK/$UPGRADE_BRANCH
   git checkout -b $UPGRADE_FORK/$UPGRADE_BRANCH --track $UPGRADE_FORK/$UPGRADE_BRANCH
