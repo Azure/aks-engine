@@ -19,6 +19,11 @@ Log ("`t{0,-14} : {1}" -f "OS Name", $systemInfo.ProductName)
 LOG ("`t{0,-14} : {1}" -f "OS Version", "$($systemInfo.CurrentBuildNumber).$($systemInfo.UBR)")
 LOG ("`t{0,-14} : {1}" -f "OS InstallType", $systemInfo.InstallationType)
 Log ""
+
+$allowedSecurityProtocols = [System.Net.ServicePointManager]::SecurityProtocol
+Log "Allowed security protocols: $allowedSecurityProtocols"
+Log ""
+
 Log "Installed Features"
 if ($systemInfo.InstallationType -ne 'client') {
     Log (Get-WindowsFeature | Where-Object Installed)
@@ -27,6 +32,7 @@ else {
     LOG "`t<Cannot enumerate installed features on client skus>"
 }
 Log ""
+
 
 Log "Installed Packages"
 $packages = Get-WindowsCapability -Online | Where-Object { $_.State -eq 'Installed' }

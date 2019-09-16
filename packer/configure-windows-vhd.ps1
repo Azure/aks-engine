@@ -99,11 +99,13 @@ function Install-Docker
     $package | Install-Package -Force | Out-Null
     Start-Service docker
 }
+
 function Install-OpenSSH
 {
     Write-Log "Installing OpenSSH Server"
     Add-WindowsCapability -Online -Name OpenSSH.Server~~~~0.0.1.0
 }
+
 function Install-WindowsPatches
 {
     # Windows Server 2019 update history can be found at https://support.microsoft.com/en-us/help/4464619
@@ -152,11 +154,30 @@ function Install-WindowsPatches
         }
     }
 }
+
+function Set-AllowedSecurityProtocols
+{
+    $allowedProtocols = @()
+    $insecureProtocols = @([System.Net.SecurityProtocolType]::SystemDefault, [System.Net.SecurityProtocolType]::Ssl3)
+
+    foreach $(protocol in [System.Enum]::GetValues([System.Net.SecurityProtocolType]))
+    {
+        if ($insecureProtocols -notcontains $protocol)
+        {
+            $allowedProtocols += $protocol
+        }
+    }
+
+    Write-Log "Settings allowed security protocols to: $allowedProtocols"
+    [System.Net.SevicePointManager]::SecurityProtocol = $allowedProtocols
+}
+
 function Set-WinRmServiceAutoStart
 {
     Write-Log "Setting WinRM service start to auto"
     sc.exe config winrm start=auto
 }
+
 function Set-WinRmServiceDelayedStart
 {
     # Hyper-V messes with networking components on startup after the feature is enabled
@@ -165,11 +186,13 @@ function Set-WinRmServiceDelayedStart
     Write-Log "Setting WinRM service start to delayed-auto"
     sc.exe config winrm start=delayed-auto
 }
+
 function Update-DefenderSignatures
 {
     Write-Log "Updating windows defender signatures."
     Update-MpSignature
 }
+
 function Update-WindowsFeatures
 {
     $featuresToEnable = @(
@@ -190,6 +213,7 @@ switch ($env:ProvisioningPhase)
     {
         Write-Log "Performing actions for provisioning phase 1"
         Set-WinRmServiceDelayedStart
+        Set-AllowedSecurityProtocols
         Disable-WindowsUpdates
         Install-WindowsPatches
         Update-DefenderSignatures
