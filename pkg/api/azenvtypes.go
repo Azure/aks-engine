@@ -36,6 +36,7 @@ type DCOSSpecConfig struct {
 
 //KubernetesSpecConfig is the kubernetes container images used.
 type KubernetesSpecConfig struct {
+	AzureTelemetryPID                string `json:"AzureTelemetryPID,omitempty"`
 	KubernetesImageBase              string `json:"kubernetesImageBase,omitempty"`
 	TillerImageBase                  string `json:"tillerImageBase,omitempty"`
 	ACIConnectorImageBase            string `json:"aciConnectorImageBase,omitempty"`
@@ -63,6 +64,18 @@ type AzureOSImageConfig struct {
 	ImagePublisher string `json:"imagePublisher,omitempty"`
 	ImageVersion   string `json:"imageVersion,omitempty"`
 }
+
+// AzureTelemetryPID represents the current telemetry ID
+type AzureTelemetryPID string
+
+const (
+	// DefaultAzurestackDeployTelemetryPID tracking ID for Deployment
+	DefaultAzurestackDeployTelemetryPID = "pid-1bda96ec-adf4-4eea-bb9a-8462de5475c0"
+	// DefaultAzurestackScaleTelemetryPID tracking ID for Scale
+	DefaultAzurestackScaleTelemetryPID = "pid-bbbafa53-d6a7-4022-84a2-86fcbaec7030"
+	// DefaultAzurestackUpgradeTelemetryPID tracking ID for Upgrade
+	DefaultAzurestackUpgradeTelemetryPID = "pid-0d9b5198-7cd7-4252-a890-5658eaf874be"
+)
 
 var (
 	//DefaultKubernetesSpecConfig is the default Docker image source of Kubernetes

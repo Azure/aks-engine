@@ -16,7 +16,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-func (cs *ContainerService) setCustomCloudProfileDefaults() error {
+func (cs *ContainerService) setCustomCloudProfileDefaults(isUpgrade, isScale bool) error {
 	p := cs.Properties
 	if p.IsAzureStackCloud() {
 		p.CustomCloudProfile.AuthenticationMethod = helpers.EnsureString(p.CustomCloudProfile.AuthenticationMethod, ClientSecretAuthMethod)
@@ -26,7 +26,7 @@ func (cs *ContainerService) setCustomCloudProfileDefaults() error {
 		if err != nil {
 			return fmt.Errorf("Failed to set environment - %s", err)
 		}
-		err = p.SetAzureStackCloudSpec()
+		err = p.SetAzureStackCloudSpec(isUpgrade, isScale)
 		if err != nil {
 			return fmt.Errorf("Failed to set cloud spec - %s", err)
 		}
@@ -96,7 +96,7 @@ func (cs *ContainerService) SetCustomCloudProfileEnvironment() error {
 }
 
 // SetAzureStackCloudSpec sets the cloud spec for Azure Stack .
-func (p *Properties) SetAzureStackCloudSpec() error {
+func (p *Properties) SetAzureStackCloudSpec(isUpgrade, isScale bool) error {
 	if p.IsAzureStackCloud() {
 		var azureStackCloudSpec AzureEnvironmentSpecConfig
 		switch p.CustomCloudProfile.DependenciesLocation {
@@ -130,6 +130,14 @@ func (p *Properties) SetAzureStackCloudSpec() error {
 			//KubernetesSpecConfig
 			asccKubernetesSpecConfig := ascc.KubernetesSpecConfig
 			azsKubernetesSpecConfig := azureStackCloudSpec.KubernetesSpecConfig
+
+			azureStackCloudSpec.KubernetesSpecConfig.AzureTelemetryPID = helpers.EnsureString(DefaultAzurestackDeployTelemetryPID, azsKubernetesSpecConfig.AzureTelemetryPID)
+			if isScale {
+				azureStackCloudSpec.KubernetesSpecConfig.AzureTelemetryPID = helpers.EnsureString(DefaultAzurestackScaleTelemetryPID, azsKubernetesSpecConfig.AzureTelemetryPID)
+			}
+			if isUpgrade {
+				azureStackCloudSpec.KubernetesSpecConfig.AzureTelemetryPID = helpers.EnsureString(DefaultAzurestackUpgradeTelemetryPID, azsKubernetesSpecConfig.AzureTelemetryPID)
+			}
 			azureStackCloudSpec.KubernetesSpecConfig.ACIConnectorImageBase = helpers.EnsureString(asccKubernetesSpecConfig.ACIConnectorImageBase, azsKubernetesSpecConfig.ACIConnectorImageBase)
 			azureStackCloudSpec.KubernetesSpecConfig.AzureCNIImageBase = helpers.EnsureString(asccKubernetesSpecConfig.AzureCNIImageBase, azsKubernetesSpecConfig.AzureCNIImageBase)
 			azureStackCloudSpec.KubernetesSpecConfig.CalicoImageBase = helpers.EnsureString(asccKubernetesSpecConfig.CalicoImageBase, azsKubernetesSpecConfig.CalicoImageBase)
