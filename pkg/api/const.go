@@ -285,7 +285,7 @@ const (
 	// DefaultWindowsSku sets the default WindowsSku value in WindowsProfile
 	DefaultWindowsSku = "2019-Datacenter-Core-with-Containers-smalldisk"
 	// DefaultImageVersion sets the default ImageVersion value in WindowsProfile
-	DefaultImageVersion = "17763.678.1908092216"
+	DefaultImageVersion = "17763.737.1909062324"
 )
 
 const (
