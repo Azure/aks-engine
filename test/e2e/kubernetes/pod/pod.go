@@ -237,7 +237,7 @@ func RunWindowsPod(image, name, namespace, command string, printOutput bool, sle
 type podRunnerCmd func(string, string, string, string, bool, time.Duration, time.Duration, time.Duration) (*Pod, error)
 
 // RunCommandMultipleTimes runs the same command 'desiredAttempts' times
-func RunCommandMultipleTimes(podRunnerCmd podRunnerCmd, image, name, command string, desiredAttempts int, sleep, duration, timeout time.Duration) (int, error) {
+func RunCommandMultipleTimes(podRunnerCmd podRunnerCmd, image, name, command string, desiredAttempts int, sleep, commandTimeout, timeout time.Duration) (int, error) {
 	var successfulAttempts int
 	var actualAttempts int
 	logResults := func() {
@@ -250,29 +250,31 @@ func RunCommandMultipleTimes(podRunnerCmd podRunnerCmd, image, name, command str
 		podName := fmt.Sprintf("%s-%d", name, r.Intn(99999))
 		var p *Pod
 		var err error
-		p, err = podRunnerCmd(image, podName, "default", command, true, sleep, duration, timeout)
-
+		p, err = podRunnerCmd(image, podName, "default", command, true, sleep, commandTimeout, timeout)
 		if err != nil {
 			return successfulAttempts, err
 		}
-		succeeded, err := p.WaitOnSucceeded(sleep, duration)
+		succeeded, err := p.WaitOnSucceeded(sleep, timeout)
 		if err != nil {
-			log.Printf("pod did not succeed in time %s\n", err)
+			log.Printf("pod %s did not succeed in time\n", podName)
+			return successfulAttempts, err
 		}
-		cmd := exec.Command("k", "logs", podName, "-n", "default")
-		out, err := cmd.CombinedOutput()
-		if err != nil {
-			log.Printf("Unable to get logs from pod %s: %s\n", podName, err)
-		} else {
-			log.Printf("%s\n", string(out))
+		exitCode := p.ContainerExitCode(podName)
+		if exitCode != 0 {
+			err := p.Logs()
+			if err != nil {
+				log.Printf("Unable to print pod logs for pod %s: %s", p.Metadata.Name, err)
+			}
+			err = p.Describe()
+			if err != nil {
+				log.Printf("Unable to describe pod %s: %s", p.Metadata.Name, err)
+			}
 		}
-
 		err = p.Delete(util.DefaultDeleteRetries)
 		if err != nil {
 			return successfulAttempts, err
 		}
-
-		if succeeded {
+		if succeeded && exitCode == 0 {
 			successfulAttempts++
 		}
 	}
@@ -773,6 +775,18 @@ func (p *Pod) IsSucceeded() bool {
 // IsFailed returns if a pod is in a Failed state
 func (p *Pod) IsFailed() bool {
 	return p.Status.Phase == "Failed"
+}
+
+// ContainerExitCode returns the exit code from a container in a terminated status, -1 if container not found or not terminated
+func (p *Pod) ContainerExitCode(name string) int {
+	for _, container := range p.Status.ContainerStatuses {
+		if container.Name == name {
+			if container.State.Terminated.ContainerID != "" {
+				return container.State.Terminated.ExitCode
+			}
+		}
+	}
+	return -1
 }
 
 // CheckOutboundConnection checks outbound connection for a list of pods.

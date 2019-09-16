@@ -48,7 +48,7 @@ const (
 	kubeSystemPodsReadinessChecks             = 6
 	sleepBetweenRetriesWhenWaitingForPodReady = 1 * time.Second
 	timeoutWhenWaitingForPodOutboundAccess    = 1 * time.Minute
-	stabilityCommandTimeout                   = 5 * time.Second
+	stabilityCommandTimeout                   = 10 * time.Second
 	windowsCommandTimeout                     = 1 * time.Minute
 	validateNetworkPolicyTimeout              = 3 * time.Minute
 	validateDNSTimeout                        = 2 * time.Minute
