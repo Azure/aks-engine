@@ -42,6 +42,7 @@ def taskForCreateJob(jobCfg, jobName, version) {
 }
 
 def runJobWithEnvironment(jobCfg, jobName, version) {
+	def jobSpecificEnv = defaultEnv + jobCfg.env
 	return {
 		node {
 			ws("${env.JOB_NAME}-${jobName}") {
@@ -56,7 +57,6 @@ def runJobWithEnvironment(jobCfg, jobName, version) {
 						unstash(name: 'aks-engine-bin')
 					}
 
-					def jobSpecificEnv = defaultEnv + jobCfg.env
 					// set environment variables needed for the test script
 					def envVars = [
 							ORCHESTRATOR_RELEASE: "${version}",
