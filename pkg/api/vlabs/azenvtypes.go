@@ -34,6 +34,7 @@ type DCOSSpecConfig struct {
 
 //KubernetesSpecConfig is the kubernetes container images used.
 type KubernetesSpecConfig struct {
+	AzureTelemetryPID                string `json:"AzureTelemetryPID,omitempty"`
 	KubernetesImageBase              string `json:"kubernetesImageBase,omitempty"`
 	TillerImageBase                  string `json:"tillerImageBase,omitempty"`
 	ACIConnectorImageBase            string `json:"aciConnectorImageBase,omitempty"`
