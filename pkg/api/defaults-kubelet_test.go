@@ -117,6 +117,18 @@ func TestKubeletConfigDefaults(t *testing.T) {
 				key, k[key], val)
 		}
 	}
+
+	cs = CreateMockContainerService("testcluster", "1.16.0-beta.1", 3, 2, false)
+	cs.setKubeletConfig(false)
+	kubeletConfig = cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig
+	expectedKeys := []string{
+		"--authentication-token-webhook",
+	}
+	for _, key := range expectedKeys {
+		if _, ok := kubeletConfig[key]; !ok {
+			t.Fatalf("could not find expected kubelet config value for %s", key)
+		}
+	}
 }
 
 func TestKubeletConfigDefaultsRemovals(t *testing.T) {

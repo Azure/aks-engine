@@ -1098,7 +1098,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 
 				By("Assigning hpa configuration to the php-apache deployment")
 				// Apply autoscale characteristics to deployment
-				err = phpApacheDeploy.CreateDeploymentHPADeleteIfExist(5, 1, 10)
+				err = phpApacheDeploy.CreateDeploymentHPADeleteIfExist(80, 1, 10)
 				Expect(err).NotTo(HaveOccurred())
 				h, err := hpa.Get(longRunningApacheDeploymentName, "default", 10)
 				Expect(err).NotTo(HaveOccurred())

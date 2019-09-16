@@ -117,6 +117,11 @@ func (cs *ContainerService) setKubeletConfig(isUpgrade bool) {
 		defaultKubeletConfig["--tls-cipher-suites"] = TLSStrongCipherSuitesKubelet
 	}
 
+	if common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.16.0-beta.1") {
+		// for enabling metrics-server v0.3.0+
+		defaultKubeletConfig["--authentication-token-webhook"] = "true"
+	}
+
 	// If no user-configurable kubelet config values exists, use the defaults
 	setMissingKubeletValues(o.KubernetesConfig, defaultKubeletConfig)
 	addDefaultFeatureGates(o.KubernetesConfig.KubeletConfig, o.OrchestratorVersion, "1.8.0", "PodPriority=true")
