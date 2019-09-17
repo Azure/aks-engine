@@ -16789,6 +16789,7 @@ spec:
         command:
         - /metrics-server
         - --kubelet-insecure-tls
+        - --kubelet-preferred-address-types=InternalIP
       nodeSelector:
         beta.kubernetes.io/os: linux
 ---
@@ -16955,6 +16956,7 @@ spec:
         command:
         - /metrics-server
         - --kubelet-insecure-tls
+        - --kubelet-preferred-address-types=InternalIP
       nodeSelector:
         beta.kubernetes.io/os: linux
 ---
@@ -17121,6 +17123,7 @@ spec:
         command:
         - /metrics-server
         - --kubelet-insecure-tls
+        - --kubelet-preferred-address-types=InternalIP
       nodeSelector:
         beta.kubernetes.io/os: linux
 ---
