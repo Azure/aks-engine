@@ -237,7 +237,7 @@ func RunWindowsPod(image, name, namespace, command string, printOutput bool, sle
 type podRunnerCmd func(string, string, string, string, bool, time.Duration, time.Duration, time.Duration) (*Pod, error)
 
 // RunCommandMultipleTimes runs the same command 'desiredAttempts' times
-func RunCommandMultipleTimes(podRunnerCmd podRunnerCmd, image, name, command string, desiredAttempts int, sleep, duration, timeout time.Duration) (int, error) {
+func RunCommandMultipleTimes(podRunnerCmd podRunnerCmd, image, name, command string, desiredAttempts int, sleep, commandTimeout, timeout time.Duration) (int, error) {
 	var successfulAttempts int
 	var actualAttempts int
 	logResults := func() {
@@ -250,29 +250,25 @@ func RunCommandMultipleTimes(podRunnerCmd podRunnerCmd, image, name, command str
 		podName := fmt.Sprintf("%s-%d", name, r.Intn(99999))
 		var p *Pod
 		var err error
-		p, err = podRunnerCmd(image, podName, "default", command, true, sleep, duration, timeout)
-
+		p, err = podRunnerCmd(image, podName, "default", command, true, sleep, timeout, timeout)
 		if err != nil {
 			return successfulAttempts, err
 		}
-		succeeded, err := p.WaitOnSucceeded(sleep, duration)
+		succeeded, err := p.WaitOnSucceeded(sleep, timeout)
 		if err != nil {
-			log.Printf("pod did not succeed in time %s\n", err)
+			log.Printf("pod %s did not succeed in time\n", podName)
+			return successfulAttempts, err
 		}
-		cmd := exec.Command("k", "logs", podName, "-n", "default")
-		out, err := cmd.CombinedOutput()
+		terminated, err := p.WaitOnTerminated(podName, sleep, commandTimeout, timeout)
 		if err != nil {
-			log.Printf("Unable to get logs from pod %s: %s\n", podName, err)
-		} else {
-			log.Printf("%s\n", string(out))
+			log.Printf("pod %s container %s did not reach a terminal exit 0 state in time\n", podName, podName)
+			return successfulAttempts, err
 		}
-
 		err = p.Delete(util.DefaultDeleteRetries)
 		if err != nil {
 			return successfulAttempts, err
 		}
-
-		if succeeded {
+		if succeeded && terminated {
 			successfulAttempts++
 		}
 	}
@@ -354,10 +350,7 @@ func Get(podName, namespace string, retries int) (*Pod, error) {
 	for i := 0; i < retries; i++ {
 		cmd := exec.Command("k", "get", "pods", podName, "-n", namespace, "-o", "json")
 		out, err = cmd.CombinedOutput()
-		if err != nil {
-			util.PrintCommand(cmd)
-			log.Printf("Error getting pod: %s\n", err)
-		} else {
+		if err == nil {
 			jsonErr := json.Unmarshal(out, &p)
 			if jsonErr != nil {
 				log.Printf("Error unmarshalling pods json:%s\n", jsonErr)
@@ -367,23 +360,6 @@ func Get(podName, namespace string, retries int) (*Pod, error) {
 		time.Sleep(3 * time.Second)
 	}
 	return &p, err
-}
-
-// GetTerminated will return a pod with a given name and namespace, including terminated pods
-func GetTerminated(podName, namespace string) (*Pod, error) {
-	cmd := exec.Command("k", "get", "pods", podName, "-n", namespace, "-o", "json")
-	util.PrintCommand(cmd)
-	out, err := cmd.CombinedOutput()
-	if err != nil {
-		return nil, err
-	}
-	p := Pod{}
-	err = json.Unmarshal(out, &p)
-	if err != nil {
-		log.Printf("Error unmarshalling pods json:%s\n", err)
-		return nil, err
-	}
-	return &p, nil
 }
 
 // PrintPodsLogs prints logs for all pods whose name matches a substring
@@ -629,7 +605,9 @@ func WaitOnSucceeded(name, namespace string, sleep, timeout time.Duration) (bool
 			pod = result.pod
 			mostRecentWaitOnSucceededPodError = result.err
 			if mostRecentWaitOnSucceededPodError == nil {
-				return pod.IsSucceeded(), nil
+				if pod.IsSucceeded() {
+					return true, nil
+				}
 			}
 		case <-ctx.Done():
 			if pod != nil {
@@ -647,6 +625,63 @@ func WaitOnSucceeded(name, namespace string, sleep, timeout time.Duration) (bool
 	}
 }
 
+// WaitOnTerminated will return true if a pod's container is in a successful (0 exit code) Terminated State
+// and completed prior to the passed in containerExecutionTimeout
+func WaitOnTerminated(name, namespace, containerName string, sleep, containerExecutionTimeout, timeout time.Duration) (bool, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+	ch := make(chan GetPodResult)
+	var mostRecentWaitOnTerminatedPodError error
+	var pod *Pod
+	go func() {
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case ch <- GetPodAsync(name, namespace, timeout):
+				time.Sleep(sleep)
+			}
+		}
+	}()
+	for {
+		select {
+		case result := <-ch:
+			pod = result.pod
+			mostRecentWaitOnTerminatedPodError = result.err
+			if mostRecentWaitOnTerminatedPodError == nil {
+				status, err := pod.ContainerStatus(containerName)
+				if err == nil {
+					t1, err := time.Parse(time.RFC3339, status.StartTime())
+					if err != nil {
+						return false, err
+					}
+					t2, err := time.Parse(time.RFC3339, status.EndTime())
+					if err != nil {
+						return false, err
+					}
+					duration := t2.Sub(t1)
+					if duration > containerExecutionTimeout {
+						return false, errors.Errorf("execution time %s is greater than timeout %s\n", duration, containerExecutionTimeout)
+					}
+					return true, nil
+				}
+			}
+		case <-ctx.Done():
+			if pod != nil {
+				err := pod.Logs()
+				if err != nil {
+					log.Printf("Unable to print pod logs for pod %s: %s", pod.Metadata.Name, err)
+				}
+				err = pod.Describe()
+				if err != nil {
+					log.Printf("Unable to describe pod %s: %s", pod.Metadata.Name, err)
+				}
+			}
+			return false, errors.Errorf("WaitOnTerminated timed out: %s\n", mostRecentWaitOnTerminatedPodError)
+		}
+	}
+}
+
 // WaitOnReady will call the static method WaitOnReady passing in p.Metadata.Name and p.Metadata.Namespace
 func (p *Pod) WaitOnReady(sleep, timeout time.Duration) (bool, error) {
 	return WaitOnReady(p.Metadata.Name, p.Metadata.Namespace, 6, sleep, timeout)
@@ -655,6 +690,11 @@ func (p *Pod) WaitOnReady(sleep, timeout time.Duration) (bool, error) {
 // WaitOnSucceeded will call the static method WaitOnSucceeded passing in p.Metadata.Name and p.Metadata.Namespace
 func (p *Pod) WaitOnSucceeded(sleep, duration time.Duration) (bool, error) {
 	return WaitOnSucceeded(p.Metadata.Name, p.Metadata.Namespace, sleep, duration)
+}
+
+// WaitOnTerminated will call the static method WaitOnTerminated passing in p.Metadata.Name and p.Metadata.Namespace
+func (p *Pod) WaitOnTerminated(container string, sleep, containerExecutionTimeout, timeout time.Duration) (bool, error) {
+	return WaitOnTerminated(p.Metadata.Name, p.Metadata.Namespace, container, sleep, containerExecutionTimeout, timeout)
 }
 
 func (p *Pod) attemptOutboundConn() error {
@@ -773,6 +813,31 @@ func (p *Pod) IsSucceeded() bool {
 // IsFailed returns if a pod is in a Failed state
 func (p *Pod) IsFailed() bool {
 	return p.Status.Phase == "Failed"
+}
+
+// ContainerStatus returns a named pod ContainerStatus object
+func (p *Pod) ContainerStatus(name string) (ContainerStatus, error) {
+	for _, status := range p.Status.ContainerStatuses {
+		if status.Name == name {
+			return status, nil
+		}
+	}
+	return ContainerStatus{}, errors.Errorf("no container status object found for name %s in pod %s", name, p.Metadata.Name)
+}
+
+// ExitCode returns a ContainerStatus's terminal exit code
+func (c *ContainerStatus) ExitCode() int {
+	return c.State.Terminated.ExitCode
+}
+
+// StartTime returns a terminal ContainerStatus's terminal "started at" RFC3339 time
+func (c *ContainerStatus) StartTime() string {
+	return c.State.Terminated.StartedAt
+}
+
+// EndTime returns a ContainerStatus's terminal "finished at" RFC3339 time
+func (c *ContainerStatus) EndTime() string {
+	return c.State.Terminated.FinishedAt
 }
 
 // CheckOutboundConnection checks outbound connection for a list of pods.
