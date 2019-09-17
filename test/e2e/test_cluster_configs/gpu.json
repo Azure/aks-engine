@@ -1,6 +1,6 @@
 {
 	"env": {
-		"REGION_OPTIONS": "westus2,southcentralus"
+		"REGION_OPTIONS": "westus2"
 	},
 	"apiModel": {
 		"apiVersion": "vlabs",
