@@ -131,7 +131,12 @@ func (p *Properties) SetAzureStackCloudSpec(isUpgrade, isScale bool) error {
 			asccKubernetesSpecConfig := ascc.KubernetesSpecConfig
 			azsKubernetesSpecConfig := azureStackCloudSpec.KubernetesSpecConfig
 
-			azureStackCloudSpec.KubernetesSpecConfig.AzureTelemetryPID = helpers.EnsureString(asccKubernetesSpecConfig.AzureTelemetryPID, DefaultAzurestackDeployTelemetryPID)
+			if asccKubernetesSpecConfig.AzureTelemetryPID == "" {
+				azureStackCloudSpec.KubernetesSpecConfig.AzureTelemetryPID = DefaultAzurestackDeployTelemetryPID
+			} else {
+				azureStackCloudSpec.KubernetesSpecConfig.AzureTelemetryPID = helpers.EnsureString(asccKubernetesSpecConfig.AzureTelemetryPID, DefaultAzurestackDeployTelemetryPID)
+			}
+
 			if isScale {
 				azureStackCloudSpec.KubernetesSpecConfig.AzureTelemetryPID = helpers.EnsureString(asccKubernetesSpecConfig.AzureTelemetryPID, DefaultAzurestackScaleTelemetryPID)
 			}
