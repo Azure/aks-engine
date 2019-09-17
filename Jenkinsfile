@@ -34,7 +34,13 @@ def tasksForUpgradeJob(jobCfg, aksEngineVersions, jobName, version) {
 
 	jobName = "${jobName}/upgrade/${upgradeVersion}"
 	if(isBackCompat()) {
-		def backCompatVersions = getPreviousVersions(params.UPGRADE_FORK) + "master"
+		def previousReleases = getPreviousVersions(params.UPGRADE_FORK)
+		def backCompatVersions = []
+		if(previousReleases.size() == 1) {
+			backCompatVersions = ["master"]
+		} else {
+			backCompatVersions = ["master"] + previousReleases[0..-2]
+		}
 		def baseReleaseBranch = getBaseReleaseBranch(params.FORK)
 		backCompatVersions.each { releaseBranch ->
 			backCompatJobName = "${jobName}/back/${baseReleaseBranch}-${releaseBranch}"
@@ -112,7 +118,6 @@ def runJobWithEnvironment(environmentVars, apiModel, jobName, version) {
 }
 
 def getPreviousVersions(fork) {
-	// set environment variables needed for the test script
 	def envVars = [
 			UPGRADE_FORK: fork,
 		]
@@ -124,7 +129,7 @@ def getPreviousVersions(fork) {
 
 def getBaseReleaseBranch(fork) {
 	def releases = getPreviousVersions(params.FORK)
-	return releases[backCompatVersionCount() - 1]
+	return releases[-1]
 }
 
 stage ("build binary") {
