@@ -19,8 +19,10 @@ func GenerateARMResources(cs *api.ContainerService) []interface{} {
 
 	if deploymentTelemetryEnabled {
 		if isAzureStack {
-			deploymentResource := createAzurestackTelemetry(cs.Properties.CustomCloudProfile.AzureEnvironmentSpecConfig.KubernetesSpecConfig.AzureTelemetryPID)
-			armResources = append(armResources, deploymentResource)
+			if cs.Properties.CustomCloudProfile.AzureEnvironmentSpecConfig.KubernetesSpecConfig.AzureTelemetryPID != "" {
+				deploymentResource := createAzurestackTelemetry(cs.Properties.CustomCloudProfile.AzureEnvironmentSpecConfig.KubernetesSpecConfig.AzureTelemetryPID)
+				armResources = append(armResources, deploymentResource)
+			}
 		}
 	}
 
