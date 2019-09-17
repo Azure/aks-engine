@@ -401,9 +401,9 @@ for KUBERNETES_VERSION in ${K8S_VERSIONS}; do
     else
       HYPERKUBE_URL="k8s.gcr.io/hyperkube-amd64:v${KUBERNETES_VERSION}"
       if (( $(echo ${KUBERNETES_VERSION} | cut -d"." -f2) < 16 )); then
-        CCM_IMAGE="k8s.gcr.io/cloud-controller-manager-amd64:v${KUBERNETES_VERSION}"
-        pullContainerImage "docker" ${CCM_IMAGE}
-        echo "  - ${CCM_IMAGE}" >> ${VHD_LOGS_FILEPATH}
+        CONTAINER_IMAGE="k8s.gcr.io/cloud-controller-manager-amd64:v${KUBERNETES_VERSION}"
+        pullContainerImage "docker" ${CONTAINER_IMAGE}
+        echo "  - ${CONTAINER_IMAGE}" >> ${VHD_LOGS_FILEPATH}
       fi
     fi
     extractHyperkube "docker"
