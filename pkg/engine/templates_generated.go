@@ -15616,6 +15616,11 @@ MASTER_CONTAINER_ADDONS_PLACEHOLDER
 {{end}}
 {{if UseCloudControllerManager }}
     sed -i "s|<img>|{{WrapAsParameter "kubernetesCcmImageSpec"}}|g" /etc/kubernetes/manifests/cloud-controller-manager.yaml
+    {{if IsKubernetesVersionGe "1.16.0-beta.1"}}
+    sed -i "s|<command>|[\"/hyperkube", "cloud-controller-manager\"]|g" /etc/kubernetes/manifests/cloud-controller-manager.yaml
+    {{else}}
+    sed -i "s|<command>|[\"cloud-controller-manager\"]|g" /etc/kubernetes/manifests/cloud-controller-manager.yaml
+    {{end}}
     sed -i "s|<config>|{{GetK8sRuntimeConfigKeyVals .OrchestratorProfile.KubernetesConfig.CloudControllerManagerConfig}}|g" /etc/kubernetes/manifests/cloud-controller-manager.yaml
 {{end}}
 {{if EnableEncryptionWithExternalKms}}
@@ -25337,7 +25342,7 @@ spec:
     - name: cloud-controller-manager
       image: <img>
       imagePullPolicy: IfNotPresent
-      command: ["/hyperkube", "cloud-controller-manager"]
+      command: <command>
       args: [<config>]
       volumeMounts:
         - name: etc-kubernetes
