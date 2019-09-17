@@ -131,12 +131,12 @@ func (p *Properties) SetAzureStackCloudSpec(isUpgrade, isScale bool) error {
 			asccKubernetesSpecConfig := ascc.KubernetesSpecConfig
 			azsKubernetesSpecConfig := azureStackCloudSpec.KubernetesSpecConfig
 
-			azureStackCloudSpec.KubernetesSpecConfig.AzureTelemetryPID = helpers.EnsureString(DefaultAzurestackDeployTelemetryPID, azsKubernetesSpecConfig.AzureTelemetryPID)
+			azureStackCloudSpec.KubernetesSpecConfig.AzureTelemetryPID = helpers.EnsureString(asccKubernetesSpecConfig.AzureTelemetryPID, DefaultAzurestackDeployTelemetryPID)
 			if isScale {
-				azureStackCloudSpec.KubernetesSpecConfig.AzureTelemetryPID = helpers.EnsureString(DefaultAzurestackScaleTelemetryPID, azsKubernetesSpecConfig.AzureTelemetryPID)
+				azureStackCloudSpec.KubernetesSpecConfig.AzureTelemetryPID = helpers.EnsureString(asccKubernetesSpecConfig.AzureTelemetryPID, DefaultAzurestackScaleTelemetryPID)
 			}
 			if isUpgrade {
-				azureStackCloudSpec.KubernetesSpecConfig.AzureTelemetryPID = helpers.EnsureString(DefaultAzurestackUpgradeTelemetryPID, azsKubernetesSpecConfig.AzureTelemetryPID)
+				azureStackCloudSpec.KubernetesSpecConfig.AzureTelemetryPID = helpers.EnsureString(asccKubernetesSpecConfig.AzureTelemetryPID, DefaultAzurestackUpgradeTelemetryPID)
 			}
 			azureStackCloudSpec.KubernetesSpecConfig.ACIConnectorImageBase = helpers.EnsureString(asccKubernetesSpecConfig.ACIConnectorImageBase, azsKubernetesSpecConfig.ACIConnectorImageBase)
 			azureStackCloudSpec.KubernetesSpecConfig.AzureCNIImageBase = helpers.EnsureString(asccKubernetesSpecConfig.AzureCNIImageBase, azsKubernetesSpecConfig.AzureCNIImageBase)
