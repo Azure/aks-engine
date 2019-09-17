@@ -203,7 +203,7 @@ func TestAssignDefaultAddonImages(t *testing.T) {
 		KeyVaultFlexVolumeAddonName:        "mcr.microsoft.com/k8s/flexvolume/keyvault-flexvolume:v0.0.13",
 		DashboardAddonName:                 "k8s.gcr.io/kubernetes-dashboard-amd64:v1.10.1",
 		ReschedulerAddonName:               "k8s.gcr.io/rescheduler:v0.3.1",
-		MetricsServerAddonName:             "k8s.gcr.io/metrics-server-amd64:v0.3.4",
+		MetricsServerAddonName:             "k8s.gcr.io/metrics-server-amd64:v0.3.1",
 		NVIDIADevicePluginAddonName:        "nvidia/k8s-device-plugin:1.10",
 		ContainerMonitoringAddonName:       "mcr.microsoft.com/azuremonitor/containerinsights/ciprod:ciprod07092019",
 		IPMASQAgentAddonName:               "k8s.gcr.io/ip-masq-agent-amd64:v2.3.0",
