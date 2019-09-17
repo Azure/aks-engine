@@ -5,6 +5,8 @@ set -x
 GOPATH="/go"
 WORK_DIR="${GOPATH}/src/github.com/Azure/aks-engine"
 
+ORIGINAL_BRANCH=$(git branch --show-current)
+
 if [[ -n "${FORK}" ]]; then
   # shellcheck disable=SC2034
   if ! output=$(git remote show "$FORK") ; then
@@ -23,4 +25,4 @@ docker run --rm \
 -w ${WORK_DIR} \
 "${DEV_IMAGE}" make build-binary || exit 1
 
-git checkout master
+git checkout "${ORIGINAL_BRANCH}"
