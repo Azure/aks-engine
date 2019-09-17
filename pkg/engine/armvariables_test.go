@@ -184,13 +184,34 @@ func TestK8sVars(t *testing.T) {
 		t.Errorf("unexpected diff while expecting equal structs: %s", diff)
 	}
 
-	// Test with ubuntu 16.04 distro
-	cs.Properties.AgentPoolProfiles[0].Distro = api.Ubuntu
+	// Test with MSI
+	cs.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity = true
 	varMap, err = GetKubernetesVariables(cs)
 	if err != nil {
 		t.Fatal(err)
 	}
 
+	expectedMap["servicePrincipalClientId"] = "msi"
+	expectedMap["servicePrincipalClientSecret"] = "msi"
+	expectedMap["useManagedIdentityExtension"] = "true"
+
+	diff = cmp.Diff(varMap, expectedMap)
+
+	if diff != "" {
+		t.Errorf("unexpected diff while expecting equal structs: %s", diff)
+	}
+
+	// Test with ubuntu 16.04 distro
+	cs.Properties.AgentPoolProfiles[0].Distro = api.Ubuntu
+	cs.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity = false
+	varMap, err = GetKubernetesVariables(cs)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	expectedMap["servicePrincipalClientId"] = "[parameters('servicePrincipalClientId')]"
+	expectedMap["servicePrincipalClientSecret"] = "[parameters('servicePrincipalClientSecret')]"
+	expectedMap["useManagedIdentityExtension"] = "false"
 	expectedMap["cloudInitFiles"] = map[string]interface{}{
 		"provisionScript":                  getBase64EncodedGzippedCustomScript(kubernetesCSEMainScript),
 		"provisionSource":                  getBase64EncodedGzippedCustomScript(kubernetesCSEHelpersScript),
@@ -383,6 +404,21 @@ func TestK8sVars(t *testing.T) {
 	delete(expectedMap, "masterEtcdPeerURLs")
 	delete(expectedMap, "masterEtcdClusterStates")
 	delete(expectedMap, "masterEtcdClientURLs")
+
+	diff = cmp.Diff(varMap, expectedMap)
+
+	if diff != "" {
+		t.Errorf("unexpected diff while expecting equal structs: %s", diff)
+	}
+
+	// Test with HostedMaster + MSI
+	cs.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity = true
+	varMap, err = GetKubernetesVariables(cs)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	expectedMap["useManagedIdentityExtension"] = "true"
 
 	diff = cmp.Diff(varMap, expectedMap)
 
