@@ -33,10 +33,11 @@ def tasksForUpgradeJob(jobCfg, aksEngineVersions, jobName, version) {
 	jobCfg.env["UPGRADE_VERSIONS"] = upgradeVersion
 
 	jobName = "${jobName}/upgrade/${upgradeVersion}"
-	if(params.BACK_COMPAT_VERSIONS && params.BACK_COMPAT_VERSIONS.toInteger() > 0) {
-		def backCompatVersions = getPreviousVersions(params.UPGRADE_FORK)
+	if(isBackCompat()) {
+		def backCompatVersions = getPreviousVersions(params.UPGRADE_FORK) + "master"
+		def baseReleaseBranch = getBaseReleaseBranch(params.FORK)
 		backCompatVersions.each { releaseBranch ->
-			backCompatJobName = "${jobName}/back/${releaseBranch}"
+			backCompatJobName = "${jobName}/back/${baseReleaseBranch}-${releaseBranch}"
 			def backCompatEnv = jobCfg.env + [UPGRADE_BRANCH: releaseBranch]
 			t[backCompatJobName] = runJobWithEnvironment(backCompatEnv, jobCfg.apiModel, backCompatJobName, version)
 		}
@@ -44,6 +45,14 @@ def tasksForUpgradeJob(jobCfg, aksEngineVersions, jobName, version) {
 		t[jobName] = runJobWithEnvironment(jobCfg.env, jobCfg.apiModel, jobName, version)
 	}
 	return t
+}
+
+def isBackCompat() {
+	return params.BACK_COMPAT_VERSIONS && params.BACK_COMPAT_VERSIONS.toInteger() > 0
+}
+
+def backCompatVersionCount() {
+	return params.BACK_COMPAT_VERSIONS.toInteger()
 }
 
 def taskForCreateJob(jobCfg, jobName, version) {
@@ -87,7 +96,7 @@ def runJobWithEnvironment(environmentVars, apiModel, jobName, version) {
 							try {
 								echo "EXECUTOR_NUMBER :: $EXECUTOR_NUMBER"
 								echo "NODE_NAME :: $NODE_NAME"
-								sh "./test/e2e/cluster.sh"
+								// sh "./test/e2e/cluster.sh"
 							} finally {
 								sh "./test/e2e/jenkins_reown.sh"
 							}
@@ -113,6 +122,11 @@ def getPreviousVersions(fork) {
 	}
 }
 
+def getBaseReleaseBranch(fork) {
+	def releases = getPreviousVersions(params.FORK)
+	return releases[backCompatVersionCount() - 1]
+}
+
 stage ("build binary") {
 	node {
 		retry(5){
@@ -122,7 +136,18 @@ stage ("build binary") {
 
 		echo "building binary for test runs"
 		try {
-			sh "./test/e2e/build.sh"
+			if(isBackCompat()) {
+				def baseReleaseBranch = getBaseReleaseBranch(params.FORK)
+				def envVars = [
+					FORK: params.FORK,
+					BRANCH: baseReleaseBranch,
+				]
+				withEnv(envVars.collect{ k, v -> "${k}=${v}" }) {
+					sh "./test/e2e/build.sh"
+				}
+			} else {
+				sh "./test/e2e/build.sh"
+			}
 		} finally {
 			sh "./test/e2e/jenkins_reown.sh"
 		}
