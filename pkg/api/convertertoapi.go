@@ -1312,6 +1312,7 @@ func convertAzureEnvironmentSpecConfig(vlabses *vlabs.AzureEnvironmentSpecConfig
 		ResourceManagerVMDNSSuffix: vlabses.EndpointConfig.ResourceManagerVMDNSSuffix,
 	}
 	api.KubernetesSpecConfig = KubernetesSpecConfig{
+		AzureTelemetryPID:                vlabses.KubernetesSpecConfig.AzureTelemetryPID,
 		KubernetesImageBase:              vlabses.KubernetesSpecConfig.KubernetesImageBase,
 		TillerImageBase:                  vlabses.KubernetesSpecConfig.TillerImageBase,
 		ACIConnectorImageBase:            vlabses.KubernetesSpecConfig.ACIConnectorImageBase,
