@@ -5,7 +5,7 @@ set -x
 GOPATH="/go"
 WORK_DIR="${GOPATH}/src/github.com/Azure/aks-engine"
 
-ORIGINAL_BRANCH=$(git branch --show-current)
+ORIGINAL_BRANCH=$(git branch | grep \* | cut -d ' ' -f2)
 
 if [[ -n "${FORK}" ]]; then
   # shellcheck disable=SC2034
