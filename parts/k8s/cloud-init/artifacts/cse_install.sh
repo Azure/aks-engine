@@ -265,14 +265,7 @@ pullContainerImage() {
 
 cleanUpContainerImages() {
     # TODO remove all unused container images at runtime
-    HYPERKUBE_IMAGES=$(docker images --format '{{.Repository}}:{{.Tag}}' | grep -v "${KUBERNETES_VERSION}$" | grep 'hyperkube')
-    if [[ -n "${MASTER_NODE}" ]]; then
-      # a master node may be in the process of scheduling a kube-proxy daemonset pod with a prior version of k8s
-      # during upgrade first boot, so we wait a bit so we don't delete the image during pod bootsrapping
-      ( sleep 600; docker rmi $HYPERKUBE_IMAGES ) &
-    else
-      docker rmi $HYPERKUBE_IMAGES
-    fi
+    docker rmi $(docker images --format '{{.Repository}}:{{.Tag}}' | grep -v "${KUBERNETES_VERSION}$" | grep 'hyperkube') &
     docker rmi $(docker images --format '{{.Repository}}:{{.Tag}}' | grep -v "${KUBERNETES_VERSION}$" | grep 'cloud-controller-manager') &
     if [ "$IS_HOSTED_MASTER" = "false" ]; then
         echo "Cleaning up AKS container images, not an AKS cluster"
@@ -282,7 +275,7 @@ cleanUpContainerImages() {
     fi
 
     # TODO: remove once ACR is available on Azure Stack
-    docker rmi registry:2 &
+    docker rmi registry:2.7.1 &
 }
 
 cleanUpGPUDrivers() {
