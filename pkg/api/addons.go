@@ -104,7 +104,7 @@ func (cs *ContainerService) setAddonsConfig(isUpdate bool) {
 
 	defaultBlobfuseFlexVolumeAddonsConfig := KubernetesAddon{
 		Name:    BlobfuseFlexVolumeAddonName,
-		Enabled: to.BoolPtr(DefaultBlobfuseFlexVolumeAddonEnabled && common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.8.0") && !cs.Properties.HasCoreOS() && !cs.Properties.IsAzureStackCloud()),
+		Enabled: to.BoolPtr(DefaultBlobfuseFlexVolumeAddonEnabled && !cs.Properties.HasCoreOS() && !cs.Properties.IsAzureStackCloud()),
 		Containers: []KubernetesContainerSpec{
 			{
 				Name:           BlobfuseFlexVolumeAddonName,
@@ -119,7 +119,7 @@ func (cs *ContainerService) setAddonsConfig(isUpdate bool) {
 
 	defaultSMBFlexVolumeAddonsConfig := KubernetesAddon{
 		Name:    SMBFlexVolumeAddonName,
-		Enabled: to.BoolPtr(DefaultSMBFlexVolumeAddonEnabled && common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.8.0") && !cs.Properties.HasCoreOS() && !cs.Properties.IsAzureStackCloud()),
+		Enabled: to.BoolPtr(DefaultSMBFlexVolumeAddonEnabled && !cs.Properties.HasCoreOS() && !cs.Properties.IsAzureStackCloud()),
 		Containers: []KubernetesContainerSpec{
 			{
 				Name:           SMBFlexVolumeAddonName,
@@ -179,7 +179,7 @@ func (cs *ContainerService) setAddonsConfig(isUpdate bool) {
 
 	defaultMetricsServerAddonsConfig := KubernetesAddon{
 		Name:    MetricsServerAddonName,
-		Enabled: to.BoolPtr(DefaultMetricsServerAddonEnabled && common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.9.0")),
+		Enabled: to.BoolPtr(DefaultMetricsServerAddonEnabled),
 		Containers: []KubernetesContainerSpec{
 			{
 				Name:  MetricsServerAddonName,

@@ -233,13 +233,6 @@ func (cs *ContainerService) setKubeletConfig(isUpgrade bool) {
 }
 
 func removeKubeletFlags(k map[string]string, v string) {
-	// Get rid of values not supported until v1.10
-	if !common.IsKubernetesVersionGe(v, "1.10.0") {
-		for _, key := range []string{"--pod-max-pids"} {
-			delete(k, key)
-		}
-	}
-
 	// Get rid of values not supported in v1.12 and up
 	if common.IsKubernetesVersionGe(v, "1.12.0") {
 		for _, key := range []string{"--cadvisor-port"} {

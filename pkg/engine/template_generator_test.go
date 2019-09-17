@@ -62,7 +62,6 @@ func TestGetTemplateFuncMap(t *testing.T) {
 		"IsPrivateCluster",
 		"ProvisionJumpbox",
 		"UseManagedIdentity",
-		"NeedsKubeDNSWithExecHealthz",
 		"GetVNETSubnetDependencies",
 		"GetLBRules",
 		"GetProbes",

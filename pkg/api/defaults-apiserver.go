@@ -49,6 +49,8 @@ func (cs *ContainerService) setAPIServerConfig() {
 		"--audit-log-maxbackup": "10",
 		"--audit-log-maxsize":   "100",
 		"--profiling":           DefaultKubernetesAPIServerEnableProfiling,
+		"--audit-policy-file":   "/etc/kubernetes/addons/audit-policy.yaml",
+		"--authorization-mode":  "Node,RBAC",
 	}
 
 	// Data Encryption at REST configuration conditions
@@ -83,20 +85,6 @@ func (cs *ContainerService) setAPIServerConfig() {
 			issuerHost = "sts.chinacloudapi.cn"
 		}
 		defaultAPIServerConfig["--oidc-issuer-url"] = "https://" + issuerHost + "/" + cs.Properties.AADProfile.TenantID + "/"
-	}
-
-	// Audit Policy configuration
-	if common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.8.0") {
-		defaultAPIServerConfig["--audit-policy-file"] = "/etc/kubernetes/addons/audit-policy.yaml"
-	}
-
-	// RBAC configuration
-	if to.Bool(o.KubernetesConfig.EnableRbac) {
-		if common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.7.0") {
-			defaultAPIServerConfig["--authorization-mode"] = "Node,RBAC"
-		} else {
-			defaultAPIServerConfig["--authorization-mode"] = "RBAC"
-		}
 	}
 
 	// Disable Weak TLS Cipher Suites for 1.10 and abov
@@ -160,20 +148,7 @@ func (cs *ContainerService) setAPIServerConfig() {
 func getDefaultAdmissionControls(cs *ContainerService) (string, string) {
 	o := cs.Properties.OrchestratorProfile
 	admissionControlKey := "--enable-admission-plugins"
-	var admissionControlValues string
-
-	// --admission-control was used in v1.9 and earlier and was deprecated in 1.10
-	if !common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.10.0") {
-		admissionControlKey = "--admission-control"
-	}
-
-	// Add new version case when applying admission controllers only available in that version or later
-	switch {
-	case common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.9.0"):
-		admissionControlValues = "NamespaceLifecycle,LimitRanger,ServiceAccount,DefaultStorageClass,DefaultTolerationSeconds,ValidatingAdmissionWebhook,ResourceQuota,ExtendedResourceToleration"
-	default:
-		admissionControlValues = "NamespaceLifecycle,LimitRanger,ServiceAccount,DefaultStorageClass,ResourceQuota"
-	}
+	admissionControlValues := "NamespaceLifecycle,LimitRanger,ServiceAccount,DefaultStorageClass,DefaultTolerationSeconds,ValidatingAdmissionWebhook,ResourceQuota,ExtendedResourceToleration"
 
 	// Pod Security Policy configuration
 	if to.Bool(o.KubernetesConfig.EnablePodSecurityPolicy) {

@@ -293,10 +293,8 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpgrade, isScale bool) {
 		}
 
 		if a.OrchestratorProfile.KubernetesConfig.IsRBACEnabled() {
-			if common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.9.0") {
-				// TODO make EnableAggregatedAPIs a pointer to bool so that a user can opt out of it
-				a.OrchestratorProfile.KubernetesConfig.EnableAggregatedAPIs = true
-			}
+			// TODO make EnableAggregatedAPIs a pointer to bool so that a user can opt out of it
+			a.OrchestratorProfile.KubernetesConfig.EnableAggregatedAPIs = true
 		} else if isUpdate && a.OrchestratorProfile.KubernetesConfig.EnableAggregatedAPIs {
 			// Upgrade scenario:
 			// We need to force set EnableAggregatedAPIs to false if RBAC was previously disabled
@@ -741,10 +739,6 @@ func (p *Properties) setStorageDefaults() {
 		}
 		if len(profile.AvailabilityProfile) == 0 {
 			profile.AvailabilityProfile = VirtualMachineScaleSets
-			// VMSS is not supported for k8s below 1.10.2
-			if p.OrchestratorProfile.OrchestratorType == Kubernetes && !common.IsKubernetesVersionGe(p.OrchestratorProfile.OrchestratorVersion, "1.10.2") {
-				profile.AvailabilityProfile = AvailabilitySet
-			}
 		}
 		if len(profile.ScaleSetEvictionPolicy) == 0 && profile.ScaleSetPriority == ScaleSetPriorityLow {
 			profile.ScaleSetEvictionPolicy = ScaleSetEvictionPolicyDelete
