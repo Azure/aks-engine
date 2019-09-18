@@ -372,19 +372,18 @@ pullContainerImage "docker" "busybox"
 echo "  - busybox" >> ${VHD_LOGS_FILEPATH}
 
 # TODO: fetch supported k8s versions from an aks-engine command instead of hardcoding them here
+# TODO add 1.15.4-azs, 1.14.7-azs, 1.13.11-azs when those hyperkube images are ready
 K8S_VERSIONS="
+1.16.0
+1.15.4
 1.15.3
 1.15.3-azs
-1.15.2
-1.15.2-azs
+1.14.7
 1.14.6
 1.14.6-azs
-1.14.5
-1.14.5-azs
+1.13.11
 1.13.10
 1.13.10-azs
-1.13.9
-1.13.9-azs
 1.12.8
 1.12.8-azs
 1.12.7
@@ -401,9 +400,11 @@ for KUBERNETES_VERSION in ${K8S_VERSIONS}; do
       HYPERKUBE_URL="mcr.microsoft.com/k8s/azurestack/core/hyperkube-amd64:v${KUBERNETES_VERSION}"
     else
       HYPERKUBE_URL="k8s.gcr.io/hyperkube-amd64:v${KUBERNETES_VERSION}"
-      CONTAINER_IMAGE="k8s.gcr.io/cloud-controller-manager-amd64:v${KUBERNETES_VERSION}"
-      pullContainerImage "docker" ${CONTAINER_IMAGE}
-      echo "  - ${CONTAINER_IMAGE}" >> ${VHD_LOGS_FILEPATH}
+      if (( $(echo ${KUBERNETES_VERSION} | cut -d"." -f2) < 16 )); then
+	    CONTAINER_IMAGE="k8s.gcr.io/cloud-controller-manager-amd64:v${KUBERNETES_VERSION}"
+	    pullContainerImage "docker" ${CONTAINER_IMAGE}
+	    echo "  - ${CONTAINER_IMAGE}" >> ${VHD_LOGS_FILEPATH}
+	  fi
     fi
     extractHyperkube "docker"
     echo "  - ${HYPERKUBE_URL}" >> ${VHD_LOGS_FILEPATH}
