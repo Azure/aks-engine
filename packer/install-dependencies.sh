@@ -373,6 +373,7 @@ echo "  - busybox" >> ${VHD_LOGS_FILEPATH}
 
 # TODO: fetch supported k8s versions from an aks-engine command instead of hardcoding them here
 K8S_VERSIONS="
+1.16.0
 1.15.3
 1.15.3-azs
 1.15.2
