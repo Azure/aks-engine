@@ -115,11 +115,20 @@ func (p *Properties) SetAzureStackCloudSpec(isUpgrade, isScale bool) error {
 			return errors.New("Failed to set Cloud Spec for Azure Stack due to invalid environment")
 		}
 
-		if p.CustomCloudProfile.DependenciesLocation == AzureStackDependenciesLocationPublic {
-			azureStackCloudSpec.KubernetesSpecConfig.AzureTelemetryPID = DefaultAzurestackDeployTelemetryPID
-		}
 		azureStackCloudSpec.EndpointConfig.ResourceManagerVMDNSSuffix = p.CustomCloudProfile.Environment.ResourceManagerVMDNSSuffix
 		azureStackCloudSpec.CloudName = AzureStackCloud
+
+		//Sets default values for telemetry PID where none is set
+		if p.CustomCloudProfile.AzureEnvironmentSpecConfig == nil {
+			azureStackCloudSpec.KubernetesSpecConfig.AzureTelemetryPID = DefaultAzurestackDeployTelemetryPID
+			if isScale {
+				azureStackCloudSpec.KubernetesSpecConfig.AzureTelemetryPID = DefaultAzurestackScaleTelemetryPID
+			}
+			if isUpgrade {
+				azureStackCloudSpec.KubernetesSpecConfig.AzureTelemetryPID = DefaultAzurestackUpgradeTelemetryPID
+			}
+		}
+
 		// Use the custom input to overwrite the default values in AzureStackCloudSpec
 		if p.CustomCloudProfile.AzureEnvironmentSpecConfig != nil {
 			ascc := p.CustomCloudProfile.AzureEnvironmentSpecConfig
@@ -136,13 +145,6 @@ func (p *Properties) SetAzureStackCloudSpec(isUpgrade, isScale bool) error {
 			azsKubernetesSpecConfig := azureStackCloudSpec.KubernetesSpecConfig
 
 			azureStackCloudSpec.KubernetesSpecConfig.AzureTelemetryPID = helpers.EnsureString(asccKubernetesSpecConfig.AzureTelemetryPID, DefaultAzurestackDeployTelemetryPID)
-
-			if isScale {
-				azureStackCloudSpec.KubernetesSpecConfig.AzureTelemetryPID = helpers.EnsureString(asccKubernetesSpecConfig.AzureTelemetryPID, DefaultAzurestackScaleTelemetryPID)
-			}
-			if isUpgrade {
-				azureStackCloudSpec.KubernetesSpecConfig.AzureTelemetryPID = helpers.EnsureString(asccKubernetesSpecConfig.AzureTelemetryPID, DefaultAzurestackUpgradeTelemetryPID)
-			}
 			azureStackCloudSpec.KubernetesSpecConfig.ACIConnectorImageBase = helpers.EnsureString(asccKubernetesSpecConfig.ACIConnectorImageBase, azsKubernetesSpecConfig.ACIConnectorImageBase)
 			azureStackCloudSpec.KubernetesSpecConfig.AzureCNIImageBase = helpers.EnsureString(asccKubernetesSpecConfig.AzureCNIImageBase, azsKubernetesSpecConfig.AzureCNIImageBase)
 			azureStackCloudSpec.KubernetesSpecConfig.CalicoImageBase = helpers.EnsureString(asccKubernetesSpecConfig.CalicoImageBase, azsKubernetesSpecConfig.CalicoImageBase)
@@ -167,8 +169,8 @@ func (p *Properties) SetAzureStackCloudSpec(isUpgrade, isScale bool) error {
 			for k, v := range ascc.OSImageConfig {
 				azureStackCloudSpec.OSImageConfig[k] = v
 			}
+			p.CustomCloudProfile.AzureEnvironmentSpecConfig = &azureStackCloudSpec
 		}
-		p.CustomCloudProfile.AzureEnvironmentSpecConfig = &azureStackCloudSpec
 		AzureCloudSpecEnvMap[AzureStackCloud] = azureStackCloudSpec
 	}
 	return nil

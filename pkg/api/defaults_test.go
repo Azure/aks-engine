@@ -2144,6 +2144,7 @@ func TestSetCustomCloudProfileDefaults(t *testing.T) {
 	expectedEnv := AzureCloudSpecEnvMap[AzurePublicCloud]
 	expectedEnv.EndpointConfig.ResourceManagerVMDNSSuffix = mockCSPDefaultSpec.CustomCloudProfile.Environment.ResourceManagerVMDNSSuffix
 	expectedEnv.CloudName = AzureStackCloud
+	expectedEnv.KubernetesSpecConfig.AzureTelemetryPID = DefaultAzurestackDeployTelemetryPID
 	if diff := cmp.Diff(actualEnv, expectedEnv); diff != "" {
 		t.Errorf("setCustomCloudProfileDefaults(): did not set AzureStackCloudSpec as default when azureEnvironmentSpecConfig is empty in api model JSON file. %s", diff)
 	}
@@ -2171,6 +2172,7 @@ func TestSetCustomCloudProfileDefaults(t *testing.T) {
 		expectedEnvAzureChinaSpec := AzureCloudSpecEnvMap[value]
 		expectedEnvAzureChinaSpec.EndpointConfig.ResourceManagerVMDNSSuffix = mockCSPDefaultSpec.CustomCloudProfile.Environment.ResourceManagerVMDNSSuffix
 		expectedEnvAzureChinaSpec.CloudName = AzureStackCloud
+		expectedEnvAzureChinaSpec.KubernetesSpecConfig.AzureTelemetryPID = DefaultAzurestackDeployTelemetryPID
 		t.Logf("verifying dependenciesLocation: %s", key)
 		if diff := cmp.Diff(actualEnvAzureChinaSpec, expectedEnvAzureChinaSpec); diff != "" {
 			t.Errorf("setCustomCloudProfileDefaults(): did not set AzureStackCloudSpec as default when connection Mode is %s in api model JSON file. %s", key, diff)
@@ -2473,6 +2475,7 @@ func TestSetCustomCloudProfileEnvironmentDefaults(t *testing.T) {
 
 	cloudSpec := AzureCloudSpecEnvMap[AzurePublicCloud]
 	cloudSpec.CloudName = AzureStackCloud
+	cloudSpec.KubernetesSpecConfig.AzureTelemetryPID = DefaultAzurestackDeployTelemetryPID
 	cloudSpec.EndpointConfig.ResourceManagerVMDNSSuffix = mockCS.Properties.CustomCloudProfile.Environment.ResourceManagerVMDNSSuffix
 	if diff := cmp.Diff(AzureCloudSpecEnvMap[AzureStackCloud], cloudSpec); diff != "" {
 		t.Errorf("Fail to compare, AzureCloudSpec AzureStackCloud %q", diff)
