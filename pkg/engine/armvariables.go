@@ -260,7 +260,7 @@ func getK8sMasterVars(cs *api.ContainerService) (map[string]interface{}, error) 
 		masterVars["etcdServerCertFilepath"] = "/etc/kubernetes/certs/etcdserver.crt"
 		masterVars["etcdServerKeyFilepath"] = "/etc/kubernetes/certs/etcdserver.key"
 	}
-	if useManagedIdentity {
+	if useManagedIdentity && !isHostedMaster {
 		masterVars["servicePrincipalClientId"] = "msi"
 		masterVars["servicePrincipalClientSecret"] = "msi"
 	} else {

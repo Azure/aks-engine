@@ -54,6 +54,7 @@ ERR_CIS_ASSIGN_FILE_PERMISSION=112 # Error assigning permission to a file in CIS
 ERR_PACKER_COPY_FILE=113 # Error writing a file to disk during VHD CI
 ERR_CIS_APPLY_PASSWORD_CONFIG=115 # Error applying CIS-recommended passwd configuration
 
+ERR_VHD_FILE_NOT_FOUND=124 # VHD log file not found on VM built from VHD distro
 ERR_VHD_BUILD_ERROR=125 # Reserved for VHD CI exit conditions
 
 # Azure Stack specific errors
