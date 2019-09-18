@@ -23739,7 +23739,12 @@ function DownloadFileOverHttp
 
     # First check to see if a file with the same name is already cached on the VHD
     $fileName = [IO.Path]::GetFileName($Url)
-    $search = [IO.Directory]::GetFiles($global:CacheDir, $fileName, [IO.SearchOption]::AllDirectories)
+    
+    $search = @()
+    if (Test-Path $global:CacheDir)
+    {
+        $search = [IO.Directory]::GetFiles($global:CacheDir, $fileName, [IO.SearchOption]::AllDirectories)
+    }
 
     if ($search.Count -ne 0)
     {

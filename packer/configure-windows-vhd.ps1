@@ -169,7 +169,7 @@ function Set-AllowedSecurityProtocols
     }
 
     Write-Log "Settings allowed security protocols to: $allowedProtocols"
-    [System.Net.SevicePointManager]::SecurityProtocol = $allowedProtocols
+    [System.Net.ServicePointManager]::SecurityProtocol = $allowedProtocols
 }
 
 function Set-WinRmServiceAutoStart
