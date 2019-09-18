@@ -13622,7 +13622,7 @@ cleanUpContainerImages() {
     fi
 
     # TODO: remove once ACR is available on Azure Stack
-    docker rmi registry:2 &
+    docker rmi registry:2.7.1 &
 }
 
 cleanUpGPUDrivers() {
@@ -13721,6 +13721,7 @@ if [[ "${IS_VHD}" = true ]]; then
         exit $ERR_VHD_FILE_NOT_FOUND
     fi
     echo "detected golden image pre-install"
+    cleanUpContainerImages
     FULL_INSTALL_REQUIRED=false
 else
     FULL_INSTALL_REQUIRED=true
@@ -13854,10 +13855,6 @@ echo "Custom script finished successfully"
 echo $(date),$(hostname), endcustomscript>>/opt/m
 mkdir -p /opt/azure/containers && touch /opt/azure/containers/provision.complete
 ps auxfww > /opt/azure/provision-ps.log &
-
-if ! $FULL_INSTALL_REQUIRED; then
-  cleanUpContainerImages
-fi
 
 if [[ "${TARGET_ENVIRONMENT,,}" != "${AZURE_STACK_ENV}"  ]]; then
     # TODO: remove once ACR is available on Azure Stack
