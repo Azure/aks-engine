@@ -11,8 +11,9 @@ import (
 	"time"
 
 	"github.com/Azure/aks-engine/test/e2e/kubernetes/util"
-	"github.com/pkg/errors"
 )
+
+const commandTimeout = 1 * time.Minute
 
 // PersistentVolume is used to parse data from kubectl get pv
 type PersistentVolume struct {
@@ -67,6 +68,30 @@ type List struct {
 	PersistentVolumes []PersistentVolume `json:"items"`
 }
 
+// DescribePVs describes all persistent volume resources
+func DescribePVs() {
+	list, err := Get()
+	if err != nil {
+		log.Printf("Unable to get pvs: %s", err)
+	}
+	if list != nil {
+		for _, pv := range list.PersistentVolumes {
+			err := pv.Describe()
+			if err != nil {
+				log.Printf("Unable to describe pv %s: %s", pv.Metadata.Name, err)
+			}
+		}
+	}
+}
+
+// Describe will describe a pv resource
+func (pv *PersistentVolume) Describe() error {
+	cmd := exec.Command("k", "describe", "pv", pv.Metadata.Name)
+	out, err := util.RunAndLogCommand(cmd, commandTimeout)
+	log.Printf("\n%s\n", string(out))
+	return err
+}
+
 // Get returns the current pvs for a given kubeconfig
 func Get() (*List, error) {
 	cmd := exec.Command("k", "get", "pv", "-o", "json")
@@ -85,30 +110,29 @@ func Get() (*List, error) {
 }
 
 // WaitOnReady will block until all pvs are in ready state
-func WaitOnReady(pvCount int, sleep, duration time.Duration) bool {
-	readyCh := make(chan bool, 1)
-	errCh := make(chan error)
-	ctx, cancel := context.WithTimeout(context.Background(), duration)
+func WaitOnReady(pvCount int, sleep, timeout time.Duration) bool {
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
+	ch := make(chan bool)
 	go func() {
 		for {
 			select {
 			case <-ctx.Done():
-				errCh <- errors.Errorf("Timeout exceeded (%s) while waiting for PVs to become Bound", duration.String())
-			default:
-				if AreAllReady(pvCount) {
-					readyCh <- true
-				}
+				return
+			case ch <- AreAllReady(pvCount):
 				time.Sleep(sleep)
 			}
 		}
 	}()
 	for {
 		select {
-		case <-errCh:
+		case ready := <-ch:
+			if ready {
+				return ready
+			}
+		case <-ctx.Done():
+			DescribePVs()
 			return false
-		case ready := <-readyCh:
-			return ready
 		}
 	}
 }

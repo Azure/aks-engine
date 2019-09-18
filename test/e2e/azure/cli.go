@@ -9,6 +9,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"os"
 	"os/exec"
 	"strconv"
 	"time"
@@ -552,6 +553,9 @@ func (sa *StorageAccount) UploadFiles(source, destination string) error {
 
 // DownloadFiles will download the output directory from storage
 func (sa *StorageAccount) DownloadFiles(source, destination string) error {
+	if _, err := os.Stat(destination); os.IsNotExist(err) {
+		os.Mkdir(destination, os.ModeDir)
+	}
 	cmd := exec.Command("az", "storage", "file", "download-batch", "--destination", destination, "--source", source, "--account-name", sa.Name, "--connection-string", sa.ConnectionString)
 	util.PrintCommand(cmd)
 	out, err := cmd.CombinedOutput()
