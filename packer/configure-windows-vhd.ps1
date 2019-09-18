@@ -160,7 +160,7 @@ function Set-AllowedSecurityProtocols
     $allowedProtocols = @()
     $insecureProtocols = @([System.Net.SecurityProtocolType]::SystemDefault, [System.Net.SecurityProtocolType]::Ssl3)
 
-    foreach $(protocol in [System.Enum]::GetValues([System.Net.SecurityProtocolType]))
+    foreach ($protocol in [System.Enum]::GetValues([System.Net.SecurityProtocolType]))
     {
         if ($insecureProtocols -notcontains $protocol)
         {
