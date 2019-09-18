@@ -1,6 +1,6 @@
 {
     "apiVersion": "vlabs",
-    "location": "",
+    "location": "redmond",
     "properties": {
         "orchestratorProfile": {
             "orchestratorType": "Kubernetes",
@@ -13,13 +13,13 @@
             }
         },
         "customCloudProfile": {
-            "portalURL": ""
+            "portalURL": "https://portal.redmond.ext-n22r0903.masd.stbtest.microsoft.com"
         },
         "featureFlags": {
             "enableTelemetry": true
         },
         "masterProfile": {
-            "dnsPrefix": "",
+            "dnsPrefix": "test",
             "distro": "ubuntu",
             "count": 3,
             "vmSize": "Standard_D2_v2"
@@ -39,14 +39,14 @@
             "ssh": {
                 "publicKeys": [
                     {
-                        "keyData": ""
+                        "keyData": "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQDvbLKDItnLMl4boe4/7Sg7azBznr1k/MCpjYroJDPxOn9m4RMAtvE7iQV8P/oqGY6DjyS7kS8ShMMRaedZ/X1xcHVOTmSihWk0hdgWfyyhHJHo5cKnnZCJYH0U4REf5ofwQlP+N+7fN2xNkQaw/qjYUH8nNpRp7z9nLk1MxAD35jACGKjth417oEM7kr86qePkdy18m+YEA8713UbUWXnqHduOsXdG+QfeHN4P3G11fHXs6yYpzf/Xmi/U6KN2fv8Q4w/5JrRmLOB++a1UYdhoQYkexuLpv53PGBqJpKrJMmv7v1ZsXV8WR7LFLlkzzbrnzICts3dr3S2FMVAAdproCG5CnwHK0kocxXDBRnicgW0ymyfFGzNtr3hXgvP7AmZWYE013/5P2068lqwU8RGQKnDE1ydIcZ58U3IkAWyswOGYML9NbbZMEV1cdBBBi8Gu6uy/3sd+vnfciTasYNF70z1qWKCawWWOEwit9mKEANh677M/dfzt9yJABRhQmDNKjxI0TumDYoCXMEZ7czHYmhKue1tBAJbgDUN23lr/xS7YT3feoVnGovazDUI+SOdrIsZXPIUlN9xh7ZBW0JvxO+JZly4pMV/gMuf2NKnxFR1jfSXPCBjSGaYjBfweEAvMJ61iH3r64T2Tis2hjg2SdkCjimwYva9dh7cGVkYGmQ== imported-openssh-key"
                     }
                 ]
             }
         },
         "servicePrincipalProfile": {
-            "clientId": "",
-            "secret": ""
+            "clientId": "9b0540cd-a92a-4d14-a7b2-7ea337153ef0",
+            "secret": "nWmxgg8BiJbOAWPKMGxDj9B911awmV4iLhTSMHvH"
         }
     }
 }

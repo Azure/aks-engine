@@ -114,6 +114,10 @@ func (p *Properties) SetAzureStackCloudSpec(isUpgrade, isScale bool) error {
 		if p.CustomCloudProfile.Environment == nil || p.CustomCloudProfile.Environment.ResourceManagerVMDNSSuffix == "" {
 			return errors.New("Failed to set Cloud Spec for Azure Stack due to invalid environment")
 		}
+
+		if p.CustomCloudProfile.DependenciesLocation == AzureStackDependenciesLocationPublic {
+			azureStackCloudSpec.KubernetesSpecConfig.AzureTelemetryPID = DefaultAzurestackDeployTelemetryPID
+		}
 		azureStackCloudSpec.EndpointConfig.ResourceManagerVMDNSSuffix = p.CustomCloudProfile.Environment.ResourceManagerVMDNSSuffix
 		azureStackCloudSpec.CloudName = AzureStackCloud
 		// Use the custom input to overwrite the default values in AzureStackCloudSpec
@@ -131,11 +135,7 @@ func (p *Properties) SetAzureStackCloudSpec(isUpgrade, isScale bool) error {
 			asccKubernetesSpecConfig := ascc.KubernetesSpecConfig
 			azsKubernetesSpecConfig := azureStackCloudSpec.KubernetesSpecConfig
 
-			if asccKubernetesSpecConfig.AzureTelemetryPID == "" {
-				azureStackCloudSpec.KubernetesSpecConfig.AzureTelemetryPID = DefaultAzurestackDeployTelemetryPID
-			} else {
-				azureStackCloudSpec.KubernetesSpecConfig.AzureTelemetryPID = helpers.EnsureString(asccKubernetesSpecConfig.AzureTelemetryPID, DefaultAzurestackDeployTelemetryPID)
-			}
+			azureStackCloudSpec.KubernetesSpecConfig.AzureTelemetryPID = helpers.EnsureString(asccKubernetesSpecConfig.AzureTelemetryPID, DefaultAzurestackDeployTelemetryPID)
 
 			if isScale {
 				azureStackCloudSpec.KubernetesSpecConfig.AzureTelemetryPID = helpers.EnsureString(asccKubernetesSpecConfig.AzureTelemetryPID, DefaultAzurestackScaleTelemetryPID)
@@ -167,8 +167,8 @@ func (p *Properties) SetAzureStackCloudSpec(isUpgrade, isScale bool) error {
 			for k, v := range ascc.OSImageConfig {
 				azureStackCloudSpec.OSImageConfig[k] = v
 			}
-			p.CustomCloudProfile.AzureEnvironmentSpecConfig = &azureStackCloudSpec
 		}
+		p.CustomCloudProfile.AzureEnvironmentSpecConfig = &azureStackCloudSpec
 		AzureCloudSpecEnvMap[AzureStackCloud] = azureStackCloudSpec
 	}
 	return nil
