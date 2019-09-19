@@ -33,6 +33,8 @@ jobs:
       -e AZURE_RESOURCE_GROUP_NAME=${AZURE_RESOURCE_GROUP_NAME} \
       -e AZURE_LOCATION=${AZURE_LOCATION} \
       -e AZURE_VM_SIZE=${PACKER_VM_SIZE} \
+      -e GIT_BRANCH=$(Build.SourceBranchName) \
+      -e GIT_REPO=$(Build.Repository.Uri) \
       -e GIT_VERSION=$(Build.SourceVersion) \
       -e BUILD_ID=$(Build.BuildId) \
       -e BUILD_NUMBER=$(Build.BuildNumber) \

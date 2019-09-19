@@ -13,6 +13,13 @@ function Log($Message) {
     $Message | Tee-Object -FilePath "c:\release-notes.txt" -Append
 }
 
+Log "Build Number: $env:BUILD_NUMBER"
+Log "Build Id:     $env:BUILD_ID"
+Log "Build Repo:   $env:BUILD_REPO"
+Log "Build Branch: $env:BUILD_BRANCH"
+Log "Commit:       $env:BUILD_COMMIT"
+Log ""
+
 Log "System Info"
 $systemInfo = Get-ItemProperty -Path 'HKLM:SOFTWARE\Microsoft\Windows NT\CurrentVersion'
 Log ("`t{0,-14} : {1}" -f "OS Name", $systemInfo.ProductName)

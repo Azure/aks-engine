@@ -1,5 +1,10 @@
 {
     "variables": {
+        "build_branch": "{{env `GIT_BRANCH`}}",
+        "build_commit": "{{env `GIT_VERSION`}}",
+        "build_id": "{{env `BUILD_ID`}}",
+        "build_number": "{{env `BUILD_NUMBER`}}",
+        "build_repo": "{{env `GIT_REPO`}}",
         "client_id": "{{env `AZURE_CLIENT_ID`}}",
         "client_secret": "{{env `AZURE_CLIENT_SECRET`}}",
         "tenant_id": "{{env `AZURE_TENANT_ID`}}",
@@ -67,6 +72,13 @@
         {
             "elevated_user": "packer",
             "elevated_password": "{{.WinRMPassword}}",
+            "environment_vars" : [
+                "BUILD_BRANCH={{user `build_branch`}}",
+                "BUILD_COMMIT={{user `build_commit`}}",
+                "BUILD_ID={{user `build_id`}}",
+                "BUILD_NUMBER={{user `build_number`}}",
+                "BUILD_REPO={{user `build_repo`}}"
+            ],
             "type": "powershell",
             "script": "packer/write-release-notes-windows.ps1"
         },
