@@ -76,6 +76,7 @@ jobs:
   parameters:
     name: 'ubuntu_18_04_linux_e2e'
     apimodel: 'examples/ubuntu-1804/kubernetes.json'
+    skipTests: '"should have healthy time synchronization"'
 
 - template: e2e-job-template.yaml
   parameters:
