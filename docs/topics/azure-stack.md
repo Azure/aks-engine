@@ -173,16 +173,12 @@ If you need to expose more than 5 services, then the recommendation is to route 
 
 These are the Kubernetes versions that you can deploy to Azure Stack using AKS Engine:
 
+- 1.15.4
 - 1.15.3
-- 1.15.2
+- 1.14.7
 - 1.14.6
-- 1.14.5
+- 1.13.11
 - 1.13.10
-- 1.13.9
-- 1.12.8
-- 1.12.7
-- 1.11.10
-- 1.11.9
 
 If the Azure Stack instance is air-gapped, then the syndicated [AKS Base Image](#disconnected-azure-stack-instances) will determine the Kubernetes version that you can deploy or the target upgrade version. The table below lists the pre-pulled versions on each AKS Base Image version.
 
