@@ -1950,12 +1950,11 @@ func TestSupportPodPidsLimitFeatureGateInAgentPool(t *testing.T) {
 	}
 
 }
-
 func TestReadOnlyPort(t *testing.T) {
 	cases := []struct {
-		name                                   string
-		cs                                     *ContainerService
-		expectedReadOnlyPort                     string
+		name                 string
+		cs                   *ContainerService
+		expectedReadOnlyPort string
 	}{
 		{
 			name: "default pre-1.16",
@@ -1968,7 +1967,7 @@ func TestReadOnlyPort(t *testing.T) {
 					},
 				},
 			},
-			expectedReadOnlyPort:                     "",
+			expectedReadOnlyPort: "",
 		},
 		{
 			name: "default 1.16",
@@ -1981,7 +1980,7 @@ func TestReadOnlyPort(t *testing.T) {
 					},
 				},
 			},
-			expectedReadOnlyPort:                     "0",
+			expectedReadOnlyPort: "0",
 		},
 	}
 
