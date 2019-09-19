@@ -171,7 +171,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			nodeList, err := node.GetReady()
 			Expect(err).NotTo(HaveOccurred())
 			for _, node := range nodeList.Nodes {
-				Expect("v" + eng.ExpandedDefinition.Properties.OrchestratorProfile.OrchestratorVersion).To(Equal(node.Status.NodeInfo.KubeletVersion))
+				Expect("v" + eng.ExpandedDefinition.Properties.OrchestratorProfile.OrchestratorVersion).To(Equal(node.Version()))
 			}
 		})
 
@@ -568,12 +568,12 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 		})
 
 		It("should have node labels specific to masters or agents", func() {
-			nodeList, err := node.Get()
+			nodes, err := node.GetWithRetry(1*time.Second, cfg.Timeout)
 			Expect(err).NotTo(HaveOccurred())
 			if !eng.ExpandedDefinition.Properties.HasLowPriorityScaleset() {
-				Expect(len(nodeList.Nodes)).To(Equal(eng.NodeCount()))
+				Expect(len(nodes)).To(Equal(eng.NodeCount()))
 			}
-			for _, node := range nodeList.Nodes {
+			for _, node := range nodes {
 				role := "master"
 				if !strings.HasPrefix(node.Metadata.Name, "k8s-master-") {
 					if eng.ExpandedDefinition.Properties.HasLowPriorityScaleset() {
@@ -1213,9 +1213,9 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 	Describe("with zoned master profile", func() {
 		It("should be labeled with zones for each masternode", func() {
 			if eng.ExpandedDefinition.Properties.MasterProfile.HasAvailabilityZones() {
-				nodeList, err := node.Get()
+				nodes, err := node.GetWithRetry(1*time.Second, cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())
-				for _, node := range nodeList.Nodes {
+				for _, node := range nodes {
 					role := node.Metadata.Labels["kubernetes.io/role"]
 					if role == "master" {
 						By("Ensuring that we get zones for each master node")
@@ -1233,9 +1233,9 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 	Describe("with all zoned agent pools", func() {
 		It("should be labeled with zones for each node", func() {
 			if eng.ExpandedDefinition.Properties.HasZonesForAllAgentPools() {
-				nodeList, err := node.Get()
+				nodes, err := node.GetWithRetry(1*time.Second, cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())
-				for _, node := range nodeList.Nodes {
+				for _, node := range nodes {
 					role := node.Metadata.Labels["kubernetes.io/role"]
 					if role == "agent" {
 						By("Ensuring that we get zones for each agent node")

@@ -311,21 +311,12 @@ func (cli *CLIProvisioner) waitForNodes() error {
 			if !ready {
 				return errors.New("Error: Not all nodes in a healthy state")
 			}
-			var version string
-			var err error
-			if cli.Config.IsKubernetes() {
-				version, err = node.Version()
-			}
-			if err != nil {
-				log.Printf("Ready nodes did not return a version: %s", err)
-			}
-			log.Printf("Testing a %s %s cluster...\n", cli.Config.Orchestrator, version)
-			nodeList, err := node.Get()
+			nodes, err := node.GetWithRetry(1*time.Second, cli.Config.Timeout)
 			if err != nil {
 				return errors.Wrap(err, "Unable to get the list of nodes")
 			}
 			if !cli.Engine.ExpandedDefinition.Properties.HasLowPriorityScaleset() {
-				for _, n := range nodeList.Nodes {
+				for _, n := range nodes {
 					exp, err := regexp.Compile("k8s-master")
 					if err != nil {
 						return err
