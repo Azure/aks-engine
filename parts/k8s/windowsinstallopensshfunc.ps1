@@ -15,7 +15,7 @@ Install-OpenSSH {
         $isAvailable = Get-WindowsCapability -Online | ? Name -like 'OpenSSH*'
 
         if (!$isAvailable) {
-            Write-Error "OpenSSH is not avaliable on this machine"
+            Write-Error "OpenSSH is not available on this machine"
             exit 1
         }
 

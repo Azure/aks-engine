@@ -59,14 +59,15 @@ function Get-FilesToCacheOnVHD
             "https://github.com/Microsoft/SDN/raw/master/Kubernetes/windows/hns.psm1"
         );
         "c:\akse-cache\win-k8s\" = @(
-            "https://acs-mirror.azureedge.net/wink8s/azs-v1.14.5-1int.zip",
             "https://acs-mirror.azureedge.net/wink8s/azs-v1.14.6-1int.zip",
-            "https://acs-mirror.azureedge.net/wink8s/azs-v1.15.2-1int.zip",
-            "https://acs-mirror.azureedge.net/wink8s/azs-v1.15.3-1int.zip"
-            "https://acs-mirror.azureedge.net/wink8s/v1.14.5-1int.zip",
+            "https://acs-mirror.azureedge.net/wink8s/azs-v1.14.7-1int.zip",
+            "https://acs-mirror.azureedge.net/wink8s/azs-v1.15.3-1int.zip",
+            "https://acs-mirror.azureedge.net/wink8s/azs-v1.15.4-1int.zip"
             "https://acs-mirror.azureedge.net/wink8s/v1.14.6-1int.zip",
-            "https://acs-mirror.azureedge.net/wink8s/v1.15.2-1int.zip",
-            "https://acs-mirror.azureedge.net/wink8s/v1.15.3-1int.zip"
+            "https://acs-mirror.azureedge.net/wink8s/v1.14.7-1int.zip",
+            "https://acs-mirror.azureedge.net/wink8s/v1.15.3-1int.zip",
+            "https://acs-mirror.azureedge.net/wink8s/v1.15.4-1int.zip",
+            "https://acs-mirror.azureedge.net/wink8s/v1.16.0-1int.zip"
         );
         "c:\akse-cache\win-vnet-cni\" = @(
             "https://acs-mirror.azureedge.net/cni/azure-vnet-cni-windows-amd64-v1.0.27.zip"
@@ -206,6 +207,9 @@ function Update-WindowsFeatures
         Install-WindowsFeature $feature
     }
 }
+
+# Disable progress writers for this session to greatly speed up operations such as Invoke-WebRequest
+$ProgressPreference = 'SilentlyContinue'
 
 switch ($env:ProvisioningPhase)
 {
