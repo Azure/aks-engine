@@ -395,18 +395,18 @@ K8S_VERSIONS="
 1.10.12
 "
 for KUBERNETES_VERSION in ${K8S_VERSIONS}; do
-    if [[ $KUBERNETES_VERSION == *"azs"* ]]; then
-      HYPERKUBE_URL="mcr.microsoft.com/k8s/azurestack/core/hyperkube-amd64:v${KUBERNETES_VERSION}"
-    else
-      HYPERKUBE_URL="k8s.gcr.io/hyperkube-amd64:v${KUBERNETES_VERSION}"
-      if (( $(echo ${KUBERNETES_VERSION} | cut -d"." -f2) < 16 )); then
-	    CONTAINER_IMAGE="k8s.gcr.io/cloud-controller-manager-amd64:v${KUBERNETES_VERSION}"
-	    pullContainerImage "docker" ${CONTAINER_IMAGE}
-	    echo "  - ${CONTAINER_IMAGE}" >> ${VHD_LOGS_FILEPATH}
-	  fi
+  if [[ $KUBERNETES_VERSION == *"azs"* ]]; then
+    HYPERKUBE_URL="mcr.microsoft.com/k8s/azurestack/core/hyperkube-amd64:v${KUBERNETES_VERSION}"
+  else
+    HYPERKUBE_URL="k8s.gcr.io/hyperkube-amd64:v${KUBERNETES_VERSION}"
+    if (( $(echo ${KUBERNETES_VERSION} | cut -d"." -f2) < 16 )); then
+      CONTAINER_IMAGE="k8s.gcr.io/cloud-controller-manager-amd64:v${KUBERNETES_VERSION}"
+      pullContainerImage "docker" ${CONTAINER_IMAGE}
+      echo "  - ${CONTAINER_IMAGE}" >> ${VHD_LOGS_FILEPATH}
     fi
-    extractHyperkube "docker"
-    echo "  - ${HYPERKUBE_URL}" >> ${VHD_LOGS_FILEPATH}
+  fi
+  extractHyperkube "docker"
+  echo "  - ${HYPERKUBE_URL}" >> ${VHD_LOGS_FILEPATH}
 done
 
 # TODO: remove once ACR is available on Azure Stack
