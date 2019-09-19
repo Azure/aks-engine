@@ -5,7 +5,6 @@
 		"properties": {
 			"orchestratorProfile": {
 				"orchestratorType": "Kubernetes",
-				"orchestratorRelease": "1.12",
 				"kubernetesConfig": {
 					"networkPlugin": "cilium",
 					"networkPolicy": "cilium",
