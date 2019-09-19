@@ -47,6 +47,7 @@ const (
 	retryCommandsTimeout                      = 5 * time.Minute
 	kubeSystemPodsReadinessChecks             = 6
 	sleepBetweenRetriesWhenWaitingForPodReady = 1 * time.Second
+	sleepBetweenRetriesRemoteSSHCommand       = 3 * time.Second
 	timeoutWhenWaitingForPodOutboundAccess    = 1 * time.Minute
 	stabilityCommandTimeout                   = 1 * time.Second
 	windowsCommandTimeout                     = 1 * time.Minute
@@ -161,7 +162,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				if node.IsLinux() && !firstMasterRegexp.MatchString(node.Metadata.Name) {
 					err := sshConn.CopyToRemote(node.Metadata.Name, "/tmp/"+hostOSDNSValidateScript)
 					Expect(err).NotTo(HaveOccurred())
-					err = sshConn.ExecuteRemote(node.Metadata.Name, hostOSDNSValidationCommand, false)
+					err = sshConn.ExecuteRemoteWithRetry(node.Metadata.Name, hostOSDNSValidationCommand, false, sleepBetweenRetriesRemoteSSHCommand, cfg.Timeout)
 					Expect(err).NotTo(HaveOccurred())
 				}
 			}
@@ -201,7 +202,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 								continue
 							}
 						}
-						err = sshConn.ExecuteRemote(node.Metadata.Name, dockerVersionCmd, true)
+						err = sshConn.ExecuteRemoteWithRetry(node.Metadata.Name, dockerVersionCmd, true, sleepBetweenRetriesRemoteSSHCommand, cfg.Timeout)
 						Expect(err).NotTo(HaveOccurred())
 					}
 				} else {
@@ -220,7 +221,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 					rootPasswdCmd := fmt.Sprintf("\"sudo grep '^root:[!*]:' /etc/shadow\" && exit 1 || exit 0")
 					for _, node := range nodeList.Nodes {
 						if node.IsUbuntu() {
-							err = sshConn.ExecuteRemote(node.Metadata.Name, rootPasswdCmd, true)
+							err = sshConn.ExecuteRemoteWithRetry(node.Metadata.Name, rootPasswdCmd, true, sleepBetweenRetriesRemoteSSHCommand, cfg.Timeout)
 							Expect(err).NotTo(HaveOccurred())
 						}
 					}
@@ -247,7 +248,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 						if node.IsUbuntu() && !firstMasterRegexp.MatchString(node.Metadata.Name) {
 							err := sshConn.CopyToRemote(node.Metadata.Name, "/tmp/"+netConfigValidateScript)
 							Expect(err).NotTo(HaveOccurred())
-							err = sshConn.ExecuteRemote(node.Metadata.Name, netConfigValidationCommand, false)
+							err = sshConn.ExecuteRemoteWithRetry(node.Metadata.Name, netConfigValidationCommand, false, sleepBetweenRetriesRemoteSSHCommand, cfg.Timeout)
 							Expect(err).NotTo(HaveOccurred())
 						}
 					}
@@ -274,8 +275,9 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 						if !firstMasterRegexp.MatchString(node.Metadata.Name) {
 							err := sshConn.CopyToRemote(node.Metadata.Name, "/tmp/"+CISFilesValidateScript)
 							Expect(err).NotTo(HaveOccurred())
-							err = sshConn.ExecuteRemote(node.Metadata.Name, CISValidationCommand, false)
+							err = sshConn.ExecuteRemoteWithRetry(node.Metadata.Name, CISValidationCommand, false, sleepBetweenRetriesRemoteSSHCommand, cfg.Timeout)
 							Expect(err).NotTo(HaveOccurred())
+							fmt.Println(err)
 						}
 					}
 				} else {
@@ -301,7 +303,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 						if node.IsUbuntu() && !firstMasterRegexp.MatchString(node.Metadata.Name) {
 							err := sshConn.CopyToRemote(node.Metadata.Name, "/tmp/"+modprobeConfigValidateScript)
 							Expect(err).NotTo(HaveOccurred())
-							err = sshConn.ExecuteRemote(node.Metadata.Name, netConfigValidationCommand, false)
+							err = sshConn.ExecuteRemoteWithRetry(node.Metadata.Name, netConfigValidationCommand, false, sleepBetweenRetriesRemoteSSHCommand, cfg.Timeout)
 							Expect(err).NotTo(HaveOccurred())
 						}
 					}
@@ -327,7 +329,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 					if node.IsUbuntu() && !firstMasterRegexp.MatchString(node.Metadata.Name) {
 						err := sshConn.CopyToRemote(node.Metadata.Name, "/tmp/"+installedPackagesValidateScript)
 						Expect(err).NotTo(HaveOccurred())
-						err = sshConn.ExecuteRemote(node.Metadata.Name, installedPackagesValidationCommand, false)
+						err = sshConn.ExecuteRemoteWithRetry(node.Metadata.Name, installedPackagesValidationCommand, false, sleepBetweenRetriesRemoteSSHCommand, cfg.Timeout)
 						Expect(err).NotTo(HaveOccurred())
 					}
 				}
@@ -351,7 +353,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 						if node.IsUbuntu() && !firstMasterRegexp.MatchString(node.Metadata.Name) {
 							err := sshConn.CopyToRemote(node.Metadata.Name, "/tmp/"+sshdConfigValidateScript)
 							Expect(err).NotTo(HaveOccurred())
-							err = sshConn.ExecuteRemote(node.Metadata.Name, sshdConfigValidationCommand, false)
+							err = sshConn.ExecuteRemoteWithRetry(node.Metadata.Name, sshdConfigValidationCommand, false, sleepBetweenRetriesRemoteSSHCommand, cfg.Timeout)
 							Expect(err).NotTo(HaveOccurred())
 						}
 					}
@@ -378,7 +380,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 						if node.IsUbuntu() && !firstMasterRegexp.MatchString(node.Metadata.Name) {
 							err := sshConn.CopyToRemote(node.Metadata.Name, "/tmp/"+pwQualityValidateScript)
 							Expect(err).NotTo(HaveOccurred())
-							err = sshConn.ExecuteRemote(node.Metadata.Name, pwQualityValidationCommand, false)
+							err = sshConn.ExecuteRemoteWithRetry(node.Metadata.Name, pwQualityValidationCommand, false, sleepBetweenRetriesRemoteSSHCommand, cfg.Timeout)
 							Expect(err).NotTo(HaveOccurred())
 						}
 					}
@@ -417,7 +419,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 						err := sshConn.CopyToRemote(node.Metadata.Name, "/tmp/"+auditdValidateScript)
 						Expect(err).NotTo(HaveOccurred())
 						auditdValidationCommand := fmt.Sprintf("\"ENABLED=%t /tmp/%s\"", enabled, auditdValidateScript)
-						err = sshConn.ExecuteRemote(node.Metadata.Name, auditdValidationCommand, false)
+						err = sshConn.ExecuteRemoteWithRetry(node.Metadata.Name, auditdValidationCommand, false, sleepBetweenRetriesRemoteSSHCommand, cfg.Timeout)
 						Expect(err).NotTo(HaveOccurred())
 					}
 				} else {
@@ -921,7 +923,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 								err = sshConn.CopyToRemote(node.Metadata.Name, "/tmp/"+simulateDockerdCrashScript)
 								Expect(err).NotTo(HaveOccurred())
 								simulateDockerCrashCommand := fmt.Sprintf("\"/tmp/%s\"", simulateDockerdCrashScript)
-								err = sshConn.ExecuteRemote(node.Metadata.Name, simulateDockerCrashCommand, true)
+								err = sshConn.ExecuteRemoteWithRetry(node.Metadata.Name, simulateDockerCrashCommand, true, sleepBetweenRetriesRemoteSSHCommand, cfg.Timeout)
 								Expect(err).NotTo(HaveOccurred())
 							}
 						}
@@ -933,7 +935,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 							if node.IsWindows() {
 								By(fmt.Sprintf("restarting kubelet service on node: %s", node.Metadata.Name))
 								restartKubeletCommand := fmt.Sprintf("\"Powershell Start-Service kubelet\"")
-								err = sshConn.ExecuteRemote(node.Metadata.Name, restartKubeletCommand, true)
+								err = sshConn.ExecuteRemoteWithRetry(node.Metadata.Name, restartKubeletCommand, true, sleepBetweenRetriesRemoteSSHCommand, cfg.Timeout)
 								Expect(err).NotTo(HaveOccurred())
 							}
 						}
@@ -1844,7 +1846,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 					if node.IsUbuntu() && !firstMasterRegexp.MatchString(node.Metadata.Name) {
 						err := sshConn.CopyToRemote(node.Metadata.Name, "/tmp/"+timeSyncValidateScript)
 						Expect(err).NotTo(HaveOccurred())
-						err = sshConn.ExecuteRemote(node.Metadata.Name, timeSyncValidationCommand, false)
+						err = sshConn.ExecuteRemoteWithRetry(node.Metadata.Name, timeSyncValidationCommand, false, sleepBetweenRetriesRemoteSSHCommand, cfg.Timeout)
 						Expect(err).NotTo(HaveOccurred())
 					}
 				}
