@@ -5,11 +5,11 @@
         "orchestratorProfile": {
             "orchestratorType": "Kubernetes",
             "orchestratorRelease": "1.14",
-            "orchestratorVersion": "1.14.5",
+            "orchestratorVersion": "1.14.7",
             "kubernetesConfig": {
                 "kubernetesImageBase": "mcr.microsoft.com/k8s/azurestack/core/",
                 "useInstanceMetadata": false,
-                "networkPlugin": "flannel"
+                "networkPlugin": "kubenet"
             }
         },
         "customCloudProfile": {
