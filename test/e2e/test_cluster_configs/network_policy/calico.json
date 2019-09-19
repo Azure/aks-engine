@@ -7,7 +7,6 @@
 		"properties": {
 			"orchestratorProfile": {
 				"orchestratorType": "Kubernetes",
-				"orchestratorRelease": "1.13",
 				"kubernetesConfig": {
 					"networkPolicy": "calico",
 					"clusterSubnet": "10.239.0.0/16",
