@@ -2927,14 +2927,14 @@ func getKubernetesConfigWithFeatureGates(featureGates string) *KubernetesConfig 
 	}
 }
 
-func TestDefaultEnablePodSecurityPolicy(t *testing.T) {
+func TestEnablePodSecurityPolicy(t *testing.T) {
 	cases := []struct {
 		name     string
 		cs       ContainerService
 		expected bool
 	}{
 		{
-			name: "default",
+			name: "default, < 1.15",
 			cs: ContainerService{
 				Properties: &Properties{
 					OrchestratorProfile: &OrchestratorProfile{
@@ -2947,33 +2947,7 @@ func TestDefaultEnablePodSecurityPolicy(t *testing.T) {
 			expected: false,
 		},
 		{
-			name: "default",
-			cs: ContainerService{
-				Properties: &Properties{
-					OrchestratorProfile: &OrchestratorProfile{
-						OrchestratorType:    Kubernetes,
-						OrchestratorVersion: "1.15.0-alpha.1",
-					},
-					MasterProfile: &MasterProfile{},
-				},
-			},
-			expected: true,
-		},
-		{
-			name: "default",
-			cs: ContainerService{
-				Properties: &Properties{
-					OrchestratorProfile: &OrchestratorProfile{
-						OrchestratorType:    Kubernetes,
-						OrchestratorVersion: "1.15.0-beta.1",
-					},
-					MasterProfile: &MasterProfile{},
-				},
-			},
-			expected: true,
-		},
-		{
-			name: "default",
+			name: "default, >= 1.15",
 			cs: ContainerService{
 				Properties: &Properties{
 					OrchestratorProfile: &OrchestratorProfile{
@@ -2984,6 +2958,92 @@ func TestDefaultEnablePodSecurityPolicy(t *testing.T) {
 				},
 			},
 			expected: true,
+		},
+		{
+			name: ">= 1.15, EnablePodSecurityPolicy=true",
+			cs: ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorType:    Kubernetes,
+						OrchestratorVersion: "1.15.0",
+						KubernetesConfig: &KubernetesConfig{
+							EnablePodSecurityPolicy: to.BoolPtr(true),
+						},
+					},
+					MasterProfile: &MasterProfile{},
+				},
+			},
+			expected: true,
+		},
+		{
+			name: ">= 1.15, EnablePodSecurityPolicy=false is statically overwritten to EnablePodSecurityPolicy=false",
+			cs: ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorType:    Kubernetes,
+						OrchestratorVersion: "1.15.0",
+						KubernetesConfig: &KubernetesConfig{
+							EnablePodSecurityPolicy: to.BoolPtr(false),
+						},
+					},
+					MasterProfile: &MasterProfile{},
+				},
+			},
+			expected: true,
+		},
+		{
+			name: "AKS >= 1.15.0, default",
+			cs: ContainerService{
+				Properties: &Properties{
+					HostedMasterProfile: &HostedMasterProfile{
+						FQDN: "foo",
+					},
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorType:    Kubernetes,
+						OrchestratorVersion: "1.15.0",
+					},
+					MasterProfile: &MasterProfile{},
+				},
+			},
+			expected: false,
+		},
+		{
+			name: "AKS >= 1.15.0, EnablePodSecurityPolicy=true",
+			cs: ContainerService{
+				Properties: &Properties{
+					HostedMasterProfile: &HostedMasterProfile{
+						FQDN: "foo",
+					},
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorType:    Kubernetes,
+						OrchestratorVersion: "1.15.0",
+						KubernetesConfig: &KubernetesConfig{
+							EnablePodSecurityPolicy: to.BoolPtr(true),
+						},
+					},
+					MasterProfile: &MasterProfile{},
+				},
+			},
+			expected: true,
+		},
+		{
+			name: "AKS >= 1.15.0, EnablePodSecurityPolicy=false",
+			cs: ContainerService{
+				Properties: &Properties{
+					HostedMasterProfile: &HostedMasterProfile{
+						FQDN: "foo",
+					},
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorType:    Kubernetes,
+						OrchestratorVersion: "1.15.0",
+						KubernetesConfig: &KubernetesConfig{
+							EnablePodSecurityPolicy: to.BoolPtr(false),
+						},
+					},
+					MasterProfile: &MasterProfile{},
+				},
+			},
+			expected: false,
 		},
 	}
 
