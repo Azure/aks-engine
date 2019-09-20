@@ -24912,23 +24912,41 @@ function DownloadFileOverHttp
         [Parameter(Mandatory=$true)][string]
         $DestinationPath
     )
-    $secureProtocols = @()
-    $insecureProtocols = @([System.Net.SecurityProtocolType]::SystemDefault, [System.Net.SecurityProtocolType]::Ssl3)
 
-    foreach ($protocol in [System.Enum]::GetValues([System.Net.SecurityProtocolType]))
+    # First check to see if a file with the same name is already cached on the VHD
+    $fileName = [IO.Path]::GetFileName($Url)
+    
+    $search = @()
+    if (Test-Path $global:CacheDir)
     {
-        if ($insecureProtocols -notcontains $protocol)
-        {
-            $secureProtocols += $protocol
-        }
+        $search = [IO.Directory]::GetFiles($global:CacheDir, $fileName, [IO.SearchOption]::AllDirectories)
     }
-    [System.Net.ServicePointManager]::SecurityProtocol = $secureProtocols
 
-    $oldProgressPreference = $ProgressPreference
-    $ProgressPreference = 'SilentlyContinue'
-    Invoke-WebRequest $Url -UseBasicParsing -OutFile $DestinationPath -Verbose
-    $ProgressPreference = $oldProgressPreference
-    Write-Log "Downloaded file to $DestinationPath"
+    if ($search.Count -ne 0)
+    {
+        Write-Log "Using chaced version of $fileName - Copying file from $($search[0]) to $DestinationPath"
+        Move-Item -Path $search[0] -Destination $DestinationPath -Force
+    }
+    else 
+    {
+        $secureProtocols = @()
+        $insecureProtocols = @([System.Net.SecurityProtocolType]::SystemDefault, [System.Net.SecurityProtocolType]::Ssl3)
+    
+        foreach ($protocol in [System.Enum]::GetValues([System.Net.SecurityProtocolType]))
+        {
+            if ($insecureProtocols -notcontains $protocol)
+            {
+                $secureProtocols += $protocol
+            }
+        }
+        [System.Net.ServicePointManager]::SecurityProtocol = $secureProtocols
+    
+        $oldProgressPreference = $ProgressPreference
+        $ProgressPreference = 'SilentlyContinue'
+        Invoke-WebRequest $Url -UseBasicParsing -OutFile $DestinationPath -Verbose
+        $ProgressPreference = $oldProgressPreference
+        Write-Log "Downloaded file to $DestinationPath"
+    }
 }
 
 # https://stackoverflow.com/a/34559554/697126
@@ -25099,6 +25117,7 @@ $global:ExcludeMasterFromStandardLB = "{{WrapAsVariable "excludeMasterFromStanda
 
 
 # Windows defaults, not changed by aks-engine
+$global:CacheDir = "c:\akse-cache"
 $global:KubeDir = "c:\k"
 $global:HNSModule = [Io.path]::Combine("$global:KubeDir", "hns.psm1")
 
@@ -25185,7 +25204,6 @@ try
             Get-KubeBinaries -KubeBinariesURL $global:WindowsKubeBinariesURL
         }
 
-
         Write-Log "Write Azure cloud provider config"
         Write-AzureConfig ` + "`" + `
             -KubeDir $global:KubeDir ` + "`" + `
@@ -25227,7 +25245,6 @@ try
                          -AgentKey $AgentKey ` + "`" + `
                          -AgentCertificate $global:AgentCertificate
 
-
         Write-Log "Create the Pause Container kubletwin/pause"
         New-InfraContainer -KubeDir $global:KubeDir
 
@@ -25235,6 +25252,7 @@ try
 
         # Configure network policy.
         if ($global:NetworkPlugin -eq "azure") {
+            Write-Log "Installing Azure VNet plugins"
             Install-VnetPlugins -AzureCNIConfDir $global:AzureCNIConfDir ` + "`" + `
                                 -AzureCNIBinDir $global:AzureCNIBinDir ` + "`" + `
                                 -VNetCNIPluginsURL $global:VNetCNIPluginsURL
@@ -25259,6 +25277,7 @@ try
             }
 
         } elseif ($global:NetworkPlugin -eq "kubenet") {
+            Write-Log "Fetching additional files needed for kubenet"
             Update-WinCNI -CNIPath $global:CNIPath
             Get-HnsPsm1 -HNSModule $global:HNSModule
         }
@@ -25294,6 +25313,9 @@ try
 
         Write-Log "Update service failure actions"
         Update-ServiceFailureActions
+
+        Write-Log "Removing aks-engine bits cache directory"
+        Remove-Item $CacheDir -Recurse -Force
 
         Write-Log "Setup Complete, reboot computer"
         Restart-Computer
@@ -26035,15 +26057,23 @@ Install-OpenSSH {
     $adminpath = "c:\ProgramData\ssh"
     $adminfile = "administrators_authorized_keys"
 
-    Write-Host "Installing OpenSSH"
-    $isAvailable = Get-WindowsCapability -Online | ? Name -like 'OpenSSH*'
+    $sshdService = Get-Service | ? Name -like 'sshd'
+    if ($sshdService.Count -eq 0)
+    {
+        Write-Host "Installing OpenSSH"
+        $isAvailable = Get-WindowsCapability -Online | ? Name -like 'OpenSSH*'
 
-    if (!$isAvailable) {
-        Write-Error "OpenSSH is not avaliable on this machine"
-        exit 1
+        if (!$isAvailable) {
+            Write-Error "OpenSSH is not available on this machine"
+            exit 1
+        }
+
+        Add-WindowsCapability -Online -Name OpenSSH.Server~~~~0.0.1.0
     }
-
-    Add-WindowsCapability -Online -Name OpenSSH.Server~~~~0.0.1.0
+    else
+    {
+        Write-Host "OpenSSH Server service detected - skipping online install..."
+    }
 
     Start-Service sshd
 
