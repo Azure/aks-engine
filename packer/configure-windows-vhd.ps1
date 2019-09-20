@@ -60,7 +60,9 @@ function Get-FilesToCacheOnVHD
         );
         "c:\akse-cache\win-k8s\" = @(
             "https://acs-mirror.azureedge.net/wink8s/azs-v1.14.6-1int.zip",
+            "https://acs-mirror.azureedge.net/wink8s/azs-v1.14.7-1int.zip",
             "https://acs-mirror.azureedge.net/wink8s/azs-v1.15.3-1int.zip",
+            "https://acs-mirror.azureedge.net/wink8s/azs-v1.15.4-1int.zip",
             "https://acs-mirror.azureedge.net/wink8s/v1.14.6-1int.zip",
             "https://acs-mirror.azureedge.net/wink8s/v1.14.7-1int.zip",
             "https://acs-mirror.azureedge.net/wink8s/v1.15.3-1int.zip",
