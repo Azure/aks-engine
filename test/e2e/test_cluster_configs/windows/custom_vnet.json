@@ -36,7 +36,7 @@
 			"masterProfile": {
 				"count": 3,
 				"dnsPrefix": "",
-				"vmSize": "Standard_D2_v2",
+				"vmSize": "Standard_D2_v3",
 				"OSDiskSizeGB": 200,
 				"vnetSubnetId": "/subscriptions/SUB_ID/resourceGroups/RG_NAME/providers/Microsoft.Network/virtualNetworks/VNET_NAME/subnets/SUBNET_NAME",
 				"firstConsecutiveStaticIP": "10.239.255.239",
@@ -46,7 +46,7 @@
 				{
 					"name": "agent1",
 					"count": 3,
-					"vmSize": "Standard_D2_v2",
+					"vmSize": "Standard_D2_v3",
 					"osType": "Windows",
 					"OSDiskSizeGB": 200,
 					"storageProfile": "ManagedDisks",
@@ -57,6 +57,7 @@
 						128
 					],
 					"availabilityProfile": "VirtualMachineScaleSets",
+					"scalesetPriority": "Low",
 					"vnetSubnetId": "/subscriptions/SUB_ID/resourceGroups/RG_NAME/providers/Microsoft.Network/virtualNetworks/VNET_NAME/subnets/SUBNET_NAME"
 				}
 			],
