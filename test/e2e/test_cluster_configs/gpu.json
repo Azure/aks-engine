@@ -25,7 +25,8 @@
 				{
 					"name": "agent1",
 					"count": 1,
-					"vmSize": "Standard_NC6"
+					"vmSize": "Standard_NC6",
+					"availabilityProfile": "VirtualMachineScaleSets"
 				},
 				{
 					"name": "agent2",
