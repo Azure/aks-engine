@@ -118,7 +118,7 @@ func TestKubeletConfigDefaults(t *testing.T) {
 		}
 	}
 
-	cs = CreateMockContainerService("testcluster", "1.16.0-beta.1", 3, 2, false)
+	cs = CreateMockContainerService("testcluster", "1.16.0", 3, 2, false)
 	cs.setKubeletConfig(false)
 	kubeletConfig = cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig
 	expectedKeys := []string{
