@@ -4,21 +4,22 @@
 		"apiVersion": "vlabs",
 		"properties": {
 			"orchestratorProfile": {
-				"orchestratorType": "Kubernetes",
+				"orchestratorType": "Kubernetes"
 			},
 			"masterProfile": {
 				"count": 1,
 				"dnsPrefix": "",
-				"vmSize": "Standard_D2_v2"
+				"vmSize": "Standard_D2_3"
 			},
 			"agentPoolProfiles": [
 				{
 					"name": "agentwin",
 					"count": 3,
-					"vmSize": "Standard_D2_v2",
+					"vmSize": "Standard_D2_v3",
 					"osType": "Windows",
 					"acceleratedNetworkingEnabledWindows": true,
-					"availabilityProfile": "AvailabilitySet"
+					"availabilityProfile": "VirtualMachineScaleSets",
+					"scalesetPriority": "Low"
 				}
 			],
 			"windowsProfile": {
