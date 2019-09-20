@@ -20,8 +20,6 @@ import (
 	"github.com/pkg/errors"
 )
 
-const commandTimeout = 1 * time.Minute
-
 // List is a container that holds all jobs returned from doing a kubectl get jobs
 type List struct {
 	Jobs []Job `json:"items"`
@@ -311,6 +309,7 @@ func DescribeJobs(jobPrefix, namespace string) {
 
 // Describe will describe a Job resource
 func (j *Job) Describe() error {
+	var commandTimeout time.Duration
 	cmd := exec.Command("k", "describe", "jobs/", j.Metadata.Name, "-n", j.Metadata.Namespace)
 	out, err := util.RunAndLogCommand(cmd, commandTimeout)
 	log.Printf("\n%s\n", string(out))

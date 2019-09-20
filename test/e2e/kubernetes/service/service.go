@@ -18,8 +18,6 @@ import (
 	"github.com/pkg/errors"
 )
 
-const commandTimeout = 3 * time.Minute
-
 // List holds a list of services returned from kubectl get svc
 type List struct {
 	Services []Service `json:"items"`
@@ -153,6 +151,7 @@ func GetAllByPrefix(prefix, namespace string) ([]Service, error) {
 
 // Delete will delete a service in a given namespace
 func (s *Service) Delete(retries int) error {
+	var commandTimeout time.Duration
 	var kubectlOutput []byte
 	var kubectlError error
 	for i := 0; i < retries; i++ {
@@ -185,6 +184,7 @@ func DescribeServices(svcPrefix, namespace string) {
 
 // Describe will describe a service resource
 func (s *Service) Describe() error {
+	var commandTimeout time.Duration
 	cmd := exec.Command("k", "describe", "svc", s.Metadata.Name, "-n", s.Metadata.Namespace)
 	out, err := util.RunAndLogCommand(cmd, commandTimeout)
 	log.Printf("\n%s\n", string(out))
@@ -202,7 +202,7 @@ func (s *Service) GetNodePort(port int) int {
 }
 
 // WaitForIngress waits for an Ingress to be provisioned
-func (s *Service) WaitForIngress(timeout, sleep time.Duration) (*Service, error) {
+func (s *Service) WaitForIngress(timeout, sleep time.Duration) error {
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 	var mostRecentWaitForIngressError error
@@ -224,7 +224,8 @@ func (s *Service) WaitForIngress(timeout, sleep time.Duration) (*Service, error)
 			svc := result.svc
 			if mostRecentWaitForIngressError == nil {
 				if svc != nil && svc.Status.LoadBalancer.Ingress != nil {
-					return svc, nil
+					s.Status.LoadBalancer.Ingress = svc.Status.LoadBalancer.Ingress
+					return nil
 				}
 			}
 		case <-ctx.Done():
@@ -232,7 +233,7 @@ func (s *Service) WaitForIngress(timeout, sleep time.Duration) (*Service, error)
 			if err != nil {
 				log.Printf("Unable to describe service\n: %s", err)
 			}
-			return nil, errors.Errorf("WaitForIngress timed out: %s\n", mostRecentWaitForIngressError)
+			return errors.Errorf("WaitForIngress timed out: %s\n", mostRecentWaitForIngressError)
 		}
 	}
 }
@@ -271,40 +272,65 @@ func WaitOnDeleted(servicePrefix, namespace string, sleep, timeout time.Duration
 	}
 }
 
-// Validate will attempt to run an http.Get against the root service url
-func (s *Service) Validate(check string, attempts int, sleep, wait time.Duration) bool {
-	var err error
-	var url string
-	var i int
-	var resp *http.Response
-	svc, waitErr := s.WaitForIngress(wait, 5*time.Second)
-	if waitErr != nil {
-		log.Printf("Unable to verify external IP, cannot validate service:%s\n", waitErr)
-		return false
-	}
-	if svc.Status.LoadBalancer.Ingress == nil || len(svc.Status.LoadBalancer.Ingress) == 0 {
-		log.Printf("Service LB ingress is empty or nil: %#v\n", svc.Status.LoadBalancer.Ingress)
-		return false
-	}
-	for i = 1; i <= attempts; i++ {
-		url = fmt.Sprintf("http://%s", svc.Status.LoadBalancer.Ingress[0]["ip"])
-		resp, err = http.Get(url)
-		if err == nil {
-			body, _ := ioutil.ReadAll(resp.Body)
-			matched, _ := regexp.MatchString(check, string(body))
-			if matched {
-				defer resp.Body.Close()
-				return true
+// ValidateWithRetry waits for an Ingress to be provisioned
+func (s *Service) ValidateWithRetry(bodyResponseTextMatch string, sleep, timeout time.Duration) error {
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+	var mostRecentValidateWithRetryError error
+	ch := make(chan error)
+	go func() {
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case ch <- s.Validate(bodyResponseTextMatch):
+				time.Sleep(sleep)
 			}
-			log.Printf("Got unexpected URL body, expected to find %s, got:\n%s\n", check, string(body))
 		}
-		time.Sleep(sleep)
+	}()
+	for {
+		select {
+		case result := <-ch:
+			mostRecentValidateWithRetryError = result
+			if mostRecentValidateWithRetryError == nil {
+				return nil
+			}
+		case <-ctx.Done():
+			err := s.Describe()
+			if err != nil {
+				log.Printf("Unable to describe service\n: %s", err)
+			}
+			return errors.Errorf("ValidateWithRetry timed out: %s\n", mostRecentValidateWithRetryError)
+		}
 	}
-	log.Printf("Unable to validate URL %s after %s, err: %#v\n", url, time.Duration(i)*wait, err)
+}
+
+// Validate will attempt to run an http.Get against the root service url
+func (s *Service) Validate(bodyResponseTextMatch string) error {
+	if len(s.Status.LoadBalancer.Ingress) < 1 {
+		return errors.Errorf("No LB ingress IP for service %s", s.Metadata.Name)
+	}
+	var resp *http.Response
+	url := fmt.Sprintf("http://%s", s.Status.LoadBalancer.Ingress[0]["ip"])
+	resp, err := http.Get(url)
 	if resp != nil {
 		defer resp.Body.Close()
 	}
-	return false
+	if err != nil {
+		return errors.Errorf("Unable to call service at URL %s: %s", url, err)
+	}
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return errors.Errorf("Unable to parse response body: %s", err)
+	}
+	matched, err := regexp.MatchString(bodyResponseTextMatch, string(body))
+	if err != nil {
+		return errors.Errorf("Unable to evalute response body against a regular expression match: %s", err)
+	}
+	if matched {
+		return nil
+	}
+	return errors.Errorf("Got unexpected URL body, expected to find %s, got:\n%s\n", bodyResponseTextMatch, string(body))
 }
 
 // CreateServiceFromFile will create a Service from file with a name

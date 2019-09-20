@@ -49,7 +49,7 @@ const (
 	sleepBetweenRetriesWhenWaitingForPodReady = 1 * time.Second
 	sleepBetweenRetriesRemoteSSHCommand       = 3 * time.Second
 	timeoutWhenWaitingForPodOutboundAccess    = 1 * time.Minute
-	stabilityCommandTimeout                   = 1 * time.Second
+	stabilityCommandTimeout                   = 3 * time.Second
 	windowsCommandTimeout                     = 1 * time.Minute
 	validateNetworkPolicyTimeout              = 3 * time.Minute
 	validateDNSTimeout                        = 2 * time.Minute
@@ -981,7 +981,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				By("Ensuring we can create an ILB service attachment")
 				sILB, err := service.CreateServiceFromFileDeleteIfExist(filepath.Join(WorkloadDir, "ingress-nginx-ilb.yaml"), serviceName+"-ilb", "default")
 				Expect(err).NotTo(HaveOccurred())
-				svc, err := sILB.WaitForIngress(cfg.Timeout, 5*time.Second)
+				err = sILB.WaitForIngress(cfg.Timeout, 5*time.Second)
 				Expect(err).NotTo(HaveOccurred())
 
 				By("Ensuring we can create a curl pod to connect to the service")
@@ -997,12 +997,12 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				By("Ensuring we can connect to the ILB service from another pod")
 				var success bool
 				for _, curlPod := range curlPods {
-					pass, curlErr := curlPod.ValidateCurlConnection(svc.Status.LoadBalancer.Ingress[0]["ip"], 30*time.Second, 3*time.Minute)
+					pass, curlErr := curlPod.ValidateCurlConnection(sILB.Status.LoadBalancer.Ingress[0]["ip"], 30*time.Second, 3*time.Minute)
 					if curlErr == nil && pass {
 						success = true
 						break
 					} else {
-						e := svc.Describe()
+						e := sILB.Describe()
 						if e != nil {
 							log.Printf("Unable to describe service\n: %s", e)
 						}
@@ -1013,21 +1013,21 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				By("Ensuring we can create an ELB service attachment")
 				sELB, err := service.CreateServiceFromFileDeleteIfExist(filepath.Join(WorkloadDir, "ingress-nginx-elb.yaml"), serviceName+"-elb", "default")
 				Expect(err).NotTo(HaveOccurred())
-				svc, err = sELB.WaitForIngress(cfg.Timeout, 5*time.Second)
+				err = sELB.WaitForIngress(cfg.Timeout, 5*time.Second)
 				Expect(err).NotTo(HaveOccurred())
 
 				By("Ensuring we can connect to the ELB service on the service IP")
-				valid := sELB.Validate("(Welcome to nginx)", 5, 30*time.Second, cfg.Timeout)
-				Expect(valid).To(BeTrue())
+				err = sELB.ValidateWithRetry("(Welcome to nginx)", 30*time.Second, cfg.Timeout)
+				Expect(err).NotTo(HaveOccurred())
 				By("Ensuring we can connect to the ELB service from another pod")
 				success = false
 				for _, curlPod := range curlPods {
-					pass, curlErr := curlPod.ValidateCurlConnection(svc.Status.LoadBalancer.Ingress[0]["ip"], 30*time.Second, 3*time.Minute)
+					pass, curlErr := curlPod.ValidateCurlConnection(sELB.Status.LoadBalancer.Ingress[0]["ip"], 30*time.Second, 3*time.Minute)
 					if curlErr == nil && pass {
 						success = true
 						break
 					} else {
-						e := svc.Describe()
+						e := sELB.Describe()
 						if e != nil {
 							log.Printf("Unable to describe service\n: %s", e)
 						}
@@ -1571,10 +1571,12 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				Expect(err).NotTo(HaveOccurred())
 				iisService, err := service.Get(deploymentName, "default")
 				Expect(err).NotTo(HaveOccurred())
+				err = iisService.WaitForIngress(cfg.Timeout, 5*time.Second)
+				Expect(err).NotTo(HaveOccurred())
 
 				By("Verifying that the service is reachable and returns the default IIS start page")
-				valid := iisService.Validate("(IIS Windows Server)", 10, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
-				Expect(valid).To(BeTrue())
+				err = iisService.ValidateWithRetry("(IIS Windows Server)", sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
+				Expect(err).NotTo(HaveOccurred())
 
 				By("Checking that each pod can reach the internet")
 				var iisPods []pod.Pod
@@ -1603,8 +1605,8 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				Expect(len(iisPods)).To(Equal(5))
 
 				By("Verifying that the service is reachable and returns the default IIS start page")
-				valid = iisService.Validate("(IIS Windows Server)", 10, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
-				Expect(valid).To(BeTrue())
+				err = iisService.ValidateWithRetry("(IIS Windows Server)", sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
+				Expect(err).NotTo(HaveOccurred())
 
 				By("Checking that each pod can reach the internet")
 				iisPods, err = iisDeploy.Pods()
@@ -1634,8 +1636,8 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				Expect(len(iisPods)).To(Equal(2))
 
 				By("Verifying that the service is reachable and returns the default IIS start page")
-				valid = iisService.Validate("(IIS Windows Server)", 10, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
-				Expect(valid).To(BeTrue())
+				err = iisService.ValidateWithRetry("(IIS Windows Server)", sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
+				Expect(err).NotTo(HaveOccurred())
 
 				By("Checking that each pod can reach the internet")
 				iisPods, err = iisDeploy.Pods()
@@ -1700,14 +1702,14 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				By("Connecting to Windows from another Windows deployment")
 				name := fmt.Sprintf("windows-2-windows-%s", cfg.Name)
 				command := fmt.Sprintf("iwr -UseBasicParsing -TimeoutSec 60 %s", windowsService.Metadata.Name)
-				successes, err := pod.RunCommandMultipleTimes(pod.RunWindowsPod, windowsImages.ServerCore, name, command, cfg.StabilityIterations, 1*time.Second, retryCommandsTimeout, windowsCommandTimeout)
+				successes, err := pod.RunCommandMultipleTimes(pod.RunWindowsPod, windowsImages.ServerCore, name, command, cfg.StabilityIterations, 1*time.Second, windowsCommandTimeout, retryCommandsTimeout)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(successes).To(Equal(cfg.StabilityIterations))
 
 				By("Connecting to Linux from Windows deployment")
 				name = fmt.Sprintf("windows-2-linux-%s", cfg.Name)
 				command = fmt.Sprintf("iwr -UseBasicParsing -TimeoutSec 60 %s", linuxService.Metadata.Name)
-				successes, err = pod.RunCommandMultipleTimes(pod.RunWindowsPod, windowsImages.ServerCore, name, command, cfg.StabilityIterations, 1*time.Second, retryCommandsTimeout, windowsCommandTimeout)
+				successes, err = pod.RunCommandMultipleTimes(pod.RunWindowsPod, windowsImages.ServerCore, name, command, cfg.StabilityIterations, 1*time.Second, windowsCommandTimeout, retryCommandsTimeout)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(successes).To(Equal(cfg.StabilityIterations))
 
