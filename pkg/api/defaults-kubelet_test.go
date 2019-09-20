@@ -1982,6 +1982,22 @@ func TestReadOnlyPort(t *testing.T) {
 			},
 			expectedReadOnlyPort: "0",
 		},
+		{
+			name: "AKS 1.16",
+			cs: &ContainerService{
+				Properties: &Properties{
+					HostedMasterProfile: &HostedMasterProfile{
+						FQDN: "foo",
+					},
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorType:    Kubernetes,
+						OrchestratorVersion: "1.16.0",
+						KubernetesConfig:    &KubernetesConfig{},
+					},
+				},
+			},
+			expectedReadOnlyPort: "",
+		},
 	}
 
 	for _, c := range cases {
