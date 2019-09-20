@@ -14,8 +14,6 @@ import (
 	"github.com/pkg/errors"
 )
 
-const commandTimeout = 1 * time.Minute
-
 // StorageClass is used to parse data from kubectl get storageclass
 type StorageClass struct {
 	Metadata   Metadata   `json:"metadata"`
@@ -84,6 +82,7 @@ func Get(scName string) (*StorageClass, error) {
 
 // Describe will describe a storageclass resource
 func (sc *StorageClass) Describe() error {
+	var commandTimeout time.Duration
 	cmd := exec.Command("k", "describe", "storageclass", sc.Metadata.Name)
 	out, err := util.RunAndLogCommand(cmd, commandTimeout)
 	log.Printf("\n%s\n", string(out))

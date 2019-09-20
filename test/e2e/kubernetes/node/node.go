@@ -18,8 +18,7 @@ import (
 
 const (
 	//ServerVersion is used to parse out the version of the API running
-	ServerVersion  = `(Server Version:\s)+(.*)`
-	commandTimeout = 1 * time.Minute
+	ServerVersion = `(Server Version:\s)+(.*)`
 )
 
 // Node represents the kubernetes Node Resource
@@ -162,6 +161,7 @@ func DescribeNodes() {
 
 // Describe will describe a node resource
 func (n *Node) Describe() error {
+	var commandTimeout time.Duration
 	cmd := exec.Command("k", "describe", "node", n.Metadata.Name)
 	out, err := util.RunAndLogCommand(cmd, commandTimeout)
 	log.Printf("\n%s\n", string(out))

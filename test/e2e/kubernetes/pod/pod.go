@@ -25,7 +25,6 @@ import (
 
 const (
 	testDir                    string = "testdirectory"
-	commandTimeout                    = 1 * time.Minute
 	deleteTimeout                     = 5 * time.Minute
 	validatePodNotExistRetries        = 3
 )
@@ -1112,6 +1111,7 @@ func (p *Pod) CheckWindowsOutboundConnection(sleep, timeout time.Duration) (bool
 
 // ValidateHostPort will attempt to run curl against the POD's hostIP and hostPort
 func (p *Pod) ValidateHostPort(check string, attempts int, sleep time.Duration, master, sshKeyPath string) bool {
+	var commandTimeout time.Duration
 	hostIP := p.Status.HostIP
 	if len(p.Spec.Containers) == 0 || len(p.Spec.Containers[0].Ports) == 0 {
 		log.Printf("Unexpected POD container spec: %v. Should have hostPort.\n", p.Spec)
@@ -1138,6 +1138,7 @@ func (p *Pod) ValidateHostPort(check string, attempts int, sleep time.Duration, 
 
 // Logs will get logs from all containers in a pod
 func (p *Pod) Logs() error {
+	var commandTimeout time.Duration
 	for _, container := range p.Spec.Containers {
 		cmd := exec.Command("k", "logs", p.Metadata.Name, "-c", container.Name, "-n", p.Metadata.Namespace)
 		out, err := util.RunAndLogCommand(cmd, commandTimeout)
@@ -1151,6 +1152,7 @@ func (p *Pod) Logs() error {
 
 // Describe will describe a pod resource
 func (p *Pod) Describe() error {
+	var commandTimeout time.Duration
 	cmd := exec.Command("k", "describe", "pod", p.Metadata.Name, "-n", p.Metadata.Namespace)
 	out, err := util.RunAndLogCommand(cmd, commandTimeout)
 	log.Printf("\n%s\n", string(out))
