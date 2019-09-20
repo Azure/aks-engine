@@ -2976,7 +2976,7 @@ func TestEnablePodSecurityPolicy(t *testing.T) {
 			expected: true,
 		},
 		{
-			name: ">= 1.15, EnablePodSecurityPolicy=false is statically overwritten to EnablePodSecurityPolicy=false",
+			name: ">= 1.15, EnablePodSecurityPolicy=false is statically overwritten to EnablePodSecurityPolicy=true",
 			cs: ContainerService{
 				Properties: &Properties{
 					OrchestratorProfile: &OrchestratorProfile{
