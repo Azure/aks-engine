@@ -6,6 +6,7 @@ Here you'll find documentation geared towards learning about the development pro
 - [Developer Guide](developer-guide.md)
 - [Planning Process](planning-process.md)
 - [Release Checklist](release-checklist.md)
+- [New k8s releae](new-k8s-release.md)
 
 AKS Engine is a community effort. As it keeps growing, we always need more people to help others. As soon as you learn AKS Engine, you can contribute in many ways:
 
