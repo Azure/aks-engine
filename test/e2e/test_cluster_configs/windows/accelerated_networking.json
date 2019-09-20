@@ -15,7 +15,7 @@
 				{
 					"name": "agentwin",
 					"count": 3,
-					"vmSize": "Standard_D2_v3",
+					"vmSize": "Standard_D2_v2",
 					"osType": "Windows",
 					"acceleratedNetworkingEnabledWindows": true,
 					"availabilityProfile": "VirtualMachineScaleSets",
