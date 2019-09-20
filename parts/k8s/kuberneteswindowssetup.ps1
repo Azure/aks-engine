@@ -160,6 +160,13 @@ try
     if ($true) {
         Write-Log "Provisioning $global:DockerServiceName... with IP $MasterIP"
 
+        # Install OpenSSH if SSH enabled
+        $sshEnabled = [System.Convert]::ToBoolean("{{ WindowsSSHEnabled }}")
+
+        if ( $sshEnabled ) {
+            Install-OpenSSH -SSHKeys $SSHKeys
+        }
+
         Write-Log "Apply telemetry data setting"
         Set-TelemetrySetting -WindowsTelemetryGUID $global:WindowsTelemetryGUID
 
@@ -285,13 +292,6 @@ try
             -HNSModule $global:HNSModule `
             -KubeletNodeLabels $global:KubeletNodeLabels
 
-        # Install OpenSSH if SSH enabled
-        $sshEnabled = [System.Convert]::ToBoolean("{{ WindowsSSHEnabled }}")
-
-        if ( $sshEnabled ) {
-            Install-OpenSSH -SSHKeys $SSHKeys
-        }
-
         Write-Log "Disable Internet Explorer compat mode and set homepage"
         Set-Explorer
 
@@ -316,4 +316,5 @@ try
 catch
 {
     Write-Error $_
+    exit 1
 }
