@@ -16,7 +16,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-func (cs *ContainerService) setCustomCloudProfileDefaults() error {
+func (cs *ContainerService) setCustomCloudProfileDefaults(isUpgrade, isScale bool) error {
 	p := cs.Properties
 	if p.IsAzureStackCloud() {
 		p.CustomCloudProfile.AuthenticationMethod = helpers.EnsureString(p.CustomCloudProfile.AuthenticationMethod, ClientSecretAuthMethod)
@@ -26,7 +26,7 @@ func (cs *ContainerService) setCustomCloudProfileDefaults() error {
 		if err != nil {
 			return fmt.Errorf("Failed to set environment - %s", err)
 		}
-		err = p.SetAzureStackCloudSpec()
+		err = p.SetAzureStackCloudSpec(isUpgrade, isScale)
 		if err != nil {
 			return fmt.Errorf("Failed to set cloud spec - %s", err)
 		}
@@ -96,7 +96,7 @@ func (cs *ContainerService) SetCustomCloudProfileEnvironment() error {
 }
 
 // SetAzureStackCloudSpec sets the cloud spec for Azure Stack .
-func (p *Properties) SetAzureStackCloudSpec() error {
+func (p *Properties) SetAzureStackCloudSpec(isUpgrade, isScale bool) error {
 	if p.IsAzureStackCloud() {
 		var azureStackCloudSpec AzureEnvironmentSpecConfig
 		switch p.CustomCloudProfile.DependenciesLocation {
@@ -114,8 +114,21 @@ func (p *Properties) SetAzureStackCloudSpec() error {
 		if p.CustomCloudProfile.Environment == nil || p.CustomCloudProfile.Environment.ResourceManagerVMDNSSuffix == "" {
 			return errors.New("Failed to set Cloud Spec for Azure Stack due to invalid environment")
 		}
+
 		azureStackCloudSpec.EndpointConfig.ResourceManagerVMDNSSuffix = p.CustomCloudProfile.Environment.ResourceManagerVMDNSSuffix
 		azureStackCloudSpec.CloudName = AzureStackCloud
+
+		//Sets default values for telemetry PID where none is set
+		if p.CustomCloudProfile.AzureEnvironmentSpecConfig == nil {
+			azureStackCloudSpec.KubernetesSpecConfig.AzureTelemetryPID = DefaultAzurestackDeployTelemetryPID
+			if isScale {
+				azureStackCloudSpec.KubernetesSpecConfig.AzureTelemetryPID = DefaultAzurestackScaleTelemetryPID
+			}
+			if isUpgrade {
+				azureStackCloudSpec.KubernetesSpecConfig.AzureTelemetryPID = DefaultAzurestackUpgradeTelemetryPID
+			}
+		}
+
 		// Use the custom input to overwrite the default values in AzureStackCloudSpec
 		if p.CustomCloudProfile.AzureEnvironmentSpecConfig != nil {
 			ascc := p.CustomCloudProfile.AzureEnvironmentSpecConfig
@@ -130,6 +143,8 @@ func (p *Properties) SetAzureStackCloudSpec() error {
 			//KubernetesSpecConfig
 			asccKubernetesSpecConfig := ascc.KubernetesSpecConfig
 			azsKubernetesSpecConfig := azureStackCloudSpec.KubernetesSpecConfig
+
+			azureStackCloudSpec.KubernetesSpecConfig.AzureTelemetryPID = helpers.EnsureString(asccKubernetesSpecConfig.AzureTelemetryPID, DefaultAzurestackDeployTelemetryPID)
 			azureStackCloudSpec.KubernetesSpecConfig.ACIConnectorImageBase = helpers.EnsureString(asccKubernetesSpecConfig.ACIConnectorImageBase, azsKubernetesSpecConfig.ACIConnectorImageBase)
 			azureStackCloudSpec.KubernetesSpecConfig.AzureCNIImageBase = helpers.EnsureString(asccKubernetesSpecConfig.AzureCNIImageBase, azsKubernetesSpecConfig.AzureCNIImageBase)
 			azureStackCloudSpec.KubernetesSpecConfig.CalicoImageBase = helpers.EnsureString(asccKubernetesSpecConfig.CalicoImageBase, azsKubernetesSpecConfig.CalicoImageBase)
