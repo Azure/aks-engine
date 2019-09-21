@@ -13661,6 +13661,13 @@ else
     REBOOTREQUIRED=false
 fi
 
+if [[ "$CONTAINER_RUNTIME" != "kata-containers" ]] && [[ "$CONTAINER_RUNTIME" != "containerd" ]]; then
+  cleanUpContainerd
+fi
+if [[ "${GPU_NODE}" != "true" ]]; then
+  cleanUpGPUDrivers
+fi
+
 if [ -f /var/log.vhd/azure/golden-image-install.complete ]; then
     echo "detected golden image pre-install"
     FULL_INSTALL_REQUIRED=false
@@ -13688,16 +13695,12 @@ fi
 installNetworkPlugin
 if [[ "$CONTAINER_RUNTIME" == "kata-containers" ]] || [[ "$CONTAINER_RUNTIME" == "containerd" ]]; then
     installContainerd
-else
-    cleanUpContainerd
 fi
 if [[ "${GPU_NODE}" = true ]]; then
     if $FULL_INSTALL_REQUIRED; then
         installGPUDrivers
     fi
     ensureGPUDrivers
-else
-    cleanUpGPUDrivers
 fi
 installKubeletAndKubectl
 if [[ $OS != $COREOS_OS_NAME ]]; then
