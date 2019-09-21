@@ -263,7 +263,7 @@ func (a *Properties) ValidateOrchestratorProfile(isUpdate bool) error {
 					}
 				}
 
-				if !o.KubernetesConfig.IsRBACEnabled() {
+				if o.KubernetesConfig.EnableRbac != nil && !o.KubernetesConfig.IsRBACEnabled() {
 					minVersionNotAllowed, err := semver.Make("1.15.0")
 					if err != nil {
 						return errors.Errorf("could not validate version")
