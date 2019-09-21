@@ -4,16 +4,13 @@
 		"apiVersion": "vlabs",
 		"properties": {
 			"orchestratorProfile": {
-				"orchestratorType": "Kubernetes",
-				"kubernetesConfig": {
-					"etcdVersion": "3.2.25",
-					"mobyVersion": "3.0.4"
-				}
+				"orchestratorType": "Kubernetes"
 			},
 			"masterProfile": {
 				"count": 1,
 				"dnsPrefix": "",
-				"vmSize": "Standard_D2_v3"
+				"vmSize": "Standard_D2_v3",
+				"distro": "ubuntu"
 			},
 			"agentPoolProfiles": [
 				{
@@ -21,7 +18,8 @@
 					"count": 3,
 					"vmSize": "Standard_D2_v3",
 					"availabilityProfile": "VirtualMachineScaleSets",
-					"scalesetPriority": "Low"
+					"scalesetPriority": "Low",
+					"distro": "ubuntu"
 				}
 			],
 			"linuxProfile": {
