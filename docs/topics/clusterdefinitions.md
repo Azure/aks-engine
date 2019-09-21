@@ -223,21 +223,29 @@ Below is a list of kubelet options that aks-engine will configure by default:
 
 | kubelet option                      | default value                                                                                                                                                 |
 | ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| "--cadvisor-port"    | "0"                                                                                                                                                         |
 | "--cloud-config"                    | "/etc/kubernetes/azure.json"                                                                                                                                  |
 | "--cloud-provider"                  | "azure"                                                                                                                                                       |
 | "--cluster-domain"                  | "cluster.local"                                                                                                                                               |
+| "--event-qps"    | "0"                                                                                                                                                         |
 | "--pod-infra-container-image"       | "pause-amd64:_version_"                                                                                                                                       |
+| "--network-plugin"                           | "cni"                                            |
 | "--max-pods"                        | "30", or "110" if using kubenet --network-plugin (i.e., `"networkPlugin": "kubenet"`)                                                                         |
-| "--eviction-hard"                   | "memory.available<100Mi,nodefs.available<10%,nodefs.inodesFree<5%"                                                                                            |
+| "--eviction-hard"                   | "memory.available<750Mi,nodefs.available<10%,nodefs.inodesFree<5%"                                                                                            |
 | "--node-status-update-frequency"    | "10s"                                                                                                                                                         |
 | "--image-gc-high-threshold"         | "85"                                                                                                                                                          |
-| "--image-gc-low-threshold"          | "850"                                                                                                                                                         |
-| "--non-masquerade-cidr"             | "10.0.0.0/8"                                                                                                                                                  |
+| "--image-gc-low-threshold"          | "80"                                                                                                                                                         |
+| "--non-masquerade-cidr"             | "0.0.0.0/0" (unless ip-masq-agent is disabled, in which case this is set to the value of `kubernetesConfig.ClusterSubnet` )                                                                                                                                                  |
 | "--azure-container-registry-config" | "/etc/kubernetes/azure.json"                                                                                                                                  |
 | "--pod-max-pids"                    | "-1" (need to activate the feature in --feature-gates=SupportPodPidsLimit=true)                                                                              |
 | "--image-pull-progress-deadline"    | "30m"                                                                                                                                                         |
 | "--feature-gates"                   | No default (can be a comma-separated list). On agent nodes `Accelerators=true` will be applied in the `--feature-gates` option for k8s versions before 1.11.0 |
 | "--enforce-node-allocatable"        | "pods" |
+| "--streaming-connection-idle-timeout"        | "4h" |
+| "--rotate-certificates"        | "true" (this default is set for clusters >= 1.11.9 ) |
+| "--tls-cipher-suites"        | "TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305,TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305,TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,TLS_RSA_WITH_AES_256_GCM_SHA384,TLS_RSA_WITH_AES_128_GCM_SHA256" |
+| "--authentication-token-webhook"        | "true" (this default is set for clusters >= 1.16.0 ) |
+| "--read-only-port"        | "0" (this default is set for clusters >= 1.16.0 ) |
 
 Below is a list of kubelet options that are _not_ currently user-configurable, either because a higher order configuration vector is available that enforces kubelet configuration, or because a static configuration is required to build a functional cluster:
 
@@ -246,7 +254,6 @@ Below is a list of kubelet options that are _not_ currently user-configurable, e
 | "--address"                                  | "0.0.0.0"                                        |
 | "--allow-privileged"                         | "true"                                           |
 | "--pod-manifest-path"                        | "/etc/kubernetes/manifests"                      |
-| "--network-plugin"                           | "cni"                                            |
 | "--node-labels"                              | (based on Azure node metadata)                   |
 | "--cgroups-per-qos"                          | "true"                                           |
 | "--kubeconfig"                               | "/var/lib/kubelet/kubeconfig"                    |
@@ -291,8 +298,6 @@ Below is a list of controller-manager options that are _not_ currently user-conf
 | "--allocate-node-cidrs"              | "false"                                                 |
 | "--cluster-cidr"                     | _uses clusterSubnet value_                              |
 | "--cluster-name"                     | _auto-generated using api model properties_             |
-| "--cloud-provider"                   | "azure"                                                 |
-| "--cloud-config"                     | "/etc/kubernetes/azure.json"                            |
 | "--root-ca-file"                     | "/etc/kubernetes/certs/ca.crt"                          |
 | "--cluster-signing-cert-file"        | "/etc/kubernetes/certs/ca.crt"                          |
 | "--cluster-signing-key-file"         | "/etc/kubernetes/certs/ca.key"                          |
