@@ -13,6 +13,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/Azure/aks-engine/pkg/api/common"
 	"github.com/Azure/aks-engine/pkg/helpers"
 	"github.com/Azure/go-autorest/autorest/azure"
 	"github.com/Azure/go-autorest/autorest/to"
@@ -1906,20 +1907,6 @@ func TestEnableAggregatedAPIs(t *testing.T) {
 	}
 }
 
-func TestAlwaysSetEnableAggregatedAPIsToFalseIfRBACDisabled(t *testing.T) {
-	mockCS := getMockBaseContainerService("1.10.3")
-	properties := mockCS.Properties
-	properties.OrchestratorProfile.OrchestratorType = Kubernetes
-	properties.OrchestratorProfile.KubernetesConfig.EnableRbac = to.BoolPtr(false)
-	properties.OrchestratorProfile.KubernetesConfig.EnableAggregatedAPIs = true
-	mockCS.setOrchestratorDefaults(true, true)
-
-	if properties.OrchestratorProfile.KubernetesConfig.EnableAggregatedAPIs {
-		t.Fatalf("expected EnableAggregatedAPIs to be manually set to false in update scenario, instead got %t",
-			properties.OrchestratorProfile.KubernetesConfig.EnableAggregatedAPIs)
-	}
-}
-
 func TestDefaultCloudProvider(t *testing.T) {
 	mockCS := getMockBaseContainerService("1.10.3")
 	properties := mockCS.Properties
@@ -3091,6 +3078,153 @@ func TestDefaultLoadBalancerSKU(t *testing.T) {
 			c.cs.setOrchestratorDefaults(false, false)
 			if c.cs.Properties.OrchestratorProfile.KubernetesConfig.LoadBalancerSku != c.expected {
 				t.Errorf("expected %s, but got %s", c.expected, c.cs.Properties.OrchestratorProfile.KubernetesConfig.LoadBalancerSku)
+			}
+		})
+	}
+}
+
+func TestEnableRBAC(t *testing.T) {
+	cases := []struct {
+		name      string
+		cs        ContainerService
+		isUpgrade bool
+		isScale   bool
+		expected  bool
+	}{
+		{
+			name: "default",
+			cs: ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorType: Kubernetes,
+					},
+					MasterProfile: &MasterProfile{},
+				},
+			},
+			expected: true,
+		},
+		{
+			name: "1.14 disabled",
+			cs: ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorType:    Kubernetes,
+						OrchestratorVersion: common.GetLatestPatchVersion("1.14", common.GetAllSupportedKubernetesVersions(false, false)),
+						KubernetesConfig: &KubernetesConfig{
+							EnableRbac: to.BoolPtr(false),
+						},
+					},
+					MasterProfile: &MasterProfile{},
+				},
+			},
+			expected: false,
+		},
+		{
+			name: "1.14 disabled upgrade",
+			cs: ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorType:    Kubernetes,
+						OrchestratorVersion: common.GetLatestPatchVersion("1.14", common.GetAllSupportedKubernetesVersions(false, false)),
+						KubernetesConfig: &KubernetesConfig{
+							EnableRbac: to.BoolPtr(false),
+						},
+					},
+					MasterProfile: &MasterProfile{},
+				},
+			},
+			isUpgrade: true,
+			expected:  false,
+		},
+		{
+			name: "1.15",
+			cs: ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorType:    Kubernetes,
+						OrchestratorVersion: common.GetLatestPatchVersion("1.15", common.GetAllSupportedKubernetesVersions(false, false)),
+					},
+					MasterProfile: &MasterProfile{},
+				},
+			},
+			expected: true,
+		},
+		{
+			name: "1.15 upgrade",
+			cs: ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorType:    Kubernetes,
+						OrchestratorVersion: common.GetLatestPatchVersion("1.15", common.GetAllSupportedKubernetesVersions(false, false)),
+					},
+					MasterProfile: &MasterProfile{},
+				},
+			},
+			isUpgrade: true,
+			expected:  true,
+		},
+		{
+			name: "1.15 upgrade false--> true override",
+			cs: ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorType:    Kubernetes,
+						OrchestratorVersion: common.GetLatestPatchVersion("1.15", common.GetAllSupportedKubernetesVersions(false, false)),
+						KubernetesConfig: &KubernetesConfig{
+							EnableRbac: to.BoolPtr(false),
+						},
+					},
+					MasterProfile: &MasterProfile{},
+				},
+			},
+			isUpgrade: true,
+			expected:  true,
+		},
+		{
+			name: "1.16 upgrade false--> true override",
+			cs: ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorType:    Kubernetes,
+						OrchestratorVersion: common.GetLatestPatchVersion("1.16", common.GetAllSupportedKubernetesVersions(false, false)),
+						KubernetesConfig: &KubernetesConfig{
+							EnableRbac: to.BoolPtr(false),
+						},
+					},
+					MasterProfile: &MasterProfile{},
+				},
+			},
+			isUpgrade: true,
+			expected:  true,
+		},
+		{
+			name: "1.15 upgrade no false--> true override in AKS scenario",
+			cs: ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorType:    Kubernetes,
+						OrchestratorVersion: common.GetLatestPatchVersion("1.15", common.GetAllSupportedKubernetesVersions(false, false)),
+						KubernetesConfig: &KubernetesConfig{
+							EnableRbac: to.BoolPtr(false),
+						},
+					},
+					HostedMasterProfile: &HostedMasterProfile{
+						FQDN: "foo",
+					},
+				},
+			},
+			isUpgrade: true,
+			expected:  false,
+		},
+	}
+
+	for _, c := range cases {
+		c := c
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+			c.cs.setOrchestratorDefaults(c.isUpgrade, c.isScale)
+			if to.Bool(c.cs.Properties.OrchestratorProfile.KubernetesConfig.EnableRbac) != c.expected {
+				t.Errorf("expected %t, but got %t", c.expected, to.Bool(c.cs.Properties.OrchestratorProfile.KubernetesConfig.EnableRbac))
 			}
 		})
 	}
