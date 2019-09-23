@@ -124,6 +124,8 @@ spec:
       - name: metrics-server
         image: {{ContainerImage "metrics-server"}}
         imagePullPolicy: IfNotPresent
+        securityContext:
+          privileged: true
         command:
         - /metrics-server
         - --source=kubernetes.summary_api:''
