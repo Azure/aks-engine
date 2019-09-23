@@ -17125,8 +17125,6 @@ spec:
       - name: metrics-server
         image: {{ContainerImage "metrics-server"}}
         imagePullPolicy: IfNotPresent
-        securityContext:
-          runAsNonRoot: true
         command:
         - /metrics-server
         - --source=kubernetes.summary_api:''
@@ -19054,8 +19052,6 @@ spec:
       containers:
         - image: {{ContainerImage "heapster"}}
           imagePullPolicy: IfNotPresent
-          securityContext:
-            runAsNonRoot: true
           name: heapster
           resources:
             requests:
@@ -19076,8 +19072,6 @@ spec:
             - --source=kubernetes.summary_api:''
         - image: {{ContainerImage "heapster-nanny"}}
           imagePullPolicy: IfNotPresent
-          securityContext:
-            runAsNonRoot: true
           name: heapster-nanny
           resources:
             requests:
@@ -19226,7 +19220,7 @@ spec:
       - image: {{ContainerImage "rescheduler"}}
         imagePullPolicy: IfNotPresent
         securityContext:
-	        runAsNonRoot: false
+          runAsNonRoot: false
         name: rescheduler
         resources:
           requests:
@@ -19359,7 +19353,7 @@ spec:
         image: {{ContainerImage "kubernetes-dashboard"}}
         imagePullPolicy: IfNotPresent
         securityContext:
-          runAsNonRoot: true
+          runAsNonRoot: false
         livenessProbe:
           httpGet:
             path: "/"
@@ -19531,6 +19525,8 @@ spec:
       - name: metrics-server
         image: {{ContainerImage "metrics-server"}}
         imagePullPolicy: IfNotPresent
+        securityContext:
+          runAsNonRoot: false
         command:
         - /metrics-server
         - --kubelet-insecure-tls
