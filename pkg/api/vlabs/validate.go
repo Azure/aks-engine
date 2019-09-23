@@ -263,6 +263,17 @@ func (a *Properties) ValidateOrchestratorProfile(isUpdate bool) error {
 					}
 				}
 
+				if o.KubernetesConfig.EnableRbac != nil && !o.KubernetesConfig.IsRBACEnabled() {
+					minVersionNotAllowed, err := semver.Make("1.15.0")
+					if err != nil {
+						return errors.Errorf("could not validate version")
+					}
+					if !sv.LT(minVersionNotAllowed) {
+						return errors.Errorf("RBAC support is required for Kubernetes version %s or greater; unable to build Kubernetes v%s cluster with enableRbac=false",
+							minVersionNotAllowed.String(), o.OrchestratorVersion)
+					}
+				}
+
 				if to.Bool(o.KubernetesConfig.EnablePodSecurityPolicy) {
 					if !o.KubernetesConfig.IsRBACEnabled() {
 						return errors.Errorf("enablePodSecurityPolicy requires the enableRbac feature as a prerequisite")
