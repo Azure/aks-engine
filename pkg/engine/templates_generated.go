@@ -19220,7 +19220,7 @@ spec:
       - image: {{ContainerImage "rescheduler"}}
         imagePullPolicy: IfNotPresent
         securityContext:
-          runAsNonRoot: false
+          runAsNonRoot: true
         name: rescheduler
         resources:
           requests:
@@ -19353,7 +19353,7 @@ spec:
         image: {{ContainerImage "kubernetes-dashboard"}}
         imagePullPolicy: IfNotPresent
         securityContext:
-          runAsNonRoot: false
+          runAsNonRoot: true
         livenessProbe:
           httpGet:
             path: "/"
@@ -19526,7 +19526,7 @@ spec:
         image: {{ContainerImage "metrics-server"}}
         imagePullPolicy: IfNotPresent
         securityContext:
-          runAsNonRoot: false
+          runAsNonRoot: true
         command:
         - /metrics-server
         - --kubelet-insecure-tls
