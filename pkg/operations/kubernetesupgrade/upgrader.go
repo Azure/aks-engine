@@ -545,7 +545,7 @@ func (ku *Upgrader) upgradeAgentScaleSets(ctx context.Context) error {
 			err = operations.SafelyDrainNodeWithClient(
 				client,
 				ku.logger,
-				strings.ToLower(vmToUpgrade.Name),
+				vmToUpgrade.Name,
 				cordonDrainTimeout,
 			)
 			if err != nil {
