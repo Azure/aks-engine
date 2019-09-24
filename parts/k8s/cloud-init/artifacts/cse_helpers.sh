@@ -239,7 +239,6 @@ apt_fix_keys() {
     fi
   done
   echo Executed apt-get update NO_PUBKEY fix $i times
-  wait_for_apt_locks
 }
 systemctl_restart() {
     retries=$1; wait_sleep=$2; timeout=$3 svcname=$4

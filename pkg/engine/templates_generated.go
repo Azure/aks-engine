@@ -13303,7 +13303,6 @@ apt_fix_keys() {
     fi
   done
   echo Executed apt-get update NO_PUBKEY fix $i times
-  wait_for_apt_locks
 }
 systemctl_restart() {
     retries=$1; wait_sleep=$2; timeout=$3 svcname=$4
@@ -13697,7 +13696,7 @@ done
 sed -i "/#HELPERSEOF/d" $script_lib
 source $script_lib
 
-apt_fix_keys
+apt_fix_keys &
 
 install_script=/opt/azure/containers/provision_installs.sh
 wait_for_file 3600 1 $install_script || exit $ERR_FILE_WATCH_TIMEOUT
