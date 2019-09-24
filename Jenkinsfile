@@ -79,7 +79,7 @@ def runJobWithEnvironment(jobCfg, jobName, version) {
 							try {
 								echo "EXECUTOR_NUMBER :: $EXECUTOR_NUMBER"
 								echo "NODE_NAME :: $NODE_NAME"
-								//sh "./test/e2e/cluster.sh"
+								sh "./test/e2e/cluster.sh"
 							} finally {
 								sh "./test/e2e/jenkins_reown.sh"
 							}
