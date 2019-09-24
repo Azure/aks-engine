@@ -679,7 +679,7 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 				if c.expectedAuditPolicy != componentFileSpec.isEnabled {
 					t.Fatalf("Expected %s to be %t", AuditPolicyAddonName, c.expectedAuditPolicy)
 				}
-			case "pod-security-policy.yaml":
+			case "1_pod-security-policy.yaml":
 				if c.expectedPodSecurityPolicy != componentFileSpec.isEnabled {
 					t.Fatalf("Expected %s to be %t", "PodSecurityPolicy", c.expectedPodSecurityPolicy)
 				}

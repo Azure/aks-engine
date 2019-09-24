@@ -204,7 +204,7 @@ func kubernetesAddonSettingsInit(p *api.Properties) []kubernetesComponentFileSpe
 		{
 			sourceFile:      "kubernetesmasteraddons-pod-security-policy.yaml",
 			base64Data:      k.GetAddonScript(PodSecurityPolicyAddonName),
-			destinationFile: "pod-security-policy.yaml",
+			destinationFile: "1_pod-security-policy.yaml",
 			isEnabled:       to.Bool(p.OrchestratorProfile.KubernetesConfig.EnablePodSecurityPolicy) || common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.15.0-beta.1"),
 		},
 		{
