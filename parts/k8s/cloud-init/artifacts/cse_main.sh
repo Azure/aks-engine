@@ -18,8 +18,6 @@ done
 sed -i "/#HELPERSEOF/d" $script_lib
 source $script_lib
 
-apt_fix_keys &
-
 install_script=/opt/azure/containers/provision_installs.sh
 wait_for_file 3600 1 $install_script || exit $ERR_FILE_WATCH_TIMEOUT
 source $install_script
@@ -58,6 +56,8 @@ fi
 if [[ "${GPU_NODE}" != "true" ]]; then
   cleanUpGPUDrivers
 fi
+
+apt_fix_keys &
 
 VHD_LOGS_FILEPATH=/opt/azure/vhd-install.complete
 if [[ "${IS_VHD}" = true ]]; then

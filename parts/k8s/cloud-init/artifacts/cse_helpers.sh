@@ -234,6 +234,7 @@ apt_fix_keys() {
     cat $output && break || \
     apt-key adv --keyserver keyserver.ubuntu.com --recv-keys $(apt-get update | grep NO_PUBKEY -m 1 | awk -F "NO_PUBKEY" '{print $2}')
     if [ $i -eq $retries ]; then
+      echo Detected NO_PUBKEY but unable to fix after $i retries
       return 1
     else sleep 1
     fi
