@@ -94,6 +94,11 @@ type GetNodesResult struct {
 // GetNodesAsync wraps Get with a struct response for goroutine + channel usage
 func GetNodesAsync() GetNodesResult {
 	list, err := Get()
+	if list == nil {
+		list = &List{
+			Nodes: []Node{},
+		}
+	}
 	return GetNodesResult{
 		Nodes: list.Nodes,
 		Err:   err,
