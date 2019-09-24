@@ -275,7 +275,7 @@ cleanUpContainerImages() {
     fi
 
     # TODO: remove once ACR is available on Azure Stack
-    docker rmi registry:2 &
+    docker rmi registry:2.7.1 &
 }
 
 cleanUpGPUDrivers() {

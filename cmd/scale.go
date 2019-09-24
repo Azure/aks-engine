@@ -433,7 +433,11 @@ func (sc *scaleCmd) run(cmd *cobra.Command, args []string) error {
 	sc.agentPool.Count = countForTemplate
 	sc.containerService.Properties.AgentPoolProfiles = []*api.AgentPoolProfile{sc.agentPool}
 
-	_, err = sc.containerService.SetPropertiesDefaults(false, true)
+	_, err = sc.containerService.SetPropertiesDefaults(api.PropertiesDefaultsParams{
+		IsScale:    true,
+		IsUpgrade:  false,
+		PkiKeySize: helpers.DefaultPkiKeySize,
+	})
 	if err != nil {
 		return errors.Wrapf(err, "error in SetPropertiesDefaults template %s", sc.apiModelPath)
 	}
@@ -488,7 +492,7 @@ func (sc *scaleCmd) run(cmd *cobra.Command, args []string) error {
 	deploymentSuffix := random.Int31()
 
 	if sc.nodes != nil {
-		sc.logger.Infof("Nodes in pool %s before scaling:\n", sc.agentPoolToScale)
+		sc.logger.Infof("Nodes in pool '%s' before scaling:\n", sc.agentPoolToScale)
 		operations.PrintNodes(sc.nodes)
 	}
 	_, err = sc.client.DeployTemplate(
@@ -504,7 +508,7 @@ func (sc *scaleCmd) run(cmd *cobra.Command, args []string) error {
 		nodes, err := operations.GetNodes(sc.client, sc.logger, sc.apiserverURL, sc.kubeconfig, time.Duration(5)*time.Minute, sc.agentPoolToScale, sc.newDesiredAgentCount)
 		if err == nil && nodes != nil {
 			sc.nodes = nodes
-			sc.logger.Infof("Nodes in pool %s cluster after scaling:\n", sc.agentPoolToScale)
+			sc.logger.Infof("Nodes in pool '%s' after scaling:\n", sc.agentPoolToScale)
 			operations.PrintNodes(sc.nodes)
 		} else {
 			sc.logger.Warningf("Unable to get nodes in pool %s after scaling:\n", sc.agentPoolToScale)

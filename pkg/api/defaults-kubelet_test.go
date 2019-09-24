@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/Azure/aks-engine/pkg/api/common"
+	"github.com/Azure/aks-engine/pkg/helpers"
 	"github.com/Azure/go-autorest/autorest/to"
 )
 
@@ -114,6 +115,18 @@ func TestKubeletConfigDefaults(t *testing.T) {
 		if k[key] != val {
 			t.Fatalf("got unexpected kubelet config value for %s: %s, expected %s",
 				key, k[key], val)
+		}
+	}
+
+	cs = CreateMockContainerService("testcluster", "1.16.0", 3, 2, false)
+	cs.setKubeletConfig(false)
+	kubeletConfig = cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig
+	expectedKeys := []string{
+		"--authentication-token-webhook",
+	}
+	for _, key := range expectedKeys {
+		if _, ok := kubeletConfig[key]; !ok {
+			t.Fatalf("could not find expected kubelet config value for %s", key)
 		}
 	}
 }
@@ -515,7 +528,11 @@ func TestEnforceNodeAllocatable(t *testing.T) {
 func TestProtectKernelDefaults(t *testing.T) {
 	// Validate default
 	cs := CreateMockContainerService("testcluster", "1.12.7", 3, 2, false)
-	cs.SetPropertiesDefaults(false, false)
+	cs.SetPropertiesDefaults(PropertiesDefaultsParams{
+		IsScale:    false,
+		IsUpgrade:  false,
+		PkiKeySize: helpers.DefaultPkiKeySize,
+	})
 	km := cs.Properties.MasterProfile.KubernetesConfig.KubeletConfig
 	if km["--protect-kernel-defaults"] != "true" {
 		t.Fatalf("got unexpected '--protect-kernel-defaults' kubelet config value %s, the expected value is %s",
@@ -534,7 +551,11 @@ func TestProtectKernelDefaults(t *testing.T) {
 			cs = CreateMockContainerService("testcluster", "1.10.13", 3, 2, false)
 			cs.Properties.MasterProfile.Distro = distro
 			cs.Properties.AgentPoolProfiles[0].Distro = distro
-			cs.SetPropertiesDefaults(false, false)
+			cs.SetPropertiesDefaults(PropertiesDefaultsParams{
+				IsScale:    false,
+				IsUpgrade:  false,
+				PkiKeySize: helpers.DefaultPkiKeySize,
+			})
 			km = cs.Properties.MasterProfile.KubernetesConfig.KubeletConfig
 			if km["--protect-kernel-defaults"] != "true" {
 				t.Fatalf("got unexpected '--protect-kernel-defaults' kubelet config value %s, the expected value is %s",
@@ -551,7 +572,11 @@ func TestProtectKernelDefaults(t *testing.T) {
 			cs = CreateMockContainerService("testcluster", "1.10.13", 3, 2, false)
 			cs.Properties.MasterProfile.Distro = distro
 			cs.Properties.AgentPoolProfiles[0].Distro = distro
-			cs.SetPropertiesDefaults(false, false)
+			cs.SetPropertiesDefaults(PropertiesDefaultsParams{
+				IsScale:    false,
+				IsUpgrade:  false,
+				PkiKeySize: helpers.DefaultPkiKeySize,
+			})
 			km = cs.Properties.MasterProfile.KubernetesConfig.KubeletConfig
 			if _, ok := km["--protect-kernel-defaults"]; ok {
 				t.Fatalf("got unexpected '--protect-kernel-defaults' kubelet config value %s",
@@ -569,7 +594,11 @@ func TestProtectKernelDefaults(t *testing.T) {
 	cs = CreateMockContainerService("testcluster", "1.10.13", 3, 2, false)
 	cs.Properties.MasterProfile.Distro = AKSUbuntu1604
 	cs.Properties.AgentPoolProfiles[0].OSType = Windows
-	cs.SetPropertiesDefaults(false, false)
+	cs.SetPropertiesDefaults(PropertiesDefaultsParams{
+		IsScale:    false,
+		IsUpgrade:  false,
+		PkiKeySize: helpers.DefaultPkiKeySize,
+	})
 	km = cs.Properties.MasterProfile.KubernetesConfig.KubeletConfig
 	if km["--protect-kernel-defaults"] != "true" {
 		t.Fatalf("got unexpected '--protect-kernel-defaults' kubelet config value %s, the expected value is %s",
@@ -593,7 +622,11 @@ func TestProtectKernelDefaults(t *testing.T) {
 					"--protect-kernel-defaults": "false",
 				},
 			}
-			cs.SetPropertiesDefaults(false, false)
+			cs.SetPropertiesDefaults(PropertiesDefaultsParams{
+				IsScale:    false,
+				IsUpgrade:  false,
+				PkiKeySize: helpers.DefaultPkiKeySize,
+			})
 			km = cs.Properties.MasterProfile.KubernetesConfig.KubeletConfig
 			if km["--protect-kernel-defaults"] != "false" {
 				t.Fatalf("got unexpected '--protect-kernel-defaults' kubelet config value %s, the expected value is %s",
@@ -1912,6 +1945,69 @@ func TestSupportPodPidsLimitFeatureGateInAgentPool(t *testing.T) {
 			hasSupportPodPidsLimitFeatureGate := strings.Contains(featureGates, "SupportPodPidsLimit=true")
 			if hasSupportPodPidsLimitFeatureGate != c.expectedSupportPodPidsLimitFeatureGate {
 				t.Fatalf("expected SupportPodPidsLimit=true presence in --feature gates to be %t, got %t", c.expectedSupportPodPidsLimitFeatureGate, hasSupportPodPidsLimitFeatureGate)
+			}
+		})
+	}
+
+}
+func TestReadOnlyPort(t *testing.T) {
+	cases := []struct {
+		name                 string
+		cs                   *ContainerService
+		expectedReadOnlyPort string
+	}{
+		{
+			name: "default pre-1.16",
+			cs: &ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorType:    Kubernetes,
+						OrchestratorVersion: "1.15.0",
+						KubernetesConfig:    &KubernetesConfig{},
+					},
+				},
+			},
+			expectedReadOnlyPort: "",
+		},
+		{
+			name: "default 1.16",
+			cs: &ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorType:    Kubernetes,
+						OrchestratorVersion: "1.16.0",
+						KubernetesConfig:    &KubernetesConfig{},
+					},
+				},
+			},
+			expectedReadOnlyPort: "0",
+		},
+		{
+			name: "AKS 1.16",
+			cs: &ContainerService{
+				Properties: &Properties{
+					HostedMasterProfile: &HostedMasterProfile{
+						FQDN: "foo",
+					},
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorType:    Kubernetes,
+						OrchestratorVersion: "1.16.0",
+						KubernetesConfig:    &KubernetesConfig{},
+					},
+				},
+			},
+			expectedReadOnlyPort: "",
+		},
+	}
+
+	for _, c := range cases {
+		c := c
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+			c.cs.setKubeletConfig(false)
+			readOnlyPort := c.cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig["--read-only-port"]
+			if readOnlyPort != c.expectedReadOnlyPort {
+				t.Fatalf("expected --read-only-port be equal to %s, got %s", c.expectedReadOnlyPort, readOnlyPort)
 			}
 		})
 	}

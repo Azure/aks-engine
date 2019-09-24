@@ -117,6 +117,14 @@ func (cs *ContainerService) setKubeletConfig(isUpgrade bool) {
 		defaultKubeletConfig["--tls-cipher-suites"] = TLSStrongCipherSuitesKubelet
 	}
 
+	if common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.16.0") {
+		// for enabling metrics-server v0.3.0+
+		defaultKubeletConfig["--authentication-token-webhook"] = "true"
+		if !cs.Properties.IsHostedMasterProfile() { // Skip for AKS until it supports metrics-server v0.3
+			defaultKubeletConfig["--read-only-port"] = "0" // we only have metrics-server v0.3 support in 1.16.0 and above
+		}
+	}
+
 	// If no user-configurable kubelet config values exists, use the defaults
 	setMissingKubeletValues(o.KubernetesConfig, defaultKubeletConfig)
 	addDefaultFeatureGates(o.KubernetesConfig.KubeletConfig, o.OrchestratorVersion, "1.8.0", "PodPriority=true")

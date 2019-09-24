@@ -14,6 +14,16 @@ import (
 func GenerateARMResources(cs *api.ContainerService) []interface{} {
 	var armResources []interface{}
 
+	deploymentTelemetryEnabled := cs.Properties.FeatureFlags.IsFeatureEnabled("EnableTelemetry")
+	isAzureStack := cs.Properties.IsAzureStackCloud()
+
+	if deploymentTelemetryEnabled {
+		if isAzureStack {
+			deploymentResource := createAzurestackTelemetry()
+			armResources = append(armResources, deploymentResource)
+		}
+	}
+
 	var useManagedIdentity, userAssignedIDEnabled bool
 	kubernetesConfig := cs.Properties.OrchestratorProfile.KubernetesConfig
 

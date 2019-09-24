@@ -15,8 +15,6 @@ import (
 	"github.com/pkg/errors"
 )
 
-const commandTimeout = 1 * time.Minute
-
 type List struct {
 	HPAs []HPA `json:"items"`
 }
@@ -54,22 +52,27 @@ type LoadBalancer struct {
 	DesiredReplicas                 int `json:"desiredReplicas"`
 }
 
-// Get returns the HPA definition specified in a given namespace
-func Get(name, namespace string) (*HPA, error) {
-	cmd := exec.Command("k", "get", "hpa", "-o", "json", "-n", namespace, name)
-	util.PrintCommand(cmd)
-	out, err := cmd.CombinedOutput()
-	if err != nil {
-		log.Printf("Error trying to run 'kubectl get hpa':%s\n", string(out))
-		return nil, err
-	}
+// Get will return a pod with a given name and namespace
+func Get(name, namespace string, retries int) (*HPA, error) {
 	h := HPA{}
-	err = json.Unmarshal(out, &h)
-	if err != nil {
-		log.Printf("Error unmarshalling service json:%s\n", err)
-		return nil, err
+	var out []byte
+	var err error
+	for i := 0; i < retries; i++ {
+		cmd := exec.Command("k", "get", "hpa", "-o", "json", "-n", namespace, name)
+		out, err = cmd.CombinedOutput()
+		if err != nil {
+			util.PrintCommand(cmd)
+			log.Printf("Error getting hpa: %s\n", err)
+		} else {
+			jsonErr := json.Unmarshal(out, &h)
+			if jsonErr != nil {
+				log.Printf("Error unmarshalling hpa json:%s\n", jsonErr)
+				err = jsonErr
+			}
+		}
+		time.Sleep(3 * time.Second)
 	}
-	return &h, nil
+	return &h, err
 }
 
 // GetAll will return all HPA resources in a given namespace
@@ -88,6 +91,21 @@ func GetAll(namespace string) (*List, error) {
 		return nil, err
 	}
 	return &hl, nil
+}
+
+// GetAllByPrefixResult is a return struct for GetAllByPrefixAsync
+type GetAllByPrefixResult struct {
+	hpas []HPA
+	err  error
+}
+
+// GetAllByPrefixAsync wraps GetAllByPrefix with a struct response for goroutine + channel usage
+func GetAllByPrefixAsync(prefix, namespace string) GetAllByPrefixResult {
+	hpas, err := GetAllByPrefix(prefix, namespace)
+	return GetAllByPrefixResult{
+		hpas: hpas,
+		err:  err,
+	}
 }
 
 // GetAllByPrefix will return all pods in a given namespace that match a prefix
@@ -110,8 +128,18 @@ func GetAllByPrefix(prefix, namespace string) ([]HPA, error) {
 	return hpas, nil
 }
 
+// Describe will describe a HPA resource
+func (h *HPA) Describe() error {
+	var commandTimeout time.Duration
+	cmd := exec.Command("k", "describe", "hpa", h.Metadata.Name, "-n", h.Metadata.Namespace)
+	out, err := util.RunAndLogCommand(cmd, commandTimeout)
+	log.Printf("\n%s\n", string(out))
+	return err
+}
+
 // Delete will delete a HPA in a given namespace
 func (h *HPA) Delete(retries int) error {
+	var commandTimeout time.Duration
 	var kubectlOutput []byte
 	var kubectlError error
 	for i := 0; i < retries; i++ {
@@ -128,34 +156,40 @@ func (h *HPA) Delete(retries int) error {
 }
 
 // WaitOnDeleted returns when an hpa resource is successfully deleted
-func WaitOnDeleted(hpaPrefix, namespace string, sleep, duration time.Duration) (bool, error) {
-	succeededCh := make(chan bool, 1)
-	errCh := make(chan error)
-	ctx, cancel := context.WithTimeout(context.Background(), duration)
+func WaitOnDeleted(hpaPrefix, namespace string, sleep, timeout time.Duration) (bool, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
+	ch := make(chan GetAllByPrefixResult)
+	var mostRecentWaitOnDeletedError error
+	var hpas []HPA
 	go func() {
 		for {
 			select {
 			case <-ctx.Done():
-				errCh <- errors.Errorf("Timeout exceeded (%s) while waiting for Pods (%s) to be deleted in namespace (%s)", duration.String(), hpaPrefix, namespace)
-			default:
-				p, err := GetAllByPrefix(hpaPrefix, namespace)
-				if err != nil {
-					errCh <- errors.Errorf("Got error while getting Pods with prefix \"%s\" in namespace \"%s\"", hpaPrefix, namespace)
-				}
-				if len(p) == 0 {
-					succeededCh <- true
-				}
+				return
+			case ch <- GetAllByPrefixAsync(hpaPrefix, namespace):
 				time.Sleep(sleep)
 			}
 		}
 	}()
 	for {
 		select {
-		case err := <-errCh:
-			return false, err
-		case deleted := <-succeededCh:
-			return deleted, nil
+		case result := <-ch:
+			mostRecentWaitOnDeletedError = result.err
+			hpas = result.hpas
+			if mostRecentWaitOnDeletedError == nil {
+				if len(hpas) == 0 {
+					return true, nil
+				}
+			}
+		case <-ctx.Done():
+			for _, hpa := range hpas {
+				err := hpa.Describe()
+				if err != nil {
+					log.Printf("Unable to describe hpa %s: %s", hpa.Metadata.Name, err)
+				}
+			}
+			return false, errors.Errorf("WaitOnDeleted timed out: %s\n", mostRecentWaitOnDeletedError)
 		}
 	}
 }

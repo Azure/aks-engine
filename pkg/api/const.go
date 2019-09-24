@@ -285,7 +285,7 @@ const (
 	// DefaultWindowsSku sets the default WindowsSku value in WindowsProfile
 	DefaultWindowsSku = "2019-Datacenter-Core-with-Containers-smalldisk"
 	// DefaultImageVersion sets the default ImageVersion value in WindowsProfile
-	DefaultImageVersion = "17763.615.1907121548"
+	DefaultImageVersion = "17763.737.1909062324"
 )
 
 const (
@@ -428,7 +428,7 @@ const (
 	//DefaultKubernetesGCLowThreshold specifies the value for the image-gc-low-threshold kubelet flag
 	DefaultKubernetesGCLowThreshold = 80
 	// DefaultEtcdVersion specifies the default etcd version to install
-	DefaultEtcdVersion = "3.3.13"
+	DefaultEtcdVersion = "3.3.15"
 	// DefaultEtcdDiskSize specifies the default size for Kubernetes master etcd disk volumes in GB
 	DefaultEtcdDiskSize = "256"
 	// DefaultEtcdDiskSizeGT3Nodes = size for Kubernetes master etcd disk volumes in GB if > 3 nodes

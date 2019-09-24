@@ -6,7 +6,7 @@
         },
         "orchestratorProfile": {
             "orchestratorType": "Kubernetes",
-            "orchestratorVersion": "1.16.0-alpha.1",
+            "orchestratorRelease": "1.16",
             "kubernetesConfig": {
                 "clusterSubnet": "10.244.0.0/16,fd00:101::/8",
                 "networkPlugin": "kubenet",

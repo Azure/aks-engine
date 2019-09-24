@@ -34,7 +34,7 @@ var (
 		"3.0.0", "3.0.1", "3.0.2", "3.0.3", "3.0.4", "3.0.5", "3.0.6", "3.0.7", "3.0.8", "3.0.9", "3.0.10", "3.0.11", "3.0.12", "3.0.13", "3.0.14", "3.0.15", "3.0.16", "3.0.17",
 		"3.1.0", "3.1.1", "3.1.2", "3.1.2", "3.1.3", "3.1.4", "3.1.5", "3.1.6", "3.1.7", "3.1.8", "3.1.9", "3.1.10",
 		"3.2.0", "3.2.1", "3.2.2", "3.2.3", "3.2.4", "3.2.5", "3.2.6", "3.2.7", "3.2.8", "3.2.9", "3.2.11", "3.2.12",
-		"3.2.13", "3.2.14", "3.2.15", "3.2.16", "3.2.23", "3.2.24", "3.2.25", "3.2.26", "3.3.0", "3.3.1", "3.3.8", "3.3.9", "3.3.10", "3.3.13"}
+		"3.2.13", "3.2.14", "3.2.15", "3.2.16", "3.2.23", "3.2.24", "3.2.25", "3.2.26", "3.3.0", "3.3.1", "3.3.8", "3.3.9", "3.3.10", "3.3.13", "3.3.15"}
 	containerdValidVersions        = [...]string{"1.1.5", "1.1.6", "1.2.4"}
 	networkPluginPlusPolicyAllowed = []k8sNetworkConfig{
 		{
@@ -150,6 +150,10 @@ func (a *Properties) validate(isUpdate bool) error {
 	if e := a.validateAADProfile(); e != nil {
 		return e
 	}
+
+	if e := a.validateFeatureFlags(); e != nil {
+		return e
+	}
 	return nil
 }
 
@@ -256,6 +260,17 @@ func (a *Properties) ValidateOrchestratorProfile(isUpdate bool) error {
 					if sv.LT(minVersion) {
 						return errors.Errorf("enableEncryptionWithExternalKms is only available in Kubernetes version %s or greater; unable to validate for Kubernetes version %s",
 							minVersion.String(), o.OrchestratorVersion)
+					}
+				}
+
+				if o.KubernetesConfig.EnableRbac != nil && !o.KubernetesConfig.IsRBACEnabled() {
+					minVersionNotAllowed, err := semver.Make("1.15.0")
+					if err != nil {
+						return errors.Errorf("could not validate version")
+					}
+					if !sv.LT(minVersionNotAllowed) {
+						return errors.Errorf("RBAC support is required for Kubernetes version %s or greater; unable to build Kubernetes v%s cluster with enableRbac=false",
+							minVersionNotAllowed.String(), o.OrchestratorVersion)
 					}
 				}
 
@@ -815,6 +830,15 @@ func (a *Properties) validateManagedIdentity() error {
 				return errors.New("user assigned identity can only be used with Kubernetes 1.12.0 or above. Please specify \"orchestratorRelease\": \"1.12\"")
 			}
 
+		}
+	}
+	return nil
+}
+
+func (a *Properties) validateFeatureFlags() error {
+	if a.FeatureFlags != nil {
+		if !a.IsAzureStackCloud() && a.FeatureFlags.EnableTelemetry {
+			return errors.Errorf("EnableTelemetry flag is only available for Azure Stack")
 		}
 	}
 	return nil

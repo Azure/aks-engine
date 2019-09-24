@@ -18,6 +18,7 @@ import (
 	"github.com/Azure/aks-engine/pkg/armhelpers/utils"
 	"github.com/Azure/aks-engine/pkg/engine"
 	"github.com/Azure/aks-engine/pkg/engine/transform"
+	"github.com/Azure/aks-engine/pkg/helpers"
 	"github.com/Azure/aks-engine/pkg/i18n"
 	"github.com/Azure/aks-engine/pkg/operations"
 	"github.com/sirupsen/logrus"
@@ -377,7 +378,7 @@ func (ku *Upgrader) upgradeAgentPools(ctx context.Context) error {
 
 		if toBeUpgradedCount == 0 {
 			ku.logger.Infof("No nodes to upgrade")
-			return nil
+			continue
 		}
 
 		// Upgrade nodes in agent pool
@@ -544,12 +545,12 @@ func (ku *Upgrader) upgradeAgentScaleSets(ctx context.Context) error {
 			err = operations.SafelyDrainNodeWithClient(
 				client,
 				ku.logger,
-				strings.ToLower(vmToUpgrade.Name),
+				vmToUpgrade.Name,
 				cordonDrainTimeout,
 			)
 			if err != nil {
 				ku.logger.Errorf("Error draining VM in VMSS: %v", err)
-				return err
+				// Continue even if there's an error in draining the node.
 			}
 
 			ku.logger.Infof(
@@ -622,7 +623,11 @@ func (ku *Upgrader) generateUpgradeTemplate(upgradeContainerService *api.Contain
 		return nil, nil, ku.Translator.Errorf("failed to initialize template generator: %s", err.Error())
 	}
 
-	_, err = upgradeContainerService.SetPropertiesDefaults(true, false)
+	_, err = upgradeContainerService.SetPropertiesDefaults(api.PropertiesDefaultsParams{
+		IsScale:    false,
+		IsUpgrade:  true,
+		PkiKeySize: helpers.DefaultPkiKeySize,
+	})
 	if err != nil {
 		return nil, nil, ku.Translator.Errorf("error in SetPropertiesDefaults: %s", err.Error())
 

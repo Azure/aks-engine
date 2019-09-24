@@ -142,7 +142,7 @@ func (cs *ContainerService) setAddonsConfig(isUpdate bool) {
 				MemoryRequests: "100Mi",
 				CPULimits:      "50m",
 				MemoryLimits:   "100Mi",
-				Image:          "mcr.microsoft.com/k8s/flexvolume/keyvault-flexvolume:v0.0.12",
+				Image:          "mcr.microsoft.com/k8s/flexvolume/keyvault-flexvolume:v0.0.13",
 			},
 		},
 	}
@@ -235,12 +235,14 @@ func (cs *ContainerService) setAddonsConfig(isUpdate bool) {
 				MemoryRequests: "50Mi",
 				CPULimits:      "50m",
 				MemoryLimits:   "250Mi",
-				Image:          specConfig.KubernetesImageBase + "ip-masq-agent-amd64:v2.3.0",
+				Image:          specConfig.KubernetesImageBase + "ip-masq-agent-amd64:v2.5.0",
 			},
 		},
 		Config: map[string]string{
-			"non-masquerade-cidr": cs.Properties.GetNonMasqueradeCIDR(),
-			"non-masq-cni-cidr":   cs.Properties.GetAzureCNICidr(),
+			"non-masquerade-cidr":           cs.Properties.GetNonMasqueradeCIDR(),
+			"non-masq-cni-cidr":             cs.Properties.GetAzureCNICidr(),
+			"secondary-non-masquerade-cidr": cs.Properties.GetSecondaryNonMasqueradeCIDR(),
+			"enable-ipv6":                   strconv.FormatBool(cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6DualStack")),
 		},
 	}
 

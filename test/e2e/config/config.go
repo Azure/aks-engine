@@ -296,7 +296,7 @@ func (c *Config) IsKubernetes() bool {
 func (c *Config) SetRandomRegion() {
 	var regions []string
 	if c.Regions == nil || len(c.Regions) == 0 {
-		regions = []string{"eastus", "southcentralus", "southeastasia", "westus2", "westeurope"}
+		regions = []string{"eastus", "uksouth", "southeastasia", "westus2", "westeurope"}
 	} else {
 		regions = c.Regions
 	}

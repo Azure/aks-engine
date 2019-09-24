@@ -105,6 +105,12 @@
 // ../../parts/k8s/cloud-init/jumpboxcustomdata.yml
 // ../../parts/k8s/cloud-init/masternodecustomdata.yml
 // ../../parts/k8s/cloud-init/nodecustomdata.yml
+// ../../parts/k8s/containeraddons/1.10/kubernetesmasteraddons-metrics-server-deployment.yaml
+// ../../parts/k8s/containeraddons/1.11/kubernetesmasteraddons-metrics-server-deployment.yaml
+// ../../parts/k8s/containeraddons/1.12/kubernetesmasteraddons-metrics-server-deployment.yaml
+// ../../parts/k8s/containeraddons/1.13/kubernetesmasteraddons-metrics-server-deployment.yaml
+// ../../parts/k8s/containeraddons/1.14/kubernetesmasteraddons-metrics-server-deployment.yaml
+// ../../parts/k8s/containeraddons/1.15/kubernetesmasteraddons-metrics-server-deployment.yaml
 // ../../parts/k8s/containeraddons/1.16/azure-cni-networkmonitor.yaml
 // ../../parts/k8s/containeraddons/1.16/ip-masq-agent.yaml
 // ../../parts/k8s/containeraddons/1.16/kubernetesmasteraddons-aad-pod-identity-deployment.yaml
@@ -125,6 +131,7 @@
 // ../../parts/k8s/containeraddons/1.6/kubernetesmasteraddons-heapster-deployment.yaml
 // ../../parts/k8s/containeraddons/1.7/kubernetesmasteraddons-heapster-deployment.yaml
 // ../../parts/k8s/containeraddons/1.8/kubernetesmasteraddons-heapster-deployment.yaml
+// ../../parts/k8s/containeraddons/1.9/kubernetesmasteraddons-metrics-server-deployment.yaml
 // ../../parts/k8s/containeraddons/azure-cni-networkmonitor.yaml
 // ../../parts/k8s/containeraddons/dns-autoscaler.yaml
 // ../../parts/k8s/containeraddons/ip-masq-agent.yaml
@@ -13111,6 +13118,7 @@ ERR_CIS_ASSIGN_FILE_PERMISSION=112 # Error assigning permission to a file in CIS
 ERR_PACKER_COPY_FILE=113 # Error writing a file to disk during VHD CI
 ERR_CIS_APPLY_PASSWORD_CONFIG=115 # Error applying CIS-recommended passwd configuration
 
+ERR_VHD_FILE_NOT_FOUND=124 # VHD log file not found on VM built from VHD distro
 ERR_VHD_BUILD_ERROR=125 # Reserved for VHD CI exit conditions
 
 # Azure Stack specific errors
@@ -13614,7 +13622,7 @@ cleanUpContainerImages() {
     fi
 
     # TODO: remove once ACR is available on Azure Stack
-    docker rmi registry:2 &
+    docker rmi registry:2.7.1 &
 }
 
 cleanUpGPUDrivers() {
@@ -13705,12 +13713,22 @@ else
     REBOOTREQUIRED=false
 fi
 
-if [ -f /var/log.vhd/azure/golden-image-install.complete ]; then
+if [[ "$CONTAINER_RUNTIME" != "kata-containers" ]] && [[ "$CONTAINER_RUNTIME" != "containerd" ]]; then
+  cleanUpContainerd
+fi
+if [[ "${GPU_NODE}" != "true" ]]; then
+  cleanUpGPUDrivers
+fi
+
+VHD_LOGS_FILEPATH=/opt/azure/vhd-install.complete
+if [[ "${IS_VHD}" = true ]]; then
+    if [ ! -f $VHD_LOGS_FILEPATH ]; then
+        echo "Using VHD distro but file $VHD_LOGS_FILEPATH not found"
+        exit $ERR_VHD_FILE_NOT_FOUND
+    fi
     echo "detected golden image pre-install"
+    cleanUpContainerImages
     FULL_INSTALL_REQUIRED=false
-    rm -rf /home/packer
-    deluser packer
-    groupdel packer
 else
     FULL_INSTALL_REQUIRED=true
 fi
@@ -13732,16 +13750,12 @@ fi
 installNetworkPlugin
 if [[ "$CONTAINER_RUNTIME" == "kata-containers" ]] || [[ "$CONTAINER_RUNTIME" == "containerd" ]]; then
     installContainerd
-else
-    cleanUpContainerd
 fi
 if [[ "${GPU_NODE}" = true ]]; then
     if $FULL_INSTALL_REQUIRED; then
         installGPUDrivers
     fi
     ensureGPUDrivers
-else
-    cleanUpGPUDrivers
 fi
 installKubeletAndKubectl
 if [[ $OS != $COREOS_OS_NAME ]]; then
@@ -13844,10 +13858,6 @@ echo $(date),$(hostname), endcustomscript>>/opt/m
 mkdir -p /opt/azure/containers && touch /opt/azure/containers/provision.complete
 ps auxfww > /opt/azure/provision-ps.log &
 
-if ! $FULL_INSTALL_REQUIRED; then
-  cleanUpContainerImages
-fi
-
 if [[ "${TARGET_ENVIRONMENT,,}" != "${AZURE_STACK_ENV}"  ]]; then
     # TODO: remove once ACR is available on Azure Stack
     apt_get_purge 20 30 120 apache2-utils || exit $ERR_APT_PURGE_FAIL
@@ -13922,7 +13932,9 @@ Type=oneshot
 ExecStart=/opt/azure/containers/enable-dhcpv6.sh
 
 [Install]
-WantedBy=multi-user.target`)
+WantedBy=multi-user.target
+#EOF
+`)
 
 func k8sCloudInitArtifactsDhcpv6ServiceBytes() ([]byte, error) {
 	return _k8sCloudInitArtifactsDhcpv6Service, nil
@@ -16148,6 +16160,996 @@ func k8sCloudInitNodecustomdataYml() (*asset, error) {
 	return a, nil
 }
 
+var _k8sContaineraddons110KubernetesmasteraddonsMetricsServerDeploymentYaml = []byte(`apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: metrics-server
+  namespace: kube-system
+  labels:
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: EnsureExists
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: system:metrics-server
+  labels:
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: EnsureExists
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - pods
+  - nodes
+  - namespaces
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - "extensions"
+  resources:
+  - deployments
+  verbs:
+  - get
+  - list
+  - watch
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: system:metrics-server
+  labels:
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: EnsureExists
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: system:metrics-server
+subjects:
+- kind: ServiceAccount
+  name: metrics-server
+  namespace: kube-system
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: RoleBinding
+metadata:
+  name: metrics-server-auth-reader
+  namespace: kube-system
+  labels:
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: EnsureExists
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: extension-apiserver-authentication-reader
+subjects:
+- kind: ServiceAccount
+  name: metrics-server
+  namespace: kube-system
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRoleBinding
+metadata:
+  name: metrics-server:system:auth-delegator
+  labels:
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: EnsureExists
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: system:auth-delegator
+subjects:
+- kind: ServiceAccount
+  name: metrics-server
+  namespace: kube-system
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: metrics-server
+  namespace: kube-system
+  labels:
+    addonmanager.kubernetes.io/mode: EnsureExists
+    kubernetes.io/name: "Metrics-server"
+    kubernetes.io/cluster-service: "true"
+spec:
+  selector:
+    k8s-app: metrics-server
+  ports:
+  - port: 443
+    protocol: TCP
+    targetPort: 443
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: metrics-server
+  namespace: kube-system
+  labels:
+    k8s-app: metrics-server
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: Reconcile
+spec:
+  selector:
+    matchLabels:
+      k8s-app: metrics-server
+  template:
+    metadata:
+      name: metrics-server
+      labels:
+        k8s-app: metrics-server
+    spec:
+      serviceAccountName: metrics-server
+      containers:
+      - name: metrics-server
+        image: {{ContainerImage "metrics-server"}}
+        imagePullPolicy: IfNotPresent
+        command:
+        - /metrics-server
+        - --source=kubernetes.summary_api:''
+      nodeSelector:
+        beta.kubernetes.io/os: linux
+---
+apiVersion: apiregistration.k8s.io/v1beta1
+kind: APIService
+metadata:
+  name: v1beta1.metrics.k8s.io
+  labels:
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: EnsureExists
+spec:
+  service:
+    name: metrics-server
+    namespace: kube-system
+  group: metrics.k8s.io
+  version: v1beta1
+  insecureSkipTLSVerify: true
+  groupPriorityMinimum: 100
+  versionPriority: 100
+`)
+
+func k8sContaineraddons110KubernetesmasteraddonsMetricsServerDeploymentYamlBytes() ([]byte, error) {
+	return _k8sContaineraddons110KubernetesmasteraddonsMetricsServerDeploymentYaml, nil
+}
+
+func k8sContaineraddons110KubernetesmasteraddonsMetricsServerDeploymentYaml() (*asset, error) {
+	bytes, err := k8sContaineraddons110KubernetesmasteraddonsMetricsServerDeploymentYamlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "k8s/containeraddons/1.10/kubernetesmasteraddons-metrics-server-deployment.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
+var _k8sContaineraddons111KubernetesmasteraddonsMetricsServerDeploymentYaml = []byte(`apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: metrics-server
+  namespace: kube-system
+  labels:
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: EnsureExists
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: system:metrics-server
+  labels:
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: EnsureExists
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - pods
+  - nodes
+  - namespaces
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - "extensions"
+  resources:
+  - deployments
+  verbs:
+  - get
+  - list
+  - watch
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: system:metrics-server
+  labels:
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: EnsureExists
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: system:metrics-server
+subjects:
+- kind: ServiceAccount
+  name: metrics-server
+  namespace: kube-system
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: RoleBinding
+metadata:
+  name: metrics-server-auth-reader
+  namespace: kube-system
+  labels:
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: EnsureExists
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: extension-apiserver-authentication-reader
+subjects:
+- kind: ServiceAccount
+  name: metrics-server
+  namespace: kube-system
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRoleBinding
+metadata:
+  name: metrics-server:system:auth-delegator
+  labels:
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: EnsureExists
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: system:auth-delegator
+subjects:
+- kind: ServiceAccount
+  name: metrics-server
+  namespace: kube-system
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: metrics-server
+  namespace: kube-system
+  labels:
+    addonmanager.kubernetes.io/mode: EnsureExists
+    kubernetes.io/name: "Metrics-server"
+    kubernetes.io/cluster-service: "true"
+spec:
+  selector:
+    k8s-app: metrics-server
+  ports:
+  - port: 443
+    protocol: TCP
+    targetPort: 443
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: metrics-server
+  namespace: kube-system
+  labels:
+    k8s-app: metrics-server
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: Reconcile
+spec:
+  selector:
+    matchLabels:
+      k8s-app: metrics-server
+  template:
+    metadata:
+      name: metrics-server
+      labels:
+        k8s-app: metrics-server
+    spec:
+      serviceAccountName: metrics-server
+      containers:
+      - name: metrics-server
+        image: {{ContainerImage "metrics-server"}}
+        imagePullPolicy: IfNotPresent
+        command:
+        - /metrics-server
+        - --source=kubernetes.summary_api:''
+      nodeSelector:
+        beta.kubernetes.io/os: linux
+---
+apiVersion: apiregistration.k8s.io/v1beta1
+kind: APIService
+metadata:
+  name: v1beta1.metrics.k8s.io
+  labels:
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: EnsureExists
+spec:
+  service:
+    name: metrics-server
+    namespace: kube-system
+  group: metrics.k8s.io
+  version: v1beta1
+  insecureSkipTLSVerify: true
+  groupPriorityMinimum: 100
+  versionPriority: 100
+`)
+
+func k8sContaineraddons111KubernetesmasteraddonsMetricsServerDeploymentYamlBytes() ([]byte, error) {
+	return _k8sContaineraddons111KubernetesmasteraddonsMetricsServerDeploymentYaml, nil
+}
+
+func k8sContaineraddons111KubernetesmasteraddonsMetricsServerDeploymentYaml() (*asset, error) {
+	bytes, err := k8sContaineraddons111KubernetesmasteraddonsMetricsServerDeploymentYamlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "k8s/containeraddons/1.11/kubernetesmasteraddons-metrics-server-deployment.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
+var _k8sContaineraddons112KubernetesmasteraddonsMetricsServerDeploymentYaml = []byte(`apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: metrics-server
+  namespace: kube-system
+  labels:
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: EnsureExists
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: system:metrics-server
+  labels:
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: EnsureExists
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - pods
+  - nodes
+  - namespaces
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - "extensions"
+  resources:
+  - deployments
+  verbs:
+  - get
+  - list
+  - watch
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: system:metrics-server
+  labels:
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: EnsureExists
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: system:metrics-server
+subjects:
+- kind: ServiceAccount
+  name: metrics-server
+  namespace: kube-system
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: RoleBinding
+metadata:
+  name: metrics-server-auth-reader
+  namespace: kube-system
+  labels:
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: EnsureExists
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: extension-apiserver-authentication-reader
+subjects:
+- kind: ServiceAccount
+  name: metrics-server
+  namespace: kube-system
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRoleBinding
+metadata:
+  name: metrics-server:system:auth-delegator
+  labels:
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: EnsureExists
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: system:auth-delegator
+subjects:
+- kind: ServiceAccount
+  name: metrics-server
+  namespace: kube-system
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: metrics-server
+  namespace: kube-system
+  labels:
+    addonmanager.kubernetes.io/mode: EnsureExists
+    kubernetes.io/name: "Metrics-server"
+    kubernetes.io/cluster-service: "true"
+spec:
+  selector:
+    k8s-app: metrics-server
+  ports:
+  - port: 443
+    protocol: TCP
+    targetPort: 443
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: metrics-server
+  namespace: kube-system
+  labels:
+    k8s-app: metrics-server
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: Reconcile
+spec:
+  selector:
+    matchLabels:
+      k8s-app: metrics-server
+  template:
+    metadata:
+      name: metrics-server
+      labels:
+        k8s-app: metrics-server
+    spec:
+      serviceAccountName: metrics-server
+      containers:
+      - name: metrics-server
+        image: {{ContainerImage "metrics-server"}}
+        imagePullPolicy: IfNotPresent
+        command:
+        - /metrics-server
+        - --source=kubernetes.summary_api:''
+      nodeSelector:
+        beta.kubernetes.io/os: linux
+---
+apiVersion: apiregistration.k8s.io/v1beta1
+kind: APIService
+metadata:
+  name: v1beta1.metrics.k8s.io
+  labels:
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: EnsureExists
+spec:
+  service:
+    name: metrics-server
+    namespace: kube-system
+  group: metrics.k8s.io
+  version: v1beta1
+  insecureSkipTLSVerify: true
+  groupPriorityMinimum: 100
+  versionPriority: 100
+`)
+
+func k8sContaineraddons112KubernetesmasteraddonsMetricsServerDeploymentYamlBytes() ([]byte, error) {
+	return _k8sContaineraddons112KubernetesmasteraddonsMetricsServerDeploymentYaml, nil
+}
+
+func k8sContaineraddons112KubernetesmasteraddonsMetricsServerDeploymentYaml() (*asset, error) {
+	bytes, err := k8sContaineraddons112KubernetesmasteraddonsMetricsServerDeploymentYamlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "k8s/containeraddons/1.12/kubernetesmasteraddons-metrics-server-deployment.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
+var _k8sContaineraddons113KubernetesmasteraddonsMetricsServerDeploymentYaml = []byte(`apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: metrics-server
+  namespace: kube-system
+  labels:
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: EnsureExists
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: system:metrics-server
+  labels:
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: EnsureExists
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - pods
+  - nodes
+  - namespaces
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - "extensions"
+  resources:
+  - deployments
+  verbs:
+  - get
+  - list
+  - watch
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: system:metrics-server
+  labels:
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: EnsureExists
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: system:metrics-server
+subjects:
+- kind: ServiceAccount
+  name: metrics-server
+  namespace: kube-system
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: RoleBinding
+metadata:
+  name: metrics-server-auth-reader
+  namespace: kube-system
+  labels:
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: EnsureExists
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: extension-apiserver-authentication-reader
+subjects:
+- kind: ServiceAccount
+  name: metrics-server
+  namespace: kube-system
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRoleBinding
+metadata:
+  name: metrics-server:system:auth-delegator
+  labels:
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: EnsureExists
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: system:auth-delegator
+subjects:
+- kind: ServiceAccount
+  name: metrics-server
+  namespace: kube-system
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: metrics-server
+  namespace: kube-system
+  labels:
+    addonmanager.kubernetes.io/mode: EnsureExists
+    kubernetes.io/name: "Metrics-server"
+    kubernetes.io/cluster-service: "true"
+spec:
+  selector:
+    k8s-app: metrics-server
+  ports:
+  - port: 443
+    protocol: TCP
+    targetPort: 443
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: metrics-server
+  namespace: kube-system
+  labels:
+    k8s-app: metrics-server
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: Reconcile
+spec:
+  selector:
+    matchLabels:
+      k8s-app: metrics-server
+  template:
+    metadata:
+      name: metrics-server
+      labels:
+        k8s-app: metrics-server
+    spec:
+      serviceAccountName: metrics-server
+      containers:
+      - name: metrics-server
+        image: {{ContainerImage "metrics-server"}}
+        imagePullPolicy: IfNotPresent
+        command:
+        - /metrics-server
+        - --source=kubernetes.summary_api:''
+      nodeSelector:
+        beta.kubernetes.io/os: linux
+---
+apiVersion: apiregistration.k8s.io/v1beta1
+kind: APIService
+metadata:
+  name: v1beta1.metrics.k8s.io
+  labels:
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: EnsureExists
+spec:
+  service:
+    name: metrics-server
+    namespace: kube-system
+  group: metrics.k8s.io
+  version: v1beta1
+  insecureSkipTLSVerify: true
+  groupPriorityMinimum: 100
+  versionPriority: 100
+`)
+
+func k8sContaineraddons113KubernetesmasteraddonsMetricsServerDeploymentYamlBytes() ([]byte, error) {
+	return _k8sContaineraddons113KubernetesmasteraddonsMetricsServerDeploymentYaml, nil
+}
+
+func k8sContaineraddons113KubernetesmasteraddonsMetricsServerDeploymentYaml() (*asset, error) {
+	bytes, err := k8sContaineraddons113KubernetesmasteraddonsMetricsServerDeploymentYamlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "k8s/containeraddons/1.13/kubernetesmasteraddons-metrics-server-deployment.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
+var _k8sContaineraddons114KubernetesmasteraddonsMetricsServerDeploymentYaml = []byte(`apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: metrics-server
+  namespace: kube-system
+  labels:
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: EnsureExists
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: system:metrics-server
+  labels:
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: EnsureExists
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - pods
+  - nodes
+  - namespaces
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - "extensions"
+  resources:
+  - deployments
+  verbs:
+  - get
+  - list
+  - watch
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: system:metrics-server
+  labels:
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: EnsureExists
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: system:metrics-server
+subjects:
+- kind: ServiceAccount
+  name: metrics-server
+  namespace: kube-system
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: RoleBinding
+metadata:
+  name: metrics-server-auth-reader
+  namespace: kube-system
+  labels:
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: EnsureExists
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: extension-apiserver-authentication-reader
+subjects:
+- kind: ServiceAccount
+  name: metrics-server
+  namespace: kube-system
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRoleBinding
+metadata:
+  name: metrics-server:system:auth-delegator
+  labels:
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: EnsureExists
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: system:auth-delegator
+subjects:
+- kind: ServiceAccount
+  name: metrics-server
+  namespace: kube-system
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: metrics-server
+  namespace: kube-system
+  labels:
+    addonmanager.kubernetes.io/mode: EnsureExists
+    kubernetes.io/name: "Metrics-server"
+    kubernetes.io/cluster-service: "true"
+spec:
+  selector:
+    k8s-app: metrics-server
+  ports:
+  - port: 443
+    protocol: TCP
+    targetPort: 443
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: metrics-server
+  namespace: kube-system
+  labels:
+    k8s-app: metrics-server
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: Reconcile
+spec:
+  selector:
+    matchLabels:
+      k8s-app: metrics-server
+  template:
+    metadata:
+      name: metrics-server
+      labels:
+        k8s-app: metrics-server
+    spec:
+      serviceAccountName: metrics-server
+      containers:
+      - name: metrics-server
+        image: {{ContainerImage "metrics-server"}}
+        imagePullPolicy: IfNotPresent
+        command:
+        - /metrics-server
+        - --source=kubernetes.summary_api:''
+      nodeSelector:
+        beta.kubernetes.io/os: linux
+---
+apiVersion: apiregistration.k8s.io/v1beta1
+kind: APIService
+metadata:
+  name: v1beta1.metrics.k8s.io
+  labels:
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: EnsureExists
+spec:
+  service:
+    name: metrics-server
+    namespace: kube-system
+  group: metrics.k8s.io
+  version: v1beta1
+  insecureSkipTLSVerify: true
+  groupPriorityMinimum: 100
+  versionPriority: 100
+`)
+
+func k8sContaineraddons114KubernetesmasteraddonsMetricsServerDeploymentYamlBytes() ([]byte, error) {
+	return _k8sContaineraddons114KubernetesmasteraddonsMetricsServerDeploymentYaml, nil
+}
+
+func k8sContaineraddons114KubernetesmasteraddonsMetricsServerDeploymentYaml() (*asset, error) {
+	bytes, err := k8sContaineraddons114KubernetesmasteraddonsMetricsServerDeploymentYamlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "k8s/containeraddons/1.14/kubernetesmasteraddons-metrics-server-deployment.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
+var _k8sContaineraddons115KubernetesmasteraddonsMetricsServerDeploymentYaml = []byte(`apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: metrics-server
+  namespace: kube-system
+  labels:
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: EnsureExists
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: system:metrics-server
+  labels:
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: EnsureExists
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - pods
+  - nodes
+  - namespaces
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - "extensions"
+  resources:
+  - deployments
+  verbs:
+  - get
+  - list
+  - watch
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: system:metrics-server
+  labels:
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: EnsureExists
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: system:metrics-server
+subjects:
+- kind: ServiceAccount
+  name: metrics-server
+  namespace: kube-system
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: RoleBinding
+metadata:
+  name: metrics-server-auth-reader
+  namespace: kube-system
+  labels:
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: EnsureExists
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: extension-apiserver-authentication-reader
+subjects:
+- kind: ServiceAccount
+  name: metrics-server
+  namespace: kube-system
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRoleBinding
+metadata:
+  name: metrics-server:system:auth-delegator
+  labels:
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: EnsureExists
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: system:auth-delegator
+subjects:
+- kind: ServiceAccount
+  name: metrics-server
+  namespace: kube-system
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: metrics-server
+  namespace: kube-system
+  labels:
+    addonmanager.kubernetes.io/mode: EnsureExists
+    kubernetes.io/name: "Metrics-server"
+    kubernetes.io/cluster-service: "true"
+spec:
+  selector:
+    k8s-app: metrics-server
+  ports:
+  - port: 443
+    protocol: TCP
+    targetPort: 443
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: metrics-server
+  namespace: kube-system
+  labels:
+    k8s-app: metrics-server
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: Reconcile
+spec:
+  selector:
+    matchLabels:
+      k8s-app: metrics-server
+  template:
+    metadata:
+      name: metrics-server
+      labels:
+        k8s-app: metrics-server
+    spec:
+      serviceAccountName: metrics-server
+      containers:
+      - name: metrics-server
+        image: {{ContainerImage "metrics-server"}}
+        imagePullPolicy: IfNotPresent
+        command:
+        - /metrics-server
+        - --source=kubernetes.summary_api:''
+      nodeSelector:
+        beta.kubernetes.io/os: linux
+---
+apiVersion: apiregistration.k8s.io/v1beta1
+kind: APIService
+metadata:
+  name: v1beta1.metrics.k8s.io
+  labels:
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: EnsureExists
+spec:
+  service:
+    name: metrics-server
+    namespace: kube-system
+  group: metrics.k8s.io
+  version: v1beta1
+  insecureSkipTLSVerify: true
+  groupPriorityMinimum: 100
+  versionPriority: 100
+`)
+
+func k8sContaineraddons115KubernetesmasteraddonsMetricsServerDeploymentYamlBytes() ([]byte, error) {
+	return _k8sContaineraddons115KubernetesmasteraddonsMetricsServerDeploymentYaml, nil
+}
+
+func k8sContaineraddons115KubernetesmasteraddonsMetricsServerDeploymentYaml() (*asset, error) {
+	bytes, err := k8sContaineraddons115KubernetesmasteraddonsMetricsServerDeploymentYamlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "k8s/containeraddons/1.15/kubernetesmasteraddons-metrics-server-deployment.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
 var _k8sContaineraddons116AzureCniNetworkmonitorYaml = []byte(`apiVersion: apps/v1
 kind: DaemonSet
 metadata:
@@ -16269,6 +17271,8 @@ spec:
       - name: azure-ip-masq-agent
         image: {{ContainerImage "ip-masq-agent"}}
         imagePullPolicy: IfNotPresent
+        args:
+          - --enable-ipv6={{ContainerConfig "enable-ipv6"}}
         securityContext:
           privileged: true
         volumeMounts:
@@ -16299,6 +17303,9 @@ data:
   ip-masq-agent: |-
     nonMasqueradeCIDRs:
       - {{ContainerConfig "non-masquerade-cidr"}}
+    {{- if ContainerConfig "secondary-non-masquerade-cidr"}}
+      - {{ContainerConfig "secondary-non-masquerade-cidr"}}
+    {{end -}}
     {{- if ContainerConfig "non-masq-cni-cidr"}}
       - {{ContainerConfig "non-masq-cni-cidr"}}
     masqLinkLocal: true
@@ -18502,7 +19509,7 @@ spec:
         imagePullPolicy: IfNotPresent
         command:
         - /metrics-server
-        - --source=kubernetes.summary_api:''
+        - --kubelet-insecure-tls
       nodeSelector:
         beta.kubernetes.io/os: linux
 ---
@@ -19789,6 +20796,171 @@ func k8sContaineraddons18KubernetesmasteraddonsHeapsterDeploymentYaml() (*asset,
 	}
 
 	info := bindataFileInfo{name: "k8s/containeraddons/1.8/kubernetesmasteraddons-heapster-deployment.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
+var _k8sContaineraddons19KubernetesmasteraddonsMetricsServerDeploymentYaml = []byte(`apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: metrics-server
+  namespace: kube-system
+  labels:
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: EnsureExists
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: system:metrics-server
+  labels:
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: EnsureExists
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - pods
+  - nodes
+  - namespaces
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - "extensions"
+  resources:
+  - deployments
+  verbs:
+  - get
+  - list
+  - watch
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: system:metrics-server
+  labels:
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: EnsureExists
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: system:metrics-server
+subjects:
+- kind: ServiceAccount
+  name: metrics-server
+  namespace: kube-system
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: RoleBinding
+metadata:
+  name: metrics-server-auth-reader
+  namespace: kube-system
+  labels:
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: EnsureExists
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: extension-apiserver-authentication-reader
+subjects:
+- kind: ServiceAccount
+  name: metrics-server
+  namespace: kube-system
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRoleBinding
+metadata:
+  name: metrics-server:system:auth-delegator
+  labels:
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: EnsureExists
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: system:auth-delegator
+subjects:
+- kind: ServiceAccount
+  name: metrics-server
+  namespace: kube-system
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: metrics-server
+  namespace: kube-system
+  labels:
+    addonmanager.kubernetes.io/mode: EnsureExists
+    kubernetes.io/name: "Metrics-server"
+    kubernetes.io/cluster-service: "true"
+spec:
+  selector:
+    k8s-app: metrics-server
+  ports:
+  - port: 443
+    protocol: TCP
+    targetPort: 443
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: metrics-server
+  namespace: kube-system
+  labels:
+    k8s-app: metrics-server
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: Reconcile
+spec:
+  selector:
+    matchLabels:
+      k8s-app: metrics-server
+  template:
+    metadata:
+      name: metrics-server
+      labels:
+        k8s-app: metrics-server
+    spec:
+      serviceAccountName: metrics-server
+      containers:
+      - name: metrics-server
+        image: {{ContainerImage "metrics-server"}}
+        imagePullPolicy: IfNotPresent
+        command:
+        - /metrics-server
+        - --source=kubernetes.summary_api:''
+      nodeSelector:
+        beta.kubernetes.io/os: linux
+---
+apiVersion: apiregistration.k8s.io/v1beta1
+kind: APIService
+metadata:
+  name: v1beta1.metrics.k8s.io
+  labels:
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: EnsureExists
+spec:
+  service:
+    name: metrics-server
+    namespace: kube-system
+  group: metrics.k8s.io
+  version: v1beta1
+  insecureSkipTLSVerify: true
+  groupPriorityMinimum: 100
+  versionPriority: 100
+`)
+
+func k8sContaineraddons19KubernetesmasteraddonsMetricsServerDeploymentYamlBytes() ([]byte, error) {
+	return _k8sContaineraddons19KubernetesmasteraddonsMetricsServerDeploymentYaml, nil
+}
+
+func k8sContaineraddons19KubernetesmasteraddonsMetricsServerDeploymentYaml() (*asset, error) {
+	bytes, err := k8sContaineraddons19KubernetesmasteraddonsMetricsServerDeploymentYamlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "k8s/containeraddons/1.9/kubernetesmasteraddons-metrics-server-deployment.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -23537,6 +24709,19 @@ var _k8sKubernetesparamsT = []byte(`{{if .HasAadProfile}}
       },
       "type": "securestring"
     },
+{{ else if and UseManagedIdentity IsHostedMaster}}
+    "servicePrincipalClientId": {
+      "metadata": {
+        "description": "Client ID (used by cloudprovider)"
+      },
+      "type": "securestring"
+    },
+    "servicePrincipalClientSecret": {
+      "metadata": {
+        "description": "The Service Principal Client Secret."
+      },
+      "type": "securestring"
+    },
 {{ end }}
     "masterOffset": {
       "defaultValue": 0,
@@ -23729,23 +24914,41 @@ function DownloadFileOverHttp
         [Parameter(Mandatory=$true)][string]
         $DestinationPath
     )
-    $secureProtocols = @()
-    $insecureProtocols = @([System.Net.SecurityProtocolType]::SystemDefault, [System.Net.SecurityProtocolType]::Ssl3)
 
-    foreach ($protocol in [System.Enum]::GetValues([System.Net.SecurityProtocolType]))
+    # First check to see if a file with the same name is already cached on the VHD
+    $fileName = [IO.Path]::GetFileName($Url)
+    
+    $search = @()
+    if (Test-Path $global:CacheDir)
     {
-        if ($insecureProtocols -notcontains $protocol)
-        {
-            $secureProtocols += $protocol
-        }
+        $search = [IO.Directory]::GetFiles($global:CacheDir, $fileName, [IO.SearchOption]::AllDirectories)
     }
-    [System.Net.ServicePointManager]::SecurityProtocol = $secureProtocols
 
-    $oldProgressPreference = $ProgressPreference
-    $ProgressPreference = 'SilentlyContinue'
-    Invoke-WebRequest $Url -UseBasicParsing -OutFile $DestinationPath -Verbose
-    $ProgressPreference = $oldProgressPreference
-    Write-Log "Downloaded file to $DestinationPath"
+    if ($search.Count -ne 0)
+    {
+        Write-Log "Using chaced version of $fileName - Copying file from $($search[0]) to $DestinationPath"
+        Move-Item -Path $search[0] -Destination $DestinationPath -Force
+    }
+    else 
+    {
+        $secureProtocols = @()
+        $insecureProtocols = @([System.Net.SecurityProtocolType]::SystemDefault, [System.Net.SecurityProtocolType]::Ssl3)
+    
+        foreach ($protocol in [System.Enum]::GetValues([System.Net.SecurityProtocolType]))
+        {
+            if ($insecureProtocols -notcontains $protocol)
+            {
+                $secureProtocols += $protocol
+            }
+        }
+        [System.Net.ServicePointManager]::SecurityProtocol = $secureProtocols
+    
+        $oldProgressPreference = $ProgressPreference
+        $ProgressPreference = 'SilentlyContinue'
+        Invoke-WebRequest $Url -UseBasicParsing -OutFile $DestinationPath -Verbose
+        $ProgressPreference = $oldProgressPreference
+        Write-Log "Downloaded file to $DestinationPath"
+    }
 }
 
 # https://stackoverflow.com/a/34559554/697126
@@ -23916,6 +25119,7 @@ $global:ExcludeMasterFromStandardLB = "{{WrapAsVariable "excludeMasterFromStanda
 
 
 # Windows defaults, not changed by aks-engine
+$global:CacheDir = "c:\akse-cache"
 $global:KubeDir = "c:\k"
 $global:HNSModule = [Io.path]::Combine("$global:KubeDir", "hns.psm1")
 
@@ -23968,6 +25172,13 @@ try
     if ($true) {
         Write-Log "Provisioning $global:DockerServiceName... with IP $MasterIP"
 
+        # Install OpenSSH if SSH enabled
+        $sshEnabled = [System.Convert]::ToBoolean("{{ WindowsSSHEnabled }}")
+
+        if ( $sshEnabled ) {
+            Install-OpenSSH -SSHKeys $SSHKeys
+        }
+
         Write-Log "Apply telemetry data setting"
         Set-TelemetrySetting -WindowsTelemetryGUID $global:WindowsTelemetryGUID
 
@@ -23994,7 +25205,6 @@ try
             Write-Log "Overwriting kube node binaries from $global:WindowsKubeBinariesURL"
             Get-KubeBinaries -KubeBinariesURL $global:WindowsKubeBinariesURL
         }
-
 
         Write-Log "Write Azure cloud provider config"
         Write-AzureConfig ` + "`" + `
@@ -24037,7 +25247,6 @@ try
                          -AgentKey $AgentKey ` + "`" + `
                          -AgentCertificate $global:AgentCertificate
 
-
         Write-Log "Create the Pause Container kubletwin/pause"
         New-InfraContainer -KubeDir $global:KubeDir
 
@@ -24045,6 +25254,7 @@ try
 
         # Configure network policy.
         if ($global:NetworkPlugin -eq "azure") {
+            Write-Log "Installing Azure VNet plugins"
             Install-VnetPlugins -AzureCNIConfDir $global:AzureCNIConfDir ` + "`" + `
                                 -AzureCNIBinDir $global:AzureCNIBinDir ` + "`" + `
                                 -VNetCNIPluginsURL $global:VNetCNIPluginsURL
@@ -24069,6 +25279,7 @@ try
             }
 
         } elseif ($global:NetworkPlugin -eq "kubenet") {
+            Write-Log "Fetching additional files needed for kubenet"
             Update-WinCNI -CNIPath $global:CNIPath
             Get-HnsPsm1 -HNSModule $global:HNSModule
         }
@@ -24093,13 +25304,6 @@ try
             -HNSModule $global:HNSModule ` + "`" + `
             -KubeletNodeLabels $global:KubeletNodeLabels
 
-        # Install OpenSSH if SSH enabled
-        $sshEnabled = [System.Convert]::ToBoolean("{{ WindowsSSHEnabled }}")
-
-        if ( $sshEnabled ) {
-            Install-OpenSSH -SSHKeys $SSHKeys
-        }
-
         Write-Log "Disable Internet Explorer compat mode and set homepage"
         Set-Explorer
 
@@ -24111,6 +25315,9 @@ try
 
         Write-Log "Update service failure actions"
         Update-ServiceFailureActions
+
+        Write-Log "Removing aks-engine bits cache directory"
+        Remove-Item $CacheDir -Recurse -Force
 
         Write-Log "Setup Complete, reboot computer"
         Restart-Computer
@@ -24124,6 +25331,7 @@ try
 catch
 {
     Write-Error $_
+    exit 1
 }
 `)
 
@@ -24851,15 +26059,23 @@ Install-OpenSSH {
     $adminpath = "c:\ProgramData\ssh"
     $adminfile = "administrators_authorized_keys"
 
-    Write-Host "Installing OpenSSH"
-    $isAvailable = Get-WindowsCapability -Online | ? Name -like 'OpenSSH*'
+    $sshdService = Get-Service | ? Name -like 'sshd'
+    if ($sshdService.Count -eq 0)
+    {
+        Write-Host "Installing OpenSSH"
+        $isAvailable = Get-WindowsCapability -Online | ? Name -like 'OpenSSH*'
 
-    if (!$isAvailable) {
-        Write-Error "OpenSSH is not avaliable on this machine"
-        exit 1
+        if (!$isAvailable) {
+            Write-Error "OpenSSH is not available on this machine"
+            exit 1
+        }
+
+        Add-WindowsCapability -Online -Name OpenSSH.Server~~~~0.0.1.0
     }
-
-    Add-WindowsCapability -Online -Name OpenSSH.Server~~~~0.0.1.0
+    else
+    {
+        Write-Host "OpenSSH Server service detected - skipping online install..."
+    }
 
     Start-Service sshd
 
@@ -29059,6 +30275,12 @@ var _bindata = map[string]func() (*asset, error){
 	"k8s/cloud-init/jumpboxcustomdata.yml":                                                 k8sCloudInitJumpboxcustomdataYml,
 	"k8s/cloud-init/masternodecustomdata.yml":                                              k8sCloudInitMasternodecustomdataYml,
 	"k8s/cloud-init/nodecustomdata.yml":                                                    k8sCloudInitNodecustomdataYml,
+	"k8s/containeraddons/1.10/kubernetesmasteraddons-metrics-server-deployment.yaml":       k8sContaineraddons110KubernetesmasteraddonsMetricsServerDeploymentYaml,
+	"k8s/containeraddons/1.11/kubernetesmasteraddons-metrics-server-deployment.yaml":       k8sContaineraddons111KubernetesmasteraddonsMetricsServerDeploymentYaml,
+	"k8s/containeraddons/1.12/kubernetesmasteraddons-metrics-server-deployment.yaml":       k8sContaineraddons112KubernetesmasteraddonsMetricsServerDeploymentYaml,
+	"k8s/containeraddons/1.13/kubernetesmasteraddons-metrics-server-deployment.yaml":       k8sContaineraddons113KubernetesmasteraddonsMetricsServerDeploymentYaml,
+	"k8s/containeraddons/1.14/kubernetesmasteraddons-metrics-server-deployment.yaml":       k8sContaineraddons114KubernetesmasteraddonsMetricsServerDeploymentYaml,
+	"k8s/containeraddons/1.15/kubernetesmasteraddons-metrics-server-deployment.yaml":       k8sContaineraddons115KubernetesmasteraddonsMetricsServerDeploymentYaml,
 	"k8s/containeraddons/1.16/azure-cni-networkmonitor.yaml":                               k8sContaineraddons116AzureCniNetworkmonitorYaml,
 	"k8s/containeraddons/1.16/ip-masq-agent.yaml":                                          k8sContaineraddons116IpMasqAgentYaml,
 	"k8s/containeraddons/1.16/kubernetesmasteraddons-aad-pod-identity-deployment.yaml":     k8sContaineraddons116KubernetesmasteraddonsAadPodIdentityDeploymentYaml,
@@ -29079,6 +30301,7 @@ var _bindata = map[string]func() (*asset, error){
 	"k8s/containeraddons/1.6/kubernetesmasteraddons-heapster-deployment.yaml":              k8sContaineraddons16KubernetesmasteraddonsHeapsterDeploymentYaml,
 	"k8s/containeraddons/1.7/kubernetesmasteraddons-heapster-deployment.yaml":              k8sContaineraddons17KubernetesmasteraddonsHeapsterDeploymentYaml,
 	"k8s/containeraddons/1.8/kubernetesmasteraddons-heapster-deployment.yaml":              k8sContaineraddons18KubernetesmasteraddonsHeapsterDeploymentYaml,
+	"k8s/containeraddons/1.9/kubernetesmasteraddons-metrics-server-deployment.yaml":        k8sContaineraddons19KubernetesmasteraddonsMetricsServerDeploymentYaml,
 	"k8s/containeraddons/azure-cni-networkmonitor.yaml":                                    k8sContaineraddonsAzureCniNetworkmonitorYaml,
 	"k8s/containeraddons/dns-autoscaler.yaml":                                              k8sContaineraddonsDnsAutoscalerYaml,
 	"k8s/containeraddons/ip-masq-agent.yaml":                                               k8sContaineraddonsIpMasqAgentYaml,
@@ -29302,6 +30525,24 @@ var _bintree = &bintree{nil, map[string]*bintree{
 			"nodecustomdata.yml":       {k8sCloudInitNodecustomdataYml, map[string]*bintree{}},
 		}},
 		"containeraddons": {nil, map[string]*bintree{
+			"1.10": {nil, map[string]*bintree{
+				"kubernetesmasteraddons-metrics-server-deployment.yaml": {k8sContaineraddons110KubernetesmasteraddonsMetricsServerDeploymentYaml, map[string]*bintree{}},
+			}},
+			"1.11": {nil, map[string]*bintree{
+				"kubernetesmasteraddons-metrics-server-deployment.yaml": {k8sContaineraddons111KubernetesmasteraddonsMetricsServerDeploymentYaml, map[string]*bintree{}},
+			}},
+			"1.12": {nil, map[string]*bintree{
+				"kubernetesmasteraddons-metrics-server-deployment.yaml": {k8sContaineraddons112KubernetesmasteraddonsMetricsServerDeploymentYaml, map[string]*bintree{}},
+			}},
+			"1.13": {nil, map[string]*bintree{
+				"kubernetesmasteraddons-metrics-server-deployment.yaml": {k8sContaineraddons113KubernetesmasteraddonsMetricsServerDeploymentYaml, map[string]*bintree{}},
+			}},
+			"1.14": {nil, map[string]*bintree{
+				"kubernetesmasteraddons-metrics-server-deployment.yaml": {k8sContaineraddons114KubernetesmasteraddonsMetricsServerDeploymentYaml, map[string]*bintree{}},
+			}},
+			"1.15": {nil, map[string]*bintree{
+				"kubernetesmasteraddons-metrics-server-deployment.yaml": {k8sContaineraddons115KubernetesmasteraddonsMetricsServerDeploymentYaml, map[string]*bintree{}},
+			}},
 			"1.16": {nil, map[string]*bintree{
 				"azure-cni-networkmonitor.yaml":                               {k8sContaineraddons116AzureCniNetworkmonitorYaml, map[string]*bintree{}},
 				"ip-masq-agent.yaml":                                          {k8sContaineraddons116IpMasqAgentYaml, map[string]*bintree{}},
@@ -29329,6 +30570,9 @@ var _bintree = &bintree{nil, map[string]*bintree{
 			}},
 			"1.8": {nil, map[string]*bintree{
 				"kubernetesmasteraddons-heapster-deployment.yaml": {k8sContaineraddons18KubernetesmasteraddonsHeapsterDeploymentYaml, map[string]*bintree{}},
+			}},
+			"1.9": {nil, map[string]*bintree{
+				"kubernetesmasteraddons-metrics-server-deployment.yaml": {k8sContaineraddons19KubernetesmasteraddonsMetricsServerDeploymentYaml, map[string]*bintree{}},
 			}},
 			"azure-cni-networkmonitor.yaml":                               {k8sContaineraddonsAzureCniNetworkmonitorYaml, map[string]*bintree{}},
 			"dns-autoscaler.yaml":                                         {k8sContaineraddonsDnsAutoscalerYaml, map[string]*bintree{}},

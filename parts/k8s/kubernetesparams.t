@@ -451,6 +451,19 @@
       },
       "type": "securestring"
     },
+{{ else if and UseManagedIdentity IsHostedMaster}}
+    "servicePrincipalClientId": {
+      "metadata": {
+        "description": "Client ID (used by cloudprovider)"
+      },
+      "type": "securestring"
+    },
+    "servicePrincipalClientSecret": {
+      "metadata": {
+        "description": "The Service Principal Client Secret."
+      },
+      "type": "securestring"
+    },
 {{ end }}
     "masterOffset": {
       "defaultValue": 0,

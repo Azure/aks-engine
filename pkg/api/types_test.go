@@ -5151,17 +5151,23 @@ func TestFormatAzureProdFQDN(t *testing.T) {
 		"santest.eastus2euap.cloudapp.azure.com",
 		"santest.francecentral.cloudapp.azure.com",
 		"santest.francesouth.cloudapp.azure.com",
+		"santest.germanynorth.cloudapp.azure.com",
+		"santest.germanywestcentral.cloudapp.azure.com",
 		"santest.japaneast.cloudapp.azure.com",
 		"santest.japanwest.cloudapp.azure.com",
 		"santest.koreacentral.cloudapp.azure.com",
 		"santest.koreasouth.cloudapp.azure.com",
 		"santest.northcentralus.cloudapp.azure.com",
 		"santest.northeurope.cloudapp.azure.com",
+		"santest.norwayeast.cloudapp.azure.com",
+		"santest.norwaywest.cloudapp.azure.com",
 		"santest.southafricanorth.cloudapp.azure.com",
 		"santest.southafricawest.cloudapp.azure.com",
 		"santest.southcentralus.cloudapp.azure.com",
 		"santest.southeastasia.cloudapp.azure.com",
 		"santest.southindia.cloudapp.azure.com",
+		"santest.switzerlandnorth.cloudapp.azure.com",
+		"santest.switzerlandwest.cloudapp.azure.com",
 		"santest.uaecentral.cloudapp.azure.com",
 		"santest.uaenorth.cloudapp.azure.com",
 		"santest.uksouth.cloudapp.azure.com",
@@ -5223,17 +5229,23 @@ func TestFormatProdFQDNByLocation(t *testing.T) {
 		"santest.eastus2euap.cloudapp.azure.com",
 		"santest.francecentral.cloudapp.azure.com",
 		"santest.francesouth.cloudapp.azure.com",
+		"santest.germanynorth.cloudapp.azure.com",
+		"santest.germanywestcentral.cloudapp.azure.com",
 		"santest.japaneast.cloudapp.azure.com",
 		"santest.japanwest.cloudapp.azure.com",
 		"santest.koreacentral.cloudapp.azure.com",
 		"santest.koreasouth.cloudapp.azure.com",
 		"santest.northcentralus.cloudapp.azure.com",
 		"santest.northeurope.cloudapp.azure.com",
+		"santest.norwayeast.cloudapp.azure.com",
+		"santest.norwaywest.cloudapp.azure.com",
 		"santest.southafricanorth.cloudapp.azure.com",
 		"santest.southafricawest.cloudapp.azure.com",
 		"santest.southcentralus.cloudapp.azure.com",
 		"santest.southeastasia.cloudapp.azure.com",
 		"santest.southindia.cloudapp.azure.com",
+		"santest.switzerlandnorth.cloudapp.azure.com",
+		"santest.switzerlandwest.cloudapp.azure.com",
 		"santest.uaecentral.cloudapp.azure.com",
 		"santest.uaenorth.cloudapp.azure.com",
 		"santest.uksouth.cloudapp.azure.com",
@@ -5268,7 +5280,11 @@ func TestFormatProdFQDNByLocation(t *testing.T) {
 	mockCSDefaultSpec.Properties.CustomCloudProfile = mockCSPDefaultSpec.CustomCloudProfile
 	mockCSDefaultSpec.Location = "randomlocation"
 	mockCSDefaultSpec.Properties.MasterProfile.DNSPrefix = "azurestackprefix"
-	mockCSDefaultSpec.SetPropertiesDefaults(false, false)
+	mockCSDefaultSpec.SetPropertiesDefaults(PropertiesDefaultsParams{
+		IsScale:    false,
+		IsUpgrade:  false,
+		PkiKeySize: helpers.DefaultPkiKeySize,
+	})
 	var actualResult []string
 	for _, location := range mockCSDefaultSpec.GetLocations() {
 		actualResult = append(actualResult, FormatProdFQDNByLocation("azurestackprefix", location, mockCSDefaultSpec.Properties.GetCustomCloudName()))
@@ -5388,6 +5404,12 @@ func TestIsFeatureEnabled(t *testing.T) {
 		{
 			name:     "empty flags",
 			feature:  "BlockOutboundInternet",
+			flags:    &FeatureFlags{},
+			expected: false,
+		},
+		{
+			name:     "telemetry",
+			feature:  "EnableTelemetry",
 			flags:    &FeatureFlags{},
 			expected: false,
 		},
@@ -5658,17 +5680,23 @@ func TestGetLocations(t *testing.T) {
 		"eastus2euap",
 		"francecentral",
 		"francesouth",
+		"germanynorth",
+		"germanywestcentral",
 		"japaneast",
 		"japanwest",
 		"koreacentral",
 		"koreasouth",
 		"northcentralus",
 		"northeurope",
+		"norwayeast",
+		"norwaywest",
 		"southafricanorth",
 		"southafricawest",
 		"southcentralus",
 		"southeastasia",
 		"southindia",
+		"switzerlandnorth",
+		"switzerlandwest",
 		"uaecentral",
 		"uaenorth",
 		"uksouth",
@@ -6295,6 +6323,126 @@ func TestHasContainerd(t *testing.T) {
 			ret := test.k.NeedsContainerd()
 			if test.expected != ret {
 				t.Errorf("expected %t, instead got : %t", test.expected, ret)
+			}
+		})
+	}
+}
+
+func TestGetNonMasqueradeCIDR(t *testing.T) {
+	tests := []struct {
+		name     string
+		p        *Properties
+		expected string
+	}{
+		{
+			name: "single cluster cidr, no dualstack",
+			p: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					KubernetesConfig: &KubernetesConfig{
+						ClusterSubnet: "10.244.0.0/16",
+					},
+				},
+				FeatureFlags: &FeatureFlags{},
+			},
+			expected: "10.244.0.0/16",
+		},
+		{
+			name: "two cluster cidr v4v6, dualstack",
+			p: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					KubernetesConfig: &KubernetesConfig{
+						ClusterSubnet: "10.244.0.0/16,fd00:101::/8",
+					},
+				},
+				FeatureFlags: &FeatureFlags{
+					EnableIPv6DualStack: true,
+				},
+			},
+			expected: "10.244.0.0/16",
+		},
+		{
+			name: "two cluster cidr v6v4, dualstack",
+			p: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					KubernetesConfig: &KubernetesConfig{
+						ClusterSubnet: "fd00:101::/8,10.244.0.0/16",
+					},
+				},
+				FeatureFlags: &FeatureFlags{
+					EnableIPv6DualStack: true,
+				},
+			},
+			expected: "fd00::/8",
+		},
+	}
+
+	for _, test := range tests {
+		test := test
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+			ret := test.p.GetNonMasqueradeCIDR()
+			if test.expected != ret {
+				t.Errorf("expected %s, instead got : %s", test.expected, ret)
+			}
+		})
+	}
+}
+
+func TestGetSecondaryNonMasqueradeCIDR(t *testing.T) {
+	tests := []struct {
+		name     string
+		p        *Properties
+		expected string
+	}{
+		{
+			name: "single cluster cidr, no dualstack",
+			p: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					KubernetesConfig: &KubernetesConfig{
+						ClusterSubnet: "10.244.0.0/16",
+					},
+				},
+				FeatureFlags: &FeatureFlags{},
+			},
+			expected: "",
+		},
+		{
+			name: "two cluster cidr v4v6, dualstack",
+			p: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					KubernetesConfig: &KubernetesConfig{
+						ClusterSubnet: "10.244.0.0/16,fd00:101::/8",
+					},
+				},
+				FeatureFlags: &FeatureFlags{
+					EnableIPv6DualStack: true,
+				},
+			},
+			expected: "fd00::/8",
+		},
+		{
+			name: "two cluster cidr v6v4, dualstack",
+			p: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					KubernetesConfig: &KubernetesConfig{
+						ClusterSubnet: "fd00:101::/8,10.244.0.0/16",
+					},
+				},
+				FeatureFlags: &FeatureFlags{
+					EnableIPv6DualStack: true,
+				},
+			},
+			expected: "10.244.0.0/16",
+		},
+	}
+
+	for _, test := range tests {
+		test := test
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+			ret := test.p.GetSecondaryNonMasqueradeCIDR()
+			if test.expected != ret {
+				t.Errorf("expected %s, instead got : %s", test.expected, ret)
 			}
 		})
 	}

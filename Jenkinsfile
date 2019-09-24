@@ -1,23 +1,100 @@
 import groovy.json.*
 
-def defaultEnv = [
-	fork: "${params.FORK}",
-	branch: "${params.BRANCH}",
-	regions: "${params.REGIONS}",
-	cleanupOnExit: true,
-	upgradeCluster: false,
-	createVNet: false,
-	scaleCluster: false,
-	]
+defaultEnv = [
+	CLEANUP_ON_EXIT: true,
+	CREATE_VNET: false,
+	] + params
 
 def k8sVersions = ["1.12", "1.13", "1.14", "1.15", "1.16"]
 def tasks = [:]
 def testConfigs = []
 
+def tasksForUpgradeJob(jobCfg, aksEngineVersions, jobName, version) {
+	def jobsByName = [:]
+	def t = [:]
+	def versions = aksEngineVersions.orchestrators.findAll {
+		it.orchestratorVersion.startsWith(version)
+	}
+
+	if(!versions) {
+		println("no versions starting with ${version}, so return an empty job map")
+		return t
+	}
+
+	def latestVersion = versions.last()
+	if(!latestVersion.upgrades) {
+		println("no versions to upgrade for ${version}, so return an empty job map")
+		return t
+	}
+
+	def upgradeVersion = latestVersion.upgrades.last().orchestratorVersion
+	jobCfg.env["UPGRADE_VERSIONS"] = upgradeVersion
+
+	jobName = "${jobName}/upgrade/${upgradeVersion}"
+	t[jobName] = runJobWithEnvironment(jobCfg, jobName, version)
+	return t
+}
+
+def taskForCreateJob(jobCfg, jobName, version) {
+	def t = [:]
+	t[jobName] = runJobWithEnvironment(jobCfg, jobName, version)
+	return t
+}
+
+def runJobWithEnvironment(jobCfg, jobName, version) {
+	def jobSpecificEnv = defaultEnv + jobCfg.env
+	return {
+		node {
+			ws("${env.JOB_NAME}-${jobName}") {
+				stage(jobName) {
+					retry(5){
+						sh("sudo rm -rf ./bin ./_output ./_logs")
+						cleanWs()
+						checkout scm
+					}
+
+					dir('./bin') {
+						unstash(name: 'aks-engine-bin')
+					}
+
+					// set environment variables needed for the test script
+					def envVars = [
+							ORCHESTRATOR_RELEASE: "${version}",
+							API_MODEL_INPUT: "${JsonOutput.toJson(jobCfg.apiModel)}",
+						] + jobSpecificEnv
+					withEnv(envVars.collect{ k, v -> "${k}=${v}" }) {
+						// define any sensitive data needed for the test script
+						def creds = [
+								string(credentialsId: 'AKS_ENGINE_TENANT_ID', variable: 'TENANT_ID'),
+								string(credentialsId: 'AKS_ENGINE_3014546b_CLIENT_ID', variable: 'CLIENT_ID'),
+								string(credentialsId: 'AKS_ENGINE_3014546b_CLIENT_SECRET', variable: 'CLIENT_SECRET'),
+								string(credentialsId: 'LOG_ANALYTICS_WORKSPACE_KEY', variable: 'LOG_ANALYTICS_WORKSPACE_KEY')
+							]
+
+						withCredentials(creds) {
+							echo "Running tests for: ${jobName}"
+							try {
+								echo "EXECUTOR_NUMBER :: $EXECUTOR_NUMBER"
+								echo "NODE_NAME :: $NODE_NAME"
+								sh "./test/e2e/cluster.sh"
+							} finally {
+								sh "./test/e2e/jenkins_reown.sh"
+							}
+						}
+					}
+
+					archiveArtifacts(artifacts: '_output/**/*', allowEmptyArchive: true)
+					archiveArtifacts(artifacts: '_logs/**/*', allowEmptyArchive: true)
+				}
+			}
+		}
+	}
+}
+
 stage ("build binary") {
 	node {
 		retry(5){
-			sh("sudo rm -rf ./bin ./_output ./_logs")
+			sh("sudo rm -rf ./*")
 			checkout scm
 		}
 
@@ -39,19 +116,35 @@ stage ("build binary") {
 stage ("discover tests") {
 	node {
 		retry(5){
-			sh("sudo rm -rf ./bin ./_output ./_logs")
+			sh("sudo rm -rf ./*")
 			checkout scm
 		}
+
+		dir('./bin') {
+			unstash(name: 'aks-engine-bin')
+		}
+
+		def aksEngineAllVersions = readJSON(text: sh(script: "bin/aks-engine get-versions -o json", returnStdout: true))
 
 		testConfigs = findFiles(glob: '**/test/e2e/test_cluster_configs/**/*.json')
 		testConfigs.each { cfgFile ->
 			def jobCfg = readJSON(file: cfgFile.path)
+			if(!jobCfg.env) {
+				jobCfg.env = [:] // ensure env exists
+			}
+
 			k8sVersions.each { version ->
 				def jobName = cfgFile.path[cfgFile.path.indexOf("test_cluster_configs/") + 21..-6] // remove leader and trailing .json
 				jobName = "v${version}/${jobName}"
-				if(params.JOB_FOCUS_REGEX.trim() && !(jobName ==~ ~/${params.JOB_FOCUS_REGEX}/)){
+				if(params.INCLUDE_JOB_REGEX.trim() && !(jobName ==~ ~/${params.INCLUDE_JOB_REGEX}/)){
 					// the job is focused, so only run jobs matching the regex
-					echo("This run is limited to jobs matching ${params.JOB_FOCUS_REGEX}; not running ${jobName}")
+					echo("This run is limited to jobs matching ${params.INCLUDE_JOB_REGEX}; not running ${jobName}")
+					return // this is a continue and will not exit the entire iteration
+				}
+
+				if(params.EXCLUDE_JOB_REGEX.trim() && (jobName ==~ ~/${params.EXCLUDE_JOB_REGEX}/)){
+					// the job is focused, so only run jobs matching the regex
+					echo("This run excludes jobs matching ${params.EXCLUDE_JOB_REGEX}; not running ${jobName}")
 					return // this is a continue and will not exit the entire iteration
 				}
 
@@ -62,58 +155,12 @@ stage ("discover tests") {
 					return // this is a continue and will not exit the entire iteration
 				}
 
-				tasks[jobName] = {
-					node {
-						ws("${env.JOB_NAME}-${jobName}") {
-							stage(jobName) {
-								retry(5){
-									sh("sudo rm -rf ./bin ./_output ./_logs")
-									cleanWs()
-									checkout scm
-								}
-
-								dir('./bin') {
-									unstash(name: 'aks-engine-bin')
-								}
-
-								def jobSpecificEnv = (jobCfg.env == null) ? defaultEnv.clone() : defaultEnv + jobCfg.env
-								// set environment variables needed for the test script
-								def envVars = [
-										"ORCHESTRATOR_RELEASE=${version}",
-										"API_MODEL_INPUT=${JsonOutput.toJson(jobCfg.apiModel)}",
-										"FORK=${jobSpecificEnv.fork}",
-										"BRANCH=${jobSpecificEnv.branch}",
-										"REGION_OPTIONS=${jobSpecificEnv.regions}",
-										"CLEANUP_ON_EXIT=${jobSpecificEnv.cleanupOnExit}",
-										"UPGRADE_CLUSTER=${jobSpecificEnv.upgradeCluster}",
-										"CREATE_VNET=${jobSpecificEnv.createVNet}",
-										"SCALE_CLUSTER=${jobSpecificEnv.scaleCluster}",
-									]
-								withEnv(envVars) {
-									// define any sensitive data needed for the test script
-									def creds = [
-											string(credentialsId: 'AKS_ENGINE_TENANT_ID', variable: 'TENANT_ID'),
-											string(credentialsId: 'AKS_ENGINE_3014546b_CLIENT_ID', variable: 'CLIENT_ID'),
-											string(credentialsId: 'AKS_ENGINE_3014546b_CLIENT_SECRET', variable: 'CLIENT_SECRET')
-										]
-
-									withCredentials(creds) {
-										echo "Running tests for: ${jobName}"
-										try {
-											echo "EXECUTOR_NUMBER :: $EXECUTOR_NUMBER"
-											echo "NODE_NAME :: $NODE_NAME"
-											sh "./test/e2e/cluster.sh"
-										} finally {
-											sh "./test/e2e/jenkins_reown.sh"
-										}
-									}
-								}
-
-								archiveArtifacts(artifacts: '_output/**/*', allowEmptyArchive: true)
-								archiveArtifacts(artifacts: '_logs/**/*', allowEmptyArchive: true)
-							}
-						}
-					}
+				if(params.UPGRADE_CLUSTER) {
+					// we are upgrading, so we need to determine the next logical version to upgrade
+					tasks = tasks + tasksForUpgradeJob(jobCfg, aksEngineAllVersions, jobName, version)
+				} else {
+					// not a upgrade job, just run the config and version
+					tasks = tasks + taskForCreateJob(jobCfg, jobName, version)
 				}
 			}
 		}
