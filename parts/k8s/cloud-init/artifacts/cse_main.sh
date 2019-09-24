@@ -18,6 +18,8 @@ done
 sed -i "/#HELPERSEOF/d" $script_lib
 source $script_lib
 
+apt_fix_keys
+
 install_script=/opt/azure/containers/provision_installs.sh
 wait_for_file 3600 1 $install_script || exit $ERR_FILE_WATCH_TIMEOUT
 source $install_script

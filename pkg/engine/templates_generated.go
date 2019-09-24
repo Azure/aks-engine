@@ -13289,6 +13289,22 @@ apt_get_dist_upgrade() {
   echo Executed apt-get dist-upgrade $i times
   wait_for_apt_locks
 }
+apt_fix_keys() {
+  retries=10
+  output=/tmp/apt-fix-keys.out
+  for i in $(seq 1 $retries); do
+    wait_for_apt_locks
+    ! (apt-get update | tee $output | grep NO_PUBKEY) && \
+    cat $output && break || \
+    apt-key adv --keyserver keyserver.ubuntu.com --recv-keys $(apt-get update | grep NO_PUBKEY -m 1 | awk -F "NO_PUBKEY" '{print $2}')
+    if [ $i -eq $retries ]; then
+      return 1
+    else sleep 1
+    fi
+  done
+  echo Executed apt-get update NO_PUBKEY fix $i times
+  wait_for_apt_locks
+}
 systemctl_restart() {
     retries=$1; wait_sleep=$2; timeout=$3 svcname=$4
     for i in $(seq 1 $retries); do
@@ -13680,6 +13696,8 @@ for i in $(seq 1 3600); do
 done
 sed -i "/#HELPERSEOF/d" $script_lib
 source $script_lib
+
+apt_fix_keys
 
 install_script=/opt/azure/containers/provision_installs.sh
 wait_for_file 3600 1 $install_script || exit $ERR_FILE_WATCH_TIMEOUT
