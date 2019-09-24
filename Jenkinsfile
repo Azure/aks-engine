@@ -171,7 +171,7 @@ stage ("discover tests") {
 }
 
 stage ("AKS Engine E2E Tests") {
-	throttle(['k8s-matrix']) {
+	// throttle(['k8s-matrix']) {
 		parallel tasks
-	}
+	//}
 }
