@@ -438,7 +438,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			var pods []pod.Pod
 
 			testPortForward := func(deploymentName string) {
-				running, podWaitErr := pod.WaitOnReady(deploymentName, deploymentNamespace, 3, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
+				running, podWaitErr := pod.WaitOnSuccesses(deploymentName, deploymentNamespace, 3, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
 				Expect(podWaitErr).NotTo(HaveOccurred())
 				Expect(running).To(Equal(true))
 				pods, err = deploy.Pods()
@@ -609,11 +609,11 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			var running bool
 			if common.IsKubernetesVersionGe(eng.ExpandedDefinition.Properties.OrchestratorProfile.OrchestratorVersion, "1.12.0") {
 				By("Ensuring that coredns is running")
-				running, err = pod.WaitOnReady("coredns", "kube-system", kubeSystemPodsReadinessChecks, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
+				running, err = pod.WaitOnSuccesses("coredns", "kube-system", kubeSystemPodsReadinessChecks, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
 
 			} else {
 				By("Ensuring that kube-dns is running")
-				running, err = pod.WaitOnReady("kube-dns", "kube-system", kubeSystemPodsReadinessChecks, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
+				running, err = pod.WaitOnSuccesses("kube-dns", "kube-system", kubeSystemPodsReadinessChecks, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
 			}
 			Expect(err).NotTo(HaveOccurred())
 			Expect(running).To(Equal(true))
@@ -626,7 +626,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			}
 			for _, componentName := range coreComponents {
 				By(fmt.Sprintf("Ensuring that %s is Running", componentName))
-				running, err := pod.WaitOnReady(componentName, "kube-system", kubeSystemPodsReadinessChecks, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
+				running, err := pod.WaitOnSuccesses(componentName, "kube-system", kubeSystemPodsReadinessChecks, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(running).To(Equal(true))
 			}
@@ -689,7 +689,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				if hasAddon, addon := eng.HasAddon(addonName); hasAddon {
 					for _, addonPod := range addonPods {
 						By(fmt.Sprintf("Ensuring that the %s addon is Running", addonName))
-						running, err := pod.WaitOnReady(addonPod, addonNamespace, kubeSystemPodsReadinessChecks, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
+						running, err := pod.WaitOnSuccesses(addonPod, addonNamespace, kubeSystemPodsReadinessChecks, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
 						Expect(err).NotTo(HaveOccurred())
 						Expect(running).To(Equal(true))
 						By(fmt.Sprintf("Ensuring that the correct resources have been applied for %s", addonPod))
@@ -710,7 +710,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 
 		It("should have the correct tiller configuration", func() {
 			if hasTiller, tillerAddon := eng.HasAddon("tiller"); hasTiller {
-				running, err := pod.WaitOnReady("tiller", "kube-system", kubeSystemPodsReadinessChecks, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
+				running, err := pod.WaitOnSuccesses("tiller", "kube-system", kubeSystemPodsReadinessChecks, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(running).To(Equal(true))
 				pods, err := pod.GetAllByPrefix("tiller-deploy", "kube-system")
@@ -729,7 +729,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 		It("should have the expected omsagent cluster footprint", func() {
 			if hasContainerMonitoring, _ := eng.HasAddon("container-monitoring"); hasContainerMonitoring {
 				By("Validating the omsagent replicaset")
-				running, err := pod.WaitOnReady("omsagent-rs", "kube-system", kubeSystemPodsReadinessChecks, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
+				running, err := pod.WaitOnSuccesses("omsagent-rs", "kube-system", kubeSystemPodsReadinessChecks, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(running).To(Equal(true))
 				pods, err := pod.GetAllByPrefix("omsagent-rs", "kube-system")
@@ -743,7 +743,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				Expect(err).NotTo(HaveOccurred())
 				Expect(pass).To(BeTrue())
 				By("Validating the omsagent daemonset")
-				running, err = pod.WaitOnReady("omsagent", "kube-system", kubeSystemPodsReadinessChecks, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
+				running, err = pod.WaitOnSuccesses("omsagent", "kube-system", kubeSystemPodsReadinessChecks, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(running).To(Equal(true))
 				pods, err = pod.GetAllByPrefix("omsagent", "kube-system")
@@ -775,7 +775,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			Expect(err).NotTo(HaveOccurred())
 
 			By("Ensuring that php-apache pod is running")
-			running, err := pod.WaitOnReady(longRunningApacheDeploymentName, "default", 3, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
+			running, err := pod.WaitOnSuccesses(longRunningApacheDeploymentName, "default", 4, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(running).To(Equal(true))
 
@@ -989,7 +989,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				curlDeploymentName := fmt.Sprintf("%s-%v", deploymentPrefix, r.Intn(99999))
 				curlDeploy, err := deployment.CreateLinuxDeployDeleteIfExists(deploymentPrefix, "library/nginx:latest", curlDeploymentName, "default", "--replicas=2")
 				Expect(err).NotTo(HaveOccurred())
-				running, err := pod.WaitOnReady(curlDeploymentName, "default", 3, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
+				running, err := pod.WaitOnSuccesses(curlDeploymentName, "default", 4, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(running).To(Equal(true))
 				curlPods, err := curlDeploy.Pods()
@@ -1081,7 +1081,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				Expect(err).NotTo(HaveOccurred())
 
 				By("Ensuring that the php-apache pod is running")
-				running, err := pod.WaitOnReady(longRunningApacheDeploymentName, "default", 3, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
+				running, err := pod.WaitOnSuccesses(longRunningApacheDeploymentName, "default", 4, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(running).To(Equal(true))
 
@@ -1115,7 +1115,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				Expect(err).NotTo(HaveOccurred())
 
 				By("Ensuring there are 3 load test pods")
-				running, err = pod.WaitOnReady(loadTestName, "default", 3, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
+				running, err = pod.WaitOnSuccesses(loadTestName, "default", 4, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(running).To(Equal(true))
 
@@ -1353,22 +1353,22 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				Expect(err).NotTo(HaveOccurred())
 
 				By("Ensure there is a running frontend-prod pod")
-				running, err := pod.WaitOnReady(frontendProdDeploymentName, nsProd, 3, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
+				running, err := pod.WaitOnSuccesses(frontendProdDeploymentName, nsProd, 4, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(running).To(Equal(true))
 
 				By("Ensure there is a running frontend-dev pod")
-				running, err = pod.WaitOnReady(frontendDevDeploymentName, nsDev, 3, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
+				running, err = pod.WaitOnSuccesses(frontendDevDeploymentName, nsDev, 4, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(running).To(Equal(true))
 
 				By("Ensure there is a running backend pod")
-				running, err = pod.WaitOnReady(backendDeploymentName, nsDev, 3, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
+				running, err = pod.WaitOnSuccesses(backendDeploymentName, nsDev, 4, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(running).To(Equal(true))
 
 				By("Ensure there is a running network-policy pod")
-				running, err = pod.WaitOnReady(nwpolicyDeploymentName, nsDev, 3, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
+				running, err = pod.WaitOnSuccesses(nwpolicyDeploymentName, nsDev, 4, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(running).To(Equal(true))
 
@@ -1562,7 +1562,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				Expect(err).NotTo(HaveOccurred())
 
 				By("Waiting on pod to be Ready")
-				running, err := pod.WaitOnReady(deploymentName, "default", 3, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
+				running, err := pod.WaitOnSuccesses(deploymentName, "default", 4, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(running).To(Equal(true))
 
@@ -1597,7 +1597,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				Expect(err).NotTo(HaveOccurred())
 
 				By("Waiting on 5 pods to be Ready")
-				running, err = pod.WaitOnReady(deploymentName, "default", 3, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
+				running, err = pod.WaitOnSuccesses(deploymentName, "default", 4, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(running).To(Equal(true))
 				iisPods, err = iisDeploy.Pods()
@@ -1678,12 +1678,12 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				Expect(err).NotTo(HaveOccurred())
 
 				By("Ensure there is a Running nginx pod")
-				running, err := pod.WaitOnReady(nginxDeploymentName, "default", 3, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
+				running, err := pod.WaitOnSuccesses(nginxDeploymentName, "default", 4, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(running).To(Equal(true))
 
 				By("Ensure there is a Running iis pod")
-				running, err = pod.WaitOnReady(windowsDeploymentName, "default", 3, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
+				running, err = pod.WaitOnSuccesses(windowsDeploymentName, "default", 4, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(running).To(Equal(true))
 
@@ -1743,7 +1743,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 					deploymentName := fmt.Sprintf("iis-%s-%v", cfg.Name, r.Intn(99999))
 					iisDeploy, err := deployment.CreateWindowsDeployIfNotExist(iisImage, deploymentName, "default", 80, hostport)
 					Expect(err).NotTo(HaveOccurred())
-					running, err := pod.WaitOnReady(deploymentName, "default", 3, 30*time.Second, cfg.Timeout)
+					running, err := pod.WaitOnSuccesses(deploymentName, "default", 4, 30*time.Second, cfg.Timeout)
 					Expect(err).NotTo(HaveOccurred())
 					Expect(running).To(Equal(true))
 					iisPods, err := iisDeploy.Pods()

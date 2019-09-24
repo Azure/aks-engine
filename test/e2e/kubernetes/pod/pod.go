@@ -537,15 +537,16 @@ func GetPodAsync(name, namespace string, timeout time.Duration) GetPodResult {
 	}
 }
 
-// WaitOnReady returns true if all pods matching a prefix substring are in a succeeded state within a period of time
+// WaitOnSuccesses returns true if all pods matching a prefix substring are in a succeeded state within a period of time
 // successesNeeded is used to make sure we return the correct value even if the pod is in a CrashLoop
-func WaitOnReady(podPrefix, namespace string, successesNeeded int, sleep, timeout time.Duration) (bool, error) {
+func WaitOnSuccesses(podPrefix, namespace string, successesNeeded int, sleep, timeout time.Duration) (bool, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 	ch := make(chan AreAllPodsRunningResult)
-	var mostRecentWaitOnReadyErr error
+	var mostRecentWaitOnSuccessesErr error
 	successCount := 0
-	failureCount := 0
+	flapCount := 0
+	var lastResult bool
 	go func() {
 		for {
 			select {
@@ -559,24 +560,28 @@ func WaitOnReady(podPrefix, namespace string, successesNeeded int, sleep, timeou
 	for {
 		select {
 		case result := <-ch:
-			mostRecentWaitOnReadyErr = result.err
-			if result.ready {
-				successCount++
-				if successCount >= successesNeeded {
-					return true, nil
-				}
-			} else {
-				if successCount > 1 {
-					failureCount++
-					if failureCount >= successesNeeded {
-						PrintPodsLogs(podPrefix, namespace)
-						return false, errors.Errorf("Pods from deployment (%s) in namespace (%s) have been checked out as all Ready %d times, but NotReady %d times. This behavior may mean it is in a crashloop", podPrefix, namespace, successCount, failureCount)
+			mostRecentWaitOnSuccessesErr = result.err
+			if mostRecentWaitOnSuccessesErr == nil {
+				if result.ready {
+					lastResult = true
+					successCount++
+					if successCount >= successesNeeded {
+						return true, nil
+					}
+				} else {
+					if lastResult {
+						flapCount++
+						if flapCount >= (successesNeeded - 1) {
+							PrintPodsLogs(podPrefix, namespace)
+							return false, errors.Errorf("Pods from deployment (%s) in namespace (%s) have been checked out as all Ready %d times, but included %d transitions away from a Ready state. This behavior may mean it is in a crashloop", podPrefix, namespace, successCount, flapCount)
+						}
+						lastResult = false
 					}
 				}
 			}
 		case <-ctx.Done():
 			PrintPodsLogs(podPrefix, namespace)
-			return false, errors.Errorf("WaitOnReady timed out: %s\n", mostRecentWaitOnReadyErr)
+			return false, errors.Errorf("WaitOnReady timed out: %s\n", mostRecentWaitOnSuccessesErr)
 		}
 	}
 }
@@ -683,7 +688,7 @@ func WaitOnTerminated(name, namespace, containerName string, sleep, containerExe
 
 // WaitOnReady will call the static method WaitOnReady passing in p.Metadata.Name and p.Metadata.Namespace
 func (p *Pod) WaitOnReady(sleep, timeout time.Duration) (bool, error) {
-	return WaitOnReady(p.Metadata.Name, p.Metadata.Namespace, 6, sleep, timeout)
+	return WaitOnSuccesses(p.Metadata.Name, p.Metadata.Namespace, 6, sleep, timeout)
 }
 
 // WaitOnSucceeded will call the static method WaitOnSucceeded passing in p.Metadata.Name and p.Metadata.Namespace
