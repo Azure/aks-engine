@@ -19636,6 +19636,7 @@ type: Opaque
 data:
   WSID: "{{ContainerConfig "workspaceGuid"}}"
   KEY: "{{ContainerConfig "workspaceKey"}}"
+  DOMAIN: "{{ContainerConfig "workspaceDomain"}}"
 ---
 apiVersion: v1
 kind: ServiceAccount
@@ -19947,7 +19948,7 @@ spec:
                 fieldRef:
                   fieldPath: status.hostIP
             - name: ACS_RESOURCE_NAME
-              value: {{ContainerConfig "clusterName"}}            
+              value: {{ContainerConfig "clusterName"}}
             - name: CONTROLLER_TYPE
               value: "DaemonSet"
             - name: ISTEST
@@ -19982,7 +19983,7 @@ spec:
               name: omsagent-secret
               readOnly: true
             - mountPath: /etc/config/settings
-              name: settings-vol-config  
+              name: settings-vol-config
       nodeSelector:
         beta.kubernetes.io/os: linux
       tolerations:
@@ -20015,7 +20016,7 @@ spec:
         - name: settings-vol-config
           configMap:
             name: container-azm-ms-agentconfig
-            optional: true    
+            optional: true
   updateStrategy:
     type: RollingUpdate
 ---
@@ -20063,7 +20064,7 @@ spec:
                 fieldRef:
                   fieldPath: status.hostIP
             - name: ACS_RESOURCE_NAME
-              value: {{ContainerConfig "clusterName"}}            
+              value: {{ContainerConfig "clusterName"}}
             - name: CONTROLLER_TYPE
               value: "ReplicaSet"
             - name: ISTEST
@@ -20090,7 +20091,7 @@ spec:
             - mountPath : /etc/config
               name: omsagent-rs-config
             - mountPath: /etc/config/settings
-              name: settings-vol-config              
+              name: settings-vol-config
           livenessProbe:
             exec:
               command:
@@ -20127,7 +20128,7 @@ spec:
         - name: settings-vol-config
           configMap:
             name: container-azm-ms-agentconfig
-            optional: true    
+            optional: true
 `)
 
 func k8sContaineraddons116KubernetesmasteraddonsOmsagentDaemonsetYamlBytes() ([]byte, error) {
@@ -23527,6 +23528,7 @@ type: Opaque
 data:
   WSID: "{{ContainerConfig "workspaceGuid"}}"
   KEY: "{{ContainerConfig "workspaceKey"}}"
+  DOMAIN: "{{ContainerConfig "workspaceDomain"}}"
 ---
 apiVersion: v1
 kind: ServiceAccount
@@ -23838,7 +23840,7 @@ spec:
                 fieldRef:
                   fieldPath: status.hostIP
             - name: ACS_RESOURCE_NAME
-              value: {{ContainerConfig "clusterName"}}            
+              value: {{ContainerConfig "clusterName"}}
             - name: CONTROLLER_TYPE
               value: "DaemonSet"
             - name: ISTEST
@@ -23873,7 +23875,7 @@ spec:
               name: omsagent-secret
               readOnly: true
             - mountPath: /etc/config/settings
-              name: settings-vol-config  
+              name: settings-vol-config
       nodeSelector:
         beta.kubernetes.io/os: linux
       tolerations:
@@ -23906,7 +23908,7 @@ spec:
         - name: settings-vol-config
           configMap:
             name: container-azm-ms-agentconfig
-            optional: true    
+            optional: true
   updateStrategy:
     type: RollingUpdate
 ---
@@ -23954,7 +23956,7 @@ spec:
                 fieldRef:
                   fieldPath: status.hostIP
             - name: ACS_RESOURCE_NAME
-              value: {{ContainerConfig "clusterName"}}            
+              value: {{ContainerConfig "clusterName"}}
             - name: CONTROLLER_TYPE
               value: "ReplicaSet"
             - name: ISTEST
@@ -23981,7 +23983,7 @@ spec:
             - mountPath : /etc/config
               name: omsagent-rs-config
             - mountPath: /etc/config/settings
-              name: settings-vol-config              
+              name: settings-vol-config
           livenessProbe:
             exec:
               command:
@@ -24018,7 +24020,7 @@ spec:
         - name: settings-vol-config
           configMap:
             name: container-azm-ms-agentconfig
-            optional: true    
+            optional: true
 `)
 
 func k8sContaineraddonsKubernetesmasteraddonsOmsagentDaemonsetYamlBytes() ([]byte, error) {

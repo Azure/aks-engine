@@ -5,6 +5,7 @@ package api
 
 import (
 	"strconv"
+	"strings"
 
 	"github.com/Azure/go-autorest/autorest/to"
 
@@ -20,6 +21,12 @@ func (cs *ContainerService) setAddonsConfig(isUpdate bool) {
 	cloudSpecConfig := cs.GetCloudSpecConfig()
 	k8sComponents := K8sComponentsByVersionMap[o.OrchestratorVersion]
 	specConfig := cloudSpecConfig.KubernetesSpecConfig
+	omsagentImage := "mcr.microsoft.com/azuremonitor/containerinsights/ciprod:ciprod07092019"
+	if strings.EqualFold(cloudSpecConfig.CloudName, "AzureChinaCloud") {
+		omsagentImage = "dockerhub.azk8s.cn/microsoft/oms:ciprod07092019"
+	} else {
+		omsagentImage = "mcr.microsoft.com/azuremonitor/containerinsights/ciprod:ciprod07092019"
+	}
 	defaultsHeapsterAddonsConfig := KubernetesAddon{
 		Name:    HeapsterAddonName,
 		Enabled: to.BoolPtr(DefaultHeapsterAddonEnabled && !common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.13.0")),
@@ -220,7 +227,7 @@ func (cs *ContainerService) setAddonsConfig(isUpdate bool) {
 				MemoryRequests: "225Mi",
 				CPULimits:      "150m",
 				MemoryLimits:   "600Mi",
-				Image:          "mcr.microsoft.com/azuremonitor/containerinsights/ciprod:ciprod07092019",
+				Image:          omsagentImage,
 			},
 		},
 	}
