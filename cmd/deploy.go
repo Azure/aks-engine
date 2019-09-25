@@ -367,7 +367,7 @@ func autofillApimodel(dc *deployCmd) error {
 		case "AzureUSGovernmentCloud":
 			workspaceDomain = "opinsights.azure.us"
 		default:
-			return errors.Wrapf(err, "apimodel: container monitoring addon not supported in this cloud: %s", az.environment.Name)
+			return errors.Wrapf(err, "apimodel: container monitoring addon not supported in this cloud: %s", dc.containerService.Properties.CustomCloudProfile.Environment.Name)
 		}
 		err := dc.configureContainerMonitoringAddon(ctx, k8sConfig, workspaceDomain)
 		if err != nil {
