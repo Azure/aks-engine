@@ -185,6 +185,9 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpgrade, isScale bool) {
 				o.KubernetesConfig.ClusterSubnet = DefaultKubernetesSubnet
 			} else {
 				o.KubernetesConfig.ClusterSubnet = DefaultKubernetesClusterSubnet
+				if cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6Only") {
+					o.KubernetesConfig.ClusterSubnet = DefaultKubernetesClusterSubnetIPv6
+				}
 				// ipv4 and ipv6 subnet for dual stack
 				if cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6DualStack") {
 					o.KubernetesConfig.ClusterSubnet = strings.Join([]string{DefaultKubernetesClusterSubnet, DefaultKubernetesClusterSubnetIPv6}, ",")

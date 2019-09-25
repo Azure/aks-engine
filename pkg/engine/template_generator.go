@@ -633,6 +633,9 @@ func (t *TemplateGenerator) getTemplateFuncMap(cs *api.ContainerService) templat
 		"IsIPv6DualStackFeatureEnabled": func() bool {
 			return cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6DualStack")
 		},
+		"IsIPv6OnlyFeatureEnabled": func() bool {
+			return cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6Only")
+		},
 		"GetBase64EncodedEnvironmentJSON": func() string {
 			customEnvironmentJSON, _ := cs.Properties.GetCustomEnvironmentJSON(false)
 			return base64.StdEncoding.EncodeToString([]byte(customEnvironmentJSON))

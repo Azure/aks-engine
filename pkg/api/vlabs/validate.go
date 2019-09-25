@@ -385,9 +385,9 @@ func (a *Properties) validateMasterProfile(isUpdate bool) error {
 			return errors.New("when masterProfile's availabilityProfile is VirtualMachineScaleSets and a vnetSubnetID is specified, the firstConsecutiveStaticIP should be empty and will be determined by an offset from the first IP in the vnetCidr")
 		}
 		// validate os type is linux if dual stack feature is enabled
-		if a.FeatureFlags.IsIPv6DualStackEnabled() {
+		if a.FeatureFlags.IsIPv6DualStackEnabled() || a.FeatureFlags.IsIPv6OnlyEnabled() {
 			if m.Distro == CoreOS {
-				return errors.Errorf("Dual stack feature is currently supported only with Ubuntu, but master is of distro type %s", m.Distro)
+				return errors.Errorf("Dual stack and IPv6 only features are currently supported only with Ubuntu, but master is of distro type %s", m.Distro)
 			}
 		}
 	}
@@ -450,12 +450,12 @@ func (a *Properties) validateAgentPoolProfiles(isUpdate bool) error {
 		}
 
 		// validate os type is linux if dual stack feature is enabled
-		if a.FeatureFlags.IsIPv6DualStackEnabled() {
+		if a.FeatureFlags.IsIPv6DualStackEnabled() || a.FeatureFlags.IsIPv6OnlyEnabled() {
 			if agentPoolProfile.OSType == Windows {
-				return errors.Errorf("Dual stack feature is supported only with Linux, but agent pool '%s' is of os type %s", agentPoolProfile.Name, agentPoolProfile.OSType)
+				return errors.Errorf("Dual stack and IPv6 only features are supported only with Linux, but agent pool '%s' is of os type %s", agentPoolProfile.Name, agentPoolProfile.OSType)
 			}
 			if agentPoolProfile.Distro == CoreOS {
-				return errors.Errorf("Dual stack feature is currently supported only with Ubuntu, but agent pool '%s' is of distro type %s", agentPoolProfile.Name, agentPoolProfile.Distro)
+				return errors.Errorf("Dual stack and IPv6 only features are currently supported only with Ubuntu, but agent pool '%s' is of distro type %s", agentPoolProfile.Name, agentPoolProfile.Distro)
 			}
 		}
 

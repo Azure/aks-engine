@@ -463,6 +463,10 @@ const (
 	DefaultKubernetesClusterSubnetIPv6 = "fd00:101::/8"
 	// DefaultKubernetesServiceCIDR specifies the IP subnet that kubernetes will create Service IPs within.
 	DefaultKubernetesServiceCIDR = "10.0.0.0/16"
+	// DefaultKubernetesServiceCIDRIPv6 specifies the IPv6 subnet that kubernetes will create Service IPs within.
+	DefaultKubernetesServiceCIDRIPv6 = "fd00:10::/64"
+	// DefaultKubernetesDNSServiceIPv6 specifies the IPv6 address that kube-dns listens on by default. must by in the default Service CIDRv6range.
+	DefaultKubernetesDNSServiceIPv6 = "fd00:10::10"
 	// DefaultKubernetesDNSServiceIP specifies the IP address that kube-dns listens on by default. must by in the default Service CIDR range.
 	DefaultKubernetesDNSServiceIP = "10.0.0.10"
 	// DefaultMobyVersion specifies the default Azure build version of Moby to install.

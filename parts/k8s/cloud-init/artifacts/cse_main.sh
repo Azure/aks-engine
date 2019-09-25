@@ -156,8 +156,8 @@ if [[ -n "${MASTER_NODE}" && "${KMS_PROVIDER_VAULT_NAME}" != "" ]]; then
     ensureKMS
 fi
 
-# configure and enable dhcpv6 for dual stack feature
-if [ "$IS_IPV6_DUALSTACK_FEATURE_ENABLED" = "true" ]; then
+# configure and enable dhcpv6 for ipv6 features
+if [ "$IS_IPV6_ENABLED" = "true" ]; then
     dhcpv6_systemd_service=/etc/systemd/system/dhcpv6.service
     dhcpv6_configuration_script=/opt/azure/containers/enable-dhcpv6.sh
     wait_for_file 3600 1 $dhcpv6_systemd_service || exit $ERR_FILE_WATCH_TIMEOUT

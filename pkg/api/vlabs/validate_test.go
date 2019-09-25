@@ -532,6 +532,53 @@ func Test_KubernetesConfig_Validate(t *testing.T) {
 			t.Error("should not error when DNSServiceIP and ServiceCidr are valid")
 		}
 
+		// same tests but using IPv6 instead of IPv4
+		c = KubernetesConfig{
+			DNSServiceIP: "fd00:168::10",
+		}
+		if err := c.Validate(k8sVersion, false, false); err == nil {
+			t.Error("should error when DNSServiceIP but not ServiceCidr")
+		}
+
+		c = KubernetesConfig{
+			ServiceCidr: "fd00:168::10/24",
+		}
+		if err := c.Validate(k8sVersion, false, false); err == nil {
+			t.Error("should error when ServiceCidr but not DNSServiceIP")
+		}
+
+		c = KubernetesConfig{
+			DNSServiceIP: "invalid",
+			ServiceCidr:  "fd00:168::10/24",
+		}
+		if err := c.Validate(k8sVersion, false, false); err == nil {
+			t.Error("should error when DNSServiceIP is invalid")
+		}
+
+		c = KubernetesConfig{
+			DNSServiceIP: "fd00:168::10",
+			ServiceCidr:  "fd00:168::10/not-a-len",
+		}
+		if err := c.Validate(k8sVersion, false, false); err == nil {
+			t.Error("should error when ServiceCidr is invalid")
+		}
+
+		c = KubernetesConfig{
+			DNSServiceIP: "fd00:1::10",
+			ServiceCidr:  "fd00:168::10/24",
+		}
+		if err := c.Validate(k8sVersion, false, false); err == nil {
+			t.Error("should error when DNSServiceIP is outside of ServiceCidr")
+		}
+
+		c = KubernetesConfig{
+			DNSServiceIP: "fd00:168::10",
+			ServiceCidr:  "fd00:168::10/24",
+		}
+		if err := c.Validate(k8sVersion, false, false); err != nil {
+			t.Error("should not error when DNSServiceIP and ServiceCidr are valid")
+		}
+
 		c = KubernetesConfig{
 			ClusterSubnet: "192.168.0.1/24",
 			NetworkPlugin: "azure",

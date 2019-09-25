@@ -1154,3 +1154,211 @@ func TestCreateAgentVMASNICWithIPv6DualStackFeature(t *testing.T) {
 		t.Errorf("unexpected diff while comparing: %s", diff)
 	}
 }
+
+func TestCreateNICWithIPv6OnlyFeature(t *testing.T) {
+	cs := &api.ContainerService{
+		Properties: &api.Properties{
+			ServicePrincipalProfile: &api.ServicePrincipalProfile{
+				ClientID: "barClientID",
+				Secret:   "bazSecret",
+			},
+			MasterProfile: &api.MasterProfile{
+				Count:               1,
+				DNSPrefix:           "myprefix1",
+				VMSize:              "Standard_DS2_v2",
+				AvailabilityProfile: api.VirtualMachineScaleSets,
+				IPAddressCount:      5,
+			},
+			OrchestratorProfile: &api.OrchestratorProfile{
+				OrchestratorType:    api.Kubernetes,
+				OrchestratorVersion: "1.15.0-beta.2",
+				KubernetesConfig: &api.KubernetesConfig{
+					NetworkPlugin: "kubenet",
+				},
+			},
+			LinuxProfile: &api.LinuxProfile{},
+			AgentPoolProfiles: []*api.AgentPoolProfile{
+				{
+					Name:                "agentpool",
+					VMSize:              "Standard_D2_v2",
+					Count:               1,
+					AvailabilityProfile: api.AvailabilitySet,
+				},
+			},
+			FeatureFlags: &api.FeatureFlags{
+				EnableIPv6Only: true,
+			},
+		},
+	}
+
+	nic := CreateNetworkInterfaces(cs)
+	expected := NetworkInterfaceARM{
+		ARMResource: ARMResource{
+			APIVersion: "[variables('apiVersionNetwork')]",
+			Copy: map[string]string{
+				"count": "[sub(variables('masterCount'), variables('masterOffset'))]",
+				"name":  "nicLoopNode",
+			},
+			DependsOn: []string{
+				"[variables('vnetID')]",
+				"[variables('masterLbName')]",
+			},
+		},
+		Interface: network.Interface{
+			Location: to.StringPtr("[variables('location')]"),
+			Name:     to.StringPtr("[concat(variables('masterVMNamePrefix'), 'nic-', copyIndex(variables('masterOffset')))]"),
+			InterfacePropertiesFormat: &network.InterfacePropertiesFormat{
+				IPConfigurations: &[]network.InterfaceIPConfiguration{
+					{
+						Name: to.StringPtr("ipconfig1"),
+						InterfaceIPConfigurationPropertiesFormat: &network.InterfaceIPConfigurationPropertiesFormat{
+							LoadBalancerBackendAddressPools: &[]network.BackendAddressPool{
+								{
+									ID: to.StringPtr("[concat(variables('masterLbID'), '/backendAddressPools/', variables('masterLbBackendPoolName'))]"),
+								},
+							},
+							LoadBalancerInboundNatRules: &[]network.InboundNatRule{
+								{
+									ID: to.StringPtr("[concat(variables('masterLbID'),'/inboundNatRules/SSH-',variables('masterVMNamePrefix'),copyIndex(variables('masterOffset')))]"),
+								},
+							},
+							PrivateIPAddress:          to.StringPtr("[variables('masterPrivateIpAddrs')[copyIndex(variables('masterOffset'))]]"),
+							Primary:                   to.BoolPtr(true),
+							PrivateIPAllocationMethod: network.Static,
+							Subnet: &network.Subnet{
+								ID: to.StringPtr("[variables('vnetSubnetID')]"),
+							},
+						},
+					},
+					{
+						Name: to.StringPtr("ipconfigv6"),
+						InterfaceIPConfigurationPropertiesFormat: &network.InterfaceIPConfigurationPropertiesFormat{
+							PrivateIPAddressVersion: "IPv6",
+							Primary:                 to.BoolPtr(false),
+							Subnet: &network.Subnet{
+								ID: to.StringPtr("[variables('vnetSubnetID')]"),
+							},
+						},
+					},
+				},
+			},
+			Type: to.StringPtr("Microsoft.Network/networkInterfaces"),
+		},
+	}
+	expected.EnableIPForwarding = to.BoolPtr(true)
+	diff := cmp.Diff(nic, expected)
+
+	if diff != "" {
+		t.Errorf("unexpected diff while expecting equal structs: %s", diff)
+	}
+}
+
+func TestCreateAgentVMASNICWithIPv6OnlyFeature(t *testing.T) {
+	cs := &api.ContainerService{
+		Properties: &api.Properties{
+			ServicePrincipalProfile: &api.ServicePrincipalProfile{
+				ClientID: "barClientID",
+				Secret:   "bazSecret",
+			},
+			MasterProfile: &api.MasterProfile{
+				Count:               1,
+				DNSPrefix:           "myprefix1",
+				VMSize:              "Standard_DS2_v2",
+				AvailabilityProfile: api.VirtualMachineScaleSets,
+			},
+			OrchestratorProfile: &api.OrchestratorProfile{
+				OrchestratorType:    api.Kubernetes,
+				OrchestratorVersion: "1.15.0-beta.2",
+				KubernetesConfig: &api.KubernetesConfig{
+					NetworkPlugin: "kubenet",
+				},
+			},
+			LinuxProfile: &api.LinuxProfile{},
+			AgentPoolProfiles: []*api.AgentPoolProfile{
+				{
+					Name:                "agentpool",
+					VMSize:              "Standard_D2_v2",
+					Count:               1,
+					AvailabilityProfile: api.AvailabilitySet,
+				},
+			},
+			FeatureFlags: &api.FeatureFlags{
+				EnableIPv6Only: true,
+			},
+		},
+	}
+
+	profile := &api.AgentPoolProfile{
+		Name:                              "fooAgent",
+		OSType:                            "Linux",
+		Role:                              "Infra",
+		LoadBalancerBackendAddressPoolIDs: []string{"/subscriptions/123/resourceGroups/rg/providers/Microsoft.Network/loadBalancers/mySLB/backendAddressPools/mySLBBEPool"},
+		IPAddressCount:                    1,
+	}
+
+	actual := createAgentVMASNetworkInterface(cs, profile)
+
+	var ipConfigurations []network.InterfaceIPConfiguration
+
+	expected := NetworkInterfaceARM{
+		ARMResource: ARMResource{
+			APIVersion: "[variables('apiVersionNetwork')]",
+			Copy: map[string]string{
+				"count": "[sub(variables('fooAgentCount'), variables('fooAgentOffset'))]",
+				"name":  "loop",
+			},
+			DependsOn: []string{
+				"[variables('vnetID')]",
+			},
+		},
+		Interface: network.Interface{
+			Type:     to.StringPtr("Microsoft.Network/networkInterfaces"),
+			Name:     to.StringPtr("[concat(variables('fooAgentVMNamePrefix'), 'nic-', copyIndex(variables('fooAgentOffset')))]"),
+			Location: to.StringPtr("[variables('location')]"),
+			InterfacePropertiesFormat: &network.InterfacePropertiesFormat{
+				IPConfigurations: &ipConfigurations,
+			},
+		},
+	}
+	expected.IPConfigurations = &[]network.InterfaceIPConfiguration{
+		{
+			Name: to.StringPtr("ipconfig1"),
+			InterfaceIPConfigurationPropertiesFormat: &network.InterfaceIPConfigurationPropertiesFormat{
+				LoadBalancerBackendAddressPools: &[]network.BackendAddressPool{
+					{
+						ID: to.StringPtr("[concat(resourceId('Microsoft.Network/loadBalancers', variables('routerLBName')), '/backendAddressPools/backend')]"),
+					},
+					{
+						ID: to.StringPtr("[concat(resourceId('Microsoft.Network/loadBalancers',parameters('masterEndpointDNSNamePrefix')), '/backendAddressPools/', parameters('masterEndpointDNSNamePrefix'))]"),
+					},
+				},
+				PrivateIPAllocationMethod: network.Dynamic,
+				Subnet: &network.Subnet{
+					ID: to.StringPtr("[variables('fooAgentVnetSubnetID')]"),
+				},
+				Primary: to.BoolPtr(true),
+			},
+		},
+		{
+			Name: to.StringPtr("ipconfigv6"),
+			InterfaceIPConfigurationPropertiesFormat: &network.InterfaceIPConfigurationPropertiesFormat{
+				PrivateIPAddressVersion: "IPv6",
+				Primary:                 to.BoolPtr(false),
+				Subnet: &network.Subnet{
+					ID: to.StringPtr(fmt.Sprintf("[variables('%sVnetSubnetID')]", profile.Name)),
+				},
+				LoadBalancerBackendAddressPools: &[]network.BackendAddressPool{
+					{
+						ID: to.StringPtr("[concat(resourceId('Microsoft.Network/loadBalancers',parameters('masterEndpointDNSNamePrefix')), '/backendAddressPools/', parameters('masterEndpointDNSNamePrefix'), '-ipv6')]"),
+					},
+				},
+			},
+		},
+	}
+	expected.EnableIPForwarding = to.BoolPtr(true)
+
+	diff := cmp.Diff(actual, expected)
+	if diff != "" {
+		t.Errorf("unexpected diff while comparing: %s", diff)
+	}
+}

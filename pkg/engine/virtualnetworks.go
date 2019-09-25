@@ -37,7 +37,7 @@ func CreateVirtualNetwork(cs *api.ContainerService) VirtualNetworkARM {
 
 	masterAddressPrefixes := []string{"[parameters('masterSubnet')]"}
 	// add ipv6 vnet cidr if dual stack enabled
-	if cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6DualStack") {
+	if cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6DualStack") || cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6Only") {
 		masterAddressPrefixes = append(masterAddressPrefixes, "[parameters('masterSubnetIPv6')]")
 		subnet.AddressPrefix = nil
 		subnet.AddressPrefixes = &masterAddressPrefixes
@@ -51,7 +51,7 @@ func CreateVirtualNetwork(cs *api.ContainerService) VirtualNetworkARM {
 
 	addressPrefixes := []string{"[parameters('vnetCidr')]"}
 	// add ipv6 vnet cidr if dual stack enabled
-	if cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6DualStack") {
+	if cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6DualStack") || cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6Only") {
 		addressPrefixes = append(addressPrefixes, "[parameters('vnetCidrIPv6')]")
 	}
 
@@ -114,7 +114,7 @@ func createVirtualNetworkVMSS(cs *api.ContainerService) VirtualNetworkARM {
 	}
 	masterAddressPrefixes := []string{"[parameters('masterSubnet')]"}
 	// add ipv6 vnet cidr if dual stack enabled
-	if cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6DualStack") {
+	if cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6DualStack") || cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6Only") {
 		masterAddressPrefixes = append(masterAddressPrefixes, "[parameters('masterSubnetIPv6')]")
 		subnetMaster.AddressPrefix = nil
 		subnetMaster.AddressPrefixes = &masterAddressPrefixes
@@ -144,7 +144,7 @@ func createVirtualNetworkVMSS(cs *api.ContainerService) VirtualNetworkARM {
 
 	addressPrefixes := []string{"[parameters('vnetCidr')]"}
 	// add ipv6 vnet cidr if dual stack enabled
-	if cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6DualStack") {
+	if cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6DualStack") || cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6Only") {
 		addressPrefixes = append(addressPrefixes, "[parameters('vnetCidrIPv6')]")
 	}
 
@@ -207,7 +207,7 @@ func createHostedMasterVirtualNetwork(cs *api.ContainerService) VirtualNetworkAR
 	}
 	masterAddressPrefixes := []string{"[parameters('masterSubnet')]"}
 	// add ipv6 vnet cidr if dual stack enabled
-	if cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6DualStack") {
+	if cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6DualStack") || cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6Only") {
 		masterAddressPrefixes = append(masterAddressPrefixes, "[parameters('masterSubnetIPv6')]")
 		subnet.AddressPrefix = nil
 		subnet.AddressPrefixes = &masterAddressPrefixes
@@ -221,7 +221,7 @@ func createHostedMasterVirtualNetwork(cs *api.ContainerService) VirtualNetworkAR
 
 	addressPrefixes := []string{"[parameters('vnetCidr')]"}
 	// add ipv6 vnet cidr if dual stack enabled
-	if cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6DualStack") {
+	if cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6DualStack") || cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6Only") {
 		addressPrefixes = append(addressPrefixes, "[parameters('vnetCidrIPv6')]")
 	}
 

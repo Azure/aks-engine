@@ -1349,6 +1349,31 @@ func TestMasterProfileDefaults(t *testing.T) {
 			properties.OrchestratorProfile.KubernetesConfig.ClusterSubnet, expectedClusterSubnet)
 	}
 
+	// this validates cluster subnet default configuration for ipv6 only feature.
+	mockCS = getMockBaseContainerService("1.15.0-beta.1")
+	properties = mockCS.Properties
+	properties.OrchestratorProfile.OrchestratorType = Kubernetes
+	properties.FeatureFlags = &FeatureFlags{EnableIPv6Only: true}
+	mockCS.SetPropertiesDefaults(false, false)
+	expectedClusterSubnet := []string{DefaultKubernetesClusterSubnetIPv6}
+	if properties.OrchestratorProfile.KubernetesConfig.ClusterSubnet != expectedClusterSubnet {
+		t.Fatalf("OrchestratorProfile.KubernetesConfig.ClusterSubnet did not have the expected configuration, got %s, expected %s",
+			properties.OrchestratorProfile.KubernetesConfig.ClusterSubnet, expectedClusterSubnet)
+	}
+
+	// this validates cluster subnet configuration for ipv6 feature when an ipv6 subnet is provided
+	mockCS = getMockBaseContainerService("1.15.0-beta.1")
+	properties = mockCS.Properties
+	properties.OrchestratorProfile.OrchestratorType = Kubernetes
+	properties.OrchestratorProfile.KubernetesConfig.ClusterSubnet = "ace:cab:deca::/8"
+	properties.FeatureFlags = &FeatureFlags{EnableIPv6: true}
+	mockCS.SetPropertiesDefaults(false, false)
+	expectedClusterSubnet = []string{"ace:cab:deca::/8"}
+	if properties.OrchestratorProfile.KubernetesConfig.ClusterSubnet != expectedClusterSubnet {
+		t.Fatalf("OrchestratorProfile.KubernetesConfig.ClusterSubnet did not have the expected configuration, got %s, expected %s",
+			properties.OrchestratorProfile.KubernetesConfig.ClusterSubnet, expectedClusterSubnet)
+	}
+
 	// this validates cluster subnet default configuration for dual stack feature when only ipv4 subnet provided
 	mockCS = getMockBaseContainerService("1.15.0-beta.1")
 	properties = mockCS.Properties

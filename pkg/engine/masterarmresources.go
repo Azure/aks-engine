@@ -99,6 +99,13 @@ func createKubernetesMasterResourcesVMAS(cs *api.ContainerService) []interface{}
 		masterResources = append(masterResources, clusterIPv4PublicIPAddress, clusterIPv6PublicIPAddress, clusterLB)
 	}
 
+	if cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6Only") {
+		clusterIPv6PublicIPAddress := CreateClusterPublicIPv6Address()
+		clusterLB := CreateClusterLoadBalancerForIPv6()
+
+		masterResources = append(masterResources, clusterIPv6PublicIPAddress, clusterLB)
+	}
+
 	masterVM := CreateMasterVM(cs)
 	masterResources = append(masterResources, masterVM)
 
@@ -179,6 +186,13 @@ func createKubernetesMasterResourcesVMSS(cs *api.ContainerService) []interface{}
 		clusterLB := CreateClusterLoadBalancerForIPv6()
 
 		masterResources = append(masterResources, clusterIPv4PublicIPAddress, clusterIPv6PublicIPAddress, clusterLB)
+	}
+
+	if cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6Only") {
+		clusterIPv6PublicIPAddress := CreateClusterPublicIPv6Address()
+		clusterLB := CreateClusterLoadBalancerForIPv6()
+
+		masterResources = append(masterResources, clusterIPv6PublicIPAddress, clusterLB)
 	}
 
 	masterVmss := CreateMasterVMSS(cs)

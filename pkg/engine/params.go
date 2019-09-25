@@ -71,7 +71,7 @@ func getParameters(cs *api.ContainerService, generatorCode string, aksEngineVers
 		} else {
 			addValue(parametersMap, "masterSubnet", properties.MasterProfile.Subnet)
 			addValue(parametersMap, "agentSubnet", properties.MasterProfile.AgentSubnet)
-			if cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6DualStack") {
+			if cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6DualStack") || cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6Only") {
 				addValue(parametersMap, "masterSubnetIPv6", properties.MasterProfile.SubnetIPv6)
 			}
 		}

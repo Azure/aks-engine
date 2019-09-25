@@ -102,7 +102,7 @@ write_files:
     {{CloudInitData "aptPreferences"}}
 {{end}}
 
-{{if IsIPv6DualStackFeatureEnabled}}
+{{if IsIPv6Enabled}}
 - path: /etc/systemd/system/dhcpv6.service
   permissions: "0644"
   encoding: gzip
