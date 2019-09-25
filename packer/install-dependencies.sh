@@ -372,9 +372,9 @@ pullContainerImage "docker" "busybox"
 echo "  - busybox" >> ${VHD_LOGS_FILEPATH}
 
 # TODO: fetch supported k8s versions from an aks-engine command instead of hardcoding them here
-# TODO add 1.15.4-azs, 1.14.7-azs, 1.13.11-azs when those hyperkube images are ready
 K8S_VERSIONS="
 1.16.0
+1.16.0-azs
 1.15.4
 1.15.4-azs
 1.15.3
