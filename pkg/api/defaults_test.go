@@ -3234,3 +3234,62 @@ func TestEnableRBAC(t *testing.T) {
 		})
 	}
 }
+
+func TestDefaultTelemetry(t *testing.T) {
+	// Test that the AzureTelemetryPID is set to DefaultAzurestackDeployTelemetryPID  by default
+	mockCSDefaultSpec := getMockBaseContainerService("1.11.6")
+	mockCSPDefaultSpec := GetMockPropertiesWithCustomCloudProfile("azurestackcloud", true, true, false)
+	mockCSDefaultSpec.Properties.CustomCloudProfile = mockCSPDefaultSpec.CustomCloudProfile
+	mockCSDefaultSpec.SetPropertiesDefaults(PropertiesDefaultsParams{
+		IsScale:    false,
+		IsUpgrade:  false,
+		PkiKeySize: helpers.DefaultPkiKeySize,
+	})
+
+	actualEnv := AzureCloudSpecEnvMap[AzureStackCloud]
+	expectedEnv := AzureCloudSpecEnvMap[AzurePublicCloud]
+	expectedEnv.EndpointConfig.ResourceManagerVMDNSSuffix = mockCSPDefaultSpec.CustomCloudProfile.Environment.ResourceManagerVMDNSSuffix
+	expectedEnv.CloudName = AzureStackCloud
+	expectedEnv.KubernetesSpecConfig.AzureTelemetryPID = DefaultAzurestackDeployTelemetryPID
+	if diff := cmp.Diff(actualEnv, expectedEnv); diff != "" {
+		t.Errorf("setCustomCloudProfileDefaults(): did not set AzureTelemetryPID as DefaultAzurestackDeployTelemetryPID. %s", diff)
+	}
+
+	// Test that the AzureTelemetryPID is set to DefaultAzurestackScaleTelemetryPID by in Scale scenario
+	mockCSScaleSpec := getMockBaseContainerService("1.11.6")
+	mockCSPScaleSpec := GetMockPropertiesWithCustomCloudProfile("azurestackcloud", true, true, false)
+	mockCSScaleSpec.Properties.CustomCloudProfile = mockCSPScaleSpec.CustomCloudProfile
+	mockCSScaleSpec.SetPropertiesDefaults(PropertiesDefaultsParams{
+		IsScale:    true,
+		IsUpgrade:  false,
+		PkiKeySize: helpers.DefaultPkiKeySize,
+	})
+
+	actualScaleEnv := AzureCloudSpecEnvMap[AzureStackCloud]
+	expectedScaleEnv := AzureCloudSpecEnvMap[AzurePublicCloud]
+	expectedScaleEnv.EndpointConfig.ResourceManagerVMDNSSuffix = mockCSPDefaultSpec.CustomCloudProfile.Environment.ResourceManagerVMDNSSuffix
+	expectedScaleEnv.CloudName = AzureStackCloud
+	expectedScaleEnv.KubernetesSpecConfig.AzureTelemetryPID = DefaultAzurestackScaleTelemetryPID
+	if diff := cmp.Diff(actualScaleEnv, expectedScaleEnv); diff != "" {
+		t.Errorf("setCustomCloudProfileDefaults(): did not set AzureTelemetryPID as DefaultAzurestackDeployTelemetryPID. %s", diff)
+	}
+
+	// Test that the AzureTelemetryPID is set to DefaultAzurestackUpgradeTelemetryPID in Upgrade scenario
+	mockCSSUpgradeSpec := getMockBaseContainerService("1.11.6")
+	mockCSPSUpgradeSpec := GetMockPropertiesWithCustomCloudProfile("azurestackcloud", true, true, false)
+	mockCSSUpgradeSpec.Properties.CustomCloudProfile = mockCSPSUpgradeSpec.CustomCloudProfile
+	mockCSSUpgradeSpec.SetPropertiesDefaults(PropertiesDefaultsParams{
+		IsScale:    false,
+		IsUpgrade:  true,
+		PkiKeySize: helpers.DefaultPkiKeySize,
+	})
+
+	actualSUpgradeEnv := AzureCloudSpecEnvMap[AzureStackCloud]
+	expectedSUpgradeEnv := AzureCloudSpecEnvMap[AzurePublicCloud]
+	expectedSUpgradeEnv.EndpointConfig.ResourceManagerVMDNSSuffix = mockCSPDefaultSpec.CustomCloudProfile.Environment.ResourceManagerVMDNSSuffix
+	expectedSUpgradeEnv.CloudName = AzureStackCloud
+	expectedSUpgradeEnv.KubernetesSpecConfig.AzureTelemetryPID = DefaultAzurestackUpgradeTelemetryPID
+	if diff := cmp.Diff(actualSUpgradeEnv, expectedSUpgradeEnv); diff != "" {
+		t.Errorf("setCustomCloudProfileDefaults(): did not set AzureTelemetryPID as DefaultAzurestackUpgradeTelemetryPID. %s", diff)
+	}
+}
