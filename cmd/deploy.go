@@ -358,7 +358,7 @@ func autofillApimodel(dc *deployCmd) error {
 
 	if k8sConfig != nil && k8sConfig.Addons != nil && k8sConfig.IsContainerMonitoringAddonEnabled() {
 		log.Infoln("container monitoring addon enabled")
-		workspaceDomain := "opinsights.azure.com"
+		var workspaceDomain string
 		cloudspecConfig := dc.containerService.GetCloudSpecConfig()
 		log.Infoln("selected cloud name:", cloudspecConfig.CloudName)
 		switch cloudspecConfig.CloudName {

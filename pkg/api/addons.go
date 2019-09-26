@@ -24,8 +24,6 @@ func (cs *ContainerService) setAddonsConfig(isUpdate bool) {
 	omsagentImage := "mcr.microsoft.com/azuremonitor/containerinsights/ciprod:ciprod07092019"
 	if strings.EqualFold(cloudSpecConfig.CloudName, "AzureChinaCloud") {
 		omsagentImage = "dockerhub.azk8s.cn/microsoft/oms:ciprod07092019"
-	} else {
-		omsagentImage = "mcr.microsoft.com/azuremonitor/containerinsights/ciprod:ciprod07092019"
 	}
 	defaultsHeapsterAddonsConfig := KubernetesAddon{
 		Name:    HeapsterAddonName,
