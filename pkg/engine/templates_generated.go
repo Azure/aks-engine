@@ -26534,8 +26534,37 @@ if (!` + "`" + `$hnsNetwork)
 {
     Write-Host "Creating a new hns Network"
     ipmo ` + "`" + `$global:HNSModule
+
+    ` + "`" + `$na = @(Get-NetAdapter -Physical)
+    if (` + "`" + `$na.Count -eq 0)
+    {
+        throw "Failed to find any physical network adapters"
+    }
+
+    # If there is more than one adapter, use the first adapter.
+    ` + "`" + `$managementIP = (Get-NetIPAddress -ifIndex ` + "`" + `$na[0].ifIndex -AddressFamily IPv4).IPAddress
+    ` + "`" + `$adapterName = ` + "`" + `$na[0].Name
+    write-host "Using adapter ` + "`" + `$adapterName with IP address ` + "`" + `$managementIP"
+    ` + "`" + `$mgmtIPAfterNetworkCreate
+
     # Fixme : use a smallest range possible, that will not collide with any pod space
-    New-HNSNetwork -Type ` + "`" + `$global:NetworkMode -AddressPrefix "192.168.255.0/30" -Gateway "192.168.255.1" -Name ` + "`" + `$global:ExternalNetwork -Verbose
+    New-HNSNetwork -Type ` + "`" + `$global:NetworkMode -AddressPrefix "192.168.255.0/30" -Gateway "192.168.255.1" -AdapterName ` + "`" + `$adapterName -Name ` + "`" + `$global:ExternalNetwork -Verbose
+
+    # Wait for the switch to be created and the ip address to be assigned.
+    for (` + "`" + `$i=0;` + "`" + `$i -lt 60;` + "`" + `$i++)
+    {
+        ` + "`" + `$mgmtIPAfterNetworkCreate = Get-NetIPAddress ` + "`" + `$managementIP -ErrorAction SilentlyContinue
+        if (` + "`" + `$mgmtIPAfterNetworkCreate)
+        {
+            break
+        }
+        sleep -Milliseconds 1000
+    }
+
+    if (-not ` + "`" + `$mgmtIPAfterNetworkCreate)
+    {
+        throw "Failed to find ` + "`" + `$managementIP after creating ` + "`" + `$global:ExternalNetwork network"
+    }
 }
 
 # Find if network created by CNI exists, if yes, remove it
