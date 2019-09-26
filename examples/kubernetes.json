@@ -2,10 +2,7 @@
   "apiVersion": "vlabs",
   "properties": {
     "orchestratorProfile": {
-      "orchestratorType": "Kubernetes",
-      "kubernetesConfig": {
-        "loadBalancerSku": "standard"
-      }
+      "orchestratorType": "Kubernetes"
     },
     "masterProfile": {
       "count": 1,
@@ -15,9 +12,8 @@
     "agentPoolProfiles": [
       {
         "name": "agentpool1",
-        "count": 3,
-        "vmSize": "Standard_D2_v3",
-        "availabilityProfile": "VirtualMachineScaleSets"
+        "count": 2,
+        "vmSize": "Standard_D2_v3"
       }
     ],
     "linuxProfile": {
