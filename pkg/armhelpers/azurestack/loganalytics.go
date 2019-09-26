@@ -161,7 +161,7 @@ func (az *AzureClient) GetLogAnalyticsWorkspaceInfo(ctx context.Context, workspa
 
 // AddContainerInsightsSolution adds container insights solution for the specified log analytics workspace
 func (az *AzureClient) AddContainerInsightsSolution(ctx context.Context, workspaceSubscriptionID, workspaceResourceGroup, workspaceName, workspaceLocation string) (result bool, err error) {
-	solutionClient := om.NewSolutionsClient(workspaceSubscriptionID, "Microsoft.OperationalInsights", "workspaces", workspaceName)
+	solutionClient := om.NewSolutionsClientWithBaseURI(az.environment.ResourceManagerEndpoint, workspaceSubscriptionID, "Microsoft.OperationalInsights", "workspaces", workspaceName)
 	solutionClient.Authorizer = az.workspacesClient.Authorizer
 
 	solutionName := "ContainerInsights(" + workspaceName + ")"

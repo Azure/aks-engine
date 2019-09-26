@@ -359,20 +359,19 @@ func autofillApimodel(dc *deployCmd) error {
 	if k8sConfig != nil && k8sConfig.Addons != nil && k8sConfig.IsContainerMonitoringAddonEnabled() {
 		log.Infoln("container monitoring addon enabled")
 		workspaceDomain := "opinsights.azure.com"
-		if dc.containerService.Properties.CustomCloudProfile != nil &&
-			dc.containerService.Properties.CustomCloudProfile.Environment != nil &&
-			dc.containerService.Properties.CustomCloudProfile.Environment.Name != "" {
-			switch dc.containerService.Properties.CustomCloudProfile.Environment.Name {
-			case "AzurePublicCloud":
-				workspaceDomain = "opinsights.azure.com"
-			case "AzureChinaCloud":
-				workspaceDomain = "opinsights.azure.cn"
-			case "AzureUSGovernmentCloud":
-				workspaceDomain = "opinsights.azure.us"
-			default:
-				return errors.Wrapf(err, "apimodel: container monitoring addon not supported in this cloud: %s", dc.containerService.Properties.CustomCloudProfile.Environment.Name)
-			}
+		cloudspecConfig := dc.containerService.GetCloudSpecConfig()
+		log.Infoln("selected cloud name:", cloudspecConfig.CloudName)
+		switch cloudspecConfig.CloudName {
+		case "AzurePublicCloud":
+			workspaceDomain = "opinsights.azure.com"
+		case "AzureChinaCloud":
+			workspaceDomain = "opinsights.azure.cn"
+		case "AzureUSGovernmentCloud":
+			workspaceDomain = "opinsights.azure.us"
+		default:
+			return errors.Wrapf(err, "apimodel: container monitoring addon not supported in this cloud: %s", cloudspecConfig.CloudName)
 		}
+
 		err := dc.configureContainerMonitoringAddon(ctx, k8sConfig, workspaceDomain)
 		if err != nil {
 			return errors.Wrap(err, "Failed to configure container monitoring addon")
