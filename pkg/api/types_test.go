@@ -112,6 +112,20 @@ const exampleUserMSIModel = `{
 }
 `
 
+func TestOrchestratorProfile_GetPodInfraContainerSpec(t *testing.T) {
+	o := OrchestratorProfile{
+		KubernetesConfig: &KubernetesConfig{
+			KubernetesImageBase: "foo/",
+		},
+		OrchestratorVersion: "1.16.0",
+	}
+	expected := "foo/pause-amd64:3.1"
+	actual := o.GetPodInfraContainerSpec()
+	if actual != expected {
+		t.Fatalf("expected GetPodInfraContainerSpec to return %s, but got %s", expected, actual)
+	}
+}
+
 func TestOSType(t *testing.T) {
 	p := Properties{
 		MasterProfile: &MasterProfile{
