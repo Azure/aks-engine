@@ -22,7 +22,7 @@ Every month, we will cut a new AKS release @ n-1 compared to the "mainline", pub
 - For an "October" release: we derive a new AKS release branch from AKS Engine n-1:
   - e.g., AKS Engine is at v0.42._n_
   - e.g., we cut a new AKS release branch from AKS Engine the latest v0.41 release
-- Any additional commits in AKS Engine ahead of this new AKS release branch will be cherry-picked by AKS.
+- Any additional commits in AKS Engine ahead of this new AKS release branch that are desired by AKS immediately will be cherry-picked by AKS into the new AKS release branch.
 - For the duration of the "October" release cycle, AKS continues to cherry-pick changes from `aks-engine@master` into its "October" release branch.
 - When "November" arrives, AKS cuts a new release branch from AKS Engine according to the above n-1 calculation.
 
