@@ -24926,7 +24926,7 @@ function DownloadFileOverHttp
 
     if ($search.Count -ne 0)
     {
-        Write-Log "Using chaced version of $fileName - Copying file from $($search[0]) to $DestinationPath"
+        Write-Log "Using cached version of $fileName - Copying file from $($search[0]) to $DestinationPath"
         Move-Item -Path $search[0] -Destination $DestinationPath -Force
     }
     else 
@@ -25272,10 +25272,11 @@ try
                     -SubscriptionId $global:SubscriptionId ` + "`" + `
                     -ResourceGroup $global:ResourceGroup ` + "`" + `
                     -AADClientId $AADClientId ` + "`" + `
+                    -KubeDir $global:KubeDir ` + "`" + `
                     -AADClientSecret $([System.Text.Encoding]::ASCII.GetString([System.Convert]::FromBase64String($AADClientSecret))) ` + "`" + `
                     -NetworkAPIVersion $NetworkAPIVersion ` + "`" + `
                     -AzureEnvironmentFilePath $([io.path]::Combine($global:KubeDir, "azurestackcloud.json")) ` + "`" + `
-                    -IdentitySystem "{{ GetIdentitySystem }}"
+                    -IdentitySystem "{{ GetIdentitySystem }}"                    
             }
 
         } elseif ($global:NetworkPlugin -eq "kubenet") {
@@ -25316,8 +25317,11 @@ try
         Write-Log "Update service failure actions"
         Update-ServiceFailureActions
 
-        Write-Log "Removing aks-engine bits cache directory"
-        Remove-Item $CacheDir -Recurse -Force
+        if (Test-Path $CacheDir)
+        {
+            Write-Log "Removing aks-engine bits cache directory"
+            Remove-Item $CacheDir -Recurse -Force
+        }
 
         Write-Log "Setup Complete, reboot computer"
         Restart-Computer
@@ -25793,11 +25797,13 @@ function GenerateAzureStackCNIConfig
         [Parameter(Mandatory=$true)][ValidateNotNullOrEmpty()][string] $ResourceGroup,
         [Parameter(Mandatory=$true)][ValidateNotNullOrEmpty()][string] $NetworkAPIVersion,
         [Parameter(Mandatory=$true)][ValidateNotNullOrEmpty()][string] $AzureEnvironmentFilePath,
-        [Parameter(Mandatory=$true)][ValidateNotNullOrEmpty()][string] $IdentitySystem
+        [Parameter(Mandatory=$true)][ValidateNotNullOrEmpty()][string] $IdentitySystem,
+        [Parameter(Mandatory=$true)][ValidateNotNullOrEmpty()][string] $KubeDir
+
     )
 
-    $networkInterfacesFile = "C:\k\network-interfaces.json"
-    $azureCNIConfigFile = "C:\k\interfaces.json"
+    $networkInterfacesFile = "$KubeDir\network-interfaces.json"
+    $azureCNIConfigFile = "$KubeDir\interfaces.json"
     $azureEnvironment = Get-Content $AzureEnvironmentFilePath | ConvertFrom-Json
 
     Write-Log "------------------------------------------------------------------------"
@@ -26014,12 +26020,20 @@ function Install-Docker
         }
     }
 
-    try {
-        Find-Package -Name Docker -ProviderName DockerMsftProvider -RequiredVersion $DockerVersion -ErrorAction Stop
-        Write-Log "Found version $DockerVersion. Installing..."
-        Install-Package -Name Docker -ProviderName DockerMsftProvider -Update -Force -RequiredVersion $DockerVersion
-        net start docker
-        Write-Log "Installed version $DockerVersion"
+    try {        
+        $dockerService = Get-Service | ? Name -like 'docker'
+        if ($dockerService.Count -eq 0)
+        {            
+            Find-Package -Name Docker -ProviderName DockerMsftProvider -RequiredVersion $DockerVersion -ErrorAction Stop
+            Write-Log "Found version $DockerVersion. Installing..."
+            Install-Package -Name Docker -ProviderName DockerMsftProvider -Update -Force -RequiredVersion $DockerVersion
+            net start docker
+            Write-Log "Installed version $DockerVersion"
+        }
+        else
+        {
+            Write-Log "Docker already installed. Hence skip install of docker."
+        }
     } catch {
         Write-Log "Error while installing package: $_.Exception.Message"
         $currentDockerVersion = (Get-Package -Name Docker -ProviderName DockerMsftProvider).Version
@@ -26066,8 +26080,7 @@ Install-OpenSSH {
         $isAvailable = Get-WindowsCapability -Online | ? Name -like 'OpenSSH*'
 
         if (!$isAvailable) {
-            Write-Error "OpenSSH is not available on this machine"
-            exit 1
+            throw "OpenSSH is not available on this machine"
         }
 
         Add-WindowsCapability -Online -Name OpenSSH.Server~~~~0.0.1.0
@@ -26105,8 +26118,7 @@ Install-OpenSSH {
     $firewall = Get-NetFirewallRule -Name *ssh*
 
     if (!$firewall) {
-        Write-Error "OpenSSH is firewall is not configured properly"
-        exit 1
+        throw "OpenSSH is firewall is not configured properly"
     }
     Write-Host "OpenSSH installed and configured successfully"
 }
