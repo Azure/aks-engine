@@ -701,11 +701,11 @@ func (p *Properties) setAgentProfileDefaults(isUpgrade, isScale bool, cloudName 
 func (p *Properties) setWindowsProfileDefaults(isUpgrade, isScale bool) {
 	windowsProfile := p.WindowsProfile
 	if !isUpgrade && !isScale {
-		if windowsProfile.WindowsPublisher == "" {
-			windowsProfile.WindowsPublisher = DefaultWindowsPublisher
-		}
 
 		if p.IsAzureStackCloud() {
+			if windowsProfile.WindowsPublisher == "" {
+				windowsProfile.WindowsPublisher = DefaultWindowsPublisher
+			}
 			if windowsProfile.WindowsOffer == "" {
 				windowsProfile.WindowsOffer = DefaultAzureStackWindowsOffer
 			}
@@ -716,14 +716,25 @@ func (p *Properties) setWindowsProfileDefaults(isUpgrade, isScale bool) {
 				windowsProfile.ImageVersion = DefaultAzureStackImageVersion
 			}
 		} else {
+			if windowsProfile.WindowsPublisher == "" {
+				windowsProfile.WindowsPublisher = AksWindowsVhdPublisher
+			}
 			if windowsProfile.WindowsOffer == "" {
-				windowsProfile.WindowsOffer = DefaultWindowsOffer
+				windowsProfile.WindowsOffer = AksWindowsVhdOffer
 			}
 			if windowsProfile.WindowsSku == "" {
-				windowsProfile.WindowsSku = DefaultWindowsSku
+				windowsProfile.WindowsSku = AksWindowsVhdSku
 			}
+
 			if windowsProfile.ImageVersion == "" {
-				windowsProfile.ImageVersion = DefaultImageVersion
+				// default versions are specific to a publisher/offer/sku
+				if windowsProfile.WindowsPublisher == AksWindowsVhdPublisher && windowsProfile.WindowsOffer == AksWindowsVhdOffer && windowsProfile.WindowsSku == AksWindowsVhdSku {
+					windowsProfile.ImageVersion = AksWindowsVhdVersion
+				} else if windowsProfile.WindowsPublisher == DefaultWindowsPublisher && windowsProfile.WindowsOffer == DefaultWindowsOffer && windowsProfile.WindowsSku == DefaultWindowsSku {
+					windowsProfile.ImageVersion = DefaultImageVersion
+				} else {
+					windowsProfile.ImageVersion = "latest"
+				}
 			}
 		}
 	}

@@ -288,6 +288,14 @@ const (
 	DefaultImageVersion = "17763.737.1909062324"
 )
 
+// Aks windows VHD parts
+const (
+	AksWindowsVhdPublisher = "microsoft-aks"
+	AksWindowsVhdOffer     = "aks-windows"
+	AksWindowsVhdSku       = "2019-datacenter-core-smalldisk"
+	AksWindowsVhdVersion   = "17763.737.190923"
+)
+
 const (
 	// AgentPoolProfileRoleEmpty is the empty role.  Deprecated; only used in
 	// aks-engine.
