@@ -165,16 +165,16 @@ New-InfraContainer {
         "1803" { 
             $imageList = docker images $defaultPauseImage --format "{{.Repository}}:{{.Tag}}"
             if (-not $imageList) {
-                docker pull $defaultPauseImage
-                docker tag $defaultPauseImage $DestinationTag 
+                docker pull $defaultPauseImage                 
             }
+            docker tag $defaultPauseImage $DestinationTag
         }
         "1809" { 
             $imageList = docker images $defaultPauseImage --format "{{.Repository}}:{{.Tag}}"
             if (-not $imageList) {
-                docker pull $defaultPauseImage
-                docker tag $defaultPauseImage $DestinationTag 
+                docker pull $defaultPauseImage                
             }
+            docker tag $defaultPauseImage $DestinationTag 
         }
         "1903" { Build-PauseContainer -WindowsBase "mcr.microsoft.com/windows/nanoserver:1903" -DestinationTag $DestinationTag}
         default { Build-PauseContainer -WindowsBase "mcr.microsoft.com/nanoserver-insider" -DestinationTag $DestinationTag}
