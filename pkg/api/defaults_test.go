@@ -3364,3 +3364,202 @@ func TestDefaultTelemetry(t *testing.T) {
 		t.Errorf("setCustomCloudProfileDefaults(): did not set AzureTelemetryPID as DefaultAzureStackUpgradeTelemetryPID. %s", diff)
 	}
 }
+
+func TestImageReference(t *testing.T) {
+	cases := []struct {
+		name                      string
+		cs                        ContainerService
+		isUpgrade                 bool
+		isScale                   bool
+		expectedMasterProfile     MasterProfile
+		expectedAgentPoolProfiles []AgentPoolProfile
+	}{
+		{
+			name: "default",
+			cs: ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorType: Kubernetes,
+					},
+					MasterProfile: &MasterProfile{},
+					AgentPoolProfiles: []*AgentPoolProfile{
+						&AgentPoolProfile{},
+					},
+				},
+			},
+			expectedMasterProfile: MasterProfile{
+				Distro:   AKSUbuntu1604,
+				ImageRef: nil,
+			},
+			expectedAgentPoolProfiles: []AgentPoolProfile{
+				AgentPoolProfile{
+					Distro:   AKSUbuntu1604,
+					ImageRef: nil,
+				},
+			},
+		},
+		{
+			name: "image references",
+			cs: ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorType: Kubernetes,
+					},
+					MasterProfile: &MasterProfile{
+						ImageRef: &ImageReference{
+							Name:           "name",
+							ResourceGroup:  "resource-group",
+							SubscriptionID: "sub-id",
+							Gallery:        "gallery",
+							Version:        "version",
+						},
+					},
+					AgentPoolProfiles: []*AgentPoolProfile{
+						&AgentPoolProfile{
+							ImageRef: &ImageReference{
+								Name:           "name",
+								ResourceGroup:  "resource-group",
+								SubscriptionID: "sub-id",
+								Gallery:        "gallery",
+								Version:        "version",
+							},
+						},
+					},
+				},
+			},
+			expectedMasterProfile: MasterProfile{
+				Distro: "",
+				ImageRef: &ImageReference{
+					Name:           "name",
+					ResourceGroup:  "resource-group",
+					SubscriptionID: "sub-id",
+					Gallery:        "gallery",
+					Version:        "version",
+				},
+			},
+			expectedAgentPoolProfiles: []AgentPoolProfile{
+				AgentPoolProfile{
+					Distro: "",
+					ImageRef: &ImageReference{
+						Name:           "name",
+						ResourceGroup:  "resource-group",
+						SubscriptionID: "sub-id",
+						Gallery:        "gallery",
+						Version:        "version",
+					},
+				},
+			},
+		},
+		{
+			name: "mixed",
+			cs: ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorType: Kubernetes,
+					},
+					MasterProfile: &MasterProfile{},
+					AgentPoolProfiles: []*AgentPoolProfile{
+						&AgentPoolProfile{
+							ImageRef: &ImageReference{
+								Name:           "name",
+								ResourceGroup:  "resource-group",
+								SubscriptionID: "sub-id",
+								Gallery:        "gallery",
+								Version:        "version",
+							},
+						},
+						&AgentPoolProfile{},
+					},
+				},
+			},
+			expectedMasterProfile: MasterProfile{
+				Distro:   AKSUbuntu1604,
+				ImageRef: nil,
+			},
+			expectedAgentPoolProfiles: []AgentPoolProfile{
+				AgentPoolProfile{
+					Distro: "",
+					ImageRef: &ImageReference{
+						Name:           "name",
+						ResourceGroup:  "resource-group",
+						SubscriptionID: "sub-id",
+						Gallery:        "gallery",
+						Version:        "version",
+					},
+				},
+				AgentPoolProfile{
+					Distro:   AKSUbuntu1604,
+					ImageRef: nil,
+				},
+			},
+		},
+	}
+
+	for _, c := range cases {
+		c := c
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+			c.cs.SetPropertiesDefaults(PropertiesDefaultsParams{
+				IsUpgrade:  c.isUpgrade,
+				IsScale:    c.isScale,
+				PkiKeySize: helpers.DefaultPkiKeySize,
+			})
+			if c.cs.Properties.MasterProfile.Distro != c.expectedMasterProfile.Distro {
+				t.Errorf("expected %s, but got %s", c.expectedMasterProfile.Distro, c.cs.Properties.MasterProfile.Distro)
+			}
+			if c.expectedMasterProfile.ImageRef == nil {
+				if c.cs.Properties.MasterProfile.ImageRef != nil {
+					t.Errorf("expected nil, but got an ImageRef")
+				}
+			} else {
+				if c.cs.Properties.MasterProfile.ImageRef == nil {
+					t.Errorf("got unexpected nil MasterProfile.ImageRef")
+				}
+				if c.cs.Properties.MasterProfile.ImageRef.Name != c.expectedMasterProfile.ImageRef.Name {
+					t.Errorf("expected %s, but got %s", c.expectedMasterProfile.ImageRef.Name, c.cs.Properties.MasterProfile.ImageRef.Name)
+				}
+				if c.cs.Properties.MasterProfile.ImageRef.ResourceGroup != c.expectedMasterProfile.ImageRef.ResourceGroup {
+					t.Errorf("expected %s, but got %s", c.expectedMasterProfile.ImageRef.ResourceGroup, c.cs.Properties.MasterProfile.ImageRef.ResourceGroup)
+				}
+				if c.cs.Properties.MasterProfile.ImageRef.SubscriptionID != c.expectedMasterProfile.ImageRef.SubscriptionID {
+					t.Errorf("expected %s, but got %s", c.expectedMasterProfile.ImageRef.SubscriptionID, c.cs.Properties.MasterProfile.ImageRef.SubscriptionID)
+				}
+				if c.cs.Properties.MasterProfile.ImageRef.Gallery != c.expectedMasterProfile.ImageRef.Gallery {
+					t.Errorf("expected %s, but got %s", c.expectedMasterProfile.ImageRef.Gallery, c.cs.Properties.MasterProfile.ImageRef.Gallery)
+				}
+				if c.cs.Properties.MasterProfile.ImageRef.Version != c.expectedMasterProfile.ImageRef.Version {
+					t.Errorf("expected %s, but got %s", c.expectedMasterProfile.ImageRef.Version, c.cs.Properties.MasterProfile.ImageRef.Version)
+				}
+			}
+			for i, profile := range c.cs.Properties.AgentPoolProfiles {
+				if profile.Distro != c.expectedAgentPoolProfiles[i].Distro {
+					t.Errorf("expected %s, but got %s", c.expectedAgentPoolProfiles[i].Distro, profile.Distro)
+				}
+				if c.expectedAgentPoolProfiles[i].ImageRef == nil {
+					if profile.ImageRef != nil {
+						t.Errorf("expected nil, but got an ImageRef")
+					}
+				} else {
+					if profile.ImageRef == nil {
+						t.Errorf("got unexpected nil MasterProfile.ImageRef")
+					}
+					if profile.ImageRef.Name != c.expectedAgentPoolProfiles[i].ImageRef.Name {
+						t.Errorf("expected %s, but got %s", c.expectedAgentPoolProfiles[i].ImageRef.Name, profile.ImageRef.Name)
+					}
+					if profile.ImageRef.ResourceGroup != c.expectedAgentPoolProfiles[i].ImageRef.ResourceGroup {
+						t.Errorf("expected %s, but got %s", c.expectedAgentPoolProfiles[i].ImageRef.ResourceGroup, profile.ImageRef.ResourceGroup)
+					}
+					if profile.ImageRef.SubscriptionID != c.expectedAgentPoolProfiles[i].ImageRef.SubscriptionID {
+						t.Errorf("expected %s, but got %s", c.expectedAgentPoolProfiles[i].ImageRef.SubscriptionID, profile.ImageRef.SubscriptionID)
+					}
+					if profile.ImageRef.Gallery != c.expectedAgentPoolProfiles[i].ImageRef.Gallery {
+						t.Errorf("expected %s, but got %s", c.expectedAgentPoolProfiles[i].ImageRef.Gallery, profile.ImageRef.Gallery)
+					}
+					if profile.ImageRef.Version != c.expectedAgentPoolProfiles[i].ImageRef.Version {
+						t.Errorf("expected %s, but got %s", c.expectedAgentPoolProfiles[i].ImageRef.Version, profile.ImageRef.Version)
+					}
+				}
+			}
+		})
+	}
+}
