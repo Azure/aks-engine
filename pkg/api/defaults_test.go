@@ -3383,7 +3383,7 @@ func TestImageReference(t *testing.T) {
 					},
 					MasterProfile: &MasterProfile{},
 					AgentPoolProfiles: []*AgentPoolProfile{
-						&AgentPoolProfile{},
+						{},
 					},
 				},
 			},
@@ -3392,7 +3392,7 @@ func TestImageReference(t *testing.T) {
 				ImageRef: nil,
 			},
 			expectedAgentPoolProfiles: []AgentPoolProfile{
-				AgentPoolProfile{
+				{
 					Distro:   AKSUbuntu1604,
 					ImageRef: nil,
 				},
@@ -3415,7 +3415,7 @@ func TestImageReference(t *testing.T) {
 						},
 					},
 					AgentPoolProfiles: []*AgentPoolProfile{
-						&AgentPoolProfile{
+						{
 							ImageRef: &ImageReference{
 								Name:           "name",
 								ResourceGroup:  "resource-group",
@@ -3438,7 +3438,7 @@ func TestImageReference(t *testing.T) {
 				},
 			},
 			expectedAgentPoolProfiles: []AgentPoolProfile{
-				AgentPoolProfile{
+				{
 					Distro: "",
 					ImageRef: &ImageReference{
 						Name:           "name",
@@ -3459,7 +3459,7 @@ func TestImageReference(t *testing.T) {
 					},
 					MasterProfile: &MasterProfile{},
 					AgentPoolProfiles: []*AgentPoolProfile{
-						&AgentPoolProfile{
+						{
 							ImageRef: &ImageReference{
 								Name:           "name",
 								ResourceGroup:  "resource-group",
@@ -3468,7 +3468,7 @@ func TestImageReference(t *testing.T) {
 								Version:        "version",
 							},
 						},
-						&AgentPoolProfile{},
+						{},
 					},
 				},
 			},
@@ -3477,7 +3477,7 @@ func TestImageReference(t *testing.T) {
 				ImageRef: nil,
 			},
 			expectedAgentPoolProfiles: []AgentPoolProfile{
-				AgentPoolProfile{
+				{
 					Distro: "",
 					ImageRef: &ImageReference{
 						Name:           "name",
@@ -3487,7 +3487,7 @@ func TestImageReference(t *testing.T) {
 						Version:        "version",
 					},
 				},
-				AgentPoolProfile{
+				{
 					Distro:   AKSUbuntu1604,
 					ImageRef: nil,
 				},
