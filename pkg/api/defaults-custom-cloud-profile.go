@@ -32,10 +32,7 @@ func (cs *ContainerService) setCustomCloudProfileDefaults(params CustomCloudProf
 		if err != nil {
 			return fmt.Errorf("Failed to set environment - %s", err)
 		}
-		err = p.SetAzureStackCloudSpec(AzureStackCloudSpecDefaultsParams{
-			IsUpgrade: params.IsUpgrade,
-			IsScale:   params.IsScale,
-		})
+		err = p.SetAzureStackCloudSpec(AzureStackCloudSpecDefaultsParams(params))
 		if err != nil {
 			return fmt.Errorf("Failed to set cloud spec - %s", err)
 		}
@@ -143,10 +140,9 @@ func (p *Properties) SetAzureStackCloudSpec(params AzureStackCloudSpecDefaultsPa
 			default:
 				azureStackCloudSpec.KubernetesSpecConfig.AzureTelemetryPID = DefaultAzureStackDeployTelemetryPID
 			}
-	
+
 		}
 
-	
 		// Use the custom input to overwrite the default values in AzureStackCloudSpec
 		if p.CustomCloudProfile.AzureEnvironmentSpecConfig != nil {
 			ascc := p.CustomCloudProfile.AzureEnvironmentSpecConfig
