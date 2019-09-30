@@ -66,6 +66,8 @@ type AzureOSImageConfig struct {
 }
 
 // AzureTelemetryPID represents the current telemetry ID
+// See more information here https://docs.microsoft.com/en-us/azure/marketplace/azure-partner-customer-usage-attribution
+// PID is maintained to keep consistent with Azure Stack Telemetry Terminologies
 type AzureTelemetryPID string
 
 const (

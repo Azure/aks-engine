@@ -16,7 +16,13 @@ import (
 	"github.com/pkg/errors"
 )
 
-func (cs *ContainerService) setCustomCloudProfileDefaults(isUpgrade, isScale bool) error {
+// CustomCloudProfileDefaultsParams is the parameters when we set the cloud profile defaults for ContainerService.
+type CustomCloudProfileDefaultsParams struct {
+	IsUpgrade bool
+	IsScale   bool
+}
+
+func (cs *ContainerService) setCustomCloudProfileDefaults(params CustomCloudProfileDefaultsParams) error {
 	p := cs.Properties
 	if p.IsAzureStackCloud() {
 		p.CustomCloudProfile.AuthenticationMethod = helpers.EnsureString(p.CustomCloudProfile.AuthenticationMethod, ClientSecretAuthMethod)
@@ -26,7 +32,10 @@ func (cs *ContainerService) setCustomCloudProfileDefaults(isUpgrade, isScale boo
 		if err != nil {
 			return fmt.Errorf("Failed to set environment - %s", err)
 		}
-		err = p.SetAzureStackCloudSpec(isUpgrade, isScale)
+		err = p.SetAzureStackCloudSpec(AzureStackCloudSpecDefaultsParams{
+			IsUpgrade: params.IsUpgrade,
+			IsScale:   params.IsScale,
+		})
 		if err != nil {
 			return fmt.Errorf("Failed to set cloud spec - %s", err)
 		}
@@ -95,8 +104,14 @@ func (cs *ContainerService) SetCustomCloudProfileEnvironment() error {
 	return nil
 }
 
+// AzureStackCloudSpecDefaultsParams is the parameters when we set the azure stack cloud spec defaults for ContainerService.
+type AzureStackCloudSpecDefaultsParams struct {
+	IsUpgrade bool
+	IsScale   bool
+}
+
 // SetAzureStackCloudSpec sets the cloud spec for Azure Stack .
-func (p *Properties) SetAzureStackCloudSpec(isUpgrade, isScale bool) error {
+func (p *Properties) SetAzureStackCloudSpec(params AzureStackCloudSpecDefaultsParams) error {
 	if p.IsAzureStackCloud() {
 		var azureStackCloudSpec AzureEnvironmentSpecConfig
 		switch p.CustomCloudProfile.DependenciesLocation {
@@ -120,15 +135,18 @@ func (p *Properties) SetAzureStackCloudSpec(isUpgrade, isScale bool) error {
 
 		//Sets default values for telemetry PID where none is set
 		if p.CustomCloudProfile.AzureEnvironmentSpecConfig == nil {
-			azureStackCloudSpec.KubernetesSpecConfig.AzureTelemetryPID = DefaultAzureStackDeployTelemetryPID
-			if isScale {
+			switch {
+			case params.IsScale:
 				azureStackCloudSpec.KubernetesSpecConfig.AzureTelemetryPID = DefaultAzureStackScaleTelemetryPID
-			}
-			if isUpgrade {
+			case params.IsUpgrade:
 				azureStackCloudSpec.KubernetesSpecConfig.AzureTelemetryPID = DefaultAzureStackUpgradeTelemetryPID
+			default:
+				azureStackCloudSpec.KubernetesSpecConfig.AzureTelemetryPID = DefaultAzureStackDeployTelemetryPID
 			}
+	
 		}
 
+	
 		// Use the custom input to overwrite the default values in AzureStackCloudSpec
 		if p.CustomCloudProfile.AzureEnvironmentSpecConfig != nil {
 			ascc := p.CustomCloudProfile.AzureEnvironmentSpecConfig

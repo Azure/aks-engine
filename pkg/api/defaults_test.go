@@ -2171,9 +2171,11 @@ func TestSetCustomCloudProfileDefaults(t *testing.T) {
 	mockCSPEmptyResourceManagerVMDNSSuffix := GetMockPropertiesWithCustomCloudProfile("azurestackcloud", true, true, false)
 	mockCSEmptyResourceManagerVMDNSSuffix.Properties.CustomCloudProfile = mockCSPEmptyResourceManagerVMDNSSuffix.CustomCloudProfile
 	mockCSEmptyResourceManagerVMDNSSuffix.Properties.CustomCloudProfile.Environment.ResourceManagerVMDNSSuffix = ""
-	isUpgrade := false
-	isScale := false
-	acutalerr := mockCSEmptyResourceManagerVMDNSSuffix.Properties.SetAzureStackCloudSpec(isUpgrade, isScale)
+
+	acutalerr := mockCSEmptyResourceManagerVMDNSSuffix.Properties.SetAzureStackCloudSpec(AzureStackCloudSpecDefaultsParams{
+		IsUpgrade: false,
+		IsScale:   false,
+	})
 	expectError := errors.New("Failed to set Cloud Spec for Azure Stack due to invalid environment")
 	if !helpers.EqualError(acutalerr, expectError) {
 		t.Errorf("verify ResourceManagerVMDNSSuffix empty: expected error: %s - got: %s", acutalerr, expectError)
@@ -2184,7 +2186,10 @@ func TestSetCustomCloudProfileDefaults(t *testing.T) {
 	mockCSPNilEnvironment := GetMockPropertiesWithCustomCloudProfile("azurestackcloud", true, true, false)
 	mockCSNilEnvironment.Properties.CustomCloudProfile = mockCSPNilEnvironment.CustomCloudProfile
 	mockCSNilEnvironment.Properties.CustomCloudProfile.Environment = nil
-	acutalerr = mockCSEmptyResourceManagerVMDNSSuffix.Properties.SetAzureStackCloudSpec(isUpgrade, isUpgrade)
+	acutalerr = mockCSEmptyResourceManagerVMDNSSuffix.Properties.SetAzureStackCloudSpec(AzureStackCloudSpecDefaultsParams{
+		IsUpgrade: false,
+		IsScale:   false,
+	})
 	if !helpers.EqualError(acutalerr, expectError) {
 		t.Errorf("verify environment nil: expected error: %s - got: %s", acutalerr, expectError)
 	}
