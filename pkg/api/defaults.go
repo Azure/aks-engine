@@ -292,6 +292,13 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpgrade, isScale bool) {
 			a.OrchestratorProfile.KubernetesConfig.EnableRbac = to.BoolPtr(DefaultRBACEnabled)
 		}
 
+		// Upgrade scenario:
+		// We need to force set EnableRbac to true for upgrades to 1.15.0 and greater if it was previously set to false (AKS Engine only)
+		if !a.OrchestratorProfile.KubernetesConfig.IsRBACEnabled() && common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.15.0") && isUpgrade && !cs.Properties.IsHostedMasterProfile() {
+			log.Warnf("RBAC will be enabled during upgrade to version %s\n", o.OrchestratorVersion)
+			a.OrchestratorProfile.KubernetesConfig.EnableRbac = to.BoolPtr(true)
+		}
+
 		if a.OrchestratorProfile.KubernetesConfig.IsRBACEnabled() {
 			if common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.9.0") {
 				// TODO make EnableAggregatedAPIs a pointer to bool so that a user can opt out of it

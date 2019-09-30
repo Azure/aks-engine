@@ -134,6 +134,18 @@ func Test_OrchestratorProfile_Validate(t *testing.T) {
 			},
 			expectedError: "enableAggregatedAPIs requires the enableRbac feature as a prerequisite",
 		},
+		"should error when KubernetesConfig has enableRBAC disabled for >= 1.15": {
+			properties: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					OrchestratorType:    "Kubernetes",
+					OrchestratorVersion: common.GetLatestPatchVersion("1.15", common.GetAllSupportedKubernetesVersions(false, false)),
+					KubernetesConfig: &KubernetesConfig{
+						EnableRbac: &falseVal,
+					},
+				},
+			},
+			expectedError: fmt.Sprintf("RBAC support is required for Kubernetes version 1.15.0 or greater; unable to build Kubernetes v%s cluster with enableRbac=false", common.GetLatestPatchVersion("1.15", common.GetAllSupportedKubernetesVersions(false, false))),
+		},
 		"should error when KubernetesConfig has enableDataEncryptionAtRest enabled with invalid version": {
 			properties: &Properties{
 				OrchestratorProfile: &OrchestratorProfile{

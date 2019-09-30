@@ -27,7 +27,8 @@
 					"name": "agentpool",
 					"count": 3,
 					"vmSize": "Standard_DS2_v2",
-					"availabilityProfile": "VirtualMachineScaleSets"
+					"availabilityProfile": "VirtualMachineScaleSets",
+					"scalesetPriority": "Low"
 				}
 			],
 			"linuxProfile": {

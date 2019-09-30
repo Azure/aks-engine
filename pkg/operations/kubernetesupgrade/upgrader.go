@@ -378,7 +378,7 @@ func (ku *Upgrader) upgradeAgentPools(ctx context.Context) error {
 
 		if toBeUpgradedCount == 0 {
 			ku.logger.Infof("No nodes to upgrade")
-			return nil
+			continue
 		}
 
 		// Upgrade nodes in agent pool
@@ -545,12 +545,12 @@ func (ku *Upgrader) upgradeAgentScaleSets(ctx context.Context) error {
 			err = operations.SafelyDrainNodeWithClient(
 				client,
 				ku.logger,
-				strings.ToLower(vmToUpgrade.Name),
+				vmToUpgrade.Name,
 				cordonDrainTimeout,
 			)
 			if err != nil {
 				ku.logger.Errorf("Error draining VM in VMSS: %v", err)
-				return err
+				// Continue even if there's an error in draining the node.
 			}
 
 			ku.logger.Infof(

@@ -5,11 +5,10 @@
         "orchestratorProfile": {
             "orchestratorType": "Kubernetes",
             "orchestratorRelease": "1.14",
-            "orchestratorVersion": "1.14.5",
             "kubernetesConfig": {
                 "kubernetesImageBase": "mcr.microsoft.com/k8s/azurestack/core/",
                 "useInstanceMetadata": false,
-                "networkPlugin": "flannel"
+                "networkPlugin": "kubenet"
             }
         },
         "customCloudProfile": {
@@ -20,7 +19,7 @@
         },
         "masterProfile": {
             "dnsPrefix": "",
-            "distro": "ubuntu",
+            "distro": "aks-ubuntu-16.04",
             "count": 3,
             "vmSize": "Standard_D2_v2"
         },
@@ -29,7 +28,7 @@
                 "name": "linuxpool",
                 "count": 3,
                 "vmSize": "Standard_D2_v2",
-                "distro": "ubuntu",
+                "distro": "aks-ubuntu-16.04",
                 "availabilityProfile": "AvailabilitySet",
                 "AcceleratedNetworkingEnabled": false
             }

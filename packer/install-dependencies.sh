@@ -204,16 +204,21 @@ for TILLER_VERSION in ${TILLER_VERSIONS}; do
 done
 
 CLUSTER_AUTOSCALER_VERSIONS="
+1.16.1
 1.16.0
+1.15.2
 1.15.1
 1.15.0
+1.14.5
 1.14.4
 1.14.2
 1.14.0
+1.13.7
 1.13.6
 1.13.4
 1.13.2
 1.13.1
+1.12.8
 1.12.7
 1.12.5
 1.12.3
@@ -373,40 +378,40 @@ echo "  - busybox" >> ${VHD_LOGS_FILEPATH}
 
 # TODO: fetch supported k8s versions from an aks-engine command instead of hardcoding them here
 K8S_VERSIONS="
+1.16.0
+1.16.0-azs
+1.15.4
+1.15.4-azs
 1.15.3
 1.15.3-azs
-1.15.2
-1.15.2-azs
+1.14.7
+1.14.7-azs
 1.14.6
 1.14.6-azs
-1.14.5
-1.14.5-azs
+1.13.11
+1.13.11-azs
 1.13.10
 1.13.10-azs
-1.13.9
-1.13.9-azs
 1.12.8
-1.12.8-azs
 1.12.7
-1.12.7-azs
 1.11.10
-1.11.10-azs
 1.11.9
-1.11.9-azs
 1.10.13
 1.10.12
 "
 for KUBERNETES_VERSION in ${K8S_VERSIONS}; do
-    if [[ $KUBERNETES_VERSION == *"azs"* ]]; then
-      HYPERKUBE_URL="mcr.microsoft.com/k8s/azurestack/core/hyperkube-amd64:v${KUBERNETES_VERSION}"
-    else
-      HYPERKUBE_URL="k8s.gcr.io/hyperkube-amd64:v${KUBERNETES_VERSION}"
+  if [[ $KUBERNETES_VERSION == *"azs"* ]]; then
+    HYPERKUBE_URL="mcr.microsoft.com/k8s/azurestack/core/hyperkube-amd64:v${KUBERNETES_VERSION}"
+  else
+    HYPERKUBE_URL="k8s.gcr.io/hyperkube-amd64:v${KUBERNETES_VERSION}"
+    if (( $(echo ${KUBERNETES_VERSION} | cut -d"." -f2) < 16 )); then
       CONTAINER_IMAGE="k8s.gcr.io/cloud-controller-manager-amd64:v${KUBERNETES_VERSION}"
       pullContainerImage "docker" ${CONTAINER_IMAGE}
       echo "  - ${CONTAINER_IMAGE}" >> ${VHD_LOGS_FILEPATH}
     fi
-    extractHyperkube "docker"
-    echo "  - ${HYPERKUBE_URL}" >> ${VHD_LOGS_FILEPATH}
+  fi
+  extractHyperkube "docker"
+  echo "  - ${HYPERKUBE_URL}" >> ${VHD_LOGS_FILEPATH}
 done
 
 # TODO: remove once ACR is available on Azure Stack

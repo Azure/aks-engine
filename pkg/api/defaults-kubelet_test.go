@@ -118,7 +118,7 @@ func TestKubeletConfigDefaults(t *testing.T) {
 		}
 	}
 
-	cs = CreateMockContainerService("testcluster", "1.16.0-beta.1", 3, 2, false)
+	cs = CreateMockContainerService("testcluster", "1.16.0", 3, 2, false)
 	cs.setKubeletConfig(false)
 	kubeletConfig = cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig
 	expectedKeys := []string{
@@ -1945,6 +1945,69 @@ func TestSupportPodPidsLimitFeatureGateInAgentPool(t *testing.T) {
 			hasSupportPodPidsLimitFeatureGate := strings.Contains(featureGates, "SupportPodPidsLimit=true")
 			if hasSupportPodPidsLimitFeatureGate != c.expectedSupportPodPidsLimitFeatureGate {
 				t.Fatalf("expected SupportPodPidsLimit=true presence in --feature gates to be %t, got %t", c.expectedSupportPodPidsLimitFeatureGate, hasSupportPodPidsLimitFeatureGate)
+			}
+		})
+	}
+
+}
+func TestReadOnlyPort(t *testing.T) {
+	cases := []struct {
+		name                 string
+		cs                   *ContainerService
+		expectedReadOnlyPort string
+	}{
+		{
+			name: "default pre-1.16",
+			cs: &ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorType:    Kubernetes,
+						OrchestratorVersion: "1.15.0",
+						KubernetesConfig:    &KubernetesConfig{},
+					},
+				},
+			},
+			expectedReadOnlyPort: "",
+		},
+		{
+			name: "default 1.16",
+			cs: &ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorType:    Kubernetes,
+						OrchestratorVersion: "1.16.0",
+						KubernetesConfig:    &KubernetesConfig{},
+					},
+				},
+			},
+			expectedReadOnlyPort: "0",
+		},
+		{
+			name: "AKS 1.16",
+			cs: &ContainerService{
+				Properties: &Properties{
+					HostedMasterProfile: &HostedMasterProfile{
+						FQDN: "foo",
+					},
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorType:    Kubernetes,
+						OrchestratorVersion: "1.16.0",
+						KubernetesConfig:    &KubernetesConfig{},
+					},
+				},
+			},
+			expectedReadOnlyPort: "",
+		},
+	}
+
+	for _, c := range cases {
+		c := c
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+			c.cs.setKubeletConfig(false)
+			readOnlyPort := c.cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig["--read-only-port"]
+			if readOnlyPort != c.expectedReadOnlyPort {
+				t.Fatalf("expected --read-only-port be equal to %s, got %s", c.expectedReadOnlyPort, readOnlyPort)
 			}
 		})
 	}

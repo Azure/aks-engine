@@ -47,8 +47,9 @@ const (
 	retryCommandsTimeout                      = 5 * time.Minute
 	kubeSystemPodsReadinessChecks             = 6
 	sleepBetweenRetriesWhenWaitingForPodReady = 1 * time.Second
+	sleepBetweenRetriesRemoteSSHCommand       = 3 * time.Second
 	timeoutWhenWaitingForPodOutboundAccess    = 1 * time.Minute
-	stabilityCommandTimeout                   = 1 * time.Second
+	stabilityCommandTimeout                   = 3 * time.Second
 	windowsCommandTimeout                     = 1 * time.Minute
 	validateNetworkPolicyTimeout              = 3 * time.Minute
 	validateDNSTimeout                        = 2 * time.Minute
@@ -161,7 +162,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				if node.IsLinux() && !firstMasterRegexp.MatchString(node.Metadata.Name) {
 					err := sshConn.CopyToRemote(node.Metadata.Name, "/tmp/"+hostOSDNSValidateScript)
 					Expect(err).NotTo(HaveOccurred())
-					err = sshConn.ExecuteRemote(node.Metadata.Name, hostOSDNSValidationCommand, false)
+					err = sshConn.ExecuteRemoteWithRetry(node.Metadata.Name, hostOSDNSValidationCommand, false, sleepBetweenRetriesRemoteSSHCommand, cfg.Timeout)
 					Expect(err).NotTo(HaveOccurred())
 				}
 			}
@@ -171,7 +172,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			nodeList, err := node.GetReady()
 			Expect(err).NotTo(HaveOccurred())
 			for _, node := range nodeList.Nodes {
-				Expect("v" + eng.ExpandedDefinition.Properties.OrchestratorProfile.OrchestratorVersion).To(Equal(node.Status.NodeInfo.KubeletVersion))
+				Expect("v" + eng.ExpandedDefinition.Properties.OrchestratorProfile.OrchestratorVersion).To(Equal(node.Version()))
 			}
 		})
 
@@ -201,7 +202,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 								continue
 							}
 						}
-						err = sshConn.ExecuteRemote(node.Metadata.Name, dockerVersionCmd, true)
+						err = sshConn.ExecuteRemoteWithRetry(node.Metadata.Name, dockerVersionCmd, true, sleepBetweenRetriesRemoteSSHCommand, cfg.Timeout)
 						Expect(err).NotTo(HaveOccurred())
 					}
 				} else {
@@ -220,7 +221,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 					rootPasswdCmd := fmt.Sprintf("\"sudo grep '^root:[!*]:' /etc/shadow\" && exit 1 || exit 0")
 					for _, node := range nodeList.Nodes {
 						if node.IsUbuntu() {
-							err = sshConn.ExecuteRemote(node.Metadata.Name, rootPasswdCmd, true)
+							err = sshConn.ExecuteRemoteWithRetry(node.Metadata.Name, rootPasswdCmd, true, sleepBetweenRetriesRemoteSSHCommand, cfg.Timeout)
 							Expect(err).NotTo(HaveOccurred())
 						}
 					}
@@ -247,7 +248,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 						if node.IsUbuntu() && !firstMasterRegexp.MatchString(node.Metadata.Name) {
 							err := sshConn.CopyToRemote(node.Metadata.Name, "/tmp/"+netConfigValidateScript)
 							Expect(err).NotTo(HaveOccurred())
-							err = sshConn.ExecuteRemote(node.Metadata.Name, netConfigValidationCommand, false)
+							err = sshConn.ExecuteRemoteWithRetry(node.Metadata.Name, netConfigValidationCommand, false, sleepBetweenRetriesRemoteSSHCommand, cfg.Timeout)
 							Expect(err).NotTo(HaveOccurred())
 						}
 					}
@@ -274,8 +275,9 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 						if !firstMasterRegexp.MatchString(node.Metadata.Name) {
 							err := sshConn.CopyToRemote(node.Metadata.Name, "/tmp/"+CISFilesValidateScript)
 							Expect(err).NotTo(HaveOccurred())
-							err = sshConn.ExecuteRemote(node.Metadata.Name, CISValidationCommand, false)
+							err = sshConn.ExecuteRemoteWithRetry(node.Metadata.Name, CISValidationCommand, false, sleepBetweenRetriesRemoteSSHCommand, cfg.Timeout)
 							Expect(err).NotTo(HaveOccurred())
+							fmt.Println(err)
 						}
 					}
 				} else {
@@ -301,7 +303,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 						if node.IsUbuntu() && !firstMasterRegexp.MatchString(node.Metadata.Name) {
 							err := sshConn.CopyToRemote(node.Metadata.Name, "/tmp/"+modprobeConfigValidateScript)
 							Expect(err).NotTo(HaveOccurred())
-							err = sshConn.ExecuteRemote(node.Metadata.Name, netConfigValidationCommand, false)
+							err = sshConn.ExecuteRemoteWithRetry(node.Metadata.Name, netConfigValidationCommand, false, sleepBetweenRetriesRemoteSSHCommand, cfg.Timeout)
 							Expect(err).NotTo(HaveOccurred())
 						}
 					}
@@ -327,7 +329,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 					if node.IsUbuntu() && !firstMasterRegexp.MatchString(node.Metadata.Name) {
 						err := sshConn.CopyToRemote(node.Metadata.Name, "/tmp/"+installedPackagesValidateScript)
 						Expect(err).NotTo(HaveOccurred())
-						err = sshConn.ExecuteRemote(node.Metadata.Name, installedPackagesValidationCommand, false)
+						err = sshConn.ExecuteRemoteWithRetry(node.Metadata.Name, installedPackagesValidationCommand, false, sleepBetweenRetriesRemoteSSHCommand, cfg.Timeout)
 						Expect(err).NotTo(HaveOccurred())
 					}
 				}
@@ -351,7 +353,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 						if node.IsUbuntu() && !firstMasterRegexp.MatchString(node.Metadata.Name) {
 							err := sshConn.CopyToRemote(node.Metadata.Name, "/tmp/"+sshdConfigValidateScript)
 							Expect(err).NotTo(HaveOccurred())
-							err = sshConn.ExecuteRemote(node.Metadata.Name, sshdConfigValidationCommand, false)
+							err = sshConn.ExecuteRemoteWithRetry(node.Metadata.Name, sshdConfigValidationCommand, false, sleepBetweenRetriesRemoteSSHCommand, cfg.Timeout)
 							Expect(err).NotTo(HaveOccurred())
 						}
 					}
@@ -378,7 +380,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 						if node.IsUbuntu() && !firstMasterRegexp.MatchString(node.Metadata.Name) {
 							err := sshConn.CopyToRemote(node.Metadata.Name, "/tmp/"+pwQualityValidateScript)
 							Expect(err).NotTo(HaveOccurred())
-							err = sshConn.ExecuteRemote(node.Metadata.Name, pwQualityValidationCommand, false)
+							err = sshConn.ExecuteRemoteWithRetry(node.Metadata.Name, pwQualityValidationCommand, false, sleepBetweenRetriesRemoteSSHCommand, cfg.Timeout)
 							Expect(err).NotTo(HaveOccurred())
 						}
 					}
@@ -417,7 +419,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 						err := sshConn.CopyToRemote(node.Metadata.Name, "/tmp/"+auditdValidateScript)
 						Expect(err).NotTo(HaveOccurred())
 						auditdValidationCommand := fmt.Sprintf("\"ENABLED=%t /tmp/%s\"", enabled, auditdValidateScript)
-						err = sshConn.ExecuteRemote(node.Metadata.Name, auditdValidationCommand, false)
+						err = sshConn.ExecuteRemoteWithRetry(node.Metadata.Name, auditdValidationCommand, false, sleepBetweenRetriesRemoteSSHCommand, cfg.Timeout)
 						Expect(err).NotTo(HaveOccurred())
 					}
 				} else {
@@ -436,7 +438,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			var pods []pod.Pod
 
 			testPortForward := func(deploymentName string) {
-				running, podWaitErr := pod.WaitOnReady(deploymentName, deploymentNamespace, 3, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
+				running, podWaitErr := pod.WaitOnSuccesses(deploymentName, deploymentNamespace, 3, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
 				Expect(podWaitErr).NotTo(HaveOccurred())
 				Expect(running).To(Equal(true))
 				pods, err = deploy.Pods()
@@ -568,12 +570,12 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 		})
 
 		It("should have node labels specific to masters or agents", func() {
-			nodeList, err := node.Get()
+			nodes, err := node.GetWithRetry(1*time.Second, cfg.Timeout)
 			Expect(err).NotTo(HaveOccurred())
 			if !eng.ExpandedDefinition.Properties.HasLowPriorityScaleset() {
-				Expect(len(nodeList.Nodes)).To(Equal(eng.NodeCount()))
+				Expect(len(nodes)).To(Equal(eng.NodeCount()))
 			}
-			for _, node := range nodeList.Nodes {
+			for _, node := range nodes {
 				role := "master"
 				if !strings.HasPrefix(node.Metadata.Name, "k8s-master-") {
 					if eng.ExpandedDefinition.Properties.HasLowPriorityScaleset() {
@@ -607,11 +609,11 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			var running bool
 			if common.IsKubernetesVersionGe(eng.ExpandedDefinition.Properties.OrchestratorProfile.OrchestratorVersion, "1.12.0") {
 				By("Ensuring that coredns is running")
-				running, err = pod.WaitOnReady("coredns", "kube-system", kubeSystemPodsReadinessChecks, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
+				running, err = pod.WaitOnSuccesses("coredns", "kube-system", kubeSystemPodsReadinessChecks, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
 
 			} else {
 				By("Ensuring that kube-dns is running")
-				running, err = pod.WaitOnReady("kube-dns", "kube-system", kubeSystemPodsReadinessChecks, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
+				running, err = pod.WaitOnSuccesses("kube-dns", "kube-system", kubeSystemPodsReadinessChecks, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
 			}
 			Expect(err).NotTo(HaveOccurred())
 			Expect(running).To(Equal(true))
@@ -624,7 +626,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			}
 			for _, componentName := range coreComponents {
 				By(fmt.Sprintf("Ensuring that %s is Running", componentName))
-				running, err := pod.WaitOnReady(componentName, "kube-system", kubeSystemPodsReadinessChecks, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
+				running, err := pod.WaitOnSuccesses(componentName, "kube-system", kubeSystemPodsReadinessChecks, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(running).To(Equal(true))
 			}
@@ -687,7 +689,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				if hasAddon, addon := eng.HasAddon(addonName); hasAddon {
 					for _, addonPod := range addonPods {
 						By(fmt.Sprintf("Ensuring that the %s addon is Running", addonName))
-						running, err := pod.WaitOnReady(addonPod, addonNamespace, kubeSystemPodsReadinessChecks, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
+						running, err := pod.WaitOnSuccesses(addonPod, addonNamespace, kubeSystemPodsReadinessChecks, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
 						Expect(err).NotTo(HaveOccurred())
 						Expect(running).To(Equal(true))
 						By(fmt.Sprintf("Ensuring that the correct resources have been applied for %s", addonPod))
@@ -708,7 +710,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 
 		It("should have the correct tiller configuration", func() {
 			if hasTiller, tillerAddon := eng.HasAddon("tiller"); hasTiller {
-				running, err := pod.WaitOnReady("tiller", "kube-system", kubeSystemPodsReadinessChecks, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
+				running, err := pod.WaitOnSuccesses("tiller", "kube-system", kubeSystemPodsReadinessChecks, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(running).To(Equal(true))
 				pods, err := pod.GetAllByPrefix("tiller-deploy", "kube-system")
@@ -727,7 +729,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 		It("should have the expected omsagent cluster footprint", func() {
 			if hasContainerMonitoring, _ := eng.HasAddon("container-monitoring"); hasContainerMonitoring {
 				By("Validating the omsagent replicaset")
-				running, err := pod.WaitOnReady("omsagent-rs", "kube-system", kubeSystemPodsReadinessChecks, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
+				running, err := pod.WaitOnSuccesses("omsagent-rs", "kube-system", kubeSystemPodsReadinessChecks, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(running).To(Equal(true))
 				pods, err := pod.GetAllByPrefix("omsagent-rs", "kube-system")
@@ -741,7 +743,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				Expect(err).NotTo(HaveOccurred())
 				Expect(pass).To(BeTrue())
 				By("Validating the omsagent daemonset")
-				running, err = pod.WaitOnReady("omsagent", "kube-system", kubeSystemPodsReadinessChecks, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
+				running, err = pod.WaitOnSuccesses("omsagent", "kube-system", kubeSystemPodsReadinessChecks, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(running).To(Equal(true))
 				pods, err = pod.GetAllByPrefix("omsagent", "kube-system")
@@ -773,7 +775,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			Expect(err).NotTo(HaveOccurred())
 
 			By("Ensuring that php-apache pod is running")
-			running, err := pod.WaitOnReady(longRunningApacheDeploymentName, "default", 3, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
+			running, err := pod.WaitOnSuccesses(longRunningApacheDeploymentName, "default", 4, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(running).To(Equal(true))
 
@@ -921,7 +923,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 								err = sshConn.CopyToRemote(node.Metadata.Name, "/tmp/"+simulateDockerdCrashScript)
 								Expect(err).NotTo(HaveOccurred())
 								simulateDockerCrashCommand := fmt.Sprintf("\"/tmp/%s\"", simulateDockerdCrashScript)
-								err = sshConn.ExecuteRemote(node.Metadata.Name, simulateDockerCrashCommand, true)
+								err = sshConn.ExecuteRemoteWithRetry(node.Metadata.Name, simulateDockerCrashCommand, true, sleepBetweenRetriesRemoteSSHCommand, cfg.Timeout)
 								Expect(err).NotTo(HaveOccurred())
 							}
 						}
@@ -933,7 +935,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 							if node.IsWindows() {
 								By(fmt.Sprintf("restarting kubelet service on node: %s", node.Metadata.Name))
 								restartKubeletCommand := fmt.Sprintf("\"Powershell Start-Service kubelet\"")
-								err = sshConn.ExecuteRemote(node.Metadata.Name, restartKubeletCommand, true)
+								err = sshConn.ExecuteRemoteWithRetry(node.Metadata.Name, restartKubeletCommand, true, sleepBetweenRetriesRemoteSSHCommand, cfg.Timeout)
 								Expect(err).NotTo(HaveOccurred())
 							}
 						}
@@ -979,7 +981,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				By("Ensuring we can create an ILB service attachment")
 				sILB, err := service.CreateServiceFromFileDeleteIfExist(filepath.Join(WorkloadDir, "ingress-nginx-ilb.yaml"), serviceName+"-ilb", "default")
 				Expect(err).NotTo(HaveOccurred())
-				svc, err := sILB.WaitForIngress(cfg.Timeout, 5*time.Second)
+				err = sILB.WaitForIngress(cfg.Timeout, 5*time.Second)
 				Expect(err).NotTo(HaveOccurred())
 
 				By("Ensuring we can create a curl pod to connect to the service")
@@ -987,7 +989,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				curlDeploymentName := fmt.Sprintf("%s-%v", deploymentPrefix, r.Intn(99999))
 				curlDeploy, err := deployment.CreateLinuxDeployDeleteIfExists(deploymentPrefix, "library/nginx:latest", curlDeploymentName, "default", "--replicas=2")
 				Expect(err).NotTo(HaveOccurred())
-				running, err := pod.WaitOnReady(curlDeploymentName, "default", 3, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
+				running, err := pod.WaitOnSuccesses(curlDeploymentName, "default", 4, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(running).To(Equal(true))
 				curlPods, err := curlDeploy.Pods()
@@ -995,12 +997,12 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				By("Ensuring we can connect to the ILB service from another pod")
 				var success bool
 				for _, curlPod := range curlPods {
-					pass, curlErr := curlPod.ValidateCurlConnection(svc.Status.LoadBalancer.Ingress[0]["ip"], 30*time.Second, 3*time.Minute)
+					pass, curlErr := curlPod.ValidateCurlConnection(sILB.Status.LoadBalancer.Ingress[0]["ip"], 30*time.Second, 3*time.Minute)
 					if curlErr == nil && pass {
 						success = true
 						break
 					} else {
-						e := svc.Describe()
+						e := sILB.Describe()
 						if e != nil {
 							log.Printf("Unable to describe service\n: %s", e)
 						}
@@ -1011,21 +1013,21 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				By("Ensuring we can create an ELB service attachment")
 				sELB, err := service.CreateServiceFromFileDeleteIfExist(filepath.Join(WorkloadDir, "ingress-nginx-elb.yaml"), serviceName+"-elb", "default")
 				Expect(err).NotTo(HaveOccurred())
-				svc, err = sELB.WaitForIngress(cfg.Timeout, 5*time.Second)
+				err = sELB.WaitForIngress(cfg.Timeout, 5*time.Second)
 				Expect(err).NotTo(HaveOccurred())
 
 				By("Ensuring we can connect to the ELB service on the service IP")
-				valid := sELB.Validate("(Welcome to nginx)", 5, 30*time.Second, cfg.Timeout)
-				Expect(valid).To(BeTrue())
+				err = sELB.ValidateWithRetry("(Welcome to nginx)", 30*time.Second, cfg.Timeout)
+				Expect(err).NotTo(HaveOccurred())
 				By("Ensuring we can connect to the ELB service from another pod")
 				success = false
 				for _, curlPod := range curlPods {
-					pass, curlErr := curlPod.ValidateCurlConnection(svc.Status.LoadBalancer.Ingress[0]["ip"], 30*time.Second, 3*time.Minute)
+					pass, curlErr := curlPod.ValidateCurlConnection(sELB.Status.LoadBalancer.Ingress[0]["ip"], 30*time.Second, 3*time.Minute)
 					if curlErr == nil && pass {
 						success = true
 						break
 					} else {
-						e := svc.Describe()
+						e := sELB.Describe()
 						if e != nil {
 							log.Printf("Unable to describe service\n: %s", e)
 						}
@@ -1079,7 +1081,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				Expect(err).NotTo(HaveOccurred())
 
 				By("Ensuring that the php-apache pod is running")
-				running, err := pod.WaitOnReady(longRunningApacheDeploymentName, "default", 3, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
+				running, err := pod.WaitOnSuccesses(longRunningApacheDeploymentName, "default", 4, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(running).To(Equal(true))
 
@@ -1113,7 +1115,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				Expect(err).NotTo(HaveOccurred())
 
 				By("Ensuring there are 3 load test pods")
-				running, err = pod.WaitOnReady(loadTestName, "default", 3, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
+				running, err = pod.WaitOnSuccesses(loadTestName, "default", 4, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(running).To(Equal(true))
 
@@ -1213,9 +1215,9 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 	Describe("with zoned master profile", func() {
 		It("should be labeled with zones for each masternode", func() {
 			if eng.ExpandedDefinition.Properties.MasterProfile.HasAvailabilityZones() {
-				nodeList, err := node.Get()
+				nodes, err := node.GetWithRetry(1*time.Second, cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())
-				for _, node := range nodeList.Nodes {
+				for _, node := range nodes {
 					role := node.Metadata.Labels["kubernetes.io/role"]
 					if role == "master" {
 						By("Ensuring that we get zones for each master node")
@@ -1233,9 +1235,9 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 	Describe("with all zoned agent pools", func() {
 		It("should be labeled with zones for each node", func() {
 			if eng.ExpandedDefinition.Properties.HasZonesForAllAgentPools() {
-				nodeList, err := node.Get()
+				nodes, err := node.GetWithRetry(1*time.Second, cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())
-				for _, node := range nodeList.Nodes {
+				for _, node := range nodes {
 					role := node.Metadata.Labels["kubernetes.io/role"]
 					if role == "agent" {
 						By("Ensuring that we get zones for each agent node")
@@ -1351,22 +1353,22 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				Expect(err).NotTo(HaveOccurred())
 
 				By("Ensure there is a running frontend-prod pod")
-				running, err := pod.WaitOnReady(frontendProdDeploymentName, nsProd, 3, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
+				running, err := pod.WaitOnSuccesses(frontendProdDeploymentName, nsProd, 4, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(running).To(Equal(true))
 
 				By("Ensure there is a running frontend-dev pod")
-				running, err = pod.WaitOnReady(frontendDevDeploymentName, nsDev, 3, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
+				running, err = pod.WaitOnSuccesses(frontendDevDeploymentName, nsDev, 4, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(running).To(Equal(true))
 
 				By("Ensure there is a running backend pod")
-				running, err = pod.WaitOnReady(backendDeploymentName, nsDev, 3, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
+				running, err = pod.WaitOnSuccesses(backendDeploymentName, nsDev, 4, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(running).To(Equal(true))
 
 				By("Ensure there is a running network-policy pod")
-				running, err = pod.WaitOnReady(nwpolicyDeploymentName, nsDev, 3, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
+				running, err = pod.WaitOnSuccesses(nwpolicyDeploymentName, nsDev, 4, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(running).To(Equal(true))
 
@@ -1560,7 +1562,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				Expect(err).NotTo(HaveOccurred())
 
 				By("Waiting on pod to be Ready")
-				running, err := pod.WaitOnReady(deploymentName, "default", 3, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
+				running, err := pod.WaitOnSuccesses(deploymentName, "default", 4, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(running).To(Equal(true))
 
@@ -1569,10 +1571,12 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				Expect(err).NotTo(HaveOccurred())
 				iisService, err := service.Get(deploymentName, "default")
 				Expect(err).NotTo(HaveOccurred())
+				err = iisService.WaitForIngress(cfg.Timeout, 5*time.Second)
+				Expect(err).NotTo(HaveOccurred())
 
 				By("Verifying that the service is reachable and returns the default IIS start page")
-				valid := iisService.Validate("(IIS Windows Server)", 10, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
-				Expect(valid).To(BeTrue())
+				err = iisService.ValidateWithRetry("(IIS Windows Server)", sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
+				Expect(err).NotTo(HaveOccurred())
 
 				By("Checking that each pod can reach the internet")
 				var iisPods []pod.Pod
@@ -1593,7 +1597,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				Expect(err).NotTo(HaveOccurred())
 
 				By("Waiting on 5 pods to be Ready")
-				running, err = pod.WaitOnReady(deploymentName, "default", 3, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
+				running, err = pod.WaitOnSuccesses(deploymentName, "default", 4, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(running).To(Equal(true))
 				iisPods, err = iisDeploy.Pods()
@@ -1601,8 +1605,8 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				Expect(len(iisPods)).To(Equal(5))
 
 				By("Verifying that the service is reachable and returns the default IIS start page")
-				valid = iisService.Validate("(IIS Windows Server)", 10, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
-				Expect(valid).To(BeTrue())
+				err = iisService.ValidateWithRetry("(IIS Windows Server)", sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
+				Expect(err).NotTo(HaveOccurred())
 
 				By("Checking that each pod can reach the internet")
 				iisPods, err = iisDeploy.Pods()
@@ -1632,8 +1636,8 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				Expect(len(iisPods)).To(Equal(2))
 
 				By("Verifying that the service is reachable and returns the default IIS start page")
-				valid = iisService.Validate("(IIS Windows Server)", 10, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
-				Expect(valid).To(BeTrue())
+				err = iisService.ValidateWithRetry("(IIS Windows Server)", sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
+				Expect(err).NotTo(HaveOccurred())
 
 				By("Checking that each pod can reach the internet")
 				iisPods, err = iisDeploy.Pods()
@@ -1674,12 +1678,12 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				Expect(err).NotTo(HaveOccurred())
 
 				By("Ensure there is a Running nginx pod")
-				running, err := pod.WaitOnReady(nginxDeploymentName, "default", 3, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
+				running, err := pod.WaitOnSuccesses(nginxDeploymentName, "default", 4, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(running).To(Equal(true))
 
 				By("Ensure there is a Running iis pod")
-				running, err = pod.WaitOnReady(windowsDeploymentName, "default", 3, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
+				running, err = pod.WaitOnSuccesses(windowsDeploymentName, "default", 4, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(running).To(Equal(true))
 
@@ -1698,14 +1702,14 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				By("Connecting to Windows from another Windows deployment")
 				name := fmt.Sprintf("windows-2-windows-%s", cfg.Name)
 				command := fmt.Sprintf("iwr -UseBasicParsing -TimeoutSec 60 %s", windowsService.Metadata.Name)
-				successes, err := pod.RunCommandMultipleTimes(pod.RunWindowsPod, windowsImages.ServerCore, name, command, cfg.StabilityIterations, 1*time.Second, retryCommandsTimeout, windowsCommandTimeout)
+				successes, err := pod.RunCommandMultipleTimes(pod.RunWindowsPod, windowsImages.ServerCore, name, command, cfg.StabilityIterations, 1*time.Second, windowsCommandTimeout, retryCommandsTimeout)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(successes).To(Equal(cfg.StabilityIterations))
 
 				By("Connecting to Linux from Windows deployment")
 				name = fmt.Sprintf("windows-2-linux-%s", cfg.Name)
 				command = fmt.Sprintf("iwr -UseBasicParsing -TimeoutSec 60 %s", linuxService.Metadata.Name)
-				successes, err = pod.RunCommandMultipleTimes(pod.RunWindowsPod, windowsImages.ServerCore, name, command, cfg.StabilityIterations, 1*time.Second, retryCommandsTimeout, windowsCommandTimeout)
+				successes, err = pod.RunCommandMultipleTimes(pod.RunWindowsPod, windowsImages.ServerCore, name, command, cfg.StabilityIterations, 1*time.Second, windowsCommandTimeout, retryCommandsTimeout)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(successes).To(Equal(cfg.StabilityIterations))
 
@@ -1739,7 +1743,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 					deploymentName := fmt.Sprintf("iis-%s-%v", cfg.Name, r.Intn(99999))
 					iisDeploy, err := deployment.CreateWindowsDeployIfNotExist(iisImage, deploymentName, "default", 80, hostport)
 					Expect(err).NotTo(HaveOccurred())
-					running, err := pod.WaitOnReady(deploymentName, "default", 3, 30*time.Second, cfg.Timeout)
+					running, err := pod.WaitOnSuccesses(deploymentName, "default", 4, 30*time.Second, cfg.Timeout)
 					Expect(err).NotTo(HaveOccurred())
 					Expect(running).To(Equal(true))
 					iisPods, err := iisDeploy.Pods()
@@ -1844,7 +1848,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 					if node.IsUbuntu() && !firstMasterRegexp.MatchString(node.Metadata.Name) {
 						err := sshConn.CopyToRemote(node.Metadata.Name, "/tmp/"+timeSyncValidateScript)
 						Expect(err).NotTo(HaveOccurred())
-						err = sshConn.ExecuteRemote(node.Metadata.Name, timeSyncValidationCommand, false)
+						err = sshConn.ExecuteRemoteWithRetry(node.Metadata.Name, timeSyncValidationCommand, false, sleepBetweenRetriesRemoteSSHCommand, cfg.Timeout)
 						Expect(err).NotTo(HaveOccurred())
 					}
 				}

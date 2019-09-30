@@ -1660,9 +1660,6 @@
         "count": "[sub(variables('agentppol1Count'), variables('agentppol1Offset'))]",
         "name": "loop"
       },
-      "dependsOn": [
-        "[variables('vnetID')]"
-      ],
       "location": "[variables('location')]",
       "name": "[concat(variables('agentppol1VMNamePrefix'), 'nic-', copyIndex(variables('agentppol1Offset')))]",
       "properties": {
@@ -1704,9 +1701,6 @@
         "count": "[sub(variables('agentpool2Count'), variables('agentpool2Offset'))]",
         "name": "loop"
       },
-      "dependsOn": [
-        "[variables('vnetID')]"
-      ],
       "location": "[variables('location')]",
       "name": "[concat(variables('agentpool2VMNamePrefix'), 'nic-', copyIndex(variables('agentpool2Offset')))]",
       "properties": {
@@ -1803,9 +1797,6 @@
     },
     {
       "apiVersion": "[variables('apiVersionDefault')]",
-      "dependsOn": [
-        "[variables('vnetID')]"
-      ],
       "location": "[variables('location')]",
       "name": "[variables('masterInternalLbName')]",
       "properties": {
@@ -1899,9 +1890,8 @@
         "name": "nicLoopNode"
       },
       "dependsOn": [
-        "[variables('masterInternalLbName')]",
         "[concat(variables('masterLbID'),'/inboundNatRules/SSH-',variables('masterVMNamePrefix'),copyIndex(variables('masterOffset')))]",
-        "[variables('vnetID')]"
+        "[variables('masterInternalLbName')]"
       ],
       "location": "[variables('location')]",
       "name": "[concat(variables('masterVMNamePrefix'), 'nic-', copyIndex(variables('masterOffset')))]",

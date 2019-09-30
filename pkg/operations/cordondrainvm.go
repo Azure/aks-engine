@@ -45,6 +45,7 @@ func SafelyDrainNode(az armhelpers.AKSEngineClient, logger *log.Entry, apiserver
 
 // SafelyDrainNodeWithClient safely drains a node so that it can be deleted from the cluster
 func SafelyDrainNodeWithClient(client armhelpers.KubernetesClient, logger *log.Entry, nodeName string, timeout time.Duration) error {
+	nodeName = strings.ToLower(nodeName)
 	//Mark the node unschedulable
 	var node *v1.Node
 	var err error
