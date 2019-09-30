@@ -151,12 +151,12 @@ func GetAllByPrefix(prefix, namespace string) ([]Service, error) {
 
 // Delete will delete a service in a given namespace
 func (s *Service) Delete(retries int) error {
-	var commandTimeout time.Duration
+	var zeroValueDuration time.Duration
 	var kubectlOutput []byte
 	var kubectlError error
 	for i := 0; i < retries; i++ {
 		cmd := exec.Command("k", "delete", "svc", "-n", s.Metadata.Namespace, s.Metadata.Name)
-		kubectlOutput, kubectlError = util.RunAndLogCommand(cmd, commandTimeout)
+		kubectlOutput, kubectlError = util.RunAndLogCommand(cmd, zeroValueDuration)
 		if kubectlError != nil {
 			log.Printf("Error while trying to delete service %s in namespace %s:%s\n", s.Metadata.Namespace, s.Metadata.Name, kubectlError)
 			log.Printf("%s\n", string(kubectlOutput))

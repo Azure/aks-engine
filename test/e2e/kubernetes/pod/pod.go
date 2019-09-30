@@ -25,7 +25,6 @@ import (
 
 const (
 	testDir                    string = "testdirectory"
-	deleteTimeout                     = 5 * time.Minute
 	validatePodNotExistRetries        = 3
 )
 
@@ -794,11 +793,12 @@ func (p *Pod) Exec(c ...string) ([]byte, error) {
 
 // Delete will delete a Pod in a given namespace
 func (p *Pod) Delete(retries int) error {
+	var zeroValueDuration time.Duration
 	var kubectlOutput []byte
 	var kubectlError error
 	for i := 0; i < retries; i++ {
 		cmd := exec.Command("k", "delete", "po", "-n", p.Metadata.Namespace, p.Metadata.Name)
-		kubectlOutput, kubectlError = util.RunAndLogCommand(cmd, deleteTimeout)
+		kubectlOutput, kubectlError = util.RunAndLogCommand(cmd, zeroValueDuration)
 		if kubectlError != nil {
 			log.Printf("Error while trying to delete Pod %s in namespace %s:%s\n", p.Metadata.Namespace, p.Metadata.Name, string(kubectlOutput))
 			continue
