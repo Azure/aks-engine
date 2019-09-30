@@ -148,6 +148,30 @@ var (
 		ImageVersion:   "2019.09.24",
 	}
 
+	// AKSWindows2019OSImageConfig is the AKS image based on Windows Server 2019
+	AKSWindowsServer2019OSImageConfig = AzureOSImageConfig{
+		ImageOffer: "aks-windows",
+		ImageSku: "2019-datacenter-core-smalldisk",
+		ImagePublisher: "microsoft-aks",
+		ImageVersion: "17763.737.190923",
+	}
+
+	// AzureStackWindowsServer2019OSImageConfig is the 'vanilla' Windows Server 2019 image to be used to with Azure Stack deployments
+	AzureStackWindowsServer2019OSImageConfig = AzureOSImageConfig{
+		ImageOffer: "WindowsServer",
+		ImageSku: "2019-Datacenter-Core-with-Containers",
+		ImagePublisher: "MicrosoftWindowsServer",
+		ImageVersion: "latest",
+	}
+
+	// WindowsServer2019OSImageConfig is the 'vanilla' Windows Server 2019 image
+	WindowsServer2019OSImageConfig = AzureOSImageConfig{
+		ImageOffer: "WindowsServer",
+		ImageSku: "2019-Datacenter-Core-with-Containers-smalldisk",
+		ImagePublisher: "MicrosoftWindowsServer",
+		ImageVersion: "17763.737.1909062324",
+	}
+
 	// ACC1604OSImageConfig is the ACC image based on Ubuntu 16.04.
 	ACC1604OSImageConfig = AzureOSImageConfig{
 		ImageOffer:     "confidential-compute-preview",

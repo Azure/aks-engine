@@ -704,34 +704,34 @@ func (p *Properties) setWindowsProfileDefaults(isUpgrade, isScale bool) {
 
 		if p.IsAzureStackCloud() {
 			if windowsProfile.WindowsPublisher == "" {
-				windowsProfile.WindowsPublisher = DefaultWindowsPublisher
+				windowsProfile.WindowsPublisher = AzureStackWindowsServer2019OSImageConfig.ImagePublisher
 			}
 			if windowsProfile.WindowsOffer == "" {
-				windowsProfile.WindowsOffer = DefaultAzureStackWindowsOffer
+				windowsProfile.WindowsOffer = AzureStackWindowsServer2019OSImageConfig.ImageOffer
 			}
 			if windowsProfile.WindowsSku == "" {
-				windowsProfile.WindowsSku = DefaultAzureStackWindowsSku
+				windowsProfile.WindowsSku = AzureStackWindowsServer2019OSImageConfig.ImageSku
 			}
 			if windowsProfile.ImageVersion == "" {
-				windowsProfile.ImageVersion = DefaultAzureStackImageVersion
+				windowsProfile.ImageVersion = AzureStackWindowsServer2019OSImageConfig.ImageVersion
 			}
 		} else {
 			if windowsProfile.WindowsPublisher == "" {
-				windowsProfile.WindowsPublisher = AksWindowsVhdPublisher
+				windowsProfile.WindowsPublisher = AKSWindowsServer2019OSImageConfig.ImagePublisher
 			}
 			if windowsProfile.WindowsOffer == "" {
-				windowsProfile.WindowsOffer = AksWindowsVhdOffer
+				windowsProfile.WindowsOffer = AKSWindowsServer2019OSImageConfig.ImageOffer
 			}
 			if windowsProfile.WindowsSku == "" {
-				windowsProfile.WindowsSku = AksWindowsVhdSku
+				windowsProfile.WindowsSku = AKSWindowsServer2019OSImageConfig.ImageSku
 			}
 
 			if windowsProfile.ImageVersion == "" {
 				// default versions are specific to a publisher/offer/sku
-				if windowsProfile.WindowsPublisher == AksWindowsVhdPublisher && windowsProfile.WindowsOffer == AksWindowsVhdOffer && windowsProfile.WindowsSku == AksWindowsVhdSku {
-					windowsProfile.ImageVersion = AksWindowsVhdVersion
-				} else if windowsProfile.WindowsPublisher == DefaultWindowsPublisher && windowsProfile.WindowsOffer == DefaultWindowsOffer && windowsProfile.WindowsSku == DefaultWindowsSku {
-					windowsProfile.ImageVersion = DefaultImageVersion
+				if windowsProfile.WindowsPublisher == AKSWindowsServer2019OSImageConfig.ImagePublisher && windowsProfile.WindowsOffer == AKSWindowsServer2019OSImageConfig.ImageOffer && windowsProfile.WindowsSku == AKSWindowsServer2019OSImageConfig.ImageSku {
+					windowsProfile.ImageVersion = AKSWindowsServer2019OSImageConfig.ImageVersion
+				} else if windowsProfile.WindowsPublisher == WindowsServer2019OSImageConfig.ImagePublisher && windowsProfile.WindowsOffer == WindowsServer2019OSImageConfig.ImageOffer && windowsProfile.WindowsSku == WindowsServer2019OSImageConfig.ImageSku {
+					windowsProfile.ImageVersion = WindowsServer2019OSImageConfig.ImageVersion
 				} else {
 					windowsProfile.ImageVersion = "latest"
 				}
