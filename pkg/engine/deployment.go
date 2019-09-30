@@ -8,7 +8,7 @@ import (
 	"github.com/Azure/go-autorest/autorest/to"
 )
 
-func createAzurestackTelemetry(azureTelemetryPID string) DeploymentARM {
+func createAzureStackTelemetry(azureTelemetryPID string) DeploymentARM {
 	properties := resources.DeploymentPropertiesExtended{
 		Mode: "Incremental",
 		Template: map[string]interface{}{

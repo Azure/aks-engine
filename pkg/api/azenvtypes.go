@@ -69,12 +69,12 @@ type AzureOSImageConfig struct {
 type AzureTelemetryPID string
 
 const (
-	// DefaultAzurestackDeployTelemetryPID tracking ID for Deployment
-	DefaultAzurestackDeployTelemetryPID = "pid-1bda96ec-adf4-4eea-bb9a-8462de5475c0"
-	// DefaultAzurestackScaleTelemetryPID tracking ID for Scale
-	DefaultAzurestackScaleTelemetryPID = "pid-bbbafa53-d6a7-4022-84a2-86fcbaec7030"
-	// DefaultAzurestackUpgradeTelemetryPID tracking ID for Upgrade
-	DefaultAzurestackUpgradeTelemetryPID = "pid-0d9b5198-7cd7-4252-a890-5658eaf874be"
+	// DefaultAzureStackDeployTelemetryPID tracking ID for Deployment
+	DefaultAzureStackDeployTelemetryPID = "pid-1bda96ec-adf4-4eea-bb9a-8462de5475c0"
+	// DefaultAzureStackScaleTelemetryPID tracking ID for Scale
+	DefaultAzureStackScaleTelemetryPID = "pid-bbbafa53-d6a7-4022-84a2-86fcbaec7030"
+	// DefaultAzureStackUpgradeTelemetryPID tracking ID for Upgrade
+	DefaultAzureStackUpgradeTelemetryPID = "pid-0d9b5198-7cd7-4252-a890-5658eaf874be"
 )
 
 var (

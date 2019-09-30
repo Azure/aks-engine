@@ -21,7 +21,7 @@ func GenerateARMResources(cs *api.ContainerService) []interface{} {
 
 	if deploymentTelemetryEnabled {
 		if isAzureStack {
-			deploymentResource := createAzurestackTelemetry(azureTelemetryPID)
+			deploymentResource := createAzureStackTelemetry(azureTelemetryPID)
 			armResources = append(armResources, deploymentResource)
 		}
 	}

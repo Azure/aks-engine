@@ -2131,7 +2131,7 @@ func TestSetCustomCloudProfileDefaults(t *testing.T) {
 	expectedEnv := AzureCloudSpecEnvMap[AzurePublicCloud]
 	expectedEnv.EndpointConfig.ResourceManagerVMDNSSuffix = mockCSPDefaultSpec.CustomCloudProfile.Environment.ResourceManagerVMDNSSuffix
 	expectedEnv.CloudName = AzureStackCloud
-	expectedEnv.KubernetesSpecConfig.AzureTelemetryPID = DefaultAzurestackDeployTelemetryPID
+	expectedEnv.KubernetesSpecConfig.AzureTelemetryPID = DefaultAzureStackDeployTelemetryPID
 	if diff := cmp.Diff(actualEnv, expectedEnv); diff != "" {
 		t.Errorf("setCustomCloudProfileDefaults(): did not set AzureStackCloudSpec as default when azureEnvironmentSpecConfig is empty in api model JSON file. %s", diff)
 	}
@@ -2159,7 +2159,7 @@ func TestSetCustomCloudProfileDefaults(t *testing.T) {
 		expectedEnvAzureChinaSpec := AzureCloudSpecEnvMap[value]
 		expectedEnvAzureChinaSpec.EndpointConfig.ResourceManagerVMDNSSuffix = mockCSPDefaultSpec.CustomCloudProfile.Environment.ResourceManagerVMDNSSuffix
 		expectedEnvAzureChinaSpec.CloudName = AzureStackCloud
-		expectedEnvAzureChinaSpec.KubernetesSpecConfig.AzureTelemetryPID = DefaultAzurestackDeployTelemetryPID
+		expectedEnvAzureChinaSpec.KubernetesSpecConfig.AzureTelemetryPID = DefaultAzureStackDeployTelemetryPID
 		t.Logf("verifying dependenciesLocation: %s", key)
 		if diff := cmp.Diff(actualEnvAzureChinaSpec, expectedEnvAzureChinaSpec); diff != "" {
 			t.Errorf("setCustomCloudProfileDefaults(): did not set AzureStackCloudSpec as default when connection Mode is %s in api model JSON file. %s", key, diff)
@@ -2464,7 +2464,7 @@ func TestSetCustomCloudProfileEnvironmentDefaults(t *testing.T) {
 
 	cloudSpec := AzureCloudSpecEnvMap[AzurePublicCloud]
 	cloudSpec.CloudName = AzureStackCloud
-	cloudSpec.KubernetesSpecConfig.AzureTelemetryPID = DefaultAzurestackDeployTelemetryPID
+	cloudSpec.KubernetesSpecConfig.AzureTelemetryPID = DefaultAzureStackDeployTelemetryPID
 	cloudSpec.EndpointConfig.ResourceManagerVMDNSSuffix = mockCS.Properties.CustomCloudProfile.Environment.ResourceManagerVMDNSSuffix
 	if diff := cmp.Diff(AzureCloudSpecEnvMap[AzureStackCloud], cloudSpec); diff != "" {
 		t.Errorf("Fail to compare, AzureCloudSpec AzureStackCloud %q", diff)
@@ -3236,7 +3236,7 @@ func TestEnableRBAC(t *testing.T) {
 }
 
 func TestDefaultTelemetry(t *testing.T) {
-	// Test that the AzureTelemetryPID is set to DefaultAzurestackDeployTelemetryPID  by default
+	// Test that the AzureTelemetryPID is set to DefaultAzureStackDeployTelemetryPID  by default
 	mockCSDefaultSpec := getMockBaseContainerService("1.11.6")
 	mockCSPDefaultSpec := GetMockPropertiesWithCustomCloudProfile("azurestackcloud", true, true, false)
 	mockCSDefaultSpec.Properties.CustomCloudProfile = mockCSPDefaultSpec.CustomCloudProfile
@@ -3250,12 +3250,12 @@ func TestDefaultTelemetry(t *testing.T) {
 	expectedEnv := AzureCloudSpecEnvMap[AzurePublicCloud]
 	expectedEnv.EndpointConfig.ResourceManagerVMDNSSuffix = mockCSPDefaultSpec.CustomCloudProfile.Environment.ResourceManagerVMDNSSuffix
 	expectedEnv.CloudName = AzureStackCloud
-	expectedEnv.KubernetesSpecConfig.AzureTelemetryPID = DefaultAzurestackDeployTelemetryPID
+	expectedEnv.KubernetesSpecConfig.AzureTelemetryPID = DefaultAzureStackDeployTelemetryPID
 	if diff := cmp.Diff(actualEnv, expectedEnv); diff != "" {
-		t.Errorf("setCustomCloudProfileDefaults(): did not set AzureTelemetryPID as DefaultAzurestackDeployTelemetryPID. %s", diff)
+		t.Errorf("setCustomCloudProfileDefaults(): did not set AzureTelemetryPID as DefaultAzureStackDeployTelemetryPID. %s", diff)
 	}
 
-	// Test that the AzureTelemetryPID is set to DefaultAzurestackScaleTelemetryPID by in Scale scenario
+	// Test that the AzureTelemetryPID is set to DefaultAzureStackScaleTelemetryPID by in Scale scenario
 	mockCSScaleSpec := getMockBaseContainerService("1.11.6")
 	mockCSPScaleSpec := GetMockPropertiesWithCustomCloudProfile("azurestackcloud", true, true, false)
 	mockCSScaleSpec.Properties.CustomCloudProfile = mockCSPScaleSpec.CustomCloudProfile
@@ -3269,12 +3269,12 @@ func TestDefaultTelemetry(t *testing.T) {
 	expectedScaleEnv := AzureCloudSpecEnvMap[AzurePublicCloud]
 	expectedScaleEnv.EndpointConfig.ResourceManagerVMDNSSuffix = mockCSPDefaultSpec.CustomCloudProfile.Environment.ResourceManagerVMDNSSuffix
 	expectedScaleEnv.CloudName = AzureStackCloud
-	expectedScaleEnv.KubernetesSpecConfig.AzureTelemetryPID = DefaultAzurestackScaleTelemetryPID
+	expectedScaleEnv.KubernetesSpecConfig.AzureTelemetryPID = DefaultAzureStackScaleTelemetryPID
 	if diff := cmp.Diff(actualScaleEnv, expectedScaleEnv); diff != "" {
-		t.Errorf("setCustomCloudProfileDefaults(): did not set AzureTelemetryPID as DefaultAzurestackDeployTelemetryPID. %s", diff)
+		t.Errorf("setCustomCloudProfileDefaults(): did not set AzureTelemetryPID as DefaultAzureStackDeployTelemetryPID. %s", diff)
 	}
 
-	// Test that the AzureTelemetryPID is set to DefaultAzurestackUpgradeTelemetryPID in Upgrade scenario
+	// Test that the AzureTelemetryPID is set to DefaultAzureStackUpgradeTelemetryPID in Upgrade scenario
 	mockCSSUpgradeSpec := getMockBaseContainerService("1.11.6")
 	mockCSPSUpgradeSpec := GetMockPropertiesWithCustomCloudProfile("azurestackcloud", true, true, false)
 	mockCSSUpgradeSpec.Properties.CustomCloudProfile = mockCSPSUpgradeSpec.CustomCloudProfile
@@ -3288,8 +3288,8 @@ func TestDefaultTelemetry(t *testing.T) {
 	expectedSUpgradeEnv := AzureCloudSpecEnvMap[AzurePublicCloud]
 	expectedSUpgradeEnv.EndpointConfig.ResourceManagerVMDNSSuffix = mockCSPDefaultSpec.CustomCloudProfile.Environment.ResourceManagerVMDNSSuffix
 	expectedSUpgradeEnv.CloudName = AzureStackCloud
-	expectedSUpgradeEnv.KubernetesSpecConfig.AzureTelemetryPID = DefaultAzurestackUpgradeTelemetryPID
+	expectedSUpgradeEnv.KubernetesSpecConfig.AzureTelemetryPID = DefaultAzureStackUpgradeTelemetryPID
 	if diff := cmp.Diff(actualSUpgradeEnv, expectedSUpgradeEnv); diff != "" {
-		t.Errorf("setCustomCloudProfileDefaults(): did not set AzureTelemetryPID as DefaultAzurestackUpgradeTelemetryPID. %s", diff)
+		t.Errorf("setCustomCloudProfileDefaults(): did not set AzureTelemetryPID as DefaultAzureStackUpgradeTelemetryPID. %s", diff)
 	}
 }
