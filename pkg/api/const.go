@@ -267,7 +267,6 @@ const (
 	MaxAzureStackManagedDiskSize = "1023"
 )
 
-
 const (
 	// AgentPoolProfileRoleEmpty is the empty role.  Deprecated; only used in
 	// aks-engine.
