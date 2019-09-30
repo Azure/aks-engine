@@ -157,13 +157,11 @@ func (uc *upgradeCmd) loadCluster() error {
 
 	if uc.containerService.Properties.IsAzureStackCloud() {
 		writeCustomCloudProfile(uc.containerService)
-		isUpgrade := true
-		isScale := false
 
-		if err := uc.containerService.Properties.SetAzureStackCloudSpec(AzureStackCloudSpecDefaultsParams{
+		if err := uc.containerService.Properties.SetAzureStackCloudSpec(api.AzureStackCloudSpecParams{
 			IsUpgrade: true,
 			IsScale:   false,
-		}){
+		}); err != nil {
 			return errors.Wrap(err, "error parsing the api model")
 		}
 	}

@@ -32,7 +32,7 @@ func (cs *ContainerService) setCustomCloudProfileDefaults(params CustomCloudProf
 		if err != nil {
 			return fmt.Errorf("Failed to set environment - %s", err)
 		}
-		err = p.SetAzureStackCloudSpec(AzureStackCloudSpecDefaultsParams(params))
+		err = p.SetAzureStackCloudSpec(AzureStackCloudSpecParams(params))
 		if err != nil {
 			return fmt.Errorf("Failed to set cloud spec - %s", err)
 		}
@@ -101,14 +101,14 @@ func (cs *ContainerService) SetCustomCloudProfileEnvironment() error {
 	return nil
 }
 
-// AzureStackCloudSpecDefaultsParams is the parameters when we set the azure stack cloud spec defaults for ContainerService.
-type AzureStackCloudSpecDefaultsParams struct {
+// AzureStackCloudSpecParams is the parameters when we set the azure stack cloud spec defaults for ContainerService.
+type AzureStackCloudSpecParams struct {
 	IsUpgrade bool
 	IsScale   bool
 }
 
 // SetAzureStackCloudSpec sets the cloud spec for Azure Stack .
-func (p *Properties) SetAzureStackCloudSpec(params AzureStackCloudSpecDefaultsParams) error {
+func (p *Properties) SetAzureStackCloudSpec(params AzureStackCloudSpecParams) error {
 	if p.IsAzureStackCloud() {
 		var azureStackCloudSpec AzureEnvironmentSpecConfig
 		switch p.CustomCloudProfile.DependenciesLocation {
