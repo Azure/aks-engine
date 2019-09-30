@@ -79,11 +79,11 @@ To update resources:
             "containers": [
                 {
                     "name": "keyvault-flexvolume",
-                    "image": "ritazh/kv-flexvol-installer:v0.0.3",
-                    "cpuRequests": "100m",
-                    "memoryRequests": "300Mi",
-                    "cpuLimits": "100m",
-                    "memoryLimits": "300Mi"
+                    "image": "mcr.microsoft.com/k8s/flexvolume/keyvault-flexvolume:v0.0.13",
+                    "cpuRequests": "50m",
+                    "memoryRequests": "100Mi",
+                    "cpuLimits": "50m",
+                    "memoryLimits": "100Mi"
                 }
             ]
           }

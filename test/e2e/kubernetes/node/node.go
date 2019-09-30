@@ -85,6 +85,26 @@ type List struct {
 	Nodes []Node `json:"items"`
 }
 
+// GetNodesResult is the result type for GetAllByPrefixAsync
+type GetNodesResult struct {
+	Nodes []Node
+	Err   error
+}
+
+// GetNodesAsync wraps Get with a struct response for goroutine + channel usage
+func GetNodesAsync() GetNodesResult {
+	list, err := Get()
+	if list == nil {
+		list = &List{
+			Nodes: []Node{},
+		}
+	}
+	return GetNodesResult{
+		Nodes: list.Nodes,
+		Err:   err,
+	}
+}
+
 // IsReady returns if the node is in a Ready state
 func (n *Node) IsReady() bool {
 	for _, condition := range n.Status.Conditions {
@@ -123,8 +143,54 @@ func (n *Node) HasSubstring(substrings []string) bool {
 	return false
 }
 
-// AreAllReady returns a bool depending on cluster state
-func AreAllReady(nodeCount int) bool {
+// Version returns the version of the kubelet on the node
+func (n *Node) Version() string {
+	return n.Status.NodeInfo.KubeletVersion
+}
+
+// DescribeNodes describes all nodes
+func DescribeNodes() {
+	list, err := Get()
+	if err != nil {
+		log.Printf("Unable to get nodes: %s", err)
+	}
+	if list != nil {
+		for _, node := range list.Nodes {
+			err := node.Describe()
+			if err != nil {
+				log.Printf("Unable to describe node %s: %s", node.Metadata.Name, err)
+			}
+		}
+	}
+}
+
+// Describe will describe a node resource
+func (n *Node) Describe() error {
+	var commandTimeout time.Duration
+	cmd := exec.Command("k", "describe", "node", n.Metadata.Name)
+	out, err := util.RunAndLogCommand(cmd, commandTimeout)
+	log.Printf("\n%s\n", string(out))
+	return err
+}
+
+// AreAllReady returns if all nodes are ready
+func AreAllReady() bool {
+	list, _ := Get()
+	if list != nil {
+		for _, node := range list.Nodes {
+			if !node.IsReady() {
+				return false
+			}
+		}
+	}
+	return true
+}
+
+// AreNNodesReady returns a bool depending on cluster state
+func AreNNodesReady(nodeCount int) bool {
+	if nodeCount == -1 {
+		return AreAllReady()
+	}
 	list, _ := Get()
 	var ready int
 	if list != nil && len(list.Nodes) == nodeCount {
@@ -143,30 +209,29 @@ func AreAllReady(nodeCount int) bool {
 }
 
 // WaitOnReady will block until all nodes are in ready state
-func WaitOnReady(nodeCount int, sleep, duration time.Duration) bool {
-	readyCh := make(chan bool, 1)
-	errCh := make(chan error)
-	ctx, cancel := context.WithTimeout(context.Background(), duration)
+func WaitOnReady(nodeCount int, sleep, timeout time.Duration) bool {
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
+	ch := make(chan bool)
 	go func() {
 		for {
 			select {
 			case <-ctx.Done():
-				errCh <- errors.Errorf("Timeout exceeded (%s) while waiting for Nodes to become ready", duration.String())
-			default:
-				if AreAllReady(nodeCount) {
-					readyCh <- true
-				}
+				return
+			case ch <- AreNNodesReady(nodeCount):
 				time.Sleep(sleep)
 			}
 		}
 	}()
 	for {
 		select {
-		case <-errCh:
+		case ready := <-ch:
+			if ready {
+				return ready
+			}
+		case <-ctx.Done():
+			DescribeNodes()
 			return false
-		case ready := <-readyCh:
-			return ready
 		}
 	}
 }
@@ -191,6 +256,39 @@ func Get() (*List, error) {
 	return &nl, nil
 }
 
+// GetWithRetry gets nodes, allowing for retries
+func GetWithRetry(sleep, timeout time.Duration) ([]Node, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+	ch := make(chan GetNodesResult)
+	var mostRecentGetWithRetryError error
+	var nodes []Node
+	go func() {
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case ch <- GetNodesAsync():
+				time.Sleep(sleep)
+			}
+		}
+	}()
+	for {
+		select {
+		case result := <-ch:
+			mostRecentGetWithRetryError = result.Err
+			nodes = result.Nodes
+			if mostRecentGetWithRetryError == nil {
+				if len(nodes) > 0 {
+					return nodes, nil
+				}
+			}
+		case <-ctx.Done():
+			return nil, errors.Errorf("GetWithRetry timed out: %s\n", mostRecentGetWithRetryError)
+		}
+	}
+}
+
 // GetReady returns the current nodes for a given kubeconfig
 func GetReady() (*List, error) {
 	l, err := Get()
@@ -208,28 +306,6 @@ func GetReady() (*List, error) {
 	return nl, nil
 }
 
-// Version get the version of the server
-func Version() (string, error) {
-	cmd := exec.Command("k", "version", "--short")
-	util.PrintCommand(cmd)
-	out, err := cmd.CombinedOutput()
-	if err != nil {
-		log.Printf("Error trying to run 'kubectl version':\n - %s", err)
-		if len(string(out)) > 0 {
-			log.Printf("\n - %s", string(out))
-		}
-		return "", err
-	}
-	split := strings.Split(string(out), "\n")
-	exp, err := regexp.Compile(ServerVersion)
-	if err != nil {
-		log.Printf("Error while compiling regexp:%s", ServerVersion)
-		log.Printf("Error:%s", err)
-	}
-	s := exp.FindStringSubmatch(split[1])
-	return s[2], nil
-}
-
 // GetAddressByType will return the Address object for a given Kubernetes node
 func (ns *Status) GetAddressByType(t string) *Address {
 	for _, a := range ns.NodeAddresses {
@@ -240,8 +316,8 @@ func (ns *Status) GetAddressByType(t string) *Address {
 	return nil
 }
 
-// GetByPrefix will return a []Node of all nodes that have a name that match the prefix
-func GetByPrefix(prefix string) ([]Node, error) {
+// GetByRegex will return a []Node of all nodes that have a name that match the regular expression
+func GetByRegex(regex string) ([]Node, error) {
 	list, err := Get()
 	if err != nil {
 		return nil, err
@@ -249,7 +325,7 @@ func GetByPrefix(prefix string) ([]Node, error) {
 
 	nodes := make([]Node, 0)
 	for _, n := range list.Nodes {
-		exp, err := regexp.Compile(prefix)
+		exp, err := regexp.Compile(regex)
 		if err != nil {
 			return nil, err
 		}

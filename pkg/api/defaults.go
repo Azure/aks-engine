@@ -26,8 +26,15 @@ import (
 // DistroValues is a list of currently supported distros
 var DistroValues = []Distro{"", Ubuntu, Ubuntu1804, RHEL, CoreOS, AKSUbuntu1604, AKSUbuntu1804, ACC1604}
 
+// PropertiesDefaultsParams is the parameters when we set the properties defaults for ContainerService.
+type PropertiesDefaultsParams struct {
+	IsUpgrade  bool
+	IsScale    bool
+	PkiKeySize int
+}
+
 // SetPropertiesDefaults for the container Properties, returns true if certs are generated
-func (cs *ContainerService) SetPropertiesDefaults(isUpgrade, isScale bool) (bool, error) {
+func (cs *ContainerService) SetPropertiesDefaults(params PropertiesDefaultsParams) (bool, error) {
 	properties := cs.Properties
 
 	// Set custom cloud profile defaults if this cluster configuration has custom cloud profile
@@ -38,20 +45,20 @@ func (cs *ContainerService) SetPropertiesDefaults(isUpgrade, isScale bool) (bool
 		}
 	}
 
-	cs.setOrchestratorDefaults(isUpgrade, isScale)
+	cs.setOrchestratorDefaults(params.IsUpgrade, params.IsScale)
 
 	cloudName := cs.GetCloudSpecConfig().CloudName
 
 	// Set master profile defaults if this cluster configuration includes master node(s)
 	if cs.Properties.MasterProfile != nil {
-		properties.setMasterProfileDefaults(isUpgrade, isScale, cloudName)
+		properties.setMasterProfileDefaults(params.IsUpgrade, params.IsScale, cloudName)
 	}
 	// Set VMSS Defaults for Masters
 	if cs.Properties.MasterProfile != nil && cs.Properties.MasterProfile.IsVirtualMachineScaleSets() {
 		properties.setVMSSDefaultsForMasters()
 	}
 
-	properties.setAgentProfileDefaults(isUpgrade, isScale, cloudName)
+	properties.setAgentProfileDefaults(params.IsUpgrade, params.IsScale, cloudName)
 
 	properties.setStorageDefaults()
 	properties.setExtensionDefaults()
@@ -66,10 +73,12 @@ func (cs *ContainerService) SetPropertiesDefaults(isUpgrade, isScale bool) (bool
 	}
 
 	if cs.Properties.WindowsProfile != nil {
-		properties.setWindowsProfileDefaults(isUpgrade, isScale)
+		properties.setWindowsProfileDefaults(params.IsUpgrade, params.IsScale)
 	}
 
-	certsGenerated, _, e := cs.SetDefaultCerts()
+	certsGenerated, _, e := cs.SetDefaultCerts(DefaultCertParams{
+		PkiKeySize: params.PkiKeySize,
+	})
 	if e != nil {
 		return false, e
 	}
@@ -283,6 +292,13 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpgrade, isScale bool) {
 			a.OrchestratorProfile.KubernetesConfig.EnableRbac = to.BoolPtr(DefaultRBACEnabled)
 		}
 
+		// Upgrade scenario:
+		// We need to force set EnableRbac to true for upgrades to 1.15.0 and greater if it was previously set to false (AKS Engine only)
+		if !a.OrchestratorProfile.KubernetesConfig.IsRBACEnabled() && common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.15.0") && isUpgrade && !cs.Properties.IsHostedMasterProfile() {
+			log.Warnf("RBAC will be enabled during upgrade to version %s\n", o.OrchestratorVersion)
+			a.OrchestratorProfile.KubernetesConfig.EnableRbac = to.BoolPtr(true)
+		}
+
 		if a.OrchestratorProfile.KubernetesConfig.IsRBACEnabled() {
 			if common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.9.0") {
 				// TODO make EnableAggregatedAPIs a pointer to bool so that a user can opt out of it
@@ -304,6 +320,12 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpgrade, isScale bool) {
 			} else {
 				a.OrchestratorProfile.KubernetesConfig.UseInstanceMetadata = to.BoolPtr(DefaultUseInstanceMetadata)
 			}
+		}
+
+		if strings.ToLower(a.OrchestratorProfile.KubernetesConfig.LoadBalancerSku) == strings.ToLower(BasicLoadBalancerSku) {
+			a.OrchestratorProfile.KubernetesConfig.LoadBalancerSku = BasicLoadBalancerSku
+		} else if strings.ToLower(a.OrchestratorProfile.KubernetesConfig.LoadBalancerSku) == strings.ToLower(StandardLoadBalancerSku) {
+			a.OrchestratorProfile.KubernetesConfig.LoadBalancerSku = StandardLoadBalancerSku
 		}
 
 		if !a.HasAvailabilityZones() && a.OrchestratorProfile.KubernetesConfig.LoadBalancerSku == "" {
@@ -741,8 +763,13 @@ func (p *Properties) setHostedMasterProfileDefaults() {
 	p.HostedMasterProfile.Subnet = DefaultKubernetesMasterSubnet
 }
 
+// DefaultCertParams is the params when we set the default certs.
+type DefaultCertParams struct {
+	PkiKeySize int
+}
+
 // SetDefaultCerts generates and sets defaults for the container certificateProfile, returns true if certs are generated
-func (cs *ContainerService) SetDefaultCerts() (bool, []net.IP, error) {
+func (cs *ContainerService) SetDefaultCerts(params DefaultCertParams) (bool, []net.IP, error) {
 	p := cs.Properties
 	if p.MasterProfile == nil || p.OrchestratorProfile.OrchestratorType != Kubernetes {
 		return false, nil, nil
@@ -801,10 +828,16 @@ func (cs *ContainerService) SetDefaultCerts() (bool, []net.IP, error) {
 		caPair = &helpers.PkiKeyCertPair{CertificatePem: p.CertificateProfile.CaCertificate, PrivateKeyPem: p.CertificateProfile.CaPrivateKey}
 	} else {
 		var err error
-		caPair, err = helpers.CreatePkiKeyCertPair("ca")
+		pkiKeyCertPairParams := helpers.PkiKeyCertPairParams{
+			CommonName: "ca",
+			PkiKeySize: params.PkiKeySize,
+		}
+
+		caPair, err = helpers.CreatePkiKeyCertPair(pkiKeyCertPairParams)
 		if err != nil {
 			return false, ips, err
 		}
+
 		p.CertificateProfile.CaCertificate = caPair.CertificatePem
 		p.CertificateProfile.CaPrivateKey = caPair.PrivateKeyPem
 	}
@@ -815,7 +848,15 @@ func (cs *ContainerService) SetDefaultCerts() (bool, []net.IP, error) {
 	}
 	ips = append(ips, cidrFirstIP)
 
-	apiServerPair, clientPair, kubeConfigPair, etcdServerPair, etcdClientPair, etcdPeerPairs, err := helpers.CreatePki(masterExtraFQDNs, ips, DefaultKubernetesClusterDomain, caPair, p.MasterProfile.Count)
+	pkiParams := helpers.PkiParams{}
+	pkiParams.CaPair = caPair
+	pkiParams.ClusterDomain = DefaultKubernetesClusterDomain
+	pkiParams.ExtraFQDNs = masterExtraFQDNs
+	pkiParams.ExtraIPs = ips
+	pkiParams.MasterCount = p.MasterProfile.Count
+	pkiParams.PkiKeySize = params.PkiKeySize
+	apiServerPair, clientPair, kubeConfigPair, etcdServerPair, etcdClientPair, etcdPeerPairs, err :=
+		helpers.CreatePki(pkiParams)
 	if err != nil {
 		return false, ips, err
 	}

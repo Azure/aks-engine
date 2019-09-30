@@ -31,7 +31,7 @@ Enable Managed Identity by adding `useManagedIdentity` in `kubernetesConfig`.
 
 <a name="feat-managed-disks"></a>
 
-## Optional: Disable Kubernetes Role-Based Access Control (RBAC)
+## Optional: Disable Kubernetes Role-Based Access Control (RBAC) (for clusters running Kubernetes versions before 1.15.0)
 
 By default, the cluster will be provisioned with [Role-Based Access Control](https://kubernetes.io/docs/admin/authorization/rbac/) enabled. Disable RBAC by adding `enableRbac` in `kubernetesConfig` in the api model:
 
@@ -40,6 +40,8 @@ By default, the cluster will be provisioned with [Role-Based Access Control](htt
         "enableRbac": false
       }
 ```
+
+To emphasize: RBAC support is required for all Kubernetes clusters >= 1.15.0
 
 See [cluster definitions](clusterdefinitions.md#kubernetesconfig) for further detail.
 

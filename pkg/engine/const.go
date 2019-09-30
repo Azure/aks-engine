@@ -114,6 +114,10 @@ const (
 	DefaultMasterEtcdClientPort = 2379
 	// etcdAccountNameFmt is the name format for a typical etcd account on Cosmos
 	etcdAccountNameFmt = "%sk8s"
+	// BasicLoadBalancerSku is the string const for Azure Basic Load Balancer
+	BasicLoadBalancerSku = "Basic"
+	// StandardLoadBalancerSku is the string const for Azure Standard Load Balancer
+	StandardLoadBalancerSku = "Standard"
 )
 
 const (
@@ -133,6 +137,8 @@ const (
 const (
 	// AzureStackSuffix is appended to kubernetes version on Azure Stack instances
 	AzureStackSuffix = "-azs"
+	// AzureStackPrefix is appended to windows binary version for Azure Stack instances
+	AzureStackPrefix = "azs-"
 )
 
 const (

@@ -44,17 +44,29 @@ func CreateMasterVM(cs *api.ContainerService) VirtualMachineARM {
 		DependsOn: dependencies,
 	}
 
+	vmTags := map[string]*string{
+		"creationSource":     to.StringPtr("[concat(parameters('generatorCode'), '-', variables('masterVMNamePrefix'), copyIndex(variables('masterOffset')))]"),
+		"resourceNameSuffix": to.StringPtr("[parameters('nameSuffix')]"),
+		"orchestrator":       to.StringPtr("[variables('orchestratorNameVersionTag')]"),
+		"aksEngineVersion":   to.StringPtr("[parameters('aksEngineVersion')]"),
+		"poolName":           to.StringPtr("master"),
+	}
+
+	if kubernetesConfig != nil && kubernetesConfig.IsContainerMonitoringAddonEnabled() {
+		addon := kubernetesConfig.GetAddonByName(ContainerMonitoringAddonName)
+		clusterDNSPrefix := "aks-engine-cluster"
+		if cs.Properties.MasterProfile != nil && cs.Properties.MasterProfile.DNSPrefix != "" {
+			clusterDNSPrefix = cs.Properties.MasterProfile.DNSPrefix
+		}
+		vmTags["logAnalyticsWorkspaceResourceId"] = to.StringPtr(addon.Config["logAnalyticsWorkspaceResourceId"])
+		vmTags["clusterName"] = to.StringPtr(clusterDNSPrefix)
+	}
+
 	virtualMachine := compute.VirtualMachine{
 		Location: to.StringPtr("[variables('location')]"),
 		Name:     to.StringPtr("[concat(variables('masterVMNamePrefix'), copyIndex(variables('masterOffset')))]"),
-		Tags: map[string]*string{
-			"creationSource":     to.StringPtr("[concat(parameters('generatorCode'), '-', variables('masterVMNamePrefix'), copyIndex(variables('masterOffset')))]"),
-			"resourceNameSuffix": to.StringPtr("[parameters('nameSuffix')]"),
-			"orchestrator":       to.StringPtr("[variables('orchestratorNameVersionTag')]"),
-			"aksEngineVersion":   to.StringPtr("[parameters('aksEngineVersion')]"),
-			"poolName":           to.StringPtr("master"),
-		},
-		Type: to.StringPtr("Microsoft.Compute/virtualMachines"),
+		Tags:     vmTags,
+		Type:     to.StringPtr("Microsoft.Compute/virtualMachines"),
 	}
 
 	addCustomTagsToVM(cs.Properties.MasterProfile.CustomVMTags, &virtualMachine)
@@ -330,6 +342,14 @@ func createAgentAvailabilitySetVM(cs *api.ContainerService, profile *api.AgentPo
 
 	dependencies = append(dependencies, fmt.Sprintf("[concat('Microsoft.Compute/availabilitySets/', variables('%[1]sAvailabilitySet'))]", profile.Name))
 
+	if profile.IsWindows() {
+		windowsProfile := cs.Properties.WindowsProfile
+		// Add dependency for Image resource created by createWindowsImage()
+		if windowsProfile.HasCustomImage() {
+			dependencies = append(dependencies, fmt.Sprintf("%sCustomWindowsImage", profile.Name))
+		}
+	}
+
 	tags := map[string]*string{
 		"creationSource":   to.StringPtr(fmt.Sprintf("[concat(parameters('generatorCode'), '-', variables('%[1]sVMNamePrefix'), copyIndex(variables('%[1]sOffset')))]", profile.Name)),
 		"orchestrator":     to.StringPtr("[variables('orchestratorNameVersionTag')]"),
@@ -459,23 +479,11 @@ func createAgentAvailabilitySetVM(cs *api.ContainerService, profile *api.AgentPo
 	storageProfile := compute.StorageProfile{}
 
 	if profile.IsWindows() {
-		if cs.Properties.WindowsProfile.HasCustomImage() {
-			storageProfile.ImageReference = &compute.ImageReference{
-				ID: to.StringPtr(fmt.Sprintf("[resourceId('Microsoft.Compute/images','%sCustomWindowsImage')]", profile.Name)),
-			}
-		} else {
-			storageProfile.ImageReference = &compute.ImageReference{
-				Offer:     to.StringPtr("[parameters('agentWindowsOffer')]"),
-				Publisher: to.StringPtr("[parameters('agentWindowsPublisher')]"),
-				Sku:       to.StringPtr("[parameters('agentWindowsSku')]"),
-				Version:   to.StringPtr("[parameters('agentWindowsVersion')]"),
-			}
-		}
+		storageProfile.ImageReference = createWindowsImageReference(profile.Name, cs.Properties.WindowsProfile)
 
 		if profile.HasDisks() {
 			storageProfile.DataDisks = getArmDataDisks(profile)
 		}
-
 	} else {
 		imageRef := profile.ImageRef
 		if profile.HasImageRef() {
@@ -589,7 +597,7 @@ func addCustomTagsToVM(tags map[string]string, vm *compute.VirtualMachine) {
 	for key, value := range tags {
 		_, found := vm.Tags[key]
 		if !found {
-			vm.Tags[key] = &value
+			vm.Tags[key] = to.StringPtr(value)
 		}
 	}
 }

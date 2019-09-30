@@ -393,8 +393,18 @@ func (t *Transformer) NormalizeResourcesForK8sMasterUpgrade(logger *logrus.Entry
 				continue
 			}
 
-			dataDisks := storageProfile[dataDisksFieldName].([]interface{})
-			dataDisk, _ := dataDisks[0].(map[string]interface{})
+			dataDisks, ok := storageProfile[dataDisksFieldName].([]interface{})
+			if !ok {
+				logger.Warnf("Template improperly formatted for field name: %s, property name: %s", storageProfileFieldName, dataDisksFieldName)
+				continue
+			}
+
+			dataDisk, ok := dataDisks[0].(map[string]interface{})
+			if !ok {
+				logger.Warnf("Template improperly formatted for field name: %s, there is no data disks defined", dataDisksFieldName)
+				continue
+			}
+
 			dataDisk[createOptionFieldName] = "attach"
 
 			if isMasterManagedDisk {

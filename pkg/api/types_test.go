@@ -1496,6 +1496,118 @@ func TestHasAvailabilityZones(t *testing.T) {
 	}
 }
 
+func TestHasLowPriorityScaleset(t *testing.T) {
+	cases := []struct {
+		p        Properties
+		expected bool
+	}{
+		{
+			p: Properties{
+				MasterProfile: &MasterProfile{
+					Count: 1,
+				},
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						AvailabilityProfile: VirtualMachineScaleSets,
+						ScaleSetPriority:    ScaleSetPriorityLow,
+					},
+				},
+			},
+			expected: true,
+		},
+		{
+			p: Properties{
+				MasterProfile: &MasterProfile{
+					Count: 1,
+				},
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						AvailabilityProfile: VirtualMachineScaleSets,
+						ScaleSetPriority:    ScaleSetPriorityLow,
+					},
+					{
+						AvailabilityProfile: VirtualMachineScaleSets,
+					},
+				},
+			},
+			expected: true,
+		},
+		{
+			p: Properties{
+				MasterProfile: &MasterProfile{
+					Count: 1,
+				},
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						AvailabilityProfile: VirtualMachineScaleSets,
+						ScaleSetPriority:    ScaleSetPriorityLow,
+					},
+					{
+						AvailabilityProfile: AvailabilitySet,
+					},
+				},
+			},
+			expected: true,
+		},
+		{
+			p: Properties{
+				MasterProfile: &MasterProfile{
+					Count: 1,
+				},
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						AvailabilityProfile: VirtualMachineScaleSets,
+					},
+				},
+			},
+			expected: false,
+		},
+		{
+			p: Properties{
+				MasterProfile: &MasterProfile{
+					Count: 1,
+				},
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						AvailabilityProfile: VirtualMachineScaleSets,
+					},
+					{
+						AvailabilityProfile: AvailabilitySet,
+					},
+				},
+			},
+			expected: false,
+		},
+		{
+			p: Properties{
+				MasterProfile: &MasterProfile{
+					Count: 1,
+				},
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						AvailabilityProfile: AvailabilitySet,
+					},
+				},
+			},
+			expected: false,
+		},
+		{
+			p: Properties{
+				MasterProfile: &MasterProfile{
+					Count: 1,
+				},
+			},
+			expected: false,
+		},
+	}
+
+	for _, c := range cases {
+		if c.p.HasLowPriorityScaleset() != c.expected {
+			t.Fatalf("expected HasLowPriorityScaleset() to return %t but instead returned %t", c.expected, c.p.HasLowPriorityScaleset())
+		}
+	}
+}
+
 func TestMasterIsUbuntu(t *testing.T) {
 	cases := []struct {
 		p        Properties
@@ -2950,6 +3062,77 @@ func TestWindowsProfile(t *testing.T) {
 	}
 }
 
+func TestWindowsProfileCustomOS(t *testing.T) {
+	cases := []struct {
+		name            string
+		w               WindowsProfile
+		expectedRef     bool
+		expectedGallery bool
+		expectedURL     bool
+	}{
+		{
+			name: "valid shared gallery image",
+			w: WindowsProfile{
+				ImageRef: &ImageReference{
+					Name:           "test",
+					ResourceGroup:  "testRG",
+					SubscriptionID: "testSub",
+					Gallery:        "testGallery",
+					Version:        "0.1.0",
+				},
+			},
+			expectedRef:     true,
+			expectedGallery: true,
+			expectedURL:     false,
+		},
+		{
+			name: "valid non-shared image",
+			w: WindowsProfile{
+				ImageRef: &ImageReference{
+					Name:          "test",
+					ResourceGroup: "testRG",
+				},
+			},
+			expectedRef:     true,
+			expectedGallery: false,
+			expectedURL:     false,
+		},
+		{
+			name: "valid image URL",
+			w: WindowsProfile{
+				WindowsImageSourceURL: "https://some/image.vhd",
+			},
+			expectedRef:     false,
+			expectedGallery: false,
+			expectedURL:     true,
+		},
+		{
+			name:            "valid no custom image",
+			w:               WindowsProfile{},
+			expectedRef:     false,
+			expectedGallery: false,
+			expectedURL:     false,
+		},
+	}
+
+	for _, c := range cases {
+		c := c
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+
+			if c.w.HasCustomImage() != c.expectedURL {
+				t.Errorf("expected HasCustomImage() to return %t but instead returned %t", c.expectedURL, c.w.HasCustomImage())
+			}
+			if c.w.HasImageRef() != c.expectedRef {
+				t.Errorf("expected HasImageRef() to return %t but instead returned %t", c.expectedRef, c.w.HasImageRef())
+			}
+			if c.w.HasImageGallery() != c.expectedGallery {
+				t.Errorf("expected HasImageGallery() to return %t but instead returned %t", c.expectedGallery, c.w.HasImageGallery())
+			}
+		})
+	}
+}
+
 func TestLinuxProfile(t *testing.T) {
 	l := LinuxProfile{}
 
@@ -3176,6 +3359,122 @@ func TestIsClusterAutoscalerEnabled(t *testing.T) {
 	enabled = c.IsClusterAutoscalerEnabled()
 	if enabled {
 		t.Fatalf("KubernetesConfig.IsClusterAutoscalerEnabled() should return false when cluster autoscaler addon has been specified as disabled, instead returned %t", enabled)
+	}
+}
+
+func TestIsContainerMonitoringEnabled(t *testing.T) {
+	// Default case
+	c := KubernetesConfig{
+		Addons: []KubernetesAddon{
+			getMockAddon("addon"),
+		},
+	}
+	enabled := c.IsContainerMonitoringAddonEnabled()
+	if enabled {
+		t.Fatalf("KubernetesConfig.IsContainerMonitoringAddonEnabled() should return %t when no container monitoring addon has been specified, instead returned %t", false, enabled)
+	}
+	// Addon present, but enabled not specified
+	c.Addons = append(c.Addons, getMockAddon(ContainerMonitoringAddonName))
+	enabled = c.IsContainerMonitoringAddonEnabled()
+	if enabled {
+		t.Fatalf("KubernetesConfig.IsContainerMonitoringAddonEnabled() should return false when container monitoring addon has been specified w/ no enabled value, instead returned %t", enabled)
+	}
+	// Addon present and enabled with config
+	b := true
+	c = KubernetesConfig{
+		Addons: []KubernetesAddon{
+			{
+				Name:    ContainerMonitoringAddonName,
+				Enabled: &b,
+			},
+		},
+	}
+	enabled = c.IsContainerMonitoringAddonEnabled()
+	if !enabled {
+		t.Fatalf("KubernetesConfig.IsContainerMonitoringAddonEnabled() should return true when container monitoring addon has been specified as enabled, instead returned %t", enabled)
+	}
+	// Addon present and disabled
+	b = false
+	c = KubernetesConfig{
+		Addons: []KubernetesAddon{
+			{
+				Name:    ContainerMonitoringAddonName,
+				Enabled: &b,
+			},
+		},
+	}
+	enabled = c.IsContainerMonitoringAddonEnabled()
+	if enabled {
+		t.Fatalf("KubernetesConfig.IsContainerMonitoringAddonEnabled() should return false when container monitoring addon has been specified as disabled, instead returned %t", enabled)
+	}
+
+	// Addon present and enabled with logAnalyticsWorkspaceResourceId in config
+	b = true
+	c = KubernetesConfig{
+		Addons: []KubernetesAddon{
+			{
+				Name:    ContainerMonitoringAddonName,
+				Enabled: &b,
+				Config: map[string]string{
+					"logAnalyticsWorkspaceResourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/test-workspace-rg/providers/Microsoft.OperationalInsights/workspaces/test-workspace",
+				},
+			},
+		},
+	}
+	enabled = c.IsContainerMonitoringAddonEnabled()
+	if !enabled {
+		t.Fatalf("KubernetesConfig.IsContainerMonitoringAddonEnabled() should return true when container monitoring addon has been specified as enabled, instead returned %t", enabled)
+	}
+
+	addon := c.GetAddonByName(ContainerMonitoringAddonName)
+	if addon.Config == nil || len(addon.Config) == 0 {
+		t.Fatalf("KubernetesConfig.IsContainerMonitoringAddonEnabled() should have addon config instead returned null or empty")
+	}
+
+	if addon.Config["logAnalyticsWorkspaceResourceId"] == "" {
+		t.Fatalf("KubernetesConfig.IsContainerMonitoringAddonEnabled() should have addon config with logAnalyticsWorkspaceResourceId, instead returned null or empty")
+	}
+
+	workspaceResourceID := addon.Config["logAnalyticsWorkspaceResourceId"]
+	if workspaceResourceID == "" {
+		t.Fatalf("KubernetesConfig.IsContainerMonitoringAddonEnabled() should have addon config with non empty azure logAnalyticsWorkspaceResourceId")
+	}
+
+	resourceParts := strings.Split(workspaceResourceID, "/")
+	if len(resourceParts) != 9 {
+		t.Fatalf("KubernetesConfig.IsContainerMonitoringAddonEnabled() should have addon config with valid Azure logAnalyticsWorkspaceResourceId, instead returned %s", workspaceResourceID)
+	}
+
+	// Addon present and enabled with legacy config
+	b = true
+	c = KubernetesConfig{
+		Addons: []KubernetesAddon{
+			{
+				Name:    ContainerMonitoringAddonName,
+				Enabled: &b,
+				Config: map[string]string{
+					"workspaceGuid": "MDAwMDAwMDAtMDAwMC0wMDAwLTAwMDAtMDAwMDAwMDAwMDAw",
+					"workspaceKey":  "NEQrdnlkNS9qU2NCbXNBd1pPRi8wR09CUTVrdUZRYzlKVmFXK0hsbko1OGN5ZVBKY3dUcGtzK3JWbXZnY1hHbW15dWpMRE5FVlBpVDhwQjI3NGE5WWc9PQ==",
+				},
+			},
+		},
+	}
+	enabled = c.IsContainerMonitoringAddonEnabled()
+	if !enabled {
+		t.Fatalf("KubernetesConfig.IsContainerMonitoringAddonEnabled() should return true when container monitoring addon has been specified as enabled, instead returned %t", enabled)
+	}
+
+	addon = c.GetAddonByName(ContainerMonitoringAddonName)
+	if addon.Config == nil || len(addon.Config) == 0 {
+		t.Fatalf("KubernetesConfig.IsContainerMonitoringAddonEnabled() should have addon config instead returned null or empty")
+	}
+
+	if addon.Config["workspaceGuid"] == "" {
+		t.Fatalf("KubernetesConfig.IsContainerMonitoringAddonEnabled() should have addon config with non empty workspaceGuid")
+	}
+
+	if addon.Config["workspaceKey"] == "" {
+		t.Fatalf("KubernetesConfig.IsContainerMonitoringAddonEnabled() should have addon config with non empty workspaceKey")
 	}
 }
 
@@ -4852,17 +5151,23 @@ func TestFormatAzureProdFQDN(t *testing.T) {
 		"santest.eastus2euap.cloudapp.azure.com",
 		"santest.francecentral.cloudapp.azure.com",
 		"santest.francesouth.cloudapp.azure.com",
+		"santest.germanynorth.cloudapp.azure.com",
+		"santest.germanywestcentral.cloudapp.azure.com",
 		"santest.japaneast.cloudapp.azure.com",
 		"santest.japanwest.cloudapp.azure.com",
 		"santest.koreacentral.cloudapp.azure.com",
 		"santest.koreasouth.cloudapp.azure.com",
 		"santest.northcentralus.cloudapp.azure.com",
 		"santest.northeurope.cloudapp.azure.com",
+		"santest.norwayeast.cloudapp.azure.com",
+		"santest.norwaywest.cloudapp.azure.com",
 		"santest.southafricanorth.cloudapp.azure.com",
 		"santest.southafricawest.cloudapp.azure.com",
 		"santest.southcentralus.cloudapp.azure.com",
 		"santest.southeastasia.cloudapp.azure.com",
 		"santest.southindia.cloudapp.azure.com",
+		"santest.switzerlandnorth.cloudapp.azure.com",
+		"santest.switzerlandwest.cloudapp.azure.com",
 		"santest.uaecentral.cloudapp.azure.com",
 		"santest.uaenorth.cloudapp.azure.com",
 		"santest.uksouth.cloudapp.azure.com",
@@ -4924,17 +5229,23 @@ func TestFormatProdFQDNByLocation(t *testing.T) {
 		"santest.eastus2euap.cloudapp.azure.com",
 		"santest.francecentral.cloudapp.azure.com",
 		"santest.francesouth.cloudapp.azure.com",
+		"santest.germanynorth.cloudapp.azure.com",
+		"santest.germanywestcentral.cloudapp.azure.com",
 		"santest.japaneast.cloudapp.azure.com",
 		"santest.japanwest.cloudapp.azure.com",
 		"santest.koreacentral.cloudapp.azure.com",
 		"santest.koreasouth.cloudapp.azure.com",
 		"santest.northcentralus.cloudapp.azure.com",
 		"santest.northeurope.cloudapp.azure.com",
+		"santest.norwayeast.cloudapp.azure.com",
+		"santest.norwaywest.cloudapp.azure.com",
 		"santest.southafricanorth.cloudapp.azure.com",
 		"santest.southafricawest.cloudapp.azure.com",
 		"santest.southcentralus.cloudapp.azure.com",
 		"santest.southeastasia.cloudapp.azure.com",
 		"santest.southindia.cloudapp.azure.com",
+		"santest.switzerlandnorth.cloudapp.azure.com",
+		"santest.switzerlandwest.cloudapp.azure.com",
 		"santest.uaecentral.cloudapp.azure.com",
 		"santest.uaenorth.cloudapp.azure.com",
 		"santest.uksouth.cloudapp.azure.com",
@@ -4969,7 +5280,11 @@ func TestFormatProdFQDNByLocation(t *testing.T) {
 	mockCSDefaultSpec.Properties.CustomCloudProfile = mockCSPDefaultSpec.CustomCloudProfile
 	mockCSDefaultSpec.Location = "randomlocation"
 	mockCSDefaultSpec.Properties.MasterProfile.DNSPrefix = "azurestackprefix"
-	mockCSDefaultSpec.SetPropertiesDefaults(false, false)
+	mockCSDefaultSpec.SetPropertiesDefaults(PropertiesDefaultsParams{
+		IsScale:    false,
+		IsUpgrade:  false,
+		PkiKeySize: helpers.DefaultPkiKeySize,
+	})
 	var actualResult []string
 	for _, location := range mockCSDefaultSpec.GetLocations() {
 		actualResult = append(actualResult, FormatProdFQDNByLocation("azurestackprefix", location, mockCSDefaultSpec.Properties.GetCustomCloudName()))
@@ -5089,6 +5404,12 @@ func TestIsFeatureEnabled(t *testing.T) {
 		{
 			name:     "empty flags",
 			feature:  "BlockOutboundInternet",
+			flags:    &FeatureFlags{},
+			expected: false,
+		},
+		{
+			name:     "telemetry",
+			feature:  "EnableTelemetry",
 			flags:    &FeatureFlags{},
 			expected: false,
 		},
@@ -5289,7 +5610,7 @@ func TestGetCustomCloudName(t *testing.T) {
 }
 
 func TestGetCustomEnvironmentJSON(t *testing.T) {
-	expectedResult := `{"name":"azurestackcloud","managementPortalURL":"https://management.local.azurestack.external/","publishSettingsURL":"https://management.local.azurestack.external/publishsettings/index","serviceManagementEndpoint":"https://management.azurestackci15.onmicrosoft.com/36f71706-54df-4305-9847-5b038a4cf189","resourceManagerEndpoint":"https://management.local.azurestack.external/","activeDirectoryEndpoint":"https://login.windows.net/","galleryEndpoint":"https://portal.local.azurestack.external=30015/","keyVaultEndpoint":"https://vault.azurestack.external/","graphEndpoint":"https://graph.windows.net/","serviceBusEndpoint":"https://servicebus.azurestack.external/","batchManagementEndpoint":"https://batch.azurestack.external/","storageEndpointSuffix":"core.azurestack.external","sqlDatabaseDNSSuffix":"database.azurestack.external","trafficManagerDNSSuffix":"trafficmanager.cn","keyVaultDNSSuffix":"vault.azurestack.external","serviceBusEndpointSuffix":"servicebus.azurestack.external","serviceManagementVMDNSSuffix":"chinacloudapp.cn","resourceManagerVMDNSSuffix":"cloudapp.azurestack.external","containerRegistryDNSSuffix":"azurecr.io","cosmosDBDNSSuffix":"","tokenAudience":"https://management.azurestack.external/","resourceIdentifiers":{"graph":"","keyVault":"","datalake":"","batch":"","operationalInsights":""}}`
+	expectedResult := `{"name":"azurestackcloud","managementPortalURL":"https://management.local.azurestack.external/","publishSettingsURL":"https://management.local.azurestack.external/publishsettings/index","serviceManagementEndpoint":"https://management.azurestackci15.onmicrosoft.com/36f71706-54df-4305-9847-5b038a4cf189","resourceManagerEndpoint":"https://management.local.azurestack.external/","activeDirectoryEndpoint":"https://login.windows.net/","galleryEndpoint":"https://portal.local.azurestack.external=30015/","keyVaultEndpoint":"https://vault.azurestack.external/","graphEndpoint":"https://graph.windows.net/","serviceBusEndpoint":"https://servicebus.azurestack.external/","batchManagementEndpoint":"https://batch.azurestack.external/","storageEndpointSuffix":"core.azurestack.external","sqlDatabaseDNSSuffix":"database.azurestack.external","trafficManagerDNSSuffix":"trafficmanager.cn","keyVaultDNSSuffix":"vault.azurestack.external","serviceBusEndpointSuffix":"servicebus.azurestack.external","serviceManagementVMDNSSuffix":"chinacloudapp.cn","resourceManagerVMDNSSuffix":"cloudapp.azurestack.external","containerRegistryDNSSuffix":"azurecr.io","cosmosDBDNSSuffix":"","tokenAudience":"https://management.azurestack.external/","resourceIdentifiers":{"graph":"","keyVault":"","datalake":"","batch":"","operationalInsights":"","storage":""}}`
 	testcases := []struct {
 		name       string
 		properties Properties
@@ -5359,17 +5680,23 @@ func TestGetLocations(t *testing.T) {
 		"eastus2euap",
 		"francecentral",
 		"francesouth",
+		"germanynorth",
+		"germanywestcentral",
 		"japaneast",
 		"japanwest",
 		"koreacentral",
 		"koreasouth",
 		"northcentralus",
 		"northeurope",
+		"norwayeast",
+		"norwaywest",
 		"southafricanorth",
 		"southafricawest",
 		"southcentralus",
 		"southeastasia",
 		"southindia",
+		"switzerlandnorth",
+		"switzerlandwest",
 		"uaecentral",
 		"uaenorth",
 		"uksouth",
@@ -5996,6 +6323,126 @@ func TestHasContainerd(t *testing.T) {
 			ret := test.k.NeedsContainerd()
 			if test.expected != ret {
 				t.Errorf("expected %t, instead got : %t", test.expected, ret)
+			}
+		})
+	}
+}
+
+func TestGetNonMasqueradeCIDR(t *testing.T) {
+	tests := []struct {
+		name     string
+		p        *Properties
+		expected string
+	}{
+		{
+			name: "single cluster cidr, no dualstack",
+			p: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					KubernetesConfig: &KubernetesConfig{
+						ClusterSubnet: "10.244.0.0/16",
+					},
+				},
+				FeatureFlags: &FeatureFlags{},
+			},
+			expected: "10.244.0.0/16",
+		},
+		{
+			name: "two cluster cidr v4v6, dualstack",
+			p: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					KubernetesConfig: &KubernetesConfig{
+						ClusterSubnet: "10.244.0.0/16,fd00:101::/8",
+					},
+				},
+				FeatureFlags: &FeatureFlags{
+					EnableIPv6DualStack: true,
+				},
+			},
+			expected: "10.244.0.0/16",
+		},
+		{
+			name: "two cluster cidr v6v4, dualstack",
+			p: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					KubernetesConfig: &KubernetesConfig{
+						ClusterSubnet: "fd00:101::/8,10.244.0.0/16",
+					},
+				},
+				FeatureFlags: &FeatureFlags{
+					EnableIPv6DualStack: true,
+				},
+			},
+			expected: "fd00::/8",
+		},
+	}
+
+	for _, test := range tests {
+		test := test
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+			ret := test.p.GetNonMasqueradeCIDR()
+			if test.expected != ret {
+				t.Errorf("expected %s, instead got : %s", test.expected, ret)
+			}
+		})
+	}
+}
+
+func TestGetSecondaryNonMasqueradeCIDR(t *testing.T) {
+	tests := []struct {
+		name     string
+		p        *Properties
+		expected string
+	}{
+		{
+			name: "single cluster cidr, no dualstack",
+			p: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					KubernetesConfig: &KubernetesConfig{
+						ClusterSubnet: "10.244.0.0/16",
+					},
+				},
+				FeatureFlags: &FeatureFlags{},
+			},
+			expected: "",
+		},
+		{
+			name: "two cluster cidr v4v6, dualstack",
+			p: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					KubernetesConfig: &KubernetesConfig{
+						ClusterSubnet: "10.244.0.0/16,fd00:101::/8",
+					},
+				},
+				FeatureFlags: &FeatureFlags{
+					EnableIPv6DualStack: true,
+				},
+			},
+			expected: "fd00::/8",
+		},
+		{
+			name: "two cluster cidr v6v4, dualstack",
+			p: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					KubernetesConfig: &KubernetesConfig{
+						ClusterSubnet: "fd00:101::/8,10.244.0.0/16",
+					},
+				},
+				FeatureFlags: &FeatureFlags{
+					EnableIPv6DualStack: true,
+				},
+			},
+			expected: "10.244.0.0/16",
+		},
+	}
+
+	for _, test := range tests {
+		test := test
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+			ret := test.p.GetSecondaryNonMasqueradeCIDR()
+			if test.expected != ret {
+				t.Errorf("expected %s, instead got : %s", test.expected, ret)
 			}
 		})
 	}

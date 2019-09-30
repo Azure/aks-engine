@@ -8,15 +8,23 @@ Install-OpenSSH {
     $adminpath = "c:\ProgramData\ssh"
     $adminfile = "administrators_authorized_keys"
 
-    Write-Host "Installing OpenSSH"
-    $isAvailable = Get-WindowsCapability -Online | ? Name -like 'OpenSSH*'
+    $sshdService = Get-Service | ? Name -like 'sshd'
+    if ($sshdService.Count -eq 0)
+    {
+        Write-Host "Installing OpenSSH"
+        $isAvailable = Get-WindowsCapability -Online | ? Name -like 'OpenSSH*'
 
-    if (!$isAvailable) {
-        Write-Error "OpenSSH is not avaliable on this machine"
-        exit 1
+        if (!$isAvailable) {
+            Write-Error "OpenSSH is not available on this machine"
+            exit 1
+        }
+
+        Add-WindowsCapability -Online -Name OpenSSH.Server~~~~0.0.1.0
     }
-
-    Add-WindowsCapability -Online -Name OpenSSH.Server~~~~0.0.1.0
+    else
+    {
+        Write-Host "OpenSSH Server service detected - skipping online install..."
+    }
 
     Start-Service sshd
 

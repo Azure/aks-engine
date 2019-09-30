@@ -94,7 +94,7 @@ func (cs *ContainerService) setKubeletConfig(isUpgrade bool) {
 		"--pod-max-pids":                      strconv.Itoa(DefaultKubeletPodMaxPIDs),
 		"--image-pull-progress-deadline":      "30m",
 		"--enforce-node-allocatable":          "pods",
-		"--streaming-connection-idle-timeout": "5m",
+		"--streaming-connection-idle-timeout": "4h",
 	}
 
 	// Set --non-masquerade-cidr if ip-masq-agent is disabled on AKS
@@ -115,6 +115,14 @@ func (cs *ContainerService) setKubeletConfig(isUpgrade bool) {
 	// Disable Weak TLS Cipher Suites for 1.10 and above
 	if common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.10.0") {
 		defaultKubeletConfig["--tls-cipher-suites"] = TLSStrongCipherSuitesKubelet
+	}
+
+	if common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.16.0") {
+		// for enabling metrics-server v0.3.0+
+		defaultKubeletConfig["--authentication-token-webhook"] = "true"
+		if !cs.Properties.IsHostedMasterProfile() { // Skip for AKS until it supports metrics-server v0.3
+			defaultKubeletConfig["--read-only-port"] = "0" // we only have metrics-server v0.3 support in 1.16.0 and above
+		}
 	}
 
 	// If no user-configurable kubelet config values exists, use the defaults

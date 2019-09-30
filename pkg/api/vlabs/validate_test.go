@@ -60,7 +60,7 @@ func Test_OrchestratorProfile_Validate(t *testing.T) {
 					},
 				},
 			},
-			expectedError: "Invalid etcd version \"1.0.0\", please use one of the following versions: [2.2.5 2.3.0 2.3.1 2.3.2 2.3.3 2.3.4 2.3.5 2.3.6 2.3.7 2.3.8 3.0.0 3.0.1 3.0.2 3.0.3 3.0.4 3.0.5 3.0.6 3.0.7 3.0.8 3.0.9 3.0.10 3.0.11 3.0.12 3.0.13 3.0.14 3.0.15 3.0.16 3.0.17 3.1.0 3.1.1 3.1.2 3.1.2 3.1.3 3.1.4 3.1.5 3.1.6 3.1.7 3.1.8 3.1.9 3.1.10 3.2.0 3.2.1 3.2.2 3.2.3 3.2.4 3.2.5 3.2.6 3.2.7 3.2.8 3.2.9 3.2.11 3.2.12 3.2.13 3.2.14 3.2.15 3.2.16 3.2.23 3.2.24 3.2.25 3.2.26 3.3.0 3.3.1 3.3.8 3.3.9 3.3.10 3.3.13]",
+			expectedError: "Invalid etcd version \"1.0.0\", please use one of the following versions: [2.2.5 2.3.0 2.3.1 2.3.2 2.3.3 2.3.4 2.3.5 2.3.6 2.3.7 2.3.8 3.0.0 3.0.1 3.0.2 3.0.3 3.0.4 3.0.5 3.0.6 3.0.7 3.0.8 3.0.9 3.0.10 3.0.11 3.0.12 3.0.13 3.0.14 3.0.15 3.0.16 3.0.17 3.1.0 3.1.1 3.1.2 3.1.2 3.1.3 3.1.4 3.1.5 3.1.6 3.1.7 3.1.8 3.1.9 3.1.10 3.2.0 3.2.1 3.2.2 3.2.3 3.2.4 3.2.5 3.2.6 3.2.7 3.2.8 3.2.9 3.2.11 3.2.12 3.2.13 3.2.14 3.2.15 3.2.16 3.2.23 3.2.24 3.2.25 3.2.26 3.3.0 3.3.1 3.3.8 3.3.9 3.3.10 3.3.13 3.3.15]",
 		},
 		"should error when KubernetesConfig has invalid containerd version for containerd runtime": {
 			properties: &Properties{
@@ -133,6 +133,18 @@ func Test_OrchestratorProfile_Validate(t *testing.T) {
 				},
 			},
 			expectedError: "enableAggregatedAPIs requires the enableRbac feature as a prerequisite",
+		},
+		"should error when KubernetesConfig has enableRBAC disabled for >= 1.15": {
+			properties: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					OrchestratorType:    "Kubernetes",
+					OrchestratorVersion: common.GetLatestPatchVersion("1.15", common.GetAllSupportedKubernetesVersions(false, false)),
+					KubernetesConfig: &KubernetesConfig{
+						EnableRbac: &falseVal,
+					},
+				},
+			},
+			expectedError: fmt.Sprintf("RBAC support is required for Kubernetes version 1.15.0 or greater; unable to build Kubernetes v%s cluster with enableRbac=false", common.GetLatestPatchVersion("1.15", common.GetAllSupportedKubernetesVersions(false, false))),
 		},
 		"should error when KubernetesConfig has enableDataEncryptionAtRest enabled with invalid version": {
 			properties: &Properties{
@@ -2044,7 +2056,7 @@ func TestProperties_ValidateZones(t *testing.T) {
 		{
 			name:                "all zones and basic loadbalancer",
 			orchestratorRelease: "1.12",
-			loadBalancerSku:     "Basic",
+			loadBalancerSku:     BasicLoadBalancerSku,
 			masterProfile: &MasterProfile{
 				Count:               5,
 				DNSPrefix:           "foo",
@@ -2108,6 +2120,112 @@ func TestProperties_ValidateZones(t *testing.T) {
 				}
 			} else {
 				t.Errorf("error should have occurred")
+			}
+		})
+	}
+}
+
+func TestProperties_ValidateLoadBalancer(t *testing.T) {
+	tests := []struct {
+		name                string
+		orchestratorRelease string
+		loadBalancerSku     string
+		masterProfile       *MasterProfile
+		agentProfiles       []*AgentPoolProfile
+		expectedErr         bool
+		expectedErrStr      string
+	}{
+		{
+			name:                "lowercase basic LB",
+			orchestratorRelease: "1.12",
+			loadBalancerSku:     "basic",
+			masterProfile: &MasterProfile{
+				Count:               3,
+				DNSPrefix:           "foo",
+				VMSize:              "Standard_DS2_v2",
+				AvailabilityProfile: VirtualMachineScaleSets,
+			},
+		},
+		{
+			name:                "Basic LB",
+			orchestratorRelease: "1.12",
+			loadBalancerSku:     BasicLoadBalancerSku,
+			masterProfile: &MasterProfile{
+				Count:               3,
+				DNSPrefix:           "foo",
+				VMSize:              "Standard_DS2_v2",
+				AvailabilityProfile: VirtualMachineScaleSets,
+			},
+		},
+		{
+			name:                "lowercase standard LB",
+			orchestratorRelease: "1.12",
+			loadBalancerSku:     "standard",
+			masterProfile: &MasterProfile{
+				Count:               3,
+				DNSPrefix:           "foo",
+				VMSize:              "Standard_DS2_v2",
+				AvailabilityProfile: VirtualMachineScaleSets,
+			},
+		},
+		{
+			name:                "Standard LB",
+			orchestratorRelease: "1.12",
+			loadBalancerSku:     StandardLoadBalancerSku,
+			masterProfile: &MasterProfile{
+				Count:               3,
+				DNSPrefix:           "foo",
+				VMSize:              "Standard_DS2_v2",
+				AvailabilityProfile: VirtualMachineScaleSets,
+			},
+		},
+		{
+			name:                "empty string LB value",
+			orchestratorRelease: "1.12",
+			loadBalancerSku:     "",
+			masterProfile: &MasterProfile{
+				Count:               3,
+				DNSPrefix:           "foo",
+				VMSize:              "Standard_DS2_v2",
+				AvailabilityProfile: VirtualMachineScaleSets,
+			},
+		},
+		{
+			name:                "invalid LB string value",
+			orchestratorRelease: "1.12",
+			loadBalancerSku:     "foo",
+			masterProfile: &MasterProfile{
+				Count:               3,
+				DNSPrefix:           "foo",
+				VMSize:              "Standard_DS2_v2",
+				AvailabilityProfile: VirtualMachineScaleSets,
+			},
+			expectedErr:    true,
+			expectedErrStr: fmt.Sprintf("Invalid value for loadBalancerSku, only %s and %s are supported", StandardLoadBalancerSku, BasicLoadBalancerSku),
+		},
+	}
+
+	for _, test := range tests {
+		test := test
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+			cs := getK8sDefaultContainerService(true)
+			cs.Properties.MasterProfile = test.masterProfile
+			cs.Properties.AgentPoolProfiles = test.agentProfiles
+			cs.Properties.OrchestratorProfile.OrchestratorRelease = test.orchestratorRelease
+			cs.Properties.OrchestratorProfile.KubernetesConfig = &KubernetesConfig{
+				LoadBalancerSku: test.loadBalancerSku,
+			}
+
+			err := cs.Validate(false)
+			if test.expectedErr {
+				if err == nil {
+					t.Errorf("error should have occurred")
+				} else {
+					if err.Error() != test.expectedErrStr {
+						t.Errorf("expected error with message : %s, but got : %s", test.expectedErrStr, err.Error())
+					}
+				}
 			}
 		})
 	}
@@ -3139,6 +3257,46 @@ func TestValidateLocation(t *testing.T) {
 			if !helpers.EqualError(gotErr, test.expectedErr) {
 				t.Logf("scenario %q", test.name)
 				t.Errorf("expected error: %v, got: %v", test.expectedErr, gotErr)
+			}
+		})
+	}
+}
+
+func TestValidateFeatureFlags(t *testing.T) {
+	tests := map[string]struct {
+		properties    *Properties
+		expectedError string
+	}{
+		"should error when enableTelemetry flag is enabled on non Azure Stack environments": {
+			properties: &Properties{
+				CustomCloudProfile: nil,
+				FeatureFlags: &FeatureFlags{
+					EnableTelemetry: true,
+				},
+			},
+			expectedError: "EnableTelemetry flag is only available for Azure Stack",
+		},
+	}
+
+	for testName, test := range tests {
+		test := test
+		t.Run(testName, func(t *testing.T) {
+			t.Parallel()
+			err := test.properties.validateFeatureFlags()
+
+			if test.expectedError == "" && err == nil {
+				return
+			}
+			if test.expectedError == "" && err != nil {
+				t.Errorf("%s expected no error but received: %s", testName, err.Error())
+				return
+			}
+			if test.expectedError != "" && err == nil {
+				t.Errorf("%s expected error: %s, but received no error", testName, test.expectedError)
+				return
+			}
+			if !strings.Contains(err.Error(), test.expectedError) {
+				t.Errorf("%s expected error: %s but received: %s", testName, test.expectedError, err.Error())
 			}
 		})
 	}

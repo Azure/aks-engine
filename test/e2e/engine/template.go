@@ -13,36 +13,44 @@ import (
 
 	"github.com/Azure/go-autorest/autorest/to"
 
+	"github.com/kelseyhightower/envconfig"
+	"github.com/pkg/errors"
+
 	"github.com/Azure/aks-engine/pkg/api"
 	"github.com/Azure/aks-engine/pkg/api/common"
 	"github.com/Azure/aks-engine/pkg/api/vlabs"
 	"github.com/Azure/aks-engine/pkg/helpers"
 	"github.com/Azure/aks-engine/pkg/i18n"
 	"github.com/Azure/aks-engine/test/e2e/config"
-	"github.com/kelseyhightower/envconfig"
-	"github.com/pkg/errors"
 )
 
 // Config represents the configuration values of a template stored as env vars
 type Config struct {
-	ClientID              string `envconfig:"CLIENT_ID"`
-	ClientSecret          string `envconfig:"CLIENT_SECRET"`
-	ClientObjectID        string `envconfig:"CLIENT_OBJECTID"`
-	MasterDNSPrefix       string `envconfig:"DNS_PREFIX"`
-	AgentDNSPrefix        string `envconfig:"DNS_PREFIX"`
-	PublicSSHKey          string `envconfig:"PUBLIC_SSH_KEY"`
-	WindowsAdminPasssword string `envconfig:"WINDOWS_ADMIN_PASSWORD"`
-	OrchestratorRelease   string `envconfig:"ORCHESTRATOR_RELEASE"`
-	OrchestratorVersion   string `envconfig:"ORCHESTRATOR_VERSION"`
-	OutputDirectory       string `envconfig:"OUTPUT_DIR" default:"_output"`
-	CreateVNET            bool   `envconfig:"CREATE_VNET" default:"false"`
-	EnableKMSEncryption   bool   `envconfig:"ENABLE_KMS_ENCRYPTION" default:"false"`
-	Distro                string `envconfig:"DISTRO"`
-	SubscriptionID        string `envconfig:"SUBSCRIPTION_ID"`
-	TenantID              string `envconfig:"TENANT_ID"`
-	ImageName             string `envconfig:"IMAGE_NAME"`
-	ImageResourceGroup    string `envconfig:"IMAGE_RESOURCE_GROUP"`
-	DebugCrashingPods     bool   `envconfig:"DEBUG_CRASHING_PODS" default:"false"`
+	ClientID                       string `envconfig:"CLIENT_ID"`
+	ClientSecret                   string `envconfig:"CLIENT_SECRET"`
+	ClientObjectID                 string `envconfig:"CLIENT_OBJECTID"`
+	LogAnalyticsWorkspaceKey       string `envconfig:"LOG_ANALYTICS_WORKSPACE_KEY"`
+	MasterDNSPrefix                string `envconfig:"DNS_PREFIX"`
+	AgentDNSPrefix                 string `envconfig:"DNS_PREFIX"`
+	PublicSSHKey                   string `envconfig:"PUBLIC_SSH_KEY"`
+	WindowsAdminPasssword          string `envconfig:"WINDOWS_ADMIN_PASSWORD"`
+	WindowsNodeImageGallery        string `envconfig:"WINDOWS_NODE_IMAGE_GALLERY" default:""`
+	WindowsNodeImageName           string `envconfig:"WINDOWS_NODE_IMAGE_NAME" default:""`
+	WindowsNodeImageResourceGroup  string `envconfig:"WINDOWS_NODE_IMAGE_RESOURCE_GROUP" default:""`
+	WindowsNodeImageSubscriptionID string `envconfig:"WINDOWS_NODE_IMAGE_SUBSCRIPTION_ID" default:""`
+	WindowsNodeImageVersion        string `envconfig:"WINDOWS_NODE_IMAGE_VERSION" deault:""`
+	WindowsNodeVhdURL              string `envconfig:"WINDOWS_NODE_VHD_URL" default:""`
+	OrchestratorRelease            string `envconfig:"ORCHESTRATOR_RELEASE"`
+	OrchestratorVersion            string `envconfig:"ORCHESTRATOR_VERSION"`
+	OutputDirectory                string `envconfig:"OUTPUT_DIR" default:"_output"`
+	CreateVNET                     bool   `envconfig:"CREATE_VNET" default:"false"`
+	EnableKMSEncryption            bool   `envconfig:"ENABLE_KMS_ENCRYPTION" default:"false"`
+	Distro                         string `envconfig:"DISTRO"`
+	SubscriptionID                 string `envconfig:"SUBSCRIPTION_ID"`
+	TenantID                       string `envconfig:"TENANT_ID"`
+	ImageName                      string `envconfig:"IMAGE_NAME"`
+	ImageResourceGroup             string `envconfig:"IMAGE_RESOURCE_GROUP"`
+	DebugCrashingPods              bool   `envconfig:"DEBUG_CRASHING_PODS" default:"false"`
 
 	ClusterDefinitionPath     string // The original template we want to use to build the cluster from.
 	ClusterDefinitionTemplate string // This is the template after we splice in the environment variables
@@ -92,6 +100,10 @@ func Build(cfg *config.Config, masterSubnetID string, agentSubnetIDs []string, i
 		return nil, err
 	}
 	prop := cs.ContainerService.Properties
+	var hasWindows bool
+	if prop.HasWindows() {
+		hasWindows = true
+	}
 
 	if config.ClientID != "" && config.ClientSecret != "" {
 		if !prop.IsAzureStackCloud() {
@@ -125,6 +137,23 @@ func Build(cfg *config.Config, masterSubnetID string, agentSubnetIDs []string, i
 		prop.WindowsProfile.AdminPassword = config.WindowsAdminPasssword
 	}
 
+	if config.WindowsNodeVhdURL != "" {
+		prop.WindowsProfile.WindowsImageSourceURL = config.WindowsNodeVhdURL
+		log.Printf("Windows nodes will use image at %s for test pass", config.WindowsNodeVhdURL)
+	} else if config.WindowsNodeImageName != "" && config.WindowsNodeImageResourceGroup != "" {
+		prop.WindowsProfile.ImageRef = &vlabs.ImageReference{
+			Name:          config.WindowsNodeImageName,
+			ResourceGroup: config.WindowsNodeImageResourceGroup,
+		}
+
+		if config.WindowsNodeImageGallery != "" && config.WindowsNodeImageSubscriptionID != "" && config.WindowsNodeImageVersion != "" {
+			prop.WindowsProfile.ImageRef.Gallery = config.WindowsNodeImageGallery
+			prop.WindowsProfile.ImageRef.SubscriptionID = config.WindowsNodeImageSubscriptionID
+			prop.WindowsProfile.ImageRef.Version = config.WindowsNodeImageVersion
+		}
+		log.Printf("Windows nodes will use image reference name:%s, rg:%s, sub:%s, gallery:%s, version:%s for test pass", config.WindowsNodeImageName, config.WindowsNodeImageResourceGroup, config.WindowsNodeImageSubscriptionID, config.WindowsNodeImageGallery, config.WindowsNodeImageVersion)
+	}
+
 	// If the parsed api model input has no expressed version opinion, we check if ENV does have an opinion
 	if prop.OrchestratorProfile.OrchestratorRelease == "" &&
 		prop.OrchestratorProfile.OrchestratorVersion == "" {
@@ -136,7 +165,7 @@ func Build(cfg *config.Config, masterSubnetID string, agentSubnetIDs []string, i
 			prop.OrchestratorProfile.OrchestratorVersion = config.OrchestratorVersion
 			// If ENV similarly has no version opinion, we will rely upon the aks-engine default
 		} else {
-			log.Println("No orchestrator version specified, will use the default.")
+			prop.OrchestratorProfile.OrchestratorVersion = common.GetDefaultKubernetesVersion(hasWindows)
 		}
 	}
 
@@ -179,6 +208,18 @@ func Build(cfg *config.Config, masterSubnetID string, agentSubnetIDs []string, i
 		}
 	}
 
+	if config.LogAnalyticsWorkspaceKey != "" && len(prop.OrchestratorProfile.KubernetesConfig.Addons) > 0 {
+		for _, addOn := range prop.OrchestratorProfile.KubernetesConfig.Addons {
+			if addOn.Name == "container-monitoring" {
+				if addOn.Config == nil {
+					addOn.Config = make(map[string]string)
+				}
+				addOn.Config["workspaceKey"] = config.LogAnalyticsWorkspaceKey
+				break
+			}
+		}
+	}
+
 	return &Engine{
 		Config:            config,
 		ClusterDefinition: cs,
@@ -206,12 +247,7 @@ func (e *Engine) AnyAgentIsLinux() bool {
 
 // HasWindowsAgents will return true is there is at least 1 windows agent pool
 func (e *Engine) HasWindowsAgents() bool {
-	for _, ap := range e.ExpandedDefinition.Properties.AgentPoolProfiles {
-		if ap.OSType == "Windows" {
-			return true
-		}
-	}
-	return false
+	return e.ExpandedDefinition.Properties.HasWindows()
 }
 
 // WindowsTestImages holds the Windows container image names used in this test pass

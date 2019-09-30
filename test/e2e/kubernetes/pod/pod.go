@@ -24,9 +24,9 @@ import (
 )
 
 const (
-	testDir        string = "testdirectory"
-	commandTimeout        = 1 * time.Minute
-	deleteTimeout         = 5 * time.Minute
+	testDir                    string = "testdirectory"
+	deleteTimeout                     = 5 * time.Minute
+	validatePodNotExistRetries        = 3
 )
 
 // List is a container that holds all pods returned from doing a kubectl get pods
@@ -160,7 +160,7 @@ func ReplaceContainerImageFromFile(filename, containerImage string) (string, err
 }
 
 // CreatePodFromFile will create a Pod from file with a name
-func CreatePodFromFile(filename, name, namespace string, sleep, duration time.Duration) (*Pod, error) {
+func CreatePodFromFile(filename, name, namespace string, sleep, timeout time.Duration) (*Pod, error) {
 	cmd := exec.Command("k", "apply", "-f", filename)
 	util.PrintCommand(cmd)
 	out, err := cmd.CombinedOutput()
@@ -168,7 +168,7 @@ func CreatePodFromFile(filename, name, namespace string, sleep, duration time.Du
 		log.Printf("Error trying to create Pod %s:%s\n", name, string(out))
 		return nil, err
 	}
-	p, err := GetWithRetry(name, namespace, sleep, duration)
+	p, err := GetWithRetry(name, namespace, sleep, timeout)
 	if err != nil {
 		log.Printf("Error while trying to fetch Pod %s:%s\n", name, err)
 		return nil, err
@@ -177,23 +177,23 @@ func CreatePodFromFile(filename, name, namespace string, sleep, duration time.Du
 }
 
 // CreatePodFromFileIfNotExist will create a Pod from file with a name
-func CreatePodFromFileIfNotExist(filename, name, namespace string, sleep, duration time.Duration) (*Pod, error) {
-	p, err := Get("dns-liveness", "default")
+func CreatePodFromFileIfNotExist(filename, name, namespace string, sleep, timeout time.Duration) (*Pod, error) {
+	p, err := Get(name, namespace, validatePodNotExistRetries)
 	if err != nil {
-		return CreatePodFromFile(filename, name, namespace, sleep, duration)
+		return CreatePodFromFile(filename, name, namespace, sleep, timeout)
 	}
 	return p, nil
 }
 
 // RunLinuxPod will create a pod that runs a bash command
 // --overrides := `"spec": {"nodeSelector":{"beta.kubernetes.io/os":"windows"}}}`
-func RunLinuxPod(image, name, namespace, command string, printOutput bool, sleep, duration, timeout time.Duration) (*Pod, error) {
+func RunLinuxPod(image, name, namespace, command string, printOutput bool, sleep, commandTimeout, podGetTimeout time.Duration) (*Pod, error) {
 	overrides := `{ "spec": {"nodeSelector":{"beta.kubernetes.io/os":"linux"}}}`
 	cmd := exec.Command("k", "run", name, "-n", namespace, "--image", image, "--image-pull-policy=IfNotPresent", "--restart=Never", "--overrides", overrides, "--command", "--", "/bin/sh", "-c", command)
 	var out []byte
 	var err error
 	if printOutput {
-		out, err = util.RunAndLogCommand(cmd, timeout)
+		out, err = util.RunAndLogCommand(cmd, commandTimeout)
 	} else {
 		out, err = cmd.CombinedOutput()
 	}
@@ -201,7 +201,7 @@ func RunLinuxPod(image, name, namespace, command string, printOutput bool, sleep
 		log.Printf("Error trying to deploy %s [%s] in namespace %s:%s\n", name, image, namespace, string(out))
 		return nil, err
 	}
-	p, err := GetWithRetry(name, namespace, sleep, duration)
+	p, err := GetWithRetry(name, namespace, sleep, podGetTimeout)
 	if err != nil {
 		log.Printf("Error while trying to fetch Pod %s in namespace %s:%s\n", name, namespace, err)
 		return nil, err
@@ -236,7 +236,7 @@ func RunWindowsPod(image, name, namespace, command string, printOutput bool, sle
 type podRunnerCmd func(string, string, string, string, bool, time.Duration, time.Duration, time.Duration) (*Pod, error)
 
 // RunCommandMultipleTimes runs the same command 'desiredAttempts' times
-func RunCommandMultipleTimes(podRunnerCmd podRunnerCmd, image, name, command string, desiredAttempts int, sleep, duration, timeout time.Duration) (int, error) {
+func RunCommandMultipleTimes(podRunnerCmd podRunnerCmd, image, name, command string, desiredAttempts int, sleep, commandTimeout, timeout time.Duration) (int, error) {
 	var successfulAttempts int
 	var actualAttempts int
 	logResults := func() {
@@ -249,26 +249,25 @@ func RunCommandMultipleTimes(podRunnerCmd podRunnerCmd, image, name, command str
 		podName := fmt.Sprintf("%s-%d", name, r.Intn(99999))
 		var p *Pod
 		var err error
-		p, err = podRunnerCmd(image, podName, "default", command, true, sleep, duration, timeout)
-
+		p, err = podRunnerCmd(image, podName, "default", command, true, sleep, timeout, timeout)
 		if err != nil {
 			return successfulAttempts, err
 		}
-		succeeded, _ := p.WaitOnSucceeded(sleep, duration)
-		cmd := exec.Command("k", "logs", podName, "-n", "default")
-		out, err := cmd.CombinedOutput()
+		succeeded, err := p.WaitOnSucceeded(sleep, timeout)
 		if err != nil {
-			log.Printf("Unable to get logs from pod %s\n", podName)
-		} else {
-			log.Printf("%s\n", string(out))
+			log.Printf("pod %s did not succeed in time\n", podName)
+			return successfulAttempts, err
 		}
-
+		terminated, err := p.WaitOnTerminated(podName, sleep, commandTimeout, timeout)
+		if err != nil {
+			log.Printf("pod %s container %s did not reach a terminal exit 0 state in time\n", podName, podName)
+			return successfulAttempts, err
+		}
 		err = p.Delete(util.DefaultDeleteRetries)
 		if err != nil {
 			return successfulAttempts, err
 		}
-
-		if succeeded {
+		if succeeded && terminated {
 			successfulAttempts++
 		}
 	}
@@ -295,73 +294,104 @@ func GetAll(namespace string) (*List, error) {
 }
 
 // GetWithRetry gets a pod, allowing for retries
-func GetWithRetry(podPrefix, namespace string, sleep, duration time.Duration) (*Pod, error) {
-	podCh := make(chan *Pod, 1)
-	errCh := make(chan error)
-	ctx, cancel := context.WithTimeout(context.Background(), duration)
+func GetWithRetry(podPrefix, namespace string, sleep, timeout time.Duration) (*Pod, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
+	ch := make(chan GetResult)
+	var mostRecentGetWithRetryError error
+	var pod *Pod
 	go func() {
 		for {
 			select {
 			case <-ctx.Done():
-				errCh <- errors.Errorf("Timeout exceeded (%s) while waiting for Pod (%s) in namespace (%s)", duration.String(), podPrefix, namespace)
-			default:
-				p, err := Get(podPrefix, namespace)
-				if err != nil {
-					log.Printf("Error getting pod %s in namespace %s: %s\n", podPrefix, namespace, err)
-				} else if p != nil {
-					podCh <- p
-				}
-				fmt.Print(".")
+				return
+			case ch <- GetAsync(podPrefix, namespace):
 				time.Sleep(sleep)
 			}
 		}
 	}()
 	for {
 		select {
-		case err := <-errCh:
-			fmt.Print("\n")
-			return nil, err
-		case p := <-podCh:
-			fmt.Print("\n")
-			return p, nil
+		case result := <-ch:
+			mostRecentGetWithRetryError = result.err
+			pod = result.pod
+			if mostRecentGetWithRetryError == nil {
+				if pod != nil {
+					return pod, nil
+				}
+			}
+		case <-ctx.Done():
+			return nil, errors.Errorf("GetWithRetry timed out: %s\n", mostRecentGetWithRetryError)
 		}
 	}
 }
 
-// Get will return a pod with a given name and namespace
-func Get(podName, namespace string) (*Pod, error) {
-	cmd := exec.Command("k", "get", "pods", podName, "-n", namespace, "-o", "json")
-	out, err := cmd.CombinedOutput()
-	if err != nil {
-		log.Printf("Error getting pod:\n")
-		util.PrintCommand(cmd)
-		return nil, err
-	}
-	p := Pod{}
-	err = json.Unmarshal(out, &p)
-	if err != nil {
-		log.Printf("Error unmarshalling pods json:%s\n", err)
-		return nil, err
-	}
-	return &p, nil
+// GetResult is a return struct for GetAsync
+type GetResult struct {
+	pod *Pod
+	err error
 }
 
-// GetTerminated will return a pod with a given name and namespace, including terminated pods
-func GetTerminated(podName, namespace string) (*Pod, error) {
-	cmd := exec.Command("k", "get", "pods", podName, "-n", namespace, "-o", "json")
-	util.PrintCommand(cmd)
-	out, err := cmd.CombinedOutput()
-	if err != nil {
-		return nil, err
+// GetAsync wraps Get with a struct response for goroutine + channel usage
+func GetAsync(podName, namespace string) GetResult {
+	pod, err := Get(podName, namespace, 1)
+	return GetResult{
+		pod: pod,
+		err: err,
 	}
+}
+
+// Get will return a pod with a given name and namespace
+func Get(podName, namespace string, retries int) (*Pod, error) {
 	p := Pod{}
-	err = json.Unmarshal(out, &p)
-	if err != nil {
-		log.Printf("Error unmarshalling pods json:%s\n", err)
-		return nil, err
+	var out []byte
+	var err error
+	for i := 0; i < retries; i++ {
+		cmd := exec.Command("k", "get", "pods", podName, "-n", namespace, "-o", "json")
+		out, err = cmd.CombinedOutput()
+		if err == nil {
+			jsonErr := json.Unmarshal(out, &p)
+			if jsonErr != nil {
+				log.Printf("Error unmarshalling pods json:%s\n", jsonErr)
+				err = jsonErr
+			}
+		}
+		time.Sleep(3 * time.Second)
 	}
-	return &p, nil
+	return &p, err
+}
+
+// PrintPodsLogs prints logs for all pods whose name matches a substring
+func PrintPodsLogs(podPrefix, namespace string) {
+	pods, err := GetAllByPrefix(podPrefix, namespace)
+	if err != nil {
+		log.Printf("Unable to print logs for pods matching prefix %s in namespace %s: %s", podPrefix, namespace, err)
+	}
+	for _, p := range pods {
+		err := p.Logs()
+		if err != nil {
+			log.Printf("Unable to print pod logs for pod %s: %s", p.Metadata.Name, err)
+		}
+		err = p.Describe()
+		if err != nil {
+			log.Printf("Unable to describe pod %s: %s", p.Metadata.Name, err)
+		}
+	}
+}
+
+// GetAllByPrefixResult is the result type for GetAllByPrefixAsync
+type GetAllByPrefixResult struct {
+	Pods []Pod
+	Err  error
+}
+
+// GetAllByPrefixAsync wraps GetAllByPrefix with a struct response for goroutine + channel usage
+func GetAllByPrefixAsync(prefix, namespace string) GetAllByPrefixResult {
+	pods, err := GetAllByPrefix(prefix, namespace)
+	return GetAllByPrefixResult{
+		Pods: pods,
+		Err:  err,
+	}
 }
 
 // GetAllByPrefix will return all pods in a given namespace that match a prefix
@@ -384,6 +414,21 @@ func GetAllByPrefix(prefix, namespace string) ([]Pod, error) {
 	return pods, nil
 }
 
+// AreAllPodsRunningResult is a return struct for AreAllPodsRunningAsync
+type AreAllPodsRunningResult struct {
+	ready bool
+	err   error
+}
+
+// AreAllPodsRunningAsync wraps AreAllPodsRunning with a struct response for goroutine + channel usage
+func AreAllPodsRunningAsync(podPrefix, namespace string) AreAllPodsRunningResult {
+	ready, err := AreAllPodsRunning(podPrefix, namespace)
+	return AreAllPodsRunningResult{
+		ready: ready,
+		err:   err,
+	}
+}
+
 // AreAllPodsRunning will return true if all pods in a given namespace are in a Running State
 func AreAllPodsRunning(podPrefix, namespace string) (bool, error) {
 	pl, err := GetAll(namespace)
@@ -393,10 +438,10 @@ func AreAllPodsRunning(podPrefix, namespace string) (bool, error) {
 
 	var status []bool
 	for _, pod := range pl.Pods {
-		matched, err := regexp.MatchString(podPrefix, pod.Metadata.Name)
-		if err != nil {
+		matched, regexErr := regexp.MatchString(podPrefix, pod.Metadata.Name)
+		if regexErr != nil {
 			log.Printf("Error trying to match pod name:%s\n", err)
-			return false, err
+			return false, regexErr
 		}
 		if matched {
 			if pod.Status.Phase != "Running" {
@@ -417,7 +462,24 @@ func AreAllPodsRunning(podPrefix, namespace string) (bool, error) {
 		}
 	}
 
-	return true, nil
+	return true, err
+}
+
+// AreAllPodsSucceededResult is a return struct for AreAllPodsSucceeded
+type AreAllPodsSucceededResult struct {
+	allPodsSucceeded bool
+	anyPodsFailed    bool
+	err              error
+}
+
+// AreAllPodsSucceededAsync wraps AreAllPodsSucceeded with a struct response for goroutine + channel usage
+func AreAllPodsSucceededAsync(podPrefix, namespace string) AreAllPodsSucceededResult {
+	allPodsSucceeded, anyPodsFailed, err := AreAllPodsSucceeded(podPrefix, namespace)
+	return AreAllPodsSucceededResult{
+		allPodsSucceeded: allPodsSucceeded,
+		anyPodsFailed:    anyPodsFailed,
+		err:              err,
+	}
 }
 
 // AreAllPodsSucceeded returns true, false if all pods in a given namespace are in a Running State
@@ -436,10 +498,10 @@ func AreAllPodsSucceeded(podPrefix, namespace string) (bool, bool, error) {
 			return false, false, err
 		}
 		if matched {
-			if pod.Status.Phase == "Failed" {
+			if pod.IsFailed() {
 				return false, true, nil
 			}
-			if pod.Status.Phase != "Succeeded" {
+			if pod.IsSucceeded() {
 				status = append(status, false)
 			} else {
 				status = append(status, true)
@@ -460,111 +522,259 @@ func AreAllPodsSucceeded(podPrefix, namespace string) (bool, bool, error) {
 	return true, false, nil
 }
 
-// WaitOnReady is used when you dont have a handle on a pod but want to wait until its in a Ready state.
-// successesNeeded is used to make sure we return the correct value even if the pod is in a CrashLoop
-func WaitOnReady(podPrefix, namespace string, successesNeeded int, sleep, duration time.Duration) (bool, error) {
-	successCount := 0
-	failureCount := 0
-	readyCh := make(chan bool, 1)
-	errCh := make(chan error)
-	ctx, cancel := context.WithTimeout(context.Background(), duration)
-	defer cancel()
-	go func() {
-		for {
-			select {
-			case <-ctx.Done():
-				errCh <- errors.Errorf("Timeout exceeded (%s) while waiting for Pods (%s) to become ready in namespace (%s), got %d of %d required successful pods ready results", duration.String(), podPrefix, namespace, successCount, successesNeeded)
-			default:
-				ready, err := AreAllPodsRunning(podPrefix, namespace)
-				if err != nil {
-					errCh <- err
-					return
-				}
-				if ready {
-					successCount++
-					if successCount >= successesNeeded {
-						readyCh <- true
-					}
-				} else {
-					if successCount > 1 {
-						failureCount++
-						if failureCount >= successesNeeded {
-							errCh <- errors.Errorf("Pods from deployment (%s) in namespace (%s) have been checked out as all Ready %d times, but NotReady %d times. This behavior may mean it is in a crashloop", podPrefix, namespace, successCount, failureCount)
-						}
-					}
-					time.Sleep(sleep)
-				}
-			}
-		}
-	}()
-	for {
-		select {
-		case err := <-errCh:
-			pods, _ := GetAllByPrefix(podPrefix, namespace)
-			if len(pods) != 0 {
-				for _, p := range pods {
-					e := p.Logs()
-					if e != nil {
-						log.Printf("Unable to print pod logs for pod %s: %s", p.Metadata.Name, e)
-					}
-					e = p.Describe()
-					if e != nil {
-						log.Printf("Unable to describe pod %s: %s", p.Metadata.Name, e)
-					}
-				}
-			}
-			return false, err
-		case ready := <-readyCh:
-			return ready, nil
-		}
+// GetPodResult is a return struct for GetPodAsync
+type GetPodResult struct {
+	pod *Pod
+	err error
+}
+
+// GetPodAsync wraps GetWithRetry with a struct response for goroutine + channel usage
+func GetPodAsync(name, namespace string, timeout time.Duration) GetPodResult {
+	p, err := GetWithRetry(name, namespace, 3*time.Second, timeout)
+	return GetPodResult{
+		pod: p,
+		err: err,
 	}
 }
 
-// WaitOnSucceeded is used when you dont have a handle on a pod but want to wait until its in a Succeeded state.
-func WaitOnSucceeded(podPrefix, namespace string, sleep, duration time.Duration) (bool, error) {
-	succeededCh := make(chan bool, 1)
-	errCh := make(chan error)
-	ctx, cancel := context.WithTimeout(context.Background(), duration)
+// WaitOnSuccesses returns true if all pods matching a prefix substring are in a succeeded state within a period of time
+// successesNeeded is used to make sure we return the correct value even if the pod is in a CrashLoop
+func WaitOnSuccesses(podPrefix, namespace string, successesNeeded int, sleep, timeout time.Duration) (bool, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
+	ch := make(chan AreAllPodsRunningResult)
+	var mostRecentWaitOnSuccessesErr error
+	successCount := 0
+	flapCount := 0
+	var lastResult bool
 	go func() {
 		for {
 			select {
 			case <-ctx.Done():
-				errCh <- errors.Errorf("Timeout exceeded (%s) while waiting for Pods (%s) to succeed in namespace (%s)", duration.String(), podPrefix, namespace)
-			default:
-				succeeded, failed, err := AreAllPodsSucceeded(podPrefix, namespace)
-				if err != nil {
-					errCh <- err
-					return
-				}
-				if failed {
-					errCh <- errors.New("At least one pod in a Failed state")
-				}
-				if succeeded {
-					succeededCh <- true
-				}
+				return
+			case ch <- AreAllPodsRunningAsync(podPrefix, namespace):
 				time.Sleep(sleep)
 			}
 		}
 	}()
 	for {
 		select {
-		case err := <-errCh:
-			return false, err
-		case ready := <-succeededCh:
-			return ready, nil
+		case result := <-ch:
+			mostRecentWaitOnSuccessesErr = result.err
+			if mostRecentWaitOnSuccessesErr == nil {
+				if result.ready {
+					lastResult = true
+					successCount++
+					if successCount >= successesNeeded {
+						return true, nil
+					}
+				} else {
+					if lastResult {
+						flapCount++
+						if flapCount >= (successesNeeded - 1) {
+							PrintPodsLogs(podPrefix, namespace)
+							return false, errors.Errorf("Pods from deployment (%s) in namespace (%s) have been checked out as all Ready %d times, but included %d transitions away from a Ready state. This behavior may mean it is in a crashloop", podPrefix, namespace, successCount, flapCount)
+						}
+						lastResult = false
+					}
+				}
+			}
+		case <-ctx.Done():
+			PrintPodsLogs(podPrefix, namespace)
+			return false, errors.Errorf("WaitOnReady timed out: %s\n", mostRecentWaitOnSuccessesErr)
+		}
+	}
+}
+
+// WaitOnSucceeded will return true if a pod is in a Succeeded State
+func WaitOnSucceeded(name, namespace string, sleep, timeout time.Duration) (bool, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+	ch := make(chan GetPodResult)
+	var mostRecentWaitOnSucceededPodError error
+	var pod *Pod
+	go func() {
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case ch <- GetPodAsync(name, namespace, timeout):
+				time.Sleep(sleep)
+			}
+		}
+	}()
+	for {
+		select {
+		case result := <-ch:
+			pod = result.pod
+			mostRecentWaitOnSucceededPodError = result.err
+			if mostRecentWaitOnSucceededPodError == nil {
+				if pod.IsSucceeded() {
+					return true, nil
+				}
+			}
+		case <-ctx.Done():
+			if pod != nil {
+				err := pod.Logs()
+				if err != nil {
+					log.Printf("Unable to print pod logs for pod %s: %s", pod.Metadata.Name, err)
+				}
+				err = pod.Describe()
+				if err != nil {
+					log.Printf("Unable to describe pod %s: %s", pod.Metadata.Name, err)
+				}
+			}
+			return false, errors.Errorf("WaitOnSucceeded timed out: %s\n", mostRecentWaitOnSucceededPodError)
+		}
+	}
+}
+
+// WaitOnTerminated will return true if a pod's container is in a successful (0 exit code) Terminated State
+// and completed prior to the passed in containerExecutionTimeout
+func WaitOnTerminated(name, namespace, containerName string, sleep, containerExecutionTimeout, timeout time.Duration) (bool, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+	ch := make(chan GetPodResult)
+	var mostRecentWaitOnTerminatedPodError error
+	var pod *Pod
+	go func() {
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case ch <- GetPodAsync(name, namespace, timeout):
+				time.Sleep(sleep)
+			}
+		}
+	}()
+	for {
+		select {
+		case result := <-ch:
+			pod = result.pod
+			mostRecentWaitOnTerminatedPodError = result.err
+			if mostRecentWaitOnTerminatedPodError == nil {
+				status, err := pod.ContainerStatus(containerName)
+				if err == nil {
+					t1, err := time.Parse(time.RFC3339, status.StartTime())
+					if err != nil {
+						return false, err
+					}
+					t2, err := time.Parse(time.RFC3339, status.EndTime())
+					if err != nil {
+						return false, err
+					}
+					duration := t2.Sub(t1)
+					if duration > containerExecutionTimeout {
+						return false, errors.Errorf("execution time %s is greater than timeout %s\n", duration, containerExecutionTimeout)
+					}
+					return true, nil
+				}
+			}
+		case <-ctx.Done():
+			if pod != nil {
+				err := pod.Logs()
+				if err != nil {
+					log.Printf("Unable to print pod logs for pod %s: %s", pod.Metadata.Name, err)
+				}
+				err = pod.Describe()
+				if err != nil {
+					log.Printf("Unable to describe pod %s: %s", pod.Metadata.Name, err)
+				}
+			}
+			return false, errors.Errorf("WaitOnTerminated timed out: %s\n", mostRecentWaitOnTerminatedPodError)
 		}
 	}
 }
 
 // WaitOnReady will call the static method WaitOnReady passing in p.Metadata.Name and p.Metadata.Namespace
-func (p *Pod) WaitOnReady(sleep, duration time.Duration) (bool, error) {
-	return WaitOnReady(p.Metadata.Name, p.Metadata.Namespace, 6, sleep, duration)
+func (p *Pod) WaitOnReady(sleep, timeout time.Duration) (bool, error) {
+	return WaitOnSuccesses(p.Metadata.Name, p.Metadata.Namespace, 6, sleep, timeout)
 }
 
 // WaitOnSucceeded will call the static method WaitOnSucceeded passing in p.Metadata.Name and p.Metadata.Namespace
 func (p *Pod) WaitOnSucceeded(sleep, duration time.Duration) (bool, error) {
 	return WaitOnSucceeded(p.Metadata.Name, p.Metadata.Namespace, sleep, duration)
+}
+
+// WaitOnTerminated will call the static method WaitOnTerminated passing in p.Metadata.Name and p.Metadata.Namespace
+func (p *Pod) WaitOnTerminated(container string, sleep, containerExecutionTimeout, timeout time.Duration) (bool, error) {
+	return WaitOnTerminated(p.Metadata.Name, p.Metadata.Namespace, container, sleep, containerExecutionTimeout, timeout)
+}
+
+func (p *Pod) attemptOutboundConn() error {
+	var err error
+	urls := getExternalURLs()
+	for _, url := range urls {
+		err = p.curlURL(url)
+		if err != nil {
+			return nil
+		}
+	}
+	return err
+}
+
+func (p *Pod) curlURL(url string) error {
+	_, err := p.Exec("--", "/usr/bin/apt", "update")
+	if err != nil {
+		return err
+	}
+	_, err = p.Exec("--", "/usr/bin/apt", "install", "-y", "curl")
+	if err != nil {
+		return err
+	}
+	_, err = p.Exec("--", "curl", url)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (p *Pod) mkdir(mountPath string) error {
+	_, err := p.Exec("--", "mkdir", mountPath+"/"+testDir)
+	if err != nil {
+		return err
+	}
+	out, err := p.Exec("--", "ls", mountPath)
+	if err != nil {
+		return err
+	}
+	if !strings.Contains(string(out), testDir) {
+		return errors.Errorf("Unexpected output from ls: %s", string(out))
+	}
+	return nil
+}
+
+func (p *Pod) powershellMkdir(mountPath string) error {
+	out, err := p.Exec("--", "powershell", "mkdir", "-force", mountPath+"\\"+testDir)
+	if err != nil {
+		return err
+	}
+	if !strings.Contains(string(out), testDir) {
+		return errors.Errorf("Unexpected output from mkdir: %s", string(out))
+	}
+	out, err = p.Exec("--", "powershell", "ls", mountPath)
+	if err != nil {
+		return err
+	}
+	if !strings.Contains(string(out), testDir) {
+		return errors.Errorf("Unexpected output from ls: %s", string(out))
+	}
+	return nil
+}
+
+// ExecResult is a return struct for ExecAsync
+type ExecResult struct {
+	out []byte
+	err error
+}
+
+// ExecAsync wraps Exec with a struct response for goroutine + channel usage
+func (p *Pod) ExecAsync(c ...string) ExecResult {
+	out, err := p.Exec(c...)
+	return ExecResult{
+		out: out,
+		err: err,
+	}
 }
 
 // Exec will execute the given command in the pod
@@ -599,28 +809,71 @@ func (p *Pod) Delete(retries int) error {
 	return kubectlError
 }
 
+// IsSucceeded returns if a pod is in a Succeeded state
+func (p *Pod) IsSucceeded() bool {
+	return p.Status.Phase == "Succeeded"
+}
+
+// IsFailed returns if a pod is in a Failed state
+func (p *Pod) IsFailed() bool {
+	return p.Status.Phase == "Failed"
+}
+
+// ContainerStatus returns a named pod ContainerStatus object
+func (p *Pod) ContainerStatus(name string) (ContainerStatus, error) {
+	for _, status := range p.Status.ContainerStatuses {
+		if status.Name == name {
+			return status, nil
+		}
+	}
+	return ContainerStatus{}, errors.Errorf("no container status object found for name %s in pod %s", name, p.Metadata.Name)
+}
+
+// ExitCode returns a ContainerStatus's terminal exit code
+func (c *ContainerStatus) ExitCode() int {
+	return c.State.Terminated.ExitCode
+}
+
+// StartTime returns a terminal ContainerStatus's terminal "started at" RFC3339 time
+func (c *ContainerStatus) StartTime() string {
+	return c.State.Terminated.StartedAt
+}
+
+// EndTime returns a ContainerStatus's terminal "finished at" RFC3339 time
+func (c *ContainerStatus) EndTime() string {
+	return c.State.Terminated.FinishedAt
+}
+
 // CheckOutboundConnection checks outbound connection for a list of pods.
-func (l *List) CheckOutboundConnection(sleep, duration time.Duration, osType api.OSType) (bool, error) {
-	readyCh := make(chan bool)
-	errCh := make(chan error)
-	ctx, cancel := context.WithTimeout(context.Background(), 2*duration)
+func (l *List) CheckOutboundConnection(sleep, timeout time.Duration, osType api.OSType) (bool, error) {
+	type isReady struct {
+		pod   Pod
+		ready bool
+		err   error
+	}
+	ch := make(chan isReady)
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 
-	ready := false
-	err := errors.Errorf("Unspecified error")
 	for _, p := range l.Pods {
 		localPod := p
 		go func() {
 			switch osType {
 			case api.Linux:
-				ready, err = localPod.CheckLinuxOutboundConnection(sleep, duration)
+				ready, err := localPod.CheckLinuxOutboundConnection(sleep, timeout)
+				ch <- isReady{
+					pod:   localPod,
+					ready: ready,
+					err:   err,
+				}
 			case api.Windows:
-				ready, err = localPod.CheckWindowsOutboundConnection(sleep, duration)
-			default:
-				ready, err = false, errors.Errorf("Invalid osType for Pod (%s)", localPod.Metadata.Name)
+				ready, err := localPod.CheckWindowsOutboundConnection(sleep, timeout)
+				ch <- isReady{
+					pod:   localPod,
+					ready: ready,
+					err:   err,
+				}
 			}
-			readyCh <- ready
-			errCh <- err
 		}()
 	}
 
@@ -628,33 +881,52 @@ func (l *List) CheckOutboundConnection(sleep, duration time.Duration, osType api
 	for {
 		select {
 		case <-ctx.Done():
-			return false, errors.Errorf("Timeout exceeded (%s) while waiting for PodList to check outbound internet connection", duration.String())
-		case err = <-errCh:
-			return false, err
-		case ready = <-readyCh:
-			if ready {
-				readyCount++
-				if readyCount == len(l.Pods) {
-					return true, nil
+			return false, errors.Errorf("Timeout exceeded (%s) while waiting for PodList to check outbound internet connection for OS type %s", timeout.String(), osType)
+		case response := <-ch:
+			ready := response.ready
+			err := response.err
+			pod := response.pod
+			if err == nil {
+				if ready {
+					readyCount++
 				}
+			} else {
+				err := pod.Logs()
+				if err != nil {
+					log.Printf("Unable to print pod logs\n: %s", err)
+				}
+				err = pod.Describe()
+				if err != nil {
+					log.Printf("Unable to describe pod\n: %s", err)
+				}
+				return false, errors.Errorf("CheckOutboundConnection returned error for pod %#v: %s\n", pod, err)
+			}
+			if readyCount == len(l.Pods) {
+				return true, nil
 			}
 		}
 	}
 }
 
 //ValidateCurlConnection checks curl connection for a list of Linux pods to a specified uri.
-func (l *List) ValidateCurlConnection(uri string, sleep, duration time.Duration) (bool, error) {
-	readyCh := make(chan bool)
-	errCh := make(chan error)
-	ctx, cancel := context.WithTimeout(context.Background(), 2*duration)
+func (l *List) ValidateCurlConnection(uri string, sleep, timeout time.Duration) (bool, error) {
+	type isReady struct {
+		pod   Pod
+		ready bool
+		err   error
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
-
+	ch := make(chan isReady)
 	for _, p := range l.Pods {
 		localPod := p
 		go func() {
-			ready, err := localPod.ValidateCurlConnection(uri, sleep, duration)
-			readyCh <- ready
-			errCh <- err
+			ready, err := localPod.ValidateCurlConnection(uri, sleep, timeout)
+			ch <- isReady{
+				pod:   localPod,
+				ready: ready,
+				err:   err,
+			}
 		}()
 	}
 
@@ -662,182 +934,189 @@ func (l *List) ValidateCurlConnection(uri string, sleep, duration time.Duration)
 	for {
 		select {
 		case <-ctx.Done():
-			return false, errors.Errorf("Timeout exceeded (%s) while waiting for PodList to check outbound internet connection", duration.String())
-		case err := <-errCh:
-			return false, err
-		case ready := <-readyCh:
-			if ready {
-				readyCount++
-				if readyCount == len(l.Pods) {
-					return true, nil
+			return false, errors.Errorf("Timeout exceeded (%s) while waiting for PodList to check outbound internet connection", timeout.String())
+		case response := <-ch:
+			ready := response.ready
+			err := response.err
+			pod := response.pod
+			if err == nil {
+				if ready {
+					readyCount++
 				}
+			} else {
+				err := pod.Logs()
+				if err != nil {
+					log.Printf("Unable to print pod logs\n: %s", err)
+				}
+				err = pod.Describe()
+				if err != nil {
+					log.Printf("Unable to describe pod\n: %s", err)
+				}
+				return false, errors.Errorf("ValidateCurlConnection returned error for pod %#v: %s\n", pod, err)
+			}
+			if readyCount == len(l.Pods) {
+				return true, nil
 			}
 		}
 	}
 }
 
 // CheckLinuxOutboundConnection will keep retrying the check if an error is received until the timeout occurs or it passes. This helps us when DNS may not be available for some time after a pod starts.
-func (p *Pod) CheckLinuxOutboundConnection(sleep, duration time.Duration) (bool, error) {
-	readyCh := make(chan bool, 1)
-	errCh := make(chan error)
-	var installedCurl bool
-	ctx, cancel := context.WithTimeout(context.Background(), duration)
+func (p *Pod) CheckLinuxOutboundConnection(sleep, timeout time.Duration) (bool, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
+	ch := make(chan error)
+	var mostRecentCheckLinuxOutboundConnectionError error
 	go func() {
 		for {
 			select {
 			case <-ctx.Done():
-				errCh <- errors.Errorf("Timeout exceeded (%s) while waiting for Pod (%s) to check outbound internet connection", duration.String(), p.Metadata.Name)
-			default:
-				if !installedCurl {
-					_, err := p.Exec("--", "/usr/bin/apt", "update")
-					if err != nil {
-						break
-					}
-					_, err = p.Exec("--", "/usr/bin/apt", "install", "-y", "curl")
-					if err != nil {
-						break
-					}
-					installedCurl = true
-				}
-				// if we can curl an external URL we have outbound internet access
-				urls := getExternalURLs()
-				for i, url := range urls {
-					out, err := p.Exec("--", "curl", url)
-					if err == nil {
-						readyCh <- true
-					} else {
-						if i == (len(urls) - 1) {
-							// if all are down let's say we don't have outbound internet access
-							log.Printf("Error:%s\n", err)
-							log.Printf("Out:%s\n", out)
-						}
-					}
-				}
+				return
+			case ch <- p.attemptOutboundConn():
 				time.Sleep(sleep)
 			}
 		}
 	}()
 	for {
 		select {
-		case err := <-errCh:
-			return false, err
-		case ready := <-readyCh:
-			return ready, nil
+		case mostRecentCheckLinuxOutboundConnectionError = <-ch:
+			if mostRecentCheckLinuxOutboundConnectionError == nil {
+				return true, nil
+			}
+		case <-ctx.Done():
+			err := p.Logs()
+			if err != nil {
+				log.Printf("Unable to print pod logs\n: %s", err)
+			}
+			err = p.Describe()
+			if err != nil {
+				log.Printf("Unable to describe pod\n: %s", err)
+			}
+			return false, errors.Errorf("CheckLinuxOutboundConnection timed out: %s\n", mostRecentCheckLinuxOutboundConnectionError)
 		}
 	}
 }
 
 // ValidateCurlConnection connects to a URI on TCP 80
-func (p *Pod) ValidateCurlConnection(uri string, sleep, duration time.Duration) (bool, error) {
-	readyCh := make(chan bool, 1)
-	errCh := make(chan error)
-	var installedCurl bool
-	ctx, cancel := context.WithTimeout(context.Background(), duration)
+func (p *Pod) ValidateCurlConnection(uri string, sleep, timeout time.Duration) (bool, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
+	ch := make(chan error)
+	var mostRecentValidateCurlConnectionError error
 	go func() {
 		for {
 			select {
 			case <-ctx.Done():
-				errCh <- errors.Errorf("Timeout exceeded (%s) while waiting for Pod (%s) to curl uri %s", duration.String(), p.Metadata.Name, uri)
-			default:
-				if !installedCurl {
-					_, err := p.Exec("--", "/usr/bin/apt", "update")
-					if err != nil {
-						break
-					}
-					_, err = p.Exec("--", "/usr/bin/apt", "install", "-y", "curl")
-					if err != nil {
-						break
-					}
-					installedCurl = true
-				}
-				_, err := p.Exec("--", "curl", uri)
-				if err == nil {
-					readyCh <- true
-				}
+				return
+			case ch <- p.curlURL(uri):
 				time.Sleep(sleep)
 			}
 		}
 	}()
 	for {
 		select {
-		case err := <-errCh:
-			return false, err
-		case ready := <-readyCh:
-			return ready, nil
+		case mostRecentValidateCurlConnectionError = <-ch:
+			if mostRecentValidateCurlConnectionError == nil {
+				return true, nil
+			}
+		case <-ctx.Done():
+			err := p.Logs()
+			if err != nil {
+				log.Printf("Unable to print pod logs\n: %s", err)
+			}
+			err = p.Describe()
+			if err != nil {
+				log.Printf("Unable to describe pod\n: %s", err)
+			}
+			return false, errors.Errorf("ValidateCurlConnection timed out: %s\n", mostRecentValidateCurlConnectionError)
 		}
 	}
 }
 
 // ValidateOmsAgentLogs validates omsagent logs
-func (p *Pod) ValidateOmsAgentLogs(execCmdString string, sleep, duration time.Duration) (bool, error) {
-	readyCh := make(chan bool, 1)
-	errCh := make(chan error)
-	ctx, cancel := context.WithTimeout(context.Background(), duration)
+func (p *Pod) ValidateOmsAgentLogs(execCmdString string, sleep, timeout time.Duration) (bool, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
+	ch := make(chan ExecResult)
+	var mostRecentValidateOmsAgentLogsError error
 	go func() {
 		for {
 			select {
 			case <-ctx.Done():
-				errCh <- errors.Errorf("Timeout exceeded (%s) while waiting for logs to be written by omsagent", duration.String())
-			default:
-				_, err := p.Exec("grep", "-i", execCmdString, "/var/opt/microsoft/omsagent/log/omsagent.log")
-				if err == nil {
-					readyCh <- true
-				}
+				return
+			case ch <- p.ExecAsync("grep", "-i", execCmdString, "/var/opt/microsoft/omsagent/log/omsagent.log"):
 				time.Sleep(sleep)
 			}
 		}
 	}()
 	for {
 		select {
-		case err := <-errCh:
-			return false, err
-		case ready := <-readyCh:
-			return ready, nil
+		case result := <-ch:
+			mostRecentValidateOmsAgentLogsError = result.err
+			if mostRecentValidateOmsAgentLogsError == nil {
+				return true, nil
+			}
+		case <-ctx.Done():
+			err := p.Logs()
+			if err != nil {
+				log.Printf("Unable to print pod logs\n: %s", err)
+			}
+			err = p.Describe()
+			if err != nil {
+				log.Printf("Unable to describe pod\n: %s", err)
+			}
+			return false, errors.Errorf("ValidateOmsAgentLogs timed out: %s\n", mostRecentValidateOmsAgentLogsError)
 		}
 	}
 }
 
 // CheckWindowsOutboundConnection will keep retrying the check if an error is received until the timeout occurs or it passes. This helps us when DNS may not be available for some time after a pod starts.
-func (p *Pod) CheckWindowsOutboundConnection(sleep, duration time.Duration) (bool, error) {
+func (p *Pod) CheckWindowsOutboundConnection(sleep, timeout time.Duration) (bool, error) {
 	exp, err := regexp.Compile(`(Connected\s*:\s*True)`)
 	if err != nil {
-		log.Printf("Error while trying to create regex for windows outbound check:%s\n", err)
-		return false, err
+		return false, errors.Errorf("Error while trying to create regex for windows outbound check:%s\n", err)
 	}
-	readyCh := make(chan bool, 1)
-	errCh := make(chan error)
-	ctx, cancel := context.WithTimeout(context.Background(), duration)
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
+	ch := make(chan ExecResult)
+	var mostRecentCheckWindowsOutboundConnectionError error
 	go func() {
 		for {
 			select {
 			case <-ctx.Done():
-				errCh <- errors.Errorf("Timeout exceeded (%s) while waiting for Pod (%s) to check outbound internet connection", duration.String(), p.Metadata.Name)
-			default:
-				out, err := p.Exec("--", "powershell", "New-Object", "System.Net.Sockets.TcpClient('8.8.8.8', 443)")
-				matched := exp.MatchString(string(out))
-				if err == nil && matched {
-					readyCh <- true
-				}
+				return
+			case ch <- p.ExecAsync("--", "powershell", "New-Object", "System.Net.Sockets.TcpClient('8.8.8.8', 443)"):
 				time.Sleep(sleep)
 			}
 		}
 	}()
 	for {
 		select {
-		case err := <-errCh:
-			return false, err
-		case ready := <-readyCh:
-			return ready, nil
+		case result := <-ch:
+			mostRecentCheckWindowsOutboundConnectionError = result.err
+			out := result.out
+			if mostRecentCheckWindowsOutboundConnectionError == nil {
+				if exp.MatchString(string(out)) {
+					return true, nil
+				}
+			}
+		case <-ctx.Done():
+			err := p.Logs()
+			if err != nil {
+				log.Printf("Unable to print pod logs\n: %s", err)
+			}
+			err = p.Describe()
+			if err != nil {
+				log.Printf("Unable to describe pod\n: %s", err)
+			}
+			return false, errors.Errorf("CheckWindowsOutboundConnection timed out: %s\n", mostRecentCheckWindowsOutboundConnectionError)
 		}
 	}
 }
 
 // ValidateHostPort will attempt to run curl against the POD's hostIP and hostPort
 func (p *Pod) ValidateHostPort(check string, attempts int, sleep time.Duration, master, sshKeyPath string) bool {
+	var commandTimeout time.Duration
 	hostIP := p.Status.HostIP
 	if len(p.Spec.Containers) == 0 || len(p.Spec.Containers[0].Ports) == 0 {
 		log.Printf("Unexpected POD container spec: %v. Should have hostPort.\n", p.Spec)
@@ -864,6 +1143,7 @@ func (p *Pod) ValidateHostPort(check string, attempts int, sleep time.Duration, 
 
 // Logs will get logs from all containers in a pod
 func (p *Pod) Logs() error {
+	var commandTimeout time.Duration
 	for _, container := range p.Spec.Containers {
 		cmd := exec.Command("k", "logs", p.Metadata.Name, "-c", container.Name, "-n", p.Metadata.Namespace)
 		out, err := util.RunAndLogCommand(cmd, commandTimeout)
@@ -877,6 +1157,7 @@ func (p *Pod) Logs() error {
 
 // Describe will describe a pod resource
 func (p *Pod) Describe() error {
+	var commandTimeout time.Duration
 	cmd := exec.Command("k", "describe", "pod", p.Metadata.Name, "-n", p.Metadata.Namespace)
 	out, err := util.RunAndLogCommand(cmd, commandTimeout)
 	log.Printf("\n%s\n", string(out))
@@ -884,81 +1165,73 @@ func (p *Pod) Describe() error {
 }
 
 // ValidateAzureFile will keep retrying the check if azure file is mounted in Pod
-func (p *Pod) ValidateAzureFile(mountPath string, sleep, duration time.Duration) (bool, error) {
-	readyCh := make(chan bool, 1)
-	errCh := make(chan error)
-	ctx, cancel := context.WithTimeout(context.Background(), duration)
+func (p *Pod) ValidateAzureFile(mountPath string, sleep, timeout time.Duration) (bool, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
+	ch := make(chan error)
+	var mostRecentValidateAzureFileError error
 	go func() {
 		for {
 			select {
 			case <-ctx.Done():
-				errCh <- errors.Errorf("Timeout exceeded (%s) while waiting for Pod (%s) to check azure file mounted", duration.String(), p.Metadata.Name)
-			default:
-				out, err := p.Exec("--", "powershell", "mkdir", "-force", mountPath+"\\"+testDir)
-				if err == nil && strings.Contains(string(out), testDir) {
-					out, err = p.Exec("--", "powershell", "ls", mountPath)
-					if err == nil && strings.Contains(string(out), testDir) {
-						readyCh <- true
-					} else {
-						log.Printf("Error:%s\n", err)
-						log.Printf("Out:%s\n", out)
-					}
-				} else {
-					log.Printf("Error:%s\n", err)
-					log.Printf("Out:%s\n", out)
-				}
+				return
+			case ch <- p.powershellMkdir(mountPath):
 				time.Sleep(sleep)
 			}
 		}
 	}()
 	for {
 		select {
-		case err := <-errCh:
-			return false, err
-		case ready := <-readyCh:
-			return ready, nil
+		case mostRecentValidateAzureFileError = <-ch:
+			if mostRecentValidateAzureFileError == nil {
+				return true, nil
+			}
+		case <-ctx.Done():
+			err := p.Logs()
+			if err != nil {
+				log.Printf("Unable to print pod logs\n: %s", err)
+			}
+			err = p.Describe()
+			if err != nil {
+				log.Printf("Unable to describe pod\n: %s", err)
+			}
+			return false, errors.Errorf("ValidateAzureFile timed out: %s\n", mostRecentValidateAzureFileError)
 		}
 	}
 }
 
 // ValidatePVC will keep retrying the check if azure disk is mounted in Pod
-func (p *Pod) ValidatePVC(mountPath string, sleep, duration time.Duration) (bool, error) {
-	readyCh := make(chan bool, 1)
-	errCh := make(chan error)
-	ctx, cancel := context.WithTimeout(context.Background(), duration)
+func (p *Pod) ValidatePVC(mountPath string, sleep, timeout time.Duration) (bool, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
+	ch := make(chan error)
+	var mostRecentValidatePVCError error
 	go func() {
 		for {
 			select {
 			case <-ctx.Done():
-				errCh <- errors.Errorf("Timeout exceeded (%s) while waiting for Pod (%s) to check azure disk mounted", duration.String(), p.Metadata.Name)
-			default:
-				var out []byte
-				var err error
-				out, err = p.Exec("--", "mkdir", mountPath+"/"+testDir)
-				if err == nil {
-					out, err = p.Exec("--", "ls", mountPath)
-					if err == nil && strings.Contains(string(out), testDir) {
-						readyCh <- true
-					} else {
-						log.Printf("Error:%s\n", err)
-						log.Printf("Out:%s\n", out)
-					}
-				} else {
-					log.Printf("Error:%s\n", err)
-					log.Printf("Out:%s\n", out)
-				}
+				return
+			case ch <- p.mkdir(mountPath):
 				time.Sleep(sleep)
 			}
 		}
 	}()
 	for {
 		select {
-		case err := <-errCh:
-			return false, err
-		case ready := <-readyCh:
-			return ready, nil
+		case mostRecentValidatePVCError = <-ch:
+			if mostRecentValidatePVCError == nil {
+				return true, nil
+			}
+		case <-ctx.Done():
+			err := p.Logs()
+			if err != nil {
+				log.Printf("Unable to print pod logs\n: %s", err)
+			}
+			err = p.Describe()
+			if err != nil {
+				log.Printf("Unable to describe pod\n: %s", err)
+			}
+			return false, errors.Errorf("ValidatePVC timed out: %s\n", mostRecentValidatePVCError)
 		}
 	}
 }

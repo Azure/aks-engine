@@ -32,7 +32,7 @@ The easiest way to start hacking on AKS Engine is to use a Docker-based environm
 $ make dev
 ```
 
-Or on Windows:
+Or on Windows (ensure Docker is configured for Linux containers on Windows):
 
 ```console
 powershell ./makedev.ps1

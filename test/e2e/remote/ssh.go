@@ -4,6 +4,7 @@
 package remote
 
 import (
+	"context"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -11,14 +12,16 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"time"
 
 	"github.com/Azure/aks-engine/test/e2e/kubernetes/util"
+	"github.com/pkg/errors"
 	"golang.org/x/crypto/ssh"
 	"golang.org/x/crypto/ssh/agent"
 )
 
 const (
-	sshRetries = 3
+	sshRetries = 20
 	scriptsDir = "scripts"
 )
 
@@ -203,4 +206,33 @@ func (c *Connection) ExecuteRemote(node, command string, printStdout bool) error
 		}
 	}
 	return sshError
+}
+
+// ExecuteRemoteWithRetry runs a remote command with retry tolerance
+func (c *Connection) ExecuteRemoteWithRetry(node, command string, printStdout bool, sleep, timeout time.Duration) error {
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+	ch := make(chan error)
+	var mostRecentExecuteRemoteWithRetryError error
+	go func() {
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case ch <- c.ExecuteRemote(node, command, printStdout):
+				time.Sleep(sleep)
+			}
+		}
+	}()
+	for {
+		select {
+		case result := <-ch:
+			mostRecentExecuteRemoteWithRetryError = result
+			if mostRecentExecuteRemoteWithRetryError == nil {
+				return nil
+			}
+		case <-ctx.Done():
+			return errors.Errorf("ExecuteRemoteWithRetry timed out: %s\n", mostRecentExecuteRemoteWithRetryError)
+		}
+	}
 }

@@ -14,6 +14,16 @@ import (
 func GenerateARMResources(cs *api.ContainerService) []interface{} {
 	var armResources []interface{}
 
+	deploymentTelemetryEnabled := cs.Properties.FeatureFlags.IsFeatureEnabled("EnableTelemetry")
+	isAzureStack := cs.Properties.IsAzureStackCloud()
+
+	if deploymentTelemetryEnabled {
+		if isAzureStack {
+			deploymentResource := createAzurestackTelemetry()
+			armResources = append(armResources, deploymentResource)
+		}
+	}
+
 	var useManagedIdentity, userAssignedIDEnabled bool
 	kubernetesConfig := cs.Properties.OrchestratorProfile.KubernetesConfig
 
@@ -47,6 +57,14 @@ func GenerateARMResources(cs *api.ContainerService) []interface{} {
 	profiles := cs.Properties.AgentPoolProfiles
 
 	for _, profile := range profiles {
+
+		if profile.IsWindows() {
+			if cs.Properties.WindowsProfile.HasCustomImage() {
+				// Create Image resource from VHD if requestesd
+				armResources = append(armResources, createWindowsImage(profile))
+			}
+		}
+
 		if profile.IsVirtualMachineScaleSets() {
 			if useManagedIdentity && !userAssignedIDEnabled {
 				armResources = append(armResources, createAgentVMSSSysRoleAssignment(profile))
@@ -99,12 +117,6 @@ func GenerateARMResources(cs *api.ContainerService) []interface{} {
 
 func createKubernetesAgentVMASResources(cs *api.ContainerService, profile *api.AgentPoolProfile) []interface{} {
 	var agentVMASResources []interface{}
-
-	if profile.IsWindows() {
-		if cs.Properties.WindowsProfile.HasCustomImage() {
-			agentVMASResources = append(agentVMASResources, createWindowsImage(profile))
-		}
-	}
 
 	agentVMASNIC := createAgentVMASNetworkInterface(cs, profile)
 	agentVMASResources = append(agentVMASResources, agentVMASNIC)

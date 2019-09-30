@@ -14,10 +14,8 @@ spec:
     - while true; do sleep 600; done
     livenessProbe:
       exec:
-        command:
-        - nslookup
-        - bbc.co.uk
+        command: ['sh', '-c', 'nslookup www.bing.com || nslookup google.com']
       initialDelaySeconds: 5
       periodSeconds: 5
   nodeSelector:
-    beta.kubernetes.io/os: linux 
+    beta.kubernetes.io/os: linux

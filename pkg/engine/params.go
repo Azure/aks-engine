@@ -219,20 +219,20 @@ func getParameters(cs *api.ContainerService, generatorCode string, aksEngineVers
 	if properties.HasWindows() {
 		addValue(parametersMap, "windowsAdminUsername", properties.WindowsProfile.AdminUsername)
 		addSecret(parametersMap, "windowsAdminPassword", properties.WindowsProfile.AdminPassword, false)
-		if properties.WindowsProfile.ImageVersion != "" {
-			addValue(parametersMap, "agentWindowsVersion", properties.WindowsProfile.ImageVersion)
-		}
-		if properties.WindowsProfile.WindowsImageSourceURL != "" {
+
+		if properties.WindowsProfile.HasCustomImage() {
 			addValue(parametersMap, "agentWindowsSourceUrl", properties.WindowsProfile.WindowsImageSourceURL)
-		}
-		if properties.WindowsProfile.WindowsPublisher != "" {
+		} else if properties.WindowsProfile.HasImageRef() {
+			addValue(parametersMap, "agentWindowsImageResourceGroup", properties.WindowsProfile.ImageRef.ResourceGroup)
+			addValue(parametersMap, "agentWindowsImageName", properties.WindowsProfile.ImageRef.Name)
+		} else {
 			addValue(parametersMap, "agentWindowsPublisher", properties.WindowsProfile.WindowsPublisher)
-		}
-		if properties.WindowsProfile.WindowsOffer != "" {
 			addValue(parametersMap, "agentWindowsOffer", properties.WindowsProfile.WindowsOffer)
+			addValue(parametersMap, "agentWindowsSku", properties.WindowsProfile.GetWindowsSku())
+			addValue(parametersMap, "agentWindowsVersion", properties.WindowsProfile.ImageVersion)
+
 		}
 
-		addValue(parametersMap, "agentWindowsSku", properties.WindowsProfile.GetWindowsSku())
 		addValue(parametersMap, "windowsDockerVersion", properties.WindowsProfile.GetWindowsDockerVersion())
 
 		for i, s := range properties.WindowsProfile.Secrets {

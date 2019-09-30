@@ -18,8 +18,6 @@ import (
 	"github.com/pkg/errors"
 )
 
-const commandTimeout = 1 * time.Minute
-
 // List holds a list of services returned from kubectl get svc
 type List struct {
 	Services []Service `json:"items"`
@@ -65,6 +63,21 @@ type LoadBalancer struct {
 	Ingress []map[string]string `json:"ingress"`
 }
 
+// GetResult is a return struct for GetAsync
+type GetResult struct {
+	svc *Service
+	err error
+}
+
+// GetAsync wraps Get with a struct response for goroutine + channel usage
+func GetAsync(name, namespace string) GetResult {
+	svc, err := Get(name, namespace)
+	return GetResult{
+		svc: svc,
+		err: err,
+	}
+}
+
 // Get returns the service definition specified in a given namespace
 func Get(name, namespace string) (*Service, error) {
 	cmd := exec.Command("k", "get", "svc", "-o", "json", "-n", namespace, name)
@@ -101,6 +114,21 @@ func GetAll(namespace string) (*List, error) {
 	return &sl, nil
 }
 
+// GetAllByPrefixResult is a return struct for GetAllByPrefixAsync
+type GetAllByPrefixResult struct {
+	svcs []Service
+	err  error
+}
+
+// GetAllByPrefixAsync wraps Get with a struct response for goroutine + channel usage
+func GetAllByPrefixAsync(prefix, namespace string) GetAllByPrefixResult {
+	svcs, err := GetAllByPrefix(prefix, namespace)
+	return GetAllByPrefixResult{
+		svcs: svcs,
+		err:  err,
+	}
+}
+
 // GetAllByPrefix will return all services in a given namespace that match a prefix
 func GetAllByPrefix(prefix, namespace string) ([]Service, error) {
 	sl, err := GetAll(namespace)
@@ -123,19 +151,44 @@ func GetAllByPrefix(prefix, namespace string) ([]Service, error) {
 
 // Delete will delete a service in a given namespace
 func (s *Service) Delete(retries int) error {
+	var commandTimeout time.Duration
 	var kubectlOutput []byte
 	var kubectlError error
 	for i := 0; i < retries; i++ {
 		cmd := exec.Command("k", "delete", "svc", "-n", s.Metadata.Namespace, s.Metadata.Name)
 		kubectlOutput, kubectlError = util.RunAndLogCommand(cmd, commandTimeout)
 		if kubectlError != nil {
-			log.Printf("Error while trying to delete service %s in namespace %s:%s\n", s.Metadata.Namespace, s.Metadata.Name, string(kubectlOutput))
+			log.Printf("Error while trying to delete service %s in namespace %s:%s\n", s.Metadata.Namespace, s.Metadata.Name, kubectlError)
+			log.Printf("%s\n", string(kubectlOutput))
 			continue
 		}
 		break
 	}
 
 	return kubectlError
+}
+
+// DescribeServices describes all service resources whose name matches a substring
+func DescribeServices(svcPrefix, namespace string) {
+	svcs, err := GetAllByPrefix(svcPrefix, namespace)
+	if err != nil {
+		log.Printf("Unable to get services matching prefix %s in namespace %s: %s", svcPrefix, namespace, err)
+	}
+	for _, svc := range svcs {
+		err := svc.Describe()
+		if err != nil {
+			log.Printf("Unable to describe service %s: %s", svc.Metadata.Name, err)
+		}
+	}
+}
+
+// Describe will describe a service resource
+func (s *Service) Describe() error {
+	var commandTimeout time.Duration
+	cmd := exec.Command("k", "describe", "svc", s.Metadata.Name, "-n", s.Metadata.Namespace)
+	out, err := util.RunAndLogCommand(cmd, commandTimeout)
+	log.Printf("\n%s\n", string(out))
+	return err
 }
 
 // GetNodePort will return the node port for a given pod
@@ -149,102 +202,135 @@ func (s *Service) GetNodePort(port int) int {
 }
 
 // WaitForIngress waits for an Ingress to be provisioned
-func (s *Service) WaitForIngress(wait, sleep time.Duration) (*Service, error) {
-	svcCh := make(chan *Service)
-	errCh := make(chan error)
-	ctx, cancel := context.WithTimeout(context.Background(), wait)
+func (s *Service) WaitForIngress(timeout, sleep time.Duration) error {
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
+	var mostRecentWaitForIngressError error
+	ch := make(chan GetResult)
 	go func() {
 		for {
 			select {
 			case <-ctx.Done():
-				errCh <- errors.New("Timeout exceeded while waiting for External IP to be provisioned")
-			default:
-				svc, _ := Get(s.Metadata.Name, s.Metadata.Namespace)
-				if svc != nil && svc.Status.LoadBalancer.Ingress != nil {
-					svcCh <- svc
-				}
+				return
+			case ch <- GetAsync(s.Metadata.Name, s.Metadata.Namespace):
 				time.Sleep(sleep)
 			}
 		}
 	}()
 	for {
 		select {
-		case err := <-errCh:
-			return nil, err
-		case svc := <-svcCh:
-			return svc, nil
+		case result := <-ch:
+			mostRecentWaitForIngressError = result.err
+			svc := result.svc
+			if mostRecentWaitForIngressError == nil {
+				if svc != nil && svc.Status.LoadBalancer.Ingress != nil {
+					s.Status.LoadBalancer.Ingress = svc.Status.LoadBalancer.Ingress
+					return nil
+				}
+			}
+		case <-ctx.Done():
+			err := s.Describe()
+			if err != nil {
+				log.Printf("Unable to describe service\n: %s", err)
+			}
+			return errors.Errorf("WaitForIngress timed out: %s\n", mostRecentWaitForIngressError)
 		}
 	}
 }
 
 // WaitOnDeleted returns when a service resource is successfully deleted
-func WaitOnDeleted(servicePrefix, namespace string, sleep, duration time.Duration) (bool, error) {
-	succeededCh := make(chan bool, 1)
-	errCh := make(chan error)
-	ctx, cancel := context.WithTimeout(context.Background(), duration)
+func WaitOnDeleted(servicePrefix, namespace string, sleep, timeout time.Duration) (bool, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
+	ch := make(chan GetAllByPrefixResult)
+	var mostRecentWaitOnDeletedError error
+	var svcs []Service
 	go func() {
 		for {
 			select {
 			case <-ctx.Done():
-				errCh <- errors.Errorf("Timeout exceeded (%s) while waiting for Services (%s) to be deleted in namespace (%s)", duration.String(), servicePrefix, namespace)
-			default:
-				s, err := GetAllByPrefix(servicePrefix, namespace)
-				if err != nil {
-					errCh <- errors.Errorf("Got error while getting Services with prefix \"%s\" in namespace \"%s\"", servicePrefix, namespace)
-				}
-				if len(s) == 0 {
-					succeededCh <- true
-				}
+				return
+			case ch <- GetAllByPrefixAsync(servicePrefix, namespace):
 				time.Sleep(sleep)
 			}
 		}
 	}()
 	for {
 		select {
-		case err := <-errCh:
-			return false, err
-		case deleted := <-succeededCh:
-			return deleted, nil
+		case result := <-ch:
+			mostRecentWaitOnDeletedError = result.err
+			svcs = result.svcs
+			if mostRecentWaitOnDeletedError == nil {
+				if len(svcs) == 0 {
+					return true, nil
+				}
+			}
+		case <-ctx.Done():
+			DescribeServices(servicePrefix, namespace)
+			return false, errors.Errorf("WaitOnDeleted timed out: %s\n", mostRecentWaitOnDeletedError)
+		}
+	}
+}
+
+// ValidateWithRetry waits for an Ingress to be provisioned
+func (s *Service) ValidateWithRetry(bodyResponseTextMatch string, sleep, timeout time.Duration) error {
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+	var mostRecentValidateWithRetryError error
+	ch := make(chan error)
+	go func() {
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case ch <- s.Validate(bodyResponseTextMatch):
+				time.Sleep(sleep)
+			}
+		}
+	}()
+	for {
+		select {
+		case result := <-ch:
+			mostRecentValidateWithRetryError = result
+			if mostRecentValidateWithRetryError == nil {
+				return nil
+			}
+		case <-ctx.Done():
+			err := s.Describe()
+			if err != nil {
+				log.Printf("Unable to describe service\n: %s", err)
+			}
+			return errors.Errorf("ValidateWithRetry timed out: %s\n", mostRecentValidateWithRetryError)
 		}
 	}
 }
 
 // Validate will attempt to run an http.Get against the root service url
-func (s *Service) Validate(check string, attempts int, sleep, wait time.Duration) bool {
-	var err error
-	var url string
-	var i int
+func (s *Service) Validate(bodyResponseTextMatch string) error {
+	if len(s.Status.LoadBalancer.Ingress) < 1 {
+		return errors.Errorf("No LB ingress IP for service %s", s.Metadata.Name)
+	}
 	var resp *http.Response
-	svc, waitErr := s.WaitForIngress(wait, 5*time.Second)
-	if waitErr != nil {
-		log.Printf("Unable to verify external IP, cannot validate service:%s\n", waitErr)
-		return false
-	}
-	if svc.Status.LoadBalancer.Ingress == nil || len(svc.Status.LoadBalancer.Ingress) == 0 {
-		log.Printf("Service LB ingress is empty or nil: %#v\n", svc.Status.LoadBalancer.Ingress)
-		return false
-	}
-	for i = 1; i <= attempts; i++ {
-		url = fmt.Sprintf("http://%s", svc.Status.LoadBalancer.Ingress[0]["ip"])
-		resp, err = http.Get(url)
-		if err == nil {
-			body, _ := ioutil.ReadAll(resp.Body)
-			matched, _ := regexp.MatchString(check, string(body))
-			if matched {
-				defer resp.Body.Close()
-				return true
-			}
-			log.Printf("Got unexpected URL body, expected to find %s, got:\n%s\n", check, string(body))
-		}
-		time.Sleep(sleep)
-	}
-	log.Printf("Unable to validate URL %s after %s, err: %#v\n", url, time.Duration(i)*wait, err)
+	url := fmt.Sprintf("http://%s", s.Status.LoadBalancer.Ingress[0]["ip"])
+	resp, err := http.Get(url)
 	if resp != nil {
 		defer resp.Body.Close()
 	}
-	return false
+	if err != nil {
+		return errors.Errorf("Unable to call service at URL %s: %s", url, err)
+	}
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return errors.Errorf("Unable to parse response body: %s", err)
+	}
+	matched, err := regexp.MatchString(bodyResponseTextMatch, string(body))
+	if err != nil {
+		return errors.Errorf("Unable to evalute response body against a regular expression match: %s", err)
+	}
+	if matched {
+		return nil
+	}
+	return errors.Errorf("Got unexpected URL body, expected to find %s, got:\n%s\n", bodyResponseTextMatch, string(body))
 }
 
 // CreateServiceFromFile will create a Service from file with a name

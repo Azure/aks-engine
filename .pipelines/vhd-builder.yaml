@@ -7,7 +7,7 @@ trigger: none
 # - POST a new SKU to azure marketplace
 
 variables:
-  CONTAINER_IMAGE:  'quay.io/deis/go-dev:v1.23.2'
+  CONTAINER_IMAGE:  'quay.io/deis/go-dev:v1.23.3'
 
 phases:
 - phase: build_vhd
@@ -71,6 +71,7 @@ phases:
       -e AZURE_RESOURCE_GROUP_NAME=${AZURE_RESOURCE_GROUP_NAME} \
       ${CONTAINER_IMAGE} make delete-sa
     displayName: Clean-up Storage Account
+    condition: always()
   - script: |
       docker run --rm \
       -v ${PWD}:/go/src/github.com/Azure/aks-engine \

@@ -3,7 +3,7 @@ DIST_DIRS         = find * -type d -exec
 
 .NOTPARALLEL:
 
-.PHONY: bootstrap build test test_fmt validate-copyright-headers fmt lint ci devenv
+.PHONY: bootstrap build test test_fmt validate-copyright-headers fmt lint ci
 
 ifdef DEBUG
 GOFLAGS   := -gcflags="-N -l"
@@ -25,7 +25,7 @@ GITTAG := $(VERSION_SHORT)
 endif
 
 REPO_PATH := github.com/Azure/$(PROJECT)
-DEV_ENV_IMAGE := quay.io/deis/go-dev:v1.23.2
+DEV_ENV_IMAGE := quay.io/deis/go-dev:v1.23.3
 DEV_ENV_WORK_DIR := /go/src/$(REPO_PATH)
 DEV_ENV_OPTS := --rm -v $(CURDIR):$(DEV_ENV_WORK_DIR) -w $(DEV_ENV_WORK_DIR) $(DEV_ENV_VARS)
 DEV_ENV_CMD := docker run $(DEV_ENV_OPTS) $(DEV_ENV_IMAGE)
@@ -81,7 +81,6 @@ generate-azure-constants:
 .PHONY: build
 build: validate-dependencies generate
 	$(GO) build $(GOFLAGS) -ldflags '$(LDFLAGS)' -o $(BINDIR)/$(PROJECT)$(EXTENSION) $(REPO_PATH)
-	$(GO) build $(GOFLAGS) -o $(BINDIR)/aks-engine-test$(EXTENSION) $(REPO_PATH)/test/aks-engine-test
 
 build-binary: generate
 	go build $(GOFLAGS) -v -ldflags "$(LDFLAGS)" -o $(BINARY_DEST_DIR)/aks-engine .
@@ -96,6 +95,10 @@ build-cross:
 .PHONY: build-windows-k8s
 build-windows-k8s:
 	./scripts/build-windows-k8s.sh -v $(K8S_VERSION) -p $(PATCH_VERSION)
+
+.PHONY: build-azs-windows-k8s
+build-azs-windows-k8s:
+	./scripts/build-windows-k8s.sh -v $(K8S_VERSION) -p $(PATCH_VERSION) -a $(BUILD_AZURE_STACK)
 
 .PHONY: dist
 dist: build-cross compress-binaries
@@ -138,7 +141,7 @@ ginkgoBuild: generate
 	ginkgo build test/e2e/kubernetes
 
 test: generate ginkgoBuild
-	ginkgo -skipPackage test/e2e/dcos,test/e2e/kubernetes -failFast -r .
+	ginkgo -skipPackage test/e2e/kubernetes -failFast -r .
 
 .PHONY: test-style
 test-style: validate-go validate-shell validate-copyright-headers
@@ -187,9 +190,6 @@ ci: bootstrap test-style build test lint
 .PHONY: coverage
 coverage:
 	@scripts/ginkgo.coverage.sh --codecov
-
-devenv:
-	./scripts/devenv.sh
 
 include versioning.mk
 include test.mk

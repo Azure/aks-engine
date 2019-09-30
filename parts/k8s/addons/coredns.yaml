@@ -59,6 +59,7 @@ metadata:
       addonmanager.kubernetes.io/mode: Reconcile
 data:
   Corefile: |
+    import conf.d/Corefile*
     .:53 {
         errors
         health
@@ -74,6 +75,20 @@ data:
         reload
         loadbalance
     }
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: coredns-custom
+  namespace: kube-system
+  labels:
+      addonmanager.kubernetes.io/mode: EnsureExists
+data:
+  Corefile: |
+    # Add custom CoreDNS configuration here.
+    #
+    # See https://github.com/coredns/coredns/tree/master/plugin/azure for information
+    # about the Azure DNS plugin.
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -153,6 +168,9 @@ spec:
         - name: config-volume
           mountPath: /etc/coredns
           readOnly: true
+        - mountPath: /etc/coredns/conf.d
+          name: config-custom
+          readOnly: true
         ports:
         - containerPort: 53
           name: dns
@@ -193,6 +211,14 @@ spec:
             items:
             - key: Corefile
               path: Corefile
+        - name: config-custom
+          configMap:
+            name: coredns-custom
+            items:
+            - key: Corefile
+              path: Corefile
+            optional: true
+
 ---
 apiVersion: v1
 kind: Service
