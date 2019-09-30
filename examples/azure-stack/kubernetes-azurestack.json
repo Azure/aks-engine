@@ -12,7 +12,8 @@
             }
         },
         "customCloudProfile": {
-            "portalURL": ""
+            "portalURL": "",
+            "identitySystem": ""
         },
         "featureFlags": {
             "enableTelemetry": true
