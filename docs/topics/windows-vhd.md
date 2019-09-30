@@ -10,14 +10,14 @@ Today the WIndows/Windows Server team only publish new images containing the lat
 
 Lastly publishing AKS specific Windows VHDs allows us to perform adequate testing on new patches before allowing customers to customers to upgrade their Windows nodes.
 In the first half of 2019 monthly security fixes broke Kubernetes workloads on Windows a few different occasions forcing the the aks-engine team to start hard-coding the specific versions of the Windows Server marketplace images (instead of targeting latest). 
-This needs to be resolved by collaborating and testing with the Windows team before patches get released publicly regardless (see [Testing Private Fixes](#Testing-Private-Fixes) section below)
+This needs to be resolved by collaborating and testing with the Windows team before patches get released publicly regardless (see [Testing Private Fixes](#Testing-Private-Fixes) section below).
 
 ## Build Process
 
 Windows AKS VHDs are produced using [packer](http://www.packer.io) in an [Azure DevOps](http://dev.azure.com) build pipeline.
 
 The build pipeline:
-- Runs a packer job provisions a new VM in Azure based off a specified Windows Server image and:
+- Runs a packer job which provisions a new VM in Azure based off a specified Windows Server image and:
   - Installs/enables required Windows components/features
   - Download multiple versions of components which users are allowed to specify the version of (Kubernetes, Docker, etc)
   - Downloads commonly used container images
