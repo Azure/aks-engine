@@ -319,7 +319,7 @@ func (d *Deployment) Delete(retries int) error {
 	if d.Metadata.HasHPA {
 		for i := 0; i < retries; i++ {
 			cmd := exec.Command("k", "delete", "hpa", "-n", d.Metadata.Namespace, d.Metadata.Name)
-			kubectlOutput, kubectlError = util.RunAndLogCommand(cmd, commandTimeout)
+			kubectlOutput, kubectlError = util.RunAndLogCommand(cmd, zeroValueDuration)
 			if kubectlError != nil {
 				log.Printf("Deployment %s has associated HPA but unable to delete in namespace %s:%s\n", d.Metadata.Namespace, d.Metadata.Name, string(kubectlOutput))
 				continue
