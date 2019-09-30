@@ -119,11 +119,13 @@ function GenerateAzureStackCNIConfig
         [Parameter(Mandatory=$true)][ValidateNotNullOrEmpty()][string] $ResourceGroup,
         [Parameter(Mandatory=$true)][ValidateNotNullOrEmpty()][string] $NetworkAPIVersion,
         [Parameter(Mandatory=$true)][ValidateNotNullOrEmpty()][string] $AzureEnvironmentFilePath,
-        [Parameter(Mandatory=$true)][ValidateNotNullOrEmpty()][string] $IdentitySystem
+        [Parameter(Mandatory=$true)][ValidateNotNullOrEmpty()][string] $IdentitySystem,
+        [Parameter(Mandatory=$true)][ValidateNotNullOrEmpty()][string] $KubeDir
+
     )
 
-    $networkInterfacesFile = "C:\k\network-interfaces.json"
-    $azureCNIConfigFile = "C:\k\interfaces.json"
+    $networkInterfacesFile = "$KubeDir\network-interfaces.json"
+    $azureCNIConfigFile = "$KubeDir\interfaces.json"
     $azureEnvironment = Get-Content $AzureEnvironmentFilePath | ConvertFrom-Json
 
     Write-Log "------------------------------------------------------------------------"

@@ -70,11 +70,30 @@ function Install-Docker
     }
 
     try {
-        Find-Package -Name Docker -ProviderName DockerMsftProvider -RequiredVersion $DockerVersion -ErrorAction Stop
-        Write-Log "Found version $DockerVersion. Installing..."
-        Install-Package -Name Docker -ProviderName DockerMsftProvider -Update -Force -RequiredVersion $DockerVersion
-        net start docker
-        Write-Log "Installed version $DockerVersion"
+        $installDocker = $true
+        $dockerService = Get-Service | ? Name -like 'docker'
+        if ($dockerService.Count -eq 0) {
+            Write-Log "Docker is not installed. Install docker version($DockerVersion)."
+        }
+        else {
+            $dockerServerVersion = docker version --format '{{.Server.Version}}'
+            Write-Log "Docker service is installed with docker version($dockerServerVersion)."
+            if ($dockerServerVersion -eq $DockerVersion) {
+                $installDocker = $false
+                Write-Log "Same version docker installed will skip installing docker version($dockerServerVersion)."
+            }
+            else {
+                Write-Log "Same version docker is not installed. Will install docker version($DockerVersion)."
+            }
+        }
+
+        if ($installDocker) {
+            Find-Package -Name Docker -ProviderName DockerMsftProvider -RequiredVersion $DockerVersion -ErrorAction Stop
+            Write-Log "Found version $DockerVersion. Installing..."
+            Install-Package -Name Docker -ProviderName DockerMsftProvider -Update -Force -RequiredVersion $DockerVersion
+            net start docker
+            Write-Log "Installed version $DockerVersion"
+        }
     } catch {
         Write-Log "Error while installing package: $_.Exception.Message"
         $currentDockerVersion = (Get-Package -Name Docker -ProviderName DockerMsftProvider).Version
