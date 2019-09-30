@@ -192,6 +192,7 @@ func (rcc *rotateCertsCmd) run(cmd *cobra.Command, args []string) error {
 		return errors.Wrap(err, "updating kubeconfig")
 	}
 
+
 	log.Debugf("Deleting Service Accoutns")
 	err = rcc.deleteServiceAccounts()
 	if err != nil {
