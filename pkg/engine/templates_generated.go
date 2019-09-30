@@ -26039,7 +26039,6 @@ function Install-Docker
         }
 
         if ($installDocker) {
-            docker version --format '{{.Server.Version}}'
             Find-Package -Name Docker -ProviderName DockerMsftProvider -RequiredVersion $DockerVersion -ErrorAction Stop
             Write-Log "Found version $DockerVersion. Installing..."
             Install-Package -Name Docker -ProviderName DockerMsftProvider -Update -Force -RequiredVersion $DockerVersion
