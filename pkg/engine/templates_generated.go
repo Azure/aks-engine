@@ -26008,6 +26008,11 @@ function Install-Docker
             [System.Environment]::SetEnvironmentVariable('DOCKER_API_VERSION', '1.37', [System.EnvironmentVariableTarget]::Machine)
         }
 
+        "19.03" {
+            Write-Log "Docker 19.03 found, setting DOCKER_API_VERSION to 1.40"
+            [System.Environment]::SetEnvironmentVariable('DOCKER_API_VERSION', '1.40', [System.EnvironmentVariableTarget]::Machine)
+        }
+
         default {
             Write-Log "Docker version $DockerVersion found, clearing DOCKER_API_VERSION"
             [System.Environment]::SetEnvironmentVariable('DOCKER_API_VERSION', $null, [System.EnvironmentVariableTarget]::Machine)
