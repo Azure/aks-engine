@@ -10,17 +10,20 @@ Today the WIndows/Windows Server team only publish new images containing the lat
 
 Lastly publishing AKS specific Windows VHDs allows us to perform adequate testing on new patches before allowing customers to customers to upgrade their Windows nodes.
 In the first half of 2019 monthly security fixes broke Kubernetes workloads on Windows a few different occasions forcing the the aks-engine team to start hard-coding the specific versions of the Windows Server marketplace images (instead of targeting latest). 
-This needs to be resolved by collaborating and testing with the Windows team before patches get released publicly regardless.
+This needs to be resolved by collaborating and testing with the Windows team before patches get released publicly regardless (see [Testing Private Fixes](#Testing-Private-Fixes) section below)
 
 ## Build Process
 
 Windows AKS VHDs are produced using [packer](http://www.packer.io) in an [Azure DevOps](http://dev.azure.com) build pipeline.
 
-The packer job provisions a new VM in Azure based off a specified Windows Server image and:
-- Installs/enables required Windows components/features
-- Download multiple versions of components which users are allowed to specify the version of (Kubernetes, Docker, etc)
-- Downloads commonly used container images
-- Configure system settings (windows update, page file sizes, etc)
+The build pipeline:
+- Runs a packer job provisions a new VM in Azure based off a specified Windows Server image and:
+  - Installs/enables required Windows components/features
+  - Download multiple versions of components which users are allowed to specify the version of (Kubernetes, Docker, etc)
+  - Downloads commonly used container images
+  - Configure system settings (windows update, page file sizes, etc)
+- Runs E2E tests using the VHD produced in the same pipeline
+- Optionally copies the VHD to another Azure storage account for extra validation and/or publishing 
 
 Note: See scripts referenced below to for further details
 
@@ -29,6 +32,16 @@ Note: See scripts referenced below to for further details
 - Azure DevOps build yaml build definition: [.pipelines/vhd-builder-windows.yaml](../../.pipelines/vhd-builder-windows.yaml)
 - Packer job definition: [packer/windows-vhd-builder.json](../../packer/windows-vhd-builder.json)
 - Customization script used in packer: [packer/configure-windows-vhd.ps1](../../packer/configure-windows-vhd.ps1)
+
+### Testing Private Fixes
+
+Occasionally it may be necessary to validate private fixes provided by the Windows team. This can be done without providing public access to the fixes by following these steps:
+- Fork Azure/aks-engine into a private git repo hosted in [Azure DevOps](http://dev.azure.com)
+- Configure a private build pipeline using [.pipelines/vhd-builder-windows.yaml](../../.pipelines/vhd-builder-windows.yaml) as the pipeline definition
+- Set up the build pipeline variables to point to private Azure subscriptions
+  - Pipeline variables are documented in the yaml file
+- Update [packer/configure-windows-vhd.ps1](../../packer/configure-windows-vhd.ps1) to install privates
+- Run the pipeline
 
 ## Usage in aks-engine
 
