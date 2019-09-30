@@ -14,7 +14,7 @@ This needs to be resolved by collaborating and testing with the Windows team bef
 
 ## Build Process
 
-Windows AKS VHDs are produced using [packer](www.packer.io) in an [Azure DevOps](dev.azure.com) build pipeline.
+Windows AKS VHDs are produced using [packer](http://www.packer.io) in an [Azure DevOps](http://dev.azure.com) build pipeline.
 
 The packer job provisions a new VM in Azure based off a specified Windows Server image and:
 - Installs/enables required Windows components/features
