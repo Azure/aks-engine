@@ -158,7 +158,7 @@ func (uc *upgradeCmd) loadCluster() error {
 	if uc.containerService.Properties.IsAzureStackCloud() {
 		writeCustomCloudProfile(uc.containerService)
 
-		if err := uc.containerService.Properties.SetAzureStackCloudSpec(api.AzureStackCloudSpecParams{
+		if err = uc.containerService.Properties.SetAzureStackCloudSpec(api.AzureStackCloudSpecParams{
 			IsUpgrade: true,
 			IsScale:   false,
 		}); err != nil {
