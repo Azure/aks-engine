@@ -1261,6 +1261,7 @@ func convertAzureEnvironmentSpecConfigToVLabs(api *AzureEnvironmentSpecConfig, v
 		ResourceManagerVMDNSSuffix: api.EndpointConfig.ResourceManagerVMDNSSuffix,
 	}
 	vlabses.KubernetesSpecConfig = vlabs.KubernetesSpecConfig{
+		AzureTelemetryPID:                api.KubernetesSpecConfig.AzureTelemetryPID,
 		KubernetesImageBase:              api.KubernetesSpecConfig.KubernetesImageBase,
 		TillerImageBase:                  api.KubernetesSpecConfig.TillerImageBase,
 		ACIConnectorImageBase:            api.KubernetesSpecConfig.ACIConnectorImageBase,

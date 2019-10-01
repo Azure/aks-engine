@@ -2213,6 +2213,7 @@ func TestSetCustomCloudProfileDefaults(t *testing.T) {
 	expectedEnv := AzureCloudSpecEnvMap[AzurePublicCloud]
 	expectedEnv.EndpointConfig.ResourceManagerVMDNSSuffix = mockCSPDefaultSpec.CustomCloudProfile.Environment.ResourceManagerVMDNSSuffix
 	expectedEnv.CloudName = AzureStackCloud
+	expectedEnv.KubernetesSpecConfig.AzureTelemetryPID = DefaultAzureStackDeployTelemetryPID
 	if diff := cmp.Diff(actualEnv, expectedEnv); diff != "" {
 		t.Errorf("setCustomCloudProfileDefaults(): did not set AzureStackCloudSpec as default when azureEnvironmentSpecConfig is empty in api model JSON file. %s", diff)
 	}
@@ -2240,6 +2241,7 @@ func TestSetCustomCloudProfileDefaults(t *testing.T) {
 		expectedEnvAzureChinaSpec := AzureCloudSpecEnvMap[value]
 		expectedEnvAzureChinaSpec.EndpointConfig.ResourceManagerVMDNSSuffix = mockCSPDefaultSpec.CustomCloudProfile.Environment.ResourceManagerVMDNSSuffix
 		expectedEnvAzureChinaSpec.CloudName = AzureStackCloud
+		expectedEnvAzureChinaSpec.KubernetesSpecConfig.AzureTelemetryPID = DefaultAzureStackDeployTelemetryPID
 		t.Logf("verifying dependenciesLocation: %s", key)
 		if diff := cmp.Diff(actualEnvAzureChinaSpec, expectedEnvAzureChinaSpec); diff != "" {
 			t.Errorf("setCustomCloudProfileDefaults(): did not set AzureStackCloudSpec as default when connection Mode is %s in api model JSON file. %s", key, diff)
@@ -2251,7 +2253,11 @@ func TestSetCustomCloudProfileDefaults(t *testing.T) {
 	mockCSPEmptyResourceManagerVMDNSSuffix := GetMockPropertiesWithCustomCloudProfile("azurestackcloud", true, true, false)
 	mockCSEmptyResourceManagerVMDNSSuffix.Properties.CustomCloudProfile = mockCSPEmptyResourceManagerVMDNSSuffix.CustomCloudProfile
 	mockCSEmptyResourceManagerVMDNSSuffix.Properties.CustomCloudProfile.Environment.ResourceManagerVMDNSSuffix = ""
-	acutalerr := mockCSEmptyResourceManagerVMDNSSuffix.Properties.SetAzureStackCloudSpec()
+
+	acutalerr := mockCSEmptyResourceManagerVMDNSSuffix.Properties.SetAzureStackCloudSpec(AzureStackCloudSpecParams{
+		IsUpgrade: false,
+		IsScale:   false,
+	})
 	expectError := errors.New("Failed to set Cloud Spec for Azure Stack due to invalid environment")
 	if !helpers.EqualError(acutalerr, expectError) {
 		t.Errorf("verify ResourceManagerVMDNSSuffix empty: expected error: %s - got: %s", acutalerr, expectError)
@@ -2262,7 +2268,10 @@ func TestSetCustomCloudProfileDefaults(t *testing.T) {
 	mockCSPNilEnvironment := GetMockPropertiesWithCustomCloudProfile("azurestackcloud", true, true, false)
 	mockCSNilEnvironment.Properties.CustomCloudProfile = mockCSPNilEnvironment.CustomCloudProfile
 	mockCSNilEnvironment.Properties.CustomCloudProfile.Environment = nil
-	acutalerr = mockCSEmptyResourceManagerVMDNSSuffix.Properties.SetAzureStackCloudSpec()
+	acutalerr = mockCSEmptyResourceManagerVMDNSSuffix.Properties.SetAzureStackCloudSpec(AzureStackCloudSpecParams{
+		IsUpgrade: false,
+		IsScale:   false,
+	})
 	if !helpers.EqualError(acutalerr, expectError) {
 		t.Errorf("verify environment nil: expected error: %s - got: %s", acutalerr, expectError)
 	}
@@ -2281,6 +2290,7 @@ func TestSetCustomCloudProfileDefaults(t *testing.T) {
 		},
 		//KubernetesSpecConfig - Due to Chinese firewall issue, the default containers from google is blocked, use the Chinese local mirror instead
 		KubernetesSpecConfig: KubernetesSpecConfig{
+			AzureTelemetryPID:                "AzureTelemetryPID",
 			KubernetesImageBase:              "KubernetesImageBase",
 			TillerImageBase:                  "TillerImageBase",
 			ACIConnectorImageBase:            "ACIConnectorImageBase",
@@ -2383,7 +2393,6 @@ func TestSetCustomCloudProfileDefaults(t *testing.T) {
 	if mockCSCustomP.Properties.CustomCloudProfile.AzureEnvironmentSpecConfig.KubernetesSpecConfig.VnetCNIWindowsPluginsDownloadURL != DefaultKubernetesSpecConfig.VnetCNIWindowsPluginsDownloadURL {
 		t.Errorf("setCustomCloudProfileDefaults(): did not set VnetCNIWindowsPluginsDownloadURL with default Value, got '%s', expected %s", mockCSCustomP.Properties.CustomCloudProfile.AzureEnvironmentSpecConfig.KubernetesSpecConfig.VnetCNIWindowsPluginsDownloadURL, DefaultKubernetesSpecConfig.VnetCNIWindowsPluginsDownloadURL)
 	}
-
 	// Test that the default values are set for IdentitySystem and AuthenticationMethod if they are not in the configuration
 	mockCSAuth := getMockBaseContainerService("1.11.6")
 	mockCSPAuth := GetMockPropertiesWithCustomCloudProfile("azurestackcloud", true, true, true)
@@ -2542,6 +2551,7 @@ func TestSetCustomCloudProfileEnvironmentDefaults(t *testing.T) {
 
 	cloudSpec := AzureCloudSpecEnvMap[AzurePublicCloud]
 	cloudSpec.CloudName = AzureStackCloud
+	cloudSpec.KubernetesSpecConfig.AzureTelemetryPID = DefaultAzureStackDeployTelemetryPID
 	cloudSpec.EndpointConfig.ResourceManagerVMDNSSuffix = mockCS.Properties.CustomCloudProfile.Environment.ResourceManagerVMDNSSuffix
 	if diff := cmp.Diff(AzureCloudSpecEnvMap[AzureStackCloud], cloudSpec); diff != "" {
 		t.Errorf("Fail to compare, AzureCloudSpec AzureStackCloud %q", diff)
@@ -3309,5 +3319,64 @@ func TestEnableRBAC(t *testing.T) {
 				t.Errorf("expected %t, but got %t", c.expected, to.Bool(c.cs.Properties.OrchestratorProfile.KubernetesConfig.EnableRbac))
 			}
 		})
+	}
+}
+
+func TestDefaultTelemetry(t *testing.T) {
+	// Test that the AzureTelemetryPID is set to DefaultAzureStackDeployTelemetryPID  by default
+	mockCSDefaultSpec := getMockBaseContainerService("1.11.6")
+	mockCSPDefaultSpec := GetMockPropertiesWithCustomCloudProfile("azurestackcloud", true, true, false)
+	mockCSDefaultSpec.Properties.CustomCloudProfile = mockCSPDefaultSpec.CustomCloudProfile
+	mockCSDefaultSpec.SetPropertiesDefaults(PropertiesDefaultsParams{
+		IsScale:    false,
+		IsUpgrade:  false,
+		PkiKeySize: helpers.DefaultPkiKeySize,
+	})
+
+	actualEnv := AzureCloudSpecEnvMap[AzureStackCloud]
+	expectedEnv := AzureCloudSpecEnvMap[AzurePublicCloud]
+	expectedEnv.EndpointConfig.ResourceManagerVMDNSSuffix = mockCSPDefaultSpec.CustomCloudProfile.Environment.ResourceManagerVMDNSSuffix
+	expectedEnv.CloudName = AzureStackCloud
+	expectedEnv.KubernetesSpecConfig.AzureTelemetryPID = DefaultAzureStackDeployTelemetryPID
+	if diff := cmp.Diff(actualEnv, expectedEnv); diff != "" {
+		t.Errorf("setCustomCloudProfileDefaults(): did not set AzureTelemetryPID as DefaultAzureStackDeployTelemetryPID. %s", diff)
+	}
+
+	// Test that the AzureTelemetryPID is set to DefaultAzureStackScaleTelemetryPID by in Scale scenario
+	mockCSScaleSpec := getMockBaseContainerService("1.11.6")
+	mockCSPScaleSpec := GetMockPropertiesWithCustomCloudProfile("azurestackcloud", true, true, false)
+	mockCSScaleSpec.Properties.CustomCloudProfile = mockCSPScaleSpec.CustomCloudProfile
+	mockCSScaleSpec.SetPropertiesDefaults(PropertiesDefaultsParams{
+		IsScale:    true,
+		IsUpgrade:  false,
+		PkiKeySize: helpers.DefaultPkiKeySize,
+	})
+
+	actualScaleEnv := AzureCloudSpecEnvMap[AzureStackCloud]
+	expectedScaleEnv := AzureCloudSpecEnvMap[AzurePublicCloud]
+	expectedScaleEnv.EndpointConfig.ResourceManagerVMDNSSuffix = mockCSPDefaultSpec.CustomCloudProfile.Environment.ResourceManagerVMDNSSuffix
+	expectedScaleEnv.CloudName = AzureStackCloud
+	expectedScaleEnv.KubernetesSpecConfig.AzureTelemetryPID = DefaultAzureStackScaleTelemetryPID
+	if diff := cmp.Diff(actualScaleEnv, expectedScaleEnv); diff != "" {
+		t.Errorf("setCustomCloudProfileDefaults(): did not set AzureTelemetryPID as DefaultAzureStackDeployTelemetryPID. %s", diff)
+	}
+
+	// Test that the AzureTelemetryPID is set to DefaultAzureStackUpgradeTelemetryPID in Upgrade scenario
+	mockCSSUpgradeSpec := getMockBaseContainerService("1.11.6")
+	mockCSPSUpgradeSpec := GetMockPropertiesWithCustomCloudProfile("azurestackcloud", true, true, false)
+	mockCSSUpgradeSpec.Properties.CustomCloudProfile = mockCSPSUpgradeSpec.CustomCloudProfile
+	mockCSSUpgradeSpec.SetPropertiesDefaults(PropertiesDefaultsParams{
+		IsScale:    false,
+		IsUpgrade:  true,
+		PkiKeySize: helpers.DefaultPkiKeySize,
+	})
+
+	actualSUpgradeEnv := AzureCloudSpecEnvMap[AzureStackCloud]
+	expectedSUpgradeEnv := AzureCloudSpecEnvMap[AzurePublicCloud]
+	expectedSUpgradeEnv.EndpointConfig.ResourceManagerVMDNSSuffix = mockCSPDefaultSpec.CustomCloudProfile.Environment.ResourceManagerVMDNSSuffix
+	expectedSUpgradeEnv.CloudName = AzureStackCloud
+	expectedSUpgradeEnv.KubernetesSpecConfig.AzureTelemetryPID = DefaultAzureStackUpgradeTelemetryPID
+	if diff := cmp.Diff(actualSUpgradeEnv, expectedSUpgradeEnv); diff != "" {
+		t.Errorf("setCustomCloudProfileDefaults(): did not set AzureTelemetryPID as DefaultAzureStackUpgradeTelemetryPID. %s", diff)
 	}
 }
