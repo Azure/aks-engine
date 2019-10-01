@@ -432,10 +432,8 @@ func (a *Properties) validateMasterProfile(isUpdate bool) error {
 	}
 
 	if to.Bool(m.AuditDEnabled) {
-		if m.Distro != "" {
-			if !m.IsUbuntu() {
-				return errors.Errorf("You have enabled auditd for master vms, but you did not specify an Ubuntu-based distro.")
-			}
+		if m.Distro != "" && !m.IsUbuntu() {
+			return errors.Errorf("You have enabled auditd for master vms, but you did not specify an Ubuntu-based distro.")
 		}
 	}
 
@@ -486,7 +484,7 @@ func (a *Properties) validateAgentPoolProfiles(isUpdate bool) error {
 		}
 
 		if to.Bool(agentPoolProfile.AuditDEnabled) {
-			if !agentPoolProfile.IsUbuntu() {
+			if agentPoolProfile.Distro != "" && !agentPoolProfile.IsUbuntu() {
 				return errors.Errorf("You have enabled auditd in agent pool %s, but you did not specify an Ubuntu-based distro", agentPoolProfile.Name)
 			}
 		}
