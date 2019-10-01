@@ -640,7 +640,6 @@ format for `sourceVault.id`, can be obtained in cli, or found in the portal: /su
 format for `vaultCertificates.certificateUrl`, can be obtained in cli, or found in the portal:
 https://{keyvaultname}.vault.azure.net:443/secrets/{secretName}/{version}
 
-
 ### windowsProfile
 
 `windowsProfile` provides configuration specific to Windows nodes in the cluster
@@ -649,10 +648,10 @@ https://{keyvaultname}.vault.azure.net:443/secrets/{secretName}/{version}
 | -------------------------------- | -------- | ------------------------------------------------------------------------ |
 | adminUsername                    | yes      | Username for the Windows adminstrator account created on each Windows node |
 | adminPassword                    | yes      | Password for the Windows adminstrator account created on each Windows node |
-| windowsPublisher                 | no       | Publisher used to find Windows VM to deploy from marketplace. Default: `MicrosoftWindowsServer` |
-| windowsOffer                     | no       | Offer used to find Windows VM to deploy from marketplace. Default: `WindowsServer` |
-| windowsSku                       | no       | SKU usedto find Windows VM to deploy from marketplace. Default: `2019-Datacenter-Core-with-Containers-smalldisk` |
-| imageVersion                     | no       | Specific image version to deploy from marketplace.  Default: `17763.737.1909062324`. This default is incremented as new versions are tested to avoid unexpected breaks. |
+| windowsPublisher                 | no       | Publisher used to find Windows VM to deploy from marketplace. Default: `microsoft-aks` |
+| windowsOffer                     | no       | Offer used to find Windows VM to deploy from marketplace. Default: `aks-windows` |
+| windowsSku                       | no       | SKU usedto find Windows VM to deploy from marketplace. Default: `2019-datacenter-core-smalldisk` |
+| imageVersion                     | no       | Specific image version to deploy from marketplace.  Default: `17763.737.190923`. This default is incremented to include the latest Windows patches after being validated by the AKS Engine team. |
 | windowsImageSourceURL            | no       | Path to an existing Azure storage blob with a sysprepped VHD. This is used to test pre-release or customized VHD files that you have uploaded to Azure. If provided, the above 4 parameters are ignored. |
 | imageReference.name              | no       | Name of an Image. |
 | imageReference.resourceGroup     | no       | Resource group that contains the Image. |
@@ -663,10 +662,43 @@ https://{keyvaultname}.vault.azure.net:443/secrets/{secretName}/{version}
 
 #### Windows Images
 
-You can configure the image used for all Windows nodes one of the following ways (listed in order of precedence based on what is specified in the api model):
+You can configure the image used for all Windows nodes one of the following ways:
 
+##### Defaults
 
-##### Custom VHD
+The AKS Engine team produces images that are optimized for and validated with aks-engine.
+The latest latest version of these images are used as the default images for Windows nodes.
+
+These images are published to the Azure Marketplace under the `microsoft-aks` publisher and `aks-windows` offer.
+Release notes for these images can be found under [releases/vhd-notes/aks-windows](../../releases/vhd-notes/aks-windows).
+
+##### Marketplace Images
+
+Aks-engine also supports running 'vanilla' Windows Server images published by Microsoft.
+These can be used by advanced users if a release other than Winders Server 2019 is needed.
+
+If you want to choose a specific Windows image, but automatically use the latest - set `windowsPublisher`, `windowsOffer`, and `windowsSku`. If you need a specific version, then add `imageVersion` too.
+
+You can find all available images with `az vm image list --all --publisher MicrosoftWindowsServer --offer WindowsServer --output table`, and the contents of these images are described in the knowledge base article [Windows Server release on Azure Marketplace update history](https://support.microsoft.com/en-us/help/4497947).
+
+If you want to use a specific image then `windowsPublisher`, `windowsOffer`, `windowsSku`, and `imageVersion` must all be set:
+
+```json
+"windowsProfile": {
+            "adminUsername": "...",
+            "adminPassword": "...",
+            "windowsPublisher": "MicrosoftWindowsServer",
+            "windowsOffer": "WindowsServer",
+            "windowsSku": "2019-Datacenter-Core-with-Containers-smalldisk",
+            "imageVersion": "2019.0.20181107"
+     },
+```
+
+##### Custom Images
+
+Listed in order of precedence based on what is specified in the api model:
+
+###### VHD
 
 To use an image uploaded to an Azure storage account (or any other accessible location) specify `windowsImageSourceURL`.
 
@@ -680,7 +712,7 @@ To use an image uploaded to an Azure storage account (or any other accessible lo
      },
 ```
 
-##### Shared Image Gallery
+###### Shared Image Gallery
 
 To use an Image from a Shared Image Gallery specify `imageReference.name`, `imageReference.resourceGroup`, `imageReference.subscriptionId`, `imageReference.galllery`, and `imageReference.version`.
 
@@ -698,7 +730,7 @@ To use an Image from a Shared Image Gallery specify `imageReference.name`, `imag
      },
 ```
 
-##### Azure Image
+###### Azure Image
 
 To use a pre-existing Azure Image specify `imageReference.name` and `imageReference.resourceGroup`.
 
@@ -710,34 +742,6 @@ To use a pre-existing Azure Image specify `imageReference.name` and `imageRefere
               "name": "custom-image",
               "resourceGroup": "windows-images"
             }
-     },
-```
-
-##### Marketplace image (Default)
-
-By default AKS engine will use a recently known good Windows image from the Azure marketplace (See [windowsProfile](#windowsProfile) table for specific values).
-
-```json
-"windowsProfile": {
-            "adminUsername": "...",
-            "adminPassword": "..."
-     },
-```
-
-If you want to choose a specific Windows image, but automatically use the latest - set `windowsPublisher`, `windowsOffer`, and `windowsSku`. If you need a specific version, then add `imageVersion` too.
-
-You can find all available images with `az vm image list --all --publisher MicrosoftWindowsServer --offer WindowsServer --output table`, and the contents of these images are described in the knowledge base article [Windows Server release on Azure Marketplace update history](https://support.microsoft.com/en-us/help/4497947).
-
-If you want to use a specific image then `windowsPublisher`, `windowsOffer`, `windowsSku`, and `imageVersion` must all be set:
-
-```json
-"windowsProfile": {
-            "adminUsername": "...",
-            "adminPassword": "...",
-            "windowsPublisher": "MicrosoftWindowsServer",
-            "windowsOffer": "WindowsServer",
-            "windowsSku": "2019-Datacenter-Core-with-Containers-smalldisk",
-            "imageVersion": "2019.0.20181107"
      },
 ```
 

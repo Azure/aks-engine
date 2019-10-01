@@ -1594,10 +1594,10 @@ func TestWindowsProfileDefaults(t *testing.T) {
 			"defaults",
 			WindowsProfile{},
 			WindowsProfile{
-				WindowsPublisher:      DefaultWindowsPublisher,
-				WindowsOffer:          DefaultWindowsOffer,
-				WindowsSku:            DefaultWindowsSku,
-				ImageVersion:          DefaultImageVersion,
+				WindowsPublisher:      AKSWindowsServer2019OSImageConfig.ImagePublisher,
+				WindowsOffer:          AKSWindowsServer2019OSImageConfig.ImageOffer,
+				WindowsSku:            AKSWindowsServer2019OSImageConfig.ImageSku,
+				ImageVersion:          AKSWindowsServer2019OSImageConfig.ImageVersion,
 				AdminUsername:         "",
 				AdminPassword:         "",
 				WindowsImageSourceURL: "",
@@ -1607,7 +1607,109 @@ func TestWindowsProfileDefaults(t *testing.T) {
 			false,
 		},
 		{
-			"user overrides",
+			"aks vhd current version",
+			WindowsProfile{
+				WindowsPublisher: AKSWindowsServer2019OSImageConfig.ImagePublisher,
+				WindowsOffer:     AKSWindowsServer2019OSImageConfig.ImageOffer,
+				WindowsSku:       AKSWindowsServer2019OSImageConfig.ImageSku,
+			},
+			WindowsProfile{
+				WindowsPublisher:      AKSWindowsServer2019OSImageConfig.ImagePublisher,
+				WindowsOffer:          AKSWindowsServer2019OSImageConfig.ImageOffer,
+				WindowsSku:            AKSWindowsServer2019OSImageConfig.ImageSku,
+				ImageVersion:          AKSWindowsServer2019OSImageConfig.ImageVersion,
+				AdminUsername:         "",
+				AdminPassword:         "",
+				WindowsImageSourceURL: "",
+				WindowsDockerVersion:  "",
+				SSHEnabled:            false,
+			},
+			false,
+		},
+		{
+			"aks vhd specific version",
+			WindowsProfile{
+				WindowsPublisher: AKSWindowsServer2019OSImageConfig.ImagePublisher,
+				WindowsOffer:     AKSWindowsServer2019OSImageConfig.ImageOffer,
+				WindowsSku:       AKSWindowsServer2019OSImageConfig.ImageSku,
+				ImageVersion:     "override",
+			},
+			WindowsProfile{
+				WindowsPublisher:      AKSWindowsServer2019OSImageConfig.ImagePublisher,
+				WindowsOffer:          AKSWindowsServer2019OSImageConfig.ImageOffer,
+				WindowsSku:            AKSWindowsServer2019OSImageConfig.ImageSku,
+				ImageVersion:          "override",
+				AdminUsername:         "",
+				AdminPassword:         "",
+				WindowsImageSourceURL: "",
+				WindowsDockerVersion:  "",
+				SSHEnabled:            false,
+			},
+			false,
+		},
+		{
+			"vanilla vhd current version",
+			WindowsProfile{
+				WindowsPublisher: WindowsServer2019OSImageConfig.ImagePublisher,
+				WindowsOffer:     WindowsServer2019OSImageConfig.ImageOffer,
+				WindowsSku:       WindowsServer2019OSImageConfig.ImageSku,
+			},
+			WindowsProfile{
+				WindowsPublisher:      WindowsServer2019OSImageConfig.ImagePublisher,
+				WindowsOffer:          WindowsServer2019OSImageConfig.ImageOffer,
+				WindowsSku:            WindowsServer2019OSImageConfig.ImageSku,
+				ImageVersion:          WindowsServer2019OSImageConfig.ImageVersion,
+				AdminUsername:         "",
+				AdminPassword:         "",
+				WindowsImageSourceURL: "",
+				WindowsDockerVersion:  "",
+				SSHEnabled:            false,
+			},
+			false,
+		},
+		{
+			"vanilla vhd spepcific version",
+			WindowsProfile{
+				WindowsPublisher: WindowsServer2019OSImageConfig.ImagePublisher,
+				WindowsOffer:     WindowsServer2019OSImageConfig.ImageOffer,
+				WindowsSku:       WindowsServer2019OSImageConfig.ImageSku,
+				ImageVersion:     "override",
+			},
+			WindowsProfile{
+				WindowsPublisher:      WindowsServer2019OSImageConfig.ImagePublisher,
+				WindowsOffer:          WindowsServer2019OSImageConfig.ImageOffer,
+				WindowsSku:            WindowsServer2019OSImageConfig.ImageSku,
+				ImageVersion:          "override",
+				AdminUsername:         "",
+				AdminPassword:         "",
+				WindowsImageSourceURL: "",
+				WindowsDockerVersion:  "",
+				SSHEnabled:            false,
+			},
+			false,
+		},
+		{
+			"user overrides latest version",
+			WindowsProfile{
+				WindowsPublisher: "override",
+				WindowsOffer:     "override",
+				WindowsSku:       "override",
+			},
+			WindowsProfile{
+				WindowsPublisher:      "override",
+				WindowsOffer:          "override",
+				WindowsSku:            "override",
+				ImageVersion:          "latest",
+				AdminUsername:         "",
+				AdminPassword:         "",
+				WindowsImageSourceURL: "",
+				WindowsDockerVersion:  "",
+				SSHEnabled:            false,
+			},
+			false,
+		},
+		{
+			"user overrides specific version",
 			WindowsProfile{
 				WindowsPublisher: "override",
 				WindowsOffer:     "override",
@@ -1631,10 +1733,10 @@ func TestWindowsProfileDefaults(t *testing.T) {
 			"Azure Stack defaults",
 			WindowsProfile{},
 			WindowsProfile{
-				WindowsPublisher:      DefaultWindowsPublisher,
-				WindowsOffer:          DefaultAzureStackWindowsOffer,
-				WindowsSku:            DefaultAzureStackWindowsSku,
-				ImageVersion:          DefaultAzureStackImageVersion,
+				WindowsPublisher:      AzureStackWindowsServer2019OSImageConfig.ImagePublisher,
+				WindowsOffer:          AzureStackWindowsServer2019OSImageConfig.ImageOffer,
+				WindowsSku:            AzureStackWindowsServer2019OSImageConfig.ImageSku,
+				ImageVersion:          AzureStackWindowsServer2019OSImageConfig.ImageVersion,
 				AdminUsername:         "",
 				AdminPassword:         "",
 				WindowsImageSourceURL: "",
@@ -1646,45 +1748,25 @@ func TestWindowsProfileDefaults(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		mockAPI := getMockAPIProperties("1.14.0")
-		mockAPI.WindowsProfile = &test.windowsProfile
-		if test.isAzureStack {
-			mockAPI.CustomCloudProfile = &CustomCloudProfile{}
-		}
-		mockAPI.setWindowsProfileDefaults(false, false)
-		if mockAPI.WindowsProfile.WindowsPublisher != test.expectedWindowsProfile.WindowsPublisher {
-			t.Fatalf("setWindowsProfileDefaults() test case %v did not return right default values %v != %v", test.name, mockAPI.WindowsProfile.WindowsPublisher, test.expectedWindowsProfile.WindowsPublisher)
-		}
-		if mockAPI.WindowsProfile.WindowsOffer != test.expectedWindowsProfile.WindowsOffer {
-			t.Fatalf("setWindowsProfileDefaults() test case %v did not return right default values %v != %v", test.name, mockAPI.WindowsProfile.WindowsOffer, test.expectedWindowsProfile.WindowsOffer)
-		}
-		if mockAPI.WindowsProfile.WindowsSku != test.expectedWindowsProfile.WindowsSku {
-			t.Fatalf("setWindowsProfileDefaults() test case %v did not return right default values %v != %v", test.name, mockAPI.WindowsProfile.WindowsSku, test.expectedWindowsProfile.WindowsSku)
-		}
-		if mockAPI.WindowsProfile.ImageVersion != test.expectedWindowsProfile.ImageVersion {
-			t.Fatalf("setWindowsProfileDefaults() test case %v did not return right default values %v != %v", test.name, mockAPI.WindowsProfile.ImageVersion, test.expectedWindowsProfile.ImageVersion)
-		}
-		if mockAPI.WindowsProfile.AdminUsername != test.expectedWindowsProfile.AdminUsername {
-			t.Fatalf("setWindowsProfileDefaults() test case %v did not return right default values %v != %v", test.name, mockAPI.WindowsProfile.AdminUsername, test.expectedWindowsProfile.AdminUsername)
-		}
-		if mockAPI.WindowsProfile.AdminPassword != test.expectedWindowsProfile.AdminPassword {
-			t.Fatalf("setWindowsProfileDefaults() test case %v did not return right default values %v != %v", test.name, mockAPI.WindowsProfile.AdminPassword, test.expectedWindowsProfile.AdminPassword)
-		}
-		if mockAPI.WindowsProfile.WindowsImageSourceURL != test.expectedWindowsProfile.WindowsImageSourceURL {
-			t.Fatalf("setWindowsProfileDefaults() test case %v did not return right default values %v != %v", test.name, mockAPI.WindowsProfile.WindowsImageSourceURL, test.expectedWindowsProfile.WindowsImageSourceURL)
-		}
-		if mockAPI.WindowsProfile.WindowsDockerVersion != test.expectedWindowsProfile.WindowsDockerVersion {
-			t.Fatalf("setWindowsProfileDefaults() test case %v did not return right default values %v != %v", test.name, mockAPI.WindowsProfile.WindowsDockerVersion, test.expectedWindowsProfile.WindowsDockerVersion)
-		}
-		if mockAPI.WindowsProfile.Secrets != nil {
-			t.Fatalf("setWindowsProfileDefaults() test case %v did not return right default values %v != %v", test.name, mockAPI.WindowsProfile.Secrets, nil)
-		}
-		if mockAPI.WindowsProfile.SSHEnabled != test.expectedWindowsProfile.SSHEnabled {
-			t.Fatalf("setWindowsProfileDefaults() test case %v did not return right default values %v != %v", test.name, mockAPI.WindowsProfile.SSHEnabled, test.expectedWindowsProfile.SSHEnabled)
-		}
-		if mockAPI.WindowsProfile.EnableAutomaticUpdates != nil {
-			t.Fatalf("setWindowsProfileDefaults() test case %v did not return right default values %v != %v", test.name, mockAPI.WindowsProfile.EnableAutomaticUpdates, nil)
-		}
+		test := test
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+
+			mockAPI := getMockAPIProperties("1.16.0")
+			mockAPI.WindowsProfile = &test.windowsProfile
+			if test.isAzureStack {
+				mockAPI.CustomCloudProfile = &CustomCloudProfile{}
+			}
+			mockAPI.setWindowsProfileDefaults(false, false)
+
+			actual := mockAPI.WindowsProfile
+			expected := &test.expectedWindowsProfile
+
+			diff := cmp.Diff(actual, expected)
+			if diff != "" {
+				t.Errorf("unexpected diff while comparing WindowsProfile: %s", diff)
+			}
+		})
 	}
 }
 
