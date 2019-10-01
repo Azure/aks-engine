@@ -413,7 +413,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			err = sshConn.CopyTo(auditdValidateScript)
 			Expect(err).NotTo(HaveOccurred())
 			for _, node := range nodeList.Nodes {
-				if !node.HasSubstring(lowPriVMSSPrefixes) {
+				if !node.HasSubstring(lowPriVMSSPrefixes) && node.IsUbuntu() {
 					var enabled bool
 					if node.HasSubstring(auditDNodePrefixes) {
 						enabled = true
