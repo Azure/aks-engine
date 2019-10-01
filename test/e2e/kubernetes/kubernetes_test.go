@@ -393,24 +393,27 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 		})
 
 		It("should validate auditd configuration", func() {
-			if !eng.ExpandedDefinition.Properties.HasLowPriorityScaleset() {
-				var auditDNodePrefixes []string
-				if eng.ExpandedDefinition.Properties.MasterProfile != nil {
-					if to.Bool(eng.ExpandedDefinition.Properties.MasterProfile.AuditDEnabled) {
-						auditDNodePrefixes = append(auditDNodePrefixes, "k8s-master-")
-					}
+			var auditDNodePrefixes []string
+			var lowPriVMSSPrefixes []string
+			if eng.ExpandedDefinition.Properties.MasterProfile != nil {
+				if to.Bool(eng.ExpandedDefinition.Properties.MasterProfile.AuditDEnabled) {
+					auditDNodePrefixes = append(auditDNodePrefixes, "k8s-master-")
 				}
-				for _, profile := range eng.ExpandedDefinition.Properties.AgentPoolProfiles {
-					if to.Bool(profile.AuditDEnabled) {
-						auditDNodePrefixes = append(auditDNodePrefixes, profile.Name)
-					}
+			}
+			for _, profile := range eng.ExpandedDefinition.Properties.AgentPoolProfiles {
+				if profile.IsLowPriorityScaleSet() {
+					lowPriVMSSPrefixes = append(lowPriVMSSPrefixes, "k8s-"+profile.Name)
+				} else if to.Bool(profile.AuditDEnabled) {
+					auditDNodePrefixes = append(auditDNodePrefixes, profile.Name)
 				}
-				nodeList, err := node.GetReady()
-				Expect(err).NotTo(HaveOccurred())
-				auditdValidateScript := "auditd-validate.sh"
-				err = sshConn.CopyTo(auditdValidateScript)
-				Expect(err).NotTo(HaveOccurred())
-				for _, node := range nodeList.Nodes {
+			}
+			nodeList, err := node.GetReady()
+			Expect(err).NotTo(HaveOccurred())
+			auditdValidateScript := "auditd-validate.sh"
+			err = sshConn.CopyTo(auditdValidateScript)
+			Expect(err).NotTo(HaveOccurred())
+			for _, node := range nodeList.Nodes {
+				if !node.HasSubstring(lowPriVMSSPrefixes) {
 					var enabled bool
 					if node.HasSubstring(auditDNodePrefixes) {
 						enabled = true
@@ -421,8 +424,6 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 					err = sshConn.ExecuteRemoteWithRetry(node.Metadata.Name, auditdValidationCommand, false, sleepBetweenRetriesRemoteSSHCommand, cfg.Timeout)
 					Expect(err).NotTo(HaveOccurred())
 				}
-			} else {
-				Skip("Skip per-node tests in low-priority VMSS cluster configuration scenario")
 			}
 		})
 

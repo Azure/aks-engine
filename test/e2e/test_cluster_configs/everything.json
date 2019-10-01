@@ -46,7 +46,8 @@
 				"vnetCidr": "10.239.0.0/16",
 				"availabilityZones": [
 					"1"
-				]
+				],
+				"auditDEnabled": true
 			},
 			"agentPoolProfiles": [
 				{
@@ -64,7 +65,8 @@
 						"1",
 						"2"
 					],
-					"scaleSetPriority": "Low"
+					"scaleSetPriority": "Low",
+					"auditDEnabled": true
 				}
 			],
 			"linuxProfile": {
