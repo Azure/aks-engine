@@ -12400,16 +12400,6 @@ systemctlEnableAndStart() {
         return 1
     fi
 }
-systemctlDisableAndStop() {
-    if ! systemctl_stop 100 5 30 $1; then
-        echo "$1 could not be stopped"
-        return 1
-    fi
-    if ! retrycmd_if_failure 120 5 25 systemctl disable $1; then
-        echo "$1 could not be disabled by systemctl"
-        return 1
-    fi
-}
 
 configureEtcdUser(){
     useradd -U "etcd"
@@ -12510,7 +12500,7 @@ ensureAuditD() {
     systemctlEnableAndStart auditd || exit $ERR_SYSTEMCTL_START_FAIL
   else
     if apt list --installed | grep 'auditd'; then
-      systemctlDisableAndStop auditd || exit $ERR_SYSTEMCTL_START_FAIL
+      apt_get_purge 20 30 120 auditd &
     fi
   fi
 }
@@ -13862,7 +13852,7 @@ ps auxfww > /opt/azure/provision-ps.log &
 
 if [[ "${TARGET_ENVIRONMENT,,}" != "${AZURE_STACK_ENV}"  ]]; then
     # TODO: remove once ACR is available on Azure Stack
-    apt_get_purge 20 30 120 apache2-utils || exit $ERR_APT_PURGE_FAIL
+    apt_get_purge 20 30 120 apache2-utils &
 fi
 
 if $REBOOTREQUIRED; then
