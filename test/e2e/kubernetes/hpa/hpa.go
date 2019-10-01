@@ -139,12 +139,12 @@ func (h *HPA) Describe() error {
 
 // Delete will delete a HPA in a given namespace
 func (h *HPA) Delete(retries int) error {
-	var commandTimeout time.Duration
+	var zeroValueDuration time.Duration
 	var kubectlOutput []byte
 	var kubectlError error
 	for i := 0; i < retries; i++ {
 		cmd := exec.Command("k", "delete", "hpa", "-n", h.Metadata.Namespace, h.Metadata.Name)
-		kubectlOutput, kubectlError = util.RunAndLogCommand(cmd, commandTimeout)
+		kubectlOutput, kubectlError = util.RunAndLogCommand(cmd, zeroValueDuration)
 		if kubectlError != nil {
 			log.Printf("Error while trying to delete service %s in namespace %s:%s\n", h.Metadata.Namespace, h.Metadata.Name, string(kubectlOutput))
 			continue
