@@ -432,8 +432,10 @@ func (a *Properties) validateMasterProfile(isUpdate bool) error {
 	}
 
 	if to.Bool(m.AuditDEnabled) {
-		if !m.IsUbuntu() {
-			return errors.Errorf("You have enabled auditd for master vms, but you did not specify an Ubuntu-based distro.")
+		if m.Distro != "" {
+			if !m.IsUbuntu() {
+				return errors.Errorf("You have enabled auditd for master vms, but you did not specify an Ubuntu-based distro.")
+			}
 		}
 	}
 
