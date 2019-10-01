@@ -189,6 +189,30 @@ function Set-WinRmServiceDelayedStart
     sc.exe config winrm start=delayed-auto
 }
 
+function Remove-AgentArtifacts
+{
+    $agentArtifacts = "$env:SystemDrive\windowsAzure"
+
+    # Removing Azure agent services which gets installed as part of VM boot up.
+    # Removal is needed so that vhd can then be used on any platform.
+    Write-Log "Stopping Azure agent services if running"
+    Stop-Service WindowsAzureGuestAgent
+    Stop-Service WindowsAzureNetAgentSvc
+    Stop-Service RdAgent
+    Stop-Service WindowsAzureTelemetryService
+
+    Write-Log "Removing Azure agent services."
+    sc.exe delete WindowsAzureGuestAgent
+    sc.exe delete WindowsAzureNetAgentSvc
+    sc.exe delete RdAgent
+    sc.exe delete WindowsAzureTelemetryService
+
+    if (Test-Path -Path $agentArtifacts)
+    {
+        Remove-Item -Path $agentArtifacts -Recurse
+    }
+}
+
 function Update-DefenderSignatures
 {
     Write-Log "Updating windows defender signatures."
@@ -232,6 +256,11 @@ switch ($env:ProvisioningPhase)
         Install-Docker
         Get-ContainerImages
         Get-FilesToCacheOnVHD
+    }
+    "3"
+    {
+        Write-Log "Performing actions for provisioning phase 3"
+        Remove-AgentArtifacts
     }
     default
     {

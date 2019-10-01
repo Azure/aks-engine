@@ -89,6 +89,13 @@
             "destination": "release-notes.txt"
         },
         {
+            "elevated_user": "packer",
+            "elevated_password": "{{.WinRMPassword}}",
+            "environment_vars": "ProvisioningPhase=3",
+            "type": "powershell",
+            "script": "packer/configure-windows-vhd.ps1"
+        },
+        {
             "type": "powershell",
             "inline": [
                 "& $env:SystemRoot\\System32\\Sysprep\\Sysprep.exe /oobe /generalize /mode:vm /quiet /quit",
