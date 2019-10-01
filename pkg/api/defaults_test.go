@@ -196,7 +196,7 @@ func TestAddonsIndexByName(t *testing.T) {
 func TestAssignDefaultAddonImages(t *testing.T) {
 	customImage := "myimage"
 	defaultAddonImages := map[string]string{
-		TillerAddonName:                    "gcr.io/kubernetes-helm/tiller:v2.11.0",
+		TillerAddonName:                    "gcr.io/kubernetes-helm/tiller:v2.13.1",
 		ACIConnectorAddonName:              "microsoft/virtual-kubelet:latest",
 		ClusterAutoscalerAddonName:         "k8s.gcr.io/cluster-autoscaler:v1.2.5",
 		BlobfuseFlexVolumeAddonName:        "mcr.microsoft.com/k8s/flexvolume/blobfuse-flexvolume:1.0.8",
