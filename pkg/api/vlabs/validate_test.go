@@ -3382,7 +3382,7 @@ func TestValidateMasterProfileImageRef(t *testing.T) {
 				},
 			},
 			isUpdate:      false,
-			expectedError: errors.New("masterProfile includes a custom image configuration (imageRef) and an explicit distro configuration, you may use one of these but not both simultaneously."),
+			expectedError: errors.New("masterProfile includes a custom image configuration (imageRef) and an explicit distro configuration, you may use one of these but not both simultaneously"),
 		},
 		"should error when masterProfile includes both an ImageRef and a Distro configuration in update context": {
 			properties: &Properties{
@@ -3402,7 +3402,7 @@ func TestValidateMasterProfileImageRef(t *testing.T) {
 				},
 			},
 			isUpdate:      true,
-			expectedError: errors.New("masterProfile includes a custom image configuration (imageRef) and an explicit distro configuration, you may use one of these but not both simultaneously."),
+			expectedError: errors.New("masterProfile includes a custom image configuration (imageRef) and an explicit distro configuration, you may use one of these but not both simultaneously"),
 		},
 		"should not error when masterProfile includes an ImageRef configuration only": {
 			properties: &Properties{
@@ -3518,7 +3518,7 @@ func TestValidateAgentPoolProfilesImageRef(t *testing.T) {
 					OrchestratorType: Kubernetes,
 				},
 				AgentPoolProfiles: []*AgentPoolProfile{
-					&AgentPoolProfile{
+					{
 						Name:   "foo",
 						Distro: AKSUbuntu1604,
 						ImageRef: &ImageReference{
@@ -3532,7 +3532,7 @@ func TestValidateAgentPoolProfilesImageRef(t *testing.T) {
 				},
 			},
 			isUpdate:      false,
-			expectedError: errors.Errorf("agentPoolProfile %s includes a custom image configuration (imageRef) and an explicit distro configuration, you may use one of these but not both simultaneously.", "foo"),
+			expectedError: errors.Errorf("agentPoolProfile %s includes a custom image configuration (imageRef) and an explicit distro configuration, you may use one of these but not both simultaneously", "foo"),
 		},
 		"should error when AgentPoolProfile includes both an ImageRef and a Distro configuration in update context": {
 			properties: &Properties{
@@ -3540,7 +3540,7 @@ func TestValidateAgentPoolProfilesImageRef(t *testing.T) {
 					OrchestratorType: Kubernetes,
 				},
 				AgentPoolProfiles: []*AgentPoolProfile{
-					&AgentPoolProfile{
+					{
 						Name:   "foo",
 						Distro: AKSUbuntu1604,
 						ImageRef: &ImageReference{
@@ -3554,7 +3554,7 @@ func TestValidateAgentPoolProfilesImageRef(t *testing.T) {
 				},
 			},
 			isUpdate:      true,
-			expectedError: errors.Errorf("agentPoolProfile %s includes a custom image configuration (imageRef) and an explicit distro configuration, you may use one of these but not both simultaneously.", "foo"),
+			expectedError: errors.Errorf("agentPoolProfile %s includes a custom image configuration (imageRef) and an explicit distro configuration, you may use one of these but not both simultaneously", "foo"),
 		},
 		"should not error when AgentPoolProfile includes an ImageRef configuration only": {
 			properties: &Properties{
@@ -3562,7 +3562,7 @@ func TestValidateAgentPoolProfilesImageRef(t *testing.T) {
 					OrchestratorType: Kubernetes,
 				},
 				AgentPoolProfiles: []*AgentPoolProfile{
-					&AgentPoolProfile{
+					{
 						Name: "foo",
 						ImageRef: &ImageReference{
 							Name:           "name",
@@ -3583,7 +3583,7 @@ func TestValidateAgentPoolProfilesImageRef(t *testing.T) {
 					OrchestratorType: Kubernetes,
 				},
 				AgentPoolProfiles: []*AgentPoolProfile{
-					&AgentPoolProfile{
+					{
 						Name: "foo",
 						ImageRef: &ImageReference{
 							Name:           "name",
@@ -3604,7 +3604,7 @@ func TestValidateAgentPoolProfilesImageRef(t *testing.T) {
 					OrchestratorType: Kubernetes,
 				},
 				AgentPoolProfiles: []*AgentPoolProfile{
-					&AgentPoolProfile{
+					{
 						Name:   "foo",
 						Distro: AKSUbuntu1604,
 					},
@@ -3619,7 +3619,7 @@ func TestValidateAgentPoolProfilesImageRef(t *testing.T) {
 					OrchestratorType: Kubernetes,
 				},
 				AgentPoolProfiles: []*AgentPoolProfile{
-					&AgentPoolProfile{
+					{
 						Name:   "foo",
 						Distro: AKSUbuntu1604,
 					},
@@ -3634,7 +3634,7 @@ func TestValidateAgentPoolProfilesImageRef(t *testing.T) {
 					OrchestratorType: Kubernetes,
 				},
 				AgentPoolProfiles: []*AgentPoolProfile{
-					&AgentPoolProfile{
+					{
 						Name: "foo",
 					},
 				},
@@ -3648,7 +3648,7 @@ func TestValidateAgentPoolProfilesImageRef(t *testing.T) {
 					OrchestratorType: Kubernetes,
 				},
 				AgentPoolProfiles: []*AgentPoolProfile{
-					&AgentPoolProfile{
+					{
 						Name: "foo",
 					},
 				},

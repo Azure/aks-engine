@@ -394,7 +394,7 @@ func (a *Properties) validateMasterProfile(isUpdate bool) error {
 
 	if m.ImageRef != nil {
 		if m.Distro != "" {
-			return errors.New("masterProfile includes a custom image configuration (imageRef) and an explicit distro configuration, you may use one of these but not both simultaneously.")
+			return errors.New("masterProfile includes a custom image configuration (imageRef) and an explicit distro configuration, you may use one of these but not both simultaneously")
 		}
 		if err := m.ImageRef.validateImageNameAndGroup(); err != nil {
 			return err
@@ -504,7 +504,7 @@ func (a *Properties) validateAgentPoolProfiles(isUpdate bool) error {
 
 		if agentPoolProfile.ImageRef != nil {
 			if agentPoolProfile.Distro != "" {
-				return errors.Errorf("agentPoolProfile %s includes a custom image configuration (imageRef) and an explicit distro configuration, you may use one of these but not both simultaneously.", agentPoolProfile.Name)
+				return errors.Errorf("agentPoolProfile %s includes a custom image configuration (imageRef) and an explicit distro configuration, you may use one of these but not both simultaneously", agentPoolProfile.Name)
 			}
 			return agentPoolProfile.ImageRef.validateImageNameAndGroup()
 		}
