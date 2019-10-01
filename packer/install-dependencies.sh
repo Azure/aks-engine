@@ -194,6 +194,7 @@ for PAUSE_VERSION in ${PAUSE_VERSIONS}; do
 done
 
 TILLER_VERSIONS="
+2.13.1
 2.11.0
 2.8.1
 "
