@@ -231,6 +231,7 @@ func TestK8sVars(t *testing.T) {
 		"labelNodesSystemdService":         getBase64EncodedGzippedCustomScript(labelNodesSystemdService),
 		"aptPreferences":                   getBase64EncodedGzippedCustomScript(aptPreferences),
 		"dockerClearMountPropagationFlags": getBase64EncodedGzippedCustomScript(dockerClearMountPropagationFlags),
+		"auditdRules":                      getBase64EncodedGzippedCustomScript(auditdRules),
 		"etcdSystemdService":               getBase64EncodedGzippedCustomScript(etcdSystemdService),
 		"dhcpv6ConfigurationScript":        getBase64EncodedGzippedCustomScript(dhcpv6ConfigurationScript),
 		"dhcpv6SystemdService":             getBase64EncodedGzippedCustomScript(dhcpv6SystemdService),

@@ -1299,6 +1299,11 @@ func (m *MasterProfile) IsVHDDistro() bool {
 	return m.Distro == AKSUbuntu1604 || m.Distro == AKSUbuntu1804
 }
 
+// IsAuditDEnabled returns true if the master profile is configured for auditd
+func (m *MasterProfile) IsAuditDEnabled() bool {
+	return m.AuditDEnabled != nil && to.Bool(m.AuditDEnabled)
+}
+
 // IsVirtualMachineScaleSets returns true if the master availability profile is VMSS
 func (m *MasterProfile) IsVirtualMachineScaleSets() bool {
 	return m.AvailabilityProfile == VirtualMachineScaleSets
@@ -1426,6 +1431,11 @@ func (a *AgentPoolProfile) IsCoreOS() bool {
 // IsVHDDistro returns true if the distro uses VHD SKUs
 func (a *AgentPoolProfile) IsVHDDistro() bool {
 	return a.Distro == AKSUbuntu1604 || a.Distro == AKSUbuntu1804
+}
+
+// IsAuditDEnabled returns true if the master profile is configured for auditd
+func (a *AgentPoolProfile) IsAuditDEnabled() bool {
+	return a.AuditDEnabled != nil && to.Bool(a.AuditDEnabled)
 }
 
 // IsAvailabilitySets returns true if the customer specified disks
