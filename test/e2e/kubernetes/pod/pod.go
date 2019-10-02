@@ -393,6 +393,37 @@ func GetAllByPrefixAsync(prefix, namespace string) GetAllByPrefixResult {
 	}
 }
 
+// GetAllByPrefixWithRetry waits for a pod replica count between min and max
+func GetAllByPrefixWithRetry(prefix, namespace string, sleep, timeout time.Duration) ([]Pod, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+	ch := make(chan GetAllByPrefixResult)
+	var mostRecentGetAllByPrefixWithRetryError error
+	var pods []Pod
+	go func() {
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case ch <- GetAllByPrefixAsync(prefix, namespace):
+				time.Sleep(sleep)
+			}
+		}
+	}()
+	for {
+		select {
+		case result := <-ch:
+			mostRecentGetAllByPrefixWithRetryError = result.Err
+			pods = result.Pods
+			if mostRecentGetAllByPrefixWithRetryError == nil {
+				return pods, nil
+			}
+		case <-ctx.Done():
+			return pods, errors.Errorf("GetAllByPrefix timed out: %s\n", mostRecentGetAllByPrefixWithRetryError)
+		}
+	}
+}
+
 // GetAllByPrefix will return all pods in a given namespace that match a prefix
 func GetAllByPrefix(prefix, namespace string) ([]Pod, error) {
 	pl, err := GetAll(namespace)
