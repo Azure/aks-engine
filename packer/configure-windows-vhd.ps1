@@ -209,7 +209,14 @@ function Remove-AgentArtifacts
 
     if (Test-Path -Path $agentArtifacts)
     {
-        Remove-Item -Path $agentArtifacts -Recurse
+        Get-ChildItem "$agentArtifacts" -Force `
+        | Sort-Object -Property FullName -Descending `
+        | ForEach-Object {
+            try {
+                Remove-Item -Path $_.FullName -Force -Recurse -ErrorAction SilentlyContinue;
+            }
+            catch { }
+        }
     }
 }
 
