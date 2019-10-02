@@ -360,7 +360,6 @@ func autofillApimodel(dc *deployCmd) error {
 		log.Infoln("container monitoring addon enabled")
 		var workspaceDomain string
 		cloudspecConfig := dc.containerService.GetCloudSpecConfig()
-		log.Infoln("selected cloud name:", cloudspecConfig.CloudName)
 		switch cloudspecConfig.CloudName {
 		case "AzurePublicCloud":
 			workspaceDomain = "opinsights.azure.com"
