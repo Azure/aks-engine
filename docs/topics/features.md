@@ -301,7 +301,7 @@ The route table resource id is of the format: `/subscriptions/SUBSCRIPTIONID/res
 
 Existing subnets will need to use the Kubernetes-based Route Table so that machines can route to Kubernetes-based workloads.
 
-Update properties of all subnets in the existing VNET he route table resource by appending the following to subnet properties:
+Update properties of all subnets in the existing VNET route table resource by appending the following to subnet properties:
 
 ```json
 "routeTable": {
