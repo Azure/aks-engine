@@ -265,11 +265,11 @@ func (cs *ContainerService) setAddonsConfig(isUpdate bool) {
 				Name:  AzureNetworkPolicyAddonName,
 				Image: "mcr.microsoft.com/containernetworking/azure-npm:v1.0.28",
 			},
-			{
-				Name:  AzureVnetTelemetryAddonName,
-				Image: "mcr.microsoft.com/containernetworking/azure-vnet-telemetry:v1.0.28",
-			},
 		},
+	}
+
+	if !common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.16.0") {
+		defaultAzureNetworkPolicyAddonsConfig.Containers = append(defaultAzureNetworkPolicyAddonsConfig.Containers, KubernetesContainerSpec{Name: AzureVnetTelemetryAddonName, Image: "mcr.microsoft.com/containernetworking/azure-vnet-telemetry:v1.0.28"})
 	}
 
 	defaultDNSAutoScalerAddonsConfig := KubernetesAddon{
@@ -400,6 +400,25 @@ func (cs *ContainerService) setAddonsConfig(isUpdate bool) {
 		o.KubernetesConfig.Addons[i].Enabled = to.BoolPtr(true)
 		// Assume addon configuration was pruned due to an inherited enabled=false, so re-apply default values
 		o.KubernetesConfig.Addons[i] = assignDefaultAddonVals(o.KubernetesConfig.Addons[i], defaultAddons[j], isUpdate)
+	}
+
+	// Support back-compat configuration for Azure NetworkPolicy, which no longer ships with a "telemetry" container starting w/ 1.16.0
+	if isUpdate && o.KubernetesConfig.NetworkPolicy == NetworkPolicyAzure && common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.16.0") {
+		i = getAddonsIndexByName(o.KubernetesConfig.Addons, AzureNetworkPolicyAddonName)
+		var hasTelemetryContainerConfig bool
+		var prunedContainersConfig []KubernetesContainerSpec
+		if i > -1 {
+			for _, c := range o.KubernetesConfig.Addons[i].Containers {
+				if c.Name == AzureVnetTelemetryAddonName {
+					hasTelemetryContainerConfig = true
+				} else {
+					prunedContainersConfig = append(prunedContainersConfig, c)
+				}
+			}
+			if hasTelemetryContainerConfig {
+				o.KubernetesConfig.Addons[i].Containers = prunedContainersConfig
+			}
+		}
 	}
 }
 
