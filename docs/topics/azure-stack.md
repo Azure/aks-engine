@@ -93,7 +93,7 @@ Unless otherwise specified down below, standard [cluster definition](../../docs/
 | Name                            | Required | Description|
 | ------------------------------- | -------- | ---------- |
 | environment                     | no       | The custom cloud type. This property should be always set to `"AzureStackCloud"`. |
-| identitySystem                  | no       | Specifies the identity provider used by the Azure Stack instance. Valid values are `"azure_ad"` (default) and `"adfs"`. |
+| identitySystem                  | yes      | Specifies the identity provider used by the Azure Stack instance. Valid values are `"azure_ad"` (default) and `"adfs"`. |
 | portalUrl                       | yes      | The tenant portal URL. |
 | dependenciesLocation            | no       | Specifies where to locate the dependencies required to during the provision/upgrade process. Valid values are `"public"` (default), `"china"`, `"german"` and `"usgovernment".` |
 
@@ -186,11 +186,11 @@ _Note: AKS Engine on disconnected Azure Stack instances is a preview feature_
 
 | AKS Engine                 | AKS Base Image     | Kubernetes versions | Notes |
 |----------------------------|--------------------|---------------------|-------|
-| from v0.38.1 to v0.38.4    | [AKS Base Ubuntu 16.04-LTS Image Distro, July 2019 (2019.07.10)](https://github.com/Azure/aks-engine/blob/v0.38.1/releases/vhd-notes/aks-ubuntu-1604/aks-ubuntu-1604-201907_2019.07.10.txt) | 1.14.3 - 1.14.1 - 1.13.7 - 1.13.5 - 1.12.8 - 1.12.7 - 1.11.10 - 1.11.9 |  |
-| v0.39.0                    | [AKS Base Ubuntu 16.04-LTS Image Distro, July 2019 (2019.07.30)](https://github.com/Azure/aks-engine/blob/v0.39.0/releases/vhd-notes/aks-ubuntu-1604/aks-ubuntu-1604-201907_2019.07.30.txt) | 1.15.1 - 1.14.4 - 1.14.3 - 1.13.8 - 1.13.7 - 1.12.8 - 1.12.7 - 1.11.10 - 1.11.9 |  |
+| v0.39.0   | [AKS Base Ubuntu 16.04-LTS Image Distro, July 2019 (2019.07.30)](https://github.com/Azure/aks-engine/blob/v0.39.0/releases/vhd-notes/aks-ubuntu-1604/aks-ubuntu-1604-201907_2019.07.30.txt) | 1.15.1 - 1.14.4 - 1.14.3 - 1.13.8 - 1.13.7 - 1.12.8 - 1.12.7 - 1.11.10 - 1.11.9 |  |
 | v0.39.1   | [AKS Base Ubuntu 16.04-LTS Image Distro, August 2019 (2019.08.09)](https://github.com/Azure/aks-engine/blob/v0.39.1/releases/vhd-notes/aks-ubuntu-1604/aks-ubuntu-1604-201908_2019.08.09.txt) | 1.15.2 - 1.15.1 - 1.14.5 - 1.14.4 - 1.13.9 - 1.13.8 - 1.12.8 - 1.12.7 - 1.11.10 - 1.11.9 |  |
-| v0.40.0                    | [AKS Base Ubuntu 16.04-LTS Image Distro, August 2019 (2019.08.21)](https://github.com/Azure/aks-engine/blob/v0.40.0/releases/vhd-notes/aks-ubuntu-1604/aks-ubuntu-1604-201908_2019.08.21.txt) | 1.15.3 - 1.15.2 - 1.14.6 - 1.14.5 - 1.13.10 - 1.13.9 - 1.12.8 - 1.12.7 - 1.11.10 - 1.11.9 |  |
-| v0.41.0                    | [AKS Base Ubuntu 16.04-LTS Image Distro, September 2019 (2019.09.10)](https://github.com/Azure/aks-engine/blob/v0.41.0/releases/vhd-notes/aks-ubuntu-1604/aks-ubuntu-1604-201908_2019.09.10.txt) | 1.15.3 - 1.15.2 - 1.14.6 - 1.14.5 - 1.13.10 - 1.13.9 - 1.12.8 - 1.12.7 - 1.11.10 - 1.11.9 |  |
+| v0.39.2   | [AKS Base Ubuntu 16.04-LTS Image Distro, August 2019 (2019.08.09)](https://github.com/Azure/aks-engine/blob/v0.39.1/releases/vhd-notes/aks-ubuntu-1604/aks-ubuntu-1604-201908_2019.08.09.txt) | 1.15.2 - 1.14.5 - 1.13.9 - 1.12.8 - 1.12.7 - 1.11.10 - 1.11.9 |  |
+| v0.40.1   | [AKS Base Ubuntu 16.04-LTS Image Distro, August 2019 (2019.08.21)](https://github.com/Azure/aks-engine/blob/v0.40.0/releases/vhd-notes/aks-ubuntu-1604/aks-ubuntu-1604-201908_2019.08.21.txt) | 1.15.3 - 1.15.2 - 1.14.6 - 1.14.5 - 1.13.10 - 1.13.9 - 1.12.8 - 1.12.7 - 1.11.10 - 1.11.9 |  |
+| v0.41.2   | [AKS Base Ubuntu 16.04-LTS Image Distro, September 2019 (2019.09.19)](https://github.com/Azure/aks-engine/blob/v0.41.2/releases/vhd-notes/aks-ubuntu-1604/aks-ubuntu-1604-201908_2019.09.19.txt) | 1.15.4 - 1.15.3 - 1.14.7 - 1.14.6 - 1.13.11 -  1.13.10 |  |
 
 ### Network Policies
 
