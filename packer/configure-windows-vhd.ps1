@@ -191,7 +191,7 @@ function Set-WinRmServiceDelayedStart
 
 function Remove-AgentArtifacts
 {
-    $agentArtifacts = "$env:SystemDrive\windowsAzure"
+    $agentArtifacts = "$env:SystemDrive\WindowsAzure"
 
     # Removing Azure agent services which gets installed as part of VM boot up.
     # Removal is needed so that vhd can then be used on any platform.
