@@ -99,7 +99,7 @@ var _ = BeforeSuite(func() {
 	}
 	masterSSHPrivateKeyFilepath = cfg.GetSSHKeyPath()
 	longRunningApacheDeploymentName = "php-apache-long-running"
-	kubeConfig, err = GetConfig()
+	kubeConfig, err = GetConfigWithRetry(3*time.Second, cfg.Timeout)
 	Expect(err).NotTo(HaveOccurred())
 	sshConn, err = remote.NewConnection(kubeConfig.GetServerName(), masterSSHPort, eng.ExpandedDefinition.Properties.LinuxProfile.AdminUsername, masterSSHPrivateKeyFilepath)
 	Expect(err).NotTo(HaveOccurred())
@@ -1742,7 +1742,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 					iisPods, err := iisDeploy.Pods()
 					Expect(err).NotTo(HaveOccurred())
 					Expect(len(iisPods)).ToNot(BeZero())
-					kubeConfig, err := GetConfig()
+					kubeConfig, err := GetConfigWithRetry(3*time.Second, cfg.Timeout)
 					Expect(err).NotTo(HaveOccurred())
 					master := fmt.Sprintf("azureuser@%s", kubeConfig.GetServerName())
 					for _, iisPod := range iisPods {
