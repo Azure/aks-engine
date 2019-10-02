@@ -158,6 +158,21 @@ func ReplaceContainerImageFromFile(filename, containerImage string) (string, err
 	return tmpFile.Name(), err
 }
 
+// GetPodResult is a return struct for GetPodAsync
+type CreatePodFromFileResult struct {
+	pod *Pod
+	err error
+}
+
+// CreatePodFromFileAsync wraps CreatePodFromFile with a struct response for goroutine + channel usage
+func CreatePodFromFileAsync(filename, name, namespace string, timeout time.Duration) CreatePodFromFileResult {
+	p, err := CreatePodFromFile(filename, name, namespace, 3*time.Second, timeout)
+	return CreatePodFromFileResult{
+		pod: p,
+		err: err,
+	}
+}
+
 // CreatePodFromFile will create a Pod from file with a name
 func CreatePodFromFile(filename, name, namespace string, sleep, timeout time.Duration) (*Pod, error) {
 	cmd := exec.Command("k", "apply", "-f", filename)
@@ -173,6 +188,37 @@ func CreatePodFromFile(filename, name, namespace string, sleep, timeout time.Dur
 		return nil, err
 	}
 	return p, nil
+}
+
+// CreatePodFromFileWithRetry will try to create a pod within a timout
+func CreatePodFromFileWithRetry(filename, name, namespace string, sleep, timeout time.Duration) (*Pod, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+	ch := make(chan CreatePodFromFileResult)
+	var mostRecentCreatePodFromFileWithRetryError error
+	var pod *Pod
+	go func() {
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case ch <- CreatePodFromFileAsync(filename, name, namespace):
+				time.Sleep(sleep)
+			}
+		}
+	}()
+	for {
+		select {
+		case result := <-ch:
+			pod = result.pod
+			mostRecentCreatePodFromFileWithRetryError = result.err
+			if mostRecentCreatePodFromFileWithRetryError == nil {
+				return pod, nil
+			}
+		case <-ctx.Done():
+			return nil, errors.Errorf("CreatePodFromFileWithRetry timed out: %s\n", mostRecentCreatePodFromFileWithRetryError)
+		}
+	}
 }
 
 // CreatePodFromFileIfNotExist will create a Pod from file with a name

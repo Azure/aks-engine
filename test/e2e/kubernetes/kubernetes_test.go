@@ -1154,7 +1154,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 
 		It("should be able to schedule a pod to a master node", func() {
 			By("Creating a pod with master nodeSelector")
-			p, err := pod.CreatePodFromFile(filepath.Join(WorkloadDir, "nginx-master.yaml"), "nginx-master", "default", 1*time.Second, cfg.Timeout)
+			p, err := pod.CreatePodFromFileWithRetry(filepath.Join(WorkloadDir, "nginx-master.yaml"), "nginx-master", "default", 3*time.Second, cfg.Timeout)
 			if err != nil {
 				p, err = pod.Get("nginx-master", "default", podLookupRetries)
 				Expect(err).NotTo(HaveOccurred())
@@ -1286,7 +1286,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 
 					By("Launching a pod using the volume claim")
 					podName := "zone-pv-pod" // should be the same as in pod-pvc.yaml
-					testPod, err := pod.CreatePodFromFile(filepath.Join(WorkloadDir, "pod-pvc.yaml"), podName, "default", 1*time.Second, cfg.Timeout)
+					testPod, err := pod.CreatePodFromFileWithRetry(filepath.Join(WorkloadDir, "pod-pvc.yaml"), podName, "default", 3*time.Second, cfg.Timeout)
 					Expect(err).NotTo(HaveOccurred())
 					ready, err = testPod.WaitOnReady(sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
 					Expect(err).NotTo(HaveOccurred())
@@ -1786,7 +1786,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 
 					By("Launching an IIS pod using the volume claim")
 					podName := "iis-azurefile" // should be the same as in iis-azurefile.yaml
-					iisPod, err := pod.CreatePodFromFile(iisAzurefileYaml, podName, "default", 1*time.Second, cfg.Timeout)
+					iisPod, err := pod.CreatePodFromFileWithRetry(iisAzurefileYaml, podName, "default", 3*time.Second, cfg.Timeout)
 					Expect(err).NotTo(HaveOccurred())
 					ready, err = iisPod.WaitOnReady(sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
 					Expect(err).NotTo(HaveOccurred())
