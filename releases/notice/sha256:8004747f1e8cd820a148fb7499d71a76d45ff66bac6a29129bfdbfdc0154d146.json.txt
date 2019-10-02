@@ -1,0 +1,95 @@
+---
+Component: musl
+Version: musl-1.1.19-r10
+Open Source License/Copyright Notice: MIT
+
+---
+Component: busybox
+Version: busybox-1.28.4-r3
+Open Source License/Copyright Notice: GPL-2.0
+
+---
+Component: alpine-baselayout
+Version: alpine-baselayout-3.1.0-r0
+Open Source License/Copyright Notice: GPL-2.0
+
+---
+Component: alpine-keys
+Version: alpine-keys-2.1-r1
+Open Source License/Copyright Notice: MIT
+
+---
+Component: libressl2.7-libcrypto
+Version: libressl2.7-libcrypto-2.7.5-r0
+Open Source License/Copyright Notice: custom
+
+---
+Component: libressl2.7-libssl
+Version: libressl2.7-libssl-2.7.5-r0
+Open Source License/Copyright Notice: custom
+
+---
+Component: libressl2.7-libtls
+Version: libressl2.7-libtls-2.7.5-r0
+Open Source License/Copyright Notice: custom
+
+---
+Component: ssl_client
+Version: ssl_client-1.28.4-r3
+Open Source License/Copyright Notice: GPL-2.0
+
+---
+Component: zlib
+Version: zlib-1.2.11-r1
+Open Source License/Copyright Notice: zlib
+
+---
+Component: apk-tools
+Version: apk-tools-2.10.1-r0
+Open Source License/Copyright Notice: GPL2
+
+---
+Component: scanelf
+Version: scanelf-1.2.3-r0
+Open Source License/Copyright Notice: GPL-2.0
+
+---
+Component: musl-utils
+Version: musl-utils-1.1.19-r10
+Open Source License/Copyright Notice: MIT BSD GPL2+
+
+---
+Component: libc-utils
+Version: libc-utils-0.7.1-r0
+Open Source License/Copyright Notice: BSD
+
+---
+Component: libuuid
+Version: libuuid-2.32-r0
+Open Source License/Copyright Notice: GPL-2.0 GPL-2.0-or-later LGPL-2.0-or-later BSD Public-Domain
+
+---
+Component: apr
+Version: apr-1.6.3-r1
+Open Source License/Copyright Notice: Apache-2.0
+
+---
+Component: expat
+Version: expat-2.2.5-r0
+Open Source License/Copyright Notice: MIT
+
+---
+Component: apr-util
+Version: apr-util-1.6.1-r3
+Open Source License/Copyright Notice: Apache-2.0
+
+---
+Component: apache2-utils
+Version: apache2-utils-2.4.38-r3
+Open Source License/Copyright Notice: Apache-2.0
+
+---
+Component: ca-certificates
+Version: ca-certificates-20171114-r3
+Open Source License/Copyright Notice: MPL-2.0 GPL-2.0-or-later
+

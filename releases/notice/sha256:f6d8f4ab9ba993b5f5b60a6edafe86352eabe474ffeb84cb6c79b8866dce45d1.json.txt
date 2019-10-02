@@ -1,0 +1,95 @@
+---
+Component: musl
+Version: musl-1.1.18-r3
+Open Source License/Copyright Notice: MIT
+
+---
+Component: busybox
+Version: busybox-1.27.2-r11
+Open Source License/Copyright Notice: GPL2
+
+---
+Component: alpine-baselayout
+Version: alpine-baselayout-3.0.5-r2
+Open Source License/Copyright Notice: GPL2
+
+---
+Component: alpine-keys
+Version: alpine-keys-2.1-r1
+Open Source License/Copyright Notice: MIT
+
+---
+Component: libressl2.6-libcrypto
+Version: libressl2.6-libcrypto-2.6.5-r0
+Open Source License/Copyright Notice: custom
+
+---
+Component: libressl2.6-libssl
+Version: libressl2.6-libssl-2.6.5-r0
+Open Source License/Copyright Notice: custom
+
+---
+Component: libressl2.6-libtls
+Version: libressl2.6-libtls-2.6.5-r0
+Open Source License/Copyright Notice: custom
+
+---
+Component: ssl_client
+Version: ssl_client-1.27.2-r11
+Open Source License/Copyright Notice: GPL2
+
+---
+Component: zlib
+Version: zlib-1.2.11-r1
+Open Source License/Copyright Notice: zlib
+
+---
+Component: apk-tools
+Version: apk-tools-2.10.1-r0
+Open Source License/Copyright Notice: GPL2
+
+---
+Component: scanelf
+Version: scanelf-1.2.2-r1
+Open Source License/Copyright Notice: GPL2
+
+---
+Component: musl-utils
+Version: musl-utils-1.1.18-r3
+Open Source License/Copyright Notice: MIT BSD GPL2+
+
+---
+Component: libc-utils
+Version: libc-utils-0.7.1-r0
+Open Source License/Copyright Notice: BSD
+
+---
+Component: ca-certificates
+Version: ca-certificates-20171114-r0
+Open Source License/Copyright Notice: MPL 2.0 GPL2+
+
+---
+Component: ncurses-terminfo-base
+Version: ncurses-terminfo-base-6.0_p20171125-r1
+Open Source License/Copyright Notice: MIT
+
+---
+Component: ncurses-terminfo
+Version: ncurses-terminfo-6.0_p20171125-r1
+Open Source License/Copyright Notice: MIT
+
+---
+Component: ncurses-libs
+Version: ncurses-libs-6.0_p20171125-r1
+Open Source License/Copyright Notice: MIT
+
+---
+Component: readline
+Version: readline-7.0.003-r0
+Open Source License/Copyright Notice: GPL
+
+---
+Component: socat
+Version: socat-1.7.3.2-r3
+Open Source License/Copyright Notice: GPL
+

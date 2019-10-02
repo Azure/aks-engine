@@ -1,0 +1,90 @@
+---
+Component: alpine-keys
+Version: alpine-keys-2.1-r1
+Open Source License/Copyright Notice: MIT
+
+---
+Component: zlib
+Version: zlib-1.2.11-r1
+Open Source License/Copyright Notice: zlib
+
+---
+Component: libc-utils
+Version: libc-utils-0.7.1-r0
+Open Source License/Copyright Notice: BSD
+
+---
+Component: libressl2.7-libcrypto
+Version: libressl2.7-libcrypto-2.7.4-r0
+Open Source License/Copyright Notice: custom
+
+---
+Component: libressl2.7-libssl
+Version: libressl2.7-libssl-2.7.4-r0
+Open Source License/Copyright Notice: custom
+
+---
+Component: apk-tools
+Version: apk-tools-2.10.0-r0
+Open Source License/Copyright Notice: GPL2
+
+---
+Component: musl
+Version: musl-1.1.19-r10
+Open Source License/Copyright Notice: MIT
+
+---
+Component: busybox
+Version: busybox-1.28.4-r0
+Open Source License/Copyright Notice: GPL-2.0
+
+---
+Component: alpine-baselayout
+Version: alpine-baselayout-3.1.0-r0
+Open Source License/Copyright Notice: GPL-2.0
+
+---
+Component: libressl2.7-libtls
+Version: libressl2.7-libtls-2.7.4-r0
+Open Source License/Copyright Notice: custom
+
+---
+Component: ssl_client
+Version: ssl_client-1.28.4-r0
+Open Source License/Copyright Notice: GPL-2.0
+
+---
+Component: scanelf
+Version: scanelf-1.2.3-r0
+Open Source License/Copyright Notice: GPL-2.0
+
+---
+Component: musl-utils
+Version: musl-utils-1.1.19-r10
+Open Source License/Copyright Notice: MIT BSD GPL2+
+
+---
+Component: ncurses-terminfo-base
+Version: ncurses-terminfo-base-6.1-r0
+Open Source License/Copyright Notice: MIT
+
+---
+Component: ncurses-terminfo
+Version: ncurses-terminfo-6.1-r0
+Open Source License/Copyright Notice: MIT
+
+---
+Component: ncurses-libs
+Version: ncurses-libs-6.1-r0
+Open Source License/Copyright Notice: MIT
+
+---
+Component: readline
+Version: readline-7.0.003-r0
+Open Source License/Copyright Notice: GPL
+
+---
+Component: bash
+Version: bash-4.4.19-r1
+Open Source License/Copyright Notice: GPL-3.0-or-later
+
