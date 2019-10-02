@@ -1619,13 +1619,6 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 					Expect(pass).To(BeTrue())
 				}
 
-				By("Checking that no pods restart")
-				for _, iisPod := range iisPods {
-					log.Printf("Checking %s", iisPod.Metadata.Name)
-					Expect(iisPod.Status.ContainerStatuses[0].Ready).To(BeTrue())
-					Expect(iisPod.Status.ContainerStatuses[0].RestartCount).To(Equal(0))
-				}
-
 				By("Scaling deployment to 2 pods")
 				err = iisDeploy.ScaleDeployment(2)
 				Expect(err).NotTo(HaveOccurred())
