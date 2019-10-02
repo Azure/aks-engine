@@ -1301,7 +1301,7 @@ func (m *MasterProfile) IsVHDDistro() bool {
 
 // IsAuditDEnabled returns true if the master profile is configured for auditd
 func (m *MasterProfile) IsAuditDEnabled() bool {
-	return m.AuditDEnabled != nil && to.Bool(m.AuditDEnabled)
+	return to.Bool(m.AuditDEnabled)
 }
 
 // IsVirtualMachineScaleSets returns true if the master availability profile is VMSS
@@ -1435,7 +1435,7 @@ func (a *AgentPoolProfile) IsVHDDistro() bool {
 
 // IsAuditDEnabled returns true if the master profile is configured for auditd
 func (a *AgentPoolProfile) IsAuditDEnabled() bool {
-	return a.AuditDEnabled != nil && to.Bool(a.AuditDEnabled)
+	return to.Bool(a.AuditDEnabled)
 }
 
 // IsAvailabilitySets returns true if the customer specified disks
