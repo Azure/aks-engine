@@ -354,9 +354,9 @@ MASTER_CONTAINER_ADDONS_PLACEHOLDER
     sed -i "s|<args>|{{GetK8sRuntimeConfigKeyVals .OrchestratorProfile.KubernetesConfig.ControllerManagerConfig}}|g" /etc/kubernetes/manifests/kube-controller-manager.yaml
     sed -i "s|<args>|{{GetK8sRuntimeConfigKeyVals .OrchestratorProfile.KubernetesConfig.SchedulerConfig}}|g" /etc/kubernetes/manifests/kube-scheduler.yaml
     {{ if IsIPv6DualStackFeatureEnabled }}
-    sed -i "s|<img>|{{WrapAsParameter "kubernetesHyperkubeSpec"}}|g; s|<CIDR>|',first(split(parameters('kubeClusterCidr'),',')),'|g; s|<kubeProxyMode>|{{ .OrchestratorProfile.KubernetesConfig.ProxyMode}}|g" /etc/kubernetes/addons/kube-proxy-daemonset.yaml
+    sed -i "s|<img>|{{WrapAsParameter "kubernetesHyperkubeSpec"}}|g; s|<CIDR>|{{WrapAsParameter "kubeClusterCidr"}}|g; s|<kubeProxyMode>|{{ .OrchestratorProfile.KubernetesConfig.ProxyMode}}|g; s|<IPv6DualStackFeature>|IPv6DualStack: true|g" /etc/kubernetes/addons/kube-proxy-daemonset.yaml
     {{ else }}
-    sed -i "s|<img>|{{WrapAsParameter "kubernetesHyperkubeSpec"}}|g; s|<CIDR>|{{WrapAsParameter "kubeClusterCidr"}}|g; s|<kubeProxyMode>|{{ .OrchestratorProfile.KubernetesConfig.ProxyMode}}|g" /etc/kubernetes/addons/kube-proxy-daemonset.yaml
+    sed -i "s|<img>|{{WrapAsParameter "kubernetesHyperkubeSpec"}}|g; s|<CIDR>|{{WrapAsParameter "kubeClusterCidr"}}|g; s|<kubeProxyMode>|{{ .OrchestratorProfile.KubernetesConfig.ProxyMode}}|g; s|<IPv6DualStackFeature>|{}|g" /etc/kubernetes/addons/kube-proxy-daemonset.yaml
     {{ end }}
     KUBEDNS=/etc/kubernetes/addons/kube-dns-deployment.yaml
 {{if NeedsKubeDNSWithExecHealthz}}

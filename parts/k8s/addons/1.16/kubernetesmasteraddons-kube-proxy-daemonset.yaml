@@ -9,6 +9,8 @@ data:
       kubeconfig: /var/lib/kubelet/kubeconfig
     clusterCIDR: "<CIDR>"
     mode: "<kubeProxyMode>"
+    featureGates:
+      <IPv6DualStackFeature>
 metadata:
   name: kube-proxy-config
   namespace: kube-system

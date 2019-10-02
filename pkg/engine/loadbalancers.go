@@ -23,7 +23,6 @@ func CreateClusterLoadBalancerForIPv6() LoadBalancerARM {
 			APIVersion: "[variables('apiVersionNetwork')]",
 			DependsOn: []string{
 				"[concat('Microsoft.Network/publicIPAddresses/', 'fee-ipv4')]",
-				"[concat('Microsoft.Network/publicIPAddresses/', 'fee-ipv6')]",
 			},
 		},
 		LoadBalancer: network.LoadBalancer{
@@ -35,9 +34,6 @@ func CreateClusterLoadBalancerForIPv6() LoadBalancerARM {
 						// cluster name used as backend addr pool name for ipv4 to ensure backward compat
 						Name: to.StringPtr("[parameters('masterEndpointDNSNamePrefix')]"),
 					},
-					{
-						Name: to.StringPtr("[concat(parameters('masterEndpointDNSNamePrefix'), '-ipv6')]"),
-					},
 				},
 				FrontendIPConfigurations: &[]network.FrontendIPConfiguration{
 					{
@@ -48,30 +44,8 @@ func CreateClusterLoadBalancerForIPv6() LoadBalancerARM {
 							},
 						},
 					},
-					{
-						Name: to.StringPtr("LBFE-v6"),
-						FrontendIPConfigurationPropertiesFormat: &network.FrontendIPConfigurationPropertiesFormat{
-							PublicIPAddress: &network.PublicIPAddress{
-								ID: to.StringPtr("[resourceId('Microsoft.Network/publicIpAddresses', 'fee-ipv6')]"),
-							},
-						},
-					},
 				},
 				LoadBalancingRules: &[]network.LoadBalancingRule{
-					{
-						Name: to.StringPtr("LBRuleIPv6"),
-						LoadBalancingRulePropertiesFormat: &network.LoadBalancingRulePropertiesFormat{
-							FrontendIPConfiguration: &network.SubResource{
-								ID: to.StringPtr("[resourceId('Microsoft.Network/loadBalancers/frontendIpConfigurations', parameters('masterEndpointDNSNamePrefix'), 'LBFE-v6')]"),
-							},
-							BackendAddressPool: &network.SubResource{
-								ID: to.StringPtr("[resourceId('Microsoft.Network/loadBalancers/backendAddressPools', parameters('masterEndpointDNSNamePrefix'), concat(parameters('masterEndpointDNSNamePrefix'), '-ipv6'))]"),
-							},
-							Protocol:     network.TransportProtocolTCP,
-							FrontendPort: to.Int32Ptr(9090),
-							BackendPort:  to.Int32Ptr(9090),
-						},
-					},
 					{
 						Name: to.StringPtr("LBRuleIPv4"),
 						LoadBalancingRulePropertiesFormat: &network.LoadBalancingRulePropertiesFormat{

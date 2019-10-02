@@ -856,7 +856,17 @@ func (cs *ContainerService) SetDefaultCerts(params DefaultCertParams) (bool, []n
 		p.CertificateProfile.CaPrivateKey = caPair.PrivateKeyPem
 	}
 
-	cidrFirstIP, err := common.CidrStringFirstIP(p.OrchestratorProfile.KubernetesConfig.ServiceCIDR)
+	serviceCIDR := p.OrchestratorProfile.KubernetesConfig.ServiceCIDR
+
+	// all validation for dual stack done with primary service cidr as that is considered
+	// the default ip family for cluster.
+	if cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6DualStack") {
+		// split service cidrs
+		serviceCIDRs := strings.Split(serviceCIDR, ",")
+		serviceCIDR = serviceCIDRs[0]
+	}
+
+	cidrFirstIP, err := common.CidrStringFirstIP(serviceCIDR)
 	if err != nil {
 		return false, ips, err
 	}
