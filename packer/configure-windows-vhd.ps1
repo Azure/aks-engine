@@ -63,6 +63,7 @@ function Get-FilesToCacheOnVHD
             "https://acs-mirror.azureedge.net/wink8s/azs-v1.14.7-1int.zip",
             "https://acs-mirror.azureedge.net/wink8s/azs-v1.15.3-1int.zip",
             "https://acs-mirror.azureedge.net/wink8s/azs-v1.15.4-1int.zip",
+            "https://acs-mirror.azureedge.net/wink8s/azs-v1.16.0-1int.zip"
             "https://acs-mirror.azureedge.net/wink8s/v1.14.6-1int.zip",
             "https://acs-mirror.azureedge.net/wink8s/v1.14.7-1int.zip",
             "https://acs-mirror.azureedge.net/wink8s/v1.15.3-1int.zip",
@@ -91,7 +92,7 @@ function Get-FilesToCacheOnVHD
 
 function Install-Docker
 {
-    $defaultDockerVersion = "18.09"
+    $defaultDockerVersion = "19.03.2"
 
     Write-Log "Attempting to install Docker version $defaultDockerVersion"
     Install-PackageProvider -Name DockerMsftProvider -Force -ForceBootstrap | Out-null

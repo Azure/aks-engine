@@ -162,8 +162,20 @@ New-InfraContainer {
     $defaultPauseImage = "mcr.microsoft.com/k8s/core/pause:1.2.0"
 
     switch ($computerInfo.WindowsVersion) {
-        "1803" { docker pull $defaultPauseImage ; docker tag $defaultPauseImage $DestinationTag }
-        "1809" { docker pull $defaultPauseImage ; docker tag $defaultPauseImage $DestinationTag }
+        "1803" { 
+            $imageList = docker images $defaultPauseImage --format "{{.Repository}}:{{.Tag}}"
+            if (-not $imageList) {
+                docker pull $defaultPauseImage                 
+            }
+            docker tag $defaultPauseImage $DestinationTag
+        }
+        "1809" { 
+            $imageList = docker images $defaultPauseImage --format "{{.Repository}}:{{.Tag}}"
+            if (-not $imageList) {
+                docker pull $defaultPauseImage                
+            }
+            docker tag $defaultPauseImage $DestinationTag 
+        }
         "1903" { Build-PauseContainer -WindowsBase "mcr.microsoft.com/windows/nanoserver:1903" -DestinationTag $DestinationTag}
         default { Build-PauseContainer -WindowsBase "mcr.microsoft.com/nanoserver-insider" -DestinationTag $DestinationTag}
     }

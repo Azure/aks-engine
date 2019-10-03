@@ -157,6 +157,7 @@ func TestConvertAzureEnvironmentSpecConfigToVLabs(t *testing.T) {
 					},
 					//KubernetesSpecConfig - Due to Chinese firewall issue, the default containers from google is blocked, use the Chinese local mirror instead
 					KubernetesSpecConfig: KubernetesSpecConfig{
+						AzureTelemetryPID:                "AzureTelemetryPID",
 						KubernetesImageBase:              "KubernetesImageBase",
 						TillerImageBase:                  "TillerImageBase",
 						ACIConnectorImageBase:            "ACIConnectorImageBase",
@@ -213,6 +214,9 @@ func TestConvertAzureEnvironmentSpecConfigToVLabs(t *testing.T) {
 	}
 
 	//KubernetesSpecConfig
+	if vlabscsSpec.KubernetesSpecConfig.AzureTelemetryPID != csSpec.KubernetesSpecConfig.AzureTelemetryPID {
+		t.Errorf("incorrect AzureTelemetryPID, expect: '%s', actual: '%s'", csSpec.KubernetesSpecConfig.AzureTelemetryPID, vlabscsSpec.KubernetesSpecConfig.AzureTelemetryPID)
+	}
 	if vlabscsSpec.KubernetesSpecConfig.KubernetesImageBase != csSpec.KubernetesSpecConfig.KubernetesImageBase {
 		t.Errorf("incorrect KubernetesImageBase, expect: '%s', actual: '%s'", csSpec.KubernetesSpecConfig.KubernetesImageBase, vlabscsSpec.KubernetesSpecConfig.KubernetesImageBase)
 	}
@@ -568,7 +572,7 @@ func getDefaultContainerService() *ContainerService {
 					EtcdVersion:                     "3.0.0",
 					EtcdDiskSizeGB:                  "256",
 					EtcdEncryptionKey:               "sampleEncruptionKey",
-					AzureCNIVersion:                 "1.0.27",
+					AzureCNIVersion:                 "1.0.28",
 					AzureCNIURLLinux:                "https://mirror.azk8s.cn/kubernetes/azure-container-networking/linux",
 					AzureCNIURLWindows:              "https://mirror.azk8s.cn/kubernetes/azure-container-networking/windows",
 					KeyVaultSku:                     "Basic",

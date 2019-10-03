@@ -39,7 +39,10 @@ func (cs *ContainerService) SetPropertiesDefaults(params PropertiesDefaultsParam
 
 	// Set custom cloud profile defaults if this cluster configuration has custom cloud profile
 	if cs.Properties.CustomCloudProfile != nil {
-		err := cs.setCustomCloudProfileDefaults()
+		err := cs.setCustomCloudProfileDefaults(CustomCloudProfileDefaultsParams{
+			IsUpgrade: params.IsUpgrade,
+			IsScale:   params.IsScale,
+		})
 		if err != nil {
 			return false, err
 		}
@@ -701,29 +704,40 @@ func (p *Properties) setAgentProfileDefaults(isUpgrade, isScale bool, cloudName 
 func (p *Properties) setWindowsProfileDefaults(isUpgrade, isScale bool) {
 	windowsProfile := p.WindowsProfile
 	if !isUpgrade && !isScale {
-		if windowsProfile.WindowsPublisher == "" {
-			windowsProfile.WindowsPublisher = DefaultWindowsPublisher
-		}
 
 		if p.IsAzureStackCloud() {
+			if windowsProfile.WindowsPublisher == "" {
+				windowsProfile.WindowsPublisher = AzureStackWindowsServer2019OSImageConfig.ImagePublisher
+			}
 			if windowsProfile.WindowsOffer == "" {
-				windowsProfile.WindowsOffer = DefaultAzureStackWindowsOffer
+				windowsProfile.WindowsOffer = AzureStackWindowsServer2019OSImageConfig.ImageOffer
 			}
 			if windowsProfile.WindowsSku == "" {
-				windowsProfile.WindowsSku = DefaultAzureStackWindowsSku
+				windowsProfile.WindowsSku = AzureStackWindowsServer2019OSImageConfig.ImageSku
 			}
 			if windowsProfile.ImageVersion == "" {
-				windowsProfile.ImageVersion = DefaultAzureStackImageVersion
+				windowsProfile.ImageVersion = AzureStackWindowsServer2019OSImageConfig.ImageVersion
 			}
 		} else {
+			if windowsProfile.WindowsPublisher == "" {
+				windowsProfile.WindowsPublisher = AKSWindowsServer2019OSImageConfig.ImagePublisher
+			}
 			if windowsProfile.WindowsOffer == "" {
-				windowsProfile.WindowsOffer = DefaultWindowsOffer
+				windowsProfile.WindowsOffer = AKSWindowsServer2019OSImageConfig.ImageOffer
 			}
 			if windowsProfile.WindowsSku == "" {
-				windowsProfile.WindowsSku = DefaultWindowsSku
+				windowsProfile.WindowsSku = AKSWindowsServer2019OSImageConfig.ImageSku
 			}
+
 			if windowsProfile.ImageVersion == "" {
-				windowsProfile.ImageVersion = DefaultImageVersion
+				// default versions are specific to a publisher/offer/sku
+				if windowsProfile.WindowsPublisher == AKSWindowsServer2019OSImageConfig.ImagePublisher && windowsProfile.WindowsOffer == AKSWindowsServer2019OSImageConfig.ImageOffer && windowsProfile.WindowsSku == AKSWindowsServer2019OSImageConfig.ImageSku {
+					windowsProfile.ImageVersion = AKSWindowsServer2019OSImageConfig.ImageVersion
+				} else if windowsProfile.WindowsPublisher == WindowsServer2019OSImageConfig.ImagePublisher && windowsProfile.WindowsOffer == WindowsServer2019OSImageConfig.ImageOffer && windowsProfile.WindowsSku == WindowsServer2019OSImageConfig.ImageSku {
+					windowsProfile.ImageVersion = WindowsServer2019OSImageConfig.ImageVersion
+				} else {
+					windowsProfile.ImageVersion = "latest"
+				}
 			}
 		}
 	}
@@ -842,7 +856,17 @@ func (cs *ContainerService) SetDefaultCerts(params DefaultCertParams) (bool, []n
 		p.CertificateProfile.CaPrivateKey = caPair.PrivateKeyPem
 	}
 
-	cidrFirstIP, err := common.CidrStringFirstIP(p.OrchestratorProfile.KubernetesConfig.ServiceCIDR)
+	serviceCIDR := p.OrchestratorProfile.KubernetesConfig.ServiceCIDR
+
+	// all validation for dual stack done with primary service cidr as that is considered
+	// the default ip family for cluster.
+	if cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6DualStack") {
+		// split service cidrs
+		serviceCIDRs := strings.Split(serviceCIDR, ",")
+		serviceCIDR = serviceCIDRs[0]
+	}
+
+	cidrFirstIP, err := common.CidrStringFirstIP(serviceCIDR)
 	if err != nil {
 		return false, ips, err
 	}

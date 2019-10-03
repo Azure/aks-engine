@@ -57,7 +57,7 @@ rules:
   resources: ["jobs"]
   verbs: ["watch","list"]
 - apiGroups: ["storage.k8s.io"]
-  resources: ["storageclasses"]
+  resources: ["csinodes", "storageclasses"]
   verbs: ["get", "list", "watch"]
 - apiGroups: ["batch"]
   resources: ["jobs", "cronjobs"]

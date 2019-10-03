@@ -62,8 +62,8 @@ installGPUDrivers
 echo "  - nvidia-docker2 nvidia-container-runtime" >> ${VHD_LOGS_FILEPATH}
 
 VNET_CNI_VERSIONS="
+1.0.28
 1.0.27
-1.0.25
 "
 for VNET_CNI_VERSION in $VNET_CNI_VERSIONS; do
     VNET_CNI_PLUGINS_URL="https://acs-mirror.azureedge.net/cni/azure-vnet-cni-linux-amd64-v${VNET_CNI_VERSION}.tgz"
@@ -194,6 +194,7 @@ for PAUSE_VERSION in ${PAUSE_VERSIONS}; do
 done
 
 TILLER_VERSIONS="
+2.13.1
 2.11.0
 2.8.1
 "
@@ -204,16 +205,21 @@ for TILLER_VERSION in ${TILLER_VERSIONS}; do
 done
 
 CLUSTER_AUTOSCALER_VERSIONS="
+1.16.1
 1.16.0
+1.15.2
 1.15.1
 1.15.0
+1.14.5
 1.14.4
 1.14.2
 1.14.0
+1.13.7
 1.13.6
 1.13.4
 1.13.2
 1.13.1
+1.12.8
 1.12.7
 1.12.5
 1.12.3
@@ -372,9 +378,10 @@ pullContainerImage "docker" "busybox"
 echo "  - busybox" >> ${VHD_LOGS_FILEPATH}
 
 # TODO: fetch supported k8s versions from an aks-engine command instead of hardcoding them here
-# TODO add 1.15.4-azs, 1.14.7-azs, 1.13.11-azs when those hyperkube images are ready
 K8S_VERSIONS="
+1.16.1
 1.16.0
+1.16.0-azs
 1.15.4
 1.15.4-azs
 1.15.3

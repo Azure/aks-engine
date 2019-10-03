@@ -19,7 +19,7 @@
 
 Enabling Managed Identity configures aks-engine to include and use MSI identities for all interactions with the Azure Resource Manager (ARM) API.
 
-Instead of using a static servic principal written to `/etc/kubernetes/azure.json`, Kubernetes will use a dynamic, time-limited token fetched from the MSI extension running on master and agent nodes. This support is currently alpha and requires Kubernetes v1.9.1 or newer.
+Instead of using a static service principal written to `/etc/kubernetes/azure.json`, Kubernetes will use a dynamic, time-limited token fetched from the MSI extension running on master and agent nodes. This support is currently alpha and requires Kubernetes v1.9.1 or newer.
 
 Enable Managed Identity by adding `useManagedIdentity` in `kubernetesConfig`.
 
@@ -301,7 +301,7 @@ The route table resource id is of the format: `/subscriptions/SUBSCRIPTIONID/res
 
 Existing subnets will need to use the Kubernetes-based Route Table so that machines can route to Kubernetes-based workloads.
 
-Update properties of all subnets in the existing VNET he route table resource by appending the following to subnet properties:
+Update properties of all subnets in the existing VNET route table resource by appending the following to subnet properties:
 
 ```json
 "routeTable": {

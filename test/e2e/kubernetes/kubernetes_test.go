@@ -99,9 +99,9 @@ var _ = BeforeSuite(func() {
 	}
 	masterSSHPrivateKeyFilepath = cfg.GetSSHKeyPath()
 	longRunningApacheDeploymentName = "php-apache-long-running"
-	kubeConfig, err = GetConfig()
+	kubeConfig, err = GetConfigWithRetry(3*time.Second, cfg.Timeout)
 	Expect(err).NotTo(HaveOccurred())
-	sshConn, err = remote.NewConnection(kubeConfig.GetServerName(), masterSSHPort, eng.ExpandedDefinition.Properties.LinuxProfile.AdminUsername, masterSSHPrivateKeyFilepath)
+	sshConn, err = remote.NewConnectionWithRetry(kubeConfig.GetServerName(), masterSSHPort, eng.ExpandedDefinition.Properties.LinuxProfile.AdminUsername, masterSSHPrivateKeyFilepath, 3*time.Second, cfg.Timeout)
 	Expect(err).NotTo(HaveOccurred())
 	success := false
 	for i := 0; i < 3; i++ {
@@ -654,7 +654,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 		})
 
 		It("should have the correct IP address for the apiserver", func() {
-			pods, err := pod.GetAllByPrefix("kube-apiserver", "kube-system")
+			pods, err := pod.GetAllByPrefixWithRetry("kube-apiserver", "kube-system", 3*time.Second, cfg.Timeout)
 			Expect(err).NotTo(HaveOccurred())
 			By("Ensuring that the correct IP address has been applied to the apiserver")
 			expectedIPAddress := eng.ExpandedDefinition.Properties.MasterProfile.FirstConsecutiveStaticIP
@@ -693,7 +693,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 						Expect(err).NotTo(HaveOccurred())
 						Expect(running).To(Equal(true))
 						By(fmt.Sprintf("Ensuring that the correct resources have been applied for %s", addonPod))
-						pods, err := pod.GetAllByPrefix(addonPod, addonNamespace)
+						pods, err := pod.GetAllByPrefixWithRetry(addonPod, addonNamespace, 3*time.Second, cfg.Timeout)
 						Expect(err).NotTo(HaveOccurred())
 						for i, c := range addon.Containers {
 							pod := pods[0]
@@ -713,7 +713,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				running, err := pod.WaitOnSuccesses("tiller", "kube-system", kubeSystemPodsReadinessChecks, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(running).To(Equal(true))
-				pods, err := pod.GetAllByPrefix("tiller-deploy", "kube-system")
+				pods, err := pod.GetAllByPrefixWithRetry("tiller-deploy", "kube-system", 3*time.Second, cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())
 				By("Ensuring that the correct max-history has been applied")
 				maxHistory := tillerAddon.Config["max-history"]
@@ -732,7 +732,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				running, err := pod.WaitOnSuccesses("omsagent-rs", "kube-system", kubeSystemPodsReadinessChecks, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(running).To(Equal(true))
-				pods, err := pod.GetAllByPrefix("omsagent-rs", "kube-system")
+				pods, err := pod.GetAllByPrefixWithRetry("omsagent-rs", "kube-system", 3*time.Second, cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())
 				By("Ensuring that the kubepodinventory plugin is writing data successfully")
 				pass, err := pods[0].ValidateOmsAgentLogs("kubePodInventoryEmitStreamSuccess", 1*time.Second, cfg.Timeout)
@@ -746,7 +746,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				running, err = pod.WaitOnSuccesses("omsagent", "kube-system", kubeSystemPodsReadinessChecks, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(running).To(Equal(true))
-				pods, err = pod.GetAllByPrefix("omsagent", "kube-system")
+				pods, err = pod.GetAllByPrefixWithRetry("omsagent", "kube-system", 3*time.Second, cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())
 				By("Ensuring that the cadvisor_perf plugin is writing data successfully")
 				pass, err = pods[0].ValidateOmsAgentLogs("cAdvisorPerfEmitStreamSuccess", 1*time.Second, cfg.Timeout)
@@ -1619,13 +1619,6 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 					Expect(pass).To(BeTrue())
 				}
 
-				By("Checking that no pods restart")
-				for _, iisPod := range iisPods {
-					log.Printf("Checking %s", iisPod.Metadata.Name)
-					Expect(iisPod.Status.ContainerStatuses[0].Ready).To(BeTrue())
-					Expect(iisPod.Status.ContainerStatuses[0].RestartCount).To(Equal(0))
-				}
-
 				By("Scaling deployment to 2 pods")
 				err = iisDeploy.ScaleDeployment(2)
 				Expect(err).NotTo(HaveOccurred())
@@ -1749,7 +1742,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 					iisPods, err := iisDeploy.Pods()
 					Expect(err).NotTo(HaveOccurred())
 					Expect(len(iisPods)).ToNot(BeZero())
-					kubeConfig, err := GetConfig()
+					kubeConfig, err := GetConfigWithRetry(3*time.Second, cfg.Timeout)
 					Expect(err).NotTo(HaveOccurred())
 					master := fmt.Sprintf("azureuser@%s", kubeConfig.GetServerName())
 					for _, iisPod := range iisPods {

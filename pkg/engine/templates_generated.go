@@ -8301,6 +8301,8 @@ data:
       kubeconfig: /var/lib/kubelet/kubeconfig
     clusterCIDR: "<CIDR>"
     mode: "<kubeProxyMode>"
+    featureGates:
+      <IPv6DualStackFeature>
 metadata:
   name: kube-proxy-config
   namespace: kube-system
@@ -15160,6 +15162,8 @@ net.ipv6.conf.default.accept_redirects = 0
 vm.overcommit_memory = 1
 kernel.panic = 10
 kernel.panic_on_oops = 1
+# https://github.com/Azure/AKS/issues/772
+fs.inotify.max_user_watches = 1048576
 `)
 
 func k8sCloudInitArtifactsSysctlD60CisConfBytes() ([]byte, error) {
@@ -15576,9 +15580,9 @@ MASTER_CONTAINER_ADDONS_PLACEHOLDER
     sed -i "s|<args>|{{GetK8sRuntimeConfigKeyVals .OrchestratorProfile.KubernetesConfig.ControllerManagerConfig}}|g" /etc/kubernetes/manifests/kube-controller-manager.yaml
     sed -i "s|<args>|{{GetK8sRuntimeConfigKeyVals .OrchestratorProfile.KubernetesConfig.SchedulerConfig}}|g" /etc/kubernetes/manifests/kube-scheduler.yaml
     {{ if IsIPv6DualStackFeatureEnabled }}
-    sed -i "s|<img>|{{WrapAsParameter "kubernetesHyperkubeSpec"}}|g; s|<CIDR>|',first(split(parameters('kubeClusterCidr'),',')),'|g; s|<kubeProxyMode>|{{ .OrchestratorProfile.KubernetesConfig.ProxyMode}}|g" /etc/kubernetes/addons/kube-proxy-daemonset.yaml
+    sed -i "s|<img>|{{WrapAsParameter "kubernetesHyperkubeSpec"}}|g; s|<CIDR>|{{WrapAsParameter "kubeClusterCidr"}}|g; s|<kubeProxyMode>|{{ .OrchestratorProfile.KubernetesConfig.ProxyMode}}|g; s|<IPv6DualStackFeature>|IPv6DualStack: true|g" /etc/kubernetes/addons/kube-proxy-daemonset.yaml
     {{ else }}
-    sed -i "s|<img>|{{WrapAsParameter "kubernetesHyperkubeSpec"}}|g; s|<CIDR>|{{WrapAsParameter "kubeClusterCidr"}}|g; s|<kubeProxyMode>|{{ .OrchestratorProfile.KubernetesConfig.ProxyMode}}|g" /etc/kubernetes/addons/kube-proxy-daemonset.yaml
+    sed -i "s|<img>|{{WrapAsParameter "kubernetesHyperkubeSpec"}}|g; s|<CIDR>|{{WrapAsParameter "kubeClusterCidr"}}|g; s|<kubeProxyMode>|{{ .OrchestratorProfile.KubernetesConfig.ProxyMode}}|g; s|<IPv6DualStackFeature>|{}|g" /etc/kubernetes/addons/kube-proxy-daemonset.yaml
     {{ end }}
     KUBEDNS=/etc/kubernetes/addons/kube-dns-deployment.yaml
 {{if NeedsKubeDNSWithExecHealthz}}
@@ -15785,6 +15789,12 @@ coreos:
 runcmd:
 - set -x
 - . /opt/azure/containers/provision_source.sh
+{{if IsAzureStackCloud}}
+- AZURESTACK_ROOT_CERTIFICATE_SOURCE_PATH="/var/lib/waagent/Certificates.pem"
+- AZURESTACK_ROOT_CERTIFICATE__DEST_PATH="/usr/local/share/ca-certificates/azsCertificate.crt"
+- cp $AZURESTACK_ROOT_CERTIFICATE_SOURCE_PATH $AZURESTACK_ROOT_CERTIFICATE__DEST_PATH
+- update-ca-certificates
+{{end}}
 - aptmarkWALinuxAgent hold{{GetKubernetesMasterPreprovisionYaml}}
 {{end}}
 `)
@@ -16141,6 +16151,12 @@ coreos:
 runcmd:
 - set -x
 - . /opt/azure/containers/provision_source.sh
+{{if IsAzureStackCloud}}
+- AZURESTACK_ROOT_CERTIFICATE_SOURCE_PATH="/var/lib/waagent/Certificates.pem"
+- AZURESTACK_ROOT_CERTIFICATE__DEST_PATH="/usr/local/share/ca-certificates/azsCertificate.crt"
+- cp $AZURESTACK_ROOT_CERTIFICATE_SOURCE_PATH $AZURESTACK_ROOT_CERTIFICATE__DEST_PATH
+- update-ca-certificates
+{{end}}
 - aptmarkWALinuxAgent hold{{GetKubernetesAgentPreprovisionYaml .}}
 {{end}}
 `)
@@ -18736,7 +18752,7 @@ rules:
   resources: ["jobs"]
   verbs: ["watch","list"]
 - apiGroups: ["storage.k8s.io"]
-  resources: ["storageclasses"]
+  resources: ["csinodes", "storageclasses"]
   verbs: ["get", "list", "watch"]
 - apiGroups: ["batch"]
   resources: ["jobs", "cronjobs"]
@@ -24928,7 +24944,7 @@ function DownloadFileOverHttp
 
     if ($search.Count -ne 0)
     {
-        Write-Log "Using chaced version of $fileName - Copying file from $($search[0]) to $DestinationPath"
+        Write-Log "Using cached version of $fileName - Copying file from $($search[0]) to $DestinationPath"
         Move-Item -Path $search[0] -Destination $DestinationPath -Force
     }
     else 
@@ -25274,10 +25290,11 @@ try
                     -SubscriptionId $global:SubscriptionId ` + "`" + `
                     -ResourceGroup $global:ResourceGroup ` + "`" + `
                     -AADClientId $AADClientId ` + "`" + `
+                    -KubeDir $global:KubeDir ` + "`" + `
                     -AADClientSecret $([System.Text.Encoding]::ASCII.GetString([System.Convert]::FromBase64String($AADClientSecret))) ` + "`" + `
                     -NetworkAPIVersion $NetworkAPIVersion ` + "`" + `
                     -AzureEnvironmentFilePath $([io.path]::Combine($global:KubeDir, "azurestackcloud.json")) ` + "`" + `
-                    -IdentitySystem "{{ GetIdentitySystem }}"
+                    -IdentitySystem "{{ GetIdentitySystem }}"                    
             }
 
         } elseif ($global:NetworkPlugin -eq "kubenet") {
@@ -25318,8 +25335,11 @@ try
         Write-Log "Update service failure actions"
         Update-ServiceFailureActions
 
-        Write-Log "Removing aks-engine bits cache directory"
-        Remove-Item $CacheDir -Recurse -Force
+        if (Test-Path $CacheDir)
+        {
+            Write-Log "Removing aks-engine bits cache directory"
+            Remove-Item $CacheDir -Recurse -Force
+        }
 
         Write-Log "Setup Complete, reboot computer"
         Restart-Computer
@@ -25795,11 +25815,13 @@ function GenerateAzureStackCNIConfig
         [Parameter(Mandatory=$true)][ValidateNotNullOrEmpty()][string] $ResourceGroup,
         [Parameter(Mandatory=$true)][ValidateNotNullOrEmpty()][string] $NetworkAPIVersion,
         [Parameter(Mandatory=$true)][ValidateNotNullOrEmpty()][string] $AzureEnvironmentFilePath,
-        [Parameter(Mandatory=$true)][ValidateNotNullOrEmpty()][string] $IdentitySystem
+        [Parameter(Mandatory=$true)][ValidateNotNullOrEmpty()][string] $IdentitySystem,
+        [Parameter(Mandatory=$true)][ValidateNotNullOrEmpty()][string] $KubeDir
+
     )
 
-    $networkInterfacesFile = "C:\k\network-interfaces.json"
-    $azureCNIConfigFile = "C:\k\interfaces.json"
+    $networkInterfacesFile = "$KubeDir\network-interfaces.json"
+    $azureCNIConfigFile = "$KubeDir\interfaces.json"
     $azureEnvironment = Get-Content $AzureEnvironmentFilePath | ConvertFrom-Json
 
     Write-Log "------------------------------------------------------------------------"
@@ -25994,6 +26016,9 @@ function Install-Docker
         $DockerVersion
     )
 
+    # DOCKER_API_VERSION needs to be set for Docker versions older than 18.09.0 EE
+    # due to https://github.com/kubernetes/kubernetes/issues/69996
+    # this issue was fixed by https://github.com/kubernetes/kubernetes/issues/69996#issuecomment-438499024
     # Note: to get a list of all versions, use this snippet
     # $versions = (curl.exe -L "https://go.microsoft.com/fwlink/?LinkID=825636&clcid=0x409" | ConvertFrom-Json).Versions | Get-Member -Type NoteProperty | Select-Object Name
     # Docker version to API version decoder: https://docs.docker.com/develop/sdk/#api-version-matrix
@@ -26017,11 +26042,30 @@ function Install-Docker
     }
 
     try {
-        Find-Package -Name Docker -ProviderName DockerMsftProvider -RequiredVersion $DockerVersion -ErrorAction Stop
-        Write-Log "Found version $DockerVersion. Installing..."
-        Install-Package -Name Docker -ProviderName DockerMsftProvider -Update -Force -RequiredVersion $DockerVersion
-        net start docker
-        Write-Log "Installed version $DockerVersion"
+        $installDocker = $true
+        $dockerService = Get-Service | ? Name -like 'docker'
+        if ($dockerService.Count -eq 0) {
+            Write-Log "Docker is not installed. Install docker version($DockerVersion)."
+        }
+        else {
+            $dockerServerVersion = docker version --format '{{.Server.Version}}'
+            Write-Log "Docker service is installed with docker version($dockerServerVersion)."
+            if ($dockerServerVersion -eq $DockerVersion) {
+                $installDocker = $false
+                Write-Log "Same version docker installed will skip installing docker version($dockerServerVersion)."
+            }
+            else {
+                Write-Log "Same version docker is not installed. Will install docker version($DockerVersion)."
+            }
+        }
+
+        if ($installDocker) {
+            Find-Package -Name Docker -ProviderName DockerMsftProvider -RequiredVersion $DockerVersion -ErrorAction Stop
+            Write-Log "Found version $DockerVersion. Installing..."
+            Install-Package -Name Docker -ProviderName DockerMsftProvider -Update -Force -RequiredVersion $DockerVersion
+            net start docker
+            Write-Log "Installed version $DockerVersion"
+        }
     } catch {
         Write-Log "Error while installing package: $_.Exception.Message"
         $currentDockerVersion = (Get-Package -Name Docker -ProviderName DockerMsftProvider).Version
@@ -26068,8 +26112,7 @@ Install-OpenSSH {
         $isAvailable = Get-WindowsCapability -Online | ? Name -like 'OpenSSH*'
 
         if (!$isAvailable) {
-            Write-Error "OpenSSH is not available on this machine"
-            exit 1
+            throw "OpenSSH is not available on this machine"
         }
 
         Add-WindowsCapability -Online -Name OpenSSH.Server~~~~0.0.1.0
@@ -26107,8 +26150,7 @@ Install-OpenSSH {
     $firewall = Get-NetFirewallRule -Name *ssh*
 
     if (!$firewall) {
-        Write-Error "OpenSSH is firewall is not configured properly"
-        exit 1
+        throw "OpenSSH is firewall is not configured properly"
     }
     Write-Host "OpenSSH installed and configured successfully"
 }
@@ -26293,8 +26335,20 @@ New-InfraContainer {
     $defaultPauseImage = "mcr.microsoft.com/k8s/core/pause:1.2.0"
 
     switch ($computerInfo.WindowsVersion) {
-        "1803" { docker pull $defaultPauseImage ; docker tag $defaultPauseImage $DestinationTag }
-        "1809" { docker pull $defaultPauseImage ; docker tag $defaultPauseImage $DestinationTag }
+        "1803" { 
+            $imageList = docker images $defaultPauseImage --format "{{.Repository}}:{{.Tag}}"
+            if (-not $imageList) {
+                docker pull $defaultPauseImage                 
+            }
+            docker tag $defaultPauseImage $DestinationTag
+        }
+        "1809" { 
+            $imageList = docker images $defaultPauseImage --format "{{.Repository}}:{{.Tag}}"
+            if (-not $imageList) {
+                docker pull $defaultPauseImage                
+            }
+            docker tag $defaultPauseImage $DestinationTag 
+        }
         "1903" { Build-PauseContainer -WindowsBase "mcr.microsoft.com/windows/nanoserver:1903" -DestinationTag $DestinationTag}
         default { Build-PauseContainer -WindowsBase "mcr.microsoft.com/nanoserver-insider" -DestinationTag $DestinationTag}
     }

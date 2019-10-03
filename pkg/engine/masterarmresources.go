@@ -92,11 +92,13 @@ func createKubernetesMasterResourcesVMAS(cs *api.ContainerService) []interface{}
 	}
 
 	if cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6DualStack") {
-		clusterIPv4PublicIPAddress := CreateClusterPublicIPAddress()
-		clusterIPv6PublicIPAddress := CreateClusterPublicIPv6Address()
-		clusterLB := CreateClusterLoadBalancerForIPv6()
+		// for standard lb sku, the loadbalancer and ipv4 FE is already created
+		if cs.Properties.OrchestratorProfile.KubernetesConfig.LoadBalancerSku != api.StandardLoadBalancerSku {
+			clusterIPv4PublicIPAddress := CreateClusterPublicIPAddress()
+			clusterLB := CreateClusterLoadBalancerForIPv6()
 
-		masterResources = append(masterResources, clusterIPv4PublicIPAddress, clusterIPv6PublicIPAddress, clusterLB)
+			masterResources = append(masterResources, clusterIPv4PublicIPAddress, clusterLB)
+		}
 	}
 
 	masterVM := CreateMasterVM(cs)
@@ -174,11 +176,13 @@ func createKubernetesMasterResourcesVMSS(cs *api.ContainerService) []interface{}
 	}
 
 	if cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6DualStack") {
-		clusterIPv4PublicIPAddress := CreateClusterPublicIPAddress()
-		clusterIPv6PublicIPAddress := CreateClusterPublicIPv6Address()
-		clusterLB := CreateClusterLoadBalancerForIPv6()
+		// for standard lb sku, the loadbalancer and ipv4 FE is already created
+		if cs.Properties.OrchestratorProfile.KubernetesConfig.LoadBalancerSku != api.StandardLoadBalancerSku {
+			clusterIPv4PublicIPAddress := CreateClusterPublicIPAddress()
+			clusterLB := CreateClusterLoadBalancerForIPv6()
 
-		masterResources = append(masterResources, clusterIPv4PublicIPAddress, clusterIPv6PublicIPAddress, clusterLB)
+			masterResources = append(masterResources, clusterIPv4PublicIPAddress, clusterLB)
+		}
 	}
 
 	masterVmss := CreateMasterVMSS(cs)
