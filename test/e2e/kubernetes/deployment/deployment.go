@@ -412,6 +412,11 @@ func (d *Deployment) Pods() ([]pod.Pod, error) {
 	return pod.GetAllByPrefixWithRetry(d.Metadata.Name, d.Metadata.Namespace, 3*time.Second, 20*time.Minute)
 }
 
+// PodsRunning will return all pods in a Running state related to a deployment
+func (d *Deployment) PodsRunning() ([]pod.Pod, error) {
+	return pod.GetAllRunningByPrefixWithRetry(d.Metadata.Name, d.Metadata.Namespace, 3*time.Second, 20*time.Minute)
+}
+
 // GetWithRetry gets a deployment, allowing for retries
 func GetWithRetry(name, namespace string, sleep, timeout time.Duration) (*Deployment, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
