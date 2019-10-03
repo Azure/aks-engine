@@ -14317,6 +14317,10 @@ configureK8s() {
 }
 EOF
     set -x
+    if [[ "${CLOUDPROVIDER_BACKOFF_MODE}" = "v2" ]]; then
+        sed -i "/cloudProviderBackoffExponent/d" /etc/kubernetes/azure.json
+        sed -i "/cloudProviderBackoffJitter/d" /etc/kubernetes/azure.json
+    fi
     if [[ -n "${MASTER_NODE}" ]]; then
         if [[ "${ENABLE_AGGREGATED_APIS}" = True ]]; then
             generateAggregatedAPICerts
@@ -29559,7 +29563,7 @@ var _k8sKubernetesparamsT = []byte(`{{if .HasAadProfile}}
       "type": "object",
       "defaultValue": {
         "cloudProviderBackoff": false,
-        "cloudProviderBackoffMode": "v1",
+        "cloudProviderBackoffMode": "",
         "cloudProviderBackoffRetries": 10,
         "cloudProviderBackoffJitter": "0",
         "cloudProviderBackoffDuration": 0,

@@ -289,7 +289,7 @@
       "type": "object",
       "defaultValue": {
         "cloudProviderBackoff": false,
-        "cloudProviderBackoffMode": "v1",
+        "cloudProviderBackoffMode": "",
         "cloudProviderBackoffRetries": 10,
         "cloudProviderBackoffJitter": "0",
         "cloudProviderBackoffDuration": 0,
