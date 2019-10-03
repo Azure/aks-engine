@@ -101,7 +101,7 @@ var _ = BeforeSuite(func() {
 	longRunningApacheDeploymentName = "php-apache-long-running"
 	kubeConfig, err = GetConfigWithRetry(3*time.Second, cfg.Timeout)
 	Expect(err).NotTo(HaveOccurred())
-	sshConn, err = remote.NewConnection(kubeConfig.GetServerName(), masterSSHPort, eng.ExpandedDefinition.Properties.LinuxProfile.AdminUsername, masterSSHPrivateKeyFilepath)
+	sshConn, err = remote.NewConnectionWithRetry(kubeConfig.GetServerName(), masterSSHPort, eng.ExpandedDefinition.Properties.LinuxProfile.AdminUsername, masterSSHPrivateKeyFilepath, 3*time.Second, cfg.Timeout)
 	Expect(err).NotTo(HaveOccurred())
 	success := false
 	for i := 0; i < 3; i++ {

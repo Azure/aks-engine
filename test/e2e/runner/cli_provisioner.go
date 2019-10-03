@@ -371,7 +371,7 @@ func (cli *CLIProvisioner) FetchProvisioningMetrics(path string, cfg *config.Con
 	authSock := strings.Split(strings.Split(string(out), "=")[1], ";")
 	os.Setenv("SSH_AUTH_SOCK", authSock[0])
 	var conn *remote.Connection
-	conn, err = remote.NewConnection(hostname, "22", cli.Engine.ClusterDefinition.Properties.LinuxProfile.AdminUsername, cli.Config.GetSSHKeyPath())
+	conn, err = remote.NewConnectionWithRetry(hostname, "22", cli.Engine.ClusterDefinition.Properties.LinuxProfile.AdminUsername, cli.Config.GetSSHKeyPath(), 3*time.Second, cli.Config.Timeout)
 	if err != nil {
 		return err
 	}
