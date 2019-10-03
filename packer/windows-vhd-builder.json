@@ -92,19 +92,15 @@
             "type": "powershell",
             "inline": [
                 "& $env:SystemRoot\\System32\\Sysprep\\Sysprep.exe /oobe /generalize /mode:vm /quiet /quit",
-                "while($true) { $imageState = Get-ItemProperty HKLM:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Setup\\State | Select ImageState; if($imageState.ImageState -ne 'IMAGE_STATE_GENERALIZE_RESEAL_TO_OOBE') { Write-Output $imageState.ImageState; Start-Sleep -s 10  } else { break } }"
-            ]
-        },
-        {
-            "elevated_user": "packer",
-            "elevated_password": "{{.WinRMPassword}}",
-            "environment_vars": "ProvisioningPhase=3",
-            "type": "powershell",
-            "script": "packer/configure-windows-vhd.ps1"
-        },
-        {
-            "type": "powershell",
-            "inline": [
+                "Stop-Service WindowsAzureGuestAgent",
+                "Stop-Service WindowsAzureNetAgentSvc",
+                "Stop-Service RdAgent",
+                "Stop-Service WindowsAzureTelemetryService",
+                "& sc.exe delete WindowsAzureGuestAgent",
+                "& sc.exe delete WindowsAzureNetAgentSvc",
+                "& sc.exe delete RdAgent",
+                "& sc.exe delete WindowsAzureTelemetryService",
+                "while($true) { $imageState = Get-ItemProperty HKLM:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Setup\\State | Select ImageState; if($imageState.ImageState -ne 'IMAGE_STATE_GENERALIZE_RESEAL_TO_OOBE') { Write-Output $imageState.ImageState; Start-Sleep -s 10  } else { break } }",
                 "Remove-Item -Path WSMan:\\Localhost\\listener\\listener* -Recurse"
             ]
         }
