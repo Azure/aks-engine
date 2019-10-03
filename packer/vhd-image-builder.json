@@ -192,6 +192,11 @@
             "destination": "/home/packer/docker_clear_mount_propagation_flags.conf"
         },
         {
+            "type": "file",
+            "source": "releases/notice/notice.txt",
+            "destination": "/home/packer/NOTICE.txt"
+        },
+        {
             "type": "shell",
             "inline": [
                 "sudo FEATURE_FLAGS={{user `feature_flags`}} BUILD_NUMBER={{user `build_number`}} BUILD_ID={{user `build_id`}} COMMIT={{user `commit`}} /bin/bash -ux /home/packer/install-dependencies.sh",
