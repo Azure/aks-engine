@@ -92,7 +92,7 @@ function Get-FilesToCacheOnVHD
 
 function Install-Docker
 {
-    $defaultDockerVersion = "18.09"
+    $defaultDockerVersion = "19.03.2"
 
     Write-Log "Attempting to install Docker version $defaultDockerVersion"
     Install-PackageProvider -Name DockerMsftProvider -Force -ForceBootstrap | Out-null
