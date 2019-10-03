@@ -689,6 +689,7 @@ func convertVLabsKubernetesConfig(vlabs *vlabs.KubernetesConfig, api *Kubernetes
 	api.MobyVersion = vlabs.MobyVersion
 	api.ContainerdVersion = vlabs.ContainerdVersion
 	api.CloudProviderBackoff = vlabs.CloudProviderBackoff
+	api.CloudProviderBackoffMode = vlabs.CloudProviderBackoffMode
 	api.CloudProviderBackoffDuration = vlabs.CloudProviderBackoffDuration
 	api.CloudProviderBackoffExponent = vlabs.CloudProviderBackoffExponent
 	api.CloudProviderBackoffJitter = vlabs.CloudProviderBackoffJitter

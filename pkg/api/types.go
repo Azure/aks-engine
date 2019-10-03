@@ -310,6 +310,7 @@ type PrivateJumpboxProfile struct {
 
 // CloudProviderConfig contains the KubernetesConfig properties specific to the Cloud Provider
 type CloudProviderConfig struct {
+	CloudProviderBackoffMode          string `json:"cloudProviderBackoffMode,omitempty"`
 	CloudProviderBackoff              *bool  `json:"cloudProviderBackoff,omitempty"`
 	CloudProviderBackoffRetries       int    `json:"cloudProviderBackoffRetries,omitempty"`
 	CloudProviderBackoffJitter        string `json:"cloudProviderBackoffJitter,omitempty"`
@@ -388,6 +389,7 @@ type KubernetesConfig struct {
 	APIServerConfig                   map[string]string `json:"apiServerConfig,omitempty"`
 	SchedulerConfig                   map[string]string `json:"schedulerConfig,omitempty"`
 	PodSecurityPolicyConfig           map[string]string `json:"podSecurityPolicyConfig,omitempty"` // Deprecated
+	CloudProviderBackoffMode          string            `json:"cloudProviderBackoffMode,omitempty"`
 	CloudProviderBackoff              *bool             `json:"cloudProviderBackoff,omitempty"`
 	CloudProviderBackoffRetries       int               `json:"cloudProviderBackoffRetries,omitempty"`
 	CloudProviderBackoffJitter        float64           `json:"cloudProviderBackoffJitter,omitempty"`
