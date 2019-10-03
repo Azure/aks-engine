@@ -194,7 +194,7 @@
         {
             "type": "file",
             "source": "releases/notice/notice.txt",
-            "destination": "/NOTICE.txt"
+            "destination": "/home/packer/NOTICE.txt"
         },
         {
             "type": "shell",
