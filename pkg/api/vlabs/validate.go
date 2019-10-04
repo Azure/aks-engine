@@ -669,6 +669,12 @@ func (a *Properties) validateAddons() error {
 						return errors.New("appgw-ingress add-ons requires 'appgw-subnet' in the Config. It is used to provision the subnet for Application Gateway in the vnet")
 					}
 				}
+			case "azure-policy":
+				if to.Bool(addon.Enabled) {
+					if a.ServicePrincipalProfile == nil || a.OrchestratorProfile.KubernetesConfig.UseManagedIdentity {
+						return errors.New("azure policy addon requires service principal profile to be specified")
+					}
+				}
 			}
 		}
 	}
