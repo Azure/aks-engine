@@ -4,6 +4,7 @@
 package api
 
 import (
+	"encoding/base64"
 	"strconv"
 	"strings"
 
@@ -25,6 +26,9 @@ func (cs *ContainerService) setAddonsConfig(isUpdate bool) {
 	if strings.EqualFold(cloudSpecConfig.CloudName, "AzureChinaCloud") {
 		omsagentImage = "dockerhub.azk8s.cn/microsoft/oms:ciprod07092019"
 	}
+	workspaceDomain := getLogAnalyticsWorkspaceDomain(cloudSpecConfig.CloudName)
+	workspaceDomain = base64.StdEncoding.EncodeToString([]byte(workspaceDomain))
+
 	defaultsHeapsterAddonsConfig := KubernetesAddon{
 		Name:    HeapsterAddonName,
 		Enabled: to.BoolPtr(DefaultHeapsterAddonEnabled && !common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.13.0")),
@@ -217,6 +221,7 @@ func (cs *ContainerService) setAddonsConfig(isUpdate bool) {
 			"dockerProviderVersion": "6.0.0-0",
 			"schema-versions":       "v1",
 			"clusterName":           clusterDNSPrefix,
+			"workspaceDomain":       workspaceDomain,
 		},
 		Containers: []KubernetesContainerSpec{
 			{
@@ -493,4 +498,21 @@ func synthesizeAddonsConfig(addons []KubernetesAddon, addon KubernetesAddon, isU
 	if i >= 0 {
 		addons[i] = assignDefaultAddonVals(addons[i], addon, isUpdate)
 	}
+}
+
+func getLogAnalyticsWorkspaceDomain(cloudName string) string {
+	var workspaceDomain string
+	switch cloudName {
+	case "AzurePublicCloud":
+		workspaceDomain = "opinsights.azure.com"
+	case "AzureChinaCloud":
+		workspaceDomain = "opinsights.azure.cn"
+	case "AzureUSGovernmentCloud":
+		workspaceDomain = "opinsights.azure.us"
+	case "AzureGermanCloud":
+		workspaceDomain = "opinsights.azure.de"
+	default:
+		workspaceDomain = "opinsights.azure.com"
+	}
+	return workspaceDomain
 }
