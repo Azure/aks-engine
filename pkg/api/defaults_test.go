@@ -1729,22 +1729,6 @@ func TestWindowsProfileDefaults(t *testing.T) {
 			},
 			false,
 		},
-		{
-			"Azure Stack defaults",
-			WindowsProfile{},
-			WindowsProfile{
-				WindowsPublisher:      AzureStackWindowsServer2019OSImageConfig.ImagePublisher,
-				WindowsOffer:          AzureStackWindowsServer2019OSImageConfig.ImageOffer,
-				WindowsSku:            AzureStackWindowsServer2019OSImageConfig.ImageSku,
-				ImageVersion:          AzureStackWindowsServer2019OSImageConfig.ImageVersion,
-				AdminUsername:         "",
-				AdminPassword:         "",
-				WindowsImageSourceURL: "",
-				WindowsDockerVersion:  "",
-				SSHEnabled:            false,
-			},
-			true,
-		},
 	}
 
 	for _, test := range tests {

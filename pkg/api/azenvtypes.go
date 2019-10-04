@@ -171,14 +171,6 @@ var (
 		ImageVersion:   "17763.737.190923",
 	}
 
-	// AzureStackWindowsServer2019OSImageConfig is the 'vanilla' Windows Server 2019 image to be used to with Azure Stack deployments
-	AzureStackWindowsServer2019OSImageConfig = AzureOSImageConfig{
-		ImageOffer:     "WindowsServer",
-		ImageSku:       "2019-Datacenter-Core-with-Containers",
-		ImagePublisher: "MicrosoftWindowsServer",
-		ImageVersion:   "latest",
-	}
-
 	// WindowsServer2019OSImageConfig is the 'vanilla' Windows Server 2019 image
 	WindowsServer2019OSImageConfig = AzureOSImageConfig{
 		ImageOffer:     "WindowsServer",
