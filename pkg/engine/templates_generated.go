@@ -20833,13 +20833,13 @@ roleRef:
 subjects:
 - kind: ServiceAccount
   name: default
-  namespace: gatekeeper-system
+  namespace: kube-system
 ---
 apiVersion: v1
 kind: Secret
 metadata:
   name: gatekeeper-webhook-server-secret
-  namespace: gatekeeper-system
+  namespace: kube-system
   labels:
     kubernetes.io/cluster-service: "true"
     addonmanager.kubernetes.io/mode: Reconcile
@@ -20853,7 +20853,7 @@ metadata:
     kubernetes.io/cluster-service: "true"
     addonmanager.kubernetes.io/mode: Reconcile
   name: gatekeeper-controller-manager-service
-  namespace: gatekeeper-system
+  namespace: kube-system
 spec:
   ports:
   - port: 443
@@ -20870,7 +20870,7 @@ metadata:
     kubernetes.io/cluster-service: "true"
     addonmanager.kubernetes.io/mode: Reconcile
   name: gatekeeper-controller-manager
-  namespace: gatekeeper-system
+  namespace: kube-system
 spec:
   selector:
     matchLabels:
@@ -21026,7 +21026,7 @@ apiVersion: config.gatekeeper.sh/v1alpha1
 kind: Config
 metadata:
   name: config
-  namespace: "gatekeeper-system"
+  namespace: "kube-system"
   labels:
     kubernetes.io/cluster-service: "true"
     addonmanager.kubernetes.io/mode: Reconcile
@@ -21039,12 +21039,18 @@ spec:
       - group: ""
         version: "v1"
         kind: "Pod"
+      - group: ""
+        version: "v1"
+        kind: "Ingress"
+      - group: ""
+        version: "v1"
+        kind: "Service"
 ---
 apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: azure-policy
-  namespace: default
+  namespace: kube-system
   labels:
     kubernetes.io/cluster-service: "true"
     addonmanager.kubernetes.io/mode: Reconcile
@@ -21077,7 +21083,7 @@ metadata:
 subjects:
 - kind: ServiceAccount
   name: azure-policy
-  namespace: default
+  namespace: kube-system
 roleRef:
   kind: ClusterRole
   name: policy-agent
@@ -21087,7 +21093,7 @@ apiVersion: v1
 kind: Secret
 metadata:
   name: azure-policy
-  namespace: default
+  namespace: kube-system
   labels:
     kubernetes.io/cluster-service: "true"
     addonmanager.kubernetes.io/mode: Reconcile
@@ -21104,7 +21110,7 @@ metadata:
     kubernetes.io/cluster-service: "true"
     addonmanager.kubernetes.io/mode: Reconcile
   name: azure-policy
-  namespace: default
+  namespace: kube-system
 spec:
   replicas: 1
   selector:
