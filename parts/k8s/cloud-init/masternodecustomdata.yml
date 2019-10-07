@@ -1,11 +1,5 @@
 #cloud-config
 
-{{if not .MasterProfile.IsCoreOS}}
-packages:
- - jq
- - traceroute
-{{end}}
-
 write_files:
 - path: /opt/azure/containers/provision_source.sh
   permissions: "0744"

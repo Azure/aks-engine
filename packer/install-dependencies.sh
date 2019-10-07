@@ -41,6 +41,7 @@ cat << EOF >> ${VHD_LOGS_FILEPATH}
   - mount
   - nfs-common
   - pigz socat
+  - traceroute
   - util-linux
   - xz-utils
   - zip
