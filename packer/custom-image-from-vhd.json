@@ -1,0 +1,52 @@
+{
+    "variables": {
+        "build_branch": "{{env `GIT_BRANCH`}}",
+        "build_commit": "{{env `GIT_VERSION`}}",
+        "build_id": "{{env `BUILD_ID`}}",
+        "build_number": "{{env `BUILD_NUMBER`}}",
+        "build_repo": "{{env `GIT_REPO`}}",
+        "client_id": "{{env `AZURE_CLIENT_ID`}}",
+        "client_secret": "{{env `AZURE_CLIENT_SECRET`}}",
+        "tenant_id": "{{env `AZURE_TENANT_ID`}}",
+        "subscription_id": "{{env `AZURE_SUBSCRIPTION_ID`}}",
+        "location": "{{env `AZURE_LOCATION`}}",
+        "vm_size": "{{env `AZURE_VM_SIZE`}}"
+    },
+    "builders": [
+        {
+            "type": "azure-arm",
+            "client_id": "{{user `client_id`}}",
+            "client_secret": "{{user `client_secret`}}",
+            "tenant_id": "{{user `tenant_id`}}",
+            "subscription_id": "{{user `subscription_id`}}",
+            "location": "{{user `location`}}",
+            "vm_size": "{{user `vm_size`}}",
+            "managed_image_resource_group_name": "custom-image-rg",
+            "build_resource_group_name": "custom-image-rg",
+            "managed_image_name": "custom-image-from-vhd",
+            "virtual_network_name": "custom-image-vnet",
+            "virtual_network_resource_group_name": "custom-image-vnet",
+            "virtual_network_subnet_name": "custom-image-vnet-subnet",
+            "os_type": "Linux",
+            "image_publisher": "microsoft-aks",
+            "image_offer": "aks",
+            "image_sku": "aks-ubuntu-1604-201910",
+            "image_version": "2019.10.03",
+            "azure_tags": {
+                "os": "Linux",
+                "now": "{{user `create_time`}}",
+                "createdBy": "aks-engine-custom-image-from-vhd"
+            }
+        }
+    ],
+    "provisioners": [
+        {
+            "execute_command": "chmod +x {{ .Path }}; {{ .Vars }} sudo -E sh '{{ .Path }}'",
+            "inline": [
+                "tee -a /opt/azure/custom-image-from-vhd.complete < /proc/version"
+            ],
+            "inline_shebang": "/bin/sh -x",
+            "type": "shell"
+        }
+    ]
+}
