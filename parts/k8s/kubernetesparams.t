@@ -279,7 +279,7 @@
         "cloudProviderRateLimitQPSWrite": "0",
         "cloudProviderRateLimitBucket": 0,
         "cloudProviderRateLimitBucketWrite": 0,
-        "loadBalancerDisableOutboundSnat": false
+        "loadBalancerDisableOutboundSNAT": false
       }
     },
 {{if IsKubernetesVersionGe "1.12.0"}}

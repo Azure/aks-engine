@@ -349,7 +349,7 @@ type CloudProviderConfig struct {
 	CloudProviderRateLimitQPSWrite    string `json:"cloudProviderRateLimitQPSWrite,omitempty"`
 	CloudProviderRateLimitBucket      int    `json:"cloudProviderRateLimitBucket,omitempty"`
 	CloudProviderRateLimitBucketWrite int    `json:"cloudProviderRateLimitBucketWrite,omitempty"`
-	CloudProviderDisableOutboundSNAT  bool   `json:"cloudProviderDisableOutboundSnat,omitempty"`
+	CloudProviderDisableOutboundSNAT  bool   `json:"cloudProviderDisableOutboundSNAT,omitempty"`
 }
 
 // KubernetesConfigDeprecated are properties that are no longer operable and will be ignored
