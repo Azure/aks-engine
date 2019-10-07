@@ -39,7 +39,10 @@ func (cs *ContainerService) SetPropertiesDefaults(params PropertiesDefaultsParam
 
 	// Set custom cloud profile defaults if this cluster configuration has custom cloud profile
 	if cs.Properties.CustomCloudProfile != nil {
-		err := cs.setCustomCloudProfileDefaults()
+		err := cs.setCustomCloudProfileDefaults(CustomCloudProfileDefaultsParams{
+			IsUpgrade: params.IsUpgrade,
+			IsScale:   params.IsScale,
+		})
 		if err != nil {
 			return false, err
 		}
@@ -290,6 +293,13 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpgrade, isScale bool) {
 
 		if a.OrchestratorProfile.KubernetesConfig.EnableRbac == nil {
 			a.OrchestratorProfile.KubernetesConfig.EnableRbac = to.BoolPtr(DefaultRBACEnabled)
+		}
+
+		// Upgrade scenario:
+		// We need to force set EnableRbac to true for upgrades to 1.15.0 and greater if it was previously set to false (AKS Engine only)
+		if !a.OrchestratorProfile.KubernetesConfig.IsRBACEnabled() && common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.15.0") && isUpgrade && !cs.Properties.IsHostedMasterProfile() {
+			log.Warnf("RBAC will be enabled during upgrade to version %s\n", o.OrchestratorVersion)
+			a.OrchestratorProfile.KubernetesConfig.EnableRbac = to.BoolPtr(true)
 		}
 
 		if a.OrchestratorProfile.KubernetesConfig.IsRBACEnabled() {
@@ -695,28 +705,23 @@ func (p *Properties) setWindowsProfileDefaults(isUpgrade, isScale bool) {
 	windowsProfile := p.WindowsProfile
 	if !isUpgrade && !isScale {
 		if windowsProfile.WindowsPublisher == "" {
-			windowsProfile.WindowsPublisher = DefaultWindowsPublisher
+			windowsProfile.WindowsPublisher = AKSWindowsServer2019OSImageConfig.ImagePublisher
+		}
+		if windowsProfile.WindowsOffer == "" {
+			windowsProfile.WindowsOffer = AKSWindowsServer2019OSImageConfig.ImageOffer
+		}
+		if windowsProfile.WindowsSku == "" {
+			windowsProfile.WindowsSku = AKSWindowsServer2019OSImageConfig.ImageSku
 		}
 
-		if p.IsAzureStackCloud() {
-			if windowsProfile.WindowsOffer == "" {
-				windowsProfile.WindowsOffer = DefaultAzureStackWindowsOffer
-			}
-			if windowsProfile.WindowsSku == "" {
-				windowsProfile.WindowsSku = DefaultAzureStackWindowsSku
-			}
-			if windowsProfile.ImageVersion == "" {
-				windowsProfile.ImageVersion = DefaultAzureStackImageVersion
-			}
-		} else {
-			if windowsProfile.WindowsOffer == "" {
-				windowsProfile.WindowsOffer = DefaultWindowsOffer
-			}
-			if windowsProfile.WindowsSku == "" {
-				windowsProfile.WindowsSku = DefaultWindowsSku
-			}
-			if windowsProfile.ImageVersion == "" {
-				windowsProfile.ImageVersion = DefaultImageVersion
+		if windowsProfile.ImageVersion == "" {
+			// default versions are specific to a publisher/offer/sku
+			if windowsProfile.WindowsPublisher == AKSWindowsServer2019OSImageConfig.ImagePublisher && windowsProfile.WindowsOffer == AKSWindowsServer2019OSImageConfig.ImageOffer && windowsProfile.WindowsSku == AKSWindowsServer2019OSImageConfig.ImageSku {
+				windowsProfile.ImageVersion = AKSWindowsServer2019OSImageConfig.ImageVersion
+			} else if windowsProfile.WindowsPublisher == WindowsServer2019OSImageConfig.ImagePublisher && windowsProfile.WindowsOffer == WindowsServer2019OSImageConfig.ImageOffer && windowsProfile.WindowsSku == WindowsServer2019OSImageConfig.ImageSku {
+				windowsProfile.ImageVersion = WindowsServer2019OSImageConfig.ImageVersion
+			} else {
+				windowsProfile.ImageVersion = "latest"
 			}
 		}
 	}
@@ -835,7 +840,17 @@ func (cs *ContainerService) SetDefaultCerts(params DefaultCertParams) (bool, []n
 		p.CertificateProfile.CaPrivateKey = caPair.PrivateKeyPem
 	}
 
-	cidrFirstIP, err := common.CidrStringFirstIP(p.OrchestratorProfile.KubernetesConfig.ServiceCIDR)
+	serviceCIDR := p.OrchestratorProfile.KubernetesConfig.ServiceCIDR
+
+	// all validation for dual stack done with primary service cidr as that is considered
+	// the default ip family for cluster.
+	if cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6DualStack") {
+		// split service cidrs
+		serviceCIDRs := strings.Split(serviceCIDR, ",")
+		serviceCIDR = serviceCIDRs[0]
+	}
+
+	cidrFirstIP, err := common.CidrStringFirstIP(serviceCIDR)
 	if err != nil {
 		return false, ips, err
 	}

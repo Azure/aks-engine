@@ -134,6 +134,18 @@ func Test_OrchestratorProfile_Validate(t *testing.T) {
 			},
 			expectedError: "enableAggregatedAPIs requires the enableRbac feature as a prerequisite",
 		},
+		"should error when KubernetesConfig has enableRBAC disabled for >= 1.15": {
+			properties: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					OrchestratorType:    "Kubernetes",
+					OrchestratorVersion: common.GetLatestPatchVersion("1.15", common.GetAllSupportedKubernetesVersions(false, false)),
+					KubernetesConfig: &KubernetesConfig{
+						EnableRbac: &falseVal,
+					},
+				},
+			},
+			expectedError: fmt.Sprintf("RBAC support is required for Kubernetes version 1.15.0 or greater; unable to build Kubernetes v%s cluster with enableRbac=false", common.GetLatestPatchVersion("1.15", common.GetAllSupportedKubernetesVersions(false, false))),
+		},
 		"should error when KubernetesConfig has enableDataEncryptionAtRest enabled with invalid version": {
 			properties: &Properties{
 				OrchestratorProfile: &OrchestratorProfile{
@@ -554,8 +566,32 @@ func Test_KubernetesConfig_Validate(t *testing.T) {
 				t.Error("should error when ProxyMode has a valid string value")
 			}
 		}
+	}
 
-		c = KubernetesConfig{
+	// Tests that apply to 1.6 and later releases
+	for _, k8sVersion := range common.GetAllSupportedKubernetesVersions(false, false) {
+		c := KubernetesConfig{
+			CloudProviderBackoff:   to.BoolPtr(true),
+			CloudProviderRateLimit: to.BoolPtr(true),
+		}
+		if err := c.Validate(k8sVersion, false, false); err != nil {
+			t.Error("should not error when basic backoff and rate limiting are set to true with no options")
+		}
+	}
+
+	// Tests that apply to 1.8 and later releases
+	for _, k8sVersion := range common.GetVersionsGt(common.GetAllSupportedKubernetesVersions(true, false), "1.8.0", true, true) {
+		c := KubernetesConfig{
+			UseCloudControllerManager: to.BoolPtr(true),
+		}
+		if err := c.Validate(k8sVersion, false, false); err != nil {
+			t.Error("should not error because UseCloudControllerManager is available since v1.8")
+		}
+	}
+
+	// Tests that apply to dualstack with 1.16 and later releases
+	for _, k8sVersion := range common.GetVersionsGt(common.GetAllSupportedKubernetesVersions(false, false), "1.16.0", true, true) {
+		c := KubernetesConfig{
 			NetworkPlugin: "kubenet",
 			ClusterSubnet: "10.244.0.0/16,ace:cab:deca::/8",
 		}
@@ -581,26 +617,58 @@ func Test_KubernetesConfig_Validate(t *testing.T) {
 		if err := c.Validate(k8sVersion, false, true); err == nil {
 			t.Error("should error when more than 2 cluster subnets provided")
 		}
-	}
 
-	// Tests that apply to 1.6 and later releases
-	for _, k8sVersion := range common.GetAllSupportedKubernetesVersions(false, false) {
-		c := KubernetesConfig{
-			CloudProviderBackoff:   to.BoolPtr(true),
-			CloudProviderRateLimit: to.BoolPtr(true),
+		c = KubernetesConfig{
+			NetworkPlugin: "kubenet",
+			ClusterSubnet: "10.244.0.0/16,ace:cab:deca::/8",
 		}
-		if err := c.Validate(k8sVersion, false, false); err != nil {
-			t.Error("should not error when basic backoff and rate limiting are set to true with no options")
-		}
-	}
 
-	// Tests that apply to 1.8 and later releases
-	for _, k8sVersion := range common.GetVersionsGt(common.GetAllSupportedKubernetesVersions(true, false), "1.8.0", true, true) {
-		c := KubernetesConfig{
-			UseCloudControllerManager: to.BoolPtr(true),
+		if err := c.Validate(k8sVersion, false, true); err == nil {
+			t.Error("should error when proxy mode is not set to ipvs")
 		}
-		if err := c.Validate(k8sVersion, false, false); err != nil {
-			t.Error("should not error because UseCloudControllerManager is available since v1.8")
+
+		c = KubernetesConfig{
+			ServiceCidr: "10.0.0.0/16,fe80:20d::/112",
+		}
+
+		if err := c.Validate(k8sVersion, false, false); err == nil {
+			t.Error("should error when more than 1 service cidr provided with ipv6dualstack feature disabled")
+		}
+
+		c = KubernetesConfig{
+			NetworkPlugin: "kubenet",
+			ClusterSubnet: "10.244.0.0/16,ace:cab:deca::/8",
+			ProxyMode:     "ipvs",
+			ServiceCidr:   "10.0.0.0/16,fe80:20d::/112,fec0::/7",
+			DNSServiceIP:  "10.0.0.10",
+		}
+
+		if err := c.Validate(k8sVersion, false, true); err == nil {
+			t.Error("should error when more than 2 service cidr provided with ipv6dualstack feature enabled")
+		}
+
+		c = KubernetesConfig{
+			NetworkPlugin: "kubenet",
+			ClusterSubnet: "10.244.0.0/16,ace:cab:deca::/8",
+			ProxyMode:     "ipvs",
+			ServiceCidr:   "10.0.0.0/16,2001:db8::/129",
+			DNSServiceIP:  "10.0.0.10",
+		}
+
+		if err := c.Validate(k8sVersion, false, true); err == nil {
+			t.Error("should error when secondary cidr is invalid with ipv6dualstack feature enabled")
+		}
+
+		c = KubernetesConfig{
+			NetworkPlugin: "kubenet",
+			ClusterSubnet: "10.244.0.0/16,ace:cab:deca::/8",
+			ProxyMode:     "ipvs",
+			ServiceCidr:   "10.0.0.0/16,fe80:20d::/112",
+			DNSServiceIP:  "10.0.0.10",
+		}
+
+		if err := c.Validate(k8sVersion, false, true); err != nil {
+			t.Error("shouldn't have errored with ipv6 dual stack feature enabled")
 		}
 	}
 }

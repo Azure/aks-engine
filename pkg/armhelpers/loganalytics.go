@@ -89,6 +89,14 @@ func (az *AzureClient) EnsureDefaultLogAnalyticsWorkspace(ctx context.Context, r
 		"chinanorth2": "chinaeast2",
 	}
 
+	AzureFairfaxLocationToOmsRegionCodeMap := map[string]string{
+		"usgovvirginia": "USGV",
+	}
+
+	AzureFairfaxRegionToOmsRegionMap := map[string]string{
+		"usgovvirginia": "usgovvirginia",
+	}
+
 	defaultWorkspaceRegion := "eastus"
 	defaultWorkspaceRegionCode := "EUS"
 
@@ -113,6 +121,19 @@ func (az *AzureClient) EnsureDefaultLogAnalyticsWorkspace(ctx context.Context, r
 			defaultWorkspaceRegionCode = regionCode
 		} else {
 			defaultWorkspaceRegionCode = "EAST2"
+		}
+
+	case "AzureUSGovernmentCloud":
+		if region, found := AzureFairfaxLocationToOmsRegionCodeMap[location]; found {
+			defaultWorkspaceRegion = region
+		} else {
+			defaultWorkspaceRegion = "usgovvirginia"
+		}
+
+		if regionCode, found := AzureFairfaxRegionToOmsRegionMap[defaultWorkspaceRegion]; found {
+			defaultWorkspaceRegionCode = regionCode
+		} else {
+			defaultWorkspaceRegionCode = "USGV"
 		}
 
 	default:
@@ -203,7 +224,7 @@ func (az *AzureClient) GetLogAnalyticsWorkspaceInfo(ctx context.Context, workspa
 
 // AddContainerInsightsSolution adds container insights solution for the specified log analytics workspace
 func (az *AzureClient) AddContainerInsightsSolution(ctx context.Context, workspaceSubscriptionID, workspaceResourceGroup, workspaceName, workspaceLocation string) (result bool, err error) {
-	solutionClient := om.NewSolutionsClient(workspaceSubscriptionID, "Microsoft.OperationalInsights", "workspaces", workspaceName)
+	solutionClient := om.NewSolutionsClientWithBaseURI(az.environment.ResourceManagerEndpoint, workspaceSubscriptionID, "Microsoft.OperationalInsights", "workspaces", workspaceName)
 	solutionClient.Authorizer = az.workspacesClient.Authorizer
 
 	solutionName := "ContainerInsights(" + workspaceName + ")"

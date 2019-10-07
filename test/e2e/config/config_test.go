@@ -28,13 +28,13 @@ func TestSetRandomRegion(t *testing.T) {
 			config: Config{
 				Regions: []string{},
 			},
-			expected: []string{"eastus", "southcentralus", "southeastasia", "westus2", "westeurope"},
+			expected: []string{"eastus", "uksouth", "southeastasia", "westus2", "westeurope"},
 		},
 		{
 			config: Config{
 				Regions: nil,
 			},
-			expected: []string{"eastus", "southcentralus", "southeastasia", "westus2", "westeurope"},
+			expected: []string{"eastus", "uksouth", "southeastasia", "westus2", "westeurope"},
 		},
 		{
 			config: Config{

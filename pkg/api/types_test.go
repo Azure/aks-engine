@@ -6375,3 +6375,123 @@ func TestHasContainerd(t *testing.T) {
 		})
 	}
 }
+
+func TestGetNonMasqueradeCIDR(t *testing.T) {
+	tests := []struct {
+		name     string
+		p        *Properties
+		expected string
+	}{
+		{
+			name: "single cluster cidr, no dualstack",
+			p: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					KubernetesConfig: &KubernetesConfig{
+						ClusterSubnet: "10.244.0.0/16",
+					},
+				},
+				FeatureFlags: &FeatureFlags{},
+			},
+			expected: "10.244.0.0/16",
+		},
+		{
+			name: "two cluster cidr v4v6, dualstack",
+			p: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					KubernetesConfig: &KubernetesConfig{
+						ClusterSubnet: "10.244.0.0/16,fd00:101::/8",
+					},
+				},
+				FeatureFlags: &FeatureFlags{
+					EnableIPv6DualStack: true,
+				},
+			},
+			expected: "10.244.0.0/16",
+		},
+		{
+			name: "two cluster cidr v6v4, dualstack",
+			p: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					KubernetesConfig: &KubernetesConfig{
+						ClusterSubnet: "fd00:101::/8,10.244.0.0/16",
+					},
+				},
+				FeatureFlags: &FeatureFlags{
+					EnableIPv6DualStack: true,
+				},
+			},
+			expected: "fd00::/8",
+		},
+	}
+
+	for _, test := range tests {
+		test := test
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+			ret := test.p.GetNonMasqueradeCIDR()
+			if test.expected != ret {
+				t.Errorf("expected %s, instead got : %s", test.expected, ret)
+			}
+		})
+	}
+}
+
+func TestGetSecondaryNonMasqueradeCIDR(t *testing.T) {
+	tests := []struct {
+		name     string
+		p        *Properties
+		expected string
+	}{
+		{
+			name: "single cluster cidr, no dualstack",
+			p: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					KubernetesConfig: &KubernetesConfig{
+						ClusterSubnet: "10.244.0.0/16",
+					},
+				},
+				FeatureFlags: &FeatureFlags{},
+			},
+			expected: "",
+		},
+		{
+			name: "two cluster cidr v4v6, dualstack",
+			p: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					KubernetesConfig: &KubernetesConfig{
+						ClusterSubnet: "10.244.0.0/16,fd00:101::/8",
+					},
+				},
+				FeatureFlags: &FeatureFlags{
+					EnableIPv6DualStack: true,
+				},
+			},
+			expected: "fd00::/8",
+		},
+		{
+			name: "two cluster cidr v6v4, dualstack",
+			p: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					KubernetesConfig: &KubernetesConfig{
+						ClusterSubnet: "fd00:101::/8,10.244.0.0/16",
+					},
+				},
+				FeatureFlags: &FeatureFlags{
+					EnableIPv6DualStack: true,
+				},
+			},
+			expected: "10.244.0.0/16",
+		},
+	}
+
+	for _, test := range tests {
+		test := test
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+			ret := test.p.GetSecondaryNonMasqueradeCIDR()
+			if test.expected != ret {
+				t.Errorf("expected %s, instead got : %s", test.expected, ret)
+			}
+		})
+	}
+}

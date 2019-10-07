@@ -51,8 +51,8 @@ $ aks-engine get-versions
 | enableAggregatedAPIs             | no                        | Enable [Kubernetes Aggregated APIs](https://kubernetes.io/docs/concepts/api-extension/apiserver-aggregation/).This is required by [Service Catalog](https://github.com/kubernetes-incubator/service-catalog/blob/master/README.md). (boolean - default is true for k8s versions greater or equal to 1.9.0, false otherwise)                                                                                                                                                                                                                                                                                                                                                                                                               |
 | enableDataEncryptionAtRest       | no                        | Enable [kubernetes data encryption at rest](https://kubernetes.io/docs/tasks/administer-cluster/encrypt-data/).This is currently an alpha feature. (boolean - default == false)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
 | enableEncryptionWithExternalKms  | no                        | Enable [kubernetes data encryption at rest with external KMS](https://kubernetes.io/docs/tasks/administer-cluster/encrypt-data/).This is currently an alpha feature. (boolean - default == false)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
-| enablePodSecurityPolicy          | no                        | Enable [kubernetes pod security policy](https://kubernetes.io/docs/concepts/policy/pod-security-policy/).This is currently a beta feature. (boolean - default == false)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
-| enableRbac                       | no                        | Enable [Kubernetes RBAC](https://kubernetes.io/docs/admin/authorization/rbac/) (boolean - default == true)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| enablePodSecurityPolicy          | no                        | Enable [kubernetes pod security policy](https://kubernetes.io/docs/concepts/policy/pod-security-policy/).This is currently a beta feature. (boolean - default == false for Kubernetes 1.14 and earlier. This setting is ignored and forced to true for Kubernetes v1.15+)                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| enableRbac                       | no                        | Enable [Kubernetes RBAC](https://kubernetes.io/docs/admin/authorization/rbac/) (boolean - default == true) RBAC support is required for Kubernetes 1.15.0 and greater, so enableRbac=false is not an allowed configuration for clusters >= 1.15.0. If you upgrade a cluster to 1.15.0 or greater from a version less than 1.15, and RBAC is disabled, the cluster configuration will be statically modified to enable RBAC as a result of running `aks-engine upgrade`.                                                                                                                                                                                                                                                                   |
 | etcdDiskSizeGB                   | no                        | Size in GB to assign to etcd data volume. Defaults (if no user value provided) are: 256 GB for clusters up to 3 nodes; 512 GB for clusters with between 4 and 10 nodes; 1024 GB for clusters with between 11 and 20 nodes; and 2048 GB for clusters with more than 20 nodes                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
 | etcdEncryptionKey                | no                        | Enryption key to be used if enableDataEncryptionAtRest is enabled. Defaults to a random, generated, key                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
 | etcdVersion                      | no (for development only) | Enables an explicit etcd version, e.g. `3.2.23`. Default is `3.3.15`. This `kubernetesConfig` property is for development only, and recommended only for ephemeral clusters. However, you may use `aks-engine upgrade` on a cluster with an api model that includes a user-modified `etcdVersion` value. If `aks-engine upgrade` determines that the user-modified version is greater than the current AKS Engine default, `aks-engine upgrade` will _not_ replace the newer version with an older version. However, if `aks-engine upgrade` determines that the user-modified version is older than the current AKS Engine default, it will build the newly upgraded master node VMs with the newer, AKS Engine default version of etcd. |
@@ -90,8 +90,7 @@ $ aks-engine get-versions
 | [smb-flexvolume](https://github.com/Azure/kubernetes-volume-drivers/tree/master/flexvolume/smb)           | false                                                                   | as many as linux agent nodes    | Access SMB server by using CIFS/SMB protocol                                                                                                                                                                                   |
 | [keyvault-flexvolume](../../examples/addons/keyvault-flexvolume/README.md)                                | true                                                                    | as many as linux agent nodes    | Access secrets, keys, and certs in Azure Key Vault from pods                                                                                                                                                                   |
 | [aad-pod-identity](../../examples/addons/aad-pod-identity/README.md)                                      | false                                                                   | 1 + 1 on each linux agent nodes | Assign Azure Active Directory Identities to Kubernetes applications                                                                                                                                                            |
-| [scheduled-maintenance](https://github.com/awesomenix/drainsafe)                                          | false                                                                   | 1 + 1 on each linux agent nodes | Cordon and drain node during planned/unplanned [azure maintenance](https://docs.microsoft.com/en-us/azure/virtual-machines/windows/scheduled-events)                                                                           |
-| [azure-policy](../../examples/addons/azure-policy/README.md)                                              | false                                                                   | 2                               | Kubernetes policy controller with Azure Policy integration                                                                                                                                                                     |
+| [scheduled-maintenance](https://github.com/awesomenix/drainsafe)                                          | false                                                                   | 1 + 1 on each linux agent nodes | Cordon and drain node during planned/unplanned [azure maintenance](https://docs.microsoft.com/en-us/azure/virtual-machines/windows/scheduled-events)                                                                           | [azure-policy](../../examples/addons/azure-policy/README.md) | false | 2 | Kubernetes policy controller with Azure Policy integration |
 
 To give a bit more info on the `addons` property: We've tried to expose the basic bits of data that allow useful configuration of these cluster features. Here are some example usage patterns that will unpack what `addons` provide:
 
@@ -222,23 +221,31 @@ See [here](https://kubernetes.io/docs/reference/generated/kubelet/) for a refere
 
 Below is a list of kubelet options that aks-engine will configure by default:
 
-| kubelet option                      | default value                                                                                                                                                 |
-| ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| "--cloud-config"                    | "/etc/kubernetes/azure.json"                                                                                                                                  |
-| "--cloud-provider"                  | "azure"                                                                                                                                                       |
-| "--cluster-domain"                  | "cluster.local"                                                                                                                                               |
-| "--pod-infra-container-image"       | "pause-amd64:_version_"                                                                                                                                       |
-| "--max-pods"                        | "30", or "110" if using kubenet --network-plugin (i.e., `"networkPlugin": "kubenet"`)                                                                         |
-| "--eviction-hard"                   | "memory.available<100Mi,nodefs.available<10%,nodefs.inodesFree<5%"                                                                                            |
-| "--node-status-update-frequency"    | "10s"                                                                                                                                                         |
-| "--image-gc-high-threshold"         | "85"                                                                                                                                                          |
-| "--image-gc-low-threshold"          | "850"                                                                                                                                                         |
-| "--non-masquerade-cidr"             | "10.0.0.0/8"                                                                                                                                                  |
-| "--azure-container-registry-config" | "/etc/kubernetes/azure.json"                                                                                                                                  |
-| "--pod-max-pids"                    | "-1" (need to activate the feature in --feature-gates=SupportPodPidsLimit=true)                                                                               |
-| "--image-pull-progress-deadline"    | "30m"                                                                                                                                                         |
-| "--feature-gates"                   | No default (can be a comma-separated list). On agent nodes `Accelerators=true` will be applied in the `--feature-gates` option for k8s versions before 1.11.0 |
-| "--enforce-node-allocatable"        | "pods"                                                                                                                                                        |
+| kubelet option                        | default value                                                                                                                                                                                                                                                                                             |
+| ------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| "--cadvisor-port"                     | "0"                                                                                                                                                                                                                                                                                                       |
+| "--cloud-config"                      | "/etc/kubernetes/azure.json"                                                                                                                                                                                                                                                                              |
+| "--cloud-provider"                    | "azure"                                                                                                                                                                                                                                                                                                   |
+| "--cluster-domain"                    | "cluster.local"                                                                                                                                                                                                                                                                                           |
+| "--event-qps"                         | "0"                                                                                                                                                                                                                                                                                                       |
+| "--pod-infra-container-image"         | "pause-amd64:_version_"                                                                                                                                                                                                                                                                                   |
+| "--network-plugin"                    | "cni"                                                                                                                                                                                                                                                                                                     |
+| "--max-pods"                          | "30", or "110" if using kubenet --network-plugin (i.e., `"networkPlugin": "kubenet"`)                                                                                                                                                                                                                     |
+| "--eviction-hard"                     | "memory.available<750Mi,nodefs.available<10%,nodefs.inodesFree<5%"                                                                                                                                                                                                                                        |
+| "--node-status-update-frequency"      | "10s"                                                                                                                                                                                                                                                                                                     |
+| "--image-gc-high-threshold"           | "85"                                                                                                                                                                                                                                                                                                      |
+| "--image-gc-low-threshold"            | "80"                                                                                                                                                                                                                                                                                                      |
+| "--non-masquerade-cidr"               | "0.0.0.0/0" (unless ip-masq-agent is disabled, in which case this is set to the value of `kubernetesConfig.ClusterSubnet` )                                                                                                                                                                               |
+| "--azure-container-registry-config"   | "/etc/kubernetes/azure.json"                                                                                                                                                                                                                                                                              |
+| "--pod-max-pids"                      | "-1" (need to activate the feature in --feature-gates=SupportPodPidsLimit=true)                                                                                                                                                                                                                           |
+| "--image-pull-progress-deadline"      | "30m"                                                                                                                                                                                                                                                                                                     |
+| "--feature-gates"                     | No default (can be a comma-separated list). On agent nodes `Accelerators=true` will be applied in the `--feature-gates` option for k8s versions before 1.11.0                                                                                                                                             |
+| "--enforce-node-allocatable"          | "pods"                                                                                                                                                                                                                                                                                                    |
+| "--streaming-connection-idle-timeout" | "4h"                                                                                                                                                                                                                                                                                                      |
+| "--rotate-certificates"               | "true" (this default is set for clusters >= 1.11.9 )                                                                                                                                                                                                                                                      |
+| "--tls-cipher-suites"                 | "TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305,TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305,TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,TLS_RSA_WITH_AES_256_GCM_SHA384,TLS_RSA_WITH_AES_128_GCM_SHA256" |
+| "--authentication-token-webhook"      | "true" (this default is set for clusters >= 1.16.0 )                                                                                                                                                                                                                                                      |
+| "--read-only-port"                    | "0" (this default is set for clusters >= 1.16.0 )                                                                                                                                                                                                                                                         |
 
 Below is a list of kubelet options that are _not_ currently user-configurable, either because a higher order configuration vector is available that enforces kubelet configuration, or because a static configuration is required to build a functional cluster:
 
@@ -247,7 +254,6 @@ Below is a list of kubelet options that are _not_ currently user-configurable, e
 | "--address"                                  | "0.0.0.0"                                        |
 | "--allow-privileged"                         | "true"                                           |
 | "--pod-manifest-path"                        | "/etc/kubernetes/manifests"                      |
-| "--network-plugin"                           | "cni"                                            |
 | "--node-labels"                              | (based on Azure node metadata)                   |
 | "--cgroups-per-qos"                          | "true"                                           |
 | "--kubeconfig"                               | "/var/lib/kubelet/kubeconfig"                    |
@@ -292,8 +298,6 @@ Below is a list of controller-manager options that are _not_ currently user-conf
 | "--allocate-node-cidrs"              | "false"                                                 |
 | "--cluster-cidr"                     | _uses clusterSubnet value_                              |
 | "--cluster-name"                     | _auto-generated using api model properties_             |
-| "--cloud-provider"                   | "azure"                                                 |
-| "--cloud-config"                     | "/etc/kubernetes/azure.json"                            |
 | "--root-ca-file"                     | "/etc/kubernetes/certs/ca.crt"                          |
 | "--cluster-signing-cert-file"        | "/etc/kubernetes/certs/ca.crt"                          |
 | "--cluster-signing-key-file"         | "/etc/kubernetes/certs/ca.key"                          |
@@ -640,10 +644,10 @@ https://{keyvaultname}.vault.azure.net:443/secrets/{secretName}/{version}
 | ----------------------------- | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | adminUsername                 | yes      | Username for the Windows adminstrator account created on each Windows node                                                                                                                                                                      |
 | adminPassword                 | yes      | Password for the Windows adminstrator account created on each Windows node                                                                                                                                                                      |
-| windowsPublisher              | no       | Publisher used to find Windows VM to deploy from marketplace. Default: `MicrosoftWindowsServer`                                                                                                                                                 |
-| windowsOffer                  | no       | Offer used to find Windows VM to deploy from marketplace. Default: `WindowsServer`                                                                                                                                                              |
-| windowsSku                    | no       | SKU usedto find Windows VM to deploy from marketplace. Default: `2019-Datacenter-Core-with-Containers-smalldisk`                                                                                                                                |
-| imageVersion                  | no       | Specific image version to deploy from marketplace. Default: `17763.678.1908092216`. This default is incremented as new versions are tested to avoid unexpected breaks.                                                                          |
+| windowsPublisher              | no       | Publisher used to find Windows VM to deploy from marketplace. Default: `microsoft-aks`                                                                                                                                                          |
+| windowsOffer                  | no       | Offer used to find Windows VM to deploy from marketplace. Default: `aks-windows`                                                                                                                                                                |
+| windowsSku                    | no       | SKU usedto find Windows VM to deploy from marketplace. Default: `2019-datacenter-core-smalldisk`                                                                                                                                                |
+| imageVersion                  | no       | Specific image version to deploy from marketplace. Default: `17763.737.190923`. This default is incremented to include the latest Windows patches after being validated by the AKS Engine team.                                                 |
 | windowsImageSourceURL         | no       | Path to an existing Azure storage blob with a sysprepped VHD. This is used to test pre-release or customized VHD files that you have uploaded to Azure. If provided, the above 4 parameters are ignored.                                        |
 | imageReference.name           | no       | Name of an Image.                                                                                                                                                                                                                               |
 | imageReference.resourceGroup  | no       | Resource group that contains the Image.                                                                                                                                                                                                         |
@@ -654,9 +658,43 @@ https://{keyvaultname}.vault.azure.net:443/secrets/{secretName}/{version}
 
 #### Windows Images
 
-You can configure the image used for all Windows nodes one of the following ways (listed in order of precedence based on what is specified in the api model):
+You can configure the image used for all Windows nodes one of the following ways:
 
-##### Custom VHD
+##### Defaults
+
+The AKS Engine team produces images that are optimized for and validated with aks-engine.
+The latest latest version of these images are used as the default images for Windows nodes.
+
+These images are published to the Azure Marketplace under the `microsoft-aks` publisher and `aks-windows` offer.
+Release notes for these images can be found under [releases/vhd-notes/aks-windows](../../releases/vhd-notes/aks-windows).
+
+##### Marketplace Images
+
+Aks-engine also supports running 'vanilla' Windows Server images published by Microsoft.
+These can be used by advanced users if a release other than Winders Server 2019 is needed.
+
+If you want to choose a specific Windows image, but automatically use the latest - set `windowsPublisher`, `windowsOffer`, and `windowsSku`. If you need a specific version, then add `imageVersion` too.
+
+You can find all available images with `az vm image list --all --publisher MicrosoftWindowsServer --offer WindowsServer --output table`, and the contents of these images are described in the knowledge base article [Windows Server release on Azure Marketplace update history](https://support.microsoft.com/en-us/help/4497947).
+
+If you want to use a specific image then `windowsPublisher`, `windowsOffer`, `windowsSku`, and `imageVersion` must all be set:
+
+```json
+"windowsProfile": {
+            "adminUsername": "...",
+            "adminPassword": "...",
+            "windowsPublisher": "MicrosoftWindowsServer",
+            "windowsOffer": "WindowsServer",
+            "windowsSku": "2019-Datacenter-Core-with-Containers-smalldisk",
+            "imageVersion": "2019.0.20181107"
+     },
+```
+
+##### Custom Images
+
+Listed in order of precedence based on what is specified in the api model:
+
+###### VHD
 
 To use an image uploaded to an Azure storage account (or any other accessible location) specify `windowsImageSourceURL`.
 
@@ -670,7 +708,7 @@ To use an image uploaded to an Azure storage account (or any other accessible lo
      },
 ```
 
-##### Shared Image Gallery
+###### Shared Image Gallery
 
 To use an Image from a Shared Image Gallery specify `imageReference.name`, `imageReference.resourceGroup`, `imageReference.subscriptionId`, `imageReference.galllery`, and `imageReference.version`.
 
@@ -688,7 +726,7 @@ To use an Image from a Shared Image Gallery specify `imageReference.name`, `imag
      },
 ```
 
-##### Azure Image
+###### Azure Image
 
 To use a pre-existing Azure Image specify `imageReference.name` and `imageReference.resourceGroup`.
 
@@ -700,34 +738,6 @@ To use a pre-existing Azure Image specify `imageReference.name` and `imageRefere
               "name": "custom-image",
               "resourceGroup": "windows-images"
             }
-     },
-```
-
-##### Marketplace image (Default)
-
-By default AKS engine will use a recently known good Windows image from the Azure marketplace (See [windowsProfile](#windowsProfile) table for specific values).
-
-```json
-"windowsProfile": {
-            "adminUsername": "...",
-            "adminPassword": "..."
-     },
-```
-
-If you want to choose a specific Windows image, but automatically use the latest - set `windowsPublisher`, `windowsOffer`, and `windowsSku`. If you need a specific version, then add `imageVersion` too.
-
-You can find all available images with `az vm image list --all --publisher MicrosoftWindowsServer --offer WindowsServer --output table`, and the contents of these images are described in the knowledge base article [Windows Server release on Azure Marketplace update history](https://support.microsoft.com/en-us/help/4497947).
-
-If you want to use a specific image then `windowsPublisher`, `windowsOffer`, `windowsSku`, and `imageVersion` must all be set:
-
-```json
-"windowsProfile": {
-            "adminUsername": "...",
-            "adminPassword": "...",
-            "windowsPublisher": "MicrosoftWindowsServer",
-            "windowsOffer": "WindowsServer",
-            "windowsSku": "2019-Datacenter-Core-with-Containers-smalldisk",
-            "imageVersion": "2019.0.20181107"
      },
 ```
 

@@ -4,6 +4,7 @@
 package remote
 
 import (
+	"context"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -11,8 +12,10 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"time"
 
 	"github.com/Azure/aks-engine/test/e2e/kubernetes/util"
+	"github.com/pkg/errors"
 	"golang.org/x/crypto/ssh"
 	"golang.org/x/crypto/ssh/agent"
 )
@@ -30,6 +33,24 @@ type Connection struct {
 	PrivateKeyPath string
 	ClientConfig   *ssh.ClientConfig
 	Client         *ssh.Client
+}
+
+// NewConnectionResult is the result type for GetConfigAsync
+type NewConnectionResult struct {
+	Connection *Connection
+	Err        error
+}
+
+// NewConnectionAsync wraps NewConnection with a struct response for goroutine + channel usage
+func NewConnectionAsync(host, port, user, keyPath string) NewConnectionResult {
+	connection, err := NewConnection(host, port, user, keyPath)
+	if connection == nil {
+		connection = &Connection{}
+	}
+	return NewConnectionResult{
+		Connection: connection,
+		Err:        err,
+	}
 }
 
 // NewConnection will build and return a new Connection object
@@ -83,6 +104,37 @@ func NewConnection(host, port, user, keyPath string) (*Connection, error) {
 		ClientConfig:   cfg,
 		Client:         sshClient,
 	}, nil
+}
+
+// NewConnectionWithRetry establishes an ssh connection, allowing for retries
+func NewConnectionWithRetry(host, port, user, keyPath string, sleep, timeout time.Duration) (*Connection, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+	ch := make(chan NewConnectionResult)
+	var mostRecentNewConnectionWithRetryError error
+	var connection *Connection
+	go func() {
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case ch <- NewConnectionAsync(host, port, user, keyPath):
+				time.Sleep(sleep)
+			}
+		}
+	}()
+	for {
+		select {
+		case result := <-ch:
+			mostRecentNewConnectionWithRetryError = result.Err
+			connection = result.Connection
+			if mostRecentNewConnectionWithRetryError == nil {
+				return connection, nil
+			}
+		case <-ctx.Done():
+			return nil, errors.Errorf("NewConnectionWithRetry timed out: %s\n", mostRecentNewConnectionWithRetryError)
+		}
+	}
 }
 
 // Execute will execute a given cmd on a remote host
@@ -203,4 +255,33 @@ func (c *Connection) ExecuteRemote(node, command string, printStdout bool) error
 		}
 	}
 	return sshError
+}
+
+// ExecuteRemoteWithRetry runs a remote command with retry tolerance
+func (c *Connection) ExecuteRemoteWithRetry(node, command string, printStdout bool, sleep, timeout time.Duration) error {
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+	ch := make(chan error)
+	var mostRecentExecuteRemoteWithRetryError error
+	go func() {
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case ch <- c.ExecuteRemote(node, command, printStdout):
+				time.Sleep(sleep)
+			}
+		}
+	}()
+	for {
+		select {
+		case result := <-ch:
+			mostRecentExecuteRemoteWithRetryError = result
+			if mostRecentExecuteRemoteWithRetryError == nil {
+				return nil
+			}
+		case <-ctx.Done():
+			return errors.Errorf("ExecuteRemoteWithRetry timed out: %s\n", mostRecentExecuteRemoteWithRetryError)
+		}
+	}
 }

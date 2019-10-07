@@ -158,7 +158,8 @@ func assignKubernetesParameters(properties *api.Properties, parametersMap params
 		}
 
 		if kubernetesConfig == nil ||
-			!kubernetesConfig.UseManagedIdentity {
+			!kubernetesConfig.UseManagedIdentity ||
+			properties.IsHostedMasterProfile() {
 			servicePrincipalProfile := properties.ServicePrincipalProfile
 
 			if servicePrincipalProfile != nil {

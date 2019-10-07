@@ -8,12 +8,7 @@ import (
 	"github.com/Azure/go-autorest/autorest/to"
 )
 
-const (
-	azurestackGenerateGUID = "pid-1bda96ec-adf4-4eea-bb9a-8462de5475c0"
-)
-
-//TODO create separate function to allow users to pass in deployment name for azure
-func createAzurestackTelemetry() DeploymentARM {
+func createAzureStackTelemetry(azureTelemetryPID string) DeploymentARM {
 	properties := resources.DeploymentPropertiesExtended{
 		Mode: "Incremental",
 		Template: map[string]interface{}{
@@ -28,7 +23,7 @@ func createAzurestackTelemetry() DeploymentARM {
 			APIVersion: "2015-01-01",
 		},
 		DeploymentExtended: resources.DeploymentExtended{
-			Name:       to.StringPtr(azurestackGenerateGUID),
+			Name:       to.StringPtr(azureTelemetryPID),
 			Type:       to.StringPtr("Microsoft.Resources/deployments"),
 			Properties: &properties,
 		},

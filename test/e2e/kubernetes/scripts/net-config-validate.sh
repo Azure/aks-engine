@@ -10,6 +10,7 @@ IPV6_ACCEPT_REDIRECTS_VALUE=0
 KERNEL_PANIC_VALUE=10
 KERNEL_PANIC_ON_OOPS_VALUE=1
 VM_OVERCOMMIT_MEMORY_VALUE=1
+INOTIFY_MAX_USER_WATCHES=1048576
 
 set -x
 grep $IPV4_SEND_REDIRECTS_VALUE /proc/sys/net/ipv4/conf/all/send_redirects || exit 1
@@ -32,3 +33,6 @@ grep $IPV4_TCP_RETRIES2_VALUE /proc/sys/net/ipv4/tcp_retries2 || exit 1
 grep $KERNEL_PANIC_VALUE /proc/sys/kernel/panic || exit 1
 grep $KERNEL_PANIC_ON_OOPS_VALUE /proc/sys/kernel/panic_on_oops || exit 1
 grep $VM_OVERCOMMIT_MEMORY_VALUE /proc/sys/vm/overcommit_memory || exit 1
+
+# TODO (@junaid-ali) Re-enable this test: validate inotify max_user_watches
+#grep $INOTIFY_MAX_USER_WATCHES /proc/sys/fs/inotify/max_user_watches || exit 1

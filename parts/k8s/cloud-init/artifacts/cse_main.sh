@@ -50,12 +50,22 @@ else
     REBOOTREQUIRED=false
 fi
 
-if [ -f /var/log.vhd/azure/golden-image-install.complete ]; then
+if [[ "$CONTAINER_RUNTIME" != "kata-containers" ]] && [[ "$CONTAINER_RUNTIME" != "containerd" ]]; then
+  cleanUpContainerd
+fi
+if [[ "${GPU_NODE}" != "true" ]]; then
+  cleanUpGPUDrivers
+fi
+
+VHD_LOGS_FILEPATH=/opt/azure/vhd-install.complete
+if [[ "${IS_VHD}" = true ]]; then
+    if [ ! -f $VHD_LOGS_FILEPATH ]; then
+        echo "Using VHD distro but file $VHD_LOGS_FILEPATH not found"
+        exit $ERR_VHD_FILE_NOT_FOUND
+    fi
     echo "detected golden image pre-install"
+    cleanUpContainerImages
     FULL_INSTALL_REQUIRED=false
-    rm -rf /home/packer
-    deluser packer
-    groupdel packer
 else
     FULL_INSTALL_REQUIRED=true
 fi
@@ -77,16 +87,12 @@ fi
 installNetworkPlugin
 if [[ "$CONTAINER_RUNTIME" == "kata-containers" ]] || [[ "$CONTAINER_RUNTIME" == "containerd" ]]; then
     installContainerd
-else
-    cleanUpContainerd
 fi
 if [[ "${GPU_NODE}" = true ]]; then
     if $FULL_INSTALL_REQUIRED; then
         installGPUDrivers
     fi
     ensureGPUDrivers
-else
-    cleanUpGPUDrivers
 fi
 installKubeletAndKubectl
 if [[ $OS != $COREOS_OS_NAME ]]; then
@@ -188,10 +194,6 @@ echo "Custom script finished successfully"
 echo $(date),$(hostname), endcustomscript>>/opt/m
 mkdir -p /opt/azure/containers && touch /opt/azure/containers/provision.complete
 ps auxfww > /opt/azure/provision-ps.log &
-
-if ! $FULL_INSTALL_REQUIRED; then
-  cleanUpContainerImages
-fi
 
 if [[ "${TARGET_ENVIRONMENT,,}" != "${AZURE_STACK_ENV}"  ]]; then
     # TODO: remove once ACR is available on Azure Stack

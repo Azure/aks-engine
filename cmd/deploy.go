@@ -358,7 +358,20 @@ func autofillApimodel(dc *deployCmd) error {
 
 	if k8sConfig != nil && k8sConfig.Addons != nil && k8sConfig.IsContainerMonitoringAddonEnabled() {
 		log.Infoln("container monitoring addon enabled")
-		err := dc.configureContainerMonitoringAddon(ctx, k8sConfig)
+		var workspaceDomain string
+		cloudspecConfig := dc.containerService.GetCloudSpecConfig()
+		switch cloudspecConfig.CloudName {
+		case "AzurePublicCloud":
+			workspaceDomain = "opinsights.azure.com"
+		case "AzureChinaCloud":
+			workspaceDomain = "opinsights.azure.cn"
+		case "AzureUSGovernmentCloud":
+			workspaceDomain = "opinsights.azure.us"
+		default:
+			return errors.Wrapf(err, "apimodel: container monitoring addon not supported in this cloud: %s", cloudspecConfig.CloudName)
+		}
+
+		err := dc.configureContainerMonitoringAddon(ctx, k8sConfig, workspaceDomain)
 		if err != nil {
 			return errors.Wrap(err, "Failed to configure container monitoring addon")
 		}
@@ -449,11 +462,12 @@ func (dc *deployCmd) run() error {
 }
 
 // configure api model addon config with container monitoring addon
-func (dc *deployCmd) configureContainerMonitoringAddon(ctx context.Context, k8sConfig *api.KubernetesConfig) error {
+func (dc *deployCmd) configureContainerMonitoringAddon(ctx context.Context, k8sConfig *api.KubernetesConfig, workspaceDomain string) error {
 	log.Infoln("configuring container monitoring addon info")
 	if k8sConfig == nil {
 		return errors.New("KubernetesConfig either null or invalid")
 	}
+
 	var workspaceResourceID string
 	var err error
 	addon := k8sConfig.GetAddonByName("container-monitoring")
@@ -501,15 +515,18 @@ func (dc *deployCmd) configureContainerMonitoringAddon(ctx context.Context, k8sC
 				addon.Config["workspaceGuid"] = base64.StdEncoding.EncodeToString([]byte(wsID))
 				addon.Config["workspaceKey"] = base64.StdEncoding.EncodeToString([]byte(wsKey))
 				addon.Config["logAnalyticsWorkspaceResourceId"] = workspaceResourceID
+				addon.Config["workspaceDomain"] = base64.StdEncoding.EncodeToString([]byte(workspaceDomain))
 			}
 		}
 
 	} else {
-		log.Infoln("using provided workspaceGuid and workspaceKey in the container addon config")
+		log.Infoln("using provided workspaceGuid, workspaceKey in the container addon config")
 		workspaceGUID := addon.Config["workspaceGuid"]
 		workspaceKey := addon.Config["workspaceKey"]
+		addon.Config["workspaceDomain"] = base64.StdEncoding.EncodeToString([]byte(workspaceDomain))
 		log.Infoln("workspaceGuid:", workspaceGUID)
 		log.Infoln("workspaceKey:", workspaceKey)
+		log.Infoln("workspaceDomain:", workspaceDomain)
 	}
 	return nil
 }

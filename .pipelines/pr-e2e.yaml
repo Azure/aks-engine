@@ -17,7 +17,7 @@ pr:
 resources:
   containers:
   - container: dev1
-    image: quay.io/deis/go-dev:v1.23.2
+    image: quay.io/deis/go-dev:v1.23.3
 
 jobs:
 - job: unit_tests
@@ -76,6 +76,8 @@ jobs:
   parameters:
     name: 'ubuntu_18_04_linux_e2e'
     apimodel: 'examples/ubuntu-1804/kubernetes.json'
+    skipTests: 'should have healthy time synchronization'
+    stabilityIterations: '10'
 
 - template: e2e-job-template.yaml
   parameters:
@@ -83,6 +85,7 @@ jobs:
     k8sRelease: '1.11'
     apimodel: 'examples/e2e-tests/kubernetes/release/default/definition.json'
     createVNET: true
+    stabilityIterations: '3'
 
 - template: e2e-job-template.yaml
   parameters:
@@ -90,6 +93,7 @@ jobs:
     k8sRelease: '1.12'
     apimodel: 'examples/e2e-tests/kubernetes/release/default/definition.json'
     createVNET: true
+    stabilityIterations: '3'
 
 - template: e2e-job-template.yaml
   parameters:
@@ -97,6 +101,7 @@ jobs:
     k8sRelease: '1.13'
     apimodel: 'examples/e2e-tests/kubernetes/release/default/definition.json'
     createVNET: true
+    stabilityIterations: '3'
 
 - template: e2e-job-template.yaml
   parameters:
@@ -104,6 +109,7 @@ jobs:
     k8sRelease: '1.14'
     apimodel: 'examples/e2e-tests/kubernetes/release/default/definition.json'
     createVNET: true
+    stabilityIterations: '3'
 
 - template: e2e-job-template.yaml
   parameters:
@@ -111,6 +117,7 @@ jobs:
     k8sRelease: '1.15'
     apimodel: 'examples/e2e-tests/kubernetes/release/default/definition.json'
     createVNET: true
+    stabilityIterations: '3'
 
 - template: e2e-job-template.yaml
   parameters:
@@ -118,6 +125,7 @@ jobs:
     k8sRelease: '1.16'
     apimodel: 'examples/e2e-tests/kubernetes/release/default/definition.json'
     createVNET: true
+    stabilityIterations: '3'
 
 - template: e2e-job-template.yaml
   parameters:
