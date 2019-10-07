@@ -62,6 +62,18 @@ func kubernetesContainerAddonSettingsInit(p *api.Properties) map[string]kubernet
 			destinationFile: "aci-connector-deployment.yaml",
 			isEnabled:       k.IsAddonEnabled(ACIConnectorAddonName),
 		},
+		AzureDiskCSIDriverAddonName: {
+			sourceFile:      "kubernetesmasteraddons-azuredisk-csi-driver-deployment.yaml",
+			base64Data:      k.GetAddonScript(AzureDiskCSIDriverAddonName),
+			destinationFile: "azuredisk-csi-driver-deployment.yaml",
+			isEnabled:       k.IsAddonEnabled(AzureDiskCSIDriverAddonName),
+		},
+		AzureFileCSIDriverAddonName: {
+			sourceFile:      "kubernetesmasteraddons-azurefile-csi-driver-deployment.yaml",
+			base64Data:      k.GetAddonScript(AzureFileCSIDriverAddonName),
+			destinationFile: "azurefile-csi-driver-deployment.yaml",
+			isEnabled:       k.IsAddonEnabled(AzureFileCSIDriverAddonName),
+		},
 		ClusterAutoscalerAddonName: {
 			sourceFile:      "kubernetesmasteraddons-cluster-autoscaler-deployment.yaml",
 			base64Data:      k.GetAddonScript(ClusterAutoscalerAddonName),
@@ -223,7 +235,8 @@ func kubernetesAddonSettingsInit(p *api.Properties) []kubernetesComponentFileSpe
 		managedStorageClassesSourceYaml = "kubernetesmasteraddons-managed-azure-storage-classes-custom.yaml"
 	}
 
-	if len(p.AgentPoolProfiles) > 0 {
+	// Use storage classes from legacy in-tree volume plugin if CSI drivers are disabled
+	if len(p.AgentPoolProfiles) > 0 && !k.IsAddonEnabled(AzureDiskCSIDriverAddonName) && !k.IsAddonEnabled(AzureFileCSIDriverAddonName) {
 		kubernetesComponentFileSpecs = append(kubernetesComponentFileSpecs,
 			kubernetesComponentFileSpec{
 				sourceFile:      unmanagedStorageClassesSourceYaml,

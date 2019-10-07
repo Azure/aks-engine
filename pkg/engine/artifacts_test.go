@@ -20,6 +20,8 @@ func TestKubernetesContainerAddonSettingsInit(t *testing.T) {
 		expectedTiller                 bool
 		expectedAADPodIdentity         bool
 		expectedACIConnector           bool
+		expectedAzureDiskCSIDriver     bool
+		expectedAzureFileCSIDriver     bool
 		expectedClusterAutoscaler      bool
 		expectedBlobfuseFlexvolume     bool
 		expectedSMBFlexvolume          bool
@@ -61,6 +63,14 @@ func TestKubernetesContainerAddonSettingsInit(t *testing.T) {
 							},
 							{
 								Name:    ACIConnectorAddonName,
+								Enabled: to.BoolPtr(false),
+							},
+							{
+								Name:    AzureDiskCSIDriverAddonName,
+								Enabled: to.BoolPtr(false),
+							},
+							{
+								Name:    AzureFileCSIDriverAddonName,
 								Enabled: to.BoolPtr(false),
 							},
 							{
@@ -123,6 +133,8 @@ func TestKubernetesContainerAddonSettingsInit(t *testing.T) {
 			expectedMetricsServer:          false,
 			expectedTiller:                 false,
 			expectedAADPodIdentity:         false,
+			expectedAzureDiskCSIDriver:     false,
+			expectedAzureFileCSIDriver:     false,
 			expectedACIConnector:           false,
 			expectedClusterAutoscaler:      false,
 			expectedBlobfuseFlexvolume:     false,
@@ -165,6 +177,14 @@ func TestKubernetesContainerAddonSettingsInit(t *testing.T) {
 							},
 							{
 								Name:    ACIConnectorAddonName,
+								Enabled: to.BoolPtr(true),
+							},
+							{
+								Name:    AzureDiskCSIDriverAddonName,
+								Enabled: to.BoolPtr(true),
+							},
+							{
+								Name:    AzureFileCSIDriverAddonName,
 								Enabled: to.BoolPtr(true),
 							},
 							{
@@ -228,6 +248,8 @@ func TestKubernetesContainerAddonSettingsInit(t *testing.T) {
 			expectedTiller:                 true,
 			expectedAADPodIdentity:         true,
 			expectedACIConnector:           true,
+			expectedAzureDiskCSIDriver:     true,
+			expectedAzureFileCSIDriver:     true,
 			expectedClusterAutoscaler:      true,
 			expectedBlobfuseFlexvolume:     true,
 			expectedSMBFlexvolume:          true,
@@ -260,6 +282,12 @@ func TestKubernetesContainerAddonSettingsInit(t *testing.T) {
 		}
 		if c.expectedACIConnector != componentFileSpec[ACIConnectorAddonName].isEnabled {
 			t.Fatalf("Expected componentFileSpec[%s] to be %t", ACIConnectorAddonName, c.expectedACIConnector)
+		}
+		if c.expectedAzureDiskCSIDriver != componentFileSpec[AzureDiskCSIDriverAddonName].isEnabled {
+			t.Fatalf("Expected componentFileSpec[%s] to be %t", AzureDiskCSIDriverAddonName, c.expectedAzureDiskCSIDriver)
+		}
+		if c.expectedAzureFileCSIDriver != componentFileSpec[AzureFileCSIDriverAddonName].isEnabled {
+			t.Fatalf("Expected componentFileSpec[%s] to be %t", AzureFileCSIDriverAddonName, c.expectedAzureFileCSIDriver)
 		}
 		if c.expectedClusterAutoscaler != componentFileSpec[ClusterAutoscalerAddonName].isEnabled {
 			t.Fatalf("Expected componentFileSpec[%s] to be %t", ClusterAutoscalerAddonName, c.expectedClusterAutoscaler)
@@ -638,6 +666,31 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 			expectedAuditPolicy:           true,
 			expectedPodSecurityPolicy:     true,
 			expectedManagedStorageClass:   true,
+			expectedUnmanagedStorageClass: false,
+			expectedScheduledMaintenance:  false,
+		},
+		// CSI drivers scenario - storage classes from legacy in-tree volume plugin should be disabled
+		{
+			p: &api.Properties{
+				OrchestratorProfile: &api.OrchestratorProfile{
+					OrchestratorType:    Kubernetes,
+					OrchestratorVersion: "1.13.0",
+					KubernetesConfig: &api.KubernetesConfig{
+						NetworkPlugin:             NetworkPluginAzure,
+						UseCloudControllerManager: to.BoolPtr(true),
+					},
+				},
+			},
+			expectedKubeDNS:               false,
+			expectedCoreDNS:               true,
+			expectedKubeProxy:             true,
+			expectedCilium:                false,
+			expectedFlannel:               false,
+			expectedAADAdminGroup:         false,
+			expectedAzureCloudProvider:    true,
+			expectedAuditPolicy:           true,
+			expectedPodSecurityPolicy:     false,
+			expectedManagedStorageClass:   false,
 			expectedUnmanagedStorageClass: false,
 			expectedScheduledMaintenance:  false,
 		},
