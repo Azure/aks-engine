@@ -21732,17 +21732,7 @@ func k8sContaineraddonsKubernetesmasteraddonsAzureNpmDaemonsetYaml() (*asset, er
 	return a, nil
 }
 
-var _k8sContaineraddonsKubernetesmasteraddonsAzurePolicyDeploymentYaml = []byte(`apiVersion: v1
-kind: Namespace
-metadata:
-  labels:
-    control-plane: controller-manager
-    controller-tools.k8s.io: "1.0"
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
-  name: gatekeeper-system
----
-apiVersion: apiextensions.k8s.io/v1beta1
+var _k8sContaineraddonsKubernetesmasteraddonsAzurePolicyDeploymentYaml = []byte(`apiVersion: apiextensions.k8s.io/v1beta1
 kind: CustomResourceDefinition
 metadata:
   creationTimestamp: null
