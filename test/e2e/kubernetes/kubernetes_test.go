@@ -89,7 +89,7 @@ var _ = BeforeSuite(func() {
 		ClusterDefinition:  csInput,
 		ExpandedDefinition: csGenerated,
 	}
-	masterNodes, err := node.GetByRegexWithRetry("^k8s-master-")
+	masterNodes, err := node.GetByRegexWithRetry("^k8s-master-", 3*time.Minute, cfg.Timeout)
 	Expect(err).NotTo(HaveOccurred())
 	masterName := masterNodes[0].Metadata.Name
 	if strings.Contains(masterName, "vmss") {
@@ -129,7 +129,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				nodeList, err = node.GetReady()
 			} else {
 				var nodes []node.Node
-				nodes, err = node.GetByRegexWithRetry(firstMasterRegexStr)
+				nodes, err = node.GetByRegexWithRetry(firstMasterRegexStr, 3*time.Minute, cfg.Timeout)
 				nodeList = &node.List{
 					Nodes: nodes,
 				}
@@ -555,7 +555,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 		It("should have node labels and annotations", func() {
 			if !eng.ExpandedDefinition.Properties.HasLowPriorityScaleset() {
 				totalNodeCount := eng.NodeCount()
-				masterNodes, err := node.GetByRegexWithRetry(firstMasterRegexStr)
+				masterNodes, err := node.GetByRegexWithRetry(firstMasterRegexStr, 3*time.Minute, cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())
 				nodes := totalNodeCount - len(masterNodes)
 				nodeList, err := node.GetByLabel("foo")
@@ -1299,7 +1299,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 
 					By("Ensuring that attached volume pv has the same zone as the zone of the node")
 					nodeName := testPod.Spec.NodeName
-					nodeList, err := node.GetByRegexWithRetry(nodeName)
+					nodeList, err := node.GetByRegexWithRetry(nodeName, 3*time.Minute, cfg.Timeout)
 					Expect(err).NotTo(HaveOccurred())
 					nodeZone := nodeList[0].Metadata.Labels["failure-domain.beta.kubernetes.io/zone"]
 					fmt.Printf("pvZone: %s\n", pvZone)
