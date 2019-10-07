@@ -347,6 +347,12 @@ ensureK8sControlPlane() {
     retrycmd_if_failure 120 5 25 $KUBECTL 2>/dev/null cluster-info || exit $ERR_K8S_RUNNING_TIMEOUT
 }
 
+ensureLabelExclusionForAzurePolicyAddon() {
+    if [[ "${AZURE_POLICY_ADDON}" = True ]]; then
+        retrycmd_if_failure 120 5 25 $KUBECTL 2>/dev/null patch ns kube-system -p '{"metadata":{"labels":{"control-plane":"controller-manager"}}}' || exit $ERR_K8S_RUNNING_TIMEOUT
+    fi
+}
+
 ensureEtcd() {
     retrycmd_if_failure 120 5 25 curl --cacert /etc/kubernetes/certs/ca.crt --cert /etc/kubernetes/certs/etcdclient.crt --key /etc/kubernetes/certs/etcdclient.key ${ETCD_CLIENT_URL}/v2/machines || exit $ERR_ETCD_RUNNING_TIMEOUT
 }
