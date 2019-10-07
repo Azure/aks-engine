@@ -441,7 +441,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				running, podWaitErr := pod.WaitOnSuccesses(deploymentName, deploymentNamespace, 3, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
 				Expect(podWaitErr).NotTo(HaveOccurred())
 				Expect(running).To(Equal(true))
-				pods, err = deploy.Pods()
+				pods, err = deploy.PodsRunning()
 				Expect(err).NotTo(HaveOccurred())
 				Expect(len(pods)).To(Equal(1))
 				for _, p := range pods {
@@ -654,7 +654,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 		})
 
 		It("should have the correct IP address for the apiserver", func() {
-			pods, err := pod.GetAllByPrefixWithRetry("kube-apiserver", "kube-system", 3*time.Second, cfg.Timeout)
+			pods, err := pod.GetAllRunningByPrefixWithRetry("kube-apiserver", "kube-system", 3*time.Second, cfg.Timeout)
 			Expect(err).NotTo(HaveOccurred())
 			By("Ensuring that the correct IP address has been applied to the apiserver")
 			expectedIPAddress := eng.ExpandedDefinition.Properties.MasterProfile.FirstConsecutiveStaticIP
@@ -693,7 +693,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 						Expect(err).NotTo(HaveOccurred())
 						Expect(running).To(Equal(true))
 						By(fmt.Sprintf("Ensuring that the correct resources have been applied for %s", addonPod))
-						pods, err := pod.GetAllByPrefixWithRetry(addonPod, addonNamespace, 3*time.Second, cfg.Timeout)
+						pods, err := pod.GetAllRunningByPrefixWithRetry(addonPod, addonNamespace, 3*time.Second, cfg.Timeout)
 						Expect(err).NotTo(HaveOccurred())
 						for i, c := range addon.Containers {
 							pod := pods[0]
@@ -713,7 +713,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				running, err := pod.WaitOnSuccesses("tiller", "kube-system", kubeSystemPodsReadinessChecks, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(running).To(Equal(true))
-				pods, err := pod.GetAllByPrefixWithRetry("tiller-deploy", "kube-system", 3*time.Second, cfg.Timeout)
+				pods, err := pod.GetAllRunningByPrefixWithRetry("tiller-deploy", "kube-system", 3*time.Second, cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())
 				By("Ensuring that the correct max-history has been applied")
 				maxHistory := tillerAddon.Config["max-history"]
@@ -732,7 +732,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				running, err := pod.WaitOnSuccesses("omsagent-rs", "kube-system", kubeSystemPodsReadinessChecks, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(running).To(Equal(true))
-				pods, err := pod.GetAllByPrefixWithRetry("omsagent-rs", "kube-system", 3*time.Second, cfg.Timeout)
+				pods, err := pod.GetAllRunningByPrefixWithRetry("omsagent-rs", "kube-system", 3*time.Second, cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())
 				By("Ensuring that the kubepodinventory plugin is writing data successfully")
 				pass, err := pods[0].ValidateOmsAgentLogs("kubePodInventoryEmitStreamSuccess", 1*time.Second, cfg.Timeout)
@@ -746,7 +746,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				running, err = pod.WaitOnSuccesses("omsagent", "kube-system", kubeSystemPodsReadinessChecks, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(running).To(Equal(true))
-				pods, err = pod.GetAllByPrefixWithRetry("omsagent", "kube-system", 3*time.Second, cfg.Timeout)
+				pods, err = pod.GetAllRunningByPrefixWithRetry("omsagent", "kube-system", 3*time.Second, cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())
 				By("Ensuring that the cadvisor_perf plugin is writing data successfully")
 				pass, err = pods[0].ValidateOmsAgentLogs("cAdvisorPerfEmitStreamSuccess", 1*time.Second, cfg.Timeout)
@@ -780,7 +780,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			Expect(running).To(Equal(true))
 
 			By("Ensuring that the php-apache pod has outbound internet access")
-			pods, err := phpApacheDeploy.Pods()
+			pods, err := phpApacheDeploy.PodsRunning()
 			Expect(err).NotTo(HaveOccurred())
 			for _, p := range pods {
 				pass, outboundErr := p.CheckLinuxOutboundConnection(5*time.Second, cfg.Timeout)
@@ -992,7 +992,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				running, err := pod.WaitOnSuccesses(curlDeploymentName, "default", 4, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(running).To(Equal(true))
-				curlPods, err := curlDeploy.Pods()
+				curlPods, err := curlDeploy.PodsRunning()
 				Expect(err).NotTo(HaveOccurred())
 				By("Ensuring we can connect to the ILB service from another pod")
 				var success bool
@@ -1086,7 +1086,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				Expect(running).To(Equal(true))
 
 				By("Ensuring that the php-apache pod has outbound internet access")
-				pods, err := phpApacheDeploy.Pods()
+				pods, err := phpApacheDeploy.PodsRunning()
 				Expect(err).NotTo(HaveOccurred())
 				for _, p := range pods {
 					pass, outboundErr := p.CheckLinuxOutboundConnection(5*time.Second, cfg.Timeout)
@@ -1118,9 +1118,8 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				running, err = pod.WaitOnSuccesses(loadTestName, "default", 4, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(running).To(Equal(true))
-
 				// We should have three load tester pods running
-				loadTestPods, err := loadTestDeploy.Pods()
+				loadTestPods, err := pod.GetAllRunningByPrefixWithRetry(loadTestPrefix, "default", 5*time.Second, cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(len(loadTestPods)).To(Equal(numLoadTestPods))
 
@@ -1373,7 +1372,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				Expect(running).To(Equal(true))
 
 				By("Ensuring we have outbound internet access from the frontend-prod pods")
-				frontendProdPods, err := frontendProdDeployment.Pods()
+				frontendProdPods, err := frontendProdDeployment.PodsRunning()
 				Expect(err).NotTo(HaveOccurred())
 				Expect(len(frontendProdPods)).ToNot(BeZero())
 				pl := pod.List{Pods: frontendProdPods}
@@ -1382,7 +1381,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				Expect(pass).To(BeTrue())
 
 				By("Ensuring we have outbound internet access from the frontend-dev pods")
-				frontendDevPods, err := frontendDevDeployment.Pods()
+				frontendDevPods, err := frontendDevDeployment.PodsRunning()
 				Expect(err).NotTo(HaveOccurred())
 				Expect(len(frontendDevPods)).ToNot(BeZero())
 				pl = pod.List{Pods: frontendDevPods}
@@ -1391,7 +1390,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				Expect(pass).To(BeTrue())
 
 				By("Ensuring we have outbound internet access from the backend pods")
-				backendPods, err := backendDeployment.Pods()
+				backendPods, err := backendDeployment.PodsRunning()
 				Expect(err).NotTo(HaveOccurred())
 				Expect(len(backendPods)).ToNot(BeZero())
 				pl = pod.List{Pods: backendPods}
@@ -1400,7 +1399,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				Expect(pass).To(BeTrue())
 
 				By("Ensuring we have outbound internet access from the network-policy pods")
-				nwpolicyPods, err := nwpolicyDeployment.Pods()
+				nwpolicyPods, err := nwpolicyDeployment.PodsRunning()
 				Expect(err).NotTo(HaveOccurred())
 				Expect(len(nwpolicyPods)).ToNot(BeZero())
 				pl = pod.List{Pods: nwpolicyPods}
@@ -1580,7 +1579,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 
 				By("Checking that each pod can reach the internet")
 				var iisPods []pod.Pod
-				iisPods, err = iisDeploy.Pods()
+				iisPods, err = iisDeploy.PodsRunning()
 				Expect(err).NotTo(HaveOccurred())
 				Expect(len(iisPods)).ToNot(BeZero())
 				for _, iisPod := range iisPods {
@@ -1600,7 +1599,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				running, err = pod.WaitOnSuccesses(deploymentName, "default", 4, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(running).To(Equal(true))
-				iisPods, err = iisDeploy.Pods()
+				iisPods, err = iisDeploy.PodsRunning()
 				Expect(err).NotTo(HaveOccurred())
 				Expect(len(iisPods)).To(Equal(5))
 
@@ -1609,7 +1608,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				Expect(err).NotTo(HaveOccurred())
 
 				By("Checking that each pod can reach the internet")
-				iisPods, err = iisDeploy.Pods()
+				iisPods, err = iisDeploy.PodsRunning()
 				Expect(err).NotTo(HaveOccurred())
 				Expect(len(iisPods)).ToNot(BeZero())
 				for _, iisPod := range iisPods {
@@ -1624,7 +1623,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				Expect(err).NotTo(HaveOccurred())
 				_, err = iisDeploy.WaitForReplicas(2, 2, 2*time.Second, cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())
-				iisPods, err = iisDeploy.Pods()
+				iisPods, err = iisDeploy.PodsRunning()
 				Expect(err).NotTo(HaveOccurred())
 				Expect(len(iisPods)).To(Equal(2))
 
@@ -1633,7 +1632,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				Expect(err).NotTo(HaveOccurred())
 
 				By("Checking that each pod can reach the internet")
-				iisPods, err = iisDeploy.Pods()
+				iisPods, err = iisDeploy.PodsRunning()
 				Expect(err).NotTo(HaveOccurred())
 				Expect(len(iisPods)).ToNot(BeZero())
 				for _, iisPod := range iisPods {
@@ -1739,7 +1738,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 					running, err := pod.WaitOnSuccesses(deploymentName, "default", 4, 30*time.Second, cfg.Timeout)
 					Expect(err).NotTo(HaveOccurred())
 					Expect(running).To(Equal(true))
-					iisPods, err := iisDeploy.Pods()
+					iisPods, err := iisDeploy.PodsRunning()
 					Expect(err).NotTo(HaveOccurred())
 					Expect(len(iisPods)).ToNot(BeZero())
 					kubeConfig, err := GetConfigWithRetry(3*time.Second, cfg.Timeout)
