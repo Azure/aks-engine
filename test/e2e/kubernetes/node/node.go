@@ -105,6 +105,18 @@ func GetNodesAsync() GetNodesResult {
 	}
 }
 
+// GetByRegexAsync wraps GetByRegex with a struct response for goroutine + channel usage
+func GetByRegexAsync(regex string) GetNodesResult {
+	nodes, err := GetByRegex(regex)
+	if nodes == nil {
+		nodes = []Node{}
+	}
+	return GetNodesResult{
+		Nodes: nodes,
+		Err:   err,
+	}
+}
+
 // IsReady returns if the node is in a Ready state
 func (n *Node) IsReady() bool {
 	for _, condition := range n.Status.Conditions {
@@ -285,6 +297,39 @@ func GetWithRetry(sleep, timeout time.Duration) ([]Node, error) {
 			}
 		case <-ctx.Done():
 			return nil, errors.Errorf("GetWithRetry timed out: %s\n", mostRecentGetWithRetryError)
+		}
+	}
+}
+
+// GetByRegexWithRetry gets nodes that match a regular expression, allowing for retries
+func GetByRegexWithRetry(regex string, sleep, timeout time.Duration) ([]Node, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+	ch := make(chan GetNodesResult)
+	var mostRecentGetByRegexWithRetryError error
+	var nodes []Node
+	go func() {
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case ch <- GetByRegexAsync(regex):
+				time.Sleep(sleep)
+			}
+		}
+	}()
+	for {
+		select {
+		case result := <-ch:
+			mostRecentGetByRegexWithRetryError = result.Err
+			nodes = result.Nodes
+			if mostRecentGetByRegexWithRetryError == nil {
+				if len(nodes) > 0 {
+					return nodes, nil
+				}
+			}
+		case <-ctx.Done():
+			return nil, errors.Errorf("GetByRegexWithRetry timed out: %s\n", mostRecentGetByRegexWithRetryError)
 		}
 	}
 }
