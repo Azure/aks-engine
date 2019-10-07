@@ -2,6 +2,15 @@
 
 This is the Azure Policy add-on. Add this add-on to your json file as shown below to automatically enable Azure Policy with OPA Gatekeeper in your new Kubernetes cluster.
 
+This add-on works with a service principal only at this time. Make sure to create a role assignment for service principal using:
+
+```
+CLIENT_ID=<your service principal id>
+SCOPE=<fully qualified resource id for the cluster. for example, "/subscriptions/<subscriptionId>/resourceGroups/<clusterResourceGroup>">
+
+az role assignment create --assignee $CLIENT_ID --scope $SCOPE --role "Policy Insights Data Writer (Preview)"`
+```
+
 > 🚨 Please note that this add-on is in alpha stage and is not production ready.
 
 ```json
@@ -55,7 +64,7 @@ You can validate that the add-on is running as expected with the following comma
 You should see gatekeeper and azure-policy pods:
 
 ```bash
-kubectl get pods
+kubectl get pods -n kube-system
 ```
 
 Plese follow the README here for further information: https://github.com/open-policy-agent/gatekeeper
