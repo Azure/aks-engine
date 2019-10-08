@@ -83,7 +83,6 @@ Or they can be referenced as a preprovision extension, this will run during clou
           "name": "hello-world",
           "singleOrAll": "All"
       }
-
   },
   "extensionProfiles": [
     {
@@ -302,4 +301,4 @@ The current list of known extensions can be found [in extensions/](https://githu
 
 ## Known issues
 
-Kubernetes extensions that run after provisioning don't currently work if the VM needs to reboot for security reboots. this is a timing issue. the extension script is started before the vm reboots and it will be cutoff before it finishes but will still report success. I've tried to get the provision script to only finish as reboot happens and I haven't gotten that to work. An extension could work most of the time if it cancelled the restart at the start and checked if a restart was needed and scheduled one at the end of its work
+Kubernetes extensions that run after provisioning don't currently work if the VM needs to reboot for security reboots. This is a timing issue. The extension script is started before the vm reboots and it will be cutoff before it finishes but will still report success. I've tried to get the provision script to only finish as reboot happens and I haven't gotten that to work. An extension could work most of the time if it cancelled the restart at the start and checked if a restart was needed and scheduled one at the end of its work.

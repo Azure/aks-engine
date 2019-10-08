@@ -60,7 +60,7 @@ Agent nodes:
 
 - create new VM and install desired Kubernetes version
 - add the new VM to the cluster
-- evict any pods might be scheduled onto this node by Kubernetes before copying custom node properties
+- evict any pods that might be scheduled onto this node by Kubernetes before copying custom node properties
 - copy the custom annotations, labels and taints of old node to new node.
 - cordon the node and drain existing workloads
 - delete the VM

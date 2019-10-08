@@ -1,15 +1,15 @@
 # AAD integration Walkthrough
 
-This is walkthrough is to help you get start with Azure Active Directory(AAD) integeration with an AKS Engine Kubernetes cluster.
+This walkthrough is to help you get start with Azure Active Directory(AAD) integeration with an AKS Engine Kubernetes cluster.
 
 [OpenID Connect](http://openid.net/connect/) is a simple identity layer built on top of the OAuth 2.0 protocol, and it is supported by both AAD and Kubernetes. Here we're going to use OpenID Connect as the communication protocol.
 
 Please also refer to [Azure Active Directory plugin for client authentication](https://github.com/kubernetes/kubernetes/blob/master/staging/src/k8s.io/client-go/plugin/pkg/client/auth/azure/README.md) in Kubernetes repo for more details about OpenID Connect and AAD support in upstream.
 
 ## Prerequisites
-1. An Azure Active Directory tenant, will refer as `AAD Tenant`. You can use the tenant for your Azure subscription;
-2. A `Web app / API` type AAD application, will refer as `Server Application`. This application represents the `apiserver`;  For groups to work properly, you'll need to edit the `Server Application` Manifest and set `groupMembershipClaims` to either `All` or `SecurityGroup`.
-3. A `Native` type AAD application, will refer as `Client Application`. This application is for user login via `kubectl`. You'll need to add delegated permission to `Server Application`, please see [troubleshooting](#loginpageerror) section for detail.
+1. An Azure Active Directory tenant, referred to as `AAD Tenant`. You can use the tenant for your Azure subscription;
+2. A `Web app / API` type AAD application, referred to as `Server Application`. This application represents the `apiserver`. For groups to work properly, you'll need to edit the `Server Application` Manifest and set `groupMembershipClaims` to either `All` or `SecurityGroup`.
+3. A `Native` type AAD application, referred to as `Client Application`. This application is for user login via `kubectl`. You'll need to add delegated permission to `Server Application`, please see [troubleshooting](#loginpageerror) section for detail.
 
 You also need to delegate permission to the application as follows:
 
@@ -31,9 +31,9 @@ Follow the [deployment steps](../tutorials/deploy.md). In step #4, add the follo
 
 - `serverAppID`   : the `Server Application`'s ID
 - `clientAppID`   : the `Client Application`'s ID
-- `tenantID`      : the `AAD tenant`'s ID.
+- `tenantID`      : the `AAD tenant`'s ID
 
-After template generation, the local generated kubeconfig file (`_output/<instance>/kubeconfig/kubeconfig.<location>.json`) will have the default user using AAD.
+After template generation, the locally generated kubeconfig file (`_output/<instance>/kubeconfig/kubeconfig.<location>.json`) will have the default user using AAD.
 Initially it isn't assoicated with any AAD user yet. To get started, try any kubectl command (like `kubectl get pods`), and you'll be prompted to the device login process. After login, you will be able to operate the cluster using your AAD identity.
 
 It should look something like:
@@ -59,7 +59,7 @@ See [enabling cluster-admin](#enabling-cluster-admin) below.
 
 To enable authorization, you need to add a cluster admin role account, and add your user to that account.
 
-The user name would be in form of `IssuerUrl#ObjectID` format.
+The user name would be in this format: `IssuerUrl#ObjectID`.
 
 It should be printed in the error message from the previous kubectl request.
 
@@ -108,7 +108,7 @@ kubectl create clusterrolebinding aad-default-group-cluster-admin-binding --clus
 The above config would automatically generate a clusterrolebinding with the cluster-admin clusterrole for the specified Group `ObjectID` on cluster deployment.
 
 #### Adding another client user:
-To add test adding another client user run the following:
+To add another client user run the following:
 
 ```sh
 kubectl config set-credentials "user1" --auth-provider=azure \
@@ -123,8 +123,8 @@ And to test that user's login
 kubectl get pods --user=user1
 ```
 
-Now you'll be prompted to login again, you can try logining with another AAD user account.
-The login would succeed, but later you can see following message since server denies access:
+Now you'll be prompted to login again, you can try logging in with another AAD user account.
+The login would succeed, but later you can see following message since the server denies access:
 ```
 Error from server (Forbidden): User "https://sts.windows.net/{tenantID}/#{objectID}" cannot list pods in the namespace "default". (get pods)
 ```
@@ -135,31 +135,31 @@ the [general guide to Kubernetes RBAC](https://kubernetes.io/docs/admin/authoriz
 ## Troubleshooting
 
 ### LoginPageError
-If you failed in login page, you may see following error message
+If you failed at the login page, you may see following error message
 ```
 Invalid resource. The client has requested access to a resource which is not listed in the requested permissions in the client's application registration. Client app ID: {UUID} Resource value from request: {UUID}. Resource app ID: {UUID}. List of valid resources from app registration: {UUID}.
 ```
-This could be caused by `Client Application` not authorized.
+This could be caused by `Client Application` not being authorized.
 
 1. Go to Azure Portal, navigate to `Azure Active Directory` -> `App registrations`.
 2. Select the `Client Application`, Navigate to `Settings` -> `Required permissions`
 3. Choose `Add`, select the `Server Application`. In permissions tab, select `Delegated permissions` -> `Access {Server Application}`
 
 ### ClientError
-If you see following message return from server via `kubectl`
+If you see the following message returned from the server via `kubectl`
 ```
 Error from server (Forbidden)
 ```
 
-It is usually caused by an incorrect configuration. You could find more debug information in apiserver log. On a master node, run following command:
+It is usually caused by an incorrect configuration. You could find more debug information in apiserver log. On a master node, run the following command:
 ```sh
 docker logs -f $(docker ps|grep 'hyperkube apiserver'|cut -d' ' -f1) 2>&1 |grep -a auth
 ```
 
-You might see following message like this:
+You might see s message like this:
 ```
 Unable to authenticate the request due to an error: [invalid bearer token, [crypto/rsa: verification error, oidc: JWT claims invalid: invalid claims, 'aud' claim and 'client_id' do not match, aud=UUID1, client_id=spn:UUID2]]
 ```
-This indicates server and client is using different `Server Application` ID, could usually happen when the configurations being updated manually.
+This indicates server and client is using different `Server Application` ID, which usually happens when the configurations are being updated manually.
 
 For other auth issues, you may also find some useful information from the log.
