@@ -12400,16 +12400,6 @@ systemctlEnableAndStart() {
         return 1
     fi
 }
-systemctlDisableAndStop() {
-    if ! systemctl_stop 100 5 30 $1; then
-        echo "$1 could not be stopped"
-        return 1
-    fi
-    if ! retrycmd_if_failure 120 5 25 systemctl disable $1; then
-        echo "$1 could not be disabled by systemctl"
-        return 1
-    fi
-}
 
 configureEtcdUser(){
     useradd -U "etcd"
@@ -12510,7 +12500,7 @@ ensureAuditD() {
     systemctlEnableAndStart auditd || exit $ERR_SYSTEMCTL_START_FAIL
   else
     if apt list --installed | grep 'auditd'; then
-      systemctlDisableAndStop auditd || exit $ERR_SYSTEMCTL_START_FAIL
+      apt_get_purge 20 30 120 auditd &
     fi
   fi
 }
@@ -13390,12 +13380,18 @@ installDeps() {
     aptmarkWALinuxAgent hold
     apt_get_update || exit $ERR_APT_UPDATE_TIMEOUT
     apt_get_dist_upgrade || exit $ERR_APT_DIST_UPGRADE_TIMEOUT
-    for apt_package in apache2-utils apt-transport-https auditd blobfuse ca-certificates ceph-common cgroup-lite cifs-utils conntrack cracklib-runtime ebtables ethtool fuse git glusterfs-client htop iftop init-system-helpers iotop iproute2 ipset iptables jq libpam-pwquality libpwquality-tools mount nfs-common pigz socat sysstat traceroute util-linux xz-utils zip; do
+    for apt_package in apache2-utils apt-transport-https blobfuse ca-certificates ceph-common cgroup-lite cifs-utils conntrack cracklib-runtime ebtables ethtool fuse git glusterfs-client htop iftop init-system-helpers iotop iproute2 ipset iptables jq libpam-pwquality libpwquality-tools mount nfs-common pigz socat sysstat traceroute util-linux xz-utils zip; do
       if ! apt_get_install 30 1 600 $apt_package; then
         journalctl --no-pager -u $apt_package
         exit $ERR_APT_INSTALL_TIMEOUT
       fi
     done
+    if [[ "${AUDITD_ENABLED}" == true ]]; then
+      if ! apt_get_install 30 1 600 auditd; then
+        journalctl --no-pager -u auditd
+        exit $ERR_APT_INSTALL_TIMEOUT
+      fi
+    fi
 }
 
 installGPUDrivers() {
@@ -15264,6 +15260,17 @@ write_files:
     {{CloudInitData "provisionCIS"}}
 {{end}}
 
+{{if not .MasterProfile.IsVHDDistro}}
+  {{if .MasterProfile.IsAuditDEnabled}}
+- path: /etc/audit/rules.d/CIS.rules
+  permissions: "0744"
+  encoding: gzip
+  owner: root
+  content: !!binary |
+    {{CloudInitData "auditdRules"}}
+  {{end}}
+{{end}}
+
 {{if IsAzureStackCloud}}
 - path: /opt/azure/containers/provision_configs_custom_cloud.sh
   permissions: "0744"
@@ -15846,6 +15853,17 @@ write_files:
   owner: root
   content: !!binary |
     {{CloudInitData "provisionCIS"}}
+{{end}}
+
+{{if not .IsVHDDistro}}
+  {{if .IsAuditDEnabled}}
+- path: /etc/audit/rules.d/CIS.rules
+  permissions: "0744"
+  encoding: gzip
+  owner: root
+  content: !!binary |
+    {{CloudInitData "auditdRules"}}
+  {{end}}
 {{end}}
 
 {{if IsAzureStackCloud}}

@@ -265,6 +265,82 @@ func TestAgentPoolProfileIsVHDDistro(t *testing.T) {
 	}
 }
 
+func TestAgentPoolProfileIsAuditDEnabled(t *testing.T) {
+	cases := []struct {
+		name     string
+		ap       AgentPoolProfile
+		expected bool
+	}{
+		{
+			name:     "default",
+			ap:       AgentPoolProfile{},
+			expected: false,
+		},
+		{
+			name: "true",
+			ap: AgentPoolProfile{
+				AuditDEnabled: to.BoolPtr(true),
+			},
+			expected: true,
+		},
+		{
+			name: "false",
+			ap: AgentPoolProfile{
+				AuditDEnabled: to.BoolPtr(false),
+			},
+			expected: false,
+		},
+	}
+
+	for _, c := range cases {
+		c := c
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+			if c.expected != c.ap.IsAuditDEnabled() {
+				t.Fatalf("Got unexpected AgentPoolProfile.IsAuditDEnabled() result. Expected: %t. Got: %t.", c.expected, c.ap.IsAuditDEnabled())
+			}
+		})
+	}
+}
+
+func TestMasterProfileIsAuditDEnabled(t *testing.T) {
+	cases := []struct {
+		name     string
+		mp       MasterProfile
+		expected bool
+	}{
+		{
+			name:     "default",
+			mp:       MasterProfile{},
+			expected: false,
+		},
+		{
+			name: "true",
+			mp: MasterProfile{
+				AuditDEnabled: to.BoolPtr(true),
+			},
+			expected: true,
+		},
+		{
+			name: "false",
+			mp: MasterProfile{
+				AuditDEnabled: to.BoolPtr(false),
+			},
+			expected: false,
+		},
+	}
+
+	for _, c := range cases {
+		c := c
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+			if c.expected != c.mp.IsAuditDEnabled() {
+				t.Fatalf("Got unexpected AgentPoolProfile.IsAuditDEnabled() result. Expected: %t. Got: %t.", c.expected, c.mp.IsAuditDEnabled())
+			}
+		})
+	}
+}
+
 func TestAgentPoolProfileIsUbuntuNonVHD(t *testing.T) {
 	cases := []struct {
 		name     string
