@@ -610,9 +610,9 @@ func TestCreateAgentVMSSHostedMasterProfile(t *testing.T) {
 				"resourceNameSuffix": to.StringPtr("[parameters('nameSuffix')]"),
 			},
 			VirtualMachineScaleSetProperties: &compute.VirtualMachineScaleSetProperties{
-				SinglePlacementGroup: to.BoolPtr(true),
-				PlatformFaultDomainCount:to.Int32Ptr(3),
-				Overprovision:        to.BoolPtr(false),
+				SinglePlacementGroup:     to.BoolPtr(true),
+				PlatformFaultDomainCount: to.Int32Ptr(3),
+				Overprovision:            to.BoolPtr(false),
 				UpgradePolicy: &compute.UpgradePolicy{
 					Mode: compute.Manual,
 				},

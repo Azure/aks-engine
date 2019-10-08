@@ -450,7 +450,7 @@ func CreateAgentVMSS(cs *api.ContainerService, profile *api.AgentPoolProfile) Vi
 			Mode: compute.Manual,
 		},
 	}
-	
+
 	if profile.PlatformFaultDomainCount != nil {
 		vmssProperties.PlatformFaultDomainCount = to.Int32Ptr(int32(*profile.PlatformFaultDomainCount))
 	}
