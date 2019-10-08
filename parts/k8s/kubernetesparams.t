@@ -253,7 +253,6 @@
       "type": "bool"
     },
 {{end}}
-{{if .OrchestratorProfile.KubernetesConfig.IsAzurePolicyEnabled}}
     "kubernetesAzurePolicyEnabled": {
       "defaultValue": false,
       "metadata": {
@@ -261,7 +260,6 @@
       },
       "type": "bool"
     },
-{{end}}
     "kubernetesACIConnectorEnabled": {
       "metadata": {
         "description": "ACI Connector Status"

@@ -25186,7 +25186,6 @@ var _k8sKubernetesparamsT = []byte(`{{if .HasAadProfile}}
       "type": "bool"
     },
 {{end}}
-{{if .OrchestratorProfile.KubernetesConfig.IsAzurePolicyEnabled}}
     "kubernetesAzurePolicyEnabled": {
       "defaultValue": false,
       "metadata": {
@@ -25194,7 +25193,6 @@ var _k8sKubernetesparamsT = []byte(`{{if .HasAadProfile}}
       },
       "type": "bool"
     },
-{{end}}
     "kubernetesACIConnectorEnabled": {
       "metadata": {
         "description": "ACI Connector Status"
