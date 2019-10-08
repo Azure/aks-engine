@@ -392,6 +392,7 @@ type MasterProfile struct {
 	AgentSubnet              string            `json:"agentSubnet,omitempty"`
 	AvailabilityZones        []string          `json:"availabilityZones,omitempty"`
 	SinglePlacementGroup     *bool             `json:"singlePlacementGroup,omitempty"`
+	PlatformFaultDomainCount *int			   `json:"platformFaultDomainCount,omitEmpty"`
 	AuditDEnabled            *bool             `json:"auditDEnabled,omitempty"`
 	CustomVMTags             map[string]string `json:"customVMTags,omitempty"`
 
@@ -471,6 +472,7 @@ type AgentPoolProfile struct {
 	PreProvisionExtension             *Extension        `json:"preProvisionExtension"`
 	Extensions                        []Extension       `json:"extensions"`
 	SinglePlacementGroup              *bool             `json:"singlePlacementGroup,omitempty"`
+	PlatformFaultDomainCount		  *int			    `json:"platformFaultDomainCount,omitEmpty"`
 	AvailabilityZones                 []string          `json:"availabilityZones,omitempty"`
 	EnableVMSSNodePublicIP            *bool             `json:"enableVMSSNodePublicIP,omitempty"`
 	LoadBalancerBackendAddressPoolIDs []string          `json:"loadBalancerBackendAddressPoolIDs,omitempty"`
