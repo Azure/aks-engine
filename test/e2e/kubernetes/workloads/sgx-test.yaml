@@ -1,7 +1,7 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: sgxtest
+  name: sgx-test
 spec:
   template:
     spec:
@@ -20,4 +20,3 @@ spec:
           path: /dev/sgx
       restartPolicy: Never
   backoffLimit: 0
-  

@@ -1808,6 +1808,16 @@ func (p *Properties) HasNSeriesSKU() bool {
 	return false
 }
 
+// HasDCSeriesSKU returns whether or not there is an DC series SKU agent pool
+func (p *Properties) HasDCSeriesSKU() bool {
+	for _, profile := range p.AgentPoolProfiles {
+		if strings.Contains(profile.VMSize, "Standard_DC") {
+			return true
+		}
+	}
+	return false
+}
+
 // IsNVIDIADevicePluginEnabled checks if the NVIDIA Device Plugin addon is enabled
 // It is enabled by default if agents contain a GPU and Kubernetes version is >= 1.10.0
 func (p *Properties) IsNVIDIADevicePluginEnabled() bool {
