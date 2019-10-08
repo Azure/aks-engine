@@ -72,6 +72,8 @@ Set-AzureCNIConfig
         $TargetEnvironment
     )
     # Fill in DNS information for kubernetes.
+    $exceptionAddresses = @($KubeClusterCIDR, $MasterSubnet, $VNetCIDR)
+
     $fileName  = [Io.path]::Combine("$AzureCNIConfDir", "10-azure.conflist")
     $configJson = Get-Content $fileName | ConvertFrom-Json
     $configJson.plugins.dns.Nameservers[0] = $KubeDnsServiceIp
@@ -83,15 +85,12 @@ Set-AzureCNIConfig
         # If multiple execptions are specified with different ranges we should only include the broadest range for each address.
         # This issue has been addressed in 19h1+ builds
 
-        $originalExceptions = @($KubeClusterCIDR, $MasterSubnet, $VNetCIDR)
-        $processedExpceptions = GetBroadestRangesForEachAddress $originalExceptions
-        Write-Host "Filtering CNI config exception list values to work aroudn WS2019 issue processing rules. Original exception list: $originalExceptions, processed exception list: $processedExpceptions"
-        $configJson.plugins.AdditionalArgs[0].Value.ExceptionList = $processedExpceptions
+        $processedExceptions = GetBroadestRangesForEachAddress $exceptionAddresses
+        Write-Host "Filtering CNI config exception list values to work around WS2019 issue processing rules. Original exception list: $exceptionAddresses, processed exception list: $processedExceptions"
+        $configJson.plugins.AdditionalArgs[0].Value.ExceptionList = $processedExceptions
     }
     else {
-        $configJson.plugins.AdditionalArgs[0].Value.ExceptionList[0] = $KubeClusterCIDR
-        $configJson.plugins.AdditionalArgs[0].Value.ExceptionList[1] = $MasterSubnet
-        $configJson.plugins.AdditionalArgs[0].Value.ExceptionList += $VNetCIDR
+        $configJson.plugins.AdditionalArgs[0].Value.ExceptionList[0] = $exceptionAddresses
     }
 
     $configJson.plugins.AdditionalArgs[1].Value.DestinationPrefix  = $KubeServiceCIDR

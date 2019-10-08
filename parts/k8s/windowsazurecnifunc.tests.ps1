@@ -11,7 +11,7 @@ Describe 'GetBroadestRangesForEachAddress' {
     ){
         param ($Values, $Expected)
 
-        $acutal = GetBroadestRangesForEachAddress -values $Values
-        $acutal | Should -Be $Expected
+        $actual = GetBroadestRangesForEachAddress -values $Values
+        $actual | Should -Be $Expected
     }
 }
