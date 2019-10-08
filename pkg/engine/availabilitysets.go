@@ -28,16 +28,17 @@ func CreateAvailabilitySet(cs *api.ContainerService, isManagedDisks bool) Availa
 			avSet.AvailabilitySetProperties = &compute.AvailabilitySetProperties{
 				PlatformUpdateDomainCount: to.Int32Ptr(3),
 			}
-			if cs.Properties.MasterProfile.PlatformFaultDomainCount != nil {
-				p := int32(*cs.Properties.MasterProfile.PlatformFaultDomainCount)
-				avSet.PlatformFaultDomainCount = to.Int32Ptr(p)
-			}
 			avSet.Sku = &compute.Sku{
 				Name: to.StringPtr("Aligned"),
 			}
 		} else if cs.Properties.MasterProfile.IsStorageAccount() {
 			avSet.AvailabilitySetProperties = &compute.AvailabilitySetProperties{}
 		}
+	}
+
+	if cs.Properties.MasterProfile.PlatformFaultDomainCount != nil {
+		p := int32(*cs.Properties.MasterProfile.PlatformFaultDomainCount)
+		avSet.PlatformFaultDomainCount = to.Int32Ptr(p)
 	}
 
 	return AvailabilitySetARM{
