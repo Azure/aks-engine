@@ -29,7 +29,7 @@ export VERSION=<your-custom-version>
 export REGISTRY=<your-docker-registry>
 hack/dev-push-hyperkube.sh
 ```
-For VERSION, we recommend that you provide a value which would help you identify the build of kubernetes. The value is VERSION will be used as tag for your custom hyperkube image.
+For VERSION, we recommend that you provide a value which would help you identify the build of kubernetes. The value VERSION will be used as a tag for your custom hyperkube image.
 
 (It's convenient to put these steps into a script.)
 

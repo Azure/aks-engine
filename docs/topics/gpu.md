@@ -15,7 +15,7 @@ Capacity:
 [...]
 ```
 
-If `nvidia.com/gpu` is `0` and you just created the cluster, you might have to wait a little bit. The driver installation can add a few minutes to the cluster deployment time compared to non-GPU agent pool scenarios, and the node might join the cluster before the installation is completed. After a few minute the node should restart, and report the correct number of GPUs.
+If `nvidia.com/gpu` is `0` and you just created the cluster, you might have to wait a little bit. The driver installation can add a few minutes to the cluster deployment time compared to non-GPU agent pool scenarios, and the node might join the cluster before the installation is completed. After a few minutes the node should restart, and report the correct number of GPUs.
 
 ## Running a GPU-enabled container
 

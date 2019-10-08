@@ -44,7 +44,7 @@ Follow these steps:
    * To see a list of your nodes type `kubectl get nodes`.  If you want full detail of the nodes, add `-o yaml` to become `kubectl get nodes -o yaml`.
    * To see a list of running pods type `kubectl get pods --all-namespaces`.
 1. Start your first Docker image by typing `kubectl run nginx --image nginx`.  This will start the nginx Docker container in a pod on one of the nodes.
-1. Type `kubectl get pods -o yaml` to see the full details of the nginx deployment. You can see the host IP and the podIP.  The pod IP is assigned from the pod CIDR on the host.  Run curl to the pod ip to see the nginx output, eg. `curl 10.244.1.4`
+1. Type `kubectl get pods -o yaml` to see the full details of the nginx deployment. You can see the host IP and the podIP.  The pod IP is assigned from the pod CIDR on the host.  Run curl to the pod IP to see the nginx output, eg. `curl 10.244.1.4`
   ![Image of curl to podIP](../static/img/kubernetes-nginx1.png)
 1. The next step is to expose the nginx deployment as a Kubernetes service on the private service network 10.0.0.0/16:
    1. Expose the service with command `kubectl expose deployment nginx --port=80`.
@@ -56,7 +56,7 @@ Follow these steps:
    2. Change `type` from `ClusterIP` to `LoadBalancer` and save it. This will now cause Kubernetes to create an Azure Load Balancer with a public IP.
    3. The change will take about 2-3 minutes.  To watch the service change from "pending" to an external ip, type `watch 'kubectl get svc'`
    ![Image of watching the transition from pending to external ip](../static/img/kubernetes-nginx3.png)
-   4. Once you see the external IP, you can browse to it in your browser:
+   4. Once you see the external IP, you can navigate to it in your browser:
    ![Image of browsing to nginx](../static/img/kubernetes-nginx4.png)
 1. The next step in this walkthrough is to show you how to remotely manage your Kubernetes cluster.  First download Kubectl to your machine and put it in your path:
    * [Windows Kubectl](https://storage.googleapis.com/kubernetes-release/release/v1.6.0/bin/windows/amd64/kubectl.exe)
