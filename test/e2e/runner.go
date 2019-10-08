@@ -95,7 +95,7 @@ func main() {
 		}
 		provision := true
 		rg := cfg.SoakClusterName
-		err = acct.SetResourceGroupWithRetry(rg, 3*time.Second, cfg.Timeout)
+		err = acct.SetResourceGroupWithRetry(rg, 3*time.Second, 1*time.Minute)
 		if err != nil {
 			log.Printf("Error while trying to set RG:%s\n", err)
 		} else {
