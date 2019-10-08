@@ -9,7 +9,7 @@ Container Monitoring addon gives you performance monitoring ability by collectin
 - Logs (stdout/stderr) of the Containers to troubleshoot the issues in containers
 - Scraping metrics from Prometheus. Refer [configuring prometheus scraping settings](https://docs.microsoft.com/en-us/azure/azure-monitor/insights/container-insights-agent-config#overview-of-configurable-prometheus-scraping-settings)
 
-Refer to (Azure Monitor for containers)[https://docs.microsoft.com/en-us/azure/azure-monitor/insights/container-insights-overview] for more details.
+Refer to [Azure Monitor for containers](https://docs.microsoft.com/en-us/azure/azure-monitor/insights/container-insights-overview) for more details.
 
 ## Components
 
@@ -19,29 +19,27 @@ The agent is automatically deployed and registered with the specified or default
 ## Onboarding
 
 Container Monitoring can be onboarded either through the monitoring add-on or the Helm chart.
-Following are supported options to enable container-monitoring add-on during the cluster creation or post custer creation.
+Following are supported options to enable container-monitoring add-on during the cluster creation or post cluster creation.
 
 > Note: option 1) and 2) are supported only through `aks-engine deploy` command.
 
 ### 1. Using Default Log Analytics Workspace
 
-Container Monitoring add-on uses default log analytics workspace if its available for the corresponding region of the cluster. If there is no default log analytics workspaces exists for the corresponding region of the cluster, then it will create new default log analytics workspace.
-With following definition, container monitoring addon will be onboarded fully without need of any additional steps such as adding container insights solution and tags etc.
+Container Monitoring add-on uses default log analytics workspace if its available for the corresponding region of the cluster. If there exist no default log analytics workspaces for the corresponding region of the cluster, then it will create new default log analytics workspace.
+With the following definition, container monitoring addon will be onboarded fully without need of any additional steps such as adding container insights solution and tags etc.
 
         {
             "name": "container-monitoring",
             "enabled": true
         }
 
-Refer [Sample Kubernetes definition file with monitoringa addon using default log analytics workspace](../../examples/addons/container-monitoring/kubernetes-container-monitoring.json)
-
-                     OR
+Refer to [Sample Kubernetes definition file with monitoringa addon using default log analytics workspace](../../examples/addons/container-monitoring/kubernetes-container-monitoring.json)
 
 ###  2. Using existing Log Analytics Workspace
 
-If you prefer to use existing log analytics workspace, then you can set  the fully qualified azure resource id of the existing log analytics workspace as in below config.
-With following definition, container monitoring addon will be onboarded fully without need of any additional steps such as adding container insights solution and tags etc.
-Azure Log analytics workspace can be in any Azure subscription which you have Log Analytics Contributor role permission on the specified Azure Log Analytics workspace.
+If you prefer to use an existing log analytics workspace, then you can set  the fully qualified azure resource id of the existing log analytics workspace as in the below config.
+With this definition, container monitoring addon will be onboarded fully without need of any additional steps such as adding container insights solution and tags etc.
+Azure Log analytics workspace can be in any Azure subscription in which you have Log Analytics Contributor role permission on the specified Azure Log Analytics workspace.
 
       {
             "name": "container-monitoring",
@@ -51,13 +49,11 @@ Azure Log analytics workspace can be in any Azure subscription which you have Lo
              }
      }
 
-Refer [Sample Kubernetes definition file with monitoringa addon using existing log analytics workspace](../../examples/addons/container-monitoring/kubernetes-container-monitoring_existing_log_analytics_workspace.json)
+Refer to [Sample Kubernetes definition file with monitoringa addon using existing log analytics workspace](../../examples/addons/container-monitoring/kubernetes-container-monitoring_existing_log_analytics_workspace.json)
 
-                 OR
+### 3. Using Workspace GUID or Key
 
-### 3. Using Worksapce GUID or Key
-
-you can also configure with workspace GUID and Key of the existing Log analytics workspace, but with this is legacy option and requires additional configuration steps
+You can also configure with workspace GUID and Key of the existing Log analytics workspace, but this is a legacy option and requires additional configuration steps
 
          {
             "name": "container-monitoring",
@@ -68,11 +64,11 @@ you can also configure with workspace GUID and Key of the existing Log analytics
             }
           }
 
-Refer [Sample Kubernetes definition file with monitoringa addon using workspace GUID and key of the existing log analytics workspace](../../examples/addons/container-monitoring/kubernetes-container-monitoring_existing_workspace_id_and_key.json)
+Refer to [Sample Kubernetes definition file with monitoringa addon using workspace GUID and key of the existing log analytics workspace](../../examples/addons/container-monitoring/kubernetes-container-monitoring_existing_workspace_id_and_key.json)
 
 ### 4. Using Azure Monitor for containers Helm chart
 
-If you prefer Helm chart, refer [Azure Monitor – Containers Helm chart](https://github.com/Helm/charts/tree/master/incubator/azuremonitor-containers) for onboarding instructions
+If you prefer Helm chart, refer to [Azure Monitor – Containers Helm chart](https://github.com/Helm/charts/tree/master/incubator/azuremonitor-containers) for onboarding instructions
 
 For more details and instructions to [onboard the container monitoring addon for the AKS Engine cluster(s)](../../examples/addons/container-monitoring/README.md)
 
@@ -84,7 +80,7 @@ After successful onboarding, navigating to [Azure Monitor for containers](https:
 
 - User requires the reader role permission on the Azure Log Analytics workspace and AKS Engine cluster resource group to view and monitor, and analyze health of your onboarded AKS Engine cluster, pods and containers etc.
 - For onboarding monitoring addon
-     -  If the existing Azure Log Analytics workspace used, then requires Log Analytics Contributor role on existing Azure Log Analytics
+     -  If the existing Azure Log Analytics workspace is used, then the Log Analytics Contributor role on existing Azure Log Analytics is required
      -  For the new Azure Log Analytics workspace, user requires the contributor role on the Subscription or the Resource group where the AKS Engine cluster resources will be deployed
 
 ## Contact
