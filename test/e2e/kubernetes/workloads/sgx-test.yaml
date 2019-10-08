@@ -1,0 +1,23 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: sgxtest
+spec:
+  template:
+    spec:
+      containers:
+      - name: sgxtest
+        image: johnkord/sgxtest:0.1
+        command: ["./sgxtesthost", "sgxtestenc.signed"]
+        volumeMounts:
+        - mountPath: /dev/sgx
+          name: dev-sgx
+        securityContext:
+          privileged: true
+      volumes:
+      - name: dev-sgx
+        hostPath:
+          path: /dev/sgx
+      restartPolicy: Never
+  backoffLimit: 0
+  
