@@ -182,11 +182,11 @@ func TestTemplateGenerator_FunctionMap(t *testing.T) {
 			Name:     "GetPodInfraContainerSpec",
 			FuncName: "GetPodInfraContainerSpec",
 			MutateFunc: func(cs api.ContainerService) api.ContainerService {
-				cs.Properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBase = "foo/"
+				cs.Properties.OrchestratorProfile.KubernetesConfig.MCRKubernetesImageBase = "foo/"
 				cs.Properties.OrchestratorProfile.OrchestratorVersion = "1.16.0"
 				return cs
 			},
-			ExpectedResult: "foo/pause-amd64:3.1",
+			ExpectedResult: "foo/pause:1.2.0",
 		},
 	}
 

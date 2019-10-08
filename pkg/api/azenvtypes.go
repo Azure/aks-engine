@@ -40,6 +40,7 @@ type KubernetesSpecConfig struct {
 	KubernetesImageBase              string `json:"kubernetesImageBase,omitempty"`
 	TillerImageBase                  string `json:"tillerImageBase,omitempty"`
 	ACIConnectorImageBase            string `json:"aciConnectorImageBase,omitempty"`
+	MCRKubernetesImageBase           string `json:"mcrKubernetesImageBase,omitempty"`
 	NVIDIAImageBase                  string `json:"nvidiaImageBase,omitempty"`
 	AzureCNIImageBase                string `json:"azureCNIImageBase,omitempty"`
 	CalicoImageBase                  string `json:"CalicoImageBase,omitempty"`
@@ -88,6 +89,7 @@ var (
 		NVIDIAImageBase:                  "nvidia/",
 		CalicoImageBase:                  "calico/",
 		AzureCNIImageBase:                "mcr.microsoft.com/containernetworking/",
+		MCRKubernetesImageBase:           "mcr.microsoft.com/k8s/core/",
 		EtcdDownloadURLBase:              "https://acs-mirror.azureedge.net/github-coreos",
 		KubeBinariesSASURLBase:           "https://acs-mirror.azureedge.net/wink8s/",
 		WindowsTelemetryGUID:             "fb801154-36b9-41bc-89c2-f4d4f05472b0",
@@ -270,6 +272,7 @@ var (
 			ACIConnectorImageBase:            "dockerhub.azk8s.cn/microsoft/",
 			NVIDIAImageBase:                  "dockerhub.azk8s.cn/nvidia/",
 			AzureCNIImageBase:                "dockerhub.azk8s.cn/containernetworking/",
+			MCRKubernetesImageBase:           "mcr.microsoft.com/k8s/core/",
 			CalicoImageBase:                  "dockerhub.azk8s.cn/calico/",
 			EtcdDownloadURLBase:              "https://mirror.azk8s.cn/kubernetes/etcd",
 			KubeBinariesSASURLBase:           DefaultKubernetesSpecConfig.KubeBinariesSASURLBase,

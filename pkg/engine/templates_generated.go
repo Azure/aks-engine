@@ -17139,19 +17139,19 @@ write_files:
     sandbox_image = "{{GetPodInfraContainerSpec}}"
     [plugins.cri.containerd.untrusted_workload_runtime]
     runtime_type = "io.containerd.runtime.v1.linux"
-{{if IsKataContainerRuntime }}
+    {{if IsKataContainerRuntime }}
     runtime_engine = "/usr/bin/kata-runtime"
-{{else}}
+    {{else}}
     runtime_engine = "/usr/local/sbin/runc"
-{{end}}
+    {{end}}
     [plugins.cri.containerd.default_runtime]
     runtime_type = "io.containerd.runtime.v1.linux"
-{{if IsKataContainerRuntime }}
+    {{if IsKataContainerRuntime }}
     runtime_engine = "/usr/bin/kata-runtime"
-{{else}}
+    {{else}}
     runtime_engine = "/usr/local/sbin/runc"
-{{end}}
-{{if IsKubenet }}
+    {{end}}
+    {{if IsKubenet }}
     [plugins.cri.cni]
     conf_template = "/etc/containerd/kubenet_template.conf"
 
@@ -17177,7 +17177,7 @@ write_files:
             }
           }]
       }
-{{end}}
+    {{end}}
 {{end}}
 
 - path: /etc/kubernetes/certs/ca.crt
@@ -17779,19 +17779,19 @@ write_files:
     sandbox_image = "{{GetPodInfraContainerSpec}}"
     [plugins.cri.containerd.untrusted_workload_runtime]
     runtime_type = "io.containerd.runtime.v1.linux"
-{{if IsKataContainerRuntime }}
+    {{if IsKataContainerRuntime }}
     runtime_engine = "/usr/bin/kata-runtime"
-{{else}}
+    {{else}}
     runtime_engine = "/usr/local/sbin/runc"
-{{end}}
+    {{end}}
     [plugins.cri.containerd.default_runtime]
     runtime_type = "io.containerd.runtime.v1.linux"
-{{if IsKataContainerRuntime }}
+    {{if IsKataContainerRuntime }}
     runtime_engine = "/usr/bin/kata-runtime"
-{{else}}
+    {{else}}
     runtime_engine = "/usr/local/sbin/runc"
-{{end}}
-{{if IsKubenet }}
+    {{end}}
+    {{if IsKubenet }}
     [plugins.cri.cni]
     conf_template = "/etc/containerd/kubenet_template.conf"
 
@@ -17817,7 +17817,7 @@ write_files:
             }
           }]
       }
-{{end}}
+    {{end}}
 {{end}}
 
 {{if IsNSeriesSKU .}}

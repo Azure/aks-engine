@@ -7,13 +7,7 @@
 				"orchestratorType": "Kubernetes",
 				"kubernetesConfig": {
 					"networkPlugin": "kubenet",
-					"containerRuntime": "containerd",
-					"addons": [
-						{
-							"name": "kubernetes-dashboard",
-							"enabled": false
-						}
-					]
+					"containerRuntime": "containerd"
 				}
 			},
 			"masterProfile": {
