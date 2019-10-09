@@ -303,6 +303,7 @@ func TestCreateAgentVMSS(t *testing.T) {
 			},
 			VirtualMachineScaleSetProperties: &compute.VirtualMachineScaleSetProperties{
 				SinglePlacementGroup:                   to.BoolPtr(true),
+				PlatformFaultDomainCount:               to.Int32Ptr(3),
 				Overprovision:                          to.BoolPtr(true),
 				DoNotRunExtensionsOnOverprovisionedVMs: to.BoolPtr(true),
 				UpgradePolicy: &compute.UpgradePolicy{
