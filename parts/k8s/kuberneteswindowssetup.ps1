@@ -92,7 +92,7 @@ $global:PrimaryScaleSetName = "{{WrapAsVariable "primaryScaleSetName"}}"
 $global:KubeClusterCIDR = "{{WrapAsParameter "kubeClusterCidr"}}"
 $global:KubeServiceCIDR = "{{WrapAsParameter "kubeServiceCidr"}}"
 $global:VNetCIDR = "{{WrapAsParameter "vnetCidr"}}"
-{{if IsKubernetesVersionGe "1.16.0-alpha.1"}}
+{{if IsKubernetesVersionGe "1.16.0"}}
 $global:KubeletNodeLabels = "{{GetAgentKubernetesLabels . "',variables('labelResourceGroup'),'"}}"
 {{else}}
 $global:KubeletNodeLabels = "{{GetAgentKubernetesLabelsDeprecated . "',variables('labelResourceGroup'),'"}}"
@@ -265,7 +265,7 @@ try
                     -AADClientSecret $([System.Text.Encoding]::ASCII.GetString([System.Convert]::FromBase64String($AADClientSecret))) `
                     -NetworkAPIVersion $NetworkAPIVersion `
                     -AzureEnvironmentFilePath $([io.path]::Combine($global:KubeDir, "azurestackcloud.json")) `
-                    -IdentitySystem "{{ GetIdentitySystem }}"                    
+                    -IdentitySystem "{{ GetIdentitySystem }}"
             }
 
         } elseif ($global:NetworkPlugin -eq "kubenet") {
