@@ -963,6 +963,7 @@ func convertVLabsMasterProfile(vlabs *vlabs.MasterProfile, api *MasterProfile) {
 	api.AvailabilityProfile = vlabs.AvailabilityProfile
 	api.AgentSubnet = vlabs.AgentSubnet
 	api.AvailabilityZones = vlabs.AvailabilityZones
+	api.PlatformFaultDomainCount = vlabs.PlatformFaultDomainCount
 	api.SinglePlacementGroup = vlabs.SinglePlacementGroup
 	api.CosmosEtcd = vlabs.CosmosEtcd
 	api.AuditDEnabled = vlabs.AuditDEnabled
@@ -1053,6 +1054,7 @@ func convertVLabsAgentPoolProfile(vlabs *vlabs.AgentPoolProfile, api *AgentPoolP
 	api.AcceleratedNetworkingEnabledWindows = vlabs.AcceleratedNetworkingEnabledWindows
 	api.VMSSOverProvisioningEnabled = vlabs.VMSSOverProvisioningEnabled
 	api.AvailabilityZones = vlabs.AvailabilityZones
+	api.PlatformFaultDomainCount = vlabs.PlatformFaultDomainCount
 	api.SinglePlacementGroup = vlabs.SinglePlacementGroup
 	api.EnableVMSSNodePublicIP = vlabs.EnableVMSSNodePublicIP
 	api.LoadBalancerBackendAddressPoolIDs = vlabs.LoadBalancerBackendAddressPoolIDs
