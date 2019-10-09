@@ -148,6 +148,7 @@
 // ../../parts/k8s/containeraddons/1.17/kubernetesmasteraddons-azure-npm-daemonset.yaml
 // ../../parts/k8s/containeraddons/1.17/kubernetesmasteraddons-blobfuse-flexvolume-installer.yaml
 // ../../parts/k8s/containeraddons/1.17/kubernetesmasteraddons-calico-daemonset.yaml
+// ../../parts/k8s/containeraddons/1.17/kubernetesmasteraddons-cloud-node-manager.yaml
 // ../../parts/k8s/containeraddons/1.17/kubernetesmasteraddons-cluster-autoscaler-deployment.yaml
 // ../../parts/k8s/containeraddons/1.17/kubernetesmasteraddons-heapster-deployment.yaml
 // ../../parts/k8s/containeraddons/1.17/kubernetesmasteraddons-keyvault-flexvolume-installer.yaml
@@ -25338,6 +25339,109 @@ func k8sContaineraddons117KubernetesmasteraddonsCalicoDaemonsetYaml() (*asset, e
 	return a, nil
 }
 
+var _k8sContaineraddons117KubernetesmasteraddonsCloudNodeManagerYaml = []byte(`apiVersion: v1
+kind: ServiceAccount
+metadata:
+  labels:
+    k8s-app: cloud-node-manager
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: Reconcile
+  name: cloud-node-manager
+  namespace: kube-system
+---
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: cloud-node-manager
+  labels:
+    k8s-app: cloud-node-manager
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: Reconcile
+rules:
+- apiGroups: [""]
+  resources: ["nodes"]
+  verbs: ["watch","list","get","update"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: cloud-node-manager
+  labels:
+    k8s-app: cloud-node-manager
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: Reconcile
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: cloud-node-manager
+subjects:
+- kind: ServiceAccount
+  name: cloud-node-manager
+  namespace: kube-system
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: cloud-node-manager
+  namespace: kube-system
+  labels:
+    component: cloud-node-manager
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: Reconcile
+spec:
+  selector:
+    matchLabels:
+      k8s-app: cloud-node-manager
+  template:
+    metadata:
+      labels:
+        k8s-app: cloud-node-manager
+    spec:
+      priorityClassName: system-node-critical
+      serviceAccountName: cloud-node-manager
+      hostNetwork: true   # required to fetch correct hostname
+      nodeSelector:
+        beta.kubernetes.io/os: linux
+      tolerations:
+      - key: CriticalAddonsOnly
+        operator: Exists
+      - key: node-role.kubernetes.io/master
+        operator: Equal
+        value: "true"
+        effect: NoSchedule
+      - operator: "Exists"
+        effect: NoExecute
+      - operator: "Exists"
+        effect: NoSchedule
+      containers:
+      - name: cloud-node-manager
+        image: {{ContainerImage "cloud-node-manager"}}
+        imagePullPolicy: IfNotPresent
+        command: ["cloud-node-manager"]
+        resources:
+          requests:
+            cpu: 50m
+            memory: 50Mi
+          limits:
+            cpu: 2000m
+            memory: 512Mi
+`)
+
+func k8sContaineraddons117KubernetesmasteraddonsCloudNodeManagerYamlBytes() ([]byte, error) {
+	return _k8sContaineraddons117KubernetesmasteraddonsCloudNodeManagerYaml, nil
+}
+
+func k8sContaineraddons117KubernetesmasteraddonsCloudNodeManagerYaml() (*asset, error) {
+	bytes, err := k8sContaineraddons117KubernetesmasteraddonsCloudNodeManagerYamlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "k8s/containeraddons/1.17/kubernetesmasteraddons-cloud-node-manager.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
 var _k8sContaineraddons117KubernetesmasteraddonsClusterAutoscalerDeploymentYaml = []byte(`---
 apiVersion: v1
 kind: ServiceAccount
@@ -33871,17 +33975,24 @@ spec:
       imagePullPolicy: IfNotPresent
       command: ["cloud-controller-manager"]
       args: [<config>]
+      resources:
+        requests:
+          cpu: 100m
+          memory: 128Mi
+        limits:
+          cpu: 4
+          memory: 2Gi
       volumeMounts:
-        - name: etc-kubernetes
-          mountPath: /etc/kubernetes
-        - name: etc-ssl
-          mountPath: /etc/ssl
-          readOnly: true
-        - name: var-lib-kubelet
-          mountPath: /var/lib/kubelet
-        - name: msi
-          mountPath: /var/lib/waagent/ManagedIdentity-Settings
-          readOnly: true
+      - name: etc-kubernetes
+        mountPath: /etc/kubernetes
+      - name: etc-ssl
+        mountPath: /etc/ssl
+        readOnly: true
+      - name: var-lib-kubelet
+        mountPath: /var/lib/kubelet
+      - name: msi
+        mountPath: /var/lib/waagent/ManagedIdentity-Settings
+        readOnly: true
   volumes:
     - name: etc-kubernetes
       hostPath:
@@ -38994,6 +39105,7 @@ var _bindata = map[string]func() (*asset, error){
 	"k8s/containeraddons/1.17/kubernetesmasteraddons-azure-npm-daemonset.yaml":             k8sContaineraddons117KubernetesmasteraddonsAzureNpmDaemonsetYaml,
 	"k8s/containeraddons/1.17/kubernetesmasteraddons-blobfuse-flexvolume-installer.yaml":   k8sContaineraddons117KubernetesmasteraddonsBlobfuseFlexvolumeInstallerYaml,
 	"k8s/containeraddons/1.17/kubernetesmasteraddons-calico-daemonset.yaml":                k8sContaineraddons117KubernetesmasteraddonsCalicoDaemonsetYaml,
+	"k8s/containeraddons/1.17/kubernetesmasteraddons-cloud-node-manager.yaml":              k8sContaineraddons117KubernetesmasteraddonsCloudNodeManagerYaml,
 	"k8s/containeraddons/1.17/kubernetesmasteraddons-cluster-autoscaler-deployment.yaml":   k8sContaineraddons117KubernetesmasteraddonsClusterAutoscalerDeploymentYaml,
 	"k8s/containeraddons/1.17/kubernetesmasteraddons-heapster-deployment.yaml":             k8sContaineraddons117KubernetesmasteraddonsHeapsterDeploymentYaml,
 	"k8s/containeraddons/1.17/kubernetesmasteraddons-keyvault-flexvolume-installer.yaml":   k8sContaineraddons117KubernetesmasteraddonsKeyvaultFlexvolumeInstallerYaml,
@@ -39295,6 +39407,7 @@ var _bintree = &bintree{nil, map[string]*bintree{
 				"kubernetesmasteraddons-azure-npm-daemonset.yaml":             {k8sContaineraddons117KubernetesmasteraddonsAzureNpmDaemonsetYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-blobfuse-flexvolume-installer.yaml":   {k8sContaineraddons117KubernetesmasteraddonsBlobfuseFlexvolumeInstallerYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-calico-daemonset.yaml":                {k8sContaineraddons117KubernetesmasteraddonsCalicoDaemonsetYaml, map[string]*bintree{}},
+				"kubernetesmasteraddons-cloud-node-manager.yaml":              {k8sContaineraddons117KubernetesmasteraddonsCloudNodeManagerYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-cluster-autoscaler-deployment.yaml":   {k8sContaineraddons117KubernetesmasteraddonsClusterAutoscalerDeploymentYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-heapster-deployment.yaml":             {k8sContaineraddons117KubernetesmasteraddonsHeapsterDeploymentYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-keyvault-flexvolume-installer.yaml":   {k8sContaineraddons117KubernetesmasteraddonsKeyvaultFlexvolumeInstallerYaml, map[string]*bintree{}},

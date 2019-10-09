@@ -429,6 +429,17 @@ for KUBERNETES_VERSION in ${K8S_VERSIONS}; do
   echo "  - ${HYPERKUBE_URL}" >> ${VHD_LOGS_FILEPATH}
 done
 
+CLOUD_MANAGER_VERSIONS="
+0.3.0
+"
+for CLOUD_MANAGER_VERSION in ${CLOUD_MANAGER_VERSIONS}; do
+  for COMPONENT in azure-cloud-controller-manager azure-cloud-node-manager; do
+    CONTAINER_IMAGE="mcr.microsoft.com/k8s/core/${COMPONENT}:v${CLOUD_MANAGER_VERSION}"
+    pullContainerImage "docker" ${CONTAINER_IMAGE}
+    echo "  - ${CONTAINER_IMAGE}" >> ${VHD_LOGS_FILEPATH}
+  done
+done
+
 # TODO: remove once ACR is available on Azure Stack
 CONTAINER_IMAGE="registry:2.7.1"
 pullContainerImage "docker" ${CONTAINER_IMAGE}

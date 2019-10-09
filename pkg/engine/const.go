@@ -52,6 +52,8 @@ const (
 	AzureStorageClassesAddonName = "azure-storage-classes"
 	// AzureNetworkPolicyAddonName is the name of the azure npm daemon set addon
 	AzureNetworkPolicyAddonName = "azure-npm-daemonset"
+	// CloudNodeManagerAddonName is the name of the cloud node manager addon
+	CloudNodeManagerAddonName = "cloud-node-manager"
 	// AzureVnetTelemetryAddonName is the name of the Azure vnet telemetry addon
 	AzureVnetTelemetryAddonName = "azure-vnet-telemetry-daemonset"
 	// CalicoAddonName is the name of calico daemonset addon

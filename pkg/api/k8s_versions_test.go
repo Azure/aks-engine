@@ -19,7 +19,8 @@ func TestGetK8sVersionComponents(t *testing.T) {
 	k8sComponent := k8sComponentVersions["1.17"]
 	expected := map[string]string{
 		"hyperkube":                        "hyperkube-amd64:v1.17.0",
-		"ccm":                              "cloud-controller-manager-amd64:v1.17.0",
+		"ccm":                              "azure-cloud-controller-manager:v0.3.0",
+		CloudNodeManagerAddonName:          "azure-cloud-node-manager:v0.3.0",
 		"windowszip":                       "v1.17.0-1int.zip",
 		DashboardAddonName:                 k8sComponent["dashboard"],
 		"exechealthz":                      k8sComponent["exechealthz"],
@@ -63,7 +64,8 @@ func TestGetK8sVersionComponents(t *testing.T) {
 	k8sComponent = k8sComponentVersions["1.16"]
 	expected = map[string]string{
 		"hyperkube":                        "hyperkube-amd64:v1.16.0",
-		"ccm":                              "cloud-controller-manager-amd64:v1.16.0",
+		"ccm":                              "azure-cloud-controller-manager:v0.3.0",
+		CloudNodeManagerAddonName:          "azure-cloud-node-manager:v0.3.0",
 		"windowszip":                       "v1.16.0-1int.zip",
 		DashboardAddonName:                 k8sComponent["dashboard"],
 		"exechealthz":                      k8sComponent["exechealthz"],
