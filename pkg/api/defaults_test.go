@@ -2026,7 +2026,7 @@ func TestCloudProviderBackoff(t *testing.T) {
 				},
 			},
 			expected: KubernetesConfig{
-				CloudProviderBackoffMode:          "",
+				CloudProviderBackoffMode:          "v1",
 				CloudProviderBackoff:              to.BoolPtr(DefaultKubernetesCloudProviderBackoff),
 				CloudProviderBackoffRetries:       DefaultKubernetesCloudProviderBackoffRetries,
 				CloudProviderBackoffJitter:        DefaultKubernetesCloudProviderBackoffJitter,

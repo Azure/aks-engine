@@ -240,7 +240,7 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpgrade, isScale bool) {
 			o.KubernetesConfig.CloudProviderBackoffMode = CloudProviderBackoffModeV2
 		} else {
 			o.KubernetesConfig.CloudProviderBackoff = to.BoolPtr(false)
-			o.KubernetesConfig.CloudProviderBackoffMode = ""
+			o.KubernetesConfig.CloudProviderBackoffMode = "v1"
 		}
 		// Enforce sane cloudprovider backoff defaults.
 		o.KubernetesConfig.SetCloudProviderBackoffDefaults()
