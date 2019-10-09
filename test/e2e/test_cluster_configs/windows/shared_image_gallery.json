@@ -1,5 +1,6 @@
 {
 	"env": {
+		"allowedOrchestratorVersions": ["stable"],
 		"REGION_OPTIONS": "westus",
 		"WINDOWS_NODE_IMAGE_NAME": "AKS-Engine-WS2019",
 		"WINDOWS_NODE_IMAGE_RESOURCE_GROUP": "acse-test-infrastructure",

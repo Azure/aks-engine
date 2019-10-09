@@ -1,5 +1,7 @@
 {
-	"env": {},
+	"env": {
+		"allowedOrchestratorVersions": ["stable"]
+	},
 	"apiModel": {
 		"apiVersion": "vlabs",
 		"properties": {

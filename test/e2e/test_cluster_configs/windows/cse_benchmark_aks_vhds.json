@@ -1,6 +1,6 @@
 {
 	"env": {
-		"allowedOrchestratorVersions": ["1.16"],
+		"allowedOrchestratorVersions": ["stable"],
 		"SKIP_TEST": "true"
 	},
 	"options": {

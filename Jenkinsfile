@@ -6,6 +6,7 @@ defaultEnv = [
 	] + params
 
 def k8sVersions = ["1.12", "1.13", "1.14", "1.15", "1.16"]
+def stableVersion = "1.16"
 def tasks = [:]
 def testConfigs = []
 
@@ -79,7 +80,7 @@ def runJobWithEnvironment(jobCfg, jobName, version) {
 							try {
 								echo "EXECUTOR_NUMBER :: $EXECUTOR_NUMBER"
 								echo "NODE_NAME :: $NODE_NAME"
-								sh "./test/e2e/cluster.sh"
+								// sh "./test/e2e/cluster.sh"
 							} finally {
 								sh "./test/e2e/jenkins_reown.sh"
 							}
@@ -152,6 +153,7 @@ stage ("discover tests") {
 				}
 
 				def isAllowedVersion = jobCfg.options?.allowedOrchestratorVersions == null ? true : version in jobCfg.options.allowedOrchestratorVersions
+				isAllowedVersion |= (version == stableVersion) && stableVersion in jobCfg.options.allowedOrchestratorVersions
 				if(!isAllowedVersion) {
 					// the job config has limited this job to not run for this verion of the orchestrator
 					echo("${jobName} is limited to ${jobCfg.options?.allowedOrchestratorVersions}; not running ${version}")
