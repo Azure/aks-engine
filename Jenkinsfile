@@ -80,7 +80,7 @@ def runJobWithEnvironment(jobCfg, jobName, version) {
 							try {
 								echo "EXECUTOR_NUMBER :: $EXECUTOR_NUMBER"
 								echo "NODE_NAME :: $NODE_NAME"
-								// sh "./test/e2e/cluster.sh"
+								sh "./test/e2e/cluster.sh"
 							} finally {
 								sh "./test/e2e/jenkins_reown.sh"
 							}
@@ -156,10 +156,10 @@ stage ("discover tests") {
 				isAllowedVersion |= (version.equals(latestReleasedVersion)) && jobCfg.options?.allowedOrchestratorVersions != null && "latestReleasedVersion" in jobCfg.options.allowedOrchestratorVersions
 				if(!isAllowedVersion) {
 					// the job config has limited this job to not run for this verion of the orchestrator
-					echo("${jobName} is limited to ${jobCfg.options?.allowedOrchestratorVersions}; not running ${version}")
+					echo("${jobName} is limited to ${jobCfg.options?.allowedOrchestratorVersions}; not running for ${version}")
 					return // this is a continue and will not exit the entire iteration
 				} else {
-					echo("${jobName} is limted to '${jobCfg.options?.allowedOrchestratorVersions}'; running ${version}")
+					echo("${jobName} is limted to '${jobCfg.options?.allowedOrchestratorVersions}'; running for ${version}")
 				}
 
 				if(params.UPGRADE_CLUSTER) {
