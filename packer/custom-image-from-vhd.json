@@ -21,7 +21,7 @@
             "subscription_id": "{{user `subscription_id`}}",
             "location": "{{user `location`}}",
             "vm_size": "{{user `vm_size`}}",
-            "managed_image_resource_group_name": "custom-image-rg",
+            "managed_image_resource_group_name": "acse-test-custom-image",
             "managed_image_name": "custom-image-from-vhd",
             "os_type": "Linux",
             "image_publisher": "microsoft-aks",
