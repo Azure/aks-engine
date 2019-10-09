@@ -45,7 +45,7 @@ type Status struct {
 }
 
 // CreateJobFromFile will create a Job from file with a name
-func CreateJobFromFile(filename, name, namespace string) (*Job, error) {
+func CreateJobFromFile(filename, name, namespace string, sleep, timeout time.Duration) (*Job, error) {
 	cmd := exec.Command("k", "create", "-f", filename)
 	util.PrintCommand(cmd)
 	out, err := cmd.CombinedOutput()
@@ -53,7 +53,7 @@ func CreateJobFromFile(filename, name, namespace string) (*Job, error) {
 		log.Printf("Error trying to create Job %s:%s\n", name, string(out))
 		return nil, err
 	}
-	job, err := Get(name, namespace)
+	job, err := GetWithRetry(name, namespace, sleep, timeout)
 	if err != nil {
 		log.Printf("Error while trying to fetch Job %s:%s\n", name, err)
 		return nil, err
@@ -62,7 +62,7 @@ func CreateJobFromFile(filename, name, namespace string) (*Job, error) {
 }
 
 // CreateWindowsJobFromTemplate will create a Job from file with a name
-func CreateWindowsJobFromTemplate(filename, name, namespace string, windowsTestImages *engine.WindowsTestImages) (*Job, error) {
+func CreateWindowsJobFromTemplate(filename, name, namespace string, windowsTestImages *engine.WindowsTestImages, sleep, timeout time.Duration) (*Job, error) {
 	t, err := template.ParseFiles(filename)
 	if err != nil {
 		return nil, err
@@ -81,11 +81,11 @@ func CreateWindowsJobFromTemplate(filename, name, namespace string, windowsTestI
 	}
 	w.Flush()
 
-	return CreateJobFromFile(tempfile.Name(), name, namespace)
+	return CreateJobFromFile(tempfile.Name(), name, namespace, sleep, timeout)
 }
 
 // CreateWindowsJobFromTemplateDeleteIfExists will create a Job from file, deleting any pre-existing job with the same name
-func CreateWindowsJobFromTemplateDeleteIfExists(filename, name, namespace string, windowsTestImages *engine.WindowsTestImages) (*Job, error) {
+func CreateWindowsJobFromTemplateDeleteIfExists(filename, name, namespace string, windowsTestImages *engine.WindowsTestImages, sleep, timeout time.Duration) (*Job, error) {
 	j, err := Get(name, namespace)
 	if err == nil {
 		err := j.Delete(util.DefaultDeleteRetries)
@@ -97,11 +97,11 @@ func CreateWindowsJobFromTemplateDeleteIfExists(filename, name, namespace string
 			return nil, err
 		}
 	}
-	return CreateWindowsJobFromTemplate(filename, name, namespace, windowsTestImages)
+	return CreateWindowsJobFromTemplate(filename, name, namespace, windowsTestImages, sleep, timeout)
 }
 
 // CreateJobFromFileDeleteIfExists will create a Job from file, deleting any pre-existing job with the same name
-func CreateJobFromFileDeleteIfExists(filename, name, namespace string) (*Job, error) {
+func CreateJobFromFileDeleteIfExists(filename, name, namespace string, sleep, timeout time.Duration) (*Job, error) {
 	j, err := Get(name, namespace)
 	if err == nil {
 		err := j.Delete(util.DefaultDeleteRetries)
@@ -113,7 +113,7 @@ func CreateJobFromFileDeleteIfExists(filename, name, namespace string) (*Job, er
 			return nil, err
 		}
 	}
-	return CreateJobFromFile(filename, name, namespace)
+	return CreateJobFromFile(filename, name, namespace, sleep, timeout)
 }
 
 // GetAll will return all jobs in a given namespace
@@ -168,6 +168,21 @@ func GetAllByPrefix(prefix, namespace string) ([]Job, error) {
 	return jobs, nil
 }
 
+// GetResult is a return struct for GetAsync
+type GetResult struct {
+	Job *Job
+	Err error
+}
+
+// GetAsync wraps Get with a struct response for goroutine + channel usage
+func GetAsync(jobName, namespace string) GetResult {
+	job, err := Get(jobName, namespace)
+	return GetResult{
+		Job: job,
+		Err: err,
+	}
+}
+
 // Get will return a job with a given name and namespace
 func Get(jobName, namespace string) (*Job, error) {
 	cmd := exec.Command("k", "get", "jobs", jobName, "-n", namespace, "-o", "json")
@@ -183,6 +198,39 @@ func Get(jobName, namespace string) (*Job, error) {
 		return nil, err
 	}
 	return &j, nil
+}
+
+// GetWithRetry gets a job, allowing for retries
+func GetWithRetry(jobName, namespace string, sleep, timeout time.Duration) (*Job, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+	ch := make(chan GetResult)
+	var mostRecentGetWithRetryError error
+	var job *Job
+	go func() {
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case ch <- GetAsync(jobName, namespace):
+				time.Sleep(sleep)
+			}
+		}
+	}()
+	for {
+		select {
+		case result := <-ch:
+			mostRecentGetWithRetryError = result.Err
+			job = result.Job
+			if mostRecentGetWithRetryError == nil {
+				if job != nil {
+					return job, nil
+				}
+			}
+		case <-ctx.Done():
+			return nil, errors.Errorf("GetWithRetry timed out: %s\n", mostRecentGetWithRetryError)
+		}
+	}
 }
 
 // AreAllJobsSucceededResult is a return struct for AreAllJobsSucceededAsync
