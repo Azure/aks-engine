@@ -153,11 +153,13 @@ stage ("discover tests") {
 				}
 
 				def isAllowedVersion = jobCfg.options?.allowedOrchestratorVersions == null ? true : version in jobCfg.options.allowedOrchestratorVersions
-				isAllowedVersion |= (version == stableVersion) && stableVersion in jobCfg.options.allowedOrchestratorVersions
+				isAllowedVersion |= (version.equals(stableVersion)) && stableVersion in jobCfg.options.allowedOrchestratorVersions
 				if(!isAllowedVersion) {
 					// the job config has limited this job to not run for this verion of the orchestrator
 					echo("${jobName} is limited to ${jobCfg.options?.allowedOrchestratorVersions}; not running ${version}")
 					return // this is a continue and will not exit the entire iteration
+				} else {
+					echo("${jobName} has the following allowed versions '${jobCfg.options?.allowedOrchestratorVersions}")
 				}
 
 				if(params.UPGRADE_CLUSTER) {
