@@ -94,9 +94,11 @@ func main() {
 			log.Fatalf("Error while trying to set storage account connection string: %s\n", err)
 		}
 		provision := true
+		rgExists := true
 		rg := cfg.SoakClusterName
-		err = acct.SetResourceGroupWithRetry(rg, 3*time.Second, cfg.Timeout)
+		err = acct.SetResourceGroupWithRetry(rg, 3*time.Second, 20*time.Second)
 		if err != nil {
+			rgExists = false
 			log.Printf("Error while trying to set RG:%s\n", err)
 		} else {
 			// set expiration time to 7 days = 168h for now
@@ -109,8 +111,10 @@ func main() {
 		}
 		if provision || cfg.ForceDeploy {
 			log.Printf("Soak cluster %s does not exist or has expired\n", rg)
-			log.Printf("Deleting Resource Group:%s\n", rg)
-			acct.DeleteGroupWithRetry(rg, true, 3*time.Second, cfg.Timeout)
+			if rgExists {
+				log.Printf("Deleting Resource Group:%s\n", rg)
+				acct.DeleteGroupWithRetry(rg, true, 3*time.Second, cfg.Timeout)
+			}
 			log.Printf("Deleting Storage files:%s\n", rg)
 			sa.DeleteFiles(cfg.SoakClusterName)
 			cfg.Name = ""
