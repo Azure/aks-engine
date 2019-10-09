@@ -1,0 +1,42 @@
+{
+	"env": {
+		"REGION_OPTIONS": "westeurope"
+	},
+	"apiModel": {
+        "apiVersion": "vlabs",
+        "properties": {
+          "orchestratorProfile": {
+            "orchestratorType": "Kubernetes"
+          },
+          "masterProfile": {
+            "count": 1,
+            "vmSize": "Standard_D2s_v3",
+            "dnsPrefix": ""
+          },
+          "agentPoolProfiles": [
+            {
+              "name": "agentpool",
+              "count": 1,
+              "availabilityProfile": "VirtualMachineScaleSets",
+              "distro": "aks-ubuntu-18.04",
+              "vmSize": "Standard_DC2s",
+              "storageProfile": "ManagedDisks"
+            }
+          ],
+          "linuxProfile": {
+            "adminUsername": "azureuser",
+            "ssh": {
+              "publicKeys": [
+                {
+                  "keyData": ""
+                }
+              ]
+            }
+          },
+          "servicePrincipalProfile": {
+            "clientId": "",
+            "secret": ""
+          }
+        }
+      }
+}

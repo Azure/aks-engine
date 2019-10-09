@@ -6523,3 +6523,27 @@ func TestGetSecondaryNonMasqueradeCIDR(t *testing.T) {
 		})
 	}
 }
+
+func TestPropertiesHasDCSeriesSKU(t *testing.T) {
+	cases := common.GetDCSeriesVMCasesForTesting()
+
+	for _, c := range cases {
+		p := Properties{
+			AgentPoolProfiles: []*AgentPoolProfile{
+				{
+					Name:   "agentpool",
+					VMSize: c.VMSKU,
+					Count:  1,
+				},
+			},
+			OrchestratorProfile: &OrchestratorProfile{
+				OrchestratorType:    Kubernetes,
+				OrchestratorVersion: "1.16.0",
+			},
+		}
+		ret := p.HasDCSeriesSKU()
+		if ret != c.Expected {
+			t.Fatalf("expected HasDCSeriesSKU(%s) to return %t, but instead got %t", c.VMSKU, c.Expected, ret)
+		}
+	}
+}

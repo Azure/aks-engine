@@ -1,0 +1,22 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: sgx-test
+spec:
+  template:
+    spec:
+      containers:
+      - name: sgxtest
+        image: oeciteam/sgx-test
+        command: ["/helloworld/host/helloworldhost", "/helloworld/enclave/helloworldenc.signed"]
+        volumeMounts:
+        - mountPath: /dev/sgx
+          name: dev-sgx
+        securityContext:
+          privileged: true
+      volumes:
+      - name: dev-sgx
+        hostPath:
+          path: /dev/sgx
+      restartPolicy: Never
+  backoffLimit: 0

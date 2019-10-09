@@ -828,7 +828,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 
 		It("should have functional container networking DNS", func() {
 			By("Ensuring that we have functional DNS resolution from a linux container")
-			j, err := job.CreateJobFromFileDeleteIfExists(filepath.Join(WorkloadDir, "validate-dns-linux.yaml"), "validate-dns-linux", "default")
+			j, err := job.CreateJobFromFileDeleteIfExists(filepath.Join(WorkloadDir, "validate-dns-linux.yaml"), "validate-dns-linux", "default", 3*time.Second, cfg.Timeout)
 			Expect(err).NotTo(HaveOccurred())
 			ready, err := j.WaitOnSucceeded(sleepBetweenRetriesWhenWaitingForPodReady, validateDNSTimeout)
 			delErr := j.Delete(util.DefaultDeleteRetries)
@@ -843,7 +843,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				By("Ensuring that we have functional DNS resolution from a windows container")
 				windowsImages, imgErr := eng.GetWindowsTestImages()
 				Expect(imgErr).NotTo(HaveOccurred())
-				j, err = job.CreateWindowsJobFromTemplateDeleteIfExists(filepath.Join(WorkloadDir, "validate-dns-windows.yaml"), "validate-dns-windows", "default", windowsImages)
+				j, err = job.CreateWindowsJobFromTemplateDeleteIfExists(filepath.Join(WorkloadDir, "validate-dns-windows.yaml"), "validate-dns-windows", "default", windowsImages, 3*time.Second, cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())
 				ready, err = j.WaitOnSucceeded(sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
 				delErr = j.Delete(util.DefaultDeleteRetries)
@@ -1180,7 +1180,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 					false,
 					eng.HasWindowsAgents())
 				if common.IsKubernetesVersionGe(version, "1.10.0") {
-					j, err := job.CreateJobFromFile(filepath.Join(WorkloadDir, "cuda-vector-add.yaml"), "cuda-vector-add", "default")
+					j, err := job.CreateJobFromFileDeleteIfExists(filepath.Join(WorkloadDir, "cuda-vector-add.yaml"), "cuda-vector-add", "default", 3*time.Second, cfg.Timeout)
 					Expect(err).NotTo(HaveOccurred())
 					ready, err := j.WaitOnSucceeded(30*time.Second, cfg.Timeout)
 					delErr := j.Delete(util.DefaultDeleteRetries)
@@ -1191,7 +1191,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 					Expect(err).NotTo(HaveOccurred())
 					Expect(ready).To(Equal(true))
 				} else {
-					j, err := job.CreateJobFromFile(filepath.Join(WorkloadDir, "nvidia-smi.yaml"), "nvidia-smi", "default")
+					j, err := job.CreateJobFromFileDeleteIfExists(filepath.Join(WorkloadDir, "nvidia-smi.yaml"), "nvidia-smi", "default", 3*time.Second, cfg.Timeout)
 					Expect(err).NotTo(HaveOccurred())
 					ready, err := j.WaitOnSucceeded(30*time.Second, cfg.Timeout)
 					delErr := j.Delete(util.DefaultDeleteRetries)
@@ -1204,6 +1204,25 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				}
 			} else {
 				Skip("This is not a GPU-enabled cluster")
+			}
+		})
+	})
+
+	Describe("with a DC-series SKU agent pool", func() {
+		It("should be able to run an SGX job", func() {
+			if eng.ExpandedDefinition.Properties.HasDCSeriesSKU() {
+				j, err := job.CreateJobFromFileDeleteIfExists(filepath.Join(WorkloadDir, "sgx-test.yaml"), "sgx-test", "default", 3*time.Second, cfg.Timeout)
+				Expect(err).NotTo(HaveOccurred())
+				ready, err := j.WaitOnSucceeded(30*time.Second, cfg.Timeout)
+				delErr := j.Delete(util.DefaultDeleteRetries)
+				if delErr != nil {
+					fmt.Printf("could not delete job %s\n", j.Metadata.Name)
+					fmt.Println(delErr)
+				}
+				Expect(err).NotTo(HaveOccurred())
+				Expect(ready).To(Equal(true))
+			} else {
+				Skip("This cluster does not have a DC-series SKU agent pool")
 			}
 		})
 	})
