@@ -33,7 +33,11 @@ func assignKubernetesParameters(properties *api.Properties, parametersMap params
 
 		if kubernetesConfig != nil {
 			if to.Bool(kubernetesConfig.UseCloudControllerManager) {
-				kubernetesCcmSpec := kubernetesImageBase + k8sComponents["ccm"]
+				controllerManagerBase := kubernetesImageBase
+				if common.IsKubernetesVersionGe(k8sVersion, "1.16.0") {
+					controllerManagerBase = mcrKubernetesImageBase
+				}
+				kubernetesCcmSpec := controllerManagerBase + k8sComponents["ccm"]
 				if kubernetesConfig.CustomCcmImage != "" {
 					kubernetesCcmSpec = kubernetesConfig.CustomCcmImage
 				}

@@ -331,6 +331,19 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 		defaultAzureNetworkPolicyAddonsConfig.Containers = append(defaultAzureNetworkPolicyAddonsConfig.Containers, KubernetesContainerSpec{Name: AzureVnetTelemetryAddonName, Image: "mcr.microsoft.com/containernetworking/azure-vnet-telemetry:v1.0.28"})
 	}
 
+	defaultCloudNodeManagerAddonsConfig := KubernetesAddon{
+		Name: CloudNodeManagerAddonName,
+		Enabled: to.BoolPtr(common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.16.0") &&
+			o.KubernetesConfig.UseCloudControllerManager != nil &&
+			*o.KubernetesConfig.UseCloudControllerManager),
+		Containers: []KubernetesContainerSpec{
+			{
+				Name:  CloudNodeManagerAddonName,
+				Image: specConfig.MCRKubernetesImageBase + k8sComponents[CloudNodeManagerAddonName],
+			},
+		},
+	}
+
 	defaultDNSAutoScalerAddonsConfig := KubernetesAddon{
 		Name: DNSAutoscalerAddonName,
 		// TODO enable this when it has been smoke tested
@@ -510,6 +523,7 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 		defaultContainerMonitoringAddonsConfig,
 		defaultAzureCNINetworkMonitorAddonsConfig,
 		defaultAzureNetworkPolicyAddonsConfig,
+		defaultCloudNodeManagerAddonsConfig,
 		defaultIPMasqAgentAddonsConfig,
 		defaultDNSAutoScalerAddonsConfig,
 		defaultsCalicoDaemonSetAddonsConfig,
