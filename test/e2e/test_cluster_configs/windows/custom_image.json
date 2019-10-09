@@ -1,6 +1,6 @@
 {
-	"env": {
-		"allowedOrchestratorVersions": ["stable"]
+	"options": {
+		"allowedOrchestratorVersions": ["latestReleasedVersion"]
 	},
 	"apiModel": {
 		"apiVersion": "vlabs",

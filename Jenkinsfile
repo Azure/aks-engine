@@ -6,7 +6,7 @@ defaultEnv = [
 	] + params
 
 def k8sVersions = ["1.12", "1.13", "1.14", "1.15", "1.16"]
-def stableVersion = "1.16"
+def latestReleasedVersion = "1.16"
 def tasks = [:]
 def testConfigs = []
 
@@ -153,13 +153,13 @@ stage ("discover tests") {
 				}
 
 				def isAllowedVersion = jobCfg.options?.allowedOrchestratorVersions == null ? true : version in jobCfg.options.allowedOrchestratorVersions
-				isAllowedVersion |= (version.equals(stableVersion)) && stableVersion in jobCfg.options.allowedOrchestratorVersions
+				isAllowedVersion |= (version.equals(latestReleasedVersion)) && "latestReleasedVersion" in jobCfg.options.allowedOrchestratorVersions
 				if(!isAllowedVersion) {
 					// the job config has limited this job to not run for this verion of the orchestrator
 					echo("${jobName} is limited to ${jobCfg.options?.allowedOrchestratorVersions}; not running ${version}")
 					return // this is a continue and will not exit the entire iteration
 				} else {
-					echo("${jobName} has the following allowed versions '${jobCfg.options?.allowedOrchestratorVersions}")
+					echo("${jobName} is limted to '${jobCfg.options?.allowedOrchestratorVersions}'; running ${version}")
 				}
 
 				if(params.UPGRADE_CLUSTER) {

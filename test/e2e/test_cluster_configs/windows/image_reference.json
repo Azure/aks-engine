@@ -1,9 +1,11 @@
 {
 	"env": {
-		"allowedOrchestratorVersions": ["stable"],
 		"REGION_OPTIONS": "westus",
 		"WINDOWS_NODE_IMAGE_NAME": "WS2019-1908",
 		"WINDOWS_NODE_IMAGE_RESOURCE_GROUP": "acse-test-infrastructure"
+	},
+	"options": {
+		"allowedOrchestratorVersions": ["latestReleasedVersion"]
 	},
 	"apiModel": {
 		"apiVersion": "vlabs",
