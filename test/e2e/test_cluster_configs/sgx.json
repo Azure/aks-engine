@@ -1,6 +1,7 @@
 {
 	"env": {
-		"REGION_OPTIONS": "westeurope"
+    "REGION_OPTIONS": "westeurope",
+    "GINKGO_SKIP": "should have healthy time synchronization"
 	},
 	"apiModel": {
         "apiVersion": "vlabs",
