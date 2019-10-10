@@ -12,6 +12,7 @@
     * [agentPoolProfiles](#agentPoolProfiles)
 * [Azure Stack Instances Registered with Azure's China cloud](#azure-stack-instances-registered-with-azures-china-cloud)
 * [Disconnected Azure Stack Instances](#disconnected-azure-stack-instances)
+* [Azure Monitor for containers](#azure-Monitor-for-containers)
 * [Unsupported Addons](#unsupported-addons)
 * [Known Issues and Limitations](#known-issues-and-limitations)
 * [Frequently Asked Questions](#frequently-asked-questions)
@@ -135,6 +136,118 @@ The `AKS Base Image` marketplace item has to be available in your Azure Stack's 
 
 Each AKS Engine release is validated and tied to a specific version of the AKS Base Image. Therefore, you need to take note of the base image version required by the AKS Engine release that you plan to use, and then download exactly that base image version. New builds of the `AKS Base Image` are frequently released to ensure that your disconnected cluster can be upgraded to the latest supported version of each component.
 
+# Azure Monitor for containers
+
+Container Monitoring addon gives you performance monitoring ability by collecting memory and processor metrics from controllers, nodes, and containers that are available in Kubernetes through the Metrics API.
+After you enable Container Monitoring addon, these metrics are automatically collected for you through a containerized version of the Log Analytics agent for Linux and stored in your [Log Analytics] workspace in Azure Cloud.
+The included pre-defined views display the residing container workloads and what affects the performance health of the Kubernetes cluster so that you can:
+
+- Identify containers that are running on the node and their average processor and memory utilization. This knowledge can help you identify resource bottlenecks.
+- Identify where the container resides in a controller or a pod. This knowledge can help you view the controller's or pod's overall performance.
+- Review the resource utilization of workloads running on the host that are unrelated to the standard processes that support the pod.
+- Understand the behavior of the cluster under average and heaviest loads. This knowledge can help you identify capacity needs and determine the maximum load that the cluster can sustain.
+- Logs (stdout/stderr) of the Containers to troubleshoot the issues in containers
+- Scraping metrics from Prometheus. Refer [configuring prometheus scraping settings](https://docs.microsoft.com/en-us/azure/azure-monitor/insights/container-insights-agent-config#overview-of-configurable-prometheus-scraping-settings)
+
+Refer to [Azure Monitor for containers](https://docs.microsoft.com/en-us/azure/azure-monitor/insights/container-insights-overview) for more details.
+
+### Onboarding
+
+Container Monitoring can be onboarded either through the Helm chart or container monitoring addon.
+
+#### 1. Using Azure Monitor for containers Helm chart
+
+Refer to [Azure Monitor – Containers Helm chart](https://github.com/Helm/charts/tree/master/incubator/azuremonitor-containers) for onboarding instructions
+
+#### 2. Using Container Monitoring addon in the API Model
+> Note: option 2) are supported only through `aks-engine deploy` command.
+
+1. Add below container-monitoring addon section to your API Model definition, updated the workspaceGuid and workspaceKey of the Azure Log Analytics workspace
+   and use updated API Model definition for cluster deployment.
+
+"kubernetesConfig": {
+    "addons": [
+					  {
+						"name": "container-monitoring",
+						"enabled": true,
+						"config": {
+						  "workspaceGuid": "<Azure Log Analytics Workspace Guid in Base-64 encoded>",
+						  "workspaceKey": "<Azure Log Analytics Workspace Key in Base-64 encoded>"
+						}
+					  }
+                ]
+  }
+
+ 2.  [Add the 'AzureMonitor-Containers' Solution to your Log Analytics workspace.](http://aka.ms/coinhelmdoc)
+
+## UX
+
+After successful onboarding, navigating to [Azure Monitor for containers](https://aka.ms/azmon-containers) to view and monitor, and analyze health of your onboarded AKS Engine cluster, pods and containers etc.
+
+### Azure Monitor for containers view to view health of all clusters in selected global azure subscriptions
+![Image of Azure Monitor for containers](../static/img/azstack_azure_mon_containers_overview.png)
+
+### Cluster chart view of the cluster
+![Image of Azure Monitor for containers](../static/img/azstack_azure_mon_containers_cluster_charts.png)
+
+### Cluster health view of the cluster
+![Image of Azure Monitor for containers](../static/img/azstack_azure_mon_containers_cluster_health.png)
+
+### Nodes view of the cluster
+![Image of Azure Monitor for containers](../static/img/azstack_azure_mon_containers_cluster_nodes.png)
+
+### Controllers view of the cluster
+![Image of Azure Monitor for containers](../static/img/azstack_azure_mon_containers_cluster_controllers.png)
+
+### Containers view of the cluster
+![Image of Azure Monitor for containers](../static/img/azstack_azure_mon_containers_cluster_containers.png)
+
+## Supported Matrix
+
+ Refer to [azuremonitor-containers-aks-engine](https://github.com/Microsoft/OMS-docker/blob/aks-engine/README.md) for the supported matrix, troubleshooting and supportability etc.
+
+## Disable Monitoring
+
+After you enable monitoring of your AKS Engine cluster, you can stop monitoring the cluster if you decide you no longer want to monitor it.
+
+- If you have onboarded the monitoring using the HELM chart, then you can disable monitoring by uninstalling the chart. Refer Uninstalling the Chart section in [azuremonitor-containers](https://github.com/helm/charts/tree/master/incubator/azuremonitor-containers)
+
+- If you have onboarded using the Container Monitoring addon, then you can remove monitoring addon with below steps
+
+      1. ssh to AKS Engine cluster master node and copy omsagent-daemonset.yaml file under /etc/kubernetes/addons to the dev machine
+      2. delete all the resources related to container monitoring addon with `kubectl delete -f omsagent-daemonset.yaml` command against your AKS Engine cluster
+      3. delete the container monitoring addon manifest file omsagent-daemonset.yaml  under /etc/kubernetes/addons
+
+## Upgrade Container Monitoring Addon
+
+For upgrading the container monitoring addon, you can disable the monitoring addon as described in Disable Monitoring section and use the HELM chart to install and upgrade
+
+
+## Contact
+
+If you have any questions or feedback regarding the container monitoring addon, please reach us out through [this](mailto:askcoin@microsoft.com) email.
+
+## References
+
+- [Azure Monitor for containers](https://docs.microsoft.com/en-us/azure/azure-monitor/insights/container-insights-overview) for  more details on how to use the product.
+- [Log Analytics](https://docs.microsoft.com/en-us/azure/azure-monitor/log-query/log-query-overview)
+- [Azure Resource Manager](https://docs.microsoft.com/en-us/azure/azure-monitor/platform/template-workspace-configuration)
+- [Azure portal](https://docs.microsoft.com/en-us/azure/azure-monitor/learn/quick-create-workspace)
+- [Manage workspaces](https://docs.microsoft.com/en-us/azure/azure-monitor/platform/manage-access)
+- [Link to Azure Monitor for containers](https://aka.ms/azmon-containers)
+
+
+## Required Roles and Permissions
+
+- User requires the reader role permission on the Azure Log Analytics workspace and AKS Engine cluster resource group to view and monitor, and analyze health of your onboarded AKS Engine cluster, pods and containers etc.
+- For onboarding monitoring addon
+     -  If the existing Azure Log Analytics workspace is used, then the Log Analytics Contributor role on existing Azure Log Analytics is required
+     -  For the new Azure Log Analytics workspace, user requires the contributor role on the Subscription or the Resource group where the AKS Engine cluster resources will be deployed
+
+## Contact
+
+If you have any questions or feedback regarding the container monitoring addon, please reach us out through [this](mailto:askcoin@microsoft.com) email.
+
 ## Unsupported Addons
 
 AKS Engine includes a number of optional [addons](../topics/clusterdefinitions.md#addons) that can be deployed as part of the cluster provisioning process.
@@ -145,7 +258,6 @@ The list below includes the addons currently unsupported on Azure Stack:
 * ACI Connector
 * Blobfuse Flex Volume
 * Cluster Autoscaler
-* Container Monitoring
 * KeyVault Flex Volume
 * NVIDIA Device Plugin
 * Rescheduler
