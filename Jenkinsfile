@@ -80,7 +80,7 @@ def runJobWithEnvironment(jobCfg, jobName, version) {
 							try {
 								echo "EXECUTOR_NUMBER :: $EXECUTOR_NUMBER"
 								echo "NODE_NAME :: $NODE_NAME"
-								sh "./test/e2e/cluster.sh"
+								// sh "./test/e2e/cluster.sh"
 							} finally {
 								sh "./test/e2e/jenkins_reown.sh"
 							}
@@ -152,8 +152,14 @@ stage ("discover tests") {
 					return // this is a continue and will not exit the entire iteration
 				}
 
-				def isAllowedVersion = jobCfg.options?.allowedOrchestratorVersions == null ? true : version in jobCfg.options.allowedOrchestratorVersions
-				isAllowedVersion |= (version.equals(latestReleasedVersion)) && jobCfg.options?.allowedOrchestratorVersions != null && "latestReleasedVersion" in jobCfg.options.allowedOrchestratorVersions
+				// run the job if:
+				// allowedOrchestratorVersions is not set OR
+				// allowedOrchestratorVersions contains version being processed OR
+				// (version being process equals latestReleasedVersion AND allowedOrchestratorVersions contains "latestReleasedVersion")
+				def allowedVersions = jobCfg.options?.allowedOrchestratorVersions
+				def isVersionAllowed = allowedVersions == null ? true  : version allowedVersions
+				isAllowedVersion |= version == latestReleasedVersion && allowedVersions && "latestReleasedVersion" in allowedVersions
+
 				if(!isAllowedVersion) {
 					// the job config has limited this job to not run for this verion of the orchestrator
 					echo("${jobName} is limited to ${jobCfg.options?.allowedOrchestratorVersions}; not running for ${version}")
