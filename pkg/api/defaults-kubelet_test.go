@@ -49,7 +49,7 @@ func TestKubeletConfigDefaults(t *testing.T) {
 		"--node-status-update-frequency":      K8sComponentsByVersionMap[cs.Properties.OrchestratorProfile.OrchestratorVersion]["nodestatusfreq"],
 		"--non-masquerade-cidr":               DefaultKubernetesSubnet,
 		"--pod-manifest-path":                 "/etc/kubernetes/manifests",
-		"--pod-infra-container-image":         cs.Properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBase + K8sComponentsByVersionMap[cs.Properties.OrchestratorProfile.OrchestratorVersion]["pause"],
+		"--pod-infra-container-image":         cs.Properties.OrchestratorProfile.KubernetesConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap[cs.Properties.OrchestratorProfile.OrchestratorVersion]["pause"],
 		"--pod-max-pids":                      strconv.Itoa(DefaultKubeletPodMaxPIDs),
 		"--protect-kernel-defaults":           "true",
 		"--rotate-certificates":               "true",

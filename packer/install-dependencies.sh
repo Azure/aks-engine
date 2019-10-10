@@ -188,8 +188,16 @@ for KUBE_DNS_MASQ_VERSION in ${KUBE_DNS_MASQ_VERSIONS}; do
     echo "  - ${CONTAINER_IMAGE}" >> ${VHD_LOGS_FILEPATH}
 done
 
-PAUSE_VERSIONS="3.1"
-for PAUSE_VERSION in ${PAUSE_VERSIONS}; do
+MCR_PAUSE_VERSIONS="1.2.0"
+for PAUSE_VERSION in ${MCR_PAUSE_VERSIONS}; do
+    # Pull the arch independent MCR pause image which is built for Linux and Windows
+    CONTAINER_IMAGE="mcr.microsoft.com/k8s/core/pause:${PAUSE_VERSION}"
+    pullContainerImage "docker" "${CONTAINER_IMAGE}"
+    echo "  - ${CONTAINER_IMAGE}" >> ${VHD_LOGS_FILEPATH}
+done
+
+GCR_PAUSE_VERSIONS="3.1"
+for PAUSE_VERSION in ${GCR_PAUSE_VERSIONS}; do
     # Image 'mcr.microsoft.com/k8s/azurestack/core/pause-amd64' is the same as 'k8s.gcr.io/pause-amd64'
     # At the time, re-tagging and pushing to mcr hub seemed simpler than changing how `defaults-kubelet.go` sets `--pod-infra-container-image`
     for IMAGE_BASE in k8s.gcr.io mcr.microsoft.com/k8s/azurestack/core; do
