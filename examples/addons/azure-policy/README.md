@@ -69,6 +69,35 @@ kubectl get pods -n kube-system
 
 Plese follow the README here for further information: https://github.com/open-policy-agent/gatekeeper
 
+## Configuration
+
+| Name                      | Required | Description                 | Default Value |
+| ------------------------- | -------- | --------------------------- | ------------- |
+| auditInterval             | no       | audit interval              | 30            |
+| constraintViolationsLimit | no       | constraint violations limit | 20            |
+
+### Azure Policy
+
+| Name           | Required | Description                       | Default Value                              |
+| -------------- | -------- | --------------------------------- | ------------------------------------------ |
+| name           | no       | container name                    | "azure-policy"                             |
+| image          | no       | image                             | "emmcmill/azure-policy-kubernetes:bugbash" |
+| cpuRequests    | no       | cpu requests for the container    | "30m"                                      |
+| memoryRequests | no       | memory requests for the container | "50Mi"                                     |
+| cpuLimits      | no       | cpu limits for the container      | "100m"                                     |
+| memoryLimits   | no       | memory limits for the container   | "200Mi"                                    |
+
+### Gatekeeper
+
+| Name           | Required | Description                       | Default Value                                        |
+| -------------- | -------- | --------------------------------- | ---------------------------------------------------- |
+| name           | no       | container name                    | "gatekeeper"                                         |
+| image          | no       | image                             | "quay.io/open-policy-agent/gatekeeper:v3.0.4-beta.1" |
+| cpuRequests    | no       | cpu requests for the container    | "100m"                                               |
+| memoryRequests | no       | memory requests for the container | "256Mi"                                              |
+| cpuLimits      | no       | cpu limits for the container      | "100m"                                               |
+| memoryLimits   | no       | memory limits for the container   | "512Mi"                                              |
+
 ## Supported Orchestrators
 
 Kubernetes
