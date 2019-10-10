@@ -27,7 +27,7 @@
             "image_publisher": "microsoft-aks",
             "image_offer": "aks",
             "image_sku": "aks-ubuntu-1604-201910",
-            "image_version": "2019.10.03",
+            "image_version": "2019.10.09",
             "azure_tags": {
                 "os": "Linux",
                 "now": "{{user `create_time`}}",
