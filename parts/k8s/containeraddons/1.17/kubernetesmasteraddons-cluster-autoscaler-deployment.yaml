@@ -184,7 +184,9 @@ spec:
         - --logtostderr=true
         - --cloud-provider=azure
         - --skip-nodes-with-local-storage=false
-        - --nodes={{ContainerConfig "min-nodes"}}:{{ContainerConfig "max-nodes"}}:<vmssName>
+        {{range $pool := .NodePoolsConfig}}
+        - --nodes={{$pool.min-nodes}}:{{$pool.min-nodes}}:{{$pool.name}}
+        {{end}}
         - --scan-interval={{ContainerConfig "scan-interval"}}
         env:
         - name: ARM_CLOUD

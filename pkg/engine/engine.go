@@ -672,6 +672,12 @@ func getAddonFuncMap(addon api.KubernetesAddon) template.FuncMap {
 		"ContainerConfig": func(name string) string {
 			return addon.Config[name]
 		},
+		"NodePoolsConfig": func() []api.ClusterAutoscalerNodePoolsSpec {
+			if addon.Name != "cluster-autoscaler" {
+				return []api.ClusterAutoscalerNodePoolsSpec{}
+			}
+			return addon.Pools
+		},
 	}
 }
 
