@@ -121,17 +121,19 @@ var _ = BeforeSuite(func() {
 })
 
 var _ = AfterSuite(func() {
-	cmd := exec.Command("k", "get", "deployments,pods,svc,daemonsets,configmaps,endpoints,jobs,clusterroles,clusterrolebindings,roles,rolebindings,storageclasses", "--all-namespaces", "-o", "wide")
-	out, err := cmd.CombinedOutput()
-	log.Printf("%s\n", out)
-	if err != nil {
-		log.Printf("Error: Unable to print all cluster resources\n")
+	if cfs.DebugAfterSuite {
+		cmd := exec.Command("k", "get", "deployments,pods,svc,daemonsets,configmaps,endpoints,jobs,clusterroles,clusterrolebindings,roles,rolebindings,storageclasses", "--all-namespaces", "-o", "wide")
+		out, err := cmd.CombinedOutput()
+		log.Printf("%s\n", out)
+		if err != nil {
+			log.Printf("Error: Unable to print all cluster resources\n")
+		}
+		pod.PrintPodsLogs("kube-addon-manager", "kube-system")
+		pod.PrintPodsLogs("kube-proxy", "kube-system")
+		pod.PrintPodsLogs("kube-scheduler", "kube-system")
+		pod.PrintPodsLogs("kube-apiserver", "kube-system")
+		pod.PrintPodsLogs("kube-controller-manager", "kube-system")
 	}
-	pod.PrintPodsLogs("kube-addon-manager", "kube-system")
-	pod.PrintPodsLogs("kube-proxy", "kube-system")
-	pod.PrintPodsLogs("kube-scheduler", "kube-system")
-	pod.PrintPodsLogs("kube-apiserver", "kube-system")
-	pod.PrintPodsLogs("kube-controller-manager", "kube-system")
 })
 
 var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", func() {
