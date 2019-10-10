@@ -454,45 +454,6 @@ if (!`$hnsNetwork)
     write-host "It took `$(`$StopWatch.Elapsed.Seconds) seconds to create the `$global:ExternalNetwork network."
 }
 
-# Find if network created by CNI exists, if yes, remove it
-# This is required to keep the network non-persistent behavior
-# Going forward, this would be done by HNS automatically during restart of the node
-
-`$hnsNetwork = Get-HnsNetwork | ? Name -EQ $KubeNetwork
-if (`$hnsNetwork)
-{
-    # Cleanup all containers
-    docker ps -q | foreach {docker rm `$_ -f}
-
-    Write-Host "Cleaning up old HNS network found"
-    Remove-HnsNetwork `$hnsNetwork
-    # Kill all cni instances & stale data left by cni
-    # Cleanup all files related to cni
-    taskkill /IM azure-vnet.exe /f
-    taskkill /IM azure-vnet-ipam.exe /f
-    `$cnijson = [io.path]::Combine("$KubeDir", "azure-vnet-ipam.json")
-    if ((Test-Path `$cnijson))
-    {
-        Remove-Item `$cnijson
-    }
-    `$cnilock = [io.path]::Combine("$KubeDir", "azure-vnet-ipam.json.lock")
-    if ((Test-Path `$cnilock))
-    {
-        Remove-Item `$cnilock
-    }
-
-    `$cnijson = [io.path]::Combine("$KubeDir", "azure-vnet.json")
-    if ((Test-Path `$cnijson))
-    {
-        Remove-Item `$cnijson
-    }
-    `$cnilock = [io.path]::Combine("$KubeDir", "azure-vnet.json.lock")
-    if ((Test-Path `$cnilock))
-    {
-        Remove-Item `$cnilock
-    }
-}
-
 # Restart Kubeproxy, which would wait, until the network is created
 # This was fixed in 1.15, workaround still needed for 1.14 https://github.com/kubernetes/kubernetes/pull/78612
 Restart-Service Kubeproxy
@@ -652,14 +613,6 @@ while (!`$hnsNetwork)
     Start-Sleep 10
     `$hnsNetwork = Get-HnsNetwork | ? Name -EQ $KubeNetwork
 }
-
-#
-# cleanup the persisted policy lists
-#
-ipmo `$global:HNSModule
-# Workaround for https://github.com/kubernetes/kubernetes/pull/68923 in < 1.14,
-# and https://github.com/kubernetes/kubernetes/pull/78612 for <= 1.15
-Get-HnsPolicyList | Remove-HnsPolicyList
 
 $KubeDir\kube-proxy.exe --v=3 --proxy-mode=kernelspace --hostname-override=$env:computername --kubeconfig=$KubeDir\config
 "@
