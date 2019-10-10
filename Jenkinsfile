@@ -158,9 +158,9 @@ stage ("discover tests") {
 				// (version being process equals latestReleasedVersion AND allowedOrchestratorVersions contains "latestReleasedVersion")
 				def allowedVersions = jobCfg.options?.allowedOrchestratorVersions
 				def isVersionAllowed = allowedVersions == null ? true  : version allowedVersions
-				isAllowedVersion |= version == latestReleasedVersion && allowedVersions && "latestReleasedVersion" in allowedVersions
+				isVersionAllowed |= version == latestReleasedVersion && allowedVersions && "latestReleasedVersion" in allowedVersions
 
-				if(!isAllowedVersion) {
+				if(!isVersionAllowed) {
 					// the job config has limited this job to not run for this verion of the orchestrator
 					echo("${jobName} is limited to ${jobCfg.options?.allowedOrchestratorVersions}; not running for ${version}")
 					return // this is a continue and will not exit the entire iteration
