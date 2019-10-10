@@ -157,7 +157,7 @@ stage ("discover tests") {
 				// allowedOrchestratorVersions contains version being processed OR
 				// (version being process equals latestReleasedVersion AND allowedOrchestratorVersions contains "latestReleasedVersion")
 				def allowedVersions = jobCfg.options?.allowedOrchestratorVersions
-				def isVersionAllowed = allowedVersions == null ? true  : version allowedVersions
+				def isVersionAllowed = allowedVersions == null ? true  : version in allowedVersions
 				isVersionAllowed |= version == latestReleasedVersion && allowedVersions && "latestReleasedVersion" in allowedVersions
 
 				if(!isVersionAllowed) {
