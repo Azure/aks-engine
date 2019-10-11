@@ -7,7 +7,11 @@
         "addons": [
           {
             "name": "azure-policy",
-            "enabled": true
+            "enabled": true,
+            "config": {
+              "auditInterval": "30",
+              "constraintViolationsLimit": "20"
+            }
           }
         ]
       }

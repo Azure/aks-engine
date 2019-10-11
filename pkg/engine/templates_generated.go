@@ -22069,7 +22069,8 @@ spec:
     spec:
       containers:
       - args:
-        - --auditInterval=30
+        - --auditInterval={{ContainerConfig "auditInterval"}}
+        - --constraintViolationsLimit={{ContainerConfig "constraintViolationsLimit"}}
         command:
         - /root/manager
         env:

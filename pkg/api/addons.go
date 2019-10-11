@@ -350,6 +350,10 @@ func (cs *ContainerService) setAddonsConfig(isUpdate bool) {
 	defaultsAzurePolicyAddonsConfig := KubernetesAddon{
 		Name:    AzurePolicyAddonName,
 		Enabled: to.BoolPtr(DefaultAzurePolicyAddonEnabled && !cs.Properties.IsAzureStackCloud()),
+		Config: map[string]string{
+			"auditInterval":             "30",
+			"constraintViolationsLimit": "20",
+		},
 		Containers: []KubernetesContainerSpec{
 			{
 				Name:           "azure-policy",

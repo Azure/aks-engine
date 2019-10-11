@@ -3092,6 +3092,10 @@ func TestSetAddonsConfig(t *testing.T) {
 				{
 					Name:    AzurePolicyAddonName,
 					Enabled: to.BoolPtr(true),
+					Config: map[string]string{
+						"auditInterval":             "30",
+						"constraintViolationsLimit": "20",
+					},
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:           "azure-policy",
