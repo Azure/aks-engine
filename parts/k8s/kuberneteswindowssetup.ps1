@@ -314,10 +314,7 @@ try
             Remove-Item $CacheDir -Recurse -Force
         }
 
-        Write-Log "Creating a startup task to run on-restart.ps1"
-        Copy-Item -Path "c:\AzureData\k8s\on-restart.ps1" -Destination "c:\k\on-restart.ps1"
-        $trigger = New-JobTrigger -AtStartup -RandomDelay 00:00:05
-        Register-ScheduledJob -Trigger $trigger -FilePath "c:\k\on-restart.ps1" -Name "k8s-restart-job"
+        Register-RestartCleanupTask
 
         Write-Log "Setup Complete, reboot computer"
         Restart-Computer
@@ -331,5 +328,5 @@ try
 catch
 {
     Write-Error $_
-    throw
+    exit 1
 }
