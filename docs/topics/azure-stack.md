@@ -136,10 +136,10 @@ The `AKS Base Image` marketplace item has to be available in your Azure Stack's 
 
 Each AKS Engine release is validated and tied to a specific version of the AKS Base Image. Therefore, you need to take note of the base image version required by the AKS Engine release that you plan to use, and then download exactly that base image version. New builds of the `AKS Base Image` are frequently released to ensure that your disconnected cluster can be upgraded to the latest supported version of each component.
 
-# Azure Monitor for containers
+## Azure Monitor for containers
 
 Container Monitoring addon gives you performance monitoring ability by collecting memory and processor metrics from controllers, nodes, and containers that are available in Kubernetes through the Metrics API.
-After you enable Container Monitoring addon, these metrics are automatically collected for you through a containerized version of the Log Analytics agent for Linux and stored in your [Log Analytics] workspace in Azure Cloud.
+After you enable Container Monitoring addon, these metrics are automatically collected for you through a containerized version of the Log Analytics agent for Linux and stored in your configured Azure Log Analytics workspace.
 The included pre-defined views display the residing container workloads and what affects the performance health of the Kubernetes cluster so that you can:
 
 - Identify containers that are running on the node and their average processor and memory utilization. This knowledge can help you identify resource bottlenecks.
@@ -161,52 +161,52 @@ Refer to [Azure Monitor – Containers Helm chart](https://github.com/Helm/chart
 
 #### 2. Using Container Monitoring addon in the API Model
 > Note: option 2) are supported only through `aks-engine deploy` command.
+  1. Add below container-monitoring addon section to your API Model definition, updated the workspaceGuid and workspaceKey placeholders with your Azure Log Analytics workspace
+    and use updated API Model definition for cluster deployment.
 
-1. Add below container-monitoring addon section to your API Model definition, updated the workspaceGuid and workspaceKey of the Azure Log Analytics workspace
-   and use updated API Model definition for cluster deployment.
+  "kubernetesConfig": {
+      "addons": [
+              {
+              "name": "container-monitoring",
+              "enabled": true,
+              "config": {
+                "workspaceGuid": "<Azure Log Analytics Workspace Guid in Base-64 encoded>",
+                "workspaceKey": "<Azure Log Analytics Workspace Key in Base-64 encoded>"
+              }
+              }
+                  ]
+    }
 
-"kubernetesConfig": {
-    "addons": [
-					  {
-						"name": "container-monitoring",
-						"enabled": true,
-						"config": {
-						  "workspaceGuid": "<Azure Log Analytics Workspace Guid in Base-64 encoded>",
-						  "workspaceKey": "<Azure Log Analytics Workspace Key in Base-64 encoded>"
-						}
-					  }
-                ]
-  }
+  2.  [Add the 'AzureMonitor-Containers' Solution to your Log Analytics workspace.](http://aka.ms/coinhelmdoc)
 
- 2.  [Add the 'AzureMonitor-Containers' Solution to your Log Analytics workspace.](http://aka.ms/coinhelmdoc)
-
-## UX
+### UX
 
 After successful onboarding, navigating to [Azure Monitor for containers](https://aka.ms/azmon-containers) to view and monitor, and analyze health of your onboarded AKS Engine cluster, pods and containers etc.
 
-### Azure Monitor for containers view to view health of all clusters in selected global azure subscriptions
+#### Azure Monitor for containers view to view health of all clusters in selected global azure subscriptions
 ![Image of Azure Monitor for containers](../static/img/azstack_azure_mon_containers_overview.png)
+ > To view Azurestack AKS-Engine clusters, select the Cloud type as Other or All and select subscription of Azure Log Analytics workspace in Global Subscription Filter.
 
-### Cluster chart view of the cluster
+#### Cluster chart view of the cluster
 ![Image of Azure Monitor for containers](../static/img/azstack_azure_mon_containers_cluster_charts.png)
 
-### Cluster health view of the cluster
+#### Cluster health view of the cluster
 ![Image of Azure Monitor for containers](../static/img/azstack_azure_mon_containers_cluster_health.png)
 
-### Nodes view of the cluster
+#### Nodes view of the cluster
 ![Image of Azure Monitor for containers](../static/img/azstack_azure_mon_containers_cluster_nodes.png)
 
-### Controllers view of the cluster
+#### Controllers view of the cluster
 ![Image of Azure Monitor for containers](../static/img/azstack_azure_mon_containers_cluster_controllers.png)
 
-### Containers view of the cluster
+#### Containers view of the cluster
 ![Image of Azure Monitor for containers](../static/img/azstack_azure_mon_containers_cluster_containers.png)
 
-## Supported Matrix
+### Supported Matrix
 
  Refer to [azuremonitor-containers-aks-engine](https://github.com/Microsoft/OMS-docker/blob/aks-engine/README.md) for the supported matrix, troubleshooting and supportability etc.
 
-## Disable Monitoring
+### Disable Monitoring
 
 After you enable monitoring of your AKS Engine cluster, you can stop monitoring the cluster if you decide you no longer want to monitor it.
 
@@ -214,20 +214,19 @@ After you enable monitoring of your AKS Engine cluster, you can stop monitoring 
 
 - If you have onboarded using the Container Monitoring addon, then you can remove monitoring addon with below steps
 
-      1. ssh to AKS Engine cluster master node and copy omsagent-daemonset.yaml file under /etc/kubernetes/addons to the dev machine
+      1. ssh to master node of your AKS Engine cluster master node and navigate to /etc/kubernetes/addons directory
       2. delete all the resources related to container monitoring addon with `kubectl delete -f omsagent-daemonset.yaml` command against your AKS Engine cluster
       3. delete the container monitoring addon manifest file omsagent-daemonset.yaml  under /etc/kubernetes/addons
 
-## Upgrade Container Monitoring Addon
+### Upgrade Container Monitoring Addon
 
-For upgrading the container monitoring addon, you can disable the monitoring addon as described in Disable Monitoring section and use the HELM chart to install and upgrade
+For upgrading the container monitoring addon, you can disable the monitoring addon as described in Disable Monitoring section and use the HELM chart to install and upgrade.
 
+### Required Roles and Permissions
 
-## Contact
+- User requires the reader role permission on resource group of Azure Log Analytics workspace to view and monitor, and analyze health of your onboarded AKS Engine cluster, pods and containers etc.
 
-If you have any questions or feedback regarding the container monitoring addon, please reach us out through [this](mailto:askcoin@microsoft.com) email.
-
-## References
+### References
 
 - [Azure Monitor for containers](https://docs.microsoft.com/en-us/azure/azure-monitor/insights/container-insights-overview) for  more details on how to use the product.
 - [Log Analytics](https://docs.microsoft.com/en-us/azure/azure-monitor/log-query/log-query-overview)
@@ -236,17 +235,10 @@ If you have any questions or feedback regarding the container monitoring addon, 
 - [Manage workspaces](https://docs.microsoft.com/en-us/azure/azure-monitor/platform/manage-access)
 - [Link to Azure Monitor for containers](https://aka.ms/azmon-containers)
 
-
-## Required Roles and Permissions
-
-- User requires the reader role permission on the Azure Log Analytics workspace and AKS Engine cluster resource group to view and monitor, and analyze health of your onboarded AKS Engine cluster, pods and containers etc.
-- For onboarding monitoring addon
-     -  If the existing Azure Log Analytics workspace is used, then the Log Analytics Contributor role on existing Azure Log Analytics is required
-     -  For the new Azure Log Analytics workspace, user requires the contributor role on the Subscription or the Resource group where the AKS Engine cluster resources will be deployed
-
-## Contact
+### Contact
 
 If you have any questions or feedback regarding the container monitoring addon, please reach us out through [this](mailto:askcoin@microsoft.com) email.
+
 
 ## Unsupported Addons
 
