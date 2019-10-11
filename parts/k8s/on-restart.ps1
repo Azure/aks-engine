@@ -9,6 +9,8 @@ function Write-Log ($message) {
 
 Write-Log "Entering on-restart.ps1"
 
+Import-Module $global:HNSModule
+
 #
 # Stop services
 #
@@ -21,7 +23,6 @@ Stop-Service kubelet
 #
 # Perform cleanup
 #
-Import-Module $global:HNSModule
 
 Write-Log "Cleaning up persisted HNS policy lists"
 Get-HnsPolicyList | Remove-HnsPolicyList
@@ -76,10 +77,9 @@ if ($hnsNetwork)
     Remove-HnsNetwork $hnsNetwork
 
     Start-Sleep 10 
-
-    Write-Log "Creating HNS network 'l2bridge'"
-    # TODO: read values from cni config on disk and create network
 }
+
+# TODO: if network plugin is kubenet create l2bridge network
 
 #
 # Start Services
