@@ -196,15 +196,15 @@
             "containers": [
               {
                 "name": "omsagent",
-                "image": "mcr.microsoft.com/azuremonitor/containerinsights/ciprod:ciprod07092019",
-                "cpuRequests": "50m",
-                "memoryRequests": "225Mi",
+                "image": "mcr.microsoft.com/azuremonitor/containerinsights/ciprod:ciprod10112019",
+                "cpuRequests": "110m",
+                "memoryRequests": "250Mi",
                 "cpuLimits": "150m",
                 "memoryLimits": "600Mi"
               }
             ],
             "config": {
-              "dockerProviderVersion": "6.0.0-0",
+              "dockerProviderVersion": "7.0.0-4",
               "omsAgentVersion": "1.10.0.1"
             }
           },
@@ -490,14 +490,14 @@
           }
         ]
       },
-      "secrets":[
+      "secrets": [
         {
-          "sourceVault":{
-            "id":"vaultId"
+          "sourceVault": {
+            "id": "vaultId"
           },
-          "vaultCertificates":[
+          "vaultCertificates": [
             {
-              "certificateUrl" :"http://url1"
+              "certificateUrl": "http://url1"
             }
           ]
         }

@@ -164,19 +164,19 @@ Refer to [Azure Monitor – Containers Helm chart](https://github.com/Helm/chart
   1. Add below container-monitoring addon section to your API Model definition, updated the workspaceGuid and workspaceKey placeholders with your Azure Log Analytics workspace
     and use updated API Model definition for cluster deployment.
 
-  "kubernetesConfig": {
-      "addons": [
-              {
-              "name": "container-monitoring",
-              "enabled": true,
-              "config": {
-                "workspaceGuid": "<Azure Log Analytics Workspace Guid in Base-64 encoded>",
-                "workspaceKey": "<Azure Log Analytics Workspace Key in Base-64 encoded>"
-              }
-              }
-                  ]
-    }
-
+      "kubernetesConfig": {
+            "addons": [
+                {
+                    "name": "container-monitoring",
+                    "enabled": true,
+                    "config": {
+                      "workspaceGuid": "<Azure Log Analytics Workspace Guid in Base-64 encoded>",
+                      "workspaceKey": "<Azure Log Analytics Workspace Key in Base-64 encoded>"
+                    }
+                }
+            ]
+      }
+  > Note: If your Azure Stack instance is located in China, use the workspaceGuid and workspaceKey of Azure Log Analytics Workspace in Azure China Cloud
   2.  [Add the 'AzureMonitor-Containers' Solution to your Log Analytics workspace.](http://aka.ms/coinhelmdoc)
 
 ### UX

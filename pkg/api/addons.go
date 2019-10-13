@@ -22,9 +22,9 @@ func (cs *ContainerService) setAddonsConfig(isUpdate bool) {
 	cloudSpecConfig := cs.GetCloudSpecConfig()
 	k8sComponents := K8sComponentsByVersionMap[o.OrchestratorVersion]
 	specConfig := cloudSpecConfig.KubernetesSpecConfig
-	omsagentImage := "mcr.microsoft.com/azuremonitor/containerinsights/ciprod:ciprod07092019"
+	omsagentImage := "mcr.microsoft.com/azuremonitor/containerinsights/ciprod:ciprod10112019"
 	if strings.EqualFold(cloudSpecConfig.CloudName, "AzureChinaCloud") {
-		omsagentImage = "dockerhub.azk8s.cn/microsoft/oms:ciprod07092019"
+		omsagentImage = "dockerhub.azk8s.cn/microsoft/oms:ciprod10112019"
 	}
 	workspaceDomain := getLogAnalyticsWorkspaceDomain(cloudSpecConfig.CloudName)
 	workspaceDomain = base64.StdEncoding.EncodeToString([]byte(workspaceDomain))
@@ -218,7 +218,7 @@ func (cs *ContainerService) setAddonsConfig(isUpdate bool) {
 		Enabled: to.BoolPtr(DefaultContainerMonitoringAddonEnabled && !cs.Properties.IsAzureStackCloud()),
 		Config: map[string]string{
 			"omsAgentVersion":       "1.10.0.1",
-			"dockerProviderVersion": "6.0.0-0",
+			"dockerProviderVersion": "7.0.0-4",
 			"schema-versions":       "v1",
 			"clusterName":           clusterDNSPrefix,
 			"workspaceDomain":       workspaceDomain,
@@ -226,8 +226,8 @@ func (cs *ContainerService) setAddonsConfig(isUpdate bool) {
 		Containers: []KubernetesContainerSpec{
 			{
 				Name:           "omsagent",
-				CPURequests:    "75m",
-				MemoryRequests: "225Mi",
+				CPURequests:    "110m",
+				MemoryRequests: "250Mi",
 				CPULimits:      "150m",
 				MemoryLimits:   "600Mi",
 				Image:          omsagentImage,

@@ -1571,18 +1571,18 @@ func TestSetAddonsConfig(t *testing.T) {
 					Enabled: to.BoolPtr(true),
 					Config: map[string]string{
 						"omsAgentVersion":       "1.10.0.1",
-						"dockerProviderVersion": "6.0.0-0",
+						"dockerProviderVersion": "7.0.0-4",
 						"schema-versions":       "v1",
 						"clusterName":           "aks-engine-cluster",
 					},
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:           "omsagent",
-							CPURequests:    "75m",
-							MemoryRequests: "225Mi",
+							CPURequests:    "110m",
+							MemoryRequests: "250Mi",
 							CPULimits:      "150m",
 							MemoryLimits:   "600Mi",
-							Image:          "mcr.microsoft.com/azuremonitor/containerinsights/ciprod:ciprod07092019",
+							Image:          "mcr.microsoft.com/azuremonitor/containerinsights/ciprod:ciprod10112019",
 						},
 					},
 				},
