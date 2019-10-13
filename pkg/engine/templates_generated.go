@@ -21493,6 +21493,12 @@ rules:
 - apiGroups: [""]
   resources: ["pods", "events", "nodes", "namespaces", "services"]
   verbs: ["list", "get", "watch"]
+- apiGroups: ["extensions"]
+  resources: ["deployments"]
+  verbs: ["list"]
+- apiGroups: ["azmon.container.insights"]
+  resources: ["healthstates"]
+  verbs: ["get", "create", "patch"]
 - nonResourceURLs: ["/metrics"]
   verbs: ["get"]
 ---
@@ -21516,7 +21522,13 @@ kind: ConfigMap
 apiVersion: v1
 data:
   kube.conf: |-
-     # Fluentd config file for OMS Docker - cluster components (kubeAPI)
+    # Fluentd config file for OMS Docker - cluster components (kubeAPI)
+    #fluent forward plugin
+    <source>
+     type forward
+     port "#{ENV['HEALTHMODEL_REPLICASET_SERVICE_SERVICE_PORT']}"
+     bind 0.0.0.0
+    </source>
      #Kubernetes pod inventory
      <source>
       type kubepodinventory
@@ -21564,6 +21576,13 @@ data:
       log_level debug
      </source>
 
+    #Kubernetes health
+    <source>
+     type kubehealth
+     tag kubehealth.ReplicaSet
+     run_interval 60s
+     log_level debug
+    </source>
      #cadvisor perf- Windows nodes
      <source>
       type wincadvisorperf
@@ -21584,7 +21603,12 @@ data:
       custom_metrics_azure_regions eastus,southcentralus,westcentralus,westus2,southeastasia,northeurope,westEurope
       metrics_to_collect cpuUsageNanoCores,memoryWorkingSetBytes
       log_level info
-     </filter>
+    </filter>
+
+    #health model aggregation filter
+    <filter kubehealth**>
+     type filter_health_model_builder
+    </filter>
 
      <match oms.containerinsights.KubePodInventory**>
       type out_oms
@@ -21659,7 +21683,7 @@ data:
      </match>
 
      <match oms.containerinsights.ContainerNodeInventory**>
-      type out_oms_api
+      type out_oms
       log_level debug
       buffer_chunk_limit 20m
       buffer_type file
@@ -21732,6 +21756,21 @@ data:
       max_retry_wait 9m
       retry_mdm_post_wait_minutes 60
      </match>
+     
+    <match kubehealth.Signals**>
+     type out_oms
+     log_level debug
+     num_threads 5
+     buffer_chunk_limit 20m
+     buffer_type file
+     buffer_path %STATE_DIR_WS%/out_oms_kubehealth*.buffer
+     buffer_queue_limit 20
+     buffer_queue_full_action drop_oldest_chunk
+     flush_interval 20s
+     retry_limit 10
+     retry_wait 30s
+     max_retry_wait 9m
+    </match>
 metadata:
   name: omsagent-rs-config
   namespace: kube-system
@@ -21806,6 +21845,7 @@ spec:
           volumeMounts:
             - mountPath: /hostfs
               name: host-root
+              readOnly: true
             - mountPath: /var/run/host
               name: docker-sock
             - mountPath: /var/log
@@ -21911,6 +21951,9 @@ spec:
               protocol: TCP
             - containerPort: 25224
               protocol: UDP
+            - containerPort: 25227
+              protocol: TCP
+              name: in-rs-tcp
           volumeMounts:
             - mountPath: /var/run/host
               name: docker-sock
@@ -21927,6 +21970,7 @@ spec:
               name: omsagent-rs-config
             - mountPath: /etc/config/settings
               name: settings-vol-config
+              readOnly: true
           livenessProbe:
             exec:
               command:
@@ -21964,6 +22008,32 @@ spec:
           configMap:
             name: container-azm-ms-agentconfig
             optional: true
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: healthmodel-replicaset-service
+  namespace: kube-system
+spec:
+  selector:
+    rsName: "omsagent-rs"
+  ports:
+    - protocol: TCP
+      port: 25227
+      targetPort: in-rs-tcp
+---
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  name: healthstates.azmon.container.insights
+  namespace: kube-system
+spec:
+  group: azmon.container.insights
+  version: v1
+  scope: Namespaced
+  names:
+    plural: healthstates
+    kind: HealthState
 `)
 
 func k8sContaineraddons116KubernetesmasteraddonsOmsagentDaemonsetYamlBytes() ([]byte, error) {
@@ -28559,6 +28629,12 @@ rules:
 - apiGroups: [""]
   resources: ["pods", "events", "nodes", "namespaces", "services"]
   verbs: ["list", "get", "watch"]
+- apiGroups: ["extensions"]
+  resources: ["deployments"]
+  verbs: ["list"]
+- apiGroups: ["azmon.container.insights"]
+  resources: ["healthstates"]
+  verbs: ["get", "create", "patch"]
 - nonResourceURLs: ["/metrics"]
   verbs: ["get"]
 ---
@@ -28582,7 +28658,13 @@ kind: ConfigMap
 apiVersion: v1
 data:
   kube.conf: |-
-     # Fluentd config file for OMS Docker - cluster components (kubeAPI)
+    # Fluentd config file for OMS Docker - cluster components (kubeAPI)
+    #fluent forward plugin
+    <source>
+     type forward
+     port "#{ENV['HEALTHMODEL_REPLICASET_SERVICE_SERVICE_PORT']}"
+     bind 0.0.0.0
+    </source>
      #Kubernetes pod inventory
      <source>
       type kubepodinventory
@@ -28630,6 +28712,13 @@ data:
       log_level debug
      </source>
 
+    #Kubernetes health
+    <source>
+     type kubehealth
+     tag kubehealth.ReplicaSet
+     run_interval 60s
+     log_level debug
+    </source>
      #cadvisor perf- Windows nodes
      <source>
       type wincadvisorperf
@@ -28650,7 +28739,12 @@ data:
       custom_metrics_azure_regions eastus,southcentralus,westcentralus,westus2,southeastasia,northeurope,westEurope
       metrics_to_collect cpuUsageNanoCores,memoryWorkingSetBytes
       log_level info
-     </filter>
+    </filter>
+
+    #health model aggregation filter
+    <filter kubehealth**>
+     type filter_health_model_builder
+    </filter>
 
      <match oms.containerinsights.KubePodInventory**>
       type out_oms
@@ -28725,7 +28819,7 @@ data:
      </match>
 
      <match oms.containerinsights.ContainerNodeInventory**>
-      type out_oms_api
+      type out_oms
       log_level debug
       buffer_chunk_limit 20m
       buffer_type file
@@ -28798,6 +28892,21 @@ data:
       max_retry_wait 9m
       retry_mdm_post_wait_minutes 60
      </match>
+     
+    <match kubehealth.Signals**>
+     type out_oms
+     log_level debug
+     num_threads 5
+     buffer_chunk_limit 20m
+     buffer_type file
+     buffer_path %STATE_DIR_WS%/out_oms_kubehealth*.buffer
+     buffer_queue_limit 20
+     buffer_queue_full_action drop_oldest_chunk
+     flush_interval 20s
+     retry_limit 10
+     retry_wait 30s
+     max_retry_wait 9m
+    </match>
 metadata:
   name: omsagent-rs-config
   namespace: kube-system
@@ -28872,6 +28981,7 @@ spec:
           volumeMounts:
             - mountPath: /hostfs
               name: host-root
+              readOnly: true
             - mountPath: /var/run/host
               name: docker-sock
             - mountPath: /var/log
@@ -28977,6 +29087,9 @@ spec:
               protocol: TCP
             - containerPort: 25224
               protocol: UDP
+            - containerPort: 25227
+              protocol: TCP
+              name: in-rs-tcp
           volumeMounts:
             - mountPath: /var/run/host
               name: docker-sock
@@ -28993,6 +29106,7 @@ spec:
               name: omsagent-rs-config
             - mountPath: /etc/config/settings
               name: settings-vol-config
+              readOnly: true
           livenessProbe:
             exec:
               command:
@@ -29030,6 +29144,32 @@ spec:
           configMap:
             name: container-azm-ms-agentconfig
             optional: true
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: healthmodel-replicaset-service
+  namespace: kube-system
+spec:
+  selector:
+    rsName: "omsagent-rs"
+  ports:
+    - protocol: TCP
+      port: 25227
+      targetPort: in-rs-tcp
+---
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  name: healthstates.azmon.container.insights
+  namespace: kube-system
+spec:
+  group: azmon.container.insights
+  version: v1
+  scope: Namespaced
+  names:
+    plural: healthstates
+    kind: HealthState
 `)
 
 func k8sContaineraddonsKubernetesmasteraddonsOmsagentDaemonsetYamlBytes() ([]byte, error) {
