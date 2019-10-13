@@ -9,8 +9,9 @@ import (
 	"testing"
 	"text/template"
 
-	"github.com/Azure/aks-engine/pkg/api"
 	"github.com/pkg/errors"
+
+	"github.com/Azure/aks-engine/pkg/api"
 )
 
 func TestGenerateTemplateV2(t *testing.T) {
@@ -90,6 +91,9 @@ func TestGetTemplateFuncMap(t *testing.T) {
 		"GetKubernetesWindowsAgentFunctions",
 		"GetMasterSwarmModeCustomData",
 		"GetAgentSwarmModeCustomData",
+		"GetPodInfraContainerSpec",
+		"IsKubenet",
+		"IsKataContainerRuntime",
 		"WrapAsVariable",
 		"CloudInitData",
 		"WrapAsParameter",
@@ -137,6 +141,93 @@ func TestGetTemplateFuncMap(t *testing.T) {
 			}
 		}
 	}
+}
+
+func TestTemplateGenerator_FunctionMap(t *testing.T) {
+	testCases := []struct {
+		Name           string
+		FuncName       string
+		MutateFunc     func(cs api.ContainerService) api.ContainerService
+		ExpectedResult interface{}
+	}{
+		{
+			Name:     "IsKubenet_IsTrueWhenNetworkPluginIsKubenet",
+			FuncName: "IsKubenet",
+			MutateFunc: func(cs api.ContainerService) api.ContainerService {
+				cs.Properties.OrchestratorProfile.KubernetesConfig.NetworkPlugin = NetworkPluginKubenet
+				return cs
+			},
+			ExpectedResult: true,
+		},
+		{
+			Name:           "IsKubenet_IsFalseWhenNetworkPluginIsNotKubenet",
+			FuncName:       "IsKubenet",
+			ExpectedResult: false,
+		},
+		{
+			Name:     "IsKataContainerRuntime_IsTrueWhenContainerRuntimeIsKataContainers",
+			FuncName: "IsKataContainerRuntime",
+			MutateFunc: func(cs api.ContainerService) api.ContainerService {
+				cs.Properties.OrchestratorProfile.KubernetesConfig.ContainerRuntime = api.KataContainers
+				return cs
+			},
+			ExpectedResult: true,
+		},
+		{
+			Name:           "IsKataContainerRuntime_IsFalseWhenContainerRuntimeIsNotKataContainers",
+			FuncName:       "IsKataContainerRuntime",
+			ExpectedResult: true,
+		},
+		{
+			Name:     "GetPodInfraContainerSpec",
+			FuncName: "GetPodInfraContainerSpec",
+			MutateFunc: func(cs api.ContainerService) api.ContainerService {
+				cs.Properties.OrchestratorProfile.KubernetesConfig.MCRKubernetesImageBase = "foo/"
+				cs.Properties.OrchestratorProfile.OrchestratorVersion = "1.16.0"
+				return cs
+			},
+			ExpectedResult: "foo/pause:1.2.0",
+		},
+	}
+
+	originalCS := &api.ContainerService{}
+	if err := json.Unmarshal([]byte(getAPIModelString()), &originalCS); err != nil {
+		t.Fatalf("unexpected error unmashalling model string: %v", err)
+	}
+
+	for _, testCase := range testCases {
+		c := testCase
+		oCS := *originalCS
+		t.Run(c.Name, func(t *testing.T) {
+			t.Parallel()
+			cs := oCS
+			if testCase.MutateFunc != nil {
+				cs = testCase.MutateFunc(oCS)
+			}
+
+			bits, err := json.Marshal(&cs)
+			if err != nil {
+				t.Fatalf("error marshalling model to string: %v", err)
+			}
+
+			funcmap, err := getFuncMap(string(bits))
+			if err != nil {
+				t.Fatalf("error generating function map: %v", err)
+			}
+
+			f, ok := funcmap[testCase.FuncName]
+			if !ok {
+				t.Fatalf("didn't find expected funcmap key %s.", testCase.FuncName)
+			}
+
+			v := reflect.ValueOf(f)
+			rargs := make([]reflect.Value, 0)
+			if ret := v.Call(rargs); ret[0].Interface() != testCase.ExpectedResult {
+				t.Fatalf("expected %v, but got %v", testCase.ExpectedResult, ret[0].Interface())
+			}
+		})
+	}
+
 }
 
 func TestGetIdentitySystem(t *testing.T) {

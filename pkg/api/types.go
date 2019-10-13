@@ -348,6 +348,7 @@ const (
 // Kubernetes specific configuration
 type KubernetesConfig struct {
 	KubernetesImageBase               string            `json:"kubernetesImageBase,omitempty"`
+	MCRKubernetesImageBase            string            `json:"mcrKubernetesImageBase,omitempty"`
 	ClusterSubnet                     string            `json:"clusterSubnet,omitempty"`
 	NetworkPolicy                     string            `json:"networkPolicy,omitempty"`
 	NetworkPlugin                     string            `json:"networkPlugin,omitempty"`
@@ -1670,7 +1671,12 @@ func (o *OrchestratorProfile) NeedsExecHealthz() bool {
 		!common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.9.0")
 }
 
-// HasAadProfile  returns true if the has aad profile
+// GetPodInfraContainerSpec returns the sandbox image as a string (ex: k8s.gcr.io/pause-amd64:3.1)
+func (o *OrchestratorProfile) GetPodInfraContainerSpec() string {
+	return o.KubernetesConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap[o.OrchestratorVersion]["pause"]
+}
+
+// HasAadProfile returns true if the has aad profile
 func (p *Properties) HasAadProfile() bool {
 	return p.AADProfile != nil
 }

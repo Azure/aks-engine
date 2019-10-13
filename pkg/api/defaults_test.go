@@ -2276,6 +2276,7 @@ func TestSetCustomCloudProfileDefaults(t *testing.T) {
 		KubernetesSpecConfig: KubernetesSpecConfig{
 			AzureTelemetryPID:                "AzureTelemetryPID",
 			KubernetesImageBase:              "KubernetesImageBase",
+			MCRKubernetesImageBase:           "MCRKubernetesImageBase",
 			TillerImageBase:                  "TillerImageBase",
 			ACIConnectorImageBase:            "ACIConnectorImageBase",
 			NVIDIAImageBase:                  "NVIDIAImageBase",

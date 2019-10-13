@@ -238,31 +238,8 @@ configureCNIIPTables() {
     fi
 }
 
-setupContainerd() {
-    echo "Configuring cri-containerd..."
-    mkdir -p "/etc/containerd"
-    CRI_CONTAINERD_CONFIG="/etc/containerd/config.toml"
-    {
-        echo "subreaper = false"
-        echo "oom_score = 0"
-        echo "[plugins.cri]"
-        echo "sandbox_image = \"$POD_INFRA_CONTAINER_SPEC\""
-        echo "[plugins.cri.containerd.untrusted_workload_runtime]"
-        echo "runtime_type = 'io.containerd.runtime.v1.linux'"
-        if [[ "$CONTAINER_RUNTIME" == "kata-containers" ]]; then
-            echo "runtime_engine = '/usr/bin/kata-runtime'"
-        else
-            echo "runtime_engine = '/usr/local/sbin/runc'"
-        fi
-        echo "[plugins.cri.containerd.default_runtime]"
-        echo "runtime_type = 'io.containerd.runtime.v1.linux'"
-        echo "runtime_engine = '/usr/local/sbin/runc'"
-    } > "$CRI_CONTAINERD_CONFIG"
-}
-
 ensureContainerd() {
-    setupContainerd
-    echo "Enabling and starting cri-containerd service..."
+    echo "Starting cri-containerd service..."
     systemctlEnableAndStart containerd || exit $ERR_SYSTEMCTL_START_FAIL
 }
 
