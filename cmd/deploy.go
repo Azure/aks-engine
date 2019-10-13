@@ -360,17 +360,7 @@ func autofillApimodel(dc *deployCmd) error {
 		log.Infoln("container monitoring addon enabled")
 		var workspaceDomain string
 		cloudspecConfig := dc.containerService.GetCloudSpecConfig()
-		switch cloudspecConfig.CloudName {
-		case "AzurePublicCloud":
-			workspaceDomain = "opinsights.azure.com"
-		case "AzureChinaCloud":
-			workspaceDomain = "opinsights.azure.cn"
-		case "AzureUSGovernmentCloud":
-			workspaceDomain = "opinsights.azure.us"
-		default:
-			return errors.Wrapf(err, "apimodel: container monitoring addon not supported in this cloud: %s", cloudspecConfig.CloudName)
-		}
-
+		workspaceDomain = getLogAnalyticsWorkspaceDomain(cloudspecConfig.CloudName)
 		err := dc.configureContainerMonitoringAddon(ctx, k8sConfig, workspaceDomain)
 		if err != nil {
 			return errors.Wrap(err, "Failed to configure container monitoring addon")
@@ -529,4 +519,22 @@ func (dc *deployCmd) configureContainerMonitoringAddon(ctx context.Context, k8sC
 		log.Infoln("workspaceDomain:", workspaceDomain)
 	}
 	return nil
+}
+
+//get domain of azure log analytics workspace domain based on the cloud
+func getLogAnalyticsWorkspaceDomain(cloudName string) string {
+	var workspaceDomain string
+	switch cloudName {
+	case "AzurePublicCloud":
+		workspaceDomain = "opinsights.azure.com"
+	case "AzureChinaCloud":
+		workspaceDomain = "opinsights.azure.cn"
+	case "AzureUSGovernmentCloud":
+		workspaceDomain = "opinsights.azure.us"
+	case "AzureGermanCloud":
+		workspaceDomain = "opinsights.azure.de"
+	default:
+		workspaceDomain = "opinsights.azure.com"
+	}
+	return workspaceDomain
 }
