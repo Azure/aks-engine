@@ -90,7 +90,7 @@ Set-AzureCNIConfig
         $configJson.plugins.AdditionalArgs[0].Value.ExceptionList = $processedExceptions
     }
     else {
-        $configJson.plugins.AdditionalArgs[0].Value.ExceptionList[0] = $exceptionAddresses
+        $configJson.plugins.AdditionalArgs[0].Value.ExceptionList = $exceptionAddresses
     }
 
     $configJson.plugins.AdditionalArgs[1].Value.DestinationPrefix  = $KubeServiceCIDR
@@ -126,7 +126,8 @@ function GetBroadestRangesForEachAddress{
         $returnValues += $ip + "/" + $range
     }
 
-    return $returnValues
+    # prefix $returnValues with common to ensure single values get returned as an array otherwise invalid json may be generated
+    return ,$returnValues
 }
 
 function GetSubnetPrefix
