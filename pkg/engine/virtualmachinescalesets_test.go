@@ -215,6 +215,13 @@ func TestCreateMasterVMSS(t *testing.T) {
 		},
 	}
 
+	expected.DependsOn = []string{
+		"[variables('nsgID')]",
+		"[variables('masterInternalLbName')]",
+		"[variables('masterLbID')]",
+		"[concat('Microsoft.ManagedIdentity/userAssignedIdentities/', variables('userAssignedID'))]",
+	}
+
 	expected.VirtualMachineProfile.ExtensionProfile = &compute.VirtualMachineScaleSetExtensionProfile{
 		Extensions: &[]compute.VirtualMachineScaleSetExtension{
 			{

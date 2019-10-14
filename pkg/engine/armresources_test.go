@@ -518,6 +518,12 @@ func TestGenerateARMResourcesWithVMSSAgentPool(t *testing.T) {
 			"[variables('userAssignedIDReference')]": {},
 		},
 	}
+	masterVM.DependsOn = []string{
+		"[concat('Microsoft.Network/networkInterfaces/', variables('masterVMNamePrefix'), 'nic-', copyIndex(variables('masterOffset')))]",
+		"[concat('Microsoft.Compute/availabilitySets/',variables('masterAvailabilitySet'))]",
+		"[concat('Microsoft.ManagedIdentity/userAssignedIdentities/', variables('userAssignedID'))]",
+	}
+
 	masterVMExtension.VirtualMachineExtension.ProtectedSettings = &map[string]interface{}{
 		"commandToExecute": `[concat('echo $(date),$(hostname);  for i in $(seq 1 1200); do grep -Fq "EOF" /opt/azure/containers/provision.sh && break; if [ $i -eq 1200 ]; then exit 100; else sleep 1; fi; done; ', variables('provisionScriptParametersCommon'),` + generateUserAssignedIdentityClientIDParameter(userAssignedIDEnabled) + `,variables('provisionScriptParametersMaster'), ' IS_VHD=true /usr/bin/nohup /bin/bash -c "/bin/bash /opt/azure/containers/provision.sh >> /var/log/azure/cluster-provision.log 2>&1"')]`,
 	}
@@ -546,6 +552,11 @@ func TestGenerateARMResourcesWithVMSSAgentPool(t *testing.T) {
 			"[variables('userAssignedIDReference')]": {},
 		},
 	}
+	agentVM.DependsOn = []string{
+		"[variables('vnetID')]",
+		"[concat('Microsoft.ManagedIdentity/userAssignedIdentities/', variables('userAssignedID'))]",
+	}
+
 	agentVM.VirtualMachineScaleSet.VirtualMachineScaleSetProperties.VirtualMachineProfile.ExtensionProfile.Extensions = &[]compute.VirtualMachineScaleSetExtension{
 		{
 			Name: to.StringPtr("vmssCSE"),

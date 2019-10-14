@@ -35,6 +35,9 @@ func CreateMasterVM(cs *api.ContainerService) VirtualMachineARM {
 	if isStorageAccount {
 		dependencies = append(dependencies, "[variables('masterStorageAccountName')]")
 	}
+	if userAssignedIDEnabled {
+		dependencies = append(dependencies, "[concat('Microsoft.ManagedIdentity/userAssignedIdentities/', variables('userAssignedID'))]")
+	}
 
 	armResource := ARMResource{
 		APIVersion: "[variables('apiVersionCompute')]",
@@ -344,6 +347,10 @@ func createAgentAvailabilitySetVM(cs *api.ContainerService, profile *api.AgentPo
 	dependencies = append(dependencies, fmt.Sprintf("[concat('Microsoft.Network/networkInterfaces/', variables('%[1]sVMNamePrefix'), 'nic-', copyIndex(variables('%[1]sOffset')))]", profile.Name))
 
 	dependencies = append(dependencies, fmt.Sprintf("[concat('Microsoft.Compute/availabilitySets/', variables('%[1]sAvailabilitySet'))]", profile.Name))
+
+	if userAssignedIDEnabled {
+		dependencies = append(dependencies, "[concat('Microsoft.ManagedIdentity/userAssignedIdentities/', variables('userAssignedID'))]")
+	}
 
 	if profile.IsWindows() {
 		windowsProfile := cs.Properties.WindowsProfile

@@ -53,6 +53,10 @@ func CreateMasterVMSS(cs *api.ContainerService) VirtualMachineScaleSetARM {
 		dependencies = append(dependencies, "[variables('masterLbID')]")
 	}
 
+	if userAssignedIDEnabled {
+		dependencies = append(dependencies, "[concat('Microsoft.ManagedIdentity/userAssignedIdentities/', variables('userAssignedID'))]")
+	}
+
 	armResource := ARMResource{
 		APIVersion: "[variables('apiVersionCompute')]",
 		DependsOn:  dependencies,
@@ -369,6 +373,10 @@ func CreateAgentVMSS(cs *api.ContainerService, profile *api.AgentPoolProfile) Vi
 	orchProfile := cs.Properties.OrchestratorProfile
 	k8sConfig := orchProfile.KubernetesConfig
 	linuxProfile := cs.Properties.LinuxProfile
+
+	if k8sConfig != nil && k8sConfig.UseManagedIdentity && k8sConfig.UserAssignedID != "" {
+		dependencies = append(dependencies, "[concat('Microsoft.ManagedIdentity/userAssignedIdentities/', variables('userAssignedID'))]")
+	}
 
 	armResource.DependsOn = dependencies
 

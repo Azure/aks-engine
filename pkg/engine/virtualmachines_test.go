@@ -137,6 +137,7 @@ func TestCreateVirtualMachines(t *testing.T) {
 	expectedVM.DependsOn = []string{
 		"[concat('Microsoft.Network/networkInterfaces/', variables('masterVMNamePrefix'), 'nic-', copyIndex(variables('masterOffset')))]",
 		"[variables('masterStorageAccountName')]",
+		"[concat('Microsoft.ManagedIdentity/userAssignedIdentities/', variables('userAssignedID'))]",
 	}
 
 	expectedVM.StorageProfile.OsDisk = &compute.OSDisk{
