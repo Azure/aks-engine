@@ -14587,7 +14587,6 @@ configClusterAutoscalerAddon() {
     sed -i "s|<tenantID>|$(echo $TENANT_ID | base64)|g" $CLUSTER_AUTOSCALER_ADDON_FILE
     sed -i "s|<rg>|$(echo $RESOURCE_GROUP | base64)|g" $CLUSTER_AUTOSCALER_ADDON_FILE
     sed -i "s|<vmType>|$(echo $VM_TYPE | base64)|g" $CLUSTER_AUTOSCALER_ADDON_FILE
-    sed -i "s|<vmssName>|$PRIMARY_SCALE_SET|g" $CLUSTER_AUTOSCALER_ADDON_FILE
 }
 
 configACIConnectorAddon() {
@@ -20805,7 +20804,9 @@ spec:
         - --logtostderr=true
         - --cloud-provider=azure
         - --skip-nodes-with-local-storage=false
-        - --nodes={{ContainerConfig "min-nodes"}}:{{ContainerConfig "max-nodes"}}:<vmssName>
+        {{range $pool := .NodePoolsConfig}}
+        - --nodes={{$pool.min-nodes}}:{{$pool.min-nodes}}:{{$pool.name}}
+        {{end}}
         - --scan-interval={{ContainerConfig "scan-interval"}}
         env:
         - name: ARM_CLOUD
@@ -24049,7 +24050,9 @@ spec:
         - --logtostderr=true
         - --cloud-provider=azure
         - --skip-nodes-with-local-storage=false
-        - --nodes={{ContainerConfig "min-nodes"}}:{{ContainerConfig "max-nodes"}}:<vmssName>
+        {{range $pool := .NodePoolsConfig}}
+        - --nodes={{$pool.min-nodes}}:{{$pool.min-nodes}}:{{$pool.name}}
+        {{end}}
         - --scan-interval={{ContainerConfig "scan-interval"}}
         env:
         - name: ARM_CLOUD
@@ -29607,8 +29610,8 @@ spec:
         - --logtostderr=true
         - --cloud-provider=azure
         - --skip-nodes-with-local-storage=false
-        - --nodes={{ContainerConfig "min-nodes"}}:{{ContainerConfig "max-nodes"}}:<vmssName>
         - --scan-interval={{ContainerConfig "scan-interval"}}
+{{GetClusterAutoscalerNodesConfig}}
         env:
         - name: ARM_CLOUD
           value: "<cloud>"

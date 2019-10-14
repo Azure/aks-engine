@@ -867,7 +867,13 @@ func convertAddonsToVlabs(a *KubernetesConfig, v *vlabs.KubernetesConfig) {
 				MemoryLimits:   a.Addons[i].Containers[j].MemoryLimits,
 			})
 		}
-
+		for k := range a.Addons[i].Pools {
+			v.Addons[i].Pools = append(v.Addons[i].Pools, vlabs.ClusterAutoscalerNodePoolsSpec{
+				Name:     a.Addons[i].Pools[k].Name,
+				MinNodes: a.Addons[i].Pools[k].MinNodes,
+				MaxNodes: a.Addons[i].Pools[k].MaxNodes,
+			})
+		}
 		if a.Addons[i].Config != nil {
 			for key, val := range a.Addons[i].Config {
 				v.Addons[i].Config[key] = val

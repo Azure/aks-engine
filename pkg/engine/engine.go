@@ -21,7 +21,6 @@ import (
 
 	"github.com/Azure/go-autorest/autorest/to"
 
-	//log "github.com/sirupsen/logrus"
 	"github.com/Azure/aks-engine/pkg/api"
 	"github.com/Azure/aks-engine/pkg/api/common"
 	"github.com/Azure/aks-engine/pkg/helpers"
@@ -643,7 +642,7 @@ func getBase64EncodedGzippedCustomScriptFromStr(str string) string {
 	return base64.StdEncoding.EncodeToString(gzipB.Bytes())
 }
 
-func getAddonFuncMap(addon api.KubernetesAddon) template.FuncMap {
+func getAddonFuncMap(addon api.KubernetesAddon, p *api.Properties) template.FuncMap {
 	return template.FuncMap{
 		"ContainerImage": func(name string) string {
 			i := addon.GetAddonContainersIndexByName(name)
@@ -672,11 +671,18 @@ func getAddonFuncMap(addon api.KubernetesAddon) template.FuncMap {
 		"ContainerConfig": func(name string) string {
 			return addon.Config[name]
 		},
-		"NodePoolsConfig": func() []api.ClusterAutoscalerNodePoolsSpec {
+		"GetClusterAutoscalerNodesConfig": func() string {
+			var ret string
 			if addon.Name != "cluster-autoscaler" {
-				return []api.ClusterAutoscalerNodePoolsSpec{}
+				return ret
 			}
-			return addon.Pools
+			for _, pool := range addon.Pools {
+				ret += fmt.Sprintf("        - --nodes=%s:%s:%s\n", pool.MinNodes, pool.MaxNodes, p.GetAgentVMPrefix(p.GetAgentPoolByName(pool.Name), p.GetAgentPoolIndexByName(pool.Name)))
+			}
+			if ret != "" {
+				ret = strings.TrimRight(ret, "\n")
+			}
+			return ret
 		},
 	}
 }
@@ -707,7 +713,7 @@ func getContainerAddonsString(properties *api.Properties, sourcePath string) str
 				orchProfile := properties.OrchestratorProfile
 				versions := strings.Split(orchProfile.OrchestratorVersion, ".")
 				addon := orchProfile.KubernetesConfig.GetAddonByName(addonName)
-				templ := template.New("addon resolver template").Funcs(getAddonFuncMap(addon))
+				templ := template.New("addon resolver template").Funcs(getAddonFuncMap(addon, properties))
 				addonFile := getCustomDataFilePath(setting.sourceFile, sourcePath, versions[0]+"."+versions[1])
 				addonFileBytes, err := Asset(addonFile)
 				if err != nil {

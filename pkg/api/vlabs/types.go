@@ -237,13 +237,21 @@ type KubernetesContainerSpec struct {
 	MemoryLimits   string `json:"memoryLimits,omitempty"`
 }
 
+// ClusterAutoscalerNodePoolsSpec defines configuration for pool-specific cluster-autoscaler configuration
+type ClusterAutoscalerNodePoolsSpec struct {
+	Name     string `json:"name,omitempty"`
+	MinNodes string `json:"min-nodes,omitempty"`
+	MaxNodes string `json:"max-nodes,omitempty"`
+}
+
 // KubernetesAddon defines a list of addons w/ configuration to include with the cluster deployment
 type KubernetesAddon struct {
-	Name       string                    `json:"name,omitempty"`
-	Enabled    *bool                     `json:"enabled,omitempty"`
-	Containers []KubernetesContainerSpec `json:"containers,omitempty"`
-	Config     map[string]string         `json:"config,omitempty"`
-	Data       string                    `json:"data,omitempty"`
+	Name       string                           `json:"name,omitempty"`
+	Enabled    *bool                            `json:"enabled,omitempty"`
+	Containers []KubernetesContainerSpec        `json:"containers,omitempty"`
+	Config     map[string]string                `json:"config,omitempty"`
+	Pools      []ClusterAutoscalerNodePoolsSpec `json:"pools,omitempty"`
+	Data       string                           `json:"data,omitempty"`
 }
 
 // PrivateCluster defines the configuration for a private cluster

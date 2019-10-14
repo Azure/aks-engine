@@ -786,7 +786,13 @@ func convertAddonsToAPI(v *vlabs.KubernetesConfig, a *KubernetesConfig) {
 				MemoryLimits:   v.Addons[i].Containers[j].MemoryLimits,
 			})
 		}
-
+		for k := range v.Addons[i].Pools {
+			a.Addons[i].Pools = append(a.Addons[i].Pools, ClusterAutoscalerNodePoolsSpec{
+				Name:     v.Addons[i].Pools[k].Name,
+				MinNodes: v.Addons[i].Pools[k].MinNodes,
+				MaxNodes: v.Addons[i].Pools[k].MaxNodes,
+			})
+		}
 		if v.Addons[i].Config != nil {
 			for key, val := range v.Addons[i].Config {
 				a.Addons[i].Config[key] = val

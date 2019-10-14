@@ -871,6 +871,16 @@ func (p *Properties) K8sOrchestratorName() string {
 	return ""
 }
 
+// GetAgentPoolByName returns the pool in the AgentPoolProfiles array that matches a name, nil if no match
+func (p *Properties) GetAgentPoolByName(name string) *AgentPoolProfile {
+	for _, profile := range p.AgentPoolProfiles {
+		if profile.Name == name {
+			return profile
+		}
+	}
+	return nil
+}
+
 // GetAgentPoolIndexByName returns the index of the provided agentpool.
 func (p *Properties) GetAgentPoolIndexByName(name string) int {
 	index := -1
