@@ -23,12 +23,20 @@ func (cs *ContainerService) setAddonsConfig(isUpdate bool) {
 	k8sComponents := K8sComponentsByVersionMap[o.OrchestratorVersion]
 	specConfig := cloudSpecConfig.KubernetesSpecConfig
 	omsagentImage := "mcr.microsoft.com/azuremonitor/containerinsights/ciprod:ciprod10112019"
-	if strings.EqualFold(cloudSpecConfig.CloudName, "AzureChinaCloud") {
-		omsagentImage = "dockerhub.azk8s.cn/microsoft/oms:ciprod10112019"
+	var workspaceDomain string
+	if cs.Properties.IsAzureStackCloud() {
+		dependenciesLocation := string(cs.Properties.CustomCloudProfile.DependenciesLocation)
+		workspaceDomain = getLogAnalyticsWorkspaceDomain(dependenciesLocation)
+		if strings.EqualFold(dependenciesLocation, "china") {
+			omsagentImage = "dockerhub.azk8s.cn/microsoft/oms:ciprod10112019"
+		}
+	} else {
+		workspaceDomain = getLogAnalyticsWorkspaceDomain(cloudSpecConfig.CloudName)
+		if strings.EqualFold(cloudSpecConfig.CloudName, "AzureChinaCloud") {
+			omsagentImage = "dockerhub.azk8s.cn/microsoft/oms:ciprod10112019"
+		}
 	}
-	workspaceDomain := getLogAnalyticsWorkspaceDomain(cloudSpecConfig.CloudName)
 	workspaceDomain = base64.StdEncoding.EncodeToString([]byte(workspaceDomain))
-
 	defaultsHeapsterAddonsConfig := KubernetesAddon{
 		Name:    HeapsterAddonName,
 		Enabled: to.BoolPtr(DefaultHeapsterAddonEnabled && !common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.13.0")),
@@ -500,16 +508,21 @@ func synthesizeAddonsConfig(addons []KubernetesAddon, addon KubernetesAddon, isU
 	}
 }
 
+// get log analyticsworkspace domain based on the cloudName or dependenciesLocation for azure stack
 func getLogAnalyticsWorkspaceDomain(cloudName string) string {
 	var workspaceDomain string
 	switch cloudName {
 	case "AzurePublicCloud":
+	case "public":
 		workspaceDomain = "opinsights.azure.com"
 	case "AzureChinaCloud":
+	case "china":
 		workspaceDomain = "opinsights.azure.cn"
 	case "AzureUSGovernmentCloud":
+	case "usgovernment":
 		workspaceDomain = "opinsights.azure.us"
 	case "AzureGermanCloud":
+	case "german":
 		workspaceDomain = "opinsights.azure.de"
 	default:
 		workspaceDomain = "opinsights.azure.com"
