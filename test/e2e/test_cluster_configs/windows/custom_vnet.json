@@ -8,33 +8,11 @@
 			"orchestratorProfile": {
 				"orchestratorType": "Kubernetes",
 				"kubernetesConfig": {
-					"clusterSubnet": "10.239.0.0/16",
-					"addons": [
-						{
-							"name": "aad-pod-identity",
-							"enabled": true
-						},
-						{
-							"name": "cluster-autoscaler",
-							"enabled": true
-						},
-						{
-							"name": "tiller",
-							"enabled": true
-						},
-						{
-							"name": "kubernetes-dashboard",
-							"enabled": true
-						},
-						{
-							"name": "rescheduler",
-							"enabled": true
-						}
-					]
+					"clusterSubnet": "10.239.0.0/16"
 				}
 			},
 			"masterProfile": {
-				"count": 3,
+				"count": 1,
 				"dnsPrefix": "",
 				"vmSize": "Standard_D2_v3",
 				"OSDiskSizeGB": 200,
