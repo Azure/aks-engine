@@ -20804,10 +20804,8 @@ spec:
         - --logtostderr=true
         - --cloud-provider=azure
         - --skip-nodes-with-local-storage=false
-        {{range $pool := .NodePoolsConfig}}
-        - --nodes={{$pool.min-nodes}}:{{$pool.min-nodes}}:{{$pool.name}}
-        {{end}}
         - --scan-interval={{ContainerConfig "scan-interval"}}
+{{GetClusterAutoscalerNodesConfig}}
         env:
         - name: ARM_CLOUD
           value: "<cloud>"
@@ -24050,10 +24048,8 @@ spec:
         - --logtostderr=true
         - --cloud-provider=azure
         - --skip-nodes-with-local-storage=false
-        {{range $pool := .NodePoolsConfig}}
-        - --nodes={{$pool.min-nodes}}:{{$pool.min-nodes}}:{{$pool.name}}
-        {{end}}
         - --scan-interval={{ContainerConfig "scan-interval"}}
+{{GetClusterAutoscalerNodesConfig}}
         env:
         - name: ARM_CLOUD
           value: "<cloud>"
