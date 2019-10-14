@@ -178,8 +178,12 @@ func addSecret(m paramsMap, k string, v interface{}, encode bool) {
 }
 
 func makeMasterExtensionScriptCommands(cs *api.ContainerService) string {
+	curlCaCertOpt := ""
+	if cs.Properties.IsAzureStackCloud() {
+		curlCaCertOpt = fmt.Sprintf("--cacert %s", AzureStackCaCertLocation)
+	}
 	return makeExtensionScriptCommands(cs.Properties.MasterProfile.PreprovisionExtension,
-		cs.Properties.ExtensionProfiles)
+		curlCaCertOpt, cs.Properties.ExtensionProfiles)
 }
 
 func makeAgentExtensionScriptCommands(cs *api.ContainerService, profile *api.AgentPoolProfile) string {
@@ -187,11 +191,15 @@ func makeAgentExtensionScriptCommands(cs *api.ContainerService, profile *api.Age
 		return makeWindowsExtensionScriptCommands(profile.PreprovisionExtension,
 			cs.Properties.ExtensionProfiles)
 	}
+	curlCaCertOpt := ""
+	if cs.Properties.IsAzureStackCloud() {
+		curlCaCertOpt = fmt.Sprintf("--cacert %s", AzureStackCaCertLocation)
+	}
 	return makeExtensionScriptCommands(profile.PreprovisionExtension,
-		cs.Properties.ExtensionProfiles)
+		curlCaCertOpt, cs.Properties.ExtensionProfiles)
 }
 
-func makeExtensionScriptCommands(extension *api.Extension, extensionProfiles []*api.ExtensionProfile) string {
+func makeExtensionScriptCommands(extension *api.Extension, curlCaCertOpt string, extensionProfiles []*api.ExtensionProfile) string {
 	var extensionProfile *api.ExtensionProfile
 	for _, eP := range extensionProfiles {
 		if strings.EqualFold(eP.Name, extension.Name) {
@@ -207,8 +215,8 @@ func makeExtensionScriptCommands(extension *api.Extension, extensionProfiles []*
 	extensionsParameterReference := fmt.Sprintf("parameters('%sParameters')", extensionProfile.Name)
 	scriptURL := getExtensionURL(extensionProfile.RootURL, extensionProfile.Name, extensionProfile.Version, extensionProfile.Script, extensionProfile.URLQuery)
 	scriptFilePath := fmt.Sprintf("/opt/azure/containers/extensions/%s/%s", extensionProfile.Name, extensionProfile.Script)
-	return fmt.Sprintf("- sudo /usr/bin/curl --retry 5 --retry-delay 10 --retry-max-time 30 -o %s --create-dirs \"%s\" \n- sudo /bin/chmod 744 %s \n- sudo %s ',%s,' > /var/log/%s-output.log",
-		scriptFilePath, scriptURL, scriptFilePath, scriptFilePath, extensionsParameterReference, extensionProfile.Name)
+	return fmt.Sprintf("- sudo /usr/bin/curl --retry 5 --retry-delay 10 --retry-max-time 30 -o %s --create-dirs %s \"%s\" \n- sudo /bin/chmod 744 %s \n- sudo %s ',%s,' > /var/log/%s-output.log",
+		scriptFilePath, curlCaCertOpt, scriptURL, scriptFilePath, scriptFilePath, extensionsParameterReference, extensionProfile.Name)
 }
 
 func makeWindowsExtensionScriptCommands(extension *api.Extension, extensionProfiles []*api.ExtensionProfile) string {
