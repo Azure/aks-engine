@@ -528,17 +528,13 @@ func (dc *deployCmd) getLogAnalyticsWorkspaceDomain() string {
 		cloudOrDependenciesLocation = string(dc.containerService.Properties.CustomCloudProfile.DependenciesLocation)
 	}
 	switch cloudOrDependenciesLocation {
-	case "AzurePublicCloud":
-	case "public":
+	case "AzurePublicCloud", "public":
 		workspaceDomain = "opinsights.azure.com"
-	case "AzureChinaCloud":
-	case "china":
+	case "AzureChinaCloud", "china":
 		workspaceDomain = "opinsights.azure.cn"
-	case "AzureUSGovernmentCloud":
-	case "usgovernment":
+	case "AzureUSGovernmentCloud", "usgovernment":
 		workspaceDomain = "opinsights.azure.us"
-	case "AzureGermanCloud":
-	case "german":
+	case "AzureGermanCloud", "german":
 		workspaceDomain = "opinsights.azure.de"
 	default:
 		workspaceDomain = "opinsights.azure.com"
