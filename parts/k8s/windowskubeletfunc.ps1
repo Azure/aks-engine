@@ -368,6 +368,12 @@ Install-KubernetesServices {
         throw "Unknown network type $NetworkPlugin, can't configure kubelet"
     }
 
+    # TODO: move out of this funciton
+    if ($NetworkPlugin -eq "kubenet") {
+        Write-Host "Writing CNI config for kubenet"
+        Write-WinCNIConfig $KubeletArgList
+    }
+
     # Used in WinCNI version of kubeletstart.ps1
     $KubeletArgListStr = ""
     $KubeletArgList | Foreach-Object {
@@ -587,6 +593,7 @@ try
 
     Start-Sleep 10
     # Add route to all other POD networks
+    Write-Host "Updating CNI config - PodCIRD: `$podCIDR, MasterSubnetGW: `$masterSubnetGW"
     Update-CNIConfig `$podCIDR `$masterSubnetGW
 
     $KubeletCommandLine

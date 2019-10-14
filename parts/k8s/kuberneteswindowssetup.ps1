@@ -328,5 +328,5 @@ try
 catch
 {
     Write-Error $_
-    exit 1
+    [Enviornment]::Exit(1)
 }
