@@ -15,6 +15,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"regexp"
+	"strconv"
 	"strings"
 	"syscall"
 	"time"
@@ -67,6 +68,7 @@ var (
 	sshConn                         *remote.Connection
 	kubeConfig                      *Config
 	firstMasterRegexp               *regexp.Regexp
+	masterNodes                     []node.Node
 )
 
 var _ = BeforeSuite(func() {
@@ -93,7 +95,8 @@ var _ = BeforeSuite(func() {
 	longRunningApacheDeploymentName = "php-apache-long-running"
 
 	if !cfg.BlockSSHPort {
-		masterNodes, err := node.GetByRegexWithRetry("^k8s-master-", 3*time.Minute, cfg.Timeout)
+		var err error
+		masterNodes, err = node.GetByRegexWithRetry("^k8s-master-", 3*time.Minute, cfg.Timeout)
 		Expect(err).NotTo(HaveOccurred())
 		masterName := masterNodes[0].Metadata.Name
 		if strings.Contains(masterName, "vmss") {
@@ -150,11 +153,9 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				var err error
 				if !eng.ExpandedDefinition.Properties.HasLowPriorityScaleset() {
 					nodeList, err = node.GetReady()
-				} else {
-					var nodes []node.Node
-					nodes, err = node.GetByRegexWithRetry(firstMasterRegexStr, 3*time.Minute, cfg.Timeout)
+				} else
 					nodeList = &node.List{
-						Nodes: nodes,
+						Nodes: masterNodes,
 					}
 				}
 				Expect(err).NotTo(HaveOccurred())
@@ -613,7 +614,11 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 
 		It("should report all nodes in a Ready state", func() {
 			var expectedReadyNodes int
-			if !eng.ExpandedDefinition.Properties.HasLowPriorityScaleset() {
+			var clusterAutoscalerInstalled bool
+			if hasAddon, _ := eng.HasAddon("cluster-autoscaler"); hasAddon {
+				clusterAutoscalerInstalled = true
+			}
+			if !eng.ExpandedDefinition.Properties.HasLowPriorityScaleset() && !clusterAutoscalerInstalled {
 				expectedReadyNodes = eng.NodeCount()
 				log.Printf("Checking for %d Ready nodes\n", expectedReadyNodes)
 			} else {
@@ -629,8 +634,6 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 		It("should have node labels and annotations", func() {
 			if !eng.ExpandedDefinition.Properties.HasLowPriorityScaleset() {
 				totalNodeCount := eng.NodeCount()
-				masterNodes, err := node.GetByRegexWithRetry(firstMasterRegexStr, 3*time.Minute, cfg.Timeout)
-				Expect(err).NotTo(HaveOccurred())
 				nodes := totalNodeCount - len(masterNodes)
 				nodeList, err := node.GetByLabel("foo")
 				Expect(err).NotTo(HaveOccurred())
@@ -1018,8 +1021,12 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 							}
 						}
 
+						var clusterAutoscalerInstalled bool
+						if hasAddon, _ := eng.HasAddon("cluster-autoscaler"); hasAddon {
+							clusterAutoscalerInstalled = true
+						}
 						var expectedReadyNodes int
-						if !eng.ExpandedDefinition.Properties.HasLowPriorityScaleset() {
+						if !eng.ExpandedDefinition.Properties.HasLowPriorityScaleset() && !clusterAutoscalerInstalled {
 							expectedReadyNodes = len(nodeList.Nodes)
 							log.Printf("Checking for %d Ready nodes\n", expectedReadyNodes)
 						} else {
@@ -1152,6 +1159,10 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 
 		It("should be able to autoscale", func() {
 			if eng.AnyAgentIsLinux() && eng.ExpandedDefinition.Properties.OrchestratorProfile.KubernetesConfig.EnableAggregatedAPIs {
+				var clusterAutoscalerInstalled bool
+				if hasAddon, _ := eng.HasAddon("cluster-autoscaler"); hasAddon {
+					clusterAutoscalerInstalled = true
+				}
 				// Inspired by http://blog.kubernetes.io/2016/07/autoscaling-in-kubernetes.html
 				r := rand.New(rand.NewSource(time.Now().UnixNano()))
 				By("Creating a php-apache deployment")
@@ -1178,7 +1189,14 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 
 				By("Assigning hpa configuration to the php-apache deployment")
 				// Apply autoscale characteristics to deployment
-				err = phpApacheDeploy.CreateDeploymentHPADeleteIfExist(80, 1, 10)
+				var totalMaxPods int
+				for _, profile := range eng.ExpandedDefinition.Properties.AgentPoolProfiles {
+					maxPods, _ := strconv.Atoi(profile.KubernetesConfig.KubeletConfig["--max-pods"])
+					n, err := node.GetByRegexWithRetry(fmt.Sprintf("^k8s-%s", profile.Name), 3*time.Minute, cfg.Timeout)
+					Expect(err).NotTo(HaveOccurred())
+					totalMaxPods += (len(n) * maxPods)
+				}
+				err = phpApacheDeploy.CreateDeploymentHPADeleteIfExist(10, 1, totalMaxPods+1)
 				Expect(err).NotTo(HaveOccurred())
 				h, err := hpa.Get(longRunningApacheDeploymentName, "default", 10)
 				Expect(err).NotTo(HaveOccurred())
@@ -1209,12 +1227,30 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				}
 				Expect(err).NotTo(HaveOccurred())
 
+				if clusterAutoscalerInstalled {
+					By("Ensuring at least one more node was added by cluster-autoscaler")
+					fmt.Printf("Making sure we have at least %d nodes", eng.NodeCount()+1)
+					ready := node.WaitOnReadyMin(eng.NodeCount()+1, 10*time.Second, cfg.Timeout)
+					Expect(ready).To(BeTrue())
+				}
+
 				By("Stopping load")
+				var nodes []node.Node
+				if clusterAutoscalerInstalled {
+					nodes, err = node.GetWithRetry(1*time.Second, cfg.Timeout)
+					Expect(err).NotTo(HaveOccurred())
+				}
 				err = loadTestDeploy.Delete(util.DefaultDeleteRetries)
 				Expect(err).NotTo(HaveOccurred())
 
+				if clusterAutoscalerInstalled {
+					By("Ensuring at least one node is removed by cluster-autoscaler")
+					ready := node.WaitOnReadyMax(len(nodes)-1, 30*time.Second, cfg.Timeout)
+					Expect(ready).To(BeTrue())
+				}
+
 				By("Ensuring we only have 1 apache-php pod after stopping load")
-				_, err = phpApacheDeploy.WaitForReplicas(-1, 1, 5*time.Second, 20*time.Minute)
+				_, err = phpApacheDeploy.WaitForReplicas(-1, 1, 5*time.Second, cfg.Timeout)
 				if err != nil {
 					e := h.Describe()
 					Expect(e).NotTo(HaveOccurred())
