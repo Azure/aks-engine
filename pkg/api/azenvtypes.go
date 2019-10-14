@@ -178,7 +178,7 @@ var (
 		ImageOffer:     "WindowsServer",
 		ImageSku:       "2019-Datacenter-Core-with-Containers-smalldisk",
 		ImagePublisher: "MicrosoftWindowsServer",
-		ImageVersion:   "17763.737.1909062324",
+		ImageVersion:   "17763.805.1910061628",
 	}
 
 	// ACC1604OSImageConfig is the ACC image based on Ubuntu 16.04.
