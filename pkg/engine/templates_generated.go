@@ -20780,7 +20780,6 @@ spec:
             memory: {{ContainerMemReqs "cluster-autoscaler"}}
         command:
         - ./cluster-autoscaler
-        - --v=3
         - --logtostderr=true
         - --cloud-provider=azure
         - --skip-nodes-with-local-storage=false
@@ -20818,6 +20817,7 @@ spec:
         - --unremovable-node-recheck-timeout={{ContainerConfig "unremovable-node-recheck-timeout"}}
         - --v={{ContainerConfig "v"}}
         - --write-status-configmap={{ContainerConfig "write-status-configmap"}}
+        - --balance-similar-node-groups={{ContainerConfig "balance-similar-node-groups"}}
 {{GetClusterAutoscalerNodesConfig}}
         env:
         - name: ARM_CLOUD
@@ -24054,7 +24054,6 @@ spec:
             memory: {{ContainerMemReqs "cluster-autoscaler"}}
         command:
         - ./cluster-autoscaler
-        - --v=3
         - --logtostderr=true
         - --cloud-provider=azure
         - --skip-nodes-with-local-storage=false
@@ -24092,6 +24091,7 @@ spec:
         - --unremovable-node-recheck-timeout={{ContainerConfig "unremovable-node-recheck-timeout"}}
         - --v={{ContainerConfig "v"}}
         - --write-status-configmap={{ContainerConfig "write-status-configmap"}}
+        - --balance-similar-node-groups={{ContainerConfig "balance-similar-node-groups"}}
 {{GetClusterAutoscalerNodesConfig}}
         env:
         - name: ARM_CLOUD
@@ -29642,7 +29642,6 @@ spec:
             memory: {{ContainerMemReqs "cluster-autoscaler"}}
         command:
         - ./cluster-autoscaler
-        - --v=3
         - --logtostderr=true
         - --cloud-provider=azure
         - --skip-nodes-with-local-storage=false
@@ -29680,6 +29679,7 @@ spec:
         - --unremovable-node-recheck-timeout={{ContainerConfig "unremovable-node-recheck-timeout"}}
         - --v={{ContainerConfig "v"}}
         - --write-status-configmap={{ContainerConfig "write-status-configmap"}}
+        - --balance-similar-node-groups={{ContainerConfig "balance-similar-node-groups"}}
 {{GetClusterAutoscalerNodesConfig}}
         env:
         - name: ARM_CLOUD
