@@ -13,14 +13,13 @@ jobs:
     maxParallel: 0
   pool:
     vmImage: ubuntu-16.04
-  
+
   container: dev1
-  
+
   variables:
     GOBIN:  '$(GOPATH)/bin' # Go binaries path
     GOROOT: '/usr/local/go' # Go installation path
-    GOPATH: '$(system.defaultWorkingDirectory)/gopath' # Go workspace path
-    modulePath: '$(GOPATH)/src/github.com/$(build.repository.name)' # Path to the module's code
+    GOPATH: '$(Agent.TempDirectory)/go' # Go workspace path
     TIMEOUT: 20m
     CLUSTER_DEFINITION: ${{ parameters.apimodel }}
     ORCHESTRATOR_RELEASE: ${{ parameters.k8sRelease }}
