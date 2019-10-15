@@ -1231,7 +1231,6 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 
 				if clusterAutoscalerInstalled {
 					By("Ensuring at least one more node was added by cluster-autoscaler")
-					fmt.Printf("Making sure we have at least %d nodes", eng.NodeCount()+1)
 					ready := node.WaitOnReadyMin(eng.NodeCount()+1, 10*time.Second, cfg.Timeout)
 					Expect(ready).To(BeTrue())
 				}
@@ -1239,6 +1238,8 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				By("Stopping load")
 				var nodes []node.Node
 				if clusterAutoscalerInstalled {
+					By("Wait a few more mins for additional nodes to come online, so that we can more effectively calculate node count reduction")
+					time.Sleep(3 * time.Minute)
 					nodes, err = node.GetWithRetry(1*time.Second, cfg.Timeout)
 					Expect(err).NotTo(HaveOccurred())
 				}
