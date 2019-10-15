@@ -14567,26 +14567,11 @@ users:
 configClusterAutoscalerAddon() {
     CLUSTER_AUTOSCALER_ADDON_FILE=/etc/kubernetes/addons/cluster-autoscaler-deployment.yaml
     wait_for_file 1200 1 $CLUSTER_AUTOSCALER_ADDON_FILE || exit $ERR_FILE_WATCH_TIMEOUT
-    if [[ "${USE_MANAGED_IDENTITY_EXTENSION}" == true ]]; then
-        CLUSTER_AUTOSCALER_MSI_VOLUME_MOUNT="- mountPath: /var/lib/waagent/\n\          name: waagent\n\          readOnly: true"
-        CLUSTER_AUTOSCALER_MSI_VOLUME="- hostPath:\n\          path: /var/lib/waagent/\n\        name: waagent"
-        CLUSTER_AUTOSCALER_MSI_HOST_NETWORK="hostNetwork: true"
-
-        sed -i "s|<volMounts>|${CLUSTER_AUTOSCALER_MSI_VOLUME_MOUNT}|g" $CLUSTER_AUTOSCALER_ADDON_FILE
-        sed -i "s|<vols>|${CLUSTER_AUTOSCALER_MSI_VOLUME}|g" $CLUSTER_AUTOSCALER_ADDON_FILE
-        sed -i "s|<hostNet>|${CLUSTER_AUTOSCALER_MSI_HOST_NETWORK}|g" $CLUSTER_AUTOSCALER_ADDON_FILE
-    elif [[ "${USE_MANAGED_IDENTITY_EXTENSION}" == false ]]; then
-        sed -i "s|<volMounts>|""|g" $CLUSTER_AUTOSCALER_ADDON_FILE
-        sed -i "s|<vols>|""|g" $CLUSTER_AUTOSCALER_ADDON_FILE
-        sed -i "s|<hostNet>|""|g" $CLUSTER_AUTOSCALER_ADDON_FILE
-    fi
-
     sed -i "s|<clientID>|$(echo $SERVICE_PRINCIPAL_CLIENT_ID | base64)|g" $CLUSTER_AUTOSCALER_ADDON_FILE
     sed -i "s|<clientSec>|$(echo $SERVICE_PRINCIPAL_CLIENT_SECRET | base64)|g" $CLUSTER_AUTOSCALER_ADDON_FILE
     sed -i "s|<subID>|$(echo $SUBSCRIPTION_ID | base64)|g" $CLUSTER_AUTOSCALER_ADDON_FILE
     sed -i "s|<tenantID>|$(echo $TENANT_ID | base64)|g" $CLUSTER_AUTOSCALER_ADDON_FILE
     sed -i "s|<rg>|$(echo $RESOURCE_GROUP | base64)|g" $CLUSTER_AUTOSCALER_ADDON_FILE
-    sed -i "s|<vmType>|$(echo $VM_TYPE | base64)|g" $CLUSTER_AUTOSCALER_ADDON_FILE
 }
 
 configACIConnectorAddon() {
@@ -14610,7 +14595,7 @@ configAzurePolicyAddon() {
 }
 
 configAddons() {
-    if [[ "${CLUSTER_AUTOSCALER_ADDON}" = True ]]; then
+    if [[ "${CLUSTER_AUTOSCALER_ADDON}" = true ]]; then
         configClusterAutoscalerAddon
     fi
 
@@ -17469,10 +17454,6 @@ MASTER_CONTAINER_ADDONS_PLACEHOLDER
 
 {{if AdminGroupID }}
     sed -i "s|<gID>|{{WrapAsParameter "aadAdminGroupId"}}|g" "/etc/kubernetes/addons/aad-default-admin-group-rbac.yaml"
-{{end}}
-
-{{if .OrchestratorProfile.KubernetesConfig.IsClusterAutoscalerEnabled}}
-    sed -i "s|<cloud>|{{WrapAsParameter "kubernetesClusterAutoscalerAzureCloud"}}|g; s|<useManagedIdentity>|{{WrapAsParameter "kubernetesClusterAutoscalerUseManagedIdentity"}}|g" /etc/kubernetes/addons/cluster-autoscaler-deployment.yaml
 {{end}}
 
 {{if EnableDataEncryptionAtRest }}
@@ -20748,7 +20729,7 @@ data:
   ResourceGroup: <rg>
   SubscriptionID: <subID>
   TenantID: <tenantID>
-  VMType: <vmType>
+  VMType: {{GetVMType}}
 kind: Secret
 metadata:
   name: cluster-autoscaler-azure
@@ -23992,7 +23973,7 @@ data:
   ResourceGroup: <rg>
   SubscriptionID: <subID>
   TenantID: <tenantID>
-  VMType: <vmType>
+  VMType: {{GetVMType}}
 kind: Secret
 metadata:
   name: cluster-autoscaler-azure
@@ -29550,7 +29531,7 @@ data:
   ResourceGroup: <rg>
   SubscriptionID: <subID>
   TenantID: <tenantID>
-  VMType: <vmType>
+  VMType: {{GetVMType}}
 kind: Secret
 metadata:
   name: cluster-autoscaler-azure
@@ -29578,8 +29559,7 @@ spec:
       labels:
         app: cluster-autoscaler
     spec:
-      priorityClassName: system-node-critical
-      <hostNet>
+      priorityClassName: system-node-critical{{GetHostNetwork}}
       serviceAccountName: cluster-autoscaler
       tolerations:
       - effect: NoSchedule
@@ -29610,7 +29590,7 @@ spec:
 {{GetClusterAutoscalerNodesConfig}}
         env:
         - name: ARM_CLOUD
-          value: "<cloud>"
+          value: "{{GetCloud}}"
         - name: ARM_SUBSCRIPTION_ID
           valueFrom:
             secretKeyRef:
@@ -29642,19 +29622,17 @@ spec:
               key: VMType
               name: cluster-autoscaler-azure
         - name: ARM_USE_MANAGED_IDENTITY_EXTENSION
-          value: "<useManagedIdentity>"
+          value: "{{UseManagedIdentity}}"
         volumeMounts:
         - mountPath: /etc/ssl/certs/ca-certificates.crt
           name: ssl-certs
-          readOnly: true
-        <volMounts>
+          readOnly: true{{GetVolumeMounts}}
       restartPolicy: Always
       volumes:
       - hostPath:
           path: /etc/ssl/certs/ca-certificates.crt
           type: ""
-        name: ssl-certs
-      <vols>
+        name: ssl-certs{{GetVolumes}}
 #EOF
 `)
 
@@ -31450,26 +31428,6 @@ var _k8sKubernetesparamsT = []byte(`{{if .HasAadProfile}}
       },
       "type": "bool"
     },
-    "kubernetesClusterAutoscalerEnabled": {
-      "metadata": {
-        "description": "Cluster autoscaler status"
-      },
-      "type": "bool"
-    },
-{{if .OrchestratorProfile.KubernetesConfig.IsClusterAutoscalerEnabled}}
-    "kubernetesClusterAutoscalerAzureCloud": {
-      "metadata": {
-        "description": "Name of the Azure cloud for the cluster autoscaler."
-      },
-      "type": "string"
-    },
-    "kubernetesClusterAutoscalerUseManagedIdentity": {
-      "metadata": {
-        "description": "Managed identity for the cluster autoscaler addon"
-      },
-      "type": "string"
-    },
-{{end}}
     "kubernetesPodInfraContainerSpec": {
       "metadata": {
         "description": "The container spec for pod infra."

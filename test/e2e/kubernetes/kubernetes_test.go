@@ -1247,8 +1247,8 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				Expect(err).NotTo(HaveOccurred())
 
 				if clusterAutoscalerInstalled {
-					By("Ensuring at least one node is removed by cluster-autoscaler")
-					ready := node.WaitOnReadyMax(len(nodes)-1, 30*time.Second, cfg.Timeout)
+					By(fmt.Sprintf("Ensuring at least one node is removed by cluster-autoscaler, waiting until we have fewer than %d nodes...", len(nodes)))
+					ready := node.WaitOnReadyMax(len(nodes)-1, 30*time.Second, cfg.Timeout*2)
 					Expect(ready).To(BeTrue())
 				}
 

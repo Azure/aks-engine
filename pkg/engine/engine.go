@@ -642,7 +642,39 @@ func getBase64EncodedGzippedCustomScriptFromStr(str string) string {
 	return base64.StdEncoding.EncodeToString(gzipB.Bytes())
 }
 
-func getAddonFuncMap(addon api.KubernetesAddon, p *api.Properties) template.FuncMap {
+func getAddonFuncMap(addon api.KubernetesAddon) template.FuncMap {
+	return template.FuncMap{
+		"ContainerImage": func(name string) string {
+			i := addon.GetAddonContainersIndexByName(name)
+			return addon.Containers[i].Image
+		},
+
+		"ContainerCPUReqs": func(name string) string {
+			i := addon.GetAddonContainersIndexByName(name)
+			return addon.Containers[i].CPURequests
+		},
+
+		"ContainerCPULimits": func(name string) string {
+			i := addon.GetAddonContainersIndexByName(name)
+			return addon.Containers[i].CPULimits
+		},
+
+		"ContainerMemReqs": func(name string) string {
+			i := addon.GetAddonContainersIndexByName(name)
+			return addon.Containers[i].MemoryRequests
+		},
+
+		"ContainerMemLimits": func(name string) string {
+			i := addon.GetAddonContainersIndexByName(name)
+			return addon.Containers[i].MemoryLimits
+		},
+		"ContainerConfig": func(name string) string {
+			return addon.Config[name]
+		},
+	}
+}
+
+func getClusterAutoscalerAddonFuncMap(addon api.KubernetesAddon, cs *api.ContainerService) template.FuncMap {
 	return template.FuncMap{
 		"ContainerImage": func(name string) string {
 			i := addon.GetAddonContainersIndexByName(name)
@@ -677,17 +709,52 @@ func getAddonFuncMap(addon api.KubernetesAddon, p *api.Properties) template.Func
 				return ret
 			}
 			for _, pool := range addon.Pools {
-				ret += fmt.Sprintf("        - --nodes=%s:%s:%s\n", pool.MinNodes, pool.MaxNodes, p.GetAgentVMPrefix(p.GetAgentPoolByName(pool.Name), p.GetAgentPoolIndexByName(pool.Name)))
+				ret += fmt.Sprintf("        - --nodes=%s:%s:%s\n", pool.MinNodes, pool.MaxNodes, cs.Properties.GetAgentVMPrefix(cs.Properties.GetAgentPoolByName(pool.Name), cs.Properties.GetAgentPoolIndexByName(pool.Name)))
 			}
 			if ret != "" {
 				ret = strings.TrimRight(ret, "\n")
 			}
 			return ret
 		},
+		"GetVMType": func() string {
+			if cs.Properties.AnyAgentUsesVirtualMachineScaleSets() {
+				return base64.StdEncoding.EncodeToString([]byte("vmss"))
+			}
+			return base64.StdEncoding.EncodeToString([]byte("standard"))
+		},
+		"GetVolumeMounts": func() string {
+			if cs.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity {
+				return fmt.Sprintf("\n        - mountPath: /var/lib/waagent/\n          name: waagent\n          readOnly: true")
+			}
+			return ""
+		},
+		"GetVolumes": func() string {
+			if cs.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity {
+				return fmt.Sprintf("\n      - hostPath:\n          path: /var/lib/waagent/\n        name: waagent")
+			}
+			return ""
+		},
+		"GetHostNetwork": func() string {
+			if cs.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity {
+				return fmt.Sprintf("\n      hostNetwork: true")
+			}
+			return ""
+		},
+		"GetCloud": func() string {
+			cloudSpecConfig := cs.GetCloudSpecConfig()
+			return cloudSpecConfig.CloudName
+		},
+		"UseManagedIdentity": func() string {
+			if cs.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity {
+				return "true"
+			}
+			return "false"
+		},
 	}
 }
 
-func getContainerAddonsString(properties *api.Properties, sourcePath string) string {
+func getContainerAddonsString(cs *api.ContainerService, sourcePath string) string {
+	properties := cs.Properties
 	var result string
 	settingsMap := kubernetesContainerAddonSettingsInit(properties)
 
@@ -713,7 +780,13 @@ func getContainerAddonsString(properties *api.Properties, sourcePath string) str
 				orchProfile := properties.OrchestratorProfile
 				versions := strings.Split(orchProfile.OrchestratorVersion, ".")
 				addon := orchProfile.KubernetesConfig.GetAddonByName(addonName)
-				templ := template.New("addon resolver template").Funcs(getAddonFuncMap(addon, properties))
+				var templ *template.Template
+				switch addonName {
+				case "cluster-autoscaler":
+					templ = template.New("addon resolver template").Funcs(getClusterAutoscalerAddonFuncMap(addon, cs))
+				default:
+					templ = template.New("addon resolver template").Funcs(getAddonFuncMap(addon))
+				}
 				addonFile := getCustomDataFilePath(setting.sourceFile, sourcePath, versions[0]+"."+versions[1])
 				addonFileBytes, err := Asset(addonFile)
 				if err != nil {

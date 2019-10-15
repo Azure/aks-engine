@@ -128,7 +128,7 @@ data:
   ResourceGroup: <rg>
   SubscriptionID: <subID>
   TenantID: <tenantID>
-  VMType: <vmType>
+  VMType: {{GetVMType}}
 kind: Secret
 metadata:
   name: cluster-autoscaler-azure
@@ -156,8 +156,7 @@ spec:
       labels:
         app: cluster-autoscaler
     spec:
-      priorityClassName: system-node-critical
-      <hostNet>
+      priorityClassName: system-node-critical{{GetHostNetwork}}
       serviceAccountName: cluster-autoscaler
       tolerations:
       - effect: NoSchedule
@@ -188,7 +187,7 @@ spec:
 {{GetClusterAutoscalerNodesConfig}}
         env:
         - name: ARM_CLOUD
-          value: "<cloud>"
+          value: "{{GetCloud}}"
         - name: ARM_SUBSCRIPTION_ID
           valueFrom:
             secretKeyRef:
@@ -220,17 +219,15 @@ spec:
               key: VMType
               name: cluster-autoscaler-azure
         - name: ARM_USE_MANAGED_IDENTITY_EXTENSION
-          value: "<useManagedIdentity>"
+          value: "{{UseManagedIdentity}}"
         volumeMounts:
         - mountPath: /etc/ssl/certs/ca-certificates.crt
           name: ssl-certs
-          readOnly: true
-        <volMounts>
+          readOnly: true{{GetVolumeMounts}}
       restartPolicy: Always
       volumes:
       - hostPath:
           path: /etc/ssl/certs/ca-certificates.crt
           type: ""
-        name: ssl-certs
-      <vols>
+        name: ssl-certs{{GetVolumes}}
 #EOF

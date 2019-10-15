@@ -373,26 +373,11 @@ users:
 configClusterAutoscalerAddon() {
     CLUSTER_AUTOSCALER_ADDON_FILE=/etc/kubernetes/addons/cluster-autoscaler-deployment.yaml
     wait_for_file 1200 1 $CLUSTER_AUTOSCALER_ADDON_FILE || exit $ERR_FILE_WATCH_TIMEOUT
-    if [[ "${USE_MANAGED_IDENTITY_EXTENSION}" == true ]]; then
-        CLUSTER_AUTOSCALER_MSI_VOLUME_MOUNT="- mountPath: /var/lib/waagent/\n\          name: waagent\n\          readOnly: true"
-        CLUSTER_AUTOSCALER_MSI_VOLUME="- hostPath:\n\          path: /var/lib/waagent/\n\        name: waagent"
-        CLUSTER_AUTOSCALER_MSI_HOST_NETWORK="hostNetwork: true"
-
-        sed -i "s|<volMounts>|${CLUSTER_AUTOSCALER_MSI_VOLUME_MOUNT}|g" $CLUSTER_AUTOSCALER_ADDON_FILE
-        sed -i "s|<vols>|${CLUSTER_AUTOSCALER_MSI_VOLUME}|g" $CLUSTER_AUTOSCALER_ADDON_FILE
-        sed -i "s|<hostNet>|${CLUSTER_AUTOSCALER_MSI_HOST_NETWORK}|g" $CLUSTER_AUTOSCALER_ADDON_FILE
-    elif [[ "${USE_MANAGED_IDENTITY_EXTENSION}" == false ]]; then
-        sed -i "s|<volMounts>|""|g" $CLUSTER_AUTOSCALER_ADDON_FILE
-        sed -i "s|<vols>|""|g" $CLUSTER_AUTOSCALER_ADDON_FILE
-        sed -i "s|<hostNet>|""|g" $CLUSTER_AUTOSCALER_ADDON_FILE
-    fi
-
     sed -i "s|<clientID>|$(echo $SERVICE_PRINCIPAL_CLIENT_ID | base64)|g" $CLUSTER_AUTOSCALER_ADDON_FILE
     sed -i "s|<clientSec>|$(echo $SERVICE_PRINCIPAL_CLIENT_SECRET | base64)|g" $CLUSTER_AUTOSCALER_ADDON_FILE
     sed -i "s|<subID>|$(echo $SUBSCRIPTION_ID | base64)|g" $CLUSTER_AUTOSCALER_ADDON_FILE
     sed -i "s|<tenantID>|$(echo $TENANT_ID | base64)|g" $CLUSTER_AUTOSCALER_ADDON_FILE
     sed -i "s|<rg>|$(echo $RESOURCE_GROUP | base64)|g" $CLUSTER_AUTOSCALER_ADDON_FILE
-    sed -i "s|<vmType>|$(echo $VM_TYPE | base64)|g" $CLUSTER_AUTOSCALER_ADDON_FILE
 }
 
 configACIConnectorAddon() {
@@ -416,7 +401,7 @@ configAzurePolicyAddon() {
 }
 
 configAddons() {
-    if [[ "${CLUSTER_AUTOSCALER_ADDON}" = True ]]; then
+    if [[ "${CLUSTER_AUTOSCALER_ADDON}" = true ]]; then
         configClusterAutoscalerAddon
     fi
 

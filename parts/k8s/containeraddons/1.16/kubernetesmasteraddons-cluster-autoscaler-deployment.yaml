@@ -128,7 +128,7 @@ data:
   ResourceGroup: <rg>
   SubscriptionID: <subID>
   TenantID: <tenantID>
-  VMType: <vmType>
+  VMType: {{GetVMType}}
 kind: Secret
 metadata:
   name: cluster-autoscaler-azure
