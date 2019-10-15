@@ -25,8 +25,8 @@ GITTAG := $(VERSION_SHORT)
 endif
 
 REPO_PATH := github.com/Azure/$(PROJECT)
-DEV_ENV_IMAGE := quay.io/deis/go-dev:v1.23.2
-DEV_ENV_WORK_DIR := /go/src/$(REPO_PATH)
+DEV_ENV_IMAGE := quay.io/deis/go-dev:v1.23.4
+DEV_ENV_WORK_DIR := /aks-engine
 DEV_ENV_OPTS := --rm -v $(CURDIR):$(DEV_ENV_WORK_DIR) -w $(DEV_ENV_WORK_DIR) $(DEV_ENV_VARS)
 DEV_ENV_CMD := docker run $(DEV_ENV_OPTS) $(DEV_ENV_IMAGE)
 DEV_ENV_CMD_IT := docker run -it $(DEV_ENV_OPTS) $(DEV_ENV_IMAGE)
@@ -165,7 +165,7 @@ bootstrap:
 ifndef HAS_GOX
 	go get -u github.com/mitchellh/gox
 endif
-	go get github.com/go-bindata/go-bindata/...@v3.1.2
+	go get github.com/go-bindata/go-bindata
 ifndef HAS_GIT
 	$(error You must install Git)
 endif
