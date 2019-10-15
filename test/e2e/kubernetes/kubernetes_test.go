@@ -1157,117 +1157,6 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			}
 		})
 
-		It("should be able to autoscale", func() {
-			if eng.AnyAgentIsLinux() && eng.ExpandedDefinition.Properties.OrchestratorProfile.KubernetesConfig.EnableAggregatedAPIs {
-				var clusterAutoscalerInstalled bool
-				if hasAddon, _ := eng.HasAddon("cluster-autoscaler"); hasAddon {
-					clusterAutoscalerInstalled = true
-				}
-				// Inspired by http://blog.kubernetes.io/2016/07/autoscaling-in-kubernetes.html
-				r := rand.New(rand.NewSource(time.Now().UnixNano()))
-				By("Creating a php-apache deployment")
-				phpApacheDeploy, err := deployment.CreateLinuxDeployIfNotExist("deis/hpa-example", longRunningApacheDeploymentName, "default", "--requests=cpu=10m,memory=10M")
-				Expect(err).NotTo(HaveOccurred())
-
-				By("Ensuring that the php-apache pod is running")
-				running, err := pod.WaitOnSuccesses(longRunningApacheDeploymentName, "default", 4, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
-				Expect(err).NotTo(HaveOccurred())
-				Expect(running).To(Equal(true))
-
-				By("Ensuring that the php-apache pod has outbound internet access")
-				pods, err := phpApacheDeploy.PodsRunning()
-				Expect(err).NotTo(HaveOccurred())
-				for _, p := range pods {
-					pass, outboundErr := p.CheckLinuxOutboundConnection(5*time.Second, cfg.Timeout)
-					Expect(outboundErr).NotTo(HaveOccurred())
-					Expect(pass).To(BeTrue())
-				}
-
-				By("Exposing TCP 80 internally on the php-apache deployment")
-				err = phpApacheDeploy.ExposeIfNotExist("ClusterIP", 80, 80)
-				Expect(err).NotTo(HaveOccurred())
-
-				By("Assigning hpa configuration to the php-apache deployment")
-				// Apply autoscale characteristics to deployment
-				var totalMaxPods int
-				for _, profile := range eng.ExpandedDefinition.Properties.AgentPoolProfiles {
-					maxPods, _ := strconv.Atoi(profile.KubernetesConfig.KubeletConfig["--max-pods"])
-					n, err := node.GetByRegexWithRetry(fmt.Sprintf("^k8s-%s", profile.Name), 3*time.Minute, cfg.Timeout)
-					Expect(err).NotTo(HaveOccurred())
-					totalMaxPods += (len(n) * maxPods)
-				}
-				maxPods, _ := strconv.Atoi(eng.ExpandedDefinition.Properties.MasterProfile.KubernetesConfig.KubeletConfig["--max-pods"])
-				totalMaxPods += (len(masterNodes) * maxPods)
-				err = phpApacheDeploy.CreateDeploymentHPADeleteIfExist(10, 1, totalMaxPods+1)
-				Expect(err).NotTo(HaveOccurred())
-				h, err := hpa.Get(longRunningApacheDeploymentName, "default", 10)
-				Expect(err).NotTo(HaveOccurred())
-
-				By("Sending load to the php-apache service by creating a 3 replica deployment")
-				// Launch a simple busybox pod that wget's continuously to the apache serviceto simulate load
-				commandString := fmt.Sprintf("while true; do wget -q -O- http://%s.default.svc.cluster.local; done", longRunningApacheDeploymentName)
-				loadTestPrefix := fmt.Sprintf("load-test-%s", cfg.Name)
-				loadTestName := fmt.Sprintf("%s-%v", loadTestPrefix, r.Intn(99999))
-				numLoadTestPods := 3
-				loadTestDeploy, err := deployment.RunLinuxDeployDeleteIfExists(loadTestPrefix, "busybox", loadTestName, "default", commandString, numLoadTestPods)
-				Expect(err).NotTo(HaveOccurred())
-
-				By("Ensuring there are 3 load test pods")
-				running, err = pod.WaitOnSuccesses(loadTestName, "default", 4, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
-				Expect(err).NotTo(HaveOccurred())
-				Expect(running).To(Equal(true))
-				// We should have three load tester pods running
-				loadTestPods, err := pod.GetAllRunningByPrefixWithRetry(loadTestPrefix, "default", 5*time.Second, cfg.Timeout)
-				Expect(err).NotTo(HaveOccurred())
-				Expect(len(loadTestPods)).To(Equal(numLoadTestPods))
-
-				By("Ensuring we have more than 1 apache-php pods due to hpa enforcement")
-				_, err = phpApacheDeploy.WaitForReplicas(2, -1, 5*time.Second, cfg.Timeout)
-				if err != nil {
-					e := h.Describe()
-					Expect(e).NotTo(HaveOccurred())
-				}
-				Expect(err).NotTo(HaveOccurred())
-
-				if clusterAutoscalerInstalled {
-					By("Ensuring at least one more node was added by cluster-autoscaler")
-					ready := node.WaitOnReadyMin(eng.NodeCount()+1, 10*time.Second, cfg.Timeout)
-					Expect(ready).To(BeTrue())
-				}
-
-				By("Stopping load")
-				var nodes []node.Node
-				if clusterAutoscalerInstalled {
-					By("Wait a few more mins for additional nodes to come online, so that we can more effectively calculate node count reduction")
-					time.Sleep(3 * time.Minute)
-					nodes, err = node.GetWithRetry(1*time.Second, cfg.Timeout)
-					Expect(err).NotTo(HaveOccurred())
-				}
-				err = loadTestDeploy.Delete(util.DefaultDeleteRetries)
-				Expect(err).NotTo(HaveOccurred())
-
-				if clusterAutoscalerInstalled {
-					By(fmt.Sprintf("Ensuring at least one node is removed by cluster-autoscaler, waiting until we have fewer than %d nodes...", len(nodes)))
-					ready := node.WaitOnReadyMax(len(nodes)-1, 30*time.Second, cfg.Timeout*2)
-					Expect(ready).To(BeTrue())
-				}
-
-				By("Ensuring we only have 1 apache-php pod after stopping load")
-				_, err = phpApacheDeploy.WaitForReplicas(-1, 1, 5*time.Second, cfg.Timeout)
-				if err != nil {
-					e := h.Describe()
-					Expect(e).NotTo(HaveOccurred())
-				}
-				Expect(err).NotTo(HaveOccurred())
-
-				By("Deleting HPA configuration")
-				err = h.Delete(util.DefaultDeleteRetries)
-				Expect(err).NotTo(HaveOccurred())
-			} else {
-				Skip("This flavor/version of Kubernetes doesn't support hpa autoscale")
-			}
-		})
-
 		It("should be able to schedule a pod to a master node", func() {
 			By("Creating a pod with master nodeSelector")
 			p, err := pod.CreatePodFromFile(filepath.Join(WorkloadDir, "nginx-master.yaml"), "nginx-master", "default", 1*time.Second, cfg.Timeout)
@@ -1984,6 +1873,117 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				}
 			} else {
 				Skip("Skip per-node tests in low-priority VMSS cluster configuration scenario")
+			}
+		})
+
+		It("should be able to autoscale", func() {
+			if eng.AnyAgentIsLinux() && eng.ExpandedDefinition.Properties.OrchestratorProfile.KubernetesConfig.EnableAggregatedAPIs {
+				var clusterAutoscalerInstalled bool
+				if hasAddon, _ := eng.HasAddon("cluster-autoscaler"); hasAddon {
+					clusterAutoscalerInstalled = true
+				}
+				// Inspired by http://blog.kubernetes.io/2016/07/autoscaling-in-kubernetes.html
+				r := rand.New(rand.NewSource(time.Now().UnixNano()))
+				By("Creating a php-apache deployment")
+				phpApacheDeploy, err := deployment.CreateLinuxDeployIfNotExist("deis/hpa-example", longRunningApacheDeploymentName, "default", "--requests=cpu=10m,memory=10M")
+				Expect(err).NotTo(HaveOccurred())
+
+				By("Ensuring that the php-apache pod is running")
+				running, err := pod.WaitOnSuccesses(longRunningApacheDeploymentName, "default", 4, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(running).To(Equal(true))
+
+				By("Ensuring that the php-apache pod has outbound internet access")
+				pods, err := phpApacheDeploy.PodsRunning()
+				Expect(err).NotTo(HaveOccurred())
+				for _, p := range pods {
+					pass, outboundErr := p.CheckLinuxOutboundConnection(5*time.Second, cfg.Timeout)
+					Expect(outboundErr).NotTo(HaveOccurred())
+					Expect(pass).To(BeTrue())
+				}
+
+				By("Exposing TCP 80 internally on the php-apache deployment")
+				err = phpApacheDeploy.ExposeIfNotExist("ClusterIP", 80, 80)
+				Expect(err).NotTo(HaveOccurred())
+
+				By("Assigning hpa configuration to the php-apache deployment")
+				// Apply autoscale characteristics to deployment
+				var totalMaxPods int
+				for _, profile := range eng.ExpandedDefinition.Properties.AgentPoolProfiles {
+					maxPods, _ := strconv.Atoi(profile.KubernetesConfig.KubeletConfig["--max-pods"])
+					n, err := node.GetByRegexWithRetry(fmt.Sprintf("^k8s-%s", profile.Name), 3*time.Minute, cfg.Timeout)
+					Expect(err).NotTo(HaveOccurred())
+					totalMaxPods += (len(n) * maxPods)
+				}
+				maxPods, _ := strconv.Atoi(eng.ExpandedDefinition.Properties.MasterProfile.KubernetesConfig.KubeletConfig["--max-pods"])
+				totalMaxPods += (len(masterNodes) * maxPods)
+				err = phpApacheDeploy.CreateDeploymentHPADeleteIfExist(25, 1, totalMaxPods+1)
+				Expect(err).NotTo(HaveOccurred())
+				h, err := hpa.Get(longRunningApacheDeploymentName, "default", 10)
+				Expect(err).NotTo(HaveOccurred())
+
+				By("Sending load to the php-apache service by creating a 3 replica deployment")
+				// Launch a simple busybox pod that wget's continuously to the apache serviceto simulate load
+				commandString := fmt.Sprintf("while true; do wget -q -O- http://%s.default.svc.cluster.local; done", longRunningApacheDeploymentName)
+				loadTestPrefix := fmt.Sprintf("load-test-%s", cfg.Name)
+				loadTestName := fmt.Sprintf("%s-%v", loadTestPrefix, r.Intn(99999))
+				numLoadTestPods := 3
+				loadTestDeploy, err := deployment.RunLinuxDeployDeleteIfExists(loadTestPrefix, "busybox", loadTestName, "default", commandString, numLoadTestPods)
+				Expect(err).NotTo(HaveOccurred())
+
+				By("Ensuring there are 3 load test pods")
+				running, err = pod.WaitOnSuccesses(loadTestName, "default", 4, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(running).To(Equal(true))
+				// We should have three load tester pods running
+				loadTestPods, err := pod.GetAllRunningByPrefixWithRetry(loadTestPrefix, "default", 5*time.Second, cfg.Timeout)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(len(loadTestPods)).To(Equal(numLoadTestPods))
+
+				By("Ensuring we have more than 1 apache-php pods due to hpa enforcement")
+				_, err = phpApacheDeploy.WaitForReplicas(2, -1, 5*time.Second, cfg.Timeout)
+				if err != nil {
+					e := h.Describe()
+					Expect(e).NotTo(HaveOccurred())
+				}
+				Expect(err).NotTo(HaveOccurred())
+
+				if clusterAutoscalerInstalled {
+					By("Ensuring at least one more node was added by cluster-autoscaler")
+					ready := node.WaitOnReadyMin(eng.NodeCount()+1, 10*time.Second, cfg.Timeout)
+					Expect(ready).To(BeTrue())
+				}
+
+				By("Stopping load")
+				var nodes []node.Node
+				if clusterAutoscalerInstalled {
+					By("Wait a few more mins for additional nodes to come online, so that we can more effectively calculate node count reduction")
+					time.Sleep(3 * time.Minute)
+					nodes, err = node.GetWithRetry(1*time.Second, cfg.Timeout)
+					Expect(err).NotTo(HaveOccurred())
+				}
+				err = loadTestDeploy.Delete(util.DefaultDeleteRetries)
+				Expect(err).NotTo(HaveOccurred())
+
+				By("Ensuring we only have 1 apache-php pod after stopping load")
+				_, err = phpApacheDeploy.WaitForReplicas(-1, 1, 5*time.Second, cfg.Timeout)
+				if err != nil {
+					e := h.Describe()
+					Expect(e).NotTo(HaveOccurred())
+				}
+				Expect(err).NotTo(HaveOccurred())
+
+				if clusterAutoscalerInstalled {
+					By(fmt.Sprintf("Ensuring at least one node is removed by cluster-autoscaler, waiting until we have fewer than %d nodes...", len(nodes)))
+					ready := node.WaitOnReadyMax(len(nodes)-1, 30*time.Second, cfg.Timeout*2)
+					Expect(ready).To(BeTrue())
+				}
+
+				By("Deleting HPA configuration")
+				err = h.Delete(util.DefaultDeleteRetries)
+				Expect(err).NotTo(HaveOccurred())
+			} else {
+				Skip("This flavor/version of Kubernetes doesn't support hpa autoscale")
 			}
 		})
 

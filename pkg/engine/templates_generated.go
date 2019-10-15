@@ -20609,7 +20609,7 @@ metadata:
     kubernetes.io/cluster-service: "true"
     addonmanager.kubernetes.io/mode: Reconcile
   name: cluster-autoscaler
-  namespace: kube-system
+  namespace: {{ContainerConfig "namespace"}}
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
@@ -20668,7 +20668,7 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
   name: cluster-autoscaler
-  namespace: kube-system
+  namespace: {{ContainerConfig "namespace"}}
   labels:
     k8s-addon: cluster-autoscaler.addons.k8s.io
     k8s-app: cluster-autoscaler
@@ -20701,13 +20701,13 @@ roleRef:
 subjects:
   - kind: ServiceAccount
     name: cluster-autoscaler
-    namespace: kube-system
+    namespace: {{ContainerConfig "namespace"}}
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
   name: cluster-autoscaler
-  namespace: kube-system
+  namespace: {{ContainerConfig "namespace"}}
   labels:
     k8s-addon: cluster-autoscaler.addons.k8s.io
     k8s-app: cluster-autoscaler
@@ -20720,7 +20720,7 @@ roleRef:
 subjects:
   - kind: ServiceAccount
     name: cluster-autoscaler
-    namespace: kube-system
+    namespace: {{ContainerConfig "namespace"}}
 ---
 apiVersion: v1
 data:
@@ -20733,7 +20733,7 @@ data:
 kind: Secret
 metadata:
   name: cluster-autoscaler-azure
-  namespace: kube-system
+  namespace: {{ContainerConfig "namespace"}}
   labels:
     kubernetes.io/cluster-service: "true"
     addonmanager.kubernetes.io/mode: Reconcile
@@ -20746,7 +20746,7 @@ metadata:
     kubernetes.io/cluster-service: "true"
     addonmanager.kubernetes.io/mode: Reconcile
   name: cluster-autoscaler
-  namespace: kube-system
+  namespace: {{ContainerConfig "namespace"}}
 spec:
   replicas: 1
   selector:
@@ -20757,8 +20757,7 @@ spec:
       labels:
         app: cluster-autoscaler
     spec:
-      priorityClassName: system-node-critical
-      <hostNet>
+      priorityClassName: system-node-critical{{GetHostNetwork}}
       serviceAccountName: cluster-autoscaler
       tolerations:
       - effect: NoSchedule
@@ -20786,10 +20785,43 @@ spec:
         - --cloud-provider=azure
         - --skip-nodes-with-local-storage=false
         - --scan-interval={{ContainerConfig "scan-interval"}}
+        - --expendable-pods-priority-cutoff={{ContainerConfig "expendable-pods-priority-cutoff"}}
+        - --ignore-daemonsets-utilization={{ContainerConfig "ignore-daemonsets-utilization"}}
+        - --ignore-mirror-pods-utilization={{ContainerConfig "ignore-mirror-pods-utilization"}}
+        - --max-autoprovisioned-node-group-count={{ContainerConfig "max-autoprovisioned-node-group-count"}}
+        - --max-empty-bulk-delete={{ContainerConfig "max-empty-bulk-delete"}}
+        - --max-failing-time={{ContainerConfig "max-failing-time"}}
+        - --max-graceful-termination-sec={{ContainerConfig "max-graceful-termination-sec"}}
+        - --max-inactivity={{ContainerConfig "max-inactivity"}}
+        - --max-node-provision-time={{ContainerConfig "max-node-provision-time"}}
+        - --max-nodes-total={{ContainerConfig "max-nodes-total"}}
+        - --max-total-unready-percentage={{ContainerConfig "max-total-unready-percentage"}}
+        - --memory-total={{ContainerConfig "memory-total"}}
+        - --min-replica-count={{ContainerConfig "min-replica-count"}}
+        - --namespace={{ContainerConfig "namespace"}}
+        - --new-pod-scale-up-delay={{ContainerConfig "new-pod-scale-up-delay"}}
+        - --node-autoprovisioning-enabled={{ContainerConfig "node-autoprovisioning-enabled"}}
+        - --ok-total-unready-count={{ContainerConfig "ok-total-unready-count"}}
+        - --scale-down-candidates-pool-min-count={{ContainerConfig "scale-down-candidates-pool-min-count"}}
+        - --scale-down-candidates-pool-ratio={{ContainerConfig "scale-down-candidates-pool-ratio"}}
+        - --scale-down-delay-after-add={{ContainerConfig "scale-down-delay-after-add"}}
+        - --scale-down-delay-after-delete={{ContainerConfig "scale-down-delay-after-delete"}}
+        - --scale-down-delay-after-failure={{ContainerConfig "scale-down-delay-after-failure"}}
+        - --scale-down-enabled={{ContainerConfig "scale-down-enabled"}}
+        - --scale-down-non-empty-candidates-count={{ContainerConfig "scale-down-non-empty-candidates-count"}}
+        - --scale-down-unneeded-time={{ContainerConfig "scale-down-unneeded-time"}}
+        - --scale-down-unready-time={{ContainerConfig "scale-down-unready-time"}}
+        - --scale-down-utilization-threshold={{ContainerConfig "scale-down-utilization-threshold"}}
+        - --skip-nodes-with-local-storage={{ContainerConfig "skip-nodes-with-local-storage"}}
+        - --skip-nodes-with-system-pods={{ContainerConfig "skip-nodes-with-system-pods"}}
+        - --stderrthreshold={{ContainerConfig "stderrthreshold"}}
+        - --unremovable-node-recheck-timeout={{ContainerConfig "unremovable-node-recheck-timeout"}}
+        - --v={{ContainerConfig "v"}}
+        - --write-status-configmap={{ContainerConfig "write-status-configmap"}}
 {{GetClusterAutoscalerNodesConfig}}
         env:
         - name: ARM_CLOUD
-          value: "<cloud>"
+          value: "{{GetCloud}}"
         - name: ARM_SUBSCRIPTION_ID
           valueFrom:
             secretKeyRef:
@@ -20821,19 +20853,17 @@ spec:
               key: VMType
               name: cluster-autoscaler-azure
         - name: ARM_USE_MANAGED_IDENTITY_EXTENSION
-          value: "<useManagedIdentity>"
+          value: "{{UseManagedIdentity}}"
         volumeMounts:
         - mountPath: /etc/ssl/certs/ca-certificates.crt
           name: ssl-certs
-          readOnly: true
-        <volMounts>
+          readOnly: true{{GetVolumeMounts}}
       restartPolicy: Always
       volumes:
       - hostPath:
           path: /etc/ssl/certs/ca-certificates.crt
           type: ""
-        name: ssl-certs
-      <vols>
+        name: ssl-certs{{GetVolumes}}
 #EOF
 `)
 
@@ -23853,7 +23883,7 @@ metadata:
     kubernetes.io/cluster-service: "true"
     addonmanager.kubernetes.io/mode: Reconcile
   name: cluster-autoscaler
-  namespace: kube-system
+  namespace: {{ContainerConfig "namespace"}}
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
@@ -23912,7 +23942,7 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
   name: cluster-autoscaler
-  namespace: kube-system
+  namespace: {{ContainerConfig "namespace"}}
   labels:
     k8s-addon: cluster-autoscaler.addons.k8s.io
     k8s-app: cluster-autoscaler
@@ -23945,13 +23975,13 @@ roleRef:
 subjects:
   - kind: ServiceAccount
     name: cluster-autoscaler
-    namespace: kube-system
+    namespace: {{ContainerConfig "namespace"}}
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
   name: cluster-autoscaler
-  namespace: kube-system
+  namespace: {{ContainerConfig "namespace"}}
   labels:
     k8s-addon: cluster-autoscaler.addons.k8s.io
     k8s-app: cluster-autoscaler
@@ -23964,7 +23994,7 @@ roleRef:
 subjects:
   - kind: ServiceAccount
     name: cluster-autoscaler
-    namespace: kube-system
+    namespace: {{ContainerConfig "namespace"}}
 ---
 apiVersion: v1
 data:
@@ -23977,7 +24007,7 @@ data:
 kind: Secret
 metadata:
   name: cluster-autoscaler-azure
-  namespace: kube-system
+  namespace: {{ContainerConfig "namespace"}}
   labels:
     kubernetes.io/cluster-service: "true"
     addonmanager.kubernetes.io/mode: Reconcile
@@ -23990,7 +24020,7 @@ metadata:
     kubernetes.io/cluster-service: "true"
     addonmanager.kubernetes.io/mode: Reconcile
   name: cluster-autoscaler
-  namespace: kube-system
+  namespace: {{ContainerConfig "namespace"}}
 spec:
   replicas: 1
   selector:
@@ -24001,8 +24031,7 @@ spec:
       labels:
         app: cluster-autoscaler
     spec:
-      priorityClassName: system-node-critical
-      <hostNet>
+      priorityClassName: system-node-critical{{GetHostNetwork}}
       serviceAccountName: cluster-autoscaler
       tolerations:
       - effect: NoSchedule
@@ -24030,10 +24059,43 @@ spec:
         - --cloud-provider=azure
         - --skip-nodes-with-local-storage=false
         - --scan-interval={{ContainerConfig "scan-interval"}}
+        - --expendable-pods-priority-cutoff={{ContainerConfig "expendable-pods-priority-cutoff"}}
+        - --ignore-daemonsets-utilization={{ContainerConfig "ignore-daemonsets-utilization"}}
+        - --ignore-mirror-pods-utilization={{ContainerConfig "ignore-mirror-pods-utilization"}}
+        - --max-autoprovisioned-node-group-count={{ContainerConfig "max-autoprovisioned-node-group-count"}}
+        - --max-empty-bulk-delete={{ContainerConfig "max-empty-bulk-delete"}}
+        - --max-failing-time={{ContainerConfig "max-failing-time"}}
+        - --max-graceful-termination-sec={{ContainerConfig "max-graceful-termination-sec"}}
+        - --max-inactivity={{ContainerConfig "max-inactivity"}}
+        - --max-node-provision-time={{ContainerConfig "max-node-provision-time"}}
+        - --max-nodes-total={{ContainerConfig "max-nodes-total"}}
+        - --max-total-unready-percentage={{ContainerConfig "max-total-unready-percentage"}}
+        - --memory-total={{ContainerConfig "memory-total"}}
+        - --min-replica-count={{ContainerConfig "min-replica-count"}}
+        - --namespace={{ContainerConfig "namespace"}}
+        - --new-pod-scale-up-delay={{ContainerConfig "new-pod-scale-up-delay"}}
+        - --node-autoprovisioning-enabled={{ContainerConfig "node-autoprovisioning-enabled"}}
+        - --ok-total-unready-count={{ContainerConfig "ok-total-unready-count"}}
+        - --scale-down-candidates-pool-min-count={{ContainerConfig "scale-down-candidates-pool-min-count"}}
+        - --scale-down-candidates-pool-ratio={{ContainerConfig "scale-down-candidates-pool-ratio"}}
+        - --scale-down-delay-after-add={{ContainerConfig "scale-down-delay-after-add"}}
+        - --scale-down-delay-after-delete={{ContainerConfig "scale-down-delay-after-delete"}}
+        - --scale-down-delay-after-failure={{ContainerConfig "scale-down-delay-after-failure"}}
+        - --scale-down-enabled={{ContainerConfig "scale-down-enabled"}}
+        - --scale-down-non-empty-candidates-count={{ContainerConfig "scale-down-non-empty-candidates-count"}}
+        - --scale-down-unneeded-time={{ContainerConfig "scale-down-unneeded-time"}}
+        - --scale-down-unready-time={{ContainerConfig "scale-down-unready-time"}}
+        - --scale-down-utilization-threshold={{ContainerConfig "scale-down-utilization-threshold"}}
+        - --skip-nodes-with-local-storage={{ContainerConfig "skip-nodes-with-local-storage"}}
+        - --skip-nodes-with-system-pods={{ContainerConfig "skip-nodes-with-system-pods"}}
+        - --stderrthreshold={{ContainerConfig "stderrthreshold"}}
+        - --unremovable-node-recheck-timeout={{ContainerConfig "unremovable-node-recheck-timeout"}}
+        - --v={{ContainerConfig "v"}}
+        - --write-status-configmap={{ContainerConfig "write-status-configmap"}}
 {{GetClusterAutoscalerNodesConfig}}
         env:
         - name: ARM_CLOUD
-          value: "<cloud>"
+          value: "{{GetCloud}}"
         - name: ARM_SUBSCRIPTION_ID
           valueFrom:
             secretKeyRef:
@@ -24065,19 +24127,17 @@ spec:
               key: VMType
               name: cluster-autoscaler-azure
         - name: ARM_USE_MANAGED_IDENTITY_EXTENSION
-          value: "<useManagedIdentity>"
+          value: "{{UseManagedIdentity}}"
         volumeMounts:
         - mountPath: /etc/ssl/certs/ca-certificates.crt
           name: ssl-certs
-          readOnly: true
-        <volMounts>
+          readOnly: true{{GetVolumeMounts}}
       restartPolicy: Always
       volumes:
       - hostPath:
           path: /etc/ssl/certs/ca-certificates.crt
           type: ""
-        name: ssl-certs
-      <vols>
+        name: ssl-certs{{GetVolumes}}
 #EOF
 `)
 
@@ -29411,7 +29471,7 @@ metadata:
     kubernetes.io/cluster-service: "true"
     addonmanager.kubernetes.io/mode: Reconcile
   name: cluster-autoscaler
-  namespace: kube-system
+  namespace: {{ContainerConfig "namespace"}}
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
@@ -29470,7 +29530,7 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
   name: cluster-autoscaler
-  namespace: kube-system
+  namespace: {{ContainerConfig "namespace"}}
   labels:
     k8s-addon: cluster-autoscaler.addons.k8s.io
     k8s-app: cluster-autoscaler
@@ -29503,13 +29563,13 @@ roleRef:
 subjects:
   - kind: ServiceAccount
     name: cluster-autoscaler
-    namespace: kube-system
+    namespace: {{ContainerConfig "namespace"}}
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
   name: cluster-autoscaler
-  namespace: kube-system
+  namespace: {{ContainerConfig "namespace"}}
   labels:
     k8s-addon: cluster-autoscaler.addons.k8s.io
     k8s-app: cluster-autoscaler
@@ -29522,7 +29582,7 @@ roleRef:
 subjects:
   - kind: ServiceAccount
     name: cluster-autoscaler
-    namespace: kube-system
+    namespace: {{ContainerConfig "namespace"}}
 ---
 apiVersion: v1
 data:
@@ -29535,7 +29595,7 @@ data:
 kind: Secret
 metadata:
   name: cluster-autoscaler-azure
-  namespace: kube-system
+  namespace: {{ContainerConfig "namespace"}}
   labels:
     kubernetes.io/cluster-service: "true"
     addonmanager.kubernetes.io/mode: Reconcile
@@ -29548,7 +29608,7 @@ metadata:
     kubernetes.io/cluster-service: "true"
     addonmanager.kubernetes.io/mode: Reconcile
   name: cluster-autoscaler
-  namespace: kube-system
+  namespace: {{ContainerConfig "namespace"}}
 spec:
   replicas: 1
   selector:
@@ -29587,6 +29647,39 @@ spec:
         - --cloud-provider=azure
         - --skip-nodes-with-local-storage=false
         - --scan-interval={{ContainerConfig "scan-interval"}}
+        - --expendable-pods-priority-cutoff={{ContainerConfig "expendable-pods-priority-cutoff"}}
+        - --ignore-daemonsets-utilization={{ContainerConfig "ignore-daemonsets-utilization"}}
+        - --ignore-mirror-pods-utilization={{ContainerConfig "ignore-mirror-pods-utilization"}}
+        - --max-autoprovisioned-node-group-count={{ContainerConfig "max-autoprovisioned-node-group-count"}}
+        - --max-empty-bulk-delete={{ContainerConfig "max-empty-bulk-delete"}}
+        - --max-failing-time={{ContainerConfig "max-failing-time"}}
+        - --max-graceful-termination-sec={{ContainerConfig "max-graceful-termination-sec"}}
+        - --max-inactivity={{ContainerConfig "max-inactivity"}}
+        - --max-node-provision-time={{ContainerConfig "max-node-provision-time"}}
+        - --max-nodes-total={{ContainerConfig "max-nodes-total"}}
+        - --max-total-unready-percentage={{ContainerConfig "max-total-unready-percentage"}}
+        - --memory-total={{ContainerConfig "memory-total"}}
+        - --min-replica-count={{ContainerConfig "min-replica-count"}}
+        - --namespace={{ContainerConfig "namespace"}}
+        - --new-pod-scale-up-delay={{ContainerConfig "new-pod-scale-up-delay"}}
+        - --node-autoprovisioning-enabled={{ContainerConfig "node-autoprovisioning-enabled"}}
+        - --ok-total-unready-count={{ContainerConfig "ok-total-unready-count"}}
+        - --scale-down-candidates-pool-min-count={{ContainerConfig "scale-down-candidates-pool-min-count"}}
+        - --scale-down-candidates-pool-ratio={{ContainerConfig "scale-down-candidates-pool-ratio"}}
+        - --scale-down-delay-after-add={{ContainerConfig "scale-down-delay-after-add"}}
+        - --scale-down-delay-after-delete={{ContainerConfig "scale-down-delay-after-delete"}}
+        - --scale-down-delay-after-failure={{ContainerConfig "scale-down-delay-after-failure"}}
+        - --scale-down-enabled={{ContainerConfig "scale-down-enabled"}}
+        - --scale-down-non-empty-candidates-count={{ContainerConfig "scale-down-non-empty-candidates-count"}}
+        - --scale-down-unneeded-time={{ContainerConfig "scale-down-unneeded-time"}}
+        - --scale-down-unready-time={{ContainerConfig "scale-down-unready-time"}}
+        - --scale-down-utilization-threshold={{ContainerConfig "scale-down-utilization-threshold"}}
+        - --skip-nodes-with-local-storage={{ContainerConfig "skip-nodes-with-local-storage"}}
+        - --skip-nodes-with-system-pods={{ContainerConfig "skip-nodes-with-system-pods"}}
+        - --stderrthreshold={{ContainerConfig "stderrthreshold"}}
+        - --unremovable-node-recheck-timeout={{ContainerConfig "unremovable-node-recheck-timeout"}}
+        - --v={{ContainerConfig "v"}}
+        - --write-status-configmap={{ContainerConfig "write-status-configmap"}}
 {{GetClusterAutoscalerNodesConfig}}
         env:
         - name: ARM_CLOUD
