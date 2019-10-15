@@ -314,7 +314,7 @@ try
             Remove-Item $CacheDir -Recurse -Force
         }
 
-        Register-RestartCleanupTask
+        Register-NodeCleanupScriptTask
 
         Write-Log "Setup Complete, reboot computer"
         Restart-Computer

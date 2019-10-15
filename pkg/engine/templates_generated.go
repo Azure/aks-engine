@@ -187,13 +187,13 @@
 // ../../parts/k8s/manifests/kubernetesmaster-kube-controller-manager-custom.yaml
 // ../../parts/k8s/manifests/kubernetesmaster-kube-controller-manager.yaml
 // ../../parts/k8s/manifests/kubernetesmaster-kube-scheduler.yaml
-// ../../parts/k8s/on-restart.ps1
 // ../../parts/k8s/windowsazurecnifunc.ps1
 // ../../parts/k8s/windowsazurecnifunc.tests.ps1
 // ../../parts/k8s/windowscnifunc.ps1
 // ../../parts/k8s/windowsconfigfunc.ps1
 // ../../parts/k8s/windowsinstallopensshfunc.ps1
 // ../../parts/k8s/windowskubeletfunc.ps1
+// ../../parts/k8s/windowsnodecleanup.ps1
 // ../../parts/masteroutputs.t
 // ../../parts/masterparams.t
 // ../../parts/swarm/Install-ContainerHost-And-Join-Swarm.ps1
@@ -31090,16 +31090,15 @@ function Get-NetworkLogCollectionScripts {
     DownloadFileOverHttp -Url 'https://github.com/microsoft/SDN/raw/master/Kubernetes/windows/helper.psm1' -DestinationPath 'c:\k\debug\helper.psm1'
 }
 
-function Register-RestartCleanupTask {
+function Register-NodeCleanupScriptTask {
     Write-Log "Creating a startup task to run on-restart.ps1"
-    Copy-Item -Path "c:\AzureData\k8s\on-restart.ps1" -Destination "c:\k\on-restart.ps1"
-    $action = New-ScheduledTaskAction -Execute "powershell.exe" -Argument "-File ` + "`" + `"c:\k\on-restart.ps1` + "`" + `""
+    Copy-Item -Path "c:\AzureData\k8s\windowsnodecleanup.ps1" -Destination "c:\k\windowsnodecleanup.ps1"
+    $action = New-ScheduledTaskAction -Execute "powershell.exe" -Argument "-File ` + "`" + `"c:\k\windowsnodecleanup.ps1` + "`" + `""
     $prinical = New-ScheduledTaskPrincipal -UserId SYSTEM -LogonType ServiceAccount -RunLevel Highest
     $trigger = New-JobTrigger -AtStartup -RandomDelay 00:00:05
     $definition = New-ScheduledTask -Action $action -Principal $prinical -Trigger $trigger -Description "k8s-restart-job"
     Register-ScheduledTask -TaskName "k8s-restart-job" -InputObject $definition
-}
-`)
+}`)
 
 func k8sKuberneteswindowsfunctionsPs1Bytes() ([]byte, error) {
 	return _k8sKuberneteswindowsfunctionsPs1, nil
@@ -31432,7 +31431,7 @@ try
             Remove-Item $CacheDir -Recurse -Force
         }
 
-        Register-RestartCleanupTask
+        Register-NodeCleanupScriptTask
 
         Write-Log "Setup Complete, reboot computer"
         Restart-Computer
@@ -31790,115 +31789,6 @@ func k8sManifestsKubernetesmasterKubeSchedulerYaml() (*asset, error) {
 	}
 
 	info := bindataFileInfo{name: "k8s/manifests/kubernetesmaster-kube-scheduler.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
-	a := &asset{bytes: bytes, info: info}
-	return a, nil
-}
-
-var _k8sOnRestartPs1 = []byte(`$global:LogPath = "c:\k\on-restart.log"
-$global:HNSModule = "c:\k\hns.psm1"
-
-filter Timestamp { "$(Get-Date -Format o): $_" }
-
-function Write-Log ($message) {
-    $message | Timestamp | Tee-Object -FilePath $global:LogPath -Append
-}
-
-Write-Log "Entering on-restart.ps1"
-
-#
-# Stop services
-#
-Write-Log "Stopping kubeproxy service"
-Stop-Service kubeproxy
-
-Write-Log "Stopping kubelet service"
-Stop-Service kubelet
-
-#
-# Perform cleanup
-#
-Import-Module $global:HNSModule
-
-Write-Log "Cleaning up persisted HNS policy lists"
-Get-HnsPolicyList | Remove-HnsPolicyList
-
-$hnsNetwork = Get-HnsNetwork | Where-Object Name -EQ azure
-if ($hnsNetwork){
-    Write-Log "Cleaning up HNS network 'azure'..."
-
-    Write-Log "Cleaning up containers"
-    docker ps -q | ForEach-Object {docker rm $_ -f}
-
-    Write-Log "Removing old HNS network"
-    Remove-HnsNetwork $hnsNetwork
-
-    taskkill /IM azure-vnet.exe /f
-    taskkill /IM azure-vnet-ipam.exe /f
-
-    $cnijson = [io.path]::Combine("c:\k", "azure-vnet-ipam.json")
-    if ((Test-Path $cnijson))
-    {
-        Remove-Item $cnijson
-    }
-
-    $cnilock = [io.path]::Combine("c:\k", "azure-vnet-ipam.json.lock")
-    if ((Test-Path $cnilock))
-    {
-        Remove-Item $cnilock
-    }
-
-    $cnijson = [io.path]::Combine("c:\k", "azure-vnet.json")
-    if ((Test-Path $cnijson))
-    {
-        Remove-Item $cnijson
-    }
-
-    $cnilock = [io.path]::Combine("c:\k", "azure-vnet.json.lock")
-    if ((Test-Path $cnilock))
-    {
-        Remove-Item $cnilock
-    }
-}
-
-$hnsNetwork = Get-HnsNetwork | Where-Object Name -EQ l2bridge
-if ($hnsNetwork)
-{
-    Write-Log "cleaning up HNS network 'l2bridge'"
-
-    Write-Log "cleaning up containers"
-    docker ps -q | ForEach-Object {docker rm $_ -f}
-
-    Write-Log "removing old HNS network"
-    Remove-HnsNetwork $hnsNetwork
-
-    Start-Sleep 10 
-
-    Write-Log "Creating HNS network 'l2bridge'"
-    # TODO: read values from cni config on disk and create network
-}
-
-#
-# Start Services
-#
-Write-Log "Starting kubelet service"
-Start-Service kubelet
-
-Write-Log "Starting kubeproxy service"
-Start-Service kubeproxy
-
-Write-Log "Exiting on-restart.ps1"`)
-
-func k8sOnRestartPs1Bytes() ([]byte, error) {
-	return _k8sOnRestartPs1, nil
-}
-
-func k8sOnRestartPs1() (*asset, error) {
-	bytes, err := k8sOnRestartPs1Bytes()
-	if err != nil {
-		return nil, err
-	}
-
-	info := bindataFileInfo{name: "k8s/on-restart.ps1", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -33093,6 +32983,104 @@ func k8sWindowskubeletfuncPs1() (*asset, error) {
 	}
 
 	info := bindataFileInfo{name: "k8s/windowskubeletfunc.ps1", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
+var _k8sWindowsnodecleanupPs1 = []byte(`$global:LogPath = "c:\k\windowsnodecleanup.log"
+$global:HNSModule = "c:\k\hns.psm1"
+
+filter Timestamp { "$(Get-Date -Format o): $_" }
+
+function Write-Log ($message) {
+    $message | Timestamp | Tee-Object -FilePath $global:LogPath -Append
+}
+
+Write-Log "Entering windowsnodecleanup.ps1"
+
+Import-Module $global:HNSModule
+
+#
+# Stop services
+#
+Write-Log "Stopping kubeproxy service"
+Stop-Service kubeproxy
+
+Write-Log "Stopping kubelet service"
+Stop-Service kubelet
+
+#
+# Perform cleanup
+#
+
+Write-Log "Cleaning up persisted HNS policy lists"
+Get-HnsPolicyList | Remove-HnsPolicyList
+
+$hnsNetwork = Get-HnsNetwork | Where-Object Name -EQ azure
+if ($hnsNetwork) {
+    Write-Log "Cleaning up HNS network 'azure'..."
+
+    Write-Log "Cleaning up containers"
+    docker ps -q | ForEach-Object { docker rm $_ -f }
+
+    Write-Log "Removing old HNS network"
+    Remove-HnsNetwork $hnsNetwork
+
+    taskkill /IM azure-vnet.exe /f
+    taskkill /IM azure-vnet-ipam.exe /f
+
+    $filesToRemove = @(
+        "c:\k\azure-vnet.json",
+        "c:\k\azure-vnet.json.lock",
+        "c:\k\azure-vnet-ipam.json",
+        "c:\k\azure-vnet-ipam.json.lock"
+    )
+
+    foreach ($file in $filesToRemove) {
+        if (Test-Path $file) {
+            Write-Log "Deleting stale file at $file"
+            Remove-Item $file
+        }
+    }
+}
+
+$hnsNetwork = Get-HnsNetwork | Where-Object Name -EQ l2bridge
+if ($hnsNetwork) {
+    Write-Log "cleaning up HNS network 'l2bridge'"
+
+    Write-Log "cleaning up containers"
+    docker ps -q | ForEach-Object { docker rm $_ -f }
+
+    Write-Log "removing old HNS network"
+    Remove-HnsNetwork $hnsNetwork
+
+    Start-Sleep 10 
+}
+
+# TODO: if network plugin is kubenet create l2bridge network
+
+#
+# Start Services
+#
+Write-Log "Starting kubelet service"
+Start-Service kubelet
+
+Write-Log "Starting kubeproxy service"
+Start-Service kubeproxy
+
+Write-Log "Exiting windowsnodecleanup.ps1"`)
+
+func k8sWindowsnodecleanupPs1Bytes() ([]byte, error) {
+	return _k8sWindowsnodecleanupPs1, nil
+}
+
+func k8sWindowsnodecleanupPs1() (*asset, error) {
+	bytes, err := k8sWindowsnodecleanupPs1Bytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "k8s/windowsnodecleanup.ps1", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -36687,13 +36675,13 @@ var _bindata = map[string]func() (*asset, error){
 	"k8s/manifests/kubernetesmaster-kube-controller-manager-custom.yaml": k8sManifestsKubernetesmasterKubeControllerManagerCustomYaml,
 	"k8s/manifests/kubernetesmaster-kube-controller-manager.yaml":        k8sManifestsKubernetesmasterKubeControllerManagerYaml,
 	"k8s/manifests/kubernetesmaster-kube-scheduler.yaml":                 k8sManifestsKubernetesmasterKubeSchedulerYaml,
-	"k8s/on-restart.ps1":                                                 k8sOnRestartPs1,
 	"k8s/windowsazurecnifunc.ps1":                                        k8sWindowsazurecnifuncPs1,
 	"k8s/windowsazurecnifunc.tests.ps1":                                  k8sWindowsazurecnifuncTestsPs1,
 	"k8s/windowscnifunc.ps1":                                             k8sWindowscnifuncPs1,
 	"k8s/windowsconfigfunc.ps1":                                          k8sWindowsconfigfuncPs1,
 	"k8s/windowsinstallopensshfunc.ps1":                                  k8sWindowsinstallopensshfuncPs1,
 	"k8s/windowskubeletfunc.ps1":                                         k8sWindowskubeletfuncPs1,
+	"k8s/windowsnodecleanup.ps1":                                         k8sWindowsnodecleanupPs1,
 	"masteroutputs.t":                                                    masteroutputsT,
 	"masterparams.t":                                                     masterparamsT,
 	"swarm/Install-ContainerHost-And-Join-Swarm.ps1":                     swarmInstallContainerhostAndJoinSwarmPs1,
@@ -36995,13 +36983,13 @@ var _bintree = &bintree{nil, map[string]*bintree{
 			"kubernetesmaster-kube-controller-manager.yaml":        {k8sManifestsKubernetesmasterKubeControllerManagerYaml, map[string]*bintree{}},
 			"kubernetesmaster-kube-scheduler.yaml":                 {k8sManifestsKubernetesmasterKubeSchedulerYaml, map[string]*bintree{}},
 		}},
-		"on-restart.ps1":                {k8sOnRestartPs1, map[string]*bintree{}},
 		"windowsazurecnifunc.ps1":       {k8sWindowsazurecnifuncPs1, map[string]*bintree{}},
 		"windowsazurecnifunc.tests.ps1": {k8sWindowsazurecnifuncTestsPs1, map[string]*bintree{}},
 		"windowscnifunc.ps1":            {k8sWindowscnifuncPs1, map[string]*bintree{}},
 		"windowsconfigfunc.ps1":         {k8sWindowsconfigfuncPs1, map[string]*bintree{}},
 		"windowsinstallopensshfunc.ps1": {k8sWindowsinstallopensshfuncPs1, map[string]*bintree{}},
 		"windowskubeletfunc.ps1":        {k8sWindowskubeletfuncPs1, map[string]*bintree{}},
+		"windowsnodecleanup.ps1":        {k8sWindowsnodecleanupPs1, map[string]*bintree{}},
 	}},
 	"masteroutputs.t": {masteroutputsT, map[string]*bintree{}},
 	"masterparams.t":  {masterparamsT, map[string]*bintree{}},
