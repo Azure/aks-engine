@@ -33,39 +33,30 @@ jobs:
   variables:
     GOBIN:  '$(GOPATH)/bin' # Go binaries path
     GOROOT: '/usr/local/go' # Go installation path
-    GOPATH: '$(system.defaultWorkingDirectory)/gopath' # Go workspace path
-    modulePath: '$(GOPATH)/src/github.com/$(build.repository.name)' # Path to the module's code
+    GOPATH: '$(Agent.TempDirectory)/go' # Go workspace path
 
   steps:
   - script: |
       mkdir -p '$(GOBIN)'
       mkdir -p '$(GOPATH)/pkg'
-      mkdir -p '$(modulePath)'
       shopt -s extglob
-      mv !(gopath) '$(modulePath)'
       echo '##vso[task.prependpath]$(GOBIN)'
       echo '##vso[task.prependpath]$(GOROOT)/bin'
     displayName: 'Set up the Go workspace'
   - script: make bootstrap
     displayName: Install dependencies
-    workingDirectory: $(modulePath)
   - script: make validate-dependencies
     displayName: Check if imports, Gopkg.toml, and Gopkg.lock are in sync
-    workingDirectory: $(modulePath)
   - script: make ensure-generated
     displayName: Check if generated code is up to date
-    workingDirectory: $(modulePath)
   - script: make generate test-style
     displayName: Run linting rules
-    workingDirectory: $(modulePath)
   - script: make build-cross
     displayName: Build cross-architectural binaries
-    workingDirectory: $(modulePath)
   - script: |
         export CODECOV_TOKEN=$(CODECOV_TOKEN)
         make coverage
     displayName: Run unit tests and calculate coverage
-    workingDirectory: $(modulePath)
 
 - template: e2e-job-template.yaml
   parameters:
