@@ -460,6 +460,9 @@ func (dc *deployCmd) configureContainerMonitoringAddon(ctx context.Context, k8sC
 	var err error
 	addon := k8sConfig.GetAddonByName("container-monitoring")
 	if addon.Config == nil || len(addon.Config) == 0 || addon.Config["logAnalyticsWorkspaceResourceId"] != "" {
+		if dc.containerService.Properties.IsAzureStackCloud() {
+			return errors.New("This is not supported option for AzureStackCloud. Please provide config with workspaceGuid and workspaceKey")
+		}
 		workspaceResourceID = strings.TrimSpace(addon.Config["logAnalyticsWorkspaceResourceId"])
 		if workspaceResourceID != "" {
 			log.Infoln("using provided log analytics workspace resource id:", workspaceResourceID)
@@ -527,14 +530,15 @@ func (dc *deployCmd) getLogAnalyticsWorkspaceDomain() string {
 	if dc.containerService.Properties.IsAzureStackCloud() {
 		cloudOrDependenciesLocation = string(dc.containerService.Properties.CustomCloudProfile.DependenciesLocation)
 	}
+	cloudOrDependenciesLocation = strings.ToLower(strings.TrimSpace(cloudOrDependenciesLocation))
 	switch cloudOrDependenciesLocation {
-	case "AzurePublicCloud", "public":
+	case "azurepubliccloud", "public":
 		workspaceDomain = "opinsights.azure.com"
-	case "AzureChinaCloud", "china":
+	case "azurechinacloud", "china":
 		workspaceDomain = "opinsights.azure.cn"
-	case "AzureUSGovernmentCloud", "usgovernment":
+	case "azureusgovernmentcloud", "usgovernment":
 		workspaceDomain = "opinsights.azure.us"
-	case "AzureGermanCloud", "german":
+	case "azuregermancloud", "german":
 		workspaceDomain = "opinsights.azure.de"
 	default:
 		workspaceDomain = "opinsights.azure.com"

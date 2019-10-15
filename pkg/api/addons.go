@@ -511,14 +511,15 @@ func synthesizeAddonsConfig(addons []KubernetesAddon, addon KubernetesAddon, isU
 // get log analyticsworkspace domain based on the cloudName or dependenciesLocation for azure stack
 func getLogAnalyticsWorkspaceDomain(cloudName string) string {
 	var workspaceDomain string
+	cloudName = strings.ToLower(strings.TrimSpace(cloudName))
 	switch cloudName {
-	case "AzurePublicCloud", "public":
+	case "azurepubliccloud", "public":
 		workspaceDomain = "opinsights.azure.com"
-	case "AzureChinaCloud", "china":
+	case "azurechinacloud", "china":
 		workspaceDomain = "opinsights.azure.cn"
-	case "AzureUSGovernmentCloud", "usgovernment":
+	case "azureusgovernmentcloud", "usgovernment":
 		workspaceDomain = "opinsights.azure.us"
-	case "AzureGermanCloud", "german":
+	case "azuregermancloud", "german":
 		workspaceDomain = "opinsights.azure.de"
 	default:
 		workspaceDomain = "opinsights.azure.com"
