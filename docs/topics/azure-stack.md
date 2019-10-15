@@ -160,7 +160,7 @@ Container Monitoring can be onboarded either through the Helm chart or container
 Refer to [Azure Monitor – Containers Helm chart](https://github.com/Helm/charts/tree/master/incubator/azuremonitor-containers) for onboarding instructions
 
 #### 2. Using Container Monitoring addon in the API Model
-> Note: option 2) are supported only through `aks-engine deploy` command.
+> Note: option 2) supported only through `aks-engine deploy` command.
   1. Add below container-monitoring addon section to your API Model definition, updated the workspaceGuid and workspaceKey placeholders with your Azure Log Analytics workspace
     and use updated API Model definition for cluster deployment.
 

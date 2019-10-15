@@ -49,7 +49,7 @@ Azure Log analytics workspace can be in any Azure subscription in which you have
              }
      }
 
-Refer to [Sample Kubernetes definition file with monitoringa addon using existing log analytics workspace](../../examples/addons/container-monitoring/kubernetes-container-monitoring_existing_log_analytics_workspace.json)
+Refer to [Sample Kubernetes definition file with monitoring addon using existing log analytics workspace](../../examples/addons/container-monitoring/kubernetes-container-monitoring_existing_log_analytics_workspace.json)
 
 ### 3. Using Workspace GUID or Key
 
@@ -64,7 +64,7 @@ You can also configure with workspace GUID and Key of the existing Log analytics
             }
           }
 
-Refer to [Sample Kubernetes definition file with monitoringa addon using workspace GUID and key of the existing log analytics workspace](../../examples/addons/container-monitoring/kubernetes-container-monitoring_existing_workspace_id_and_key.json)
+Refer to [Sample Kubernetes definition file with monitoring addon using workspace GUID and key of the existing log analytics workspace](../../examples/addons/container-monitoring/kubernetes-container-monitoring_existing_workspace_id_and_key.json)
 
 ### 4. Using Azure Monitor for containers Helm chart
 
