@@ -297,7 +297,7 @@ func CreateMasterVMSS(cs *api.ContainerService) VirtualMachineScaleSetARM {
 	// TODO The AzureStack constraint has to be relaxed, it should only apply to *disconnected* instances
 	if !cs.Properties.FeatureFlags.IsFeatureEnabled("BlockOutboundInternet") && !cs.Properties.IsAzureStackCloud() {
 		if cs.GetCloudSpecConfig().CloudName == api.AzureChinaCloud {
-			registry = `gcr.azk8s.cn 80`
+			registry = `gcr.azk8s.cn 443`
 		} else {
 			registry = `aksrepos.azurecr.io 443`
 		}
@@ -702,7 +702,7 @@ func CreateAgentVMSS(cs *api.ContainerService, profile *api.AgentPoolProfile) Vi
 
 	if !featureFlags.IsFeatureEnabled("BlockOutboundInternet") {
 		if cs.GetCloudSpecConfig().CloudName == api.AzureChinaCloud {
-			registry = `gcr.azk8s.cn 80`
+			registry = `gcr.azk8s.cn 443`
 		} else {
 			registry = `aksrepos.azurecr.io 443`
 		}
