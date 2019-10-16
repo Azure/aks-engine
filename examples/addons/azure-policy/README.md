@@ -78,14 +78,14 @@ Plese follow the README here for further information: https://github.com/open-po
 
 ### Azure Policy
 
-| Name           | Required | Description                       | Default Value                              |
-| -------------- | -------- | --------------------------------- | ------------------------------------------ |
-| name           | no       | container name                    | "azure-policy"                             |
-| image          | no       | image                             | "emmcmill/azure-policy-kubernetes:bugbash" |
-| cpuRequests    | no       | cpu requests for the container    | "30m"                                      |
-| memoryRequests | no       | memory requests for the container | "50Mi"                                     |
-| cpuLimits      | no       | cpu limits for the container      | "100m"                                     |
-| memoryLimits   | no       | memory limits for the container   | "200Mi"                                    |
+| Name           | Required | Description                       | Default Value                                                                 |
+| -------------- | -------- | --------------------------------- | ----------------------------------------------------------------------------- |
+| name           | no       | container name                    | "azure-policy"                                                                |
+| image          | no       | image                             | "mcr.microsoft.com/azure-policy/policy-kubernetes-addon-prod:prod_20191011.1" |
+| cpuRequests    | no       | cpu requests for the container    | "30m"                                                                         |
+| memoryRequests | no       | memory requests for the container | "50Mi"                                                                        |
+| cpuLimits      | no       | cpu limits for the container      | "100m"                                                                        |
+| memoryLimits   | no       | memory limits for the container   | "200Mi"                                                                       |
 
 ### Gatekeeper
 

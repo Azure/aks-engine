@@ -214,7 +214,7 @@ func TestAssignDefaultAddonImages(t *testing.T) {
 		CalicoAddonName:                    "calico/typha:v3.8.0",
 		AzureNetworkPolicyAddonName:        "mcr.microsoft.com/containernetworking/azure-npm:v1.0.28",
 		AADPodIdentityAddonName:            "mcr.microsoft.com/k8s/aad-pod-identity/nmi:1.2",
-		AzurePolicyAddonName:               "emmcmill/azure-policy-kubernetes:bugbash",
+		AzurePolicyAddonName:               "mcr.microsoft.com/azure-policy/policy-kubernetes-addon-prod:prod_20191011.1",
 	}
 
 	customAddonImages := make(map[string]string)

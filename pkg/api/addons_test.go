@@ -3107,7 +3107,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:           "azure-policy",
-							Image:          "emmcmill/azure-policy-kubernetes:bugbash",
+							Image:          "mcr.microsoft.com/azure-policy/policy-kubernetes-addon-prod:prod_20191011.1",
 							CPURequests:    "30m",
 							MemoryRequests: "50Mi",
 							CPULimits:      "100m",
