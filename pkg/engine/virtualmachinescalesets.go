@@ -374,7 +374,7 @@ func CreateAgentVMSS(cs *api.ContainerService, profile *api.AgentPoolProfile) Vi
 	k8sConfig := orchProfile.KubernetesConfig
 	linuxProfile := cs.Properties.LinuxProfile
 
-	if k8sConfig != nil && k8sConfig.UseManagedIdentity && k8sConfig.UserAssignedID != "" {
+	if k8sConfig != nil && k8sConfig.UserAssignedIDEnabled() {
 		dependencies = append(dependencies, "[concat('Microsoft.ManagedIdentity/userAssignedIdentities/', variables('userAssignedID'))]")
 	}
 
