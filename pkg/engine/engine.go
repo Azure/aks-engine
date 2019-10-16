@@ -709,7 +709,7 @@ func getClusterAutoscalerAddonFuncMap(addon api.KubernetesAddon, cs *api.Contain
 				return ret
 			}
 			for _, pool := range addon.Pools {
-				ret += fmt.Sprintf("        - --nodes=%s:%s:%s\n", pool.MinNodes, pool.MaxNodes, cs.Properties.GetAgentVMPrefix(cs.Properties.GetAgentPoolByName(pool.Name), cs.Properties.GetAgentPoolIndexByName(pool.Name)))
+				ret += fmt.Sprintf("        - --nodes=%s:%s:%s\n", pool.Config["min-nodes"], pool.Config["max-nodes"], cs.Properties.GetAgentVMPrefix(cs.Properties.GetAgentPoolByName(pool.Name), cs.Properties.GetAgentPoolIndexByName(pool.Name)))
 			}
 			if ret != "" {
 				ret = strings.TrimRight(ret, "\n")

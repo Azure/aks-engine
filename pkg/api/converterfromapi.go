@@ -868,11 +868,15 @@ func convertAddonsToVlabs(a *KubernetesConfig, v *vlabs.KubernetesConfig) {
 			})
 		}
 		for k := range a.Addons[i].Pools {
-			v.Addons[i].Pools = append(v.Addons[i].Pools, vlabs.ClusterAutoscalerNodePoolsSpec{
-				Name:     a.Addons[i].Pools[k].Name,
-				MinNodes: a.Addons[i].Pools[k].MinNodes,
-				MaxNodes: a.Addons[i].Pools[k].MaxNodes,
+			v.Addons[i].Pools = append(v.Addons[i].Pools, vlabs.AddonNodePoolsConfig{
+				Name:   a.Addons[i].Pools[k].Name,
+				Config: map[string]string{},
 			})
+			if a.Addons[i].Pools[k].Config != nil {
+				for key, val := range a.Addons[i].Pools[k].Config {
+					v.Addons[i].Pools[k].Config[key] = val
+				}
+			}
 		}
 		if a.Addons[i].Config != nil {
 			for key, val := range a.Addons[i].Config {
