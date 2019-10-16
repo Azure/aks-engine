@@ -151,6 +151,7 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 				Image:          specConfig.KubernetesImageBase + k8sComponents[ClusterAutoscalerAddonName],
 			},
 		},
+		Pools: makeDefaultClusterAutoscalerAddonPoolsConfig(cs),
 	}
 
 	defaultBlobfuseFlexVolumeAddonsConfig := KubernetesAddon{
@@ -616,6 +617,21 @@ func assignDefaultAddonVals(addon, defaults KubernetesAddon, isUpgrade bool) Kub
 			}
 		}
 	}
+	for i := range defaults.Pools {
+		p := addon.GetAddonPoolsIndexByName(defaults.Pools[i].Name)
+		if p < 0 {
+			addon.Pools = append(addon.Pools, defaults.Pools[i])
+		} else {
+			for key, val := range defaults.Pools[i].Config {
+				if addon.Pools[p].Config == nil {
+					addon.Pools[p].Config = make(map[string]string)
+				}
+				if v, ok := addon.Pools[p].Config[key]; !ok || v == "" {
+					addon.Pools[p].Config[key] = val
+				}
+			}
+		}
+	}
 	for key, val := range defaults.Config {
 		if addon.Config == nil {
 			addon.Config = make(map[string]string)
@@ -632,4 +648,18 @@ func synthesizeAddonsConfig(addons []KubernetesAddon, addon KubernetesAddon, isU
 	if i >= 0 {
 		addons[i] = assignDefaultAddonVals(addons[i], addon, isUpgrade)
 	}
+}
+
+func makeDefaultClusterAutoscalerAddonPoolsConfig(cs *ContainerService) []AddonNodePoolsConfig {
+	var ret []AddonNodePoolsConfig
+	for _, pool := range cs.Properties.AgentPoolProfiles {
+		ret = append(ret, AddonNodePoolsConfig{
+			Name: pool.Name,
+			Config: map[string]string{
+				"min-nodes": strconv.Itoa(pool.Count),
+				"max-nodes": strconv.Itoa(pool.Count),
+			},
+		})
+	}
+	return ret
 }

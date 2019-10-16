@@ -299,6 +299,16 @@ func (a KubernetesAddon) GetAddonContainersIndexByName(containerName string) int
 	return -1
 }
 
+// GetAddonPoolsIndexByName returns the KubernetesAddon pools index with the name `poolName`
+func (a KubernetesAddon) GetAddonPoolsIndexByName(poolName string) int {
+	for i := range a.Pools {
+		if a.Pools[i].Name == poolName {
+			return i
+		}
+	}
+	return -1
+}
+
 // PrivateCluster defines the configuration for a private cluster
 type PrivateCluster struct {
 	Enabled        *bool                  `json:"enabled,omitempty"`

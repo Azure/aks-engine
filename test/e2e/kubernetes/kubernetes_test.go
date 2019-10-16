@@ -69,6 +69,7 @@ var (
 	kubeConfig                      *Config
 	firstMasterRegexp               *regexp.Regexp
 	masterNodes                     []node.Node
+	clusterAutoscalerEngaged        bool
 )
 
 var _ = BeforeSuite(func() {
@@ -124,6 +125,17 @@ var _ = BeforeSuite(func() {
 		Expect(success).To(BeTrue())
 		firstMasterRegexp, err = regexp.Compile(firstMasterRegexStr)
 		Expect(err).NotTo(HaveOccurred())
+		if hasAddon, addon := eng.HasAddon("cluster-autoscaler"); hasAddon {
+			if len(addon.Pools) > 0 {
+				for _, pool := range addon.Pools {
+					p := eng.ExpandedDefinition.Properties.GetAgentPoolIndexByName(pool.Name)
+					maxNodes, _ := strconv.Atoi(pool.Config["max-nodes"])
+					if maxNodes > eng.ExpandedDefinition.Properties.AgentPoolProfiles[p].Count {
+						clusterAutoscalerEngaged = true
+					}
+				}
+			}
+		}
 	}
 })
 
@@ -614,11 +626,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 
 		It("should report all nodes in a Ready state", func() {
 			var expectedReadyNodes int
-			var clusterAutoscalerInstalled bool
-			if hasAddon, _ := eng.HasAddon("cluster-autoscaler"); hasAddon {
-				clusterAutoscalerInstalled = true
-			}
-			if !eng.ExpandedDefinition.Properties.HasLowPriorityScaleset() && !clusterAutoscalerInstalled {
+			if !eng.ExpandedDefinition.Properties.HasLowPriorityScaleset() && !clusterAutoscalerEngaged {
 				expectedReadyNodes = eng.NodeCount()
 				log.Printf("Checking for %d Ready nodes\n", expectedReadyNodes)
 			} else {
@@ -1021,12 +1029,8 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 							}
 						}
 
-						var clusterAutoscalerInstalled bool
-						if hasAddon, _ := eng.HasAddon("cluster-autoscaler"); hasAddon {
-							clusterAutoscalerInstalled = true
-						}
 						var expectedReadyNodes int
-						if !eng.ExpandedDefinition.Properties.HasLowPriorityScaleset() && !clusterAutoscalerInstalled {
+						if !eng.ExpandedDefinition.Properties.HasLowPriorityScaleset() && !clusterAutoscalerEngaged {
 							expectedReadyNodes = len(nodeList.Nodes)
 							log.Printf("Checking for %d Ready nodes\n", expectedReadyNodes)
 						} else {
@@ -1878,10 +1882,6 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 
 		It("should be able to autoscale", func() {
 			if eng.AnyAgentIsLinux() && eng.ExpandedDefinition.Properties.OrchestratorProfile.KubernetesConfig.EnableAggregatedAPIs {
-				var clusterAutoscalerInstalled bool
-				if hasAddon, _ := eng.HasAddon("cluster-autoscaler"); hasAddon {
-					clusterAutoscalerInstalled = true
-				}
 				// Inspired by http://blog.kubernetes.io/2016/07/autoscaling-in-kubernetes.html
 				r := rand.New(rand.NewSource(time.Now().UnixNano()))
 				By("Creating a php-apache deployment")
@@ -1948,7 +1948,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				}
 				Expect(err).NotTo(HaveOccurred())
 
-				if clusterAutoscalerInstalled {
+				if clusterAutoscalerEngaged {
 					By("Ensuring at least one more node was added by cluster-autoscaler")
 					ready := node.WaitOnReadyMin(eng.NodeCount()+1, 10*time.Second, cfg.Timeout)
 					Expect(ready).To(BeTrue())
@@ -1958,7 +1958,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				err = loadTestDeploy.Delete(util.DefaultDeleteRetries)
 				Expect(err).NotTo(HaveOccurred())
 				var nodes []node.Node
-				if clusterAutoscalerInstalled {
+				if clusterAutoscalerEngaged {
 					By("Wait a few more mins for additional nodes to come online, so that we can more effectively calculate node count reduction")
 					time.Sleep(3 * time.Minute)
 					nodes, err = node.GetWithRetry(1*time.Second, cfg.Timeout)
@@ -1973,7 +1973,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				}
 				Expect(err).NotTo(HaveOccurred())
 
-				if clusterAutoscalerInstalled {
+				if clusterAutoscalerEngaged {
 					By(fmt.Sprintf("Ensuring at least one node is removed by cluster-autoscaler, waiting until we have fewer than %d nodes...", len(nodes)))
 					ready := node.WaitOnReadyMax(len(nodes)-1, 30*time.Second, cfg.Timeout*2)
 					Expect(ready).To(BeTrue())
