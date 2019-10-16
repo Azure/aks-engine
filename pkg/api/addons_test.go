@@ -1835,6 +1835,10 @@ func TestSetAddonsConfig(t *testing.T) {
 					Name:    AADPodIdentityAddonName,
 					Enabled: to.BoolPtr(false),
 				},
+				{
+					Name:    AzurePolicyAddonName,
+					Enabled: to.BoolPtr(DefaultAzurePolicyAddonEnabled),
+				},
 			},
 		},
 		{
@@ -1985,6 +1989,10 @@ func TestSetAddonsConfig(t *testing.T) {
 				{
 					Name:    AADPodIdentityAddonName,
 					Enabled: to.BoolPtr(false),
+				},
+				{
+					Name:    AzurePolicyAddonName,
+					Enabled: to.BoolPtr(DefaultAzurePolicyAddonEnabled),
 				},
 			},
 		},
@@ -3055,7 +3063,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "50Mi",
 							CPULimits:      "50m",
 							MemoryLimits:   "250Mi",
-							Image:          specConfig.KubernetesImageBase + "ip-masq-agent-amd64:v2.3.0",
+							Image:          specConfig.KubernetesImageBase + "ip-masq-agent-amd64:v2.5.0",
 						},
 					},
 					Config: map[string]string{
