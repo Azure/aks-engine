@@ -1908,16 +1908,22 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 
 				By("Assigning hpa configuration to the php-apache deployment")
 				// Apply autoscale characteristics to deployment
-				var totalMaxPods int
-				for _, profile := range eng.ExpandedDefinition.Properties.AgentPoolProfiles {
-					maxPods, _ := strconv.Atoi(profile.KubernetesConfig.KubeletConfig["--max-pods"])
-					n, err := node.GetByRegexWithRetry(fmt.Sprintf("^k8s-%s", profile.Name), 3*time.Minute, cfg.Timeout)
-					Expect(err).NotTo(HaveOccurred())
-					totalMaxPods += (len(n) * maxPods)
+				var cpuTarget, totalMaxPods int
+				if clusterAutoscalerEngaged {
+					cpuTarget = 25
+					for _, profile := range eng.ExpandedDefinition.Properties.AgentPoolProfiles {
+						maxPods, _ := strconv.Atoi(profile.KubernetesConfig.KubeletConfig["--max-pods"])
+						n, err := node.GetByRegexWithRetry(fmt.Sprintf("^k8s-%s", profile.Name), 3*time.Minute, cfg.Timeout)
+						Expect(err).NotTo(HaveOccurred())
+						totalMaxPods += (len(n) * maxPods)
+					}
+				} else {
+					cpuTarget = 50
+					totalMaxPods = 10
 				}
 				maxPods, _ := strconv.Atoi(eng.ExpandedDefinition.Properties.MasterProfile.KubernetesConfig.KubeletConfig["--max-pods"])
 				totalMaxPods += (len(masterNodes) * maxPods)
-				err = phpApacheDeploy.CreateDeploymentHPADeleteIfExist(25, 1, totalMaxPods+1)
+				err = phpApacheDeploy.CreateDeploymentHPADeleteIfExist(cpuTarget, 1, totalMaxPods+1)
 				Expect(err).NotTo(HaveOccurred())
 				h, err := hpa.Get(longRunningApacheDeploymentName, "default", 10)
 				Expect(err).NotTo(HaveOccurred())
