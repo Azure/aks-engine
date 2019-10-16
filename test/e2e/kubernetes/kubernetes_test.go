@@ -1955,6 +1955,8 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				}
 
 				By("Stopping load")
+				err = loadTestDeploy.Delete(util.DefaultDeleteRetries)
+				Expect(err).NotTo(HaveOccurred())
 				var nodes []node.Node
 				if clusterAutoscalerInstalled {
 					By("Wait a few more mins for additional nodes to come online, so that we can more effectively calculate node count reduction")
@@ -1962,8 +1964,6 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 					nodes, err = node.GetWithRetry(1*time.Second, cfg.Timeout)
 					Expect(err).NotTo(HaveOccurred())
 				}
-				err = loadTestDeploy.Delete(util.DefaultDeleteRetries)
-				Expect(err).NotTo(HaveOccurred())
 
 				By("Ensuring we only have 1 apache-php pod after stopping load")
 				_, err = phpApacheDeploy.WaitForReplicas(-1, 1, 5*time.Second, cfg.Timeout)
