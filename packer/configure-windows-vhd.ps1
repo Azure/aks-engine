@@ -56,6 +56,12 @@ function Get-FilesToCacheOnVHD
     $map = @{
         "c:\akse-cache\" = @(
             "https://github.com/Microsoft/SDN/raw/master/Kubernetes/flannel/l2bridge/cni/win-bridge.exe",
+            "https://github.com/microsoft/SDN/raw/master/Kubernetes/windows/debug/collectlogs.ps1",
+            "https://github.com/microsoft/SDN/raw/master/Kubernetes/windows/debug/dumpVfpPolicies.ps1",
+            "https://github.com/microsoft/SDN/raw/master/Kubernetes/windows/debug/starthnstrace.cmd",
+            "https://github.com/microsoft/SDN/raw/master/Kubernetes/windows/debug/startpacketcapture.cmd",
+            "https://github.com/microsoft/SDN/raw/master/Kubernetes/windows/debug/stoppacketcapture.cmd",
+            "https://github.com/microsoft/SDN/raw/master/Kubernetes/windows/helper.psm1"
             "https://github.com/Microsoft/SDN/raw/master/Kubernetes/windows/hns.psm1"
         );
         "c:\akse-cache\win-k8s\" = @(
