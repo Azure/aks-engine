@@ -294,6 +294,8 @@ try
             -HNSModule $global:HNSModule `
             -KubeletNodeLabels $global:KubeletNodeLabels
 
+        Get-NetworkLogCollectionScripts
+
         Write-Log "Disable Internet Explorer compat mode and set homepage"
         Set-Explorer
 
