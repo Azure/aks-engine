@@ -22226,10 +22226,13 @@ spec:
         kind: "Pod"
       - group: ""
         version: "v1"
-        kind: "Ingress"
-      - group: ""
-        version: "v1"
         kind: "Service"
+      - group: "extensions"
+        version: "v1beta1"
+        kind: "Ingress"
+      - group: "networking.k8s.io"
+        version: "v1beta1"
+        kind: "Ingress"
 ---
 apiVersion: v1
 kind: ServiceAccount
