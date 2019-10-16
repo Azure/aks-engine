@@ -773,6 +773,7 @@ func convertAddonsToAPI(v *vlabs.KubernetesConfig, a *KubernetesConfig) {
 		a.Addons = append(a.Addons, KubernetesAddon{
 			Name:    v.Addons[i].Name,
 			Enabled: v.Addons[i].Enabled,
+			Mode:    v.Addons[i].Mode,
 			Config:  map[string]string{},
 			Data:    v.Addons[i].Data,
 		})

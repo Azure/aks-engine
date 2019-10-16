@@ -703,6 +703,9 @@ func getClusterAutoscalerAddonFuncMap(addon api.KubernetesAddon, cs *api.Contain
 		"ContainerConfig": func(name string) string {
 			return addon.Config[name]
 		},
+		"GetMode": func() string {
+			return addon.Mode
+		},
 		"GetClusterAutoscalerNodesConfig": func() string {
 			var ret string
 			if addon.Name != "cluster-autoscaler" {

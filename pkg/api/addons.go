@@ -102,6 +102,7 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 	defaultClusterAutoscalerAddonsConfig := KubernetesAddon{
 		Name:    ClusterAutoscalerAddonName,
 		Enabled: to.BoolPtr(DefaultClusterAutoscalerAddonEnabled && !cs.Properties.IsAzureStackCloud()),
+		Mode:    AddonModeEnsureExists,
 		Config: map[string]string{
 			"min-nodes":                             "1",
 			"max-nodes":                             "5",
@@ -594,6 +595,9 @@ func assignDefaultAddonVals(addon, defaults KubernetesAddon, isUpgrade bool) Kub
 			Name:    addon.Name,
 			Enabled: addon.Enabled,
 		}
+	}
+	if addon.Mode == "" {
+		addon.Mode = defaults.Mode
 	}
 	for i := range defaults.Containers {
 		c := addon.GetAddonContainersIndexByName(defaults.Containers[i].Name)

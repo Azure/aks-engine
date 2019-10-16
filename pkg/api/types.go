@@ -275,6 +275,7 @@ type AddonNodePoolsConfig struct {
 type KubernetesAddon struct {
 	Name       string                    `json:"name,omitempty"`
 	Enabled    *bool                     `json:"enabled,omitempty"`
+	Mode       string                    `json:"mode,omitempty"`
 	Containers []KubernetesContainerSpec `json:"containers,omitempty"`
 	Config     map[string]string         `json:"config,omitempty"`
 	Pools      []AddonNodePoolsConfig    `json:"pools,omitempty"`

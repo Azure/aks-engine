@@ -20607,7 +20607,7 @@ metadata:
     k8s-addon: cluster-autoscaler.addons.k8s.io
     k8s-app: cluster-autoscaler
     kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
+    addonmanager.kubernetes.io/mode: {{GetMode}}
   name: cluster-autoscaler
   namespace: {{ContainerConfig "namespace"}}
 ---
@@ -20619,7 +20619,7 @@ metadata:
     k8s-addon: cluster-autoscaler.addons.k8s.io
     k8s-app: cluster-autoscaler
     kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
+    addonmanager.kubernetes.io/mode: {{GetMode}}
 rules:
 - apiGroups: [""]
   resources: ["events", "endpoints"]
@@ -20673,7 +20673,7 @@ metadata:
     k8s-addon: cluster-autoscaler.addons.k8s.io
     k8s-app: cluster-autoscaler
     kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
+    addonmanager.kubernetes.io/mode: {{GetMode}}
 rules:
 - apiGroups: [""]
   resources: ["configmaps"]
@@ -20693,7 +20693,7 @@ metadata:
     k8s-addon: cluster-autoscaler.addons.k8s.io
     k8s-app: cluster-autoscaler
     kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
+    addonmanager.kubernetes.io/mode: {{GetMode}}
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
@@ -20712,7 +20712,7 @@ metadata:
     k8s-addon: cluster-autoscaler.addons.k8s.io
     k8s-app: cluster-autoscaler
     kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
+    addonmanager.kubernetes.io/mode: {{GetMode}}
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
@@ -20736,7 +20736,7 @@ metadata:
   namespace: {{ContainerConfig "namespace"}}
   labels:
     kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
+    addonmanager.kubernetes.io/mode: {{GetMode}}
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -20744,7 +20744,7 @@ metadata:
   labels:
     app: cluster-autoscaler
     kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
+    addonmanager.kubernetes.io/mode: {{GetMode}}
   name: cluster-autoscaler
   namespace: {{ContainerConfig "namespace"}}
 spec:
@@ -23881,7 +23881,7 @@ metadata:
     k8s-addon: cluster-autoscaler.addons.k8s.io
     k8s-app: cluster-autoscaler
     kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
+    addonmanager.kubernetes.io/mode: {{GetMode}}
   name: cluster-autoscaler
   namespace: {{ContainerConfig "namespace"}}
 ---
@@ -23893,7 +23893,7 @@ metadata:
     k8s-addon: cluster-autoscaler.addons.k8s.io
     k8s-app: cluster-autoscaler
     kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
+    addonmanager.kubernetes.io/mode: {{GetMode}}
 rules:
 - apiGroups: [""]
   resources: ["events", "endpoints"]
@@ -23947,7 +23947,7 @@ metadata:
     k8s-addon: cluster-autoscaler.addons.k8s.io
     k8s-app: cluster-autoscaler
     kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
+    addonmanager.kubernetes.io/mode: {{GetMode}}
 rules:
 - apiGroups: [""]
   resources: ["configmaps"]
@@ -23967,7 +23967,7 @@ metadata:
     k8s-addon: cluster-autoscaler.addons.k8s.io
     k8s-app: cluster-autoscaler
     kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
+    addonmanager.kubernetes.io/mode: {{GetMode}}
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
@@ -23986,7 +23986,7 @@ metadata:
     k8s-addon: cluster-autoscaler.addons.k8s.io
     k8s-app: cluster-autoscaler
     kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
+    addonmanager.kubernetes.io/mode: {{GetMode}}
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
@@ -24010,7 +24010,7 @@ metadata:
   namespace: {{ContainerConfig "namespace"}}
   labels:
     kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
+    addonmanager.kubernetes.io/mode: {{GetMode}}
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -24018,7 +24018,7 @@ metadata:
   labels:
     app: cluster-autoscaler
     kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
+    addonmanager.kubernetes.io/mode: {{GetMode}}
   name: cluster-autoscaler
   namespace: {{ContainerConfig "namespace"}}
 spec:
@@ -29469,7 +29469,7 @@ metadata:
     k8s-addon: cluster-autoscaler.addons.k8s.io
     k8s-app: cluster-autoscaler
     kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
+    addonmanager.kubernetes.io/mode: {{GetMode}}
   name: cluster-autoscaler
   namespace: {{ContainerConfig "namespace"}}
 ---
@@ -29481,7 +29481,7 @@ metadata:
     k8s-addon: cluster-autoscaler.addons.k8s.io
     k8s-app: cluster-autoscaler
     kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
+    addonmanager.kubernetes.io/mode: {{GetMode}}
 rules:
 - apiGroups: [""]
   resources: ["events", "endpoints"]
@@ -29535,7 +29535,7 @@ metadata:
     k8s-addon: cluster-autoscaler.addons.k8s.io
     k8s-app: cluster-autoscaler
     kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
+    addonmanager.kubernetes.io/mode: {{GetMode}}
 rules:
 - apiGroups: [""]
   resources: ["configmaps"]
@@ -29555,7 +29555,7 @@ metadata:
     k8s-addon: cluster-autoscaler.addons.k8s.io
     k8s-app: cluster-autoscaler
     kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
+    addonmanager.kubernetes.io/mode: {{GetMode}}
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
@@ -29574,7 +29574,7 @@ metadata:
     k8s-addon: cluster-autoscaler.addons.k8s.io
     k8s-app: cluster-autoscaler
     kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
+    addonmanager.kubernetes.io/mode: {{GetMode}}
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
@@ -29598,7 +29598,7 @@ metadata:
   namespace: {{ContainerConfig "namespace"}}
   labels:
     kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
+    addonmanager.kubernetes.io/mode: {{GetMode}}
 ---
 apiVersion: extensions/v1beta1
 kind: Deployment
@@ -29606,7 +29606,7 @@ metadata:
   labels:
     app: cluster-autoscaler
     kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
+    addonmanager.kubernetes.io/mode: {{GetMode}}
   name: cluster-autoscaler
   namespace: {{ContainerConfig "namespace"}}
 spec:
