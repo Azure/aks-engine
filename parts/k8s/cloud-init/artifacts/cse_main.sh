@@ -58,15 +58,15 @@ if [[ "${GPU_NODE}" != "true" ]]; then
 fi
 
 VHD_LOGS_FILEPATH=/opt/azure/vhd-install.complete
-if [[ "${IS_VHD}" = true ]]; then
-    if [ ! -f $VHD_LOGS_FILEPATH ]; then
-        echo "Using VHD distro but file $VHD_LOGS_FILEPATH not found"
-        exit $ERR_VHD_FILE_NOT_FOUND
-    fi
+if [ -f $VHD_LOGS_FILEPATH ]; then
     echo "detected golden image pre-install"
     cleanUpContainerImages
     FULL_INSTALL_REQUIRED=false
 else
+    if [[ "${IS_VHD}" = true ]]; then
+        echo "Using VHD distro but file $VHD_LOGS_FILEPATH not found"
+        exit $ERR_VHD_FILE_NOT_FOUND
+    fi
     FULL_INSTALL_REQUIRED=true
 fi
 

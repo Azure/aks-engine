@@ -3357,3 +3357,315 @@ func TestValidateFeatureFlags(t *testing.T) {
 		})
 	}
 }
+
+func TestValidateMasterProfileImageRef(t *testing.T) {
+	tests := map[string]struct {
+		properties    *Properties
+		isUpdate      bool
+		expectedError error
+	}{
+		"should error when masterProfile includes both an ImageRef and a Distro configuration": {
+			properties: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					OrchestratorType: Kubernetes,
+				},
+				MasterProfile: &MasterProfile{
+					Distro: AKSUbuntu1604,
+					ImageRef: &ImageReference{
+						Name:           "name",
+						ResourceGroup:  "rg",
+						SubscriptionID: "sub-id",
+						Gallery:        "gallery",
+						Version:        "version",
+					},
+					DNSPrefix: "foo",
+				},
+			},
+			isUpdate:      false,
+			expectedError: errors.New("masterProfile includes a custom image configuration (imageRef) and an explicit distro configuration, you may use one of these but not both simultaneously"),
+		},
+		"should error when masterProfile includes both an ImageRef and a Distro configuration in update context": {
+			properties: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					OrchestratorType: Kubernetes,
+				},
+				MasterProfile: &MasterProfile{
+					Distro: AKSUbuntu1604,
+					ImageRef: &ImageReference{
+						Name:           "name",
+						ResourceGroup:  "rg",
+						SubscriptionID: "sub-id",
+						Gallery:        "gallery",
+						Version:        "version",
+					},
+					DNSPrefix: "foo",
+				},
+			},
+			isUpdate:      true,
+			expectedError: errors.New("masterProfile includes a custom image configuration (imageRef) and an explicit distro configuration, you may use one of these but not both simultaneously"),
+		},
+		"should not error when masterProfile includes an ImageRef configuration only": {
+			properties: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					OrchestratorType: Kubernetes,
+				},
+				MasterProfile: &MasterProfile{
+					ImageRef: &ImageReference{
+						Name:           "name",
+						ResourceGroup:  "rg",
+						SubscriptionID: "sub-id",
+						Gallery:        "gallery",
+						Version:        "version",
+					},
+					DNSPrefix: "foo",
+				},
+			},
+			isUpdate:      false,
+			expectedError: nil,
+		},
+		"should not error when masterProfile includes an ImageRef configuration only in an upgrade context": {
+			properties: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					OrchestratorType: Kubernetes,
+				},
+				MasterProfile: &MasterProfile{
+					ImageRef: &ImageReference{
+						Name:           "name",
+						ResourceGroup:  "rg",
+						SubscriptionID: "sub-id",
+						Gallery:        "gallery",
+						Version:        "version",
+					},
+					DNSPrefix: "foo",
+				},
+			},
+			isUpdate:      true,
+			expectedError: nil,
+		},
+		"should not error when masterProfile includes a Distro configuration only": {
+			properties: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					OrchestratorType: Kubernetes,
+				},
+				MasterProfile: &MasterProfile{
+					Distro:    AKSUbuntu1604,
+					DNSPrefix: "foo",
+				},
+			},
+			isUpdate:      false,
+			expectedError: nil,
+		},
+		"should not error when masterProfile includes a Distro configuration only in an upgrade context": {
+			properties: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					OrchestratorType: Kubernetes,
+				},
+				MasterProfile: &MasterProfile{
+					Distro:    AKSUbuntu1604,
+					DNSPrefix: "foo",
+				},
+			},
+			isUpdate:      true,
+			expectedError: nil,
+		},
+		"should not error when masterProfile includes neither an explicit Distro nor ImageRef configuration": {
+			properties: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					OrchestratorType: Kubernetes,
+				},
+				MasterProfile: &MasterProfile{
+					DNSPrefix: "foo",
+				},
+			},
+			isUpdate:      false,
+			expectedError: nil,
+		},
+		"should not error when masterProfile includes neither an explicit Distro nor ImageRef configuration in an upgrade context": {
+			properties: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					OrchestratorType: Kubernetes,
+				},
+				MasterProfile: &MasterProfile{
+					DNSPrefix: "foo",
+				},
+			},
+			isUpdate:      true,
+			expectedError: nil,
+		},
+	}
+
+	for testName, test := range tests {
+		test := test
+		t.Run(testName, func(t *testing.T) {
+			t.Parallel()
+			err := test.properties.validateMasterProfile(test.isUpdate)
+			if !helpers.EqualError(err, test.expectedError) {
+				t.Errorf("expected error: %v, got: %v", test.expectedError, err)
+			}
+		})
+	}
+}
+
+func TestValidateAgentPoolProfilesImageRef(t *testing.T) {
+	tests := map[string]struct {
+		properties    *Properties
+		isUpdate      bool
+		expectedError error
+	}{
+		"should error when AgentPoolProfile includes both an ImageRef and a Distro configuration": {
+			properties: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					OrchestratorType: Kubernetes,
+				},
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						Name:   "foo",
+						Distro: AKSUbuntu1604,
+						ImageRef: &ImageReference{
+							Name:           "name",
+							ResourceGroup:  "rg",
+							SubscriptionID: "sub-id",
+							Gallery:        "gallery",
+							Version:        "version",
+						},
+					},
+				},
+			},
+			isUpdate:      false,
+			expectedError: errors.Errorf("agentPoolProfile %s includes a custom image configuration (imageRef) and an explicit distro configuration, you may use one of these but not both simultaneously", "foo"),
+		},
+		"should error when AgentPoolProfile includes both an ImageRef and a Distro configuration in update context": {
+			properties: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					OrchestratorType: Kubernetes,
+				},
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						Name:   "foo",
+						Distro: AKSUbuntu1604,
+						ImageRef: &ImageReference{
+							Name:           "name",
+							ResourceGroup:  "rg",
+							SubscriptionID: "sub-id",
+							Gallery:        "gallery",
+							Version:        "version",
+						},
+					},
+				},
+			},
+			isUpdate:      true,
+			expectedError: errors.Errorf("agentPoolProfile %s includes a custom image configuration (imageRef) and an explicit distro configuration, you may use one of these but not both simultaneously", "foo"),
+		},
+		"should not error when AgentPoolProfile includes an ImageRef configuration only": {
+			properties: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					OrchestratorType: Kubernetes,
+				},
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						Name: "foo",
+						ImageRef: &ImageReference{
+							Name:           "name",
+							ResourceGroup:  "rg",
+							SubscriptionID: "sub-id",
+							Gallery:        "gallery",
+							Version:        "version",
+						},
+					},
+				},
+			},
+			isUpdate:      false,
+			expectedError: nil,
+		},
+		"should not error when AgentPoolProfile includes an ImageRef configuration only in an upgrade context": {
+			properties: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					OrchestratorType: Kubernetes,
+				},
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						Name: "foo",
+						ImageRef: &ImageReference{
+							Name:           "name",
+							ResourceGroup:  "rg",
+							SubscriptionID: "sub-id",
+							Gallery:        "gallery",
+							Version:        "version",
+						},
+					},
+				},
+			},
+			isUpdate:      true,
+			expectedError: nil,
+		},
+		"should not error when AgentPoolProfile includes a Distro configuration only": {
+			properties: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					OrchestratorType: Kubernetes,
+				},
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						Name:   "foo",
+						Distro: AKSUbuntu1604,
+					},
+				},
+			},
+			isUpdate:      false,
+			expectedError: nil,
+		},
+		"should not error when AgentPoolProfile includes a Distro configuration only in an upgrade context": {
+			properties: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					OrchestratorType: Kubernetes,
+				},
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						Name:   "foo",
+						Distro: AKSUbuntu1604,
+					},
+				},
+			},
+			isUpdate:      true,
+			expectedError: nil,
+		},
+		"should not error when AgentPoolProfile includes neither an explicit Distro nor ImageRef configuration": {
+			properties: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					OrchestratorType: Kubernetes,
+				},
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						Name: "foo",
+					},
+				},
+			},
+			isUpdate:      false,
+			expectedError: nil,
+		},
+		"should not error when AgentPoolProfile includes neither an explicit Distro nor ImageRef configuration in an upgrade context": {
+			properties: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					OrchestratorType: Kubernetes,
+				},
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						Name: "foo",
+					},
+				},
+			},
+			isUpdate:      true,
+			expectedError: nil,
+		},
+	}
+
+	for testName, test := range tests {
+		test := test
+		t.Run(testName, func(t *testing.T) {
+			t.Parallel()
+			err := test.properties.validateAgentPoolProfiles(test.isUpdate)
+			if !helpers.EqualError(err, test.expectedError) {
+				t.Errorf("expected error: %v, got: %v", test.expectedError, err)
+			}
+		})
+	}
+}

@@ -1,11 +1,5 @@
 #cloud-config
 
-{{if not .MasterProfile.IsCoreOS}}
-packages:
- - jq
- - traceroute
-{{end}}
-
 write_files:
 - path: /opt/azure/containers/provision_source.sh
   permissions: "0744"
@@ -42,6 +36,17 @@ write_files:
   owner: root
   content: !!binary |
     {{CloudInitData "provisionCIS"}}
+{{end}}
+
+{{if not .MasterProfile.IsVHDDistro}}
+  {{if .MasterProfile.IsAuditDEnabled}}
+- path: /etc/audit/rules.d/CIS.rules
+  permissions: "0744"
+  encoding: gzip
+  owner: root
+  content: !!binary |
+    {{CloudInitData "auditdRules"}}
+  {{end}}
 {{end}}
 
 {{if IsAzureStackCloud}}
@@ -187,6 +192,58 @@ write_files:
     {{WrapAsVariable "systemdBPFMount"}}
 {{end}}
 
+{{if NeedsContainerd}}
+- path: /etc/containerd/config.toml
+  permissions: "0644"
+  owner: root
+  content: |
+    subreaper = false
+    oom_score = 0
+    [plugins.cri]
+    sandbox_image = "{{GetPodInfraContainerSpec}}"
+    [plugins.cri.containerd.untrusted_workload_runtime]
+    runtime_type = "io.containerd.runtime.v1.linux"
+    {{if IsKataContainerRuntime }}
+    runtime_engine = "/usr/bin/kata-runtime"
+    {{else}}
+    runtime_engine = "/usr/local/sbin/runc"
+    {{end}}
+    [plugins.cri.containerd.default_runtime]
+    runtime_type = "io.containerd.runtime.v1.linux"
+    {{if IsKataContainerRuntime }}
+    runtime_engine = "/usr/bin/kata-runtime"
+    {{else}}
+    runtime_engine = "/usr/local/sbin/runc"
+    {{end}}
+    {{if IsKubenet }}
+    [plugins.cri.cni]
+    conf_template = "/etc/containerd/kubenet_template.conf"
+
+- path: /etc/containerd/kubenet_template.conf
+  permissions: "0644"
+  owner: root
+  content: |
+      {
+          "cniVersion": "0.3.1",
+          "name": "kubenet",
+          "plugins": [{
+            "type": "bridge",
+            "bridge": "cbr0",
+            "mtu": 1500,
+            "addIf": "eth0",
+            "isGateway": true,
+            "ipMasq": false,
+            "hairpinMode": false,
+            "ipam": {
+                "type": "host-local",
+                "subnet": "{{`{{.PodCIDR}}`}}",
+                "routes": [{ "dst": "0.0.0.0/0" }]
+            }
+          }]
+      }
+    {{end}}
+{{end}}
+
 - path: /etc/kubernetes/certs/ca.crt
   permissions: "0644"
   encoding: base64
@@ -210,14 +267,14 @@ write_files:
     {{CloudInitData "generateProxyCertsScript"}}
 {{end}}
 
-{{if HasLinuxProfile}}{{if HasCustomSearchDomain}}
+{{if and HasLinuxProfile HasCustomSearchDomain}}
 - path: /opt/azure/containers/setup-custom-search-domains.sh
   permissions: "0744"
   encoding: gzip
   owner: root
   content: !!binary |
     {{CloudInitData "customSearchDomainsScript"}}
-{{end}}{{end}}
+{{end}}
 
 - path: /var/lib/kubelet/kubeconfig
   permissions: "0644"
@@ -302,7 +359,7 @@ MASTER_CONTAINER_ADDONS_PLACEHOLDER
 {{end}}
     KUBELET_CONFIG={{GetKubeletConfigKeyVals .MasterProfile.KubernetesConfig}}
     KUBELET_IMAGE={{WrapAsParameter "kubernetesHyperkubeSpec"}}
-{{if IsKubernetesVersionGe "1.16.0-alpha.1"}}
+{{if IsKubernetesVersionGe "1.16.0"}}
     KUBELET_NODE_LABELS={{GetMasterKubernetesLabels "',variables('labelResourceGroup'),'"}}
 {{else}}
     KUBELET_NODE_LABELS={{GetMasterKubernetesLabelsDeprecated "',variables('labelResourceGroup'),'"}}
@@ -563,11 +620,5 @@ coreos:
 runcmd:
 - set -x
 - . /opt/azure/containers/provision_source.sh
-{{if IsAzureStackCloud}}
-- AZURESTACK_ROOT_CERTIFICATE_SOURCE_PATH="/var/lib/waagent/Certificates.pem"
-- AZURESTACK_ROOT_CERTIFICATE__DEST_PATH="/usr/local/share/ca-certificates/azsCertificate.crt"
-- cp $AZURESTACK_ROOT_CERTIFICATE_SOURCE_PATH $AZURESTACK_ROOT_CERTIFICATE__DEST_PATH
-- update-ca-certificates
-{{end}}
 - aptmarkWALinuxAgent hold{{GetKubernetesMasterPreprovisionYaml}}
 {{end}}

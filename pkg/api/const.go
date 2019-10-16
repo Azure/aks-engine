@@ -449,7 +449,7 @@ const (
 	// DefaultKubernetesDNSServiceIP specifies the IP address that kube-dns listens on by default. must by in the default Service CIDR range.
 	DefaultKubernetesDNSServiceIP = "10.0.0.10"
 	// DefaultMobyVersion specifies the default Azure build version of Moby to install.
-	DefaultMobyVersion = "3.0.6"
+	DefaultMobyVersion = "3.0.7"
 	// DefaultContainerdVersion specifies the default containerd version to install.
 	DefaultContainerdVersion = "1.1.5"
 	// DefaultDockerBridgeSubnet specifies the default subnet for the docker bridge network for masters and agents.

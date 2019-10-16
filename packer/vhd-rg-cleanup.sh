@@ -52,7 +52,7 @@ for resourceGroup in $( az group list --query "[?contains(name, 'packer-Resource
     for deployment in $(az group deployment list -g $resourceGroup | jq '.[] | .name' | tr -d '\"' || ""); do
         echo "Will delete deployment ${deployment} from resource group ${resourceGroup}..."
         if [[ "${DRY_RUN}" = false ]]; then
-            az group deployment delete -y -n $deployment -g $resourceGroup || echo "unable to delete deployment ${deployment}, will continue..."
+            az group deployment delete -n $deployment -g $resourceGroup || echo "unable to delete deployment ${deployment}, will continue..."
         else
             echo "skipping because DRY_RUN is set to true"
         fi

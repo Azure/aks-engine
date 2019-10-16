@@ -36,6 +36,7 @@ type DCOSSpecConfig struct {
 type KubernetesSpecConfig struct {
 	AzureTelemetryPID                string `json:"azureTelemetryPID,omitempty"`
 	KubernetesImageBase              string `json:"kubernetesImageBase,omitempty"`
+	MCRKubernetesImageBase           string `json:"mcrKubernetesImageBase,omitempty"`
 	TillerImageBase                  string `json:"tillerImageBase,omitempty"`
 	ACIConnectorImageBase            string `json:"aciConnectorImageBase,omitempty"`
 	NVIDIAImageBase                  string `json:"nvidiaImageBase,omitempty"`

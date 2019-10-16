@@ -20,6 +20,7 @@ The Windows Server deployments default to 30GB for the OS drive (C:), which is n
         "osType": "Windows",
         "osDiskSizeGB": 128
      }
+]
 ```
 
 ### Choosing the Windows Server version
@@ -305,7 +306,7 @@ Workaround:
 
 Example:
 
-```json
+```js
 {
     "cniVersion":  "0.3.0",
     "name":  "azure",

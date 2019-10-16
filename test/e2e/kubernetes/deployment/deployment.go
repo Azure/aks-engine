@@ -409,7 +409,12 @@ func (d *Deployment) CreateDeploymentHPADeleteIfExist(cpuPercent, min, max int) 
 
 // Pods will return all pods related to a deployment
 func (d *Deployment) Pods() ([]pod.Pod, error) {
-	return pod.GetAllByPrefix(d.Metadata.Name, d.Metadata.Namespace)
+	return pod.GetAllByPrefixWithRetry(d.Metadata.Name, d.Metadata.Namespace, 3*time.Second, 20*time.Minute)
+}
+
+// PodsRunning will return all pods in a Running state related to a deployment
+func (d *Deployment) PodsRunning() ([]pod.Pod, error) {
+	return pod.GetAllRunningByPrefixWithRetry(d.Metadata.Name, d.Metadata.Namespace, 3*time.Second, 20*time.Minute)
 }
 
 // GetWithRetry gets a deployment, allowing for retries
@@ -472,7 +477,7 @@ func (d *Deployment) WaitForReplicas(min, max int, sleep, timeout time.Duration)
 			select {
 			case <-ctx.Done():
 				return
-			case ch <- pod.GetAllByPrefixAsync(d.Metadata.Name, d.Metadata.Namespace):
+			case ch <- pod.GetAllRunningByPrefixAsync(d.Metadata.Name, d.Metadata.Namespace):
 				time.Sleep(sleep)
 			}
 		}

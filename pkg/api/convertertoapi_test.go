@@ -374,6 +374,7 @@ func TestConvertAzureEnvironmentSpecConfig(t *testing.T) {
 					KubernetesSpecConfig: vlabs.KubernetesSpecConfig{
 						AzureTelemetryPID:                "AzureTelemetryPID",
 						KubernetesImageBase:              "KubernetesImageBase",
+						MCRKubernetesImageBase:           "MCRKubernetesImageBase",
 						TillerImageBase:                  "TillerImageBase",
 						ACIConnectorImageBase:            "ACIConnectorImageBase",
 						NVIDIAImageBase:                  "NVIDIAImageBase",

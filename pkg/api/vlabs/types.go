@@ -275,6 +275,7 @@ const (
 // Kubernetes specific configuration
 type KubernetesConfig struct {
 	KubernetesImageBase               string            `json:"kubernetesImageBase,omitempty"`
+	MCRKubernetesImageBase            string            `json:"mcrKubernetesImageBase,omitempty"`
 	ClusterSubnet                     string            `json:"clusterSubnet,omitempty"`
 	DNSServiceIP                      string            `json:"dnsServiceIP,omitempty"`
 	ServiceCidr                       string            `json:"serviceCidr,omitempty"`

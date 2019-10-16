@@ -644,8 +644,17 @@ func (t *TemplateGenerator) getTemplateFuncMap(cs *api.ContainerService) templat
 
 			return api.AzureADIdentitySystem
 		},
+		"GetPodInfraContainerSpec": func() string {
+			return cs.Properties.OrchestratorProfile.GetPodInfraContainerSpec()
+		},
+		"IsKubenet": func() bool {
+			return cs.Properties.OrchestratorProfile.KubernetesConfig.NetworkPlugin == NetworkPluginKubenet
+		},
 		"NeedsContainerd": func() bool {
 			return cs.Properties.OrchestratorProfile.KubernetesConfig.NeedsContainerd()
+		},
+		"IsKataContainerRuntime": func() bool {
+			return cs.Properties.OrchestratorProfile.KubernetesConfig.ContainerRuntime == api.KataContainers
 		},
 	}
 }

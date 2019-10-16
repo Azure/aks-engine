@@ -7,6 +7,9 @@
 		"WINDOWS_NODE_IMAGE_SUBSCRIPTION_ID": "3014546b-7d1c-4f80-8523-f24a9976fe6a",
 		"WINDOWS_NODE_IMAGE_VERSION": "17763.678.190826"
 	},
+	"options": {
+		"allowedOrchestratorVersions": ["latestReleasedVersion"]
+	},
 	"apiModel": {
 		"apiVersion": "vlabs",
 		"properties": {
