@@ -1917,12 +1917,12 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 						Expect(err).NotTo(HaveOccurred())
 						totalMaxPods += (len(n) * maxPods)
 					}
+					maxPods, _ := strconv.Atoi(eng.ExpandedDefinition.Properties.MasterProfile.KubernetesConfig.KubeletConfig["--max-pods"])
+					totalMaxPods += (len(masterNodes) * maxPods)
 				} else {
 					cpuTarget = 50
 					totalMaxPods = 10
 				}
-				maxPods, _ := strconv.Atoi(eng.ExpandedDefinition.Properties.MasterProfile.KubernetesConfig.KubeletConfig["--max-pods"])
-				totalMaxPods += (len(masterNodes) * maxPods)
 				err = phpApacheDeploy.CreateDeploymentHPADeleteIfExist(cpuTarget, 1, totalMaxPods+1)
 				Expect(err).NotTo(HaveOccurred())
 				h, err := hpa.Get(longRunningApacheDeploymentName, "default", 10)
