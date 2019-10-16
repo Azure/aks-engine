@@ -5,6 +5,7 @@ metadata:
   namespace: kube-system
   version: v1
 spec:
+  priorityClassName: system-node-critical
   hostNetwork: true
   containers:
   - name: kube-addon-manager
