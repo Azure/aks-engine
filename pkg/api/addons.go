@@ -140,7 +140,7 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 			"unremovable-node-recheck-timeout":      "5m0s",
 			"v":                                     "3",
 			"write-status-configmap":                "true",
-			"balance-similar-node-groups":           "false",
+			"balance-similar-node-groups":           "true",
 		},
 		Containers: []KubernetesContainerSpec{
 			{
