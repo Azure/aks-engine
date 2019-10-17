@@ -26586,9 +26586,6 @@ metadata:
     kubernetes.io/cluster-service: "true"
     addonmanager.kubernetes.io/mode: Reconcile
 rules:
-- apiGroups: [""]
-  resources: ["configmaps"]
-  verbs: ["create", "delete", "update", "list", "get"]
 - apiGroups: ["constraints.gatekeeper.sh"]
   resources: ["*"]
   verbs: ["create", "delete", "update", "list", "get"]
@@ -26611,18 +26608,6 @@ roleRef:
   kind: ClusterRole
   name: policy-agent
   apiGroup: rbac.authorization.k8s.io
----
-apiVersion: v1
-kind: Secret
-metadata:
-  name: azure-policy
-  namespace: kube-system
-  labels:
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
-type: Opaque
-data:
-  telemetry-key: TURObFpqbGpOVFV0TnpVelppMDBOVEF3TFdGa05HTXROVEExWVRJelltRTROelpt
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -26674,33 +26659,16 @@ spec:
           value: 5m   # Valid time units are "ns", "us" (or "µs"), "ms", "s", "m", "h"
         - name: TELEMETRY_HEARTBEAT_INTERVAL
           value: 5m   # Valid time units are "ns", "us" (or "µs"), "ms", "s", "m", "h"
-        - name: CA_CERT_PATH
-          value: /etc/azure-policy/ca-cert.pem
-        - name: CLIENT_CERT_PATH
-          value: /etc/azure-policy/client-cert.pem
-        - name: CLIENT_KEY_PATH
-          value: /etc/azure-policy/client-key.pem
-        - name: APP_INSIGHTS_KEY
-          valueFrom:
-            secretKeyRef:
-              name: azure-policy
-              key: telemetry-key
         - name: CURRENT_IMAGE
           value: {{ContainerImage "azure-policy"}}
         volumeMounts:
         - name: acs-credential
           mountPath: "/etc/acs/azure.json"
-        - name: cert
-          mountPath: /etc/azure-policy
       volumes:
       - hostPath:
           path: /etc/kubernetes/azure.json
           type: File
         name: acs-credential
-      - name: cert
-        secret:
-          defaultMode: 420
-          secretName: azure-policy
 `)
 
 func k8sContaineraddonsAzurePolicyDeploymentYamlBytes() ([]byte, error) {
