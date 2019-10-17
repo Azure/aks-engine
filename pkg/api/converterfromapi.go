@@ -5,6 +5,7 @@ package api
 
 import (
 	"fmt"
+
 	"github.com/Azure/aks-engine/pkg/api/vlabs"
 	"github.com/Azure/go-autorest/autorest/azure"
 	"github.com/blang/semver"

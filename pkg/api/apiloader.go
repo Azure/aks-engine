@@ -267,16 +267,16 @@ func (a *Apiloader) SerializeContainerService(containerService *ContainerService
 		}
 	}
 	switch version {
-		case vlabs.APIVersion:
-			vlabsContainerService := ConvertContainerServiceToVLabs(containerService)
-			armContainerService := &VlabsARMContainerService{}
-			armContainerService.ContainerService = vlabsContainerService
-			armContainerService.APIVersion = version
-			b, err := helpers.JSONMarshalIndent(armContainerService, "", "  ", false)
-			if err != nil {
-				return nil, err
-			}
-			return b, nil
+	case vlabs.APIVersion:
+		vlabsContainerService := ConvertContainerServiceToVLabs(containerService)
+		armContainerService := &VlabsARMContainerService{}
+		armContainerService.ContainerService = vlabsContainerService
+		armContainerService.APIVersion = version
+		b, err := helpers.JSONMarshalIndent(armContainerService, "", "  ", false)
+		if err != nil {
+			return nil, err
+		}
+		return b, nil
 
 	default:
 		return nil, a.Translator.Errorf("invalid version %s for conversion back from unversioned object", version)
