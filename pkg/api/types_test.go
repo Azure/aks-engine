@@ -4513,7 +4513,7 @@ func getMockAddon(name string) KubernetesAddon {
 			},
 		},
 		Pools: []AddonNodePoolsConfig{
-			AddonNodePoolsConfig{
+			{
 				Name: "pool1",
 				Config: map[string]string{
 					"min-nodes": "3",

@@ -1754,7 +1754,7 @@ func TestGetClusterAutoscalerAddonFuncMap(t *testing.T) {
 					},
 				},
 				Pools: []api.AddonNodePoolsConfig{
-					api.AddonNodePoolsConfig{
+					{
 						Name: "pool1",
 						Config: map[string]string{
 							"min-nodes": "1",

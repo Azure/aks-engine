@@ -865,7 +865,7 @@ func TestSetAddonsConfig(t *testing.T) {
 						"balance-similar-node-groups":           "true",
 					},
 					Pools: []AddonNodePoolsConfig{
-						AddonNodePoolsConfig{
+						{
 							Name: "pool1",
 							Config: map[string]string{
 								"min-nodes": "1",
@@ -1103,21 +1103,21 @@ func TestSetAddonsConfig(t *testing.T) {
 						"balance-similar-node-groups":           "true",
 					},
 					Pools: []AddonNodePoolsConfig{
-						AddonNodePoolsConfig{
+						{
 							Name: "pool1",
 							Config: map[string]string{
 								"min-nodes": "5",
 								"max-nodes": "5",
 							},
 						},
-						AddonNodePoolsConfig{
+						{
 							Name: "pool2",
 							Config: map[string]string{
 								"min-nodes": "10",
 								"max-nodes": "10",
 							},
 						},
-						AddonNodePoolsConfig{
+						{
 							Name: "pool3",
 							Config: map[string]string{
 								"min-nodes": "1",
@@ -1300,21 +1300,21 @@ func TestSetAddonsConfig(t *testing.T) {
 										"balance-similar-node-groups":           "false",
 									},
 									Pools: []AddonNodePoolsConfig{
-										AddonNodePoolsConfig{
+										{
 											Name: "pool1",
 											Config: map[string]string{
 												"min-nodes": "1",
 												"max-nodes": "100",
 											},
 										},
-										AddonNodePoolsConfig{
+										{
 											Name: "pool2",
 											Config: map[string]string{
 												"min-nodes": "3",
 												"max-nodes": "10",
 											},
 										},
-										AddonNodePoolsConfig{
+										{
 											Name: "pool3",
 											Config: map[string]string{
 												"min-nodes": "1",
@@ -1415,21 +1415,21 @@ func TestSetAddonsConfig(t *testing.T) {
 						"balance-similar-node-groups":           "false",
 					},
 					Pools: []AddonNodePoolsConfig{
-						AddonNodePoolsConfig{
+						{
 							Name: "pool1",
 							Config: map[string]string{
 								"min-nodes": "1",
 								"max-nodes": "100",
 							},
 						},
-						AddonNodePoolsConfig{
+						{
 							Name: "pool2",
 							Config: map[string]string{
 								"min-nodes": "3",
 								"max-nodes": "10",
 							},
 						},
-						AddonNodePoolsConfig{
+						{
 							Name: "pool3",
 							Config: map[string]string{
 								"min-nodes": "1",
@@ -1589,7 +1589,7 @@ func TestSetAddonsConfig(t *testing.T) {
 										"max-total-unready-percentage":         "46",
 									},
 									Pools: []AddonNodePoolsConfig{
-										AddonNodePoolsConfig{
+										{
 											Name: "pool1",
 											Config: map[string]string{
 												"min-nodes": "1",
@@ -1690,7 +1690,7 @@ func TestSetAddonsConfig(t *testing.T) {
 						"balance-similar-node-groups":           "true",
 					},
 					Pools: []AddonNodePoolsConfig{
-						AddonNodePoolsConfig{
+						{
 							Name: "pool1",
 							Config: map[string]string{
 								"min-nodes": "1",
@@ -5039,7 +5039,7 @@ func TestMakeDefaultClusterAutoscalerAddonPoolsConfig(t *testing.T) {
 				},
 			},
 			expectedAddonPoolsConfig: []AddonNodePoolsConfig{
-				AddonNodePoolsConfig{
+				{
 					Name: "pool1",
 					Config: map[string]string{
 						"min-nodes": "3",
@@ -5077,35 +5077,35 @@ func TestMakeDefaultClusterAutoscalerAddonPoolsConfig(t *testing.T) {
 				},
 			},
 			expectedAddonPoolsConfig: []AddonNodePoolsConfig{
-				AddonNodePoolsConfig{
+				{
 					Name: "pool1",
 					Config: map[string]string{
 						"min-nodes": "3",
 						"max-nodes": "3",
 					},
 				},
-				AddonNodePoolsConfig{
+				{
 					Name: "pool2",
 					Config: map[string]string{
 						"min-nodes": "10",
 						"max-nodes": "10",
 					},
 				},
-				AddonNodePoolsConfig{
+				{
 					Name: "pool3",
 					Config: map[string]string{
 						"min-nodes": "1",
 						"max-nodes": "1",
 					},
 				},
-				AddonNodePoolsConfig{
+				{
 					Name: "pool4",
 					Config: map[string]string{
 						"min-nodes": "33",
 						"max-nodes": "33",
 					},
 				},
-				AddonNodePoolsConfig{
+				{
 					Name: "pool5",
 					Config: map[string]string{
 						"min-nodes": "5",

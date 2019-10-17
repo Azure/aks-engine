@@ -1913,7 +1913,8 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 					cpuTarget = 25
 					for _, profile := range eng.ExpandedDefinition.Properties.AgentPoolProfiles {
 						maxPods, _ := strconv.Atoi(profile.KubernetesConfig.KubeletConfig["--max-pods"])
-						n, err := node.GetByRegexWithRetry(fmt.Sprintf("^k8s-%s", profile.Name), 3*time.Minute, cfg.Timeout)
+						var n []node.Node
+						n, err = node.GetByRegexWithRetry(fmt.Sprintf("^k8s-%s", profile.Name), 3*time.Minute, cfg.Timeout)
 						Expect(err).NotTo(HaveOccurred())
 						totalMaxPods += (len(n) * maxPods)
 					}
