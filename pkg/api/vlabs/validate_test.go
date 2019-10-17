@@ -8,10 +8,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/Azure/go-autorest/autorest/to"
-
 	"github.com/Azure/aks-engine/pkg/api/common"
 	"github.com/Azure/aks-engine/pkg/helpers"
+	"github.com/Azure/go-autorest/autorest/to"
 	"github.com/blang/semver"
 	"github.com/pkg/errors"
 )
@@ -1077,6 +1076,33 @@ func TestProperties_ValidateInvalidExtensionProfiles(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestProperties_ValidateIsValidVersion(t *testing.T) {
+	p := &Properties{}
+	p.OrchestratorProfile = &OrchestratorProfile{}
+	p.OrchestratorProfile.OrchestratorType = Kubernetes
+
+	t.Run("Kubernetes version is valid", func(t *testing.T) {
+		_, err := p.isValidVersion("1.16.0")
+		if err != nil {
+			t.Errorf("version is not valid - should error: %v", err)
+		}
+	})
+
+	t.Run("Kubernetes version is not valid", func(t *testing.T) {
+		_, err := p.isValidVersion("v1.16.0")
+		if err == nil {
+			t.Errorf("version is valid - should not error: %v", err)
+		}
+	})
+
+	t.Run("Kubernetes version is not valid", func(t *testing.T) {
+		_, err := p.isValidVersion("1.16")
+		if err == nil {
+			t.Errorf("version is valid - should not error: %v", err)
+		}
+	})
 }
 
 func Test_ServicePrincipalProfile_ValidateSecretOrKeyvaultSecretRef(t *testing.T) {

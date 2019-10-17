@@ -26549,7 +26549,7 @@ metadata:
   namespace: "kube-system"
   labels:
     kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
+    addonmanager.kubernetes.io/mode: EnsureExists
 spec:
   sync:
     syncOnly:
