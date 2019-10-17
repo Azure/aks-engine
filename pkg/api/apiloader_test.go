@@ -33,97 +33,13 @@ func TestLoadContainerServiceFromFile(t *testing.T) {
 		},
 	}
 
-	containerService, _, err := apiloader.LoadContainerServiceFromFile("../engine/testdata/v20170701/kubernetes.json", true, false, existingContainerService)
+	_, _, err := apiloader.LoadContainerServiceFromFile("../engine/testdata/simple/kubernetes.json", false, false, existingContainerService)
 	if err != nil {
 		t.Error(err.Error())
-	}
-	if containerService.Properties.OrchestratorProfile.OrchestratorVersion != "1.8.12" {
-		t.Errorf("Failed to set orcherstator version when it is set in the json, expected 1.8.12 but got %s", containerService.Properties.OrchestratorProfile.OrchestratorVersion)
-	}
-
-	containerService, _, err = apiloader.LoadContainerServiceFromFile("../engine/testdata/v20170701/kubernetes-default-version.json", true, false, existingContainerService)
-	if err != nil {
-		t.Error(err.Error())
-	}
-	if containerService.Properties.OrchestratorProfile.OrchestratorVersion != "1.7.16" {
-		t.Errorf("Failed to set orcherstator version when it is not set in the json, got %s", containerService.Properties.OrchestratorProfile.OrchestratorVersion)
-	}
-
-	containerService, _, err = apiloader.LoadContainerServiceFromFile("../engine/testdata/v20170131/kubernetes.json", true, false, existingContainerService)
-	if err != nil {
-		t.Error(err.Error())
-	}
-	if containerService.Properties.OrchestratorProfile.OrchestratorVersion != "1.7.16" {
-		t.Errorf("Failed to set orcherstator version when it is not set in the json, got %s", containerService.Properties.OrchestratorProfile.OrchestratorVersion)
-	}
-
-	containerService, _, err = apiloader.LoadContainerServiceFromFile("../engine/testdata/v20160930/kubernetes.json", true, false, existingContainerService)
-	if err != nil {
-		t.Error(err.Error())
-	}
-	if containerService.Properties.OrchestratorProfile.OrchestratorVersion != "1.7.16" {
-		t.Errorf("Failed to set orcherstator version when it is not set in the json, got %s", containerService.Properties.OrchestratorProfile.OrchestratorVersion)
-	}
-
-	containerService, _, err = apiloader.LoadContainerServiceFromFile("../engine/testdata/v20170701/kubernetes-default-version.json", true, false, nil)
-	if err != nil {
-		t.Error(err.Error())
-	}
-	if containerService.Properties.OrchestratorProfile.OrchestratorVersion != common.GetDefaultKubernetesVersion(false) {
-		t.Errorf("Failed to set orcherstator version when it is not set in the json API v20170701, got %s but expected %s", containerService.Properties.OrchestratorProfile.OrchestratorVersion, common.GetDefaultKubernetesVersion(false))
-	}
-
-	containerService, _, err = apiloader.LoadContainerServiceFromFile("../engine/testdata/v20170701/kubernetes-win-default-version.json", true, false, nil)
-	if err != nil {
-		t.Error(err.Error())
-	}
-	if containerService.Properties.OrchestratorProfile.OrchestratorVersion != common.GetDefaultKubernetesVersion(true) {
-		t.Errorf("Failed to set orcherstator version to windows default when it is not set in the json API v20170701, got %s but expected %s", containerService.Properties.OrchestratorProfile.OrchestratorVersion, common.GetDefaultKubernetesVersion(true))
-	}
-
-	containerService, _, err = apiloader.LoadContainerServiceFromFile("../engine/testdata/v20170131/kubernetes.json", true, false, nil)
-	if err != nil {
-		t.Error(err.Error())
-	}
-	if containerService.Properties.OrchestratorProfile.OrchestratorVersion != common.GetDefaultKubernetesVersion(false) {
-		t.Errorf("Failed to set orcherstator version when it is not set in the json API v20170131, got %s but expected %s", containerService.Properties.OrchestratorProfile.OrchestratorVersion, common.GetDefaultKubernetesVersion(false))
-	}
-
-	containerService, _, err = apiloader.LoadContainerServiceFromFile("../engine/testdata/v20170131/kubernetes-win.json", true, false, nil)
-	if err != nil {
-		t.Error(err.Error())
-	}
-	if containerService.Properties.OrchestratorProfile.OrchestratorVersion != common.GetDefaultKubernetesVersion(true) {
-		t.Errorf("Failed to set orcherstator version to windows default when it is not set in the json API v20170131, got %s but expected %s", containerService.Properties.OrchestratorProfile.OrchestratorVersion, common.GetDefaultKubernetesVersion(true))
-	}
-
-	containerService, _, err = apiloader.LoadContainerServiceFromFile("../engine/testdata/v20170701/kubernetes.json", false, false, nil)
-	if err != nil {
-		t.Error(err.Error())
-	}
-
-	containerService, _, err = apiloader.LoadContainerServiceFromFile("../engine/testdata/v20170131/kubernetes.json", false, false, nil)
-	if err != nil {
-		t.Error(err.Error())
-	}
-
-	containerService, _, err = apiloader.LoadContainerServiceFromFile("../engine/testdata/simple/kubernetes.json", false, false, nil)
-	if err != nil {
-		t.Error(err.Error())
-	}
-
-	// Test ACS scale scenario
-	existingContainerService.Properties.OrchestratorProfile.OrchestratorVersion = "1.8.12"
-	containerService, _, err = apiloader.LoadContainerServiceFromFile("../engine/testdata/v20170701/kubernetes.json", true, true, existingContainerService)
-	if err != nil {
-		t.Error(err.Error())
-	}
-	if containerService.Properties.OrchestratorProfile.OrchestratorVersion != "1.8.12" {
-		t.Errorf("Failed to set orcherstator version when it is set in the json, expected 1.8.12 but got %s", containerService.Properties.OrchestratorProfile.OrchestratorVersion)
 	}
 
 	// Test error scenario
-	containerService, _, err = apiloader.LoadContainerServiceFromFile("../this-file-doesnt-exist.json", true, false, nil)
+	_, _, err = apiloader.LoadContainerServiceFromFile("../this-file-doesnt-exist.json", true, false, nil)
 	if err == nil {
 		t.Errorf("expected error passing a non-existent filepath string to apiloader.LoadContainerServiceFromFile(), instead got nil")
 	}
@@ -639,31 +555,6 @@ func TestSerializeContainerService(t *testing.T) {
 	}
 
 	cs.Properties.HostedMasterProfile = nil
-	// Test without HostedMasterProfile
-
-	// Test with version v20160930
-	b, err = apiloader.SerializeContainerService(cs, v20160930.APIVersion)
-	if b == nil || err != nil {
-		t.Errorf("unexpected error while trying to Serialize Container Service with version v20180331: %s", err.Error())
-	}
-
-	// Test with version v20160330
-	b, err = apiloader.SerializeContainerService(cs, v20160330.APIVersion)
-	if b == nil || err != nil {
-		t.Errorf("unexpected error while trying to Serialize Container Service with version v20180331: %s", err.Error())
-	}
-
-	// Test with version v20170131
-	b, err = apiloader.SerializeContainerService(cs, v20170131.APIVersion)
-	if b == nil || err != nil {
-		t.Errorf("unexpected error while trying to Serialize Container Service with version v20180331: %s", err.Error())
-	}
-
-	// Test with version v20170701
-	b, err = apiloader.SerializeContainerService(cs, v20170701.APIVersion)
-	if b == nil || err != nil {
-		t.Errorf("unexpected error while trying to Serialize Container Service with version v20180331: %s", err.Error())
-	}
 
 	// Test with version vlabs
 	b, err = apiloader.SerializeContainerService(cs, vlabs.APIVersion)

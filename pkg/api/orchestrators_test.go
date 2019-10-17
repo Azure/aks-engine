@@ -76,27 +76,6 @@ func TestOrchestratorUpgradeInfo(t *testing.T) {
 	Expect(len(orch.Upgrades)).To(Equal(0))
 }
 
-func TestGetOrchestratorVersionProfileListV20170930(t *testing.T) {
-	RegisterTestingT(t)
-	// v20170930 - all orchestrators
-	list, e := GetOrchestratorVersionProfileListV20170930("", "")
-	Expect(e).To(BeNil())
-	numSwarmVersions := 1
-	numDockerCEVersions := 1
-
-	totalNumVersions := numSwarmVersions +
-		numDockerCEVersions +
-		len(common.GetAllSupportedKubernetesVersions(false, false)) +
-		len(common.AllDCOSSupportedVersions)
-
-	Expect(len(list.Properties.Orchestrators)).To(Equal(totalNumVersions))
-
-	// v20170930 - kubernetes only
-	list, e = GetOrchestratorVersionProfileListV20170930(common.Kubernetes, "")
-	Expect(e).To(BeNil())
-	Expect(len(list.Properties.Orchestrators)).To(Equal(len(common.GetAllSupportedKubernetesVersions(false, false))))
-}
-
 func TestGetOrchestratorVersionProfileList(t *testing.T) {
 	RegisterTestingT(t)
 	// kubernetes only
