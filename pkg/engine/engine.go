@@ -708,9 +708,6 @@ func getClusterAutoscalerAddonFuncMap(addon api.KubernetesAddon, cs *api.Contain
 		},
 		"GetClusterAutoscalerNodesConfig": func() string {
 			var ret string
-			if addon.Name != "cluster-autoscaler" {
-				return ret
-			}
 			for _, pool := range addon.Pools {
 				ret += fmt.Sprintf("        - --nodes=%s:%s:%s\n", pool.Config["min-nodes"], pool.Config["max-nodes"], cs.Properties.GetAgentVMPrefix(cs.Properties.GetAgentPoolByName(pool.Name), cs.Properties.GetAgentPoolIndexByName(pool.Name)))
 			}
