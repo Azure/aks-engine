@@ -472,7 +472,7 @@ func (t *Transformer) NormalizeResourcesForK8sMasterUpgrade(logger *logrus.Entry
 	return nil
 }
 
-//RemoveNsgDependency Removes the nsg dependency from the
+//RemoveNsgDependency Removes the nsg dependency from the resource
 func RemoveNsgDependency(logger *logrus.Entry, resourceName string, resourceMap map[string]interface{}) {
 
 	if resourceName != "" && resourceMap != nil {
