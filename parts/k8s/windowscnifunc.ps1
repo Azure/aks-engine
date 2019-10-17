@@ -37,7 +37,19 @@ function Test-PodCIDR($podCIDR) {
     return $podCIDR.length -gt 0
 }
 
-function Update-CNIConfig($podCIDR, $masterSubnetGW) {
+function Write-WinCNIConfig {
+    param(
+        [string] $cniConfigPath,
+        [string] $networkMode,
+        [string] $kubeDnsServiceIp,
+        [string] $kubeDnsSearchPath,
+        [string] $kubeClusterCIDR,
+        [string] $masterSubnet,
+        [string] $kubeServiceCIDR
+    )
+
+    Write-Log "Writing CNI config for kubenet"
+
     $jsonSampleConfig =
     "{
     ""cniVersion"": ""0.2.0"",
@@ -59,37 +71,44 @@ function Update-CNIConfig($podCIDR, $masterSubnetGW) {
 }"
 
     $configJson = ConvertFrom-Json $jsonSampleConfig
-    $configJson.name = $global:NetworkMode.ToLower()
-    $configJson.dns.Nameservers[0] = $global:KubeDnsServiceIp
-    $configJson.dns.Search[0] = $global:KubeDnsSearchPath
+    $configJson.name = $networkMode.ToLower()
+    $configJson.dns.Nameservers[0] = $kubeDnsServiceIp
+    $configJson.dns.Search[0] = $kubeDnsSearchPath
 
-    $configJson.policies[0].Value.ExceptionList[0] = $global:KubeClusterCIDR
-    $configJson.policies[0].Value.ExceptionList[1] = $global:MasterSubnet
-    $configJson.policies[1].Value.DestinationPrefix = $global:KubeServiceCIDR
+    $configJson.policies[0].Value.ExceptionList[0] = $kubeClusterCIDR
+    $configJson.policies[0].Value.ExceptionList[1] = $masterSubnet
+    $configJson.policies[1].Value.DestinationPrefix = $kubeServiceCIDR
 
-    if (Test-Path $global:CNIConfig) {
-        Clear-Content -Path $global:CNIConfig
+    if (Test-Path $cniConfigPath) {
+        Clear-Content -Path $cniConfigPath
     }
 
-    Write-Host "Generated CNI Config [$configJson]"
+    Write-Log "Generated CNI Config [$configJson]"
 
-    Add-Content -Path $global:CNIConfig -Value (ConvertTo-Json $configJson -Depth 20)
+    Add-Content -Path $cniConfigPath -Value (ConvertTo-Json $configJson -Depth 20)
 }
 
-function Write-WinCNIConfig ($kubeletArgList) {
-    $masterSubnetGW = Get-DefaultGateway $global:MasterSubnet
+function Get-PodCIDRForNode {
+    param(
+        [string[]] $kubeletArgList
+    )
+
+    Write-Log "Attempting to get pod CIDR"
     $podCIDR = Get-PodCIDR
     $podCidrDiscovered = Test-PodCIDR($podCIDR)
 
+    Write-Log "Staring kubelet with args: $kubeletArgList"
+
     # if the podCIDR has not yet been assigned to this node, start the kubelet process to get the podCIDR, and then promptly kill it.
     if (-not $podCidrDiscovered) {
-        Write-Host "Staring kubelet with args: $kubeletArgList"
+        Write-Log "Staring kubelet with args: $kubeletArgList"
+
         $process = Start-Process -FilePath c:\k\kubelet.exe -PassThru -ArgumentList $kubeletArgList
 
         # run kubelet until podCidr is discovered
-        Write-Host "waiting to discover pod CIDR"
+        Write-Log "waiting to discover pod CIDR"
         while (-not $podCidrDiscovered) {
-            Write-Host "Sleeping for 10s, and then waiting to discover pod CIDR"
+            Write-Log "Sleeping for 10s, and then waiting to discover pod CIDR"
             Start-Sleep 10
 
             $podCIDR = Get-PodCIDR
@@ -100,7 +119,19 @@ function Write-WinCNIConfig ($kubeletArgList) {
         $process | Stop-Process | Out-Null
     }
 
-    Write-Host "Updating CNI config - PodCIRD: $podCIDR, MasterSubnetGW: $masterSubnetGW"
-    Update-CNIConfig $podCIDR $masterSubnetGW
+    Write-Log "Pod CIDR: $podCIDR"
+    return $podCIDR
+}
+
+function Create-WinCNINetwork {
+    param(
+        [string]$networkMode,
+        [string]$addressPrefix,
+        [string]$gateway,
+        [string]$name
+    )
+
+    Write-Log "Creating a new hns network: -Type $networkMode  -AddressPrefix $addressPrefix -Gateway $gateway -Name $name"
+    New-HNSNetwork -Type $networkMode -AddressPrefix $addressPrefix -Gateway $gateway -Name $name -Verbose
 }
 

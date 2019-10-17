@@ -340,9 +340,9 @@ Install-KubernetesServices {
 
     mkdir $VolumePluginDir
     $KubeletArgList = $KubeletConfigArgs # This is the initial list passed in from aks-engine
-    $KubeletArgList += "--node-labels=`$global:KubeletNodeLabels"
+    $KubeletArgList += "--node-labels=$($KubeletNodeLabels)"
     # $KubeletArgList += "--hostname-override=`$global:AzureHostname" TODO: remove - dead code?
-    $KubeletArgList += "--volume-plugin-dir=`$global:VolumePluginDir"
+    $KubeletArgList += "--volume-plugin-dir=$($VolumePluginDir)"
     # If you are thinking about adding another arg here, you should be considering pkg/engine/defaults-kubelet.go first
     # Only args that need to be calculated or combined with other ones on the Windows agent should be added here.
 
@@ -370,8 +370,35 @@ Install-KubernetesServices {
 
     # TODO: move out of this funciton
     if ($NetworkPlugin -eq "kubenet") {
-        Write-Host "Writing CNI config for kubenet"
-        Write-WinCNIConfig $KubeletArgList
+
+        Write-Log "Performing kubenet one-time setup"
+
+        $podCIDR = Get-PodCIDRForNode -kubeletArgList $KubeletArgList
+        $masterSubnetGW = Get-DefaultGateway $MasterSubnet
+
+        Write-WinCNIConfig `
+        -cniConfigPath "c:\k\cni\config\$($NetworkMode).conf" `
+        -networkMode $NetworkMode `
+        -kubeDnsServiceIp $KubeDnsServiceIp `
+        -kubeDnsSearchPath 'svc.cluster.local' `
+        -kubeClusterCIDR $KubeClusterCIDR `
+        -masterSubnet $MasterSubnet `
+        -kubeServiceCIDR $KubeServiceCIDR
+
+        Import-Module $HNSModule
+
+        Create-WinCNINetwork `
+            -networkMode $NetworkMode `
+            -addressPrefix "192.168.255.0/30" `
+            -gateway "192.168.255.1" `
+            -name 'ext'
+
+        # try not doing this
+        Create-WinCNINetwork `
+            -networkMode $NetworkMode `
+            -addressPrefix $podCIDR `
+            -gateway $masterSubnetGW `
+            -name $networkMode.ToLower()
     }
 
     # Used in WinCNI version of kubeletstart.ps1
@@ -626,7 +653,9 @@ $KubeDir\kube-proxy.exe --v=3 --proxy-mode=kernelspace --hostname-override=$env:
 
     $kubeProxyStartStr | Out-File -encoding ASCII -filepath $KubeProxyStartFile
 
+<#
     New-NSSMService -KubeDir $KubeDir `
         -KubeletStartFile $KubeletStartFile `
         -KubeProxyStartFile $KubeProxyStartFile
+#>
 }

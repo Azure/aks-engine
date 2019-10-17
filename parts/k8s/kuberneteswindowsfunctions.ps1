@@ -6,7 +6,7 @@ function
 Write-Log($message)
 {
     $msg = $message | Timestamp
-    Write-Output $msg
+    Write-Host $msg
 }
 
 function DownloadFileOverHttp
