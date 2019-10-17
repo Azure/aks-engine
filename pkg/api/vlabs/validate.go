@@ -393,6 +393,9 @@ func (a *Properties) validateMasterProfile(isUpdate bool) error {
 	}
 
 	if m.ImageRef != nil {
+		if m.Distro != "" {
+			return errors.New("masterProfile includes a custom image configuration (imageRef) and an explicit distro configuration, you may use one of these but not both simultaneously")
+		}
 		if err := m.ImageRef.validateImageNameAndGroup(); err != nil {
 			return err
 		}
@@ -432,7 +435,7 @@ func (a *Properties) validateMasterProfile(isUpdate bool) error {
 	}
 
 	if to.Bool(m.AuditDEnabled) {
-		if !m.IsUbuntu() {
+		if m.Distro != "" && !m.IsUbuntu() {
 			return errors.Errorf("You have enabled auditd for master vms, but you did not specify an Ubuntu-based distro.")
 		}
 	}
@@ -484,7 +487,7 @@ func (a *Properties) validateAgentPoolProfiles(isUpdate bool) error {
 		}
 
 		if to.Bool(agentPoolProfile.AuditDEnabled) {
-			if !agentPoolProfile.IsUbuntu() {
+			if agentPoolProfile.Distro != "" && !agentPoolProfile.IsUbuntu() {
 				return errors.Errorf("You have enabled auditd in agent pool %s, but you did not specify an Ubuntu-based distro", agentPoolProfile.Name)
 			}
 		}
@@ -500,6 +503,9 @@ func (a *Properties) validateAgentPoolProfiles(isUpdate bool) error {
 		}
 
 		if agentPoolProfile.ImageRef != nil {
+			if agentPoolProfile.Distro != "" {
+				return errors.Errorf("agentPoolProfile %s includes a custom image configuration (imageRef) and an explicit distro configuration, you may use one of these but not both simultaneously", agentPoolProfile.Name)
+			}
 			return agentPoolProfile.ImageRef.validateImageNameAndGroup()
 		}
 
@@ -1144,9 +1150,22 @@ func (k *KubernetesConfig) Validate(k8sVersion string, hasWindows, ipv6DualStack
 	// number of minimum retries allowed for kubelet to post node status
 	const minKubeletRetries = 4
 
-	// ipv6 dual stack feature is currently only supported with kubenet
-	if ipv6DualStackEnabled && k.NetworkPlugin != "kubenet" {
-		return errors.Errorf("OrchestratorProfile.KubernetesConfig.NetworkPlugin '%s' is invalid. IPv6 dual stack supported only with kubenet.", k.NetworkPlugin)
+	if ipv6DualStackEnabled {
+		sv, err := semver.Make(k8sVersion)
+		if err != nil {
+			return errors.Errorf("could not validate version %s", k8sVersion)
+		}
+		minVersion, err := semver.Make("1.16.0")
+		if err != nil {
+			return errors.New("could not validate version")
+		}
+		if sv.LT(minVersion) {
+			return errors.Errorf("IPv6 dual stack not available in kubernetes version %s", k8sVersion)
+		}
+		// ipv6 dual stack feature is currently only supported with kubenet
+		if k.NetworkPlugin != "kubenet" {
+			return errors.Errorf("OrchestratorProfile.KubernetesConfig.NetworkPlugin '%s' is invalid. IPv6 dual stack supported only with kubenet.", k.NetworkPlugin)
+		}
 	}
 
 	if k.ClusterSubnet != "" {
@@ -1249,31 +1268,55 @@ func (k *KubernetesConfig) Validate(k8sVersion string, hasWindows, ipv6DualStack
 			return errors.Errorf("OrchestratorProfile.KubernetesConfig.DNSServiceIP '%s' is an invalid IP address", k.DNSServiceIP)
 		}
 
-		_, serviceCidr, err := net.ParseCIDR(k.ServiceCidr)
+		primaryServiceCIDR := k.ServiceCidr
+		if ipv6DualStackEnabled {
+			// split the service cidr to see if there are multiple cidrs
+			serviceCidrs := strings.Split(k.ServiceCidr, ",")
+			if len(serviceCidrs) > 2 {
+				return errors.Errorf("OrchestratorProfile.KubernetesConfig.ServiceCidr '%s' is an invalid CIDR subnet. More than 2 CIDRs not allowed for dualstack", k.ServiceCidr)
+			}
+			if len(serviceCidrs) == 2 {
+				firstServiceCIDR, secondServiceCIDR := serviceCidrs[0], serviceCidrs[1]
+				_, _, err := net.ParseCIDR(secondServiceCIDR)
+				if err != nil {
+					return errors.Errorf("OrchestratorProfile.KubernetesConfig.ServiceCidr '%s' is an invalid CIDR subnet", secondServiceCIDR)
+				}
+				// use the primary service cidr for further validation
+				primaryServiceCIDR = firstServiceCIDR
+			}
+			// if # of service cidrs is 1, then continues with the default validation
+		}
+
+		_, serviceCidr, err := net.ParseCIDR(primaryServiceCIDR)
 		if err != nil {
-			return errors.Errorf("OrchestratorProfile.KubernetesConfig.ServiceCidr '%s' is an invalid CIDR subnet", k.ServiceCidr)
+			return errors.Errorf("OrchestratorProfile.KubernetesConfig.ServiceCidr '%s' is an invalid CIDR subnet", primaryServiceCIDR)
 		}
 
 		// Finally validate that the DNS ip is within the subnet
 		if !serviceCidr.Contains(dnsIP) {
-			return errors.Errorf("OrchestratorProfile.KubernetesConfig.DNSServiceIP '%s' is not within the ServiceCidr '%s'", k.DNSServiceIP, k.ServiceCidr)
+			return errors.Errorf("OrchestratorProfile.KubernetesConfig.DNSServiceIP '%s' is not within the ServiceCidr '%s'", k.DNSServiceIP, primaryServiceCIDR)
 		}
 
 		// and that the DNS IP is _not_ the subnet broadcast address
 		broadcast := common.IP4BroadcastAddress(serviceCidr)
 		if dnsIP.Equal(broadcast) {
-			return errors.Errorf("OrchestratorProfile.KubernetesConfig.DNSServiceIP '%s' cannot be the broadcast address of ServiceCidr '%s'", k.DNSServiceIP, k.ServiceCidr)
+			return errors.Errorf("OrchestratorProfile.KubernetesConfig.DNSServiceIP '%s' cannot be the broadcast address of ServiceCidr '%s'", k.DNSServiceIP, primaryServiceCIDR)
 		}
 
 		// and that the DNS IP is _not_ the first IP in the service subnet
 		firstServiceIP := common.CidrFirstIP(serviceCidr.IP)
 		if firstServiceIP.Equal(dnsIP) {
-			return errors.Errorf("OrchestratorProfile.KubernetesConfig.DNSServiceIP '%s' cannot be the first IP of ServiceCidr '%s'", k.DNSServiceIP, k.ServiceCidr)
+			return errors.Errorf("OrchestratorProfile.KubernetesConfig.DNSServiceIP '%s' cannot be the first IP of ServiceCidr '%s'", k.DNSServiceIP, primaryServiceCIDR)
 		}
 	}
 
 	if k.ProxyMode != "" && k.ProxyMode != KubeProxyModeIPTables && k.ProxyMode != KubeProxyModeIPVS {
 		return errors.Errorf("Invalid KubeProxyMode %v. Allowed modes are %v and %v", k.ProxyMode, KubeProxyModeIPTables, KubeProxyModeIPVS)
+	}
+
+	// dualstack is currently supported only with ipvs proxy mode
+	if ipv6DualStackEnabled && k.ProxyMode != KubeProxyModeIPVS {
+		return errors.Errorf("Invalid KubeProxyMode %v. Dualstack supported currently only with %v mode", k.ProxyMode, KubeProxyModeIPVS)
 	}
 
 	// Validate that we have a valid etcd version

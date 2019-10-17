@@ -16,7 +16,13 @@ import (
 	"github.com/pkg/errors"
 )
 
-func (cs *ContainerService) setCustomCloudProfileDefaults() error {
+// CustomCloudProfileDefaultsParams is the parameters when we set the cloud profile defaults for ContainerService.
+type CustomCloudProfileDefaultsParams struct {
+	IsUpgrade bool
+	IsScale   bool
+}
+
+func (cs *ContainerService) setCustomCloudProfileDefaults(params CustomCloudProfileDefaultsParams) error {
 	p := cs.Properties
 	if p.IsAzureStackCloud() {
 		p.CustomCloudProfile.AuthenticationMethod = helpers.EnsureString(p.CustomCloudProfile.AuthenticationMethod, ClientSecretAuthMethod)
@@ -26,7 +32,7 @@ func (cs *ContainerService) setCustomCloudProfileDefaults() error {
 		if err != nil {
 			return fmt.Errorf("Failed to set environment - %s", err)
 		}
-		err = p.SetAzureStackCloudSpec()
+		err = p.SetAzureStackCloudSpec(AzureStackCloudSpecParams(params))
 		if err != nil {
 			return fmt.Errorf("Failed to set cloud spec - %s", err)
 		}
@@ -95,8 +101,14 @@ func (cs *ContainerService) SetCustomCloudProfileEnvironment() error {
 	return nil
 }
 
+// AzureStackCloudSpecParams is the parameters when we set the azure stack cloud spec defaults for ContainerService.
+type AzureStackCloudSpecParams struct {
+	IsUpgrade bool
+	IsScale   bool
+}
+
 // SetAzureStackCloudSpec sets the cloud spec for Azure Stack .
-func (p *Properties) SetAzureStackCloudSpec() error {
+func (p *Properties) SetAzureStackCloudSpec(params AzureStackCloudSpecParams) error {
 	if p.IsAzureStackCloud() {
 		var azureStackCloudSpec AzureEnvironmentSpecConfig
 		switch p.CustomCloudProfile.DependenciesLocation {
@@ -114,8 +126,23 @@ func (p *Properties) SetAzureStackCloudSpec() error {
 		if p.CustomCloudProfile.Environment == nil || p.CustomCloudProfile.Environment.ResourceManagerVMDNSSuffix == "" {
 			return errors.New("Failed to set Cloud Spec for Azure Stack due to invalid environment")
 		}
+
 		azureStackCloudSpec.EndpointConfig.ResourceManagerVMDNSSuffix = p.CustomCloudProfile.Environment.ResourceManagerVMDNSSuffix
 		azureStackCloudSpec.CloudName = AzureStackCloud
+
+		//Sets default values for telemetry PID where none is set
+		if p.CustomCloudProfile.AzureEnvironmentSpecConfig == nil {
+			switch {
+			case params.IsScale:
+				azureStackCloudSpec.KubernetesSpecConfig.AzureTelemetryPID = DefaultAzureStackScaleTelemetryPID
+			case params.IsUpgrade:
+				azureStackCloudSpec.KubernetesSpecConfig.AzureTelemetryPID = DefaultAzureStackUpgradeTelemetryPID
+			default:
+				azureStackCloudSpec.KubernetesSpecConfig.AzureTelemetryPID = DefaultAzureStackDeployTelemetryPID
+			}
+
+		}
+
 		// Use the custom input to overwrite the default values in AzureStackCloudSpec
 		if p.CustomCloudProfile.AzureEnvironmentSpecConfig != nil {
 			ascc := p.CustomCloudProfile.AzureEnvironmentSpecConfig
@@ -130,6 +157,8 @@ func (p *Properties) SetAzureStackCloudSpec() error {
 			//KubernetesSpecConfig
 			asccKubernetesSpecConfig := ascc.KubernetesSpecConfig
 			azsKubernetesSpecConfig := azureStackCloudSpec.KubernetesSpecConfig
+
+			azureStackCloudSpec.KubernetesSpecConfig.AzureTelemetryPID = helpers.EnsureString(asccKubernetesSpecConfig.AzureTelemetryPID, DefaultAzureStackDeployTelemetryPID)
 			azureStackCloudSpec.KubernetesSpecConfig.ACIConnectorImageBase = helpers.EnsureString(asccKubernetesSpecConfig.ACIConnectorImageBase, azsKubernetesSpecConfig.ACIConnectorImageBase)
 			azureStackCloudSpec.KubernetesSpecConfig.AzureCNIImageBase = helpers.EnsureString(asccKubernetesSpecConfig.AzureCNIImageBase, azsKubernetesSpecConfig.AzureCNIImageBase)
 			azureStackCloudSpec.KubernetesSpecConfig.CalicoImageBase = helpers.EnsureString(asccKubernetesSpecConfig.CalicoImageBase, azsKubernetesSpecConfig.CalicoImageBase)
@@ -138,6 +167,7 @@ func (p *Properties) SetAzureStackCloudSpec() error {
 			azureStackCloudSpec.KubernetesSpecConfig.EtcdDownloadURLBase = helpers.EnsureString(asccKubernetesSpecConfig.EtcdDownloadURLBase, azsKubernetesSpecConfig.EtcdDownloadURLBase)
 			azureStackCloudSpec.KubernetesSpecConfig.KubeBinariesSASURLBase = helpers.EnsureString(asccKubernetesSpecConfig.KubeBinariesSASURLBase, azsKubernetesSpecConfig.KubeBinariesSASURLBase)
 			azureStackCloudSpec.KubernetesSpecConfig.KubernetesImageBase = helpers.EnsureString(asccKubernetesSpecConfig.KubernetesImageBase, azsKubernetesSpecConfig.KubernetesImageBase)
+			azureStackCloudSpec.KubernetesSpecConfig.MCRKubernetesImageBase = helpers.EnsureString(asccKubernetesSpecConfig.MCRKubernetesImageBase, azsKubernetesSpecConfig.MCRKubernetesImageBase)
 			azureStackCloudSpec.KubernetesSpecConfig.NVIDIAImageBase = helpers.EnsureString(asccKubernetesSpecConfig.NVIDIAImageBase, azsKubernetesSpecConfig.NVIDIAImageBase)
 			azureStackCloudSpec.KubernetesSpecConfig.TillerImageBase = helpers.EnsureString(asccKubernetesSpecConfig.TillerImageBase, azsKubernetesSpecConfig.TillerImageBase)
 			azureStackCloudSpec.KubernetesSpecConfig.VnetCNILinuxPluginsDownloadURL = helpers.EnsureString(asccKubernetesSpecConfig.VnetCNILinuxPluginsDownloadURL, azsKubernetesSpecConfig.VnetCNILinuxPluginsDownloadURL)

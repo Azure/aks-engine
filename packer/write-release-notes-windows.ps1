@@ -8,9 +8,11 @@
 
 $ErrorActionPreference = "Stop"
 
+$releaseNotesFilePath = "c:\release-notes.txt"
+
 function Log($Message) {
     # Write-Output $Message
-    $Message | Tee-Object -FilePath "c:\release-notes.txt" -Append
+    $Message | Tee-Object -FilePath $releaseNotesFilePath -Append
 }
 
 Log "Build Number: $env:BUILD_NUMBER"
@@ -106,3 +108,6 @@ foreach ($file in [IO.Directory]::GetFiles('c:\akse-cache', '*', [IO.SearchOptio
 }
 
 Log ($displayObjects | Format-Table -Property File, Sha256, SizeBytes | Out-String -Width 4096)
+
+# Ensure proper encoding is set for release notes file
+[IO.File]::ReadAllText($releaseNotesFilePath) | Out-File -Encoding utf8 $releaseNotesFilePath

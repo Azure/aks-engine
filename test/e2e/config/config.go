@@ -42,6 +42,7 @@ type Config struct {
 	UseDeployCommand    bool   `envconfig:"USE_DEPLOY_COMMAND"`
 	GinkgoFocus         string `envconfig:"GINKGO_FOCUS"`
 	GinkgoSkip          string `envconfig:"GINKGO_SKIP"`
+	DebugAfterSuite     bool   `envconfig:"DEBUG_AFTERSUITE" default:"false"`
 }
 
 // CustomCloudConfig holds configurations for custom clould

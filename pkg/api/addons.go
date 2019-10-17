@@ -4,7 +4,9 @@
 package api
 
 import (
+	"encoding/base64"
 	"strconv"
+	"strings"
 
 	"github.com/Azure/go-autorest/autorest/to"
 
@@ -20,6 +22,13 @@ func (cs *ContainerService) setAddonsConfig(isUpdate bool) {
 	cloudSpecConfig := cs.GetCloudSpecConfig()
 	k8sComponents := K8sComponentsByVersionMap[o.OrchestratorVersion]
 	specConfig := cloudSpecConfig.KubernetesSpecConfig
+	omsagentImage := "mcr.microsoft.com/azuremonitor/containerinsights/ciprod:ciprod07092019"
+	if strings.EqualFold(cloudSpecConfig.CloudName, "AzureChinaCloud") {
+		omsagentImage = "dockerhub.azk8s.cn/microsoft/oms:ciprod07092019"
+	}
+	workspaceDomain := getLogAnalyticsWorkspaceDomain(cloudSpecConfig.CloudName)
+	workspaceDomain = base64.StdEncoding.EncodeToString([]byte(workspaceDomain))
+
 	defaultsHeapsterAddonsConfig := KubernetesAddon{
 		Name:    HeapsterAddonName,
 		Enabled: to.BoolPtr(DefaultHeapsterAddonEnabled && !common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.13.0")),
@@ -212,6 +221,7 @@ func (cs *ContainerService) setAddonsConfig(isUpdate bool) {
 			"dockerProviderVersion": "6.0.0-0",
 			"schema-versions":       "v1",
 			"clusterName":           clusterDNSPrefix,
+			"workspaceDomain":       workspaceDomain,
 		},
 		Containers: []KubernetesContainerSpec{
 			{
@@ -220,7 +230,7 @@ func (cs *ContainerService) setAddonsConfig(isUpdate bool) {
 				MemoryRequests: "225Mi",
 				CPULimits:      "150m",
 				MemoryLimits:   "600Mi",
-				Image:          "mcr.microsoft.com/azuremonitor/containerinsights/ciprod:ciprod07092019",
+				Image:          omsagentImage,
 			},
 		},
 	}
@@ -263,13 +273,13 @@ func (cs *ContainerService) setAddonsConfig(isUpdate bool) {
 		Containers: []KubernetesContainerSpec{
 			{
 				Name:  AzureNetworkPolicyAddonName,
-				Image: "mcr.microsoft.com/containernetworking/azure-npm:v1.0.27",
-			},
-			{
-				Name:  AzureVnetTelemetryAddonName,
-				Image: "mcr.microsoft.com/containernetworking/azure-vnet-telemetry:v1.0.27",
+				Image: "mcr.microsoft.com/containernetworking/azure-npm:v1.0.28",
 			},
 		},
+	}
+
+	if !common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.16.0") {
+		defaultAzureNetworkPolicyAddonsConfig.Containers = append(defaultAzureNetworkPolicyAddonsConfig.Containers, KubernetesContainerSpec{Name: AzureVnetTelemetryAddonName, Image: "mcr.microsoft.com/containernetworking/azure-vnet-telemetry:v1.0.28"})
 	}
 
 	defaultDNSAutoScalerAddonsConfig := KubernetesAddon{
@@ -401,6 +411,25 @@ func (cs *ContainerService) setAddonsConfig(isUpdate bool) {
 		// Assume addon configuration was pruned due to an inherited enabled=false, so re-apply default values
 		o.KubernetesConfig.Addons[i] = assignDefaultAddonVals(o.KubernetesConfig.Addons[i], defaultAddons[j], isUpdate)
 	}
+
+	// Support back-compat configuration for Azure NetworkPolicy, which no longer ships with a "telemetry" container starting w/ 1.16.0
+	if isUpdate && o.KubernetesConfig.NetworkPolicy == NetworkPolicyAzure && common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.16.0") {
+		i = getAddonsIndexByName(o.KubernetesConfig.Addons, AzureNetworkPolicyAddonName)
+		var hasTelemetryContainerConfig bool
+		var prunedContainersConfig []KubernetesContainerSpec
+		if i > -1 {
+			for _, c := range o.KubernetesConfig.Addons[i].Containers {
+				if c.Name == AzureVnetTelemetryAddonName {
+					hasTelemetryContainerConfig = true
+				} else {
+					prunedContainersConfig = append(prunedContainersConfig, c)
+				}
+			}
+			if hasTelemetryContainerConfig {
+				o.KubernetesConfig.Addons[i].Containers = prunedContainersConfig
+			}
+		}
+	}
 }
 
 func appendAddonIfNotPresent(addons []KubernetesAddon, addon KubernetesAddon) []KubernetesAddon {
@@ -469,4 +498,21 @@ func synthesizeAddonsConfig(addons []KubernetesAddon, addon KubernetesAddon, isU
 	if i >= 0 {
 		addons[i] = assignDefaultAddonVals(addons[i], addon, isUpdate)
 	}
+}
+
+func getLogAnalyticsWorkspaceDomain(cloudName string) string {
+	var workspaceDomain string
+	switch cloudName {
+	case "AzurePublicCloud":
+		workspaceDomain = "opinsights.azure.com"
+	case "AzureChinaCloud":
+		workspaceDomain = "opinsights.azure.cn"
+	case "AzureUSGovernmentCloud":
+		workspaceDomain = "opinsights.azure.us"
+	case "AzureGermanCloud":
+		workspaceDomain = "opinsights.azure.de"
+	default:
+		workspaceDomain = "opinsights.azure.com"
+	}
+	return workspaceDomain
 }

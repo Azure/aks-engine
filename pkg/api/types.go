@@ -348,6 +348,7 @@ const (
 // Kubernetes specific configuration
 type KubernetesConfig struct {
 	KubernetesImageBase               string            `json:"kubernetesImageBase,omitempty"`
+	MCRKubernetesImageBase            string            `json:"mcrKubernetesImageBase,omitempty"`
 	ClusterSubnet                     string            `json:"clusterSubnet,omitempty"`
 	NetworkPolicy                     string            `json:"networkPolicy,omitempty"`
 	NetworkPlugin                     string            `json:"networkPlugin,omitempty"`
@@ -1299,6 +1300,11 @@ func (m *MasterProfile) IsVHDDistro() bool {
 	return m.Distro == AKSUbuntu1604 || m.Distro == AKSUbuntu1804
 }
 
+// IsAuditDEnabled returns true if the master profile is configured for auditd
+func (m *MasterProfile) IsAuditDEnabled() bool {
+	return to.Bool(m.AuditDEnabled)
+}
+
 // IsVirtualMachineScaleSets returns true if the master availability profile is VMSS
 func (m *MasterProfile) IsVirtualMachineScaleSets() bool {
 	return m.AvailabilityProfile == VirtualMachineScaleSets
@@ -1426,6 +1432,11 @@ func (a *AgentPoolProfile) IsCoreOS() bool {
 // IsVHDDistro returns true if the distro uses VHD SKUs
 func (a *AgentPoolProfile) IsVHDDistro() bool {
 	return a.Distro == AKSUbuntu1604 || a.Distro == AKSUbuntu1804
+}
+
+// IsAuditDEnabled returns true if the master profile is configured for auditd
+func (a *AgentPoolProfile) IsAuditDEnabled() bool {
+	return to.Bool(a.AuditDEnabled)
 }
 
 // IsAvailabilitySets returns true if the customer specified disks
@@ -1660,7 +1671,12 @@ func (o *OrchestratorProfile) NeedsExecHealthz() bool {
 		!common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.9.0")
 }
 
-// HasAadProfile  returns true if the has aad profile
+// GetPodInfraContainerSpec returns the sandbox image as a string (ex: k8s.gcr.io/pause-amd64:3.1)
+func (o *OrchestratorProfile) GetPodInfraContainerSpec() string {
+	return o.KubernetesConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap[o.OrchestratorVersion]["pause"]
+}
+
+// HasAadProfile returns true if the has aad profile
 func (p *Properties) HasAadProfile() bool {
 	return p.AADProfile != nil
 }
@@ -1802,6 +1818,16 @@ func (a *AgentPoolProfile) IsNSeriesSKU() bool {
 func (p *Properties) HasNSeriesSKU() bool {
 	for _, profile := range p.AgentPoolProfiles {
 		if strings.Contains(profile.VMSize, "Standard_N") {
+			return true
+		}
+	}
+	return false
+}
+
+// HasDCSeriesSKU returns whether or not there is an DC series SKU agent pool
+func (p *Properties) HasDCSeriesSKU() bool {
+	for _, profile := range p.AgentPoolProfiles {
+		if strings.Contains(profile.VMSize, "Standard_DC") {
 			return true
 		}
 	}

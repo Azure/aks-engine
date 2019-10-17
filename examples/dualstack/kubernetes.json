@@ -8,7 +8,12 @@
             "orchestratorType": "Kubernetes",
             "orchestratorRelease": "1.16",
             "kubernetesConfig": {
-                "clusterSubnet": "10.244.0.0/16,fd00:101::/8",
+                "loadBalancerSku": "Standard",
+                "excludeMasterFromStandardLB": true,
+                "clusterSubnet": "10.244.0.0/16,fc00::/8",
+                "serviceCidr": "10.0.0.0/16,fd00::/108",
+                "dnsServiceIP": "10.0.0.10",
+                "kubeProxyMode": "ipvs",
                 "networkPlugin": "kubenet",
                 "apiServerConfig": {
                     "--feature-gates": "IPv6DualStack=true"

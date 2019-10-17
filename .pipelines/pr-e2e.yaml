@@ -129,6 +129,14 @@ jobs:
 
 - template: e2e-job-template.yaml
   parameters:
+    name: 'k8s_1_17_release_e2e'
+    k8sRelease: '1.17'
+    apimodel: 'examples/e2e-tests/kubernetes/release/default/definition.json'
+    createVNET: true
+    stabilityIterations: '3'
+
+- template: e2e-job-template.yaml
+  parameters:
     name: 'k8s_windows_1_12_release_e2e'
     k8sRelease: '1.12'
     apimodel: 'examples/e2e-tests/kubernetes/windows/hybrid/definition.json'
@@ -155,4 +163,10 @@ jobs:
   parameters:
     name: 'k8s_windows_1_16_release_e2e'
     k8sRelease: '1.16'
+    apimodel: 'examples/e2e-tests/kubernetes/windows/hybrid/definition.json'
+
+- template: e2e-job-template.yaml
+  parameters:
+    name: 'k8s_windows_1_17_release_e2e'
+    k8sRelease: '1.17'
     apimodel: 'examples/e2e-tests/kubernetes/windows/hybrid/definition.json'

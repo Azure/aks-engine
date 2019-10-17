@@ -10,13 +10,14 @@ import (
 
 	"github.com/blang/semver"
 
+	"github.com/Azure/go-autorest/autorest/azure"
+
 	v20160330 "github.com/Azure/aks-engine/pkg/api/v20160330"
 	v20160930 "github.com/Azure/aks-engine/pkg/api/v20160930"
 	v20170131 "github.com/Azure/aks-engine/pkg/api/v20170131"
 	v20170701 "github.com/Azure/aks-engine/pkg/api/v20170701"
 	v20170930 "github.com/Azure/aks-engine/pkg/api/v20170930"
 	"github.com/Azure/aks-engine/pkg/api/vlabs"
-	"github.com/Azure/go-autorest/autorest/azure"
 )
 
 ///////////////////////////////////////////////////////////
@@ -711,6 +712,7 @@ func convertDcosConfigToVLabs(api *DcosConfig, vl *vlabs.DcosConfig) {
 
 func convertKubernetesConfigToVLabs(apiCfg *KubernetesConfig, vlabsCfg *vlabs.KubernetesConfig) {
 	vlabsCfg.KubernetesImageBase = apiCfg.KubernetesImageBase
+	vlabsCfg.MCRKubernetesImageBase = apiCfg.MCRKubernetesImageBase
 	vlabsCfg.ClusterSubnet = apiCfg.ClusterSubnet
 	vlabsCfg.DNSServiceIP = apiCfg.DNSServiceIP
 	vlabsCfg.ServiceCidr = apiCfg.ServiceCIDR
@@ -1261,7 +1263,9 @@ func convertAzureEnvironmentSpecConfigToVLabs(api *AzureEnvironmentSpecConfig, v
 		ResourceManagerVMDNSSuffix: api.EndpointConfig.ResourceManagerVMDNSSuffix,
 	}
 	vlabses.KubernetesSpecConfig = vlabs.KubernetesSpecConfig{
+		AzureTelemetryPID:                api.KubernetesSpecConfig.AzureTelemetryPID,
 		KubernetesImageBase:              api.KubernetesSpecConfig.KubernetesImageBase,
+		MCRKubernetesImageBase:           api.KubernetesSpecConfig.MCRKubernetesImageBase,
 		TillerImageBase:                  api.KubernetesSpecConfig.TillerImageBase,
 		ACIConnectorImageBase:            api.KubernetesSpecConfig.ACIConnectorImageBase,
 		NVIDIAImageBase:                  api.KubernetesSpecConfig.NVIDIAImageBase,

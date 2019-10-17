@@ -160,8 +160,8 @@ func (sc *scaleCmd) load() error {
 
 	if sc.containerService.Properties.IsAzureStackCloud() {
 		writeCustomCloudProfile(sc.containerService)
-		err = sc.containerService.Properties.SetAzureStackCloudSpec()
-		if err != nil {
+
+		if err = sc.containerService.Properties.SetAzureStackCloudSpec(api.AzureStackCloudSpecParams{IsUpgrade: false, IsScale: true}); err != nil {
 			return errors.Wrap(err, "error parsing the api model")
 		}
 	}

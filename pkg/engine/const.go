@@ -139,6 +139,8 @@ const (
 	AzureStackSuffix = "-azs"
 	// AzureStackPrefix is appended to windows binary version for Azure Stack instances
 	AzureStackPrefix = "azs-"
+	// AzureStackCaCertLocation is where Azure Stack's CRP drops the stamp CA certificate
+	AzureStackCaCertLocation = "/var/lib/waagent/Certificates.pem"
 )
 
 const (
@@ -180,6 +182,7 @@ const (
 	dockerClearMountPropagationFlags         = "k8s/cloud-init/artifacts/docker_clear_mount_propagation_flags.conf"
 	systemdBPFMount                          = "k8s/cloud-init/artifacts/sys-fs-bpf.mount"
 	etcdSystemdService                       = "k8s/cloud-init/artifacts/etcd.service"
+	auditdRules                              = "k8s/cloud-init/artifacts/auditd-rules"
 	// scripts and service for enabling ipv6 dual stack
 	dhcpv6SystemdService      = "k8s/cloud-init/artifacts/dhcpv6.service"
 	dhcpv6ConfigurationScript = "k8s/cloud-init/artifacts/enable-dhcpv6.sh"

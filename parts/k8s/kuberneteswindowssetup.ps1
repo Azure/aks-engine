@@ -92,7 +92,7 @@ $global:PrimaryScaleSetName = "{{WrapAsVariable "primaryScaleSetName"}}"
 $global:KubeClusterCIDR = "{{WrapAsParameter "kubeClusterCidr"}}"
 $global:KubeServiceCIDR = "{{WrapAsParameter "kubeServiceCidr"}}"
 $global:VNetCIDR = "{{WrapAsParameter "vnetCidr"}}"
-{{if IsKubernetesVersionGe "1.16.0-alpha.1"}}
+{{if IsKubernetesVersionGe "1.16.0"}}
 $global:KubeletNodeLabels = "{{GetAgentKubernetesLabels . "',variables('labelResourceGroup'),'"}}"
 {{else}}
 $global:KubeletNodeLabels = "{{GetAgentKubernetesLabelsDeprecated . "',variables('labelResourceGroup'),'"}}"
@@ -261,6 +261,7 @@ try
                     -SubscriptionId $global:SubscriptionId `
                     -ResourceGroup $global:ResourceGroup `
                     -AADClientId $AADClientId `
+                    -KubeDir $global:KubeDir `
                     -AADClientSecret $([System.Text.Encoding]::ASCII.GetString([System.Convert]::FromBase64String($AADClientSecret))) `
                     -NetworkAPIVersion $NetworkAPIVersion `
                     -AzureEnvironmentFilePath $([io.path]::Combine($global:KubeDir, "azurestackcloud.json")) `
@@ -305,8 +306,11 @@ try
         Write-Log "Update service failure actions"
         Update-ServiceFailureActions
 
-        Write-Log "Removing aks-engine bits cache directory"
-        Remove-Item $CacheDir -Recurse -Force
+        if (Test-Path $CacheDir)
+        {
+            Write-Log "Removing aks-engine bits cache directory"
+            Remove-Item $CacheDir -Recurse -Force
+        }
 
         Write-Log "Setup Complete, reboot computer"
         Restart-Computer

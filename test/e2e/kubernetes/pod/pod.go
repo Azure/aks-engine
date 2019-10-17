@@ -25,7 +25,6 @@ import (
 
 const (
 	testDir                    string = "testdirectory"
-	deleteTimeout                     = 5 * time.Minute
 	validatePodNotExistRetries        = 3
 )
 
@@ -394,6 +393,37 @@ func GetAllByPrefixAsync(prefix, namespace string) GetAllByPrefixResult {
 	}
 }
 
+// GetAllByPrefixWithRetry will return all pods in a given namespace that match a prefix, retrying if error up to a timeout
+func GetAllByPrefixWithRetry(prefix, namespace string, sleep, timeout time.Duration) ([]Pod, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+	ch := make(chan GetAllByPrefixResult)
+	var mostRecentGetAllByPrefixWithRetryError error
+	var pods []Pod
+	go func() {
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case ch <- GetAllByPrefixAsync(prefix, namespace):
+				time.Sleep(sleep)
+			}
+		}
+	}()
+	for {
+		select {
+		case result := <-ch:
+			mostRecentGetAllByPrefixWithRetryError = result.Err
+			pods = result.Pods
+			if mostRecentGetAllByPrefixWithRetryError == nil {
+				return pods, nil
+			}
+		case <-ctx.Done():
+			return pods, errors.Errorf("GetAllByPrefixWithRetry timed out: %s\n", mostRecentGetAllByPrefixWithRetryError)
+		}
+	}
+}
+
 // GetAllByPrefix will return all pods in a given namespace that match a prefix
 func GetAllByPrefix(prefix, namespace string) ([]Pod, error) {
 	pl, err := GetAll(namespace)
@@ -412,6 +442,68 @@ func GetAllByPrefix(prefix, namespace string) ([]Pod, error) {
 		}
 	}
 	return pods, nil
+}
+
+// GetAllRunningByPrefixAsync wraps GetAllRunningByPrefix with a struct response for goroutine + channel usage
+func GetAllRunningByPrefixAsync(prefix, namespace string) GetAllByPrefixResult {
+	pods, err := GetAllRunningByPrefix(prefix, namespace)
+	return GetAllByPrefixResult{
+		Pods: pods,
+		Err:  err,
+	}
+}
+
+// GetAllRunningByPrefix will return all Running pods in a given namespace that match a prefix
+func GetAllRunningByPrefix(prefix, namespace string) ([]Pod, error) {
+	pl, err := GetAll(namespace)
+	if err != nil {
+		return nil, err
+	}
+	pods := []Pod{}
+	for _, p := range pl.Pods {
+		matched, err := regexp.MatchString(prefix+"-.*", p.Metadata.Name)
+		if err != nil {
+			log.Printf("Error trying to match pod name:%s\n", err)
+			return nil, err
+		}
+		if matched {
+			if p.Status.Phase == "Running" {
+				pods = append(pods, p)
+			}
+		}
+	}
+	return pods, nil
+}
+
+// GetAllRunningByPrefixWithRetry will return all Running pods in a given namespace that match a prefix, retrying if error up to a timeout
+func GetAllRunningByPrefixWithRetry(prefix, namespace string, sleep, timeout time.Duration) ([]Pod, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+	ch := make(chan GetAllByPrefixResult)
+	var mostRecentGetAllRunningByPrefixWithRetryError error
+	var pods []Pod
+	go func() {
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case ch <- GetAllRunningByPrefixAsync(prefix, namespace):
+				time.Sleep(sleep)
+			}
+		}
+	}()
+	for {
+		select {
+		case result := <-ch:
+			mostRecentGetAllRunningByPrefixWithRetryError = result.Err
+			pods = result.Pods
+			if mostRecentGetAllRunningByPrefixWithRetryError == nil {
+				return pods, nil
+			}
+		case <-ctx.Done():
+			return pods, errors.Errorf("GetAllRunningByPrefixWithRetry timed out: %s\n", mostRecentGetAllRunningByPrefixWithRetryError)
+		}
+	}
 }
 
 // AreAllPodsRunningResult is a return struct for AreAllPodsRunningAsync
@@ -794,11 +886,12 @@ func (p *Pod) Exec(c ...string) ([]byte, error) {
 
 // Delete will delete a Pod in a given namespace
 func (p *Pod) Delete(retries int) error {
+	var zeroValueDuration time.Duration
 	var kubectlOutput []byte
 	var kubectlError error
 	for i := 0; i < retries; i++ {
 		cmd := exec.Command("k", "delete", "po", "-n", p.Metadata.Namespace, p.Metadata.Name)
-		kubectlOutput, kubectlError = util.RunAndLogCommand(cmd, deleteTimeout)
+		kubectlOutput, kubectlError = util.RunAndLogCommand(cmd, zeroValueDuration)
 		if kubectlError != nil {
 			log.Printf("Error while trying to delete Pod %s in namespace %s:%s\n", p.Metadata.Namespace, p.Metadata.Name, string(kubectlOutput))
 			continue

@@ -19,7 +19,7 @@
 
 Enabling Managed Identity configures aks-engine to include and use MSI identities for all interactions with the Azure Resource Manager (ARM) API.
 
-Instead of using a static servic principal written to `/etc/kubernetes/azure.json`, Kubernetes will use a dynamic, time-limited token fetched from the MSI extension running on master and agent nodes. This support is currently alpha and requires Kubernetes v1.9.1 or newer.
+Instead of using a static service principal written to `/etc/kubernetes/azure.json`, Kubernetes will use a dynamic, time-limited token fetched from the MSI extension running on master and agent nodes. This support is currently alpha and requires Kubernetes v1.9.1 or newer.
 
 Enable Managed Identity by adding `useManagedIdentity` in `kubernetesConfig`.
 
@@ -35,10 +35,10 @@ Enable Managed Identity by adding `useManagedIdentity` in `kubernetesConfig`.
 
 By default, the cluster will be provisioned with [Role-Based Access Control](https://kubernetes.io/docs/admin/authorization/rbac/) enabled. Disable RBAC by adding `enableRbac` in `kubernetesConfig` in the api model:
 
-```console
-      "kubernetesConfig": {
-        "enableRbac": false
-      }
+```json
+"kubernetesConfig": {
+  "enableRbac": false
+}
 ```
 
 To emphasize: RBAC support is required for all Kubernetes clusters >= 1.15.0
@@ -113,9 +113,9 @@ spec:
 Kubernetes clusters are configured by default to use the [Azure CNI plugin](https://github.com/Azure/azure-container-networking) which provides an Azure native networking experience. Pods will receive IP addresses directly from the vnet subnet on which they're hosted. If the api model doesn't specify explicitly, aks-engine will automatically provide the following `networkPlugin` configuration in `kubernetesConfig`:
 
 ```json
-      "kubernetesConfig": {
-        "networkPlugin": "azure"
-      }
+"kubernetesConfig": {
+  "networkPlugin": "azure"
+}
 ```
 
 ### Additional Azure integrated networking configuration
@@ -125,27 +125,27 @@ In addition you can modify the following settings to change the networking behav
 IP addresses are pre-allocated in the subnet. Using ipAddressCount you can specify how many you would like to pre-allocate. This number needs to account for number of pods you would like to run on that subnet.
 
 ```json
-    "masterProfile": {
-      "ipAddressCount": 200
-    },
+"masterProfile": {
+  "ipAddressCount": 200
+},
 ```
 
 Currently, the IP addresses that are pre-allocated aren't allowed by the default natter for Internet bound traffic. In order to work around this limitation we allow the user to specify the vnetCidr (eg. 10.0.0.0/8) to be EXCLUDED from the default masquerade rule that is applied. The result is that traffic destined for anything within that block will NOT be natted on the outbound VM interface. This field has been called vnetCidr but may be wider than the vnet cidr block if you would like POD IPs to be routable across vnets using vnet-peering or express-route.
 
 ```json
-    "masterProfile": {
-      "vnetCidr": "10.0.0.0/8",
-    },
+"masterProfile": {
+  "vnetCidr": "10.0.0.0/8",
+},
 ```
 
 When using Azure integrated networking the maxPods setting will be set to 30 by default. This number can be changed keeping in mind that there is a limit of 65,536 IPs per vnet.
 
 ```json
-      "kubernetesConfig": {
-        "kubeletConfig": {
-          "--max-pods": "50"
-        }
-      }
+"kubernetesConfig": {
+  "kubeletConfig": {
+    "--max-pods": "50"
+  }
+}
 ```
 
 <a name="feat-calico"></a>
@@ -248,7 +248,7 @@ In larger subnets (e.g., `/16`) it's not as practically useful to push static IP
 
 Before provisioning, modify the `masterProfile` and `agentPoolProfiles` to match the above requirements, with the below being a representative example:
 
-```json
+```js
 "masterProfile": {
   ...
   "vnetSubnetId": "/subscriptions/SUB_ID/resourceGroups/RG_NAME/providers/Microsoft.Network/virtualNetworks/VNET_NAME/subnets/MASTER_SUBNET_NAME",
@@ -275,7 +275,7 @@ Modify `agentPoolProfiles`, `vnetSubnetId` should be set to the value of the `ag
 *NOTE: The `firstConsecutiveStaticIP` configuration should be empty and will be derived from an offset and the first IP in the vnetCidr.*
 For example, if `vnetCidr` is `10.239.0.0/16`, `master` subnet is `10.239.0.0/17`, `agent` subnet is `10.239.128.0/17`, then `firstConsecutiveStaticIP` will be `10.239.0.4`.
 
-```json
+```js
 "masterProfile": {
   ...
   "vnetSubnetId": "/subscriptions/SUB_ID/resourceGroups/RG_NAME/providers/Microsoft.Network/virtualNetworks/VNET_NAME/subnets/MASTER_SUBNET_NAME",
@@ -301,17 +301,17 @@ The route table resource id is of the format: `/subscriptions/SUBSCRIPTIONID/res
 
 Existing subnets will need to use the Kubernetes-based Route Table so that machines can route to Kubernetes-based workloads.
 
-Update properties of all subnets in the existing VNET he route table resource by appending the following to subnet properties:
+Update properties of all subnets in the existing VNET route table resource by appending the following to subnet properties:
 
 ```json
 "routeTable": {
         "id": "/subscriptions/<SubscriptionId>/resourceGroups/<ResourceGroupName>/providers/Microsoft.Network/routeTables/k8s-master-<SOMEID>-routetable>"
-      }
+}
 ```
 
 E.g.:
 
-```json
+```js
 "subnets": [
     {
       "name": "subnetname",
@@ -337,9 +337,9 @@ You can designate kubernetes agents to use Kata Containers as the
 container runtime by setting:
 
 ```json
-      "kubernetesConfig": {
-        "containerRuntime": "kata-containers"
-      }
+"kubernetesConfig": {
+  "containerRuntime": "kata-containers"
+}
 ```
 
 You will need to make sure your agents are using a `vmSize` that [supports
@@ -357,7 +357,7 @@ This should look like:
         "availabilityProfile": "AvailabilitySet",
         "diskSizesGB": [1023]
       }
-    ],
+],
 ```
 
 <a name="feat-private-cluster"></a>
@@ -367,10 +367,10 @@ This should look like:
 You can build a private Kubernetes cluster with no public IP addresses assigned by setting:
 
 ```json
-      "kubernetesConfig": {
-        "privateCluster": {
-          "enabled": true
-      }
+"kubernetesConfig": {
+  "privateCluster": {
+    "enabled": true
+}
 ```
 
 In order to access this cluster using kubectl commands, you will need a jumpbox in the same VNET (or onto a peer VNET that routes to the VNET). If you do not already have a jumpbox, you can use aks-engine to provision your jumpbox (see below) or create it manually. You can create a new jumpbox manually in the Azure Portal under "Create a resource > Compute > Ubuntu Server 16.04 LTS VM" or using the [az cli](https://docs.microsoft.com/en-us/cli/azure/vm?view=azure-cli-latest#az_vm_create). You will then be able to:
@@ -385,17 +385,17 @@ Alternatively, you may also ssh into your nodes (given that your ssh key is on t
 To auto-provision a jumpbox with your aks-engine deployment use:
 
 ```json
-      "kubernetesConfig": {
-        "privateCluster": {
-          "enabled": true,
-          "jumpboxProfile": {
-            "name": "my-jb",
-            "vmSize": "Standard_D4s_v3",
-            "osDiskSizeGB": 30,
-            "username": "azureuser",
-            "publicKey": "xxx"
-          }
-      }
+"kubernetesConfig": {
+  "privateCluster": {
+    "enabled": true,
+    "jumpboxProfile": {
+      "name": "my-jb",
+      "vmSize": "Standard_D4s_v3",
+      "osDiskSizeGB": 30,
+      "username": "azureuser",
+      "publicKey": "xxx"
+    }
+}
 ```
 
 <a name="feat-keyvault-encryption"></a>
@@ -436,12 +436,27 @@ This is possible by specifying `imageReference` under `masterProfile` or on a gi
 
 ```json
 {
-    "apiVersion": "vlabs",
-    "properties": {
-      "orchestratorProfile": {
-        "orchestratorType": "Kubernetes"
+  "apiVersion": "vlabs",
+  "properties": {
+    "orchestratorProfile": {
+      "orchestratorType": "Kubernetes"
+    },
+    "masterProfile": {
+      "imageReference": {
+        "name": "linuxvm",
+        "resourceGroup": "sig",
+        "subscriptionID": "00000000-0000-0000-0000-000000000000",
+        "gallery": "siggallery",
+        "version": "0.0.1"
       },
-      "masterProfile": {
+      "count": 1,
+      "dnsPrefix": "",
+      "vmSize": "Standard_D2_v3"
+    },
+    "agentPoolProfiles": [
+      {
+        "name": "agentpool1",
+        "count": 3,
         "imageReference": {
           "name": "linuxvm",
           "resourceGroup": "sig",
@@ -449,41 +464,26 @@ This is possible by specifying `imageReference` under `masterProfile` or on a gi
           "gallery": "siggallery",
           "version": "0.0.1"
         },
-        "count": 1,
-        "dnsPrefix": "",
-        "vmSize": "Standard_D2_v3"
-      },
-      "agentPoolProfiles": [
-        {
-          "name": "agentpool1",
-          "count": 3,
-          "imageReference": {
-            "name": "linuxvm",
-            "resourceGroup": "sig",
-            "subscriptionID": "00000000-0000-0000-0000-000000000000",
-            "gallery": "siggallery",
-            "version": "0.0.1"
-          },
-          "vmSize": "Standard_D2_v3",
-          "availabilityProfile": "AvailabilitySet"
-        }
-      ],
-      "linuxProfile": {
-        "adminUsername": "azureuser",
-        "ssh": {
-          "publicKeys": [
-            {
-              "keyData": ""
-            }
-          ]
-        }
-      },
-      "servicePrincipalProfile": {
-        "clientId": "",
-        "secret": ""
+        "vmSize": "Standard_D2_v3",
+        "availabilityProfile": "AvailabilitySet"
       }
+    ],
+    "linuxProfile": {
+      "adminUsername": "azureuser",
+      "ssh": {
+        "publicKeys": [
+          {
+            "keyData": ""
+          }
+        ]
+      }
+    },
+    "servicePrincipalProfile": {
+      "clientId": "",
+      "secret": ""
     }
   }
+}
 ```
 
 ## Ephemeral OS Disks
