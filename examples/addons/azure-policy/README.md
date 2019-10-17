@@ -23,7 +23,11 @@ az role assignment create --assignee $CLIENT_ID --scope $SCOPE --role "Policy In
         "addons": [
           {
             "name": "azure-policy",
-            "enabled": true
+            "enabled": true,
+            "config": {
+              "auditInterval": "30",
+              "constraintViolationsLimit": "20"
+            }
           }
         ]
       }
@@ -73,7 +77,7 @@ Plese follow the README here for further information: https://github.com/open-po
 
 | Name                      | Required | Description                 | Default Value |
 | ------------------------- | -------- | --------------------------- | ------------- |
-| auditInterval             | no       | audit interval              | 30            |
+| auditInterval             | no       | audit interval (in seconds) | 30            |
 | constraintViolationsLimit | no       | constraint violations limit | 20            |
 
 ### Azure Policy
