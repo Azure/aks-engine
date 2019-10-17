@@ -104,8 +104,6 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 		Enabled: to.BoolPtr(DefaultClusterAutoscalerAddonEnabled && !cs.Properties.IsAzureStackCloud()),
 		Mode:    AddonModeEnsureExists,
 		Config: map[string]string{
-			"min-nodes":                             "1",
-			"max-nodes":                             "5",
 			"scan-interval":                         "1m",
 			"expendable-pods-priority-cutoff":       "-10",
 			"ignore-daemonsets-utilization":         "false",
@@ -621,19 +619,10 @@ func assignDefaultAddonVals(addon, defaults KubernetesAddon, isUpgrade bool) Kub
 			}
 		}
 	}
-	for i := range defaults.Pools {
-		p := addon.GetAddonPoolsIndexByName(defaults.Pools[i].Name)
-		if p < 0 {
+	// For pools-specific configuration, we only take the defaults if we have zero user-provided pools configuration
+	if len(addon.Pools) == 0 {
+		for i := range defaults.Pools {
 			addon.Pools = append(addon.Pools, defaults.Pools[i])
-		} else {
-			for key, val := range defaults.Pools[i].Config {
-				if addon.Pools[p].Config == nil {
-					addon.Pools[p].Config = make(map[string]string)
-				}
-				if v, ok := addon.Pools[p].Config[key]; !ok || v == "" {
-					addon.Pools[p].Config[key] = val
-				}
-			}
 		}
 	}
 	for key, val := range defaults.Config {
