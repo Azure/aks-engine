@@ -7,6 +7,7 @@ metadata:
     tier: control-plane
     component: kube-scheduler
 spec:
+  priorityClassName: system-node-critical
   hostNetwork: true
   containers:
     - name: kube-scheduler

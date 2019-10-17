@@ -30595,6 +30595,7 @@ metadata:
     tier: control-plane
     component: cloud-controller-manager
 spec:
+  priorityClassName: system-node-critical
   hostNetwork: true
   containers:
     - name: cloud-controller-manager
@@ -30650,6 +30651,7 @@ metadata:
   namespace: kube-system
   version: v1
 spec:
+  priorityClassName: system-node-critical
   hostNetwork: true
   containers:
   - name: kube-addon-manager
@@ -30699,6 +30701,7 @@ metadata:
     tier: control-plane
     component: kube-apiserver
 spec:
+  priorityClassName: system-node-critical
   hostNetwork: true
   containers:
     - name: kube-apiserver
@@ -30760,6 +30763,7 @@ metadata:
     tier: control-plane
     component: kube-controller-manager
 spec:
+  priorityClassName: system-node-critical
   hostNetwork: true
   containers:
     - name: kube-controller-manager
@@ -30789,7 +30793,8 @@ spec:
     - name: msi
       hostPath:
         path: /var/lib/waagent/ManagedIdentity-Settings
-    <volumessl>`)
+    <volumessl>
+`)
 
 func k8sManifestsKubernetesmasterKubeControllerManagerCustomYamlBytes() ([]byte, error) {
 	return _k8sManifestsKubernetesmasterKubeControllerManagerCustomYaml, nil
@@ -30815,6 +30820,7 @@ metadata:
     tier: control-plane
     component: kube-controller-manager
 spec:
+  priorityClassName: system-node-critical
   hostNetwork: true
   containers:
     - name: kube-controller-manager
@@ -30866,6 +30872,7 @@ metadata:
     tier: control-plane
     component: kube-scheduler
 spec:
+  priorityClassName: system-node-critical
   hostNetwork: true
   containers:
     - name: kube-scheduler
